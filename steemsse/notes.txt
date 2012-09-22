@@ -1,0 +1,6 @@
+Steem SSE project
+
+Folders 3rdparty, include, windows-build & X-build are part of Steem source.
+3rd party and include could be used by other projects.
+
+No doc is included because there may be copyright issues, sorry about that.
