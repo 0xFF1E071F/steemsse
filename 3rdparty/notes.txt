@@ -1,0 +1,24 @@
+6301
+  Sim6xx by Arne Riiber adapted for emulation of the Hitachi HD6301V1 used 
+  as an intelligent keyboard controller on the Atari ST.
+
+dsp
+  Basic DSP (digital sound processing) adapted from code by Maverick 
+  (Fabio Bizzetti) used to emulate the STE's Microwire controller.
+
+pasti
+  - Definitions for the pasti plugin by ijor aka Jorge Cwik, pasti@fxatari.com.
+  - div68kCycleAccurate.c, routines giving the exact timing for the DIV 
+  instructions, also by ijor.
+
+portaudio
+  Linux. Dead-end for the moment. Removed.
+
+rtaudio
+  Linux. We got this one working at some point.
+
+unrarlib
+  Windows/Linux. Dead-end for the moment. Removed.
+
+zlib
+  Linux. Operating.
