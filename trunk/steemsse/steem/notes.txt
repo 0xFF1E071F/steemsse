@@ -1,0 +1,4 @@
+Steem.new.bak was the original Steem.new
+Steem.new is the version for the SSE build.
+
+A new folder SSE has been created in the code folder.

@@ -1,0 +1,12 @@
+Add option to mute keyboard click - done
+Improve keyboard BE...
+Something missing in shortcuts?
+Rip Steem sound to WST?
+Disable blitter option
+include willib... but more MFC needed?
+
+
+Problem:
+Duplication of code for Unix/Win32
+Example there's options_create() & x_options_create()
+My additions only compile in Win32
