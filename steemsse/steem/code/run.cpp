@@ -12,7 +12,7 @@ handled here, in event_scanline and event_vbl_interrupt.
 #pragma message("Included for compilation: run.cpp")
 #endif
 
-#include "SSE\SSEDebug.h"
+#include "SSE/SSEDebug.h"
 
 //---------------------------------------------------------------------------
 void exception(int exn,exception_action ea,MEM_ADDRESS a)
@@ -603,7 +603,35 @@ void event_scanline()
 void event_start_vbl()
 {
   // This happens about 60 cycles into scanline 247 (50Hz)
+
+/*
+#ifdef SS_TST1
+  debug2++;
+  if(debug2==2)
+  {
+    if(debug3)
+    {
+      xbios2=debug3;
+      debug3=0;
+    }
+    else if(xbios2!=debug1)
+    {
+      debug3=xbios2;
+      xbios2=debug1;
+    }
+  }
+#endif
+*/
   shifter_draw_pointer=xbios2; // SS: reload SDP
+/*
+#ifdef SS_TST1
+  if(debug2==2)
+  {
+    debug1=xbios2; // save
+    debug2=0;
+  }
+#endif
+*/
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
   shifter_pixel=shifter_hscroll;
   overscan_add_extra=0; //SS?
@@ -615,7 +643,6 @@ void event_vbl_interrupt()
 { 
   bool VSyncing=(FSDoVsync && FullScreen && fast_forward==0 && slow_motion==0);
   bool BlitFrame=0;
-  //TRACE("xbios2 %X\n",xbios2);
 #ifndef NO_CRAZY_MONITOR
   if (extended_monitor==0)
 #endif
@@ -941,7 +968,10 @@ void event_vbl_interrupt()
     shifter_last_draw_line=320;
     overscan=OVERSCAN_MAX_COUNTDOWN;
   }
+#ifdef SS_TST1___
+#else
   event_start_vbl(); // Reset SDP again!
+#endif
 #if defined(SS_VID_DRAGON)
   if(SS_signal==SS_SIGNAL_SHIFTER_CONFUSED_1)
     SS_signal=SS_SIGNAL_SHIFTER_CONFUSED_2; // stage 2 of our hack

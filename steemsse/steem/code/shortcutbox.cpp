@@ -11,10 +11,10 @@ maps all sorts of user input to all sorts of emulator functions.
 
 #if defined(STEVEN_SEAGAL)
 #if defined(SS_INTERRUPT)
-#include "SSE\SSEInterrupt.h"
+#include "SSE/SSEInterrupt.h"
 #endif
 #if defined(SS_VID_SHIFTER_EVENTS)
-#include "SSE\SSEShifterEvents.h"
+#include "SSE/SSEShifterEvents.h"
 #endif
 #endif
 

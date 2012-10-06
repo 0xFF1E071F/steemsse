@@ -3,7 +3,7 @@
 #####################################
 
 # requires tools: make, gcc, g++, nasm
-# requires libs: rtaudio, portaudio, zlib, minizip, urarlib, X
+# requires libs: rtaudio, /*portaudio*/, zlib, minizip, /*urarlib*/, X
 
 # symbolic links - code, inc, 3rdparty
 
@@ -17,21 +17,19 @@ STEEMFLAGS=-DUNIX -DLINUX -DSTEVEN_SEAGAL -DNO_PORT_AUDIO
 CFLAGS=-I$(ROOT)/include -I$(ROOT)/steem/code \
 -I$(ROOT)/3rdparty \
 -I$(ROOT)/3rdparty/pasti \
--I$(ROOT)/3rdparty/hatari \
--I$(ROOT)/3rdparty/unrarlib \
+-I$(ROOT)/3rdparty/dsp \
+-I$(ROOT)/3rdparty/6301 \
 -I$(ROOT)/3rdparty/zlib/contrib/minizip \
 -I$(ROOT)/3rdparty/zlib \
--I$(ROOT)/3rdparty/portaudio/src/common \
--I$(ROOT)/3rdparty/portaudio/include \
 -I$(ROOT)/3rdparty/rtaudio \
--w -Wfatal-errors
+-lasound -w -Wfatal-errors
 
 RELEASE_CFLAGS=-O
 
 # Output filename
 OUTPUT="./output/steem"
 
-LIBS=-lX11 -lXext -lpthread -lXxf86vm \
+    LIBS=-lX11 -lXext -lpthread -lXxf86vm \
       $(ROOT)/3rdparty/zlib/crc32.o  \
       $(ROOT)/3rdparty/zlib/inflate.o \
       $(ROOT)/3rdparty/zlib/adler32.o \
@@ -43,18 +41,22 @@ LIBS=-lX11 -lXext -lpthread -lXxf86vm \
       $(ROOT)/3rdparty/zlib/compress.o \
       $(ROOT)/3rdparty/zlib/contrib/minizip/unzip.o \
       $(ROOT)/3rdparty/zlib/contrib/minizip/ioapi.o \
-       \
-      $(ROOT)/3rdparty/unrarlib/unrarlib/unrarlib.o \
-			\
-      $(ROOT)/3rdparty/portaudio/lib/libportaudio.la \
-       \
-      $(ROOT)/3rdparty/rtaudio/tests/Release/RtAudio.o\
-      $(ROOT)/3rdparty/pasti/div68kCycleAccurate.o
+      $(ROOT)/3rdparty/rtaudio/tests/Release/RtAudio.o \
+      $(ROOT)/X-build/obj/6301.o \
+      $(ROOT)/X-build/obj/dsp.o \
+      $(ROOT)/X-build/obj/div68kCycleAccurate.o 
 
-LIBTOOL=$(ROOT)/3rdparty/portaudio/libtool
+#      ./obj/dsp.o ./obj/6301.o ./obj/div68kCycleAccurate.o
+
+
+#      $(ROOT)/3rdparty/pasti/div68kCycleAccurate.o
+
+#LIBTOOL=$(ROOT)/3rdparty/portaudio/libtool
+LIBTOOL=libtool
 
 # Objects
-OBJS=./obj/asm_draw.o ./obj/emu.o ./obj/asm_osd.o ./obj/main.o ./obj/helper.o ./obj/resource.o
+OBJS=./obj/asm_draw.o ./obj/emu.o ./obj/asm_osd.o ./obj/main.o ./obj/helper.o ./obj/resource.o ./obj/SSE.o ./obj/SSEOption.o 
+#./obj/dsp.o ./obj/6301.o ./obj/div68kCycleAccurate.o
 # OBJS=./code/draw_c/draw_c.o emu.o main.o urarlib.o helper.o resource.o
 
 # Targets
@@ -65,6 +67,8 @@ all:	asm
 	$(MAKE) helper
 	$(MAKE) main
 	$(MAKE) emu
+	$(MAKE) SSE
+	$(MAKE) SSEOption
 	$(MAKE) link
 
 clean:
@@ -72,7 +76,7 @@ clean:
 
 fresh:
 	$(MAKE) clean
-	$(MAKE) urarlib
+#	$(MAKE) urarlib
 	$(MAKE) asm
 	$(MAKE) all
 
@@ -83,7 +87,7 @@ test:
 release:
 	$(MAKE) clean
 	$(MAKE) res
-	$(MAKE) urarlib
+#	$(MAKE) urarlib
 	$(MAKE) asm
 	$(MAKE) release_compile
 	$(MAKE) link_static
@@ -109,27 +113,41 @@ res:
 
 link: 
 	$(LIBTOOL) --tag=CC --mode=link $(CC) -o $(OUTPUT) $(CFLAGS) $(OBJS) $(LIBS)
+#	$(LIBTOOL) --tag=CC  $(CC) -o $(OUTPUT) $(CFLAGS) $(OBJS) $(LIBS)
 
 link_static:
 	$(CC) -o $(OUTPUT) $(CFLAGS) $(OBJS) $(LIBS) -static
 
 
-3rdparty:	zlib unrarlib portaudio rtaudio div68kCycleAccurate
+SSE:
+	$(CC) -o ./obj/SSE.o -c $(ROOT)/steem/code/SSE/SSE.cpp $(CFLAGS) $(STEEMFLAGS)
+
+SSEOption:
+	$(CC) -o ./obj/SSEOption.o -c $(ROOT)/steem/code/SSE/SSEOption.cpp $(CFLAGS) $(STEEMFLAGS)
+
+#3rdparty:	zlib unrarlib portaudio rtaudio div68kCycleAccurate 6301
+3rdparty:	div68kCycleAccurate 6301 dsp zlib rtaudio 
 
 div68kCycleAccurate:
-	gcc -c $(ROOT)/3rdparty/pasti/div68kCycleAccurate.c $(CFLAGS) -o$(ROOT)/3rdparty/pasti/div68kCycleAccurate.o
+	gcc -c $(ROOT)/3rdparty/pasti/div68kCycleAccurate.c $(CFLAGS) -o./obj/div68kCycleAccurate.o
 
-unrarlib:
-	gcc -c $(ROOT)/3rdparty/unrarlib/unrarlib/unrarlib.c $(CFLAGS) -o$(ROOT)/3rdparty/unrarlib/unrarlib/unrarlib.o
+6301:
+	gcc -c $(ROOT)/3rdparty/6301/6301.c $(CFLAGS) -o./obj/6301.o
+
+dsp:
+	$(CC) -o ./obj/dsp.o -c $(ROOT)/3rdparty/dsp/dsp.cpp $(CFLAGS) $(STEEMFLAGS)
+
+#unrarlib:
+#	gcc -c $(ROOT)/3rdparty/unrarlib/unrarlib/unrarlib.c $(CFLAGS) -o$(ROOT)/3rdparty/unrarlib/unrarlib/unrarlib.o
 
 zlib:
 	cd $(ROOT)/3rdparty/zlib; sh configure; make test
 	cd $(ROOT)/3rdparty/zlib/contrib/minizip; make all
 
-portaudio:
-	cd $(ROOT)/3rdparty/portaudio; \
-	sh configure; \
-	make
+#portaudio:
+#	cd $(ROOT)/3rdparty/portaudio; \
+#	sh configure; \
+#	make
 
 rtaudio:
 	cd $(ROOT)/3rdparty/rtaudio; sh configure --with-alsa; cd tests; make

@@ -12,7 +12,7 @@ to the PC display.
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)
-#include "SSE\SSEVideo.cpp"
+#include "SSE/SSEVideo.cpp"
 #endif
 
 

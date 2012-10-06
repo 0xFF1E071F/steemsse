@@ -108,7 +108,7 @@ TDebug::~TDebug() {
   }
 }
 
-#if !defined(_DEBUG) && defined(DEBUG_BUILD)
+#if !defined(_DEBUG) && (defined(DEBUG_BUILD) || defined(SS_UNIX_TRACE))
 void TDebug::TraceToFile(char *fmt, ...){ 
   if(SSEOption.OutputTraceToFile
     && (!SSEOption.TraceFileLimit||nTrace <TRACE_MAX_WRITES)

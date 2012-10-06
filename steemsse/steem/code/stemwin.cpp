@@ -934,10 +934,8 @@ void HandleButtonMessage(UINT Id,HWND hBut)
             fast_forward!=RUNSTATE_STOPPED+1 && slow_motion!=RUNSTATE_STOPPED+1){
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_MOUSE_CAPTURE)
           if(SSEOption.CaptureMouse)
-            SetStemMouseMode(STEM_MOUSEMODE_WINDOW);
-#else
-          SetStemMouseMode(STEM_MOUSEMODE_WINDOW);
 #endif
+          SetStemMouseMode(STEM_MOUSEMODE_WINDOW);
         }
 
         SendMessage(hBut,BM_SETCHECK,1,0);

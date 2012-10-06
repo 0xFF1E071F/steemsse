@@ -16,7 +16,7 @@ THD6301::~THD6301() {
 }
 
 
-THD6301::Init() { // called in 'main'
+void THD6301::Init() { // called in 'main'
   Initialised=Crashed=0;
   if(hd6301_init()) // calling the 6301 function
   {

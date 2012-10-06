@@ -1455,6 +1455,7 @@ Valid sector numbers range from 1 to 240, inclusive.
           VideoEvents.Add(scan_y,LINECYCLES,'V',io_src_b); 
 #endif
           if (mem_len<=FOUR_MEGS) io_src_b&=b00111111;
+///if(Shifter.FetchingLine())
           DWORD_B_2(&xbios2)=io_src_b;
 /*
  For compatibility reasons, the low-byte of the Video Base Address is ALWAYS
@@ -1480,12 +1481,25 @@ Valid sector numbers range from 1 to 240, inclusive.
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_SHIFTER_EVENTS)
           VideoEvents.Add(scan_y,LINECYCLES,'V',io_src_b); 
 #endif
+
+//ASSERT(Shifter.FetchingLine());
+///if(Shifter.FetchingLine())
+
+////////////////////io_src_b&=b11111110;
+
+
           DWORD_B_1(&xbios2)=io_src_b;
 
 #if defined(STEVEN_SEAGAL) && defined(SS_STF)
           if(ST_TYPE==STE) 
 #endif
-            DWORD_B_0(&xbios2)=0; 
+            DWORD_B_0(&xbios2)=0;
+#ifdef SS_TST1
+//          else if(Shifter.FetchingLine()) DWORD_B_0(&xbios2)=6;
+#endif 
+
+
+
           log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set screen base to "+HEXSl(xbios2,6));
           break;
 
@@ -1781,7 +1795,7 @@ This register allows to skip from a single to 15 pixels at the start of each
         case 0xff8260: //resolution
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VIDEO) 
-
+////ASSERT(!screen_res);
           Shifter.SetShiftMode(io_src_b);
           break;
         

@@ -14,7 +14,7 @@ and (for some reason) command-line options.
 #define LOGSECTION LOGSECTION_INIT
 
 #if defined(SS_IKBD_6301)
-#include "SSE\SSE6301.h"
+#include "SSE/SSE6301.h"
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)

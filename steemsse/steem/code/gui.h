@@ -13,8 +13,8 @@
 #endif
 
 #if defined(STEVEN_SEAGAL)
-#include "SSE\SSEDecla.h"
-#include "SSE\SSEParameters.h"
+#include "SSE/SSEDecla.h"
+#include "SSE/SSEParameters.h"
 #endif
 
 #define PEEKED_MESSAGE 0

@@ -1,4 +1,7 @@
 //---------------------------------------------------------------------------
+
+#define NO_PORTAUDIO//SS tmp
+
 void TOptionBox::CreatePage(int n)
 {
 	switch (n){
@@ -15,6 +18,9 @@ void TOptionBox::CreatePage(int n)
     case 11:CreateProfilesPage();break;
     case 6:CreateStartupPage();break;
     case 15:CreatePathsPage();break;
+#if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE)
+    case 16:CreateSSEPage();break;
+#endif
 	}
 }
 //---------------------------------------------------------------------------
@@ -138,15 +144,11 @@ void TOptionBox::CreateMachinePage()
     page_w/2-10-5,25,button_notify_proc,this,BT_TEXT,T("Remove"),747,BkCol);
   y+=100;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STF) 
-  //temp
-#else
   mustreset_td.text=T("Memory and monitor changes don't take effect until the next cold reset of the ST");
   mustreset_td.sy=0;
   mustreset_td.wordwrapped=false;
 	mustreset_td.create(XD,page_p,page_l,y,page_w,45,hxc::col_white,0);
   y+=55;
-#endif
   
   coldreset_but.create(XD,page_p,page_l,y,page_w,25,button_notify_proc,this,
             BT_TEXT,T("Perform Cold Reset Now"),1000,hxc::col_bk);
@@ -517,17 +519,7 @@ void TOptionBox::CreateGeneralPage()
   hints.add(start_click_but.handle,T("When this option is ticked clicking a mouse button on Steem's main window will start emulation."),
               page_p);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS)
-  // Option Specific hacks
-  y+=30;
-  specific_hacks_but.create(XD,page_p,page_l,y,0,25,
-          button_notify_proc,this,BT_CHECKBOX,
-          T("Hacks"),160,BkCol);
-  specific_hacks_but.set_check(SpecificHacks);
-  hints.add(specific_hacks_but.handle,T("If checked, specific hacks targetting known programs are used. Those hacks may break other programs."),
-              page_p);
 
-#endif
 
   XFlush(XD);
 }
@@ -658,7 +650,8 @@ void TOptionBox::FillSoundDevicesDD()
 {
   hxc_dropdown *dd=(hxc_dropdown*)hxc::find(sound_group.handle,5000);
   dd->make_empty();
-#ifndef NO_PORTAUDIO
+#ifndef NO_PORTAUDIO  //NO_PORTAUDIO
+  hjhjgkj
   if (UseSound==XS_PA){
     int c=Pa_GetDeviceCount(),isel=Pa_GetDefaultOutputDevice();
     for (PaDeviceIndex i=0;i<c;i++){
@@ -1117,4 +1110,123 @@ void TOptionBox::CreatePathsPage()
   XFlush(XD);
 }
 //---------------------------------------------------------------------------
+
+#if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE) \
+  && defined(SS_UNIX)
+
+void TOptionBox::CreateSSEPage() {
+  int y=10; // top
+  int Wid;
+  const int LineHeight=30;
+  const int HorizontalSeparation=10;
+
+#if defined(SS_VID_BORDERS)
+  Wid=hxc::get_text_width(XD,T("Display Size"));
+  border_size_label.create(XD,page_p,page_l,y,Wid,25,NULL,this,BT_STATIC 
+    | BT_TEXT,T("Display Size"),0,BkCol);
+  border_size_dd.id=4001; //TODO
+  border_size_dd.make_empty();
+  border_size_dd.additem("Normal (384x270)",0);
+  border_size_dd.additem("Large (400x275)",1);
+  border_size_dd.additem("Large (400x278)",2);
+  border_size_dd.additem("Very large (412x280)",3);
+  border_size_dd.select_item_by_data(SSEOption.BorderSize);
+  border_size_dd.create(XD,page_p,page_l+5+Wid,y,400-(15+Wid+10),350,
+    dd_notify_proc,this);
+  y+=LineHeight;
+#endif
+
+#if defined(SS_VAR_MOUSE_CAPTURE)
+  capture_mouse_but.create(XD,page_p,page_l,y,0,25,
+    button_notify_proc,this,BT_CHECKBOX,T("Capture mouse"),4002,BkCol);
+  capture_mouse_but.set_check(SSEOption.CaptureMouse);
+  hints.add(capture_mouse_but.handle,
+    T("If unchecked, Steem will leave mouse control to X-Windows until you click in the window"),
+    page_p);
+  y+=LineHeight;
+#endif
+
+#if defined(SS_HACKS)
+  specific_hacks_but.create(XD,page_p,page_l,y,0,25,
+    button_notify_proc,this,BT_CHECKBOX,T("Hacks"),4003,BkCol);
+  specific_hacks_but.set_check(SSE_HACKS_ON);
+  hints.add(specific_hacks_but.handle,
+  T("For an edgier emulation, recommended!"),page_p);
+  y+=LineHeight;
+#endif
+
+#if defined(SS_VAR_STEALTH) 
+  stealth_mode_but.create(XD,page_p,page_l,y,0,25,
+    button_notify_proc,this,BT_CHECKBOX,T("Stealth mode"),4004,BkCol);
+  stealth_mode_but.set_check(SSEOption.StealthMode);
+  hints.add(stealth_mode_but.handle,
+  T("Steem won't tell ST programs who it is"),page_p);
+  y+=LineHeight;
+#endif
+
+#if defined(SS_STF)
+  Wid=hxc::get_text_width(XD,T("ST Model"));
+  st_type_label.create(XD,page_p,page_l,y,Wid,25,NULL,this,BT_STATIC 
+    | BT_TEXT,T("ST Model"),0,BkCol);
+  st_type_dd.id=4005;
+  st_type_dd.make_empty();
+  st_type_dd.additem("STE",0);
+  st_type_dd.additem("STF",1);
+  st_type_dd.additem("STF (wake up state 2)",2);
+  st_type_dd.additem("Mega STF (with blitter)",3);
+  st_type_dd.select_item_by_data(ST_TYPE);
+  st_type_dd.create(XD,page_p,page_l+5+Wid,y,400-(15+Wid+10),350,
+    dd_notify_proc,this);
+  y+=LineHeight;
+#endif
+
+#if defined(SS_IKBD_6301) 
+  hd6301emu_but.create(XD,page_p,page_l,y,0,25,
+    button_notify_proc,this,BT_CHECKBOX,T("6301 true emu"),4006,BkCol);
+  hd6301emu_but.set_check(SSEOption.HD6301Emu);
+  hints.add(hd6301emu_but.handle,
+  T("This enables a real emulation of the IKBD keyboard chip (using the Sim6xxx code by Arne Riiber, thx dude!)"),
+    page_p);
+  y+=LineHeight;
+#endif
+
+#if defined(SS_VAR_KEYBOARD_CLICK)
+  keyboard_click_but.create(XD,page_p,page_l,y,0,25,
+    button_notify_proc,this,BT_CHECKBOX,T("Keyboard click"),4007,BkCol);
+  int keyboard_click=( PEEK(0x484)&1 ); // get current setting
+  keyboard_click_but.set_check(keyboard_click);
+  hints.add(keyboard_click_but.handle,
+  T("This gives you direct access to bit1 of address $484, which enables or disables the annoying keyboard click"),
+    page_p);
+  y+=LineHeight;
+#endif
+
+#if defined(SS_SOUND_FILTER_STF)
+  psg_filter_but.create(XD,page_p,page_l,y,0,25,
+    button_notify_proc,this,BT_CHECKBOX,T("PSG Filter"),4008,BkCol);
+  psg_filter_but.set_check(SSEOption.PSGFilter);
+  hints.add(psg_filter_but.handle,
+  T("This makes PSG (YM-2149) chip tunes and samples sound less muffled"),
+    page_p);
+  y+=LineHeight;
+#endif
+
+#if defined(SS_SOUND_MICROWIRE)
+  ste_microwire_but.create(XD,page_p,page_l,y,0,25,
+    button_notify_proc,this,BT_CHECKBOX,T("STE Microwire"),4009,BkCol);
+  ste_microwire_but.set_check(SSEOption.STEMicrowire);
+  hints.add(ste_microwire_but.handle,
+  T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature"),
+    page_p);
+//  y+=LineHeight;
+#endif
+
+  XFlush(XD);
+}
+#endif
+
+
+
+
+
 

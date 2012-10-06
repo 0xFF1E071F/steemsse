@@ -1,3 +1,4 @@
+
 /*---------------------------------------------------------------------------
 FILE: main.cpp
 MODULE: Steem
@@ -31,9 +32,9 @@ other files that make up the Steem module.
 #endif
 
 #include "conditions.h"	
-#include "SSE\SSE.h" // SS
+#include "SSE/SSE.h" // SS
 #if defined(STEVEN_SEAGAL)
-#include "SSE\SSEDebug.h"
+#include "SSE/SSEDebug.h"
 #endif
 
 const char *stem_version_date_text=__DATE__ " - " __TIME__;
@@ -87,7 +88,7 @@ TPatchesBox PatchesBox;
 #include "acc.cpp"
 
 #if defined(STEVEN_SEAGAL)
-#include "SSE\SSEDebug.cpp"
+#include "SSE/SSEDebug.cpp"
 #endif
 
 #ifdef DEBUG_BUILD
@@ -124,7 +125,7 @@ TPatchesBox PatchesBox;
 
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301) 
-#include "SSE\SSE6301.h"
+#include "SSE/SSE6301.h"
 #endif  
 
 
@@ -179,6 +180,10 @@ int main(int argc,char *argv[])
   printf(EasyStr("\n-- Steem Engine v")+stem_version_text+" --\n\n");
   printf(EasyStr("Steem will save all its settings to ")+RunDir.Text+"\n");
 
+#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301) 
+  HD6301.Init(); // we don't forget to do this in Linux as well...
+#endif  
+  
   XD=XOpenDisplay(NULL);
   if (XD==NULL){
     printf("\nFailed to open X display\n");
@@ -234,6 +239,9 @@ int main(int argc,char *argv[])
           int RevertFlag;
           XGetInputFocus(XD,&FocusWin,&RevertFlag);
           if (FocusWin==StemWin && fast_forward!=RUNSTATE_STOPPED+1 && slow_motion!=RUNSTATE_STOPPED+1){
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_MOUSE_CAPTURE)
+            if(SSEOption.CaptureMouse)
+#endif
             SetStemMouseMode(STEM_MOUSEMODE_WINDOW);
           }
           RunBut.set_check(true);

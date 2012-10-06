@@ -1904,7 +1904,7 @@ void TOptionBox::CreateSSEPage() {
   Wid=GetCheckBoxSize(Font,T("Hacks")).Width;
   Win=CreateWindow("Button",T("Hacks"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           page_l,y,Wid,23,Handle,(HMENU)1027,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,SSEOption.Hacks,0);
+  SendMessage(Win,BM_SETCHECK,SSE_HACKS_ON,0);
   ToolAddWindow(ToolTip,Win,T("For an edgier emulation, recommended!"));
   y+=LineHeight;
 #endif
@@ -1939,11 +1939,12 @@ void TOptionBox::CreateSSEPage() {
 #endif
 
 #if defined(SS_IKBD_6301) 
-  Wid=GetCheckBoxSize(Font,T("HD6301V1 true emu")).Width;
-  Win=CreateWindow("Button",T("HD6301V1 true emu"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
+  Wid=GetCheckBoxSize(Font,T("6301 true emu")).Width;
+  Win=CreateWindow("Button",T("6301 true emu"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           page_l,y,Wid,23,Handle,(HMENU)1029,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,SSEOption.HD6301Emu,0);
-  ToolAddWindow(ToolTip,Win,T("This enables a real emulation of the IKBD keyboard chip (using the Sim6xxx code by Arne Riiber, thx dude!)"));
+  ToolAddWindow(ToolTip,Win,
+    T("This enables a real emulation of the IKBD keyboard chip (using the Sim6xxx code by Arne Riiber, thx dude!)"));
   y+=LineHeight;
 #endif
 
@@ -1955,7 +1956,8 @@ void TOptionBox::CreateSSEPage() {
     BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)7301,HInstance,NULL);
   BOOL keyboard_click=( PEEK(0x484)&1 ); // get current setting
   SendMessage(Win,BM_SETCHECK,keyboard_click,0);
-  ToolAddWindow(ToolTip,Win,T("This gives you direct access to bit1 of address $484, which enables or disables the annoying keyboard click"));
+  ToolAddWindow(ToolTip,Win,
+    T("This gives you direct access to bit1 of address $484, which enables or disables the annoying keyboard click"));
   y+=LineHeight;
 #endif  
 
@@ -1964,7 +1966,8 @@ void TOptionBox::CreateSSEPage() {
   Win=CreateWindow("Button",T("PSG Filter"),WS_CHILD | WS_TABSTOP |
     BS_CHECKBOX,page_l,y,Wid,25,Handle,(HMENU)7303,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,SSEOption.PSGFilter,0);
-  ToolAddWindow(ToolTip,Win,T("This makes PSG (YM-2149) chip tunes and samples sound less muffled"));
+  ToolAddWindow(ToolTip,Win,
+    T("This makes PSG (YM-2149) chip tunes and samples sound less muffled"));
   y+=LineHeight;
 #endif
 
@@ -1975,8 +1978,9 @@ void TOptionBox::CreateSSEPage() {
   Win=CreateWindow("Button",T("STE Microwire"),WS_CHILD | WS_TABSTOP |
     BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)7302,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,SSEOption.STEMicrowire,0);
-  ToolAddWindow(ToolTip,Win,T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature"));
-  y+=LineHeight;
+  ToolAddWindow(ToolTip,Win,
+    T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature"));
+//  y+=LineHeight;
 #endif
 
   CreateWindow("Button",T("Perform cold reset now"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,

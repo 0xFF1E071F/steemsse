@@ -34,7 +34,7 @@ HINSTANCE Inst;	// this global variable is declared in this header SS
 #include <portaudio/portaudio_dll.cpp>
 #endif
 #else
-#include <portaudio.h>
+//#include <portaudio.h>//SS temp
 #endif
 #endif
 
