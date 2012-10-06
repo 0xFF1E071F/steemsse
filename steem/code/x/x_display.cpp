@@ -66,7 +66,8 @@ bool SteemDisplay::InitX()
   int Scr=XDefaultScreen(XD);
   int w=640,h=480;
   if (Disp.BorderPossible()){
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS) \
+  && defined(SS_UNIX)
     w=640+4* (SideBorderSize); // 768 or 800 or 832
     h=400+2*(BORDER_TOP+BottomBorderSize);
 #else
@@ -138,7 +139,8 @@ bool SteemDisplay::InitXSHM()
   int Scr=XDefaultScreen(XD);
   int w=640,h=480;
   if (BorderPossible()){
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS) \
+    && defined(SS_UNIX)
     w=640+4* (SideBorderSize); // 768 or 800 or 832
     h=400+2*(BORDER_TOP+BottomBorderSize);
 #else
@@ -283,7 +285,12 @@ bool SteemDisplay::Blit()
     sy=draw_blit_source_rect.top;
     sw=draw_blit_source_rect.right;
     sh=draw_blit_source_rect.bottom;
-
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
+    if(BORDER_40) // clip from larger to 800
+    {
+      sx+=16; // eg BPOC
+    }
+#endif
     dx=max((XVM_FullW-sw)/2,0);
     dy=max((XVM_FullH-sh)/2,0);
     if (sh>XVM_FullH) sh=XVM_FullH;
@@ -486,10 +493,10 @@ void SteemDisplay::ChangeToFullScreen()
   XSetWindowAttributes swa; 
   swa.backing_store=NotUseful;
   swa.override_redirect=True;
-  #if defined(STEVEN_SEAGAL) 
+#if defined(STEVEN_SEAGAL) && defined(SS_UNIX)
   XVM_FullWin=XCreateWindow(XD,XDefaultRootWindow(XD),0,0,w,h,Screen,
 #else
-XVM_FullWin=XCreateWindow(XD,XDefaultRootWindow(XD),x,y,w,h,Screen,			    
+  XVM_FullWin=XCreateWindow(XD,XDefaultRootWindow(XD),x,y,w,h,Screen,			    
 #endif
 			    CopyFromParent,InputOutput,CopyFromParent,
                            CWBackingStore | CWOverrideRedirect,&swa);
@@ -504,13 +511,13 @@ XVM_FullWin=XCreateWindow(XD,XDefaultRootWindow(XD),x,y,w,h,Screen,
   XMapWindow(XD,XVM_FullWin);
 
   XF86VidModeGetViewPort(XD,Screen,&XVM_ViewX,&XVM_ViewY);
-#if defined(STEVEN_SEAGAL) 
+#if defined(STEVEN_SEAGAL) && defined(SS_UNIX)
   TRACE("using XWarpPointer");
- // XWarpPointer(XD, None, XDefaultRootWindow(XD),0, 0, 0, 0, 0, 0);
-XWarpPointer(XD, None, XVM_FullWin,0, 0, 0, 0, 0, 0);
-  //XWarpPointer(XD,Screen,XVM_FullWin,0,0,0,0,x,y); //
-  //XWarpPointer(XD,None,XVM_FullWin,0,0,0,0,window_mouse_centre_x,window_mouse_centre_y);
-  //XWarpPointer(XD,None,XDefaultRootWindow(XD),0,0,0,0,window_mouse_centre_x,window_mouse_centre_y);
+//  XWarpPointer(XD, None, XDefaultRootWindow(XD),0, 0, 0, 0, 0, 0);
+  XWarpPointer(XD, None, XVM_FullWin,0, 0, 0, 0, 0, 0);
+//  XWarpPointer(XD,Screen,XVM_FullWin,0,0,0,0,x,y); //
+//  XWarpPointer(XD,None,XVM_FullWin,0,0,0,0,window_mouse_centre_x,window_mouse_centre_y);
+//  XWarpPointer(XD,None,XDefaultRootWindow(XD),0,0,0,0,window_mouse_centre_x,window_mouse_centre_y);
 #endif
   FullScreen=XF86VidModeSwitchToMode(XD,Screen,Mode);
   

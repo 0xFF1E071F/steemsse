@@ -11,7 +11,7 @@ as changing disk images and determining what files are disks.
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_STRUCT)
-#include "SSE\SSEOption.h"
+#include "SSE/SSEOption.h"
 #endif
 
 //---------------------------------------------------------------------------

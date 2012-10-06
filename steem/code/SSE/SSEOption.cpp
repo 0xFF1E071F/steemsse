@@ -5,13 +5,18 @@
 
 TOption SSEOption; // singleton
 
+//tmp
+#ifdef UNIX
+#define TRUE 1 // don't screw this one up...
+#define FALSE 0
+#endif
 
 TOption::TOption() {
   Init();
 }
 
 
-TOption::Init() {
+void TOption::Init() {
 #if defined(SS_HACKS)
   Hacks=TRUE;
 #endif

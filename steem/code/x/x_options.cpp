@@ -1,4 +1,6 @@
 #define OPTIONS_HEIGHT 400
+
+#include "SSE/SSE6301.h"
 //---------------------------------------------------------------------------
 TOptionBox::TOptionBox()
 {
@@ -145,6 +147,11 @@ void TOptionBox::Show()
   page_lv.sl.Add(T("Startup"),101+ICO16_FUJI16,6);
   page_lv.sl.Add(T("Paths"),101+ICO16_FUJI16,15);
 
+#if defined(STEVEN_SEAGAL)
+  page_lv.sl.Add(T("SSE"),101+74,16);
+#endif
+  
+  
   page_lv.lpig=&Ico16;
   page_lv.display_mode=1;
 
@@ -588,6 +595,42 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
       XSetInputFocus(XD,p_lv->handle,RevertToParent,CurrentTime);
       XFlush(XD);
     }
+#if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE) \
+  &&defined(SS_UNIX)
+#if defined(SS_VAR_MOUSE_CAPTURE)
+    else if(b->id==4002)
+      SSEOption.CaptureMouse=b->checked;
+#endif
+#if defined(SS_HACKS)
+    else if(b->id==4003)
+      SSEOption.Hacks=b->checked;
+#endif
+#if defined(SS_VAR_STEALTH)
+    else if(b->id==4004)
+      SSEOption.StealthMode=b->checked;
+#endif
+#if defined(SS_IKBD_6301)
+    else if(b->id==4006)
+      b->checked=SSEOption.HD6301Emu=b->checked&HD6301.Initialised;
+#endif
+#if defined(SS_VAR_KEYBOARD_CLICK)
+    else if(b->id==4007)
+    {
+      if(b->checked)// pathetic, there must be a better way
+        PEEK(0x484)|=0x0001;
+      else
+	PEEK(0x484)&=0xFFFE;
+    }
+#endif         
+#if defined(SS_SOUND_FILTER_STF)
+    else if(b->id==4008)
+      SSEOption.PSGFilter=b->checked;
+#endif
+#if defined(SS_SOUND_MICROWIRE)
+    else if(b->id==4009)
+      SSEOption.STEMicrowire=b->checked;
+#endif   
+#endif
   }
   return 0;
 }
@@ -692,6 +735,26 @@ int TOptionBox::dd_notify_proc(hxc_dropdown*dd,int mess,int i)
     if (dd->id==2013) MFO.allow_same_vbls=dd->sl[dd->sel].Data[0];
     macro_file_options(MACRO_FILE_SET,This->MacroSel,&MFO);
   }
+
+#if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE) \
+  &&defined(SS_UNIX)
+#if defined(SS_VID_BORDERS)
+  else if(dd->id==4001) // display size
+  {
+    SSEOption.BorderSize=dd->sel;
+    ChangeBorderSize(SSEOption.BorderSize);
+  }
+#endif
+#if defined(SS_STF)
+  else if(dd->id==4005) // ST model
+  {
+    ST_TYPE=dd->sel;
+    SwitchSTType(ST_TYPE);
+    // TODO: add TOS matching, Mega STF 4MB 
+  }
+#endif
+#endif
+
   return 0;
 }
 //---------------------------------------------------------------------------

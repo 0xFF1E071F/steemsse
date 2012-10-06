@@ -566,7 +566,7 @@ struct TShifter {
   inline int FetchingLine();
   int IncScanline();
   void Render(int cycles_since_hbl, int dispatcher=DISPATCHER_NONE);
-  inline RoundCycles(int &cycles_in);
+  inline void RoundCycles(int &cycles_in);
   inline void SetPal(int n, WORD NewPal);
   void SetShiftMode(BYTE NewRes);
   void SetSyncMode(BYTE NewSync);
@@ -728,7 +728,7 @@ inline int TShifter::FetchingLine() {
 }
 
 
-inline TShifter::RoundCycles(int& cycles_in) {
+inline void TShifter::RoundCycles(int& cycles_in) {
   cycles_in-=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN;
   if(shifter_hscroll_extra_fetch && !shifter_hscroll) 
     cycles_in+=16;

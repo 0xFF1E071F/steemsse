@@ -67,7 +67,7 @@ EXT int sound_variable_d INIT(208);
 
 EXT bool sound_internal_speaker INIT(false);
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_KEYBOARD_CLICK)
-EXT bool mute_keyboard_click INIT(true);
+/////EXT bool mute_keyboard_click INIT(true);
 #endif
 EXT int sound_freq INIT(50066),sound_comline_freq INIT(0),sound_chosen_freq INIT(50066);
 EXT int sound_mode INIT(SOUND_MODE_CHIP),sound_last_mode INIT(SOUND_MODE_CHIP);
@@ -198,7 +198,7 @@ int dma_sound_l_top_val=128,dma_sound_r_top_val=128;
 int dma_sound_bass=6; // 6 is neutral value
 int dma_sound_treble=6;
 
-#include "..\..\3rdparty\dsp\dsp.h"
+#include "../../3rdparty/dsp/dsp.h"
 // each filter is mono => each control x2
 TIirVolume MicrowireVolumeL,MicrowireVolumeR;
 TIirLowShelf MicrowireBassL,MicrowireBassR;

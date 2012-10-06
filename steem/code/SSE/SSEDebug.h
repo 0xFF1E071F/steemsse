@@ -59,7 +59,7 @@ SSDebug.ReportBreakpoints=(Alert(#x,"Breakpoint",MB_OKCANCEL)==IDOK);}}
 #define BREAKPOINT 
 #define VERIFY(x) x // I never use VERIFY
 
-#if defined(SS_UNIX_TRACE)
+#if defined(SS_UNIX_TRACE____) //tmp
 #define TRACE my_trace
 void my_trace(char *fmt, ...);
 #else

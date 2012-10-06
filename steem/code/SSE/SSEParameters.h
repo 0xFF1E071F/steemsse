@@ -93,7 +93,12 @@
 
 #if defined(SS_IKBD_6301)
 
+#if defined(SS_UNIX)
+#define HD6301_ROM_FILENAME "./HD6301V1ST.img" // cooler than 'keyboard.rom'
+#else
 #define HD6301_ROM_FILENAME "HD6301V1ST.img" // cooler than 'keyboard.rom'
+#endif
+
 #define HD6301_ROM_CHECKSUM 451175 // BTW this rom sends $F1 after reset (80,1)
 /*  The HD6301 runs at 1MH, the M68000 at +-8MH
     Scanline = 512 M68000 cycles, but only 512/8=64 HD6301 cycles

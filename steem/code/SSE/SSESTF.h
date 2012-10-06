@@ -7,7 +7,7 @@
 // starting with 0 is easier for GUI; default is STE
 enum ESTModels {STE,STF,STF2,MEGASTF,SS_STF_ST_MODELS}; 
 
-SwitchSTType(int new_type); // adapt to new machine
+int SwitchSTType(int new_type); // adapt to new machine
 
 #endif
 

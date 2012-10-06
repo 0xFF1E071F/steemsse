@@ -174,6 +174,49 @@ public:
   hxc_button internal_speaker_but; // changed in Sound_Start
 #endif
 
+
+#if defined(STEVEN_SEAGAL) && defined(SS_UNIX)
+
+#if defined(SS_VID_BORDERS)
+  hxc_button border_size_label; 
+  hxc_dropdown border_size_dd;
+#endif
+
+#if defined(SS_VAR_MOUSE_CAPTURE)
+  hxc_button capture_mouse_but;
+#endif
+
+#if defined(SS_HACKS)
+  hxc_button specific_hacks_but;
+#endif
+
+#if defined(SS_VAR_STEALTH) 
+  hxc_button stealth_mode_but;
+#endif
+
+#if defined(SS_STF)
+  hxc_button st_type_label;
+  hxc_dropdown st_type_dd;
+#endif
+
+#if defined(SS_IKBD_6301) 
+  hxc_button hd6301emu_but;
+#endif
+
+#if defined(SS_VAR_KEYBOARD_CLICK)
+  hxc_button keyboard_click_but; 
+#endif
+
+#if defined(SS_SOUND_FILTER_STF)
+  hxc_button psg_filter_but;
+#endif
+
+#if defined(SS_SOUND_MICROWIRE)
+  hxc_button ste_microwire_but;
+#endif
+
+#endif
+
   void MachineUpdateIfVisible();
   void TOSRefreshBox(EasyStr="");
   bool NeedReset() { return NewMemConf0>=0 || NewMonitorSel>=0 || NewROMFile.NotEmpty(); }

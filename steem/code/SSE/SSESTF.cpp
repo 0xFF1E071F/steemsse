@@ -1,6 +1,6 @@
 #if defined(SS_STF)
 
-SwitchSTType(int new_type) {
+int SwitchSTType(int new_type) {
   ASSERT(new_type==STE||new_type==STF||new_type==STF2||new_type==MEGASTF);
   ST_TYPE=new_type;
   if(ST_TYPE!=STE) // all STF types

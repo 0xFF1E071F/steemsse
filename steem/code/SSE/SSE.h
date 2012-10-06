@@ -63,6 +63,8 @@ TODO (future versions, in no definite order)
 - Boiler: "run to RTS"
 - monochrome demos
 - Overdrive/Dragon + a common way for all "unstable" overscan
+- Eliminate magic constants in gui
+- syndic84
 */
 
 
@@ -112,7 +114,7 @@ TODO (future versions, in no definite order)
 // TEMP //
 //////////
 
-//#define SS_TST1 // while adding new features
+#define SS_TST1 // while adding new features
 
 
 ///////////////////////
@@ -294,6 +296,16 @@ TODO (future versions, in no definite order)
 
 #if defined(SS_FDC)
 
+//#define SS_FDC_IDF // IPF (Kryoflux) support...
+/*
+    for loading/init/etc the DLL, look at pasti (USE_PASTI) and
+    duplicate
+    apparently it's very different from pasti, that's no WD emulation
+    instead we get raw data and density info, the rest is up to us!
+    so it could be that we get it working first with trivial cases
+    but not protected software
+*/
+
 #if defined(SS_HACKS) // all "protected" by the hack option
 
 #define SS_FDC_CHANGE_COMMAND_DURING_SPINUP // from Hatari
@@ -305,8 +317,6 @@ TODO (future versions, in no definite order)
 #define SS_FDC_STREAM_SECTORS_SPEED // faster in fast mode, slower with ADAT!
 
 #endif
-
-//#define SS_FDC_KRYOFLUX //TODO
 
 #endif
 

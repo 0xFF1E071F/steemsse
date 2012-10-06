@@ -38,11 +38,11 @@ struct TOption {
   int StealthMode;
 #endif
   // we keep those also in the release build so that snapshots are compatible
-  BOOL OutputTraceToFile; // can be disabled in Boiler
-  BOOL TraceFileLimit; // stop TRACING to file at +-3+MB
+  int OutputTraceToFile; // can be disabled in Boiler // BOOL -> int for Unix...
+  int TraceFileLimit; // stop TRACING to file at +-3+MB // BOOL -> int for Unix...
 #ifdef __cplusplus
   TOption();
-  Init();
+  void Init();
 #endif
 };
 // C linkage
