@@ -2,7 +2,7 @@
 
 #include "SSEOption.h"
 
-// note most of useful code is in 3rdparty folder
+// note most useful code is in 3rdparty folder '6301'
 
 THD6301 HD6301; // singleton
 

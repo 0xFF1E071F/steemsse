@@ -20,14 +20,23 @@ class TFloppyImage
 private:
   EasyStr ImageFile,MSATempFile,ZipTempFile,FormatTempFile;
 public:
-  TFloppyImage()             { f=NULL;Format_f=NULL;PastiDisk=0;PastiBuf=NULL;RemoveDisk();}
+  TFloppyImage()             { f=NULL;Format_f=NULL;PastiDisk=
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)    
+    IPFDisk=
+#endif
+    0;PastiBuf=NULL;RemoveDisk();}
+
   ~TFloppyImage()            { RemoveDisk(); }
 
   int SetDisk(EasyStr,EasyStr="",BPBINFO* = NULL,BPBINFO* = NULL);
   EasyStr GetDisk()  { return ImageFile; }
   bool ReinsertDisk();
   void RemoveDisk(bool=0);
-  bool DiskInDrive() { return f!=NULL || PastiDisk; }
+  bool DiskInDrive() { return f!=NULL || PastiDisk 
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+    || IPFDisk
+#endif    
+    ; }
   bool NotEmpty() { return DiskInDrive(); }
   bool Empty()       { return DiskInDrive()==0; }
   bool IsMSA()       { return MSATempFile.NotEmpty(); }
@@ -47,9 +56,13 @@ public:
   EasyStr DiskName,DiskInZip;
   DWORD DiskFileLen;
 
-  BYTE *PastiBuf;
+  BYTE *PastiBuf; // SS same for IPF?
   int PastiBufLen;
   bool STT_File,PastiDisk;
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+  bool IPFDisk;
+#endif
+
   DWORD STT_TrackStart[2][FLOPPY_MAX_TRACK_NUM+1];
   WORD STT_TrackLen[2][FLOPPY_MAX_TRACK_NUM+1];
 
@@ -68,3 +81,6 @@ bool FloppyArchiveIsReadWrite=0;
 extern TFloppyImage FloppyDrive[2];
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)    
+extern CapsDrive SF314[2];
+#endif

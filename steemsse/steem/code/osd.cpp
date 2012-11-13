@@ -54,7 +54,7 @@ void osd_draw_begin()
 //  col_backblue=colour_convert(FUJI_COL);
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
   col_fd_green[0]=colour_convert(0,255,0);
   col_fd_green[1]=colour_convert(0,200,0);
   col_fd_red[0]=colour_convert(255,0,0);
@@ -389,7 +389,7 @@ void osd_draw()
   }
   
   
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
   // Green led for floppy disk read; red for write.
   if(osd_show_disk_light)
   {
@@ -434,7 +434,7 @@ void osd_draw()
       }
     }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
     // Hard disk activity
     else if(HDDisplayTimer>timer)
     {

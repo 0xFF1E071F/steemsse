@@ -36,14 +36,17 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
   if (Ext==NULL) return 0;
 
   if (*Ext=='.') Ext++;
-
   int ret=0;
-  if (MatchesAnyString_I(Ext,"ST","STT","DIM","MSA",NULL)){
+  if (MatchesAnyString_I(Ext,"ST","STT","DIM","MSA",
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+    "IPF",
+#endif    
+    NULL)){
     ret=DISK_UNCOMPRESSED;
   }else if (MatchesAnyString_I(Ext,"STZ","ZIP",NULL)){
     ret=DISK_COMPRESSED;
 
-#ifdef RAR_SUPPORT
+#ifdef RAR_SUPPORT // SS we will have UNRAR support later
   }else if (MatchesAnyString_I(Ext,"RAR",NULL)){
     ret=DISK_COMPRESSED;
 #endif
@@ -378,6 +381,7 @@ void TDiskManager::Show()
 
   for (int i=0;i<2;i++){
     if (FloppyDrive[i].DiskInDrive()){
+//      TRACE("there's a floppy in drive %d so we insert it\n",i);
       InsertDisk(i,FloppyDrive[i].DiskName,FloppyDrive[i].GetDisk(),true,0,FloppyDrive[i].DiskInZip);
     }
   }
@@ -2358,7 +2362,7 @@ LRESULT __stdcall TDiskManager::Drive_Icon_WndProc(HWND Win,UINT Mess,WPARAM wPa
 {
   TDiskManager *This;
 
-  int disk=GetDlgCtrlID(Win)-98;
+  int disk=GetDlgCtrlID(Win)-98; // SS magic cst...
   switch (Mess){
     case WM_PAINT:
     {
@@ -2731,11 +2735,13 @@ void TDiskManager::InsertHistoryDelete(int d,char *Name,char *Path,char *DiskInZ
 bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChangeDisk,
                                 bool MakeFocus,EasyStr DiskInZip,bool SuppressErr,bool AllowInsert2)
 {
+  TRACE("Inserting disk %s in drive %c\n",Name.c_str(),Drive+'A');
   if (DontChangeDisk==0){
-    if (Path.Empty()) return 0;
-
+    if (Path.Empty()) 
+      return 0;
     int Err=FloppyDrive[Drive].SetDisk(Path,DiskInZip);
     if (Err){
+      TRACE("Error %d\n",Err);
       if (FloppyDrive[Drive].Empty()) EjectDisk(Drive); // Update display
       if (SuppressErr==0){
         switch (Err){

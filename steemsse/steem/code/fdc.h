@@ -7,7 +7,23 @@
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC)
+
 #define ADAT (!floppy_instant_sector_access) // ADAT = Accurate Disk Access Times
+
+#if defined(SS_DEBUG)
+int fdc_report_regs(bool spell_out_status=0);
+void fdc_spell_out_status(BYTE res, int type);
+#endif
+
+#if defined(SS_FDC_IPF)
+
+#include <caps/Comtype.h>
+#include <caps/CapsAPI.h>
+#include <caps/CapsPlug.h>
+#include <caps/CapsFDC.h>
+extern CapsFdc WD1772;
+#endif
+
 #endif
 
 #define FLOPPY_MAX_BYTESPERSECTOR 512
@@ -40,15 +56,13 @@ EXT void pasti_handle_return(struct pastiIOINFO*);
 EXT void pasti_motor_proc(BOOL);
 EXT void pasti_log_proc(const char *);
 EXT void pasti_warn_proc(const char *);
-
-
 EXT HINSTANCE hPasti INIT(NULL);
 EXT int pasti_update_time;
 EXT const struct pastiFUNCS *pasti INIT(NULL);
 //EXT bool pasti_use_all_possible_disks INIT(0);
 EXT char pasti_file_exts[160];
 EXT WORD pasti_store_byte_access;
-#if defined(STEVEN_SEAGAL)
+#if defined(STEVEN_SEAGAL) // &&?
 EXT BOOL pasti_active INIT(0);
 #else
 EXT bool pasti_active INIT(0);
@@ -82,7 +96,7 @@ int dma_bytes_written_for_sector_count=0;
 
 BYTE fdc_cr,fdc_tr,fdc_sr,fdc_str,fdc_dr;
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC)
-BYTE fdc_old_cr;
+BYTE fdc_old_cr;// for my hacks...
 #endif
 
 bool fdc_last_step_inwards_flag;

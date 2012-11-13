@@ -1,5 +1,6 @@
 // This file is compiled as a distinct module (resulting in an OBJ file)
 #include "SSEOption.h"
+#include "SSEDebug.h"
 
 #if defined(SS_SSE_OPTION_STRUCT)
 
@@ -17,6 +18,7 @@ TOption::TOption() {
 
 
 void TOption::Init() {
+  //TRACE("init SSEOption\n");
 #if defined(SS_HACKS)
   Hacks=TRUE;
 #endif

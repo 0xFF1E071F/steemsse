@@ -335,17 +335,6 @@ bool Initialise()
   INIFile=WriteDir+SLASH "steem.ini";
   bool NoNewInst=0,AlwaysNewInst=0,QuitNow=0,ShowNotify=true;
 
-  
-  //tst
-// arguments _argc & _argv were never filled!
-  
-
-
-
-
-
-
-
   for (int n=0;n<_argc-1;n++){
     EasyStr Path;
     int Type=GetComLineArgType(_argv[1+n],Path);
@@ -474,7 +463,7 @@ UNIX_ONLY( hxc::font_sl.Insert(0,0,Path,NULL); )
     bool TwoSteems=CheckForSteemRunning();
 
 #if defined(UNIX)
-    TwoSteems=true;
+    TwoSteems=true; //SS certainly a hack
 #endif
 
     bool CrashedLastTime=CleanupTempFiles();
@@ -801,7 +790,7 @@ UNIX_ONLY( hxc::font_sl.Insert(0,0,Path,NULL); )
   }
 
 
-#ifdef WIN32
+#ifdef WIN32 // SS associates too much?
 #ifndef ONEGAME
   AssociateSteem(".ST","st_disk_image",0,T("ST Disk Image"),DISK_ICON_NUM,0);
   AssociateSteem(".STT","st_disk_image",0,T("ST Disk Image"),DISK_ICON_NUM,0);
@@ -1159,6 +1148,7 @@ void CleanUpSteem()
   if (hPasti) FreeLibrary(hPasti);
   hPasti=NULL;
 #endif
+
 }
 //---------------------------------------------------------------------------
 

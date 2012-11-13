@@ -5,16 +5,17 @@
 
 This is based on the source code for Steem 3.2 as released by Steem authors,
 Ant & Russ Hayward.
-Current site for this build: http://ataristeven.host898.net/Steem.htm
+Current site for this build: http://ataristeven.eu5.org/Steem.htm
 SVN code repository is at http://code.google.com/p/steem-engine/ for
 v3.3.0 and at http://sourceforge.net/projects/steemsse/  for later versions.
 
 Added some files to the project. 
--In folder 'code\SSE', several files starting with 'SSE', included this one.
+-In folder 'code\SSE', several files starting with 'SSE', including this one.
 -A file div68kCycleAccurate.c in '3rdparty\pasti', to use the correct DIV 
 timings found by ijor (also author of Pasti).
 -A folder dsp in '3rdparty' for Microwire emulation
 -A folder 6301 in '3rdparty' for true emulation of the IKBD
+-A folder caps in '3rdparty' for IPF disk image format support
 Other mods are in Steem code, inside blocks where STEVEN_SEAGAL is defined.
 Some exceptions, like mmu_confused, directly changed, very easy to reverse.
 Many other defines are used to segment code. This is heavy but it makes 
@@ -29,24 +30,30 @@ They don't mean that I did something cool, only that I comment the source.
 VC6 is used as IDE, but also Notepad and the free (and discontinued)
 Borland C++ 5.5 compiler, like the original Steem.
 Compatibility with those compilers is a requirement of this build.
-A Linux build must also be possible (the current version probably doesn't
-compile).
+It must also compile in Linux (gcc) for the Unix build XSteem (there's a 
+working build since v3.4.
 The VC6 build should be linked with the C++ library, don't count on system
 DLL or it will crash in Windows Vista & 7.
-Wich build is better between BCC & VC6 is open to discussion. It seems BCC
-refuses to inline more functions but is it better or worse?
-
+The best build should be the M$ one. They're greedy but they know their 
+business!
+    
 SSE.h is supposed to mainly be a collection of compiling switches. It should
 include nothing and can be included everywhere.
 
 */
 
 /*
+DONE
+- Working (compiling & running) Linux build of 3.4
+- Check fullscreen mode (crashes reported)
+- IPF support (Kryoflux) 
+*/
+
+/*
 TODO (future versions, in no definite order)
-- Systematic fix for 508/512 cycle counting issue (Omega)
-- IPF support (Kryoflux)
+
 - Record video (to AVI)
-- Working Linux build
+- Systematic fix for 508/512 cycle counting issue (Omega)
 - ACIA/MIDI corrections
 - Real timings for 6301 / check SS_IKBD_RUN_IRQ_TO_END: hack?
 + Adjust this with a clock + Captain Blood?
@@ -55,7 +62,7 @@ TODO (future versions, in no definite order)
 + redesign system, like all others do: trace(type,msg)? note: no perf loss
 - Support for unrar.dll
 - Check if TOS1.00 sould boot with 4MB
-- Fix FETCH_TIMING/prefetch: not easy
+- Fix FETCH_TIMING/prefetch: not easy (is there something to fix?)
 - OSD shifted in 'large' display mode
 - 'redraw' in this mode
 - better OSD "Steem SSE" logo
@@ -65,6 +72,10 @@ TODO (future versions, in no definite order)
 - Overdrive/Dragon + a common way for all "unstable" overscan
 - Eliminate magic constants in gui
 - syndic84
+- unix: SSE options icon
+- nuke winston import, it's outdated
+- nuke update process
+- Boiler: remove DIV logging,we know the timing now
 */
 
 
@@ -78,9 +89,17 @@ TODO (future versions, in no definite order)
 /////////////
 
 #if defined(STEVEN_SEAGAL)
-#define SSE_VERSION 340 // check snapshot; rc\resource.rc
-#define SSE_VERSION_TXT "SSE 3.4.0" 
-#define WINDOW_TITLE "Steem Engine SSE 3.4.0" 
+//#define BETA
+#ifdef BETA // beta with all features
+#define SSE_VERSION 350 // check snapshot; rc\resource.rc
+#define SSE_VERSION_TXT "SSE SSE Beta" 
+#define WINDOW_TITLE "Steem SSE beta"//"Steem Engine SSE 3.5.0" 
+#else // next planned release
+#define SSE_VERSION 341 // check snapshot; rc\resource.rc
+#define SSE_VERSION_TXT "SSE 3.4.1" 
+#define WINDOW_TITLE "Steem Engine SSE 3.4.1" 
+#endif
+#undef BETA
 #endif
 
 
@@ -93,7 +112,7 @@ TODO (future versions, in no definite order)
 #define SS_ACIA       // MC6850 Asynchronous Communications Interface Adapter
 #define SS_BLITTER    // spelled BLiTTER
 #define SS_CPU        // M68000 microprocessor
-#define SS_FDC        // WD1772 floppy disk controller (just hacks)
+#define SS_FDC        // WD1772 floppy disk controller (hacks, IPF)
 #define SS_HACKS      // an option for dubious fixes
 #define SS_IKBD       // HD6301V1 IKBD (keyboard, mouse, joystick controller)
 #define SS_INTERRUPT  // MC68901 Multi-Function Peripheral Chip, HBL, VBL
@@ -103,7 +122,7 @@ TODO (future versions, in no definite order)
 #define SS_STF        // switch STF/STE
 #define SS_STRUCTURE  // TODO
 #define SS_TOS        // The Operating System
-#define SS_UNIX       // TODO
+#define SS_UNIX       // Linux build must be OK too
 #define SS_VARIOUS    // Mouse capture, keyboard click...
 #define SS_VIDEO      // shifter tricks; large borders
 
@@ -195,28 +214,31 @@ TODO (future versions, in no definite order)
 // DEBUG //
 ///////////
 
-#if !defined(SS_DEBUG) && (defined(_DEBUG) || defined(DEBUG_BUILD) || defined(SS_BOILER))
+#if !defined(SS_DEBUG) && (defined(_DEBUG) || defined(DEBUG_BUILD) || \
+defined(SS_BOILER))
 #define SS_DEBUG  
 #endif
 
-#if defined(SS_DEBUG) && defined(DEBUG_BUILD)
-#define SS_DEBUG_CLIPBOARD // right-click on 'dump' to copy then paste
-#endif
+//#if defined(SS_DEBUG) 
 
 #if defined(SS_DEBUG)
 
-//#define SS_DEBUG_NO_TRACE
-#define SS_DEBUG_OVERRIDE_TRACE // a selection for the released boiler
+#if defined(DEBUG_BUILD) //add more here
+#define SS_DEBUG_CLIPBOARD // right-click on 'dump' to copy then paste
+#endif
+
+// The following switches are compile-time with no boiler equivalent (TODO)
+
+//#define SS_DEBUG_NO_TRACE // no trace whatsoever
+//#define SS_DEBUG_OVERRIDE_TRACE // a selection for the released boiler
 
 #if defined(SS_DEBUG_NO_TRACE)
 
 #elif defined(SS_DEBUG_OVERRIDE_TRACE) && !defined(_DEBUG)
 
-#define SS_CPU_EXCEPTION_TRACE
 #define SS_DEBUG_START_STOP_INFO
 #define SS_FDC_TRACE
-#define SS_IKBD_TRACE 
-#define SS_IKBD_TRACE_COMMANDS
+#define SS_IKBD_TRACE_COMMANDS // used by 6301 emu now
 #define SS_IKBD_TRACE_IO
 #define SS_IKBD_6301_DUMP_RAM
 #define SS_IKBD_6301_TRACE 
@@ -242,9 +264,12 @@ TODO (future versions, in no definite order)
 //#define SS_CPU_EXCEPTION_TRACE
 //#define SS_CPU_PREFETCH_TRACE
 //#define SS_DEBUG_REPORT_SKIP_FRAME
-//#define SS_DEBUG_START_STOP_INFO
-//#define SS_FDC_TRACE // all commands
+#define SS_DEBUG_START_STOP_INFO
+//#define SS_FDC_TRACE // all writes (commands+TR+SR+DR)
 //#define SS_FDC_TRACE2 // read status register
+//#define SS_FDC_TRACE_IRQ // when the emu sets IRQ
+//#define SS_FDC_TRACE_BYTES // all bytes read from disk
+//#define SS_FDC_IPF_LOCK_INFO // trace info
 //#define SS_IKBD_6301_TRACE 
 #if defined(SS_IKBD_6301_TRACE)
 //#define SS_IKBD_6301_TRACE_SCI_RX
@@ -280,12 +305,14 @@ TODO (future versions, in no definite order)
 //#define SS_VID_SDP_TRACE3 // report differences with Steem v3.2 
 //#define SS_VID_VERTICAL_OVERSCAN_TRACE
 //#define SS_VID_PALETTE_BYTE_CHANGE_TRACE
-#define SS_VID_SHIFTER_EVENTS // recording all shifter events in a frame
-#define SS_VID_AUTO_FRAME_REPORT_ON_STOP
+//#define SS_VID_SHIFTER_EVENTS // recording all shifter events in a frame
+//#define SS_VID_AUTO_FRAME_REPORT_ON_STOP
 //#define SS_VID_REPORT_VBL_TRICKS // a line each VBL
 //#define SS_VID_BORDERS_TRACE
 
 #endif//#if defined(SS_DEBUG_NO_TRACE)
+
+#else // no SS_DEBUG
 
 #endif
 
@@ -296,21 +323,16 @@ TODO (future versions, in no definite order)
 
 #if defined(SS_FDC)
 
-//#define SS_FDC_IDF // IPF (Kryoflux) support...
-/*
-    for loading/init/etc the DLL, look at pasti (USE_PASTI) and
-    duplicate
-    apparently it's very different from pasti, that's no WD emulation
-    instead we get raw data and density info, the rest is up to us!
-    so it could be that we get it working first with trivial cases
-    but not protected software
-*/
+#if defined(WIN32) && SSE_VERSION>=350
+#define SS_FDC_IPF // IPF (Kryoflux) support...
+#endif
+
+#define SS_FDC_CHANGE_SECTOR_WHILE_BUSY // from Kryoflux
+#define SS_FDC_CHANGE_TRACK_WHILE_BUSY // from Kryoflux
 
 #if defined(SS_HACKS) // all "protected" by the hack option
 
 #define SS_FDC_CHANGE_COMMAND_DURING_SPINUP // from Hatari
-#define SS_FDC_CHANGE_SECTOR_WHILE_BUSY // from Hatari
-#define SS_FDC_CHANGE_TRACK_WHILE_BUSY // from Hatari
 #define SS_FDC_RESTORE // adding delay (fast+ADAT)
 #define SS_FDC_SEEK_VERIFY // adding delay (fast)
 #define SS_FDC_STARTING_DELAY // adding delay (fast)
@@ -411,6 +433,18 @@ TODO (future versions, in no definite order)
 #endif
 
 
+
+
+/////////
+// OSD //
+/////////
+
+#if defined(SS_OSD)
+///#define SS_OSD_LOGO //TODO
+#define SS_OSD_DRIVE_LED
+#endif
+
+
 ///////////
 // SOUND //
 ///////////
@@ -455,7 +489,7 @@ TODO (future versions, in no definite order)
 ////////////////
 // UNIX/LINUX // 
 ////////////////
-// note v3.4 no build has been attempted yet
+
 #if defined(SS_UNIX)
 #if !defined(UNIX)
 #undef SS_UNIX

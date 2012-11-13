@@ -109,7 +109,6 @@ void init_timings()
 #if USE_PASTI
 #if defined(STEVEN_SEAGAL) && defined(SS_MFP_RATIO)
   pasti_update_time=ABSOLUTE_CPU_TIME+CpuNormalHz;
-
 #else
   pasti_update_time=ABSOLUTE_CPU_TIME+8000000;
 #endif

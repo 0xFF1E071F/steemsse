@@ -174,9 +174,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
               log_to(LOGSECTION_IKBD,Str("IKBD: ")+HEXSl(old_pc,6)+" - Received new command before old one was sent, replacing "+
                                       HEXSl(agenda[n].param,2)+" with "+HEXSl(io_src_b,2));
               agenda[n].param=io_src_b;
-#if defined(SS_IKBD_TRACE)
               TRACE("IKBD replace byte %X with %X\n",agenda[n].param,io_src_b);
-#endif
             }
           }
 
@@ -495,17 +493,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
           }
         }else{ // even
           // Byte access causes bus error
-#if defined(STEVEN_SEAGAL)
-          if (io_word_access==0) 
-          {
-#if defined(SS_INT_TRACE)
-            TRACE("MFP even byte access\n");
-#endif
-            exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
-          }
-#else
           if (io_word_access==0) exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
-#endif
         }
       }else{ // beyond allowed range
         exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
@@ -595,7 +583,6 @@ Even though the samples are built on a byte-base, the DMA chip also only
               case 0x5:next_dma_sound_start&=0xff00ff;next_dma_sound_start|=io_src_b << 8;break;
               case 0x7:
 #if defined(STEVEN_SEAGAL) && defined(SS_SOUND)
-                //ASSERT(!(io_src_b&1)); // MOLZ
                 io_src_b&=0xFE;
 #endif
                 next_dma_sound_start&=0xffff00;next_dma_sound_start|=io_src_b;break;
@@ -1187,6 +1174,32 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 
 */    
     case 0xff8600:{  //--------------------------------------- DMA / FDC
+/*
+-------+-----+-----------------------------------------------------+----------
+##############DMA/WD1772 Disk controller                           ###########
+-------+-----+-----------------------------------------------------+----------
+$FF8600|     |Reserved                                             |
+$FF8602|     |Reserved                                             |
+$FF8604|word |FDC access/sector count                              |R/W
+$FF8606|word |DMA mode/status                             BIT 2 1 0|R
+       |     |Condition of FDC DATA REQUEST signal -----------' | ||
+       |     |0 - sector count null,1 - not null ---------------' ||
+       |     |0 - no error, 1 - DMA error ------------------------'|
+$FF8606|word |DMA mode/status                 BIT 8 7 6 . 4 3 2 1 .|W
+       |     |0 - read FDC/HDC,1 - write ---------' | | | | | | |  |
+       |     |0 - HDC access,1 - FDC access --------' | | | | | |  |
+       |     |0 - DMA on,1 - no DMA ------------------' | | | | |  |
+       |     |Reserved ---------------------------------' | | | |  |
+       |     |0 - FDC reg,1 - sector count reg -----------' | | |  |
+       |     |0 - FDC access,1 - HDC access ----------------' | |  |
+       |     |0 - pin A1 low, 1 - pin A1 high ----------------' |  |
+       |     |0 - pin A0 low, 1 - pin A0 high ------------------'  |
+$FF8609|byte |DMA base and counter (High byte)                     |R/W
+$FF860B|byte |DMA base and counter (Mid byte)                      |R/W
+$FF860D|byte |DMA base and counter (Low byte)                      |R/W
+-------+-----+-----------------------------------------------------+----------
+*/
+
       if (addr>0xff860f){ //past allowed range
         exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
       }else{
@@ -1202,9 +1215,20 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
         log_to_section(LOGSECTION_FDC,a);
 #endif
 */
-        if (addr<0xff8604) exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
-        if (addr<0xff8608 && io_word_access==0) exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
-#if USE_PASTI
+/*
+$FF8600|     |Reserved
+$FF8602|     |Reserved
+*/
+        if (addr<0xff8604) 
+          exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
+/*
+$FF8604|word |FDC access/sector count
+$FF8606|word |DMA mode/status
+*/
+        if (addr<0xff8608 && io_word_access==0) 
+          exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
+
+#if USE_PASTI //SS: this block sends all DMA+FDC commands to the pasti DLL
         if (hPasti && pasti_active){
           WORD data=io_src_b;
           if (addr<0xff8608){ // word only
@@ -1219,15 +1243,24 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
           struct pastiIOINFO pioi;
           pioi.addr=addr;
           pioi.data=data;
-          pioi.stPC=pc;
+          pioi.stPC=pc; //SS debug only?
           pioi.cycles=ABSOLUTE_CPU_TIME;
-//          log_to(LOGSECTION_PASTI,Str("PASTI: IO write addr=$")+HEXSl(addr,6)+" data=$"+
-//                            HEXSl(io_src_b,2)+" ("+io_src_b+") pc=$"+HEXSl(pc,6)+" cycles="+pioi.cycles);
-          pasti->Io(PASTI_IOWRITE,&pioi);
+          //          log_to(LOGSECTION_PASTI,Str("PASTI: IO write addr=$")+HEXSl(addr,6)+" data=$"+
+          //                            HEXSl(io_src_b,2)+" ("+io_src_b+") pc=$"+HEXSl(pc,6)+" cycles="+pioi.cycles);
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)          
+          TRACE_LOG("Before write: ");
+          if(TRACE_ENABLED) fdc_report_regs();
+#endif
+          pasti->Io(PASTI_IOWRITE,&pioi); //SS send to DLL
           pasti_handle_return(&pioi);
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)          
+          TRACE_LOG("After write: ");
+          if(TRACE_ENABLED) fdc_report_regs();
+#endif
           break;
         }
 #endif
+        //SS this block handles DMA+FDC for Steem's native emu + IPF
         switch (addr){
 //          ff 8604   R/W     |--------xxxxxxxx|   Disk Controller (Word Access)
           case 0xff8604:  //high byte of FDC access
@@ -1249,7 +1282,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
             }
             break;
           case 0xff8605:  //low byte of FDC access
-          {
+          {//SS scope
             if (dma_mode & BIT_4){ //write FDC sector counter, 0x190
               dma_sector_count&=0xff00;
               dma_sector_count|=io_src_b;
@@ -1266,60 +1299,79 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
               log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Writing $xx"+HEXSl(io_src_b,2)+" to HDC register #"+((dma_mode & BIT_1) ? 1:0));
               break;
             }
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)          
+            TRACE_LOG("Before write: ");
+            if(TRACE_ENABLED) fdc_report_regs();
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+            int drive=floppy_current_drive();
+            int wd_address=(dma_mode&(BIT_1+BIT_2))>>1;
+            if(Caps.DriveIsIPF[drive])
+            {
+              if(!wd_address && (io_src_b&0x20)) // can't handle writes
+                FDCCantWriteDisplayTimer=timeGetTime()+3000;
+              else
+                CapsFdcWrite(&WD1772,wd_address,io_src_b); // send to DLL
+            }
+            else switch (wd_address*2){
+#else
             switch (dma_mode & (BIT_1+BIT_2)){
+#endif
               case 0:
                 floppy_fdc_command(io_src_b);
                 break;
+              case 2:
 /*
 r1 (r/w) - Track Register - The outermost track on the disk is
 numbered 0.  During disk reading, writing, and verifying, the 177x
 compares the Track Register to the track number in the sector ID
 field.  When the 177x is busy, it ignores CPU writes to this register.
-[In fact, it doesn't (undocumented), from Hatari]
+[In fact, it doesn't (undocumented), from Kryoflux]
 The highest legal track number is 240.
 */
-              case 2:
+                if(fdc_str & FDC_STR_BUSY)
+                  TRACE_LOG("TR change while busy %d -> %d\n",fdc_tr,io_src_b);
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_CHANGE_TRACK_WHILE_BUSY)
+                fdc_tr=io_src_b;
+#else
                 if ((fdc_str & FDC_STR_BUSY)==0){
                   log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC track register to "+io_src_b);
                   fdc_tr=io_src_b;
                 }else{
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_CHANGE_TRACK_WHILE_BUSY)
-#if defined(SS_FDC_TRACE)
-                  TRACE("Track register change while busy\n");
-#endif
-                  if(SSE_HACKS_ON)
-                    fdc_tr=io_src_b; 
-#endif
                   log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Can't set FDC track register to "+io_src_b+", FDC is busy");
                 }
+#endif
                 break;
+              case 4:
 /*
 r2 (r/w) - Sector Register - During disk reading and writing, the 177x
 compares the Sector Register to the sector number in the sector ID
 field.  When the 177x is busy, it ignores CPU writes to this register.
-[In fact, it doesn't (undocumented) from Hatari]
+[In fact, it doesn't (undocumented) from Kryoflux]
 Valid sector numbers range from 1 to 240, inclusive.
 */
-              case 4:
+                if(fdc_str & FDC_STR_BUSY)
+                  TRACE_LOG("SR change while busy %d -> %d\n",fdc_sr,io_src_b);
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_CHANGE_SECTOR_WHILE_BUSY)
+                fdc_sr=io_src_b; // fixes Delirious 4 loader without Pasti
+#else
                 if ((fdc_str & FDC_STR_BUSY)==0){
                   log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC sector register to "+io_src_b);
                   fdc_sr=io_src_b;
                 }else{
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_CHANGE_SECTOR_WHILE_BUSY)
-#if defined(SS_FDC_TRACE)
-                  TRACE("Sector register change while busy %d -> %d\n",fdc_sr,io_src_b);
-#endif
-                  if(SSE_HACKS_ON)   
-                    fdc_sr=io_src_b; // fixes Delirious 4 loader without Pasti
-#endif
                   log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Can't set FDC sector register to "+io_src_b+", FDC is busy");
                 }
+#endif
                 break;
               case 6:
                 log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC data register to "+io_src_b);
                 fdc_dr=io_src_b;
                 break;
             }
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)          
+            TRACE_LOG("After write: ");
+            if(TRACE_ENABLED) fdc_report_regs();
+#endif
             break;
           }
 
@@ -1327,21 +1379,19 @@ Valid sector numbers range from 1 to 240, inclusive.
           case 0xff8606:  //high byte of DMA mode
             dma_mode&=0x00ff;
             dma_mode|=WORD(WORD(io_src_b) << 8);
-
             fdc_read_address_buffer_len=0;
             dma_bytes_written_for_sector_count=0;
             break;
           case 0xff8607:  //low byte of DMA mode
             dma_mode&=0xff00;
             dma_mode|=io_src_b;
-
             fdc_read_address_buffer_len=0;
             dma_bytes_written_for_sector_count=0;
             break;
-
           case 0xff8609:  //high byte of DMA pointer
             dma_address&=0x00ffff;
             dma_address|=((MEM_ADDRESS)io_src_b) << 16;
+            //TRACE("DMA address=%X\n",dma_address);
             log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Set DMA address to "+HEXSl(dma_address,6));
             break;
           case 0xff860b:  //mid byte of DMA pointer
@@ -1481,25 +1531,12 @@ Valid sector numbers range from 1 to 240, inclusive.
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_SHIFTER_EVENTS)
           VideoEvents.Add(scan_y,LINECYCLES,'V',io_src_b); 
 #endif
-
-//ASSERT(Shifter.FetchingLine());
-///if(Shifter.FetchingLine())
-
-////////////////////io_src_b&=b11111110;
-
-
           DWORD_B_1(&xbios2)=io_src_b;
 
 #if defined(STEVEN_SEAGAL) && defined(SS_STF)
           if(ST_TYPE==STE) 
 #endif
             DWORD_B_0(&xbios2)=0;
-#ifdef SS_TST1
-//          else if(Shifter.FetchingLine()) DWORD_B_0(&xbios2)=6;
-#endif 
-
-
-
           log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set screen base to "+HEXSl(xbios2,6));
           break;
 
@@ -2122,8 +2159,9 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
     }
 
 #endif
-
   }else{
+//SS this is the way chosen by Steem authors, word accesses are treated byte 
+//by byte
     io_word_access=true;
     io_write_b(addr,HIBYTE(io_src_w));
     io_write_b(addr+1,LOBYTE(io_src_w));
@@ -2171,7 +2209,8 @@ void ASMCALL io_write_l(MEM_ADDRESS addr,LONG io_src_l)
     }
 #endif
   }
-  INSTRUCTION_TIME(-4); // SS cool for all cases?
+  //SS same way for long accesses; TODO check this timing trick?
+  INSTRUCTION_TIME(-4);
   io_write_w(addr,HIWORD(io_src_l));
   INSTRUCTION_TIME(4);
   io_write_w(addr+2,LOWORD(io_src_l));

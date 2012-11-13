@@ -152,20 +152,11 @@ void reset_peripherals(bool Cold)
     pasti->HwReset(Cold);
   }
 #endif
-//ss why no fdc reset?
 
-  /*agenda_delete(agenda_floppy_seek);
-        agenda_delete(agenda_floppy_readwrite_sector);
-        agenda_delete(agenda_floppy_read_address);
-        agenda_delete(agenda_floppy_read_track);
-        agenda_delete(agenda_floppy_write_track);
-        agenda_delete(agenda_fdc_finished);
-*/
-  //fdc_tr=0;
-
-
-
-
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+  if(Caps.Initialised)
+    CapsFdcReset(&WD1772);
+#endif
 
   ZeroMemory(mfp_reg,sizeof(mfp_reg));
   mfp_reg[MFPR_GPIP]=mfp_gpip_no_interrupt;

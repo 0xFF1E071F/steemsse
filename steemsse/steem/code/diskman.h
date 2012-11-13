@@ -197,7 +197,7 @@ public:
   int DoubleClickAction;
 };
 
-#ifdef WIN32
+#ifdef WIN32  // SS why here?
 void TDiskManager::RefreshDiskView(EasyStr SelPath,bool EditLabel,EasyStr SelLinkPath,int iItem)
 {
   SetDir(DisksFol,0,SelPath,EditLabel,SelLinkPath,iItem);

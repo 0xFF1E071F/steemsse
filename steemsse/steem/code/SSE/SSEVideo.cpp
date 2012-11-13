@@ -21,6 +21,8 @@ TVideoEvents VideoEvents;  // singleton
 // Video - object TShifter //
 /////////////////////////////
 
+#define LOGSECTION LOGSECTION_VIDEO
+
 TShifter::TShifter() {
 #if defined(WIN32)
   ScanlineBuffer=NULL;

@@ -465,10 +465,35 @@ No write access.
       }
       return 0xff;
     }case 0xff8600:{      //----------------------------------- DMA/FDC
+/*
+-------+-----+-----------------------------------------------------+----------
+##############DMA/WD1772 Disk controller                           ###########
+-------+-----+-----------------------------------------------------+----------
+$FF8600|     |Reserved                                             |
+$FF8602|     |Reserved                                             |
+$FF8604|word |FDC access/sector count                              |R/W
+$FF8606|word |DMA mode/status                             BIT 2 1 0|R
+       |     |Condition of FDC DATA REQUEST signal -----------' | ||
+       |     |0 - sector count null,1 - not null ---------------' ||
+       |     |0 - no error, 1 - DMA error ------------------------'|
+$FF8606|word |DMA mode/status                 BIT 8 7 6 . 4 3 2 1 .|W
+       |     |0 - read FDC/HDC,1 - write ---------' | | | | | | |  |
+       |     |0 - HDC access,1 - FDC access --------' | | | | | |  |
+       |     |0 - DMA on,1 - no DMA ------------------' | | | | |  |
+       |     |Reserved ---------------------------------' | | | |  |
+       |     |0 - FDC reg,1 - sector count reg -----------' | | |  |
+       |     |0 - FDC access,1 - HDC access ----------------' | |  |
+       |     |0 - pin A1 low, 1 - pin A1 high ----------------' |  |
+       |     |0 - pin A0 low, 1 - pin A0 high ------------------'  |
+$FF8609|byte |DMA base and counter (High byte)                     |R/W
+$FF860B|byte |DMA base and counter (Mid byte)                      |R/W
+$FF860D|byte |DMA base and counter (Low byte)                      |R/W
+-------+-----+-----------------------------------------------------+----------
+*/
       if (addr>0xff860f) exception(BOMBS_BUS_ERROR,EA_READ,addr);
       if (addr<0xff8604) exception(BOMBS_BUS_ERROR,EA_READ,addr);
       if (addr<0xff8608 && io_word_access==0) exception(BOMBS_BUS_ERROR,EA_READ,addr);
-#if USE_PASTI
+#if USE_PASTI //SS pasti.dll will give us the correct byte 
       if (hPasti && pasti_active){
         if (addr<0xff8608){ // word only
           if (addr & 1) return LOBYTE(pasti_store_byte_access);
@@ -504,7 +529,7 @@ No write access.
         //should check bit 8 = 0, read
         if (dma_mode & BIT_4){ //read sector counter (maintained by the DMA chip)
           return LOBYTE(dma_sector_count);
-        }
+        } 
 
         if (dma_mode & BIT_3){ // HD access
           LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
@@ -513,7 +538,21 @@ No write access.
         }
 
         // Read FDC register
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+        if(Caps.DriveIsIPF[floppy_current_drive()])
+        {
+          if(!(dma_mode & (BIT_1+BIT_2)))
+          {
+            mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
+            WD1772.lineout&=~CAPSFDC_LO_INTRQ; // and in the WD1772
+          }
+          BYTE value=CapsFdcRead(&WD1772,(dma_mode & (BIT_1+BIT_2))/2); 
+          return value;
+        }
+        else // else switch...
+#endif
         switch (dma_mode & (BIT_1+BIT_2)){
+          case 0://SS read status
 /*
 r0 (read) - Status Register - The value in this register depends on
 the previous 177x command.  If the 177x receives a Force Interrupt
@@ -574,7 +613,6 @@ Bit 0 - Busy.  This bit is 1 when the 177x is busy.  This bit is 0
 when the 177x is free for CPU commands.
 
 */
-          case 0:
           {
             int fn=floppy_current_drive();
             if (floppy_track_index_pulse_active()){
@@ -623,23 +661,13 @@ when the 177x is free for CPU commands.
             LOG_ONLY( if (mode==STEM_MODE_CPU) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
                             " - Read status register as $"+HEXSl(fdc_str,2)); )
 */
-            return fdc_str;//no trace?
+            return fdc_str;
           }
           case 2:
-#if defined(SS_FDC_TRACE) 
-            TRACE("F%d y%d c%d FDC read TR: %X\n",FRAME,scan_y,LINECYCLES,fdc_tr);
-#endif
             return fdc_tr; //track register
           case 4:
-#if defined(SS_FDC_TRACE) 
-            TRACE("F%d y%d c%d FDC read SR: %X\n",FRAME,scan_y,LINECYCLES,fdc_sr);
-#endif
             return fdc_sr; //sector register
           case 6:
-#if defined(SS_FDC_TRACE) 
-            TRACE("F%d y%d c%d FDC read DR: %X\n",FRAME,scan_y,LINECYCLES,fdc_dr);
-#endif
-
             return fdc_dr; //data register
         }
         break;

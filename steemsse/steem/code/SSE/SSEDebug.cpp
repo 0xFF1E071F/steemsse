@@ -34,9 +34,21 @@ int ReportGeneralInfos(int when) {
     TRACE("\n");
     TRACE("%d drives",num_connected_floppies);
     if(FloppyDrive[0].DiskInDrive())
+    {
       TRACE("; Disk A: %s",FloppyDrive[0].DiskName.c_str()); 
+#if defined(SS_FDC_IPF)
+    if(Caps.DriveIsIPF[0]) 
+      TRACE(" (IPF emu)");
+#endif
+    }
     if(num_connected_floppies==2 && FloppyDrive[1].DiskInDrive())
+    {
       TRACE("; Disk B: %s",FloppyDrive[1].DiskName.c_str()); 
+#if defined(SS_FDC_IPF)
+    if(Caps.DriveIsIPF[1]) 
+      TRACE(" (IPF emu)");
+#endif
+    }
     if(!HardDiskMan.DisableHardDrives && stemdos_current_drive) // check
       TRACE("; HD ON");
     TRACE("; ADAT %d",ADAT);
@@ -85,17 +97,57 @@ void my_trace(char *fmt, ...){
   va_end(body);	
   OutputDebugString(out);
 }
+
+//#if !defined(DEBUG_BUILD)
+
+//#endif
+
 #endif
 
+bool logsection_enabled_b[100];
 
 TDebug::TDebug() {
   trace_file_pointer=NULL; // classic C file handling
   ReportBreakpoints=TRUE; // disabled when clicking cancel in the box
   nTrace=0; // trace counter
+
+  ZeroMemory(logsection_enabled_b,100*sizeof(bool));
+  // compile time wanted traces (overrides boiler if present)
+  logsection_enabled_b[ LOGSECTION_ALWAYS ] = 0;
+  logsection_enabled_b[ LOGSECTION_FDC ] = 0;
+  logsection_enabled_b[ LOGSECTION_IO ] = 0;
+  logsection_enabled_b[ LOGSECTION_MFP_TIMERS ] = 0;
+  logsection_enabled_b[ LOGSECTION_INIT ] = 0;
+  logsection_enabled_b[ LOGSECTION_CRASH ] = 0;
+  logsection_enabled_b[ LOGSECTION_STEMDOS ] = 0;
+  logsection_enabled_b[ LOGSECTION_IKBD ] = 0;
+  logsection_enabled_b[ LOGSECTION_AGENDA ] = 0;
+  logsection_enabled_b[ LOGSECTION_INTERRUPTS ] = 0;
+  logsection_enabled_b[ LOGSECTION_TRAP ] = 0;
+  logsection_enabled_b[ LOGSECTION_SOUND ] = 0;
+  logsection_enabled_b[ LOGSECTION_VIDEO ] = 0;
+  logsection_enabled_b[ LOGSECTION_BLITTER ] = 0;
+  logsection_enabled_b[ LOGSECTION_MIDI ] = 0;
+  logsection_enabled_b[ LOGSECTION_TRACE ] = 0;
+  logsection_enabled_b[ LOGSECTION_SHUTDOWN ] = 0;
+  logsection_enabled_b[ LOGSECTION_SPEEDLIMIT ] = 0;
+  logsection_enabled_b[ LOGSECTION_CPU ] = 0;
+  logsection_enabled_b[ LOGSECTION_INIFILE ] = 0;
+  logsection_enabled_b[ LOGSECTION_GUI ] = 0;
+  logsection_enabled_b[ LOGSECTION_DIV ] = 0;
+  logsection_enabled_b[ LOGSECTION_PASTI ] = 0;
+  // TODO options in boiler?
+  logsection_enabled_b[ LOGSECTION_FDC_BYTES ] = 0;
+  logsection_enabled_b[ LOGSECTION_IPF_LOCK_INFO ] = 0;
+
 #if !defined(_DEBUG) && defined(DEBUG_BUILD)
   trace_file_pointer=fopen("TRACE.txt","w"); // only one file name...
-  TRACE("This is a Steem SSE TRACE file\n");
+//  ASSERT(SSEOption.OutputTraceToFile);
+  TraceToFile("This is a Steem SSE TRACE file\n");
   ASSERT(trace_file_pointer);
+
+
+
 #endif
 }
 
@@ -124,6 +176,8 @@ void TDebug::TraceToFile(char *fmt, ...){
   }
 }
 #endif
+
+
 
 TDebug SSDebug; // singleton
 
