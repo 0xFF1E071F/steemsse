@@ -1646,6 +1646,7 @@ void TOptionBox::CreateAssocPage()
 #if USE_PASTI
   if (hPasti) AssAddToExtensionsLV(".STX",T("Pasti Disk Image"),3);
 #endif
+  // SS ipf?
   AssAddToExtensionsLV(".DIM",T("Disk Image"),4);
   AssAddToExtensionsLV(".STZ",T("Zipped Disk Image"),5);
   AssAddToExtensionsLV(".STS",T("Memory Snapshot"),6);
@@ -1980,7 +1981,7 @@ void TOptionBox::CreateSSEPage() {
   SendMessage(Win,BM_SETCHECK,SSEOption.STEMicrowire,0);
   ToolAddWindow(ToolTip,Win,
     T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature"));
-//  y+=LineHeight;
+  y+=LineHeight;
 #endif
 
   CreateWindow("Button",T("Perform cold reset now"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,

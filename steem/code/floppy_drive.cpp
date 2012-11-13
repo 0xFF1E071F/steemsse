@@ -13,6 +13,11 @@ data.
 
 // SS some casts corrected int( -> (int)( ?
 
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)    
+#include "SSE/SSEOption.h"
+#include "SSE/SSEFloppy.h"
+#endif
+
 #define LOGSECTION LOGSECTION_FDC
 
 int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDetectBPB,BPBINFO *pFileBPB)
@@ -33,6 +38,9 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   MSA=IsSameStr_I(Ext,"MSA");
   STT=IsSameStr_I(Ext,"STT");
   DIM=IsSameStr_I(Ext,"DIM");
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+  bool IPF=IsSameStr_I(Ext,"IPF");
+#endif
 
   // NewDiskInZip will be blank for default disk, RealDiskInZip will be the
   // actual name of the file in the zip that is a disk image
@@ -58,6 +66,9 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
               MSA=has_extension(fn,"MSA");
               STT=has_extension(fn,"STT");
               DIM=has_extension(fn,"DIM");
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+              IPF=has_extension(fn,"IPF");
+#endif
             }
             HOffset=zippy.current_file_offset;
             NewDiskInZip=CompressedDiskName;
@@ -96,6 +107,17 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   if (this==&FloppyDrive[0]) drive=0;
   if (this==&FloppyDrive[1]) drive=1;
   if (drive==-1) f_PastiDisk=0; // Never use pasti for extra drives
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+  if(Caps.Initialised && drive!=-1 && Caps.DriveIsIPF[drive])
+  {
+    TRACE_LOG("Removing drive %d ID %d\n",drive,Caps.ContainerID[drive]);
+    VERIFY(CapsRemImage(Caps.ContainerID[drive])!=-1);
+    if(!(Caps.DriveIsIPF[(!drive)&1])) // other drive
+      Caps.Active=FALSE; 
+  }
+  Caps.DriveIsIPF[drive]=0;
+#endif
+
   if (f_PastiDisk){
 #if USE_PASTI
     int Ret=0;
@@ -141,6 +163,34 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       if (NewZipTemp.NotEmpty()) DeleteFile(NewZipTemp);
       return Ret;
     }
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+  }
+  else if(IPF&&Caps.Initialised) { 
+    if(!Caps.DriveIsIPF[drive])
+    {
+      Caps.ContainerID[drive]=CapsAddImage();
+      Caps.DriveIsIPF[drive]=TRUE;
+      TRACE_LOG("Caps.ContainerID[%d]=%d\n",drive,Caps.ContainerID[drive]);
+    }
+    VERIFY( !CapsLockImage(Caps.ContainerID[drive],File) );
+    CapsImageInfo img_info;
+    VERIFY( !CapsGetImageInfo(&img_info,Caps.ContainerID[drive]) );
+    ASSERT( img_info.type==ciitFDD );
+    ASSERT( img_info.platform[0]==ciipAtariST );
+    ASSERT( img_info.platform[1]==ciipNA ); // dual?
+    TRACE_LOG("CAPS ID type %d release %d mincylinder %d maxcylinder %d computer %s\n", img_info.type,img_info.release,img_info.mincylinder,img_info.maxcylinder,CapsGetPlatformName(img_info.platform[0]));
+    if(img_info.platform[0]!=ciipAtariST)
+    {
+      int Ret=FIMAGE_WRONGFORMAT;
+      return Ret;
+    }
+    Caps.Active=TRUE;
+    SF314[drive].diskattr|=CAPSDRIVE_DA_IN; 
+    WD1772.drivenew=WD1772.drivesel=WD1772.driveact=drive;
+    WD1772.driveprc=&SF314[drive];
+    Caps.LockedTrack[drive]=-1;
+    Caps.LockedSide[drive]=-1;
 #endif
   }else{
     // Open for read for an MSA (going to convert to ST and write to that)
@@ -455,6 +505,9 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   DiskInZip=NewDiskInZip;
   ImageFile=OriginalFile;
   PastiDisk=f_PastiDisk;
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+  IPFDisk=IPF;
+#endif
   WrittenTo=0;
 
   // Media change, write protect for 10 VBLs, unprotect for 10 VBLs, wp for 10
@@ -477,7 +530,11 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 //---------------------------------------------------------------------------
 bool TFloppyImage::ReinsertDisk()
 {
-  if (Empty() || PastiDisk) return 0;
+  if (Empty() || PastiDisk
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+    || IPFDisk
+#endif
+    ) return 0;
 
   fclose(f);
   if (ZipTempFile.NotEmpty()) ReadOnly=(FloppyArchiveIsReadWrite==0);
@@ -497,7 +554,11 @@ bool TFloppyImage::ReinsertDisk()
 //---------------------------------------------------------------------------
 bool TFloppyImage::OpenFormatFile()
 {
-  if (f==NULL || ReadOnly || Format_f || STT_File || PastiDisk) return 0;
+  if (f==NULL || ReadOnly || Format_f || STT_File || PastiDisk
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+    || IPFDisk
+#endif    
+    ) return 0;
 
   // The format file is just a max size ST file, any formatted tracks
   // go in here and then are merged with unformatted tracks when
@@ -530,7 +591,11 @@ bool TFloppyImage::OpenFormatFile()
 //---------------------------------------------------------------------------
 bool TFloppyImage::ReopenFormatFile()
 {
-  if (Format_f==NULL || f==NULL || ReadOnly || PastiDisk) return 0;
+  if (Format_f==NULL || f==NULL || ReadOnly || PastiDisk
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+    || IPFDisk
+#endif    
+    ) return 0;
 
   fclose(Format_f);
 
@@ -991,7 +1056,9 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   PastiBuf=NULL;
   PastiBufLen=0;
   PastiDisk=0;
-
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+  IPFDisk=0;
+#endif
   if (f) fclose(f);
   f=NULL;
   if (Format_f) fclose(Format_f);

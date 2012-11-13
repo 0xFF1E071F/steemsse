@@ -186,6 +186,7 @@ inline void m68k_Process() {
   pc+=2; 
 //  ASSERT(ir!=0xD191); // dbg: break on opcode...
 //  ASSERT(!mmu_testing);
+  int cycles=cpu_cycles;
   m68k_high_nibble_jump_table[ir>>12](); // go to instruction...
   HANDLE_IOACCESS(m68k_trace();); // keep as macro, wouldn't be inlined
   DEBUG_ONLY( debug_first_instruction=0 );

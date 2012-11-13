@@ -65,11 +65,6 @@
 
 #if defined(SS_CPU)
 
-#if defined(_DEBUG) // change at leisure
-#define EXCEPTIONS_REPORTED 25
-#else // in file
-#define EXCEPTIONS_REPORTED 155
-#endif
 
 #endif
 

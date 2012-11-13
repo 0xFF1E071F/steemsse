@@ -6,142 +6,6 @@ is called when a command is written to the FDC's command register via the
 DMA I/O addresses (see iow.cpp).
 ---------------------------------------------------------------------------*/
 
-/*
-Programming information from the data sheets for the Western Digital
-1770-00 and 1772-00 floppy disk drive controllers.  David Gahris,
-dgahris@eece.maine.edu, typed and edited this on 10 Mar 1995.
-
-Unless I note otherwise, this file applies to both the 1770-00 and the
-1772-00, and I do not deal with other chips in the 1770 family, such
-as the 1773-00 or the 1770-02.  I call the 1770 and the 1772
-collectively the 177x.  Except as noted, "clock cycles" are CPU clock
-cycles at exactly 1 MHz.
-
-  The 177x is designed for a
-head data rate of 250 kilobits per second.  If the CPU does not give
-the 177x a byte by the time the 177x needs to write to the disk, the
-177x writes a zero byte instead.  The minimum cycle time of the raw
-head data input is 3 CPU clock cycles.  The head data output has a
-cycle time of 4, 6, or 8 CPU clock cycles.  The head data output pulse
-width is .82 clock cycles for an early bit, .69 cycles for a normal
-bit, and .57 cycles for a late bit.  See the Commands section for
-information on write precompensation.  The 1772-02 is 100%
-software-compatible with the 1772-00.  During DMA between the 177x and
-CPU RAM, the DRQ (Data Request) pin of the 177x controls data
-transfer.  The DRQ pin is high when the Data Request bit in the Status
-Register is high, and the DRQ pin is low when the Data Request bit is
-low.
-
-
-REGISTERS:
-----------
-
-
-The names are self-explanatory.  All registers are 8 bits wide.  After
-the CPU writes to any register, it cannot read that register for 16
-cycles.
-
-
-Data Shift (internal?)
-
-Data (fdc_dr)
-
-Track (fdc_tr)
-
-Sector (SR fdc_sr)
-
-Command (CR fdc_cr)
-
-Status (STR fdc_str)
-
-
-r0 (write) - Command Register - When the 177x is busy, it ignores CPU
-writes to this register UNLESS the new command is a force interrupt.
-
-r0 (read) - Status Register - The value in this register depends on
-the previous 177x command.  If the 177x receives a Force Interrupt
-command while it is executing another command, the FDDC will clear the
-Busy bit (Status bit 0: see later in this paragraph), and leave all
-other Status bits unchanged.  If the 177x receives a Force Interrupt
-command while it is not executing a command, the 177x will update the
-entire Status Register as though it had just executed a Type I
-command.  (For an explanation of Type I, Type II, Type III, and Type
-IV commands, see the section on commands.)  When the CPU is connected
-(directly or indirectly) to the 177x's interrupt output, it is a bad
-idea to check the Busy bit because a CPU read of the Status Register
-clears the 177x's interrupt output.  After the CPU writes to the
-Command Register, it should not attempt to read the Busy bit for 24
-cycles.  The CPU should not follow a Command Register write with a
-read of Status bits 1-7 until 32 clock cycles have elapsed.
-
-Bits:
-Bit 7 - Motor On.  This bit is high when the drive motor is on, and
-low when the motor is off.
-
-Bit 6 - Write Protect.  This bit is not used during reads.  During
-writes, this bit is high when the disk is write protected.
-
-Bit 5 - Spin-up / Record Type.  For Type I commands, this bit is low
-during the 6-revolution motor spin-up time.  This bit is high after
-spin-up.  For Type II and Type III commands, Bit 5 low indicates a
-normal data mark.  Bit 5 high indicates a deleted data mark.
-
-Bit 4 - Record Not Found.  This bit is set if the 177x cannot find the
-track, sector, or side which the CPU requested.  Otherwise, this bit
-is clear.
-
-Bit 3 - CRC Error.  This bit is high if a sector CRC on disk does not
-match the CRC which the 177x computed from the data.  The CRC
-polynomial is x^16+x^12+x^5+1.  If the stored CRC matches the newly
-calculated CRC, the CRC Error bit is low.  If this bit and the Record
-Not Found bit are set, the error was in an ID field.  If this bit is
-set but Record Not Found is clear, the error was in a data field.
-
-Bit 2 - Track Zero / Lost Data.  After Type I commands, this bit is 0
-if the mechanism is at track zero.  This bit is 1 if the head is not
-at track zero.  After Type II or III commands, this bit is 1 if the
-CPU did not respond to Data Request (Status bit 1) in time for the
-177x to maintain a continuous data flow.  This bit is 0 if the CPU
-responded promptly to Data Request.
-
-Bit 1 - Index / Data Request.  On Type I commands, this bit is high
-during the index pulse that occurs once per disk rotation.  This bit
-is low at all times other than the index pulse.  For Type II and III
-commands, Bit 1 high signals the CPU to handle the data register in
-order to maintain a continuous flow of data.  Bit 1 is high when the
-data register is full during a read or when the data register is empty
-during a write.  "Worst case service time" for Data Request is 23.5
-cycles.
-
-Bit 0 - Busy.  This bit is 1 when the 177x is busy.  This bit is 0
-when the 177x is free for CPU commands.
-
-r1 (r/w) - Track Register - The outermost track on the disk is
-numbered 0.  During disk reading, writing, and verifying, the 177x
-compares the Track Register to the track number in the sector ID
-field.  When the 177x is busy, it ignores CPU writes to this register.
-The highest legal track number is 240.
-
-r2 (r/w) - Sector Register - During disk reading and writing, the 177x
-compares the Sector Register to the sector number in the sector ID
-field.  When the 177x is busy, it ignores CPU writes to this register.
-Valid sector numbers range from 1 to 240, inclusive.
-
-r3 (r/w) - Data Register
-
-
-INTERRUPTS:
------------
-
-The 177x interrupts the CPU: *each time it finishes a command, *if a
-Force Interrupt condition is true, or *if the FDDC tries to write to a
-write-protected disk.  The 177x's interrupt output pin resets when the
-CPU reads the status register or writes to the command register,
-except after a Force Interrupt (immediate) command.  See the section
-on the Force Interrupt command.
-
-*/
-
 #if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
 #pragma message("Included for compilation: fdc.cpp")
 #endif
@@ -159,7 +23,7 @@ on the Force Interrupt command.
       dma_status|=BIT_1;  /* DMA sector count not 0 */   \
       if (dma_sector_count==0) dma_status&=~BIT_1;     \
     }                                                      \
-  }                                                        \
+  }
 
 // 5 revolutions per second, 313*50 HBLs per second
 #define FDC_HBLS_PER_ROTATION (313*50/5)
@@ -175,7 +39,7 @@ int floppy_current_drive()
   }else if ((psg_reg[PSGR_PORT_A] & BIT_2)==0){ // Drive B
     return 1;
   }
-  return 0; // Neither, guess A
+  return 0; // Neither, guess A //SS: often the case
 }
 //---------------------------------------------------------------------------
 BYTE floppy_current_side()
@@ -278,6 +142,9 @@ void fdc_type1_check_verify()
 DEBUG_ONLY( if (fdc_str & FDC_STR_SEEK_ERROR) log("     Verify failed (track not formatted)"); )
 }
 //---------------------------------------------------------------------------
+//SS writes to $FF8604 when bits 2&1 of $FF8606 have been cleared
+//              WD1772 CR                DMA CR
+// directly come here
 void floppy_fdc_command(BYTE cm)
 {
   log(Str("FDC: ")+HEXSl(old_pc,6)+" - executing command $"+HEXSl(cm,2));
@@ -293,9 +160,7 @@ writes to this register UNLESS the new command is a force interrupt.
     if(fdc_spinning_up && SSE_HACKS_ON)
     {
       // fixes Overdrive boot
-#if defined(SS_FDC_TRACE)
-      TRACE("FDC ACT %d Cd %X replaces %X SpgUp%d  Busy %x\n",ABSOLUTE_CPU_TIME,cm,fdc_old_cr,fdc_spinning_up,fdc_str);
-#endif
+      TRACE_LOG("FDC ACT %d Cd %X replaces %X SpgUp%d  Busy %x\n",ABSOLUTE_CPU_TIME,cm,fdc_old_cr,fdc_spinning_up,fdc_str);
     }
     else
 #endif
@@ -304,7 +169,6 @@ writes to this register UNLESS the new command is a force interrupt.
       return;
     }
   }
-
   mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
   agenda_delete(agenda_fdc_finished);
 
@@ -326,10 +190,8 @@ writes to this register UNLESS the new command is a force interrupt.
   // while the motor is in the middle of spinning up (BIT_3).
   bool delay_exec=0;
   if ((fdc_str & FDC_STR_MOTOR_ON)==0){
-#if defined(SS_FDC_TRACE)
     ASSERT(!fdc_spinning_up);
-    TRACE("FDC ACT %d Cd %X Dr %X Starting motor\n",ABSOLUTE_CPU_TIME,cm,fdc_dr);
-#endif
+    TRACE_LOG("FDC ACT %d Cd %X Dr %X Starting motor\n",ABSOLUTE_CPU_TIME,cm,fdc_dr);
     if ((cm & (BIT_7+BIT_6+BIT_5+BIT_4))!=0xd0){ // Not force interrupt
       if ((cm & BIT_3)==0){
         delay_exec=true; // Delay command until after spinup
@@ -376,101 +238,6 @@ void fdc_execute()
   if (shifter_freq==MONO_HZ){
     hbl_multiply=double(HBLS_PER_SECOND_MONO)/double(HBLS_PER_SECOND_AVE);
   }
-#if defined(SS_FDC_TRACE) 
-  int type=0;
-  if(!(fdc_cr & BIT_7)) // move
-    type=1;
-  else switch (fdc_cr & (BIT_7+BIT_6+BIT_5+BIT_4))
-  {
-    case 0x80:case 0xa0: //R/W
-    case 0x90:case 0xb0:
-      type=2; 
-      break;
-    case 0xc0: //read address
-      type=3;
-      break;
-    case 0xd0: //force interrupt
-      type=4; 
-  }
-
-
-/*
-Bits:
-Bit 7 - Motor On.  This bit is high when the drive motor is on, and
-low when the motor is off.
-
-Bit 6 - Write Protect.  This bit is not used during reads.  During
-writes, this bit is high when the disk is write protected.
-
-Bit 5 - Spin-up / Record Type.  For Type I commands, this bit is low
-during the 6-revolution motor spin-up time.  This bit is high after
-spin-up.  For Type II and Type III commands, Bit 5 low indicates a
-normal data mark.  Bit 5 high indicates a deleted data mark.
-
-Bit 4 - Record Not Found.  This bit is set if the 177x cannot find the
-track, sector, or side which the CPU requested.  Otherwise, this bit
-is clear.
-
-Bit 3 - CRC Error.  This bit is high if a sector CRC on disk does not
-match the CRC which the 177x computed from the data.  The CRC
-polynomial is x^16+x^12+x^5+1.  If the stored CRC matches the newly
-calculated CRC, the CRC Error bit is low.  If this bit and the Record
-Not Found bit are set, the error was in an ID field.  If this bit is
-set but Record Not Found is clear, the error was in a data field.
-
-Bit 2 - Track Zero / Lost Data.  After Type I commands, this bit is 0
-if the mechanism is at track zero.  This bit is 1 if the head is not
-at track zero.  After Type II or III commands, this bit is 1 if the
-CPU did not respond to Data Request (Status bit 1) in time for the
-177x to maintain a continuous data flow.  This bit is 0 if the CPU
-responded promptly to Data Request.
-
-Bit 1 - Index / Data Request.  On Type I commands, this bit is high
-during the index pulse that occurs once per disk rotation.  This bit
-is low at all times other than the index pulse.  For Type II and III
-commands, Bit 1 high signals the CPU to handle the data register in
-order to maintain a continuous flow of data.  Bit 1 is high when the
-data register is full during a read or when the data register is empty
-during a write.  "Worst case service time" for Data Request is 23.5
-cycles.
-
-Bit 0 - Busy.  This bit is 1 when the 177x is busy.  This bit is 0
-when the 177x is free for CPU commands.
-*/
-
-  TRACE("FDC F%d y%d c%d pc %X STR %X (",FRAME,scan_y,LINECYCLES,pc,fdc_str);
-  if(fdc_str&0x80)
-    TRACE(" Motor On");
-  if(fdc_str&0x40)
-    TRACE(" Write Protect");
-  if(fdc_str&0x20)
-    if(type==1) 
-      if(!fdc_spinning_up)
-        TRACE(" Spin-up");
-      else;
-    else
-      TRACE(" Record Type");
-  if(fdc_str&0x10)
-    TRACE(" Record Not Found");
-  if(fdc_str&0x08)
-    TRACE(" CRC Error");
-  if(fdc_str&0x04)
-    if(type==1) 
-      TRACE(" Track Zero");
-    else
-      TRACE(" Lost Data");
-  if(fdc_str&0x02)
-    if(type==1) 
-      TRACE(" Index");
-    else
-      TRACE(" Lost Data");
-  if(fdc_str&0x01)
-    TRACE(" Busy");
-  TRACE(" ) CR %X DR %d TR %d SR %d\n",fdc_cr,fdc_dr,fdc_tr,fdc_sr);
-//  TRACE("FDC ACT %d SpgUp%d Cd %X Dr %X T%d TA1%d STR %X Old %X\n",ABSOLUTE_CPU_TIME,fdc_spinning_up,fdc_cr,fdc_dr,type,floppy_type1_command_active,fdc_str,fdc_old_cr);
-#endif
-
- 
 /*
 The 177x accepts 11 commands.  Western Digital divides these commands
 into four categories, labeled I,II, III, and IV.
@@ -564,9 +331,8 @@ and ends the command.
 */
             if(ADAT || SSE_HACKS_ON) 
             { 
-#if defined(SS_FDC_TRACE)
-              if(floppy_head_track[floppyno]) TRACE("FDC delay restore from track %d\n",floppy_head_track[floppyno]);
-#endif
+              if(floppy_head_track[floppyno]) 
+                TRACE_LOG("FDC delay restore from track %d\n",floppy_head_track[floppyno]);
               hbls_to_interrupt*=floppy_head_track[floppyno];
               if(ADAT && SSE_HACKS_ON) 
                 hbls_to_interrupt*=2;
@@ -589,17 +355,12 @@ The CPU must load the desired track number into the Data Register
 before issuing this command.  The Seek command causes the 177x to step
 the head to the desired track number and update the Track Register.
 */
-
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_TRACE)
-        TRACE("FDC %x seek track %d from %d\n",fdc_cr,fdc_dr,fdc_tr);
-#endif
+        TRACE_LOG("FDC %x seek track %d from %d\n",fdc_cr,fdc_dr,fdc_tr);
 
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_SEEK_VERIFY)
         if(SSE_HACKS_ON && !ADAT && fdc_cr==0x17) 
         { 
-#if defined(SS_FDC_TRACE)
-          TRACE("Seek with 'verify' hack\n");
-#endif
+          TRACE_LOG("Seek with 'verify' hack\n");
 #if defined(SS_FDC_STARTING_DELAY)
           agenda_add(agenda_floppy_seek,4,0);  // hack for Ultimate 3D Dots
 #else
@@ -658,10 +419,7 @@ cycles before the first stepping pulse.
             fdc_type1_check_verify();
           }
           floppy_type1_command_active=1;
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_TRACE)
-        TRACE("Step in %d\n",fdc_tr);
-#endif
-
+          TRACE_LOG("Step in %d\n",fdc_tr);
         }
       }
     }
@@ -1011,9 +769,7 @@ acknowledge Force Interrupt commands only between micro- instructions.
         agenda_delete(agenda_floppy_write_track);
         agenda_delete(agenda_fdc_finished);
         fdc_str=BYTE(fdc_str & FDC_STR_MOTOR_ON);
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_TRACE)
-        TRACE("fdc T4 cr %X str %X T1 %d T23 %d\n",fdc_cr,fdc_str,floppy_type1_command_active,type23_active);
-#endif
+        TRACE_LOG("fdc T4 cr %X str %X T1 %d T23 %d\n",fdc_cr,fdc_str,floppy_type1_command_active,type23_active);
         if (fdc_cr & b1100){
           agenda_fdc_finished(0); // Interrupt CPU immediately
         }else{
@@ -1095,7 +851,9 @@ void agenda_floppy_seek(int)
 void agenda_floppy_readwrite_sector(int Data)
 {
   int floppyno=floppy_current_drive();
+  ASSERT(floppyno==0 || floppyno==1);
   TFloppyImage *floppy=&FloppyDrive[floppyno];
+  ASSERT(floppy);
   bool FromFormat=0;
   if (floppy_head_track[floppyno]<=FLOPPY_MAX_TRACK_NUM){
     FromFormat=floppy->TrackIsFormatted[floppy_current_side()][floppy_head_track[floppyno]];
@@ -1108,6 +866,7 @@ void agenda_floppy_readwrite_sector(int Data)
     WriteProtect=FDC_STR_WRITE_PROTECT;
   }
   if (floppy->Empty()){
+    TRACE("agenda_floppy_readwrite_sector(): floppy is empty\n");
     fdc_str=BYTE(WriteProtect | FDC_STR_MOTOR_ON | /*FDC_STR_SEEK_ERROR | */FDC_STR_BUSY);
     agenda_add(agenda_fdc_finished,FDC_HBLS_PER_ROTATION*int((shifter_freq==MONO_HZ) ? 11:5),0);
     return; // Don't loop
@@ -1121,10 +880,9 @@ void agenda_floppy_readwrite_sector(int Data)
   agenda_add(agenda_fdc_motor_flag_off,MILLISECONDS_TO_HBLS(1800),0);
 
 instant_sector_access_loop:
-
   int Part=LOWORD(Data);
   int SectorStage=(Part % 71); // 0=seek, 1-64=read/write, 65=end of sector, 66-70=gap
-
+//  TRACE("fdc rw sector command %X part %d stage %d\n",Command,Part,SectorStage);
   if (SectorStage==0){
     if (floppy->SeekSector(floppy_current_side(),floppy_head_track[floppyno],fdc_sr,FromFormat)){
       // Error seeking sector, it doesn't exist
@@ -1139,6 +897,9 @@ instant_sector_access_loop:
 #endif
   }else if (SectorStage<=64){
     FILE *f=(FILE*)(FromFormat ? floppy->Format_f:floppy->f);
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC)
+    const // just to check
+#endif
     int BytesPerStage=16;
     int PosInSector=(SectorStage-1)*BytesPerStage;
 
@@ -1146,7 +907,7 @@ instant_sector_access_loop:
     
     if (Command & 0x20){ // Write
       
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
       // Red floppy led for writing, it works more or less
       if(FDCWritingTimer<timer)
         FDCWritingTimer=timer+RED_LED_DELAY;
@@ -1156,11 +917,18 @@ instant_sector_access_loop:
       if (floppy->ReadOnly){
         floppy_irq_flag=FLOPPY_IRQ_NOW; //interrupt with write-protect flag
         FDCCantWriteDisplayTimer=timer+3000;
+
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF) 
+        // 1st phase, no support for writes yet
+      }else if(Caps.DriveIsIPF[floppyno]) {
+          FDCCantWriteDisplayTimer=timer+3000;
+#endif
       }else{
         floppy->WrittenTo=true;
         if (floppy->IsZip()) FDCCantWriteDisplayTimer=timer+5000; // Writing will be lost!
+        //SS byte per byte, we write 16 bytes
         for (int bb=BytesPerStage;bb>0;bb--){
-          Temp=read_from_dma();
+          Temp=read_from_dma(); //SS from RAM to disk
           if (fwrite(&Temp,1,1,f)==0){
             if (floppy_handle_file_error(floppyno,true,fdc_sr,PosInSector,FromFormat)){
               floppy_irq_flag=FLOPPY_IRQ_ONESEC;  //end command after 1 second
@@ -1171,11 +939,11 @@ instant_sector_access_loop:
           PosInSector++;
         }
       }
-    }else{
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD)
-      // reading
+    }else{ // SS Read
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
       FDCWriting=0;
 #endif
+
       BYTE *lpDest;
       for (int bb=BytesPerStage;bb>0;bb--){	// SS: int BytesPerStage=16;
         if (DMA_ADDRESS_IS_VALID_W && dma_sector_count){
@@ -1221,7 +989,7 @@ instant_sector_access_loop:
   }
 
   if (floppy_instant_sector_access){
-    Data=MAKELONG(Part,Command);
+    Data=MAKELONG(Part,Command); // SS Part has been ++, Command is unchanged
     goto instant_sector_access_loop; //SS OMG!
   }else{
     // 8000 bytes per revolution * 5 revolutions per second
@@ -1670,58 +1438,66 @@ void fdc_add_to_crc(WORD &crc,BYTE data)
 #if USE_PASTI
 void pasti_handle_return(struct pastiIOINFO *pPIOI)
 {
-//  log_to(LOGSECTION_PASTI,Str("PASTI: Handling return, update cycles=")+pPIOI->updateCycles+" irq="+pPIOI->intrqState+" Xfer="+pPIOI->haveXfer);
-  pasti_update_time=ABSOLUTE_CPU_TIME+pPIOI->updateCycles;
-
-#if defined(STEVEN_SEAGAL) // compiler warning
+  //  log_to(LOGSECTION_PASTI,Str("PASTI: Handling return, update cycles=")+pPIOI->updateCycles+" irq="+pPIOI->intrqState+" Xfer="+pPIOI->haveXfer);
+  pasti_update_time=ABSOLUTE_CPU_TIME+pPIOI->updateCycles; //SS smart...
+  
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_REWRITE)
   BOOL old_irq=(mfp_reg[MFPR_GPIP] & BIT_5)==0; // 0=irq on
 #else
   bool old_irq=(mfp_reg[MFPR_GPIP] & BIT_5)==0; // 0=irq on
 #endif
+  
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+  if(pPIOI->intrqState) // IRQ is high
+    TRACE_LOG("Pasti IRQ ");
+    if(TRACE_ENABLED) fdc_report_regs();
+#endif
+  
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
+  // Red floppy led for writing in Pasti mode, seems often wrong
+  pastiPEEKINFO ppi;
+  pasti->Peek(&ppi);
+  if( (ppi.commandReg) & 0X20) // Pasti is writing
+  {
+    if(FDCWritingTimer<timer)
+      FDCWritingTimer=timer+RED_LED_DELAY;	
+    FDCWriting=TRUE;
+  }
+  else
+    FDCWriting=FALSE;
+#endif
+
   if (old_irq!=pPIOI->intrqState){
     mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,!pPIOI->intrqState);
     if (pPIOI->intrqState){
       // FDC is busy, activate light
       disk_light_off_time=timer+DisableDiskLightAfter;
-
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD)
-      // Red floppy led for writing in Pasti mode, seems often wrong
-      pastiPEEKINFO ppi;
-      pasti->Peek(&ppi);
-      if( (ppi.commandReg) & 0X20) // Pasti is writing
-      {
-        if(FDCWritingTimer<timer)
-        {
-          FDCWritingTimer=timer+RED_LED_DELAY;	
-        }
-        FDCWriting=TRUE;
-      }
-      else// if( (ppi.commandReg) & 0X20)
-      {
-        FDCWriting=FALSE;
-      }//if(ppi.commandReg & 0X20)
-#endif
-
     }
   }
-  
+
+  //SS pasti manages DMA itself, then calls Steem to transfer what it gathered
   if (pPIOI->haveXfer){
     dma_address=pPIOI->xferInfo.xferSTaddr;
     if (pPIOI->xferInfo.memToDisk){
-//      log_to(LOGSECTION_PASTI,Str("PASTI: DMA transfer ")+pPIOI->xferInfo.xferLen+" bytes from address=$"+HEXSl(dma_address,6)+" to pasti buffer");
+      //      log_to(LOGSECTION_PASTI,Str("PASTI: DMA transfer ")+pPIOI->xferInfo.xferLen+" bytes from address=$"+HEXSl(dma_address,6)+" to pasti buffer");
       for (DWORD i=0;i<pPIOI->xferInfo.xferLen;i++){
         if (DMA_ADDRESS_IS_VALID_R) LPBYTE(pPIOI->xferInfo.xferBuf)[i]=PEEK(dma_address);
         dma_address++;
       }
     }else{
-//      log_to(LOGSECTION_PASTI,Str("PASTI: DMA transfer ")+pPIOI->xferInfo.xferLen+" bytes from pasti buffer to address=$"+HEXSl(dma_address,6));
-      for (DWORD i=0;i<pPIOI->xferInfo.xferLen;i++){
+      //      log_to(LOGSECTION_PASTI,Str("PASTI: DMA transfer ")+pPIOI->xferInfo.xferLen+" bytes from pasti buffer to address=$"+HEXSl(dma_address,6));
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+      if(TRACE_ENABLED) fdc_report_regs();
+#endif
+      for (DWORD i=0;i<pPIOI->xferInfo.xferLen;i++){ 
         if (DMA_ADDRESS_IS_VALID_W){
           DEBUG_CHECK_WRITE_B(dma_address);
           PEEK(dma_address)=LPBYTE(pPIOI->xferInfo.xferBuf)[i];
+          TRACE_LOG("%02X ",LPBYTE(pPIOI->xferInfo.xferBuf)[i]);
         }
         dma_address++;
       }
+      TRACE_LOG("\n");
     }
   }
   if (pPIOI->brkHit){
@@ -1753,3 +1529,99 @@ void pasti_warn_proc(const char *text)
 //---------------------------------------------------------------------------
 #undef LOGSECTION
 
+
+//---------------------------------------------------------------------------
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC)
+
+#if defined(SS_DEBUG)
+  // functions that sould work with all FDC emus
+
+int fdc_report_regs(bool spell_out_status) {
+  int drive=floppy_current_drive();
+  int commandReg,statusReg,trackReg,sectorReg,dataReg,currentTrack,dmaControl,
+    dmaAddress;
+  if(hPasti && pasti_active)
+  {
+    pastiPEEKINFO ppi;
+    pasti->Peek(&ppi);
+    drive=ppi.drvSelect; //?
+    commandReg=ppi.commandReg;
+    statusReg=ppi.statusReg;
+    trackReg=ppi.trackReg;
+    sectorReg=ppi.sectorReg;
+    dataReg=ppi.dataReg;
+    dmaControl=ppi.dmaControl;
+    currentTrack=drive ? ppi.drvbTrack : ppi.drvaTrack;
+    dmaAddress=ppi.dmaBase;
+  }
+#if defined(SS_FDC_IPF)
+  else if(Caps.DriveIsIPF[drive])
+  {
+    int ext=0;
+    commandReg=CapsFdcGetInfo(cfdciR_Command, &WD1772,ext);
+    statusReg=CapsFdcGetInfo(cfdciR_ST, &WD1772,ext);
+    trackReg=CapsFdcGetInfo(cfdciR_Track, &WD1772,ext);
+    sectorReg=CapsFdcGetInfo(cfdciR_Sector, &WD1772,ext);
+    dataReg=CapsFdcGetInfo(cfdciR_Data, &WD1772,ext);
+    currentTrack=SF314[drive].track;
+    dmaControl=dma_mode;
+    dmaAddress=dma_address;
+  }
+#endif
+  else // Steem's native FDC emu
+  {
+    commandReg=fdc_cr;
+    statusReg=fdc_str;
+    trackReg=fdc_tr;
+    sectorReg=fdc_sr;
+    dataReg=fdc_dr;
+    currentTrack=floppy_head_track[drive];
+    dmaControl=dma_mode;
+    dmaAddress=dma_address;
+  }
+  TRACE("FDC REGS CMD %X STR %X TR %d ($%x) SR %d ($%x) DR %d ($%X) Track %d DMA CR %X to %X\n",
+    commandReg,statusReg,trackReg,trackReg,sectorReg,sectorReg,dataReg,dataReg,
+    currentTrack,dmaControl,dmaAddress);
+  if(spell_out_status)
+  {
+    int type= (commandReg&0x80) ? 0 : 1; // it's type1 or not
+    fdc_spell_out_status(statusReg,type);
+  }
+  return TRUE;
+}
+
+void fdc_spell_out_status(BYTE res, int type) {
+  TRACE("FDC STR %X ( ",res);
+  if(res&0x80)
+    TRACE("MO ");//Motor On
+  if(res&0x40)
+    TRACE("WP ");// write protect
+  if(res&0x20)
+    if(type==1)
+      TRACE("SU "); // Spin-up (meaning up to speed)
+    else
+      TRACE("RT "); //Record Type
+  if(res&0x10)
+    TRACE("REC! ");//Record Not Found
+  if(res&0x08)
+    TRACE("CRC! "); //CRC Error
+  if(res&0x04)
+    if(type==1) 
+      TRACE("T0 "); // track zero
+    else
+      TRACE("DATA! ");//Lost Data
+  if(res&0x02)
+    if(type==1) 
+      TRACE("IDX "); // index
+    else
+      TRACE("DRQ "); // data request
+  if(res&0x01)
+    TRACE("ON "); // busy
+  TRACE(")\n"); 
+}
+
+#endif
+#if defined(SS_FDC_IPF)
+#include "SSE/SSEFloppy.cpp" // we use Steem's variables
+#endif
+#endif//SS

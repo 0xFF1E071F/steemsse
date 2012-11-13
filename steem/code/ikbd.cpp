@@ -427,9 +427,7 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
   if(HD6301EMU_ON)
   {
-#if defined(SS_IKBD_TRACE_6301)
-    TRACE("IKBD Finished transmitting byte %X to 6301 emu (act %d after %d cycles)\n",src,ABSOLUTE_CPU_TIME,ABSOLUTE_CPU_TIME-ACIA_IKBD.last_tx_write_time);
-#endif
+    TRACE_LOG("IKBD Finished transmitting byte %X to 6301 emu (act %d after %d cycles)\n",src,ABSOLUTE_CPU_TIME,ABSOLUTE_CPU_TIME-ACIA_IKBD.last_tx_write_time);
     hd6301_receiving_from_MC6850=0; // line is free
 #if defined(SS_ACIA_DOUBLE_BUFFER_TX)
     if(ACIA_IKBD.tx_flag) // but if there's another one waiting
@@ -457,7 +455,7 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
         ? HD6301_CYCLES_PER_SCANLINE/2 : HD6301_CYCLES_PER_SCANLINE;
       if(!hd6301_run_cycles(n6301cycles))
       {
-        TRACE("6301 emu is hopelessly crashed!\n");
+        TRACE_LOG("6301 emu is hopelessly crashed!\n");
         HD6301.Crashed=1; 
       }
       HD6301.RunThisHbl=1; // stupid signal
@@ -472,14 +470,14 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
   ikbd.send_nothing=0;  // This should only happen if valid command is received!
   if(ikbd.command_read_count) // SS: entering command parameters
   { // that is, commands with parameters are handled first (here) 
-#if defined(SS_IKBD_TRACE_COMMANDS) // listing the parameters
+#if defined(SS_DEBUG)
 #if defined(SS_IKBD_FAKE_CUSTOM)
     if(!ikbd.custom_prg_loading && ikbd.command!=0x50)
 #endif
     {
-      TRACE("%X ",src);
+      TRACE_LOG("%X ",src);
       if(ikbd.command_read_count==1)
-        TRACE(") "); // ain't it nice? //TODO sometimes broken
+        TRACE_LOG(") "); // ain't it nice? //TODO sometimes broken
     }
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM) 
@@ -581,9 +579,7 @@ treated as part of the mouse logically. When buttons act like keys,
  LEFT=0x74 & RIGHT=0x75.
 */
       case 0x7: // Set what package is returned when mouse buttons are pressed
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Set Mouse Action $%X\n",ikbd.command_param[0]);
-#endif
+        TRACE_LOG("Set Mouse Action $%X\n",ikbd.command_param[0]);
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD) 
         ikbd.port_0_joy=false;
 #endif
@@ -611,9 +607,7 @@ wrap between 0 and large positive numbers. Excess motion below 0 is ignored.
         ikbd.mouse_mode=IKBD_MOUSE_MODE_ABSOLUTE;
         ikbd.abs_mouse_max_x=MAKEWORD(ikbd.command_param[1],ikbd.command_param[0]);
         ikbd.abs_mouse_max_y=MAKEWORD(ikbd.command_param[3],ikbd.command_param[2]);
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Set Mouse Absolute (x:%d y:%d)\n",ikbd.abs_mouse_max_x,ikbd.abs_mouse_max_y);
-#endif
+        TRACE_LOG("Set Mouse Absolute (x:%d y:%d)\n",ikbd.abs_mouse_max_x,ikbd.abs_mouse_max_y);
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_ABS_MOUSE)
 /* "Less is more" - Emulation is more accurate without all this code!
    Fixes Manchester United
@@ -644,9 +638,7 @@ affected by the mouse motion origin.
 */
       case 0xa: // Return mouse movements as cursor keys
         ikbd.mouse_mode=IKBD_MOUSE_MODE_CURSOR_KEYS;
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Set Mouse Keys\n");
-#endif
+        TRACE_LOG("Set Mouse Keys\n");
         ikbd.cursor_key_mouse_pulse_count_x=max(int(ikbd.command_param[0]),1);
         ikbd.cursor_key_mouse_pulse_count_y=max(int(ikbd.command_param[1]),1);
         ikbd.port_0_joy=false;
@@ -666,9 +658,7 @@ it does NOT affect the resolution of the data returned to the host. This command
  RESET (or power-up).
 */
       case 0xb: // Set relative mouse threshold
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Set Mouse Threshold\n");
-#endif
+        TRACE_LOG("Set Mouse Threshold\n");
         ikbd.relative_mouse_threshold_x=ikbd.command_param[0];
         ikbd.relative_mouse_threshold_y=ikbd.command_param[1];
         ikbd_inc_hack(ikbd.psyg_hack_stage,1);
@@ -693,9 +683,7 @@ information is available only by interrogating the IKBD in the
  to report on button press or release (see SET MOSE BUTTON ACTION).
 */
       case 0xc://set absolute mouse threshold
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Set Mouse Scale (x:%d y:%d)\n",ikbd.command_param[0],ikbd.command_param[1]);
-#endif
+        TRACE_LOG("Set Mouse Scale (x:%d y:%d)\n",ikbd.command_param[0],ikbd.command_param[1]);
         ASSERT(ikbd.command_param[0]>0 && ikbd.command_param[1]>0);
         ikbd.abs_mouse_scale_x=ikbd.command_param[0];
         ikbd.abs_mouse_scale_y=ikbd.command_param[1];
@@ -720,9 +708,7 @@ absolute mouse position.
       case 0xe://set mouse position in IKBD
         ikbd.abs_mouse_x=MAKEWORD(ikbd.command_param[2],ikbd.command_param[1]);
         ikbd.abs_mouse_y=MAKEWORD(ikbd.command_param[4],ikbd.command_param[3]);
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Set Mouse (x:%d y:%d)\n",ikbd.abs_mouse_x,ikbd.abs_mouse_y);
-#endif
+        TRACE_LOG("Set Mouse (x:%d y:%d)\n",ikbd.abs_mouse_x,ikbd.abs_mouse_y);
         break;
 /*
 SET JOYSTICK MONITORING
@@ -743,9 +729,7 @@ the time-of-day clock, and monitor the joystick. The rate sets the interval
 transmitted.
 */
       case 0x17://joystick duration
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Set Joystick Duration\n");
-#endif
+        TRACE_LOG("Set Joystick Duration\n");
         log("IKBD: Joysticks set to duration mode");
         ikbd.joy_mode=IKBD_JOY_MODE_DURATION;
         ikbd.duration=ikbd.command_param[0]*10; //in 1000ths of a second
@@ -787,9 +771,7 @@ Note that by setting RX and/or Ry to zero, the velocity feature can be
  of cursor 'keystrokes' is set by VX and VY.
 */
       case 0x19://cursor key simulation mode for joystick 0
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Set Joystick Key\n");
-#endif
+        TRACE_LOG("Set Joystick Key\n");
         ikbd.joy_mode=IKBD_JOY_MODE_CURSOR_KEYS;
         for(int n=0;n<6;n++){
           ikbd.cursor_key_joy_time[n]=ikbd.command_param[n];
@@ -819,10 +801,7 @@ and not alter that particular field of the date or time. This permits
 setting only some subfields of the time-of-day clock.
 */
       case 0x1b://set clock time
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Set Clock\n");
-#endif
-
+        TRACE_LOG("Set Clock\n");
         log("IKBD: Set clock to... ");
         for (int n=0;n<6;n++){
           int newval=ikbd.command_param[n];
@@ -890,9 +869,7 @@ Code:
 This command permits the host to read from the IKBD controller memory.
 */
       case 0x21:  //read memory
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Read Memory\n");
-#endif
+        TRACE_LOG("Read Memory\n");
       {
         WORD adr=MAKEWORD(ikbd.command_param[1],ikbd.command_param[0]);
         log(Str("IKBD: Reading 6 bytes of IKBD memory, address ")+HEXSl(adr,4));
@@ -923,13 +900,12 @@ This command allows the host to command the execution of a subroutine in the IKB
    of this function).
 */
       case 0x22:  //execute routine
-#if defined(SS_IKBD_TRACE_COMMANDS) && ! defined(SS_IKBD_FAKE_CUSTOM)
-        TRACE("Execute Program\n");
-#endif
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM)
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Execute 6301 Program Loader? Checksum %X\n",ikbd.custom_prg_checksum);
-#endif
+#if !(defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM))
+        TRACE_LOG("Execute Program\n");
+        log(Str("IKBD: Blimey! Executing IKBD routine at ")+
+              HEXSl(MAKEWORD(ikbd.command_param[1],ikbd.command_param[0]),4));
+#else
+        TRACE_LOG("Execute 6301 Program Loader? Checksum %X\n",ikbd.custom_prg_checksum);
         switch(ikbd.custom_prg_checksum)
         {
         case 0x5CA: // Transbeauce 2
@@ -942,9 +918,6 @@ This command allows the host to command the execution of a subroutine in the IKB
           ikbd.command_read_count=200; // gross hack
           break;
         }//sw
-#else // Blimey!
-        log(Str("IKBD: Blimey! Executing IKBD routine at ")+
-              HEXSl(MAKEWORD(ikbd.command_param[1],ikbd.command_param[0]),4));
 #endif
         break;   
 /*
@@ -969,24 +942,18 @@ The RESET command or function causes the IKBD to perform a simple self-test.
  matrix error).
 */
       case 0x80:  
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Reset\n");
-#endif
+        TRACE_LOG("Reset\n");
         if(src==0x01) 
           ikbd_reset(0);
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_TRACE_COMMANDS)
         else
-          TRACE("Reset command ignored (not 80-01)\n");
-#endif
+          TRACE_LOG("Reset command ignored (not 80-01)\n");
         break;
       }//sw
     }
   }
   else
   { //new command SS: some commands are executed at once, others require parameters
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_TRACE_COMMANDS)  
-    if(src) TRACE("TM %d PC %X IKBD Command %X ",ABSOLUTE_CPU_TIME,pc-2,src);
-#endif
+    if(src) TRACE_LOG("TM %d PC %X IKBD Command %X ",ABSOLUTE_CPU_TIME,pc-2,src);
 /*
 After any joystick command, the ikbd assumes that joysticks are connected to both Joystick0
 and Joystick1. Any mouse command (except MOUSE DISABLE) then causes port 0 to again
@@ -998,9 +965,7 @@ TODO!
     if(ikbd.joy_mode==IKBD_JOY_MODE_FIRE_BUTTON_DURATION) 
     {
       ikbd.joy_mode=IKBD_JOY_MODE_OFF;
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_TRACE_COMMANDS)      
-      TRACE("...JOY Mode OFF...");
-#endif
+      TRACE_LOG("...JOY Mode OFF...");
     }
     if (ikbd.resetting && src!=0x08 && src!=0x14) ikbd.reset_0814_hack=-1;
     if (ikbd.resetting && src!=0x12 && src!=0x14) ikbd.reset_1214_hack=-1;
@@ -1024,9 +989,7 @@ behave as if they were keyboard keys.
 */
       case 0x8: //return relative mouse position from now on
         ikbd.mouse_mode=IKBD_MOUSE_MODE_RELATIVE;
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Set Mouse Relative");
-#endif
+        TRACE_LOG("Set Mouse Relative");
         ikbd.port_0_joy=false;
         ikbd_inc_hack(ikbd.psyg_hack_stage,0);
         ikbd_inc_hack(ikbd.reset_0814_hack,0);
@@ -1055,9 +1018,7 @@ The INTERROGATE MOUSE POSITION command is valid when in the ABSOLUTE MOUSE
 POSITIONING mode, regardless of the setting of the MOUSE BUTTON ACTION.
 */
       case 0xd: //read absolute mouse position
-#if defined(SS_IKBD_TRACE_COMMANDS) // it's used in polling
-        TRACE("Read Mouse ABS");
-#endif
+        TRACE_LOG("Read Mouse ABS");
         // This should be ignored if you aren't in absolute mode!
         if (ikbd.mouse_mode!=IKBD_MOUSE_MODE_ABSOLUTE) break;
         ikbd.port_0_joy=false; // SS it's a valid mouse command
@@ -1077,9 +1038,7 @@ absolute mouse motion. This causes mouse motion toward the user to be
 negative in sign and away from the user to be positive.
 */
       case 0xf: //mouse goes upside down
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Mouse Y Axis Reverse");
-#endif
+        TRACE_LOG("Mouse Y Axis Reverse");
         ikbd.mouse_upside_down=true;
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
         ikbd.port_0_joy=false;
@@ -1096,9 +1055,7 @@ Makes the origin of the Y axis to be at the top of the logical
  in sign and away from the user to be negative.
 */
       case 0x10: //mouse goes right way up
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Mouse Y Axis Normal");
-#endif
+        TRACE_LOG("Mouse Y Axis Normal");
         ikbd.mouse_upside_down=false;
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
         ikbd.port_0_joy=false;
@@ -1116,9 +1073,7 @@ command can be thought of as a NO OPERATION command. If this command is
 */
       case 0x11: //okay to send!
         log("IKBD turned on");
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("IKBD ON");
-#endif
+        TRACE_LOG("IKBD ON");
         ikbd.send_nothing=false;
         break;
 /*
@@ -1135,9 +1090,7 @@ disabled). Any valid mouse mode command resumes mouse motion monitoring.
 */
       case 0x12: //turn mouse off
         log("IKBD: Mouse turned off");
-#if defined(SS_IKBD_TRACE_COMMANDS)        
-        TRACE("Mouse OFF");
-#endif
+        TRACE_LOG("Mouse OFF");
         ikbd.mouse_mode=IKBD_MOUSE_MODE_OFF;
         ikbd.port_0_joy=true;
         ikbd_inc_hack(ikbd.reset_1214_hack,0);
@@ -1173,9 +1126,7 @@ temporarily stops the monitoring process (i.e. the samples are not enqueued
 */
       case 0x13: //stop data transfer to main processor
         log("IKBD turned off");
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("IKBD OFF");
-#endif
+        TRACE_LOG("IKBD OFF");
         ikbd.send_nothing=true;
         break;
 /*
@@ -1189,9 +1140,7 @@ a joystick event record to be generated.
 */
       case 0x14: //return joystick movements
         log("IKBD: Changed joystick mode to change notification");
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Joysticks Notify");
-#endif
+        TRACE_LOG("Joysticks Notify");
         ikbd.port_0_joy=true; 
 #if defined(SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT)
         if(ikbd.mouse_mode==IKBD_MOUSE_MODE_OFF)
@@ -1221,9 +1170,7 @@ INTERROGATE commands to sense joystick state.
 */
       case 0x15: //don't return joystick movements
         log("IKBD: Joysticks set to only report when asked");
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Joysticks On Query");
-#endif
+        TRACE_LOG("Joysticks On Query");
         ikbd.port_0_joy=true;
         ikbd.mouse_mode=IKBD_MOUSE_MODE_OFF;  //disable mouse
         agenda_delete(ikbd_report_abs_mouse);
@@ -1242,9 +1189,7 @@ This command is valid in either the JOYSTICK EVENT REPORTING mode
  or the JOYSTICK INTERROGATION MODE.
 */
       case 0x16: //read joystick
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Read Joystick");
-#endif
+        TRACE_LOG("Read Joystick");
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
         ikbd.port_0_joy=true;
 #endif
@@ -1272,9 +1217,7 @@ The sample interval should be as constant as possible.
 */
       case 0x18: //fire button duration, constant high speed joystick button test
         log("IKBD: Joysticks set to fire button duration mode!");
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Joysticks Duration");
-#endif
+        TRACE_LOG("Joysticks Duration");
         ikbd.joy_mode=IKBD_JOY_MODE_FIRE_BUTTON_DURATION;
         ikbd.mouse_mode=IKBD_MOUSE_MODE_OFF;  //disable mouse
         agenda_delete(ikbd_report_abs_mouse);
@@ -1294,9 +1237,7 @@ and SET JOYSTICK KEYCODE MODE.)
 */
       case 0x1a: //turn off joysticks
         log("IKBD: Joysticks turned off");
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Joysticks OFF");
-#endif
+        TRACE_LOG("Joysticks OFF");
       //  ikbd.mouse_mode=IKBD_MOUSE_MODE_OFF;  //disable mouse // already so in Steem 3.2
         ikbd.port_0_joy=0;
         ikbd.joy_mode=IKBD_JOY_MODE_OFF;
@@ -1324,9 +1265,7 @@ Code:
     All time-of-day is sent in packed BCD format.
 */
       case 0x1c: //read clock time
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Read Clock");
-#endif
+        TRACE_LOG("Read Clock");
         keyboard_buffer_write(0xfc);
         for (int n=0;n<6;n++){
           keyboard_buffer_write(ikbd.clock[n]);
@@ -1399,15 +1338,11 @@ or FIRE BUTTON MONITORING mode.
 
 */
       case 0x87: //return what happens when mouse buttons are pressed
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Query Mouse Action");
-#endif
+        TRACE_LOG("Query Mouse Action");
         keyboard_buffer_write_string(0xf6,0x7,ikbd.mouse_button_press_what_message,0,0,0,0,0,(-1));
         break;
       case 0x88:case 0x89:case 0x8a:
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Query Mouse Mode");
-#endif
+        TRACE_LOG("Query Mouse Mode");
         keyboard_buffer_write(0xf6);
         keyboard_buffer_write(BYTE(ikbd.mouse_mode));
         if (ikbd.mouse_mode==0x9){
@@ -1423,17 +1358,13 @@ or FIRE BUTTON MONITORING mode.
         }
         break;
       case 0x8b: //x, y threshhold for relative mouse movement messages
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Query Mouse Threshold");
-#endif
+        TRACE_LOG("Query Mouse Threshold");
         keyboard_buffer_write_string(0xf6,0xb,ikbd.relative_mouse_threshold_x,
                                       ikbd.relative_mouse_threshold_y,
                                       0,0,0,0,(-1));
         break;
       case 0x8c: //x,y scaling of mouse for absolute mouse
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Query Mouse Scale");
-#endif
+        TRACE_LOG("Query Mouse Scale");
         keyboard_buffer_write_string(0xf6,0xc,ikbd.abs_mouse_scale_x,
                                       ikbd.abs_mouse_scale_y,
                                       0,0,0,0,(-1));
@@ -1445,9 +1376,7 @@ or FIRE BUTTON MONITORING mode.
       case 0x8e: /*DEAD*/ break;
 #endif
       case 0x8f:case 0x90: //return 0xf if mouse is upside down, 0x10 otherwise
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Query Mouse Y Axis");
-#endif
+        TRACE_LOG("Query Mouse Y Axis");
         keyboard_buffer_write(0xf6);
         if (ikbd.mouse_upside_down){
           keyboard_buffer_write(0xf);
@@ -1461,9 +1390,7 @@ or FIRE BUTTON MONITORING mode.
       case 0x91: /*DEAD*/ break;
 #endif
       case 0x92:  //is mouse off?
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Query Mouse Off");
-#endif
+        TRACE_LOG("Query Mouse Off");
         keyboard_buffer_write(0xf6);
         if (ikbd.mouse_mode==IKBD_MOUSE_MODE_OFF){
           keyboard_buffer_write(0x12);
@@ -1477,9 +1404,7 @@ or FIRE BUTTON MONITORING mode.
       case 0x93: /*DEAD*/ break;
 #endif
       case 0x94:case 0x95:case 0x99:
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Query Joystick Mode");
-#endif
+        TRACE_LOG("Query Joystick Mode");
       {
         keyboard_buffer_write(0xf6);
         // if joysticks are disabled then return previous state. We don't store that.
@@ -1500,9 +1425,7 @@ or FIRE BUTTON MONITORING mode.
       case 0x98: /*DEAD*/ break;
 #endif
       case 0x9a:  //is joystick off?
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("Query Joystick Off");
-#endif
+        TRACE_LOG("Query Joystick Off");
         keyboard_buffer_write(0xf6);
         if (ikbd.joy_mode==IKBD_JOY_MODE_OFF){
           keyboard_buffer_write(0x1a);
@@ -1514,20 +1437,16 @@ or FIRE BUTTON MONITORING mode.
         // > 0x9a all DEAD (tested up to 0xac)
 
       default: // I'm afraid my hack for Jumping Jackson causes ignored commands
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        if(src) TRACE("Byte ignored",src);
-#endif
+        if(src) TRACE_LOG("Byte ignored",src);
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
         ASSERT(!IkbdOff);
         ikbd.send_nothing=IkbdOff;
 #endif
     ;}//sw
-#if defined(SS_IKBD_TRACE_COMMANDS)
     if(ikbd.command_read_count)
-      TRACE("( ");  //  we'll list parameters
+      TRACE_LOG("( ");  //  we'll list parameters
     else
-      TRACE("\n"); // we're done
-#endif
+      TRACE_LOG("\n"); // we're done
     ikbd.command_parameter_counter=0;
   }
 }
@@ -1665,9 +1584,7 @@ void keyboard_buffer_write(BYTE src) {
   else
   {
     log("IKBD: Keyboard buffer overflow");
-#if defined(SS_IKBD_TRACE)
-    TRACE("IKBD: Keyboard buffer overflow\n");
-#endif
+    TRACE_LOG("IKBD: Keyboard buffer overflow\n");
   }
 }
 
@@ -1679,7 +1596,7 @@ void keyboard_buffer_write(BYTE src) {
 void hd6301_keyboard_buffer_write(BYTE src) { 
   ASSERT(HD6301EMU_ON);
 #if defined(SS_IKBD_TRACE_6301)
-  TRACE("%d received byte %X from 6301 emu\n",ABSOLUTE_CPU_TIME,src);
+  TRACE_LOG("%d received byte %X from 6301 emu\n",ABSOLUTE_CPU_TIME,src);
 #endif
 #if defined(SS_ACIA_IRQ_DELAY)
   ikbd.timer_when_keyboard_info=ABSOLUTE_CPU_TIME; // record exact timing
@@ -1702,9 +1619,7 @@ void hd6301_keyboard_buffer_write(BYTE src) {
   else
   {
     log("IKBD: Keyboard buffer overflow");
-#if defined(SS_IKBD_TRACE)
-    TRACE("IKBD (6301): Keyboard buffer overflow\n");
-#endif
+    TRACE_LOG("IKBD (6301): Keyboard buffer overflow\n");
   }
 }
 
@@ -1915,12 +1830,9 @@ void ikbd_reset(bool Cold)
 //---------------------------------------------------------------------------
 void agenda_keyboard_reset(int SendF0) // SS scheduled by ikbd_reset()
 {
-
-#if defined(STEVEN_SEAGAL) &&defined(SS_IKBD_TRACE)
-  TRACE("IKBD: TM %d Execute reset\n",ABSOLUTE_CPU_TIME);
+  TRACE_LOG("IKBD: TM %d Execute reset\n",ABSOLUTE_CPU_TIME);
   if(HD6301EMU_ON)
     printf("IKBD: TM %d Execute reset\n",ABSOLUTE_CPU_TIME);
-#endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM)
   ikbd.custom_prg_loading=FALSE;
@@ -1968,13 +1880,13 @@ void agenda_keyboard_reset(int SendF0) // SS scheduled by ikbd_reset()
 
     if (ikbd.psyg_hack_stage==3 || ikbd.reset_0814_hack==2 || ikbd.reset_1214_hack==2){
       log("IKBD: HACK ACTIVATED - turning mouse on.");
-      TRACE("IKBD: HACK ACTIVATED - turning mouse on\n"); // Barbarian
+      TRACE_LOG("IKBD: HACK ACTIVATED - turning mouse on\n"); // Barbarian
       ikbd.mouse_mode=IKBD_MOUSE_MODE_RELATIVE;
       ikbd.port_0_joy=false;
     }
     if (ikbd.reset_121A_hack==2){ // Turned both mouse and joystick off, but they should be on.
       log("IKBD: HACK ACTIVATED - turning mouse and joystick on.");
-      TRACE("IKBD: HACK ACTIVATED - turning mouse and joystick on.\n");
+      TRACE_LOG("IKBD: HACK ACTIVATED - turning mouse and joystick on.\n");
       ikbd.mouse_mode=IKBD_MOUSE_MODE_RELATIVE;
       ikbd.joy_mode=IKBD_JOY_MODE_AUTO_NOTIFY;
       ikbd.port_0_joy=false;
@@ -2070,7 +1982,9 @@ Code:
 
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM)
-// Custom 6301 programs handlers copied from Hatari
+//  Custom 6301 programs handlers copied from Hatari, used when 6301 emu isn't
+
+
 void IKBD_STRUCT::CustomDragonnels() {
   BYTE kbd_info = 0;
   // mouse

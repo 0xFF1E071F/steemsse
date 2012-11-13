@@ -399,7 +399,10 @@ bool SteemDisplay::InitGDI()
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
-  if(GetSystemMetrics(SM_CXSCREEN)>640+4*SideBorderSizeWin)
+  if(GetSystemMetrics(SM_CXSCREEN)>640+4*SideBorderSizeWin
+    // testing also vertical pixels (bugfix 3.4.1) but... GDI? (useless)
+    && GetSystemMetrics(SM_CYSCREEN)>400+2*(BORDER_TOP+BORDER_BOTTOM)
+    )
   {
     w=640+4*SideBorderSizeWin;
     h=400+2*(BORDER_TOP+BORDER_BOTTOM);
@@ -486,8 +489,16 @@ HRESULT SteemDisplay::Lock()
       draw_line_length=DDBackSurDesc.lPitch;
       draw_mem=LPBYTE(DDBackSurDesc.lpSurface);
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
-      if(FullScreen) // now that memory is available to us...
-        ZeroMemory(draw_mem,800*8*200); // clear top of screen
+      // trying to make it crash-free (v3.4.1)
+      if(FullScreen && BORDER_40)
+      {
+        try { //try to erase memory (black screen)
+          ZeroMemory(draw_mem,800*8*200);
+        }
+        catch(...) {
+          // forget it
+        }
+      }
 #endif
       return DD_OK;
     }
@@ -558,6 +569,7 @@ bool SteemDisplay::Blit()
             {
               draw_fs_blit_mode=DFSM_STRAIGHTBLIT;
               TRACE("Fullscreen BorderSize %d changing to mode %d\n",SSEOption.BorderSize,draw_fs_blit_mode);
+              break;
             }
 #endif
             hRet=DDPrimarySur->Flip(NULL,0); //DDFLIP_WAIT);
@@ -567,8 +579,12 @@ bool SteemDisplay::Blit()
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
             if(BORDER_40) // clip from larger to 800
             {
-                RECT our_clipping={16,0,816,556-6};
-                hRet=DDPrimarySur->Blt(&draw_blit_source_rect,DDBackSur,
+              // CLS
+              //HDC dc=GetDC(StemWin);
+              //VERIFY( FillRect(dc,&draw_blit_source_rect,(HBRUSH)GetStockObject(BLACK_BRUSH)) ); 
+              // trick              
+              RECT our_clipping={16,0,816,556-6};
+              hRet=DDPrimarySur->Blt(&draw_blit_source_rect,DDBackSur,
                   &our_clipping,DDBLT_WAIT,NULL);
             }
             else // other sizes: blit fast
@@ -597,7 +613,10 @@ bool SteemDisplay::Blit()
           }
         }
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
-        else if(hRet) // it can fail for whatever reason
+/*  It can fail for whatever reason. First we try to switch to stretch mode,
+    if it still fails we go laptop mode.
+*/
+        else if(hRet) 
         {
           if(draw_fs_blit_mode!=DFSM_STRETCHBLIT)
             draw_fs_blit_mode=DFSM_STRETCHBLIT;
@@ -830,7 +849,7 @@ void SteemDisplay::DrawFullScreenLetterbox()
         Dest.left=0;Dest.right=SideGap;
         DDBackSur->Blt(&Dest,NULL,NULL,DDBLT_COLORFILL | DDBLT_WAIT,&bfx);
         if (dc){
-          FillRect(dc,&Dest,(HBRUSH)GetStockObject(BLACK_BRUSH));
+          FillRect(dc,&Dest,(HBRUSH)GetStockObject(BLACK_BRUSH)); // SS ape this instead...
         }else{
           DDPrimarySur->Blt(&Dest,NULL,NULL,DDBLT_COLORFILL | DDBLT_WAIT,&bfx);
         }

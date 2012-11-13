@@ -22,6 +22,11 @@
 #define BOOL int
 #endif
 
+#ifdef WIN32
+#include <windows.h>
+#endif
+
+
 #if defined(VC_BUILD)
 //#pragma warning (1 : 4710) // function '...' not inlined as warning L1
 #pragma warning (disable : 4800) // 'int' : forcing value to bool 'true' or 'false' (performance warning)
@@ -48,6 +53,10 @@ extern "C" int SS_signal; // "handy" global mask (future coding horror case)
 #endif
 
 #endif
+
+
+
+
 
 ///////////////
 // INTERRUPT //

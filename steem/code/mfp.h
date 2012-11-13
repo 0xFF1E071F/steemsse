@@ -860,6 +860,7 @@ void mfp_check_for_timer_timeouts(); // SS not implemented
 #define mfp_interrupt_i_bit(irq) (BYTE(1 << (irq & 7)))
 #define mfp_interrupt_i_ab(irq) (1-((irq & 8) >> 3))
 
+//TODO check the condition
 #define mfp_interrupt_pend(irq,when_fired)                                       \
   if (mfp_interrupt_enabled[irq]){                             \
     LOG_ONLY( bool done= ) mfp_set_pending(irq,when_fired);   \

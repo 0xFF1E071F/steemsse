@@ -22,66 +22,64 @@ TCpu::TCpu() {
 
 #if defined(SS_CPU_EXCEPTION)
 
+#define LOGSECTION LOGSECTION_CRASH
+
 void m68k_exception::crash()
 {
   DWORD bytes_to_stack=int((bombs==BOMBS_BUS_ERROR || bombs==BOMBS_ADDRESS_ERROR) ? (4+2+2+4+2):(4+2));
   MEM_ADDRESS sp=(MEM_ADDRESS)(SUPERFLAG ? (areg[7] & 0xffffff):(other_sp & 0xffffff));
 
-#if defined(SS_CPU_EXCEPTION_TRACE)   // report in TRACE, helped a lot
+#if defined(SS_DEBUG)   
   Cpu.nExceptions++;
-  if(Cpu.nExceptions<=EXCEPTIONS_REPORTED
-    &&!(bombs==2 && pc==0xfc0f38)) // blitter test
-  {
+  {//TODO remove this in IDE...
 #ifdef DEBUG_BUILD // this helped a lot 
     EasyStr instr=disa_d2(old_pc); // take advantage of the disassembler
-    TRACE("PC:%X-Op:%X-Ins: %s -SR:%X-Bus:%X\n",old_pc,ir,instr.Text,sr,abus);
+    TRACE_LOG("PC:%X-Op:%X-Ins: %s -SR:%X-Bus:%X\n",old_pc,ir,instr.Text,sr,abus);
 #else
-    TRACE("PC:%X-Op:%X-SR:%X-Bus:%X\n",old_pc,ir,sr,abus);
+    TRACE_LOG("PC:%X-Op:%X-SR:%X-Bus:%X\n",old_pc,ir,sr,abus);
 #endif
-    TRACE("Regs");
+    TRACE_LOG("Regs");
     int i;
     for(i=0;i<8;i++) // D0-D7
-      TRACE(" D%d:%X",i,r[i]);
-    TRACE("\nRegs");
+      TRACE_LOG(" D%d:%X",i,r[i]);
+    TRACE_LOG("\nRegs");
     for(i=0;i<8;i++) // A0-A7 (A7 when the exception occured)
-      TRACE(" A%d:%X",i,areg[i]);
-    TRACE("\nException Nr %d, %d (",Cpu.nExceptions,bombs);
+      TRACE_LOG(" A%d:%X",i,areg[i]);
+    TRACE_LOG("\nException #%d, %d bombs (",Cpu.nExceptions,bombs);
     switch(bombs)
     {  
     case 2:
-      TRACE("BOMBS_BUS_ERROR"); 
+      TRACE_LOG("BOMBS_BUS_ERROR"); 
       break;
     case 3:
-      TRACE("BOMBS_ADDRESS_ERROR"); 
+      TRACE_LOG("BOMBS_ADDRESS_ERROR"); 
       break;
     case 4:
-      TRACE("BOMBS_ILLEGAL_INSTRUCTION"); 
+      TRACE_LOG("BOMBS_ILLEGAL_INSTRUCTION"); 
       break;
     case 5:
-      TRACE("BOMBS_DIVISION_BY_ZERO"); 
+      TRACE_LOG("BOMBS_DIVISION_BY_ZERO"); 
       break;
     case 6:
-      TRACE("BOMBS_CHK"); 
+      TRACE_LOG("BOMBS_CHK"); 
       break;
     case 7:
-      TRACE("BOMBS_TRAPV"); 
+      TRACE_LOG("BOMBS_TRAPV"); 
       break;
     case 8:
-      TRACE("BOMBS_PRIVILEGE_VIOLATION"); 
+      TRACE_LOG("BOMBS_PRIVILEGE_VIOLATION"); 
       break;
     case 9:
-      TRACE("BOMBS_TRACE_EXCEPTION"); 
+      TRACE_LOG("BOMBS_TRACE_EXCEPTION"); 
       break;
     case 10:
-      TRACE("BOMBS_LINE_A"); 
+      TRACE_LOG("BOMBS_LINE_A"); 
       break;
     case 11:
-      TRACE("BOMBS_LINE_F"); 
+      TRACE_LOG("BOMBS_LINE_F"); 
       break;
     }//sw
-    TRACE(")-Vector: %X\n",LPEEK(bombs*4));
-    if(Cpu.nExceptions==EXCEPTIONS_REPORTED)
-      TRACE("%d exceptions. Stopping reporting exceptions.\n",Cpu.nExceptions);
+    TRACE_LOG(")-Vector: %X\n",LPEEK(bombs*4));
   }
 #endif
 
@@ -89,8 +87,8 @@ void m68k_exception::crash()
   {
     // Double bus error, CPU halt (we crash and burn)
     // This only has to be done here, m68k_PUSH_ will cause bus error if invalid
-  //  DEBUG_ONLY( log_history(bombs,crash_address) );
-    TRACE("Double bus error SP:%X\n",sp);
+    DEBUG_ONLY( log_history(bombs,crash_address) );
+    TRACE_LOG("Double bus error SP:%X\n",sp);
     perform_crash_and_burn();//SS don't think there's anything to fix here
   }
   else
@@ -112,7 +110,7 @@ void m68k_exception::crash()
 #if defined(SS_DEBUG)
         BRK(odd exception vector);
         Cpu.nExceptions++;
-        TRACE("->%d bombs\n",bombs);
+        TRACE_LOG("->%d bombs\n",bombs);
 #endif
         address=ad;
         action=EA_FETCH;
@@ -157,7 +155,7 @@ void m68k_exception::crash()
           ASSERT(Cpu.PrefetchClass==1);
           PREFETCH_IRC;
           _pc+=2;
-          TRACE("Crash during write PC%X IR%X +2 for prefetch\n",_pc,_ir);
+          TRACE_LOG("Crash during write PC%X IR%X +2 for prefetch\n",_pc,_ir);
         }
 
 #endif
@@ -170,32 +168,32 @@ void m68k_exception::crash()
           {
 #if defined(SS_CPU_WAR_HELI)
           case 0x2285: 
-            TRACE("War Heli? (use ADAT)\n");
+            TRACE_LOG("War Heli? (use ADAT)\n");
             offset=2; // fixes War Heli, already in Steem 3.2.
             break;
 #endif
 #if defined(SS_CPU_PHALEON)
           case 0x21F8:
-            TRACE("Protected demo (European, Phaleon, Transbeauce 2?\n");
+            TRACE_LOG("Protected demo (European, Phaleon, Transbeauce 2?\n");
             offset=-2; // fixes those protected demos
             break;
 #endif
           case 0x2ABB: // Lethal Xcess (STF)
             break;
           case 0x2235: 
-            TRACE("Super Neo Show demo?\n"); // strange beast
+            TRACE_LOG("Super Neo Show demo?\n"); // strange beast
             break;
           case 0x20BC:
           case 0x2089:
-            TRACE("Cuddly demo?\n");
+            TRACE_LOG("Cuddly demo?\n");
             break;
           default: // generally an emu fault
-            TRACE("MOVE.L crash - Opcode %X\n",_ir);
+            TRACE_LOG("MOVE.L crash - Opcode %X\n",_ir);
             break;
           }//sw
 #if defined(SS_DEBUG)
           if(offset)
-            TRACE("Adjusting stacked PC %d: %X\n",offset,_pc+offset);
+            TRACE_LOG("Adjusting stacked PC %d: %X\n",offset,_pc+offset);
 #endif
           _pc+=offset;
         }
@@ -213,7 +211,7 @@ void m68k_exception::crash()
       }
       CATCH_M68K_EXCEPTION
       {
-        TRACE("Exception during exception...\n");
+        TRACE_LOG("Exception during exception...\n");
         r[15]=0xf000; // R15=A7
       }
       END_M68K_EXCEPTION
@@ -228,7 +226,7 @@ void m68k_exception::crash()
   }
   PeekEvent(); // Stop exception freeze
 }
-
+#undef LOGSECTION
 #endif//#if defined(SS_CPU_EXCEPTION)
 
 

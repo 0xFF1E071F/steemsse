@@ -10,9 +10,12 @@ the ST.
 #pragma message("Included for compilation: mfp.cpp")
 #endif
 
+#define LOGSECTION LOGSECTION_INTERRUPTS//SS
+
 /*  SS MFP emulation is a very complicated affair. I'm surprised that Steem
     can do so much with so little code.
-    Apparently the timings are very good too.
+    Apparently the timings are very good too. It seems so far that using a 
+    ratio for timings causes no drifting.
 */
 
 //---------------------------------------------------------------------------
@@ -119,16 +122,14 @@ inline bool mfp_set_pending(int irq,int when_set)
     mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)]|=mfp_interrupt_i_bit(irq); 
     return true;
   }
-#if defined(SS_INT_TRACE)
   else // value can be odd??
-    TRACE("MFP no set pending, %d cycles too soon\n",CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED+56-8-abs_quick(when_set-mfp_time_of_start_of_last_interrupt[irq]));
-#endif
+    TRACE_LOG("MFP no set pending, %d cycles too soon\n",CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED+56-8-abs_quick(when_set-mfp_time_of_start_of_last_interrupt[irq]));
   return (mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)] 
     & mfp_interrupt_i_bit(irq))!=0;
 }
 
 
-
+#undef LOGSECTION//ss
 #define LOGSECTION LOGSECTION_MFP_TIMERS
 /*
   The four timers are programmed via three Timer Control Registers and four
@@ -247,10 +248,8 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 #if defined(SS_DEBUG)
     // it seems not to be expected
     if (reg<=MFPR_TBCR && new_val>8)
-      TRACE("MFP: --------------- PULSE EXTENSION MODE!! -----------------");
+      TRACE_LOG("MFP: --------------- PULSE EXTENSION MODE!! -----------------");
 #endif
-
-
     prepare_event_again();
   }else if (reg>=MFPR_TADR && reg<=MFPR_TDDR){ //data reg change
     timer=reg-MFPR_TADR;
@@ -369,6 +368,8 @@ int mfp_calc_timer_counter(int timer)
 
 */
 
+#define LOGSECTION LOGSECTION_INTERRUPTS//SS
+
 void ASMCALL check_for_interrupts_pending()
 {
   if (STOP_INTS_BECAUSE_INTERCEPT_OS==0){
@@ -394,7 +395,7 @@ void ASMCALL check_for_interrupts_pending()
             // like in Hatari, but it must point to some trouble? TODO
             if(SSE_HACKS_ON && irq==6 && ABSOLUTE_CPU_TIME-ikbd.timer_when_keyboard_info < SS_6301_TO_ACIA_IN_CYCLES)//7260)
             {
-              TRACE("mfp irq 6 %d cycles post trigger\n",ABSOLUTE_CPU_TIME-ikbd.timer_when_keyboard_info);
+              SS_INT_TRACE("mfp irq 6 %d cycles post trigger\n",ABSOLUTE_CPU_TIME-ikbd.timer_when_keyboard_info);
               break; // come back later
             }
 #endif
@@ -410,11 +411,11 @@ void ASMCALL check_for_interrupts_pending()
       Shifter.nVbl && // hack for resuming emu (auto.sts)
 #endif
       vbl_pending && ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl>64+4){
-      //TRACE("delayed vbl %d y %d SR %X\n",FRAME,scan_y,sr);
+      //SS_INT_TRACE("delayed vbl %d y %d SR %X\n",FRAME,scan_y,sr);
       if ((sr & SR_IPL)<SR_IPL_4){
         ASSERT(!Blit.HasBus);
         VBL_INTERRUPT
-//        if(LPEEK(0x70)!=0xFC06DE) TRACE("VBL %d vector %X\n",nVbl,LPEEK(0x70));
+//        if(LPEEK(0x70)!=0xFC06DE) SS_INT_TRACE("VBL %d vector %X\n",nVbl,LPEEK(0x70));
       }
     }
 #else
@@ -422,7 +423,7 @@ void ASMCALL check_for_interrupts_pending()
       if ((sr & SR_IPL)<SR_IPL_4){
 
         VBL_INTERRUPT
-//        if(LPEEK(0x70)!=0xFC06DE) TRACE("VBL %d vector %X\n",nVbl,LPEEK(0x70));
+//        if(LPEEK(0x70)!=0xFC06DE) SS_INT_TRACE("VBL %d vector %X\n",nVbl,LPEEK(0x70));
       }
     }
 
@@ -436,8 +437,8 @@ void ASMCALL check_for_interrupts_pending()
           ASSERT(!Blit.HasBus);
           HBL_INTERRUPT;
         }
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_TRACE) // can happen quite a lot
-        else if(LPEEK(0x0068)<0xFC0000) TRACE("no hbl %X\n",LPEEK(0x0068));
+#if defined(STEVEN_SEAGAL) && defined(SS_INT_HBL) // can happen quite a lot
+        else if(LPEEK(0x0068)<0xFC0000) TRACE_LOG("no hbl %X\n",LPEEK(0x0068));
 #endif
       }
     }
@@ -453,7 +454,7 @@ void mfp_interrupt(int irq,int when_fired)
     log_to_section(LOGSECTION_INTERRUPTS,EasyStr("  enabled"));
     if (mfp_set_pending(irq,when_fired)==0){
       log_to_section(LOGSECTION_INTERRUPTS,EasyStr("  but ignored due to MFP clearing pending after it was set"));
-      TRACE("MFP irq ignored due to MFP clearing pending after it was set\n"); // cases?
+      TRACE_LOG("MFP irq ignored due to MFP clearing pending after it was set\n"); // cases?
     }else{
       if ((mfp_reg[MFPR_IMRA+mfp_interrupt_i_ab(irq)] & mfp_interrupt_i_bit(irq))==0){
         log_to_section(LOGSECTION_INTERRUPTS,EasyStr("  but masked"));
@@ -469,6 +470,13 @@ void mfp_interrupt(int irq,int when_fired)
             }else{
               mfp_reg[MFPR_ISRA+mfp_interrupt_i_ab(irq)]&=BYTE(~mfp_interrupt_i_bit(irq));
             }
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)   
+            if(irq==7 && (WD1772.lineout&CAPSFDC_LO_INTRQ))
+            {
+              TRACE_LOG("execute WD1772 irq\n");
+              WD1772.lineout&=~CAPSFDC_LO_INTRQ; // never happens & wrong?
+            }
+#endif
             MEM_ADDRESS vector;
             vector=    (mfp_reg[MFPR_VR] & 0xf0)  +(irq);
             vector*=4;

@@ -1,7 +1,7 @@
 #include "conditions.h"
 
 // includes from include.h with adaptations
-
+this file isn't used, should be deleted
 #ifdef UNIX
 bool enable_zip=true;
 #else

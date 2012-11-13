@@ -428,6 +428,19 @@ void event_hbl()   //just HBL, don't draw yet
   }
   if (dma_sound_on_this_screen) dma_sound_fetch();
   screen_event_pointer++;  
+
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+  // giving cycles to IPF's WD1772 emu every scanline
+  if(Caps.Active)
+  {
+#if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)
+    ASSERT( Shifter.CurrentScanline.Cycles>100)
+    CapsFdcEmulate(&WD1772,Shifter.CurrentScanline.Cycles);
+#else
+    CapsFdcEmulate(&WD1772,screen_res==2? 160 : 512);
+#endif
+  }
+#endif
 }
 //---------------------------------------------------------------------------
 
@@ -563,6 +576,19 @@ void event_scanline()
   /////// and relative to cpu_time_of_last_vbl:
   cpu_timer_at_start_of_hbl=time_of_next_event; 
 
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+  // giving cycles to IPF's WD1772 emu every scanline
+  if(Caps.Active)
+  {
+#if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)
+    ASSERT( Shifter.CurrentScanline.Cycles>100)
+    CapsFdcEmulate(&WD1772,Shifter.CurrentScanline.Cycles);
+#else
+    CapsFdcEmulate(&WD1772,screen_res==2? 160 : 512);
+#endif
+  }
+#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)
   Shifter.IncScanline();
 #else
@@ -603,35 +629,7 @@ void event_scanline()
 void event_start_vbl()
 {
   // This happens about 60 cycles into scanline 247 (50Hz)
-
-/*
-#ifdef SS_TST1
-  debug2++;
-  if(debug2==2)
-  {
-    if(debug3)
-    {
-      xbios2=debug3;
-      debug3=0;
-    }
-    else if(xbios2!=debug1)
-    {
-      debug3=xbios2;
-      xbios2=debug1;
-    }
-  }
-#endif
-*/
   shifter_draw_pointer=xbios2; // SS: reload SDP
-/*
-#ifdef SS_TST1
-  if(debug2==2)
-  {
-    debug1=xbios2; // save
-    debug2=0;
-  }
-#endif
-*/
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
   shifter_pixel=shifter_hscroll;
   overscan_add_extra=0; //SS?
@@ -968,10 +966,7 @@ void event_vbl_interrupt()
     shifter_last_draw_line=320;
     overscan=OVERSCAN_MAX_COUNTDOWN;
   }
-#ifdef SS_TST1___
-#else
   event_start_vbl(); // Reset SDP again!
-#endif
 #if defined(SS_VID_DRAGON)
   if(SS_signal==SS_SIGNAL_SHIFTER_CONFUSED_1)
     SS_signal=SS_SIGNAL_SHIFTER_CONFUSED_2; // stage 2 of our hack
@@ -1006,6 +1001,7 @@ void event_vbl_interrupt()
     if(VblJitterIndex==5)
       VblJitterIndex=0;
 #endif
+
   log_to(LOGSECTION_SPEEDLIMIT,"--");
 
   PasteVBL();
@@ -1059,6 +1055,10 @@ void event_pasti_update()
 #endif
     return;
   }
+
+//SS pasti.dll tells us when we must call it again through the variable
+// pastiIOINFO->updateCycles as read in pasti_handle_return. The sync is
+// ensured by the plugin
 
   struct pastiIOINFO pioi;
   pioi.stPC=pc;

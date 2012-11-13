@@ -629,7 +629,13 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
   }
 
-#endif
+  if(Version>=42) // Steem 3.5
+  // while beta this all may change...
+  {
+//    ReadWrite(IPFDisk);//tmp- silly...
+  }
+
+#endif//#if defined(STEVEN_SEAGAL)
 
 
   //

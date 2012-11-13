@@ -857,8 +857,37 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             if (draw_grille_black<4) draw_grille_black=4;
           }
           break;
+        case 208:
+          if (HIWORD(wPar)==BN_CLICKED){
+            bool proceed=true;
+            if (FullScreen){
+              if (IDCANCEL==Alert(T("This will cause the monitor to change resolution"),
+                        T("Change Colour Depth"),MB_OKCANCEL | MB_DEFBUTTON1 | MB_ICONEXCLAMATION)){
+                proceed=false;
+              }
+            }
+            if (proceed){
+              display_option_8_bit_fs=!display_option_8_bit_fs;
+              SendMessage(HWND(lPar),BM_SETCHECK,display_option_8_bit_fs,0);
+              if (FullScreen){
+                change_fullscreen_display_mode(false);
+                palette_convert_all();
+                draw(false);
+                InvalidateRect(StemWin,NULL,0);
+              }
+              This->UpdateHzDisplay();
+            }
+          }
+          break;
+        case 210:
+          if (HIWORD(wPar)==BN_CLICKED){
+            prefer_res_640_400=!prefer_res_640_400;
+            SendMessage(HWND(lPar),BM_SETCHECK,prefer_res_640_400,0);
+          }
+          break;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STF)
+#if defined(STEVEN_SEAGAL)
+#if defined(SS_STF)
           // option ST model
         case 211:
           if (HIWORD(wPar)==CBN_SELENDOK)
@@ -896,35 +925,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
 	  break;
 #endif
-
-        case 208:
-          if (HIWORD(wPar)==BN_CLICKED){
-            bool proceed=true;
-            if (FullScreen){
-              if (IDCANCEL==Alert(T("This will cause the monitor to change resolution"),
-                        T("Change Colour Depth"),MB_OKCANCEL | MB_DEFBUTTON1 | MB_ICONEXCLAMATION)){
-                proceed=false;
-              }
-            }
-            if (proceed){
-              display_option_8_bit_fs=!display_option_8_bit_fs;
-              SendMessage(HWND(lPar),BM_SETCHECK,display_option_8_bit_fs,0);
-              if (FullScreen){
-                change_fullscreen_display_mode(false);
-                palette_convert_all();
-                draw(false);
-                InvalidateRect(StemWin,NULL,0);
-              }
-              This->UpdateHzDisplay();
-            }
-          }
-          break;
-        case 210:
-          if (HIWORD(wPar)==BN_CLICKED){
-            prefer_res_640_400=!prefer_res_640_400;
-            SendMessage(HWND(lPar),BM_SETCHECK,prefer_res_640_400,0);
-          }
-          break;
+#endif// defined(STEVEN_SEAGAL)
 
         case 220:case 222:case 224:
           if (HIWORD(wPar)==CBN_SELENDOK){

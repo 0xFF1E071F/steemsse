@@ -329,7 +329,7 @@ void stemdos_read(int h,MEM_ADDRESS sp)
   }
   r[0]=c; //number of characters read
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -352,7 +352,7 @@ void stemdos_write(int h,MEM_ADDRESS sp)
   }
   r[0]=c; //number of characters written
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -388,7 +388,7 @@ void stemdos_seek(int h,MEM_ADDRESS sp)
     r[0]=ftell(stemdos_file[h].f);
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -664,7 +664,7 @@ void stemdos_mkdir()
     r[0]=0; //succeed!
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -681,7 +681,7 @@ void stemdos_rmdir()
     r[0]=0; //succeed!
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -708,7 +708,7 @@ void stemdos_Fdelete()
     r[0]=0; //succeed!
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -717,7 +717,7 @@ void stemdos_Fdelete()
 void stemdos_Fattrib()
 {
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -770,7 +770,7 @@ void stemdos_Fattrib()
 void stemdos_rename()
 {
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -1609,7 +1609,7 @@ void stemdos_parse_path()  //remove \..\ etc.
 {
   log(EasyStr("STEMDOS: Parsing path ")+stemdos_filename);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 

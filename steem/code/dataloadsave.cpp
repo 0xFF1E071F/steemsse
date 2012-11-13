@@ -674,21 +674,17 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SS_HACKS)
     SSE_HACKS_ON=pCSF->GetInt("Options","SpecificHacks",SSE_HACKS_ON);
 #endif
-
 #if defined(SS_VAR_MOUSE_CAPTURE)
     SSEOption.CaptureMouse=pCSF->GetInt("Options","CaptureMouse",SSEOption.CaptureMouse);
 #endif
-
 #if defined(SS_IKBD_6301)
     HD6301EMU_ON=pCSF->GetInt("Options","HD6301Emu",HD6301EMU_ON);
     if(!HD6301.Initialised)
       HD6301EMU_ON=0;
 #endif
-
 #if defined(SS_VAR_STEALTH) 
     SSEOption.StealthMode=pCSF->GetInt("Options","StealthMode",SSEOption.StealthMode);
 #endif
-
     // Adjustments
 #if defined(SS_VID_BORDERS)
     SSEOption.BorderSize=pCSF->GetInt("Display","BorderSize",SSEOption.BorderSize);
@@ -698,7 +694,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #endif
 #endif // SS
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS)
+#if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS____)
 #else
     frameskip=pCSF->GetInt("Options","FrameSkip",frameskip);
 #endif
@@ -1021,11 +1017,10 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SS_VAR_STEALTH) 
   pCSF->SetStr("Options","StealthMode",EasyStr(SSEOption.StealthMode));
 #endif
-
 #if defined(SS_VID_BORDERS)
   pCSF->SetStr("Display","BorderSize",EasyStr(SSEOption.BorderSize));  
 #endif
-#endif
+#endif//SS
 
   pCSF->SetStr("Display","ResChangeResize",EasyStr(ResChangeResize));
   pCSF->SetStr("Display","WinSizeLowRes",EasyStr(WinSizeForRes[0]));
