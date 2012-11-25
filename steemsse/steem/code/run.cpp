@@ -14,6 +14,10 @@ handled here, in event_scanline and event_vbl_interrupt.
 
 #include "SSE/SSEDebug.h"
 
+#ifdef SHOW_DRAW_SPEED
+extern HWND  StemWin;
+#endif
+
 //---------------------------------------------------------------------------
 void exception(int exn,exception_action ea,MEM_ADDRESS a)
 {
@@ -429,16 +433,17 @@ void event_hbl()   //just HBL, don't draw yet
   if (dma_sound_on_this_screen) dma_sound_fetch();
   screen_event_pointer++;  
 
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF) && !defined(SS_FDC_IPF_CPU)
   // giving cycles to IPF's WD1772 emu every scanline
   if(Caps.Active)
   {
 #if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)
     ASSERT( Shifter.CurrentScanline.Cycles>100)
-    CapsFdcEmulate(&WD1772,Shifter.CurrentScanline.Cycles);
+    CapsFdcEmulate(&WD1772,Shifter.CurrentScanline.Cycles-Caps.CyclesRun);
 #else
     CapsFdcEmulate(&WD1772,screen_res==2? 160 : 512);
 #endif
+    Caps.CyclesRun=0;
   }
 #endif
 }
@@ -576,16 +581,17 @@ void event_scanline()
   /////// and relative to cpu_time_of_last_vbl:
   cpu_timer_at_start_of_hbl=time_of_next_event; 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF) && !defined(SS_FDC_IPF_CPU)
   // giving cycles to IPF's WD1772 emu every scanline
   if(Caps.Active)
   {
 #if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)
     ASSERT( Shifter.CurrentScanline.Cycles>100)
-    CapsFdcEmulate(&WD1772,Shifter.CurrentScanline.Cycles);
+    CapsFdcEmulate(&WD1772,Shifter.CurrentScanline.Cycles-Caps.CyclesRun);
 #else
     CapsFdcEmulate(&WD1772,screen_res==2? 160 : 512);
 #endif
+    Caps.CyclesRun=0;
   }
 #endif
 

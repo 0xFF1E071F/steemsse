@@ -108,14 +108,8 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   if (this==&FloppyDrive[1]) drive=1;
   if (drive==-1) f_PastiDisk=0; // Never use pasti for extra drives
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
-  if(Caps.Initialised && drive!=-1 && Caps.DriveIsIPF[drive])
-  {
-    TRACE_LOG("Removing drive %d ID %d\n",drive,Caps.ContainerID[drive]);
-    VERIFY(CapsRemImage(Caps.ContainerID[drive])!=-1);
-    if(!(Caps.DriveIsIPF[(!drive)&1])) // other drive
-      Caps.Active=FALSE; 
-  }
-  Caps.DriveIsIPF[drive]=0;
+  if(!IPF && Caps.Initialised && drive!=-1 && Caps.DriveIsIPF[drive])
+    RemoveDisk();
 #endif
 
   if (f_PastiDisk){
@@ -165,32 +159,50 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     }
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_IPF_LOCK_INFO
   }
   else if(IPF&&Caps.Initialised) { 
+    // if we need to, we add a CAPS drive
     if(!Caps.DriveIsIPF[drive])
     {
       Caps.ContainerID[drive]=CapsAddImage();
+      WD1772.drivemax++;
       Caps.DriveIsIPF[drive]=TRUE;
-      TRACE_LOG("Caps.ContainerID[%d]=%d\n",drive,Caps.ContainerID[drive]);
+      TRACE_LOG("Adding CAPS drive ID %d for drive %c\n",Caps.ContainerID[drive],drive+'A');
     }
+    // then we open the IPF file
     VERIFY( !CapsLockImage(Caps.ContainerID[drive],File) );
     CapsImageInfo img_info;
     VERIFY( !CapsGetImageInfo(&img_info,Caps.ContainerID[drive]) );
     ASSERT( img_info.type==ciitFDD );
-    ASSERT( img_info.platform[0]==ciipAtariST );
-    ASSERT( img_info.platform[1]==ciipNA ); // dual?
-    TRACE_LOG("CAPS ID type %d release %d mincylinder %d maxcylinder %d computer %s\n", img_info.type,img_info.release,img_info.mincylinder,img_info.maxcylinder,CapsGetPlatformName(img_info.platform[0]));
-    if(img_info.platform[0]!=ciipAtariST)
+    TRACE_LOG("Disk in %c is CAPS release %d rev %d of %d/%d/%d for ",drive+'A',img_info.release,img_info.revision,img_info.crdt.day,img_info.crdt.month,img_info.crdt.year);
+    bool found=0;
+    for(int i=0;i<CAPS_MAXPLATFORM;i++)
+    {
+      if((img_info.platform[i])!=ciipNA)
+        TRACE_LOG("%s ",CapsGetPlatformName(img_info.platform[i]));
+      if(img_info.platform[i]==ciipAtariST)
+        found=true;
+    }
+    TRACE_LOG("Sides:%d Tracks:%d-%d\n",img_info.maxhead+1,img_info.mincylinder,img_info.maxcylinder);
+    ASSERT( found );
+    if(!found)    // could be a Spectrum disk etc.
     {
       int Ret=FIMAGE_WRONGFORMAT;
       return Ret;
     }
     Caps.Active=TRUE;
-    SF314[drive].diskattr|=CAPSDRIVE_DA_IN; 
-    WD1772.drivenew=WD1772.drivesel=WD1772.driveact=drive;
-    WD1772.driveprc=&SF314[drive];
-    Caps.LockedTrack[drive]=-1;
-    Caps.LockedSide[drive]=-1;
+    WD1772.drivenew=drive;
+    SF314[drive].diskattr|=CAPSDRIVE_DA_IN;
+    CapsFdcInvalidateTrack(&WD1772,drive); // Galaxy Force II
+    Caps.LockedTrack[drive]=Caps.LockedSide[drive]=-1;
+    BytesPerSector=0; // should lock to check one track
+    SectorsPerTrack=0; // should lock to check one track
+    Sides=img_info.maxhead+1;
+    TracksPerSide=img_info.maxcylinder;
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_FDC
 #endif
   }else{
     // Open for read for an MSA (going to convert to ST and write to that)
@@ -1057,6 +1069,22 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   PastiBufLen=0;
   PastiDisk=0;
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_IPF_LOCK_INFO
+  int drive=-1;
+  if (this==&FloppyDrive[0]) drive=0;
+  if (this==&FloppyDrive[1]) drive=1;
+  
+  if(Caps.Initialised && drive!=-1 && Caps.DriveIsIPF[drive])
+  {
+    TRACE_LOG("Removing CAPS drive ID %d from ID %c\n",Caps.ContainerID[drive],drive+'A');
+    VERIFY(CapsRemImage(Caps.ContainerID[drive])!=-1);
+    WD1772.drivemax--;
+
+    if(!(Caps.DriveIsIPF[(!drive)&1])) // other drive
+      Caps.Active=FALSE; 
+    Caps.DriveIsIPF[drive]=0;
+  }
   IPFDisk=0;
 #endif
   if (f) fclose(f);

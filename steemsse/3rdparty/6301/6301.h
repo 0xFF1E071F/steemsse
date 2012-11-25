@@ -23,7 +23,7 @@
     - Barbarian, Manchester United, Jumping Jackson (WNW), Cobra compil 01
     Gauntlet (joy0 bug), Lethal Xcess, The Sentinel, Arkanoid, MGT
     All functions and variables beginning with hd6301 are declared in this
-    6301 module and are  meant to be visible to Steem (interface) by way of
+    6301 module and are meant to be visible to Steem (interface) by way of
     inclusion of this file.
 
     TODO: 
@@ -36,11 +36,22 @@
 #define STEVEN_SEAGAL // defined in the IDE (VC), not in batch file (BCC)
 #endif
 
-#include "SSE\SSE.h"
-#include "SSE\SSEParameters.h"
+#include "SSE/SSE.h"
+//#include "SSE/SSEDebug.h"
+#include "SSE/SSEParameters.h"
 #ifdef WIN32
 #include <windows.h>
 #endif
+
+//tmp
+//#ifdef UNIX
+//typedef unsigned int u_int; 
+//typedef unsigned char u_char;
+//#define u_int int
+//#endif
+
+#include <sys/types.h>
+
 
 #if defined(SS_IKBD_6301)
 
@@ -54,12 +65,12 @@ extern int hd6301_completed_transmission_to_MC6850; // for sync
 extern int hd6301_mouse_move_since_last_interrupt_x; // different lifetime
 extern int hd6301_mouse_move_since_last_interrupt_y;
 // functions used by Steem
-hd6301_init(); // just another name
-hd6301_destroy(); // like a C++ destructor
-hd6301_reset(); // just another name
-hd6301_run_cycles(u_int cycles); // emulate
-hd6301_load_save(int one_if_save, unsigned char *buffer); // for snaphot
-hd6301_transmit_byte(u_char byte_in); // just passing through
+int hd6301_init(); // just another name
+int hd6301_destroy(); // like a C++ destructor
+int hd6301_reset(); // just another name
+int hd6301_run_cycles(u_int cycles); // emulate
+int hd6301_load_save(int one_if_save, unsigned char *buffer); // for snaphot
+int hd6301_transmit_byte(u_char byte_in); // just passing through
 
 
 // debug facilities
@@ -69,17 +80,24 @@ hd6301_transmit_byte(u_char byte_in); // just passing through
 #if defined(SS_IKBD_6301_TRACE)
 extern FILE *trace_file_pointer_6301; // must be a C variable
 #endif
+
 #ifndef ASSERT // will stop only in VC IDE
+
 #if defined(_MSC_VER) && defined(_DEBUG)
+
 #define ASSERT(x) {if(!(x)) {printf("Assert failed: %s\n",#x);\
  _asm{int 0x03}}}
+
 #else 
+
 #if !defined(NDEBUG)
 #define ASSERT(x) {if(!(x)) printf("Assert failed: %s\n",#x);}
 #else
 #define ASSERT(x) // release
 #endif
+
 #endif
+
 #endif
 
 #if !defined(TRACE)

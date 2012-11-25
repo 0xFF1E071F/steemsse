@@ -8,23 +8,16 @@
 
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC)
 
-#define ADAT (!floppy_instant_sector_access) // ADAT = Accurate Disk Access Times
+// ADAT = Accurate Disk Access Times (Steem option, snails on drives!)
+#define ADAT (!floppy_instant_sector_access) 
 
 #if defined(SS_DEBUG)
+int fdc_command_type(int command);
 int fdc_report_regs(bool spell_out_status=0);
 void fdc_spell_out_status(BYTE res, int type);
 #endif
 
-#if defined(SS_FDC_IPF)
-
-#include <caps/Comtype.h>
-#include <caps/CapsAPI.h>
-#include <caps/CapsPlug.h>
-#include <caps/CapsFDC.h>
-extern CapsFdc WD1772;
-#endif
-
-#endif
+#endif//SS
 
 #define FLOPPY_MAX_BYTESPERSECTOR 512
 #define FLOPPY_MAX_TRACK_NUM      85

@@ -186,8 +186,18 @@ inline void m68k_Process() {
   pc+=2; 
 //  ASSERT(ir!=0xD191); // dbg: break on opcode...
 //  ASSERT(!mmu_testing);
+#if defined(SS_FDC_IPF_CPU) // normally overkill
   int cycles=cpu_cycles;
+#endif
   m68k_high_nibble_jump_table[ir>>12](); // go to instruction...
+#if defined(SS_FDC_IPF_CPU)
+ if(Caps.Active)
+  {
+    int cpucycles=cycles-cpu_cycles;
+    ASSERT( cpucycles>0 );
+    CapsFdcEmulate(&WD1772,cpucycles);
+  }
+#endif
   HANDLE_IOACCESS(m68k_trace();); // keep as macro, wouldn't be inlined
   DEBUG_ONLY( debug_first_instruction=0 );
 }

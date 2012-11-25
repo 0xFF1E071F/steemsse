@@ -1,19 +1,21 @@
 [SCROLLERS]
 §v, built §b
 running §d
-Press the pause/break key to release the mouse, shift-pause/break to stop emulation
-visit the steem website for all the latest news & updates: http://steem.atari.org
-Comments or queries?  E-mail steem@gmx.net
+Press the pause/break key to release the mouse, shift-pause/break or F12 to stop emulation
+visit the steem SSE website for all the latest news & updates: http://ataristeven.eu5.org/Steem.htm
+Comments or queries?  E-mail another.steven.seagal@gmail.com
 Steem, the STE emulating engine, written by Anthony and Russell Hayward
-found a bug or a game that won't run?  Send us a bug report (see readme for details)
+found a bug or a game that won't run?  Send us a bug report (see Steem SSE.txt)
 Right-click on the fast forward button to use the flashlight - see if there is really something there on a black screen
-Having problems? Read the FAQ first, if that doesn't help then email us (steem@gmx.net)
+Having problems? Read the FAQ first, if that doesn't help then forget it
 steem was created using Borland's Free C++ compiler
 Thanks to: Xavier Joubert, Stephen Ware, Tomi Kivela, Sebastien Molines, Hans Harrod and Kimmo Hakala for tracking down bugs
 If a program won't run from hard drives, copy it to a disk image using the ST desktop, and it might work better
 Some programs won't work if their disk is read only, always try making it read-write (or extracting the disk if it is in an archive) if you have problems
 Some programs won't work with memory size set to 4Mb or 512Kb
 fast forward is very useful, map it to a key using shortcuts to get the full effect
+Check the new options in this SSE build
+Steem is the best so why bother with the rest!
 
 [WINSCROLLERS]
 maximize the window to go to fullscreen mode (directx required)
@@ -350,68 +352,8 @@ MagiCMac (Mac)
 http://www.application-systems.de/magicmac/index.html
 Ostridge (Linux)
 http://sourceforge.net/projects/ostridge/
+Steven Seagal's Atari ST Site
+http://ataristeven.eu5.org
 [LINKSEND]
-
-
-[UPDATEPATCHES]
-10 patches.zip 6873
-
-
-[UPDATEUSER]
-3.1 steem_v3_1.zip 598731
-This is a bit sooner than intended but Steem v3.1 has been released. Mostly this version is here to fix a few small bugs that appeared in v3, but we fixed a few more old bugs while we were at it.
-
--- Emulation Bugs Fixed --
-. Hard drive Pexec mode 4 bug (Devpac, Turbo Assembler).
-. Hard drive double intercept bug.
-. Hard drive seek bug (Spacola).
-. Joystick fire when mouse enabled bug (Starglider).
-. More unusual characters allowed in hard drive filenames.
-. Fixed hard drive file times.
-. Video address write bug (Ambition Demo, Apathetic Games).
-
--- Other Bugs Fixed --
-. Fixed NT LPT port access slowdown.
-. Fixed port repeating output byte when offline bug.
-. Extract archive to hard drive folder bug fixed.
-. Fixed hard drive problems with the Steem disk imager.
-
--- New Features --
-. Take screenshot button
-
-Download the update from the new Steem website URL http://steem.atari.st/ (thanks to Rich of LGD for the hosting, and Silver Surfer for the hosting and php stuff). 
-
-Alternatively click on the download button below, this updater finally works again.
-
-Russell and Anthony Hayward
-
-
-[UPDATEDEBUG]
-3.1 steemdebug_v3_1.zip 772154 
-This is a bit sooner than intended but Steem v3.1 has been released. Mostly this version is here to fix a few small bugs that appeared in v3, but we fixed a few more old bugs while we were at it.
-
--- Emulation Bugs Fixed --
-. Hard drive Pexec mode 4 bug (Devpac, Turbo Assembler).
-. Hard drive double intercept bug.
-. Hard drive seek bug (Spacola).
-. Joystick fire when mouse enabled bug (Starglider).
-. More unusual characters allowed in hard drive filenames.
-. Fixed hard drive file times.
-. Video address write bug (Ambition Demo, Apathetic Games).
-
--- Other Bugs Fixed --
-. Fixed NT LPT port access slowdown.
-. Fixed port repeating output byte when offline bug.
-. Extract archive to hard drive folder bug fixed.
-. Fixed hard drive problems with the Steem disk imager.
-
--- New Features --
-. Take screenshot button
-
-Download the update from the new Steem website URL http://steem.atari.st/ (thanks to Rich of LGD for the hosting, and Silver Surfer for the hosting and php stuff). 
-
-Alternatively click on the download button below, this updater finally works again.
-
-Russell and Anthony Hayward
 
 [END]

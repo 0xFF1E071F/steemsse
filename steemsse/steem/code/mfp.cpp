@@ -474,7 +474,7 @@ void mfp_interrupt(int irq,int when_fired)
             if(irq==7 && (WD1772.lineout&CAPSFDC_LO_INTRQ))
             {
               TRACE_LOG("execute WD1772 irq\n");
-              WD1772.lineout&=~CAPSFDC_LO_INTRQ; // never happens & wrong?
+              WD1772.lineout&=~CAPSFDC_LO_INTRQ; 
             }
 #endif
             MEM_ADDRESS vector;

@@ -10,17 +10,25 @@
 #include <caps/CapsPlug.h>
 #include <caps/CapsFDC.h>
 
-// our interface with CAPSimg.dll
+// we declare our nice two double sided SF314 drives!
+extern CapsDrive SF314[2]; 
+// and the chip that can control one at a time
+extern CapsFdc WD1772;
+
+
+// our interface with CAPSimg.dll, C++ style
 struct TCaps {  
   TCaps();
   ~TCaps();
-  Init();
+  int Init();
+  bool WritePsgA(int data);
   // using static functions so that there's no 'this'
   static void CallbackDRQ(PCAPSFDC pc, UDWORD setting);
   static void CallbackIRQ(PCAPSFDC pc, UDWORD lineout);
   static void CallbackTRK(PCAPSFDC pc, UDWORD driveact);
   BOOL Initialised; // we do need a correct DLL
   BOOL Active; // if there's an IPF disk in some drive, we must run IPF cycles
+  int CyclesRun; // must be the same for each line
   // for drive A & B
   SDWORD DriveIsIPF[2]; 
   SDWORD ContainerID[2]; 

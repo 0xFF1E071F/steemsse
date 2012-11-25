@@ -9,6 +9,10 @@ This contains the DirectDraw code used by Windows Steem for output.
 #pragma message("Included for compilation: display.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI) 
+extern int shifter_freq_at_start_of_vbl;
+#endif
+
 //SS: the singleton object is Disp
 
 //---------------------------------------------------------------------------
@@ -492,7 +496,7 @@ HRESULT SteemDisplay::Lock()
       // trying to make it crash-free (v3.4.1)
       if(FullScreen && BORDER_40)
       {
-        try { //try to erase memory (black screen)
+        try { //try to erase memory (black screen) //note use fillrect ok?
           ZeroMemory(draw_mem,800*8*200);
         }
         catch(...) {
@@ -514,6 +518,45 @@ void SteemDisplay::Unlock()
 {
   if (Method==DISPMETHOD_DD){
     DDBackSur->Unlock(NULL);
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
+    //TODO reuse objects? possible?
+    if(video_recording && runstate==RUNSTATE_RUNNING)
+    {
+      if(!pAviFile)
+      {
+        if(!frameskip||frameskip==8) // error||auto
+          frameskip=1;
+        TRACE("Start AVI recording, codec %s, frameskip %d\n",SS_VID_RECORD_AVI_CODEC,frameskip);
+        pAviFile=new CAviFile(SS_VID_RECORD_AVI_FILENAME,
+          mmioFOURCC(video_recording_codec[0],video_recording_codec[1],
+          video_recording_codec[2],video_recording_codec[3]),
+          shifter_freq_at_start_of_vbl/frameskip);
+      }
+      HDC SurfDC;
+      VERIFY( DDBackSur->GetDC(&SurfDC)==DD_OK );
+      DDSURFACEDESC ddsd;
+      ZeroMemory(&ddsd, sizeof(ddsd));
+      ddsd.dwSize = sizeof(ddsd);
+      VERIFY( DDBackSur->GetSurfaceDesc(&ddsd)==DD_OK );
+      HBITMAP OffscrBmp = CreateCompatibleBitmap(SurfDC,ddsd.dwWidth,ddsd.
+        dwHeight);
+      ASSERT(OffscrBmp);
+      HDC OffscrDC = CreateCompatibleDC(SurfDC);
+      ASSERT(OffscrDC);
+      HBITMAP OldBmp = (HBITMAP)SelectObject(OffscrDC, OffscrBmp);
+      ASSERT(OldBmp);
+      BitBlt(OffscrDC, 0, 0,ddsd.dwWidth,ddsd.dwHeight, SurfDC, 0, 0, SRCCOPY);
+      if(pAviFile->AppendNewFrame(OffscrBmp))
+      {
+        delete pAviFile;
+        video_recording=0;
+      }
+      DeleteDC(OffscrDC); // important, release Windows resources!
+      DeleteObject(OldBmp);
+      DeleteObject(OffscrBmp);
+      DDBackSur->ReleaseDC(SurfDC);
+    }
+#endif
   }else if (Method==DISPMETHOD_GDI){
     SetBitmapBits(GDIBmp,GDIBmpSize,GDIBmpMem);
   }
@@ -524,7 +567,6 @@ void SteemDisplay::VSync()
   ASSERT(FullScreen);
 
   if (FullScreen==0) return;
-
 
   log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: VSYNC - Starting wait for VBL at ")+(timeGetTime()-run_start_time));
 
@@ -582,6 +624,10 @@ bool SteemDisplay::Blit()
               // CLS
               //HDC dc=GetDC(StemWin);
               //VERIFY( FillRect(dc,&draw_blit_source_rect,(HBRUSH)GetStockObject(BLACK_BRUSH)) ); 
+
+//TODO bltColorFill(Rect dest, int fillValue);
+
+
               // trick              
               RECT our_clipping={16,0,816,556-6};
               hRet=DDPrimarySur->Blt(&draw_blit_source_rect,DDBackSur,

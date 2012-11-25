@@ -2,6 +2,8 @@
 #ifndef SSEDEBUG_H
 #define SSEDEBUG_H
 
+extern bool FullScreen;
+
 
 #if defined(SS_DEBUG)
 
@@ -33,16 +35,14 @@ extern TDebug SSDebug;
  
 #if defined(DEBUG_BUILD) // boiler
 #if defined(_DEBUG) // IDE
-#define TRACE_ENABLED (logsection_enabled_b[LOGSECTION] || logsection_enabled[LOGSECTION])
-//#define TRACE_LOG if(logsection_enabled_b[LOGSECTION] || logsection_enabled[LOGSECTION]) TRACE
+#define TRACE_ENABLED (logsection_enabled_b[LOGSECTION] || LOGSECTION<NUM_LOGSECTIONS && logsection_enabled[LOGSECTION])
 #else // no IDE
-#define TRACE_ENABLED (logsection_enabled[LOGSECTION])
-//#define TRACE_LOG if(logsection_enabled[LOGSECTION]) TRACE
+#define TRACE_ENABLED (logsection_enabled_b[LOGSECTION] || LOGSECTION<NUM_LOGSECTIONS && logsection_enabled[LOGSECTION])
+//#define TRACE_ENABLED (LOGSECTION<NUM_LOGSECTIONS && logsection_enabled[LOGSECTION])
 #endif
 #else // no boiler 
 #if defined(_DEBUG) // IDE
 #define TRACE_ENABLED (logsection_enabled_b[LOGSECTION])
-//#define TRACE_LOG if(logsection_enabled_b[LOGSECTION]) TRACE
 #else
 impossible!
 #endif
@@ -76,6 +76,7 @@ extern bool logsection_enabled_b[100];
   #define LOGSECTION_PASTI 22
   #define NUM_LOGSECTIONS 23
 #endif
+// our additions:
 enum {LOGSECTION_FDC_BYTES=23,LOGSECTION_IPF_LOCK_INFO};
 
 #if defined(_DEBUG) && defined(VC_BUILD)
@@ -93,9 +94,9 @@ extern "C" void my_trace(char *fmt, ...);
 #define BREAKPOINT {if(SSDebug.ReportBreakpoints) \
 SSDebug.ReportBreakpoints=(Alert("Breakpoint! Click cancel to stop those \
 boxes","BRK",MB_OKCANCEL)==IDOK);} 
-#define ASSERT(x) {if(SSDebug.ReportBreakpoints&&(!(x))) { \
-TRACE("Assert failed: %s\n",#x); \
-SSDebug.ReportBreakpoints=(Alert(#x,"ASSERT",MB_OKCANCEL)==IDOK);}}
+#define ASSERT(x) {if (!(x)) {TRACE("Assert failed: %s\n",#x); \
+  if(SSDebug.ReportBreakpoints) { \
+  SSDebug.ReportBreakpoints=(Alert(#x,"ASSERT",MB_OKCANCEL)==IDOK);}}}
 #define VERIFY(X) ASSERT(X)
 #define BRK(x){if(SSDebug.ReportBreakpoints) { \
 TRACE("Breakpoint: %s\n",#x); \
