@@ -13,6 +13,10 @@ ior.cpp and iow.cpp for the lowest level emulation.
 
 #define LOGSECTION LOGSECTION_SOUND
 
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
+extern IDirectSoundBuffer *PrimaryBuf,*SoundBuf;
+#endif
+
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 HRESULT Sound_Start()
@@ -385,6 +389,9 @@ double d_dsp_v; // a bit silly, heavy, and maybe not optimal
 
 void sound_record_to_wav(int c,DWORD SINE_ONLY(t),bool chipmode,int *source_p)
 {
+
+//ss called like this:       sound_record_to_wav(countdown_to_storing_values,write_time_1,chipmode,source_p);
+
   if (timer<sound_record_start_time) return;
 
   int v=psg_voltage,dv=psg_dv; //restore from last time
@@ -551,7 +558,10 @@ HRESULT Sound_VBL()
     bool store_values=false,chipmode=bool((sound_mode==SOUND_MODE_EMULATED) ? false:true);
     if (sound_mode==SOUND_MODE_SHARPSAMPLES) chipmode=(psg_reg[PSGR_MIXER] & b00111111)!=b00111111;
     if (sound_mode==SOUND_MODE_SHARPCHIP)    chipmode=(psg_reg[PSGR_MIXER] & b00111111)==b00111111;
-    if (sound_record){
+    if (sound_record 
+      
+////      || video_recording
+      ){
       sound_record_to_wav(countdown_to_storing_values,write_time_1,chipmode,source_p);
     }
 
@@ -612,6 +622,12 @@ HRESULT Sound_VBL()
         samples_left_in_buffer-=LockLength[n]/sound_bytes_per_sample;
       }
     }
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI) 
+    if(video_recording&&SoundBuf&&pAviFile&&pAviFile->Initialised)
+    {
+      VERIFY( !pAviFile->AppendSound(DatAdr[0],LockLength[0]) );
+    }
+#endif
     SoundUnlock(DatAdr[0],LockLength[0],DatAdr[1],LockLength[1]);
     while (source_p < (psg_channels_buf+PSG_CHANNEL_BUF_LENGTH)){
       *(source_p++)=VOLTAGE_FP(VOLTAGE_ZERO_LEVEL); //zero the rest of the buffer

@@ -118,16 +118,4 @@ enum {
 
 #define Naked __declspec(naked)
 
-#define NODEFAULT//SS tmp..
-/*
-#ifdef _DEBUG
-#define NODEFAULT   ASSERT(0)
-#else
-#ifdef MSVC
-#define NODEFAULT   __assume(0)
-#else
-#define NODEFAULT//SS tmp...
-#endif
-#endif
-*/
 #endif

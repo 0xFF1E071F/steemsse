@@ -73,6 +73,19 @@ extern "C" int SS_signal; // "handy" global mask (future coding horror case)
 
 #if defined(SS_VIDEO)
 
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI) 
+#define _T(X) X
+#define _tcscpy strcpy
+#define _tcsncpy strncpy
+#include <AVI/AviFile.h>
+extern CAviFile *pAviFile;// tmp, useless to have it here
+extern int video_recording;
+extern char *video_recording_codec;
+#endif
+
+
+
+
 #if defined(SS_VID_BORDERS)
 extern int SideBorderSize,BottomBorderSize;
 extern int SideBorderSizeWin;
@@ -85,6 +98,7 @@ int ChangeBorderSize(int size); // gui.cpp
 #endif
 #else
 #define FRAME (-1)
+
 
 #endif
 

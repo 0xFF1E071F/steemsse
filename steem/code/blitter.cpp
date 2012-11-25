@@ -540,15 +540,15 @@ BYTE Blitter_IO_ReadB(MEM_ADDRESS Adr)
 #else
 	
 #if defined(STEVEN_SEAGAL) && defined(SS_STF)
-/*  When TOS1.02 resets, it tests for Blitter.
+/*  When TOS>1.00 resets, it tests for Blitter.
     There was a blitter on (some!) Mega STF, in this emulation you're entitled
     to a blitter without having to place an order with Atari.
+    But it's the exact same blitter for STF & STE, while they were different
+    chips.
 */
  if(ST_TYPE!=STE && ST_TYPE!=MEGASTF)
   {
-#if defined(SS_BLT_TRACE)
-    TRACE("STF: no blitter exception\n");
-#endif
+    TRACE_LOG("STF: no blitter exception in ior\n");
     exception(BOMBS_BUS_ERROR,EA_READ,Adr);
     return 0;
   }
@@ -625,9 +625,7 @@ void Blitter_IO_WriteB(MEM_ADDRESS Adr,BYTE Val)
 #if defined(STEVEN_SEAGAL) && defined(SS_STF)
   if(ST_TYPE!=STE && ST_TYPE!=MEGASTF)
   {
-#if defined(SS_BLT_TRACE)
-    TRACE("STF: no blitter exception\n");
-#endif
+    TRACE_LOG("STF: no blitter exception in iow\n");
     exception(BOMBS_BUS_ERROR,EA_READ,Adr);
     return ;
   }
@@ -911,7 +909,7 @@ after each copied word/line the Blitter proceeds.
       Blit.Hog=bool(Val & BIT_6);
       if (Blit.Busy==0){
         if (Val & BIT_7){ //start new
-#if defined(SS_BLT_TRACE2)
+#if defined(STEVEN_SEAGAL) && defined(SS_BLT_TRACE2)
           TRACE("F%d y%d c%d Blt %X Hg%d Hp%d Op%d x%d y%d NF%d FX%d Sk%d from %X (x+%d y+%d) to %X (x+%d y+%d) Msk %X %X %X\n",
             FRAME,scan_y,LINECYCLES,Val,Blit.Hog,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.NFSR,Blit.FXSR,Blit.Skew,Blit.SrcAdr,Blit.SrcXInc,Blit.SrcYInc,Blit.DestAdr,Blit.DestXInc,Blit.DestYInc,Blit.EndMask[0],Blit.EndMask[1],Blit.EndMask[2]);
 #endif
@@ -919,9 +917,7 @@ after each copied word/line the Blitter proceeds.
           // GEM doc viewer, Braindamage - no glitch visible
           if(!(Blit.SrcAdr > Blit.DestAdr || Blit.DestAdr-Blit.SrcAdr>Blit.XCount/2)) // bad test!
           {
-#if defined(SS_BLT_TRACE)
-            TRACE("Blitter overlap? Src %X Dest %X XCount %d YCount %d\n",Blit.SrcAdr,Blit.DestAdr,Blit.XCount,Blit.YCount);
-#endif
+            TRACE_LOG("Blitter overlap? Src %X Dest %X XCount %d YCount %d\n",Blit.SrcAdr,Blit.DestAdr,Blit.XCount,Blit.YCount);
             
             // We just need to change source, dest & direction...
             /*    

@@ -152,7 +152,6 @@ void reset_peripherals(bool Cold)
     pasti->HwReset(Cold);
   }
 #endif
-
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
   if(Caps.Initialised)
     CapsFdcReset(&WD1772);

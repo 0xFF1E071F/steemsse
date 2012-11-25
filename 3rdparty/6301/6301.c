@@ -1,11 +1,25 @@
 // This file is compiled as a distinct module (resulting in an OBJ file)
 #include "6301.h"
-#include "SSE\SSE.h"
-#include "SSE\SSEOption.h"
+#include "SSE/SSE.h"
+#include "SSE/SSEOption.h"
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
 
 
+//tmp
+//#ifdef SS_UNIX
+//#define _rotl __rotl
+//#define _rotr __rotr
+//#endif
 
+#ifndef WIN32
+unsigned int _rotr(unsigned int Data, unsigned int Bits) {
+  return ((Data >> Bits) | (Data << (32-Bits)));
+}
+unsigned int _rotl(unsigned int Data, unsigned int Bits) {
+  return ((Data << Bits) | (Data >> (32-Bits)));
+}
+#endif
+ 
 // functions & variables from Steem (declared as extern "C") there
 extern void hd6301_keyboard_buffer_write(unsigned char src) ;
 extern int cpu_timer,cpu_cycles; // for debug
@@ -168,7 +182,7 @@ hd6301_transmit_byte(u_char byte_in) {
 
 
 hd6301_load_save(int one_if_save,unsigned char *buffer) {
-  // A function to help the snapshot facility of Steem
+  // A function to help the memory snapshot facility of Steem
   unsigned char *i=buffer; // stack on Steem's side
   ASSERT(buffer);
   ASSERT(ram);

@@ -275,6 +275,12 @@ int main(int argc,char *argv[])
   }catch(...){}
 #endif
 
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI) 
+  if(pAviFile)
+    delete pAviFile;
+#endif
+
   WIN_ONLY( SetErrorMode(0); )
   log_write("Fatal Error - attempting to shut down cleanly");
   PerformCleanShutdown();

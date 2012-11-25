@@ -228,7 +228,7 @@ void ASMCALL perform_crash_and_burn()
 {
   reset_st(RESET_COLD | RESET_NOSTOP | RESET_CHANGESETTINGS | RESET_NOBACKUP);
 #if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
-  TRACE("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!nCRASH AND BURN - ST RESET\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+  TRACE("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\nCRASH AND BURN - ST RESET\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
 #else
   osd_start_scroller(T("CRASH AND BURN - ST RESET"));
 #endif

@@ -12,7 +12,7 @@ that deal with reads from ST I/O addresses ($ff8000 onwards).
 #define LOGSECTION LOGSECTION_IO
 #if !defined(STEVEN_SEAGAL) || !defined(SS_VID_SDP_READ) || defined(SS_DEBUG)
 MEM_ADDRESS get_shifter_draw_pointer(int cycles_since_hbl)
-{ // SS: basis for TShifter::ReadSDP in SSEVideo.h
+{ // SS: basis for TShifter::ReadSDP in SSEVideo.h, which replaces this
   if (bad_drawing){
     // Fake SDP
     if (scan_y<0){
@@ -493,7 +493,12 @@ $FF860D|byte |DMA base and counter (Low byte)                      |R/W
       if (addr>0xff860f) exception(BOMBS_BUS_ERROR,EA_READ,addr);
       if (addr<0xff8604) exception(BOMBS_BUS_ERROR,EA_READ,addr);
       if (addr<0xff8608 && io_word_access==0) exception(BOMBS_BUS_ERROR,EA_READ,addr);
-#if USE_PASTI //SS pasti.dll will give us the correct byte 
+
+#if USE_PASTI 
+/*  SS pasti.dll will give us the correct byte for all the range, using its
+    own variables, meaning that Steem dma_... variables have no meaningful
+    values in Pasti mode
+*/
       if (hPasti && pasti_active){
         if (addr<0xff8608){ // word only
           if (addr & 1) return LOBYTE(pasti_store_byte_access);
@@ -513,6 +518,7 @@ $FF860D|byte |DMA base and counter (Low byte)                      |R/W
         return BYTE(pioi.data);
       }
 #endif
+
       switch(addr){
       case 0xff8604:  //high byte of FDC access
         //should check bit 8 = 0 (read)
@@ -538,81 +544,34 @@ $FF860D|byte |DMA base and counter (Low byte)                      |R/W
         }
 
         // Read FDC register
+
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+/*  Contrary to Pasti, the CAPSimg.dll will return the byte only for 
+    the WD1772 itself, not DMA registers. For those, Steem is still
+    in charge.
+*/
         if(Caps.DriveIsIPF[floppy_current_drive()])
         {
-          if(!(dma_mode & (BIT_1+BIT_2)))
+#if defined(SS_FDC_IPF_RUN_PRE_IO)
+          CapsFdcEmulate(&WD1772,300);
+          Caps.CyclesRun=300;
+#endif
+          if(!(dma_mode & (BIT_1+BIT_2))) // read status register
           {
             mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
             WD1772.lineout&=~CAPSFDC_LO_INTRQ; // and in the WD1772
           }
           BYTE value=CapsFdcRead(&WD1772,(dma_mode & (BIT_1+BIT_2))/2); 
+#if defined(SS_FDC_IPF_RUN_POST_IO)
+          CapsFdcEmulate(&WD1772,200);
+          Caps.CyclesRun=200;
+#endif
           return value;
         }
         else // else switch...
 #endif
         switch (dma_mode & (BIT_1+BIT_2)){
           case 0://SS read status
-/*
-r0 (read) - Status Register - The value in this register depends on
-the previous 177x command.  If the 177x receives a Force Interrupt
-command while it is executing another command, the FDDC will clear the
-Busy bit (Status bit 0: see later in this paragraph), and leave all
-other Status bits unchanged.  If the 177x receives a Force Interrupt
-command while it is not executing a command, the 177x will update the
-entire Status Register as though it had just executed a Type I
-command.  (For an explanation of Type I, Type II, Type III, and Type
-IV commands, see the section on commands.)  When the CPU is connected
-(directly or indirectly) to the 177x's interrupt output, it is a bad
-idea to check the Busy bit because a CPU read of the Status Register
-clears the 177x's interrupt output.  After the CPU writes to the
-Command Register, it should not attempt to read the Busy bit for 24
-cycles.  The CPU should not follow a Command Register write with a
-read of Status bits 1-7 until 32 clock cycles have elapsed.
-
-Bits:
-Bit 7 - Motor On.  This bit is high when the drive motor is on, and
-low when the motor is off.
-
-Bit 6 - Write Protect.  This bit is not used during reads.  During
-writes, this bit is high when the disk is write protected.
-
-Bit 5 - Spin-up / Record Type.  For Type I commands, this bit is low
-during the 6-revolution motor spin-up time.  This bit is high after
-spin-up.  For Type II and Type III commands, Bit 5 low indicates a
-normal data mark.  Bit 5 high indicates a deleted data mark.
-
-Bit 4 - Record Not Found.  This bit is set if the 177x cannot find the
-track, sector, or side which the CPU requested.  Otherwise, this bit
-is clear.
-
-Bit 3 - CRC Error.  This bit is high if a sector CRC on disk does not
-match the CRC which the 177x computed from the data.  The CRC
-polynomial is x^16+x^12+x^5+1.  If the stored CRC matches the newly
-calculated CRC, the CRC Error bit is low.  If this bit and the Record
-Not Found bit are set, the error was in an ID field.  If this bit is
-set but Record Not Found is clear, the error was in a data field.
-
-Bit 2 - Track Zero / Lost Data.  After Type I commands, this bit is 0
-if the mechanism is at track zero.  This bit is 1 if the head is not
-at track zero.  After Type II or III commands, this bit is 1 if the
-CPU did not respond to Data Request (Status bit 1) in time for the
-177x to maintain a continuous data flow.  This bit is 0 if the CPU
-responded promptly to Data Request.
-
-Bit 1 - Index / Data Request.  On Type I commands, this bit is high
-during the index pulse that occurs once per disk rotation.  This bit
-is low at all times other than the index pulse.  For Type II and III
-commands, Bit 1 high signals the CPU to handle the data register in
-order to maintain a continuous flow of data.  Bit 1 is high when the
-data register is full during a read or when the data register is empty
-during a write.  "Worst case service time" for Data Request is 23.5
-cycles.
-
-Bit 0 - Busy.  This bit is 1 when the 177x is busy.  This bit is 0
-when the 177x is free for CPU commands.
-
-*/
           {
             int fn=floppy_current_drive();
             if (floppy_track_index_pulse_active()){

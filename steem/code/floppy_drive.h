@@ -80,7 +80,3 @@ bool FloppyArchiveIsReadWrite=0;
 #else
 extern TFloppyImage FloppyDrive[2];
 #endif
-
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)    
-extern CapsDrive SF314[2];
-#endif

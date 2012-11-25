@@ -30,9 +30,7 @@ SDWORD CapsLockTrack(PCAPSTRACKINFO pi, SDWORD id, UDWORD cylinder, UDWORD head,
 SDWORD CapsUnlockTrack(SDWORD id, UDWORD cylinder, UDWORD head);
 SDWORD CapsUnlockAllTracks(SDWORD id);
 PCHAR  CapsGetPlatformName(UDWORD pid);
-
-
-//SS
+//SS those were missing:
 UDWORD CapsFdcGetInfo(SDWORD iid, PCAPSFDC pc, SDWORD ext);
 SDWORD CapsFdcInit(PCAPSFDC pc);
 void CapsFdcReset(PCAPSFDC pc);

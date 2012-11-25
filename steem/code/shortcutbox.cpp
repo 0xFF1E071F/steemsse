@@ -27,13 +27,31 @@ maps all sorts of user input to all sorts of emulator functions.
 #define CUT_TAKESCREENSHOT 29
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS)
+
+enum {
+  CUT_TOGGLEHARDDRIVES=231,
+#if defined(SS_VID_SHIFTER_EVENTS)
+  CUT_REPORTSHIFTERTRICKS,
+#endif
+#if defined(SS_VID_RECORD_AVI)
+  CUT_RECORD_VIDEO,
+#endif
+  CUT_LAST_ITEM_SS
+};
+
+#define NUM_SHORTCUTS (54+1+1 DEBUG_ONLY(+5)   +CUT_LAST_ITEM_SS-230)
+
+/*
 #define CUT_TOGGLEHARDDRIVES 231	// <255!!!!
+
 #if defined(SS_DEBUG) && defined(SS_VIDEO)
 #define CUT_REPORTSHIFTERTRICKS 232	// <255!!!!
 #define NUM_SHORTCUTS (1+1+   54+1+1 DEBUG_ONLY(+5)) // adding my own
 #else
 #define NUM_SHORTCUTS (1+   54+1+1 DEBUG_ONLY(+5)) // adding my own
 #endif
+
+*/
 #else
 #define NUM_SHORTCUTS (54+1+1 DEBUG_ONLY(+5))
 #endif
@@ -61,8 +79,12 @@ const char *ShortcutNames[NUM_SHORTCUTS*2]=
 	"Toggle Hard Drives On/Off",(char*)CUT_TOGGLEHARDDRIVES,
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG) && defined(SS_VIDEO) && defined(SS_VARIOUS)
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SHIFTER_EVENTS)//defined(SS_DEBUG) && defined(SS_VIDEO) && defined(SS_VARIOUS)
    "Report shifter tricks",(char*)CUT_REPORTSHIFTERTRICKS,
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
+   "Record Video",(char*)CUT_RECORD_VIDEO,
 #endif
 
 #ifdef UNIX
@@ -583,7 +605,23 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       break;
 #endif
       
-      
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
+    case CUT_RECORD_VIDEO:
+      if(video_recording)
+      {
+        TRACE("\nStop AVI record\n");
+        delete pAviFile;
+        pAviFile=0;
+      }
+      else
+      {
+//        if(!frameskip||frameskip==8) // error||auto
+  //        frameskip=1;
+    //    TRACE("Start AVI recording, frameskip %d\n",frameskip);
+      }
+      video_recording=!video_recording;
+      break;
+#endif      
 
       
 #ifdef DEBUG_BUILD

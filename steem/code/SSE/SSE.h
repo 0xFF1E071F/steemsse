@@ -11,11 +11,13 @@ v3.3.0 and at http://sourceforge.net/projects/steemsse/  for later versions.
 
 Added some files to the project. 
 -In folder 'code\SSE', several files starting with 'SSE', including this one.
+-A folder 6301 in '3rdparty' for true emulation of the IKBD
+-A folder avi in '3rdparty' for recording video to AVI support
+-A folder caps in '3rdparty' for IPF disk image format support
+-A folder dsp in '3rdparty' for Microwire emulation
 -A file div68kCycleAccurate.c in '3rdparty\pasti', to use the correct DIV 
 timings found by ijor (also author of Pasti).
--A folder dsp in '3rdparty' for Microwire emulation
--A folder 6301 in '3rdparty' for true emulation of the IKBD
--A folder caps in '3rdparty' for IPF disk image format support
+
 Other mods are in Steem code, inside blocks where STEVEN_SEAGAL is defined.
 Some exceptions, like mmu_confused, directly changed, very easy to reverse.
 Many other defines are used to segment code. This is heavy but it makes 
@@ -35,7 +37,7 @@ working build since v3.4.
 The VC6 build should be linked with the C++ library, don't count on system
 DLL or it will crash in Windows Vista & 7.
 The best build should be the M$ one. They're greedy but they know their 
-business!
+business! 
     
 SSE.h is supposed to mainly be a collection of compiling switches. It should
 include nothing and can be included everywhere.
@@ -45,20 +47,25 @@ include nothing and can be included everywhere.
 /*
 DONE
 - Working (compiling & running) Linux build of 3.4
-- Check fullscreen mode (crashes reported)
-- IPF support (Kryoflux) 
+- Check fullscreen mode (crashes reported): 3.4.1
+- IPF support (Kryoflux) (for V.3.5)
+- IPF can't insert disk 2, drive confusion (B=A?)
+- IPF display properties
+- IPF Turbo Outrun (DMA). Also Burgerman.
+- Lethal Xcess: hack
+- Record video (to AVI)
+- Pasti: wrong red led
+- TRACE can be commanded by boiler log options (started)
 */
 
 /*
 TODO (future versions, in no definite order)
-
-- Record video (to AVI)
+- PSG filter also for record
 - Systematic fix for 508/512 cycle counting issue (Omega)
 - ACIA/MIDI corrections
 - Real timings for 6301 / check SS_IKBD_RUN_IRQ_TO_END: hack?
 + Adjust this with a clock + Captain Blood?
 - Event for write to IKBD, but would it be useful?
-- TRACE can be commanded by boiler log options ? 
 + redesign system, like all others do: trace(type,msg)? note: no perf loss
 - Support for unrar.dll
 - Check if TOS1.00 sould boot with 4MB
@@ -76,6 +83,7 @@ TODO (future versions, in no definite order)
 - nuke winston import, it's outdated
 - nuke update process
 - Boiler: remove DIV logging,we know the timing now
+- use IPF insights to improve fdc emu
 */
 
 
@@ -89,15 +97,15 @@ TODO (future versions, in no definite order)
 /////////////
 
 #if defined(STEVEN_SEAGAL)
-//#define BETA
+#define BETA
 #ifdef BETA // beta with all features
 #define SSE_VERSION 350 // check snapshot; rc\resource.rc
-#define SSE_VERSION_TXT "SSE SSE Beta" 
+#define SSE_VERSION_TXT "SSE Beta" 
 #define WINDOW_TITLE "Steem SSE beta"//"Steem Engine SSE 3.5.0" 
 #else // next planned release
-#define SSE_VERSION 341 // check snapshot; rc\resource.rc
-#define SSE_VERSION_TXT "SSE 3.4.1" 
-#define WINDOW_TITLE "Steem Engine SSE 3.4.1" 
+#define SSE_VERSION 350 // check snapshot; rc\resource.rc
+#define SSE_VERSION_TXT "3.5.0" 
+#define WINDOW_TITLE "Steem Engine SSE 3.5.0" 
 #endif
 #undef BETA
 #endif
@@ -124,7 +132,7 @@ TODO (future versions, in no definite order)
 #define SS_TOS        // The Operating System
 #define SS_UNIX       // Linux build must be OK too
 #define SS_VARIOUS    // Mouse capture, keyboard click...
-#define SS_VIDEO      // shifter tricks; large borders
+#define SS_VIDEO      // shifter tricks; large borders, recording
 
 #endif
 
@@ -133,7 +141,7 @@ TODO (future versions, in no definite order)
 // TEMP //
 //////////
 
-#define SS_TST1 // while adding new features
+//#define SS_TST1 // while adding new features
 
 
 ///////////////////////
@@ -256,15 +264,19 @@ defined(SS_BOILER))
 
 #else // for custom debugging
 
+//#define SHOW_DRAW_SPEED
+
 //#define SS_ACIA_TRACE
 //#define SS_ACIA_TRACE_READ_SR // heavy
 //#define SS_ACIA_TRACE_IO // heavy when programs poll data register
-//#define SS_BLT_TRACE
 //#define SS_BLT_TRACE2 // report all blits
 //#define SS_CPU_EXCEPTION_TRACE
 //#define SS_CPU_PREFETCH_TRACE
 //#define SS_DEBUG_REPORT_SKIP_FRAME
-#define SS_DEBUG_START_STOP_INFO
+//#define SS_DEBUG_START_STOP_INFO
+//#define SS_FDC_TRACE_SECTORS
+//#define SS_FDC_TRACE_IPF_SECTORS
+#define SS_FDC_TRACE_IPF_STATUS //spell out status register
 //#define SS_FDC_TRACE // all writes (commands+TR+SR+DR)
 //#define SS_FDC_TRACE2 // read status register
 //#define SS_FDC_TRACE_IRQ // when the emu sets IRQ
@@ -325,6 +337,13 @@ defined(SS_BOILER))
 
 #if defined(WIN32) && SSE_VERSION>=350
 #define SS_FDC_IPF // IPF (Kryoflux) support...
+#if defined(SS_FDC_IPF)
+// those switches were used for development, normally they ain't necessary
+//#define SS_FDC_IPF_CPU // total sync
+//#define SS_FDC_IPF_RUN_PRE_IO 
+//#define SS_FDC_IPF_RUN_POST_IO
+#define SS_FDC_IPF_LETHAL_XCESS
+#endif
 #endif
 
 #define SS_FDC_CHANGE_SECTOR_WHILE_BUSY // from Kryoflux
@@ -433,8 +452,6 @@ defined(SS_BOILER))
 #endif
 
 
-
-
 /////////
 // OSD //
 /////////
@@ -491,11 +508,13 @@ defined(SS_BOILER))
 ////////////////
 
 #if defined(SS_UNIX)
+
 #if !defined(UNIX)
 #undef SS_UNIX
 #else
 #define SS_UNIX_TRACE // TRACE into the terminal (if it's open?)
 #endif
+
 #endif
 
 
@@ -534,8 +553,6 @@ defined(SS_BOILER))
 #define SS_VID_STEEM_EXTENDED  // based on Steem system
 //#define SS_VID_STEEM_ORIGINAL // only for debugging/separate blocks, careful
 
-//#define SS_VID_RECORDING //TODO (record a video file of rendering)
-
 #if defined(SS_DEBUG) 
 //#define SS_VIDEO_DRAW_DBG  // totally bypass CheckSideOverscan() & Render() !
 //#define SS_VID_VERT_OVSCN_OLD_STEEM_WAY // only for vertical overscan
@@ -546,7 +563,9 @@ defined(SS_BOILER))
 #define draw_scanline_to(cycles_since_hbl) Shifter.Render(cycles_since_hbl)
 #endif
 
-// features
+#if defined(WIN32) && SSE_VERSION>=350// && defined(_MSC_VER)
+#define SS_VID_RECORD_AVI //avifile
+#endif
 
 #if defined(SS_VID_STEEM_EXTENDED)
 

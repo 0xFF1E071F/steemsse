@@ -72,7 +72,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /w /W0 /GX /Zi /Ox /Ot /Og /Oi /Ob2 /Gy /D "_VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /I /I /I /I /GA /GF
-# ADD CPP /nologo /G6 /Zp16 /W3 /GX /Zi /Ob2 /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /I "..\..\3rdparty\sim6xxx" /D "NDEBUG" /D "NO_DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /FR /GA /GF /c
+# ADD CPP /nologo /G6 /MT /W3 /GX /Zi /Ob2 /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /I "..\..\3rdparty\sim6xxx" /D "NDEBUG" /D "NO_DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /FR /GA /GF /c
 # ADD BASE MTL /nologo /win32
 # ADD MTL /nologo /win32
 # ADD BASE RSC /l 0x409
@@ -137,6 +137,11 @@ PostBuild_Cmds=copy "Release\BoilerBeta.exe" "G:\emu\ST\bin\steem"
 SOURCE=..\..\steem\emu.cpp
 DEP_CPP_EMU_C=\
 	"..\..\3rdparty\6301\6301.h"\
+	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\3rdparty\caps\CapsAPI.h"\
+	"..\..\3rdparty\caps\CapsFDC.h"\
+	"..\..\3rdparty\caps\CapsPlug.h"\
+	"..\..\3rdparty\caps\Comtype.h"\
 	"..\..\3rdparty\dsp\dsp.h"\
 	"..\..\3rdparty\pasti\pasti.h"\
 	"..\..\include\binary.h"\
@@ -203,6 +208,8 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\SSE\SSECpu.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\Steem\code\SSE\SSEFloppy.cpp"\
+	"..\..\Steem\code\SSE\SSEFloppy.h"\
 	"..\..\steem\code\SSE\SSEInline.h"\
 	"..\..\steem\code\SSE\SSEInterrupt.cpp"\
 	"..\..\steem\code\SSE\SSEInterrupt.h"\
@@ -304,8 +311,14 @@ NODEP_CPP_HELPE=\
 SOURCE=..\..\steem\code\main.cpp
 DEP_CPP_MAIN_=\
 	"..\..\3rdparty\6301\6301.h"\
+	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\3rdparty\caps\CapsAPI.h"\
+	"..\..\3rdparty\caps\CapsFDC.h"\
+	"..\..\3rdparty\caps\CapsPlug.h"\
+	"..\..\3rdparty\caps\Comtype.h"\
 	"..\..\3rdparty\dsp\dsp.h"\
 	"..\..\3rdparty\pasti\pasti.h"\
+	"..\..\3rdparty\unrarlib\unrarlib\unrarlib.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\choosefolder.h"\
 	"..\..\include\circularbuffer.h"\
@@ -423,6 +436,7 @@ DEP_CPP_MAIN_=\
 	"..\..\Steem\code\SSE\SSEDebug.cpp"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\Steem\code\SSE\SSEFloppy.h"\
 	"..\..\steem\code\SSE\SSEInterrupt.h"\
 	"..\..\steem\code\SSE\SSEOption.h"\
 	"..\..\steem\code\SSE\SSEParameters.h"\
@@ -1098,6 +1112,7 @@ DEP_CPP_6301_=\
 	"..\..\3rdparty\6301\timer.c"\
 	"..\..\3rdparty\6301\timer.h"\
 	"..\..\3rdparty\6301\tty.c"\
+	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
 	"..\..\steem\code\SSE\SSEOption.h"\
@@ -1112,19 +1127,7 @@ SOURCE=..\..\3rdparty\6301\6301.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\alu.c
-
-!IF  "$(CFG)" == "Steem - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
@@ -1133,19 +1136,7 @@ SOURCE=..\..\3rdparty\6301\alu.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\callstac.c
-
-!IF  "$(CFG)" == "Steem - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
@@ -1158,19 +1149,7 @@ SOURCE=..\..\3rdparty\6301\chip.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\cpu.c
-
-!IF  "$(CFG)" == "Steem - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
@@ -1183,36 +1162,12 @@ SOURCE=..\..\3rdparty\6301\defs.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\fprinthe.c
-
-!IF  "$(CFG)" == "Steem - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\instr.c
-
-!IF  "$(CFG)" == "Steem - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
@@ -1221,19 +1176,7 @@ SOURCE=..\..\3rdparty\6301\instr.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\ireg.c
-
-!IF  "$(CFG)" == "Steem - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
@@ -1246,19 +1189,7 @@ SOURCE=..\..\3rdparty\6301\main.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\memory.c
-
-!IF  "$(CFG)" == "Steem - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
@@ -1267,36 +1198,12 @@ SOURCE=..\..\3rdparty\6301\memory.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\memsetl.c
-
-!IF  "$(CFG)" == "Steem - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\opfunc.c
-
-!IF  "$(CFG)" == "Steem - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
@@ -1305,19 +1212,7 @@ SOURCE=..\..\3rdparty\6301\opfunc.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\optab.c
-
-!IF  "$(CFG)" == "Steem - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
@@ -1326,19 +1221,7 @@ SOURCE=..\..\3rdparty\6301\optab.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\reg.c
-
-!IF  "$(CFG)" == "Steem - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
@@ -1347,19 +1230,7 @@ SOURCE=..\..\3rdparty\6301\reg.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\sci.c
-
-!IF  "$(CFG)" == "Steem - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
@@ -1368,19 +1239,7 @@ SOURCE=..\..\3rdparty\6301\sci.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\symtab.c
-
-!IF  "$(CFG)" == "Steem - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
@@ -1389,19 +1248,7 @@ SOURCE=..\..\3rdparty\6301\symtab.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\timer.c
-
-!IF  "$(CFG)" == "Steem - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
@@ -1410,19 +1257,63 @@ SOURCE=..\..\3rdparty\6301\timer.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\tty.c
-
-!IF  "$(CFG)" == "Steem - Win32 Debug"
-
 # PROP Exclude_From_Build 1
+# End Source File
+# End Group
+# Begin Group "caps"
 
-!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
+# PROP Default_Filter ""
+# Begin Source File
 
-# PROP Exclude_From_Build 1
+SOURCE=..\..\3rdparty\caps\CapsAPI.h
+# End Source File
+# Begin Source File
 
-!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+SOURCE=..\..\3rdparty\caps\CapsFDC.h
+# End Source File
+# Begin Source File
 
-!ENDIF 
+SOURCE=..\..\3rdparty\caps\CapsPlug.cpp
+DEP_CPP_CAPSP=\
+	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\3rdparty\caps\CapsAPI.h"\
+	"..\..\3rdparty\caps\CapsFDC.h"\
+	"..\..\3rdparty\caps\CapsPlug.h"\
+	"..\..\3rdparty\caps\Comtype.h"\
+	"..\..\steem\code\SSE\SSE.h"\
+	"..\..\Steem\code\SSE\SSEDebug.h"\
+	"..\..\steem\code\SSE\SSEDecla.h"\
+	
+# End Source File
+# Begin Source File
 
+SOURCE=..\..\3rdparty\caps\CapsPlug.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\3rdparty\caps\Comtype.h
+# End Source File
+# End Group
+# Begin Group "AVI"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\3rdparty\avi\AviFile.cpp
+DEP_CPP_AVIFI=\
+	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\steem\code\SSE\SSE.h"\
+	"..\..\Steem\code\SSE\SSEDebug.h"\
+	"..\..\steem\code\SSE\SSEDecla.h"\
+	
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\3rdparty\avi\AviFile.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\3rdparty\avi\Resource.h
 # End Source File
 # End Group
 # End Group
@@ -3597,6 +3488,7 @@ SOURCE=..\..\include\wordwrapper.h
 
 SOURCE=..\..\steem\code\SSE\SSE.cpp
 DEP_CPP_SSE_C=\
+	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
 	
@@ -3675,6 +3567,15 @@ SOURCE=..\..\steem\code\SSE\SSEDecla.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\Steem\code\SSE\SSEFloppy.cpp
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\Steem\code\SSE\SSEFloppy.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\steem\code\SSE\SSEInline.h
 # End Source File
 # Begin Source File
@@ -3702,7 +3603,9 @@ SOURCE=..\..\steem\code\SSE\SSEInterrupt.h
 
 SOURCE=..\..\steem\code\SSE\SSEOption.cpp
 DEP_CPP_SSEOP=\
+	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\steem\code\SSE\SSE.h"\
+	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
 	"..\..\steem\code\SSE\SSEOption.h"\
 	"..\..\steem\code\SSE\SSESTF.h"\

@@ -121,6 +121,10 @@ void TDiskManager::SetNumFloppies(int NewNum)
 {
   num_connected_floppies=NewNum;
 
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+  WD1772.drivecnt/*max*/=NewNum; // or drivecnt?
+#endif
+
 #if USE_PASTI
   if (hPasti){
     struct pastiCONFIGINFO pci;
@@ -2735,11 +2739,12 @@ void TDiskManager::InsertHistoryDelete(int d,char *Name,char *Path,char *DiskInZ
 bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChangeDisk,
                                 bool MakeFocus,EasyStr DiskInZip,bool SuppressErr,bool AllowInsert2)
 {
-  TRACE("Inserting disk %s in drive %c\n",Name.c_str(),Drive+'A');
+  TRACE("Inserting disk %s in drive %c\n",Path.c_str(),Drive+'A');
   if (DontChangeDisk==0){
     if (Path.Empty()) 
       return 0;
     int Err=FloppyDrive[Drive].SetDisk(Path,DiskInZip);
+    ASSERT(!Err);
     if (Err){
       TRACE("Error %d\n",Err);
       if (FloppyDrive[Drive].Empty()) EjectDisk(Drive); // Update display

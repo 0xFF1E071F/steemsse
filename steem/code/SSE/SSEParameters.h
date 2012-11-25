@@ -200,6 +200,12 @@
 
 #if defined(SS_VIDEO)
 
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
+#define SS_VID_RECORD_AVI_FILENAME "SteemVideo.avi"
+#define SS_VID_RECORD_AVI_CODEC "MPG4"
+#endif
+
+
 #if defined(SS_VID_BORDERS)
 #define ORIGINAL_BORDER_SIDE 32
 #if defined(SS_VID_BORDERS_LB_DX)

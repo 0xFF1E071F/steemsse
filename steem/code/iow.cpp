@@ -41,6 +41,10 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 */
 
   log_io_write(addr,io_src_b);
+#if defined(SS_DEBUG)
+  if(!io_word_access) 
+    TRACE_LOG("PC%X write byte %X to %X\n",pc-2,io_src_b,addr);
+#endif
 
 #ifdef DEBUG_BUILD
   DEBUG_CHECK_WRITE_IO_B(addr,io_src_b);
@@ -113,100 +117,99 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
       switch (addr){
     /******************** Keyboard ACIA ************************/
 
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_IKBD
+#endif
+
       case 0xfffc00:  //control
         if ((io_src_b & 3)==3){
           log_to(LOGSECTION_IKBD,Str("IKBD: ")+HEXSl(old_pc,6)+" - ACIA reset"); 
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_TRACE)
-          TRACE("IKBD - ACIA IKBD master reset\n");
-#endif
+          TRACE_LOG("IKBD - ACIA IKBD master reset\n");
           ACIA_Reset(NUM_ACIA_IKBD,0);
         }else{
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_TRACE)
-          TRACE("PC %X ACIA IKBD write CR %X\n",pc,io_src_b); // rare?
-#endif
+          TRACE_LOG("Write %X to IKBD's ACIA CR\n",io_src_b);
           ACIA_SetControl(NUM_ACIA_IKBD,io_src_b);
         }
         break;
 
       case 0xfffc02:  //data
+
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD) 
-#if defined(SS_IKBD_TRACE_6301)
-        TRACE("%d PC %X IKBD write 0xfffc02 %X hd6301_receiving_from_MC6850 %d\n",ABSOLUTE_CPU_TIME,pc,io_src_b,hd6301_receiving_from_MC6850);
-#endif
+        TRACE_LOG("Write %X to IKBD's ACIA DR\n",io_src_b);
+        // no TX in the agenda?
+        if(agenda_get_queue_pos(agenda_acia_tx_delay_IKBD)<0)
         {
-          bool TXEmptyAgenda=(agenda_get_queue_pos(agenda_acia_tx_delay_IKBD)>=0);
-          if(TXEmptyAgenda==0)
+          if(ACIA_IKBD.tx_irq_enabled) // rare
           {
-            if(ACIA_IKBD.tx_irq_enabled)
-            {
-              ACIA_IKBD.irq=false;
-              mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
-            }
-#if defined(SS_IKBD_6301)
-            // it's taken care of in agenda_ikbd_process() (double buffer)
-#if defined(SS_ACIA_DOUBLE_BUFFER_TX)
-            if(!HD6301EMU_ON)
-#endif
-              agenda_add(agenda_acia_tx_delay_IKBD,IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESS_ALT /*ACIAClockToHBLS(ACIA_IKBD.clock_divide)*/,0);
-#else
-            agenda_add(agenda_acia_tx_delay_IKBD,IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESS_ALT /*ACIAClockToHBLS(ACIA_IKBD.clock_divide)*/,0);
-#endif
-          }
-#if defined(SS_IKBD_6301)
-          // If the line is free, the byte in register will be sent very soon 
-          // and the bit cleared very soon (double buffer)
-#if defined(SS_ACIA_DOUBLE_BUFFER_TX)
-          if(hd6301_receiving_from_MC6850||!HD6301EMU_ON)  
-#endif
-#endif
-            ACIA_IKBD.tx_flag=true; //flag for transmitting
-          // If send new byte before last one has finished being sent
-          if(
-#if defined(SS_IKBD_6301) && !defined(SS_ACIA_DOUBLE_BUFFER_TX)
-            !HD6301EMU_ON&& // we don't do that TODO otherwise? seems incorrect
-#endif
-            abs(ABSOLUTE_CPU_TIME-ACIA_IKBD.last_tx_write_time)<ACIA_CYCLES_NEEDED_TO_START_TX)//512
-          {
-            // replace old byte with new one
-            int n=agenda_get_queue_pos(agenda_ikbd_process);
-            if(n>=0)
-            {
-              log_to(LOGSECTION_IKBD,Str("IKBD: ")+HEXSl(old_pc,6)+" - Received new command before old one was sent, replacing "+
-                                      HEXSl(agenda[n].param,2)+" with "+HEXSl(io_src_b,2));
-              agenda[n].param=io_src_b;
-              TRACE("IKBD replace byte %X with %X\n",agenda[n].param,io_src_b);
-            }
+            ACIA_IKBD.irq=false;
+            mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,
+              !(ACIA_IKBD.irq || ACIA_MIDI.irq));
           }
 
 #if defined(SS_IKBD_6301) && defined(SS_ACIA_DOUBLE_BUFFER_TX)
-          // we'll place in agenda when the first byte is handled
-          else if(hd6301_receiving_from_MC6850)
-          {
-#if defined(SS_IKBD_TRACE_6301)
-            TRACE("%d PC %X IKBD write (shift delayed) %X\n",ACIA_IKBD.last_tx_write_time,pc,io_src_b);
-            printf("%d PC %X IKBD write (shift delayed) %X\n",ACIA_IKBD.last_tx_write_time,pc,io_src_b);
+          if(!HD6301EMU_ON) // see agenda_ikbd_process()
 #endif
-            ACIA_IKBD.data_tdr=io_src_b;
-          }
-#endif
+            agenda_add(agenda_acia_tx_delay_IKBD,
+              IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESS_ALT,0);
+        }
 
-          else
+#if defined(SS_IKBD_6301)&& defined(SS_ACIA_DOUBLE_BUFFER_TX)
+        // If the line is free, the byte in register will be sent very soon 
+        // and the TX bit cleared very soon (double buffer)
+        if(hd6301_receiving_from_MC6850||!HD6301EMU_ON)  
+#endif
+          ACIA_IKBD.tx_flag=true;
+   
+/*  "If send new byte before last one has finished being sent"
+    We keep this part for now, maybe Steem authors had info.
+    It's like ACIA wouldn't start shifting at once.
+    In the MC6850 doc, they mention "within one bit time".
+    7250 bit/s, 8000000 cycles/s
+    1bit = 1100 cycles, the ACIA_CYCLES_NEEDED_TO_START_TX (=512)
+    would be an average.
+*/ 
+        if(abs(ABSOLUTE_CPU_TIME-ACIA_IKBD.last_tx_write_time)
+          <ACIA_CYCLES_NEEDED_TO_START_TX)//512
+        {
+          // replace old byte with new one
+          int n=agenda_get_queue_pos(agenda_ikbd_process);
+          if(n>=0)
           {
-            // there is a delay before the data gets to the IKBD
-            ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
-#if defined(SS_IKBD_TRACE_IO)
-            TRACE("iow IKBD write %X (act %d PC %X tx%d)\n",io_src_b,ABSOLUTE_CPU_TIME,pc,ACIA_IKBD.tx_flag);
-            if(HD6301EMU_ON)
-              printf("iow IKBD write %X (act %d PC %X tx%d)\n",io_src_b,ABSOLUTE_CPU_TIME,pc,ACIA_IKBD.tx_flag);
-#endif
-            agenda_add(agenda_ikbd_process,
-#if defined(SS_IKBD_6301)
-              HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL,
-#else
-             IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESS_ALT,
-#endif
-             io_src_b);
+            log_to(LOGSECTION_IKBD,Str("IKBD: ")+HEXSl(old_pc,6)+" - Received new command before old one was sent, replacing "+
+              HEXSl(agenda[n].param,2)+" with "+HEXSl(io_src_b,2));
+            TRACE_LOG("IKBD replace byte %X with %X\n",agenda[n].param,io_src_b);
+            agenda[n].param=io_src_b;
           }
+        }
+
+#if defined(SS_IKBD_6301) && defined(SS_ACIA_DOUBLE_BUFFER_TX)
+        // ACIA to 6301 line busy: we'll place in agenda when the current byte
+        // is handled
+        else if(hd6301_receiving_from_MC6850) 
+        {
+#if defined(SS_IKBD_TRACE_6301)
+          printf("%d PC %X IKBD write (shift delayed) %X\n",ACIA_IKBD.last_tx_write_time,pc,io_src_b);
+#endif
+          ACIA_IKBD.data_tdr=io_src_b;
+        }
+#endif
+        // line is free, or we don't care (6301+"fake")
+        else
+        {
+          ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
+#if defined(SS_IKBD_TRACE_6301)
+          if(HD6301EMU_ON)
+            printf("iow IKBD write %X (act %d PC %X tx%d)\n",io_src_b,ABSOLUTE_CPU_TIME,pc,ACIA_IKBD.tx_flag);
+#endif
+          // agenda the byte to process
+          agenda_add(agenda_ikbd_process,
+#if defined(SS_IKBD_6301)
+            HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL,
+#else
+           IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESS_ALT,
+#endif
+           io_src_b);
         }
 
 #if defined(SS_IKBD_6301)
@@ -215,6 +218,10 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 #endif
 
         break;
+
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_IO
+
 #else // Steem 3.2
       {
         bool TXEmptyAgenda=(agenda_get_queue_pos(agenda_acia_tx_delay_IKBD)>=0);
@@ -968,10 +975,35 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
         psg_reg[psg_reg_select]=io_src_b;
 
         if (psg_reg_select==PSGR_PORT_A){
-#if USE_PASTI
-          if (hPasti && pasti_active) pasti->WritePorta(io_src_b,ABSOLUTE_CPU_TIME);
-#endif
+/*
+    The PSG ports are used for other purposes than chip sound.
 
+    ff 8802   W               |xxxxxxxx|   PSG Write Data
+                               ||||||||       I/O Port A
+                               ||||||| -------   Floppy Side0/_Side1 Select
+                               |||||| --------   Floppy _Drive0 Select
+                               ||||| ---------   Floppy _Drive1 Select
+                               |||| ----------   RS232 Request To Send
+                               ||| -----------   RS232 Data Terminal Ready
+                               || ------------   Centronics _STROBE
+                               | -------------   General Purpose Output
+                                --------------   Reserved
+    
+    Floppy drive & side is selected if the bit is cleared, not set!
+    Bit 0: side
+    Bit 1: drive A
+    Bit 2: drive B
+    If both bits 1&2 are set, drive A is selected.
+*/
+          TRACE_LOG("PSG Port A %X (&7: %X)\n",io_src_b,io_src_b&7);
+#if USE_PASTI // SS Pasti manages this as well
+          if (hPasti && pasti_active) 
+            pasti->WritePorta(io_src_b,ABSOLUTE_CPU_TIME);
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+          if(Caps.Active) // like the above (we imitate!)
+            Caps.WritePsgA(io_src_b);
+#endif
           SerialPort.SetDTR(io_src_b & BIT_4);
           SerialPort.SetRTS(io_src_b & BIT_3);
           if ((old_val & (BIT_1+BIT_2))!=(io_src_b & (BIT_1+BIT_2))){
@@ -993,6 +1025,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
           if (ParallelPort.IsOpen()){
             if (ParallelPort.OutputByte(io_src_b)==0){
               log_write("ARRRGGHH: Lost printer character, printer not responding!!!!");
+              TRACE("ARRRGGHH: Lost printer character, printer not responding!!!!");
             }
             UpdateCentronicsBusyBit();
           }
@@ -1218,6 +1251,7 @@ $FF860D|byte |DMA base and counter (Low byte)                      |R/W
 /*
 $FF8600|     |Reserved
 $FF8602|     |Reserved
+-> writing there crashes:
 */
         if (addr<0xff8604) 
           exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
@@ -1247,16 +1281,8 @@ $FF8606|word |DMA mode/status
           pioi.cycles=ABSOLUTE_CPU_TIME;
           //          log_to(LOGSECTION_PASTI,Str("PASTI: IO write addr=$")+HEXSl(addr,6)+" data=$"+
           //                            HEXSl(io_src_b,2)+" ("+io_src_b+") pc=$"+HEXSl(pc,6)+" cycles="+pioi.cycles);
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)          
-          TRACE_LOG("Before write: ");
-          if(TRACE_ENABLED) fdc_report_regs();
-#endif
           pasti->Io(PASTI_IOWRITE,&pioi); //SS send to DLL
           pasti_handle_return(&pioi);
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)          
-          TRACE_LOG("After write: ");
-          if(TRACE_ENABLED) fdc_report_regs();
-#endif
           break;
         }
 #endif
@@ -1299,24 +1325,28 @@ $FF8606|word |DMA mode/status
               log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Writing $xx"+HEXSl(io_src_b,2)+" to HDC register #"+((dma_mode & BIT_1) ? 1:0));
               break;
             }
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)          
-            TRACE_LOG("Before write: ");
-            if(TRACE_ENABLED) fdc_report_regs();
-#endif
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
             int drive=floppy_current_drive();
             int wd_address=(dma_mode&(BIT_1+BIT_2))>>1;
-            if(Caps.DriveIsIPF[drive])
+            if(Caps.DriveIsIPF[drive]) // this could be trouble
             {
-              if(!wd_address && (io_src_b&0x20)) // can't handle writes
-                FDCCantWriteDisplayTimer=timeGetTime()+3000;
-              else
-                CapsFdcWrite(&WD1772,wd_address,io_src_b); // send to DLL
-            }
-            else switch (wd_address*2){
-#else
-            switch (dma_mode & (BIT_1+BIT_2)){
+#if defined(SS_FDC_IPF_RUN_PRE_IO)
+              CapsFdcEmulate(&WD1772,300);
+              Caps.CyclesRun=300;
 #endif
+#if defined(SS_FDC_IPF_LETHAL_XCESS)
+              if(SSE_HACKS_ON && !wd_address)
+                WD1772.lineout&=~CAPSFDC_LO_INTIP; // fixes Lethal Xcess
+#endif
+              CapsFdcWrite(&WD1772,wd_address,io_src_b); // send to DLL
+#if defined(SS_FDC_IPF_RUN_POST_IO)
+              CapsFdcEmulate(&WD1772,200);
+              Caps.CyclesRun=200;
+#endif
+            }
+            else // else switch 
+#endif
+            switch (dma_mode & (BIT_1+BIT_2)){
               case 0:
                 floppy_fdc_command(io_src_b);
                 break;
@@ -1329,9 +1359,9 @@ field.  When the 177x is busy, it ignores CPU writes to this register.
 [In fact, it doesn't (undocumented), from Kryoflux]
 The highest legal track number is 240.
 */
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_CHANGE_TRACK_WHILE_BUSY)
                 if(fdc_str & FDC_STR_BUSY)
                   TRACE_LOG("TR change while busy %d -> %d\n",fdc_tr,io_src_b);
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_CHANGE_TRACK_WHILE_BUSY)
                 fdc_tr=io_src_b;
 #else
                 if ((fdc_str & FDC_STR_BUSY)==0){
@@ -1350,9 +1380,9 @@ field.  When the 177x is busy, it ignores CPU writes to this register.
 [In fact, it doesn't (undocumented) from Kryoflux]
 Valid sector numbers range from 1 to 240, inclusive.
 */
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_CHANGE_SECTOR_WHILE_BUSY)
                 if(fdc_str & FDC_STR_BUSY)
                   TRACE_LOG("SR change while busy %d -> %d\n",fdc_sr,io_src_b);
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_CHANGE_SECTOR_WHILE_BUSY)
                 fdc_sr=io_src_b; // fixes Delirious 4 loader without Pasti
 #else
                 if ((fdc_str & FDC_STR_BUSY)==0){
@@ -1368,10 +1398,6 @@ Valid sector numbers range from 1 to 240, inclusive.
                 fdc_dr=io_src_b;
                 break;
             }
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)          
-            TRACE_LOG("After write: ");
-            if(TRACE_ENABLED) fdc_report_regs();
-#endif
             break;
           }
 
@@ -1391,7 +1417,6 @@ Valid sector numbers range from 1 to 240, inclusive.
           case 0xff8609:  //high byte of DMA pointer
             dma_address&=0x00ffff;
             dma_address|=((MEM_ADDRESS)io_src_b) << 16;
-            //TRACE("DMA address=%X\n",dma_address);
             log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Set DMA address to "+HEXSl(dma_address,6));
             break;
           case 0xff860b:  //mid byte of DMA pointer
@@ -1832,10 +1857,10 @@ This register allows to skip from a single to 15 pixels at the start of each
         case 0xff8260: //resolution
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VIDEO) 
-////ASSERT(!screen_res);
+
           Shifter.SetShiftMode(io_src_b);
           break;
-        
+
 #else // Steem 3.2
         
           if (screen_res>=2 || emudetect_falcon_mode!=EMUD_FALC_MODE_OFF) return;
@@ -2130,6 +2155,9 @@ MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
 //---------------------------------------------------------------------------
 void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
 {
+#if defined(SS_DEBUG)
+  TRACE_LOG("PC%X write word %X to %X\n",pc-2,io_src_w,addr);
+#endif
   if (addr>=0xff8240 && addr<0xff8260){  //palette
     DEBUG_CHECK_WRITE_IO_W(addr,io_src_w);
     int n=(addr-0xff8240) >> 1;

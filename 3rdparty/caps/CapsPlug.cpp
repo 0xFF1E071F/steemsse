@@ -41,7 +41,7 @@ CapsProc cpr[]= {
   "CAPSUnlockAllTracks", NULL,
   "CAPSGetPlatformName", NULL,
   "CAPSLockImageMemory", NULL,
-  //SS were missing:
+  //SS those were missing:
   "CAPSFdcGetInfo", NULL, //13
   "CAPSFdcInit", NULL,
   "CAPSFdcReset", NULL,
