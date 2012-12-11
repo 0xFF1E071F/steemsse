@@ -44,7 +44,7 @@ void TOption::Init() {
   StealthMode=FALSE;
 #endif
   OutputTraceToFile=TRUE; // can be disabled in Boiler
-  TraceFileLimit=TRUE; // stop TRACING to file at +-3+MB
+  TraceFileLimit=FALSE;//TRUE; // stop TRACING to file at +-3+MB
 }
 
 #endif//#if defined(SS_SSE_OPTION_STRUCT)

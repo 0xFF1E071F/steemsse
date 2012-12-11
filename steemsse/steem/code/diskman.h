@@ -74,6 +74,7 @@ private:
   Str MSAConvSel;
 
   bool Importing;
+
 #elif defined(UNIX)
 	int HistBackLength,HistForwardLength;
 

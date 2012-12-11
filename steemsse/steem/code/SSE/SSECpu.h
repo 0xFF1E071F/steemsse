@@ -183,14 +183,29 @@ inline void m68k_Process() {
 #endif
 #endif
   FetchWord(ir); // IR->IRD
+
+//if(debug1) TRACE("%X\n",pc);
+//if(pc==0x144c8) debug1=0;
+//if(pc==0x1de20) TRACE("A3 %x\n",areg[3]);
+///if(pc==0x061A) TRACE("PC %x\n",pc);
+
+#if defined(SS_CPU_EXCEPTION) && defined(SS_CPU_EXCEPTION_TRACE_PC)//heavy!!!
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_CRASH
+  if(Cpu.nExceptions>1) 
+    TRACE_LOG("%X\n",pc);
+#undef LOGSECTION
+#endif
+
+
   pc+=2; 
 //  ASSERT(ir!=0xD191); // dbg: break on opcode...
 //  ASSERT(!mmu_testing);
-#if defined(SS_FDC_IPF_CPU) // normally overkill
+#if defined(SS_IPF_CPU) 
   int cycles=cpu_cycles;
 #endif
   m68k_high_nibble_jump_table[ir>>12](); // go to instruction...
-#if defined(SS_FDC_IPF_CPU)
+#if defined(SS_IPF_CPU)
  if(Caps.Active)
   {
     int cpucycles=cycles-cpu_cycles;

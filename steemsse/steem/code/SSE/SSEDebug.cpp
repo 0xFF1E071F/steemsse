@@ -8,16 +8,15 @@
 int debug0=0,debug1=0,debug2=0,debug3=0,debug4=0,
   debug5=0,debug6=0,debug7=0,debug8=0,debug9=0;
 
-TDebug SSDebug; // singleton
+TDebug Debug; // singleton
 
 bool logsection_enabled_b[100];
 
-TDebug::TDebug() {
-  trace_file_pointer=NULL; // classic C file handling
-  ReportBreakpoints=TRUE; // disabled when clicking cancel in the box
-  nTrace=0; // trace counter
+char trace_buffer[1024]; // permanent rather that on the stack
 
-  ZeroMemory(logsection_enabled_b,100*sizeof(bool));
+TDebug::TDebug() {
+
+  ZeroMemory(logsection_enabled_b,100*sizeof(bool)); // 100> our need
   // compile time wanted traces (overrides boiler if present)
   logsection_enabled_b[ LOGSECTION_ALWAYS ] = 0;
   logsection_enabled_b[ LOGSECTION_FDC ] = 0;
@@ -42,59 +41,53 @@ TDebug::TDebug() {
   logsection_enabled_b[ LOGSECTION_GUI ] = 0;
   logsection_enabled_b[ LOGSECTION_DIV ] = 0;
   logsection_enabled_b[ LOGSECTION_PASTI ] = 0;
-  // TODO options in boiler?
+  // TODO more options in boiler?
   logsection_enabled_b[ LOGSECTION_FDC_BYTES ] = 0;
   logsection_enabled_b[ LOGSECTION_IPF_LOCK_INFO ] = 0;
+  logsection_enabled_b[ LOGSECTION_IMAGE_INFO ] = 0;
 
-#if !defined(_DEBUG) && defined(DEBUG_BUILD)
-  trace_file_pointer=fopen("TRACE.txt","w"); // only one file name...
-//  ASSERT(SSEOption.OutputTraceToFile);
-  TraceToFile("This is a Steem SSE TRACE file\n");
+#if defined(SS_DEBUG_TRACE_FILE)
+  ReportBreakpoints=TRUE; // disabled when clicking cancel in the box
+  nTrace=0; // trace counter
+  trace_file_pointer=fopen(SS_TRACE_FILE_NAME,"w"); // only one file name...
   ASSERT(trace_file_pointer);
-
-
-
+  TRACE("This is a Steem SSE TRACE file\n");
 #endif
 }
 
 
 TDebug::~TDebug() {
+#if defined(SS_DEBUG_TRACE_FILE)
   if(trace_file_pointer)
   {
-    TRACE("Closing TRACE file...\n");
+    TRACE("Closing TRACE file...\n"); 
     fclose(trace_file_pointer);
   }
+#endif
 }
 
-#if !defined(_DEBUG) && (defined(DEBUG_BUILD) || defined(SS_UNIX_TRACE))
+#if defined(SS_DEBUG_TRACE_FILE)
+
 void TDebug::TraceToFile(char *fmt, ...){ 
   if(SSEOption.OutputTraceToFile
-    && (!SSEOption.TraceFileLimit||nTrace <TRACE_MAX_WRITES)
     && trace_file_pointer)  
   {
-    char out[1024];	//better way?
     va_list body;	
     va_start(body, fmt);	
-    VERIFY( vsprintf(out, fmt, body)<1024 );
+    VERIFY( vsprintf(trace_buffer, fmt, body)<1024 );
     va_end(body);	
-    fprintf(trace_file_pointer,out);
+    fprintf(trace_file_pointer,trace_buffer);
     nTrace++; 
+    if(SSEOption.TraceFileLimit && nTrace>=TRACE_MAX_WRITES)
+    {
+      nTrace=0;
+      rewind(trace_file_pointer); // it doesn't erase
+      TRACE("\n--------------------------\nREWIND TRACE\n--------------------------\n");
+    }
   }
 }
+
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 #if defined(SS_DEBUG_START_STOP_INFO)
@@ -125,16 +118,16 @@ int ReportGeneralInfos(int when) {
     if(FloppyDrive[0].DiskInDrive())
     {
       TRACE("; Disk A: %s",FloppyDrive[0].DiskName.c_str()); 
-#if defined(SS_FDC_IPF)
-    if(Caps.DriveIsIPF[0]) 
+#if defined(SS_IPF)
+    if(Caps.IsIpf(0)) 
       TRACE(" (IPF emu)");
 #endif
     }
     if(num_connected_floppies==2 && FloppyDrive[1].DiskInDrive())
     {
       TRACE("; Disk B: %s",FloppyDrive[1].DiskName.c_str()); 
-#if defined(SS_FDC_IPF)
-    if(Caps.DriveIsIPF[1]) 
+#if defined(SS_IPF)
+    if(Caps.IsIpf(1)) 
       TRACE(" (IPF emu)");
 #endif
     }
@@ -171,7 +164,7 @@ int ReportGeneralInfos(int when) {
 #endif
 
 
-#if defined(_DEBUG)
+#if defined(_DEBUG) && !defined(SS_DEBUG_TRACE_FILE)
 // TRACE for VC IDE
 #include <stdio.h>
 #include <stdarg.h>
@@ -179,12 +172,11 @@ int ReportGeneralInfos(int when) {
 // Our TRACE facility has no MFC dependency.
 // The same for ASSERT. Could be easier?
 void my_trace(char *fmt, ...){
-  char out[1024];	
   va_list body;	
   va_start(body, fmt);	
-  vsprintf(out, fmt, body);	
+  vsprintf(trace_buffer, fmt, body);	
   va_end(body);	
-  OutputDebugString(out);
+  OutputDebugString(trace_buffer);
 }
 
 #endif

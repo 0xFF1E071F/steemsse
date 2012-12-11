@@ -83,9 +83,6 @@ extern int video_recording;
 extern char *video_recording_codec;
 #endif
 
-
-
-
 #if defined(SS_VID_BORDERS)
 extern int SideBorderSize,BottomBorderSize;
 extern int SideBorderSizeWin;

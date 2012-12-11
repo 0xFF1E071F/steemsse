@@ -2,37 +2,51 @@
 #ifndef SSEDEBUG_H
 #define SSEDEBUG_H
 
-extern bool FullScreen;
+#if defined(SS_DEBUG) 
 
+extern "C" int debug0,debug1,debug2,debug3,debug4,debug5,debug6,debug7,debug8,
+  debug9; // 4,5,6 cleared every VBL, 7,8,9 every HBL (too much?)
 
-#if defined(SS_DEBUG)
+#if (!defined(_DEBUG)) && !defined(SS_DEBUG_TRACE_FILE) \
+  && (defined(DEBUG_BUILD) || defined(SS_UNIX_TRACE))
+#define SS_DEBUG_TRACE_FILE
+#endif
 
+#if defined(SS_DEBUG_TRACE_FILE)
 #include <stdio.h>
+#endif
 
-extern "C" int debug0,debug1,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9;
-// 4,5,6 cleared every VBL, 7,8,9 every HBL (too much?)
 
+#if defined(DEBUG_BUILD)
+void debug_set_bk(unsigned long ad,bool set);
+#define BREAK(ad) debug_set_bk(ad,true)
+#else
+#define BREAK(ad)
+#endif
+
+extern char trace_buffer[1024]; 
 
 struct TDebug {
   TDebug();
   ~TDebug();
-#if !defined(_DEBUG) && defined(DEBUG_BUILD) // not in IDE
-  void TraceToFile(char *fmt, ...);  
-#endif
+  
+#if defined(SS_DEBUG_TRACE_FILE)
+  void TraceToFile(char *fmt, ...); 
   FILE *trace_file_pointer; 
   BOOL ReportBreakpoints; // disabled when clicking cancel in the box
   int nTrace;
+#endif
   int ShifterTricks;
 };
-extern TDebug SSDebug;
+extern TDebug Debug;
 
+
+#if defined(SS_DEBUG_START_STOP_INFO)
+enum EReportGeneralInfos {START,STOP} ;
+int ReportGeneralInfos(int when);
 #endif
 
 
-#if defined(SS_DEBUG)
-
-#define TRACE_MAX_WRITES 200000 // to avoid too big file
- 
 #if defined(DEBUG_BUILD) // boiler
 #if defined(_DEBUG) // IDE
 #define TRACE_ENABLED (logsection_enabled_b[LOGSECTION] || LOGSECTION<NUM_LOGSECTIONS && logsection_enabled[LOGSECTION])
@@ -47,6 +61,7 @@ extern TDebug SSDebug;
 impossible!
 #endif
 #endif
+
 #define TRACE_LOG if(TRACE_ENABLED) TRACE
 
 extern bool logsection_enabled_b[100];
@@ -76,10 +91,8 @@ extern bool logsection_enabled_b[100];
   #define LOGSECTION_PASTI 22
   #define NUM_LOGSECTIONS 23
 #endif
-// our additions:
-enum {LOGSECTION_FDC_BYTES=23,LOGSECTION_IPF_LOCK_INFO};
 
-#if defined(_DEBUG) && defined(VC_BUILD)
+#if defined(_DEBUG) && defined(VC_BUILD) && !defined(SS_DEBUG_TRACE_FILE)
 
 #define TRACE my_trace // to be independent of MFC
 
@@ -90,17 +103,18 @@ extern "C" void my_trace(char *fmt, ...);
 #define BRK(x) {TRACE(#x); TRACE("\n");}
 
 #else // for boiler
-#define TRACE SSDebug.TraceToFile
-#define BREAKPOINT {if(SSDebug.ReportBreakpoints) \
-SSDebug.ReportBreakpoints=(Alert("Breakpoint! Click cancel to stop those \
+
+#define TRACE Debug.TraceToFile
+#define BREAKPOINT {if(Debug.ReportBreakpoints) \
+Debug.ReportBreakpoints=(MessageBox(0,"Breakpoint! Click cancel to stop those \
 boxes","BRK",MB_OKCANCEL)==IDOK);} 
 #define ASSERT(x) {if (!(x)) {TRACE("Assert failed: %s\n",#x); \
-  if(SSDebug.ReportBreakpoints) { \
-  SSDebug.ReportBreakpoints=(Alert(#x,"ASSERT",MB_OKCANCEL)==IDOK);}}}
+  if(Debug.ReportBreakpoints) { \
+  Debug.ReportBreakpoints=(MessageBox(0,#x,"ASSERT",MB_OKCANCEL)==IDOK);}}}
 #define VERIFY(X) ASSERT(X)
-#define BRK(x){if(SSDebug.ReportBreakpoints) { \
+#define BRK(x){if(Debug.ReportBreakpoints) { \
 TRACE("Breakpoint: %s\n",#x); \
-SSDebug.ReportBreakpoints=(Alert(#x,"Breakpoint",MB_OKCANCEL)==IDOK);}}
+Debug.ReportBreakpoints=(MessageBox(0,#x,"Breakpoint",MB_OKCANCEL)==IDOK);}}
 
 #endif
 
@@ -113,19 +127,27 @@ SSDebug.ReportBreakpoints=(Alert(#x,"Breakpoint",MB_OKCANCEL)==IDOK);}}
 #define TRACE my_trace
 void my_trace(char *fmt, ...);
 #else
+
+#if defined(VC_BUILD) // OK for Unix?
+#define TRACE(x) 
+#define TRACE_LOG(x) 
+#else
 #define TRACE
 #define TRACE_LOG
+#endif
+
 #endif
 #define ASSERT(x)
 #define BRK(x) 
 
 #endif 
 
-#if defined(SS_DEBUG_START_STOP_INFO)
-enum EReportGeneralInfos {START,STOP} ;
-int ReportGeneralInfos(int when);
-#endif
 
+// our additions to logsections
+enum {LOGSECTION_FDC_BYTES=23,
+   LOGSECTION_IPF_LOCK_INFO,
+   LOGSECTION_IMAGE_INFO 
+ };
 
 
 #endif// SSEDEBUG_H

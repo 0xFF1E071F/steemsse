@@ -8,6 +8,107 @@ DESCRIPTION: Functions to reset the emulator to a startup state.
 #pragma message("Included for compilation: reset.cpp")
 #endif
 
+/*
+Atari ST Boot Up Operation
+The Motorola 68000 on boot up requires initial
+values to load into its supervisor stack pointer
+and reset vector address. These come in the
+form of two long words at address 0x000000 to
+0x000007.
+
+Boot up sequence
+Figure 9 - Atari ST boot up sequence
+(1)
+. Load SSP with long word value from 0xFC0000.
+. Load PC with long word value from 0xFC0004 (Garbage value, memory not yet
+sized).
+. CPU Supervisor Mode Interrupts disabled (IPL=7).
+. RESET instruction to reset all peripheral chips.
+. Check for magic number 0xFA52235F on cartridge port, if present jump to
+diagnostic cartridge.
+(2).
+. Test for warm start, if memvalid (0x000420) and memval2 (0x00043A) contain
+the Magic numbers 0x7520191F3 and 0x237698AA respectively, then load the
+memconf (0xFF8001) contents with data from memctrl (0x000424).
+(3)
+. If the resvalid (0x000426) contains the Magic number 0x31415926, jump to reset
+vector taken from Resvector (0x00042A).
+(4)
+. YM2149 sound chip initialized (Floppy deselected).
+. The vertical synchronization frequency in syncmode (0xFF820A) is adjusted to
+50Hz or 60Hz depending on region.
+. Shifter palette initialized.
+. Shifter Base register (0xFF8201 and 0xFF8203) are initialized to 0x010000.
+. The following steps 5 to 8 are only done on a coldstart to initialize memory.
+(5)
+. Write 0x000a (2 Mbyte & 2 Mbyte) to the MMU Memory Configuration Register
+0xff8001).
+(6)
+. Write Pattern to 0x000000 - 0x000lff.
+. Read Pattern from 0x000200 - 0x0003ff.
+. If Match then Bank0 contains 128 Kbyte; goto step 7.
+. Read Pattern from 0x000400 - 0x0005ff.
+. If Match then Bank0 contains 512 Kbyte; goto step 7.
+. Read Pattern from 0x000000 - 0x0001ff.
+. If Match then Bank0 contains 2 Mbyte; goto step 7.
+. panic: RAM error in Bank0.
+(7)
+. Write Pattern to 0x200000 - 0x200lff.
+. Read Pattern from 0x200200 - 0x2003ff.
+. If Match then Bank1 contains 128 Kbyte; goto step 8.
+. Read Pattern from 0x200400 - 0x2005ff.
+. If Match then Bank1 contains 512 Kbyte; goto step 8.
+. Read Pattern from 0x200000 - 0x2001ff.
+. If Match then Bank1 contains 2 Mbyte; goto step 8.
+. note: Bank1 not fitted.
+(8)
+. Write Configuration to MMU Memory Configuration Register (0xff8001).
+. Note Total Memory Size (Top of RAM) for future reference in phystop
+(0x00042E).
+. Set magic values in memvalid (0x000420) and memval2 (0x00043A).
+(9)
+. Clear the first 64 Kbytes of RAM from top of operating system variables
+(0x00093A) to Shifter base address (0x010000).
+. Initialize operating system variables.
+. Change and locate Shifter Base register to 32768 bytes from top of physical ram.
+. Initialize interrupt CPU vector table.
+. Initialize BIOS.
+. Initialize MFP.
+(10)
+. Cartridge port checked, if software with bit 2 set in CA_INIT then start.
+(11)
+. Identify type of monitor attached for mode of operation for the Shifter video chip
+and initialize.
+(12)
+. Cartridge port checked, if software with CA_INIT clear (execute prior to display
+memory and interrupt vector initialization) then start.
+(13)
+. CPU Interrupt level (IPL) lowered to 3 (HBlank interrupts remain masked).
+(14)
+. Cartridge port checked, if software with bit 1 set in CA_INIT (Execute prior to
+GEMDOS initialization) then start.
+(15)
+. The GEMDOS Initialization routines are completed.
+(16)
+. Attempt boot from floppy disk if operating system variable _bootdev (0x000446)
+smaller than 2 (for floppy disks) is. Before a boot attempt is made bit 3 in
+CA_INIT (Execute prior to boot disk) checked, if set, start cartridge.
+. The ACSI Bus is examined for devices, if successful search and load boot sector.
+. If system variable _cmdload (0x000482) is 0x0000, skip step 17.
+(17)
+. Turn screen cursor on
+. Start any program in AUTO folder of boot device
+. Start COMMAND.PRG for a shell
+(18)
+. Start any program in AUTO folder of boot device
+. AES (in the ROM) starts.
+
+It is important to have these two different reset signals, as some parts of the design only
+need to be reset on power up to known states. One of these components was the clock
+signal component. It was important for the CPU that the clock was running while a reset
+is issued, and that the reset was active for at least 132 clock cycles [27].
+*/
+
 //---------------------------------------------------------------------------
 void power_on()
 {
@@ -73,6 +174,9 @@ void power_on()
   floppy_irq_flag=0;
   fdc_spinning_up=0;
   floppy_type1_command_active=2;
+#if defined(STEVEN_SEAGAL) && defined(SS_DMA_WRITE_CONTROL)
+  dma_mode=0; // see reset_peripherals()
+#endif
 
   hdimg_reset();
 
@@ -92,9 +196,9 @@ void reset_peripherals(bool Cold)
 
 #if defined(SS_RESET_TRACE)
   if(Cold)
-    TRACE("F%d Reset peripherals (cold)\n",FRAME);
+    TRACE("Reset peripherals (cold)\n");
   else
-    TRACE("F%d Reset peripherals (warm)\n",FRAME);
+    TRACE("Reset peripherals (warm)\n");
 #endif	
 #ifndef NO_CRAZY_MONITOR
   if (extended_monitor){
@@ -128,7 +232,7 @@ void reset_peripherals(bool Cold)
 #endif
 #if defined(SS_DEBUG)
   if(Cold)// Not for warm resets because there are many reset tricks.
-    SSDebug.ShifterTricks=0;
+    Debug.ShifterTricks=0;
 #endif
 #endif
   
@@ -141,8 +245,18 @@ void reset_peripherals(bool Cold)
   vbl_pending=false;
 
   dma_status=1;  //no error, apparently
+#if defined(STEVEN_SEAGAL) && defined(SS_DMA_WRITE_CONTROL)
+/*
+          The actual DMA operation is performed through a 32 byte
+          FIFO  programmed  via  the  DMA  Mode Control Register (word
+          access write only, reset: not affected) and DMA Sector Count
+          Register  (word  access  write only, reset: all zeros).
+*/
+  dma_sector_count=0;//SS test
+#else
   dma_mode=0;
   dma_sector_count=0xffff;
+#endif
   fdc_read_address_buffer_len=0;
   dma_bytes_written_for_sector_count=0;
 
@@ -152,9 +266,10 @@ void reset_peripherals(bool Cold)
     pasti->HwReset(Cold);
   }
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
-  if(Caps.Initialised)
-    CapsFdcReset(&WD1772);
+
+#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
+  if(Caps.Version)
+    Caps.Reset();
 #endif
 
   ZeroMemory(mfp_reg,sizeof(mfp_reg));
@@ -187,8 +302,6 @@ void reset_peripherals(bool Cold)
   dma_sound_bass=6; // 6 is neutral value
   dma_sound_treble=6;
 #endif
-
-
 
   ACIA_Reset(NUM_ACIA_IKBD,true);
   ikbd_reset(true); // Always cold reset, soft reset is different

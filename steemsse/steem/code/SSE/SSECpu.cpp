@@ -30,21 +30,9 @@ void m68k_exception::crash()
   MEM_ADDRESS sp=(MEM_ADDRESS)(SUPERFLAG ? (areg[7] & 0xffffff):(other_sp & 0xffffff));
 
 #if defined(SS_DEBUG)   
-  Cpu.nExceptions++;
-  {//TODO remove this in IDE...
-#ifdef DEBUG_BUILD // this helped a lot 
-    EasyStr instr=disa_d2(old_pc); // take advantage of the disassembler
-    TRACE_LOG("PC:%X-Op:%X-Ins: %s -SR:%X-Bus:%X\n",old_pc,ir,instr.Text,sr,abus);
-#else
-    TRACE_LOG("PC:%X-Op:%X-SR:%X-Bus:%X\n",old_pc,ir,sr,abus);
-#endif
-    TRACE_LOG("Regs");
-    int i;
-    for(i=0;i<8;i++) // D0-D7
-      TRACE_LOG(" D%d:%X",i,r[i]);
-    TRACE_LOG("\nRegs");
-    for(i=0;i<8;i++) // A0-A7 (A7 when the exception occured)
-      TRACE_LOG(" A%d:%X",i,areg[i]);
+  if(Cpu.nExceptions!=-1)
+  {
+    Cpu.nExceptions++;  
     TRACE_LOG("\nException #%d, %d bombs (",Cpu.nExceptions,bombs);
     switch(bombs)
     {  
@@ -79,7 +67,24 @@ void m68k_exception::crash()
       TRACE_LOG("BOMBS_LINE_F"); 
       break;
     }//sw
-    TRACE_LOG(")-Vector: %X\n",LPEEK(bombs*4));
+    TRACE_LOG(") at %d\n",ABSOLUTE_CPU_TIME);
+
+/////if(ir==0xCC8D) bombs=2;
+
+#ifdef DEBUG_BUILD 
+    EasyStr instr=disa_d2(old_pc); // take advantage of the disassembler
+    TRACE_LOG("PC=%X-IR=%X-Ins: %s -SR=%X-Bus=%X",old_pc,ir,instr.Text,sr,abus);
+#else
+    TRACE_LOG("PC=%X-IR=%X-SR=%X-Bus=%X",old_pc,ir,sr,abus);
+#endif
+    TRACE_LOG("-Vector $%X=%X\n",bombs*4,LPEEK(bombs*4));
+    // dump registers
+    for(int i=0;i<8;i++) // D0-D7
+      TRACE_LOG("D%d=%X ",i,r[i]);
+    TRACE_LOG("\n");
+    for(int i=0;i<8;i++) // A0-A7 (A7 when the exception occured)
+      TRACE_LOG("A%d=%X ",i,areg[i]);
+    TRACE_LOG("\n");
   }
 #endif
 
@@ -88,8 +93,11 @@ void m68k_exception::crash()
     // Double bus error, CPU halt (we crash and burn)
     // This only has to be done here, m68k_PUSH_ will cause bus error if invalid
     DEBUG_ONLY( log_history(bombs,crash_address) );
-    TRACE_LOG("Double bus error SP:%X\n",sp);
-    perform_crash_and_burn();//SS don't think there's anything to fix here
+    TRACE_LOG("Double bus error SP:%d < bytes to stack %d\n",sp,bytes_to_stack);
+    perform_crash_and_burn();
+#if defined(SS_DEBUG)
+    Cpu.nExceptions=-1;
+#endif
   }
   else
   {
@@ -98,8 +106,10 @@ void m68k_exception::crash()
     {
       if(!SUPERFLAG) 
         change_to_supervisor_mode();
+      TRACE_LOG("Push crash address %X on %X\n",(crash_address & 0x00ffffff) | pc_high_byte,r[15]-4);
       m68k_PUSH_L((crash_address & 0x00ffffff) | pc_high_byte); 
       INSTRUCTION_TIME_ROUND(8);
+      TRACE_LOG("Push SR %X on %X\n",_sr,r[15]-2);
       m68k_PUSH_W(_sr); // Status register 
       INSTRUCTION_TIME_ROUND(4); //Round first for interrupts
       MEM_ADDRESS ad=LPEEK(bombs*4); // Get the vector
@@ -117,6 +127,7 @@ void m68k_exception::crash()
       }
       else
       {
+        TRACE_LOG("PC = %X\n\n",ad);
         set_pc(ad);
         SR_CLEAR(SR_TRACE);
         INSTRUCTION_TIME_ROUND(22); 
@@ -129,7 +140,6 @@ void m68k_exception::crash()
         change_to_supervisor_mode();
       TRY_M68K_EXCEPTION
       {
-
 
 #if defined(SS_CPU_WAR_HELI2)
 /*  New fix for War Heli, based on when exactly in the MOVE process the crash
@@ -160,7 +170,7 @@ void m68k_exception::crash()
 
 #endif
 
-        // MOVE.L ad hoc hacks, not used anymore
+        // MOVE.L ad hoc hacks
         if((_ir & 0xf000)==(b00100000 << 8))
         {
           int offset=0;
@@ -191,22 +201,27 @@ void m68k_exception::crash()
             TRACE_LOG("MOVE.L crash - Opcode %X\n",_ir);
             break;
           }//sw
-#if defined(SS_DEBUG)
           if(offset)
             TRACE_LOG("Adjusting stacked PC %d: %X\n",offset,_pc+offset);
-#endif
           _pc+=offset;
         }
-        WORD x=WORD(_ir & 0xffe0); // status
+
+        TRACE_LOG("Push PC %X on %X\n",_pc,r[15]-4);
+        m68k_PUSH_L(_pc);
+        TRACE_LOG("Push SR %X on %X\n",_sr,r[15]-2);
+        m68k_PUSH_W(_sr);
+        TRACE_LOG("Push IR %X on %X\n",_ir,r[15]-2);
+        m68k_PUSH_W(_ir);
+        TRACE_LOG("Push address %X on %X\n",address,r[15]-4);
+        m68k_PUSH_L(address);
+        // status
+        WORD x=WORD(_ir & 0xffe0); 
         if(action!=EA_WRITE) x|=B6_010000;
         if(action==EA_FETCH)
           x|=WORD((_sr & SR_SUPER) ? FC_SUPERVISOR_PROGRAM:FC_USER_PROGRAM);
         else
           x|=WORD((_sr & SR_SUPER) ? FC_SUPERVISOR_DATA:FC_USER_DATA);
-        m68k_PUSH_L(_pc);
-        m68k_PUSH_W(_sr);
-        m68k_PUSH_W(_ir);
-        m68k_PUSH_L(address);
+        TRACE_LOG("Push status %X on %X\n",x,r[15]-2);
         m68k_PUSH_W(x);
       }
       CATCH_M68K_EXCEPTION
@@ -215,11 +230,12 @@ void m68k_exception::crash()
         r[15]=0xf000; // R15=A7
       }
       END_M68K_EXCEPTION
+      TRACE_LOG("PC = %X\n\n",LPEEK(bombs*4));
       SET_PC(LPEEK(bombs*4)); // includes final prefetch
       SR_CLEAR(SR_TRACE);
       INSTRUCTION_TIME_ROUND(50); //Round for fetch
 #if defined(SS_CPU_PREFETCH) && defined(SS_DEBUG)
-  Cpu.PrefetchClass=2;
+      Cpu.PrefetchClass=2;
 #endif
     }
 ///    DEBUG_ONLY(log_history(bombs,crash_address));
@@ -802,6 +818,7 @@ void m68k_0011() //move.w
   {
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     m68k_dest=&(r[PARAM_N]);
+//if(PARAM_N==3 /*&& m68k_src_w==0x21C*/) TRACE("PC %X D3 %X\n",pc-2,m68k_src_w);
     m68k_DEST_W=m68k_src_w;
     SR_CHECK_Z_AND_N_W;
   }
@@ -882,6 +899,11 @@ case BITS_876_110: // (d8, An, Xn)
     if (m68k_src_w & MSB_W){
       SR_SET(SR_N);
     }
+
+
+///if(abus==0x02c8ba) TRACE("PC %X %X %X\n",pc-2,abus,m68k_src_w);
+
+
     m68k_dpoke_abus(m68k_src_w);
 
 #if defined(SS_CPU_POST_INC)

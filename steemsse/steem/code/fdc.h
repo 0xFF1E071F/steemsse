@@ -7,17 +7,9 @@
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC)
-
 // ADAT = Accurate Disk Access Times (Steem option, snails on drives!)
 #define ADAT (!floppy_instant_sector_access) 
-
-#if defined(SS_DEBUG)
-int fdc_command_type(int command);
-int fdc_report_regs(bool spell_out_status=0);
-void fdc_spell_out_status(BYTE res, int type);
 #endif
-
-#endif//SS
 
 #define FLOPPY_MAX_BYTESPERSECTOR 512
 #define FLOPPY_MAX_TRACK_NUM      85
@@ -88,10 +80,6 @@ int dma_sector_count;
 int dma_bytes_written_for_sector_count=0;
 
 BYTE fdc_cr,fdc_tr,fdc_sr,fdc_str,fdc_dr;
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC)
-BYTE fdc_old_cr;// for my hacks...
-#endif
-
 bool fdc_last_step_inwards_flag;
 BYTE floppy_head_track[2];
 int fdc_spinning_up=0;
@@ -114,8 +102,11 @@ bool floppy_track_index_pulse_active();
 int fdc_step_time_to_hbls[4]={94,188,32,47};
 
 int fdc_read_address_buffer_len=0;
+#if defined(STEVEN_SEAGAL) && defined(SS_DMA_DOUBLE_FIFO)
+BYTE fdc_read_address_buffer[32]; // 2 buffers of 16bytes
+#else
 BYTE fdc_read_address_buffer[20];
-
+#endif
 #endif
 
 #undef EXT

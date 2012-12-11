@@ -41,8 +41,9 @@ CapsProc cpr[]= {
   "CAPSUnlockAllTracks", NULL,
   "CAPSGetPlatformName", NULL,
   "CAPSLockImageMemory", NULL,
-  //SS those were missing:
-  "CAPSFdcGetInfo", NULL, //13
+  //SS those were missing (starting from 13)
+  "CAPSGetVersionInfo",NULL,
+  "CAPSFdcGetInfo", NULL,
   "CAPSFdcInit", NULL,
   "CAPSFdcReset", NULL,
   "CAPSFdcEmulate", NULL,
@@ -53,7 +54,7 @@ CapsProc cpr[]= {
   NULL, NULL
 };
 
-enum {ECapsFdcGetInfo=13,ECapsFdcInit,ECapsFdcReset,ECapsFdcEmulate,
+enum {ECapsGetVersionInfo=13,ECapsFdcGetInfo,ECapsFdcInit,ECapsFdcReset,ECapsFdcEmulate,
 ECapsFdcRead,ECapsFdcWrite,ECapsFdcInvalidateTrack,ECapsGetInfo}; //SS
 
 // start caps image support
@@ -74,7 +75,7 @@ SDWORD CapsInit(LPCTSTR lib)
   for (int prc=0; cpr[prc].name; prc++)
   {
     cpr[prc].proc=GetProcAddress(capi, cpr[prc].name);
-//    TRACE("init fct %s %p\n",cpr[prc].name,cpr[prc].proc);
+  //  TRACE("init fct %s %p\n",cpr[prc].name,cpr[prc].proc);
   }
   SDWORD res=cpr[0].proc ? CAPSHOOKN(cpr[0].proc)() : imgeUnsupported;
 
@@ -186,8 +187,17 @@ SDWORD CapsLockImageMemory(SDWORD id, PUBYTE buffer, UDWORD length, UDWORD flag)
   return res;
 }
 
-//SS additions to wield the WD1772 emu
+//SS library version
+SDWORD CapsGetVersionInfo(PVOID pversioninfo, UDWORD flag) {
+  UDWORD res=cpr[ECapsGetVersionInfo].proc ? 
+    CAPSHOOKN(cpr[ECapsGetVersionInfo].proc)(pversioninfo,flag) : imgeUnsupported;
 
+  return res;
+}
+
+
+//SS additions to wield the WD1772 emu
+//
 UDWORD CapsFdcGetInfo(SDWORD iid, PCAPSFDC pc, SDWORD ext) {
   UDWORD res=cpr[ECapsFdcGetInfo].proc ? 
     CAPSHOOKN(cpr[ECapsFdcGetInfo].proc)(iid, pc, ext) : imgeUnsupported;

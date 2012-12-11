@@ -3791,6 +3791,11 @@ void                              m68k_and_b_to_dN(){
   SR_CHECK_Z_AND_N_W;
 }void                             m68k_and_l_to_dN(){
   FETCH_TIMING;
+
+////  if( (ir&BITS_543)>>3 == 1 )
+   ////// exception(BOMBS_ADDRESS_ERROR,EA_READ,abus);
+
+
   m68k_GET_SOURCE_L_NOT_A;
   if(SOURCE_IS_REGISTER_OR_IMMEDIATE){INSTRUCTION_TIME(4);}
   else {INSTRUCTION_TIME(2);}
@@ -4972,6 +4977,7 @@ extern "C" void m68k_0110(){  //Bcc + BSR
       INSTRUCTION_TIME_ROUND(18); // round for fetch
     }else{ // Bcc
       if (m68k_CONDITION_TEST){ // branch taken
+//////////////////////        if(new_pc&1) m68k_unrecognised();
         m68k_READ_W(new_pc); // Check for bus/address errors
         SET_PC(new_pc);
         INSTRUCTION_TIME_ROUND(10); // round for fetch

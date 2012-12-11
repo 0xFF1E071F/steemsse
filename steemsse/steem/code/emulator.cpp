@@ -113,6 +113,16 @@ void init_timings()
   pasti_update_time=ABSOLUTE_CPU_TIME+8000000;
 #endif
 #endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_DMA_DELAY)
+#if defined(SS_MFP_RATIO)
+    Dma.dma_time=ABSOLUTE_CPU_TIME+CpuNormalHz;
+#else
+    Dma.dma_time=ABSOLUTE_CPU_TIME+8000000;
+#endif
+#endif
+
+
   hbl_count=0;
 }
 //---------------------------------------------------------------------------
@@ -335,7 +345,7 @@ void agenda_add(LPAGENDAPROC action,int pause,int param)
 {
   if (agenda_length>=MAX_AGENDA_LENGTH){
     log_write("AARRRGGGHH!: Agenda full, can't add!");
-    TRACE("AARRRGGGHH!: Agenda full, can't add!\n");
+    TRACE("AARRRGGGHH!: Agenda full, can't add!\n"); // indicates a bug
     return;
   }
 
@@ -390,22 +400,22 @@ int agenda_get_queue_pos(LPAGENDAPROC job)
 }
 //---------------------------------------------------------------------------
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_IKBD
 void agenda_acia_tx_delay_IKBD(int)
 {
 #if defined(SS_ACIA_DOUBLE_BUFFER_TX)
   if( (!hd6301_receiving_from_MC6850)||!HD6301EMU_ON)
-#endif
   {
-#if defined(SS_ACIA_TRACE_IO)
-  TRACE("%d tx %x->0\n",ABSOLUTE_CPU_TIME,ACIA_IKBD.tx_flag);
 #endif
+  TRACE_LOG("%d tx %x->0\n",ABSOLUTE_CPU_TIME,ACIA_IKBD.tx_flag);
   ACIA_IKBD.tx_flag=0; //finished transmitting
+#if defined(SS_ACIA_DOUBLE_BUFFER_TX)
   }
+#endif
   if(ACIA_IKBD.tx_irq_enabled)
   {
-#if defined(SS_ACIA_TRACE) // it is rare
-    TRACE("agenda_acia_tx_delay_IKBD setting IRQ at %d\n",ABSOLUTE_CPU_TIME);
-#endif
+    TRACE_LOG("agenda_acia_tx_delay_IKBD setting IRQ at %d\n",ABSOLUTE_CPU_TIME);
     ACIA_IKBD.irq=true;
   }
   mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));

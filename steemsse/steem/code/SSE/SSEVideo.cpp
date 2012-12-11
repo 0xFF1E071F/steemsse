@@ -1634,7 +1634,7 @@ int TShifter::IncScanline() { // a big extension of 'scan_y++'!
 
 #if defined(SS_DEBUG)
   debug7=debug8=debug9=0;
-  SSDebug.ShifterTricks|=CurrentScanline.Tricks;
+  Debug.ShifterTricks|=CurrentScanline.Tricks;
 #endif
 
   scan_y++; 
@@ -2160,7 +2160,7 @@ void TShifter::Vbl() {
 #if defined(SS_DEBUG)
 #if defined(SS_VID_REPORT_VBL_TRICKS)
   TRACE("VBL %d shifter tricks %X\n",nVbl,SSDebug.ShifterTricks);
-  SSDebug.ShifterTricks=0;
+  Debug.ShifterTricks=0;
 #endif
   nVbl++;
   debug4=debug5=debug6=0;

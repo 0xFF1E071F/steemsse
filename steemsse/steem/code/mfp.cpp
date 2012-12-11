@@ -245,11 +245,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
       log("MFP: --------------- PULSE EXTENSION MODE!! -----------------");
     }
 #endif
-#if defined(SS_DEBUG)
-    // it seems not to be expected
-    if (reg<=MFPR_TBCR && new_val>8)
-      TRACE_LOG("MFP: --------------- PULSE EXTENSION MODE!! -----------------");
-#endif
+    ASSERT(!(reg<=MFPR_TBCR && new_val>8)); // it seems not to be expected
     prepare_event_again();
   }else if (reg>=MFPR_TADR && reg<=MFPR_TDDR){ //data reg change
     timer=reg-MFPR_TADR;
@@ -385,7 +381,7 @@ void ASMCALL check_for_interrupts_pending()
           if (mfp_reg[MFPR_IMRA+i_ab] & i_bit){ //is it not masked out?
 #if defined(STEVEN_SEAGAL) && defined(SS_BLT_BLIT_MODE_INTERRUPT)
 /*  Stop blitter to start interrupt. This is a bugfix and necessary for Lethal
-    Excess if we use the correct BLIT mode cycles (64x4).
+    Xcess if we use the correct BLIT mode cycles (64x4). (I think)
 */
             if(Blit.HasBus) // opt: we assume the test is quicker than clearing
               Blit.HasBus=false; 
@@ -470,11 +466,12 @@ void mfp_interrupt(int irq,int when_fired)
             }else{
               mfp_reg[MFPR_ISRA+mfp_interrupt_i_ab(irq)]&=BYTE(~mfp_interrupt_i_bit(irq));
             }
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)   
-            if(irq==7 && (WD1772.lineout&CAPSFDC_LO_INTRQ))
+#if defined(STEVEN_SEAGAL) && defined(SS_IPF) 
+            // should be very rare, most programs, including TOS, poll
+            if(irq==7 && Caps.Active && (Caps.WD1772.lineout&CAPSFDC_LO_INTRQ))
             {
               TRACE_LOG("execute WD1772 irq\n");
-              WD1772.lineout&=~CAPSFDC_LO_INTRQ; 
+              Caps.WD1772.lineout&=~CAPSFDC_LO_INTRQ; 
             }
 #endif
             MEM_ADDRESS vector;

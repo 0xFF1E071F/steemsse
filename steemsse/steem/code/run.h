@@ -173,6 +173,19 @@ EXT int cpu_timer_at_start_of_hbl;
 #define PREPARE_EVENT_CHECK_FOR_PASTI
 #endif
 
+
+#if defined(STEVEN_SEAGAL) && defined(SS_DMA_DELAY)
+#define PREPARE_EVENT_CHECK_FOR_DMA       \
+  if ((time_of_next_event-Dma.dma_time) >= 0){                 \
+    time_of_next_event=Dma.dma_time;  \
+    screen_event_vector=TDma::Event;                    \
+  }
+
+#else
+#define PREPARE_EVENT_CHECK_FOR_DMA
+#endif
+
+
 // SS:PREPARE_EVENT_CHECK_FOR_ACIA_IKBD_IN is defined in ikbd.h
 
 typedef void(*EVENTPROC)();
