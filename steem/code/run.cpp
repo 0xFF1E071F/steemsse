@@ -281,6 +281,11 @@ void inline prepare_event_again() //might be an earlier one
     PREPARE_EVENT_CHECK_FOR_DEBUG;
     
     PREPARE_EVENT_CHECK_FOR_PASTI;
+
+#if defined(STEVEN_SEAGAL) && defined(SS_DMA_DELAY)
+    PREPARE_EVENT_CHECK_FOR_DMA;
+#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SS_ACIA_IRQ_DELAY)
     PREPARE_EVENT_CHECK_FOR_ACIA_IKBD_IN;
 #endif
@@ -311,6 +316,10 @@ void inline prepare_next_event()
     PREPARE_EVENT_CHECK_FOR_DEBUG;
       
     PREPARE_EVENT_CHECK_FOR_PASTI;
+
+#if defined(STEVEN_SEAGAL) && defined(SS_DMA_DELAY)
+    PREPARE_EVENT_CHECK_FOR_DMA;
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SS_ACIA_IRQ_DELAY)
     PREPARE_EVENT_CHECK_FOR_ACIA_IKBD_IN;
 #endif
@@ -410,7 +419,7 @@ void event_hbl()   //just HBL, don't draw yet
 #undef LOGSECTION
 
   log_to_section(LOGSECTION_VIDEO,EasyStr("VIDEO: Event HBL at end of line ")+scan_y+", cycle "+(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl));
-  right_border_changed=0;
+  right_border_changed=0;//SS useful in SSE?
   scanline_drawn_so_far=0;
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
   cpu_timer_at_start_of_hbl=time_of_next_event; // SS as defined in draw.cpp
@@ -432,19 +441,8 @@ void event_hbl()   //just HBL, don't draw yet
   }
   if (dma_sound_on_this_screen) dma_sound_fetch();
   screen_event_pointer++;  
-
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF) && !defined(SS_FDC_IPF_CPU)
-  // giving cycles to IPF's WD1772 emu every scanline
-  if(Caps.Active)
-  {
-#if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)
-    ASSERT( Shifter.CurrentScanline.Cycles>100)
-    CapsFdcEmulate(&WD1772,Shifter.CurrentScanline.Cycles-Caps.CyclesRun);
-#else
-    CapsFdcEmulate(&WD1772,screen_res==2? 160 : 512);
-#endif
-    Caps.CyclesRun=0;
-  }
+#if defined(STEVEN_SEAGAL) && defined(SS_IPF) && !defined(SS_IPF_CPU)
+//  if(Caps.Active) Caps.Hbl(); //double?
 #endif
 }
 //---------------------------------------------------------------------------
@@ -464,7 +462,10 @@ void event_scanline()
     {
       ASSERT(HD6301.Initialised);
       int n6301cycles= (screen_res==2) 
-        ? HD6301_CYCLES_PER_SCANLINE/2 : HD6301_CYCLES_PER_SCANLINE; //64
+        ? /*HD6301_CYCLES_PER_SCANLINE/2*/20 : HD6301_CYCLES_PER_SCANLINE; //64
+
+      n6301cycles=Shifter.CurrentScanline.Cycles/8;
+
       if(!hd6301_run_cycles(n6301cycles))
       {
         TRACE("6301 emu is hopelessly crashed!\n");
@@ -472,6 +473,7 @@ void event_scanline()
       }
     }
     HD6301.RunThisHbl=0; // reset for next hbl
+    //TODO adjust at VBL
   }
 #endif
   // SS Note: refactoring here is very dangerous!
@@ -581,18 +583,9 @@ void event_scanline()
   /////// and relative to cpu_time_of_last_vbl:
   cpu_timer_at_start_of_hbl=time_of_next_event; 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF) && !defined(SS_FDC_IPF_CPU)
-  // giving cycles to IPF's WD1772 emu every scanline
+#if defined(STEVEN_SEAGAL) && defined(SS_IPF) && !defined(SS_IPF_CPU)
   if(Caps.Active)
-  {
-#if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)
-    ASSERT( Shifter.CurrentScanline.Cycles>100)
-    CapsFdcEmulate(&WD1772,Shifter.CurrentScanline.Cycles-Caps.CyclesRun);
-#else
-    CapsFdcEmulate(&WD1772,screen_res==2? 160 : 512);
-#endif
-    Caps.CyclesRun=0;
-  }
+    Caps.Hbl();
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)

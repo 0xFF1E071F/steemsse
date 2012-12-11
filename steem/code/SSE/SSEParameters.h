@@ -70,6 +70,37 @@
 
 
 ///////////
+// DEBUG //
+///////////
+
+#if defined(SS_DEBUG) 
+#define SS_TRACE_FILE_NAME "TRACE.txt"
+#define TRACE_MAX_WRITES 200000 // to avoid too big file
+#endif
+
+
+/////////
+// DMA //
+/////////
+
+#if defined(SS_DMA)
+#if defined(SS_DMA_DELAY)
+#define SS_DMA_ACCESS_DELAY 20
+#endif
+#endif
+
+
+/////////
+// FDC //
+/////////
+
+#if defined(SS_FDC)
+
+
+#endif
+
+
+///////////
 // Hacks //
 ///////////
 
@@ -184,6 +215,17 @@
 
 
 /////////
+// IPF //
+/////////
+
+#if defined(SS_IPF)
+#define SS_IPF_PLUGIN_FILE "CAPSImg.dll"
+#define SS_IPF_FREQU 8000000//? CPU speed?
+#endif
+
+
+
+/////////
 // OSD //
 /////////
 
@@ -192,6 +234,15 @@
 #define HD_TIMER 100 // Yellow hard disk led (imperfect timing)
 #endif
 
+
+/////////////
+// VARIOUS //
+/////////////
+
+#if defined(SS_VARIOUS)
+
+
+#endif
 
 
 ///////////

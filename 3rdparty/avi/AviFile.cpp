@@ -18,6 +18,7 @@
 extern IDirectSoundBuffer *PrimaryBuf,*SoundBuf;
 unsigned int FormatAviMessage(HRESULT code, char *buf,unsigned int len);
 extern int shifter_freq_at_start_of_vbl;
+extern bool FullScreen;
 
 #include "avifile.h"
 

@@ -186,10 +186,16 @@ bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDi
     floppy_instant_sector_access=pCSF->GetInt("Disks","QuickDiskAccess",floppy_instant_sector_access);
     FloppyArchiveIsReadWrite=bool(pCSF->GetInt("Disks","FloppyArchiveIsReadWrite",FloppyArchiveIsReadWrite));
     if (BootDisk[0].Empty() || FirstLoad==0){
+#if defined(STEVEN_SEAGAL) &&  defined(SS_FDC_DONT_INSERT_NON_EXISTENT_IMAGES)
+      if( (pCSF->GetStr("Disks","Disk_A_Name","")).NotEmpty() )
+#endif
       InsertDisk(0,pCSF->GetStr("Disks","Disk_A_Name",""),pCSF->GetStr("Disks","Disk_A_Path",""),
                     0,0,pCSF->GetStr("Disks","Disk_A_DiskInZip",""),true);
     }
     if (BootDisk[1].Empty() || FirstLoad==0){
+#if defined(STEVEN_SEAGAL) &&  defined(SS_FDC_DONT_INSERT_NON_EXISTENT_IMAGES)
+      if( (pCSF->GetStr("Disks","Disk_B_Name","")).NotEmpty() )
+#endif
       InsertDisk(1,pCSF->GetStr("Disks","Disk_B_Name",""),pCSF->GetStr("Disks","Disk_B_Path",""),
                     0,0,pCSF->GetStr("Disks","Disk_B_DiskInZip",""),true);
     }

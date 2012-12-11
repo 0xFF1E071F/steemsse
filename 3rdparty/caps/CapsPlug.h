@@ -31,6 +31,7 @@ SDWORD CapsUnlockTrack(SDWORD id, UDWORD cylinder, UDWORD head);
 SDWORD CapsUnlockAllTracks(SDWORD id);
 PCHAR  CapsGetPlatformName(UDWORD pid);
 //SS those were missing:
+SDWORD CapsGetVersionInfo(PVOID pversioninfo, UDWORD flag);
 UDWORD CapsFdcGetInfo(SDWORD iid, PCAPSFDC pc, SDWORD ext);
 SDWORD CapsFdcInit(PCAPSFDC pc);
 void CapsFdcReset(PCAPSFDC pc);

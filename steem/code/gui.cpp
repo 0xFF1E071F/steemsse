@@ -22,9 +22,7 @@ and (for some reason) command-line options.
 extern int draw_last_scanline_for_border,res_vertical_scale; // forward
 
 int ChangeBorderSize(int size_in) {
-#if defined(SS_VID_BORDERS_TRACE)
-  TRACE("Setting display size to %d (%d)\n",size_in,SSEOption.BorderSize);
-#endif
+  TRACE_LOG("Setting display size to %d (%d)\n",size_in,SSEOption.BorderSize);
   int size=size_in;
   ASSERT(size==0||size==1||size==2||size==3);
   if(1||size!=SSEOption.BorderSize) //todo

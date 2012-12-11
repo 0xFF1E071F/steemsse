@@ -109,7 +109,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_SHIFTER_EVENTS)
           VideoEvents.Add(scan_y,LINECYCLES,'J',rel_cycle+6); 
 #endif
-          BUS_JAM_TIME(rel_cycle+6); // just 6
+          BUS_JAM_TIME(rel_cycle+6); //SS just 6
 
         }
       }
@@ -117,10 +117,8 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
       switch (addr){
     /******************** Keyboard ACIA ************************/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_IKBD
-#endif
 
       case 0xfffc00:  //control
         if ((io_src_b & 3)==3){
@@ -536,9 +534,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 #if defined(STEVEN_SEAGAL) && defined(SS_STF)
       if(ST_TYPE!=STE)
       {
-#if defined(SS_STF_TRACE)
-        TRACE("STF illegal write to 0xff8900\n");
-#endif
+        TRACE_LOG("STF write %X to %X\n",io_src_b,addr);
         exception(BOMBS_BUS_ERROR,EA_WRITE,addr); // fixes PYM/ST-CNX, SoWatt, etc.
         break;
       }
@@ -995,12 +991,17 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
     Bit 2: drive B
     If both bits 1&2 are set, drive A is selected.
 */
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_FDC
           TRACE_LOG("PSG Port A %X (&7: %X)\n",io_src_b,io_src_b&7);
+#undef LOGSECTION
+#define LOGSECTION LOGSETION_IO
+
 #if USE_PASTI // SS Pasti manages this as well
           if (hPasti && pasti_active) 
             pasti->WritePorta(io_src_b,ABSOLUTE_CPU_TIME);
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
           if(Caps.Active) // like the above (we imitate!)
             Caps.WritePsgA(io_src_b);
 #endif
@@ -1035,204 +1036,12 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
       }
       break;
     }
-/*
-
-               A direct main memory RAM access channel  is  shared  to
-          provide  support  for  both low speed (250 to 500 Kbits/sec)
-          and high speed (up to 12 Mbits/sec) 8 bit  device  controll-
-          ers.   The  base address for the DMA read or write operation
-          is loaded into the DMA Base  Address  and  Counter  Register
-          (read/write,  reset:  all  zeros).   Since  only one counter
-          register and channel is provided, only one DMA operation can
-          be executed at a time.
-
-               The actual DMA operation is performed through a 32 byte
-          FIFO  programmed  via  the  DMA  Mode Control Register (word
-          access write only, reset: not affected) and DMA Sector Count
-          Register  (word  access  write only, reset: all zeros).  The
-          progress, success, or failure of a DMA operation is reported
-          through  the  DMA  Status  Register  (word access read only,
-          reset: one) which is cleared by toggling Write/_Read in  the
-          DMA Mode Control Register.
-
-               Bus accesses are granted  to  the  DMA  controller  and
-          MC68000  MPU  on  an  egalitarian  first  come, first served
-          basis.  The access remains in effect until an  operation  is
-          complete or until control is otherwise relinquished.
-
-          DMA/Disk
-
-          ff 8600           |----------------|   Reserved
-          ff 8602           |----------------|   Reserved
-
-          ff 8604   R/W     |--------xxxxxxxx|   Disk Controller (Word Access)
-
-          ff 8606   R       |-------------xxx|   DMA Status (Word Access)
-                                          |||
-                                          || ----   _Error Status
-                                          | -----   _Sector Count Zero Status
-                                           ------   _Data Request Inactive Status
-          ff 8606   W       |-------xxxxxxxx-|   DMA Mode Control (Word Access)
-                                    ||||||||
-                                    ||||||| -----   A0
-                                    |||||| ------   A1
-                                    ||||| -------   HDC/_FDC Register Select
-                                    |||| --------   Sector Count Register Select
-                                    |||0            Reserved
-                                    || ----------   Disable/_Enable DMA
-                                    | -----------   FDC/_HDC
-                                     ------------   Write/_Read
-
-          ff 8609   R/W             |xxxxxxxx|   DMA Base and Counter High
-          ff 860b   R/W             |xxxxxxxx|   DMA Base and Counter Mid
-          ff 860d   R/W             |xxxxxxxx|   DMA Base and Counter Low
-  
-
-               The ST floppy disk drive interface is provided  through
-          the  DMA  controller  to an on board WD1772 Floppy Disk Con-
-          troller.  A total of two daisy chained  floppy  disk  drives
-          (drive  0  or 1) can be supported.  Commands are sent to the
-          FDC by first writing to the DMA  Mode  Control  Register  to
-          select  the  FDC  internal command register and then writing
-          the desired one byte command to the Disk  Controller  Regis-
-          ter.   The  entire floppy disk DMA read or write sequence is
-          as follows:
-
-
-          o  select floppy drive 0 or 1 (PSG I/O Port A).
-          o  select floppy side 0 or 1 (PSG I/O Port A).
-          o  load DMA Base Address and Counter Register.
-          o  toggle Write/_Read to clear status (DMA Mode Control Register).
-          o  select DMA read or write (DMA Mode Control Register).
-          o  select DMA Sector Count Register (DMA Mode Control Register).
-          o  load DMA Sector Count Register (DMA operation trigger).
-          o  select FDC internal command register (DMA Mode Control Register).
-          o  issue FDC read or write command (Disk Controller Register).
-          o  DMA active until sector count is zero (DMA Status Register,
-             do not poll during DMA active).
-          o  issue FDC force interrupt command on multi-sector transfers
-             except at track boundaries (Disk Controller Register).
-          o  check DMA error status (DMA Status Register, nondestructive).
-
-
-
-               The detection of floppy disk removal is  not  supported
-          in hardware.
-
-               The ST hard  disk  drive  interface  is  also  provided
-          through the DMA controller, however the Atari Hard Disk Con-
-          troller is off board and is  sent  commands  using  an  ANSI
-          X3T9.2  SCSI-like (Small Computer Systems Interface) command
-          descriptor block protocol.  The Atari  Hard  Disk  Interface
-          (AHDI)  supports  a minimal subset of SCSI commands (Class 0
-          OpCodes), which are dispatched using the following fixed six
-          byte  Atari  Computer System Interface (ACSI) command packet
-          format:
-
-
-          ----- ACSI Command Descriptor Block ---------------
-
-                  Byte 0  |xxxxxxxx|
-                           ||||||||
-                           ||| -------- Operation Code
-                            ----------- Controller Number
-                  Byte 1  |xxxxxxxx|
-                           ||||||||
-                           |||--------- Block Address High
-                            ----------- Device Number
-                  Byte 2  |xxxxxxxx|
-                           ||||||||
-                            ----------- Block Address Mid
-                  Byte 3  |xxxxxxxx|
-                           ||||||||
-                            ----------- Block Address Low
-                  Byte 4  |xxxxxxxx|
-                           ||||||||
-                            ----------- Block Count
-                  Byte 5  |xxxxxxxx|
-                           ||||||||
-                            ----------- Control Byte
-
-
-
-               The  following  is  a  summary  of  available   command
-          OpCodes:
-
-          ----- AHDI Command Summary Table ---------------
-
-                   ---------- --------------------
-                  | OpCode   | Command            |
-                   ---------- --------------------
-                  | 0x00     | Test Unit Ready    |
-                  | 0x05     | Verify Track       |  *
-                  | 0x06     | Format Track       |  *
-                  | 0x08     | Read               |  *
-                  | 0x0a     | Write              |  *
-                  | 0x0b     | Seek               |
-                  | 0x0d     | Correction Pattern |
-                  | 0x15     | Mode Select        |
-                  | 0x1a     | Mode Sense         |
-                   ---------- --------------------
-
-                   *  multisector transfer with implied seek
-
-          NOTE:  subject to change.
-
-
-
-               Commands are issued to the Atari HDC in a manner  simi-
-          lar  to that of the FDC, with the major difference being the
-          handshaking of a multi-byte command descriptor  block.   The
-          entire hard disk DMA read or write sequence is as follows:
-
-
-          o  load DMA Base Address and Counter Register.
-          o  toggle Write/_Read to clear status (DMA Mode Control Register).
-          o  select DMA read or write (DMA Mode Control Register).
-          o  select DMA Sector Count Register (DMA Mode Control Register).
-          o  load DMA Sector Count Register (DMA operation trigger).
-          o  select HDC internal command register (DMA Mode Control Register).
-          o  issue controller select byte while clearing A0.
-          o  set A0 for remaining command bytes.
-          o  after last command byte select controller (DMA Mode Control
-             Register).
-          o  DMA active until sector count is zero (DMA Status Register,
-             do not poll during DMA active).
-          o  check DMA error status (DMA Status Register, nondestructive).
-          o  check HDC status byte and if necessary perform ECC correction
-             following a Verify Track or Read Sector command.
-
-               The format of both floppy and hard  disks  contain  512
-          byte data sectors.
-
-*/    
     case 0xff8600:{  //--------------------------------------- DMA / FDC
-/*
--------+-----+-----------------------------------------------------+----------
-##############DMA/WD1772 Disk controller                           ###########
--------+-----+-----------------------------------------------------+----------
-$FF8600|     |Reserved                                             |
-$FF8602|     |Reserved                                             |
-$FF8604|word |FDC access/sector count                              |R/W
-$FF8606|word |DMA mode/status                             BIT 2 1 0|R
-       |     |Condition of FDC DATA REQUEST signal -----------' | ||
-       |     |0 - sector count null,1 - not null ---------------' ||
-       |     |0 - no error, 1 - DMA error ------------------------'|
-$FF8606|word |DMA mode/status                 BIT 8 7 6 . 4 3 2 1 .|W
-       |     |0 - read FDC/HDC,1 - write ---------' | | | | | | |  |
-       |     |0 - HDC access,1 - FDC access --------' | | | | | |  |
-       |     |0 - DMA on,1 - no DMA ------------------' | | | | |  |
-       |     |Reserved ---------------------------------' | | | |  |
-       |     |0 - FDC reg,1 - sector count reg -----------' | | |  |
-       |     |0 - FDC access,1 - HDC access ----------------' | |  |
-       |     |0 - pin A1 low, 1 - pin A1 high ----------------' |  |
-       |     |0 - pin A0 low, 1 - pin A0 high ------------------'  |
-$FF8609|byte |DMA base and counter (High byte)                     |R/W
-$FF860B|byte |DMA base and counter (Mid byte)                      |R/W
-$FF860D|byte |DMA base and counter (Low byte)                      |R/W
--------+-----+-----------------------------------------------------+----------
-*/
 
+#if defined(SS_DMA_IO) // taken out of here, in SSEFloppy
+      Dma.IOWrite(addr,io_src_b);
+      break;
+#else // Steem 3.2
       if (addr>0xff860f){ //past allowed range
         exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
       }else{
@@ -1241,28 +1050,16 @@ $FF860D|byte |DMA base and counter (Low byte)                      |R/W
         EasyStr bin_src_b;bin_src_b.SetLength(8);
         itoa(io_src_b,bin_src_b,2);
         EasyStr a=EasyStr("FDC: Writing byte ")+bin_src_b.LPad(8,'0')+" to IO address "+HEXSl(addr,6);
-#ifdef DEBUG_BUILD
+#ifdef _DEBUG_BUILD
         iolist_entry *iol=search_iolist(addr);
         if (iol) a+=EasyStr(" (")+(iol->name)+")";
 #endif
         log_to_section(LOGSECTION_FDC,a);
 #endif
 */
-/*
-$FF8600|     |Reserved
-$FF8602|     |Reserved
--> writing there crashes:
-*/
-        if (addr<0xff8604) 
-          exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
-/*
-$FF8604|word |FDC access/sector count
-$FF8606|word |DMA mode/status
-*/
-        if (addr<0xff8608 && io_word_access==0) 
-          exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
-
-#if USE_PASTI //SS: this block sends all DMA+FDC commands to the pasti DLL
+        if (addr<0xff8604) exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
+        if (addr<0xff8608 && io_word_access==0) exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
+#if USE_PASTI
         if (hPasti && pasti_active){
           WORD data=io_src_b;
           if (addr<0xff8608){ // word only
@@ -1277,18 +1074,16 @@ $FF8606|word |DMA mode/status
           struct pastiIOINFO pioi;
           pioi.addr=addr;
           pioi.data=data;
-          pioi.stPC=pc; //SS debug only?
+          pioi.stPC=pc;
           pioi.cycles=ABSOLUTE_CPU_TIME;
-          //          log_to(LOGSECTION_PASTI,Str("PASTI: IO write addr=$")+HEXSl(addr,6)+" data=$"+
-          //                            HEXSl(io_src_b,2)+" ("+io_src_b+") pc=$"+HEXSl(pc,6)+" cycles="+pioi.cycles);
-          pasti->Io(PASTI_IOWRITE,&pioi); //SS send to DLL
+//          log_to(LOGSECTION_PASTI,Str("PASTI: IO write addr=$")+HEXSl(addr,6)+" data=$"+
+//                            HEXSl(io_src_b,2)+" ("+io_src_b+") pc=$"+HEXSl(pc,6)+" cycles="+pioi.cycles);
+          pasti->Io(PASTI_IOWRITE,&pioi);
           pasti_handle_return(&pioi);
           break;
         }
 #endif
-        //SS this block handles DMA+FDC for Steem's native emu + IPF
         switch (addr){
-//          ff 8604   R/W     |--------xxxxxxxx|   Disk Controller (Word Access)
           case 0xff8604:  //high byte of FDC access
             if (dma_mode & BIT_4){ //write DMA sector counter, 0x190
               dma_sector_count&=0xff;
@@ -1308,7 +1103,7 @@ $FF8606|word |DMA mode/status
             }
             break;
           case 0xff8605:  //low byte of FDC access
-          {//SS scope
+          {
             if (dma_mode & BIT_4){ //write FDC sector counter, 0x190
               dma_sector_count&=0xff00;
               dma_sector_count|=io_src_b;
@@ -1325,73 +1120,25 @@ $FF8606|word |DMA mode/status
               log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Writing $xx"+HEXSl(io_src_b,2)+" to HDC register #"+((dma_mode & BIT_1) ? 1:0));
               break;
             }
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
-            int drive=floppy_current_drive();
-            int wd_address=(dma_mode&(BIT_1+BIT_2))>>1;
-            if(Caps.DriveIsIPF[drive]) // this could be trouble
-            {
-#if defined(SS_FDC_IPF_RUN_PRE_IO)
-              CapsFdcEmulate(&WD1772,300);
-              Caps.CyclesRun=300;
-#endif
-#if defined(SS_FDC_IPF_LETHAL_XCESS)
-              if(SSE_HACKS_ON && !wd_address)
-                WD1772.lineout&=~CAPSFDC_LO_INTIP; // fixes Lethal Xcess
-#endif
-              CapsFdcWrite(&WD1772,wd_address,io_src_b); // send to DLL
-#if defined(SS_FDC_IPF_RUN_POST_IO)
-              CapsFdcEmulate(&WD1772,200);
-              Caps.CyclesRun=200;
-#endif
-            }
-            else // else switch 
-#endif
             switch (dma_mode & (BIT_1+BIT_2)){
               case 0:
                 floppy_fdc_command(io_src_b);
                 break;
               case 2:
-/*
-r1 (r/w) - Track Register - The outermost track on the disk is
-numbered 0.  During disk reading, writing, and verifying, the 177x
-compares the Track Register to the track number in the sector ID
-field.  When the 177x is busy, it ignores CPU writes to this register.
-[In fact, it doesn't (undocumented), from Kryoflux]
-The highest legal track number is 240.
-*/
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_CHANGE_TRACK_WHILE_BUSY)
-                if(fdc_str & FDC_STR_BUSY)
-                  TRACE_LOG("TR change while busy %d -> %d\n",fdc_tr,io_src_b);
-                fdc_tr=io_src_b;
-#else
                 if ((fdc_str & FDC_STR_BUSY)==0){
                   log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC track register to "+io_src_b);
                   fdc_tr=io_src_b;
                 }else{
                   log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Can't set FDC track register to "+io_src_b+", FDC is busy");
                 }
-#endif
                 break;
               case 4:
-/*
-r2 (r/w) - Sector Register - During disk reading and writing, the 177x
-compares the Sector Register to the sector number in the sector ID
-field.  When the 177x is busy, it ignores CPU writes to this register.
-[In fact, it doesn't (undocumented) from Kryoflux]
-Valid sector numbers range from 1 to 240, inclusive.
-*/
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_CHANGE_SECTOR_WHILE_BUSY)
-                if(fdc_str & FDC_STR_BUSY)
-                  TRACE_LOG("SR change while busy %d -> %d\n",fdc_sr,io_src_b);
-                fdc_sr=io_src_b; // fixes Delirious 4 loader without Pasti
-#else
                 if ((fdc_str & FDC_STR_BUSY)==0){
                   log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC sector register to "+io_src_b);
                   fdc_sr=io_src_b;
                 }else{
                   log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Can't set FDC sector register to "+io_src_b+", FDC is busy");
                 }
-#endif
                 break;
               case 6:
                 log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC data register to "+io_src_b);
@@ -1405,15 +1152,18 @@ Valid sector numbers range from 1 to 240, inclusive.
           case 0xff8606:  //high byte of DMA mode
             dma_mode&=0x00ff;
             dma_mode|=WORD(WORD(io_src_b) << 8);
+
             fdc_read_address_buffer_len=0;
             dma_bytes_written_for_sector_count=0;
             break;
           case 0xff8607:  //low byte of DMA mode
             dma_mode&=0xff00;
             dma_mode|=io_src_b;
+
             fdc_read_address_buffer_len=0;
             dma_bytes_written_for_sector_count=0;
             break;
+
           case 0xff8609:  //high byte of DMA pointer
             dma_address&=0x00ffff;
             dma_address|=((MEM_ADDRESS)io_src_b) << 16;
@@ -1436,9 +1186,14 @@ Valid sector numbers range from 1 to 240, inclusive.
         }
       }
       break;
+#endif//!dma
     }
+
 #undef LOGSECTION
-#define LOGSECTION LOGSECTION_VIDEO
+#define LOGSECTION LOGSECTION_IO
+
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_VIDEO//?
 
     case 0xff8200:{  //----------------------------------------=--------------- shifter
                      //----------------------------------------=--------------- shifter
@@ -1454,6 +1209,7 @@ Valid sector numbers range from 1 to 240, inclusive.
       //----------------------------------------=--------------- shifter
       // SS Shifter emulation is so complicated I took some functions out
       // of here
+      // TODO take it all out, restore 3.2
       if ((addr>=0xff8210 && addr<0xff8240) || addr>=0xff8280){
         exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
       }
@@ -1643,9 +1399,7 @@ Valid sector numbers range from 1 to 240, inclusive.
 #if defined(STEVEN_SEAGAL) && defined(SS_STF)
           if(ST_TYPE!=STE)
           {
-#if defined(SS_STF_TRACE)
-            TRACE("STF ignore write %X to %X VBASELO\n",io_src_b,addr);
-#endif
+            TRACE_LOG("STF write %X to %X\n",io_src_b,addr);
             break; // fixes Lemmings 40; used by Beyond/Pax Plax Parallax
           }
 #endif
@@ -1741,9 +1495,7 @@ Valid sector numbers range from 1 to 240, inclusive.
 #if defined(STEVEN_SEAGAL) && defined(SS_STF)
           if(ST_TYPE!=STE)
           {
-#if defined(SS_STF_TRACE)
-            TRACE("STF ignore write %X to %X LINEWID\n",io_src_b,addr);
-#endif
+            TRACE_LOG("STF write %X to %X\n",io_src_b,addr);
             break; // fixes Imagination/Roller Coaster mush
           }
 #endif
@@ -1806,9 +1558,7 @@ This register allows to skip from a single to 15 pixels at the start of each
 #if defined(STEVEN_SEAGAL) && defined(SS_STF)
           if(ST_TYPE!=STE) 
           {
-#if defined(SS_STF_TRACE)
-            TRACE("STF ignore write %X to %X HSCROLL\n",io_src_b,addr);
-#endif
+            TRACE_LOG("STF write %X to %X\n",io_src_b,addr);
             break; // fixes Hyperforce
           }
           else
@@ -2055,9 +1805,7 @@ MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
 #if defined(STEVEN_SEAGAL) && defined(SS_MMU_WRITE)
           if(old_pc<FOURTEEN_MEGS) // the write doesn't "confuse" the MMU
           {
-#if defined(SS_MMU_TRACE)
-            TRACE("Cancel MMU testing\n");
-#endif
+            TRACE_LOG("Cancel MMU testing\n");
             mmu_testing=false; // fixes Super Neo Demo Show (1MB)
           }
 #endif
@@ -2066,9 +1814,7 @@ MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
           himem=(MEM_ADDRESS)mem_len;
           int mmu_testing=0;//dbg
 #endif
-#if defined(SS_MMU_TRACE)
-          TRACE("MMU PC %X Byte %X RAM %dK Bank 0 %d Bank 1 %d testing %d\n",old_pc,io_src_b,mem_len/1024,bank_length[0]/1024,bank_length[1]/1024,mmu_testing);
-#endif
+          TRACE_LOG("MMU PC %X Byte %X RAM %dK Bank 0 %d Bank 1 %d testing %d\n",old_pc,io_src_b,mem_len/1024,bank_length[0]/1024,bank_length[1]/1024,mmu_testing);
         }
       }else if (addr>0xff800f){
         exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
@@ -2132,9 +1878,7 @@ MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
 #if defined(STEVEN_SEAGAL) && defined(SS_STF)
        if(ST_TYPE!=STE)
        {
-#if defined(SS_STF_TRACE)
-         TRACE("STF write to 0xff9200\n");
-#endif
+         TRACE_LOG("STF write %X to %X\n",io_src_b,addr);
          break;  // or bombs?
        }
 #endif

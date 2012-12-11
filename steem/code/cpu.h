@@ -66,7 +66,12 @@ EXT int m68k_divu_cycles INIT(124),m68k_divs_cycles INIT(140); // +4 for overall
 #define PC32 ( (pc&0xffffff)|(pc_high_byte) )
 #define FOUR_MEGS 0x400000
 #define FOURTEEN_MEGS 0xE00000
+
+#if defined(SS_CPU_MAY_WRITE_0)
+#define MEM_FIRST_WRITEABLE 0
+#else
 #define MEM_FIRST_WRITEABLE 8 // SS check this
+#endif
 
 #define SR_IPL (BIT_a+BIT_9+BIT_8)
 #define SR_IPL_7 (BIT_a+BIT_9+BIT_8)

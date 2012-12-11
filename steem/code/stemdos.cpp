@@ -1354,7 +1354,7 @@ void stemdos_intercept_trap_1()
     case 0x2a:case 0x2c:  //Get Date - Get Time
     case 0x2b:case 0x2d:  //Set Date - Set Time
       if (stemdos_intercept_datetime){
-        time_t timer=time(NULL);
+        time_t timer=time(NULL); //SS used by GFA3 each time the editor appears
         struct tm *lpTime=localtime(&timer);
         DWORD DOSTime=TMToDOSDateTime(lpTime);
         switch (stemdos_command){

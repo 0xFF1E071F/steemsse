@@ -452,7 +452,7 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
       hd6301_transmit_byte(src);// send byte to 6301 emu
       // run some cycles now to maybe avoid sync problems (may be useless)
       int n6301cycles= (screen_res==2) 
-        ? HD6301_CYCLES_PER_SCANLINE/2 : HD6301_CYCLES_PER_SCANLINE;
+        ? /*HD6301_CYCLES_PER_SCANLINE/2*/ 20: HD6301_CYCLES_PER_SCANLINE;
       if(!hd6301_run_cycles(n6301cycles))
       {
         TRACE_LOG("6301 emu is hopelessly crashed!\n");
@@ -1776,6 +1776,7 @@ void ikbd_set_clock_to_correct_time()
 //  ikbd.clock[0]=BYTE((lpTime->tm_year % 10) | ((lpTime->tm_year/10) << 4));
   ikbd.clock[0]=BYTE((y % 10) | ((y/10) << 4));
   ikbd.clock_vbl_count=0;
+//  TRACE("ikbd Setting clock %02d:%02d:%02d\n",lpTime->tm_hour,lpTime->tm_min,lpTime->tm_sec);
 }
 
 void ikbd_reset(bool Cold)

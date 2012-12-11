@@ -10,6 +10,7 @@ that deal with reads from ST I/O addresses ($ff8000 onwards).
 #endif
 
 #define LOGSECTION LOGSECTION_IO
+
 #if !defined(STEVEN_SEAGAL) || !defined(SS_VID_SDP_READ) || defined(SS_DEBUG)
 MEM_ADDRESS get_shifter_draw_pointer(int cycles_since_hbl)
 { // SS: basis for TShifter::ReadSDP in SSEVideo.h, which replaces this
@@ -138,10 +139,9 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
 /******************** Keyboard ACIA ************************/
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
-
       case 0xfffc00:  //status
       {
-#if defined(SS_DEBUG) && defined(SS_ACIA_IRQ_DELAY)
+#if defined(SS_ACIA_IRQ_DELAY)//dbg info
         int elapsed_cycles=ABSOLUTE_CPU_TIME-ikbd.timer_when_keyboard_info;
 #endif
         // Build the byte x to be returned based on our ACIA var
@@ -164,25 +164,24 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
         {
           ASSERT( ACIA_IKBD.rx_irq_enabled );
           x|=BIT_7; //irq bit
-#if defined(SS_IKBD_TRACE_IO) && defined(SS_ACIA_IRQ_DELAY)
-          TRACE("PC %X $FC00 check irq at %d (%d)\n",pc-2,elapsed_cycles,ABSOLUTE_CPU_TIME);
+#if defined(SS_ACIA_IRQ_DELAY)
+          TRACE_LOG("PC %X $FC00 check irq at %d (%d)\n",pc-2,elapsed_cycles,ABSOLUTE_CPU_TIME);
 #endif
         }
         // bit 5
         if (ACIA_IKBD.overrun==ACIA_OVERRUN_YES) 
           x|=BIT_5; //overrun
 
-#if defined(SS_ACIA_TRACE_READ_SR)
-#if defined(SS_IKBD_TRACE_IO) && defined(SS_ACIA_IRQ_DELAY)
+#if defined(SS_ACIA_IRQ_DELAY)
         if(ACIA_IKBD.rx_stage)
-          TRACE("PC %X, read 0xfffc00: %x after %d cycles, ACIA rx stage %d\n",pc-2,x,elapsed_cycles,ACIA_IKBD.rx_stage); 
+          TRACE_LOG("PC %X, read 0xfffc00: %x after %d cycles, ACIA rx stage %d\n",pc-2,x,elapsed_cycles,ACIA_IKBD.rx_stage); 
         else if(keyboard_buffer_length)
-          TRACE("PC %X, read 0xfffc00: %x\n",pc-2,x); 
+          TRACE_LOG("PC %X, read 0xfffc00: %x\n",pc-2,x); 
 #endif
 #if defined(SS_IKBD_TRACE_6301)
         if(x&BIT_1) printf("read 0xfffc00 %x ACT %d PX %X\n",x,ABSOLUTE_CPU_TIME,pc);
 #endif
-#endif
+
           return x;
         }//scope
 
@@ -219,9 +218,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
             "), changing ACIA IRQ bit from "+old_irq+" to "+ACIA_IKBD.irq); )
           }
           mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
-#if defined(SS_ACIA_TRACE_IO)
-          TRACE("PC %X Read 0xfffc02: %x (%d) at ACT %d\n",pc,ACIA_IKBD.data,hd6301_transmitting_to_MC6850,ABSOLUTE_CPU_TIME);
-#endif
+          TRACE_LOG("PC %X Read 0xfffc02: %x (%d) at ACT %d\n",pc,ACIA_IKBD.data,hd6301_transmitting_to_MC6850,ABSOLUTE_CPU_TIME);
           return ACIA_IKBD.data;
       }
 
@@ -346,9 +343,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
 #if defined(SS_STF)
       if(ST_TYPE!=STE)
       {
-#if defined(SS_STF_TRACE)
-        TRACE("STF read STE DMA Sound %x\n",addr);
-#endif
+        TRACE_LOG("STF read STE DMA Sound %x\n",addr);
         //exception(BOMBS_BUS_ERROR,EA_READ,addr);
         return 0; // crash?
       break;
@@ -465,40 +460,14 @@ No write access.
       }
       return 0xff;
     }case 0xff8600:{      //----------------------------------- DMA/FDC
-/*
--------+-----+-----------------------------------------------------+----------
-##############DMA/WD1772 Disk controller                           ###########
--------+-----+-----------------------------------------------------+----------
-$FF8600|     |Reserved                                             |
-$FF8602|     |Reserved                                             |
-$FF8604|word |FDC access/sector count                              |R/W
-$FF8606|word |DMA mode/status                             BIT 2 1 0|R
-       |     |Condition of FDC DATA REQUEST signal -----------' | ||
-       |     |0 - sector count null,1 - not null ---------------' ||
-       |     |0 - no error, 1 - DMA error ------------------------'|
-$FF8606|word |DMA mode/status                 BIT 8 7 6 . 4 3 2 1 .|W
-       |     |0 - read FDC/HDC,1 - write ---------' | | | | | | |  |
-       |     |0 - HDC access,1 - FDC access --------' | | | | | |  |
-       |     |0 - DMA on,1 - no DMA ------------------' | | | | |  |
-       |     |Reserved ---------------------------------' | | | |  |
-       |     |0 - FDC reg,1 - sector count reg -----------' | | |  |
-       |     |0 - FDC access,1 - HDC access ----------------' | |  |
-       |     |0 - pin A1 low, 1 - pin A1 high ----------------' |  |
-       |     |0 - pin A0 low, 1 - pin A0 high ------------------'  |
-$FF8609|byte |DMA base and counter (High byte)                     |R/W
-$FF860B|byte |DMA base and counter (Mid byte)                      |R/W
-$FF860D|byte |DMA base and counter (Low byte)                      |R/W
--------+-----+-----------------------------------------------------+----------
-*/
+
+#if defined(SS_DMA_IO) // taken out of here, in SSEFloppy
+      return Dma.IORead(addr);
+#else // Steem 3.2
       if (addr>0xff860f) exception(BOMBS_BUS_ERROR,EA_READ,addr);
       if (addr<0xff8604) exception(BOMBS_BUS_ERROR,EA_READ,addr);
       if (addr<0xff8608 && io_word_access==0) exception(BOMBS_BUS_ERROR,EA_READ,addr);
-
-#if USE_PASTI 
-/*  SS pasti.dll will give us the correct byte for all the range, using its
-    own variables, meaning that Steem dma_... variables have no meaningful
-    values in Pasti mode
-*/
+#if USE_PASTI
       if (hPasti && pasti_active){
         if (addr<0xff8608){ // word only
           if (addr & 1) return LOBYTE(pasti_store_byte_access);
@@ -518,7 +487,6 @@ $FF860D|byte |DMA base and counter (Low byte)                      |R/W
         return BYTE(pioi.data);
       }
 #endif
-
       switch(addr){
       case 0xff8604:  //high byte of FDC access
         //should check bit 8 = 0 (read)
@@ -535,7 +503,7 @@ $FF860D|byte |DMA base and counter (Low byte)                      |R/W
         //should check bit 8 = 0, read
         if (dma_mode & BIT_4){ //read sector counter (maintained by the DMA chip)
           return LOBYTE(dma_sector_count);
-        } 
+        }
 
         if (dma_mode & BIT_3){ // HD access
           LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
@@ -544,34 +512,8 @@ $FF860D|byte |DMA base and counter (Low byte)                      |R/W
         }
 
         // Read FDC register
-
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
-/*  Contrary to Pasti, the CAPSimg.dll will return the byte only for 
-    the WD1772 itself, not DMA registers. For those, Steem is still
-    in charge.
-*/
-        if(Caps.DriveIsIPF[floppy_current_drive()])
-        {
-#if defined(SS_FDC_IPF_RUN_PRE_IO)
-          CapsFdcEmulate(&WD1772,300);
-          Caps.CyclesRun=300;
-#endif
-          if(!(dma_mode & (BIT_1+BIT_2))) // read status register
-          {
-            mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
-            WD1772.lineout&=~CAPSFDC_LO_INTRQ; // and in the WD1772
-          }
-          BYTE value=CapsFdcRead(&WD1772,(dma_mode & (BIT_1+BIT_2))/2); 
-#if defined(SS_FDC_IPF_RUN_POST_IO)
-          CapsFdcEmulate(&WD1772,200);
-          Caps.CyclesRun=200;
-#endif
-          return value;
-        }
-        else // else switch...
-#endif
         switch (dma_mode & (BIT_1+BIT_2)){
-          case 0://SS read status
+          case 0:
           {
             int fn=floppy_current_drive();
             if (floppy_track_index_pulse_active()){
@@ -595,7 +537,6 @@ $FF860D|byte |DMA base and counter (Low byte)                      |R/W
                 updated or cleared, it will never change until a new command is
                 issued to the FDC.
               */
-
               fdc_str&=(~FDC_STR_WRITE_PROTECT);
               if (floppy_mediach[fn]){
                 if (floppy_mediach[fn]/10!=1) fdc_str|=FDC_STR_WRITE_PROTECT;
@@ -651,6 +592,7 @@ $FF860D|byte |DMA base and counter (Low byte)                      |R/W
         return 0;
       }
       break;
+#endif//!dmaio
     }case 0xff8200:{      //----------------------------------- shifter
                      //----------------------------------------=--------------- shifter
                      //----------------------------------------=--------------- shifter
@@ -683,13 +625,11 @@ FF8240 - FF827F   palette, res
         case 0xff8203:  //mid byte of screen memory address
           return HIBYTE(LOWORD(xbios2));
         case 0xff820d:  //low byte of screen memory address
-#if defined(STEVEN_SEAGAL) && defined(SS_STF) && defined(SS_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SS_STF)
           if(ST_TYPE!=STE) 
           {
-#if defined(SS_STF_TRACE)
-            TRACE("STF read 0xff820d\n");
-#endif
-            ASSERT(!(xbios2 & 0xFF)); // protection in iow.cpp
+            TRACE_LOG("STF read 0xff820d\n");
+            return 0;
           }
 #endif
           return LOBYTE(xbios2);
@@ -727,9 +667,7 @@ FF8240 - FF827F   palette, res
 #if defined(STEVEN_SEAGAL) && defined(SS_STF)
           if(ST_TYPE!=STE)
           {
-#if defined(SS_STF_TRACE)
-            TRACE("STF read 0xff820b: 0\n");
-#endif
+            TRACE_LOG("STF read 0xff820b: 0\n");
             return 0xFF; // STF; fixes Live & Let Die
           }
 #endif
@@ -740,9 +678,7 @@ FF8240 - FF827F   palette, res
 #if defined(STEVEN_SEAGAL) && defined(SS_STF)
           if(ST_TYPE!=STE)
           {
-#if defined(SS_STF_TRACE)
-            TRACE("STF read 0xff820f: 0\n");
-#endif
+            TRACE_LOG("STF read 0xff820f: 0\n");
             return 0;
           }
 #endif
@@ -758,9 +694,7 @@ FF8240 - FF827F   palette, res
 #if defined(STEVEN_SEAGAL) && defined(SS_STF)
           if(ST_TYPE!=STE)
           {
-#if defined(SS_STF_TRACE)
-            TRACE("STF read 0xff8265: 0 %d\n");
-#endif
+            TRACE_LOG("STF read 0xff8265: 0 %d\n");
             return 0;
           }
 #endif
@@ -775,9 +709,7 @@ FF8240 - FF827F   palette, res
     }case 0xff8000:{      //----------------------------------- MMU
       if (addr==0xff8001){
         if (mem_len>FOUR_MEGS) return MEMCONF_2MB | (MEMCONF_2MB << 2);
-#if defined(SS_MMU_TRACE)
-        TRACE("PC %X read MMU %X\n",pc,mmu_memory_configuration);
-#endif
+        TRACE_LOG("PC %X read MMU %X\n",pc,mmu_memory_configuration);
         return mmu_memory_configuration;
       }else if (addr>0xff800f){ //forbidden range
         exception(BOMBS_BUS_ERROR,EA_READ,addr);

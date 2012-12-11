@@ -21,7 +21,7 @@ private:
   EasyStr ImageFile,MSATempFile,ZipTempFile,FormatTempFile;
 public:
   TFloppyImage()             { f=NULL;Format_f=NULL;PastiDisk=
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)    
+#if defined(STEVEN_SEAGAL) && defined(SS_IPF)    
     IPFDisk=
 #endif
     0;PastiBuf=NULL;RemoveDisk();}
@@ -33,7 +33,7 @@ public:
   bool ReinsertDisk();
   void RemoveDisk(bool=0);
   bool DiskInDrive() { return f!=NULL || PastiDisk 
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
     || IPFDisk
 #endif    
     ; }
@@ -59,7 +59,7 @@ public:
   BYTE *PastiBuf; // SS same for IPF?
   int PastiBufLen;
   bool STT_File,PastiDisk;
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
   bool IPFDisk;
 #endif
 

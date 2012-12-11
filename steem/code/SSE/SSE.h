@@ -28,6 +28,8 @@ thing changed is no update attempt).
 
 My inane comments outside of defined blocks generally are marked by 'SS:'
 They don't mean that I did something cool, only that I comment the source.
+
+I removed nothing from the original source code or comments.
 		  
 VC6 is used as IDE, but also Notepad and the free (and discontinued)
 Borland C++ 5.5 compiler, like the original Steem.
@@ -39,8 +41,8 @@ DLL or it will crash in Windows Vista & 7.
 The best build should be the M$ one. They're greedy but they know their 
 business! 
     
-SSE.h is supposed to mainly be a collection of compiling switches. It should
-include nothing and can be included everywhere.
+SSE.h is supposed to mainly be a collection of compiling switches (defines).
+It should include nothing and can be included everywhere.
 
 */
 
@@ -51,24 +53,29 @@ DONE
 - IPF support (Kryoflux) (for V.3.5)
 - IPF can't insert disk 2, drive confusion (B=A?)
 - IPF display properties
-- IPF Turbo Outrun (DMA). Also Burgerman.
-- Lethal Xcess: hack
-- Record video (to AVI)
+- IPF Turbo Outrun, Burgerman (side selection)
+- IPF Lethal Xcess: hack (beta-only)
+- Record video (to AVI) (1st version)
 - Pasti: wrong red led
 - TRACE can be commanded by boiler log options (started)
+- IPF Archipelagos, Vindicators (DMA)
+- indicate Pasti is in charge on disk manager
+- IPF Double Dragon II (IRQ)
+- Disk manager mentions 'Pasti' if active
 */
 
 /*
 TODO (future versions, in no definite order)
+- Real timings for 6301 / check SS_IKBD_RUN_IRQ_TO_END: hack?
++ Adjust this with a clock + Captain Blood?
+- GFA3 can't help here
 - PSG filter also for record
 - Systematic fix for 508/512 cycle counting issue (Omega)
 - ACIA/MIDI corrections
-- Real timings for 6301 / check SS_IKBD_RUN_IRQ_TO_END: hack?
-+ Adjust this with a clock + Captain Blood?
 - Event for write to IKBD, but would it be useful?
 + redesign system, like all others do: trace(type,msg)? note: no perf loss
-- Support for unrar.dll
-- Check if TOS1.00 sould boot with 4MB
+- Support for unrar.dll (3.6?)
+- Check if TOS1.00 sould boot with 4MB (MMU)
 - Fix FETCH_TIMING/prefetch: not easy (is there something to fix?)
 - OSD shifted in 'large' display mode
 - 'redraw' in this mode
@@ -84,6 +91,16 @@ TODO (future versions, in no definite order)
 - nuke update process
 - Boiler: remove DIV logging,we know the timing now
 - use IPF insights to improve fdc emu
+- convert ST to IPF on the fly?
+- cycles: ROM access isn't shared with shifter
+- cycles: CPU vs HBL
+- don't crash at corrupt snapshot ('try'?)
+- IPF Sundog: simple matter of writing & reading back
+- IPF + Pasti Blood Money (CPU?) note bytes are different
+- Check if image in zip OK (eg no IPF for pasti), maybe complicated
+- automatically switch to Pasti (but linked with above?)
+- Move all shifter IO to object shifter
+- SLM804 laser printer, yeah right
 */
 
 
@@ -120,17 +137,20 @@ TODO (future versions, in no definite order)
 #define SS_ACIA       // MC6850 Asynchronous Communications Interface Adapter
 #define SS_BLITTER    // spelled BLiTTER
 #define SS_CPU        // M68000 microprocessor
+#define SS_DMA        // Custom Direct Memory Access chip (disk)
 #define SS_FDC        // WD1772 floppy disk controller (hacks, IPF)
 #define SS_HACKS      // an option for dubious fixes
 #define SS_IKBD       // HD6301V1 IKBD (keyboard, mouse, joystick controller)
+#define SS_IPF        // CAPS support (IPF disks) (TODO change switch)
 #define SS_INTERRUPT  // MC68901 Multi-Function Peripheral Chip, HBL, VBL
 #define SS_MMU        // Memory Manager Unit (of the ST, just RAM)
 #define SS_OSD        // On Screen Display (drive leds, version)
+#define SS_SHIFTER  //TODO
 #define SS_SOUND      // YM2149, STE DMA sound, Microwire
 #define SS_STF        // switch STF/STE
 #define SS_STRUCTURE  // TODO
 #define SS_TOS        // The Operating System
-#define SS_UNIX       // Linux build must be OK too
+#define SS_UNIX       // Linux build must be OK too (may lag)
 #define SS_VARIOUS    // Mouse capture, keyboard click...
 #define SS_VIDEO      // shifter tricks; large borders, recording
 
@@ -176,6 +196,7 @@ TODO (future versions, in no definite order)
 #define SS_BLT_HOG_MODE_INTERRUPT // no interrupt in hog mode
 //#define SS_BLT_OVERLAP // TODO
 //#define SS_BLT_TIMING // based on a table, but Steem does it better
+//#define SS_BLT_TRACE2 // report all blits
 
 #endif
 
@@ -203,6 +224,10 @@ TODO (future versions, in no definite order)
 
 #if defined(SS_CPU_EXCEPTION)
 #define SS_CPU_ASSERT_ILLEGAL // assert before trying to execute
+
+
+////#define SS_CPU_MAY_WRITE_0//tst
+
 #define SS_CPU_GET_SOURCE // update PC after read - is it a real fix?
 #ifndef SS_CPU_GET_SOURCE
 #define SS_CPU_PHALEON // opcode based hack for Phaleon (etc.) protection
@@ -222,86 +247,51 @@ TODO (future versions, in no definite order)
 // DEBUG //
 ///////////
 
+// TODO finish conversion to logsection use
+
 #if !defined(SS_DEBUG) && (defined(_DEBUG) || defined(DEBUG_BUILD) || \
 defined(SS_BOILER))
-#define SS_DEBUG  
+#define SS_DEBUG  //use lost?
 #endif
-
-//#if defined(SS_DEBUG) 
 
 #if defined(SS_DEBUG)
 
-#if defined(DEBUG_BUILD) //add more here
+#if defined(DEBUG_BUILD) //TODO add other mods here
 #define SS_DEBUG_CLIPBOARD // right-click on 'dump' to copy then paste
 #endif
 
-// The following switches are compile-time with no boiler equivalent (TODO)
+//#define SS_DEBUG_TRACE_FILE // if IDE can't follow
 
-//#define SS_DEBUG_NO_TRACE // no trace whatsoever
-//#define SS_DEBUG_OVERRIDE_TRACE // a selection for the released boiler
+#if defined(SS_DEBUG) && !defined(BCC_BUILD) && !defined(_DEBUG)
+#define SS_DEBUG_BOILER_TRACE 
+#endif
 
-#if defined(SS_DEBUG_NO_TRACE)
-
-#elif defined(SS_DEBUG_OVERRIDE_TRACE) && !defined(_DEBUG)
-
+#if defined(SS_DEBUG_BOILER_TRACE) && !defined(_DEBUG)
+// this is for the Boiler release, in addition to log options
 #define SS_DEBUG_START_STOP_INFO
-#define SS_FDC_TRACE
-#define SS_IKBD_TRACE_COMMANDS // used by 6301 emu now
-#define SS_IKBD_TRACE_IO
+#define SS_IKBD_TRACE_COMMANDS // only used by 6301 emu now
 #define SS_IKBD_6301_DUMP_RAM
 #define SS_IKBD_6301_TRACE 
 #define SS_IKBD_6301_TRACE_SCI_RX
 #define SS_IKBD_6301_TRACE_SCI_TX
 #define SS_IKBD_6301_TRACE_KEYS
-#define SS_MMU_TRACE
+#define SS_IPF_TRACE_SECTORS // show sector info (IPF)
 #define SS_RESET_TRACE
 #define SS_VID_SHIFTER_EVENTS // recording all shifter events in a frame
 #define SS_VID_AUTO_FRAME_REPORT_ON_STOP
-#define SS_VID_BORDERS_TRACE
 #define SS_VID_REPORT_VBL_TRICKS // a line each VBL
 #define SS_VID_TRACE_SUSPICIOUS2 // suspicious +2 & -2
 #define SS_VID_END_OF_LINE_CORRECTION_TRACE // their correction
 
 #else // for custom debugging
 
-//#define SHOW_DRAW_SPEED
 
-//#define SS_ACIA_TRACE
-//#define SS_ACIA_TRACE_READ_SR // heavy
-//#define SS_ACIA_TRACE_IO // heavy when programs poll data register
-//#define SS_BLT_TRACE2 // report all blits
-//#define SS_CPU_EXCEPTION_TRACE
+//#define SS_CPU_EXCEPTION_TRACE_PC // reporting all PC
 //#define SS_CPU_PREFETCH_TRACE
 //#define SS_DEBUG_REPORT_SKIP_FRAME
 //#define SS_DEBUG_START_STOP_INFO
-//#define SS_FDC_TRACE_SECTORS
-//#define SS_FDC_TRACE_IPF_SECTORS
-#define SS_FDC_TRACE_IPF_STATUS //spell out status register
-//#define SS_FDC_TRACE // all writes (commands+TR+SR+DR)
-//#define SS_FDC_TRACE2 // read status register
-//#define SS_FDC_TRACE_IRQ // when the emu sets IRQ
-//#define SS_FDC_TRACE_BYTES // all bytes read from disk
-//#define SS_FDC_IPF_LOCK_INFO // trace info
-//#define SS_IKBD_6301_TRACE 
-#if defined(SS_IKBD_6301_TRACE)
-//#define SS_IKBD_6301_TRACE_SCI_RX
-//#define SS_IKBD_6301_TRACE_SCI_TX
-//#define SS_IKBD_6301_TRACE_SCI_TRCSE
-//#define SS_IKBD_6301_TRACE_INT_TIMER
-//#define SS_IKBD_6301_TRACE_INT_SCI
-//#define SS_IKBD_6301_DISASSEMBLE_CUSTOM_PRG 
-//#define SS_IKBD_6301_DISASSEMBLE_ROM 
-//#define SS_IKBD_6301_DUMP_RAM
-//#define SS_IKBD_6301_TRACE_KEYS
-#endif
-//#define SS_IKBD_TRACE 
-//#define SS_IKBD_TRACE_COMMANDS // report commands sent to IKBD
-//#define SS_IKBD_TRACE_IO // IKBD all reads & writes
-//#define SS_IKBD_TRACE_FAKE_CUSTOM // IKBD custom
-//#define SS_IKBD_TRACE_6301 // interaction with 6301 emu
-//#define SS_IKBD_TRACE_6301_MOUSE // temp
-//#define SS_MMU_TRACE
-//#define SS_MMU_TRACE2
+
+
 //#define SS_RESET_TRACE
 //#define SS_SOUND_TRACE
 //#define SS_INT_TRACE
@@ -317,14 +307,31 @@ defined(SS_BOILER))
 //#define SS_VID_SDP_TRACE3 // report differences with Steem v3.2 
 //#define SS_VID_VERTICAL_OVERSCAN_TRACE
 //#define SS_VID_PALETTE_BYTE_CHANGE_TRACE
-//#define SS_VID_SHIFTER_EVENTS // recording all shifter events in a frame
+#define SS_VID_SHIFTER_EVENTS // recording all shifter events in a frame
 //#define SS_VID_AUTO_FRAME_REPORT_ON_STOP
 //#define SS_VID_REPORT_VBL_TRICKS // a line each VBL
-//#define SS_VID_BORDERS_TRACE
 
 #endif//#if defined(SS_DEBUG_NO_TRACE)
 
 #else // no SS_DEBUG
+
+#endif
+
+
+/////////
+// DMA //
+/////////
+
+#if defined(SS_DMA)
+
+//#define SS_DMA_ADDRESS // enforcing order for write (no use?)
+//#define SS_DMA_DOUBLE_FIFO // works but overkill
+//#define SS_DMA_DELAY // works but overkill
+#define SS_DMA_FDC_ACCESS
+#define SS_DMA_IO // necessary for DMA+FDC fixes
+#define SS_DMA_READ_STATUS 
+#define SS_DMA_SECTOR_COUNT
+#define SS_DMA_WRITE_CONTROL
 
 #endif
 
@@ -335,29 +342,25 @@ defined(SS_BOILER))
 
 #if defined(SS_FDC)
 
-#if defined(WIN32) && SSE_VERSION>=350
-#define SS_FDC_IPF // IPF (Kryoflux) support...
-#if defined(SS_FDC_IPF)
-// those switches were used for development, normally they ain't necessary
-//#define SS_FDC_IPF_CPU // total sync
-//#define SS_FDC_IPF_RUN_PRE_IO 
-//#define SS_FDC_IPF_RUN_POST_IO
-#define SS_FDC_IPF_LETHAL_XCESS
-#endif
-#endif
-
+#define SS_FDC_DONT_INSERT_NON_EXISTENT_IMAGES // at startup
+//& don't remove?
 #define SS_FDC_CHANGE_SECTOR_WHILE_BUSY // from Kryoflux
 #define SS_FDC_CHANGE_TRACK_WHILE_BUSY // from Kryoflux
+
+//#define SS_FDC_READ_HIGH_BYTE // like pasti, 0
 
 #if defined(SS_HACKS) // all "protected" by the hack option
 
 #define SS_FDC_CHANGE_COMMAND_DURING_SPINUP // from Hatari
+//#define SS_FDC_NO_DISK // ignore commands if there's no disk inserted
+// no, must sendIRQ (see pasti)
 #define SS_FDC_RESTORE // adding delay (fast+ADAT)
 #define SS_FDC_SEEK_VERIFY // adding delay (fast)
 #define SS_FDC_STARTING_DELAY // adding delay (fast)
 #define SS_FDC_STREAM_SECTORS_SPEED // faster in fast mode, slower with ADAT!
 
-#endif
+#endif//hacks
+//#define SS_FDC_TRACE_STATUS //spell out status register
 
 #endif
 
@@ -383,6 +386,24 @@ defined(SS_BOILER))
 #endif
 #define SS_IKBD_6301_SET_TDRE
 #define SS_IKBD_6301_TIMER_FIX // not sure there was a problem
+
+//#define SS_IKBD_TRACE_COMMANDS // report commands sent to IKBD
+//#define SS_IKBD_TRACE_FAKE_CUSTOM // IKBD custom
+//#define SS_IKBD_TRACE_6301 // interaction with 6301 emu
+//#define SS_IKBD_TRACE_6301_MOUSE // temp
+//#define SS_IKBD_6301_TRACE // ambigous!
+#if defined(SS_IKBD_6301_TRACE)
+//#define SS_IKBD_6301_TRACE_SCI_RX
+//#define SS_IKBD_6301_TRACE_SCI_TX
+//#define SS_IKBD_6301_TRACE_SCI_TRCSE
+//#define SS_IKBD_6301_TRACE_INT_TIMER
+//#define SS_IKBD_6301_TRACE_INT_SCI
+//#define SS_IKBD_6301_DISASSEMBLE_CUSTOM_PRG 
+//#define SS_IKBD_6301_DISASSEMBLE_ROM 
+//#define SS_IKBD_6301_DUMP_RAM
+//#define SS_IKBD_6301_TRACE_KEYS
+#endif
+
 #endif//#if defined(SS_IKBD_6301)
 
 #define SS_IKBD_FAKE_ABS_MOUSE // less is more!
@@ -441,6 +462,25 @@ defined(SS_BOILER))
 
 
 /////////
+// IPF //
+/////////
+
+#if defined(SS_IPF)
+
+// those switches were used for development, normally they ain't necessary
+//#define SS_IPF_CPU // total sync, works but overkill
+//#define SS_IPF_RUN_PRE_IO 
+//#define SS_IPF_RUN_POST_IO
+#ifdef BETA
+#define SS_IPF_LETHAL_XCESS // hack useful with capsimg v4.2
+#define SS_IPF_WRITE_HACK // useless hack for v4.2 AFAIK
+#endif
+//#define SS_IPF_SAVE_WRITES //TODO?
+//#define SS_IPF_TRACE_SECTORS // show sector info
+#endif
+
+
+/////////
 // MMU //
 /////////
 
@@ -448,7 +488,7 @@ defined(SS_BOILER))
 
 #define SS_MMU_WRITE // programs in RAM may write in the MMU
 ////#define SS_MMU_NO_CONFUSION // would need to patch TOS then = regression!
-
+//#define SS_MMU_TRACE2
 #endif
 
 
@@ -529,13 +569,15 @@ defined(SS_BOILER))
 #define SS_VAR_F12 // F12 starts/stops emulation
 #endif
 #define SS_VAR_FULLSCREEN_DONT_START // disable run when going fullscreen
-//#define SS_VAR_HIDE_OPTIONS_AT_START
+//#define SS_VAR_HIDE_OPTIONS_AT_START // hack before debugging
 #define SS_VAR_KEYBOARD_CLICK // not a sound nor IKBD option
 #define SS_VAR_MSA_CONVERTER // don't prompt if found
 #define SS_VAR_STEALTH // don't tell we're an emulator (option)
 #define SS_VAR_REWRITE // to conform to what compilers expect (warnings...)
 #define SS_SSE_OPTION_PAGE // a new page for all our options
 #define SS_SSE_OPTION_STRUCT // structure with constructor
+
+#define SS_VAR_PASTI_ON_WARNING // mention in disk manager title
 
 #define NO_RAR_SUPPORT // the library is outdated, right?
 
@@ -554,6 +596,7 @@ defined(SS_BOILER))
 //#define SS_VID_STEEM_ORIGINAL // only for debugging/separate blocks, careful
 
 #if defined(SS_DEBUG) 
+//#define SHOW_DRAW_SPEED //was already in Steem
 //#define SS_VIDEO_DRAW_DBG  // totally bypass CheckSideOverscan() & Render() !
 //#define SS_VID_VERT_OVSCN_OLD_STEEM_WAY // only for vertical overscan
 //#define SS_VID_SKIP_SCANLINE -29 // fetch but only draw colour 0

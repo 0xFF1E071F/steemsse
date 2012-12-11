@@ -14,6 +14,12 @@ as changing disk images and determining what files are disks.
 #include "SSE/SSEOption.h"
 #endif
 
+#if defined(STEVEN_SEAGAL) && USE_PASTI && defined(SS_VAR_PASTI_ON_WARNING)
+char window_caption[25]="Disk Manager (Pasti on)"; // and a nice global
+#endif
+
+#define LOGSECTION LOGSECTION_IMAGE_INFO
+
 //---------------------------------------------------------------------------
 bool ExtensionIsPastiDisk(char *Ext)
 {
@@ -38,7 +44,7 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
   if (*Ext=='.') Ext++;
   int ret=0;
   if (MatchesAnyString_I(Ext,"ST","STT","DIM","MSA",
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
     "IPF",
 #endif    
     NULL)){
@@ -121,8 +127,8 @@ void TDiskManager::SetNumFloppies(int NewNum)
 {
   num_connected_floppies=NewNum;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IPF)
-  WD1772.drivecnt/*max*/=NewNum; // or drivecnt?
+#if defined(STEVEN_SEAGAL) && defined(SS_IPF) //TODO
+  Caps.WD1772.drivecnt/*max*/=NewNum; // or drivecnt?
 #endif
 
 #if USE_PASTI
@@ -262,9 +268,16 @@ void TDiskManager::Show()
   bool MaximizeIt=bool(FullScreen ? FSMaximized:Maximized);
 
   ManageWindowClasses(SD_REGISTER);
+#if defined(STEVEN_SEAGAL) && USE_PASTI && defined(SS_VAR_PASTI_ON_WARNING)
+  window_caption[12]=(pasti_active) ? ' ' : '\0';
+  Handle=CreateWindowEx(WS_EX_CONTROLPARENT | WS_EX_APPWINDOW,"Steem Disk Manager",window_caption,
+      WS_CAPTION | WS_SYSMENU | WS_SIZEBOX | WS_MAXIMIZEBOX | WS_MINIMIZEBOX,
+      Left,Top,Width,Height,ParentWin,NULL,HInstance,NULL);
+#else
   Handle=CreateWindowEx(WS_EX_CONTROLPARENT | WS_EX_APPWINDOW,"Steem Disk Manager",T("Disk Manager"),
       WS_CAPTION | WS_SYSMENU | WS_SIZEBOX | WS_MAXIMIZEBOX | WS_MINIMIZEBOX,
       Left,Top,Width,Height,ParentWin,NULL,HInstance,NULL);
+#endif
   if (HandleIsInvalid()){
     ManageWindowClasses(SD_UNREGISTER);
     return;
@@ -385,7 +398,6 @@ void TDiskManager::Show()
 
   for (int i=0;i<2;i++){
     if (FloppyDrive[i].DiskInDrive()){
-//      TRACE("there's a floppy in drive %d so we insert it\n",i);
       InsertDisk(i,FloppyDrive[i].DiskName,FloppyDrive[i].GetDisk(),true,0,FloppyDrive[i].DiskInZip);
     }
   }
@@ -1054,7 +1066,6 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
   if (StemDialog_RetDefVal) return Ret;
 
   TDiskManager *This;
-
   switch (Mess){
     case WM_COMMAND:
     {
@@ -1575,7 +1586,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
           if (LOWORD(wPar)==2024){
             pasti->DlgConfig(HWND(FullScreen ? StemWin:This->Handle),0,NULL);
           }
-          if (LOWORD(wPar)==2023){
+          if (LOWORD(wPar)==2023){ //SS option use pasti
             bool cancel=false;
             if (pc!=rom_addr){
               int i=Alert(T("Changing this setting necessitates a cold reset.")+"\n"+T("Do you want to reset now?"),
@@ -1592,6 +1603,10 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
               This->EjectDisk(1);
               This->RefreshDiskView();
               CheckResetDisplay();
+#if defined(SS_VAR_PASTI_ON_WARNING)
+              window_caption[12]=(pasti_active) ? ' ' : '\0';
+              SetWindowText(This->Handle,window_caption);
+#endif
             }
           }
           break;
@@ -2739,14 +2754,20 @@ void TDiskManager::InsertHistoryDelete(int d,char *Name,char *Path,char *DiskInZ
 bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChangeDisk,
                                 bool MakeFocus,EasyStr DiskInZip,bool SuppressErr,bool AllowInsert2)
 {
-  TRACE("Inserting disk %s in drive %c\n",Path.c_str(),Drive+'A');
+  TRACE_LOG("%c: Inserting disk %s[%s] in drive\n",Drive+'A',Name.c_str(),Path.c_str());
+
+#if defined(STEVEN_SEAGAL) && USE_PASTI && defined(SS_VAR_PASTI_ON_WARNING)
+  // check Pasti caption
+  window_caption[12]=(pasti_active) ? ' ' : '\0';
+  SetWindowText(/*This->*/Handle,window_caption);
+#endif
+
   if (DontChangeDisk==0){
     if (Path.Empty()) 
       return 0;
     int Err=FloppyDrive[Drive].SetDisk(Path,DiskInZip);
-    ASSERT(!Err);
     if (Err){
-      TRACE("Error %d\n",Err);
+      TRACE_LOG("Error %d\n",Err);
       if (FloppyDrive[Drive].Empty()) EjectDisk(Drive); // Update display
       if (SuppressErr==0){
         switch (Err){
@@ -3246,3 +3267,4 @@ Str TDiskManager::GetContentsGetAppendName(Str TOSECName)
 }
 //---------------------------------------------------------------------------
 
+#undef LOGSECTION //LOGSECTION_IMAGE_INFO
