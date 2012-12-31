@@ -9,6 +9,8 @@ of the various unarchiving libraries it can use.
 #pragma message("Included for compilation: archive.cpp")
 #endif
 
+#define LOGSECTION LOGSECTION_IMAGE_INFO
+
 //---------------------------------------------------------------------------
 zipclass::zipclass()
 {
@@ -16,6 +18,9 @@ zipclass::zipclass()
   is_open=false;
   current_file_n=0;
   err=0;
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+  hArcData=0;
+#endif
 }
 //---------------------------------------------------------------------------
 bool zipclass::first(char *name)
@@ -88,6 +93,30 @@ bool zipclass::first(char *name)
 
     return ZIPPY_SUCCEED;
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+  }
+  else if (strcmp(type,"RAR")==0 && hUnrar)
+  {
+    ArchiveData.ArcName=name;
+    hArcData=RarOpenArchive(&ArchiveData);
+    ASSERT(hArcData);
+    ASSERT(!ArchiveData.OpenResult);
+    if(!hArcData || ArchiveData.OpenResult)
+      return ZIPPY_FAIL;
+//    TRACE_LOG("UnRAR: %s now open\n",name);
+    int ec=RarReadHeader(hArcData,&HeaderData);
+    if(!ec)
+    {
+//      ASSERT( !(HeaderData.FileAttr&0x10) ); // directory!
+//      TRACE_LOG("UnRAR 1st file %s v%d\n",HeaderData.FileName,HeaderData.UnpVer);
+      is_open=true;
+      current_file_n=0;
+      current_file_offset=0;
+      attrib=WORD(HeaderData.FileAttr);
+      crc=HeaderData.FileCRC;
+      return ZIPPY_SUCCEED;
+    }
+#endif
   }
   return ZIPPY_FAIL;
 }
@@ -136,6 +165,32 @@ bool zipclass::next()
 
     return ZIPPY_SUCCEED;
 #endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+  }else if (strcmp(type,"RAR")==0){
+
+    if (is_open==0 || !hUnrar || !hArcData) 
+      return ZIPPY_FAIL;
+
+    int ec;
+    // we must 'process' the current one or reading will fail
+    ec=RarProcessFile(hArcData,RAR_TEST,NULL,NULL);
+    ASSERT(!ec);
+    ec=RarReadHeader(hArcData,&HeaderData);
+    current_file_n++;
+    if(!ec)
+    {
+//      ASSERT( !(HeaderData.FileAttr&0x10) ); // directory!
+//      TRACE_LOG("UnRAR next file %s\n",HeaderData.FileName);
+      current_file_offset=current_file_n;
+      attrib=WORD(HeaderData.FileAttr);
+      crc=HeaderData.FileCRC;
+      return ZIPPY_SUCCEED;
+    }
+//    else
+//      TRACE_LOG("UnRAR next %d ec %d\n",current_file_n,ec);
+#endif
+
   }
   return ZIPPY_FAIL;
 }
@@ -155,6 +210,11 @@ char* zipclass::filename_in_zip()
   }else if (strcmp(type,"RAR")==0){
     if (rar_current) return rar_current->item.Name;
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+  }else if (strcmp(type,"RAR")==0){
+    if(hUnrar&&hArcData) 
+      return HeaderData.FileName;
+#endif
   }
   return "";
 }
@@ -170,9 +230,15 @@ bool zipclass::close()
 
       is_open=false;
       return ZIPPY_SUCCEED;
-
 #ifdef RAR_SUPPORT
     }else if (strcmp(type,"RAR")==0){
+      is_open=false;
+      return ZIPPY_SUCCEED;
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+    }else if (strcmp(type,"RAR")==0 && hUnrar){
+//      TRACE_LOG("closing RAR archive\n");
+      VERIFY( !RarCloseArchive(hArcData) );
       is_open=false;
       return ZIPPY_SUCCEED;
 #endif
@@ -206,6 +272,7 @@ void zipclass::list_contents(char *name,EasyStringList *eslp,bool st_disks_only)
 //---------------------------------------------------------------------------
 bool zipclass::extract_file(char *fn,int offset,char *dest_dir,bool hide,DWORD attrib)
 {
+  TRACE_LOG("zippy extract %s (#%d) to %s\n",fn,offset,dest_dir);
   if (enable_zip==0) return ZIPPY_FAIL;
 
   if (strcmp(type,"ZIP")==0){
@@ -337,8 +404,46 @@ bool zipclass::extract_file(char *fn,int offset,char *dest_dir,bool hide,DWORD a
     return ZIPPY_SUCCEED;
 
 #endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+  }else if (strcmp(type,"RAR")==0 && hUnrar){
+    ASSERT(hUnrar);
+    if (is_open) 
+      close();
+
+    if (first(fn)==0){
+      while (offset > 0){
+        if (next()){ // Failed
+          close();
+          return ZIPPY_FAIL;
+        }
+        offset--;
+      }
+    }
+
+    char *data_ptr;
+    DWORD data_size;
+    ASSERT(hArcData);
+    int ec=RarProcessFile(hArcData,RAR_EXTRACT,NULL,dest_dir); 
+//    TRACE_LOG("%s -> %s : %d\n",HeaderData.FileName,dest_dir,ec);
+    ASSERT(!ec);
+    if(ec)
+      return ZIPPY_FAIL;    
+    close();
+#ifdef WIN32
+    if (hide){
+      SetFileAttributes(dest_dir,FILE_ATTRIBUTE_HIDDEN);
+    }else{
+      SetFileAttributes(dest_dir,attrib);
+    }
+#endif
+
+    return ZIPPY_SUCCEED;
+#endif
+
   }
   return ZIPPY_FAIL;
 }
 //---------------------------------------------------------------------------
 
+#undef LOGSECTION

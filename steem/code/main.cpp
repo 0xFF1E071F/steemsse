@@ -33,9 +33,9 @@ other files that make up the Steem module.
 
 #include "conditions.h"	
 #include "SSE/SSE.h" // SS
-#if defined(STEVEN_SEAGAL)
+//#if defined(STEVEN_SEAGAL)
 #include "SSE/SSEDebug.h"
-#endif
+//#endif
 
 const char *stem_version_date_text=__DATE__ " - " __TIME__;
 
@@ -125,7 +125,7 @@ TPatchesBox PatchesBox;
 
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301) 
-#include "SSE/SSE6301.h"
+#include "SSE/SSE6301.h" //TODO
 #endif  
 
 
@@ -240,7 +240,7 @@ int main(int argc,char *argv[])
           XGetInputFocus(XD,&FocusWin,&RevertFlag);
           if (FocusWin==StemWin && fast_forward!=RUNSTATE_STOPPED+1 && slow_motion!=RUNSTATE_STOPPED+1){
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_MOUSE_CAPTURE)
-            if(SSEOption.CaptureMouse)
+            if(CAPTURE_MOUSE)
 #endif
             SetStemMouseMode(STEM_MOUSEMODE_WINDOW);
           }
@@ -262,7 +262,9 @@ int main(int argc,char *argv[])
     PerformCleanShutdown();
   	return EXIT_SUCCESS;
 #if defined(STEVEN_SEAGAL)
-
+/*  if you don't define STEVEN_SEAGAL and you get an error here in VC++,
+    try compile switch /GX-
+*/
 #elif defined(WIN32) && !defined(DEBUG_BUILD) && !defined(MINGW_BUILD) && !defined(ONEGAME)
   }__except(EXCEPTION_EXECUTE_HANDLER){
     if (AutoLoadSnapShot){
@@ -650,11 +652,26 @@ UNIX_ONLY( hxc::font_sl.Insert(0,0,Path,NULL); )
 #endif
 
   SetNotifyInitText(T("Jump Tables"));
-
+#ifndef SS_VAR_NOTIFY
   WIN_ONLY( LoadUnzipDLL(); )
-
+#endif
   log("STARTUP: cpu_routines_init Called");
   cpu_routines_init();
+
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_NOTIFY)
+  SetNotifyInitText("unzipd32.dll");
+  WIN_ONLY( LoadUnzipDLL(); )
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+#if defined(SS_VAR_NOTIFY)
+  SetNotifyInitText("unrar.dll");
+#endif
+  WIN_ONLY( LoadUnrarDLL(); )
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
+  Caps.Init();
+#endif
 
 #ifdef DEBUG_BUILD
   log("STARTUP: d2_routines_init Called");
@@ -1116,7 +1133,9 @@ void CleanUpSteem()
   DestroyKeyTable();
 
   WIN_ONLY( if (hUnzip) FreeLibrary(hUnzip); enable_zip=false; hUnzip=NULL; )
-
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+  WIN_ONLY( if (hUnrar) FreeLibrary(hUnrar); enable_rar=false; hUnrar=NULL; )
+#endif
 #ifdef UNIX
   if (XD){
     XCloseDisplay(XD);

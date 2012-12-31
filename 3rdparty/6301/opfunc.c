@@ -374,7 +374,7 @@ rti_inh ()
 	reg_setix   (popword ());
 	reg_setpc   (popword ());
 #if defined(SS_IKBD_RUN_IRQ_TO_END)
-	ExecutingInt=0; //SS
+	ExecutingInt=-1;
 #endif
 }
 rts_inh ()	{reg_setpc (popword ());}

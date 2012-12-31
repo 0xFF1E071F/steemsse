@@ -256,7 +256,7 @@ int shifter_freq_change_time[32];
 int shifter_freq_change[32];
 int shifter_freq_change_idx=0;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_STEEM_EXTENDED)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_TRICKS)
 // keeping a record for shift mode changes as well
 int shifter_shift_mode_change_time[32];
 int shifter_shift_mode_change[32];

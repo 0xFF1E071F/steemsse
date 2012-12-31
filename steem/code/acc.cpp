@@ -306,6 +306,8 @@ void log_write_stack()
   log_write(EasyStr("        ")+HEXSl(d2_dpeek(areg[7]+18),4));
 #endif
 }
+
+
 #endif
 
 EasyStr HEXSl(long n,int ln){
@@ -530,3 +532,10 @@ Str scanline_cycle_log()
 }
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+WORD change_endian(WORD x) {
+  BYTE high=x>>8;
+  BYTE low=x&0xFF;
+  return (low<<8) | high;
+}
+#endif

@@ -66,9 +66,7 @@ void init_timings()
   shifter_cycle_base=ABSOLUTE_CPU_TIME;
 #if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START)
   // We lose the vertical overscan at restart pretty often with this mod.
-#if defined(SS_INT_VBI_START_TRACE)
   TRACE("Init timings PC %X VBI %X pending %d\n",pc,LPEEK(0x0070),vbl_pending);
-#endif
 #else
   // This is a hack to make the first screen work
   if (pc==(MEM_ADDRESS)(LPEEK(0x0070) & 0xffffff)){
@@ -234,7 +232,7 @@ void intercept_xbios()
   }
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_STEALTH)
-  if (!SSEOption.StealthMode 
+  if (!STEALTH_MODE 
     && m68k_dpeek(sp)==37 && r[6]==r[7] && r[7]==0x456d753f){ // Vsync with Emu?, emudtect
 #else
   if (m68k_dpeek(sp)==37 && r[6]==r[7] && r[7]==0x456d753f){ // Vsync with Emu?, emudtect
@@ -630,7 +628,8 @@ void call_a000()
   SET_PC(LPEEK(BOMBS_LINE_A*4));
 //  log(EasyStr("interrupt - increasing interrupt depth from ")+interrupt_depth+" to "+(interrupt_depth+1));
   SR_CLEAR(SR_TRACE);
-  interrupt_depth++;
+BRK(yoho)
+  interrupt_depth++; 
   memcpy(save_r,r,16*4);
   on_rte_interrupt_depth=interrupt_depth;
 }

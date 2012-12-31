@@ -1,16 +1,9 @@
 // This file is compiled as a distinct module (resulting in an OBJ file)
 #include "6301.h"
 #include "SSE/SSE.h"
-#include "SSE/SSEOption.h"
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
-
-
-//tmp
-//#ifdef SS_UNIX
-//#define _rotl __rotl
-//#define _rotr __rotr
-//#endif
-
+#include "SSE/SSEOption.h"
+extern int iDummy;
 #ifndef WIN32
 unsigned int _rotr(unsigned int Data, unsigned int Bits) {
   return ((Data >> Bits) | (Data << (32-Bits)));
@@ -143,34 +136,37 @@ hd6301_run_cycles(u_int cycles_to_run) {
     reset(); // hack
   }
 #if defined(SS_IKBD_6301_ADJUST_CYCLES)
-  // for precision, maybe not important?
-  if(cycles_to_give_back) 
+  if(cycles_to_give_back>=cycles_to_run)
   {
-    if(cycles_to_give_back>10)
-      cycles_to_give_back-=10,cycles_to_run-=10;
-    else
-      cycles_to_run-=cycles_to_give_back,cycles_to_give_back=0;
+    cycles_to_give_back-=cycles_to_run;
+    return -1;
+  }
+  else if(cycles_to_give_back)
+  {
+    cycles_to_run-=cycles_to_give_back;
+    cycles_to_give_back=0;
   }
 #endif
   // the ExecutingInt hack seemed necessary at some point, maybe it isn't
   while(cycles_run<cycles_to_run && !Crashed6301 
 #if defined(SS_IKBD_RUN_IRQ_TO_END)
-    || ExecutingInt
+    || ExecutingInt==1
 #endif
   )
   {
     instr_exec (); // execute one instruction
     cycles_run=cpu.ncycles-starting_cycles;
   }
-#if defined(SS_IKBD_6301_ADJUST_CYCLES)
+#if defined(SS_IKBD_RUN_IRQ_TO_END)
   if(ExecutingInt)
   {
-    cycles_to_give_back+=cpu.ncycles-starting_cycles-cycles_run;
-    printf("bonus cycles for int %d\n",cycles_to_give_back);
-    ASSERT(cycles_to_give_back<512);
+    ASSERT( ExecutingInt==-1 );
+    ExecutingInt=0;
   }
-  cycles_to_give_back+=cpu.ncycles-starting_cycles-cycles_run-cycles_to_give_back/5;
-  ASSERT(cycles_to_give_back>=0);
+#endif
+#if defined(SS_IKBD_6301_ADJUST_CYCLES)
+  ASSERT( !cycles_to_give_back );
+  cycles_to_give_back=cycles_run-cycles_to_run;
 #endif
   return (Crashed6301) ? 0 : cycles_run; 
 }

@@ -1,3 +1,4 @@
+
 #ifdef IN_EMU
 #define EXT
 #define INIT(s) =s
@@ -768,10 +769,6 @@ BYTE mfp_gpip_input_buffer=0;
 //#define MFP_CLK_EXACT 2451034 // Between 2450992 and 2451050 (erring high) old version before 12 cycle delay
 
 //#define MFP_CLK_EXACT 2450780  old version, checked inaccurately
-/*
-#define MFP_CLK 2457
-#define MFP_CLK_EXACT 2457600
-*/
 
 #if defined(STEVEN_SEAGAL) && defined(SS_MFP_RATIO)
 // it's a variable now! See SSE.h !!!!!!!!!!!!

@@ -933,7 +933,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
         if (GetForegroundWindow()==StemWin && GetCapture()==NULL && IsIconic(StemWin)==0 &&
             fast_forward!=RUNSTATE_STOPPED+1 && slow_motion!=RUNSTATE_STOPPED+1){
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_MOUSE_CAPTURE)
-          if(SSEOption.CaptureMouse)
+          if(CAPTURE_MOUSE)
 #endif
           SetStemMouseMode(STEM_MOUSEMODE_WINDOW);
         }
@@ -943,7 +943,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
         SendMessage(hBut,BM_SETCHECK,0,0);
       }else{
         if (runstate==RUNSTATE_RUNNING){
-#if defined(SS_VID_SHIFTER_EVENTS) && defined(SS_VID_AUTO_FRAME_REPORT_ON_STOP)
+#if defined(SS_VID_SHIFTER_EVENTS) && defined(SS_SHIFTER_EVENTS_ON_STOP)
           VideoEvents.Report(); // shifter tricks report
 #endif
           runstate=RUNSTATE_STOPPING;
@@ -1050,11 +1050,21 @@ void HandleButtonMessage(UINT Id,HWND hBut)
 
         SendMessage(hBut,BM_SETCHECK,1,0);
         TrackPopupMenu(Pop,TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
-                        rc.left,rc.bottom,0,StemWin,NULL);
+          rc.left,rc.bottom,0,StemWin,NULL);
         if (PasteText.Empty()) SendMessage(hBut,BM_SETCHECK,0,0);
-
+        
         DestroyMenu(Pop);
       }else{
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+          if(Disp.ScreenShotFormat==IF_NEO)
+          {
+            ASSERT( sizeof(neochrome_file)==32128 );
+            VERIFY( Disp.pNeoFile=new neochrome_file );
+            ZeroMemory(Disp.pNeoFile,sizeof(neochrome_file));
+            for(int i=0;i<16;i++)
+              Disp.pNeoFile->palette[i]=change_endian(STpal[i]);
+          }
+#endif
         if (runstate==RUNSTATE_RUNNING){
           DoSaveScreenShot|=1;
         }else{
@@ -1308,7 +1318,12 @@ void SnapShotGetOptions(EasyStringList *p_sl)
 
   EasyStr NoSaveExplain="";
 #ifndef DISABLE_STEMDOS
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_F)
+  if (on_rte!=ON_RTE_RTE && on_rte!=ON_RTE_LINE_F){
+#else
   if (on_rte!=ON_RTE_RTE){
+#endif
+    TRACE("on_rte %d ON_RTE_RTE %d\n",on_rte,ON_RTE_RTE);
     NoSaveExplain=T("The ST is in the middle of a disk operation");
   }else{
     if (stemdos_any_files_open()) NoSaveExplain=T("The ST has file(s) open");

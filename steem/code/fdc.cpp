@@ -150,7 +150,7 @@ void floppy_fdc_command(BYTE cm)
 {
   log(Str("FDC: ")+HEXSl(old_pc,6)+" - executing command $"+HEXSl(cm,2));
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
 /*
 "In the Atari the MO output is directly connected to the drive and it is 
 therefore mandatory to always enable the spin-up sequence (h = 0).
@@ -158,12 +158,13 @@ therefore mandatory to always enable the spin-up sequence (h = 0).
 pre-compensation should always be used (p = 0). The stepping rate should
  normally be set to 3 ms (r0, r1 = 1, 1) but it is possible to set it to 2
  ms (r0, r1 = 1, 0) however this gives less reliable results.
+ Many programs don't respect those rules, see asserts.
 */
   int type=WD1772.CommandType(cm);
-  ASSERT( !(cm&BIT_3) || type==4 ); // 'h'
+//  ASSERT( !(cm&BIT_3) || type==4 ); // 'h' //DotS, WarHeli
   ASSERT( !(cm&BIT_2) || type==1 || type==4  ); // 'e'
   ASSERT( !WD1772.WritingToDisk() || !(cm&BIT_1) ); // 'p'
-  ASSERT( type!=1 || (cm&3)==3 || cm==1 ); // 'r0,r1', restore may go faster
+  //ASSERT( type!=1 || (cm&3)==3 || cm==1 ); // 'r0,r1', restore may go faster //No Buddies Land
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_NO_DISK) && defined(SS_HACKS)
@@ -194,7 +195,9 @@ even the same command (from Hatari). This fixes Overdrive boot "stuck on
 Amiga disk".
 */
     if(fdc_spinning_up && SSE_HACKS_ON)
+    {
       TRACE_LOG("ACT %d CR %X->%X during spin-up STR%x\n",ABSOLUTE_CPU_TIME,WD1772.OldCr,cm,fdc_str);
+    }
     else
 #endif
     if ((cm & (BIT_7+BIT_6+BIT_5+BIT_4))!=0xd0){ // Not force interrupt
@@ -234,10 +237,10 @@ Amiga disk".
     fdc_spinning_up=int(delay_exec ? 2:1);
     if (floppy_instant_sector_access){
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_STARTING_DELAY)
-        if(SSE_HACKS_ON) 
-          agenda_add(agenda_fdc_spun_up,MILLISECONDS_TO_HBLS(650),
+      if(SSE_HACKS_ON) 
+        agenda_add(agenda_fdc_spun_up,MILLISECONDS_TO_HBLS(650),
           delay_exec); // fixes Songs of the Unexpected
-        else
+      else
 #endif
       agenda_add(agenda_fdc_spun_up,MILLISECONDS_TO_HBLS(100),delay_exec);
     }else{
@@ -336,7 +339,9 @@ r1       r0            1770                                        1772
 
 53  = step in with update track register
 */
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
     ASSERT(WD1772.CommandType(fdc_cr)==1);
+#endif
     hbls_to_interrupt=fdc_step_time_to_hbls[fdc_cr & (BIT_0 | BIT_1)];
 
     switch (fdc_cr & (BIT_7+BIT_6+BIT_5+BIT_4)){
@@ -543,7 +548,10 @@ CRC.
 */
       case 0x80:case 0xa0:LOG_ONLY( n_sectors=1; ) // Read/write single sector
       case 0x90:case 0xb0:                         // Read/write multiple sectors
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
         ASSERT(WD1772.CommandType(fdc_cr)==2);
+//        ASSERT(fdc_cr!=0xA0);
+#endif
         if (floppy->Empty() || floppy_head_track[floppyno]>FLOPPY_MAX_TRACK_NUM){
           fdc_str=FDC_STR_MOTOR_ON | FDC_STR_SEEK_ERROR | FDC_STR_BUSY;
           floppy_irq_flag=FLOPPY_IRQ_ONESEC;  //end command after 1 second
@@ -674,7 +682,9 @@ Byte #     Meaning                |     Sector length code     Sector length
 The 177x copies the track address into the Sector Register.  The chip
 sets the CRC Error bit in the status register if the CRC is invalid.
 */
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
         ASSERT(WD1772.CommandType(fdc_cr)==3);
+#endif
         log(Str("FDC: Type III Command - read address to ")+HEXSl(dma_address,6)+"from drive "+char('A'+floppyno));
 
         if (floppy->Empty()){
@@ -722,7 +732,9 @@ write splices or noise may cause the chip to look for an address mark.
 the AM detector has found an address mark.]  The chip may read gap
 bytes incorrectly during write-splice time because of synchronization.
 */
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
         ASSERT(WD1772.CommandType(fdc_cr)==3);
+#endif
         log(Str("FDC: Type III Command - read track to ")+HEXSl(dma_address,6)+" from drive "+char('A'+floppyno)+
                   " dma_sector_count="+dma_sector_count);
 
@@ -758,7 +770,9 @@ address-mark value of $c2 to the disk.  The written $c2 will lack an
 MFM clock transition between bits 3 and 4.  A Data Register value of
 $f7 will write a two-byte CRC to the disk.
 */
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
         ASSERT(WD1772.CommandType(fdc_cr)==3);
+#endif
         log(Str("FDC: - Type III Command - write track from address ")+HEXSl(dma_address,6)+" to drive "+char('A'+floppyno));
 
         floppy_irq_flag=0;
@@ -794,7 +808,9 @@ acknowledge Force Interrupt commands only between micro- instructions.
 */
       case 0xd0:        //force interrupt
       {
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
         ASSERT(WD1772.CommandType(fdc_cr)==4);
+#endif
         log(Str("FDC: ")+HEXSl(old_pc,6)+" - Force interrupt: t="+hbl_count);
 
         bool type23_active=(agenda_get_queue_pos(agenda_floppy_readwrite_sector)>=0 ||
@@ -1475,7 +1491,7 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
 {
   //  log_to(LOGSECTION_PASTI,Str("PASTI: Handling return, update cycles=")+pPIOI->updateCycles+" irq="+pPIOI->intrqState+" Xfer="+pPIOI->haveXfer);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC)// osd, fdcdebug
+#if defined(STEVEN_SEAGAL) && defined(SS_DMA)// osd, fdcdebug
   Dma.UpdateRegs();
 #endif
 
@@ -1487,7 +1503,7 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
   bool old_irq=(mfp_reg[MFPR_GPIP] & BIT_5)==0; // 0=irq on
 #endif
   
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_OSD_DRIVE_LED)
   // Red floppy led for writing in Pasti mode
   if(WD1772.WritingToDisk())
   {
@@ -1554,7 +1570,9 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
     if(!debug2) // to avoid double lines
     {
 //      TRACE_LOG("%d ",ABSOLUTE_CPU_TIME);
+#if defined(STEVEN_SEAGAL) && defined(SS_DMA) && defined(SS_DEBUG)
       if(TRACE_ENABLED) Dma.UpdateRegs(true);
+#endif
       debug2++;
     }
     else

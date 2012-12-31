@@ -22,12 +22,12 @@ and (for some reason) command-line options.
 extern int draw_last_scanline_for_border,res_vertical_scale; // forward
 
 int ChangeBorderSize(int size_in) {
-  TRACE_LOG("Setting display size to %d (%d)\n",size_in,SSEOption.BorderSize);
+  TRACE_LOG("Setting display size to %d (%d)\n",size_in,DISPLAY_SIZE);
   int size=size_in;
   ASSERT(size==0||size==1||size==2||size==3);
-  if(1||size!=SSEOption.BorderSize) //todo
+  if(1||size!=DISPLAY_SIZE) //todo
   {
-    SSEOption.BorderSize=size;
+    DISPLAY_SIZE=size;
     switch(size)
     {
     case 0:
@@ -1049,6 +1049,10 @@ char *FSTypes(int Type,...)
     strcpy(tp,"*.st;*.stt;*.msa;*.dim;*.zip;*.stz");tp+=strlen(tp);
 #ifdef RAR_SUPPORT
     strcpy(tp,";*.rar");tp+=strlen(tp);
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+    if(hUnrar)
+      strcpy(tp,";*.rar");tp+=strlen(tp);
 #endif
 #if USE_PASTI
     if (hPasti){

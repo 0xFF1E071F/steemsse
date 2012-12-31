@@ -41,7 +41,9 @@ void TOptionBox::CreatePage(int n)
     case 6:CreateStartupPage();break;
     case 14:CreateIconsPage();break;
     case 8:CreateAssocPage();break;
+#ifndef SS_VAR_NO_UPDATE
     case 7:CreateUpdatePage();break;
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE)
     case 16:CreateSSEPage();break;
 #endif
@@ -1546,6 +1548,7 @@ void TOptionBox::CreateStartupPage()
   ShowPageControls();
 }
 //---------------------------------------------------------------------------
+#ifndef SS_VAR_NO_UPDATE
 void TOptionBox::CreateUpdatePage()
 {
   int Wid;
@@ -1606,6 +1609,7 @@ void TOptionBox::CreateUpdatePage()
   SetPageControlsFont();
   ShowPageControls();
 }
+#endif
 //---------------------------------------------------------------------------
 void TOptionBox::AssAddToExtensionsLV(char *Ext,char *Desc,int Num)
 {
@@ -1646,11 +1650,13 @@ void TOptionBox::CreateAssocPage()
 #if USE_PASTI
   if (hPasti) AssAddToExtensionsLV(".STX",T("Pasti Disk Image"),3);
 #endif
-  // SS ipf?
   AssAddToExtensionsLV(".DIM",T("Disk Image"),4);
   AssAddToExtensionsLV(".STZ",T("Zipped Disk Image"),5);
   AssAddToExtensionsLV(".STS",T("Memory Snapshot"),6);
   AssAddToExtensionsLV(".STC",T("Cartridge Image"),7);
+#if defined(STEVEN_SEAGAL) && defined(SS_IPF_ASSOCIATE)
+  AssAddToExtensionsLV(".IPF",T("IPF Disk Image"),8);
+#endif
   Scroller.AutoSize(5,5);
 
   int Wid=GetCheckBoxSize(Font,T("Always open files in new window")).Width;
@@ -1887,7 +1893,7 @@ void TOptionBox::CreateSSEPage() {
   SendMessage(BorderSizeOption,CB_ADDSTRING,1,(long)CStrT("Large (400x275)"));
   SendMessage(BorderSizeOption,CB_ADDSTRING,1,(long)CStrT("Large (400x278)"));
   SendMessage(BorderSizeOption,CB_ADDSTRING,1,(long)CStrT("Very large (412x280)"));
-  SendMessage(BorderSizeOption,CB_SETCURSEL,min((int)SSEOption.BorderSize,3),0);
+  SendMessage(BorderSizeOption,CB_SETCURSEL,min((int)DISPLAY_SIZE,3),0);
   y+=LineHeight;
 #endif
 
@@ -1896,7 +1902,7 @@ void TOptionBox::CreateSSEPage() {
   Win=CreateWindow("Button",T("Capture mouse"),
                           WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           page_l,y,Wid,25,Handle,(HMENU)1028,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,SSEOption.CaptureMouse,0);
+  SendMessage(Win,BM_SETCHECK,CAPTURE_MOUSE,0);
   ToolAddWindow(ToolTip,Win,T("If unchecked, Steem will leave mouse control to Windows until you click in the window"));
   y+=LineHeight;
 #endif
@@ -1916,8 +1922,8 @@ void TOptionBox::CreateSSEPage() {
   Wid=GetCheckBoxSize(Font,T("Stealth mode")).Width;
   Win=CreateWindow("Button",T("Stealth mode"),WS_CHILD | WS_TABSTOP |
     BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)1031,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,SSEOption.StealthMode,0);
-  ToolAddWindow(ToolTip,Win,T("Steem won't tell ST programs who it is"));
+  SendMessage(Win,BM_SETCHECK,STEALTH_MODE,0);
+  ToolAddWindow(ToolTip,Win,T("Disable emu detect"));
   y+=LineHeight;
 #endif  
 
@@ -1943,7 +1949,7 @@ void TOptionBox::CreateSSEPage() {
   Wid=GetCheckBoxSize(Font,T("6301 true emu")).Width;
   Win=CreateWindow("Button",T("6301 true emu"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           page_l,y,Wid,23,Handle,(HMENU)1029,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,SSEOption.HD6301Emu,0);
+  SendMessage(Win,BM_SETCHECK,HD6301EMU_ON,0);
   ToolAddWindow(ToolTip,Win,
     T("This enables a real emulation of the IKBD keyboard chip (using the Sim6xxx code by Arne Riiber, thx dude!)"));
   y+=LineHeight;
@@ -1966,7 +1972,7 @@ void TOptionBox::CreateSSEPage() {
   Wid=GetCheckBoxSize(Font,T("PSG Filter")).Width;
   Win=CreateWindow("Button",T("PSG Filter"),WS_CHILD | WS_TABSTOP |
     BS_CHECKBOX,page_l,y,Wid,25,Handle,(HMENU)7303,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,SSEOption.PSGFilter,0);
+  SendMessage(Win,BM_SETCHECK,PSG_FILTER_FIX,0);
   ToolAddWindow(ToolTip,Win,
     T("This makes PSG (YM-2149) chip tunes and samples sound less muffled"));
   y+=LineHeight;
@@ -1978,7 +1984,7 @@ void TOptionBox::CreateSSEPage() {
   Wid=GetCheckBoxSize(Font,T("STE Microwire")).Width;
   Win=CreateWindow("Button",T("STE Microwire"),WS_CHILD | WS_TABSTOP |
     BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)7302,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,SSEOption.STEMicrowire,0);
+  SendMessage(Win,BM_SETCHECK,MICROWIRE_ON,0);
   ToolAddWindow(ToolTip,Win,
     T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature"));
   y+=LineHeight;

@@ -1,0 +1,6 @@
+Steem SSE
+
+- Added txt extensions to history, license, readme, it helps my backup tool
+- There's no 'CapsPlug' for the Linux version. The functions of the library
+  are defined in the library.
+  TODO: how do we access this library?

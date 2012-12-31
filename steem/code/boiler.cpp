@@ -496,6 +496,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
           new mem_browser(debug_ads[id].ad,type);
         }else if (id>=301 && id<400){
           id-=300;
+          // SS id corresponds to 
           logsection_enabled[id]=!logsection_enabled[id];
           CheckMenuItem(logsection_menu,LOWORD(wPar),MF_BYCOMMAND| int(logsection_enabled[id] ? MF_CHECKED:MF_UNCHECKED));
           if (id==LOGSECTION_CPU){
@@ -871,19 +872,19 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               break;
 #if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
             case 1517: // Output TRACE to file
-              SSEOption.OutputTraceToFile=!SSEOption.OutputTraceToFile;
+              USE_TRACE_FILE=!USE_TRACE_FILE;
               CheckMenuItem(boiler_op_menu,1517,
-                MF_BYCOMMAND|((int)(SSEOption.OutputTraceToFile)
+                MF_BYCOMMAND|((int)(USE_TRACE_FILE)
                 ?MF_CHECKED:MF_UNCHECKED));
 #if defined(SS_IKBD_6301_TRACE)
-              if(!SSEOption.OutputTraceToFile&&trace_file_pointer_6301)
+              if(!USE_TRACE_FILE&&trace_file_pointer_6301)
                 fclose(trace_file_pointer_6301);
 #endif
               break;
             case 1518: // Limit TRACE file size
-              SSEOption.TraceFileLimit=!SSEOption.TraceFileLimit;
+              TRACE_FILE_REWIND=!TRACE_FILE_REWIND;
               CheckMenuItem(boiler_op_menu,1518,
-                MF_BYCOMMAND|((int)(SSEOption.TraceFileLimit)
+                MF_BYCOMMAND|((int)(TRACE_FILE_REWIND)
                 ? MF_CHECKED : MF_UNCHECKED));
               break;
 #endif

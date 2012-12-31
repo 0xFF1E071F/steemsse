@@ -131,7 +131,7 @@ void SoundStopInternalSpeaker()
 
 #if defined(STEVEN_SEAGAL) && defined(SS_SOUND_FILTER_STF)  
 // a simplisctic but better (in my ears) low-pass filter, optional
-#define CALC_V_CHIP if(SSEOption.PSGFilter) v=(*source_p+dv)/2,dv=v;\
+#define CALC_V_CHIP if(PSG_FILTER_FIX) v=(*source_p+dv)/2,dv=v;\
                     else if (v!=*source_p || dv){                            \
                   v+=dv;                                            \
                   dv-=(v-(*source_p)) >> 3;                         \
@@ -203,6 +203,7 @@ for: volume, balance, bass, treble.
 We define twice because of the SS_SOUND_VOL option (v -6db for YM chip effects)
 Demos using bass/treble:
 Beat; White Spirit
+TODO simplify, make more efficient
 */
 double d_dsp_v; // a bit silly, heavy, and maybe not optimal
 #define LOW_SHELF_FREQ 80 // 50
@@ -214,20 +215,20 @@ double d_dsp_v; // a bit silly, heavy, and maybe not optimal
 #define WRITE_SOUND_LOOP(Alter_V,Out_P,Size,GetSize)         \
              while (c>0){                                                  \
               Alter_V                                                     \
-              if(SSEOption.STEMicrowire && (psg_reg[PSGR_MIXER] & b00111111)!=b00111111 ) v=PsgGain.FilterAudio(v,-6); \
+              if(MICROWIRE_ON && (psg_reg[PSGR_MIXER] & b00111111)!=b00111111 ) v=PsgGain.FilterAudio(v,-6); \
               val=v + *lp_dma_sound_channel;                           \
-              if( SSEOption.STEMicrowire&&(\
+              if( MICROWIRE_ON&&(\
                 dma_sound_bass!=6||dma_sound_treble!=6\
               ||dma_sound_volume<0x28\
               ||dma_sound_l_volume<0x14)) d_dsp_v=val;\
-              if(SSEOption.STEMicrowire&&dma_sound_bass!=6) \
+              if(MICROWIRE_ON&&dma_sound_bass!=6) \
                 d_dsp_v=MicrowireBassL.FilterAudio(d_dsp_v,LOW_SHELF_FREQ,dma_sound_bass-6);\
-              if(SSEOption.STEMicrowire&&dma_sound_treble!=6)\
+              if(MICROWIRE_ON&&dma_sound_treble!=6)\
                 d_dsp_v=MicrowireTrebleL.FilterAudio(d_dsp_v,HIGH_SHELF_FREQ,dma_sound_treble-6);\
-              if(SSEOption.STEMicrowire&&(dma_sound_volume<0x28||dma_sound_l_volume<0x14))\
+              if(MICROWIRE_ON&&(dma_sound_volume<0x28||dma_sound_l_volume<0x14))\
                 d_dsp_v=MicrowireVolumeL.FilterAudio(d_dsp_v,dma_sound_volume-0x28\
                   +dma_sound_l_volume-0x14);\
-              if( SSEOption.STEMicrowire &&(\
+              if( MICROWIRE_ON &&(\
                 dma_sound_bass!=6||dma_sound_treble!=6\
               ||dma_sound_volume<0x28\
               ||dma_sound_l_volume<0x14))  val=d_dsp_v;\
@@ -239,18 +240,18 @@ double d_dsp_v; // a bit silly, heavy, and maybe not optimal
               *(Out_P++)=Size(GetSize(&val)); \
               if (sound_num_channels==2){         \
                 val=v + *(lp_dma_sound_channel+1);                                            \
-                if(SSEOption.STEMicrowire&&(dma_sound_bass!=6||dma_sound_treble!=6\
+                if(MICROWIRE_ON&&(dma_sound_bass!=6||dma_sound_treble!=6\
               ||dma_sound_volume<0x28\
               ||dma_sound_r_volume<0x14)) \
                   d_dsp_v=val;\
-                if(SSEOption.STEMicrowire&&dma_sound_bass!=6) \
+                if(MICROWIRE_ON&&dma_sound_bass!=6) \
                   d_dsp_v=MicrowireBassR.FilterAudio(d_dsp_v,LOW_SHELF_FREQ,dma_sound_bass-6);\
-                if(SSEOption.STEMicrowire&&dma_sound_treble!=6)\
+                if(MICROWIRE_ON&&dma_sound_treble!=6)\
                   d_dsp_v=MicrowireTrebleR.FilterAudio(d_dsp_v,HIGH_SHELF_FREQ,dma_sound_treble-6);\
-                if(SSEOption.STEMicrowire&&(dma_sound_volume<0x28||dma_sound_r_volume<0x14))\
+                if(MICROWIRE_ON&&(dma_sound_volume<0x28||dma_sound_r_volume<0x14))\
                 d_dsp_v=MicrowireVolumeR.FilterAudio(d_dsp_v,dma_sound_volume-0x28\
                   +dma_sound_r_volume-0x14);\
-                if(SSEOption.STEMicrowire&&(dma_sound_bass!=6||dma_sound_treble!=6\
+                if(MICROWIRE_ON&&(dma_sound_bass!=6||dma_sound_treble!=6\
               ||dma_sound_volume<0x28\
               ||dma_sound_r_volume<0x14)) \
                  val=d_dsp_v;\
@@ -272,18 +273,18 @@ double d_dsp_v; // a bit silly, heavy, and maybe not optimal
              while (c>0){                                                  \
               Alter_V                                                     \
               val=v + *lp_dma_sound_channel;                           \
-              if( SSEOption.STEMicrowire&&(\
+              if( MICROWIRE_ON&&(\
                 dma_sound_bass!=6||dma_sound_treble!=6\
               ||dma_sound_volume<0x28\
               ||dma_sound_l_volume<0x14)) tmp=val;\
-              if(SSEOption.STEMicrowire&&dma_sound_bass!=6) \
+              if(MICROWIRE_ON&&dma_sound_bass!=6) \
                 tmp=MicrowireBassL.FilterAudio(tmp,LOW_SHELF_FREQ,dma_sound_bass-6);\
-              if(SSEOption.STEMicrowire&&dma_sound_treble!=6)\
+              if(MICROWIRE_ON&&dma_sound_treble!=6)\
                 tmp=MicrowireTrebleL.FilterAudio(tmp,HIGH_SHELF_FREQ,dma_sound_treble-6);\
-              if(SSEOption.STEMicrowire&&(dma_sound_volume<0x28||dma_sound_l_volume<0x14))\
+              if(MICROWIRE_ON&&(dma_sound_volume<0x28||dma_sound_l_volume<0x14))\
                 tmp=MicrowireVolumeL.FilterAudio(tmp,dma_sound_volume-0x28\
                   +dma_sound_l_volume-0x14);\
-              if( SSEOption.STEMicrowire &&(\
+              if( MICROWIRE_ON &&(\
                 dma_sound_bass!=6||dma_sound_treble!=6\
               ||dma_sound_volume<0x28\
               ||dma_sound_l_volume<0x14))  val=tmp;\
@@ -295,18 +296,18 @@ double d_dsp_v; // a bit silly, heavy, and maybe not optimal
               *(Out_P++)=Size(GetSize(&val)); \
               if (sound_num_channels==2){         \
                 val=v + *(lp_dma_sound_channel+1);                                            \
-                if(SSEOption.STEMicrowire&&(dma_sound_bass!=6||dma_sound_treble!=6\
+                if(MICROWIRE_ON&&(dma_sound_bass!=6||dma_sound_treble!=6\
               ||dma_sound_volume<0x28\
               ||dma_sound_r_volume<0x14)) \
                   tmp=val;\
-                if(SSEOption.STEMicrowire&&dma_sound_bass!=6) \
+                if(MICROWIRE_ON&&dma_sound_bass!=6) \
                   tmp=MicrowireBassR.FilterAudio(tmp,LOW_SHELF_FREQ,dma_sound_bass-6);\
-                if(SSEOption.STEMicrowire&&dma_sound_treble!=6)\
+                if(MICROWIRE_ON&&dma_sound_treble!=6)\
                   tmp=MicrowireTrebleR.FilterAudio(tmp,HIGH_SHELF_FREQ,dma_sound_treble-6);\
-                if(SSEOption.STEMicrowire&&(dma_sound_volume<0x28||dma_sound_r_volume<0x14))\
+                if(MICROWIRE_ON&&(dma_sound_volume<0x28||dma_sound_r_volume<0x14))\
                 tmp=MicrowireVolumeR.FilterAudio(tmp,dma_sound_volume-0x28\
                   +dma_sound_r_volume-0x14);\
-                if(SSEOption.STEMicrowire&&(dma_sound_bass!=6||dma_sound_treble!=6\
+                if(MICROWIRE_ON&&(dma_sound_bass!=6||dma_sound_treble!=6\
               ||dma_sound_volume<0x28\
               ||dma_sound_r_volume<0x14)) \
                  val=tmp;\
@@ -750,9 +751,7 @@ void dma_sound_set_mode(BYTE new_mode)
 #if defined(STEVEN_SEAGAL) && defined(SS_SOUND)
   ASSERT(!(new_mode&~0x8F));
   new_mode&=0x8F;
-#if defined(SS_SOUND_TRACE)
-TRACE("F%d STE Snd mode %X freq %d\n",FRAME,new_mode,dma_sound_mode_to_freq[new_mode & 3]);
-#endif
+  TRACE_LOG("F%d STE Snd mode %X freq %d\n",FRAME,new_mode,dma_sound_mode_to_freq[new_mode & 3]);
 #endif
 
   dma_sound_mode=new_mode;
@@ -855,7 +854,7 @@ void dma_sound_fetch()
 
 #if defined(SS_SOUND_FILTER_STE)
         // exactly the same low-pass filter as for STF sound
-        if(SSEOption.STEMicrowire&&dma_sound_channel_buf_last_write_t>3)
+        if(MICROWIRE_ON&&dma_sound_channel_buf_last_write_t>3)
         {
           int tmp=(w1+
             + dma_sound_channel_buf[dma_sound_channel_buf_last_write_t-2])/2;

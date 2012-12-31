@@ -26,7 +26,8 @@
     vindicating Steem authors! Though it is all guessing.
 */
 #if defined(SS_IKBD_6301)
-#define SS_6301_TO_ACIA_IN_CYCLES (HD6301EMU_ON?HD6301_CYCLES_TO_SEND_BYTE*8:7200)
+#define SS_6301_TO_ACIA_IN_CYCLES (HD6301EMU_ON?\
+  HD6301_CYCLES_TO_SEND_BYTE*HD6301_CYCLE_DIVISOR:7200)
 #define SS_6301_TO_ACIA_IN_HBL (HD6301EMU_ON?HD6301_CYCLES_TO_SEND_BYTE_IN_HBL:(screen_res==2?24:12))
 #else
 #define SS_6301_TO_ACIA_IN_CYCLES (7200) // from WinSTon
@@ -126,26 +127,29 @@
 #endif
 
 #define HD6301_ROM_CHECKSUM 451175 // BTW this rom sends $F1 after reset (80,1)
-/*  The HD6301 runs at 1MH, the M68000 at +-8MH
-    Scanline = 512 M68000 cycles, but only 512/8=64 HD6301 cycles
-*/
-#define HD6301_CYCLES_PER_SCANLINE 64 // 64
+#define HD6301_CYCLES_PER_SCANLINE 64 // used in SS_SHIFTER not defined
+#define HD6301_CYCLE_DIVISOR 8 // the 6301 runs at 1MHz (verified by Stefan jL)
+
 #define IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESS_ALT (HD6301EMU_ON?45:2)
 // 2 is very wrong, we know that - todo
 // in HBL, for Steem, -1 for precise timing (RX/IRQ delay)
 #define HD6301_CYCLES_TO_SEND_BYTE_IN_HBL \
-((HD6301_CYCLES_TO_SEND_BYTE*8/(shifter_freq_at_start_of_vbl==50?512: (screen_res==2?160:508)))-1)
+((HD6301_CYCLES_TO_SEND_BYTE*HD6301_CYCLE_DIVISOR/(shifter_freq_at_start_of_vbl==50?512: (screen_res==2?160:508)))-1)
 #define HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL \
-(HD6301_CYCLES_TO_RECEIVE_BYTE*8/ (shifter_freq_at_start_of_vbl==50?512:(screen_res==2?160:508)))
+(HD6301_CYCLES_TO_RECEIVE_BYTE*HD6301_CYCLE_DIVISOR/ (shifter_freq_at_start_of_vbl==50?512:(screen_res==2?160:508)))
 #define HD6301_MAX_DIS_INSTR 2000 
-/*  Guessed timings, probably wrong
-    1024 is the theoretical minimal value (x8=8192)
-    1300;1350 is the minimum for Froggies menu (x8=10400-10800), it also
-    makes Unlimited Bobs flicker-free.
-    Above that, GEM starts to act up
+
+/*  Guessed timings, that make Dragonnels, Froggies, Transbeauce 2 work.
+    + no flicker in Unlimited Bobs menu
+    Lower values: custom programs may fail to load because the 6301 hasn't
+    finished treating a byte when the next comes.
+    7,812.5 bit/s -> how many cycles to transmit one byte?
+    Do control bits count?
+    1350 would translate to effective 5925.9 bit/s
 */
-#define HD6301_CYCLES_TO_SEND_BYTE 1300
-#define HD6301_CYCLES_TO_RECEIVE_BYTE 1350
+#define HD6301_CYCLES_TO_SEND_BYTE 1350//1300
+#define HD6301_CYCLES_TO_RECEIVE_BYTE 1350//1350
+
 // far from ideal, but maybe we must change method or timings instead
 #define HD6301_MOUSE_SPEED_CHUNKS 15
 #define HD6301_MOUSE_SPEED_CYCLES_PER_CHUNK 1000
@@ -236,10 +240,21 @@
 
 
 /////////////
+// SHIFTER //
+/////////////
+
+//#define SS_SHIFTER_SKIP_SCANLINE -29 // fetch but only draw colour 0 (debug)
+
+
+/////////////
 // VARIOUS //
 /////////////
 
 #if defined(SS_VARIOUS)
+
+#if USE_PASTI && defined(SS_VAR_PASTI_ON_WARNING)
+#define SS_DISK_MANAGER_PASTI_ON "Disk Manager (Pasti On)"
+#endif
 
 
 #endif
@@ -272,8 +287,8 @@
 #define VERY_LARGE_BORDER_BOTTOM 50  // counts for raster fx
 #endif
 
-#if defined(SS_VID_SHIFTER_EVENTS)
-#define VID_SHIFTER_EVENTS_FILENAME "shifter_tricks.txt"
+#if defined(SS_SHIFTER_EVENTS)
+#define SHIFTER_EVENTS_FILENAME "shifter_tricks.txt"
 #endif
 
 #endif

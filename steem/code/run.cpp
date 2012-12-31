@@ -64,7 +64,7 @@ void run()
 
   Sound_Start();
 
-#if defined (STEVEN_SEAGAL) && defined(SS_VID_STEEM_EXTENDED)
+#if defined (STEVEN_SEAGAL) && defined(SS_SHIFTER_TRICKS)
   Shifter.AddFreqChange(shifter_freq);
 #else
   ADD_SHIFTER_FREQ_CHANGE(shifter_freq);
@@ -392,6 +392,7 @@ void event_timer_b()
       log_to(LOGSECTION_MFP_TIMERS,EasyStr("MFP: Timer B counter decreased to ")+(mfp_timer_counter[1]/64)+" at "+scanline_cycle_log());
       if (mfp_timer_counter[1]<64){
         log(EasyStr("MFP: Timer B timeout at ")+scanline_cycle_log());
+        TRACE_LOG("F%d y%d Timer B%d\n",FRAME,scan_y,1);
         mfp_timer_counter[1]=BYTE_00_TO_256(mfp_reg[MFPR_TBDR])*64;
         mfp_interrupt_pend(MFP_INT_TIMER_B,time_of_next_timer_b);
       }
@@ -412,6 +413,8 @@ void event_hbl()   //just HBL, don't draw yet
   tasks, including hbl_pending (the interrupts are triggered in mfp.cpp).
   IPL 2 - note usual level=3, so HBL isn't executed; if it is, it is triggered
   in check_for_interrupts_pending() (mfp.cpp).
+  For 50hz, 313 lines, 1 call to event_hbl, 312 calls to event_scanline
+  This can be handy, eg 6301 emu
 */
 
 #define LOGSECTION LOGSECTION_AGENDA
@@ -423,7 +426,7 @@ void event_hbl()   //just HBL, don't draw yet
   scanline_drawn_so_far=0;
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
   cpu_timer_at_start_of_hbl=time_of_next_event; // SS as defined in draw.cpp
-#if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
   Shifter.IncScanline();
   ASSERT(scan_y==-32 || scan_y==-62 || scan_y==-33);
 #else
@@ -441,8 +444,34 @@ void event_hbl()   //just HBL, don't draw yet
   }
   if (dma_sound_on_this_screen) dma_sound_fetch();
   screen_event_pointer++;  
+
+#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+  // we run some 6301 cycles at the end of each scanline (x312)
+  if(HD6301EMU_ON && !HD6301.Crashed)
+  {
+    if(!HD6301.RunThisHbl) 
+    {
+      ASSERT(HD6301.Initialised);
+      int n6301cycles;
+#if defined(SS_SHIFTER)
+      n6301cycles=Shifter.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
+#else
+      n6301cycles== (screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
+#endif
+      ASSERT(n6301cycles);
+      if(!hd6301_run_cycles(n6301cycles))
+      {
+        TRACE("6301 emu is hopelessly crashed!\n");
+        HD6301.Crashed=1; 
+      }
+    }
+    HD6301.RunThisHbl=0; // reset for next hbl
+  }
+#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF) && !defined(SS_IPF_CPU)
-//  if(Caps.Active) Caps.Hbl(); //double?
+  if(Caps.Active) 
+    Caps.Hbl(); 
 #endif
 }
 //---------------------------------------------------------------------------
@@ -455,17 +484,19 @@ void event_scanline()
 #undef LOGSECTION
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
-  // we run some 6301 cycles at the end of each scanline
+  // we run some 6301 cycles at the end of each scanline (x312)
   if(HD6301EMU_ON && !HD6301.Crashed)
   {
     if(!HD6301.RunThisHbl) 
     {
       ASSERT(HD6301.Initialised);
-      int n6301cycles= (screen_res==2) 
-        ? /*HD6301_CYCLES_PER_SCANLINE/2*/20 : HD6301_CYCLES_PER_SCANLINE; //64
-
-      n6301cycles=Shifter.CurrentScanline.Cycles/8;
-
+      int n6301cycles;
+#if defined(SS_SHIFTER)
+      n6301cycles=Shifter.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
+#else
+      n6301cycles== (screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
+#endif
+      ASSERT(n6301cycles);
       if(!hd6301_run_cycles(n6301cycles))
       {
         TRACE("6301 emu is hopelessly crashed!\n");
@@ -473,10 +504,12 @@ void event_scanline()
       }
     }
     HD6301.RunThisHbl=0; // reset for next hbl
-    //TODO adjust at VBL
   }
 #endif
-  // SS Note: refactoring here is very dangerous!
+
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
+
+  // Note: refactoring here is very dangerous!
   if (scan_y<shifter_first_draw_line-1){
     if (scan_y>=draw_first_scanline_for_border){
       if (bad_drawing==0) Shifter.DrawScanlineToEnd();
@@ -488,7 +521,7 @@ void event_scanline()
   }else if (scan_y<shifter_last_draw_line-1){
     if (bad_drawing==0) Shifter.DrawScanlineToEnd();
     time_of_next_timer_b=time_of_next_event+cpu_cycles_from_hbl_to_timer_b+TB_TIME_WOBBLE;
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_TIMER_B_AER)
+#if defined(SS_INT_TIMER_B_AER)
     if(mfp_reg[1]&8)
       time_of_next_timer_b-=320; // fixes Seven Gates of Jambala (from Hatari)
 #endif
@@ -497,9 +530,29 @@ void event_scanline()
     time_of_next_timer_b=time_of_next_event+160000;  //put into future
   }
 
+#else // Steem 3.2
+
+  if (scan_y<shifter_first_draw_line-1){
+    if (scan_y>=draw_first_scanline_for_border){
+      if (bad_drawing==0) draw_scanline_to_end();
+      time_of_next_timer_b=time_of_next_event+160000;  //put into future
+    }
+  }else if (scan_y<shifter_first_draw_line){ //next line is first visible
+    if (bad_drawing==0) draw_scanline_to_end();
+    time_of_next_timer_b=time_of_next_event+cpu_cycles_from_hbl_to_timer_b+TB_TIME_WOBBLE;
+  }else if (scan_y<shifter_last_draw_line-1){
+    if (bad_drawing==0) draw_scanline_to_end();
+    time_of_next_timer_b=time_of_next_event+cpu_cycles_from_hbl_to_timer_b+TB_TIME_WOBBLE;
+  }else if (scan_y<draw_last_scanline_for_border){
+    if (bad_drawing==0) draw_scanline_to_end();
+    time_of_next_timer_b=time_of_next_event+160000;  //put into future
+  }
+
+#endif
+
   log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: Event Scanline at end of line ")+scan_y+" sdp is $"+HEXSl(shifter_draw_pointer,6));
   
-#if defined(STEVEN_SEAGAL) && defined(SS_VIDEO) &&!defined(SS_VIDEO_DRAW_DBG)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER) &&!defined(SS_SHIFTER_DRAW_DBG)
   Shifter.CheckSyncTrick(); // check for +2 -2 errors
   Shifter.CheckVerticalOverscan(); // top & bottom borders
 #else // Steem 3.2's vertical overscan check
@@ -560,7 +613,7 @@ void event_scanline()
 #endif
 
   if (freq_change_this_scanline){
-#if defined(SS_VID_STEEM_EXTENDED)
+#if defined(SS_SHIFTER_TRICKS)
     if(shifter_freq_change_time[shifter_freq_change_idx]<time_of_next_event-16
       && shifter_shift_mode_change_time[shifter_shift_mode_change_idx]
       <time_of_next_event-16)
@@ -588,7 +641,7 @@ void event_scanline()
     Caps.Hbl();
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
   Shifter.IncScanline();
 #else
   scan_y++;
@@ -645,7 +698,7 @@ void event_vbl_interrupt()
 #endif
   { // Make sure whole screen is drawn (in 60Hz and 70Hz there aren't enough lines)
     while (scan_y<draw_last_scanline_for_border){
-#if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
       if(!bad_drawing) 
         Shifter.DrawScanlineToEnd();
       scanline_drawn_so_far=0;
@@ -749,6 +802,7 @@ void event_vbl_interrupt()
   }
 
   //------------- Auto Frameskip Calculation -----------
+#define LOGSECTION LOGSECTION_VIDEO
   if (frameskip==AUTO_FRAMESKIP){ //decide if we are ahead of schedule
     if (fast_forward==0 && slow_motion==0 && VSyncing==0){
       timer=timeGetTime();
@@ -756,9 +810,7 @@ void event_vbl_interrupt()
         frameskip_count=1;   //we are ahead of target so draw the next frame
         speed_limit_wait_till=auto_frameskip_target_time;
       }else{
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_REPORT_SKIP_FRAME) && defined(SS_VIDEO)
-        TRACE("Overload - Skip VBL %d\n",FRAME);
-#endif
+        TRACE_LOG("Overload - Skip VBL %d\n",FRAME);
         auto_frameskip_target_time+=(run_speed_ticks_per_second+(shifter_freq/2))/shifter_freq;
       }
     }else if (VSyncing){
@@ -786,7 +838,7 @@ void event_vbl_interrupt()
     frame_delay_timeout=timer;
   }
   log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: Going to wait until ")+(frame_delay_timeout-run_start_time)+" timer="+(timer-run_start_time));
-
+#undef LOGSECTION
   //--------- Look for Windows messages ------------
   int old_slow_motion=slow_motion;
   int m=0;
@@ -966,7 +1018,7 @@ void event_vbl_interrupt()
     overscan=OVERSCAN_MAX_COUNTDOWN;
   }
   event_start_vbl(); // Reset SDP again!
-#if defined(SS_VID_DRAGON)
+#if defined(SS_SHIFTER_DRAGON)//temp
   if(SS_signal==SS_SIGNAL_SHIFTER_CONFUSED_1)
     SS_signal=SS_SIGNAL_SHIFTER_CONFUSED_2; // stage 2 of our hack
 #endif  
@@ -1012,7 +1064,41 @@ void event_vbl_interrupt()
   }
   debug_vbl();
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)
+
+
+
+#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301_______)
+  // run extra 6301 cycles of the VBL ????
+  if(HD6301EMU_ON && !HD6301.Crashed)
+  {
+  //  debug4++;//312 at end of vbl, we do miss one...
+//    if(!HD6301.RunThisHbl) 
+    {
+      ASSERT(HD6301.Initialised);
+      int n6301cycles;
+
+#if defined(SS_SHIFTER)
+      n6301cycles=Shifter.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
+      
+#else
+      n6301cycles=0;// (screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
+#endif
+      ASSERT(n6301cycles);
+      if(!hd6301_run_cycles(n6301cycles))
+      {
+        TRACE("6301 emu is hopelessly crashed!\n");
+        HD6301.Crashed=1; 
+      }
+    }
+    HD6301.RunThisHbl=0; // reset for next hbl
+    //TODO adjust at VBL
+  }
+#endif
+
+
+
+
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
   Shifter.Vbl();
 #endif
 }

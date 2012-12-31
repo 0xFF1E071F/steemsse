@@ -230,6 +230,7 @@ inline void m68k_Process() {
   SET_PC(ad);\
   SR_CLEAR(SR_TRACE);\
   interrupt_depth++;\
+/*  TRACE("%X %d\n",ad,interrupt_depth);*/\
 }
 
 #else

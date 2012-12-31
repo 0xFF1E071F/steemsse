@@ -4,7 +4,7 @@
 
 # TARGTYPE "Win32 (x86) Application" 0x0101
 
-CFG=Steem - Win32 Debug
+CFG=Steem - Win32 Boiler Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
@@ -13,13 +13,14 @@ CFG=Steem - Win32 Debug
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "vc.mak" CFG="Steem - Win32 Debug"
+!MESSAGE NMAKE /f "vc.mak" CFG="Steem - Win32 Boiler Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
 !MESSAGE "Steem - Win32 Debug" (based on "Win32 (x86) Application")
 !MESSAGE "Steem - Win32 Release" (based on "Win32 (x86) Application")
 !MESSAGE "Steem - Win32 Boiler" (based on "Win32 (x86) Application")
+!MESSAGE "Steem - Win32 Boiler Debug" (based on "Win32 (x86) Application")
 !MESSAGE 
 
 # Begin Project
@@ -122,6 +123,35 @@ SOURCE="$(InputPath)"
 PostBuild_Cmds=copy "Release\BoilerBeta.exe" "G:\emu\ST\bin\steem"
 # End Special Build Tool
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "Steem___Win32_Boiler_Debug"
+# PROP BASE Intermediate_Dir "Steem___Win32_Boiler_Debug"
+# PROP BASE Ignore_Export_Lib 0
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "Steem___Win32_Boiler_Debug"
+# PROP Intermediate_Dir "Steem___Win32_Boiler_Debug"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+# ADD BASE CPP /nologo /G6 /ML /GX /Zi /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /D "_DEBUG" /D "NO_DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /FR /EHa /c
+# ADD CPP /nologo /G6 /ML /GX /Zi /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /D "_DEBUG" /D "DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /FR /EHa /c
+# ADD BASE MTL /nologo /win32
+# ADD MTL /nologo /win32
+# ADD BASE RSC /l 0x409
+# ADD RSC /l 0x409
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 dinput.lib dxguid.lib winmm.lib ComCtl32.Lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:IX86 /out:"Debug\Steem.exe" /pdbtype:sept
+# SUBTRACT BASE LINK32 /pdb:none
+# ADD LINK32 dinput.lib dxguid.lib winmm.lib ComCtl32.Lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:IX86 /out:"Debug\Steem.exe" /pdbtype:sept
+# SUBTRACT LINK32 /pdb:none
+
 !ENDIF 
 
 # Begin Target
@@ -129,6 +159,7 @@ PostBuild_Cmds=copy "Release\BoilerBeta.exe" "G:\emu\ST\bin\steem"
 # Name "Steem - Win32 Debug"
 # Name "Steem - Win32 Release"
 # Name "Steem - Win32 Boiler"
+# Name "Steem - Win32 Boiler Debug"
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;def;odl;idl;hpj;bat;asm"
@@ -215,6 +246,8 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\SSE\SSEInterrupt.h"\
 	"..\..\steem\code\SSE\SSEOption.h"\
 	"..\..\steem\code\SSE\SSEParameters.h"\
+	"..\..\steem\code\SSE\SSEShifter.cpp"\
+	"..\..\steem\code\SSE\SSEShifter.h"\
 	"..\..\steem\code\SSE\SSEShifterEvents.cpp"\
 	"..\..\steem\code\SSE\SSEShifterEvents.h"\
 	"..\..\steem\code\SSE\SSESTF.cpp"\
@@ -318,6 +351,7 @@ DEP_CPP_MAIN_=\
 	"..\..\3rdparty\caps\Comtype.h"\
 	"..\..\3rdparty\dsp\dsp.h"\
 	"..\..\3rdparty\pasti\pasti.h"\
+	"..\..\3rdparty\UnRARDLL\unrar.h"\
 	"..\..\3rdparty\unrarlib\unrarlib\unrarlib.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\choosefolder.h"\
@@ -1127,7 +1161,26 @@ SOURCE=..\..\3rdparty\6301\6301.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\alu.c
+
+!IF  "$(CFG)" == "Steem - Win32 Debug"
+
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -1136,7 +1189,26 @@ SOURCE=..\..\3rdparty\6301\alu.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\callstac.c
+
+!IF  "$(CFG)" == "Steem - Win32 Debug"
+
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -1149,7 +1221,26 @@ SOURCE=..\..\3rdparty\6301\chip.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\cpu.c
+
+!IF  "$(CFG)" == "Steem - Win32 Debug"
+
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -1162,12 +1253,50 @@ SOURCE=..\..\3rdparty\6301\defs.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\fprinthe.c
+
+!IF  "$(CFG)" == "Steem - Win32 Debug"
+
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\instr.c
+
+!IF  "$(CFG)" == "Steem - Win32 Debug"
+
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -1176,7 +1305,26 @@ SOURCE=..\..\3rdparty\6301\instr.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\ireg.c
+
+!IF  "$(CFG)" == "Steem - Win32 Debug"
+
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -1189,7 +1337,26 @@ SOURCE=..\..\3rdparty\6301\main.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\memory.c
+
+!IF  "$(CFG)" == "Steem - Win32 Debug"
+
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -1198,12 +1365,50 @@ SOURCE=..\..\3rdparty\6301\memory.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\memsetl.c
+
+!IF  "$(CFG)" == "Steem - Win32 Debug"
+
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\opfunc.c
+
+!IF  "$(CFG)" == "Steem - Win32 Debug"
+
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -1212,7 +1417,26 @@ SOURCE=..\..\3rdparty\6301\opfunc.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\optab.c
+
+!IF  "$(CFG)" == "Steem - Win32 Debug"
+
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -1221,7 +1445,26 @@ SOURCE=..\..\3rdparty\6301\optab.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\reg.c
+
+!IF  "$(CFG)" == "Steem - Win32 Debug"
+
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -1230,7 +1473,26 @@ SOURCE=..\..\3rdparty\6301\reg.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\sci.c
+
+!IF  "$(CFG)" == "Steem - Win32 Debug"
+
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -1239,7 +1501,26 @@ SOURCE=..\..\3rdparty\6301\sci.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\symtab.c
+
+!IF  "$(CFG)" == "Steem - Win32 Debug"
+
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -1248,7 +1529,26 @@ SOURCE=..\..\3rdparty\6301\symtab.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\timer.c
+
+!IF  "$(CFG)" == "Steem - Win32 Debug"
+
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -1257,7 +1557,26 @@ SOURCE=..\..\3rdparty\6301\timer.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\6301\tty.c
+
+!IF  "$(CFG)" == "Steem - Win32 Debug"
+
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # End Group
 # Begin Group "caps"
@@ -1353,6 +1672,11 @@ SOURCE=..\..\steem\code\acc.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -1369,6 +1693,11 @@ SOURCE=..\..\steem\code\archive.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -1393,6 +1722,11 @@ SOURCE=..\..\steem\code\associate.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -1409,6 +1743,11 @@ SOURCE=..\..\steem\code\blitter.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -1433,6 +1772,11 @@ SOURCE=..\..\steem\code\boiler.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -1449,6 +1793,11 @@ SOURCE=..\..\steem\code\controls.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -1473,6 +1822,11 @@ SOURCE=..\..\steem\code\cpu.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -1489,6 +1843,11 @@ SOURCE=..\..\steem\code\cpuinit.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -1513,6 +1872,11 @@ SOURCE=..\..\steem\code\d2.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -1529,6 +1893,11 @@ SOURCE=..\..\steem\code\dataloadsave.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -1553,6 +1922,11 @@ SOURCE=..\..\steem\code\debug.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -1569,6 +1943,11 @@ SOURCE=..\..\steem\code\debug_emu.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -1593,6 +1972,11 @@ SOURCE=..\..\steem\code\dir_id.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -1609,6 +1993,11 @@ SOURCE=..\..\steem\code\diskman.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -1633,6 +2022,11 @@ SOURCE=..\..\steem\code\diskman_diags.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -1649,6 +2043,11 @@ SOURCE=..\..\steem\code\diskman_drag.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -1673,6 +2072,11 @@ SOURCE=..\..\steem\code\display.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -1689,6 +2093,11 @@ SOURCE=..\..\steem\code\draw.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -1713,6 +2122,11 @@ SOURCE=..\..\steem\code\dwin_edit.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -1729,6 +2143,11 @@ SOURCE=..\..\steem\code\emulator.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -1753,6 +2172,11 @@ SOURCE=..\..\steem\code\fdc.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -1769,6 +2193,11 @@ SOURCE=..\..\steem\code\floppy_drive.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -1793,6 +2222,11 @@ SOURCE=..\..\steem\code\gui.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -1809,6 +2243,11 @@ SOURCE=..\..\steem\code\harddiskman.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -1833,6 +2272,11 @@ SOURCE=..\..\steem\code\hdimg.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -1849,6 +2293,11 @@ SOURCE=..\..\steem\code\historylist.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -1873,6 +2322,11 @@ SOURCE=..\..\steem\code\ikbd.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -1889,6 +2343,11 @@ SOURCE=..\..\steem\code\infobox.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -1913,6 +2372,11 @@ SOURCE=..\..\steem\code\init_sound.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -1929,6 +2393,11 @@ SOURCE=..\..\steem\code\iolist.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -1953,6 +2422,11 @@ SOURCE=..\..\steem\code\ior.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -1969,6 +2443,11 @@ SOURCE=..\..\steem\code\iow.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -1993,6 +2472,11 @@ SOURCE=..\..\steem\code\loadsave.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2009,6 +2493,11 @@ SOURCE=..\..\steem\code\loadsave_emu.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2033,6 +2522,11 @@ SOURCE=..\..\steem\code\macros.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2049,6 +2543,11 @@ SOURCE=..\..\steem\code\mem_browser.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2073,6 +2572,11 @@ SOURCE=..\..\steem\code\mfp.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2089,6 +2593,11 @@ SOURCE=..\..\steem\code\midi.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2113,6 +2622,11 @@ SOURCE=..\..\steem\code\mr_static.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2129,6 +2643,11 @@ SOURCE=..\..\steem\code\notifyinit.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2153,6 +2672,11 @@ SOURCE=..\..\steem\code\onegame.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2169,6 +2693,11 @@ SOURCE=..\..\steem\code\options.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2193,6 +2722,11 @@ SOURCE=..\..\steem\code\options_create.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2209,6 +2743,11 @@ SOURCE=..\..\steem\code\osd.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2233,6 +2772,11 @@ SOURCE=..\..\steem\code\palette.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2249,6 +2793,11 @@ SOURCE=..\..\steem\code\patchesbox.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2273,6 +2822,11 @@ SOURCE=..\..\steem\code\psg.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2289,6 +2843,11 @@ SOURCE=..\..\steem\code\reset.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2313,6 +2872,11 @@ SOURCE=..\..\steem\code\rs232.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2329,6 +2893,11 @@ SOURCE=..\..\steem\code\run.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2353,6 +2922,11 @@ SOURCE=..\..\steem\code\screen_saver.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2369,6 +2943,11 @@ SOURCE=..\..\steem\code\shortcutbox.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2393,6 +2972,11 @@ SOURCE=..\..\steem\code\steemintro.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2409,6 +2993,11 @@ SOURCE=..\..\steem\code\stemdialogs.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2433,6 +3022,11 @@ SOURCE=..\..\steem\code\stemdos.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2449,6 +3043,11 @@ SOURCE=..\..\steem\code\stemwin.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2473,6 +3072,11 @@ SOURCE=..\..\steem\code\stjoy.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2489,6 +3093,11 @@ SOURCE=..\..\steem\code\stjoy_directinput.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2513,6 +3122,11 @@ SOURCE=..\..\steem\code\stports.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2529,6 +3143,11 @@ SOURCE=..\..\steem\code\trace.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2557,6 +3176,11 @@ SOURCE=..\..\include\binary.h
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2573,6 +3197,11 @@ SOURCE=..\..\include\choosefolder.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2597,6 +3226,11 @@ SOURCE=..\..\include\choosefolder.h
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2613,6 +3247,11 @@ SOURCE=..\..\include\circularbuffer.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2637,6 +3276,11 @@ SOURCE=..\..\include\circularbuffer.h
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2653,6 +3297,11 @@ SOURCE=..\..\include\clarity.h
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2677,6 +3326,11 @@ SOURCE=..\..\include\colcombo.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2693,6 +3347,11 @@ SOURCE=..\..\include\colcombo.h
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2717,6 +3376,11 @@ SOURCE=..\..\include\configstorefile.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2733,6 +3397,11 @@ SOURCE=..\..\include\configstorefile.h
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2757,6 +3426,11 @@ SOURCE=..\..\include\configstorefile_bad.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2773,6 +3447,11 @@ SOURCE=..\..\include\configstorefile_list.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2797,6 +3476,11 @@ SOURCE=..\..\include\dderr_meaning.h
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2813,6 +3497,11 @@ SOURCE=..\..\include\dderr_strings.h
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2837,6 +3526,11 @@ SOURCE=..\..\include\ddutil.h
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2853,6 +3547,11 @@ SOURCE=..\..\include\di_get_contents.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2877,6 +3576,11 @@ SOURCE=..\..\include\di_get_contents.h
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2893,6 +3597,11 @@ SOURCE=..\..\include\directory_tree.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2917,6 +3626,11 @@ SOURCE=..\..\include\directory_tree.h
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2933,6 +3647,11 @@ SOURCE=..\..\include\dirsearch.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2957,6 +3676,11 @@ SOURCE=..\..\include\dirsearch.h
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -2973,6 +3697,11 @@ SOURCE=..\..\include\dynamicarray.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -2997,6 +3726,11 @@ SOURCE=..\..\include\dynamicarray.h
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -3013,6 +3747,11 @@ SOURCE=..\..\include\easycompress.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -3037,6 +3776,11 @@ SOURCE=..\..\include\easycompress.h
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -3053,6 +3797,11 @@ SOURCE=..\..\include\easystr.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -3077,6 +3826,11 @@ SOURCE=..\..\include\easystr.h
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -3093,6 +3847,11 @@ SOURCE=..\..\include\easystringlist.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -3117,6 +3876,11 @@ SOURCE=..\..\include\easystringlist.h
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -3133,6 +3897,11 @@ SOURCE=..\..\include\fixed.h
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -3157,6 +3926,11 @@ SOURCE=..\..\include\input_prompt.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -3173,6 +3947,11 @@ SOURCE=..\..\include\input_prompt.h
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -3197,6 +3976,11 @@ SOURCE=..\..\include\internal_speaker.h
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -3213,6 +3997,11 @@ SOURCE=..\..\include\lbprintf.h
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -3237,6 +4026,11 @@ SOURCE=..\..\include\myddutil.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -3253,6 +4047,11 @@ SOURCE=..\..\include\mymisc.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -3277,6 +4076,11 @@ SOURCE=..\..\include\mymisc.h
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -3293,6 +4097,11 @@ SOURCE=..\..\include\notwin_mymisc.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -3317,6 +4126,11 @@ SOURCE=..\..\include\notwin_mymisc.h
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -3333,6 +4147,11 @@ SOURCE=..\..\include\portio.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -3357,6 +4176,11 @@ SOURCE=..\..\include\portio.h
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -3373,6 +4197,11 @@ SOURCE=..\..\include\scrollingcontrolswin.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -3397,6 +4226,11 @@ SOURCE=..\..\include\scrollingcontrolswin.h
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -3413,6 +4247,11 @@ SOURCE=..\..\include\sprites.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -3437,6 +4276,11 @@ SOURCE=..\..\include\tbrowseforfolder.h
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -3453,6 +4297,11 @@ SOURCE=..\..\include\wordwrapper.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -3477,6 +4326,11 @@ SOURCE=..\..\include\wordwrapper.h
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -3491,6 +4345,7 @@ DEP_CPP_SSE_C=\
 	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEParameters.h"\
 	
 # End Source File
 # Begin Source File
@@ -3510,6 +4365,11 @@ SOURCE=..\..\steem\code\SSE\SSE6301.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
 
 !ENDIF 
 
@@ -3532,6 +4392,11 @@ SOURCE=..\..\steem\code\SSE\SSECpu.cpp
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -3542,9 +4407,6 @@ SOURCE=..\..\steem\code\SSE\SSECpu.h
 # Begin Source File
 
 SOURCE=..\..\Steem\code\SSE\SSEDebug.cpp
-DEP_CPP_SSEDE=\
-	"..\..\Steem\code\SSE\SSEDebug.h"\
-	
 
 !IF  "$(CFG)" == "Steem - Win32 Debug"
 
@@ -3553,6 +4415,11 @@ DEP_CPP_SSEDE=\
 !ELSEIF  "$(CFG)" == "Steem - Win32 Release"
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
 
 !ENDIF 
 
@@ -3568,7 +4435,26 @@ SOURCE=..\..\steem\code\SSE\SSEDecla.h
 # Begin Source File
 
 SOURCE=..\..\Steem\code\SSE\SSEFloppy.cpp
+
+!IF  "$(CFG)" == "Steem - Win32 Debug"
+
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -3591,6 +4477,11 @@ SOURCE=..\..\steem\code\SSE\SSEInterrupt.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
 
 !ENDIF 
 
@@ -3621,6 +4512,34 @@ SOURCE=..\..\steem\code\SSE\SSEParameters.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\steem\code\SSE\SSEShifter.cpp
+
+!IF  "$(CFG)" == "Steem - Win32 Debug"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\SSE\SSEShifter.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\steem\code\SSE\SSEShifterEvents.cpp
 
 !IF  "$(CFG)" == "Steem - Win32 Debug"
@@ -3632,6 +4551,11 @@ SOURCE=..\..\steem\code\SSE\SSEShifterEvents.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
 
 !ENDIF 
 
@@ -3654,6 +4578,11 @@ SOURCE=..\..\steem\code\SSE\SSESTF.cpp
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -3674,6 +4603,13 @@ SOURCE=..\..\steem\code\SSE\SSEVideo.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
 
 !ENDIF 
 
@@ -3706,6 +4642,11 @@ SOURCE=..\..\include\x\hxc.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -3722,6 +4663,11 @@ SOURCE=..\..\include\x\hxc.h
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -3746,6 +4692,11 @@ SOURCE=..\..\include\x\hxc_alert.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -3762,6 +4713,11 @@ SOURCE=..\..\include\x\hxc_alert.h
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -3786,6 +4742,11 @@ SOURCE=..\..\include\x\hxc_button.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -3802,6 +4763,11 @@ SOURCE=..\..\include\x\hxc_dir_lv.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -3826,6 +4792,11 @@ SOURCE=..\..\include\x\hxc_dir_lv.h
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -3842,6 +4813,11 @@ SOURCE=..\..\include\x\hxc_dropdown.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -3866,6 +4842,11 @@ SOURCE=..\..\include\x\hxc_edit.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -3882,6 +4863,11 @@ SOURCE=..\..\include\x\hxc_fileselect.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -3906,6 +4892,11 @@ SOURCE=..\..\include\x\hxc_fileselect.h
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -3922,6 +4913,11 @@ SOURCE=..\..\include\x\hxc_listview.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -3946,6 +4942,11 @@ SOURCE=..\..\include\x\hxc_popup.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -3962,6 +4963,11 @@ SOURCE=..\..\include\x\hxc_popup.h
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -3986,6 +4992,11 @@ SOURCE=..\..\include\x\hxc_popuphints.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -4002,6 +5013,11 @@ SOURCE=..\..\include\x\hxc_popuphints.h
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -4026,6 +5042,11 @@ SOURCE=..\..\include\x\hxc_prompt.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -4042,6 +5063,11 @@ SOURCE=..\..\include\x\hxc_prompt.h
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -4066,6 +5092,11 @@ SOURCE=..\..\include\x\hxc_scrollarea.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -4082,6 +5113,11 @@ SOURCE=..\..\include\x\hxc_scrollbar.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -4106,6 +5142,11 @@ SOURCE=..\..\include\x\hxc_textdisplay.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -4126,6 +5167,11 @@ SOURCE=..\..\include\x\icongroup.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -4142,6 +5188,11 @@ SOURCE=..\..\include\x\icongroup.h
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -4170,6 +5221,11 @@ SOURCE=..\..\steem\code\x\x_controls.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -4186,6 +5242,11 @@ SOURCE=..\..\steem\code\x\x_controls.h
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -4210,6 +5271,11 @@ SOURCE=..\..\steem\code\x\x_diskman.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -4226,6 +5292,11 @@ SOURCE=..\..\steem\code\x\x_display.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -4250,6 +5321,11 @@ SOURCE=..\..\steem\code\x\x_gui.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -4266,6 +5342,11 @@ SOURCE=..\..\steem\code\x\x_harddiskman.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -4290,6 +5371,11 @@ SOURCE=..\..\steem\code\x\x_infobox.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -4306,6 +5392,11 @@ SOURCE=..\..\steem\code\x\x_joy.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -4330,6 +5421,11 @@ SOURCE=..\..\steem\code\x\x_midi.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -4346,6 +5442,11 @@ SOURCE=..\..\include\x\x_mymisc.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -4370,6 +5471,11 @@ SOURCE=..\..\include\x\x_mymisc.h
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -4386,6 +5492,11 @@ SOURCE=..\..\steem\code\x\x_notifyinit.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -4410,6 +5521,11 @@ SOURCE=..\..\steem\code\x\x_options.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -4426,6 +5542,11 @@ SOURCE=..\..\steem\code\x\x_options_create.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -4450,6 +5571,11 @@ SOURCE=..\..\steem\code\x\x_patchesbox.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -4466,6 +5592,11 @@ SOURCE=..\..\include\x\x_portio.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -4490,6 +5621,11 @@ SOURCE=..\..\steem\code\x\x_screen_saver.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -4506,6 +5642,11 @@ SOURCE=..\..\steem\code\x\x_shortcutbox.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -4530,6 +5671,11 @@ SOURCE=..\..\steem\code\x\x_sound.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -4546,6 +5692,11 @@ SOURCE=..\..\steem\code\x\x_sound_portaudio.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -4570,6 +5721,11 @@ SOURCE=..\..\steem\code\x\x_sound_rtaudio.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -4590,6 +5746,11 @@ SOURCE=..\..\steem\code\x\x_stemdialogs.cpp
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -4606,6 +5767,11 @@ SOURCE=..\..\steem\code\x\x_stemwin.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1

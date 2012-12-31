@@ -13,7 +13,7 @@ maps all sorts of user input to all sorts of emulator functions.
 #if defined(SS_INTERRUPT)
 #include "SSE/SSEInterrupt.h"
 #endif
-#if defined(SS_VID_SHIFTER_EVENTS)
+#if defined(SS_SHIFTER_EVENTS)
 #include "SSE/SSEShifterEvents.h"
 #endif
 #endif
@@ -30,7 +30,7 @@ maps all sorts of user input to all sorts of emulator functions.
 
 enum {
   CUT_TOGGLEHARDDRIVES=231,
-#if defined(SS_VID_SHIFTER_EVENTS)
+#if defined(SS_SHIFTER_EVENTS)
   CUT_REPORTSHIFTERTRICKS,
 #endif
 #if defined(SS_VID_RECORD_AVI)
@@ -41,17 +41,6 @@ enum {
 
 #define NUM_SHORTCUTS (54+1+1 DEBUG_ONLY(+5)   +CUT_LAST_ITEM_SS-230)
 
-/*
-#define CUT_TOGGLEHARDDRIVES 231	// <255!!!!
-
-#if defined(SS_DEBUG) && defined(SS_VIDEO)
-#define CUT_REPORTSHIFTERTRICKS 232	// <255!!!!
-#define NUM_SHORTCUTS (1+1+   54+1+1 DEBUG_ONLY(+5)) // adding my own
-#else
-#define NUM_SHORTCUTS (1+   54+1+1 DEBUG_ONLY(+5)) // adding my own
-#endif
-
-*/
 #else
 #define NUM_SHORTCUTS (54+1+1 DEBUG_ONLY(+5))
 #endif
@@ -77,14 +66,12 @@ const char *ShortcutNames[NUM_SHORTCUTS*2]=
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS)
 	"Toggle Hard Drives On/Off",(char*)CUT_TOGGLEHARDDRIVES,
-#endif
-
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SHIFTER_EVENTS)//defined(SS_DEBUG) && defined(SS_VIDEO) && defined(SS_VARIOUS)
+#if defined(SS_SHIFTER_EVENTS)
    "Report shifter tricks",(char*)CUT_REPORTSHIFTERTRICKS,
 #endif
-
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
+#if defined(SS_VID_RECORD_AVI)
    "Record Video",(char*)CUT_RECORD_VIDEO,
+#endif
 #endif
 
 #ifdef UNIX
@@ -265,7 +252,10 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
 #endif
   if (ShortcutBox.Picking) return;
   if (bAppActive==0) return;
-
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_F12)
+  if(Inf.Id[0]==VK_F12)
+    return; // ignore this shortcut (v3.5)
+#endif
   if (Inf.Action==0){
     if (Inf.PressKey==VK_SHIFT || Inf.PressKey==VK_LSHIFT) CutModDown|=1;
     if (Inf.PressKey==VK_SHIFT || Inf.PressKey==VK_RSHIFT) CutModDown|=2;
@@ -596,16 +586,14 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       HardDiskMan.DisableHardDrives=!HardDiskMan.DisableHardDrives;	// toggle
       HardDiskMan.update_mount();
       break;
-#endif      
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SHIFTER_EVENTS)
+#if defined(SS_SHIFTER_EVENTS)
       // Trigger a report of all video events for the current VBL
       // so as to investigate shifter tricks (txt file)
     case CUT_REPORTSHIFTERTRICKS:	
       VideoEvents.TriggerReport=2;
       break;
 #endif
-      
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
+#if defined(SS_VID_RECORD_AVI)
     case CUT_RECORD_VIDEO:
       if(video_recording)
       {
@@ -622,7 +610,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       video_recording=!video_recording;
       break;
 #endif      
-
+#endif      
       
 #ifdef DEBUG_BUILD
     case 200: // Trace Into

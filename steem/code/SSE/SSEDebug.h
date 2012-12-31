@@ -1,7 +1,9 @@
 #pragma once
 #ifndef SSEDEBUG_H
 #define SSEDEBUG_H
-
+/*  This file must be included whether STEVEN_SEAGAL is defined or not
+    because we need to define macors ASSERT, TRACE etc. anyway
+*/
 #if defined(SS_DEBUG) 
 
 extern "C" int debug0,debug1,debug2,debug3,debug4,debug5,debug6,debug7,debug8,
@@ -62,7 +64,7 @@ impossible!
 #endif
 #endif
 
-#define TRACE_LOG if(TRACE_ENABLED) TRACE
+#define TRACE_LOG if(TRACE_ENABLED) TRACE  //very dangerous though, use {}
 
 extern bool logsection_enabled_b[100];
 #if !defined(DEBUG_BUILD)
@@ -137,16 +139,18 @@ void my_trace(char *fmt, ...);
 #endif
 
 #endif
+
 #define ASSERT(x)
 #define BRK(x) 
 
 #endif 
 
 
-// our additions to logsections
-enum {LOGSECTION_FDC_BYTES=23,
-   LOGSECTION_IPF_LOCK_INFO,
-   LOGSECTION_IMAGE_INFO 
+// our additions to logsections, needed in all builds
+enum {
+  LOGSECTION_FDC_BYTES=23,
+  LOGSECTION_IPF_LOCK_INFO,
+  LOGSECTION_IMAGE_INFO, 
  };
 
 

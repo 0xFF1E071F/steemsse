@@ -2,20 +2,18 @@
     Modified for use by Steem SSE. Addition of sound stream.
 */
 
-#if !defined(STEVEN_SEAGAL)
-#include "StdAfx.h"
-#endif
+//#include "StdAfx.h" // no MFC for Steem
 #include "..\steem\code\SSE\SSE.h" // get all switches
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
 #pragma comment(lib, "vfw32.Lib")  //  OK for VC6
-#include <dsound.h>
+#include "dsound.h" // VC9 can't do that
 #include "..\steem\code\SSE\SSEDebug.h" // TRACE, ASSERT
 #include "windows.h"
 #define _T(X) X
 #define _tcscpy strcpy
 #define _tcsncpy strncpy
-extern IDirectSoundBuffer *PrimaryBuf,*SoundBuf;
+extern IDirectSoundBuffer *PrimaryBuf,*SoundBuf; // VC9 doesn't know that
 unsigned int FormatAviMessage(HRESULT code, char *buf,unsigned int len);
 extern int shifter_freq_at_start_of_vbl;
 extern bool FullScreen;

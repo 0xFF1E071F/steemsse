@@ -657,7 +657,9 @@ void TOptionBox::Show()
   AddPageLabel(T("Profiles"),11);
   AddPageLabel(T("Startup"),6);
   AddPageLabel(T("Icons"),14);
+#ifndef SS_VAR_NO_UPDATE
   AddPageLabel(T("Auto Update"),7);
+#endif
   AddPageLabel(T("File Associations"),8);
 
 #if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE)
@@ -1022,8 +1024,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 1026:
           if (HIWORD(wPar)==CBN_SELENDOK)
           {
-            SSEOption.BorderSize=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
-            ChangeBorderSize(SSEOption.BorderSize);
+            DISPLAY_SIZE=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
+            ChangeBorderSize(DISPLAY_SIZE);
           }
 	  break;
 #endif
@@ -1031,8 +1033,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 1027:
           if(HIWORD(wPar)==BN_CLICKED)
           {
-            SSEOption.Hacks=!SSEOption.Hacks;
-            SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.Hacks,0);
+            SSE_HACKS_ON=!SSE_HACKS_ON;
+            SendMessage(HWND(lPar),BM_SETCHECK,SSE_HACKS_ON,0);
           }
           break;
 #endif
@@ -1040,8 +1042,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 1028:
           if(HIWORD(wPar)==BN_CLICKED)
           {
-            SSEOption.CaptureMouse=!SSEOption.CaptureMouse;
-            SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.CaptureMouse,0);
+            CAPTURE_MOUSE=!CAPTURE_MOUSE;
+            SendMessage(HWND(lPar),BM_SETCHECK,CAPTURE_MOUSE,0);
           }
           break;
 #endif
@@ -1049,11 +1051,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 1029:
           if(HIWORD(wPar)==BN_CLICKED)
           {
-            SSEOption.HD6301Emu=!SSEOption.HD6301Emu;
+            HD6301EMU_ON=!HD6301EMU_ON;
             if(!HD6301.Initialised) // it's not greyed out but nothing happens
-              SSEOption.HD6301Emu=0;
-            SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.HD6301Emu,0);
-            printf("HD6301 emu: %d\n",SSEOption.HD6301Emu);
+              HD6301EMU_ON=0; //TODO grey out
+            SendMessage(HWND(lPar),BM_SETCHECK,HD6301EMU_ON,0);
+            printf("HD6301 emu: %d\n",HD6301EMU_ON);
           }
           break;
 #endif
@@ -1061,13 +1063,13 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 1031:
           if(HIWORD(wPar)==BN_CLICKED)
           {
-            SSEOption.StealthMode=!SSEOption.StealthMode;
-            SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.StealthMode,0);
+            STEALTH_MODE=!STEALTH_MODE;
+            SendMessage(HWND(lPar),BM_SETCHECK,STEALTH_MODE,0);
           }
           break;
 #endif
 #endif//SS
-        case 1051:
+        case 1051://SS screenshot format
           if (HIWORD(wPar)==CBN_SELENDOK){
             Str Ext;
             Ext.SetLength(200);
@@ -1185,11 +1187,16 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               case 5100: Ext=".ST";AssociateSteem(Ext,"st_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
               case 5101: Ext=".STT";AssociateSteem(Ext,"st_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
               case 5102: Ext=".MSA";AssociateSteem(Ext,"st_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
+#if USE_PASTI
               case 5103: Ext=".STX";AssociateSteem(Ext,"st_pasti_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
+#endif
               case 5104: Ext=".DIM";AssociateSteem(Ext,"st_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
               case 5105: Ext=".STZ";AssociateSteem(Ext,"st_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
               case 5106: Ext=".STS";AssociateSteem(Ext,"steem_memory_snapshot",true,T("Steem Memory Snapshot"),SNAP_ICON_NUM,0); break;
               case 5107: Ext=".STC";AssociateSteem(Ext,"st_cartridge",true,T("ST ROM Cartridge"),CART_ICON_NUM,0); break;
+#if defined(STEVEN_SEAGAL) && defined(SS_IPF_ASSOCIATE)
+              case 5108: Ext=".IPF";AssociateSteem(Ext,"st_ipf_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
+#endif
             }
             HWND But=HWND(lPar);
             if (IsSteemAssociated(Ext)){
@@ -1357,8 +1364,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(STEVEN_SEAGAL) && defined(SS_SOUND_MICROWIRE) 
         case 7302: // STE Microwire on/off 
           if (HIWORD(wPar)==BN_CLICKED){
-            SSEOption.STEMicrowire=!SSEOption.STEMicrowire;
-            SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.STEMicrowire,0);
+            MICROWIRE_ON=!MICROWIRE_ON;
+            SendMessage(HWND(lPar),BM_SETCHECK,MICROWIRE_ON,0);
           }
           break; 
 #endif
@@ -1366,8 +1373,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(STEVEN_SEAGAL) && defined(SS_SOUND_FILTER_STF)
         case 7303: // PSG Filter (more open)
           if (HIWORD(wPar)==BN_CLICKED){
-            SSEOption.PSGFilter=!SSEOption.PSGFilter;
-            SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.PSGFilter,0);
+            PSG_FILTER_FIX=!PSG_FILTER_FIX;
+            SendMessage(HWND(lPar),BM_SETCHECK,PSG_FILTER_FIX,0);
           }
           break; 
 

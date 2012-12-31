@@ -37,6 +37,13 @@
 // Hacks //
 ///////////
 
+extern
+#ifdef __cplusplus
+ "C" 
+#endif
+int iDummy;// can be l-value
+
+
 #if defined(SS_HACKS)
 extern "C" int SS_signal; // "handy" global mask (future coding horror case)
 #endif
@@ -67,9 +74,32 @@ extern "C" int SS_signal; // "handy" global mask (future coding horror case)
 #endif
 
 
+/////////////
+// VARIOUS //
+/////////////
+
+
+
+
+
 ///////////
 // VIDEO //
 ///////////
+
+
+#define LINECYCLE0 cpu_timer_at_start_of_hbl
+#define LINECYCLES (ABSOLUTE_CPU_TIME-LINECYCLE0) 
+#define FRAMECYCLES (ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl)
+//#if defined(SS_DEBUG) || defined(SS_INT_VBI_START) // TODO check
+#if defined(SS_SHIFTER)
+#define FRAME (Shifter.nVbl) 
+#elif defined(SS_SHIFTER_EVENTS)
+#define FRAME (VideoEvents.nVbl)
+#else 
+#define FRAME (-1)
+#endif
+
+
 
 #if defined(SS_VIDEO)
 
@@ -93,10 +123,11 @@ extern int SideBorderSizeWin;
 #define BORDER_BOTTOM BottomBorderSize // !!!!!!!!!!!!!!!!!!!!!!!
 int ChangeBorderSize(int size); // gui.cpp
 #endif
-#else
+
+#endif
+
+#ifndef FRAME
 #define FRAME (-1)
-
-
 #endif
 
 #endif//SSEDECLA_H

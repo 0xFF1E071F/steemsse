@@ -1,6 +1,24 @@
+General
+This is the '3rdparty' folder for Steem SSE.
+As far as we know, all files here are public.
+However this says nothing about the licence. Steem SSE is "GPL",
+we may use the tools in this folder for Steem, but it doesn't mean
+that those are "GPL" as well.
+
+
 6301
   Sim6xx by Arne Riiber adapted for emulation of the Hitachi HD6301V1 used 
   as an intelligent keyboard controller on the Atari ST.
+
+caps
+  
+IPF Library by István Fábián and The Software Preservation Society
+  http://www.softpres.org - for Win32
+
+caps_linux
+  
+IPF Library by István Fábián and The Software Preservation Society
+  http://www.softpres.org - for Unix (TODO)
 
 dsp
   Basic DSP (digital sound processing) adapted from code by Maverick 
@@ -16,6 +34,9 @@ portaudio
 
 rtaudio
   Linux. We got this one working at some point.
+
+UnRARDLL
+  Win32. RAR support directly using the DLL.
 
 unrarlib
   Windows/Linux. Dead-end for the moment. Removed.

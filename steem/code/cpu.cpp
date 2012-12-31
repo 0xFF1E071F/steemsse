@@ -3091,13 +3091,20 @@ void                              m68k_rte(){
             break;
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_F)
+          case ON_RTE_LINE_F:
+            interrupt_depth++; // there's a RTE after all, cancel 'compensate'
+            //on_rte=ON_RTE_RTE;
+            break;
+#endif
+
 #ifndef NO_CRAZY_MONITOR
           case ON_RTE_LINE_A:
             on_rte=ON_RTE_RTE;
             SET_PC(on_rte_return_address);
             extended_monitor_hack();
-
             break;
+
           case ON_RTE_DONE_MALLOC_FOR_EM:
 //            log_write(HEXSl(pc,6)+EasyStr(": Malloc done - returned $")+HEXSl(r[0],8));
             xbios2=(r[0]+255)&-256;
@@ -3116,6 +3123,7 @@ void                              m68k_rte(){
       }
     }
 //    log(EasyStr("RTE - decreasing interrupt depth from ")+interrupt_depth+" to "+(interrupt_depth-1));
+//    TRACE("RTE\n");
     interrupt_depth--;
     ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
 //    check_for_interrupts_pending();// was commented out
@@ -5067,6 +5075,15 @@ extern "C" void m68k_1110(){  //bit shift
 }
 
 extern "C" void m68k_1111(){  //line-f emulator
+/*  SS this is called a lot by TOS, and it seems it doesn't exit with an
+    RTE, which messes the interrupt_depth counter
+    Like this, still not OK like there are some RTEs...
+*/
+//#if defined(STEVEN_SEAGAL) && defined(SS_CPU) && defined(SS_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_F)
+  interrupt_depth--; // compensate
+  on_rte=ON_RTE_LINE_F;
+#endif
   pc-=2;  //pc not incremented for illegal instruction
 
 #ifdef ONEGAME
@@ -5078,6 +5095,7 @@ extern "C" void m68k_1111(){  //line-f emulator
 
   INSTRUCTION_TIME_ROUND(0);  // Round first for interrupts
   INSTRUCTION_TIME_ROUND(34);
+//TRACE("Line F %X\n",LPEEK(BOMBS_LINE_F*4));
   m68k_interrupt(LPEEK(BOMBS_LINE_F*4));
   m68k_do_trace_exception=0;
 

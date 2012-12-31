@@ -248,6 +248,7 @@ TODO?
     return 0;
   }//sw
   BRK(impossible)
+  return 0; // quiet C++ warning
 }
 
 
@@ -294,7 +295,7 @@ void TDma::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
     return;
   }
 #endif
-
+  int drive=floppy_current_drive();
   switch (addr)
   {
 
@@ -318,7 +319,7 @@ void TDma::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
 "The FDC registers only uses 8 bits when writing and therefore the upper byte 
 is ignored and when reading the 8 upper bits consistently reads 1."
 */
-    ASSERT(!io_src_b); // Blood Money IPF crashing, Archipelagos IPF
+    //ASSERT(!io_src_b); // Blood Money IPF crashing, Archipelagos IPF, Overdrive
     break;
     
   case 0xff8605:  
@@ -337,8 +338,10 @@ is ignored and when reading the 8 upper bits consistently reads 1."
 "It is interesting to note that when the DMA is in write mode, the two internal
  FIFOS are filled immediately after the Count Register is written."
 */
-      if(dma_mode&0x100) // RAM to disk
-        RequestTransfer(); // we fill one
+#if defined(SS_IPF)
+      if((dma_mode&0x100) && Caps.Active && Caps.IsIpf(drive)) // RAM to disk
+        RequestTransfer(); // we fill one - only for IPF
+#endif
       log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Set DMA sector count to "+dma_sector_count);
       break;
     }
@@ -790,7 +793,7 @@ int TWD1772::CommandType(int command) {
     type=1;
   else if(!(command&BIT_6))
     type=2;
-  else if((command&0xF0)==0xD) //1101
+  else if((command&0xF0)==0xD0) //1101
     type=4;
   else
     type=3;
@@ -847,7 +850,7 @@ void TWD1772::TraceStatus() {
 TCaps Caps; // singleton
 
 TCaps::TCaps() {
-  VERIFY( Init()!=NULL );
+//  VERIFY( Init()!=NULL ); // we prefer to init from main
 }
 
 
@@ -855,6 +858,9 @@ TCaps::~TCaps() {
   CapsExit();
 }
 
+void SetNotifyInitText(char*);//forward
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_INIT
 
 TCaps::Init() {
 
@@ -865,6 +871,9 @@ TCaps::Init() {
   LockedTrack[0]=LockedTrack[1]=-1; 
 #if defined(SS_IPF_RUN_PRE_IO) || defined(SS_IPF_RUN_POST_IO)
   CyclesRun=0;
+#endif
+#if defined(SS_VAR_NOTIFY)
+  SetNotifyInitText(SS_IPF_PLUGIN_FILE);
 #endif
   CapsInit(SS_IPF_PLUGIN_FILE);
 
@@ -882,13 +891,13 @@ TCaps::Init() {
   WD1772.drivemax=0;
 
   if(CapsFdcInit(&WD1772)!=imgeOk)
-    TRACE("CapsFdcInit failed, no IPF support\n");
+    TRACE_LOG("CapsFdcInit failed, no IPF support\n");
   else
   {
     CapsVersionInfo versioninfo;
     VERIFY( !CapsGetVersionInfo((void*)&versioninfo,0) );
     ASSERT( !versioninfo.type );
-    TRACE("Using CapsImg library V%d.%d\n",versioninfo.release,versioninfo.revision);
+    TRACE_LOG("Using CapsImg library V%d.%d\n",versioninfo.release,versioninfo.revision);
     Version=versioninfo.release*10+versioninfo.revision; // keep this for hacks
     ASSERT( Version==42 );
   }
@@ -1032,8 +1041,10 @@ int TCaps::WriteWD1772(int data) {
     if(Version==42 && (data&0xE0)==0xA0)
     {
       TRACE("IPF unimplemented command %X\n",data);
+#if defined(SS_OSD_DRIVE_LED)
       if(FDCWritingTimer<timer)
         FDCWritingTimer=timer+RED_LED_DELAY;	
+#endif
 #if defined(SS_IPF_WRITE_HACK)
       if(SSE_HACKS_ON && (data&0xE0)==0xA0) // =write sector (not track!)
       {
@@ -1046,8 +1057,10 @@ int TCaps::WriteWD1772(int data) {
       }
 #endif
     }
+#if defined(SS_OSD_DRIVE_LED)
     else
       FDCWriting=FALSE;
+#endif
   }
 
   CapsFdcWrite(&WD1772,wd_address,data); // send to DLL
@@ -1063,7 +1076,7 @@ int TCaps::WriteWD1772(int data) {
 
 void TCaps::Hbl() {
   // we run cycles at each HBL if there's an IPF file in. Performance OK
-#if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
   ASSERT( Shifter.CurrentScanline.Cycles>100)
 #if defined(SS_IPF_RUN_PRE_IO) || defined(SS_IPF_RUN_POST_IO)
   ASSERT( Shifter.CurrentScanline.Cycles-Caps.CyclesRun>0 );
@@ -1097,8 +1110,6 @@ int TCaps::IsIpf(int drive) {
 */
 
 void TCaps::CallbackDRQ(PCAPSFDC pc, UDWORD setting) {
-
-
 #if defined(SS_DEBUG) || !defined(VC_BUILD)
   Dma.UpdateRegs();
   ASSERT( dma_mode&BIT_7 ); // DMA enabled
@@ -1132,8 +1143,10 @@ it is only possible to transfer data in multiples of 16 bytes"
       Dma.RequestTransfer();
       fdc_read_address_buffer_len=0;
       disk_light_off_time=timeGetTime()+DisableDiskLightAfter;
+#if defined(SS_OSD_DRIVE_LED)
       if(::WD1772.WritingToDisk()) // it's Steem's one!
         FDCWriting=TRUE;
+#endif
     }
     Caps.WD1772.r_st1&=~CAPSFDC_SR_IP_DRQ; // The Pawn
     Caps.WD1772.lineout&=~CAPSFDC_LO_DRQ;

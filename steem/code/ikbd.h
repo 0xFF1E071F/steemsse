@@ -111,18 +111,13 @@ release it will be 0xF1, and so on.)
 SS: most ST's had a 6301 that sent '$F1'
 */
 
-#if defined(STEVEN_SEAGAL) 
-
-#if defined(SS_IKBD_FAKE_CUSTOM)
+#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM)
 EXT void keyboard_buffer_write(BYTE,int signal=0);
 #else
 EXT void keyboard_buffer_write(BYTE);
 #endif
-
-#if defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
 extern "C" void hd6301_keyboard_buffer_write(BYTE);
-#endif
-
 #endif
 
 EXT void keyboard_buffer_write_n_record(BYTE);
@@ -305,7 +300,7 @@ logically connected to it. If a mouse disable command is received while port 0
   int reset_1214_hack;
   int joy_packet_pos;
   int mouse_packet_pos;
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
+#if defined(STEVEN_SEAGAL) //&& defined(SS_IKBD)
 /*  WRT memory snapshots we can safely modify the structures, the size is 
     recorded along with data
 */

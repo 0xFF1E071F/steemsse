@@ -1,7 +1,10 @@
-// Steem Steven Seagal Edition
-// SSE.h
+#pragma once // VC guard
+#ifndef STEVEN_SEAGAL_H // BCC guard
+#define STEVEN_SEAGAL_H
 
 /*
+Steem Steven Seagal Edition (SSE)
+---------------------------------
 
 This is based on the source code for Steem 3.2 as released by Steem authors,
 Ant & Russ Hayward.
@@ -20,6 +23,7 @@ timings found by ijor (also author of Pasti).
 
 Other mods are in Steem code, inside blocks where STEVEN_SEAGAL is defined.
 Some exceptions, like mmu_confused, directly changed, very easy to reverse.
+(Only the name of the variable is changed).
 Many other defines are used to segment code. This is heavy but it makes 
 debugging a lot easier (real life-savers when something is broken).
 To enjoy the new features, you must define STEVEN_SEAGAL!
@@ -51,30 +55,26 @@ DONE
 - Working (compiling & running) Linux build of 3.4
 - Check fullscreen mode (crashes reported): 3.4.1
 - IPF support (Kryoflux) (for V.3.5)
-- IPF can't insert disk 2, drive confusion (B=A?)
-- IPF display properties
-- IPF Turbo Outrun, Burgerman (side selection)
-- IPF Lethal Xcess: hack (beta-only)
-- Record video (to AVI) (1st version)
+- Record video (to AVI) (1st version, for v3.5)
 - Pasti: wrong red led
 - TRACE can be commanded by boiler log options (started)
-- IPF Archipelagos, Vindicators (DMA)
-- indicate Pasti is in charge on disk manager
-- IPF Double Dragon II (IRQ)
-- Disk manager mentions 'Pasti' if active
+- Disk manager window title mentions 'Pasti On' if active
+- Support for unrar.dll (for V.3.5)
+- Save snapshot in NEO format (v3.5)
+- nuked WinSTon import, it's outdated
+- nuked update process
+- F12 as shortcut will do nothing
+- crash if screen saver
+- on rte fix vs save snapshot (still not ideal)
+- 6301 emu debug: more accurate clock in Captain Blood
 */
 
 /*
 TODO (future versions, in no definite order)
-- Real timings for 6301 / check SS_IKBD_RUN_IRQ_TO_END: hack?
-+ Adjust this with a clock + Captain Blood?
-- GFA3 can't help here
-- PSG filter also for record
+- printing directly on a PC printer?
 - Systematic fix for 508/512 cycle counting issue (Omega)
 - ACIA/MIDI corrections
 - Event for write to IKBD, but would it be useful?
-+ redesign system, like all others do: trace(type,msg)? note: no perf loss
-- Support for unrar.dll (3.6?)
 - Check if TOS1.00 sould boot with 4MB (MMU)
 - Fix FETCH_TIMING/prefetch: not easy (is there something to fix?)
 - OSD shifted in 'large' display mode
@@ -85,28 +85,21 @@ TODO (future versions, in no definite order)
 - monochrome demos
 - Overdrive/Dragon + a common way for all "unstable" overscan
 - Eliminate magic constants in gui
-- syndic84
 - unix: SSE options icon
-- nuke winston import, it's outdated
-- nuke update process
 - Boiler: remove DIV logging,we know the timing now
 - use IPF insights to improve fdc emu
 - convert ST to IPF on the fly?
 - cycles: ROM access isn't shared with shifter
 - cycles: CPU vs HBL
 - don't crash at corrupt snapshot ('try'?)
-- IPF Sundog: simple matter of writing & reading back
 - IPF + Pasti Blood Money (CPU?) note bytes are different
 - Check if image in zip OK (eg no IPF for pasti), maybe complicated
 - automatically switch to Pasti (but linked with above?)
 - Move all shifter IO to object shifter
 - SLM804 laser printer, yeah right
+- IPF support for Linux build
+- examine SDL possibilities
 */
-
-
-#pragma once // VC guard
-#ifndef STEVEN_SEAGAL_H // BCC guard
-#define STEVEN_SEAGAL_H
 
 
 /////////////
@@ -141,19 +134,31 @@ TODO (future versions, in no definite order)
 #define SS_FDC        // WD1772 floppy disk controller (hacks, IPF)
 #define SS_HACKS      // an option for dubious fixes
 #define SS_IKBD       // HD6301V1 IKBD (keyboard, mouse, joystick controller)
-#define SS_IPF        // CAPS support (IPF disks) (TODO change switch)
+#define SS_IPF        // CAPS support (IPF disks) 
 #define SS_INTERRUPT  // MC68901 Multi-Function Peripheral Chip, HBL, VBL
+#define SS_MIDI       // TODO
 #define SS_MMU        // Memory Manager Unit (of the ST, just RAM)
 #define SS_OSD        // On Screen Display (drive leds, version)
-#define SS_SHIFTER  //TODO
+#define SS_SHIFTER    // The legendary custom shifter and all its tricks
 #define SS_SOUND      // YM2149, STE DMA sound, Microwire
 #define SS_STF        // switch STF/STE
 #define SS_STRUCTURE  // TODO
 #define SS_TOS        // The Operating System
 #define SS_UNIX       // Linux build must be OK too (may lag)
-#define SS_VARIOUS    // Mouse capture, keyboard click...
-#define SS_VIDEO      // shifter tricks; large borders, recording
+#define SS_VARIOUS    // Mouse capture, keyboard click, unrar...
+#define SS_VIDEO      // large borders, screenshot, recording
 
+#endif
+
+#ifdef WIN32
+#undef SS_UNIX
+#endif
+#if !defined(SS_DMA) || !defined(SS_FDC)
+#undef SS_IPF
+#endif
+#if defined(SS_UNIX)
+#undef SS_IPF
+//#define SS_UNIX_IPF//TODO
 #endif
 
 
@@ -161,7 +166,7 @@ TODO (future versions, in no definite order)
 // TEMP //
 //////////
 
-//#define SS_TST1 // while adding new features
+//#define SS_TST1 
 
 
 ///////////////////////
@@ -216,6 +221,9 @@ TODO (future versions, in no definite order)
 #define SS_CPU_MOVE_L
 #define SS_CPU_POKE         // poke like a C64 (inline in VC6)
 
+//#define SS_CPU_EXCEPTION_TRACE_PC // reporting all PC
+//#define SS_CPU_PREFETCH_TRACE
+
 #if defined(SS_CPU_MOVE_W) && defined(SS_VIDEO) // hack: only for move.w
 #define SS_CPU_3615GEN4_ULM // changing the scanline being fetched
 #endif
@@ -224,14 +232,14 @@ TODO (future versions, in no definite order)
 
 #if defined(SS_CPU_EXCEPTION)
 #define SS_CPU_ASSERT_ILLEGAL // assert before trying to execute
-
-
-////#define SS_CPU_MAY_WRITE_0//tst
-
 #define SS_CPU_GET_SOURCE // update PC after read - is it a real fix?
 #ifndef SS_CPU_GET_SOURCE
+//#define SS_CPU_MAY_WRITE_0//tst
 #define SS_CPU_PHALEON // opcode based hack for Phaleon (etc.) protection
 #endif
+
+#define SS_CPU_LINE_F // for interrupt depth counter
+
 #ifdef SS_CPU_PREFETCH_______
 #define SS_CPU_WAR_HELI2 // other way for Wat Heli (trying)  / REDO
 #else
@@ -256,60 +264,30 @@ defined(SS_BOILER))
 
 #if defined(SS_DEBUG)
 
+//#define SS_DEBUG_TRACE_FILE // if IDE can't follow, use file
+
 #if defined(DEBUG_BUILD) //TODO add other mods here
 #define SS_DEBUG_CLIPBOARD // right-click on 'dump' to copy then paste
 #endif
 
-//#define SS_DEBUG_TRACE_FILE // if IDE can't follow
-
 #if defined(SS_DEBUG) && !defined(BCC_BUILD) && !defined(_DEBUG)
-#define SS_DEBUG_BOILER_TRACE 
-#endif
-
-#if defined(SS_DEBUG_BOILER_TRACE) && !defined(_DEBUG)
-// this is for the Boiler release, in addition to log options
+// supposedly we're building the release boiler, make sure features are in
+#define SS_SHIFTER_EVENTS // record all shifter events of the frame
+#define SS_SHIFTER_REPORT_VBL_TRICKS // a line each VBL
+#define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
 #define SS_DEBUG_START_STOP_INFO
+#define SS_IPF_TRACE_SECTORS // show sector info (IPF)
+
 #define SS_IKBD_TRACE_COMMANDS // only used by 6301 emu now
 #define SS_IKBD_6301_DUMP_RAM
 #define SS_IKBD_6301_TRACE 
 #define SS_IKBD_6301_TRACE_SCI_RX
 #define SS_IKBD_6301_TRACE_SCI_TX
 #define SS_IKBD_6301_TRACE_KEYS
-#define SS_IPF_TRACE_SECTORS // show sector info (IPF)
-#define SS_RESET_TRACE
-#define SS_VID_SHIFTER_EVENTS // recording all shifter events in a frame
-#define SS_VID_AUTO_FRAME_REPORT_ON_STOP
-#define SS_VID_REPORT_VBL_TRICKS // a line each VBL
-#define SS_VID_TRACE_SUSPICIOUS2 // suspicious +2 & -2
-#define SS_VID_END_OF_LINE_CORRECTION_TRACE // their correction
 
 #else // for custom debugging
 
-
-//#define SS_CPU_EXCEPTION_TRACE_PC // reporting all PC
-//#define SS_CPU_PREFETCH_TRACE
-//#define SS_DEBUG_REPORT_SKIP_FRAME
-//#define SS_DEBUG_START_STOP_INFO
-
-
-//#define SS_RESET_TRACE
-//#define SS_SOUND_TRACE
-//#define SS_INT_TRACE
-//#define SS_INT_VBI_START_TRACE//?
-//#define SS_STF_TRACE
-//#define SS_TOS_TRACE
-//#define SS_VID_0BYTE_LINE_TRACE
-//#define SS_VID_TRACE_SUSPICIOUS2 // suspicious +2 & -2
-//#define SS_VID_END_OF_LINE_CORRECTION_TRACE
-//#define SS_VID_LEFT_OFF_COMPARE_STEEM_32
-//#define SS_VID_SDP_TRACE 
-//#define SS_VID_SDP_TRACE2
-//#define SS_VID_SDP_TRACE3 // report differences with Steem v3.2 
-//#define SS_VID_VERTICAL_OVERSCAN_TRACE
-//#define SS_VID_PALETTE_BYTE_CHANGE_TRACE
-#define SS_VID_SHIFTER_EVENTS // recording all shifter events in a frame
-//#define SS_VID_AUTO_FRAME_REPORT_ON_STOP
-//#define SS_VID_REPORT_VBL_TRICKS // a line each VBL
+#define SS_DEBUG_START_STOP_INFO
 
 #endif//#if defined(SS_DEBUG_NO_TRACE)
 
@@ -332,7 +310,6 @@ defined(SS_BOILER))
 #define SS_DMA_READ_STATUS 
 #define SS_DMA_SECTOR_COUNT
 #define SS_DMA_WRITE_CONTROL
-
 #endif
 
 
@@ -352,11 +329,13 @@ defined(SS_BOILER))
 #if defined(SS_HACKS) // all "protected" by the hack option
 
 #define SS_FDC_CHANGE_COMMAND_DURING_SPINUP // from Hatari
-//#define SS_FDC_NO_DISK // ignore commands if there's no disk inserted
+
+#define SS_FDC_NO_DISK // ignore commands if there's no disk inserted
 // no, must sendIRQ (see pasti)
 #define SS_FDC_RESTORE // adding delay (fast+ADAT)
 #define SS_FDC_SEEK_VERIFY // adding delay (fast)
 #define SS_FDC_STARTING_DELAY // adding delay (fast)
+
 #define SS_FDC_STREAM_SECTORS_SPEED // faster in fast mode, slower with ADAT!
 
 #endif//hacks
@@ -380,10 +359,8 @@ defined(SS_BOILER))
 #define SS_IKBD_6301_DISABLE_BREAKS // to save 64k
 #define SS_IKBD_6301_DISABLE_CALLSTACK // to save 3k on the PC stack
 #define SS_IKBD_DOUBLE_BUFFER_6301_TX  // 6301 transmitting, same as for ACIA
-#define SS_IKBD_RUN_IRQ_TO_END // kind of a hack TODO
-#if defined(SS_IKBD_RUN_IRQ_TO_END)
-#define SS_IKBD_6301_ADJUST_CYCLES
-#endif
+#define SS_IKBD_RUN_IRQ_TO_END // kind of a hack
+#define SS_IKBD_6301_ADJUST_CYCLES // stay in sync!
 #define SS_IKBD_6301_SET_TDRE
 #define SS_IKBD_6301_TIMER_FIX // not sure there was a problem
 
@@ -405,6 +382,8 @@ defined(SS_BOILER))
 #endif
 
 #endif//#if defined(SS_IKBD_6301)
+
+//#define SS_IKBD_TRACE_IO
 
 #define SS_IKBD_FAKE_ABS_MOUSE // less is more!
 #define SS_IKBD_FAKE_CUSTOM // HD6301 custom programs fake emu (from Hatari)
@@ -444,12 +423,13 @@ defined(SS_BOILER))
 ///#define SS_MFP_ALL_I_HAVE // temp silly,useless hack! TODO
 #define SS_MFP_POST_INT_LATENCY // hardware quirk?
 #define SS_MFP_RATIO // change the values of CPU & MFP freq!
-#define SS_MFP_RATIO_STE // measured for STE
+#define SS_MFP_RATIO_STE // measured (by Steem Authors) for STE
 #define SS_MFP_RATIO_STF // theoretical for STF
+#define SS_MFP_TxDR_RESET // they're not reset according to doc
 #endif
 
 #if defined(SS_INT_TIMER_B)
-//#define SS_INT_TIMER_B_NO_WOBBLE // does it fix anything???
+#define SS_INT_TIMER_B_NO_WOBBLE // does it fix anything???
 #define SS_INT_TIMER_B_AER // earlier trigger (from Hatari)
 #endif
 
@@ -471,12 +451,15 @@ defined(SS_BOILER))
 //#define SS_IPF_CPU // total sync, works but overkill
 //#define SS_IPF_RUN_PRE_IO 
 //#define SS_IPF_RUN_POST_IO
+#define SS_IPF_ASSOCIATE // extension associated with Steem
+#define SS_IPF_OSD // for the little box at reset
 #ifdef BETA
 #define SS_IPF_LETHAL_XCESS // hack useful with capsimg v4.2
 #define SS_IPF_WRITE_HACK // useless hack for v4.2 AFAIK
 #endif
 //#define SS_IPF_SAVE_WRITES //TODO?
 //#define SS_IPF_TRACE_SECTORS // show sector info
+
 #endif
 
 
@@ -499,6 +482,88 @@ defined(SS_BOILER))
 #if defined(SS_OSD)
 ///#define SS_OSD_LOGO //TODO
 #define SS_OSD_DRIVE_LED
+#endif
+
+
+/////////////
+// SHIFTER //
+/////////////
+
+#if defined(SS_SHIFTER)
+
+//#define SS_SHIFTER_STEEM_ORIGINAL // only for debugging/separate blocks
+
+#define SS_SHIFTER_TRICKS  // based on Steem system, extended
+
+#if defined(SS_SHIFTER_TRICKS)
+
+#define SS_SHIFTER_0BYTE_LINE
+
+#if defined(SS_SHIFTER_0BYTE_LINE)
+#define SS_SHIFTER_0BYTE_LINE_RES_END
+#define SS_SHIFTER_0BYTE_LINE_RES_HBL
+#define SS_SHIFTER_0BYTE_LINE_RES_START
+#define SS_SHIFTER_0BYTE_LINE_SYNC
+//#define SS_SHIFTER_0BYTE_LINE_TRACE
+#endif
+
+#define SS_SHIFTER_4BIT_SCROLL
+#define SS_SHIFTER_60HZ_OVERSCAN
+#define SS_SHIFTER_END_OF_LINE_CORRECTION // correct +2, -2 lines 
+#define SS_SHIFTER_LINE_PLUS_2_THRESHOLD
+#define SS_SHIFTER_MED_OVERSCAN
+#define SS_SHIFTER_NON_STOPPING_LINE // Enchanted Land
+#define SS_SHIFTER_PALETTE_BYTE_CHANGE 
+#define SS_SHIFTER_STE_LEFT_OFF // 224 byte scanline
+#define SS_SHIFTER_STE_MED_HSCROLL
+#define SS_SHIFTER_STE_HSCROLL_LEFT_OFF
+#if defined(SS_STF)
+#define SS_STF_VERTICAL_OVERSCAN
+#endif
+#define SS_SHIFTER_STE_VERTICAL_OVERSCAN
+#define SS_SHIFTER_UNSTABLE_LEFT_OFF // DoLB, Omega, Overdrive/Dragon
+//#define SS_VID_LEFT_OFF_COMPARE_STEEM_32
+//#define SS_VID_TRACE_SUSPICIOUS2 // suspicious +2 & -2
+
+#endif
+
+#define SS_SHIFTER_SDP // SDP=shifter draw pointer
+
+#if defined(SS_SHIFTER_SDP)
+#define SS_SHIFTER_SDP_READ
+#define SS_SHIFTER_SDP_WRITE
+#define SS_SHIFTER_SDP_WRITE_ADD_EXTRA
+#define SS_SHIFTER_SDP_WRITE_LOWER_BYTE
+//#define SS_SHIFTER_SDP_TRACE 
+//#define SS_SHIFTER_SDP_TRACE2
+//#define SS_SHIFTER_SDP_TRACE3 // report differences with Steem v3.2 
+#endif
+
+#if defined(SS_HACKS)
+// most hacks concern SDP, there's room for improvement
+#define SS_SHIFTER_SDP_WRITE_DE_HSCROLL
+#define SS_SHIFTER_SDP_WRITE_MIDDLE_BYTE // stable
+#define SS_SHIFTER_BIG_WOBBLE // Big Wobble shift
+#define SS_SHIFTER_DANGEROUS_FANTAISY // Dangerous Fantaisy credits flicker
+#define SS_SHIFTER_DRAGON // confused shifter, temp hack
+#define SS_SHIFTER_NO_COOPER_GREETINGS // No Cooper Greetings shift
+#define SS_SHIFTER_OMEGA  // Omega Full Overscan shift (60hz)
+#define SS_SHIFTER_PACEMAKER // Pacemaker credits flickering line
+#define SS_SHIFTER_SCHNUSDIE // Reality is a Lie/Schnusdie overscan logo
+#define SS_SHIFTER_TCB // Swedish New Year Demo/TCB SDP (60hz)
+#endif
+
+#if defined(SS_DEBUG) 
+//#define SS_SHIFTER_DRAW_DBG  // totally bypass CheckSideOverscan() & Render()
+#define SS_SHIFTER_EVENTS // recording all shifter events in a frame
+#define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
+//#define SS_SHIFTER_REPORT_VBL_TRICKS // a line each VBL
+//#define SS_SHIFTER_VERTICAL_OVERSCAN_TRACE
+#else
+#define draw_check_border_removal Shifter.CheckSideOverscan
+#define draw_scanline_to(cycles_since_hbl) Shifter.Render(cycles_since_hbl)
+#endif
+
 #endif
 
 
@@ -562,7 +627,13 @@ defined(SS_BOILER))
 // VARIOUS //
 /////////////
 
+#define NO_RAR_SUPPORT // I removed the library, so it's unconditional
+
 #if defined(SS_VARIOUS)
+
+#define SS_VAR_NO_UPDATE // remove all code in relation to updating
+#define SS_VAR_NO_WINSTON // nuke WinSTon import, saves 16K in VC6 release yeah
+
 
 #define SS_VAR_MOUSE_CAPTURE 
 #if !(defined(_DEBUG) && defined(VC_BUILD)) // it's Windows 'break' key
@@ -575,11 +646,15 @@ defined(SS_BOILER))
 #define SS_VAR_STEALTH // don't tell we're an emulator (option)
 #define SS_VAR_REWRITE // to conform to what compilers expect (warnings...)
 #define SS_SSE_OPTION_PAGE // a new page for all our options
-#define SS_SSE_OPTION_STRUCT // structure with constructor
+#define SS_SSE_OPTION_STRUCT // structure SSEOption (necessary!)
 
 #define SS_VAR_PASTI_ON_WARNING // mention in disk manager title
 
-#define NO_RAR_SUPPORT // the library is outdated, right?
+#ifdef WIN32
+#define SS_VAR_UNRAR // using unrar.dll, up to date
+#endif
+
+#define SS_VAR_NOTIFY //adding some notify during init
 
 #endif 
 
@@ -592,82 +667,31 @@ defined(SS_BOILER))
 
 #define SS_VID_BORDERS // option display size
 #define SS_VID_BORDERS_LB_DX // rendering-stage rather than painful hacks
-#define SS_VID_STEEM_EXTENDED  // based on Steem system
-//#define SS_VID_STEEM_ORIGINAL // only for debugging/separate blocks, careful
+//#define SS_VID_AUTOOFF_DECRUNCHING // show borders when decrunching=confusing
+#define SS_VID_BPOC // Best Part of the Creation fit display 800
 
 #if defined(SS_DEBUG) 
 //#define SHOW_DRAW_SPEED //was already in Steem
-//#define SS_VIDEO_DRAW_DBG  // totally bypass CheckSideOverscan() & Render() !
 //#define SS_VID_VERT_OVSCN_OLD_STEEM_WAY // only for vertical overscan
-//#define SS_VID_SKIP_SCANLINE -29 // fetch but only draw colour 0
 //#define SS_VID_VERT_OVSCN_OLD_STEEM_WAY
-#else
-#define draw_check_border_removal Shifter.CheckSideOverscan
-#define draw_scanline_to(cycles_since_hbl) Shifter.Render(cycles_since_hbl)
 #endif
 
 #if defined(WIN32) && SSE_VERSION>=350// && defined(_MSC_VER)
 #define SS_VID_RECORD_AVI //avifile
 #endif
 
-#if defined(SS_VID_STEEM_EXTENDED)
-
-#define SS_VID_0BYTE_LINE
-
-#if defined(SS_VID_0BYTE_LINE)
-#define SS_VID_0BYTE_LINE_RES_END
-#define SS_VID_0BYTE_LINE_RES_HBL
-#define SS_VID_0BYTE_LINE_RES_START
-#define SS_VID_0BYTE_LINE_SYNC
+#if defined(WIN32) && SSE_VERSION>=350
+#define SS_VID_SAVE_NEO // screenshots in ST Neochrome format
 #endif
 
-#define SS_VID_4BIT_SCROLL
-#define SS_VID_60HZ_OVERSCAN
-#define SS_VID_AUTOOFF_DECRUNCHING // show borders when decrunching
-#define SS_VID_END_OF_LINE_CORRECTION // correct +2, -2 lines (like in Hatari)
-#define SS_VID_LINE_PLUS_2_THRESHOLD
-#define SS_VID_MED_OVERSCAN
-#define SS_VID_NON_STOPPING_LINE // Enchanted Land
-#define SS_VID_PALETTE_BYTE_CHANGE 
-#define SS_VID_STE_LEFT_OFF // 224 byte scanline
-#define SS_VID_STE_MED_HSCROLL
-#define SS_VID_STE_HSCROLL_LEFT_OFF
-#if defined(SS_STF)
-#define SS_STF_VERTICAL_OVERSCAN
-#endif
-#define SS_VID_STE_VERTICAL_OVERSCAN
-#define SS_VID_UNSTABLE_LEFT_OFF // DoLB, Omega, Overdrive/Dragon
-#endif
-
-#define SS_VID_SDP // SDP=shifter draw pointer
-
-#if defined(SS_VID_SDP)
-#define SS_VID_SDP_READ
-#define SS_VID_SDP_WRITE
-#define SS_VID_SDP_WRITE_ADD_EXTRA
-#define SS_VID_SDP_WRITE_LOWER_BYTE
-#endif
-
-#if defined(SS_HACKS)
-// most hacks concern SDP, there's room for improvement
-#define SS_VID_SDP_WRITE_DE_HSCROLL
-#define SS_VID_SDP_WRITE_MIDDLE_BYTE // stable
-#define SS_VID_BIG_WOBBLE // Big Wobble shift
-#define SS_VID_BPOC // Best Part of the Creation fit display 800
-#define SS_VID_DANGEROUS_FANTAISY // Dangerous Fantaisy credits flicker
-#if defined(SS_STF_WAKE_UP)
-#define SS_VID_DRAGON // confused shifter, temp hack
-#endif
-#define SS_VID_NO_COOPER_GREETINGS // No Cooper Greetings shift
-#define SS_VID_OMEGA  // Omega Full Overscan shift (60hz)
-#define SS_VID_PACEMAKER // Pacemaker credits flickering line
-#define SS_VID_SCHNUSDIE // Reality is a Lie/Schnusdie overscan logo
-#define SS_VID_TCB // Swedish New Year Demo/TCB SDP (60hz)
-#endif
 
 #endif// video
 
-#else // if STEVEN_SEAGAL is NOT defined
+
+/////////////////////////////////////
+// if STEVEN_SEAGAL is NOT defined //
+/////////////////////////////////////
+#else 
 // a fair warning:
 #pragma message("Are you mad? You forgot to #define STEVEN_SEAGAL!") 
 #include "SSEDecla.h" // still need to neutralise debug macros

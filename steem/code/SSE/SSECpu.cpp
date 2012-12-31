@@ -852,7 +852,7 @@ void m68k_0011() //move.w
 case BITS_876_101: // (d16, An)
       INSTRUCTION_TIME(12-4-4);
       abus=areg[PARAM_N]+(signed short)m68k_fetchW();
-#if defined(SS_CPU_3615GEN4_ULM)
+#if defined(SS_CPU_3615GEN4_ULM) && defined(SS_SHIFTER)
       // Writing in video RAM just after it's been fetched into the shifter
       if(abus>=shifter_draw_pointer && abus<=shifter_draw_pointer+32 
         && Shifter.FetchingLine())

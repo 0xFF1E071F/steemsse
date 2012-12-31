@@ -174,9 +174,17 @@ void power_on()
   floppy_irq_flag=0;
   fdc_spinning_up=0;
   floppy_type1_command_active=2;
-#if defined(STEVEN_SEAGAL) && defined(SS_DMA_WRITE_CONTROL)
+#if defined(STEVEN_SEAGAL) 
+/////////////////  interrupt_depth=0;
+#if defined(SS_DMA_WRITE_CONTROL)
   dma_mode=0; // see reset_peripherals()
 #endif
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_MFP_TxDR_RESET)
+  ZeroMemory(&mfp_reg[MFPR_TADR],4);
+#endif
+
 
   hdimg_reset();
 
@@ -193,13 +201,10 @@ void power_on()
 void reset_peripherals(bool Cold)
 {
   log("***** reset peripherals ****");
-
-#if defined(SS_RESET_TRACE)
   if(Cold)
-    TRACE("Reset peripherals (cold)\n");
+    TRACE_LOG("Reset peripherals (cold)\n");
   else
-    TRACE("Reset peripherals (warm)\n");
-#endif	
+    TRACE_LOG("Reset peripherals (warm)\n");
 #ifndef NO_CRAZY_MONITOR
   if (extended_monitor){
     if (em_planes==1){
@@ -223,7 +228,7 @@ void reset_peripherals(bool Cold)
   }
   
 #if defined(STEVEN_SEAGAL)
-#if defined(SS_VID_STEEM_EXTENDED)
+#if defined(SS_SHIFTER_TRICKS)
   for(int i=0;i<32;i++)
   {
     shifter_freq_change[i]=0; // interference Leavin' Terramis/Flood on PP43
@@ -271,8 +276,16 @@ void reset_peripherals(bool Cold)
   if(Caps.Version)
     Caps.Reset();
 #endif
+//ss txdr not reset +udr tsr
 
+#if defined(STEVEN_SEAGAL) && defined(SS_MFP_TxDR_RESET)
+  DWORD tmp;
+  memcpy(&tmp,&mfp_reg[MFPR_TADR],4);
+#endif
   ZeroMemory(mfp_reg,sizeof(mfp_reg));
+#if defined(STEVEN_SEAGAL) && defined(SS_MFP_TxDR_RESET)
+  memcpy(&mfp_reg[MFPR_TADR],&tmp,4);
+#endif
   mfp_reg[MFPR_GPIP]=mfp_gpip_no_interrupt;
   mfp_reg[MFPR_AER]=0x4;   // CTS goes the other way
   mfp_reg[MFPR_TSR]=BIT_7 | BIT_4;  //buffer empty | END

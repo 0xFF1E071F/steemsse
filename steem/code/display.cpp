@@ -59,6 +59,9 @@ SteemDisplay::SteemDisplay()
   ScreenShotFormat=0;
   ScreenShotUseFullName=0;ScreenShotAlwaysAddNum=0;
   ScreenShotMinSize=0;
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+  pNeoFile=NULL;
+#endif
   RunOnChangeToWindow=0;
   DoAsyncBlit=0;
 
@@ -610,7 +613,7 @@ bool SteemDisplay::Blit()
             if(BORDER_40) // bad framing in flip mode
             {
               draw_fs_blit_mode=DFSM_STRAIGHTBLIT;
-              TRACE("Fullscreen BorderSize %d changing to mode %d\n",SSEOption.BorderSize,draw_fs_blit_mode);
+              TRACE("Fullscreen BorderSize %d changing to mode %d\n",DISPLAY_SIZE,draw_fs_blit_mode);
               break;
             }
 #endif
@@ -1266,8 +1269,11 @@ HRESULT SteemDisplay::SaveScreenShot()
     if (Attrib==0xffffffff || (Attrib & FILE_ATTRIBUTE_DIRECTORY)==0) return DDERR_GENERIC;
 
     Str Exts="bmp";
-    WIN_ONLY( if (hFreeImage) Exts=ScreenShotExt; )
-
+    WIN_ONLY( if (hFreeImage) Exts=ScreenShotExt; )//SS only when needed
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+    if(ScreenShotFormat==IF_NEO)
+      Exts="NEO";
+#endif
     EasyStr FirstWord="Steem_";
     if (FloppyDrive[0].DiskName.NotEmpty()){
       FirstWord=FloppyDrive[0].DiskName;
@@ -1572,6 +1578,28 @@ HRESULT SteemDisplay::SaveScreenShot()
       FreeImage_Free(FIBmp);
     }else
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+    if(ScreenShotFormat==IF_NEO)
+    {
+      ASSERT( pNeoFile );
+      if (pNeoFile)
+      {
+        pNeoFile->resolution=screen_res;
+        // palette was already copied (sooner=better)
+        for(int i=0;i<16000;i++)
+          pNeoFile->data[i]=change_endian(DPEEK(xbios2+i*2));
+        FILE *f=fopen(ShotFile,"wb");
+        if(f)
+        {
+          fwrite(pNeoFile,sizeof(neochrome_file),1,f);
+          fclose(f);
+        }
+        delete pNeoFile;
+        pNeoFile=NULL;
+      }
+     }
+    else
+#endif
     {
       BITMAPINFOHEADER bih;
 
@@ -1659,6 +1687,9 @@ void SteemDisplay::ScreenShotGetFormats(EasyStringList *pSL)
     pSL->Add("PGM",FIF_PGM);
     pSL->Add("PPM",FIF_PPM);
   }
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+  pSL->Add("NEO",IF_NEO);
+#endif
 }
 //---------------------------------------------------------------------------
 void SteemDisplay::ScreenShotGetFormatOpts(EasyStringList *pSL)
