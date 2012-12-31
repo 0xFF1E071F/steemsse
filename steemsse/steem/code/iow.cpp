@@ -106,7 +106,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
           rel_cycle%=10;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SHIFTER_EVENTS)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_EVENTS)
           VideoEvents.Add(scan_y,LINECYCLES,'J',rel_cycle+6); 
 #endif
           BUS_JAM_TIME(rel_cycle+6); //SS just 6
@@ -523,7 +523,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
       break;
 
     case 0xff8a00:      //----------------------------------- Blitter
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SHIFTER_EVENTS)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_EVENTS)
       VideoEvents.Add(scan_y,LINECYCLES,'B',((addr-0xff8a00)<<8)|io_src_b);
 #endif
       Blitter_IO_WriteB(addr,io_src_b);
@@ -736,10 +736,8 @@ bits are being ignored.
                       dma_sound_r_top_val=BYTE(128.0*rv*mv);
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_SOUND_MICROWIRE)
-#if defined(SS_SOUND_TRACE)
-                      TRACE("STE Snd master %X L %X R %X\n",dma_sound_volume,dma_sound_l_volume,dma_sound_r_volume);
-                      TRACE("STE Snd vol L %d R %d\n",dma_sound_l_top_val,dma_sound_r_top_val);
-#endif
+                      TRACE_LOG("STE Snd master %X L %X R %X\n",dma_sound_volume,dma_sound_l_volume,dma_sound_r_volume);
+                      TRACE_LOG("STE Snd vol L %d R %d\n",dma_sound_l_top_val,dma_sound_r_top_val);
                       //dma_sound_l_top_val=dma_sound_r_top_val=128;
 #endif
                       log_to_section(LOGSECTION_SOUND,EasyStr("SOUND: ")+HEXSl(old_pc,6)+" - DMA sound set volume master="+dma_sound_volume+
@@ -758,9 +756,7 @@ Set at $8D by TOS1.06.
 Set at $86 for neutral by Beat Demo, max= min
 */
 #if defined(STEVEN_SEAGAL) && defined(SS_SOUND_MICROWIRE)
-#if defined(SS_SOUND_TRACE)
-                      TRACE("DMA snd Treble $%X\n",io_src_b); 
-#endif
+                      TRACE_LOG("DMA snd Treble $%X\n",io_src_b); 
                       io_src_b&=0xF;
                       if(io_src_b>0xC)
                         io_src_b=0x6;
@@ -779,9 +775,7 @@ Each increment represents 2 db, normalized at 50 Hz.
 Set at D by TOS1.06.
 */
 #if defined(STEVEN_SEAGAL) && defined(SS_SOUND_MICROWIRE)
-#if defined(SS_SOUND_TRACE)
-                      TRACE("DMA snd Bass $%X\n",io_src_b); 
-#endif
+                      TRACE_LOG("DMA snd Bass $%X\n",io_src_b); 
                       io_src_b&=0xF;
                       if(io_src_b>0xC)
                         io_src_b=0x6;
@@ -802,9 +796,7 @@ Set at D by TOS1.06.
  but the YM2149 sound is being downsized by 12 db. "01" mixes DMA and YM2149
  linearly, "10" means DMA sound output only.
 */
-#if defined(SS_SOUND_TRACE)
-                      TRACE("STE SND mixer %X\n",dat);
-#endif
+                      TRACE_LOG("STE SND mixer %X\n",dat);
                       ASSERT(dat&3); // Again
                       dma_sound_mixer=dat & b00000011; // 1=PSG too, anything else only DMA
                       log_to_section(LOGSECTION_SOUND,EasyStr("SOUND: ")+HEXSl(old_pc,6)+" - DMA sound mixer is set to "+dma_sound_mixer);
@@ -834,15 +826,13 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
           case 0xff8925:  // Set low byte of MicroWire_Mask
             MicroWire_Mask=MAKEWORD(io_src_b,HIBYTE(MicroWire_Mask));
             break;
-#if defined(SS_SOUND_TRACE)
           case 0xFF8902:
           case 0xFF890E:
           case 0xFF8920:
             ASSERT(!io_src_b);
             break;
           default:
-            TRACE("STE SND %X %X\n",addr,io_src_b);
-#endif
+            TRACE_LOG("STE SND %X %X\n",addr,io_src_b);
         }
       }
       break;
@@ -1224,20 +1214,18 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
         // Writing byte to palette writes that byte to both the low and high byte!
         WORD new_pal=MAKEWORD(io_src_b,io_src_b & 0xf);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
 
-#if defined(SS_VID_SHIFTER_EVENTS) && defined(SS_DEBUG)
+#if defined(SS_SHIFTER_EVENTS) && defined(SS_DEBUG)
         VideoEvents.Add(scan_y,LINECYCLES,'p', (n<<12)|io_src_b);  // little p
 #endif
 
-#if defined(SS_VID_PALETTE_BYTE_CHANGE) 
+#if defined(SS_SHIFTER_PALETTE_BYTE_CHANGE) 
         // TESTING maybe Steem was right, Hatari is wrong
         if(addr&1) // the double write happens only on even addresses (?)
         {
           new_pal=(STpal[n]&0xFF00)|io_src_b; // fixes Golden Soundtracker demo
-#if defined(SS_VID_PALETTE_BYTE_CHANGE_TRACE)
-          TRACE("Single byte  %X write pal %X STPal[%d] %X->%X\n",io_src_b,addr,n,STpal[n],new_pal);
-#endif
+          TRACE_LOG("Single byte  %X write pal %X STPal[%d] %X->%X\n",io_src_b,addr,n,STpal[n],new_pal);
         }
 #endif
 
@@ -1282,8 +1270,11 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
         /////////////////
 
         case 0xff8201:  //high byte of screen memory address
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SHIFTER_EVENTS)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_EVENTS)
           VideoEvents.Add(scan_y,LINECYCLES,'V',io_src_b); 
+
+//          TRACE("Videobase H %X->%X (VBL%d y %d)\n",DWORD_B_2(&xbios2),io_src_b,FRAME,scan_y);
+
 #endif
           if (mem_len<=FOUR_MEGS) io_src_b&=b00111111;
 ///if(Shifter.FetchingLine())
@@ -1309,8 +1300,11 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
         /////////////////
 
         case 0xff8203:  //mid byte of screen memory address
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SHIFTER_EVENTS)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_EVENTS)
           VideoEvents.Add(scan_y,LINECYCLES,'V',io_src_b); 
+
+//          TRACE("Videobase M %X->%X (VBL%d y %d)\n",DWORD_B_1(&xbios2),io_src_b,FRAME,scan_y);
+
 #endif
           DWORD_B_1(&xbios2)=io_src_b;
 
@@ -1329,18 +1323,18 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
         case 0xff8207:  //mid byte of draw pointer
         case 0xff8209:  //low byte of draw pointer
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SDP_WRITE)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_SDP_WRITE)
           Shifter.WriteSDP(addr,io_src_b); // very complicated!
           break;
 
-#else // Steem 3.2 or SS_VID_SDP_WRITE not defined
+#else // Steem 3.2 or SS_SHIFTER_SDP_WRITE not defined
         {
 //          int srp=scanline_raster_position();
           int dst=ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl;
           dst-=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN;
           dst+=16;dst&=-16;
           dst+=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN;
-#if defined(STEVEN_SEAGAL) && defined(SS_VIDEO) // video defined but not SDP
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER) // video defined but not SDP
           Shifter.Render(dst);
 #else
           draw_scanline_to(dst); // This makes shifter_draw_pointer up to date
@@ -1393,7 +1387,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
    to be even sincebit 0 is automatically assumed #0.
 */
         case 0xff820d:  //low byte of screen memory address
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SHIFTER_EVENTS)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_EVENTS)
           VideoEvents.Add(scan_y,LINECYCLES,'v',io_src_b); 
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_STF)
@@ -1418,7 +1412,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
         
         case 0xff820a: //synchronization mode
         
-#if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
           Shifter.SetSyncMode(io_src_b); 
           break;
 
@@ -1489,7 +1483,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
  must NOT be skipped using the Line Offset Register. 
 */
 	    case 0xff820f:   //int shifter_fetch_extra_words;
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SHIFTER_EVENTS)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_EVENTS)
           VideoEvents.Add(scan_y,LINECYCLES,'F',io_src_b); 
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_STF)
@@ -1500,13 +1494,13 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
           }
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VIDEO) 
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER) 
           Shifter.Render(LINECYCLES,DISPATCHER_LINEWIDTH); // eg Beat Demo
 #else
           draw_scanline_to(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl); // Update sdp if off right  
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SDP_TRACE)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_SDP_TRACE)
           TRACE("F%d y%d c%d LW %d -> %d\n",FRAME,scan_y,LINECYCLES,shifter_fetch_extra_words,io_src_b);
 #endif
           shifter_fetch_extra_words=(BYTE)io_src_b;
@@ -1552,7 +1546,7 @@ This register allows to skip from a single to 15 pixels at the start of each
           // 16 pixels. If you have got hscroll extra fetch turned on then setting this
           // to 0 confuses the shifter and causes it to shrink the left border by 16 pixels.
         case 0xff8265:  // Hscroll
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SHIFTER_EVENTS)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_EVENTS)
           VideoEvents.Add(scan_y,LINECYCLES,(addr==0xff8264)?'h':'H',io_src_b); 
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_STF)
@@ -1571,7 +1565,7 @@ This register allows to skip from a single to 15 pixels at the start of each
             shifter_pixel-=shifter_hscroll; //SS not needed/error?
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SDP_TRACE)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_SDP_TRACE)
             TRACE("F%d y%d c%d HS %d -> %d\n",FRAME,scan_y,LINECYCLES,shifter_hscroll,io_src_b);
 #endif
 
@@ -1606,7 +1600,7 @@ This register allows to skip from a single to 15 pixels at the start of each
 
         case 0xff8260: //resolution
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VIDEO) 
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER) 
 
           Shifter.SetShiftMode(io_src_b);
           break;
@@ -1906,9 +1900,9 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
     DEBUG_CHECK_WRITE_IO_W(addr,io_src_w);
     int n=(addr-0xff8240) >> 1;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
   
-#if defined(SS_VID_SHIFTER_EVENTS) && defined(SS_DEBUG)
+#if defined(SS_SHIFTER_EVENTS) && defined(SS_DEBUG)
     if(Blit.HasBus)
       VideoEvents.Add(scan_y,LINECYCLES,'Q',(n<<12)|io_src_w); 
     else

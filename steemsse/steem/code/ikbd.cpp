@@ -451,8 +451,18 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
       ASSERT(!HD6301.RunThisHbl); // may assert
       hd6301_transmit_byte(src);// send byte to 6301 emu
       // run some cycles now to maybe avoid sync problems (may be useless)
-      int n6301cycles= (screen_res==2) 
-        ? /*HD6301_CYCLES_PER_SCANLINE/2*/ 20: HD6301_CYCLES_PER_SCANLINE;
+
+int n6301cycles;
+#if defined(SS_SHIFTER)
+      n6301cycles=Shifter.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
+#else
+      n6301cycles== (screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
+#endif
+
+
+
+    //  int n6301cycles= (screen_res==2) 
+//        ? /*HD6301_CYCLES_PER_SCANLINE/2*/ 20: HD6301_CYCLES_PER_SCANLINE;
       if(!hd6301_run_cycles(n6301cycles))
       {
         TRACE_LOG("6301 emu is hopelessly crashed!\n");
@@ -1263,6 +1273,8 @@ Code:
             ss          ; second
 
     All time-of-day is sent in packed BCD format.
+
+    This is used by Captain Blood. 
 */
       case 0x1c: //read clock time
         TRACE_LOG("Read Clock");
@@ -1603,7 +1615,7 @@ void hd6301_keyboard_buffer_write(BYTE src) {
 #endif
   if(keyboard_buffer_length<MAX_KEYBOARD_BUFFER_SIZE)
   {
-    ASSERT(!keyboard_buffer_length); // TESTING
+//    ASSERT(!keyboard_buffer_length); // TESTING
     //if(keyboard_buffer_length)  
     //  memmove(keyboard_buffer+1,keyboard_buffer,keyboard_buffer_length);
     //else
@@ -1832,14 +1844,14 @@ void ikbd_reset(bool Cold)
 void agenda_keyboard_reset(int SendF0) // SS scheduled by ikbd_reset()
 {
   TRACE_LOG("IKBD: TM %d Execute reset\n",ABSOLUTE_CPU_TIME);
+#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
   if(HD6301EMU_ON)
     printf("IKBD: TM %d Execute reset\n",ABSOLUTE_CPU_TIME);
-
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM)
   ikbd.custom_prg_loading=FALSE;
   ikbd.custom_prg_ID=0;
 #endif
-
   if (SendF0==0){
     ikbd.mouse_button_press_what_message=0;
     ikbd.mouse_mode=IKBD_MOUSE_MODE_RELATIVE;

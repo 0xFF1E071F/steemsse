@@ -599,19 +599,19 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
   &&defined(SS_UNIX)
 #if defined(SS_VAR_MOUSE_CAPTURE)
     else if(b->id==4002)
-      SSEOption.CaptureMouse=b->checked;
+      CAPTURE_MOUSE=b->checked;
 #endif
 #if defined(SS_HACKS)
     else if(b->id==4003)
-      SSEOption.Hacks=b->checked;
+      SSE_HACKS_ON=b->checked;
 #endif
 #if defined(SS_VAR_STEALTH)
     else if(b->id==4004)
-      SSEOption.StealthMode=b->checked;
+      STEALTH_MODE=b->checked;
 #endif
 #if defined(SS_IKBD_6301)
     else if(b->id==4006)
-      b->checked=SSEOption.HD6301Emu=b->checked&HD6301.Initialised;
+      b->checked=HD6301EMU_ON=b->checked&HD6301.Initialised;
 #endif
 #if defined(SS_VAR_KEYBOARD_CLICK)
     else if(b->id==4007)
@@ -624,11 +624,11 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
 #endif         
 #if defined(SS_SOUND_FILTER_STF)
     else if(b->id==4008)
-      SSEOption.PSGFilter=b->checked;
+      PSG_FILTER_FIX=b->checked;
 #endif
 #if defined(SS_SOUND_MICROWIRE)
     else if(b->id==4009)
-      SSEOption.STEMicrowire=b->checked;
+      MICROWIRE_ON=b->checked;
 #endif   
 #endif
   }
@@ -741,8 +741,8 @@ int TOptionBox::dd_notify_proc(hxc_dropdown*dd,int mess,int i)
 #if defined(SS_VID_BORDERS)
   else if(dd->id==4001) // display size
   {
-    SSEOption.BorderSize=dd->sel;
-    ChangeBorderSize(SSEOption.BorderSize);
+    DISPLAY_SIZE=dd->sel;
+    ChangeBorderSize(DISPLAY_SIZE);
   }
 #endif
 #if defined(SS_STF)

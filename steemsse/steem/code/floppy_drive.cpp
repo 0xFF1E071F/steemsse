@@ -18,7 +18,7 @@ data.
 #include "SSE/SSEFloppy.h"
 #endif
 
-#define LOGSECTION LOGSECTION_FDC
+#define LOGSECTION LOGSECTION_IMAGE_INFO
 
 int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDetectBPB,BPBINFO *pFileBPB)
 {
@@ -48,6 +48,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 
   int Type=ExtensionIsDisk(dot);
   if (Type==DISK_COMPRESSED){
+//    TRACE_LOG("compressed enable_zip %d\n",enable_zip);
     if (!enable_zip) return FIMAGE_WRONGFORMAT;
 
     int HOffset=-1;
@@ -56,7 +57,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       CorruptZip=0;
       do{
         EasyStr fn=zippy.filename_in_zip();
-        TRACE("file in zip %s\n",fn.c_str());
+//        TRACE_LOG("File in zip %s\n",fn.c_str());
         Type=FileIsDisk(fn);
         if (Type==DISK_UNCOMPRESSED || Type==DISK_PASTI){
           if (CompressedDiskName.Empty() || IsSameStr_I(CompressedDiskName,fn.Text)){
@@ -85,6 +86,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       NewZipTemp.SetLength(MAX_PATH);
       GetTempFileName(WriteDir,"ZIP",0,NewZipTemp);
       if (zippy.extract_file(File,HOffset,NewZipTemp,true /*bool hide*/)){
+        TRACE_LOG("Failed to extract%s\n",NewZipTemp.c_str());
         DeleteFile(NewZipTemp);
         return FIMAGE_WRONGFORMAT;
       }
@@ -101,6 +103,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   }else if (Type==DISK_PASTI){
     f_PastiDisk=true;
   }else if (Type==0){
+    TRACE_LOG("Disk type 0\n");
     return FIMAGE_WRONGFORMAT;
   }
 
@@ -181,6 +184,8 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     }
 
     if (GetFileLength(nf)<512){
+      TRACE_LOG("File length of %s = %d\n",File.c_str(),GetFileLength(nf));
+//      BRK(check it)
       fclose(nf);
       if (NewZipTemp.NotEmpty()) DeleteFile(NewZipTemp);
       return FIMAGE_WRONGFORMAT;
@@ -289,6 +294,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
         }
 
         if (Err){
+          TRACE_LOG("Error opening %s\n",NewMSATemp.c_str());
           DeleteFile(NewMSATemp);
           if (NewZipTemp.NotEmpty()) DeleteFile(NewZipTemp);
           return FIMAGE_WRONGFORMAT;
@@ -798,7 +804,8 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   int drive=-1;
   if (this==&FloppyDrive[0]) drive=0;
   if (this==&FloppyDrive[1]) drive=1;
-  TRACE_LOG("Remove disk from drive %c\n",'A'+drive );
+  if(drive==0 || drive==1)
+    TRACE_LOG("Remove disk from drive %c\n",'A'+drive );
 #endif
 
   if (f && ReadOnly==0 && LoseChanges==0 && WrittenTo && ZipTempFile.Empty()){

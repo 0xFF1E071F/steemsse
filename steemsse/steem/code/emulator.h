@@ -204,6 +204,10 @@ EXT WORD tos_version;
 #define ON_RTE_DONE_MALLOC_FOR_EM 4
 #define ON_RTE_STOP 400
 
+#if defined(SS_CPU_LINE_F)
+#define ON_RTE_LINE_F 5
+#endif
+
 EXT int interrupt_depth INIT(0);
 EXT int em_width INIT(480);
 EXT int em_height INIT(480);

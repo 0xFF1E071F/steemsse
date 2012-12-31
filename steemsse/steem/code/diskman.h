@@ -46,9 +46,15 @@ private:
   static LRESULT __stdcall Dialog_WndProc(HWND,UINT,WPARAM,LPARAM);
   static int CALLBACK CompareFunc(LPARAM,LPARAM,LPARAM);
   void BeginDrag(int,HWND),MoveDrag(),EndDrag(int,int,bool);
+#ifndef SS_VAR_NO_WINSTON
   HRESULT CreateLinkCheckForOverwrite(char *,char *,IShellLink *,IPersistFile *);
   bool ImportDiskExists(char *,EasyStr &);
-  bool DoCreateMultiLinks(),DoImport();
+#endif
+  bool DoCreateMultiLinks()
+#ifndef SS_VAR_NO_WINSTON    
+    ,DoImport()
+#endif
+  ;
   void AddFoldersToMenu(HMENU,int,EasyStr,bool);
   bool MoveOrCopyFile(bool,char*,char*,char*,bool);
   void PropShowFileInfo(int);
@@ -157,11 +163,11 @@ public:
   bool AtHome;
   bool ExplorerFolders;
 
-
+#ifndef SS_VAR_NO_WINSTON
   EasyStr WinSTonPath,WinSTonDiskPath,ImportPath;
   bool ImportOnlyIfExist;
   int ImportConflictAction;
-
+#endif
   EasyStr MultipleLinksPath,LinksTargetPath;
 
   bool DoExtraShortcutCheck;

@@ -61,7 +61,7 @@ instr_exec ()
 */
   if(hd6301_completed_transmission_to_MC6850 
 #if defined(SS_IKBD_RUN_IRQ_TO_END)
-    && !ExecutingInt
+    && ExecutingInt!=1
 #endif
   )
   {
@@ -78,7 +78,7 @@ instr_exec ()
 
   if (!reg_getiflag () 
 #if defined(SS_IKBD_RUN_IRQ_TO_END)
-    && !ExecutingInt
+    && ExecutingInt!=1
 #endif
   ) 
   {

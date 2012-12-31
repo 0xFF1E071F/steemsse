@@ -551,15 +551,10 @@ void LoadState(GoodConfigStoreFile *pCSF)
   CheckMenuItem(boiler_op_menu,1516,MF_BYCOMMAND | int(debug_uppercase_disa ? MF_CHECKED:MF_UNCHECKED));
 
 #if defined(STEVEN_SEAGAL) //&& defined(SS_DEBUG)
-//  SSEOption.OutputTraceToFile
-//    =pCSF->GetInt("Debug Options","OutputTraceToFile",SSEOption.OutputTraceToFile);
-//  SSEOption.TraceFileLimit
-//    =pCSF->GetInt("Debug Options","TraceFileLimit",SSEOption.TraceFileLimit);
-
   CheckMenuItem(boiler_op_menu,1517,MF_BYCOMMAND|
-    ((SSEOption.OutputTraceToFile)?MF_CHECKED:MF_UNCHECKED));
+    ((USE_TRACE_FILE)?MF_CHECKED:MF_UNCHECKED));
   CheckMenuItem(boiler_op_menu,1518,MF_BYCOMMAND|
-    ((SSEOption.TraceFileLimit)?MF_CHECKED:MF_UNCHECKED));
+    ((TRACE_FILE_REWIND)?MF_CHECKED:MF_UNCHECKED));
 #endif
   
   CheckMenuItem(logsection_menu,1013,MF_BYCOMMAND | int(debug_wipe_log_on_reset ? MF_CHECKED:MF_UNCHECKED));
@@ -688,11 +683,6 @@ void SaveState(ConfigStoreFile *pCSF)
   pCSF->SetStr("Debug Options","Run Until Text",GetWindowTextStr(GetDlgItem(DWin,1021)));
   pCSF->SetInt("Debug Options","Monospace Disa",debug_monospace_disa);
   pCSF->SetInt("Debug Options","Uppercase Disa",debug_uppercase_disa);
-
-#if defined(STEVEN_SEAGAL) //&& defined(SS_DEBUG)
-//  pCSF->SetInt("Debug Options","OutputTraceToFile",SSEOption.OutputTraceToFile);
-//  pCSF->SetInt("Debug Options","TraceFileLimit",SSEOption.TraceFileLimit);
-#endif
 
   FILE *bf=fopen(WriteDir+SLASH "logsection.dat","wb");
   if (bf){

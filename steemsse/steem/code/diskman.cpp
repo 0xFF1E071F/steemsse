@@ -15,8 +15,10 @@ as changing disk images and determining what files are disks.
 #endif
 
 #if defined(STEVEN_SEAGAL) && USE_PASTI && defined(SS_VAR_PASTI_ON_WARNING)
-char window_caption[25]="Disk Manager (Pasti on)"; // and a nice global
+char window_caption[]=SS_DISK_MANAGER_PASTI_ON; // and a nice global
 #endif
+
+// SS: it's mixed win32/unix
 
 #define LOGSECTION LOGSECTION_IMAGE_INFO
 
@@ -52,10 +54,15 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
   }else if (MatchesAnyString_I(Ext,"STZ","ZIP",NULL)){
     ret=DISK_COMPRESSED;
 
-#ifdef RAR_SUPPORT // SS we will have UNRAR support later
+#ifdef RAR_SUPPORT 
   }else if (MatchesAnyString_I(Ext,"RAR",NULL)){
     ret=DISK_COMPRESSED;
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+  }else if(hUnrar&&MatchesAnyString_I(Ext,"RAR",NULL)){
+    ret=DISK_COMPRESSED;
+#endif
+
   }
 
 #if USE_PASTI
@@ -111,7 +118,7 @@ void TDiskManager::PerformInsertAction(int Action,EasyStr Name,EasyStr Path,Easy
       PostRunMessage();
     }else{
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_MOUSE_CAPTURE)
-      if(SSEOption.CaptureMouse)
+      if(CAPTURE_MOUSE)
         SetStemMouseMode(STEM_MOUSEMODE_WINDOW);
       else
         SetStemMouseMode(STEM_MOUSEMODE_DISABLED);
@@ -143,7 +150,7 @@ void TDiskManager::SetNumFloppies(int NewNum)
 
 #ifdef WIN32
   if (Handle) if (GetDlgItem(Handle,99)) InvalidateRect(GetDlgItem(Handle,99),NULL,0);
-#elif defined(UNIX)
+#elif defined(UNIX) //SS obviously a bit coded with a unix tool!
 	if (Handle){
 		if (num_connected_floppies==2){
 			drive_icon[1].set_icon(&Ico32,ICO32_DRIVE_B);
@@ -198,7 +205,7 @@ TDiskManager::TDiskManager()
   EjectDisksWhenQuit=0;
 
   MSAConvProcess=NULL;
-
+#ifndef SS_VAR_NO_WINSTON
   HKEY Key;
   WinSTonPath="C:\\Program Files\\WinSTon";
   if (RegOpenKey(HKEY_CURRENT_USER,"Software\\WinSTon",&Key)==ERROR_SUCCESS){
@@ -212,13 +219,14 @@ TDiskManager::TDiskManager()
   }
   NO_SLASH(WinSTonPath);
   WinSTonDiskPath=WinSTonPath+"\\Discs";
-
+#endif
   MSAConvPath="";
-
+#ifndef SS_VAR_NO_WINSTON
   ImportOnlyIfExist=true;
   ImportConflictAction=0;
 
   ContentConflictAction=2;
+#endif
 }
 //---------------------------------------------------------------------------
 void TDiskManager::ManageWindowClasses(bool Unreg)
@@ -1300,8 +1308,9 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,2010,T("Find In Current Folder"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,2030,T("Run MSA Converter")+"\10F6");
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,0,NULL);
+#ifndef SS_VAR_NO_WINSTON
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,2001,T("Import &WinSTon Favourites"));
-
+#endif
             RECT rc;
             GetWindowRect(HWND(lPar),&rc);
             TrackPopupMenu(Pop,TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
@@ -1543,9 +1552,11 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
         case 2007:case 2008:case 2009:
           This->DoubleClickAction=LOWORD(wPar)-2007;
           break;
+#ifndef SS_VAR_NO_WINSTON
         case 2001:  // Import
           This->ShowImportDiag();
           break;
+#endif
         case 2010:
           ShellExecute(NULL,"Find",This->DisksFol,"","",SW_SHOWNORMAL);
           break;
@@ -2759,7 +2770,7 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
 #if defined(STEVEN_SEAGAL) && USE_PASTI && defined(SS_VAR_PASTI_ON_WARNING)
   // check Pasti caption
   window_caption[12]=(pasti_active) ? ' ' : '\0';
-  SetWindowText(/*This->*/Handle,window_caption);
+  SetWindowText(Handle,window_caption);
 #endif
 
   if (DontChangeDisk==0){
@@ -2767,7 +2778,7 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
       return 0;
     int Err=FloppyDrive[Drive].SetDisk(Path,DiskInZip);
     if (Err){
-      TRACE_LOG("Error %d\n",Err);
+      TRACE_LOG("Set Disk Error %d\n",Err);
       if (FloppyDrive[Drive].Empty()) EjectDisk(Drive); // Update display
       if (SuppressErr==0){
         switch (Err){

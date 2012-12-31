@@ -18,7 +18,7 @@ TDebug::TDebug() {
 
   ZeroMemory(logsection_enabled_b,100*sizeof(bool)); // 100> our need
   // compile time wanted traces (overrides boiler if present)
-  logsection_enabled_b[ LOGSECTION_ALWAYS ] = 0;
+  logsection_enabled_b[ LOGSECTION_ALWAYS ] = 1;
   logsection_enabled_b[ LOGSECTION_FDC ] = 0;
   logsection_enabled_b[ LOGSECTION_IO ] = 0;
   logsection_enabled_b[ LOGSECTION_MFP_TIMERS ] = 0;
@@ -44,7 +44,7 @@ TDebug::TDebug() {
   // TODO more options in boiler?
   logsection_enabled_b[ LOGSECTION_FDC_BYTES ] = 0;
   logsection_enabled_b[ LOGSECTION_IPF_LOCK_INFO ] = 0;
-  logsection_enabled_b[ LOGSECTION_IMAGE_INFO ] = 0;
+  logsection_enabled_b[ LOGSECTION_IMAGE_INFO ] = 1;
 
 #if defined(SS_DEBUG_TRACE_FILE)
   ReportBreakpoints=TRUE; // disabled when clicking cancel in the box
@@ -69,8 +69,7 @@ TDebug::~TDebug() {
 #if defined(SS_DEBUG_TRACE_FILE)
 
 void TDebug::TraceToFile(char *fmt, ...){ 
-  if(SSEOption.OutputTraceToFile
-    && trace_file_pointer)  
+  if(USE_TRACE_FILE && trace_file_pointer)  
   {
     va_list body;	
     va_start(body, fmt);	
@@ -78,7 +77,7 @@ void TDebug::TraceToFile(char *fmt, ...){
     va_end(body);	
     fprintf(trace_file_pointer,trace_buffer);
     nTrace++; 
-    if(SSEOption.TraceFileLimit && nTrace>=TRACE_MAX_WRITES)
+    if(TRACE_FILE_REWIND && nTrace>=TRACE_MAX_WRITES)
     {
       nTrace=0;
       rewind(trace_file_pointer); // it doesn't erase
@@ -111,7 +110,7 @@ int ReportGeneralInfos(int when) {
     TRACE("Display %s", MONO ? "Monochrome" : "Colour");
 #if defined(SS_VID_BORDERS)
     if(!MONO)
-      TRACE(", Size %d", SSEOption.BorderSize);
+      TRACE(", Size %d", DISPLAY_SIZE);
 #endif
     TRACE("\n");
     TRACE("%d drives",num_connected_floppies);
@@ -155,8 +154,9 @@ int ReportGeneralInfos(int when) {
     TRACE("Timers A %X B %X C %X D %X\n",LPEEK(0x134),LPEEK(0x120),LPEEK(0x114),LPEEK(0x110));
     TRACE("ACIA IKBD %X\n",LPEEK(0x118));
     // Misc
-#if defined(SS_SOUND_MICROWIRE) && defined(SS_SOUND_TRACE)
-    TRACE("Microwire %d dma bass %X treble %X\n",SSEOption.STEMicrowire,dma_sound_bass,dma_sound_treble);
+#if defined(SS_SOUND_MICROWIRE)
+    if(dma_sound_bass!=6||dma_sound_treble!=6)
+      TRACE("Microwire %d dma bass %X treble %X\n",MICROWIRE_ON,dma_sound_bass,dma_sound_treble);
 #endif
   }
   return TRUE;

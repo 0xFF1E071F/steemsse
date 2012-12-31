@@ -28,6 +28,9 @@ FI_ENUM(FREE_IMAGE_FORMAT) {
 	FIF_PSD,
 	FIF_CUT,
 	FIF_IFF = FIF_LBM,
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+  IF_NEO,
+#endif
 };
 
 #define BMP_DEFAULT         0

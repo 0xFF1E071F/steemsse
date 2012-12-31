@@ -28,30 +28,18 @@
 
     TODO: 
     - get real timings / Froggies must still be OK
-    - mouse movement isn't satisfying yet
+    - mouse movement isn't satisfying yet, but it's complicated, SainT has
+    problems too. It's probably related to timings.
     - check ram access range?
 */
 
-#if !defined(STEVEN_SEAGAL)
-#define STEVEN_SEAGAL // defined in the IDE (VC), not in batch file (BCC)
-#endif
-
 #include "SSE/SSE.h"
-//#include "SSE/SSEDebug.h"
 #include "SSE/SSEParameters.h"
 #ifdef WIN32
 #include <windows.h>
 #endif
 
-//tmp
-//#ifdef UNIX
-//typedef unsigned int u_int; 
-//typedef unsigned char u_char;
-//#define u_int int
-//#endif
-
 #include <sys/types.h>
-
 
 #if defined(SS_IKBD_6301)
 

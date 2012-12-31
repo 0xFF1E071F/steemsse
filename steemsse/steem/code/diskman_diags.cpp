@@ -362,6 +362,7 @@ void TDiskManager::ShowLinksDiag()
 }
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
+#ifndef SS_VAR_NO_WINSTON
 void TDiskManager::ShowImportDiag()
 {
   ImportDiag=CreateWindowEx(WS_EX_CONTROLPARENT,"Steem Disk Manager Dialog",T("Import WinSTon Favourites"),WS_CAPTION,
@@ -459,6 +460,7 @@ void TDiskManager::ShowImportDiag()
   DiagFocus=GetDlgItem(ImportDiag,IDOK);
   ShowWindow(ImportDiag,SW_SHOW);
 }
+#endif
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 void TDiskManager::ShowPropDiag()
@@ -1025,8 +1027,10 @@ LRESULT __stdcall TDiskManager::Dialog_WndProc(HWND Win,UINT Mess,WPARAM wPar,LP
     switch (Mess){
       case WM_COMMAND:
         switch (LOWORD(wPar)){
+#ifndef SS_VAR_NO_WINSTON
           case IDOK:
             if (This->DoImport()==0) break;
+#endif
           case IDCANCEL:
             if (This->Importing){
               This->Importing=0;
@@ -1254,6 +1258,7 @@ bool TDiskManager::DoCreateMultiLinks()
 }
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
+#ifndef SS_VAR_NO_WINSTON
 bool TDiskManager::ImportDiskExists(char *Disk,EasyStr &FullDisk)
 {
   if (Disk==NULL) return 0;
@@ -1290,7 +1295,9 @@ bool TDiskManager::ImportDiskExists(char *Disk,EasyStr &FullDisk)
   FullDisk+=OldExt;
   return 0;
 }
+#endif
 //---------------------------------------------------------------------------
+#ifndef SS_VAR_NO_WINSTON
 HRESULT TDiskManager::CreateLinkCheckForOverwrite(char *LinkPath,char *TargetPath,
                           IShellLink *Link,IPersistFile* File)
 {
@@ -1323,7 +1330,9 @@ HRESULT TDiskManager::CreateLinkCheckForOverwrite(char *LinkPath,char *TargetPat
 
   return CreateLink(LinkPath,TargetPath,NULL,Link,File);
 }
+#endif
 //---------------------------------------------------------------------------
+#ifndef SS_VAR_NO_WINSTON
 bool TDiskManager::DoImport()
 {
   WinSTonPath.SetLength(MAX_PATH);
@@ -1508,5 +1517,6 @@ bool TDiskManager::DoImport()
 
   return true;
 }
+#endif
 //---------------------------------------------------------------------------
 

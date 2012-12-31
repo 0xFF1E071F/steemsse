@@ -11,10 +11,13 @@ to the PC display.
 #pragma message("Included for compilation: draw.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
+#include "SSE/SSEShifter.cpp"
+#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)
 #include "SSE/SSEVideo.cpp"
 #endif
-
 
 //---------------------------------------------------------------------------
 void ASMCALL draw_scanline_dont(int,int,int,int) {}
@@ -890,7 +893,7 @@ void draw(bool osd)
       scanline_drawn_so_far=0;
       shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
       Shifter.DrawScanlineToEnd();
 #else      
       draw_scanline_to_end();
@@ -962,8 +965,6 @@ void get_fullscreen_rect(RECT *rc)
 //---------------------------------------------------------------------------
 void init_screen()
 {
-
-
 
   draw_end();
 

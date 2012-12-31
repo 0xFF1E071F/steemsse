@@ -9,8 +9,6 @@ appears when the emulator begins to run to give useful information.
 #pragma message("Included for compilation: osd.cpp")
 #endif
 
-
-
 void ASMCALL osd_draw_char_dont(long*,BYTE*,long,long,int,long,long) {}
 
 void ASMCALL osd_draw_char_clipped_dont(long*,BYTE*,long,long,int,long,long,RECT*) {}
@@ -598,9 +596,16 @@ void osd_get_reset_info(EasyStringList *sl)
   sl->Add(t);
 
   sl->Add(T("ST CPU speed")+": "+(n_millions_cycles_per_sec)+" "+T("Megahertz"));
-
   t=T("Active drives")+": A";
+#if defined(STEVEN_SEAGAL) && defined(SS_IPF_OSD)
+  if(Caps.IsIpf(0))
+    t+=" (IPF)";
+#endif
   if (num_connected_floppies==2) t+=", B";
+#if defined(STEVEN_SEAGAL) && defined(SS_IPF_OSD)
+  if(Caps.IsIpf(1))
+    t+=" (IPF)";
+#endif
   for (int n=2;n<26;n++) if (mount_flag[n]) t+=Str(", ")+char('A'+n);
   sl->Add(t);
 

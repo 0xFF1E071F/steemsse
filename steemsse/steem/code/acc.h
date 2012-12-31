@@ -6,13 +6,16 @@
 #define INIT(s)
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+WORD change_endian(WORD x); // double of something?
+#endif
 
 #ifdef ENABLE_LOGFILE
 
   #define log(s)  \
    {if(logsection_enabled[LOGSECTION]){ \
       if(!logging_suspended){            \
-        log_write(s);                 \
+        log_write(s);                \
       }                               \
    }}
 

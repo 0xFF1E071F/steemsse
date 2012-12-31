@@ -1057,6 +1057,7 @@ void stemdos_intercept_trap_1()
         sr|=SR_IPL_7;
         on_rte=ON_RTE_STEMDOS;
         on_rte_interrupt_depth=interrupt_depth+1;
+
         stemdos_rte_action=STEMDOS_RTE_GET_DTA_FOR_FSFIRST;
 
         stemdos_trap_1_Fgetdta();
@@ -1101,9 +1102,7 @@ void stemdos_intercept_trap_1()
 #if defined(STEVEN_SEAGAL) && defined(SS_TOS)
       if(stemdos_command==0x3D)
       {
-#if defined(SS_TOS_TRACE)
-        TRACE("Opening file %s\n",stemdos_filename.c_str());
-#endif
+        TRACE_LOG("Opening file %s\n",stemdos_filename.c_str());
 #if defined(SS_TOS_PATCH106)
         if(SSE_HACKS_ON && tos_version==0x106 && stemdos_filename=="DESKTOP.INF")
           SS_signal=SS_SIGNAL_TOS_PATCH106;
@@ -1139,14 +1138,12 @@ void stemdos_intercept_trap_1()
       int h=m68k_dpeek(sp+2);
 
 #if defined(STEVEN_SEAGAL) && defined(SS_TOS)
-#if defined(SS_TOS_TRACE)
-      TRACE("Close file %d\n",h);
-#endif
+      TRACE_LOG("Close file %d\n",h);
 #if defined(SS_TOS_PATCH106)
       if(SS_signal==SS_SIGNAL_TOS_PATCH106)
       { // stupid hack because I can't patch the TOS itself - TODO
         BYTE tmp=PEEK(0xF0EF);
-        TRACE("Yoho! Hacking bug in TOS106 for you - byte %X\n",tmp);
+        TRACE_LOG("Yoho! Hacking bug in TOS106 for you - byte %X\n",tmp);
         tmp++;
         PEEK(0xF0EF)=tmp;
         SS_signal=0;
@@ -1167,6 +1164,7 @@ void stemdos_intercept_trap_1()
 
         on_rte=ON_RTE_STEMDOS;
         on_rte_interrupt_depth=interrupt_depth+1;
+
         stemdos_rte_action=STEMDOS_RTE_FCLOSE;
 
         stemdos_trap_1_Fclose(h); //deallocate handle
@@ -1177,7 +1175,7 @@ void stemdos_intercept_trap_1()
       return;
     }case 0x3f:{ //read
       int h=m68k_dpeek(sp+2);
-#if defined(STEVEN_SEAGAL) && defined(SS_TOS_TRACE)
+#if defined(STEVEN_SEAGAL___)
       long count=m68k_lpeek(sp+4);
       MEM_ADDRESS buf=m68k_lpeek(sp+8);
       TRACE("Read %d in file to %x\n",count,buf);

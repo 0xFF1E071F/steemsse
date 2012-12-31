@@ -38,7 +38,7 @@ void TOption::Init() {
   CaptureMouse=TRUE;
 #endif
 #if defined(SS_VID_BORDERS)
-  BorderSize=0; // original Steem 3.2
+  DisplaySize=0; // original Steem 3.2
 #endif
 #if defined(SS_VAR_STEALTH)
   StealthMode=FALSE;

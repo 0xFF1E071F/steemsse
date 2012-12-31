@@ -1,4 +1,7 @@
-#if defined(SS_VID_SHIFTER_EVENTS)
+#if defined(SS_SHIFTER_EVENTS)
+
+TVideoEvents VideoEvents;  // singleton
+
 
 TVideoEvents::TVideoEvents() {
   Init();
@@ -13,7 +16,7 @@ void TVideoEvents::Init() {
 int TVideoEvents::Report() {
   TRACE("Saving frame shifter events...\n");
   FILE* fp;
-  fp=fopen(VID_SHIFTER_EVENTS_FILENAME,"w"); // unique file name
+  fp=fopen(SHIFTER_EVENTS_FILENAME,"w"); // unique file name
   ASSERT(fp);
   if(fp)
   {

@@ -11,9 +11,9 @@ that deal with reads from ST I/O addresses ($ff8000 onwards).
 
 #define LOGSECTION LOGSECTION_IO
 
-#if !defined(STEVEN_SEAGAL) || !defined(SS_VID_SDP_READ) || defined(SS_DEBUG)
+#if !defined(STEVEN_SEAGAL) || !defined(SS_SHIFTER_SDP_READ) || defined(SS_DEBUG)
 MEM_ADDRESS get_shifter_draw_pointer(int cycles_since_hbl)
-{ // SS: basis for TShifter::ReadSDP in SSEVideo.h, which replaces this
+{ 
   if (bad_drawing){
     // Fake SDP
     if (scan_y<0){
@@ -129,7 +129,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
           rel_cycle%=10;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SHIFTER_EVENTS)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_EVENTS)
           VideoEvents.Add(scan_y,LINECYCLES,'j',rel_cycle+6);
 #endif
           BUS_JAM_TIME(rel_cycle+6); // just 6 - fixes jitter in Spectrum 512
@@ -218,7 +218,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
             "), changing ACIA IRQ bit from "+old_irq+" to "+ACIA_IKBD.irq); )
           }
           mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
-          TRACE_LOG("PC %X Read 0xfffc02: %x (%d) at ACT %d\n",pc,ACIA_IKBD.data,hd6301_transmitting_to_MC6850,ABSOLUTE_CPU_TIME);
+//          TRACE_LOG("PC %X Read 0xfffc02: %x (%d) at ACT %d\n",pc,ACIA_IKBD.data,hd6301_transmitting_to_MC6850,ABSOLUTE_CPU_TIME);
           return ACIA_IKBD.data;
       }
 
@@ -332,7 +332,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
         exception(BOMBS_BUS_ERROR,EA_READ,addr);
       }break;
     }case 0xff8a00:{      //----------------------------------- Blitter
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SHIFTER_EVENTS)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_EVENTS)
       BYTE b=Blitter_IO_ReadB(addr);
       VideoEvents.Add(scan_y,LINECYCLES,'b',((addr-0xff8a00)<<8)|b);
       return b;
@@ -637,7 +637,7 @@ FF8240 - FF827F   palette, res
         case 0xff8207:  //mid byte of screen draw pointer
         case 0xff8209:{  //low byte of screen draw pointer
           MEM_ADDRESS sdp;
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SDP_READ)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_SDP_READ)
           sdp=Shifter.ReadSDP(LINECYCLES); // a complicated affair
 #else
           if(scan_y<shifter_first_draw_line || scan_y>=shifter_last_draw_line){
@@ -648,12 +648,12 @@ FF8240 - FF827F   palette, res
                         " - Read shifter draw pointer as $"+HEXSl(sdp,6)+
                         " on "+scanline_cycle_log()); )
           }
-#if defined(STEVEN_SEAGAL) && !defined(SS_VID_SDP_READ) && defined(SS_VID_SDP_TRACE)
+#if defined(STEVEN_SEAGAL) && !defined(SS_SHIFTER_SDP_READ) && defined(SS_SHIFTER_SDP_TRACE)
           TRACE("ReadSDP y %d c %d %X->%X(%d)\n",scan_y,LINECYCLES,shifter_draw_pointer_at_start_of_line,sdp,sdp-shifter_draw_pointer_at_start_of_line);
 #endif
 #endif
           BYTE b=DWORD_B(&sdp,(2-(addr-0xff8205)/2)); // change for big endian !!!!!!!!!
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SHIFTER_EVENTS)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_EVENTS)
           VideoEvents.Add(scan_y,LINECYCLES,'r',((addr&0xF)<<8)|b);
 #endif
           return b;//DWORD_B(&sdp, (2-(addr-0xff8205)/2) );   

@@ -3,7 +3,7 @@
 #define SSESHIFTEREVENTS_H
 
 
-#if defined(SS_VID_SHIFTER_EVENTS)
+#if defined(SS_SHIFTER_EVENTS)
 /*  Function: record all "shifter events" of a frame. Save as file what I
     find a fantastic report (helped me fix many cases).
     At some point, to replace the Hatari hack  I tried using it for emulation,

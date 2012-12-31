@@ -42,21 +42,27 @@ Port 2 (DDR)  GPIP GPIP GPIP GPIP GPIP GPIP GPIP GPIP   1=Output
 Port 3 (GPIP) GPIP GPIP GPIP GPIP GPIP GPIP GPIP GPIP
                7    6    5    4    3    2    1    0
 
+Practically on the ST, the request is placed by clearing the bit in the GPIP.
+
 */ 
-  BYTE mask=BYTE(1 << bit);
-  BYTE set_mask=BYTE(set ? mask:0);
-  BYTE cur_val=(mfp_reg[MFPR_GPIP] & mask);
+  BYTE mask=BYTE(1 << bit); //SS get the bit in hexa //is cast useless?
+  BYTE set_mask=BYTE(set ? mask:0); //SS same or 0 if we clear
+  BYTE cur_val=(mfp_reg[MFPR_GPIP] & mask); //SS state of that GPIP bit
   if (cur_val==set_mask) return; //no change
+  //SS detects if we're setting an IRQ
   bool old_1_to_0_detector_input=(cur_val ^ (mfp_reg[MFPR_AER] & mask))==mask;
-  mfp_reg[MFPR_GPIP]&=BYTE(~mask);
-  mfp_reg[MFPR_GPIP]|=set_mask;
+  ASSERT( old_1_to_0_detector_input || set );
+  mfp_reg[MFPR_GPIP]&=BYTE(~mask); //SS zero the target bit, leaving others
+  mfp_reg[MFPR_GPIP]|=set_mask; //SS set target bit if needed
   // If the DDR bit is low then the bit from the io line is used,
   // if it is high interrupts then it comes from the input buffer.
   // In that case interrupts are handled in the write to the GPIP.
   if (old_1_to_0_detector_input && (mfp_reg[MFPR_DDR] & mask)==0){
     // Transition the right way! Make the interrupt pend (don't cause an intr
     // straight away in case another more important one has just happened).
-    mfp_interrupt_pend(mfp_gpip_irq[bit],ABSOLUTE_CPU_TIME);
+    //SS the irq must also be enabled
+    //ASSERT( mfp_interrupt_enabled[bit] ); // this would assert
+    mfp_interrupt_pend(mfp_gpip_irq[bit],ABSOLUTE_CPU_TIME); //SS this is a macro
     ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
   }
 }
@@ -222,7 +228,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
         }else{  //timer stopped, or in event count mode
           // This checks all timers to see if they have timed out, if they have then
           // it will set the pend bit. This is dangerous, messes up LXS!
-//          mfp_check_for_timer_timeouts();
+          // mfp_check_for_timer_timeouts(); // ss not implemented
 
           mfp_timer_enabled[timer]=false;
           mfp_timer_period_change[timer]=0;
@@ -370,11 +376,16 @@ void ASMCALL check_for_interrupts_pending()
 {
   if (STOP_INTS_BECAUSE_INTERCEPT_OS==0){
     if ((ioaccess & IOACCESS_FLAG_DELAY_MFP)==0){ //SS MFP=IPL6
+      //SS check IRQ from highest (15) to lowest (0)
       for (int irq=15;irq>=0;irq--)
       {
+
         BYTE i_bit=BYTE(1 << (irq & 7));
+
         int i_ab=1-((irq & 8) >> 3);
+
         if (mfp_reg[MFPR_ISRA+i_ab] & i_bit){ //interrupt in service
+          TRACE_LOG("IRQ %d in service\n",irq);
           break;  //time to stop looking for pending interrupts
         }
         if (mfp_reg[MFPR_IPRA+i_ab] & i_bit){ //is this interrupt pending?
@@ -391,7 +402,7 @@ void ASMCALL check_for_interrupts_pending()
             // like in Hatari, but it must point to some trouble? TODO
             if(SSE_HACKS_ON && irq==6 && ABSOLUTE_CPU_TIME-ikbd.timer_when_keyboard_info < SS_6301_TO_ACIA_IN_CYCLES)//7260)
             {
-              SS_INT_TRACE("mfp irq 6 %d cycles post trigger\n",ABSOLUTE_CPU_TIME-ikbd.timer_when_keyboard_info);
+              TRACE_LOG("mfp irq 6 %d cycles post trigger\n",ABSOLUTE_CPU_TIME-ikbd.timer_when_keyboard_info);
               break; // come back later
             }
 #endif
@@ -403,23 +414,22 @@ void ASMCALL check_for_interrupts_pending()
     }
 #if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START) // normally, no
     if (
-#ifdef SS_VIDEO
+#ifdef SS_SHIFTER
       Shifter.nVbl && // hack for resuming emu (auto.sts)
 #endif
       vbl_pending && ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl>64+4){
-      //SS_INT_TRACE("delayed vbl %d y %d SR %X\n",FRAME,scan_y,sr);
+      //TRACE_LOG("delayed vbl %d y %d SR %X\n",FRAME,scan_y,sr);
       if ((sr & SR_IPL)<SR_IPL_4){
         ASSERT(!Blit.HasBus);
         VBL_INTERRUPT
-//        if(LPEEK(0x70)!=0xFC06DE) SS_INT_TRACE("VBL %d vector %X\n",nVbl,LPEEK(0x70));
+//        if(LPEEK(0x70)!=0xFC06DE) TRACE_LOG("VBL %d vector %X\n",Shifter.nVbl,LPEEK(0x70));
       }
     }
 #else
      if (vbl_pending){ //SS IPL4
       if ((sr & SR_IPL)<SR_IPL_4){
-
         VBL_INTERRUPT
-//        if(LPEEK(0x70)!=0xFC06DE) SS_INT_TRACE("VBL %d vector %X\n",nVbl,LPEEK(0x70));
+        if(LPEEK(0x70)!=0xFC06DE) TRACE_LOG("F%d VBI %X\n",FRAME,LPEEK(0x70));
       }
     }
 
@@ -467,7 +477,7 @@ void mfp_interrupt(int irq,int when_fired)
               mfp_reg[MFPR_ISRA+mfp_interrupt_i_ab(irq)]&=BYTE(~mfp_interrupt_i_bit(irq));
             }
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF) 
-            // should be very rare, most programs, including TOS, poll
+            // should be rare, most programs, including TOS, poll
             if(irq==7 && Caps.Active && (Caps.WD1772.lineout&CAPSFDC_LO_INTRQ))
             {
               TRACE_LOG("execute WD1772 irq\n");
@@ -479,10 +489,39 @@ void mfp_interrupt(int irq,int when_fired)
             vector*=4;
             mfp_time_of_start_of_last_interrupt[irq]=ABSOLUTE_CPU_TIME;
 #if defined(STEVEN_SEAGAL) && defined(SS_INT_MFP)
-            INSTRUCTION_TIME_ROUND(SS_INT_MFP_TIMING);
+            INSTRUCTION_TIME_ROUND(SS_INT_MFP_TIMING); // same
 #else
             INSTRUCTION_TIME_ROUND(56);
 #endif
+
+
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)//tmp
+//            TRACE_LOG("MFP Execute IRQ %d Vector %X Address %X\n",irq,vector,LPEEK(vector));
+            TRACE_LOG("MFP %d IRQ %d ",interrupt_depth,irq);
+            switch(irq)
+            {
+            case 0:TRACE_LOG("Centronics busy\n");break;
+            case 1:TRACE_LOG("RS-232 DCD\n");  break;                                         
+case 2:            TRACE_LOG("RS-232 CTS\n");        break;                                   
+       case 3:     TRACE_LOG("Blitter done\n");            break;                             
+case 4:            TRACE_LOG("Timer D\n");         break;                       
+       case 5:     TRACE_LOG("Timer C\n");    break;                            
+case 6:            TRACE_LOG("ACIA\n");   break;                              
+       case 7:     TRACE_LOG("FDC/HDC\n");   break;                                           
+case 8:            TRACE_LOG("Timer B\n");   break;                                     
+       case 9:     TRACE_LOG("Send Error\n");            break;                               
+case 10:            TRACE_LOG("Send buffer empty\n");          break;                         
+       case 11:     TRACE_LOG("Receive error\n");                    break;                   
+case 12:            TRACE_LOG("Receive buffer full\n");        break;                         
+       case 13:     TRACE_LOG("Timer A\n");              break;                   
+case 14:            TRACE_LOG("RS-232 Ring detect\n");                     break;             
+       case 15:     TRACE_LOG("Monochrome Detect\n");       break;                     
+
+            }//sw
+//            ASSERT( interrupt_depth<2 );
+#endif
+
+
             m68k_interrupt(LPEEK(vector));
             sr=WORD((sr & (~SR_IPL)) | SR_IPL_6);
             log_to_section(LOGSECTION_INTERRUPTS,EasyStr("  IRQ fired - vector=")+HEXSl(LPEEK(vector),6));

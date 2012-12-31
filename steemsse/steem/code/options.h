@@ -125,7 +125,11 @@ public:
 
 #ifdef WIN32
   void CreateFullscreenPage(),CreateMIDIPage();
-  void CreateUpdatePage(),CreateAssocPage();
+  void 
+#ifndef SS_VAR_NO_UPDATE
+    CreateUpdatePage(),
+#endif
+    CreateAssocPage();
   void IconsAddToScroller(),CreateIconsPage();
 #else
   void CreatePathsPage();

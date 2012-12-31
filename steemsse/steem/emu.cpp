@@ -19,11 +19,12 @@ inline int abs_quick(int i)
 #include "conditions.h" //SS
 #include "SSE/SSE.h" //SS
 
+#include "SSE/SSEDebug.h"
 #if defined(STEVEN_SEAGAL)
 #include "SSE/SSEDecla.h"
 #include "SSE/SSEParameters.h"
 #include "SSE/SSEOption.h"
-#include "SSE/SSEDebug.h"
+#include "SSE/SSEFloppy.h"
 #endif
 
 #if USE_PASTI
@@ -96,6 +97,7 @@ void set_pc(MEM_ADDRESS ad); // forward // still necessary?
 #include "SSE/SSEInterrupt.h"
 #include "SSE/SSESTF.h"
 #include "SSE/SSEShifterEvents.h"
+#include "SSE/SSEShifter.h"
 #include "SSE/SSEVideo.h"
 #include "SSE/SSEInline.h"
 #include "SSE/SSEDebug.h"

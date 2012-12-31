@@ -247,13 +247,13 @@ bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDi
 
 #ifdef WIN32
     ExplorerFolders=pCSF->GetInt("Disks","ExplorerFolders",ExplorerFolders);
-
+#ifndef SS_VAR_NO_WINSTON
     WinSTonPath=pCSF->GetStr("Disks","WinSTonPath",WinSTonPath);
     WinSTonDiskPath=pCSF->GetStr("Disks","WinSTonDiskPath",WinSTonDiskPath);
     ImportPath=pCSF->GetStr("Disks","ImportPath",ImportPath);
     ImportOnlyIfExist=(bool)pCSF->GetInt("Disks","ImportOnlyIfExist",ImportOnlyIfExist);
     ImportConflictAction=pCSF->GetInt("Disks","ImportConflictAction",ImportConflictAction);
-
+#endif
     MSAConvPath=pCSF->GetStr("Disks","MSAConvPath",MSAConvPath);
 
     SmallIcons=pCSF->GetInt("Disks","SmallIcons",SmallIcons);
@@ -343,13 +343,13 @@ bool TDiskManager::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 
 #ifdef WIN32
   pCSF->SetStr("Disks","ExplorerFolders",LPSTR(ExplorerFolders ? "1":"0"));
-
+#ifndef SS_VAR_NO_WINSTON
   pCSF->SetStr("Disks","WinSTonPath",EasyStr(WinSTonPath));
   pCSF->SetStr("Disks","WinSTonDiskPath",EasyStr(WinSTonDiskPath));
   pCSF->SetStr("Disks","ImportPath",EasyStr(ImportPath));
   pCSF->SetStr("Disks","ImportOnlyIfExist",LPSTR(ImportOnlyIfExist ? "1":"0"));
   pCSF->SetStr("Disks","ImportConflictAction",EasyStr(ImportConflictAction));
-
+#endif
   pCSF->SetStr("Disks","MSAConvPath",MSAConvPath);
 
   pCSF->SetStr("Disks","SmallIcons",LPSTR(SmallIcons ? "1":"0"));
@@ -681,7 +681,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     SSE_HACKS_ON=pCSF->GetInt("Options","SpecificHacks",SSE_HACKS_ON);
 #endif
 #if defined(SS_VAR_MOUSE_CAPTURE)
-    SSEOption.CaptureMouse=pCSF->GetInt("Options","CaptureMouse",SSEOption.CaptureMouse);
+    CAPTURE_MOUSE=pCSF->GetInt("Options","CaptureMouse",CAPTURE_MOUSE);
 #endif
 #if defined(SS_IKBD_6301)
     HD6301EMU_ON=pCSF->GetInt("Options","HD6301Emu",HD6301EMU_ON);
@@ -689,14 +689,14 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
       HD6301EMU_ON=0;
 #endif
 #if defined(SS_VAR_STEALTH) 
-    SSEOption.StealthMode=pCSF->GetInt("Options","StealthMode",SSEOption.StealthMode);
+    STEALTH_MODE=pCSF->GetInt("Options","StealthMode",STEALTH_MODE);
 #endif
     // Adjustments
 #if defined(SS_VID_BORDERS)
-    SSEOption.BorderSize=pCSF->GetInt("Display","BorderSize",SSEOption.BorderSize);
-    if(SSEOption.BorderSize<0||SSEOption.BorderSize>3)
-      SSEOption.BorderSize=0;
-    ChangeBorderSize(SSEOption.BorderSize);
+    DISPLAY_SIZE=pCSF->GetInt("Display","BorderSize",DISPLAY_SIZE);
+    if(DISPLAY_SIZE<0||DISPLAY_SIZE>3)
+      DISPLAY_SIZE=0;
+    ChangeBorderSize(DISPLAY_SIZE);
 #endif
 #endif // SS
 
@@ -1015,16 +1015,16 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetStr("Options","SpecificHacks",EasyStr(SSE_HACKS_ON));
 #endif
 #if defined(SS_VAR_MOUSE_CAPTURE)
-  pCSF->SetStr("Options","CaptureMouse",EasyStr(SSEOption.CaptureMouse));
+  pCSF->SetStr("Options","CaptureMouse",EasyStr(CAPTURE_MOUSE));
 #endif
 #if defined(SS_IKBD_6301)
   pCSF->SetStr("Options","HD6301Emu",EasyStr(HD6301EMU_ON));
 #endif
 #if defined(SS_VAR_STEALTH) 
-  pCSF->SetStr("Options","StealthMode",EasyStr(SSEOption.StealthMode));
+  pCSF->SetStr("Options","StealthMode",EasyStr(STEALTH_MODE));
 #endif
 #if defined(SS_VID_BORDERS)
-  pCSF->SetStr("Display","BorderSize",EasyStr(SSEOption.BorderSize));  
+  pCSF->SetStr("Display","BorderSize",EasyStr(DISPLAY_SIZE));  
 #endif
 #endif//SS
 

@@ -1130,7 +1130,7 @@ void TOptionBox::CreateSSEPage() {
   border_size_dd.additem("Large (400x275)",1);
   border_size_dd.additem("Large (400x278)",2);
   border_size_dd.additem("Very large (412x280)",3);
-  border_size_dd.select_item_by_data(SSEOption.BorderSize);
+  border_size_dd.select_item_by_data(DISPLAY_SIZE);
   border_size_dd.create(XD,page_p,page_l+5+Wid,y,400-(15+Wid+10),350,
     dd_notify_proc,this);
   y+=LineHeight;
@@ -1139,7 +1139,7 @@ void TOptionBox::CreateSSEPage() {
 #if defined(SS_VAR_MOUSE_CAPTURE)
   capture_mouse_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Capture mouse"),4002,BkCol);
-  capture_mouse_but.set_check(SSEOption.CaptureMouse);
+  capture_mouse_but.set_check(CAPTURE_MOUSE);
   hints.add(capture_mouse_but.handle,
     T("If unchecked, Steem will leave mouse control to X-Windows until you click in the window"),
     page_p);
@@ -1158,7 +1158,7 @@ void TOptionBox::CreateSSEPage() {
 #if defined(SS_VAR_STEALTH) 
   stealth_mode_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Stealth mode"),4004,BkCol);
-  stealth_mode_but.set_check(SSEOption.StealthMode);
+  stealth_mode_but.set_check(STEALTH_MODE);
   hints.add(stealth_mode_but.handle,
   T("Steem won't tell ST programs who it is"),page_p);
   y+=LineHeight;
@@ -1183,7 +1183,7 @@ void TOptionBox::CreateSSEPage() {
 #if defined(SS_IKBD_6301) 
   hd6301emu_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("6301 true emu"),4006,BkCol);
-  hd6301emu_but.set_check(SSEOption.HD6301Emu);
+  hd6301emu_but.set_check(HD6301EMU_ON);
   hints.add(hd6301emu_but.handle,
   T("This enables a real emulation of the IKBD keyboard chip (using the Sim6xxx code by Arne Riiber, thx dude!)"),
     page_p);
@@ -1204,7 +1204,7 @@ void TOptionBox::CreateSSEPage() {
 #if defined(SS_SOUND_FILTER_STF)
   psg_filter_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("PSG Filter"),4008,BkCol);
-  psg_filter_but.set_check(SSEOption.PSGFilter);
+  psg_filter_but.set_check(PSG_FILTER_FIX);
   hints.add(psg_filter_but.handle,
   T("This makes PSG (YM-2149) chip tunes and samples sound less muffled"),
     page_p);
@@ -1214,7 +1214,7 @@ void TOptionBox::CreateSSEPage() {
 #if defined(SS_SOUND_MICROWIRE)
   ste_microwire_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("STE Microwire"),4009,BkCol);
-  ste_microwire_but.set_check(SSEOption.STEMicrowire);
+  ste_microwire_but.set_check(MICROWIRE_ON);
   hints.add(ste_microwire_but.handle,
   T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature"),
     page_p);
