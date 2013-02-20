@@ -1,3 +1,0 @@
-2 versions of the scripts for Borland free C++ 5.5 compiler are given.
-If you use this compiler, choose one of the versions and adapt it to
-your system.
