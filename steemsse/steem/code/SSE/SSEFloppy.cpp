@@ -126,7 +126,7 @@ is ignored and when reading the 8 upper bits consistently reads 1."
 */
     return 0xff;// like in doc
 #endif
-    BRK(impossible)
+    BRK(impossible) 
 
   case 0xff8605: 
     // sector counter
@@ -498,6 +498,7 @@ What was in the buffers will go nowhere, the internal counter is reset.
 
 
 #if defined(SS_DEBUG)
+// we used those while adding IPF support
 
 void TDma::TraceIORead(MEM_ADDRESS addr) {
   UpdateRegs();
@@ -588,7 +589,7 @@ void TDma::TraceIOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
     TRACE("W DMA CR $%X\n",(dma_mode&0xff00)|io_src_b);
     break;
   case 0xff8609:  //high byte of DMA pointer
-    TRACE("W DMA bus %X\n",(dma_address&0x00ffff)| ((MEM_ADDRESS)io_src_b) << 16);
+    TRACE("W DMA bus %X\n",(dma_address&0x00ffff)| ( ((MEM_ADDRESS)io_src_b) << 16) );//extra () for warning
     break;
   case 0xff860b:  //mid byte of DMA pointer
     break;
@@ -633,11 +634,11 @@ void TDma::UpdateRegs(bool trace_them) {
   if(Caps.IsIpf(floppy_current_drive()))
   {
     int ext=0; // TODO
-    fdc_cr=CapsFdcGetInfo(cfdciR_Command, &Caps.WD1772,ext);
-    fdc_str=CapsFdcGetInfo(cfdciR_ST, &Caps.WD1772,ext);
-    fdc_tr=CapsFdcGetInfo(cfdciR_Track, &Caps.WD1772,ext);
-    fdc_sr=CapsFdcGetInfo(cfdciR_Sector, &Caps.WD1772,ext);
-    fdc_dr=CapsFdcGetInfo(cfdciR_Data, &Caps.WD1772,ext);
+    fdc_cr=CAPSFdcGetInfo(cfdciR_Command, &Caps.WD1772,ext);
+    fdc_str=CAPSFdcGetInfo(cfdciR_ST, &Caps.WD1772,ext);
+    fdc_tr=CAPSFdcGetInfo(cfdciR_Track, &Caps.WD1772,ext);
+    fdc_sr=CAPSFdcGetInfo(cfdciR_Sector, &Caps.WD1772,ext);
+    fdc_dr=CAPSFdcGetInfo(cfdciR_Data, &Caps.WD1772,ext);
     floppy_head_track[0]=Caps.SF314[0].track;
     floppy_head_track[1]=Caps.SF314[1].track;
   } 
@@ -689,7 +690,7 @@ void TDma::Event() {
 
 
 #undef LOGSECTION
-#define LOGSECTION LOGSECTION_FDC_BYTES
+#define LOGSECTION LOGSECTION_FDC_BYTES//SS
 
 void TDma::TransferBytes() {
   // execute the DMA transfer (assume floppy)
@@ -850,17 +851,18 @@ void TWD1772::TraceStatus() {
 TCaps Caps; // singleton
 
 TCaps::TCaps() {
-//  VERIFY( Init()!=NULL ); // we prefer to init from main
+  // we init in main to keep control of timing
 }
 
 
 TCaps::~TCaps() {
-  CapsExit();
+  if(Version) //if = 0, the DLL wasn't there
+    CAPSExit();
 }
 
 void SetNotifyInitText(char*);//forward
 #undef LOGSECTION
-#define LOGSECTION LOGSECTION_INIT
+#define LOGSECTION LOGSECTION_INIT//SS
 
 TCaps::Init() {
 
@@ -875,61 +877,73 @@ TCaps::Init() {
 #if defined(SS_VAR_NOTIFY)
   SetNotifyInitText(SS_IPF_PLUGIN_FILE);
 #endif
-  CapsInit(SS_IPF_PLUGIN_FILE);
 
-  // drives
-  SF314[0].type=SF314[1].type=sizeof(CapsDrive); // must be >=sizeof(CapsDrive)
-  SF314[0].rpm=SF314[1].rpm=CAPSDRIVE_35DD_RPM;
-  SF314[0].maxtrack=SF314[1].maxtrack=CAPSDRIVE_35DD_HST;
+  CapsVersionInfo versioninfo;
+  try {
+    CAPSInit();
+  }
+  catch(...) {
+    TRACE_LOG("CapsImg.DLL can't be loaded\n");
+    return 0;
+  }
+  VERIFY( !CAPSGetVersionInfo((void*)&versioninfo,0) );
+  ASSERT( !versioninfo.type );
+  TRACE_LOG("Using CapsImg library V%d.%d\n",versioninfo.release,versioninfo.revision);
+  CAPSIMG_OK=Version=versioninfo.release*10+versioninfo.revision; 
+  ASSERT( Version==42 );
 
-  // controller
+  // controller init
   WD1772.type=sizeof(CapsFdc);  // must be >=sizeof(CapsFdc)
   WD1772.model=cfdcmWD1772;
   WD1772.clockfrq=SS_IPF_FREQU; 
   WD1772.drive=SF314; // ain't it cool?
   WD1772.drivecnt=2;
   WD1772.drivemax=0;
+  // drives
+  SF314[0].type=SF314[1].type=sizeof(CapsDrive); // must be >=sizeof(CapsDrive)
+  SF314[0].rpm=SF314[1].rpm=CAPSDRIVE_35DD_RPM;
+  SF314[0].maxtrack=SF314[1].maxtrack=CAPSDRIVE_35DD_HST;
 
-  if(CapsFdcInit(&WD1772)!=imgeOk)
-    TRACE_LOG("CapsFdcInit failed, no IPF support\n");
-  else
+  int ec=CAPSFdcInit(&WD1772);
+  if(ec!=imgeOk)
   {
-    CapsVersionInfo versioninfo;
-    VERIFY( !CapsGetVersionInfo((void*)&versioninfo,0) );
-    ASSERT( !versioninfo.type );
-    TRACE_LOG("Using CapsImg library V%d.%d\n",versioninfo.release,versioninfo.revision);
-    Version=versioninfo.release*10+versioninfo.revision; // keep this for hacks
-    ASSERT( Version==42 );
+    TRACE_LOG("CAPSFdcInit failure %d\n",ec);
+    Version=0;
+    return 0;
   }
 
-  // the DLL will call them, strange that they're erased at FDC init
+  // the DLL will call them, strange that they're erased at FDC init:
   WD1772.cbdrq=CallbackDRQ;
   WD1772.cbirq=CallbackIRQ;
   WD1772.cbtrk=CallbackTRK;
+
+  // we already create our 2 IPF drives, instead of waiting for an image:
+  ContainerID[0]=CAPSAddImage();
+  ContainerID[1]=CAPSAddImage();
+  ASSERT( ContainerID[0]!=-1 && ContainerID[1]!=-1 );
+  WD1772.drivemax=2;
+  WD1772.drivecnt=2;
+
   return Version;
 }
 
 
 void TCaps::Reset() {
-    CapsFdcReset(&WD1772);
+    CAPSFdcReset(&WD1772);
 }
 
 #undef LOGSECTION
-#define LOGSECTION LOGSECTION_IMAGE_INFO
+#define LOGSECTION LOGSECTION_IMAGE_INFO//SS
 
 int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
     ASSERT( !drive || drive==1 );
-    ASSERT( !IsIpf(drive) );
     ASSERT( img_info );
-    ContainerID[drive]=CapsAddImage();
     ASSERT( ContainerID[drive]!=-1 );
-    WD1772.drivemax++; 
-    ASSERT( WD1772.drivemax>=1 && WD1772.drivemax<=2 );
+    ASSERT( ContainerID[drive]!=-1 );
     DriveMap|=(drive+1); // not <<!
     bool FileIsReadOnly=bool(GetFileAttributes(File) & FILE_ATTRIBUTE_READONLY);
-    TRACE_LOG("Adding CAPS drive ID %d for drive %c\n",Caps.ContainerID[drive],drive+'A');
-    VERIFY( !CapsLockImage(ContainerID[drive],File) ); // open the IPF file
-    VERIFY( !CapsGetImageInfo(img_info,ContainerID[drive]) );
+    VERIFY( !CAPSLockImage(ContainerID[drive],File) ); // open the IPF file
+    VERIFY( !CAPSGetImageInfo(img_info,ContainerID[drive]) );
     ASSERT( img_info->type==ciitFDD );
     TRACE_LOG("Disk in %c is CAPS release %d rev %d of %d/%d/%d for ",
       drive+'A',img_info->release,img_info->revision,img_info->crdt.day,
@@ -938,7 +952,7 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
     for(int i=0;i<CAPS_MAXPLATFORM;i++)
     {
       if((img_info->platform[i])!=ciipNA)
-        TRACE_LOG("%s ",CapsGetPlatformName(img_info->platform[i]));
+        TRACE_LOG("%s ",CAPSGetPlatformName(img_info->platform[i]));
       if(img_info->platform[i]==ciipAtariST)
         found=true;
     }
@@ -954,25 +968,24 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
     SF314[drive].diskattr|=CAPSDRIVE_DA_IN; // indispensable!
     if(!FileIsReadOnly)
       SF314[drive].diskattr&=~CAPSDRIVE_DA_WP; // Sundog
-    CapsFdcInvalidateTrack(&WD1772,drive); // Galaxy Force II
+    CAPSFdcInvalidateTrack(&WD1772,drive); // Galaxy Force II
     LockedTrack[drive]=LockedSide[drive]=-1;
   return 0;
 }
 
 
 void TCaps::RemoveDisk(int drive) {
-    TRACE_LOG("Drive %c removing image and CAPS drive ID %d\n",drive+'A',Caps.ContainerID[drive]);
-    VERIFY( !CapsUnlockImage(Caps.ContainerID[drive]) ); // eject disk
-    VERIFY( CapsRemImage(Caps.ContainerID[drive])!=-1 ); // remove drive
-    WD1772.drivemax--;
-    ASSERT( WD1772.drivemax>=0 && WD1772.drivemax<2 );
-    DriveMap&=~(drive+1); // not <<!
-    if(!IsIpf(!drive)) // other drive
-      Active=FALSE; 
+  TRACE_LOG("Drive %c removing image\n",drive+'A');
+  VERIFY( !CAPSUnlockImage(Caps.ContainerID[drive]) ); // eject disk
+  SF314[drive].diskattr&=~CAPSDRIVE_DA_IN;
+  DriveMap&=~(drive+1); // not <<!
+  if(!IsIpf(!drive)) // other drive
+    Active=FALSE; 
 }
 
 
 #undef LOGSETION
+#define LOGSECTION LOGSECTION_FDC
 
 void TCaps::WritePsgA(int data) {
   // drive selection (we don't refactor...)
@@ -995,23 +1008,32 @@ UDWORD TCaps::ReadWD1772() {
 #endif
 
 #if defined(SS_IPF_RUN_PRE_IO)
-  CapsFdcEmulate(&WD1772,CYCLES_PRE_IO);
+  CAPSFdcEmulate(&WD1772,CYCLES_PRE_IO);
   CyclesRun+=CYCLES_PRE_IO;
 #endif
 
+  UDWORD data=CAPSFdcRead(&WD1772,(dma_mode & (BIT_1+BIT_2))/2); 
   if(!(dma_mode & (BIT_1+BIT_2))) // read status register
   {
     mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
     WD1772.lineout&=~CAPSFDC_LO_INTRQ; // and in the WD1772
+    int drive=floppy_current_drive(); //TODO code duplication
+    if(floppy_mediach[drive])
+    {
+      if(floppy_mediach[drive]/10!=1) 
+        data|=FDC_STR_WRITE_PROTECT;
+      else
+        data&=~FDC_STR_WRITE_PROTECT;
+      TRACE_LOG("FDC SR mediach %d WP %x\n",floppy_mediach[drive],data&FDC_STR_WRITE_PROTECT);
+    }
   }
-  UDWORD data=CapsFdcRead(&WD1772,(dma_mode & (BIT_1+BIT_2))/2); 
 
 #if defined(SS_IPF_RUN_POST_IO)
-  CapsFdcEmulate(&WD1772,CYCLES_POST_IO);
+  CAPSFdcEmulate(&WD1772,CYCLES_POST_IO);
   CyclesRun+=CYCLES_POST_IO;
 #endif
   ASSERT(!(data&0xFF00));
-  return data;//&0xbd ; //& 0xFD
+  return data;
 }
 
 
@@ -1022,7 +1044,7 @@ int TCaps::WriteWD1772(int data) {
 #endif
 
 #if defined(SS_IPF_RUN_PRE_IO)
-  CapsFdcEmulate(&WD1772,CYCLES_PRE_IO);
+  CAPSFdcEmulate(&WD1772,CYCLES_PRE_IO);
   CyclesRun+=CYCLES_PRE_IO;
 #endif  
   int wd_address=(dma_mode&(BIT_1+BIT_2))>>1;
@@ -1063,31 +1085,34 @@ int TCaps::WriteWD1772(int data) {
 #endif
   }
 
-  CapsFdcWrite(&WD1772,wd_address,data); // send to DLL
+  TRACE("write %X to %p - %X\n",data,&WD1772,wd_address);
+  CAPSFdcWrite(&WD1772,wd_address,data); // send to DLL
 
 #if defined(SS_IPF_RUN_POST_IO)
-  CapsFdcEmulate(&WD1772,CYCLES_POST_IO);
+  CAPSFdcEmulate(&WD1772,CYCLES_POST_IO);
   CyclesRun+=CYCLES_POST_IO;
 #endif
 
   return wd_address;
 }
 
+#undef LOGSETION
 
 void TCaps::Hbl() {
+
   // we run cycles at each HBL if there's an IPF file in. Performance OK
 #if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
   ASSERT( Shifter.CurrentScanline.Cycles>100)
 #if defined(SS_IPF_RUN_PRE_IO) || defined(SS_IPF_RUN_POST_IO)
   ASSERT( Shifter.CurrentScanline.Cycles-Caps.CyclesRun>0 );
 #endif
-  CapsFdcEmulate(&WD1772,Shifter.CurrentScanline.Cycles
+  CAPSFdcEmulate(&WD1772,Shifter.CurrentScanline.Cycles
 #if defined(SS_IPF_RUN_PRE_IO) || defined(SS_IPF_RUN_POST_IO)
     -CyclesRun
 #endif
     );
 #else
-    CapsFdcEmulate(&WD1772,screen_res==2? 160 : 512);
+  CAPSFdcEmulate(&WD1772,screen_res==2? 160 : 512);
 #endif
 
 #if defined(SS_IPF_RUN_PRE_IO) || defined(SS_IPF_RUN_POST_IO)
@@ -1102,8 +1127,7 @@ int TCaps::IsIpf(int drive) {
 }
 
 
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_FDC_BYTES // to trace all bytes transferred!
+#define LOGSECTION LOGSECTION_FDC_BYTES//SS // to trace all bytes transferred!
 
 /*  Callback functions. Since they're static, they access object data like
     any external function, using 'Caps.'
@@ -1120,7 +1144,7 @@ void TCaps::CallbackDRQ(PCAPSFDC pc, UDWORD setting) {
   {
     if(!(dma_mode&BIT_8)) // disk->RAM
     {
-      BYTE data_register=CapsFdcGetInfo(cfdciR_Data, &Caps.WD1772,0); 
+      BYTE data_register=CAPSFdcGetInfo(cfdciR_Data, &Caps.WD1772,0); 
       fdc_read_address_buffer[
 #if defined(SS_DMA_DOUBLE_FIFO)
         16*Dma.BufferInUse+
@@ -1134,8 +1158,8 @@ void TCaps::CallbackDRQ(PCAPSFDC pc, UDWORD setting) {
 #endif
         fdc_read_address_buffer_len++];
 /*
-"The FIFOs are not flushed automatically at the end of a transfer, and therefore 
-it is only possible to transfer data in multiples of 16 bytes"
+"The FIFOs are not flushed automatically at the end of a transfer, and 
+therefore it is only possible to transfer data in multiples of 16 bytes"
 */
     ASSERT( fdc_read_address_buffer_len<=16 );
     if(fdc_read_address_buffer_len==16)
@@ -1153,11 +1177,11 @@ it is only possible to transfer data in multiples of 16 bytes"
   }
 }
 
-
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_FDC
 
 void TCaps::CallbackIRQ(PCAPSFDC pc, DWORD lineout) {
+  ASSERT(pc==&Caps.WD1772);
   //ASSERT( lineout&CAPSFDC_LO_INTRQ );// Manoir de Mortevielle
   //ASSERT( !mfp_interrupt_enabled[7] );  // Cyberball
 #if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
@@ -1175,7 +1199,7 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   ASSERT( !drive||drive==1 );
   ASSERT( Caps.IsIpf(drive) );
   ASSERT( drive==floppy_current_drive() );
-  CapsTrackInfoT2 track_info;
+  CapsTrackInfoT2 track_info; // apparently we must use type 2...
   track_info.type=2; 
   UDWORD flags=DI_LOCK_DENALT|DI_LOCK_DENVAR|DI_LOCK_UPDATEFD|DI_LOCK_TYPE;
   int side=Caps.SF314[drive].side;
@@ -1185,12 +1209,12 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   {
     ASSERT( Caps.LockedSide[drive]!=-1 );
     ASSERT( track!=Caps.LockedTrack[drive] || side!=Caps.LockedSide[drive] );
-    VERIFY( !CapsUnlockTrack(Caps.ContainerID[drive],Caps.LockedTrack[drive],
+    VERIFY( !CAPSUnlockTrack(Caps.ContainerID[drive],Caps.LockedTrack[drive],
       Caps.LockedSide[drive]) );
     TRACE_LOG("CAPS Unlock %c:S%dT%d\n",drive+'A',Caps.LockedSide[drive],
       Caps.LockedTrack[drive]);
   }
-  VERIFY( !CapsLockTrack((PCAPSTRACKINFO)&track_info,Caps.ContainerID[drive],
+  VERIFY( !CAPSLockTrack((PCAPSTRACKINFO)&track_info,Caps.ContainerID[drive],
     track,side,flags) );
   ASSERT( side==track_info.head );
   ASSERT( track==track_info.cylinder );
@@ -1212,7 +1236,7 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   TRACE_LOG("sector info (encoder,cell type,data,gap info)\n");
   for(sec_num=1;sec_num<=track_info.sectorcnt;sec_num++)
   {
-    CapsGetInfo(&CSI,Caps.ContainerID[drive],track,side,cgiitSector,sec_num-1);
+    CAPSGetInfo(&CSI,Caps.ContainerID[drive],track,side,cgiitSector,sec_num-1);
     TRACE_LOG("#%d|%d|%d|%d %d %d|%d %d %d %d %d %d %d\n",
       sec_num,
       CSI.enctype,      // encoder type

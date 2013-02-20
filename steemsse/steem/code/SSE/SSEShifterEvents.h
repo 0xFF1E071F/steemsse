@@ -25,6 +25,7 @@ public:
   int TriggerReport; // set 2 to ask a full report, then it's set FALSE again
   TVideoEvents();
   inline void Add(int scanline, int cycle, char type, int value);
+//  inline void Add(int pc,int scanline, int cycle, char type, int value);
   void Init();
   int Report();
   int Vbl(); 
@@ -56,7 +57,10 @@ inline void TVideoEvents::Add(int scanline, int cycle, char type, int value) {
   m_nEvents++;  // starting from 0 each VBL, event 0 is dummy 
   if(m_nEvents<=0||m_nEvents>MAX_EVENTS) {BRK(bad m_nEvents); return;}
   int total_cycles= (shifter_freq_at_start_of_vbl==50) ?512:508;// Shifter.CurrentScanline.Cycles;//512;
-  if(cycle>total_cycles) // if hbl was delayed, adjust here
+  if(
+    
+    0&&
+    cycle>total_cycles) // if hbl was delayed, adjust here
   {
     cycle-=total_cycles;
     scanline++;

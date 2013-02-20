@@ -1,6 +1,7 @@
 // This file is compiled as a distinct module (resulting in an OBJ file)
 #include "SSEOption.h"
 #include "SSEDebug.h"
+#include "SSESTF.h" // for the enum
 
 #if defined(SS_SSE_OPTION_STRUCT)
 
@@ -13,38 +14,39 @@ TOption SSEOption; // singleton
 #endif
 
 TOption::TOption() {
-  Init();
+  Init(); // a problem...
 }
 
 
 void TOption::Init() {
   //TRACE("init SSEOption\n");
+//  ZeroMemory(this,sizeof(TOption)); 
 #if defined(SS_HACKS)
   Hacks=TRUE;
 #endif
-#if defined(SS_IKBD_6301)
   HD6301Emu=FALSE;
-#endif
-#if defined(SS_SOUND_MICROWIRE)
   STEMicrowire=FALSE;
-#endif
 #if defined(SS_SOUND_FILTER_STF)
   PSGFilter=TRUE;
 #endif
-#if defined(SS_STF)
-  STModel=STE;
-#endif
-#if defined(SS_VAR_MOUSE_CAPTURE)
+  STModel=0;//STE;
   CaptureMouse=TRUE;
-#endif
-#if defined(SS_VID_BORDERS)
   DisplaySize=0; // original Steem 3.2
-#endif
-#if defined(SS_VAR_STEALTH)
   StealthMode=FALSE;
-#endif
   OutputTraceToFile=TRUE; // can be disabled in Boiler
   TraceFileLimit=FALSE;//TRUE; // stop TRACING to file at +-3+MB
+  WakeUpState=0; 
 }
 
 #endif//#if defined(SS_SSE_OPTION_STRUCT)
+
+
+#if defined(SS_SSE_CONFIG_STRUCT)
+
+TConfig SSEConfig;
+
+TConfig::TConfig() {
+  ZeroMemory(this,sizeof(TConfig));
+}
+
+#endif//#if defined(SS_SSE_CONFIG_STRUCT)

@@ -10,8 +10,12 @@ change Steem's many options to their heart's delight.
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_STF_MATCH_TOS)
-EasyStr KnownSTFTosPath,KnownSTETosPath;
+EasyStr KnownSTFTosPath,KnownSTETosPath; // global...
 #endif
+
+///#include "SSE/SSECpu.h"
+
+#define LOGSECTION LOGSECTION_OPTIONS//SS
 
 //---------------------------------------------------------------------------
 bool TOptionBox::ChangeBorderModeRequest(int newborder)
@@ -191,7 +195,7 @@ int TOptionBox::TOSLangToFlagIdx(int Lang)
     case 3: return 4;  //German
     case 11: return 5; //Italian
     case 13: return 6; //Swedish
-#if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS) // from some dude
+#if defined(SSE_AVTANDIL_FIX_001)
     case 39: return 9; //Russian-corrected
 #else
     case 14: return 9; //Russian
@@ -206,13 +210,23 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel)
 { //SS this creates the TOS list in the option page
 #ifdef WIN32
   HWND Win=GetDlgItem(Handle,8300);
+#ifndef SS_STF_MATCH_TOS
+/*  When player selects STE/STF, this function may be called to get
+    paths to TOS. But the window doesn't exist, hence some complications.
+*/
   if (Win==NULL) return;
-
+#endif
   EnumDateFormats(EnumDateFormatsProc,LOCALE_USER_DEFAULT,DATE_SHORTDATE);
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STF_MATCH_TOS)
+  if(Win) {
+#endif
   SendMessage(Win,LB_RESETCONTENT,0,0);
   UpdateWindow(Win);
   SendMessage(Win,WM_SETREDRAW,0,0);
+#if defined(STEVEN_SEAGAL) && defined(SS_STF_MATCH_TOS)
+  }
+#endif
 #elif defined(UNIX)
   if (tos_lv.handle==0) return;
 
@@ -235,6 +249,9 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel)
   EasyStr Fol=RunDir;
   EasyStr VersionPath; // The first TOS found which matches the current TOS version
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STF_MATCH_TOS)
+  if(Win) {
+#endif
   eslTOS.DeleteAll();
   eslTOS.Sort=eslTOS_Sort;
 
@@ -245,6 +262,9 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel)
       Sel=NewROMFile;
     }
   }
+#if defined(STEVEN_SEAGAL) && defined(SS_STF_MATCH_TOS)
+  }
+#endif
 
  	DirSearch ds;
   if (ds.Find(Fol+SLASH+"*.*")){
@@ -294,25 +314,39 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel)
 
 #if defined(STEVEN_SEAGAL) && defined(SS_STF_MATCH_TOS)
             // remember paths of TOS102 (STF) & TOS106 (STE)
-            if(Ver==0x102)
+            if(Ver==0x102 && KnownSTFTosPath.Empty())
+            {
+              TRACE_LOG("Memorising %s for TOS%X\n",Path.c_str(),Ver);
               KnownSTFTosPath=Path;
-            else if(Ver==0x106)
+            }
+            else if(Ver==0x106 && KnownSTETosPath.Empty())
+            {
+              TRACE_LOG("Memorising %s for TOS%X\n",Path.c_str(),Ver);
               KnownSTETosPath=Path;
+            }
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
             if(Ver!=0x81AA) // 6301 ST Rom mustn't be listed
 #endif
-
+#if defined(STEVEN_SEAGAL) && defined(SS_STF_MATCH_TOS)
+  if(Win) {
+#endif
             eslTOS.Add(3,Str(GetFileNameFromPath(Path))+"\01"+Path,
                             Ver,Country,Date);
             if (Ver==tos_version && VersionPath.Empty()) VersionPath=Path;
+#if defined(STEVEN_SEAGAL) && defined(SS_STF_MATCH_TOS)
+  }
+#endif
           }
         }
       }
     }while (ds.Next());
     ds.Close();
   }
+#if defined(STEVEN_SEAGAL) && defined(SS_STF_MATCH_TOS)
+  if(!Win)  return; // that's it
+#endif
 
   int Selected=-1,VersionSel=-1,ROMFileSel=-1;
 
@@ -342,6 +376,9 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel)
     if (IsSameStr_I(FullPath,Sel)) Selected=idx;
     if (IsSameStr_I(FullPath,ROMFile)) ROMFileSel=idx;
     if (IsSameStr_I(FullPath,VersionPath)) VersionSel=idx;
+#if defined(STEVEN_SEAGAL) && defined(SS_STF_MATCH_TOS) // ensure refresh list
+    if (IsSameStr_I(FullPath,NewROMFile)) Selected=idx;
+#endif
     i+=dir;
   }
 
@@ -388,6 +425,7 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel)
   }
   WIN_ONLY( SendMessage(Win,WM_SETREDRAW,1,0); )
 }
+
 //---------------------------------------------------------------------------
 void TOptionBox::LoadProfile(char *File)
 {
@@ -589,7 +627,7 @@ void TOptionBox::LoadIcons()
                           hGUIIcon[RC_ICO_OPS_PROFILES],hGUIIcon[RC_ICO_EXTERNAL],hGUIIcon[RC_ICO_OPS_MACROS],
                           hGUIIcon[RC_ICO_OPS_ICONS],hGUIIcon[RC_ICO_OPS_OSD],
 #if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE)                          
-                          hGUIIcon[RC_ICO_OPS_SSE],
+                          hGUIIcon[RC_ICO_OPS_SSE], // YEAH!!
 #endif
                           0);
   }
@@ -889,25 +927,34 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 
 #if defined(STEVEN_SEAGAL)
-#if defined(SS_STF)
-          // option ST model
+
+#if defined(SS_STF)          // option ST model
         case 211:
           if (HIWORD(wPar)==CBN_SELENDOK)
           {
             ST_TYPE=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
+            TRACE_LOG("Select ST type = %d\n",ST_TYPE);
             SwitchSTType(ST_TYPE);
 #if defined(SS_STF_MATCH_TOS)
-            // preselect a compatible TOS
+            // preselect a compatible TOS 
+            if(KnownSTETosPath.Empty()||KnownSTFTosPath.Empty())
+            {
+              EasyStr Sel;
+              This->TOSRefreshBox(Sel);
+            }
+            ASSERT( !KnownSTETosPath.Empty() && !KnownSTFTosPath.Empty() );
             if(ST_TYPE==STE 
               && (tos_version<0x106 || !This->NewROMFile.Empty()) 
               && !KnownSTETosPath.Empty())
             {
+              TRACE_LOG("TOS %s\n",KnownSTETosPath.c_str());
               This->NewROMFile=KnownSTETosPath;
             }
             else if(ST_TYPE!=STE 
               && (tos_version>0x104 || !This->NewROMFile.Empty())  
               && !KnownSTFTosPath.Empty())
             {
+              TRACE_LOG("TOS %s\n",KnownSTFTosPath.c_str());
               This->NewROMFile=KnownSTFTosPath;
             }
 #endif
@@ -916,6 +963,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             {
               // Oh happy you, you get a Mega STF with 4MB!
               DWORD Conf=MAKELONG(MEMCONF_2MB,MEMCONF_2MB);
+              TRACE_LOG("Granting 4MB for Mega STF4!\n");
               This->NewMemConf0=LOWORD(Conf);This->NewMemConf1=HIWORD(Conf);
               if (bank_length[0]==mmu_bank_length_from_config[This->NewMemConf0] &&
                 bank_length[1]==mmu_bank_length_from_config[This->NewMemConf1]){
@@ -926,6 +974,14 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #endif
           }
 	  break;
+#endif
+#if defined(SS_MMU_WAKE_UP) // 0,1,2
+        case 212:
+          if (HIWORD(wPar)==CBN_SELENDOK)
+          {
+            WAKE_UP_STATE=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
+          }
+          break;
 #endif
 #endif// defined(STEVEN_SEAGAL)
 
@@ -1025,6 +1081,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if (HIWORD(wPar)==CBN_SELENDOK)
           {
             DISPLAY_SIZE=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
+            TRACE_LOG("Display size %d\n",DISPLAY_SIZE);
             ChangeBorderSize(DISPLAY_SIZE);
           }
 	  break;
@@ -1034,6 +1091,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if(HIWORD(wPar)==BN_CLICKED)
           {
             SSE_HACKS_ON=!SSE_HACKS_ON;
+            TRACE_LOG("Hacks %d\n",SSE_HACKS_ON);
             SendMessage(HWND(lPar),BM_SETCHECK,SSE_HACKS_ON,0);
           }
           break;
@@ -1043,6 +1101,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if(HIWORD(wPar)==BN_CLICKED)
           {
             CAPTURE_MOUSE=!CAPTURE_MOUSE;
+            TRACE_LOG("Capture mouse %d\n",CAPTURE_MOUSE);
             SendMessage(HWND(lPar),BM_SETCHECK,CAPTURE_MOUSE,0);
           }
           break;
@@ -1052,9 +1111,10 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if(HIWORD(wPar)==BN_CLICKED)
           {
             HD6301EMU_ON=!HD6301EMU_ON;
-            if(!HD6301.Initialised) // it's not greyed out but nothing happens
+            if(!HD6301_OK) // it's not greyed out but nothing happens
               HD6301EMU_ON=0; //TODO grey out
             SendMessage(HWND(lPar),BM_SETCHECK,HD6301EMU_ON,0);
+            TRACE_LOG("HD6301 emu: %d\n",HD6301EMU_ON);
             printf("HD6301 emu: %d\n",HD6301EMU_ON);
           }
           break;
@@ -1064,6 +1124,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if(HIWORD(wPar)==BN_CLICKED)
           {
             STEALTH_MODE=!STEALTH_MODE;
+            TRACE_LOG("Stealth: %d\n",STEALTH_MODE);
             SendMessage(HWND(lPar),BM_SETCHECK,STEALTH_MODE,0);
           }
           break;
@@ -1356,6 +1417,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             {
               PEEK(0x484)&=0xFFFE;
             }
+            TRACE_LOG("Keyboard click $464 %X\n",PEEK(0x484));
             SendMessage(HWND(lPar),BM_SETCHECK,keyboard_click,0);
           }
           break; 
@@ -1365,6 +1427,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 7302: // STE Microwire on/off 
           if (HIWORD(wPar)==BN_CLICKED){
             MICROWIRE_ON=!MICROWIRE_ON;
+            TRACE_LOG("Microwire %d\n",MICROWIRE_ON);
             SendMessage(HWND(lPar),BM_SETCHECK,MICROWIRE_ON,0);
           }
           break; 
@@ -1374,6 +1437,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 7303: // PSG Filter (more open)
           if (HIWORD(wPar)==BN_CLICKED){
             PSG_FILTER_FIX=!PSG_FILTER_FIX;
+            TRACE_LOG("Alternative PSG filter %d\n",PSG_FILTER_FIX);
             SendMessage(HWND(lPar),BM_SETCHECK,PSG_FILTER_FIX,0);
           }
           break; 
@@ -2188,4 +2252,4 @@ int TOptionBox::DTreeNotifyProc(DirectoryTree*,void *t,int Mess,int i1,int)
 #include "x/x_options.cpp"
 #endif
 
-
+#undef LOGSECTION //SS

@@ -151,7 +151,7 @@ HRESULT SteemDisplay::InitDD()
       Err=EasyStr("CoCreateInstance error\n\n")+Err;
       log_write("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
       log_write(Err);
-      TRACE("%s\n",Err);
+      TRACE_LOG("%s\n",Err);
       log_write("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 #ifndef ONEGAME
       MessageBox(NULL,Err,T("Steem Engine DirectDraw Error"),
@@ -201,6 +201,10 @@ HRESULT SteemDisplay::InitDD()
     ZeroMemory(DDDisplayModePossible,sizeof(DDDisplayModePossible));
     ZeroMemory(DDClosestHz,sizeof(DDClosestHz));
     DDObj->EnumDisplayModes(DDEDM_REFRESHRATES,NULL,this,DDEnumModesCallback);
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_CHECK_DDFS)
+    TRACE_LOG("DD fullscreen mask %X\n",DD_FULLSCREEN);
+#endif
+
     for (int idx=0;idx<3;idx++){
       for (int hicol=0;hicol<2;hicol++){
         for (int n=1;n<NUM_HZ;n++){
@@ -211,29 +215,46 @@ HRESULT SteemDisplay::InitDD()
 
     return DD_OK;
   }catch(...){
-    TRACE("DirectDraw caused DISASTER!\n");
+    TRACE_LOG("DirectDraw caused DISASTER!\n");
     return DDError("DirectDraw caused DISASTER!",DDERR_EXCEPTION);
   }
 }
 //---------------------------------------------------------------------------
 HRESULT WINAPI SteemDisplay::DDEnumModesCallback(LPDDSURFACEDESC ddsd,LPVOID t)
 {
-  if (ddsd->ddpfPixelFormat.dwRGBBitCount>16) return DDENUMRET_OK;
+  ASSERT(! (ddsd->dwFlags & DDSD_ALPHABITDEPTH) );
+  ASSERT(! (ddsd->dwFlags & DDSD_ZBUFFERBITDEPTH) );
+  ASSERT( ddsd->lPitch== ddsd->dwWidth*(ddsd->ddpfPixelFormat.dwRGBBitCount/8) );
   
-  SteemDisplay *This=(SteemDisplay*)t;
-  int hicol=(ddsd->ddpfPixelFormat.dwRGBBitCount>8),idx=-1;
+  TRACE_LOG("DD fullscreen mode %dx%d %d bits %dHz\n",
+    ddsd->dwWidth,ddsd->dwHeight,
+    ddsd->ddpfPixelFormat.dwRGBBitCount,
+    ddsd->dwRefreshRate
+    );
 
+  if (ddsd->ddpfPixelFormat.dwRGBBitCount>16) return DDENUMRET_OK;//SS?
+  
+  SteemDisplay *This=(SteemDisplay*)t;//SS as passed
+  int hicol=(ddsd->ddpfPixelFormat.dwRGBBitCount>8),idx=-1;
+  ASSERT( (!hicol) || ddsd->ddpfPixelFormat.dwRGBBitCount==16 );
   if (ddsd->dwWidth==640 && ddsd->dwHeight==480) idx=0;
   if (ddsd->dwWidth==800 && ddsd->dwHeight==600) idx=1;
   if (ddsd->dwWidth==640 && ddsd->dwHeight==400) idx=2;
 
   if (idx>=0){
+    ASSERT( ddsd->dwWidth!=320 );
     This->DDDisplayModePossible[idx][hicol]=true;
+    TRACE_LOG("Adding idx %d hicol %d w %d h%d %dHz\n",
+      idx,hicol,ddsd->dwWidth,ddsd->dwHeight,ddsd->dwRefreshRate);
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_CHECK_DDFS)
+    DD_FULLSCREEN|=(1<<(idx+(hicol*4))); //$77 if all found
+#endif
     for (int n=1;n<NUM_HZ;n++){
       int diff=abs(HzIdxToHz[n]-int(ddsd->dwRefreshRate));
       int curdiff=abs(HzIdxToHz[n]-int(This->DDClosestHz[idx][hicol][n]));
       if (diff<curdiff && diff<=DISP_MAX_FREQ_LEEWAY){
         This->DDClosestHz[idx][hicol][n]=ddsd->dwRefreshRate;
+        TRACE_LOG("Adding close Hz\n");
       }
     }
   }
@@ -305,7 +326,11 @@ HRESULT SteemDisplay::DDCreateSurfaces()
 #else
         DDBackSurDesc.dwWidth=640+4* (SideBorderSizeWin);
 #endif
-        DDBackSurDesc.dwHeight=400+2*(BORDER_TOP+BottomBorderSize);
+        DDBackSurDesc.dwHeight=400+2*(BORDER_TOP+BottomBorderSize
+#if defined(SS_VID_ADJUST_DRAWING_ZONE1)
+        +1 // hack to fix crash on video emu panic, last 'border' scanline
+#endif
+        );
 #else
         DDBackSurDesc.dwWidth=768;
         DDBackSurDesc.dwHeight=400+2*(BORDER_TOP+BORDER_BOTTOM);
@@ -314,12 +339,18 @@ HRESULT SteemDisplay::DDCreateSurfaces()
         DDBackSurDesc.dwWidth=640;
         DDBackSurDesc.dwHeight=480;
       }
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_ADJUST_DRAWING_ZONE2)
+      // because we can increase or decrease display size ?
+      draw_blit_source_rect.right=int(DDBackSurDesc.dwWidth)-1;
+      draw_blit_source_rect.bottom=int(DDBackSurDesc.dwHeight)-1;
+#else
       if (draw_blit_source_rect.right>=int(DDBackSurDesc.dwWidth)){
         draw_blit_source_rect.right=int(DDBackSurDesc.dwWidth)-1;
       }
       if (draw_blit_source_rect.bottom>=int(DDBackSurDesc.dwHeight)){
         draw_blit_source_rect.bottom=int(DDBackSurDesc.dwHeight)-1;
       }
+#endif
       if ((Ret=DDObj->CreateSurface(&DDBackSurDesc,&DDBackSur,NULL))!=DD_OK){
         if (n==0){
           ExtraFlags=0;
@@ -379,7 +410,7 @@ HRESULT SteemDisplay::DDError(char *ErrorText,HRESULT DErr)
   DDGetErrorDescription(DErr,Text+strlen(Text),499-strlen(Text));
   log_write("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
   log_write(Text);
-  TRACE("!!!!!!!\n%s\n!!!!!!!!!!!!!!",Text);
+  TRACE_LOG("!!!!!!!\n%s\n!!!!!!!!!!!!!!",Text);
   log_write("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
   strcat(Text,EasyStr("\n\n")+T("Would you like to disable the use of DirectDraw?"));
 #ifndef ONEGAME
@@ -473,6 +504,9 @@ bool SteemDisplay::InitGDI()
 #undef LOGSECTION
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
+
+#define LOGSECTION LOGSECTION_VIDEO//SS
+
 HRESULT SteemDisplay::Lock()
 {
   switch (Method){
@@ -504,6 +538,7 @@ HRESULT SteemDisplay::Lock()
         }
         catch(...) {
           // forget it
+          TRACE_LOG("Exception during DD Lock CLS\n");
         }
       }
 #endif
@@ -529,7 +564,7 @@ void SteemDisplay::Unlock()
       {
         if(!frameskip||frameskip==8) // error||auto
           frameskip=1;
-        TRACE("Start AVI recording, codec %s, frameskip %d\n",SS_VID_RECORD_AVI_CODEC,frameskip);
+        TRACE_LOG("Start AVI recording, codec %s, frameskip %d\n",SS_VID_RECORD_AVI_CODEC,frameskip);
         pAviFile=new CAviFile(SS_VID_RECORD_AVI_FILENAME,
           mmioFOURCC(video_recording_codec[0],video_recording_codec[1],
           video_recording_codec[2],video_recording_codec[3]),
@@ -607,13 +642,18 @@ bool SteemDisplay::Blit()
     HRESULT hRet;
     if (FullScreen){
       if (runstate==RUNSTATE_RUNNING){
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_BLIT_TRY_BLOCK)
+        try {
+#endif
+
         switch (draw_fs_blit_mode){
           case DFSM_FLIP:
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
             if(BORDER_40) // bad framing in flip mode
             {
               draw_fs_blit_mode=DFSM_STRAIGHTBLIT;
-              TRACE("Fullscreen BorderSize %d changing to mode %d\n",DISPLAY_SIZE,draw_fs_blit_mode);
+              TRACE_LOG("Fullscreen BorderSize %d changing to mode %d\n",DISPLAY_SIZE,draw_fs_blit_mode);
               break;
             }
 #endif
@@ -653,11 +693,17 @@ bool SteemDisplay::Blit()
             break;
           }
         }
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_BLIT_TRY_BLOCK)
+        }
+        catch(...) { // VC6: catches system exceptions
+          hRet=1234; // real ones are negative
+        }
+#endif
         if (hRet==DDERR_SURFACELOST){ // SS can happen if idle for long
           hRet=RestoreSurfaces();
           if (hRet!=DD_OK){
             DDError(T("Drawing memory permanently lost"),hRet);
-            TRACE("Drawing memory permanently lost\n");
+            TRACE_LOG("Drawing memory permanently lost\n");
             Init();
           }
         }
@@ -675,7 +721,7 @@ bool SteemDisplay::Blit()
             change_fullscreen_display_mode(true); // no warning
             runstate=RUNSTATE_STOPPING;//we lost picture, we must stop
           }
-          TRACE("Fullscreen Direct Draw blit failed, error %d, changing to mode %d\n",hRet,draw_fs_blit_mode);
+          TRACE_LOG("Fullscreen Direct Draw blit failed, error %d, changing to mode %d\n",hRet,draw_fs_blit_mode);
         }
 #endif
       }else{ //not running right now
@@ -689,7 +735,7 @@ bool SteemDisplay::Blit()
             if (i==0) hRet=RestoreSurfaces();
             if (hRet!=DD_OK){
               DDError(T("Drawing memory permanently lost"),hRet);
-			  TRACE("Drawing memory permanently lost\n");
+			        TRACE_LOG("Drawing memory permanently lost\n");
               Init();
               break;
             }
@@ -752,7 +798,7 @@ void SteemDisplay::WaitForAsyncBlitToFinish()
 void SteemDisplay::RunStart(bool Temp)
 {
   if (FullScreen==0) return;
-
+  ASSERT( BytesPerPixel==1 || BytesPerPixel==2 );
   if (Temp==0){
     bool ChangeSize=0;
     int w=640,h=400,hz=0;
@@ -935,7 +981,14 @@ void SteemDisplay::ChangeToFullScreen()
 {
   if (CanGoToFullScreen()==0 || FullScreen || DDExclusive) return;
 
-  TRACE("Going fullscreen...\n");
+//  TRACE_LOG("Going fullscreen...\n");
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_CHECK_DDFS)
+    if(!DD_FULLSCREEN)
+    {
+      Alert("Your display setup won't allow Steem fullscreen!","Direct Draw Error!",0);
+      return;
+    }
+#endif
 
   draw_end();
 
@@ -960,7 +1013,7 @@ void SteemDisplay::ChangeToFullScreen()
     DirectoryTree::PopupParent=StemWin;
     
     GetWindowRect(StemWin,&rcPreFS);
-
+    
     ShowWindow(GetDlgItem(StemWin,106),SW_SHOWNA);
 
     SetWindowLong(StemWin,GWL_STYLE,WS_VISIBLE);
@@ -977,15 +1030,14 @@ void SteemDisplay::ChangeToFullScreen()
       w=monitor_width;
       h=monitor_height;
     }
-
-    SetWindowPos(StemWin,HWND_TOPMOST,0,0,w,h,0);
+    VERIFY( SetWindowPos(StemWin,HWND_TOPMOST,0,0,w,h,0) );
 
     CheckResetDisplay(true);
 
     ClipWin=CreateWindow("Steem Fullscreen Clip Window","",WS_CHILD | WS_VISIBLE |
                           WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
                           0,MENUHEIGHT,w,h-MENUHEIGHT,StemWin,(HMENU)1111,Inst,NULL);
-    DDClipper->SetHWnd(0,ClipWin);
+    VERIFY( DDClipper->SetHWnd(0,ClipWin)==DD_OK );
 
 #ifndef ONEGAME
     FSQuitBut=CreateWindow("Steem Fullscreen Quit Button","",WS_CHILD,
@@ -1035,6 +1087,7 @@ void SteemDisplay::ChangeToFullScreen()
       PostRunMessage();
 #endif
     }else{ //back to windowed mode
+      TRACE_LOG("Can't go fullscreen\n");
       ChangeToWindowedMode(true);
     }
   }
@@ -1043,7 +1096,7 @@ void SteemDisplay::ChangeToFullScreen()
 void SteemDisplay::ChangeToWindowedMode(bool Emergency)
 {
   if (DDExclusive==0 && FullScreen==0) return;
-  TRACE("Going windowed mode...\n");
+  TRACE_LOG("Going windowed mode...\n");
   WIN_ONLY( if (FullScreen) TScreenSaver::killTimer(); )
 
   bool CanChangeNow=true;
@@ -1094,6 +1147,9 @@ void SteemDisplay::ChangeToWindowedMode(bool Emergency)
 bool SteemDisplay::CanGoToFullScreen()
 {
   if (Method==DISPMETHOD_DD){
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_CHECK_DDFS)
+    if(DD_FULLSCREEN)
+#endif
     return true;
   }
   return 0;
@@ -1106,6 +1162,8 @@ void SteemDisplay::FlipToDialogsScreen()
 //---------------------------------------------------------------------------
 HRESULT SteemDisplay::SetDisplayMode(int w,int h,int bpp,int hz,int *hz_ok)
 {
+  ASSERT( w==640 || w==800 );
+  ASSERT( h==400 || h==480 || h==600 );
   if (Method==DISPMETHOD_DD && DDExclusive){
     int idx=-1;
     if (w==640 && h==480) idx=0;
@@ -1132,11 +1190,13 @@ HRESULT SteemDisplay::SetDisplayMode(int w,int h,int bpp,int hz,int *hz_ok)
     if (Ret!=DD_OK){
 //      DDError(T("Can't SetDisplayMode"),Ret);
 //      Init();
+      TRACE_LOG("DD error %d\n",Ret);
       return Ret;
     }
 
     if ((Ret=DDCreateSurfaces())!=DD_OK) Init();
-
+    if (Ret!=DD_OK)
+      TRACE_LOG("DD error %d\n",Ret);
     return Ret;
   }
   return DDERR_GENERIC;
@@ -1735,4 +1795,4 @@ void draw_init_resdependent()
 #include "x/x_display.cpp"
 #endif
 
-
+#undef LOGSECTION//SS

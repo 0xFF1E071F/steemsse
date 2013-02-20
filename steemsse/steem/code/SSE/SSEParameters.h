@@ -106,9 +106,12 @@
 ///////////
 
 #if defined(SS_HACKS)
-#define SS_SIGNAL_TOS_PATCH106 1 // checking all ST files we open
-#define SS_SIGNAL_SHIFTER_CONFUSED_1 2 // temp hacks for 3.4
-#define SS_SIGNAL_SHIFTER_CONFUSED_2 3 // not looking for elegance!
+enum {
+SS_SIGNAL_TOS_PATCH106=1, // checking all ST files we open
+SS_SIGNAL_SHIFTER_CONFUSED_1,// temp hacks for 3.4
+SS_SIGNAL_SHIFTER_CONFUSED_2,// not looking for elegance!
+SS_SIGNAL_ENUM_EnumDisplayModes, // wait until finished (?)
+};
 #endif
 
 
@@ -171,6 +174,7 @@
 /*  Timings theory=44 but "at least" 12 cycles more are necessary
     56 was already the Steem value. Changing those values may apparently
     fix some problems, but it's generally a false lead (tried that).
+    Handy for experiments :)
 */
 #if defined(SS_INT_MFP)
 #define SS_INT_MFP_TIMING 56
@@ -227,6 +231,22 @@
 #define SS_IPF_FREQU 8000000//? CPU speed?
 #endif
 
+
+///////////
+// SOUND //
+///////////
+
+#if defined(SS_SOUND_LOW_PASS_FILTER)
+#define LOW_PASS_FILTER_FREQ (10000)
+#define LOW_PASS_FILTER_GAIN (0)
+#endif
+
+#if defined(SS_SOUND_FILTER_STF)
+//#define SS_SOUND_FILTER_STF_V ((*source_p+dv)>>2)
+//#define SS_SOUND_FILTER_STF_DV ((*source_p+dv)/2)
+#define SS_SOUND_FILTER_STF_V ((*source_p+dv)/2)
+#define SS_SOUND_FILTER_STF_DV (v)//((*source_p+dv)/2)
+#endif
 
 
 /////////

@@ -44,6 +44,8 @@ extern
 int iDummy;// can be l-value
 
 
+
+
 #if defined(SS_HACKS)
 extern "C" int SS_signal; // "handy" global mask (future coding horror case)
 #endif
@@ -62,6 +64,27 @@ extern "C" int SS_signal; // "handy" global mask (future coding horror case)
 #endif
 
 
+/////////
+// IPF //
+/////////
+
+#if defined(SS_IPF)
+
+#ifdef WIN32
+
+#ifdef _MSC_VER
+#pragma comment(lib, "../../3rdparty/caps/CAPSImg.lib")
+#pragma comment(linker, "/delayload:CAPSImg.dll")
+#endif
+
+#ifdef __BORLANDC__
+#pragma comment(lib, "../../3rdparty/caps/bcclib/CAPSImg.lib")
+///#pragma comment(linker, "/delayload:CAPSImg.dll")
+#endif
+
+#endif//win32
+
+#endif
 
 
 
@@ -74,18 +97,70 @@ extern "C" int SS_signal; // "handy" global mask (future coding horror case)
 #endif
 
 
+/////////
+// SDL //
+/////////
+
+#if defined(SS_SDL)
+
+#ifdef WIN32
+
+#include <SDL-WIN/include/SDL.h> 
+
+#ifdef _MSC_VER
+#pragma comment(lib, "../../3rdparty/SDL-WIN/lib/x86/SDL.lib")
+#pragma comment(lib, "../../3rdparty/SDL-WIN/lib/x86/SDLmain.lib")
+
+//#pragma comment(lib, "Delayimp.lib")
+//#pragma comment(linker, "/ignore:4199")
+#pragma comment(linker, "/delayload:SDL.dll")
+#endif
+
+#ifdef __BORLANDC__
+#pragma comment(lib, "../../3rdparty/SDL-WIN/bcclib/SDL.lib")
+#endif
+
+#endif//win32
+
+#endif
+
+
+//////////
+// TEMP //
+//////////
+
+//before moving to a better location/class
+
+
+
+
 /////////////
 // VARIOUS //
 /////////////
 
+#if defined(SS_DELAY_LOAD_DLL)
+// Delay loading DLLs
+// No switch because code depends on it and it's desireable,
+// and we can't make a switch for Borland (option directly in makefile)
 
+#include "delayimp.h"
 
+#ifdef _MSC_VER
+#pragma comment(lib, "Delayimp.lib")
+#pragma comment(linker, "/ignore:4199")
+#endif
+
+#ifdef __BORLANDC__
+extern DelayedLoadHook _EXPDATA __pfnDliFailureHook;
+FARPROC WINAPI MyLoadFailureHook(dliNotification dliNotify, DelayLoadInfo * pdli);
+#endif
+
+#endif
 
 
 ///////////
 // VIDEO //
 ///////////
-
 
 #define LINECYCLE0 cpu_timer_at_start_of_hbl
 #define LINECYCLES (ABSOLUTE_CPU_TIME-LINECYCLE0) 
@@ -98,8 +173,6 @@ extern "C" int SS_signal; // "handy" global mask (future coding horror case)
 #else 
 #define FRAME (-1)
 #endif
-
-
 
 #if defined(SS_VIDEO)
 

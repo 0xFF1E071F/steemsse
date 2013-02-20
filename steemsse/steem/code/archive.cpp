@@ -9,7 +9,7 @@ of the various unarchiving libraries it can use.
 #pragma message("Included for compilation: archive.cpp")
 #endif
 
-#define LOGSECTION LOGSECTION_IMAGE_INFO
+#define LOGSECTION LOGSECTION_IMAGE_INFO//SS
 
 //---------------------------------------------------------------------------
 zipclass::zipclass()
@@ -95,16 +95,16 @@ bool zipclass::first(char *name)
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
   }
-  else if (strcmp(type,"RAR")==0 && hUnrar)
+  else if (strcmp(type,"RAR")==0 && UNRAR_OK)
   {
     ArchiveData.ArcName=name;
-    hArcData=RarOpenArchive(&ArchiveData);
+    hArcData=RAROpenArchive(&ArchiveData);
     ASSERT(hArcData);
     ASSERT(!ArchiveData.OpenResult);
     if(!hArcData || ArchiveData.OpenResult)
       return ZIPPY_FAIL;
 //    TRACE_LOG("UnRAR: %s now open\n",name);
-    int ec=RarReadHeader(hArcData,&HeaderData);
+    int ec=RARReadHeader(hArcData,&HeaderData);
     if(!ec)
     {
 //      ASSERT( !(HeaderData.FileAttr&0x10) ); // directory!
@@ -169,14 +169,14 @@ bool zipclass::next()
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
   }else if (strcmp(type,"RAR")==0){
 
-    if (is_open==0 || !hUnrar || !hArcData) 
+    if (is_open==0 || !UNRAR_OK || !hArcData) 
       return ZIPPY_FAIL;
 
     int ec;
     // we must 'process' the current one or reading will fail
-    ec=RarProcessFile(hArcData,RAR_TEST,NULL,NULL);
+    ec=RARProcessFile(hArcData,RAR_TEST,NULL,NULL);
     ASSERT(!ec);
-    ec=RarReadHeader(hArcData,&HeaderData);
+    ec=RARReadHeader(hArcData,&HeaderData);
     current_file_n++;
     if(!ec)
     {
@@ -212,7 +212,7 @@ char* zipclass::filename_in_zip()
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
   }else if (strcmp(type,"RAR")==0){
-    if(hUnrar&&hArcData) 
+    if(UNRAR_OK&&hArcData) 
       return HeaderData.FileName;
 #endif
   }
@@ -236,9 +236,9 @@ bool zipclass::close()
       return ZIPPY_SUCCEED;
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
-    }else if (strcmp(type,"RAR")==0 && hUnrar){
+    }else if (strcmp(type,"RAR")==0 && UNRAR_OK){
 //      TRACE_LOG("closing RAR archive\n");
-      VERIFY( !RarCloseArchive(hArcData) );
+      VERIFY( !RARCloseArchive(hArcData) );
       is_open=false;
       return ZIPPY_SUCCEED;
 #endif
@@ -406,8 +406,7 @@ bool zipclass::extract_file(char *fn,int offset,char *dest_dir,bool hide,DWORD a
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
-  }else if (strcmp(type,"RAR")==0 && hUnrar){
-    ASSERT(hUnrar);
+  }else if (strcmp(type,"RAR")==0 && UNRAR_OK){
     if (is_open) 
       close();
 
@@ -424,7 +423,7 @@ bool zipclass::extract_file(char *fn,int offset,char *dest_dir,bool hide,DWORD a
     char *data_ptr;
     DWORD data_size;
     ASSERT(hArcData);
-    int ec=RarProcessFile(hArcData,RAR_EXTRACT,NULL,dest_dir); 
+    int ec=RARProcessFile(hArcData,RAR_EXTRACT,NULL,dest_dir); 
 //    TRACE_LOG("%s -> %s : %d\n",HeaderData.FileName,dest_dir,ec);
     ASSERT(!ec);
     if(ec)

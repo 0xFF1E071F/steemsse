@@ -142,7 +142,11 @@ void intercept_os() // SS could we do much more here?
 
 #ifndef NO_CRAZY_MONITOR
   if (extended_monitor){
+#if defined(SSE_MEGAR_FIX_001)
+    if ((ir&0xffff)==0x4e42){ //instruction is TRAP #2 (VDI or AES)
+#else
     if ((ir&15)==2){ //VDI or AES
+#endif
 #ifdef ENABLE_LOGFILE
       if (logsection_enabled[LOGSECTION_TRAP]) log_os_call(2);
 #endif
@@ -208,12 +212,7 @@ void intercept_bios()
     if (d>=2){
       if (stemdos_check_mount(d)){
         r[0]=0; // Hasn't changed - everything ignores this anyway
-
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU)
-        m68k_perform_rte(); // no function to call
-#else
         M68K_PERFORM_RTE(;);  //don't need to check interrupts because sr won't actually have changed
-#endif
       }
     }
   }
@@ -242,20 +241,12 @@ void intercept_xbios()
     areg[0]=0xffc100;
     emudetect_called=true;
     emudetect_init();
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU)
-    m68k_perform_rte(); // no function to call
-#else
     M68K_PERFORM_RTE(;);  //don't need to check interrupts because sr won't actually have changed
-#endif
   }else if (m68k_dpeek(sp)==23 && stemdos_intercept_datetime){ // Get clock time
     time_t timer=time(NULL);
     struct tm *lpTime=localtime(&timer);
     r[0]=TMToDOSDateTime(lpTime);
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU)
-    m68k_perform_rte(); // no function to call
-#else
     M68K_PERFORM_RTE(;);  //don't need to check interrupts because sr won't actually have changed
-#endif
 /*
   }else if (m68k_dpeek(sp)==4 && extended_monitor){
     /// Getrez returns different values in TT modes
@@ -399,7 +390,7 @@ int agenda_get_queue_pos(LPAGENDAPROC job)
 //---------------------------------------------------------------------------
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
 #undef LOGSECTION
-#define LOGSECTION LOGSECTION_IKBD
+#define LOGSECTION LOGSECTION_IKBD//SS
 void agenda_acia_tx_delay_IKBD(int)
 {
 #if defined(SS_ACIA_DOUBLE_BUFFER_TX)
@@ -436,13 +427,16 @@ void agenda_acia_tx_delay_MIDI(int)
 #undef LOGSECTION
 //-------------------------------------------------- MMU Confused
 #if !defined(SS_MMU_NO_CONFUSION)
-/*  SS Apparently this section concerns TOS boot, when the system tests
-    memory. In other emulators, the test isn't emulated, TOS is patched.
-    Needless to say I understand nothing of this.
-*/
-MEM_ADDRESS mmu_testing_address(MEM_ADDRESS ad)
+  /* SS I still don't know is the use.
+  I thought it was for when TOS resets and tests memory, but now
+  it seems to work without it.
+  TESTING
+  */
+#define LOGSECTION LOGSECTION_IO//SS
+
+MEM_ADDRESS mmu_confused_address(MEM_ADDRESS ad)
 {
-#if defined(SS_MMU_TRACE2)
+#if defined(SS_DEBUG)
   MEM_ADDRESS ad1=ad; // save for trace
 #endif
 
@@ -520,79 +514,59 @@ MEM_ADDRESS mmu_testing_address(MEM_ADDRESS ad)
     ad=0xfffffe; //gap
   }
   if (bank==1 && ad<FOUR_MEGS) ad+=bank_length[0];
-#if defined(SS_MMU_TRACE2)
-      TRACE("MMU confused ad %X -> %X\n",ad1,ad);
-#endif
+  TRACE_LOG("MMU confused ad %X -> %X\n",ad1,ad);
   return ad;
 }
 
-BYTE ASMCALL mmu_testing_peek(MEM_ADDRESS ad,bool cause_exception)
+BYTE ASMCALL mmu_confused_peek(MEM_ADDRESS ad,bool cause_exception)
 {
-  MEM_ADDRESS c_ad=mmu_testing_address(ad);
+  MEM_ADDRESS c_ad=mmu_confused_address(ad);
   if (c_ad==0xffffff){   //bus error
     if (cause_exception) exception(BOMBS_BUS_ERROR,EA_READ,ad);
-#if defined(SS_MMU_TRACE2)
-    TRACE("MMU confused peek %X 0\n",ad);
-#endif
+    TRACE_LOG("MMU confused peek %X 0\n",ad);
     return 0;
   }else if (c_ad==0xfffffe){  //gap in memory
-#if defined(SS_MMU_TRACE2)
-    TRACE("MMU confused peek %X FF\n",ad);
-#endif
+    TRACE_LOG("MMU confused peek %X FF\n",ad);
     return 0xff;
   }else if (c_ad<mem_len){
-#if defined(SS_MMU_TRACE2)
-    TRACE("MMU confused peek %X %X\n",ad,PEEK(c_ad));
-#endif
+    TRACE_LOG("MMU confused peek %X %X\n",ad,PEEK(c_ad));
     return PEEK(c_ad);
   }else{
-#if defined(SS_MMU_TRACE2)
-    TRACE("MMU confused peek %X FF\n",ad);
-#endif
+    TRACE_LOG("MMU confused peek %X FF\n",ad);
     return 0xff;
   }
 }
 
-WORD ASMCALL mmu_testing_dpeek(MEM_ADDRESS ad,bool cause_exception)
+WORD ASMCALL mmu_confused_dpeek(MEM_ADDRESS ad,bool cause_exception)
 {
-  MEM_ADDRESS c_ad=mmu_testing_address(ad);
+  MEM_ADDRESS c_ad=mmu_confused_address(ad);
   if (c_ad==0xffffff){   //bus error
     if (cause_exception) exception(BOMBS_BUS_ERROR,EA_READ,ad);
-#if defined(SS_MMU_TRACE2)
-    TRACE("MMU confused dpeek %X 0\n",ad);
-#endif
+    TRACE_LOG("MMU confused dpeek %X 0\n",ad);
     return 0;
   }else if (c_ad==0xfffffe){  //gap in memory
-#if defined(SS_MMU_TRACE2)
-    TRACE("MMU confused dpeek %X FFFF\n",ad);
-#endif
+    TRACE_LOG("MMU confused dpeek %X FFFF\n",ad);
     return 0xffff;
   }else if (c_ad<mem_len){
-#if defined(SS_MMU_TRACE2)
-    TRACE("MMU confused dpeek %X %X\n",ad,DPEEK(c_ad));
-#endif
+    TRACE_LOG("MMU confused dpeek %X %X\n",ad,DPEEK(c_ad));
     return DPEEK(c_ad);
   }else{
-#if defined(SS_MMU_TRACE2)
-    TRACE("MMU confused dpeek %X FFFF\n",ad);
-#endif
+    TRACE_LOG("MMU confused dpeek %X FFFF\n",ad);
     return 0xffff;
   }
 }
 
-LONG ASMCALL mmu_testing_lpeek(MEM_ADDRESS ad,bool cause_exception)
+LONG ASMCALL mmu_confused_lpeek(MEM_ADDRESS ad,bool cause_exception)
 {
-  WORD a=mmu_testing_dpeek(ad,cause_exception);
-  WORD b=mmu_testing_dpeek(ad+2,cause_exception);
-#if defined(SS_MMU_TRACE2)
-    TRACE("MMU confused lpeek %X %X\n",ad,MAKELONG(b,a));
-#endif
+  WORD a=mmu_confused_dpeek(ad,cause_exception);
+  WORD b=mmu_confused_dpeek(ad+2,cause_exception);
+  TRACE_LOG("MMU confused lpeek %X %X\n",ad,MAKELONG(b,a));
   return MAKELONG(b,a);
 }
 
-void ASMCALL mmu_testing_set_dest_to_addr(int bytes,bool cause_exception)
+void ASMCALL mmu_confused_set_dest_to_addr(int bytes,bool cause_exception)
 {
-  MEM_ADDRESS c_ad=mmu_testing_address(abus);
+  MEM_ADDRESS c_ad=mmu_confused_address(abus);
   if (c_ad==0xffffff){  //bus error
     if (cause_exception) exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
   }else if (c_ad==0xfffffe){  //gap in memory
@@ -602,11 +576,9 @@ void ASMCALL mmu_testing_set_dest_to_addr(int bytes,bool cause_exception)
   }else{
     m68k_dest=&iobuffer;  //throw away result
   }
-#if defined(SS_MMU_TRACE2)
-  TRACE("MMU confused set dest %X\n",m68k_dest);
-#endif
-
+  TRACE_LOG("MMU confused set dest %X\n",m68k_dest);
 }
+#undef LOGSECTION
 #endif//#if !defined(SS_MMU_NO_CONFUSION)
 
 
@@ -614,21 +586,31 @@ void ASMCALL mmu_testing_set_dest_to_addr(int bytes,bool cause_exception)
 
 void call_a000()
 {
+//  BRK(lineAemul);
   on_rte_return_address=(PC32);
   //now save regs a0,a1,d0 ?
   INSTRUCTION_TIME_ROUND(0);  // Round first for interrupts
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  INSTRUCTION_TIME_ROUND(34-4);
+  FETCH_TIMING;
+#if defined(SS_CPU_PREFETCH_TIMING_SET_PC)
+    INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+#endif
+#else
   INSTRUCTION_TIME_ROUND(34);
+#endif
   on_rte=ON_RTE_LINE_A;
-  DPEEK(0)=0xa000;
+  DPEEK(0)=0xa000; //SS ?
 //    m68k_interrupt(LPEEK(BOMBS_LINE_A*4));
   WORD _sr=sr;
   if (!SUPERFLAG) change_to_supervisor_mode();
   m68k_PUSH_L(0);
   m68k_PUSH_W(_sr);
   SET_PC(LPEEK(BOMBS_LINE_A*4));
+
 //  log(EasyStr("interrupt - increasing interrupt depth from ")+interrupt_depth+" to "+(interrupt_depth+1));
   SR_CLEAR(SR_TRACE);
-BRK(yoho)
+
   interrupt_depth++; 
   memcpy(save_r,r,16*4);
   on_rte_interrupt_depth=interrupt_depth;

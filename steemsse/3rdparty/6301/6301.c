@@ -1,6 +1,8 @@
 // This file is compiled as a distinct module (resulting in an OBJ file)
 #include "6301.h"
 #include "SSE/SSE.h"
+#include "SSE/SSEDebug.h"
+
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
 #include "SSE/SSEOption.h"
 extern int iDummy;
@@ -47,8 +49,25 @@ int CurrentParameter=0;
 int TotalParameters=0; // #parameters
 #endif
 
-#if defined(SS_IKBD_6301_TRACE)
-FILE *trace_file_pointer_6301=0;
+// Debug facilities
+// ASSERT
+#if defined(_MSC_VER) && defined(_DEBUG)
+#define ASSERT(x) {if(!(x)) {TRACE("Assert failed: %s\n",#x);\
+                   _asm{int 0x03}}}
+#else 
+#if !defined(NDEBUG)
+#define ASSERT(x) {if(!(x)) TRACE("Assert failed: %s\n",#x);} //just a trace
+#else
+#define ASSERT(x) // release
+#endif
+#endif
+// TRACE
+#if defined(SS_DEBUG) 
+// we use this trick because Trace is a struct function
+void (*hd6301_trace)(char *fmt, ...);
+#define TRACE hd6301_trace
+#else
+#define TRACE
 #endif
 
 // constructing our module (OBJ) the good old Steem way, hem
@@ -83,7 +102,7 @@ hd6301_init() {
 
 
 hd6301_destroy() {
-  printf("6301: destroy object\n");
+  TRACE("6301: destroy object\n");
   if(ram) 
     free(ram);
   ram=NULL;
@@ -92,15 +111,11 @@ hd6301_destroy() {
     free(breaks);
   breaks=NULL;
 #endif
-#if defined(SS_IKBD_6301_TRACE)
-  if(trace_file_pointer_6301)
-    fclose(trace_file_pointer_6301);
-#endif  
 }
 
 
 hd6301_reset() {
-  printf("6301 emu cpu reset\n");
+  TRACE("6301 emu cpu reset\n");
   cpu_reset();
   hd6301_receiving_from_MC6850=hd6301_transmitting_to_MC6850
     =hd6301_completed_transmission_to_MC6850=0;
@@ -121,18 +136,18 @@ hd6301_run_cycles(u_int cycles_to_run) {
   // make sure our 6301 is running OK
   if(!cpu_isrunning())
   {
-    printf("6301 starting cpu\n");
+    TRACE("6301 starting cpu\n");
     cpu_start();
   }
   if((iram[TRCSR]&1) && !hd6301_receiving_from_MC6850)  
   {
-    printf("6301 waking up (PC %X cycles %d ACT %d)\n",reg_getpc(),cpu.ncycles,act);
+    TRACE("6301 waking up (PC %X cycles %d ACT %d)\n",reg_getpc(),cpu.ncycles,act);
     iram[TRCSR]&=~1; // ha! that's for Barbarian (& Froggies)
   }
   pc=reg_getpc();
   if(!(pc>=0xF000 && pc<=0xFFFF || pc>=0x80 && pc<=0xFF))
   {
-    printf("PC out of range, resetting chip\n"); 
+    TRACE("PC out of range, resetting chip\n"); 
     reset(); // hack
   }
 #if defined(SS_IKBD_6301_ADJUST_CYCLES)
@@ -207,7 +222,7 @@ hd6301_load_save(int one_if_save,unsigned char *buffer) {
   // ram
   if(one_if_save)
   {
-    printf("Snapshot - save RAM\n");
+    TRACE("Snapshot - save RAM\n");
 #if defined(DUMP_RAM)
     dump_ram();
 #endif
@@ -215,7 +230,7 @@ hd6301_load_save(int one_if_save,unsigned char *buffer) {
   }
   else
   {
-    printf("Snapshot - load RAM\n");
+    TRACE("Snapshot - load RAM\n");
     memmove(&ram[0x80],i,128);
 #if defined(DUMP_RAM)
     dump_ram();
@@ -231,7 +246,7 @@ hd6301_load_save(int one_if_save,unsigned char *buffer) {
   i+=sizeof(iram);
 
   // our variables (TODO?)
-  //printf("Size of 6301 snapshot: %d bytes\n",i-buffer);
+  //TRACE("Size of 6301 snapshot: %d bytes\n",i-buffer);
   return i-buffer;
 }
 
@@ -239,13 +254,9 @@ hd6301_load_save(int one_if_save,unsigned char *buffer) {
 
 load_rom() {
   FILE *fp;
-  char *romfile=HD6301_ROM_FILENAME;
+  char romfile[20]=HD6301_ROM_FILENAME;
 #if defined(SS_IKBD_6301_TRACE)
-  fp = freopen("Trace6301.txt", "w", stdout ); // open trace file
-  ASSERT(fp);
-  if(fp)
-    trace_file_pointer_6301=fp; // used to close
-  printf("6301: Init RAM, load ROM %s\n",romfile);
+  TRACE("6301: Init RAM, load ROM %s\n",romfile);
 #endif
   
   fp=fopen(romfile,"r+b");
@@ -258,13 +269,13 @@ load_rom() {
     for(i=0;i<4096;i++)
       checksum+=ram[0xF000+i];
     if(checksum!=HD6301_ROM_CHECKSUM)
-      printf("checksum of rom=%d expected=%d\n",checksum,HD6301_ROM_CHECKSUM);
+      TRACE("checksum of rom=%d expected=%d\n",checksum,HD6301_ROM_CHECKSUM);
 #endif
     fclose(fp);
   }
   else 
   {
-    printf("Failed to open file\n");
+    TRACE("Failed to open file\n");
     free(ram);
     ram=NULL;
   } 
@@ -274,10 +285,10 @@ load_rom() {
 
 dump_rom() {
   int i;
-  printf("************************************************************\n");
-  printf("* This disassembly of the Atari ST's HD6301V1 ROM was made *\n");
-  printf("* by Sim6xxx as modified for Steem                         *\n");
-  printf("************************************************************\n\n\n");
+  TRACE("************************************************************\n");
+  TRACE("* This disassembly of the Atari ST's HD6301V1 ROM was made *\n");
+  TRACE("* by Sim6xxx as modified for Steem                         *\n");
+  TRACE("************************************************************\n\n\n");
   for(i=0xF000;i<0xFFFF;i++)
   {
     // don't decode data, + indication
@@ -292,7 +303,7 @@ dump_rom() {
     // data groups
     else if(i==0xf2f3)
     {
-      printf("eg Scancodes are here below\n");
+      TRACE("eg Scancodes are here below\n");
       mem_print (i, 0xF370-0xf2f3+1,14); 
       i+=0xF370-0xf2f3;
     }
@@ -315,9 +326,9 @@ dump_rom() {
 
 dump_ram() {
   int i;
-  printf("RAM dump\n    \t00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F\n");
+  TRACE("RAM dump\n    \t00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F\n");
   mem_print (0x80,128,16);
-  printf("RAM disassembly\n");
+  TRACE("RAM disassembly\n");
   for(i=0x80;i<0x80+128;i++)
     i+=instr_print (i)-1;
 }

@@ -3,7 +3,6 @@ class TOptionBox : public TStemDialog
 {
 private:
   int page_l,page_w;
-
 #ifdef WIN32
   static LRESULT __stdcall WndProc(HWND,UINT,WPARAM,LPARAM);
   static LRESULT __stdcall Fullscreen_WndProc(HWND,UINT,WPARAM,LPARAM);
@@ -169,6 +168,9 @@ public:
   HWND BorderOption;
 #if defined(STEVEN_SEAGAL) && defined(SS_STF)
   HWND STTypeOption;
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU_WAKE_UP)
+  HWND MMUWakeUpOption;
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
   HWND BorderSizeOption;

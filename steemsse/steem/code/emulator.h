@@ -266,12 +266,12 @@ EXT int scan_y;
 #define KB128 (128*1024)
 
 #if !defined(SS_MMU_NO_CONFUSION)
-EXT MEM_ADDRESS mmu_testing_address(MEM_ADDRESS ad);
+EXT MEM_ADDRESS mmu_confused_address(MEM_ADDRESS ad);
 extern "C"{
-BYTE ASMCALL mmu_testing_peek(MEM_ADDRESS ad,bool cause_exception);
-WORD ASMCALL mmu_testing_dpeek(MEM_ADDRESS ad,bool cause_exception);
-LONG ASMCALL mmu_testing_lpeek(MEM_ADDRESS ad,bool cause_exception);
-void ASMCALL mmu_testing_set_dest_to_addr(int bytes,bool cause_exception);
+BYTE ASMCALL mmu_confused_peek(MEM_ADDRESS ad,bool cause_exception);
+WORD ASMCALL mmu_confused_dpeek(MEM_ADDRESS ad,bool cause_exception);
+LONG ASMCALL mmu_confused_lpeek(MEM_ADDRESS ad,bool cause_exception);
+void ASMCALL mmu_confused_set_dest_to_addr(int bytes,bool cause_exception);
 }
 #endif
 
@@ -353,12 +353,15 @@ void agenda_acia_tx_delay_IKBD(int),agenda_acia_tx_delay_MIDI(int);
 
 MEM_ADDRESS on_rte_return_address;
 
+
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
 #define M68K_UNSTOP                         \
   if (cpu_stopped){ \
                    \
                   cpu_stopped=false;     \
                   SET_PC((pc+4) | pc_high_byte);          \
   }
+#endif
 
 // This list is used to reinit the agendas after loading a snapshot
 // add any new agendas to the end of the list, replace old agendas

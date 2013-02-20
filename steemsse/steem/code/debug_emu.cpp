@@ -66,7 +66,7 @@ void update_display_after_trace()
     int horz_scale=0;
     debug_update_drawing_position(&horz_scale);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
     Shifter.Render(LINECYCLES);
 #else
     draw_scanline_to(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);

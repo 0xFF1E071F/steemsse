@@ -159,7 +159,7 @@ u_int offs;
       {
         value&=~mask; // clear bit
 #if defined(SS_IKBD_6301_TRACE_KEYS)
-        printf("Read DR1 %X\n",value);
+        TRACE("Read DR1 %X\n",value);
 #endif
       }
     }

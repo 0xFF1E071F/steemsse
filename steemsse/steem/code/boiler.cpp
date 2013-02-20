@@ -12,14 +12,16 @@ build and the basis of the debug GUI.
 
 /* SS
   Mods in the debug build (Steem Boiler):
-  - not sure CPU mods are reckoned but it seems so
-  - mostly no log for modified code eg video (TODO?)
+  - not sure CPU mods are reckoned but it seems so (TODO)
+  - mostly no log for modified code eg video (TODO)
   - TRACE feature preferred, much more selective
   - TRACE to file if you're not in Visual Studio (check Options)
   - also an option to limit this file's size
   - shifter tricks report on demand (new shortcut), also a file
   - copy disassembly into clipboard instead of a file if right
   click on the Dump button - using RAM
+  TODO:
+
 */
 
 //---------------------------------------------------------------------------
@@ -428,9 +430,6 @@ long __stdcall sr_display_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 {
 	if (Win==HiddenParent) return DefWindowProc(Win,Mess,wPar,lPar);
-	//if(Mess!=32 && Mess!=78)
-	//if(Mess==WM_CHAR || Mess==WM_SYSCHAR)
-		//TRACE(" %X",Mess); 
 	switch (Mess){
     case WM_SIZE:
       MoveWindow(DWin_trace_button,340,1,(LOWORD(lPar)-350)/4 - 5,27,true);
@@ -876,10 +875,6 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               CheckMenuItem(boiler_op_menu,1517,
                 MF_BYCOMMAND|((int)(USE_TRACE_FILE)
                 ?MF_CHECKED:MF_UNCHECKED));
-#if defined(SS_IKBD_6301_TRACE)
-              if(!USE_TRACE_FILE&&trace_file_pointer_6301)
-                fclose(trace_file_pointer_6301);
-#endif
               break;
             case 1518: // Limit TRACE file size
               TRACE_FILE_REWIND=!TRACE_FILE_REWIND;
@@ -1215,7 +1210,6 @@ BOOL SetClipboardText(LPCTSTR pszText) // from the 'net, for disa_to_file mod
       ok = (BOOL)SetClipboardData(CF_TEXT, hMem);
       CloseClipboard(); // relinquish it for other windows
    }
-//   TRACE("clipboard %d\n",ok);
    return ok;
 }
 #endif
@@ -1314,7 +1308,6 @@ void disa_to_file(FILE*f,MEM_ADDRESS dstart,int dlen,bool as_source)
 #if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_CLIPBOARD)
   if(!f)
   {
-//    TRACE("bytes: %d\n",buffer_ptr-buffer);
     SetClipboardText( (LPCTSTR) buffer);
     delete [] buffer; 
   }

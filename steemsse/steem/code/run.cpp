@@ -84,7 +84,7 @@ void run()
   log_write(">>> Start Emulation <<<");
 
 #if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_START_STOP_INFO)
-  ReportGeneralInfos(START);
+  Debug.ReportGeneralInfos(TDebug::START);
 #endif
 
   DEBUG_ONLY( debug_first_instruction=true; ) // Don't break if running from breakpoint
@@ -118,15 +118,7 @@ void run()
           DEBUG_ONLY( if (pc_history_idx>=HISTORY_SIZE) pc_history_idx=0; )
           
 #define LOGSECTION LOGSECTION_CPU
-
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU)
-          // This is where instructions are executed. We're in the main loop.
-          // Other places that execute instructions are trace and blitter.
-          m68k_Process(); // inline function
-#else
-          m68k_PROCESS // macro
-#endif
-
+          m68k_PROCESS 
 #undef LOGSECTION
 
           DEBUG_ONLY( debug_first_instruction=0; )
@@ -226,13 +218,7 @@ void run()
   log_write(">>> Stop Emulation <<<");
 
 #if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_START_STOP_INFO)
-  ReportGeneralInfos(STOP);
-#endif
-
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
-#if defined(SS_CPU)
-  Cpu.nExceptions=0;
-#endif
+  Debug.ReportGeneralInfos(TDebug::STOP);
 #endif
 
 #ifdef WIN32
@@ -414,7 +400,6 @@ void event_hbl()   //just HBL, don't draw yet
   IPL 2 - note usual level=3, so HBL isn't executed; if it is, it is triggered
   in check_for_interrupts_pending() (mfp.cpp).
   For 50hz, 313 lines, 1 call to event_hbl, 312 calls to event_scanline
-  This can be handy, eg 6301 emu
 */
 
 #define LOGSECTION LOGSECTION_AGENDA
@@ -451,12 +436,12 @@ void event_hbl()   //just HBL, don't draw yet
   {
     if(!HD6301.RunThisHbl) 
     {
-      ASSERT(HD6301.Initialised);
+      ASSERT(HD6301_OK);
       int n6301cycles;
 #if defined(SS_SHIFTER)
       n6301cycles=Shifter.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
 #else
-      n6301cycles== (screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
+      n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
 #endif
       ASSERT(n6301cycles);
       if(!hd6301_run_cycles(n6301cycles))
@@ -489,12 +474,12 @@ void event_scanline()
   {
     if(!HD6301.RunThisHbl) 
     {
-      ASSERT(HD6301.Initialised);
+      ASSERT(HD6301_OK);
       int n6301cycles;
 #if defined(SS_SHIFTER)
       n6301cycles=Shifter.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
 #else
-      n6301cycles== (screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
+      n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
 #endif
       ASSERT(n6301cycles);
       if(!hd6301_run_cycles(n6301cycles))
@@ -507,26 +492,51 @@ void event_scanline()
   }
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
-
-  // Note: refactoring here is very dangerous!
+#if defined(STEVEN_SEAGAL)
+/*  Note: refactoring here is very dangerous!
+    We must separate SS_SHIFTER from SS_INTERRUPT, which makes for many
+    #if blocks.
+*/
   if (scan_y<shifter_first_draw_line-1){
     if (scan_y>=draw_first_scanline_for_border){
-      if (bad_drawing==0) Shifter.DrawScanlineToEnd();
+      if (bad_drawing==0) 
+#if defined(SS_SHIFTER) &&!defined(SS_SHIFTER_DRAW_DBG)
+        Shifter.DrawScanlineToEnd();
+#else
+        draw_scanline_to_end();
+#endif
       time_of_next_timer_b=time_of_next_event+160000;  //put into future
     }
   }else if (scan_y<shifter_first_draw_line){ //next line is first visible
-    if (bad_drawing==0) Shifter.DrawScanlineToEnd();
-    time_of_next_timer_b=time_of_next_event+cpu_cycles_from_hbl_to_timer_b+TB_TIME_WOBBLE;
+    if (bad_drawing==0) 
+#if defined(SS_SHIFTER) &&!defined(SS_SHIFTER_DRAW_DBG)
+      Shifter.DrawScanlineToEnd();
+#else
+      draw_scanline_to_end();
+#endif
+    time_of_next_timer_b=time_of_next_event
+      +cpu_cycles_from_hbl_to_timer_b+TB_TIME_WOBBLE;
   }else if (scan_y<shifter_last_draw_line-1){
-    if (bad_drawing==0) Shifter.DrawScanlineToEnd();
-    time_of_next_timer_b=time_of_next_event+cpu_cycles_from_hbl_to_timer_b+TB_TIME_WOBBLE;
+    if (bad_drawing==0) 
+#if defined(SS_SHIFTER) &&!defined(SS_SHIFTER_DRAW_DBG)
+      Shifter.DrawScanlineToEnd();
+#else
+      draw_scanline_to_end();
+#endif
+    time_of_next_timer_b=time_of_next_event
+      +cpu_cycles_from_hbl_to_timer_b+TB_TIME_WOBBLE;
 #if defined(SS_INT_TIMER_B_AER)
+//  from Hatari, fixes Seven Gates of Jambala; Trex Warrior
     if(mfp_reg[1]&8)
-      time_of_next_timer_b-=320; // fixes Seven Gates of Jambala (from Hatari)
+      time_of_next_timer_b-=320; //gross?
 #endif
   }else if (scan_y<draw_last_scanline_for_border){
-    if (bad_drawing==0) Shifter.DrawScanlineToEnd();
+    if (bad_drawing==0) 
+#if defined(SS_SHIFTER) &&!defined(SS_SHIFTER_DRAW_DBG)
+      Shifter.DrawScanlineToEnd();
+#else
+      draw_scanline_to_end();
+#endif
     time_of_next_timer_b=time_of_next_event+160000;  //put into future
   }
 
@@ -802,7 +812,7 @@ void event_vbl_interrupt()
   }
 
   //------------- Auto Frameskip Calculation -----------
-#define LOGSECTION LOGSECTION_VIDEO
+#define LOGSECTION LOGSECTION_VIDEO//SS
   if (frameskip==AUTO_FRAMESKIP){ //decide if we are ahead of schedule
     if (fast_forward==0 && slow_motion==0 && VSyncing==0){
       timer=timeGetTime();
@@ -1074,7 +1084,7 @@ void event_vbl_interrupt()
   //  debug4++;//312 at end of vbl, we do miss one...
 //    if(!HD6301.RunThisHbl) 
     {
-      ASSERT(HD6301.Initialised);
+      ASSERT(HD6301_OK);
       int n6301cycles;
 
 #if defined(SS_SHIFTER)
@@ -1155,7 +1165,11 @@ void event_pasti_update()
 #endif
 //---------------------------------------------------------------------------
 #if defined(STEVEN_SEAGAL) // added events
-#if defined(SS_ACIA_IRQ_DELAY)
+
+#if defined(SS_ACIA_IRQ_DELAY) // this implements an insight from Hatari
+
+#define LOGSECTION LOGSECTION_IKBD//SS
+
 void event_acia_rx_irq() {
   // this gives cycle accuracy to ikbd handling 
   ASSERT(ACIA_IKBD.rx_stage);
@@ -1170,9 +1184,7 @@ void event_acia_rx_irq() {
       hd6301_transmitting_to_MC6850--;
       hd6301_completed_transmission_to_MC6850++;
       ASSERT(hd6301_completed_transmission_to_MC6850==1); // 6301 emu -- it
-#if defined(SS_IKBD_6301_TRACE_SCI_TX)
-      printf("%d event_acia_rx_irq() AciaRxCompleted #%d: %X, %d to get\n",ABSOLUTE_CPU_TIME,hd6301_completed_transmission_to_MC6850,*keyboard_buffer,hd6301_transmitting_to_MC6850);
-#endif
+      TRACE_LOG("%d event_acia_rx_irq() AciaRxCompleted #%d: %X, %d to get\n",ABSOLUTE_CPU_TIME,hd6301_completed_transmission_to_MC6850,*keyboard_buffer,hd6301_transmitting_to_MC6850);
     }
 #endif
     if(ikbd.send_nothing)
@@ -1202,9 +1214,7 @@ void event_acia_rx_irq() {
         // (readable at $FFFC02)
         ACIA_IKBD.data=keyboard_buffer[keyboard_buffer_length];
         ACIA_IKBD.rx_not_read=true;
-#if defined(SS_IKBD_TRACE_IO)
-        TRACE("%d scan_y %d ACIA RX\n",lcycles,scan_y);
-#endif
+        TRACE_LOG("%d scan_y %d ACIA RX\n",lcycles,scan_y);
       }
       if(ACIA_IKBD.rx_irq_enabled)//// && !ikbd.resetting)
         ACIA_IKBD.rx_stage++; // 2: irq can trigger
@@ -1222,16 +1232,16 @@ void event_acia_rx_irq() {
     >=SS_6301_TO_ACIA_IN_CYCLES+SS_ACIA_IRQ_DELAY_CYCLES) // time to set IRQ
   {
     ACIA_IKBD.irq=true;
-#if defined(SS_IKBD_TRACE_IO)
-       TRACE("%d scan_y %d ACIA IRQ\n",lcycles,scan_y);
-#endif
+    TRACE_LOG("%d scan_y %d ACIA IRQ\n",lcycles,scan_y);
     mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0);
     ACIA_IKBD.rx_stage=0;
   }
 }
+#undef LOGSECTION
 #endif
 
 #if defined(SS_INT_VBI_START)  // we don't use it for now
+
 void event_trigger_vbl() { 
 //  TRACE("event trigger vbl %d pending %d SR %X\n",FRAME,vbl_pending,sr);
   if ((sr & SR_IPL)<SR_IPL_4)// && vbl_pending)

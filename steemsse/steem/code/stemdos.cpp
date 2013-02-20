@@ -68,11 +68,7 @@ bool stemdos_any_files_open()
 //---------------------------------------------------------------------------
 void stemdos_final_rte() //clear stack from original GEMDOS call
 {
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU)
-  m68k_perform_rte(); // no function to call //TODO remove that?
-#else
   M68K_PERFORM_RTE(;);
-#endif
   interrupt_depth--;
   check_for_interrupts_pending();
   intercept_os();
@@ -685,7 +681,6 @@ void stemdos_rmdir()
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
-
 }
 
 void stemdos_Fdelete()
@@ -862,7 +857,7 @@ void stemdos_Pexec() //called from stemdos_rte, nothing done after this fn calle
       if ((MEM_ADDRESS)(basepage+0x100UL+text+data+bss) > (MEM_ADDRESS)(m68k_lpeek(basepage+0x4))){ //basepage+4 contains hi-tpa
         r[0]=-39;  //out of memory
         log("STEMDOS: Program too big! Out of memory.");
-        TRACE("STEMDOS: Program too big! Out of memory.\n");
+        TRACE_LOG("STEMDOS: Program too big! Out of memory.\n");
         fclose(stemdos_Pexec_file);
         stemdos_Pexec_file=NULL;
         stemdos_mfree_from_Pexec_list();
@@ -1103,7 +1098,7 @@ void stemdos_intercept_trap_1()
       if(stemdos_command==0x3D)
       {
         TRACE_LOG("Opening file %s\n",stemdos_filename.c_str());
-#if defined(SS_TOS_PATCH106)
+#if defined(SS_TOS_PATCH106) // miserable hack
         if(SSE_HACKS_ON && tos_version==0x106 && stemdos_filename=="DESKTOP.INF")
           SS_signal=SS_SIGNAL_TOS_PATCH106;
 #endif

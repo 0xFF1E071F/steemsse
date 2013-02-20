@@ -171,10 +171,44 @@ DEP_CPP_EMU_C=\
 	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\3rdparty\caps\CapsAPI.h"\
 	"..\..\3rdparty\caps\CapsFDC.h"\
-	"..\..\3rdparty\caps\CapsPlug.h"\
+	"..\..\3rdparty\caps\CapsLib.h"\
+	"..\..\3rdparty\caps\comlib.h"\
 	"..\..\3rdparty\caps\Comtype.h"\
 	"..\..\3rdparty\dsp\dsp.h"\
 	"..\..\3rdparty\pasti\pasti.h"\
+	"..\..\3rdparty\SDL-WIN\include\begin_code.h"\
+	"..\..\3rdparty\SDL-WIN\include\close_code.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_active.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_audio.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_cdrom.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_dreamcast.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_macos.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_macosx.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_minimal.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_os2.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_symbian.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_win32.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_cpuinfo.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_endian.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_error.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_events.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_joystick.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_keyboard.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_keysym.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_loadso.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_main.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_mouse.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_mutex.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_platform.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_quit.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_rwops.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_stdinc.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_thread.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_timer.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_version.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_video.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\circularbuffer.h"\
 	"..\..\include\clarity.h"\
@@ -347,10 +381,44 @@ DEP_CPP_MAIN_=\
 	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\3rdparty\caps\CapsAPI.h"\
 	"..\..\3rdparty\caps\CapsFDC.h"\
-	"..\..\3rdparty\caps\CapsPlug.h"\
+	"..\..\3rdparty\caps\CapsLib.h"\
+	"..\..\3rdparty\caps\comlib.h"\
 	"..\..\3rdparty\caps\Comtype.h"\
 	"..\..\3rdparty\dsp\dsp.h"\
 	"..\..\3rdparty\pasti\pasti.h"\
+	"..\..\3rdparty\SDL-WIN\include\begin_code.h"\
+	"..\..\3rdparty\SDL-WIN\include\close_code.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_active.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_audio.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_cdrom.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_dreamcast.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_macos.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_macosx.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_minimal.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_os2.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_symbian.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_win32.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_cpuinfo.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_endian.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_error.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_events.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_joystick.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_keyboard.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_keysym.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_loadso.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_main.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_mouse.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_mutex.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_platform.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_quit.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_rwops.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_stdinc.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_thread.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_timer.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_version.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_video.h"\
 	"..\..\3rdparty\UnRARDLL\unrar.h"\
 	"..\..\3rdparty\unrarlib\unrarlib\unrarlib.h"\
 	"..\..\include\binary.h"\
@@ -1147,11 +1215,11 @@ DEP_CPP_6301_=\
 	"..\..\3rdparty\6301\timer.h"\
 	"..\..\3rdparty\6301\tty.c"\
 	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
 	"..\..\steem\code\SSE\SSEOption.h"\
 	"..\..\steem\code\SSE\SSEParameters.h"\
-	"..\..\steem\code\SSE\SSESTF.h"\
 	
 # End Source File
 # Begin Source File
@@ -1592,25 +1660,11 @@ SOURCE=..\..\3rdparty\caps\CapsFDC.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\3rdparty\caps\CapsPlug.cpp
-DEP_CPP_CAPSP=\
-	"..\..\3rdparty\avi\AviFile.h"\
-	"..\..\3rdparty\caps\CapsAPI.h"\
-	"..\..\3rdparty\caps\CapsFDC.h"\
-	"..\..\3rdparty\caps\CapsPlug.h"\
-	"..\..\3rdparty\caps\Comtype.h"\
-	"..\..\steem\code\SSE\SSE.h"\
-	"..\..\Steem\code\SSE\SSEDebug.h"\
-	"..\..\steem\code\SSE\SSEDecla.h"\
-	
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\3rdparty\caps\CapsPlug.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\3rdparty\caps\Comtype.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\3rdparty\caps\CAPSImg.lib
 # End Source File
 # End Group
 # Begin Group "AVI"
@@ -1621,6 +1675,39 @@ SOURCE=..\..\3rdparty\caps\Comtype.h
 SOURCE=..\..\3rdparty\avi\AviFile.cpp
 DEP_CPP_AVIFI=\
 	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\3rdparty\SDL-WIN\include\begin_code.h"\
+	"..\..\3rdparty\SDL-WIN\include\close_code.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_active.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_audio.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_cdrom.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_dreamcast.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_macos.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_macosx.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_minimal.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_os2.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_symbian.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_win32.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_cpuinfo.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_endian.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_error.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_events.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_joystick.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_keyboard.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_keysym.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_loadso.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_main.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_mouse.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_mutex.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_platform.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_quit.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_rwops.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_stdinc.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_thread.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_timer.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_version.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_video.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
@@ -1633,6 +1720,214 @@ SOURCE=..\..\3rdparty\avi\AviFile.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\avi\Resource.h
+# End Source File
+# End Group
+# Begin Group "SDL"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\begin_code.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\close_code.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_active.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_audio.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_byteorder.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_cdrom.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_config.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_config_dreamcast.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_config_macos.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_config_macosx.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_config_minimal.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_config_nds.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_config_os2.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_config_symbian.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_config_win32.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_copying.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_cpuinfo.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_endian.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_error.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_events.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_getenv.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_joystick.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_keyboard.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_keysym.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_loadso.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_main.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_mouse.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_mutex.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_name.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_opengl.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_platform.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_quit.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_rwops.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_stdinc.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_syswm.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_thread.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_timer.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_types.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_version.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\include\SDL_video.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\lib\x86\SDL.lib"
+
+!IF  "$(CFG)" == "Steem - Win32 Debug"
+
+# PROP Exclude_From_Build 1
+# PROP Ignore_Default_Tool 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\3rdparty\SDL-WIN\lib\x86\SDLmain.lib"
+
+!IF  "$(CFG)" == "Steem - Win32 Debug"
+
+# PROP Exclude_From_Build 1
+# PROP Ignore_Default_Tool 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+!ENDIF 
+
 # End Source File
 # End Group
 # End Group
@@ -4343,6 +4638,7 @@ SOURCE=..\..\include\wordwrapper.h
 SOURCE=..\..\steem\code\SSE\SSE.cpp
 DEP_CPP_SSE_C=\
 	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
 	"..\..\steem\code\SSE\SSEParameters.h"\
@@ -4365,6 +4661,8 @@ SOURCE=..\..\steem\code\SSE\SSE6301.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
@@ -4392,6 +4690,8 @@ SOURCE=..\..\steem\code\SSE\SSECpu.cpp
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
 
+# PROP Exclude_From_Build 1
+
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
@@ -4407,6 +4707,9 @@ SOURCE=..\..\steem\code\SSE\SSECpu.h
 # Begin Source File
 
 SOURCE=..\..\Steem\code\SSE\SSEDebug.cpp
+DEP_CPP_SSEDE=\
+	"..\..\Steem\code\SSE\SSEDebug.h"\
+	
 
 !IF  "$(CFG)" == "Steem - Win32 Debug"
 
@@ -4415,6 +4718,8 @@ SOURCE=..\..\Steem\code\SSE\SSEDebug.cpp
 !ELSEIF  "$(CFG)" == "Steem - Win32 Release"
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
@@ -4478,6 +4783,8 @@ SOURCE=..\..\steem\code\SSE\SSEInterrupt.cpp
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
 
+# PROP Exclude_From_Build 1
+
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
@@ -4495,6 +4802,39 @@ SOURCE=..\..\steem\code\SSE\SSEInterrupt.h
 SOURCE=..\..\steem\code\SSE\SSEOption.cpp
 DEP_CPP_SSEOP=\
 	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\3rdparty\SDL-WIN\include\begin_code.h"\
+	"..\..\3rdparty\SDL-WIN\include\close_code.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_active.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_audio.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_cdrom.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_dreamcast.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_macos.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_macosx.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_minimal.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_os2.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_symbian.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_win32.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_cpuinfo.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_endian.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_error.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_events.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_joystick.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_keyboard.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_keysym.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_loadso.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_main.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_mouse.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_mutex.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_platform.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_quit.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_rwops.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_stdinc.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_thread.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_timer.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_version.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_video.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
@@ -4505,6 +4845,14 @@ DEP_CPP_SSEOP=\
 # Begin Source File
 
 SOURCE=..\..\steem\code\SSE\SSEOption.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\SSE\SSEMMU.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\SSE\SSEMMU.cpp
 # End Source File
 # Begin Source File
 
@@ -4552,6 +4900,8 @@ SOURCE=..\..\steem\code\SSE\SSEShifterEvents.cpp
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
 
+# PROP Exclude_From_Build 1
+
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
@@ -4577,6 +4927,8 @@ SOURCE=..\..\steem\code\SSE\SSESTF.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+# PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 

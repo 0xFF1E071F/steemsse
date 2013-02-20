@@ -5,7 +5,7 @@
 #if defined(STEVEN_SEAGAL) && defined(SS_STF)
 
 // starting with 0 is easier for GUI; default is STE
-enum ESTModels {STE,STF,STF2,MEGASTF,SS_STF_ST_MODELS}; 
+enum ESTModels {STE,STF,MEGASTF,SS_STF_ST_MODELS}; 
 
 int SwitchSTType(int new_type); // adapt to new machine
 

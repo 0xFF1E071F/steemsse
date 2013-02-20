@@ -11,14 +11,14 @@ data.
 #pragma message("Included for compilation: floppydrive.cpp")
 #endif
 
-// SS some casts corrected int( -> (int)( ?
+// SS some casts "corrected" int( -> (int)( ?
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)    
 #include "SSE/SSEOption.h"
 #include "SSE/SSEFloppy.h"
 #endif
 
-#define LOGSECTION LOGSECTION_IMAGE_INFO
+#define LOGSECTION LOGSECTION_IMAGE_INFO//SS
 
 int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDetectBPB,BPBINFO *pFileBPB)
 {
@@ -795,6 +795,11 @@ int TFloppyImage::GetRawTrackData(int Side,int Track)
 //---------------------------------------------------------------------------
 void TFloppyImage::RemoveDisk(bool LoseChanges)
 {
+#if defined(STEVEN_SEAGAL) &&  defined(SS_FDC_DONT_REMOVE_NON_EXISTENT_IMAGES)
+  if(Empty()) // nothing to do
+    return;
+#endif
+
   static bool Removing=0;
 
   if (Removing) return;

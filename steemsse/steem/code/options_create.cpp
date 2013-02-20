@@ -1935,9 +1935,6 @@ void TOptionBox::CreateSSEPage() {
 	  page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)211,HInstance,NULL);
   SendMessage(STTypeOption,CB_ADDSTRING,0,(long)CStrT("STE"));
   SendMessage(STTypeOption,CB_ADDSTRING,1,(long)CStrT("STF"));
-#if defined(SS_STF_WAKE_UP)
-  SendMessage(STTypeOption,CB_ADDSTRING,1,(long)CStrT("STF (wake up state 2)"));
-#endif
 #if defined(SS_STF_MEGASTF)
   SendMessage(STTypeOption,CB_ADDSTRING,1,(long)CStrT("Mega STF (with blitter)"));
 #endif
@@ -1945,11 +1942,32 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
+#if defined(SS_MMU_WAKE_UP)
+  Wid=get_text_width(T("Wake-up state"));
+  CreateWindow("Static",T("Wake-up state"),WS_CHILD,
+    page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
+  MMUWakeUpOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
+	  page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)212,HInstance,NULL);
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Ignore wake-up state"));
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Wake-up state 1"));
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Wake-up state 2"));
+  SendMessage(MMUWakeUpOption,CB_SETCURSEL,WAKE_UP_STATE,0);
+  y+=LineHeight;
+#endif
+
 #if defined(SS_IKBD_6301) 
   Wid=GetCheckBoxSize(Font,T("6301 true emu")).Width;
-  Win=CreateWindow("Button",T("6301 true emu"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
-                          page_l,y,Wid,23,Handle,(HMENU)1029,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,HD6301EMU_ON,0);
+  
+  int mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+  if(!HD6301_OK)
+    mask|=WS_DISABLED;
+  
+  Win=CreateWindow("Button",T("6301 true emu"),mask,page_l,y,Wid,23,Handle,
+    (HMENU)1029,HInstance,NULL);
+  if(!HD6301_OK)
+    SendMessage(Win,BN_DISABLE,0,0);
+  else
+    SendMessage(Win,BM_SETCHECK,HD6301EMU_ON,0);
   ToolAddWindow(ToolTip,Win,
     T("This enables a real emulation of the IKBD keyboard chip (using the Sim6xxx code by Arne Riiber, thx dude!)"));
   y+=LineHeight;

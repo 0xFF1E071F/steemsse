@@ -9,7 +9,7 @@ for output.
 #pragma message("Included for compilation: init_sound.cpp")
 #endif
 
-// SS some casts corrected DWORD( -> (DWORD)(
+// SS some casts corrected DWORD( -> (DWORD)( //undo,it worked?
 
 #define LOGSECTION LOGSECTION_SOUND
 //---------------------------------------------------------------------------

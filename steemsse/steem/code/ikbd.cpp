@@ -412,9 +412,8 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
 */
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM)
-/*
-  Special case of custom programs already running. In fake emu, we ignore 
-  the writes, except when the CPU is sending $FF to Froggies' menu manager.
+/*  Special case of custom programs already running. In fake emu, we ignore 
+    the writes, except when the CPU is sending $FF to Froggies' menu manager.
 */
   if(ikbd.custom_prg_ID)
   {
@@ -427,7 +426,7 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
   if(HD6301EMU_ON)
   {
-    TRACE_LOG("IKBD Finished transmitting byte %X to 6301 emu (act %d after %d cycles)\n",src,ABSOLUTE_CPU_TIME,ABSOLUTE_CPU_TIME-ACIA_IKBD.last_tx_write_time);
+//    TRACE_LOG("IKBD Finished transmitting byte %X to 6301 emu (act %d after %d cycles)\n",src,ABSOLUTE_CPU_TIME,ABSOLUTE_CPU_TIME-ACIA_IKBD.last_tx_write_time);
     hd6301_receiving_from_MC6850=0; // line is free
 #if defined(SS_ACIA_DOUBLE_BUFFER_TX)
     if(ACIA_IKBD.tx_flag) // but if there's another one waiting
@@ -436,12 +435,10 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
       ACIA_IKBD.tx_flag=0; // register is free
       // agenda byte to serialise (it's in the shift register)
       // 6301 can't receive it at once, so we need no extra variable
-    //  ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
       agenda_add(agenda_ikbd_process,HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL,
         ACIA_IKBD.data_tdr);
 #if defined(SS_IKBD_TRACE_IO)
-      TRACE("%d PC %X IKBD TX shift %X\n",ABSOLUTE_CPU_TIME,pc,ACIA_IKBD.data_tdr);
-      printf("%d PC %X IKBD TX shift %X\n",ABSOLUTE_CPU_TIME,pc,ACIA_IKBD.data_tdr);
+      TRACE_LOG("%d PC %X IKBD TX shift %X\n",ABSOLUTE_CPU_TIME,pc,ACIA_IKBD.data_tdr);
 #endif
     }
 #endif
@@ -451,18 +448,11 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
       ASSERT(!HD6301.RunThisHbl); // may assert
       hd6301_transmit_byte(src);// send byte to 6301 emu
       // run some cycles now to maybe avoid sync problems (may be useless)
-
-int n6301cycles;
 #if defined(SS_SHIFTER)
-      n6301cycles=Shifter.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
+      int n6301cycles=Shifter.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
 #else
-      n6301cycles== (screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
+      int n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
 #endif
-
-
-
-    //  int n6301cycles= (screen_res==2) 
-//        ? /*HD6301_CYCLES_PER_SCANLINE/2*/ 20: HD6301_CYCLES_PER_SCANLINE;
       if(!hd6301_run_cycles(n6301cycles))
       {
         TRACE_LOG("6301 emu is hopelessly crashed!\n");
@@ -534,7 +524,7 @@ int n6301cycles;
 #endif
         switch(ikbd.custom_prg_checksum)
         {
-        case 0x2643:
+        case 0x2643: //TODO no magic cst
           ikbd.custom_prg_ID=IKBD_DRAGONNELS_MENU;
 #if defined(SS_IKBD_TRACE_FAKE_CUSTOM)
           TRACE("Dragonnels\n");
@@ -975,7 +965,7 @@ TODO!
     if(ikbd.joy_mode==IKBD_JOY_MODE_FIRE_BUTTON_DURATION) 
     {
       ikbd.joy_mode=IKBD_JOY_MODE_OFF;
-      TRACE_LOG("...JOY Mode OFF...");
+      TRACE_LOG("...JOY Mode OFF...\n");
     }
     if (ikbd.resetting && src!=0x08 && src!=0x14) ikbd.reset_0814_hack=-1;
     if (ikbd.resetting && src!=0x12 && src!=0x14) ikbd.reset_1214_hack=-1;
@@ -999,7 +989,7 @@ behave as if they were keyboard keys.
 */
       case 0x8: //return relative mouse position from now on
         ikbd.mouse_mode=IKBD_MOUSE_MODE_RELATIVE;
-        TRACE_LOG("Set Mouse Relative");
+        TRACE_LOG("Set Mouse Relative\n");
         ikbd.port_0_joy=false;
         ikbd_inc_hack(ikbd.psyg_hack_stage,0);
         ikbd_inc_hack(ikbd.reset_0814_hack,0);
@@ -1028,7 +1018,7 @@ The INTERROGATE MOUSE POSITION command is valid when in the ABSOLUTE MOUSE
 POSITIONING mode, regardless of the setting of the MOUSE BUTTON ACTION.
 */
       case 0xd: //read absolute mouse position
-        TRACE_LOG("Read Mouse ABS");
+        TRACE_LOG("Read Mouse ABS\n");
         // This should be ignored if you aren't in absolute mode!
         if (ikbd.mouse_mode!=IKBD_MOUSE_MODE_ABSOLUTE) break;
         ikbd.port_0_joy=false; // SS it's a valid mouse command
@@ -1048,7 +1038,7 @@ absolute mouse motion. This causes mouse motion toward the user to be
 negative in sign and away from the user to be positive.
 */
       case 0xf: //mouse goes upside down
-        TRACE_LOG("Mouse Y Axis Reverse");
+        TRACE_LOG("Mouse Y Axis Reverse\n");
         ikbd.mouse_upside_down=true;
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
         ikbd.port_0_joy=false;
@@ -1065,7 +1055,7 @@ Makes the origin of the Y axis to be at the top of the logical
  in sign and away from the user to be negative.
 */
       case 0x10: //mouse goes right way up
-        TRACE_LOG("Mouse Y Axis Normal");
+        TRACE_LOG("Mouse Y Axis Normal\n");
         ikbd.mouse_upside_down=false;
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
         ikbd.port_0_joy=false;
@@ -1083,7 +1073,7 @@ command can be thought of as a NO OPERATION command. If this command is
 */
       case 0x11: //okay to send!
         log("IKBD turned on");
-        TRACE_LOG("IKBD ON");
+        TRACE_LOG("IKBD ON\n");
         ikbd.send_nothing=false;
         break;
 /*
@@ -1100,7 +1090,7 @@ disabled). Any valid mouse mode command resumes mouse motion monitoring.
 */
       case 0x12: //turn mouse off
         log("IKBD: Mouse turned off");
-        TRACE_LOG("Mouse OFF");
+        TRACE_LOG("Mouse OFF\n");
         ikbd.mouse_mode=IKBD_MOUSE_MODE_OFF;
         ikbd.port_0_joy=true;
         ikbd_inc_hack(ikbd.reset_1214_hack,0);
@@ -1136,7 +1126,7 @@ temporarily stops the monitoring process (i.e. the samples are not enqueued
 */
       case 0x13: //stop data transfer to main processor
         log("IKBD turned off");
-        TRACE_LOG("IKBD OFF");
+        TRACE_LOG("IKBD OFF\n");
         ikbd.send_nothing=true;
         break;
 /*
@@ -1150,7 +1140,7 @@ a joystick event record to be generated.
 */
       case 0x14: //return joystick movements
         log("IKBD: Changed joystick mode to change notification");
-        TRACE_LOG("Joysticks Notify");
+        TRACE_LOG("Joysticks Notify\n");
         ikbd.port_0_joy=true; 
 #if defined(SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT)
         if(ikbd.mouse_mode==IKBD_MOUSE_MODE_OFF)
@@ -1180,7 +1170,7 @@ INTERROGATE commands to sense joystick state.
 */
       case 0x15: //don't return joystick movements
         log("IKBD: Joysticks set to only report when asked");
-        TRACE_LOG("Joysticks On Query");
+        TRACE_LOG("Joysticks On Query\n");
         ikbd.port_0_joy=true;
         ikbd.mouse_mode=IKBD_MOUSE_MODE_OFF;  //disable mouse
         agenda_delete(ikbd_report_abs_mouse);
@@ -1199,7 +1189,7 @@ This command is valid in either the JOYSTICK EVENT REPORTING mode
  or the JOYSTICK INTERROGATION MODE.
 */
       case 0x16: //read joystick
-        TRACE_LOG("Read Joystick");
+        TRACE_LOG("Read Joystick\n");
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
         ikbd.port_0_joy=true;
 #endif
@@ -1227,7 +1217,7 @@ The sample interval should be as constant as possible.
 */
       case 0x18: //fire button duration, constant high speed joystick button test
         log("IKBD: Joysticks set to fire button duration mode!");
-        TRACE_LOG("Joysticks Duration");
+        TRACE_LOG("Joysticks Duration\n");
         ikbd.joy_mode=IKBD_JOY_MODE_FIRE_BUTTON_DURATION;
         ikbd.mouse_mode=IKBD_MOUSE_MODE_OFF;  //disable mouse
         agenda_delete(ikbd_report_abs_mouse);
@@ -1247,7 +1237,7 @@ and SET JOYSTICK KEYCODE MODE.)
 */
       case 0x1a: //turn off joysticks
         log("IKBD: Joysticks turned off");
-        TRACE_LOG("Joysticks OFF");
+        TRACE_LOG("Joysticks OFF\n");
       //  ikbd.mouse_mode=IKBD_MOUSE_MODE_OFF;  //disable mouse // already so in Steem 3.2
         ikbd.port_0_joy=0;
         ikbd.joy_mode=IKBD_JOY_MODE_OFF;
@@ -1275,13 +1265,16 @@ Code:
     All time-of-day is sent in packed BCD format.
 
     This is used by Captain Blood. 
+    F29 also reads the clock.
 */
       case 0x1c: //read clock time
         TRACE_LOG("Read Clock");
         keyboard_buffer_write(0xfc);
         for (int n=0;n<6;n++){
           keyboard_buffer_write(ikbd.clock[n]);
+          TRACE_LOG(" %d",ikbd.clock[n]);
         }
+        TRACE_LOG("\n");
         break;
       case 0x20:ikbd.command_read_count=3;break;
 /*
@@ -1350,11 +1343,11 @@ or FIRE BUTTON MONITORING mode.
 
 */
       case 0x87: //return what happens when mouse buttons are pressed
-        TRACE_LOG("Query Mouse Action");
+        TRACE_LOG("Query Mouse Action\n");
         keyboard_buffer_write_string(0xf6,0x7,ikbd.mouse_button_press_what_message,0,0,0,0,0,(-1));
         break;
       case 0x88:case 0x89:case 0x8a:
-        TRACE_LOG("Query Mouse Mode");
+        TRACE_LOG("Query Mouse Mode\n");
         keyboard_buffer_write(0xf6);
         keyboard_buffer_write(BYTE(ikbd.mouse_mode));
         if (ikbd.mouse_mode==0x9){
@@ -1370,13 +1363,13 @@ or FIRE BUTTON MONITORING mode.
         }
         break;
       case 0x8b: //x, y threshhold for relative mouse movement messages
-        TRACE_LOG("Query Mouse Threshold");
+        TRACE_LOG("Query Mouse Threshold\n");
         keyboard_buffer_write_string(0xf6,0xb,ikbd.relative_mouse_threshold_x,
                                       ikbd.relative_mouse_threshold_y,
                                       0,0,0,0,(-1));
         break;
       case 0x8c: //x,y scaling of mouse for absolute mouse
-        TRACE_LOG("Query Mouse Scale");
+        TRACE_LOG("Query Mouse Scale\n");
         keyboard_buffer_write_string(0xf6,0xc,ikbd.abs_mouse_scale_x,
                                       ikbd.abs_mouse_scale_y,
                                       0,0,0,0,(-1));
@@ -1388,7 +1381,7 @@ or FIRE BUTTON MONITORING mode.
       case 0x8e: /*DEAD*/ break;
 #endif
       case 0x8f:case 0x90: //return 0xf if mouse is upside down, 0x10 otherwise
-        TRACE_LOG("Query Mouse Y Axis");
+        TRACE_LOG("Query Mouse Y Axis\n");
         keyboard_buffer_write(0xf6);
         if (ikbd.mouse_upside_down){
           keyboard_buffer_write(0xf);
@@ -1402,7 +1395,7 @@ or FIRE BUTTON MONITORING mode.
       case 0x91: /*DEAD*/ break;
 #endif
       case 0x92:  //is mouse off?
-        TRACE_LOG("Query Mouse Off");
+        TRACE_LOG("Query Mouse Off\n");
         keyboard_buffer_write(0xf6);
         if (ikbd.mouse_mode==IKBD_MOUSE_MODE_OFF){
           keyboard_buffer_write(0x12);
@@ -1416,7 +1409,7 @@ or FIRE BUTTON MONITORING mode.
       case 0x93: /*DEAD*/ break;
 #endif
       case 0x94:case 0x95:case 0x99:
-        TRACE_LOG("Query Joystick Mode");
+        TRACE_LOG("Query Joystick Mode\n");
       {
         keyboard_buffer_write(0xf6);
         // if joysticks are disabled then return previous state. We don't store that.
@@ -1437,7 +1430,7 @@ or FIRE BUTTON MONITORING mode.
       case 0x98: /*DEAD*/ break;
 #endif
       case 0x9a:  //is joystick off?
-        TRACE_LOG("Query Joystick Off");
+        TRACE_LOG("Query Joystick Off\n");
         keyboard_buffer_write(0xf6);
         if (ikbd.joy_mode==IKBD_JOY_MODE_OFF){
           keyboard_buffer_write(0x1a);
@@ -1449,7 +1442,7 @@ or FIRE BUTTON MONITORING mode.
         // > 0x9a all DEAD (tested up to 0xac)
 
       default: // I'm afraid my hack for Jumping Jackson causes ignored commands
-        if(src) TRACE_LOG("Byte ignored",src);
+        if(src) TRACE_LOG("Byte ignored",src);  // (TODO)
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
         ASSERT(!IkbdOff);
         ikbd.send_nothing=IkbdOff;
@@ -1473,9 +1466,7 @@ void agenda_keyboard_replace(int) {
       ACIA_IKBD.rx_stage=1; // actual work done later
     else // we retry later, repairs Cobra Compil 1 
     {
-#if defined(SS_IKBD_TRACE_IO)
-      TRACE("IKBD Input delayed...\n");
-#endif
+      TRACE_LOG("IKBD Input delayed...\n");
       agenda_add(agenda_keyboard_replace,SS_6301_TO_ACIA_IN_HBL,0);
     }
   }
@@ -1582,10 +1573,7 @@ void keyboard_buffer_write(BYTE src) {
     // put info in buffer
     keyboard_buffer_length++;
     keyboard_buffer[0]=src;
-
-#if defined(SS_IKBD_TRACE_IO)
-    TRACE("PC %X IKBD +%X(%d)\n",pc,src,keyboard_buffer_length);
-#endif
+    TRACE_LOG("PC %X IKBD +%X(%d)\n",pc,src,keyboard_buffer_length);
 
     log(EasyStr("IKBD: Wrote $")+HEXSl(src,2)+" keyboard buffer length="+keyboard_buffer_length);
     if(ikbd.joy_packet_pos>=0) 
@@ -1623,9 +1611,7 @@ void hd6301_keyboard_buffer_write(BYTE src) {
     // put info in buffer
     keyboard_buffer_length++;
     keyboard_buffer[0]=src;
-#if defined(SS_IKBD_TRACE_IO)
-    TRACE("PC %X IKBD(6301) +%X(%d)\n",pc,src,keyboard_buffer_length);
-#endif
+    TRACE_LOG("PC %X IKBD(6301) +%X(%d)\n",pc,src,keyboard_buffer_length);
     log(EasyStr("IKBD (6301): Wrote $")+HEXSl(src,2)+" keyboard buffer length="+keyboard_buffer_length);
   }
   else
@@ -1681,9 +1667,9 @@ void ikbd_mouse_move(int x,int y,int mousek,int max_mouse_move)
   {
     hd6301_mouse_move_since_last_interrupt_x=x;
     hd6301_mouse_move_since_last_interrupt_y=y;
-#if defined(SS_IKBD_TRACE_6301_MOUSE) // in the 6301 trace
+#if defined(SS_IKBD_TRACE_6301_MOUSE)
     if(x||y)
-      printf("VBL %d x %d y %d\n",FRAME,x,y); 
+      TRACE_LOG("VBL %d x %d y %d\n",FRAME,x,y); 
 #endif
     return;
   }
@@ -1802,7 +1788,7 @@ void ikbd_reset(bool Cold)
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
   if(HD6301EMU_ON)
   {
-    if(HD6301.Initialised) // if snaphot messed up...
+    if(HD6301_OK) 
     {
       HD6301.Crashed=0;
       hd6301_reset();
@@ -1844,10 +1830,6 @@ void ikbd_reset(bool Cold)
 void agenda_keyboard_reset(int SendF0) // SS scheduled by ikbd_reset()
 {
   TRACE_LOG("IKBD: TM %d Execute reset\n",ABSOLUTE_CPU_TIME);
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
-  if(HD6301EMU_ON)
-    printf("IKBD: TM %d Execute reset\n",ABSOLUTE_CPU_TIME);
-#endif
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM)
   ikbd.custom_prg_loading=FALSE;
   ikbd.custom_prg_ID=0;

@@ -10,9 +10,6 @@ int SideBorderSizeWin=ORIGINAL_BORDER_SIDE;
 int BottomBorderSize=ORIGINAL_BORDER_BOTTOM; // 40
 #endif
 
-
-
-
 #if defined(SS_SHIFTER_EVENTS)
 #include "SSEShifterEvents.cpp" // debug module, the Steem way...
 #endif

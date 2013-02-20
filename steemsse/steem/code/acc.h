@@ -56,6 +56,7 @@ WORD change_endian(WORD x); // double of something?
   #define LOG_CPU
 #endif
 
+#if !(defined(STEVEN_SEAGAL) && defined(SS_DEBUG_LOG_OPTIONS))
   #define LOGSECTION_ALWAYS 0
   #define LOGSECTION_FDC 1
   #define LOGSECTION_IO 2
@@ -80,7 +81,7 @@ WORD change_endian(WORD x); // double of something?
   #define LOGSECTION_DIV 21
   #define LOGSECTION_PASTI 22
   #define NUM_LOGSECTIONS 23
-
+#endif
   extern const char *name_of_mfp_interrupt[21];
 
 #ifdef IN_MAIN
@@ -94,11 +95,20 @@ WORD change_endian(WORD x); // double of something?
                                     {"IO",LOGSECTION_IO},
                                     {"Crash",LOGSECTION_CRASH},
                                     {"CPU",LOGSECTION_CPU},
+#if !(defined(STEVEN_SEAGAL) && defined(SS_DEBUG_DIV))
                                     {"Div Instructions",LOGSECTION_DIV},
+#endif
                                     {"Trace",LOGSECTION_TRACE},
                                     {"-",-1},
                                     {"FDC",LOGSECTION_FDC},
-                                    {"Pasti",LOGSECTION_PASTI},
+                                     
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_LOG_OPTIONS)
+  {"Floppy data",LOGSECTION_FDC_BYTES},
+  {"Image info",LOGSECTION_IMAGE_INFO},
+  {"IPF sector info",LOGSECTION_IPF_LOCK_INFO},
+#else
+  {"Pasti",LOGSECTION_PASTI},
+#endif
                                     {"Stemdos",LOGSECTION_STEMDOS},
                                     {"Trap",LOGSECTION_TRAP},
                                     {"-",-1},

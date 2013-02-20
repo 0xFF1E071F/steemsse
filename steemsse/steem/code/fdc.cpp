@@ -162,24 +162,9 @@ pre-compensation should always be used (p = 0). The stepping rate should
 */
   int type=WD1772.CommandType(cm);
 //  ASSERT( !(cm&BIT_3) || type==4 ); // 'h' //DotS, WarHeli
-  ASSERT( !(cm&BIT_2) || type==1 || type==4  ); // 'e'
-  ASSERT( !WD1772.WritingToDisk() || !(cm&BIT_1) ); // 'p'
+  //ASSERT( !(cm&BIT_2) || type==1 || type==4  ); // 'e' //Delirious 4
+  //ASSERT( !WD1772.WritingToDisk() || !(cm&BIT_1) ); // 'p' //GEM
   //ASSERT( type!=1 || (cm&3)==3 || cm==1 ); // 'r0,r1', restore may go faster //No Buddies Land
-#endif
-
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_NO_DISK) && defined(SS_HACKS)
-/*  If there is no disk in drive, we ignore the command.
-    The same if there's no drive B:
-    Tentative and covered by the 'hacks' option. 
-    It helps Lethal Xcess IPF when there's no disk in B:
-    But no IRQ is triggered, contrary to Pasti -> we don't do that now?
-*/
-  int drive=floppy_current_drive();
-  if(FloppyDrive[drive].Empty() && SSE_HACKS_ON )
-  {
-    TRACE_LOG("FDC command %X ignored, no disk in drive %c\n",cm,drive+'A');
-    return;
-  }
 #endif
 
   if (fdc_str & FDC_STR_BUSY){
@@ -921,7 +906,7 @@ void agenda_floppy_readwrite_sector(int Data)
     WriteProtect=FDC_STR_WRITE_PROTECT;
   }
   if (floppy->Empty()){
-    TRACE("agenda_floppy_readwrite_sector(): floppy is empty\n");
+    TRACE_LOG("agenda_floppy_readwrite_sector(): floppy is empty\n");
     fdc_str=BYTE(WriteProtect | FDC_STR_MOTOR_ON | /*FDC_STR_SEEK_ERROR | */FDC_STR_BUSY);
     agenda_add(agenda_fdc_finished,FDC_HBLS_PER_ROTATION*int((shifter_freq==MONO_HZ) ? 11:5),0);
     return; // Don't loop
@@ -1525,7 +1510,7 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
 
   //SS pasti manages DMA itself, then calls Steem to transfer what it gathered
 #undef LOGSECTION
-#define LOGSECTION LOGSECTION_FDC_BYTES
+#define LOGSECTION LOGSECTION_FDC_BYTES//SS
   if (pPIOI->haveXfer){
     dma_address=pPIOI->xferInfo.xferSTaddr;
     if (pPIOI->xferInfo.memToDisk){
@@ -1560,11 +1545,9 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
     }
   }
 #undef LOGSECTION
-#define LOGSECTION LOGSECTION_FDC
+#define LOGSECTION LOGSECTION_FDC//SS
 
 #if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)  // reporting IRQ
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_FDC  
   if(old_irq!=pPIOI->intrqState) 
   {
     if(!debug2) // to avoid double lines
@@ -1598,7 +1581,14 @@ void pasti_motor_proc(BOOL on)
 
 void pasti_log_proc(const char * LOG_ONLY(text))
 {
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_LOG_OPTIONS) \
+  && defined(ENABLE_LOGFILE)
+  TRACE_LOG((char*)text); //constaway
+  // it was the only active logging for this section 
+  log(text);
+#else
   log_to(LOGSECTION_PASTI,Str("PASTI: ")+text);
+#endif
 }
 
 void pasti_warn_proc(const char *text)
