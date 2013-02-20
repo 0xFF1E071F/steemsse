@@ -39,6 +39,7 @@
 #include <windows.h>
 #endif
 
+#include <stdio.h> // printf...
 #include <sys/types.h>
 
 #if defined(SS_IKBD_6301)
@@ -60,46 +61,13 @@ int hd6301_run_cycles(u_int cycles); // emulate
 int hd6301_load_save(int one_if_save, unsigned char *buffer); // for snaphot
 int hd6301_transmit_byte(u_char byte_in); // just passing through
 
-
-// debug facilities
-// printf writes in a file trace6301.txt, TRACE goes to Steem (IDE)
-#include <stdio.h>
 #define USE_PROTOTYPES 
-#if defined(SS_IKBD_6301_TRACE)
-extern FILE *trace_file_pointer_6301; // must be a C variable
-#endif
 
-#ifndef ASSERT // will stop only in VC IDE
-
-#if defined(_MSC_VER) && defined(_DEBUG)
-
-#define ASSERT(x) {if(!(x)) {printf("Assert failed: %s\n",#x);\
- _asm{int 0x03}}}
-
-#else 
-
-#if !defined(NDEBUG)
-#define ASSERT(x) {if(!(x)) printf("Assert failed: %s\n",#x);}
-#else
-#define ASSERT(x) // release
-#endif
-
-#endif
-
-#endif
-
-#if !defined(TRACE)
-#if defined(_DEBUG) && defined(_MSC_VER) 
-extern void my_trace(char *fmt, ...);
-#define TRACE my_trace
-#else
-#define TRACE
-#endif
-#endif
 
 // ensure compiling, TODO, find the BCC ID instead
 #if !defined(_MSC_VER) 
 #pragma warn- 8008
+#pragma warn- 8019 // code has no effect
 #pragma warn- 8045
 #pragma warn- 8060
 #pragma warn- 8061

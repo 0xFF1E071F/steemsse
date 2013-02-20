@@ -381,8 +381,11 @@ extern bool logsection_enabled[100];
 class EasyStr;
 extern void log_write(EasyStr);
 
+//#if !(defined(STEVEN_SEAGAL)) && defined(SS_DEBUG_LOG_OPTIONS))
 #define LOGSECTION_INIFILE 19
 #define LOGSECTION_GUI 20
+//#endif
+
 #define CSF_LOG(s) if (logsection_enabled[LOGSECTION_INIFILE] && logging_suspended==0) log_write(s)
 #define DTREE_LOG(s) if (logsection_enabled[LOGSECTION_GUI] && logging_suspended==0) log_write(s)
 

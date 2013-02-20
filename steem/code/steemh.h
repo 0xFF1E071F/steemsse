@@ -34,7 +34,7 @@ EXT unsigned long tos_len;    //132
 EXT unsigned long mem_len;    //136
 EXT bool tos_high;            //140
 #if !defined(SS_MMU_NO_CONFUSION)
-EXT bool mmu_testing; //mmu_confused;        //144  //SS new name
+EXT bool mmu_confused;        //144 
 #endif
 EXT unsigned long hbl_count INIT(0);
 
@@ -52,8 +52,14 @@ EXT const char *stem_version_text INIT(SSE_VERSION_TXT); // OSD + info box
 EXT const char *stem_version_text INIT("3.2");
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX)
+#define STEEM_EMAIL "another.steven.seagal@gmail.com"
+#else
 #define STEEM_EMAIL "steem@gmx.net"
+#endif
+
 #define STEEM_WEB "http:/""/steem.atari.st/"
+
 #define MSACONV_WEB "http:/""/msaconverter.free.fr/"
 #define DIDATABASE_WEB STEEM_WEB "database.htm"
 

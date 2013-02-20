@@ -183,8 +183,8 @@ BYTE d2_peek(MEM_ADDRESS ad){
       if(ad<=(0xe00000+256*1024))return ROM_PEEK(ad-rom_addr);
       else{d2_peekvalid=0xff;return 0;}
 #if !defined(SS_MMU_NO_CONFUSION)
-    }else if(mmu_testing){
-      return mmu_testing_peek(ad,false);
+    }else if(mmu_confused){
+      return mmu_confused_peek(ad,false);
 #endif
     }
   }else{
@@ -225,8 +225,8 @@ WORD d2_dpeek(MEM_ADDRESS ad)
       if(ad<=(0xe00000+256*1024))      return (WORD)ROM_DPEEK(ad-rom_addr);
       else {d2_peekvalid=0xffff;return 0;}
 #if !defined(SS_MMU_NO_CONFUSION)
-    }else if(mmu_testing){
-      return mmu_testing_dpeek(ad,false);
+    }else if(mmu_confused){
+      return mmu_confused_dpeek(ad,false);
 #endif
     }
   }else{
@@ -268,8 +268,8 @@ LONG d2_lpeek(MEM_ADDRESS ad){
       if(ad<=(0xe00000+256*1024))      return (LONG)ROM_LPEEK(ad-rom_addr);
       else {d2_peekvalid=0xffffffff;return 0;}
 #if !defined(SS_MMU_NO_CONFUSION)
-    }else if(mmu_testing){
-      return mmu_testing_lpeek(ad,false);
+    }else if(mmu_confused){
+      return mmu_confused_lpeek(ad,false);
 #endif
     }
   }else{

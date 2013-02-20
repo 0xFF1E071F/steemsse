@@ -84,8 +84,15 @@ void TGeneralInfo::GetHyperlinkLists(EasyStringList &desc_sl,EasyStringList &lin
 {
   desc_sl.Sort=eslNoSort;
   link_sl.Sort=eslNoSort;
-  desc_sl.Add(T("Official Steem website"),0);
+  desc_sl.Add(T("Official Steem website (legacy)"),0);
   link_sl.Add(STEEM_WEB);
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX)
+  desc_sl.Add(T("Steem SSE sourceforge"),0);
+  link_sl.Add("http:/""/sourceforge.net/projects/steemsse/");
+  desc_sl.Add(T("Steven Seagal's Atari ST Site"),0);
+  link_sl.Add("http://ataristeven.t15.org/");
+#endif
 
   // Steem links
   FILE *f=fopen(RunDir+SLASH "steem.new","rt");

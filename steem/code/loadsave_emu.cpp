@@ -582,9 +582,6 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   {
 #ifdef SS_STF
     ReadWrite(ST_TYPE);
-    ASSERT(!(ST_TYPE!=STF && ST_TYPE!=STF2 && ST_TYPE!=STE && ST_TYPE!=MEGASTF));
-    if(ST_TYPE!=STF && ST_TYPE!=STF2 && ST_TYPE!=STE && ST_TYPE!=MEGASTF)
-      ST_TYPE=STE;
     SwitchSTType(ST_TYPE);
 #endif
     int dummy=0; // dummy for former Program ID
@@ -616,14 +613,14 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
     if (LoadOrSave==LS_SAVE) // 1=save
     {
-      if(HD6301.Initialised)
+      if(HD6301_OK)
         hd6301_load_save(LoadOrSave,buffer_for_hd6301);
       ReadWrite(buffer_for_hd6301);  
     }
     else // 0=load
     {
       ReadWrite(buffer_for_hd6301);  
-      if(HD6301.Initialised)
+      if(HD6301_OK)
         hd6301_load_save(LoadOrSave,buffer_for_hd6301);
     }
 #endif

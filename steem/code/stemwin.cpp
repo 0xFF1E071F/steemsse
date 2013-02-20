@@ -570,6 +570,9 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           { PostRunMessage();} // it's a macro
           else
           {
+#if defined(SS_SHIFTER_EVENTS) && defined(SS_SHIFTER_EVENTS_ON_STOP)
+            VideoEvents.Report(); // shifter tricks report
+#endif
             runstate=RUNSTATE_STOPPING;
           }
         }
@@ -581,6 +584,9 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         if (wPar==VK_PAUSE){
           if (Mess==WM_KEYUP || Mess==WM_SYSKEYUP){
             if (FullScreen || GetKeyState(VK_SHIFT)<0){
+#if defined(SS_SHIFTER_EVENTS) && defined(SS_SHIFTER_EVENTS_ON_STOP)
+              VideoEvents.Report(); // shifter tricks report
+#endif
               runstate=RUNSTATE_STOPPING;
             }else{
               if (stem_mousemode==STEM_MOUSEMODE_DISABLED){
@@ -923,7 +929,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
       SendMessage(hBut,BM_SETCHECK,PatchesBox.IsVisible(),0);
       break;
 
-    case 101: // TOGGLE EMULATION START/STOP ?
+    case 101: // TOGGLE EMULATION START/STOP
       if (SendMessage(hBut,BM_GETCLICKBUTTON,0,0)==2) break;
 
       RunMessagePosted=0;
@@ -943,7 +949,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
         SendMessage(hBut,BM_SETCHECK,0,0);
       }else{
         if (runstate==RUNSTATE_RUNNING){
-#if defined(SS_VID_SHIFTER_EVENTS) && defined(SS_SHIFTER_EVENTS_ON_STOP)
+#if defined(SS_SHIFTER_EVENTS) && defined(SS_SHIFTER_EVENTS_ON_STOP)
           VideoEvents.Report(); // shifter tricks report
 #endif
           runstate=RUNSTATE_STOPPING;

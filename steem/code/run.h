@@ -49,6 +49,7 @@ DEBUG_ONLY(EXT int mode);
 EXT int mixed_output INIT(0);
 
 EXT int cpu_time_of_last_vbl,shifter_cycle_base;
+
 EXT int cpu_timer_at_start_of_hbl;
 
 #ifdef IN_EMU

@@ -4,15 +4,6 @@ bool enable_zip=true;
 bool enable_zip=false;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
-#ifdef UNIX //silly but subject to change
-bool enable_rar=false; 
-#else
-bool enable_rar=false;
-#endif
-#endif
-
-
 #ifndef WM_MOUSEWHEEL
 #define WM_MOUSEWHEEL 0x020A
 #endif

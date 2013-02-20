@@ -11,10 +11,18 @@ extern DWORD get_shifter_draw_pointer(int);
 
 extern "C" {
 
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU_WAKE_UP_IO_BYTES_R)
+BYTE ASMCALL io_read_b(MEM_ADDRESS,bool recursive=false);
+#else
 BYTE ASMCALL io_read_b(MEM_ADDRESS);
+#endif
 WORD ASMCALL io_read_w(MEM_ADDRESS);
 DWORD ASMCALL io_read_l(MEM_ADDRESS);
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU_WAKE_UP_IO_BYTES_W)
+void ASMCALL io_write_b(MEM_ADDRESS,BYTE,bool recursive=false);
+#else
 void ASMCALL io_write_b(MEM_ADDRESS,BYTE);
+#endif
 void ASMCALL io_write_w(MEM_ADDRESS,WORD);
 void ASMCALL io_write_l(MEM_ADDRESS,LONG);
 

@@ -52,6 +52,9 @@ __ENV__   Step period = 2EP/(15625*32) Hz.  Scale by 2^17 to scale 13124.5 to 1.
 
 */
 
+
+
+
 #define SOUND_DESIRED_LQ_FREQ (50066/2)
 
 #ifdef ENABLE_VARIABLE_SOUND_DAMPING
@@ -176,6 +179,7 @@ MEM_ADDRESS dma_sound_fetch_address;
 
 // Max frequency/lowest refresh *2 for stereo
 #define DMA_SOUND_BUFFER_LENGTH 2600 * SCREENS_PER_SOUND_VBL * 2
+
 WORD dma_sound_channel_buf[DMA_SOUND_BUFFER_LENGTH+16];
 DWORD dma_sound_channel_buf_last_write_t;
 int dma_sound_on_this_screen=0;
@@ -206,7 +210,12 @@ TIirHighShelf MicrowireTrebleL,MicrowireTrebleR;
 #ifdef SS_SOUND_VOL
 TIirVolume PsgGain;
 #endif
+#if defined(SS_SOUND_LOW_PASS_FILTER)
+TIirLowPass PSGLowFilterL,PSGLowFilterR;
 #endif
+#endif
+
+
 
 //---------------------------------- PSG ------------------------------------
 
@@ -229,7 +238,6 @@ void psg_write_buffer(int,DWORD);
 
 //#define PSG_CHANNEL_BUF_LENGTH (2048*SCREENS_PER_SOUND_VBL)
 #define PSG_CHANNEL_BUF_LENGTH (8192*SCREENS_PER_SOUND_VBL)
-
 #define VOLTAGE_ZERO_LEVEL 0
 #define VOLTAGE_FIXED_POINT 256
 //must now be fixed at 256!
@@ -375,11 +383,6 @@ const int psg_envelope_level[8][64]={
 #undef VFP
 #undef VZL
 #undef VA
-#ifdef STEVEN_SEAGAL
-#define VFP VFP
-#define VZL VZL
-#define VA VA
-#endif
 
 DWORD psg_quantize_time(int,DWORD);
 void psg_set_reg(int,BYTE,BYTE&);

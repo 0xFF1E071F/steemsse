@@ -107,22 +107,11 @@ inline void m68k_poke(MEM_ADDRESS ad,BYTE x);
 inline void m68k_dpoke(MEM_ADDRESS ad,WORD x);
 inline void m68k_lpoke(MEM_ADDRESS ad,LONG x);
 
-
-/*
-               RAM memory access cycles are  interleaved  between  the
-          microprocessor  unit and the video controller, thus allowing
-          video display memory to reside efficiently as part  of  main
-          memory (the MPU still maintains full memory bandwidth).
-
-  =>      The CPU can't access the bus as it needs to. It only gets
-          2 clocks every 4 clocks. Instruction times can be extended,
-          a rule of thumb is that they're rounded to 4, but it's subtler
-          than that. It's masterfully managed in Steem thanks to
-          the judicial placement of those 2 macros.
-*/
-
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU)) // inlined
 #define INSTRUCTION_TIME(t) {cpu_cycles-=(t);}
 #define INSTRUCTION_TIME_ROUND(t) {INSTRUCTION_TIME(t); cpu_cycles&=-4;}
+#endif
+
 
 #ifdef DEBUG_BUILD
 
@@ -194,7 +183,8 @@ WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     EXTRA_PREFETCH               \
   }
 
-// I can't find one instance where checkints is passed.
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
+// SS I can't find one instance where checkints is passed.
 #define M68K_PERFORM_RTE(checkints)             \
             SET_PC(m68k_lpeek(r[15]+2));        \
             sr=m68k_dpeek(r[15]);r[15]+=6;      \
@@ -203,27 +193,16 @@ WORD prefetch_buf[2]; // SS the 2 words prefetch queue
             DETECT_TRACE_BIT;                   \
             checkints;                          \
 
+#endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH)
-  #define PREFETCH_SET_PC                       \
-  prefetch_buf[0]=*lpfetch;\
-  prefetch_buf[1]=*(lpfetch+MEM_DIR); \
-  prefetched_2=true;\
-  if(Cpu.CallPrefetch) \
-  {\
-    ASSERT(Cpu.PrefetchedOpcode==prefetch_buf[0]);\
-    prefetch_buf[0]=Cpu.PrefetchedOpcode;\
-    Cpu.CallPrefetch=FALSE;\
-  }\
-  lpfetch+=MEM_DIR;
-#else
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
   #define PREFETCH_SET_PC                       \
   prefetched_2=false; /*will have prefetched 1 word*/ \
   prefetch_buf[0]=*lpfetch;               \
   lpfetch+=MEM_DIR;  /*let's not cause exceptions here*/
 #endif
 
-
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
 #define SET_PC(ad)        \
     pc=ad;                               \
     pc_high_byte=pc & 0xff000000;     \
@@ -260,8 +239,9 @@ WORD prefetch_buf[2]; // SS the 2 words prefetch queue
       lpfetch_bound=lpDPEEK(mem_len+(MEM_EXTRA_BYTES/2));         \
     }                                         \
     PREFETCH_SET_PC
+#endif
 
-#if !defined(STEVEN_SEAGAL) || !defined(SS_CPU)
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
 #define FETCH_W(dest_word)              \
   if(prefetched_2){                     \
     dest_word=prefetch_buf[0];            \
@@ -275,7 +255,7 @@ WORD prefetch_buf[2]; // SS the 2 words prefetch queue
   if(lpfetch MEM_GE lpfetch_bound)exception(BOMBS_BUS_ERROR,EA_FETCH,pc);
 #endif
 
-#if !defined(STEVEN_SEAGAL) || !defined(SS_CPU)
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
 #define FETCH_TIMING {INSTRUCTION_TIME(4); cpu_cycles&=-4;} 
 #endif
 
@@ -367,7 +347,7 @@ WORD prefetch_buf[2]; // SS the 2 words prefetch queue
   }
 
 
-#else
+#else // (with MMU "confusion")
 
 #define m68k_SET_DEST_B_TO_ADDR        \
   abus&=0xffffff;                                   \
@@ -380,8 +360,8 @@ WORD prefetch_buf[2]; // SS the 2 words prefetch queue
       DWORD_B_0(&iobuffer)=io_read_b(abus);        \
     }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);             \
   }else if(abus>=himem){                               \
-    if(mmu_testing){                               \
-      mmu_testing_set_dest_to_addr(1,true);           \
+    if(mmu_confused){                               \
+      mmu_confused_set_dest_to_addr(1,true);           \
     }else if(abus>=FOUR_MEGS){                                                \
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               \
     }else{                                                        \
@@ -411,8 +391,8 @@ WORD prefetch_buf[2]; // SS the 2 words prefetch queue
       *((WORD*)&iobuffer)=io_read_w(abus);        \
     }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                \
   }else if(abus>=himem){                               \
-    if(mmu_testing){                               \
-      mmu_testing_set_dest_to_addr(2,true);           \
+    if(mmu_confused){                               \
+      mmu_confused_set_dest_to_addr(2,true);           \
     }else if(abus>=FOUR_MEGS){                                                \
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               \
     }else{                                                        \
@@ -442,8 +422,8 @@ WORD prefetch_buf[2]; // SS the 2 words prefetch queue
       iobuffer=io_read_l(abus);        \
     }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                 \
   }else if(abus>=himem){                               \
-    if(mmu_testing){                               \
-      mmu_testing_set_dest_to_addr(4,true);           \
+    if(mmu_confused){                               \
+      mmu_confused_set_dest_to_addr(4,true);           \
     }else if(abus>=FOUR_MEGS){                                                \
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               \
     }else{                                                        \
@@ -476,8 +456,7 @@ WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH)
-#else
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH))
 #define EXTRA_PREFETCH                    \
   prefetch_buf[1]=*lpfetch;              \
   prefetched_2=true;
@@ -503,7 +482,7 @@ int debug_mem_write_log_bytes;
 
 #define STOP_INTS_BECAUSE_INTERCEPT_OS bool(ioaccess & (IOACCESS_INTERCEPT_OS | IOACCESS_INTERCEPT_OS2))
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU)
-void m68k_interrupt(MEM_ADDRESS);  //non-address or bus error interrupt
+//void m68k_interrupt(MEM_ADDRESS);  //non-address or bus error interrupt
 #endif
 void change_to_user_mode();
 void change_to_supervisor_mode();
@@ -820,13 +799,15 @@ void sr_check_z_n_l_for_r0()
 
 #else //inemu
 
-
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU__________)
+#define SET_PC(ad) M68000.SetPC(ad);
+#else
 #define SET_PC(ad) set_pc(ad);
+#endif
 extern void set_pc(MEM_ADDRESS);
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU)
-#else
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
 extern void perform_rte();
 #endif
 

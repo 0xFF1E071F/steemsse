@@ -9,6 +9,10 @@ that deal with reads from ST I/O addresses ($ff8000 onwards).
 #pragma message("Included for compilation: ior.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU)
+#include "SSE/SSEMMU.h"
+#endif
+
 #define LOGSECTION LOGSECTION_IO
 
 #if !defined(STEVEN_SEAGAL) || !defined(SS_SHIFTER_SDP_READ) || defined(SS_DEBUG)
@@ -57,7 +61,11 @@ MEM_ADDRESS get_shifter_draw_pointer(int cycles_since_hbl)
 }
 #endif
 //---------------------------------------------------------------------------
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU_WAKE_UP_IO_BYTES_R)
+BYTE ASMCALL io_read_b(MEM_ADDRESS addr,bool recursive)
+#else
 BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
+#endif
 {
 /*
   Allowed addresses
@@ -93,6 +101,21 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
   FF9220, FF9222                   paddles
   FFFA00 - FFFA3F   MFP
 */
+
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_TRACE_IO)
+  if(!io_word_access) 
+    TRACE_LOG("PC %X read byte at %X\n",pc-2,addr);
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU_WAKE_UP_IO_BYTES_R)
+  if(!io_word_access && !recursive && MMU.OnMmuCycles(LINECYCLES))
+  {
+    cpu_cycles-=2; // = +2 cycles
+    BYTE return_value=io_read_b(addr,true);
+    cpu_cycles+=2;
+    return return_value;
+  }
+#endif
 
   DEBUG_CHECK_READ_IO_B(addr);
 #ifdef ONEGAME
@@ -178,8 +201,8 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
         else if(keyboard_buffer_length)
           TRACE_LOG("PC %X, read 0xfffc00: %x\n",pc-2,x); 
 #endif
-#if defined(SS_IKBD_TRACE_6301)
-        if(x&BIT_1) printf("read 0xfffc00 %x ACT %d PX %X\n",x,ABSOLUTE_CPU_TIME,pc);
+#if defined(SS_DEBUG)
+        if(x&BIT_1) TRACE_LOG("read 0xfffc00 %x ACT %d PX %X\n",x,ABSOLUTE_CPU_TIME,pc);
 #endif
 
           return x;
@@ -344,8 +367,8 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
       if(ST_TYPE!=STE)
       {
         TRACE_LOG("STF read STE DMA Sound %x\n",addr);
-        //exception(BOMBS_BUS_ERROR,EA_READ,addr);
-        return 0; // crash?
+        exception(BOMBS_BUS_ERROR,EA_READ,addr); // Petari says it must crash
+        //return 0; // crash?
       break;
       }
 #endif
@@ -593,6 +616,8 @@ No write access.
       }
       break;
 #endif//!dmaio
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_VIDEO//SS
     }case 0xff8200:{      //----------------------------------- shifter
                      //----------------------------------------=--------------- shifter
                      //----------------------------------------=--------------- shifter
@@ -678,8 +703,8 @@ FF8240 - FF827F   palette, res
 #if defined(STEVEN_SEAGAL) && defined(SS_STF)
           if(ST_TYPE!=STE)
           {
-            TRACE_LOG("STF read 0xff820f: 0\n");
-            return 0;
+            TRACE_LOG("STF read %d: $FF %d\n",addr); //3.5 FF
+            return 0xFF;
           }
 #endif
           return (BYTE)shifter_fetch_extra_words;
@@ -688,24 +713,43 @@ FF8240 - FF827F   palette, res
         case 0xff8260: //resolution
           return (BYTE)screen_res;
         case 0xff8264:  //hscroll no increase screen width
+
+#if defined(STEVEN_SEAGAL) && defined(SS_STF)
+          if(ST_TYPE!=STE)
+          {
+            TRACE_LOG("STF read %d: $FF %d\n",addr);
+            return 0xFF; // fixes Titan (thx to Petari)
+          }
+#endif
           return (BYTE)0;
+
         case 0xff8265:  //hscroll
           DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) shifter_hscroll_extra_fetch=(shifter_hscroll!=0);
 #if defined(STEVEN_SEAGAL) && defined(SS_STF)
           if(ST_TYPE!=STE)
           {
-            TRACE_LOG("STF read 0xff8265: 0 %d\n");
-            return 0;
+            TRACE_LOG("STF read %d: $FF %d\n",addr);
+            return 0xFF; // and not 0 (v3.5)
           }
 #endif
           return (BYTE)shifter_hscroll;
         }
         // Below $10 - Odd bytes return value or 0, even bytes return 0xfe/0x7e
         // Above $40 - Unused return 0
+        TRACE_LOG("Read unused %x\n",addr);
         if (addr<=0xff820f && (addr & 1)==0) return 0xfe;
+#if defined(STEVEN_SEAGAL) && defined(SS_STF)
+        if(ST_TYPE!=STE)
+        {
+          TRACE_LOG("STF read %d: $FF %d\n",addr);
+          return 0xFF; // fixes Titan (thx to Petari)
+        }
+#endif
         return 0;
       }
       break;
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_IO//SS
     }case 0xff8000:{      //----------------------------------- MMU
       if (addr==0xff8001){
         if (mem_len>FOUR_MEGS) return MEMCONF_2MB | (MEMCONF_2MB << 2);
@@ -783,17 +827,51 @@ FF8240 - FF827F   palette, res
 //---------------------------------------------------------------------------
 WORD ASMCALL io_read_w(MEM_ADDRESS addr)
 {
+
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU_WAKE_UP_IOR_HACK)
+
+  WORD return_value;
+  int CyclesIn=LINECYCLES;
+  if(MMU.OnMmuCycles(CyclesIn))
+    cpu_cycles-=2; // - = + !!!!
+
+  if (addr>=0xff8240 && addr<0xff8260){  //palette
+    DEBUG_CHECK_READ_IO_W(addr);
+    int n=addr-0xff8240;n/=2;
+    return_value=STpal[n];
+  }else{
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_TRACE_IO)
+    TRACE_LOG("PC %X read word at %X\n",pc-2,addr);
+#endif
+    io_word_access=true;
+    WORD x=WORD(io_read_b(addr) << 8);
+    x|=io_read_b(addr+1);
+    io_word_access=0;
+    return_value=x;
+  }
+
+  if(MMU.OnMmuCycles(CyclesIn))
+    cpu_cycles+=2;
+
+  return return_value;
+
+#else
+
   if (addr>=0xff8240 && addr<0xff8260){  //palette
     DEBUG_CHECK_READ_IO_W(addr);
     int n=addr-0xff8240;n/=2;
     return STpal[n];
   }else{
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_TRACE_IO)
+    TRACE_LOG("PC %X read word at %X\n",pc-2,addr);
+#endif
     io_word_access=true;
     WORD x=WORD(io_read_b(addr) << 8);
     x|=io_read_b(addr+1);
     io_word_access=0;
     return x;
   }
+#endif  
 }
 //---------------------------------------------------------------------------
 DWORD ASMCALL io_read_l(MEM_ADDRESS addr)

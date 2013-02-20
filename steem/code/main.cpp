@@ -32,10 +32,9 @@ other files that make up the Steem module.
 #endif
 
 #include "conditions.h"	
+
 #include "SSE/SSE.h" // SS
-//#if defined(STEVEN_SEAGAL)
-#include "SSE/SSEDebug.h"
-//#endif
+#include "SSE/SSEDebug.h" //SS
 
 const char *stem_version_date_text=__DATE__ " - " __TIME__;
 
@@ -115,14 +114,13 @@ TPatchesBox PatchesBox;
 #include "macros.cpp"
 #include <wordwrapper.cpp>
 #include "screen_saver.cpp"
-////#include "SSE.cpp"// compiled as apart module
+
 #ifdef ONEGAME
 #define _USE_MEMORY_TO_MEMORY_DECOMPRESSION
 #include <unrarlib/unrarlib.h> // SS: unrar not urar, confusing  ????
 //#include <urarlib/urarlib.c> // SS not sure it's operating! TODO
 #include "onegame.cpp"
 #endif
-
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301) 
 #include "SSE/SSE6301.h" //TODO
@@ -652,6 +650,13 @@ UNIX_ONLY( hxc::font_sl.Insert(0,0,Path,NULL); )
 #endif
 
   SetNotifyInitText(T("Jump Tables"));
+
+#if defined(STEVEN_SEAGAL) && defined(SS_DELAY_LOAD_DLL)
+#ifdef __BORLANDC__
+__pfnDliFailureHook = MyLoadFailureHook;
+#endif
+#endif
+
 #ifndef SS_VAR_NOTIFY
   WIN_ONLY( LoadUnzipDLL(); )
 #endif
@@ -671,6 +676,19 @@ UNIX_ONLY( hxc::font_sl.Insert(0,0,Path,NULL); )
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
   Caps.Init();
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_SDL)
+  SDL_OK=TRUE;
+  try{
+    if(SDL_Init(SDL_INIT_EVERYTHING)==-1)
+      SDL_OK=FALSE;
+  }
+  catch(...)
+  {
+    TRACE_LOG("no SDL.DLL\n");
+    SDL_OK=FALSE;
+  }
 #endif
 
 #ifdef DEBUG_BUILD
@@ -812,7 +830,7 @@ UNIX_ONLY( hxc::font_sl.Insert(0,0,Path,NULL); )
     }
   }
 
-
+#if !defined(SS_VAR_NO_AUTO_ASSOCIATE)
 #ifdef WIN32 // SS associates too much?
 #ifndef ONEGAME
   AssociateSteem(".ST","st_disk_image",0,T("ST Disk Image"),DISK_ICON_NUM,0);
@@ -823,6 +841,9 @@ UNIX_ONLY( hxc::font_sl.Insert(0,0,Path,NULL); )
 #if USE_PASTI
   if (hPasti) AssociateSteem(".STX","st_pasti_disk_image",0,T("ST Disk Image"),DISK_ICON_NUM,0);
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SS_IPF_ASSOCIATE)
+  AssociateSteem(".IPF","st_disk_image",0,T("ST Disk Image"),DISK_ICON_NUM,0);
+#endif
   AssociateSteem(".STS","steem_memory_snapshot",0,T("Steem Memory Snapshot"),SNAP_ICON_NUM,0);
   AssociateSteem(".STC","st_cartridge",0,T("ST ROM Cartridge"),CART_ICON_NUM,0);
   AssociateSteem(".PRG","st_program",0,T("ST Program"),PRG_ICON_NUM,true);
@@ -832,7 +853,7 @@ UNIX_ONLY( hxc::font_sl.Insert(0,0,Path,NULL); )
   AssociateSteem(".TTP","st_program",0,T("ST Program"),PRG_ICON_NUM,true);
 #endif
 #endif
-
+#endif//#if !defined(SS_VAR_NO_AUTO_ASSOCIATE)
 #ifndef ONEGAME
   DestroyNotifyInitWin();
 #endif
@@ -998,7 +1019,7 @@ void make_Mem(BYTE conf0,BYTE conf1)
 
   himem=mem_len;
 #if !defined(SS_MMU_NO_CONFUSION)
-  mmu_testing=false;
+  mmu_confused=false;
 #endif
 }
 //---------------------------------------------------------------------------
@@ -1133,9 +1154,13 @@ void CleanUpSteem()
   DestroyKeyTable();
 
   WIN_ONLY( if (hUnzip) FreeLibrary(hUnzip); enable_zip=false; hUnzip=NULL; )
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
-  WIN_ONLY( if (hUnrar) FreeLibrary(hUnrar); enable_rar=false; hUnrar=NULL; )
+
+#if defined(STEVEN_SEAGAL) && defined(SS_SDL)
+  if(SDL_OK)
+    SDL_Quit();
 #endif
+
+
 #ifdef UNIX
   if (XD){
     XCloseDisplay(XD);

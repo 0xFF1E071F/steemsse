@@ -10,6 +10,10 @@ route of communication between programs and the chips in the emulated ST.
 #pragma message("Included for compilation: iow.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU)
+#include "SSE/SSEMMU.h"
+#endif
+
 #define LOGSECTION LOGSECTION_IO
 /*
   Secret addresses:
@@ -18,7 +22,11 @@ route of communication between programs and the chips in the emulated ST.
                             which must be null-terminated
 */
 //---------------------------------------------------------------------------
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU_WAKE_UP_IO_BYTES_W)
+void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b,bool recursive)
+#else
 void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
+#endif
 {
 /*
   Allowed IO writes (OR 0)
@@ -41,11 +49,37 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 */
 
   log_io_write(addr,io_src_b);
-#if defined(SS_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_TRACE_IO)
   if(!io_word_access) 
-    TRACE_LOG("PC%X write byte %X to %X\n",pc-2,io_src_b,addr);
+    TRACE_LOG("PC %X write byte %X to %X\n",pc-2,io_src_b,addr);
 #endif
 
+
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU_WAKE_UP_IO_BYTES_W)
+  if(!io_word_access && !recursive && MMU.OnMmuCycles(LINECYCLES))
+  {
+#if !defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
+    cpu_cycles-=2; // = +2 cycles
+#endif
+    io_write_b(addr,io_src_b,true);
+#if !defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
+    cpu_cycles+=2;
+#endif
+  }
+#endif
+
+
+/*
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU_WAKE_UP_IOW_HACK) \
+  && defined(SS_MMU_WAKE_UP_IO_BYTES_W)
+  int CyclesIn=LINECYCLES;
+  if(!io_word_access && MMU.OnMmuCycles(CyclesIn))
+  {
+    TRACE_LOG("Write byte %X on %X delayed cycles %d\n",io_src_b,addr,CyclesIn);
+    cpu_cycles-=2; 
+  }
+#endif
+*/
 #ifdef DEBUG_BUILD
   DEBUG_CHECK_WRITE_IO_B(addr,io_src_b);
 #endif
@@ -118,7 +152,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
     /******************** Keyboard ACIA ************************/
 
 #undef LOGSECTION
-#define LOGSECTION LOGSECTION_IKBD
+#define LOGSECTION LOGSECTION_IKBD//SS
 
       case 0xfffc00:  //control
         if ((io_src_b & 3)==3){
@@ -187,7 +221,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
         else if(hd6301_receiving_from_MC6850) 
         {
 #if defined(SS_IKBD_TRACE_6301)
-          printf("%d PC %X IKBD write (shift delayed) %X\n",ACIA_IKBD.last_tx_write_time,pc,io_src_b);
+          TRACE_LOG("%d PC %X IKBD write (shift delayed) %X\n",ACIA_IKBD.last_tx_write_time,pc,io_src_b);
 #endif
           ACIA_IKBD.data_tdr=io_src_b;
         }
@@ -198,7 +232,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
           ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
 #if defined(SS_IKBD_TRACE_6301)
           if(HD6301EMU_ON)
-            printf("iow IKBD write %X (act %d PC %X tx%d)\n",io_src_b,ABSOLUTE_CPU_TIME,pc,ACIA_IKBD.tx_flag);
+            TRACE_LOG("iow IKBD write %X (act %d PC %X tx%d)\n",io_src_b,ABSOLUTE_CPU_TIME,pc,ACIA_IKBD.tx_flag);
 #endif
           // agenda the byte to process
           agenda_add(agenda_ikbd_process,
@@ -218,7 +252,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
         break;
 
 #undef LOGSECTION
-#define LOGSECTION LOGSECTION_IO
+#define LOGSECTION LOGSECTION_IO//SS
 
 #else // Steem 3.2
       {
@@ -534,7 +568,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 #if defined(STEVEN_SEAGAL) && defined(SS_STF)
       if(ST_TYPE!=STE)
       {
-        TRACE_LOG("STF write %X to %X\n",io_src_b,addr);
+        TRACE_LOG("STF write %X to DMA %X\n",io_src_b,addr);
         exception(BOMBS_BUS_ERROR,EA_WRITE,addr); // fixes PYM/ST-CNX, SoWatt, etc.
         break;
       }
@@ -982,10 +1016,10 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
     If both bits 1&2 are set, drive A is selected.
 */
 #undef LOGSECTION
-#define LOGSECTION LOGSECTION_FDC
+#define LOGSECTION LOGSECTION_FDC//SS
           TRACE_LOG("PSG Port A %X (&7: %X)\n",io_src_b,io_src_b&7);
 #undef LOGSECTION
-#define LOGSECTION LOGSETION_IO
+#define LOGSECTION LOGSETION_IO//SS
 
 #if USE_PASTI // SS Pasti manages this as well
           if (hPasti && pasti_active) 
@@ -1180,10 +1214,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
     }
 
 #undef LOGSECTION
-#define LOGSECTION LOGSECTION_IO
-
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_VIDEO//?
+#define LOGSECTION LOGSECTION_VIDEO
 
     case 0xff8200:{  //----------------------------------------=--------------- shifter
                      //----------------------------------------=--------------- shifter
@@ -1200,6 +1231,13 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
       // SS Shifter emulation is so complicated I took some functions out
       // of here
       // TODO take it all out, restore 3.2
+
+#if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
+      if(recursive) 
+        cpu_cycles+=-2;
+#endif
+
+
       if ((addr>=0xff8210 && addr<0xff8240) || addr>=0xff8280){
         exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
       }
@@ -1216,7 +1254,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 
 #if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
 
-#if defined(SS_SHIFTER_EVENTS) && defined(SS_DEBUG)
+#if defined(SS_SHIFTER_EVENTS) && defined(SS_SHIFTER_EVENTS_PAL)
         VideoEvents.Add(scan_y,LINECYCLES,'p', (n<<12)|io_src_b);  // little p
 #endif
 
@@ -1301,7 +1339,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 
         case 0xff8203:  //mid byte of screen memory address
 #if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_EVENTS)
-          VideoEvents.Add(scan_y,LINECYCLES,'V',io_src_b); 
+          VideoEvents.Add(scan_y,LINECYCLES,'M',io_src_b); 
 
 //          TRACE("Videobase M %X->%X (VBL%d y %d)\n",DWORD_B_1(&xbios2),io_src_b,FRAME,scan_y);
 
@@ -1684,6 +1722,12 @@ This register allows to skip from a single to 15 pixels at the start of each
         }//sw
       }//if
     }//scope
+
+#if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
+    if(recursive) 
+      cpu_cycles+=2;
+#endif
+
     break;//shifter
 
 #undef LOGSECTION
@@ -1778,37 +1822,33 @@ TOS106
 MMU PC E000E6 Byte A RAM 1024K Bank 0 512 Bank 1 512 testing 1
 MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
 
-  This is one of the very few changes we made without defines:
-  mmu_confused -> mmu_testing everywhere (var & func)
-
 */
-
 #if defined(STEVEN_SEAGAL) && defined(SS_MMU_WRITE) 
         if(mem_len<=FOUR_MEGS){ // programs actually may write here?
 #else
         if (old_pc>=FOURTEEN_MEGS && mem_len<=FOUR_MEGS){
 #endif
-//          TRACE("PC %X write %X to MMU\n",pc,io_src_b);
+          TRACE_LOG("PC %X write %X to MMU\n",pc,io_src_b);
           mmu_memory_configuration=io_src_b;
           mmu_bank_length[0]=mmu_bank_length_from_config[(mmu_memory_configuration & b1100) >> 2];
           mmu_bank_length[1]=mmu_bank_length_from_config[(mmu_memory_configuration & b0011)];
 #if !defined(SS_MMU_NO_CONFUSION)
-          mmu_testing=false;
-          if (bank_length[0]) if (mmu_bank_length[0]!=bank_length[0]) mmu_testing=true;
-          if (bank_length[1]) if (mmu_bank_length[1]!=bank_length[1]) mmu_testing=true;
+          mmu_confused=false;
+          if (bank_length[0]) if (mmu_bank_length[0]!=bank_length[0]) mmu_confused=true;
+          if (bank_length[1]) if (mmu_bank_length[1]!=bank_length[1]) mmu_confused=true;
 #if defined(STEVEN_SEAGAL) && defined(SS_MMU_WRITE)
           if(old_pc<FOURTEEN_MEGS) // the write doesn't "confuse" the MMU
           {
             TRACE_LOG("Cancel MMU testing\n");
-            mmu_testing=false; // fixes Super Neo Demo Show (1MB)
+            mmu_confused=false; // fixes Super Neo Demo Show (1MB)
           }
 #endif
-          himem=(MEM_ADDRESS)(mmu_testing ? 0:mem_len);
+          himem=(MEM_ADDRESS)(mmu_confused ? 0:mem_len);
 #else
           himem=(MEM_ADDRESS)mem_len;
-          int mmu_testing=0;//dbg
+          int mmu_confused=0;//dbg
 #endif
-          TRACE_LOG("MMU PC %X Byte %X RAM %dK Bank 0 %d Bank 1 %d testing %d\n",old_pc,io_src_b,mem_len/1024,bank_length[0]/1024,bank_length[1]/1024,mmu_testing);
+          TRACE_LOG("MMU PC %X Byte %X RAM %dK Bank 0 %d Bank 1 %d testing %d\n",old_pc,io_src_b,mem_len/1024,bank_length[0]/1024,bank_length[1]/1024,mmu_confused);
         }
       }else if (addr>0xff800f){
         exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
@@ -1889,20 +1929,34 @@ MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
       exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
     }
   }
+/*
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU_WAKE_UP_IOW_HACK) \
+  && defined(SS_MMU_WAKE_UP_IO_BYTES_W)
+  if(!io_word_access && MMU.OnMmuCycles(CyclesIn))
+    cpu_cycles+=2; 
+#endif
+*/
 }
 //---------------------------------------------------------------------------
 void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
 {
-#if defined(SS_DEBUG)
-  TRACE_LOG("PC%X write word %X to %X\n",pc-2,io_src_w,addr);
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_TRACE_IO)
+  TRACE_LOG("PC %X write word %X to %X\n",pc-2,io_src_w,addr);
 #endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU_WAKE_UP_IOW_HACK)
+  int CyclesIn=LINECYCLES;
+  if(MMU.OnMmuCycles(CyclesIn))
+      cpu_cycles-=2; // - = + !!!!
+#endif
+
   if (addr>=0xff8240 && addr<0xff8260){  //palette
     DEBUG_CHECK_WRITE_IO_W(addr,io_src_w);
     int n=(addr-0xff8240) >> 1;
 
 #if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
   
-#if defined(SS_SHIFTER_EVENTS) && defined(SS_DEBUG)
+#if defined(SS_SHIFTER_EVENTS) && defined(SS_SHIFTER_EVENTS_PAL) //debug
     if(Blit.HasBus)
       VideoEvents.Add(scan_y,LINECYCLES,'Q',(n<<12)|io_src_w); 
     else
@@ -1933,6 +1987,11 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
     io_write_b(addr+1,LOBYTE(io_src_w));
     io_word_access=0;
   }
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU_WAKE_UP_IOW_HACK)
+  if(MMU.OnMmuCycles(CyclesIn))
+    cpu_cycles+=2;
+#endif
+
 }
 //---------------------------------------------------------------------------
 void ASMCALL io_write_l(MEM_ADDRESS addr,LONG io_src_l)

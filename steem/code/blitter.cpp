@@ -187,7 +187,17 @@ void Blitter_Blit_Word() //SS Data is blitted word by word
   it is required.
 */
   //won't read source for 0,5,10,15 or Hop=0,1 (unless 1 and smudge on)
-  if ((Blit.Op % 5)!=0 && (Blit.Hop>1 || (Blit.Hop==1 && Blit.Smudge))){
+
+
+  if(! ((Blit.Op % 5)!=0 && (Blit.Hop>1 || (Blit.Hop==1 && Blit.Smudge))) )
+  {
+//    ASSERT(!Blit.Smudge);
+  }
+
+
+  if (
+    //Blit.Smudge*0||
+    (Blit.Op % 5)!=0 && (Blit.Hop>1 || (Blit.Hop==1 && Blit.Smudge))){
     if (Blit.NFSR && Blit.Last){
 /*
   NFSR stands  for No  Final Source  Read.   When this  bit is  set the last
@@ -445,13 +455,7 @@ void Blitter_Draw()
 
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_CPU
-        
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU)
-        m68k_Process();
-#else
         m68k_PROCESS
-#endif
-
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_BLITTER
 
@@ -905,14 +909,14 @@ after each copied word/line the Blitter proceeds.
     case 0x3C:
       Blit.LineNumber=BYTE(Val & (BIT_0 | BIT_1 | BIT_2 | BIT_3)); 
       Blit.Smudge=bool(Val & BIT_5);
-//      ASSERT(!Blit.Smudge); // Braindamage
+//      ASSERT(!Blit.Smudge); // Braindamage polygon
+      //Blit.Smudge=0;
       Blit.Hog=bool(Val & BIT_6);
       if (Blit.Busy==0){
         if (Val & BIT_7){ //start new
-#if defined(STEVEN_SEAGAL) && defined(SS_BLT_TRACE2)
-          TRACE("F%d y%d c%d Blt %X Hg%d Hp%d Op%d x%d y%d NF%d FX%d Sk%d from %X (x+%d y+%d) to %X (x+%d y+%d) Msk %X %X %X\n",
+          TRACE_LOG("F%d y%d c%d Blt %X Hg%d Hp%d Op%d x%d y%d NF%d FX%d Sk%d from %X (x+%d y+%d) to %X (x+%d y+%d) Msk %X %X %X\n",
             FRAME,scan_y,LINECYCLES,Val,Blit.Hog,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.NFSR,Blit.FXSR,Blit.Skew,Blit.SrcAdr,Blit.SrcXInc,Blit.SrcYInc,Blit.DestAdr,Blit.DestXInc,Blit.DestYInc,Blit.EndMask[0],Blit.EndMask[1],Blit.EndMask[2]);
-#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SS_BLT_OVERLAP)//TODO
           // GEM doc viewer, Braindamage - no glitch visible
           if(!(Blit.SrcAdr > Blit.DestAdr || Blit.DestAdr-Blit.SrcAdr>Blit.XCount/2)) // bad test!

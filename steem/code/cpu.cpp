@@ -8,25 +8,22 @@ the rest of the program are the macro m68k_PROCESS that executes the next
 instruction and cpu_routines_init in cpuinit.cpp.
 ---------------------------------------------------------------------------*/
 
+/*  SS
+    This part of Steem was a good surprise for me, with all aspects of
+    instructions, including the timing, highly modular, and 
+    with a very good accuracy for most instructions.
+    I certainly didn't treat these functions as a black box. To help, I
+    followed them in VC6's debugger.
+    Changed:
+    - some instructions in SSECPU.cpp (CLR,DIV,MOVE)
+    - prefetch timing
+    With all the defines, code has become pretty unreadable at places,
+    sorrry about that but they're necessary for debugging.
+*/
+
 #if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
 #pragma message("Included for compilation: cpu.cpp")
 #endif
-
-/*  SS: very accurate & clever, a good surprise
-    I was afraid, not knowing any better, that this CPU emu would be one class
-    below Hatari's, and almost impossible to fix due to rigid structures.
-    The opposite proves to be true.
-    For example still looking for a 'pairing' fault or a wrong timing (beside 
-    the obvious DIV).
-    Notice how the timings are placed so that you can emulate the CPU at 
-    low level, like microcodes!
-    It's very possible to follow the functions for eaxmple in VC6's debugger.
-    The source is not much commented and is macro-heavy but is clear enough,
-    in fact easier to grasp than UAE.
-    Modding the functions/instructions isn't so hard either. To begin with,
-    they have civilised names. The getdest, getsource etc. business is also 
-    what you expect in a CPU emulation.
-*/
 
 #if !defined(PREFETCH_IRC)
 #define PREFETCH_IRC // doing
@@ -64,9 +61,10 @@ void (*m68k_jump_get_dest_w_not_a_faster_for_d[8])();
 void (*m68k_jump_get_dest_l_not_a_faster_for_d[8])();
 bool (*m68k_jump_condition_test[16])();
 
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU)
-  // those macros have been replaced with inline functions (SSECpu.h)
-#else
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
+
+#if !defined(SS_MMU_NO_CONFUSION)
+
 #define m68k_READ_B_FROM_ADDR                         \
   abus&=0xffffff;                                   \
   if(abus>=himem){                                  \
@@ -88,8 +86,8 @@ bool (*m68k_jump_condition_test[16])();
       else m68k_src_b=0xff;                                          \
     }else if (abus>=0xd00000 && abus<0xd80000){ \
       m68k_src_b=0xff;                                          \
-    }else if(mmu_testing){                            \
-      m68k_src_b=mmu_testing_peek(abus,true);                                         \
+    }else if(mmu_confused){                            \
+      m68k_src_b=mmu_confused_peek(abus,true);                                         \
     }else if(abus>=FOUR_MEGS){                   \
       exception(BOMBS_BUS_ERROR,EA_READ,abus);                          \
     }else{                                                     \
@@ -127,8 +125,8 @@ bool (*m68k_jump_condition_test[16])();
       else m68k_src_w=0xffff;                                          \
     }else if (abus>=0xd00000 && abus<0xd80000){ \
       m68k_src_w=0xffff;                                          \
-    }else if(mmu_testing){                            \
-      m68k_src_w=mmu_testing_dpeek(abus,true);                                         \
+    }else if(mmu_confused){                            \
+      m68k_src_w=mmu_confused_dpeek(abus,true);                                         \
     }else if(abus>=FOUR_MEGS){                   \
       exception(BOMBS_BUS_ERROR,EA_READ,abus);                          \
     }else{                                                     \
@@ -165,8 +163,8 @@ bool (*m68k_jump_condition_test[16])();
       else m68k_src_l=0xffffffff;                                          \
     }else if (abus>=0xd00000 && abus<0xd80000-2){ \
       m68k_src_l=0xffffffff;                                          \
-    }else if (mmu_testing){                            \
-      m68k_src_l=mmu_testing_lpeek(abus,true);                                         \
+    }else if (mmu_confused){                            \
+      m68k_src_l=mmu_confused_lpeek(abus,true);                                         \
     }else if (abus>=FOUR_MEGS){                   \
       exception(BOMBS_BUS_ERROR,EA_READ,abus);                          \
     }else{                                                     \
@@ -179,8 +177,118 @@ bool (*m68k_jump_condition_test[16])();
     DEBUG_CHECK_READ_L(abus);  \
     m68k_src_l=LPEEK(abus);                  \
   }else exception(BOMBS_BUS_ERROR,EA_READ,abus);
-#endif//SS
 
+#else//we remove mmu_confused parts...
+
+#define m68k_READ_B_FROM_ADDR                         \
+  abus&=0xffffff;                                   \
+  if(abus>=himem){                                  \
+    if(abus>=MEM_IO_BASE){            \
+      if(SUPERFLAG)m68k_src_b=io_read_b(abus);           \
+      else exception(BOMBS_BUS_ERROR,EA_READ,abus);         \
+    }else if(abus>=0xfc0000){                             \
+      if(tos_high && abus<(0xfc0000+192*1024))m68k_src_b=ROM_PEEK(abus-rom_addr);   \
+      else if (abus<0xfe0000 || abus>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,abus);  \
+    }else if(abus>=MEM_EXPANSION_CARTRIDGE){           \
+      if(cart){                                             \
+        m68k_src_b=CART_PEEK(abus-MEM_EXPANSION_CARTRIDGE);  \
+      }else{                                                 \
+        m68k_src_b=0xff;                                    \
+      }                                                     \
+    }else if (abus>=rom_addr){                         \
+      if(abus<(0xe00000+256*1024))m68k_src_b=ROM_PEEK(abus-rom_addr);                           \
+      else if (abus>=0xec0000) exception(BOMBS_BUS_ERROR,EA_READ,abus);          \
+      else m68k_src_b=0xff;                                          \
+    }else if (abus>=0xd00000 && abus<0xd80000){ \
+      m68k_src_b=0xff;                                          \
+    }else if(abus>=FOUR_MEGS){                   \
+      exception(BOMBS_BUS_ERROR,EA_READ,abus);                          \
+    }else{                                                     \
+      m68k_src_b=0xff;                                          \
+    }                                                             \
+  }else if(abus>=MEM_START_OF_USER_AREA){                                              \
+    DEBUG_CHECK_READ_B(abus);  \
+    m68k_src_b=(BYTE)(PEEK(abus));                  \
+  }else if(SUPERFLAG){     \
+    DEBUG_CHECK_READ_B(abus);  \
+    m68k_src_b=(BYTE)(PEEK(abus));                  \
+  }else exception(BOMBS_BUS_ERROR,EA_READ,abus);
+
+
+#define m68k_READ_W_FROM_ADDR           \
+  abus&=0xffffff;                                   \
+  if(abus&1){                                      \
+    exception(BOMBS_ADDRESS_ERROR,EA_READ,abus);    \
+  }else if(abus>=himem){                                  \
+    if(abus>=MEM_IO_BASE){            \
+      if(SUPERFLAG)m68k_src_w=io_read_w(abus);           \
+      else exception(BOMBS_BUS_ERROR,EA_READ,abus);         \
+    }else if(abus>=0xfc0000){                             \
+      if (tos_high && abus<(0xfc0000+192*1024)) m68k_src_w=ROM_DPEEK(abus-rom_addr);   \
+      else if (abus<0xfe0000 || abus>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,abus);  \
+    }else if(abus>=MEM_EXPANSION_CARTRIDGE){           \
+      if(cart){                                             \
+        m68k_src_w=CART_DPEEK(abus-MEM_EXPANSION_CARTRIDGE);  \
+      }else{                                                 \
+        m68k_src_w=0xffff;                                    \
+      }                                                     \
+    }else if(abus>=rom_addr){                         \
+      if(abus<(0xe00000+256*1024)) m68k_src_w=ROM_DPEEK(abus-rom_addr);                           \
+      else if (abus>=0xec0000) exception(BOMBS_BUS_ERROR,EA_READ,abus);          \
+      else m68k_src_w=0xffff;                                          \
+    }else if (abus>=0xd00000 && abus<0xd80000){ \
+      m68k_src_w=0xffff;                                          \
+    }else if(abus>=FOUR_MEGS){                   \
+      exception(BOMBS_BUS_ERROR,EA_READ,abus);                          \
+    }else{                                                     \
+      m68k_src_w=0xffff;                                          \
+    }                                                             \
+  }else if(abus>=MEM_START_OF_USER_AREA){                                              \
+    DEBUG_CHECK_READ_W(abus);  \
+    m68k_src_w=DPEEK(abus);                  \
+  }else if(SUPERFLAG){     \
+    DEBUG_CHECK_READ_W(abus);  \
+    m68k_src_w=DPEEK(abus);                  \
+  }else exception(BOMBS_BUS_ERROR,EA_READ,abus);
+
+#define m68k_READ_L_FROM_ADDR                        \
+  abus&=0xffffff;                                   \
+  if(abus&1){                                      \
+    exception(BOMBS_ADDRESS_ERROR,EA_READ,abus);    \
+  }else if(abus>=himem){                                  \
+    if(abus>=MEM_IO_BASE){           \
+      if(SUPERFLAG)m68k_src_l=io_read_l(abus);          \
+      else exception(BOMBS_BUS_ERROR,EA_READ,abus);         \
+    }else if(abus>=0xfc0000){                             \
+      if(tos_high && abus<(0xfc0000+192*1024-2)) m68k_src_l=ROM_LPEEK(abus-rom_addr);   \
+      else if (abus<0xfe0000 || abus>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,abus);  \
+    }else if(abus>=MEM_EXPANSION_CARTRIDGE){           \
+      if(cart){                                             \
+        m68k_src_l=CART_LPEEK(abus-MEM_EXPANSION_CARTRIDGE);  \
+      }else{                                                 \
+        m68k_src_l=0xffffffff;                                    \
+      }                                                     \
+    }else if(abus>=rom_addr){                         \
+      if(abus<(0xe00000+256*1024-2)) m68k_src_l=ROM_LPEEK(abus-rom_addr);   \
+      else if (abus>=0xec0000) exception(BOMBS_BUS_ERROR,EA_READ,abus);          \
+      else m68k_src_l=0xffffffff;                                          \
+    }else if (abus>=0xd00000 && abus<0xd80000-2){ \
+      m68k_src_l=0xffffffff;                                          \
+    }else if (abus>=FOUR_MEGS){                   \
+      exception(BOMBS_BUS_ERROR,EA_READ,abus);                          \
+    }else{                                                     \
+      m68k_src_l=0xffffffff;                                          \
+    }                                                             \
+  }else if(abus>=MEM_START_OF_USER_AREA){                                              \
+    DEBUG_CHECK_READ_L(abus);  \
+    m68k_src_l=LPEEK(abus);                  \
+  }else if(SUPERFLAG){     \
+    DEBUG_CHECK_READ_L(abus);  \
+    m68k_src_l=LPEEK(abus);                  \
+  }else exception(BOMBS_BUS_ERROR,EA_READ,abus);
+
+#endif//consfusion!
+#endif//SS
 
 #define m68k_READ_B(addr)                              \
   m68k_src_b=m68k_peek(addr);                           \
@@ -192,7 +300,7 @@ bool (*m68k_jump_condition_test[16])();
   m68k_src_l=m68k_lpeek(addr);                           \
 
 //---------------------------------------------------------------------------
-// not inlined in VC6
+// SS not inlined in VC6
 inline void change_to_user_mode()
 {
 //  if(SUPERFLAG){
@@ -212,8 +320,6 @@ inline void change_to_supervisor_mode()
 
 void m68k_exception::init(int a,exception_action ea,MEM_ADDRESS _abus)
 {
-//  ASSERT(::ir!=0x21F8); // tb2 protection etc
-  //ASSERT(::ir!=0x2285); // war heli
   bombs=a;
   _pc=PC32; //old_pc;
   crash_address=old_pc;
@@ -281,7 +387,7 @@ NOT_DEBUG(inline) void m68k_interrupt(MEM_ADDRESS ad) //not address, bus, illega
   WORD _sr=sr;
   if (!SUPERFLAG) change_to_supervisor_mode();
 #if defined(SS_CPU_PREFETCH)
-  Cpu.PrefetchClass=2;
+  M68000.PrefetchClass=2;
 #endif
   m68k_PUSH_L(PC32);
   m68k_PUSH_W(_sr);
@@ -295,7 +401,7 @@ NOT_DEBUG(inline) void m68k_interrupt(MEM_ADDRESS ad) //not address, bus, illega
 // TODO: Allow exception frames to be written to IO?
 
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_EXCEPTION)
- // redone in SSECpu.cpp
+ // redone in SSEM68000.cpp
 #else 
 void m68k_exception::crash()
 {
@@ -363,7 +469,7 @@ void m68k_exception::crash()
 #undef LOGSECTION
 
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_POKE)
-// see SSECpu.cpp
+// see SSEM68000.cpp
 #else
 
 NOT_DEBUG(inline) void m68k_poke_abus(BYTE x){
@@ -374,10 +480,13 @@ NOT_DEBUG(inline) void m68k_poke_abus(BYTE x){
     else
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
   }else if(abus>=himem){
-    if (mmu_testing){
-      mmu_testing_set_dest_to_addr(1,true);
+#if !defined(SS_MMU_NO_CONFUSION)
+    if (mmu_confused){
+      mmu_confused_set_dest_to_addr(1,true);
       m68k_DEST_B=x;
-    }else if (abus>=FOUR_MEGS){
+    }else
+#endif
+    if (abus>=FOUR_MEGS){
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
     } //otherwise throw away
   }else{
@@ -400,10 +509,13 @@ NOT_DEBUG(inline) void m68k_dpoke_abus(WORD x){
     else
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
   }else if(abus>=himem){
-    if(mmu_testing){
-      mmu_testing_set_dest_to_addr(2,true);
+#if !defined(SS_MMU_NO_CONFUSION)
+    if(mmu_confused){
+      mmu_confused_set_dest_to_addr(2,true);
       m68k_DEST_W=x;
-    }else if(abus>=FOUR_MEGS){
+    }else 
+#endif
+    if(abus>=FOUR_MEGS){
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
     } //otherwise throw away
   }else{
@@ -426,10 +538,13 @@ NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x){
     else
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
   }else if(abus>=himem){
-    if(mmu_testing){
-      mmu_testing_set_dest_to_addr(4,true);
+#if !defined(SS_MMU_NO_CONFUSION)
+    if(mmu_confused){
+      mmu_confused_set_dest_to_addr(4,true);
       m68k_DEST_L=x;
-    }else if(abus>=FOUR_MEGS){
+    }else 
+#endif
+    if(abus>=FOUR_MEGS){
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
     } //otherwise throw away
   }else{
@@ -479,8 +594,8 @@ BYTE m68k_peek(MEM_ADDRESS ad){
     }else if (ad>=0xd00000 && ad<0xd80000){
       return 0xff;
 #if !defined(SS_MMU_NO_CONFUSION)
-    }else if (mmu_testing){
-      return mmu_testing_peek(ad,true);
+    }else if (mmu_confused){
+      return mmu_confused_peek(ad,true);
 #endif
     }else if (ad>=FOUR_MEGS){
       exception(BOMBS_BUS_ERROR,EA_READ,ad);
@@ -517,8 +632,8 @@ WORD m68k_dpeek(MEM_ADDRESS ad){
     }else if (ad>=0xd00000 && ad<0xd80000){
       return 0xffff;
 #if !defined(SS_MMU_NO_CONFUSION)
-    }else if(mmu_testing){
-      return mmu_testing_dpeek(ad,true);
+    }else if(mmu_confused){
+      return mmu_confused_dpeek(ad,true);
 #endif
     }else if(ad>=FOUR_MEGS){
       exception(BOMBS_BUS_ERROR,EA_READ,ad);
@@ -555,8 +670,8 @@ LONG m68k_lpeek(MEM_ADDRESS ad){
     }else if (ad>=0xd00000 && ad<0xd80000){
       return 0xffffffff;
 #if !defined(SS_MMU_NO_CONFUSION)
-    }else if (mmu_testing){
-      return mmu_testing_lpeek(ad,true);
+    }else if (mmu_confused){
+      return mmu_confused_lpeek(ad,true);
 #endif
     }else if (ad>=FOUR_MEGS){
       exception(BOMBS_BUS_ERROR,EA_READ,ad);
@@ -804,7 +919,7 @@ LONG m68k_read_dest_l(){
   }
 #endif
 
-
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
 #define m68k_PROCESS \
   LOG_CPU  \
   old_pc=pc;  \
@@ -813,6 +928,7 @@ LONG m68k_read_dest_l(){
   m68k_high_nibble_jump_table[ir>>12]();    \
   HANDLE_IOACCESS(m68k_trace();)           \
   DEBUG_ONLY( debug_first_instruction=0 );
+#endif
 
 #define LOGSECTION LOGSECTION_TRACE
 
@@ -827,6 +943,7 @@ extern "C" ASMCALL void m68k_trace() //execute instruction with trace bit set
 #endif
 {
   // SS this unmodded 68K trace emulation is good enough for TB2 etc.
+  // TODO: use our TM68000 functions? but it seems to run fine as is
 #ifdef DEBUG_BUILD
   pc_history[pc_history_idx++]=pc;
   if (pc_history_idx>=HISTORY_SIZE) pc_history_idx=0;
@@ -850,12 +967,12 @@ extern "C" ASMCALL void m68k_trace() //execute instruction with trace bit set
   m68k_do_trace_exception=true;
 #if defined(STEVEN_SEAGAL) 
 #if defined(SS_CPU) && defined(SS_DEBUG)
-  Cpu.PreviousIr=ir;
-  Cpu.nInstr++;
-  Cpu.NextIrFetched=false;
+  M68000.PreviousIr=ir;
+  M68000.nInstr++;
+  M68000.NextIrFetched=false;
 #endif
 #if defined(SS_CPU_PREFETCH)
-  Cpu.PrefetchClass=0; // default - useless!
+  M68000.PrefetchClass=0; // default - useless!
 #endif
 #endif
  //ASSERT(ir!=0x19F3); // dbg: break on opcode...
@@ -961,15 +1078,30 @@ void m68k_get_source_000_l(){ m68k_src_l=(long)(r[PARAM_M]); }
 void m68k_get_source_001_b(){ m68k_src_b=(BYTE)(areg[PARAM_M]); }
 void m68k_get_source_001_w(){ m68k_src_w=(WORD)(areg[PARAM_M]); }
 void m68k_get_source_001_l(){ m68k_src_l=(long)(areg[PARAM_M]); }
+
 void m68k_get_source_010_b(){ INSTRUCTION_TIME_ROUND(4);m68k_READ_B(areg[PARAM_M]) }
 void m68k_get_source_010_w(){ INSTRUCTION_TIME_ROUND(4);m68k_READ_W(areg[PARAM_M]) }
 void m68k_get_source_010_l(){ INSTRUCTION_TIME_ROUND(8);m68k_READ_L(areg[PARAM_M]) }
 void m68k_get_source_011_b(){ INSTRUCTION_TIME_ROUND(4);m68k_READ_B(areg[PARAM_M]) areg[PARAM_M]++; if(PARAM_M==7)areg[7]++;}
 void m68k_get_source_011_w(){ INSTRUCTION_TIME_ROUND(4);m68k_READ_W(areg[PARAM_M]) areg[PARAM_M]+=2; }
 void m68k_get_source_011_l(){ INSTRUCTION_TIME_ROUND(8);m68k_READ_L(areg[PARAM_M]) areg[PARAM_M]+=4; }
+
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_ROUNDING_SOURCE_100)
+/*  
+    Theory:
+    The -- to register happens when the MMU fetches for the shifter, hence
+    we mustn't round here, contrary to index register addressing.
+    Fixes Cernit Trandafir demo scren #2 + Summer Delight #5, #7
+    TESTING
+*/
+void m68k_get_source_100_b(){ INSTRUCTION_TIME(6);/* 6 */ areg[PARAM_M]--;if(PARAM_M==7)areg[7]--;m68k_READ_B(areg[PARAM_M]) }
+void m68k_get_source_100_w(){ INSTRUCTION_TIME(6);/* 6 */areg[PARAM_M]-=2;m68k_READ_W(areg[PARAM_M])  }
+void m68k_get_source_100_l(){ INSTRUCTION_TIME(10);/* 10 */areg[PARAM_M]-=4;m68k_READ_L(areg[PARAM_M])  }
+#else
 void m68k_get_source_100_b(){ INSTRUCTION_TIME_ROUND(6);/* 6 */ areg[PARAM_M]--;if(PARAM_M==7)areg[7]--;m68k_READ_B(areg[PARAM_M]) }
 void m68k_get_source_100_w(){ INSTRUCTION_TIME_ROUND(6);/* 6 */areg[PARAM_M]-=2;m68k_READ_W(areg[PARAM_M])  }
 void m68k_get_source_100_l(){ INSTRUCTION_TIME_ROUND(10);/* 10 */areg[PARAM_M]-=4;m68k_READ_L(areg[PARAM_M])  }
+#endif
 void m68k_get_source_101_b(){
   INSTRUCTION_TIME_ROUND(8);
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_GET_SOURCE)
@@ -1395,10 +1527,11 @@ void m68k_get_dest_111_l(){
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// SS: EXTRA_PREFETCH has been deactivated, it's being taken care of for
-// all instructions now, by PREFETCH_IRC
-// I long thought that those -4 must be somehow wrong, but up to now I can't
-// find a single case were timings are at fault
+/*  SS: EXTRA_PREFETCH has been deactivated, it's being taken care of for
+    all instructions now, by PREFETCH_IRC
+    The negative timings correct extra timing added in instructions like ORI,
+    it seems it was to spare some code?
+*/
 
 void m68k_get_dest_000_b_faster(){ INSTRUCTION_TIME(-4); m68k_dest=r+PARAM_M; }
 void m68k_get_dest_000_w_faster(){ INSTRUCTION_TIME(-4); m68k_dest=r+PARAM_M; }
@@ -1570,31 +1703,69 @@ bool m68k_condition_test_le(){return ((sr&SR_Z) || ( ((sr&(SR_N+SR_V))==SR_N) ||
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+/*SS
+Immediate Instruction Execution Times                           
+                                
+                        op #, Dn        op #, An        op #, M
+ADDI    Byte, Word      8(2/0)          -               12(2/1)+
+        Long            16(3/0)         -               20(3/2)+
+ADDQ    Byte, Word      4(1/0)          4(1/0)*         8(1/1)+
+        Long            8(1/0)          8(1/0)          12(1/2)+
+ANDI    Byte, Word      8(2/0)          -               12(2/1)+
+        Long            14(3/0)         -               20(3/2)+
+CMPI    Byte, Word      8(2/0)          -               8(2/0)+
+        Long            14(3/0)         -               12(3/0)+
+EORI    Byte, Word      8(2/0)          -               12(2/1)+
+        Long            16(3/0)         -               20(3/2)+
+MOVEQ   Long            4(1/0)          -               -
+ORI     Byte, Word      8(2/0)          -               12(2/1)+
+        Long            16(3/0)         -               20(3/2)+
+SUBI    Byte, Word      8(2/0)          -               12(2/1)+
+        Long            16(3/0)         -               20(3/2)+
+SUBQ    Byte, Word      4(1/0)          8(1/0)*         8(1/1)+
+        Long            8(1/0)          8(1/0)          12(1/2)+
+
+*/
+
 void                              m68k_ori_b(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
   if ((ir & B6_111111)==B6_111100){  //to sr
     INSTRUCTION_TIME(16);
     CCR|=m68k_IMMEDIATE_B;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
     sr&=SR_VALID_BITMASK;
     pc+=2;
   }else{
     INSTRUCTION_TIME(8);
     m68k_GET_IMMEDIATE_B;
-    m68k_GET_DEST_B_NOT_A_FASTER_FOR_D;
+    m68k_GET_DEST_B_NOT_A_FASTER_FOR_D; // SS this compensates the 8
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
     m68k_DEST_B|=m68k_src_b;
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_B
   }
 }
 void                              m68k_ori_w(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   if ((ir & B6_111111)==B6_111100){  //to sr
     if (SUPERFLAG){
       INSTRUCTION_TIME(16);
       sr|=m68k_IMMEDIATE_W;
       PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
       sr&=SR_VALID_BITMASK;
       pc+=2;
       DETECT_TRACE_BIT;
@@ -1606,46 +1777,70 @@ void                              m68k_ori_w(){
     m68k_GET_IMMEDIATE_W;
     m68k_GET_DEST_W_NOT_A_FASTER_FOR_D;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
     m68k_DEST_W|=m68k_src_w;
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_W
   }
 }
 void                              m68k_ori_l(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   INSTRUCTION_TIME(16);
   m68k_GET_IMMEDIATE_L;
   m68k_GET_DEST_L_NOT_A_FASTER_FOR_D;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_DEST_L|=m68k_src_l;
   SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
   SR_CHECK_Z_AND_N_L
 }
 void                              m68k_andi_b(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   if((ir&B6_111111)==B6_111100){  //to sr
     INSTRUCTION_TIME(16);
     CCR&=m68k_IMMEDIATE_B;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
     pc+=2;
   }else{
     INSTRUCTION_TIME(8);
     m68k_GET_IMMEDIATE_B;
     m68k_GET_DEST_B_NOT_A_FASTER_FOR_D;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
     m68k_DEST_B&=m68k_src_b;
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_B
   }
 }
 void                              m68k_andi_w(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   if((ir&B6_111111)==B6_111100){  //to sr
     if(SUPERFLAG){
       DEBUG_ONLY( int debug_old_sr=sr; )
       INSTRUCTION_TIME(16);
       sr&=m68k_IMMEDIATE_W;
       PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
       DETECT_CHANGE_TO_USER_MODE;
       pc+=2;
       ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
@@ -1658,30 +1853,46 @@ void                              m68k_andi_w(){
     INSTRUCTION_TIME(8);
     m68k_GET_IMMEDIATE_W;
     m68k_GET_DEST_W_NOT_A_FASTER_FOR_D;
-    PREFETCH_IRC;
+//    PREFETCH_IRC;
     m68k_DEST_W&=m68k_src_w;
+    PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_W
   }
 }
 void                              m68k_andi_l(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   INSTRUCTION_TIME(16);
   m68k_GET_IMMEDIATE_L;
   m68k_GET_DEST_L_NOT_A_FASTER_FOR_D;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_DEST_L&=m68k_src_l;
   SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
   SR_CHECK_Z_AND_N_L
 }
 void                              m68k_subi_b(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   INSTRUCTION_TIME(8);
   m68k_GET_IMMEDIATE_B;
   m68k_GET_DEST_B_NOT_A_FASTER_FOR_D;
   PREFETCH_IRC;
-//  SR_CLEAR(SR_USER_BYTE); // was commented out
+//  SR_CLEAR(SR_USER_BYTE); //SS was commented out
 //  if((unsigned char)m68k_IMMEDIATE_B>(unsigned char)m68k_DEST_B)SR_SET(SR_C+SR_X); // was commented out
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_old_dest=m68k_DEST_B;
   m68k_DEST_B-=m68k_src_b;
   SR_SUB_B(SR_X);
@@ -1702,63 +1913,99 @@ void                              m68k_subi_b(){
   */
 }
 void                              m68k_subi_w(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   INSTRUCTION_TIME(8);
   m68k_GET_IMMEDIATE_W;
   m68k_GET_DEST_W_NOT_A_FASTER_FOR_D;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_old_dest=m68k_DEST_W;
   m68k_DEST_W-=m68k_src_w;
   SR_SUB_W(SR_X);
 }
 void                              m68k_subi_l(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   INSTRUCTION_TIME(16);
   m68k_GET_IMMEDIATE_L;
   m68k_GET_DEST_L_NOT_A_FASTER_FOR_D;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_old_dest=m68k_DEST_L;
   m68k_DEST_L-=m68k_src_l;
   SR_SUB_L(SR_X);
 }
 void                              m68k_addi_b(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   INSTRUCTION_TIME(8);
   m68k_GET_IMMEDIATE_B;
   m68k_GET_DEST_B_NOT_A_FASTER_FOR_D;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_old_dest=m68k_DEST_B;
   m68k_DEST_B+=m68k_src_b;
   SR_ADD_B;
 }
 void                              m68k_addi_w(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   INSTRUCTION_TIME(8);
   m68k_GET_IMMEDIATE_W;
   m68k_GET_DEST_W_NOT_A_FASTER_FOR_D;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_old_dest=m68k_DEST_W;
   m68k_DEST_W+=m68k_src_w;
   SR_ADD_W;
 }
 
 void                              m68k_addi_l(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   INSTRUCTION_TIME(16);
   m68k_GET_IMMEDIATE_L;
   m68k_GET_DEST_L_NOT_A_FASTER_FOR_D;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_old_dest=m68k_DEST_L;
   m68k_DEST_L+=m68k_src_l;
   SR_ADD_L;
 }
 
 void                              m68k_btst(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_GET_IMMEDIATE_B;
   if ((ir&BITS_543)==BITS_543_000){
     INSTRUCTION_TIME(6);
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
     m68k_src_b&=31;
     if((r[PARAM_M]>>m68k_src_b)&1){
       SR_CLEAR(SR_Z);
@@ -1774,6 +2021,9 @@ void                              m68k_btst(){
     }else{
       m68k_GET_SOURCE_B_NOT_A;
       PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
       if((m68k_src_b>>m68k_ap)&1){
         SR_CLEAR(SR_Z);
       }else{
@@ -1783,10 +2033,16 @@ void                              m68k_btst(){
   }
 }
 void                              m68k_bchg(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_GET_IMMEDIATE_B;
   if((ir&BITS_543)==BITS_543_000){
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
     m68k_src_b&=31;
     if (m68k_src_b>=16){
       INSTRUCTION_TIME(8); //MAXIMUM VALUE
@@ -1805,6 +2061,9 @@ void                              m68k_bchg(){
     m68k_src_b&=7;
     m68k_GET_DEST_B_NOT_A;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
     m68k_src_b=(BYTE)(1<<m68k_src_b);
     if(m68k_DEST_B&m68k_src_b){
       SR_CLEAR(SR_Z);
@@ -1815,10 +2074,16 @@ void                              m68k_bchg(){
   }
 }
 void                              m68k_bclr(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_GET_IMMEDIATE_B;
   if((ir&BITS_543)==BITS_543_000){
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
     m68k_src_b&=31;
     if (m68k_src_b>=16){
       INSTRUCTION_TIME(10); //MAXIMUM VALUE
@@ -1837,6 +2102,9 @@ void                              m68k_bclr(){
     m68k_src_b&=7;
     m68k_GET_DEST_B_NOT_A;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
     m68k_src_b=(BYTE)(1<<m68k_src_b);
     if(m68k_DEST_B&m68k_src_b){
       SR_CLEAR(SR_Z);
@@ -1847,10 +2115,16 @@ void                              m68k_bclr(){
   }
 }
 void                              m68k_bset(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_GET_IMMEDIATE_B;
   if ((ir&BITS_543)==BITS_543_000){
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
     m68k_src_b&=31;
     if (m68k_src_b>=16){
       INSTRUCTION_TIME(8); //MAXIMUM VALUE
@@ -1869,6 +2143,9 @@ void                              m68k_bset(){
     m68k_src_b&=7;
     m68k_GET_DEST_B_NOT_A;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
     m68k_src_b=(BYTE)(1<<m68k_src_b);
     if(m68k_DEST_B&m68k_src_b){
       SR_CLEAR(SR_Z);
@@ -1879,11 +2156,17 @@ void                              m68k_bset(){
   }
 }
 void                              m68k_eori_b(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   if((ir&B6_111111)==B6_111100){  //to sr
     INSTRUCTION_TIME(16);
     CCR^=m68k_IMMEDIATE_B;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
     sr&=SR_VALID_BITMASK;
     pc+=2;
   }else{
@@ -1891,19 +2174,28 @@ void                              m68k_eori_b(){
     m68k_GET_IMMEDIATE_B;
     m68k_GET_DEST_B_NOT_A_FASTER_FOR_D;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
     m68k_DEST_B^=m68k_src_b;
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_B
   }
 }
 void                              m68k_eori_w(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   if((ir&B6_111111)==B6_111100){  //to sr
     if(SUPERFLAG){
       DEBUG_ONLY( int debug_old_sr=sr; )
       INSTRUCTION_TIME(16);
       sr^=m68k_IMMEDIATE_W;
       PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
       sr&=SR_VALID_BITMASK;
       pc+=2;
       DETECT_CHANGE_TO_USER_MODE
@@ -1919,28 +2211,43 @@ void                              m68k_eori_w(){
     m68k_GET_IMMEDIATE_W;
     m68k_GET_DEST_W_NOT_A_FASTER_FOR_D;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
     m68k_DEST_W^=m68k_src_w;
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_W;
   }
 }
 void                              m68k_eori_l(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   INSTRUCTION_TIME(16);
   m68k_GET_IMMEDIATE_L;
   m68k_GET_DEST_L_NOT_A_FASTER_FOR_D;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_DEST_L^=m68k_src_l;
   SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
   SR_CHECK_Z_AND_N_L;
 }
 
 void                              m68k_cmpi_b(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   INSTRUCTION_TIME(4);
   m68k_GET_IMMEDIATE_B;
   m68k_old_dest=m68k_read_dest_b();
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
   compare_buffer=m68k_old_dest;
   m68k_dest=&compare_buffer;
   m68k_DEST_B-=m68k_src_b;
@@ -1948,22 +2255,34 @@ void                              m68k_cmpi_b(){
   SR_SUB_B(0);
 }
 void                              m68k_cmpi_w(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   INSTRUCTION_TIME(4);
   m68k_GET_IMMEDIATE_W;
   m68k_old_dest=m68k_read_dest_w();
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
   compare_buffer=m68k_old_dest;
   m68k_dest=&compare_buffer;
   m68k_DEST_W-=m68k_src_w;
   SR_SUB_W(0);
 }
 void                              m68k_cmpi_l(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_GET_IMMEDIATE_L;
   if(DEST_IS_REGISTER){INSTRUCTION_TIME(10);} else {INSTRUCTION_TIME(8);}
   m68k_old_dest=m68k_read_dest_l();
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
   compare_buffer=m68k_old_dest;
   m68k_dest=&compare_buffer;
   m68k_DEST_L-=m68k_src_l;
@@ -1971,7 +2290,12 @@ void                              m68k_cmpi_l(){
 }
 
 void                              m68k_movep_w_to_dN_or_btst(){
+
+
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   if((ir&BITS_543)==BITS_543_001){
     // MOVEP
     MEM_ADDRESS addr=areg[PARAM_M]+(signed short)m68k_fetchW();
@@ -1984,14 +2308,23 @@ void                              m68k_movep_w_to_dN_or_btst(){
     DWORD_B_0(&r[PARAM_N])=m68k_src_b; //low byte
     INSTRUCTION_TIME(4);
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+    FETCH_TIMING;
+#endif
+
 // was commented out:
 //    *( ((BYTE*)(&r[PARAM_N])) +1)=m68k_src_b; //high byte
 //    m68k_READ_B(addr+2);
 //    *( ((BYTE*)(&r[PARAM_N]))   )=m68k_src_b; //low byte
   }else{
+
     if ((ir&BITS_543)==BITS_543_000){  //btst to data register
       INSTRUCTION_TIME(2);
         PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
+
       if ((r[PARAM_M] >> (31 & r[PARAM_N])) & 1){
         SR_CLEAR(SR_Z);
       }else{
@@ -2000,6 +2333,9 @@ void                              m68k_movep_w_to_dN_or_btst(){
     }else{ // btst memory
       m68k_GET_SOURCE_B_NOT_A;   //even immediate mode is allowed!!!!
       PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
       if( (m68k_src_b >> (7 & r[PARAM_N])) & 1){
         SR_CLEAR(SR_Z);
       }else{
@@ -2010,7 +2346,10 @@ void                              m68k_movep_w_to_dN_or_btst(){
 }
 
 void                              m68k_movep_l_to_dN_or_bchg(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   if((ir&BITS_543)==BITS_543_001){
     // MOVEP
     MEM_ADDRESS addr=areg[PARAM_M]+(signed short)m68k_fetchW();
@@ -2034,11 +2373,17 @@ void                              m68k_movep_l_to_dN_or_bchg(){
     DWORD_B_0(&r[PARAM_N])=m68k_src_b;
     INSTRUCTION_TIME(4);
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
 
   }else{ // bchg
     if((ir&BITS_543)==BITS_543_000){ // register
       m68k_src_w=BYTE(LOBYTE(r[PARAM_N]) & 31);
       PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
       if (m68k_src_w>=16){
         INSTRUCTION_TIME(4); //MAXIMUM VALUE
       }else{
@@ -2054,6 +2399,9 @@ void                              m68k_movep_l_to_dN_or_bchg(){
       INSTRUCTION_TIME(4);
       m68k_GET_DEST_B_NOT_A;
       PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
       if((m68k_DEST_B>>(7&r[PARAM_N]))&1){
         SR_CLEAR(SR_Z);
       }else{
@@ -2065,11 +2413,14 @@ void                              m68k_movep_l_to_dN_or_bchg(){
 }
 
 void                              m68k_movep_w_from_dN_or_bclr(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   if ((ir & BITS_543)==BITS_543_001){
     // MOVEP
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH) && defined(SS_DEBUG)
-    Cpu.PrefetchClass=1;  // not used
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH) //&& defined(SS_DEBUG)
+    M68000.PrefetchClass=1;  // not used
 #endif
     MEM_ADDRESS ad=areg[PARAM_M]+(short)m68k_fetchW();
     pc+=2;
@@ -2080,6 +2431,9 @@ void                              m68k_movep_w_from_dN_or_bclr(){
     INSTRUCTION_TIME(4);
     m68k_poke(ad,DWORD_B_0(&r[PARAM_N]));
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
   }else{ //bclr
     if((ir&BITS_543)==BITS_543_000){
       m68k_src_w=BYTE(LOBYTE(r[PARAM_N]) & 31);
@@ -2094,6 +2448,9 @@ void                              m68k_movep_w_from_dN_or_bclr(){
         SR_SET(SR_Z);
       }
         PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
       r[PARAM_M]&=(long)~((long)(1<<m68k_src_w));
 
       //length = .l
@@ -2101,6 +2458,9 @@ void                              m68k_movep_w_from_dN_or_bclr(){
       INSTRUCTION_TIME(4);
       m68k_GET_DEST_B_NOT_A;
       PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+  FETCH_TIMING;
+#endif
       if((m68k_DEST_B>>(7&r[PARAM_N]))&1){
         SR_CLEAR(SR_Z);
       }else{
@@ -2112,11 +2472,14 @@ void                              m68k_movep_w_from_dN_or_bclr(){
 }
 
 void                              m68k_movep_l_from_dN_or_bset(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
+#endif
+
   if ((ir&BITS_543)==BITS_543_001){
     // MOVEP
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH) && defined(SS_DEBUG)
-    Cpu.PrefetchClass=1; 
+    M68000.PrefetchClass=1; 
 #endif
     MEM_ADDRESS ad=areg[PARAM_M]+(signed short)m68k_fetchW();
     pc+=2;
@@ -2138,8 +2501,11 @@ void                              m68k_movep_l_from_dN_or_bset(){
     INSTRUCTION_TIME(4);
     m68k_poke(ad,DWORD_B_0(p));
 
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+    FETCH_TIMING;
+#endif
     PREFETCH_IRC; 
-  }else{ // bset
+  }else{ // SS bset
     if((ir&BITS_543)==BITS_543_000){
       m68k_src_w=BYTE(LOBYTE(r[PARAM_N]) & 31);
       if (m68k_src_w>=16){
@@ -2152,16 +2518,27 @@ void                              m68k_movep_l_from_dN_or_bset(){
       }else{
         SR_SET(SR_Z);
       }
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+      FETCH_TIMING;
+#endif
       PREFETCH_IRC;
       r[PARAM_M]|=(1<<m68k_src_w);
 
-
+//SS was so:
     //    m68k_dest=// D2_dM;
       //length = .l
     }else{
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH))
       INSTRUCTION_TIME(4);
+#endif
       m68k_GET_DEST_B_NOT_A;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
+      FETCH_TIMING;
+#endif
       PREFETCH_IRC;
+#if (defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH))
+      INSTRUCTION_TIME(4);
+#endif
       if((m68k_DEST_B>>(7&r[PARAM_N]))&1){
         SR_CLEAR(SR_Z);
       }else{
@@ -2189,9 +2566,16 @@ void                              m68k_movep_l_from_dN_or_bset(){
 
 
 void                              m68k_negx_b(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_GET_DEST_B_NOT_A;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
+
   m68k_old_dest=m68k_DEST_B;
   m68k_DEST_B=(BYTE)-m68k_DEST_B;
   if(sr&SR_X)m68k_DEST_B--;
@@ -2201,9 +2585,15 @@ void                              m68k_negx_b(){
   if((m68k_old_dest|m68k_DEST_B)&MSB_B)SR_SET(SR_C+SR_X);
   if(m68k_DEST_B & MSB_B)SR_SET(SR_N);
 }void                             m68k_negx_w(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_GET_DEST_W_NOT_A;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_old_dest=m68k_DEST_W;
   m68k_DEST_W=(WORD)-m68k_DEST_W;
   if(sr&SR_X)m68k_DEST_W--;
@@ -2213,10 +2603,21 @@ void                              m68k_negx_b(){
   if((m68k_old_dest|m68k_DEST_W)&MSB_W)SR_SET(SR_C+SR_X);
   if(m68k_DEST_W & MSB_W)SR_SET(SR_N);
 }void                             m68k_negx_l(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
-  INSTRUCTION_TIME(2);
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU)
   m68k_GET_DEST_L_NOT_A;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
+  INSTRUCTION_TIME(2);
+#else
+  INSTRUCTION_TIME(2);
+  m68k_GET_DEST_L_NOT_A;
+#endif
   m68k_old_dest=m68k_DEST_L;
   m68k_DEST_L=-m68k_DEST_L;
   if(sr&SR_X)m68k_DEST_L-=1;
@@ -2227,7 +2628,7 @@ void                              m68k_negx_b(){
   if(m68k_DEST_L & MSB_L)SR_SET(SR_N);
 }
 // TODO: These read the dest if it is memory
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_CLR) // done in SSECpu.cpp
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_CLR) // done in SSEM68000.cpp
 void m68k_clr_b();
 void m68k_clr_w();
 void m68k_clr_l();
@@ -2258,11 +2659,21 @@ void                              m68k_clr_b(){
   SR_SET(SR_Z);
 }
 #endif
+
+//#undef SS_CPU_LINE_4_TIMINGS
+
 void                              m68k_neg_b(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
+
   if(DEST_IS_REGISTER==0){INSTRUCTION_TIME(4);}
   m68k_GET_DEST_B_NOT_A;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
+
   m68k_old_dest=m68k_DEST_B;
   m68k_DEST_B=(BYTE)-m68k_DEST_B;
   SR_CLEAR(SR_USER_BYTE);
@@ -2270,10 +2681,16 @@ void                              m68k_neg_b(){
   if((m68k_old_dest|m68k_DEST_B)&MSB_B)SR_SET(SR_C+SR_X);
   SR_CHECK_Z_AND_N_B;
 }void                             m68k_neg_w(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
+
   if(DEST_IS_REGISTER==0){INSTRUCTION_TIME(4);}
   m68k_GET_DEST_W_NOT_A;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_old_dest=m68k_DEST_W;
   m68k_DEST_W=(WORD)-m68k_DEST_W;
   SR_CLEAR(SR_USER_BYTE);
@@ -2281,10 +2698,16 @@ void                              m68k_neg_b(){
   if((m68k_old_dest|m68k_DEST_W)&MSB_W)SR_SET(SR_C+SR_X);
   SR_CHECK_Z_AND_N_W;
 }void                             m68k_neg_l(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
+
   if(DEST_IS_REGISTER){INSTRUCTION_TIME(2);}else {INSTRUCTION_TIME(8);}
   m68k_GET_DEST_L_NOT_A;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_old_dest=m68k_DEST_L;
   m68k_DEST_L=-m68k_DEST_L;
   SR_CLEAR(SR_USER_BYTE);
@@ -2293,59 +2716,103 @@ void                              m68k_neg_b(){
   SR_CHECK_Z_AND_N_L;
 }
 void                              m68k_not_b(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
+
   if(DEST_IS_REGISTER==0){INSTRUCTION_TIME(4);}
   m68k_GET_DEST_B_NOT_A;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_DEST_B=(BYTE)~m68k_DEST_B;
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
   SR_CHECK_Z_AND_N_B;
 }void                             m68k_not_w(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
+
   if(DEST_IS_REGISTER==0){INSTRUCTION_TIME(4);}
   m68k_GET_DEST_W_NOT_A;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_DEST_W=(WORD)~m68k_DEST_W;
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
   SR_CHECK_Z_AND_N_W;
 }void                             m68k_not_l(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
+
   if (DEST_IS_REGISTER){INSTRUCTION_TIME(2);}else {INSTRUCTION_TIME(8);}
   m68k_GET_DEST_L_NOT_A;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_DEST_L=~m68k_DEST_L;
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
   SR_CHECK_Z_AND_N_L;
 }
+
 void                              m68k_tst_b(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
   BYTE x=m68k_read_dest_b();
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
   PREFETCH_IRC;
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
   if(!x)SR_SET(SR_Z);
   if(x&MSB_B)SR_SET(SR_N);
 }void                             m68k_tst_w(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
   WORD x=m68k_read_dest_w();
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
   PREFETCH_IRC;
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
   if(!x)SR_SET(SR_Z);
   if(x&MSB_W)SR_SET(SR_N);
 }void                             m68k_tst_l(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
   LONG x=m68k_read_dest_l();
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
   PREFETCH_IRC;
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
   if(!x)SR_SET(SR_Z);
   if(x&MSB_L)SR_SET(SR_N);
 }
+
+
+//#define SS_CPU_LINE_4_TIMINGS
+//#undef SS_CPU_LINE_4_TIMINGS
+
 void                              m68k_tas(){
   if((ir&B6_111111)==B6_111100){
     ILLEGAL;
   }else{
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
     FETCH_TIMING;
+#endif
     m68k_GET_DEST_B_NOT_A;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+    FETCH_TIMING;
+#endif
 #ifdef SS_CPU_TAS // not defined in 3.3
     if(DEST_IS_REGISTER==0){INSTRUCTION_TIME(6);} 
 #else
@@ -2357,18 +2824,35 @@ void                              m68k_tas(){
     m68k_DEST_B|=MSB_B;
   }
 }
+
+//#define SS_CPU_LINE_4_TIMINGS
+//#undef SS_CPU_LINE_4_TIMINGS
+
 // TODO: This should read the memory first 
 void                              m68k_move_from_sr(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH)
+  m68k_GET_DEST_W_NOT_A; // DSOS loader
+#endif
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
   if (DEST_IS_REGISTER){
     INSTRUCTION_TIME(2);
   }else{
     INSTRUCTION_TIME(4);
   }
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH))
   m68k_GET_DEST_W_NOT_A;
-  PREFETCH_IRC;
+#endif
   m68k_DEST_W=sr;
 }
+
+//#define SS_CPU_LINE_4_TIMINGS
+
 void                              m68k_move_from_ccr(){
     ILLEGAL;
   
@@ -2382,9 +2866,15 @@ void                              m68k_move_to_ccr(){
   if((ir&BITS_543)==BITS_543_001){
     m68k_unrecognised();
   }else{
-    FETCH_TIMING;
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
+  FETCH_TIMING;
+#endif
+
     m68k_GET_SOURCE_W;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
     CCR=LOBYTE(m68k_src_w);
     sr&=SR_VALID_BITMASK;
     INSTRUCTION_TIME(8);
@@ -2396,12 +2886,18 @@ void                              m68k_move_to_sr(){
       m68k_unrecognised();
     }else{
       DEBUG_ONLY( int debug_old_sr=sr; )
-      FETCH_TIMING;
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
+  FETCH_TIMING;
+#endif
+
       INSTRUCTION_TIME(8);
       m68k_GET_SOURCE_W;
       sr=m68k_src_w;
       sr&=SR_VALID_BITMASK;
       PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
       DETECT_CHANGE_TO_USER_MODE;
       DETECT_TRACE_BIT;
       // Interrupts must come after trace exception
@@ -2413,11 +2909,19 @@ void                              m68k_move_to_sr(){
     exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
   }
 }
+
+//#define SS_CPU_LINE_4_TIMINGS
+
 void                              m68k_nbcd(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
   if (DEST_IS_REGISTER){INSTRUCTION_TIME(2);}else {INSTRUCTION_TIME(4);}
   m68k_GET_DEST_B_NOT_A;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
   int m=m68k_DEST_B,n=0;
   if(m&0xff) n=0xa0;
   if(m&0xf)n=0x9a;
@@ -2430,9 +2934,14 @@ void                              m68k_nbcd(){
 }
 void                              m68k_pea_or_swap(){
   if((ir&BITS_543)==BITS_543_000){ // SWAP
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
     FETCH_TIMING;
+#endif
     r[PARAM_M]=MAKELONG(HIWORD(r[PARAM_M]),LOWORD(r[PARAM_M]));
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+    FETCH_TIMING;
+#endif
     SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
     if(!r[PARAM_M])SR_SET(SR_Z);
     if(r[PARAM_M]&MSB_L)SR_SET(SR_N);
@@ -2449,18 +2958,21 @@ void                              m68k_pea_or_swap(){
     if ((ir & B6_111111)==B6_111011 || (ir & B6_111000)==B6_110000){ INSTRUCTION_TIME(2); } //iriwo
     m68k_get_effective_address();
     INSTRUCTION_TIME_ROUND(8); // Round before writing to memory
+
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH)
     if((ir & B6_111111)==B6_111000) 
-      Cpu.PrefetchClass=1; // PEA for absolute short and absolute long addr. modes
+      M68000.PrefetchClass=1; // PEA for absolute short and absolute long addr. modes
     else
     {
       PREFETCH_IRC; 
       FETCH_TIMING;
     }
 #endif
+
     m68k_PUSH_L(effective_address);
+
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH)
-    if(Cpu.PrefetchClass==1)
+    if(M68000.PrefetchClass==1)
     {
       PREFETCH_IRC;
       FETCH_TIMING;
@@ -2470,17 +2982,26 @@ void                              m68k_pea_or_swap(){
 #endif
   }
 }
+
+//#define SS_CPU_LINE_4_TIMINGS
+
 void                              m68k_movem_w_from_regs_or_ext_w(){
-  FETCH_TIMING; 
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
+  FETCH_TIMING;
+#endif
+
   if((ir&BITS_543)==BITS_543_000){ //EXT.W
     SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
     m68k_dest=&(r[PARAM_M]);
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+    FETCH_TIMING;
+#endif
     m68k_DEST_W=(signed short)((signed char)LOBYTE(r[PARAM_M]));
     SR_CHECK_Z_AND_N_W;
   }else if ((ir & BITS_543)==BITS_543_100){ // MOVEM -(An)
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH) && defined(SS_DEBUG)
-    Cpu.PrefetchClass=1; 
+    M68000.PrefetchClass=1; 
 #endif
     m68k_src_w=m68k_fetchW();pc+=2;
     INSTRUCTION_TIME(4);
@@ -2506,9 +3027,12 @@ void                              m68k_movem_w_from_regs_or_ext_w(){
     // predecrement afterwards.
     areg[PARAM_M]=ad | areg_hi;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
   }else{ // MOVEM
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH) && defined(SS_DEBUG)
-    Cpu.PrefetchClass=1; 
+    M68000.PrefetchClass=1; 
 #endif
     m68k_src_w=m68k_fetchW();pc+=2;
     INSTRUCTION_TIME(4);
@@ -2571,6 +3095,9 @@ void                              m68k_movem_w_from_regs_or_ext_w(){
       mask<<=1;
     }
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
   }
   if (ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_W){  //oh dear, writing multiple words to the PSG
     int s=count_bits_set_in_word(m68k_src_w);
@@ -2578,17 +3105,27 @@ void                              m68k_movem_w_from_regs_or_ext_w(){
   }
 }
 
+//#define SS_CPU_LINE_4_TIMINGS
+//#undef SS_CPU_LINE_4_TIMINGS
 void                              m68k_movem_l_from_regs_or_ext_l(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
+
   if((ir&BITS_543)==BITS_543_000){  //ext.l
     SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
     m68k_dest=&(r[PARAM_M]);
+
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
     m68k_DEST_L=(signed long)((signed short)LOWORD(r[PARAM_M]));
     SR_CHECK_Z_AND_N_L;
   }else if((ir&BITS_543)==BITS_543_100){ //MOVEM predecrement
+
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH) && defined(SS_DEBUG)
-    Cpu.PrefetchClass=1; 
+    M68000.PrefetchClass=1; 
 #endif
     m68k_src_w=m68k_fetchW();pc+=2;
     INSTRUCTION_TIME(4);
@@ -2609,9 +3146,12 @@ void                              m68k_movem_l_from_regs_or_ext_l(){
     // predecrement afterwards.
     areg[PARAM_M]=ad | areg_hi;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
   }else{ // MOVEM
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH) && defined(SS_DEBUG)
-    Cpu.PrefetchClass=1; 
+    M68000.PrefetchClass=1; 
 #endif
     m68k_src_w=m68k_fetchW();pc+=2;
     INSTRUCTION_TIME(4);
@@ -2656,6 +3196,12 @@ void                              m68k_movem_l_from_regs_or_ext_l(){
       ad=0; // This is to stop an annoying warning
       m68k_unrecognised();
     }
+
+    PREFETCH_IRC; // seems wrong, see Dragonnels menu at overscan limit
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+    FETCH_TIMING;
+#endif
+
     short mask=1;
     for (int n=0;n<16;n++){
       if (m68k_src_w&mask){
@@ -2666,7 +3212,6 @@ void                              m68k_movem_l_from_regs_or_ext_l(){
       }
       mask<<=1;
     }
-    PREFETCH_IRC;
   }
   if (ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_W){  //oh dear, writing multiple longs to the PSG
     int s=count_bits_set_in_word(m68k_src_w)*2; //number of words to write
@@ -2674,14 +3219,20 @@ void                              m68k_movem_l_from_regs_or_ext_l(){
   }
 
 }
+
+//#define SS_CPU_LINE_4_TIMINGS
+
 void                              m68k_movem_l_to_regs(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
+
   bool postincrement=false;
   m68k_src_w=m68k_fetchW();pc+=2; // SS: TODO what if m68k_src_w=0?
   INSTRUCTION_TIME(4);
   MEM_ADDRESS ad;
   switch(ir&BITS_543){
-  case BITS_543_010:
+  case BITS_543_010: //ss (A)
     ad=areg[PARAM_M];
     break;
   case BITS_543_011:
@@ -2754,13 +3305,22 @@ void                              m68k_movem_l_to_regs(){
   m68k_dpeek(ad); //extra word read (discarded)
   INSTRUCTION_TIME_ROUND(4);
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
   if (ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_R){  //oh dear, reading multiple longs from the PSG
     int s=count_bits_set_in_word(m68k_src_w)*2+1; //number of words read
     if(s>4)BUS_JAM_TIME((s-1)&-4);  //we've already had a bus jam of 4, for s=5..8 want extra bus jam of 4
   }
 }
+
+//#define SS_CPU_LINE_4_TIMINGS
+
 void                              m68k_movem_w_to_regs(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
+
   bool postincrement=false;
   INSTRUCTION_TIME(4);
   m68k_src_w=m68k_fetchW();pc+=2;
@@ -2841,11 +3401,15 @@ void                              m68k_movem_w_to_regs(){
   m68k_dpeek(ad); //extra word read (discarded)
   INSTRUCTION_TIME_ROUND(4);
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
   if (ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_R){  //oh dear, reading multiple words from the PSG
     int s=count_bits_set_in_word(m68k_src_w)+1; //number of words read
     if(s>4)BUS_JAM_TIME((s-1)&-4);  //we've already had a bus jam of 4, for s=5..8 want extra bus jam of 4
   }
 }
+
 void                              m68k_jsr()
 {
   // see jmp instruction times table and +8.
@@ -2859,17 +3423,19 @@ void                              m68k_jsr()
 
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH)
   // read new PC before pushing current PC; fixes nothing AFAIK
-  Cpu.PrefetchClass=1; 
+  M68000.PrefetchClass=1; 
   m68k_READ_W(effective_address); // Check for bus/address errors
   FETCH_TIMING; // Fetch from new address before setting PC
-  Cpu.FetchForCall(effective_address); // fetch before writing stack
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH_TIMING_SET_PC)
+  INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+#endif
+  M68000.FetchForCall(effective_address); // fetch before writing stack
   m68k_PUSH_L(PC32); 
 #else
   m68k_PUSH_L(PC32);
   FETCH_TIMING; // Fetch from new address before setting PC
   m68k_READ_W(effective_address); // Check for bus/address errors
 #endif
-
   SET_PC(effective_address);
   intercept_os();
 }
@@ -2890,12 +3456,19 @@ void                              m68k_jmp()
 
   m68k_get_effective_address();
   FETCH_TIMING; // Fetch from new address before setting PC
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH_TIMING_SET_PC)
+  INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+#endif
   m68k_READ_W(effective_address); // Check for bus/address errors
   SET_PC(effective_address);  
   intercept_os();
 }
+
 void                              m68k_chk(){
+  #if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
+
   if((ir&BITS_543)==BITS_543_001){
     m68k_unrecognised();
   }else{
@@ -2904,15 +3477,38 @@ void                              m68k_chk(){
     if(r[PARAM_N]&0x8000){
       SR_SET(SR_N);
       m68k_interrupt(LPEEK(BOMBS_CHK*4));
-      INSTRUCTION_TIME_ROUND(40);
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+      INSTRUCTION_TIME(40-4);
+      FETCH_TIMING;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH_TIMING_SET_PC)
+      INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+#endif
+#else
+      INSTRUCTION_TIME_ROUND(40)
+#endif
     }else if((signed short)LOWORD(r[PARAM_N])>(signed short)m68k_src_w){
       SR_CLEAR(SR_N);
       m68k_interrupt(LPEEK(BOMBS_CHK*4));
-      INSTRUCTION_TIME_ROUND(40);
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+      INSTRUCTION_TIME(40-4);
+      FETCH_TIMING;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH_TIMING_SET_PC)
+      INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+#endif
+#else
+      INSTRUCTION_TIME_ROUND(40)
+#endif
+
     }
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH)
     else
+    {
       PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
+
+    }
 #endif
   }
 }
@@ -2927,12 +3523,16 @@ void                              m68k_lea(){
   // xxx.l    12    8             4
   // D(pc)    8     4             4
   // D(pc,dM) 14    8             6
-
   if ((ir & B6_111111)==B6_111011 || (ir & B6_111000)==B6_110000){ INSTRUCTION_TIME(2); }
   m68k_get_effective_address();
   PREFETCH_IRC;
+#if (defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
+  FETCH_TIMING;
+#endif
   areg[PARAM_N]=effective_address;
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING; /// This seems strange but it is right, it fetches after instruction
+#endif
 }
 
 
@@ -2944,11 +3544,9 @@ void                              m68k_line_4_stuff(){
 void                              m68k_trap(){
   INSTRUCTION_TIME_ROUND(8); // Time to read address to jump to
   MEM_ADDRESS Vector=LPEEK( 0x80+((ir & 0xf)*4) );
-
   switch (ir & 0xf){
     case 1: //GEMDOS
       if (os_gemdos_vector==0) if (Vector>=rom_addr) os_gemdos_vector=Vector;
-//TRACE("pc: %X\n",pc);
       break;
     case 13: // BIOS
       if (os_bios_vector==0) if (Vector>=rom_addr) os_bios_vector=Vector;
@@ -2958,7 +3556,15 @@ void                              m68k_trap(){
       break;
   }
   m68k_interrupt(Vector);
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  INSTRUCTION_TIME(26-4);
+  FETCH_TIMING;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH_TIMING_SET_PC)
+  INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+#endif
+#else
   INSTRUCTION_TIME_ROUND(26);
+#endif
   intercept_os();
   debug_check_break_on_irq(BREAK_IRQ_TRAP_IDX);
 }
@@ -2966,67 +3572,114 @@ void                              m68k_trap(){
 
 void                              m68k_link(){
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH) && defined(SS_DEBUG)
-  Cpu.PrefetchClass=1; 
+  M68000.PrefetchClass=1; 
 #endif
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
+
   INSTRUCTION_TIME(12);
   m68k_GET_IMMEDIATE_W;
   m68k_PUSH_L(areg[PARAM_M]);
   areg[PARAM_M]=r[15];
   r[15]+=(signed short)m68k_src_w;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
+
 }
 void                              m68k_unlk(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
+
   INSTRUCTION_TIME(8);
   r[15]=areg[PARAM_M];
   abus=r[15];m68k_READ_L_FROM_ADDR;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
+
   r[15]+=4;    //This is contrary to the Programmer's reference manual which says
   areg[PARAM_M]=m68k_src_l; //it does move (a7),An then adds 4 to a7, but it fixed Wrath of Demon
 }
 void                              m68k_move_to_usp(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
+
   if (SUPERFLAG){
     other_sp=areg[PARAM_M];
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
+
   }else{
     exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
   }
 }
 void                              m68k_move_from_usp(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
+
   if (SUPERFLAG){
     areg[PARAM_M]=other_sp;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
   }else{
     exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
   }
 }
 void                              m68k_reset(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
+
   if (SUPERFLAG){
     reset_peripherals(0);
     INSTRUCTION_TIME(128);
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
+
   }else{
     exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
   }
 }
 void                              m68k_nop(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH)
-  PREFETCH_IRC // quite the opposite!
+  PREFETCH_IRC; // quite the opposite!
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
 #else
   prefetched_2=false;
   prefetch_buf[0]=*(lpfetch-MEM_DIR);  //flush prefetch queue
 #endif
 }
+
+
 void                              m68k_stop(){
   if (SUPERFLAG){
     if (cpu_stopped==0){
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+//STOP	4(0/0)	
+//stop reads the immediate and doesn't prefetch
+#else
       FETCH_TIMING;
+#endif
       m68k_GET_IMMEDIATE_W;
+
       INSTRUCTION_TIME_ROUND(4); // time for immediate fetch
 
       DEBUG_ONLY( int debug_old_sr=sr; )
@@ -3044,7 +3697,7 @@ void                              m68k_stop(){
 //      check_for_interrupts_pending(); // was commented out
 
       CHECK_STOP_ON_USER_CHANGE;
-    }else{
+    }else{ //SS already stopped
       SET_PC((pc-2) | pc_high_byte);
       // If we have got here then there were no interrupts pending when the IPL
       // was changed. Now unless we are in a blitter loop nothing can possibly
@@ -3063,12 +3716,16 @@ void                              m68k_rte(){
   bool dont_intercept_os=false;
   if (SUPERFLAG){
     DEBUG_ONLY( int debug_old_sr=sr; )
-    INSTRUCTION_TIME_ROUND(20);
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU)
-    m68k_perform_rte();
-#else
-    M68K_PERFORM_RTE(;);
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+    INSTRUCTION_TIME(20-4);
+    FETCH_TIMING;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH_TIMING_SET_PC)
+    INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
 #endif
+#else
+    INSTRUCTION_TIME_ROUND(20);
+#endif
+    M68K_PERFORM_RTE(;);
 
     log_to(LOGSECTION_INTERRUPTS,Str("INTERRUPT: ")+HEXSl(old_pc,6)+" - RTE to "+HEXSl(pc,6)+" sr="+HEXSl(sr,4)+
                                   " at "+ABSOLUTE_CPU_TIME+" idepth="+interrupt_depth);
@@ -3123,7 +3780,6 @@ void                              m68k_rte(){
       }
     }
 //    log(EasyStr("RTE - decreasing interrupt depth from ")+interrupt_depth+" to "+(interrupt_depth-1));
-//    TRACE("RTE\n");
     interrupt_depth--;
     ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
 //    check_for_interrupts_pending();// was commented out
@@ -3140,7 +3796,15 @@ void                              m68k_rtd(){
   m68k_unrecognised();
 }
 void                              m68k_rts(){
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  INSTRUCTION_TIME(16-4);
+  FETCH_TIMING;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH_TIMING_SET_PC)
+  INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+#endif
+#else
   INSTRUCTION_TIME_ROUND(16);
+#endif
   effective_address=m68k_lpeek(r[15]);
   r[15]+=4;
   m68k_READ_W(effective_address); // Check for bus/address errors
@@ -3151,14 +3815,35 @@ void                              m68k_trapv(){
   if (sr & SR_V){
     m68k_interrupt(LPEEK(BOMBS_TRAPV*4));
     INSTRUCTION_TIME_ROUND(0); //Round first for interrupts
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+    INSTRUCTION_TIME(34-4);
+    FETCH_TIMING;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH_TIMING_SET_PC)
+    INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+#endif
+#else
     INSTRUCTION_TIME_ROUND(34);
+#endif
   }else{
-    PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
+    FETCH_TIMING_NO_ROUND; //?
+#else
     INSTRUCTION_TIME(4);
+#endif
+    PREFETCH_IRC;
+
   }
 }
 void                              m68k_rtr(){
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  INSTRUCTION_TIME(20-4);
+  FETCH_TIMING;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH_TIMING_SET_PC)
+    INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+#endif
+#else
   INSTRUCTION_TIME_ROUND(20);
+#endif
   CCR=LOBYTE(m68k_dpeek(r[15]));r[15]+=2;
   sr&=SR_VALID_BITMASK;
 
@@ -3188,21 +3873,32 @@ void                              m68k_movec(){
 ////////////////////////////////////////////////////////////////////////////////
 
 void                              m68k_addq_b(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_5_TIMINGS))
   FETCH_TIMING;
+#endif
   INSTRUCTION_TIME(4);
   m68k_src_b=(BYTE)PARAM_N;if(m68k_src_b==0)m68k_src_b=8;
   m68k_GET_DEST_B_NOT_A_FASTER_FOR_D;
   m68k_old_dest=m68k_DEST_B;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_5_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_DEST_B+=m68k_src_b;
   
   SR_ADD_B;
 }void                             m68k_addq_w(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_5_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_src_w=(WORD)PARAM_N;if(m68k_src_w==0)m68k_src_w=8;
   if((ir&BITS_543)==BITS_543_001){ //addq.w to address register
     INSTRUCTION_TIME(4);
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_5_TIMINGS)
+    FETCH_TIMING;
+#endif
     areg[PARAM_M]+=m68k_src_w;
     
   }else{
@@ -3210,15 +3906,24 @@ void                              m68k_addq_b(){
     m68k_GET_DEST_W_NOT_A_FASTER_FOR_D;
     m68k_old_dest=m68k_DEST_W;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_5_TIMINGS)
+    FETCH_TIMING;
+#endif
     m68k_DEST_W+=m68k_src_w;
     SR_ADD_W;
   }
 }void                             m68k_addq_l(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_5_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_src_l=(LONG)PARAM_N;if(m68k_src_l==0)m68k_src_l=8;
   if((ir&BITS_543)==BITS_543_001){ //addq.l to address register
     INSTRUCTION_TIME(4);
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_5_TIMINGS)
+    FETCH_TIMING;
+#endif
     areg[PARAM_M]+=m68k_src_l;
     
   }else{
@@ -3226,50 +3931,79 @@ void                              m68k_addq_b(){
     m68k_GET_DEST_L_NOT_A_FASTER_FOR_D;
     m68k_old_dest=m68k_DEST_L;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_5_TIMINGS)
+    FETCH_TIMING;
+#endif
     m68k_DEST_L+=m68k_src_l;
     SR_ADD_L;
   }
 }
 void                              m68k_subq_b(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_5_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_src_b=(BYTE)PARAM_N;if(m68k_src_b==0)m68k_src_b=8;
   INSTRUCTION_TIME(4);
   m68k_GET_DEST_B_NOT_A_FASTER_FOR_D;
   m68k_old_dest=m68k_DEST_B;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_5_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_DEST_B-=m68k_src_b;
   SR_SUB_B(SR_X);
 }void                             m68k_subq_w(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_5_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_src_w=(WORD)PARAM_N;if(m68k_src_w==0)m68k_src_w=8;
   if((ir&BITS_543)==BITS_543_001){ //subq.w to address register
     INSTRUCTION_TIME(4);
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_5_TIMINGS)
+    FETCH_TIMING;
+#endif
     areg[PARAM_M]-=m68k_src_w;
   }else{
     INSTRUCTION_TIME(4);
     m68k_GET_DEST_W_NOT_A_FASTER_FOR_D;
     m68k_old_dest=m68k_DEST_W;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_5_TIMINGS)
+    FETCH_TIMING;
+#endif
     m68k_DEST_W-=m68k_src_w;
     SR_SUB_W(SR_X);
   }
 }void                             m68k_subq_l(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_5_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_src_l=(LONG)PARAM_N;if(m68k_src_l==0)m68k_src_l=8;
   if((ir&BITS_543)==BITS_543_001){ //subq.l to address register
     areg[PARAM_M]-=m68k_src_l;
     INSTRUCTION_TIME(4);
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_5_TIMINGS)
+    FETCH_TIMING;
+#endif
   }else{
     INSTRUCTION_TIME(8);
     m68k_GET_DEST_L_NOT_A_FASTER_FOR_D;
     m68k_old_dest=m68k_DEST_L;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_5_TIMINGS)
+    FETCH_TIMING;
+#endif
     m68k_DEST_L-=m68k_src_l;
     SR_SUB_L(SR_X);
   }
 }
+//#undef SS_CPU_LINE_5_TIMINGS
+
 void                              m68k_dbCC_or_sCC(){
   if ((ir&BITS_543)==BITS_543_001){ // DBCC
 /*
@@ -3284,21 +4018,42 @@ Then (Dn - 1 -> Dn; If Dn  <> -1 Then PC + dn -> PC)
         MEM_ADDRESS new_pc=(pc+(signed short)m68k_src_w-2) | pc_high_byte;
         m68k_READ_W(new_pc); // Check for bus/address errors
         SET_PC(new_pc);
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_5_TIMINGS)
+        FETCH_TIMING;
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH_TIMING_SET_PC)
+        INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+#endif
       }else{
         INSTRUCTION_TIME(4);
         PREFETCH_IRC;
-      }
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_5_TIMINGS)
+        FETCH_TIMING;
+#endif
+    }
     }else{
       INSTRUCTION_TIME(2);
       PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_5_TIMINGS)
+      FETCH_TIMING;
+#endif
+
     }
-    FETCH_TIMING;
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_5_TIMINGS))
+  FETCH_TIMING;
+#endif
+//#define SS_CPU_LINE_5_TIMINGS
   }else{ // SCC
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_5_TIMINGS))
     FETCH_TIMING;
+#endif
     m68k_GET_DEST_B;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_5_TIMINGS)
+    FETCH_TIMING;
+#endif
     PREFETCH_IRC;
     if(m68k_CONDITION_TEST){
-#if defined(STEVEN_SEAGAL)
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_REWRITE)
       m68k_DEST_B=(char)0xff; // just a warning
 #else
       m68k_DEST_B=0xff;
@@ -3325,27 +4080,48 @@ Then (Dn - 1 -> Dn; If Dn  <> -1 Then PC + dn -> PC)
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-
+//#undef SS_CPU_LINE_8_TIMINGS
 void                              m68k_or_b_to_dN(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_8_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_GET_SOURCE_B_NOT_A;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_8_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_dest=&(r[PARAM_N]);
   m68k_DEST_B|=m68k_src_b;
   SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
   SR_CHECK_Z_AND_N_B;
 }void                             m68k_or_w_to_dN(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_8_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_GET_SOURCE_W_NOT_A;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_8_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_dest=&(r[PARAM_N]);
   m68k_DEST_W|=m68k_src_w;
   SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
   SR_CHECK_Z_AND_N_W;
-}void                             m68k_or_l_to_dN(){
+}
+//#undef SS_CPU_LINE_8_TIMINGS //sowatt/sync
+void                             m68k_or_l_to_dN(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_8_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_GET_SOURCE_L_NOT_A;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_8_TIMINGS)
+  FETCH_TIMING;
+#endif
+
   if (SOURCE_IS_REGISTER_OR_IMMEDIATE){INSTRUCTION_TIME(4);}
   else {INSTRUCTION_TIME(2);}
   m68k_dest=&(r[PARAM_N]);
@@ -3353,13 +4129,14 @@ void                              m68k_or_b_to_dN(){
   SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
   SR_CHECK_Z_AND_N_L;
 }
+#define SS_CPU_LINE_8_TIMINGS
 #if defined(SS_CPU_DIV)
 void m68k_divu();
 #else
 void                              m68k_divu(){
-  DEBUG_ONLY(
-    log_to(LOGSECTION_DIV,Str("DIV: ")+HEXSl(old_pc,6)+" - "+disa_d2(old_pc));
-  )
+#if !(defined(STEVEN_SEAGAL) && defined(SS_DEBUG_DIV))
+  DEBUG_ONLY(    log_to(LOGSECTION_DIV,Str("DIV: ")+HEXSl(old_pc,6)+" - "+disa_d2(old_pc));  )
+#endif
   FETCH_TIMING;
   m68k_GET_SOURCE_W_NOT_A;
   if (m68k_src_w==0){
@@ -3380,9 +4157,12 @@ void                              m68k_divu(){
   }
 }
 #endif
-
+//#undef SS_CPU_LINE_8_TIMINGS
 void                              m68k_or_b_from_dN_or_sbcd(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_8_TIMINGS))
   FETCH_TIMING;
+#endif
+
   switch(ir&BITS_543){
   case BITS_543_000:case BITS_543_001:{  //sbcd
     if((ir&BITS_543)==BITS_543_000){
@@ -3406,6 +4186,9 @@ void                              m68k_or_b_from_dN_or_sbcd(){
     n%=100;
     if(n)SR_CLEAR(SR_Z);
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_8_TIMINGS)
+  FETCH_TIMING;
+#endif
     m68k_DEST_B=(BYTE)( (((n/10)%10)<<4)+(n%10) );
     break;
   }default://or.b
@@ -3414,12 +4197,20 @@ void                              m68k_or_b_from_dN_or_sbcd(){
     m68k_GET_DEST_B_NOT_A;
     m68k_src_b=LOBYTE(r[PARAM_N]);  
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_8_TIMINGS)
+  FETCH_TIMING;
+#endif
     m68k_DEST_B|=m68k_src_b;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_B;
   }
-}void                             m68k_or_w_from_dN(){
+}
+#undef SS_CPU_LINE_8_TIMINGS
+void                             m68k_or_w_from_dN(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_8_TIMINGS))
   FETCH_TIMING;
+#endif
+
   switch(ir&BITS_543){
   case BITS_543_000:
   case BITS_543_001:
@@ -3431,12 +4222,20 @@ void                              m68k_or_b_from_dN_or_sbcd(){
     m68k_GET_DEST_W_NOT_A;
     m68k_src_w=LOWORD(r[PARAM_N]);
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_8_TIMINGS)
+  FETCH_TIMING;
+#endif
     m68k_DEST_W|=m68k_src_w;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_W;
   }
-}void                             m68k_or_l_from_dN(){
+}
+//#undef SS_CPU_LINE_8_TIMINGS
+void                             m68k_or_l_from_dN(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_8_TIMINGS))
   FETCH_TIMING;
+#endif
+
   switch(ir&BITS_543){
   case BITS_543_000:
   case BITS_543_001:
@@ -3448,6 +4247,9 @@ void                              m68k_or_b_from_dN_or_sbcd(){
     m68k_GET_DEST_L_NOT_A;
     m68k_src_l=r[PARAM_N];
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_8_TIMINGS)
+  FETCH_TIMING;
+#endif
     m68k_DEST_L|=m68k_src_l;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_L;
@@ -3458,9 +4260,9 @@ void                              m68k_or_b_from_dN_or_sbcd(){
 void m68k_divs();
 #else
 void                              m68k_divs(){
-  DEBUG_ONLY(
-    log_to(LOGSECTION_DIV,Str("DIV: ")+HEXSl(old_pc,6)+" - "+disa_d2(old_pc));
-  )
+#if !(defined(STEVEN_SEAGAL) && defined(SS_DEBUG_DIV))
+  DEBUG_ONLY( log_to(LOGSECTION_DIV,Str("DIV: ")+HEXSl(old_pc,6)+" - "+disa_d2(old_pc)); )
+#endif
   FETCH_TIMING;
   m68k_GET_SOURCE_W_NOT_A;
   if (m68k_src_w==0){
@@ -3497,50 +4299,119 @@ void                              m68k_divs(){
 ////////////////////////////////////////////////////////////////////////////////
 
 void                              m68k_sub_b_to_dN(){
+#if !defined(SS_CPU_LINE_9_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
   INSTRUCTION_TIME(4);
+#endif
+#endif
   m68k_GET_SOURCE_B_NOT_A;
   m68k_dest=&r[PARAM_N];
   m68k_old_dest=m68k_DEST_B;
-  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_9_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
+  INSTRUCTION_TIME(4);
+#endif
+#endif
+  PREFETCH_IRC_NO_ROUND;
   m68k_DEST_B-=m68k_src_b;
   SR_SUB_B(SR_X);
   INSTRUCTION_TIME_ROUND(0);
 }
 void                             m68k_sub_w_to_dN(){
+#if !defined(SS_CPU_LINE_9_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
   INSTRUCTION_TIME(4);
+#endif
+#endif
   m68k_GET_SOURCE_W;   //A is allowed
   m68k_dest=&r[PARAM_N];
   m68k_old_dest=m68k_DEST_W;
-  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_9_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
+  INSTRUCTION_TIME(4);
+#endif
+#endif
+
+  PREFETCH_IRC_NO_ROUND;
   m68k_DEST_W-=m68k_src_w;
   SR_SUB_W(SR_X);
   INSTRUCTION_TIME_ROUND(0);
 }
 void                             m68k_sub_l_to_dN(){
+#if !defined(SS_CPU_LINE_9_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
   INSTRUCTION_TIME(4);
+#endif
+#endif
   m68k_GET_SOURCE_L;   //A is allowed
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_9_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
+  INSTRUCTION_TIME(4);
+#endif
+#endif
+  PREFETCH_IRC_NO_ROUND;
   if(SOURCE_IS_REGISTER_OR_IMMEDIATE){INSTRUCTION_TIME(4);}
   else {INSTRUCTION_TIME(2);}
+//SS like for ADD? worth it doing this now?
   m68k_dest=&r[PARAM_N];
   m68k_old_dest=m68k_DEST_L;
-  PREFETCH_IRC;
   m68k_DEST_L-=m68k_src_l;
   SR_SUB_L(SR_X);
   INSTRUCTION_TIME_ROUND(0);
 }void                             m68k_suba_w(){
+#if !defined(SS_CPU_LINE_9_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
   INSTRUCTION_TIME(4);
+#endif
+#endif
   m68k_GET_SOURCE_W;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_9_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
+  INSTRUCTION_TIME(4);
+#endif
+#endif
+  PREFETCH_IRC_NO_ROUND;  
   INSTRUCTION_TIME(4);
   m68k_src_l=(signed long)((signed short)m68k_src_w);
-  PREFETCH_IRC;
+
   areg[PARAM_N]-=m68k_src_l;
   INSTRUCTION_TIME_ROUND(0);
 }
 void                              m68k_sub_b_from_dN(){
+#if !defined(SS_CPU_LINE_9_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
   INSTRUCTION_TIME(4);
+#endif
+#endif
   switch(ir&BITS_543){
   case BITS_543_000:
   case BITS_543_001:
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_9_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
+  INSTRUCTION_TIME(4);
+#endif
+#endif
+    PREFETCH_IRC_NO_ROUND;
     if((ir&BITS_543)==BITS_543_000){
       m68k_src_b=LOBYTE(r[PARAM_M]);
       m68k_dest=&(r[PARAM_N]);
@@ -3552,7 +4423,6 @@ void                              m68k_sub_b_from_dN(){
       m68k_SET_DEST_B(areg[PARAM_N]);
     }
     m68k_old_dest=m68k_DEST_B;
-    PREFETCH_IRC;
     m68k_DEST_B-=m68k_src_b;
     if(sr&SR_X)m68k_DEST_B--;
     SR_SUBX_B;
@@ -3561,19 +4431,44 @@ void                              m68k_sub_b_from_dN(){
     INSTRUCTION_TIME(4);
     EXTRA_PREFETCH; 
     m68k_src_b=LOBYTE(r[PARAM_N]);
-    m68k_GET_DEST_B_NOT_A;
+        m68k_GET_DEST_B_NOT_A;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_9_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
+  INSTRUCTION_TIME(4);
+#endif
+#endif
+    PREFETCH_IRC_NO_ROUND;
+
+
     m68k_old_dest=m68k_DEST_B;
-    PREFETCH_IRC;
     m68k_DEST_B-=m68k_src_b;
     SR_SUB_B(SR_X);
   }
   INSTRUCTION_TIME_ROUND(0);
 }
+
 void                              m68k_sub_w_from_dN(){
+#if !defined(SS_CPU_LINE_9_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
   INSTRUCTION_TIME(4);
+#endif
+#endif
   switch(ir&BITS_543){
   case BITS_543_000:
   case BITS_543_001:
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_9_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
+  INSTRUCTION_TIME(4);
+#endif
+#endif
+    PREFETCH_IRC_NO_ROUND;
+
     if((ir&BITS_543)==BITS_543_000){
       m68k_src_w=LOWORD(r[PARAM_M]);
       m68k_dest=&(r[PARAM_N]);
@@ -3583,7 +4478,6 @@ void                              m68k_sub_w_from_dN(){
       areg[PARAM_N]-=2;m68k_SET_DEST_W(areg[PARAM_N]);
     }
     m68k_old_dest=m68k_DEST_W;
-    PREFETCH_IRC;
     m68k_DEST_W-=m68k_src_w;
     if(sr&SR_X)m68k_DEST_W--;
     SR_SUBX_W;
@@ -3592,30 +4486,68 @@ void                              m68k_sub_w_from_dN(){
     INSTRUCTION_TIME(4);
     EXTRA_PREFETCH; 
     m68k_src_w=LOWORD(r[PARAM_N]);
+
+
     m68k_GET_DEST_W_NOT_A;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_9_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
+  INSTRUCTION_TIME(4);
+#endif
+#endif
+    PREFETCH_IRC_NO_ROUND;
     m68k_old_dest=m68k_DEST_W;
-    PREFETCH_IRC;
+
     m68k_DEST_W-=m68k_src_w;
     SR_SUB_W(SR_X);
   }
   INSTRUCTION_TIME_ROUND(0);
 }
 void                              m68k_sub_l_from_dN(){
+#if !defined(SS_CPU_LINE_9_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
   INSTRUCTION_TIME(4);
+#endif
+#endif
   switch(ir&BITS_543){
   case BITS_543_000:
   case BITS_543_001:
     if((ir&BITS_543)==BITS_543_000){
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_9_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
+  INSTRUCTION_TIME(4);
+#endif
+#endif
+    PREFETCH_IRC_NO_ROUND;
+
       INSTRUCTION_TIME(4);
       m68k_src_l=r[PARAM_M];
       m68k_dest=&(r[PARAM_N]);
     }else{
-      INSTRUCTION_TIME_ROUND(26);
+
       areg[PARAM_M]-=4;m68k_src_l=m68k_lpeek(areg[PARAM_M]);
       areg[PARAM_N]-=4;m68k_SET_DEST_L(areg[PARAM_N]);
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_9_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
+  INSTRUCTION_TIME(4);
+#endif
+#endif
+    PREFETCH_IRC_NO_ROUND;
+
+      INSTRUCTION_TIME_ROUND(26);
+
     }
     m68k_old_dest=m68k_DEST_L;
-    PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_ROUNDING_FIX_SUB_L)
+    CHECK_EXTRA_ROUNDED_CYCLES;
+#endif
     m68k_DEST_L-=m68k_src_l;
     if(sr&SR_X)m68k_DEST_L--;
     SR_SUBX_L;
@@ -3623,20 +4555,47 @@ void                              m68k_sub_l_from_dN(){
   default:
     INSTRUCTION_TIME(8);
     EXTRA_PREFETCH; 
+    
     m68k_src_l=r[PARAM_N];
     m68k_GET_DEST_L_NOT_A;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_9_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
+  INSTRUCTION_TIME(4);
+#endif
+#endif
+    PREFETCH_IRC_NO_ROUND;
+
+    
     m68k_old_dest=m68k_DEST_L;
-    PREFETCH_IRC;
     m68k_DEST_L-=m68k_src_l;
     SR_SUB_L(SR_X);
   }
   INSTRUCTION_TIME_ROUND(0);
 }void                             m68k_suba_l(){
+#if !defined(SS_CPU_LINE_9_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
   INSTRUCTION_TIME(4);
+#endif
+#endif
   m68k_GET_SOURCE_L;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_9_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
+  INSTRUCTION_TIME(4);
+#endif
+#endif
+    PREFETCH_IRC_NO_ROUND;
+
   if (SOURCE_IS_REGISTER_OR_IMMEDIATE){INSTRUCTION_TIME(4);}
   else {INSTRUCTION_TIME(2);}
-  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_ROUNDING_FIX_SUBA_L)
+  CHECK_EXTRA_ROUNDED_CYCLES;
+#endif
   areg[PARAM_N]-=m68k_src_l;
   INSTRUCTION_TIME_ROUND(0);
 }
@@ -3657,47 +4616,72 @@ void                              m68k_sub_l_from_dN(){
 ////////////////////////////////////////////////////////////////////////////////
 
 void                              m68k_cmp_b(){
+#if !defined(SS_CPU_LINE_B_TIMINGS)
   FETCH_TIMING;
+#endif
   m68k_GET_SOURCE_B;
   m68k_old_dest=LOBYTE(r[PARAM_N]);
   compare_buffer=m68k_old_dest;
   m68k_dest=&compare_buffer;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_B_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_DEST_B-=m68k_src_b;
   SR_SUB_B(0);
 }void                             m68k_cmp_w(){
+#if !defined(SS_CPU_LINE_B_TIMINGS)
   FETCH_TIMING;
+#endif
   m68k_GET_SOURCE_W;
   m68k_old_dest=LOWORD(r[PARAM_N]);
   compare_buffer=m68k_old_dest;
   m68k_dest=&compare_buffer;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_B_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_DEST_W-=m68k_src_w;
   SR_SUB_W(0);
 }void                             m68k_cmp_l(){
+#if !defined(SS_CPU_LINE_B_TIMINGS)
   FETCH_TIMING;
+#endif
+
   m68k_GET_SOURCE_L;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_B_TIMINGS)
+  FETCH_TIMING;
+#endif
   INSTRUCTION_TIME(2);
   m68k_old_dest=r[PARAM_N];
   compare_buffer=m68k_old_dest;
   m68k_dest=&compare_buffer;
-  PREFETCH_IRC;
   m68k_DEST_L-=m68k_src_l;
   SR_SUB_L(0);
 }void                             m68k_cmpa_w(){
+#if !defined(SS_CPU_LINE_B_TIMINGS)
   FETCH_TIMING;
+#endif
+
   m68k_GET_SOURCE_W;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_B_TIMINGS)
+  FETCH_TIMING;
+#endif
+  PREFETCH_IRC;
   INSTRUCTION_TIME(2);
   m68k_src_l=(signed long)((signed short)m68k_src_w);
   m68k_old_dest=areg[PARAM_N];
   compare_buffer=m68k_old_dest;
   m68k_dest=&compare_buffer;
-  PREFETCH_IRC;
   m68k_DEST_L-=m68k_src_l;
   SR_SUB_L(0);
 }
 void                              m68k_eor_b(){
+#if !defined(SS_CPU_LINE_B_TIMINGS)
   FETCH_TIMING;
+#endif
+
   if((ir&BITS_543)==BITS_543_001){  //cmpm
     INSTRUCTION_TIME_ROUND(8);
     m68k_src_b=m68k_peek(areg[PARAM_M]);areg[PARAM_M]++; if(PARAM_M==7)areg[PARAM_M]++;
@@ -3705,18 +4689,27 @@ void                              m68k_eor_b(){
     compare_buffer=m68k_old_dest;
     m68k_dest=&compare_buffer;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_B_TIMINGS)
+    FETCH_TIMING;
+#endif
     m68k_DEST_B-=m68k_src_b;
     SR_SUB_B(0);
   }else{
     INSTRUCTION_TIME(4);
     m68k_GET_DEST_B_NOT_A_FASTER_FOR_D;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_B_TIMINGS)
+    FETCH_TIMING;
+#endif
     m68k_DEST_B^=LOBYTE(r[PARAM_N]);
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_B;
   }
 }void                             m68k_eor_w(){
+#if !defined(SS_CPU_LINE_B_TIMINGS)
   FETCH_TIMING;
+#endif
+
   if((ir&BITS_543)==BITS_543_001){  //cmpm
     INSTRUCTION_TIME_ROUND(8);
     m68k_src_w=m68k_dpeek(areg[PARAM_M]);areg[PARAM_M]+=2;
@@ -3724,18 +4717,27 @@ void                              m68k_eor_b(){
     compare_buffer=m68k_old_dest;
     m68k_dest=&compare_buffer;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_B_TIMINGS)
+    FETCH_TIMING;
+#endif
     m68k_DEST_W-=m68k_src_w;
     SR_SUB_W(0);
   }else{
     INSTRUCTION_TIME(4);
     m68k_GET_DEST_W_NOT_A_FASTER_FOR_D;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_B_TIMINGS)
+    FETCH_TIMING;
+#endif
     m68k_DEST_W^=LOWORD(r[PARAM_N]);
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_W;
   }
 }void                             m68k_eor_l(){
+#if !defined(SS_CPU_LINE_B_TIMINGS)
   FETCH_TIMING;
+#endif
+
   if((ir&BITS_543)==BITS_543_001){  //cmpm
     INSTRUCTION_TIME_ROUND(16);
     m68k_src_l=m68k_lpeek(areg[PARAM_M]);areg[PARAM_M]+=4;
@@ -3743,29 +4745,42 @@ void                              m68k_eor_b(){
     compare_buffer=m68k_old_dest;
     m68k_dest=&compare_buffer;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_B_TIMINGS)
+    FETCH_TIMING;
+#endif
     m68k_DEST_L-=m68k_src_l;
     SR_SUB_L(0);
   }else{
     INSTRUCTION_TIME(8);
     m68k_GET_DEST_L_NOT_A_FASTER_FOR_D;
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_B_TIMINGS)
+    FETCH_TIMING;
+#endif
     m68k_DEST_L^=r[PARAM_N];
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_L;
   }
 }
+//#undef SS_CPU_LINE_B_TIMINGS
 void                             m68k_cmpa_l(){
+#if !defined(SS_CPU_LINE_B_TIMINGS)
   FETCH_TIMING;
+#endif
+
   m68k_GET_SOURCE_L;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_B_TIMINGS)
+  FETCH_TIMING; //DSOS/scrollers
+#endif
   INSTRUCTION_TIME(2);
   m68k_old_dest=areg[PARAM_N];
   compare_buffer=m68k_old_dest;
   m68k_dest=&compare_buffer;
-  PREFETCH_IRC;
   m68k_DEST_L-=m68k_src_l;
   SR_SUB_L(0);
 }
-
+//#define SS_CPU_LINE_B_TIMINGS
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -3781,61 +4796,105 @@ void                             m68k_cmpa_l(){
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+
 void                              m68k_and_b_to_dN(){
+#if !defined(SS_CPU_LINE_C_TIMINGS)
   FETCH_TIMING;
+#endif
   m68k_GET_SOURCE_B_NOT_A;
   m68k_dest=&(r[PARAM_N]);
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_C_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_DEST_B&=m68k_src_b;
   SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
   SR_CHECK_Z_AND_N_B;
 }void                             m68k_and_w_to_dN(){
+#if !defined(SS_CPU_LINE_C_TIMINGS)
   FETCH_TIMING;
+#endif
+
   m68k_GET_SOURCE_W_NOT_A;
   m68k_dest=&(r[PARAM_N]);
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_C_TIMINGS)
+  FETCH_TIMING;
+#endif
   m68k_DEST_W&=m68k_src_w;
   SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
   SR_CHECK_Z_AND_N_W;
 }void                             m68k_and_l_to_dN(){
+#if !defined(SS_CPU_LINE_C_TIMINGS)
   FETCH_TIMING;
+#endif
+
 
 ////  if( (ir&BITS_543)>>3 == 1 )
    ////// exception(BOMBS_ADDRESS_ERROR,EA_READ,abus);
 
 
   m68k_GET_SOURCE_L_NOT_A;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_C_TIMINGS)
+  FETCH_TIMING;
+#endif
+
   if(SOURCE_IS_REGISTER_OR_IMMEDIATE){INSTRUCTION_TIME(4);}
   else {INSTRUCTION_TIME(2);}
   m68k_dest=&(r[PARAM_N]);
-  PREFETCH_IRC;
   m68k_DEST_L&=m68k_src_l;
   SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
   SR_CHECK_Z_AND_N_L;
 }
+
+//#undef SS_CPU_LINE_C_TIMINGS
 void                              m68k_mulu(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_C_TIMINGS))
   FETCH_TIMING;
+#endif
   m68k_GET_SOURCE_W_NOT_A;
+  PREFETCH_IRC_NO_ROUND;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_C_TIMINGS)
+  FETCH_TIMING_NO_ROUND; //Dragonnels loader 
+#endif
   INSTRUCTION_TIME(34);
+
   ///// Hey, this is right apparently
   for (WORD Val=m68k_src_w;Val;Val>>=1){
     if (Val & 1) INSTRUCTION_TIME(2);
   }
+
   m68k_dest=&(r[PARAM_N]);
-  PREFETCH_IRC;
   m68k_DEST_L=(unsigned long)LOWORD(r[PARAM_N])*(unsigned long)((unsigned short)m68k_src_w);
   SR_CLEAR(SR_Z+SR_N+SR_C+SR_V);
   SR_CHECK_Z_AND_N_L;
 }
+//#define SS_CPU_LINE_C_TIMINGS
+
+//#undef SS_CPU_LINE_C_TIMINGS
 void                              m68k_and_b_from_dN_or_abcd(){
+#if !defined(SS_CPU_LINE_C_TIMINGS)
   FETCH_TIMING;
+#endif
+
   switch (ir & BITS_543){
   case BITS_543_000:case BITS_543_001:{
     if((ir&BITS_543)==BITS_543_000){
+    PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_C_TIMINGS)
+    FETCH_TIMING;
+#endif
+
       INSTRUCTION_TIME(2);
       m68k_src_b=LOBYTE(r[PARAM_M]);
       m68k_dest=&(r[PARAM_N]);
     }else{
+    PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_C_TIMINGS)
+    FETCH_TIMING;
+#endif
+
       INSTRUCTION_TIME_ROUND(14);
       areg[PARAM_M]--;
             if(PARAM_M==7)areg[PARAM_M]--;
@@ -3852,7 +4911,6 @@ void                              m68k_and_b_from_dN_or_abcd(){
     if(n>=100)SR_SET(SR_X+SR_C); //if a carry occurs
     n%=100;
     if(n)SR_CLEAR(SR_Z);
-    PREFETCH_IRC;
     m68k_DEST_B=(BYTE)( (((n/10)%10)<<4)+(n%10) );
     break;
   }default:
@@ -3861,24 +4919,41 @@ void                              m68k_and_b_from_dN_or_abcd(){
     m68k_GET_DEST_B_NOT_A;
     m68k_src_b=LOBYTE(r[PARAM_N]);
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_C_TIMINGS)
+    FETCH_TIMING;
+#endif
     m68k_DEST_B&=m68k_src_b;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_B;
   }
-}void                             m68k_and_w_from_dN_or_exg_like(){
+}
+//#define SS_CPU_LINE_C_TIMINGS
+//#undef SS_CPU_LINE_C_TIMINGS
+void                             m68k_and_w_from_dN_or_exg_like(){
+#if !defined(SS_CPU_LINE_C_TIMINGS)
   FETCH_TIMING;
+#endif
+
   switch(ir&BITS_543){
   case BITS_543_000:
+    PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_C_TIMINGS)
+    FETCH_TIMING;
+#endif
+
     INSTRUCTION_TIME(2);
     compare_buffer=r[PARAM_N];
-    PREFETCH_IRC;
     r[PARAM_N]=r[PARAM_M];
     r[PARAM_M]=compare_buffer;
     break;
   case BITS_543_001:
+    PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_C_TIMINGS)
+    FETCH_TIMING;
+#endif
+
     INSTRUCTION_TIME(2);
     compare_buffer=areg[PARAM_N];
-    PREFETCH_IRC;
     areg[PARAM_N]=areg[PARAM_M];
     areg[PARAM_M]=compare_buffer;
     break;
@@ -3888,12 +4963,21 @@ void                              m68k_and_b_from_dN_or_abcd(){
     m68k_GET_DEST_W_NOT_A;
     m68k_src_w=LOWORD(r[PARAM_N]);
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_C_TIMINGS)
+    FETCH_TIMING;
+#endif
     m68k_DEST_W&=m68k_src_w;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_W;
   }
-}void                             m68k_and_l_from_dN_or_exg_unlike(){
+}
+//#define SS_CPU_LINE_C_TIMINGS
+//#undef SS_CPU_LINE_C_TIMINGS
+void                             m68k_and_l_from_dN_or_exg_unlike(){
+#if !defined(SS_CPU_LINE_C_TIMINGS)
   FETCH_TIMING;
+#endif
+
   switch(ir&BITS_543){
   case BITS_543_000:
     m68k_unrecognised();
@@ -3902,10 +4986,15 @@ void                              m68k_and_b_from_dN_or_abcd(){
     // m68k_dest=// D2_dM;
     break;
   case BITS_543_001:
+    //SS TB2/DNT
+    // EXG 6(1/0)
+    PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_C_TIMINGS)
+    FETCH_TIMING;
+#endif
     INSTRUCTION_TIME(2);
     compare_buffer=areg[PARAM_M];
     areg[PARAM_M]=r[PARAM_N];
-    PREFETCH_IRC;
     r[PARAM_N]=compare_buffer;
     break;
   default:
@@ -3914,16 +5003,29 @@ void                              m68k_and_b_from_dN_or_abcd(){
     m68k_GET_DEST_L_NOT_A;
     m68k_src_l=r[PARAM_N];
     PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_C_TIMINGS)
+    FETCH_TIMING;
+#endif
     m68k_DEST_L&=m68k_src_l;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_L;
   }
 }
+//#define SS_CPU_LINE_C_TIMINGS
+//#undef SS_CPU_LINE_C_TIMINGS
 void                              m68k_muls(){
+#if !defined(SS_CPU_LINE_C_TIMINGS)
   FETCH_TIMING;
+#endif
+
   m68k_GET_SOURCE_W_NOT_A;
+  PREFETCH_IRC_NO_ROUND;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_C_TIMINGS)
+  FETCH_TIMING_NO_ROUND; // delirious 4 loader
+#endif
   INSTRUCTION_TIME(34);
   ///// Hey, this is right apparently
+
   int LastLow=0;
   int Val=WORD(m68k_src_w);
   for (int n=0;n<16;n++){
@@ -3932,13 +5034,11 @@ void                              m68k_muls(){
     Val>>=1;
   }
   m68k_dest=&(r[PARAM_N]);
-  PREFETCH_IRC;
   m68k_DEST_L=((signed long)((signed short)LOWORD(r[PARAM_N])))*((signed long)((signed short)m68k_src_w));
   SR_CLEAR(SR_Z+SR_N+SR_C+SR_V);
   SR_CHECK_Z_AND_N_L;
 }
-
-
+//#define SS_CPU_LINE_C_TIMINGS
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3956,45 +5056,112 @@ void                              m68k_muls(){
 ////////////////////////////////////////////////////////////////////////////////
 
 void                              m68k_add_b_to_dN(){
+#if !defined(SS_CPU_LINE_D_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
   INSTRUCTION_TIME(4);
+#endif
+#endif
   m68k_GET_SOURCE_B_NOT_A;
   m68k_dest=&r[PARAM_N];
   m68k_old_dest=m68k_DEST_B;
-  PREFETCH_IRC;
+  PREFETCH_IRC_NO_ROUND;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_D_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
+  INSTRUCTION_TIME(4);
+#endif
+#endif
+
   m68k_DEST_B+=m68k_src_b;
   SR_ADD_B;
   INSTRUCTION_TIME_ROUND(0);
 }void                             m68k_add_w_to_dN(){ // add.w ea,dn or adda.w ea,an
+#if !defined(SS_CPU_LINE_D_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
   INSTRUCTION_TIME(4);
+#endif
+#endif
   m68k_GET_SOURCE_W;   //A is allowed
   m68k_dest=&r[PARAM_N];
   m68k_old_dest=m68k_DEST_W;
-  PREFETCH_IRC;
+  PREFETCH_IRC_NO_ROUND;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_D_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
+  INSTRUCTION_TIME(4);
+#endif
+#endif
   m68k_DEST_W+=m68k_src_w;
   SR_ADD_W;
   INSTRUCTION_TIME_ROUND(0);
 }void                             m68k_add_l_to_dN(){ // add.l ea,dn or adda.l ea,an
+#if !defined(SS_CPU_LINE_D_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
   INSTRUCTION_TIME(4);
+#endif
+#endif
+
   m68k_GET_SOURCE_L;   //A is allowed
   if(SOURCE_IS_REGISTER_OR_IMMEDIATE){INSTRUCTION_TIME(4);}
-  else {INSTRUCTION_TIME(2);}
+  else {INSTRUCTION_TIME(2);
+  }
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_ROUNDING_FIX_ADD_L)
+  CHECK_EXTRA_ROUNDED_CYCLES;  // fixes Cernit Trandafir #2 right border
+#endif
   m68k_dest=&r[PARAM_N];
   m68k_old_dest=m68k_DEST_L;
-  PREFETCH_IRC;
+  PREFETCH_IRC_NO_ROUND;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_D_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
+  INSTRUCTION_TIME(4);
+#endif
+#endif
   m68k_DEST_L+=m68k_src_l;
   SR_ADD_L;
   INSTRUCTION_TIME_ROUND(0);
 }void                             m68k_adda_w(){
+#if !defined(SS_CPU_LINE_D_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
   INSTRUCTION_TIME(4);
+#endif
+#endif
+
   m68k_GET_SOURCE_W;
   INSTRUCTION_TIME(4);
   m68k_src_l=(signed long)((signed short)m68k_src_w);
-  PREFETCH_IRC;
+  PREFETCH_IRC_NO_ROUND;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_D_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
+  INSTRUCTION_TIME(4);
+#endif
+#endif
+
   areg[PARAM_N]+=m68k_src_l;
   INSTRUCTION_TIME_ROUND(0);
 }
 void                              m68k_add_b_from_dN(){
+#if !defined(SS_CPU_LINE_D_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
   INSTRUCTION_TIME(4);
+#endif
+#endif
+
   switch(ir&BITS_543){
   case BITS_543_000:
   case BITS_543_001:
@@ -4011,7 +5178,15 @@ void                              m68k_add_b_from_dN(){
       m68k_SET_DEST_B(areg[PARAM_N]);
     }
     m68k_old_dest=m68k_DEST_B;
-    PREFETCH_IRC;
+    PREFETCH_IRC_NO_ROUND;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_D_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+    FETCH_TIMING_NO_ROUND;
+#else
+    INSTRUCTION_TIME(4);
+#endif
+#endif
+
     m68k_DEST_B+=m68k_src_b;
     if(sr&SR_X)m68k_DEST_B++;
     
@@ -4023,7 +5198,15 @@ void                              m68k_add_b_from_dN(){
     m68k_src_b=LOBYTE(r[PARAM_N]);
     m68k_GET_DEST_B_NOT_A;
     m68k_old_dest=m68k_DEST_B;
-    PREFETCH_IRC;
+    PREFETCH_IRC_NO_ROUND;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_D_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+    FETCH_TIMING_NO_ROUND;
+#else
+    INSTRUCTION_TIME(4);
+#endif
+#endif
+
     m68k_DEST_B+=m68k_src_b;
     
     SR_ADD_B;
@@ -4031,7 +5214,14 @@ void                              m68k_add_b_from_dN(){
   INSTRUCTION_TIME_ROUND(0);
 }
 void                              m68k_add_w_from_dN(){
+#if !defined(SS_CPU_LINE_D_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
   INSTRUCTION_TIME(4);
+#endif
+#endif
+
   switch(ir&BITS_543){
   case BITS_543_000:
   case BITS_543_001:
@@ -4044,7 +5234,15 @@ void                              m68k_add_w_from_dN(){
       areg[PARAM_N]-=2;m68k_SET_DEST_W(areg[PARAM_N]);
     }
     m68k_old_dest=m68k_DEST_W;
-    PREFETCH_IRC;
+    PREFETCH_IRC_NO_ROUND;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_D_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+    FETCH_TIMING_NO_ROUND;
+#else
+    INSTRUCTION_TIME(4);
+#endif
+#endif
+
     m68k_DEST_W+=m68k_src_w;
 
     if(sr&SR_X)m68k_DEST_W++;
@@ -4057,14 +5255,29 @@ void                              m68k_add_w_from_dN(){
     m68k_src_w=LOWORD(r[PARAM_N]);
     m68k_GET_DEST_W_NOT_A;
     m68k_old_dest=m68k_DEST_W;
-    PREFETCH_IRC;
+    PREFETCH_IRC_NO_ROUND;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_D_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+    FETCH_TIMING_NO_ROUND;
+#else
+    INSTRUCTION_TIME(4);
+#endif
+#endif
+
     m68k_DEST_W+=m68k_src_w;
     SR_ADD_W;
   }
   INSTRUCTION_TIME_ROUND(0);
 }
 void                              m68k_add_l_from_dN(){
+#if !defined(SS_CPU_LINE_D_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
   INSTRUCTION_TIME(4);
+#endif
+#endif
+
   switch (ir&BITS_543){
   case BITS_543_000:
   case BITS_543_001:
@@ -4078,7 +5291,15 @@ void                              m68k_add_l_from_dN(){
       areg[PARAM_N]-=4;m68k_SET_DEST_L(areg[PARAM_N]);
     }
     m68k_old_dest=m68k_DEST_L;
-    PREFETCH_IRC;
+    PREFETCH_IRC_NO_ROUND;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_D_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+    FETCH_TIMING_NO_ROUND;
+#else
+    INSTRUCTION_TIME(4);
+#endif
+#endif
+
     m68k_DEST_L+=m68k_src_l;
     if(sr&SR_X)m68k_DEST_L++;
     
@@ -4090,24 +5311,54 @@ void                              m68k_add_l_from_dN(){
     m68k_src_l=r[PARAM_N];
     m68k_GET_DEST_L_NOT_A;
     m68k_old_dest=m68k_DEST_L;
-    PREFETCH_IRC;
+    PREFETCH_IRC_NO_ROUND;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_D_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+    FETCH_TIMING_NO_ROUND;
+#else
+    INSTRUCTION_TIME(4);
+#endif
+#endif
+
     m68k_DEST_L+=m68k_src_l;
     SR_ADD_L;
   }
   INSTRUCTION_TIME_ROUND(0);
 }
 void                             m68k_adda_l(){
+#if !defined(SS_CPU_LINE_D_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
   INSTRUCTION_TIME(4);
+#endif
+#endif
+
   m68k_GET_SOURCE_L;
   if (SOURCE_IS_REGISTER_OR_IMMEDIATE){
     INSTRUCTION_TIME(4);
   }else{
     INSTRUCTION_TIME(2);
   }
-  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_ROUNDING_FIX_ADDA_L)
+  // fixes Cernit Trandafir #2 & Summer Delight #5 extra cycles
+  // fixes Summer Delight #5 & #7
+    CHECK_EXTRA_ROUNDED_CYCLES;
+#endif
+  PREFETCH_IRC_NO_ROUND;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_D_TIMINGS)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  FETCH_TIMING_NO_ROUND;
+#else
+  INSTRUCTION_TIME(4);
+#endif
+#endif
+
   areg[PARAM_N]+=m68k_src_l;
   INSTRUCTION_TIME_ROUND(0);
 }
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -4125,8 +5376,15 @@ void                             m68k_adda_l(){
 
 
 void                              m68k_asr_b_to_dM(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
+
   INSTRUCTION_TIME(2+2*m68k_src_w);
   if(m68k_src_w>31)m68k_src_w=31;
   m68k_dest=&(r[PARAM_M]);
@@ -4138,12 +5396,19 @@ void                              m68k_asr_b_to_dM(){
       SR_CLEAR(SR_C+SR_X);
     }
   }
-  PREFETCH_IRC;
   *((signed char*)m68k_dest)>>=m68k_src_w;
   SR_CHECK_Z_AND_N_B;
 }void                             m68k_lsr_b_to_dM(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
+
   INSTRUCTION_TIME(2+2*m68k_src_w);
   if(m68k_src_w>31)m68k_src_w=31;
   m68k_dest=&(r[PARAM_M]);
@@ -4159,16 +5424,22 @@ void                              m68k_asr_b_to_dM(){
       }
     }
   }
-  PREFETCH_IRC;
   *((unsigned char*)m68k_dest)>>=m68k_src_w;
   SR_CHECK_Z_AND_N_B;
 }void                             m68k_roxr_b_to_dM(){ //okay
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
+
   INSTRUCTION_TIME(2+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);if(sr&SR_X)SR_SET(SR_C);
-  PREFETCH_IRC;
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=(sr&SR_X);
     if(m68k_DEST_B&1){
@@ -4180,12 +5451,18 @@ void                              m68k_asr_b_to_dM(){
   }
   SR_CHECK_Z_AND_N_B;
 }void                             m68k_ror_b_to_dM(){  //okay!
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-  PREFETCH_IRC;
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=m68k_DEST_B&1;
     if(old_x){
@@ -4198,13 +5475,19 @@ void                              m68k_asr_b_to_dM(){
   SR_CHECK_Z_AND_N_B;
 }
 void                              m68k_asr_w_to_dM(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   if(m68k_src_w>31)m68k_src_w=31;
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-  PREFETCH_IRC;
   if(m68k_src_w){
     if( m68k_DEST_W&(WORD)( 1<<min(m68k_src_w-1,15) )  ){
       SR_SET(SR_C+SR_X);
@@ -4215,8 +5498,15 @@ void                              m68k_asr_w_to_dM(){
   }
   SR_CHECK_Z_AND_N_W;
 }void                             m68k_lsr_w_to_dM(){  //okay!
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   if(m68k_src_w>31)m68k_src_w=31;
   m68k_dest=&(r[PARAM_M]);
@@ -4232,16 +5522,21 @@ void                              m68k_asr_w_to_dM(){
       }
     }
   }
-  PREFETCH_IRC;
   *((unsigned short*)m68k_dest)>>=m68k_src_w;
   SR_CHECK_Z_AND_N_W;
 }void                             m68k_roxr_w_to_dM(){          //okay
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);if(sr&SR_X)SR_SET(SR_C);
-  PREFETCH_IRC;
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=(sr&SR_X);
     if(m68k_DEST_W&1){
@@ -4253,12 +5548,18 @@ void                              m68k_asr_w_to_dM(){
   }
   SR_CHECK_Z_AND_N_W;
 }void                             m68k_ror_w_to_dM(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-  PREFETCH_IRC;
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=m68k_DEST_W&1;
     if(old_x){
@@ -4271,13 +5572,19 @@ void                              m68k_asr_w_to_dM(){
   SR_CHECK_Z_AND_N_W;
 }
 void                              m68k_asr_l_to_dM(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
   INSTRUCTION_TIME(4+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
 
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-  PREFETCH_IRC;
   if (m68k_src_w){
     // If shift by 31 or more then test MSB as this is copied to the whole long
     if ( m68k_DEST_L & (1 << min(m68k_src_w-1,31)) ){
@@ -4293,8 +5600,15 @@ void                              m68k_asr_l_to_dM(){
   SR_CHECK_Z_AND_N_L;
 }
 void                             m68k_lsr_l_to_dM(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
   INSTRUCTION_TIME(4+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
@@ -4309,17 +5623,22 @@ void                             m68k_lsr_l_to_dM(){
       }
     }
   }
-  PREFETCH_IRC;
   *((unsigned long*)m68k_dest)>>=m68k_src_w;
   if(m68k_src_w>31)m68k_DEST_L=0;
   SR_CHECK_Z_AND_N_L;
 }void                             m68k_roxr_l_to_dM(){   //okay!
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
   INSTRUCTION_TIME(4+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);if(sr&SR_X)SR_SET(SR_C);
-  PREFETCH_IRC;
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=(sr&SR_X);
     if(m68k_DEST_L&1){
@@ -4331,12 +5650,18 @@ void                             m68k_lsr_l_to_dM(){
   }
   SR_CHECK_Z_AND_N_L;
 }void                             m68k_ror_l_to_dM(){   //okay!
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
   INSTRUCTION_TIME(4+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-  PREFETCH_IRC;
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=m68k_DEST_L&1;
     if(old_x){
@@ -4349,8 +5674,15 @@ void                             m68k_lsr_l_to_dM(){
   SR_CHECK_Z_AND_N_L;
 }
 void                              m68k_asl_b_to_dM(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   if (m68k_src_w>31) m68k_src_w=31;
   m68k_dest=&(r[PARAM_M]);
@@ -4374,12 +5706,18 @@ void                              m68k_asl_b_to_dM(){
       SR_SET(SR_V);
     }
   }
-  PREFETCH_IRC;
   *((signed char*)m68k_dest)<<=m68k_src_w;
   SR_CHECK_Z_AND_N_B;
 }void                             m68k_lsl_b_to_dM(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   if(m68k_src_w>31)m68k_src_w=31;
   m68k_dest=&(r[PARAM_M]);
@@ -4392,17 +5730,22 @@ void                              m68k_asl_b_to_dM(){
       }
     }
   }
-  PREFETCH_IRC;
   *((unsigned char*)m68k_dest)<<=m68k_src_w;
   SR_CHECK_Z_AND_N_B;
 }void                             m68k_roxl_b_to_dM(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
 
   INSTRUCTION_TIME(2+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);if(sr&SR_X)SR_SET(SR_C);
-  PREFETCH_IRC;
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=(sr&SR_X);
     if(m68k_DEST_B&MSB_B){
@@ -4414,12 +5757,18 @@ void                              m68k_asl_b_to_dM(){
   }
   SR_CHECK_Z_AND_N_B;
 }void                             m68k_rol_b_to_dM(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-  PREFETCH_IRC;
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=m68k_DEST_B&MSB_B;
     if(old_x){
@@ -4432,8 +5781,15 @@ void                              m68k_asl_b_to_dM(){
   SR_CHECK_Z_AND_N_B;
 }
 void                              m68k_asl_w_to_dM(){       //okay!
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   if(m68k_src_w>31)m68k_src_w=31;
   m68k_dest=&(r[PARAM_M]);
@@ -4454,12 +5810,18 @@ void                              m68k_asl_w_to_dM(){       //okay!
       SR_SET(SR_V);
     }
   }
-  PREFETCH_IRC;
   *((signed short*)m68k_dest)<<=m68k_src_w;
   SR_CHECK_Z_AND_N_W;
 }void                             m68k_lsl_w_to_dM(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   if(m68k_src_w>31)m68k_src_w=31;
   m68k_dest=&(r[PARAM_M]);
@@ -4472,18 +5834,23 @@ void                              m68k_asl_w_to_dM(){       //okay!
       }
     }
   }
-  PREFETCH_IRC;
   *((unsigned short*)m68k_dest)<<=m68k_src_w;
 
   SR_CHECK_Z_AND_N_W;
 }
 void                             m68k_roxl_w_to_dM(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);if(sr&SR_X)SR_SET(SR_C);
-  PREFETCH_IRC;
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=(sr&SR_X);
     if(m68k_DEST_W&MSB_W){
@@ -4495,12 +5862,18 @@ void                             m68k_roxl_w_to_dM(){
   }
   SR_CHECK_Z_AND_N_W;
 }void                             m68k_rol_w_to_dM(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-  PREFETCH_IRC;
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=m68k_DEST_W&MSB_W;
     if(old_x){
@@ -4513,8 +5886,15 @@ void                             m68k_roxl_w_to_dM(){
   SR_CHECK_Z_AND_N_W;
 }
 void                              m68k_asl_l_to_dM(){    //okay!
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
   INSTRUCTION_TIME(4+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
@@ -4534,13 +5914,19 @@ void                              m68k_asl_l_to_dM(){    //okay!
       SR_SET(SR_V);
     }
   }
-  PREFETCH_IRC;
   *((signed long*)m68k_dest)<<=m68k_src_w;
   if(m68k_src_w>31)m68k_DEST_L=0;
   SR_CHECK_Z_AND_N_L;
 }void                             m68k_lsl_l_to_dM(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
   INSTRUCTION_TIME(4+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
@@ -4552,17 +5938,22 @@ void                              m68k_asl_l_to_dM(){    //okay!
       }
     }
   }
-  PREFETCH_IRC;
   *((unsigned long*)m68k_dest)<<=m68k_src_w;
   if(m68k_src_w>31)m68k_DEST_L=0;
   SR_CHECK_Z_AND_N_L;
 }void                             m68k_roxl_l_to_dM(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
   INSTRUCTION_TIME(4+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);if(sr&SR_X)SR_SET(SR_C);
-  PREFETCH_IRC;
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=(sr&SR_X);
     if(m68k_DEST_L&MSB_L){
@@ -4574,12 +5965,18 @@ void                              m68k_asl_l_to_dM(){    //okay!
   }
   SR_CHECK_Z_AND_N_L;
 }void                             m68k_rol_l_to_dM(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
+  PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
   INSTRUCTION_TIME(4+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-  PREFETCH_IRC;
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=m68k_DEST_L&MSB_L;
     if(old_x){
@@ -4592,10 +5989,16 @@ void                              m68k_asl_l_to_dM(){    //okay!
   SR_CHECK_Z_AND_N_L;
 }
 void                              m68k_bit_shift_right_to_mem(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   INSTRUCTION_TIME(4);
   m68k_GET_DEST_W_NOT_A_OR_D;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
   switch(ir&BITS_ba9){
   case BITS_ba9_000:
     SR_CLEAR(SR_N+SR_V+SR_Z+SR_C+SR_X);
@@ -4643,10 +6046,16 @@ void                              m68k_bit_shift_right_to_mem(){
   }
 }
 void                              m68k_bit_shift_left_to_mem(){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
+#endif
+
   INSTRUCTION_TIME(4);
   m68k_GET_DEST_W_NOT_A_OR_D;
   PREFETCH_IRC;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_E_TIMINGS)
+  FETCH_TIMING;
+#endif
   switch(ir&BITS_ba9){
   case BITS_ba9_000: //asl
     SR_CLEAR(SR_N+SR_V+SR_Z+SR_C+SR_X);
@@ -4720,7 +6129,7 @@ extern "C" void m68k_0000(){ //immediate stuff
 
 // Note the INSTRUCTION_TIME were commented out by Steem authors, and
 // the other comments are theirs too. We define our versions of the MOVE
-// instructions in SSECpu.cpp.
+// instructions in SSEM68000.cpp.
 
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_MOVE_B)
 void m68k_0001();
@@ -4971,50 +6380,104 @@ extern "C" void m68k_0101(){
   m68k_jump_line_5[(ir&BITS_876)>>6]();
 }
 
+//SS line6
+
 extern "C" void m68k_0110(){  //Bcc + BSR
   if (LOBYTE(ir)){
     // 8-bit displacement
     MEM_ADDRESS new_pc=(pc+(signed long)((signed char)LOBYTE(ir))) | pc_high_byte;
     if ((ir & 0xf00)==0x100){ //BSR
 #if defined(SS_CPU_PREFETCH)
-      Cpu.PrefetchClass=2;
+      M68000.PrefetchClass=2;
 #endif
       m68k_PUSH_L(PC32);
       m68k_READ_W(new_pc); // Check for bus/address errors
+
+#if (defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING))
+      INSTRUCTION_TIME(18-4);
+#endif
       SET_PC(new_pc);
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+      FETCH_TIMING;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH_TIMING_SET_PC)
+    INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+#endif
+#else
       INSTRUCTION_TIME_ROUND(18); // round for fetch
+#endif
     }else{ // Bcc
       if (m68k_CONDITION_TEST){ // branch taken
-//////////////////////        if(new_pc&1) m68k_unrecognised();
         m68k_READ_W(new_pc); // Check for bus/address errors
+#if (defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING))
+        INSTRUCTION_TIME(10-4); // DSOS Lots of scrollers
+#endif
         SET_PC(new_pc);
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING))
         INSTRUCTION_TIME_ROUND(10); // round for fetch
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+        FETCH_TIMING;
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH_TIMING_SET_PC)
+    INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+#endif
       }else{ // branch not taken
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+        INSTRUCTION_TIME(8-4);    
+        FETCH_TIMING;
+#else
         INSTRUCTION_TIME_ROUND(8); // round for fetch
+#endif
         PREFETCH_IRC;
       }
     }
   }else{
     if ((ir & 0xf00)==0x100){ //BSR.L  //.W
 #if defined(SS_CPU_PREFETCH)
-      Cpu.PrefetchClass=2;
+      M68000.PrefetchClass=2;
 #endif
       m68k_PUSH_L(PC32+2);
       MEM_ADDRESS new_pc=(pc+(signed long)((signed short)m68k_fetchW())) | pc_high_byte;
       // stacked pc is always instruction pc+2 due to prefetch (pc doesn't increase before new_pc is read)
       m68k_READ_W(new_pc); // Check for bus/address errors
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+      INSTRUCTION_TIME(18-4);    
+#endif
       SET_PC(new_pc);      
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+      FETCH_TIMING;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH_TIMING_SET_PC)
+      INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+#endif
+#else
       INSTRUCTION_TIME_ROUND(18); // round for fetch
+#endif
     }else{ // Bcc.l // .W
       MEM_ADDRESS new_pc=(pc+(signed long)((signed short)m68k_fetchW())) | pc_high_byte;
       if (m68k_CONDITION_TEST){
         // stacked pc is always instruction pc+2 due to prefetch (pc doesn't increase before new_pc is read)
         m68k_READ_W(new_pc); // Check for bus/address errors
+#if (defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING))
+        INSTRUCTION_TIME(10-4);
+#endif
         SET_PC(new_pc);
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING))
         INSTRUCTION_TIME_ROUND(10); // round for fetch
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+        FETCH_TIMING;
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH_TIMING_SET_PC)
+        INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+#endif
       }else{
         pc+=2;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+        INSTRUCTION_TIME(12-4);    
+        FETCH_TIMING;
+#else
         INSTRUCTION_TIME_ROUND(12); // round for fetch
+#endif
         PREFETCH_IRC;
       }
     }
@@ -5026,14 +6489,19 @@ extern "C" void m68k_0111(){  //moveq
     m68k_unrecognised();
   }else{
 #if defined(SS_CPU_PREFETCH)
-    Cpu.PrefetchClass=1;
+    M68000.PrefetchClass=1;
 #endif
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_7_TIMINGS))
     FETCH_TIMING;
+#endif
     m68k_dest=&(r[PARAM_N]);
     m68k_DEST_L=(signed long)((signed char)LOBYTE(ir));
+#if (defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_7_TIMINGS))
+    FETCH_TIMING;
+#endif
+    PREFETCH_IRC;
     SR_CLEAR(SR_Z+SR_N+SR_C+SR_V);
     SR_CHECK_Z_AND_N_L;
-    PREFETCH_IRC;
   }
 }
 
@@ -5048,11 +6516,19 @@ extern "C" void m68k_1001(){ //sub
 extern "C" void m68k_1010() //line-a
 {
   pc-=2;  //pc not incremented for illegal instruction
-
+//  BRK(lineA);
 //  log_write("CPU sees line-a instruction");
 //  intercept_line_a();
   INSTRUCTION_TIME_ROUND(0);  // Round first for interrupts
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  INSTRUCTION_TIME_ROUND(34-4);
+  FETCH_TIMING;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH_TIMING_SET_PC)
+  INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+#endif
+#else
   INSTRUCTION_TIME_ROUND(34);
+#endif
   m68k_interrupt(LPEEK(BOMBS_LINE_A*4));
   m68k_do_trace_exception=0;
   debug_check_break_on_irq(BREAK_IRQ_LINEA_IDX);
@@ -5075,11 +6551,6 @@ extern "C" void m68k_1110(){  //bit shift
 }
 
 extern "C" void m68k_1111(){  //line-f emulator
-/*  SS this is called a lot by TOS, and it seems it doesn't exit with an
-    RTE, which messes the interrupt_depth counter
-    Like this, still not OK like there are some RTEs...
-*/
-//#if defined(STEVEN_SEAGAL) && defined(SS_CPU) && defined(SS_DEBUG)
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_F)
   interrupt_depth--; // compensate
   on_rte=ON_RTE_LINE_F;
@@ -5094,8 +6565,15 @@ extern "C" void m68k_1111(){  //line-f emulator
 #endif
 
   INSTRUCTION_TIME_ROUND(0);  // Round first for interrupts
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+  INSTRUCTION_TIME_ROUND(34-4);
+  FETCH_TIMING;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH_TIMING_SET_PC)
+  INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+#endif
+#else
   INSTRUCTION_TIME_ROUND(34);
-//TRACE("Line F %X\n",LPEEK(BOMBS_LINE_F*4));
+#endif
   m68k_interrupt(LPEEK(BOMBS_LINE_F*4));
   m68k_do_trace_exception=0;
 
@@ -5105,6 +6583,6 @@ extern "C" void m68k_1111(){  //line-f emulator
 
 #include "cpuinit.cpp"	
 
-#if defined(SS_CPU)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU)
 #include "SSE/SSECpu.cpp"
 #endif

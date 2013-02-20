@@ -685,7 +685,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #endif
 #if defined(SS_IKBD_6301)
     HD6301EMU_ON=pCSF->GetInt("Options","HD6301Emu",HD6301EMU_ON);
-    if(!HD6301.Initialised)
+    if(!HD6301_OK)
       HD6301EMU_ON=0;
 #endif
 #if defined(SS_VAR_STEALTH) 

@@ -51,7 +51,7 @@ Practically on the ST, the request is placed by clearing the bit in the GPIP.
   if (cur_val==set_mask) return; //no change
   //SS detects if we're setting an IRQ
   bool old_1_to_0_detector_input=(cur_val ^ (mfp_reg[MFPR_AER] & mask))==mask;
-  ASSERT( old_1_to_0_detector_input || set );
+//  ASSERT( old_1_to_0_detector_input || set );
   mfp_reg[MFPR_GPIP]&=BYTE(~mask); //SS zero the target bit, leaving others
   mfp_reg[MFPR_GPIP]|=set_mask; //SS set target bit if needed
   // If the DDR bit is low then the bit from the io line is used,
@@ -489,7 +489,19 @@ void mfp_interrupt(int irq,int when_fired)
             vector*=4;
             mfp_time_of_start_of_last_interrupt[irq]=ABSOLUTE_CPU_TIME;
 #if defined(STEVEN_SEAGAL) && defined(SS_INT_MFP)
+#if defined(SS_CPU_FETCH_TIMING)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+            INSTRUCTION_TIME_ROUND(SS_INT_MFP_TIMING-4);
+            FETCH_TIMING;
+#if defined(SS_CPU_PREFETCH_TIMING_SET_PC)
+    INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+#endif
+#else
+            INSTRUCTION_TIME_ROUND(34);
+#endif
+#else
             INSTRUCTION_TIME_ROUND(SS_INT_MFP_TIMING); // same
+#endif
 #else
             INSTRUCTION_TIME_ROUND(56);
 #endif

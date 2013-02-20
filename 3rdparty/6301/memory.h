@@ -67,7 +67,7 @@ mem_getb (addr)
     {
 #if !defined(NDEBUG)
     if(reg_getpc()!=0xB5) // Froggies (changes nothing)
-      printf("NOTE PX %X reading WO register %X\n",reg_getpc(),addr);
+      TRACE("NOTE PX %X reading WO register %X\n",reg_getpc(),addr);
 #endif
       return 0xFF; // as in HD6301V1 doc
 #endif
@@ -121,7 +121,7 @@ mem_putb (addr, value)
     if(offs==RDR||offs==FRC||offs==ICR)
     {
 #if !defined(NDEBUG)
-      printf("NOTE PX %X writing %X on RO register %X\n",reg_getpc(),addr, value);
+      TRACE("NOTE PX %X writing %X on RO register %X\n",reg_getpc(),addr, value);
 #endif
       return;
     }

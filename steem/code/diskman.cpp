@@ -18,9 +18,7 @@ as changing disk images and determining what files are disks.
 char window_caption[]=SS_DISK_MANAGER_PASTI_ON; // and a nice global
 #endif
 
-// SS: it's mixed win32/unix
-
-#define LOGSECTION LOGSECTION_IMAGE_INFO
+#define LOGSECTION LOGSECTION_IMAGE_INFO//SS
 
 //---------------------------------------------------------------------------
 bool ExtensionIsPastiDisk(char *Ext)
@@ -59,7 +57,7 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
     ret=DISK_COMPRESSED;
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
-  }else if(hUnrar&&MatchesAnyString_I(Ext,"RAR",NULL)){
+  }else if(UNRAR_OK&&MatchesAnyString_I(Ext,"RAR",NULL)){
     ret=DISK_COMPRESSED;
 #endif
 
@@ -132,9 +130,19 @@ void TDiskManager::PerformInsertAction(int Action,EasyStr Name,EasyStr Path,Easy
 //---------------------------------------------------------------------------
 void TDiskManager::SetNumFloppies(int NewNum)
 {
+  ASSERT( num_connected_floppies==1 || num_connected_floppies==2 );
+  ASSERT( NewNum==1 || NewNum==2 );
   num_connected_floppies=NewNum;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF) //TODO
+#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
+
+  if(Caps.IsIpf(1)) // there's an IPF disk in drive B
+  {
+    if(NewNum==1) // deactivated
+      Caps.SF314[1].diskattr&=~CAPSDRIVE_DA_IN;
+    else // active
+      Caps.SF314[1].diskattr|=CAPSDRIVE_DA_IN;
+  } // maybe there's more to do for TOS
   Caps.WD1772.drivecnt/*max*/=NewNum; // or drivecnt?
 #endif
 

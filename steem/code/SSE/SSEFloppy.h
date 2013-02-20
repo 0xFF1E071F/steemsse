@@ -123,18 +123,16 @@ extern TWD1772 WD1772;
 #if defined(SS_IPF)
 /* Support for IPF file format using the WD1772 emulator included in 
    CAPSimg.dll (Caps library).
-   We also extended "CapsPlug" in the third party folder because it had nothing
-   to interface with the WD1772 emulation.
+
+   All calls to the DLL functions are encapsulated here, but there are some
+   direct access to CapsFdc variables.
    DMA transfers aren't handled by this emulator, contrary to Pasti, so we 
    use the existing Steem system, improved.
    Part of the difficulty is to know which variables of the DLL we need to 
    update. For example, when we insert a disk image, 'diskattr' of the 
    CapsDrive structure must be ored with CAPSDRIVE_DA_IN, or the emulator will 
    not work at all. It got me stuck for a long time.
-   All calls to the DLL are encapsulated in CapsPlug.cpp, all calls to CapsPlug
-   functions are encapsulated here, but there are some direct access to CapsFdc
-   variables.
-   In the current version (3.5.0), most IPF images should run.
+   In version 3.5.0, most IPF images should run.
    Known cases: Sundog needs write support, Blood Money not sure if it's a disk
    problem.
    It's perfectly possible to give write support in Steem, but it would be 
@@ -146,8 +144,8 @@ extern TWD1772 WD1772;
 
 #include <caps/Comtype.h>
 #include <caps/CapsAPI.h>
-#include <caps/CapsPlug.h>
 #include <caps/CapsFDC.h>
+#include<caps/CapsLib.h>
 
 // our interface with CAPSimg.dll, C++ style (RAII)
 struct TCaps {  

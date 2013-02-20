@@ -17,6 +17,8 @@ and (for some reason) command-line options.
 #include "SSE/SSE6301.h"
 #endif
 
+
+
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
 
 extern int draw_last_scanline_for_border,res_vertical_scale; // forward
@@ -290,16 +292,7 @@ void LoadAllIcons(ConfigStoreFile *NOT_ONEGAME( pCSF ),bool NOT_ONEGAME( FirstCa
     if (size){
       if (UseDefault==0) File=pCSF->GetStr("Icons",Str("Icon")+n,"");
       if (File.NotEmpty()) hGUIIcon[n]=(HICON)LoadImage(Inst,File,IMAGE_ICON,size,size,LR_LOADFROMFILE);
-   //   else TRACE("file empty for icon %d\n",n);
-      //ASSERT(n!=74);
-      //TRACE("n %d size %d\n",n,size);
       if (hGUIIcon[n]==NULL) hGUIIcon[n]=(HICON)LoadImage(Inst,RCNUM(n),IMAGE_ICON,size,size,0);
-if(!hGUIIcon[n])
-{
-  ////char ssss[80];
-  ///RCNUM(n);
-  TRACE("Failed to load icon %d %d\n",n,RCNUM(n));
-}
       if (load16too){
         if (File.NotEmpty()) hGUIIconSmall[n]=(HICON)LoadImage(Inst,File,IMAGE_ICON,16,16,LR_LOADFROMFILE);
         if (hGUIIconSmall[n]==NULL) hGUIIconSmall[n]=(HICON)LoadImage(Inst,RCNUM(n),IMAGE_ICON,16,16,0);
@@ -1051,7 +1044,7 @@ char *FSTypes(int Type,...)
     strcpy(tp,";*.rar");tp+=strlen(tp);
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
-    if(hUnrar)
+    if(UNRAR_OK)
       strcpy(tp,";*.rar");tp+=strlen(tp);
 #endif
 #if USE_PASTI
@@ -1189,8 +1182,6 @@ void ShowAllDialogs(bool Show)
 //---------------------------------------------------------------------------
 void HandleKeyPress(UINT VKCode,bool Up,int Extended)
 {
-//  ASSERT(scan_y<0);
-  //if(scan_y>0) TRACE("key at y%d\n",scan_y);
   if (disable_input_vbl_count) return;
   if (ikbd_keys_disabled()) return; //in duration mode
   if (macro_play_has_keys) return;
@@ -1221,7 +1212,9 @@ void HandleKeyPress(UINT VKCode,bool Up,int Extended)
     if(HD6301EMU_ON)
     { 
 #if defined(SS_IKBD_6301_TRACE_KEYS)
-      printf("ACT %d Key %X is %s\n",ABSOLUTE_CPU_TIME,STCode,Up?"up":"down");
+#define LOGSECTION LOGSECTION_IKBD
+      TRACE_LOG("ACT %d Key %X is %s\n",ABSOLUTE_CPU_TIME,STCode,Up?"up":"down");
+#undef LOGSECTION
 #endif
       // we don't write in a buffer, 6301 emu will do it
     }
@@ -1249,7 +1242,6 @@ void HandleKeyPress(UINT VKCode,bool Up,int Extended)
 //---------------------------------------------------------------------------
 void SetStemMouseMode(int NewMM)
 {
-  //TRACE("SetStemMouseMode(%d)\n",NewMM);
   static POINT OldMousePos={-1,0};
 //  if (NewMM==stem_mousemode) return;
 

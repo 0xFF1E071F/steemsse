@@ -33,7 +33,7 @@
 #define TRICK_4BIT_SCROLL 0x20
 #define TRICK_OVERSCAN_MED_RES 0x40 //?
 #define TRICK_BLACK_LINE 0x80	
-#define TRICK_VERTICAL_OVERSCAN 0x100 // for both top & bottom
+#define TRICK_VERTICAL_OVERSCAN 0x100 // for both top & bottom (TODO)
 #define TRICK_LINE_PLUS_20 0x200	
 #define TRICK_0BYTE_LINE 0x400	
 #define TRICK_STABILISER 0x800
@@ -815,7 +815,6 @@ FF825E
     if(STpal[n]!=NewPal)
     {
       int CyclesIn=LINECYCLES;
-
 #if defined(SHIFTER_PREFETCH_LATENCY)
       if(draw_lock && CyclesIn>SHIFTER_PREFETCH_LATENCY+SHIFTER_RASTER_PREFETCH_TIMING)
 #else
@@ -917,6 +916,7 @@ inline int TShifter::FreqChangeAtCycle(int cycle) {
   return rv;
 }
 
+
 inline int TShifter::ShiftModeChangeAtCycle(int cycle) {
   // if there was a change at this cycle, return it, otherwise -1
   int t=cycle+LINECYCLE0; // convert to absolute
@@ -929,8 +929,50 @@ inline int TShifter::ShiftModeChangeAtCycle(int cycle) {
   int rv=(j<32 && !(shifter_shift_mode_change_time[i]-t))
     ?shifter_shift_mode_change[i]:-1;
   return rv;
-}
 
+}
+#if removethis
+
+buggy!
+  C472 STE +20? 4:-1 -8(504):0 -4(508):2
+  8) time -19900 R0 9) time -8 R2 10) time 4 R0 11) time -27136
+
+
+
+inline int TShifter::ShiftModeChangeAtCycle(int cycle) {
+  // if there was a change at this cycle, return it, otherwise -1
+  int t=cycle+LINECYCLE0; // convert to absolute
+  // look for t in shifter_shift_mode_change_time[]
+  int i,j; // i is the index, j a counter max 31
+
+
+  for(i=shifter_shift_mode_change_idx,j=0;
+  j<32 && shifter_shift_mode_change_time[i]-t!=0;
+  j++,i--,i&=31);
+
+
+  
+  int rv=(j<32 && !(shifter_shift_mode_change_time[i]-t))
+    ?shifter_shift_mode_change[i]:-1;
+
+
+
+/*
+  for(j=-1,i=0;i<32;i++)
+    if(!(shifter_shift_mode_change_time[i]-t))
+    {
+      j=shifter_shift_mode_change[i];
+      break;
+    }
+
+if(FRAME>4)  ASSERT(j==rv);
+*/
+
+
+
+  return rv;
+}
+#endif
 
 inline int TShifter::FreqChangeIdx(int cycle) {
   // give the idx of freq change at this cycle, if any
@@ -1167,7 +1209,7 @@ inline int TShifter::CycleOfLastChangeToShiftMode(int value) {
 
 #if defined(SS_SHIFTER_SDP_READ)
 
-inline MEM_ADDRESS TShifter::ReadSDP(int cycles_since_hbl,int dispatcher) {
+inline MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
   if (bad_drawing){
     // Fake SDP
 #if defined(SS_SHIFTER_SDP_TRACE)
@@ -1177,12 +1219,11 @@ inline MEM_ADDRESS TShifter::ReadSDP(int cycles_since_hbl,int dispatcher) {
       return xbios2;
     }else if (scan_y<shifter_y){
       int line_len=(160/res_vertical_scale);
-      return xbios2 + scan_y*line_len + min(cycles_since_hbl/2,line_len) & ~1;
+      return xbios2 + scan_y*line_len + min(CyclesIn/2,line_len) & ~1;
     }else{
       return xbios2+32000;
     }
   }
-
   CheckSideOverscan();
   MEM_ADDRESS sdp; // return value
   if(FetchingLine())
@@ -1193,6 +1234,96 @@ inline MEM_ADDRESS TShifter::ReadSDP(int cycles_since_hbl,int dispatcher) {
     int bytes_ahead=(shifter_hscroll_extra_fetch) 
       ?(SHIFTER_RASTER_PREFETCH_TIMING/2)*2:(SHIFTER_RASTER_PREFETCH_TIMING/2);
     int starts_counting=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN/2 - bytes_ahead;
+/*
+    84/2-8 = 34
+    In Hatari, they start at 56 + 12 = 68, /2 = 34
+    In both cases we use kind of magic values.
+    The same results from Hatari because their CPU timing at time of read is 
+    wrong like in Steem.
+
+    Hack-approach necessary while we're fixing instruction timings, but
+    this is the right ST value.
+
+    TODO: modify CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN
+    Before that, we keep this big debug block (normally only 
+    SS_CPU_PREFETCH_TIMING will be defined).
+*/
+#if defined(SS_CPU_PREFETCH_TIMING)
+  starts_counting-=2;
+#else
+  if(0);
+#if defined(SS_CPU_LINE_0_TIMINGS)
+  else if( (ir&0xF000)==0x0000)
+    starts_counting-=2;
+#endif
+#if defined(SS_CPU_MOVE_B_TIMINGS)
+  else if( (ir&0xF000)==0x1000)
+    starts_counting-=2;
+#endif
+#if defined(SS_CPU_MOVE_L_TIMINGS)
+  else if( (ir&0xF000)==0x2000) 
+    starts_counting-=2;
+#endif
+#if defined(SS_CPU_MOVE_W_TIMINGS)
+  else if( (ir&0xF000)==0x3000) 
+    starts_counting-=2;
+#endif
+#if defined(SS_CPU_LINE_4_TIMINGS)
+  else if( (ir&0xF000)==0x4000) 
+    starts_counting-=2;
+#endif
+#if defined(SS_CPU_LINE_5_TIMINGS)
+  else if( (ir&0xF000)==0x5000) 
+    starts_counting-=2;
+#endif
+#if defined(SS_CPU_LINE_8_TIMINGS)
+  else if( (ir&0xF000)==0x8000) 
+    starts_counting-=2;
+#endif
+#if defined(SS_CPU_LINE_9_TIMINGS)
+  else if( (ir&0xF000)==0x9000)
+    starts_counting-=2;
+#endif
+#if defined(SS_CPU_LINE_B_TIMINGS)
+  else if( (ir&0xF000)==0xB000) // CMP & EOR
+    starts_counting-=2;
+#endif
+#if defined(SS_CPU_LINE_C_TIMINGS)
+  else if( (ir&0xF000)==0xC000) // (+ ABCD, EXG, MUL, line C)
+    starts_counting-=2;
+#endif
+#if defined(SS_CPU_LINE_D_TIMINGS)
+  else if( (ir&0xF000)==0xD000) // (+ ABCD, EXG, MUL, line C)
+    starts_counting-=2;
+#endif
+#if defined(SS_CPU_LINE_E_TIMINGS)
+  else if( (ir&0xF000)==0xE000) 
+    starts_counting-=2;
+#endif
+#if defined(SS_DEBUG_TRACE_SDP_READ_IR)
+  else 
+  {
+    if(ir!=debug1)
+    {
+#if defined(DEBUG_BUILD)
+      EasyStr instr=disa_d2(old_pc);
+      TRACE("Read SDP ir %x Disa %s\n",ir,instr.c_str());
+#else
+      TRACE("Read SDP ir %4X\n",ir);
+#endif    
+      debug1=ir;
+    }
+  }
+#endif
+#endif
+// 0308 B010 01CE
+/*
+Read SDP ir 308 Disa movep.w $fffc(a0),d1 DSOS menu
+Read SDP ir d238 Disa add.b $8207.W,d1 DSOS TLB
+Read SDP ir d038 Disa add.b $8209.W,d0
+*/
+
+//note high res?
     if(!left_border)
       starts_counting-=26;
 
@@ -1203,7 +1334,7 @@ inline MEM_ADDRESS TShifter::ReadSDP(int cycles_since_hbl,int dispatcher) {
       starts_counting+=2; //fixes Swedish New Year Demo/TCB
 #endif
 
-    int c=cycles_since_hbl/2-starts_counting;
+    int c=CyclesIn/2-starts_counting;
     sdp=shifter_draw_pointer_at_start_of_line;
     if (c>=bytes_to_count)
       sdp+=bytes_to_count+(shifter_fetch_extra_words*2);
@@ -1215,11 +1346,11 @@ inline MEM_ADDRESS TShifter::ReadSDP(int cycles_since_hbl,int dispatcher) {
 #if defined(SS_SHIFTER_SDP_TRACE3) // compare with Steem (can't be 100%)
     if(sdp>shifter_draw_pointer_at_start_of_line)
     {
-      MEM_ADDRESS sdpdbg=get_shifter_draw_pointer(cycles_since_hbl);
+      MEM_ADDRESS sdpdbg=get_shifter_draw_pointer(CyclesIn);
       if(sdpdbg!=sdp)
       {
-        TRACE("SDP 0 %X %d %X (+%d) Steem 3.2 %X (+%d)\n",shifter_draw_pointer_at_start_of_line,cycles_since_hbl,sdp,sdp-shifter_draw_pointer_at_start_of_line,sdpdbg,sdpdbg-shifter_draw_pointer_at_start_of_line);
-        MEM_ADDRESS sdpdbg=get_shifter_draw_pointer(cycles_since_hbl); // rego...
+        TRACE("SDP 0 %X %d %X (+%d) Steem 3.2 %X (+%d)\n",shifter_draw_pointer_at_start_of_line,CyclesIn,sdp,sdp-shifter_draw_pointer_at_start_of_line,sdpdbg,sdpdbg-shifter_draw_pointer_at_start_of_line);
+        MEM_ADDRESS sdpdbg=get_shifter_draw_pointer(CyclesIn); // rego...
       }
     }
 #endif
@@ -1227,10 +1358,12 @@ inline MEM_ADDRESS TShifter::ReadSDP(int cycles_since_hbl,int dispatcher) {
   else // lines witout fetching (before or after frame)
     sdp=shifter_draw_pointer;
 
-#if defined(SS_SHIFTER_SDP_TRACE2)
-  TRACE("Read SDP F%d y%d c%d SDP %X (%d - %d) sdp %X\n",FRAME,scan_y,cycles_since_hbl,sdp,sdp-shifter_draw_pointer_at_start_of_line,CurrentScanline.Bytes,shifter_draw_pointer);
-#endif
-
+//#if defined(SS_SHIFTER_SDP_TRACE2)
+//  if(scan_y==-29) TRACE("Read SDP F%d y%d c%d SDP %X (%d - %d) sdp %X\n",FRAME,scan_y,CyclesIn,sdp,sdp-shifter_draw_pointer_at_start_of_line,CurrentScanline.Bytes,shifter_draw_pointer);
+//#endif
+  int nbytes=sdp-shifter_draw_pointer_at_start_of_line;
+//ASSERT( nbytes!= 224); 
+  ///if(nbytes==224)     nbytes=204;
   return sdp;
 }
 
@@ -1450,7 +1583,9 @@ int TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
   // update shifter_draw_pointer_at_start_of_line or ReadSDP returns garbage
   shifter_draw_pointer_at_start_of_line-=shifter_draw_pointer; //sdp_real
   shifter_draw_pointer_at_start_of_line+=nsdp;
-  shifter_draw_pointer=nsdp;
+  shifter_draw_pointer=nsdp
+    
+    ;
 
 #if defined(SS_SHIFTER_SDP_WRITE_MIDDLE_BYTE)
   // hack, record middle byte, programmer couldn't intend it to change

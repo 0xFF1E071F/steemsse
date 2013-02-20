@@ -129,7 +129,7 @@ void draw_begin()
   }
 #endif
 
-#ifdef SSDEBUG_BUILD
+#ifdef DEBUG_BUILD
   if (debug_cycle_colours){
     debug_cycle_colours--;
     if (debug_cycle_colours==0){
@@ -334,12 +334,14 @@ void draw_end()
   if (draw_osd) osd_draw();
 #endif
 
-#ifdef DEBUG_BUILD
-#if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)
+#ifdef DEBUG_BUILD //SS? TODO
+
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
   Shifter.DrawBufferedScanlineToVideo(); 
 #else
   DRAW_BUFFERED_SCANLINE_TO_VIDEO
 #endif
+
 #endif
 
   Disp.Unlock();
@@ -361,7 +363,7 @@ void draw_end()
 
 #define LOGSECTION LOGSECTION_VIDEO
 
-#if !defined(STEVEN_SEAGAL) || !defined(SS_VIDEO) || defined(SS_DEBUG) 
+#if !defined(STEVEN_SEAGAL) || !defined(SS_SHIFTER) || defined(SS_DEBUG) 
 // normally nuked by the linker anyway
 
 //---------------------------------------------------------------------------
@@ -400,17 +402,6 @@ void draw_check_border_removal()
           shifter_draw_pointer+=8;
           if (shifter_freq_at_start_of_vbl==50) overscan_add_extra+=OVERSCAN_ADD_EXTRA_FOR_LEFT_BORDER_REMOVAL;
           left_border=0;
-/*
-          if(scan_y==5)
-          {TRACE("left off idx %d i %d R2 %d now %d\n",shifter_freq_change_idx,i,shifter_freq_change_time[i]-cpu_timer_at_start_of_hbl,ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
-          int j;
-          for (j=0;j<32;j++)
-            TRACE("%d %d %d ",j,shifter_freq_change_time[j]-cpu_timer_at_start_of_hbl,shifter_freq_change[j]);
-          TRACE("\n");
-
-
-          }
-*/
 /*
           int fetches_in_mono=((shifter_freq_change_time[(i+1) & 31]-cpu_timer_at_start_of_hbl-8)/4) % 4;
           shifter_draw_pointer+=fetches_in_mono*2;
@@ -867,7 +858,6 @@ void draw(bool osd)
 {
   // SS: this is called by init, load... not for actual emulation
   // It draws the screen in one time
-  //TRACE("draw full screen...\n");
   int save_scan_y=scan_y;
   MEM_ADDRESS save_sdp=shifter_draw_pointer;
   MEM_ADDRESS save_sdp_at_start_of_line=shifter_draw_pointer_at_start_of_line;

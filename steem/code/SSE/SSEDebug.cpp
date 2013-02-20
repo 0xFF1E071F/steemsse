@@ -2,57 +2,63 @@
 
 #if defined(SS_DEBUG) 
 
-#include <stdio.h>
-#include <stdarg.h>
+int debug0,debug1,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9;
 
-int debug0=0,debug1=0,debug2=0,debug3=0,debug4=0,
-  debug5=0,debug6=0,debug7=0,debug8=0,debug9=0;
+#ifdef SS_IKBD
+extern "C" void (_stdcall *hd6301_trace)(char *fmt, ...);
+#endif
 
 TDebug Debug; // singleton
 
-bool logsection_enabled_b[100];
-
-char trace_buffer[1024]; // permanent rather that on the stack
-
 TDebug::TDebug() {
 
-  ZeroMemory(logsection_enabled_b,100*sizeof(bool)); // 100> our need
-  // compile time wanted traces (overrides boiler if present)
-  logsection_enabled_b[ LOGSECTION_ALWAYS ] = 1;
-  logsection_enabled_b[ LOGSECTION_FDC ] = 0;
-  logsection_enabled_b[ LOGSECTION_IO ] = 0;
-  logsection_enabled_b[ LOGSECTION_MFP_TIMERS ] = 0;
-  logsection_enabled_b[ LOGSECTION_INIT ] = 0;
-  logsection_enabled_b[ LOGSECTION_CRASH ] = 0;
-  logsection_enabled_b[ LOGSECTION_STEMDOS ] = 0;
-  logsection_enabled_b[ LOGSECTION_IKBD ] = 0;
-  logsection_enabled_b[ LOGSECTION_AGENDA ] = 0;
-  logsection_enabled_b[ LOGSECTION_INTERRUPTS ] = 0;
-  logsection_enabled_b[ LOGSECTION_TRAP ] = 0;
-  logsection_enabled_b[ LOGSECTION_SOUND ] = 0;
-  logsection_enabled_b[ LOGSECTION_VIDEO ] = 0;
-  logsection_enabled_b[ LOGSECTION_BLITTER ] = 0;
-  logsection_enabled_b[ LOGSECTION_MIDI ] = 0;
-  logsection_enabled_b[ LOGSECTION_TRACE ] = 0;
-  logsection_enabled_b[ LOGSECTION_SHUTDOWN ] = 0;
-  logsection_enabled_b[ LOGSECTION_SPEEDLIMIT ] = 0;
-  logsection_enabled_b[ LOGSECTION_CPU ] = 0;
-  logsection_enabled_b[ LOGSECTION_INIFILE ] = 0;
-  logsection_enabled_b[ LOGSECTION_GUI ] = 0;
-  logsection_enabled_b[ LOGSECTION_DIV ] = 0;
-  logsection_enabled_b[ LOGSECTION_PASTI ] = 0;
-  // TODO more options in boiler?
-  logsection_enabled_b[ LOGSECTION_FDC_BYTES ] = 0;
-  logsection_enabled_b[ LOGSECTION_IPF_LOCK_INFO ] = 0;
-  logsection_enabled_b[ LOGSECTION_IMAGE_INFO ] = 1;
+  ZeroMemory(&debug0,10*sizeof(int));  
+
+#if defined(SS_DEBUG_LOG_OPTIONS)
+  //  We must init those variables for the builds without the boiler
+  ZeroMemory(logsection_enabled,100*sizeof(bool)); // 100> our need
+  logsection_enabled[ LOGSECTION_ALWAYS ] = 1;
+  logsection_enabled[ LOGSECTION_FDC ] = 0;
+  logsection_enabled[ LOGSECTION_IO ] = 0;
+  logsection_enabled[ LOGSECTION_MFP_TIMERS ] = 0;
+  logsection_enabled[ LOGSECTION_INIT ] =0;
+  logsection_enabled[ LOGSECTION_CRASH ] = 0;
+  logsection_enabled[ LOGSECTION_STEMDOS ] = 0;
+  logsection_enabled[ LOGSECTION_IKBD ] = 0;
+  logsection_enabled[ LOGSECTION_AGENDA ] = 0;
+  logsection_enabled[ LOGSECTION_INTERRUPTS ] = 0;
+  logsection_enabled[ LOGSECTION_TRAP ] = 0;
+  logsection_enabled[ LOGSECTION_SOUND ] = 0;
+  logsection_enabled[ LOGSECTION_VIDEO ] = 0;
+  logsection_enabled[ LOGSECTION_BLITTER ] = 0;
+  logsection_enabled[ LOGSECTION_MIDI ] = 0;
+  logsection_enabled[ LOGSECTION_TRACE ] = 0;
+  logsection_enabled[ LOGSECTION_SHUTDOWN ] = 0;
+  logsection_enabled[ LOGSECTION_SPEEDLIMIT ] = 0;
+  logsection_enabled[ LOGSECTION_CPU ] = 0;
+  logsection_enabled[ LOGSECTION_INIFILE ] = 0;
+  logsection_enabled[ LOGSECTION_GUI ] = 0;
+  // no PASTI, no DIV
+// additions
+  logsection_enabled[ LOGSECTION_FDC_BYTES ] = 0;
+  logsection_enabled[ LOGSECTION_IPF_LOCK_INFO ] = 0;
+  logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 0;
+  logsection_enabled[ LOGSECTION_OPTIONS ] = 1; // no boiler control
+#endif
 
 #if defined(SS_DEBUG_TRACE_FILE)
-  ReportBreakpoints=TRUE; // disabled when clicking cancel in the box
+  IgnoreErrors=0; 
   nTrace=0; // trace counter
-  trace_file_pointer=fopen(SS_TRACE_FILE_NAME,"w"); // only one file name...
+  trace_file_pointer=freopen(SS_TRACE_FILE_NAME, "w", stdout );
   ASSERT(trace_file_pointer);
   TRACE("This is a Steem SSE TRACE file\n");
 #endif
+
+#ifdef SS_IKBD
+  hd6301_trace=&TDebug::TraceLog;
+#endif
+//  hd6301_trace=(void (__stdcall *)()) &TDebug::Trace;
+
 }
 
 
@@ -66,23 +72,75 @@ TDebug::~TDebug() {
 #endif
 }
 
-#if defined(SS_DEBUG_TRACE_FILE)
 
-void TDebug::TraceToFile(char *fmt, ...){ 
-  if(USE_TRACE_FILE && trace_file_pointer)  
+
+#if defined(SS_DEBUG_TRACE)
+//note: #define TRACE Debug.Trace
+
+#include <stdio.h>
+#include <stdarg.h>
+#if defined(SS_DEBUG_TRACE_IDE) && defined(WIN32)
+#include <windows.h>
+#endif
+
+void TDebug::Trace(char *fmt, ...){ 
+  // Our TRACE facility has no MFC dependency.
+  va_list body;	
+  va_start(body, fmt);	
+  int nchars=_vsnprintf(trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
+  va_end(body);	
+  if(nchars==-1)
+    strcpy(trace_buffer,"TRACE buffer overrun\n");
+
+#if defined(SS_DEBUG_TRACE_IDE) && defined(WIN32)
+  OutputDebugString(trace_buffer);
+#endif
+  
+#if defined(SS_DEBUG_TRACE_FILE)
+  printf(trace_buffer); 
+  nTrace++; 
+  if(TRACE_FILE_REWIND && nTrace>=TRACE_MAX_WRITES)
   {
+    nTrace=0;
+    rewind(trace_file_pointer); // it doesn't erase
+    TRACE("\n--------------------------\nREWIND TRACE\n--------------------------\n");
+  }
+#endif
+
+}
+
+void TDebug::TraceLog(char *fmt, ...) { // static
+  ASSERT(Debug.LogSection>=0 && Debug.LogSection<100);
+  if(Debug.LogSection<NUM_LOGSECTIONS && Debug.logsection_enabled[Debug.LogSection]
+#if defined(DEBUG_BUILD)
+    ||::logsection_enabled[Debug.LogSection] 
+#endif
+    )
+  {
+    // we must replicate the Trace body because passing ... arguments isn't
+    // trivial (TODO)
     va_list body;	
-    va_start(body, fmt);	
-    VERIFY( vsprintf(trace_buffer, fmt, body)<1024 );
+    va_start(body, fmt);
+    int nchars=_vsnprintf(Debug.trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
     va_end(body);	
-    fprintf(trace_file_pointer,trace_buffer);
-    nTrace++; 
-    if(TRACE_FILE_REWIND && nTrace>=TRACE_MAX_WRITES)
+
+    if(nchars==-1)
+      strcpy(Debug.trace_buffer,"TRACE buffer overrun\n");
+
+#if defined(SS_DEBUG_TRACE_IDE) && defined(WIN32)
+    OutputDebugString(Debug.trace_buffer);
+#endif
+  
+#if defined(SS_DEBUG_TRACE_FILE)
+    printf(Debug.trace_buffer); 
+    Debug.nTrace++; 
+    if(TRACE_FILE_REWIND && Debug.nTrace>=TRACE_MAX_WRITES)
     {
-      nTrace=0;
-      rewind(trace_file_pointer); // it doesn't erase
+      Debug.nTrace=0;
+      rewind(Debug.trace_file_pointer); // it doesn't erase
       TRACE("\n--------------------------\nREWIND TRACE\n--------------------------\n");
     }
+#endif
   }
 }
 
@@ -97,7 +155,7 @@ extern int stemdos_current_drive;
 extern int dma_sound_bass,dma_sound_treble;
 #endif
 
-int ReportGeneralInfos(int when) {
+void TDebug::ReportGeneralInfos(int when) {
   
   if(when==START)
   {
@@ -132,7 +190,9 @@ int ReportGeneralInfos(int when) {
     }
     if(!HardDiskMan.DisableHardDrives && stemdos_current_drive) // check
       TRACE("; HD ON");
+#if defined(SS_FDC)
     TRACE("; ADAT %d",ADAT);
+#endif
 #if USE_PASTI
     TRACE("; Pasti %d",pasti_active);
 #endif
@@ -159,26 +219,8 @@ int ReportGeneralInfos(int when) {
       TRACE("Microwire %d dma bass %X treble %X\n",MICROWIRE_ON,dma_sound_bass,dma_sound_treble);
 #endif
   }
-  return TRUE;
 }
 #endif
 
-
-#if defined(_DEBUG) && !defined(SS_DEBUG_TRACE_FILE)
-// TRACE for VC IDE
-#include <stdio.h>
-#include <stdarg.h>
-#include <windows.h>
-// Our TRACE facility has no MFC dependency.
-// The same for ASSERT. Could be easier?
-void my_trace(char *fmt, ...){
-  va_list body;	
-  va_start(body, fmt);	
-  vsprintf(trace_buffer, fmt, body);	
-  va_end(body);	
-  OutputDebugString(trace_buffer);
-}
-
-#endif
 
 #endif

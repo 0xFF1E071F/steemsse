@@ -38,7 +38,6 @@ HRESULT Sound_Start()
   if (fast_forward || slow_motion || runstate!=RUNSTATE_RUNNING) return DSERR_GENERIC;
 
   sound_first_vbl=true;
-
   log("SOUND: Starting sound buffers and initialising PSG variables");
 
   // Work out startup voltage
@@ -109,8 +108,19 @@ void SoundStopInternalSpeaker()
   internal_speaker_sound_by_period(0);
 }
 //---------------------------------------------------------------------------
-#ifdef ENABLE_VARIABLE_SOUND_DAMPING
+#ifdef ENABLE_VARIABLE_SOUND_DAMPING //SS for boiler...
 
+#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_FILTER_STF)  
+// a simplisctic but better (in my ears) low-pass filter, optional
+#define CALC_V_CHIP if(PSG_FILTER_FIX && (v!=*source_p || dv)) v=SS_SOUND_FILTER_STF_V,dv=SS_SOUND_FILTER_STF_DV;\
+                    else if (v!=*source_p || dv){                            \
+                  v+=dv;                                            \
+                  dv-=(v-(*source_p))*sound_variable_a >> 8;        \
+                  dv*=sound_variable_d;                                           \
+                  dv>>=8;                                           \
+                }
+
+#else
 #define CALC_V_CHIP  \
                 if (v!=*source_p || dv){                            \
                   v+=dv;                                            \
@@ -118,6 +128,7 @@ void SoundStopInternalSpeaker()
                   dv*=sound_variable_d;                                           \
                   dv>>=8;                                           \
                 }
+#endif
 
 #define CALC_V_CHIP_25KHZ  \
                 if (v!=*source_p || dv){                            \
@@ -131,7 +142,7 @@ void SoundStopInternalSpeaker()
 
 #if defined(STEVEN_SEAGAL) && defined(SS_SOUND_FILTER_STF)  
 // a simplisctic but better (in my ears) low-pass filter, optional
-#define CALC_V_CHIP if(PSG_FILTER_FIX) v=(*source_p+dv)/2,dv=v;\
+#define CALC_V_CHIP if(PSG_FILTER_FIX && (v!=*source_p || dv)) v=SS_SOUND_FILTER_STF_V,dv=SS_SOUND_FILTER_STF_DV;\
                     else if (v!=*source_p || dv){                            \
                   v+=dv;                                            \
                   dv-=(v-(*source_p)) >> 3;                         \
@@ -160,7 +171,7 @@ void SoundStopInternalSpeaker()
 
 #endif
 
-#define CALC_V_EMU  v=*source_p;
+#define CALC_V_EMU  v=*source_p; // SS: no filter, contrary to chipmode
 
 #ifdef SHOW_WAVEFORM
   #define WAVEFORM_SET_VAL(v) (val=(v))
@@ -172,7 +183,7 @@ void SoundStopInternalSpeaker()
 
 
 
-#ifdef WRITE_ONLY_SINE_WAVE
+#ifdef WRITE_ONLY_SINE_WAVE //SS not defined
 
 #define SINE_ONLY(s) s
 
@@ -212,6 +223,72 @@ double d_dsp_v; // a bit silly, heavy, and maybe not optimal
 
 #if defined(SS_SOUND_VOL) // -6db for PSG sound (using DSP), if Microwire on
 
+
+#if defined(SS_SOUND_LOW_PASS_FILTER) // no
+
+#define WRITE_SOUND_LOOP(Alter_V,Out_P,Size,GetSize)         \
+SampleRate=sound_freq;\
+             while (c>0){                                                  \
+              Alter_V                                                     \
+              if(MICROWIRE_ON && (psg_reg[PSGR_MIXER] & b00111111)!=b00111111 ) v=PsgGain.FilterAudio(v,-6); \
+              val=v + *lp_dma_sound_channel;                           \
+              if( MICROWIRE_ON&&(\
+                dma_sound_bass!=6||dma_sound_treble!=6\
+              ||dma_sound_volume<0x28\
+              ||dma_sound_l_volume<0x14)) d_dsp_v=val;\
+d_dsp_v=val;\
+              if(MICROWIRE_ON&&dma_sound_bass!=6) \
+                d_dsp_v=MicrowireBassL.FilterAudio(d_dsp_v,LOW_SHELF_FREQ,dma_sound_bass-6);\
+              if(MICROWIRE_ON&&dma_sound_treble!=6)\
+                d_dsp_v=MicrowireTrebleL.FilterAudio(d_dsp_v,HIGH_SHELF_FREQ,dma_sound_treble-6);\
+              if(MICROWIRE_ON&&(dma_sound_volume<0x28||dma_sound_l_volume<0x14))\
+                d_dsp_v=MicrowireVolumeL.FilterAudio(d_dsp_v,dma_sound_volume-0x28\
+                  +dma_sound_l_volume-0x14);\
+              val=d_dsp_v=PSGLowFilterL.FilterAudio(d_dsp_v,LOW_PASS_FILTER_FREQ,LOW_PASS_FILTER_GAIN);\
+              if( MICROWIRE_ON &&(\
+                dma_sound_bass!=6||dma_sound_treble!=6\
+              ||dma_sound_volume<0x28\
+              ||dma_sound_l_volume<0x14))  val=d_dsp_v;\
+  	          if (val<VOLTAGE_FP(0)){                                     \
+                val=VOLTAGE_FP(0); \
+      	      }else if (val>VOLTAGE_FP(255)){                            \
+        	      val=VOLTAGE_FP(255);                    \
+  	          }                                                            \
+              *(Out_P++)=Size(GetSize(&val)); \
+              if (sound_num_channels==2){         \
+                val=v + *(lp_dma_sound_channel+1);                                            \
+                if(MICROWIRE_ON&&(dma_sound_bass!=6||dma_sound_treble!=6\
+                  ||dma_sound_volume<0x28\
+                  ||dma_sound_r_volume<0x14)) \
+                  d_dsp_v=val;\
+d_dsp_v=val;\
+                if(MICROWIRE_ON&&dma_sound_bass!=6) \
+                  d_dsp_v=MicrowireBassR.FilterAudio(d_dsp_v,LOW_SHELF_FREQ,dma_sound_bass-6);\
+                if(MICROWIRE_ON&&dma_sound_treble!=6)\
+                  d_dsp_v=MicrowireTrebleR.FilterAudio(d_dsp_v,HIGH_SHELF_FREQ,dma_sound_treble-6);\
+                if(MICROWIRE_ON&&(dma_sound_volume<0x28||dma_sound_r_volume<0x14))\
+                d_dsp_v=MicrowireVolumeR.FilterAudio(d_dsp_v,dma_sound_volume-0x28\
+                  +dma_sound_r_volume-0x14);\
+                val=d_dsp_v=PSGLowFilterR.FilterAudio(d_dsp_v,LOW_PASS_FILTER_FREQ,LOW_PASS_FILTER_GAIN);\
+                if(MICROWIRE_ON&&(dma_sound_bass!=6||dma_sound_treble!=6\
+                  ||dma_sound_volume<0x28\
+                  ||dma_sound_r_volume<0x14)) \
+                  val=d_dsp_v;\
+                if (val<VOLTAGE_FP(0)){                                     \
+                  val=VOLTAGE_FP(0); \
+                }else if (val>VOLTAGE_FP(255)){                            \
+                  val=VOLTAGE_FP(255);                    \
+                }                                                            \
+                *(Out_P++)=Size(GetSize(&val)); \
+              }     \
+    	        WAVEFORM_ONLY(temp_waveform_display[((int)(source_p-psg_channels_buf)+psg_time_of_last_vbl_for_writing) % MAX_temp_waveform_display_counter]=WORD_B_1(&val)); \
+  	          *(source_p++)=VOLTAGE_FP(VOLTAGE_ZERO_LEVEL);                 \
+              if (lp_dma_sound_channel<lp_max_dma_sound_channel) lp_dma_sound_channel+=2; \
+      	      c--;                                                          \
+	          }
+
+#else
+
 #define WRITE_SOUND_LOOP(Alter_V,Out_P,Size,GetSize)         \
              while (c>0){                                                  \
               Alter_V                                                     \
@@ -241,8 +318,8 @@ double d_dsp_v; // a bit silly, heavy, and maybe not optimal
               if (sound_num_channels==2){         \
                 val=v + *(lp_dma_sound_channel+1);                                            \
                 if(MICROWIRE_ON&&(dma_sound_bass!=6||dma_sound_treble!=6\
-              ||dma_sound_volume<0x28\
-              ||dma_sound_r_volume<0x14)) \
+                  ||dma_sound_volume<0x28\
+                  ||dma_sound_r_volume<0x14)) \
                   d_dsp_v=val;\
                 if(MICROWIRE_ON&&dma_sound_bass!=6) \
                   d_dsp_v=MicrowireBassR.FilterAudio(d_dsp_v,LOW_SHELF_FREQ,dma_sound_bass-6);\
@@ -252,9 +329,9 @@ double d_dsp_v; // a bit silly, heavy, and maybe not optimal
                 d_dsp_v=MicrowireVolumeR.FilterAudio(d_dsp_v,dma_sound_volume-0x28\
                   +dma_sound_r_volume-0x14);\
                 if(MICROWIRE_ON&&(dma_sound_bass!=6||dma_sound_treble!=6\
-              ||dma_sound_volume<0x28\
-              ||dma_sound_r_volume<0x14)) \
-                 val=d_dsp_v;\
+                  ||dma_sound_volume<0x28\
+                  ||dma_sound_r_volume<0x14)) \
+                  val=d_dsp_v;\
                 if (val<VOLTAGE_FP(0)){                                     \
                   val=VOLTAGE_FP(0); \
                 }else if (val>VOLTAGE_FP(255)){                            \
@@ -267,6 +344,8 @@ double d_dsp_v; // a bit silly, heavy, and maybe not optimal
               if (lp_dma_sound_channel<lp_max_dma_sound_channel) lp_dma_sound_channel+=2; \
       	      c--;                                                          \
 	          }
+#endif//SS_SOUND_LOW_PASS_FILTER)
+
 
 #else
 #define WRITE_SOUND_LOOP(Alter_V,Out_P,Size,GetSize)         \
@@ -358,6 +437,7 @@ double d_dsp_v; // a bit silly, heavy, and maybe not optimal
 
 #endif//ss
 
+
 #endif
 
 #define WRITE_TO_WAV_FILE_B(val) fputc(BYTE(WORD_B_1(&(val))),wav_file);
@@ -425,7 +505,7 @@ void sound_record_to_wav(int c,DWORD SINE_ONLY(t),bool chipmode,int *source_p)
 
 HRESULT Sound_VBL()
 {
-#if SCREENS_PER_SOUND_VBL != 1
+#if SCREENS_PER_SOUND_VBL != 1 //SS it is 1
   static int screens_countdown=SCREENS_PER_SOUND_VBL;
   screens_countdown--;if (screens_countdown>0) return DD_OK;
   screens_countdown=SCREENS_PER_SOUND_VBL;
@@ -654,6 +734,9 @@ HRESULT Sound_VBL()
 
   return DS_OK;
 }
+
+
+
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 /*                                DMA SOUND                                  */
@@ -928,6 +1011,7 @@ void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
 /*                                PSG SOUND                                  */
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
+#if !defined(STEVEN_SEAGAL) //not used
 #define PSG_CALC_VOLTAGE_ENVELOPE                                     \
       {																																	\
         envstage=(t64-est64)/envmodulo2;           \
@@ -937,6 +1021,7 @@ void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
           *(p++)+=psg_envelope_level[envshape][envstage & 63];            \
         }																															\
       }
+#endif
 
 #define PSG_PULSE_NOISE(ntn) (psg_noise[(ntn) MOD_PSG_NOISE_ARRAY] )
 #define PSG_PULSE_TONE  ((t*128 / psg_tonemodulo) & 1)
@@ -970,8 +1055,6 @@ void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
         envvol=psg_envelope_level[envshape][psg_envstage & 63];            \
       }																															\
 
-
-
 #define PSG_PREPARE_NOISE                                \
       int noiseperiod=(1+(psg_reg[PSGR_NOISE_PERIOD]&0x1f));      \
       af=((int)noiseperiod*sound_freq);                              \
@@ -989,6 +1072,8 @@ void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
       if (abc==0) log_write(Str("toneperiod=")+toneperiod+" sound_freq="+sound_freq+" psg_tonemodulo_2="+psg_tonemodulo_2); \
       */
 
+
+
 #define PSG_PREPARE_TONE                                 \
       af=((int)toneperiod*sound_freq);                              \
       af*=((double)(1<<17))/15625;                               \
@@ -1002,6 +1087,7 @@ void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
         bf=af;                      \
       }                           \
       psg_tonecountdown=psg_tonemodulo_2-(int)bf; \
+
 
 #define PSG_TONE_ADVANCE                                   \
           psg_tonecountdown-=TWO_MILLION;  \
@@ -1189,15 +1275,23 @@ DWORD psg_adjust_envelope_start_time(DWORD t,DWORD new_envperiod)
   return DWORD(c);
 }
 
+/*  SS: this is the function called by iow.cpp when program changes the PSG 
+    registers.
+    It takes care of writing the appropriate part of the VBL sound buffer
+    before the register change.
+    old_val has just been read in the PSG register by iow.cpp
+*/
+
 void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
 {
+  ASSERT(reg<=15);
   // suggestions for global variables:  n_samples_per_vbl=sound_freq/shifter_freq,   shifter_y+(SCANLINES_ABOVE_SCREEN+SCANLINES_BELOW_SCREEN)
   if (reg==1 || reg==3 || reg==5 || reg==13){
     new_val&=15;
   }else if (reg==6 || (reg>=8 && reg<=10)){
     new_val&=31;
   }
-  if (reg>=PSGR_PORT_A) return;
+  if (reg>=PSGR_PORT_A) return; //SS 14,15
   if (old_val==new_val && reg!=PSGR_ENVELOPE_SHAPE) return;
 
   if (psg_capture_file){
@@ -1219,8 +1313,9 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
     log(Str("SOUND: ")+HEXSl(old_pc,6)+" - PSG reg "+reg+" changed to "+new_val+" at "+scanline_cycle_log());
     return;
   }
+//  ASSERT( n_cpu_cycles_per_second==8000000 );
+  int cpu_cycles_per_vbl=n_cpu_cycles_per_second/shifter_freq; //160000 at 50hz
 
-  int cpu_cycles_per_vbl=n_cpu_cycles_per_second/shifter_freq;
 #if SCREENS_PER_SOUND_VBL != 1
   cpu_cycles_per_vbl*=SCREENS_PER_SOUND_VBL;
   DWORDLONG a64=(ABSOLUTE_CPU_TIME-cpu_time_of_last_sound_vbl);
@@ -1228,10 +1323,9 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
   DWORDLONG a64=(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl);
 #endif
 
-  a64*=psg_n_samples_this_vbl;
+  a64*=psg_n_samples_this_vbl; 
   a64/=cpu_cycles_per_vbl;
   DWORD t=psg_time_of_last_vbl_for_writing+(DWORD)a64;
-
   log(EasyStr("SOUND: PSG reg ")+reg+" changed to "+new_val+" at "+scanline_cycle_log()+"; samples "+t+"; vbl was at "+psg_time_of_last_vbl_for_writing);
   switch (reg){
     case 0:case 1:
@@ -1265,7 +1359,7 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
 //      new_val&=0xf;
 
       // ST doesn't quantize, it changes the level straight away.
-//        t=psg_quantize_time(reg-8,t);
+      //  t=psg_quantize_time(reg-8,t);
       psg_write_buffer(reg-8,t);
 //        psg_tone_start_time[reg-8]=t;
       break;

@@ -20,4 +20,15 @@ int video_recording=0;
 char *video_recording_codec=SS_VID_RECORD_AVI_CODEC;
 #endif
 
+#if defined(SS_DELAY_LOAD_DLL)
+#ifdef __BORLANDC__
+// http://edn.embarcadero.com/article/28515
+FARPROC WINAPI MyLoadFailureHook(dliNotification dliNotify,DelayLoadInfo * pdli)
+{
+  // dliNotify == dliFailLoadLibrary or dliFailGetProcAddress or ...
+  throw 0; // we have a catch(...) (hopefully)
+}
+#endif
+#endif
+
 #endif//#if defined(STEVEN_SEAGAL)

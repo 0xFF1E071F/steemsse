@@ -20,7 +20,7 @@ int TVideoEvents::Report() {
   ASSERT(fp);
   if(fp)
   {
-    fprintf(fp,"Steem shifter events report\n");
+    fprintf(fp,"Steem shifter events report\nFrame frequency: %d\n",shifter_freq_at_start_of_vbl);
     if(FloppyDrive[0].DiskInDrive())
       fprintf(fp,"Disk A: %s",FloppyDrive[0].DiskName.c_str()); 
     int i,j;
@@ -31,9 +31,10 @@ int TVideoEvents::Report() {
         j=m_VideoEvent[i].Scanline;
         fprintf(fp,"\nLine %03d -",j);
       }
-      if(m_VideoEvent[i].Type=='F')
+      if(m_VideoEvent[i].Type=='F' || m_VideoEvent[i].Type=='C' 
+        || m_VideoEvent[i].Type=='#') // decimal
         fprintf(fp," %03d:%c%04d",m_VideoEvent[i].Cycle,m_VideoEvent[i].Type,m_VideoEvent[i].Value);
-      else
+      else  // hexa
         fprintf(fp," %03d:%c%04X",m_VideoEvent[i].Cycle,m_VideoEvent[i].Type,m_VideoEvent[i].Value);
     }//nxt
     fclose(fp);

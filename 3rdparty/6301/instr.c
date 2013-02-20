@@ -66,7 +66,7 @@ instr_exec ()
   )
   {
 #if defined(SS_IKBD_6301_TRACE_SCI_TX)
-    printf("ACT %d Cycles %d TX finished TRCSR=%X\n",act,cpu.ncycles,iram[TRCSR]);
+    TRACE("ACT %d Cycles %d TX finished TRCSR=%X\n",act,cpu.ncycles,iram[TRCSR]);
 #endif
     ASSERT(hd6301_completed_transmission_to_MC6850==1);
     hd6301_completed_transmission_to_MC6850--;
@@ -87,14 +87,14 @@ instr_exec ()
      */
     if ((ireg_getb (TCSR) & OCF) && (ireg_getb (TCSR) & EOCI)) {
 #if defined(SS_IKBD_6301_TRACE_INT_TIMER)
-      printf("ACT %d Timer interrupt\n",act);
+      TRACE("ACT %d Timer interrupt\n",act);
 #endif
       int_addr (OCFVECTOR);
       interrupted = 1;
     } 
     else if (serial_int ()) {
 #if defined(SS_IKBD_6301_TRACE_INT_SCI)
-      printf("ACT %d cycles %d SCI interrupt TRCSR=%X RXi=%d TXi=%d\n",act,cpu.ncycles,ireg_getb (TRCSR),rxinterrupts,txinterrupts);
+      TRACE("ACT %d cycles %d SCI interrupt TRCSR=%X RXi=%d TXi=%d\n",act,cpu.ncycles,ireg_getb (TRCSR),rxinterrupts,txinterrupts);
 #endif
       txinterrupts=0; //?
       int_addr (SCIVECTOR);
@@ -127,7 +127,7 @@ instr_exec ()
     
     if( ! ( pc>=0x80 && pc<0xFFFF) ) // eg bad snapshot
     {
-      printf("6301 emu is hopelessly crashed!\n");
+      TRACE("6301 emu is hopelessly crashed!\n");
       Crashed6301=1;
       return -1;
     }
@@ -160,10 +160,10 @@ instr_print (addr)
   ASSERT (opptr->op_value == op);
 
   if(pc==mem_getw(0xFFF0)) // SS
-    printf("\nSCI interrupt start (rx %d)\n",rxinterrupts);
+    TRACE("\nSCI interrupt start (rx %d)\n",rxinterrupts);
 
   if(pc==mem_getw(0xFFF4)) // SS
-    printf("\nOCF interrupt start\n");
+    TRACE("\nOCF interrupt start\n");
 
   printf ("%04x\t", pc);
 
@@ -185,7 +185,7 @@ instr_print (addr)
       int disp=mem_getb (pc + 1);
       if(disp&0x80) // negative displacement
         disp=-(0xFF-disp+1);
-      printf(" (%X)", pc+2+disp);
+      TRACE(" (%X)", pc+2+disp);
     }
   }
   else
@@ -197,7 +197,7 @@ instr_print (addr)
       printf ("\t%s", symname);
   }
 #if !defined(SS_IKBD_6301_DISASSEMBLE_ROM)
-  printf ("\t[%d]\n", cpu_getncycles ());
+  TRACE ("\t[%d]\n", cpu_getncycles ());
 #endif
   putchar('\n');
   if(opptr->op_value==0x39 || opptr->op_value==0x3b)
