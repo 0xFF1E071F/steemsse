@@ -1,3 +1,0 @@
-makefile.txt is just a copy of makefile
-The extension (txt) is used for backup purposes (we use FBBackup)
-Hopefully the copy is always up to date

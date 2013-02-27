@@ -795,7 +795,7 @@ int TFloppyImage::GetRawTrackData(int Side,int Track)
 //---------------------------------------------------------------------------
 void TFloppyImage::RemoveDisk(bool LoseChanges)
 {
-#if defined(STEVEN_SEAGAL) &&  defined(SS_FDC_DONT_REMOVE_NON_EXISTENT_IMAGES)
+#if defined(STEVEN_SEAGAL) &&  defined(SS_VAR_DONT_REMOVE_NON_EXISTENT_IMAGES)
   if(Empty()) // nothing to do
     return;
 #endif

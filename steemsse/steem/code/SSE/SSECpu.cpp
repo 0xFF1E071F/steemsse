@@ -9,7 +9,7 @@ TM68000 M68000; // singleton
 TM68000::TM68000() {
 #if defined(SS_DEBUG)    
   nExceptions=nInstr=0;
-  NextIrFetched=true;
+//  NextIrFetched=false; //at power on
 #endif
 #if defined(SS_CPU_PREFETCH_CALL)
   CallPrefetch=FALSE;

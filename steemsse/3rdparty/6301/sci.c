@@ -81,6 +81,7 @@ int nbytes;
   }
 
 #if defined(SS_IKBD_6301_CHECK_COMMANDS)
+
   if(pc<0xF000) // PC is in the RAM=>custom program running
   {
 #if defined(SS_IKBD_6301_DISASSEMBLE_CUSTOM_PRG)
@@ -88,6 +89,8 @@ int nbytes;
     if(BytesToLoad==-256) // Drag: Frog: TB2: 
       dump_ram();
 #endif
+//    ASSERT(CurrentCommand==0x22);
+//    printf("6301 custom gets %X\n",rec_byte);
   }
   else if(BytesToLoad>0)
   {
@@ -96,6 +99,7 @@ int nbytes;
     BytesToLoad--;
 #if defined(SS_IKBD_TRACE_COMMANDS)
     TRACE("Loading byte %X in %X, %d to go $F0:%d\n",rec_byte,our_address,BytesToLoad,ram[0xF0]);
+//    printf("Loading byte %X in %X, %d to go $F0:%d\n",rec_byte,our_address,BytesToLoad,ram[0xF0]);
 #endif
     if(!BytesToLoad)
       CurrentCommand=CurrentParameter=0;
@@ -119,16 +123,24 @@ int nbytes;
 #endif
         BytesToLoad=rec_byte;
       }
+//      printf("6301 Memory load parameter %d = $%X\n",CurrentParameter,rec_byte);
+    }
+    else if(CurrentCommand==0x22 && CurrentParameter<=TotalParameters)
+    {
+//      printf("6301 Execute parameter %d = $%X\n",CurrentParameter,rec_byte);
     }
     else if(CurrentParameter==TotalParameters)
     {
+/*
       if(CurrentCommand==0x22) // CONTROLLER EXECUTE
       {
-#if defined(SS_IKBD_6301_DISASSEMBLE_CUSTOM_PRG)
         TRACE("Boot\n");
+//        printf("6301 Execute ($%X?)\n",CustomPrgAddress);
+#if defined(SS_IKBD_6301_DISASSEMBLE_CUSTOM_PRG)
         dump_ram();
 #endif
       }
+*/
       CurrentCommand=0;
     }
   }
@@ -156,9 +168,10 @@ int nbytes;
     case 0x12: // 12 DISABLE MOUSE
       TotalParameters=0;
 #if defined(SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT)
-      TRACE("Disable mouse hardware quirk\n");
+      TRACE("Disable mouse hardware quirk %d\n",SSE_HACKS_ON);
       if(SSE_HACKS_ON)
         mouse_x_counter=mouse_y_counter=~MOUSE_MASK; // fixes Jumping Jackson
+//      else mouse_x_counter=mouse_y_counter=0;
 #endif
       break;
     case 0x19: // SET JOYSTICK KEYCODE MODE

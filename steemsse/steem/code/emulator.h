@@ -184,7 +184,7 @@ in memory (CDAB)
 The way the Steem Authors dealt with the situation is a stroke of genius (or they 
 took it from another genius...) 
 By "naive" we must understand WinSTon and maybe Hatari.
-
+(In fact it seems to be an option in Hatari?)
 Mem_End is the end of the allocated PC RAM, but it's the beginning
 of the ST RAM!
 
@@ -372,7 +372,15 @@ LPAGENDAPROC agenda_list[]={agenda_fdc_spun_up,agenda_fdc_motor_flag_off,agenda_
                           agenda_serial_break_boundary,agenda_serial_loopback_byte,agenda_midi_replace,
                           agenda_check_centronics_interrupt,agenda_ikbd_process,agenda_keyboard_reset,
                           agenda_acia_tx_delay_IKBD,agenda_acia_tx_delay_MIDI,ikbd_send_joystick_message,
-                          ikbd_report_abs_mouse,agenda_keyboard_replace,(LPAGENDAPROC)1};
+                          ikbd_report_abs_mouse,agenda_keyboard_replace,
+                          
+#if defined(SS_FDC_RESTORE_AGENDA)
+                          agenda_fdc_restore,
+#endif
+#if defined(SS_FDC_VERIFY_AGENDA)
+                          agenda_fdc_verify,
+#endif
+                          (LPAGENDAPROC)1};
 //--------------------------------------------------------------------------- SHIFTER
 
 //#define SHIFTER_DRAWING_NOT 0

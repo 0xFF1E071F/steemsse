@@ -149,7 +149,7 @@ int_addr (addr)
 #endif
 	reg_setiflag (1);
 #if defined(SS_IKBD_RUN_IRQ_TO_END)
-	ExecutingInt=1; //SS
+	ExecutingInt=EXECUTING_INT; //SS
 #endif
 }
 
@@ -374,7 +374,7 @@ rti_inh ()
 	reg_setix   (popword ());
 	reg_setpc   (popword ());
 #if defined(SS_IKBD_RUN_IRQ_TO_END)
-	ExecutingInt=-1;
+	ExecutingInt=FINISHED_EXECUTING_INT;
 #endif
 }
 rts_inh ()	{reg_setpc (popword ());}

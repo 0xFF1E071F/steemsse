@@ -348,7 +348,12 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
     case 0xff9200:{      //----------------------------------- paddles
       bool Illegal=0;
       BYTE ret=JoyReadSTEAddress(addr,&Illegal);
-      if (Illegal) exception(BOMBS_BUS_ERROR,EA_READ,addr);
+      if (Illegal
+#if defined(STEVEN_SEAGAL) && defined(SS_STF)
+        || ST_TYPE!=STE //  Ultimate Arena, thx Petari
+#endif
+        )
+        exception(BOMBS_BUS_ERROR,EA_READ,addr);
       return ret;
     }case 0xff9000:{      //----------------------------------- ?
       if(addr>0xff9001){
@@ -356,7 +361,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
       }break;
     }case 0xff8a00:{      //----------------------------------- Blitter
 #if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_EVENTS)
-      BYTE b=Blitter_IO_ReadB(addr);
+      BYTE b=Blitter_IO_ReadB(addr); // STF crash there
       VideoEvents.Add(scan_y,LINECYCLES,'b',((addr-0xff8a00)<<8)|b);
       return b;
 #else
@@ -531,10 +536,14 @@ No write access.
         if (dma_mode & BIT_3){ // HD access
           LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
                   " - Reading low byte of HDC register #"+((dma_mode & BIT_1) ? 1:0)); )
+
           return 0xff;
+
         }
 
+
         // Read FDC register
+
         switch (dma_mode & (BIT_1+BIT_2)){
           case 0:
           {

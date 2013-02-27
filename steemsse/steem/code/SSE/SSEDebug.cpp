@@ -4,7 +4,7 @@
 
 int debug0,debug1,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9;
 
-#ifdef SS_IKBD
+#if defined(SS_IKBD_6301)
 extern "C" void (_stdcall *hd6301_trace)(char *fmt, ...);
 #endif
 
@@ -54,11 +54,9 @@ TDebug::TDebug() {
   TRACE("This is a Steem SSE TRACE file\n");
 #endif
 
-#ifdef SS_IKBD
+#if defined(SS_IKBD_6301)
   hd6301_trace=&TDebug::TraceLog;
 #endif
-//  hd6301_trace=(void (__stdcall *)()) &TDebug::Trace;
-
 }
 
 
@@ -177,7 +175,7 @@ void TDebug::ReportGeneralInfos(int when) {
       TRACE("; Disk A: %s",FloppyDrive[0].DiskName.c_str()); 
 #if defined(SS_IPF)
     if(Caps.IsIpf(0)) 
-      TRACE(" (IPF emu)");
+      TRACE(" (IPF)");
 #endif
     }
     if(num_connected_floppies==2 && FloppyDrive[1].DiskInDrive())
@@ -185,7 +183,7 @@ void TDebug::ReportGeneralInfos(int when) {
       TRACE("; Disk B: %s",FloppyDrive[1].DiskName.c_str()); 
 #if defined(SS_IPF)
     if(Caps.IsIpf(1)) 
-      TRACE(" (IPF emu)");
+      TRACE(" (IPF)");
 #endif
     }
     if(!HardDiskMan.DisableHardDrives && stemdos_current_drive) // check
@@ -200,7 +198,7 @@ void TDebug::ReportGeneralInfos(int when) {
     TRACE("\nHacks %d",SSE_HACKS_ON);
 #endif
 #if defined(SS_IKBD_6301)
-    TRACE("; HD6301 true emu %d",HD6301EMU_ON);
+    TRACE("; HD6301 %d",HD6301EMU_ON);
 #endif
     TRACE("\n");
   }

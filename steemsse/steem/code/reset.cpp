@@ -228,6 +228,17 @@ void reset_peripherals(bool Cold)
   }
   
 #if defined(STEVEN_SEAGAL)
+#if defined(SS_FDC_RESET__)
+  fdc_str=BIT_2;
+  fdc_tr=0;fdc_sr=0;fdc_dr=0;
+fdc_spinning_up=0;
+  floppy_irq_flag=0;
+
+  //dma_mode=0;
+  dma_sector_count=0;
+//  floppy_type1_command_active=2;
+//hbl_count=0;//oops
+#endif
 #if defined(SS_SHIFTER_TRICKS)
   for(int i=0;i<32;i++)
   {
@@ -332,6 +343,9 @@ void reset_peripherals(bool Cold)
   ZeroMemory(&Blit,sizeof(Blit));
 
   cpu_stopped=false;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU) && defined(SS_DEBUG)
+  M68000.NextIrFetched=false;
+#endif
 
   if (runstate==RUNSTATE_RUNNING) prepare_event_again();
 }

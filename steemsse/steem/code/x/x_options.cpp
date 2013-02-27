@@ -611,7 +611,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
 #endif
 #if defined(SS_IKBD_6301)
     else if(b->id==4006)
-      b->checked=HD6301EMU_ON=b->checked&HD6301.Initialised;
+      b->checked=HD6301EMU_ON=b->checked&HD6301_OK;
 #endif
 #if defined(SS_VAR_KEYBOARD_CLICK)
     else if(b->id==4007)
@@ -619,7 +619,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
       if(b->checked)// pathetic, there must be a better way
         PEEK(0x484)|=0x0001;
       else
-	PEEK(0x484)&=0xFFFE;
+        PEEK(0x484)&=0xFFFE;
     }
 #endif         
 #if defined(SS_SOUND_FILTER_STF)

@@ -67,8 +67,8 @@ EXT int m68k_divu_cycles INIT(124),m68k_divs_cycles INIT(140); // +4 for overall
 #define FOUR_MEGS 0x400000
 #define FOURTEEN_MEGS 0xE00000
 
-#if defined(SS_CPU_MAY_WRITE_0)
-#define MEM_FIRST_WRITEABLE 0
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_MAY_WRITE_0)
+#define MEM_FIRST_WRITEABLE 0 // Aladin
 #else
 #define MEM_FIRST_WRITEABLE 8 // SS check this
 #endif

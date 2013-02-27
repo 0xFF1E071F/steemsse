@@ -130,7 +130,7 @@ SS_SIGNAL_ENUM_EnumDisplayModes, // wait until finished (?)
 #endif
 
 #define HD6301_ROM_CHECKSUM 451175 // BTW this rom sends $F1 after reset (80,1)
-#define HD6301_CYCLES_PER_SCANLINE 64 // used in SS_SHIFTER not defined
+#define HD6301_CYCLES_PER_SCANLINE 64 // used if SS_SHIFTER not defined
 #define HD6301_CYCLE_DIVISOR 8 // the 6301 runs at 1MHz (verified by Stefan jL)
 
 #define IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESS_ALT (HD6301EMU_ON?45:2)
@@ -142,16 +142,14 @@ SS_SIGNAL_ENUM_EnumDisplayModes, // wait until finished (?)
 (HD6301_CYCLES_TO_RECEIVE_BYTE*HD6301_CYCLE_DIVISOR/ (shifter_freq_at_start_of_vbl==50?512:(screen_res==2?160:508)))
 #define HD6301_MAX_DIS_INSTR 2000 
 
-/*  Guessed timings, that make Dragonnels, Froggies, Transbeauce 2 work.
-    + no flicker in Unlimited Bobs menu
-    Lower values: custom programs may fail to load because the 6301 hasn't
-    finished treating a byte when the next comes.
-    7,812.5 bit/s -> how many cycles to transmit one byte?
-    Do control bits count?
-    1350 would translate to effective 5925.9 bit/s
+/*  
+    Those timings seem to high vs theory (1024?).
+      We take them for:
+    - Froggies over the Fence menu (very odd)
+    - Dragonnels/Unlimited Bobs
 */
-#define HD6301_CYCLES_TO_SEND_BYTE 1350//1300
-#define HD6301_CYCLES_TO_RECEIVE_BYTE 1350//1350
+#define HD6301_CYCLES_TO_SEND_BYTE 1350
+#define HD6301_CYCLES_TO_RECEIVE_BYTE 1350
 
 // far from ideal, but maybe we must change method or timings instead
 #define HD6301_MOUSE_SPEED_CHUNKS 15

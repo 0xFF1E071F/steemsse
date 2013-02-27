@@ -23,15 +23,21 @@ TShifter::TShifter() {
 #if defined(WIN32)
   ScanlineBuffer=NULL;
 #endif
+  CurrentScanline.Cycles=500;
 }
 
 
 TShifter::~TShifter() {
 }
 
-/*  Check overscan functions. Those are based on existing Steem code, but much 
+/*  Check overscan functions:
+    -  CheckSideOverscan()
+    -  CheckSyncTrick() 
+    -  CheckVerticalOverscan()
+    Those are based on existing Steem code, but much 
     inflated, for a good cause: now Steem handles a lot more shifter tricks
     than before.
+    Much has been inspired by Hatari, but was also discussed on Atari-forum.
 */
 
 void TShifter::CheckSideOverscan() {
@@ -245,19 +251,10 @@ void TShifter::CheckSideOverscan() {
         || ShiftModeChangeAtCycle(-4)==2))
         CurrentScanline.Tricks|=TRICK_LINE_PLUS_20;
 
-/*
-      if(scan_y==-28) 
-      {
-        TRACE("C%d STE +20? 4:%d -8(504):%d -4(508):%d\n",LINECYCLES,ShiftModeChangeAtCycle(4),ShiftModeChangeAtCycle(-8),ShiftModeChangeAtCycle(-4));
-        for(i=0;i<32;i++)
-        {
-          if(abs(shifter_shift_mode_change_time[i]-LINECYCLE0)<512)
-            TRACE("%d) time %d R%X (%d) ",i,shifter_shift_mode_change_time[i]-LINECYCLE0,shifter_shift_mode_change[i],shifter_shift_mode_change_time[i]);
-        }
-        TRACE("\nidx %d mask %X pc %x\n",shifter_shift_mode_change_idx,CurrentScanline.Tricks,pc);
-        
-      }
-  */      
+   //   if(!ShiftModeChangeAtCycle(8) && ShiftModeChangeAtCycle(-8)==2)
+     //   CurrentScanline.Tricks|=TRICK_LINE_PLUS_20;
+
+
     }
 #endif
 
@@ -741,14 +738,11 @@ void TShifter::CheckSideOverscan() {
         CurrentScanline.Tricks|=TRICK_OVERSCAN_MED_RES;
         TrickExecuted|=TRICK_OVERSCAN_MED_RES;
         int cycles_in_low_res=r1cycle-r0cycle;
-
-#if defined(SS_SHIFTER_NO_COOPER_GREETINGS)
-        if(SSE_HACKS_ON) 
-        {
-          int shift=(((cycles_in_low_res)/2)%8)/2; // = 2
-          shifter_draw_pointer+=-shift; 
-          overscan_add_extra+=shift;
-        }
+#if defined(SS_SHIFTER_MED_OVERSCAN_SHIFT)
+        int shift=(((cycles_in_low_res)/2)%8)/2; // = 2
+        ASSERT( shift==2 ); // No Cooper Greetings, Nightmare
+        shifter_draw_pointer+=-shift; 
+        overscan_add_extra+=shift;
 #endif
 #if defined(SS_VID_BPOC)
         if(BORDER_40 && SSE_HACKS_ON && cycles_in_low_res==16) 
@@ -1734,7 +1728,7 @@ int TShifter::IncScanline() { // a big extension of 'scan_y++'!
     CurrentScanline.EndCycle=372;
     CurrentScanline.Cycles=508;
   }
-  else if(shifter_freq==72)
+  else if(shifter_freq==72 || screen_res==2)
   {
     CurrentScanline.StartCycle=0;
     CurrentScanline.EndCycle=160;
@@ -1803,12 +1797,12 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
   case DISPATCHER_SET_SHIFT_MODE:
     RoundCycles(cycles_since_hbl); // eg Drag/Happy Islands, Cool STE
     break; 
-#if defined(SS_VID_BORDERS_RENDER_SYNC_FOR_VERY_LARGE)
-  case DISPATCHER_SET_SYNC:
-    RoundCycles(cycles_since_hbl); // eg D4/NGC, D4/Nightmare
+/*
+  case DISPATCHER_SET_SYNC: //not used
+    RoundCycles(cycles_since_hbl); 
     cycles_since_hbl++;
     break;
-#endif
+*/
   case DISPATCHER_WRITE_SDP:
     RoundCycles(cycles_since_hbl); // eg D4/Tekila
     break;
@@ -1889,7 +1883,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
         nsdp-=(old_shifter_pixel/16)*8;
         nsdp+=(shifter_pixel/16)*8; // is sdp forward at end of line?
         
-#if defined(SS_SHIFTER_4BIT_SCROLL)
+#if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_4BIT_SCROLL)
 /*  This is where we do the actual shift for those rare programs using the
     4bit hardscroll trick (PYM/ST-CNX,D4/Nightmare,D4/NGC).
     Notice it is quite simple, and also very efficient because it uses 
@@ -2153,25 +2147,14 @@ void TShifter::SetSyncMode(BYTE NewSync) {
 //  TRACE("y%d c%d s%d\n",scan_y,CyclesIn,NewSync);
 #endif
 
-#if defined(SS_VID_BORDERS_RENDER_SYNC_FOR_VERY_LARGE)
-/*  This is very strange. Usually, Steem wouldn't render for sync changes,
-    but with a display width of 412, we need to do it or the doubled line
-    isn't OK in the left border with the "double size, no stretch" option
-    in many programs like Delirious IV menu, Transbeauce 2 menu, etc. 
-    There was no such problem with width 416.
-    It really is a case of fixing a problem without mastering the rendering
-    system. TODo
-*/
-  if(SideBorderSize==VERY_LARGE_BORDER_SIDE)
-    Render(CyclesIn,DISPATCHER_SET_SYNC); // round, +1
-#endif
   int new_freq;  
 
   if(screen_res>=2) // note this part is not extra-reliable yet
   {
-    BRK(HIRES new sync); // happens?
+//    BRK(HIRES new sync); // happens? yes
     new_freq=MONO_HZ;
     shifter_freq_idx=2;
+    CurrentScanline.Cycles=160;
   }
   else if(NewSync&2) // freq 50hz
   {
