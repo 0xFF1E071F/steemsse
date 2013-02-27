@@ -61,7 +61,7 @@ instr_exec ()
 */
   if(hd6301_completed_transmission_to_MC6850 
 #if defined(SS_IKBD_RUN_IRQ_TO_END)
-    && ExecutingInt!=1
+    //&& ExecutingInt!=EXECUTING_INT
 #endif
   )
   {
@@ -72,13 +72,17 @@ instr_exec ()
     hd6301_completed_transmission_to_MC6850--;
     ASSERT(hd6301_completed_transmission_to_MC6850>=0);
     ASSERT(!hd6301_completed_transmission_to_MC6850);
+#if defined(SS_IKBD_RUN_IRQ_TO_END)
+    ASSERT( ExecutingInt!=EXECUTING_INT );
+#endif
+///    ASSERT( 0 );
     //if(ireg_getb (TRCSR) & TIE)
       txinterrupts=1; // we should trigger IRQ
   }
 
   if (!reg_getiflag () 
 #if defined(SS_IKBD_RUN_IRQ_TO_END)
-    && ExecutingInt!=1
+    && ExecutingInt!=EXECUTING_INT
 #endif
   ) 
   {

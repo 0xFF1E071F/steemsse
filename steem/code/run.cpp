@@ -482,7 +482,7 @@ void event_scanline()
       n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
 #endif
       ASSERT(n6301cycles);
-      if(!hd6301_run_cycles(n6301cycles))
+      if(hd6301_run_cycles(n6301cycles)==-1)
       {
         TRACE("6301 emu is hopelessly crashed!\n");
         HD6301.Crashed=1; 
@@ -1094,7 +1094,7 @@ void event_vbl_interrupt()
       n6301cycles=0;// (screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
 #endif
       ASSERT(n6301cycles);
-      if(!hd6301_run_cycles(n6301cycles))
+      if(hd6301_run_cycles(n6301cycles)==-1)
       {
         TRACE("6301 emu is hopelessly crashed!\n");
         HD6301.Crashed=1; 

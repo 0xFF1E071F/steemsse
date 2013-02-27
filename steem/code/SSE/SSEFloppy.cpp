@@ -21,8 +21,11 @@ TDma::TDma() {
 #if defined(SS_DMA_IO) // all fixes depend on it
 
 #undef LOGSECTION
-#define LOGSECTION LOGSECTION_FDC // not IO
-
+#if defined(SS_DEBUG_FDC_IO_IN_FDC_LOGSECTION)
+#define LOGSECTION LOGSECTION_FDC
+#else
+#define LOGSECTION LOGSECTION_IO
+#endif
 /*  DMA/Disk IO table based on Atari doc
 
     ff 8600           |----------------|   Reserved 
@@ -184,10 +187,15 @@ to generate DMA bus cycle.
           else if (FloppyDrive[drive].ReadOnly)
             fdc_str|=FDC_STR_WRITE_PROTECT;
         }
+        // seems OK, no reset after command:
         if(fdc_spinning_up)
           fdc_str&=BYTE(~FDC_STR_T1_SPINUP_COMPLETE);
         else
           fdc_str|=FDC_STR_T1_SPINUP_COMPLETE;
+        if(!fdc_tr) {
+//          ASSERT( fdc_str&FDC_STR_T1_TRACK_0 );
+          fdc_str|=FDC_STR_T1_TRACK_0;
+        }
       } // else it should be set in fdc_execute()
       if ((mfp_reg[MFPR_GPIP] & BIT_5)==0)
       {
@@ -199,6 +207,8 @@ to generate DMA bus cycle.
       }
       return fdc_str; // STR
     case 2:
+      //ASSERT( fdc_cr ); // would be a problem
+      ASSERT( fdc_cr & (BIT_7+BIT_6+BIT_5+BIT_4));
       return fdc_tr; // TR
     case 4:
       return fdc_sr; // SR
@@ -516,7 +526,9 @@ void TDma::TraceIORead(MEM_ADDRESS addr) {
     }
     switch(dma_mode & (BIT_1+BIT_2)){
     case 0:
+#if !defined(SS_DEBUG_TRACE_IDE)
       TRACE("R STR $%X\n",fdc_str);
+#endif
       break;
     case 2:
       TRACE("R TR %d\n",fdc_tr);
@@ -781,12 +793,6 @@ from the Data bus.
 
 TWD1772 WD1772;
 
-int TWD1772::WritingToDisk() {
-  return((fdc_cr&0xF0)==0xF0 || (fdc_cr&0xE0)==0xA0);
-}
-
-#if defined(SS_DEBUG)
-
 int TWD1772::CommandType(int command) {
   // return type 1-4 of this FDC command
   int type;
@@ -801,6 +807,13 @@ int TWD1772::CommandType(int command) {
   return type;
 }
 
+
+int TWD1772::WritingToDisk() {
+  return((fdc_cr&0xF0)==0xF0 || (fdc_cr&0xE0)==0xA0);
+}
+
+
+#if defined(SS_DEBUG)
 
 void TWD1772::TraceStatus() {
   // this embarrassing part proves my ignorance!
@@ -984,7 +997,7 @@ void TCaps::RemoveDisk(int drive) {
 }
 
 
-#undef LOGSETION
+#undef LOGSECTION
 #define LOGSECTION LOGSECTION_FDC
 
 void TCaps::WritePsgA(int data) {
@@ -1085,7 +1098,7 @@ int TCaps::WriteWD1772(int data) {
 #endif
   }
 
-  TRACE("write %X to %p - %X\n",data,&WD1772,wd_address);
+  TRACE_LOG("write %X to %p - %X\n",data,&WD1772,wd_address);
   CAPSFdcWrite(&WD1772,wd_address,data); // send to DLL
 
 #if defined(SS_IPF_RUN_POST_IO)
@@ -1126,7 +1139,7 @@ int TCaps::IsIpf(int drive) {
   return (DriveMap&(drive+1)); // not <<!
 }
 
-
+#undef LOGSECTION
 #define LOGSECTION LOGSECTION_FDC_BYTES//SS // to trace all bytes transferred!
 
 /*  Callback functions. Since they're static, they access object data like

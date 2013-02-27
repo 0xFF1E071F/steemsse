@@ -95,7 +95,7 @@ despite the try
 - STE wake up states? (Forest)
 - Unix build of 3.5, but with fewer features
 - Load snaphost -> pasti mention?
-- snapshot: 6301 wrong
+
 */
 
 
@@ -105,10 +105,10 @@ despite the try
 
 #if defined(STEVEN_SEAGAL)
 
-#define SS_BETA
+// #define SS_BETA
 
 #ifdef SS_BETA // beta with all features
-#define SSE_VERSION 351 //was for?
+#define SSE_VERSION 350 //was for?
 #define SSE_VERSION_TXT "SSE Beta" 
 #define WINDOW_TITLE "Steem SSE beta"//"Steem Engine SSE 3.5.0" 
 #else // next planned release
@@ -133,16 +133,16 @@ despite the try
 #define SS_BLITTER    // spelled BLiTTER
 #define SS_CPU        // M68000 microprocessor
 #define SS_DMA        // Custom Direct Memory Access chip (disk)
-#define SS_FDC        // WD1772 floppy disk controller (hacks, IPF)
+#define SS_FDC        // WD1772 floppy disk controller
 #define SS_GLUE       // TODO
 #define SS_HACKS      // an option for dubious fixes
 #define SS_IKBD       // HD6301V1 IKBD (keyboard, mouse, joystick controller)
 #define SS_IPF        // CAPS support (IPF disks) 
 #define SS_INTERRUPT  // MC68901 Multi-Function Peripheral Chip, HBL, VBL
 #define SS_MIDI       // TODO
-#define SS_MMU        // Memory Manager Unit (of the ST, just RAM)
+#define SS_MMU        // Memory Manager Unit (of the ST, no paging)
 #define SS_OSD        // On Screen Display (drive leds, version)
-#define SS_SDL        // Simple DirectMedia Layer 
+#define SS_SDL        // Simple DirectMedia Layer (TODO)
 #define SS_SHIFTER    // The legendary custom shifter and all its tricks
 #define SS_SOUND      // YM2149, STE DMA sound, Microwire
 #define SS_STF        // switch STF/STE
@@ -182,8 +182,9 @@ despite the try
 //#define TEST01
 //#define TEST02
 //#define TEST03
-
 #endif
+
+
 
 
 ///////////////////////
@@ -202,8 +203,7 @@ despite the try
 #define SS_SSE_OPTION_STRUCT // structure SSEOption 
 #define SS_SSE_CONFIG_STRUCT // structure SSEConfig 
 #define SS_DELAY_LOAD_DLL // can run without DLL
-//TODO doesn't work when directly launching a disk image?
-//no: doesn't work with unrar.dll
+
 
 //////////
 // ACIA //
@@ -240,14 +240,13 @@ despite the try
 
 #if defined(SS_CPU)
 
-
 #define SS_CPU_EXCEPTION    // crash like Windows 98
 #define SS_CPU_PREFETCH     // fetch like a dog
 #define SS_CPU_ROUNDING     // round like a rolling stone
 
-#ifdef SS_CPU_ROUNDING 
+#if defined(SS_CPU_ROUNDING)
 
-//#define SS_CPU_ROUNDING_CHECKS
+//#define SS_CPU_ROUNDING_CHECKS // 1st approach, a bit on the heavy side
 #if defined(SS_CPU_ROUNDING_CHECKS)
 #define SS_CPU_ROUNDING_FIX_ADD_L
 #define SS_CPU_ROUNDING_FIX_ADDA_L
@@ -255,7 +254,12 @@ despite the try
 #define SS_CPU_ROUNDING_FIX_SUBA_L
 #endif
 
-#define SS_CPU_ROUNDING_SOURCE_100 // far simpler, but more general (risky)
+// far simpler, but more general (risky) than checking later:
+#define SS_CPU_ROUNDING_SOURCE_100 // -(An)
+// but this wouldn't be correct:
+// you must fetch D8 first, no? Not clear...
+//#define SS_CPU_ROUNDING_SOURCE_110 // (d8, An, Xn) // breaks DSOS etc
+//#define SS_CPU_ROUNDING_SOURCE_111_011 // (d8, PC, Xn)
 
 #endif//rounding
 
@@ -271,36 +275,33 @@ despite the try
 //#define SS_CPU_EXCEPTION_TRACE_PC // reporting all PC
 //#define SS_CPU_PREFETCH_TRACE
 
-#if defined(SS_CPU_MOVE_W) && defined(SS_VIDEO) // hack: only for move.w
-#define SS_CPU_3615GEN4_ULM // changing the scanline being fetched
-#endif
-
 //#define SS_CPU_TAS
 
 #if defined(SS_CPU_EXCEPTION)
 #define SS_CPU_ASSERT_ILLEGAL // assert before trying to execute (Titan)
-#define SS_CPU_GET_SOURCE // update PC after read - is it a real fix? TB2
-#define SS_CPU_MAY_WRITE_0//tst (?)
-#ifndef SS_CPU_GET_SOURCE
+#define SS_CPU_GET_SOURCE // update PC after read - is it a real fix? Phaleon
+#ifndef SS_CPU_GET_SOURCE // when PC is ++ (Phaleon)
 #define SS_CPU_PHALEON // opcode based hack for Phaleon (etc.) protection
 #endif
+#define SS_CPU_MAY_WRITE_0 // it's both ROM and RAM!
 #define SS_CPU_POST_INC // no post increment if exception (Beyond)
 #endif//exc
+
 
 #if defined(SS_CPU_PREFETCH)
 // Change no timing, just the macro used, so that we can identify what timings
 // are for prefetch:
-#define SS_CPU_FETCH_TIMING 
+#define SS_CPU_FETCH_TIMING  //todo, compile errors if undef
 
 // Move the timing counting from FETCH_TIMING to PREFETCH_IRC, this is a big
 // change:
-#define SS_CPU_PREFETCH_TIMING 
+#define SS_CPU_PREFETCH_TIMING //big, big change
 #ifdef SS_CPU_PREFETCH_TIMING 
 #define SS_CPU_PREFETCH_TIMING_SET_PC // necessary for some SET PC cases
 //#define SS_CPU_PREFETCH_TIMING_EXCEPT // to mix unique switch + lines
 #endif
 #if !defined(SS_CPU_PREFETCH_TIMING) || defined(SS_CPU_PREFETCH_TIMING_EXCEPT)
-#define CORRECTING_PREFETCH_TIMING
+//#define CORRECTING_PREFETCH_TIMING 
 #endif
 #ifdef CORRECTING_PREFETCH_TIMING
 // powerful prefetch debugging switches
@@ -323,7 +324,6 @@ despite the try
 #define SS_CPU_LINE_D_TIMINGS // 1101 ADD/ADDX
 #define SS_CPU_LINE_E_TIMINGS // 1110 Shift/Rotate/Bit Field
 #define SS_CPU_LINE_F_TIMINGS // 1111 Coprocessor Interface/MC68040 and CPU32 Extensions
-
 #endif
 
 #endif//prefetch
@@ -334,8 +334,11 @@ despite the try
 #else
 #define SS_CPU_WAR_HELI // isolate a hack already in v3.2
 #endif
-#endif //
+#endif
 
+#if defined(SS_CPU_MOVE_W) && defined(SS_SHIFTER) // hack: only for move.w
+#define SS_CPU_3615GEN4_ULM // changing the scanline being fetched
+#endif
 
 #define SS_CPU_LINE_F // for interrupt depth counter
 
@@ -359,7 +362,11 @@ defined(SS_BOILER))
 #ifdef _DEBUG // VC
 #define SS_DEBUG_TRACE_IDE
 #endif
+#if defined(DEBUG_BUILD)
 #define SS_DEBUG_TRACE_FILE
+#else
+//#define SS_DEBUG_TRACE_FILE
+#endif
 #endif
 
 #if defined(DEBUG_BUILD) //TODO add other mods here
@@ -376,7 +383,6 @@ defined(SS_BOILER))
 #define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
 #define SS_DEBUG_START_STOP_INFO
 #define SS_IPF_TRACE_SECTORS // show sector info (IPF)
-
 #define SS_IKBD_TRACE_COMMANDS // only used by 6301 emu now
 #define SS_IKBD_6301_DUMP_RAM
 #define SS_IKBD_6301_TRACE 
@@ -395,7 +401,6 @@ defined(SS_BOILER))
 #define SS_IKBD_6301_TRACE_SCI_TX
 #define SS_IKBD_6301_TRACE_KEYS
 
-
 //#define SS_DEBUG_TRACE_CPU_ROUNDING
 //#define SS_DEBUG_TRACE_PREFETCH
 #define SS_DEBUG_TRACE_SDP_READ_IR
@@ -412,7 +417,7 @@ defined(SS_BOILER))
 /////////
 
 #if defined(SS_DMA)
-
+// this is the DAM as used for disk operation
 //#define SS_DMA_ADDRESS // enforcing order for write (no use?)
 //#define SS_DMA_DOUBLE_FIFO // works but overkill
 //#define SS_DMA_DELAY // works but overkill
@@ -430,22 +435,25 @@ defined(SS_BOILER))
 
 #if defined(SS_FDC)
 
-#define SS_FDC_DONT_INSERT_NON_EXISTENT_IMAGES // at startup
-#define SS_FDC_DONT_REMOVE_NON_EXISTENT_IMAGES // at final save
-#define SS_FDC_CHANGE_SECTOR_WHILE_BUSY // from Kryoflux
-#define SS_FDC_CHANGE_TRACK_WHILE_BUSY // from Kryoflux
+#define SS_FDC_ACCURATE // bug fixes and additions for ADAT mode (v3.5)
+
+#ifdef SS_FDC_ACCURATE
+#define SS_FDC_CHANGE_COMMAND_DURING_SPINUP // from Hatari
+#define SS_FDC_FORMAT_BYTES // more hbl / sector 
+#define SS_FDC_INDEX_PULSE
+#define SS_FDC_MOTOR_OFF // post command..
+#define SS_FDC_RESTORE_AGENDA
+#define SS_FDC_SEEK_UPDATE_TR
+#define SS_FDC_SPIN_UP_STATUS
+#define SS_FDC_SPIN_UP_TIME
+#define SS_FDC_VERIFY_AGENDA
+#endif
+// those also in fast mode (can't hurt), it's not in fdc.cpp but iow.cpp
+#define SS_FDC_CHANGE_SECTOR_WHILE_BUSY // from Hatari or Kryoflux
+#define SS_FDC_CHANGE_TRACK_WHILE_BUSY // from Hatari or Kryoflux
 
 //#define SS_FDC_READ_HIGH_BYTE // like pasti, 0
-
-#if defined(SS_HACKS) // all "protected" by the hack option
-
-#define SS_FDC_CHANGE_COMMAND_DURING_SPINUP // from Hatari
-#define SS_FDC_RESTORE // adding delay (fast+ADAT)
-#define SS_FDC_SEEK_VERIFY // adding delay (fast)
-#define SS_FDC_STARTING_DELAY // adding delay (fast)
-#define SS_FDC_STREAM_SECTORS_SPEED // faster in fast mode, slower with ADAT!
-
-#endif//hacks
+//#define SS_DEBUG_FDC_IO_IN_FDC_LOGSECTION //there's no silly define
 //#define SS_FDC_TRACE_STATUS //spell out status register
 
 #endif
@@ -474,7 +482,7 @@ defined(SS_BOILER))
 #define SS_IKBD_6301_DISABLE_BREAKS // to save 64k
 #define SS_IKBD_6301_DISABLE_CALLSTACK // to save 3k on the PC stack
 #define SS_IKBD_DOUBLE_BUFFER_6301_TX  // 6301 transmitting, same as for ACIA
-#define SS_IKBD_RUN_IRQ_TO_END // kind of a hack
+#define SS_IKBD_RUN_IRQ_TO_END
 #define SS_IKBD_6301_ADJUST_CYCLES // stay in sync!
 #define SS_IKBD_6301_SET_TDRE
 #define SS_IKBD_6301_TIMER_FIX // not sure there was a problem
@@ -486,8 +494,8 @@ defined(SS_BOILER))
 
 #define SS_IKBD_6301_TRACE // ambigous!
 #if defined(SS_IKBD_6301_TRACE)
-#define SS_IKBD_6301_TRACE_SCI_RX
-#define SS_IKBD_6301_TRACE_SCI_TX
+//#define SS_IKBD_6301_TRACE_SCI_RX
+//#define SS_IKBD_6301_TRACE_SCI_TX
 //#define SS_IKBD_6301_TRACE_SCI_TRCSE
 //#define SS_IKBD_6301_TRACE_INT_TIMER
 //#define SS_IKBD_6301_TRACE_INT_SCI
@@ -592,7 +600,7 @@ defined(SS_BOILER))
 #define SS_MMU_WAKE_UP_0_BYTE_LINE
 #define SS_MMU_WAKE_UP_IOR_HACK 
 #define SS_MMU_WAKE_UP_IOW_HACK 
-// the following are more experimental (break programs)
+// the following are more experimental 
 #define SS_MMU_WAKE_UP_IO_BYTES_R 
 #define SS_MMU_WAKE_UP_IO_BYTES_W 
 #define SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY
@@ -653,6 +661,7 @@ defined(SS_BOILER))
 #define SS_SHIFTER_END_OF_LINE_CORRECTION // correct +2, -2 lines 
 #define SS_SHIFTER_LINE_PLUS_2_THRESHOLD
 #define SS_SHIFTER_MED_OVERSCAN
+#define SS_SHIFTER_MED_OVERSCAN_SHIFT
 #define SS_SHIFTER_NON_STOPPING_LINE // Enchanted Land
 #define SS_SHIFTER_PALETTE_BYTE_CHANGE 
 #define SS_SHIFTER_PALETTE_TIMING
@@ -688,7 +697,6 @@ defined(SS_BOILER))
 #define SS_SHIFTER_BIG_WOBBLE // Big Wobble shift
 #define SS_SHIFTER_DANGEROUS_FANTAISY // Dangerous Fantaisy credits flicker
 #define SS_SHIFTER_DRAGON // confused shifter, temp hack
-#define SS_SHIFTER_NO_COOPER_GREETINGS // No Cooper Greetings shift
 #define SS_SHIFTER_OMEGA  // Omega Full Overscan shift (60hz)
 #define SS_SHIFTER_PACEMAKER // Pacemaker credits flickering line
 #define SS_SHIFTER_SCHNUSDIE // Reality is a Lie/Schnusdie overscan logo
@@ -784,6 +792,9 @@ defined(SS_BOILER))
 
 #if defined(SS_VARIOUS)
 
+#define SS_VAR_DONT_INSERT_NON_EXISTENT_IMAGES // at startup
+#define SS_VAR_DONT_REMOVE_NON_EXISTENT_IMAGES // at final save
+
 #define SS_VAR_NO_AUTO_ASSOCIATE // + may deassociate ... TODO
 
 #define SS_VAR_NO_UPDATE // remove all code in relation to updating
@@ -822,7 +833,6 @@ defined(SS_BOILER))
 
 #define SS_VID_BORDERS // option display size
 #define SS_VID_BORDERS_LB_DX // rendering-stage rather than painful hacks
-#define SS_VID_BORDERS_RENDER_SYNC_FOR_VERY_LARGE
 //#define SS_VID_AUTOOFF_DECRUNCHING // show borders when decrunching=confusing
 #define SS_VID_BPOC // Best Part of the Creation fit display 800
 

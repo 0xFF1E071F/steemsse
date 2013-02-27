@@ -140,15 +140,15 @@ void set_pc(MEM_ADDRESS ad)
 {
   SET_PC(ad); 
 }
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU)
-#else 
+
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
+
 void perform_rte()
 {
   M68K_PERFORM_RTE(;);
 }
+
 #endif
-
-
 
 #define LOGSECTION LOGSECTION_CPU
 void m68k_process()
@@ -156,6 +156,11 @@ void m68k_process()
   m68k_PROCESS
 }
 #undef LOGSECTION
+
+
+
+
+
 
 void m68k_poke_noinline(MEM_ADDRESS ad,BYTE x){ m68k_poke(ad,x); }
 void m68k_dpoke_noinline(MEM_ADDRESS ad,WORD x){ m68k_dpoke(ad,x); }

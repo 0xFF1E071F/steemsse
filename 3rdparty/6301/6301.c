@@ -36,7 +36,12 @@ int hd6301_mouse_move_since_last_interrupt_y;
 
 unsigned char rec_byte;
 #if defined(SS_IKBD_RUN_IRQ_TO_END)
-int ExecutingInt=0;
+
+#define NOT_EXECUTING_INT 0
+#define EXECUTING_INT 1
+#define FINISHED_EXECUTING_INT -1
+
+int ExecutingInt=NOT_EXECUTING_INT;
 #endif
 int Crashed6301=0;
 
@@ -52,6 +57,7 @@ int TotalParameters=0; // #parameters
 // Debug facilities
 // ASSERT
 #if defined(_MSC_VER) && defined(_DEBUG)
+#undef ASSERT
 #define ASSERT(x) {if(!(x)) {TRACE("Assert failed: %s\n",#x);\
                    _asm{int 0x03}}}
 #else 
@@ -71,8 +77,12 @@ void (*hd6301_trace)(char *fmt, ...);
 #endif
 
 // constructing our module (OBJ) the good old Steem way, hem
-#define error printf // saves headache
-#define warning printf 
+
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_IKBD
+
+#define error TRACE //printf // saves headache
+#define warning TRACE //printf 
 // base
 #if !defined(SS_IKBD_6301_DISABLE_CALLSTACK)
 #include "callstac.c"
@@ -97,6 +107,7 @@ void (*hd6301_trace)(char *fmt, ...);
 // Interface with Steem
 
 hd6301_init() {
+//  TRACE("hello\n");
   return (int)mem_init();
 }
 
@@ -120,6 +131,9 @@ hd6301_reset() {
   hd6301_receiving_from_MC6850=hd6301_transmitting_to_MC6850
     =hd6301_completed_transmission_to_MC6850=0;
   iram[TRCSR]=0x20;
+#if defined(SS_IKBD_RUN_IRQ_TO_END)
+  ExecutingInt=NOT_EXECUTING_INT;
+#endif
   cpu_start(); // since we don't use the command.c file
 }
 
@@ -151,23 +165,30 @@ hd6301_run_cycles(u_int cycles_to_run) {
     reset(); // hack
   }
 #if defined(SS_IKBD_6301_ADJUST_CYCLES)
+  /*
   if(cycles_to_give_back>=cycles_to_run)
   {
     cycles_to_give_back-=cycles_to_run;
     return -1;
   }
-  else if(cycles_to_give_back)
+  else 
+  */
+  if(cycles_to_give_back)
   {
-    cycles_to_run-=cycles_to_give_back;
-    cycles_to_give_back=0;
+    // we really must go slowly here, better lose some time sync
+    // than break custom programs (TB2 etc.)
+    int cycles_given_back=min(20,cycles_to_give_back);
+    cycles_to_run-=cycles_given_back;         //cycles_to_give_back;
+    //cycles_to_give_back=0;
+    cycles_to_give_back-=cycles_given_back;
   }
 #endif
-  // the ExecutingInt hack seemed necessary at some point, maybe it isn't
-  while(cycles_run<cycles_to_run && !Crashed6301 
+
+  while(!Crashed6301 && (cycles_run<cycles_to_run 
 #if defined(SS_IKBD_RUN_IRQ_TO_END)
-    || ExecutingInt==1
+    || ExecutingInt==EXECUTING_INT
 #endif
-  )
+  ))
   {
     instr_exec (); // execute one instruction
     cycles_run=cpu.ncycles-starting_cycles;
@@ -175,13 +196,13 @@ hd6301_run_cycles(u_int cycles_to_run) {
 #if defined(SS_IKBD_RUN_IRQ_TO_END)
   if(ExecutingInt)
   {
-    ASSERT( ExecutingInt==-1 );
-    ExecutingInt=0;
+    ASSERT( ExecutingInt==FINISHED_EXECUTING_INT );
+    ExecutingInt=NOT_EXECUTING_INT;
   }
 #endif
 #if defined(SS_IKBD_6301_ADJUST_CYCLES)
-  ASSERT( !cycles_to_give_back );
-  cycles_to_give_back=cycles_run-cycles_to_run;
+//  ASSERT( !cycles_to_give_back );
+  cycles_to_give_back+=cycles_run-cycles_to_run;
 #endif
   return (Crashed6301) ? 0 : cycles_run; 
 }
@@ -332,5 +353,7 @@ dump_ram() {
   for(i=0x80;i<0x80+128;i++)
     i+=instr_print (i)-1;
 }
+
+#undef LOGSECTION
 
 #endif

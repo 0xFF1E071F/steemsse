@@ -192,7 +192,10 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
         if(hd6301_receiving_from_MC6850||!HD6301EMU_ON)  
 #endif
           ACIA_IKBD.tx_flag=true;
-   
+
+#if defined(SS_IKBD_6301)
+        if(0);
+#else
 /*  "If send new byte before last one has finished being sent"
     We keep this part for now, maybe Steem authors had info.
     It's like ACIA wouldn't start shifting at once.
@@ -200,6 +203,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
     7250 bit/s, 8000000 cycles/s
     1bit = 1100 cycles, the ACIA_CYCLES_NEEDED_TO_START_TX (=512)
     would be an average.
+    v3.5: disabled for true 6301 emu (Delirious 4 fake GEM)
 */ 
         if(abs(ABSOLUTE_CPU_TIME-ACIA_IKBD.last_tx_write_time)
           <ACIA_CYCLES_NEEDED_TO_START_TX)//512
@@ -214,6 +218,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
             agenda[n].param=io_src_b;
           }
         }
+#endif
 
 #if defined(SS_IKBD_6301) && defined(SS_ACIA_DOUBLE_BUFFER_TX)
         // ACIA to 6301 line busy: we'll place in agenda when the current byte
@@ -1015,8 +1020,11 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
     Bit 2: drive B
     If both bits 1&2 are set, drive A is selected.
 */
+
+#if defined(SS_DEBUG_FDC_IO_IN_FDC_LOGSECTION)
 #undef LOGSECTION
-#define LOGSECTION LOGSECTION_FDC//SS
+#define LOGSECTION LOGSECTION_FDC
+#endif
           TRACE_LOG("PSG Port A %X (&7: %X)\n",io_src_b,io_src_b&7);
 #undef LOGSECTION
 #define LOGSECTION LOGSETION_IO//SS

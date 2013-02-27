@@ -1572,7 +1572,11 @@ int TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
       if(PreviousScanline.Tricks&TRICK_STABILISER)
         nsdp+=-2; // fixes D4/Tekila shift
       else
+#if defined(SS_CPU_PREFETCH_TIMING)
+        nsdp+=2; // interesting! TODO
+#else
         nsdp+=4; // fixes E605 Planet shift
+#endif
     }
 #endif
   }

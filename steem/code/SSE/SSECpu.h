@@ -74,7 +74,9 @@ void m68k_dpoke_abus2(WORD);
 void m68k_lpoke_abus2(LONG);
 #endif
 
-
+/*  We now have a nice object representing the Motorola 68000, with some 
+    functions, but the instructions stay global C
+*/
 struct TM68000 {
   TM68000();
   inline void FetchTiming();
@@ -104,7 +106,7 @@ struct TM68000 {
 #if defined(SS_CPU_PREFETCH)
   BOOL CallPrefetch; 
   WORD *PrefetchAddress; 
-  int PrefetchClass;
+  int PrefetchClass; // see ijor's article
   WORD PrefetchedOpcode;
   WORD FetchForCall(MEM_ADDRESS ad);
   inline void PrefetchIrc();
@@ -160,13 +162,11 @@ void TM68000::CheckExtraRoundedCycles() {
 
 
 inline void TM68000::FetchTiming() {
-#if !defined(DEBUG_BUILD)
+#if !defined(SS_CPU_PREFETCH_TIMING)
   ASSERT(!NextIrFetched); //strong
-#endif
 #if defined(DEBUG_BUILD)
   NextIrFetched=true;
 #endif
-#if !defined(SS_CPU_PREFETCH_TIMING)
   InstructionTimeRound(4); 
 #endif
 #if defined(SS_CPU_PREFETCH_TIMING) && defined(SS_CPU_PREFETCH_TIMING_EXCEPT)
@@ -181,13 +181,11 @@ inline void TM68000::FetchTiming() {
 #if defined(SS_CPU_FETCH_TIMING)
 
 inline void TM68000::FetchTimingNoRound() {
-#if !defined(DEBUG_BUILD)
+#if !defined(SS_CPU_PREFETCH_TIMING)
   ASSERT(!NextIrFetched);
-#endif
 #if defined(SS_DEBUG)
   NextIrFetched=true;
 #endif
-#if !defined(SS_CPU_PREFETCH_TIMING)
   InstructionTime(4); 
 #endif
 #if defined(SS_CPU_PREFETCH_TIMING) && defined(SS_CPU_PREFETCH_TIMING_EXCEPT)
@@ -286,6 +284,10 @@ inline void TM68000::PrefetchIrc() {
   prefetched_2=TRUE;
 
 #if defined(SS_CPU_PREFETCH_TIMING)
+  ASSERT(!NextIrFetched); //strong
+#if defined(DEBUG_BUILD)
+  NextIrFetched=true;
+#endif
 #if defined(SS_CPU_PREFETCH_TIMING_EXCEPT)
   if(debug_prefetch_timing(ir))
     ; else
@@ -365,17 +367,16 @@ inline void TM68000::Process() {
     TRACE("%x %x %s no FETCH_TIMING\n",old_pc,PreviousIr,instr.c_str());
   }
 #endif
-  NextIrFetched=false; // in FETCH_TIMING or...
+//  NextIrFetched=false; // in FETCH_TIMING or...
 #endif//debug
 
   old_pc=pc;  
 
 #if defined(SS_CPU_PREFETCH)
   ASSERT(prefetched_2);
-#if defined(SS_DEBUG)
-  PrefetchClass=0; // default - not used
+  PrefetchClass=0; // default, most instructions
 #endif
-#endif
+
   FetchWord(ir); // IR->IRD
   
 //if(debug1) TRACE("%X\n",pc);
@@ -413,7 +414,10 @@ inline void TM68000::Process() {
   }
 #endif
 
+
+
 #if defined(SS_DEBUG)
+ NextIrFetched=false; // in FETCH_TIMING or...// check_interrut
 #if defined(SS_CPU_ROUNDING_CHECKS)
   // for the moment, debug only
   ASSERT( CurrentRoundedCycles>= CurrentUnroundedCycles );

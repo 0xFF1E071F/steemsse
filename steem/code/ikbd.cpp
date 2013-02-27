@@ -453,7 +453,7 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
 #else
       int n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
 #endif
-      if(!hd6301_run_cycles(n6301cycles))
+      if(hd6301_run_cycles(n6301cycles)==-1)
       {
         TRACE_LOG("6301 emu is hopelessly crashed!\n");
         HD6301.Crashed=1; 

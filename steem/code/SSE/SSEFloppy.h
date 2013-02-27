@@ -104,17 +104,23 @@ extern TDma Dma;
 #if defined(SS_FDC)
 
 struct TWD1772 {
+
+  int CommandType(int command); // I->IV
 #if defined(SS_DEBUG) || defined(SS_OSD_DRIVE_LED)
 /*  This is useful for OSD: if we're writing then we need to display a red
     light (green when reading). This is used by pasti & IPF.
 */
   int WritingToDisk();
 #endif
+
+
+
 #if defined(SS_DEBUG)
-  int CommandType(int command);
+  int SectorPart;
   void TraceStatus();
 #endif
-  int OldCr;
+
+  int OldCr; //debug?
 };
 extern TWD1772 WD1772;
 
