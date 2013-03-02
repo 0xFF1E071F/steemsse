@@ -45,6 +45,13 @@ int TVideoEvents::Report() {
 
 
 int TVideoEvents::Vbl() {
+#if defined(SS_SHIFTER_REPORT_VBL_TRICKS)
+  if(Debug.ShifterTricks)
+  {
+    TRACE("VBL %d shifter tricks %X\n",nVbl,Debug.ShifterTricks);
+    Debug.ShifterTricks=0;
+  }
+#endif  
   int rv= TriggerReport;
   if(TriggerReport==2 && m_nEvents)
     TriggerReport--;

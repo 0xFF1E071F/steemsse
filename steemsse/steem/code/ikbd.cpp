@@ -464,6 +464,9 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
   }
 #endif
 
+  ASSERT( !HD6301EMU_ON );
+//  if(HD6301.Crashed) fprintf(stderr,"6301 emu is hopelessly crashed");
+
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
   BOOL IkbdOff=(ikbd.send_nothing); // useless?
 #endif

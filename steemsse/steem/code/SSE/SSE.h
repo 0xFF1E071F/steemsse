@@ -105,7 +105,7 @@ despite the try
 
 #if defined(STEVEN_SEAGAL)
 
-// #define SS_BETA
+//#define SS_BETA
 
 #ifdef SS_BETA // beta with all features
 #define SSE_VERSION 350 //was for?
@@ -202,8 +202,9 @@ despite the try
 #define SS_SSE_OPTION_PAGE // a new page for all our options
 #define SS_SSE_OPTION_STRUCT // structure SSEOption 
 #define SS_SSE_CONFIG_STRUCT // structure SSEConfig 
+#ifdef WIN32
 #define SS_DELAY_LOAD_DLL // can run without DLL
-
+#endif
 
 //////////
 // ACIA //
@@ -301,17 +302,14 @@ despite the try
 //#define SS_CPU_PREFETCH_TIMING_EXCEPT // to mix unique switch + lines
 #endif
 #if !defined(SS_CPU_PREFETCH_TIMING) || defined(SS_CPU_PREFETCH_TIMING_EXCEPT)
-//#define CORRECTING_PREFETCH_TIMING 
+#define CORRECTING_PREFETCH_TIMING 
 #endif
 #ifdef CORRECTING_PREFETCH_TIMING
 // powerful prefetch debugging switches
 #define SS_CPU_LINE_0_TIMINGS // 0000 Bit Manipulation/MOVEP/Immediate
 #define SS_CPU_LINE_1_TIMINGS  // 0001 Move Byte
-#define SS_CPU_LINE_1_TIMINGS_2 // ea,Dn
 #define SS_CPU_LINE_2_TIMINGS // 0010 Move Long
-#define SS_CPU_LINE_2_TIMINGS_2 // ea,Dn/An
 #define SS_CPU_LINE_3_TIMINGS // 0011 Move Word
-#define SS_CPU_LINE_3_TIMINGS_2 // ea,Dn/An
 #define SS_CPU_LINE_4_TIMINGS // 0100 Miscellaneous
 #define SS_CPU_LINE_5_TIMINGS // 0101 ADDQ/SUBQ/Scc/DBcc/TRAPcc
 #define SS_CPU_LINE_6_TIMINGS // 0110 Bcc/BSR/BRA
@@ -325,6 +323,15 @@ despite the try
 #define SS_CPU_LINE_E_TIMINGS // 1110 Shift/Rotate/Bit Field
 #define SS_CPU_LINE_F_TIMINGS // 1111 Coprocessor Interface/MC68040 and CPU32 Extensions
 #endif
+
+
+#if defined(SS_CPU_PREFETCH_TIMING) || defined(CORRECTING_PREFETCH_TIMING)
+//#if SSE_VERSION>350 // this was forgotten for v3.5.0... oops, did sthg wrong
+// but it's OK
+#define SS_CPU_PREFETCH_MOVE_MEM // we isolate prefetch fix for move to mem 
+//#endif
+#endif
+
 
 #endif//prefetch
 
@@ -354,6 +361,10 @@ defined(SS_BOILER))
 #define SS_DEBUG  //use lost?
 #endif
 
+#if defined(SS_UNIX)
+///#define SS_DEBUG // in makefile
+#endif
+
 #if defined(SS_DEBUG)
 
 #define SS_DEBUG_TRACE
@@ -362,7 +373,7 @@ defined(SS_BOILER))
 #ifdef _DEBUG // VC
 #define SS_DEBUG_TRACE_IDE
 #endif
-#if defined(DEBUG_BUILD)
+#if defined(DEBUG_BUILD) 
 #define SS_DEBUG_TRACE_FILE
 #else
 //#define SS_DEBUG_TRACE_FILE
@@ -379,7 +390,9 @@ defined(SS_BOILER))
 #if defined(SS_DEBUG) && !defined(BCC_BUILD) && !defined(_DEBUG)
 // supposedly we're building the release boiler, make sure features are in
 #define SS_SHIFTER_EVENTS // record all shifter events of the frame
+#if !defined(SS_UNIX)
 #define SS_SHIFTER_REPORT_VBL_TRICKS // a line each VBL
+#endif
 #define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
 #define SS_DEBUG_START_STOP_INFO
 #define SS_IPF_TRACE_SECTORS // show sector info (IPF)
@@ -437,7 +450,7 @@ defined(SS_BOILER))
 
 #define SS_FDC_ACCURATE // bug fixes and additions for ADAT mode (v3.5)
 
-#ifdef SS_FDC_ACCURATE
+#if defined(SS_FDC_ACCURATE)
 #define SS_FDC_CHANGE_COMMAND_DURING_SPINUP // from Hatari
 #define SS_FDC_FORMAT_BYTES // more hbl / sector 
 #define SS_FDC_INDEX_PULSE
@@ -744,8 +757,9 @@ defined(SS_BOILER))
 /////////////////////////////////
 
 #if defined(SS_STF)
-
+#ifdef WIN32
 #define SS_STF_MATCH_TOS // select a compatible TOS for next reset
+#endif
 #define SS_STF_MEGASTF // blitter in STF (could be useful?)
 // TODO: Falcon, Mega STE, TT... yeah right
 
@@ -778,7 +792,10 @@ defined(SS_BOILER))
 #if !defined(UNIX)
 #undef SS_UNIX
 #else
+#if defined(SS_DEBUG)
 #define SS_UNIX_TRACE // TRACE into the terminal (if it's open?)
+#define SS_DEBUG_TRACE_FILE
+#endif
 #endif
 
 #endif

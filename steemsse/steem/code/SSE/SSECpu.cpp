@@ -626,25 +626,19 @@ behavior is the same as other MOVE variants (class 1 instruction).
 
 */
 
-//todo from Hatari:
-	/* [NP] genamode counts 2 cycles if dest is -(An), this is wrong. */
-	/* For move dest (An), (An)+ and -(An) take the same time */
-	/* (for other instr, dest -(An) really takes 2 cycles more) */
-//-> already OK in Steem
-
 #if defined(SS_CPU_MOVE_B)
 
 void m68k_0001() {  // move.b
 
-#if !defined(SS_CPU_LINE_1_TIMINGS)
-
+#if !defined(SS_CPU_LINE_1_TIMINGS) && !defined(SS_CPU_PREFETCH_TIMING) \
+  && !defined(SS_CPU_PREFETCH_MOVE_MEM)
 #if defined(SS_CPU_FETCH_TIMING)
   if((ir&BITS_876)==BITS_876_000)
     FETCH_TIMING_NO_ROUND; // it's the same, but recorded as fetch timing
   else
 #endif
     INSTRUCTION_TIME(4);
-#endif//!defined(SS_CPU_LINE_1_TIMINGS)
+#endif
 
 #if defined(SS_CPU_PREFETCH)
   M68000.PrefetchClass=1; // by default 
@@ -670,14 +664,11 @@ void m68k_0001() {  // move.b
   // Destination
   if((ir&BITS_876)==BITS_876_000)
   { // Dn
-#if defined(SS_CPU_LINE_1_TIMINGS) && !defined(SS_CPU_LINE_1_TIMINGS_2)
-    FETCH_TIMING_NO_ROUND;
-#endif
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     m68k_dest=&(r[PARAM_N]);
     m68k_DEST_B=m68k_src_b; // move completed
     SR_CHECK_Z_AND_N_B; // update flags
-#if defined(SS_CPU_LINE_1_TIMINGS) && defined(SS_CPU_LINE_1_TIMINGS_2)
+#if defined(SS_CPU_LINE_1_TIMINGS) 
     FETCH_TIMING_NO_ROUND;
 #endif
   }
@@ -691,13 +682,16 @@ void m68k_0001() {  // move.b
     switch(ir&BITS_876)
     {
     case BITS_876_010: // (An)
-#if defined(SS_CPU_LINE_1_TIMINGS)
+#if (defined(SS_CPU_LINE_1_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
+  && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
       abus=areg[PARAM_N];
       break;
     case BITS_876_011: // (An)+
-#if defined(SS_CPU_LINE_1_TIMINGS)
+#if (defined(SS_CPU_LINE_1_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
+  && defined(SS_CPU_PREFETCH_MOVE_MEM)
+
       INSTRUCTION_TIME(4);
 #endif
 
@@ -716,7 +710,8 @@ void m68k_0001() {  // move.b
       PREFETCH_IRC;
       FETCH_TIMING;
 #endif  
-#if defined(SS_CPU_LINE_1_TIMINGS)
+#if (defined(SS_CPU_LINE_1_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
+  && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
 
@@ -727,7 +722,8 @@ void m68k_0001() {  // move.b
       break;
     case BITS_876_101: // (d16, An)
       INSTRUCTION_TIME(12-4-4);
-#if defined(SS_CPU_LINE_1_TIMINGS)
+#if (defined(SS_CPU_LINE_1_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
+  && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
 
@@ -736,7 +732,8 @@ void m68k_0001() {  // move.b
       break;
     case BITS_876_110: // (d8, An, Xn)
       INSTRUCTION_TIME(14-4-4);
-#if defined(SS_CPU_LINE_1_TIMINGS)
+#if (defined(SS_CPU_LINE_1_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
+  && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
 
@@ -752,10 +749,10 @@ void m68k_0001() {  // move.b
       switch (ir & BITS_ba9){
       case BITS_ba9_000: // (xxx).W
         INSTRUCTION_TIME(12-4-4);
-#if defined(SS_CPU_LINE_1_TIMINGS)
+#if (defined(SS_CPU_LINE_1_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
+  && defined(SS_CPU_PREFETCH_MOVE_MEM)
         INSTRUCTION_TIME(4);
 #endif
-
         abus=0xffffff & (unsigned long)((signed long)((signed short)m68k_fetchW()));
         pc+=2;
         break;
@@ -765,7 +762,8 @@ void m68k_0001() {  // move.b
           M68000.PrefetchClass=2; // only .L
 #endif
         INSTRUCTION_TIME(16-4-4);
-#if defined(SS_CPU_LINE_1_TIMINGS)
+#if (defined(SS_CPU_LINE_1_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
+  && defined(SS_CPU_PREFETCH_MOVE_MEM)
         INSTRUCTION_TIME(4);
 #endif
 
@@ -828,7 +826,8 @@ void m68k_0001() {  // move.b
 void m68k_0010()  //move.l
 {
 
-#if !defined(SS_CPU_LINE_2_TIMINGS)
+#if !defined(SS_CPU_LINE_2_TIMINGS) && !defined(SS_CPU_PREFETCH_TIMING) \
+  && !defined(SS_CPU_PREFETCH_MOVE_MEM)
 #if defined(SS_CPU_FETCH_TIMING)
   if((ir&BITS_876)==BITS_876_000
     ||(ir & BITS_876)==BITS_876_001)
@@ -857,30 +856,21 @@ void m68k_0010()  //move.l
   // Destination
   if ((ir & BITS_876)==BITS_876_000) // Dn
   { 
-#if defined(SS_CPU_LINE_2_TIMINGS) && !defined(SS_CPU_LINE_2_TIMINGS_2)
-    FETCH_TIMING_NO_ROUND;
-#endif
-
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     m68k_dest=&(r[PARAM_N]);
     m68k_DEST_L=m68k_src_l;
     SR_CHECK_Z_AND_N_L;
-#if defined(SS_CPU_LINE_2_TIMINGS) && defined(SS_CPU_LINE_2_TIMINGS_2)
+#if defined(SS_CPU_LINE_2_TIMINGS)
     FETCH_TIMING_NO_ROUND;
 #endif
 
   }
   else if ((ir & BITS_876)==BITS_876_001) // An
   {
-#if defined(SS_CPU_LINE_2_TIMINGS) && !defined(SS_CPU_LINE_2_TIMINGS_2)
-    FETCH_TIMING_NO_ROUND;
-#endif
-
     areg[PARAM_N]=m68k_src_l; // MOVEA
-#if defined(SS_CPU_LINE_2_TIMINGS) && defined(SS_CPU_LINE_2_TIMINGS_2)
+#if defined(SS_CPU_LINE_2_TIMINGS) 
     FETCH_TIMING_NO_ROUND;
 #endif
-
   }
   else
   {   //to memory
@@ -889,7 +879,8 @@ void m68k_0010()  //move.l
     {
     case BITS_876_010: // (An)
       INSTRUCTION_TIME(12-4-4);
-#if defined(SS_CPU_LINE_2_TIMINGS)
+#if (defined(SS_CPU_LINE_2_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
+  && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
 
@@ -897,7 +888,8 @@ void m68k_0010()  //move.l
       break;
     case BITS_876_011: // (An)+
       INSTRUCTION_TIME(12-4-4);
-#if defined(SS_CPU_LINE_2_TIMINGS)
+#if (defined(SS_CPU_LINE_2_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
+  && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
 
@@ -910,7 +902,8 @@ void m68k_0010()  //move.l
       break;
     case BITS_876_100: // -(An)
       INSTRUCTION_TIME(12-4-4);
-#if defined(SS_CPU_LINE_2_TIMINGS)
+#if (defined(SS_CPU_LINE_2_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
+  && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
 
@@ -924,7 +917,8 @@ void m68k_0010()  //move.l
       break;
     case BITS_876_101: // (d16, An)
       INSTRUCTION_TIME(16-4-4);
-#if defined(SS_CPU_LINE_2_TIMINGS)
+#if (defined(SS_CPU_LINE_2_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
+  && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
 
@@ -933,7 +927,8 @@ void m68k_0010()  //move.l
       break;
     case BITS_876_110: // (d8, An, Xn)
       INSTRUCTION_TIME(18-4-4);
-#if defined(SS_CPU_LINE_2_TIMINGS)
+#if (defined(SS_CPU_LINE_2_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
+  && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
 
@@ -949,7 +944,8 @@ void m68k_0010()  //move.l
       switch(ir&BITS_ba9){
       case BITS_ba9_000: // (xxx).W
         INSTRUCTION_TIME(16-4-4);
-#if defined(SS_CPU_LINE_2_TIMINGS)
+#if (defined(SS_CPU_LINE_2_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
+  && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
 
@@ -958,7 +954,8 @@ void m68k_0010()  //move.l
         break;
       case BITS_ba9_001: // (xxx).L
         INSTRUCTION_TIME(20-4-4);
-#if defined(SS_CPU_LINE_2_TIMINGS)
+#if (defined(SS_CPU_LINE_2_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
+  && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
 
@@ -1021,7 +1018,8 @@ void m68k_0010()  //move.l
 
 void m68k_0011() //move.w
 {
-#if !defined(SS_CPU_LINE_3_TIMINGS)
+#if !defined(SS_CPU_LINE_3_TIMINGS) && !defined(SS_CPU_PREFETCH_TIMING) \
+  && !defined(SS_CPU_PREFETCH_MOVE_MEM)
 #if defined(SS_CPU_FETCH_TIMING)
   if((ir&BITS_876)==BITS_876_000
     ||(ir & BITS_876)==BITS_876_001)
@@ -1050,24 +1048,18 @@ void m68k_0011() //move.w
   // Destination
   if ((ir & BITS_876)==BITS_876_000) // Dn
   {
-#if defined(SS_CPU_LINE_3_TIMINGS) && !defined(SS_CPU_LINE_3_TIMINGS_2)
-    FETCH_TIMING_NO_ROUND;
-#endif
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     m68k_dest=&(r[PARAM_N]);
     m68k_DEST_W=m68k_src_w;
     SR_CHECK_Z_AND_N_W;
-#if defined(SS_CPU_LINE_3_TIMINGS) && defined(SS_CPU_LINE_3_TIMINGS_2)
+#if defined(SS_CPU_LINE_3_TIMINGS) 
     FETCH_TIMING_NO_ROUND;
 #endif
   }
   else if ((ir & BITS_876)==BITS_876_001) // An
   {
-#if defined(SS_CPU_LINE_3_TIMINGS) && !defined(SS_CPU_LINE_3_TIMINGS_2)
-    FETCH_TIMING_NO_ROUND;
-#endif
     areg[PARAM_N]=(signed long)((signed short)m68k_src_w); // movea
-#if defined(SS_CPU_LINE_3_TIMINGS) && defined(SS_CPU_LINE_3_TIMINGS_2)
+#if defined(SS_CPU_LINE_3_TIMINGS)
     FETCH_TIMING_NO_ROUND;
 #endif
   }
@@ -1077,13 +1069,15 @@ void m68k_0011() //move.w
     switch (ir & BITS_876)
     {
     case BITS_876_010: // (An)
-#if defined(SS_CPU_LINE_3_TIMINGS)
+#if (defined(SS_CPU_LINE_3_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
+  && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
       abus=areg[PARAM_N];
       break;
     case BITS_876_011:  // (An)+
-#if defined(SS_CPU_LINE_3_TIMINGS)
+#if (defined(SS_CPU_LINE_3_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
+  && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
 
@@ -1095,7 +1089,8 @@ void m68k_0011() //move.w
 #endif
       break;
     case BITS_876_100: // -(An)
-#if defined(SS_CPU_LINE_3_TIMINGS)
+#if (defined(SS_CPU_LINE_3_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
+  && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
 
@@ -1109,7 +1104,8 @@ void m68k_0011() //move.w
       break;
     case BITS_876_101: // (d16, An)
       INSTRUCTION_TIME(12-4-4);
-#if defined(SS_CPU_LINE_3_TIMINGS)
+#if (defined(SS_CPU_LINE_3_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
+  && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
       abus=areg[PARAM_N]+(signed short)m68k_fetchW();
@@ -1124,7 +1120,8 @@ void m68k_0011() //move.w
       break;
     case BITS_876_110: // (d8, An, Xn)
       INSTRUCTION_TIME(14-4-4);
-#if defined(SS_CPU_LINE_3_TIMINGS)
+#if (defined(SS_CPU_LINE_3_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
+  && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
 
@@ -1140,7 +1137,8 @@ void m68k_0011() //move.w
       switch (ir & BITS_ba9){
       case BITS_ba9_000: // (xxx).W
         INSTRUCTION_TIME(12-4-4);
-#if defined(SS_CPU_LINE_3_TIMINGS)
+#if (defined(SS_CPU_LINE_3_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
+  && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
 
@@ -1149,7 +1147,8 @@ void m68k_0011() //move.w
         break;
       case BITS_ba9_001: // (xxx).L
         INSTRUCTION_TIME(16-4-4);
-#if defined(SS_CPU_LINE_3_TIMINGS)
+#if (defined(SS_CPU_LINE_3_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
+  && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
 

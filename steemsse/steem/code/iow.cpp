@@ -836,7 +836,7 @@ Set at D by TOS1.06.
  linearly, "10" means DMA sound output only.
 */
                       TRACE_LOG("STE SND mixer %X\n",dat);
-                      ASSERT(dat&3); // Again
+//                      ASSERT(dat&3); // Again, Pacemaker
                       dma_sound_mixer=dat & b00000011; // 1=PSG too, anything else only DMA
                       log_to_section(LOGSECTION_SOUND,EasyStr("SOUND: ")+HEXSl(old_pc,6)+" - DMA sound mixer is set to "+dma_sound_mixer);
                       break;

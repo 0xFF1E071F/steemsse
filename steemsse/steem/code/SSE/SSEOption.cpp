@@ -3,12 +3,17 @@
 #include "SSEDebug.h"
 #include "SSESTF.h" // for the enum
 
+
+
+
 #if defined(SS_SSE_OPTION_STRUCT)
 
 TOption SSEOption; // singleton
 
 //tmp
 #ifdef UNIX
+#include <stdio.h>
+#include <string.h>
 #define TRUE 1 // don't screw this one up...
 #define FALSE 0
 #endif
@@ -33,8 +38,13 @@ void TOption::Init() {
   CaptureMouse=TRUE;
   DisplaySize=0; // original Steem 3.2
   StealthMode=FALSE;
+#if defined(DEBUG_BUILD)  
   OutputTraceToFile=TRUE; // can be disabled in Boiler
+#else
+  OutputTraceToFile=FALSE; 
+#endif
   TraceFileLimit=FALSE;//TRUE; // stop TRACING to file at +-3+MB
+
   WakeUpState=0; 
 }
 
@@ -46,7 +56,11 @@ void TOption::Init() {
 TConfig SSEConfig;
 
 TConfig::TConfig() {
+#ifdef WIN32
   ZeroMemory(this,sizeof(TConfig));
+#else
+  memset(this,0,sizeof(TConfig));
+#endif
 }
 
 #endif//#if defined(SS_SSE_CONFIG_STRUCT)

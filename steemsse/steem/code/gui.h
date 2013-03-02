@@ -222,6 +222,12 @@ int GetComLineArgType(char *,EasyStr &);
 #define ARG_NONEWINSTANCE 250
 #define ARG_ALWAYSNEWINSTANCE 251
 
+
+#if defined(STEVEN_SEAGAL) && defined(SS_UNIX_TRACE)
+#define ARG_LOGSECTION 252
+#define ARG_TRACEFILE 253
+#endif
+
 void ParseCommandLine(int,char*[],int=0);
 
 bool MakeGUI();

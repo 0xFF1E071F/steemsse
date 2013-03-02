@@ -1256,15 +1256,15 @@ inline MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
   else if( (ir&0xF000)==0x0000)
     starts_counting-=2;
 #endif
-#if defined(SS_CPU_MOVE_B_TIMINGS)
+#if defined(SS_CPU_LINE_1_TIMINGS)
   else if( (ir&0xF000)==0x1000)
     starts_counting-=2;
 #endif
-#if defined(SS_CPU_MOVE_L_TIMINGS)
+#if defined(SS_CPU_LINE_2_TIMINGS)
   else if( (ir&0xF000)==0x2000) 
     starts_counting-=2;
 #endif
-#if defined(SS_CPU_MOVE_W_TIMINGS)
+#if defined(SS_CPU_LINE_3_TIMINGS)
   else if( (ir&0xF000)==0x3000) 
     starts_counting-=2;
 #endif
@@ -1572,8 +1572,8 @@ int TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
       if(PreviousScanline.Tricks&TRICK_STABILISER)
         nsdp+=-2; // fixes D4/Tekila shift
       else
-#if defined(SS_CPU_PREFETCH_TIMING)
-        nsdp+=2; // interesting! TODO
+#if defined(SS_CPU_PREFETCH_TIMING) || defined(CORRECTING_PREFETCH_TIMING)
+        nsdp+=2; // it's because we come sooner
 #else
         nsdp+=4; // fixes E605 Planet shift
 #endif

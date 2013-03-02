@@ -36,6 +36,10 @@ other files that make up the Steem module.
 #include "SSE/SSE.h" // SS
 #include "SSE/SSEDebug.h" //SS
 
+#if defined(SS_STF)
+#include "SSE/SSESTF.h"//unix
+#endif
+
 const char *stem_version_date_text=__DATE__ " - " __TIME__;
 
 #ifndef ONEGAME
@@ -362,6 +366,26 @@ UNIX_ONLY( hxc::font_sl.Insert(0,0,Path,NULL); )
     }else if (Type==ARG_NONOTIFYINIT){
       ShowNotify=0;
     }
+#if defined(STEVEN_SEAGAL) && defined(SS_UNIX_TRACE)
+    else if (Type==ARG_TRACEFILE){
+      ////TRACE("hhhh\n");
+      if(Path.Length()>0) // room for improvement...
+        USE_TRACE_FILE=(Path.Mids(0,1)=="Y" || Path.Mids(0,1)=="y") ? 1 : 0;
+      /////TRACE("use file %d\n",USE_TRACE_FILE);
+    }
+
+    else if (Type==ARG_LOGSECTION){
+      //TRACE("LOGSECTION: %s\n",Path.c_str());
+      for(int i=0;i<NUM_LOGSECTIONS;i++)
+      {
+	if(Path.Length()>i)
+	{
+	  Debug.logsection_enabled[i]= Path.Mids(i,1)=="1" ? 1 : 0;
+	  //if(Debug.logsection_enabled[i]) TRACE("LOGSECTION %d enabled\n",i);
+	}
+      }
+    }
+#endif    
   }
 #else
   INIFile=RunDir+SLASH ONEGAME_NAME ".ini";

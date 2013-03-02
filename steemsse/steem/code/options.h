@@ -205,6 +205,11 @@ public:
   hxc_dropdown st_type_dd;
 #endif
 
+#if defined(SS_MMU_WAKE_UP)
+  hxc_button wake_up_label; 
+  hxc_dropdown wake_up_dd;
+#endif
+
 #if defined(SS_IKBD_6301) 
   hxc_button hd6301emu_but;
 #endif

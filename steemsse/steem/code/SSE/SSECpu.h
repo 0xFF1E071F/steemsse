@@ -163,12 +163,20 @@ void TM68000::CheckExtraRoundedCycles() {
 
 inline void TM68000::FetchTiming() {
 #if !defined(SS_CPU_PREFETCH_TIMING)
-  ASSERT(!NextIrFetched); //strong
-#if defined(DEBUG_BUILD)
+
+#if defined(SS_DEBUG)
+  //ASSERT(!NextIrFetched); //strong
+  if(NextIrFetched)
+  {
+    TRACE("PC %X IR %X double prefetch?\n",pc,ir);
+  }
+//#if defined(DEBUG_BUILD)
   NextIrFetched=true;
-#endif
+//#endif
+#endif  
   InstructionTimeRound(4); 
 #endif
+  
 #if defined(SS_CPU_PREFETCH_TIMING) && defined(SS_CPU_PREFETCH_TIMING_EXCEPT)
   if(debug_prefetch_timing(ir))
     InstructionTimeRound(4); 
@@ -182,12 +190,20 @@ inline void TM68000::FetchTiming() {
 
 inline void TM68000::FetchTimingNoRound() {
 #if !defined(SS_CPU_PREFETCH_TIMING)
-  ASSERT(!NextIrFetched);
+
 #if defined(SS_DEBUG)
+  //ASSERT(!NextIrFetched); //strong
+  if(NextIrFetched)
+  {
+    TRACE("PC %X IR %X double prefetch?\n",pc,ir);
+  }
+//#if defined(DEBUG_BUILD)
   NextIrFetched=true;
-#endif
+//#endif
+#endif  
   InstructionTime(4); 
 #endif
+  
 #if defined(SS_CPU_PREFETCH_TIMING) && defined(SS_CPU_PREFETCH_TIMING_EXCEPT)
 
   if(debug_prefetch_timing(ir))
@@ -277,17 +293,26 @@ inline void TM68000::PerformRte() {
 #if defined(SS_CPU_PREFETCH)
 
 inline void TM68000::PrefetchIrc() {
-#if !(defined(_DEBUG) && defined(DEBUG_BUILD))
+//#if !(defined(_DEBUG) && defined(DEBUG_BUILD))
+#if defined(SS_DEBUG) && !(defined(_DEBUG) && defined(DEBUG_BUILD))
   ASSERT(!prefetched_2); // strong, only once per instruction 
 #endif
   prefetch_buf[1]=*lpfetch;
   prefetched_2=TRUE;
-
+  
 #if defined(SS_CPU_PREFETCH_TIMING)
-  ASSERT(!NextIrFetched); //strong
-#if defined(DEBUG_BUILD)
+
+#if defined(SS_DEBUG) && !(defined(_DEBUG) && defined(DEBUG_BUILD))
+  //ASSERT(!NextIrFetched); //strong
+  if(NextIrFetched)
+  {
+    TRACE("PC %X IR %X double prefetch?\n",pc,ir);
+  }
+//#if defined(DEBUG_BUILD)
   NextIrFetched=true;
+//#endif
 #endif
+
 #if defined(SS_CPU_PREFETCH_TIMING_EXCEPT)
   if(debug_prefetch_timing(ir))
     ; else
@@ -300,13 +325,26 @@ inline void TM68000::PrefetchIrc() {
 
 
 inline void TM68000::PrefetchIrcNoRound() {
-#if !(defined(_DEBUG) && defined(DEBUG_BUILD))
+//#if !(defined(_DEBUG) && defined(DEBUG_BUILD))
+#if defined(SS_DEBUG) && !(defined(_DEBUG) && defined(DEBUG_BUILD))
   ASSERT(!prefetched_2); // strong, only once per instruction 
 #endif
   prefetch_buf[1]=*lpfetch;
   prefetched_2=TRUE;
-
+  
 #if defined(SS_CPU_PREFETCH_TIMING)
+
+#if defined(SS_DEBUG) && !(defined(_DEBUG) && defined(DEBUG_BUILD))
+  //ASSERT(!NextIrFetched); //strong
+  if(NextIrFetched)
+  {
+    TRACE("PC %X IR %X double prefetch?\n",pc,ir);
+  }
+//#if defined(DEBUG_BUILD)
+  NextIrFetched=true;
+//#endif
+#endif
+
 #if defined(SS_CPU_PREFETCH_TIMING_EXCEPT)
   if(debug_prefetch_timing(ir))
     ; else

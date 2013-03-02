@@ -5,7 +5,11 @@
 int debug0,debug1,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9;
 
 #if defined(SS_IKBD_6301)
+#if defined(SS_UNIX)
+extern "C" void (*hd6301_trace)(char *fmt, ...);
+#else
 extern "C" void (_stdcall *hd6301_trace)(char *fmt, ...);
+#endif
 #endif
 
 TDebug Debug; // singleton
@@ -51,7 +55,7 @@ TDebug::TDebug() {
   nTrace=0; // trace counter
   trace_file_pointer=freopen(SS_TRACE_FILE_NAME, "w", stdout );
   ASSERT(trace_file_pointer);
-  TRACE("This is a Steem SSE TRACE file\n");
+  printf("This is a Steem SSE TRACE file\n");
 #endif
 
 #if defined(SS_IKBD_6301)
@@ -85,7 +89,11 @@ void TDebug::Trace(char *fmt, ...){
   // Our TRACE facility has no MFC dependency.
   va_list body;	
   va_start(body, fmt);	
+#if defined(SS_UNIX)
+  int nchars=vsnprintf(trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
+#else
   int nchars=_vsnprintf(trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
+#endif
   va_end(body);	
   if(nchars==-1)
     strcpy(trace_buffer,"TRACE buffer overrun\n");
@@ -93,10 +101,17 @@ void TDebug::Trace(char *fmt, ...){
 #if defined(SS_DEBUG_TRACE_IDE) && defined(WIN32)
   OutputDebugString(trace_buffer);
 #endif
+
+#if defined(SS_UNIX_TRACE)
+  if(!USE_TRACE_FILE)  
+    fprintf(stderr,trace_buffer);
+#endif 
   
 #if defined(SS_DEBUG_TRACE_FILE)
-  printf(trace_buffer); 
-  nTrace++; 
+#if defined(DEBUG_BUILD) || defined(SS_UNIX)
+  if(USE_TRACE_FILE)
+#endif      
+    printf(trace_buffer),nTrace++; 
   if(TRACE_FILE_REWIND && nTrace>=TRACE_MAX_WRITES)
   {
     nTrace=0;
@@ -119,7 +134,13 @@ void TDebug::TraceLog(char *fmt, ...) { // static
     // trivial (TODO)
     va_list body;	
     va_start(body, fmt);
+#if defined(SS_UNIX)
+    int nchars=vsnprintf(Debug.trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
+#else
     int nchars=_vsnprintf(Debug.trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
+#endif
+//    int nchars=_vsnprintf(Debug.trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
+
     va_end(body);	
 
     if(nchars==-1)
@@ -128,10 +149,17 @@ void TDebug::TraceLog(char *fmt, ...) { // static
 #if defined(SS_DEBUG_TRACE_IDE) && defined(WIN32)
     OutputDebugString(Debug.trace_buffer);
 #endif
-  
+
+#if defined(SS_UNIX_TRACE)
+    if(!USE_TRACE_FILE)
+      fprintf(stderr,Debug.trace_buffer);
+#endif 
+    
 #if defined(SS_DEBUG_TRACE_FILE)
-    printf(Debug.trace_buffer); 
-    Debug.nTrace++; 
+#if defined(DEBUG_BUILD) || defined(SS_UNIX)
+    if(USE_TRACE_FILE)
+#endif      
+      printf(Debug.trace_buffer),Debug.nTrace++; 
     if(TRACE_FILE_REWIND && Debug.nTrace>=TRACE_MAX_WRITES)
     {
       Debug.nTrace=0;

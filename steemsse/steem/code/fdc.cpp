@@ -1017,13 +1017,14 @@ void agenda_fdc_finished(int)
     floppy_type1_command_active=2;
   }
 //  FDC_SCHEDULE_MOTOR_OFF; // 9 revs post command end
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_ACCURATE)
   if(ADAT)
   {
     fdc_str|=FDC_STR_MOTOR_ON;
     agenda_delete(agenda_fdc_motor_flag_off);
     agenda_add(agenda_fdc_motor_flag_off,MILLISECONDS_TO_HBLS(1800),0);
   }
-
+#endif
 }
 //---------------------------------------------------------------------------
 void agenda_floppy_seek(int)

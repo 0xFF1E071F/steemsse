@@ -29,6 +29,8 @@ void THD6301::Init() { // called in 'main'
   {
     TRACE_LOG("HD6301 emu NOT initialised\n");
     HD6301EMU_ON=0;
+    ///Alert("no 6301","Error");
+   /// alert.ask(XD,"no 6301",Caption,T("Okay"),default_option,0);
   }
 /*
   int a=0;
