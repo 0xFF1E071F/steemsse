@@ -1075,39 +1075,6 @@ void event_vbl_interrupt()
   debug_vbl();
 #endif
 
-
-
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301_______)
-  // run extra 6301 cycles of the VBL ????
-  if(HD6301EMU_ON && !HD6301.Crashed)
-  {
-  //  debug4++;//312 at end of vbl, we do miss one...
-//    if(!HD6301.RunThisHbl) 
-    {
-      ASSERT(HD6301_OK);
-      int n6301cycles;
-
-#if defined(SS_SHIFTER)
-      n6301cycles=Shifter.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
-      
-#else
-      n6301cycles=0;// (screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
-#endif
-      ASSERT(n6301cycles);
-      if(hd6301_run_cycles(n6301cycles)==-1)
-      {
-        TRACE("6301 emu is hopelessly crashed!\n");
-        HD6301.Crashed=1; 
-      }
-    }
-    HD6301.RunThisHbl=0; // reset for next hbl
-    //TODO adjust at VBL
-  }
-#endif
-
-
-
-
 #if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
   Shifter.Vbl();
 #endif

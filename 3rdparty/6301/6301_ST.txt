@@ -11,6 +11,7 @@ Interesting ST cases
 
 Barbarian
 Cobra Compil 1
+Delirious 4 fake GEM
 Dragonnels (Menu, Unlimited Bobs, Great Plazma)
 Froggies over the Fence (Menu)
 Gauntlet
@@ -122,6 +123,12 @@ Computing a theoretical #cycles for transmitting a byte:
 1 byte in 1000000/976.5625 cycles = 1024 cycles
 
 Value that works in the ST (esp. for loading a custom program): 1350 cycles
+Lower values would work, but not with Froggies.
+
+A problem of 6301 emulation is that the ST program didn't have a "ready" 
+message.
+By sending commands too fast, you could mess it up, likewise in emulation if
+your timings are off.
 
 
 Double-buffering
@@ -132,8 +139,11 @@ allows to have one value in the shift register (value being transmitted/
 received) and another value in the I/O register.
 A concrete implication is that you can write the first two bytes in a very 
 short delay, and of course read a byte while another is being shifted.
+Another is that if you write two bytes in quick succession, the second will
+replace the first only if the shift register is busy.
 Not sure it makes a difference, but it's implemented in Steem (optional 
 #define).
+
 
 
 DR registers in input mode

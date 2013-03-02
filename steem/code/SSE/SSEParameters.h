@@ -75,7 +75,11 @@
 ///////////
 
 #if defined(SS_DEBUG) 
+#if defined(SS_UNIX)
+#define SS_TRACE_FILE_NAME "./TRACE.txt"
+#else
 #define SS_TRACE_FILE_NAME "TRACE.txt"
+#endif
 #define TRACE_MAX_WRITES 200000 // to avoid too big file
 #endif
 
@@ -125,6 +129,7 @@ SS_SIGNAL_ENUM_EnumDisplayModes, // wait until finished (?)
 
 #if defined(SS_UNIX)
 #define HD6301_ROM_FILENAME "./HD6301V1ST.img" // cooler than 'keyboard.rom'
+//#define HD6301_ROM_FILENAME "HD6301V1ST.img" // cooler than 'keyboard.rom'
 #else
 #define HD6301_ROM_FILENAME "HD6301V1ST.img" // cooler than 'keyboard.rom'
 #endif

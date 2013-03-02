@@ -21,7 +21,6 @@ extern int cpu_timer,cpu_cycles; // for debug
 #define ABSOLUTE_CPU_TIME (cpu_timer-cpu_cycles)
 #define act ABSOLUTE_CPU_TIME
 extern unsigned char  stick[8]; // joysticks
-
 // variables from Steem we declare here as 'C' linkage (easier than in Steem)
 int ST_Key_Down[128]; // not better than what I envisioned but effective!
 int mousek;
@@ -177,7 +176,13 @@ hd6301_run_cycles(u_int cycles_to_run) {
   {
     // we really must go slowly here, better lose some time sync
     // than break custom programs (TB2 etc.)
+#ifdef WIN32
     int cycles_given_back=min(20,cycles_to_give_back);
+#else
+    int cycles_given_back=cycles_to_give_back;
+    if(cycles_given_back>20)
+      cycles_given_back=20;
+#endif
     cycles_to_run-=cycles_given_back;         //cycles_to_give_back;
     //cycles_to_give_back=0;
     cycles_to_give_back-=cycles_given_back;
@@ -280,7 +285,8 @@ load_rom() {
   TRACE("6301: Init RAM, load ROM %s\n",romfile);
 #endif
   
-  fp=fopen(romfile,"r+b");
+  //fp=fopen(romfile,"r+b");
+  fp=fopen("./HD6301V1ST.img","r+b");
   if(fp)
   {
     int i,checksum=0;
@@ -293,10 +299,12 @@ load_rom() {
       TRACE("checksum of rom=%d expected=%d\n",checksum,HD6301_ROM_CHECKSUM);
 #endif
     fclose(fp);
+    fprintf(stderr,"6301 OK\n");
   }
   else 
   {
     TRACE("Failed to open file\n");
+    fprintf(stderr,"6301 KO\n");
     free(ram);
     ram=NULL;
   } 

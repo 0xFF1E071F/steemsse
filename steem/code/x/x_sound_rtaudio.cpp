@@ -108,7 +108,7 @@ HRESULT Rt_StartBuffer(int flatlevel1,int flatlevel2)
   // now we find the device index through the name...
   RtAudio::DeviceInfo info;
   unsigned int devices=rt_audio->getDeviceCount();
-  ASSERT(c);
+///////  ASSERT(c); //what was it?
   for(unsigned int i=0;i<devices;i++) // 1->0
   {
     info=rt_audio->getDeviceInfo(i);

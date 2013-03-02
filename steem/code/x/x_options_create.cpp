@@ -1172,10 +1172,26 @@ void TOptionBox::CreateSSEPage() {
   st_type_dd.make_empty();
   st_type_dd.additem("STE",0);
   st_type_dd.additem("STF",1);
-  st_type_dd.additem("STF (wake up state 2)",2);
-  st_type_dd.additem("Mega STF (with blitter)",3);
+#if defined(SS_STF_MEGASTF)
+  st_type_dd.additem("Mega STF (with blitter)",2);
+#endif
   st_type_dd.select_item_by_data(ST_TYPE);
   st_type_dd.create(XD,page_p,page_l+5+Wid,y,400-(15+Wid+10),350,
+    dd_notify_proc,this);
+  y+=LineHeight;
+#endif
+
+#if defined(SS_MMU_WAKE_UP)
+  Wid=hxc::get_text_width(XD,T("Wake-up state"));
+  wake_up_label.create(XD,page_p,page_l,y,Wid,25,NULL,this,BT_STATIC 
+    | BT_TEXT,T("Wake-up state"),0,BkCol);
+  wake_up_dd.id=4006;
+  wake_up_dd.make_empty();
+  wake_up_dd.additem("Ignore wake-up state",0);
+  wake_up_dd.additem("Wake-up state 1",1);
+  wake_up_dd.additem("Wake-up state 2",2);
+  wake_up_dd.select_item_by_data(WAKE_UP_STATE);
+  wake_up_dd.create(XD,page_p,page_l+5+Wid,y,400-(15+Wid+10),350,
     dd_notify_proc,this);
   y+=LineHeight;
 #endif

@@ -17,8 +17,6 @@ and (for some reason) command-line options.
 #include "SSE/SSE6301.h"
 #endif
 
-
-
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
 
 extern int draw_last_scanline_for_border,res_vertical_scale; // forward
@@ -708,8 +706,18 @@ int GetComLineArgType(char *Arg,EasyStr &Path)
   }else if (ComLineArgCompare(Arg,"RTBUFNUM",true)){
     Path=strchr(Arg,'=')+1;
     return ARG_RTBUFNUM;
-
-  }else{
+  }
+#if defined(STEVEN_SEAGAL) && defined(SS_UNIX_TRACE)
+  else if (ComLineArgCompare(Arg,"TRACEFILE=",true)){ //Y,N
+    Path=strchr(Arg,'=')+1;
+    return ARG_TRACEFILE;
+  }
+  else if (ComLineArgCompare(Arg,"LOGSECTION=",true)){
+    Path=strchr(Arg,'=')+1;
+    return ARG_LOGSECTION;
+  }
+#endif
+  else{
     int Type=ARG_UNKNOWN;
     char *pArg=Arg;
     if (ComLineArgCompare(Arg,"INI=",true)){
@@ -722,6 +730,7 @@ int GetComLineArgType(char *Arg,EasyStr &Path)
       pArg=strchr(Arg,'=')+1;
       Type=ARG_SETCUTSFILE;
     }
+    
     Path.SetLength(MAX_PATH);
     GetLongPathName(pArg,Path,MAX_PATH);
 
@@ -1208,7 +1217,7 @@ void HandleKeyPress(UINT VKCode,bool Up,int Extended)
   if (STCode){
     ST_Key_Down[STCode]=!Up; // this is used by ikbd.cpp & ireg.c
 
-#if defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
     if(HD6301EMU_ON)
     { 
 #if defined(SS_IKBD_6301_TRACE_KEYS)

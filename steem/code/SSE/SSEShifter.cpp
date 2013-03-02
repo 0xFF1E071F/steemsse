@@ -2226,13 +2226,6 @@ void TShifter::Vbl() {
 #endif
   nVbl++;
 #if defined(SS_DEBUG)
-#if defined(SS_SHIFTER_REPORT_VBL_TRICKS)
-  if(Debug.ShifterTricks)
-  {
-    TRACE("VBL %d shifter tricks %X\n",nVbl,Debug.ShifterTricks);
-    Debug.ShifterTricks=0;
-  }
-#endif
   debug4=debug5=debug6=0;
 #endif
 }

@@ -1,6 +1,9 @@
 #define OPTIONS_HEIGHT 400
 
 #include "SSE/SSE6301.h"
+#if defined(SS_STF)
+int SwitchSTType(int new_type);//forward
+#endif
 //---------------------------------------------------------------------------
 TOptionBox::TOptionBox()
 {
@@ -611,6 +614,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
 #endif
 #if defined(SS_IKBD_6301)
     else if(b->id==4006)
+      //b->checked=HD6301EMU_ON=b->checked&HD6301_OK;
       b->checked=HD6301EMU_ON=b->checked&HD6301_OK;
 #endif
 #if defined(SS_VAR_KEYBOARD_CLICK)
@@ -752,6 +756,13 @@ int TOptionBox::dd_notify_proc(hxc_dropdown*dd,int mess,int i)
     SwitchSTType(ST_TYPE);
     // TODO: add TOS matching, Mega STF 4MB 
   }
+#endif
+#if defined(SS_MMU_WAKE_UP)
+  else if(dd->id==4006) // wake-up state
+  {
+    WAKE_UP_STATE=dd->sel;
+  }
+
 #endif
 #endif
 

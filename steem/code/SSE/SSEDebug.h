@@ -118,7 +118,9 @@ enum logsection_enum_tag {
 #if defined(_DEBUG) && defined(VC_BUILD)
 // Our ASSERT facility has no MFC dependency.
 #define ASSERT(x) {if(!(x) && !FullScreen) _asm{int 0x03}}
-#else // for boiler
+#elif defined(SS_UNIX_TRACE)
+#define ASSERT(x) if (!(x)) {TRACE("Assert failed: %s\n",#x);} 
+#elif defined(DEBUG_BUILD) // for boiler
 #ifdef __cplusplus
 #define ASSERT(x) {if (!(x)) {TRACE("Assert failed: %s\n",#x); \
   if(!Debug.IgnoreErrors) { \
@@ -126,7 +128,7 @@ enum logsection_enum_tag {
   if(debug9==IDABORT) exit(EXIT_FAILURE);\
   Debug.IgnoreErrors=(debug9==IDIGNORE);}}}
 #endif//c++
-#endif
+#endif//vc
 #else //!SS_DEBUG
 #define ASSERT(x)
 #endif
@@ -135,7 +137,9 @@ enum logsection_enum_tag {
 #if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
 #if defined(_DEBUG) && defined(VC_BUILD)
 #define BREAKPOINT _asm { int 3 }
-#else // for boiler
+#elif defined(SS_UNIX_TRACE)
+#define BREAKPOINT TRACE("BREAKPOINT\n"); // extremely silly, I know
+#elif DEBUG_BUILD // for boiler
 #ifdef __cplusplus
 #define BREAKPOINT {if(!Debug.IgnoreErrors) { \
   TRACE("Breakpoint\n"); \
@@ -148,11 +152,15 @@ enum logsection_enum_tag {
 
 // BRK(x) 
 #if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+#if DEBUG_BUILD
 #ifdef __cplusplus
 #define BRK(x){if(!Debug.IgnoreErrors) { \
   TRACE("Breakpoint: %s\n",#x); \
   Debug.IgnoreErrors=!(MessageBox(0,#x,"Breakpoint",MB_ICONWARNING|MB_OKCANCEL)==IDOK);}}
 #endif//c++
+#elif defined(SS_UNIX_TRACE)
+#define BRK(x) TRACE("BRK %s\n",#x);
+#endif
 #else //!SS_DEBUG
 #define BRK(x)
 #endif
@@ -203,7 +211,9 @@ enum logsection_enum_tag {
 #if defined(_DEBUG) && defined(VC_BUILD)
 // Our VERIFY facility has no MFC dependency.
 #define VERIFY(x) {if(!(x) && !FullScreen) _asm{int 0x03}}
-#else // for boiler
+#elif defined(SS_UNIX_TRACE)
+#define VERIFY(x) if (!(x)) {TRACE("Verify failed: %s\n",#x);} 
+#elif defined(DEBUG_BUILD) // for boiler
 #ifdef __cplusplus
 #define VERIFY(x) {if (!(x)) {TRACE("Verify failed: %s\n",#x); \
   if(!Debug.IgnoreErrors) { \

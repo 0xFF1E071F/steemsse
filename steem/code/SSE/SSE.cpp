@@ -1,7 +1,7 @@
 // This file is compiled as a distinct module (resulting in an OBJ file)
 
 #include "SSE.h"
-#include "SSEdecla.h"
+#include "SSEDecla.h"
 #include "SSEParameters.h"
 
 

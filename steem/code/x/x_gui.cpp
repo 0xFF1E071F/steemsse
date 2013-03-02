@@ -602,9 +602,14 @@ void HandleKeyPress(UINT KeyCode,bool Up,int Extend)
   }
 
   if (STCode==0) STCode=key_table[BYTE(KeyCode)];
-  if (STCode){
+  if (STCode){    
     ST_Key_Down[STCode]=!Up;
     if (Up) STCode|=MSB_B;
+    
+#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+    if(!HD6301EMU_ON)
+#endif
+    
     keyboard_buffer_write_n_record(STCode);
 
 #ifndef DISABLE_STEMDOS
