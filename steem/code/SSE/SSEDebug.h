@@ -160,7 +160,12 @@ enum logsection_enum_tag {
 #endif//c++
 #elif defined(SS_UNIX_TRACE)
 #define BRK(x) TRACE("BRK %s\n",#x);
+//#endif
+#elif defined(_DEBUG)
+#define BRK(X) _asm{int 0x03}
+
 #endif
+
 #else //!SS_DEBUG
 #define BRK(x)
 #endif
