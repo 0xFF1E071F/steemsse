@@ -139,7 +139,7 @@ enum logsection_enum_tag {
 #define BREAKPOINT _asm { int 3 }
 #elif defined(SS_UNIX_TRACE)
 #define BREAKPOINT TRACE("BREAKPOINT\n"); // extremely silly, I know
-#elif DEBUG_BUILD // for boiler
+#elif defined(DEBUG_BUILD) // for boiler
 #ifdef __cplusplus
 #define BREAKPOINT {if(!Debug.IgnoreErrors) { \
   TRACE("Breakpoint\n"); \
@@ -152,7 +152,7 @@ enum logsection_enum_tag {
 
 // BRK(x) 
 #if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
-#if DEBUG_BUILD
+#if defined(DEBUG_BUILD)
 #ifdef __cplusplus
 #define BRK(x){if(!Debug.IgnoreErrors) { \
   TRACE("Breakpoint: %s\n",#x); \
