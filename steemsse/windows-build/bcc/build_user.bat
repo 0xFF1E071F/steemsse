@@ -9,8 +9,8 @@ set NASMPATH=D:\Console\nasm\
 set BCCROOT=D:\Console\bcc\
 set BCCPATH=D:\Console\bcc\bin\
 set COPYPATH=G:\emu\st\bin\steem\
-set ROOT=c:\data\prg\st\
-
+rem set ROOT=c:\data\prg\st\
+set ROOT=G:\Downloads\steemsse-code\steemsse\
 rem the rest should be the same for all systems:
 
 set PROGRAMNAME=SteemBeta BCC.exe
