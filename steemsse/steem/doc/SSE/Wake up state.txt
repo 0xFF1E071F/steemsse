@@ -1,0 +1,94 @@
+The CPU and the MMU share access to the RAM bus: 2 cycles each every 4
+cycles.
+
+The wake up state is randomly determined at cold reset, with a state being
+more probable than another, depending on temperature too.
+
+It affects the order of cycles sharing for each chunk of 4 clock cycles.
+
+The reference is cycle 0 at cold reset.
+
+The more practical reference is the start of scanline in the 'shifter trick 
+reckoning', the latter meaning the cycles that are targeted to obtain certain
+effects. EG: cycle 376 for right border removal. The important thing is of 
+course that wake up state has an influence on those tricks.
+
+We call the wake up states '1' and '2'.
+To reduce confusion (if possible), we will try to define wake up states so
+that the demo 'Forest' by Paolo gives us the same numbers as those we use.
+
+Sync 0-byte line
+------------------
+
+In Steem in STF mode, 'Forest' will return state 1 or 2 according to the
+following rule:
+
+In wake up state 1, changing frequency to 60 at cycle 56 then back to
+50 at cycle 64 will confuse the shifter and produce a 0 byte line (no
+memory fetching, a black line is drawn).
+
+In wake up state 2, changing frequency to 60 at cycle 58 then back to
+50 at cycle 68 will confuse the shifter and produce a 0 byte line (no
+memory fetching, a black line is drawn).
+
+State (STF)            1                      2
+Switch to 60          56                     58                      
+Switch to 50          64                     68
+CPU cycles         56-57                  58-59
+Shifter cycles     58-59                  56-57
+
+We derive the schemas that show how every 4 cycles are shared.
+They start at cycle 0 and all multiples of 4 after that.
+
+
+State 1
++-----+
+| CPU |
++-----+
+| MMU | 
++-----+
+
+
+State 2
++-----+
+| MMU |
++-----+
+| CPU |
++-----+
+
+
+Right border off
+------------------
+
+The 'magic cycle' to remove the right border is 376.
+
+In wake-up state 2, a write on cycle 374 will not work.
+But in wake-up state 1, it will be delayed by the MMU and hit cycle 376.
+
+-> Nostalgia menu
+
+
+State 1
++-----+
+| CPU |   372
++-----+
+| MMU |   374 -> delayed to 376, right border trick will work
++-----+
+
+
+State 2
++-----+
+| MMU |   372
++-----+
+| CPU |   374 -> taken, right border trick missed
++-----+
+
+
+Palette
+---------
+
+Logic says that palette changes may be delayed if we hit when the bus isn't
+ available (second chunk in state 1, first chunk in state 2).
+The delay would be 2.
+But there's still a delay of 1 that must be added to all changes in Steem.
+I didn't see it in Hatari so it may have nothing to do with emulation.

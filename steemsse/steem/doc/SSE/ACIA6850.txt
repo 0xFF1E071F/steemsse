@@ -1,0 +1,233 @@
+Steem SSE documentation
+
+Motorola ACIA MC6850
+===============================================================================
+
+Sources:
+Official MC6850 documentation by Motorola
+Some general Atari ST documentation
+Development of Steem
+
+-------------------------------------------------------------------------------
+
+ACIA stands for 'Asynchronous Communications Interface Adapter'
+
+Two ACIA MC6850 equip the Atari ST, one for the keyboard controller (called
+IKBD, it's a Hitachi HD6301V1 chip, also documented here) and one for the
+MIDI controller.
+
+Pins (lines):
++---------+
+|VSS      |
+|VCC      |
+|RxData   |
+|RxCLK    |
+|TxData   |
+|TxCLK    |
+|RTS      |
+|IRQ      |
+|CS0-2    |
+|RS       |
+|R/W      |
+|D0-D7    |
+|CTS      |
+|DCD      |
+|E        |
++---------+
+
+
+Serial communication happens bit by bit on a single line per direction.
+The ACIA converts between bit flows and bytes, which is called shifting.
+
+There are two such lines on the 6850:
+RxData = receiving line
+TxData = transmitting line
+
+There are associated clock lines:
+RxCLK  = receiving clock (500khz on the ST)
+TxCLK  = transmitting clock (500khz on the ST)
+
+The ACIA can send and receive in duplex, but there's only one IRQ line, which
+can be used for both directions.
+
+The 6850 has an 8bit bidirectional bus (D0-D7).
+R/W operations on all registers pass through this bus.
+
+The 6850 also has pins to control access, which is done by the electronics
+(no need to emulate at such low level):
+
+CS0-2 = Chip select lines (input)
+RS    = Register select line (input)
+High: Transmit/receive Low: Control/Status
+R/W   = R/W line (input)
+High: Read register  Low: Write register
+
+The RTS, CTS and DCD lines concern Modem activity. They're not used on the ST.
+
+E     = Enable line (input) A derivative of a CPU clock
+It is 1/10th of the CPU clock (+- 800000hz on the ST)
+
+
+The Motorola ACIA MC6850 has 4 "visible" (accessible by the programmer) 
+8bit registers:
+
+RDR Receive Data
+TDR Transmit Data
+CR  Control
+SR  Status
+
+Those 4 registers are mapped on only 2 R/W bytes for each ACIA on the ST:
+
+$FFFC00 for CR and SR of the IKBD controller
+$FFFC02 for RDR and TDR of the IKBD controller
+$FFFC04 for CR and SR of the MIDI controller
+$FFFC06 for RDR and TDR of the MIDI controller
+
+Data registers are double buffered: R/W can occur during the transmission or
+reception of the next byte.
+
+The double buffer consists of two additional registers where the actual
+shifting happens, we call them:
+
+RDRS shifting register for RDR
+TDRS shifting register for TDR
+
+We have the following schemas:
+
+other chip -> other serial interface -> bits -> RDRS -> byte -> RDR -> CPU
+
+CPU -> byte -> TDR -> TDRS -> bits -> other serial interface -> other chip
+
+Double buffering means that two bytes may be written very fast one after
+the other on TDR. The first byte will be transferred almost at once into
+TDRS. Subsequent bytes will have to wait the full serial transfer time.
+
+Control Register CR
+
+One writes on the ST's CR by writing on addresses $FFFC00 (IKBD) or $FFFC04 
+(MIDI). This register can't be read by the program.
+
+                                                BIT 7 6 5 4 3 2 1 0|
+       |     |Rx Int enable (1 - enable) -----------' | | | | | | ||
+       |     |Tx Interrupts                           | | | | | | ||
+       |     |00 - RTS low, Tx int disable -----------+-+ | | | | ||
+       |     |01 - RTS low, Tx int enable ------------+-+ | | | | ||
+       |     |10 - RTS high, Tx int disable ----------+-+ | | | | ||
+       |     |11 - RTS low, Tx int disable,           | | | | | | ||
+       |     |     Tx a break onto data out ----------+-' | | | | ||
+       |     |Settings                                    | | | | ||
+       |     |000 - 7 bit, even, 2 stop bit --------------+-+-+ | ||
+       |     |001 - 7 bit, odd, 2 stop bit ---------------+-+-+ | ||
+       |     |010 - 7 bit, even, 1 stop bit --------------+-+-+ | ||
+       |     |011 - 7 bit, odd, 1 stop bit ---------------+-+-+ | ||
+       |     |100 - 8 bit, 2 stop bit --------------------+-+-+ | ||
+       |     |101 - 8 bit, 1 stop bit --------------------+-+-+ | ||
+       |     |110 - 8 bit, even, 1 stop bit --------------+-+-+ | ||
+       |     |111 - 8 bit, odd, 1 stop bit ---------------+-+-' | ||
+       |     |Clock divide                                      | ||
+       |     |00 - Normal --------------------------------------+-+|
+       |     |01 - Div by 16 -----------------------------------+-+|
+       |     |10 - Div by 64 -----------------------------------+-+|
+       |     |11 - Master reset --------------------------------+-'|
+
+If the byte ends with bits 11, it triggers a 'master reset' of the chip.
+
+Notice that there's no 'Reset' pin, so the ACIA isn't concerned by a warm 
+reset.
+
+Master reset doesn't affect other CR bits.
+
+Bits 0 and 1 also control the speed of transmission:
+
+SS1 SS0                  Speed (bit/s)
+ 0   0    Normal            500000
+ 0   1    Div by 16          31250
+ 1   0    Div by 64         7812.5 (ST)
+
+The speed applies to both sending & receiving bits. It's been set at
+500khz for both TxCLK & RxCLK on the ST chip that interacts with the
+HD6301.
+
+Bits 4-3-2 are set as 101 on the ST (8 bit, 1 stop bit).
+
+Status Register SR
+
+The SR is read on the ST on addresses $FFFC00 (IKBD) or $FFFC04 (MIDI). 
+This register can't be written by the program. Bits are set or cleared
+by the hardware (or the emulation).
+
+                                                BIT 7 6 5 4 3 2 1 0|
+       |     |Interrupt request --------------------' | | | | | | ||
+       |     |Parity error ---------------------------' | | | | | ||
+       |     |Rx overrun -------------------------------' | | | | ||
+       |     |Framing error ------------------------------' | | | ||
+       |     |CTS ------------------------------------------' | | ||
+       |     |DCD --------------------------------------------' | ||
+       |     |Tx data register empty ---------------------------' ||
+       |     |Rx data register full ------------------------------'|
+
+In emulation, we will never set Parity error or Framing error.
+Rx overrun can be set if the program fails to read one byte.
+We don't care about CTS and DCD.
+
+At power on, SR will have value 2 (Tx data register empty), not 0 (or the
+ST would never boot).
+
+At 'master reset', bits 0 and 5 are cleared. The other bits don't change,
+at least according to our reading of doc.
+In Steem, it seems more compatible to set SR=2 (Delirious IV).
+
+Receiver overrun (OVRN) will be set if the program reads a byte and the previous
+byte was never read. It isn't set when the new byte is copied into RDR, only
+when it is read.
+
+IRQ may be set  depending on CR, if a byte has been transmitted or/and a 
+byte has arrived, or an overrun occured.
+
+It remains so as long as the condition is true and is cleared only by the 
+correct operation (read or write depending on the trigger), not by 
+'master reset'.
+
+
+Receive Data RDR
+Reading a byte doesn't clear it. SR is used by the hardware to know if data
+has been read.
+
+Transmit Data TDR
+
+
+Doc states: master reset initialises both the transmitter and the receiver.
+Does it mean RDR=TDR=0?
+Are RDRS and TDRS cleared? Apparently not.
+
+IRQ
+
+IRQ may be enabled for both receiving and transmitting.
+
+Receiving: bit 7 of CR enables IRQ.
+When a byte has been shifted, it is copied from RDRS into RDR.
+The chip will request an interrupt and will set bit 7 of SR.
+The exact timing of those 3 events isn't exactly the same. The byte is in RDR
+some cycles (2? which would translate to 20 M68000 cycles on the ST) before
+bit 7 of SR is set.
+Case: V8 Music Studio.
+There's an IRQ when Overrun occurs as well, if receiving IRQ is enabled.
+
+Transmitting: in CR, if bit 6=0 and bit 5=1, IRQ is enabled for transmission.
+When TDR is empty, IRQ will trigger.
+If TDR is empty when writing on the ACIA CR, IRQ will trigger at once, which is
+kind of silly.
+There are probably similar timing considerations as for receiving.
+Additionally, double buffering means that the IRQ could trigger very soon after
+the byte has been written into TDR.
+Few programs do use this stupid IRQ (cases?) Hades Nebula
+
+
+
+
+
+
+
+
+
+
