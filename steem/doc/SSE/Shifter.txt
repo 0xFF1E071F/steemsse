@@ -1,0 +1,45 @@
+Shifter
+=========
+
+The shifter in the Atari ST is a custom chip.
+Some unofficial documentation for it was published in ST Magazine (French) by
+ST-Connexion.
+This text is based on these articles and their traduction.
+
+
+
+Shifter probable registers
+----------------------------
+
+SR1-4: Shift Registers
+Each register is 16bit.
+Those 16bit registers do the actual shifting from right to left.
+For each pixel, there's one shift. The leftmost bits of SR form the pixel.
+The new rightmost bit is a 0.
+
+IR1-4: Input registers
+Video RAM is fetched by the MMU word by word and the IR registers are filled one
+by one.
+Each register is 16bit.
+
+IRI: input register index
+This register may be just 2bit. It indexes SR registers so that the shifter
+knows where to copy the word put on the data bus by the MMU.
+
+
+
+Schemas
+---------
+
+Shift mode 0
+
+  0/1 <-   SR1 [][][][][][][][][][][][][][][][]
+  0/1 <-   SR2 [][][][][][][][][][][][][][][][]
+  0/1 <-   SR3 [][][][][][][][][][][][][][][][]
+  0/1 <-   SR4 [][][][][][][][][][][][][][][][]
+   |
+   V
+ Palette
+   |
+   V
+Video out
