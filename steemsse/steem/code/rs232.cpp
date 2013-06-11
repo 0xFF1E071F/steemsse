@@ -58,9 +58,19 @@ void RS232_CalculateBaud(bool Div16,BYTE cr,bool SetBaudNow)
       rs232_hbls_per_word=(mfp_timer_prescale[cr]*BYTE_00_TO_256(mfp_reg[MFPR_TDDR]))*16*
                               rs232_bits_per_word*hbls_per_second/MFP_CLK_EXACT;
     }else{
+#if defined(STEVEN_SEAGAL) && defined(SS_MFP_RS232)
+      // max works with int, and we made rs232_hbls_per_word unisgned
+      rs232_hbls_per_word=(mfp_timer_prescale[cr]*BYTE_00_TO_256(mfp_reg[MFPR_TDDR]))*
+                          rs232_bits_per_word*hbls_per_second/MFP_CLK_EXACT;
+ //     ASSERT( rs232_hbls_per_word>=1 ); //asserts
+      if(rs232_hbls_per_word<1)
+        rs232_hbls_per_word=1; 
+#else
       rs232_hbls_per_word=max((mfp_timer_prescale[cr]*BYTE_00_TO_256(mfp_reg[MFPR_TDDR]))*
                             rs232_bits_per_word*hbls_per_second/MFP_CLK_EXACT,1);
+#endif
     }
+    ASSERT( rs232_hbls_per_word>=0 );
     if (SerialPort.IsPCPort()){
       if (SetBaudNow==0){
         UpdateBaud=true;
@@ -135,6 +145,7 @@ void RS232_WriteReg(int Reg,BYTE NewVal)
           agenda_delete(agenda_serial_break_boundary);
           if ((mfp_reg[MFPR_TSR] & BIT_7)==0){ // tx buffer not empty
             agenda_add(agenda_serial_sent_byte,2,0);
+            //SS agenda_serial_sent_byte(0);
           }
         }
       }

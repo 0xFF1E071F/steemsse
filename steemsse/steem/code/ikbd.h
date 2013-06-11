@@ -112,12 +112,11 @@ SS: most ST's had a 6301 that sent '$F1'
 */
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM)
-EXT void keyboard_buffer_write(BYTE,int signal=0);
+extern "C" void keyboard_buffer_write(BYTE,int signal=0);
+#elif defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+extern "C" void keyboard_buffer_write(BYTE);
 #else
 EXT void keyboard_buffer_write(BYTE);
-#endif
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
-extern "C" void hd6301_keyboard_buffer_write(BYTE);
 #endif
 
 EXT void keyboard_buffer_write_n_record(BYTE);
@@ -333,45 +332,12 @@ logically connected to it. If a mouse disable command is received while port 0
 BYTE keyboard_buffer_read();
 
 
-
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
-struct ACIA_STRUCT{ // SS removed _
-  int clock_divide;
-
-  int rx_delay__unused;
-  bool rx_irq_enabled;
-  bool rx_not_read;
-
-  int overrun;
-
-  int tx_flag;
-  bool tx_irq_enabled;
-
-  BYTE data; //SS data_rx
-  bool irq;
-
-  int last_tx_write_time;
-  int last_rx_read_time;
-
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_IRQ_DELAY)
-/*  This is to help implement the short delay between RX set and IRQ set,
-    as mentioned in Hatari.
-    1: RX will be set at right time 2: IRQ will be (some cycles later)
-*/
-  int rx_stage; 
+#if (defined(STEVEN_SEAGAL) && defined(SS_ACIA)) 
+//temp moved from emulator.h to have it compile
+#include "acia.h"
+ACIA_STRUCT acia[2];
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_DOUBLE_BUFFER_TX)
-/*  When a byte is being shifted in the shift register and being transmitted,
-    another byte may already be transmitted in the data register, it will wait
-    there until the first transmission is over.
-*/
-  BYTE data_tdr;
-#endif
-
-
-}acia[2];
-#endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_ACIA_IRQ_DELAY)
 

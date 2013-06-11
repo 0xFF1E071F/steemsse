@@ -47,6 +47,8 @@ void ASMCALL draw_scanline_dont(int,int,int,int) {}
 
 void draw_begin()
 {
+//  ASSERT(draw_grille_black>0);
+
   if (draw_lock) return;
   /*
   #ifndef NO_CRAZY_MONITOR
@@ -76,7 +78,6 @@ void draw_begin()
   }
   UNIX_ONLY( draw_fs_topgap=0; )
   if (draw_grille_black>0) Disp.DrawFullScreenLetterbox();
-
   if (Disp.Lock()!=DD_OK) return;
 
   if (BytesPerPixel==1) palette_copy();
@@ -94,6 +95,11 @@ void draw_begin()
   draw_dest_next_scanline=draw_dest_ad+draw_dest_increase_y;
   WIN_ONLY( draw_store_dest_ad=NULL; )
 
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
+    if(SCANLINES_INTERPOLATED) 
+      draw_grille_black=4;
+#endif
+
   if (draw_grille_black>0){
     bool using_grille=0;
     if (draw_dest_increase_y>draw_line_length){
@@ -107,6 +113,10 @@ void draw_begin()
       if (draw_fs_fx==DFSFX_GRILLE) using_grille=true;
 #endif
     }
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
+    if(SCANLINES_INTERPOLATED) 
+      using_grille=true;
+#endif
     if (using_grille){
       int l=640;
       if (Disp.BorderPossible()) l+=BORDER_SIDE*2 * 2;
@@ -169,7 +179,8 @@ void draw_set_jumps_and_source()
     if (ResChangeResize==0){
       big_draw=0; // always stretch
     }else if (screen_res<2){
-      if (draw_win_mode[screen_res]==DWM_STRETCH) big_draw=0;
+      if (draw_win_mode[screen_res]==DWM_STRETCH)
+        big_draw=0;
     }
   }
 #endif
@@ -222,8 +233,12 @@ void draw_set_jumps_and_source()
     return;
   }
 #endif
-
-  if (big_draw){
+  
+  if (big_draw
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
+    ||SCANLINES_INTERPOLATED
+#endif
+    ){
     int p=1; // 640 width 400 height
 #ifdef WIN32
     if (FullScreen){
@@ -233,6 +248,11 @@ void draw_set_jumps_and_source()
     }
 #else
     if (draw_fs_fx==DFSFX_GRILLE) p=2; // 640x200 low/med
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
+    if(SCANLINES_INTERPOLATED)
+      p=0;
 #endif
 
     draw_scanline=jump_draw_scanline[p][BytesPerPixel-1][screen_res];
@@ -265,6 +285,12 @@ void draw_set_jumps_and_source()
         oy=0;oh=480;
       }
     }
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
+    if(!screen_res && SCANLINES_INTERPOLATED && !FullScreen) 
+      ow/=2;
+#endif
+
     draw_blit_source_rect.left=ox;
     draw_blit_source_rect.right=ox+ow;
     draw_blit_source_rect.top=oy;
@@ -281,7 +307,6 @@ void draw_set_jumps_and_source()
     draw_scanline_medres=jump_draw_scanline[0][BytesPerPixel-1][1];
     draw_med_low_double_height=0;
     int ox=0,oy=0,ow=shifter_x,oh=shifter_y;
-
     if (mixed_output){
       draw_scanline_lowres=jump_draw_scanline[2][BytesPerPixel-1][0];
       if (screen_res==0) draw_scanline=draw_scanline_lowres;
@@ -363,10 +388,15 @@ void draw_end()
 
 #define LOGSECTION LOGSECTION_VIDEO
 
-#if !defined(STEVEN_SEAGAL) || !defined(SS_SHIFTER) || defined(SS_DEBUG) 
-// normally nuked by the linker anyway
+#if !defined(STEVEN_SEAGAL) || !defined(SS_SHIFTER) \
+  || defined(SS_SHIFTER_DRAW_DBG) || !defined(SS_STRUCTURE)
 
 //---------------------------------------------------------------------------
+/* SS this was the core of shifter trick analysis in Steem 3.2.
+   There's not so much code but it ran many cases eg Darkside of the Spoon,
+   it was missing the 0byte line, 4bit scrolling.
+   It has been much expanded and commented in SSEShifter.cpp.
+*/
 void draw_check_border_removal()
 {
 //  if (shifter_freq_at_start_of_vbl!=50) return;
@@ -424,7 +454,7 @@ void draw_check_border_removal()
 
 /*
   // This should do something, but I don't know what! See Nostalgia Lemmings screen.
-
+//SS-> 0 byte line
   if (overscan_add_extra>-300){
     t=cpu_timer_at_start_of_hbl+48; //trigger point
     if (act>t){
@@ -1030,7 +1060,6 @@ void res_change()
 //---------------------------------------------------------------------------
 bool draw_routines_init()
 {
-//  TRACE("draw_routines_init()\n");
   {
     event_plan[0]=event_plan_50hz;
     event_plan[1]=event_plan_60hz;
@@ -1065,9 +1094,9 @@ bool draw_routines_init()
     evp->time=SS_INT_VBI_START; // 68
 #if defined(SS_STF) 
     if(ST_TYPE!=STE)
-      evp->time-=4; // fixes 36.15 Gen4 demo by Cakeman
+      evp->time-=4; // fixes 36.15 Gen4 demo by Cakeman (or used to!)
 #endif
-    evp->event=event_trigger_vbl;
+    evp->event=event_trigger_vbi;
     evp++;
 #endif  
     // SS for line 0, event is not scanline but hbl, but for all the others,
@@ -1105,7 +1134,7 @@ bool draw_routines_init()
     if(ST_TYPE!=STE)
       evp->time-=4;
 #endif
-    evp->event=event_trigger_vbl;
+    evp->event=event_trigger_vbi;
     evp++;
 #endif  
     evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_60HZ;
@@ -1141,7 +1170,7 @@ bool draw_routines_init()
     if(ST_TYPE!=STE)
       evp->time-=4;
 #endif
-    evp->event=event_trigger_vbl;
+    evp->event=event_trigger_vbi;
     evp++;
 #endif  
     for (int y=0;y < (SCANLINES_ABOVE_SCREEN_70HZ+400+SCANLINES_BELOW_SCREEN_70HZ);y++){

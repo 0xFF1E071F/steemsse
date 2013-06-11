@@ -20,7 +20,13 @@ int TVideoEvents::Report() {
   ASSERT(fp);
   if(fp)
   {
-    fprintf(fp,"Steem shifter events report\nFrame frequency: %d\n",shifter_freq_at_start_of_vbl);
+    char sdate[9];
+    char stime[9];
+    _strdate( sdate );
+    _strtime( stime );
+    fprintf(fp,"Steem shifter events report - %s -%s\nFrame frequency: %d shift mode: %d\n",
+      sdate,stime,shifter_freq_at_start_of_vbl,screen_res);
+
     if(FloppyDrive[0].DiskInDrive())
       fprintf(fp,"Disk A: %s",FloppyDrive[0].DiskName.c_str()); 
     int i,j;

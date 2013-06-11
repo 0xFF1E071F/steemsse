@@ -43,12 +43,13 @@
 // Hacks //
 ///////////
 
+#if ! defined(SS_SSE_CONFIG_STRUCT)
 extern
 #ifdef __cplusplus
  "C" 
 #endif
 int iDummy;// can be l-value
-
+#endif
 
 
 
@@ -63,35 +64,7 @@ extern "C" int SS_signal; // "handy" global mask (future coding horror case)
 
 #if defined(SS_IKBD)
 
-#if defined(SS_IKBD_TRACE_COMMANDS) || defined(SS_IKBD_6301_DISASSEMBLE_CUSTOM_PRG)
-#define SS_IKBD_6301_CHECK_COMMANDS // make defines coherent
 #endif
-
-#endif
-
-
-/////////
-// IPF //
-/////////
-
-#if defined(SS_IPF)
-
-#ifdef WIN32
-
-#ifdef _MSC_VER
-#pragma comment(lib, "../../3rdparty/caps/CAPSImg.lib")
-#pragma comment(linker, "/delayload:CAPSImg.dll")
-#endif
-
-#ifdef __BORLANDC__
-#pragma comment(lib, "../../3rdparty/caps/bcclib/CAPSImg.lib")
-///#pragma comment(linker, "/delayload:CAPSImg.dll")
-#endif
-
-#endif//win32
-
-#endif
-
 
 
 ///////////////
@@ -104,29 +77,24 @@ extern "C" int SS_signal; // "handy" global mask (future coding horror case)
 
 
 /////////
-// SDL //
+// IPF //
 /////////
 
-#if defined(SS_SDL)
+#if defined(SS_IPF)
 
-#ifdef WIN32
-
-#include <SDL-WIN/include/SDL.h> 
+#if defined(WIN32) && defined(SS_DELAY_LOAD_DLL)
 
 #ifdef _MSC_VER
-#pragma comment(lib, "../../3rdparty/SDL-WIN/lib/x86/SDL.lib")
-#pragma comment(lib, "../../3rdparty/SDL-WIN/lib/x86/SDLmain.lib")
-
-//#pragma comment(lib, "Delayimp.lib")
-//#pragma comment(linker, "/ignore:4199")
-#pragma comment(linker, "/delayload:SDL.dll")
+#pragma comment(lib, "../../3rdparty/caps/CAPSImg.lib")
+#pragma comment(linker, "/delayload:CAPSImg.dll")
 #endif
 
 #ifdef __BORLANDC__
-#pragma comment(lib, "../../3rdparty/SDL-WIN/bcclib/SDL.lib")
+#pragma comment(lib, "../../3rdparty/caps/bcclib/CAPSImg.lib")
+///#pragma comment(linker, "/delayload:CAPSImg.dll")
 #endif
 
-#endif//win32
+#endif
 
 #endif
 
@@ -182,25 +150,36 @@ FARPROC WINAPI MyLoadFailureHook(dliNotification dliNotify, DelayLoadInfo * pdli
 
 #if defined(SS_VIDEO)
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI) 
+#if defined(SS_VID_RECORD_AVI) 
 #define _T(X) X
 #define _tcscpy strcpy
 #define _tcsncpy strncpy
 #include <AVI/AviFile.h>
 extern CAviFile *pAviFile;// tmp, useless to have it here
-extern int video_recording;
+extern BYTE video_recording;
 extern char *video_recording_codec;
 #endif
 
 #if defined(SS_VID_BORDERS)
-extern int SideBorderSize,BottomBorderSize;
-extern int SideBorderSizeWin;
-#define SS_VID_BORDERS_HACKS
-
+extern BYTE SideBorderSize,BottomBorderSize, SideBorderSizeWin;
 #define BORDER_SIDE SideBorderSize // avoids much rewriting in Steem!!!!!!!!!!!
 #define BORDER_EXTRA (SideBorderSize-ORIGINAL_BORDER_SIDE) // 0 8 16, in pixels
 #define BORDER_BOTTOM BottomBorderSize // !!!!!!!!!!!!!!!!!!!!!!!
 int ChangeBorderSize(int size); // gui.cpp
+#endif
+
+#if defined(SS_VID_SCANLINES_INTERPOLATED)
+
+#if defined(SS_VID_SCANLINES_INTERPOLATED_MED)
+
+#define SCANLINES_INTERPOLATED \
+ (draw_win_mode[screen_res]==DWM_STRETCH_SCANLINES&&!mixed_output&&screen_res<2)
+#else
+
+// note draw_win_mode[2] doesn't exist!
+#define SCANLINES_INTERPOLATED (!screen_res && !mixed_output\
+  &&draw_win_mode[screen_res]==DWM_STRETCH_SCANLINES) 
+#endif
 #endif
 
 #endif
@@ -208,5 +187,21 @@ int ChangeBorderSize(int size); // gui.cpp
 #ifndef FRAME
 #define FRAME (-1)
 #endif
+
+#if defined(SS_OSD_SCROLLER_CONTROL)
+#include "../../../include/easystr.h"
+
+struct TOsdControl {
+  enum {NO_SCROLLER,WANT_SCROLLER,SCROLLING};
+  long ScrollerColour;
+  BYTE ScrollerPhase;
+  EasyStr ScrollText;
+  TOsdControl() { ScrollerPhase=NO_SCROLLER; };
+  void StartScroller(EasyStr text);
+};
+
+extern TOsdControl OsdControl;
+#endif
+
 
 #endif//SSEDECLA_H

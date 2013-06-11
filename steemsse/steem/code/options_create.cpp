@@ -8,22 +8,21 @@ DESCRIPTION: Functions to create the pages of the options dialog box.
 #pragma message("Included for compilation: options_create.cpp")
 #endif
 
-#if defined(SS_STF)
+#if defined(STEVEN_SEAGAL) && defined(SS_STF)
 #include "SSE\SSESTF.h"
 #endif
 
-#if defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
 #include "SSE\SSE6301.h"
 #endif
 
-#if defined(SS_SSE_OPTION_STRUCT)
+#if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_STRUCT)
 #include "SSE\SSEOption.h"
 #endif
 
 //---------------------------------------------------------------------------
 void TOptionBox::CreatePage(int n)
 {
-//  TRACE("Option page %d Handle %d page_l %d\n",n,Handle,page_l);
   switch (n){
     case 9:CreateMachinePage();break;
     case 10:CreateTOSPage();break;
@@ -55,7 +54,7 @@ void TOptionBox::CreateMachinePage()
   HWND Win;
   long Wid;
   int y=10;
- 
+
   Wid=get_text_width(T("ST CPU speed"));
   CreateWindow("Static",T("ST CPU speed"),WS_CHILD,page_l,y+4,Wid,23,Handle,(HMENU)403,HInstance,NULL);
   
@@ -805,7 +804,15 @@ void TOptionBox::CreateDisplayPage()
   CBAddString(Win,T("Normal Size"),0);
   CBAddString(Win,T("Double Size")+" - "+T("Stretch"),1);
   CBAddString(Win,T("Double Size")+" - "+T("No Stretch"),MAKELONG(1,DWM_NOSTRETCH));
+
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
+  CBAddString(Win,T("Double Size")+" - "+T("Scanlines"),MAKELONG(1,DWM_GRILLE)); //2
+  CBAddString(Win,T("Double Size")+" - "+T("Scanlines interpolated"),MAKELONG(1,DWM_STRETCH_SCANLINES)); //3
+#else
   CBAddString(Win,T("Double Size")+" - "+T("Grille"),MAKELONG(1,DWM_GRILLE));
+#endif
+
   CBAddString(Win,T("Treble Size"),2);
   CBAddString(Win,T("Quadruple Size"),3);
   y+=30;
@@ -819,7 +826,14 @@ void TOptionBox::CreateDisplayPage()
   CBAddString(Win,T("Normal Size"),0);
   CBAddString(Win,T("Double Height")+" - "+T("Stretch"),1);
   CBAddString(Win,T("Double Height")+" - "+T("No Stretch"),MAKELONG(1,DWM_NOSTRETCH));
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED_MED)
+  CBAddString(Win,T("Double Height")+" - "+T("Scanlines"),MAKELONG(1,DWM_GRILLE)); //2
+  CBAddString(Win,T("Double Height")+" - "+T("Scanlines interpolated"),MAKELONG(1,DWM_STRETCH_SCANLINES)); //3
+#else
   CBAddString(Win,T("Double Height")+" - "+T("Grille"),MAKELONG(1,DWM_GRILLE));
+#endif
+
   CBAddString(Win,T("Double Size"),2);
   CBAddString(Win,T("Quadruple Height"),3);
   y+=30;
@@ -946,7 +960,7 @@ void TOptionBox::CreateOSDPage()
   long Wid;
   int y=10;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
   Wid=GetCheckBoxSize(Font,T("Disk access light")).Width;
   Win=CreateWindow("Button",T("Disk access light"),WS_CHILD  | WS_TABSTOP | BS_CHECKBOX,
                           page_l,y,Wid,23,Handle,(HMENU)12000,HInstance,NULL);
@@ -957,6 +971,15 @@ void TOptionBox::CreateOSDPage()
 #endif
 
   SendMessage(Win,BM_SETCHECK,osd_show_disk_light,0);
+
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_INFO)
+  long Wid2=Wid;
+  Wid=GetCheckBoxSize(Font,T("Disk drive info")).Width;
+  Win=CreateWindow("Button",T("Disk drive info"),WS_CHILD  | WS_TABSTOP | BS_CHECKBOX,
+                          page_l + Wid2,y,Wid,23,Handle,(HMENU)12001,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,OSD_DRIVE_INFO,0);
+#endif
+
   y+=30;
 
   int *p_element[4]={&osd_show_plasma,&osd_show_speed,&osd_show_icons,&osd_show_cpu};
@@ -1003,8 +1026,14 @@ void TOptionBox::CreateOSDPage()
   Win=CreateWindow("Button",T("Scrolling messages"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           page_l,y,Wid,23,Handle,(HMENU)12020,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,osd_show_scrollers,0);
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_SCROLLER_DISK_IMAGE)
+  Wid2=Wid;
+  Wid=GetCheckBoxSize(Font,T("Disk image names")).Width;
+  Win=CreateWindow("Button",T("Disk image names"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
+                          page_l+Wid2,y,Wid,23,Handle,(HMENU)12002,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,OSD_IMAGE_NAME,0);
+#endif
   y+=30;
-
   Wid=GetCheckBoxSize(Font,T("Disable on screen display")).Width;
   Win=CreateWindow("Button",T("Disable on screen display"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           page_l,y,Wid,23,Handle,(HMENU)12030,HInstance,NULL);
@@ -1385,14 +1414,24 @@ void TOptionBox::CreateSoundPage()
   CBAddString(Win,T("16-Bit Stereo"),MAKEWORD(16,2));
   SendMessage(Win,CB_SETCURSEL,(sound_num_bits-8)/4 + (sound_num_channels-1),0);
   y+=30;
-
+#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_RECOMMEND_OPTIONS)
+  Wid=GetCheckBoxSize(Font,T("Write to primary buffer (not recommended)")).Width;
+  Win=CreateWindow("Button",T("Write to primary buffer (not recommended)"),WS_CHILD | WS_TABSTOP |
+                          BS_CHECKBOX | DisableIfMute,
+                          page_l+10,y,Wid,23,Handle,(HMENU)7102,HInstance,NULL);
+#else
   Wid=GetCheckBoxSize(Font,T("Write to primary buffer")).Width;
   Win=CreateWindow("Button",T("Write to primary buffer"),WS_CHILD | WS_TABSTOP |
                           BS_CHECKBOX | DisableIfMute,
                           page_l+10,y,Wid,23,Handle,(HMENU)7102,HInstance,NULL);
+#endif
   SendMessage(Win,BM_SETCHECK,sound_write_primary,0);
   ToolAddWindow(ToolTip,Win,T("Steem tries to output sound in a way that is friendly to other programs.")+" "+
-                            T("However some sound cards do not like that, if you are having problems check this option to make Steem take full control."));
+#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_RECOMMEND_OPTIONS)
+    T("Check this option ONLY if you have problems with your soundcard."));
+#else
+  T("However some sound cards do not like that, if you are having problems check this option to make Steem take full control."));
+#endif
   y+=30;
 
   Wid=GetTextSize(Font,T("Timing method")).Width;
@@ -1402,8 +1441,13 @@ void TOptionBox::CreateSoundPage()
   Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP |
                     DisableIfMute | CBS_DROPDOWNLIST,
                     page_l+15+Wid,y,page_w-10-(15+Wid),200,Handle,(HMENU)7103,HInstance,NULL),
+
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Play Cursor"));
+#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_RECOMMEND_OPTIONS)
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Write Cursor (recommended)"));
+#else
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Write Cursor"));
+#endif
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Milliseconds"));
   SendMessage(Win,CB_SETCURSEL,sound_time_method,0);
   y+=30;
@@ -1542,6 +1586,16 @@ void TOptionBox::CreateStartupPage()
   }
 
   CSF.Close();
+
+#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_MICROWIRE)
+  y+=30;
+  Wid=GetCheckBoxSize(Font,T("Enable DSP")).Width;
+  Win=CreateWindow("Button",T("Enable DSP"),WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX | int(NoDD ? WS_DISABLED:0),
+                          page_l,y,Wid,23,Handle,(HMENU)3306,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,DSP_ENABLED,0);
+  ToolAddWindow(ToolTip,Win,T("If you have some odd crashes, unchecking this may help. DSP code uses the math coprocessor and exceptions are almost impossible to catch"));
+
+#endif
 
   if (Focus==NULL) Focus=GetDlgItem(Handle,3303);
   SetPageControlsFont();
@@ -1876,6 +1930,7 @@ void TOptionBox::CreateSSEPage() {
   int y=10; // top
   const int LineHeight=30;
   const int HorizontalSeparation=10;
+  int mask;
 
   // Title
   Wid=get_text_width(T("Steem SSE Options\n================="));
@@ -1919,11 +1974,11 @@ void TOptionBox::CreateSSEPage() {
 #if defined(SS_VAR_STEALTH) 
   y-=LineHeight; // maybe it will be optimised away!
   Offset=Wid+HorizontalSeparation;
-  Wid=GetCheckBoxSize(Font,T("Stealth mode")).Width;
-  Win=CreateWindow("Button",T("Stealth mode"),WS_CHILD | WS_TABSTOP |
+  Wid=GetCheckBoxSize(Font,T("Emu detect")).Width;
+  Win=CreateWindow("Button",T("Emu detect"),WS_CHILD | WS_TABSTOP |
     BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)1031,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,STEALTH_MODE,0);
-  ToolAddWindow(ToolTip,Win,T("Disable emu detect"));
+  SendMessage(Win,BM_SETCHECK,!STEALTH_MODE,0);
+  ToolAddWindow(ToolTip,Win,T("Disable easy detection of Steem by ST programs"));
   y+=LineHeight;
 #endif  
 
@@ -1936,7 +1991,7 @@ void TOptionBox::CreateSSEPage() {
   SendMessage(STTypeOption,CB_ADDSTRING,0,(long)CStrT("STE"));
   SendMessage(STTypeOption,CB_ADDSTRING,1,(long)CStrT("STF"));
 #if defined(SS_STF_MEGASTF)
-  SendMessage(STTypeOption,CB_ADDSTRING,1,(long)CStrT("Mega STF (with blitter)"));
+  SendMessage(STTypeOption,CB_ADDSTRING,1,(long)CStrT("Mega ST4"));
 #endif
   SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,SS_STF_ST_MODELS-1),0);
   y+=LineHeight;
@@ -1958,7 +2013,7 @@ void TOptionBox::CreateSSEPage() {
 #if defined(SS_IKBD_6301) 
   Wid=GetCheckBoxSize(Font,T("6301 true emu")).Width;
   
-  int mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
   if(!HD6301_OK)
     mask|=WS_DISABLED;
   
@@ -1974,7 +2029,9 @@ void TOptionBox::CreateSSEPage() {
 #endif
 
 #if defined(SS_VAR_KEYBOARD_CLICK) 
+#if defined(SS_IKBD_6301) 
   y-=LineHeight; // maybe it will be optimised away!
+#endif
   Offset=Wid+HorizontalSeparation;
   Wid=GetCheckBoxSize(Font,T("Keyboard click")).Width;
   Win=CreateWindow("Button",T("Keyboard click"),WS_CHILD | WS_TABSTOP |
@@ -1988,8 +2045,9 @@ void TOptionBox::CreateSSEPage() {
 
 #if defined(SS_SOUND_FILTER_STF)
   Wid=GetCheckBoxSize(Font,T("PSG Filter")).Width;
-  Win=CreateWindow("Button",T("PSG Filter"),WS_CHILD | WS_TABSTOP |
-    BS_CHECKBOX,page_l,y,Wid,25,Handle,(HMENU)7303,HInstance,NULL);
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+  Win=CreateWindow("Button",T("PSG Filter"),mask,
+    page_l,y,Wid,25,Handle,(HMENU)7303,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,PSG_FILTER_FIX,0);
   ToolAddWindow(ToolTip,Win,
     T("This makes PSG (YM-2149) chip tunes and samples sound less muffled"));
@@ -1998,13 +2056,41 @@ void TOptionBox::CreateSSEPage() {
 
 #if defined(SS_SOUND_MICROWIRE)
   y-=LineHeight; // maybe it will be optimised away!
-  //Offset=Wid+HorizontalSeparation;
   Wid=GetCheckBoxSize(Font,T("STE Microwire")).Width;
-  Win=CreateWindow("Button",T("STE Microwire"),WS_CHILD | WS_TABSTOP |
-    BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)7302,HInstance,NULL);
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+  if(!DSP_ENABLED)
+    mask|=WS_DISABLED;
+  Win=CreateWindow("Button",T("STE Microwire"),mask,
+    page_l+Offset,y,Wid,25,Handle,(HMENU)7302,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,MICROWIRE_ON,0);
   ToolAddWindow(ToolTip,Win,
     T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature"));
+  y+=LineHeight;
+#endif
+
+#if defined(SS_PASTI_ONLY_STX)
+  Wid=GetCheckBoxSize(Font,T("Pasti only for STX")).Width;
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+  if(!hPasti)
+    mask|=WS_DISABLED;
+  Win=CreateWindow("Button",T("Pasti only for STX"),mask,
+    page_l,y,Wid,25,Handle,(HMENU)7305,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,MICROWIRE_ON,0);
+  ToolAddWindow(ToolTip,Win,
+    T("When checked, Pasti will only be used for STX disks (not ST, MSA)"));
+  y+=LineHeight;
+#endif
+
+#if defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+  Wid=GetCheckBoxSize(Font,T("Use SDL")).Width;
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+  if(!SDL_OK)
+    mask|=WS_DISABLED;
+  Win=CreateWindow("Button",T("Use SDL"),mask,
+    page_l,y,Wid,25,Handle,(HMENU)7304,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,USE_SDL,0);
+  ToolAddWindow(ToolTip,Win,
+    T("Experimental use of SDL for portability..."));
   y+=LineHeight;
 #endif
 
@@ -2014,4 +2100,28 @@ void TOptionBox::CreateSSEPage() {
   SetPageControlsFont();
   ShowPageControls(); // forgot that for a while... where are the controls?
 }
+
+#if defined(SS_VAR_OPTIONS_REFRESH)
+// for SSE options that are saved with memory snapshot
+void TOptionBox::SSEUpdateIfVisible() {
+  if (Handle==NULL) 
+    return;
+  HWND Win=GetDlgItem(Handle,1029); //HD6301 emu
+  if(Win==NULL) 
+    return; 
+  if(!HD6301_OK)
+    SendMessage(Win,BN_DISABLE,0,0);
+  else
+    SendMessage(Win,BM_SETCHECK,HD6301EMU_ON,0);
+
+  Win=GetDlgItem(Handle,7301); //kkb click
+  if(Win==NULL) 
+    return; 
+  SendMessage(Win,BM_SETCHECK,PEEK(0x484)&1,0);
+}
 #endif
+
+
+#endif
+
+

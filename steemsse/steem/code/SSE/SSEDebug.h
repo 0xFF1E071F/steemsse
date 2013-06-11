@@ -13,7 +13,7 @@
 #endif
 
 #if defined(SS_DEBUG) // boiler build or ide debug build
-// general use debug variables; 4,5,6 cleared every VBL, 7,8,9 every HBL
+// general use debug variables;
 extern 
 #ifdef __cplusplus
 "C" 
@@ -41,11 +41,22 @@ struct TDebug {
   int nTrace;
 #endif
   int IgnoreErrors; 
+
+
 #ifdef __cplusplus // visible only to C++ objects
+
+#if defined(SS_CPU_PREFETCH_TRACE)
+  bool CpuPrefetchDiffDetected;
+#endif
+#if defined(SS_CPU_TRACE_DETECT)
+  bool CpuTraceDetected;
+#endif
+
 #if defined(SS_DEBUG_START_STOP_INFO)
   enum {START,STOP} ;
   void ReportGeneralInfos(int when);
 #endif
+
 #endif//c++
   int logsection_enabled[100]; // we want a double anyway //bool
   int LogSection;
@@ -152,22 +163,29 @@ enum logsection_enum_tag {
 
 // BRK(x) 
 #if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+
 #if defined(DEBUG_BUILD)
+
 #ifdef __cplusplus
 #define BRK(x){if(!Debug.IgnoreErrors) { \
   TRACE("Breakpoint: %s\n",#x); \
   Debug.IgnoreErrors=!(MessageBox(0,#x,"Breakpoint",MB_ICONWARNING|MB_OKCANCEL)==IDOK);}}
 #endif//c++
+
 #elif defined(SS_UNIX_TRACE)
+
 #define BRK(x) TRACE("BRK %s\n",#x);
-//#endif
-#elif defined(_DEBUG)
-#define BRK(X) _asm{int 0x03}
+
+#elif defined(VC_BUILD)
+
+#define BRK(x) {TRACE("BRK %s\n",#x); _asm { int 3 } }
 
 #endif
 
 #else //!SS_DEBUG
+
 #define BRK(x)
+
 #endif
 
 // TRACE

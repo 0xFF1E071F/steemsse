@@ -197,7 +197,10 @@ static dr2_getb (offs)
   ASSERT(offs==P2);
   value=0xFF;
   if(mousek) // clear the correct bit (see above)
+  {
     value&=mousek<<1;
+//    TRACE("HD6301 handling mousek %x -> %x\n",mousek,value);
+  }
   return value;
 }
 
@@ -261,37 +264,36 @@ static dr4_getb (offs)
     TODO: speed, accuracy...
 */
   if(!(ddr4&0xF) && (ddr2&1) 
-    && (hd6301_mouse_move_since_last_interrupt_x
-    ||hd6301_mouse_move_since_last_interrupt_y) )
+    && (HD6301.MouseVblDeltaX || HD6301.MouseVblDeltaY) )
   {
     int n_chunk=HD6301_MOUSE_SPEED_CHUNKS; // 20 // 15
     int cycles_per_chunk=HD6301_MOUSE_SPEED_CYCLES_PER_CHUNK;// 1250;// 500 
     int movement,cycles_for_a_click;
-    if(hd6301_mouse_move_since_last_interrupt_x) // horizontal
+    if(HD6301.MouseVblDeltaX) // horizontal
     { 
-      int amx=abs(hd6301_mouse_move_since_last_interrupt_x);
+      int amx=abs(HD6301.MouseVblDeltaX);
       movement=__min((int)amx,n_chunk-1);
       cycles_for_a_click=cycles_per_chunk*(n_chunk-movement);
       if(cpu.ncycles-mouse_click_x_time>cycles_for_a_click)
       {
-        if(hd6301_mouse_move_since_last_interrupt_x<0) // left
+        if(HD6301.MouseVblDeltaX<0) // left
           mouse_x_counter=_rotl(mouse_x_counter,1);
-        else //if(hd6301_mouse_move_since_last_interrupt_x>0)
+        else  // right
           mouse_x_counter=_rotr(mouse_x_counter,1);
         mouse_click_x_time=cpu.ncycles;
       }
     }
     
-    if(hd6301_mouse_move_since_last_interrupt_y) // vertical
+    if(HD6301.MouseVblDeltaY) // vertical
     {
-      int amy=abs(hd6301_mouse_move_since_last_interrupt_y);
+      int amy=abs(HD6301.MouseVblDeltaY);
       movement=__min(amy,n_chunk-1);
       cycles_for_a_click=cycles_per_chunk*(n_chunk-movement);
       if(cpu.ncycles-mouse_click_y_time>cycles_for_a_click)
       {
-        if(hd6301_mouse_move_since_last_interrupt_y<0) // up (?)
+        if(HD6301.MouseVblDeltaY<0) // up
           mouse_y_counter=_rotl(mouse_y_counter,1);
-        else //if(hd6301_mouse_move_since_last_interrupt_y>0) // down
+        else  // down
           mouse_y_counter=_rotr(mouse_y_counter,1);
         mouse_click_y_time=cpu.ncycles;
       }

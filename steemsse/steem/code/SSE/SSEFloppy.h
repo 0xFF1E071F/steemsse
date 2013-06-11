@@ -3,10 +3,6 @@
 #define SSEFLOPPY_H
 
 /*
-
-DMA = Direct Memory Access, this is a custom Atari chip
-FDC = Floppy Disk Controller, this is the WD1772
-
 "The Atari ST uses a WD1772 FDC controller to interface to the Floppy Drive.
  In the Atari system architecture the FDC data and address busses are 
 connected to a private bus of the Atari Custom DMA controller and therefore
@@ -23,43 +19,57 @@ command is terminated by either polling this input or by triggering an
 interrupt."
 */
 
+
 #if defined(SS_DMA)
-/*  We use object TDma to refine emulation of the DMA in Steem, but we keep
-    using other Steem variables (dma_... and fdc_...).
+/*  We use object TDma to refine emulation of the DMA in Steem.
+    Steem original variables are defined as the new ones.
 */
 
+#define dma_sector_count Dma.Counter
+#define dma_address Dma.BaseAddress
+#define dma_bytes_written_for_sector_count Dma.ByteCount
+#define dma_mode Dma.MCR
+#define dma_status Dma.SR
+
 struct TDma {
+
+  MEM_ADDRESS BaseAddress; // Base Address Register
+  WORD MCR; // mode control register
+  BYTE SR; // status register
+  WORD Counter; // Counter register
+  WORD ByteCount; // 1-512 for sectors
+
   TDma();
-#if defined(SS_DMA_IO)
-/*  All DMA and FDC fixes of Steem SSE need this to be defined. This part
-    takes over and expends the DMA/FDC segments in ior.cpp & iow.cpp, which
-    makes those files more readable (now we handle Steem "native", pasti and
-    IPF).
-*/
   BYTE IORead(MEM_ADDRESS addr);
   void IOWrite(MEM_ADDRESS addr,BYTE io_src_b);
-#endif
-#if defined(SS_DEBUG)
-  void TraceIORead(MEM_ADDRESS addr);
-  void TraceIOWrite(MEM_ADDRESS addr,BYTE io_src_b);
-#endif
-#if defined(SS_DEBUG) || defined(SS_OSD_DRIVE_LED)
-/*  When pasti is in charge, Steem dma & fdc variables aren't updated. This
-    function updates those variables with pasti values.
-    Useful for TRACE and for the red led of drives.
+/*  Because Steem runs CAPS and Pasti plugins, DMA/FDC regs are not
+    always up-to-date. This function copies the values from CAPS or
+    Pasti so that they are. Useful for debug, OSD.
 */
   void UpdateRegs(bool trace_them=false);
-#endif  
+
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DMA_INC_ADDRESS)
+  void IncAddress();
+#define DMA_INC_ADDRESS Dma.IncAddress();
+#endif
+
+#if defined(SS_DMA_FIFO)
+
+  void AddToFifo(BYTE data);
+  BYTE GetFifoByte();
+
 /*  To be able to emulate the DMA precisely if necessary, DMA transfers are
     emulated in two steps. First, they're requested, then they're executed.
     That way we can emulate a little delay before the transfer occurs & the
     toggling of two FIFO buffers at each transfer.
     It proved overkill however, so calling RequestTransfer() will result in
-    the immediate call of TransferBytes() (as defined in SSE.h).
+    the immediate call of TransferBytes() (as #defined in SSE.h).
+    And only one buffer is used.
 */
   void RequestTransfer();
   void TransferBytes();
-  int Request;
+  bool Request;
+  BYTE Fifo_idx;
 #if defined(SS_DMA_DOUBLE_FIFO)
 /*
 "Internally the DMA has two 16 bytes FIFOs that are used alternatively. 
@@ -70,9 +80,22 @@ When a FIFO is full a bus request is made to the 68000 and when granted,
 have been transferred."
 This feature is emulated in Steem if SS_DMA_DOUBLE_FIFO is defined, but it
 hasn't proved necessary yet.
+
 */
-  int BufferInUse; 
+  bool BufferInUse; 
+  BYTE Fifo[2][16
+#if defined(SS_DMA_FIFO_READ_ADDRESS) && !defined(SS_DMA_FIFO_READ_ADDRESS2)
+    +4 // see fdc.h, replaces fdc_read_address_buffer[20]
 #endif
+    ];
+#else
+  BYTE Fifo[16
+#if defined(SS_DMA_FIFO_READ_ADDRESS) && !defined(SS_DMA_FIFO_READ_ADDRESS2)
+    +4 // see fdc.h, replaces fdc_read_address_buffer[20]
+#endif
+    ];
+#endif
+#endif//FIFO
 #if defined(SS_DMA_DELAY)
 /*
 "In read mode, when one of the FIFO is full (i.e. when 16 bytes have been
@@ -91,40 +114,143 @@ This feature uses Steem's event system, which is cycle accurate but also
 heavy. It was a test.
 */
   static void Event(); 
-  int dma_time;
+  int TransferTime;
 #endif
 
 };
 
 extern TDma Dma;
 
+#endif//dma
+
+
+#if defined(SS_DRIVE)
+/* How a floppy disk is structured (bytes/track, gaps...) is handled
+   here.
+*/
+
+struct TSF314 {
+  enum {RPM=DRIVE_RPM,MAX_CYL=DRIVE_MAX_CYL,TRACK_BYTES=DRIVE_BYTES_ROTATION};
+  WORD BytePosition();
+  WORD BytePositionOfFirstId();
+  WORD BytesToHbls(int bytes);
+  unsigned long HblsAtIndex();
+  WORD HblsPerRotation();
+  WORD HblsPerSector();
+  WORD HblsToBytes(int hbls);
+  BYTE nSectors();
+  void NextID(BYTE &Id,WORD &nHbls);
+  BYTE PostIndexGap();
+  BYTE PreDataGap();
+  BYTE PostDataGap();
+  WORD PreIndexGap();
+  WORD RecordLength();
+  BYTE SectorGap();
+  BYTE Track();
+  WORD TrackGap();
+  BYTE Id; // object has to know if its A: or B:
+#if defined(SS_PASTI_ONLY_STX)
+  BYTE ImageType;
 #endif
+};
+
+
+extern TSF314 SF314[2]; // 2 double-sided drives, wow!
+
+#endif//SS_DRIVE
 
 
 #if defined(SS_FDC)
 
-struct TWD1772 {
+/*
+FDC Registers detail
 
-  int CommandType(int command); // I->IV
+Data Shift Register - This 8-bit register assembles serial data from the Read
+ Data input (RD) during Read operations and transfers serial data to the Write
+ Data output during Write operations.
+
+Data Register - This 8-bit register is used as a holding register during Disk
+ Read and Write operations. In disk Read operations, the assembled data byte 
+is transferred in parallel to the Data Register from the Data Shift Register.
+ In Disk Write operations, information is transferred in parallel from the 
+Data Register to the Data Shift Register.
+When executing the Seek Command, the Data Register holds the address of the
+ desired Track position. This register is loaded from the Data bus and gated
+ onto the Data bus under processor control.
+
+Track Register - This 8-bit register holds the track number of the current
+ Read/Write head position. It is incremented by one every time the head is
+ stepped in and decremented by one when the head is stepped out (towards 
+track 00). The content of the register is compared with the recorded track
+ number in the ID field during disk Read, Write, and Verify operations. 
+The Track Register can be loaded from or transferred to the Data bus. 
+This Register is not loaded when the device is busy.
+
+Sector Register (SR) - This 8-bit register holds the address of the desired
+ sector position. The contents of the register are compared with the recorded
+ sector number in the ID field during disk Read or Write operations. 
+The Sector Register contents can be loaded from or transferred to the Data bus
+. This register is not loaded when the device is busy.
+
+Command Register (CR) - This 8-bit register holds the command presently
+ being executed. This register is not loaded when the device is busy unless
+ the new command is a force interrupt. The Command Register is loaded from 
+the Data bus, but not read onto the Data bus.
+
+Status Register (STR) - This 8-bit register holds device Status information.
+ The meaning of the Status bits is a function of the type of command
+ previously executed. This register is read onto the Data bus, but not loaded 
+from the Data bus.
+*/
+
+struct TWD1772 {
+  BYTE CR;
+  BYTE STR;
+  BYTE TR;
+  BYTE SR;
+  BYTE DR;
+
+  
+  BYTE IORead(BYTE Line);
+  void IOWrite(BYTE Line,BYTE io_src_b);
+  BYTE CommandType(int command=-1); // I->IV
 #if defined(SS_DEBUG) || defined(SS_OSD_DRIVE_LED)
 /*  This is useful for OSD: if we're writing then we need to display a red
     light (green when reading). This is used by pasti & IPF.
 */
   int WritingToDisk();
 #endif
-
-
-
 #if defined(SS_DEBUG)
-  int SectorPart;
   void TraceStatus();
 #endif
-
-  int OldCr; //debug?
 };
 extern TWD1772 WD1772;
 
-#endif
+#define fdc_cr WD1772.CR
+#define fdc_str WD1772.STR
+#define fdc_tr WD1772.TR
+#define fdc_sr WD1772.SR
+#define fdc_dr WD1772.DR
+#endif //FDC
+
+
+#if defined(SS_PSG)
+/*  In v3.5.1, object PSG is only used for drive management.
+    Drive is 0 (A:) or 1 (B:), but if both relevant bits in
+    PSG port A are set then no drive is selected (FF).
+*/
+
+struct TYM2149 {
+  enum {NO_VALID_DRIVE=0xFF};
+  BYTE Drive();
+  BYTE PortA();
+  BYTE Side();
+};
+
+extern TYM2149 YM2149;
+
+#endif//PSG
+
 
 #if defined(SS_IPF)
 /* Support for IPF file format using the WD1772 emulator included in 
@@ -143,7 +269,8 @@ extern TWD1772 WD1772;
    problem.
    It's perfectly possible to give write support in Steem, but it would be 
    better emulated in the plugin itself. We should do it ourselve only if the
-   CAPS WD1772 emu is never completed and if it would bring much to players. 
+   CAPS WD1772 emu is never completed and if it would bring much to players
+   (many disk images available).
    In the current state, only Sundog IPF would benefit, and we have Sundog 
    Pasti. Not worth the code.
 */
@@ -163,11 +290,13 @@ struct TCaps {
   int InsertDisk(int drive, char *File,CapsImageInfo *img_info);
   int IsIpf(int drive);
   void RemoveDisk(int drive);
-  UDWORD ReadWD1772();
+  UDWORD ReadWD1772(BYTE Line);
   void WritePsgA(int data);
-  int WriteWD1772(int data);
+  void WriteWD1772(BYTE Line,int data);
 
-/*  Using static functions so that there's no 'this'.
+/*  Using static functions so that there's no 'this' for those
+    callback functions.
+
     1) DRQ (data request)
     If we're reading from the disk, all data bytes combined by the controller
    come here, one by one.
@@ -179,18 +308,21 @@ struct TCaps {
 */
   static void CallbackDRQ(PCAPSFDC pc, UDWORD setting);
 
-  static void CallbackIRQ(PCAPSFDC pc, UDWORD lineout);
+
 /*  2) IRQ (interrupt request)
     The assigned IRQ (7) is generally disabled on the ST, but the corresponding
     bit (5) in the  MFP GPIP register (IO address $FFFA01) may be polled 
     instead.
 */  
+  static void CallbackIRQ(PCAPSFDC pc, UDWORD lineout);
 
-  static void CallbackTRK(PCAPSFDC pc, UDWORD driveact);
+
 /*  3) Track
     Strangely it's our job to change track and update all variables,
     maybe because there are different ways (memory, track by track...)?
 */
+  static void CallbackTRK(PCAPSFDC pc, UDWORD driveact);
+
 
   int Version; // 0: failed; else release revision eg 42
   BOOL Active; // if there's an IPF disk in some drive, we must run IPF cycles
@@ -198,15 +330,15 @@ struct TCaps {
   int CyclesRun; // must be the same for each line
 #endif
   // for drive A & B
-  int DriveMap; // bit0=drive A bit1=drive B
+  BYTE DriveMap; // bit0=drive A bit1=drive B
   SDWORD ContainerID[2]; 
   SDWORD LockedSide[2];
   SDWORD LockedTrack[2]; 
 /*  Here for the drives and the controllers, we use the names of the actual
-    hardware. Note that Steem SSE also uses its own WD1772 variable.
+    hardware. Note that Steem SSE also uses those variable names.
 */
-  CapsDrive SF314[2]; 
-  CapsFdc WD1772; 
+  CapsDrive SF314[2]; // 2 double-sided floppy drives
+  CapsFdc WD1772; // 1 cheap controller
 };
 
 extern TCaps Caps;

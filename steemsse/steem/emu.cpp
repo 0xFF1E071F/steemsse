@@ -20,6 +20,7 @@ inline int abs_quick(int i)
 #include "SSE/SSE.h" //SS
 
 #include "SSE/SSEDebug.h"
+
 #if defined(STEVEN_SEAGAL)
 #include "SSE/SSEDecla.h"
 #include "SSE/SSEParameters.h"
@@ -94,13 +95,15 @@ void internal_speaker_sound_by_period(int){}
 void set_pc(MEM_ADDRESS ad); // forward // still necessary?
 #include "SSE/SSE6301.h"
 #include "SSE/SSECpu.h"
-#include "SSE/SSEInterrupt.h"
+//#include "SSE/SSEInterrupt.h"
 #include "SSE/SSESTF.h"
 #include "SSE/SSEShifterEvents.h"
 #include "SSE/SSEShifter.h"
+#include "SSE/SSEInterrupt.h"
 #include "SSE/SSEVideo.h"
 #include "SSE/SSEInline.h"
-#include "SSE/SSEDebug.h"
+#include "SSE/SSESDL.h"
+///#include "SSE/SSEDebug.h"
 #endif
 
 #include "cpu.cpp"
@@ -126,8 +129,7 @@ void set_pc(MEM_ADDRESS ad); // forward // still necessary?
 #include "SSE/SSEInterrupt.cpp"
 #include "SSE/SSESTF.cpp"
 #include "SSE/SSE6301.cpp" // or in ikbd?
-
-
+#include "SSE/SSESDL.cpp" //?
 #endif
 
 #include "reset.cpp"

@@ -11,8 +11,6 @@ data.
 #pragma message("Included for compilation: floppydrive.cpp")
 #endif
 
-// SS some casts "corrected" int( -> (int)( ?
-
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)    
 #include "SSE/SSEOption.h"
 #include "SSE/SSEFloppy.h"
@@ -22,6 +20,17 @@ data.
 
 int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDetectBPB,BPBINFO *pFileBPB)
 {
+
+  TRACE_LOG("SetDisk %s %s\n",File.c_str(),CompressedDiskName.c_str());
+
+#if defined(STEVEN_SEAGAL)&&defined(SS_DRIVE)&&defined(SS_PASTI_ONLY_STX)
+  int drive=-1;
+  if (this==&FloppyDrive[0]) drive=0;
+  if (this==&FloppyDrive[1]) drive=1;
+  if(drive!=-1)
+    SF314[drive].ImageType=0;//default, this will detect STX disks (3)
+#endif
+
   if (IsSameStr_I(File,ImageFile) && IsSameStr_I(CompressedDiskName,DiskInZip)) return 0;
 
   if (Exists(File)==0) return FIMAGE_FILEDOESNTEXIST;
@@ -42,13 +51,23 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   bool IPF=IsSameStr_I(Ext,"IPF");
 #endif
 
+/*
+#if defined(STEVEN_SEAGAL) && defined(SS_PASTI_AUTO_SWITCH)
+  if(DIM||STT
+#if defined(SS_IPF)
+    ||IPF
+#endif
+    )
+    pasti_active=false;
+#endif
+ */ 
+  
   // NewDiskInZip will be blank for default disk, RealDiskInZip will be the
   // actual name of the file in the zip that is a disk image
   EasyStr NewDiskInZip,RealDiskInZip;
 
   int Type=ExtensionIsDisk(dot);
   if (Type==DISK_COMPRESSED){
-//    TRACE_LOG("compressed enable_zip %d\n",enable_zip);
     if (!enable_zip) return FIMAGE_WRONGFORMAT;
 
     int HOffset=-1;
@@ -63,7 +82,17 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
           if (CompressedDiskName.Empty() || IsSameStr_I(CompressedDiskName,fn.Text)){
             // Blank DiskInZip name means default disk (first in zip)
             if (Type==DISK_PASTI){
+#if defined(STEVEN_SEAGAL) && defined(SS_PASTI_ONLY_STX)
+              if(drive!=-1)
+              {
+                TRACE_LOG("Disk in %c is STX\n",'A'+drive);
+                SF314[drive].ImageType=DISK_PASTI;
+              }
+#endif
               f_PastiDisk=true;
+#if defined(SS_PASTI_AUTO_SWITCH)
+              pasti_active=true;
+#endif
             }else{
               MSA=has_extension(fn,"MSA");
               STT=has_extension(fn,"STT");
@@ -71,6 +100,11 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
               IPF=has_extension(fn,"IPF");
 #endif
+              /*
+#if defined(SS_PASTI_AUTO_SWITCH)
+              pasti_active=false;
+#endif
+              */
             }
             HOffset=zippy.current_file_offset;
             NewDiskInZip=CompressedDiskName;
@@ -100,20 +134,35 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       if (CorruptZip) return FIMAGE_CORRUPTZIP;
       return FIMAGE_NODISKSINZIP;
     }
-  }else if (Type==DISK_PASTI){
+  }else if (Type==DISK_PASTI
+#if defined(SS_PASTI_AUTO_SWITCH)
+    && (IsSameStr_I(Ext,"STX")||pasti_active)
+#endif
+    ){
+#if defined(STEVEN_SEAGAL)&&defined(SS_PASTI_ONLY_STX)
+    if(drive!=-1)
+    {
+      TRACE_LOG("Disk in %c is STX\n",'A'+drive);
+      SF314[drive].ImageType=DISK_PASTI;
+    }
+#endif
     f_PastiDisk=true;
+#if defined(SS_PASTI_AUTO_SWITCH)
+    pasti_active=true;
+#endif
   }else if (Type==0){
     TRACE_LOG("Disk type 0\n");
     return FIMAGE_WRONGFORMAT;
   }
-
+#if !(defined(STEVEN_SEAGAL) && defined(SS_PASTI_ONLY_STX))
   int drive=-1;
   if (this==&FloppyDrive[0]) drive=0;
   if (this==&FloppyDrive[1]) drive=1;
+#endif
   if (drive==-1) f_PastiDisk=0; // Never use pasti for extra drives
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
-  if(Caps.Version && drive!=-1 && Caps.IsIpf(drive))
+  if(CAPSIMG_OK && drive!=-1 && Caps.IsIpf(drive))
     RemoveDisk();
 #endif
 
@@ -164,7 +213,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     }
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
-  }else if(IPF&&Caps.Version) { 
+  }else if(CAPSIMG_OK && IPF) { 
     CapsImageInfo img_info;
     int Ret=Caps.InsertDisk(drive,File,&img_info);
     if(Ret==FIMAGE_WRONGFORMAT)
@@ -185,7 +234,6 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 
     if (GetFileLength(nf)<512){
       TRACE_LOG("File length of %s = %d\n",File.c_str(),GetFileLength(nf));
-//      BRK(check it)
       fclose(nf);
       if (NewZipTemp.NotEmpty()) DeleteFile(NewZipTemp);
       return FIMAGE_WRONGFORMAT;
@@ -795,6 +843,7 @@ int TFloppyImage::GetRawTrackData(int Side,int Track)
 //---------------------------------------------------------------------------
 void TFloppyImage::RemoveDisk(bool LoseChanges)
 {
+
 #if defined(STEVEN_SEAGAL) &&  defined(SS_VAR_DONT_REMOVE_NON_EXISTENT_IMAGES)
   if(Empty()) // nothing to do
     return;
@@ -805,12 +854,14 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   if (Removing) return;
   Removing=true;
 
-#if defined(STEVEN_SEAGAL) && (USE_PASTI ||defined(SS_IPF))
+#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
   int drive=-1;
   if (this==&FloppyDrive[0]) drive=0;
   if (this==&FloppyDrive[1]) drive=1;
+#ifdef SS_DEBUG
   if(drive==0 || drive==1)
     TRACE_LOG("Remove disk from drive %c\n",'A'+drive );
+#endif
 #endif
 
   if (f && ReadOnly==0 && LoseChanges==0 && WrittenTo && ZipTempFile.Empty()){
@@ -1031,7 +1082,7 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
 
 #if USE_PASTI
   if (PastiDisk){
-#if !defined(STEVEN_SEAGAL) || !defined(SS_IPF)
+#if !(defined(STEVEN_SEAGAL) && defined(SS_IPF)) // put above
     int drive=-1;
     if (this==&FloppyDrive[0]) drive=0;
     if (this==&FloppyDrive[1]) drive=1;
@@ -1043,10 +1094,12 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
       pdi.fileBuf=PastiBuf;
       pdi.bufSize=PastiBufLen;
       if (pasti->SaveImg(drive,0,&pdi)==FALSE){
+#if !(defined(STEVEN_SEAGAL) && defined(SS_PASTI_NO_RESET))
         int err=pasti->GetLastError();
         if (err!=pastiErrUnimpl){
           Alert(T("Unable to save to disk image, changes have been lost!"),T("Disk Image Error"),MB_OK);
         }
+#endif
       }
     }
     pasti->Eject(drive,ABSOLUTE_CPU_TIME);
@@ -1058,7 +1111,7 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   PastiDisk=0;
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
-  if(Caps.Version && drive!=-1 && Caps.IsIpf(drive))
+  if(CAPSIMG_OK && drive!=-1 && Caps.IsIpf(drive))
     Caps.RemoveDisk(drive);
   IPFDisk=0;
 #endif

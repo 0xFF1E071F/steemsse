@@ -13,7 +13,8 @@ and its various buttons.
 void StemWinResize(int xo,int yo)
 {
   int res=screen_res;
-  if (mixed_output) res=1;
+  if (mixed_output)
+    res=1;
   int Idx=WinSizeForRes[res];
 
 #ifndef NO_CRAZY_MONITOR
@@ -480,7 +481,6 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             ratio=(double)(WinSize[res][Idx].x)/(double)(WinSize[res][Idx].y);
           }
           double sz=( (double)(rc.right-4)/ratio + (double)(rc.bottom-(MENUHEIGHT+4)))/2.0;
-          //TRACE("sz: %f ratio:%f\n",sz,ratio);
           SetStemWinSize((int)(sz*ratio + 0.5),(int)(sz + 0.5));
 
           return 0;
@@ -550,7 +550,6 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
     case WM_KEYDOWN:
     case WM_KEYUP:
     case WM_SYSKEYDOWN:case WM_SYSKEYUP:
-		//TRACE("Key %X",wPar);
       if (bAppActive==0) return 0;
       if (wPar==VK_SHIFT || wPar==VK_CONTROL || wPar==VK_MENU) return 0;
 #ifndef ONEGAME
@@ -761,7 +760,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
       }
       else if (border & 1)
-      {// blurry dispplay in 'no stretch' mode? check here!!!!!!!!!!!!!!!!
+      {// blurry display in 'no stretch' mode? check here!!!!!!!!!!!!!!!!
         CanUse_400=(cw==(4+640+ 4* SideBorderSizeWin) 
           && ch==(MENUHEIGHT+4+400 + 2*(BORDER_TOP+BottomBorderSize)));
       }else{
@@ -1084,7 +1083,6 @@ void HandleButtonMessage(UINT Id,HWND hBut)
 //---------------------------------------------------------------------------
 void SetStemWinSize(int w,int h,int xo,int yo)
 {
-//  TRACE("SetStemWinSize %d, %d, %d, %d\n",w,h,xo,yo);
   if (FullScreen){
     rcPreFS.left=max(rcPreFS.left+xo,0l);
     rcPreFS.top=max(int(rcPreFS.top+yo),-GetSystemMetrics(SM_CYCAPTION));
@@ -1094,8 +1092,6 @@ void SetStemWinSize(int w,int h,int xo,int yo)
     if (bAppMaximized==0 && bAppMinimized==0){
       RECT rc;
       GetWindowRect(StemWin,&rc);
-//      TRACE("cx: %d ",w+4+GetSystemMetrics(SM_CXFRAME)*2);
-//      TRACE("cy: %d\n",h+MENUHEIGHT+4+GetSystemMetrics(SM_CYFRAME)*2+GetSystemMetrics(SM_CYCAPTION));
       SetWindowPos(StemWin,0,max(rc.left+xo,0l),max((int)(rc.top+yo),-GetSystemMetrics(SM_CYCAPTION)),
                     w+4+GetSystemMetrics(SM_CXFRAME)*2,
                     h+MENUHEIGHT+4+GetSystemMetrics(SM_CYFRAME)*2+GetSystemMetrics(SM_CYCAPTION),
@@ -1329,7 +1325,6 @@ void SnapShotGetOptions(EasyStringList *p_sl)
 #else
   if (on_rte!=ON_RTE_RTE){
 #endif
-    TRACE("on_rte %d ON_RTE_RTE %d\n",on_rte,ON_RTE_RTE);
     NoSaveExplain=T("The ST is in the middle of a disk operation");
   }else{
     if (stemdos_any_files_open()) NoSaveExplain=T("The ST has file(s) open");

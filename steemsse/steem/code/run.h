@@ -95,7 +95,9 @@ EXT int cpu_timer_at_start_of_hbl;
           }
 #endif
 
-
+/*  SS because agenda have an absolute timing (hbl count)
+    there's no need to delete them
+*/
 
 #define CHECK_AGENDA                                              \
   if ((hbl_count++)==agenda_next_time){                           \
@@ -177,8 +179,8 @@ EXT int cpu_timer_at_start_of_hbl;
 
 #if defined(STEVEN_SEAGAL) && defined(SS_DMA_DELAY)
 #define PREPARE_EVENT_CHECK_FOR_DMA       \
-  if ((time_of_next_event-Dma.dma_time) >= 0){                 \
-    time_of_next_event=Dma.dma_time;  \
+  if ((time_of_next_event-Dma.TransferTime) >= 0){                 \
+    time_of_next_event=Dma.TransferTime;  \
     screen_event_vector=TDma::Event;                    \
   }
 
@@ -199,7 +201,7 @@ typedef struct{
 screen_event_struct event_plan_50hz[313*2+2+1],event_plan_60hz[263*2+2+1],event_plan_70hz[600*2+2+1],
                     event_plan_boosted_50hz[313*2+2+1],event_plan_boosted_60hz[263*2+2+1],event_plan_boosted_70hz[600*2+2+1];
 
-void event_trigger_vbl();
+void event_trigger_vbi();
 
 #else
 

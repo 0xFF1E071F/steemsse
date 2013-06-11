@@ -9,6 +9,15 @@ appears when the emulator begins to run to give useful information.
 #pragma message("Included for compilation: osd.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_INFO)//forward
+#include "SSE/SSEFloppy.h"
+#if !(defined(STEVEN_SEAGAL) && defined(SS_FDC))
+extern BYTE fdc_sr;
+#endif
+extern BYTE floppy_head_track[2];
+#endif
+
+
 void ASMCALL osd_draw_char_dont(long*,BYTE*,long,long,int,long,long) {}
 
 void ASMCALL osd_draw_char_clipped_dont(long*,BYTE*,long,long,int,long,long,RECT*) {}
@@ -51,7 +60,6 @@ void osd_draw_begin()
   col_white=colour_convert(255,255,255);
 //  col_backblue=colour_convert(FUJI_COL);
 
-
 #if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
   col_fd_green[0]=colour_convert(0,255,0);
   col_fd_green[1]=colour_convert(0,200,0);
@@ -88,7 +96,7 @@ void osd_init_draw_static()
 {
   osd_start_time=timer;
   osd_shown_scroller=true;
-  osd_scroller_finish_time=0;
+  osd_scroller_finish_time=0; 
 }
 //---------------------------------------------------------------------------
 EasyStr get_osd_scroller_text(int n) {
@@ -142,7 +150,6 @@ void osd_start_scroller(char *t)
 {
   osd_scroller=t;
   strupr(osd_scroller.Text);
-
   osd_start_time=0;
   osd_shown_scroller=true;
   osd_scroller_start_time=timer+100;
@@ -196,6 +203,12 @@ void osd_draw()
 
   int x1,y1;
   x1=draw_blit_source_rect.right-draw_blit_source_rect.left;
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
+  if(draw_win_mode[screen_res]==DWM_STRETCH_SCANLINES && FullScreen)
+    x1/=2;
+#endif
+
   y1=draw_blit_source_rect.bottom-draw_blit_source_rect.top;
   bool can_have_scroller=true;
 
@@ -225,8 +238,8 @@ void osd_draw()
     if (osd_old_pos) start_y=25;
     if (BytesPerPixel==1){
 
-#ifndef SS_OSD
-      // not sure, haven't seen it in action
+#if !(defined(STEVEN_SEAGAL) && defined(SS_OSD_LOGO))
+      //SS not sure, haven't seen it in action
       osd_black_box(draw_mem,x-1,start_y,PLASMA_W+2,PLASMA_H+2,draw_line_length);
       for (int y=start_y+1;y<start_y+1+PLASMA_H;y++) osd_blueize_line(x,y,PLASMA_W);
 #endif
@@ -252,7 +265,7 @@ void osd_draw()
         frame=min(int(timer-(osd_start_time+200))/20,14);
       }
 
-#ifndef SS_OSD
+#if !(defined(STEVEN_SEAGAL) && defined(SS_OSD_LOGO))
       // Drawing the rectangle where the STEEM ENIGINE logo will be written
       // Just suppress it for the "new" logo
       if (frame>=0) 
@@ -262,7 +275,7 @@ void osd_draw()
     if (frame==14){
       x=x1/2-OSD_LOGO_W/2;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_LOGO)
 // hack to display correct version number (temp)
 #define THE_LEFT (0)
 #define THE_RIGHT ((x1))
@@ -270,10 +283,12 @@ void osd_draw()
       RECT cliprect={THE_LEFT,0,THE_RIGHT,y1};
       // must be CAPS for the scroller font
       char tmp_buffer[BUFFER_LENGTH];
-      strcpy(tmp_buffer,"Steem Engine ");	
+//      strcpy(tmp_buffer,"Steem Engine ");	
+      strcpy(tmp_buffer,"Steem SSE ");	
       // note it's STEem Engine anyway, not STeem Engine
       size_t buffer_length = strlen(tmp_buffer);
-      ASSERT( buffer_length == 13);
+      //ASSERT( buffer_length == 13);
+      ASSERT( buffer_length == 10 );
       size_t version_length = strlen(stem_version_text);
       ASSERT ( buffer_length + version_length <BUFFER_LENGTH );
       strncat(tmp_buffer,stem_version_text,BUFFER_LENGTH-buffer_length);
@@ -287,6 +302,10 @@ void osd_draw()
         osd_draw_char_clipped(osd_font+(n*64),draw_mem,x,start_y+PLASMA_H/2-OSD_LOGO_H/2,draw_line_length,col_white,32,&cliprect);
         x+=16;
       }//nxt i
+#undef THE_LEFT
+#undef THE_RIGHT
+#undef BUFFER_LENGTH
+
 #else
       for (int c=0;c<OSD_LOGO_W/32 + 1;c++){
         osd_draw_char(osd_font+((50+c)*64),draw_mem,x,start_y+PLASMA_H/2-OSD_LOGO_H/2,draw_line_length,col_white,OSD_LOGO_H);
@@ -301,7 +320,6 @@ void osd_draw()
     delete[] osd_plasma;     osd_plasma=NULL;
   }
 
-	//return;
   if (seconds<osd_show_speed){
     if (avg_frame_time && runstate==RUNSTATE_RUNNING){
       can_have_scroller=0;
@@ -387,12 +405,24 @@ void osd_draw()
   }
   
   
+  if(osd_show_disk_light 
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_INFO)
+    || OSD_DRIVE_INFO
+#endif
+    )
+
 #if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
   // Green led for floppy disk read; red for write.
-  if(osd_show_disk_light)
   {
-    if((psg_reg[PSGR_PORT_A] & b0110)==BIT_1 // drive A?
-      || (psg_reg[PSGR_PORT_A] & b0110)==BIT_2  // drive B?
+#if defined(SS_OSD_DRIVE_LED2)    
+    {
+      Dma.UpdateRegs();
+      bool FDCWriting=WD1772.WritingToDisk();
+      if(WD1772.STR&0x80) // motor on, simply
+#else
+    if(  (psg_reg[PSGR_PORT_A]&6) != 6
+    //  psg_reg[PSGR_PORT_A] & b0110)==BIT_1 // drive A?
+    //  || (psg_reg[PSGR_PORT_A] & b0110)==BIT_2  // drive B?
       || FDCCantWriteDisplayTimer>timer
       || FDCWritingTimer>timer
       || FDCWriting)
@@ -402,39 +432,84 @@ void osd_draw()
         || FDCCantWriteDisplayTimer>timer
         || FDCWritingTimer>timer
         || FDCWriting)
+#endif
       {
         int idx=32,w=20;
         if(draw_blit_source_rect.bottom>200+BORDER_TOP+BORDER_BOTTOM)
           idx=37,w=32;
-        DWORD col;
-        col= (FDCWriting || (FDCWritingTimer>timer)) 
+        DWORD col=(FDCWriting 
+#if !defined(SS_OSD_DRIVE_LED2)   
+          || (FDCWritingTimer>timer)
+#endif
+          ) 
           ? col_fd_red[(hbl_count/512) & 1] : col_fd_green[(hbl_count/512) & 1];
 #else
-  if (osd_show_disk_light){
+  {
     if ((psg_reg[PSGR_PORT_A] & b0110)==BIT_1 || (psg_reg[PSGR_PORT_A] & b0110)==BIT_2 || FDCCantWriteDisplayTimer>timer){
       if (disk_light_off_time>timer || DisableDiskLightAfter==0 || FDCCantWriteDisplayTimer>timer){
         int idx=32,w=20;
         if (draw_blit_source_rect.bottom>200+BORDER_TOP+BORDER_BOTTOM){
           idx=37,w=32;
         }
-	    	DWORD col=col_yellow[(hbl_count/512) & 1];
+    	DWORD col=col_yellow[(hbl_count/512) & 1];
 #endif
-        if (FDCCantWriteDisplayTimer>timer){
-          col=col_red;
-          osd_draw_char(osd_font+(38*64),draw_mem,(x1-w)-24,1,draw_line_length,col_red,16);
-          if (((FDCCantWriteDisplayTimer-timer) % 500)<=250){
-            osd_draw_char(osd_font+(39*64),draw_mem,(x1-w)-24,1,draw_line_length,col_red,16);
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_INFO)
+        if(osd_show_disk_light)
+#endif
+        {
+          if (FDCCantWriteDisplayTimer>timer){
+            col=col_red;
+            osd_draw_char(osd_font+(38*64),draw_mem,(x1-w)-24,1,draw_line_length,col_red,16);
+            if (((FDCCantWriteDisplayTimer-timer) % 500)<=250){
+              osd_draw_char(osd_font+(39*64),draw_mem,(x1-w)-24,1,draw_line_length,col_red,16);
+            }
           }
-        }
-        osd_draw_char(osd_font+(idx*64),draw_mem,(x1-w)-4,4,draw_line_length,col,8);
+          osd_draw_char(osd_font+(idx*64),draw_mem,(x1-w)-4,4,draw_line_length,col,8);
 
-        if (draw_grille_black<4) draw_grille_black=4;
+          if (draw_grille_black<4) draw_grille_black=4;
+        }
+
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_INFO)
+        // hack to display drive side track sector
+        if(OSD_DRIVE_INFO)// && seconds>=osd_show_plasma)
+        {
+#define THE_LEFT (x1/2)
+#define THE_RIGHT ((x1))
+#define BUFFER_LENGTH 10 //"D:S-TR-SEC" drive-side-track-sector
+
+          RECT cliprect={THE_LEFT,0,THE_RIGHT,y1};
+          
+          BYTE floppyno=floppy_current_drive();      
+          char tmp_buffer[BUFFER_LENGTH];
+
+          sprintf(tmp_buffer,"%C:%1d-%02d-%02d",'A'+floppyno,floppy_current_side()+1,
+            floppy_head_track[floppyno],fdc_sr);
+
+          //sprintf(tmp_buffer,"CR %2X",fdc_cr);
+
+          size_t drive_info_length=strlen(tmp_buffer);
+          int x=x1-(drive_info_length+1)*16;
+          int start_y=0+8;
+          for(unsigned int i=0;i<drive_info_length;i++)
+          {
+            int n= (int)(tmp_buffer[i]) + (60-33);
+            if (n>=60 && n<120)
+              osd_draw_char_clipped(osd_font+(n*64),draw_mem,x,start_y+PLASMA_H/2-OSD_LOGO_H/2,draw_line_length,col,32,&cliprect);
+            x+=16;
+          }//nxt i
+          if (draw_grille_black<4) draw_grille_black=4;
+#undef THE_LEFT
+#undef THE_RIGHT
+#undef BUFFER_LENGTH
+        }
+#endif
+
       }
     }
 
 #if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
     // Hard disk activity
-    else if(HDDisplayTimer>timer)
+    if(HDDisplayTimer>timer)
     {
       int idx=32,w=20;
       if (draw_blit_source_rect.bottom>200+BORDER_TOP+BORDER_BOTTOM)
@@ -446,13 +521,32 @@ void osd_draw()
 #endif
   }
 
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_SCROLLER_CONTROL)
+  if(OsdControl.ScrollerPhase==TOsdControl::WANT_SCROLLER)
+  {
+    osd_start_scroller(OsdControl.ScrollText);
+    OsdControl.ScrollerPhase=TOsdControl::SCROLLING;
+    osd_shown_scroller=true;
+    osd_scroller_start_time=timer+100;
+    osd_scroller_finish_time=osd_scroller_start_time + 20*20 + osd_scroller.Length()*4*20 + (1280/4*20);
+  }    
+  else if(OsdControl.ScrollerPhase==TOsdControl::SCROLLING)
+    ;
+  else
+#endif
+
 
   if (can_have_scroller && osd_shown_scroller==0){
     osd_shown_scroller=true;
     osd_scroller_finish_time=0;
     osd_pick_scroller();
   }
-  if (osd_shown_scroller && timer<osd_scroller_finish_time){
+
+  if (osd_shown_scroller && timer<osd_scroller_finish_time
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_SCROLLER_CONTROL)    
+    || OsdControl.ScrollerPhase==TOsdControl::SCROLLING
+#endif
+    ){
     int pos=(timer-osd_scroller_start_time)/20;
     if (pos>=20){
       int i=(pos-20)/4;
@@ -465,20 +559,40 @@ void osd_draw()
       int scroll_len=osd_scroller.Length();
       while (x > (THE_LEFT-BORDER_SIDE)){
         if (i<scroll_len){
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_SCROLLER_CONTROL)
+          long colour=(OsdControl.ScrollerPhase==TOsdControl::SCROLLING)?
+            OsdControl.ScrollerColour : col_white;
+#endif
           int n=int(osd_scroller[i])+(60-33);
-		  TRACE("%c",n);
           if (n>=60 && n<120){
             if (x>=THE_LEFT && x < THE_RIGHT-BORDER_SIDE){
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_SCROLLER_CONTROL)
+              osd_draw_char(osd_font+(n*64),draw_mem,x,y1-24-5,draw_line_length,colour,32);
+#else
               osd_draw_char_transparent(osd_font+(n*64),draw_mem,x,y1-24-5,draw_line_length,col_white,32);
+#endif
             }else if (x<THE_RIGHT){
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_SCROLLER_CONTROL)
+              osd_draw_char_clipped(osd_font+(n*64),draw_mem,x,y1-24-5,draw_line_length,colour,32,&cliprect);
+#else
               osd_draw_char_clipped_transparent(osd_font+(n*64),draw_mem,x,y1-24-5,draw_line_length,col_white,32,&cliprect);
+#endif
             }
           }
           if (i==(scroll_len-1)){
-            if ((x+16)<THE_LEFT) osd_scroller_finish_time=0;
+            if ((x+16)<THE_LEFT) 
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_SCROLLER_CONTROL)
+            {
+              OsdControl.ScrollerPhase=TOsdControl::NO_SCROLLER;
+#endif
+              osd_scroller_finish_time=0;
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_SCROLLER_CONTROL)
+            }
+#endif
           }
         }
         x-=16;
+
         if ((--i)<0) break;
       }
       #undef THE_LEFT
@@ -486,6 +600,7 @@ void osd_draw()
       if (draw_grille_black<4) draw_grille_black=4;
     }
   }
+
 
 #endif // ONEGAME
 }
@@ -598,12 +713,12 @@ void osd_get_reset_info(EasyStringList *sl)
   sl->Add(T("ST CPU speed")+": "+(n_millions_cycles_per_sec)+" "+T("Megahertz"));
   t=T("Active drives")+": A";
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF_OSD)
-  if(Caps.IsIpf(0))
+  if(CAPSIMG_OK && Caps.IsIpf(0))
     t+=" (IPF)";
 #endif
   if (num_connected_floppies==2) t+=", B";
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF_OSD)
-  if(Caps.IsIpf(1))
+  if(CAPSIMG_OK && Caps.IsIpf(1))
     t+=" (IPF)";
 #endif
   for (int n=2;n<26;n++) if (mount_flag[n]) t+=Str(", ")+char('A'+n);

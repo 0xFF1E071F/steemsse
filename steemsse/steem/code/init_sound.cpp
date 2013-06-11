@@ -5,6 +5,10 @@ DESCRIPTION: The guts of Steem's sound output code, uses a DirectSound buffer
 for output.
 ---------------------------------------------------------------------------*/
 
+/*  SS 'init' is a bit of a misnomer as it's used during emulation
+*/
+
+
 #if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
 #pragma message("Included for compilation: init_sound.cpp")
 #endif
@@ -80,6 +84,8 @@ HRESULT InitSound()
   SoundRelease();
 
   HRESULT Ret;
+
+#if !(defined(STEVEN_SEAGAL) && defined(SS_SOUND_SKIP_DSOUND_TEST)) //stupid?
   // Hey, this allows Steem to run even if there is no DSound.dll
   log("SOUND: Attempting to load dsound.dll");
   HINSTANCE hDSDll=LoadLibrary("dsound");
@@ -93,6 +99,7 @@ HRESULT InitSound()
     log("SOUND: Freeing library");
     FreeLibrary(hDSDll);
   }
+#endif
 
   log("SOUND: Initialising, creating DirectSound object");
   Ret=CoCreateInstance(CLSID_DirectSound,NULL,CLSCTX_ALL,IID_IDirectSound,(void**)&DSObj);
@@ -211,14 +218,63 @@ DWORD SoundGetTime()
 
   if (sound_time_method<2){
     play_cursor=0,write_cursor=0;
+/*
+Current Play and Write Positions
+DirectSound maintains two pointers into the buffer: the current play position 
+(or play cursor) and the current write position (or write cursor). These 
+positions are byte offsets into the buffer, not absolute memory addresses.
+
+The IDirectSoundBuffer::Play method always starts playing at the buffer's 
+current play position. When a buffer is created, the play position is set to 
+zero. As a sound is played, the play position moves and always points to the 
+next byte of data to be output. When the buffer is stopped, the play position 
+remains where it is.
+
+The current write position is the point after which it is safe to write data 
+into the buffer. The block between the current play position and the current 
+write position is already committed to be played, and cannot be changed safely.
+
+Visualize the buffer as a clock face, with data written to it in a clockwise 
+direction. The play position and the write position are like two hands sweeping 
+around the face at the same speed, the write position always keeping a little 
+ahead of the play position. If the play position points to the 1 and the write 
+position points to the 2, it is only safe to write data after the 2. Data 
+between the 1 and the 2 may already have been queued for playback by 
+DirectSound and should not be touched.
+
+Note  The write position moves with the play position, not with data written to 
+the buffer. If you're streaming data, you are responsible for maintaining your 
+own pointer into the buffer to indicate where the next block of data should be 
+written.
+
+Also note that the dwWriteCursor parameter to the IDirectSoundBuffer::Lock 
+method is not the current write position; it is the offset within the buffer 
+where you actually intend to begin writing data. (If you do want to begin 
+writing at the current write position, you specify DSBLOCK_FROMWRITECURSOR in 
+the dwFlags parameter. In this case the dwWriteCursor parameter is ignored.) 
+
+An application can retrieve the current play and write positions by calling the 
+IDirectSoundBuffer::GetCurrentPosition method. The 
+IDirectSoundBuffer::SetCurrentPosition method lets you set the current play 
+position, but the current write position cannot be changed.
+
+-> 'write cursor' is the right method.
+
+*/
     SoundBuf->GetCurrentPosition(&play_cursor,&write_cursor);
+#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_OPTIMISE) // one DIV fewer!
+    DWORD cursor=(sound_time_method==0) ? play_cursor:write_cursor;
+    cursor/=sound_bytes_per_sample;
+#else
     play_cursor/=sound_bytes_per_sample;
     write_cursor/=sound_bytes_per_sample;
     DWORD cursor=(sound_time_method==0) ? play_cursor:write_cursor;
-    if (cursor<psg_last_play_cursor) psg_time_of_start_of_buffer+=sound_buffer_length;
+#endif
+    if (cursor<psg_last_play_cursor) 
+      psg_time_of_start_of_buffer+=sound_buffer_length;
     s_time=psg_time_of_start_of_buffer+cursor;
     psg_last_play_cursor=cursor;
-  }else{
+  }else{ //SS in ms
     DWORD mSecs=timeGetTime()-SoundBufStartTime;
     s_time=(mSecs*sound_freq)/1000;
   }

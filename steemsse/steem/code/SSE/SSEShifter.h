@@ -25,22 +25,24 @@
     we '&' it. Each value is the previous one x2.
     Note max 32 bit = $80 000 000
 */
+
 #define TRICK_LINE_PLUS_26 0x001
 #define TRICK_LINE_PLUS_2 0x02
 #define TRICK_LINE_MINUS_106 0x04
 #define TRICK_LINE_MINUS_2 0x08
 #define TRICK_LINE_PLUS_44 0x10
 #define TRICK_4BIT_SCROLL 0x20
-#define TRICK_OVERSCAN_MED_RES 0x40 //?
+#define TRICK_OVERSCAN_MED_RES 0x40
 #define TRICK_BLACK_LINE 0x80	
-#define TRICK_VERTICAL_OVERSCAN 0x100 // for both top & bottom (TODO)
-#define TRICK_LINE_PLUS_20 0x200	
-#define TRICK_0BYTE_LINE 0x400	
-#define TRICK_STABILISER 0x800
-#define TRICK_WRITE_SDP 0x1000
-#define TRICK_WRITE_SDP_POST_DE 0x2000
-#define TRICK_CONFUSED_SHIFTER 0x4000//tmp hack
-
+#define TRICK_TOP_OVERSCAN 0x100
+#define TRICK_BOTTOM_OVERSCAN 0x200
+#define TRICK_BOTTOM_OVERSCAN_60HZ 0x400
+#define TRICK_LINE_PLUS_20 0x800	
+#define TRICK_0BYTE_LINE 0x1000	
+#define TRICK_STABILISER 0x2000
+#define TRICK_WRITE_SDP 0x4000
+#define TRICK_WRITE_SDP_POST_DE 0x8000
+#define TRICK_CONFUSED_SHIFTER 0x10000//tmp hack
 
 // register names in Atari doc / Steem variable
 #define HSCROLL shifter_hscroll
@@ -64,466 +66,17 @@ enum {BORDERS_NONE, BORDERS_ON, BORDERS_AUTO_OFF, BORDERS_AUTO_ON};
     +12 treatment),and also a "magic value" (hack) of 7 (x4) used in Hatari 
     to shift lines with the same result.
     We try to rationalise this.
+    Update: the delay is reduced after we corrected prefetch timing.
+    TODO, but all reversible
 */
 #define SHIFTER_PREFETCH_LATENCY 12 
 #define SHIFTER_RASTER_PREFETCH_TIMING (shifter_freq==72 ? 4 : 16) 
 #define SHIFTER_RASTER (shifter_freq==72? 2 : (screen_res ? 4 : 8)) 
 
 
-/* 
-  Atari:
-
-       Video display memory is configured as n logical  planes
-  interwoven  by  16  bit words into contiguous memory to form
-  one 32 Kbyte (actually 0x7d00) physical  plane  starting  at
-  any 256 byte half page boundary (in RAM only).  The starting
-  address of display  memory  is  placed  in  the  Video  Base
-  Address  Register  (read/write,  reset:  all zeros) which is
-  then loaded into the Video Address  Counter  Register  (read
-  only, reset: all zeros) and incremented.  The following is a
-  diagram of possible physical configurations of video display
-  memory:
-
-
-                 --------
-  16 bit word   |        |
-                 -------- -------- -------- -------- --------
-  4 plane       |plane 0 |plane 1 |plane 2 |plane 3 |plane 0 |
-                 -------- -------- -------- -------- --------
-  2 plane       |plane 0 |plane 1 |plane 0 |plane 1 |plane 0 |
-                 -------- -------- -------- -------- --------
-  1 plane       |plane 0 |plane 0 |plane 0 |plane 0 |plane 0 |
-                 -------- -------- -------- -------- --------
-
-
-       The general flow of the video controller is as follows:
-  BitMap  planes are taken a word at a time from video display
-  memory and placed in the video shift register where one  bit
-  from  each  plane is shifted out and collectively used as an
-  index (plane 0 is the least  significant  bit)  to  a  color
-  lookup  palette  entry which is supplied to 3 bit digital to
-  analog converters to produce RGB output.  The following is a
-  block diagram of the video controller:
-
-  ----- Video Controller Block Diagram ---------------
-
-         --------          --------        --------   lsb  --------
-        | 3      |---- -->|0 1 2 3 |----->|      0 |----->| 16 x 9 |-
-       --------  |    |   |        |      |      1 |----->| Lookup |-|->R
-      | 2      |------    |        |      |      2 |----->|        |-
-     --------  | |    |   |        |      |      3 |----->|        |-
-    | 1      |--------    |        |      |        |--    |        |-|->G
-   --------  | |-     |    --------        --------   |   |        |-
-  | 0      |----------                                |   |        |-
-  |        | |-                                       |   |        |-|->B
-  |        | |                                        |   |        |-
-  |        |-                                         |    --------
-  |        |                                          |    --------
-   --------                                            -->|Inverter|->MONO
-                                                           --------
-
-  Logical BitMap          Video Display   Video Shift     Color Palette
-  Planes                  Memory          Register        and 3 Bit DACs
-
-
-    ST-CNX:
-
-Picture Display Format 
-
-A picture is displayed 50 times a second in 50Hz mode (or 60 times in 60Hz). The
-ST generates 313 lines per picture at  50Hz (263 at 60Hz). In theory, it  should
-generate 312.5 lines, (obtained by  successively displaying 312 and 313  lines).
-It therefore assumes  the monitor can  tolerate displaying a  picture at 49,92Hz
-instead of 50Hz. This also explains why the ST cannot have a real interlace mode
-such as that of  the Amiga. Each line  takes a constant time  to be transmitted:
-otherwise the  picture would  be distorted.  This time  is calculated  using the
-following formula:
-
-               1
--------------------------------------------------------------
-(Number of pictures per second * number of lines per picture)
-
-For "Number of pictures per second"=50 and "Number of lines per  picture"=312.5,
-we get 64 microseconds. But some will wonder how come there are 313 lines, if  I
-only see 200  on the screen?  The other lines  are used by  the upper and  lower
-borders, and  by the  vertical synchronization  signal which  tells the  monitor
-where the top of  the screen starts. Overscan  is the process of  converting the
-lines used to make  up the borders into  lines able to display  a picture loaded
-from memory. I will call "useable  screen" that part of the screen  not occupied
-by borders.
-
-A monochrome picture  is displayed in  the same way,  where the refresh  rate is
-approximately 70Hz and each line takes 28 microseconds to be transmitted. It  is
-composed of approximately 500 lines, of which 400 form the useable screen.
-
-
-
-Video Components 
-
-Before getting into the subject, let us recall the role of each component of the
-ST responsible of the display.
-
-- The MMU: This component reads memory and sends it to the SHIFTER every 500 ns.
-
-  Registers:
-  * Address of the picture to display on next VBL:
-$FFFF8201: upper byte
-$FFFF8203: middle byte
-$FFFF820D: lower byte (STE only)
-
-  * Video counter, indicates the address being decoded at this instant:
-$FFFF8205: upper byte
-$FFFF8207: middle byte
-$FFFF8209: lower byte
-    Please note that you can only read from these on a plain ST, the STE however
-    also allows to write to them,  which will immediately  change the  displayed
-    screenarea.
-
-- The GLUE: Produces the vertical and  horizontal synchronization signals.  It
-   also produces signals telling the SHIFTER  when it should display the useable
-   screen,  and  when it should show the background  colour 0  (corresponding to
-   the border). It also tells the MMU when to send data to the SHIFTER.
-
-  Registers:
-  * $FFFF820A: Synchronization mode
-    Bit 1 corresponds to the monitor refresh rate (0 for 60Hz, 1 for 50 Hz)
-
-  * Resolution:
-$FFFF8260  (Both the GLUE and the SHIFTER have a copy of this register)
-    This byte can have  one of 3 values:  0 for low-,  1 for middle- and  2 for
-    high-resolution.  The GLUE needs this register,  because in high-resolution
-    the picture is displayed at ~70 Hz which requires different synchronization
-    signals (see second part)
-
-- The SHIFTER:  Decodes the data  sent by the MMU into  colour or  monochrome
-   signals, corresponding to the picture in memory.
-
-  Registers:
-  * Resolution:
-$FFFF8260  (Both the GLUE and the SHIFTER have a copy of this register)
-    The SHIFTER needs this register because  it needs to know  how to decode the
-    picture data (as 4, 2 or 1 bitplanes) and whether to send the picture out to
-    the RGB pins or the monochrome pin. Indeed, if one of these pins are active,
-    the other is low.  The "hardware"  proof is  that the SHIFTER  receives  the
-    address bus signals A1 to A5 (no need for A0 because every address is even).
-    However only A1 to A4 would be sufficient to access the palette.
-
-
-
-Video Signals 
-
-Now we'll discuss which signals the display components use to work together.
-Before diving in, a word of warning: everything said here was deduced logically
-but never verified with an oscilloscope. Thus, while I'm sure of my conclusions,
-I don't take any responsibility if some hardware hacker damages his ST by
-trusting this article.
-
-The MMU reads picture data from memory  and passes it on the SHIFTER, using  the
-Load/Dcyc signal to  tell the SHIFTER  the data on  its data bus  comes from the
-screen buffer. When this happens, the  68000 can't access the data bus.  Because
-the  data  bus  is also  used  to  program the  SHIFTER  registers,  you may  be
-wondering,  how  can the  68000  change resolution  or  the palette?  After  all
-programs such as Spectrum 512 change the palette while the picture is displayed!
-Isn't there a conflict between the 68000 and the MMU?  To help us to understand,
-we notice that the 68000 has access to the address and data buses every 4 cycles
-(which explains why  all instruction cycle  times are multiples  of four: a  NOP
-takes 4 cycles as specified in the 68000 manual, but EXG takes 8 cycles  instead
-of the 6 specified in the manual). Thus, the MMU steals the other cycles to read
-the video memory and to  transfer it to the SHIFTER,  and also to deal with  DMA
-Sound on the STE. On the other  hand, the MMU interrupts the 68000 for  disk-DMA
-(floppy and HD)  and Blitter transfers.  Thus, if these  devices are not  turned
-off, every programs  that relies on  constant execution time  (such as Overscan)
-will not work correctly.
-
- 
-The GLUE generates the DE, Vsync, Hsync and Blank signals:
-
-- The DE (Display Enable) signal  tells the  SHIFTER when to display the  border
-  and when it has to display the  usable screen.  It also tells the MMU  when to
-  send data to the SHIFTER:  It is unnecessary  to send  data and  increment the
-  video counter  while the  border is  displayed.  If you cut the track  of this
-  signal you will obtain a  "hardware" overscan (thanks to Aragorn who confirmed
-  this by doing it). However, due to stability issues, this is  not recommended.
-  The Autoswitch Overscan board (see ST Magazine 50) works in a very similar way
-  by controlling this signal.
-
-- The Blank signal forces the  RGB colour outputs to zero  just before,  during,
-  and just after the Hsync and Vsync synchronization signals.  Indeed,  monitors
-  require the video signal  to be 0 volts  (black colour) before  every synchro-
-  nization pulse (implemented as a negative voltage): Even the border colour has
-  to be eliminated to prevent overlaying the border colour over the screen while
-  the electron beam returns to the beginning of the next line (from the screen's
-  right to its left)  and to the next picture  (from the screen's bottom  to its
-  top).  Note that the Blank signal isn't used if the screen is displaying high-
-  resolution.
-
-The Vsync and Hsync sync signals are added to the video signal:
-
-- Vsync is the  vertical synchronization signal which specifies where the top of
-  the picture is located  in the video stream.  The VBL interrupt corresponds to
-  an edge of this signal.
-
-- Hsync is the horizontal synchronization signal. It generates the HBL interrupt
-  (vector $68).  The HBL interrupt  should not  to be confused  with the Timer B
-  interrupt (vector $120)  which is generated  when the DE signal goes low on an
-  input of the MFP:  The Timer B interrupt is triggered  only,  when the useable
-  screen is displayed, because DE is inactive during upper and lower border.
-
-The MMU uses the  Vsync signal to  reset the video counter  with the contents of
-$FFFF8201 and $FFFF8203 (you may also add $FFFF820D on STE).
-
-Knowing that  the GLUE  handles this  signals,  it  seems logical  that it would
-control the process of displaying the  screen. To do this, it would  require two
-counters:
-
-- a vertical counter:   the number of currenly displayed line
-
-- a horizontal counter: the position within the line currently being output
-
-        [Top and Bottom Overscan: see CheckVerticalOverscan()]
-
-        Left and Right overscan
-
-        The horizontal counter is incremented every 500ns (aka every
-        0.5us). It is reset every HBL. Thus the MMU sends a word to the
-        SHIFTER every 0.5us . Notice that at 50Hz a line will last 64us
-        while at 60Hz it will last 63.5us. Also note that the SECAM
-        specification requires that the horizontal synchronisation pulse
-        should last 0.47us. However because the GLUE only has a
-        resolution of 0.5us, the ST relies on the tolerance of the
-        monitor and emits an Hsync signal of 0.5us.
-
-        The GLUE goes through a similar process to display each line as
-        it does to display the whole picture: first a border. This is
-        achieved using a signal H (as in Horizontal) which is active
-        during the portion of the line to be displayed. H and V are
-        combined using an AND gate to give the signal DE (Display
-        Enable). Thus only when H and V are active, is a useable screen
-        displayed.
-
-        H is activated once the horizontal counter reaches a first value
-        at the end of the border. H is deactivated once the horizontal
-        counter reaches a second value at the end of the useable screen,
-        40us later. Finally once the horizontal counter reaches a third
-        value, the Hsync signal is activated for 500ns and a new line is
-        started. Notice that while these three values depend on the
-        display frequency, the length of a standard useable line is
-        always 40us (that is to say 160 bytes output every 0.5us as
-        words).
-
- 
-        The following pseudo-code describes the GLUE's work. Note that I
-        did not determine the exact moment the HBL interrupt takes
-        place, and therefore a constant should be added to the following
-        numbers. Similarly, there is little value in determining Y.
-
-Position=0
-REPEAT
- IF Position == 13  AND display_freq=60  THEN Activate    signal H
- IF Position == 14  AND display_freq=50  THEN Activate    signal H
- IF Position == 93  AND display_freq=60  THEN Disactivate signal H
- IF Position == 94  AND display_freq=50  THEN Disactivate signal H
- IF Position == Y   AND display_freq=60  THEN Activate    signal Hsync
- IF Position == Y+1 AND display_freq=60  THEN Disactivate signal Hsync
-                                              and start a new line
- IF Position == Y+1 AND display_freq=50  THEN Activate    signal Hsync
- IF Position == Y+2 AND display_freq=50  THEN Disactivate signal Hsync
-                                              and start a new line
- Position = Position+1
-END_REPEAT
-
-
-        The internal structure of the SHIFTER:
-
-        As the GLUE controls the DE signal, one would expect the
-        beginning of the useable screen to always occur at the same
-        location on the screen. However, if one removes the right
-        border, one will see that the useable screen starts slightly
-        further to the left than it does in the normal non-overscan
-        mode. The SHIFTER is responsable for this effect. Unlike the
-        GLUE, it is a complex circuit. Providing a full explanation of
-        its function is beyond the scope of this article. Instead I
-        present here a simplified explanation, which may describe
-        certain aspects poorly, but suffices for this study.
-
- 
-        The SHIFTER contains 4 16-bit registers RR1 to RR4, where RR
-        denotes Rotating Register. Each of these registers undergoes a
-        continuous rotation, shifting out their most significant bit on
-        each rotation. The most significant bits thus output are used to
-        address colours in the palette which is directly linked to the
-        RGB pins. For instance in low resolution, the four RR registers
-        are shifted so 4 bits are output at a time, corresponding to the
-        4 bitplanes. Thus, after 16 rotations, RR1 to RR4 are "empty".
-
-        The four RR registers are updated simultaneously and at the same
-        time, whatever the resolution. Consider medium resolution. It
-        only uses 2 bitplanes, so only two registers RR1 and RR2 are
-        being shifted. It doubles the horizontal resolution (640
-        pixels), so both registers are rotating twice as fast as in low
-        resolution. Each time the RR registers are shifted, their least
-        significant bit is cleared. Once RR1 and RR2 have been
-        "emptied", they are updated with the contents of RR3 and RR4,
-        which are themselves emptied.
-
-        High resolution is processed slightly differently: only RR1
-        rotates, but at four times the speed it does in low resolution.
-        The exiting bit addresses bit 0 of colour 0 in the palette to
-        determine whether the picture should be shown in inversed video.
-        It is also reinserted as the entering bit of RR1, so RR1 is
-        rotated rather than shifted. When RR1 has been emptied, it is
-        updated with the value of RR2; RR2 is updated with the value of
-        RR3 and RR4 with that of RR3. RR4 is then empty, and is filled
-        with $0000 or $FFFF depending on the value of bit 0 of colour 0.
-
-        The SHIFTER also contains four temporary bitplane registers: IR1
-        to IR4, where IR denotes Internal Register. Their behaviour is
-        given by the following pseudo-code:
-
-Number_of_read_bitplanes = 0
-REPEAT
- IF Load is active THEN IR[Number_of_read_bitplanes] = Data sent from MMU
-                        Number_of_read_bitplanes = Number_of_read_bitplanes + 1
- IF Number_of_read_bitplanes == 4 AND IF DE is active
-    THEN RR1 = IR1; RR2 = IR2; RR3 = IR3; RR4 = IR4
- IF Number_of_read_bitplanes == 4 THEN Number_of_read_bitplanes = 0
-END_REPEAT
-
-        This process is continuous, and depends in no way on the
-        synchronisation signals sent by the GLUE. Thus the RR registers
-        are only reset when four bitplanes were received. As the RR
-        registers are permanently rotated, they are emptied when the MMU
-        sends no data or when DE (Display Enable) is off. In low and
-        medium resolutions, each shift fills the least significant bit
-        with a zero, which explains why the border colour is determined
-        by colour zero in the palette. In high resolution they are
-        filled by the value of bit 0 of colour 0 (signal BE)
-        guaranteeing that the border is always black. This avoids the
-        use of the Blank signal when the monitor's electron gun returns
-        to the next line. This can be verified by causing the SHIFTER to
-        display something during this time: it is displayed as a
-        diagonal trace on the screen (it is extended and grey rather
-        than white as the electron beam is moving quickly).
-
-        Note that every change of resolution immediately changes the
-        SHIFTER's behaviour: RR1 to RR4 will be treated differently, and
-        any momentary switch to high resolution will appear as a black
-        line on a colour monitor and a horizontal line on the monochrome
-        monitor. This corresponds to a temporary disactivation of the
-        RGB pins and the activation of the Mono pin. If transition
-        occurs during the useable screen, the effect obtained differs on
-        STF's and STE's, and differs according to the exact position on
-        the screen in which it occured. For instance, there is a
-        position from which a black line will extend all the way to the
-        extreme right of the screen. This corresponds to the activation
-        of the BLANK signal by the GLUE. These effects do not change the
-        way in which the screen is decoded, or the synchronisation
-        signals are generated.
-
-        Shifts of the Useable Screen
-
-        In the usual non-overscan scenario, DE is activated and
-        disactivated 16 pixels before and after each line of the useable
-        screen. The SHIFTER will only display the four IR values once it
-        has received all of them. But if some of the IR registers were
-        already filled, it won't need to wait to load all of them before
-        loading the RR registers. Since the RR registers are loaded
-        earlier, the useable screen will be shifted left. This shift
-        will correspond directly to the number of words less that it did
-        not need to wait for. As we saw, the MMU sends a new word to the
-        SHIFTER every 500ns. Thus if only IR1 were filled, the image
-        would be shifted 500ns left (corresponding to 4 pixels in low
-        resolution). IR1 and IR2 correspond to 8 pixels, and so on.
-
-        Note that this effect is perpetuated from VBL to VBL: if at the
-        end of a VBL, the IR registers are not all empty, the next
-        useable screen will be shifted left. If one changes resolution
-        during the useable screen, depending on the location of the
-        change, it is possible to affect the normal functioning of the
-        IR registers. Such changes of resolution can result in the
-        bitplanes being shifted. Finally this description is incomplete,
-        because it does not account for screens where one observes
-        alternating bands of useable screen and border.
-
- 
-        Consider now a line with the left border removed: it contains
-        186 bytes, or 92+1 words. 92 is a multiple of 4, so there is a
-        word too many per line. As we know, the beginning of the right
-        border is due to DE being disactivated, so its position will not
-        vary: if there is one word too many per line it will be loaded
-        on the left of the screen. As the SHIFTER displays border unless
-        all IR registers have been loaded, the first line displayed will
-        stop 500ns before a normal line would, i.e. 4 pixels left in low
-        resolution. At the end of the first line IR1 is already loaded,
-        so the second line should start 0.5us earlier. Similarly at the
-        end of the second line both IR1 and IR2 are already loaded, so
-        the third line should start 1us earlier. Thus in low resolution
-        one would expect the following sequence of left shifts: 4-8-12-0
-        pixels. This actually occurs rarely (one time out of 20),
-        depending on power up conditions causing the the GLUE, MMU and
-        SHIFTER to be slightly out of synch. Instead one usually obtains
-        the truncation of line four pixels early corresponding to the
-        disactivation of DE. Is IR1 ignored? Indeed at the beginning of
-        each left overscan line there is a transition to high resolution
-        for a few cycles to activate DE. The change to high resolution
-        occurs before DE is activated. Then there are 500ns before the
-        Load/Dcyc signal of the MMU is activated (because there are 94
-        positions between the switch to monochrome and the switch to
-        60Hz to remove the right border: that is to say when DE is
-        usually disactivated, for 93 (92+1) words read by the MMU). The
-        fact that DE is activated, but Load/Dcyc isn't has as effect to
-        clear the last IR register loaded, and to decrement the
-        Number_of_read_bitplanes register. Thus if the MMU responds
-        earlier, which can happen if it is out of synch with the
-        SHIFTER, one will obtain the expected sequence of 4-8-12-0 pixel
-        shifts in low resolution. To conclude, left overscan alone is
-        potentially unstable and it is unadvisable to use it alone.
-
- 
-        So why is right overscan stable? Each line is two words too
-        long! In fact, right overscan is only relatively stable in 50Hz
-        low resolution: in medium resolution, two words too many
-        correspond to 16 pixels. As all the IR registers must be loaded
-        before their contents is transfered to the RR register, every
-        second line is shifted left 16 pixels. Similarly, at 60Hz in low
-        resolution the same thing occurs with an 8 pixel left shift
-        every second line: only IR3 and IR4 need to be loaded. The fact
-        this does not occur at 50Hz means that Number_of_read_bitplanes
-        must be reset to zero. The same effect occurs for 158 byte
-        lines: they should be shifted by 12-8-4-0 pixels every 4 lines
-        in low resolution, since they have 3 words too many. These
-        anomalies are due to rare combinations of the DE and Load/Dcyc
-        signals as in the case of the left border: Load/Dcyc is active
-        when DE is disactivated, or DE is active while Load/Dcyc have
-        not been activated in the last 500ns.
-
-* INTERESTING POSITIONS
-
-; A list of positions follows: the first number
-; corresponds to Mono_1, the second to Mono_2 and so on.
-; The added fourth and fifth timings correspond to the time taken
-; by the routines that change the resolution of the display frequency.
-; Changing the display frequency takes 4*4 cycles, or 4 nops.
-; Changing the display resolution takes 5*4 cycles, or 5 nops.
-; Note that the 0 byte line obtained by changing display frequency
-; does not occur on some power-ups; and that the 0 byte line obtained
-; by switching to high resolution distorts the picture on some monitors:
-; change the height of line 6 to see this effect.
-; Complete Overscan: 1,0,0,1,1,89,13,9,230,2
-; Left Overscan:     1,0,0,0,0,89+13+9+5+4,0,0,186,0
-; Right Overscan:    0,0,0,1,0,89+5,13+9+5,204,0
-; 80 byte line:      1,1,0,0,0,35,89+13+9+4-35,80,0
-; 54 byte line:      0,1,0,0,0,35+5,89+13+9+4-35,54,0
-; Right Overscan2:   0,1,0,0,0,89+5,13+9+4,0,204,0  (Switching to monochrome)
-; 0 byte overscan:   0,0,0,1,0,14,75+5+13+9+5+5,0,0,0 (Changing frequency)
-; 0 byte overscan:   0,1,0,0,0,6,89+13+9+5+4-6,0,0,0 (Switching to monochrome)
-
-*/
 /*  There's something wrong with the cycles when the line is 508 cycles,
     but fixing it will take some care. See the Omega hack
 */
-
-//#if defined(SS_VIDEO)
 
 struct TScanline {
   int StartCycle; // eg 56
@@ -554,7 +107,10 @@ struct TShifter {
   void DrawScanlineToEnd();
   inline int FetchingLine();
   int IncScanline();
+  BYTE TShifter::IORead(MEM_ADDRESS addr);
+  void TShifter::IOWrite(MEM_ADDRESS addr,BYTE io_src_b);
   void Render(int cycles_since_hbl, int dispatcher=DISPATCHER_NONE);
+  void Reset(bool Cold);
   inline void RoundCycles(int &cycles_in);
   inline void SetPal(int n, WORD NewPal);
   void SetShiftMode(BYTE NewRes);
@@ -606,23 +162,24 @@ struct TShifter {
 #endif 
 #endif
 
-  // we need keep info for only 3 scanlines (pb: info for top/bottom?)
+  // we need keep info for only 3 scanlines 
   TScanline PreviousScanline, CurrentScanline, NextScanline;
 
   int ExtraAdded;//rather silly
   int HblStartingHscroll; // saving true hscroll in MED RES (no use)
-  int HblPixelShift; //
+  int HblPixelShift; // for 4bit scrolling
 #if defined(WIN32)
   BYTE *ScanlineBuffer;
 #endif
   int m_ShiftMode; // contrary to screen_res, it's updated at each change
+  int m_SyncMode;//
+  int m_nHbls; //313,263,501
   int TrickExecuted; //make sure that each trick will only be applied once
   int nVbl;
 };
 
 extern TShifter Shifter; // singleton
 
-//#endif//video?
 
 ////////////////////////////////
 // TShifter: inline functions //
@@ -637,7 +194,7 @@ inline void TShifter::AddExtraToShifterDrawPointerAtEndOfLine(unsigned long &ext
     ASSERT(!overscan_add_extra);
     return;
   }
-  extra+=(shifter_fetch_extra_words)*2;     
+  extra+=(LINEWID)*2;     
 /*
 Left border off + STE scrolling
 For STE scrolling, the shifter must load the extra raster that will be used
@@ -680,6 +237,7 @@ inline int TShifter::CheckFreq(int t) {
 
 inline void TShifter::DrawBufferedScanlineToVideo() {
   // replacing macro DRAW_BUFFERED_SCANLINE_TO_VIDEO
+
   if(draw_store_dest_ad)
   { 
     // Bytes that will be copied.
@@ -690,7 +248,7 @@ inline void TShifter::DrawBufferedScanlineToVideo() {
     while(src<(DWORD*)draw_dest_ad) 
       *(dest++)=*(src++); 
     ASSERT(draw_med_low_double_height);
-    if(draw_med_low_double_height) // ???
+//    if(draw_med_low_double_height)
     {
       src=(DWORD*)draw_temp_line_buf;                        
       dest=(DWORD*)(draw_store_dest_ad+draw_line_length);      
@@ -716,12 +274,12 @@ inline int TShifter::FetchingLine() {
 
 inline void TShifter::RoundCycles(int& cycles_in) {
   cycles_in-=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN;
-  if(shifter_hscroll_extra_fetch && !shifter_hscroll) 
+  if(shifter_hscroll_extra_fetch && !HSCROLL) 
     cycles_in+=16;
   cycles_in+=SHIFTER_RASTER_PREFETCH_TIMING;
   cycles_in&=-SHIFTER_RASTER_PREFETCH_TIMING;
   cycles_in+=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN;
-  if(shifter_hscroll_extra_fetch && !shifter_hscroll) 
+  if(shifter_hscroll_extra_fetch && !HSCROLL) 
     cycles_in-=16;
 }
 
@@ -835,7 +393,7 @@ FF825E
    look-up functions to extend the existing Steem system.
    To make it easier we duplicate the 'freq_change' array for shift mode (res)
    changes (every function is duplicated even if not used).
-   TODO: debug & optimise (seek only once)
+   TODO: debug & optimise (seek only once), this is first draft
 */
 
 inline void TShifter::AddFreqChange(int f) {
@@ -931,48 +489,7 @@ inline int TShifter::ShiftModeChangeAtCycle(int cycle) {
   return rv;
 
 }
-#if removethis
 
-buggy!
-  C472 STE +20? 4:-1 -8(504):0 -4(508):2
-  8) time -19900 R0 9) time -8 R2 10) time 4 R0 11) time -27136
-
-
-
-inline int TShifter::ShiftModeChangeAtCycle(int cycle) {
-  // if there was a change at this cycle, return it, otherwise -1
-  int t=cycle+LINECYCLE0; // convert to absolute
-  // look for t in shifter_shift_mode_change_time[]
-  int i,j; // i is the index, j a counter max 31
-
-
-  for(i=shifter_shift_mode_change_idx,j=0;
-  j<32 && shifter_shift_mode_change_time[i]-t!=0;
-  j++,i--,i&=31);
-
-
-  
-  int rv=(j<32 && !(shifter_shift_mode_change_time[i]-t))
-    ?shifter_shift_mode_change[i]:-1;
-
-
-
-/*
-  for(j=-1,i=0;i<32;i++)
-    if(!(shifter_shift_mode_change_time[i]-t))
-    {
-      j=shifter_shift_mode_change[i];
-      break;
-    }
-
-if(FRAME>4)  ASSERT(j==rv);
-*/
-
-
-
-  return rv;
-}
-#endif
 
 inline int TShifter::FreqChangeIdx(int cycle) {
   // give the idx of freq change at this cycle, if any
@@ -1164,32 +681,6 @@ inline int TShifter::CycleOfLastChangeToShiftMode(int value) {
     in ReadSDP, based on Steem 3.2, which worked very well for most cases.
     Cases that didn't work: Forest, SNYD/TCB. Enchanted Land somehow.
 
-    Flix:
-
-    In  order to make some commands,  like the colour or  our 
-    frequency  switchings,  occur at exactly the same  position,  you 
-    have  to  become synchronized with  the  raster-electron-ray.  An 
-    ingenious method to achieve this effect is the following one:
-
-    WAIT:     MOVE.B    $FF8209.W,D0   ; Low-Byte
-              BEQ.S     WAIT           ; mustn't be 0
-              NOT.B     D0             ; negate D0
-              LSL.B     D0,D0          ; Synchronisation
-
-    If  you execute this routine every VBL,  all  following  commands 
-    will be executed at the same position every VBL,  that means that 
-    the colour- or frequency-switches are stable.  But what does this 
-    little routine do?  At first,  the low-byte of the screen-address 
-    is  loaded  into D0.  This byte exactly determines  the  position 
-    within  the line.  It is negated and the LSL-command is  executed 
-    (LSR,  ASL  or  ASR  work as well).  As you  can  read  in  every 
-    processor-book  the LSL-command takes  8+2*n  clock-cycles.  That 
-    means  that  the command needs more clock-cycles the  bigger  the 
-    value in D0 is. That is exactly the shifting that we need! I hope 
-    that you understood this part,  because all fullscreens and sync-
-    scrolling-routines  are based upon this effect.  You should  know 
-    that  one  VBL  (50  Hz) consists  of  160000  clock-cycles  (one 
-    scanline  consists of 512 clock-cycles).
 
     STE - read & write
 
@@ -1202,6 +693,7 @@ inline int TShifter::CycleOfLastChangeToShiftMode(int value) {
     frame. 
     The effect is immediate, therefore it should be reloaded carefully 
     (or during blanking) to provide reliable results. 
+    [LOL!]
 
     According to ST-CNX, those registers are in the MMU, not in the shifter.
 
@@ -1212,8 +704,8 @@ inline int TShifter::CycleOfLastChangeToShiftMode(int value) {
 inline MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
   if (bad_drawing){
     // Fake SDP
-#if defined(SS_SHIFTER_SDP_TRACE)
-    TRACE("fake SDP\n");
+#if defined(SS_SHIFTER_SDP_TRACE_LOG)
+    TRACE_LOG("fake SDP\n");
 #endif
     if (scan_y<0){
       return xbios2;
@@ -1239,7 +731,7 @@ inline MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
     In Hatari, they start at 56 + 12 = 68, /2 = 34
     In both cases we use kind of magic values.
     The same results from Hatari because their CPU timing at time of read is 
-    wrong like in Steem.
+    wrong like in Steem pre 3.5.
 
     Hack-approach necessary while we're fixing instruction timings, but
     this is the right ST value.
@@ -1248,6 +740,7 @@ inline MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
     Before that, we keep this big debug block (normally only 
     SS_CPU_PREFETCH_TIMING will be defined).
 */
+
 #if defined(SS_CPU_PREFETCH_TIMING)
   starts_counting-=2;
 #else
@@ -1300,16 +793,16 @@ inline MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
   else if( (ir&0xF000)==0xE000) 
     starts_counting-=2;
 #endif
-#if defined(SS_DEBUG_TRACE_SDP_READ_IR)
+#if defined(SS_DEBUG_TRACE_LOG_SDP_READ_IR)
   else 
   {
     if(ir!=debug1)
     {
 #if defined(DEBUG_BUILD)
       EasyStr instr=disa_d2(old_pc);
-      TRACE("Read SDP ir %x Disa %s\n",ir,instr.c_str());
+      TRACE_LOG("Read SDP ir %x Disa %s\n",ir,instr.c_str());
 #else
-      TRACE("Read SDP ir %4X\n",ir);
+      TRACE_LOG("Read SDP ir %4X\n",ir);
 #endif    
       debug1=ir;
     }
@@ -1337,19 +830,19 @@ Read SDP ir d038 Disa add.b $8209.W,d0
     int c=CyclesIn/2-starts_counting;
     sdp=shifter_draw_pointer_at_start_of_line;
     if (c>=bytes_to_count)
-      sdp+=bytes_to_count+(shifter_fetch_extra_words*2);
+      sdp+=bytes_to_count+(LINEWID*2);
     else if (c>=0){
       c&=-2;
       sdp+=c;
     }
     
-#if defined(SS_SHIFTER_SDP_TRACE3) // compare with Steem (can't be 100%)
+#if defined(SS_SHIFTER_SDP_TRACE_LOG3) // compare with Steem (can't be 100%)
     if(sdp>shifter_draw_pointer_at_start_of_line)
     {
       MEM_ADDRESS sdpdbg=get_shifter_draw_pointer(CyclesIn);
       if(sdpdbg!=sdp)
       {
-        TRACE("SDP 0 %X %d %X (+%d) Steem 3.2 %X (+%d)\n",shifter_draw_pointer_at_start_of_line,CyclesIn,sdp,sdp-shifter_draw_pointer_at_start_of_line,sdpdbg,sdpdbg-shifter_draw_pointer_at_start_of_line);
+        TRACE_LOG("SDP 0 %X %d %X (+%d) Steem 3.2 %X (+%d)\n",shifter_draw_pointer_at_start_of_line,CyclesIn,sdp,sdp-shifter_draw_pointer_at_start_of_line,sdpdbg,sdpdbg-shifter_draw_pointer_at_start_of_line);
         MEM_ADDRESS sdpdbg=get_shifter_draw_pointer(CyclesIn); // rego...
       }
     }
@@ -1358,8 +851,8 @@ Read SDP ir d038 Disa add.b $8209.W,d0
   else // lines witout fetching (before or after frame)
     sdp=shifter_draw_pointer;
 
-//#if defined(SS_SHIFTER_SDP_TRACE2)
-//  if(scan_y==-29) TRACE("Read SDP F%d y%d c%d SDP %X (%d - %d) sdp %X\n",FRAME,scan_y,CyclesIn,sdp,sdp-shifter_draw_pointer_at_start_of_line,CurrentScanline.Bytes,shifter_draw_pointer);
+//#if defined(SS_SHIFTER_SDP_TRACE_LOG2)
+//  if(scan_y==-29) TRACE_LOG("Read SDP F%d y%d c%d SDP %X (%d - %d) sdp %X\n",FRAME,scan_y,CyclesIn,sdp,sdp-shifter_draw_pointer_at_start_of_line,CurrentScanline.Bytes,shifter_draw_pointer);
 //#endif
   int nbytes=sdp-shifter_draw_pointer_at_start_of_line;
 //ASSERT( nbytes!= 224); 
@@ -1380,11 +873,21 @@ int TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
     So this is mainly a collection of hacks for now, that handle pratical
     cases.
     TODO: examine interaction write SDP/left off in Steem
-    Some cases (all should display fine):
+    Some cases (all should display fine, at least they did when writing this):
 
     An Cool STE
     Line 000 - 008:r0900 028:r0900 048:r0900 068:r0908 452:w050D 480:w07F1 508:w0990 512:T1000
     Not in DE
+
+    Armada is Dead
+    Line 198 - 436:w0501 440:w0747 456:P0334 472:w0966 488:H0003 504:F0092 512:R0082 512:TC000
+    Line 199 - 008:R0000 376:S0000 384:S0082 444:R0082 456:R0000 496:S0000 512:R0082 512:T2211
+    Line 200 - 008:R0000 016:S0082 376:S0000 384:S0082 444:R0082 456:R0000 512:R0082 512:T2011
+    Line 201 - 008:R0000 376:S0000 384:S0082 444:R0082 456:R0000 512:R0082 512:T2011
+    Line 202 - 008:R0000 376:S0000 384:S0082 444:R0082 456:R0000 512:R0082 512:T2011
+    It's similar to Big Wobble, the difference we see is that R0 happens at cycles
+    008 instead of 012 in Big Wobble. The compatible hack = no shift when 008.
+    See SSEShifter.cpp
 
     Asylum
     Line 001 - Events:  052:V0000 056:w050B 060:w0746 064:w09EE
@@ -1395,7 +898,12 @@ int TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
     Line 200 - 012:w09A2
 
     Big Wobble
-    Line -27 - 404:w0505 428:w079A 452:w090A 476:F0124 500:H0008 512:R0082 512:T1000
+    Line -28 - 392:w050B 416:w07FD 440:w0980 512:TC000
+    Line -27 - 404:w0508 428:w0715 452:w091A 476:F0124 500:H0009 512:R0082 512:TC000
+    Line -26 - 012:R00F0 376:S00F0 384:S0082 444:R0082 456:R00F0 512:R0082 512:T2011
+    Line -25 - 012:R00F0 376:S00F0 384:S0082 444:R0082 456:R00F0 512:R0082 512:T2011
+    Line -24 - 012:R00F0 376:S00F0 384:S0082 444:R0082 456:R00F0 512:R0082 512:T2011
+    Line -23 - 012:R00F0 376:S00F0 384:S0082 444:R0082 456:R00F0 512:R0082 512:T2011
     Post DE, followed with... change Linewid, change HScroll, switch R2/R0
     Seems to require +4 in our system
 
@@ -1469,8 +977,8 @@ int TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 
   int cycles=LINECYCLES; // cycle in shifter reckoning
 
-#if defined(SS_SHIFTER_SDP_TRACE2)
-  TRACE("F%d y%d c%d Write %X to %X\n",FRAME,scan_y,cycles,io_src_b,addr);
+#if defined(SS_SHIFTER_SDP_TRACE_LOG2)
+  TRACE_LOG("F%d y%d c%d Write %X to %X\n",FRAME,scan_y,cycles,io_src_b,addr);
 #endif
 #if defined(SS_SHIFTER_EVENTS)
   VideoEvents.Add(scan_y,cycles,'w',((addr&0xF)<<8)|io_src_b);
@@ -1480,8 +988,8 @@ int TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
   // some STF programs write to those addresses, it just must be ignored.
   if(ST_TYPE!=STE)
   {
-#if defined(SS_SHIFTER_SDP_TRACE)
-    TRACE("STF ignore write to SDP %x %x\n",addr,io_src_b);
+#if defined(SS_SHIFTER_SDP_TRACE_LOG)
+    TRACE_LOG("STF ignore write to SDP %x %x\n",addr,io_src_b);
 #endif
     return FALSE; // fixes Nightdawn
   }
@@ -1520,8 +1028,8 @@ int TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
     int current_sdp_middle_byte=(shifter_draw_pointer&0xFF00)>>8;
     if(current_sdp_middle_byte != SDPMiddleByte) // need to restore?
     {
-#if defined(SS_SHIFTER_SDP_TRACE)
-      TRACE("F%d y%d c%d SDP %X reset middle byte from %X to %X\n",FRAME,scan_y,cycles,shifter_draw_pointer,current_sdp_middle_byte,SDPMiddleByte);
+#if defined(SS_SHIFTER_SDP_TRACE_LOG)
+      TRACE_LOG("F%d y%d c%d SDP %X reset middle byte from %X to %X\n",FRAME,scan_y,cycles,shifter_draw_pointer,current_sdp_middle_byte,SDPMiddleByte);
 #endif
       DWORD_B(&shifter_draw_pointer,(0xff8209-0xff8207)/2)=SDPMiddleByte;
       middle_byte_corrected=TRUE;
@@ -1562,7 +1070,7 @@ int TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 
     // cancel the Steem 3.2 fix for left off with STE scrolling on
     if(!ExtraAdded && (CurrentScanline.Tricks&TRICK_LINE_PLUS_26)
-      && shifter_hscroll>=12)
+      && HSCROLL>=12)
       overscan_add_extra+=8; // fixes bumpy scrolling in E605 Planet
 
 #if defined(SS_SHIFTER_SDP_WRITE_DE_HSCROLL)
@@ -1570,10 +1078,14 @@ int TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
       &&shifter_skip_raster_for_hscroll && !left_border && !ExtraAdded)
     {
       if(PreviousScanline.Tricks&TRICK_STABILISER)
+#if defined(SS_SHIFTER_TEKILA)
         nsdp+=-2; // fixes D4/Tekila shift
+#else
+        ;
+#endif
       else
 #if defined(SS_CPU_PREFETCH_TIMING) || defined(CORRECTING_PREFETCH_TIMING)
-        nsdp+=2; // it's because we come sooner
+        nsdp+=2; // it's because we come sooner (which is more correct)
 #else
         nsdp+=4; // fixes E605 Planet shift
 #endif

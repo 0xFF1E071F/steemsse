@@ -12,13 +12,8 @@ the ST.
 
 #define LOGSECTION LOGSECTION_INTERRUPTS//SS
 
-/*  SS MFP emulation is a very complicated affair. I'm surprised that Steem
-    can do so much with so little code.
-    Apparently the timings are very good too. It seems so far that using a 
-    ratio for timings causes no drifting.
-*/
-
 //---------------------------------------------------------------------------
+
 void mfp_gpip_set_bit(int bit,bool set)
 {
 /*
@@ -80,13 +75,13 @@ void calc_time_of_next_timer_b()
 /* Only fetching lines are counted.
    This function is only called by mfp_set_timer_reg().
    When a new timer B is set, we check if it still could trigger this
-   scanline.
+   scanline. TODO simplify?
 */
 
   int cycles_in=int(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
   if (cycles_in<cpu_cycles_from_hbl_to_timer_b){
     if (scan_y>=shifter_first_draw_line && scan_y<shifter_last_draw_line){
-#if defined(SS_INT_TIMER_B)
+#if defined(SS_MFP_TIMER_B)
       if(mfp_reg[1]&8)
         time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;  //put into future
       else
@@ -116,13 +111,12 @@ inline BYTE mfp_get_timer_control_register(int n)
 // called by mfp_interrupt(int irq,int when_fired)
 inline bool mfp_set_pending(int irq,int when_set)
 {
-  if(abs_quick(when_set-mfp_time_of_start_of_last_interrupt[irq])
-#if defined(STEVEN_SEAGAL) && defined(SS_MFP_POST_INT_LATENCY)
-    // fixes Final Conflict, I don't remember if 56 wasn't OK
-    >=CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED+56-8) 
-#else
-    >=CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED)
+  if(abs_quick(when_set-mfp_time_of_start_of_last_interrupt[irq]) >=(
+#if defined(STEVEN_SEAGAL) && defined(SS_MFP_HACK_FINAL_CONFLICT)
+    // Hack for Final Conflict, I don't remember if 56 wasn't OK
+    SSE_HACKS_ON?CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED+56-8:
 #endif
+    CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED))
   {
     // Set pending
     mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)]|=mfp_interrupt_i_bit(irq); 
@@ -192,6 +186,16 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
           // see if it goes over one.  If it does, make the next time-out a bit later.
           mfp_timer_period[timer]=int( double(mfp_timer_prescale[new_control]*int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+timer]))) * CPU_CYCLES_PER_MFP_CLK);
 
+#if defined(STEVEN_SEAGAL) && defined(SS_MFP_RATIO_PRECISION)
+/*  Here we do exactly what Steem authors suggested, and it does bring the
+    timing measurements at the same level as SainT and Hatari (HWTST001.PRG),
+    so it's definitely an improvement, and it isn't complicated at all!
+*/
+          mfp_timer_period_fraction[timer]=int(  1000*((double(mfp_timer_prescale[new_control]*int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+timer]))) * CPU_CYCLES_PER_MFP_CLK)-(double)mfp_timer_period[timer])  );
+          mfp_timer_period_current_fraction[timer]=0;
+          TRACE_LOG("MFP set timer %C period %d.%d\n",'A'+timer,mfp_timer_period[timer],mfp_timer_period_fraction[timer]);
+#endif
+
           // Here mfp_timer_timeout assumes that the next MFP_CLK tick happens
           // at exactly 3.24 cycles from when the timer is started, but that isn't
           // what really happens. Below we adjust for the fixed boundary of the clock.
@@ -229,7 +233,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
           // This checks all timers to see if they have timed out, if they have then
           // it will set the pend bit. This is dangerous, messes up LXS!
           // mfp_check_for_timer_timeouts(); // ss not implemented
-
+          TRACE_LOG("MFP Timer %C stopped\n",'A'+timer);
           mfp_timer_enabled[timer]=false;
           mfp_timer_period_change[timer]=0;
           log(EasyStr("  Set control to ")+new_control+" (reg=$"+HEXSl(new_val,2)+")"+
@@ -371,6 +375,7 @@ int mfp_calc_timer_counter(int timer)
 */
 
 #define LOGSECTION LOGSECTION_INTERRUPTS//SS
+//SS  check_for_interrupts_pending() concerns not just the MFP...
 
 void ASMCALL check_for_interrupts_pending()
 {
@@ -397,15 +402,6 @@ void ASMCALL check_for_interrupts_pending()
             if(Blit.HasBus) // opt: we assume the test is quicker than clearing
               Blit.HasBus=false; 
 #endif
-
-#if defined(SS_MFP_ALL_I_HAVE) // stupid hack, the demo crashes anyway
-            // like in Hatari, but it must point to some trouble? TODO
-            if(SSE_HACKS_ON && irq==6 && ABSOLUTE_CPU_TIME-ikbd.timer_when_keyboard_info < SS_6301_TO_ACIA_IN_CYCLES)//7260)
-            {
-              TRACE_LOG("mfp irq 6 %d cycles post trigger\n",ABSOLUTE_CPU_TIME-ikbd.timer_when_keyboard_info);
-              break; // come back later
-            }
-#endif
             mfp_interrupt(irq,ABSOLUTE_CPU_TIME); //then cause interrupt
             break;        //lower priority interrupts not allowed now.
           }
@@ -413,6 +409,8 @@ void ASMCALL check_for_interrupts_pending()
       }//nxt irq
     }
 #if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START) // normally, no
+/*
+We wouldn't do it here
     if (
 #ifdef SS_SHIFTER
       Shifter.nVbl && // hack for resuming emu (auto.sts)
@@ -425,11 +423,12 @@ void ASMCALL check_for_interrupts_pending()
 //        if(LPEEK(0x70)!=0xFC06DE) TRACE_LOG("VBL %d vector %X\n",Shifter.nVbl,LPEEK(0x70));
       }
     }
+*/
 #else
      if (vbl_pending){ //SS IPL4
       if ((sr & SR_IPL)<SR_IPL_4){
         VBL_INTERRUPT
-        if(LPEEK(0x70)!=0xFC06DE) TRACE_LOG("F%d VBI %X\n",FRAME,LPEEK(0x70));
+  ////      if(LPEEK(0x70)!=0xFC06DE) TRACE_LOG("F%d VBI %X\n",FRAME,LPEEK(0x70));
       }
     }
 
@@ -514,20 +513,20 @@ void mfp_interrupt(int irq,int when_fired)
             {
             case 0:TRACE_LOG("Centronics busy\n");break;
             case 1:TRACE_LOG("RS-232 DCD\n");  break;                                         
-case 2:            TRACE_LOG("RS-232 CTS\n");        break;                                   
-       case 3:     TRACE_LOG("Blitter done\n");            break;                             
-case 4:            TRACE_LOG("Timer D\n");         break;                       
-       case 5:     TRACE_LOG("Timer C\n");    break;                            
-case 6:            TRACE_LOG("ACIA\n");   break;                              
-       case 7:     TRACE_LOG("FDC/HDC\n");   break;                                           
-case 8:            TRACE_LOG("Timer B\n");   break;                                     
-       case 9:     TRACE_LOG("Send Error\n");            break;                               
-case 10:            TRACE_LOG("Send buffer empty\n");          break;                         
-       case 11:     TRACE_LOG("Receive error\n");                    break;                   
-case 12:            TRACE_LOG("Receive buffer full\n");        break;                         
-       case 13:     TRACE_LOG("Timer A\n");              break;                   
-case 14:            TRACE_LOG("RS-232 Ring detect\n");                     break;             
-       case 15:     TRACE_LOG("Monochrome Detect\n");       break;                     
+            case 2:            TRACE_LOG("RS-232 CTS\n");        break;                                   
+            case 3:     TRACE_LOG("Blitter done\n");            break;                             
+            case 4:            TRACE_LOG("Timer D\n");         break;                       
+            case 5:     TRACE_LOG("Timer C\n");    break;                            
+            case 6:            TRACE_LOG("ACIA\n");   break;                              
+            case 7:     TRACE_LOG("FDC/HDC\n");   break;                                           
+            case 8:            TRACE_LOG("Timer B\n");   break;                                     
+            case 9:     TRACE_LOG("Send Error\n");            break;                               
+            case 10:            TRACE_LOG("Send buffer empty\n");          break;                         
+            case 11:     TRACE_LOG("Receive error\n");                    break;                   
+            case 12:            TRACE_LOG("Receive buffer full\n");        break;                         
+            case 13:     TRACE_LOG("Timer A\n");              break;                   
+            case 14:            TRACE_LOG("RS-232 Ring detect\n");                     break;             
+            case 15:     TRACE_LOG("Monochrome Detect\n");       break;                     
 
             }//sw
 //            ASSERT( interrupt_depth<2 );

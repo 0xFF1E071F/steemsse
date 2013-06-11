@@ -122,7 +122,7 @@ status interface to the programmer.
 The MFP is a derivative of the MK3801, a Z80 family peripheral.
 */
 
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_TIMER_B_NO_WOBBLE)
+#if defined(STEVEN_SEAGAL) && defined(SS_MFP_TIMER_B_NO_WOBBLE)
 #define TB_TIME_WOBBLE (0) // no wobble for Timer B
 #else
 #define TB_TIME_WOBBLE (rand() & 4)
@@ -806,6 +806,10 @@ int mfp_timer_counter[4];
 int mfp_timer_timeout[4];
 bool mfp_timer_enabled[4]={0,0,0,0};
 int mfp_timer_period[4]={10000,10000,10000,10000};
+#if defined(SS_MFP_RATIO_PRECISION)
+int mfp_timer_period_fraction[4]={0,0,0,0};
+int mfp_timer_period_current_fraction[4]={0,0,0,0};
+#endif
 bool mfp_timer_period_change[4]={0,0,0,0};
 //int mfp_timer_prescale_counter[4]={0,0,0,0};
 

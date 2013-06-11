@@ -13,7 +13,14 @@ change Steem's many options to their heart's delight.
 EasyStr KnownSTFTosPath,KnownSTETosPath; // global...
 #endif
 
-///#include "SSE/SSECpu.h"
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU)
+ // bad, at least we don't duplicate code
+extern WORD*lpfetch,*lpfetch_bound;
+extern bool prefetched_2;///////=false;
+extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
+#define INC_PC
+#include "SSE/SSEM68000.h"
+#endif
 
 #define LOGSECTION LOGSECTION_OPTIONS//SS
 
@@ -316,12 +323,12 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel)
             // remember paths of TOS102 (STF) & TOS106 (STE)
             if(Ver==0x102 && KnownSTFTosPath.Empty())
             {
-              TRACE_LOG("Memorising %s for TOS%X\n",Path.c_str(),Ver);
+              //TRACE_LOG("Memorising %s for TOS%X\n",Path.c_str(),Ver);
               KnownSTFTosPath=Path;
             }
             else if(Ver==0x106 && KnownSTETosPath.Empty())
             {
-              TRACE_LOG("Memorising %s for TOS%X\n",Path.c_str(),Ver);
+              //TRACE_LOG("Memorising %s for TOS%X\n",Path.c_str(),Ver);
               KnownSTETosPath=Path;
             }
 #endif
@@ -851,6 +858,13 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 204:
           if (HIWORD(wPar)==CBN_SELENDOK){
             int proceed=1,new_mode=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);  //carry on, don't change res
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
+            if(new_mode!=DFSM_STRETCHBLIT 
+              && draw_win_mode[screen_res]==DWM_STRETCH_SCANLINES)
+              draw_win_mode[screen_res]--;
+#endif
+
             if (new_mode!=draw_fs_blit_mode){
               if (FullScreen){
                 if (new_mode==DFSM_LAPTOP){
@@ -933,7 +947,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if (HIWORD(wPar)==CBN_SELENDOK)
           {
             ST_TYPE=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
-            TRACE_LOG("Select ST type = %d\n",ST_TYPE);
+            TRACE_LOG("Option ST type = %d\n",ST_TYPE);
             SwitchSTType(ST_TYPE);
 #if defined(SS_STF_MATCH_TOS)
             // preselect a compatible TOS 
@@ -958,12 +972,24 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               This->NewROMFile=KnownSTFTosPath;
             }
 #endif
-#if defined(SS_STF_MEGASTF)
+#if defined(SS_STF_MEGASTF) || defined(SS_STE_2MB) ||  defined(SS_STF_1MB)
+/*  Preselect a RAM configuration acording to the ST model.
+*/
+            DWORD Conf=0;
+#if defined(SS_STF_MEGASTF)  // Mega ST4: 4MB
             if(ST_TYPE==MEGASTF)
+              Conf=MAKELONG(MEMCONF_2MB,MEMCONF_2MB);
+#endif
+#if defined(SS_STE_2MB)
+            if(ST_TYPE==STE) // STE with 2MB (not Mega STE!)
+              Conf=MAKELONG(MEMCONF_2MB,MEMCONF_0);
+#endif
+#if defined(SS_STF_1MB)
+            if(ST_TYPE==STF) // Atari 1040 ST
+              Conf=MAKELONG(MEMCONF_512,MEMCONF_512);
+#endif
+            if(Conf)
             {
-              // Oh happy you, you get a Mega STF with 4MB!
-              DWORD Conf=MAKELONG(MEMCONF_2MB,MEMCONF_2MB);
-              TRACE_LOG("Granting 4MB for Mega STF4!\n");
               This->NewMemConf0=LOWORD(Conf);This->NewMemConf1=HIWORD(Conf);
               if (bank_length[0]==mmu_bank_length_from_config[This->NewMemConf0] &&
                 bank_length[1]==mmu_bank_length_from_config[This->NewMemConf1]){
@@ -1029,7 +1055,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SendMessage(HWND(lPar),BM_SETCHECK,ResChangeResize,0);
           }
           break;
-        case 302:case 304:case 306:
+        case 302:case 304:case 306:   //SS Window Size Low Medium High
           if (HIWORD(wPar)==CBN_SELENDOK){
             int Res=(LOWORD(wPar)-302)/2;
             bool redraw=0;
@@ -1041,6 +1067,10 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
                 draw_win_mode[Res]=HIWORD(dat);
                 redraw=true;
               }
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
+              if(draw_win_mode[screen_res]==DWM_STRETCH_SCANLINES)
+                draw_fs_blit_mode=DFSM_STRETCHBLIT; // only compatible FS mode
+#endif
             }
             if (Res==int(mixed_output ? 1:screen_res)){
               if (redraw && FullScreen==0){
@@ -1081,7 +1111,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if (HIWORD(wPar)==CBN_SELENDOK)
           {
             DISPLAY_SIZE=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
-            TRACE_LOG("Display size %d\n",DISPLAY_SIZE);
+            TRACE_LOG("Option Display size %d\n",DISPLAY_SIZE);
             ChangeBorderSize(DISPLAY_SIZE);
           }
 	  break;
@@ -1091,7 +1121,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if(HIWORD(wPar)==BN_CLICKED)
           {
             SSE_HACKS_ON=!SSE_HACKS_ON;
-            TRACE_LOG("Hacks %d\n",SSE_HACKS_ON);
+            TRACE_LOG("Option Hacks %d\n",SSE_HACKS_ON);
             SendMessage(HWND(lPar),BM_SETCHECK,SSE_HACKS_ON,0);
           }
           break;
@@ -1101,7 +1131,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if(HIWORD(wPar)==BN_CLICKED)
           {
             CAPTURE_MOUSE=!CAPTURE_MOUSE;
-            TRACE_LOG("Capture mouse %d\n",CAPTURE_MOUSE);
+            TRACE_LOG("Option Capture mouse %d\n",CAPTURE_MOUSE);
             SendMessage(HWND(lPar),BM_SETCHECK,CAPTURE_MOUSE,0);
           }
           break;
@@ -1114,8 +1144,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             if(!HD6301_OK) // it's not greyed out but nothing happens
               HD6301EMU_ON=0; //TODO grey out
             SendMessage(HWND(lPar),BM_SETCHECK,HD6301EMU_ON,0);
-            TRACE_LOG("HD6301 emu: %d\n",HD6301EMU_ON);
-            printf("HD6301 emu: %d\n",HD6301EMU_ON);
+            TRACE_LOG("Option HD6301 emu: %d\n",HD6301EMU_ON);
+//            printf("HD6301 emu: %d\n",HD6301EMU_ON);
           }
           break;
 #endif
@@ -1124,8 +1154,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if(HIWORD(wPar)==BN_CLICKED)
           {
             STEALTH_MODE=!STEALTH_MODE;
-            TRACE_LOG("Stealth: %d\n",STEALTH_MODE);
-            SendMessage(HWND(lPar),BM_SETCHECK,STEALTH_MODE,0);
+            TRACE_LOG("Option Stealth: %d\n",STEALTH_MODE);
+            SendMessage(HWND(lPar),BM_SETCHECK,!STEALTH_MODE,0);
           }
           break;
 #endif
@@ -1216,6 +1246,12 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             }
           }
           break;
+
+#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_MICROWIRE)
+        case 3306:
+          DSP_ENABLED=!DSP_ENABLED;
+          break;
+#endif
 
         case 4200:case 4201:case 4202:case 4203:
           if (HIWORD(wPar)==BN_CLICKED){
@@ -1349,7 +1385,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               Sound_Stop(true);
               sound_time_method=nstm;
               if (runstate==RUNSTATE_RUNNING){
+#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_CHANGE_TIME_METHOD_DELAY)
+                Sleep(200);
+#else
                 Sleep(50);
+#endif
                 Sound_Start();
               }
             }
@@ -1361,7 +1401,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             psg_write_n_screens_ahead=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
           }
           break;
-        case 7099:
+        case 7099: //SS sound output type
           if (HIWORD(wPar)==CBN_SELENDOK){
             This->SoundModeChange(SendMessage(HWND(lPar),CB_GETCURSEL,0,0),true,0);
           }
@@ -1417,7 +1457,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             {
               PEEK(0x484)&=0xFFFE;
             }
-            TRACE_LOG("Keyboard click $464 %X\n",PEEK(0x484));
+            TRACE_LOG("Option Keyboard click $464 %X\n",PEEK(0x484));
             SendMessage(HWND(lPar),BM_SETCHECK,keyboard_click,0);
           }
           break; 
@@ -1427,7 +1467,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 7302: // STE Microwire on/off 
           if (HIWORD(wPar)==BN_CLICKED){
             MICROWIRE_ON=!MICROWIRE_ON;
-            TRACE_LOG("Microwire %d\n",MICROWIRE_ON);
+            TRACE_LOG("Option Microwire %d\n",MICROWIRE_ON);
             SendMessage(HWND(lPar),BM_SETCHECK,MICROWIRE_ON,0);
           }
           break; 
@@ -1437,11 +1477,41 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 7303: // PSG Filter (more open)
           if (HIWORD(wPar)==BN_CLICKED){
             PSG_FILTER_FIX=!PSG_FILTER_FIX;
-            TRACE_LOG("Alternative PSG filter %d\n",PSG_FILTER_FIX);
+            TRACE_LOG("Option PSG filter %d\n",PSG_FILTER_FIX);
             SendMessage(HWND(lPar),BM_SETCHECK,PSG_FILTER_FIX,0);
           }
           break; 
+#endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+        case 7304: // SDL
+          if (HIWORD(wPar)==BN_CLICKED){
+            USE_SDL=!USE_SDL;
+            TRACE_LOG("Option SDL %d\n",USE_SDL);
+            SendMessage(HWND(lPar),BM_SETCHECK,USE_SDL,0);
+            Disp.ScreenChange();
+          }
+          break; 
+#endif
+
+#if defined(SS_PASTI_ONLY_STX)
+        case 7305: // Pasti only STX
+          if (HIWORD(wPar)==BN_CLICKED){
+            PASTI_JUST_STX=!PASTI_JUST_STX;
+            SendMessage(HWND(lPar),BM_SETCHECK,PASTI_JUST_STX,0);
+            TRACE_LOG("Option Pasti just STX %d\n",PASTI_JUST_STX);
+            for(int i=0;i<2;i++) // necessary, later refactor (structure) TODO
+            {
+              if(FloppyDrive[i].NotEmpty())
+              {
+                EasyStr name=FloppyDrive[i].DiskName;
+                EasyStr path=FloppyDrive[i].GetImageFile(); 
+                DiskMan.EjectDisk(i);
+                DiskMan.InsertDisk(i,name,path,0,0,"",true);
+              }
+            }            
+          }
+          break; 
 #endif
 
         case 8100: // Memory size
@@ -1965,6 +2035,20 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             osd_show_disk_light=!osd_show_disk_light;
             SendMessage(HWND(lPar),BM_SETCHECK,osd_show_disk_light,0);
           }
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_INFO)
+        }else if(i==1) {
+          if (HIWORD(wPar)==BN_CLICKED){
+            OSD_DRIVE_INFO=!OSD_DRIVE_INFO;
+            SendMessage(HWND(lPar),BM_SETCHECK,OSD_DRIVE_INFO,0);
+          }
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_SCROLLER_DISK_IMAGE)
+        }else if(i==2) {
+          if (HIWORD(wPar)==BN_CLICKED){
+            OSD_IMAGE_NAME=!OSD_IMAGE_NAME;
+            SendMessage(HWND(lPar),BM_SETCHECK,OSD_IMAGE_NAME,0);
+          }
+#endif
         }else if (i>=10 && i<20){
           if (HIWORD(wPar)==CBN_SELENDOK){
             int *p_element[4]={&osd_show_plasma,&osd_show_speed,&osd_show_icons,&osd_show_cpu};

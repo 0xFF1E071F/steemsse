@@ -13,6 +13,7 @@ DMA I/O addresses (see iow.cpp).
 #define DMA_ADDRESS_IS_VALID_R (dma_address<himem)
 #define DMA_ADDRESS_IS_VALID_W (dma_address<himem && dma_address>=MEM_FIRST_WRITEABLE)
 
+#if !(defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DMA_INC_ADDRESS))
 #define DMA_INC_ADDRESS                                    \
   if (dma_sector_count){                                   \
     dma_address++;                                         \
@@ -24,14 +25,22 @@ DMA I/O addresses (see iow.cpp).
       if (dma_sector_count==0) dma_status&=~BIT_1;     \
     }                                                      \
   }
+#endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE)
+#define DRIVE floppy_current_drive() // 0 or 1 guaranteed
+#define FDC_HBLS_PER_ROTATION  (SF314[DRIVE].HblsPerRotation()) 
+#else
 // 5 revolutions per second, 313*50 HBLs per second
-#define FDC_HBLS_PER_ROTATION (313*50/5)
-// 5% of track is index pulse, too high?
-#define FDC_HBLS_OF_INDEX_PULSE (FDC_HBLS_PER_ROTATION/20) // 20
+#define FDC_HBLS_PER_ROTATION (313*50/5) 
+#endif
 
-#if defined(TEST02)// it's used for 2 things?
-#define FDC_HBLS_OF_INDEX_PULSE (FDC_HBLS_PER_ROTATION/5)
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_INDEX_PULSE) 
+// 4ms =200ms/50
+#define FDC_HBLS_OF_INDEX_PULSE (FDC_HBLS_PER_ROTATION/ ((ADAT)?50:20)) 
+#else
+// 5% of track is index pulse, too high? 
+#define FDC_HBLS_OF_INDEX_PULSE (FDC_HBLS_PER_ROTATION/20) // 20
 #endif
 
 #define LOGSECTION LOGSECTION_FDC
@@ -43,7 +52,8 @@ int floppy_current_drive()
   }else if ((psg_reg[PSGR_PORT_A] & BIT_2)==0){ // Drive B
     return 1;
   }
-  return 0; // Neither, guess A //SS: often the case, it seems to work
+  //SS this is fine for safety but see floppy_fdc_command for emulation
+  return 0; // Neither, guess A 
 }
 //---------------------------------------------------------------------------
 BYTE floppy_current_side()
@@ -113,34 +123,43 @@ bool floppy_handle_file_error(int floppyno,bool Write,int sector,int PosInSector
 }
 //---------------------------------------------------------------------------
 bool floppy_track_index_pulse_active()
-{//SS ip=4ms
+{
   if (floppy_type1_command_active){
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_INDEX_PULSE)
-/* 
-    IP holds for 4ms = 15.65*4 = 62.6 hbl each rev
-    a rev=3130 HBL ; that makes 2%, not 5%
-*/
-    if(ADAT)
-      return ( (DWORD)hbl_count%3130<=63 ); // exact at 50hz (TODO)
-#endif
     return (((DWORD)hbl_count) % FDC_HBLS_PER_ROTATION)>=(FDC_HBLS_PER_ROTATION-FDC_HBLS_OF_INDEX_PULSE);
-
   }
   return 0;
 }
 //---------------------------------------------------------------------------
 void fdc_type1_check_verify()
+
 {
-  TRACE_LOG("running fdc_type1_check_verify, CR=%X\n",fdc_cr);
+
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_VERIFY_AGENDA)
-//  agenda_delete(agenda_fdc_finished); //dbg
+/*  In v3.5.0, verify took 3 REVs which was based on a bad reading of the
+    doc ("max 6 revs, so 3 is average").
+    In fact Verify is completed as soon as an ID field with matching track 
+    number is found. 
+    This is now precisely emulated, using same routine as for 'read address',
+    but more random could be fine.
+    What isn't emulated: ID track is correct?
+*/
   if(ADAT)
   {
-    int n_hbls=FDC_VERIFY?MILLISECONDS_TO_HBLS(15)+ 3130*3 : 2; //randomise?
-    agenda_add(agenda_fdc_verify,n_hbls,1);
+    if(FDC_VERIFY)
+    {
+      WORD HBLsToNextSector;
+      BYTE NextIDNum;
+      SF314[DRIVE].NextID(NextIDNum,HBLsToNextSector); // references
+      HBLsToNextSector+=MILLISECONDS_TO_HBLS(15); // head settling
+      agenda_add(agenda_fdc_verify,HBLsToNextSector,1);
+    }
+    else
+      // delay 'finish' to avoid nasty bugs (European Demos)
+      agenda_add(agenda_fdc_verify,2,1); 
     return;
   }
 #endif
+
   if (FDC_VERIFY==0) return;
   // This reads an ID field and checks that track number matches floppy_head_track
   // It will fail on an unformatted track or if there is no disk of course
@@ -165,6 +184,25 @@ void floppy_fdc_command(BYTE cm)
 {
   log(Str("FDC: ")+HEXSl(old_pc,6)+" - executing command $"+HEXSl(cm,2));
 
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_IGNORE_WHEN_NO_DRIVE_SELETED)
+/*  This was missing in Steem up to now but was in Hatari.
+    Commands are ignored if no drive is currently selected, except
+    for command Interrupt, which shouldn't need any drive.
+    Not sure it's the best emulation (controller would at least try?).
+    Fixes Japtro loader in the accurate way of v3.5.1 though.
+    This demo already worked before because SEEK and STEP were implemented 
+    another, less precise way (compensation).
+*/
+  if( ADAT && YM2149.Drive()==TYM2149::NO_VALID_DRIVE && (cm&0xF0)!=0xd0)
+  {
+    TRACE_LOG("CR %X no drive selected",cm);
+    return;
+  }
+#endif
+
+  if (fdc_str & FDC_STR_BUSY){
+    
+    TRACE_LOG("Command while FDC busy ");
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_CHANGE_COMMAND_DURING_SPINUP)
 /*
   The doc states:
@@ -178,25 +216,15 @@ void floppy_fdc_command(BYTE cm)
   DSOS.
   The ADAT condition is just to make sure we break nothing in normal mode.
 */
-    bool command123_switch=(ADAT && fdc_spinning_up 
-      &&!(fdc_cr&BIT_3) && WD1772.CommandType(cm)<4);
-    ASSERT( !(command123_switch && cm==fdc_cr) );
-#endif
-
-  if (fdc_str & FDC_STR_BUSY){
-
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_CHANGE_COMMAND_DURING_SPINUP)
-    if(command123_switch)
-    {
+    if( ADAT && fdc_spinning_up &&!(WD1772.CR&BIT_3) && WD1772.CommandType(cm)<4
+      && cm!=WD1772.CR)
       // we don't return, we will execute this command instead
-      TRACE_LOG("FDC command switch %X->%X during spin-up STR %x\n",WD1772.OldCr,cm,fdc_str);
-    }
+      TRACE_LOG("CR %X->%X during spin-up",WD1772.CR,cm);
     else
 #endif
     if ((cm & (BIT_7+BIT_6+BIT_5+BIT_4))!=0xd0){ // Not force interrupt
-//      ASSERT( !fdc_spinning_up );
       log("     Command ignored, FDC is busy!");
-      TRACE_LOG("Command ignored, FDC is busy!\n");
+      TRACE_LOG("Command %X ignored",cm);
       return;
     }
   }
@@ -207,18 +235,19 @@ void floppy_fdc_command(BYTE cm)
   if (floppy_current_drive()==1 && num_connected_floppies<2){ // Drive B disconnected?
     return;
   }
-
+#if !(defined(STEVEN_SEAGAL)&&defined(SS_OSD_DRIVE_LED3))
   disk_light_off_time=timer+DisableDiskLightAfter;
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC)
-  WD1772.OldCr=fdc_cr; // record last command used
 #endif
   fdc_cr=cm;
 
   agenda_delete(agenda_fdc_motor_flag_off); //SS it's safe as we set it ourselve
 
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_CHANGE_COMMAND_DURING_SPINUP)
-  // no need to start the motor, it's already spinning up
-  if(command123_switch)
+/*  No need to start the motor, it should already be spinning up
+    (Noughts and Mad Crosses STE)
+    But we need to start the motor if command interrupt (Froggies). 
+*/
+  if(ADAT && fdc_str & FDC_STR_BUSY && WD1772.CommandType(cm)<4) 
     return;
 #endif
 
@@ -227,9 +256,8 @@ void floppy_fdc_command(BYTE cm)
   // there is a bit in type 1, 2 and 3 commands that will make them execute
   // while the motor is in the middle of spinning up (BIT_3).
   bool delay_exec=0;
+
   if ((fdc_str & FDC_STR_MOTOR_ON)==0){
-//    ASSERT(!fdc_spinning_up);
-    TRACE_LOG("FDC ACT %d Cd %X Dr %X Starting motor\n",ABSOLUTE_CPU_TIME,cm,fdc_dr);
     if ((cm & (BIT_7+BIT_6+BIT_5+BIT_4))!=0xd0){ // Not force interrupt
       if ((cm & BIT_3)==0){
         delay_exec=true; // Delay command until after spinup
@@ -237,27 +265,25 @@ void floppy_fdc_command(BYTE cm)
     }
     fdc_str=FDC_STR_BUSY | FDC_STR_MOTOR_ON;
     fdc_spinning_up=int(delay_exec ? 2:1);
-//    TRACE_LOG("setting up agenda_fdc_spun_up\n");
+    TRACE_LOG("Motor on");
     if (floppy_instant_sector_access){
       agenda_add(agenda_fdc_spun_up,MILLISECONDS_TO_HBLS(100),delay_exec);
     }else{
-      // 6 revolutions but guaranteed 1 second spinup at 5 RPS, how?
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_SPIN_UP_TIME)
-      ASSERT(shifter_freq==50);
-      agenda_add(agenda_fdc_spun_up,3130*6,delay_exec);
+      agenda_add(agenda_fdc_spun_up,FDC_HBLS_PER_ROTATION*6,delay_exec);
 #else
+      // 6 revolutions but guaranteed 1 second spinup at 5 RPS, how?
       agenda_add(agenda_fdc_spun_up,MILLISECONDS_TO_HBLS(1100),delay_exec);
 #endif
     }
   }
-
   if (delay_exec==0) fdc_execute();
 }
 //---------------------------------------------------------------------------
 void agenda_fdc_spun_up(int do_exec)
 {
   fdc_spinning_up=0;
-  TRACE_LOG("Spun up exec %d\n",do_exec);
+  TRACE_LOG("Spin up\n");
   if (do_exec) fdc_execute();
 }
 //---------------------------------------------------------------------------
@@ -265,20 +291,29 @@ void fdc_execute()
 {
   // We need to do something here to make the command take more time
   // if the disk spinning up (fdc_spinning_up).
+ 
+#if defined(STEVEN_SEAGAL)&&defined(SS_PSG)&&defined(SS_FDC)
+  ASSERT( YM2149.Drive()!=TYM2149::NO_VALID_DRIVE || WD1772.CommandType()==4);
+#endif
 
   int floppyno=floppy_current_drive();
   TFloppyImage *floppy=&FloppyDrive[floppyno];
 
   floppy_irq_flag=FLOPPY_IRQ_YES;
-  double hbls_to_interrupt=64.0;
 
+
+#if defined(STEVEN_SEAGAL)&&defined(SS_FDC_PRECISE_HBL)
+  int hbls_to_interrupt=64;
+#define hbl_multiply 1
+#else
+  double hbls_to_interrupt=64.0;
   // The FDC timings don't change when you switch to mono, but HBLs do.
   // This variable corrects for that.
   double hbl_multiply=1.0;
   if (shifter_freq==MONO_HZ){
     hbl_multiply=double(HBLS_PER_SECOND_MONO)/double(HBLS_PER_SECOND_AVE);
   }
-
+#endif
 /*
 The 177x accepts 11 commands.  Western Digital divides these commands
 into four categories, labeled I,II, III, and IV.
@@ -306,8 +341,8 @@ COMMAND SUMMARY
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
 //  TRACE_LOG("FDC status: ");  
 //  if(TRACE_ENABLED) Dma.UpdateRegs(true);
-  TRACE_LOG("FDC type %d command $%2X ",WD1772.CommandType(fdc_cr),fdc_cr);
-  if(floppyno) TRACE_LOG("(drive B) ");
+  BYTE drive_char= (psg_reg[PSGR_PORT_A]&6)==6? '?' : 'A'+floppyno;
+  TRACE_LOG("%C: FDC $%2X ",drive_char,fdc_cr);
 #endif
 
   if ((fdc_cr & BIT_7)==0){
@@ -394,29 +429,29 @@ command word, the 177x sets the Seek Error bit in the status register
 and ends the command.
 */
       case 0x00: //restore to track 0
-        TRACE_LOG("Restore (TR %d CYL %d V %d)\n",fdc_tr,floppy_head_track[floppyno],!!FDC_VERIFY);
+        TRACE_LOG("Restore (TR %d CYL %d)",fdc_tr,floppy_head_track[floppyno]);
         if (FDC_VERIFY && floppy->Empty()){ //no disk
           fdc_str=FDC_STR_SEEK_ERROR | FDC_STR_MOTOR_ON | FDC_STR_BUSY;
         }else{
           if (floppy_head_track[floppyno]==0){
             hbls_to_interrupt=2;
           }else{
-
             if (floppy_instant_sector_access==0) hbls_to_interrupt*=floppy_head_track[floppyno];
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_RESTORE_AGENDA)
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_RESTORE_AGENDA) && defined(SS_FDC_SEEK)
             if(!ADAT)
 #endif            
             floppy_head_track[floppyno]=0;
           }
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_RESTORE_AGENDA)
+          // As documented
           if(ADAT)
           {
             fdc_tr=255,fdc_dr=0;
-            if(hbls_to_interrupt==2)  
+            floppy_irq_flag=0;
+            if(hbls_to_interrupt==2)  //?
               agenda_add(agenda_floppy_seek,2,0);
             else
               agenda_add(agenda_fdc_restore,(int)(hbls_to_interrupt*hbl_multiply),floppyno);            
-
           }
           else
 #endif
@@ -431,9 +466,10 @@ Seek:
 The CPU must load the desired track number into the Data Register
 before issuing this command.  The Seek command causes the 177x to step
 the head to the desired track number and update the Track Register.
+
 */
       case 0x10: //seek to track number in data register
-        TRACE_LOG("Seek track %d from %d (V %d)\n",fdc_dr,fdc_tr,!!FDC_VERIFY);
+        TRACE_LOG("Seek %d (TR %d CYL %d)",fdc_dr,fdc_tr,floppy_head_track[floppyno]);
         agenda_add(agenda_floppy_seek,2,0);
         fdc_str=FDC_STR_MOTOR_ON | FDC_STR_BUSY;
         floppy_irq_flag=0;
@@ -463,6 +499,10 @@ cycles before the first stepping pulse.
 */
       default: //step, step in, step out
       {
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_STEP)
+        if(ADAT)
+          floppy_irq_flag=0;
+#endif
         fdc_str=FDC_STR_MOTOR_ON | FDC_STR_BUSY;
         char d=1; //step direction, default is inwards
         if (floppy->Empty()){
@@ -481,11 +521,10 @@ cycles before the first stepping pulse.
           }else{ //can step
             floppy_head_track[floppyno]+=d;
             log(Str("FDC: Stepped drive ")+char('A'+floppyno)+" to track "+floppy_head_track[floppyno]);
-            TRACE_LOG("Step fdc_type1_check_verify\n");
             fdc_type1_check_verify();
           }
           floppy_type1_command_active=1;
-          TRACE_LOG("Step updt %d dir %d TR %d CYL %d V %d\n",!!(fdc_cr & BIT_4),d,fdc_tr,floppy_head_track[floppyno],!!FDC_VERIFY);
+          TRACE_LOG("Step %d (TR %d CYL %d)",d,fdc_tr,floppy_head_track[floppyno]);
         }
       }
     }
@@ -579,22 +618,19 @@ CRC.
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
         ASSERT(WD1772.CommandType(fdc_cr)==2);
         switch(fdc_cr & (BIT_7+BIT_6+BIT_5+BIT_4)) {
-          case 0x80: 
-            if(floppy_current_side())
-              TRACE_LOG("Read sector %d of track %d of 2nd side\n",fdc_sr,fdc_tr); 
-            else
-              TRACE_LOG("Read sector %d of track %d\n",fdc_sr,fdc_tr); 
-            break;
-          case 0xa0: 
-            if(floppy_current_side())
-              TRACE_LOG("Write sector %d of track %d of 2nd side\n",fdc_sr,fdc_tr); 
-            else
-              TRACE_LOG("Write sector %d of track %d\n",fdc_sr,fdc_tr); 
-            break;
-          case 0x90: TRACE_LOG("Read %d sectors\n",dma_sector_count); break;
-          case 0xb0: TRACE_LOG("Write %d sectors\n",dma_sector_count); break;
+        case 0x80: 
+          TRACE_LOG("Read H%d TR%d SR%d",floppy_current_side(),fdc_tr,fdc_sr);           
+          break;
+        case 0xa0:
+          TRACE_LOG("Write H%d TR%d SR%d",floppy_current_side(),fdc_tr,fdc_sr);           
+          break;
+        case 0x90: 
+          TRACE_LOG("Read H%d TR%d +SR%d-%d",floppy_current_side(),fdc_tr,fdc_sr,dma_sector_count);
+          break;
+        case 0xb0: 
+          TRACE_LOG("Write H%d TR%d +SR%d-%d",floppy_current_side(),fdc_tr,fdc_sr,dma_sector_count);
+          break;
         }//sw
-        WD1772.SectorPart=0;
 #endif
 
         if (floppy->Empty() || floppy_head_track[floppyno]>FLOPPY_MAX_TRACK_NUM){
@@ -633,48 +669,45 @@ CRC.
               }
             }
           }
-          if (SectorIdx>-1){
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_FORMAT_BYTES)
-  // here there really was a bug (not enough HBL/track)
-            DWORD HBLsPerTrack=FDC_HBLS_PER_ROTATION
-//              -FDC_HBLS_OF_INDEX_PULSE // makes no sense
-              ;
-            DWORD HBLsPerSector=HBLsPerTrack/nSects;
-            DWORD HBLsAtStartOfRotation=(hbl_count/FDC_HBLS_PER_ROTATION)
-              *FDC_HBLS_PER_ROTATION;          
 
-            DWORD HBLOfSectorStart=HBLsAtStartOfRotation 
-              + SectorIdx*HBLsPerSector
-              + HBLsPerSector * 119/672;//// - MILLISECONDS_TO_HBLS(15);
-              ;
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_RW_SECTOR_TIMING)
+/*  Compute more precisely at which byte/HBL the sector R/W operation should
+    start. Important for Microprose Golf 
+    TODO review, shouldn't we go for ID first??
+*/
+          if (SectorIdx>-1 && nSects>0) {
+            WORD SectorStartingByte= SF314[DRIVE].PostIndexGap()
+              +SectorIdx*SF314[DRIVE].RecordLength()
+              +SF314[DRIVE].PreDataGap();
 
-            if (HBLOfSectorStart<hbl_count) 
-              HBLOfSectorStart+=FDC_HBLS_PER_ROTATION;
+            DWORD HBLOfSectorStart=SF314[DRIVE].HblsAtIndex()
+              +SF314[DRIVE].BytesToHbls(SectorStartingByte);
 
-            agenda_delete(agenda_floppy_readwrite_sector);
-            agenda_add(agenda_floppy_readwrite_sector,
-              int(hbl_multiply*(HBLOfSectorStart
-       ///       -HBLsPerSector * 100/672
-              -hbl_count)),
-              MAKELONG(0,fdc_cr));
-            floppy_irq_flag=0;
-            fdc_str=FDC_STR_MOTOR_ON | FDC_STR_BUSY;
+#if defined(SS_FDC_HEAD_SETTLE)//normally also type III
+          ASSERT( !(WD1772.CR&BIT_2) );
+          if(WD1772.CR&BIT_2)
+            HBLOfSectorStart+=MILLISECONDS_TO_HBLS(15);
+#endif
+
+          if (HBLOfSectorStart<hbl_count) 
+            HBLOfSectorStart+=FDC_HBLS_PER_ROTATION;
+
 #else
+          if (SectorIdx>-1){
             // Break up the readable track into nSects sections,
             // agenda_floppy_readwrite_sector occurs at the start of one of these sections
             DWORD HBLsPerTrack=FDC_HBLS_PER_ROTATION-FDC_HBLS_OF_INDEX_PULSE;
             DWORD HBLsPerSector=HBLsPerTrack/nSects;
             DWORD HBLsAtStartOfRotation=(hbl_count/FDC_HBLS_PER_ROTATION)*FDC_HBLS_PER_ROTATION;
-            
-
             DWORD HBLOfSectorStart=HBLsAtStartOfRotation + SectorIdx*HBLsPerSector;
             if (HBLOfSectorStart<hbl_count) HBLOfSectorStart+=FDC_HBLS_PER_ROTATION;
+#endif
 
             agenda_delete(agenda_floppy_readwrite_sector);
             agenda_add(agenda_floppy_readwrite_sector,int(hbl_multiply*(HBLOfSectorStart-hbl_count))+2,MAKELONG(0,fdc_cr));
             floppy_irq_flag=0;
             fdc_str=FDC_STR_MOTOR_ON | FDC_STR_BUSY;
-#endif//#if defined(STEVEN_SEAGAL) && defined(SS_FDC_FORMAT_BYTES)
+
           }else{
             floppy_irq_flag=FLOPPY_IRQ_ONESEC;
             fdc_str=FDC_STR_MOTOR_ON | FDC_STR_SEEK_ERROR | FDC_STR_BUSY;  //sector not found
@@ -688,9 +721,9 @@ Type III commands are Read Address, Read Track, and Write Track.
 
 Command          Bit 7     B6     B5     B4     B3     B2     B1     Bit 0
 ------------     -----     --     --     --     --     --     --     -----
-Read Address     1         1      0      0      h      E      0      0
-Read Track       1         1      1      0      h      E      0      0
-Write Track      1         1      1      1      h      E      P      0
+Read Address     1         1      0      0      h      E      0      0      C0
+Read Track       1         1      1      0      h      E      0      0      E0
+Write Track      1         1      1      1      h      E      P      0      F0
 
 Flags:
 
@@ -725,7 +758,6 @@ where bit shifts usually occur and bit density is maximal.  A 1 value
 for this flag disables write precompensation.
 */
       case 0xc0: //read address
-        TRACE_LOG("read address\n");
 /*
 Read Address:
 The 177x reads the next ID field it finds, then sends the CPU the
@@ -746,6 +778,7 @@ sets the CRC Error bit in the status register if the CRC is invalid.
 */
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
         ASSERT(WD1772.CommandType(fdc_cr)==3);
+        TRACE_LOG("read address");
 #endif
         log(Str("FDC: Type III Command - read address to ")+HEXSl(dma_address,6)+"from drive "+char('A'+floppyno));
 
@@ -754,8 +787,18 @@ sets the CRC Error bit in the status register if the CRC is invalid.
         }else{
           FDC_IDField IDList[30];
           DWORD nSects=floppy->GetIDFields(floppy_current_side(),floppy_head_track[floppyno],IDList);
+
           if (nSects){
             DWORD DiskPosition=hbl_count % FDC_HBLS_PER_ROTATION;
+
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_READ_ADDRESS_TIMING)
+/*  Using a more precise routine for timings, this fixes ProCopy 'Analyze'
+*/
+            WORD HBLsToNextSector;
+            BYTE NextIDNum;
+            SF314[DRIVE].NextID(NextIDNum,HBLsToNextSector); //references
+            HBLsToNextSector-=2; //see below
+#else
             // Break up the track into nSects sections, agenda_read_address
             // occurs at the end of one of these sections
             DWORD HBLsPerTrack=FDC_HBLS_PER_ROTATION-FDC_HBLS_OF_INDEX_PULSE;
@@ -769,6 +812,7 @@ sets the CRC Error bit in the status register if the CRC is invalid.
               // Go to next revolution
               HBLsToNextSector=(FDC_HBLS_PER_ROTATION-DiskPosition) + HBLsPerSector;
             }
+#endif
             agenda_delete(agenda_floppy_read_address);
             agenda_add(agenda_floppy_read_address,int(hbl_multiply*HBLsToNextSector)+2,NextIDNum);
             floppy_irq_flag=0;
@@ -796,7 +840,7 @@ bytes incorrectly during write-splice time because of synchronization.
       case 0xe0:  //read track
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
         ASSERT(WD1772.CommandType(fdc_cr)==3);
-        TRACE_LOG("read track\n");
+        TRACE_LOG("read track");
 #endif
         log(Str("FDC: Type III Command - read track to ")+HEXSl(dma_address,6)+" from drive "+char('A'+floppyno)+
                   " dma_sector_count="+dma_sector_count);
@@ -805,7 +849,16 @@ bytes incorrectly during write-splice time because of synchronization.
         floppy_irq_flag=0;
         if (floppy->DiskInDrive()){
           agenda_delete(agenda_floppy_read_track);
-          DWORD DiskPosition=hbl_count % FDC_HBLS_PER_ROTATION;
+        DWORD DiskPosition=hbl_count % FDC_HBLS_PER_ROTATION;
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_READ_TRACK_TIMING)
+/*  agenda_floppy_read_track starts at first sector, so we add the post 
+    index gap here
+*/
+          FDC_IDField IDList[30];
+          int nSects=floppy->GetIDFields(floppy_current_side(),floppy_head_track[floppyno],IDList);
+          DiskPosition-=SF314[DRIVE].BytesToHbls(SF314[DRIVE].PostIndexGap());
+#endif
+
           agenda_add(agenda_floppy_read_track,int(hbl_multiply*(FDC_HBLS_PER_ROTATION-DiskPosition)),0);
         }
         break;
@@ -835,7 +888,7 @@ $f7 will write a two-byte CRC to the disk.
       case 0xf0:  //write (format) track
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
         ASSERT(WD1772.CommandType(fdc_cr)==3);
-        TRACE_LOG("Format\n");
+        TRACE_LOG("write track");
 #endif
         log(Str("FDC: - Type III Command - write track from address ")+HEXSl(dma_address,6)+" to drive "+char('A'+floppyno));
 
@@ -846,6 +899,11 @@ $f7 will write a two-byte CRC to the disk.
           if (floppy->Format_f){
             agenda_delete(agenda_floppy_write_track);
             DWORD DiskPosition=hbl_count % FDC_HBLS_PER_ROTATION;
+
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_WRITE_TRACK_TIMING)
+            DiskPosition+=SF314[DRIVE].BytesToHbls(SF314[DRIVE].PostIndexGap()); 
+#endif
+
             agenda_add(agenda_floppy_write_track,int(hbl_multiply*(FDC_HBLS_PER_ROTATION-DiskPosition)),0);
             floppy_write_track_bytes_done=0;
           }
@@ -874,7 +932,7 @@ acknowledge Force Interrupt commands only between micro- instructions.
       {
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
         ASSERT(WD1772.CommandType(fdc_cr)==4);
-        TRACE_LOG("Interrupt\n");
+        TRACE_LOG("Interrupt");
 #endif
         log(Str("FDC: ")+HEXSl(old_pc,6)+" - Force interrupt: t="+hbl_count);
 
@@ -882,7 +940,7 @@ acknowledge Force Interrupt commands only between micro- instructions.
                             agenda_get_queue_pos(agenda_floppy_read_address)>=0 ||
                             agenda_get_queue_pos(agenda_floppy_read_track)>=0 ||
                             agenda_get_queue_pos(agenda_floppy_write_track)>=0);
-#if defined(SS_FDC_RESTORE_AGENDA)
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_RESTORE_AGENDA)
         agenda_delete(agenda_fdc_restore);
 #endif
         agenda_delete(agenda_floppy_seek);
@@ -890,16 +948,21 @@ acknowledge Force Interrupt commands only between micro- instructions.
         agenda_delete(agenda_floppy_read_address);
         agenda_delete(agenda_floppy_read_track);
         agenda_delete(agenda_floppy_write_track);
-#if defined(SS_FDC_VERIFY_AGENDA)
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_VERIFY_AGENDA)
         agenda_delete(agenda_fdc_verify);
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_SPIN_UP_AGENDA)
+        agenda_delete(agenda_fdc_spun_up); // Holocaust/Blood real start
 #endif
         agenda_delete(agenda_fdc_finished);
         fdc_str=BYTE(fdc_str & FDC_STR_MOTOR_ON);
-        TRACE_LOG("fdc T4 cr %X str %X T1 %d T23 %d\n",fdc_cr,fdc_str,floppy_type1_command_active,type23_active);
         if (fdc_cr & b1100){
-          TRACE_LOG("Interrupt CPU immediately\n");
+          TRACE_LOG(" Immediate");
           agenda_fdc_finished(0); // Interrupt CPU immediately
         }else{
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_MOTOR_OFF)
+          agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION*9,0);
+#endif
           floppy_irq_flag=0;
           mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
         }
@@ -920,18 +983,23 @@ acknowledge Force Interrupt commands only between micro- instructions.
       }
     }
   }
-  if (fdc_str & FDC_STR_MOTOR_ON) agenda_add(agenda_fdc_motor_flag_off,MILLISECONDS_TO_HBLS(1800),0);
-
-#if defined(SS_FDC_VERIFY_AGENDA)
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_MOTOR_OFF)
   if(!ADAT)
 #endif
+  if (fdc_str & FDC_STR_MOTOR_ON) agenda_add(agenda_fdc_motor_flag_off,MILLISECONDS_TO_HBLS(1800),0);
+
   if (floppy_irq_flag){
     if (floppy_irq_flag!=FLOPPY_IRQ_NOW){ // Don't need to add agenda if it has happened
       if (floppy_irq_flag==FLOPPY_IRQ_ONESEC){
-        TRACE_LOG("IRQ in %d HBLs\n",MILLISECONDS_TO_HBLS(1000));
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_PRECISE_HBL)
+        TRACE_LOG("Error - 5REV - IRQ in %d HBLs",FDC_HBLS_PER_ROTATION*5);
+        agenda_add(agenda_fdc_finished,FDC_HBLS_PER_ROTATION*5,0);
+#else
+        TRACE_LOG("1SEC - IRQ in %d HBLs",MILLISECONDS_TO_HBLS(1000));
         agenda_add(agenda_fdc_finished,MILLISECONDS_TO_HBLS(1000),0);
+#endif
       }else{
-        TRACE_LOG("IRQ in %d HBLs\n",int(hbls_to_interrupt*hbl_multiply));
+        TRACE_LOG("IRQ in %d HBLs",int(hbls_to_interrupt*hbl_multiply));
         agenda_add(agenda_fdc_finished,int(hbls_to_interrupt*hbl_multiply),0);
       }
     }
@@ -939,38 +1007,65 @@ acknowledge Force Interrupt commands only between micro- instructions.
 
 }
 //---------------------------------------------------------------------------
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_MOTOR_OFF_COUNT_IP)
+/*
+JLG
+You should be careful before deselecting a drive. 
+The FDC will automatically turn off the motor after the 10 index pulse 
+(10 * 200ms) if no command has been received during this period.
+ However the drive needs to be selected in order to the index pulse to 
+ be conveyed to the FDC. This implies that you must wait for the motor
+ to stop before deselecting the drive.
+-> We try to emulate this here, assuming one drive in operation
+(we don't look at  the complication, juggling with drives!)
+*/
+void agenda_fdc_motor_flag_off(int revs_to_wait)
+{
+  if(ADAT && revs_to_wait>0)
+  {
+    if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE) // one drive selected?
+      revs_to_wait--;
+    agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION,revs_to_wait);
+  }
+  else
+  {
+    TRACE_LOG("Motor off\n");
+    fdc_str&=BYTE(~FDC_STR_MOTOR_ON);
+  }
+}
+#else
 void agenda_fdc_motor_flag_off(int)
 {
   TRACE_LOG("Motor off\n");
   fdc_str&=BYTE(~FDC_STR_MOTOR_ON);
 }
+#endif
 //---------------------------------------------------------------------------
 
 
-#if defined(SS_FDC_RESTORE_AGENDA)
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_RESTORE_AGENDA)
 
 void agenda_fdc_restore(int floppyno) {
   ASSERT( ADAT );
-  TRACE_LOG("agenda_fdc_restore\n");
   ASSERT( !fdc_dr );
-//  agenda_delete(agenda_fdc_restore); //dbg
-  fdc_tr=fdc_dr;
-  floppy_head_track[floppyno]=fdc_dr;
-  TRACE_LOG("Agenda restore fdc_type1_check_verify\n");
+  // we do it in one time, normally it's a series of steps
+  ASSERT( fdc_tr==255 );
+  floppy_head_track[floppyno]=fdc_tr=fdc_dr;
+  ASSERT( !fdc_tr );
   fdc_type1_check_verify();
 }
 
 #endif
 
-#if defined(SS_FDC_VERIFY_AGENDA)
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_VERIFY_AGENDA)
 
-void agenda_fdc_verify(int a) {
+void agenda_fdc_verify(int dummy) {
+
   ASSERT( ADAT );
-  TRACE_LOG("agenda_fdc_verify dispatcher %d V %d\n",a,!!FDC_VERIFY);
-//  agenda_delete(agenda_fdc_verify); //dbg (Yo)
-//  if(WD1772.CommandType(fdc_cr)==1 && FDC_VERIFY)
+  
   if(floppy_type1_command_active && FDC_VERIFY)
   {
+    TRACE_LOG("Verify\n");
     // This reads an ID field and checks that track number matches floppy_head_track
     // It will fail on an unformatted track or if there is no disk of course
     int floppyno=floppy_current_drive();
@@ -981,7 +1076,6 @@ void agenda_fdc_verify(int a) {
     else if(floppy_head_track[floppyno]!=fdc_tr)
     {
       fdc_str|=FDC_STR_SEEK_ERROR;
-      TRACE_LOG("seek error tr %d floppy %d\n",fdc_tr,floppy_head_track[floppyno]);
     }
     else if (floppy->TrackIsFormatted[floppy_current_side()][floppy_head_track[floppyno]]==0){
       // If track is formatted then it is okay to seek to it, otherwise do this:
@@ -989,25 +1083,25 @@ void agenda_fdc_verify(int a) {
       if (floppy_current_side() >= floppy->Sides) fdc_str|=FDC_STR_SEEK_ERROR;
     }
     DEBUG_ONLY( if (fdc_str & FDC_STR_SEEK_ERROR) log("     Verify failed (track not formatted)"); )
+#if defined(SS_DEBUG)
+    if(fdc_str & FDC_STR_SEEK_ERROR)
+      TRACE_LOG("Verify error TR %d CYL %d\n",fdc_tr,floppy_head_track[floppyno]);
+#endif
   }
-  TRACE_LOG("Verify finish\n");
-  agenda_fdc_finished('V');
+  agenda_fdc_finished(0);
 }
 
 #endif
 
 //---------------------------------------------------------------------------
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC)
-void agenda_fdc_finished(int dispatcher)
-#else
 void agenda_fdc_finished(int)
-#endif
 {
-  log("FDC: Finished command, GPIP bit low.");
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
-  TRACE_LOG("FDC finished dispatcher %c\n",dispatcher?(char)dispatcher:'-');
+  ASSERT( fdc_str&BYTE(~FDC_STR_BUSY) );
+#if defined(STEVEN_SEAGAL) && defined(SS_DMA) && defined(SS_DEBUG)
+  if(TRACE_ENABLED) 
+    Dma.UpdateRegs(true);
 #endif
-//  ASSERT( fdc_str&FDC_STR_BUSY ); //no, eg end of R/W, set motor & WP, not BSY
+  log("FDC: Finished command, GPIP bit low.");
   floppy_irq_flag=FLOPPY_IRQ_NOW;
   mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,0); // Sets bit in GPIP low (and it stays low)
   fdc_str&=BYTE(~FDC_STR_BUSY); // Turn off busy bit
@@ -1016,13 +1110,16 @@ void agenda_fdc_finished(int)
     if (floppy_head_track[floppy_current_drive()]==0) fdc_str|=FDC_STR_T1_TRACK_0;
     floppy_type1_command_active=2;
   }
-//  FDC_SCHEDULE_MOTOR_OFF; // 9 revs post command end
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_ACCURATE)
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_MOTOR_OFF)
   if(ADAT)
   {
-    fdc_str|=FDC_STR_MOTOR_ON;
-    agenda_delete(agenda_fdc_motor_flag_off);
-    agenda_add(agenda_fdc_motor_flag_off,MILLISECONDS_TO_HBLS(1800),0);
+    ASSERT( fdc_str&FDC_STR_MOTOR_ON );
+    ASSERT( agenda_get_queue_pos(agenda_fdc_motor_flag_off)<0 );
+#if defined(SS_FDC_MOTOR_OFF_COUNT_IP)
+    agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION,9); //10?
+#else
+    agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION*9,0);
+#endif
   }
 #endif
 }
@@ -1031,21 +1128,39 @@ void agenda_floppy_seek(int)
 {
   ASSERT( fdc_str&FDC_STR_BUSY );
   int floppyno=floppy_current_drive();
-
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_SEEK_UPDATE_TR)
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_SEEK)
+/*
+SEEK
+This command assumes that the track register contains the track number of the
+current position of the Read/Write head and the Data Register contains the
+desired track number. The WD1770 will update the Track Register and issue
+stepping pulses in the appropiate direction until the contents of the Track
+Register are equal to the contents of the Data Register (the desired Track
+location). A verification operation takes place if the V flag is on. The h
+bit allows the Motor On option at the start of the command. An interrupt is
+generated at the completion of the command. Note: When using mutiple drives,
+the track register must be updated for the drive selected before seeks are
+issued.
+->
+Seek works with DR and TR, not DR and disk track.
+*/
   if(ADAT)
   {
-    if (fdc_tr==fdc_dr)
+    if(fdc_tr==fdc_dr)
     {
-      TRACE_LOG("FDC seek %d finished\n",fdc_dr);
       log(Str("FDC: Finished seeking to track ")+fdc_dr+" hbl_count="+hbl_count);
-      ASSERT( floppy_head_track[floppyno]==fdc_tr );
-      agenda_delete(agenda_floppy_seek);//why is there still one? D4
-      TRACE_LOG("Agenda seek fdc_type1_check_verify\n");
+#ifdef SS_DEBUG // this happens, eg in GEM
+      if(floppy_head_track[floppyno]!=fdc_tr)
+        TRACE_LOG("!Seek: DR %d TR%d CYL %d\n",fdc_dr,fdc_tr,floppy_head_track[floppyno]);
+      else TRACE_LOG("Seek completed TR=%d\n",fdc_tr);
+#endif
       fdc_type1_check_verify();
+#if !defined(SS_FDC_VERIFY_AGENDA)
+      agenda_fdc_finished(0);
+#endif
       return;
     }
-    else if (fdc_tr>fdc_dr)
+    else if(fdc_tr>fdc_dr)
     {
       fdc_tr--;
       if(floppy_head_track[floppyno])
@@ -1064,40 +1179,52 @@ void agenda_floppy_seek(int)
         floppy_head_track[floppyno]++;
     }
   }
-  else // !ADAT
+  else // !ADAT or not defined
   {
 #endif
+/*  In Steem 3.2, seek was directly using disk track instead of TR
+    It still works that way in fast mode.
+    It was already using an agenda for each step.
+*/
+    if (floppy_head_track[floppyno]==fdc_dr){
+      log(Str("FDC: Finished seeking to track ")+fdc_dr+" hbl_count="+hbl_count);
+      fdc_tr=fdc_dr;
+      fdc_type1_check_verify();
+#if defined(SS_FDC_VERIFY_AGENDA)
+      if(!ADAT)
+#endif
+      agenda_fdc_finished(0);
 
-  if (floppy_head_track[floppyno]==fdc_dr){
-    log(Str("FDC: Finished seeking to track ")+fdc_dr+" hbl_count="+hbl_count);
-    fdc_tr=fdc_dr;
-    fdc_type1_check_verify();
-    agenda_fdc_finished(0);
-    return;
-  }
-  if (floppy_head_track[floppyno]>fdc_dr){
-    floppy_head_track[floppyno]--;
-  }else if (floppy_head_track[floppyno]<fdc_dr){
-    floppy_head_track[floppyno]++;
-  }
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_SEEK_UPDATE_TR)
+      return;
+    }
+    if (floppy_head_track[floppyno]>fdc_dr){
+      floppy_head_track[floppyno]--;
+    }else if (floppy_head_track[floppyno]<fdc_dr){
+      floppy_head_track[floppyno]++;
+    }
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_SEEK)
   }
 #endif
   int hbls_to_interrupt=fdc_step_time_to_hbls[fdc_cr & (BIT_0 | BIT_1)];
   if (floppy_instant_sector_access) hbls_to_interrupt>>=5;
-  TRACE_LOG("agenda seeking %d, TR %d CYL %d\n",fdc_dr,fdc_tr,floppy_head_track[floppyno]);
+#if !(defined(STEVEN_SEAGAL)&&defined(SS_FDC_PRECISE_HBL))
   double hbl_multiply=1.0;
   if (shifter_freq==MONO_HZ) hbl_multiply=double(HBLS_PER_SECOND_MONO)/double(HBLS_PER_SECOND_AVE);
   agenda_add(agenda_floppy_seek,int(hbl_multiply*double(hbls_to_interrupt)),0);
+#else
+  agenda_add(agenda_floppy_seek,hbls_to_interrupt,0);
+#endif
 }
 //---------------------------------------------------------------------------
 void agenda_floppy_readwrite_sector(int Data)
 {
-  //TRACE_LOG("agenda_floppy_readwrite_sector ");
   int floppyno=floppy_current_drive();
   ASSERT(floppyno==0 || floppyno==1);
   TFloppyImage *floppy=&FloppyDrive[floppyno];
   ASSERT(floppy);
+#if defined(STEVEN_SEAGAL)&&defined(SS_FDC_ACCURATE)
+  BYTE nSects=floppy->SectorsPerTrack;
+#endif
   bool FromFormat=0;
   if (floppy_head_track[floppyno]<=FLOPPY_MAX_TRACK_NUM){
     FromFormat=floppy->TrackIsFormatted[floppy_current_side()][floppy_head_track[floppyno]];
@@ -1110,39 +1237,37 @@ void agenda_floppy_readwrite_sector(int Data)
     WriteProtect=FDC_STR_WRITE_PROTECT;
   }
   if (floppy->Empty()){
-    TRACE_LOG("agenda_floppy_readwrite_sector(): floppy is empty\n");
+    TRACE_LOG("No disk %c\n",floppyno+'A');
     fdc_str=BYTE(WriteProtect | FDC_STR_MOTOR_ON | /*FDC_STR_SEEK_ERROR | */FDC_STR_BUSY);
     agenda_add(agenda_fdc_finished,FDC_HBLS_PER_ROTATION*int((shifter_freq==MONO_HZ) ? 11:5),0);
     return; // Don't loop
   }
-
+#if !(defined(STEVEN_SEAGAL)&&defined(SS_OSD_DRIVE_LED3))
   disk_light_off_time=timer+DisableDiskLightAfter;
+#endif
   fdc_str=BYTE(FDC_STR_BUSY | FDC_STR_MOTOR_ON | WriteProtect);
 #if defined(SS_FDC_SPIN_UP_STATUS)
   fdc_str|=FDC_STR_T1_SPINUP_COMPLETE; // no real use...
 #endif
   floppy_irq_flag=0;
   if (floppy_access_ff) floppy_access_ff_counter=FLOPPY_FF_VBL_COUNT;
+
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_MOTOR_OFF)
+  if(!ADAT) {
+#endif
   agenda_delete(agenda_fdc_motor_flag_off);
   agenda_add(agenda_fdc_motor_flag_off,MILLISECONDS_TO_HBLS(1800),0);
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_MOTOR_OFF)
+  }
+#endif
 
 instant_sector_access_loop:
   int Part=LOWORD(Data);
-
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
-  if(!Part) TRACE_LOG("agenda RW ");
-  else TRACE_LOG("%d ",Part);
-  if(Part==65)
-    TRACE_LOG("\n");
-  ASSERT( WD1772.SectorPart==Part || Part==65&&WD1772.SectorPart==33);
-  WD1772.SectorPart++;
-#endif
-
   int SectorStage=(Part % 71); // 0=seek, 1-64=read/write, 65=end of sector, 66-70=gap
   if (SectorStage==0){
     if (floppy->SeekSector(floppy_current_side(),floppy_head_track[floppyno],fdc_sr,FromFormat)){
       // Error seeking sector, it doesn't exist
-      TRACE_LOG("no sector\n");
+      TRACE_LOG("Seek error sector %d\n",fdc_sr);
       floppy_irq_flag=FLOPPY_IRQ_ONESEC;  //end command after 1 second
     }
 #ifdef ONEGAME
@@ -1154,17 +1279,15 @@ instant_sector_access_loop:
 #endif
   }else if (SectorStage<=64){
     FILE *f=(FILE*)(FromFormat ? floppy->Format_f:floppy->f);
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC)
-    const // just to check
-#endif
-    int BytesPerStage=16;
+    int BytesPerStage=16; //SS constant
     int PosInSector=(SectorStage-1)*BytesPerStage;
 
     BYTE Temp;
     
     if (Command & 0x20){ // Write
       
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED) \
+  && !defined(SS_OSD_DRIVE_LED2)
       // Red floppy led for writing, it works more or less
       if(FDCWritingTimer<timer)
         FDCWritingTimer=timer+RED_LED_DELAY;
@@ -1179,24 +1302,46 @@ instant_sector_access_loop:
         if (floppy->IsZip()) FDCCantWriteDisplayTimer=timer+5000; // Writing will be lost!
         //SS byte per byte, we write 16 bytes
         for (int bb=BytesPerStage;bb>0;bb--){
+
+#if defined(STEVEN_SEAGAL) && defined(SS_DMA_FIFO_NATIVE)
+          Temp=Dma.GetFifoByte(); //SS from RAM to disk
+#else
           Temp=read_from_dma(); //SS from RAM to disk
+#endif
           if (fwrite(&Temp,1,1,f)==0){
             if (floppy_handle_file_error(floppyno,true,fdc_sr,PosInSector,FromFormat)){
               floppy_irq_flag=FLOPPY_IRQ_ONESEC;  //end command after 1 second
               break;
             }
           }
+#if !(defined(STEVEN_SEAGAL) && defined(SS_DMA_FIFO_NATIVE))
           dma_address++;
+#endif
           PosInSector++;
         }
+#if defined(SS_DMA_COUNT_CYCLES) &&!defined(SS_DMA_FIFO_NATIVE)
+        INSTRUCTION_TIME(8);
+#endif
       }
     }else{ // SS Read
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED) \
+  && !defined(SS_OSD_DRIVE_LED2)
       FDCWriting=0;
 #endif
-
+#if !(defined(STEVEN_SEAGAL) && defined(SS_DMA_FIFO_NATIVE))
       BYTE *lpDest;
+#endif
       for (int bb=BytesPerStage;bb>0;bb--){	// SS: int BytesPerStage=16;
+
+#if defined(STEVEN_SEAGAL) && defined(SS_DMA_FIFO_NATIVE)
+        if (fread(&Temp,1,1,f)==0){
+          if (floppy_handle_file_error(floppyno,0,fdc_sr,PosInSector,FromFormat)){
+            floppy_irq_flag=FLOPPY_IRQ_ONESEC;  //end command after 1 second
+            break;
+          }
+        }
+        Dma.AddToFifo(Temp); // hey this works already, breaks nothing
+#else
         if (DMA_ADDRESS_IS_VALID_W && dma_sector_count){
           lpDest=lpPEEK(dma_address);
         }else{
@@ -1209,8 +1354,12 @@ instant_sector_access_loop:
           }
         }
         DMA_INC_ADDRESS;
+#endif
         PosInSector++;
       }
+#if defined(STEVEN_SEAGAL) && defined(SS_DMA_COUNT_CYCLES) &&!defined(SS_DMA_FIFO_NATIVE)
+      INSTRUCTION_TIME(8);
+#endif
     }
     if (PosInSector>=int(FromFormat ? floppy->FormatLargestSector:floppy->BytesPerSector)){
       Part=64; // Done sector, last part
@@ -1221,6 +1370,15 @@ instant_sector_access_loop:
     if (Command & BIT_4){ // Multiple sectors
       fdc_sr++;
       floppy_irq_flag=0;
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_MULTIPLE_SECTORS)
+      if(ADAT)
+      {
+        // the drive must find next sector
+        agenda_add(agenda_floppy_readwrite_sector,SF314[DRIVE].SectorGap(),
+          MAKELONG(++Part,Command));
+        return;
+      }
+#endif
     }
   }
 
@@ -1229,22 +1387,21 @@ instant_sector_access_loop:
   switch (floppy_irq_flag){
     case FLOPPY_IRQ_NOW:
       log("FDC: Finished read/write sector");
-      TRACE_LOG("FDC: Finished read/write sector");      
-#if defined(SS_FDC_VERIFY_AGENDA)
+      fdc_str=BYTE(WriteProtect | FDC_STR_MOTOR_ON); //SS War Heli
+//      TRACE_LOG("Sector R/W OK\n");
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_RW_SECTOR_TIMING2)
+      // For test program FDCT by Petari
       if(ADAT)
-      {
-        int nhbls= (ADAT&&FDC_VERIFY) ? MILLISECONDS_TO_HBLS(15)+ 3130*3 : 2;
-        agenda_add(agenda_fdc_verify,nhbls,2);
-        return;
-      }
+        agenda_add(agenda_fdc_finished,SF314[DRIVE].BytesToHbls(nSects<11?
+          FDC_SECTOR_GAP_BEFORE_IRQ_9_10:FDC_SECTOR_GAP_BEFORE_IRQ_11),0);
+      else
 #endif
-      fdc_str=BYTE(WriteProtect | FDC_STR_MOTOR_ON);
-      TRACE_LOG("RW IRQ NOW\n");
       agenda_fdc_finished(0);
       return; // Don't loop
     case FLOPPY_IRQ_ONESEC:
       // sector not found
       fdc_str=BYTE(WriteProtect | FDC_STR_MOTOR_ON | /*FDC_STR_SEEK_ERROR | */FDC_STR_BUSY);
+      TRACE_LOG("Sector not found\n");
       agenda_add(agenda_fdc_finished,FDC_HBLS_PER_ROTATION*int((shifter_freq==MONO_HZ) ? 11:5),0);
       return; // Don't loop
   }
@@ -1253,17 +1410,34 @@ instant_sector_access_loop:
     Data=MAKELONG(Part,Command); // SS Part has been ++, Command is unchanged
     goto instant_sector_access_loop; //SS OMG!
   }else{
+    
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_BYTES_PER_ROTATION)
+/*
+JLG: Note that the 3 1/2 FD are spinning at 300 RPM which implies a 200 ms total
+ track time. As the MFM cells have a length of 4 µsec this gives a total of
+ 50000 cells and therefore about 6250 bytes per track.
+
+300 RPM
+
+1 Rev = 1/300 min = 60/300 sec = 1/5 sec = 200 ms
+
+The speed affects the agenda frequency for each block of 16 bytes (DMA
+transfer).
+*/
+    int bytes_per_second=TSF314::TRACK_BYTES*5;
+
+#else
     // 8000 bytes per revolution * 5 revolutions per second
     int bytes_per_second=8000*5;
+#endif
+
+#if defined(STEVEN_SEAGAL)&&defined(SS_FDC_PRECISE_HBL)
+    int hbls_per_second=HBL_PER_SECOND;
+#else
     int hbls_per_second=HBLS_PER_SECOND_AVE; // 60hz and 50hz are roughly the same
     if (shifter_freq==MONO_HZ) hbls_per_second=int(HBLS_PER_SECOND_MONO);
-    int n_hbls=hbls_per_second/(bytes_per_second/16);
-#if defined(SS_FDC_VERIFY_TIME)
-    if( (fdc_cr&BIT_2) && Part==64)
-    {
-      n_hbls+=MILLISECONDS_TO_HBLS(15)+3130; // suppose 1rev
-    }
 #endif
+    int n_hbls=hbls_per_second/(bytes_per_second/16);
 
     agenda_add(agenda_floppy_readwrite_sector,n_hbls,MAKELONG(Part,Command));
   }
@@ -1278,29 +1452,69 @@ void agenda_floppy_read_address(int idx)
   if (idx<nSects){
     log(Str("FDC: Reading address for sector ")+IDList[idx].SectorNum+" on track "+
                 floppy_head_track[floppyno]+", side "+floppy_current_side()+" hbls="+hbl_count);
+#if defined(STEVEN_SEAGAL) && defined(SS_DMA_FIFO_READ_ADDRESS2)
+    BYTE fdc_read_address_buffer[6];
+    BYTE fdc_read_address_buffer_len=0;//not real len, we use Dma.Fifo_idx
+#endif
     fdc_read_address_buffer[fdc_read_address_buffer_len++]=IDList[idx].Track;
     fdc_read_address_buffer[fdc_read_address_buffer_len++]=IDList[idx].Side;
     fdc_read_address_buffer[fdc_read_address_buffer_len++]=IDList[idx].SectorNum;
     fdc_read_address_buffer[fdc_read_address_buffer_len++]=IDList[idx].SectorLen;
     fdc_read_address_buffer[fdc_read_address_buffer_len++]=IDList[idx].CRC1;
     fdc_read_address_buffer[fdc_read_address_buffer_len++]=IDList[idx].CRC2;
+
     TRACE_LOG("Read address T%d S%d s#%d t%d CRC %X %X\n", IDList[idx].Track,
       IDList[idx].Side,IDList[idx].SectorNum,IDList[idx].SectorLen,
       IDList[idx].CRC1,IDList[idx].CRC2);
+
+#if defined(STEVEN_SEAGAL) && defined(SS_DMA_FIFO_READ_ADDRESS2)
+    for(int i=0;i<6;i++)
+      Dma.AddToFifo(fdc_read_address_buffer[i]);
+#else
     if (fdc_read_address_buffer_len>=16){ // DMA buffering madness
       for (int n=0;n<16;n++) write_to_dma(fdc_read_address_buffer[n]);
       memmove(fdc_read_address_buffer,fdc_read_address_buffer+16,4);
       fdc_read_address_buffer_len-=16;
     }
+#endif
+
     fdc_str&=BYTE(~FDC_STR_WRITE_PROTECT);
     fdc_str|=FDC_STR_MOTOR_ON;
+
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_READ_ADDRESS_UPDATE_SR)
+/*  The Track Address of the ID field is written into the sector register so 
+    that a comparison can be made by the user.
+    This happens after eventual DMA transfer, so the value should be correct.
+*/
+    if(ADAT)
+      WD1772.SR=IDList[idx].Track;
+#endif
+
     agenda_fdc_finished(0);
+#if !(defined(STEVEN_SEAGAL)&&defined(SS_OSD_DRIVE_LED3))
     disk_light_off_time=timer+DisableDiskLightAfter;
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_MOTOR_OFF)
+    if(!ADAT) {
+#endif
     agenda_delete(agenda_fdc_motor_flag_off);
     agenda_add(agenda_fdc_motor_flag_off,MILLISECONDS_TO_HBLS(1800),0);
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_MOTOR_OFF)
+    }
+#endif
+
   }
 }
 //---------------------------------------------------------------------------
+
+/*  SS Read track and write track emulation were good enough to work
+    with ProCopy on ST images (amazing!): this mustn't be lost.
+    Improvements would relate more to other image formats.
+    Also the DMA movements have been left as is for now. In a later version
+    we could try to use our DMA Fifo instead.
+*/
+
 void agenda_floppy_read_track(int part)
 {
   static int BytesRead;
@@ -1316,11 +1530,20 @@ void agenda_floppy_read_track(int part)
   if (floppy->Empty()) return; // Stop, timeout
 
   if (part==0) BytesRead=0;
+#if !(defined(STEVEN_SEAGAL)&&defined(SS_OSD_DRIVE_LED3))
   disk_light_off_time=timer+DisableDiskLightAfter;
+#endif
   fdc_str|=FDC_STR_BUSY;
   if (floppy_access_ff) floppy_access_ff_counter=FLOPPY_FF_VBL_COUNT;
+
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_MOTOR_OFF)
+  if(!ADAT) {
+#endif
   agenda_delete(agenda_fdc_motor_flag_off);
   agenda_add(agenda_fdc_motor_flag_off,MILLISECONDS_TO_HBLS(1800),0);
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_MOTOR_OFF)
+  }
+#endif
 
   int TrackBytes=floppy->GetRawTrackData(floppy_current_side(),floppy_head_track[floppyno]);
   if (TrackBytes){
@@ -1352,7 +1575,6 @@ void agenda_floppy_read_track(int part)
     }
   }else{
     int DDBytes=6272-(floppy_head_track[floppyno]/25)*16; // inner tracks (higher numbers) are a bit shorter
-
     FDC_IDField IDList[30];
     int nSects=floppy->GetIDFields(floppy_current_side(),floppy_head_track[floppyno],IDList);
     if (nSects==0){
@@ -1366,6 +1588,10 @@ void agenda_floppy_read_track(int part)
       // Find out if it is a high density track
       TrackBytes=0;
       for (int n=0;n<nSects;n++) TrackBytes+=22+12+3+1+6+22+12+3+1 + (128 << IDList[n].SectorLen) + 26;
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_READ_TRACK_TIMING)
+      // counted before we came
+      DDBytes-=SF314[DRIVE].BytesToHbls(SF314[DRIVE].PostIndexGap()); 
+#endif
       if (TrackBytes>DDBytes){
         TrackBytes=DDBytes*2;
       }else{
@@ -1378,6 +1604,7 @@ void agenda_floppy_read_track(int part)
 
         BYTE pre_sect[200];
         int i=0;
+
         for (int n=0;n<22;n++) pre_sect[i++]=0x4e;  // Gap 1 & 3 (22 bytes)
         for (int n=0;n<12;n++) pre_sect[i++]=0x00;  // Gap 3 (12)
         for (int n=0;n<3;n++) pre_sect[i++]=0xa1;   // Marker
@@ -1500,10 +1727,18 @@ void agenda_floppy_read_track(int part)
     agenda_fdc_finished(0);
     log(Str("FDC: Read track finished, t=")+hbl_count);
   }else if (Error==0){   //read more of the track
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_BYTES_PER_ROTATION)
+    int bytes_per_second=TSF314::TRACK_BYTES*5;
+#else
     // 8000 bytes per revolution * 5 revolutions per second
     int bytes_per_second=8000*5;
+#endif
+#if defined(STEVEN_SEAGAL)&&defined(SS_FDC_PRECISE_HBL)
+    int hbls_per_second=HBL_PER_SECOND;
+#else
     int hbls_per_second=HBLS_PER_SECOND_AVE; // 60hz and 50hz are roughly the same
     if (shifter_freq==MONO_HZ) hbls_per_second=int(HBLS_PER_SECOND_MONO);
+#endif
     int n_hbls=hbls_per_second/(bytes_per_second/16);
     agenda_add(agenda_floppy_read_track,n_hbls,part);
   }
@@ -1590,10 +1825,17 @@ void agenda_floppy_write_track(int part)
   bool Error=0;
   fdc_str|=FDC_STR_BUSY;
   if (floppy_access_ff) floppy_access_ff_counter=FLOPPY_FF_VBL_COUNT;
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_MOTOR_OFF)
+  if(!ADAT) {
+#endif
   agenda_delete(agenda_fdc_motor_flag_off);
   agenda_add(agenda_fdc_motor_flag_off,MILLISECONDS_TO_HBLS(1800),0);
-
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_MOTOR_OFF)
+  }
+#endif
+#if !(defined(STEVEN_SEAGAL)&&defined(SS_OSD_DRIVE_LED3))
   disk_light_off_time=timer+DisableDiskLightAfter;
+#endif
   if (part==0){ // Find data/address marks
     // Find address marks and read SectorLen and nSector from the address
     // Must have [[0xa1] 0xa1] 0xa1 0xfe or [[0xc2] 0xc2] 0xc2 0xfe
@@ -1617,7 +1859,7 @@ void agenda_floppy_write_track(int part)
               case 0:  SectorLen=128;break;
               case 1:  SectorLen=256;break;
               case 2:  SectorLen=512;break;
-              case 3:  Error=true /*SectorLen=1024*/ ;break;
+              case 3:  Error=true /*SectorLen=1024*/ ;break; //SS why?
               default: Error=true;
             }
             if (Error){
@@ -1691,10 +1933,18 @@ void agenda_floppy_write_track(int part)
     log("FDC: Format aborted, can't write to format file");
     fdc_str=FDC_STR_MOTOR_ON | FDC_STR_SEEK_ERROR | FDC_STR_BUSY;
   }else{ //write more of the track
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_BYTES_PER_ROTATION)
+    int bytes_per_second=TSF314::TRACK_BYTES*5;
+#else
     // 8000 bytes per revolution * 5 revolutions per second
     int bytes_per_second=8000*5;
+#endif
+#if defined(STEVEN_SEAGAL)&&defined(SS_FDC_PRECISE_HBL)
+    int hbls_per_second=HBL_PER_SECOND;
+#else
     int hbls_per_second=HBLS_PER_SECOND_AVE; // 60hz and 50hz are roughly the same
     if (shifter_freq==MONO_HZ) hbls_per_second=int(HBLS_PER_SECOND_MONO);
+#endif
     int n_hbls=hbls_per_second/(bytes_per_second/16);
     agenda_add(agenda_floppy_write_track,n_hbls,part);
   }
@@ -1708,24 +1958,23 @@ void fdc_add_to_crc(WORD &crc,BYTE data)
   }
 }
 //---------------------------------------------------------------------------
+
 #if USE_PASTI
+
 void pasti_handle_return(struct pastiIOINFO *pPIOI)
 {
   //  log_to(LOGSECTION_PASTI,Str("PASTI: Handling return, update cycles=")+pPIOI->updateCycles+" irq="+pPIOI->intrqState+" Xfer="+pPIOI->haveXfer);
 
 #if defined(STEVEN_SEAGAL) && defined(SS_DMA)// osd, fdcdebug
-  Dma.UpdateRegs();
+  Dma.UpdateRegs(); // for pasti, registers AFTER operation
 #endif
 
   pasti_update_time=ABSOLUTE_CPU_TIME+pPIOI->updateCycles; //SS smart...
   
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_REWRITE)
-  BOOL old_irq=(mfp_reg[MFPR_GPIP] & BIT_5)==0; // 0=irq on
-#else
   bool old_irq=(mfp_reg[MFPR_GPIP] & BIT_5)==0; // 0=irq on
-#endif
   
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_OSD_DRIVE_LED)
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_OSD_DRIVE_LED) \
+  && !defined(SS_OSD_DRIVE_LED2)
   // Red floppy led for writing in Pasti mode
   if(WD1772.WritingToDisk())
   {
@@ -1737,67 +1986,64 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
     FDCWriting=FALSE;
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_REWRITE)
+  if (old_irq!=(bool)pPIOI->intrqState){
+#else
   if (old_irq!=pPIOI->intrqState){
+#endif
     mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,!pPIOI->intrqState);
     if (pPIOI->intrqState){
       // FDC is busy, activate light
+#if !(defined(STEVEN_SEAGAL)&&defined(SS_OSD_DRIVE_LED3))
       disk_light_off_time=timer+DisableDiskLightAfter;
+#endif
     }
   }
 
   //SS pasti manages DMA itself, then calls Steem to transfer what it gathered
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_FDC_BYTES//SS
+
   if (pPIOI->haveXfer){
-    dma_address=pPIOI->xferInfo.xferSTaddr;
+    dma_address=pPIOI->xferInfo.xferSTaddr; //SS not the regs
+
     if (pPIOI->xferInfo.memToDisk){
-      // notice how Pasti sends 512 bytes at once and yet it works:
-      ASSERT( pPIOI->xferInfo.xferLen==512 );
-      TRACE_LOG("%d/%d from %X: ",fdc_tr,fdc_sr,dma_address);
       //      log_to(LOGSECTION_PASTI,Str("PASTI: DMA transfer ")+pPIOI->xferInfo.xferLen+" bytes from address=$"+HEXSl(dma_address,6)+" to pasti buffer");
       for (DWORD i=0;i<pPIOI->xferInfo.xferLen;i++){
         if (DMA_ADDRESS_IS_VALID_R) 
         {
+#if defined(STEVEN_SEAGAL) && defined(SS_DMA_FIFO_PASTI)
+          LPBYTE(pPIOI->xferInfo.xferBuf)[i]=Dma.GetFifoByte();
+#else
           LPBYTE(pPIOI->xferInfo.xferBuf)[i]=PEEK(dma_address);
-          TRACE_LOG("%02X ",LPBYTE(pPIOI->xferInfo.xferBuf)[i]);
+#endif
         }
-        //TODO break lines by 16 for trace
+#if !(defined(STEVEN_SEAGAL) && defined(SS_DMA_FIFO_PASTI))
         dma_address++;
+#endif
       }
       TRACE_LOG("\n");
     }else{
       //      log_to(LOGSECTION_PASTI,Str("PASTI: DMA transfer ")+pPIOI->xferInfo.xferLen+" bytes from pasti buffer to address=$"+HEXSl(dma_address,6));
-      ASSERT( pPIOI->xferInfo.xferLen==16 );
-//      TRACE_LOG("%d ",ABSOLUTE_CPU_TIME);
-      TRACE_LOG("%d/%d to %X: ",fdc_tr,fdc_sr,dma_address);
       for (DWORD i=0;i<pPIOI->xferInfo.xferLen;i++){ 
         if (DMA_ADDRESS_IS_VALID_W){
           DEBUG_CHECK_WRITE_B(dma_address);
+#if defined(STEVEN_SEAGAL) && defined(SS_DMA_FIFO_PASTI)
+          Dma.AddToFifo(LPBYTE(pPIOI->xferInfo.xferBuf)[i]);
+#else
           PEEK(dma_address)=LPBYTE(pPIOI->xferInfo.xferBuf)[i];
-          TRACE_LOG("%02X ",LPBYTE(pPIOI->xferInfo.xferBuf)[i]);
+#endif
         }
+#if !(defined(STEVEN_SEAGAL) && defined(SS_DMA_FIFO_PASTI))
         dma_address++;
+#endif
       }
-      TRACE_LOG("\n");
     }
   }
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_FDC//SS
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)  // reporting IRQ
-  if(old_irq!=pPIOI->intrqState) 
-  {
-    if(!debug2) // to avoid double lines
-    {
-//      TRACE_LOG("%d ",ABSOLUTE_CPU_TIME);
 #if defined(STEVEN_SEAGAL) && defined(SS_DMA) && defined(SS_DEBUG)
-      if(TRACE_ENABLED) Dma.UpdateRegs(true);
-#endif
-      debug2++;
-    }
-    else
-      debug2=0;
-  }
+  if(TRACE_ENABLED&&!old_irq&&old_irq!=(bool)pPIOI->intrqState) 
+    Dma.UpdateRegs(true); // finally! simple & elegant
 #endif
 
   if (pPIOI->brkHit){
@@ -1812,15 +2058,17 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
 
 void pasti_motor_proc(BOOL on)
 {
+#if !(defined(STEVEN_SEAGAL)&&defined(SS_OSD_DRIVE_LED3))
   disk_light_off_time=timer;
   if (on) disk_light_off_time+=50*1000;
+#endif
 }
 
 void pasti_log_proc(const char * LOG_ONLY(text))
 {
 #if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_LOG_OPTIONS) \
   && defined(ENABLE_LOGFILE)
-  TRACE_LOG((char*)text); //constaway
+  TRACE_LOG("Pasti: %s\n",(char*)text);
   // it was the only active logging for this section 
   log(text);
 #else

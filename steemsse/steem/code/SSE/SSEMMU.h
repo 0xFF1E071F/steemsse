@@ -25,6 +25,9 @@ State 2
 #include "SSEOption.h"
 #include "SSESTF.h"
 
+#ifdef SS_MMU
+
+
 struct TMMU {
 //  int WakeUpState; // we take the variable in SSEOption
   inline bool OnMmuCycles(int CyclesIn);
@@ -78,4 +81,5 @@ inline bool TMMU::WakeUpState2() {
       WAKE_UP_STATE==2);
 }
 
+#endif
 #endif//#ifndef SSEMMU_H

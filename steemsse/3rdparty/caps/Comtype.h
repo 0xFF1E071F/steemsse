@@ -114,9 +114,9 @@ enum {
 #define DF_31 (1UL<<DB_31)
 
 #define DllImport __declspec(dllimport)
-#pragma warning(disable: 4005) // already defined by pasti.h
+#ifndef DllExport//SS...by pasti.h
 #define DllExport __declspec(dllexport)   
-#pragma warning(default: 4005)
+#endif
 #define Naked __declspec(naked)
 
 #endif

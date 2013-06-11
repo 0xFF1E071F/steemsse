@@ -135,63 +135,11 @@ In case of 6cycle 68000 instruction, that instruction is rounded to 8, or paired
 */
 
 
-EXT int MILLISECONDS_TO_HBLS(int);
+EXT int MILLISECONDS_TO_HBLS(int); 
 EXT void make_Mem(BYTE,BYTE);
 EXT void GetCurrentMemConf(BYTE[2]);
 
 EXT BYTE *Mem INIT(NULL),*Rom INIT(NULL);
-
-
-//SS About memory:
-/*
-6.1	Memory
-
-The ST’s RAM is stored in the variable Mem, which is declared in emulator.h and set 
-up in the make_Mem() function in main.cpp.
-
-The ST’s ROM is stored in the variable Rom, which is declared in emulator.h and set 
-up in the Initialise() function in main.cpp.
-
-On little-endian processors such as the 486-compatibles used in modern PCs, the issue 
-arises of storing data for use by a big-endian processor such as an emulated Motorola 
-68000 (the ST’s CPU).  For example, imagine that a computer has a byte $AB stored at 
-address $100 and $CD stored at address $101.  If the computer is big-endian, reading 
-a word (two bytes) from the address $100 will return $ABCD.  If the computer is
- little-endian, it will return $CDAB.  Thus if a little-endian computer is emulating 
-a big-endian one, and the naïve storage method is used for the emulated computer’s
- memory, then each word and longword needs to be reversed before writing to and after
- reading from the emulated memory.  To avoid this overhead, Steem stores the ST memory 
-in reverse order in the PC’s memory.  We store the address immediately after the last
- byte of the storage buffer (the variable Mem_End), and calculate PC addresses from 
-ST addresses by subtracting the address and the data length from this address. 
- Hence the ST’s word at $100 is stored in the PC’s memory at (Mem_End-2-$100). 
- Macros are provided to hide this confusing calculation, for example
-
-#define DPEEK(l)   *(WORD*)(Mem_End_minus_2-(l))
-
-in steemh.h.
-
-
-SS:
-
-I find the big or little-endian definition confusing.
-It's "big" if the RAM position is "bigger" (comes after).
-In big-endian processors, we have AB CD; CD is on a higher, bigger RAM position
-than AB.
-In practice, little-endian processors (like Intel) reverse all the data they write
-in memory (CDAB)
-
-The way the Steem Authors dealt with the situation is a stroke of genius (or they 
-took it from another genius...) 
-By "naive" we must understand WinSTon and maybe Hatari.
-(In fact it seems to be an option in Hatari?)
-Mem_End is the end of the allocated PC RAM, but it's the beginning
-of the ST RAM!
-
-*/
-
-
-
 EXT WORD tos_version;
 
 #define COLOUR_MONITOR (mfp_gpip_no_interrupt & MFP_GPIP_COLOUR)
@@ -220,7 +168,11 @@ EXT int on_rte_interrupt_depth;
 extern "C"
 {
 EXT MEM_ADDRESS shifter_draw_pointer;
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+EXT BYTE shifter_hscroll, shifter_skip_raster_for_hscroll; // the latter bool
+#else
 EXT int shifter_hscroll,shifter_skip_raster_for_hscroll;
+#endif
 }
 
 EXT MEM_ADDRESS xbios2,shifter_draw_pointer_at_start_of_line;
@@ -231,7 +183,11 @@ EXT int shifter_x,shifter_y;
 EXT int shifter_first_draw_line;
 EXT int shifter_last_draw_line;
 EXT int shifter_scanline_width_in_bytes;
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+EXT BYTE shifter_fetch_extra_words;
+#else
 EXT int shifter_fetch_extra_words;
+#endif
 EXT bool shifter_hscroll_extra_fetch;
 EXT int screen_res INIT(0);
 EXT int scan_y;
@@ -348,7 +304,11 @@ void agenda_keyboard_replace(int);
 
 int agenda_get_queue_pos(LPAGENDAPROC);
 //void inline agenda_process();
-void agenda_acia_tx_delay_IKBD(int),agenda_acia_tx_delay_MIDI(int);
+void 
+#if !(defined(STEVEN_SEAGAL) && defined(SS_IKBD_MANAGE_ACIA_TX))
+agenda_acia_tx_delay_IKBD(int),
+#endif
+agenda_acia_tx_delay_MIDI(int);
 
 
 MEM_ADDRESS on_rte_return_address;
@@ -371,7 +331,10 @@ LPAGENDAPROC agenda_list[]={agenda_fdc_spun_up,agenda_fdc_motor_flag_off,agenda_
                           agenda_floppy_read_track,agenda_floppy_write_track,agenda_serial_sent_byte,
                           agenda_serial_break_boundary,agenda_serial_loopback_byte,agenda_midi_replace,
                           agenda_check_centronics_interrupt,agenda_ikbd_process,agenda_keyboard_reset,
-                          agenda_acia_tx_delay_IKBD,agenda_acia_tx_delay_MIDI,ikbd_send_joystick_message,
+#if !(defined(STEVEN_SEAGAL) && defined(SS_IKBD_MANAGE_ACIA_TX))
+                          agenda_acia_tx_delay_IKBD,
+#endif
+                          agenda_acia_tx_delay_MIDI,ikbd_send_joystick_message,
                           ikbd_report_abs_mouse,agenda_keyboard_replace,
                           
 #if defined(SS_FDC_RESTORE_AGENDA)
@@ -399,9 +362,8 @@ int ACIAClockToHBLS(int,bool=0);
 void ACIA_Reset(int,bool);
 void ACIA_SetControl(int,BYTE);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
-#else
-struct ACIA_STRUCT{ // SS removed _
+#if !(defined(STEVEN_SEAGAL) && defined(SS_ACIA)) //see new file acia.h
+struct _ACIA_STRUCT{
   int clock_divide;
 
   int rx_delay__unused;
@@ -418,9 +380,7 @@ struct ACIA_STRUCT{ // SS removed _
 
   int last_tx_write_time;
   int last_rx_read_time;
-
 }acia[2];
-#endif
 
 #define ACIA_OVERRUN_NO 0
 #define ACIA_OVERRUN_COMING 1
@@ -431,6 +391,10 @@ struct ACIA_STRUCT{ // SS removed _
 
 #define ACIA_IKBD acia[0]
 #define ACIA_MIDI acia[1]
+
+
+#endif
+
 
 
 #ifndef NO_CRAZY_MONITOR

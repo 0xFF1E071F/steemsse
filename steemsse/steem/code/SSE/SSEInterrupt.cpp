@@ -8,7 +8,9 @@
 #endif
 
 #if defined(SS_INT_VBL_STF)
-  int HblTiming=444;
+  int HblTiming=HBL_FOR_STF;//444;
+#endif
+
 #endif
 
 #if defined(SS_MFP_RATIO) // need no SS_STF
@@ -20,4 +22,3 @@ double CpuMfpRatio=(double)CPU_STE_TH/(double)MFP_CLK_LE_EXACT;
 DWORD CpuNormalHz=CPU_STE_TH; // STE
 #endif
 
-#endif

@@ -7,7 +7,8 @@
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
 #pragma comment(lib, "vfw32.Lib")  //  OK for VC6
-#include "dsound.h" // VC9 can't do that
+#include "dsound.h" // VC9 can't do that? need SDK?
+
 #include "..\steem\code\SSE\SSEDebug.h" // TRACE, ASSERT
 #include "windows.h"
 #define _T(X) X
@@ -18,12 +19,14 @@ unsigned int FormatAviMessage(HRESULT code, char *buf,unsigned int len);
 extern int shifter_freq_at_start_of_vbl;
 extern bool FullScreen;
 
+
 #include "avifile.h"
 
 #ifndef __countof
 #define __countof(x)	((sizeof(x)/sizeof(x[0])))
 #endif
 
+#define LOGSECTION LOGSECTION_VIDEO//SS
 
 CAviFile:: CAviFile(LPCSTR lpszFileName /* =_T("Output.avi") */, 
 			DWORD dwCodec /* = mmioFOURCC('M','P','G','4') */,
@@ -120,7 +123,7 @@ void CAviFile::SetErrorMessage(LPCTSTR lpszErrorMessage)
 {
 	_tcsncpy(m_szErrMsg, lpszErrorMessage, __countof(m_szErrMsg)-1);
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
-	TRACE("%s\n",m_szErrMsg);
+	TRACE_LOG("%s\n",m_szErrMsg);
 #endif
 }
 	
@@ -191,7 +194,7 @@ HRESULT CAviFile::InitMovieCreation(int nFrameWidth, int nFrameHeight, int nBits
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
   if(FAILED(AVIMakeCompressedStream(&m_pAviCompressedStream,m_pAviStream,&m_AviCompressOptions,NULL)))
   {
-    TRACE("Fall back to MSVC codec\n");
+    TRACE_LOG("Fall back to MSVC codec\n");
     m_AviCompressOptions.fccHandler=mmioFOURCC('M','S','V','C');
   }
 #endif

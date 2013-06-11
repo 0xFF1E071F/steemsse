@@ -56,6 +56,10 @@ EXT int draw_fs_topgap INIT(0);
 #define DWM_STRETCH 0
 #define DWM_NOSTRETCH 1
 #define DWM_GRILLE 2
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
+#define DWM_STRETCH_SCANLINES 3
+#endif
+
 WIN_ONLY( EXT int draw_win_mode[2]; ) // Inited by draw_fs_blit_mode
 
 
@@ -81,7 +85,13 @@ extern int prefer_pc_hz[2][3];
 extern WORD tested_pc_hz[2][3];
 
 EXT void get_fullscreen_rect(RECT *);
-EXT int overscan INIT(0),stfm_borders INIT(0);
+EXT int overscan INIT(0)
+#if !(defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE) \
+ && defined(SS_SHIFTER) && !defined(SS_SHIFTER_DRAW_DBG) \
+ && defined(SS_STRUCTURE))
+,stfm_borders INIT(0)
+#endif
+;
 
 UNIX_ONLY( EXT int x_draw_surround_count INIT(4); )
 

@@ -229,6 +229,10 @@ public:
 #endif
 
   void MachineUpdateIfVisible();
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_OPTIONS_REFRESH)
+  void SSEUpdateIfVisible();
+#endif
+
   void TOSRefreshBox(EasyStr="");
   bool NeedReset() { return NewMemConf0>=0 || NewMonitorSel>=0 || NewROMFile.NotEmpty(); }
   int GetCurrentMonitorSel();

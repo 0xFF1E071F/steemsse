@@ -41,7 +41,7 @@ static int  rxindex      = 0; /* Index of first byte in recvbuf */
 
 /*  This function is called by Steem when a byte sent to the 6301 is supposed
     to have been received, decoded in the shift register and transferred in RDR.
-    The transmission delay is taken care of in Steem.
+    The transmission delay is taken care of in Steem (agenda).
     The function allows accumulation of input, but in real hardware, there can
     be only one byte in the RDR.
 */
@@ -67,147 +67,27 @@ int nbytes;
       warning ("sci_in:: buffer full\n");
   rec_byte=*s;
 
-#if defined(SS_IKBD_6301_TRACE_SCI_RX)
-  TRACE("SCI RX #%d $%x (TRCSR %X PC %X cycles %d ACT %d)\n",rxinterrupts,rec_byte,trcsr,pc,cpu.ncycles,ABSOLUTE_CPU_TIME);
-#endif
+  TRACE("6301 SCI in #%d $%x (TRCSR %X)\n",rxinterrupts,rec_byte,trcsr);
+
   if(trcsr&WU) // bug?
     TRACE("6301 in standby mode\n");
 
   if(rxinterrupts>1)  
   {
-    TRACE("RX interrupt overload %d\n",rxinterrupts); 
+    TRACE("6301 OVR rx %d RDR %X RDRS %X SR %X->%X\n",rxinterrupts,recvbuf[rxinterrupts-2],recvbuf[rxinterrupts-1],iram[TRCSR],iram[TRCSR]|ORFE);
     iram[TRCSR]|=ORFE; // hardware sets overrun bit
+    //recvbuf[0]=recvbuf[rxinterrupts-1]; // replace 
     rxinterrupts=1; // there can be only one byte to read
   }
-
 #if defined(SS_IKBD_6301_CHECK_COMMANDS)
-
-  if(pc<0xF000) // PC is in the RAM=>custom program running
-  {
-#if defined(SS_IKBD_6301_DISASSEMBLE_CUSTOM_PRG)
-    BytesToLoad--; // we need a counter, we recycle this one
-    if(BytesToLoad==-256) // Drag: Frog: TB2: 
-      dump_ram();
-#endif
-//    ASSERT(CurrentCommand==0x22);
-//    printf("6301 custom gets %X\n",rec_byte);
-  }
-  else if(BytesToLoad>0)
-  {
-    int our_address=CustomPrgAddress-3+CurrentParameter;
-    CurrentParameter++;
-    BytesToLoad--;
-#if defined(SS_IKBD_TRACE_COMMANDS)
-    TRACE("Loading byte %X in %X, %d to go $F0:%d\n",rec_byte,our_address,BytesToLoad,ram[0xF0]);
-//    printf("Loading byte %X in %X, %d to go $F0:%d\n",rec_byte,our_address,BytesToLoad,ram[0xF0]);
-#endif
-    if(!BytesToLoad)
-      CurrentCommand=CurrentParameter=0;
-  }
-  else if(CurrentCommand && TotalParameters)
-  {
-    CurrentParameter++;
-#if defined(SS_IKBD_TRACE_COMMANDS)
-    TRACE("Parameter %d of command %x = %X\n",CurrentParameter,CurrentCommand,rec_byte);
-#endif
-    if(CurrentCommand==0x20) // MEMORY LOAD
-    {
-      if(CurrentParameter==1)
-        CustomPrgAddress=rec_byte<<8;
-      if(CurrentParameter==2)
-        CustomPrgAddress|=rec_byte;
-      if(CurrentParameter==3)
-      {
-#if defined(SS_IKBD_TRACE_COMMANDS)
-        TRACE("%d bytes to load in RAM %X\n",rec_byte,CustomPrgAddress);
-#endif
-        BytesToLoad=rec_byte;
-      }
-//      printf("6301 Memory load parameter %d = $%X\n",CurrentParameter,rec_byte);
-    }
-    else if(CurrentCommand==0x22 && CurrentParameter<=TotalParameters)
-    {
-//      printf("6301 Execute parameter %d = $%X\n",CurrentParameter,rec_byte);
-    }
-    else if(CurrentParameter==TotalParameters)
-    {
-/*
-      if(CurrentCommand==0x22) // CONTROLLER EXECUTE
-      {
-        TRACE("Boot\n");
-//        printf("6301 Execute ($%X?)\n",CustomPrgAddress);
-#if defined(SS_IKBD_6301_DISASSEMBLE_CUSTOM_PRG)
-        dump_ram();
-#endif
-      }
-*/
-      CurrentCommand=0;
-    }
-  }
-  else if(rec_byte) // new command
-  {
-    CurrentParameter=0;
-    switch(rec_byte)
-    {
-    case 0x80: // RESET
-    case 0x07: // SET MOUSE BUTTON ACTION
-    case 0x17: // SET JOYSTICK MONITORING
-      TotalParameters=1;
-      break;
-    case 0x09: // SET ABSOLUTE MOUSE POSITIONING
-      TotalParameters=4;
-      break;
-    case 0x0A: // SET MOUSE KEYCODE MOUSE
-    case 0x0B: // SET MOUSE THRESHOLD
-    case 0x0C: // SET MOUSE SCALE
-      TotalParameters=2;
-      break;
-    case 0x0E: // LOAD MOUSE POSITION
-      TotalParameters=5;
-      break;
-    case 0x12: // 12 DISABLE MOUSE
-      TotalParameters=0;
 #if defined(SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT)
-      TRACE("Disable mouse hardware quirk %d\n",SSE_HACKS_ON);
-      if(SSE_HACKS_ON)
-        mouse_x_counter=mouse_y_counter=~MOUSE_MASK; // fixes Jumping Jackson
-//      else mouse_x_counter=mouse_y_counter=0;
-#endif
-      break;
-    case 0x19: // SET JOYSTICK KEYCODE MODE
-    case 0x1B: // TIME-OF-DAY CLOCK SET
-      TotalParameters=6;
-      break;
-    case 0x20: // MEMORY LOAD
-      TotalParameters=3;
-      break;
-    case 0x21: // MEMORY READ
-    case 0x22: // CONTROLLER EXECUTE
-//      mem_print (CustomPrgAddress, 0xE, 1); //bytes to load = 0
-      TotalParameters=2;
-      break;
-    default:
-      // 8 SET RELATIVE MOUSE POSITION REPORTING
-      // D INTERROGATE MOUSE POSITION
-      // F SET Y=0 AT BOTTOM
-      // 10 SET Y=0 AT TOP
-      // 11 RESUME
-      // 13 PAUSE OUTPUT
-      // 14 SET JOYSTICK EVENT REPORTING
-      // 15 SET JOYSTICK INTERROGATION MODE
-      // 16 JOYSTICK INTERROGATE
-      // 18 SET FIRE BUTTON MONITORING
-      // 1A DISABLE JOYSTICKS
-      // 1C INTERROGATE TIME-OF-DAT CLOCK
-      // 87... STATUS INQUIRIES
-      TotalParameters=0;
-    }
-#if defined(SS_IKBD_TRACE_COMMANDS)
-    TRACE("IKBD command in $%X, %d parameters\n",rec_byte,TotalParameters);
-#endif
-    CurrentCommand=rec_byte;
+  if(HD6301.LastCommand==0x12 && SSE_HACKS_ON)
+  {
+    // for Jumping Jackson Auto but it seems there's sthg else
+    TRACE("Disable mouse hardware quirk\n");
+    mouse_x_counter=mouse_y_counter=~MOUSE_MASK; 
   }
-  else ; // could be junk?
+#endif
 #endif
   return 0;//warning
 }
@@ -279,15 +159,20 @@ trcsr_getb (offs)
   else
     rv&= ~RDRF;
 
-#if defined(SS_IKBD_DOUBLE_BUFFER_6301_TX)
-  // this could work with high values (buffers) but is meant for 1
-  if(hd6301_transmitting_to_MC6850<=hd6301_completed_transmission_to_MC6850) 
-#else
-  if(!hd6301_transmitting_to_MC6850)
+  if(!ACIA_IKBD.LineRxBusy
+  //if(!txinterrupts
+#if defined(SS_ACIA_DOUBLE_BUFFER_RX)
+  //  ||!ACIA_IKBD.ByteWaitingRx
 #endif
+    )
     rv|=TDRE; // is empty
   else
     rv&=~TDRE; // is full
+
+  if(ACIA_IKBD.LineRxBusy&&!ACIA_IKBD.ByteWaitingRx&&(rv&TDRE))
+    TRACE("TRCSR %X transmit OK, line busy\n",rv);
+  else if(rv&TDRE)
+    TRACE("TRCSR %X transmit OK, line free\n",rv);
     
   return rv;
 }
@@ -306,20 +191,21 @@ trcsr_putb (offs, value)
 //  u_char trcsr; //ST
   ASSERT(value&RE); // Receive is never disabled by program
   if(value&1)
-    TRACE("Stand by mode PC %X\n cycles %d",reg_getpc(),cpu.ncycles);
+    TRACE("Set 6301 stand-by\n");
   
 #if defined(SS_IKBD_6301_SET_TDRE)
-  //  Here we do as if the program could set bit 5 of TRCSR
+  //  Here we do as if the program could set bit 5 of TRCSR - correct?
   value&=0x3F; 
   if(value&0x20) 
   {
-#if defined(SS_IKBD_6301_TRACE_SCI_TRCSE)
-    TRACE("set TRCSR %X (PC %X Cycles %d ACT %d)\n",value,reg_getpc(),cpu.ncycles,act);
-#endif
-    txinterrupts = 1; // this will force a check; fixes Cobra Compil 1
+    if((value & TIE)&&!ACIA_IKBD.LineRxBusy) 
+    {
+      TRACE("6301 program sets TDRE\n");
+      txinterrupts = 1; // this will force a check; fixes Cobra Compil 1 -hack?
+    }
   }
 #else // here, bit 5 of TRCSR can't be set by software
-  value&=0x1F; 
+  value&=0x1F;  // IKBD panic in Cobra Compil 1
 #endif
   ireg_putb (TRCSR, value);
 #if 0 // ST: We do nothing of the sort, of course
@@ -352,12 +238,12 @@ rdr_getb (offs)
      * into RDR
      */
     if (rxinterrupts) {
-#if defined(SS_IKBD_6301_TRACE)
-      rec_byte=recvbuf[rxindex];
+
 #if defined(SS_IKBD_6301_TRACE_SCI_RX)
-      TRACE("SCI read RX $%x (PC %X cycles %d ACT %d)\n",rec_byte,reg_getpc(),cpu.ncycles,ABSOLUTE_CPU_TIME);
+      rec_byte=recvbuf[rxindex];
+      TRACE("6301 SCI read RX $%x (#%d)\n",rec_byte,rxindex);
 #endif
-#endif
+
       ireg_putb (RDR, recvbuf[rxindex++]);
 
       rxinterrupts--;
@@ -372,13 +258,11 @@ rdr_getb (offs)
     //  ST
     if(iram[TRCSR]&ORFE)
     {
-#if defined(SS_IKBD_6301_TRACE_SCI_RX)
-      TRACE("Read RDR, clearing overrun bit\n");
-#endif
+      TRACE("6301 clear OVR\n");
       iram[TRCSR]&=~ORFE; // clear overrun bit
     }
 
-    rxinterrupts=0;
+    rxinterrupts=0;//
 
   }
   return ireg_getb (RDR);
@@ -409,37 +293,28 @@ tdr_putb (offs, value)
     it can be triggered at once.
 */
   trcsr = trcsr_getb (TRCSR);
-//  if (trcsr & TIE)
-//    txinterrupts = 1;
-  
-#if defined(SS_IKBD_DOUBLE_BUFFER_6301_TX)
-  if((trcsr & TIE)&&!hd6301_transmitting_to_MC6850) 
-    txinterrupts = 1; // double buffer in 6301: TX-shift registers
-  ASSERT(hd6301_transmitting_to_MC6850<2);
-#else
-  txinterrupts=0; 
-  ASSERT(!hd6301_transmitting_to_MC6850); 
+#if 0
+  if (trcsr & TIE)
+    txinterrupts = 1;
 #endif
 
-  // this puts the byte on an agenda, the ST will read later
-#if defined(SS_IKBD_DOUBLE_BUFFER_6301_TX)
-  if(hd6301_transmitting_to_MC6850<2)
-#else
-  if(!hd6301_transmitting_to_MC6850  && (trcsr & TE))
-#endif
-    hd6301_keyboard_buffer_write(value); // call Steem's ikbd function
+#if defined(SS_ACIA_DOUBLE_BUFFER_RX)
+  if(ACIA_IKBD.LineRxBusy)
+  {
+    ASSERT( !ACIA_IKBD.ByteWaitingRx );
+    ACIA_IKBD.ByteWaitingRx=1;
+  }
   else
-    TRACE("Serial line not ready, sending %X fails!\n",value);
-
-#if defined(SS_IKBD_DOUBLE_BUFFER_6301_TX)
-  hd6301_transmitting_to_MC6850++; // can be >1 !!!
-  ASSERT(hd6301_transmitting_to_MC6850<3); // max 2 bytes, 1 on the line, one in the register
+    keyboard_buffer_write(value); // call Steem's ikbd function
+  ACIA_IKBD.LineRxBusy=1;
 #else
-  hd6301_transmitting_to_MC6850=1; 
+  keyboard_buffer_write(value); // call Steem's ikbd function
 #endif
+
 #if defined(SS_IKBD_6301_TRACE_SCI_TX)
-  TRACE("SCI TX #%d $%x (PC %X Cycles %d ACT %d)\n",hd6301_transmitting_to_MC6850,value,reg_getpc (),cpu.ncycles,ABSOLUTE_CPU_TIME);
+  TRACE("HD6301: $%x ->ACIA RDRS\n",value);
 #endif
+
   return 0;//warning
 }
 

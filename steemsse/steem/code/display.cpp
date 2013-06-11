@@ -10,7 +10,7 @@ This contains the DirectDraw code used by Windows Steem for output.
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI) 
-extern int shifter_freq_at_start_of_vbl;
+extern int shifter_freq_at_start_of_vbl; //forward
 #endif
 
 //SS: the singleton object is Disp
@@ -689,6 +689,15 @@ bool SteemDisplay::Blit()
           {
             RECT Dest;
             get_fullscreen_rect(&Dest);
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
+            if(SCANLINES_INTERPOLATED)
+#if defined(SS_VID_SCANLINES_INTERPOLATED_MED)
+              if(screen_res==1)
+                draw_blit_source_rect.right--; // and another hack...
+              else
+#endif
+                draw_blit_source_rect.right/=2; 
+#endif
             hRet=DDPrimarySur->Blt(&Dest,DDBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
             break;
           }
@@ -758,6 +767,12 @@ bool SteemDisplay::Blit()
       if(BORDER_40) // clip from larger to 800
         OffsetRect(&draw_blit_source_rect,16,0);
 #endif
+
+#if defined(SS_VID_SCANLINES_INTERPOLATED_MED)
+      if(screen_res==1&&SCANLINES_INTERPOLATED)
+        draw_blit_source_rect.right--; // and another hack...
+#endif
+
       for (int i=0;i<2;i++){
         hRet=DDPrimarySur->Blt(&dest,DDBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
         //hRet=DDPrimarySur->Blt(NULL,DDBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
@@ -965,6 +980,14 @@ void SteemDisplay::DrawFullScreenLetterbox()
 void SteemDisplay::ScreenChange()
 {
   draw_end();
+
+#if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+  if(USE_SDL)
+    SDL.EnterSDLVideoMode(); // temp
+  else
+    SDL.LeaveSDLVideoMode(); //temp
+
+#endif
   if (Method==DISPMETHOD_DD){
 // DX4         if (DDObj->TestCooperativeLevel()!=DDERR_EXCLUSIVEMODEALREADYSET)
     if (DDCreateSurfaces()!=DD_OK) Init();
@@ -981,13 +1004,19 @@ void SteemDisplay::ChangeToFullScreen()
 {
   if (CanGoToFullScreen()==0 || FullScreen || DDExclusive) return;
 
-//  TRACE_LOG("Going fullscreen...\n");
+  TRACE_LOG("Going fullscreen...\n");
+
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_CHECK_DDFS)
     if(!DD_FULLSCREEN)
     {
       Alert("Your display setup won't allow Steem fullscreen!","Direct Draw Error!",0);
       return;
     }
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
+    if(SCANLINES_INTERPOLATED)
+      draw_fs_blit_mode=DFSM_STRETCHBLIT; // only compatible FS mode
 #endif
 
   draw_end();

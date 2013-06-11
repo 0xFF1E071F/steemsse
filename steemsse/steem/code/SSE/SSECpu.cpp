@@ -7,17 +7,857 @@
 TM68000 M68000; // singleton
 
 TM68000::TM68000() {
+  Reset(true);
+}
+
+
+void TM68000::Reset(bool cold) {
 #if defined(SS_DEBUG)    
-  nExceptions=nInstr=0;
-//  NextIrFetched=false; //at power on
+  if(cold)
+    nExceptions=nInstr=0;
+  NextIrFetched=false; //at power on
 #endif
-#if defined(SS_CPU_PREFETCH_CALL)
+#if defined(SS_CPU_PREFETCH_CALL) //yes
   CallPrefetch=FALSE;
 #endif
-#if defined(SS_CPU_ROUNDING_CHECKS)
-  Rounding=false; 
-#endif
 }
+
+
+
+//////////////////////////////
+// Effective Address (<EA>) //
+//////////////////////////////
+
+/*
+
+This is copied from cpu.cpp (GET SOURCE block) and extended.
+
+Explanation for TRUE_PC, it's based on microcodes and confirmed by tests, 
+so there's no contest!
+It's useful in case of crash during the read.
+
+b543	b210         Mode           .B, .W             .L
+
+000	R            Dn              PC                PC
+001	R            An              PC                PC
+010	R            (An)            PC                PC
+011	R            (An)+           PC                PC
+100	R            -(An)           PC+2              PC
+101	R            (d16, An)       PC                PC
+110	R            (d8, An, Xn)    PC                PC
+111	000          (xxx).W         PC+2              PC+2
+111	001          (xxx).L         PC+4              PC+4
+111	010          (d16, PC)       PC                PC
+111	011          (d8, PC, Xn)    PC                PC
+111	100          #<data>         PC+2              PC+4
+
+*/
+
+
+// Dn
+
+void m68k_get_source_000_b(){ // .B Dn
+  m68k_src_b=(BYTE)(r[PARAM_M]); 
+}
+
+
+void m68k_get_source_000_w(){ //.W Dn
+  m68k_src_w=(WORD)(r[PARAM_M]); 
+}
+
+
+void m68k_get_source_000_l(){ //.L Dn
+  m68k_src_l=(long)(r[PARAM_M]); 
+}
+
+
+// An
+
+void m68k_get_source_001_b(){ // .B An
+  m68k_src_b=(BYTE)(areg[PARAM_M]); 
+}
+
+
+void m68k_get_source_001_w(){ // .W An
+  m68k_src_w=(WORD)(areg[PARAM_M]); 
+}
+
+
+void m68k_get_source_001_l(){ // .L An
+  m68k_src_l=(long)(areg[PARAM_M]); 
+}
+
+// (An)
+
+void m68k_get_source_010_b(){ // .B (An)
+
+  INSTRUCTION_TIME_ROUND(4);
+
+  m68k_READ_B(areg[PARAM_M]) 
+
+}
+
+
+void m68k_get_source_010_w(){ // .W (An)
+
+  INSTRUCTION_TIME_ROUND(4);
+
+  m68k_READ_W(areg[PARAM_M]) 
+
+}
+
+
+void m68k_get_source_010_l(){ // .L (An)
+
+  INSTRUCTION_TIME_ROUND(8);
+
+  m68k_READ_L(areg[PARAM_M]) 
+
+}
+
+// (An)+
+
+void m68k_get_source_011_b(){ // .B (An)+
+
+  INSTRUCTION_TIME_ROUND(4);
+
+  m68k_READ_B(areg[PARAM_M]) 
+  areg[PARAM_M]++; 
+  if(PARAM_M==7)
+    areg[7]++;
+
+}
+
+
+void m68k_get_source_011_w(){ // .W (An)+
+
+  INSTRUCTION_TIME_ROUND(4);
+
+  m68k_READ_W(areg[PARAM_M]) 
+
+  areg[PARAM_M]+=2; 
+}
+
+
+void m68k_get_source_011_l(){ // .L (An)+
+
+  INSTRUCTION_TIME_ROUND(8);
+
+  m68k_READ_L(areg[PARAM_M]) 
+
+  areg[PARAM_M]+=4; // for .L, we assume ++ post read
+
+}
+
+// -(An)
+
+/*  SS_CPU_ROUNDING_SOURCE_100:
+    We don't round because the instruction by itself takes 6/10 cycles.
+    Fixes Cernit Trandafir demo scren #2 + the similar Summer Delight #5, #7
+    Quite surprised that nothing seems to be broken by the change yet.
+    TESTING
+    INSTRUCTION_TIME_ROUND(4) instead of INSTRUCTION_TIME(6) would break
+    RGBeast for example.
+
+    PC: +2 as first step for .B,.W
+*/
+
+void m68k_get_source_100_b(){ // .B -(An)
+
+  TRUE_PC+=2;
+
+#if defined(SS_CPU_ROUNDING_SOURCE_100)
+  INSTRUCTION_TIME(6);
+#else
+  INSTRUCTION_TIME_ROUND(6);
+#endif
+
+  areg[PARAM_M]--;
+  if(PARAM_M==7)
+    areg[7]--;
+
+  m68k_READ_B(areg[PARAM_M]) 
+
+}
+
+
+void m68k_get_source_100_w(){ // .W -(An)
+
+  TRUE_PC+=2;
+
+#if defined(SS_CPU_ROUNDING_SOURCE_100)
+  INSTRUCTION_TIME(6);
+#else
+  INSTRUCTION_TIME_ROUND(6);
+#endif
+
+  areg[PARAM_M]-=2;
+
+  m68k_READ_W(areg[PARAM_M])  
+
+}
+
+
+void m68k_get_source_100_l(){ // .L -(An)
+
+#if defined(SS_CPU_ROUNDING_SOURCE_100)
+  INSTRUCTION_TIME(10);
+#else
+  INSTRUCTION_TIME_ROUND(10);
+#endif
+
+  areg[PARAM_M]-=4;
+
+  m68k_READ_L(areg[PARAM_M])  
+
+}
+
+
+// (d16, An)
+
+void m68k_get_source_101_b(){ //.B (d16, An)
+
+  INSTRUCTION_TIME_ROUND(8);
+
+  register int fw=(signed short)m68k_fetchW(); 
+  pc+=2;
+
+  m68k_READ_B(areg[PARAM_M]+fw);
+
+}
+
+
+void m68k_get_source_101_w(){ // .W (d16, An)
+
+  INSTRUCTION_TIME_ROUND(8);
+
+  register int fw=(signed short)m68k_fetchW(); 
+  pc+=2;
+
+  m68k_READ_W(areg[PARAM_M]+fw);
+
+}
+
+
+void m68k_get_source_101_l(){ // .L (d16, An)
+
+  INSTRUCTION_TIME_ROUND(12);
+
+  register int fw=(signed short)m68k_fetchW();
+  pc+=2;
+
+  m68k_READ_L(areg[PARAM_M]+fw);
+
+}
+
+// (d8,An,Xn)
+
+/*  (d8,An,Xn) +(d8,PC,Xn)
+    Hatari: 
+    "On ST, d8(An,Xn) takes 2 cycles more (which can generate pairing)."
+    It was already correctly handled in Steem by using :
+    INSTRUCTION_TIME_ROUND(10);
+    It will take 12 cycles except if pairing.
+    Cases: DSoS, Anomaly
+    Strange though, still to examine.
+*/
+
+void m68k_get_source_110_b(){ // .B (d8,An,Xn)
+
+  INSTRUCTION_TIME_ROUND(10);
+
+  WORD w=m68k_fetchW();
+  pc+=2;
+
+  if(w&BIT_b){  //.l
+    abus=areg[PARAM_M]+(signed char)LOBYTE(w)+(int)r[w>>12];
+  }else{         //.w
+    abus=areg[PARAM_M]+(signed char)LOBYTE(w)+(signed short)r[w>>12];
+  }
+  m68k_READ_B_FROM_ADDR
+
+}
+
+
+void m68k_get_source_110_w(){ // .W (d8,An,Xn)
+
+  INSTRUCTION_TIME_ROUND(10);
+
+  WORD w=m68k_fetchW();
+
+  pc+=2;
+  if(w&BIT_b){  //.l
+    abus=areg[PARAM_M]+(signed char)LOBYTE(w)+(int)r[w>>12];
+  }else{         //.w
+    abus=areg[PARAM_M]+(signed char)LOBYTE(w)+(signed short)r[w>>12];
+  }
+
+  m68k_READ_W_FROM_ADDR
+
+}
+
+
+void m68k_get_source_110_l(){ // .L (d8,An,Xn)
+
+  INSTRUCTION_TIME_ROUND(14);
+
+  WORD w=m68k_fetchW();
+  pc+=2; 
+
+  if(w&BIT_b){  //.l
+    abus=areg[PARAM_M]+(signed char)LOBYTE(w)+(int)r[w>>12];
+  }else{         //.w
+    abus=areg[PARAM_M]+(signed char)LOBYTE(w)+(signed short)r[w>>12];
+  }
+
+  m68k_READ_L_FROM_ADDR
+
+}
+
+// (xxx).W, (xxx).L, (d16, PC), (d8, PC, Xn), #<data>
+
+void m68k_get_source_111_b(){
+
+  switch(ir&0x7){
+  case 0:{ // .B (xxx).W
+    TRUE_PC+=2;
+    INSTRUCTION_TIME_ROUND(8);
+    register signed int fw=(signed short)m68k_fetchW();
+    pc+=2; 
+    m68k_READ_B(fw)
+    break;
+  }
+  case 1:{ // .B (xxx).L
+    TRUE_PC+=4;
+    INSTRUCTION_TIME_ROUND(12);
+    register MEM_ADDRESS fl=m68k_fetchL();
+    pc+=4;  
+    m68k_READ_B(fl)
+    break;
+   }
+  case 2:{ // .B (d16, PC)
+    INSTRUCTION_TIME_ROUND(8);
+    register MEM_ADDRESS ad=PC_RELATIVE_PC+(signed short)m68k_fetchW();
+    pc+=2;
+    PC_RELATIVE_MONITOR(ad);
+    m68k_READ_B(ad)
+    break;
+  }
+  case 3:{ // .B (d8, PC, Xn)
+
+    INSTRUCTION_TIME_ROUND(10);
+
+    m68k_iriwo=m68k_fetchW();
+    if(m68k_iriwo&BIT_b){  //.l
+      abus=PC_RELATIVE_PC+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
+    }else{         //.w
+      abus=PC_RELATIVE_PC+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
+    }
+    PC_RELATIVE_MONITOR(abus);
+    pc+=2;
+    m68k_READ_B_FROM_ADDR
+    break;       //what do bits 8,9,a  of extra word do?  (not always 0)
+  }
+  case 4:{ // .B #<data>
+    TRUE_PC+=2;
+    INSTRUCTION_TIME_ROUND(4);
+    pc+=2;
+    m68k_src_b=m68k_fetchB();
+    break;
+  }
+  default:
+    ILLEGAL;
+  }
+}
+
+
+void m68k_get_source_111_w(){
+
+  switch(ir&0x7){
+  case 0:{ // .W (xxx).W
+    TRUE_PC+=2;
+    INSTRUCTION_TIME_ROUND(8);
+    register signed int fw=(signed short)m68k_fetchW();
+    pc+=2; 
+    m68k_READ_W(fw)
+    break;
+  }case 1:{ // .W (xxx).L
+    TRUE_PC+=4;
+    INSTRUCTION_TIME_ROUND(12);
+    register MEM_ADDRESS fl=m68k_fetchL();
+    pc+=4;  
+    m68k_READ_W(fl)
+    break;
+  }case 2:{ // .W (d16, PC)
+    INSTRUCTION_TIME_ROUND(8);
+    register MEM_ADDRESS ad=PC_RELATIVE_PC+(signed short)m68k_fetchW();
+    pc+=2;
+    PC_RELATIVE_MONITOR(ad);
+    m68k_READ_W(ad)
+    break;
+  }case 3:{ // .W (d8, PC, Xn)
+    INSTRUCTION_TIME_ROUND(10);
+    m68k_iriwo=m68k_fetchW();
+    if(m68k_iriwo&BIT_b){  //.l
+      abus=PC_RELATIVE_PC+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
+    }else{         //.w
+      abus=PC_RELATIVE_PC+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
+    }
+    m68k_READ_W_FROM_ADDR
+    PC_RELATIVE_MONITOR(abus);
+    pc+=2; 
+    break;       //what do bits 8,9,a  of extra word do?  (not always 0)
+  }case 4:{ // .B #<data>
+    TRUE_PC+=2;
+    INSTRUCTION_TIME_ROUND(4);
+//      ap=m68k_fetchL();pc+=4;
+    pc+=2;
+    m68k_src_w=m68k_fetchW();
+    break;
+  }default:
+    ILLEGAL;
+  }
+}
+
+
+void m68k_get_source_111_l(){
+
+  switch(ir&0x7){
+  case 0:{ // .L (xxx).W
+    TRUE_PC+=2;
+    INSTRUCTION_TIME_ROUND(12);
+    register signed int fw=(signed short)m68k_fetchW();
+    pc+=2; 
+    m68k_READ_L(fw) 
+    break;
+  }case 1:{ // .L (xxx).L
+    TRUE_PC+=4;
+    INSTRUCTION_TIME_ROUND(16);
+    register MEM_ADDRESS fl=m68k_fetchL();
+    pc+=4;  
+    m68k_READ_L(fl)
+    break;
+  }case 2:{ // .L (d16, PC)
+    INSTRUCTION_TIME_ROUND(12);
+    register MEM_ADDRESS ad=PC_RELATIVE_PC+(signed short)m68k_fetchW();
+    pc+=2;
+    PC_RELATIVE_MONITOR(ad);
+    m68k_READ_L(ad)
+    break;
+  }case 3:{ // .L (d8, PC, Xn)
+    INSTRUCTION_TIME_ROUND(14);
+    m68k_iriwo=m68k_fetchW();
+    if(m68k_iriwo&BIT_b){  //.l
+      abus=PC_RELATIVE_PC+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
+    }else{         //.w
+      abus=PC_RELATIVE_PC+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
+    }
+    PC_RELATIVE_MONITOR(abus);
+    pc+=2;
+    m68k_READ_L_FROM_ADDR
+    break;       //what do bits 8,9,a  of extra word do?  (not always 0)
+  }case 4:{ // .B #<data>
+    TRUE_PC+=4;
+    INSTRUCTION_TIME_ROUND(8);
+    m68k_src_l=m68k_fetchL();
+    pc+=4;  
+    break;
+  }default:
+    ILLEGAL;
+  }
+}
+
+
+/////////////////
+// Destination //
+/////////////////
+
+
+/*  For some instructions, EA microcodes are used and the data is read even if
+    it isn't necessary for the logic of the instruction.
+    CLR etc. read before write.
+    If we really are in a write cycle, PC should be at its definitive value.
+    If it's a read cycle, we use the <EA> rules for PC.
+*/
+
+
+void m68k_get_dest_000_b(){ 
+  m68k_dest=r+PARAM_M; 
+}
+
+void m68k_get_dest_000_w(){ 
+  m68k_dest=r+PARAM_M; 
+}
+
+void m68k_get_dest_000_l(){ 
+  m68k_dest=r+PARAM_M; 
+}
+
+void m68k_get_dest_001_b(){ 
+  m68k_dest=areg+PARAM_M; 
+}
+
+void m68k_get_dest_001_w(){ 
+  m68k_dest=areg+PARAM_M; 
+}
+
+void m68k_get_dest_001_l(){ 
+  m68k_dest=areg+PARAM_M; 
+}
+
+void m68k_get_dest_010_b(){ 
+  INSTRUCTION_TIME_ROUND(4); 
+  m68k_SET_DEST_B(areg[PARAM_M]); 
+}
+
+void m68k_get_dest_010_w(){
+  INSTRUCTION_TIME_ROUND(4);
+  m68k_SET_DEST_W(areg[PARAM_M]); 
+}
+
+void m68k_get_dest_010_l(){ 
+  INSTRUCTION_TIME_ROUND(8);
+  m68k_SET_DEST_L(areg[PARAM_M]); 
+}
+
+void m68k_get_dest_011_b(){
+  INSTRUCTION_TIME_ROUND(4);
+  m68k_SET_DEST_B(areg[PARAM_M]);
+  areg[PARAM_M]+=1;
+  if(PARAM_M==7)
+    areg[PARAM_M]++;
+}
+
+void m68k_get_dest_011_w(){
+  INSTRUCTION_TIME_ROUND(4);
+  m68k_SET_DEST_W(areg[PARAM_M]);
+  areg[PARAM_M]+=2; 
+}
+
+void m68k_get_dest_011_l(){
+  INSTRUCTION_TIME_ROUND(8);
+  m68k_SET_DEST_L(areg[PARAM_M]);
+  areg[PARAM_M]+=4; 
+}
+
+void m68k_get_dest_100_b(){ 
+#if defined(SS_CPU_TRUE_PC)
+  if(CHECK_READ)
+    TRUE_PC+=2;
+#endif
+  INSTRUCTION_TIME_ROUND(6);
+  areg[PARAM_M]-=1;
+  if(PARAM_M==7)
+    areg[PARAM_M]--; 
+  m68k_SET_DEST_B(areg[PARAM_M]);
+}
+
+void m68k_get_dest_100_w(){ 
+#if defined(SS_CPU_TRUE_PC)
+  if(CHECK_READ)
+    TRUE_PC+=2;
+#endif
+  INSTRUCTION_TIME_ROUND(6);
+  areg[PARAM_M]-=2;
+  m68k_SET_DEST_W(areg[PARAM_M]); 
+}
+
+void m68k_get_dest_100_l(){
+  INSTRUCTION_TIME_ROUND(10);
+  areg[PARAM_M]-=4;
+  m68k_SET_DEST_L(areg[PARAM_M]);  
+}
+
+void m68k_get_dest_101_b(){
+  INSTRUCTION_TIME_ROUND(8);
+  register signed int fw=(signed short)m68k_fetchW();
+  pc+=2; 
+  m68k_SET_DEST_B(areg[PARAM_M]+fw);
+}
+
+void m68k_get_dest_101_w(){
+  INSTRUCTION_TIME_ROUND(8);
+  register signed int fw=(signed short)m68k_fetchW();
+  pc+=2; 
+  m68k_SET_DEST_W(areg[PARAM_M]+fw);
+}
+
+void m68k_get_dest_101_l(){
+  INSTRUCTION_TIME_ROUND(12);
+  register signed int fw=(signed short)m68k_fetchW();
+  pc+=2; 
+  m68k_SET_DEST_L(areg[PARAM_M]+fw);
+}
+
+void m68k_get_dest_110_b(){
+  INSTRUCTION_TIME_ROUND(10);
+  m68k_iriwo=m68k_fetchW();
+  pc+=2; 
+  if(m68k_iriwo&BIT_b){  //.l
+    abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
+  }else{         //.w
+    abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
+  }
+  m68k_SET_DEST_B_TO_ADDR
+}
+
+void m68k_get_dest_110_w(){
+  INSTRUCTION_TIME_ROUND(10);
+  m68k_iriwo=m68k_fetchW();
+  pc+=2; 
+  if(m68k_iriwo&BIT_b){  //.l
+    abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
+  }else{         //.w
+    abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
+  }
+  m68k_SET_DEST_W_TO_ADDR
+}
+
+void m68k_get_dest_110_l(){
+  INSTRUCTION_TIME_ROUND(14);
+  m68k_iriwo=m68k_fetchW();
+  pc+=2; 
+  if(m68k_iriwo&BIT_b){  //.l
+    abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
+  }else{         //.w
+    abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
+  }
+  m68k_SET_DEST_L_TO_ADDR
+}
+
+void m68k_get_dest_111_b(){
+  switch(ir&0x7){
+  case 0:{
+    INSTRUCTION_TIME_ROUND(8);
+    register signed int fw=(signed short)m68k_fetchW();
+    pc+=2; 
+#if defined(SS_CPU_TRUE_PC)
+  if(CHECK_READ)
+    TRUE_PC+=2;
+#endif
+    m68k_SET_DEST_B(fw)
+    break;
+  }case 1:{
+    INSTRUCTION_TIME_ROUND(12);
+    register MEM_ADDRESS fw=m68k_fetchL();
+    pc+=4;  
+#if defined(SS_CPU_TRUE_PC)
+  if(CHECK_READ)
+    TRUE_PC+=4;
+#endif
+    m68k_SET_DEST_B(fw)
+    break;
+  }default:
+    ILLEGAL;
+  }
+}
+
+void m68k_get_dest_111_w(){
+  switch(ir&0x7){
+  case 0:{
+    INSTRUCTION_TIME_ROUND(8);
+    register signed int fw=(signed short)m68k_fetchW();pc+=2; 
+#if defined(SS_CPU_TRUE_PC)
+  if(CHECK_READ)
+    TRUE_PC+=2;
+#endif
+    m68k_SET_DEST_W(fw)
+    break;
+  }case 1:{
+    INSTRUCTION_TIME_ROUND(12);
+    register MEM_ADDRESS fw=m68k_fetchL();pc+=4;  
+#if defined(SS_CPU_TRUE_PC)
+  if(CHECK_READ)
+    TRUE_PC+=4;
+#endif
+    m68k_SET_DEST_W(fw)
+    break;
+  }default:
+    ILLEGAL;
+  }
+}
+
+void m68k_get_dest_111_l(){
+  switch(ir&0x7){
+  case 0:{
+    INSTRUCTION_TIME_ROUND(12);
+    register signed int fw=(signed short)m68k_fetchW();pc+=2; 
+#if defined(SS_CPU_TRUE_PC)
+  if(CHECK_READ)
+    TRUE_PC+=2;
+#endif
+    m68k_SET_DEST_L(fw)
+    break;
+  }case 1:{
+    INSTRUCTION_TIME_ROUND(16);
+    register MEM_ADDRESS fw=m68k_fetchL();pc+=4;  
+#if defined(SS_CPU_TRUE_PC)
+  if(CHECK_READ)
+    TRUE_PC+=4;
+#endif
+    m68k_SET_DEST_L(fw)
+    break;
+  }default:
+    ILLEGAL;
+  }
+}
+
+/*  EXTRA_PREFETCH has been deactivated, it's being taken care of for
+    all instructions now, by PREFETCH_IRC
+    The negative timings correct extra timing added in instructions like ORI,
+    it seems it was to spare some code?
+*/
+
+void m68k_get_dest_000_b_faster(){
+  INSTRUCTION_TIME(-4);
+  m68k_dest=r+PARAM_M; 
+}
+
+void m68k_get_dest_000_w_faster(){
+  INSTRUCTION_TIME(-4);
+  m68k_dest=r+PARAM_M; 
+}
+
+void m68k_get_dest_000_l_faster(){
+  INSTRUCTION_TIME(-4);
+  m68k_dest=r+PARAM_M; 
+}
+
+void m68k_get_dest_001_b_faster(){ m68k_dest=areg+PARAM_M; EXTRA_PREFETCH}
+void m68k_get_dest_001_w_faster(){ m68k_dest=areg+PARAM_M; EXTRA_PREFETCH}
+void m68k_get_dest_001_l_faster(){ m68k_dest=areg+PARAM_M; EXTRA_PREFETCH}
+void m68k_get_dest_010_b_faster(){ INSTRUCTION_TIME_ROUND(4); m68k_SET_DEST_B(areg[PARAM_M]); EXTRA_PREFETCH}
+void m68k_get_dest_010_w_faster(){ INSTRUCTION_TIME_ROUND(4); m68k_SET_DEST_W(areg[PARAM_M]); EXTRA_PREFETCH}
+void m68k_get_dest_010_l_faster(){ INSTRUCTION_TIME_ROUND(8); m68k_SET_DEST_L(areg[PARAM_M]); EXTRA_PREFETCH}
+void m68k_get_dest_011_b_faster(){ INSTRUCTION_TIME_ROUND(4); m68k_SET_DEST_B(areg[PARAM_M]); areg[PARAM_M]+=1; if(PARAM_M==7)areg[7]++; EXTRA_PREFETCH}
+void m68k_get_dest_011_w_faster(){ INSTRUCTION_TIME_ROUND(4); m68k_SET_DEST_W(areg[PARAM_M]); areg[PARAM_M]+=2; EXTRA_PREFETCH}
+void m68k_get_dest_011_l_faster(){ INSTRUCTION_TIME_ROUND(8); m68k_SET_DEST_L(areg[PARAM_M]); areg[PARAM_M]+=4; EXTRA_PREFETCH}
+void m68k_get_dest_100_b_faster(){ INSTRUCTION_TIME_ROUND(6); areg[PARAM_M]-=1; if(PARAM_M==7)areg[7]--; m68k_SET_DEST_B(areg[PARAM_M]); EXTRA_PREFETCH}
+void m68k_get_dest_100_w_faster(){ INSTRUCTION_TIME_ROUND(6); areg[PARAM_M]-=2; m68k_SET_DEST_W(areg[PARAM_M]); EXTRA_PREFETCH}
+void m68k_get_dest_100_l_faster(){ INSTRUCTION_TIME_ROUND(10); areg[PARAM_M]-=4; m68k_SET_DEST_L(areg[PARAM_M]); EXTRA_PREFETCH}
+void m68k_get_dest_101_b_faster(){
+  INSTRUCTION_TIME_ROUND(8);
+  register signed int fw=(signed short)m68k_fetchW();pc+=2; 
+  m68k_SET_DEST_B(areg[PARAM_M]+fw);
+  EXTRA_PREFETCH
+}
+void m68k_get_dest_101_w_faster(){
+  INSTRUCTION_TIME_ROUND(8);
+  register signed int fw=(signed short)m68k_fetchW();pc+=2; 
+  m68k_SET_DEST_W(areg[PARAM_M]+fw);
+  EXTRA_PREFETCH
+}
+void m68k_get_dest_101_l_faster(){
+  INSTRUCTION_TIME_ROUND(12);
+  register signed int fw=(signed short)m68k_fetchW();pc+=2; 
+  m68k_SET_DEST_L(areg[PARAM_M]+fw);
+  EXTRA_PREFETCH
+}
+void m68k_get_dest_110_b_faster(){
+  INSTRUCTION_TIME_ROUND(10);
+  m68k_iriwo=m68k_fetchW();pc+=2; 
+  if(m68k_iriwo&BIT_b){  //.l
+    abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
+  }else{         //.w
+    abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
+  }
+  m68k_SET_DEST_B_TO_ADDR
+  EXTRA_PREFETCH
+}
+void m68k_get_dest_110_w_faster(){
+  INSTRUCTION_TIME_ROUND(10);
+  m68k_iriwo=m68k_fetchW();pc+=2; 
+  if(m68k_iriwo&BIT_b){  //.l
+    abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
+  }else{         //.w
+    abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
+  }
+  m68k_SET_DEST_W_TO_ADDR
+  EXTRA_PREFETCH
+}
+void m68k_get_dest_110_l_faster(){
+  INSTRUCTION_TIME_ROUND(14);
+  m68k_iriwo=m68k_fetchW();pc+=2; 
+  if(m68k_iriwo&BIT_b){  //.l
+    abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
+  }else{         //.w
+    abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
+  }
+  m68k_SET_DEST_L_TO_ADDR
+  EXTRA_PREFETCH
+}
+void m68k_get_dest_111_b_faster(){
+  switch(ir&0x7){
+  case 0:{
+    INSTRUCTION_TIME_ROUND(8);
+    register signed int fw=(signed short)m68k_fetchW();pc+=2; 
+    m68k_SET_DEST_B(fw)
+    EXTRA_PREFETCH
+    break;
+  }case 1:{
+    INSTRUCTION_TIME_ROUND(12);
+    register MEM_ADDRESS fw=m68k_fetchL();pc+=4;  
+    m68k_SET_DEST_B(fw)
+    EXTRA_PREFETCH
+    break;
+  }default:
+    ILLEGAL;
+  }
+}
+void m68k_get_dest_111_w_faster(){
+  switch(ir&0x7){
+  case 0:{
+    INSTRUCTION_TIME_ROUND(8);
+    register signed int fw=(signed short)m68k_fetchW();pc+=2; 
+#if defined(SS_CPU_TRUE_PC)
+  if(CHECK_READ)
+    TRUE_PC+=2;
+#endif
+    m68k_SET_DEST_W(fw)
+    EXTRA_PREFETCH
+    break;
+  }case 1:{
+    INSTRUCTION_TIME_ROUND(12);
+    register MEM_ADDRESS fw=m68k_fetchL();pc+=4;  
+#if defined(SS_CPU_TRUE_PC)
+  if(CHECK_READ)
+    TRUE_PC+=4;
+#endif
+    m68k_SET_DEST_W(fw)
+    EXTRA_PREFETCH
+    break;
+  }default:
+    ILLEGAL;
+  }
+}
+void m68k_get_dest_111_l_faster(){
+  switch(ir&0x7){
+  case 0:{
+    INSTRUCTION_TIME_ROUND(12);
+    register signed int fw=(signed short)m68k_fetchW();pc+=2; 
+#if defined(SS_CPU_TRUE_PC)
+  if(CHECK_READ)
+    TRUE_PC+=2;
+#endif
+    m68k_SET_DEST_L(fw)
+    EXTRA_PREFETCH
+    break;
+  }case 1:{
+    INSTRUCTION_TIME_ROUND(16);
+    register MEM_ADDRESS fw=m68k_fetchL();pc+=4;  
+#if defined(SS_CPU_TRUE_PC)
+  if(CHECK_READ)
+    TRUE_PC+=4;
+#endif
+    m68k_SET_DEST_L(fw)
+    EXTRA_PREFETCH
+    break;
+  }default:
+    ILLEGAL;
+  }
+}
+
+
 
 
 ////////////////
@@ -26,12 +866,13 @@ TM68000::TM68000() {
 
 #if defined(SS_CPU_EXCEPTION)
 
-#define LOGSECTION LOGSECTION_CRASH//SS
+#define LOGSECTION LOGSECTION_CRASH
 
-void m68k_exception::crash()
-{
-  DWORD bytes_to_stack=int((bombs==BOMBS_BUS_ERROR || bombs==BOMBS_ADDRESS_ERROR) ? (4+2+2+4+2):(4+2));
-  MEM_ADDRESS sp=(MEM_ADDRESS)(SUPERFLAG ? (areg[7] & 0xffffff):(other_sp & 0xffffff));
+void m68k_exception::crash() { // copied from cpu.cpp and improved
+  DWORD bytes_to_stack=int((bombs==BOMBS_BUS_ERROR || bombs==BOMBS_ADDRESS_ERROR)
+    ? (4+2+2+4+2):(4+2));
+  MEM_ADDRESS sp=(MEM_ADDRESS)(SUPERFLAG 
+    ? (areg[7] & 0xffffff):(other_sp & 0xffffff));
 
 #if defined(SS_DEBUG)   
   if(M68000.nExceptions!=-1)
@@ -71,8 +912,11 @@ void m68k_exception::crash()
       TRACE_LOG("BOMBS_LINE_F"); 
       break;
     }//sw
-    TRACE_LOG(") at %d\n",ABSOLUTE_CPU_TIME);
-
+#if defined(SS_CPU_TRUE_PC)
+    TRACE_LOG(") during %s\n",(action==EA_READ||CHECK_READ)?"Read":"Write");
+#else
+    TRACE_LOG(") during %s\n",(action==EA_READ)?"Read":"Write (maybe!)");
+#endif
 #ifdef DEBUG_BUILD 
     EasyStr instr=disa_d2(old_pc); // take advantage of the disassembler
     TRACE_LOG("PC=%X-IR=%X-Ins: %s -SR=%X-Bus=%X",old_pc,ir,instr.Text,sr,abus);
@@ -97,13 +941,11 @@ void m68k_exception::crash()
     DEBUG_ONLY( log_history(bombs,crash_address) );
     TRACE_LOG("Double bus error SP:%d < bytes to stack %d\n",sp,bytes_to_stack);
     perform_crash_and_burn();
-#if defined(SS_DEBUG)
-    M68000.nExceptions=-1;
-#endif
   }
   else
   {
-    INSTRUCTION_TIME_ROUND(0); //Round first for interrupts
+    //SS:never quite understood this rounding for interrupts thing
+    INSTRUCTION_TIME_ROUND(0); //Round first for interrupts 
     if(bombs==BOMBS_ILLEGAL_INSTRUCTION || bombs==BOMBS_PRIVILEGE_VIOLATION)
     {
       if(!SUPERFLAG) 
@@ -130,7 +972,7 @@ void m68k_exception::crash()
       else
       {
         TRACE_LOG("PC = %X\n\n",ad);
-        set_pc(ad);
+        M68000.SetPC(ad);
         SR_CLEAR(SR_TRACE);
         INSTRUCTION_TIME_ROUND(22); 
         interrupt_depth++; // Is this necessary?
@@ -143,71 +985,54 @@ void m68k_exception::crash()
       TRY_M68K_EXCEPTION
       {
 
-#if defined(SS_CPU_WAR_HELI2)
-/*  New fix for War Heli, based on when exactly in the MOVE process the crash
-    occured.
-    Apparently when cpu crashes while writing, the last prefetch occurs right
-    before the exception is handled, or that's what we suppose for this hack.
-    If it's true, it's weird.
-    In fact it seems wrong TODO
-*/        
-#if defined(SS_DEBUG)
-        if(((_ir & 0xF000)>>12) <3 // MOVE opcode 00, 01, 02
-          && M68000.PrefetchClass>0
-          && !prefetched_2
-          && action==EA_WRITE
-          && (ir&BITS_876)!=BITS_876_101 // (d16, An) Syntax Terror, move.b
-          && (ir&BITS_876)!=BITS_876_110 // (d8, An, Xn) pc shouldn't have +2?
-          )
-#else
-        if(_ir==0x2285) // hack of 3.3
-#endif
-        {
-//          ASSERT((_ir & 0xf000)==(b00100000 << 8)  ); //MOVE.L //tmp disable-froggies
-          ASSERT(M68000.PrefetchClass==1);
-          PREFETCH_IRC;
-          _pc+=2;
-          TRACE_LOG("Crash during write PC%X IR%X +2 for prefetch\n",_pc,_ir);
-        }
+#if defined(SS_HACKS) && !defined(SS_CPU_TRUE_PC_AND_NO_HACKS)
+/*  Using opcode specific adjustments, disabled in v3.5.1
+*/
+        int offset=0;
 
-#endif
-
-        // MOVE.L ad hoc hacks
-        if((_ir & 0xf000)==(b00100000 << 8))
+        if(SSE_HACKS_ON)
         {
-          int offset=0;
-          switch(_ir) // opcode
+          switch(_ir) // opcode in IR at crash
           {
-#if defined(SS_CPU_WAR_HELI)
-          case 0x2285: 
-            TRACE_LOG("War Heli? (use ADAT)\n");
-            offset=2; // fixes War Heli, already in Steem 3.2.
-            break;
-#endif
-#if defined(SS_CPU_PHALEON)
-          case 0x21F8:
+#if defined(SS_CPU_HACK_PHALEON)
+          case 0x21F8: // move.l $0.W,$24.w
             TRACE_LOG("Protected demo (European, Phaleon, Transbeauce 2?\n");
-            offset=-2; // fixes those protected demos
+            offset=-2; // used to fix those protected demos, but now no need?
             break;
 #endif
-          case 0x2ABB: // Lethal Xcess (STF)
+#if defined(SS_CPU_HACK_WAR_HELI)
+          case 0x2285: // move.l d5,(a1)
+            TRACE_LOG("War Heli? (use ADAT)\n");
+            offset=2; // fixes War Heli, already in Steem 3.2., but too generic
             break;
-          case 0x2235: 
-            TRACE_LOG("Super Neo Show demo?\n"); // strange beast
+#endif
+#if defined(SS_CPU_HACK_BLOOD_MONEY)
+          case 0x48d6: // movem.l a0-5,(a6)
+            TRACE_LOG("Blood Money?\n");
+            offset=2;
             break;
-          case 0x20BC:
-          case 0x2089:
-            TRACE_LOG("Cuddly demo?\n");
-            break;
-          default: // generally an emu fault
-            TRACE_LOG("MOVE.L crash - Opcode %X\n",_ir);
-            break;
+#endif
           }//sw
-          if(offset)
-            TRACE_LOG("Adjusting stacked PC %d: %X\n",offset,_pc+offset);
-          _pc+=offset;
-        }
+        }//hacks
+        if(offset)
+           TRACE_LOG("Adjusting stacked PC %X (%d) %X\n",_pc,offset,_pc+offset);
+        _pc+=offset;
+#endif//hack opcode
 
+
+#if defined(SS_CPU_DETECT_STACK_PC_USE)
+        _pc=0x123456; // push garbage!
+#elif defined(SS_CPU_TRUE_PC) 
+        if(
+#if !defined(SS_CPU_TRUE_PC_AND_NO_HACKS)
+          !SSE_HACKS_ON && 
+#endif
+          _pc!=M68000.Pc)
+        {
+          TRACE_LOG("pc %X true PC %X\n",_pc,M68000.Pc);
+          _pc=M68000.Pc;
+        }
+#endif
         TRACE_LOG("Push PC %X on %X\n",_pc,r[15]-4);
         m68k_PUSH_L(_pc);
         TRACE_LOG("Push SR %X on %X\n",_sr,r[15]-2);
@@ -229,30 +1054,46 @@ void m68k_exception::crash()
       CATCH_M68K_EXCEPTION
       {
         TRACE_LOG("Exception during exception...\n");
-        r[15]=0xf000; // R15=A7
+        r[15]=0xf000; // R15=A7  // should be halt?
       }
       END_M68K_EXCEPTION
+
       TRACE_LOG("PC = %X\n\n",LPEEK(bombs*4));
       SET_PC(LPEEK(bombs*4)); // includes final prefetch
+
       SR_CLEAR(SR_TRACE);
+
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+      INSTRUCTION_TIME_ROUND(50-4); // TODO micro timings?
+      FETCH_TIMING;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH_TIMING_SET_PC)
+      INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+#endif
+#else
       INSTRUCTION_TIME_ROUND(50); //Round for fetch
-#if defined(SS_CPU_PREFETCH) && defined(SS_DEBUG)
+#endif
+#if defined(SS_CPU_PREFETCH_CLASS)
       M68000.PrefetchClass=2;
 #endif
     }
-///    DEBUG_ONLY(log_history(bombs,crash_address));
+    DEBUG_ONLY(log_history(bombs,crash_address));
   }
   PeekEvent(); // Stop exception freeze
 }
+
 #undef LOGSECTION
+
+
 #endif//#if defined(SS_CPU_EXCEPTION)
+
+
 
 
 //////////////
 // Prefetch //
 //////////////
 
-#if defined(SS_CPU_PREFETCH)
+#if defined(SS_CPU_PREFETCH_CALL)
 
 WORD TM68000::FetchForCall(MEM_ADDRESS ad) {
   // fetch PC before pushing return address in JSR, fixes nothing
@@ -317,7 +1158,7 @@ void m68k_poke_abus2(BYTE x){
       mmu_confused_set_dest_to_addr(1,true);
       m68k_DEST_B=x;
 #if defined(SS_MMU_TRACE2)
-      TRACE("MMU %X: poke %X=%X\n",old_pc,m68k_DEST_B,x);
+      TRACE_LOG("MMU %X: poke %X=%X\n",old_pc,m68k_DEST_B,x);
 #endif
     }else 
 #endif      
@@ -330,6 +1171,23 @@ void m68k_poke_abus2(BYTE x){
       PEEK(abus)=x;
     else if (abus>=MEM_START_OF_USER_AREA)
       PEEK(abus)=x;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_IGNORE_WRITE_0)
+/*  Atari doc states:
+    A 4 word portion  of ROM  is  shadowed  at  the  start of RAM for 
+    the reset stack  pointer and program counter.  
+    Writing to this  area  or  any ROM location will also result in 
+    a bus error.
+
+    Yet for Aladin (Macintosh emulator), we mustn't crash when the bus
+    is set at 0, and we must ignore writes on 0 instead of crashing.
+
+    It must crash at 4 for Death of the Clock Cycles (bugfix 3.5.1)
+
+    No good explanation for that, we just have programs running.
+*/
+    else if(SUPERFLAG && !abus)
+      ;
+#endif
     else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
   }
 }
@@ -349,7 +1207,7 @@ void m68k_dpoke_abus2(WORD x){
       mmu_confused_set_dest_to_addr(2,true);
       m68k_DEST_W=x;
 #if defined(SS_MMU_TRACE2)
-      TRACE("MMU %X: dpoke %X=%X\n",old_pc,m68k_DEST_W,x);
+      TRACE_LOG("MMU %X: dpoke %X=%X\n",old_pc,m68k_DEST_W,x);
 #endif
     }else 
 #endif
@@ -362,6 +1220,10 @@ void m68k_dpoke_abus2(WORD x){
       DPEEK(abus)=x;
     else if(abus>=MEM_START_OF_USER_AREA)
       DPEEK(abus)=x;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_IGNORE_WRITE_0)
+    else if(SUPERFLAG && !abus)
+      ;
+#endif
     else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
   }
 }
@@ -381,7 +1243,7 @@ void m68k_lpoke_abus2(LONG x){
       mmu_confused_set_dest_to_addr(4,true);
       m68k_DEST_L=x;
 #if defined(SS_MMU_TRACE2)
-      TRACE("MMU %X: lpoke %X=%X\n",old_pc,m68k_DEST_L,x);
+      TRACE_LOG("MMU %X: lpoke %X=%X\n",old_pc,m68k_DEST_L,x);
 #endif
     }else 
 #endif
@@ -394,6 +1256,10 @@ void m68k_lpoke_abus2(LONG x){
       LPEEK(abus)=x;
     else if(abus>=MEM_START_OF_USER_AREA)
       LPEEK(abus)=x;
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_IGNORE_WRITE_0)
+    else if(SUPERFLAG && !abus)
+      ;
+#endif
     else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
   }
 }
@@ -405,72 +1271,7 @@ void m68k_lpoke_abus2(LONG x){
 // Redone instructions //
 /////////////////////////
 
-#if defined(SS_CPU_CLR)
 
-//#undef SS_CPU_LINE_4_TIMINGS
-
-
-// CLR reads before writing but we leave timings unchanged (Decade Menu)
-// It fixes nothing that I know, it was a 'TODO' from Steem authors
-
-void                              m68k_clr_b(){
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
-  FETCH_TIMING;
-#endif
-
-  if (DEST_IS_REGISTER==0){INSTRUCTION_TIME(4);}
-  m68k_GET_DEST_B_NOT_A;
-  PREFETCH_IRC;
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-  int save=cpu_cycles;
-  if (DEST_IS_REGISTER==0) 
-    M68000.m68kReadBFromAddr();
-  cpu_cycles=save;
-  m68k_DEST_B=0;
-  SR_CLEAR(SR_N+SR_V+SR_C);
-  SR_SET(SR_Z);
-}void                             m68k_clr_w(){
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
-  FETCH_TIMING;
-#endif
-
-  if(DEST_IS_REGISTER==0){INSTRUCTION_TIME(4);}
-  m68k_GET_DEST_W_NOT_A;
-  PREFETCH_IRC;
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-  int save=cpu_cycles;
-  if (DEST_IS_REGISTER==0) 
-    M68000.m68kReadWFromAddr();
-  cpu_cycles=save;
-  m68k_DEST_W=0;
-  SR_CLEAR(SR_N+SR_V+SR_C);
-  SR_SET(SR_Z);
-}void                             m68k_clr_l(){
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS))
-  FETCH_TIMING;
-#endif
-
-  if(DEST_IS_REGISTER){INSTRUCTION_TIME(2);}else {INSTRUCTION_TIME(8);}
-  m68k_GET_DEST_L_NOT_A;
-  PREFETCH_IRC;
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-  int save=cpu_cycles;
-  if (DEST_IS_REGISTER==0) 
-    M68000.m68kReadLFromAddr();
-  cpu_cycles=save;
-  m68k_DEST_L=0;
-  SR_CLEAR(SR_N+SR_V+SR_C);
-  SR_SET(SR_Z);
-}
-
-//#define SS_CPU_LINE_4_TIMINGS
-#endif
 
 #if defined(SS_CPU_DIV) 
 
@@ -547,21 +1348,6 @@ void                              m68k_divs(){
 //#define SS_CPU_LINE_8_TIMINGS
 #endif
 
-/*  Move have each its switch (useful when debugging); various fixes.
-    There's no FETCH_TIMING when moving to register, which isn't correct!
-    But all Steem timings hold together.
-    If we 'move' (lol) the first INSTRUCTION_TIME(4) after 'get_source',
-    lots of programs are broken.
-    We need to compensate it at the 'read SDP' function, with a filter on
-    opcode. In most instructions, FETCH_TIMING comes at once, which isn't 
-    correct. The general cycle is 'read', 'fetch', 'write if necessary'.
-    If we fix Steem timings, we should do all at once, or use filters 
-    (supposing we know where to apply them, like in 'read SDP').
-    The -4 in INSTRUCTION_TIME() below are explained so: we start from
-    official timing, we take 4 for the first INSTRUCTION_TIME(4), we
-    take 4 for instruction prefetch.
-*/
-
 /*
 MOVE instructions. Most variants, except the ones noted below
 
@@ -630,8 +1416,9 @@ behavior is the same as other MOVE variants (class 1 instruction).
 
 void m68k_0001() {  // move.b
 
-#if !defined(SS_CPU_LINE_1_TIMINGS) && !defined(SS_CPU_PREFETCH_TIMING) \
-  && !defined(SS_CPU_PREFETCH_MOVE_MEM)
+#if (!defined(SS_CPU_LINE_3_TIMINGS) && !defined(SS_CPU_PREFETCH_TIMING)) \
+  || !defined(SS_CPU_PREFETCH_MOVE_MEM)
+  
 #if defined(SS_CPU_FETCH_TIMING)
   if((ir&BITS_876)==BITS_876_000)
     FETCH_TIMING_NO_ROUND; // it's the same, but recorded as fetch timing
@@ -640,12 +1427,12 @@ void m68k_0001() {  // move.b
     INSTRUCTION_TIME(4);
 #endif
 
-#if defined(SS_CPU_PREFETCH)
+#if defined(SS_CPU_PREFETCH_CLASS)
   M68000.PrefetchClass=1; // by default 
 #endif
 
-#if defined(SS_CPU_POST_INC)
-  BOOL PostIncrement=FALSE;
+#if defined(SS_CPU_POST_INC) || defined(SS_CPU_PRE_DEC)
+  int UpdateAn=0; // for (An)+ and -(An) both, based on microcodes analysis
 #endif
 
 #if defined(SS_CPU_ASSERT_ILLEGAL)
@@ -662,6 +1449,9 @@ void m68k_0001() {  // move.b
   m68k_GET_SOURCE_B;
 
   // Destination
+
+  TRUE_PC=pc+2;
+
   if((ir&BITS_876)==BITS_876_000)
   { // Dn
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
@@ -691,13 +1481,11 @@ void m68k_0001() {  // move.b
     case BITS_876_011: // (An)+
 #if (defined(SS_CPU_LINE_1_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
   && defined(SS_CPU_PREFETCH_MOVE_MEM)
-
       INSTRUCTION_TIME(4);
 #endif
-
       abus=areg[PARAM_N];
 #if defined(SS_CPU_POST_INC)
-      PostIncrement=TRUE;
+      UpdateAn=(PARAM_N==7)?2:1;
 #else
       areg[PARAM_N]++; 
       if(PARAM_N==7)
@@ -705,7 +1493,7 @@ void m68k_0001() {  // move.b
 #endif
       break;
     case BITS_876_100: // -(An)
-#if defined(SS_CPU_PREFETCH)
+#if defined(SS_CPU_PREFETCH_CLASS)
       M68000.PrefetchClass=0; 
       PREFETCH_IRC;
       FETCH_TIMING;
@@ -714,11 +1502,15 @@ void m68k_0001() {  // move.b
   && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
-
+#if defined(SS_CPU_PRE_DEC)
+      UpdateAn=(PARAM_N==7)?-2:-1;
+      abus=areg[PARAM_N]+UpdateAn;
+#else
       areg[PARAM_N]--;
       if(PARAM_N==7)
-        areg[7]--;
+        areg[PARAM_N]--;
       abus=areg[PARAM_N];
+#endif
       break;
     case BITS_876_101: // (d16, An)
       INSTRUCTION_TIME(12-4-4);
@@ -726,9 +1518,8 @@ void m68k_0001() {  // move.b
   && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
-
       abus=areg[PARAM_N]+(signed short)m68k_fetchW();
-      pc+=2;
+      pc+=2; 
       break;
     case BITS_876_110: // (d8, An, Xn)
       INSTRUCTION_TIME(14-4-4);
@@ -737,7 +1528,7 @@ void m68k_0001() {  // move.b
       INSTRUCTION_TIME(4);
 #endif
 
-      m68k_iriwo=m68k_fetchW();pc+=2;
+      m68k_iriwo=m68k_fetchW();pc+=2; 
       if(m68k_iriwo&BIT_b){  //.l
         abus=areg[PARAM_N]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
       }else{         //.w
@@ -754,10 +1545,10 @@ void m68k_0001() {  // move.b
         INSTRUCTION_TIME(4);
 #endif
         abus=0xffffff & (unsigned long)((signed long)((signed short)m68k_fetchW()));
-        pc+=2;
+        pc+=2; 
         break;
       case BITS_ba9_001: // (xxx).L
-#if defined(SS_CPU_PREFETCH)
+#if defined(SS_CPU_PREFETCH_CLASS)
         if(refetch)
           M68000.PrefetchClass=2; // only .L
 #endif
@@ -768,7 +1559,7 @@ void m68k_0001() {  // move.b
 #endif
 
         abus=m68k_fetchL() & 0xffffff;
-        pc+=4;
+        pc+=4;  
         break;
 #if !defined(SS_CPU_ASSERT_ILLEGAL)
       default:
@@ -786,16 +1577,11 @@ void m68k_0001() {  // move.b
     }
     m68k_poke_abus(m68k_src_b); // write; could crash
 
-#if defined(SS_CPU_POST_INC)
-    if(PostIncrement)
-    {
-      areg[PARAM_N]++; 
-      if(PARAM_N==7)
-        areg[7]++;
-    }
+#if defined(SS_CPU_POST_INC) || defined(SS_CPU_PRE_DEC)
+    areg[PARAM_N]+=UpdateAn; // can be 0,-1,-2,+1,+2
 #endif
 
-#if defined(SS_CPU_PREFETCH)
+#if defined(SS_CPU_PREFETCH_CLASS)
     if(M68000.PrefetchClass==2)
     {
       REFETCH_IR;
@@ -804,11 +1590,12 @@ void m68k_0001() {  // move.b
     if(M68000.PrefetchClass) // -(An), already fetched
       FETCH_TIMING;
 #else
-    if (refetch) prefetch_buf[0]=*(lpfetch-MEM_DIR);
+    if (refetch) 
+      prefetch_buf[0]=*(lpfetch-MEM_DIR);
     FETCH_TIMING;  
 #endif  
   }// to memory
-#if defined(SS_CPU_PREFETCH)
+#if defined(SS_CPU_PREFETCH_CLASS)
   if(M68000.PrefetchClass==1) // classes 0 & 2 already handled
   {
     if((ir&BITS_876)==BITS_876_000)
@@ -817,6 +1604,7 @@ void m68k_0001() {  // move.b
       PREFETCH_IRC;
   }
 #endif
+
 }
 
 #endif
@@ -826,8 +1614,8 @@ void m68k_0001() {  // move.b
 void m68k_0010()  //move.l
 {
 
-#if !defined(SS_CPU_LINE_2_TIMINGS) && !defined(SS_CPU_PREFETCH_TIMING) \
-  && !defined(SS_CPU_PREFETCH_MOVE_MEM)
+#if (!defined(SS_CPU_LINE_3_TIMINGS) && !defined(SS_CPU_PREFETCH_TIMING)) \
+  || !defined(SS_CPU_PREFETCH_MOVE_MEM)
 #if defined(SS_CPU_FETCH_TIMING)
   if((ir&BITS_876)==BITS_876_000
     ||(ir & BITS_876)==BITS_876_001)
@@ -837,12 +1625,12 @@ void m68k_0010()  //move.l
   INSTRUCTION_TIME(4);
 #endif
 
-#if defined(SS_CPU_PREFETCH)
+#if defined(SS_CPU_PREFETCH_CLASS)
   M68000.PrefetchClass=1; // by default 
 #endif
 
-#if defined(SS_CPU_POST_INC)
-  BOOL PostIncrement=FALSE;
+#if defined(SS_CPU_POST_INC) || defined(SS_CPU_PRE_DEC)
+  int UpdateAn=0; // for (An)+ and -(An) both, based on microcodes analysis
 #endif
 
 #if defined(SS_CPU_ASSERT_ILLEGAL)
@@ -853,7 +1641,11 @@ void m68k_0010()  //move.l
 #endif
 
   m68k_GET_SOURCE_L; // where tb2 etc crash
+
   // Destination
+
+  TRUE_PC=pc+2; // eg. War Heli move.l d5,(a1)
+
   if ((ir & BITS_876)==BITS_876_000) // Dn
   { 
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
@@ -883,7 +1675,6 @@ void m68k_0010()  //move.l
   && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
-
       abus=areg[PARAM_N];
       break;
     case BITS_876_011: // (An)+
@@ -892,10 +1683,9 @@ void m68k_0010()  //move.l
   && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
-
       abus=areg[PARAM_N];
 #if defined(SS_CPU_POST_INC)
-      PostIncrement=TRUE;
+      UpdateAn=4;
 #else
       areg[PARAM_N]+=4;
 #endif
@@ -907,13 +1697,18 @@ void m68k_0010()  //move.l
       INSTRUCTION_TIME(4);
 #endif
 
-#if defined(SS_CPU_PREFETCH)
+#if defined(SS_CPU_PREFETCH_CLASS)
       M68000.PrefetchClass=0; 
       PREFETCH_IRC;
       FETCH_TIMING;
 #endif  
+#if defined(SS_CPU_PRE_DEC)
+      UpdateAn=-4;
+      abus=areg[PARAM_N]+UpdateAn;
+#else
       areg[PARAM_N]-=4;
       abus=areg[PARAM_N];
+#endif
       break;
     case BITS_876_101: // (d16, An)
       INSTRUCTION_TIME(16-4-4);
@@ -923,7 +1718,7 @@ void m68k_0010()  //move.l
 #endif
 
       abus=areg[PARAM_N]+(signed short)m68k_fetchW();
-      pc+=2;
+      pc+=2; 
       break;
     case BITS_876_110: // (d8, An, Xn)
       INSTRUCTION_TIME(18-4-4);
@@ -932,7 +1727,7 @@ void m68k_0010()  //move.l
       INSTRUCTION_TIME(4);
 #endif
 
-      m68k_iriwo=m68k_fetchW();pc+=2;
+      m68k_iriwo=m68k_fetchW();pc+=2; 
       if(m68k_iriwo&BIT_b){  //.l
         abus=areg[PARAM_N]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
       }else{         //.w
@@ -950,21 +1745,21 @@ void m68k_0010()  //move.l
 #endif
 
         abus=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
-        pc+=2;
+        pc+=2; 
         break;
       case BITS_ba9_001: // (xxx).L
         INSTRUCTION_TIME(20-4-4);
 #if (defined(SS_CPU_LINE_2_TIMINGS) || defined(SS_CPU_PREFETCH_TIMING)) \
   && defined(SS_CPU_PREFETCH_MOVE_MEM)
-      INSTRUCTION_TIME(4);
+        INSTRUCTION_TIME(4);
 #endif
 
-#if defined(SS_CPU_PREFETCH)
+#if defined(SS_CPU_PREFETCH_CLASS)
         if(refetch) 
           M68000.PrefetchClass=2; 
 #endif 
         abus=m68k_fetchL()&0xffffff;
-        pc+=4;
+        pc+=4;  
         break;
 #if !defined(SS_CPU_ASSERT_ILLEGAL)
       default:
@@ -981,12 +1776,11 @@ void m68k_0010()  //move.l
     }
     m68k_lpoke_abus(m68k_src_l);
 
-#if defined(SS_CPU_POST_INC)
-    if(PostIncrement)
-      areg[PARAM_N]+=4;
+#if defined(SS_CPU_POST_INC) || defined(SS_CPU_PRE_DEC)
+    areg[PARAM_N]+=UpdateAn; // can be 0,-4,+4
 #endif
 
-#if defined(SS_CPU_PREFETCH)
+#if defined(SS_CPU_PREFETCH_CLASS)
     if(M68000.PrefetchClass==2)
     {
       REFETCH_IR;
@@ -1000,16 +1794,21 @@ void m68k_0010()  //move.l
 #endif  
 
   }// to memory
-#if defined(SS_CPU_PREFETCH)
+#if defined(SS_CPU_PREFETCH_CLASS)
   if(M68000.PrefetchClass==1)
   {
     if((ir&BITS_876)==BITS_876_000 || (ir & BITS_876)==BITS_876_001)
       PREFETCH_IRC_NO_ROUND;
     else
+#ifdef TEST_01
+      PREFETCH_IRC_NO_ROUND;
+#else
       PREFETCH_IRC;
-  }
-
 #endif
+
+  }
+#endif
+
 }
 
 #endif
@@ -1018,8 +1817,8 @@ void m68k_0010()  //move.l
 
 void m68k_0011() //move.w
 {
-#if !defined(SS_CPU_LINE_3_TIMINGS) && !defined(SS_CPU_PREFETCH_TIMING) \
-  && !defined(SS_CPU_PREFETCH_MOVE_MEM)
+#if (!defined(SS_CPU_LINE_3_TIMINGS) && !defined(SS_CPU_PREFETCH_TIMING)) \
+  || !defined(SS_CPU_PREFETCH_MOVE_MEM)
 #if defined(SS_CPU_FETCH_TIMING)
   if((ir&BITS_876)==BITS_876_000
     ||(ir & BITS_876)==BITS_876_001)
@@ -1029,12 +1828,12 @@ void m68k_0011() //move.w
   INSTRUCTION_TIME(4);
 #endif
 
-#if defined(SS_CPU_PREFETCH)
+#if defined(SS_CPU_PREFETCH_CLASS)
   M68000.PrefetchClass=1; // by default 
 #endif
 
-#if defined(SS_CPU_POST_INC)
-  BOOL PostIncrement=FALSE;
+#if defined(SS_CPU_POST_INC) || defined(SS_CPU_PRE_DEC)
+  int UpdateAn=0; // for (An)+ and -(An) both, based on microcodes analysis
 #endif
 
 #if defined(SS_CPU_ASSERT_ILLEGAL)
@@ -1045,7 +1844,11 @@ void m68k_0011() //move.w
 #endif
 
   m68k_GET_SOURCE_W;
+
   // Destination
+
+  TRUE_PC=pc+2;
+
   if ((ir & BITS_876)==BITS_876_000) // Dn
   {
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
@@ -1080,10 +1883,9 @@ void m68k_0011() //move.w
   && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
-
       abus=areg[PARAM_N];
 #if defined(SS_CPU_POST_INC)
-      PostIncrement=TRUE; // fixes Beyond loader
+      UpdateAn=2; // fixes Beyond loader
 #else
       areg[PARAM_N]+=2;
 #endif
@@ -1093,14 +1895,18 @@ void m68k_0011() //move.w
   && defined(SS_CPU_PREFETCH_MOVE_MEM)
       INSTRUCTION_TIME(4);
 #endif
-
-#if defined(SS_CPU_PREFETCH)
+#if defined(SS_CPU_PREFETCH_CLASS)
       M68000.PrefetchClass=0; 
-      PREFETCH_IRC;
+      PREFETCH_IRC; // fixes 4pixel Rasters demo
       FETCH_TIMING;
 #endif  
+#if defined(SS_CPU_PRE_DEC)
+      UpdateAn=-2;
+      abus=areg[PARAM_N]+UpdateAn;
+#else
       areg[PARAM_N]-=2;
       abus=areg[PARAM_N];
+#endif
       break;
     case BITS_876_101: // (d16, An)
       INSTRUCTION_TIME(12-4-4);
@@ -1116,7 +1922,7 @@ void m68k_0011() //move.w
         && Shifter.FetchingLine())
         Shifter.Render(LINECYCLES,DISPATCHER_CPU); 
 #endif
-      pc+=2;
+      pc+=2; 
       break;
     case BITS_876_110: // (d8, An, Xn)
       INSTRUCTION_TIME(14-4-4);
@@ -1125,7 +1931,7 @@ void m68k_0011() //move.w
       INSTRUCTION_TIME(4);
 #endif
 
-      m68k_iriwo=m68k_fetchW();pc+=2;
+      m68k_iriwo=m68k_fetchW();pc+=2; 
       if(m68k_iriwo&BIT_b){  //.l
         abus=areg[PARAM_N]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
       }else{         //.w
@@ -1143,7 +1949,7 @@ void m68k_0011() //move.w
 #endif
 
         abus=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
-        pc+=2;
+        pc+=2; 
         break;
       case BITS_ba9_001: // (xxx).L
         INSTRUCTION_TIME(16-4-4);
@@ -1152,12 +1958,12 @@ void m68k_0011() //move.w
       INSTRUCTION_TIME(4);
 #endif
 
-#if defined(SS_CPU_PREFETCH)
+#if defined(SS_CPU_PREFETCH_CLASS)
         if(refetch) 
           M68000.PrefetchClass=2; 
 #endif  
         abus=m68k_fetchL()&0xffffff;
-        pc+=4;
+        pc+=4;  
         break;
 #if defined(SS_CPU_ASSERT_ILLEGAL)
       default:
@@ -1172,15 +1978,13 @@ void m68k_0011() //move.w
     if (m68k_src_w & MSB_W){
       SR_SET(SR_N);
     }
-
     m68k_dpoke_abus(m68k_src_w);
 
-#if defined(SS_CPU_POST_INC)
-    if(PostIncrement)
-      areg[PARAM_N]+=2;
+#if defined(SS_CPU_POST_INC) || defined(SS_CPU_PRE_DEC)
+    areg[PARAM_N]+=UpdateAn; // can be 0,-2,+2
 #endif
 
-#if defined(SS_CPU_PREFETCH)
+#if defined(SS_CPU_PREFETCH_CLASS)
     if(M68000.PrefetchClass==2)
     {
       REFETCH_IR;
@@ -1193,13 +1997,18 @@ void m68k_0011() //move.w
     FETCH_TIMING;  // move fetches after instruction
 #endif  
   }// to memory
-#if defined(SS_CPU_PREFETCH)
+#if defined(SS_CPU_PREFETCH_CLASS)
   if(M68000.PrefetchClass==1)
   {
     if((ir&BITS_876)==BITS_876_000 || (ir & BITS_876)==BITS_876_001)
       PREFETCH_IRC_NO_ROUND;
     else
+#ifdef TEST_01
+      PREFETCH_IRC_NO_ROUND;
+#else
       PREFETCH_IRC;
+#endif
+
   }
 
 #endif
