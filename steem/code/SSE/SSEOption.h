@@ -5,7 +5,6 @@
     (internal use).
 */
 
-
 #include "SSE.h" 
 
 #ifdef WIN32
@@ -17,17 +16,22 @@
 struct TOption {
   // We keep all options in the structure so that snapshots are compatible
   // even if a feature isn't compiled
-  int Hacks;
-  int HD6301Emu;
-  int STEMicrowire;
-  int PSGFilter;
-  int STModel;
-  int CaptureMouse;
-  int DisplaySize;// 0=Steem 3.2 1,2 Large 3 Very large
-  int StealthMode;
-  int OutputTraceToFile; // can be disabled in Boiler // BOOL -> int for Unix...
-  int TraceFileLimit; // stop TRACING to file at +-3+MB // BOOL -> int for Unix...
-  int WakeUpState; 
+  BYTE STModel;
+  BYTE DisplaySize;// 0=Steem 3.2 1,2 Large 3 Very large
+  BYTE WakeUpState; 
+  unsigned int Hacks:1;
+  unsigned int HD6301Emu:1;
+  unsigned int STEMicrowire:1;
+  unsigned int PSGFilter:1;
+  unsigned int CaptureMouse:1;
+  unsigned int StealthMode:1;
+  unsigned int OutputTraceToFile:1; // can be disabled in Boiler // BOOL -> int for Unix...
+  unsigned int TraceFileLimit:1; // stop TRACING to file at +-3+MB // BOOL -> int for Unix...
+  unsigned int UseSDL:1;
+  unsigned int OsdDriveInfo:1;
+  unsigned int Dsp:1; // giving the ability to disable buggy DSP
+  unsigned int OsdImageName:1;
+  unsigned int PastiJustSTX:1;
 #ifdef __cplusplus // visible only to C++ objects
   TOption();
   void Init();
@@ -41,7 +45,7 @@ extern "C" TOption SSEOption;
 extern struct TOption SSEOption;
 #endif
 
-// All access through macros to allow for struct not defined!
+// these macros were considered useful at some point
 #define SSE_HACKS_ON (SSEOption.Hacks)
 #define HD6301EMU_ON (SSEOption.HD6301Emu)
 #define MICROWIRE_ON (SSEOption.STEMicrowire)
@@ -54,7 +58,11 @@ extern struct TOption SSEOption;
 #define USE_TRACE_FILE (SSEOption.OutputTraceToFile)
 #define TRACE_FILE_REWIND (SSEOption.TraceFileLimit)
 #define WAKE_UP_STATE (SSEOption.WakeUpState)
-
+#define USE_SDL (SSEOption.UseSDL)
+#define OSD_DRIVE_INFO (SSEOption.OsdDriveInfo)
+#define DSP_ENABLED (SSEOption.Dsp)
+#define OSD_IMAGE_NAME (SSEOption.OsdImageName)
+#define PASTI_JUST_STX (SSEOption.PastiJustSTX)
 #else//!defined(SS_SSE_OPTION_STRUCT)
 
 #endif//#if defined(SS_SSE_OPTION_STRUCT)
@@ -63,22 +71,19 @@ extern struct TOption SSEOption;
 #if defined(SS_SSE_CONFIG_STRUCT)
 
 struct TConfig {
-  // files to load at start, were they found?
-  // we list them all, use will be progressive
-  enum {
-    UNRARDLL,
-    SDLDLL,
-    HD6301V1IMG,
-    UNZIP32DLL,
-    CAPSIMGDLL,
-    PASTIDLL,
-    MAX_LIST
-  } FileList;
-  int Loaded[MAX_LIST];
+
   int DDFullscreenMask; // mask?
+
+  // files to load at start, were they found?
+  unsigned int UnrarDll:1;
+  unsigned int SdlDll:1;
+  unsigned int Hd6301v1Img:1;
+  unsigned int Unzip32Dll:1;
+  unsigned int CapsImgDll:1;
+  unsigned int PastiDll:1;
+
 #ifdef __cplusplus // visible only to C++ objects
   TConfig();
-//  void Init();
 #endif
 };
 
@@ -89,11 +94,13 @@ extern "C" TConfig SSEConfig;
 extern struct TConfig SSEConfig;
 #endif
 
-#define CAPSIMG_OK (SSEConfig.Loaded[TConfig::CAPSIMGDLL])
+#define CAPSIMG_OK (SSEConfig.CapsImgDll)
 #define DD_FULLSCREEN (SSEConfig.DDFullscreenMask)
-#define HD6301_OK (SSEConfig.Loaded[TConfig::HD6301V1IMG])
-#define SDL_OK (SSEConfig.Loaded[TConfig::SDLDLL])
-#define UNRAR_OK (SSEConfig.Loaded[TConfig::UNRARDLL])
+#define HD6301_OK (SSEConfig.Hd6301v1Img)
+#define SDL_OK (SSEConfig.SdlDll)
+#define UNRAR_OK (SSEConfig.UnrarDll)
+
+
 
 #else//#if ! defined(SS_SSE_CONFIG_STRUCT)
 
@@ -104,8 +111,6 @@ extern struct TConfig SSEConfig;
 #define UNRAR_OK (iDummy)
 
 #endif//#if defined(SS_SSE_CONFIG_STRUCT)
-
-
 
 #endif//#ifndef SSEOPTION_H
 

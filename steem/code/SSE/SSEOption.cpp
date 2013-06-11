@@ -24,8 +24,6 @@ TOption::TOption() {
 
 
 void TOption::Init() {
-  //TRACE("init SSEOption\n");
-//  ZeroMemory(this,sizeof(TOption)); 
 #if defined(SS_HACKS)
   Hacks=TRUE;
 #endif
@@ -44,8 +42,12 @@ void TOption::Init() {
   OutputTraceToFile=FALSE; 
 #endif
   TraceFileLimit=FALSE;//TRUE; // stop TRACING to file at +-3+MB
-
   WakeUpState=0; 
+  UseSDL=0;
+  OsdDriveInfo=1;
+  Dsp=1;
+  OsdImageName=1;
+  PastiJustSTX=1;
 }
 
 #endif//#if defined(SS_SSE_OPTION_STRUCT)

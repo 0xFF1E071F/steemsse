@@ -1170,11 +1170,6 @@ void stemdos_intercept_trap_1()
       return;
     }case 0x3f:{ //read
       int h=m68k_dpeek(sp+2);
-#if defined(STEVEN_SEAGAL___)
-      long count=m68k_lpeek(sp+4);
-      MEM_ADDRESS buf=m68k_lpeek(sp+8);
-      TRACE("Read %d in file to %x\n",count,buf);
-#endif
       if (h>=0 && h<6) h=stemdos_std_handle_forced_to[h];
       if (h>=6 && h<=45){
         if (stemdos_file[h].open){ //one of ours

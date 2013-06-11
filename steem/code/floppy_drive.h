@@ -7,8 +7,9 @@
 #define FIMAGE_DIMNOMAGIC          6
 #define FIMAGE_DIMTYPENOTSUPPORTED 7
 
+
 typedef struct{
-  BYTE Track,Side,SectorNum,SectorLen,CRC1,CRC2;
+    BYTE Track,Side,SectorNum,SectorLen,CRC1,CRC2;
 }FDC_IDField;
 
 typedef struct{
@@ -27,6 +28,11 @@ public:
     0;PastiBuf=NULL;RemoveDisk();}
 
   ~TFloppyImage()            { RemoveDisk(); }
+
+
+#if defined(STEVEN_SEAGAL) && defined(SS_PASTI_NO_RESET)
+  EasyStr GetImageFile() {return ImageFile;}
+#endif
 
   int SetDisk(EasyStr,EasyStr="",BPBINFO* = NULL,BPBINFO* = NULL);
   EasyStr GetDisk()  { return ImageFile; }

@@ -9,13 +9,18 @@ for Steem's memory snapshots system.
 #pragma message("Included for compilation: loadsave_emu.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL)
+extern EasyStr RunDir,WriteDir,INIFile,ScreenShotFol;
+extern EasyStr LastSnapShot,BootStateFile,StateHist[10],AutoSnapShotName;
+#endif
+
 //---------------------------------------------------------------------------
 void ReadWriteVar(void *lpVar,DWORD szVar,NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &pMem ),
                         int LoadOrSave,int Type,int Version)
 {
   bool SaveSize;   // SS Steem saves size, so we may extend structs with no worry
   if (Type==0){ // Variable
-    SaveSize=(Version==17);
+    SaveSize=(Version==17); //SS wasn't stupid either
   }else if (Type==1){ // Array
     SaveSize=(Version>=3);
   }else{  // Struct
@@ -28,7 +33,6 @@ void ReadWriteVar(void *lpVar,DWORD szVar,NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( B
       fwrite(lpVar,1,szVar,f);
     }else{
       fread(lpVar,1,szVar,f);
-      //TRACE("Read
     }
 //    log_write(Str(szVar));
   }else{
@@ -129,8 +133,19 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(shifter_x);            //4
   ReadWrite(shifter_y);            //4
   ReadWrite(shifter_scanline_width_in_bytes); //4 //SS: unused
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+  {
+    int tmp=shifter_fetch_extra_words;
+    ReadWrite(tmp);       //4
+    shifter_fetch_extra_words=(BYTE)tmp;
+    tmp=shifter_hscroll;
+    ReadWrite(tmp);       //4
+    shifter_hscroll=(BYTE)tmp;
+  }
+#else
   ReadWrite(shifter_fetch_extra_words);       //4
   ReadWrite(shifter_hscroll);                 //4
+#endif
   if (Version==17 || Version==18){ // The unreleased freak versions!
     ReadWrite(screen_res);
   }else{
@@ -183,7 +198,15 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(dma_mode);          //2
   ReadWrite(dma_status);        //1
   ReadWrite(dma_address);       //4
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+  {
+    int dma_sector_count_tmp=dma_sector_count;
+    ReadWrite(dma_sector_count_tmp);
+    dma_sector_count=dma_sector_count_tmp;
+  }
+#else
   ReadWrite(dma_sector_count);  //4
+#endif
   ReadWrite(fdc_cr);            //1
   ReadWrite(fdc_tr);            //1
   ReadWrite(fdc_sr);            //1
@@ -191,8 +214,18 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(fdc_dr);                     //1
   ReadWrite(fdc_last_step_inwards_flag); //1
   ReadWriteArray(floppy_head_track);
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+  {
+    int floppy_mediach_tmp[2];
+    floppy_mediach_tmp[0]=floppy_mediach[0];
+    floppy_mediach_tmp[1]=floppy_mediach[1];
+    ReadWriteArray(floppy_mediach_tmp);
+    floppy_mediach[0]=floppy_mediach_tmp[0];
+    floppy_mediach[1]=floppy_mediach_tmp[1];
+  }
+#else
   ReadWriteArray(floppy_mediach);
-
+#endif
 #ifdef DISABLE_STEMDOS
   int stemdos_Pexec_list_ptr=0;
   MEM_ADDRESS stemdos_Pexec_list[76];
@@ -245,6 +278,20 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   if (Version>=5) ReadWriteArray(ST_Key_Down);
 
   if (Version>=8) ReadWriteStruct(ACIA_IKBD);
+
+#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_USE_REGISTERS)
+  if(Version<44 && LoadOrSave==LS_LOAD) //v3.5.1
+  {
+    ACIA_IKBD.CR=0x96; // usually
+    ACIA_IKBD.SR=2; // usually
+    ACIA_MIDI.CR=0x95; // usually
+    ACIA_MIDI.SR=2; // usually
+  }
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_DOUBLE_BUFFER_TX)
+  ACIA_IKBD.LineRxBusy=0;
+  ACIA_IKBD.LineTxBusy=0;
+#endif
 
   if (Version>=9){
 #ifdef DISABLE_STEMDOS
@@ -418,7 +465,15 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   bool spin_up=bool(fdc_spinning_up);
   if (Version>=32) ReadWrite(spin_up);
   if (Version>=33){
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+    {
+      int fdc_spinning_up_tmp=fdc_spinning_up;
+      ReadWrite(fdc_spinning_up_tmp);
+      fdc_spinning_up=fdc_spinning_up_tmp;
+    }
+#else
     ReadWrite(fdc_spinning_up);
+#endif
   }else if (LoadOrSave==LS_LOAD){
     fdc_spinning_up=spin_up;
   }
@@ -427,10 +482,45 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 
   if (Version>=35){
     ReadWrite(psg_reg_data);
+
+#if defined(STEVEN_SEAGAL) && defined(SS_DMA_FIFO_READ_ADDRESS2)
+    BYTE fdc_read_address_buffer_len=0;
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+    {
+      int floppy_type1_command_active_tmp=floppy_type1_command_active;
+      ReadWrite(floppy_type1_command_active_tmp);
+      floppy_type1_command_active=floppy_type1_command_active_tmp;
+      int fdc_read_address_buffer_len_tmp=fdc_read_address_buffer_len;
+      ReadWrite(fdc_read_address_buffer_len_tmp);
+      fdc_read_address_buffer_len=fdc_read_address_buffer_len_tmp;
+    }
+#else
     ReadWrite(floppy_type1_command_active);
     ReadWrite(fdc_read_address_buffer_len);
+#endif
+
+
+#if defined(STEVEN_SEAGAL) && defined(SS_DMA_FIFO_READ_ADDRESS2)
+    {
+      BYTE fdc_read_address_buffer_fake[20];
+      ReadWriteArray(fdc_read_address_buffer_fake);
+    }
+#else
     ReadWriteArray(fdc_read_address_buffer);
+#endif
+
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+    {
+      int dma_bytes_written_for_sector_count_tmp=dma_bytes_written_for_sector_count;
+      ReadWrite(dma_bytes_written_for_sector_count_tmp);
+      dma_bytes_written_for_sector_count=dma_bytes_written_for_sector_count_tmp;
+    }
+#else
     ReadWrite(dma_bytes_written_for_sector_count);
+#endif
   }
 
   if (Version>=36){
@@ -500,7 +590,12 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 
   BYTE *pasti_block=NULL;
   DWORD pasti_block_len=0;
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_REWRITE)
+  bool pasti_old_active;
+#else
   int pasti_old_active;
+#endif
 #if USE_PASTI
   pasti_old_active=pasti_active;
 #else
@@ -626,10 +721,43 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
   }
 
-  if(Version>=42) // Steem 3.5
+  //3.5.0: nothing special
+
+  if(Version>=44) // Steem 3.5.1
   // while beta this all may change...
   {
-//    ReadWrite(IPFDisk);//tmp- silly...
+#if defined(SS_SHIFTER)
+    ReadWriteStruct(Shifter); // for res & sync
+#endif
+
+#if defined(SS_IKBD_6301) // too bad it was forgotten before
+    WORD HD6301EMU_ON_tmp=HD6301EMU_ON;
+    ReadWrite(HD6301EMU_ON_tmp); // but is it better?
+    HD6301EMU_ON=HD6301EMU_ON_tmp!=0;
+#endif
+
+#if defined(SS_ACIA_USE_REGISTERS)
+    ReadWriteStruct(ACIA_MIDI); //CR...
+#endif
+
+#if defined(SS_DMA)
+    ReadWriteStruct(Dma);
+#endif
+
+#if defined(SS_VAR_CHECK_SNAPSHOT)
+    int magic=123456;
+    ReadWrite(magic);
+    //ASSERT(magic==123456);
+    if(magic!=123456)
+    {
+      Alert("Bad snapshot file has corrupted emulation \n\
+Steem SSE will reset auto.sts and quit\nSorry!",
+        T("Load Memory Snapshot Failed"),MB_ICONEXCLAMATION);      
+      fclose(f);
+      DeleteFile(WriteDir+SLASH+AutoSnapShotName+".sts");
+      PostQuitMessage(-1);
+    }
+#endif
   }
 
 #endif//#if defined(STEVEN_SEAGAL)
@@ -727,7 +855,9 @@ void LoadSnapShotUpdateVars(int Version)
     }
     if (fdc_spinning_up) agenda_add(agenda_fdc_spun_up,MILLISECONDS_TO_HBLS(40),fdc_spinning_up==2);
     if (ACIA_MIDI.tx_flag) agenda_add(agenda_acia_tx_delay_MIDI,2,0);
+#if !(defined(STEVEN_SEAGAL) && defined(SS_IKBD_MANAGE_ACIA_TX))
     if (ACIA_IKBD.tx_flag) agenda_add(agenda_acia_tx_delay_IKBD,2,0);
+#endif
   }
 
 #if USE_PASTI

@@ -265,10 +265,19 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
 
     FILE *f=fopen(FilNam,"rb");
     if (f){
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_CHECK_SNAPSHOT)
+    try {
+#endif
       Failed=LoadSaveAllStuff(f,LS_LOAD,-1,ChangeDisks,&Version);
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_CHECK_SNAPSHOT)
+    }
+    catch(...) { //Works in VC6 - BCC? Unix certainly not.
+      Failed=FileError=true;
+    }
+#endif
       if (Failed==0){
         Failed=int((EasyUncompressToMem(Mem+MEM_EXTRA_BYTES,mem_len,f)!=0) ? 2:0);
-        TRACE("Loading snapshot %s\n----------------------------------------------------------\n",FilNam);
+        TRACE("Load memory snapshot %s\n",FilNam);
       }
       fclose(f);
     }else{
@@ -306,6 +315,15 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
     }
     reset_st(RESET_COLD | RESET_STOP | RESET_CHANGESETTINGS | RESET_NOBACKUP);
   }
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_SCROLLER_DISK_IMAGE)
+    if(OSD_IMAGE_NAME && !FloppyDrive[0].Empty())
+      OsdControl.StartScroller(FloppyDrive[0].DiskName); // display image disk name
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_OPTIONS_REFRESH)
+    OptionBox.SSEUpdateIfVisible();
+#endif
+
   return Failed==0;
 }
 //---------------------------------------------------------------------------

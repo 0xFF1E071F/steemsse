@@ -67,11 +67,7 @@ EXT int m68k_divu_cycles INIT(124),m68k_divs_cycles INIT(140); // +4 for overall
 #define FOUR_MEGS 0x400000
 #define FOURTEEN_MEGS 0xE00000
 
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_MAY_WRITE_0)
-#define MEM_FIRST_WRITEABLE 0 // Aladin
-#else
-#define MEM_FIRST_WRITEABLE 8 // SS check this
-#endif
+#define MEM_FIRST_WRITEABLE 8
 
 #define SR_IPL (BIT_a+BIT_9+BIT_8)
 #define SR_IPL_7 (BIT_a+BIT_9+BIT_8)
@@ -107,7 +103,7 @@ inline void m68k_poke(MEM_ADDRESS ad,BYTE x);
 inline void m68k_dpoke(MEM_ADDRESS ad,WORD x);
 inline void m68k_lpoke(MEM_ADDRESS ad,LONG x);
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU)) // inlined
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU)) // inlined in SSECpu.h
 #define INSTRUCTION_TIME(t) {cpu_cycles-=(t);}
 #define INSTRUCTION_TIME_ROUND(t) {INSTRUCTION_TIME(t); cpu_cycles&=-4;}
 #endif
@@ -261,6 +257,96 @@ WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 
 #if defined(STEVEN_SEAGAL) && defined(SS_MMU_NO_CONFUSION)
 
+
+#if defined(SS_CPU_SET_BUS_0)
+
+#define m68k_SET_DEST_B_TO_ADDR        \
+  abus&=0xffffff;                                   \
+  if(abus>=MEM_IO_BASE){               \
+    if(SUPERFLAG){                        \
+      ioaccess&=IOACCESS_FLAGS_MASK; \
+      ioaccess|=1;                     \
+      ioad=abus;                        \
+      m68k_dest=&iobuffer;               \
+      DWORD_B_0(&iobuffer)=io_read_b(abus);        \
+    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);             \
+  }else if(abus>=himem){                               \
+    if(abus>=FOUR_MEGS){                                                \
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               \
+    }else{                                                        \
+      m68k_dest=&iobuffer;                             \
+    }                                       \
+  }else{                                            \
+    DEBUG_CHECK_WRITE_B(abus); \
+    if (SUPERFLAG && abus>=0){                             \
+      m68k_dest=lpPEEK(abus);           \
+    }else if(abus>=MEM_START_OF_USER_AREA){ \
+      m68k_dest=lpPEEK(abus);           \
+    }else{                                      \
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
+    }                                           \
+  }
+
+#define m68k_SET_DEST_W_TO_ADDR        \
+  abus&=0xffffff;                                   \
+  if(abus&1){                                      \
+    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);    \
+  }else if(abus>=MEM_IO_BASE){               \
+    if(SUPERFLAG){                        \
+      ioaccess&=IOACCESS_FLAGS_MASK; \
+      ioaccess|=2;                     \
+      ioad=abus;                        \
+      m68k_dest=&iobuffer;               \
+      *((WORD*)&iobuffer)=io_read_w(abus);        \
+    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                \
+  }else if(abus>=himem){                               \
+    if(abus>=FOUR_MEGS){                                                \
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               \
+    }else{                                                        \
+      m68k_dest=&iobuffer;                             \
+    }                                       \
+  }else{                               \
+    DEBUG_CHECK_WRITE_W(abus);  \
+    if(SUPERFLAG && abus>=0){                       \
+      m68k_dest=lpDPEEK(abus);           \
+    }else if(abus>=MEM_START_OF_USER_AREA){ \
+      m68k_dest=lpDPEEK(abus);           \
+    }else{                                      \
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
+    }                                           \
+  }
+
+#define m68k_SET_DEST_L_TO_ADDR        \
+  abus&=0xffffff;                                   \
+  if(abus&1){                                      \
+    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);    \
+  }else if(abus>=MEM_IO_BASE){               \
+    if(SUPERFLAG){                        \
+      ioaccess&=IOACCESS_FLAGS_MASK; \
+      ioaccess|=4;                     \
+      ioad=abus;                         \
+      m68k_dest=&iobuffer;               \
+      iobuffer=io_read_l(abus);        \
+    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                 \
+  }else if(abus>=himem){                               \
+    if(abus>=FOUR_MEGS){                                                \
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               \
+    }else{                                                        \
+      m68k_dest=&iobuffer;                             \
+    }                                       \
+  }else{                               \
+    DEBUG_CHECK_WRITE_L(abus);  \
+    if(SUPERFLAG && abus>=0){                       \
+      m68k_dest=lpLPEEK(abus);           \
+    }else if(abus>=MEM_START_OF_USER_AREA){ \
+      m68k_dest=lpLPEEK(abus);           \
+    }else{                                      \
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
+    }                                           \
+  }
+
+#else
+
 #define m68k_SET_DEST_B_TO_ADDR        \
   abus&=0xffffff;                                   \
   if(abus>=MEM_IO_BASE){               \
@@ -345,6 +431,8 @@ WORD prefetch_buf[2]; // SS the 2 words prefetch queue
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
     }                                           \
   }
+#endif
+
 
 
 #else // (with MMU "confusion")
@@ -481,9 +569,6 @@ int debug_mem_write_log_bytes;
 #endif
 
 #define STOP_INTS_BECAUSE_INTERCEPT_OS bool(ioaccess & (IOACCESS_INTERCEPT_OS | IOACCESS_INTERCEPT_OS2))
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU)
-//void m68k_interrupt(MEM_ADDRESS);  //non-address or bus error interrupt
-#endif
 void change_to_user_mode();
 void change_to_supervisor_mode();
 
@@ -492,16 +577,11 @@ bool cpu_stopped=false,m68k_do_trace_exception;
 signed int compare_buffer;
 
 
-
-
-
-
-
 #define PC_RELATIVE_PC pc
 //(old_pc+2)
 //(old_dpc+2)
 
-
+#if !(defined(STEVEN_SEAGAL)&&defined(SS_CPU)) // inlined in SSECpu.h
 #define m68k_GET_SOURCE_B m68k_jump_get_source_b[(ir&BITS_543)>>3]()
 #define m68k_GET_SOURCE_W m68k_jump_get_source_w[(ir&BITS_543)>>3]()
 #define m68k_GET_SOURCE_L m68k_jump_get_source_l[(ir&BITS_543)>>3]()
@@ -525,6 +605,7 @@ signed int compare_buffer;
 #define m68k_GET_DEST_B_NOT_A_FASTER_FOR_D m68k_jump_get_dest_b_not_a_faster_for_d[(ir&BITS_543)>>3]()
 #define m68k_GET_DEST_W_NOT_A_FASTER_FOR_D m68k_jump_get_dest_w_not_a_faster_for_d[(ir&BITS_543)>>3]()
 #define m68k_GET_DEST_L_NOT_A_FASTER_FOR_D m68k_jump_get_dest_l_not_a_faster_for_d[(ir&BITS_543)>>3]()
+#endif//ss-cpu
 
 #define m68k_CONDITION_TEST m68k_jump_condition_test[(ir&0xf00)>>8]()
 
@@ -760,9 +841,9 @@ signed int compare_buffer;
 
 
 
-#define m68k_GET_IMMEDIATE_B m68k_src_b=m68k_fetchB();pc+=2
-#define m68k_GET_IMMEDIATE_W m68k_src_w=m68k_fetchW();pc+=2
-#define m68k_GET_IMMEDIATE_L m68k_src_l=m68k_fetchL();pc+=4
+#define m68k_GET_IMMEDIATE_B m68k_src_b=m68k_fetchB();pc+=2; 
+#define m68k_GET_IMMEDIATE_W m68k_src_w=m68k_fetchW();pc+=2; 
+#define m68k_GET_IMMEDIATE_L m68k_src_l=m68k_fetchL();pc+=4; 
 #define m68k_IMMEDIATE_B (signed char)m68k_fetchB()
 #define m68k_IMMEDIATE_W (short)m68k_fetchW()
 #define m68k_IMMEDIATE_L (long)m68k_fetchL() // SS unused
@@ -778,7 +859,23 @@ signed int compare_buffer;
 
 
 #ifndef DETECT_TRACE_BIT
+
+
+#if defined(SS_CPU_TRACE2___)
+#define DETECT_TRACE_BIT  {\
+  if (sr & SR_TRACE)\
+  {\
+    ioaccess=TRACE_BIT_JUST_SET | (ioaccess & IOACCESS_FLAGS_MASK);\
+    M68000.TraceStatus=TM68000::TRACE_NEXT;\
+  }\
+  else\
+    M68000.TraceStatus=TM68000::NO_TRACE;\
+  }
+  
+#else
 #define DETECT_TRACE_BIT {if (sr & SR_TRACE) ioaccess=TRACE_BIT_JUST_SET | (ioaccess & IOACCESS_FLAGS_MASK);}
+#endif
+
 #endif
 
 #define TRACE_BIT_JUST_SET 0x2b
@@ -799,12 +896,14 @@ void sr_check_z_n_l_for_r0()
 
 #else //inemu
 
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU__________)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU)
 #define SET_PC(ad) M68000.SetPC(ad);
 #else
 #define SET_PC(ad) set_pc(ad);
-#endif
 extern void set_pc(MEM_ADDRESS);
+#endif
+
+
 
 
 #if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))

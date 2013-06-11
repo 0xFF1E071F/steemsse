@@ -59,29 +59,39 @@ instr_exec ()
     We kind of sync 6301 to ACIA transmission, allowing the interrupt
     only when the byte has been received.
 */
-  if(hd6301_completed_transmission_to_MC6850 
-#if defined(SS_IKBD_RUN_IRQ_TO_END)
-    //&& ExecutingInt!=EXECUTING_INT
-#endif
-  )
+  if(hd6301_completed_transmission_to_MC6850)
   {
 #if defined(SS_IKBD_6301_TRACE_SCI_TX)
-    TRACE("ACT %d Cycles %d TX finished TRCSR=%X\n",act,cpu.ncycles,iram[TRCSR]);
+    TRACE("6301 send byte completed\n");
 #endif
-    ASSERT(hd6301_completed_transmission_to_MC6850==1);
     hd6301_completed_transmission_to_MC6850--;
-    ASSERT(hd6301_completed_transmission_to_MC6850>=0);
     ASSERT(!hd6301_completed_transmission_to_MC6850);
-#if defined(SS_IKBD_RUN_IRQ_TO_END)
+
+#if defined(SS_IKBD_6301_RUN_IRQ_TO_END)
     ASSERT( ExecutingInt!=EXECUTING_INT );
 #endif
-///    ASSERT( 0 );
-    //if(ireg_getb (TRCSR) & TIE)
-      txinterrupts=1; // we should trigger IRQ
+
+//#if !defined(SS_ACIA_DOUBLE_BUFFER_RX)
+    // this is very dubious, we need it, because of this, do we have
+    // working double buffer?
+    txinterrupts=1; // we may trigger IRQ 
+//#endif
+
+#if defined(SS_ACIA_DOUBLE_BUFFER_RX)
+/*  We may also start shifting the waiting byte...
+*/
+    if(ACIA_IKBD.ByteWaitingRx)
+    {
+      keyboard_buffer_write( iram[TDR] ); // call Steem's ikbd function
+      ACIA_IKBD.ByteWaitingRx=0;
+      //txinterrupts=1;
+    }
+#endif
   }
 
+
   if (!reg_getiflag () 
-#if defined(SS_IKBD_RUN_IRQ_TO_END)
+#if defined(SS_IKBD_6301_RUN_IRQ_TO_END)
     && ExecutingInt!=EXECUTING_INT
 #endif
   ) 
@@ -98,9 +108,9 @@ instr_exec ()
     } 
     else if (serial_int ()) {
 #if defined(SS_IKBD_6301_TRACE_INT_SCI)
-      TRACE("ACT %d cycles %d SCI interrupt TRCSR=%X RXi=%d TXi=%d\n",act,cpu.ncycles,ireg_getb (TRCSR),rxinterrupts,txinterrupts);
+      TRACE("SCI interrupt TRCSR=%X RXi=%d TXi=%d\n",ireg_getb (TRCSR),rxinterrupts,txinterrupts);
 #endif
-      txinterrupts=0; //?
+      txinterrupts=0; 
       int_addr (SCIVECTOR);
       interrupted = 1;
     }

@@ -27,15 +27,25 @@ uname -v = #1 SMP PREEMPT Fri Jul 8 18:01:30 CDT 2011
 /usr/bin/oslevel       = unknown
 /bin/universe          = unknown
 
-PATH: /sbin
-PATH: /usr/sbin
-PATH: /bin
 PATH: /usr/bin
+PATH: /bin
+PATH: /usr/local/bin
+PATH: /usr/X11R6/bin/
+PATH: /usr/games
+PATH: /usr/lib/kde4/libexec
+PATH: sbin
+PATH: /usr/sbin
+PATH: /usr/lib/qt4/bin
+PATH: /usr/bin
+PATH: /usr/sbin
+PATH: /usr/lib/kde4/libexec
+PATH: /bin
+PATH: /sbin
 PATH: /usr/X11R6/bin
+PATH: /usr/games
 PATH: /usr/local/bin
 PATH: /usr/local/sbin
-PATH: /usr/lib/kde4/libexec
-PATH: /usr/lib/qt4/bin
+PATH: /home/bill/bin
 PATH: /usr/bin
 PATH: /usr/sbin
 PATH: /usr/lib/kde4/libexec

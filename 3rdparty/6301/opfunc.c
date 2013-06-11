@@ -148,7 +148,7 @@ int_addr (addr)
 	callstack_push (reg_getpc ());               /* new subroutine ref. */
 #endif
 	reg_setiflag (1);
-#if defined(SS_IKBD_RUN_IRQ_TO_END)
+#if defined(SS_IKBD_6301_RUN_IRQ_TO_END)
 	ExecutingInt=EXECUTING_INT; //SS
 #endif
 }
@@ -373,7 +373,7 @@ rti_inh ()
 	reg_setacca (popbyte ());
 	reg_setix   (popword ());
 	reg_setpc   (popword ());
-#if defined(SS_IKBD_RUN_IRQ_TO_END)
+#if defined(SS_IKBD_6301_RUN_IRQ_TO_END)
 	ExecutingInt=FINISHED_EXECUTING_INT;
 #endif
 }

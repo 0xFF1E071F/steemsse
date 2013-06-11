@@ -18,7 +18,10 @@ IPF Library by István Fábián and The Software Preservation Society
 caps_linux
   
 IPF Library by István Fábián and The Software Preservation Society
-  http://www.softpres.org - for Unix (TODO)
+  http://www.softpres.org - for Unix
+
+doc
+  Some doc files
 
 dsp
   Basic DSP (digital sound processing) adapted from code by Maverick 

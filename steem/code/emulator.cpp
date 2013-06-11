@@ -14,14 +14,10 @@ the end of scanlines.
 //---------------------------------------------------------------------------
 void init_timings()
 {
-/*  SS When launching Steem or loading a snaphot, this function is called 
-    twice, the first time  with PC = TOS start, the second time with recorded
-    PC.
-*/
   // don't do anything to agendas here!
-
+#if !(defined(STEVEN_SEAGAL)&&defined(SS_OSD_DRIVE_LED3))
   disk_light_off_time=timeGetTime()+DisableDiskLightAfter;
-
+#endif
   fdc_str&=BYTE(~FDC_STR_MOTOR_ON);
   shifter_first_draw_line=0;	// SS: 0-199 = normal display
   shifter_last_draw_line=shifter_y;
@@ -114,9 +110,9 @@ void init_timings()
 
 #if defined(STEVEN_SEAGAL) && defined(SS_DMA_DELAY)
 #if defined(SS_MFP_RATIO)
-    Dma.dma_time=ABSOLUTE_CPU_TIME+CpuNormalHz;
+    Dma.TransferTime=ABSOLUTE_CPU_TIME+CpuNormalHz;
 #else
-    Dma.dma_time=ABSOLUTE_CPU_TIME+8000000;
+    Dma.TransferTime=ABSOLUTE_CPU_TIME+8000000;
 #endif
 #endif
 
@@ -268,6 +264,7 @@ int ACIAClockToHBLS(int ClockDivide,bool MIDI_In)
   int HBLs=1;
   // We assume the default setting of 9 bits per byte sent, I'm not sure
   // if the STs ACIAs worked in any other mode. The ACIA master clock is 500kHz.
+  ASSERT( ClockDivide==1||ClockDivide==2 );
   if (shifter_freq==MONO_HZ){
     if (ClockDivide==1){ // Divide by 16 (31250 bits per second)
       HBLs=int(HBLS_PER_SECOND_MONO/(500000.0/16.0/9.0) + 1);
@@ -281,6 +278,11 @@ int ACIAClockToHBLS(int ClockDivide,bool MIDI_In)
       HBLs=(int)(HBLS_PER_SECOND_AVE/(500000.0/64.0/9.0) + 1);
     }
   }
+
+#if defined(STEVEN_SEAGAL) && defined(SS_ACIA)
+    HBLs--;
+#endif
+
   if (MIDI_In && MIDI_in_speed!=100){
     HBLs*=100;
     HBLs/=MIDI_in_speed;
@@ -288,52 +290,146 @@ int ACIAClockToHBLS(int ClockDivide,bool MIDI_In)
   return HBLs;
 }
 //---------------------------------------------------------------------------
+
 void ACIA_Reset(int nACIA,bool Cold)
 {
-//  if (Cold){
   acia[nACIA].tx_flag=0;
+#if !(defined(STEVEN_SEAGAL) && defined(SS_IKBD_MANAGE_ACIA_TX))
   if (nACIA==NUM_ACIA_IKBD) agenda_delete(agenda_acia_tx_delay_IKBD);
+#endif
   if (nACIA==NUM_ACIA_MIDI) agenda_delete(agenda_acia_tx_delay_MIDI);
-//  }
+#if !(defined(STEVEN_SEAGAL) && defined(SS_ACIA_REMOVE_OLD_VARIABLES))
   acia[nACIA].rx_not_read=0;
+#endif
   acia[nACIA].overrun=0;
   acia[nACIA].clock_divide=int((nACIA==NUM_ACIA_MIDI) ? 1:2);
+#if !(defined(STEVEN_SEAGAL) && defined(SS_ACIA_REMOVE_OLD_VARIABLES))
   acia[nACIA].tx_irq_enabled=0;
   acia[nACIA].rx_irq_enabled=true;
+#endif
   acia[nACIA].data=0;
   acia[nACIA].last_tx_write_time=0;
+#if !(defined(STEVEN_SEAGAL) && defined(SS_ACIA_REMOVE_OLD_VARIABLES))
   LOG_ONLY( if (nACIA==0 && acia[nACIA].irq) log_to_section(LOGSECTION_IKBD,EasyStr("IKBD: ACIA reset - Changing ACIA IRQ bit from ")+ACIA_IKBD.irq+" to 0"); )
   acia[nACIA].irq=false;
+#endif
+
+#if defined(SS_ACIA_TEST_REGISTERS)
+//  ASSERT( !( (ACIA_IKBD.SR&BIT_7)||(ACIA_MIDI.SR&BIT_7) )==!(ACIA_IKBD.irq||ACIA_MIDI.irq) );
+#endif
+
+#if !defined(SS_ACIA_USE_REGISTERS)
   if (Cold==0) mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
+#endif
+
+#if defined(STEVEN_SEAGAL)
+#if defined(SS_ACIA_REGISTERS)
+/*
+                                                BIT 7 6 5 4 3 2 1 0|
+       |     |Interrupt request --------------------' | | | | | | ||
+       |     |Parity error ---------------------------' | | | | | ||
+       |     |Rx overrun -------------------------------' | | | | ||
+       |     |Framing error ------------------------------' | | | ||
+       |     |CTS ------------------------------------------' | | ||
+       |     |DCD --------------------------------------------' | ||
+       |     |Tx data register empty ---------------------------' ||
+       |     |Rx data register full ------------------------------'|
+*/
+  if(Cold) 
+  {
+    acia[nACIA].SR=2;
+    acia[nACIA].CR=0x80; //?
+    acia[nACIA].RDRS=0;
+    acia[nACIA].TDRS=0;
+  }
+  acia[nACIA].RDR=0;//?
+  acia[nACIA].TDR=0;
+//  acia[nACIA].SR&=~(BIT_0|BIT_5); // from doc
+  acia[nACIA].SR=2; // eg Delirious IV
+#endif
+
+#if defined(SS_ACIA_IRQ_DELAY)
+  acia[nACIA].rx_stage=0;
+#endif
+
+  if(Cold)
+  {
+#if defined(SS_ACIA_DOUBLE_BUFFER_RX)
+    acia[nACIA].LineRxBusy=0;
+    acia[nACIA].ByteWaitingRx=0;
+#endif
+#if defined(SS_ACIA_DOUBLE_BUFFER_TX)
+    acia[nACIA].ByteWaitingTx=0;
+    acia[nACIA].LineTxBusy=0;
+#endif
+  }
+
+#endif
 }
 //---------------------------------------------------------------------------
 void ACIA_SetControl(int nACIA,BYTE Val)
 {
   acia[nACIA].clock_divide=      (Val & b00000011);
+#if !(defined(STEVEN_SEAGAL) && defined(SS_ACIA_REMOVE_OLD_VARIABLES))
   acia[nACIA].tx_irq_enabled=    (Val & b01100000)==BIT_5;
   acia[nACIA].rx_irq_enabled=bool(Val & b10000000);
+#endif
   LOG_ONLY( if (nACIA==0) log_to(LOGSECTION_IKBD,EasyStr("IKBD: ACIA control set to ")+itoa(Val,d2_t_buf,2)); )
-
+#if defined(STEVEN_SEAGAL) && (defined(SS_ACIA_USE_REGISTERS)||defined(SS_ACIA_TEST_REGISTERS))
+  if((ACIA_IKBD.CR&BIT_5)&&!(ACIA_IKBD.CR&BIT_6) 
+#if defined(SS_ACIA_DOUBLE_BUFFER_TX)
+    && !ACIA_IKBD.ByteWaitingTx
+#endif
+    )
+  {
+    ACIA_IKBD.SR|=BIT_7; 
+#if defined(SS_ACIA_USE_REGISTERS)
+  //  mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0); //trigger
+#endif
+  }
+  else
+ ACIA_IKBD.SR&=~BIT_7; 
+#endif
   if (acia[nACIA].tx_irq_enabled){
     acia[nACIA].irq=true;
   }else{
     LOG_ONLY( if (nACIA==0 && ACIA_IKBD.irq) log_to(LOGSECTION_IKBD,EasyStr("IKBD: ACIA set control - Changing ACIA IRQ bit from ")+ACIA_IKBD.irq+" to 0"); )
     acia[nACIA].irq=false;
   }
+#if defined(SS_ACIA_USE_REGISTERS)
+  mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!( (ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7)));
+#else
   mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
+#endif
 }
 //---------------------------------------------------------------------------  Agenda
 #define LOGSECTION LOGSECTION_AGENDA
 int MILLISECONDS_TO_HBLS(int ms)
 {
+#if defined(STEVEN_SEAGAL) && defined(SS_TIMINGS_MS_TO_HBL)
+/*  All CAPS for some reason, used in fdc, ikbd.
+    We make it more precise.
+*/
+  return ms*HBL_PER_SECOND/1000;
+#else
   if (shifter_freq==MONO_HZ) return int((ms*HBLS_PER_SECOND_MONO)/1000);
   return int((ms*HBLS_PER_SECOND_AVE)/1000);
+#endif
 }
 
 void agenda_add(LPAGENDAPROC action,int pause,int param)
 {
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+  ASSERT( pause>=0 );
+  int i;
+  for(i=0;i<256 && agenda_list[i]!=(LPAGENDAPROC)1;i++)
+    if(agenda_list[i]==action)
+      break;
+  TRACE_LOG("agenda add #%d #%d %p in %d hbl data $%X\n",agenda_length,i,action,pause,param);
+#endif
   if (agenda_length>=MAX_AGENDA_LENGTH){
     log_write("AARRRGGGHH!: Agenda full, can't add!");
+    BRK( Agenda full )
     TRACE("AARRRGGGHH!: Agenda full, can't add!\n"); // indicates a bug
     return;
   }
@@ -359,6 +455,7 @@ void agenda_add(LPAGENDAPROC action,int pause,int param)
 //---------------------------------------------------------------------------
 void agenda_delete(LPAGENDAPROC job)
 {
+  TRACE_LOG("agenda delete %p\n",job);
   WIN_ONLY( EnterCriticalSection(&agenda_cs); )
   for (int n=0;n<agenda_length;n++){
     if (agenda[n].perform==job){
@@ -388,49 +485,103 @@ int agenda_get_queue_pos(LPAGENDAPROC job)
   return n;
 }
 //---------------------------------------------------------------------------
+
+#if !(defined(STEVEN_SEAGAL) && defined(SS_IKBD_MANAGE_ACIA_TX))
+
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
 #undef LOGSECTION
-#define LOGSECTION LOGSECTION_IKBD//SS
+#define LOGSECTION LOGSECTION_IKBD // not "ACIA"
+/*  This agenda is set when data is written to ACIA IKBD TDR (iow.cpp)
+*/
 void agenda_acia_tx_delay_IKBD(int)
 {
-#if defined(SS_ACIA_DOUBLE_BUFFER_TX)
-  if( (!hd6301_receiving_from_MC6850)||!HD6301EMU_ON)
+
+
+#if defined(SS_ACIA_REGISTERS)
+  ACIA_IKBD.SR|=BIT_1; // TDRE
+  if( (ACIA_IKBD.CR&BIT_5)&&!(ACIA_IKBD.CR&BIT_6) ) // IRQ transmit enabled
   {
+    ACIA_IKBD.SR|=BIT_7; // IRQ
+#if defined(SS_ACIA_USE_REGISTERS)
+    mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,
+      !((ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7)));
 #endif
-  TRACE_LOG("%d tx %x->0\n",ABSOLUTE_CPU_TIME,ACIA_IKBD.tx_flag);
-  ACIA_IKBD.tx_flag=0; //finished transmitting
-#if defined(SS_ACIA_DOUBLE_BUFFER_TX)
   }
 #endif
+
+  ACIA_IKBD.tx_flag=0; //finished transmitting
+
+#if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
   if(ACIA_IKBD.tx_irq_enabled)
   {
     TRACE_LOG("agenda_acia_tx_delay_IKBD setting IRQ at %d\n",ABSOLUTE_CPU_TIME);
     ACIA_IKBD.irq=true;
   }
+#if !defined(SS_ACIA_USE_REGISTERS)
   mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
+#endif
+#endif
+
+#if defined(SS_ACIA_TEST_REGISTERS)
+  TRACE_LOG("Agenda TX to IKBD CR%X SR%X irq%d tx%d\n",ACIA_IKBD.CR,ACIA_IKBD.SR,ACIA_IKBD.irq,ACIA_IKBD.tx_flag);
+#endif
 }
+
 #else
+
 void agenda_acia_tx_delay_IKBD(int)
 {
+#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_REGISTERS)
+  ACIA_IKBD.SR|=BIT_1; // TDRE
+  if( (ACIA_IKBD.CR&BIT_5)&&!(ACIA_IKBD.CR&BIT_6) ) // IRQ transmit enabled
+  {
+    ACIA_IKBD.SR|=BIT_7; // IRQ
+#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_USE_REGISTERS)
+    mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,
+      !((ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7)));
+#endif
+  }
+#endif
   ACIA_IKBD.tx_flag=0; //finished transmitting
+#if !(defined(STEVEN_SEAGAL) && defined(SS_ACIA_USE_REGISTERS))
   if (ACIA_IKBD.tx_irq_enabled) ACIA_IKBD.irq=true;
   mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
+#endif
 }
 #endif
+
+#endif//#if !(defined(STEVEN_SEAGAL) && defined(SS_IKBD_MANAGE_ACIA_TX))
+
 //---------------------------------------------------------------------------
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_MIDI // not "ACIA"
 void agenda_acia_tx_delay_MIDI(int)
 {
   ACIA_MIDI.tx_flag=0; //finished transmitting
+#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_REGISTERS)
+  ACIA_MIDI.SR|=BIT_1; // TDRE
+  if( (ACIA_MIDI.CR&BIT_5)&&!(ACIA_MIDI.CR&BIT_6) ) // IRQ transmit enabled
+  {
+    ACIA_MIDI.SR|=BIT_7; // IRQ
+#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_USE_REGISTERS)
+    mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,
+      !((ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7)));
+#endif
+  }
+#endif
+#if !(defined(STEVEN_SEAGAL) && defined(SS_ACIA_REMOVE_OLD_VARIABLES))
   if (ACIA_MIDI.tx_irq_enabled) ACIA_MIDI.irq=true;
   mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
+#endif
 }
 #undef LOGSECTION
 //-------------------------------------------------- MMU Confused
-#if !defined(SS_MMU_NO_CONFUSION)
-  /* SS I still don't know is the use.
+#if !(defined(STEVEN_SEAGAL) && defined(SS_MMU_NO_CONFUSION))
+  /* SS I still don't know what's the use.
   I thought it was for when TOS resets and tests memory, but now
   it seems to work without it.
-  TESTING
+  It's quite a lot of code removed.
+  TESTING undefined
   */
 #define LOGSECTION LOGSECTION_IO//SS
 
@@ -586,7 +737,7 @@ void ASMCALL mmu_confused_set_dest_to_addr(int bytes,bool cause_exception)
 
 void call_a000()
 {
-//  BRK(lineAemul);
+
   on_rte_return_address=(PC32);
   //now save regs a0,a1,d0 ?
   INSTRUCTION_TIME_ROUND(0);  // Round first for interrupts

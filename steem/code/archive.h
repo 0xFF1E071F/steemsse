@@ -14,8 +14,6 @@
 #include <unrarlib/unrarlib/unrarlib.h>	
 #endif
 
-#include "SSE/SSEDecla.h" //SS
-
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
 #include "SSE/SSEOption.h"
 #include <UnRARDLL/unrar.h>
@@ -72,12 +70,16 @@ public:
 
 #ifdef _MSC_VER
 #pragma comment(lib,"../../3rdparty/UnRARDLL/unrar.lib")
+#if defined(WIN32) && defined(SS_DELAY_LOAD_DLL)
 #pragma comment(linker, "/delayload:unrar.dll")
+#endif
 #endif
 
 #ifdef __BORLANDC__
 #pragma comment(lib,"../../3rdparty/UnRARDLL/bcc/unrar.lib")
+// Borland: delay load DLL in makefile
 #endif
+
 
 void LoadUnrarDLL() {
 

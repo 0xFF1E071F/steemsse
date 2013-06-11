@@ -2,10 +2,13 @@
 #include "6301.h"
 #include "SSE/SSE.h"
 #include "SSE/SSEDebug.h"
+#include "SSE/SSE6301.h"
+#include "acia.h"
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
 #include "SSE/SSEOption.h"
 extern int iDummy;
+
 #ifndef WIN32
 unsigned int _rotr(unsigned int Data, unsigned int Bits) {
   return ((Data >> Bits) | (Data << (32-Bits)));
@@ -16,7 +19,7 @@ unsigned int _rotl(unsigned int Data, unsigned int Bits) {
 #endif
  
 // functions & variables from Steem (declared as extern "C") there
-extern void hd6301_keyboard_buffer_write(unsigned char src) ;
+extern void keyboard_buffer_write(unsigned char src) ;
 extern int cpu_timer,cpu_cycles; // for debug
 #define ABSOLUTE_CPU_TIME (cpu_timer-cpu_cycles)
 #define act ABSOLUTE_CPU_TIME
@@ -25,16 +28,12 @@ extern unsigned char  stick[8]; // joysticks
 int ST_Key_Down[128]; // not better than what I envisioned but effective!
 int mousek;
 // our variables that Steem must see
-int hd6301_receiving_from_MC6850=0; // for sync
-int hd6301_transmitting_to_MC6850=0; // for sync
 int hd6301_completed_transmission_to_MC6850; // for sync
-int hd6301_mouse_move_since_last_interrupt_x; // different lifetime
-int hd6301_mouse_move_since_last_interrupt_y;
 
 // additional variables for our module
 
 unsigned char rec_byte;
-#if defined(SS_IKBD_RUN_IRQ_TO_END)
+#if defined(SS_IKBD_6301_RUN_IRQ_TO_END)
 
 #define NOT_EXECUTING_INT 0
 #define EXECUTING_INT 1
@@ -106,7 +105,6 @@ void (*hd6301_trace)(char *fmt, ...);
 // Interface with Steem
 
 hd6301_init() {
-//  TRACE("hello\n");
   return (int)mem_init();
 }
 
@@ -124,13 +122,14 @@ hd6301_destroy() {
 }
 
 
-hd6301_reset() {
+hd6301_reset(int Cold) {
   TRACE("6301 emu cpu reset\n");
   cpu_reset();
-  hd6301_receiving_from_MC6850=hd6301_transmitting_to_MC6850
-    =hd6301_completed_transmission_to_MC6850=0;
+
+  hd6301_completed_transmission_to_MC6850=0;
+  Crashed6301=0;
   iram[TRCSR]=0x20;
-#if defined(SS_IKBD_RUN_IRQ_TO_END)
+#if defined(SS_IKBD_6301_RUN_IRQ_TO_END)
   ExecutingInt=NOT_EXECUTING_INT;
 #endif
   cpu_start(); // since we don't use the command.c file
@@ -152,10 +151,14 @@ hd6301_run_cycles(u_int cycles_to_run) {
     TRACE("6301 starting cpu\n");
     cpu_start();
   }
-  if((iram[TRCSR]&1) && !hd6301_receiving_from_MC6850)  
+  if((iram[TRCSR]&1) 
+#if defined(SS_ACIA_DOUBLE_BUFFER_TX)
+    && !ACIA_IKBD.LineTxBusy
+#endif
+    )
   {
     TRACE("6301 waking up (PC %X cycles %d ACT %d)\n",reg_getpc(),cpu.ncycles,act);
-    iram[TRCSR]&=~1; // ha! that's for Barbarian (& Froggies)
+    iram[TRCSR]&=~1; // ha! that's for Barbarian (& Obliterator, Froggies)
   }
   pc=reg_getpc();
   if(!(pc>=0xF000 && pc<=0xFFFF || pc>=0x80 && pc<=0xFF))
@@ -164,14 +167,6 @@ hd6301_run_cycles(u_int cycles_to_run) {
     reset(); // hack
   }
 #if defined(SS_IKBD_6301_ADJUST_CYCLES)
-  /*
-  if(cycles_to_give_back>=cycles_to_run)
-  {
-    cycles_to_give_back-=cycles_to_run;
-    return -1;
-  }
-  else 
-  */
   if(cycles_to_give_back)
   {
     // we really must go slowly here, better lose some time sync
@@ -190,7 +185,7 @@ hd6301_run_cycles(u_int cycles_to_run) {
 #endif
 
   while(!Crashed6301 && (cycles_run<cycles_to_run 
-#if defined(SS_IKBD_RUN_IRQ_TO_END)
+#if defined(SS_IKBD_6301_RUN_IRQ_TO_END)
     || ExecutingInt==EXECUTING_INT
 #endif
   ))
@@ -198,7 +193,7 @@ hd6301_run_cycles(u_int cycles_to_run) {
     instr_exec (); // execute one instruction
     cycles_run=cpu.ncycles-starting_cycles;
   }
-#if defined(SS_IKBD_RUN_IRQ_TO_END)
+#if defined(SS_IKBD_6301_RUN_IRQ_TO_END)
   if(ExecutingInt)
   {
     ASSERT( ExecutingInt==FINISHED_EXECUTING_INT );

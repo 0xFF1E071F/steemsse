@@ -4,22 +4,25 @@
 #pragma message("Included for compilation: SSEShifter.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_MMU)
+#if defined(SS_MMU)
 #include "SSE/SSEMMU.h"
+#endif
+
+#if defined(SS_SHIFTER_EVENTS)
+#include "SSEShifterEvents.cpp" // debug module, the Steem way...
 #endif
 
 
 TShifter Shifter; // singleton
-//#undef SS_MMU_WAKE_UP_IO_BYTES_W
+
 
 /////////////////////
 // object TShifter //
 /////////////////////
 
-#define LOGSECTION LOGSECTION_VIDEO//SS
+#define LOGSECTION LOGSECTION_VIDEO
 
 TShifter::TShifter() {
-   nVbl=0;
 #if defined(WIN32)
   ScanlineBuffer=NULL;
 #endif
@@ -38,6 +41,8 @@ TShifter::~TShifter() {
     inflated, for a good cause: now Steem handles a lot more shifter tricks
     than before.
     Much has been inspired by Hatari, but was also discussed on Atari-forum.
+    In some cases we go beyond Hatari (at least v1.6.1)
+    Also like in Hatari comments briefly explain shifter tricks.
 */
 
 void TShifter::CheckSideOverscan() {
@@ -141,20 +146,7 @@ void TShifter::CheckSideOverscan() {
 #if defined(SS_SHIFTER_0BYTE_LINE_SYNC) 
 
 /*  
-    ST-CNX
-
-       * 0 Byte line by switching to 60Hz at position 14 (detection of
-        the beginning of a line at 50Hz). This method is not recomended,
-        because it doesn't work once out of every twenty times the ST is
-        powered on. This happens when the timing of the GLUE and the MMU
-        are offset in such a manner that the 68000 cannot access the bus
-        on the precise cycle required to change the frequency. Recall
-        that it is the MMU that decides which of every four cycles will
-        be allocated to the 68000, and that at on power on circuits can
-        receive parasitic noise on the clock signal that could
-        potentially cause this offset.
-
-    SS: 0-byte sync switches are model-dependent and even "wake up state"-
+    0-byte sync switches are model-dependent and even "wake up state"-
     dependent. They  are used only in a 2006 demo called SHFORSTV.TOS,
     by the dude who also made the Overscan Demos.
     Switche: STF(1) (56/64), STF(2) (58/68), and STE (40/52).
@@ -169,7 +161,7 @@ void TShifter::CheckSideOverscan() {
     {
 #if defined(SS_MMU_WAKE_UP_0_BYTE_LINE)
       if(WAKE_UP_STATE==2) // OK, Forest says it's 2
-        s0cycle=58,s2cycle=68; // but strange according to compile options
+        s0cycle=58,s2cycle=68+2; // but strange according to compile options
       else
 #endif
         s0cycle=56,s2cycle=64; // default STF1 (OK for 'Forest')
@@ -194,9 +186,6 @@ void TShifter::CheckSideOverscan() {
       shifter_draw_pointer-=160; // hack: Steem will draw black and update SDP
       CurrentScanline.Bytes=0;
       TrickExecuted|=TRICK_0BYTE_LINE;
-#if defined(SS_SHIFTER_0BYTE_LINE_TRACE)
-      TRACE("%d 0byte line\n",scan_y);
-#endif
     }
     return; // 0byte line takes no other tricks
   }
@@ -250,11 +239,6 @@ void TShifter::CheckSideOverscan() {
       if(!ShiftModeChangeAtCycle(4) && (ShiftModeChangeAtCycle(-8)==2
         || ShiftModeChangeAtCycle(-4)==2))
         CurrentScanline.Tricks|=TRICK_LINE_PLUS_20;
-
-   //   if(!ShiftModeChangeAtCycle(8) && ShiftModeChangeAtCycle(-8)==2)
-     //   CurrentScanline.Tricks|=TRICK_LINE_PLUS_20;
-
-
     }
 #endif
 
@@ -264,60 +248,6 @@ void TShifter::CheckSideOverscan() {
   ///////////////////////////////////
 
 /*
-    Flix:
-    For  a  long time it was considered impossible to open  the  left 
-    border,  because the trick with the 60-hertz-switch did not  work 
-    in the left border (I was sure about that as well). But than came 
-    the  "Death  Of The Left Border"-Demo by  the  TNT-Crew.  Finally 
-    there  was a screen in the legendary Union-Demo that  firstly  in 
-    ST-history  displayed  no borders at  all:  The  first  so-called 
-    "Fullscreen"!  The demo-coders made the impossible possible.  But 
-    how  does  this  trick  work?  It's  pretty  simple:  Instead  of 
-    switching  to  60  Hz you switch to 71 Hz!  If  you  disable  the 
-    interrupt  that  resets  at 71 Hz,  you can switch to  71  Hz  in 
-    coulour mode.  You should do this only for short periods of  time 
-    (a few clock-cycles).  Being in 71 Hz for a long time can  damage 
-    your  monitor (allthough I've never seen such damages).  It  goes 
-    without  saying  that neither Maggie nor the "Delta  Force"  take 
-    responsibility for damages caused by this technique.  If you  now 
-    open the right border additionally,  the ST displays 230  instead 
-    of  160  bytes  per line!  
-
-    ST-CNX:
-        Thus we have obtained a right overscan, but have no clue as to
-        how to remove the left border. It is obvious that the GLUE
-        pseudo-code given so far cannot help us in any way. Therefore we
-        need to look at the other available register settings. As we
-        discouraged any use of external synchronisation, all that is
-        left is switching to high resolution mode. The structure of the
-        screen is very different in hires than that we have looked at so
-        far: each line contains only 80 bytes instead of 160, and each
-        line only takes 28us (20us for the useable screen, and 8us for
-        the border and Hsync) instead of 64us. Thus each monochrome line
-        will have a smaller left border so that the useable line will
-        start earlier, and as it only contains 80 bytes it will also
-        finish earlier. Thus we need to add the following lines to our
-        GLUE pseudo-code:
-
- IF Position == 0   AND display_freq=70  THEN Activate    signal H
- IF Position == 40  AND display_freq=70  THEN Disactivate signal H
- IF Position == Z   AND display_freq=70  THEN Activate    signal Hsync
- IF Position == Z+1 AND display_freq=70  THEN Disactivate signal Hsync
-                                              and start a new line
-
- (Determining Z is of no value)
-
-        It is therefore sufficient to switch to monochrome to activate H
-        and DE, and therefore force the MMU and the SHIFTER to start
-        decoding the useable screen. One returns to low or medium
-        resolution to actually see the useable screen on the RGB pins.
-        Thus one obtains at 50Hz lines of 160+26 = 186 bytes. At 60Hz
-        one obtains lines of 184 bytes. The difference of 2 bytes
-        corresponds to the difference of 0.5us between the two line
-        lengths (63.5us at 60Hz and 64us at 50Hz).
-    
-  
-    SS:
     Shifter latency could  explain that you may place your switch in the
     first cycles of the line, and the bonus bytes are still 26. My theory!
     The limits are:
@@ -349,7 +279,7 @@ void TShifter::CheckSideOverscan() {
     if(ST_TYPE!=STE)
       lim_r2+=6,lim_r0+=2; // experimental
 
-#if defined(SS_MMU_WAKE_UP_IO_BYTES_W)
+#if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
     if(MMU.WakeUpState2())
       lim_r2+=2,lim_r0+=2;
 #endif
@@ -393,10 +323,10 @@ void TShifter::CheckSideOverscan() {
         i=CheckFreq(t);
         if(i>=0 && shifter_freq_change[i]==MONO_HZ
           && ! CurrentScanline.Tricks&TRICK_LINE_PLUS_26)
-          TRACE("F%d y%d left off detected by Steem 3.2 R2 %d R0 %d\n",FRAME,scan_y,r2cycle,r0cycle);
+          TRACE_LOG("F%d y%d left off detected by Steem 3.2 R2 %d R0 %d\n",FRAME,scan_y,r2cycle,r0cycle);
         else if((i<0||shifter_freq_change[i]!=MONO_HZ)
           && CurrentScanline.Tricks&TRICK_LINE_PLUS_26)
-          TRACE("F%d y%d left off not detected by Steem 3.2 R2 %d R0 %d\n",FRAME,scan_y,r2cycle,r0cycle);
+          TRACE_LOG("F%d y%d left off not detected by Steem 3.2 R2 %d R0 %d\n",FRAME,scan_y,r2cycle,r0cycle);
       }
 #endif
 #endif
@@ -434,7 +364,7 @@ void TShifter::CheckSideOverscan() {
           overscan_add_extra+=2;  // 8 + 2 + 16 = 26
         }
         CurrentScanline.Bytes+=26;
-        if(shifter_hscroll>=12) // STE shifter bug (Steem authors)
+        if(HSCROLL>=12) // STE shifter bug (Steem authors)
         {   
           shifter_draw_pointer+=8; 
           overscan_add_extra-=8; // removed this in 3.3, was a mistake
@@ -443,7 +373,7 @@ void TShifter::CheckSideOverscan() {
         if(SideBorderSize==ORIGINAL_BORDER_SIDE) // 32
 #endif
           shifter_draw_pointer+=8; // 8+16+2=26
-//        TRACE("+26 y %d px %d\n",scan_y,shifter_pixel);
+//        TRACE_LOG("+26 y %d px %d\n",scan_y,shifter_pixel);
         TrickExecuted|=TRICK_LINE_PLUS_26;
 
         // additional hacks for left off
@@ -454,11 +384,11 @@ void TShifter::CheckSideOverscan() {
 /*  Hack for Death of the Left Border, Omega Full Overscan (and?)
     no stabiliser, late switch, unstable overscan: shift +4
     'Hack' option not necessary, choosing wake up state 2 is enough!
- */
+    But that's a hack, not precise emulation.
+*/
         if(r0cycle>=16 && ST_TYPE==STF && WAKE_UP_STATE==2
           && !(PreviousScanline.Tricks&TRICK_STABILISER))
         {
-//          ASSERT(!debug1);
             shifter_draw_pointer+=4,overscan_add_extra-=4;
             shifter_pixel+=-4;
         }
@@ -466,8 +396,12 @@ void TShifter::CheckSideOverscan() {
 
 #if defined(SS_SHIFTER_BIG_WOBBLE) && defined(SS_SHIFTER_SDP_WRITE)
         if(SSE_HACKS_ON && (PreviousScanline.Tricks&TRICK_WRITE_SDP_POST_DE)
-          && HSCROLL) 
-          shifter_draw_pointer+=-4; // fixes Big Wobble
+          && HSCROLL 
+#if defined(SS_SHIFTER_ARMADA_IS_DEAD)
+          && r0cycle==12
+#endif
+          ) 
+          shifter_draw_pointer+=-4; // fixes Big Wobble, see SSESehifter.h
 #endif
 
 #if defined(SS_SHIFTER_SCHNUSDIE) && defined(SS_SHIFTER_TRICKS)
@@ -488,137 +422,6 @@ void TShifter::CheckSideOverscan() {
   ////////////////
 
 /*
-    Flix:
-    In order to make the  opening  of  the 
-    "side-borders"  run  on  all STs,  you've  to  install  so-called 
-    "Stabilisation"-switches  at  the  end  of  each  line  (This  is 
-    sometimes  called "Closing of the right border" which it  isn't). 
-    You  can  switch  to  71 Hz (like in the  source)  or  to  medium 
-    resolution (like ULM (Unlimited Matricks) does it).  I prefer the 
-    71  Hz  method,  because  I heard that the  other  method  causes 
-    problems  on few STs.  The "Stabilisation" is needed because  the 
-    shifter  waits for the last word at the end of the  right  border 
-    (115  words are displayed in fullscreen) to fill the last  plane. 
-    This  word  never  arrives and to avoid total  confusion  of  the 
-    shifter the 71-Hz-switch does something like a shifter-reset.
-
-    ST-CNX:
-        Stabiliser
-
-        So now we know how to remove the left border, and we know how to
-        remove the right border, shouldn't removing both lead to
-        overscan? This is where my research was stuck for 3 months...
-        The problem is that one obtains an unstable overscan. This was
-        predictable as we learnt above that lines in left overscan start
-        500ns earlier, and the example of right overscan at 60Hz taught
-        us that right overscan is unstable if it starts 500ns earlier.
-        The instable right overscan displayed the useable screen 8
-        pixels early every second line, which is exactly what one
-        observes if one removes both borders! The only difference is
-        that the lines have lengths of 226 or 234 bytes, i.e. 230 +/- 4
-        bytes. One recognises the word too many that is swallowed by the
-        opening of the left border: 226 = 224 + 2, where 224 is a
-        multiple of 8; and 234 = 232 + 2 where 232 is a multiple of 8.
-        In fact the MMU reads 230 bytes each line, but the SHIFTER
-        displays 226 (less the 2 it ignores) or 234 (-2). This shift
-        doesn't seem all that bothersome at first glance since one could
-        shift the contents of every second line by 8 pixels. However if
-        one wants a partial overscan (removing the borders only on some
-        lines), the remainder of the normal useable screen will also be
-        shifted left if it starts on a shifted line. Furthermore, the
-        shift is perpetuated from VBL to VBL, so that at each new VBL
-        two words are introduced. Thus the useable screen trembles, each
-        line being shifted differently every VBL.
-
-        Some STs have a combination of MMU, GLUE and SHIFTER chips that
-        allow them to tollerate such an overscan if an even number of
-        lines have their borders removed. Others don't because the DE
-        signal is sometimes activated, sometimes disactivated at the end
-        of each line, the GLUE and the SHIFTER being out of synch. One
-        remedies this situation by using a stabiliser, of which there
-        are different kinds. Stabilisers exploit the internal state of
-        the SHIFTER to make it believe that it is dealing with a
-        multiple of 4 words length line. To do this one changes
-        resolution during the useable screen. We saw that changing
-        resolution immediately changed the way the SHIFTER decodes
-        bitplanes. In fact it also changes the way it manages its IR
-        registers. Thus a stabiliser could be implemented by a
-        transition to medium resolution. But since each stabiliser
-        functions differently, we will only study one: transitioning to
-        high resolution at position 108. This is the stablest
-        stabiliser. In fact this transition could occur at any position
-        that is a multiple of 4 because at these positions the internal
-        state of the RR and IR regiters is the same. The position 108 is
-        chosen because it is on the extreme right of the picture, hiding
-        the effect of the stabiliser. Indeed this stabiliser causes 12
-        black pixels followed by 16 pixels with displaced bitplanes to
-        be displayed. The 12 pixels correspond to the 12 cycle
-        transition to high resolution.
-
- 
-        At position 108, a secondary effect occurs: the Blank signal is
-        activated 2us later on an STF, causing 16 pixels to be displayed
-        further right that is usually possible.
-
-        The stabiliser thus consists of transitioning to high resolution
-        for 12 cycles, followed by a return to low or medium resolution.
-        The transition occurs just before the RR registers are loaded
-        with the contents of the IR registers (Recall that the 68000 and
-        the SHIFTER are out of sync so that the MMU can send image data
-        to the SHIFTER while the 68000 changes the palette). During the
-        first 12 cycles the RR registers act as they would in high
-        resolution. The switch back to low or medium resolution occurs
-        just before RR1 is loaded with the contents of RR2, RR2 with
-        that of RR3 (and so on). Thus RR3 and RR4 contain after these 12
-        cycles $0000 or $FFFF according to the value of bit 0 of colour
-        0 (BE). RR2 contains what was in RR4, and RR1 contains what what
-        was in RR3.
-
-        There are then 4 pixels to show that will be shown in the wrong
-        colours: colours 0-3 or 12-15 depending on whether RR3 and RR4
-        contain $0000 or $FFFF (RR1 corresponds to the least significant
-        bit of the colour, while RR4 corresponds to the most significant
-        bit of the colour: see "La Bible ST" chapter 3.4).
-
-        Now consider the IR registers: when the switch to low or medium
-        resolution occurs, IR4 has yet to be loaded, but the switch at
-        this position has as effect to force Number_of_read_bitplanes to
-        4. Since the RR registers are not yet empty, the SHIFTER does
-        not reinitialise them, but starts to reload the IR registers.
-        There are now still four words to read until the end of the
-        line, so the next line will not be shifted. Notice that for 4
-        cycles after the return to low or medium resolution, the SHIFTER
-        continues to rotate the RR registers as if it were still in high
-        resolution. Thus at that time, RR2 to RR4 contain $0000 or
-        $FFFF, while only RR1 comes from screen memory: RR1 contains
-        what was in RR2 four cycles before, and therefore what should
-        have been displayed in RR4. Its colours correspond to the colour
-        0-1 or 14-15 of the palette, respectively. A stabiliser
-        consisting of a switch to medium instead of high resolution at
-        this position also works, but the screen is sometimes shifted by
-        a pixel horizontally. This occurs seemingly randomly.
-
-        Resetting the Shifter
-
-        Exiting certain overscans often causes the bitplanes of the
-        following normal screen to be displaced. This occurs because the
-        last line of the overscan was missing its stabiliser. While in
-        overscan, one doesn't observe the displacement of bitplanes
-        because the stabiliser of the first line of the next VBL clears
-        the effect. Sometimes they hide the effect further by setting
-        the colours to zero during that first line. To restore the
-        picture at the end of one of these programs. one must reset the
-        SHIFTER. This is done by using a sequence of switches of
-        resolution at the begining of each VBL during the border, while
-        DE is disactivated. It has the effect of clearing out the
-        registers of the SHIFTER. I recommend that you use the timings
-        indicated in my example programs so that your demos work on
-        every ST. Finally do not "optimize" your code by removing the
-        stabiliser, which MUST ALSO BE PRECISELY PLACED. This would
-        returning to the state of the art 3 years ago!
-  
-    SS:
-        Not really understanding the text above yet.
         For the moment, we consider that on a STF, overscan without stabiliser
         and with late switches would cause a +4 shift (DOLB, Omega) due to
         shifter registers. 
@@ -651,7 +454,7 @@ void TShifter::CheckSideOverscan() {
   {
 
     t=LINECYCLE0+28; //trigger point
-#if defined(SS_MMU_WAKE_UP_IO_BYTES_W)
+#if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
     if(MMU.WakeUpState2())
       t+=2;
 #endif
@@ -666,7 +469,7 @@ void TShifter::CheckSideOverscan() {
 
   if(!draw_line_off && (CurrentScanline.Tricks&TRICK_BLACK_LINE))
   {
-    //TRACE("%d BLK\n",scan_y);
+    //TRACE_LOG("%d BLK\n",scan_y);
     draw_line_off=true;
     memset(PCpal,0,sizeof(long)*16); // all colours black
   }
@@ -704,7 +507,7 @@ void TShifter::CheckSideOverscan() {
 #endif
     ShiftModeChangeAtCycle(460)==2 && !ShiftModeChangeAtCycle(460+8)))
   {
-    TRACE("F%d y%d c%d Enchanted Land HW test R2 %d R0 %d\n",FRAME,scan_y,CyclesIn,NextShiftModeChange(460-4,2),NextShiftModeChange(460,0));
+    TRACE_LOG("F%d y%d c%d Enchanted Land HW test R2 %d R0 %d\n",FRAME,scan_y,CyclesIn,NextShiftModeChange(460-4,2),NextShiftModeChange(460,0));
     CurrentScanline.Bytes+=24; // "double" right off, fixes Enchanted Land
   }
 #endif
@@ -716,17 +519,19 @@ void TShifter::CheckSideOverscan() {
 /*  Overscan (230byte lines) is possible in medium resolution too. Because the
     shifter may have fetched some bytes when the switch occurs, we need to 
     shift the display according to R1 cycle (No Cooper Greetings), I think. 
-    20 for NCG   512R2 12R0 20R1
-    28 for PYM/BPOC  512R2 12R0 28R1
-    36 for NCG off lines 183, 200 512R2 12R0 36R1 (strange!)
-    16 for Drag/Reset
+    20 for NCG   512R2 12R0 20R1        shift=2
+    28 for PYM/BPOC  512R2 12R0 28R1    shift=0
+    36 for NCG off lines 183, 200 512R2 12R0 36R1 (strange!) shift=2
+    16 for Drag/Reset    shift=?
     12 & 16 for PYM/STCNX left off (which is really doing 4bit hardcsroll)
+    D4/Nightmare shift=2
 */
 
 #if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_MED_OVERSCAN)
 
   if(!left_border && !(TrickExecuted&TRICK_OVERSCAN_MED_RES))
   {
+    //ASSERT( mixed_output );
     // look for switch to R1
     r1cycle=CycleOfLastChangeToShiftMode(1);
     if(r1cycle>16 && r1cycle<=40)
@@ -739,8 +544,7 @@ void TShifter::CheckSideOverscan() {
         TrickExecuted|=TRICK_OVERSCAN_MED_RES;
         int cycles_in_low_res=r1cycle-r0cycle;
 #if defined(SS_SHIFTER_MED_OVERSCAN_SHIFT)
-        int shift=(((cycles_in_low_res)/2)%8)/2; // = 2
-        ASSERT( shift==2 ); // No Cooper Greetings, Nightmare
+        int shift=(((cycles_in_low_res)/2)%8)/2;
         shifter_draw_pointer+=-shift; 
         overscan_add_extra+=shift;
 #endif
@@ -771,6 +575,7 @@ void TShifter::CheckSideOverscan() {
 */
   
 #if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_4BIT_SCROLL)
+
   if(!left_border && screen_res==1 && !(TrickExecuted&TRICK_4BIT_SCROLL))
   {
     r1cycle=CycleOfLastChangeToShiftMode(1);
@@ -792,7 +597,7 @@ void TShifter::CheckSideOverscan() {
         shifter_draw_pointer+=shift_in_bytes; // that way we don't need to
         overscan_add_extra-=shift_in_bytes; // correct in Render()
         HblPixelShift=13+8-cycles_in_med_res-8; // -7,-3,1, 5, done in Render()
-//        TRACE("4bit y%d CMR%d CLR%d SH%d PIX%d\n",scan_y,cycles_in_med_res,cycles_in_low_res,shift_in_bytes,HblPixelShift);
+//        TRACE_LOG("4bit y%d CMR%d CLR%d SH%d PIX%d\n",scan_y,cycles_in_med_res,cycles_in_low_res,shift_in_bytes,HblPixelShift);
       }
     }
   }
@@ -817,7 +622,7 @@ void TShifter::CheckSideOverscan() {
 #if defined(SS_SHIFTER_LINE_PLUS_2_THRESHOLD)
     t=LINECYCLE0+52; // fixes Forest
 
-#if defined(SS_MMU_WAKE_UP_IO_BYTES_W)
+#if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
     if(MMU.WakeUpState2())
       t+=2;
 #endif
@@ -825,12 +630,7 @@ void TShifter::CheckSideOverscan() {
 #else
     t=LINECYCLE0+58; 
 #endif
-    if(act-t>0
-
-//&& CurrentScanline.Cycles==512
-
-
-) 
+    if(act-t>0) 
     {
       i=CheckFreq(t);
       if(i>=0 && shifter_freq_change[i]==60)
@@ -852,10 +652,10 @@ void TShifter::CheckSideOverscan() {
     CurrentScanline.Bytes+=2;
     TrickExecuted|=TRICK_LINE_PLUS_2;
     overscan=OVERSCAN_MAX_COUNTDOWN; // 25
-   // TRACE("+2 y %d c %d +2 60 %d 50 %d\n",scan_y,LINECYCLES,FreqChangeCycle(i),FreqChangeCycle(i+1));
-#if defined(SS_VID_TRACE_SUSPICIOUS2)
+   // TRACE_LOG("+2 y %d c %d +2 60 %d 50 %d\n",scan_y,LINECYCLES,FreqChangeCycle(i),FreqChangeCycle(i+1));
+#if defined(SS_VID_TRACE_LOG_SUSPICIOUS2)
     if(shifter_freq_change_time[i]-LINECYCLE0<0)
-      TRACE("F%d Suspicious +2 y %d tmg sw %d tmg hbl %d diff %d\n",FRAME,scan_y,shifter_freq_change_time[i],cpu_timer_at_start_of_hbl,shifter_freq_change_time[i]-cpu_timer_at_start_of_hbl);
+      TRACE_LOG("F%d Suspicious +2 y %d tmg sw %d tmg hbl %d diff %d\n",FRAME,scan_y,shifter_freq_change_time[i],cpu_timer_at_start_of_hbl,shifter_freq_change_time[i]-cpu_timer_at_start_of_hbl);
 #endif
   }
 
@@ -868,14 +668,6 @@ void TShifter::CheckSideOverscan() {
 
 /*  A shift mode switch to 2 at cycle 160 (end of HIRES line) causes the line 
     to stop there. 106 bytes are not fetched.
-
-    ST-CNX
-           Furthermore if one switches to monochrome at position 40, one
-        obtains line lenght of 80 bytes (if the left border has been
-        removed) or of 80-26 = 54 bytes (not removing the left border)
-        corresponding to the 80 bytes of each high resolution line. Note
-        that one has to quickly return to low or medium resolution to
-        avoid causing an Hsync and a new line.
 */
 
 #if defined(SS_SHIFTER_STEEM_ORIGINAL) || 0
@@ -889,7 +681,7 @@ void TShifter::CheckSideOverscan() {
 #elif defined(SS_SHIFTER_TRICKS) && 1// eg PYM/ST-CNX
   t=LINECYCLE0+164; // look for R2 <= 164
 
-#if defined(SS_MMU_WAKE_UP_IO_BYTES_W)
+#if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
     if(MMU.WakeUpState2())
       t+=2;
 #endif
@@ -904,7 +696,7 @@ void TShifter::CheckSideOverscan() {
      r2cycle=ShiftModeChangeAtCycle(160);     // Superior160 164 (LOL)
      if( (CurrentScanline.Tricks&TRICK_LINE_MINUS_106) && r2cycle!=2)
      {
-       TRACE("Line -106 R2 cycle %d\n",shifter_shift_mode_change_time[i]-LINECYCLE0);
+       TRACE_LOG("Line -106 R2 cycle %d\n",shifter_shift_mode_change_time[i]-LINECYCLE0);
 //       CurrentScanline.Tricks&=~TRICK_LINE_MINUS_106;
      }
 
@@ -929,13 +721,7 @@ void TShifter::CheckSideOverscan() {
   /////////////
 
 /*  
-  ST-CNX
-       * 158 byte line at 50Hz by switching to 60Hz at position 93,
-        enabling the 60Hz end of line detection. The line is shorter by
-        a word, corresponding to the difference of 0.5us between the two
-        times to display a line (63.5us versus 64us).
-
-    SS: it's a -2 line if it's at 60hz at cycle 372, the switch doesn't
+    It's a -2 line if it's at 60hz at cycle 372, the switch doesn't
     need to happen at 372, though it makes more sense there. Sooner, there
     could be distortion on a real ST.
 */
@@ -946,7 +732,7 @@ void TShifter::CheckSideOverscan() {
   // Steem test
   t=LINECYCLE0+372; //trigger point for early right border
 /*
-#if defined(SS_MMU_WAKE_UP_IO_BYTES_W)
+#if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
     if(MMU.WakeUpState2())
       t+=2;
 #endif
@@ -961,9 +747,9 @@ void TShifter::CheckSideOverscan() {
       CurrentScanline.Tricks|=TRICK_LINE_MINUS_2;
   }
 
-#if defined(SS_VID_TRACE_SUSPICIOUS2)
+#if defined(SS_VID_TRACE_LOG_SUSPICIOUS2)
   if((CurrentScanline.Tricks&TRICK_LINE_MINUS_2)&&!(shifter_freq_change_time[i]-LINECYCLE0>56))
-    TRACE("F%d Suspicious -2 y %d tmg sw %d tmg hbl %d diff %d\n",FRAME,scan_y,shifter_freq_change_time[i],LINECYCLE0,shifter_freq_change_time[i]-LINECYCLE0);
+    TRACE_LOG("F%d Suspicious -2 y %d tmg sw %d tmg hbl %d diff %d\n",FRAME,scan_y,shifter_freq_change_time[i],LINECYCLE0,shifter_freq_change_time[i]-LINECYCLE0);
 #endif
 
   if((CurrentScanline.Tricks&TRICK_LINE_MINUS_2)
@@ -973,89 +759,21 @@ void TShifter::CheckSideOverscan() {
     CurrentScanline.Bytes+=-2;
     TrickExecuted|=TRICK_LINE_MINUS_2;
     right_border_changed=true;
-//    TRACE("-2 y %d c %d s %d e %d ea %d\n",scan_y,LINECYCLES,scanline_drawn_so_far,overscan_add_extra,ExtraAdded);
+//    TRACE_LOG("-2 y %d c %d s %d e %d ea %d\n",scan_y,LINECYCLES,scanline_drawn_so_far,overscan_add_extra,ExtraAdded);
   }
+
+
+  // TODO right off for 60hz...
+
+
 
   /////////////////////////////////
   // RIGHT BORDER OFF (line +44) // 
   /////////////////////////////////
 
 /* 
-    Flix:
-    Soon  the next border was declared to vanish:  The right  border. 
-    Unfortunately it is not possible to open this border with Timer B 
-    or HBL interrupts.  The ST displays graphics in the right border, 
-    if  you  switch the frequency to 60 Hz at a certain  position  in 
-    every line,  in which the right border is supposed to be  opened. 
-    This  "certain" position requires a completely new  technique  of 
-    programming. If you switch colours in an ordinary Timer B, VBL or 
-    HBL interrupt, you can see, that these interrupts do not occur at 
-    exactly the same position. The colours shake from the left to the 
-    right.  In  order to make some commands,  like the colour or  our 
-    frequency  switchings,  occur at exactly the same  position,  you 
-    have  to  become synchronized with  the  raster-electron-ray.  An 
-    ingenious method to achieve this effect is the following one:
-
-    WAIT:     MOVE.B    $FF8209.W,D0   ; Low-Byte
-              BEQ.S     WAIT           ; mustn't be 0
-              NOT.B     D0             ; negate D0
-              LSL.B     D0,D0          ; Synchronisation
-
-    If  you execute this routine every VBL,  all  following  commands 
-    will be executed at the same position every VBL,  that means that 
-    the colour- or frequency-switches are stable.  But what does this 
-    little routine do?  At first,  the low-byte of the screen-address 
-    is  loaded  into D0.  This byte exactly determines  the  position 
-    within  the line.  It is negated and the LSL-command is  executed 
-    (LSR,  ASL  or  ASR  work as well).  As you  can  read  in  every 
-    processor-book  the LSL-command takes  8+2*n  clock-cycles.  That 
-    means  that  the command needs more clock-cycles the  bigger  the 
-    value in D0 is. That is exactly the shifting that we need! I hope 
-    that you understood this part,  because all fullscreens and sync-
-    scrolling-routines  are based upon this effect.  You should  know 
-    that  one  VBL  (50  Hz) consists  of  160000  clock-cycles  (one 
-    scanline  consists of 512 clock-cycles).  Now you have to  switch 
-    the  frequency  at a certain position and the  border  opens.  Of 
-    course  this takes a lot more processor time than the opening  of 
-    the  upper  or lower border,  because you've to open  the  border 
-    every  line.  Your  ST now displays 204 bytes per  line!  A  line 
-    consists  of 25.5 instead of 20 words without the  right  border, 
-    but should use only 23 of these 25.5 words,  because the  picture 
-    is  distorted on some STs (We made this mistake in  the  "Musical 
-    Wonder  - 1991") if you use too much  words.  Anyway,  there  are 
-    hardly  any monitors that have such a huge visible right  border. 
-    A  demo-screen  without  the  lower  and  the  right  border  was 
-    included in the "Amiga-Demo" by TEX.
-
-    ST-CNX:
-         * Right Overscan by switching to 60Hz at position 94, overiding
-        the 50Hz end-of-useable-line detection, and then returning to
-        50Hz. Each line is now 160 + 44 = 204 bytes long. At 50Hz this
-        mode is stable on all ST's. Notice that 204 bytes is not a
-        multiple of 8, and therefore 2 bitplanes on the extreme right of
-        the picture are not displayed.
-
-        It is important to return immediately to 50Hz, otherwise STE's
-        react bizzarely and distort the screen.
-
-        At 60Hz, right overscan is also possible by playing the same
-        trick at position 93. The length of each line is still 204, but
-        the line must be stabilised (the principle of stabilisation is
-        described below). Furthermore I have not checked whether this
-        kind of line can be stabilised on all STs.
-        (...)
-        Note that one can obtain remove the right border by switching to
-        monochrome at position 94 at 50Hz (overiding the end-of-useable-
-        line detection) but that this method causes a black line to be
-        displayed between the normal screen and the right overscan (see
-        explanation below). A 0 byte line can also be obtained. This
-        method is stable but because it occurs at the time Hsync is
-        being processed, it can distort the screen.
-
-  
-    SS:
-    1) The mysterious "certain position" is cycle 376 (94x4) in our reckoning,
-    374 is OK on many machines.
+    1) The position to remove right border  is cycle 376 (94x4) in our
+    reckoning, 374 is OK on many machines.
     2) The number of bonus bytes (44) is quite bigger than for the left
     border (26). 
     3) People talk of 416 wide res (208x2), not 460 (230x2).
@@ -1075,7 +793,7 @@ void TShifter::CheckSideOverscan() {
 
   t=LINECYCLE0+378; //trigger point for right border cut
 /*
-#if defined(SS_MMU_WAKE_UP_IO_BYTES_W)
+#if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
     if(MMU.WakeUpState2())
       t+=2;
 #endif
@@ -1093,9 +811,9 @@ void TShifter::CheckSideOverscan() {
           i=i1;
       }
 
-#if defined(SS_MMU_WAKE_UP_RIGHT_BORDER) && !defined(SS_MMU_WAKE_UP_IO_BYTES_W)
+#if defined(SS_MMU_WAKE_UP_RIGHT_BORDER) && !defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
       int threshold= (MMU.WakeUpState2()) ? 376 : 374;
-#elif defined(SS_MMU_WAKE_UP_IO_BYTES_W)
+#elif defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
       int threshold= (WAKE_UP_STATE) ? 376 : 374; // taking care of 'ignore'
 #else
       int threshold=374;
@@ -1139,9 +857,11 @@ void TShifter::CheckSideOverscan() {
 
 void TShifter::CheckSyncTrick() {
 
-#if defined(SS_SHIFTER_END_OF_LINE_CORRECTION) //  or should be trashed by compiler
-  // Those tests are much like EndHBL in Hatari
-  // Finish horizontal overscan : correct -2 & +2 effects
+#if defined(SS_SHIFTER_END_OF_LINE_CORRECTION)
+/*  Those tests are much like EndHBL in Hatari
+    Finish horizontal overscan : correct -2 & +2 effects
+*/
+  
   if(CurrentScanline.Tricks&TRICK_LINE_PLUS_2 && CurrentScanline.EndCycle==372)     
   {
     CurrentScanline.Tricks&=~TRICK_LINE_PLUS_2;
@@ -1174,244 +894,6 @@ void TShifter::CheckVerticalOverscan() {
 
 /* Vertical overscan
 
-    Flix:
-    The  first human ever to display any graphics in a screen  border 
-    was  Sven alias "Alyssa" from Mannheim/Germany.  Back in 1987  he 
-    wrote  an intro,  that showed graphics in the  lower  border.  As 
-    Sven  vanished  very fast from the  ST-scene,  it  is  completely 
-    unsettled,  how Sven had the idea to switch the screen  frequency 
-    to  60 Hz for a short period of time within the last line of  the 
-    screen.  Without this fundamental idea,  no fullscreens or  sync-
-    scrolling  would be possible on the ST.  Unfortunately nobody  in 
-    the  ST-scene  knows  what "Alyssa"  is  doing  today.  TEX  (The 
-    Exceptions)  firstly  used graphics in the lower  border  in  the 
-    famous  "B.I.G.  Demo".  To  open the lower  border,  the  screen 
-    frequency  has  to be switched to 60 Hz at the end of  the  199th 
-    line.  The  ST  then  reads nearly 50 more lines  of  the  screen 
-    memory!  The Exceptions revealed this secret in the  B.I.G.  Demo 
-    at the end of the longest scrolltext (42 Kybtes of  text).  After 
-    The Exceptions took up Alyssa's trick,  the upper border was  the 
-    next  one  to  be  removed.  This is  achieved  by  toggling  the 
-    frequency  13  or  29 lines above the "usual"  beginning  of  the 
-    screen.  You  may wonder,  why the upper border can be 13  or  29 
-    lines long.  Unfortunately there are two different  MMU-versions, 
-    that have a difference of 16 lines.  Due to the place to open the 
-    upper  border  being  above the screen memory  and  the  Timer  B 
-    starting  to  count at the beginning of the  screen  memory,  The 
-    Exceptions  used a quite complicated method.  They set a Timer  B 
-    Interrupt  in  the last line and waited  until  the  electron-ray 
-    reached the right position in the upper border.  Doing this, they 
-    had  to waste a lot of processor-time.  In the "Musical Wonder  - 
-    1991"  I  used a routine that waited a few  scanlines  after  the 
-    VBL-Interrupt occured and then toggled the screen-frequency.  But 
-    there's  still a better method.  Timer B is counting just  "real" 
-    screen-lines  (200),  but there is another  interrupt,  the  HBL, 
-    which  counts all scanlines (313).  At the beginning of  the  VBL 
-    the  HBL  starts counting until the right position  to  open  the 
-    upper border is reached.  If you now open both, the upper and the 
-    lower,  border,  you  have  277  lines of  graphics  in  the  low 
-    resolution.
-    (...)
-    If you now open all borders, you've a screen memory that consists 
-    of  160+230*276  (=63640) bytes.  The first line  is  needed  for 
-    synchronisation, therefore it has 160 bytes. The screen memory is 
-    almost twice as big as in the "usual" low resolution!
-    (...)
-    It  is  possible to open two more lines of the  lower  border  by 
-    switching  to 60 Hz for a second time at the end of the  "normal" 
-    lower border.  Unfortunately this does not work on the new  Atari 
-    colour  monitors 
-
-    ST-CNX:
-
-The vertical counter is  incremented every line, i.e.  at every edge of  the HBL
-signal. It will be reset on each edge of the VBL.
-
-At the top of the screen, a border will be displayed, and once a given value  of
-the vertical  counter is  reached, an  internal signal  will be  set to show the
-useable  screen;  let us  call  this signal  V.  V masks  the  DE signal,  which
-specifies the location of the right and  left border. The V signal will also  be
-deactivated when the vertical counter reaches a further value, corresponding  to
-the end of the useable screen. Finally, once the counter reaches a third  value,
-a VBL interrupt and the beginning of a new frame is triggered.
-
-Based on  this, nothing  seems to  allow us  to get  rid of  the upper and lower
-border. But we  must recall that  there are only  263 lines for  a 60 Hz picture
-whereas there are 313 lines for a  50 Hz picture. If the upper and  lower border
-had the same  height at 50Hz,  each one would  be 56 lines  high. If the useable
-screen at 60Hz started  at line 56, as  it does at 50Hz,  there would only be  7
-lines left for the  lower border: the useable  screen wouldn't be centered  ! On
-some monitors, the bottom of the picture wouldn't even be visible...
-Therefore the useable screen must start higher at 60 Hz.
-
-At 60 Hz, the picture starts at line 34 and ends at line 234.
-At 50Hz, the picture starts at line X and ends at line X+200.
-
-Beware: the value X depends on the genation of the GLUE:
-For older STs: X = 63-16 = 47 # (frost: beware also that the diagram says 49
-lines).
-For "newer" STs (every STs except those of ST Connexion!): X = 63.
-In other words, on older STs, the picture is shifted upwards by 16 lines at 50Hz:
-this explains why some obtains only 249 lines whereas others get 271 lines for a
-simple Low-Border Overscan (thanks to Marlon of ST Connexion for telling me about this).
-
-The following pseudo-code describes the work of the GLUE in a simplified fashion:
-
-Line_Number=0
-REPEAT
-IF Line_Number ==  34   AND display_freq=60 THEN Activate signal V
-IF Line_Number == X     AND display_freq=50 THEN Activate signal V
-IF Line_Number == 234   AND display_freq=60 THEN de-activate signal V
-IF Line_Number == 200+X AND display_freq=50 THEN de-activate signal V
-IF Line_Number == 263   AND display_freq=60 THEN start a new VBL
-IF Line_Number == 313   AND display_freq=50 THEN start a new VBL
-Line_Number = Line_Number+1
-END_REPEAT
-
-Note that the frequency test happens more  than once when a new VBL is  started.
-Thus, it  is not  possible to  use the  second example  program (see part #2) to
-check the starting line of a 60  Hz VBL: just as well because line  263 triggers
-the Low-Border Overscan on newer STs. If you want to check, make the VBL  adjust
-the frequency to 50 Hz and the HBL to 60Hz at line 263.
-
-The pseudo-code  is only  presented as  an example  to help  you understand  the
-problem: the  GLUE is  not programmed  (that would  be too  slow for a component
-which must  react in  500 nanoseconds).  Everything is  implemented as  hardware
-logic, which explains the use of  equalities which are easier to implement  than
-inequalities.
-
-Since the ST only checks whether the vertical counter is equal to a given  value
-to activate or deactivate the signal V,  one can obtain a variety of effects  by
-setting the refresh rate at the appropriate line.
-
-Thus, in order to produce a Low  Border Overscan, it is sufficient to switch  to
-60 Hz at the right time at the end of line 199 of the useable screen. This  will
-prevent the GLUE from  deactivating the V signal:  at the value of  the vertical
-counter corresponding to the  199th line of the  useable screen at 50Hz,  V will
-only  be deactivated  if the  current frequency  is 50Hz.  Because the  vertical
-counter is now  greater than any  of the values  that cause an  event at a  60Hz
-refresh rate, there are  no other effects to  worry about. Once the  time of the
-test has elapsed (the test occurs at the beginning of the line, even before  the
-left border is displayed),  it is necessary to  switch back to 50  Hz, otherwise
-the screen will be distorted (refer back to the pseudo-code).
-
-It is also  possible to shrink  the screen by  switching to  60  Hz at line 234:
-this  corresponds  to  the point  when the  signal V  is deactivated  at 60 Hz.
-Switching back to 50 Hz,  the screen will not be  affected by the subsequent de-
-activation of signal V at line X+200.
-
-Finally, it is useful to know that  one can produce a low border Overscan  at 60
-Hz: at the end of  line 199 of the useable  screen, we switch to 50  Hz and then
-back to  60 Hz,  avoiding the  test  at  line 234.  We can  use the same Timer B
-interrupt routine whether the  program is running at  a refresh rate of  50Hz or
-60Hzin, by using the following instruction:  eor.b   #2,$ffff820a.w.  The only
-commercial program that  I know that  uses this technique  is the game  "Leavin'
-Teramis" by Thalion Software: during  level loading, a 22000 colours  picture is
-displayed, at either 50  hz or 60 Hz  (to reduce flickering). The  green message
-under the picture is displayed in the lower border in both cases.
-
-As  the lower  overscan happens  at the  bottom of  the useable  screen, we  can
-synchronize the 68000 code versus the video counter ($ffff8205 to  $ffff8209),
-resulting in better stability (see next  the part for example code). It  is even
-possible to use the  floppy disk DMA with  a bottom overscan. This  kind of code
-trades off the  amount of time  spent at the  alternate refresh rate  versus the
-amount of distortion caused on the screen.  Note that there do not appear to  be
-any methods other than toggling the refresh rate to remove the lower border.
-
-To remove the  upper border, we  simply switch to  60 Hz at  the end of  line 33
-(just before line 34,  where the test happens). As the top border overscan comes
-before the useable picture,  we  cannot synchronize our program using  the video
-counter. Various solutions have been used:
-
-- A stupid wait loop  from the  beginning  of the VBL  interrupt handler,  which
-  wastes cpu cycles but is easy to implement. This method makes two bets:
-
-   * First bet, the VBL interrupt will always happen immediately, which requires
-     that the 68000 is not executing an instruction which takes many cycles such
-     as  movem  or divu,  since the 68000 will complete its current  instruction
-     before servicing the interrupt handler.
-
-   * The Second bet belongs  to the time taken by the  GLUE before treating line
-     34. It has to be a constant whichever ST is used. So far this has proven to
-     be true.
-
-- The use of a MFP timer: This method allows the more than 17000 cpu cycles
-  before line 34 to be used. However this method makes the following additional
-  bets:
-
-   * Third bet, the latency to service the MFP interrupt will always be the same.
-     This is true for the ST/STF series,  but some STEs that I was able to  test
-     (thanks to Laurent) triggered  the interrupt 60 cycles later than on a STF!
-     The bottom overscan of Leavin' Teramis doesn't' work on those STEs, even if
-     the program  detects the STE:  This  shows that this delay varies according
-     to your model of STE.
-
-   * Fourth bet, unless we leave some dead time during line 34, we may encounter
-     the same problem for the MFP interrupt as described in the first bet!
-
-- The use of the HBL interrupt: this interrupt is nearly never used on the ST,
-  and is even forbidden by the ROM (its interrupt handler, pointed to by vector
-  $68 has as only function to mask this interrupt). As this interrupt is
-  triggered by the Hsync signal, it occurs on every line (including borders and
-  the useable screen), which makes it perfect for counting lines up to the 34th
-  line after the VBL. But it has a drawback, which explains why this method is
-  rarely used:  The HBL  interrupt occurs at the  beginning of the line, and the
-  68000  takes at least  44 cycles  to enter the  interrupt handler, so that the
-  interrupt  handling routine  is executed  in the middle of the  left border...
-  Which is ugly if one uses it to change the palette!
-  To remove  the upper  border,  each  HBL interrupt  will check  whether it has
-  reached line 33. If so, it will wait (with a DBF and some NOPs)  until the end
-  of the line to toggle the refresh rate. This way, we lose lose less cpu time
-  than the first method, and we don't depend on the MFP.
-
-  This method takes 2 bets:
-
-  * First bet, the number of HBL lines to count will not change, whatever the ST
-    we use:  This has never happened, and if it ever would,  none of other means
-    of  removing  the upper border,  described above,  would work.  However this
-    method will survive when the previous methods will not: The time between the
-    VBL and line 34 may vary by up to a quarter of a line without  affecting the
-    number of HBLs that must be counted...
-
-  * Second bet, the time taken to service  the HBL interrupt will be a constant.
-    Again,  I have never  seen this not to be true,  and it is hard  to see why
-    Atari  would add  extra  circuitry to  this signal:  Some  chips  were added
-    between the MFP and the 68000 on the STE,  but the MFP is fully used by this
-    computer. Atari's disdain for the HBL should preserve its reliability.
-
-It is  impossible to trigger a top  overscan in 60 Hz using a 50/60 Hz frequency
-switch.
-
-There is another method of removing the upper border: one switches to monochrome
-output at the beginning of the VBL. This technique allows us to use most of  the
-34 lines  above the  top border  overscan described  above. Unfortunately,  this
-method only works on some STs, but not on STEs... This method relies on the fact
-that a monochrome screen has an  even shorter top border since the  refresh rate
-is 70Hz.  By switching  back to  50 or  60 Hz,  after the  video counter  starts
-incrementing, one obtains a top border overscan. However, I've noticed that  one
-does not remove  the upper border  if one switches  back to 50/60Hz  immediately
-after the video  counter starts. Instead  one is able  to synchronize the  68000
-with the  video counter  allowing one  to change  the colour  of the border at a
-precise location, like BMT seems to do in the third screen of the Skid Row  demo
-(see ST Mag 47, page 14). As  this technique is not reliable, I don't  recommend
-it, to prevent  certain people from  complaining... (This is  an allusion to  an
-article  previously  published  in  ST  Magazine,  written  by  Belzebub  of  ST
--Connexion, complaining that most overscans do not work on his ancient ST).
-
-  [SS This amazing Skid Row/BMT3 demo doesn't seem to read the SDP, to switch
-  sync, all interrupts are disabled, and it runs suspiciously flawlessly in 
-  Steem. All timings are good!]
-
-Now that we have learnt how to remove the upper and lower borders, it should  be
-easy to  remove both  in the  same screen.  But a  subtlety is often forgotten !
-Without top border overscan, we can use Timer B interrupt to trigger the  bottom
-overscan, so the border is removed whatever value of X, the number of the  first
-line of the useable screen. We  cannot use the same technique when  removing the
-upper border: to remove the lower border, we must toggle the refresh rate twice,
-with an interval of  16 lines. This will  guarantee compatability with the  most
-recent STs as well as antiquities.
-
-    SS:
     1) The two different MMU are not emulated, we emulate the common ST with
     29 bonus top lines.
 
@@ -1433,6 +915,9 @@ recent STs as well as antiquities.
     -E605 planet (500:S0)
     -RGBeast (480:S0, sometimes 500:S2)
     STF cases:
+    -3615Gen4 Cakeman
+    -Auto 168
+    -European Demos (top 444 60) When it misses there's just no 60 (VBI?)
     -Musical Wonder 90 (416:S0,504:S2)
     -SNYD2/Sync Vectorballs II 424:S0000 504:S0002 (every time)
     "the low border of Sync's vectorballs was never stable on my machine"
@@ -1445,10 +930,16 @@ recent STs as well as antiquities.
     enough!
 */
 
-  BOOL on_overscan_limit=(scan_y==-30 
-    || scan_y==shifter_last_draw_line-1 && scan_y<245); 
+  enum{NO_LIMIT=0,LIMIT_TOP,LIMIT_BOTTOM};
+
+  BYTE on_overscan_limit=NO_LIMIT;
+  if(scan_y==-30)
+    on_overscan_limit=LIMIT_TOP;
+  else if(scan_y==shifter_last_draw_line-1 && scan_y<245)
+    on_overscan_limit=LIMIT_BOTTOM;
+
   int t,i=shifter_freq_change_idx;
-  int freq_at_trigger=0; // =shifter_freq was a stupid bug
+  int freq_at_trigger=0; 
   if(screen_res==2) 
     freq_at_trigger=MONO_HZ;
   if(emudetect_overscans_fixed) 
@@ -1467,10 +958,10 @@ recent STs as well as antiquities.
 #if defined(SS_SHIFTER_TRICKS) && !defined(SS_VID_VERT_OVSCN_OLD_STEEM_WAY)
   else if(on_overscan_limit && shifter_freq_at_start_of_vbl==50)
   {
-    t=502;
+    t=VERT_OVSCN_LIMIT; //502
 #if defined(SS_STF) && defined(SS_STF_VERTICAL_OVERSCAN)
     if(ST_TYPE!=STE)
-      t+=4; // fixes Auto 168 flicker in Steem
+      t+=STF_VERT_OVSCN_OFFSET; //4
 #endif
     
     if(FreqAtCycle(t)==60 
@@ -1481,40 +972,29 @@ recent STs as well as antiquities.
       freq_at_trigger=60;
   }
 #if defined(SS_SHIFTER_60HZ_OVERSCAN) 
-  else if(scan_y==199 && shifter_freq_at_start_of_vbl==60 
-    && FreqAtCycle(502-4)==50) // simpler test, not many cases
-      CurrentScanline.Tricks|=TRICK_VERTICAL_OVERSCAN; // fixes Leavin' Terramis
+/*  Removing lower border at 60hz. Simpler test, not many cases.
+    Fixes Leavin' Terramis in monitor mode.
+*/
+  else if(on_overscan_limit==LIMIT_BOTTOM && shifter_freq_at_start_of_vbl==60 
+    && FreqAtCycle(502-4)==50) 
+      CurrentScanline.Tricks|=TRICK_BOTTOM_OVERSCAN_60HZ; 
 #endif
 #endif
 
   if(on_overscan_limit && freq_at_trigger==60 // a bit messy, it's because we
     && shifter_freq_at_start_of_vbl==50) // keep the possibility of "old way"
-    CurrentScanline.Tricks|=TRICK_VERTICAL_OVERSCAN;
-
-#if !defined(SS_VID_VERT_OVSCN_OLD_STEEM_WAY) \
-  && defined(SS_SHIFTER_VERTICAL_OVERSCAN_TRACE) && defined(SS_SHIFTER_TRICKS)
-  if(on_overscan_limit && shifter_freq_at_start_of_vbl==50 
-    && freq_change_this_scanline)
-  { // debug report differences Steem-SSE
-    int t2=cpu_timer_at_start_of_hbl+CYCLES_FROM_HBL_TO_RIGHT_BORDER_CLOSE+98; // 502
-    int i2=CheckFreq(t2); 
-    int freq_at_trigger2=(i2>-1) ? shifter_freq_change[i2] : 0;
-    if(!(CurrentScanline.Tricks&TRICK_VERTICAL_OVERSCAN)
-      && freq_at_trigger2==60)
-      TRACE("y %d c %d fcts %d\n",scan_y,t,freq_change_this_scanline);
-    else if((CurrentScanline.Tricks&TRICK_VERTICAL_OVERSCAN)
-      && freq_at_trigger2!=60)
-      TRACE("y %d c %d fcts %d FreqAtCycle(t) %d FreqAtCycle(t-2) %d FreqChangeAtCycle(t-2) %d freq_at_trigger %d\n",scan_y,t,freq_change_this_scanline,FreqAtCycle(t),FreqAtCycle(t-2),FreqChangeAtCycle(t-2),freq_at_trigger);
-
+  {
+    CurrentScanline.Tricks|= (on_overscan_limit==LIMIT_TOP) 
+      ? TRICK_TOP_OVERSCAN: TRICK_BOTTOM_OVERSCAN;
   }
-#endif
 
-  if(CurrentScanline.Tricks&TRICK_VERTICAL_OVERSCAN)
+  if(CurrentScanline.Tricks&
+    (TRICK_TOP_OVERSCAN|TRICK_BOTTOM_OVERSCAN|TRICK_BOTTOM_OVERSCAN_60HZ))
   {
     overscan=OVERSCAN_MAX_COUNTDOWN;
     time_of_next_timer_b=time_of_next_event+cpu_cycles_from_hbl_to_timer_b
       + TB_TIME_WOBBLE;
-    if(scan_y==-30) // top border off
+    if(on_overscan_limit==LIMIT_TOP) // top border off
     {
       shifter_first_draw_line=-29;
       if(FullScreen && border==2) // TODO a macro
@@ -1528,9 +1008,9 @@ recent STs as well as antiquities.
       shifter_last_draw_line=247; //?
   }
 
-#if defined(SS_SHIFTER_VERTICAL_OVERSCAN_TRACE)
+#if defined(SS_SHIFTER_VERTICAL_OVERSCAN_TRACE_LOG)
   if(on_overscan_limit) 
-    TRACE("F%d y%d overscan %X\n",FRAME,scan_y,(bool)(CurrentScanline.Tricks&TRICK_VERTICAL_OVERSCAN));
+    TRACE_LOG("F%d y%d freq at %d %d at %d %d switch %d to %d, %d to %d, %d to %d overscan %X\n",FRAME,scan_y,t,FreqAtCycle(t),t-2,FreqAtCycle(t-2),PreviousFreqChange(PreviousFreqChange(t)),FreqChangeAtCycle(PreviousFreqChange(PreviousFreqChange(t))),PreviousFreqChange(t),FreqChangeAtCycle(PreviousFreqChange(t)),NextFreqChange(t),FreqChangeAtCycle(NextFreqChange(t)),(bool)(CurrentScanline.Tricks&TRICK_VERTICAL_OVERSCAN));
 #endif
 }
 
@@ -1559,7 +1039,7 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
         for (int n=0;n<emudetect_falcon_mode_size;n++){
           if (in_pic){
             nsdp=shifter_draw_pointer + pic*emudetect_falcon_mode;
-            draw_scanline(bord,pic,bord,shifter_hscroll);
+            draw_scanline(bord,pic,bord,HSCROLL);
             AddExtraToShifterDrawPointerAtEndOfLine(nsdp);
             shifter_draw_pointer=nsdp;
           }else{
@@ -1570,7 +1050,7 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
         }
       }
     }
-    shifter_pixel=shifter_hscroll; //start by drawing this pixel
+    shifter_pixel=HSCROLL; //start by drawing this pixel
     scanline_drawn_so_far=BORDER_SIDE+320+BORDER_SIDE;
   }else if (extended_monitor){
     int h=min(em_height,Disp.SurfaceHeight);
@@ -1628,11 +1108,11 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
       draw_dest_ad=draw_dest_next_scanline;
       draw_dest_next_scanline+=draw_dest_increase_y;
     }
-    shifter_pixel=shifter_hscroll; //start by drawing this pixel
+    shifter_pixel=HSCROLL; //start by drawing this pixel
 #if defined(SS_SHIFTER_STE_MED_HSCROLL) 
     HblStartingHscroll=shifter_pixel; // save the real one (not important for Cool STE)
     if(screen_res==1) //it's in cycles, bad name
-      shifter_pixel=shifter_hscroll/2; // fixes Cool STE jerky scrollers
+      shifter_pixel=HSCROLL/2; // fixes Cool STE jerky scrollers
 #endif
   }
   // Monochrome
@@ -1641,7 +1121,7 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
     if(scan_y>=shifter_first_draw_line && scan_y<shifter_last_draw_line)
     {
       nsdp=shifter_draw_pointer+80;
-      shifter_pixel=shifter_hscroll; //start by drawing this pixel
+      shifter_pixel=HSCROLL; //start by drawing this pixel
       if(scan_y>=draw_first_possible_line && scan_y<draw_last_possible_line)
       {
         if(border & 1)
@@ -1682,19 +1162,18 @@ int TShifter::IncScanline() { // a big extension of 'scan_y++'!
   if(CurrentScanline.Tricks)
   {
     VideoEvents.Add(scan_y,CurrentScanline.Cycles,'T',CurrentScanline.Tricks);
-    VideoEvents.Add(scan_y,CurrentScanline.Cycles,'#',CurrentScanline.Bytes);
+//    VideoEvents.Add(scan_y,CurrentScanline.Cycles,'#',CurrentScanline.Bytes);
   }
 #endif
 
 #if defined(SS_DEBUG)
-  debug7=debug8=debug9=0;
   Debug.ShifterTricks|=CurrentScanline.Tricks;
 #endif
 
   scan_y++; 
   
   left_border=BORDER_SIDE;
-  if(shifter_hscroll) 
+  if(HSCROLL) 
     left_border+=16;
   if(shifter_hscroll_extra_fetch) 
     left_border-=16;
@@ -1702,16 +1181,16 @@ int TShifter::IncScanline() { // a big extension of 'scan_y++'!
 #if defined(SS_DEBUG) && !defined(SS_SHIFTER_DRAW_DBG)
   if( scan_y-1>=shifter_first_draw_line && scan_y+1<shifter_last_draw_line
     && (overscan_add_extra || !ExtraAdded) && screen_res<2)
-    TRACE("F%d y%d Extra %d added %d\n",FRAME,scan_y-1,overscan_add_extra,ExtraAdded);
+    TRACE_LOG("F%d y%d Extra %d added %d\n",FRAME,scan_y-1,overscan_add_extra,ExtraAdded);
 #endif
-//        AddExtraToShifterDrawPointerAtEndOfLine(shifter_draw_pointer);
+//        AddExtraToShifterDrawPointerAtEndOfLine(shifter_draw_pointer); //?
   ExtraAdded=overscan_add_extra=0;
 #if defined(SS_SHIFTER_SDP_WRITE)
   SDPMiddleByte=999; // an impossible value for a byte
 #endif
   PreviousScanline=CurrentScanline; // auto-generated
   CurrentScanline=NextScanline;
-  if(scan_y==-29 && (PreviousScanline.Tricks&TRICK_VERTICAL_OVERSCAN)
+  if(scan_y==-29 && (PreviousScanline.Tricks&TRICK_TOP_OVERSCAN)
     || !scan_y && !PreviousScanline.Bytes)
     CurrentScanline.Bytes=160; // needed by ReadSDP - not perfect (TODO)
   else if(FetchingLine()) 
@@ -1720,27 +1199,459 @@ int TShifter::IncScanline() { // a big extension of 'scan_y++'!
   {
     CurrentScanline.StartCycle=56;
     CurrentScanline.EndCycle=376;
-    CurrentScanline.Cycles=512;
+    CurrentScanline.Cycles=SCANLINE_TIME_IN_CPU_CYCLES_50HZ;
   }
   else if(shifter_freq==60)
   {
     CurrentScanline.StartCycle=52;
     CurrentScanline.EndCycle=372;
-    CurrentScanline.Cycles=508;
+    CurrentScanline.Cycles=SCANLINE_TIME_IN_CPU_CYCLES_60HZ;
   }
   else if(shifter_freq==72 || screen_res==2)
   {
     CurrentScanline.StartCycle=0;
     CurrentScanline.EndCycle=160;
-    CurrentScanline.Cycles=160;
+    CurrentScanline.Cycles=SCANLINE_TIME_IN_CPU_CYCLES_70HZ;
   }
   TrickExecuted=0;
+
+  CurrentScanline.Tricks=0;
 
   // In the STE if you make hscroll non-zero in the normal way then the shifter
   // buffers 2 rasters ahead. We don't do this so to make sdp correct at the
   // end of the line we must add a raster.  
-  shifter_skip_raster_for_hscroll = shifter_hscroll!=0;//SS correct place?
+  shifter_skip_raster_for_hscroll = HSCROLL!=0;//SS correct place?
   return scan_y; // fancy
+}
+
+/*  For simplification, GLUE/MMU/Shifter IO is considered just shifter for what
+    concerns the ST video circuits.
+    We moved the parts of ior.cpp and iow.cpp dealing with video circuits here.
+*/
+
+BYTE TShifter::IORead(MEM_ADDRESS addr) {
+
+  ASSERT( (addr&0xFFFF00)==0xff8200 );
+
+/*
+    This was in Steem 3.2:
+    // Below $10 - Odd bytes return value or 0, even bytes return 0xfe/0x7e
+    // Above $40 - Unused return 0
+    //// Unused bytes between $60 and $80 should return 0!
+   For now, we keep that for STE (refactored), return $FF for STF.
+   ior_byte is our return value, to which we immediately give a default
+   value.
+   Cases 
+   R FF820D Lemmings40
+*/
+  BYTE ior_byte= ((addr&1)||addr>0xff8240) ? 0 : 0xFE; 
+#if defined(SS_STF)
+  if(ST_TYPE!=STE)
+    ior_byte=0xFF; 
+#endif  
+
+  if (addr>=0xff8240 && addr<0xff8260){  //palette
+    int n=(addr-0xff8240)/2; // which palette
+    ior_byte= (addr&1) ? (STpal[n]&0xFF) : (STpal[n]>>8);
+  }else if (addr>0xff820f && addr<0xff8240){ //forbidden gap
+    exception(BOMBS_BUS_ERROR,EA_READ,addr);
+  }else if (addr>0xff827f){  //forbidden area after SHIFTER
+    exception(BOMBS_BUS_ERROR,EA_READ,addr);
+  }else{
+    switch(addr){
+      
+    case 0xff8201:  //high byte of screen memory address
+      ior_byte=LOBYTE(HIWORD(xbios2));
+      break;
+      
+    case 0xff8203:  //mid byte of screen memory address
+      ior_byte=HIBYTE(LOWORD(xbios2));
+      break;
+      
+    case 0xff8205:  //high byte of screen draw pointer
+    case 0xff8207:  //mid byte of screen draw pointer
+    case 0xff8209:{  //low byte of screen draw pointer
+      MEM_ADDRESS sdp;
+#if defined(SS_SHIFTER_SDP_READ)
+      sdp=ReadSDP(LINECYCLES); // a complicated affair
+#else
+      if(scan_y<shifter_first_draw_line || scan_y>=shifter_last_draw_line){
+        sdp=shifter_draw_pointer;
+      }else{
+        sdp=get_shifter_draw_pointer(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
+        LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_VIDEO,Str("VIDEO: ")+HEXSl(old_pc,6)+
+          " - Read shifter draw pointer as $"+HEXSl(sdp,6)+
+          " on "+scanline_cycle_log()); )
+      }
+#endif
+      ior_byte=DWORD_B(&sdp,(2-(addr-0xff8205)/2)); // change for big endian !!!!!!!!!
+#if defined(SS_SHIFTER_EVENTS)
+      VideoEvents.Add(scan_y,LINECYCLES,'r',((addr&0xF)<<8)|ior_byte);
+#endif
+      }
+      break;
+      
+    case 0xff820a:  //synchronization mode
+      ior_byte&=~3;           // this way takes care
+      ior_byte|=m_SyncMode;   // of both STF & STE
+      break;
+
+    case 0xff820d:  //low byte of screen memory address
+      ASSERT(!(xbios2&1));
+#if defined(SS_STF)
+      ASSERT( ST_TYPE==STE || !(xbios2&0xFF) );
+      if(ST_TYPE==STE) 
+#endif
+        ior_byte=xbios2&0xFF;
+      break;
+  
+    case 0xff820f: // LINEWID
+#if defined(SS_STF)
+      ASSERT( ST_TYPE==STE ); //No Cooper
+      if(ST_TYPE==STE) 
+#endif
+        ior_byte=LINEWID;
+      break;
+      
+    case 0xff8260: //resolution
+      ior_byte&=~3;           // this way takes care
+      ior_byte|=m_ShiftMode;  // of both STF & STE
+      break;
+
+    case 0xff8265:  //HSCROLL
+      DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) shifter_hscroll_extra_fetch=(shifter_hscroll!=0);
+#if defined(SS_STF)
+      if(ST_TYPE==STE)
+#endif
+        ior_byte=HSCROLL;
+      break;
+    }//if
+    
+  }
+#if defined(SS_SHIFTER_IOR_TRACE_LOG)
+  // made possible by our structure change
+  TRACE_LOG("Shifter read %X=%X\n",addr,ior_byte);
+#endif
+  return ior_byte;
+}
+
+
+void TShifter::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
+
+  ASSERT( (addr&0xFFFF00)==0xff8200 );
+
+#if defined(SS_SHIFTER_IOW_TRACE_LOG)
+  TRACE_LOG("(%d/%d) Shifter write %X=%X\n",scan_y,LINECYCLES,addr,io_src_b);
+#endif  
+
+  if ((addr>=0xff8210 && addr<0xff8240) || addr>=0xff8280){
+    exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
+  }
+  
+  /////////////
+  // Palette // // SS word (long) writes far more frequent (see below)
+  /////////////
+  
+  else if (addr>=0xff8240 && addr<0xff8260){  //palette
+    int n=(addr-0xff8240) >> 1; 
+    
+    // Writing byte to palette writes that byte to both the low and high byte!
+    WORD new_pal=MAKEWORD(io_src_b,io_src_b & 0xf);
+    
+#if defined(SS_SHIFTER_EVENTS) && defined(SS_SHIFTER_EVENTS_PAL)
+    VideoEvents.Add(scan_y,LINECYCLES,'p', (n<<12)|io_src_b);  // little p
+#endif
+    
+#if defined(SS_SHIFTER_PALETTE_BYTE_CHANGE) 
+    // TESTING maybe Steem was right, Hatari is wrong
+    if(addr&1) // the double write happens only on even addresses (?)
+    {
+      new_pal=(STpal[n]&0xFF00)|io_src_b; // fixes Golden Soundtracker demo
+      TRACE_LOG("Single byte  %X write pal %X STPal[%d] %X->%X\n",io_src_b,addr,n,STpal[n],new_pal);
+    }
+#endif
+    
+    SetPal(n,new_pal);
+    log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Palette change at scan_y="+scan_y+" cycle "+(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl));
+    
+    
+  }
+  else{
+    switch(addr){
+      
+/*
+Video Base Address:                           ST     STE
+
+$FFFF8201    0 0 X X X X X X   High Byte      yes    yes
+$FFFF8203    X X X X X X X X   Mid Byte       yes    yes
+$FFFF820D    X X X X X X X 0   Low Byte       no     yes
+
+These registers only contain the "reset" value for the Shifter after a 
+whole screen has been drawn. It does not affect the current screen, but 
+the one for the next VBL. To make immediate changes on the screen, use 
+the Video Address Counter [(SDP)].
+
+According to ST-CNX, those registers are in the MMU, not in the shifter.
+
+ STE doc by Paranoid: for compatibility reasons, the low-byte
+ of the Video Base Address is ALWAYS set to 0 when the mid- or high-byte of
+ the Video Base Address are set. 
+ E.g.: Leavin' Terramis
+
+*/
+     
+    case 0xff8201:  //high byte of screen memory address
+#if defined(SS_SHIFTER_EVENTS)
+      VideoEvents.Add(scan_y,LINECYCLES,'V',io_src_b); 
+#endif
+      // asserts on SoWatt, Leavin' Terramis
+      ASSERT( mem_len>FOUR_MEGS || !(io_src_b&(~b00111111)) ); 
+      if (mem_len<=FOUR_MEGS) 
+        io_src_b&=b00111111;
+      DWORD_B_2(&xbios2)=io_src_b;
+#if defined(SS_STF)
+      if(ST_TYPE==STE) 
+#endif
+        DWORD_B_0(&xbios2)=0; 
+      log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set screen base to "+HEXSl(xbios2,6));
+      break;
+      
+    case 0xff8203:  //mid byte of screen memory address
+#if defined(SS_SHIFTER_EVENTS)
+      VideoEvents.Add(scan_y,LINECYCLES,'M',io_src_b); 
+#endif
+      DWORD_B_1(&xbios2)=io_src_b;
+      
+#if defined(SS_STF)
+      if(ST_TYPE==STE) 
+#endif
+        DWORD_B_0(&xbios2)=0; 
+      log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set screen base to "+HEXSl(xbios2,6));
+      break;
+      
+    case 0xff8205:  //high byte of draw pointer
+    case 0xff8207:  //mid byte of draw pointer
+    case 0xff8209:  //low byte of draw pointer
+      
+#if defined(SS_SHIFTER_SDP_WRITE)
+      WriteSDP(addr,io_src_b); // very complicated!
+      break;
+      
+#else // Steem 3.2 or SS_SHIFTER_SDP_WRITE not defined
+      {
+        //          int srp=scanline_raster_position();
+        int dst=ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl;
+        dst-=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN;
+        dst+=16;dst&=-16;
+        dst+=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN;
+#if defined(SS_SHIFTER) // video defined but not SDP
+        Render(dst);
+#else
+        draw_scanline_to(dst); // This makes shifter_draw_pointer up to date
+#endif
+        MEM_ADDRESS nsdp=shifter_draw_pointer;
+        if (mem_len<=FOUR_MEGS && addr==0xff8205) io_src_b&=b00111111;
+        DWORD_B(&nsdp,(0xff8209-addr)/2)=io_src_b;
+        
+        /*
+        if (shifter_hscroll){
+        if (dst>=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN-32 && dst<CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320-16){
+        log_to(LOGSECTION_VIDEO,Str("ATTANT: addr=")+HEXSl(addr,6));
+        if (addr==0xff8209){
+        // If you set low byte while on screen with hscroll on then sdp will
+        // be an extra raster ahead. Steem's sdp is always 1 raster ahead, so
+        // correct for that here.
+        nsdp-=8;
+        }
+        }
+        }
+        */
+        
+        //          int off=(get_shifter_draw_pointer(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl)&-8)-shifter_draw_pointer;
+        //          shifter_draw_pointer=nsdp-off;
+        shifter_draw_pointer_at_start_of_line-=shifter_draw_pointer;
+        shifter_draw_pointer_at_start_of_line+=nsdp;
+        shifter_draw_pointer=nsdp;
+        
+        log_to(LOGSECTION_VIDEO,Str("VIDEO: ")+HEXSl(old_pc,6)+" - Set shifter draw pointer to "+
+          HEXSl(shifter_draw_pointer,6)+" at "+scanline_cycle_log()+", aligned to "+dst);
+        break;
+      }
+#endif
+
+    case 0xff820a: //synchronization mode      
+      SetSyncMode(io_src_b); 
+      break;
+      
+/* 
+VBASELO 
+This register contains the low-order byte of the video display base address. 
+It can be altered at any time and will affect the next display processor data 
+fetch. it is recommended that the video display address be altered only during 
+vertical and horizontal blanking or display garbage may result. 
+
+STE only. That's why the low byte is separated from the high & mid bytes.
+Writing on it on a STF does nothing.
+
+Last bit always cleared.
+*/
+    case 0xff820d:  //low byte of screen memory address
+#if defined(SS_SHIFTER_EVENTS)
+      VideoEvents.Add(scan_y,LINECYCLES,'v',io_src_b); 
+#endif
+#if defined(SS_STF)
+      if(ST_TYPE!=STE)
+      {
+        TRACE_LOG("STF write %X to %X\n",io_src_b,addr);
+        break; // fixes Lemmings 40; used by Beyond/Pax Plax Parallax
+      }
+#endif
+
+      ASSERT(!(io_src_b&1)); //E605
+      io_src_b&=~1;
+      xbios2&=0xFFFF00;
+      xbios2|=io_src_b;
+      log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set screen base to "+HEXSl(xbios2,6));
+      break;
+      
+/*
+LINEWID This register indicates the number of extra words of data (beyond
+that required by an ordinary ST at the same resolution) which represent
+a single display line. If it is zero, this is the same as an ordinary ST. 
+If it is nonzero, that many additional words of data will constitute a
+single video line (thus allowing virtual screens wider than the displayed 
+screen). CAUTION In fact, this register contains the word offset which 
+the display processor will add to the video display address to point to 
+the next line. If you are actively scrolling (HSCROLL <> 0), this register
+should contain The additional width of a display line minus one data fetch
+(in low resolution one data fetch would be four words, one word for 
+monochrome, etc.).
+
+Line-Offset Register
+  
+FFFF820F  X X X X X X X X X                  no     yes
+    
+This register contains the value how many WORDS (not BYTES!) the Shifter is
+supposed to skip after each Rasterline. This register enables virtual screens
+that are (horizontally) larger than the displayed screen by making the 
+Shifter skip the set number of words when a line has been drawn on screen.    
+
+The Line Offset Register is very critical. Make sure it contains the correct
+value at any time. If the Pixel Offset Register contains a zero, the Line 
+Offset Register contains the exact number of words to skip after each line. 
+But if you set the Pixel Offset Register to "X", the Shifter will still 
+display 320 (640) pixels a line and therefore has to read "X" pixels from
+the NEXT word which it would have skipped if the Pixel offset Register 
+contained a "0". Hence, for any Pixel Offset Value > 0, please note that 
+the Shifter has to read (a few bits) more each rasterline and these bits 
+must NOT be skipped using the Line Offset Register. 
+*/
+    case 0xff820f:   
+#if defined(SS_SHIFTER_EVENTS)
+      VideoEvents.Add(scan_y,LINECYCLES,'F',io_src_b); 
+#endif
+#if defined(SS_STF)
+      if(ST_TYPE!=STE)
+      {
+        TRACE_LOG("STF write %X to %X\n",io_src_b,addr);
+        break; // fixes Imagination/Roller Coaster mush
+      }
+#endif
+      
+#if defined(SS_SHIFTER) 
+      Render(LINECYCLES,DISPATCHER_LINEWIDTH); // eg Beat Demo
+#else
+      draw_scanline_to(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl); // Update sdp if off right  
+#endif
+      
+#if defined(SS_SHIFTER_SDP_TRACE_LOG)
+      TRACE_LOG("F%d y%d c%d LW %d -> %d\n",FRAME,scan_y,LINECYCLES,LINEWID,io_src_b);
+#endif
+      LINEWID=io_src_b;
+      log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set shifter_fetch_extra_words to "+
+        (shifter_fetch_extra_words)+" at "+scanline_cycle_log());
+      break;
+
+    case 0xff8260: //resolution
+      SetShiftMode(io_src_b);
+      break;
+      
+/*
+HSCROLL 
+This register contains the pixel scroll offset. 
+If it is zero, this is the same as an ordinary ST. 
+If it is nonzero, it indicates which data bits constitute the first pixel 
+from the first word of data. 
+That is, the leftmost displayed pixel is selected from the first data word(s)
+of a given line by this register.
+
+
+FF8264 ---- ---- ---- xxxx
+
+[Notice how writes to FF8264 should be ignored. They aren't.]
+
+Horizontal Bitwise Scroll.
+Delays the start of screen by the specified number of bits. 
+
+Video Base Address Pixel Offset              STF     STE
+
+$FFFF8265  0 0 0 0 X X X X                   no      yes
+
+This register allows to skip from a single to 15 pixels at the start of each
+rasterline to allow horizontal fine-scrolling. 
+*/
+      
+    case 0xff8264:   
+      // Set hscroll and don't change line length
+      // This is an odd register, when you change hscroll below to non-zero each
+      // scanline becomes 4 words longer to allow for extra screen data. This register
+      // sets hscroll but doesn't do that, instead the left border is increased by
+      // 16 pixels. If you have got hscroll extra fetch turned on then setting this
+      // to 0 confuses the shifter and causes it to shrink the left border by 16 pixels.
+    case 0xff8265:  // Hscroll
+#if defined(SS_SHIFTER_EVENTS)
+      VideoEvents.Add(scan_y,LINECYCLES,(addr==0xff8264)?'h':'H',io_src_b); 
+#endif
+#if defined(SS_STF)
+      if(ST_TYPE!=STE) 
+      {
+        TRACE_LOG("STF write %X to %X\n",io_src_b,addr);
+        break; // fixes Hyperforce
+      }
+      else
+#endif
+      {
+        int cycles_in=(int)(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
+        
+#if defined(SS_SHIFTER_SDP_TRACE_LOG)
+        TRACE_LOG("F%d y%d c%d HS %d -> %d\n",FRAME,scan_y,LINECYCLES,HSCROLL,io_src_b);
+#endif
+        
+        HSCROLL=io_src_b & 0xf; // limited to 4bits
+        log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set horizontal scroll ("+HEXSl(addr,6)+
+          ") to "+(shifter_hscroll)+" at "+scanline_cycle_log());
+        if (addr==0xff8265) shifter_hscroll_extra_fetch=(HSCROLL!=0); //OK
+        
+        
+#if defined(SS_VID_BORDERS)
+        if (cycles_in<=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN-BORDER_SIDE){
+#else
+        if (cycles_in<=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN-32){
+#endif           // eg Coreflakes hidden screen
+          if (left_border>0){ // Don't do this if left border removed!
+            shifter_skip_raster_for_hscroll = HSCROLL!=0; //SS computed at end of line anyway
+            left_border=BORDER_SIDE;
+            if (HSCROLL)
+              left_border+=16;
+            if(shifter_hscroll_extra_fetch) 
+              left_border-=16;
+          }
+        }
+      } 
+      break;
+        
+    }//sw
+  }//if     
 }
 
 
@@ -1766,7 +1677,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     CheckSideOverscan(); 
 
 /*  What happens here is very confusing; we render in real time, but not
-    quite. As on a real ST, there's a delay of fetch+12 (8?) between the 
+    quite. As on a real ST, there's a delay of fetch+8 between the 
     'shifter cycles' and the 'palette reading' cycles. 
     We can't render at once because the palette could change. 
     CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN (84) takes care of that delay. 
@@ -1778,7 +1689,8 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
   // this may look impressive but it's just a bunch of hacks!
   switch(dispatcher) {
   case DISPATCHER_CPU:
-    cycles_since_hbl+=16; // eg 3615 Gen4 by ULM, override normal delay
+    //RoundCycles(cycles_since_hbl);
+    cycles_since_hbl+=16; // 3615 Gen4 by ULM, override normal delay
     break;
   case DISPATCHER_DSTE:
     break;
@@ -1837,7 +1749,8 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     {
       if(left_border<0) // shouldn't happen
       {
-        TRACE("LB<0, leaving render\n");
+        BRK( LB<0 leaving render ) ; //test if should remove...
+        TRACE_LOG("LB<0, leaving render\n");
         return; // may avoid crash
       }
       int border1=0,border2=0,picture=0,hscroll=0; // parameters for ASM routine
@@ -1936,7 +1849,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
           ASSERT(hscroll<16);
           if(hscroll>=16) // convert excess hscroll in SDP shift
           {
-            if(scan_y==120) TRACE("y %d hscroll OVL\n",scan_y);
+            if(scan_y==120) TRACE_LOG("y %d hscroll OVL\n",scan_y);
             shifter_draw_pointer+=(SHIFTER_RASTER_PREFETCH_TIMING/2)
               *(hscroll/16); // ST-CNX large border
             hscroll-=16*(hscroll/16);
@@ -1949,7 +1862,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 #endif
           if(border1<0||picture<0||border2<0||hscroll<0||hscroll>15)
           {
-            TRACE("F%d y%d p%d Render error %d %d %d %d\n",
+            TRACE_LOG("F%d y%d p%d Render error %d %d %d %d\n",
               FRAME,scan_y,pixels_in,border1,picture,border2,hscroll); 
             return;
           }
@@ -2013,6 +1926,25 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 }
 
 
+void TShifter::Reset(bool Cold) {
+  m_SyncMode=0; 
+  m_ShiftMode=screen_res; // we know it's updated first, debug strange screen!
+  nVbl=0; // cold or warm
+
+#if defined(SS_SHIFTER_TRICKS)
+  for(int i=0;i<32;i++)
+  {
+    shifter_freq_change[i]=0; // interference Leavin' Terramis/Flood on PP43
+    shifter_shift_mode_change_time[i]=-1;
+  }
+#endif
+
+#if defined(SS_DEBUG)
+  if(Cold)
+    Debug.ShifterTricks=0;
+#endif
+}
+
 /*  SetShiftMode() and SetSyncMode() are called when a program writes
     on "shifter" registers FF8260 (shift) or FF820A (sync). 
     Most shifter tricks use those registers. 
@@ -2051,16 +1983,18 @@ void TShifter::SetShiftMode(BYTE NewMode) {
     
   In monochrome, frequency is 70hz, a line is transmitted in 28µs.
   There are +- 500 scanlines.
+  We see no reason to forbid writing 3 without crash, but how it is
+  handled by the shifter is unknown. Awesome 16 should work in STF mode
+  anyway.
 */
 
   int CyclesIn=LINECYCLES;
-
-////  ASSERT(!NewMode==2 && scan_y==-29 );
-
 #if defined(SS_SHIFTER_EVENTS)
   VideoEvents.Add(scan_y,CyclesIn,'R',NewMode); 
-  //  TRACE("y%d c%d r%d\n",scan_y,CyclesIn,NewMode);
+  //TRACE_LOG("y%d c%d r%d\n",scan_y,CyclesIn,NewMode);
 #endif
+  NewMode&=3; // only two lines would physically exist
+  m_ShiftMode=NewMode; // update, used by ior now (v3.5.1)
 
   if(screen_res>=2|| emudetect_falcon_mode!=EMUD_FALC_MODE_OFF)
     return; // if not, bad display in high resolution
@@ -2075,17 +2009,13 @@ void TShifter::SetShiftMode(BYTE NewMode) {
 
   // From here, we have a colour display:
   ASSERT( mfp_gpip_no_interrupt & MFP_GPIP_COLOUR );
+  if(NewMode==3) 
+    NewMode=1; // or 2? TESTING
 
-  NewMode&=3; ASSERT(NewMode!=3); // can only be 0 (low),1 (med),2 (hi) now
-//  if(NewMode==m_ShiftMode)    return;
-#if defined(SS_SHIFTER_0BYTE_LINE_TRACE) // try to detect
-  if(NewMode!=2 && CyclesIn>448+8 && CyclesIn<512) 
-    TRACE("0byte line? y%d c%d r%d\n",scan_y,CyclesIn,NewMode);
-#endif
 #if defined(SS_SHIFTER_TRICKS) // before rendering
   AddShiftModeChange(NewMode); // add time & mode
 #endif
-  
+
   Render(CyclesIn,DISPATCHER_SET_SHIFT_MODE);
 
 #if !defined(SS_SHIFTER_TRICKS) || defined(SS_DEBUG) // after rendering
@@ -2113,6 +2043,8 @@ void TShifter::SetShiftMode(BYTE NewMode) {
     }
     if(mixed_output==3 && (ABSOLUTE_CPU_TIME-cpu_timer_at_res_change<30))
       mixed_output=0; //cancel!
+    else if(scan_y<-30) // not displaying anything: no output to mix...
+      ; // eg Pandemonium/Chaos Dister
     else if(!mixed_output)
       mixed_output=3;
     else if(mixed_output<2)
@@ -2121,7 +2053,6 @@ void TShifter::SetShiftMode(BYTE NewMode) {
   }
 
   freq_change_this_scanline=true; // all switches are interesting
-  m_ShiftMode=NewMode; // update
 
 }
 
@@ -2144,17 +2075,18 @@ void TShifter::SetSyncMode(BYTE NewSync) {
 
 #if defined(SS_SHIFTER_EVENTS) 
   VideoEvents.Add(scan_y,CyclesIn,'S',NewSync); 
-//  TRACE("y%d c%d s%d\n",scan_y,CyclesIn,NewSync);
+//  TRACE_LOG("y%d c%d s%d\n",scan_y,CyclesIn,NewSync);
 #endif
 
   int new_freq;  
 
+  m_SyncMode=NewSync&3;
+
   if(screen_res>=2) // note this part is not extra-reliable yet
   {
-//    BRK(HIRES new sync); // happens? yes
-    new_freq=MONO_HZ;
+    new_freq=MONO_HZ; //71
     shifter_freq_idx=2;
-    CurrentScanline.Cycles=160;
+    CurrentScanline.Cycles=scanline_time_in_cpu_cycles[shifter_freq_idx]; 
   }
   else if(NewSync&2) // freq 50hz
   {
@@ -2162,7 +2094,6 @@ void TShifter::SetSyncMode(BYTE NewSync) {
     shifter_freq_idx=0;
     const int limit512=   // TO CHECK
 #if defined(SS_STF) && defined (SS_MMU_WAKE_UP)
-
     (
 #if !defined(SS_MMU_WAKE_UP_STE)
       ST_TYPE!=STE && 
@@ -2171,7 +2102,7 @@ void TShifter::SetSyncMode(BYTE NewSync) {
 #endif
       54+2;
     if(CyclesIn<=limit512)
-      CurrentScanline.Cycles=512;
+      CurrentScanline.Cycles=scanline_time_in_cpu_cycles[shifter_freq_idx]; 
     if(FetchingLine())
     {
       if(CyclesIn<=52 && left_border)
@@ -2185,7 +2116,7 @@ void TShifter::SetSyncMode(BYTE NewSync) {
     new_freq=60;
     shifter_freq_idx=1;
     if(CyclesIn<=52)
-      CurrentScanline.Cycles=508;
+      CurrentScanline.Cycles=scanline_time_in_cpu_cycles[shifter_freq_idx]; 
 
     if(FetchingLine())
     {
@@ -2221,15 +2152,13 @@ void TShifter::SetSyncMode(BYTE NewSync) {
 
 
 void TShifter::Vbl() {
+  // called at the very end of event_vbl_interrupt()
 #if defined(SS_SHIFTER_EVENTS)
   VideoEvents.Vbl(); 
 #endif
+  m_nHbls=HBL_PER_FRAME;
   nVbl++;
-#if defined(SS_DEBUG)
-  debug4=debug5=debug6=0;
-#endif
 }
 
-
-#endif
-//#define SS_MMU_WAKE_UP_IO_BYTES_W
+#undef LOGSECTION
+#endif//#if defined(SS_SHIFTER)

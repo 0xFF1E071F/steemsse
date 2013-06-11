@@ -10,9 +10,9 @@ maps all sorts of user input to all sorts of emulator functions.
 #endif
 
 #if defined(STEVEN_SEAGAL)
-#if defined(SS_INTERRUPT)
+//#if defined(SS_INTERRUPT)
 #include "SSE/SSEInterrupt.h"
-#endif
+//#endif
 #if defined(SS_SHIFTER_EVENTS)
 #include "SSE/SSEShifterEvents.h"
 #endif
@@ -594,21 +594,17 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       break;
 #endif
 #if defined(SS_VID_RECORD_AVI)
+#define LOGSECTION LOGSECTION_VIDEO
     case CUT_RECORD_VIDEO:
       if(video_recording)
       {
-        TRACE("\nStop AVI record\n");
+        TRACE_LOG("\nStop AVI record\n");
         delete pAviFile;
         pAviFile=0;
       }
-      else
-      {
-//        if(!frameskip||frameskip==8) // error||auto
-  //        frameskip=1;
-    //    TRACE("Start AVI recording, frameskip %d\n",frameskip);
-      }
       video_recording=!video_recording;
       break;
+#undef LOGSECTION
 #endif      
 #endif      
       

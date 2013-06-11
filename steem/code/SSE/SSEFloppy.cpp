@@ -7,25 +7,25 @@
 #include "SSEFloppy.h"
 #include "SSEOption.h"
 
+
 #if defined(SS_DMA)
 
 TDma Dma;
 
 TDma::TDma() {
-  Request=FALSE;
+  Request=false;
 #if defined(SS_DMA_DOUBLE_FIFO)
   BufferInUse=0;
 #endif
 }
 
-#if defined(SS_DMA_IO) // all fixes depend on it
+#if defined(SS_DMA) 
+/*  Read/write on disk DMA registers.
+    All SSE fixes depend on it.
+*/
 
-#undef LOGSECTION
-#if defined(SS_DEBUG_FDC_IO_IN_FDC_LOGSECTION)
-#define LOGSECTION LOGSECTION_FDC
-#else
-#define LOGSECTION LOGSECTION_IO
-#endif
+#define LOGSECTION LOGSECTION_FDC // DMA+FDC
+
 /*  DMA/Disk IO table based on Atari doc
 
     ff 8600           |----------------|   Reserved 
@@ -58,93 +58,70 @@ TDma::TDma() {
     ff 8610 - ff 86ff                      Reserved
 */
 
+
 BYTE TDma::IORead(MEM_ADDRESS addr) {
+
+  ASSERT( (addr&0xFFFF00)==0xFF8600 );
+  BYTE ior_byte=0xFF;
+
+  TRACE_LOG("DMA R %X ",addr);
 
   // test for bus error
   if(addr>0xff860f || addr<0xff8604 || addr<0xff8608 && !io_word_access) 
     exception(BOMBS_BUS_ERROR,EA_READ,addr);
 
-  // trace
-#if defined(SS_DEBUG)
-  if(TRACE_ENABLED)
-    TraceIORead(addr);
-#endif
-
-  // pasti handling
-#if USE_PASTI 
-  if(hPasti && pasti_active)
-  {
-    if(addr<0xff8608) // word only
-      if(addr & 1) return LOBYTE(pasti_store_byte_access);
-    struct pastiIOINFO pioi;
-    pioi.addr=addr;
-    pioi.stPC=pc;
-    pioi.cycles=ABSOLUTE_CPU_TIME;
-//    log_to(LOGSECTION_PASTI,Str("PASTI: IO read addr=$")
-//      +HEXSl(addr,6)+" pc=$"+HEXSl(pc,6)+" cycles="+pioi.cycles);
-    pasti->Io(PASTI_IOREAD,&pioi);
-    pasti_handle_return(&pioi);
-    if(addr<0xff8608) // word only
-    {
-      pasti_store_byte_access=WORD(pioi.data);
-      pioi.data=HIBYTE(pioi.data);
-    }
-//          log_to(LOGSECTION_PASTI,Str("PASTI: Read returning $")
-//              +HEXSl(BYTE(pioi.data),2)+" ("+BYTE(pioi.data)+")");
-    return BYTE(pioi.data);
-  }
-#endif
-
-  int drive=floppy_current_drive();
   switch(addr)
   {
 
   case 0xff8604:
-    ASSERT(!(dma_mode & BIT_4)); 
     // sector counter
-    if(dma_mode & BIT_4) 
+    ASSERT(!(MCR & BIT_4)); 
+    if(MCR & BIT_4) 
 #if defined(SS_DMA_SECTOR_COUNT)
 /*
 "The sector count register is write only. Reading this register return
  unpredictable values."
 */
-      return (rand()&0xFF);
+      ior_byte=(rand()&0xFF); // or FF?
 #else
-      return HIBYTE(dma_sector_count); 
+      ior_byte=HIBYTE(Counter); 
 #endif
     // HD access
-    else if(dma_mode & BIT_3) 
+    else if(MCR & BIT_3) 
     {
       LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
-        " - Reading high byte of HDC register #"+((dma_mode & BIT_1) ? 1:0)); )
-      return 0xff;
+        " - Reading high byte of HDC register #"+((MCR & BIT_1) ? 1:0)); )
     }
     // high byte of FDC
-#if defined(SS_FDC_READ_HIGH_BYTE)
-    return 0x00;// like in Pasti
+    else
+#if defined(SS_DMA_FDC_READ_HIGH_BYTE)
+      ior_byte=0x00;// like in Pasti
 #else
 /*
 "The FDC registers only uses 8 bits when writing and therefore the upper byte 
 is ignored and when reading the 8 upper bits consistently reads 1."
 */
-    return 0xff;// like in doc
+      ;
 #endif
-    BRK(impossible) 
+    break;
 
   case 0xff8605: 
     // sector counter
-    if(dma_mode & BIT_4) 
-#if defined(SS_DMA_SECTOR_COUNT)
-      return (rand()&0xFF);
-#else
-      return LOBYTE(dma_sector_count); 
-#endif
-    // HD access
-    else if(dma_mode & BIT_3) 
+    if(MCR & BIT_4) 
     {
+      TRACE_LOG("Counter");
+#if defined(SS_DMA_SECTOR_COUNT)
+      ior_byte=(rand()&0xFF);
+#else
+      ior_byte=LOBYTE(Counter); 
+#endif
+    }
+    // HD access
+    else if(MCR & BIT_3) 
+    {
+      TRACE_LOG("HD");
       LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
                   " - Reading low byte of HDC register #"+((dma_mode & BIT_1) ? 1:0)); )
-      return 0xff;
     }
     // Read FDC register
 #if defined(SS_DMA_FDC_ACCESS)
@@ -154,209 +131,242 @@ Disk Controller is acknowledged; otherwise, the DRQ from the Hard Disk
 interface is acknowledged. For some reason this bit must also be set 
 to generate DMA bus cycle.
 */
-    if(!(dma_mode&BIT_7)) // we can't
+    else if(!(MCR&BIT_7)) // we can't
     {
-      TRACE_LOG("Read FDC, DMA mode %x\n",dma_mode);
-      return 0xFF;
+      TRACE_LOG("No FDC access DMA MCR %x",MCR);
     }
 #endif
-    // IPF handling
-#if defined(SS_IPF)
-    if(Caps.IsIpf(drive))
-      return Caps.ReadWD1772();
+    else
+#if defined(SS_FDC)
+      ior_byte=WD1772.IORead( (MCR&(BIT_1+BIT_2))/2 );
+#else // old ior block... ugly but flexible - normally not compiled
+    {
+        // Read FDC register
+        switch (dma_mode & (BIT_1+BIT_2)){
+          case 0:
+          {
+            int fn=floppy_current_drive();
+            if (floppy_track_index_pulse_active()){
+              fdc_str|=FDC_STR_T1_INDEX_PULSE;
+            }else{
+              // If not type 1 command we will get here, it is okay to clear
+              // it as this bit is only for the DMA chip for type 2/3.
+              fdc_str&=BYTE(~FDC_STR_T1_INDEX_PULSE);
+            }
+            if (floppy_type1_command_active){
+              /* From Jorge Cwik
+                The FDC has two different
+                type of status. There is a "Type I" status after any Type I command,
+                and there is a different "status" after types II & III commands. The
+                meaning of some of the status bits is different (this probably you
+                already know),  but the updating of these bits is different too.
+
+                In a Type II-III status, the write protect bit is updated from the write
+                protect signal only when trying to write to the disk (write sector
+                or format track), otherwise is clear. This bit is static, once it was
+                updated or cleared, it will never change until a new command is
+                issued to the FDC.
+              */
+              fdc_str&=(~FDC_STR_WRITE_PROTECT);
+              if (floppy_mediach[fn]){
+                if (floppy_mediach[fn]/10!=1) fdc_str|=FDC_STR_WRITE_PROTECT;
+              }else if (FloppyDrive[fn].ReadOnly){
+                fdc_str|=FDC_STR_WRITE_PROTECT;
+              }
+              if (fdc_spinning_up){
+                fdc_str&=BYTE(~FDC_STR_T1_SPINUP_COMPLETE);
+              }else{
+                fdc_str|=FDC_STR_T1_SPINUP_COMPLETE;
+              }
+            } // else it should be set in fdc_execute()
+            if ((mfp_reg[MFPR_GPIP] & BIT_5)==0){
+              LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
+                          " - Reading status register as "+Str(itoa(fdc_str,d2_t_buf,2)).LPad(8,'0')+
+                          " ($"+HEXSl(fdc_str,2)+"), clearing IRQ"); )
+              floppy_irq_flag=0;
+              mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
+            }
+//            log_DELETE_SOON(Str("FDC: ")+HEXSl(old_pc,6)+" - reading FDC status register as $"+HEXSl(fdc_str,2));
+/*
+            LOG_ONLY( if (mode==STEM_MODE_CPU) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
+                            " - Read status register as $"+HEXSl(fdc_str,2)); )
+*/
+            return fdc_str;
+          }
+          case 2:
+            return fdc_tr; //track register
+          case 4:
+            return fdc_sr; //sector register
+          case 6:
+            return fdc_dr; //data register
+        }
+    }
 #endif
-    // Steem handling
-    switch(dma_mode&(BIT_1+BIT_2)){
-    case 0: // STR
-      // Update some flags before returning it
-      // IP
-      if (floppy_track_index_pulse_active())
-        fdc_str|=FDC_STR_T1_INDEX_PULSE;
-      else
-        // If not type 1 command we will get here, it is okay to clear
-        // it as this bit is only for the DMA chip for type 2/3.
-        fdc_str&=BYTE(~FDC_STR_T1_INDEX_PULSE);
-      // WP, SU
-      if(floppy_type1_command_active)
-      {
-        fdc_str&=(~FDC_STR_WRITE_PROTECT);
-        if(floppy_mediach[drive])
-        {
-          if(floppy_mediach[drive]/10!=1) 
-            fdc_str|=FDC_STR_WRITE_PROTECT;
-          else if (FloppyDrive[drive].ReadOnly)
-            fdc_str|=FDC_STR_WRITE_PROTECT;
-        }
-        // seems OK, no reset after command:
-        if(fdc_spinning_up)
-          fdc_str&=BYTE(~FDC_STR_T1_SPINUP_COMPLETE);
-        else
-          fdc_str|=FDC_STR_T1_SPINUP_COMPLETE;
-        if(!fdc_tr) {
-//          ASSERT( fdc_str&FDC_STR_T1_TRACK_0 );
-          fdc_str|=FDC_STR_T1_TRACK_0;
-        }
-      } // else it should be set in fdc_execute()
-      if ((mfp_reg[MFPR_GPIP] & BIT_5)==0)
-      {
-        LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
-          " - Reading status register as "+Str(itoa(fdc_str,d2_t_buf,2)).LPad(8,'0')+
-          " ($"+HEXSl(fdc_str,2)+"), clearing IRQ"); )
-        floppy_irq_flag=0;
-        mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
-      }
-      return fdc_str; // STR
-    case 2:
-      //ASSERT( fdc_cr ); // would be a problem
-      ASSERT( fdc_cr & (BIT_7+BIT_6+BIT_5+BIT_4));
-      return fdc_tr; // TR
-    case 4:
-      return fdc_sr; // SR
-    case 6:
-      return fdc_dr; // DR
-    }//sw
-    BRK(impossible)
+
+    break;
 
   case 0xff8606:  //high byte of DMA status
-    return 0x0; // only bits 0-2 of low byte are used
+    ior_byte=0; // only bits 0-2 of low byte are used
+    break;
 
   case 0xff8607:  //low byte of DMA status
+    TRACE_LOG("SR");
 #if defined(SS_DMA_READ_STATUS)
 /*
 "If the DMA status word is polled during a DMA operation the transfer might
  be disrupted."
 Not emulated
 */
-    return BYTE(b00000111) & dma_status; // fixes Vindicators IPF
+    ior_byte=BYTE(b00000111) & SR; // fixes Vindicators IPF
 #else
-    return BYTE(b11110000) | dma_status;
+    ior_byte=BYTE(b11110000) | SR;
 #endif
-
+    break;
 /*
 "The DMA Address Counter register must be read in a High, Mid, Low order."
 TODO?
 */
   case 0xff8609:  // DMA Base and Counter High
-    return (BYTE)((dma_address&0xff0000)>>16);
+    TRACE_LOG("BaseAddress");
+    ior_byte=(BYTE)((BaseAddress&0xff0000)>>16);
+    break;
 
   case 0xff860b:  // DMA Base and Counter Mid
-    return (BYTE)((dma_address&0xff00)>>8);
+    TRACE_LOG("BaseAddress");
+    ior_byte=(BYTE)((BaseAddress&0xff00)>>8);
+    break;
 
   case 0xff860d:  // DMA Base and Counter Low
-    return (BYTE)((dma_address&0xff));
+    TRACE_LOG("BaseAddress");
+    ior_byte=(BYTE)((BaseAddress&0xff));
+    break;
 
   case 0xff860e: //frequency/density control
   {
+    TRACE_LOG("Density");
+    BYTE drive=floppy_current_drive();
     if(FloppyDrive[drive].STT_File) 
-      return 0;
-
-    TFloppyImage *floppy=&(FloppyDrive[drive]);
-      return BYTE((floppy->BytesPerSector * floppy->SectorsPerTrack)>7000);
+      ior_byte=0;
+    else
+    {
+      TFloppyImage *floppy=&(FloppyDrive[drive]);
+      ior_byte=BYTE((floppy->BytesPerSector * floppy->SectorsPerTrack)>7000);
+    }
+    break;
   }
 
   case 0xff860f: //high byte of frequency/density control?
-    return 0;
+    ior_byte=0;
+    break;
   }//sw
-  BRK(impossible)
-  return 0; // quiet C++ warning
+
+#if USE_PASTI 
+/*  Pasti handles all Dma reads - this cancels the first value
+    of ior_byte, but allows to go through TRACE and update our variables..
+*/
+  if(hPasti && pasti_active
+#if defined(STEVEN_SEAGAL) && defined(SS_PASTI_ONLY_STX)
+    && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3
+   // ||addr!=0xff8605||MCR&BIT_3||MCR&BIT_4
+    )
+#endif        
+    )
+  {
+    TRACE_LOG(" Pasti");
+    if(addr<0xff8608 && (addr & 1))
+    {
+      ior_byte=LOBYTE(pasti_store_byte_access);
+    }
+    else
+    {
+      struct pastiIOINFO pioi;
+      pioi.addr=addr;
+      pioi.stPC=pc;
+      pioi.cycles=ABSOLUTE_CPU_TIME;
+//    log_to(LOGSECTION_PASTI,Str("PASTI: IO read addr=$")
+//      +HEXSl(addr,6)+" pc=$"+HEXSl(pc,6)+" cycles="+pioi.cycles);
+      pasti->Io(PASTI_IOREAD,&pioi);
+      pasti_handle_return(&pioi);
+      if(addr<0xff8608) // word only
+      {
+        pasti_store_byte_access=WORD(pioi.data);
+        pioi.data=HIBYTE(pioi.data);
+      }
+//          log_to(LOGSECTION_PASTI,Str("PASTI: Read returning $")
+//              +HEXSl(BYTE(pioi.data),2)+" ("+BYTE(pioi.data)+")");
+      ior_byte=BYTE(pioi.data);
+    }
+  }
+#endif
+
+  TRACE_LOG(" .B=%X\n",ior_byte);
+
+  return ior_byte;
 }
 
 
 void TDma::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
 
+  ASSERT( (addr&0xFFFF00)==0xFF8600 );
+
+  TRACE_LOG("DMA W %X ",addr);
+
   // test for bus error
   if(addr>0xff860f || addr<0xff8604 || addr<0xff8608 && !io_word_access) 
     exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
 
-  // trace
-#if defined(SS_DEBUG)
-  if(TRACE_ENABLED)
-    TraceIOWrite(addr,io_src_b);
-#endif
-
-  // pasti handling
-#if USE_PASTI 
-  if(hPasti && pasti_active)
-  {
-    // pasti.dll takes WORDs, so we build it in 2 steps
-    WORD data=io_src_b;
-    if (addr<0xff8608)
-    { // word only
-      if(addr & 1)
-      {
-        data=MAKEWORD(io_src_b,pasti_store_byte_access);
-        addr&=~1;
-      }
-      else
-      {
-        pasti_store_byte_access=io_src_b;
-        return;
-      }
-    }
-    struct pastiIOINFO pioi;
-    pioi.addr=addr;
-    pioi.data=data;
-    pioi.stPC=pc; //SS debug only?
-    pioi.cycles=ABSOLUTE_CPU_TIME;
-    //          log_to(LOGSECTION_PASTI,Str("PASTI: IO write addr=$")+HEXSl(addr,6)+" data=$"+
-    //                            HEXSl(io_src_b,2)+" ("+io_src_b+") pc=$"+HEXSl(pc,6)+" cycles="+pioi.cycles);
-    pasti->Io(PASTI_IOWRITE,&pioi); //SS send to DLL
-    pasti_handle_return(&pioi);
-    return;
-  }
-#endif
-  int drive=floppy_current_drive();
   switch (addr)
   {
 
   case 0xff8604:
     //write DMA sector counter, 0x190
-    if(dma_mode & BIT_4)
+    if(MCR & BIT_4)
     { 
       ASSERT(!io_src_b);
-      dma_sector_count&=0xff;
-      dma_sector_count|=int(io_src_b) << 8;
+      Counter&=0xff;
+      Counter|=int(io_src_b) << 8;
       log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Set DMA sector count to "+dma_sector_count);
       break;
     }
     // HD access
-    if(dma_mode & BIT_3)
+    if(MCR & BIT_3)
     { 
       log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Writing $"+HEXSl(io_src_b,2)+"xx to HDC register #"+((dma_mode & BIT_1) ? 1:0));
       break;
     }
 /*
-"The FDC registers only uses 8 bits when writing and therefore the upper byte 
+"The FDC registers only use 8 bits when writing and therefore the upper byte 
 is ignored and when reading the 8 upper bits consistently reads 1."
 */
-    //ASSERT(!io_src_b); // Blood Money IPF crashing, Archipelagos IPF, Overdrive
+
     break;
     
   case 0xff8605:  
     //write FDC sector counter, 0x190
-    if (dma_mode & BIT_4)
+    if (MCR & BIT_4)
     { 
-      dma_sector_count&=0xff00;
-      dma_sector_count|=io_src_b;
+      TRACE_LOG("Counter");
+      Counter&=0xff00;
+      Counter|=io_src_b;
       // We need do that only once (word access):
-      if (dma_sector_count)
-        dma_status|=BIT_1;
+      if (Counter)
+        SR|=BIT_1;
       else
-        dma_status&=BYTE(~BIT_1); //status register bit for 0 count
-      dma_bytes_written_for_sector_count=0;
+        SR&=BYTE(~BIT_1); //status register bit for 0 count
+      ByteCount=0;
 /*
 "It is interesting to note that when the DMA is in write mode, the two internal
  FIFOS are filled immediately after the Count Register is written."
+ RAM to disk
+ -> to simplify emulation, we fill FIFO only at first DRQ (and each time
+    it' empty)
 */
-#if defined(SS_IPF)
-      if((dma_mode&0x100) && Caps.Active && Caps.IsIpf(drive)) // RAM to disk
-        RequestTransfer(); // we fill one - only for IPF
-#endif
       log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Set DMA sector count to "+dma_sector_count);
       break;
     }
     // HD access
-    if (dma_mode & BIT_3){ 
+    if (MCR & BIT_3){ 
+      TRACE_LOG("HD");
       log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Writing $xx"+HEXSl(io_src_b,2)+" to HDC register #"+((dma_mode & BIT_1) ? 1:0));
       break;
     }
@@ -368,57 +378,43 @@ Disk Controller is acknowledged; otherwise, the DRQ from the Hard Disk
 interface is acknowledged. For some reason this bit must also be set 
 to generate DMA bus cycle."
 */
-    ASSERT( dma_mode&BIT_7 );
-    if(!(dma_mode&BIT_7))
+    ASSERT( MCR&BIT_7 );
+    if(!(MCR&BIT_7))
       break;
 #endif
-    // IPF handling
-#if defined(SS_IPF)
-    if(Caps.IsIpf(floppy_current_drive())) 
+
+#if defined(SS_FDC)
+    WD1772.IOWrite((MCR&(BIT_1+BIT_2))/2,io_src_b);
+#else // old iow block... ugly but flexible - normally not compiled
     {
-      Caps.WriteWD1772(io_src_b);
-      break;
+            switch (dma_mode & (BIT_1+BIT_2)){
+              case 0:
+                floppy_fdc_command(io_src_b);
+                break;
+              case 2:
+                if ((fdc_str & FDC_STR_BUSY)==0){
+                  log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC track register to "+io_src_b);
+                  fdc_tr=io_src_b;
+                }else{
+                  log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Can't set FDC track register to "+io_src_b+", FDC is busy");
+                }
+                break;
+              case 4:
+                if ((fdc_str & FDC_STR_BUSY)==0){
+                  log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC sector register to "+io_src_b);
+                  fdc_sr=io_src_b;
+                }else{
+                  log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Can't set FDC sector register to "+io_src_b+", FDC is busy");
+                }
+                break;
+              case 6:
+                log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC data register to "+io_src_b);
+                fdc_dr=io_src_b;
+                break;
+            }
+
     }
 #endif
-    // Steem handling
-    switch (dma_mode&(BIT_1+BIT_2))
-    {
-    case 0: // CR
-      floppy_fdc_command(io_src_b); // in fdc.cpp
-      break;
-    case 2: // TR
-#if defined(SS_FDC_CHANGE_TRACK_WHILE_BUSY)
-      if(fdc_str & FDC_STR_BUSY)
-        TRACE_LOG("TR change while busy %d -> %d\n",fdc_tr,io_src_b);
-      fdc_tr=io_src_b;
-#else
-      if ((fdc_str & FDC_STR_BUSY)==0){
-        log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC track register to "+io_src_b);
-        fdc_tr=io_src_b;
-      }else{
-        log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Can't set FDC track register to "+io_src_b+", FDC is busy");
-      }
-#endif
-      break;
-    case 4: // SR
-#if defined(SS_FDC_CHANGE_SECTOR_WHILE_BUSY)
-      if(fdc_str & FDC_STR_BUSY)
-        TRACE_LOG("SR change while busy %d -> %d\n",fdc_sr,io_src_b);
-      fdc_sr=io_src_b; // fixes Delirious 4 loader without Pasti
-#else
-      if ((fdc_str & FDC_STR_BUSY)==0){
-        log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC sector register to "+io_src_b);
-        fdc_sr=io_src_b;
-      }else{
-        log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Can't set FDC sector register to "+io_src_b+", FDC is busy");
-      }
-#endif
-      break;
-    case 6: // DR
-      log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC data register to "+io_src_b);
-      fdc_dr=io_src_b;
-      break;
-    }
     break;
 
   case 0xff8606:  //high byte of DMA mode
@@ -433,66 +429,78 @@ RAM". Note that "flushing to disk" would be impossible.
 What was in the buffers will go nowhere, the internal counter is reset.
 */
     // detect toggling of bit 8 (boolean !x ^ !y = logical x ^^ y)
-    if( !(dma_mode&0x100) ^ !(io_src_b) ) // fixes Archipelagos IPF
+    if( !(MCR&0x100) ^ !(io_src_b) ) // fixes Archipelagos IPF
     {
-      fdc_read_address_buffer_len=0;
-      dma_sector_count=0;
-      dma_bytes_written_for_sector_count=0;
-      dma_status=1;
-      Request=FALSE;
+      TRACE_LOG("Reset");
+#if !defined(SS_DMA_FIFO_READ_ADDRESS2)
+      fdc_read_address_buffer_len=0;// this is only for command III read address
+#endif
+      Counter=0;
+      ByteCount=0;
+      SR=1;
+      Request=false;
+      Fifo_idx=0;
 #if defined(SS_DMA_DOUBLE_FIFO) 
       BufferInUse=0;
 #endif
     }
-    dma_mode&=0x00ff;
-    dma_mode|=WORD(WORD(io_src_b) << 8);
+    MCR&=0x00ff;
+    MCR|=WORD(WORD(io_src_b) << 8);
 #else
-    dma_mode&=0x00ff;
-    dma_mode|=WORD(WORD(io_src_b) << 8);
+    MCR&=0x00ff;
+    MCR|=WORD(WORD(io_src_b) << 8);
+#if !defined(SS_DMA_FIFO_READ_ADDRESS2)
     fdc_read_address_buffer_len=0;
-    dma_bytes_written_for_sector_count=0;
+#endif
+    ByteCount=0;
 #endif
     break;
     
   case 0xff8607:  //low byte of DMA mode
-    ASSERT(!(io_src_b&1));
+    TRACE_LOG("CR");
+    ASSERT(!(io_src_b&1)); // Omega, Union
     ASSERT(!(io_src_b&BIT_5));
-    dma_mode&=0xff00;
-    dma_mode|=io_src_b;
+    MCR&=0xff00;
+    MCR|=io_src_b;
 #if !defined(SS_DMA_WRITE_CONTROL) // see above
+#if !defined(SS_DMA_FIFO_READ_ADDRESS2)
     fdc_read_address_buffer_len=0;
-    dma_bytes_written_for_sector_count=0;
+#endif
+    ByteCount=0;
 #endif
     break;
     
   case 0xff8609:  // DMA Base and Counter High
-    dma_address&=0x00ffff;
-    dma_address|=((MEM_ADDRESS)io_src_b) << 16;
-    log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Set DMA address to "+HEXSl(dma_address,6));
+    TRACE_LOG("BaseAddress");
+    BaseAddress&=0x00ffff;
+    BaseAddress|=((MEM_ADDRESS)io_src_b) << 16;
+    log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Set DMA address to "+HEXSl(BaseAddress,6));
     break;
     
   case 0xff860b:  // DMA Base and Counter Mid
-#if defined(SS_DMA_ADDRESS)
+    TRACE_LOG("BaseAddress");
+#if defined(SS_BaseAddress)
 /* 
 "The DMA Address Counter register must be loaded (written) in a Low, Mid, 
   High order."
 */
-    dma_address&=0x0000ff;
-    dma_address|=((MEM_ADDRESS)io_src_b) << 8;
-    //dma_address|=0xff0000;
+    BaseAddress&=0x0000ff;
+    BaseAddress|=((MEM_ADDRESS)io_src_b) << 8;
+    //BaseAddress|=0xff0000;
 #else
-    dma_address&=0xff00ff;
-    dma_address|=((MEM_ADDRESS)io_src_b) << 8;
+    BaseAddress&=0xff00ff;
+    BaseAddress|=((MEM_ADDRESS)io_src_b) << 8;
 #endif
     break;
     
   case 0xff860d:  // DMA Base and Counter Low
-#if defined(SS_DMA_ADDRESS)
-    //dma_address=0xffff00,dma_address|=io_src_b;
-    dma_address=io_src_b;
+    TRACE_LOG("BaseAddress");
+#if defined(SS_BaseAddress)
+    //BaseAddress=0xffff00,BaseAddress|=io_src_b;
+    BaseAddress=io_src_b;
 #else
-    dma_address&=0xffff00;
-    dma_address|=io_src_b;
+    BaseAddress&=0xffff00;
+    BaseAddress|=io_src_b;
 #endif       
     break;
     
@@ -502,129 +510,67 @@ What was in the buffers will go nowhere, the internal counter is reset.
   case 0xff860f: //low byte of frequency/density control
     break;
   }//sw
-}
 
-#endif//dmaio
+  
+#if USE_PASTI 
+/*  Pasti handles all DMA writes, still we want to update our variables
+    and go through TRACE.
+*/
+  if(hPasti && pasti_active
+    
+#if defined(STEVEN_SEAGAL)&&defined(SS_DRIVE)&&defined(SS_PASTI_ONLY_STX)
+    && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3
+    ||addr!=0xff8605||MCR&BIT_3||MCR&BIT_4
+    )
+#endif        
+    )
+  {
+    TRACE_LOG(" Pasti");
+    WORD data=io_src_b;
 
-
-#if defined(SS_DEBUG)
-// we used those while adding IPF support
-
-void TDma::TraceIORead(MEM_ADDRESS addr) {
-  UpdateRegs();
-  switch (addr){
-  case 0xff8604:  //high byte of FDC access
-    break;
-  case 0xff8605:  //low byte of FDC access
-    if (dma_mode & BIT_4){ //write FDC sector counter, 0x190
-      TRACE("R DMA # %d\n",dma_sector_count);
-      break;
+    if(addr<0xff8608 && !(addr&1))
+      pasti_store_byte_access=io_src_b;
+    else
+    {
+      if(addr<0xff8608)
+      {
+        ASSERT( addr&1 );
+        data=MAKEWORD(io_src_b,pasti_store_byte_access);
+        addr&=~1;
+      }
+      struct pastiIOINFO pioi;
+      pioi.addr=addr;
+      pioi.data=data;
+      pioi.stPC=pc; //SS debug only?
+      pioi.cycles=ABSOLUTE_CPU_TIME;
+      //          log_to(LOGSECTION_PASTI,Str("PASTI: IO write addr=$")+HEXSl(addr,6)+" data=$"+
+      //                            HEXSl(io_src_b,2)+" ("+io_src_b+") pc=$"+HEXSl(pc,6)+" cycles="+pioi.cycles);
+      pasti->Io(PASTI_IOWRITE,&pioi); //SS send to DLL
+      pasti_handle_return(&pioi);
     }
-    if (dma_mode & BIT_3){ // HD access
-      TRACE("R DMA HD\n");
-      break;
-    }
-    switch(dma_mode & (BIT_1+BIT_2)){
-    case 0:
-#if !defined(SS_DEBUG_TRACE_IDE)
-      TRACE("R STR $%X\n",fdc_str);
-#endif
-      break;
-    case 2:
-      TRACE("R TR %d\n",fdc_tr);
-      break;
-    case 4:
-      TRACE("R SR %d\n",fdc_sr);
-      break;
-    case 6:
-      TRACE("R DR %d\n",fdc_dr);
-      break;
-    }
-    break;
-  case 0xff8606:  //high byte of DMA mode
-    break;
-  case 0xff8607:  //low byte of DMA mode
-    TRACE("R DMA CR $%X\n",dma_mode);
-    break;
-  case 0xff8609:  //high byte of DMA pointer
-    TRACE("R DMA bus %X\n",dma_address);
-    break;
-  case 0xff860b:  //mid byte of DMA pointer
-    break;
-  case 0xff860d:  //low byte of DMA pointer
-    break;
-  case 0xff860e: //high byte of frequency/density control 
-    TRACE("R denisity HI\n");
-    break;
-  case 0xff860f: //low byte of frequency/density control
-    TRACE("R denisity LO\n");
-    break;
   }
-}
-
-void TDma::TraceIOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
-  UpdateRegs();
-  switch (addr){
-  case 0xff8604:  //high byte of FDC access
-    break;
-  case 0xff8605:  //low byte of FDC access
-    if (dma_mode & BIT_4){ //write FDC sector counter, 0x190
-      TRACE("W DMA # %d\n",(dma_sector_count&0xff00)|io_src_b);
-      break;
-    }
-    if (dma_mode & BIT_3){ // HD access
-      TRACE("DMA HD access %X\n",io_src_b);
-      break;
-    }
-    switch(dma_mode & (BIT_1+BIT_2)){
-    case 0:
-      TRACE("W CR $%X\n",io_src_b);
-      break;
-    case 2:
-      TRACE("W TR %d\n",io_src_b);
-      break;
-    case 4:
-      TRACE("W SR %d\n",io_src_b);
-      break;
-    case 6:
-      TRACE("W DR %d\n",io_src_b);
-      break;
-    }
-    break;
-  case 0xff8606:  //high byte of DMA mode
-    break;
-  case 0xff8607:  //low byte of DMA mode
-#if USE_PASTI
-    if(hPasti && pasti_active)
-      dma_mode=(dma_mode&0x00FF)|(pasti_store_byte_access<<8);
 #endif
-    TRACE("W DMA CR $%X\n",(dma_mode&0xff00)|io_src_b);
-    break;
-  case 0xff8609:  //high byte of DMA pointer
-    TRACE("W DMA bus %X\n",(dma_address&0x00ffff)| ( ((MEM_ADDRESS)io_src_b) << 16) );//extra () for warning
-    break;
-  case 0xff860b:  //mid byte of DMA pointer
-    break;
-  case 0xff860d:  //low byte of DMA pointer
-    break;
-  case 0xff860e: //high byte of frequency/density control 
-    TRACE("W $%X on %X\n",io_src_b,addr); //unexpected
-    break;
-  case 0xff860f: //low byte of frequency/density control
-    TRACE("W $%X on %X\n",io_src_b,addr);//unexpected
-    break;
-  }
+
+  TRACE_LOG(" =.B %X\n",io_src_b);
+
 }
 
 #endif
 
-#if defined(SS_DEBUG) || defined(SS_OSD_DRIVE_LED)
 
 void TDma::UpdateRegs(bool trace_them) {
-  // this is used for debugging and for pasti drive led
-  BYTE psg=psg_reg[PSGR_PORT_A]&7; // 'drive select'
+/*  This is used for debugging and for pasti drive led
+    and may have some other uses.
+    We update both DMA and FDC registers (so we use old variable names for the
+    latter) - we could have a TWD1772::UpdateRegs() as well.
+*/
+
 #if USE_PASTI
-  if(hPasti && pasti_active)
+  if(hPasti && pasti_active
+#if defined(STEVEN_SEAGAL) && defined(SS_PASTI_ONLY_STX) //all or nothing?
+    && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
+#endif      
+    )
   {
     pastiPEEKINFO ppi;
     pasti->Peek(&ppi);
@@ -633,19 +579,18 @@ void TDma::UpdateRegs(bool trace_them) {
     fdc_tr=ppi.trackReg;
     fdc_sr=ppi.sectorReg;
     fdc_dr=ppi.dataReg;
-    dma_mode=ppi.dmaControl;
     floppy_head_track[0]=ppi.drvaTrack;
     floppy_head_track[1]=ppi.drvbTrack;
-    dma_address=ppi.dmaBase;
-    dma_status=ppi.dmaStatus;
-    dma_sector_count=ppi.dmaCount;
-    psg=ppi.drvSelect;
-  }else
+    Counter=ppi.dmaCount;
+    BaseAddress=ppi.dmaBase;
+    MCR=ppi.dmaControl;
+    SR=ppi.dmaStatus;
+  }
 #endif
 #if defined(SS_IPF)
-  if(Caps.IsIpf(floppy_current_drive()))
+  if(CAPSIMG_OK && Caps.IsIpf(floppy_current_drive()))
   {
-    int ext=0; // TODO
+    int ext=0;
     fdc_cr=CAPSFdcGetInfo(cfdciR_Command, &Caps.WD1772,ext);
     fdc_str=CAPSFdcGetInfo(cfdciR_ST, &Caps.WD1772,ext);
     fdc_tr=CAPSFdcGetInfo(cfdciR_Track, &Caps.WD1772,ext);
@@ -657,145 +602,409 @@ void TDma::UpdateRegs(bool trace_them) {
 #endif
   if(trace_them)
   {
-    TRACE("CR %X STR %X ",fdc_cr,fdc_str);
+    TRACE_LOG("FDC IRQ CR %X STR %X ",fdc_cr,fdc_str);
 #if defined(SS_FDC_TRACE_STATUS)
     WD1772.TraceStatus();
 #endif
-    TRACE("TR %d SR %d DR %d ($%X) PSG %X T %d/%d DMA CR %X $%X SR %X #%d PC %X\n",
-      fdc_tr,fdc_sr,fdc_dr,fdc_dr,psg,floppy_head_track[0],floppy_head_track[1],
-      dma_mode,dma_address,dma_status,dma_sector_count,pc);
+    TRACE_LOG("TR %d SR %d DR %d ($%X)",fdc_tr,fdc_sr,fdc_dr,fdc_dr);
+#if defined(SS_PSG)
+    BYTE drive=YM2149.Drive();
+    BYTE side=YM2149.Side();
+    TRACE_LOG(" %c%d:",'A'+drive,side);
+#endif
+    TRACE_LOG(" T %d/%d DMA CR %X $%X SR %X #%d PC %X\n",
+      floppy_head_track[0],floppy_head_track[1],MCR,BaseAddress,SR,Counter,pc);
   }
 }
 
+
+#undef LOGSECTION
+
+
+#if defined(SS_STRUCTURE_DMA_INC_ADDRESS)
+/*  We see no need for an inline function/macro for disk operation.
+    This is the same as the macro in fdc.cpp but with our new names.
+    "The count should indicate the number of 512 bytes chunks that 
+    the DMA will have to transfer
+    "This register is decrement by one each time 512 bytes has been
+    transferred. When the sector count register reaches zero the DMA
+    will stop to transfer data. Only the lower 8 bits are used."
+    -> it's always 512 bytes, regardless of sector size
+*/
+
+void TDma::IncAddress() {
+  if (Counter&0xFF){                                   
+    BaseAddress++;                                         
+    ByteCount++;                  
+    if (ByteCount>=512) 
+    {        
+      ByteCount=0;              
+      Counter--;                                  
+      SR|=BIT_1;  // DMA sector count not 0
+      if(!(Counter&0xFF)) 
+        SR&=~BIT_1;     
+    }                                                      
+  }
+}
 #endif
+
+
+#if defined(SS_DMA_FIFO)
+/*  We try to emulate the DMA FIFO transfers in a more accurate way.
+    In previous versions the bytes were directly moved between ST RAM
+    and disk image. Now there's a real automatic buffer working both
+    ways.
+    SS_DMA_DOUBLE_FIFO has been tested but isn't defined, overkill, 
+    so we spare some data bytes(17); strangely EXE size stays the same.
+*/
+
+void TDma::AddToFifo(BYTE data) {
+  // DISK -> FIFO -> RAM = 'read disk' = 'write dma'
+
+  ASSERT( (MCR&BIT_7) && !(MCR&BIT_6) );
+  ASSERT( !(MCR&BIT_8) ); // disk->RAM (Read floppy)
+  ASSERT( Fifo_idx<16 );
+
+  Fifo
+#if defined(SS_DMA_DOUBLE_FIFO)
+    [BufferInUse]
+#endif
+    [Fifo_idx++]=data;
+
+  if(Fifo_idx==16)
+    Dma.RequestTransfer();
+}
+
+
+/*  For writing to disk, we use the FIFO in the other direction,
+    because we want it to fill up when empty.
+    On a real ST, the first DMA transfer happens right when the
+    sector count has been set.
+    This could be important in theory, but know no case.
+*/
+
+BYTE TDma::GetFifoByte() {
+  // RAM -> FIFO -> DISK = 'write disk' = 'read dma'
+
+  ASSERT( (MCR&BIT_7) && !(MCR&BIT_6) );
+  ASSERT( (MCR&BIT_8) ); // RAM -> disk (Write floppy)
+
+  if(!Fifo_idx)
+    Dma.RequestTransfer();
+
+  BYTE data=Fifo
+#if defined(SS_DMA_DOUBLE_FIFO)
+    [BufferInUse]
+#endif
+    [--Fifo_idx];
+
+  return data;  
+
+}
+
 
 void TDma::RequestTransfer() {
   // we make this function to avoid code duplication
-  Request=TRUE; 
-#if defined(SS_DMA_DOUBLE_FIFO)
-  BufferInUse=!Dma.BufferInUse; // toggle 16byte buffer
+  Request=true; 
+  
+  Fifo_idx= (MCR&0x100) ? 16 : 0;
+
+#if defined(SS_DMA_DOUBLE_FIFO) // normally not
+  BufferInUse=!BufferInUse; // toggle 16byte buffer
 #endif
 
-#if defined(SS_DMA_DELAY) // set event
-  dma_time=ABSOLUTE_CPU_TIME+SS_DMA_ACCESS_DELAY;
+#if defined(SS_DMA_DELAY) // normally not - set event
+  TransferTime=ABSOLUTE_CPU_TIME+SS_DMA_ACCESS_DELAY;
   PREPARE_EVENT_CHECK_FOR_DMA
 #else
   TransferBytes(); // direct transfer
 #endif
 }
 
+
 #if defined(SS_DMA_DELAY) // normally not
 // this is a Steem 'event' (static member function)
 
 void TDma::Event() {
 #if defined(SS_MFP_RATIO)
-  Dma.dma_time=ABSOLUTE_CPU_TIME+CpuNormalHz;
+  Dma.TransferTime=ABSOLUTE_CPU_TIME+CpuNormalHz;
 #else
-  Dma.dma_time=ABSOLUTE_CPU_TIME+8000000;
+  Dma.TransferTime=ABSOLUTE_CPU_TIME+8000000;
 #endif
-//  if(!Caps.Active)
-  //  return;
   if(Dma.Request)
     Dma.TransferBytes();
 }
+
 #endif
 
 
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_FDC_BYTES//SS
+#define LOGSECTION LOGSECTION_FDC_BYTES
+
 
 void TDma::TransferBytes() {
   // execute the DMA transfer (assume floppy)
-  ASSERT( dma_mode&0x80 ); // bit 7 or no transfer
-  ASSERT(!(dma_mode&BIT_5));
+  ASSERT( MCR&0x80 ); // bit 7 or no transfer
+  ASSERT(!(MCR&BIT_5));
   ASSERT( Request );
-  //UpdateRegs();
-  //    TRACE_LOG("%d ",ABSOLUTE_CPU_TIME);
-  if(!(dma_mode&0x100)) // disk -> RAM
-    TRACE_LOG("%d/%d to %X: ",fdc_tr,fdc_sr,dma_address);
+  ASSERT( MCR==0x80 || MCR==0x90 || MCR==0x180 || MCR==0x190 );
+
+  if(!(MCR&0x100)) // disk -> RAM
+    TRACE_LOG("%2d/%2d/%3d to %X: ",fdc_tr,fdc_sr,ByteCount,BaseAddress);
   else  // RAM -> disk
-    TRACE_LOG("%d/%d from %X: ",fdc_tr,fdc_sr,dma_address);
+    TRACE_LOG("%2d/%2d/%3d from %X: ",fdc_tr,fdc_sr,ByteCount,BaseAddress);
   
-  for(int i=0;i<16;i++) // burst, 16byte packets
+  for(int i=0;i<16;i++) // burst, 16byte packets strictly, 8 words
   {
-    if(!(dma_mode&0x100)&& DMA_ADDRESS_IS_VALID_W) // disk -> RAM
-      PEEK(dma_address)=
-        fdc_read_address_buffer[
+    if(!(MCR&0x100)&& DMA_ADDRESS_IS_VALID_W) // disk -> RAM
+      PEEK(BaseAddress)=
+        Fifo
 #if defined(SS_DMA_DOUBLE_FIFO)
-        16*(!BufferInUse)+
+        [!BufferInUse] // because it's been just toggled
 #endif
-        i];
-    else if((dma_mode&0x100) && DMA_ADDRESS_IS_VALID_R) // RAM -> disk
-      fdc_read_address_buffer[
+        [i];
+    
+    else if((MCR&0x100) && DMA_ADDRESS_IS_VALID_R) // RAM -> disk
+      Fifo
 #if defined(SS_DMA_DOUBLE_FIFO)
-        16*(!BufferInUse)+
+        [BufferInUse] // because we fill the new buffer
 #endif
-        i]=PEEK(dma_address);
+        [15-i]=PEEK(BaseAddress);
     else TRACE_LOG("!!!");
-    TRACE_LOG("%02X ",fdc_read_address_buffer[
+    TRACE_LOG("%02X ",Fifo
 #if defined(SS_DMA_DOUBLE_FIFO)
-      16*(!BufferInUse)+
+      [!BufferInUse]
 #endif
-      i]);
-    DMA_INC_ADDRESS; // use Steem's existing routine
+      [i]);
+
+    if(hPasti&&pasti_active
+#if defined(STEVEN_SEAGAL) && defined(SS_PASTI_ONLY_STX)
+    &&(!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
+#endif        
+      )  
+      dma_address++;
+    else
+      DMA_INC_ADDRESS; // use Steem's existing routine
   }
-  INSTRUCTION_TIME(8); // it doesn't seem to change anything but why not?
+#if defined(SS_DMA_COUNT_CYCLES) 
+  INSTRUCTION_TIME(8); 
+#endif
   TRACE_LOG("\n");
   Request=FALSE;
 }
 
+#undef LOGSECTION
+
+#endif//DMA_FIFO
 
 #endif//dma
 
 
-#if defined(SS_FDC)
+
+#if defined(SS_DRIVE)
+/*  Problems concerning the drive itself (RPM...) or the disks (gaps...) are
+    treated here.
+*/
+/*  TODO
+    There are still some hacks in drive emulation, we keep them so some
+    programs run:
+    Microprose Golf
+    FDCTNF by Petari
+    See SSEParameters.h
+*/
+
+TSF314 SF314[2]; // cool!
+
 
 /*
-FDC Registers detail
 
-Data Shift Register - This 8-bit register assembles serial data from the Read
- Data input (RD) during Read operations and transfers serial data to the Write
- Data output during Write operations.
+from JLG, floppy disk gaps
 
-Data Register - This 8-bit register is used as a holding register during Disk
- Read and Write operations. In disk Read operations, the assembled data byte 
-is transferred in parallel to the Data Register from the Data Shift Register.
- In Disk Write operations, information is transferred in parallel from the 
-Data Register to the Data Shift Register.
-When executing the Seek Command, the Data Register holds the address of the
- desired Track position. This register is loaded from the Data bus and gated
- onto the Data bus under processor control.
+# bytes 
+Name                       9 Sectors  10 Sectors  11 Sectors     Byte
+Gap 1 Post Index                  60          60          10      4E
 
-Track Register - This 8-bit register holds the track number of the current
- Read/Write head position. It is incremented by one every time the head is
- stepped in and decremented by one when the head is stepped out (towards 
-track 00). The content of the register is compared with the recorded track
- number in the ID field during disk Read, Write, and Verify operations. 
-The Track Register can be loaded from or transferred to the Data bus. 
-This Register is not loaded when the device is busy.
+Gap 2 Pre ID                    12+3        12+3         3+3     00+A1
+ID Address Mark                    1           1           1      FE
+ID                                 6           6           6
+Gap 3a Post ID                    22          22          22      4E 
+Gap 3b Pre Data                 12+3        12+3        12+3     00+A1
+Data Address Mark                  1           1           1      FB
+Data                             512         512         512
+CRC                                2           2           2
+Gap 4 Post Data                   40          40           1      4E
 
-Sector Register (SR) - This 8-bit register holds the address of the desired
- sector position. The contents of the register are compared with the recorded
- sector number in the ID field during disk Read or Write operations. 
-The Sector Register contents can be loaded from or transferred to the Data bus
-. This register is not loaded when the device is busy.
+Record bytes                     614         614         566
 
-Command Register (CR) - This 8-bit register holds the command presently
- being executed. This register is not loaded when the device is busy unless
- the new command is a force interrupt. The Command Register is loaded from 
-the Data bus, but not read onto the Data bus.
+Gap 5 Pre Index                  664          50          20      4E
 
-Status Register (STR) - This 8-bit register holds device Status information.
- The meaning of the Status bits is a function of the type of command
- previously executed. This register is read onto the Data bus, but not loaded 
-from the Data bus.
+Total track                     6250        6250        6256
+
+
+    Note that the index position can be anywhere when the disk begins
+    to spin.
+    We do our computing using bytes, then convert the result into HBL, the
+    timing unit for drive operations in Steem.
+   
 */
+
+
+WORD TSF314::BytePosition() {
+  return HblsToBytes( hbl_count % HblsPerRotation() );
+}
+
+
+WORD TSF314::BytePositionOfFirstId() { // with +7 for reading ID
+  return ( PostIndexGap() + ( (nSectors()<11)?12+3+7:3+3+7) );
+}
+
+
+WORD TSF314::BytesToHbls(int bytes) {
+  return HblsPerRotation()*bytes/TRACK_BYTES;
+}
+
+
+unsigned long TSF314::HblsAtIndex() {
+  return (hbl_count/HblsPerRotation())*HblsPerRotation();
+}
+
+
+WORD TSF314::HblsPerRotation() {
+  return HBL_PER_SECOND/(RPM/60); // see SSEParameters
+}
+
+
+WORD TSF314::HblsPerSector() {
+  return nSectors()?(HblsPerRotation()-BytesToHbls(TrackGap()))/nSectors() : 0;
+}
+
+
+WORD TSF314::HblsToBytes(int hbls) {
+  return TRACK_BYTES*hbls/HblsPerRotation();
+}
+
+
+void TSF314::NextID(BYTE &Id,WORD &nHbls) {
+/*  This routine was written to improve timing of command 'Read Address',
+    used by ProCopy. Since it exists, it is also used for 'Verify'.
+*/
+  Id=0;
+  WORD BytesToRun;
+  WORD ByteOfNextId=BytePositionOfFirstId();//default
+  WORD BytePositionOfLastId=ByteOfNextId+(nSectors()-1)*RecordLength();
+  WORD CurrentByte=BytePosition(); 
+  // still on this rev
+  if(CurrentByte<ByteOfNextId) // before first ID
+    BytesToRun=ByteOfNextId-CurrentByte;
+  else if(CurrentByte<BytePositionOfLastId) // before last ID
+  {
+    while(CurrentByte>=ByteOfNextId)
+      ByteOfNextId+=RecordLength();
+    BytesToRun=ByteOfNextId-CurrentByte;
+    Id=(ByteOfNextId-BytePositionOfFirstId())/RecordLength();
+    ASSERT( Id>=1 && Id<nSectors() );
+  }
+  // next rev
+  else
+    BytesToRun=TRACK_BYTES-CurrentByte+ByteOfNextId;
+  nHbls=BytesToHbls(BytesToRun);
+}
+
+
+BYTE TSF314::nSectors() { 
+  // should we add IPF, STX? - here we do native
+  BYTE nSects;
+#if defined(SS_PSG)
+  if(FloppyDrive[Id].STT_File)
+  {
+    FDC_IDField IDList[30]; // much work each time, but STT rare
+    nSects=FloppyDrive[Id].GetIDFields(YM2149.Side(),Track(),IDList);
+  }
+  else
+#endif
+    nSects=FloppyDrive[Id].SectorsPerTrack;
+  return nSects;
+}
+
+
+BYTE TSF314::PostIndexGap() {
+  return (nSectors()<11)? 60 : 10;
+}
+
+
+BYTE TSF314::PreDataGap() {
+  int gap=0;
+  switch(nSectors())
+  {
+  case 9:
+  case 10: // with ID (7) and DAM (1)
+    gap=12+3+7+22+12+3+1; 
+    break;
+  case 11:
+    gap=3+3+7+22+12+3+1;
+    break;
+  }
+  return gap;
+}
+
+
+BYTE TSF314::PostDataGap() {
+  return (nSectors()<11)? 40 : 1;
+}
+
+
+WORD TSF314::PreIndexGap() {
+  int gap=0;
+  switch(nSectors())
+  {
+  case 9:
+    gap=664;
+    break;
+  case 10:
+    gap=50;
+    break;
+  case 11:
+    gap=20;
+    break;
+  }
+  return gap;
+}
+
+
+WORD TSF314::RecordLength() {
+  return (nSectors()<11)? 614 : 566;
+}
+
+
+BYTE TSF314::SectorGap() {
+  return PostDataGap()+PreDataGap();
+}
+
+
+BYTE TSF314::Track() {
+  return floppy_head_track[Id]; //eh eh
+}
+
+
+WORD TSF314::TrackGap() {
+  return PostIndexGap()+PreIndexGap();
+}
+
+#endif//drive
+
+
+
+#if defined(SS_FDC)
+
+#define LOGSECTION LOGSECTION_FDC
 
 TWD1772 WD1772;
 
-int TWD1772::CommandType(int command) {
+
+BYTE TWD1772::CommandType(int command) {
   // return type 1-4 of this FDC command
-  int type;
+  if(command==-1) //default: current command
+    command=CR;
+  BYTE type;
   if(!(command&BIT_7))
     type=1;
   else if(!(command&BIT_6))
@@ -808,55 +1017,282 @@ int TWD1772::CommandType(int command) {
 }
 
 
+BYTE TWD1772::IORead(BYTE Line) {
+
+  ASSERT( Line>=0 && Line<=3 );
+  BYTE ior_byte;
+  BYTE drive=floppy_current_drive();
+
+    // Steem handling
+    switch(Line){
+    case 0: // STR
+      // Update some flags before returning STR
+      // IP
+      if(floppy_track_index_pulse_active())
+        STR|=FDC_STR_T1_INDEX_PULSE;
+      else
+        // If not type 1 command we will get here, it is okay to clear
+        // it as this bit is only for the DMA chip for type 2/3.
+        STR&=BYTE(~FDC_STR_T1_INDEX_PULSE);
+      // WP, SU
+      if(floppy_type1_command_active)
+      {
+        STR&=(~FDC_STR_WRITE_PROTECT);
+        if(floppy_mediach[drive])
+        {
+          if(floppy_mediach[drive]/10!=1) 
+            STR|=FDC_STR_WRITE_PROTECT;
+          else if (FloppyDrive[drive].ReadOnly)
+            STR|=FDC_STR_WRITE_PROTECT;
+        }
+        // seems OK, no reset after command:
+        if(fdc_spinning_up)
+          STR&=BYTE(~FDC_STR_T1_SPINUP_COMPLETE);
+        else
+          STR|=FDC_STR_T1_SPINUP_COMPLETE;
+        if(ADAT&&fdc_tr) { // (ADAT: v3.5.1, No Cooper) //TR or CYL?
+          STR|=FDC_STR_T1_TRACK_0;
+        }
+      } // else it should be set in fdc_execute()
+      if ((mfp_reg[MFPR_GPIP] & BIT_5)==0)
+      {
+        LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
+          " - Reading status register as "+Str(itoa(STR,d2_t_buf,2)).LPad(8,'0')+
+          " ($"+HEXSl(STR,2)+"), clearing IRQ"); )
+        floppy_irq_flag=0;
+        mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
+      }
+      ior_byte=STR;
+#if !defined(SS_DEBUG_TRACE_IDE)
+      TRACE_LOG("FDC STR");
+#endif
+      break;
+    case 1:
+      TRACE_LOG("FDC TR");
+      ior_byte=TR;
+      break;      
+    case 2:
+      TRACE_LOG("FDC SR");
+      ior_byte=SR;
+      break;
+    case 3:
+      TRACE_LOG("FDC DR");
+      ior_byte=DR;
+      break;
+    }//sw
+
+    // IPF handling
+#if defined(SS_IPF)
+    if(Caps.IsIpf(drive))
+      ior_byte=Caps.ReadWD1772(Line);
+#endif
+  return ior_byte;
+}
+
+
+void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
+
+  ASSERT( Line>=0 && Line<=3 );
+  BYTE drive=floppy_current_drive();
+
+  switch(Line)
+  {
+  case 0: // CR - could be blocked, can't record here :(
+    TRACE_LOG("FDC CR ");
+
+#if defined(SS_PSG) && defined(SS_DEBUG)
+    if(YM2149.Drive()==TYM2149::NO_VALID_DRIVE)
+      TRACE_LOG("?: ");
+#endif
+    {
+      bool can_send=true; // are we in Steem's native emu?
+#if defined(SS_IPF)
+      can_send=can_send&&!Caps.IsIpf(drive);
+#endif
+#if USE_PASTI 
+      can_send=can_send&&!(hPasti && pasti_active
+#if defined(STEVEN_SEAGAL)&&defined(SS_DRIVE)&&defined(SS_PASTI_ONLY_STX)
+        && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
+#endif            
+        
+        );
+#endif
+      if(can_send)
+        floppy_fdc_command(io_src_b); // in fdc.cpp
+      else
+        TRACE_LOG("Can't send command %X, drive %C type %d\n",io_src_b,'A'+YM2149.Drive(),SF314[YM2149.Drive()].ImageType);
+    }
+    break;
+  case 1: // TR
+    TRACE_LOG("FDC TR");
+#if defined(SS_FDC_CHANGE_TRACK_WHILE_BUSY)
+    if(!(STR&FDC_STR_BUSY)||ADAT)
+      fdc_tr=io_src_b;
+#else
+    if (!(STR&FDC_STR_BUSY)){
+      log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC track register to "+io_src_b);
+      TR=io_src_b;
+    }else{
+      log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Can't set FDC track register to "+io_src_b+", FDC is busy");
+    }
+#endif
+    break;
+  case 2: // SR
+    TRACE_LOG("FDC SR");
+#if defined(SS_FDC_CHANGE_SECTOR_WHILE_BUSY)
+    if(!(STR&FDC_STR_BUSY)||ADAT)
+      SR=io_src_b; // fixes Delirious 4 loader without Pasti
+    
+#else
+    if (!(STR & FDC_STR_BUSY)){
+      log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC sector register to "+io_src_b);
+      SR=io_src_b;
+    }else{
+      log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Can't set FDC sector register to "+io_src_b+", FDC is busy");
+    }
+#endif
+    break;
+  case 3: // DR
+    TRACE_LOG("FDC DR");
+    log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC data register to "+io_src_b);
+    DR=io_src_b;
+    break;
+  }
+  
+  // IPF handling
+#if defined(SS_IPF)
+  if(Caps.IsIpf(drive)) 
+    Caps.WriteWD1772(Line,io_src_b);
+#endif
+  
+}
+
+
 int TWD1772::WritingToDisk() {
-  return((fdc_cr&0xF0)==0xF0 || (fdc_cr&0xE0)==0xA0);
+  return((CR&0xF0)==0xF0 || (CR&0xE0)==0xA0);
 }
 
 
 #if defined(SS_DEBUG)
 
+/*
+Bits:
+Bit 7 - Motor On.  This bit is high when the drive motor is on, and
+low when the motor is off.
+
+Bit 6 - Write Protect.  This bit is not used during reads.  During
+writes, this bit is high when the disk is write protected.
+
+Bit 5 - Spin-up / Record Type.  For Type I commands, this bit is low
+during the 6-revolution motor spin-up time.  This bit is high after
+spin-up.  For Type II and Type III commands, Bit 5 low indicates a
+normal data mark.  Bit 5 high indicates a deleted data mark.
+
+Bit 4 - Record Not Found.  This bit is set if the 177x cannot find the
+track, sector, or side which the CPU requested.  Otherwise, this bit
+is clear.
+
+Bit 3 - CRC Error.  This bit is high if a sector CRC on disk does not
+match the CRC which the 177x computed from the data.  The CRC
+polynomial is x^16+x^12+x^5+1.  If the stored CRC matches the newly
+calculated CRC, the CRC Error bit is low.  If this bit and the Record
+Not Found bit are set, the error was in an ID field.  If this bit is
+set but Record Not Found is clear, the error was in a data field.
+
+Bit 2 - Track Zero / Lost Data.  After Type I commands, this bit is 0
+if the mechanism is at track zero.  This bit is 1 if the head is not
+at track zero.  After Type II or III commands, this bit is 1 if the
+CPU did not respond to Data Request (Status bit 1) in time for the
+177x to maintain a continuous data flow.  This bit is 0 if the CPU
+responded promptly to Data Request.
+
+Bit 1 - Index / Data Request.  On Type I commands, this bit is high
+during the index pulse that occurs once per disk rotation.  This bit
+is low at all times other than the index pulse.  For Type II and III
+commands, Bit 1 high signals the CPU to handle the data register in
+order to maintain a continuous flow of data.  Bit 1 is high when the
+data register is full during a read or when the data register is empty
+during a write.  "Worst case service time" for Data Request is 23.5
+cycles.
+
+Bit 0 - Busy.  This bit is 1 when the 177x is busy.  This bit is 0
+when the 177x is free for CPU commands.
+*/
+
+
 void TWD1772::TraceStatus() {
   // this embarrassing part proves my ignorance!
   int type=CommandType(fdc_cr);
-  TRACE("( ");
-  if(fdc_str&0x80)
-    TRACE("MO ");//Motor On
-  if(fdc_str&0x40)
-    TRACE("WP ");// write protect
-  if(fdc_str&0x20)
+  TRACE_LOG("( ");
+  if(STR&0x80)
+    TRACE_LOG("MO ");//Motor On
+  if(STR&0x40)
+    TRACE_LOG("WP ");// write protect
+  if(STR&0x20)
     if(type==1)
-      TRACE("SU "); // Spin-up (meaning up to speed)
+      TRACE_LOG("SU "); // Spin-up (meaning up to speed)
     else
-      TRACE("RT "); //Record Type (1=deleted data)
-  if(fdc_str&0x10)
+      TRACE_LOG("RT "); //Record Type (1=deleted data)
+  if(STR&0x10)
     if(type==1)
-      TRACE("SE ");//Seek Error
+      TRACE_LOG("SE ");//Seek Error
     else
-      TRACE("RNF ");//Record Not Found
-  if(fdc_str&0x08)
-    TRACE("CRC "); //CRC Error
-  if(fdc_str&0x04)
+      TRACE_LOG("RNF ");//Record Not Found
+  if(STR&0x08)
+    TRACE_LOG("CRC "); //CRC Error
+  if(STR&0x04)
     if(type==1) 
-      TRACE("T0 "); // track zero
+      TRACE_LOG("T0 "); // track zero
     else
-      TRACE("LD ");//Lost Data, normally impossible on ST
-  if(fdc_str&0x02)
+      TRACE_LOG("LD ");//Lost Data, normally impossible on ST
+  if(STR&0x02)
     if(type==1) 
-      TRACE("IP "); // index
+      TRACE_LOG("IP "); // index
     else
-      TRACE("DRQ "); // data request
-  if(fdc_str&0x01)
-    TRACE("BSY "); // busy
-    TRACE(") "); 
+      TRACE_LOG("DRQ "); // data request
+  if(STR&0x01)
+    TRACE_LOG("BSY "); // busy
+    TRACE_LOG(") "); 
 }
 
 #endif//debug
 
 
-#endif
+#endif//FDC
 
 
-#if defined(SS_IPF)
+
+#if defined(SS_PSG)
+/*  In v3.5.1, object YM2149 is only used for drive management.
+*/
+
+
+TYM2149 YM2149;
+
+
+BYTE TYM2149::Drive(){
+  BYTE drive=0xFF; // different from floppy_current_drive()
+  if(!(PortA()&BIT_1))
+    drive=0; //A:
+  else if(!(PortA()&BIT_2))
+    drive=1; //B:
+  return drive;
+}
+
+
+BYTE TYM2149::PortA(){
+  return psg_reg[PSGR_PORT_A];
+}
+
+
+BYTE TYM2149::Side(){
+  return (PortA()&BIT_0)==0;  //0: side 1;  1: side 0 !
+}
+
+#endif//PSG
+
+
+#if defined(SS_IPF) // Implementation of CAPS support in Steem
 
 #define CYCLES_PRE_IO 100 // those aren't
 #define CYCLES_POST_IO 100 // used
@@ -869,7 +1305,7 @@ TCaps::TCaps() {
 
 
 TCaps::~TCaps() {
-  if(Version) //if = 0, the DLL wasn't there
+  if(CAPSIMG_OK)
     CAPSExit();
 }
 
@@ -902,9 +1338,9 @@ TCaps::Init() {
   VERIFY( !CAPSGetVersionInfo((void*)&versioninfo,0) );
   ASSERT( !versioninfo.type );
   TRACE_LOG("Using CapsImg library V%d.%d\n",versioninfo.release,versioninfo.revision);
-  CAPSIMG_OK=Version=versioninfo.release*10+versioninfo.revision; 
+  Version=versioninfo.release*10+versioninfo.revision; 
   ASSERT( Version==42 );
-
+  CAPSIMG_OK= (Version>0);
   // controller init
   WD1772.type=sizeof(CapsFdc);  // must be >=sizeof(CapsFdc)
   WD1772.model=cfdcmWD1772;
@@ -949,45 +1385,53 @@ void TCaps::Reset() {
 #define LOGSECTION LOGSECTION_IMAGE_INFO//SS
 
 int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
-    ASSERT( !drive || drive==1 );
-    ASSERT( img_info );
-    ASSERT( ContainerID[drive]!=-1 );
-    ASSERT( ContainerID[drive]!=-1 );
-    DriveMap|=(drive+1); // not <<!
-    bool FileIsReadOnly=bool(GetFileAttributes(File) & FILE_ATTRIBUTE_READONLY);
-    VERIFY( !CAPSLockImage(ContainerID[drive],File) ); // open the IPF file
-    VERIFY( !CAPSGetImageInfo(img_info,ContainerID[drive]) );
-    ASSERT( img_info->type==ciitFDD );
-    TRACE_LOG("Disk in %c is CAPS release %d rev %d of %d/%d/%d for ",
-      drive+'A',img_info->release,img_info->revision,img_info->crdt.day,
-      img_info->crdt.month,img_info->crdt.year);
-    bool found=0;
-    for(int i=0;i<CAPS_MAXPLATFORM;i++)
-    {
-      if((img_info->platform[i])!=ciipNA)
-        TRACE_LOG("%s ",CAPSGetPlatformName(img_info->platform[i]));
-      if(img_info->platform[i]==ciipAtariST)
-        found=true;
-    }
-    TRACE_LOG("Sides:%d Tracks:%d-%d\n",img_info->maxhead+1,img_info->mincylinder,
-      img_info->maxcylinder);
-    ASSERT( found );
-    if(!found)    // could be a Spectrum disk etc.
-    {
-      int Ret=FIMAGE_WRONGFORMAT;
-      return Ret;
-    }
-    Active=TRUE;
-    SF314[drive].diskattr|=CAPSDRIVE_DA_IN; // indispensable!
-    if(!FileIsReadOnly)
-      SF314[drive].diskattr&=~CAPSDRIVE_DA_WP; // Sundog
-    CAPSFdcInvalidateTrack(&WD1772,drive); // Galaxy Force II
-    LockedTrack[drive]=LockedSide[drive]=-1;
+
+  ASSERT( CAPSIMG_OK );
+  if(!CAPSIMG_OK)
+    return -1;
+
+  ASSERT( !drive || drive==1 );
+  ASSERT( img_info );
+  ASSERT( ContainerID[drive]!=-1 );
+  ASSERT( ContainerID[drive]!=-1 );
+  DriveMap|=(drive+1); // not <<!
+  bool FileIsReadOnly=bool(GetFileAttributes(File) & FILE_ATTRIBUTE_READONLY);
+  VERIFY( !CAPSLockImage(ContainerID[drive],File) ); // open the IPF file
+  VERIFY( !CAPSGetImageInfo(img_info,ContainerID[drive]) );
+  ASSERT( img_info->type==ciitFDD );
+  TRACE_LOG("Disk in %c is CAPS release %d rev %d of %d/%d/%d for ",
+    drive+'A',img_info->release,img_info->revision,img_info->crdt.day,
+    img_info->crdt.month,img_info->crdt.year);
+  bool found=0;
+  for(int i=0;i<CAPS_MAXPLATFORM;i++)
+  {
+    if((img_info->platform[i])!=ciipNA)
+      TRACE_LOG("%s ",CAPSGetPlatformName(img_info->platform[i]));
+    if(img_info->platform[i]==ciipAtariST || SSE_HACKS_ON) //MPS GOlf 'test'
+      found=true;
+  }
+  TRACE_LOG("Sides:%d Tracks:%d-%d\n",img_info->maxhead+1,img_info->mincylinder,
+    img_info->maxcylinder);
+  ASSERT( found );
+  if(!found)    // could be a Spectrum disk etc.
+  {
+    int Ret=FIMAGE_WRONGFORMAT;
+    return Ret;
+  }
+  Active=TRUE;
+  SF314[drive].diskattr|=CAPSDRIVE_DA_IN; // indispensable!
+  if(!FileIsReadOnly)
+    SF314[drive].diskattr&=~CAPSDRIVE_DA_WP; // Sundog
+  CAPSFdcInvalidateTrack(&WD1772,drive); // Galaxy Force II
+  LockedTrack[drive]=LockedSide[drive]=-1;
   return 0;
 }
 
 
 void TCaps::RemoveDisk(int drive) {
+  ASSERT( CAPSIMG_OK );
+  if(!CAPSIMG_OK)
+    return;
   TRACE_LOG("Drive %c removing image\n",drive+'A');
   VERIFY( !CAPSUnlockImage(Caps.ContainerID[drive]) ); // eject disk
   SF314[drive].diskattr&=~CAPSDRIVE_DA_IN;
@@ -1001,20 +1445,22 @@ void TCaps::RemoveDisk(int drive) {
 #define LOGSECTION LOGSECTION_FDC
 
 void TCaps::WritePsgA(int data) {
-  // drive selection (we don't refactor...)
+  // drive selection 
   if ((psg_reg[PSGR_PORT_A]&BIT_1)==0 /*&& DriveIsIPF[0]*/)
     WD1772.drivenew=0;
   else if ((psg_reg[PSGR_PORT_A]&BIT_2)==0 /*&& DriveIsIPF[1]*/)
     WD1772.drivenew=1;
+//TODO: no drive...
   else //if(DriveIsIPF[0])
-    WD1772.drivenew=0;
+    WD1772.drivenew=-2; //0;  //?  //TESTING
   // side selection (Burger Man, Turbo Outrun...)
-  ASSERT( !WD1772.drivenew || WD1772.drivenew==1 );
-  SF314[WD1772.drivenew].newside=((psg_reg[PSGR_PORT_A]&BIT_0)==0);
+//  ASSERT( !WD1772.drivenew || WD1772.drivenew==1 );
+  if(!WD1772.drivenew || WD1772.drivenew==1)
+    SF314[WD1772.drivenew].newside=((psg_reg[PSGR_PORT_A]&BIT_0)==0);
 }
 
 
-UDWORD TCaps::ReadWD1772() {
+UDWORD TCaps::ReadWD1772(BYTE Line) {
 
 #if defined(SS_DEBUG)
   Dma.UpdateRegs();
@@ -1025,8 +1471,8 @@ UDWORD TCaps::ReadWD1772() {
   CyclesRun+=CYCLES_PRE_IO;
 #endif
 
-  UDWORD data=CAPSFdcRead(&WD1772,(dma_mode & (BIT_1+BIT_2))/2); 
-  if(!(dma_mode & (BIT_1+BIT_2))) // read status register
+  UDWORD data=CAPSFdcRead(&WD1772,Line); 
+  if(!Line) // read status register
   {
     mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
     WD1772.lineout&=~CAPSFDC_LO_INTRQ; // and in the WD1772
@@ -1050,66 +1496,58 @@ UDWORD TCaps::ReadWD1772() {
 }
 
 
-int TCaps::WriteWD1772(int data) {
+void TCaps::WriteWD1772(BYTE Line,int data) {
 
-#if defined(SS_DEBUG) || !defined(VC_BUILD)
   Dma.UpdateRegs();
-#endif
 
 #if defined(SS_IPF_RUN_PRE_IO)
   CAPSFdcEmulate(&WD1772,CYCLES_PRE_IO);
   CyclesRun+=CYCLES_PRE_IO;
 #endif  
-  int wd_address=(dma_mode&(BIT_1+BIT_2))>>1;
-#if defined(SS_IPF_LETHAL_XCESS)
-  if(SSE_HACKS_ON && !wd_address && Version==42) 
+
+#if defined(SS_FDC) && defined(SS_IPF_LETHAL_XCESS)
+  if(SSE_HACKS_ON && !Line && Version==42) 
   { //targeted hack to make up for something missing in capsimg (?)
-    if( (::WD1772.OldCr&0xF0)==0xD0 && (data&0xF0)==0xE0 ) 
+    if( (::WD1772.CR&0xF0)==0xD0 && (data&0xF0)==0xE0 ) 
+    {
+      TRACE_LOG("hack Lethal Xcess\n");
       WD1772.lineout&=~CAPSFDC_LO_INTIP; // fixes Lethal Xcess
-    ::WD1772.OldCr=data;
+      // in current beta, this doesn't work anymore?
+    }
   }
 #endif
 
-  if(!wd_address) // command
+  if(!Line) // command
   {
+    // TODO drive selection problem
     mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Double Dragon II
     if(Version==42 && (data&0xE0)==0xA0)
     {
-      TRACE("IPF unimplemented command %X\n",data);
-#if defined(SS_OSD_DRIVE_LED)
-      if(FDCWritingTimer<timer)
-        FDCWritingTimer=timer+RED_LED_DELAY;	
-#endif
+      TRACE_LOG("IPF unimplemented command",data);
+
 #if defined(SS_IPF_WRITE_HACK)
       if(SSE_HACKS_ON && (data&0xE0)==0xA0) // =write sector (not track!)
       {
-        TRACE("hack for write to IPF %d sectors\n",dma_sector_count);
-        dma_address+=512*dma_sector_count;
-        INSTRUCTION_TIME(256*dma_sector_count);
-        dma_sector_count=0;
-        //dma_status&=~BIT_1;
-        dma_status=1;
+        TRACE_LOG("Hack for write to IPF %d sectors\n",Dma.Counter);
+        Dma.BaseAddress+=512*Dma.Counter;
+#if defined(SS_DMA_COUNT_CYCLES)
+        INSTRUCTION_TIME(256*Dma.Counter);
+#endif
+        Dma.Counter=0;
+        Dma.SR=1;
       }
 #endif
     }
-#if defined(SS_OSD_DRIVE_LED)
-    else
-      FDCWriting=FALSE;
-#endif
   }
 
-  TRACE_LOG("write %X to %p - %X\n",data,&WD1772,wd_address);
-  CAPSFdcWrite(&WD1772,wd_address,data); // send to DLL
+  CAPSFdcWrite(&WD1772,Line,data); // send to DLL
 
 #if defined(SS_IPF_RUN_POST_IO)
   CAPSFdcEmulate(&WD1772,CYCLES_POST_IO);
   CyclesRun+=CYCLES_POST_IO;
 #endif
-
-  return wd_address;
 }
 
-#undef LOGSETION
 
 void TCaps::Hbl() {
 
@@ -1125,7 +1563,7 @@ void TCaps::Hbl() {
 #endif
     );
 #else
-  CAPSFdcEmulate(&WD1772,screen_res==2? 160 : 512);
+  CAPSFdcEmulate(&WD1772,screen_res==2? 224 : 512);
 #endif
 
 #if defined(SS_IPF_RUN_PRE_IO) || defined(SS_IPF_RUN_POST_IO)
@@ -1139,8 +1577,6 @@ int TCaps::IsIpf(int drive) {
   return (DriveMap&(drive+1)); // not <<!
 }
 
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_FDC_BYTES//SS // to trace all bytes transferred!
 
 /*  Callback functions. Since they're static, they access object data like
     any external function, using 'Caps.'
@@ -1149,60 +1585,33 @@ int TCaps::IsIpf(int drive) {
 void TCaps::CallbackDRQ(PCAPSFDC pc, UDWORD setting) {
 #if defined(SS_DEBUG) || !defined(VC_BUILD)
   Dma.UpdateRegs();
-  ASSERT( dma_mode&BIT_7 ); // DMA enabled
-  ASSERT(!(dma_mode&BIT_6)); // DMA enabled
-  ASSERT(!(dma_mode&BIT_3)); // Floppy
+  ASSERT( Dma.MCR&BIT_7 ); // DMA enabled
+  ASSERT(!(Dma.MCR&BIT_6)); // DMA enabled
+  ASSERT(!(Dma.MCR&BIT_3)); // Floppy
 #endif
-  if((dma_mode&BIT_7) && !(dma_mode&BIT_6))
+  if((Dma.MCR&BIT_7) && !(Dma.MCR&BIT_6))
   {
-    if(!(dma_mode&BIT_8)) // disk->RAM
-    {
-      BYTE data_register=CAPSFdcGetInfo(cfdciR_Data, &Caps.WD1772,0); 
-      fdc_read_address_buffer[
-#if defined(SS_DMA_DOUBLE_FIFO)
-        16*Dma.BufferInUse+
-#endif
-        fdc_read_address_buffer_len++]=data_register;
-    }
+    // transfer one byte
+    if(!(Dma.MCR&BIT_8)) // disk->RAM
+      Dma.AddToFifo( CAPSFdcGetInfo(cfdciR_Data,&Caps.WD1772,0) );
     else // RAM -> disk
-      Caps.WD1772.r_data=fdc_read_address_buffer[
-#if defined(SS_DMA_DOUBLE_FIFO)
-        16*Dma.BufferInUse+
-#endif
-        fdc_read_address_buffer_len++];
-/*
-"The FIFOs are not flushed automatically at the end of a transfer, and 
-therefore it is only possible to transfer data in multiples of 16 bytes"
-*/
-    ASSERT( fdc_read_address_buffer_len<=16 );
-    if(fdc_read_address_buffer_len==16)
-    { 
-      Dma.RequestTransfer();
-      fdc_read_address_buffer_len=0;
-      disk_light_off_time=timeGetTime()+DisableDiskLightAfter;
-#if defined(SS_OSD_DRIVE_LED)
-      if(::WD1772.WritingToDisk()) // it's Steem's one!
-        FDCWriting=TRUE;
-#endif
-    }
+      Caps.WD1772.r_data=Dma.GetFifoByte();  
+
     Caps.WD1772.r_st1&=~CAPSFDC_SR_IP_DRQ; // The Pawn
     Caps.WD1772.lineout&=~CAPSFDC_LO_DRQ;
   }
 }
 
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_FDC
 
 void TCaps::CallbackIRQ(PCAPSFDC pc, DWORD lineout) {
   ASSERT(pc==&Caps.WD1772);
-  //ASSERT( lineout&CAPSFDC_LO_INTRQ );// Manoir de Mortevielle
-  //ASSERT( !mfp_interrupt_enabled[7] );  // Cyberball
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
-//  TRACE_LOG("%d ",ABSOLUTE_CPU_TIME);
+#if defined(SS_DEBUG)
   if(TRACE_ENABLED) Dma.UpdateRegs(true);
 #endif
   mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,!(lineout&CAPSFDC_LO_INTRQ));
+#if !defined(SS_OSD_DRIVE_LED3)
   disk_light_off_time=timeGetTime()+DisableDiskLightAfter;
+#endif
 }
 
 #undef LOGSECTION
@@ -1232,8 +1641,6 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   ASSERT( side==track_info.head );
   ASSERT( track==track_info.cylinder );
   ASSERT( !track_info.sectorsize );
-  ASSERT( !track_info.weakcnt ); // Dungeon Master?
-  ASSERT( !track_info.timebuf ); // asserts with DI_LOCK_DENAUTO lock flag
   TRACE_LOG("CAPS Lock %c:S%dT%d flags %X sectors %d bits %d overlap %d startbit %d timebuf %x\n",
     drive+'A',side,track,flags,track_info.sectorcnt,track_info.tracklen,track_info.overlap,track_info.startbit,track_info.timebuf);
   Caps.SF314[drive].trackbuf=track_info.trackbuf;
@@ -1269,8 +1676,8 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
 
 }
 
-#undef LOGSECTION
-
 #endif//ipf
 
-#endif
+#undef LOGSECTION
+
+#endif//#if defined(STEVEN_SEAGAL)

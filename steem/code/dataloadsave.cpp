@@ -675,8 +675,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 
   SEC(PSEC_DISPFULL){
 
-#if defined(STEVEN_SEAGAL) 
-
+#if defined(STEVEN_SEAGAL) // load SSE options
 #if defined(SS_HACKS)
     SSE_HACKS_ON=pCSF->GetInt("Options","SpecificHacks",SSE_HACKS_ON);
 #endif
@@ -691,12 +690,33 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SS_VAR_STEALTH) 
     STEALTH_MODE=pCSF->GetInt("Options","StealthMode",STEALTH_MODE);
 #endif
-    // Adjustments
+#if defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+    USE_SDL=pCSF->GetInt("Options","UseSDL",USE_SDL);
+#endif
+#if defined(SS_STF) 
+    ST_TYPE=pCSF->GetInt("Options","StType",ST_TYPE);
+#endif
+#if defined(SS_MMU_WAKE_UP)
+    WAKE_UP_STATE=pCSF->GetInt("Options","WakeUpState",WAKE_UP_STATE);
+#endif
 #if defined(SS_VID_BORDERS)
     DISPLAY_SIZE=pCSF->GetInt("Display","BorderSize",DISPLAY_SIZE);
     if(DISPLAY_SIZE<0||DISPLAY_SIZE>3)
       DISPLAY_SIZE=0;
     ChangeBorderSize(DISPLAY_SIZE);
+#endif
+#if defined(SS_SOUND_FILTER_STF)
+    PSG_FILTER_FIX=pCSF->GetInt("Sound","PsgFilter",PSG_FILTER_FIX);
+#endif
+#if defined(SS_SOUND_MICROWIRE)
+    MICROWIRE_ON=pCSF->GetInt("Sound","Microwire",MICROWIRE_ON);
+    DSP_ENABLED=pCSF->GetInt("Sound","Dsp",DSP_ENABLED);
+#endif
+#if defined(SS_OSD_DRIVE_INFO)
+    OSD_DRIVE_INFO=pCSF->GetInt("Sound","OsdDriveInfo", OSD_DRIVE_INFO);
+#endif
+#if defined(SS_VAR_SCROLLER_DISK_IMAGE)
+    OSD_IMAGE_NAME=pCSF->GetInt("Options","OsdImageName", OSD_IMAGE_NAME);
 #endif
 #endif // SS
 
@@ -1023,9 +1043,32 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SS_VAR_STEALTH) 
   pCSF->SetStr("Options","StealthMode",EasyStr(STEALTH_MODE));
 #endif
+#if defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+  pCSF->SetStr("Options","UseSDL",EasyStr(USE_SDL));  
+#endif
+#if defined(SS_STF) 
+  pCSF->SetStr("Options","StType",EasyStr(ST_TYPE));  
+#endif
+#if defined(SS_MMU_WAKE_UP)
+  pCSF->SetStr("Options","WakeUpState",EasyStr(WAKE_UP_STATE));  
+#endif
 #if defined(SS_VID_BORDERS)
   pCSF->SetStr("Display","BorderSize",EasyStr(DISPLAY_SIZE));  
 #endif
+#if defined(SS_SOUND_FILTER_STF)
+  pCSF->SetStr("Sound","PsgFilter",EasyStr(PSG_FILTER_FIX));  
+#endif
+#if defined(SS_SOUND_MICROWIRE)
+  pCSF->SetStr("Sound","Microwire",EasyStr(MICROWIRE_ON));  
+  pCSF->SetStr("Sound","Dsp",EasyStr(DSP_ENABLED));  
+#endif
+#if defined(SS_OSD_DRIVE_INFO)
+  pCSF->SetStr("Options","OsdDriveInfo",EasyStr(OSD_DRIVE_INFO));  
+#endif
+#if defined(SS_VAR_SCROLLER_DISK_IMAGE)
+  pCSF->SetStr("Options","OsdImageName",EasyStr(OSD_IMAGE_NAME));  
+#endif
+
 #endif//SS
 
   pCSF->SetStr("Display","ResChangeResize",EasyStr(ResChangeResize));

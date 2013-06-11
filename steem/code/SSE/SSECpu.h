@@ -5,6 +5,8 @@
 
 #if defined(SS_CPU)
 
+#define LOGSECTION LOGSECTION_CRASH // not correct, temp, cpu is trouble
+
 // forward (due to shitty structure)
 #if defined(SS_VAR_REWRITE)
 extern "C" void ASMCALL m68k_trace();
@@ -21,6 +23,25 @@ extern "C" unsigned getDivs68kCycles( signed long dividend, signed short divisor
 #if defined(SS_CPU_PREFETCH_TIMING_EXCEPT)
 bool debug_prefetch_timing(WORD ir);
 #endif
+// forward
+extern void (*m68k_jump_get_dest_b[8])();
+extern void (*m68k_jump_get_dest_w[8])();
+extern void (*m68k_jump_get_dest_l[8])();
+extern void (*m68k_jump_get_dest_b_not_a[8])();
+extern void (*m68k_jump_get_dest_w_not_a[8])();
+extern void (*m68k_jump_get_dest_l_not_a[8])();
+extern void (*m68k_jump_get_dest_b_not_a_or_d[8])();
+extern void (*m68k_jump_get_dest_w_not_a_or_d[8])();
+extern void (*m68k_jump_get_dest_l_not_a_or_d[8])();
+extern void (*m68k_jump_get_dest_b_not_a_faster_for_d[8])();
+extern void (*m68k_jump_get_dest_w_not_a_faster_for_d[8])();
+extern void (*m68k_jump_get_dest_l_not_a_faster_for_d[8])();
+extern void (*m68k_jump_get_source_b[8])();
+extern void (*m68k_jump_get_source_w[8])();
+extern void (*m68k_jump_get_source_l[8])();
+extern void (*m68k_jump_get_source_b_not_a[8])();
+extern void (*m68k_jump_get_source_w_not_a[8])();
+extern void (*m68k_jump_get_source_l_not_a[8])();
 
 
 #ifdef DEBUG_BUILD
@@ -35,7 +56,10 @@ bool debug_prefetch_timing(WORD ir);
 #endif
 
 
+
 // keep as macro, wouldn't be inlined in VC6
+// but since we changed trace...
+
 #define HANDLE_IOACCESS(tracefunc) \
   if (ioaccess){                             \
     switch (ioaccess & IOACCESS_NUMBER_MASK){                        \
@@ -67,99 +91,28 @@ bool debug_prefetch_timing(WORD ir);
   }
 
 
-
 #if defined(SS_CPU_POKE)
 void m68k_poke_abus2(BYTE);
 void m68k_dpoke_abus2(WORD);
 void m68k_lpoke_abus2(LONG);
 #endif
 
-/*  We now have a nice object representing the Motorola 68000, with some 
-    functions, but the instructions stay global C
-*/
-struct TM68000 {
-  TM68000();
-  inline void FetchTiming();
-  inline void FetchTimingNoRound();
-  inline void FetchWord(WORD &dest_word); 
-  inline void InstructionTime(int n);
-  inline void InstructionTimeRound(int n);
-  inline void Interrupt(MEM_ADDRESS ad);
-  inline void PerformRte();
-  inline void PrefetchSetPC();
-  inline void Process();
-  inline void m68kReadBFromAddr();
-  inline void m68kReadWFromAddr();
-  inline void m68kReadLFromAddr();
-  inline void SetPC(MEM_ADDRESS ad);
-  inline void Unstop();
-#if defined(SS_DEBUG)
-  int IrAddress; // pc at start
-  int nExceptions;
-  int nInstr;
-  WORD PreviousIr;
-  bool NextIrFetched; // fetched next instruction?
-#if defined(SS_CPU_ROUNDING_CHECKS)
-  int CycleSubstractions; // for rounding (not used...)
-#endif
-#endif//debug
-#if defined(SS_CPU_PREFETCH)
-  BOOL CallPrefetch; 
-  WORD *PrefetchAddress; 
-  int PrefetchClass; // see ijor's article
-  WORD PrefetchedOpcode;
-  WORD FetchForCall(MEM_ADDRESS ad);
-  inline void PrefetchIrc();
-  inline void PrefetchIrcNoRound();
-  inline void RefetchIr();
-#endif
-#if defined(SS_CPU_ROUNDING_CHECKS)
-  bool Rounding; // timing has been rounded
-  bool AlignedCycles; // current counter is multiple of 4
-  int CurrentRoundedCycles;
-  int CurrentUnroundedCycles;
-  inline void CheckExtraRoundedCycles();
-#endif
-};
+// Finer names!
+#define IRC   prefetch_buf[1]
+#define IR    prefetch_buf[0]
+#define IRD   ir
 
-extern TM68000 M68000;
+
+#include "SSEM68000.h" // there you go...
+
+#if defined(SS_CPU_TRUE_PC)
+#define TRUE_PC M68000.Pc
+#define CHECK_READ M68000.CheckRead
+#endif
+
 
 
 // inline functions of TM68000 (instead of macros)
-
-
-#if defined(SS_CPU_ROUNDING_CHECKS)
-
-/*  
-
-    ADD.L (EA),register
-    depends on EA
-    
-    -(An) : 10 + 6 = 16 (not 20) (Cernit #2)
-    first it --, then it reads (4+4) and it's ready
-
-    D8(An,Dn): 14 + 6 rounded to 24 (not 20) (DSOS menu)
-    it reads D8 (4), then it must compute address (2)
-    then it fetches data (4+4)
-    2 cycles are lost between the reads
-    Note: we use a more general fix (SS_CPU_ROUNDING_CHECKS undefined)
-*/
-
-void TM68000::CheckExtraRoundedCycles() {
-  if(CurrentRoundedCycles-CurrentUnroundedCycles==4
-        && (ir & BITS_543)==BITS_543_100) // -(An)
-  { 
-    cpu_cycles+=(4); 
-#if defined(SS_DEBUG)
-    CycleSubstractions++;
-#endif
-  }
-}
-#define CHECK_EXTRA_ROUNDED_CYCLES M68000.CheckExtraRoundedCycles()
-
-
-#endif//SS_CPU_ROUNDING_CHECKS
-
 
 inline void TM68000::FetchTiming() {
 #if !defined(SS_CPU_PREFETCH_TIMING)
@@ -168,7 +121,7 @@ inline void TM68000::FetchTiming() {
   //ASSERT(!NextIrFetched); //strong
   if(NextIrFetched)
   {
-    TRACE("PC %X IR %X double prefetch?\n",pc,ir);
+    TRACE_LOG("PC %X IR %X double prefetch?\n",pc,ir);
   }
 //#if defined(DEBUG_BUILD)
   NextIrFetched=true;
@@ -192,20 +145,17 @@ inline void TM68000::FetchTimingNoRound() {
 #if !defined(SS_CPU_PREFETCH_TIMING)
 
 #if defined(SS_DEBUG)
-  //ASSERT(!NextIrFetched); //strong
+  ASSERT(!NextIrFetched); //strong
   if(NextIrFetched)
   {
-    TRACE("PC %X IR %X double prefetch?\n",pc,ir);
+    TRACE_LOG("PC %X IR %X double prefetch?\n",pc,ir);
   }
-//#if defined(DEBUG_BUILD)
   NextIrFetched=true;
-//#endif
 #endif  
   InstructionTime(4); 
 #endif
   
 #if defined(SS_CPU_PREFETCH_TIMING) && defined(SS_CPU_PREFETCH_TIMING_EXCEPT)
-
   if(debug_prefetch_timing(ir))
     InstructionTime(4); 
 #endif
@@ -217,45 +167,229 @@ inline void TM68000::FetchTimingNoRound() {
 
 
 inline void TM68000::FetchWord(WORD &dest_word) {
-  dest_word=prefetch_buf[0];
-  if(prefetched_2)
+  dest_word=IR;
+  if(prefetched_2)// already fetched
   {
-    if(prefetch_buf[1]!=*lpfetch)
+#if defined(SS_CPU_PREFETCH_DETECT_IRC_TRICK) && defined(SS_DEBUG)
+    if(!Debug.CpuPrefetchDiffDetected) {
+      ASSERT( IRC==*lpfetch ); 
+      if(IRC!=*lpfetch) Debug.CpuPrefetchDiffDetected=true;
+    }
+#endif
+    if(IRC!=*lpfetch)
     {
-/*  The "prefetch trick" was used by some demos to crash when the CPU
-    was in 'trace' mode (nothing to do with our debug TRACE!).
+/*  The "prefetch trick" was used by some programs to crash when the CPU
+    was in 'trace' mode 
     eg Anomaly, Transbeauce 1, Transbeauce 2
+    Operation Clean Streets (Auto 168)
 */
 #if defined(SS_CPU_PREFETCH_TRACE)
-      TRACE("Prefetched IRC:%X current:%X\n",prefetch_buf[1],*lpfetch);
+      TRACE_LOG("Prefetched IRC:%X current:%X\n",prefetch_buf[1],*lpfetch);
+      if(IRC!=*lpfetch && !Debug.CpuPrefetchDiffDetected) 
+      {
+        OsdControl.StartScroller("CPU possible prefetch trick");
+        Debug.CpuPrefetchDiffDetected=true;
+      }
 #endif
-//      prefetch_buf[1]=*lpfetch; // enabling this cancels prefetch (don't)
+#if defined(SS_CPU_NO_PREFETCH)
+      prefetch_buf[1]=*lpfetch; // enabling this cancels prefetch (don't)
+#endif
     }
-    prefetch_buf[0]=prefetch_buf[1];
+    IR=IRC;
     prefetched_2=false;
   }
   else
-    prefetch_buf[0]=*lpfetch; // next instr
+#if defined(SS_CPU_FETCH_IO_FULL)
+  // don't use lpfetch for fetching in IO zone, use io_read
+  if(pc>=MEM_IO_BASE && !(pc>=0xff8240 && pc<0xff8260))
+  {
+    IR=io_read_w(pc);
+    TRACE_LOG("Fetch word %X in IO zone %X\n",prefetch_buf[0],pc);
+    return;
+  }
+  else
+#endif
+    IR=*lpfetch; // next instr
+  ASSERT( !(pc>=MEM_IO_BASE && !(pc>=0xff8240 && pc<0xff8260)) ); // Warp, Union
+#if defined(SS_CPU_FETCH_IO)
+  if(pc>=MEM_IO_BASE) // normally it took IRC
+    return; //if we test that, we may as well avoid useless inc "PC"
+#endif
   lpfetch+=MEM_DIR; // advance the fetch pointer
-  if(lpfetch MEM_GE lpfetch_bound) // <=
+  if(lpfetch MEM_GE lpfetch_bound) // MEM_GE : <=
     exception(BOMBS_BUS_ERROR,EA_FETCH,pc);
 }
 #define FETCH_W(dest_word) M68000.FetchWord(dest_word);
 
 
+#define m68k_GET_DEST_B M68000.GetDestByte();
+#define m68k_GET_DEST_W M68000.GetDestWord();
+#define m68k_GET_DEST_L M68000.GetDestLong();
+#define m68k_GET_DEST_B_NOT_A M68000.GetDestByteNotA();
+#define m68k_GET_DEST_W_NOT_A M68000.GetDestWordNotA();
+#define m68k_GET_DEST_L_NOT_A M68000.GetDestLongNotA();
+#define m68k_GET_DEST_B_NOT_A_OR_D M68000.GetDestByteNotAOrD();
+#define m68k_GET_DEST_W_NOT_A_OR_D M68000.GetDestWordNotAOrD();
+#define m68k_GET_DEST_L_NOT_A_OR_D M68000.GetDestLongNotAOrD();
+#define m68k_GET_DEST_B_NOT_A_FASTER_FOR_D M68000.GetDestByteNotAFasterForD();
+#define m68k_GET_DEST_W_NOT_A_FASTER_FOR_D M68000.GetDestWordNotAFasterForD();
+#define m68k_GET_DEST_L_NOT_A_FASTER_FOR_D M68000.GetDestLongNotAFasterForD();
+#define m68k_GET_SOURCE_B M68000.GetSourceByte();
+#define m68k_GET_SOURCE_W M68000.GetSourceWord();
+#define m68k_GET_SOURCE_L M68000.GetSourceLong();
+#define m68k_GET_SOURCE_B_NOT_A M68000.GetSourceByteNotA();
+#define m68k_GET_SOURCE_W_NOT_A M68000.GetSourceWordNotA();
+#define m68k_GET_SOURCE_L_NOT_A M68000.GetSourceLongNotA();
+
+inline void TM68000::GetDestByte() {
+#if defined(SS_CPU_TRUE_PC)
+  if(!CheckRead)
+    Pc=pc+2;
+#endif
+  m68k_jump_get_dest_b[(ir&BITS_543)>>3]();
+}
+
+
+inline void TM68000::GetDestWord() {
+#if defined(SS_CPU_TRUE_PC)
+  if(!CheckRead)
+    Pc=pc+2;
+#endif
+  m68k_jump_get_dest_w[(ir&BITS_543)>>3]();
+}
+
+
+inline void TM68000::GetDestLong() {
+#if defined(SS_CPU_TRUE_PC)
+  if(!CheckRead)
+    Pc=pc+2;
+#endif
+  m68k_jump_get_dest_l[(ir&BITS_543)>>3]();
+}
+
+
+inline void TM68000::GetDestByteNotA() {
+#if defined(SS_CPU_TRUE_PC)
+  if(!CheckRead)
+    Pc=pc+2;
+#endif
+  m68k_jump_get_dest_b_not_a[(ir&BITS_543)>>3]();
+}
+
+
+inline void TM68000::GetDestWordNotA() {
+#if defined(SS_CPU_TRUE_PC)
+  if(!CheckRead)
+    Pc=pc+2;
+#endif
+  m68k_jump_get_dest_w_not_a[(ir&BITS_543)>>3]();
+}
+
+
+inline void TM68000::GetDestLongNotA() {
+#if defined(SS_CPU_TRUE_PC)
+  if(!CheckRead)
+    Pc=pc+2;
+#endif
+  m68k_jump_get_dest_l_not_a[(ir&BITS_543)>>3]();
+}
+
+
+inline void TM68000::GetDestByteNotAOrD() {
+#if defined(SS_CPU_TRUE_PC)
+  if(!CheckRead)
+    Pc=pc+2;
+#endif
+  m68k_jump_get_dest_b_not_a_or_d[(ir&BITS_543)>>3]();
+}
+
+
+inline void TM68000::GetDestWordNotAOrD() {
+#if defined(SS_CPU_TRUE_PC)
+  if(!CheckRead)
+    Pc=pc+2;
+#endif
+  m68k_jump_get_dest_w_not_a_or_d[(ir&BITS_543)>>3]();
+}
+
+
+inline void TM68000::GetDestLongNotAOrD() {
+#if defined(SS_CPU_TRUE_PC)
+  if(!CheckRead)
+    Pc=pc+2;
+#endif
+  m68k_jump_get_dest_l_not_a_or_d[(ir&BITS_543)>>3]();
+}
+
+
+inline void TM68000::GetDestByteNotAFasterForD() {
+#if defined(SS_CPU_TRUE_PC)
+  if(!CheckRead)
+    Pc=pc+2;
+#endif
+  m68k_jump_get_dest_b_not_a_faster_for_d[(ir&BITS_543)>>3]();
+}
+
+
+inline void TM68000::GetDestWordNotAFasterForD() {
+#if defined(SS_CPU_TRUE_PC)
+  if(!CheckRead)
+    Pc=pc+2;
+#endif
+  m68k_jump_get_dest_w_not_a_faster_for_d[(ir&BITS_543)>>3]();
+}
+
+
+inline void TM68000::GetDestLongNotAFasterForD() {
+#if defined(SS_CPU_TRUE_PC)
+  if(!CheckRead)
+    Pc=pc+2;
+#endif
+  m68k_jump_get_dest_l_not_a_faster_for_d[(ir&BITS_543)>>3]();
+}
+
+
+inline void TM68000::GetSourceByte() {
+  m68k_jump_get_source_b[(ir&BITS_543)>>3]();
+}
+
+
+inline void TM68000::GetSourceWord() {
+  m68k_jump_get_source_w[(ir&BITS_543)>>3]();
+}
+
+
+inline void TM68000::GetSourceLong() {
+  m68k_jump_get_source_l[(ir&BITS_543)>>3]();
+}
+
+
+inline void TM68000::GetSourceByteNotA() {
+  m68k_jump_get_source_b_not_a[(ir&BITS_543)>>3]();
+}
+
+
+inline void TM68000::GetSourceWordNotA() {
+  m68k_jump_get_source_w_not_a[(ir&BITS_543)>>3]();
+}
+
+
+inline void TM68000::GetSourceLongNotA() {
+  m68k_jump_get_source_l_not_a[(ir&BITS_543)>>3]();
+}
+
+
 inline void TM68000::InstructionTime(int t) {
   cpu_cycles-=(t);
-#if defined(SS_CPU_ROUNDING_CHECKS)
-  CurrentUnroundedCycles+=t; 
-  CurrentRoundedCycles+=(t+3)&~3;
-#endif
 }
 #define INSTRUCTION_TIME(t)  M68000.InstructionTime(t)
 
 
 inline void TM68000::InstructionTimeRound(int t) {
   InstructionTime(t);
+#if ! defined(SS_MMU_WAIT_STATES)
   cpu_cycles&=-4;
+#endif
 }
 #define INSTRUCTION_TIME_ROUND(t) M68000.InstructionTimeRound(t)
 
@@ -264,15 +398,15 @@ inline void TM68000::Interrupt(MEM_ADDRESS ad) {
   WORD _sr=sr;
   if (!SUPERFLAG) 
     change_to_supervisor_mode();
-#if defined(SS_CPU_PREFETCH)
+#if defined(SS_CPU_PREFETCH_CLASS)
   PrefetchClass=2;
 #endif
   m68k_PUSH_L(PC32);
   m68k_PUSH_W(_sr);
-  SetPC(ad);//SET_PC(ad);
+  SetPC(ad);
   SR_CLEAR(SR_TRACE);
   interrupt_depth++;
-//  TRACE("%X %d\n",ad,interrupt_depth);
+//  TRACE_LOG("%X %d\n",ad,interrupt_depth);
 }
 #define m68k_interrupt(ad) M68000.Interrupt(ad)
 
@@ -285,7 +419,7 @@ inline void TM68000::PerformRte() {
   sr=m68k_dpeek(r[15]);r[15]+=6;      
   sr&=SR_VALID_BITMASK;               
   DETECT_CHANGE_TO_USER_MODE;         
-  DETECT_TRACE_BIT;                                           
+  DETECT_TRACE_BIT;        
 }
 #define M68K_PERFORM_RTE(checkints) M68000.PerformRte()
 
@@ -293,66 +427,77 @@ inline void TM68000::PerformRte() {
 #if defined(SS_CPU_PREFETCH)
 
 inline void TM68000::PrefetchIrc() {
-//#if !(defined(_DEBUG) && defined(DEBUG_BUILD))
-#if defined(SS_DEBUG) && !(defined(_DEBUG) && defined(DEBUG_BUILD))
+
+#if defined(SS_DEBUG) && defined(SS_CPU_PREFETCH_ASSERT)
   ASSERT(!prefetched_2); // strong, only once per instruction 
 #endif
-  prefetch_buf[1]=*lpfetch;
-  prefetched_2=TRUE;
-  
-#if defined(SS_CPU_PREFETCH_TIMING)
 
+#if !defined(SS_CPU_FETCH_IO_FULL)
+  ASSERT( !(pc>=MEM_IO_BASE && !(pc>=0xff8240 && pc<0xff8260)) );
+#else 
+  if(pc>=MEM_IO_BASE && !(pc>=0xff8240 && pc<0xff8260))
+  {
+    IRC=io_read_w(pc); 
+    TRACE_LOG("IRC %X in IO zone %X\n",IRC,pc);
+  }
+  else
+#endif
+  
+  IRC=*lpfetch; //prefetch_buf[1]=*lpfetch;
+  prefetched_2=TRUE;
+#if defined(SS_CPU_PREFETCH_TIMING) // we count fetch timing here
 #if defined(SS_DEBUG) && !(defined(_DEBUG) && defined(DEBUG_BUILD))
   //ASSERT(!NextIrFetched); //strong
   if(NextIrFetched)
   {
-    TRACE("PC %X IR %X double prefetch?\n",pc,ir);
+    TRACE_LOG("PC %X IR %X double prefetch?\n",pc,ir);
   }
-//#if defined(DEBUG_BUILD)
   NextIrFetched=true;
-//#endif
 #endif
-
 #if defined(SS_CPU_PREFETCH_TIMING_EXCEPT)
-  if(debug_prefetch_timing(ir))
+  if(debug_prefetch_timing(IRD))
     ; else
 #endif
-  {
     InstructionTimeRound(4);
-  }
-#endif
+#endif//SS_CPU_PREFETCH_TIMING
+
 }
 
 
-inline void TM68000::PrefetchIrcNoRound() {
-//#if !(defined(_DEBUG) && defined(DEBUG_BUILD))
+inline void TM68000::PrefetchIrcNoRound() { // the same except no rounding
+
 #if defined(SS_DEBUG) && !(defined(_DEBUG) && defined(DEBUG_BUILD))
   ASSERT(!prefetched_2); // strong, only once per instruction 
 #endif
-  prefetch_buf[1]=*lpfetch;
+#if !defined(SS_CPU_FETCH_IO_FULL)
+  ASSERT( !(pc>=MEM_IO_BASE && !(pc>=0xff8240 && pc<0xff8260)) );
+#else 
+  if(pc>=MEM_IO_BASE && !(pc>=0xff8240 && pc<0xff8260))
+  {
+    IRC=io_read_w(pc); 
+    TRACE_LOG("IRC %X in IO zone %X\n",IRC,pc);
+  }
+  else
+#endif
+  //prefetch_buf[1]=*lpfetch;
+  IRC=*lpfetch;
   prefetched_2=TRUE;
-  
-#if defined(SS_CPU_PREFETCH_TIMING)
-
+#if defined(SS_CPU_PREFETCH_TIMING) // we count fetch timing here
 #if defined(SS_DEBUG) && !(defined(_DEBUG) && defined(DEBUG_BUILD))
-  //ASSERT(!NextIrFetched); //strong
+  ASSERT(!NextIrFetched); //strong
   if(NextIrFetched)
   {
-    TRACE("PC %X IR %X double prefetch?\n",pc,ir);
+    TRACE_LOG("PC %X IR %X double prefetch?\n",pc,ir);
   }
-//#if defined(DEBUG_BUILD)
   NextIrFetched=true;
-//#endif
 #endif
-
 #if defined(SS_CPU_PREFETCH_TIMING_EXCEPT)
-  if(debug_prefetch_timing(ir))
+  if(debug_prefetch_timing(IRD))
     ; else
 #endif
-  {
     InstructionTime(4);
-  }
-#endif
+#endif//SS_CPU_PREFETCH_TIMING
+
 }
 
 
@@ -360,39 +505,15 @@ inline void TM68000::PrefetchIrcNoRound() {
 #define PREFETCH_IRC  M68000.PrefetchIrc()
 #define PREFETCH_IRC_NO_ROUND  M68000.PrefetchIrcNoRound()
 
-
-#else
-
-#define PREFETCH_IRC
-#define PREFETCH_IRC_NO_ROUND
-
 #endif
 
-inline void TM68000::PrefetchSetPC() {
-  // called by SetPC; we don't count timing here
-  prefetch_buf[0]=*lpfetch;
-  prefetch_buf[1]=*(lpfetch+MEM_DIR); 
-  prefetched_2=true; // was false in Steem 3.2
-#if defined(SS_CPU_PREFETCH)
-  if(M68000.CallPrefetch) 
-  {
-    ASSERT(M68000.PrefetchedOpcode==prefetch_buf[0]);
-    prefetch_buf[0]=M68000.PrefetchedOpcode;
-    M68000.CallPrefetch=FALSE;
-  }
-#endif
-  lpfetch+=MEM_DIR;
-}
-#define PREFETCH_SET_PC M68000.PrefetchSetPC();
-
+// core function, dispatches in cpu emu, inlining m68k_PROCESS
 
 inline void TM68000::Process() {
-// core function, dispatches in cpu emu
   LOG_CPU  
-  
 #if defined(SS_DEBUG)
   IrAddress=pc;
-  PreviousIr=ir;
+  PreviousIr=IRD;
   nInstr++;
 #if defined(SS_CPU_FETCH_TIMING) && defined(DEBUG_BUILD) \
   && defined(SS_DEBUG_TRACE_PREFETCH)
@@ -402,48 +523,63 @@ inline void TM68000::Process() {
   if(!NextIrFetched && ir!=0x4e72)
   {
     EasyStr instr=disa_d2(old_pc);
-    TRACE("%x %x %s no FETCH_TIMING\n",old_pc,PreviousIr,instr.c_str());
+    TRACE_LOG("%x %x %s no FETCH_TIMING\n",old_pc,PreviousIr,instr.c_str());
   }
 #endif
 //  NextIrFetched=false; // in FETCH_TIMING or...
 #endif//debug
 
+#if defined(SS_CPU_CHECK_PC) 
+  ASSERT( (PC&0xffffff)==pc+2 );   // strong
+#ifdef DEBUG_BUILD
+  if((PC&0xffffff)!=pc+2)
+  {
+    EasyStr instr=disa_d2(old_pc);
+    TRACE_LOG("PC %X IR %X %s PC %X TST %X\n",old_pc,PreviousIr,instr.c_str(),pc+2,(PC&0xffffff));
+    PC=pc+2;//no error accumulation!
+  }
+#endif
+#endif
+
   old_pc=pc;  
 
 #if defined(SS_CPU_PREFETCH)
-  ASSERT(prefetched_2);
+/*  basic prefetch rule:
+Just before the start of any instruction two words (no more and no less) are 
+already fetched. One word will be in IRD and another one in IRC.
+*/
+#if defined(SS_CPU_PREFETCH_ASSERT)
+  ASSERT(prefetched_2); // strong
+#endif
+#if defined(SS_CPU_PREFETCH_CLASS)
   PrefetchClass=0; // default, most instructions
 #endif
+#endif
 
-  FetchWord(ir); // IR->IRD
-  
-//if(debug1) TRACE("%X\n",pc);
-//if(pc==0x144c8) debug1=0;
-//if(pc==0x1de20) TRACE("A3 %x\n",areg[3]);
-///if(pc==0x061A) TRACE("PC %x\n",pc);
+  FetchWord(IRD); // IR->IRD (using reference)
+  // TODO should already be there?
+  // TODO assert illegal here, but perf?
 
 #if defined(SS_CPU_EXCEPTION) && defined(SS_CPU_EXCEPTION_TRACE_PC)//heavy!!!
   if(nExceptions>1) 
     TRACE_LOG("%X\n",pc);
 #endif
 
-#if defined(SS_CPU_ROUNDING_CHECKS)
-  Rounding=false;
-  AlignedCycles=true; //? for pairing in the future
-  CurrentRoundedCycles=0;
-  CurrentUnroundedCycles=0;
-#if defined(SS_DEBUG)
-  CycleSubstractions=0;
-#endif
+  pc+=2; // in fact it was already set in previous instruction
+
+#if defined(SS_CPU_TRUE_PC)
+  Pc=pc; // anyway
+  CheckRead=0;
 #endif
 
-  pc+=2; 
 #if defined(SS_IPF_CPU) || defined(SS_DEBUG)
   int cycles=cpu_cycles;
 #endif
+
   //ASSERT(ir!=0x91AE); // dbg: break on opcode
+  /////////// JUMP TO CPU EMU: ///////////////
   m68k_high_nibble_jump_table[ir>>12](); // go to instruction...
-#if defined(SS_IPF_CPU)
+#if defined(SS_IPF_CPU) // no
  if(Caps.Active)
   {
     int cpucycles=cycles-cpu_cycles;
@@ -451,36 +587,11 @@ inline void TM68000::Process() {
     CapsFdcEmulate(&WD1772,cpucycles);
   }
 #endif
-
-
-
 #if defined(SS_DEBUG)
  NextIrFetched=false; // in FETCH_TIMING or...// check_interrut
-#if defined(SS_CPU_ROUNDING_CHECKS)
-  // for the moment, debug only
-  ASSERT( CurrentRoundedCycles>= CurrentUnroundedCycles );
-#endif
-#if defined(DEBUG_BUILD) && defined(SS_DEBUG_TRACE_CPU_ROUNDING) \
-  && defined(SS_CPU_ROUNDING_CHECKS)
-  if(CurrentRoundedCycles-CurrentUnroundedCycles>=4
-    && !CycleSubstractions)
-  {
-    EasyStr instr=disa_d2(IrAddress);
-    TRACE("%x %x %s cycles %d rounded %d\n",IrAddress,ir,instr.c_str(),CurrentUnroundedCycles,CurrentRoundedCycles);
-  }
-#endif
-  if(0
-  //||ir==0x48F8 // MovemR->M
-  //||ir==0x4cd2 //movem M->R
-  //||ir==0xd5e4 // 20 vs 16 //adda.l    -(a4),a2  th: 10 + 6 = 16 STM probably rounded to 12+6=18 rounded = 20
-  //||ir==0xd5db //adda.l    (a3)+,a2  16vs 14
-  //||ir==0xd093   // add.l (a3),d0  16 vs 14
-    )
-  {
-//    TRACE("ir %x cycles %d\n",ir,cycles-cpu_cycles);
-  }
 #endif//debug
-  HANDLE_IOACCESS(m68k_trace();); // keep as macro, wouldn't be inlined
+
+  HANDLE_IOACCESS( m68k_trace(); ); // keep as macro, wouldn't be inlined
   DEBUG_ONLY( debug_first_instruction=0 );
 }
 #define m68k_PROCESS M68000.Process();
@@ -489,8 +600,9 @@ inline void TM68000::Process() {
 #if defined(SS_CPU_PREFETCH)
 
 inline void TM68000::RefetchIr() {
-  ASSERT(prefetch_buf[0]==*(lpfetch+1)); // detect cases (none yet!)
-  prefetch_buf[0]=*(lpfetch-MEM_DIR);
+  ASSERT( IR==*(lpfetch+1) ); // detect cases (none yet!)
+  ASSERT( MEM_DIR==-1 );
+  IR=*(lpfetch-MEM_DIR);
 }
 #define REFETCH_IR  M68000.RefetchIr();
 #else
@@ -498,46 +610,6 @@ inline void TM68000::RefetchIr() {
 
 #endif
 
-
-inline void TM68000::SetPC(MEM_ADDRESS ad) {
-    pc=ad;                               
-    pc_high_byte=pc & 0xff000000;     
-    pc&=0xffffff;                    
-    lpfetch=lpDPEEK(0); //Default to instant bus error when fetch
-    lpfetch_bound=lpDPEEK(0);         
-
-    if (pc>=himem){                                                       
-      if (pc<MEM_IO_BASE){           
-        if (pc>=MEM_EXPANSION_CARTRIDGE){                                
-          if (pc>=0xfc0000){                                                   
-            if (tos_high && pc<(0xfc0000+192*1024)){         
-              lpfetch=lpROM_DPEEK(pc-0xfc0000); 
-              lpfetch_bound=lpROM_DPEEK(192*1024);         
-            }                                                
-          }else if (cart){                    
-            lpfetch=lpCART_DPEEK(pc-MEM_EXPANSION_CARTRIDGE);
-            lpfetch_bound=lpCART_DPEEK(128*1024);       
-          }                   
-        }else if(pc>=rom_addr){            
-          if (pc<(0xe00000 + 256*1024)){   
-            lpfetch=lpROM_DPEEK(pc-0xe00000);
-            lpfetch_bound=lpROM_DPEEK(256*1024);   
-          }              
-        }              
-      }else{   
-        if (pc>=0xff8240 && pc<0xff8260){      
-          lpfetch=lpPAL_DPEEK(pc-0xff8240); 
-          lpfetch_bound=lpPAL_DPEEK(64+PAL_EXTRA_BYTES);     
-        }                        
-      }                                   
-    }else{             
-      lpfetch=lpDPEEK(pc); 
-      lpfetch_bound=lpDPEEK(mem_len+(MEM_EXTRA_BYTES/2));  
-    }                            
-    PrefetchSetPC();//PREFETCH_SET_PC
-
-}
-#define SET_PC(ad) M68000.SetPC(ad);
 
 
 // They're not much called
@@ -805,6 +877,7 @@ NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x){
 // it's +- a copy of the above because of VC's inlining rules
 // now those ones are not inlined, but in Stemdos (hd emu) so it's a good thing
 inline void m68k_poke(MEM_ADDRESS ad,BYTE x){
+  ASSERT(ad);
   abus=ad&0xffffff;
   BOOL super=SUPERFLAG;
   if(abus>=MEM_IO_BASE && super)
@@ -821,6 +894,7 @@ inline void m68k_poke(MEM_ADDRESS ad,BYTE x){
 
 
 inline void m68k_dpoke(MEM_ADDRESS ad,WORD x){
+  ASSERT(ad);
   abus=ad&0xffffff;
   BOOL super=SUPERFLAG;
   if(abus&1) 
@@ -839,6 +913,7 @@ inline void m68k_dpoke(MEM_ADDRESS ad,WORD x){
 
 
 inline void m68k_lpoke(MEM_ADDRESS ad,LONG x){
+  ASSERT(ad);
   abus=ad&0xffffff;
   BOOL super=SUPERFLAG;
   if(abus&1)
@@ -927,7 +1002,7 @@ bool debug_prefetch_timing(WORD ir) {
 }
 #endif
 
-
+#undef LOGSECTION
 
 #endif//#if defined(SS_CPU)
 

@@ -13,10 +13,6 @@ and (for some reason) command-line options.
 #include "stemwin.cpp"
 #define LOGSECTION LOGSECTION_INIT
 
-#if defined(SS_IKBD_6301)
-#include "SSE/SSE6301.h"
-#endif
-
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
 
 extern int draw_last_scanline_for_border,res_vertical_scale; // forward
@@ -796,7 +792,9 @@ void ParseCommandLine(int NumArgs,char *Arg[],int Level)
       case ARG_SETPABUFSIZE:  UNIX_ONLY( pa_output_buffer_size=atoi(Path); ) break;
       case ARG_ALLOWREADOPEN: stemdos_comline_read_is_rb=true; break;
       case ARG_NOINTS:        no_ints=true; break; // SS removed _
+#if !(defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE))
       case ARG_STFMBORDER:    stfm_borders=4; break;
+#endif
       case ARG_SCREENSHOTUSEFULLNAME: Disp.ScreenShotUseFullName=true; break;
       case ARG_SCREENSHOTALWAYSADDNUM: Disp.ScreenShotAlwaysAddNum=true; break;
       case ARG_ALLOWLPTINPUT: comline_allow_LPT_input=true; break;
@@ -1214,18 +1212,27 @@ void HandleKeyPress(UINT VKCode,bool Up,int Extended)
   }
   
   if (STCode==0) STCode=key_table[BYTE(VKCode)]; //SS: +- ASCII -> ST scancode
-  if (STCode){
+  if (STCode
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_F12)
+    && VKCode!=VK_F12
+#endif
+    ){
     ST_Key_Down[STCode]=!Up; // this is used by ikbd.cpp & ireg.c
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+/*  We don't write in a buffer, 6301 emu will do it after having scanned
+    ST_Key_Down.
+*/
     if(HD6301EMU_ON)
     { 
-#if defined(SS_IKBD_6301_TRACE_KEYS)
+#if defined(SS_DEBUG) && defined(SS_IKBD_6301_TRACE_KEYS)
 #define LOGSECTION LOGSECTION_IKBD
-      TRACE_LOG("ACT %d Key %X is %s\n",ABSOLUTE_CPU_TIME,STCode,Up?"up":"down");
+      if(Up)
+        TRACE_LOG("Player depresses key PC $%X ST $%X\n",VKCode,STCode);
+      else 
+        TRACE_LOG("Player presses key PC $%X ST $%X\n",VKCode,STCode);
 #undef LOGSECTION
 #endif
-      // we don't write in a buffer, 6301 emu will do it
     }
     else
     {

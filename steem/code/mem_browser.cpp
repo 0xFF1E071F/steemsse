@@ -136,7 +136,7 @@ void mem_browser::new_window(MEM_ADDRESS address,type_disp_type new_disp_type)
           CreateWindow("Static","",WS_VISIBLE | WS_CHILD | SS_ETCHEDVERT,
               412,0,2,27,owner,NULL,Inst,NULL);
 
-          /*(HWND)debug4=*/CreateWindow("Button","Dump->",WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+          CreateWindow("Button","Dump->",WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
               419,2,60,23,owner,(HMENU)4,Inst,NULL);
 
           Win=CreateWindowEx(512,"Combobox","",WS_VISIBLE | WS_CHILD | WS_VSCROLL | CBS_DROPDOWN,

@@ -31,6 +31,7 @@
     - mouse movement isn't satisfying yet, but it's complicated, SainT has
     problems too. It's probably related to timings.
     - check ram access range?
+    - Brataccas doesn't work
 */
 
 #include "SSE/SSE.h"
@@ -48,15 +49,11 @@
 extern int ST_Key_Down[128];
 extern int mousek;
 // variables that Steem must see
-extern int hd6301_receiving_from_MC6850; // for sync
-extern int hd6301_transmitting_to_MC6850; // for sync
 extern int hd6301_completed_transmission_to_MC6850; // for sync
-extern int hd6301_mouse_move_since_last_interrupt_x; // different lifetime
-extern int hd6301_mouse_move_since_last_interrupt_y;
 // functions used by Steem
 int hd6301_init(); // just another name
 int hd6301_destroy(); // like a C++ destructor
-int hd6301_reset(); // just another name
+int hd6301_reset(int Cold); 
 int hd6301_run_cycles(u_int cycles); // emulate
 int hd6301_load_save(int one_if_save, unsigned char *buffer); // for snaphot
 int hd6301_transmit_byte(u_char byte_in); // just passing through

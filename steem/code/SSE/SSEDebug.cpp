@@ -12,6 +12,7 @@ extern "C" void (_stdcall *hd6301_trace)(char *fmt, ...);
 #endif
 #endif
 
+
 TDebug Debug; // singleton
 
 TDebug::TDebug() {
@@ -22,6 +23,8 @@ TDebug::TDebug() {
   //  We must init those variables for the builds without the boiler
   ZeroMemory(logsection_enabled,100*sizeof(bool)); // 100> our need
   logsection_enabled[ LOGSECTION_ALWAYS ] = 1;
+#if defined(_DEBUG) && !defined(DEBUG_BUILD) // VC6 IDE debug no boiler
+  //TODO move somehow to SSE.H
   logsection_enabled[ LOGSECTION_FDC ] = 0;
   logsection_enabled[ LOGSECTION_IO ] = 0;
   logsection_enabled[ LOGSECTION_MFP_TIMERS ] = 0;
@@ -45,8 +48,9 @@ TDebug::TDebug() {
   // no PASTI, no DIV
 // additions
   logsection_enabled[ LOGSECTION_FDC_BYTES ] = 0;
-  logsection_enabled[ LOGSECTION_IPF_LOCK_INFO ] = 0;
-  logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 0;
+  logsection_enabled[ LOGSECTION_IPF_LOCK_INFO ] = 0; //remove option
+  logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 1;
+#endif
   logsection_enabled[ LOGSECTION_OPTIONS ] = 1; // no boiler control
 #endif
 
@@ -55,11 +59,24 @@ TDebug::TDebug() {
   nTrace=0; // trace counter
   trace_file_pointer=freopen(SS_TRACE_FILE_NAME, "w", stdout );
   ASSERT(trace_file_pointer);
-  printf("This is a Steem SSE TRACE file\n");
+  // http://www.ehow.com/how_2190605_use-date-time-c-program.html
+  char sdate[9];
+  char stime[9];
+  _strdate( sdate );
+  _strtime( stime );
+  printf("Steem SSE TRACE - %s -%s\n",sdate,stime);
 #endif
 
 #if defined(SS_IKBD_6301)
   hd6301_trace=&TDebug::TraceLog;
+#endif
+
+#if defined(SS_CPU_PREFETCH_DETECT_IRC_TRICK)
+  CpuPrefetchDiffDetected=false;
+#endif
+
+#if defined(SS_CPU_TRACE_DETECT)
+  CpuTraceDetected=false;
 #endif
 }
 
@@ -116,7 +133,7 @@ void TDebug::Trace(char *fmt, ...){
   {
     nTrace=0;
     rewind(trace_file_pointer); // it doesn't erase
-    TRACE("\n--------------------------\nREWIND TRACE\n--------------------------\n");
+    TRACE("\n============\nREWIND TRACE\n============\n");
   }
 #endif
 
@@ -139,7 +156,6 @@ void TDebug::TraceLog(char *fmt, ...) { // static
 #else
     int nchars=_vsnprintf(Debug.trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
 #endif
-//    int nchars=_vsnprintf(Debug.trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
 
     va_end(body);	
 
@@ -164,7 +180,7 @@ void TDebug::TraceLog(char *fmt, ...) { // static
     {
       Debug.nTrace=0;
       rewind(Debug.trace_file_pointer); // it doesn't erase
-      TRACE("\n--------------------------\nREWIND TRACE\n--------------------------\n");
+      TRACE("\n============\nREWIND TRACE\n============\n");
     }
 #endif
   }
@@ -247,6 +263,5 @@ void TDebug::ReportGeneralInfos(int when) {
   }
 }
 #endif
-
 
 #endif

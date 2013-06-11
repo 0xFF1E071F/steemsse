@@ -70,8 +70,8 @@ mem_getb (addr)
       TRACE("NOTE PX %X reading WO register %X\n",reg_getpc(),addr);
 #endif
       return 0xFF; // as in HD6301V1 doc
-#endif
     }
+#endif
     ASSERT(offs!=P3); // DR3 never read by ROM
     if (ireg_getb_func[offs])
     {  

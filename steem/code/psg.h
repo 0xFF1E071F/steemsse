@@ -69,9 +69,6 @@ EXT int sound_variable_d INIT(208);
 #define SOUND_MODE_SHARPCHIP    4
 
 EXT bool sound_internal_speaker INIT(false);
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_KEYBOARD_CLICK)
-/////EXT bool mute_keyboard_click INIT(true);
-#endif
 EXT int sound_freq INIT(50066),sound_comline_freq INIT(0),sound_chosen_freq INIT(50066);
 EXT int sound_mode INIT(SOUND_MODE_CHIP),sound_last_mode INIT(SOUND_MODE_CHIP);
 EXT BYTE sound_num_channels INIT(1),sound_num_bits INIT(8);
@@ -197,23 +194,20 @@ int dma_sound_mixer=1,dma_sound_volume=40;
 int dma_sound_l_volume=20,dma_sound_r_volume=20;
 int dma_sound_l_top_val=128,dma_sound_r_top_val=128;
 
-
 #if defined(STEVEN_SEAGAL) && defined(SS_SOUND_MICROWIRE)
+#include "../../3rdparty/dsp/dsp.h"
 int dma_sound_bass=6; // 6 is neutral value
 int dma_sound_treble=6;
-
-#include "../../3rdparty/dsp/dsp.h"
-// each filter is mono => each control x2
-TIirVolume MicrowireVolumeL,MicrowireVolumeR;
-TIirLowShelf MicrowireBassL,MicrowireBassR;
-TIirHighShelf MicrowireTrebleL,MicrowireTrebleR;
-#ifdef SS_SOUND_VOL
+TIirVolume MicrowireVolume[2];
+TIirLowShelf MicrowireBass[2];
+TIirHighShelf MicrowireTreble[2];
+#if defined(SS_SOUND_VOL)
 TIirVolume PsgGain;
 #endif
 #if defined(SS_SOUND_LOW_PASS_FILTER)
-TIirLowPass PSGLowFilterL,PSGLowFilterR;
+TIirLowPass PSGLowFilter[2];
 #endif
-#endif
+#endif//microwire
 
 
 
@@ -231,7 +225,11 @@ void psg_write_buffer(int,DWORD);
 #ifndef ONEGAME
 #define PSG_WRITE_EXTRA 300
 #else
+#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_NO_EXTRA_PER_VBL)
+#define PSG_WRITE_EXTRA 0
+#else
 #define PSG_WRITE_EXTRA OGExtraSamplesPerVBL
+#endif
 #endif
 
 //#define PSG_WRITE_EXTRA 10

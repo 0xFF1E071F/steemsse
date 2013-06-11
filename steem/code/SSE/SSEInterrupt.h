@@ -1,18 +1,25 @@
 #pragma once
 #ifndef SSEINTERRUPT_H
 #define SSEINTERRUPT_H
-#if defined(SS_INTERRUPT)
+
+#include "SSESTF.h"
 
 #if defined(SS_MFP_RATIO) 
 extern double CpuMfpRatio;
 extern DWORD CpuNormalHz;
 #endif
 
+#if defined(SS_INTERRUPT)
+
 #if defined(SS_INT_VBL_STF)
 extern int HblTiming;
 #endif
 
 #if defined(IN_EMU) // argh! using the ugly Steem trick "IN_EMU"
+
+#if !defined(SS_CPU)
+void m68k_interrupt(MEM_ADDRESS ad);
+#endif
 
 #if defined(SS_INT_JITTER)
 extern int HblJitter[],VblJitter[];
@@ -57,9 +64,47 @@ extern int HblJitterIndex,VblJitterIndex;
 
 #if defined(SS_INT_VBL) 
 
+#if defined(SS_INT_VBL_INLINE)
+
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_INTERRUPTS
+
+inline void VBLInterrupt() {
+  ASSERT( vbl_pending );
+  vbl_pending=false; 
+
+  log_to_section(LOGSECTION_INTERRUPTS,EasyStr("INTERRUPT: VBL at PC=")+HEXSl(pc,6)+" time is "+ABSOLUTE_CPU_TIME+" ("+(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl)+" cycles into screen)");
+
+  M68K_UNSTOP;
+
+#if defined(SS_INT_JITTER_VBL)
+  if(ST_TYPE==STE) 
+#endif
+    INTERRUPT_START_TIME_WOBBLE;
+
+  INSTRUCTION_TIME_ROUND(SS_INT_VBL_TIMING);
+
+  TRACE_LOG("F%d Cycles %d VBI %X #%d\n",FRAME,ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl,LPEEK(0x0070),interrupt_depth);
+  m68k_interrupt(LPEEK(0x0070));
+
+#if defined(SS_INT_JITTER_VBL)
+  if(ST_TYPE!=STE) 
+    INSTRUCTION_TIME(VblJitter[VblJitterIndex]);
+#endif
+  sr=(sr& (WORD)(~SR_IPL))|(WORD)(SR_IPL_4);
+
+  debug_check_break_on_irq(BREAK_IRQ_VBL_IDX);
+  ASSERT(!vbl_pending);
+}
+
+#undef LOGSECTION
+
+#define VBL_INTERRUPT VBLInterrupt();
+
+#else//inline
+
 #if defined(SS_INT_JITTER_VBL)
 // we use the jitter only for STF, on the STE it breaks Krieg
-
 #define VBL_INTERRUPT {\
   vbl_pending=false;    \
   log_to_section(LOGSECTION_INTERRUPTS,EasyStr("INTERRUPT: VBL at PC=")+HEXSl(pc,6)+" time is "+ABSOLUTE_CPU_TIME+" ("+(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl)+" cycles into screen)");\
@@ -87,6 +132,8 @@ extern int HblJitterIndex,VblJitterIndex;
 }
 
 #endif
+#endif//inline
+
 #endif
 
 #endif//defined(IN_EMU)

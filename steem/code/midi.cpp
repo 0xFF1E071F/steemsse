@@ -137,7 +137,7 @@ void TMIDIOut::SendByte(BYTE Val)
           pCurSysEx->pHdr=pHdr;
         }else{
           log("MIDI: No sysex headers available, ignoring message!");
-          TRACE("MIDI: No sysex headers available, ignoring message!\n");
+          TRACE_LOG("MIDI: No sysex headers available, ignoring message!\n");
         }
 
         if (Val==b11110111) AddToBuffer=0;
@@ -179,14 +179,14 @@ void TMIDIOut::SendByte(BYTE Val)
         MessBuf[MessBufLen++]=Val;
       }else{
         log("MIDI: Out message buffer overflow!");
-        TRACE("MIDI: Out message buffer overflow!\n");
+        TRACE_LOG("MIDI: Out message buffer overflow!\n");
       }
     }else{
       if (pCurSysEx->Len < MaxSysExLen){
         pCurSysEx->pData[pCurSysEx->Len++]=Val;
       }else{
         log("MIDI: Out sysex buffer overflow!");
-        TRACE("MIDI: Out sysex buffer overflow!\n");
+        TRACE_LOG("MIDI: Out sysex buffer overflow!\n");
       }
     }
   }
