@@ -425,7 +425,6 @@ DEP_CPP_MAIN_=\
 	"..\..\3rdparty\SDL-WIN\include\SDL_version.h"\
 	"..\..\3rdparty\SDL-WIN\include\SDL_video.h"\
 	"..\..\3rdparty\UnRARDLL\unrar.h"\
-	"..\..\3rdparty\unrarlib\unrarlib\unrarlib.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\choosefolder.h"\
 	"..\..\include\circularbuffer.h"\
@@ -1116,8 +1115,8 @@ SOURCE=..\..\steem\rc\reset_need.ico
 # Begin Source File
 
 SOURCE=..\..\steem\rc\resource.rc
-# ADD BASE RSC /l 0x809 /i "\data\prg\ST\steem\rc"
-# ADD RSC /l 0x409 /i "\data\prg\ST\steem\rc"
+# ADD BASE RSC /l 0x809 /i "\Downloads\steemsse-code\steemsse\steem\rc" /i "\data\prg\ST\steem\rc"
+# ADD RSC /l 0x409 /i "\Downloads\steemsse-code\steemsse\steem\rc" /i "\data\prg\ST\steem\rc"
 # End Source File
 # Begin Source File
 
@@ -1228,6 +1227,7 @@ DEP_CPP_6301_=\
 	"..\..\3rdparty\6301\tty.c"\
 	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\include\easystr.h"\
+	"..\..\steem\code\acia.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\steem\code\SSE\SSE6301.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
@@ -1923,10 +1923,6 @@ SOURCE=..\..\steem\asm\asm_draw_VC.obj
 # Begin Source File
 
 SOURCE=..\..\steem\asm\asm_osd_VC.obj
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\include\asm\asm_portio_vc.obj
 # End Source File
 # End Group
 # Begin Group "code"
@@ -4622,6 +4618,7 @@ DEP_CPP_SSE_C=\
 	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\include\easystr.h"\
 	"..\..\steem\code\SSE\SSE.h"\
+	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
 	"..\..\steem\code\SSE\SSEParameters.h"\
 	
