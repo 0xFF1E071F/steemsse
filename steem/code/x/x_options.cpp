@@ -289,8 +289,11 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
       floppy_access_ff=b->checked;
     }else if (b->id==140){
       StartEmuOnClick=b->checked;
+#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_MICROWIRE)
+    }else if (b->id==141){
+      DSP_ENABLED=b->checked;
+#endif
     }else if (b->id==210){
-
       draw_fs_fx=(b->checked ? DFSFX_GRILLE:DFSFX_NONE);
       if (draw_grille_black<4) draw_grille_black=4;
       if (runstate!=RUNSTATE_RUNNING) draw(false);
@@ -573,6 +576,10 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
 
     }else if (b->id==12000){
       osd_show_disk_light=b->checked;
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_INFO)
+    }else if (b->id==12001){
+      OSD_DRIVE_INFO=b->checked;
+#endif
     }else if (b->id==12020){
       osd_show_scrollers=b->checked;
     }else if (b->id==12030){
@@ -610,7 +617,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
 #endif
 #if defined(SS_VAR_STEALTH)
     else if(b->id==4004)
-      STEALTH_MODE=b->checked;
+      STEALTH_MODE=!b->checked;
 #endif
 #if defined(SS_IKBD_6301)
     else if(b->id==4006)

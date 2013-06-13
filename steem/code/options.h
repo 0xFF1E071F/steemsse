@@ -224,6 +224,7 @@ public:
 
 #if defined(SS_SOUND_MICROWIRE)
   hxc_button ste_microwire_but;
+  hxc_button enable_dsp_but;
 #endif
 
 #endif

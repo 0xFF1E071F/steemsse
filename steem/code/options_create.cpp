@@ -974,8 +974,8 @@ void TOptionBox::CreateOSDPage()
 
 #if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_INFO)
   long Wid2=Wid;
-  Wid=GetCheckBoxSize(Font,T("Disk drive info")).Width;
-  Win=CreateWindow("Button",T("Disk drive info"),WS_CHILD  | WS_TABSTOP | BS_CHECKBOX,
+  Wid=GetCheckBoxSize(Font,T("Disk drive track info")).Width;
+  Win=CreateWindow("Button",T("Disk drive track info"),WS_CHILD  | WS_TABSTOP | BS_CHECKBOX,
                           page_l + Wid2,y,Wid,23,Handle,(HMENU)12001,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OSD_DRIVE_INFO,0);
 #endif
@@ -1978,7 +1978,7 @@ void TOptionBox::CreateSSEPage() {
   Win=CreateWindow("Button",T("Emu detect"),WS_CHILD | WS_TABSTOP |
     BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)1031,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,!STEALTH_MODE,0);
-  ToolAddWindow(ToolTip,Win,T("Disable easy detection of Steem by ST programs"));
+  ToolAddWindow(ToolTip,Win,T("Enable easy detection of Steem by ST programs"));
   y+=LineHeight;
 #endif  
 

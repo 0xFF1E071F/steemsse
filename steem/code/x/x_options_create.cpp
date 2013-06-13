@@ -520,6 +520,19 @@ void TOptionBox::CreateGeneralPage()
               page_p);
 
 
+#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_MICROWIRE)
+  y+=35;
+
+  enable_dsp_but.create(XD,page_p,page_l,y,0,25,
+          button_notify_proc,this,BT_CHECKBOX,
+          T("Start emulation on mouse click"),141,BkCol);
+  enable_dsp_but.set_check(DSP_ENABLED);
+  hints.add(enable_dsp_but.handle,T("If you have some odd crashes, unchecking this may help. DSP code uses the math coprocessor and exceptions are almost impossible to catch"),
+              page_p);
+
+#endif
+
+
 
   XFlush(XD);
 }
@@ -535,7 +548,11 @@ void TOptionBox::CreateSoundPage()
   sound_mode_dd.id=5001;
   sound_mode_dd.make_empty();
   sound_mode_dd.additem(T("None (Mute)"));
+#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_FILTER_STF)
+  sound_mode_dd.additem(T("Simulated Monitor Speaker"));
+#else
   sound_mode_dd.additem(T("Simulated ST Speaker"));
+#endif
   sound_mode_dd.additem(T("Direct"));
   sound_mode_dd.additem(T("Sharp STFM Samples"));
   sound_mode_dd.changesel(sound_mode);
@@ -804,10 +821,22 @@ void TOptionBox::CreateOSDPage()
   hxc_button *p_but;
   hxc_dropdown *p_dd;
 
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
+  p_but=new hxc_button(XD,page_p,page_l,y,0,25,button_notify_proc,this,
+                          BT_CHECKBOX,T("Disk access light"),12000,BkCol);
+#else
   p_but=new hxc_button(XD,page_p,page_l,y,0,25,button_notify_proc,this,
                           BT_CHECKBOX,T("Floppy disk access light"),12000,BkCol);
+#endif
   p_but->set_check(osd_show_disk_light);
   y+=35;
+
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_INFO)
+  p_but=new hxc_button(XD,page_p,page_l,y,0,25,button_notify_proc,this,
+                          BT_CHECKBOX,T("Disk drive track info"),12001,BkCol);
+  p_but->set_check(OSD_DRIVE_INFO);
+  y+=35;
+#endif
 
   int *p_element[4]={&osd_show_plasma,&osd_show_speed,&osd_show_icons,&osd_show_cpu};
   Str osd_name[4];
@@ -841,6 +870,13 @@ void TOptionBox::CreateOSDPage()
                           BT_CHECKBOX,T("Scrolling messages"),12020,BkCol);
   p_but->set_check(osd_show_scrollers);
   y+=35;
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_SCROLLER_DISK_IMAGE)
+  p_but=new hxc_button(XD,page_p,page_l,y,0,25,button_notify_proc,this,
+                          BT_CHECKBOX,T("Disk image names"),12002,BkCol);
+  p_but->set_check(OSD_IMAGE_NAME);
+  y+=35;
+#endif
 
   osd_disable_but.create(XD,page_p,page_l,y,0,25,button_notify_proc,this,
                           BT_CHECKBOX,T("Disable on screen display"),12030,BkCol);
@@ -1157,10 +1193,10 @@ void TOptionBox::CreateSSEPage() {
 
 #if defined(SS_VAR_STEALTH) 
   stealth_mode_but.create(XD,page_p,page_l,y,0,25,
-    button_notify_proc,this,BT_CHECKBOX,T("Stealth mode"),4004,BkCol);
-  stealth_mode_but.set_check(STEALTH_MODE);
+    button_notify_proc,this,BT_CHECKBOX,T("Emu detect"),4004,BkCol);
+  stealth_mode_but.set_check(!STEALTH_MODE);
   hints.add(stealth_mode_but.handle,
-  T("Steem won't tell ST programs who it is"),page_p);
+  T("Enable easy detection of Steem by ST programs"),page_p);
   y+=LineHeight;
 #endif
 
@@ -1236,6 +1272,9 @@ void TOptionBox::CreateSSEPage() {
     page_p);
 //  y+=LineHeight;
 #endif
+
+
+
 
   XFlush(XD);
 }

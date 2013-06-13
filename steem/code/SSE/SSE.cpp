@@ -39,7 +39,8 @@ FARPROC WINAPI MyLoadFailureHook(dliNotification dliNotify,DelayLoadInfo * pdli)
 TOsdControl OsdControl;
 
 extern bool osd_show_scrollers,osd_shown_scroller;
-extern DWORD timer,osd_scroller_finish_time;
+//extern DWORD timer,osd_scroller_finish_time;
+extern long timer,osd_scroller_finish_time;
 extern long col_yellow[2],col_blue,col_red,col_green,col_white;
 
 

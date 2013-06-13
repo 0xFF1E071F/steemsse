@@ -683,7 +683,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 // PASTI //
 ///////////
 
-#if defined(SS_PASTI)
+#if defined(SS_PASTI) && defined(WIN32)
 
 #define SS_PASTI_ALWAYS_DISPLAY_STX_DISKS
 #define SS_PASTI_AUTO_SWITCH
@@ -831,6 +831,11 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SOUND_VOL // -6db for PSG chipsound except samples (using DSP)
 #define SS_SOUND_FILTER_STE // same very simple filter as for STF
 
+#ifdef UNIX
+#define SS_RTAUDIO_LARGER_BUFFER //simplistic attempt
+#endif
+
+
 #endif
 
 
@@ -917,7 +922,9 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #if defined(SS_VARIOUS)
 
+#ifdef WIN32
 #define SS_VAR_CHECK_SNAPSHOT
+#endif
 #define SS_VAR_DONT_INSERT_NON_EXISTENT_IMAGES // at startup
 #define SS_VAR_DONT_REMOVE_NON_EXISTENT_IMAGES // at final save
 #if !(defined(_DEBUG) && defined(VC_BUILD)) // it's Windows 'break' key
@@ -971,8 +978,10 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_VID_SAVE_NEO // screenshots in ST Neochrome format
 #endif
 
+#if defined(WIN32)
 #define SS_VID_SCANLINES_INTERPOLATED // using stretch mode!
 #define SS_VID_SCANLINES_INTERPOLATED_MED
+#endif
 
 #if defined(SS_DEBUG) 
 //#define SHOW_DRAW_SPEED //was already in Steem

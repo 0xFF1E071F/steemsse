@@ -11,6 +11,8 @@
 #include <windows.h>
 #endif
 
+#include "SSEDecla.h" //BYTE
+
 #if defined(SS_SSE_OPTION_STRUCT)
 
 struct TOption {
