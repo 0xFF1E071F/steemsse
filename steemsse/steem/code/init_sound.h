@@ -28,7 +28,12 @@ EXT void internal_speaker_sound_by_period(int);
 EXT EasyStr sound_device_name; // INIT("/dev/dsp");
 EXT int console_device INIT(-1);
 
+
+#if defined(SS_RTAUDIO_LARGER_BUFFER)
+EXT int rt_buffer_size INIT(256*2),rt_buffer_num INIT(4);
+#else
 EXT int rt_buffer_size INIT(256),rt_buffer_num INIT(4);
+#endif
 
 #endif
 

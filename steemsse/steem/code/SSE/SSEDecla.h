@@ -20,6 +20,7 @@
 #define TRUE 1
 #define FALSE 0
 #define BOOL int
+typedef unsigned char BYTE;
 #endif
 
 #ifdef WIN32
@@ -54,7 +55,12 @@ int iDummy;// can be l-value
 
 
 #if defined(SS_HACKS)
-extern "C" int SS_signal; // "handy" global mask (future coding horror case)
+extern 
+#ifdef __cplusplus
+ "C" 
+#endif
+ //"C" 
+int SS_signal; // "handy" global mask (future coding horror case)
 #endif
 
 
@@ -188,6 +194,7 @@ int ChangeBorderSize(int size); // gui.cpp
 #define FRAME (-1)
 #endif
 
+#ifdef __cplusplus
 #if defined(SS_OSD_SCROLLER_CONTROL)
 #include "../../../include/easystr.h"
 
@@ -202,6 +209,6 @@ struct TOsdControl {
 
 extern TOsdControl OsdControl;
 #endif
-
+#endif
 
 #endif//SSEDECLA_H

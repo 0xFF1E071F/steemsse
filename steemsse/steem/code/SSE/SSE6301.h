@@ -6,10 +6,16 @@
 // so it's gotta be compatible.
 #if defined(SS_IKBD_6301)
 
+#include "SSEDecla.h"
+
 #ifdef __cplusplus // we know this one is already included in 6301.c
 extern "C" {
 #include "../../3rdparty/6301/6301.h"
 }
+#endif
+
+#ifdef UNIX
+//typedef unsigned char BYTE
 #endif
 
 struct THD6301 {
@@ -50,9 +56,13 @@ struct THD6301 {
 };
 
 #ifdef __cplusplus
-extern "C" 
+//extern "C" 
 #endif
-extern struct THD6301 HD6301;
+extern 
+#ifdef __cplusplus
+"C" 
+#endif
+struct THD6301 HD6301;
 
 #endif//#if defined(SS_IKBD_6301)
 

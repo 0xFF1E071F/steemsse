@@ -320,7 +320,7 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
     if(OSD_IMAGE_NAME && !FloppyDrive[0].Empty())
       OsdControl.StartScroller(FloppyDrive[0].DiskName); // display image disk name
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_OPTIONS_REFRESH)
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_OPTIONS_REFRESH) &&defined(WIN32)
     OptionBox.SSEUpdateIfVisible();
 #endif
 

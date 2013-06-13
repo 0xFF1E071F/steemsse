@@ -107,8 +107,8 @@ struct TShifter {
   void DrawScanlineToEnd();
   inline int FetchingLine();
   int IncScanline();
-  BYTE TShifter::IORead(MEM_ADDRESS addr);
-  void TShifter::IOWrite(MEM_ADDRESS addr,BYTE io_src_b);
+  BYTE IORead(MEM_ADDRESS addr);
+  void IOWrite(MEM_ADDRESS addr,BYTE io_src_b);
   void Render(int cycles_since_hbl, int dispatcher=DISPATCHER_NONE);
   void Reset(bool Cold);
   inline void RoundCycles(int &cycles_in);
