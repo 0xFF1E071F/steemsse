@@ -11,7 +11,7 @@ ior.cpp and iow.cpp for the lowest level emulation.
     code is poor or buggy.
 */
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: psg.cpp")
 #endif
 

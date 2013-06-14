@@ -156,7 +156,7 @@ FARPROC WINAPI MyLoadFailureHook(dliNotification dliNotify, DelayLoadInfo * pdli
 
 #if defined(SS_VIDEO)
 
-#if defined(SS_VID_RECORD_AVI) 
+#if defined(SS_VID_RECORD_AVI) && defined(__cplusplus)
 #define _T(X) X
 #define _tcscpy strcpy
 #define _tcsncpy strncpy

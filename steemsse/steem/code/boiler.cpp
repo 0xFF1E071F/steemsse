@@ -6,7 +6,7 @@ DESCRIPTION: This file contains a lot of utility functions for Steem's debug
 build and the basis of the debug GUI.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: boiler.cpp")
 #endif
 

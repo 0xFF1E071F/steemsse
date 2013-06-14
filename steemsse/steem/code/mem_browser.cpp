@@ -6,7 +6,7 @@ DESCRIPTION: The code for Steem's memory browsers, used heavily in the debug
 build to view memory and I/O areas.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: mem_browser.cpp")
 #endif
 

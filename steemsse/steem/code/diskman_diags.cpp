@@ -4,7 +4,7 @@ MODULE: Steem
 DESCRIPTION: The dialogs that can be shown by the Disk Manager.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: diskman_diags.cpp")
 #endif
 

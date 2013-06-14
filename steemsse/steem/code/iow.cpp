@@ -6,7 +6,7 @@ that deal with writes to ST I/O addresses ($ff8000 onwards), this is the only
 route of communication between programs and the chips in the emulated ST.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: iow.cpp")
 #endif
 

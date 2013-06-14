@@ -4,7 +4,7 @@ MODULE: Steem
 DESCRIPTION: The window that appears while Steem is initialising.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: notifyinit.cpp")
 #endif
 

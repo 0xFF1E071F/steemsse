@@ -6,7 +6,7 @@ DESCRIPTION: Functions to handle tracing instructions in the debug version
 of Steem and displaying information on what happened.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: trace.cpp")
 #endif
 

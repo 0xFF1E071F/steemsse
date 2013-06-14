@@ -862,7 +862,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(SS_STRUCTURE)
 
 #define SS_STRUCTURE_DMA_INC_ADDRESS
-#define SS_STRUCTURE_INFO //TODO
+//#define SS_STRUCTURE_INFO // files included in modules
 #define SS_STRUCTURE_IOR
 
 #endif

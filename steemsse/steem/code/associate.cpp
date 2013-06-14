@@ -5,7 +5,7 @@ DESCRIPTION: The code to perform the sometimes confusing task of associating
 Steem with required file types.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: associate.cpp")
 #endif
 

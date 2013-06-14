@@ -7,7 +7,7 @@ the code for Steem's agenda system that schedules tasks to be performed at
 the end of scanlines.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: emulator.cpp")
 #endif
 

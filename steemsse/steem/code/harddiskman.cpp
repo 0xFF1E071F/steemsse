@@ -4,7 +4,7 @@ MODULE: Steem
 DESCRIPTION: The code for the hard drive manager dialog.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: harddiskman.cpp")
 #endif
 

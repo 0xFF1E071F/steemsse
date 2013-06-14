@@ -5,7 +5,7 @@ DESCRIPTION: Functions to create and draw Steem's on screen display that
 appears when the emulator begins to run to give useful information.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: osd.cpp")
 #endif
 

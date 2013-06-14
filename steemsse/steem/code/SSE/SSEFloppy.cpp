@@ -21,7 +21,6 @@ TDma::TDma() {
 
 #if defined(SS_DMA) 
 /*  Read/write on disk DMA registers.
-    All SSE fixes depend on it.
 */
 
 #define LOGSECTION LOGSECTION_FDC // DMA+FDC
@@ -494,7 +493,8 @@ What was in the buffers will go nowhere, the internal counter is reset.
     break;
     
   case 0xff860d:  // DMA Base and Counter Low
-    TRACE_LOG("BaseAddress");
+    TRACE_LOG("BaseAddress L");
+    ASSERT( !(io_src_b&1) ); // shouldn't the address be even?
 #if defined(SS_BaseAddress)
     //BaseAddress=0xffff00,BaseAddress|=io_src_b;
     BaseAddress=io_src_b;
@@ -776,7 +776,6 @@ void TDma::TransferBytes() {
 #endif
       [i]);
 
-#if USE_PASTI    
     if(hPasti&&pasti_active
 #if defined(STEVEN_SEAGAL) && defined(SS_PASTI_ONLY_STX)
     &&(!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
@@ -784,7 +783,6 @@ void TDma::TransferBytes() {
       )  
       dma_address++;
     else
-#endif      
       DMA_INC_ADDRESS; // use Steem's existing routine
   }
 #if defined(SS_DMA_COUNT_CYCLES) 
@@ -1121,10 +1119,8 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #endif
       if(can_send)
         floppy_fdc_command(io_src_b); // in fdc.cpp
-#if USE_PASTI    	
       else
         TRACE_LOG("Can't send command %X, drive %C type %d\n",io_src_b,'A'+YM2149.Drive(),SF314[YM2149.Drive()].ImageType);
-#endif      
     }
     break;
   case 1: // TR
@@ -1275,7 +1271,7 @@ TYM2149 YM2149;
 
 
 BYTE TYM2149::Drive(){
-  BYTE drive=0xFF; // different from floppy_current_drive()
+  BYTE drive=NO_VALID_DRIVE; // different from floppy_current_drive()
   if(!(PortA()&BIT_1))
     drive=0; //A:
   else if(!(PortA()&BIT_2))

@@ -4,7 +4,7 @@ MODULE: Steem
 DESCRIPTION: Functions to create the pages of the options dialog box.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: options_create.cpp")
 #endif
 

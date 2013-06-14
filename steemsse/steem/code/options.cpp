@@ -5,7 +5,7 @@ DESCRIPTION: The code for Steem's option dialog that allows the user to
 change Steem's many options to their heart's delight.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: options.cpp")
 #endif
 

@@ -9,7 +9,7 @@ disa_d2 (see bottom of file) to disassemble an instruction and
 d2_routines_init to initialise the debugger.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: d2.cpp")
 #endif
 

@@ -5,7 +5,7 @@ CONDITION: DEBUG_BUILD
 DESCRIPTION: The edit box that is used to change values in the debugger.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: dwin_edit.cpp")
 #endif
 

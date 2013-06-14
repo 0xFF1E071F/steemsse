@@ -4,7 +4,7 @@ MODULE: emu
 DESCRIPTION: Emulation of the STE only blitter chip.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: blitter.cpp")
 #endif
 

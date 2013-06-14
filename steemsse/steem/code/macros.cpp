@@ -5,7 +5,7 @@ DESCRIPTION: These functions are used by Steem's macro system, to record,
 replay, load and save user input.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: macros.cpp")
 #endif
 

@@ -6,7 +6,7 @@ DESCRIPTION: This file was going to house Steem's medium-level hard disk image
 emulation, but it hasn't been written yet (and probably won't be).
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: hdimg.cpp")
 #endif
 

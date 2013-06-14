@@ -6,7 +6,7 @@ these functions are used in the emulation of Steem for vital processes such
 as changing disk images and determining what files are disks.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: diskman.cpp")
 #endif
 

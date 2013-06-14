@@ -4,7 +4,7 @@ MODULE: emu
 DESCRIPTION: Serial port emulation.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: rs232.cpp")
 #endif
 

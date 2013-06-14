@@ -1,6 +1,6 @@
 #if defined(SS_SHIFTER)
 
-#if defined(SS_STRUCTURE)
+#if defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: SSEShifter.cpp")
 #endif
 

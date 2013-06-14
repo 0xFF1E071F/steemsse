@@ -8,7 +8,7 @@ to be scheduled to the nearest cycle. Speed limiting and drawing is also
 handled here, in event_scanline and event_vbl_interrupt.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: run.cpp")
 #endif
 

@@ -5,7 +5,7 @@ DESCRIPTION: A class to encapsulate the process of outputting to the display.
 This contains the DirectDraw code used by Windows Steem for output.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: display.cpp")
 #endif
 

@@ -4,7 +4,7 @@ MODULE: emu
 DESCRIPTION: Initialisation for CPU jump tables.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: cpuinit.cpp")
 #endif
 

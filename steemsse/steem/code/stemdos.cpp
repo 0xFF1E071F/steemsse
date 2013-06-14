@@ -5,7 +5,7 @@ DESCRIPTION: Steem's virtual hard drive emulation. This is achieved through
 intercepting ST OS calls and translating them to PC OS calls.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: stemdos.cpp")
 #endif
 

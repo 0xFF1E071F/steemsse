@@ -1,6 +1,6 @@
 #if defined(SS_VIDEO)
 
-#if defined(SS_STRUCTURE)
+#if defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: SSEVideo.cpp")
 #endif
 

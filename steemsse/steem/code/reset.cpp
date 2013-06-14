@@ -4,7 +4,7 @@ MODULE: emu
 DESCRIPTION: Functions to reset the emulator to a startup state.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: reset.cpp")
 #endif
 
