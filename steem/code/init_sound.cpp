@@ -9,7 +9,7 @@ for output.
 */
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: init_sound.cpp")
 #endif
 

@@ -4,7 +4,7 @@ MODULE: Steem
 DESCRIPTION: Steem's general information dialog.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: infobox.cpp")
 #endif
 

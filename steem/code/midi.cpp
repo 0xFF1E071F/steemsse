@@ -6,7 +6,7 @@ takes the raw bytes from the MIDI ACIA and buffers them before sending them
 on to the Windows multimedia MIDI API. 
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: midi.cpp")
 #endif
 

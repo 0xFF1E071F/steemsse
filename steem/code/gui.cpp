@@ -6,7 +6,7 @@ GUI functions. It creates the main window in MakeGUI, handles translations
 and (for some reason) command-line options.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: gui.cpp")
 #endif
 

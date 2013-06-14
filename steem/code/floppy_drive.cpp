@@ -7,7 +7,7 @@ to move to the correct place in the disk image file and then reads/writes
 data.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: floppydrive.cpp")
 #endif
 

@@ -5,7 +5,7 @@ DESCRIPTION: The intro that appears when Steem is first run that allows the
 user to configure the most common options.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: steemintro.cpp")
 #endif
 

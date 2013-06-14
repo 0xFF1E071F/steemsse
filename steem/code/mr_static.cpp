@@ -6,7 +6,7 @@ DESCRIPTION: A class to encapsulate the labels that contain various data
 in the debugger.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: mr_static.cpp")
 #endif
 

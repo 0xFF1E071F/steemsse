@@ -6,7 +6,7 @@ DESCRIPTION: A global list that stores information about various special
 addresses and how they should be displayed in the debugger.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: iolist.cpp")
 #endif
 

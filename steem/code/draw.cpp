@@ -7,7 +7,7 @@ draw one line, draw_end unlocks output and draw_blit blits the drawn output
 to the PC display. 
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: draw.cpp")
 #endif
 

@@ -5,7 +5,7 @@ DESCRIPTION: This file contains both the code for the Steem joysticks dialog
 and the code to read the PC joysticks.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: stjoy.cpp")
 #endif
 

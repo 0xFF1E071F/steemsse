@@ -5,7 +5,7 @@ DESCRIPTION: Functions to implement Steem's flexible shortcuts system that
 maps all sorts of user input to all sorts of emulator functions.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: shortcutbox.cpp")
 #endif
 

@@ -13,7 +13,7 @@ instruction and cpu_routines_init in cpuinit.cpp.
     This part was already frightening, now it's worse with all the #ifdef
 */
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: cpu.cpp")
 #endif
 

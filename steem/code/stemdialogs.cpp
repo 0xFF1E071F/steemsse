@@ -5,7 +5,7 @@ DESCRIPTION: The base class for Steem's dialogs that are used to configure
 the emulator and perform additional functions.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: stemdialogs.cpp")
 #endif
 

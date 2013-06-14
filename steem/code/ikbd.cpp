@@ -11,7 +11,7 @@ V3.3, fake emu borrowed from Hatari for reprogramming
 V3.4, hardware-level emulation
 V3.5.1: fake emu for reprogramming nuked (avoid bloat)
 ---------------------------------------------------------------------------*/
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: ikbd.cpp")
 #endif
 

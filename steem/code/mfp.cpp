@@ -6,7 +6,7 @@ DESCRIPTION: The core of Steem's Multi Function Processor emulation
 the ST.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: mfp.cpp")
 #endif
 

@@ -5,7 +5,7 @@ DESCRIPTION: This file contains the code for zipclass, Steem's abstraction
 of the various unarchiving libraries it can use.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: archive.cpp")
 #endif
 

@@ -6,7 +6,7 @@ is called when a command is written to the FDC's command register via the
 DMA I/O addresses (see iow.cpp).
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: fdc.cpp")
 #endif
 

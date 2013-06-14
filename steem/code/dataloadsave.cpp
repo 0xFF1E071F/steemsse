@@ -5,7 +5,7 @@ DESCRIPTION: The code to load and save all Steem's options (and there are
 a lot of them) to and from the ini file.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: dataloadsave.cpp")
 #endif
 

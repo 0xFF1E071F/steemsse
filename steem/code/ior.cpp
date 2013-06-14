@@ -5,7 +5,7 @@ DESCRIPTION: I/O address reads. This file contains crucial core functions
 that deal with reads from ST I/O addresses ($ff8000 onwards).
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: ior.cpp")
 #endif
 

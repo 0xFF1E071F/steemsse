@@ -4,7 +4,7 @@ MODULE: Steem
 DESCRIPTION: Completely random accessory functions.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: acc.cpp")
 #endif
 

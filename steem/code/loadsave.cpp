@@ -6,7 +6,7 @@ to and from files. This includes loading TOS images and handling steem.ini
 and steem.new.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: loadsave.cpp")
 #endif
 

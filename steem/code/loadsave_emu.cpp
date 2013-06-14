@@ -5,7 +5,7 @@ DESCRIPTION: Functions to load and save emulation variables. This is mainly
 for Steem's memory snapshots system.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: loadsave_emu.cpp")
 #endif
 
