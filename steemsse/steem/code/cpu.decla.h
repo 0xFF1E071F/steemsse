@@ -1,58 +1,6 @@
-#if defined(SS_STRUCTURE_CPU_H)
-
-#ifdef IN_EMU
-#define EXT
-#define INIT(s) =s
-#else
-#define EXT extern
-#define INIT(s)
-#endif
-
-#include "cpu.decla.h"
-/* after moving all defines and declarations to cpu.decla.h, all that
-remains here is the part that shouldn't be in a h file, to move in a 
-second step
-*/
-#if defined(IN_EMU) 
-
-#ifdef DEBUG_BUILD
-#ifndef RELEASE_BUILD
-MEM_ADDRESS pc_rel_stop_on_ref=0;
-#endif
-#endif
-
-WORD*lpfetch,*lpfetch_bound;
-bool prefetched_2=false;
-WORD prefetch_buf[2]; // SS the 2 words prefetch queue
-
-#ifdef ENABLE_LOGFILE
-MEM_ADDRESS debug_mem_write_log_address;
-int debug_mem_write_log_bytes;
-#endif
-
-bool cpu_stopped=false,m68k_do_trace_exception;
-
-signed int compare_buffer;
-
-void sr_check_z_n_l_for_r0()
-{
-  m68k_dest=&r[0];
-  SR_CHECK_Z_AND_N_L;
-}
-
-
-#endif//in emu
-
-
-#else//!defined(SS_STRUCTURE_CPU_H)
-
-#ifdef IN_EMU
-#define EXT
-#define INIT(s) =s
-#else
-#define EXT extern
-#define INIT(s)
-#endif
+#pragma once
+#ifndef CPU_DECLA_H
+#define CPU_DECLA_H
 
 #define BOMBS_BUS_ERROR 2
 #define BOMBS_ADDRESS_ERROR 3
@@ -142,9 +90,7 @@ EXT int m68k_divu_cycles INIT(124),m68k_divs_cycles INIT(140); // +4 for overall
 #define lpSSP ((MEM_ADDRESS*)((SUPERFLAG) ? &(r[15]):&other_sp))
 #define lpUSP ((MEM_ADDRESS*)((SUPERFLAG) ? &other_sp:&(r[15])))
 
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
+
 #if defined(IN_EMU)
 
 inline void m68k_poke(MEM_ADDRESS ad,BYTE x);
@@ -155,7 +101,6 @@ inline void m68k_lpoke(MEM_ADDRESS ad,LONG x);
 #define INSTRUCTION_TIME(t) {cpu_cycles-=(t);}
 #define INSTRUCTION_TIME_ROUND(t) {INSTRUCTION_TIME(t); cpu_cycles&=-4;}
 #endif
-
 
 #ifdef DEBUG_BUILD
 
@@ -188,7 +133,7 @@ for the next change to user mode (when the interrupt has finished).
 
 #ifndef RELEASE_BUILD
 
-MEM_ADDRESS pc_rel_stop_on_ref=0;
+extern MEM_ADDRESS pc_rel_stop_on_ref;
 
 #define PC_RELATIVE_MONITOR(ad) \
   if (pc_rel_stop_on_ref){ \
@@ -204,11 +149,13 @@ MEM_ADDRESS pc_rel_stop_on_ref=0;
 #define PC_RELATIVE_MONITOR(ad)
 #endif//RELEASE_BUILD
 
-#else
+#else // !DEBUG_BUILD
+
 #define CHECK_STOP_ON_USER_CHANGE
 #define CHECK_STOP_USER_MODE_NO_INTR
 #define debug_check_break_on_irq(irq)
 #define PC_RELATIVE_MONITOR(ad)
+
 #endif//DEBUG_BUILD
 
 
@@ -216,10 +163,10 @@ MEM_ADDRESS pc_rel_stop_on_ref=0;
 #define DEST_IS_MEMORY ((ir&BITS_543)>BITS_543_001)
 #define SOURCE_IS_REGISTER_OR_IMMEDIATE ((ir & BITS_543)<=BITS_543_001 || ((ir&b00111111)==b00111100) )
 
+extern WORD*lpfetch,*lpfetch_bound;
+extern bool prefetched_2;
+extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 
-WORD*lpfetch,*lpfetch_bound;
-bool prefetched_2=false;
-WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 
 // SS This one is apparently never used.
 #define EXTRA_PREFETCH_IF_TO_MEM \
@@ -610,20 +557,20 @@ WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 #define IOACCESS_INTERCEPT_OS BIT_12
 #define IOACCESS_INTERCEPT_OS2 BIT_13
 
+
 #ifdef ENABLE_LOGFILE
 #define IOACCESS_DEBUG_MEM_WRITE_LOG BIT_14
-MEM_ADDRESS debug_mem_write_log_address;
-int debug_mem_write_log_bytes;
+extern MEM_ADDRESS debug_mem_write_log_address;
+extern int debug_mem_write_log_bytes;
 #endif
 
 #define STOP_INTS_BECAUSE_INTERCEPT_OS bool(ioaccess & (IOACCESS_INTERCEPT_OS | IOACCESS_INTERCEPT_OS2))
 void change_to_user_mode();
 void change_to_supervisor_mode();
 
-bool cpu_stopped=false,m68k_do_trace_exception;
+extern bool cpu_stopped,m68k_do_trace_exception;
 
-signed int compare_buffer;
-
+extern signed int compare_buffer;
 
 #define PC_RELATIVE_PC pc
 //(old_pc+2)
@@ -935,14 +882,9 @@ signed int compare_buffer;
 #define FC_SUPERVISOR_PROGRAM 6
 #define FC_INTERRUPT_VERIFICATION 7
 
-void sr_check_z_n_l_for_r0()
-{
-  m68k_dest=&r[0];
-  SR_CHECK_Z_AND_N_L;
-}
+extern void sr_check_z_n_l_for_r0();
 
-
-#else //inemu
+#else //!IN_EMU
 
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU)
 #define SET_PC(ad) M68000.SetPC(ad);
@@ -950,9 +892,6 @@ void sr_check_z_n_l_for_r0()
 #define SET_PC(ad) set_pc(ad);
 extern void set_pc(MEM_ADDRESS);
 #endif
-
-
-
 
 #if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
 extern void perform_rte();
@@ -968,9 +907,8 @@ extern void m68k_poke_noinline(MEM_ADDRESS ad,BYTE x);
 extern void m68k_dpoke_noinline(MEM_ADDRESS ad,WORD x);
 extern void m68k_lpoke_noinline(MEM_ADDRESS ad,LONG x);
 
-#endif
 
-#undef EXT
-#undef INIT
+#endif//IN_EMU
 
-#endif//SS_STRUCTURE_CPU_H
+
+#endif//CPU_DECLA_H

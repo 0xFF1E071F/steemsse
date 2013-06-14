@@ -7,7 +7,12 @@
 #define LOGSECTION LOGSECTION_CRASH // not correct, temp, cpu is trouble
 
 
-#if !defined(SS_STRUCTURE_BIG_FORWARD)
+#if defined(SS_STRUCTURE_CPU_H)
+#include "../cpu.decla.h" // hey look it already works for this
+
+#elif defined(SS_STRUCTURE_BIG_FORWARD)
+// ...
+#elif !defined(SS_STRUCTURE_BIG_FORWARD)
 
 // forward (due to shitty structure)
 #if defined(SS_VAR_REWRITE)
@@ -107,6 +112,12 @@ void m68k_lpoke_abus2(LONG);
 
 
 #include "SSEM68000.h" // there you go...
+
+
+
+
+
+
 
 #if defined(SS_CPU_TRUE_PC)
 #define TRUE_PC M68000.Pc

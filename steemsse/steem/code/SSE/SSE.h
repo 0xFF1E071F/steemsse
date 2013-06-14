@@ -867,13 +867,17 @@ we copy all Steem declarations in one file, big_forward.h
 then we may delete all previous forward declarations
 later it will be between big forward and full separation
 still must ve totally reversible, and depends on compiler
+err
+problem, multiple struct/class definition not allowed?
 */
 
-#define SS_STRUCTURE_BIG_FORWARD
+#define SS_STRUCTURE_BIG_FORWARD // temp
 
 #define SS_STRUCTURE_DMA_INC_ADDRESS
 //#define SS_STRUCTURE_INFO // files included in modules
 #define SS_STRUCTURE_IOR
+
+#define SS_STRUCTURE_CPU_H // cpu.h -> cpu.h.h, cpu.h.cpp
 
 #endif
 
