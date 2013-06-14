@@ -1,4 +1,3 @@
-
 #pragma once
 #ifndef SSECPU_H
 #define SSECPU_H
@@ -6,6 +5,9 @@
 #if defined(SS_CPU)
 
 #define LOGSECTION LOGSECTION_CRASH // not correct, temp, cpu is trouble
+
+
+#if !defined(SS_STRUCTURE_BIG_FORWARD)
 
 // forward (due to shitty structure)
 #if defined(SS_VAR_REWRITE)
@@ -43,6 +45,7 @@ extern void (*m68k_jump_get_source_b_not_a[8])();
 extern void (*m68k_jump_get_source_w_not_a[8])();
 extern void (*m68k_jump_get_source_l_not_a[8])();
 
+#endif
 
 #ifdef DEBUG_BUILD
 #define DEBUG_CHECK_IOACCESS \

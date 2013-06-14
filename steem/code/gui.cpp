@@ -14,8 +14,9 @@ and (for some reason) command-line options.
 #define LOGSECTION LOGSECTION_INIT
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
-
+#if !defined(SS_STRUCTURE_BIG_FORWARD)
 extern int draw_last_scanline_for_border,res_vertical_scale; // forward
+#endif
 
 int ChangeBorderSize(int size_in) {
   TRACE_LOG("Setting display size to %d (%d)\n",size_in,DISPLAY_SIZE);

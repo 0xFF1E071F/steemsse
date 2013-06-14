@@ -34,6 +34,11 @@ other files that make up the Steem module.
 #include "conditions.h"	
 
 #include "SSE/SSE.h" // SS
+
+#if defined(SS_STRUCTURE_BIG_FORWARD)
+#include "big_forward.h"
+#endif
+
 #include "SSE/SSEDebug.h" //SS
 
 #if defined(SS_STF)

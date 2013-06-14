@@ -1309,7 +1309,9 @@ TCaps::~TCaps() {
     CAPSExit();
 }
 
+#if !defined(SS_STRUCTURE_BIG_FORWARD)
 void SetNotifyInitText(char*);//forward
+#endif
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_INIT//SS
 

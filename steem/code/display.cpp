@@ -10,7 +10,9 @@ This contains the DirectDraw code used by Windows Steem for output.
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI) 
+#if !defined(SS_STRUCTURE_BIG_FORWARD)
 extern int shifter_freq_at_start_of_vbl; //forward
+#endif
 #endif
 
 //SS: the singleton object is Disp

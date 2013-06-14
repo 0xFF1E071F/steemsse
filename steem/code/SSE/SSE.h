@@ -861,6 +861,16 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #if defined(SS_STRUCTURE)
 
+/*
+step by step
+we copy all Steem declarations in one file, big_forward.h
+then we may delete all previous forward declarations
+later it will be between big forward and full separation
+still must ve totally reversible, and depends on compiler
+*/
+
+#define SS_STRUCTURE_BIG_FORWARD
+
 #define SS_STRUCTURE_DMA_INC_ADDRESS
 //#define SS_STRUCTURE_INFO // files included in modules
 #define SS_STRUCTURE_IOR

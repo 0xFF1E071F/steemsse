@@ -10,11 +10,13 @@ appears when the emulator begins to run to give useful information.
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_INFO)//forward
+#if !defined(SS_STRUCTURE_BIG_FORWARD)
 #include "SSE/SSEFloppy.h"
 #if !(defined(STEVEN_SEAGAL) && defined(SS_FDC))
 extern BYTE fdc_sr;
 #endif
 extern BYTE floppy_head_track[2];
+#endif
 #endif
 
 
