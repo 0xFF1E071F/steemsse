@@ -1081,6 +1081,9 @@ void m68k_get_effective_address()
 
 #if (defined(STEVEN_SEAGAL) && defined(SS_CPU)) // moved to SSECpu.cpp
 // forward (temp, structure!)
+
+
+#if !defined(SS_STRUCTURE_BIG_FORWARD)
 void m68k_get_source_000_b();
 void m68k_get_source_000_w();
 void m68k_get_source_000_l();
@@ -1105,6 +1108,7 @@ void m68k_get_source_110_l();
 void m68k_get_source_111_b();
 void m68k_get_source_111_w();
 void m68k_get_source_111_l();
+#endif
 
 #else
 ////////////////////////////////////////////////////////////////////////////////
@@ -1308,7 +1312,7 @@ void m68k_get_source_111_l(){
 #if (defined(STEVEN_SEAGAL) && defined(SS_CPU)) // moved to SSECpu.cpp
 // forward (temp, structure!)
 
-
+#if !defined(SS_STRUCTURE_BIG_FORWARD)
 void m68k_get_dest_000_b();
 void m68k_get_dest_000_w();
 void m68k_get_dest_000_l();
@@ -1357,6 +1361,7 @@ void m68k_get_dest_110_l_faster();
 void m68k_get_dest_111_b_faster();
 void m68k_get_dest_111_w_faster();
 void m68k_get_dest_111_l_faster();
+#endif
 
 #else
 ////////////////////////////////////////////////////////////////////////////////
