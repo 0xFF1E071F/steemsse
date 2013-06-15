@@ -9,40 +9,8 @@
 #endif
 
 #include "cpu.decla.h"
-/* after moving all defines and declarations to cpu.decla.h, all that
-remains here is the part that shouldn't be in a h file, to move in a 
-second step
-*/
-#if defined(IN_EMU) 
 
-#ifdef DEBUG_BUILD
-#ifndef RELEASE_BUILD
-MEM_ADDRESS pc_rel_stop_on_ref=0;
-#endif
-#endif
-
-WORD*lpfetch,*lpfetch_bound;
-bool prefetched_2=false;
-WORD prefetch_buf[2]; // SS the 2 words prefetch queue
-
-#ifdef ENABLE_LOGFILE
-MEM_ADDRESS debug_mem_write_log_address;
-int debug_mem_write_log_bytes;
-#endif
-
-bool cpu_stopped=false,m68k_do_trace_exception;
-
-signed int compare_buffer;
-
-void sr_check_z_n_l_for_r0()
-{
-  m68k_dest=&r[0];
-  SR_CHECK_Z_AND_N_L;
-}
-
-
-#endif//in emu
-
+// step 2: moving from h into cpp
 
 #else//!defined(SS_STRUCTURE_CPU_H)
 

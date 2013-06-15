@@ -68,7 +68,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #if defined(STEVEN_SEAGAL)
 
-//#define SS_BETA //title, OSD, plus some testing
+#define SS_BETA //title, OSD, plus some testing
 
 #ifdef SS_BETA // beta with all features
 #define SSE_VERSION 351
@@ -251,7 +251,8 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_CPU_POST_INC // no post increment if exception 
 #define SS_CPU_PRE_DEC // no "pre" decrement if exception!
 #define SS_CPU_SET_BUS_0 // setting bus not the same as writing on it ?
-#define SS_CPU_TRUE_PC // PC as pushed in case of bus error, based on microcodes
+// PC as pushed in case of bus error, based on microcodes, cost 4KB:
+#define SS_CPU_TRUE_PC 
 #define SS_CPU_TRUE_PC_AND_NO_HACKS // option 'Hacks' or not: true PC
 
 #endif//exception
