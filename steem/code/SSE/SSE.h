@@ -958,6 +958,7 @@ problem, multiple struct/class definition not allowed?
 #define SS_VAR_OPTIONS_REFRESH
 #define SS_VAR_RESIZE // reduce memory set (int->BYTE etc.)
 #define SS_VAR_REWRITE // to conform to what compilers expect (warnings...)
+#define SS_VAR_REWRITE_VC_2012 // from DrCoolZic
 #define SS_VAR_SCROLLER_DISK_IMAGE
 #define SS_VAR_STEALTH // don't tell we're an emulator (option)
 #ifdef WIN32

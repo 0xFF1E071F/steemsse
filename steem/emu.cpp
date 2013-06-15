@@ -19,6 +19,10 @@ inline int abs_quick(int i)
 #include "conditions.h" //SS
 #include "SSE/SSE.h" //SS
 
+#if defined(SS_STRUCTURE_BIG_FORWARD)
+#include "big_forward.h"
+#endif
+
 #include "SSE/SSEDebug.h"
 
 #if defined(STEVEN_SEAGAL)
@@ -92,7 +96,7 @@ void internal_speaker_sound_by_period(int){}
 #include "emulator.h"
 
 #if defined(STEVEN_SEAGAL)
-void set_pc(MEM_ADDRESS ad); // forward // still necessary?
+///void set_pc(MEM_ADDRESS ad); // forward // still necessary?
 #include "SSE/SSE6301.h"
 #include "SSE/SSECpu.h"
 //#include "SSE/SSEInterrupt.h"
