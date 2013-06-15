@@ -17,6 +17,37 @@ instruction and cpu_routines_init in cpuinit.cpp.
 #pragma message("Included for compilation: cpu.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_CPU_H)
+// step 2: moving from h into cpp
+#ifdef DEBUG_BUILD
+#ifndef RELEASE_BUILD
+MEM_ADDRESS pc_rel_stop_on_ref=0;
+#endif
+#endif
+
+WORD*lpfetch,*lpfetch_bound;
+bool prefetched_2=false;
+WORD prefetch_buf[2]; // SS the 2 words prefetch queue
+
+#ifdef ENABLE_LOGFILE
+MEM_ADDRESS debug_mem_write_log_address;
+int debug_mem_write_log_bytes;
+#endif
+
+bool cpu_stopped=false,m68k_do_trace_exception;
+
+signed int compare_buffer;
+
+void sr_check_z_n_l_for_r0()
+{
+  m68k_dest=&r[0];
+  SR_CHECK_Z_AND_N_L;
+}
+
+
+#endif
+
+
 // SS neutralise macros if needs be
 #if !defined(PREFETCH_IRC)
 #define PREFETCH_IRC 
