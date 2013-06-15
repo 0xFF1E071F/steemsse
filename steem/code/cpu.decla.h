@@ -133,7 +133,7 @@ for the next change to user mode (when the interrupt has finished).
 
 #ifndef RELEASE_BUILD
 
-extern MEM_ADDRESS pc_rel_stop_on_ref;
+EXT MEM_ADDRESS pc_rel_stop_on_ref;
 
 #define PC_RELATIVE_MONITOR(ad) \
   if (pc_rel_stop_on_ref){ \
@@ -568,8 +568,8 @@ extern int debug_mem_write_log_bytes;
 void change_to_user_mode();
 void change_to_supervisor_mode();
 
-extern bool cpu_stopped,m68k_do_trace_exception;
-
+extern bool cpu_stopped;
+extern bool m68k_do_trace_exception;
 extern signed int compare_buffer;
 
 #define PC_RELATIVE_PC pc

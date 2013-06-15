@@ -18,6 +18,10 @@ extern "C" int iDummy=0;
 extern "C" int SS_signal=0;
 #endif
 
+///extern int aaa;
+///int aaa;
+
+
 #if defined(SS_VID_RECORD_AVI) 
 #include <AVI/AviFile.h>
 CAviFile *pAviFile=0;

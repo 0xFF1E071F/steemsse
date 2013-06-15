@@ -1,5 +1,8 @@
 #if defined(SS_STRUCTURE_CPU_H)
 
+
+// step 3: make sure h is extern, no init
+/*
 #ifdef IN_EMU
 #define EXT
 #define INIT(s) =s
@@ -7,8 +10,24 @@
 #define EXT extern
 #define INIT(s)
 #endif
+*/
+
+#define EXT extern
+#define INIT(s)
+
 
 #include "cpu.decla.h"
+
+#undef EXT
+#undef INIT
+
+/*
+    now declarations & definitions are where they should be but
+    only for cpu. We still can't compile cpu.cpp because it depends
+    on all other variables declared/defined in other h & cpp files
+    First we need to split other h files like we did cpu.h
+*/
+
 
 // step 2: moving from h into cpp
 
