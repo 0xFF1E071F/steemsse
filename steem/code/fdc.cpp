@@ -126,6 +126,7 @@ bool floppy_track_index_pulse_active()
 {
   if (floppy_type1_command_active){
     return (((DWORD)hbl_count) % FDC_HBLS_PER_ROTATION)>=(FDC_HBLS_PER_ROTATION-FDC_HBLS_OF_INDEX_PULSE);
+////        return ( ( (DWORD)hbl_count) % FDC_HBLS_PER_ROTATION)<=FDC_HBLS_OF_INDEX_PULSE ;
   }
   return 0;
 }

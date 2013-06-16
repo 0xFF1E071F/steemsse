@@ -8,6 +8,129 @@ DESCRIPTION: Completely random accessory functions.
 #pragma message("Included for compilation: acc.cpp")
 #endif
 
+#if defined(SS_STRUCTURE_ACC_H)
+//#ifdef IN_MAIN // normally yes
+#define EXT
+#define INIT(s) =s
+//#endif
+
+
+#ifdef ENABLE_LOGFILE
+
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS)
+  EXT bool logging_suspended INIT(TRUE);
+#else
+  EXT bool logging_suspended INIT(false);
+#endif
+
+  EXT bool logsection_enabled[100];
+  EXT void log_io_write(MEM_ADDRESS,BYTE);
+  EXT int log_cpu_count INIT(0);
+
+  
+  //struct{
+    //char *Name;
+    //int Index;
+  //}
+  struct_logsection logsections[NUM_LOGSECTIONS+8]={{"Always",LOGSECTION_ALWAYS},
+                                    {"Video",LOGSECTION_VIDEO},
+                                    {"MFP Timers",LOGSECTION_MFP_TIMERS},
+                                    {"Interrupts",LOGSECTION_INTERRUPTS},
+                                    {"IO",LOGSECTION_IO},
+                                    {"Crash",LOGSECTION_CRASH},
+                                    {"CPU",LOGSECTION_CPU},
+#if !(defined(STEVEN_SEAGAL) && defined(SS_DEBUG_DIV))
+                                    {"Div Instructions",LOGSECTION_DIV},
+#endif
+                                    {"Trace",LOGSECTION_TRACE},
+                                    {"-",-1},
+                                    {"FDC",LOGSECTION_FDC},
+                                     
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_LOG_OPTIONS)
+  {"Floppy data",LOGSECTION_FDC_BYTES},
+  {"Image info",LOGSECTION_IMAGE_INFO},
+  {"IPF sector info",LOGSECTION_IPF_LOCK_INFO},
+#else
+  {"Pasti",LOGSECTION_PASTI},
+#endif
+                                    {"Stemdos",LOGSECTION_STEMDOS},
+                                    {"Trap",LOGSECTION_TRAP},
+                                    {"-",-1},
+                                    {"IKBD",LOGSECTION_IKBD},
+                                    {"Tasks",LOGSECTION_AGENDA},
+                                    {"Blitter",LOGSECTION_BLITTER},
+                                    {"Sound",LOGSECTION_SOUND},
+                                    {"MIDI",LOGSECTION_MIDI},
+                                    {"-",-1},
+                                    {"Speed Limiting",LOGSECTION_SPEEDLIMIT},
+                                    {"Startup",LOGSECTION_INIT},
+                                    {"Shutdown",LOGSECTION_SHUTDOWN},
+                                    {"INI File",LOGSECTION_INIFILE},
+                                    {"GUI",LOGSECTION_GUI},
+                                    {"*",-1}};
+
+
+  const char *name_of_mfp_interrupt[21]={"Centronics","RS232 DCD","RS232 CTS","Blitter",
+        "Timer D","Timer C","ACIAs","FDC","Timer B","RS232 TX Error","RS232 RX Buf Empty",
+        "RS232 RX Error","RS232 RX Buf Full","Timer A","RS232 Ring Detector","Mono Monitor",
+        "HBL","VBL","Line-A","Line-F","Trap"};
+
+    //////////////////////////////// names of OS calls //////////////////////////////////
+  const char* gemdos_calls[0x58]={"Pterm0","Conin","Conout(c=&)","Cauxin","Cauxout (c=&)",
+        "Cprnout(c=&)","Raw con io Crawio(c=&)","Crawcin","Cnecic","Print line(text=%)",
+        "ReadLine(buf=%)","Constat","","","SetDrv(drv=&)","","Conout stat","Printer status",
+        "inp?(serial)","out?(serial)","","","","","","GetDrv","SetDTA(buf=%)","","","","","",
+        "super(%)","","","","","","","","","","GetDate","SetDate(date=&)","Gettime",
+        "Settime(time=&)","","GetDTA","Get version number","PtermRes(keepcnt=%,retcode=&)",
+        "","","","","Dfree(buf=%,drive=&)","","","Mkdir(path=%=$)","Rmdir(path=%=$)",
+        "Chdir(path=%)","Fcreate(fname=%=$,attr=&)","Fopen(fname=%=$,mode=&)","Fclose(handle=&)",
+        "Fread(handle=&,count=%,buf=%)","Fwrite(handle=&,count=%,buf=%)","Fdelete(fname=%=$)",
+        "Fseek(offest=%,handle=&,seekmode=&)","Fattrib(fname=%=$,flag=&,attrib=&)",
+        "","Fdup(handle=&)","Fforce(stdh=&,nonstdh=&)","DgetPath(buf=%,drive=&)",
+        "Malloc(%)","Mfree(addr=%)","Mshrink(dummy=&,block=%,newsize=%)","Pexec(mode=&,%=$,%,%)",
+        "Pterm(retcode=&)","","Fsfirst(fnam=%=$,attr=&)","Fsnext","","","","","","",
+        "Frename(dummy=&,oldname=%=$,newname=%=$)","Fdatime(timeptr=%,handle=&,flag=&)"};
+
+  const char* bios_calls[12]={"GetMBP(pointer=%)","Bconstat(dev=&)","Bconin(dev=&)",
+        "Bconout(dev=&,c=&)","Rwabs(rwflag=&,buffer=%,number=&,recno=&,dev=&), read/write disk sector",
+        "Setexec(number=&,vector=%), set exception vector","Tickcal","Getbpb(dev=&)","Bcostat(dev=&)",
+        "Mediach(dev=&)","Drvmap","Kbshift(mode=&)"};
+
+  const char* xbios_calls[40]={"InitMouse(type=&,parameter=%,vector=%)","Ssbrk(number=%)",
+        "Physbase","Logbase","Getrez","setscreen(log=%,phys=%,res=&)","Setpalette(ptr=%)",
+        "Setcolor(colornum=&,color=&)","Floprd(buffer=%,filler=%,dev=&,sector=&,track=&,side=&,count=&)",
+        "Flopwr(buffer=%,filler=%,dev=&,sector=&,track=&,side=&,count=&)",
+        "Flopfmt(buffer=%,filler=%,dev=&,spt=&,track=&,side=&,interleave=&,magic=&,virgin=&)","",
+        "Midiws(count=&,ptr=%)","Mfpint(number=&,vector=%)","Iorec(dev=&)",
+        "Rsconf(baud=&,ctrl=&,ucr=&,rsr=&,tsr=&,scr=&)","Keytbl(unshift=%,shift=%,caps=%)",
+        "random","protobt(buffer=%,serialno=%,disktype=&,execflag=&)",
+        "Flopver(buffer=%,filler=%,dev=&,sector=&,track=&,side=&,count=&)","Scrdmp",
+        "Cursconf(function=&,rate=&)","Settime(time=%)","Gettime","Bioskeys","Ikbdws(number=&,ptr=%)",
+        "Jdisint(number=&)","Jenabint(number=&)","Giaccess(data=&,register=&)","Offgibit(bitnumber=&)",
+        "Ongibit(bitnumber=&)","Xbtimer(timer=&,control=&,data=&,vector=%)","Dosound(pointer=%)",
+        "Setprt(config=&)","Kbdvbase","Kbrate(delay=&,repeat=&)","Prtblk(parameter=%)",
+        "Vsync","Supexec(%)","Puntaes"};
+
+  FILE *logfile=NULL;
+  EXT EasyStr LogFileName;
+
+#else//#ifdef ENABLE_LOGFILE
+#endif
+
+EXT bool STfile_read_error INIT(0);
+
+
+int how_big_is_0000;
+
+char reg_name_buf[8]; // SS removed _
+
+
+#undef EXT
+#undef INIT
+#endif
+
+
 // Porting: GetNearestPaletteIndex  get_text_width flush_message_queue
 
 /*void inline log(EasyStr a){

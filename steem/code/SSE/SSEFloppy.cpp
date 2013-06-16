@@ -1315,11 +1315,6 @@ void SetNotifyInitText(char*);//forward
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_INIT//SS
 
-/*
-DrCoolZic » Sat Jun 15, 2013 8:36 am 
-Visual Studio C++ 2012
-In SSEFloppy.cpp line 1316 can you change TCaps::Init() to int TCaps::Init()
-*/
 
 int TCaps::Init() {
 

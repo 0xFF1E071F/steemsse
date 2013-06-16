@@ -73,7 +73,8 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /w /W0 /GX /Zi /Ox /Ot /Og /Oi /Ob2 /Gy /D "_VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /I /I /I /I /GA /GF
-# ADD CPP /nologo /G6 /MT /W3 /GX /Zi /Ob2 /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /I "..\..\3rdparty\sim6xxx" /D "NDEBUG" /D "NO_DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /FR /GA /GF /c
+# ADD CPP /nologo /G6 /MT /W3 /GX /Zi /Os /Oy /Ob2 /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /I "..\..\3rdparty\sim6xxx" /D "NDEBUG" /D "NO_DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /FR /GA /GF /c
+# SUBTRACT CPP /Og
 # ADD BASE MTL /nologo /win32
 # ADD MTL /nologo /win32
 # ADD BASE RSC /l 0x409
@@ -220,12 +221,15 @@ DEP_CPP_EMU_C=\
 	"..\..\include\notwin_mymisc.h"\
 	"..\..\include\portio.h"\
 	"..\..\include\x\x_mymisc.h"\
+	"..\..\steem\code\acc.decla.h"\
 	"..\..\steem\code\acc.h"\
 	"..\..\steem\code\acia.h"\
+	"..\..\steem\code\big_forward.h"\
 	"..\..\steem\code\blitter.cpp"\
 	"..\..\steem\code\blitter.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\cpu.cpp"\
+	"..\..\steem\code\cpu.decla.h"\
 	"..\..\steem\code\cpu.h"\
 	"..\..\steem\code\cpuinit.cpp"\
 	"..\..\steem\code\debug_emu.cpp"\
@@ -425,6 +429,7 @@ DEP_CPP_MAIN_=\
 	"..\..\3rdparty\SDL-WIN\include\SDL_version.h"\
 	"..\..\3rdparty\SDL-WIN\include\SDL_video.h"\
 	"..\..\3rdparty\UnRARDLL\unrar.h"\
+	"..\..\3rdparty\unrarlib\unrarlib\unrarlib.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\choosefolder.h"\
 	"..\..\include\circularbuffer.h"\
@@ -456,16 +461,19 @@ DEP_CPP_MAIN_=\
 	"..\..\include\x\icongroup.h"\
 	"..\..\include\x\x_mymisc.h"\
 	"..\..\steem\code\acc.cpp"\
+	"..\..\steem\code\acc.decla.h"\
 	"..\..\steem\code\acc.h"\
 	"..\..\steem\code\acia.h"\
 	"..\..\steem\code\archive.cpp"\
 	"..\..\steem\code\archive.h"\
 	"..\..\steem\code\associate.cpp"\
+	"..\..\steem\code\big_forward.h"\
 	"..\..\steem\code\blitter.h"\
 	"..\..\steem\code\boiler.cpp"\
 	"..\..\steem\code\boiler.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\controls.cpp"\
+	"..\..\steem\code\cpu.decla.h"\
 	"..\..\steem\code\cpu.h"\
 	"..\..\steem\code\d2.cpp"\
 	"..\..\steem\code\d2.h"\
@@ -598,6 +606,10 @@ NODEP_CPP_MAIN_=\
 # PROP Default_Filter "h;hpp;hxx;hm;inl;inc"
 # Begin Source File
 
+SOURCE=..\..\steem\code\acc.decla.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\steem\code\acc.h
 # End Source File
 # Begin Source File
@@ -619,6 +631,10 @@ SOURCE=..\..\steem\code\boiler.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\conditions.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\cpu.decla.h
 # End Source File
 # Begin Source File
 
@@ -1115,8 +1131,8 @@ SOURCE=..\..\steem\rc\reset_need.ico
 # Begin Source File
 
 SOURCE=..\..\steem\rc\resource.rc
-# ADD BASE RSC /l 0x809 /i "\Downloads\steemsse-code\steemsse\steem\rc" /i "\data\prg\ST\steem\rc"
-# ADD RSC /l 0x409 /i "\Downloads\steemsse-code\steemsse\steem\rc" /i "\data\prg\ST\steem\rc"
+# ADD BASE RSC /l 0x809 /i "\data\prg\ST\steem\rc" /i "\Downloads\steemsse-code\steemsse\steem\rc"
+# ADD RSC /l 0x409 /i "\data\prg\ST\steem\rc" /i "\Downloads\steemsse-code\steemsse\steem\rc"
 # End Source File
 # Begin Source File
 

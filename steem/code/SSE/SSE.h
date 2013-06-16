@@ -875,10 +875,11 @@ problem, multiple struct/class definition not allowed?
 #define SS_STRUCTURE_BIG_FORWARD // temp
 
 #define SS_STRUCTURE_DMA_INC_ADDRESS
-//#define SS_STRUCTURE_INFO // files included in modules
+//#define SS_STRUCTURE_INFO // just telling files included in modules
 #define SS_STRUCTURE_IOR
 
-#define SS_STRUCTURE_CPU_H // cpu.h -> cpu.h.h, cpu.h.cpp
+#define SS_STRUCTURE_ACC_H
+#define SS_STRUCTURE_CPU_H  // we started with this one to prove concept
 
 #endif
 
