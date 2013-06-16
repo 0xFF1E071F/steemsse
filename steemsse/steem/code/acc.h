@@ -1,3 +1,9 @@
+#if defined(SS_STRUCTURE_ACC_H)
+
+#include "acc.decla.h"
+
+#else//!defined(SS_STRUCTURE_ACC_H)
+
 #ifdef IN_MAIN
 #define EXT
 #define INIT(s) =s
@@ -242,3 +248,4 @@ EasyStr GetEXEFileName();
 #undef EXT
 #undef INIT
 
+#endif//defined(SS_STRUCTURE_ACC_H)
