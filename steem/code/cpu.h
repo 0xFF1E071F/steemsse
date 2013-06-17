@@ -1,4 +1,4 @@
-#if defined(SS_STRUCTURE_CPU_H)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_CPU_H)
 
 #define EXT extern
 #define INIT(s)

@@ -1,3 +1,4 @@
+#pragma once
 #ifndef ACIA_H
 #define ACIA_H
 /*  This file has been added to clarify and improve ACIA emulation.
@@ -67,7 +68,6 @@ struct ACIA_STRUCT{ // removed _ ..
 };
 
 extern struct ACIA_STRUCT acia[2]; 
-
 
 #ifdef __cplusplus
 }//extern "C"

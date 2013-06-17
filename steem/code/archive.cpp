@@ -9,6 +9,75 @@ of the various unarchiving libraries it can use.
 #pragma message("Included for compilation: archive.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_ARCHIVE_H)
+zipclass zippy; 
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+
+#define LOGSECTION LOGSECTION_INIT
+
+HINSTANCE hUnzip=NULL;
+
+void LoadUnzipDLL()
+{
+  hUnzip=LoadLibrary("unzipd32.dll");
+  enable_zip=(hUnzip!=NULL);
+  if (hUnzip){
+    GetFirstInZip=(int(_stdcall*)(char*,PackStruct*))GetProcAddress(hUnzip,"GetFirstInZip");
+    GetNextInZip=(int(_stdcall*)(PackStruct*))GetProcAddress(hUnzip,"GetNextInZip");
+    CloseZipFile=(void(_stdcall*)(PackStruct*))GetProcAddress(hUnzip,"CloseZipFile");
+    isZip=(BYTE(_stdcall*)(char*))GetProcAddress(hUnzip,"isZip");
+    UnzipFile=(int(_stdcall*)(char*,char*,WORD,long,void*,long))GetProcAddress(hUnzip,"unzipfile");
+
+    if (!(GetFirstInZip && GetNextInZip && CloseZipFile && isZip && UnzipFile)){
+      FreeLibrary(hUnzip);
+      hUnzip=NULL;
+      enable_zip=false;
+    }
+  }//hunzip
+}
+
+
+#ifdef _MSC_VER
+#pragma comment(lib,"../../3rdparty/UnRARDLL/unrar.lib")
+#if defined(WIN32) && defined(SS_DELAY_LOAD_DLL)
+#pragma comment(linker, "/delayload:unrar.dll")
+#endif
+#endif
+#ifdef __BORLANDC__
+#pragma comment(lib,"../../3rdparty/UnRARDLL/bcc/unrar.lib")
+// Borland: delay load DLL in makefile
+#endif
+
+
+void LoadUnrarDLL() {
+
+  try {
+/*  This function is missing in very old versions of UnRAR.dll, so it is safer 
+    to use LoadLibrary and GetProcAddress to access it.
+*/
+    UNRAR_OK=RARGetDllVersion(); // 5 with our unrar.dll
+  }
+  catch(...) {
+    UNRAR_OK=0;
+  }
+  if (UNRAR_OK)
+  {
+      TRACE_LOG("UnRAR.DLL loaded, v%d\n",UNRAR_OK);
+      // prefill structures for all archives
+      ZeroMemory(&zippy.ArchiveData,sizeof(zippy.ArchiveData));  
+      ZeroMemory(&zippy.HeaderData,sizeof(zippy.HeaderData));  
+      zippy.ArchiveData.OpenMode=RAR_OM_EXTRACT;
+  }
+  else
+    TRACE_LOG("Failed to open UnRAR.DLL\n");
+}
+#undef LOGSECTION
+#endif//ss
+
+
+#endif
+
 #define LOGSECTION LOGSECTION_IMAGE_INFO//SS
 
 //---------------------------------------------------------------------------

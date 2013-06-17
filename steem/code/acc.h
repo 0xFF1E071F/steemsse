@@ -1,4 +1,4 @@
-#if defined(SS_STRUCTURE_ACC_H)
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_ACC_H)
 
 #include "acc.decla.h"
 

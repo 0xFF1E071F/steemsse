@@ -1,3 +1,9 @@
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_ARCHIVE_H)
+
+#include "archive.decla.h"
+
+#else
+
 #ifdef UNIX
 #include <unzip.h>
 #endif
@@ -106,3 +112,4 @@ void LoadUnrarDLL() {
 #undef LOGSECTION
 #endif//ss
 
+#endif//#if defined(SS_STRUCTURE_ARCHIVE_H)
