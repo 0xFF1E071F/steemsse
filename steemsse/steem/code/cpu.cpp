@@ -19,33 +19,25 @@ instruction and cpu_routines_init in cpuinit.cpp.
 
 #if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_CPU_H)
 
-// step 3: make sure h is extern, no init
-// "intern", init here in cpp:
-
 #define EXT
 #define INIT(s) =s
 
 m68k_exception ExceptionObject;
 jmp_buf *pJmpBuf=NULL;
-
 EXT BYTE  m68k_peek(MEM_ADDRESS ad);
 EXT WORD  m68k_dpeek(MEM_ADDRESS ad);
 EXT LONG  m68k_lpeek(MEM_ADDRESS ad);
-
-//+TODO don't need those anymore:
+#if !defined(SS_CPU_DIV)
 EXT int m68k_divu_cycles INIT(124),m68k_divs_cycles INIT(140); // +4 for overall time
-
+#endif
 #ifdef DEBUG_BUILD
 #ifndef RELEASE_BUILD
 EXT MEM_ADDRESS pc_rel_stop_on_ref;
 #endif
 #endif
 
-
 #undef EXT
 #undef INIT
-
-// step 2: moving from h into cpp
 
 WORD*lpfetch,*lpfetch_bound;
 bool prefetched_2=false;
@@ -54,7 +46,7 @@ WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 #ifdef ENABLE_LOGFILE
 MEM_ADDRESS debug_mem_write_log_address;
 int debug_mem_write_log_bytes;
-#endif
+#endif//structure
 
 bool cpu_stopped=0;
 bool m68k_do_trace_exception;

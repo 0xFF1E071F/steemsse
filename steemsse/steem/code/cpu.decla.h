@@ -57,7 +57,9 @@ EXT LONG  m68k_lpeek(MEM_ADDRESS ad);
 
 EXT void cpu_routines_init();
 
+#if !defined(SS_CPU_DIV)
 EXT int m68k_divu_cycles INIT(124),m68k_divs_cycles INIT(140); // +4 for overall time
+#endif
 
 #define PC32 ( (pc&0xffffff)|(pc_high_byte) )
 #define FOUR_MEGS 0x400000
