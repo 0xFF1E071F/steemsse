@@ -71,7 +71,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_BETA //title, OSD, plus some testing
 
 #ifdef SS_BETA // beta with all features
-#define SSE_VERSION 351
+#define SSE_VERSION 352
 #define SSE_VERSION_TXT "Beta" 
 #define WINDOW_TITLE "Steem SSE beta"
 #else // next planned release
@@ -874,13 +874,17 @@ problem, multiple struct/class definition not allowed?
 
 #define SS_STRUCTURE_BIG_FORWARD // temp
 
+//#define SS_STRUCTURE_NEW_H_FILES
+
 #define SS_STRUCTURE_DMA_INC_ADDRESS
 //#define SS_STRUCTURE_INFO // just telling files included in modules
 #define SS_STRUCTURE_IOR
 
+#if defined(SS_STRUCTURE_NEW_H_FILES)
 #define SS_STRUCTURE_ACC_H
 #define SS_STRUCTURE_ARCHIVE_H
 #define SS_STRUCTURE_CPU_H  // we started with this one to prove concept
+#endif
 
 #endif
 
