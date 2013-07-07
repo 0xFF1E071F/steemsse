@@ -1,0 +1,16 @@
+Steem SSE uses makefiles with txt extension, because of the way some
+backup tools work.
+
+To build XSteem SSE, enter this in the terminal:
+make -B -fMakefile.txt 3rdparty
+make -B -fMakefile.txt
+
+To build the debug build, enter this:
+make -B -fMakefile_dbg.txt 3rdparty
+make -B -fMakefile_dbg.txt
+
+The 2 step process was already the way for previous Steem versions.
+It is justified by slow building of some 3rd party software.
+
+If you get compilation errors, you should update your configuration based on
+hints given by the compiler.
