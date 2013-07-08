@@ -1381,8 +1381,13 @@ HRESULT SteemDisplay::SaveScreenShot()
     if (AddNumExt){
       int Num=0;
       do{
+#if defined(STEVEN_SEAGAL) && defined(SS_SNAPSHOTS_NUMBER)
+        if (++Num >= 100000) return DDERR_GENERIC;
+        ShotFile=ScreenShotFol+SLASH+FirstWord+"_"+(EasyStr("00000")+Num).Rights(5)+"."+Exts;
+#else
         if (++Num >= 1000) return DDERR_GENERIC;
         ShotFile=ScreenShotFol+SLASH+FirstWord+"_"+(EasyStr("000")+Num).Rights(3)+"."+Exts;
+#endif
       }while (Exists(ShotFile));
     }
   }

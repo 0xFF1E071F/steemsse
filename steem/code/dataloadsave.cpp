@@ -713,7 +713,6 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     DSP_ENABLED=pCSF->GetInt("Sound","Dsp",DSP_ENABLED);
 #endif
 #if defined(SS_OSD_DRIVE_INFO)
-    //OSD_DRIVE_INFO=pCSF->GetInt("Sound","OsdDriveInfo", OSD_DRIVE_INFO);//stupid bug in 3.5.1
     OSD_DRIVE_INFO=pCSF->GetInt("Options","OsdDriveInfo", OSD_DRIVE_INFO);
 #endif
 #if defined(SS_VAR_SCROLLER_DISK_IMAGE)
