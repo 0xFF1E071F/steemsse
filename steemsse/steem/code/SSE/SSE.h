@@ -46,7 +46,7 @@ VC6 is used as IDE, but also Notepad and the free (and discontinued)
 Borland C++ 5.5 compiler, like the original Steem.
 Compatibility with those compilers is a requirement of this build.
 It must also compile in Linux (gcc) for the Unix build XSteem (there's a 
-working build since v3.4.
+working build since v3.4).
 The VC6 build should be linked with the C++ library, don't count on system
 DLL or it will crash in Windows Vista & 7.
 The best build should be the M$ one. They're greedy but they know their 
@@ -1004,6 +1004,8 @@ problem, multiple struct/class definition not allowed?
 #define SS_VID_SCANLINES_INTERPOLATED // using stretch mode!
 #define SS_VID_SCANLINES_INTERPOLATED_MED
 #endif
+
+#define SS_SNAPSHOTS_NUMBER
 
 #if defined(SS_DEBUG) 
 //#define SHOW_DRAW_SPEED //was already in Steem
