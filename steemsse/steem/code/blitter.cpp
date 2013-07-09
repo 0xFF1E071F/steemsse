@@ -8,6 +8,10 @@ DESCRIPTION: Emulation of the STE only blitter chip.
 #pragma message("Included for compilation: blitter.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_BLITTER_H)
+BLITTER_STRUCT Blit;
+#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SS_BLT_TIMING)
 /*  This follows a table giving total execution times.
     Using this or Steem's way seems to give equivalent results.

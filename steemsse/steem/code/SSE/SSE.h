@@ -874,7 +874,7 @@ problem, multiple struct/class definition not allowed?
 
 #define SS_STRUCTURE_BIG_FORWARD // temp
 
-//#define SS_STRUCTURE_NEW_H_FILES
+#define SS_STRUCTURE_NEW_H_FILES
 
 #define SS_STRUCTURE_DMA_INC_ADDRESS
 //#define SS_STRUCTURE_INFO // just telling files included in modules
@@ -883,7 +883,9 @@ problem, multiple struct/class definition not allowed?
 #if defined(SS_STRUCTURE_NEW_H_FILES)
 #define SS_STRUCTURE_ACC_H
 #define SS_STRUCTURE_ARCHIVE_H
+#define SS_STRUCTURE_BLITTER_H
 #define SS_STRUCTURE_CPU_H  // we started with this one to prove concept
+
 #endif
 
 #endif
@@ -1005,7 +1007,7 @@ problem, multiple struct/class definition not allowed?
 #define SS_VID_SCANLINES_INTERPOLATED_MED
 #endif
 
-#define SS_SNAPSHOTS_NUMBER
+#define SS_VID_SCREENSHOTS_NUMBER
 
 #if defined(SS_DEBUG) 
 //#define SHOW_DRAW_SPEED //was already in Steem

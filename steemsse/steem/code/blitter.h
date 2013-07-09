@@ -1328,6 +1328,12 @@ LOP| 0  1  2  3    HOP = Halftone Operation
 
 */
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_BLITTER_H)
+
+#include "blitter.decla.h"
+
+#else//!defined(SS_STRUCTURE_BLITTER_H)
+
 extern "C" void ASMCALL Blitter_Start_Now();
 extern void Blitter_Draw();
 
@@ -1383,3 +1389,4 @@ BYTE Blitter_IO_ReadB(MEM_ADDRESS);
 void Blitter_IO_WriteB(MEM_ADDRESS,BYTE);
 #endif
 
+#endif//!defined(SS_STRUCTURE_BLITTER_H)

@@ -226,6 +226,7 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\acia.h"\
 	"..\..\steem\code\big_forward.h"\
 	"..\..\steem\code\blitter.cpp"\
+	"..\..\steem\code\blitter.decla.h"\
 	"..\..\steem\code\blitter.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\cpu.cpp"\
@@ -465,9 +466,11 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\acc.h"\
 	"..\..\steem\code\acia.h"\
 	"..\..\steem\code\archive.cpp"\
+	"..\..\steem\code\archive.decla.h"\
 	"..\..\steem\code\archive.h"\
 	"..\..\steem\code\associate.cpp"\
 	"..\..\steem\code\big_forward.h"\
+	"..\..\steem\code\blitter.decla.h"\
 	"..\..\steem\code\blitter.h"\
 	"..\..\steem\code\boiler.cpp"\
 	"..\..\steem\code\boiler.h"\
@@ -618,7 +621,15 @@ SOURCE=..\..\steem\code\acia.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\steem\code\archive.decla.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\steem\code\archive.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\blitter.decla.h
 # End Source File
 # Begin Source File
 
