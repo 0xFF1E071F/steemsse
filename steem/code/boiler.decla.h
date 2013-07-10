@@ -1,50 +1,49 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_BOILER_H)
+#pragma once
+#ifndef BOILER_DECLA_H
+#define BOILER_DECLA_H
 
-#include "boiler.decla.h"
+#define EXT extern
+#define INIT(s)
 
-#else//!defined(SS_STRUCTURE_BOILER_H)
+EXT MEM_ADDRESS dpc,old_dpc;
+EXT HWND DWin,HiddenParent;
+EXT HMENU menu,breakpoint_menu,monitor_menu,breakpoint_irq_menu;
+EXT HMENU insp_menu;
+EXT HMENU mem_browser_menu,history_menu,logsection_menu;
+EXT HMENU menu1;
+EXT HMENU boiler_op_menu,shift_screen_menu;
+EXT HWND sr_display,DWin_edit;
+EXT mr_static *lpms_other_sp;
+EXT HWND DWin_trace_button,DWin_trace_over_button,DWin_run_button;
 
-
-MEM_ADDRESS dpc,old_dpc;
-
-HWND DWin=NULL,HiddenParent=NULL;
-HMENU menu,breakpoint_menu,monitor_menu,breakpoint_irq_menu;
-HMENU insp_menu=NULL;
-HMENU mem_browser_menu,history_menu,logsection_menu;
-HMENU menu1;
-HMENU boiler_op_menu,shift_screen_menu;
-HWND sr_display,DWin_edit;
-mr_static *lpms_other_sp;
-HWND DWin_trace_button,DWin_trace_over_button,DWin_run_button;
-
-Str LogViewProg="notepad.exe";
+EXT Str LogViewProg;
 
 void boiler_show_stack_display(int);
-ScrollControlWin DWin_timings_scroller;
-HWND DWin_right_display_combo;
+EXT ScrollControlWin DWin_timings_scroller;
+EXT HWND DWin_right_display_combo;
 
-WNDPROC Old_sr_display_WndProc;
+EXT WNDPROC Old_sr_display_WndProc;
 
-mem_browser m_b_mem_disa,m_b_stack;
+EXT mem_browser m_b_mem_disa,m_b_stack;
 
 #define SIMULTRACE_CHOOSE ((HWND)(0xffffffff))
-HWND simultrace=NULL;
+EXT HWND simultrace;
 
 void debug_load_file_to_address(HWND,MEM_ADDRESS);
 
 Str debug_parse_disa_for_display(Str);
-bool debug_monospace_disa=0,debug_uppercase_disa=0;
+EXT bool debug_monospace_disa,debug_uppercase_disa;
 
-bool d2_trace=false;
+EXT bool d2_trace;
 
 /////////////////////////////// insp menu ////////////////////////////////////
-int insp_menu_subject_type;
-void* insp_menu_subject;
-long insp_menu_long[3];
-char insp_menu_long_name[3][100];
-int insp_menu_long_bytes[3];
-void insp_menu_setup();
-int insp_menu_col,insp_menu_row;
+EXT int insp_menu_subject_type;
+EXT void* insp_menu_subject;
+EXT long insp_menu_long[3];
+EXT char insp_menu_long_name[3][100];
+EXT int insp_menu_long_bytes[3];
+EXT void insp_menu_setup();
+EXT int insp_menu_col,insp_menu_row;
 
 /////////////////////////////// breakpoints ////////////////////////////////////
 typedef struct{
@@ -63,7 +62,7 @@ void logfile_wipe();
 void debug_set_bk(MEM_ADDRESS,bool);
 void debug_set_mon(MEM_ADDRESS,bool,WORD);
 
-DynamicArray<DEBUG_ADDRESS> debug_ads;
+EXT DynamicArray<DEBUG_ADDRESS> debug_ads;
 
 /////////////////////////////// logfile  ////////////////////////////////////
 
@@ -71,9 +70,11 @@ DynamicArray<DEBUG_ADDRESS> debug_ads;
 void update_register_display(bool);
 void disa_to_file(FILE*f,MEM_ADDRESS dstart,int dlen,bool);
 //---------------------------------------------------------------------------
-THistoryList HistList;
+EXT THistoryList HistList;
 
 void debug_plugin_load(),debug_plugin_free();
 
+#undef EXT
+#undef INIT
 
-#endif//SS_STRUCTURE_BOILER_H
+#endif//BOILER_DECLA_H
