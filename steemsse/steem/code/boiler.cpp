@@ -10,6 +10,56 @@ build and the basis of the debug GUI.
 #pragma message("Included for compilation: boiler.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_BOILER_H)
+
+MEM_ADDRESS dpc,old_dpc;
+HWND DWin=NULL,HiddenParent=NULL;
+HMENU menu,breakpoint_menu,monitor_menu,breakpoint_irq_menu;
+HMENU insp_menu=NULL;
+HMENU mem_browser_menu,history_menu,logsection_menu;
+HMENU menu1;
+HMENU boiler_op_menu,shift_screen_menu;
+HWND sr_display,DWin_edit;
+mr_static *lpms_other_sp;
+HWND DWin_trace_button,DWin_trace_over_button,DWin_run_button;
+
+Str LogViewProg="notepad.exe";
+
+void boiler_show_stack_display(int);
+ScrollControlWin DWin_timings_scroller;
+HWND DWin_right_display_combo;
+
+WNDPROC Old_sr_display_WndProc;
+
+mem_browser m_b_mem_disa,m_b_stack;
+
+HWND simultrace=NULL;
+
+bool debug_monospace_disa=0,debug_uppercase_disa=0;
+
+bool d2_trace=false;
+
+/////////////////////////////// insp menu ////////////////////////////////////
+int insp_menu_subject_type;
+void* insp_menu_subject;
+long insp_menu_long[3];
+char insp_menu_long_name[3][100];
+int insp_menu_long_bytes[3];
+void insp_menu_setup();
+int insp_menu_col,insp_menu_row;
+
+/////////////////////////////// breakpoints ////////////////////////////////////
+
+DynamicArray<DEBUG_ADDRESS> debug_ads;
+
+/////////////////////////////// logfile  ////////////////////////////////////
+
+//////////////////////////////// routines //////////////////////////////////
+//---------------------------------------------------------------------------
+THistoryList HistList;
+
+#endif
+
 /* SS
   Mods in the debug build (Steem Boiler):
   - not sure CPU mods are reckoned but it seems so (TODO)
