@@ -480,6 +480,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\cpu.decla.h"\
 	"..\..\steem\code\cpu.h"\
 	"..\..\steem\code\d2.cpp"\
+	"..\..\steem\code\d2.decla.h"\
 	"..\..\steem\code\d2.h"\
 	"..\..\steem\code\dataloadsave.cpp"\
 	"..\..\steem\code\dataloadsave.h"\
@@ -655,6 +656,10 @@ SOURCE=..\..\steem\code\cpu.decla.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\cpu.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\d2.decla.h
 # End Source File
 # Begin Source File
 

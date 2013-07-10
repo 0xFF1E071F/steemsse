@@ -885,7 +885,8 @@ problem, multiple struct/class definition not allowed?
 #define SS_STRUCTURE_ARCHIVE_H
 #define SS_STRUCTURE_BLITTER_H
 #define SS_STRUCTURE_BOILER_H
-#define SS_STRUCTURE_CPU_H  // we started with this one to prove concept
+#define SS_STRUCTURE_CPU_H
+#define SS_STRUCTURE_D2_H
 
 #endif
 

@@ -1,8 +1,10 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_D2_H)
+#pragma once
+#ifndef D2_DECLA_H
+#define D2_DECLA_H
 
-#include "d2.decla.h"
+#define EXT extern
+#define INIT(s)
 
-#else//!defined(SS_STRUCTURE_D2_H)
 
 #define D2_PC_RELATIVE_PC dpc
 
@@ -58,20 +60,24 @@
 #define D2_aM EasyStr("a")+("0\0001\0002\0003\0004\0005\0006\0007\000"+2*PARAM_M)
 #define D2_BRACKETS_aN EasyStr("(a")+("0\0001\0002\0003\0004\0005\0006\0007\000"+2*PARAM_N)+")"
 #define D2_BRACKETS_aM EasyStr("(a")+("0\0001\0002\0003\0004\0005\0006\0007\000"+2*PARAM_M)+")"
+
 #define D2_IRIWO d2_iriwo()
 #define D2_IRIWO_N d2_iriwo_N()
 #define D2_IRIWO_PC d2_iriwo_pc()
 
 EasyStr disa_d2(MEM_ADDRESS);
 
-LONG d2_peekvalid;
+EXT LONG d2_peekvalid;
 
 BYTE d2_peek(MEM_ADDRESS ad);
 WORD d2_dpeek(MEM_ADDRESS ad);
 LONG d2_lpeek(MEM_ADDRESS ad);
 
-EasyStr d2_src,d2_dest,d2_command,d2_pc_rel_ex;
-WORD d2_ap;
-int d2_n_movem_regs;
+EXT EasyStr d2_src,d2_dest,d2_command,d2_pc_rel_ex;
+EXT WORD d2_ap;
+EXT int d2_n_movem_regs;
 
-#endif//SS_STRUCTURE_D2_H
+#undef EXT
+#undef INIT
+
+#endif//D2_DECLA_H
