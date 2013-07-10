@@ -8,12 +8,12 @@ CFG=Steem - Win32 Boiler Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
-!MESSAGE NMAKE /f "vc.mak".
+!MESSAGE NMAKE /f "SteemVC6.mak".
 !MESSAGE 
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "vc.mak" CFG="Steem - Win32 Boiler Debug"
+!MESSAGE NMAKE /f "SteemVC6.mak" CFG="Steem - Win32 Boiler Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
@@ -473,6 +473,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\blitter.decla.h"\
 	"..\..\steem\code\blitter.h"\
 	"..\..\steem\code\boiler.cpp"\
+	"..\..\steem\code\boiler.decla.h"\
 	"..\..\steem\code\boiler.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\controls.cpp"\
@@ -634,6 +635,10 @@ SOURCE=..\..\steem\code\blitter.decla.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\blitter.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\boiler.decla.h
 # End Source File
 # Begin Source File
 
