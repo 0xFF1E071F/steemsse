@@ -13,6 +13,13 @@ d2_routines_init to initialise the debugger.
 #pragma message("Included for compilation: d2.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_D2_H)
+LONG d2_peekvalid;
+EasyStr d2_src,d2_dest,d2_command,d2_pc_rel_ex;
+WORD d2_ap;
+int d2_n_movem_regs;
+#endif
+
 void (*d2_high_nibble_jump_table[16])();
 void (*d2_jump_line_0[64])();
 void (*d2_jump_line_4[64])();
