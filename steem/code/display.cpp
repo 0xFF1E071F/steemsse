@@ -9,6 +9,48 @@ This contains the DirectDraw code used by Windows Steem for output.
 #pragma message("Included for compilation: display.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DISPLAY_H)
+#define EXT
+#define INIT(s) =s
+
+extern "C"
+{
+EXT int BytesPerPixel INIT(2),rgb32_bluestart_bit INIT(0);
+EXT bool rgb555 INIT(0);
+EXT int monitor_width,monitor_height; //true size of monitor, for LAPTOP mode.
+}
+
+int HzIdxToHz[NUM_HZ]={0,50,60,MONO_HZ,100,120};
+
+EXT SteemDisplay Disp;
+
+WIN_ONLY( bool TryDD=true; )
+#ifdef NO_SHM
+UNIX_ONLY( bool TrySHM=false; )
+#else
+UNIX_ONLY( bool TrySHM=true; )
+#endif
+
+#ifdef WIN32
+//#include "SteemFreeImage.h"
+// definition part of SteemFreeImage.h
+
+FI_INITPROC FreeImage_Initialise;
+FI_DEINITPROC FreeImage_DeInitialise;
+FI_CONVFROMRAWPROC FreeImage_ConvertFromRawBits;
+FI_SAVEPROC FreeImage_Save;
+FI_FREEPROC FreeImage_Free;
+FI_SUPPORTBPPPROC FreeImage_FIFSupportsExportBPP;
+
+#endif
+  
+
+
+#undef EXT
+#undef INIT
+#endif
+
+
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI) 
 #if !defined(SS_STRUCTURE_BIG_FORWARD)
 extern int shifter_freq_at_start_of_vbl; //forward

@@ -1,3 +1,6 @@
+#if !(defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DISPLAY_H))
+
+
 #define FI_ENUM(x)      enum x
 #define FI_STRUCT(x)	struct x
 
@@ -84,3 +87,4 @@ FI_SAVEPROC FreeImage_Save;
 FI_FREEPROC FreeImage_Free;
 FI_SUPPORTBPPPROC FreeImage_FIFSupportsExportBPP;
 
+#endif// !(defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DISPLAY_H))
