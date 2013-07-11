@@ -10,6 +10,17 @@ as changing disk images and determining what files are disks.
 #pragma message("Included for compilation: diskman.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DISKMAN_H)
+
+#ifdef WIN32
+void TDiskManager::RefreshDiskView(EasyStr SelPath,bool EditLabel,EasyStr SelLinkPath,int iItem)
+{
+  SetDir(DisksFol,0,SelPath,EditLabel,SelLinkPath,iItem);
+}
+#endif
+
+#endif
+
 #if defined(STEVEN_SEAGAL) && USE_PASTI && defined(SS_PASTI_ON_WARNING)
 char sDiskManagerWindowCaption[]="Disk Manager (Pasti On)"; // and a nice global
 #endif

@@ -1,23 +1,14 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DISKMAN_H)
-
-#include "diskman.decla.h"
-
-#else//!defined(SS_STRUCTURE_DISKMAN_H)
-
+#pragma once
+#ifndef DISKMAN_DECLA_H
+#define DISKMAN_DECLA_H
 
 #define DISK_UNCOMPRESSED 1
 #define DISK_COMPRESSED 2
 #define DISK_PASTI 3
 
 #define FileIsDisk(s) ExtensionIsDisk(strrchr(s,'.'))
-#ifdef IN_MAIN
-#define EXT
-#define INIT(s) =s
-#else
-#define EXT extern
-#define INIT(s)
-#endif
-int ExtensionIsDisk(char*,bool returnPastiDisksOnlyWhenPastiOn INIT(true));
+
+int ExtensionIsDisk(char*,bool returnPastiDisksOnlyWhenPastiOn=true);
 
 typedef struct{
   EasyStr Name,Path,LinkPath;
@@ -211,11 +202,8 @@ public:
   int DoubleClickAction;
 };
 
-#ifdef WIN32  // SS why here?
-void TDiskManager::RefreshDiskView(EasyStr SelPath,bool EditLabel,EasyStr SelLinkPath,int iItem)
-{
-  SetDir(DisksFol,0,SelPath,EditLabel,SelLinkPath,iItem);
-}
+#ifdef WIN32
+void TDiskManager::RefreshDiskView(EasyStr SelPath,bool EditLabel,EasyStr SelLinkPath,int iItem);
 #endif
 
-#endif//SS_STRUCTURE_DISKMAN_H
+#endif//DISKMAN_DECLA_H
