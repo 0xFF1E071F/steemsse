@@ -890,6 +890,7 @@ problem, multiple struct/class definition not allowed?
 #define SS_STRUCTURE_DATALOADSAVE_H
 #define SS_STRUCTURE_DEBUGEMU_H
 #define SS_STRUCTURE_DIRID_H
+#define SS_STRUCTURE_DISKMAN_H
 //...
 #endif
 
