@@ -10,6 +10,10 @@ can be mapped to perform a function.
 #pragma message("Included for compilation: dir_id.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DIRID_H)
+char *KeyboardButtonName[256]={NULL};
+#endif
+
 //---------------------------------------------------------------------------
 bool IsDirIDPressed(int ID,int DeadZonePercent,bool CheckDisable,bool DiagonalPOV)
 {
