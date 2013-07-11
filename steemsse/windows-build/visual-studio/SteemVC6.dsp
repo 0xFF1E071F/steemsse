@@ -236,6 +236,7 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\debug_emu.cpp"\
 	"..\..\steem\code\debug_emu.decla.h"\
 	"..\..\steem\code\debug_emu.h"\
+	"..\..\steem\code\display.decla.h"\
 	"..\..\steem\code\display.h"\
 	"..\..\steem\code\draw.cpp"\
 	"..\..\steem\code\draw.h"\
@@ -497,6 +498,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\diskman_diags.cpp"\
 	"..\..\steem\code\diskman_drag.cpp"\
 	"..\..\steem\code\display.cpp"\
+	"..\..\steem\code\display.decla.h"\
 	"..\..\steem\code\display.h"\
 	"..\..\steem\code\draw.h"\
 	"..\..\steem\code\dwin_edit.cpp"\
@@ -701,6 +703,10 @@ SOURCE=..\..\steem\code\diskman.decla.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\diskman.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\display.decla.h
 # End Source File
 # Begin Source File
 

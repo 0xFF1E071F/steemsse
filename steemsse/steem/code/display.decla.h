@@ -1,25 +1,18 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DISPLAY_H)
+#pragma once
+#ifndef DISPLAY_DECLA_H
+#define DISPLAY_DECLA_H
 
-#include "display.decla.h"
-
-#else//!defined(SS_STRUCTURE_DISPLAY_H)
-
-
-
-#ifdef IN_EMU
-#define EXT
-#define INIT(s) =s
-#else
 #define EXT extern
 #define INIT(s)
-#endif
-//---------------------------------------------------------------------------
 
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
 //http://wiki.multimedia.cx/index.php?title=Neochrome
+//todo move that in 3rd party...
+#ifdef WIN32
 #define uint8_t BYTE
 #define uint16_t WORD
+#endif
 struct neochrome_file{
  uint16_t flags;                      /* always 0 */
  uint16_t resolution;                 /* 0 = low (320x200x16), 1 = medium (640x200x4), 2 = high (640x400x2) */
@@ -35,8 +28,10 @@ struct neochrome_file{
  uint16_t reserved[33];
  uint16_t data[16000];
 } ;
+#ifdef WIN32
 #undef uint8_t
 #undef uint16_t
+#endif
 #endif
 
 extern void draw_init_resdependent();
@@ -60,11 +55,8 @@ EXT int monitor_width,monitor_height; //true size of monitor, for LAPTOP mode.
 #define NUM_HZ 6
 #define DISP_MAX_FREQ_LEEWAY 5
 
-#ifdef IN_EMU
-int HzIdxToHz[NUM_HZ]={0,50,60,MONO_HZ,100,120};
-#else
 EXT int HzIdxToHz[NUM_HZ];
-#endif
+
 //---------------------------------------------------------------------------
 class SteemDisplay
 {
@@ -189,35 +181,114 @@ public:
 
 };
 
-#ifdef IN_MAIN
-SteemDisplay Disp;
-#else
-extern SteemDisplay Disp;
-#endif
-//---------------------------------------------------------------------------
-#ifdef IN_MAIN
 
-WIN_ONLY( bool TryDD=true; )
+EXT SteemDisplay Disp;
+
+
+WIN_ONLY( EXT bool TryDD; )
 #ifdef NO_SHM
-UNIX_ONLY( bool TrySHM=false; )
+UNIX_ONLY( EXT bool TrySHM; )
 #else
-UNIX_ONLY( bool TrySHM=true; )
+UNIX_ONLY( EXT bool TrySHM; )
 #endif
 
 #define IF_TOCLIPBOARD 0xfff0
 
 #ifdef WIN32
-#include "SteemFreeImage.h"
+//#include "SteemFreeImage.h"
+
+// declaration part of SteemFreeImage.h
+
+#define FI_ENUM(x)      enum x
+#define FI_STRUCT(x)	struct x
+
+FI_STRUCT (FIBITMAP) { void *data; };
+
+FI_ENUM(FREE_IMAGE_FORMAT) {
+	FIF_UNKNOWN = -1,
+	FIF_BMP = 0,
+	FIF_ICO,
+	FIF_JPEG,
+	FIF_JNG,
+	FIF_KOALA,
+	FIF_LBM,
+	FIF_MNG,
+	FIF_PBM,
+	FIF_PBMRAW,
+	FIF_PCD,
+	FIF_PCX,
+	FIF_PGM,
+	FIF_PGMRAW,
+	FIF_PNG,
+	FIF_PPM,
+	FIF_PPMRAW,
+	FIF_RAS,
+	FIF_TARGA,
+	FIF_TIFF,
+	FIF_WBMP,
+	FIF_PSD,
+	FIF_CUT,
+	FIF_IFF = FIF_LBM,
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+  IF_NEO,
+#endif
+};
+
+#define BMP_DEFAULT         0
+#define BMP_SAVE_RLE        1
+#define CUT_DEFAULT         0
+#define ICO_DEFAULT         0
+#define ICO_FIRST           0
+#define ICO_SECOND          0
+#define ICO_THIRD           0
+#define IFF_DEFAULT         0
+#define JPEG_DEFAULT        0
+#define JPEG_FAST           1
+#define JPEG_ACCURATE       2
+#define JPEG_QUALITYSUPERB  0x80
+#define JPEG_QUALITYGOOD    0x100
+#define JPEG_QUALITYNORMAL  0x200
+#define JPEG_QUALITYAVERAGE 0x400
+#define JPEG_QUALITYBAD     0x800
+#define KOALA_DEFAULT       0
+#define LBM_DEFAULT         0
+#define MNG_DEFAULT         0
+#define PCD_DEFAULT         0
+#define PCD_BASE            1
+#define PCD_BASEDIV4        2
+#define PCD_BASEDIV16       3
+#define PCX_DEFAULT         0
+#define PNG_DEFAULT         0
+#define PNG_IGNOREGAMMA		  1		// avoid gamma correction
+#define PNM_DEFAULT         0
+#define PNM_SAVE_RAW        0       // If set the writer saves in RAW format (i.e. P4, P5 or P6)
+#define PNM_SAVE_ASCII      1       // If set the writer saves in ASCII format (i.e. P1, P2 or P3)
+#define RAS_DEFAULT         0
+#define TARGA_DEFAULT       0
+#define TARGA_LOAD_RGB888   1       // If set the loader converts RGB555 and ARGB8888 -> RGB888.
+#define TARGA_LOAD_RGB555   2       // This flag is obsolete
+#define TIFF_DEFAULT        0
+#define WBMP_DEFAULT        0
+#define PSD_DEFAULT         0
+
+typedef void (__stdcall *FI_INITPROC)(BOOL);
+typedef void (__stdcall *FI_DEINITPROC)();
+typedef FIBITMAP* (__stdcall *FI_CONVFROMRAWPROC)(BYTE*,int,int,int,UINT,UINT,UINT,UINT,BOOL);
+typedef BOOL (__stdcall *FI_SAVEPROC)(FREE_IMAGE_FORMAT,FIBITMAP*,const char *,int);
+typedef void (__stdcall *FI_FREEPROC)(FIBITMAP*);
+typedef BOOL (__stdcall *FI_SUPPORTBPPPROC)(FREE_IMAGE_FORMAT,int);
+
+
 
 SET_GUID(CLSID_DirectDraw,			0xD7B70EE0,0x4340,0x11CF,0xB0,0x63,0x00,0x20,0xAF,0xC2,0xCD,0x35 );
 SET_GUID(IID_IDirectDraw,			0x6C14DB80,0xA733,0x11CE,0xA5,0x21,0x00,0x20,0xAF,0x0B,0xE5,0x60 );
 SET_GUID(IID_IDirectDraw2,                  0xB3A6F3E0,0x2B43,0x11CF,0xA2,0xDE,0x00,0xAA,0x00,0xB9,0x33,0x56 );
 
 #endif
-#endif
+
+
 
 #undef EXT
 #undef INIT
 
-
-#endif//SS_STRUCTURE_DISPLAY_H
+#endif//DISPLAY_DECLA_H
