@@ -1,11 +1,6 @@
-
-
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DIRID_H)
-
-#include "dir_id.decla.h"
-
-#else//!SS_STRUCTURE_DIRID_H
-
+#pragma once
+#ifndef DIRID_DECLA_H
+#define DIRID_DECLA_H
 
 
 //---------------------------------------------------------------------------
@@ -24,7 +19,7 @@ LRESULT __stdcall ButtonPickerWndProc(HWND,UINT,WPARAM,LPARAM);
 
 int ConvertDirID(int,int);
 //---------------------------------------------------------------------------
-char *KeyboardButtonName[256]={NULL};
+extern char *KeyboardButtonName[256];
 
 #ifdef WIN32
 #define BLANK_DIRID(i) (i==0 || HIBYTE(i)==0xff)
@@ -34,4 +29,5 @@ char *KeyboardButtonName[256]={NULL};
 #define NOT_BLANK_DIRID(i) (HIBYTE(i)!=0xff)
 #endif
 
-#endif//#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DIRID_H)
+
+#endif//DIRID_DECLA_H
