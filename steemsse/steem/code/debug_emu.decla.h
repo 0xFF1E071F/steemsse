@@ -1,24 +1,16 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DEBUGEMU_H)
+#pragma once
+#ifndef DEBUGEMU_DECLA_H
+#define DEBUGEMU_DECLA_H
 
-#include "debug_emu.decla.h"
+#define EXT extern
+#define INIT(s)
 
-#else//!SS_STRUCTURE_DEBUGEMU_H
-
-#ifdef IN_EMU
-#define EXT
-#define INIT(s) =s
 extern EasyStr disa_d2(MEM_ADDRESS);
 void breakpoint_check();
 extern int debug_get_ad_mode(MEM_ADDRESS);
 extern WORD debug_get_ad_mask(MEM_ADDRESS,bool);
-#else
-#define EXT extern
-#define INIT(s)
-#ifdef IN_MAIN
 int debug_get_ad_mode(MEM_ADDRESS);
 WORD debug_get_ad_mask(MEM_ADDRESS,bool);
-#endif
-#endif
 
 EXT bool debug_in_trace INIT(0),debug_wipe_log_on_reset;
 EXT bool redraw_on_stop INIT(0),redraw_after_trace INIT(0);
@@ -145,11 +137,7 @@ EXT int monitor_mode INIT(2),breakpoint_mode INIT(2);
 #define BREAK_IRQ_TRAP_IDX 20
 #define NUM_BREAK_IRQS 21
 
-#ifdef IN_EMU
-bool break_on_irq[NUM_BREAK_IRQS]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-#else
 extern bool break_on_irq[NUM_BREAK_IRQS];
-#endif
 
 #define HISTORY_SIZE 1000
 #define HIST_MENU_SIZE 20
@@ -161,7 +149,6 @@ EXT BYTE debug_send_alt_keys INIT(0),debug_send_alt_keys_vbl_countdown INIT(0);
 EXT int __stdcall debug_plugin_read_mem(DWORD,BYTE*,int);
 EXT int __stdcall debug_plugin_write_mem(DWORD,BYTE*,int);
 
-#ifdef IN_MAIN
 typedef void __stdcall DEBUGPLUGIN_INITPROC(void**,char*);
 typedef void __stdcall DEBUGPLUGIN_ACTIVATEPROC(int);
 typedef void __stdcall DEBUGPLUGIN_CLOSEPROC();
@@ -174,12 +161,11 @@ typedef struct{
   char Menu[512];
 }DEBUGPLUGININFO;
 
-void *debug_plugin_routines[]={(void*)2,(void*)debug_plugin_read_mem,(void*)debug_plugin_write_mem};
-DynamicArray<DEBUGPLUGININFO> debug_plugins;
-#endif
+extern void *debug_plugin_routines[];
+extern DynamicArray<DEBUGPLUGININFO> debug_plugins;
 
 #undef EXT
 #undef INIT
 //---------------------------------------------------------------------------
 
-#endif//!SS_STRUCTURE_DEBUGEMU_H
+#endif// DEBUGEMU_DECLA_H

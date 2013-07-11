@@ -234,6 +234,7 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\cpu.h"\
 	"..\..\steem\code\cpuinit.cpp"\
 	"..\..\steem\code\debug_emu.cpp"\
+	"..\..\steem\code\debug_emu.decla.h"\
 	"..\..\steem\code\debug_emu.h"\
 	"..\..\steem\code\display.h"\
 	"..\..\steem\code\draw.cpp"\
@@ -485,6 +486,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\dataloadsave.cpp"\
 	"..\..\steem\code\dataloadsave.decla.h"\
 	"..\..\steem\code\dataloadsave.h"\
+	"..\..\steem\code\debug_emu.decla.h"\
 	"..\..\steem\code\debug_emu.h"\
 	"..\..\steem\code\dir_id.cpp"\
 	"..\..\steem\code\dir_id.h"\
@@ -673,6 +675,10 @@ SOURCE=..\..\steem\code\dataloadsave.decla.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\dataloadsave.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\debug_emu.decla.h
 # End Source File
 # Begin Source File
 

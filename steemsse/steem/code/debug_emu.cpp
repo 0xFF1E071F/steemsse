@@ -8,6 +8,49 @@ DESCRIPTION: General low-level debugging functions.
 #pragma message("Included for compilation: debug_emu.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DEBUGEMU_H)
+#define EXT
+#define INIT(s) =s
+
+EXT bool debug_in_trace INIT(0),debug_wipe_log_on_reset;
+EXT bool redraw_on_stop INIT(0),redraw_after_trace INIT(0);
+EXT COLORREF debug_gun_pos_col INIT( RGB(255,0,0) );
+EXT int crash_notification INIT(CRASH_NOTIFICATION_BOMBS_DISPLAYED);
+EXT bool stop_on_blitter_flag INIT(false);
+EXT bool stop_on_ipl_7 INIT(false);
+EXT int stop_on_user_change INIT(0);
+EXT int stop_on_next_program_run INIT(0);
+EXT bool debug_first_instruction INIT(0);
+EXT Str runstate_why_stop;
+EXT DWORD debug_cycles_since_VBL,debug_cycles_since_HBL;
+EXT MEM_ADDRESS debug_VAP;
+EXT int debug_time_to_timer_timeout[4];
+EXT int debug_cycle_colours INIT(0);
+EXT int debug_screen_shift INIT(0);
+EXT int debug_num_bk INIT(0),debug_num_mon_reads INIT(0),debug_num_mon_writes INIT(0);
+EXT int debug_num_mon_reads_io INIT(0),debug_num_mon_writes_io INIT(0);
+
+EXT MEM_ADDRESS debug_bk_ad[MAX_BREAKPOINTS],debug_mon_read_ad[MAX_BREAKPOINTS],debug_mon_write_ad[MAX_BREAKPOINTS];
+EXT MEM_ADDRESS debug_mon_read_ad_io[MAX_BREAKPOINTS],debug_mon_write_ad_io[MAX_BREAKPOINTS];
+EXT WORD debug_mon_read_mask[MAX_BREAKPOINTS],debug_mon_write_mask[MAX_BREAKPOINTS];
+EXT WORD debug_mon_read_mask_io[MAX_BREAKPOINTS],debug_mon_write_mask_io[MAX_BREAKPOINTS];
+//---------------------------------------------------------------------------
+EXT MEM_ADDRESS trace_over_breakpoint INIT(0xffffffff);
+EXT int debug_run_until INIT(DRU_OFF),debug_run_until_val;
+
+EXT int monitor_mode INIT(2),breakpoint_mode INIT(2);
+bool break_on_irq[NUM_BREAK_IRQS]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+EXT MEM_ADDRESS pc_history[HISTORY_SIZE];
+EXT int pc_history_idx INIT(0);
+EXT BYTE debug_send_alt_keys INIT(0),debug_send_alt_keys_vbl_countdown INIT(0);
+void *debug_plugin_routines[]={(void*)2,(void*)debug_plugin_read_mem,(void*)debug_plugin_write_mem};
+DynamicArray<DEBUGPLUGININFO> debug_plugins;
+
+
+#undef EXT
+#undef INIT
+#endif
+
 //---------------------------------------------------------------------------
 // This is for if the emu is half way though the screen, it should be called
 // immediately after draw_begin to fix draw_dest_ad
