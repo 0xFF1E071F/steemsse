@@ -1,3 +1,9 @@
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DATALOADSAVE_H)
+
+#include "dataloadsave.decla.h"
+
+#else//!SS_STRUCTURE_DATALOADSAVE_H
+
 #define SEC(n) if (SecDisabled[int(n)]==0)
 
 #ifndef ONEGAME
@@ -65,3 +71,5 @@ Str ProfileSectionGetStrFromID(int ID)
   }
   return "";
 }
+
+#endif

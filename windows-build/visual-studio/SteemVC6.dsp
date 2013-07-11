@@ -483,6 +483,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\d2.decla.h"\
 	"..\..\steem\code\d2.h"\
 	"..\..\steem\code\dataloadsave.cpp"\
+	"..\..\steem\code\dataloadsave.decla.h"\
 	"..\..\steem\code\dataloadsave.h"\
 	"..\..\steem\code\debug_emu.h"\
 	"..\..\steem\code\dir_id.cpp"\
@@ -664,6 +665,10 @@ SOURCE=..\..\steem\code\d2.decla.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\d2.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\dataloadsave.decla.h
 # End Source File
 # Begin Source File
 
@@ -1263,7 +1268,6 @@ DEP_CPP_6301_=\
 	"..\..\3rdparty\6301\timer.h"\
 	"..\..\3rdparty\6301\tty.c"\
 	"..\..\3rdparty\avi\AviFile.h"\
-	"..\..\include\easystr.h"\
 	"..\..\steem\code\acia.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\steem\code\SSE\SSE6301.h"\
@@ -1726,7 +1730,6 @@ SOURCE=..\..\3rdparty\caps\CAPSImg.lib
 SOURCE=..\..\3rdparty\avi\AviFile.cpp
 DEP_CPP_AVIFI=\
 	"..\..\3rdparty\avi\AviFile.h"\
-	"..\..\include\easystr.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
@@ -4653,7 +4656,6 @@ SOURCE=..\..\include\wordwrapper.h
 SOURCE=..\..\steem\code\SSE\SSE.cpp
 DEP_CPP_SSE_C=\
 	"..\..\3rdparty\avi\AviFile.h"\
-	"..\..\include\easystr.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
@@ -4822,7 +4824,6 @@ SOURCE=..\..\steem\code\SSE\SSEM68000.h
 SOURCE=..\..\steem\code\SSE\SSEMMU.cpp
 DEP_CPP_SSEMM=\
 	"..\..\3rdparty\avi\AviFile.h"\
-	"..\..\include\easystr.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
 	"..\..\steem\code\SSE\SSEMMU.h"\
@@ -4839,7 +4840,6 @@ SOURCE=..\..\steem\code\SSE\SSEMMU.h
 SOURCE=..\..\steem\code\SSE\SSEOption.cpp
 DEP_CPP_SSEOP=\
 	"..\..\3rdparty\avi\AviFile.h"\
-	"..\..\include\easystr.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\

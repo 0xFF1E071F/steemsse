@@ -9,6 +9,32 @@ a lot of them) to and from the ini file.
 #pragma message("Included for compilation: dataloadsave.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DATALOADSAVE_H)
+ProfileSectionData ProfileSection[20]=
+      {{"Machine and TOS",PSEC_MACHINETOS},{"Ports and MIDI",PSEC_PORTS},
+       {"General",PSEC_GENERAL},{"Display, Fullscreen, Brightness and Contrast",PSEC_DISPFULL},
+       {"On Screen Display",PSEC_OSD},{"Steem Window Position and Size",PSEC_POSSIZE},
+       {"Disk Emulation",PSEC_DISKEMU},{"Disk Manager",PSEC_DISKGUI},
+       {"Hard Drives",PSEC_HARDDRIVES},{"Joysticks",PSEC_JOY},
+#ifdef UNIX
+       {"PC Joysticks",PSEC_PCJOY},
+#endif
+       {"Sound",PSEC_SOUND},{"Shortcuts",PSEC_CUT},{"Macros",PSEC_MACRO},
+       {"Patches",PSEC_PATCH},{"Startup",PSEC_STARTUP},
+       {"Auto Update and File Associations",PSEC_AUTOUP},
+       {"Memory Snapshots",PSEC_SNAP},{"Paste Delay",PSEC_PASTE},
+       {NULL,-1}};
+
+Str ProfileSectionGetStrFromID(int ID)
+{
+  for (int i=0;;i++){
+    if (ProfileSection[i].Name==NULL) break;
+    if (ProfileSection[i].ID==ID) return ProfileSection[i].Name;
+  }
+  return "";
+}
+#endif
+
 //---------------------------------------------------------------------------
 void LoadAllDialogData(bool FirstLoad,Str INIFile,bool *SecDisabled,GoodConfigStoreFile *pCSF)
 {
