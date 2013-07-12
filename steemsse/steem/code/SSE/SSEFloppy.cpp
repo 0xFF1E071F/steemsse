@@ -888,6 +888,9 @@ void TSF314::NextID(BYTE &Id,WORD &nHbls) {
     used by ProCopy. Since it exists, it is also used for 'Verify'.
 */
   Id=0;
+  nHbls=0;
+  if(FloppyDrive[Id].Empty())
+    return;
   WORD BytesToRun;
   WORD ByteOfNextId=BytePositionOfFirstId();//default
   WORD BytePositionOfLastId=ByteOfNextId+(nSectors()-1)*RecordLength();
