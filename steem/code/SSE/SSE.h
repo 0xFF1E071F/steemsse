@@ -222,11 +222,11 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #if defined(SS_CARTRIDGE)
 
-//todo avoid crash
 #define SS_CARTRIDGE_64KB_OK
 #define SS_CARTRIDGE_DIAGNOSTIC
 #define SS_CARTRIDGE_NO_CRASH_ON_WRONG_FILE
 #define SS_CARTRIDGE_NO_EXTRA_BYTES_OK
+
 #endif
 
 
@@ -655,9 +655,10 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #if defined(SS_MMU)
 
-//#define SS_MMU_NO_CONFUSION //  I still don't know what was the use (TESTING)
-// found one use! Diagnostic cartridge...
+//#define SS_MMU_NO_CONFUSION // Diagnostic cartridge: don't define
 #define SS_MMU_WAKE_UP
+#define SS_MMU_WRITE // programs in RAM may write in the MMU
+
 #if defined(SS_MMU_WAKE_UP)
 #if defined(SS_CPU)
 //#define SS_MMU_WAIT_STATES // extreme, replaces rounding to 4, TODO
@@ -675,7 +676,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 //#define SS_MMU_WAKE_UP_STE_STATE2 // STE in same state2 as STF (no)
 //#define SS_MMU_WAKE_UP_WRITE_SDP
 #endif// SS_MMU_WAKE_UP
-#define SS_MMU_WRITE // programs in RAM may write in the MMU
+
 
 #endif
 
@@ -765,6 +766,8 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SHIFTER_PALETTE_BYTE_CHANGE 
 #define SS_SHIFTER_PALETTE_TIMING
 #define SS_SHIFTER_STE_LEFT_OFF // 224 byte scanline
+#define SS_SHIFTER_STE_LEFT_OFF_SHIFT // for Riverside
+#define SS_SHIFTER_LEFT_OFF_TEST_BEFORE_HBL // for Riverside
 #define SS_SHIFTER_STE_MED_HSCROLL
 #define SS_SHIFTER_STE_HSCROLL_LEFT_OFF
 
