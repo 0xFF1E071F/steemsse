@@ -211,7 +211,11 @@ void TShifter::CheckSideOverscan() {
     scroll the screen by using "sync lines" (eg Enchanted Land).
 */
 
-  if(left_border && CyclesIn<512)
+  if(left_border
+#ifndef SS_SHIFTER_LEFT_OFF_TEST_BEFORE_HBL // fixes Riverside low border
+    && CyclesIn<512
+#endif
+    )
   {
 
   //////////////////////////////////////////
@@ -354,6 +358,11 @@ void TShifter::CheckSideOverscan() {
           overscan_add_extra+=6; // fixes MOLZ/Spiral
 #endif
         TrickExecuted|=TRICK_LINE_PLUS_20;
+#if defined(SS_SHIFTER_STE_LEFT_OFF_SHIFT)
+        HblPixelShift=-8; // fixes Riverside shift
+        if(SideBorderSize!=ORIGINAL_BORDER_SIDE)
+          shifter_draw_pointer+=-8,overscan_add_extra+=8;
+#endif
       }
       else // normal left off
 #endif
@@ -1804,7 +1813,12 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     Steem authors, of course).
     hscroll>15 is handled further.
 */
-        if(CurrentScanline.Tricks&TRICK_4BIT_SCROLL)
+
+        if( (CurrentScanline.Tricks&TRICK_4BIT_SCROLL)
+#if defined(SS_SHIFTER_STE_LEFT_OFF_SHIFT)
+          || (CurrentScanline.Tricks&TRICK_LINE_PLUS_20)
+#endif
+          )
         {
           hscroll-=HblPixelShift;
           if(hscroll<0)
@@ -1846,7 +1860,6 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
             picture+=picture_left_edge;
           AUTO_BORDER_ADJUST; // hack borders if necessary
           DEBUG_ONLY( shifter_draw_pointer+=debug_screen_shift; );
-          ASSERT(hscroll<16);
           if(hscroll>=16) // convert excess hscroll in SDP shift
           {
             if(scan_y==120) TRACE_LOG("y %d hscroll OVL\n",scan_y);
