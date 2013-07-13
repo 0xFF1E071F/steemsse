@@ -1548,7 +1548,10 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               This->LastCartFile=NewCart;
               if (load_cart(NewCart)){
                 Alert(T("There was an error loading the cartridge."),T("Cannot Load Cartridge"),MB_ICONEXCLAMATION);
+#if !(defined(STEVEN_SEAGAL) && defined(SS_CARTRIDGE_NO_CRASH_ON_WRONG_FILE))
+                // breaking here hangs Steem
                 break;
+#endif
               }else{
                 CartFile=NewCart;
               }

@@ -94,6 +94,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_ACIA       // MC6850 Asynchronous Communications Interface Adapter
 #define SS_BLITTER    // spelled BLiTTER by those in the known!
 #define SS_CPU        // MC68000 microprocessor
+#define SS_CARTRIDGE  // ROM Cartridge slot
 #define SS_DMA        // Custom Direct Memory Access chip (disk)
 #define SS_DRIVE      // SF314 floppy disk drive
 #define SS_FDC        // WD1772 floppy disk controller
@@ -212,6 +213,20 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 //#define SS_BLT_TIMING // based on a table, but Steem does it better
 //TODO smudge?
 
+#endif
+
+
+///////////////
+// CARTRIDGE //
+///////////////
+
+#if defined(SS_CARTRIDGE)
+
+//todo avoid crash
+#define SS_CARTRIDGE_64KB_OK
+#define SS_CARTRIDGE_DIAGNOSTIC
+#define SS_CARTRIDGE_NO_CRASH_ON_WRONG_FILE
+#define SS_CARTRIDGE_NO_EXTRA_BYTES_OK
 #endif
 
 
@@ -640,7 +655,8 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #if defined(SS_MMU)
 
-#define SS_MMU_NO_CONFUSION //  I still don't know what was the use (TESTING)
+//#define SS_MMU_NO_CONFUSION //  I still don't know what was the use (TESTING)
+// found one use! Diagnostic cartridge...
 #define SS_MMU_WAKE_UP
 #if defined(SS_MMU_WAKE_UP)
 #if defined(SS_CPU)

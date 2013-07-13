@@ -449,6 +449,96 @@ bool load_TOS(char *)
 }
 #endif
 //---------------------------------------------------------------------------
+#if defined(STEVEN_SEAGAL) && defined(SS_CARTRIDGE)
+/*  Loading a ROM cartridge.
+    Steem format STC has 4 null bytes at the start, then the 128 KB
+    of the cartridge.
+    SSE: we accept files  where there are no extra null bytes
+    We also accept 64KB cartridges.
+    We also load diagnostic cartridges.
+*/
+
+bool load_cart(char *filename) {
+  bool failed=false; // return true on failure (!)
+  
+  FILE *f=fopen(filename,"rb");
+  if (f==NULL) 
+    failed=true;
+  else
+  {
+    long FileLen=GetFileLength(f); //can be 64KB, 128KB, 128KB+4bytes
+    DWORD FirstBytes;
+    int offset=0;
+    switch(FileLen) {
+#if defined(SS_CARTRIDGE_64KB_OK)
+    case 64*1024:
+      offset=FileLen+4;
+      break;
+#endif
+#if defined(SS_CARTRIDGE_NO_EXTRA_BYTES_OK)
+    case 128*1024:
+      offset=4;
+      break;
+#endif
+    case 128*1024+4: // Steem original
+      fread(&FirstBytes,4,1,f);
+      if(FirstBytes)
+        failed=true;
+      break;
+    default:
+      failed=true;
+    }
+    if(!failed)
+    {
+      fread(&FirstBytes,4,1,f);
+      switch(FirstBytes) {
+#if defined(SS_CARTRIDGE_DIAGNOSTIC)
+      case 0x5F2352FA: // $FA52235F reversed - diagnostic
+        break;
+#endif
+      case 0x42EFCDAB:  //$ABCDEF42 reversed - application
+        break;
+      default: // unknown
+        failed=true;
+      }
+      if(!failed)
+      {
+        if (cart) 
+          delete[] cart;
+        cart=new BYTE[128*1024];
+        memset(cart,0xFF,128*1024);
+        long Len=FileLen-4;
+        fseek(f,-4,SEEK_CUR); //hehe
+        for(int bn=Len-1;bn>=0;bn--) 
+          fread(cart+bn+offset,1,1,f); // backwards
+        
+        Cart_End_minus_1=cart+(128*1024-1);
+        Cart_End_minus_2=Cart_End_minus_1-1;
+        Cart_End_minus_4=Cart_End_minus_1-3;
+        
+        if(pc>=MEM_EXPANSION_CARTRIDGE && pc<0xfc0000){
+          SET_PC(PC32);        
+        }
+#if defined(SS_CARTRIDGE_DIAGNOSTIC)
+        /*  If these four bytes are found, the computer will transfer control
+        to memory location $FA0004, where you should start placing your 
+        MC68000 machine language instructions.
+        */
+        if(FirstBytes==0x5F2352FA)
+        {
+          SET_PC(0xFA0004)
+        }
+#endif
+      }
+      fclose(f);
+    }
+  }
+
+  return failed;
+}
+
+#else // Steem 3.2
+
 bool load_cart(char *filename) // return true on failure
 {
   FILE *f=fopen(filename,"rb");
@@ -480,6 +570,8 @@ bool load_cart(char *filename) // return true on failure
   fclose(f);
   return Loaded==0;
 }
+
+#endif
 //---------------------------------------------------------------------------
 #ifdef DEBUG_BUILD
 typedef struct{
