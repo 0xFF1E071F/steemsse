@@ -759,15 +759,15 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SHIFTER_4BIT_SCROLL
 #define SS_SHIFTER_60HZ_OVERSCAN
 #define SS_SHIFTER_END_OF_LINE_CORRECTION // correct +2, -2 lines 
+#define SS_SHIFTER_LEFT_OFF_TEST_BEFORE_HBL // for Riverside
 #define SS_SHIFTER_LINE_PLUS_2_THRESHOLD
+#define SS_SHIFTER_LINE_PLUS_20 // 224 byte scanline STE only
+#define SS_SHIFTER_LINE_PLUS_20_SHIFT // for Riverside
 #define SS_SHIFTER_MED_OVERSCAN
 #define SS_SHIFTER_MED_OVERSCAN_SHIFT
 #define SS_SHIFTER_NON_STOPPING_LINE // Enchanted Land
 #define SS_SHIFTER_PALETTE_BYTE_CHANGE 
 #define SS_SHIFTER_PALETTE_TIMING
-#define SS_SHIFTER_STE_LEFT_OFF // 224 byte scanline
-#define SS_SHIFTER_STE_LEFT_OFF_SHIFT // for Riverside
-#define SS_SHIFTER_LEFT_OFF_TEST_BEFORE_HBL // for Riverside
 #define SS_SHIFTER_STE_MED_HSCROLL
 #define SS_SHIFTER_STE_HSCROLL_LEFT_OFF
 

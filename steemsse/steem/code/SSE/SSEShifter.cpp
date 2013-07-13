@@ -234,7 +234,7 @@ void TShifter::CheckSideOverscan() {
     More cases needed...
 */
 
-#if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_STE_LEFT_OFF)
+#if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_LINE_PLUS_20)
 
 #if defined(SS_STF)
     if(ST_TYPE==STE) 
@@ -340,7 +340,7 @@ void TShifter::CheckSideOverscan() {
     if( (CurrentScanline.Tricks&TRICK_LINE_PLUS_26)
       || (CurrentScanline.Tricks&TRICK_LINE_PLUS_20))
     {
-#if defined(SS_SHIFTER_STE_LEFT_OFF)
+#if defined(SS_SHIFTER_LINE_PLUS_20)
       if(CurrentScanline.Tricks&TRICK_LINE_PLUS_20)
       {
         CurrentScanline.Bytes+=20;
@@ -358,7 +358,7 @@ void TShifter::CheckSideOverscan() {
           overscan_add_extra+=6; // fixes MOLZ/Spiral
 #endif
         TrickExecuted|=TRICK_LINE_PLUS_20;
-#if defined(SS_SHIFTER_STE_LEFT_OFF_SHIFT)
+#if defined(SS_SHIFTER_LINE_PLUS_20_SHIFT)
         HblPixelShift=-8; // fixes Riverside shift
         if(SideBorderSize!=ORIGINAL_BORDER_SIDE)
           shifter_draw_pointer+=-8,overscan_add_extra+=8;
@@ -1815,7 +1815,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 */
 
         if( (CurrentScanline.Tricks&TRICK_4BIT_SCROLL)
-#if defined(SS_SHIFTER_STE_LEFT_OFF_SHIFT)
+#if defined(SS_SHIFTER_LINE_PLUS_20_SHIFT)
           || (CurrentScanline.Tricks&TRICK_LINE_PLUS_20)
 #endif
           )
