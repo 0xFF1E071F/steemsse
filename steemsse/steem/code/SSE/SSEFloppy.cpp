@@ -847,7 +847,6 @@ Total track                     6250        6250        6256
    
 */
 
-
 WORD TSF314::BytePosition() {
   return HblsToBytes( hbl_count % HblsPerRotation() );
 }

@@ -270,8 +270,19 @@ void floppy_fdc_command(BYTE cm)
     if (floppy_instant_sector_access){
       agenda_add(agenda_fdc_spun_up,MILLISECONDS_TO_HBLS(100),delay_exec);
     }else{
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_SPIN_UP_TIME)
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_SPIN_UP_TIME)
+#ifdef SS_DRIVE_SPIN_UP_TIME2
+      // Make it fall at a multiple of HblsPerRotation
+      int hbl_last_ip=(hbl_count/FDC_HBLS_PER_ROTATION)*FDC_HBLS_PER_ROTATION;
+      ASSERT( hbl_last_ip<=hbl_count );
+      int hbl_next_ip=hbl_last_ip+FDC_HBLS_PER_ROTATION;
+      ASSERT( hbl_next_ip>=hbl_count );
+      int delay=hbl_next_ip-hbl_count+5*FDC_HBLS_PER_ROTATION;
+      ASSERT( delay<=FDC_HBLS_PER_ROTATION*6 );
+      agenda_add(agenda_fdc_spun_up,delay,delay_exec);
+#else
       agenda_add(agenda_fdc_spun_up,FDC_HBLS_PER_ROTATION*6,delay_exec);
+#endif
 #else
       // 6 revolutions but guaranteed 1 second spinup at 5 RPS, how?
       agenda_add(agenda_fdc_spun_up,MILLISECONDS_TO_HBLS(1100),delay_exec);
