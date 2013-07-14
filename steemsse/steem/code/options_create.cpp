@@ -2075,7 +2075,7 @@ void TOptionBox::CreateSSEPage() {
     mask|=WS_DISABLED;
   Win=CreateWindow("Button",T("Pasti only for STX"),mask,
     page_l,y,Wid,25,Handle,(HMENU)7305,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,MICROWIRE_ON,0);
+  SendMessage(Win,BM_SETCHECK,PASTI_JUST_STX,0);
   ToolAddWindow(ToolTip,Win,
     T("When checked, Pasti will only be used for STX disks (not ST, MSA)"));
   y+=LineHeight;

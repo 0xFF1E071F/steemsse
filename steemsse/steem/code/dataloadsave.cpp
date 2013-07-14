@@ -744,6 +744,11 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SS_VAR_SCROLLER_DISK_IMAGE)
     OSD_IMAGE_NAME=pCSF->GetInt("Options","OsdImageName", OSD_IMAGE_NAME);
 #endif
+#if defined(SS_PASTI_ONLY_STX)
+  //pCSF->SetStr("Options","PastiJustStx",EasyStr(PASTI_JUST_STX)); 
+    PASTI_JUST_STX=pCSF->GetInt("Options","PastiJustStx",PASTI_JUST_STX);
+#endif
+
 #endif // SS
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS____)
@@ -1093,6 +1098,9 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 #if defined(SS_VAR_SCROLLER_DISK_IMAGE)
   pCSF->SetStr("Options","OsdImageName",EasyStr(OSD_IMAGE_NAME));  
+#endif
+#if defined(SS_PASTI_ONLY_STX)
+  pCSF->SetStr("Options","PastiJustStx",EasyStr(PASTI_JUST_STX));  
 #endif
 
 #endif//SS
