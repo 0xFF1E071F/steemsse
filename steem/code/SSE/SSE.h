@@ -457,6 +457,8 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_DRIVE_READ_TRACK_TIMING
 #define SS_DRIVE_RW_SECTOR_TIMING // start of sector
 #define SS_DRIVE_RW_SECTOR_TIMING2 // end of sector
+#define SS_DRIVE_SPIN_UP_TIME
+#define SS_DRIVE_SPIN_UP_TIME2 // more precise
 #define SS_DRIVE_WRITE_TRACK_TIMING
 
 #endif
@@ -484,7 +486,6 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_FDC_SEEK
 #define SS_FDC_SPIN_UP_AGENDA
 #define SS_FDC_SPIN_UP_STATUS
-#define SS_FDC_SPIN_UP_TIME
 #define SS_FDC_STEP
 
 
