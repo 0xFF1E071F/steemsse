@@ -23,7 +23,7 @@ TDma::TDma() {
 /*  Read/write on disk DMA registers.
 */
 
-#define LOGSECTION LOGSECTION_FDC // DMA+FDC
+#define LOGSECTION LOGSECTION_IO // DMA+FDC
 
 /*  DMA/Disk IO table based on Atari doc
 
