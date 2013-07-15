@@ -912,6 +912,7 @@ problem, multiple struct/class definition not allowed?
 #define SS_STRUCTURE_DIRID_H
 #define SS_STRUCTURE_DISKMAN_H
 #define SS_STRUCTURE_DISPLAY_H
+#define SS_STRUCTURE_DRAW_H
 //...
 #endif
 

@@ -1,19 +1,10 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DRAW_H)
+#pragma once
+#ifndef DRAW_DECLA_H
+#define DRAW_DECLA_H
 
-#include "draw.decla.h"
-
-#else//!defined(SS_STRUCTURE_DRAW_H)
-
-
-#ifdef IN_EMU
-#define EXT
-#define EXTC
-#define INIT(s) =s
-#else
 #define EXT extern
 #define EXTC extern "C"
 #define INIT(s)
-#endif
 
 #define BORDER_TOP 30
 #if !(defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS))
@@ -29,11 +20,6 @@
 #define DFSFX_NONE 0
 #define DFSFX_GRILLE 1
 #define DFSFX_BLUR 2
-#if !defined(STEVEN_SEAGAL) // double! ain't I smart?
-#define DFSM_LAPTOP 3
-#endif
-
-
 
 EXT bool draw_routines_init();
 
@@ -106,13 +92,13 @@ WIN_ONLY( EXT HWND ClipWin; )
 
 
 
-#ifdef IN_EMU
+//#ifdef IN_EMU
 
-int prefer_pc_hz[2][3]={{0,0,0},{0,0,0}};
-WORD tested_pc_hz[2][3]={{0,0,0},{0,0,0}};
+EXT int prefer_pc_hz[2][3];
+EXT WORD tested_pc_hz[2][3];
 
 
-int cpu_cycles_from_hbl_to_timer_b;
+EXT int cpu_cycles_from_hbl_to_timer_b;
 
 #define SCANLINES_ABOVE_SCREEN_50HZ 63 
 #define SCANLINES_ABOVE_SCREEN_60HZ 34
@@ -154,49 +140,38 @@ int cpu_cycles_from_hbl_to_timer_b;
 #define HBLS_PER_SECOND_AVE 15700 // Average between 50 and 60hz
 #define HBLS_PER_SECOND_MONO (501.0*71.42857)
 
-const int scanlines_above_screen[4]={SCANLINES_ABOVE_SCREEN_50HZ,
-                                    SCANLINES_ABOVE_SCREEN_60HZ,
-                                    SCANLINES_ABOVE_SCREEN_70HZ,
-                                    16};
+EXT const int scanlines_above_screen[4];
 
-const int scanline_time_in_cpu_cycles_8mhz[4]={SCANLINE_TIME_IN_CPU_CYCLES_50HZ,
-                                                SCANLINE_TIME_IN_CPU_CYCLES_60HZ,
-                                                SCANLINE_TIME_IN_CPU_CYCLES_70HZ,
-                                                128};
+EXT const int scanline_time_in_cpu_cycles_8mhz[4];
 
-int scanline_time_in_cpu_cycles[4]={SCANLINE_TIME_IN_CPU_CYCLES_50HZ,
-                                    SCANLINE_TIME_IN_CPU_CYCLES_60HZ,
-                                    SCANLINE_TIME_IN_CPU_CYCLES_70HZ,
-                                    128};
+EXT int scanline_time_in_cpu_cycles[4];
 
-int draw_dest_increase_y;
+EXT int draw_dest_increase_y;
 
-int res_vertical_scale=1;
-int draw_first_scanline_for_border,draw_last_scanline_for_border; //calculated from BORDER_TOP, BORDER_BOTTOM and res_vertical_scale
+EXT int res_vertical_scale;
+EXT int draw_first_scanline_for_border,draw_last_scanline_for_border; //calculated from BORDER_TOP, BORDER_BOTTOM and res_vertical_scale
 
-int draw_first_possible_line=0,draw_last_possible_line=200;
+EXT int draw_first_possible_line,draw_last_possible_line;
+
 void inline draw_scanline_to_end();
 
 #if !defined(STEVEN_SEAGAL) || !defined(SS_VIDEO) || defined(SS_DEBUG)
 void inline draw_scanline_to(int);
 #endif
 
-int scanline_drawn_so_far;
-int cpu_cycles_when_shifter_draw_pointer_updated;
+EXT int scanline_drawn_so_far;
+EXT int cpu_cycles_when_shifter_draw_pointer_updated;
 
-
-
-
-int left_border=BORDER_SIDE,right_border=BORDER_SIDE;
-bool right_border_changed=0;
-int overscan_add_extra;
+EXT int left_border,right_border;
+EXT bool right_border_changed;
+EXT int overscan_add_extra;
 
 //LPSCANPROC draw_scanline;
 
 typedef void ASMCALL PIXELWISESCANPROC(int,int,int,int);
 typedef PIXELWISESCANPROC* LPPIXELWISESCANPROC;
 //LPRASTERWISESCANPROC jump_draw_scanline[2][4][3],draw_scanline;
-LPPIXELWISESCANPROC jump_draw_scanline[3][4][3],draw_scanline,draw_scanline_lowres,draw_scanline_medres;
+EXT LPPIXELWISESCANPROC jump_draw_scanline[3][4][3],draw_scanline,draw_scanline_lowres,draw_scanline_medres;
 void ASMCALL draw_scanline_dont(int,int,int,int);
 
 //LPPALETTECONVERTPROC palette_convert_entry=NULL;
@@ -269,15 +244,15 @@ void ASMCALL draw_scanline_24_hires(int,int,int,int),draw_scanline_32_hires(int,
           }                           \
           s+=overscan_add_extra;
 
-int shifter_freq_change_time[32];
-int shifter_freq_change[32];
-int shifter_freq_change_idx=0;
+EXT int shifter_freq_change_time[32];
+EXT int shifter_freq_change[32];
+EXT int shifter_freq_change_idx;
 
 #if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_TRICKS)
 // keeping a record for shift mode changes as well
-int shifter_shift_mode_change_time[32];
-int shifter_shift_mode_change[32];
-int shifter_shift_mode_change_idx=0;
+EXT int shifter_shift_mode_change_time[32];
+EXT int shifter_shift_mode_change[32];
+EXT int shifter_shift_mode_change_idx;
 #endif
 
 
@@ -291,19 +266,19 @@ int shifter_shift_mode_change_idx=0;
 // restore draw_scanline.
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
-BYTE draw_temp_line_buf[800*4+16+ 200 ]; // overkill but I can't count
+EXT BYTE draw_temp_line_buf[800*4+16+ 200 ]; // overkill but I can't count
 #else
-BYTE draw_temp_line_buf[800*4+16]; 
+EXT BYTE draw_temp_line_buf[800*4+16]; 
 #endif
 
-BYTE *draw_store_dest_ad=NULL;
-LPPIXELWISESCANPROC draw_scanline_1_line[2],draw_store_draw_scanline;
-bool draw_buffer_complex_scanlines;
-#endif
+EXT BYTE *draw_store_dest_ad;
+EXT LPPIXELWISESCANPROC draw_scanline_1_line[2],draw_store_draw_scanline;
+EXT bool draw_buffer_complex_scanlines;
+#endif//WIN32
 
-bool draw_med_low_double_height;
+EXT bool draw_med_low_double_height;
 
-bool draw_line_off=0;
+EXT bool draw_line_off;
 
 #define ADD_SHIFTER_FREQ_CHANGE(f) \
   {shifter_freq_change_idx++;shifter_freq_change_idx&=31; \
@@ -312,16 +287,16 @@ bool draw_line_off=0;
   log_to_section(LOGSECTION_VIDEO,EasyStr("VIDEO: Change to freq ")+(f)+      \
             " at time "+ABSOLUTE_CPU_TIME);}
 
-bool freq_change_this_scanline=false;
+EXT bool freq_change_this_scanline;
 
 #if !defined(STEVEN_SEAGAL) || !defined(SS_VIDEO) || defined(SS_DEBUG)
 void draw_check_border_removal();
 #endif
 
-#endif
+//#endif//inemu
 
 #undef EXT
+#undef EXTC
 #undef INIT
 
-
-#endif//defined(SS_STRUCTURE_DRAW_H)
+#endif//DRAW_DECLA_H
