@@ -11,6 +11,123 @@ to the PC display.
 #pragma message("Included for compilation: draw.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DRAW_H)
+
+#define EXT
+#define EXTC
+#define INIT(s) =s
+
+EXT int stfm_b_timer INIT(0);//tmp
+
+
+EXT int bad_drawing INIT(0);
+EXT int draw_fs_blit_mode INIT( UNIX_ONLY(DFSM_STRAIGHTBLIT) WIN_ONLY(DFSM_STRETCHBLIT) );
+EXT int draw_fs_fx INIT(DFSFX_NONE),draw_grille_black INIT(6);
+EXT RECT draw_blit_source_rect;
+EXT int draw_fs_topgap INIT(0);
+
+WIN_ONLY( EXT int draw_win_mode[2]; ) // Inited by draw_fs_blit_mode
+
+EXT bool FullScreen INIT(0);
+EXT bool draw_lock;
+
+EXT BYTE *draw_mem;
+EXT int draw_line_length;
+EXT long *PCpal;
+EXT WORD STpal[16];
+EXT BYTE *draw_dest_ad,*draw_dest_next_scanline;
+EXT int border INIT(2),border_last_chosen INIT(2);
+
+EXT bool display_option_8_bit_fs INIT(false);
+EXT bool prefer_res_640_400 INIT(0),using_res_640_400 INIT(0);
+extern int prefer_pc_hz[2][3];
+extern WORD tested_pc_hz[2][3];
+EXT int overscan INIT(0)
+#if !(defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE) \
+ && defined(SS_SHIFTER) && !defined(SS_SHIFTER_DRAW_DBG) \
+ && defined(SS_STRUCTURE))
+,stfm_borders INIT(0)
+#endif
+;
+UNIX_ONLY( EXT int x_draw_surround_count INIT(4); )
+
+WIN_ONLY( EXT HWND ClipWin; )
+
+int prefer_pc_hz[2][3]={{0,0,0},{0,0,0}};
+WORD tested_pc_hz[2][3]={{0,0,0},{0,0,0}};
+
+
+int cpu_cycles_from_hbl_to_timer_b;
+
+const int scanlines_above_screen[4]={SCANLINES_ABOVE_SCREEN_50HZ,
+                                    SCANLINES_ABOVE_SCREEN_60HZ,
+                                    SCANLINES_ABOVE_SCREEN_70HZ,
+                                    16};
+
+const int scanline_time_in_cpu_cycles_8mhz[4]={SCANLINE_TIME_IN_CPU_CYCLES_50HZ,
+                                                SCANLINE_TIME_IN_CPU_CYCLES_60HZ,
+                                                SCANLINE_TIME_IN_CPU_CYCLES_70HZ,
+                                                128};
+
+int scanline_time_in_cpu_cycles[4]={SCANLINE_TIME_IN_CPU_CYCLES_50HZ,
+                                    SCANLINE_TIME_IN_CPU_CYCLES_60HZ,
+                                    SCANLINE_TIME_IN_CPU_CYCLES_70HZ,
+                                    128};
+
+int draw_dest_increase_y;
+
+int res_vertical_scale=1;
+int draw_first_scanline_for_border,draw_last_scanline_for_border; //calculated from BORDER_TOP, BORDER_BOTTOM and res_vertical_scale
+
+int draw_first_possible_line=0,draw_last_possible_line=200;
+
+int scanline_drawn_so_far;
+int cpu_cycles_when_shifter_draw_pointer_updated;
+
+int left_border=BORDER_SIDE,right_border=BORDER_SIDE;
+bool right_border_changed=0;
+int overscan_add_extra;
+
+LPPIXELWISESCANPROC jump_draw_scanline[3][4][3],draw_scanline,draw_scanline_lowres,draw_scanline_medres;
+
+
+int shifter_freq_change_time[32];
+int shifter_freq_change[32];
+int shifter_freq_change_idx=0;
+
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_TRICKS)
+// keeping a record for shift mode changes as well
+int shifter_shift_mode_change_time[32];
+int shifter_shift_mode_change[32];
+int shifter_shift_mode_change_idx=0;
+#endif
+
+
+#ifdef WIN32
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
+BYTE draw_temp_line_buf[800*4+16+ 200 ]; // overkill but I can't count
+#else
+BYTE draw_temp_line_buf[800*4+16]; 
+#endif
+
+BYTE *draw_store_dest_ad=NULL;
+LPPIXELWISESCANPROC draw_scanline_1_line[2],draw_store_draw_scanline;
+bool draw_buffer_complex_scanlines;
+#endif
+
+bool draw_med_low_double_height;
+
+bool draw_line_off=0;
+
+bool freq_change_this_scanline=false;
+
+#undef EXT
+#undef EXTC
+#undef INIT
+
+
+#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
 #include "SSE/SSEShifter.cpp"
 #endif

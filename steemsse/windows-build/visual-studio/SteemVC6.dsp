@@ -239,6 +239,7 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\display.decla.h"\
 	"..\..\steem\code\display.h"\
 	"..\..\steem\code\draw.cpp"\
+	"..\..\steem\code\draw.decla.h"\
 	"..\..\steem\code\draw.h"\
 	"..\..\steem\code\emulator.cpp"\
 	"..\..\steem\code\emulator.h"\
@@ -500,6 +501,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\display.cpp"\
 	"..\..\steem\code\display.decla.h"\
 	"..\..\steem\code\display.h"\
+	"..\..\steem\code\draw.decla.h"\
 	"..\..\steem\code\draw.h"\
 	"..\..\steem\code\dwin_edit.cpp"\
 	"..\..\steem\code\dwin_edit.h"\
@@ -711,6 +713,10 @@ SOURCE=..\..\steem\code\display.decla.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\display.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\draw.decla.h
 # End Source File
 # Begin Source File
 
@@ -1290,6 +1296,7 @@ DEP_CPP_6301_=\
 	"..\..\3rdparty\6301\timer.h"\
 	"..\..\3rdparty\6301\tty.c"\
 	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\include\easystr.h"\
 	"..\..\steem\code\acia.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\steem\code\SSE\SSE6301.h"\
@@ -1752,6 +1759,7 @@ SOURCE=..\..\3rdparty\caps\CAPSImg.lib
 SOURCE=..\..\3rdparty\avi\AviFile.cpp
 DEP_CPP_AVIFI=\
 	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\include\easystr.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
@@ -4678,6 +4686,7 @@ SOURCE=..\..\include\wordwrapper.h
 SOURCE=..\..\steem\code\SSE\SSE.cpp
 DEP_CPP_SSE_C=\
 	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\include\easystr.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
@@ -4846,6 +4855,7 @@ SOURCE=..\..\steem\code\SSE\SSEM68000.h
 SOURCE=..\..\steem\code\SSE\SSEMMU.cpp
 DEP_CPP_SSEMM=\
 	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\include\easystr.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
 	"..\..\steem\code\SSE\SSEMMU.h"\
@@ -4862,6 +4872,7 @@ SOURCE=..\..\steem\code\SSE\SSEMMU.h
 SOURCE=..\..\steem\code\SSE\SSEOption.cpp
 DEP_CPP_SSEOP=\
 	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\include\easystr.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
