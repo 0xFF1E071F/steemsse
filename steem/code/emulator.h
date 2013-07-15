@@ -1,3 +1,10 @@
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_EMULATOR_H)
+
+#include "emulator.decla.h"
+
+#else//!defined(SS_STRUCTURE_EMULATOR_H)
+
+
 #ifdef IN_EMU
 #define EXT
 #define INIT(s) =s
@@ -412,3 +419,4 @@ MEM_ADDRESS vdi_intout=0;
 #undef EXT
 #undef INIT
 
+#endif//SS_STRUCTURE_EMULATOR_H
