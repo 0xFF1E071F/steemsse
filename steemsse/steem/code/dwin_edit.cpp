@@ -9,6 +9,18 @@ DESCRIPTION: The edit box that is used to change values in the debugger.
 #pragma message("Included for compilation: dwin_edit.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DWINEDIT_H)
+void* DWin_edit_subject;
+int DWin_edit_subject_type;
+int DWin_edit_subject_index;
+int DWin_edit_subject_col;
+MEM_ADDRESS DWin_edit_subject_ad;
+_DWin_edit_subject_content DWin_edit_subject_content;
+
+bool DWin_edit_is_being_temporarily_defocussed=false;
+#endif
+
+
 long __stdcall DWin_edit_WndProc(HWND,unsigned int,unsigned int,long);
 WNDPROC Old_edit_WndProc;
 

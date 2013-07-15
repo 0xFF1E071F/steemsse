@@ -504,6 +504,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\draw.decla.h"\
 	"..\..\steem\code\draw.h"\
 	"..\..\steem\code\dwin_edit.cpp"\
+	"..\..\steem\code\dwin_edit.decla.h"\
 	"..\..\steem\code\dwin_edit.h"\
 	"..\..\steem\code\emulator.h"\
 	"..\..\steem\code\fdc.h"\
@@ -721,6 +722,10 @@ SOURCE=..\..\steem\code\draw.decla.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\draw.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\dwin_edit.decla.h
 # End Source File
 # Begin Source File
 
