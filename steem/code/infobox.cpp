@@ -26,6 +26,10 @@ void TGeneralInfo::CreatePage(int pg)
     case INFOPAGE_HOWTO_CART:
     case INFOPAGE_FAQ:
     case INFOPAGE_UNIXREADME:
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX2)
+    case INFOPAGE_README_SSE: 
+    case INFOPAGE_FAQ_SSE: 
+#endif
       CreateReadmePage(pg);
       break;
   }
@@ -172,7 +176,11 @@ void TGeneralInfo::LoadIcons()
     ImageList_AddPaddedIcons(il,PAD_ALIGN_RIGHT,hGUIIcon[RC_ICO_INFO],hGUIIcon[RC_ICO_INFO_CLOCK],
                               hGUIIcon[RC_ICO_FUJILINK],hGUIIcon[RC_ICO_TEXT],
                               hGUIIcon[RC_ICO_INFO] /*unused*/,hGUIIcon[RC_ICO_DISK_HOWTO],
-                              hGUIIcon[RC_ICO_CART_HOWTO],hGUIIcon[RC_ICO_INFO_FAQ],0);
+                              hGUIIcon[RC_ICO_CART_HOWTO],hGUIIcon[RC_ICO_INFO_FAQ]
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX2)
+                              ,hGUIIcon[RC_ICO_OPS_SSE],hGUIIcon[RC_ICO_OPS_SSE]
+#endif
+                              ,0);
   }
   SendMessage(PageTree,TVM_SETIMAGELIST,TVSIL_NORMAL,(LPARAM)il);
   if (old_il) ImageList_Destroy(old_il);
@@ -226,6 +234,11 @@ void TGeneralInfo::Show()
   AddPageLabel(T("Links"),INFOPAGE_LINKS);
   if (Exists(RunDir+"\\disk image howto.txt")) AddPageLabel("Disk Image Howto",INFOPAGE_HOWTO_DISK);
   if (Exists(RunDir+"\\cart image howto.txt")) AddPageLabel("Cartridge Image Howto",INFOPAGE_HOWTO_CART);
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX2)
+  if (Exists(RunDir+"\\"+WINDOW_TITLE+".txt")) AddPageLabel(WINDOW_TITLE,INFOPAGE_README_SSE);
+  if (Exists(RunDir+"\\Steem SSE FAQ.txt")) AddPageLabel("SSE Faq",INFOPAGE_FAQ_SSE);
+#endif
 
   page_l=2+TreeGetMaxItemWidth(PageTree)+5+2+10;
   page_w=min(page_w,620-page_l);
@@ -446,6 +459,10 @@ void TGeneralInfo::CreateReadmePage(int p)
     case INFOPAGE_HOWTO_DISK: TextFile+="disk image howto.txt"; break;
     case INFOPAGE_HOWTO_CART: TextFile+="cart image howto.txt"; break;
     case INFOPAGE_FAQ: TextFile+="faq.txt"; break;
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX2)
+    case INFOPAGE_README_SSE: TextFile+=WINDOW_TITLE; TextFile+=".txt"; break;
+    case INFOPAGE_FAQ_SSE: TextFile+="Steem SSE FAQ.txt"; break;
+#endif
   }
   FILE *f=fopen(TextFile,"rb");
   if (f){

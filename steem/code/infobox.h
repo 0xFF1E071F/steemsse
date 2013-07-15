@@ -9,7 +9,13 @@
 #define INFOPAGE_HOWTO_CART 6
 #define INFOPAGE_FAQ 7
 
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX2)
+#define INFOPAGE_README_SSE 8
+#define INFOPAGE_FAQ_SSE 9
+#define NUM_INFOPAGE 10
+#else
 #define NUM_INFOPAGE 8
+#endif
 
 #define HL_STATIC 1
 #define HL_UNDERLINE 2
