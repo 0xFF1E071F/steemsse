@@ -75,9 +75,9 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SSE_VERSION_TXT "Beta" 
 #define WINDOW_TITLE "Steem SSE beta"
 #else // next planned release
-#define SSE_VERSION 351 // check snapshot Version; rc\resource.rc
-#define SSE_VERSION_TXT "3.5.1" 
-#define WINDOW_TITLE "Steem SSE 3.5.1" //not 'Engine', too long
+#define SSE_VERSION 352 // check snapshot Version; rc\resource.rc
+#define SSE_VERSION_TXT "3.5.2" 
+#define WINDOW_TITLE "Steem SSE 3.5.2" //not 'Engine', too long
 #endif
 
 #endif
@@ -986,6 +986,7 @@ problem, multiple struct/class definition not allowed?
 #define SS_VAR_FULLSCREEN_DONT_START // disable run when going fullscreen - option?
 //#define SS_VAR_HIDE_OPTIONS_AT_START // hack before debugging
 #define SS_VAR_INFOBOX // reaction to information button
+#define SS_VAR_INFOBOX2 // add SSE texts
 #define SS_VAR_KEYBOARD_CLICK // not a sound nor IKBD option
 #define SS_VAR_MOUSE_CAPTURE 
 #define SS_VAR_MSA_CONVERTER // don't prompt if found
