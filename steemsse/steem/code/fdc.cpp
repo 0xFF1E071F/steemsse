@@ -196,14 +196,14 @@ void floppy_fdc_command(BYTE cm)
 */
   if( ADAT && YM2149.Drive()==TYM2149::NO_VALID_DRIVE && (cm&0xF0)!=0xd0)
   {
-    TRACE_LOG("CR %X no drive selected",cm);
+    TRACE_LOG("CR %X no drive selected\n",cm);
     return;
   }
 #endif
 
   if (fdc_str & FDC_STR_BUSY){
     
-    TRACE_LOG("Command while FDC busy ");
+    TRACE_LOG("Command while FDC busy\n");
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_CHANGE_COMMAND_DURING_SPINUP)
 /*
   The doc states:
@@ -220,12 +220,12 @@ void floppy_fdc_command(BYTE cm)
     if( ADAT && fdc_spinning_up &&!(WD1772.CR&BIT_3) && WD1772.CommandType(cm)<4
       && cm!=WD1772.CR)
       // we don't return, we will execute this command instead
-      TRACE_LOG("CR %X->%X during spin-up",WD1772.CR,cm);
+      TRACE_LOG("CR %X->%X during spin-up\n",WD1772.CR,cm);
     else
 #endif
     if ((cm & (BIT_7+BIT_6+BIT_5+BIT_4))!=0xd0){ // Not force interrupt
       log("     Command ignored, FDC is busy!");
-      TRACE_LOG("Command %X ignored",cm);
+      TRACE_LOG("Command %X ignored\n",cm);
       return;
     }
   }
@@ -266,7 +266,7 @@ void floppy_fdc_command(BYTE cm)
     }
     fdc_str=FDC_STR_BUSY | FDC_STR_MOTOR_ON;
     fdc_spinning_up=int(delay_exec ? 2:1);
-    TRACE_LOG("Motor on");
+    TRACE_LOG("Motor on\n");
     if (floppy_instant_sector_access){
       agenda_add(agenda_fdc_spun_up,MILLISECONDS_TO_HBLS(100),delay_exec);
     }else{
@@ -310,9 +310,7 @@ void fdc_execute()
 
   int floppyno=floppy_current_drive();
   TFloppyImage *floppy=&FloppyDrive[floppyno];
-
   floppy_irq_flag=FLOPPY_IRQ_YES;
-
 
 #if defined(STEVEN_SEAGAL)&&defined(SS_FDC_PRECISE_HBL)
   int hbls_to_interrupt=64;
@@ -349,13 +347,6 @@ COMMAND SUMMARY
      +------+----------+-------------------------+
 
 */
-
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
-//  TRACE_LOG("FDC status: ");  
-//  if(TRACE_ENABLED) Dma.UpdateRegs(true);
-  BYTE drive_char= (psg_reg[PSGR_PORT_A]&6)==6? '?' : 'A'+floppyno;
-  TRACE_LOG("%C: FDC $%2X ",drive_char,fdc_cr);
-#endif
 
   if ((fdc_cr & BIT_7)==0){
     // Type 1 commands
@@ -441,7 +432,7 @@ command word, the 177x sets the Seek Error bit in the status register
 and ends the command.
 */
       case 0x00: //restore to track 0
-        TRACE_LOG("Restore (TR %d CYL %d)",fdc_tr,floppy_head_track[floppyno]);
+        TRACE_LOG("Restore (TR %d CYL %d)\n",fdc_tr,floppy_head_track[floppyno]);
         if (FDC_VERIFY && floppy->Empty()){ //no disk
           fdc_str=FDC_STR_SEEK_ERROR | FDC_STR_MOTOR_ON | FDC_STR_BUSY;
         }else{
@@ -481,7 +472,7 @@ the head to the desired track number and update the Track Register.
 
 */
       case 0x10: //seek to track number in data register
-        TRACE_LOG("Seek %d (TR %d CYL %d)",fdc_dr,fdc_tr,floppy_head_track[floppyno]);
+        TRACE_LOG("Seek %d (TR %d CYL %d)\n",fdc_dr,fdc_tr,floppy_head_track[floppyno]);
         agenda_add(agenda_floppy_seek,2,0);
         fdc_str=FDC_STR_MOTOR_ON | FDC_STR_BUSY;
         floppy_irq_flag=0;
@@ -536,7 +527,7 @@ cycles before the first stepping pulse.
             fdc_type1_check_verify();
           }
           floppy_type1_command_active=1;
-          TRACE_LOG("Step %d (TR %d CYL %d)",d,fdc_tr,floppy_head_track[floppyno]);
+          TRACE_LOG("Step %d (TR %d CYL %d)\n",d,fdc_tr,floppy_head_track[floppyno]);
         }
       }
     }
@@ -631,16 +622,16 @@ CRC.
         ASSERT(WD1772.CommandType(fdc_cr)==2);
         switch(fdc_cr & (BIT_7+BIT_6+BIT_5+BIT_4)) {
         case 0x80: 
-          TRACE_LOG("Read H%d TR%d SR%d",floppy_current_side(),fdc_tr,fdc_sr);           
+          TRACE_LOG("Read H%d TR%d SR%d\n",floppy_current_side(),fdc_tr,fdc_sr);           
           break;
         case 0xa0:
-          TRACE_LOG("Write H%d TR%d SR%d",floppy_current_side(),fdc_tr,fdc_sr);           
+          TRACE_LOG("Write H%d TR%d SR%d\n",floppy_current_side(),fdc_tr,fdc_sr);           
           break;
         case 0x90: 
-          TRACE_LOG("Read H%d TR%d +SR%d-%d",floppy_current_side(),fdc_tr,fdc_sr,dma_sector_count);
+          TRACE_LOG("Read H%d TR%d +SR%d-%d\n",floppy_current_side(),fdc_tr,fdc_sr,dma_sector_count);
           break;
         case 0xb0: 
-          TRACE_LOG("Write H%d TR%d +SR%d-%d",floppy_current_side(),fdc_tr,fdc_sr,dma_sector_count);
+          TRACE_LOG("Write H%d TR%d +SR%d-%d\n",floppy_current_side(),fdc_tr,fdc_sr,dma_sector_count);
           break;
         }//sw
 #endif
@@ -790,7 +781,7 @@ sets the CRC Error bit in the status register if the CRC is invalid.
 */
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
         ASSERT(WD1772.CommandType(fdc_cr)==3);
-        TRACE_LOG("read address");
+        TRACE_LOG("read address\n");
 #endif
         log(Str("FDC: Type III Command - read address to ")+HEXSl(dma_address,6)+"from drive "+char('A'+floppyno));
 
@@ -852,7 +843,7 @@ bytes incorrectly during write-splice time because of synchronization.
       case 0xe0:  //read track
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
         ASSERT(WD1772.CommandType(fdc_cr)==3);
-        TRACE_LOG("read track");
+        TRACE_LOG("read track\n");
 #endif
         log(Str("FDC: Type III Command - read track to ")+HEXSl(dma_address,6)+" from drive "+char('A'+floppyno)+
                   " dma_sector_count="+dma_sector_count);
@@ -900,7 +891,7 @@ $f7 will write a two-byte CRC to the disk.
       case 0xf0:  //write (format) track
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
         ASSERT(WD1772.CommandType(fdc_cr)==3);
-        TRACE_LOG("write track");
+        TRACE_LOG("write track\n");
 #endif
         log(Str("FDC: - Type III Command - write track from address ")+HEXSl(dma_address,6)+" to drive "+char('A'+floppyno));
 
@@ -944,7 +935,7 @@ acknowledge Force Interrupt commands only between micro- instructions.
       {
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
         ASSERT(WD1772.CommandType(fdc_cr)==4);
-        TRACE_LOG("Interrupt");
+        TRACE_LOG("Interrupt\n");
 #endif
         log(Str("FDC: ")+HEXSl(old_pc,6)+" - Force interrupt: t="+hbl_count);
 
@@ -969,7 +960,7 @@ acknowledge Force Interrupt commands only between micro- instructions.
         agenda_delete(agenda_fdc_finished);
         fdc_str=BYTE(fdc_str & FDC_STR_MOTOR_ON);
         if (fdc_cr & b1100){
-          TRACE_LOG(" Immediate");
+          TRACE_LOG(" Immediate\n");
           agenda_fdc_finished(0); // Interrupt CPU immediately
         }else{
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_MOTOR_OFF)
@@ -1004,14 +995,14 @@ acknowledge Force Interrupt commands only between micro- instructions.
     if (floppy_irq_flag!=FLOPPY_IRQ_NOW){ // Don't need to add agenda if it has happened
       if (floppy_irq_flag==FLOPPY_IRQ_ONESEC){
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_PRECISE_HBL)
-        TRACE_LOG("Error - 5REV - IRQ in %d HBLs",FDC_HBLS_PER_ROTATION*5);
+        TRACE_LOG("Error - 5REV - IRQ in %d HBLs\n",FDC_HBLS_PER_ROTATION*5);
         agenda_add(agenda_fdc_finished,FDC_HBLS_PER_ROTATION*5,0);
 #else
-        TRACE_LOG("1SEC - IRQ in %d HBLs",MILLISECONDS_TO_HBLS(1000));
+        TRACE_LOG("1SEC - IRQ in %d HBLs\n",MILLISECONDS_TO_HBLS(1000));
         agenda_add(agenda_fdc_finished,MILLISECONDS_TO_HBLS(1000),0);
 #endif
       }else{
-        TRACE_LOG("IRQ in %d HBLs",int(hbls_to_interrupt*hbl_multiply));
+        TRACE_LOG("IRQ in %d HBLs\n",int(hbls_to_interrupt*hbl_multiply));
         agenda_add(agenda_fdc_finished,int(hbls_to_interrupt*hbl_multiply),0);
       }
     }

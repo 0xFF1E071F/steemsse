@@ -1066,19 +1066,19 @@ BYTE TWD1772::IORead(BYTE Line) {
       }
       ior_byte=STR;
 #if !defined(SS_DEBUG_TRACE_IDE)
-      TRACE_LOG("FDC STR");
+      TRACE_LOG("FDC STR %X\n",ior_byte);
 #endif
       break;
     case 1:
-      TRACE_LOG("FDC TR");
+      TRACE_LOG("FDC R TR %d\n",ior_byte);
       ior_byte=TR;
       break;      
     case 2:
-      TRACE_LOG("FDC SR");
+      TRACE_LOG("FDC R SR %d\n",ior_byte);
       ior_byte=SR;
       break;
     case 3:
-      TRACE_LOG("FDC DR");
+      TRACE_LOG("FDC R DR %d\n",ior_byte);
       ior_byte=DR;
       break;
     }//sw
@@ -1100,13 +1100,11 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
   switch(Line)
   {
   case 0: // CR - could be blocked, can't record here :(
-    TRACE_LOG("FDC CR ");
-
-#if defined(SS_PSG) && defined(SS_DEBUG)
-    if(YM2149.Drive()==TYM2149::NO_VALID_DRIVE)
-      TRACE_LOG("?: ");
-#endif
     {
+#if defined(SS_DEBUG)
+      BYTE drive_char= (psg_reg[PSGR_PORT_A]&6)==6? '?' : 'A'+DRIVE;
+      TRACE_LOG("FDC CR $%2X drive %c side %d TR %d SR %d DR %d\n",io_src_b,drive_char,floppy_current_side(),fdc_tr,fdc_sr,fdc_dr);
+#endif
       bool can_send=true; // are we in Steem's native emu?
 #if defined(SS_IPF)
       can_send=can_send&&!Caps.IsIpf(drive);
@@ -1116,17 +1114,16 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #if defined(STEVEN_SEAGAL)&&defined(SS_DRIVE)&&defined(SS_PASTI_ONLY_STX)
         && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
 #endif            
-        
         );
 #endif
       if(can_send)
         floppy_fdc_command(io_src_b); // in fdc.cpp
-      else
-        TRACE_LOG("Can't send command %X, drive %C type %d\n",io_src_b,'A'+YM2149.Drive(),SF314[YM2149.Drive()].ImageType);
+ //     else
+ //       TRACE_LOG("FDC %X not native, drive %C type %d\n",io_src_b,'A'+YM2149.Drive(),SF314[YM2149.Drive()].ImageType);
     }
     break;
   case 1: // TR
-    TRACE_LOG("FDC TR");
+    TRACE_LOG("FDC TR %d\n",io_src_b);
 #if defined(SS_FDC_CHANGE_TRACK_WHILE_BUSY)
     if(!(STR&FDC_STR_BUSY)||ADAT)
       fdc_tr=io_src_b;
@@ -1140,7 +1137,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #endif
     break;
   case 2: // SR
-    TRACE_LOG("FDC SR");
+    TRACE_LOG("FDC SR %d\n",io_src_b);
 #if defined(SS_FDC_CHANGE_SECTOR_WHILE_BUSY)
     if(!(STR&FDC_STR_BUSY)||ADAT)
       SR=io_src_b; // fixes Delirious 4 loader without Pasti
@@ -1155,7 +1152,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #endif
     break;
   case 3: // DR
-    TRACE_LOG("FDC DR");
+    TRACE_LOG("FDC DR %d\n",io_src_b);
     log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC data register to "+io_src_b);
     DR=io_src_b;
     break;

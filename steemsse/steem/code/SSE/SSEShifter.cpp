@@ -1311,7 +1311,7 @@ BYTE TShifter::IORead(MEM_ADDRESS addr) {
       ASSERT( ST_TYPE==STE || !(xbios2&0xFF) );
       if(ST_TYPE==STE) 
 #endif
-        ior_byte=xbios2&0xFF;
+        ior_byte=(BYTE)xbios2&0xFF;
       break;
   
     case 0xff820f: // LINEWID

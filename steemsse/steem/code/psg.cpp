@@ -270,7 +270,7 @@ inline void Microwire(int channel,int &val
       d_dsp_v=PSGLowFilter[channel].FilterAudio(d_dsp_v,LOW_PASS_FILTER_FREQ,LOW_PASS_FILTER_GAIN);
 #endif
 #endif
-    val=d_dsp_v;
+    val=(int)d_dsp_v;
   }
 }
 
