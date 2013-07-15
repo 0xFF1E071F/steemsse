@@ -240,6 +240,9 @@ void TDebug::ReportGeneralInfos(int when) {
 #endif
 #if USE_PASTI
     TRACE("; Pasti %d",pasti_active);
+#if defined(SS_PASTI_ONLY_STX)
+    TRACE(" STX only %d",PASTI_JUST_STX);
+#endif
 #endif
 #if defined(SS_HACKS)
     TRACE("\nHacks %d",SSE_HACKS_ON);

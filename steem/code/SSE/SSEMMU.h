@@ -74,11 +74,6 @@ inline bool TMMU::WakeUpState2() {
   (ST_TYPE!=STE) &&
 #endif
   WAKE_UP_STATE==2);
-    if(
-#if defined(SS_STF) && !defined(SS_MMU_WAKE_UP_STE)
-      ST_TYPE!=STE && 
-#endif
-      WAKE_UP_STATE==2);
 }
 
 #endif

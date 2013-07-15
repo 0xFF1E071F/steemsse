@@ -895,7 +895,7 @@ FF8240 - FF827F   palette, res
 
     case 0xff8000:
       if(addr==0xff8001)
-        ior_byte=(mem_len>FOUR_MEGS) ? MEMCONF_2MB|(MEMCONF_2MB<<2)
+        ior_byte=(mem_len>FOUR_MEGS) ? (BYTE)(MEMCONF_2MB|(MEMCONF_2MB<<2))
                                      : mmu_memory_configuration;
       else if(addr>0xff800f) //forbidden range
         exception(BOMBS_BUS_ERROR,EA_READ,addr);
