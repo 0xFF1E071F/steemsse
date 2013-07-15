@@ -11,6 +11,122 @@ the end of scanlines.
 #pragma message("Included for compilation: emulator.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_EMULATOR_H)
+#define EXT
+#define INIT(s) =s
+
+EXT int MILLISECONDS_TO_HBLS(int); 
+EXT void make_Mem(BYTE,BYTE);
+EXT void GetCurrentMemConf(BYTE[2]);
+
+EXT BYTE *Mem INIT(NULL),*Rom INIT(NULL);
+EXT WORD tos_version;
+
+EXT int interrupt_depth INIT(0);
+EXT int em_width INIT(480);
+EXT int em_height INIT(480);
+EXT int em_planes INIT(4);
+EXT int extended_monitor INIT(0);
+EXT DWORD n_cpu_cycles_per_second INIT(8000000),new_n_cpu_cycles_per_second INIT(0),n_millions_cycles_per_sec INIT(8);
+EXT int on_rte;
+EXT int on_rte_interrupt_depth;
+
+EXT MEM_ADDRESS shifter_draw_pointer;
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+EXT BYTE shifter_hscroll, shifter_skip_raster_for_hscroll; // the latter bool
+#else
+EXT int shifter_hscroll,shifter_skip_raster_for_hscroll;
+#endif
+
+EXT MEM_ADDRESS xbios2,shifter_draw_pointer_at_start_of_line;
+EXT int shifter_pixel;
+EXT int shifter_freq INIT(60);
+EXT int shifter_freq_idx INIT(1);
+EXT int shifter_x,shifter_y;
+EXT int shifter_first_draw_line;
+EXT int shifter_last_draw_line;
+EXT int shifter_scanline_width_in_bytes;
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+EXT BYTE shifter_fetch_extra_words;
+#else
+EXT int shifter_fetch_extra_words;
+#endif
+EXT bool shifter_hscroll_extra_fetch;
+EXT int screen_res INIT(0);
+EXT int scan_y;
+
+EXT BYTE mmu_memory_configuration;
+
+EXT MEM_ADDRESS mmu_bank_length[2];
+EXT MEM_ADDRESS bank_length[2];
+
+
+WIN_ONLY( EXT CRITICAL_SECTION agenda_cs; )
+
+const MEM_ADDRESS mmu_bank_length_from_config[5]=
+                  {128*1024,512*1024,2*1024*1024,0,7*1024*1024};
+
+MEM_ADDRESS os_gemdos_vector=0,os_bios_vector=0,os_xbios_vector=0;
+bool emudetect_called=0,emudetect_write_logs_to_printer=0,emudetect_overscans_fixed=false;
+
+BYTE emudetect_falcon_mode=EMUD_FALC_MODE_OFF;
+BYTE emudetect_falcon_mode_size=0;
+bool emudetect_falcon_extra_height=0;
+
+DynamicArray<DWORD> emudetect_falcon_stpal;
+DynamicArray<DWORD> emudetect_falcon_pcpal;
+
+BYTE snapshot_loaded=0;
+
+bool vbl_pending=false;
+
+AGENDA_STRUCT agenda[MAX_AGENDA_LENGTH];
+
+int agenda_length=0;
+unsigned long agenda_next_time=0x7fffffff;
+
+MEM_ADDRESS on_rte_return_address;
+
+LPAGENDAPROC agenda_list[]={agenda_fdc_spun_up,agenda_fdc_motor_flag_off,agenda_fdc_finished,
+                          agenda_floppy_seek,agenda_floppy_readwrite_sector,agenda_floppy_read_address,
+                          agenda_floppy_read_track,agenda_floppy_write_track,agenda_serial_sent_byte,
+                          agenda_serial_break_boundary,agenda_serial_loopback_byte,agenda_midi_replace,
+                          agenda_check_centronics_interrupt,agenda_ikbd_process,agenda_keyboard_reset,
+#if !(defined(STEVEN_SEAGAL) && defined(SS_IKBD_MANAGE_ACIA_TX))
+                          agenda_acia_tx_delay_IKBD,
+#endif
+                          agenda_acia_tx_delay_MIDI,ikbd_send_joystick_message,
+                          ikbd_report_abs_mouse,agenda_keyboard_replace,
+                          
+#if defined(SS_FDC_RESTORE_AGENDA)
+                          agenda_fdc_restore,
+#endif
+#if defined(SS_FDC_VERIFY_AGENDA)
+                          agenda_fdc_verify,
+#endif
+                          (LPAGENDAPROC)1};
+
+
+#if !(defined(STEVEN_SEAGAL) && defined(SS_ACIA)) //see new file acia.h
+struct _ACIA_STRUCT acia[2];
+#endif
+
+#ifndef NO_CRAZY_MONITOR
+
+int aes_calls_since_reset=0;
+long save_r[16];
+
+MEM_ADDRESS line_a_base=0;
+MEM_ADDRESS vdi_intout=0;
+
+#endif
+
+#undef EXT
+#undef INIT
+
+
+#endif
+
 //---------------------------------------------------------------------------
 void init_timings()
 {

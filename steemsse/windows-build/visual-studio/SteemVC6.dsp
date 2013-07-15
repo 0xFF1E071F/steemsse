@@ -242,6 +242,7 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\draw.decla.h"\
 	"..\..\steem\code\draw.h"\
 	"..\..\steem\code\emulator.cpp"\
+	"..\..\steem\code\emulator.decla.h"\
 	"..\..\steem\code\emulator.h"\
 	"..\..\steem\code\fdc.cpp"\
 	"..\..\steem\code\fdc.h"\
@@ -506,6 +507,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\dwin_edit.cpp"\
 	"..\..\steem\code\dwin_edit.decla.h"\
 	"..\..\steem\code\dwin_edit.h"\
+	"..\..\steem\code\emulator.decla.h"\
 	"..\..\steem\code\emulator.h"\
 	"..\..\steem\code\fdc.h"\
 	"..\..\steem\code\floppy_drive.cpp"\
@@ -730,6 +732,10 @@ SOURCE=..\..\steem\code\dwin_edit.decla.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\dwin_edit.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\emulator.decla.h
 # End Source File
 # Begin Source File
 
