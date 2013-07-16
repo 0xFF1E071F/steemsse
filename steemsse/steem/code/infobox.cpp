@@ -237,7 +237,7 @@ void TGeneralInfo::Show()
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX2)
   if (Exists(RunDir+"\\"+WINDOW_TITLE+".txt")) AddPageLabel(WINDOW_TITLE,INFOPAGE_README_SSE);
-  if (Exists(RunDir+"\\Steem SSE FAQ.txt")) AddPageLabel("SSE Faq",INFOPAGE_FAQ_SSE);
+  if (Exists(RunDir+"\\"+STEEM_SSE_FAQ_TXT)) AddPageLabel("SSE FAQ",INFOPAGE_FAQ_SSE);
 #endif
 
   page_l=2+TreeGetMaxItemWidth(PageTree)+5+2+10;
@@ -461,7 +461,7 @@ void TGeneralInfo::CreateReadmePage(int p)
     case INFOPAGE_FAQ: TextFile+="faq.txt"; break;
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX2)
     case INFOPAGE_README_SSE: TextFile+=WINDOW_TITLE; TextFile+=".txt"; break;
-    case INFOPAGE_FAQ_SSE: TextFile+="Steem SSE FAQ.txt"; break;
+    case INFOPAGE_FAQ_SSE: TextFile+=STEEM_SSE_FAQ_TXT; break;
 #endif
   }
   FILE *f=fopen(TextFile,"rb");

@@ -10,6 +10,98 @@ DMA I/O addresses (see iow.cpp).
 #pragma message("Included for compilation: fdc.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_FDC_H)
+
+#define EXT
+#define INIT(s) =s
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+EXT BYTE floppy_mediach[2]; // potentially breaks snapshot...
+EXT BYTE num_connected_floppies INIT(2);
+#else
+EXT int floppy_mediach[2];
+EXT int num_connected_floppies INIT(2);
+#endif
+
+EXT int floppy_current_drive();
+
+EXT BYTE floppy_current_side();
+EXT void fdc_add_to_crc(WORD &,BYTE);
+
+#if !(defined(STEVEN_SEAGAL) && defined(SS_DMA))
+EXT MEM_ADDRESS dma_address;
+#endif
+
+EXT bool floppy_instant_sector_access INIT(true);
+
+EXT bool floppy_access_ff INIT(0);
+#if !(defined(STEVEN_SEAGAL)&&defined(SS_OSD_DRIVE_LED3))
+EXT DWORD disk_light_off_time INIT(0);
+#endif
+EXT bool floppy_access_started_ff INIT(0);
+
+#if USE_PASTI
+EXT HINSTANCE hPasti INIT(NULL);
+EXT int pasti_update_time;
+EXT const struct pastiFUNCS *pasti INIT(NULL);
+//EXT bool pasti_use_all_possible_disks INIT(0);
+EXT char pasti_file_exts[160];
+EXT WORD pasti_store_byte_access;
+EXT bool pasti_active INIT(0);
+//EXT DynamicArray<pastiBREAKINFO> pasti_bks;
+#endif
+
+#if !(defined(STEVEN_SEAGAL) && defined(SS_DMA))
+WORD dma_mode;
+BYTE dma_status;
+#endif
+
+#if !(defined(STEVEN_SEAGAL) && defined(SS_FDC))
+BYTE fdc_cr,fdc_tr,fdc_sr,fdc_str,fdc_dr; // made struct
+#endif
+bool fdc_last_step_inwards_flag;
+BYTE floppy_head_track[2];
+
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+BYTE floppy_access_ff_counter=0;
+BYTE floppy_irq_flag=0;
+BYTE fdc_step_time_to_hbls[4]={94,188,32,47};
+#if !(defined(STEVEN_SEAGAL) && defined(SS_DMA_FIFO_READ_ADDRESS))
+BYTE fdc_read_address_buffer_len=0;
+#endif
+#if !(defined(STEVEN_SEAGAL) && defined(SS_DMA))
+WORD dma_sector_count; 
+#endif
+WORD floppy_write_track_bytes_done;
+BYTE fdc_spinning_up=0;
+BYTE floppy_type1_command_active=2;  // Default to type 1 status
+#if !(defined(STEVEN_SEAGAL) && defined(SS_DMA))
+WORD dma_bytes_written_for_sector_count=0;
+#endif
+#else
+int floppy_access_ff_counter=0;
+int floppy_irq_flag=0;
+int fdc_step_time_to_hbls[4]={94,188,32,47};
+int fdc_read_address_buffer_len=0;
+#if !(defined(STEVEN_SEAGAL) && defined(SS_DMA))
+int dma_sector_count;
+#endif
+int floppy_write_track_bytes_done;
+int fdc_spinning_up=0;
+int floppy_type1_command_active=2;  // Default to type 1 status
+#if !(defined(STEVEN_SEAGAL) && defined(SS_DMA))
+int dma_bytes_written_for_sector_count=0;
+#endif
+#endif//defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+
+EXT BYTE fdc_read_address_buffer[20];
+
+#undef EXT
+#undef INIT
+
+#endif
+
 #define DMA_ADDRESS_IS_VALID_R (dma_address<himem)
 #define DMA_ADDRESS_IS_VALID_W (dma_address<himem && dma_address>=MEM_FIRST_WRITEABLE)
 

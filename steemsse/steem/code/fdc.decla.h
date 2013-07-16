@@ -1,17 +1,9 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_FDC_H)
+#pragma once
+#ifndef FDC_DECLA_H
+#define FDC_DECLA_H
 
-#include "fdc.decla.h"
-
-#else//!defined(SS_STRUCTURE_FDC_H)
-
-
-#ifdef IN_EMU
-#define EXT
-#define INIT(s) =s
-#else
 #define EXT extern
 #define INIT(s)
-#endif
 
 #if defined(STEVEN_SEAGAL) && (defined(SS_FDC)||defined(SS_DMA))
 // ADAT = Accurate Disk Access Times (Steem option, snails on drives!)
@@ -79,7 +71,7 @@ EXT bool pasti_active INIT(0);
 
 
 
-#ifdef IN_EMU
+//#ifdef IN_EMU
 
 #define FDC_STR_BUSY               BIT_0
 #define FDC_STR_T1_INDEX_PULSE     BIT_1
@@ -97,15 +89,15 @@ EXT bool pasti_active INIT(0);
 #define FDC_VERIFY                (fdc_cr & FDC_CR_TYPE_1_VERIFY)
 
 #if !(defined(STEVEN_SEAGAL) && defined(SS_DMA))
-WORD dma_mode;
-BYTE dma_status;
+EXT WORD dma_mode;
+EXT BYTE dma_status;
 #endif
 
 #if !(defined(STEVEN_SEAGAL) && defined(SS_FDC))
-BYTE fdc_cr,fdc_tr,fdc_sr,fdc_str,fdc_dr; // made struct
+EXT BYTE fdc_cr,fdc_tr,fdc_sr,fdc_str,fdc_dr; // made struct
 #endif
-bool fdc_last_step_inwards_flag;
-BYTE floppy_head_track[2];
+EXT bool fdc_last_step_inwards_flag;
+EXT BYTE floppy_head_track[2];
 
 void floppy_fdc_command(BYTE);
 void fdc_execute();
@@ -113,39 +105,39 @@ bool floppy_track_index_pulse_active();
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
 enum {FLOPPY_FF_VBL_COUNT=20};
-BYTE floppy_access_ff_counter=0;
+EXT BYTE floppy_access_ff_counter;
 enum {FLOPPY_IRQ_YES=9,FLOPPY_IRQ_ONESEC,FLOPPY_IRQ_NOW};
-BYTE floppy_irq_flag=0;
-BYTE fdc_step_time_to_hbls[4]={94,188,32,47};
+EXT BYTE floppy_irq_flag;
+EXT BYTE fdc_step_time_to_hbls[4];
 #if !(defined(STEVEN_SEAGAL) && defined(SS_DMA_FIFO_READ_ADDRESS))
-BYTE fdc_read_address_buffer_len=0;
+EXT BYTE fdc_read_address_buffer_len;
 #endif
 #if !(defined(STEVEN_SEAGAL) && defined(SS_DMA))
-WORD dma_sector_count; 
+EXT WORD dma_sector_count; 
 #endif
-WORD floppy_write_track_bytes_done;
-BYTE fdc_spinning_up=0;
-BYTE floppy_type1_command_active=2;  // Default to type 1 status
+EXT WORD floppy_write_track_bytes_done;
+EXT BYTE fdc_spinning_up;
+EXT BYTE floppy_type1_command_active;  // Default to type 1 status
 #if !(defined(STEVEN_SEAGAL) && defined(SS_DMA))
-WORD dma_bytes_written_for_sector_count=0;
+EXT WORD dma_bytes_written_for_sector_count;
 #endif
 #else
 #define FLOPPY_FF_VBL_COUNT 20
-int floppy_access_ff_counter=0;
+int floppy_access_ff_counter;
 #define FLOPPY_IRQ_YES 9
 #define FLOPPY_IRQ_ONESEC 10
 #define FLOPPY_IRQ_NOW 417
-int floppy_irq_flag=0;
-int fdc_step_time_to_hbls[4]={94,188,32,47};
-int fdc_read_address_buffer_len=0;
+EXT int floppy_irq_flag;
+EXT int fdc_step_time_to_hbls[4];
+EXT int fdc_read_address_buffer_len;
 #if !(defined(STEVEN_SEAGAL) && defined(SS_DMA))
-int dma_sector_count;
+EXT int dma_sector_count;
 #endif
-int floppy_write_track_bytes_done;
-int fdc_spinning_up=0;
-int floppy_type1_command_active=2;  // Default to type 1 status
+EXT int floppy_write_track_bytes_done;
+EXT int fdc_spinning_up;
+EXT int floppy_type1_command_active;  // Default to type 1 status
 #if !(defined(STEVEN_SEAGAL) && defined(SS_DMA))
-int dma_bytes_written_for_sector_count=0;
+EXT int dma_bytes_written_for_sector_count;
 #endif
 #endif//defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
 
@@ -156,12 +148,12 @@ int dma_bytes_written_for_sector_count=0;
 #define fdc_read_address_buffer_len Dma.Fifo_idx
 #endif
 #else
-BYTE fdc_read_address_buffer[20];
+EXT BYTE fdc_read_address_buffer[20];
 #endif
 
-#endif
+//#endif
 
 #undef EXT
 #undef INIT
 
-#endif//!defined(SS_STRUCTURE_FDC_H)
+#endif//#define FDC_DECLA_H
