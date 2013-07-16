@@ -11,6 +11,11 @@ data.
 #pragma message("Included for compilation: floppydrive.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_FLOPPYDRIVE_H)
+TFloppyImage FloppyDrive[2];
+bool FloppyArchiveIsReadWrite=0;
+#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)    
 //#include "SSE/SSEOption.h"
 //#include "SSE/SSEFloppy.h"
