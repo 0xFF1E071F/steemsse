@@ -382,6 +382,8 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 #if defined(SS_VARIOUS)
 
+#define STEEM_SSE_FAQ_TXT "Steem SSE FAQ.txt"
+
 #endif
 
 
