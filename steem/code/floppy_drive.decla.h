@@ -1,9 +1,9 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_FLOPPYDRIVE_H)
+#pragma once
+#ifndef FLOPPYDRIVE_DECLA_H
+#define FLOPPYDRIVE_DECLA_H
 
-#include "floppy_drive.decla.h"
-
-#else//!defined(SS_STRUCTURE_FLOPPYDRIVE_H)
-
+#define EXT extern
+#define INIT(s)
 
 #define FIMAGE_OK                  0
 #define FIMAGE_WRONGFORMAT         1
@@ -87,11 +87,7 @@ public:
   bool WrittenTo;	//SS: WrittenTo just means 'dirty'
 };
 
-#ifdef IN_MAIN
-TFloppyImage FloppyDrive[2];
-bool FloppyArchiveIsReadWrite=0;
-#else
 extern TFloppyImage FloppyDrive[2];
-#endif
+extern bool FloppyArchiveIsReadWrite;
 
-#endif//!defined(SS_STRUCTURE_FLOPPYDRIVE_H)
+#endif//#define FLOPPYDRIVE_DECLA_H
