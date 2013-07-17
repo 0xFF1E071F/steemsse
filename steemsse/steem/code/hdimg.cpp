@@ -10,6 +10,21 @@ emulation, but it hasn't been written yet (and probably won't be).
 #pragma message("Included for compilation: hdimg.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_HDIMG_H)
+#define EXT
+#define INIT(s) =s
+
+
+EXT bool hdimg_active INIT(0);
+
+EXT MEM_ADDRESS os_hdimg_init_vector INIT(0),os_hdimg_bpb_vector INIT(0),os_hdimg_rw_vector INIT(0),
+              os_hdimg_boot_vector INIT(0),os_hdimg_mediach_vector INIT(0);
+
+#undef EXT
+#undef INIT
+
+#endif
+
 //---------------------------------------------------------------------------
 void hdimg_init_vectors()
 {

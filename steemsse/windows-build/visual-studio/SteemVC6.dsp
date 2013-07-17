@@ -254,6 +254,7 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\floppy_drive.h"\
 	"..\..\steem\code\gui.decla.h"\
 	"..\..\steem\code\gui.h"\
+	"..\..\steem\code\hdimg.decla.h"\
 	"..\..\steem\code\hdimg.h"\
 	"..\..\steem\code\ikbd.cpp"\
 	"..\..\steem\code\ikbd.h"\
@@ -527,6 +528,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\harddiskman.cpp"\
 	"..\..\steem\code\harddiskman.h"\
 	"..\..\steem\code\hdimg.cpp"\
+	"..\..\steem\code\hdimg.decla.h"\
 	"..\..\steem\code\hdimg.h"\
 	"..\..\steem\code\historylist.cpp"\
 	"..\..\steem\code\historylist.h"\
@@ -783,6 +785,10 @@ SOURCE=..\..\steem\code\gui_emu.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\harddiskman.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\hdimg.decla.h
 # End Source File
 # Begin Source File
 
