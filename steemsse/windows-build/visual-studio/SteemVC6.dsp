@@ -213,9 +213,12 @@ DEP_CPP_EMU_C=\
 	"..\..\include\binary.h"\
 	"..\..\include\circularbuffer.h"\
 	"..\..\include\clarity.h"\
+	"..\..\include\configstorefile.h"\
 	"..\..\include\dirsearch.h"\
 	"..\..\include\dynamicarray.h"\
+	"..\..\include\easycompress.h"\
 	"..\..\include\easystr.h"\
+	"..\..\include\easystringlist.h"\
 	"..\..\include\internal_speaker.h"\
 	"..\..\include\mymisc.h"\
 	"..\..\include\notwin_mymisc.h"\
@@ -249,6 +252,7 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\fdc.h"\
 	"..\..\steem\code\floppy_drive.decla.h"\
 	"..\..\steem\code\floppy_drive.h"\
+	"..\..\steem\code\gui.decla.h"\
 	"..\..\steem\code\gui.h"\
 	"..\..\steem\code\hdimg.h"\
 	"..\..\steem\code\ikbd.cpp"\
@@ -273,6 +277,7 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\psg.h"\
 	"..\..\steem\code\reset.cpp"\
 	"..\..\steem\code\reset.h"\
+	"..\..\steem\code\resnum.decla.h"\
 	"..\..\steem\code\rs232.cpp"\
 	"..\..\steem\code\rs232.h"\
 	"..\..\steem\code\run.cpp"\
@@ -517,6 +522,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\floppy_drive.decla.h"\
 	"..\..\steem\code\floppy_drive.h"\
 	"..\..\steem\code\gui.cpp"\
+	"..\..\steem\code\gui.decla.h"\
 	"..\..\steem\code\gui.h"\
 	"..\..\steem\code\harddiskman.cpp"\
 	"..\..\steem\code\harddiskman.h"\
@@ -560,6 +566,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\patchesbox.h"\
 	"..\..\steem\code\psg.h"\
 	"..\..\steem\code\reset.h"\
+	"..\..\steem\code\resnum.decla.h"\
 	"..\..\steem\code\resnum.h"\
 	"..\..\steem\code\rs232.h"\
 	"..\..\steem\code\run.h"\
@@ -763,6 +770,10 @@ SOURCE=..\..\steem\code\floppy_drive.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\steem\code\gui.decla.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\steem\code\gui.h
 # End Source File
 # Begin Source File
@@ -872,6 +883,10 @@ SOURCE=..\..\steem\code\psg.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\reset.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\resnum.decla.h
 # End Source File
 # Begin Source File
 
