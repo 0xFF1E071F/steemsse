@@ -382,6 +382,8 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 #if defined(SS_VARIOUS)
 
+#define README_FONT_NAME "Courier New"
+#define README_FONT_HEIGHT 16
 #define STEEM_SSE_FAQ_TXT "Steem SSE FAQ.txt"
 
 #endif

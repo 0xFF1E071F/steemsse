@@ -52,11 +52,7 @@ EXT const char *stem_version_text INIT(SSE_VERSION_TXT); // OSD + info box
 EXT const char *stem_version_text INIT("3.2");
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX)
-#define STEEM_EMAIL "another.steven.seagal@gmail.com"
-#else
 #define STEEM_EMAIL "steem@gmx.net"
-#endif
 
 #define STEEM_WEB "http:/""/steem.atari.st/"
 

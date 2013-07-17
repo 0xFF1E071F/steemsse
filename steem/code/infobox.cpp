@@ -91,7 +91,7 @@ void TGeneralInfo::GetHyperlinkLists(EasyStringList &desc_sl,EasyStringList &lin
   desc_sl.Add(T("Official Steem website (legacy)"),0);
   link_sl.Add(STEEM_WEB);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX)
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX1)
   desc_sl.Add(T("Steem SSE sourceforge"),0);
   link_sl.Add("http:/""/sourceforge.net/projects/steemsse/");
   desc_sl.Add(T("Steven Seagal's Atari ST Site"),0);
@@ -138,8 +138,12 @@ void TGeneralInfo::GetHyperlinkLists(EasyStringList &desc_sl,EasyStringList &lin
 //---------------------------------------------------------------------------
 TGeneralInfo::TGeneralInfo()
 {
-  page_l=160;page_w=500;
-
+  page_l=160;
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX4)
+  page_w=82*8;//with Courier New, should give 80 visible columns
+#else  
+  page_w=500;
+#endif
   Left=(GetSystemMetrics(SM_CXSCREEN)-(3+page_l+page_w+10+3))/2;
   Top=(GetSystemMetrics(SM_CYSCREEN)-(INFOBOX_HEIGHT+GetSystemMetrics(SM_CYCAPTION)))/2;
 
@@ -213,6 +217,12 @@ void TGeneralInfo::Show()
     return;
   }
 
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX3)
+  hFontCourier=CreateFont (README_FONT_HEIGHT, 0, 0, 0, FW_DONTCARE, FALSE, 
+    FALSE, FALSE, ANSI_CHARSET,OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+    DEFAULT_QUALITY,DEFAULT_PITCH | FF_SWISS,README_FONT_NAME);
+#endif
+
   SetWindowLong(Handle,GWL_USERDATA,(long)this);
 
   MakeParent(HWND(FullScreen ? StemWin:NULL));
@@ -241,7 +251,10 @@ void TGeneralInfo::Show()
 #endif
 
   page_l=2+TreeGetMaxItemWidth(PageTree)+5+2+10;
+#if !(defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX4))
   page_w=min(page_w,620-page_l);
+#endif
+
   SetWindowPos(Handle,NULL,0,0,3+page_l+page_w+10+3,GetSystemMetrics(SM_CYCAPTION)+3+INFOBOX_HEIGHT+3,SWP_NOZORDER | SWP_NOMOVE);
   SetWindowPos(PageTree,NULL,0,0,page_l-10,INFOBOX_HEIGHT,SWP_NOZORDER | SWP_NOMOVE);
 
@@ -466,15 +479,25 @@ void TGeneralInfo::CreateReadmePage(int p)
   }
   FILE *f=fopen(TextFile,"rb");
   if (f){
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX5)
+    char *text=(char*)malloc(64000);
+#else
     char text[64000];
+#endif
     text[fread(text,1,64000,f)]=0;
     fclose(f);
-
     SendMessage(GetDlgItem(Handle,500),WM_SETTEXT,0,(LPARAM)text);
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX5)
+    free(text);
+#endif
   }
 
   if (Focus==NULL) Focus=GetDlgItem(Handle,504);
   SetPageControlsFont();
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX3)
+  SendMessage (GetDlgItem(Handle,500), WM_SETFONT, WPARAM (hFontCourier), TRUE);
+#endif
+
   ShowPageControls();
 }
 //---------------------------------------------------------------------------
@@ -484,6 +507,10 @@ void TGeneralInfo::Hide()
 
   ShowWindow(Handle,SW_HIDE);
   if (FullScreen) SetFocus(StemWin);
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX3)
+  DeleteObject(hFontCourier);
+#endif
 
   DestroyCurrentPage();
   DestroyWindow(Handle);Handle=NULL;
