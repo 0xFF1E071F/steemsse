@@ -1,3 +1,9 @@
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_HARDDISKMAN_H)
+#ifndef HARDDISKMAN_H
+#define HARDDISKMAN_H
+#endif
+
+
 #define MAX_HARDDRIVES 10
 
 typedef struct{
@@ -49,3 +55,6 @@ public:
   bool DisableHardDrives;
 };
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_HARDDISKMAN_H)
+#endif//HARDDISKMAN_H
+#endif
