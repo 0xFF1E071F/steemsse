@@ -1,17 +1,9 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_HDIMG_H)
+#pragma once
+#ifndef HDIMG_DECLA_H
+#define HDIMG_DECLA_H
 
-#include "hdimg.decla.h"
-
-#else//!defined(SS_STRUCTURE_HDIMG_H)
-
-
-#ifdef IN_MAIN
-#define EXT
-#define INIT(s) =s
-#else
 #define EXT extern
 #define INIT(s)
-#endif
 
 EXT void hdimg_init_vectors();
 EXT void hdimg_reset();
@@ -26,4 +18,4 @@ EXT MEM_ADDRESS os_hdimg_init_vector INIT(0),os_hdimg_bpb_vector INIT(0),os_hdim
 #undef EXT
 #undef INIT
 
-#endif//SS_STRUCTURE_HDIMG_H
+#endif//HDIMG_DECLA_H
