@@ -990,8 +990,11 @@ problem, multiple struct/class definition not allowed?
 #endif
 #define SS_VAR_FULLSCREEN_DONT_START // disable run when going fullscreen - option?
 //#define SS_VAR_HIDE_OPTIONS_AT_START // hack before debugging
-#define SS_VAR_INFOBOX // reaction to information button
-#define SS_VAR_INFOBOX2 // add SSE texts
+#define SS_VAR_INFOBOX1 // SSE internet sites
+#define SS_VAR_INFOBOX2 // SSE readme + FAQ
+#define SS_VAR_INFOBOX3 // readme text font
+#define SS_VAR_INFOBOX4 // readme 80 col 
+#define SS_VAR_INFOBOX5 // don't take 64K on the stack!
 #define SS_VAR_KEYBOARD_CLICK // not a sound nor IKBD option
 #define SS_VAR_MOUSE_CAPTURE 
 #define SS_VAR_MSA_CONVERTER // don't prompt if found

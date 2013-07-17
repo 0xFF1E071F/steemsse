@@ -39,6 +39,10 @@ private:
   HIMAGELIST il;
   int MaxLinkID;
 
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX3)
+  HFONT hFontCourier;
+#endif
+
 #elif defined(UNIX)
   static int WinProc(TGeneralInfo*,Window,XEvent*);
   static int button_notifyproc(hxc_button*,int,int*);
