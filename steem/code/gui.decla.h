@@ -1,16 +1,28 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_GUI_H)
+#pragma once
+#ifndef GUI_DECLA_H
+#define GUI_DECLA_H
 
-#include "gui.decla.h"
-
-#else//!defined(SS_STRUCTURE_GUI_H)
-
-#ifdef IN_MAIN
-#define EXT
-#define INIT(s) =s
-#else
 #define EXT extern
 #define INIT(s)
+
+/*
+#include <easystr.h>
+#include <mymisc.h>
+#include <easycompress.h>
+#include <easystringlist.h>
+#include <portio.h>
+#include <dynamicarray.h>
+#include <dirsearch.h>
+
+#if USE_PASTI
+#include <pasti/pasti.h>
 #endif
+*/
+#include <configstorefile.h>
+#include "resnum.decla.h"
+
+
+
 
 #ifndef ONEGAME
 #define MENUHEIGHT 20
@@ -155,7 +167,7 @@ EXT MODIFIERSTATESTRUCT GetLRModifierStates();
 
 #endif
 //---------------------------------------------------------------------------
-#ifdef IN_MAIN
+//#ifdef IN_MAIN
 
 #define SHORTCUTS_TIMER_ID 2000
 #define DISPLAYCHANGE_TIMER_ID 2100
@@ -251,9 +263,9 @@ int GetScreenWidth(),GetScreenHeight();
 void ShowAllDialogs(bool);
 void slow_motion_change(bool);
 
-bool RunMessagePosted=0;
+EXT bool RunMessagePosted;
 
-BYTE KeyDownModifierState[256];
+EXT BYTE KeyDownModifierState[256];
 
 void ShiftSwitchChangeModifiers(bool,bool,int[]);
 void ShiftSwitchRestoreModifiers(int[]);
@@ -262,18 +274,18 @@ void HandleShiftSwitching(UINT,bool,BYTE&,int[]);
 Str SnapShotGetLastBackupPath();
 void SnapShotGetOptions(EasyStringList*);
 
-int PasteVBLCount=0,PasteSpeed=2;
-Str PasteText;
-bool StartEmuOnClick=0;
+EXT int PasteVBLCount,PasteSpeed;
+EXT Str PasteText;
+EXT bool StartEmuOnClick;
 //---------------------------------------------------------------------------
 #ifdef WIN32
 LRESULT __stdcall WndProc(HWND,UINT,WPARAM,LPARAM);
 LRESULT __stdcall FSClipWndProc(HWND,UINT,WPARAM,LPARAM);
 LRESULT __stdcall FSQuitWndProc(HWND,UINT,WPARAM,LPARAM);
 
-HWND FSQuitBut=NULL;
+EXT HWND FSQuitBut;
 
-HICON hGUIIcon[RC_NUM_ICONS],hGUIIconSmall[RC_NUM_ICONS];
+EXT HICON hGUIIcon[RC_NUM_ICONS],hGUIIconSmall[RC_NUM_ICONS];
 
 inline bool HandleMessage(MSG*);
 void EnableAllWindows(bool,HWND);
@@ -287,17 +299,17 @@ bool IsSteemAssociated(EasyStr);
 void AssociateSteem(EasyStr,EasyStr,bool,char *,int,bool);
 void UpdatePasteButton();
 
-HWND StemWin=NULL,ParentWin=NULL,ToolTip=NULL,DisableFocusWin=NULL,UpdateWin=NULL;
-HMENU StemWin_SysMenu=NULL;
-HFONT fnt;
-HCURSOR PCArrow;
-COLORREF MidGUIRGB,DkMidGUIRGB;
-HANDLE SteemRunningMutex=NULL;
+EXT HWND StemWin,ParentWin,ToolTip,DisableFocusWin,UpdateWin;
+EXT HMENU StemWin_SysMenu;
+EXT HFONT fnt;
+EXT HCURSOR PCArrow;
+EXT COLORREF MidGUIRGB,DkMidGUIRGB;
+EXT HANDLE SteemRunningMutex;
 
-bool WinNT=0;
-bool AllowTaskSwitch = NOT_ONEGAME(true) ONEGAME_ONLY(0);
-HHOOK hNTTaskSwitchHook=NULL;
-HWND NextClipboardViewerWin=NULL;
+EXT bool WinNT;
+EXT bool AllowTaskSwitch;
+EXT HHOOK hNTTaskSwitchHook;
+EXT HWND NextClipboardViewerWin;
 
 #define PostRunMessage()  if (RunMessagePosted==0){ \
                             SendDlgItemMessage(StemWin,101,BM_SETCLICKBUTTON,1,0); \
@@ -307,7 +319,7 @@ HWND NextClipboardViewerWin=NULL;
 //---------------------------------------------------------------------------
 #elif defined(UNIX)
 //---------------------------------------------------------------------------
-XErrorEvent XError;
+EXT XErrorEvent XError;
 int HandleXError(Display*,XErrorEvent*);
 
 int StemWinProc(void*,Window,XEvent*);
@@ -316,8 +328,8 @@ int hyperlink_np(hxc_button*,int,int*);
 
 void steem_hxc_modal_notify(bool);
 
-hxc_popup pop;
-hxc_popuphints hints;
+EXT hxc_popup pop;
+EXT hxc_popuphints hints;
 
 int ProcessEvent(XEvent *);
 void InitColoursAndIcons();
@@ -325,13 +337,13 @@ void InitColoursAndIcons();
 void steem_hxc_alloc_colours(Display*);
 void steem_hxc_free_colours(Display*);
 
-Window StemWin=0;
-GC DispGC=0;
-Cursor EmptyCursor=0;
-Atom RunSteemAtom,LoadSnapShotAtom;
-XID SteemWindowGroup = 0;
-DWORD BlackCol=0,WhiteCol=0,BkCol=0,BorderLightCol,BorderDarkCol;
-hxc_alert alert;
+EXT Window StemWin;
+EXT GC DispGC;
+EXT Cursor EmptyCursor;
+EXT Atom RunSteemAtom,LoadSnapShotAtom;
+EXT XID SteemWindowGroup;
+EXT DWORD BlackCol,WhiteCol,BkCol,BorderLightCol,BorderDarkCol;
+EXT hxc_alert alert;
 //XFontStruct *GUIFont=NULL,*SmallFont=NULL;
 
 void PrintHelpToStdout();
@@ -340,15 +352,8 @@ bool SetForegroundWindow(Window,Time=CurrentTime);
 Window GetForegroundWindow();
 void CentreWindow(Window,bool);
 bool GetWindowPositionData(Window,WINPOSITIONDATA *);
-  // SS: look how shitty C++ can be
-short KeyState[256]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
+EXT short KeyState[256];
 void SetKeyState(int,bool,bool=false);
 short GetKeyStateSym(KeySym);
 
@@ -447,15 +452,15 @@ void SnapShotProcess(int);
 #define ICO64_HARDDRIVES_FR 2
 
 extern "C" LPBYTE Get_icon16_bmp(),Get_icon32_bmp(),Get_icon64_bmp(),Get_tos_flags_bmp();
-IconGroup Ico16,Ico32,Ico64,IcoTOSFlags;
-Pixmap StemWinIconPixmap=0,StemWinIconMaskPixmap=0;
+EXT IconGroup Ico16,Ico32,Ico64,IcoTOSFlags;
+EXT Pixmap StemWinIconPixmap,StemWinIconMaskPixmap;
 
-hxc_button RunBut,FastBut,ResetBut,SnapShotBut,ScreenShotBut,PasteBut,FullScreenBut;
-hxc_button InfBut,PatBut,CutBut,OptBut,JoyBut,DiskBut;
+EXT hxc_button RunBut,FastBut,ResetBut,SnapShotBut,ScreenShotBut,PasteBut,FullScreenBut;
+EXT hxc_button InfBut,PatBut,CutBut,OptBut,JoyBut,DiskBut;
 
 #define FF_DOUBLECLICK_MS 200
 
-DWORD ff_doubleclick_time=0;
+EXT DWORD ff_doubleclick_time;
 
 int StemWinButtonNotifyProc(hxc_button*,int,int*);
 
@@ -474,51 +479,17 @@ inline DWORD RemoveProp(Window Win,XContext Prop)
   return RemoveProp(XD,Win,Prop);
 }
 
-int romfile_parse_routine(char*fn,struct stat*s)
-{
-  if (S_ISDIR(s->st_mode)) return FS_FTYPE_FOLDER;
-  if (has_extension_list(fn,".IMG",".ROM",NULL)){
-    return FS_FTYPE_FILE_ICON+ICO16_STCONFIG;
-  }
-  return FS_FTYPE_REJECT;
-}
+int romfile_parse_routine(char*fn,struct stat*s);
 
-int diskfile_parse_routine(char *fn,struct stat *s)
-{
-  if (S_ISDIR(s->st_mode)) return FS_FTYPE_FOLDER;
-  if (FileIsDisk(fn)){
-	  return FS_FTYPE_FILE_ICON+ICO16_DISKMAN;	
-  }
-  return FS_FTYPE_REJECT;
-}
+int diskfile_parse_routine(char *fn,struct stat *s);
 
-int wavfile_parse_routine(char *fn,struct stat *s)
-{
-  if (S_ISDIR(s->st_mode)) return FS_FTYPE_FOLDER;
-  if (has_extension(fn,".WAV")){
-	  return FS_FTYPE_FILE_ICON+ICO16_SOUND;	
-  }
-  return FS_FTYPE_REJECT;
-}
+int wavfile_parse_routine(char *fn,struct stat *s);
 
-int folder_parse_routine(char *fn,struct stat *s)
-{
-  if (S_ISDIR(s->st_mode)) return FS_FTYPE_FOLDER;
-  return FS_FTYPE_REJECT;
-}
+int folder_parse_routine(char *fn,struct stat *s);
 
-int cartfile_parse_routine(char *fn,struct stat*s)
-{
-  if (S_ISDIR(s->st_mode)) return FS_FTYPE_FOLDER;
-  if (has_extension(fn,".STC")){
-    if ((s->st_size)==128*1024+4){
-      return FS_FTYPE_FILE_ICON+ICO16_CART;
-    }
-  }
-  return FS_FTYPE_REJECT;
-}
+int cartfile_parse_routine(char *fn,struct stat*s);
 
-hxc_fileselect fileselect;
+EXT hxc_fileselect fileselect;
 
 #define COMLINE_HTTP 0
 #define COMLINE_FTP 1
@@ -528,195 +499,79 @@ hxc_fileselect fileselect;
 
 #define NUM_COMLINES 5
 
-char* Comlines_Default[NUM_COMLINES][8]={
-        {"netscape \"[URL]\"","konqueror \"[URL]\"","galeon \"[URL]\"","opera \"[URL]\"","firefox \"[URL]\"","mozilla \"[URL]\"",NULL},
-        {"netscape \"[URL]\"","konqueror \"[URL]\"","galeon \"[URL]\"","opera \"[URL]\"","firefox \"[URL]\"","mozilla \"[URL]\"",NULL},
-        {"netscape \"mailto:[ADDRESS]\"","mozilla \"mailto:[ADDRESS]\"","kmail \"[ADDRESS]\"","galeon \"mailto:[ADDRESS]\"",NULL},
-        {"konqueror \"[PATH]\"","nautilus \"[PATH]\"","xfm \"[PATH]\"",NULL},
-        {"kfind \"[PATH]\"","gnome-search-tool \"[PATH]\"",NULL}
-        };
+EXT char* Comlines_Default[NUM_COMLINES][8];
 
-Str Comlines[NUM_COMLINES]={Comlines_Default[0][0],Comlines_Default[1][0],Comlines_Default[2][0],Comlines_Default[3][0],Comlines_Default[4][0]};
+EXT Str Comlines[NUM_COMLINES];
 
 #endif //win32,unix
 
 bool load_cart(char*);
 void CleanUpSteem();
-bool StepByStepInit=0;
-EasyStr RunDir,WriteDir,INIFile,ScreenShotFol;
-EasyStr LastSnapShot,BootStateFile,StateHist[10],AutoSnapShotName="auto";
-Str BootDisk[2];
+EXT bool StepByStepInit;
+EXT EasyStr RunDir,WriteDir,INIFile,ScreenShotFol;
+EXT EasyStr LastSnapShot,BootStateFile,StateHist[10],AutoSnapShotName;
+EXT Str BootDisk[2];
 
 #define BOOT_PASTI_DEFAULT 0
 #define BOOT_PASTI_ON 1
 #define BOOT_PASTI_OFF 2
 
-int BootPasti=BOOT_PASTI_DEFAULT;
-bool PauseWhenInactive=0,BootTOSImage=0;
-bool bAOT=0,bAppMaximized=0;
+EXT int BootPasti;
+EXT bool PauseWhenInactive,BootTOSImage;
+EXT bool bAOT,bAppMaximized;
 #ifndef ONEGAME
-bool AutoLoadSnapShot=true,ShowTips=true;
+EXT bool AutoLoadSnapShot,ShowTips;
 #else
-bool AutoLoadSnapShot=0,ShowTips=0;
+EXT bool AutoLoadSnapShot,ShowTips;
 #endif
-bool AllowLPT=true,AllowCOM=true;
-bool HighPriority=0;
+EXT bool AllowLPT,AllowCOM;
+EXT bool HighPriority;
 
 #define BOOT_MODE_DEFAULT 0
 #define BOOT_MODE_FULLSCREEN 1
 #define BOOT_MODE_WINDOW 2
 #define BOOT_MODE_FLAGS_MASK 0xff
 #define BOOT_MODE_RUN 0x100
-int BootInMode=BOOT_MODE_DEFAULT;
+EXT int BootInMode;
 
 char *FSTypes(int,...);
 
-bool NoINI;
+EXT bool NoINI;
 
-const POINT WinSize[4][5]={ {{320,200},{640,400},{960, 600},{1280,800},{-1,-1}},
-                            {{640,200},{640,400},{1280,400},{1280,800},{-1,-1}},
-                            {{640,400},{1280,800},{-1,-1}},
-                            {{800,600},{-1,-1}}};
+EXT const POINT WinSize[4][5];
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
- POINT WinSizeBorderOriginal[4][5]={ {{320+ORIGINAL_BORDER_SIDE*2,200+(BORDER_TOP+ORIGINAL_BORDER_BOTTOM)},
-{640+(ORIGINAL_BORDER_SIDE*2)*2,400+2*(BORDER_TOP+ORIGINAL_BORDER_BOTTOM)},
-{960+(ORIGINAL_BORDER_SIDE*3)*2, 600+3*(BORDER_TOP+ORIGINAL_BORDER_BOTTOM)},
-{1280+(ORIGINAL_BORDER_SIDE*4)*2,800+4*(BORDER_TOP+ORIGINAL_BORDER_BOTTOM)},
-{-1,-1}},
-{{640+(ORIGINAL_BORDER_SIDE*2)*2,200+(BORDER_TOP+ORIGINAL_BORDER_BOTTOM)},
-{640+(ORIGINAL_BORDER_SIDE*2)*2,400+2*(BORDER_TOP+ORIGINAL_BORDER_BOTTOM)},
-{1280+(ORIGINAL_BORDER_SIDE*4)*2,400+2*(BORDER_TOP+ORIGINAL_BORDER_BOTTOM)},
-{1280+(ORIGINAL_BORDER_SIDE*4)*2,800+4*(BORDER_TOP+ORIGINAL_BORDER_BOTTOM)},
-{-1,-1}},
-{{640+(ORIGINAL_BORDER_SIDE*2)*2,400+2*(BORDER_TOP+ORIGINAL_BORDER_BOTTOM)},
-{1280+(ORIGINAL_BORDER_SIDE*4)*2,800+4*(BORDER_TOP+ORIGINAL_BORDER_BOTTOM)},
-{-1,-1}},
-{{800,600},
-{-1,-1}}
-};
 
+EXT  POINT WinSizeBorderOriginal[4][5];
 
- POINT WinSizeBorderLarge[4][5]={ {{320+LARGE_BORDER_SIDE_WIN*2,200+(BORDER_TOP+LARGE_BORDER_BOTTOM)},
-{640+(LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BORDER_TOP+LARGE_BORDER_BOTTOM)}, 
-{960+(LARGE_BORDER_SIDE_WIN*3)*2, 600+3*(BORDER_TOP+LARGE_BORDER_BOTTOM)},
-{1280+(LARGE_BORDER_SIDE_WIN*4)*2,800+4*(BORDER_TOP+LARGE_BORDER_BOTTOM)},
-{-1,-1}},
-{{640+(LARGE_BORDER_SIDE_WIN*2)*2,200+(BORDER_TOP+LARGE_BORDER_BOTTOM)},
-{640+(LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BORDER_TOP+LARGE_BORDER_BOTTOM)},
-{1280+(LARGE_BORDER_SIDE_WIN*4)*2,400+2*(BORDER_TOP+LARGE_BORDER_BOTTOM)},
-{1280+(LARGE_BORDER_SIDE_WIN*4)*2,800+4*(BORDER_TOP+LARGE_BORDER_BOTTOM)},
-{-1,-1}},
-{{640+(LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BORDER_TOP+LARGE_BORDER_BOTTOM)},
-{1280+(LARGE_BORDER_SIDE_WIN*4)*2,800+4*(BORDER_TOP+LARGE_BORDER_BOTTOM)},
-{-1,-1}},
-{{800,600},
-{-1,-1}}
-};
+EXT  POINT WinSizeBorderLarge[4][5];
 
- POINT WinSizeBorderLarge2[4][5]={ {{320+LARGE_BORDER_SIDE_WIN*2,200+(BORDER_TOP+LARGE_BORDER_BOTTOM+3)},
-{640+(LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BORDER_TOP+LARGE_BORDER_BOTTOM+3)}, 
-{960+(LARGE_BORDER_SIDE_WIN*3)*2, 600+3*(BORDER_TOP+LARGE_BORDER_BOTTOM+3)},
-{1280+(LARGE_BORDER_SIDE_WIN*4)*2,800+4*(BORDER_TOP+LARGE_BORDER_BOTTOM+3)},
-{-1,-1}},
-{{640+(LARGE_BORDER_SIDE_WIN*2)*2,200+(BORDER_TOP+LARGE_BORDER_BOTTOM+3)},
-{640+(LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BORDER_TOP+LARGE_BORDER_BOTTOM+3)},
-{1280+(LARGE_BORDER_SIDE_WIN*4)*2,400+2*(BORDER_TOP+LARGE_BORDER_BOTTOM+3)},
-{1280+(LARGE_BORDER_SIDE_WIN*4)*2,800+4*(BORDER_TOP+LARGE_BORDER_BOTTOM+3)},
-{-1,-1}},
-{{640+(LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BORDER_TOP+LARGE_BORDER_BOTTOM+3)},
-{1280+(LARGE_BORDER_SIDE_WIN*4)*2,800+4*(BORDER_TOP+LARGE_BORDER_BOTTOM+3)},
-{-1,-1}},
-{{800,600},
-{-1,-1}}
-};
+EXT  POINT WinSizeBorderLarge2[4][5];
 
+EXT  POINT WinSizeBorderVeryLarge[4][5];
 
- POINT WinSizeBorderVeryLarge[4][5]={ {{320+VERY_LARGE_BORDER_SIDE_WIN*2,200+(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
-{640+(VERY_LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)}, 
-{960+(VERY_LARGE_BORDER_SIDE_WIN*3)*2, 600+3*(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
-{1280+(VERY_LARGE_BORDER_SIDE_WIN*4)*2,800+4*(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
-{-1,-1}},
-{{640+(VERY_LARGE_BORDER_SIDE_WIN*2)*2,200+(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
-{640+(VERY_LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
-{1280+(VERY_LARGE_BORDER_SIDE_WIN*4)*2,400+2*(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
-{1280+(VERY_LARGE_BORDER_SIDE_WIN*4)*2,800+4*(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
-{-1,-1}},
-{{640+(VERY_LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
-{1280+(VERY_LARGE_BORDER_SIDE_WIN*4)*2,800+4*(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
-{-1,-1}},
-{{800,600},
-{-1,-1}}
-};
-
-
-
-
- POINT WinSizeBorder[4][5]={ {{320+BORDER_SIDE*2,200+(BORDER_TOP+BORDER_BOTTOM)},
-{640+(BORDER_SIDE*2)*2,400+2*(BORDER_TOP+BORDER_BOTTOM)}, 
-{960+(BORDER_SIDE*3)*2, 600+3*(BORDER_TOP+BORDER_BOTTOM)},
-{1280+(BORDER_SIDE*4)*2,800+4*(BORDER_TOP+BORDER_BOTTOM)},
-{-1,-1}},
-{{640+(BORDER_SIDE*2)*2,200+(BORDER_TOP+BORDER_BOTTOM)},
-{640+(BORDER_SIDE*2)*2,400+2*(BORDER_TOP+BORDER_BOTTOM)},
-{1280+(BORDER_SIDE*4)*2,400+2*(BORDER_TOP+BORDER_BOTTOM)},
-{1280+(BORDER_SIDE*4)*2,800+4*(BORDER_TOP+BORDER_BOTTOM)},
-{-1,-1}},
-{{640+(BORDER_SIDE*2)*2,400+2*(BORDER_TOP+BORDER_BOTTOM)},
-{1280+(BORDER_SIDE*4)*2,800+4*(BORDER_TOP+BORDER_BOTTOM)},
-{-1,-1}},
-{{800,600},
-{-1,-1}}
-};
+EXT  POINT WinSizeBorder[4][5];
 
 #else
 
-const POINT WinSizeBorder[4][5]={ {{320+BORDER_SIDE*2,200+(BORDER_TOP+BORDER_BOTTOM)},
-                                   {640+(BORDER_SIDE*2)*2,400+2*(BORDER_TOP+BORDER_BOTTOM)},
-                                   {960+(BORDER_SIDE*3)*2, 600+3*(BORDER_TOP+BORDER_BOTTOM)},
-                                   {1280+(BORDER_SIDE*4)*2,800+4*(BORDER_TOP+BORDER_BOTTOM)},
-                                   {-1,-1}},
-                                  {{640+(BORDER_SIDE*2)*2,200+(BORDER_TOP+BORDER_BOTTOM)},
-                                   {640+(BORDER_SIDE*2)*2,400+2*(BORDER_TOP+BORDER_BOTTOM)},
-                                   {1280+(BORDER_SIDE*4)*2,400+2*(BORDER_TOP+BORDER_BOTTOM)},
-                                   {1280+(BORDER_SIDE*4)*2,800+4*(BORDER_TOP+BORDER_BOTTOM)},
-                                   {-1,-1}},
-                                  {{640+(BORDER_SIDE*2)*2,400+2*(BORDER_TOP+BORDER_BOTTOM)},
-                                   {1280+(BORDER_SIDE*4)*2,800+4*(BORDER_TOP+BORDER_BOTTOM)},
-                                   {-1,-1}},
-                                   {{800,600},
-                                   {-1,-1}}
-                                   };
+EXT const POINT WinSizeBorder[4][5];
+
 #endif
 
-int WinSizeForRes[4]={0,0,0,0}; // SS: for resolutions 0,1,2 & 3("crazy")
+EXT int WinSizeForRes[4]; // SS: for resolutions 0,1,2 & 3("crazy")
 
-RECT rcPreFS;
+EXT RECT rcPreFS;
 
 void flashlight(bool);
 
-BYTE PCCharToSTChar[128]={  0,  0,  0,159,  0,  0,187,  0,  0,  0,  0,  0,181,  0,  0,  0,
-                            0,  0,154,  0,  0,  0,  0,255,  0,191,  0,  0,182,  0,  0,  0,
-                            0,173,  0,156,  0,157,  0,221,185,189,  0,174,170,  0,190,  0,
-                          248,241,253,254,  0,230,188,  0,  0,199,  0,175,172,171,  0,168,
-                          182,  0,  0,183,142,143,147,128,  0,144,  0,  0,  0,  0,  0,  0,
-                            0,165,  0,  0,  0,184,153,194,178,  0,  0,  0,154,  0,  0,158,
-                          133,160,131,176,132,134,145,135,138,130,136,137,141,161,140,139,
-                            0,164,149,162,147,177,148,246,179,151,163,150,154,  0,  0,152};
+EXT BYTE PCCharToSTChar[128];
 
-BYTE STCharToPCChar[128]={199,  0,233,226,228,224,229,231,234,235,232,239,238,236,196,197,
-                          201,230,  0,244,246,242,251,249,255,214,252,  0,163,165,223,131,
-                          225,237,243,250,241,209,  0,  0,191,  0,172,189,188,161,171,187,
-                          227,245,216,248,  0,140,156,195,213,168,  0,134,182,169,174,153,
-                            0,  0,215,  0,  0,  0,  0,185,  0,  0,  0,  0,  0,  0,  0,  0,
-                            0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,167,  0,  0,
-                            0,  0,  0,  0,  0,  0,181,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-                            0,177,  0,  0,  0,  0,247,  0,176,  0,  0,  0,  0,178,179,151};
+EXT BYTE STCharToPCChar[128];
 
 
-#endif
+//#endif
 
 #undef EXT
 #undef INIT
 
-#endif//SS_STRUCTURE_GUI_H
+#endif//GUI_DECLA_H

@@ -2,8 +2,8 @@
 #ifndef FLOPPYDRIVE_DECLA_H
 #define FLOPPYDRIVE_DECLA_H
 
-#define EXT extern
-#define INIT(s)
+//#define EXT extern
+//#define INIT(s)
 
 #define FIMAGE_OK                  0
 #define FIMAGE_WRONGFORMAT         1
