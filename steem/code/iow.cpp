@@ -283,7 +283,8 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
         }
         else
         {
-          if(!ACIA_IKBD.ByteWaitingTx) // TDR was free
+          //why did I do that? Disabling fixes High Fidelity Dreams
+          ///if(!ACIA_IKBD.ByteWaitingTx) // TDR was free 
             ACIA_IKBD.TDR=io_src_b; 
           TRACE_LOG("ACIA IKBD byte waiting $%X\n",io_src_b);
           ACIA_IKBD.ByteWaitingTx=true;

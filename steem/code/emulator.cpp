@@ -513,7 +513,11 @@ void ACIA_SetControl(int nACIA,BYTE Val)
     acia[nACIA].irq=false;
   }
 #if defined(SS_ACIA_USE_REGISTERS)
-  mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!( (ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7)));
+  mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!( (ACIA_IKBD.SR&BIT_7)
+#ifdef TEST01
+////    && ( ACIA_IKBD.CR&BIT_7 )
+#endif
+    || (ACIA_MIDI.SR&BIT_7)));
 #else
   mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
 #endif
