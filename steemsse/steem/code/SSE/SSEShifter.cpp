@@ -1415,8 +1415,9 @@ According to ST-CNX, those registers are in the MMU, not in the shifter.
 #if defined(SS_SHIFTER_EVENTS)
       VideoEvents.Add(scan_y,LINECYCLES,'V',io_src_b); 
 #endif
-      // asserts on SoWatt, Leavin' Terramis
-      ASSERT( mem_len>FOUR_MEGS || !(io_src_b&(~b00111111)) ); 
+      // asserts on SoWatt, Leavin' Terramis, High Fidelity Dreams
+      // ...
+//      ASSERT( mem_len>FOUR_MEGS || !(io_src_b&(~b00111111)) ); 
       if (mem_len<=FOUR_MEGS) 
         io_src_b&=b00111111;
       DWORD_B_2(&xbios2)=io_src_b;

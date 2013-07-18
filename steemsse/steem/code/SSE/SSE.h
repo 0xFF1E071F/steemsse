@@ -364,12 +364,12 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #ifdef SS_DEBUG_TRACE
 #ifdef _DEBUG // VC
-#define SS_DEBUG_TRACE_IDE
+//#define SS_DEBUG_TRACE_IDE
 #endif
 #if defined(DEBUG_BUILD) 
 #define SS_DEBUG_TRACE_FILE
 #else//VC
-//#define SS_DEBUG_TRACE_FILE
+#define SS_DEBUG_TRACE_FILE
 #endif
 #endif
 
