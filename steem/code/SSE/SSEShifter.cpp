@@ -677,6 +677,8 @@ void TShifter::CheckSideOverscan() {
 
 /*  A shift mode switch to 2 at cycle 160 (end of HIRES line) causes the line 
     to stop there. 106 bytes are not fetched.
+    Just Buggin: 152:R0002 172:R0000 (refix v3.5.2); lower?
+    ST-CNX: 160:R0002 172:R0000
 */
 
 #if defined(SS_SHIFTER_STEEM_ORIGINAL) || 0
@@ -698,7 +700,7 @@ void TShifter::CheckSideOverscan() {
   if(act-t>=0 && !(TrickExecuted&TRICK_LINE_MINUS_106))
   {
      i=CheckShiftMode(t);
-     if(i>=0 && shifter_shift_mode_change[i]==2 && ShiftModeChangeCycle(i)>152/*140*/)
+     if(i>=0 && shifter_shift_mode_change[i]==2 && ShiftModeChangeCycle(i)>=152/*140*/)
        CurrentScanline.Tricks|=TRICK_LINE_MINUS_106;
 
 #ifdef SS_DEBUG
