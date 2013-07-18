@@ -1,3 +1,9 @@
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_HISTORYLIST_H)
+// need no apart decla.h for this one
+#ifndef HISTORYLIST_H
+#define HISTORYLIST_H
+#endif
+
 //---------------------------------------------------------------------------
 class THistoryList : public TStemDialog
 {
@@ -16,3 +22,6 @@ public:
   bool Maximized;
 };
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_HISTORYLIST_H)
+#endif//HISTORYLIST_H
+#endif

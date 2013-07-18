@@ -1,3 +1,9 @@
+#if defined(STEVEN_SEAGAL)
+#pragma message("gui_emu.h ?")
+This file doesn't seem to be used at all. It doubles with gui.h, and shall
+be removed.
+#endif
+
 #ifdef IN_MAIN
 #define EXT
 #else
