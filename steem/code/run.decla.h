@@ -1,16 +1,9 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_RUN_H)
+#pragma once
+#ifndef RUN_DECLA_H
+#define RUN_DECLA_H
 
-#include "run.decla.h"
-
-#else//!defined(SS_STRUCTURE_RUN_H)
-
-#ifdef IN_EMU
-#define EXT
-#define INIT(s) =s
-#else
 #define EXT extern
 #define INIT(s)
-#endif
 
 #define RUNSTATE_RUNNING 0
 #define RUNSTATE_STOPPING 1
@@ -58,7 +51,7 @@ EXT int cpu_time_of_last_vbl,shifter_cycle_base;
 
 EXT int cpu_timer_at_start_of_hbl;
 
-#ifdef IN_EMU
+//#ifdef IN_EMU
 
 #define CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED 28
 
@@ -204,18 +197,18 @@ typedef struct{
 }screen_event_struct;
 
 #if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START)
-screen_event_struct event_plan_50hz[313*2+2+1],event_plan_60hz[263*2+2+1],event_plan_70hz[600*2+2+1],
+EXT screen_event_struct event_plan_50hz[313*2+2+1],event_plan_60hz[263*2+2+1],event_plan_70hz[600*2+2+1],
                     event_plan_boosted_50hz[313*2+2+1],event_plan_boosted_60hz[263*2+2+1],event_plan_boosted_70hz[600*2+2+1];
 
 void event_trigger_vbi();
 
 #else
 
-screen_event_struct event_plan_50hz[313*2+2],event_plan_60hz[263*2+2],event_plan_70hz[600*2+2],
+EXT screen_event_struct event_plan_50hz[313*2+2],event_plan_60hz[263*2+2],event_plan_70hz[600*2+2],
                     event_plan_boosted_50hz[313*2+2],event_plan_boosted_60hz[263*2+2],event_plan_boosted_70hz[600*2+2];
 #endif
 
-screen_event_struct*screen_event_pointer,*event_plan[4],*event_plan_boosted[4];
+EXT screen_event_struct*screen_event_pointer,*event_plan[4],*event_plan_boosted[4];
 void prepare_next_event();
 void inline prepare_event_again();
 void event_timer_a_timeout();
@@ -238,21 +231,20 @@ void event_hbl(); //just HBL, don't draw yet, don't increase scan_y
 #ifndef STEVEN_SEAGAL	//unused
 void event_scanline_last_line_of_60Hz(),event_scanline_last_line_of_70Hz();
 #endif
-EVENTPROC event_mfp_timer_timeout[4]={event_timer_a_timeout,event_timer_b_timeout,
-                          event_timer_c_timeout,event_timer_d_timeout};
-int time_of_next_event;
-EVENTPROC screen_event_vector;
-int cpu_time_of_start_of_event_plan;
+EXT EVENTPROC event_mfp_timer_timeout[4];
+EXT int time_of_next_event;
+EXT EVENTPROC screen_event_vector;
+EXT int cpu_time_of_start_of_event_plan;
 
 //int cpu_time_of_next_hbl_interrupt=0;
-int time_of_next_timer_b=0;
-int time_of_last_hbl_interrupt;
-int screen_res_at_start_of_vbl;
-int shifter_freq_at_start_of_vbl;
-int scanline_time_in_cpu_cycles_at_start_of_vbl;
-bool hbl_pending;
+EXT int time_of_next_timer_b;
+EXT int time_of_last_hbl_interrupt;
+EXT int screen_res_at_start_of_vbl;
+EXT int shifter_freq_at_start_of_vbl;
+EXT int scanline_time_in_cpu_cycles_at_start_of_vbl;
+EXT bool hbl_pending;
 
-int cpu_timer_at_res_change;
+EXT int cpu_timer_at_res_change;
 
 #ifdef DEBUG_BUILD
 #define CHECK_BREAKPOINT                     \
@@ -266,7 +258,7 @@ int cpu_timer_at_res_change;
 #define CHECK_BREAKPOINT
 #endif
 
-#endif
+//#endif
 
 #if USE_PASTI
 void event_pasti_update();
@@ -275,4 +267,4 @@ void event_pasti_update();
 #undef EXT
 #undef INIT
 
-#endif//SS_STRUCTURE_RUN_H
+#endif//RUN_DECLA_H

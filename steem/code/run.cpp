@@ -12,6 +12,88 @@ handled here, in event_scanline and event_vbl_interrupt.
 #pragma message("Included for compilation: run.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_RUN_H)
+
+#define EXT
+#define INIT(s) =s
+
+EXT int runstate;
+// fast_forward_max_speed=(1000 / (max %/100)); 0 for unlimited
+EXT int fast_forward INIT(0),fast_forward_max_speed INIT(0);
+EXT bool fast_forward_stuck_down INIT(0);
+EXT int slow_motion INIT(0),slow_motion_speed INIT(100);
+EXT int run_speed_ticks_per_second INIT(1000);
+EXT bool disable_speed_limiting INIT(0);
+LOG_ONLY( EXT int run_start_time; )
+UNIX_ONLY( EXT bool RunWhenStop INIT(0); )
+
+EXT DWORD avg_frame_time INIT(0),avg_frame_time_timer,frame_delay_timeout,timer;
+EXT DWORD speed_limit_wait_till;
+EXT int avg_frame_time_counter INIT(0);
+EXT DWORD auto_frameskip_target_time;
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS___)
+EXT int frameskip INIT(1);
+#else
+EXT int frameskip INIT(AUTO_FRAMESKIP);
+#endif
+EXT int frameskip_count INIT(1);
+
+EXT bool flashlight_flag INIT(false);
+
+DEBUG_ONLY(EXT int mode);
+
+EXT int mixed_output INIT(0);
+
+EXT int cpu_time_of_last_vbl,shifter_cycle_base;
+
+EXT int cpu_timer_at_start_of_hbl;
+
+//#ifdef IN_EMU
+
+#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START)
+screen_event_struct event_plan_50hz[313*2+2+1],event_plan_60hz[263*2+2+1],event_plan_70hz[600*2+2+1],
+                    event_plan_boosted_50hz[313*2+2+1],event_plan_boosted_60hz[263*2+2+1],event_plan_boosted_70hz[600*2+2+1];
+
+void event_trigger_vbi();
+
+#else
+
+screen_event_struct event_plan_50hz[313*2+2],event_plan_60hz[263*2+2],event_plan_70hz[600*2+2],
+                    event_plan_boosted_50hz[313*2+2],event_plan_boosted_60hz[263*2+2],event_plan_boosted_70hz[600*2+2];
+#endif
+
+screen_event_struct*screen_event_pointer,*event_plan[4],*event_plan_boosted[4];
+
+EVENTPROC event_mfp_timer_timeout[4]={event_timer_a_timeout,event_timer_b_timeout,
+                          event_timer_c_timeout,event_timer_d_timeout};
+int time_of_next_event;
+EVENTPROC screen_event_vector;
+int cpu_time_of_start_of_event_plan;
+
+//int cpu_time_of_next_hbl_interrupt=0;
+int time_of_next_timer_b=0;
+int time_of_last_hbl_interrupt;
+int screen_res_at_start_of_vbl;
+int shifter_freq_at_start_of_vbl;
+int scanline_time_in_cpu_cycles_at_start_of_vbl;
+bool hbl_pending;
+
+int cpu_timer_at_res_change;
+
+
+//#endif
+
+#if USE_PASTI
+void event_pasti_update();
+#endif
+
+#undef EXT
+#undef INIT
+
+
+#endif
+
 #include "SSE/SSEDebug.h"
 
 #ifdef SHOW_DRAW_SPEED
