@@ -257,6 +257,7 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\hdimg.decla.h"\
 	"..\..\steem\code\hdimg.h"\
 	"..\..\steem\code\ikbd.cpp"\
+	"..\..\steem\code\ikbd.decla.h"\
 	"..\..\steem\code\ikbd.h"\
 	"..\..\steem\code\init_sound.h"\
 	"..\..\steem\code\iolist.h"\
@@ -282,6 +283,7 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\rs232.cpp"\
 	"..\..\steem\code\rs232.h"\
 	"..\..\steem\code\run.cpp"\
+	"..\..\steem\code\run.decla.h"\
 	"..\..\steem\code\run.h"\
 	"..\..\steem\code\shortcutbox.h"\
 	"..\..\steem\code\SSE\SSE.h"\
@@ -532,6 +534,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\hdimg.h"\
 	"..\..\steem\code\historylist.cpp"\
 	"..\..\steem\code\historylist.h"\
+	"..\..\steem\code\ikbd.decla.h"\
 	"..\..\steem\code\ikbd.h"\
 	"..\..\steem\code\include.h"\
 	"..\..\steem\code\infobox.cpp"\
@@ -571,6 +574,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\resnum.decla.h"\
 	"..\..\steem\code\resnum.h"\
 	"..\..\steem\code\rs232.h"\
+	"..\..\steem\code\run.decla.h"\
 	"..\..\steem\code\run.h"\
 	"..\..\steem\code\screen_saver.cpp"\
 	"..\..\steem\code\screen_saver.h"\
@@ -796,6 +800,10 @@ SOURCE=..\..\steem\code\historylist.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\steem\code\ikbd.decla.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\steem\code\ikbd.h
 # End Source File
 # Begin Source File
@@ -897,6 +905,10 @@ SOURCE=..\..\steem\code\resnum.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\rs232.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\run.decla.h
 # End Source File
 # Begin Source File
 
