@@ -920,6 +920,7 @@ problem, multiple struct/class definition not allowed?
 #define SS_STRUCTURE_GUI_H
 #define SS_STRUCTURE_HARDDISKMAN_H
 #define SS_STRUCTURE_HDIMG_H
+#define SS_STRUCTURE_HISTORYLIST_H
 //...
 #endif
 
