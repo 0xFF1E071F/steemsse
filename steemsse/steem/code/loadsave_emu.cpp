@@ -288,8 +288,10 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     ACIA_MIDI.SR=2; // usually
   }
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_DOUBLE_BUFFER_TX)
+#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_DOUBLE_BUFFER_RX)
   ACIA_IKBD.LineRxBusy=0;
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_DOUBLE_BUFFER_TX)
   ACIA_IKBD.LineTxBusy=0;
 #endif
 

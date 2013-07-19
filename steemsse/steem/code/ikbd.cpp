@@ -526,7 +526,8 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
 {
   log(EasyStr("IKBD: At ")+hbl_count+" receives $"+HEXSl(src,2));
 
-  TRACE_LOG("ACIA %X -> IKBD\n",src);
+  //TRACE_LOG("ACIA %X -> IKBD\n",src);
+  TRACE_LOG("IKBD RDRS->RDR $%X\n",src);
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301) && defined(SS_DEBUG)
   HD6301.InterpretCommand(src); // our powerful 6301 command interpreter!
@@ -595,7 +596,7 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
 */
   if(HD6301EMU_ON && !HD6301.Crashed) 
   {
-    TRACE_LOG("6301 RDRS->RDR %X\n",src);
+//    TRACE_LOG("6301 RDRS->RDR %X\n",src);
     hd6301_transmit_byte(src);// send byte to 6301 emu
     
 #if defined(SS_IKBD_6301_RUN_CYCLES_AT_IO)//no...
@@ -1642,7 +1643,7 @@ void keyboard_buffer_write(BYTE src) {
 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_DOUBLE_BUFFER_TX)
+#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_DOUBLE_BUFFER_RX) //TX?!
   if(!ACIA_IKBD.LineRxBusy)
   {
 #if defined(SS_ACIA_REGISTERS)

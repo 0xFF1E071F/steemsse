@@ -138,7 +138,7 @@ void THD6301::InterpretCommand(BYTE ByteIn) {
 void THD6301::ReportCommand() {
   ASSERT( CurrentCommand!=-1 );
   // give command code
-  TRACE_LOG("6301 $%02X ",CurrentCommand);
+  TRACE_LOG("[IKBD interpreter $%02X ",CurrentCommand);
   // spell out command
   switch(CurrentCommand) {
     case 0x80: TRACE_LOG("RESET"); break;
@@ -186,7 +186,7 @@ void THD6301::ReportCommand() {
       TRACE_LOG("%d=$%X ",Parameter[i],Parameter[i]);
     TRACE_LOG(")");
   }
-  TRACE_LOG("\n");
+  TRACE_LOG("]\n");
 }
 
 #endif//debug
@@ -194,9 +194,9 @@ void THD6301::ReportCommand() {
 #if defined(SS_ACIA_DOUBLE_BUFFER_TX)
 
 void THD6301::ReceiveByte(BYTE data) {
-/*  Transfer byte to 6301
+/*  Transfer byte to 6301 (call of this function initiates transfer)
 */
-  TRACE_LOG("Start shifting %X ACIA->6301\n",data);
+  TRACE_LOG("ACIA TDR->TDRS->IKBD RDRS $%X\n",data);
   ACIA_IKBD.ByteWaitingTx=false;
   agenda_add(agenda_ikbd_process,HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL,data);
 #if defined(SS_ACIA_REGISTERS)

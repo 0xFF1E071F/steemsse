@@ -460,8 +460,8 @@ void ACIA_Reset(int nACIA,bool Cold)
   }
   acia[nACIA].RDR=0;//?
   acia[nACIA].TDR=0;
-//  acia[nACIA].SR&=~(BIT_0|BIT_5); // from doc
-  acia[nACIA].SR=2; // eg Delirious IV
+  acia[nACIA].SR&=~(BIT_0|BIT_5); // from doc
+ // acia[nACIA].SR=2; // eg Delirious IV, but also "stuck" waiting byte needed
 #endif
 
 #if defined(SS_ACIA_IRQ_DELAY)
@@ -514,9 +514,6 @@ void ACIA_SetControl(int nACIA,BYTE Val)
   }
 #if defined(SS_ACIA_USE_REGISTERS)
   mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!( (ACIA_IKBD.SR&BIT_7)
-#ifdef TEST01
-////    && ( ACIA_IKBD.CR&BIT_7 )
-#endif
     || (ACIA_MIDI.SR&BIT_7)));
 #else
   mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));

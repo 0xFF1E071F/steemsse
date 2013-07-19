@@ -13,7 +13,7 @@ extern "C" {  // necessary for VC6
 
 
 struct ACIA_STRUCT{ // removed _ ..
-  int clock_divide;
+  int clock_divide; //OLD_VARIABLES?
 #if !defined(SS_ACIA_REMOVE_OLD_VARIABLES)
   int rx_delay__unused; //SS see this?
   BYTE rx_irq_enabled;
