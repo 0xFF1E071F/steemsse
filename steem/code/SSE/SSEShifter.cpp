@@ -603,10 +603,38 @@ void TShifter::CheckSideOverscan() {
         if(r0cycle>=0 && !ShiftModeChangeAtCycle(r0cycle))
           cycles_in_low_res=r1cycle-r0cycle; // 8 NGC, Nightmare
         int shift_in_bytes=8-cycles_in_med_res/2+cycles_in_low_res/4;
+
+#if defined(SS_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK)
+        // strange corrections now necessary, quick patch. TODO
+        if(SSE_HACKS_ON && DISPLAY_SIZE>0 && cycles_in_low_res==8) 
+        {
+          switch(shift_in_bytes)
+          {
+          case 0:
+            shift_in_bytes=0;
+            break;
+          case 2:
+            shift_in_bytes=2;
+            break;
+          case 4:
+            shift_in_bytes=-4; //NGC+Nightmare VLB OK:-4
+            break;
+          case 6:
+            shift_in_bytes=-2; //NGC VLB OK:-2
+            break;
+          }
+          shift_in_bytes+=8;
+        }
+#endif
+
         shifter_draw_pointer+=shift_in_bytes; // that way we don't need to
         overscan_add_extra-=shift_in_bytes; // correct in Render()
         HblPixelShift=13+8-cycles_in_med_res-8; // -7,-3,1, 5, done in Render()
-//        TRACE_LOG("4bit y%d CMR%d CLR%d SH%d PIX%d\n",scan_y,cycles_in_med_res,cycles_in_low_res,shift_in_bytes,HblPixelShift);
+#if defined(SS_DEBUG)
+        ASSERT( HblPixelShift==-7||HblPixelShift==-3||HblPixelShift==1||HblPixelShift==5 );
+//        ASSERT( shift_in_bytes==0||shift_in_bytes==2||shift_in_bytes==4||shift_in_bytes==6 );
+      //  if(scan_y==100)  TRACE_LOG("4bit y%d CMR%d CLR%d SH%d PIX%d\n",scan_y,cycles_in_med_res,cycles_in_low_res,shift_in_bytes,HblPixelShift);
+#endif
       }
     }
   }
@@ -1865,7 +1893,9 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
           DEBUG_ONLY( shifter_draw_pointer+=debug_screen_shift; );
           if(hscroll>=16) // convert excess hscroll in SDP shift
           {
+#if defined(SS_DEBUG)
             if(scan_y==120) TRACE_LOG("y %d hscroll OVL\n",scan_y);
+#endif
             shifter_draw_pointer+=(SHIFTER_RASTER_PREFETCH_TIMING/2)
               *(hscroll/16); // ST-CNX large border
             hscroll-=16*(hscroll/16);

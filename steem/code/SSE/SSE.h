@@ -550,11 +550,12 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_IKBD_6301_TIMER_FIX // not sure there was a problem
 //#define SS_IKBD_6301_TRACE // defined in SS_DEBUG
 #if defined(SS_IKBD_6301_TRACE)
+//#define SS_IKBD_6301_DISASSEMBLE_ROM 
 //#define SS_IKBD_6301_TRACE_SCI_RX
 //#define SS_IKBD_6301_TRACE_SCI_TX
 //#define SS_IKBD_6301_TRACE_INT_TIMER
-#define SS_IKBD_6301_TRACE_INT_SCI
-//#define SS_IKBD_6301_DISASSEMBLE_ROM 
+//#define SS_IKBD_6301_TRACE_INT_SCI
+//#define SS_IKBD_6301_TRACE_STATUS
 //#define SS_IKBD_6301_DUMP_RAM
 //#define SS_IKBD_6301_TRACE_KEYS
 #endif
@@ -758,6 +759,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SHIFTER_0BYTE_LINE_SYNC
 #endif
 #define SS_SHIFTER_4BIT_SCROLL
+#define SS_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK
 #define SS_SHIFTER_60HZ_OVERSCAN
 #define SS_SHIFTER_END_OF_LINE_CORRECTION // correct +2, -2 lines 
 #define SS_SHIFTER_LEFT_OFF_TEST_BEFORE_HBL // for Riverside
@@ -1119,7 +1121,9 @@ problem, multiple struct/class definition not allowed?
 #undef SS_VID_SAVE_NEO
 #endif
 
-
+#if !defined(SS_VID_BORDERS) || !defined(SS_HACKS)
+#undef SS_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK
+#endif
 
 /////////////////////////////////////
 // if STEVEN_SEAGAL is NOT defined //

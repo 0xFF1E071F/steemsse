@@ -142,19 +142,23 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
 /*  
     Bus jam:
     In Hatari, each access causes 8 cycles of wait states.
+    In v1.7.0, more complicated
     In Steem, we count 6 cycles, but with rounding.
     We removed extra cycles since v3.4 as it broke Spectrum 512
+    If we want to make it more precise, we probably must act on
+    different aspects at once.
 */
       if( 
 #if defined(DEBUG_BUILD)
         mode==STEM_MODE_CPU && // no cycles when boiler is reading
 #endif
-        (!io_word_access||!(addr & 1))) //Only cause bus jam once per word
+        (!io_word_access||!(addr & 1)) ) //Only cause bus jam once per word
       {
         BYTE wait_states=6;
 #if !defined(SS_ACIA_BUS_JAM_NO_WOBBLE)
         wait_states+=(8000000-(ABSOLUTE_CPU_TIME-shifter_cycle_base))%10;
 #endif
+
 #if defined(SS_SHIFTER_EVENTS)
         VideoEvents.Add(scan_y,LINECYCLES,'j',wait_states);
 #endif
@@ -288,10 +292,12 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
           ior_byte=ACIA_IKBD.data;
 #endif
 
-#if defined(SS_ACIA_TEST_REGISTERS)
-          TRACE_LOG("Read ACIA IKBD %X\n",ior_byte);
+#if defined(ss_DEBUG) && defined(SS_ACIA_TEST_REGISTERS)
+          static BYTE previous_read; // avoid trace overflow when polling
+          if(ior_byte!=previous_read)
+            TRACE_LOG("CPU reads ACIA IKBD %X\n",ior_byte);
+          previous_read=ior_byte;
 #endif
-
           break;
       }
 

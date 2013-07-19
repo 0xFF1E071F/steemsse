@@ -1543,10 +1543,8 @@ void HandleKeyPress(UINT VKCode,bool Up,int Extended)
     { 
 #if defined(SS_DEBUG) && defined(SS_IKBD_6301_TRACE_KEYS)
 #define LOGSECTION LOGSECTION_IKBD
-      if(Up)
-        TRACE_LOG("Player depresses key PC $%X ST $%X\n",VKCode,STCode);
-      else 
-        TRACE_LOG("Player presses key PC $%X ST $%X\n",VKCode,STCode);
+      TRACE_LOG("Key PC $%X ST $%X ",VKCode,STCode);
+      TRACE_LOG( (Up) ? "-\n" : "+\n");
 #undef LOGSECTION
 #endif
     }

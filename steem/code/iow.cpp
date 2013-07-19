@@ -84,7 +84,8 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
       // Only cause bus jam once per word
       DEBUG_ONLY( if (mode==STEM_MODE_CPU) )
       {
-        if (io_word_access==0 || (addr & 1)==0){
+        if (io_word_access==0 || (addr & 1)==0)
+        {
 //          if (passed VBL or HBL point){ //SS: those // are not mine
 //            BUS_JAM_TIME(4);
 //          }else{
@@ -116,8 +117,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 #if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_EVENTS)
           VideoEvents.Add(scan_y,LINECYCLES,'J',rel_cycle+6); 
 #endif
-          BUS_JAM_TIME(rel_cycle+6); //SS just 6
-
+          BUS_JAM_TIME(rel_cycle+6); //SS just 6 (TODO)
         }
       }
 
@@ -183,10 +183,8 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
           ACIA_SetControl(NUM_ACIA_IKBD,io_src_b);
         }
 #if defined(SS_ACIA_TEST_REGISTERS)
-        TRACE_LOG("CPU %X -> ACIA IKBD CR SR %X\n",io_src_b,ACIA_IKBD.SR);
-//        TRACE_LOG("CPU %X -> ACIA IKBD CR SR %X rx_irq_enabled %d tx_irq_enabled %d rx_not_read %d irq %d \n",io_src_b,ACIA_IKBD.SR,ACIA_IKBD.rx_irq_enabled,ACIA_IKBD.tx_irq_enabled,ACIA_IKBD.rx_not_read,ACIA_IKBD.irq);
+        TRACE_LOG("CPU $%X -> ACIA IKBD CR (SR $%X)\n",io_src_b,ACIA_IKBD.SR);
 #endif
-
         break;
 
       case 0xfffc02:  // data //SS sending data to HD6301
@@ -194,7 +192,7 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 #if defined(STEVEN_SEAGAL) && defined(SS_ACIA) 
 
 #if defined(SS_ACIA_TEST_REGISTERS)
-        TRACE_LOG("CPU %X -> ACIA IKDB TDR SR %X\n",io_src_b,ACIA_IKBD.SR);
+        TRACE_LOG("CPU $%X -> ACIA IKDB TDR (SR $%X)\n",io_src_b,ACIA_IKBD.SR);
 #endif
 
 #if defined(SS_ACIA_REGISTERS)
@@ -257,11 +255,11 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
     current emulation) to the shifting register, and TDR is free again.
     When TDR is free, status bit TDRE is set, and Steem's tx_flag is false!
     (hard to follow)
-    If the ACIA is shifting and already has a byte in TDR, then the new byte
-    will not be written in TDR (eg...).
-    Writing is blocked but there's no overrun status bit or IRQ for that.
-    [TESTING as Steem worked the other way: replace byte being shifted, but
-    it made no sense]
+    If the ACIA is shifting and already has a byte in TDR:
+    v3.5.1: Writing is blocked but there's no overrun status bit or IRQ for
+    that. Fixes Delirious 4 mouse in fake GEM.
+    v3.5.2: Blocking writing breaks High Fidelity Dreams, so we don't block
+    anymore. Also, not sure Delirious 4 mouse in fake GEM must be fixed.
 */
         if(!ACIA_IKBD.LineTxBusy)
         {
@@ -271,9 +269,10 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
           // rare case when IRQ is enabled for transmit
           if( (ACIA_IKBD.CR&BIT_5)&&!(ACIA_IKBD.CR&BIT_6))
           {
-             ACIA_IKBD.SR|=BIT_7; 
+            TRACE_LOG("ACIA IKBD TX IRQ\n");            
+            ACIA_IKBD.SR|=BIT_7; 
 #if defined(SS_ACIA_USE_REGISTERS)
-             mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0); //trigger
+            mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0); //trigger
 #endif
           }
 #endif
@@ -283,10 +282,13 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
         }
         else
         {
-          //why did I do that? Disabling fixes High Fidelity Dreams
-          ///if(!ACIA_IKBD.ByteWaitingTx) // TDR was free 
-            ACIA_IKBD.TDR=io_src_b; 
-          TRACE_LOG("ACIA IKBD byte waiting $%X\n",io_src_b);
+#if defined(SS_DEBUG)
+          if(!ACIA_IKBD.ByteWaitingTx) // TDR was free 
+            TRACE_LOG("ACIA IKBD byte waiting $%X\n",io_src_b);
+          else
+            TRACE_LOG("ACIA IKBD new byte waiting $%X (instead of $%X)\n",io_src_b,ACIA_IKBD.TDR);
+#endif
+          ACIA_IKBD.TDR=io_src_b; 
           ACIA_IKBD.ByteWaitingTx=true;
 #if !defined(SS_ACIA_REGISTERS)
           ACIA_IKBD.WaitingByte=io_src_b;
@@ -296,22 +298,21 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 #else //no double buffer
 
 #if defined(SS_ACIA_USE_REGISTERS)
-        if(ACIA_IKBD.SR&BIT_1)
-#else
-        if(!ACIA_IKBD.tx_flag)
+        ////if(ACIA_IKBD.SR&BIT_1)  //why it didn't work:
+#else                             // we've cleared it just before!
+////        if(!ACIA_IKBD.tx_flag)
 #endif
         {
 #if defined(SS_ACIA_REGISTERS)
           ACIA_IKBD.TDRS=ACIA_IKBD.TDR; 
 #endif
           // agenda the byte to process
+          agenda_delete(agenda_ikbd_process); //imprecise - TODO? 
           agenda_add(agenda_ikbd_process,HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL,
             io_src_b);
         }
 
-#endif//double buffer
-
-
+#endif//double buffer or not
 
         break;
 
@@ -450,8 +451,6 @@ system exclusive start and end messages (F0 and F7).
 
       case 0xfffc06:  //data
       {
-     
-
 #if defined(SS_ACIA_REGISTERS)
         if( (ACIA_MIDI.CR&BIT_5)&&!(ACIA_MIDI.CR&BIT_6) )// IRQ transmit enabled
           ACIA_MIDI.SR&=~BIT_7; // clear IRQ bit
