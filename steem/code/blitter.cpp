@@ -170,6 +170,7 @@ void ASMCALL Blitter_Start_Now()
           bool(mfp_reg[MFPR_GPIP] & MFP_GPIP_BLITTER_BIT)+" to 1");
   mfp_gpip_set_bit(MFP_GPIP_BLITTER_BIT,true);
   Blit.YCounter=Blit.YCount;
+//  ASSERT( Blit.YCount!=65536 );
   /*Only want to start the line if not in the middle of one.*/
   if (WORD(Blit.XCounter-Blit.XCount)==0) Blitter_Start_Line();
   Blitter_Draw();
@@ -405,7 +406,6 @@ void Blitter_Draw()
 
 //  Blit.YCounter=int(Blit.YCount ? Blit.YCount:65536);
   INSTRUCTION_TIME_ROUND(BLITTER_START_WAIT);
-
   if (Blit.YCount==0){  //see note in Blitter.txt - trying to restart with a ycount of zero results in no restart
 /*
      * If the BUSY flag is
@@ -563,7 +563,7 @@ BYTE Blitter_IO_ReadB(MEM_ADDRESS Adr)
 #endif
 	
   MEM_ADDRESS Offset=Adr-0xFF8A00;
-	
+
   if (Offset<0x20){
     int nWord=(Offset/2);
     if (Offset & 1){  // Low byte
@@ -625,6 +625,8 @@ BYTE Blitter_IO_ReadB(MEM_ADDRESS Adr)
 //---------------------------------------------------------------------------
 void Blitter_IO_WriteB(MEM_ADDRESS Adr,BYTE Val)
 {
+  //TRACE("Blitter W %X=%X\n",Adr,Val);
+
 #ifdef DISABLE_BLITTER
   exception(BOMBS_BUS_ERROR,EA_WRITE,Adr);
   return;
@@ -634,7 +636,7 @@ void Blitter_IO_WriteB(MEM_ADDRESS Adr,BYTE Val)
   if(ST_TYPE!=STE && ST_TYPE!=MEGASTF)
   {
     TRACE_LOG("STF: no blitter exception in iow\n");
-    exception(BOMBS_BUS_ERROR,EA_READ,Adr);
+    exception(BOMBS_BUS_ERROR,EA_WRITE,Adr);
     return ;
   }
 #endif
@@ -643,7 +645,6 @@ void Blitter_IO_WriteB(MEM_ADDRESS Adr,BYTE Val)
   if (Offset<0x3A && io_word_access==0){
     return;
   }
-
 //  bool old_blit_primed=blit_primed;
 //  blit_primed=true;
 
@@ -689,10 +690,12 @@ Source Y Increment Register:
 */
     case 0x20: WORD_B_1(&Blit.SrcXInc)=Val;return;
     case 0x21: WORD_B_0(&Blit.SrcXInc)=BYTE(Val & ~1);
+  //    ASSERT( Blit.SrcXInc );
       log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Set blitter SrcXInc to "+Blit.SrcXInc);
       return;
     case 0x22: WORD_B_1(&Blit.SrcYInc)=Val;return;
     case 0x23: WORD_B_0(&Blit.SrcYInc)=BYTE(Val & ~1);
+  //    ASSERT( Blit.SrcYInc );
       log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Set blitter SrcYInc to "+Blit.SrcYInc);
       return;
 /*
@@ -752,8 +755,31 @@ Destination Y Increment Register:
 Similar to the Source X/Y Increment Register. These two denote how many Bytes 
 after each copied word/line the Blitter proceeds.
 */
+/*
+SOURCE X INCREMENT
+
+This is  a signed  15-bit register,  the least significant bit is ignored,
+specifying the offset in bytes to the address of the  next source  word in
+the  current  line.    This  value  will be sign-extended and added to the
+SOURCE ADDRESS register at the end of a source word fetch, whenever  the X
+COUNT register  does not  contain a value of one.  If the X COUNT register
+is  loaded  with  a  value  of  one  this  register  is  not  used.   Byte
+instructions can not be used to read or write this register.
+*/
     case 0x2E: WORD_B_1(&Blit.DestXInc)=Val;return;
     case 0x2F: WORD_B_0(&Blit.DestXInc)=BYTE(Val & ~1);return;
+/*
+SOURCE Y INCREMENT
+
+This is  a signed  15-bit register,  the least significant bit is ignored,
+specifying the offset in bytes to the address of the first source  word in
+the next  line.   This value will be sign-extended and added to the SOURCE
+ADDRESS register at the end of  the last  source word  fetch of  each line
+(when the  X COUNT  register contains  a value  of one).   If  the X COUNT
+register is loaded with a value of one this register  is used exclusively.
+Byte instructions can not be used to read or write this register. 
+
+*/
     case 0x30: WORD_B_1(&Blit.DestYInc)=Val;return;
     case 0x31: WORD_B_0(&Blit.DestYInc)=BYTE(Val & ~1);return;
 /*
@@ -773,7 +799,8 @@ after each copied word/line the Blitter proceeds.
   This contains the address where the Blitter copies all the data to that it 
   computes. A real 32 Bit word that has to be even.
 */
-    case 0x32: return;
+    case 0x32: 
+      return;
     case 0x33: DWORD_B_2(&Blit.DestAdr)=Val;
       log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Set blitter DestAdr to "+HEXSl(Blit.DestAdr,6));
       return;
@@ -817,6 +844,7 @@ after each copied word/line the Blitter proceeds.
       return;
     case 0x37:
       WORD_B_0(&Blit.XCount)=Val;
+      //ASSERT( Blit.XCount );
       Blit.XCounter=Blit.XCount;
       if (Blit.XCounter==0) Blit.XCounter=65536;
       log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Set blitter XCount to "+Blit.XCount);
@@ -832,11 +860,29 @@ after each copied word/line the Blitter proceeds.
   Each time a destination line is  completed the  value will  be decremented
   until it reaches zero, at which time the tranfer is complete.
 */
+
+/* 
+Re: "Metroid"
+
+by Zamuel_a » Sat Jul 20, 2013 10:55 am 
+From what I remember, in Steem it was OK to have a blitter height of ZERO,
+ so in one of my first versions when a sprite was outside the screen it had
+ the height zero and didn't get drawn. That crashed on a real machine since
+ the height had to be 1 or more.
+*/
     case 0x38:
       WORD_B_1(&Blit.YCount)=Val;
+#if defined(STEVEN_SEAGAL) && defined(SS_BLT_YCOUNT)
+      Blit.YCount&=0xFFFF; // hack, YCount is now 32bit
+#endif
       return;
     case 0x39:
       WORD_B_0(&Blit.YCount)=Val;
+#if defined(STEVEN_SEAGAL) && defined(SS_BLT_YCOUNT)
+      if (Blit.YCount==0) 
+        Blit.YCount=65536; // hack... (TODO)
+#endif
+      
       log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Set blitter YCount to "+Blit.YCount);
       return;
 /*
@@ -1013,7 +1059,8 @@ after each copied word/line the Blitter proceeds.
                Blit.NFSR=bool(Val & BIT_6);
                Blit.FXSR=bool(Val & BIT_7);
                log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Set blitter Skew to "+Blit.Skew+", NFSR to "+(int)Blit.NFSR+", FXSR to "+(int)Blit.FXSR);
-    case 0x3E:case 0x3F:return;
+    case 0x3E:case 0x3F:
+      return;
   }
   exception(BOMBS_BUS_ERROR,EA_WRITE,Adr);
 #endif

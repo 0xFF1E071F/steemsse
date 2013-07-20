@@ -1591,7 +1591,7 @@ void agenda_keyboard_replace(int) {
 #if defined(SS_ACIA_DOUBLE_BUFFER_RX)
       // here we should take care of next byte but we have another
       // problem anyway (txinterrupts)
-      ASSERT( ACIA_IKBD.LineRxBusy );
+////      ASSERT( ACIA_IKBD.LineRxBusy );
       if(ACIA_IKBD.LineRxBusy)
       {
         ACIA_IKBD.LineRxBusy=false;
