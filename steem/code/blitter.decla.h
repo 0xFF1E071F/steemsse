@@ -5,8 +5,11 @@
 #define EXT extern
 #define INIT(s)
 
+/*  SS The following structure was named _BLITTER_STRUCT in Steem 3.2.
+    We changed the name into TBlitter.
+*/
 
-struct BLITTER_STRUCT{ // SS removed _
+struct TBlitter{ 
   WORD HalfToneRAM[16];
 /*
 All the address-related auxilary registers such as X-Count/Y-Count,
@@ -58,7 +61,7 @@ All the address-related auxilary registers such as X-Count/Y-Count,
 
 };
 
-extern BLITTER_STRUCT Blit;
+extern TBlitter Blit;
 
 BYTE Blitter_IO_ReadB(MEM_ADDRESS);
 void Blitter_IO_WriteB(MEM_ADDRESS,BYTE);

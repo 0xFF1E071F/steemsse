@@ -1339,7 +1339,12 @@ extern void Blitter_Draw();
 
 #ifdef IN_EMU
 //---------------------------------------------------------------------------
-struct BLITTER_STRUCT{ // SS removed _
+
+/*  SS The following structure was named _BLITTER_STRUCT in Steem 3.2.
+    We changed the name into TBlitter.
+*/
+
+struct TBlitter{ 
   WORD HalfToneRAM[16];
 /*
 All the address-related auxilary registers such as X-Count/Y-Count,
