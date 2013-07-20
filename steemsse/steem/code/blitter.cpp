@@ -9,7 +9,7 @@ DESCRIPTION: Emulation of the STE only blitter chip.
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_BLITTER_H)
-BLITTER_STRUCT Blit;
+TBlitter Blit;
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_BLT_TIMING)
@@ -859,16 +859,6 @@ Byte instructions can not be used to read or write this register.
   written,  NOT  necessarily  the  value  initially written to the register.
   Each time a destination line is  completed the  value will  be decremented
   until it reaches zero, at which time the tranfer is complete.
-*/
-
-/* 
-Re: "Metroid"
-
-by Zamuel_a » Sat Jul 20, 2013 10:55 am 
-From what I remember, in Steem it was OK to have a blitter height of ZERO,
- so in one of my first versions when a sprite was outside the screen it had
- the height zero and didn't get drawn. That crashed on a real machine since
- the height had to be 1 or more.
 */
     case 0x38:
       WORD_B_1(&Blit.YCount)=Val;
