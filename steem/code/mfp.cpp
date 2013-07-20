@@ -55,10 +55,12 @@ Practically on the ST, the request is placed by clearing the bit in the GPIP.
   if (old_1_to_0_detector_input && (mfp_reg[MFPR_DDR] & mask)==0){
     // Transition the right way! Make the interrupt pend (don't cause an intr
     // straight away in case another more important one has just happened).
-    //SS the irq must also be enabled
-    //ASSERT( mfp_interrupt_enabled[bit] ); // this would assert
-    mfp_interrupt_pend(mfp_gpip_irq[bit],ABSOLUTE_CPU_TIME); //SS this is a macro
+    mfp_interrupt_pend(mfp_gpip_irq[bit],ABSOLUTE_CPU_TIME);
+#if defined(STEVEN_SEAGAL) && defined(SS_MFP_DELAY_POST_PENDING)
+    ioaccess|=IOACCESS_FLAG_DELAY_MFP; // fixes V8 Music System
+#else
     ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
+#endif
   }
 }
 //---------------------------------------------------------------------------
@@ -393,8 +395,10 @@ void ASMCALL check_for_interrupts_pending()
           TRACE_LOG("IRQ %d in service\n",irq);
           break;  //time to stop looking for pending interrupts
         }
+
         if (mfp_reg[MFPR_IPRA+i_ab] & i_bit){ //is this interrupt pending?
           if (mfp_reg[MFPR_IMRA+i_ab] & i_bit){ //is it not masked out?
+
 #if defined(STEVEN_SEAGAL) && defined(SS_BLT_BLIT_MODE_INTERRUPT)
 /*  Stop blitter to start interrupt. This is a bugfix and necessary for Lethal
     Xcess if we use the correct BLIT mode cycles (64x4). (I think)

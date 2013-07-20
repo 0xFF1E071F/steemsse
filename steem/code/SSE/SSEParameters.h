@@ -60,6 +60,7 @@ enum {HBLS_50HZ=313,HBLS_60HZ=263,HBLS_71HZ=501};
 SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #endif
 
+#endif
 
 #if defined(SS_IKBD_6301)
 
@@ -76,7 +77,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 
 
-#endif
+//#endif
 
 #else //!ACIA
 #define SS_6301_TO_ACIA_IN_HBL (screen_res==2?24:12) // to be <7200

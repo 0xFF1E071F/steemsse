@@ -150,7 +150,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 //#define TEST01 
 //#define TEST02
 //#define TEST03
-//#define TEST04 
+//#define TEST04
 //#define TEST05
 //#define TEST06
 //#define TEST07
@@ -189,7 +189,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_ACIA_BUS_JAM_NO_WOBBLE
 #define SS_ACIA_DOUBLE_BUFFER_RX // only from 6301 (not MIDI)
 #define SS_ACIA_DOUBLE_BUFFER_TX // only to 6301 (not MIDI)
-#define SS_ACIA_IRQ_DELAY // only from 6301 (not MIDI)
+//#define SS_ACIA_IRQ_DELAY // not defined anymore (v3.5.2)
 #define SS_ACIA_OVERRUN // only 6301
 #define SS_ACIA_REGISTERS // formalising the registers
 //#define SS_ACIA_REMOVE_OLD_VARIABLES // TODO
@@ -619,6 +619,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #if defined(SS_MFP)
 
+#define SS_MFP_DELAY_POST_PENDING // from Hatari
 #define SS_MFP_RATIO // change the values of CPU & MFP freq!
 #define SS_MFP_RATIO_PRECISION // for short timers
 #define SS_MFP_RATIO_STE // measured (by Steem Authors) for STE?
