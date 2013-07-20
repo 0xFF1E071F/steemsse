@@ -21,7 +21,13 @@ All the address-related auxilary registers such as X-Count/Y-Count,
   short DestXInc,DestYInc;
   MEM_ADDRESS DestAdr;
 
+#if defined(STEVEN_SEAGAL) && defined(SS_BLT_YCOUNT)
+  WORD XCount;
+  DWORD YCount; // hack, we need more than 16 bit for the 0=65536 thing
+#else
   WORD XCount,YCount;
+#endif
+  
   BYTE Hop,Op;
 
   char LineNumber;

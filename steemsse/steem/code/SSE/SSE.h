@@ -147,8 +147,8 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 //////////
 
 #if defined(SS_BETA)
-//#define TEST01 
-//#define TEST02
+//#define TEST01//
+//#define TEST02//
 //#define TEST03
 //#define TEST04
 //#define TEST05
@@ -211,6 +211,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_BLT_HOG_MODE_INTERRUPT // no interrupt in hog mode
 //#define SS_BLT_OVERLAP // TODO
 //#define SS_BLT_TIMING // based on a table, but Steem does it better
+#define SS_BLT_YCOUNT // 0=65536
 //TODO smudge?
 
 #endif
