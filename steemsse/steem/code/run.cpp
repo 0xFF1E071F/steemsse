@@ -1278,6 +1278,8 @@ void event_pasti_update()
     We add on the "event" system of Steem, which gives cycle accuracy.
     This feature doesn't depend on HD6301 true emu.
     It fixes V8 Music System.
+    This has been removed in v3.5.2 and replaced with an MFP fix, also copied
+    from Hatari, that seems more correct (SS_ACIA_IRQ_DELAY not defined).
 */
 
 #define LOGSECTION LOGSECTION_IKBD
@@ -1403,7 +1405,8 @@ void event_acia_rx_irq() {
   }
   // set IRQ
   if(ACIA_IKBD.rx_stage==2 && lcycles
-    >=SS_6301_TO_ACIA_IN_CYCLES+SS_ACIA_IRQ_DELAY_CYCLES) 
+    >=SS_6301_TO_ACIA_IN_CYCLES+SS_ACIA_IRQ_DELAY_CYCLES
+   ) 
   {
 #if defined(SS_ACIA_TEST_REGISTERS)
     ASSERT( ACIA_IKBD.CR&BIT_7 );

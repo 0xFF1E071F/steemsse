@@ -1563,7 +1563,9 @@ or FIRE BUTTON MONITORING mode.
 }
 //---------------------------------------------------------------------------
 
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_IRQ_DELAY) 
+#if defined(STEVEN_SEAGAL) 
+
+#if defined(SS_ACIA_IRQ_DELAY) 
 
 void agenda_keyboard_replace(int) {
   if(keyboard_buffer_length)
@@ -1580,6 +1582,135 @@ void agenda_keyboard_replace(int) {
 
 #else
 
+void agenda_keyboard_replace(int) {
+
+  if (keyboard_buffer_length){
+    if (ikbd.send_nothing==0){
+////      int lcycles=ABSOLUTE_CPU_TIME-ikbd.timer_when_keyboard_info;
+      
+#if defined(SS_ACIA_DOUBLE_BUFFER_RX)
+      // here we should take care of next byte but we have another
+      // problem anyway (txinterrupts)
+      ASSERT( ACIA_IKBD.LineRxBusy );
+      if(ACIA_IKBD.LineRxBusy)
+      {
+        ACIA_IKBD.LineRxBusy=false;
+#if defined(SS_IKBD_6301) 
+        if(HD6301EMU_ON)
+          hd6301_completed_transmission_to_MC6850=true;
+#endif
+      }
+#endif
+      ASSERT( !ikbd.send_nothing );
+      ASSERT( keyboard_buffer_length );
+      keyboard_buffer_length--;
+      ASSERT( keyboard_buffer_length>=0 );
+      if(!HD6301EMU_ON)
+      {
+        if(ikbd.joy_packet_pos>=keyboard_buffer_length) 
+          ikbd.joy_packet_pos=-1;
+        if(ikbd.mouse_packet_pos>=keyboard_buffer_length) 
+          ikbd.mouse_packet_pos=-1;
+      }
+
+#if defined(SS_ACIA_TEST_REGISTERS)
+      ASSERT( !(!(ACIA_IKBD.SR&BIT_0)^!(ACIA_IKBD.rx_not_read)) );
+#endif
+
+#if defined(SS_ACIA_REGISTERS)
+      ACIA_IKBD.RDR=ACIA_IKBD.RDRS;
+#endif
+#if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
+      ACIA_IKBD.data=keyboard_buffer[keyboard_buffer_length];
+#endif
+#if defined(SS_ACIA_TEST_REGISTERS)
+      ASSERT( ACIA_IKBD.RDR==ACIA_IKBD.data );
+#endif
+//      TRACE_LOG("ACIA RDRS->RDR %X (%d cycles)\n",keyboard_buffer[keyboard_buffer_length],lcycles);
+      TRACE_LOG("ACIA RDRS->RDR %X\n",keyboard_buffer[keyboard_buffer_length]);
+
+/*  Check overrun.
+    The overrun isn't set before the data is read, Steem was right on this.
+    But it seems previous byte is lost, not new one (TESTING), see above,
+    it was already copied.
+*/
+#if defined(SS_ACIA_USE_REGISTERS)
+      if(ACIA_IKBD.SR&BIT_0) // RDR full
+#else
+      if(ACIA_IKBD.rx_not_read)
+#endif
+      {
+        log("IKBD: Overrun on keyboard ACIA");
+        // discard data and set overrun
+        if(ACIA_IKBD.overrun!=ACIA_OVERRUN_YES) 
+        {
+          TRACE_LOG("ACIA IKBD OVR\n");
+          ACIA_IKBD.overrun=ACIA_OVERRUN_COMING;
+#if defined(SS_ACIA_REGISTERS)
+          ACIA_IKBD.SR|=BIT_5;
+#endif
+        }
+      }
+      else // not overrun, OK
+      {
+#if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
+        ACIA_IKBD.rx_not_read=true;
+#endif
+#if defined(SS_ACIA_REGISTERS)
+        ACIA_IKBD.SR|=BIT_0; // RDR full
+        ACIA_IKBD.SR&=~BIT_5; // no overrun
+#endif
+      }
+      
+      
+#if defined(SS_ACIA_TEST_REGISTERS)
+      //      ASSERT( !(!(ACIA_IKBD.CR&BIT_7)^!(ACIA_IKBD.rx_irq_enabled)) );
+      if(!(ACIA_IKBD.CR&BIT_7)^!(ACIA_IKBD.rx_irq_enabled))
+        TRACE_LOG("ACIA IKBD IRQ RX enabled difference: CR %X rx_irq_enabled %d\n",ACIA_IKBD.CR,ACIA_IKBD.rx_irq_enabled);
+#endif
+#if defined(SS_ACIA_USE_REGISTERS)
+      if(ACIA_IKBD.CR&BIT_7)
+#else
+      if(ACIA_IKBD.rx_irq_enabled)
+#endif        
+      {
+        log(EasyStr("IKBD: Changing ACIA IRQ bit from ")+ACIA_IKBD.irq+" to 1");
+        ACIA_IKBD.irq=true;
+        
+#if defined(SS_ACIA_TEST_REGISTERS)
+        ASSERT( ACIA_IKBD.CR&BIT_7 );
+        ASSERT( ACIA_IKBD.rx_irq_enabled );
+#endif
+#if defined(SS_ACIA_REGISTERS)
+        if(ACIA_IKBD.CR&BIT_7)
+          ACIA_IKBD.SR|=BIT_7;
+#endif
+#if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
+        ACIA_IKBD.irq=true;
+#endif
+//        TRACE_LOG("ACIA IRQ (RDR) (%d cycles)\n",lcycles);
+        TRACE_LOG("ACIA IRQ (RDR)\n");
+        mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0);
+      }
+    }
+
+  }
+  // More to process?
+  if(keyboard_buffer_length) 
+  {
+    agenda_add(agenda_keyboard_replace,SS_6301_TO_ACIA_IN_HBL,0);
+#if defined(SS_ACIA_USE_REGISTERS)
+    ACIA_IKBD.RDRS=keyboard_buffer[keyboard_buffer_length-1];
+#endif
+  }
+  if (macro_start_after_ikbd_read_count) 
+    macro_start_after_ikbd_read_count--;
+}
+
+#endif
+
+#else // Steem 3.2
+
 void agenda_keyboard_replace(int)
 {
   log(EasyStr("IKBD: agenda_keyboard_replace at time=")+hbl_count+" with keyboard_buffer_length="+keyboard_buffer_length);
@@ -1594,16 +1725,9 @@ void agenda_keyboard_replace(int)
         log("IKBD: Overrun on keyboard ACIA");
         // discard data and set overrun
         if (ACIA_IKBD.overrun!=ACIA_OVERRUN_YES) ACIA_IKBD.overrun=ACIA_OVERRUN_COMING;
-#if defined(SS_ACIA_REGISTERS)
-        ACIA_IKBD.status|=BIT_5;
-#endif
       }else{
         ACIA_IKBD.data=keyboard_buffer[keyboard_buffer_length]; //---------------------------------------------------------------------------
         ACIA_IKBD.rx_not_read=true;
-#if defined(SS_ACIA_REGISTERS)
-        ACIA_IKBD.status|=BIT_0; // RDRE full
-        ACIA_IKBD.status&=~BIT_5; // no overrun
-#endif
       }
       if (ACIA_IKBD.rx_irq_enabled){
         log(EasyStr("IKBD: Changing ACIA IRQ bit from ")+ACIA_IKBD.irq+" to 1");
@@ -1615,6 +1739,7 @@ void agenda_keyboard_replace(int)
   }
   if (macro_start_after_ikbd_read_count) macro_start_after_ikbd_read_count--;
 }
+
 #endif
 
 void keyboard_buffer_write_n_record(BYTE src)
