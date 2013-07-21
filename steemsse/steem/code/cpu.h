@@ -270,7 +270,7 @@ WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 #if defined(STEVEN_SEAGAL) && defined(SS_MMU_NO_CONFUSION)
 
 
-#if defined(SS_CPU_SET_BUS_0)
+#if defined(SS_CPU_SET_DEST_TO_0)
 
 #define m68k_SET_DEST_B_TO_ADDR        \
   abus&=0xffffff;                                   \

@@ -363,7 +363,7 @@ void inline prepare_event_again() //might be an earlier one
   cpu_cycles+=oo;cpu_timer+=oo;
 }
 
-void inline prepare_next_event()
+void inline prepare_next_event() //SS check this "inline" thing
 {
   time_of_next_event=cpu_time_of_start_of_event_plan + screen_event_pointer->time;
   screen_event_vector=(screen_event_pointer->event); // SS pointer to function
@@ -443,7 +443,12 @@ void inline prepare_next_event()
   int new_timeout=ABSOLUTE_CPU_TIME+stage;
 #endif
 
-
+/* SS the check happens at "arbitrary" timing, the correct timing
+  as recorded in mfp_timer_timeout[] is recorded. This "should" be
+  the precise timing, whatever happens in the instruction that's
+  running when the timer hits. If one is 2 cycles before the other,
+  the event will be set up for this one.
+*/
 void event_timer_a_timeout()
 {
   HANDLE_TIMEOUT(0);

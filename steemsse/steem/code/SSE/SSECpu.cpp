@@ -1185,7 +1185,7 @@ void m68k_poke_abus2(BYTE x){
 
     No good explanation for that, we just have programs running.
 */
-    else if(SUPERFLAG && !abus)
+    else if(SUPERFLAG && abus==0 ) 
       ;
 #endif
     else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
@@ -1256,7 +1256,12 @@ void m68k_lpoke_abus2(LONG x){
       LPEEK(abus)=x;
     else if(abus>=MEM_START_OF_USER_AREA)
       LPEEK(abus)=x;
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_IGNORE_WRITE_0)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_IGNORE_WRITE_0__)
+/*  Not for long because it breaks Fuzion 77, 78, 84 (bugfix 3.5.2).
+    There's no real explanation. Maybe the bus error detector doesn't 
+    start until after the first word.
+*/
+  
     else if(SUPERFLAG && !abus)
       ;
 #endif

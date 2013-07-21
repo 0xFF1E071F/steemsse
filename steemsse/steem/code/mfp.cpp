@@ -388,7 +388,6 @@ void ASMCALL check_for_interrupts_pending()
       {
 
         BYTE i_bit=BYTE(1 << (irq & 7));
-
         int i_ab=1-((irq & 8) >> 3);
 
         if (mfp_reg[MFPR_ISRA+i_ab] & i_bit){ //interrupt in service

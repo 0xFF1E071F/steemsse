@@ -147,8 +147,8 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 //////////
 
 #if defined(SS_BETA)
-//#define TEST01//
-//#define TEST02//
+//#define TEST01
+//#define TEST02
 //#define TEST03
 //#define TEST04
 //#define TEST05
@@ -263,10 +263,11 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_CPU_HACK_WAR_HELI
 #endif
 
-#define SS_CPU_IGNORE_WRITE_0 // but not 4... hacky...
+#define SS_CPU_IGNORE_WRITE_0 // may write on 1st word (it doesn't change?)
 #define SS_CPU_POST_INC // no post increment if exception 
 #define SS_CPU_PRE_DEC // no "pre" decrement if exception!
-#define SS_CPU_SET_BUS_0 // setting bus not the same as writing on it ?
+//#define SS_CPU_SET_DEST_TO_0 
+
 // PC as pushed in case of bus error, based on microcodes, cost 4KB:
 #define SS_CPU_TRUE_PC 
 #define SS_CPU_TRUE_PC_AND_NO_HACKS // option 'Hacks' or not: true PC
@@ -365,12 +366,12 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #ifdef SS_DEBUG_TRACE
 #ifdef _DEBUG // VC
-//#define SS_DEBUG_TRACE_IDE
+#define SS_DEBUG_TRACE_IDE
 #endif
 #if defined(DEBUG_BUILD) 
 #define SS_DEBUG_TRACE_FILE
 #else//VC
-#define SS_DEBUG_TRACE_FILE
+//#define SS_DEBUG_TRACE_FILE
 #endif
 #endif
 
@@ -837,7 +838,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(SS_SOUND)
 
 #define SS_SOUND_CHANGE_TIME_METHOD_DELAY //detail
-
+#define SS_SOUND_DETECT_SAMPLE_RATE//?
 #define SS_SOUND_FILTER_STF // a very simple filter
 
 #define SS_SOUND_INLINE // macro->inline, easier for my tests, but hard to do

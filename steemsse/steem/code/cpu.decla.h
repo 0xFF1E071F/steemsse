@@ -252,97 +252,14 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 #define FETCH_TIMING {INSTRUCTION_TIME(4); cpu_cycles&=-4;} 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_MMU_NO_CONFUSION)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_SET_DEST_TO_0)
+#undef MEM_FIRST_WRITEABLE
+#define MEM_FIRST_WRITEABLE 0
+#endif
 
 
-#if defined(SS_CPU_SET_BUS_0)
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU_NO_CONFUSION) 
 
-#define m68k_SET_DEST_B_TO_ADDR        \
-  abus&=0xffffff;                                   \
-  if(abus>=MEM_IO_BASE){               \
-    if(SUPERFLAG){                        \
-      ioaccess&=IOACCESS_FLAGS_MASK; \
-      ioaccess|=1;                     \
-      ioad=abus;                        \
-      m68k_dest=&iobuffer;               \
-      DWORD_B_0(&iobuffer)=io_read_b(abus);        \
-    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);             \
-  }else if(abus>=himem){                               \
-    if(abus>=FOUR_MEGS){                                                \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               \
-    }else{                                                        \
-      m68k_dest=&iobuffer;                             \
-    }                                       \
-  }else{                                            \
-    DEBUG_CHECK_WRITE_B(abus); \
-    if (SUPERFLAG && abus>=0){                             \
-      m68k_dest=lpPEEK(abus);           \
-    }else if(abus>=MEM_START_OF_USER_AREA){ \
-      m68k_dest=lpPEEK(abus);           \
-    }else{                                      \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
-    }                                           \
-  }
-
-#define m68k_SET_DEST_W_TO_ADDR        \
-  abus&=0xffffff;                                   \
-  if(abus&1){                                      \
-    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);    \
-  }else if(abus>=MEM_IO_BASE){               \
-    if(SUPERFLAG){                        \
-      ioaccess&=IOACCESS_FLAGS_MASK; \
-      ioaccess|=2;                     \
-      ioad=abus;                        \
-      m68k_dest=&iobuffer;               \
-      *((WORD*)&iobuffer)=io_read_w(abus);        \
-    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                \
-  }else if(abus>=himem){                               \
-    if(abus>=FOUR_MEGS){                                                \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               \
-    }else{                                                        \
-      m68k_dest=&iobuffer;                             \
-    }                                       \
-  }else{                               \
-    DEBUG_CHECK_WRITE_W(abus);  \
-    if(SUPERFLAG && abus>=0){                       \
-      m68k_dest=lpDPEEK(abus);           \
-    }else if(abus>=MEM_START_OF_USER_AREA){ \
-      m68k_dest=lpDPEEK(abus);           \
-    }else{                                      \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
-    }                                           \
-  }
-
-#define m68k_SET_DEST_L_TO_ADDR        \
-  abus&=0xffffff;                                   \
-  if(abus&1){                                      \
-    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);    \
-  }else if(abus>=MEM_IO_BASE){               \
-    if(SUPERFLAG){                        \
-      ioaccess&=IOACCESS_FLAGS_MASK; \
-      ioaccess|=4;                     \
-      ioad=abus;                         \
-      m68k_dest=&iobuffer;               \
-      iobuffer=io_read_l(abus);        \
-    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                 \
-  }else if(abus>=himem){                               \
-    if(abus>=FOUR_MEGS){                                                \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               \
-    }else{                                                        \
-      m68k_dest=&iobuffer;                             \
-    }                                       \
-  }else{                               \
-    DEBUG_CHECK_WRITE_L(abus);  \
-    if(SUPERFLAG && abus>=0){                       \
-      m68k_dest=lpLPEEK(abus);           \
-    }else if(abus>=MEM_START_OF_USER_AREA){ \
-      m68k_dest=lpLPEEK(abus);           \
-    }else{                                      \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
-    }                                           \
-  }
-
-#else
 
 #define m68k_SET_DEST_B_TO_ADDR        \
   abus&=0xffffff;                                   \
@@ -428,11 +345,10 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
     }                                           \
   }
-#endif
 
 
+#else // (with MMU "confusion") //back on in v3.5.2
 
-#else // (with MMU "confusion")
 
 #define m68k_SET_DEST_B_TO_ADDR        \
   abus&=0xffffff;                                   \
@@ -463,8 +379,11 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     }                                           \
   }
 
+//if(abus) for Aladin, temp form
+
 #define m68k_SET_DEST_W_TO_ADDR        \
   abus&=0xffffff;                                   \
+  if(abus) {\
   if(abus&1){                                      \
     exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);    \
   }else if(abus>=MEM_IO_BASE){               \
@@ -492,7 +411,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     }else{                                      \
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
     }                                           \
-  }
+  }}
 
 #define m68k_SET_DEST_L_TO_ADDR        \
   abus&=0xffffff;                                   \
@@ -526,6 +445,12 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
   }
 
 #endif//#if defined(STEVEN_SEAGAL) && defined(SS_MMU_NO_CONFUSION)
+
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_SET_DEST_TO_0)
+#undef MEM_FIRST_WRITEABLE
+#define MEM_FIRST_WRITEABLE 8
+#endif
+
 
 #define m68k_SET_DEST_B(addr)           \
   abus=addr;                            \

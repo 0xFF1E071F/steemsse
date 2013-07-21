@@ -526,7 +526,7 @@ NOT_DEBUG(inline) void m68k_poke_abus(BYTE x){
     } //otherwise throw away
   }else{
     DEBUG_CHECK_WRITE_B(abus);
-    if (SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)
+    if (SUPERFLAG && abus>=MEM_FIRST_WRITEABLE) //SS !defined
       PEEK(abus)=x;
     else if (abus>=MEM_START_OF_USER_AREA)
       PEEK(abus)=x;
@@ -555,7 +555,7 @@ NOT_DEBUG(inline) void m68k_dpoke_abus(WORD x){
     } //otherwise throw away
   }else{
     DEBUG_CHECK_WRITE_W(abus);
-    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)
+    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)//SS !defined
       DPEEK(abus)=x;
     else if(abus>=MEM_START_OF_USER_AREA)
       DPEEK(abus)=x;
@@ -584,7 +584,7 @@ NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x){
     } //otherwise throw away
   }else{
     DEBUG_CHECK_WRITE_L(abus);
-    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)
+    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)//SS !defined
       LPEEK(abus)=x;
     else if(abus>=MEM_START_OF_USER_AREA)
       LPEEK(abus)=x;
@@ -1037,6 +1037,7 @@ extern "C" ASMCALL void m68k_trace() //execute instruction with trace bit set
 #endif
 #endif
  //ASSERT(ir!=0x19F3); // dbg: break on opcode...
+
   m68k_high_nibble_jump_table[ir>>12](); //SS call in trace
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU) && defined(SS_DEBUG)
   M68000.NextIrFetched=false;
