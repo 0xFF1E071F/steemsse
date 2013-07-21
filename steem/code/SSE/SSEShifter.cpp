@@ -1346,7 +1346,7 @@ BYTE TShifter::IORead(MEM_ADDRESS addr) {
   
     case 0xff820f: // LINEWID
 #if defined(SS_STF)
-      ASSERT( ST_TYPE==STE ); //No Cooper
+      //ASSERT( ST_TYPE==STE ); //No Cooper, Fuzion 77, 78
       if(ST_TYPE==STE) 
 #endif
         ior_byte=LINEWID;

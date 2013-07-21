@@ -297,20 +297,14 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 
 #else //no double buffer
 
-#if defined(SS_ACIA_USE_REGISTERS)
-        ////if(ACIA_IKBD.SR&BIT_1)  //why it didn't work:
-#else                             // we've cleared it just before!
-////        if(!ACIA_IKBD.tx_flag)
-#endif
-        {
+
 #if defined(SS_ACIA_REGISTERS)
-          ACIA_IKBD.TDRS=ACIA_IKBD.TDR; 
+        ACIA_IKBD.TDRS=ACIA_IKBD.TDR; 
 #endif
-          // agenda the byte to process
-          agenda_delete(agenda_ikbd_process); //imprecise - TODO? 
-          agenda_add(agenda_ikbd_process,HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL,
-            io_src_b);
-        }
+        // agenda the byte to process
+        agenda_delete(agenda_ikbd_process); //imprecise - TODO? 
+        agenda_add(agenda_ikbd_process,HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL,
+          io_src_b);
 
 #endif//double buffer or not
 

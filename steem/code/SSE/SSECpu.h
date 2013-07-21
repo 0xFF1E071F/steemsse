@@ -869,7 +869,6 @@ NOT_DEBUG(inline) void m68k_dpoke_abus(WORD x){
 
 
 NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x){
-  ////m68k_lpoke_abus2(x); return; ////dbg    
   abus&=0xffffff;
   BOOL super=SUPERFLAG;
   if(abus&1)
