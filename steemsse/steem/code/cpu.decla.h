@@ -252,11 +252,6 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 #define FETCH_TIMING {INSTRUCTION_TIME(4); cpu_cycles&=-4;} 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_SET_DEST_TO_0)
-#undef MEM_FIRST_WRITEABLE
-#define MEM_FIRST_WRITEABLE 0
-#endif
-
 
 #if defined(STEVEN_SEAGAL) && defined(SS_MMU_NO_CONFUSION) 
 
@@ -379,7 +374,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     }                                           \
   }
 
-//if(abus) for Aladin, temp form
+#if defined(SS_CPU_SET_DEST_TO_0)
 
 #define m68k_SET_DEST_W_TO_ADDR        \
   abus&=0xffffff;                                   \
@@ -413,6 +408,41 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     }                                           \
   }}
 
+#else//!SS_CPU_SET_DEST_TO_0
+
+#define m68k_SET_DEST_W_TO_ADDR        \
+  abus&=0xffffff;                                   \
+  if(abus&1){                                      \
+    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);    \
+  }else if(abus>=MEM_IO_BASE){               \
+    if(SUPERFLAG){                        \
+      ioaccess&=IOACCESS_FLAGS_MASK; \
+      ioaccess|=2;                     \
+      ioad=abus;                        \
+      m68k_dest=&iobuffer;               \
+      *((WORD*)&iobuffer)=io_read_w(abus);        \
+    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                \
+  }else if(abus>=himem){                               \
+    if(mmu_confused){                               \
+      mmu_confused_set_dest_to_addr(2,true);           \
+    }else if(abus>=FOUR_MEGS){                                                \
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               \
+    }else{                                                        \
+      m68k_dest=&iobuffer;                             \
+    }                                       \
+  }else{                               \
+    DEBUG_CHECK_WRITE_W(abus);  \
+    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){                       \
+      m68k_dest=lpDPEEK(abus);           \
+    }else if(abus>=MEM_START_OF_USER_AREA){ \
+      m68k_dest=lpDPEEK(abus);           \
+    }else{                                      \
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
+    }                                           \
+  }
+
+#endif
+
 #define m68k_SET_DEST_L_TO_ADDR        \
   abus&=0xffffff;                                   \
   if(abus&1){                                      \
@@ -445,11 +475,6 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
   }
 
 #endif//#if defined(STEVEN_SEAGAL) && defined(SS_MMU_NO_CONFUSION)
-
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_SET_DEST_TO_0)
-#undef MEM_FIRST_WRITEABLE
-#define MEM_FIRST_WRITEABLE 8
-#endif
 
 
 #define m68k_SET_DEST_B(addr)           \
@@ -527,7 +552,7 @@ extern signed int compare_buffer;
 #define m68k_GET_DEST_B_NOT_A_FASTER_FOR_D m68k_jump_get_dest_b_not_a_faster_for_d[(ir&BITS_543)>>3]()
 #define m68k_GET_DEST_W_NOT_A_FASTER_FOR_D m68k_jump_get_dest_w_not_a_faster_for_d[(ir&BITS_543)>>3]()
 #define m68k_GET_DEST_L_NOT_A_FASTER_FOR_D m68k_jump_get_dest_l_not_a_faster_for_d[(ir&BITS_543)>>3]()
-#endif//ss-cpu
+#endif//!ss-cpu
 
 #define m68k_CONDITION_TEST m68k_jump_condition_test[(ir&0xf00)>>8]()
 

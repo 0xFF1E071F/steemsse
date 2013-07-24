@@ -782,7 +782,9 @@ MEM_ADDRESS mmu_confused_address(MEM_ADDRESS ad)
     ad=0xfffffe; //gap
   }
   if (bank==1 && ad<FOUR_MEGS) ad+=bank_length[0];
+#if defined(SS_DEBUG)
   TRACE_LOG("MMU confused ad %X -> %X\n",ad1,ad);
+#endif
   return ad;
 }
 

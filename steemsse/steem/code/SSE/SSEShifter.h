@@ -809,22 +809,46 @@ inline MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
   }
 #endif
 #endif
-// 0308 B010 01CE
-/*
-Read SDP ir 308 Disa movep.w $fffc(a0),d1 DSOS menu
-Read SDP ir d238 Disa add.b $8207.W,d1 DSOS TLB
-Read SDP ir d038 Disa add.b $8209.W,d0
-*/
 
-//note high res?
     if(!left_border)
       starts_counting-=26;
 
 #if defined(SS_SHIFTER_TCB) && defined(SS_SHIFTER_TRICKS)
-    else if(CurrentScanline.Tricks&TRICK_LINE_PLUS_2 
-      // 512 cycles 60hz lines, we must compensate (don't understand it all
-      && PreviousScanline.Cycles==512)  // but it works)
-      starts_counting+=2; //fixes Swedish New Year Demo/TCB
+/*  There seems to be much confusion caused by 50/60hz switches and when
+    the video counter starts running.
+    This is just a hack so that SNYD/TCB works without breaking, for example,
+    Mindbomb/No Shit.
+    Or maybe there's yet another issue in TCB.
+
+TCB:
+-broken:
+Line -30 - 372:S0000 456:S0000 480:r0900 500:r0900 512:T0100
+Line -29 - 008:r0900 028:r0900 048:r0900 068:r0902 512:R0002
+Line -28 - 008:R0000 372:S0000 380:S0002 440:R0002 452:R0000 512:R0002 508:T2009
+-OK:
+Line -30 - 372:S0000 456:S0000 480:r0900 500:r0900 512:T0100
+Line -29 - 008:r0900 028:r0900 048:r0900 068:r0900 088:r090A
+Line -28 - 004:R0002 012:R0000 376:S0000 384:S0002 444:R0002 456:R0000 508:T2009
+NoShit:
+- broken:
+Line -30 - 416:S0000 512:T0100
+Line -29 - 236:S0002 244:r0958 260:r0960 508:T0002
+Line -28 - 008:R0002 016:R0000 380:S0000 388:S0002 448:R0002 460:R0000 512:T2001
+-OK:
+Line -30 - 432:S0000 512:T0100
+Line -29 - 252:S0002 260:r0962 276:r096A 508:T0002
+Line -28 - 004:R0002 012:R0000 376:S0000 384:S0002 444:R0002 456:R0000 512:T2011
+
+*/
+    else if(SSE_HACKS_ON && CurrentScanline.Cycles==508
+      && PreviousScanline.Cycles==512)
+    {
+      int c2=PreviousFreqChange(0);
+      int c1=PreviousFreqChange(c2);
+      if(c2>440-512 && c1>360-512 && FreqChangeAtCycle(c2)==60 
+        && FreqChangeAtCycle(c1)==60)
+        starts_counting+=2;
+    }
 #endif
 
     int c=CyclesIn/2-starts_counting;
@@ -851,12 +875,10 @@ Read SDP ir d038 Disa add.b $8209.W,d0
   else // lines witout fetching (before or after frame)
     sdp=shifter_draw_pointer;
 
-//#if defined(SS_SHIFTER_SDP_TRACE_LOG2)
-//  if(scan_y==-29) TRACE_LOG("Read SDP F%d y%d c%d SDP %X (%d - %d) sdp %X\n",FRAME,scan_y,CyclesIn,sdp,sdp-shifter_draw_pointer_at_start_of_line,CurrentScanline.Bytes,shifter_draw_pointer);
-//#endif
+#if defined(SS_SHIFTER_SDP_TRACE_LOG2)
+  if(scan_y==-29) TRACE_LOG("Read SDP F%d y%d c%d SDP %X (%d - %d) sdp %X\n",FRAME,scan_y,CyclesIn,sdp,sdp-shifter_draw_pointer_at_start_of_line,CurrentScanline.Bytes,shifter_draw_pointer);
+#endif
   int nbytes=sdp-shifter_draw_pointer_at_start_of_line;
-//ASSERT( nbytes!= 224); 
-  ///if(nbytes==224)     nbytes=204;
   return sdp;
 }
 
