@@ -1624,7 +1624,7 @@ void agenda_keyboard_replace(int) {
       ACIA_IKBD.data=keyboard_buffer[keyboard_buffer_length];
 #endif
 #if defined(SS_ACIA_TEST_REGISTERS)
-      ASSERT( ACIA_IKBD.RDR==ACIA_IKBD.data );
+//      ASSERT( ACIA_IKBD.RDR==ACIA_IKBD.data );
 #endif
 //      TRACE_LOG("ACIA RDRS->RDR %X (%d cycles)\n",keyboard_buffer[keyboard_buffer_length],lcycles);
       TRACE_LOG("ACIA RDRS->RDR %X\n",keyboard_buffer[keyboard_buffer_length]);
@@ -1690,6 +1690,7 @@ void agenda_keyboard_replace(int) {
 #endif
 //        TRACE_LOG("ACIA IRQ (RDR) (%d cycles)\n",lcycles);
         TRACE_LOG("ACIA IRQ (RDR)\n");
+        ASSERT(  mfp_reg[MFPR_GPIP]&MFP_GPIP_ACIA_BIT );
         mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0);
       }
     }

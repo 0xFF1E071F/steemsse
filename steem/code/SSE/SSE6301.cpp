@@ -216,8 +216,14 @@ void THD6301::ResetChip(int Cold) {
   {
     HD6301.Crashed=0;
     hd6301_reset(Cold);
-    ZeroMemory(ST_Key_Down,sizeof(ST_Key_Down)); // Phalanx/Overdrive (OK?)
-    //ikbd_reset(true);
+
+/*  Overdrive Demo: when you exit a demo screen, eg 'Oh No', by pressing the
+    spacebar, the IKBD is reset. If the program receives the break code for
+    spacebar ($B9) before the $F1, it will stop responding to IKBD input.
+    This is a hack for the moment for experiments (check cases).
+*/
+    if(SSE_HACKS_ON)
+      ZeroMemory(ST_Key_Down,sizeof(ST_Key_Down));
   }
 #endif  
 }

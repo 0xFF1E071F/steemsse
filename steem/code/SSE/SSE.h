@@ -189,7 +189,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_ACIA_BUS_JAM_NO_WOBBLE
 #define SS_ACIA_DOUBLE_BUFFER_RX // only from 6301 (not MIDI)
 #define SS_ACIA_DOUBLE_BUFFER_TX // only to 6301 (not MIDI)
-//#define SS_ACIA_IRQ_DELAY // not defined anymore (v3.5.2)
+//#define SS_ACIA_IRQ_DELAY // not defined anymore (v3.5.2), see MFP
 #define SS_ACIA_OVERRUN // only 6301
 #define SS_ACIA_REGISTERS // formalising the registers
 //#define SS_ACIA_REMOVE_OLD_VARIABLES // TODO
@@ -263,10 +263,10 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_CPU_HACK_WAR_HELI
 #endif
 
-#define SS_CPU_IGNORE_WRITE_0 // may write on 1st word (it doesn't change?)
+#define SS_CPU_IGNORE_WRITE_0 // for Aladin, may write on 1st word (it doesn't change?)
 #define SS_CPU_POST_INC // no post increment if exception 
 #define SS_CPU_PRE_DEC // no "pre" decrement if exception!
-//#define SS_CPU_SET_DEST_TO_0 
+#define SS_CPU_SET_DEST_TO_0 // for Aladin
 
 // PC as pushed in case of bus error, based on microcodes, cost 4KB:
 #define SS_CPU_TRUE_PC 
@@ -529,11 +529,13 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_IKBD_FAKE_MOUSE_SCALE // actually use the scale
 #define SS_IKBD_MANAGE_ACIA_TX
 #define SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT // hardware quirk?
+#define SS_IKBD_OVERDRIVE // reset keys?
+#define SS_IKBD_TRACE_CPU_READ
 
 #if defined(SS_HACKS)
 //#define SS_IKBD_FAKE_CUSTOM_IS_HACK // need option Hacks to make them work
 //#define SS_IKBD_FAKE_CUSTOM_DRAGONNELS // keyboard selection
-#define SS_IKBD_POLL_IN_FRAME // poll once during the frame too 
+#define SS_IKBD_POLL_IN_FRAME // poll once during the frame too
 #endif
 
 #if defined(SS_IKBD_6301) 
@@ -622,6 +624,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(SS_MFP)
 
 #define SS_MFP_DELAY_POST_PENDING // from Hatari
+
 #define SS_MFP_RATIO // change the values of CPU & MFP freq!
 #define SS_MFP_RATIO_PRECISION // for short timers
 #define SS_MFP_RATIO_STE // measured (by Steem Authors) for STE?
@@ -660,7 +663,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #if defined(SS_MMU)
 
-//#define SS_MMU_NO_CONFUSION // Diagnostic cartridge: don't define
+//#define SS_MMU_NO_CONFUSION // Diagnostic cartridge: don't define (v3.5.2)
 #define SS_MMU_WAKE_UP
 #define SS_MMU_WRITE // programs in RAM may write in the MMU
 

@@ -203,7 +203,7 @@ public:
 };
 
 #ifdef WIN32
-void TDiskManager::RefreshDiskView(EasyStr SelPath,bool EditLabel,EasyStr SelLinkPath,int iItem);
+//void TDiskManager::RefreshDiskView(EasyStr SelPath,bool EditLabel,EasyStr SelLinkPath,int iItem);
 #endif
 
 #endif//DISKMAN_DECLA_H

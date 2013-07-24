@@ -292,11 +292,16 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
           ior_byte=ACIA_IKBD.data;
 #endif
 
+/*
 #if defined(ss_DEBUG) && defined(SS_ACIA_TEST_REGISTERS)
           static BYTE previous_read; // avoid trace overflow when polling
           if(ior_byte!=previous_read)
             TRACE_LOG("CPU reads ACIA IKBD %X\n",ior_byte);
           previous_read=ior_byte;
+#endif
+*/
+#if defined(SS_IKBD_TRACE_CPU_READ)
+          TRACE_LOG("CPU reads ACIA IKBD %X\n",ior_byte);
 #endif
           break;
       }

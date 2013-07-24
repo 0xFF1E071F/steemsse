@@ -654,7 +654,7 @@ void TShifter::CheckSideOverscan() {
 
   // Steem test
   if(shifter_freq_at_start_of_vbl==50 && left_border==BORDER_SIDE
-    &&!(TrickExecuted&TRICK_LINE_PLUS_2) )
+    &&!(TrickExecuted&TRICK_LINE_PLUS_2))
   {   
 #if defined(SS_SHIFTER_LINE_PLUS_2_THRESHOLD)
     t=LINECYCLE0+52; // fixes Forest
@@ -907,6 +907,7 @@ void TShifter::CheckSyncTrick() {
     shifter_draw_pointer-=2; // eg SNYD/TCB at scan_y -29
     TRACE_LOG("scan_y %d cancel +2\n",scan_y);
   } // no 'else', they're false alerts!
+
   if(CurrentScanline.Tricks&TRICK_LINE_MINUS_2     
     && (CurrentScanline.StartCycle==52 || CurrentScanline.EndCycle!=372))
   {
@@ -1461,7 +1462,7 @@ According to ST-CNX, those registers are in the MMU, not in the shifter.
       VideoEvents.Add(scan_y,LINECYCLES,'M',io_src_b); 
 #endif
       DWORD_B_1(&xbios2)=io_src_b;
-      
+
 #if defined(SS_STF)
       if(ST_TYPE==STE) 
 #endif
@@ -2148,11 +2149,14 @@ void TShifter::SetSyncMode(BYTE NewSync) {
 #endif
       54+2;
     if(CyclesIn<=limit512)
-      CurrentScanline.Cycles=scanline_time_in_cpu_cycles[shifter_freq_idx]; 
+      CurrentScanline.Cycles=scanline_time_in_cpu_cycles[shifter_freq_idx];
     if(FetchingLine())
     {
       if(CyclesIn<=52 && left_border)
+      {
         CurrentScanline.StartCycle=56;
+     ////   CurrentScanline.Cycles=512;
+      }
       if(CyclesIn<=372)
         CurrentScanline.EndCycle=376;
     }
@@ -2167,8 +2171,11 @@ void TShifter::SetSyncMode(BYTE NewSync) {
     if(FetchingLine())
     {
       if(CyclesIn<=52 && left_border) // TO CHECK
+      {
         CurrentScanline.StartCycle=52; 
-      if(CyclesIn<=372 && FetchingLine())
+      ////  CurrentScanline.Cycles=508;
+      }
+      if(CyclesIn<=372)
       {
         CurrentScanline.EndCycle=372;
         // adjust timer B, not sure it changes anything
