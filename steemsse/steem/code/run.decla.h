@@ -219,7 +219,7 @@ void event_scanline();
 void event_timer_b();
 
 #if defined(STEVEN_SEAGAL) && defined(SS_ACIA_IRQ_DELAY)
-void event_acia_rx_irq(); // we do need the precision
+void event_acia_rx_irq(); // not defined anymore (v3.5.2), see MFP
 #endif
 
 //void event_hbl();

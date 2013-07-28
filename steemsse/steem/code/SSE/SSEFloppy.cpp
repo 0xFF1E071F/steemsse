@@ -842,6 +842,14 @@ Total track                     6250        6250        6256
 
     Note that the index position can be anywhere when the disk begins
     to spin.
+    But, from Hatari:
+    "
+ * As the FDC waits 6 index pulses during the spin up phase, this means
+ * that when motor reaches its desired speed an index pulse was just
+ * encountered.
+ * So, the position after peak speed is reached is not random, it will always
+ * be 0 and we set the index pulse time to "now".
+    " - TODO
     We do our computing using bytes, then convert the result into HBL, the
     timing unit for drive operations in Steem.
    

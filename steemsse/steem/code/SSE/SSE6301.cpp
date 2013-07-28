@@ -194,7 +194,8 @@ void THD6301::ReportCommand() {
 #if defined(SS_ACIA_DOUBLE_BUFFER_TX)
 
 void THD6301::ReceiveByte(BYTE data) {
-/*  Transfer byte to 6301 (call of this function initiates transfer)
+/*  Transfer byte to 6301 (call of this function initiates transfer).
+    This function is used for true and fake 6301 emu.
 */
   TRACE_LOG("ACIA TDR->TDRS->IKBD RDRS $%X\n",data);
   ACIA_IKBD.ByteWaitingTx=false;

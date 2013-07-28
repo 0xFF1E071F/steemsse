@@ -42,7 +42,7 @@ enum {HBLS_50HZ=313,HBLS_60HZ=263,HBLS_71HZ=501};
 
 #if defined(SS_ACIA)
 
-#if defined(SS_ACIA_IRQ_DELAY)
+#if defined(SS_ACIA_IRQ_DELAY)// not defined anymore (v3.5.2), see MFP
 
 #define SS_ACIA_IRQ_DELAY_CYCLES 20 // est. gap between RX and IRQ in CPU cycles
 /*  Delay before keys sent by the IKBD are received by the ACIA.
@@ -230,9 +230,16 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
       We take them for:
     - Froggies over the Fence menu (very odd)
     - Dragonnels/Unlimited Bobs 
+    No ACIA improvement yet has been able to get the numbers lower.
 */
-#define HD6301_CYCLES_TO_SEND_BYTE 1350
-#define HD6301_CYCLES_TO_RECEIVE_BYTE 1350
+
+#if defined(SS_ACIA_IKBD_SHORTER_TIMINGS)
+#define HD6301_CYCLES_TO_SEND_BYTE (1152)
+#define HD6301_CYCLES_TO_RECEIVE_BYTE (1152)
+#else
+#define HD6301_CYCLES_TO_SEND_BYTE (1350)
+#define HD6301_CYCLES_TO_RECEIVE_BYTE (1350)
+#endif
 
 // far from ideal, but maybe we must change method or timings instead
 #define HD6301_MOUSE_SPEED_CHUNKS 15

@@ -32,7 +32,7 @@ struct ACIA_STRUCT{ // removed _ ..
   int last_tx_write_time;
   int last_rx_read_time;
 
-#if defined(SS_ACIA_IRQ_DELAY)
+#if defined(SS_ACIA_IRQ_DELAY)// not defined anymore (v3.5.2), see MFP
 /*  This is to help implement the short delay between RX set and IRQ set,
     as mentioned in Hatari.
     1: RX will be set at right time 2: IRQ will be (some cycles later)
@@ -64,7 +64,9 @@ struct ACIA_STRUCT{ // removed _ ..
     RDRS,   // receive data shift
     TDRS;   // transmit data shift
 #endif
-
+#ifdef __cplusplus
+  inline bool IrqForTx() { return ((CR&BIT_5)&&!(CR&BIT_6)); }
+#endif
 };
 
 extern struct ACIA_STRUCT acia[2]; 
