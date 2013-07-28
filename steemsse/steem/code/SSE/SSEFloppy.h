@@ -152,6 +152,9 @@ struct TSF314 {
 #if defined(SS_PASTI_ONLY_STX)
   BYTE ImageType;
 #endif
+#if defined(SS_DRIVE_MOTOR_ON)
+  BYTE MotorOn;
+#endif
 };
 
 

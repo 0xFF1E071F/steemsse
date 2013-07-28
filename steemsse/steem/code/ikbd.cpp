@@ -2018,10 +2018,7 @@ void ikbd_reset(bool Cold)
     {
       TRACE_LOG("6301 reset ikbd.cpp part\n");
       HD6301.Crashed=0;
-      //agenda_keyboard_reset(0); // for mouse upside down
-      //keyboard_buffer_length=0;
       ikbd.mouse_upside_down=false;
-      //ZeroMemory(ST_Key_Down,sizeof(ST_Key_Down)); // fixes Overdrive stuck; no... TODO
       return;
     }
     else

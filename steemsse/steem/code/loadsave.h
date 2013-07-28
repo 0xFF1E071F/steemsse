@@ -1,7 +1,8 @@
 #if defined(STEVEN_SEAGAL)
 // rather silly but so we leave the define here
-
-#if SSE_VERSION>=351
+#if SSE_VERSION>=352
+#define SNAPSHOT_VERSION 45
+#elif SSE_VERSION>=351
 #define SNAPSHOT_VERSION 44
 #elif SSE_VERSION>=350
 #define SNAPSHOT_VERSION 43
