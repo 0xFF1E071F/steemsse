@@ -76,8 +76,9 @@ TDR Transmit Data
 CR  Control
 SR  Status
 
-Those 4 registers are mapped on only 2 R/W bytes for each ACIA on the ST:
+Those 4 registers are mapped on only 2 R/W bytes for each ACIA.
 
+On the ST:
 $FFFC00 for CR and SR of the IKBD controller
 $FFFC02 for RDR and TDR of the IKBD controller
 $FFFC04 for CR and SR of the MIDI controller
@@ -101,6 +102,13 @@ CPU -> byte -> TDR -> TDRS -> bits -> other serial interface -> other chip
 Double buffering means that two bytes may be written very fast one after
 the other on TDR. The first byte will be transferred almost at once into
 TDRS. Subsequent bytes will have to wait the full serial transfer time.
+
+'Almost' doesn't mean instant, for a few cycles (32?, which would translate
+into 512 MC68000 cycles), TDR will not take a byte and the TDRE bit in 
+SR will be cleared.
+Cases: 
+Delirious 4 fake GEM. The mouse is centered OK because command $D is ignored,
+it comes too close after previous byte.
 
 Control Register CR
 
@@ -141,14 +149,22 @@ Bits 0 and 1 also control the speed of transmission:
 
 SS1 SS0                  Speed (bit/s)
  0   0    Normal            500000
- 0   1    Div by 16          31250
- 1   0    Div by 64         7812.5 (ST)
+ 0   1    Div by 16          31250 (ST: MIDI)
+ 1   0    Div by 64         7812.5 (ST: IKBD)
 
 The speed applies to both sending & receiving bits. It's been set at
 500khz for both TxCLK & RxCLK on the ST chip that interacts with the
 HD6301.
 
 Bits 4-3-2 are set as 101 on the ST (8 bit, 1 stop bit).
+
+Timing
+
+IKBD
+
+7812.5 bit/s
+[TODO]
+
 
 Status Register SR
 
@@ -166,7 +182,7 @@ by the hardware (or the emulation).
        |     |Tx data register empty ---------------------------' ||
        |     |Rx data register full ------------------------------'|
 
-In emulation, we will never set Parity error or Framing error.
+In ST emulation, we will never set Parity error or Framing error.
 Rx overrun can be set if the program fails to read one byte.
 We don't care about CTS and DCD.
 
@@ -175,13 +191,12 @@ ST would never boot).
 
 At 'master reset', bits 0 and 5 are cleared. The other bits don't change,
 at least according to our reading of doc.
-In Steem, it seems more compatible to set SR=2 (Delirious IV).
 
 Receiver overrun (OVRN) will be set if the program reads a byte and the previous
 byte was never read. It isn't set when the new byte is copied into RDR, only
 when it is read.
 
-IRQ may be set  depending on CR, if a byte has been transmitted or/and a 
+IRQ may be set depending on CR, if a byte has been transmitted or/and a 
 byte has arrived, or an overrun occured.
 
 It remains so as long as the condition is true and is cleared only by the 
@@ -198,7 +213,8 @@ Transmit Data TDR
 
 Doc states: master reset initialises both the transmitter and the receiver.
 Does it mean RDR=TDR=0?
-Are RDRS and TDRS cleared? Apparently not.
+Are RDRS and TDRS cleared? Apparently not. [examples?]
+[in hatari 1.7.0, all those registers are cleared]
 
 IRQ
 
@@ -207,10 +223,6 @@ IRQ may be enabled for both receiving and transmitting.
 Receiving: bit 7 of CR enables IRQ.
 When a byte has been shifted, it is copied from RDRS into RDR.
 The chip will request an interrupt and will set bit 7 of SR.
-The exact timing of those 3 events isn't exactly the same. The byte is in RDR
-some cycles (2? which would translate to 20 M68000 cycles on the ST) before
-bit 7 of SR is set.
-Case: V8 Music Studio.
 There's an IRQ when Overrun occurs as well, if receiving IRQ is enabled.
 
 Transmitting: in CR, if bit 6=0 and bit 5=1, IRQ is enabled for transmission.
@@ -220,14 +232,6 @@ kind of silly.
 There are probably similar timing considerations as for receiving.
 Additionally, double buffering means that the IRQ could trigger very soon after
 the byte has been written into TDR.
-Few programs do use this stupid IRQ (cases?) Hades Nebula
-
-
-
-
-
-
-
-
-
+Few programs do use this stupid IRQ.
+Cases: Hades Nebula
 

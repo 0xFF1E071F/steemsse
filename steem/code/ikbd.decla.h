@@ -277,7 +277,7 @@ logically connected to it. If a mouse disable command is received while port 0
 /*  WRT memory snapshots we can safely modify the structures, the size is 
     recorded along with data
 */
-#if defined(SS_ACIA_IRQ_DELAY)  // could organised another way
+#if defined(SS_ACIA_IRQ_DELAY)  // not defined anymore (v3.5.2), see MFP
   int timer_when_keyboard_info; // to improve accuracy of keyboard IRQ timing
 #endif
 #if defined(SS_IKBD_POLL_IN_FRAME)
@@ -316,7 +316,7 @@ EXT ACIA_STRUCT acia[2];
 
 
 #if defined(STEVEN_SEAGAL) && defined(SS_ACIA_IRQ_DELAY)
-
+// not defined anymore (v3.5.2), see MFP
 inline void PrepareEventCheckForAciaIkbdIn() {
   if(acia[0].rx_stage)
   {

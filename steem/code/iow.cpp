@@ -173,6 +173,7 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
       case 0xfffc00:  //control //SS writing ACIA IKBD control register
 
 #if defined(SS_ACIA_REGISTERS)
+        ASSERT( !((io_src_b&BIT_7==0) && (ACIA_IKBD.SR&BIT_7)) );
         ACIA_IKBD.CR=io_src_b; // assign before we send to other functions
 #endif
         if ((io_src_b & 3)==3){
@@ -202,7 +203,7 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
     is enabled. Eg Hades Nebula
 */
         ACIA_IKBD.SR&=~BIT_1; // clear TDRE bit
-        if( (ACIA_IKBD.CR&BIT_5)&&!(ACIA_IKBD.CR&BIT_6)) // if IRQ transmit enabled
+        if(ACIA_IKBD.IrqForTx())
           ACIA_IKBD.SR&=~BIT_7; // clear IRQ bit
 #if defined(SS_ACIA_USE_REGISTERS)
         //update in MFP (if needs be)
@@ -213,7 +214,9 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 
 #if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
         ACIA_IKBD.tx_flag=true; // = TDRE clear (TDR not free)
+#if !defined(SS_ACIA_TDR_COPY_DELAY)
         ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
+#endif
 #endif
 
 #if !defined(SS_IKBD_MANAGE_ACIA_TX)
@@ -251,15 +254,16 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
         }//no TX agenda
 
 #if defined(SS_ACIA_DOUBLE_BUFFER_TX) 
-/*  If the line is free, the byte in TDR is copied at once (instantly in our
-    current emulation) to the shifting register, and TDR is free again.
+/*  If the line is free, the byte in TDR is copied almost at once into the 
+    shifting register, and TDR is free again.
     When TDR is free, status bit TDRE is set, and Steem's tx_flag is false!
     (hard to follow)
-    If the ACIA is shifting and already has a byte in TDR:
-    v3.5.1: Writing is blocked but there's no overrun status bit or IRQ for
-    that. Fixes Delirious 4 mouse in fake GEM.
-    v3.5.2: Blocking writing breaks High Fidelity Dreams, so we don't block
-    anymore. Also, not sure Delirious 4 mouse in fake GEM must be fixed.
+    v3.5.2:
+    If the ACIA is shifting and already has a byte in TDR, the byte in TDR
+    can be changed (High Fidelity Dreams).
+    But writes to TDR mustn't be too close to one another, we find there's
+    a delay of around 512 M68K cycles when the byte will be ignored (Delirious
+    4 fake GEM). 1000 cycles is already too much (same program).
 */
         if(!ACIA_IKBD.LineTxBusy)
         {
@@ -283,10 +287,18 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
         else
         {
 #if defined(SS_DEBUG)
-          if(!ACIA_IKBD.ByteWaitingTx) // TDR was free 
+          if(ACIA_IKBD.last_tx_write_time&&ACT-ACIA_IKBD.last_tx_write_time<512)
+            ;
+          else if(!ACIA_IKBD.ByteWaitingTx) // TDR was free 
             TRACE_LOG("ACIA IKBD byte waiting $%X\n",io_src_b);
           else
             TRACE_LOG("ACIA IKBD new byte waiting $%X (instead of $%X)\n",io_src_b,ACIA_IKBD.TDR);
+#endif
+
+#if defined(SS_ACIA_TDR_COPY_DELAY)
+          if(ACIA_IKBD.last_tx_write_time&&ACT-ACIA_IKBD.last_tx_write_time<512)
+            TRACE_LOG("ACIA TDR byte %X blocked after %d cycles\n",io_src_b,ACT-ACIA_IKBD.last_tx_write_time);
+          else
 #endif
           ACIA_IKBD.TDR=io_src_b; 
           ACIA_IKBD.ByteWaitingTx=true;
@@ -294,7 +306,10 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
           ACIA_IKBD.WaitingByte=io_src_b;
 #endif
         }
-
+#if defined(SS_ACIA_TDR_COPY_DELAY)
+        if(ACT-ACIA_IKBD.last_tx_write_time>512)
+          ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
+#endif
 #else //no double buffer
 
 
@@ -456,7 +471,7 @@ system exclusive start and end messages (F0 and F7).
 #endif
 #endif
         bool TXEmptyAgenda=(agenda_get_queue_pos(agenda_acia_tx_delay_MIDI)
-#if defined(SS_MIDI)
+#if defined(SS_MIDI)   //TODO
           <0
 #else
           >=0

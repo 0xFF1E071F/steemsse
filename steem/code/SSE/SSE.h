@@ -186,14 +186,23 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #if defined(SS_ACIA)
 
-#define SS_ACIA_BUS_JAM_NO_WOBBLE
+#define SS_ACIA_BUS_JAM_NO_WOBBLE // simple "fix"
+//#define SS_ACIA_BUS_JAM_PRECISE_WOBBLE //TODO
 #define SS_ACIA_DOUBLE_BUFFER_RX // only from 6301 (not MIDI)
 #define SS_ACIA_DOUBLE_BUFFER_TX // only to 6301 (not MIDI)
+
+#ifdef SS_BETA
+//#define SS_ACIA_IKBD_SHORTER_TIMINGS //tests
+#endif
+
 //#define SS_ACIA_IRQ_DELAY // not defined anymore (v3.5.2), see MFP
-#define SS_ACIA_OVERRUN // only 6301
+#define SS_ACIA_IRQ_ASSERT_READ_SR //TODO
+//#define SS_ACIA_OVERRUN_REPLACE_BYTE // normally no
 #define SS_ACIA_REGISTERS // formalising the registers
 //#define SS_ACIA_REMOVE_OLD_VARIABLES // TODO
+#define SS_ACIA_DONT_CLEAR_DR
 #define SS_ACIA_NO_RESET_PIN // don't reset on warm reset
+#define SS_ACIA_TDR_COPY_DELAY
 #define SS_ACIA_TEST_REGISTERS // debugging...
 #define SS_ACIA_USE_REGISTERS // instead of Steem variables TESTING
 
@@ -366,12 +375,12 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #ifdef SS_DEBUG_TRACE
 #ifdef _DEBUG // VC
-#define SS_DEBUG_TRACE_IDE
+//#define SS_DEBUG_TRACE_IDE
 #endif
 #if defined(DEBUG_BUILD) 
 #define SS_DEBUG_TRACE_FILE
 #else//VC
-//#define SS_DEBUG_TRACE_FILE
+#define SS_DEBUG_TRACE_FILE
 #endif
 #endif
 
@@ -531,6 +540,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT // hardware quirk?
 #define SS_IKBD_OVERDRIVE // reset keys?
 #define SS_IKBD_TRACE_CPU_READ
+//#define SS_IKBD_TRACE_CPU_READ2
 
 #if defined(SS_HACKS)
 //#define SS_IKBD_FAKE_CUSTOM_IS_HACK // need option Hacks to make them work
@@ -546,7 +556,6 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_IKBD_6301_CHECK_IREG_WO // some registers are write-only
 #define SS_IKBD_6301_DISABLE_BREAKS // to save 64k (we still consume 64k)
 #define SS_IKBD_6301_DISABLE_CALLSTACK // to save 3k on the PC stack
-#define SS_IKBD_6301_DOUBLE_BUFFER_TX  // 6301 transmitting, same as for ACIA
 //#define SS_IKBD_6301_RUN_CYCLES_AT_IO // overkill
 #define SS_IKBD_6301_MOUSE_ADJUST_SPEED //poor attempt
 #define SS_IKBD_6301_RUN_IRQ_TO_END // hack around Sim6xxx's working
@@ -845,7 +854,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SOUND_FILTER_STF // a very simple filter
 
 #define SS_SOUND_INLINE // macro->inline, easier for my tests, but hard to do
-#define SS_SOUND_LOW_PASS_FILTER 
+//#define SS_SOUND_LOW_PASS_FILTER  // Float exceptions, no thanks
 
 #define SS_SOUND_MICROWIRE // volume, balance, bass & treble, primitive DSP
 #define SS_SOUND_NO_EXTRA_PER_VBL //compensating hack? changes what?
@@ -1105,6 +1114,10 @@ problem, multiple struct/class definition not allowed?
 
 #if !defined(SS_SHIFTER)
 #undef SS_SHIFTER_EVENTS
+#endif
+
+#if !defined(SS_SOUND_LOW_PASS_FILTER)
+#undef SS_SOUND_DETECT_SAMPLE_RATE
 #endif
 
 #if !USE_PASTI

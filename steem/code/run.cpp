@@ -352,6 +352,7 @@ void inline prepare_event_again() //might be an earlier one
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_ACIA_IRQ_DELAY)
+// not defined anymore (v3.5.2), see MFP
     PREPARE_EVENT_CHECK_FOR_ACIA_IKBD_IN;
 #endif
 
@@ -386,6 +387,7 @@ void inline prepare_next_event() //SS check this "inline" thing
     PREPARE_EVENT_CHECK_FOR_DMA;
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_ACIA_IRQ_DELAY)
+// not defined anymore (v3.5.2), see MFP
     PREPARE_EVENT_CHECK_FOR_ACIA_IKBD_IN;
 #endif
 
@@ -1276,7 +1278,7 @@ void event_pasti_update()
 //---------------------------------------------------------------------------
 #if defined(STEVEN_SEAGAL) // added events
 
-#if defined(SS_ACIA_IRQ_DELAY) 
+#if defined(SS_ACIA_IRQ_DELAY)
 /*  Imitating a Hatari feature, we implement a short delay between the time
     a byte has been transferred from the ACIA's shift register to its RDR,
     and the time IRQ is set in the SR.

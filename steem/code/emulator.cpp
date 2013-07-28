@@ -423,15 +423,11 @@ void ACIA_Reset(int nACIA,bool Cold)
   acia[nACIA].tx_irq_enabled=0;
   acia[nACIA].rx_irq_enabled=true;
 #endif
-  acia[nACIA].data=0;
+  acia[nACIA].data=0;//SS ?
   acia[nACIA].last_tx_write_time=0;
 #if !(defined(STEVEN_SEAGAL) && defined(SS_ACIA_REMOVE_OLD_VARIABLES))
   LOG_ONLY( if (nACIA==0 && acia[nACIA].irq) log_to_section(LOGSECTION_IKBD,EasyStr("IKBD: ACIA reset - Changing ACIA IRQ bit from ")+ACIA_IKBD.irq+" to 0"); )
   acia[nACIA].irq=false;
-#endif
-
-#if defined(SS_ACIA_TEST_REGISTERS)
-//  ASSERT( !( (ACIA_IKBD.SR&BIT_7)||(ACIA_MIDI.SR&BIT_7) )==!(ACIA_IKBD.irq||ACIA_MIDI.irq) );
 #endif
 
 #if !defined(SS_ACIA_USE_REGISTERS)
@@ -458,13 +454,17 @@ void ACIA_Reset(int nACIA,bool Cold)
     acia[nACIA].RDRS=0;
     acia[nACIA].TDRS=0;
   }
+#if !defined(SS_ACIA_DONT_CLEAR_DR)
   acia[nACIA].RDR=0;//?
   acia[nACIA].TDR=0;
+#endif
+/*
+"Overrun is also reset by the Master Reset."
+*/
   acia[nACIA].SR&=~(BIT_0|BIT_5); // from doc
- // acia[nACIA].SR=2; // eg Delirious IV, but also "stuck" waiting byte needed
 #endif
 
-#if defined(SS_ACIA_IRQ_DELAY)
+#if defined(SS_ACIA_IRQ_DELAY)// not defined anymore (v3.5.2), see MFP
   acia[nACIA].rx_stage=0;
 #endif
 
@@ -504,7 +504,7 @@ void ACIA_SetControl(int nACIA,BYTE Val)
 #endif
   }
   else
- ACIA_IKBD.SR&=~BIT_7; 
+    ACIA_IKBD.SR&=~BIT_7; 
 #endif
   if (acia[nACIA].tx_irq_enabled){
     acia[nACIA].irq=true;
@@ -602,7 +602,6 @@ int agenda_get_queue_pos(LPAGENDAPROC job)
   return n;
 }
 //---------------------------------------------------------------------------
-
 #if !(defined(STEVEN_SEAGAL) && defined(SS_IKBD_MANAGE_ACIA_TX))
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
@@ -613,7 +612,7 @@ int agenda_get_queue_pos(LPAGENDAPROC job)
 void agenda_acia_tx_delay_IKBD(int)
 {
 
-
+dssfd
 #if defined(SS_ACIA_REGISTERS)
   ACIA_IKBD.SR|=BIT_1; // TDRE
   if( (ACIA_IKBD.CR&BIT_5)&&!(ACIA_IKBD.CR&BIT_6) ) // IRQ transmit enabled

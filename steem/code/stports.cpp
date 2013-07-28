@@ -34,10 +34,7 @@ void agenda_midi_replace(int)
       if (ACIA_MIDI.overrun!=ACIA_OVERRUN_YES) 
         ACIA_MIDI.overrun=ACIA_OVERRUN_COMING;
 
-#if defined(SS_ACIA_OVERRUN)
-/*  The overrun isn't set before the data is read, Steem was right on this.
-    But it seems previous byte is lost, not new one (TESTING)
-*/
+#if defined(SS_ACIA_OVERRUN_REPLACE_BYTE) // normally not
 #if defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
       TRACE_LOG("Midi in overrun %X not read\n",ACIA_MIDI.RDR);
       ACIA_MIDI.RDR=midi_in;
