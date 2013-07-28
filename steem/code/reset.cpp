@@ -167,6 +167,9 @@ void power_on()
     floppy_head_track[floppyno]=0;
 #if defined(STEVEN_SEAGAL) && defined(SS_DRIVE)
     SF314[floppyno].Id=floppyno;
+#if defined(SS_DRIVE_MOTOR_ON)
+    SF314[floppyno].MotorOn=false;
+#endif
 #endif
   }
   fdc_tr=0;fdc_sr=0;fdc_dr=0;

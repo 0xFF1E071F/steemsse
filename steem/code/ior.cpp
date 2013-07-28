@@ -224,9 +224,10 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 /*  If we're going to ignore the write, inform the program through SR register
     (Froggies)
 */
-        if(ACIA_IKBD.last_tx_write_time&&ACT-ACIA_IKBD.last_tx_write_time<512)
+        if(ACIA_IKBD.last_tx_write_time
+          &&ACT-ACIA_IKBD.last_tx_write_time<ACIA_CYCLES_NEEDED_TO_START_TX)
         {
-          TRACE_LOG("ACIA SR TDRE not set yet ()\n",ACT-ACIA_IKBD.last_tx_write_time);
+          TRACE_LOG("ACIA SR TDRE not set yet (%d)\n",ACT-ACIA_IKBD.last_tx_write_time);
           ior_byte&=~BIT_1;
         }
 #endif

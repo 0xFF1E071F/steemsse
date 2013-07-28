@@ -29,6 +29,7 @@ this one.
 timings found by ijor (also author of Pasti).
 -A folder 'SDL-WIN' for future SDL support
 -A folder 'unRARDLL' in '3rdparty' for unrar support
+-Files xxx.decla.h: work in progress
 
 Other mods are in Steem code, inside blocks where STEVEN_SEAGAL is defined.
 Many other defines are used to segment code. This is heavy but it makes 
@@ -75,7 +76,8 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SSE_VERSION_TXT "Beta" 
 #define WINDOW_TITLE "Steem SSE beta"
 #else // next planned release
-#define SSE_VERSION 352 // check snapshot Version; rc\resource.rc
+#define SSE_VERSION 352 
+// check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_VERSION_TXT "3.5.2" 
 #define WINDOW_TITLE "Steem SSE 3.5.2" //not 'Engine', too long
 #endif
@@ -117,7 +119,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_TIMINGS    
 #define SS_TOS        // The Operating System
 #define SS_UNIX       // Linux build must be OK too (may lag)
-#define SS_VARIOUS    // Mouse capture, keyboard click, unrar...
+  #define SS_VARIOUS    // Mouse capture, keyboard click, unrar...
 #define SS_VIDEO      // large borders, screenshot, recording
 
 #endif
@@ -200,7 +202,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 //#define SS_ACIA_OVERRUN_REPLACE_BYTE // normally no
 #define SS_ACIA_REGISTERS // formalising the registers
 //#define SS_ACIA_REMOVE_OLD_VARIABLES // TODO
-#define SS_ACIA_DONT_CLEAR_DR
+//#define SS_ACIA_DONT_CLEAR_DR //?
 #define SS_ACIA_NO_RESET_PIN // don't reset on warm reset
 #define SS_ACIA_TDR_COPY_DELAY
 #define SS_ACIA_TEST_REGISTERS // debugging...
@@ -463,6 +465,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(SS_DRIVE)
 
 #define SS_DRIVE_BYTES_PER_ROTATION
+#define SS_DRIVE_MOTOR_ON
 #define SS_DRIVE_MULTIPLE_SECTORS
 #define SS_DRIVE_READ_ADDRESS_TIMING
 #define SS_DRIVE_READ_TRACK_TIMING
@@ -538,7 +541,6 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_IKBD_FAKE_MOUSE_SCALE // actually use the scale
 #define SS_IKBD_MANAGE_ACIA_TX
 #define SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT // hardware quirk?
-#define SS_IKBD_OVERDRIVE // reset keys?
 #define SS_IKBD_TRACE_CPU_READ
 //#define SS_IKBD_TRACE_CPU_READ2
 
@@ -546,6 +548,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 //#define SS_IKBD_FAKE_CUSTOM_IS_HACK // need option Hacks to make them work
 //#define SS_IKBD_FAKE_CUSTOM_DRAGONNELS // keyboard selection
 #define SS_IKBD_POLL_IN_FRAME // poll once during the frame too
+#define SS_IKBD_OVERDRIVE // reset keys?
 #endif
 
 #if defined(SS_IKBD_6301) 

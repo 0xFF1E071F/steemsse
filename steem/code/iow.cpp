@@ -264,6 +264,8 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
     But writes to TDR mustn't be too close to one another, we find there's
     a delay of around 512 M68K cycles when the byte will be ignored (Delirious
     4 fake GEM). 1000 cycles is already too much (same program).
+    This feature was in fact already in Steem 3.2 somehow:
+    ACIA_CYCLES_NEEDED_TO_START_TX (=512)
 */
         if(!ACIA_IKBD.LineTxBusy)
         {
@@ -296,7 +298,8 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 #endif
 
 #if defined(SS_ACIA_TDR_COPY_DELAY)
-          if(ACIA_IKBD.last_tx_write_time&&ACT-ACIA_IKBD.last_tx_write_time<512)
+          if(ACIA_IKBD.last_tx_write_time
+            &&ACT-ACIA_IKBD.last_tx_write_time<ACIA_CYCLES_NEEDED_TO_START_TX)
             TRACE_LOG("ACIA TDR byte %X blocked after %d cycles\n",io_src_b,ACT-ACIA_IKBD.last_tx_write_time);
           else
 #endif
@@ -307,7 +310,7 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 #endif
         }
 #if defined(SS_ACIA_TDR_COPY_DELAY)
-        if(ACT-ACIA_IKBD.last_tx_write_time>512)
+        if(ACT-ACIA_IKBD.last_tx_write_time>ACIA_CYCLES_NEEDED_TO_START_TX)
           ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
 #endif
 #else //no double buffer
@@ -1207,6 +1210,12 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
             TRACE_LOG("PSG-A %X %c%d:\n",io_src_b,'A'+YM2149.Drive(),YM2149.Side());
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_IO
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_MOTOR_ON)
+// hack for European Demos, eg Pendrag I, no disk in B:
+            if(SSE_HACKS_ON && ADAT && YM2149.Drive()!=TYM2149::NO_VALID_DRIVE)
+              fdc_str&=~FDC_STR_MOTOR_ON; 
 #endif
 
 #ifdef ENABLE_LOGFILE

@@ -896,7 +896,8 @@ void TSF314::NextID(BYTE &Id,WORD &nHbls) {
 */
   Id=0;
   nHbls=0;
-  if(FloppyDrive[Id].Empty())
+  if(FloppyDrive[floppy_current_drive()].Empty()) //3.5.2
+  //if(FloppyDrive[Id].Empty())
     return;
   WORD BytesToRun;
   WORD ByteOfNextId=BytePositionOfFirstId();//default

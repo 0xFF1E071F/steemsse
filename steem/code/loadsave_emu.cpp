@@ -726,7 +726,6 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   //3.5.0: nothing special
 
   if(Version>=44) // Steem 3.5.1
-  // while beta this all may change...
   {
 #if defined(SS_SHIFTER)
     ReadWriteStruct(Shifter); // for res & sync
@@ -745,8 +744,17 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #if defined(SS_DMA)
     ReadWriteStruct(Dma);
 #endif
+  }
+
+  if(Version>=45) //3.5.2
+  {
+    ReadWriteStruct(SF314);
+  }
+
 
 #if defined(SS_VAR_CHECK_SNAPSHOT)
+  if(Version>=44)
+  {
     int magic=123456;
     ReadWrite(magic);
     //ASSERT(magic==123456);
@@ -759,8 +767,9 @@ Steem SSE will reset auto.sts and quit\nSorry!",
       DeleteFile(WriteDir+SLASH+AutoSnapShotName+".sts");
       PostQuitMessage(-1);
     }
-#endif
   }
+#endif
+
 
 #endif//#if defined(STEVEN_SEAGAL)
 

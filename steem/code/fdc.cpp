@@ -358,7 +358,12 @@ void floppy_fdc_command(BYTE cm)
     }
     fdc_str=FDC_STR_BUSY | FDC_STR_MOTOR_ON;
     fdc_spinning_up=int(delay_exec ? 2:1);
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_MOTOR_ON)
+    SF314[DRIVE].MotorOn=true;
+    TRACE_LOG("Motor on drive %c\n",'A'+DRIVE);
+#else
     TRACE_LOG("Motor on\n");
+#endif
     if (floppy_instant_sector_access){
       agenda_add(agenda_fdc_spun_up,MILLISECONDS_TO_HBLS(100),delay_exec);
     }else{
@@ -386,6 +391,21 @@ void floppy_fdc_command(BYTE cm)
 //---------------------------------------------------------------------------
 void agenda_fdc_spun_up(int do_exec)
 {
+
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_MOTOR_ON)
+/*  If there's no disk, the drive can't catch index and the controller
+    can't count them.
+*/
+  if( ADAT && FloppyDrive[floppy_current_drive()].Empty() )
+  {
+    TRACE_LOG("Drive empty, no spinup\n");
+    fdc_str&=BYTE(FDC_STR_T1_SPINUP_COMPLETE);
+    fdc_str|=FDC_STR_BUSY;
+    agenda_fdc_finished(0);
+    return;
+  }
+#endif
+
   fdc_spinning_up=0;
   TRACE_LOG("Spin up\n");
   if (do_exec) fdc_execute();
@@ -1124,8 +1144,13 @@ void agenda_fdc_motor_flag_off(int revs_to_wait)
   }
   else
   {
-    TRACE_LOG("Motor off\n");
     fdc_str&=BYTE(~FDC_STR_MOTOR_ON);
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_MOTOR_ON)
+    TRACE_LOG("Motor off drive %c\n",'A'+DRIVE);
+    SF314[DRIVE].MotorOn=false;
+#else
+    TRACE_LOG("Motor off\n");
+#endif
   }
 }
 #else
@@ -1133,6 +1158,9 @@ void agenda_fdc_motor_flag_off(int)
 {
   TRACE_LOG("Motor off\n");
   fdc_str&=BYTE(~FDC_STR_MOTOR_ON);
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_MOTOR_ON)
+    SF314[DRIVE].MotorOn=false;
+#endif
 }
 #endif
 //---------------------------------------------------------------------------
@@ -1165,7 +1193,14 @@ void agenda_fdc_verify(int dummy) {
     // It will fail on an unformatted track or if there is no disk of course
     int floppyno=floppy_current_drive();
     TFloppyImage *floppy=&FloppyDrive[floppyno];
-    if (floppy_head_track[floppyno]>FLOPPY_MAX_TRACK_NUM || floppy->Empty()){
+#if !defined(SS_DRIVE_MOTOR_ON)
+      ASSERT( !floppy->Empty() );
+#endif
+    if (floppy_head_track[floppyno]>FLOPPY_MAX_TRACK_NUM
+#if !defined(SS_DRIVE_MOTOR_ON)
+      || floppy->Empty()
+#endif
+      ){
       fdc_str|=FDC_STR_SEEK_ERROR;
     }
     else if(floppy_head_track[floppyno]!=fdc_tr)
@@ -1191,7 +1226,7 @@ void agenda_fdc_verify(int dummy) {
 //---------------------------------------------------------------------------
 void agenda_fdc_finished(int)
 {
-  ASSERT( fdc_str&BYTE(~FDC_STR_BUSY) );
+  //ASSERT( !(fdc_str&FDC_STR_BUSY) );//?
 #if defined(STEVEN_SEAGAL) && defined(SS_DMA) && defined(SS_DEBUG)
   if(TRACE_ENABLED) 
     Dma.UpdateRegs(true);
@@ -1208,7 +1243,7 @@ void agenda_fdc_finished(int)
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_MOTOR_OFF)
   if(ADAT)
   {
-    ASSERT( fdc_str&FDC_STR_MOTOR_ON );
+    ASSERT( fdc_str&FDC_STR_MOTOR_ON || FloppyDrive[floppy_current_drive()].Empty());
     ASSERT( agenda_get_queue_pos(agenda_fdc_motor_flag_off)<0 );
 #if defined(SS_FDC_MOTOR_OFF_COUNT_IP)
     agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION,9); //10?

@@ -217,15 +217,19 @@ void THD6301::ResetChip(int Cold) {
   {
     HD6301.Crashed=0;
     hd6301_reset(Cold);
-
-/*  Overdrive Demo: when you exit a demo screen, eg 'Oh No', by pressing the
+  }
+#endif
+#if defined(SS_IKBD_TRACE_CPU_READ)
+/*  It's not clear at all what should be done, so 'Hacks' serves as an
+    option here. It made a difference for Overdrive Demo: going back to
+    menu at some point, then not anymore (? v3.5.2)
+    It's also unclear whether we should do it for 'true' or 'fake' emu.
+    Overdrive Demo: when you exit a demo screen, eg 'Oh No', by pressing the
     spacebar, the IKBD is reset. If the program receives the break code for
     spacebar ($B9) before the $F1, it will stop responding to IKBD input.
-    This is a hack for the moment for experiments (check cases).
 */
-    if(SSE_HACKS_ON)
-      ZeroMemory(ST_Key_Down,sizeof(ST_Key_Down));
-  }
+  if(SSE_HACKS_ON)
+    ZeroMemory(ST_Key_Down,sizeof(ST_Key_Down));
 #endif  
 }
 
