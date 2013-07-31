@@ -176,7 +176,8 @@ bool macro_play_start()
   FILE *f=fopen(macro_play_file,"rb");
   if (f==NULL) return 0;
 
-  unsigned int Version=0,SizeMVI=0,StructOffset=0;
+  unsigned int Version=0,StructOffset=0;
+  size_t SizeMVI = 0;
   fread(&Version,1,4,f);
   fread(&SizeMVI,1,4,f);
   fread(&StructOffset,1,4,f);
