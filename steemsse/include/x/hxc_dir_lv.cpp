@@ -109,7 +109,7 @@ bool hxc_dir_lv::refresh_fol()
             if (link_ext && match==0) match=IsSameStr_I(link_ext,ext_sl[n].String);
             if (match){
               if (notifyproc){
-                int newn=notifyproc(this,DLVN_GETTYPE,int(notify_path.Text));
+                int newn=notifyproc(this,DLVN_GETTYPE,(intptr_t)notify_path.Text);
                 if (newn) n=newn;
               }
               int icon_idx=is_link;
@@ -187,14 +187,14 @@ EasyStr hxc_dir_lv::movecopylink_item(int action,EasyStr src,EasyStr dest_fol)
       ccn.flags=0;
       ccn.path=src;
       ccn.new_path=dest_path;
-      notifyproc(this,DLVN_CONTENTSCHANGE,int(&ccn));
+      notifyproc(this,DLVN_CONTENTSCHANGE,(intptr_t)&ccn);
     }
     system(EasyStr("mv -f \"")+src+"\" \""+dest_fol+"/"+"\"");
     struct stat s;
     ccn.success=(stat(src,&s)==-1);
     if (notifyproc){
       ccn.time=DLVCCN_AFTER;
-      notifyproc(this,DLVN_CONTENTSCHANGE,int(&ccn));
+      notifyproc(this,DLVN_CONTENTSCHANGE,(intptr_t)&ccn);
     }
   }else if (action==MCL_COPY){
     dest_path=GetUniquePath(dest_fol,GetFileNameFromPath(src));
@@ -217,7 +217,7 @@ int hxc_dir_lv::lv_notifyproc(hxc_listview *lv,int mess,int i)
   		if (lv->sl[i].Data[DLVD_TYPE]<2){
         EasyStr new_fol=This->get_item_path(i);
         int ret=0;
-        if (This->notifyproc) ret=This->notifyproc(This,DLVN_FOLDERCHANGE,int(new_fol.Text));
+        if (This->notifyproc) ret=This->notifyproc(This,DLVN_FOLDERCHANGE,(intptr_t)new_fol.Text);
         if (ret==0){
           This->fol=new_fol;
     			This->refresh_fol();
@@ -309,7 +309,7 @@ int hxc_dir_lv::lv_notifyproc(hxc_listview *lv,int mess,int i)
 			if (This->notifyproc && ds->on>=0) This->notifyproc(This,DLVN_SELCHANGE,ds->on);
 
  			if (ds->in_lv==0){
- 				if (This->notifyproc) This->notifyproc(This,DLVN_DROP,(int)ds);
+ 				if (This->notifyproc) This->notifyproc(This,DLVN_DROP,(intptr_t)ds);
  				break;
  			}
 
@@ -390,7 +390,7 @@ void hxc_dir_lv::delete_item()
     ccn.time=DLVCCN_BEFORE;
     ccn.flags=0;
     ccn.path=file;
-    notifyproc(this,DLVN_CONTENTSCHANGE,int(&ccn));
+    notifyproc(this,DLVN_CONTENTSCHANGE,(intptr_t)&ccn);
   }
 
   if (type==1){ // Folder, delete it and all its contents!
@@ -404,7 +404,7 @@ void hxc_dir_lv::delete_item()
 
   if (notifyproc){
     ccn.time=DLVCCN_AFTER;
-    notifyproc(this,DLVN_CONTENTSCHANGE,int(&ccn));
+    notifyproc(this,DLVN_CONTENTSCHANGE,(intptr_t)&ccn);
   }
 
   if (ccn.success==0){
@@ -414,7 +414,7 @@ void hxc_dir_lv::delete_item()
   }
 
   refresh_fol();
-  if (notifyproc) notifyproc(this,DLVN_ITEMDELETED,int(file.Text));
+  if (notifyproc) notifyproc(this,DLVN_ITEMDELETED,(intptr_t)file.Text);
 }
 //---------------------------------------------------------------------------
 void hxc_dir_lv::rename_item()
@@ -444,7 +444,7 @@ void hxc_dir_lv::rename_item()
       ccn.flags=flags;
       ccn.path=file;
       ccn.new_path=new_file;
-      notifyproc(this,DLVN_CONTENTSCHANGE,int(&ccn));
+      notifyproc(this,DLVN_CONTENTSCHANGE,(intptr_t)&ccn);
     }
 
     struct stat s;
@@ -453,7 +453,7 @@ void hxc_dir_lv::rename_item()
     }
     if (notifyproc){
       ccn.time=DLVCCN_AFTER;
-      notifyproc(this,DLVN_CONTENTSCHANGE,int(&ccn));
+      notifyproc(this,DLVN_CONTENTSCHANGE,(intptr_t)&ccn);
     }
     if (ccn.success==0) return;
 
@@ -461,7 +461,7 @@ void hxc_dir_lv::rename_item()
     select_item_by_name(GetFileNameFromPath(new_file));
     if (notifyproc){
       if (type==1){
-        notifyproc(this,DLVN_FOLDERMOVED,int(file.Text));
+        notifyproc(this,DLVN_FOLDERMOVED,(intptr_t)file.Text);
       }
       notifyproc(this,DLVN_NAMECHANGED,lv.sel);
     }

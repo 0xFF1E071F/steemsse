@@ -1014,7 +1014,7 @@ void hxc_listview::drag_end(int mx,int my)
 	if (mx<0 || mx>w-border*2-sb_w) ds.in_lv=0;
 	if (my<0 || my>h-border*2) ds.in_lv=0;
 
-	notifyproc(this,LVN_DROP,(int)&ds);
+	notifyproc(this,LVN_DROP,(intptr_t)&ds);
 }
 
 bool hxc_listview::is_dropped_in(hxc_listview_drop_struct *pds,hxc *phxc)
