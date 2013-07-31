@@ -1,7 +1,7 @@
 
 #if defined(STEVEN_SEAGAL)
 // resnum.h is included by rc\resource.rc
-#include "SSE\SSE.h"
+#include "SSE/SSE.h"
 #endif
 
 

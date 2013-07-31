@@ -1,4 +1,4 @@
-#include "..\\code\\resnum.h"
+#include "../code/resnum.h"
 // EDIT in NOTEPAD, not the VC IDE!!!!!!!
 //Update "FileVersion" and "ProductVersion" too!
 #define STEEM_VER_MAJOR 3
@@ -37,8 +37,8 @@ END
 
 
 //Bitmaps
-TOSFLAGS BITMAP "Flags.bmp"
-ST_CHARS BITMAP "ST_Chars_Mono.bmp"
+TOSFLAGS BITMAP "flags.bmp"
+ST_CHARS BITMAP "st_chars_mono.bmp"
 DEBUGICONS BITMAP "debug_icons.bmp"
 
 // Cursors
