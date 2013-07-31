@@ -6,7 +6,10 @@ used by Steem. Basically includes all the files that are in the object.
 ---------------------------------------------------------------------------*/
 
 #include "pch.h"
+
+#if __BORLANDC__
 #pragma hdrstop
+#endif
 
 #define IN_HELPER
 
