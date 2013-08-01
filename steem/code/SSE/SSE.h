@@ -119,7 +119,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_TIMINGS    
 #define SS_TOS        // The Operating System
 #define SS_UNIX       // Linux build must be OK too (may lag)
-  #define SS_VARIOUS    // Mouse capture, keyboard click, unrar...
+#define SS_VARIOUS    // Mouse capture, keyboard click, unrar...
 #define SS_VIDEO      // large borders, screenshot, recording
 
 #endif
@@ -635,8 +635,9 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #if defined(SS_MFP)
 
-#define SS_MFP_DELAY_POST_PENDING // from Hatari
-
+#define SS_MFP_DELAY_POST_PENDING // from Hatari 
+#define SS_MFP_DELAY_POST_PENDING2
+#define SS_MFP_IACK_LATENCY
 #define SS_MFP_RATIO // change the values of CPU & MFP freq!
 #define SS_MFP_RATIO_PRECISION // for short timers
 #define SS_MFP_RATIO_STE // measured (by Steem Authors) for STE?
@@ -649,11 +650,6 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_MFP_TIMER_B_NO_WOBBLE // does it fix anything???
 #endif
 #define SS_MFP_TxDR_RESET // they're not reset according to doc
-
-#ifdef SS_HACKS
-#define SS_MFP_HACK_FINAL_CONFLICT
-#endif
-
 #endif
 
 

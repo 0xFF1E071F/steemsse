@@ -206,6 +206,11 @@ void run()
         DEBUG_ONLY( if (runstate!=RUNSTATE_RUNNING) break; )
         DEBUG_ONLY( mode=STEM_MODE_INSPECT; )
        
+/*  SS Events (such as interrupts) are arranged in a chronological way.
+    If an interrupt of lower priority triggers 2 cycles before one of
+    higher priority and it's not blocked, it will be executed by Steem.
+    From the comments in Hatari v1.7.0 it seems correct (Fuzion 77, 78, 84).
+*/
         while (cpu_cycles<=0){
           screen_event_vector(); 
           prepare_next_event();
@@ -427,8 +432,8 @@ void inline prepare_next_event() //SS check this "inline" thing
     new_timeout+=4; \
   }
 
-
 #else
+
 #define HANDLE_TIMEOUT(tn) \
   log(Str("MFP: Timer ")+char('A'+tn)+" timeout at "+ABSOLUTE_CPU_TIME+" timeout was "+mfp_timer_timeout[tn]+ \
     " period was "+mfp_timer_period[tn]); \
@@ -445,12 +450,6 @@ void inline prepare_next_event() //SS check this "inline" thing
   int new_timeout=ABSOLUTE_CPU_TIME+stage;
 #endif
 
-/* SS the check happens at "arbitrary" timing, the correct timing
-  as recorded in mfp_timer_timeout[] is recorded. This "should" be
-  the precise timing, whatever happens in the instruction that's
-  running when the timer hits. If one is 2 cycles before the other,
-  the event will be set up for this one.
-*/
 void event_timer_a_timeout()
 {
   HANDLE_TIMEOUT(0);

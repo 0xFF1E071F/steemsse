@@ -956,7 +956,18 @@ void TShifter::CheckVerticalOverscan() {
     -RGBeast (480:S0, sometimes 500:S2)
     STF cases:
     -3615Gen4 Cakeman
-    -Auto 168
+    -Auto 168 
+    with HBL at 444+4+8!:
+    Line -30 - 488:S0000 512:S0002 512:T0100
+    Line -30 - 492:S0000 516:S0002 512:T0100
+
+    with HBL at 444+4:
+    Line -30 - 504:S0000 512:T0100
+    missed
+    Line -30 - 508:S0000
+    Line -29 - 020:S0002 264:j0006
+    No doubt 508 is too high, so yes it's VBI problem
+
     -European Demos (top 444 60) When it misses there's just no 60 (VBI?)
     -Musical Wonder 90 (416:S0,504:S2)
     -SNYD2/Sync Vectorballs II 424:S0000 504:S0002 (every time)
@@ -1033,7 +1044,7 @@ void TShifter::CheckVerticalOverscan() {
   {
     overscan=OVERSCAN_MAX_COUNTDOWN;
     time_of_next_timer_b=time_of_next_event+cpu_cycles_from_hbl_to_timer_b
-      + TB_TIME_WOBBLE;
+      + TB_TIME_WOBBLE; //TODO other possible timing for timer B
     if(on_overscan_limit==LIMIT_TOP) // top border off
     {
       shifter_first_draw_line=-29;
