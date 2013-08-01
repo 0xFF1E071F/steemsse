@@ -704,6 +704,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(SS_OSD)
 
 #define SS_OSD_DRIVE_INFO // cool! (v3.5.1)
+#define SS_OSD_DRIVE_INFO2 // no SR when fast
 #define SS_OSD_DRIVE_LED
 #define SS_OSD_DRIVE_LED2 // simpler approach
 #define SS_OSD_DRIVE_LED3 // remove useless variable

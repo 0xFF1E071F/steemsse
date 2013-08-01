@@ -484,6 +484,12 @@ void osd_draw()
           BYTE floppyno=floppy_current_drive();      
           char tmp_buffer[BUFFER_LENGTH];
 
+#if defined(SS_OSD_DRIVE_INFO2)
+          if(!ADAT)
+          sprintf(tmp_buffer,"%C:%1d-%02d",'A'+floppyno,floppy_current_side()+1,
+            floppy_head_track[floppyno]);
+          else
+#endif
           sprintf(tmp_buffer,"%C:%1d-%02d-%02d",'A'+floppyno,floppy_current_side()+1,
             floppy_head_track[floppyno],fdc_sr);
 
