@@ -433,8 +433,8 @@ inline void TM68000::PerformRte() {
   sr&=SR_VALID_BITMASK;               
   DETECT_CHANGE_TO_USER_MODE;         
   DETECT_TRACE_BIT;       
-#if defined(SS_MFP_DELAY_POST_PENDING2)
-/*  Both SS_MFP_DELAY_POST_PENDING and SS_MFP_DELAY_POST_PENDING2 organise a
+#if defined(SS_MFP_IRQ_DELAY2)
+/*  Both SS_MFP_IRQ_DELAY and SS_MFP_IRQ_DELAY2 organise a
     "dirty quick fix" approach to imitate a feature that's more structurally
     implemented in Hatari.
     Because of this, the mods are protected by option 'Hacks'.

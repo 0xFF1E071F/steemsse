@@ -56,8 +56,8 @@ Practically on the ST, the request is placed by clearing the bit in the GPIP.
     // Transition the right way! Make the interrupt pend (don't cause an intr
     // straight away in case another more important one has just happened).
     mfp_interrupt_pend(mfp_gpip_irq[bit],ABSOLUTE_CPU_TIME);
-#if defined(STEVEN_SEAGAL) && defined(SS_MFP_DELAY_POST_PENDING)
-/*  Both SS_MFP_DELAY_POST_PENDING and SS_MFP_DELAY_POST_PENDING2 organise a
+#if defined(STEVEN_SEAGAL) && defined(SS_MFP_IRQ_DELAY)
+/*  Both SS_MFP_IRQ_DELAY and SS_MFP_IRQ_DELAY2 organise a
     "dirty quick fix" approach to imitate a feature that's more structurally
     implemented in Hatari.
     Because of this, the mods are protected by option 'Hacks'.

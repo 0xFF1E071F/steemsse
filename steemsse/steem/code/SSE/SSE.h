@@ -635,9 +635,9 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #if defined(SS_MFP)
 
-#define SS_MFP_DELAY_POST_PENDING // from Hatari 
-#define SS_MFP_DELAY_POST_PENDING2
 #define SS_MFP_IACK_LATENCY
+#define SS_MFP_IRQ_DELAY // from Hatari 
+#define SS_MFP_IRQ_DELAY2
 #define SS_MFP_RATIO // change the values of CPU & MFP freq!
 #define SS_MFP_RATIO_PRECISION // for short timers
 #define SS_MFP_RATIO_STE // measured (by Steem Authors) for STE?
