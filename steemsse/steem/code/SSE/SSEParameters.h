@@ -266,11 +266,12 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 ///////////////
 
 #if defined(SS_INTERRUPT)
-/*  Timings theory=44 but "at least" 12 cycles more are necessary
-    56 was already the Steem value. Changing those values may apparently
-    fix some problems, but it's generally a false lead (tried that).
-    Handy for experiments :)
+/*  
+    IACK (interrupt acknowledge)  12
+    Exception processing          44
+    Total                         56
 */
+
 #if defined(SS_INT_MFP)
 #define SS_INT_MFP_TIMING 56
 #endif
@@ -289,7 +290,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 #if defined(SS_INT_VBL_STF) // modest hack still works
 #define HBL_FOR_STE 444
-#define HBL_FOR_STF (444+STF_VERT_OVSCN_OFFSET+4) // +4, hmm... TODO
+#define HBL_FOR_STF (444+STF_VERT_OVSCN_OFFSET+4+ (SSE_HACKS_ON ? 4 : 0)) // no good!TODO
 #endif
 
 #endif

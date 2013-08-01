@@ -33,7 +33,7 @@ Port 1 (AER)  GPIP GPIP GPIP GPIP GPIP GPIP GPIP GPIP   1=Rising
 Port 2 (DDR)  GPIP GPIP GPIP GPIP GPIP GPIP GPIP GPIP   1=Output
                7    6    5    4    3    2    1    0     0=Input
 
-                    General Purpose I/O Register
+-                    General Purpose I/O Register
 Port 3 (GPIP) GPIP GPIP GPIP GPIP GPIP GPIP GPIP GPIP
                7    6    5    4    3    2    1    0
 
@@ -57,9 +57,19 @@ Practically on the ST, the request is placed by clearing the bit in the GPIP.
     // straight away in case another more important one has just happened).
     mfp_interrupt_pend(mfp_gpip_irq[bit],ABSOLUTE_CPU_TIME);
 #if defined(STEVEN_SEAGAL) && defined(SS_MFP_DELAY_POST_PENDING)
-    ioaccess|=IOACCESS_FLAG_DELAY_MFP; // fixes V8 Music System
-#else
-    ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
+/*  Both SS_MFP_DELAY_POST_PENDING and SS_MFP_DELAY_POST_PENDING2 organise a
+    "dirty quick fix" approach to imitate a feature that's more structurally
+    implemented in Hatari.
+    Because of this, the mods are protected by option 'Hacks'.
+    TODO: more reliable
+
+2013/03/01 [NP] When MFP_IRQ goes from 0 to 1, the resulting signal is visible
+to the CPU only 4 cycles later
+*/
+    if(SSE_HACKS_ON)
+      ioaccess|=IOACCESS_FLAG_DELAY_MFP; // fixes V8 Music System
+    else
+      ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
 #endif
   }
 }
@@ -110,26 +120,54 @@ inline BYTE mfp_get_timer_control_register(int n)
   }
 }
 
-// called by mfp_interrupt(int irq,int when_fired)
 inline bool mfp_set_pending(int irq,int when_set)
 {
-  if(abs_quick(when_set-mfp_time_of_start_of_last_interrupt[irq]) >=(
-#if defined(STEVEN_SEAGAL) && defined(SS_MFP_HACK_FINAL_CONFLICT)
-    // Hack for Final Conflict, I don't remember if 56 wasn't OK
-    SSE_HACKS_ON?CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED+56-8:
+#if defined(STEVEN_SEAGAL) && defined(SS_MFP_IACK_LATENCY)
+/*
+Final Conflict
+
+http://www.atari-forum.com/viewtopic.php?f=51&t=15885#wrap (ijor):
+
+The CPU takes several cycles between the moment it decides to take an interrupt
+ (and which one), until it actually acks the interrupt to the MFP. 
+And only at the latter time the MFP clears its pending bit (and interrupt 
+state). The former happens (in this case) during execution of the RTE 
+instruction. 
+The latter on the Interrupt ACK bus cycle, part of the interrupt exception 
+sequence. Let's call those two critical moments, "t1" and "t2".
+
+Let's consider a timer interrupt happening just before "t2", the Int ACK 
+cycle (interrupt is being processed as a consequence of the previous timer
+ interrupt). The MFP would clear this new interrupt, even when the CPU
+ meant to ack the previous one. In other words, MFP doesn't signal any
+ interrupt any more, at least not until the next timer period. But if the
+ timing is right, the next timer interrupt would happen just after "t1".
+ So by the time the next interrupt happens, the CPU already dediced to 
+either run the VBL interrupt, or the main code.
+  =>
+  Timer A is pending...      check interrupts... start IACK (12 cycles)
+  During those 12 cycles, Timer A triggers again! On a real ST, the MFP
+  clears the interrupt for both occurences.
+  In Steem:
+  Without the fix, 56 cycles will be counted for first interrupt, then
+  timers will be checked and Timer A will be set pending again.
+  With the fix, being too close to former one, Timer A will be ignored.
+  So we don't need to split the interrupt timings.
+  Because of the way we implement it, the fix is considered a hack, but
+  I've seen nothing broken by it yet (since v3.3).
+*/
+  if(abs_quick(when_set-mfp_time_of_start_of_last_interrupt[irq])
+    >= (SSE_HACKS_ON
+    ?56-8+CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED
+    :CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED)){
+#else
+  if (abs_quick(when_set-mfp_time_of_start_of_last_interrupt[irq])>=CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED){
 #endif
-    CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED))
-  {
-    // Set pending
-    mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)]|=mfp_interrupt_i_bit(irq); 
+    mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)]|=mfp_interrupt_i_bit(irq); // Set pending
     return true;
   }
-  else // value can be odd??
-    TRACE_LOG("MFP no set pending, %d cycles too soon\n",CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED+56-8-abs_quick(when_set-mfp_time_of_start_of_last_interrupt[irq]));
-  return (mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)] 
-    & mfp_interrupt_i_bit(irq))!=0;
+  return (mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)] & mfp_interrupt_i_bit(irq))!=0;
 }
-
 
 #undef LOGSECTION//ss
 #define LOGSECTION LOGSECTION_MFP_TIMERS
@@ -189,13 +227,13 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
           mfp_timer_period[timer]=int( double(mfp_timer_prescale[new_control]*int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+timer]))) * CPU_CYCLES_PER_MFP_CLK);
 
 #if defined(STEVEN_SEAGAL) && defined(SS_MFP_RATIO_PRECISION)
-/*  Here we do exactly what Steem authors suggested, and it does bring the
+/*  Here we do exactly what Steem authors suggested above, and it does bring the
     timing measurements at the same level as SainT and Hatari (HWTST001.PRG),
     so it's definitely an improvement, and it isn't complicated at all!
 */
           mfp_timer_period_fraction[timer]=int(  1000*((double(mfp_timer_prescale[new_control]*int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+timer]))) * CPU_CYCLES_PER_MFP_CLK)-(double)mfp_timer_period[timer])  );
           mfp_timer_period_current_fraction[timer]=0;
-          TRACE_LOG("MFP set timer %C period %d.%d\n",'A'+timer,mfp_timer_period[timer],mfp_timer_period_fraction[timer]);
+          TRACE_LOG("PC %X MFP set timer %C control %x period %d.%d\n",old_pc,'A'+timer,new_control,mfp_timer_period[timer],mfp_timer_period_fraction[timer]);
 #endif
 
           // Here mfp_timer_timeout assumes that the next MFP_CLK tick happens
@@ -257,7 +295,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
       log("MFP: --------------- PULSE EXTENSION MODE!! -----------------");
     }
 #endif
-    ASSERT(!(reg<=MFPR_TBCR && new_val>8)); // it seems not to be expected
+    ASSERT(!(reg<=MFPR_TBCR && new_val>8)); 
     prepare_event_again();
   }else if (reg>=MFPR_TADR && reg<=MFPR_TDDR){ //data reg change
     timer=reg-MFPR_TADR;
@@ -381,6 +419,7 @@ int mfp_calc_timer_counter(int timer)
 
 void ASMCALL check_for_interrupts_pending()
 {
+
   if (STOP_INTS_BECAUSE_INTERCEPT_OS==0){
     if ((ioaccess & IOACCESS_FLAG_DELAY_MFP)==0){ //SS MFP=IPL6
       //SS check IRQ from highest (15) to lowest (0)

@@ -738,7 +738,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
 
 #if defined(SS_ACIA_USE_REGISTERS)
-    ReadWriteStruct(ACIA_MIDI); //CR...
+    ReadWriteStruct(ACIA_MIDI);
 #endif
 
 #if defined(SS_DMA)
@@ -746,13 +746,8 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
   }
 
-  if(Version>=45) //3.5.2
-  {
-    ReadWriteStruct(SF314);
-  }
 
-
-#if defined(SS_VAR_CHECK_SNAPSHOT)
+#if defined(SS_VAR_CHECK_SNAPSHOT) //stupid!
   if(Version>=44)
   {
     int magic=123456;
@@ -769,6 +764,11 @@ Steem SSE will reset auto.sts and quit\nSorry!",
     }
   }
 #endif
+
+  if(Version>=45) //3.5.2
+  {
+   // ReadWriteStruct(SF314);
+  }
 
 
 #endif//#if defined(STEVEN_SEAGAL)

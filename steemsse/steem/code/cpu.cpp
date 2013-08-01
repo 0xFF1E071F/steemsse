@@ -1037,7 +1037,6 @@ extern "C" ASMCALL void m68k_trace() //execute instruction with trace bit set
 #endif
 #endif
  //ASSERT(ir!=0x19F3); // dbg: break on opcode...
-
   m68k_high_nibble_jump_table[ir>>12](); //SS call in trace
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU) && defined(SS_DEBUG)
   M68000.NextIrFetched=false;

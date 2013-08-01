@@ -6,7 +6,6 @@
 
 #define LOGSECTION LOGSECTION_CRASH // not correct, temp, cpu is trouble
 
-
 #if defined(SS_STRUCTURE_CPU_H)
 #include "../cpu.decla.h" // hey look it already works for this
 
@@ -433,7 +432,25 @@ inline void TM68000::PerformRte() {
   sr=m68k_dpeek(r[15]);r[15]+=6;      
   sr&=SR_VALID_BITMASK;               
   DETECT_CHANGE_TO_USER_MODE;         
-  DETECT_TRACE_BIT;        
+  DETECT_TRACE_BIT;       
+#if defined(SS_MFP_DELAY_POST_PENDING2)
+/*  Both SS_MFP_DELAY_POST_PENDING and SS_MFP_DELAY_POST_PENDING2 organise a
+    "dirty quick fix" approach to imitate a feature that's more structurally
+    implemented in Hatari.
+    Because of this, the mods are protected by option 'Hacks'.
+    TODO: more reliable
+
+2013/03/01 [NP] When MFP_IRQ goes from 0 to 1, the resulting signal is visible
+to the CPU only 4 cycles later
+*/
+
+  if(SSE_HACKS_ON && (ioaccess&IOACCESS_FLAG_DELAY_MFP))
+  {
+    // fixes Audio Artistic Demo
+    ioaccess&=~IOACCESS_FLAG_DELAY_MFP;
+    ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE; 
+  }
+#endif
 }
 #define M68K_PERFORM_RTE(checkints) M68000.PerformRte()
 
