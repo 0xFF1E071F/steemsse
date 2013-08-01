@@ -1204,7 +1204,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
           SerialPort.SetRTS(io_src_b & BIT_3);
           if ((old_val & (BIT_1+BIT_2))!=(io_src_b & (BIT_1+BIT_2))){
 
-#if defined(SS_PSG_REPORT_DRIVE_CHANGE)
+#if defined(STEVEN_SEAGAL) && defined(SS_PSG_REPORT_DRIVE_CHANGE)
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_FDC
             TRACE_LOG("PSG-A %X %c%d:\n",io_src_b,'A'+YM2149.Drive(),YM2149.Side());
@@ -1215,8 +1215,25 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 #if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_MOTOR_ON)
 // hack for European Demos, eg Pendrag I, no disk in B:
             if(SSE_HACKS_ON && ADAT && YM2149.Drive()!=TYM2149::NO_VALID_DRIVE)
-              fdc_str&=~FDC_STR_MOTOR_ON; 
+            {
+              //fdc_str&=~FDC_STR_MOTOR_ON; 
+              TRACE_LOG("Motors A%d B%d\n",SF314[0].MotorOn,SF314[1].MotorOn);
+              if(SF314[YM2149.Drive()].MotorOn &&  !FloppyDrive[YM2149.Drive()].Empty())
+                fdc_str|=FDC_STR_MOTOR_ON;
+              else
+                fdc_str&=~FDC_STR_MOTOR_ON;
+#if defined(STEVEN_SEAGAL) && defined(SS_PSG_REPORT_DRIVE_CHANGE)
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_FDC
+              TRACE_LOG("Motor of %c: %d %d\n",'A'+YM2149.Drive(),!!(fdc_str&FDC_STR_MOTOR_ON),SF314[YM2149.Drive()].MotorOn);
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_IO
 #endif
+            }
+#endif
+
+
+
 
 #ifdef ENABLE_LOGFILE
             if ((psg_reg[PSGR_PORT_A] & BIT_1)==0){ //drive 0
