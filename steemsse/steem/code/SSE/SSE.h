@@ -465,6 +465,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(SS_DRIVE)
 
 #define SS_DRIVE_BYTES_PER_ROTATION
+#define SS_DRIVE_EMPTY
 #define SS_DRIVE_MOTOR_ON
 #define SS_DRIVE_MULTIPLE_SECTORS
 #define SS_DRIVE_READ_ADDRESS_TIMING
@@ -828,7 +829,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(SS_DEBUG) 
 //#define SS_SHIFTER_DRAW_DBG  // totally bypass CheckSideOverscan() & Render()
 #define SS_SHIFTER_EVENTS // recording all shifter events in a frame
-//#define SS_SHIFTER_EVENTS_PAL // also for palette
+#define SS_SHIFTER_EVENTS_PAL // also for palette
 #define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
 #if !defined(SS_DEBUG_TRACE_IDE)
 #define SS_SHIFTER_REPORT_VBL_TRICKS // a line each VBL

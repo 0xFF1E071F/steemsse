@@ -359,7 +359,8 @@ void floppy_fdc_command(BYTE cm)
     fdc_str=FDC_STR_BUSY | FDC_STR_MOTOR_ON;
     fdc_spinning_up=int(delay_exec ? 2:1);
 #if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_MOTOR_ON)
-    SF314[DRIVE].MotorOn=true;
+    if( ADAT && !FloppyDrive[floppy_current_drive()].Empty() )
+      SF314[DRIVE].MotorOn=true;
     TRACE_LOG("Motor on drive %c\n",'A'+DRIVE);
 #else
     TRACE_LOG("Motor on\n");
@@ -386,17 +387,32 @@ void floppy_fdc_command(BYTE cm)
 #endif
     }
   }
+
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_EMPTY)
+/*  'Motor on' flag in STR being set doesn't mean the drive is spinning
+    especially if we have 2 drives.
+    Fixes European Demos: 'insert disk B' screen
+*/
+  else if(SSE_HACKS_ON && ADAT && FloppyDrive[DRIVE].Empty())
+  {
+#if defined(SS_DEBUG) && defined(SS_DRIVE_MOTOR_ON)
+    ASSERT( !SF314[DRIVE].MotorOn );
+#endif
+    agenda_fdc_finished(0);
+    return;
+  }
+#endif
   if (delay_exec==0) fdc_execute();
 }
 //---------------------------------------------------------------------------
 void agenda_fdc_spun_up(int do_exec)
 {
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_MOTOR_ON)
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_EMPTY)
 /*  If there's no disk, the drive can't catch index and the controller
     can't count them.
 */
-  if( ADAT && FloppyDrive[floppy_current_drive()].Empty() )
+  if( SSE_HACKS_ON && ADAT && FloppyDrive[floppy_current_drive()].Empty() )
   {
     TRACE_LOG("Drive empty, no spinup\n");
     fdc_str&=BYTE(FDC_STR_T1_SPINUP_COMPLETE);
@@ -1136,6 +1152,7 @@ The FDC will automatically turn off the motor after the 10 index pulse
 */
 void agenda_fdc_motor_flag_off(int revs_to_wait)
 {
+  //TRACE("%c:agenda_fdc_motor_flag_off %d revs\n",'A'+DRIVE,revs_to_wait);
   if(ADAT && revs_to_wait>0)
   {
     if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE) // one drive selected?
@@ -1245,6 +1262,7 @@ void agenda_fdc_finished(int)
   {
     ASSERT( fdc_str&FDC_STR_MOTOR_ON || FloppyDrive[floppy_current_drive()].Empty());
     ASSERT( agenda_get_queue_pos(agenda_fdc_motor_flag_off)<0 );
+
 #if defined(SS_FDC_MOTOR_OFF_COUNT_IP)
     agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION,9); //10?
 #else
