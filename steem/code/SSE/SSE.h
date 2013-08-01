@@ -735,7 +735,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(SS_PSG)
 
 #ifdef SS_DEBUG
-//#define SS_PSG_REPORT_DRIVE_CHANGE // as FDC trace
+#define SS_PSG_REPORT_DRIVE_CHANGE // as FDC trace
 #endif
 
 #endif

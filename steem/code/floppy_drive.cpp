@@ -41,6 +41,11 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     SF314[drive].ImageType=0;//default, this will detect STX disks (3)
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_MOTOR_ON)
+  if(drive!=-1)
+    SF314[drive].MotorOn=false;
+#endif
+
   if (IsSameStr_I(File,ImageFile) && IsSameStr_I(CompressedDiskName,DiskInZip)) return 0;
 
   if (Exists(File)==0) return FIMAGE_FILEDOESNTEXIST;
