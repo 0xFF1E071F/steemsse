@@ -261,11 +261,6 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
     v3.5.2:
     If the ACIA is shifting and already has a byte in TDR, the byte in TDR
     can be changed (High Fidelity Dreams).
-    But writes to TDR mustn't be too close to one another, we find there's
-    a delay of around 512 M68K cycles when the byte will be ignored (Delirious
-    4 fake GEM). 1000 cycles is already too much (same program).
-    This feature was in fact already in Steem 3.2 somehow:
-    ACIA_CYCLES_NEEDED_TO_START_TX (=512)
 */
         if(!ACIA_IKBD.LineTxBusy)
         {
@@ -298,6 +293,35 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 #endif
 
 #if defined(SS_ACIA_TDR_COPY_DELAY)
+/*
+    Writes to TDR mustn't be too close to one another, we find there's
+    a delay of around 512 M68K cycles when the byte will be ignored (Delirious
+    4 fake GEM). 1000 cycles is already too much (same program).
+    This feature was in fact already in Steem 3.2 somehow:
+    ACIA_CYCLES_NEEDED_TO_START_TX (=512)
+    However:
+http://www.atari-forum.com/viewtopic.php?f=94&p=235197&sid=04b10874e3d4793b2bf57a2453a9881b#p235197
+
+I noticed you also added a small pause to the acia for delirious demo 4 to 
+always get the mouse pointer centered on the fake GEM desktop intro ; 
+unfortunately I'm afraid this is not necessary as this is a bug in the demo on 
+real HW too (yes, this demo has lots of bugs  ).
+More precisely, I get the same effect as Hatari 1.7 on my 520 STF : 9 times out 
+of 10, the mouse will be nearly on top of the screen (y=13 instead of y=88). 
+The code to write to the ACIA is correct in the demo (wait for bit 1 in 
+fffc00), but it seems that if you move the mouse during loading (before the 16 
+bombs appear), this will affect the position sent in the SetInternalMousePos 
+command. This will affect mouse centering on a real 520 STF as well as on 
+Hatari 1.7 in what seems to be rather random in the end (I don't have time to 
+look at the demo code to see what they made wrong and how it can affect initial 
+centering).
+All in all, I think you can remove this ACIA patch from your next Steem release.
+
+Nicolas
+
+ => SS_ACIA_TDR_COPY_DELAY isn't defined (v3.5.2)
+
+*/
           if(ACIA_IKBD.last_tx_write_time
             &&ACT-ACIA_IKBD.last_tx_write_time<ACIA_CYCLES_NEEDED_TO_START_TX)
             TRACE_LOG("ACIA TDR byte %X blocked after %d cycles\n",io_src_b,ACT-ACIA_IKBD.last_tx_write_time);

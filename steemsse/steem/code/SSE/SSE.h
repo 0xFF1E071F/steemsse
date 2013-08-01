@@ -204,7 +204,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 //#define SS_ACIA_REMOVE_OLD_VARIABLES // TODO
 //#define SS_ACIA_DONT_CLEAR_DR //?
 #define SS_ACIA_NO_RESET_PIN // don't reset on warm reset
-#define SS_ACIA_TDR_COPY_DELAY
+//#define SS_ACIA_TDR_COPY_DELAY // apparently not necessary
 #define SS_ACIA_TEST_REGISTERS // debugging...
 #define SS_ACIA_USE_REGISTERS // instead of Steem variables TESTING
 
