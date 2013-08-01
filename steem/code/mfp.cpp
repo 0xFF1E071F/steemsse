@@ -126,7 +126,7 @@ inline bool mfp_set_pending(int irq,int when_set)
 /*
 Final Conflict
 
-http://www.atari-forum.com/viewtopic.php?f=51&t=15885#wrap (ijor):
+http://www.atari-forum.com/viewtopic.php?f=51&t=15885#p195733 (ijor):
 
 The CPU takes several cycles between the moment it decides to take an interrupt
  (and which one), until it actually acks the interrupt to the MFP. 
