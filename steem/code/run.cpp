@@ -687,7 +687,7 @@ void event_scanline()
   log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: Event Scanline at end of line ")+scan_y+" sdp is $"+HEXSl(shifter_draw_pointer,6));
   
 #if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER) &&!defined(SS_SHIFTER_DRAW_DBG)
-  Shifter.CheckSyncTrick(); // check for +2 -2 errors
+  Shifter.EndHBL(); // check for +2 -2 errors + unstable shifter
   Shifter.CheckVerticalOverscan(); // top & bottom borders
 #else // Steem 3.2's vertical overscan check
   if (shifter_freq_at_start_of_vbl==50){
@@ -1169,7 +1169,7 @@ void event_vbl_interrupt() //SS misleading name?
   event_start_vbl(); // Reset SDP again! //SS check
 #endif
 
-#if defined(SS_SHIFTER_DRAGON)//temp
+#if defined(SS_SHIFTER_DRAGON1)//temp
   if(SS_signal==SS_SIGNAL_SHIFTER_CONFUSED_1)
     SS_signal=SS_SIGNAL_SHIFTER_CONFUSED_2; // stage 2 of our hack
 #endif  

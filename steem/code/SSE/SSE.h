@@ -769,32 +769,34 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #define SS_SHIFTER_0BYTE_LINE
 #if defined(SS_SHIFTER_0BYTE_LINE)
-#define SS_SHIFTER_0BYTE_LINE_RES_END
-#define SS_SHIFTER_0BYTE_LINE_RES_HBL
-#define SS_SHIFTER_0BYTE_LINE_RES_START
-#define SS_SHIFTER_0BYTE_LINE_SYNC
+#define SS_SHIFTER_0BYTE_LINE_RES_END //No Buddies Land
+#define SS_SHIFTER_0BYTE_LINE_RES_HBL //Beyond/Pax Plax Parallax
+#define SS_SHIFTER_0BYTE_LINE_RES_START //Nostalgic-O/Lemmings
+#define SS_SHIFTER_0BYTE_LINE_SYNC //Forest
 #endif
-#define SS_SHIFTER_4BIT_SCROLL
+#define SS_SHIFTER_4BIT_SCROLL //Let's do the Twist again
 #define SS_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK
-#define SS_SHIFTER_60HZ_OVERSCAN
+#define SS_SHIFTER_60HZ_OVERSCAN //Leavin' Terramis
 #define SS_SHIFTER_END_OF_LINE_CORRECTION // correct +2, -2 lines 
 #define SS_SHIFTER_LEFT_OFF_TEST_BEFORE_HBL // for Riverside
-#define SS_SHIFTER_LINE_PLUS_2_THRESHOLD
+#define SS_SHIFTER_LINE_PLUS_2_THRESHOLD //Forest
 #define SS_SHIFTER_LINE_PLUS_20 // 224 byte scanline STE only
 #define SS_SHIFTER_LINE_PLUS_20_SHIFT // for Riverside
-#define SS_SHIFTER_MED_OVERSCAN
-#define SS_SHIFTER_MED_OVERSCAN_SHIFT
+#define SS_SHIFTER_MED_OVERSCAN // BPOC
+#define SS_SHIFTER_MED_OVERSCAN_SHIFT // No Cooper/greetings
 #define SS_SHIFTER_NON_STOPPING_LINE // Enchanted Land
-#define SS_SHIFTER_PALETTE_BYTE_CHANGE 
-#define SS_SHIFTER_PALETTE_TIMING
-#define SS_SHIFTER_STE_MED_HSCROLL
-#define SS_SHIFTER_STE_HSCROLL_LEFT_OFF
+#define SS_SHIFTER_PALETTE_BYTE_CHANGE //Golden Soundtracker
+#define SS_SHIFTER_PALETTE_TIMING //Overscan Demos #6
+#define SS_SHIFTER_STE_MED_HSCROLL // Cool STE
+#define SS_SHIFTER_STE_HSCROLL_LEFT_OFF //MOLZ/Spiral
+#define SS_SHIFTER_STE_VERTICAL_OVERSCAN //RGBeast
+#define SS_SHIFTER_UNSTABLE // DoLB, Omega, Overdrive/Dragon, Beeshift
+//#define SS_SHIFTER_UNSTABLE_LEFT_OFF // DoLB, Omega, Overdrive/Dragon
 
 #if defined(SS_STF)
 #define SS_STF_VERTICAL_OVERSCAN
 #endif
-#define SS_SHIFTER_STE_VERTICAL_OVERSCAN
-#define SS_SHIFTER_UNSTABLE_LEFT_OFF // DoLB, Omega, Overdrive/Dragon
+
 //#define SS_VID_LEFT_OFF_COMPARE_STEEM_32
 //#define SS_VID_TRACE_SUSPICIOUS2 // suspicious +2 & -2
 #endif//#if defined(SS_SHIFTER_TRICKS)
@@ -818,7 +820,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SHIFTER_ARMADA_IS_DEAD // no shift contrary to Big Wobble
 #define SS_SHIFTER_BIG_WOBBLE // Big Wobble shift
 #define SS_SHIFTER_DANGEROUS_FANTAISY // Dangerous Fantaisy credits flicker
-#define SS_SHIFTER_DRAGON // confused shifter, temp hack
+#define SS_SHIFTER_DRAGON1 // confused shifter, temp hack
 #define SS_SHIFTER_OMEGA  // Omega Full Overscan shift (60hz)
 #define SS_SHIFTER_PACEMAKER // Pacemaker credits flickering line
 #define SS_SHIFTER_SCHNUSDIE // Reality is a Lie/Schnusdie overscan logo
@@ -829,7 +831,8 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(SS_DEBUG) 
 //#define SS_SHIFTER_DRAW_DBG  // totally bypass CheckSideOverscan() & Render()
 #define SS_SHIFTER_EVENTS // recording all shifter events in a frame
-#define SS_SHIFTER_EVENTS_PAL // also for palette
+//#define SS_SHIFTER_EVENTS_PAL // also for palette
+//#define SS_SHIFTER_EVENTS_READ_SDP // also for read SDP
 #define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
 #if !defined(SS_DEBUG_TRACE_IDE)
 #define SS_SHIFTER_REPORT_VBL_TRICKS // a line each VBL
@@ -1103,6 +1106,11 @@ problem, multiple struct/class definition not allowed?
 #undef SS_MMU_WAKE_UP_IO_BYTES_R
 #undef SS_MMU_WAKE_UP_IOR_HACK
 #undef SS_MMU_WAKE_UP_IOW_HACK
+#undef SS_SHIFTER_EVENTS
+#endif
+
+#if defined(SS_SHIFTER_UNSTABLE)
+#undef SS_SHIFTER_DRAGON1
 #endif
 
 #if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
@@ -1113,9 +1121,6 @@ problem, multiple struct/class definition not allowed?
 #undef SS_VAR_SCROLLER_DISK_IMAGE
 #endif
 
-#if !defined(SS_SHIFTER)
-#undef SS_SHIFTER_EVENTS
-#endif
 
 #if !defined(SS_SOUND_LOW_PASS_FILTER)
 #undef SS_SOUND_DETECT_SAMPLE_RATE
