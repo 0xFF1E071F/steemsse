@@ -22,6 +22,12 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 #include "SSE/SSEM68000.h"
 #endif
 
+#if defined(SS_SHIFTER_UNSTABLE)
+#include "SSE/SSEShifterEvents.h"
+#include "SSE/SSEShifter.h"
+#endif
+
+
 #define LOGSECTION LOGSECTION_OPTIONS//SS
 
 //---------------------------------------------------------------------------
@@ -1006,6 +1012,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if (HIWORD(wPar)==CBN_SELENDOK)
           {
             WAKE_UP_STATE=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
+#if defined(SS_SHIFTER_UNSTABLE)
+            Shifter.Preload=0; // reset the thing!
+#endif
           }
           break;
 #endif

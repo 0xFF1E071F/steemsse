@@ -35,7 +35,7 @@ TShifter::~TShifter() {
 
 /*  Check overscan functions:
     -  CheckSideOverscan()
-    -  CheckSyncTrick() 
+    -  EndHBL() 
     -  CheckVerticalOverscan()
     Those are based on existing Steem code, but much 
     inflated, for a good cause: now Steem handles a lot more shifter tricks
@@ -192,12 +192,12 @@ void TShifter::CheckSideOverscan() {
 
 #endif
 
-#if defined(SS_SHIFTER_DRAGON)//temp
+#if defined(SS_SHIFTER_DRAGON1)//temp
     if(SS_signal==SS_SIGNAL_SHIFTER_CONFUSED_2
       && !(CurrentScanline.Tricks&TRICK_CONFUSED_SHIFTER))
     {
       CurrentScanline.Tricks|=TRICK_CONFUSED_SHIFTER;
-      shifter_draw_pointer+=-2,overscan_add_extra+=2;
+      ShiftSDP(-2);
       scanline_drawn_so_far=4;//not perfect...
     }
 #endif
@@ -361,7 +361,7 @@ void TShifter::CheckSideOverscan() {
 #if defined(SS_SHIFTER_LINE_PLUS_20_SHIFT)
         HblPixelShift=-8; // fixes Riverside shift
         if(SideBorderSize!=ORIGINAL_BORDER_SIDE)
-          shifter_draw_pointer+=-8,overscan_add_extra+=8;
+          ShiftSDP(-8);
 #endif
       }
       else // normal left off
@@ -373,11 +373,13 @@ void TShifter::CheckSideOverscan() {
           overscan_add_extra+=2;  // 8 + 2 + 16 = 26
         }
         CurrentScanline.Bytes+=26;
+#if defined(SS_SHIFTER_UNSTABLE)
+        // left off eats one preloaded RR, see ST-CNX doc
+        if(Preload>0)
+          Preload--;
+#endif
         if(HSCROLL>=12) // STE shifter bug (Steem authors)
-        {   
-          shifter_draw_pointer+=8; 
-          overscan_add_extra-=8; // removed this in 3.3, was a mistake
-        }
+          ShiftSDP(8);
 #if defined(SS_VID_BORDERS)
         if(SideBorderSize==ORIGINAL_BORDER_SIDE) // 32
 #endif
@@ -394,11 +396,12 @@ void TShifter::CheckSideOverscan() {
     no stabiliser, late switch, unstable overscan: shift +4
     'Hack' option not necessary, choosing wake up state 2 is enough!
     But that's a hack, not precise emulation.
+    3.5.2: not defined
 */
         if(r0cycle>=16 && ST_TYPE==STF && WAKE_UP_STATE==2
           && !(PreviousScanline.Tricks&TRICK_STABILISER))
         {
-            shifter_draw_pointer+=4,overscan_add_extra-=4;
+            ShiftSDP(4);
             shifter_pixel+=-4;
         }
 #endif
@@ -410,7 +413,7 @@ void TShifter::CheckSideOverscan() {
           && r0cycle==12
 #endif
           ) 
-          shifter_draw_pointer+=-4; // fixes Big Wobble, see SSESehifter.h
+          shifter_draw_pointer+=-4; // fixes Big Wobble, see SSEShifter.h
 #endif
 
 #if defined(SS_SHIFTER_SCHNUSDIE) && defined(SS_SHIFTER_TRICKS)
@@ -430,12 +433,10 @@ void TShifter::CheckSideOverscan() {
   // STABILISER //
   ////////////////
 
-/*
-        For the moment, we consider that on a STF, overscan without stabiliser
-        and with late switches would cause a +4 shift (DOLB, Omega) due to
-        shifter registers. 
-        Stabiliser detection is used for other hacks too.
-        Plus for Overdrive/Dragon, a -2 shift... just hacks really
+/*  A HI/LO switch after DE "resets" the shifter by emptying its registers.
+    All kinds of strange effects may result from absence of stabiliser when
+    trying to display lines which have a length in bytes not multiple of 8,
+    such as the 230 bytes line (left off, right off).
 */
 
 #if defined(SS_SHIFTER_TRICKS) && defined(TRICK_STABILISER)
@@ -446,10 +447,99 @@ void TShifter::CheckSideOverscan() {
     {
       r0cycle=NextShiftModeChange(r2cycle,0);
       if(r0cycle>-1 && r0cycle<464 ) 
+      {
         CurrentScanline.Tricks|=TRICK_STABILISER;
+#if defined(SS_SHIFTER_UNSTABLE)
+        Preload=0; // "reset" empties RR
+#endif
+      }
     }
   }
 #endif
+
+  /////////////////////
+  // DESTABILISATION //
+  /////////////////////
+
+/*  Here we try to emulate the effect of a MED/LOW switch during DE.
+    Preliminary.
+    Option Wake-up state must be set to 2, not because only WU state 2
+    works on a ST, but to isolate this from "normal" emulation.
+*/
+
+#if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_UNSTABLE)
+  /*
+detect unstable: switch MED/LOW - Beeshift
+- 3 (screen shifted by 12 pixels because only 1 word will be read before the 4 are available to draw the bitmap);
+- 2 (screen shifted by 8 pixels because only 2 words will be read before the 4 are available to draw the bitmap);
+- 1 (screen shifted by 4 pixels because only 3 words will be read before the 4 are available to draw the bitmap);
+- 0 (screen shifted by 0 pixels because the 4 words will be read to draw the bitmap);
+080:R0001 100:R0000   
+088:R0001 100:R0000
+092:R0001 100:R0000
+
+  There are many other switches possible, we limit ourselves to these for now.
+
+  */
+  if( ST_TYPE==STF && WAKE_UP_STATE==2
+    && !(CurrentScanline.Tricks&TRICK_UNSTABLE) 
+    && (PreviousScanline.Tricks&TRICK_STABILISER)
+    && left_border && LINECYCLES>56 && LINECYCLES<372)
+  {
+
+    r1cycle=NextShiftModeChange(56,1); // detect switch to medium
+    if(r1cycle>-1)
+    {
+      r0cycle=NextShiftModeChange(r1cycle,0); // detect switch to low
+      if(r0cycle>r1cycle)
+      {
+        ASSERT( r0cycle==100+2 );
+        ASSERT( r1cycle==80+2 || r1cycle==88+2 || r1cycle==92+2 );
+        switch(r1cycle)
+        {
+          // no explanation for #words; '+2' because of WU2
+        case 80+2:
+          Preload=1;
+          break;
+        case 88+2:
+          Preload=3;
+          break;
+        case 92+2:
+          Preload=2;
+          break;
+        }
+      }
+    }
+  }
+  
+#endif
+
+#if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_UNSTABLE)
+/*  Shift due to unstable shifter, caused by a line+26 (Dragon) without
+    stabiliser or a MED/LOW switch, or a line+230 without stabiliser:
+    apply effect
+    Note this isn't exact science, it's in development.
+    DOLB: 3 words preloaded but it becomes 2 due to left off:
+    SDP+4   pixels -4
+    Dragon: 1 word preloaded    SDP+6   pixels -12
+    Dragon: 1 word preloaded   SDP-2   pixels +4  looks better though but
+    we don't bother for now.
+    (4-preload)*2 = shift SDP
+*/
+  
+  if(ST_TYPE==STF && WAKE_UP_STATE==2 
+    && Preload && !(CurrentScanline.Tricks&TRICK_UNSTABLE)
+    && CyclesIn>40) // wait for left-off check
+  {
+    ShiftSDP((4-Preload)*2);
+    HblPixelShift=(4-Preload)*4;
+    if(Preload==2&&(CurrentScanline.Tricks&TRICK_LINE_PLUS_26))
+      HblPixelShift-=4;
+    CurrentScanline.Tricks|=TRICK_UNSTABLE;
+  }
+
+#endif
+
 
   ////////////////
   // BLACK LINE //
@@ -457,6 +547,7 @@ void TShifter::CheckSideOverscan() {
 
 /*  A sync switch at cycle 28 causes the shifter to fetch the line but not
     display it, showing black pixels instead. Overscan #5,#6, Forest.
+    028:S0000 036:S0002
 */
 
   if(!draw_line_off && shifter_freq_at_start_of_vbl==50)
@@ -553,16 +644,14 @@ void TShifter::CheckSideOverscan() {
         TrickExecuted|=TRICK_OVERSCAN_MED_RES;
         int cycles_in_low_res=r1cycle-r0cycle;
 #if defined(SS_SHIFTER_MED_OVERSCAN_SHIFT)
-        int shift=(((cycles_in_low_res)/2)%8)/2;
-        shifter_draw_pointer+=-shift; 
-        overscan_add_extra+=shift;
+        ShiftSDP( (((cycles_in_low_res)/2)%8)/2 );
 #endif
 #if defined(SS_VID_BPOC)
         if(BORDER_40 && SSE_HACKS_ON && cycles_in_low_res==16) 
-          { // fit text of Best Part of the Creation on a 800 display
-              shifter_draw_pointer+=4,overscan_add_extra+=-4;
-              shifter_pixel+=4;
-          }
+        { // fit text of Best Part of the Creation on a 800 display
+          ShiftSDP(4);      
+          shifter_pixel+=4;
+        }
 #endif
       }
     }
@@ -627,8 +716,7 @@ void TShifter::CheckSideOverscan() {
         }
 #endif
 
-        shifter_draw_pointer+=shift_in_bytes; // that way we don't need to
-        overscan_add_extra-=shift_in_bytes; // correct in Render()
+        ShiftSDP(shift_in_bytes);
         HblPixelShift=13+8-cycles_in_med_res-8; // -7,-3,1, 5, done in Render()
 #if defined(SS_DEBUG)
         ASSERT( HblPixelShift==-7||HblPixelShift==-3||HblPixelShift==1||HblPixelShift==5 );
@@ -894,11 +982,13 @@ void TShifter::CheckSideOverscan() {
 }
 
 
-void TShifter::CheckSyncTrick() {
+void TShifter::EndHBL() {
 
 #if defined(SS_SHIFTER_END_OF_LINE_CORRECTION)
+
 /*  Those tests are much like EndHBL in Hatari
     Finish horizontal overscan : correct -2 & +2 effects
+    Check shifter stability (preliminary)
 */
   
   if(CurrentScanline.Tricks&TRICK_LINE_PLUS_2 && CurrentScanline.EndCycle==372)     
@@ -915,8 +1005,9 @@ void TShifter::CheckSyncTrick() {
     shifter_draw_pointer+=2;
     TRACE_LOG("scan_y %d cancel -2\n",scan_y);
   }
+#endif//#if defined(SS_SHIFTER_END_OF_LINE_CORRECTION)
 
-#if defined(SS_SHIFTER_DRAGON) && defined(SS_STF) && defined(SS_MMU_WAKE_UP)
+#if defined(SS_SHIFTER_DRAGON1) && defined(SS_STF) && defined(SS_MMU_WAKE_UP)
   //temp hack...// left off, no stabiliser
   if(SSE_HACKS_ON && ST_TYPE==STF && WAKE_UP_STATE==2 
     && CurrentScanline.Tricks==1) 
@@ -926,7 +1017,32 @@ void TShifter::CheckSyncTrick() {
     SS_signal=0;
 #endif
 
+#if defined(SS_SHIFTER_UNSTABLE)
+
+/*  3.5.2 This way is more generic. It tries to make sense of #words loaded
+    in the shifter after the "unstable" trick.
+    Left off: 160+26=186 = (23*8)+2 -> 1 word preloaded
+    Left off, right off: 160+26+44=(28*8)+6 -> 3 words preloaded
+    See doc by ST-CNX and LJBK's efforts at AF
+*/
+
+  if( ST_TYPE==STF && WAKE_UP_STATE==2)
+  {
+    if(CurrentScanline.Tricks==TRICK_LINE_PLUS_26)
+      Preload=1;
+    else if(CurrentScanline.Tricks==(TRICK_LINE_PLUS_26|TRICK_UNSTABLE)//0x10001
+      && PreviousScanline.Tricks==(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_44
+      |TRICK_UNSTABLE)) //    0x10011
+      Preload=0;//hack omega back to menu
+    else if( (CurrentScanline.Tricks&(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_44))
+      ==(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_44)
+      &&!(CurrentScanline.Tricks&TRICK_STABILISER)) 
+      Preload=3;
+  }
+  
 #endif
+
+
 }
 
 
@@ -1336,7 +1452,7 @@ BYTE TShifter::IORead(MEM_ADDRESS addr) {
       }
 #endif
       ior_byte=DWORD_B(&sdp,(2-(addr-0xff8205)/2)); // change for big endian !!!!!!!!!
-#if defined(SS_SHIFTER_EVENTS)
+#if defined(SS_SHIFTER_EVENTS) && defined(SS_SHIFTER_EVENTS_READ_SDP)
       VideoEvents.Add(scan_y,LINECYCLES,'r',((addr&0xF)<<8)|ior_byte);
 #endif
       }
@@ -1722,8 +1838,11 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 #endif
 
   if(freq_change_this_scanline
-#if defined(SS_SHIFTER_DRAGON)//temp
+#if defined(SS_SHIFTER_DRAGON1)//temp
     || SS_signal==SS_SIGNAL_SHIFTER_CONFUSED_2
+#endif
+#if defined(SS_SHIFTER_UNSTABLE)
+    || Preload // must go apply trick at each scanline
 #endif
     )
     CheckSideOverscan(); 
@@ -1755,7 +1874,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 #endif
       WAKE_UP_STATE==1))
 #endif
-      cycles_since_hbl++; // eg Overscan #6, already in v3.2 TODO why?
+      cycles_since_hbl++; // eg Overscan Demos #6, already in v3.2 TODO why?
 #endif
     break;
   case DISPATCHER_SET_SHIFT_MODE:
@@ -1855,11 +1974,17 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     the hscroll parameter of the assembly drawing routine (programmed by
     Steem authors, of course).
     hscroll>15 is handled further.
+    We use this routine for other shifts as well.
+    TODO: be able to shift the line by an arbitrary #pixels left ot right
+    (assembly)
 */
 
         if( (CurrentScanline.Tricks&TRICK_4BIT_SCROLL)
 #if defined(SS_SHIFTER_LINE_PLUS_20_SHIFT)
           || (CurrentScanline.Tricks&TRICK_LINE_PLUS_20)
+#endif
+#if defined(SS_SHIFTER_UNSTABLE)
+          || (CurrentScanline.Tricks&TRICK_UNSTABLE)
 #endif
           )
         {
@@ -1876,6 +2001,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
           }
         }
 #endif
+
       }
       else if(screen_res==1) // MEDIUM RES
       {
@@ -2001,6 +2127,12 @@ void TShifter::Reset(bool Cold) {
   if(Cold)
     Debug.ShifterTricks=0;
 #endif
+
+#if defined(SS_SHIFTER_UNSTABLE)
+  if(Cold)
+    Preload=0;
+#endif
+
 }
 
 /*  SetShiftMode() and SetSyncMode() are called when a program writes

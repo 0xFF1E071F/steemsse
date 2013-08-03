@@ -42,7 +42,12 @@
 #define TRICK_STABILISER 0x2000
 #define TRICK_WRITE_SDP 0x4000
 #define TRICK_WRITE_SDP_POST_DE 0x8000
+#if defined(SS_SHIFTER_DRAGON1)
 #define TRICK_CONFUSED_SHIFTER 0x10000//tmp hack
+#endif
+#if defined(SS_SHIFTER_UNSTABLE)
+#define TRICK_UNSTABLE 0x10000 // less specific
+#endif
 
 // register names in Atari doc / Steem variable
 #define HSCROLL shifter_hscroll
@@ -100,7 +105,7 @@ struct TShifter {
   inline int CheckFreq(int t);
   void CheckSideOverscan(); // left & right border effects
   void CheckVerticalOverscan(); // top & bottom borders
-  void CheckSyncTrick(); // at end of HBL, check if +2 -2 were correct
+  void EndHBL(); // at end of HBL, check if +2 -2 were correct
 #if defined(WIN32)
   inline void DrawBufferedScanlineToVideo();
 #endif
@@ -115,6 +120,7 @@ struct TShifter {
   inline void SetPal(int n, WORD NewPal);
   void SetShiftMode(BYTE NewRes);
   void SetSyncMode(BYTE NewSync);
+  inline void ShiftSDP(int shift);
   void Vbl();
 
 #if defined(SS_SHIFTER_TRICKS) // some functions aren't used
@@ -167,7 +173,7 @@ struct TShifter {
 
   int ExtraAdded;//rather silly
   int HblStartingHscroll; // saving true hscroll in MED RES (no use)
-  int HblPixelShift; // for 4bit scrolling
+  int HblPixelShift; // for 4bit scrolling, other shifts //BYTE?
 #if defined(WIN32)
   BYTE *ScanlineBuffer;
 #endif
@@ -176,6 +182,11 @@ struct TShifter {
   int m_nHbls; //313,263,501
   int TrickExecuted; //make sure that each trick will only be applied once
   int nVbl;
+
+#if defined(SS_SHIFTER_UNSTABLE)
+  BYTE Preload; // #words into shifter's RR (shifts display)
+#endif
+
 };
 
 extern TShifter Shifter; // singleton
@@ -884,6 +895,8 @@ Line -28 - 004:R0002 012:R0000 376:S0000 384:S0002 444:R0002 456:R0000 512:T2011
 
 #endif
 
+#ifdef IN_EMU//temp
+
 #ifdef SS_SHIFTER_SDP_WRITE
 
 int TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
@@ -1138,6 +1151,12 @@ int TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 
 #endif
 
+#endif//#ifdef IN_EMU
+
+void TShifter::ShiftSDP(int shift) {
+  shifter_draw_pointer+=shift; 
+  overscan_add_extra-=shift;
+}
 
 // just taking some unimportant code out of Render for clarity
 
