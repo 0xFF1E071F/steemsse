@@ -520,16 +520,14 @@ void TOptionBox::CreateGeneralPage()
               page_p);
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_MICROWIRE)
+#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_OPTION_DISABLE_DSP)
   y+=35;
-
   enable_dsp_but.create(XD,page_p,page_l,y,0,25,
           button_notify_proc,this,BT_CHECKBOX,
           T("Start emulation on mouse click"),141,BkCol);
   enable_dsp_but.set_check(DSP_ENABLED);
   hints.add(enable_dsp_but.handle,T("If you have some odd crashes, unchecking this may help. DSP code uses the math coprocessor and exceptions are almost impossible to catch"),
               page_p);
-
 #endif
 
 

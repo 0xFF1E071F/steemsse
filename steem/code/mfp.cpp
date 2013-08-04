@@ -147,7 +147,7 @@ either run the VBL interrupt, or the main code.
   =>
   Timer A is pending...      check interrupts... start IACK (12 cycles)
   During those 12 cycles, Timer A triggers again! On a real ST, the MFP
-  clears the interrupt for both occurences.
+  clears the interrupt for both occurrences.
   In Steem:
   Without the fix, 56 cycles will be counted for first interrupt, then
   timers will be checked and Timer A will be set pending again.

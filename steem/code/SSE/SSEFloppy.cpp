@@ -776,6 +776,7 @@ void TDma::TransferBytes() {
 #endif
       [i]);
 
+#if USE_PASTI    
     if(hPasti&&pasti_active
 #if defined(STEVEN_SEAGAL) && defined(SS_PASTI_ONLY_STX)
     &&(!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
@@ -783,6 +784,7 @@ void TDma::TransferBytes() {
       )  
       dma_address++;
     else
+#endif
       DMA_INC_ADDRESS; // use Steem's existing routine
   }
 #if defined(SS_DMA_COUNT_CYCLES) 

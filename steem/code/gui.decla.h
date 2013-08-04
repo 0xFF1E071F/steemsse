@@ -319,6 +319,7 @@ EXT HWND NextClipboardViewerWin;
 //---------------------------------------------------------------------------
 #elif defined(UNIX)
 //---------------------------------------------------------------------------
+
 EXT XErrorEvent XError;
 int HandleXError(Display*,XErrorEvent*);
 

@@ -196,6 +196,9 @@ extern TShifter Shifter; // singleton
 // TShifter: inline functions //
 ////////////////////////////////
 
+
+#if !defined(SS_UNIX) || defined(IN_EMU)
+
 inline void TShifter::AddExtraToShifterDrawPointerAtEndOfLine(unsigned long &extra) {
   // What a beautiful name!
   // Replacing macro ADD_EXTRA_TO_SHIFTER_DRAW_POINTER_AT_END_OF_LINE(s)
@@ -1157,6 +1160,10 @@ void TShifter::ShiftSDP(int shift) {
   shifter_draw_pointer+=shift; 
   overscan_add_extra-=shift;
 }
+
+
+#endif//#if !defined(SS_UNIX) || defined(IN_EMU)
+
 
 // just taking some unimportant code out of Render for clarity
 

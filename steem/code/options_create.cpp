@@ -1587,7 +1587,7 @@ void TOptionBox::CreateStartupPage()
 
   CSF.Close();
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_MICROWIRE)
+#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_OPTION_DISABLE_DSP)
   y+=30;
   Wid=GetCheckBoxSize(Font,T("Enable DSP")).Width;
   Win=CreateWindow("Button",T("Enable DSP"),WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX | int(NoDD ? WS_DISABLED:0),
@@ -2058,8 +2058,10 @@ void TOptionBox::CreateSSEPage() {
   y-=LineHeight; // maybe it will be optimised away!
   Wid=GetCheckBoxSize(Font,T("STE Microwire")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_OPTION_DISABLE_DSP)
   if(!DSP_ENABLED)
     mask|=WS_DISABLED;
+#endif
   Win=CreateWindow("Button",T("STE Microwire"),mask,
     page_l+Offset,y,Wid,25,Handle,(HMENU)7302,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,MICROWIRE_ON,0);

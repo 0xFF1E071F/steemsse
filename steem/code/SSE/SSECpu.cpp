@@ -928,7 +928,7 @@ void m68k_exception::crash() { // copied from cpu.cpp and improved
     for(int i=0;i<8;i++) // D0-D7
       TRACE_LOG("D%d=%X ",i,r[i]);
     TRACE_LOG("\n");
-    for(int i=0;i<8;i++) // A0-A7 (A7 when the exception occured)
+    for(int i=0;i<8;i++) // A0-A7 (A7 when the exception occurred)
       TRACE_LOG("A%d=%X ",i,areg[i]);
     TRACE_LOG("\n");
   }

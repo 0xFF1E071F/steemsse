@@ -18,9 +18,9 @@ BEGIN
     BEGIN
         BLOCK "080904b0"
         BEGIN
-            VALUE "Comments", "Atari STE Emulator for all Windows systems\000"
+            VALUE "Comments", "Atari ST Emulator for all Windows systems\000"
             VALUE "CompanyName", "Anthony and Russell Hayward\000"
-            VALUE "FileDescription", "Steem Engine (Atari STE Emulator)\000"
+            VALUE "FileDescription", "Steem Engine (Atari ST Emulator)\000"
             VALUE "FileVersion", "3.5.2\000"
             VALUE "InternalName", "Steem\000"
             VALUE "LegalCopyright", "Copyright Anthony and Russell Hayward\000"
