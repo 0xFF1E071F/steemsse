@@ -736,6 +736,8 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #endif
 #if defined(SS_SOUND_MICROWIRE)
     MICROWIRE_ON=pCSF->GetInt("Sound","Microwire",MICROWIRE_ON);
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_OPTION_DISABLE_DSP)
     DSP_ENABLED=pCSF->GetInt("Sound","Dsp",DSP_ENABLED);
 #endif
 #if defined(SS_OSD_DRIVE_INFO)
@@ -745,7 +747,6 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     OSD_IMAGE_NAME=pCSF->GetInt("Options","OsdImageName", OSD_IMAGE_NAME);
 #endif
 #if defined(SS_PASTI_ONLY_STX)
-  //pCSF->SetStr("Options","PastiJustStx",EasyStr(PASTI_JUST_STX)); 
     PASTI_JUST_STX=pCSF->GetInt("Options","PastiJustStx",PASTI_JUST_STX);
 #endif
 
@@ -1091,6 +1092,8 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 #if defined(SS_SOUND_MICROWIRE)
   pCSF->SetStr("Sound","Microwire",EasyStr(MICROWIRE_ON));  
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_OPTION_DISABLE_DSP)
   pCSF->SetStr("Sound","Dsp",EasyStr(DSP_ENABLED));  
 #endif
 #if defined(SS_OSD_DRIVE_INFO)

@@ -239,7 +239,11 @@ inline void Microwire(int channel,int &val
                       ,bool lowpass
 #endif
   ) {
-  if(DSP_ENABLED&&MICROWIRE_ON)
+  if(
+#if defined(SS_SOUND_OPTION_DISABLE_DSP)
+    DSP_ENABLED&&
+#endif
+    MICROWIRE_ON)
   {
     double d_dsp_v=val;
 #if defined(SS_STF)

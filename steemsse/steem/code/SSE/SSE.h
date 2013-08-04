@@ -18,7 +18,7 @@ Added some files to the project.
 - acia.h in 'steem\code'.
 -In folder 'steem\code\SSE', several files starting with 'SSE', including 
 this one.
--In folder 'steem\doc\SSE', some doc files (done by me)
+-In folder 'steem\doc\SSE', some doc files (mainly done by me)
 -A folder '6301' in '3rdparty' for true emulation of the IKBD
 -A folder 'avi' in '3rdparty' for recording video to AVI support
 -A folder 'caps' in '3rdparty' for IPF disk image format support
@@ -69,7 +69,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #if defined(STEVEN_SEAGAL)
 
-#define SS_BETA //title, OSD, plus some testing
+//#define SS_BETA //title, OSD, plus some testing
 
 #ifdef SS_BETA // beta with all features
 #define SSE_VERSION 352
@@ -205,7 +205,9 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 //#define SS_ACIA_DONT_CLEAR_DR //?
 #define SS_ACIA_NO_RESET_PIN // don't reset on warm reset
 //#define SS_ACIA_TDR_COPY_DELAY // apparently not necessary
-#define SS_ACIA_TEST_REGISTERS // debugging...
+#if defined(SS_DEBUG)
+#define SS_ACIA_TEST_REGISTERS
+#endif
 #define SS_ACIA_USE_REGISTERS // instead of Steem variables TESTING
 
 #endif
@@ -274,7 +276,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_CPU_HACK_WAR_HELI
 #endif
 
-#define SS_CPU_IGNORE_WRITE_0 // for Aladin, may write on 1st word (it doesn't change?)
+#define SS_CPU_IGNORE_WRITE_0 // for Aladin, may write on 1st word
 #define SS_CPU_POST_INC // no post increment if exception 
 #define SS_CPU_PRE_DEC // no "pre" decrement if exception!
 #define SS_CPU_SET_DEST_TO_0 // for Aladin
@@ -447,7 +449,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_DMA_FDC_ACCESS
 //#define SS_DMA_FDC_READ_HIGH_BYTE // like pasti, 0
 #define SS_DMA_FIFO // first made for CAPS 
-#define SS_DMA_FIFO_NATIVE // then extended for Steem native
+#define SS_DMA_FIFO_NATIVE // then extended for Steem native (not R/W tracks)
 #define SS_DMA_FIFO_PASTI // and Pasti
 #define SS_DMA_FIFO_READ_ADDRESS // save some bytes...
 #define SS_DMA_FIFO_READ_ADDRESS2 // save 4 bytes more...
@@ -471,7 +473,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_DRIVE_READ_ADDRESS_TIMING
 #define SS_DRIVE_READ_TRACK_TIMING
 #define SS_DRIVE_RW_SECTOR_TIMING // start of sector
-#define SS_DRIVE_RW_SECTOR_TIMING2 // end of sector
+#define SS_DRIVE_RW_SECTOR_TIMING2 // end of sector (hack)
 #define SS_DRIVE_SPIN_UP_TIME
 #define SS_DRIVE_SPIN_UP_TIME2 // more precise
 #define SS_DRIVE_WRITE_TRACK_TIMING
@@ -831,8 +833,8 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(SS_DEBUG) 
 //#define SS_SHIFTER_DRAW_DBG  // totally bypass CheckSideOverscan() & Render()
 #define SS_SHIFTER_EVENTS // recording all shifter events in a frame
-//#define SS_SHIFTER_EVENTS_PAL // also for palette
-//#define SS_SHIFTER_EVENTS_READ_SDP // also for read SDP
+#define SS_SHIFTER_EVENTS_PAL // also for palette
+#define SS_SHIFTER_EVENTS_READ_SDP // also for read SDP
 #define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
 #if !defined(SS_DEBUG_TRACE_IDE)
 #define SS_SHIFTER_REPORT_VBL_TRICKS // a line each VBL
@@ -854,7 +856,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(SS_SOUND)
 
 #define SS_SOUND_CHANGE_TIME_METHOD_DELAY //detail
-#define SS_SOUND_DETECT_SAMPLE_RATE//?
+//#define SS_SOUND_DETECT_SAMPLE_RATE//?
 #define SS_SOUND_FILTER_STF // a very simple filter
 
 #define SS_SOUND_INLINE // macro->inline, easier for my tests, but hard to do
@@ -864,6 +866,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SOUND_NO_EXTRA_PER_VBL //compensating hack? changes what?
 
 #define SS_SOUND_OPTIMISE
+//#define SS_SOUND_OPTION_DISABLE_DSP // not needed if no anti-aliasing
 #define SS_SOUND_RECOMMEND_OPTIONS
 
 #ifdef WIN32
@@ -915,7 +918,9 @@ problem, multiple struct/class definition not allowed?
 
 #define SS_STRUCTURE_BIG_FORWARD // temp
 
+#if !defined(SS_UNIX)
 #define SS_STRUCTURE_NEW_H_FILES
+#endif
 
 #define SS_STRUCTURE_DMA_INC_ADDRESS
 //#define SS_STRUCTURE_INFO // just telling files included in modules

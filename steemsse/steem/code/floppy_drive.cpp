@@ -33,12 +33,14 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 
   TRACE_LOG("SetDisk %s %s\n",File.c_str(),CompressedDiskName.c_str());
 
-#if defined(STEVEN_SEAGAL)&&defined(SS_DRIVE)&&defined(SS_PASTI_ONLY_STX)
+#if defined(STEVEN_SEAGAL)&&defined(SS_DRIVE)//&&defined(SS_PASTI_ONLY_STX)
   int drive=-1;
   if (this==&FloppyDrive[0]) drive=0;
   if (this==&FloppyDrive[1]) drive=1;
+#if defined(SS_PASTI_ONLY_STX)  
   if(drive!=-1)
     SF314[drive].ImageType=0;//default, this will detect STX disks (3)
+#endif
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_MOTOR_ON)
@@ -65,17 +67,6 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
   bool IPF=IsSameStr_I(Ext,"IPF");
 #endif
-
-/*
-#if defined(STEVEN_SEAGAL) && defined(SS_PASTI_AUTO_SWITCH)
-  if(DIM||STT
-#if defined(SS_IPF)
-    ||IPF
-#endif
-    )
-    pasti_active=false;
-#endif
- */ 
   
   // NewDiskInZip will be blank for default disk, RealDiskInZip will be the
   // actual name of the file in the zip that is a disk image
@@ -115,11 +106,11 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
               IPF=has_extension(fn,"IPF");
 #endif
-              /*
+//              /*
 #if defined(SS_PASTI_AUTO_SWITCH)
               pasti_active=false;
 #endif
-              */
+//              */
             }
             HOffset=zippy.current_file_offset;
             NewDiskInZip=CompressedDiskName;
@@ -169,7 +160,8 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     TRACE_LOG("Disk type 0\n");
     return FIMAGE_WRONGFORMAT;
   }
-#if !(defined(STEVEN_SEAGAL) && defined(SS_PASTI_ONLY_STX))
+//#if !(defined(STEVEN_SEAGAL) && defined(SS_PASTI_ONLY_STX))
+#if !(defined(STEVEN_SEAGAL) && defined(SS_DRIVE))
   int drive=-1;
   if (this==&FloppyDrive[0]) drive=0;
   if (this==&FloppyDrive[1]) drive=1;

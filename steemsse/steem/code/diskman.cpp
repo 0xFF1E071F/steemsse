@@ -1640,8 +1640,6 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
     disk in, the disk will just disappear.
 */
             pasti_active=!pasti_active;
-            ///////SF314.ReinsertDisks();
-            
             for(int i=0;i<2;i++)
             {
               if(FloppyDrive[i].NotEmpty())
