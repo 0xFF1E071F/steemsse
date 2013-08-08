@@ -212,7 +212,6 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
         }
 
 #if defined(SS_DEBUG) && defined(SS_ACIA_TEST_REGISTERS)
-        ////if(ior_byte!=2) TRACE_LOG("ACIA IKBD SR built %X persistent SR %X\n",ior_byte,ACIA_IKBD.SR);//tmp
         if(ior_byte!=ACIA_IKBD.SR)
           TRACE_LOG("ACIA IKBD SR built %X persistent SR %X\n",ior_byte,ACIA_IKBD.SR);
 #endif
@@ -224,17 +223,24 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 #endif
 
 #if defined(SS_ACIA_TDR_COPY_DELAY)
-/*  If we're going to ignore the write, inform the program through SR register
-    (Froggies)
+/*    
+Double buffering means that two bytes may be written very fast one after
+the other on TDR. The first byte will be transferred almost at once into
+TDRS. Subsequent bytes will have to wait the full serial transfer time.
+
+'Almost' doesn't mean instant, for a few cycles (32?, which would translate
+into 512 MC68000 cycles), the TDRE bit in SR will be cleared but TDR will 
+take a byte.
+This feature was in Steem 3.2 but I made it disappear in some SSE versions!
+Refix v3.5.3
 */
         if(ACIA_IKBD.last_tx_write_time
           &&ACT-ACIA_IKBD.last_tx_write_time<ACIA_CYCLES_NEEDED_TO_START_TX)
         {
           TRACE_LOG("ACIA SR TDRE not set yet (%d)\n",ACT-ACIA_IKBD.last_tx_write_time);
-          ior_byte&=~BIT_1;
+          ior_byte&=~BIT_1; // fixes Nightdawn
         }
 #endif
-
 
         break;
 

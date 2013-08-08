@@ -214,11 +214,11 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 
 #if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
         ACIA_IKBD.tx_flag=true; // = TDRE clear (TDR not free)
-#if !defined(SS_ACIA_TDR_COPY_DELAY)
+#endif
+#if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)\
+  || defined(SS_ACIA_TDR_COPY_DELAY)
         ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
 #endif
-#endif
-
 #if !defined(SS_IKBD_MANAGE_ACIA_TX)
 /*  We do this in ikbd.cpp together with handling the byte, it's an 
     optimisation (one agenda instead of two).
@@ -291,43 +291,12 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
           else
             TRACE_LOG("ACIA IKBD new byte waiting $%X (instead of $%X)\n",io_src_b,ACIA_IKBD.TDR);
 #endif
-
-#if defined(SS_ACIA_TDR_COPY_DELAY)
-/*
-    Writes to TDR mustn't be too close to one another, we find there's
-    a delay of around 512 M68K cycles when the byte will be ignored (Delirious
-    4 fake GEM). 1000 cycles is already too much (same program).
-    This feature was in fact already in Steem 3.2 somehow:
-    ACIA_CYCLES_NEEDED_TO_START_TX (=512)
-    But is it necessary?
-    
-http://www.atari-forum.com/viewtopic.php?f=94&p=235197&sid=04b10874e3d4793b2bf57a2453a9881b#p235197
-
-"I noticed you also added a small pause to the acia for delirious demo 4 to 
-always get the mouse pointer centered on the fake GEM desktop intro ; 
-unfortunately I'm afraid this is not necessary as this is a bug in the demo on 
-real HW too (yes, this demo has lots of bugs  ).
-More precisely, I get the same effect as Hatari 1.7 on my 520 STF : 9 times out 
-of 10, the mouse will be nearly on top of the screen (y=13 instead of y=88). "
-
- => SS_ACIA_TDR_COPY_DELAY isn't defined (v3.5.2)
-
-*/
-          if(ACIA_IKBD.last_tx_write_time
-            &&ACT-ACIA_IKBD.last_tx_write_time<ACIA_CYCLES_NEEDED_TO_START_TX)
-            TRACE_LOG("ACIA TDR byte %X blocked after %d cycles\n",io_src_b,ACT-ACIA_IKBD.last_tx_write_time);
-          else
-#endif
           ACIA_IKBD.TDR=io_src_b; 
           ACIA_IKBD.ByteWaitingTx=true;
 #if !defined(SS_ACIA_REGISTERS)
           ACIA_IKBD.WaitingByte=io_src_b;
 #endif
         }
-#if defined(SS_ACIA_TDR_COPY_DELAY)
-        if(ACT-ACIA_IKBD.last_tx_write_time>ACIA_CYCLES_NEEDED_TO_START_TX)
-          ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
-#endif
 
 #else //no double buffer
 
