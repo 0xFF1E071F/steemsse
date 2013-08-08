@@ -192,15 +192,11 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #define SS_ACIA_BUS_JAM_NO_WOBBLE // simple "fix"
 //#define SS_ACIA_BUS_JAM_PRECISE_WOBBLE //TODO
-
-
-//#define SS_ACIA_DOUBLE_BUFFER_RX // only from 6301 (not MIDI) //broken, can't disable
+#define SS_ACIA_DOUBLE_BUFFER_RX // only from 6301 (not MIDI) 
 #define SS_ACIA_DOUBLE_BUFFER_TX // only to 6301 (not MIDI)
-
 #ifdef SS_BETA
 //#define SS_ACIA_IKBD_SHORTER_TIMINGS //tests
 #endif
-
 //#define SS_ACIA_IRQ_DELAY // not defined anymore (v3.5.2), see MFP
 //#define SS_ACIA_IRQ_ASSERT_READ_SR //TODO
 //#define SS_ACIA_OVERRUN_REPLACE_BYTE // normally no
@@ -208,12 +204,11 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 //#define SS_ACIA_REMOVE_OLD_VARIABLES // TODO
 //#define SS_ACIA_DONT_CLEAR_DR //?
 #define SS_ACIA_NO_RESET_PIN // don't reset on warm reset
-///#define SS_ACIA_TDR_COPY_DELAY // apparently not necessary but see Nightdawn
+#define SS_ACIA_TDR_COPY_DELAY // effect on SR
 #if defined(SS_DEBUG)
 #define SS_ACIA_TEST_REGISTERS
 #endif
-#define SS_ACIA_USE_REGISTERS // instead of Steem variables TESTING
-
+#define SS_ACIA_USE_REGISTERS // instead of Steem variables
 #endif
 
 
@@ -1107,7 +1102,6 @@ problem, multiple struct/class definition not allowed?
 #endif
 
 #if !defined(SS_ACIA_DOUBLE_BUFFER_RX) || !defined(SS_ACIA_DOUBLE_BUFFER_TX)
-//#undef SS_ACIA_TEST_REGISTERS
 #undef SS_ACIA_USE_REGISTERS
 #endif
 
