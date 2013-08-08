@@ -462,6 +462,7 @@ void ACIA_Reset(int nACIA,bool Cold)
 "Overrun is also reset by the Master Reset."
 */
   acia[nACIA].SR&=~(BIT_0|BIT_5); // from doc
+////    acia[nACIA].SR=2;
 #endif
 
 #if defined(SS_ACIA_IRQ_DELAY)// not defined anymore (v3.5.2), see MFP
@@ -500,7 +501,7 @@ void ACIA_SetControl(int nACIA,BYTE Val)
   {
     ACIA_IKBD.SR|=BIT_7; 
 #if defined(SS_ACIA_USE_REGISTERS)
-  //  mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0); //trigger
+//   mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0); //trigger  //or not...
 #endif
   }
   else
@@ -611,8 +612,8 @@ int agenda_get_queue_pos(LPAGENDAPROC job)
 */
 void agenda_acia_tx_delay_IKBD(int)
 {
+jdjddj
 
-dssfd
 #if defined(SS_ACIA_REGISTERS)
   ACIA_IKBD.SR|=BIT_1; // TDRE
   if( (ACIA_IKBD.CR&BIT_5)&&!(ACIA_IKBD.CR&BIT_6) ) // IRQ transmit enabled
@@ -647,6 +648,7 @@ dssfd
 
 void agenda_acia_tx_delay_IKBD(int)
 {
+  dfdf
 #if defined(STEVEN_SEAGAL) && defined(SS_ACIA_REGISTERS)
   ACIA_IKBD.SR|=BIT_1; // TDRE
   if( (ACIA_IKBD.CR&BIT_5)&&!(ACIA_IKBD.CR&BIT_6) ) // IRQ transmit enabled

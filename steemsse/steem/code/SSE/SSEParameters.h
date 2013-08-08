@@ -246,7 +246,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define HD6301_MOUSE_SPEED_CYCLES_PER_CHUNK 1000
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM)
+#if defined(SS_IKBD_FAKE_CUSTOM)
 /*  This is not some complicated technical aspect of emulation.
     Checksums are used for gross hacks.
 */

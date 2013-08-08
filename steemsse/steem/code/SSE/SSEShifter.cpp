@@ -982,70 +982,6 @@ detect unstable: switch MED/LOW - Beeshift
 }
 
 
-void TShifter::EndHBL() {
-
-#if defined(SS_SHIFTER_END_OF_LINE_CORRECTION)
-
-/*  Those tests are much like EndHBL in Hatari
-    Finish horizontal overscan : correct -2 & +2 effects
-    Check shifter stability (preliminary)
-*/
-  
-  if(CurrentScanline.Tricks&TRICK_LINE_PLUS_2 && CurrentScanline.EndCycle==372)     
-  {
-    CurrentScanline.Tricks&=~TRICK_LINE_PLUS_2;
-    shifter_draw_pointer-=2; // eg SNYD/TCB at scan_y -29
-    TRACE_LOG("scan_y %d cancel +2\n",scan_y);
-  } // no 'else', they're false alerts!
-
-  if(CurrentScanline.Tricks&TRICK_LINE_MINUS_2     
-    && (CurrentScanline.StartCycle==52 || CurrentScanline.EndCycle!=372))
-  {
-    CurrentScanline.Tricks&=~TRICK_LINE_MINUS_2;
-    shifter_draw_pointer+=2;
-    TRACE_LOG("scan_y %d cancel -2\n",scan_y);
-  }
-#endif//#if defined(SS_SHIFTER_END_OF_LINE_CORRECTION)
-
-#if defined(SS_SHIFTER_DRAGON1) && defined(SS_STF) && defined(SS_MMU_WAKE_UP)
-  //temp hack...// left off, no stabiliser
-  if(SSE_HACKS_ON && ST_TYPE==STF && WAKE_UP_STATE==2 
-    && CurrentScanline.Tricks==1) 
-    SS_signal=SS_SIGNAL_SHIFTER_CONFUSED_1; // stage 1 of our hack...
-  else if(CurrentScanline.Tricks&&CurrentScanline.Tricks!=0x10
-    && (CurrentScanline.Tricks!=TRICK_CONFUSED_SHIFTER))
-    SS_signal=0;
-#endif
-
-#if defined(SS_SHIFTER_UNSTABLE)
-
-/*  3.5.2 This way is more generic. It tries to make sense of #words loaded
-    in the shifter after the "unstable" trick.
-    Left off: 160+26=186 = (23*8)+2 -> 1 word preloaded
-    Left off, right off: 160+26+44=(28*8)+6 -> 3 words preloaded
-    See doc by ST-CNX and LJBK's efforts at AF
-*/
-
-  if( ST_TYPE==STF && WAKE_UP_STATE==2)
-  {
-    if(CurrentScanline.Tricks==TRICK_LINE_PLUS_26)
-      Preload=1;
-    else if(CurrentScanline.Tricks==(TRICK_LINE_PLUS_26|TRICK_UNSTABLE)//0x10001
-      && PreviousScanline.Tricks==(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_44
-      |TRICK_UNSTABLE)) //    0x10011
-      Preload=0;//hack omega back to menu
-    else if( (CurrentScanline.Tricks&(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_44))
-      ==(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_44)
-      &&!(CurrentScanline.Tricks&TRICK_STABILISER)) 
-      Preload=3;
-  }
-  
-#endif
-
-
-}
-
-
 void TShifter::CheckVerticalOverscan() {
 
 /* Vertical overscan
@@ -1319,6 +1255,70 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
     }
     scanline_drawn_so_far=BORDER_SIDE+320+BORDER_SIDE; //border1+picture+border2;
   }//end Monochrome
+}
+
+
+void TShifter::EndHBL() {
+
+#if defined(SS_SHIFTER_END_OF_LINE_CORRECTION)
+
+/*  Those tests are much like EndHBL in Hatari
+    Finish horizontal overscan : correct -2 & +2 effects
+    Check shifter stability (preliminary)
+*/
+  
+  if(CurrentScanline.Tricks&TRICK_LINE_PLUS_2 && CurrentScanline.EndCycle==372)     
+  {
+    CurrentScanline.Tricks&=~TRICK_LINE_PLUS_2;
+    shifter_draw_pointer-=2; // eg SNYD/TCB at scan_y -29
+    TRACE_LOG("scan_y %d cancel +2\n",scan_y);
+  } // no 'else', they're false alerts!
+
+  if(CurrentScanline.Tricks&TRICK_LINE_MINUS_2     
+    && (CurrentScanline.StartCycle==52 || CurrentScanline.EndCycle!=372))
+  {
+    CurrentScanline.Tricks&=~TRICK_LINE_MINUS_2;
+    shifter_draw_pointer+=2;
+    TRACE_LOG("scan_y %d cancel -2\n",scan_y);
+  }
+#endif//#if defined(SS_SHIFTER_END_OF_LINE_CORRECTION)
+
+#if defined(SS_SHIFTER_DRAGON1) && defined(SS_STF) && defined(SS_MMU_WAKE_UP)
+  // not defined in v3.5.2
+  if(SSE_HACKS_ON && ST_TYPE==STF && WAKE_UP_STATE==2 
+    && CurrentScanline.Tricks==1) 
+    SS_signal=SS_SIGNAL_SHIFTER_CONFUSED_1; // stage 1 of our hack...
+  else if(CurrentScanline.Tricks&&CurrentScanline.Tricks!=0x10
+    && (CurrentScanline.Tricks!=TRICK_CONFUSED_SHIFTER))
+    SS_signal=0;
+#endif
+
+#if defined(SS_SHIFTER_UNSTABLE)
+
+/*  3.5.2 This way is more generic. It tries to make sense of #words loaded
+    in the shifter after the "unstable" trick.
+    Left off: 160+26=186 = (23*8)+2 -> 1 word preloaded
+    Left off, right off: 160+26+44=(28*8)+6 -> 3 words preloaded
+    See doc by ST-CNX and LJBK's efforts at AF
+*/
+
+  if( ST_TYPE==STF && WAKE_UP_STATE==2)
+  {
+    if(CurrentScanline.Tricks==TRICK_LINE_PLUS_26)
+      Preload=1;
+    else if(CurrentScanline.Tricks==(TRICK_LINE_PLUS_26|TRICK_UNSTABLE)//0x10001
+      && PreviousScanline.Tricks==(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_44
+      |TRICK_UNSTABLE)) //    0x10011
+      Preload=0;//hack omega back to menu
+    else if( (CurrentScanline.Tricks&(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_44))
+      ==(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_44)
+      &&!(CurrentScanline.Tricks&TRICK_STABILISER)) 
+      Preload=3;
+  }
+  
+#endif
+
+
 }
 
 
@@ -1860,7 +1860,6 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
   // this may look impressive but it's just a bunch of hacks!
   switch(dispatcher) {
   case DISPATCHER_CPU:
-    //RoundCycles(cycles_since_hbl);
     cycles_since_hbl+=16; // 3615 Gen4 by ULM, override normal delay
     break;
   case DISPATCHER_DSTE:
@@ -2352,7 +2351,7 @@ void TShifter::Vbl() {
 #if defined(SS_SHIFTER_EVENTS)
   VideoEvents.Vbl(); 
 #endif
-  m_nHbls=HBL_PER_FRAME;
+//  m_nHbls=HBL_PER_FRAME;
   nVbl++;
 }
 

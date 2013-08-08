@@ -212,13 +212,16 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
         }
 
 #if defined(SS_DEBUG) && defined(SS_ACIA_TEST_REGISTERS)
+        ////if(ior_byte!=2) TRACE_LOG("ACIA IKBD SR built %X persistent SR %X\n",ior_byte,ACIA_IKBD.SR);//tmp
         if(ior_byte!=ACIA_IKBD.SR)
           TRACE_LOG("ACIA IKBD SR built %X persistent SR %X\n",ior_byte,ACIA_IKBD.SR);
 #endif
 
 #endif
+
 #if defined(SS_ACIA_USE_REGISTERS)
         ior_byte=ACIA_IKBD.SR; 
+#endif
 
 #if defined(SS_ACIA_TDR_COPY_DELAY)
 /*  If we're going to ignore the write, inform the program through SR register
@@ -232,7 +235,7 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
         }
 #endif
 
-#endif
+
         break;
 
       // ACIA keyboard read data
@@ -292,7 +295,7 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 
         }
 
-#if defined(SS_ACIA_TEST_REGISTERS)
+#if defined(SS_ACIA_TEST_REGISTERS) && defined(SS_ACIA_DOUBLE_BUFFER_RX)
         ASSERT( ACIA_IKBD.RDR==ACIA_IKBD.data );
 //        ASSERT( !( (ACIA_IKBD.SR&BIT_7)||(ACIA_MIDI.SR&BIT_7) )==!(ACIA_IKBD.irq||ACIA_MIDI.irq) );
 #endif
@@ -386,7 +389,7 @@ Receiver Data Register is retained.
           ACIA_MIDI.irq=(ACIA_MIDI.tx_irq_enabled && ACIA_MIDI.tx_flag==0);
 #endif
 #if defined(SS_ACIA_REGISTERS)
-          ACIA_IKBD.SR&=~BIT_5;
+          ACIA_MIDI.SR&=~BIT_5;// ACIA bugfix 3.5.3
           if(!( ACIA_MIDI.IrqForTx() && (ACIA_MIDI.SR&BIT_1) )) // TDRE
             ACIA_MIDI.SR&=~BIT_7; // clear IRQ bit
 #endif

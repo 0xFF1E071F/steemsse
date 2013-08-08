@@ -767,7 +767,9 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 
   if(Version>=45) //3.5.2
   {
+#if defined(SS_DRIVE)
     ReadWriteStruct(SF314);
+#endif
   }
 
 

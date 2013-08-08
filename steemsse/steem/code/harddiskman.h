@@ -1,9 +1,6 @@
-#if defined(STEVEN_SEAGAL) /////&& defined(SS_STRUCTURE_HARDDISKMAN_H)
-// need no apart decla.h for this one
-#ifndef HARDDISKMAN_H
-#define HARDDISKMAN_H
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_HARDDISKMAN_H)
+#pragma once
 #endif
-
 
 #define MAX_HARDDRIVES 10
 
@@ -56,6 +53,4 @@ public:
   bool DisableHardDrives;
 };
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_HARDDISKMAN_H)
-#endif//HARDDISKMAN_H
-#endif
+

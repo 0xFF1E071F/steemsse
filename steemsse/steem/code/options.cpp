@@ -23,11 +23,6 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 #endif
 
 #if defined(SS_SHIFTER_UNSTABLE)
-
-#ifdef SS_UNIX
-//extern int left_border,screen_res,overscan_add_extra,shifter_freq_change_idx;
-#endif
-
 #include "SSE/SSEShifterEvents.h"
 #include "SSE/SSEShifter.h"
 #endif

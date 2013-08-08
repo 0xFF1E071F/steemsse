@@ -328,8 +328,8 @@ of 10, the mouse will be nearly on top of the screen (y=13 instead of y=88). "
         if(ACT-ACIA_IKBD.last_tx_write_time>ACIA_CYCLES_NEEDED_TO_START_TX)
           ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
 #endif
-#else //no double buffer
 
+#else //no double buffer
 
 #if defined(SS_ACIA_REGISTERS)
         ACIA_IKBD.TDRS=ACIA_IKBD.TDR; 

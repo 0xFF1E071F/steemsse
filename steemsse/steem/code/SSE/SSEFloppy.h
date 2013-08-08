@@ -48,7 +48,7 @@ struct TDma {
 */
   void UpdateRegs(bool trace_them=false);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DMA_INC_ADDRESS)
+#if defined(SS_STRUCTURE_DMA_INC_ADDRESS)
   void IncAddress();
 #define DMA_INC_ADDRESS Dma.IncAddress();
 #endif
