@@ -128,7 +128,7 @@ struct TShifter {
   inline void AddShiftModeChange(int r);
   inline int CheckShiftMode(int t);
   inline int FreqChange(int idx);
-  inline int ShiftMode(int idx=-1);
+  inline int ShiftModeChange(int idx=-1);
   inline int FreqChangeCycle(int idx);
   inline int ShiftModeChangeCycle(int idx);
   inline int FreqChangeIdx(int cycle);
@@ -159,11 +159,11 @@ struct TShifter {
   inline MEM_ADDRESS ReadSDP(int cycles_since_hbl,int dispatcher=DISPATCHER_NONE);
 #endif
 #ifdef SS_SHIFTER_SDP_WRITE
-#if defined(_DEBUG) // VC IDE
-  int WriteSDP(MEM_ADDRESS addr, BYTE io_src_b);
-#else
-  inline int WriteSDP(MEM_ADDRESS addr, BYTE io_src_b);
-#endif
+//#if defined(_DEBUG) // VC IDE
+//  int WriteSDP(MEM_ADDRESS addr, BYTE io_src_b);
+//#else
+  inline void WriteSDP(MEM_ADDRESS addr, BYTE io_src_b);
+//#endif
   int SDPMiddleByte; // glue it! 
 #endif 
 #endif
@@ -179,7 +179,7 @@ struct TShifter {
 #endif
   int m_ShiftMode; // contrary to screen_res, it's updated at each change
   int m_SyncMode;//
-  int m_nHbls; //313,263,501
+//  int m_nHbls; //313,263,501 //not used yet
   int TrickExecuted; //make sure that each trick will only be applied once
   int nVbl;
 
@@ -197,7 +197,7 @@ extern TShifter Shifter; // singleton
 ////////////////////////////////
 
 
-#if !defined(SS_UNIX) || defined(IN_EMU)
+#if defined(IN_EMU) //temp...
 
 inline void TShifter::AddExtraToShifterDrawPointerAtEndOfLine(unsigned long &extra) {
   // What a beautiful name!
@@ -247,6 +247,9 @@ inline int TShifter::CheckFreq(int t) {
 }
 
 
+// TODO DE()
+
+
 #ifdef WIN32
 
 inline void TShifter::DrawBufferedScanlineToVideo() {
@@ -261,7 +264,7 @@ inline void TShifter::DrawBufferedScanlineToVideo() {
     DWORD *dest=(DWORD*)draw_store_dest_ad;  
     while(src<(DWORD*)draw_dest_ad) 
       *(dest++)=*(src++); 
-    ASSERT(draw_med_low_double_height);
+//    ASSERT(draw_med_low_double_height);//OK, never asserted
 //    if(draw_med_low_double_height)
     {
       src=(DWORD*)draw_temp_line_buf;                        
@@ -439,23 +442,23 @@ inline int TShifter::CheckShiftMode(int t) {
   return i;
 }
 
-
-inline int TShifter::FreqChange(int idx) {
+/*
+inline int TShifter::FreqChange(int idx) { //not used...
   // return value of this change (50 or 60)
   idx&=31;
-  ASSERT(shifter_freq_change[idx]==50||shifter_freq_change[idx]==60);
+  //ASSERT(shifter_freq_change[idx]==50||shifter_freq_change[idx]==60);//OK
   return shifter_freq_change[idx];
 }
 
-inline int TShifter::ShiftMode(int idx) { // .. Change
+inline int TShifter::ShiftModeChange(int idx) { //not used...
   // return value of this change (0,1,2)
   if(idx==-1)
     return m_ShiftMode;
   idx&=31;
-  ASSERT(!shifter_shift_mode_change[idx]||shifter_shift_mode_change[idx]==1||shifter_shift_mode_change[idx]==2);
+  //ASSERT(!shifter_shift_mode_change[idx]||shifter_shift_mode_change[idx]==1||shifter_shift_mode_change[idx]==2);
   return shifter_shift_mode_change[idx];
 }
-
+*/
 
 inline int TShifter::FreqChangeCycle(int idx) {
   // just give the relative cycle of element idx
@@ -902,7 +905,7 @@ Line -28 - 004:R0002 012:R0000 376:S0000 384:S0002 444:R0002 456:R0000 512:T2011
 
 #ifdef SS_SHIFTER_SDP_WRITE
 
-int TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
+void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 /*
     This is a difficult side of STE emulation, made difficult too by
     Steem's rendering system, that uses the shifter draw pointer as 
@@ -1029,7 +1032,8 @@ int TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 #if defined(SS_SHIFTER_SDP_TRACE_LOG)
     TRACE_LOG("STF ignore write to SDP %x %x\n",addr,io_src_b);
 #endif
-    return FALSE; // fixes Nightdawn
+//    return FALSE; // fixes Nightdawn
+    return; // fixes Nightdawn, STF-only game
   }
 #endif
 
@@ -1137,9 +1141,7 @@ int TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
   // update shifter_draw_pointer_at_start_of_line or ReadSDP returns garbage
   shifter_draw_pointer_at_start_of_line-=shifter_draw_pointer; //sdp_real
   shifter_draw_pointer_at_start_of_line+=nsdp;
-  shifter_draw_pointer=nsdp
-    
-    ;
+  shifter_draw_pointer=nsdp;
 
 #if defined(SS_SHIFTER_SDP_WRITE_MIDDLE_BYTE)
   // hack, record middle byte, programmer couldn't intend it to change
@@ -1149,7 +1151,7 @@ int TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 
   CurrentScanline.Tricks|=TRICK_WRITE_SDP; // could be handy
 
-  return shifter_draw_pointer; // fancy
+  //return shifter_draw_pointer; // fancy
 }
 
 #endif
@@ -1162,7 +1164,7 @@ void TShifter::ShiftSDP(int shift) {
 }
 
 
-#endif//#if !defined(SS_UNIX) || defined(IN_EMU)
+#endif// defined(IN_EMU)
 
 
 // just taking some unimportant code out of Render for clarity

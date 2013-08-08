@@ -1063,10 +1063,10 @@ void m68k_exception::crash() { // copied from cpu.cpp and improved
 
       SR_CLEAR(SR_TRACE);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+#if defined(SS_CPU_FETCH_TIMING)
       INSTRUCTION_TIME_ROUND(50-4); // TODO micro timings?
       FETCH_TIMING;
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH_TIMING_SET_PC)
+#if defined(SS_CPU_PREFETCH_TIMING_SET_PC)
       INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
 #endif
 #else
@@ -1171,7 +1171,7 @@ void m68k_poke_abus2(BYTE x){
       PEEK(abus)=x;
     else if (abus>=MEM_START_OF_USER_AREA)
       PEEK(abus)=x;
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_IGNORE_WRITE_0)
+#if defined(SS_CPU_IGNORE_WRITE_0)
 /*  Atari doc states:
     A 4 word portion  of ROM  is  shadowed  at  the  start of RAM for 
     the reset stack  pointer and program counter.  
@@ -1220,7 +1220,7 @@ void m68k_dpoke_abus2(WORD x){
       DPEEK(abus)=x;
     else if(abus>=MEM_START_OF_USER_AREA)
       DPEEK(abus)=x;
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_IGNORE_WRITE_0)
+#if defined(SS_CPU_IGNORE_WRITE_0)
     else if(SUPERFLAG && !abus)
       ;
 #endif
@@ -1256,7 +1256,7 @@ void m68k_lpoke_abus2(LONG x){
       LPEEK(abus)=x;
     else if(abus>=MEM_START_OF_USER_AREA)
       LPEEK(abus)=x;
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_IGNORE_WRITE_0__)
+#if defined(SS_CPU_IGNORE_WRITE_0__)
 /*  Not for long because it breaks Fuzion 77, 78, 84 (bugfix 3.5.2).
     There's no real explanation. Maybe the bus error detector doesn't 
     start until after the first word.
@@ -1283,7 +1283,7 @@ void m68k_lpoke_abus2(LONG x){
 // using ijor's timings (in 3rdparty\pasti), what they fix proves them correct
 //#undef SS_CPU_LINE_8_TIMINGS
 void                              m68k_divu(){
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_8_TIMINGS))
+#if !defined(SS_CPU_LINE_8_TIMINGS)
   FETCH_TIMING;
 #endif
   m68k_GET_SOURCE_W_NOT_A;
@@ -1295,7 +1295,7 @@ void                              m68k_divu(){
     INSTRUCTION_TIME_ROUND(38);
   }else{
     PREFETCH_IRC;
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_8_TIMINGS)
+#if defined(SS_CPU_LINE_8_TIMINGS)
     FETCH_TIMING;
 #endif
     unsigned long q;
@@ -1317,7 +1317,7 @@ void                              m68k_divu(){
 
 
 void                              m68k_divs(){
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_8_TIMINGS))
+#if !defined(SS_CPU_LINE_8_TIMINGS)
   FETCH_TIMING;
 #endif
 
@@ -1331,7 +1331,7 @@ void                              m68k_divs(){
     INSTRUCTION_TIME_ROUND(38);
   }else{
     PREFETCH_IRC;
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_8_TIMINGS)
+#if defined(SS_CPU_LINE_8_TIMINGS)
     FETCH_TIMING;
 #endif
     signed long q;

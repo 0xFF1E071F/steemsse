@@ -1299,7 +1299,7 @@ void event_acia_rx_irq() {
   { 
     ASSERT(lcycles>=SS_6301_TO_ACIA_IN_CYCLES);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_DOUBLE_BUFFER_RX)//TX?!
+#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_DOUBLE_BUFFER_RX)
     // here we should take care of next byte but we have another
     // problem anyway (txinterrupts)
     ASSERT(ACIA_IKBD.LineRxBusy)

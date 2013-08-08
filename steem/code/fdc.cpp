@@ -1537,7 +1537,8 @@ instant_sector_access_loop:
       log("FDC: Finished read/write sector");
       fdc_str=BYTE(WriteProtect | FDC_STR_MOTOR_ON); //SS War Heli
 //      TRACE_LOG("Sector R/W OK\n");
-#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_RW_SECTOR_TIMING2)
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_RW_SECTOR_TIMING2)\
+      && defined(SS_FDC)
       // For test program FDCT by Petari
       if(ADAT)
         agenda_add(agenda_fdc_finished,SF314[DRIVE].BytesToHbls(nSects<11?

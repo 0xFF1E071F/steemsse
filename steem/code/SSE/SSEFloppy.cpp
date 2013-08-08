@@ -264,7 +264,7 @@ TODO?
     of ior_byte, but allows to go through TRACE and update our variables..
 */
   if(hPasti && pasti_active
-#if defined(STEVEN_SEAGAL) && defined(SS_PASTI_ONLY_STX)
+#if defined(SS_PASTI_ONLY_STX)
     && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3
    // ||addr!=0xff8605||MCR&BIT_3||MCR&BIT_4
     )
@@ -518,7 +518,7 @@ What was in the buffers will go nowhere, the internal counter is reset.
 */
   if(hPasti && pasti_active
     
-#if defined(STEVEN_SEAGAL)&&defined(SS_DRIVE)&&defined(SS_PASTI_ONLY_STX)
+#if defined(SS_DRIVE)&&defined(SS_PASTI_ONLY_STX)
     && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3
     ||addr!=0xff8605||MCR&BIT_3||MCR&BIT_4
     )
@@ -567,7 +567,7 @@ void TDma::UpdateRegs(bool trace_them) {
 
 #if USE_PASTI
   if(hPasti && pasti_active
-#if defined(STEVEN_SEAGAL) && defined(SS_PASTI_ONLY_STX) //all or nothing?
+#if defined(SS_PASTI_ONLY_STX) //all or nothing?
     && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
 #endif      
     )
@@ -778,7 +778,7 @@ void TDma::TransferBytes() {
 
 #if USE_PASTI    
     if(hPasti&&pasti_active
-#if defined(STEVEN_SEAGAL) && defined(SS_PASTI_ONLY_STX)
+#if defined(SS_PASTI_ONLY_STX)
     &&(!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
 #endif        
       )  
@@ -1122,7 +1122,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #endif
 #if USE_PASTI 
       can_send=can_send&&!(hPasti && pasti_active
-#if defined(STEVEN_SEAGAL)&&defined(SS_DRIVE)&&defined(SS_PASTI_ONLY_STX)
+#if defined(SS_DRIVE)&&defined(SS_PASTI_ONLY_STX)
         && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
 #endif            
         );
@@ -1565,7 +1565,7 @@ void TCaps::WriteWD1772(BYTE Line,int data) {
 void TCaps::Hbl() {
 
   // we run cycles at each HBL if there's an IPF file in. Performance OK
-#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
+#if defined(SS_SHIFTER)
   ASSERT( Shifter.CurrentScanline.Cycles>100)
 #if defined(SS_IPF_RUN_PRE_IO) || defined(SS_IPF_RUN_POST_IO)
   ASSERT( Shifter.CurrentScanline.Cycles-Caps.CyclesRun>0 );

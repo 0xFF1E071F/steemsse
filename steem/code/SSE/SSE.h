@@ -69,17 +69,17 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #if defined(STEVEN_SEAGAL)
 
-//#define SS_BETA //title, OSD, plus some testing
+#define SS_BETA //title, OSD, plus some testing
 
-#ifdef SS_BETA // beta with all features
-#define SSE_VERSION 352
-#define SSE_VERSION_TXT "Beta" 
-#define WINDOW_TITLE "Steem SSE beta"
+#ifdef SS_BETA 
+#define SSE_VERSION 353
+#define SSE_VERSION_TXT "3.5.3" 
+#define WINDOW_TITLE "Steem Beta 3.5.3"
 #else // next planned release
-#define SSE_VERSION 352 
+#define SSE_VERSION 353 
 // check snapshot Version (in LoadSave.h); rc\resource.rc
-#define SSE_VERSION_TXT "3.5.2" 
-#define WINDOW_TITLE "Steem SSE 3.5.2" //not 'Engine', too long
+#define SSE_VERSION_TXT "3.5.3" 
+#define WINDOW_TITLE "Steem SSE 3.5.3" //not 'Engine', too long
 #endif
 
 #endif
@@ -90,6 +90,8 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 //////////////////
 
 // Any switch may be disabled and it should still compile & run
+
+//TODO: dma, broken
 
 #if defined(STEVEN_SEAGAL)
 
@@ -190,7 +192,9 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #define SS_ACIA_BUS_JAM_NO_WOBBLE // simple "fix"
 //#define SS_ACIA_BUS_JAM_PRECISE_WOBBLE //TODO
-#define SS_ACIA_DOUBLE_BUFFER_RX // only from 6301 (not MIDI)
+
+
+//#define SS_ACIA_DOUBLE_BUFFER_RX // only from 6301 (not MIDI) //broken, can't disable
 #define SS_ACIA_DOUBLE_BUFFER_TX // only to 6301 (not MIDI)
 
 #ifdef SS_BETA
@@ -198,13 +202,13 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #endif
 
 //#define SS_ACIA_IRQ_DELAY // not defined anymore (v3.5.2), see MFP
-#define SS_ACIA_IRQ_ASSERT_READ_SR //TODO
+//#define SS_ACIA_IRQ_ASSERT_READ_SR //TODO
 //#define SS_ACIA_OVERRUN_REPLACE_BYTE // normally no
 #define SS_ACIA_REGISTERS // formalising the registers
 //#define SS_ACIA_REMOVE_OLD_VARIABLES // TODO
 //#define SS_ACIA_DONT_CLEAR_DR //?
 #define SS_ACIA_NO_RESET_PIN // don't reset on warm reset
-//#define SS_ACIA_TDR_COPY_DELAY // apparently not necessary
+///#define SS_ACIA_TDR_COPY_DELAY // apparently not necessary but see Nightdawn
 #if defined(SS_DEBUG)
 #define SS_ACIA_TEST_REGISTERS
 #endif
@@ -944,9 +948,9 @@ problem, multiple struct/class definition not allowed?
 #define SS_STRUCTURE_FDC_H
 #define SS_STRUCTURE_FLOPPYDRIVE_H
 #define SS_STRUCTURE_GUI_H
-#define SS_STRUCTURE_HARDDISKMAN_H
+//#define SS_STRUCTURE_HARDDISKMAN_H
 #define SS_STRUCTURE_HDIMG_H
-#define SS_STRUCTURE_HISTORYLIST_H
+//#define SS_STRUCTURE_HISTORYLIST_H
 #define SS_STRUCTURE_IKBD_H
 //...
 #define SS_STRUCTURE_RUN_H
@@ -1102,8 +1106,21 @@ problem, multiple struct/class definition not allowed?
 #undef SS_ACIA_USE_REGISTERS
 #endif
 
+#if !defined(SS_ACIA_DOUBLE_BUFFER_RX) || !defined(SS_ACIA_DOUBLE_BUFFER_TX)
+//#undef SS_ACIA_TEST_REGISTERS
+#undef SS_ACIA_USE_REGISTERS
+#endif
+
+#if !defined(SS_DMA)
+#undef SS_STRUCTURE_DMA_INC_ADDRESS
+#endif
+
 #if !defined(SS_DMA_FIFO)
 #undef SS_IPF
+#endif
+
+#if !defined(SS_FDC)
+#undef SS_OSD_DRIVE_INFO2
 #endif
 
 #if !defined(SS_SHIFTER)

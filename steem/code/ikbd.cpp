@@ -572,6 +572,7 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
 #endif
  }
 #endif
+
 #if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
   if(ACIA_IKBD.tx_irq_enabled)
     ACIA_IKBD.irq=true;
@@ -1647,6 +1648,7 @@ void agenda_keyboard_replace(int) {
       else // not overrun, OK
       {
 #if defined(SS_ACIA_REGISTERS)
+//        TRACE_LOG("ACIA RDRS->RDR %X\n",ACIA_IKBD.RDRS);
         ACIA_IKBD.RDR=ACIA_IKBD.RDRS; // transfer shifted byte
         ACIA_IKBD.SR|=BIT_0; // set RDR full
 #endif
@@ -1654,7 +1656,7 @@ void agenda_keyboard_replace(int) {
         ACIA_IKBD.data=keyboard_buffer[keyboard_buffer_length];
         ACIA_IKBD.rx_not_read=true;
 #endif
-#if defined(SS_ACIA_TEST_REGISTERS)
+#if defined(SS_ACIA_TEST_REGISTERS) && defined(SS_ACIA_DOUBLE_BUFFER_RX)
         ASSERT( ACIA_IKBD.RDR==ACIA_IKBD.data );
 #endif
       }
