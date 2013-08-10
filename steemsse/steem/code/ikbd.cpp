@@ -1640,6 +1640,9 @@ void agenda_keyboard_replace(int) {
         {
           TRACE_LOG("ACIA IKBD OVR\n");
           ACIA_IKBD.overrun=ACIA_OVERRUN_COMING; // keep original system
+#ifdef TEST01
+          ACIA_IKBD.LineRxBusy=true;
+#endif
 #if defined(SS_ACIA_REGISTERS)
        //   ACIA_IKBD.SR|=BIT_5; // ACIA bugfix 3.5.2
 #endif

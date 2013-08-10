@@ -91,8 +91,6 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 // Any switch may be disabled and it should still compile & run
 
-//TODO: dma, broken
-
 #if defined(STEVEN_SEAGAL)
 
 #define SS_ACIA       // MC6850 Asynchronous Communications Interface Adapter

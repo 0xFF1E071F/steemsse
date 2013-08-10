@@ -1311,6 +1311,31 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
               log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Writing $xx"+HEXSl(io_src_b,2)+" to HDC register #"+((dma_mode & BIT_1) ? 1:0));
               break;
             }
+            switch (dma_mode & (BIT_1+BIT_2)){
+              case 0:
+                floppy_fdc_command(io_src_b);
+                break;
+              case 2:
+                if ((fdc_str & FDC_STR_BUSY)==0){
+                  log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC track register to "+io_src_b);
+                  fdc_tr=io_src_b;
+                }else{
+                  log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Can't set FDC track register to "+io_src_b+", FDC is busy");
+                }
+                break;
+              case 4:
+                if ((fdc_str & FDC_STR_BUSY)==0){
+                  log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC sector register to "+io_src_b);
+                  fdc_sr=io_src_b;
+                }else{
+                  log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Can't set FDC sector register to "+io_src_b+", FDC is busy");
+                }
+                break;
+              case 6:
+                log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC data register to "+io_src_b);
+                fdc_dr=io_src_b;
+                break;
+            }
             break;
           }
 
