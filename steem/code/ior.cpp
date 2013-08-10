@@ -248,7 +248,6 @@ Refix v3.5.3
       case 0xfffc02:
       {
         DEBUG_ONLY( if (mode!=STEM_MODE_CPU) return ACIA_IKBD.data; ) // boiler
-
         // Update status BIT 0 (RX full)
 #if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
         ACIA_IKBD.rx_not_read=0; 
@@ -261,6 +260,10 @@ Refix v3.5.3
         if(ACIA_IKBD.overrun==ACIA_OVERRUN_COMING) // keep this, it's right
         {
           ACIA_IKBD.overrun=ACIA_OVERRUN_YES;
+#ifdef TEST01
+///          ACIA_IKBD.LineRxBusy=false;
+#endif
+
 #if defined(SS_ACIA_REGISTERS)
           ACIA_IKBD.SR|=BIT_5; // set overrun (only now, conform to doc)
           if(ACIA_IKBD.CR&BIT_7) // irq enabled
@@ -282,6 +285,9 @@ Refix v3.5.3
   Receive Data Register."
 */
           ACIA_IKBD.overrun=ACIA_OVERRUN_NO;
+#ifdef TEST01
+          ACIA_IKBD.LineRxBusy=false;
+#endif
 
 #if defined(SS_ACIA_REGISTERS)
           ACIA_IKBD.SR&=~BIT_0; // ACIA bugfix 3.5.2, bit cleared only if no OVR
