@@ -159,21 +159,22 @@ trcsr_getb (offs)
   else
     rv&= ~RDRF;
 
-  if(!ACIA_IKBD.LineRxBusy
-  //if(!txinterrupts
 #if defined(SS_ACIA_DOUBLE_BUFFER_RX)
-  //  ||!ACIA_IKBD.ByteWaitingRx
-#endif
-    )
+/*  This is guess work
+*/
+  if(!ACIA_IKBD.LineRxBusy||!ACIA_IKBD.ByteWaitingRx)
     rv|=TDRE; // is empty
   else
     rv&=~TDRE; // is full
+#endif
 
+#if defined(SS_IKBD_6301_TRACE_STATUS)
   if(ACIA_IKBD.LineRxBusy&&!ACIA_IKBD.ByteWaitingRx&&(rv&TDRE))
     TRACE("TRCSR %X transmit OK, line busy\n",rv);
   else if(rv&TDRE)
     TRACE("TRCSR %X transmit OK, line free\n",rv);
-    
+#endif
+
   return rv;
 }
 
@@ -194,18 +195,25 @@ trcsr_putb (offs, value)
     TRACE("Set 6301 stand-by\n");
   
 #if defined(SS_IKBD_6301_SET_TDRE)
-  //  Here we do as if the program could set bit 5 of TRCSR - correct?
+/*  Here we do as if the program could set bit 5 of TRCSR - correct?
+    Cobra Compil 1: if we don't, "keyboard panic" (maybe we're compensating
+    another bug)
+*/
   value&=0x3F; 
-  if(value&0x20) 
+  if(value&TDRE/*0x20*/) 
   {
-    if((value & TIE)&&!ACIA_IKBD.LineRxBusy) 
+    if((value & TIE)
+#if defined(SS_ACIA_DOUBLE_BUFFER_RX)
+      &&!ACIA_IKBD.LineRxBusy
+#endif
+      ) 
     {
       TRACE("6301 program sets TDRE\n");
-      txinterrupts = 1; // this will force a check; fixes Cobra Compil 1 -hack?
+      txinterrupts = 1; // this will force a check
     }
   }
 #else // here, bit 5 of TRCSR can't be set by software
-  value&=0x1F;  // IKBD panic in Cobra Compil 1
+  value&=0x1F;  
 #endif
   ireg_putb (TRCSR, value);
 #if 0 // ST: We do nothing of the sort, of course
@@ -239,8 +247,8 @@ rdr_getb (offs)
      */
     if (rxinterrupts) {
 
-#if defined(SS_IKBD_6301_TRACE_SCI_RX)
       rec_byte=recvbuf[rxindex];
+#if defined(SS_IKBD_6301_TRACE_SCI_RX)
       TRACE("6301 SCI read RX $%x (#%d)\n",rec_byte,rxindex);
 #endif
 
@@ -291,6 +299,7 @@ tdr_putb (offs, value)
     In fact for Steem, we will generate the TX interrupt later when the byte
     has been transmitted, except if the line was free (double buffering), then
     it can be triggered at once.
+    TODO: this part is especially messy, what does really happen?
 */
   trcsr = trcsr_getb (TRCSR);
 #if 0
@@ -299,22 +308,26 @@ tdr_putb (offs, value)
 #endif
 
 #if defined(SS_ACIA_DOUBLE_BUFFER_RX)
+/*  Froggies: the line is never busy, but bytes are transmitted when
+    the ACIA is in overrun. If we "blocked" them, Froggies wouldn't work
+    at all.
+*/
   if(ACIA_IKBD.LineRxBusy)
   {
+#if defined(SS_IKBD_6301_TRACE_SCI_TX)
+    TRACE("HD6301: $%X waits in TDR\n",value);
+#endif
     ASSERT( !ACIA_IKBD.ByteWaitingRx );
     ACIA_IKBD.ByteWaitingRx=1;
   }
   else
-    keyboard_buffer_write(value); // call Steem's ikbd function
-  ACIA_IKBD.LineRxBusy=1;
-#else
-  keyboard_buffer_write(value); // call Steem's ikbd function
 #endif
-
+  {
 #if defined(SS_IKBD_6301_TRACE_SCI_TX)
-  TRACE("HD6301: $%x ->ACIA RDRS\n",value);
+    TRACE("HD6301: $%X ->ACIA RDRS\n",value);
 #endif
-
+    keyboard_buffer_write(value); // call Steem's ikbd function
+  }
   return 0;//warning
 }
 

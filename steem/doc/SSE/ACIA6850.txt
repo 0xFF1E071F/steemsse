@@ -7,6 +7,18 @@ Sources:
 Official MC6850 documentation by Motorola
 Some general Atari ST documentation
 Development of Steem
+Hatari
+
+
+Interesting ST cases
+=====================
+
+Brataccas
+Delirious 4 fake GEM
+Froggies over the Fence (Menu)
+Hades Nebula
+Overdrive by Phalanx
+
 
 -------------------------------------------------------------------------------
 
@@ -103,12 +115,15 @@ Double buffering means that two bytes may be written very fast one after
 the other on TDR. The first byte will be transferred almost at once into
 TDRS. Subsequent bytes will have to wait the full serial transfer time.
 
-'Almost' doesn't mean instant, for a few cycles (32?, which would translate
-into 512 MC68000 cycles), the TDRE bit in SR will be cleared but TDR will 
-take a byte.
+'Almost' doesn't mean instant, for a few cycles , the TDRE bit in SR will
+be cleared. 
+TDR will take a byte however, and this new byte will be shifted after the
+short delay.
+This explains why Delirious IV fails to center the mouse on a real ST as well.
 
 Cases: 
 Delirious 4 fake GEM
+Hades Nebula
 Nightdawn
 
 Control Register CR
@@ -157,15 +172,66 @@ The speed applies to both sending & receiving bits. It's been set at
 500khz for both TxCLK & RxCLK on the ST chip that interacts with the
 HD6301.
 
-Bits 4-3-2 are set as 101 on the ST (8 bit, 1 stop bit).
+Bits 4-3-2 are set as 101 on the ST (8 bit, 1 stop bit). 
+There's also a start bit, so you must count 10bit/byte.
 
-Timing
+Timings
 
-IKBD
+ACIA <--> IKBD timings
 
-7812.5 bit/s
-[TODO]
+7812.5 bit/s, 10bits-> 1280 ACIA cycles/byte
 
+In Steem, we must use 1350 cycles instead, that is 70 cycles more, 
+or Froggies menu won't work well.
+No improvement in ACIA emu could lower this number, so we try and
+justify it instead ;)
+
+Froggies: 
+When the CPU sends $4, IKBD sends 4 bytes.
+With adapted timing, 2 bytes are ignored due to ACIA OVR, the
+program uses the 2 remaining bytes and it works.
+With theoretical timings, 3 bytes are ignored and it's broken.
+
+Possible explanation: there's starting & finishing delay for each byte,
+because copying TDR to TDRS and RDRS to RDR takes some time in both chips,
+maybe more in one that the other.
+
+For example:
+
+ACIA/IKBD transfer	
+
+Baud	                      7812.5
+#bits	                          10
+bytes/s	                      781.25
+
+ACIA frequency               1000000
+ACIA cycles/byte                1280
+
+TDR->TDRS delay                   25
+in CPU cycles                    200 (value OK for Nightdawn and Hades Nebula)
+RDRS->RDR delay                   25
+in CPU cycles                    200
+
+ACIA cycles/byte                1330
+
+MC68000 real frequency       8021248
+MC68000 used frequency       8000000
+ratio                       1.002656
+
+ACIA cycles/byte          1333.53248
+More delay in 6301?             16.5
+ACIA cycles/byte          1350.03248
+MC68000 cycles/byte      10800.25984
+
+This is speculative.
+Anyway, a difference of 70 ACIA cycles isn't too terrible. It looked worse
+before because 
+- WinSTon/Hatari used a "measured" value of 7200 (CPU cycles)
+- 7812.5 baud is ambiguous, it isn't clear that you must add control bits to 
+  get real speed.
+
+ACIA <--> MIDI timings 
+(TODO)
 
 Status Register SR
 
@@ -211,7 +277,6 @@ has been read.
 
 Transmit Data TDR
 
-
 Doc states: master reset initialises both the transmitter and the receiver.
 Does it mean RDR=TDR=0?
 Are RDRS and TDRS cleared? Apparently not. [examples?]
@@ -234,5 +299,20 @@ There are probably similar timing considerations as for receiving.
 Additionally, double buffering means that the IRQ could trigger very soon after
 the byte has been written into TDR.
 Few programs do use this stupid IRQ.
-Cases: Hades Nebula
+Cases: 
+Hades Nebula
+
+--
+
+Overrun
+
+When a byte has been shifted but the previous byte hasn't been read by the CPU
+yet, the new byte isn't copied into RDR, it stays in RDRS, and the ACIA knows
+that the chip is in a overrun situation (internal register).
+As said before, the OVRN status bit will be set only when reading RDR.
+What's not clear: can the sending device (6301) shift another byte into RDRS 
+while the overrun condition is present, yet RDR hasn't been read yet?
+Apparently yes, and the new byte replaces the byte currently waiting in RDRS.
+Cases:
+Froggies
 

@@ -1611,7 +1611,7 @@ void agenda_keyboard_replace(int) {
           ikbd.mouse_packet_pos=-1;
       }
 
-      TRACE_LOG("ACIA RDRS->RDR %X\n",keyboard_buffer[keyboard_buffer_length]);
+
 
 /*  Check overrun.
     "The Overrun does not occur in the Status Register until the valid character
@@ -1625,7 +1625,7 @@ void agenda_keyboard_replace(int) {
       if(ACIA_IKBD.rx_not_read)
 #endif
       {
-
+        TRACE_LOG("ACIA RDRS OVR: $%X->$%X\n",keyboard_buffer[keyboard_buffer_length],keyboard_buffer[keyboard_buffer_length+1]);
 #if defined(SS_ACIA_OVERRUN_REPLACE_BYTE) // normally not
 #if defined(SS_ACIA_REGISTERS)
         ACIA_IKBD.RDR=ACIA_IKBD.RDRS; 
@@ -1638,11 +1638,8 @@ void agenda_keyboard_replace(int) {
 
         if(ACIA_IKBD.overrun!=ACIA_OVERRUN_YES) 
         {
-          TRACE_LOG("ACIA IKBD OVR\n");
+          //TRACE_LOG("ACIA IKBD OVR\n");
           ACIA_IKBD.overrun=ACIA_OVERRUN_COMING; // keep original system
-#ifdef TEST01
-          ACIA_IKBD.LineRxBusy=true;
-#endif
 #if defined(SS_ACIA_REGISTERS)
        //   ACIA_IKBD.SR|=BIT_5; // ACIA bugfix 3.5.2
 #endif
@@ -1650,6 +1647,7 @@ void agenda_keyboard_replace(int) {
       }
       else // not overrun, OK
       {
+        TRACE_LOG("ACIA RDRS->RDR %X\n",keyboard_buffer[keyboard_buffer_length]);
 #if defined(SS_ACIA_REGISTERS)
 //        TRACE_LOG("ACIA RDRS->RDR %X\n",ACIA_IKBD.RDRS);
         ACIA_IKBD.RDR=ACIA_IKBD.RDRS; // transfer shifted byte

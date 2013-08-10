@@ -233,9 +233,11 @@ into 512 MC68000 cycles), the TDRE bit in SR will be cleared but TDR will
 take a byte.
 This feature was in Steem 3.2 but I made it disappear in some SSE versions!
 Refix v3.5.3
+#cycles should be variable and depend on ACIA clock, but we don't emulate
+that. The number is chosen so as not to break Hades Nebula (interesting screen
+when it does).
 */
-        if(ACIA_IKBD.last_tx_write_time
-          &&ACT-ACIA_IKBD.last_tx_write_time<ACIA_CYCLES_NEEDED_TO_START_TX)
+        if(abs(ACT-ACIA_IKBD.last_tx_write_time)<ACIA_TDR_COPY_DELAY)
         {
           TRACE_LOG("ACIA SR TDRE not set yet (%d)\n",ACT-ACIA_IKBD.last_tx_write_time);
           ior_byte&=~BIT_1; // fixes Nightdawn
@@ -260,10 +262,6 @@ Refix v3.5.3
         if(ACIA_IKBD.overrun==ACIA_OVERRUN_COMING) // keep this, it's right
         {
           ACIA_IKBD.overrun=ACIA_OVERRUN_YES;
-#ifdef TEST01
-///          ACIA_IKBD.LineRxBusy=false;
-#endif
-
 #if defined(SS_ACIA_REGISTERS)
           ACIA_IKBD.SR|=BIT_5; // set overrun (only now, conform to doc)
           if(ACIA_IKBD.CR&BIT_7) // irq enabled
@@ -285,9 +283,6 @@ Refix v3.5.3
   Receive Data Register."
 */
           ACIA_IKBD.overrun=ACIA_OVERRUN_NO;
-#ifdef TEST01
-          ACIA_IKBD.LineRxBusy=false;
-#endif
 
 #if defined(SS_ACIA_REGISTERS)
           ACIA_IKBD.SR&=~BIT_0; // ACIA bugfix 3.5.2, bit cleared only if no OVR
@@ -308,7 +303,7 @@ Refix v3.5.3
         }
 
 #if defined(SS_ACIA_TEST_REGISTERS) && defined(SS_ACIA_DOUBLE_BUFFER_RX)
-        ASSERT( ACIA_IKBD.RDR==ACIA_IKBD.data );
+//        ASSERT( ACIA_IKBD.RDR==ACIA_IKBD.data );
 //        ASSERT( !( (ACIA_IKBD.SR&BIT_7)||(ACIA_MIDI.SR&BIT_7) )==!(ACIA_IKBD.irq||ACIA_MIDI.irq) );
 #endif
 /*

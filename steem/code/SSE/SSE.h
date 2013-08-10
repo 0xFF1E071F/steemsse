@@ -192,9 +192,6 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 //#define SS_ACIA_BUS_JAM_PRECISE_WOBBLE //TODO
 #define SS_ACIA_DOUBLE_BUFFER_RX // only from 6301 (not MIDI) 
 #define SS_ACIA_DOUBLE_BUFFER_TX // only to 6301 (not MIDI)
-#ifdef SS_BETA
-//#define SS_ACIA_IKBD_SHORTER_TIMINGS //tests
-#endif
 //#define SS_ACIA_IRQ_DELAY // not defined anymore (v3.5.2), see MFP
 //#define SS_ACIA_IRQ_ASSERT_READ_SR //TODO
 //#define SS_ACIA_OVERRUN_REPLACE_BYTE // normally no
@@ -542,7 +539,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_IKBD_MANAGE_ACIA_TX
 #define SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT // hardware quirk?
 #define SS_IKBD_TRACE_CPU_READ
-//#define SS_IKBD_TRACE_CPU_READ2
+#define SS_IKBD_TRACE_CPU_READ2 //beware polling
 
 #if defined(SS_HACKS)
 //#define SS_IKBD_FAKE_CUSTOM_IS_HACK // need option Hacks to make them work
