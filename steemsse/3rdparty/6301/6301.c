@@ -7,7 +7,6 @@
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
 #include "SSE/SSEOption.h"
-extern int iDummy;
 
 #ifndef WIN32
 unsigned int _rotr(unsigned int Data, unsigned int Bits) {

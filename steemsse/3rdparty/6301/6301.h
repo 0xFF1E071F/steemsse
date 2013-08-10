@@ -25,13 +25,15 @@
     All functions and variables beginning with hd6301 are declared in this
     6301 module and are meant to be visible to Steem (interface) by way of
     inclusion of this file.
+    ASSERT will only work properly in the Visual Studio IDE (or equivalent).
+    I went out of my way to have TRACE working just like in the rest of Steem
+    SSE.
 
     TODO: 
     - get real timings / Froggies must still be OK
     - mouse movement isn't satisfying yet, but it's complicated, SainT has
     problems too. It's probably related to timings.
     - check ram access range?
-    - Brataccas doesn't work
 */
 
 #include "SSE/SSE.h"

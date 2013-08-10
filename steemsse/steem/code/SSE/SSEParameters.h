@@ -74,10 +74,10 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 #endif
 
-
-
-
-//#endif
+#if defined(SS_ACIA_TDR_COPY_DELAY)
+//#define ACIA_TDR_COPY_DELAY ACIA_CYCLES_NEEDED_TO_START_TX //formerly
+#define ACIA_TDR_COPY_DELAY (200) // Hades Nebula vs. Nightdawn (???)
+#endif
 
 #else //!ACIA
 #define SS_6301_TO_ACIA_IN_HBL (screen_res==2?24:12) // to be <7200
@@ -225,21 +225,9 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))-1)
 SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define HD6301_MAX_DIS_INSTR 2000 
 
-/*  
-    Those timings seem too high vs theory (1024?, 1152?,1280?).
-      We take them for:
-    - Froggies over the Fence menu (very odd)
-    - Dragonnels/Unlimited Bobs 
-    No ACIA improvement yet has been able to get the numbers lower.
-*/
 
-#if defined(SS_ACIA_IKBD_SHORTER_TIMINGS)
-#define HD6301_CYCLES_TO_SEND_BYTE (1280)
-#define HD6301_CYCLES_TO_RECEIVE_BYTE (1280)
-#else
-#define HD6301_CYCLES_TO_SEND_BYTE (1350)
+#define HD6301_CYCLES_TO_SEND_BYTE (1350) // see ACIA6850.txt
 #define HD6301_CYCLES_TO_RECEIVE_BYTE (1350)
-#endif
 
 // far from ideal, but maybe we must change method or timings instead
 #define HD6301_MOUSE_SPEED_CHUNKS 15
