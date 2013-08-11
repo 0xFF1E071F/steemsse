@@ -126,6 +126,9 @@ Delirious 4 fake GEM
 Hades Nebula
 Nightdawn
 
+Based on those cases, we set the delay to 200 CPU cycles in Steem. 
+This isn't precise emulation, but it will work with those programs.
+
 Control Register CR
 
 One writes on the ST's CR by writing on addresses $FFFC00 (IKBD) or $FFFC04 
@@ -169,8 +172,7 @@ SS1 SS0                  Speed (bit/s)
  1   0    Div by 64         7812.5 (ST: IKBD)
 
 The speed applies to both sending & receiving bits. It's been set at
-500khz for both TxCLK & RxCLK on the ST chip that interacts with the
-HD6301.
+500khz for both TxCLK & RxCLK on the ST chips.
 
 Bits 4-3-2 are set as 101 on the ST (8 bit, 1 stop bit). 
 There's also a start bit, so you must count 10bit/byte.

@@ -28,6 +28,7 @@ public:
 //  inline void Add(int pc,int scanline, int cycle, char type, int value);
   void Init();
   int Report();
+  void ReportLine();
   int Vbl(); 
   int nVbl;
   struct SVideoEvent m_VideoEvent[MAX_EVENTS]; // it's public

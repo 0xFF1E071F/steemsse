@@ -31,12 +31,12 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_INIT ] =0;
   logsection_enabled[ LOGSECTION_CRASH ] = 0;
   logsection_enabled[ LOGSECTION_STEMDOS ] = 0;
-  logsection_enabled[ LOGSECTION_IKBD ] = 1;
+  logsection_enabled[ LOGSECTION_IKBD ] = 0;
   logsection_enabled[ LOGSECTION_AGENDA ] = 0;
   logsection_enabled[ LOGSECTION_INTERRUPTS ] = 0;
   logsection_enabled[ LOGSECTION_TRAP ] = 0;
   logsection_enabled[ LOGSECTION_SOUND ] = 0;
-  logsection_enabled[ LOGSECTION_VIDEO ] = 0;
+  logsection_enabled[ LOGSECTION_VIDEO ] = 1;
   logsection_enabled[ LOGSECTION_BLITTER ] = 0;
   logsection_enabled[ LOGSECTION_MIDI ] = 0;
   logsection_enabled[ LOGSECTION_TRACE ] = 0;
@@ -250,6 +250,9 @@ void TDebug::ReportGeneralInfos(int when) {
 #if defined(SS_IKBD_6301)
     TRACE("; HD6301 %d",HD6301EMU_ON);
 #endif
+
+    TRACE("; WU %d",WAKE_UP_STATE);
+
     TRACE("\n");
   }
   else

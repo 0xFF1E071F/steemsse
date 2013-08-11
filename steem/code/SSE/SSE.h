@@ -678,12 +678,13 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #endif
 #define SS_MMU_WAKE_UP_0_BYTE_LINE
 #define SS_MMU_WAKE_UP_DELAY_ACCESS // CPU can't access bus when MMU has it
-#define SS_MMU_WAKE_UP_IO_BYTES_R 
+//#define SS_MMU_WAKE_UP_IO_BYTES_R  // breaks too much (read SDP) TODO
 #define SS_MMU_WAKE_UP_IO_BYTES_W 
 #define SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY
 #define SS_MMU_WAKE_UP_IOR_HACK 
 #define SS_MMU_WAKE_UP_IOW_HACK 
-#define SS_MMU_WAKE_UP_PALETTE_STE // render +1 cycle in state 2
+#define SS_MMU_WAKE_UP_PALETTE_STE // render +1 cycle (pixel) in state 2
+
 //#define SS_MMU_WAKE_UP_READ_SDP
 #define SS_MMU_WAKE_UP_RIGHT_BORDER
 //#define SS_MMU_WAKE_UP_STE_STATE2 // STE in same state2 as STF (no)
@@ -783,6 +784,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SHIFTER_NON_STOPPING_LINE // Enchanted Land
 #define SS_SHIFTER_PALETTE_BYTE_CHANGE //Golden Soundtracker
 #define SS_SHIFTER_PALETTE_TIMING //Overscan Demos #6
+#define SS_SHIFTER_RIGHT_OFF_BY_SHIFT_MODE //beeshift0
 #define SS_SHIFTER_STE_MED_HSCROLL // Cool STE
 #define SS_SHIFTER_STE_HSCROLL_LEFT_OFF //MOLZ/Spiral
 #define SS_SHIFTER_STE_VERTICAL_OVERSCAN //RGBeast
@@ -827,7 +829,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(SS_DEBUG) 
 //#define SS_SHIFTER_DRAW_DBG  // totally bypass CheckSideOverscan() & Render()
 #define SS_SHIFTER_EVENTS // recording all shifter events in a frame
-#define SS_SHIFTER_EVENTS_PAL // also for palette
+//#define SS_SHIFTER_EVENTS_PAL // also for palette
 #define SS_SHIFTER_EVENTS_READ_SDP // also for read SDP
 #define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
 #if !defined(SS_DEBUG_TRACE_IDE)
