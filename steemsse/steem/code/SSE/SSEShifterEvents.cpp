@@ -50,6 +50,26 @@ int TVideoEvents::Report() {
 }
 
 
+void TVideoEvents::ReportLine() {
+  // current line
+  // look back
+  int i=m_nEvents;
+  while(i>1 && m_VideoEvent[i].Scanline==scan_y)
+    i--;
+  TRACE("Y%d C%d ",scan_y,LINECYCLES);
+  for(;i<=m_nEvents;i++)
+  {
+    if(m_VideoEvent[i].Type=='F' || m_VideoEvent[i].Type=='C' 
+        || m_VideoEvent[i].Type=='#') // decimal
+        TRACE(" %03d:%c%04d",m_VideoEvent[i].Cycle,m_VideoEvent[i].Type,m_VideoEvent[i].Value);
+      else  // hexa
+        TRACE(" %03d:%c%04X",m_VideoEvent[i].Cycle,m_VideoEvent[i].Type,m_VideoEvent[i].Value);
+  }
+  TRACE("\n");
+
+}
+
+
 int TVideoEvents::Vbl() {
 #if defined(SS_SHIFTER_REPORT_VBL_TRICKS)
   if(Debug.ShifterTricks)

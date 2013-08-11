@@ -145,10 +145,10 @@ void TShifter::CheckSideOverscan() {
   
 #if defined(SS_SHIFTER_0BYTE_LINE_SYNC) 
 
-/*  
-    0-byte sync switches are model-dependent and even "wake up state"-
+/*  0-byte sync switches are model-dependent and even "wake up state"-
     dependent. They  are used only in a 2006 demo called SHFORSTV.TOS,
     by the dude who also made the Overscan Demos.
+    Also: beeshift
     Switche: STF(1) (56/64), STF(2) (58/68), and STE (40/52).
     Haven't found other working combinations yet (hacker!)
 */
@@ -245,7 +245,6 @@ void TShifter::CheckSideOverscan() {
         CurrentScanline.Tricks|=TRICK_LINE_PLUS_20;
     }
 #endif
-
 
   ///////////////////////////////////
   //  LEFT BORDER OFF (line +26)   //
@@ -408,7 +407,7 @@ void TShifter::CheckSideOverscan() {
 
 #if defined(SS_SHIFTER_BIG_WOBBLE) && defined(SS_SHIFTER_SDP_WRITE)
         if(SSE_HACKS_ON && (PreviousScanline.Tricks&TRICK_WRITE_SDP_POST_DE)
-          && HSCROLL 
+          && HSCROLL  // so it's STE-only
 #if defined(SS_SHIFTER_ARMADA_IS_DEAD)
           && r0cycle==12
 #endif
@@ -468,46 +467,28 @@ void TShifter::CheckSideOverscan() {
 */
 
 #if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_UNSTABLE)
-  /*
+/*
 detect unstable: switch MED/LOW - Beeshift
 - 3 (screen shifted by 12 pixels because only 1 word will be read before the 4 are available to draw the bitmap);
 - 2 (screen shifted by 8 pixels because only 2 words will be read before the 4 are available to draw the bitmap);
 - 1 (screen shifted by 4 pixels because only 3 words will be read before the 4 are available to draw the bitmap);
 - 0 (screen shifted by 0 pixels because the 4 words will be read to draw the bitmap);
-080:R0001 100:R0000   
-088:R0001 100:R0000
-092:R0001 100:R0000
-
-  There are many other switches possible, we limit ourselves to these for now.
-
-  */
-  if( ST_TYPE==STF && WAKE_UP_STATE==2
+*/
+  if( ST_TYPE==STF && WAKE_UP_STATE // 1 & 2
     && !(CurrentScanline.Tricks&TRICK_UNSTABLE) 
-    && (PreviousScanline.Tricks&TRICK_STABILISER)
-    && left_border && LINECYCLES>56 && LINECYCLES<372)
+    && (PreviousScanline.Tricks&TRICK_STABILISER) // shifter is stable
+    && left_border && LINECYCLES>56 && LINECYCLES<372) //'DE'
   {
-
     r1cycle=NextShiftModeChange(56,1); // detect switch to medium
     if(r1cycle>-1)
     {
       r0cycle=NextShiftModeChange(r1cycle,0); // detect switch to low
       if(r0cycle>r1cycle)
       {
-        ASSERT( r0cycle==100+2 );
-        ASSERT( r1cycle==80+2 || r1cycle==88+2 || r1cycle==92+2 );
-        switch(r1cycle)
-        {
-          // no explanation for #words; '+2' because of WU2
-        case 80+2:
-          Preload=1;
-          break;
-        case 88+2:
-          Preload=3;
-          break;
-        case 92+2:
-          Preload=2;
-          break;
-        }
+        int cycles_in_med=r0cycle-r1cycle;
+        if(cycles_in_med<=20) 
+          Preload=cycles_in_med/4;  // at least it tries to make sense
+//        TRACE("y%d R1 %d R0 %d cycles in med %d\n",scan_y,r1cycle,r0cycle,cycles_in_med);
       }
     }
   }
@@ -524,10 +505,11 @@ detect unstable: switch MED/LOW - Beeshift
     Dragon: 1 word preloaded    SDP+6   pixels -12
     Dragon: 1 word preloaded   SDP-2   pixels +4  looks better though but
     we don't bother for now.
-    (4-preload)*2 = shift SDP
+    (4-preload)*2 = shift SDP ?
+    It could be that both determining preload and using preload are wrong!
 */
   
-  if(ST_TYPE==STF && WAKE_UP_STATE==2 
+  if(ST_TYPE==STF && WAKE_UP_STATE // 1 & 2
     && Preload && !(CurrentScanline.Tricks&TRICK_UNSTABLE)
     && CyclesIn>40) // wait for left-off check
   {
@@ -537,9 +519,7 @@ detect unstable: switch MED/LOW - Beeshift
       HblPixelShift-=4;
     CurrentScanline.Tricks|=TRICK_UNSTABLE;
   }
-
 #endif
-
 
   ////////////////
   // BLACK LINE //
@@ -720,7 +700,7 @@ detect unstable: switch MED/LOW - Beeshift
         HblPixelShift=13+8-cycles_in_med_res-8; // -7,-3,1, 5, done in Render()
 #if defined(SS_DEBUG)
         ASSERT( HblPixelShift==-7||HblPixelShift==-3||HblPixelShift==1||HblPixelShift==5 );
-//        ASSERT( shift_in_bytes==0||shift_in_bytes==2||shift_in_bytes==4||shift_in_bytes==6 );
+        ASSERT( shift_in_bytes==0||shift_in_bytes==2||shift_in_bytes==4||shift_in_bytes==6 );
       //  if(scan_y==100)  TRACE_LOG("4bit y%d CMR%d CLR%d SH%d PIX%d\n",scan_y,cycles_in_med_res,cycles_in_low_res,shift_in_bytes,HblPixelShift);
 #endif
       }
@@ -777,7 +757,7 @@ detect unstable: switch MED/LOW - Beeshift
     CurrentScanline.Bytes+=2;
     TrickExecuted|=TRICK_LINE_PLUS_2;
     overscan=OVERSCAN_MAX_COUNTDOWN; // 25
-   // TRACE_LOG("+2 y %d c %d +2 60 %d 50 %d\n",scan_y,LINECYCLES,FreqChangeCycle(i),FreqChangeCycle(i+1));
+//    TRACE_LOG("+2 y %d c %d +2 60 %d 50 %d\n",scan_y,LINECYCLES,FreqChangeCycle(i),FreqChangeCycle(i+1));
 #if defined(SS_VID_TRACE_LOG_SUSPICIOUS2)
     if(shifter_freq_change_time[i]-LINECYCLE0<0)
       TRACE_LOG("F%d Suspicious +2 y %d tmg sw %d tmg hbl %d diff %d\n",FRAME,scan_y,shifter_freq_change_time[i],cpu_timer_at_start_of_hbl,shifter_freq_change_time[i]-cpu_timer_at_start_of_hbl);
@@ -916,15 +896,15 @@ detect unstable: switch MED/LOW - Beeshift
     Blank. 
 
     4) Fetching ends at 460 (230x2), not 464 (376+2x44).
+    5) Steem already handled 71/50 switch to remove right border.
 */
-
   t=LINECYCLE0+378; //trigger point for right border cut
-/*
+
 #if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
     if(MMU.WakeUpState2())
-      t+=2;
+      t+=4; // beeshift0 vs omega
 #endif
-*/
+
   if(act-t>=0
     && !(CurrentScanline.Tricks&TRICK_LINE_MINUS_2))
   {
@@ -955,10 +935,13 @@ detect unstable: switch MED/LOW - Beeshift
 /*  Wrong cycle! It really hits at 372 but Steem is confused by the 508 cycles
     lines. Hatari hasn't that problem. It's hard to fix.TODO
 */
-        &&(!(CurrentScanline.Cycles==508) || !SSE_HACKS_ON)
+        &&(!(CurrentScanline.Cycles==508 
+            && FreqChangeAtCycle(376)==60) || !SSE_HACKS_ON)
 #endif
         )
+      {
         CurrentScanline.Tricks|=TRICK_LINE_PLUS_44;
+      }
     }
   }
 
@@ -977,6 +960,13 @@ detect unstable: switch MED/LOW - Beeshift
     CurrentScanline.EndCycle=460; //or 464?
     overscan=OVERSCAN_MAX_COUNTDOWN; // 25
     right_border_changed=true;
+#ifdef SS_DEBUG___
+    if(scan_y==-29)
+    {
+      TRACE_LOG("Steem detects right off at %d\n",shifter_freq_change_time[i]-LINECYCLE0);
+      VideoEvents.ReportLine();
+    }
+#endif
   }
 
 }
@@ -1030,7 +1020,7 @@ void TShifter::CheckVerticalOverscan() {
     of line 199. 199-182 = 17?
 
     6) I know no cases of programs making the screen smaller. It was small
-    enough!
+    enough! TODO PYM big border?
 */
 
   enum{NO_LIMIT=0,LIMIT_TOP,LIMIT_BOTTOM};
@@ -1300,24 +1290,24 @@ void TShifter::EndHBL() {
     Left off: 160+26=186 = (23*8)+2 -> 1 word preloaded
     Left off, right off: 160+26+44=(28*8)+6 -> 3 words preloaded
     See doc by ST-CNX and LJBK's efforts at AF
+    3.5.3
+    In which WU state it should work isn't clear.
+    We choose 1 now because Omega in WU2 would interfere with Beeshift.
 */
 
-  if( ST_TYPE==STF && WAKE_UP_STATE==2)
+  if( ST_TYPE==STF && WAKE_UP_STATE==1)
   {
+    // Overdrive/Dragon
     if(CurrentScanline.Tricks==TRICK_LINE_PLUS_26)
       Preload=1;
-    else if(CurrentScanline.Tricks==(TRICK_LINE_PLUS_26|TRICK_UNSTABLE)//0x10001
-      && PreviousScanline.Tricks==(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_44
-      |TRICK_UNSTABLE)) //    0x10011
-      Preload=0;//hack omega back to menu
+    // Death of the Left Border, Omega Full Overscan
     else if( (CurrentScanline.Tricks&(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_44))
       ==(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_44)
       &&!(CurrentScanline.Tricks&TRICK_STABILISER)) 
-      Preload=3;
+      Preload=3; // becomes 2 at first left off
   }
   
 #endif
-
 
 }
 
@@ -1495,9 +1485,9 @@ BYTE TShifter::IORead(MEM_ADDRESS addr) {
     }//if
     
   }
-#if defined(SS_SHIFTER_IOR_TRACE_LOG)
+#if defined(SS_SHIFTER_IOR_TRACE)
   // made possible by our structure change
-  TRACE_LOG("Shifter read %X=%X\n",addr,ior_byte);
+  TRACE("Shifter read %X=%X\n",addr,ior_byte);
 #endif
   return ior_byte;
 }
@@ -1507,8 +1497,8 @@ void TShifter::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
 
   ASSERT( (addr&0xFFFF00)==0xff8200 );
 
-#if defined(SS_SHIFTER_IOW_TRACE_LOG)
-  TRACE_LOG("(%d/%d) Shifter write %X=%X\n",scan_y,LINECYCLES,addr,io_src_b);
+#if defined(SS_SHIFTER_IOW_TRACE)
+  TRACE("(%d/%d) Shifter write %X=%X\n",scan_y,LINECYCLES,addr,io_src_b);
 #endif  
 
   if ((addr>=0xff8210 && addr<0xff8240) || addr>=0xff8280){
@@ -2207,8 +2197,8 @@ void TShifter::SetShiftMode(BYTE NewMode) {
 
   Render(CyclesIn,DISPATCHER_SET_SHIFT_MODE);
 
-#if !defined(SS_SHIFTER_TRICKS) || defined(SS_DEBUG) // after rendering
-  ADD_SHIFTER_FREQ_CHANGE( NewMode==2 ? MONO_HZ : shifter_freq ); // add time & freq
+#if defined(SS_SHIFTER_RIGHT_OFF_BY_SHIFT_MODE)
+  AddFreqChange( (NewMode==2 ? MONO_HZ : shifter_freq) );
 #endif
 
   int old_screen_res=screen_res;

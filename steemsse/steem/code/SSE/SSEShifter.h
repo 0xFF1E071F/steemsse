@@ -145,8 +145,8 @@ struct TShifter {
   inline int NextFreqChangeIdx(int cycle);
   inline int NextShiftModeChangeIdx(int cycle);
   // cycle of previous change to whatever value before this cycle
-  inline int PreviousFreqChange(int cycle);
-  inline int PreviousShiftModeChange(int cycle);
+  inline int PreviousFreqChange(int cycle,int value=-1);
+  inline int PreviousShiftModeChange(int cycle,int value=-1);
   // idx of previous change to whatever value before this cycle
   inline int PreviousFreqChangeIdx(int cycle);
   inline int PreviousShiftModeChangeIdx(int cycle);
@@ -608,27 +608,31 @@ inline int TShifter::NextShiftModeChangeIdx(int cycle) {
 }
 
 
-inline int TShifter::PreviousFreqChange(int cycle) {
+inline int TShifter::PreviousFreqChange(int cycle,int value) {
   // return cycle of previous change before this cycle
   int t=cycle+LINECYCLE0; // convert to absolute
-  int i,j;
-  for(i=shifter_freq_change_idx,j=0
+  int idx,i,j;
+  for(idx=-1,i=shifter_freq_change_idx,j=0
     ; shifter_freq_change_time[i]-t>=0 && j<32
-    ; i--,i&=31,j++) ;
-  if(shifter_freq_change_time[i]-t<0)
-    return shifter_freq_change_time[i]-LINECYCLE0;
+    ; i--,i&=31,j++) 
+    if(value==-1 || shifter_freq_change[i]==value)
+      idx=i;
+  if(idx!=-1 && shifter_freq_change_time[idx]-t<0)
+    return shifter_freq_change_time[idx]-LINECYCLE0;
   return -1;
 }
 
-inline int TShifter::PreviousShiftModeChange(int cycle) {
+inline int TShifter::PreviousShiftModeChange(int cycle,int value) {
   // return cycle of previous change before this cycle
   int t=cycle+LINECYCLE0; // convert to absolute
-  int i,j;
-  for(i=shifter_shift_mode_change_idx,j=0
+  int idx,i,j;
+  for(idx=-1,i=shifter_shift_mode_change_idx,j=0
     ; shifter_shift_mode_change_time[i]-t>=0 && j<32
-    ; i--,i&=31,j++) ;
-  if(shifter_shift_mode_change_time[i]-t<0)
-    return shifter_shift_mode_change_time[i]-LINECYCLE0;
+    ; i--,i&=31,j++) 
+    if(value==-1 || shifter_shift_mode_change[i]==value)
+      idx=i;
+  if(idx!=-1 && shifter_shift_mode_change_time[idx]-t<0)
+    return shifter_shift_mode_change_time[idx]-LINECYCLE0;
   return -1;
 }
 
