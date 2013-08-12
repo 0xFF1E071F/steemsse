@@ -460,10 +460,11 @@ void TShifter::CheckSideOverscan() {
   // DESTABILISATION //
   /////////////////////
 
-/*  Here we try to emulate the effect of a MED/LOW switch during DE.
-    Preliminary.
-    Option Wake-up state must be set to 2, not because only WU state 2
-    works on a ST, but to isolate this from "normal" emulation.
+/*  Detect MED/LO switches during DE.
+    This will load some words into the shifter, the shifter will start displaying
+    shifted planes and shifted pixels in low res.
+    In Steem's current rendering system, we must use indirect ways, we miss a
+    'shift' function.
 */
 
 #if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_UNSTABLE)
@@ -488,7 +489,7 @@ detect unstable: switch MED/LOW - Beeshift
         int cycles_in_med=r0cycle-r1cycle;
         if(cycles_in_med<=20) 
           Preload=cycles_in_med/4;  // at least it tries to make sense
-//        TRACE("y%d R1 %d R0 %d cycles in med %d\n",scan_y,r1cycle,r0cycle,cycles_in_med);
+//        TRACE("y%d R1 %d R0 %d cycles in med %d Preload %d\n",scan_y,r1cycle,r0cycle,cycles_in_med,Preload);
       }
     }
   }
@@ -503,20 +504,48 @@ detect unstable: switch MED/LOW - Beeshift
     DOLB: 3 words preloaded but it becomes 2 due to left off:
     SDP+4   pixels -4
     Dragon: 1 word preloaded    SDP+6   pixels -12
-    Dragon: 1 word preloaded   SDP-2   pixels +4  looks better though but
-    we don't bother for now.
     (4-preload)*2 = shift SDP ?
     It could be that both determining preload and using preload are wrong!
 */
   
-  if(ST_TYPE==STF && WAKE_UP_STATE // 1 & 2
+  if( ST_TYPE==STF && WAKE_UP_STATE // 1 & 2
     && Preload && !(CurrentScanline.Tricks&TRICK_UNSTABLE)
-    && CyclesIn>40) // wait for left-off check
+    //&& CyclesIn>40   // wait for left-off check
+    ) 
   {
-    ShiftSDP((4-Preload)*2);
-    HblPixelShift=(4-Preload)*4;
-    if(Preload==2&&(CurrentScanline.Tricks&TRICK_LINE_PLUS_26))
-      HblPixelShift-=4;
+    ASSERT( Preload>0 && Preload<6 );
+
+/*
+8 -> 2 words -> -8       86-94
+12 -> 3 words -> -12     86-98
+16 -> 4 words -> 0
+20 -> 5 words -> -4
+
+cycles words	MOD	SDP 	pixel
+				
+8	  2	2	4	8
+12	3	3	6	12
+16	4	0	0	0
+20	5	1	2	4
+
+*/ 
+    // with this instead of 4-preload, Omega shift is bad, but it could
+    // be due to another problem (line+2)?
+    int shift_sdp=-(Preload%4)*2;
+    if(left_border&&Preload>1)
+    {
+      left_border-=(Preload%4)*4; // more like real thing for bee
+      right_border+=(Preload%4)*4; // but abuse of system
+      if(shift_sdp)
+        shift_sdp+=8; // hack
+    }
+    else  //  we'd prefer the rest to be handled by this...
+    {
+      HblPixelShift=(Preload%4)*4;
+      if(SSE_HACKS_ON)
+        HblPixelShift=-HblPixelShift; //(- for Dragon, temp hack)
+    }
+    ShiftSDP(shift_sdp); // correct plane shift
     CurrentScanline.Tricks|=TRICK_UNSTABLE;
   }
 #endif
@@ -1291,11 +1320,10 @@ void TShifter::EndHBL() {
     Left off, right off: 160+26+44=(28*8)+6 -> 3 words preloaded
     See doc by ST-CNX and LJBK's efforts at AF
     3.5.3
-    In which WU state it should work isn't clear.
-    We choose 1 now because Omega in WU2 would interfere with Beeshift.
+    In which WU state it should work isn't clear. TODO
 */
 
-  if( ST_TYPE==STF && WAKE_UP_STATE==1)
+  if( ST_TYPE==STF && WAKE_UP_STATE)//==1)
   {
     // Overdrive/Dragon
     if(CurrentScanline.Tricks==TRICK_LINE_PLUS_26)
@@ -1305,6 +1333,12 @@ void TShifter::EndHBL() {
       ==(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_44)
       &&!(CurrentScanline.Tricks&TRICK_STABILISER)) 
       Preload=3; // becomes 2 at first left off
+  }
+
+  if(CurrentScanline.Cycles==508 && FetchingLine()
+    && FreqAtCycle(0)==60 && FreqAtCycle(464)==60)
+  {
+    Preload=0; // a full 60hz scanline should reset the shifter
   }
   
 #endif
@@ -2102,8 +2136,9 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 void TShifter::Reset(bool Cold) {
   m_SyncMode=0; 
   m_ShiftMode=screen_res; // we know it's updated first, debug strange screen!
+#if defined(SS_DEBUG)
   nVbl=0; // cold or warm
-
+#endif
 #if defined(SS_SHIFTER_TRICKS)
   for(int i=0;i<32;i++)
   {
@@ -2342,7 +2377,12 @@ void TShifter::Vbl() {
   VideoEvents.Vbl(); 
 #endif
 //  m_nHbls=HBL_PER_FRAME;
-  nVbl++;
+#if defined(SS_DEBUG)
+  nVbl++; 
+#endif
+#if defined(SS_SHIFTER_UNSTABLE)
+  HblPixelShift=0;
+#endif
 }
 
 #undef LOGSECTION
