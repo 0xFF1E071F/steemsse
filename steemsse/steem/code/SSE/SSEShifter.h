@@ -181,8 +181,9 @@ struct TShifter {
   int m_SyncMode;//
 //  int m_nHbls; //313,263,501 //not used yet
   int TrickExecuted; //make sure that each trick will only be applied once
+#if defined(SS_DEBUG)
   int nVbl;
-
+#endif
 #if defined(SS_SHIFTER_UNSTABLE)
   BYTE Preload; // #words into shifter's RR (shifts display)
 #endif
