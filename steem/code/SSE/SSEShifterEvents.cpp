@@ -35,7 +35,7 @@ int TVideoEvents::Report() {
       if(m_VideoEvent[i].Scanline!=j)
       {
         j=m_VideoEvent[i].Scanline;
-        fprintf(fp,"\nLine %03d -",j);
+        fprintf(fp,"\n%03d -",j);
       }
       if(m_VideoEvent[i].Type=='F' || m_VideoEvent[i].Type=='C' 
         || m_VideoEvent[i].Type=='#') // decimal
