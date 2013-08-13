@@ -261,7 +261,7 @@ void TShifter::CheckSideOverscan() {
     Cuddly Demos (not patched)
     Musical Wonder 1991
     Imagination/Roller Coaster SNYD/TCB
-    Omega (cycle 8 is only apparent)
+    Omega (cycle 8 is only apparent)  ?
     Overscan Demos original
     SNYD/TCB (F4)
     SNYD2/Sync fullscreen (F5)
@@ -368,7 +368,13 @@ void TShifter::CheckSideOverscan() {
       {
         if(shifter_freq_at_start_of_vbl==50) 
         {
+/*  Cases where we see that this shift is necessary:
+    - Oh Crikey What a Scorcher Hidden Screen ULM: obvious shift
+    - Overdrive/Dragon
+    - Overscan Demos #6 (strangely)
+*/
           shifter_pixel+=4;
+
           overscan_add_extra+=2;  // 8 + 2 + 16 = 26
         }
         CurrentScanline.Bytes+=26;
@@ -501,16 +507,15 @@ detect unstable: switch MED/LOW - Beeshift
     stabiliser or a MED/LOW switch, or a line+230 without stabiliser:
     apply effect
     Note this isn't exact science, it's in development.
-    DOLB: 3 words preloaded but it becomes 2 due to left off:
-    SDP+4   pixels -4
-    Dragon: 1 word preloaded    SDP+6   pixels -12
-    (4-preload)*2 = shift SDP ?
+    DOLB, Omega: 3 words preloaded but it becomes 2 due to left off
+    Dragon: 1 word preloaded    
+    
     It could be that both determining preload and using preload are wrong!
 */
   
   if( ST_TYPE==STF && WAKE_UP_STATE // 1 & 2
     && Preload && !(CurrentScanline.Tricks&TRICK_UNSTABLE)
-    //&& CyclesIn>40   // wait for left-off check
+    && CyclesIn>40   // wait for left-off check (->Preload--, Omega)
     ) 
   {
     ASSERT( Preload>0 && Preload<6 );
@@ -529,23 +534,26 @@ cycles words	MOD	SDP 	pixel
 20	5	1	2	4
 
 */ 
-    // with this instead of 4-preload, Omega shift is bad, but it could
-    // be due to another problem (line+2)?
-    int shift_sdp=-(Preload%4)*2;
-    if(left_border&&Preload>1)
-    {
-      left_border-=(Preload%4)*4; // more like real thing for bee
-      right_border+=(Preload%4)*4; // but abuse of system
-      if(shift_sdp)
-        shift_sdp+=8; // hack
-    }
-    else  //  we'd prefer the rest to be handled by this...
-    {
-      HblPixelShift=(Preload%4)*4;
-      if(SSE_HACKS_ON)
-        HblPixelShift=-HblPixelShift; //(- for Dragon, temp hack)
-    }
+
+    // 1. planes
+    int shift_sdp=-(Preload%4)*2; // unique formula
+    if(Preload>1 && shift_sdp) // but...
+      shift_sdp+=8; // hack!
     ShiftSDP(shift_sdp); // correct plane shift
+    // 2. pixels
+    // Beeshift, the full frame shifts in the border
+    if(left_border)
+    {
+      left_border-=(Preload%4)*4;
+      right_border+=(Preload%4)*4;
+    }
+    else  //  hack for DOLB, Omega, centering the pic
+    {
+      if(SSE_HACKS_ON)
+        HblPixelShift=4; 
+    }
+//    TRACE_LOG("Y%d Preload %d shift SDP %d pixels %d lb %d rb %d\n",scan_y,Preload,shift_sdp,HblPixelShift,left_border,right_border);
+
     CurrentScanline.Tricks|=TRICK_UNSTABLE;
   }
 #endif
@@ -640,7 +648,6 @@ cycles words	MOD	SDP 	pixel
 
   if(!left_border && !(TrickExecuted&TRICK_OVERSCAN_MED_RES))
   {
-    //ASSERT( mixed_output );
     // look for switch to R1
     r1cycle=CycleOfLastChangeToShiftMode(1);
     if(r1cycle>16 && r1cycle<=40)
@@ -750,7 +757,12 @@ cycles words	MOD	SDP 	pixel
 */
 
   // Steem test
-  if(shifter_freq_at_start_of_vbl==50 && left_border==BORDER_SIDE
+  if(shifter_freq_at_start_of_vbl==50 
+    && (left_border==BORDER_SIDE
+#if defined(SS_SHIFTER_UNSTABLE)
+    || (CurrentScanline.Tricks&TRICK_UNSTABLE) 
+#endif
+    )
     &&!(TrickExecuted&TRICK_LINE_PLUS_2))
   {   
 #if defined(SS_SHIFTER_LINE_PLUS_2_THRESHOLD)
@@ -767,6 +779,7 @@ cycles words	MOD	SDP 	pixel
     if(act-t>0) 
     {
       i=CheckFreq(t);
+
       if(i>=0 && shifter_freq_change[i]==60)
       {
         CurrentScanline.Tricks|=TRICK_LINE_PLUS_2;
@@ -778,7 +791,7 @@ cycles words	MOD	SDP 	pixel
   if((CurrentScanline.Tricks&TRICK_LINE_PLUS_2)
     && !(TrickExecuted&TRICK_LINE_PLUS_2))
   {
-    ASSERT(left_border==BORDER_SIDE);
+//    ASSERT(left_border==BORDER_SIDE);
     ASSERT(!(CurrentScanline.Tricks&TRICK_LINE_MINUS_2));
 //    ASSERT(CurrentScanline.Cycles==512);
     left_border-=4; // 2 bytes -> 4 cycles
@@ -960,15 +973,20 @@ cycles words	MOD	SDP 	pixel
         && FreqAtCycle(threshold)==50
 #endif
         && shifter_freq_change_time[i]-LINECYCLE0>372 
+        )
+      {
+
 #if defined(SS_SHIFTER_OMEGA)
 /*  Wrong cycle! It really hits at 372 but Steem is confused by the 508 cycles
     lines. Hatari hasn't that problem. It's hard to fix.TODO
 */
-        &&(!(CurrentScanline.Cycles==508 
-            && FreqChangeAtCycle(376)==60) || !SSE_HACKS_ON)
+        if(SSE_HACKS_ON && CurrentScanline.Cycles==508
+          && FreqChangeAtCycle(376)==60)
+        {
+          TRACE_LOG("Spurious right off\n");
+        }
+        else
 #endif
-        )
-      {
         CurrentScanline.Tricks|=TRICK_LINE_PLUS_44;
       }
     }
