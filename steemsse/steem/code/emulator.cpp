@@ -612,8 +612,6 @@ int agenda_get_queue_pos(LPAGENDAPROC job)
 */
 void agenda_acia_tx_delay_IKBD(int)
 {
-jdjddj
-
 #if defined(SS_ACIA_REGISTERS)
   ACIA_IKBD.SR|=BIT_1; // TDRE
   if( (ACIA_IKBD.CR&BIT_5)&&!(ACIA_IKBD.CR&BIT_6) ) // IRQ transmit enabled
@@ -648,7 +646,6 @@ jdjddj
 
 void agenda_acia_tx_delay_IKBD(int)
 {
-  dfdf
 #if defined(STEVEN_SEAGAL) && defined(SS_ACIA_REGISTERS)
   ACIA_IKBD.SR|=BIT_1; // TDRE
   if( (ACIA_IKBD.CR&BIT_5)&&!(ACIA_IKBD.CR&BIT_6) ) // IRQ transmit enabled

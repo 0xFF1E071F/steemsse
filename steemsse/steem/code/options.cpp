@@ -1007,7 +1007,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
 	  break;
 #endif
-#if defined(SS_MMU_WAKE_UP) // 0,1,2
+#if defined(SS_MMU_WAKE_UP) // 0,1,2 +3=panic
         case 212:
           if (HIWORD(wPar)==CBN_SELENDOK)
           {

@@ -215,10 +215,17 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 #if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
         ACIA_IKBD.tx_flag=true; // = TDRE clear (TDR not free)
 #endif
+
+        /*
 #if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)\
-  || defined(SS_ACIA_TDR_COPY_DELAY)
+     || defined(SS_ACIA_TDR_COPY_DELAY)
+#if defined(SS_ACIA_TDR_COPY_DELAY)
+        if(abs(ACT-ACIA_IKBD.last_tx_write_time)>ACIA_TDR_COPY_DELAY)
+#endif        
         ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
 #endif
+*/
+
 #if !defined(SS_IKBD_MANAGE_ACIA_TX)
 /*  We do this in ikbd.cpp together with handling the byte, it's an 
     optimisation (one agenda instead of two).
@@ -261,9 +268,14 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
     v3.5.2:
     If the ACIA is shifting and already has a byte in TDR, the byte in TDR
     can be changed (High Fidelity Dreams).
+    We record the timing of 'tx' only if the line is free: Pandemonium Demos.
 */
         if(!ACIA_IKBD.LineTxBusy)
         {
+#if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)\
+     || defined(SS_ACIA_TDR_COPY_DELAY)
+          ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
+#endif
           HD6301.ReceiveByte(io_src_b);
 #if defined(SS_ACIA_REGISTERS)
           ACIA_IKBD.SR|=BIT_1; // TDRE free
@@ -284,9 +296,7 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
         else
         {
 #if defined(SS_DEBUG)
-          if(ACIA_IKBD.last_tx_write_time&&ACT-ACIA_IKBD.last_tx_write_time<512)
-            ;
-          else if(!ACIA_IKBD.ByteWaitingTx) // TDR was free 
+          if(!ACIA_IKBD.ByteWaitingTx) // TDR was free 
             TRACE_LOG("ACIA IKBD byte waiting $%X\n",io_src_b);
           else
             TRACE_LOG("ACIA IKBD new byte waiting $%X (instead of $%X)\n",io_src_b,ACIA_IKBD.TDR);

@@ -247,11 +247,10 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_CPU_DIV          // divide like Caesar
 #define SS_CPU_EXCEPTION    // crash like Windows 98
 #define SS_CPU_FETCH_IO     // fetch like a dog in outer space
-#define SS_CPU_3615GEN4_ULM // be from a new generation
 #define SS_CPU_MOVE_B       // move like a superstar
 #define SS_CPU_MOVE_W       
 #define SS_CPU_MOVE_L
-#define SS_CPU_POKE         // poke like a C64 (inline in VC6)
+#define SS_CPU_POKE         // poke like a C64 
 #define SS_CPU_PREFETCH     // prefetch like a dog
 #define SS_CPU_ROUNDING     // round like a rolling stone
 #define SS_CPU_TAS          // 4 cycles fewer if memory
@@ -283,6 +282,13 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #if defined(SS_CPU_FETCH_IO)
 #define SS_CPU_FETCH_IO_FULL // need all or nothing for: Union Demo!
+#endif
+
+#if defined(SS_CPU_POKE)
+//#define SS_CPU_3615GEN4_ULM //targeted for 36.15 GEN4 by ULM
+#define SS_CPU_CHECK_VIDEO_RAM_B
+#define SS_CPU_CHECK_VIDEO_RAM_L
+#define SS_CPU_CHECK_VIDEO_RAM_W // for 36.15 GEN4 by ULM
 #endif
 
 #if defined(SS_CPU_PREFETCH)
@@ -789,7 +795,12 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SHIFTER_STE_HSCROLL_LEFT_OFF //MOLZ/Spiral
 #define SS_SHIFTER_STE_VERTICAL_OVERSCAN //RGBeast
 #define SS_SHIFTER_UNSTABLE // DoLB, Omega, Overdrive/Dragon, Beeshift
-//#define SS_SHIFTER_UNSTABLE_LEFT_OFF // DoLB, Omega, Overdrive/Dragon
+#ifdef SS_SHIFTER_UNSTABLE
+#define SS_SHIFTER_HI_RES_SCROLLING // Beeshift2
+#define SS_SHIFTER_MED_RES_SCROLLING // Beeshift
+#define SS_SHIFTER_PANIC // funny effect, interleaved border bands
+#endif
+//#define SS_SHIFTER_UNSTABLE_LEFT_OFF // DoLB, Omega, Overdrive/Dragon old hack
 
 #if defined(SS_STF)
 #define SS_STF_VERTICAL_OVERSCAN
@@ -829,9 +840,11 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(SS_DEBUG) 
 //#define SS_SHIFTER_DRAW_DBG  // totally bypass CheckSideOverscan() & Render()
 #define SS_SHIFTER_EVENTS // recording all shifter events in a frame
-//#define SS_SHIFTER_EVENTS_PAL // also for palette
+#define SS_SHIFTER_EVENTS_PAL // also for palette
 #define SS_SHIFTER_EVENTS_READ_SDP // also for read SDP
+//#define SS_SHIFTER_EVENTS_BYTES // scanline length
 #define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
+#define SS_SHIFTER_EVENTS_TRICKS // "bordermask"
 #if !defined(SS_DEBUG_TRACE_IDE)
 #define SS_SHIFTER_REPORT_VBL_TRICKS // a line each VBL
 #endif
@@ -1099,7 +1112,9 @@ problem, multiple struct/class definition not allowed?
 #endif
 
 #if !defined(SS_ACIA_DOUBLE_BUFFER_RX) || !defined(SS_ACIA_DOUBLE_BUFFER_TX)
+#undef SS_ACIA_TDR_COPY_DELAY
 #undef SS_ACIA_USE_REGISTERS
+#undef SS_IKBD_MANAGE_ACIA_TX
 #endif
 
 #if !defined(SS_DMA)

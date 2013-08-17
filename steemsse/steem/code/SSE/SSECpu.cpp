@@ -1167,6 +1167,20 @@ void m68k_poke_abus2(BYTE x){
     } //otherwise throw away
   }else{
     DEBUG_CHECK_WRITE_B(abus);
+#if defined(SS_CPU_CHECK_VIDEO_RAM_B)
+/*  If we're going to write in video RAM of the current scanline,
+    we check whether we need to render before. Some programs write
+    just after the memory has been fetched, but Steem renders at
+    shifter events, and if nothing happens, at the end of the line.
+    So if we do nothing it will render wrong memory.
+    The test isn't perfect and will cause some "false alerts" but
+    we have performance in mind.
+*/
+    if(Shifter.FetchingLine() 
+      && abus>=shifter_draw_pointer
+      && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2)
+      Shifter.Render(LINECYCLES,DISPATCHER_CPU); 
+#endif
     if (SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)
       PEEK(abus)=x;
     else if (abus>=MEM_START_OF_USER_AREA)
@@ -1216,6 +1230,12 @@ void m68k_dpoke_abus2(WORD x){
     } //otherwise throw away
   }else{
     DEBUG_CHECK_WRITE_W(abus);
+#if defined(SS_CPU_CHECK_VIDEO_RAM_W) // 3615 GEN4
+    if(Shifter.FetchingLine() 
+      && abus>=shifter_draw_pointer
+      && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2)
+      Shifter.Render(LINECYCLES,DISPATCHER_CPU); 
+#endif
     if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)
       DPEEK(abus)=x;
     else if(abus>=MEM_START_OF_USER_AREA)
@@ -1252,6 +1272,12 @@ void m68k_lpoke_abus2(LONG x){
     } //otherwise throw away
   }else{
     DEBUG_CHECK_WRITE_L(abus);
+#if defined(SS_CPU_CHECK_VIDEO_RAM_L)
+    if(Shifter.FetchingLine() 
+      && abus>=shifter_draw_pointer
+      && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2)
+      Shifter.Render(LINECYCLES,DISPATCHER_CPU); 
+#endif
     if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)
       LPEEK(abus)=x;
     else if(abus>=MEM_START_OF_USER_AREA)
