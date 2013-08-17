@@ -2006,6 +2006,9 @@ void TOptionBox::CreateSSEPage() {
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Ignore wake-up state"));
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Wake-up state 1"));
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Wake-up state 2"));
+#if defined(SS_SHIFTER_PANIC)
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Wake-up state bad display")); //3
+#endif
   SendMessage(MMUWakeUpOption,CB_SETCURSEL,WAKE_UP_STATE,0);
   y+=LineHeight;
 #endif

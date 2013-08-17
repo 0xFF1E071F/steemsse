@@ -186,6 +186,9 @@ struct TShifter {
 #endif
 #if defined(SS_SHIFTER_UNSTABLE)
   BYTE Preload; // #words into shifter's RR (shifts display)
+#if defined(SS_SHIFTER_PANIC)
+  DWORD Scanline[230/4+2]; // the price of fun
+#endif
 #endif
 
 };
