@@ -36,7 +36,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_INTERRUPTS ] = 0;
   logsection_enabled[ LOGSECTION_TRAP ] = 0;
   logsection_enabled[ LOGSECTION_SOUND ] = 0;
-  logsection_enabled[ LOGSECTION_VIDEO ] = 1;
+  logsection_enabled[ LOGSECTION_VIDEO ] = 0;
   logsection_enabled[ LOGSECTION_BLITTER ] = 0;
   logsection_enabled[ LOGSECTION_MIDI ] = 0;
   logsection_enabled[ LOGSECTION_TRACE ] = 0;
@@ -71,13 +71,10 @@ TDebug::TDebug() {
   hd6301_trace=&TDebug::TraceLog;
 #endif
 
-#if defined(SS_CPU_PREFETCH_DETECT_IRC_TRICK)
-  CpuPrefetchDiffDetected=false;
+#if defined(SS_OSD_DEBUG_MESSAGE)
+  TraceOsd("Debug Build"); // implies clean init
 #endif
 
-#if defined(SS_CPU_TRACE_DETECT)
-  CpuTraceDetected=false;
-#endif
 }
 
 
@@ -85,12 +82,11 @@ TDebug::~TDebug() {
 #if defined(SS_DEBUG_TRACE_FILE)
   if(trace_file_pointer)
   {
-    TRACE("Closing TRACE file...\n"); 
+    TRACE("Closing TRACE file...\n"); // silly but it shows it's OK
     fclose(trace_file_pointer);
   }
 #endif
 }
-
 
 
 #if defined(SS_DEBUG_TRACE)
@@ -139,55 +135,6 @@ void TDebug::Trace(char *fmt, ...){
 
 }
 
-void TDebug::TraceLog(char *fmt, ...) { // static
-  ASSERT(Debug.LogSection>=0 && Debug.LogSection<100);
-  if(Debug.LogSection<NUM_LOGSECTIONS && Debug.logsection_enabled[Debug.LogSection]
-#if defined(DEBUG_BUILD)
-    ||::logsection_enabled[Debug.LogSection] 
-#endif
-    )
-  {
-    // we must replicate the Trace body because passing ... arguments isn't
-    // trivial (TODO)
-    va_list body;	
-    va_start(body, fmt);
-#if defined(SS_UNIX)
-    int nchars=vsnprintf(Debug.trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
-#else
-    int nchars=_vsnprintf(Debug.trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
-#endif
-
-    va_end(body);	
-
-    if(nchars==-1)
-      strcpy(Debug.trace_buffer,"TRACE buffer overrun\n");
-
-#if defined(SS_DEBUG_TRACE_IDE) && defined(WIN32)
-    OutputDebugString(Debug.trace_buffer);
-#endif
-
-#if defined(SS_UNIX_TRACE)
-    if(!USE_TRACE_FILE)
-      fprintf(stderr,Debug.trace_buffer);
-#endif 
-    
-#if defined(SS_DEBUG_TRACE_FILE)
-#if defined(DEBUG_BUILD) || defined(SS_UNIX)
-    if(USE_TRACE_FILE)
-#endif      
-      printf(Debug.trace_buffer),Debug.nTrace++; 
-    if(TRACE_FILE_REWIND && Debug.nTrace>=TRACE_MAX_WRITES)
-    {
-      Debug.nTrace=0;
-      rewind(Debug.trace_file_pointer); // it doesn't erase
-      TRACE("\n============\nREWIND TRACE\n============\n");
-    }
-#endif
-  }
-}
-
-#endif
-
 
 #if defined(SS_DEBUG_START_STOP_INFO)
 // A series of TRACE giving precious info at the start & end of emulation
@@ -200,7 +147,8 @@ extern int dma_sound_bass,dma_sound_treble;
 #endif
 #endif
 
-void TDebug::ReportGeneralInfos(int when) {
+
+void TDebug::TraceGeneralInfos(int when) {
   
   if(when==START)
   {
@@ -273,4 +221,77 @@ void TDebug::ReportGeneralInfos(int when) {
 }
 #endif
 
+
+void TDebug::TraceLog(char *fmt, ...) { // static
+  ASSERT(Debug.LogSection>=0 && Debug.LogSection<100);
+  if(Debug.LogSection<NUM_LOGSECTIONS && Debug.logsection_enabled[Debug.LogSection]
+#if defined(DEBUG_BUILD)
+    ||::logsection_enabled[Debug.LogSection] 
 #endif
+    )
+  {
+    // we must replicate the Trace body because passing ... arguments isn't
+    // trivial (TODO)
+    va_list body;	
+    va_start(body, fmt);
+#if defined(SS_UNIX)
+    int nchars=vsnprintf(Debug.trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
+#else
+    int nchars=_vsnprintf(Debug.trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
+#endif
+
+    va_end(body);	
+
+    if(nchars==-1)
+      strcpy(Debug.trace_buffer,"TRACE buffer overrun\n");
+
+#if defined(SS_DEBUG_TRACE_IDE) && defined(WIN32)
+    OutputDebugString(Debug.trace_buffer);
+#endif
+
+#if defined(SS_UNIX_TRACE)
+    if(!USE_TRACE_FILE)
+      fprintf(stderr,Debug.trace_buffer);
+#endif 
+    
+#if defined(SS_DEBUG_TRACE_FILE)
+#if defined(DEBUG_BUILD) || defined(SS_UNIX)
+    if(USE_TRACE_FILE)
+#endif      
+      printf(Debug.trace_buffer),Debug.nTrace++; 
+    if(TRACE_FILE_REWIND && Debug.nTrace>=TRACE_MAX_WRITES)
+    {
+      Debug.nTrace=0;
+      rewind(Debug.trace_file_pointer); // it doesn't erase
+      TRACE("\n============\nREWIND TRACE\n============\n");
+    }
+#endif
+  }
+}
+
+#endif
+
+
+#if defined(SS_OSD_DEBUG_MESSAGE)
+/*  This is a little something that will help a lot.
+    Current systems are powerful enough to accomodate a lot of those
+    messages, eg when the CPU is in trace mode (Transbeauce 2).
+*/  
+void TDebug::TraceOsd(char *fmt, ...) {
+
+  va_list body;	
+  va_start(body, fmt);	
+#if defined(SS_UNIX)
+  int nchars=vsnprintf(m_OsdMessage,OSD_DEBUG_MESSAGE_LENGTH,fmt,body); // check for overrun 
+#else
+  int nchars=_vsnprintf(m_OsdMessage,OSD_DEBUG_MESSAGE_LENGTH,fmt,body); // check for overrun 
+#endif
+  va_end(body);	
+  strupr(m_OsdMessage); // OSD font is upper-only
+//  TRACE("osdinfo %s %d %d\n",Debug.m_OsdMessage,Debug.OsdTimer,timer);
+  OsdTimer=timer+OSD_DEBUG_MESSAGE_TIME*1000;
+}
+#endif
+
+
+#endif//#if defined(SS_DEBUG) 

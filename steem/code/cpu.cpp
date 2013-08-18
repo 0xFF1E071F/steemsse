@@ -993,12 +993,8 @@ extern "C" ASMCALL void m68k_trace() //execute instruction with trace bit set
 
   ASSERT( sr&SR_TRACE );
 
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_TRACE_DETECT) && defined(SS_DEBUG)
-  if(!Debug.CpuTraceDetected) 
-  {
-    OsdControl.StartScroller("CPU trace mode!");
-    Debug.CpuTraceDetected=true;
-  }
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_TRACE_DETECT)
+  TRACE_OSD("TRACE");
 #endif
 
   LOG_CPU

@@ -1535,26 +1535,25 @@ void HandleKeyPress(UINT VKCode,bool Up,int Extended)
     ){
     ST_Key_Down[STCode]=!Up; // this is used by ikbd.cpp & ireg.c
 
+
+#if defined(SS_DEBUG) //&& defined(SS_IKBD_6301_TRACE_KEYS)
+#define LOGSECTION LOGSECTION_IKBD
+    TRACE_LOG("Key PC $%X ST $%X ",VKCode,STCode);
+    TRACE_LOG( (Up) ? "-\n" : "+\n");
+#undef LOGSECTION
+#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
 /*  We don't write in a buffer, 6301 emu will do it after having scanned
     ST_Key_Down.
 */
-    if(HD6301EMU_ON)
-    { 
-#if defined(SS_DEBUG) && defined(SS_IKBD_6301_TRACE_KEYS)
-#define LOGSECTION LOGSECTION_IKBD
-      TRACE_LOG("Key PC $%X ST $%X ",VKCode,STCode);
-      TRACE_LOG( (Up) ? "-\n" : "+\n");
-#undef LOGSECTION
-#endif
-    }
-    else
+    if(!HD6301EMU_ON)
     {
-// The break code for each key is obtained by ORing 0x80 with the make code:
       if (Up) STCode|=MSB_B; // MSB_B = $80
       keyboard_buffer_write_n_record(STCode);
     }
 #else  // Steem 3.2
+// The break code for each key is obtained by ORing 0x80 with the make code:
     if (Up) STCode|=MSB_B; // MSB_B = $80
     keyboard_buffer_write_n_record(STCode);
 #endif

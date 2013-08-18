@@ -30,7 +30,7 @@ maps all sorts of user input to all sorts of emulator functions.
 
 enum {
   CUT_TOGGLEHARDDRIVES=231,
-#if defined(SS_SHIFTER_EVENTS)
+#if defined(SS_SHIFTER_EVENTS) && !defined(SS_SHIFTER_EVENTS_ON_STOP)
   CUT_REPORTSHIFTERTRICKS,
 #endif
 #if defined(SS_VID_RECORD_AVI)
@@ -66,7 +66,7 @@ const char *ShortcutNames[NUM_SHORTCUTS*2]=
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS)
 	"Toggle Hard Drives On/Off",(char*)CUT_TOGGLEHARDDRIVES,
-#if defined(SS_SHIFTER_EVENTS)
+#if defined(SS_SHIFTER_EVENTS) && !defined(SS_SHIFTER_EVENTS_ON_STOP)
    "Report shifter tricks",(char*)CUT_REPORTSHIFTERTRICKS,
 #endif
 #if defined(SS_VID_RECORD_AVI)
@@ -586,7 +586,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       HardDiskMan.DisableHardDrives=!HardDiskMan.DisableHardDrives;	// toggle
       HardDiskMan.update_mount();
       break;
-#if defined(SS_SHIFTER_EVENTS)
+#if defined(SS_SHIFTER_EVENTS) && !defined(SS_SHIFTER_EVENTS_ON_STOP)
       // Trigger a report of all video events for the current VBL
       // so as to investigate shifter tricks (txt file)
     case CUT_REPORTSHIFTERTRICKS:	

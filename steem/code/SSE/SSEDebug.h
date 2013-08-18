@@ -8,6 +8,8 @@
     We use '__cplusplus' to make some parts accessible to C objects.
 */
 
+#include "SSEParameters.h"
+
 #if defined(SS_DEBUG_TRACE_FILE)
 #include <stdio.h>
 #endif
@@ -45,21 +47,26 @@ struct TDebug {
 
 #ifdef __cplusplus // visible only to C++ objects
 
-#if defined(SS_CPU_PREFETCH_TRACE)
-  bool CpuPrefetchDiffDetected;
-#endif
-#if defined(SS_CPU_TRACE_DETECT)
-  bool CpuTraceDetected;
-#endif
-
 #if defined(SS_DEBUG_START_STOP_INFO)
   enum {START,STOP} ;
-  void ReportGeneralInfos(int when);
+  void TraceGeneralInfos(int when);
+#endif
+
+#if defined(SS_OSD_DEBUG_MESSAGE)
+  char m_OsdMessage[OSD_DEBUG_MESSAGE_LENGTH+1]; // +null as usual
+  void TraceOsd(char *fmt, ...);
+  unsigned long OsdTimer;
+#define TRACE_OSD Debug.TraceOsd
+#else
+
+#define TRACE_OSD(X)
+
 #endif
 
 #endif//c++
   int logsection_enabled[100]; // we want a double anyway //bool
   int LogSection;
+
 };
 
 extern struct TDebug Debug;

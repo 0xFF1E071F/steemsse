@@ -201,6 +201,11 @@ bool osd_is_on(bool timed_only)
 void osd_draw()
 {
 #ifndef ONEGAME
+/*
+  ASSERT( !osd_no_draw );
+  ASSERT( !osd_disable );
+  TRACE("osd F%d\n",FRAME);
+*/
   if (osd_no_draw || osd_disable) return;
 
   int x1,y1;
@@ -277,8 +282,8 @@ void osd_draw()
     if (frame==14){
       x=x1/2-OSD_LOGO_W/2;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_LOGO)
-// hack to display correct version number (temp)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_LOGO2)
+// hack to display correct version number (temp) - and do we even need it?
 #define THE_LEFT (0)
 #define THE_RIGHT ((x1))
 #define BUFFER_LENGTH 35
@@ -405,7 +410,31 @@ void osd_draw()
       }
     }
   }
-  
+
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DEBUG_MESSAGE)
+  if(Debug.OsdTimer>timer)
+  {
+//    TRACE("osd %s %d %d\n",Debug.m_OsdMessage,Debug.OsdTimer,timer);
+    DWORD col=col_yellow[0];
+#define THE_LEFT 0//(x1/2)
+#define THE_RIGHT (x1/2)//((x1))
+    // TODO refactor in basic function?
+    RECT cliprect={THE_LEFT,0,THE_RIGHT,y1};
+    int x=0;
+    int start_y=0+8;
+    for(unsigned int i=0;i<strlen(Debug.m_OsdMessage);i++)
+    {
+      int n= (int)(Debug.m_OsdMessage[i]) + (60-33);
+      if (n>=60 && n<120)
+        osd_draw_char_clipped(osd_font+(n*64),draw_mem,x,start_y+PLASMA_H/2-OSD_LOGO_H/2,draw_line_length,col,32,&cliprect);
+      x+=16;
+    }//nxt i
+    if (draw_grille_black<4) draw_grille_black=4;
+#undef THE_LEFT
+#undef THE_RIGHT
+#undef BUFFER_LENGTH
+  }
+#endif
   
   if(osd_show_disk_light 
 #if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_INFO)
