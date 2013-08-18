@@ -4,9 +4,7 @@
 
 #include "SSEOption.h"
 
-// TODO: Brataccas
-
-// note most useful code is in 3rdparty folder '6301'
+// note most useful emulation code is in 3rdparty folder '6301'
 
 THD6301 HD6301; // singleton
 
@@ -30,17 +28,19 @@ void THD6301::Init() { // called in 'main'
   else
   {
     TRACE_LOG("HD6301 emu NOT initialised\n");
+    TRACE_OSD("NO HD6301");
     HD6301EMU_ON=0;
   }
 }
 
 #undef LOGSECTION//init
+#define LOGSECTION LOGSECTION_IKBD
 
 #if defined(SS_DEBUG)
 /*  This should work for both 'fake' and 'true' 6301 emulation.
     We know command codes & parameters, we report this info through trace.
-    We must accept that other traces will interfere, so we report only
-    when the command is complete (progress on v3.5.0)
+    when the command is complete.
+    3.5.3: bugfix IKBD reprogramming mess
 */
 void THD6301::InterpretCommand(BYTE ByteIn) {
 
@@ -51,9 +51,9 @@ void THD6301::InterpretCommand(BYTE ByteIn) {
   // custom program (boot) loading?
   else if(CustomProgram==CUSTOM_PROGRAM_LOADING)
   {
-    Parameter[CurrentParameter]--;
-    if(Parameter[CurrentParameter])
-      CustomProgram=CUSTOM_PROGRAM_LOADED;
+    Parameter[CurrentParameter-1]--;   // bugfix 1
+    if(!Parameter[CurrentParameter-1])  // bugfix 2
+      CustomProgram=CUSTOM_PROGRAM_LOADED; // we don't try and ID the program
   }
   // new command?
   else if(CurrentCommand==-1 && ByteIn) 
@@ -121,6 +121,7 @@ void THD6301::InterpretCommand(BYTE ByteIn) {
     // how to treat further bytes?
     switch(CurrentCommand) {
     case 0x20:
+      TRACE_LOG("Loading %d bytes\n",Parameter[CurrentParameter-1]);
       CustomProgram=CUSTOM_PROGRAM_LOADING;
       break;
     case 0x22:
@@ -139,7 +140,7 @@ void THD6301::ReportCommand() {
   ASSERT( CurrentCommand!=-1 );
   // give command code
   TRACE_LOG("[IKBD interpreter $%02X ",CurrentCommand);
-  // spell out command
+  // spell out command (as in Atari manual)
   switch(CurrentCommand) {
     case 0x80: TRACE_LOG("RESET"); break;
     case 0x07: TRACE_LOG("SET MOUSE BUTTON ACTION"); break;
@@ -153,7 +154,10 @@ void THD6301::ReportCommand() {
     case 0x0E: TRACE_LOG("LOAD MOUSE POSITION"); break;
     case 0x19: TRACE_LOG("SET JOYSTICK KEYCODE MODE"); break;
     case 0x1B: TRACE_LOG("TIME-OF-DAY CLOCK SET"); break;
-    case 0x20: TRACE_LOG("MEMORY LOAD"); break;
+    case 0x20: 
+      TRACE_LOG("MEMORY LOAD"); 
+      TRACE_OSD("IKBD-PRG");
+      break;
     case 0x08: TRACE_LOG("SET RELATIVE MOUSE POSITION REPORTING"); break;
     case 0x0D: TRACE_LOG("INTERROGATE MOUSE POSITION"); break;
     case 0x0F: TRACE_LOG("SET Y=0 AT BOTTOM"); break;
@@ -176,7 +180,7 @@ void THD6301::ReportCommand() {
     case 0x92: TRACE_LOG("STATUS INQUIRY mouse enable/disable"); break;
     case 0x94: TRACE_LOG("STATUS INQUIRY joystick mode"); break;
     case 0x9A: TRACE_LOG("STATUS INQUIRY joystick enable/disable"); break;
-    default: TRACE_LOG("Unknown command %X",CurrentCommand);
+    default:   TRACE_LOG("Unknown command %X",CurrentCommand);
   }
   // list parameters if any
   if(nParameters)

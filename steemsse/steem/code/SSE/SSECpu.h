@@ -105,18 +105,11 @@ void m68k_lpoke_abus2(LONG);
 #endif
 
 // Finer names!
-#define IRC   prefetch_buf[1]
-#define IR    prefetch_buf[0]
-#define IRD   ir
+#define IRC   prefetch_buf[1] // Instruction Register Capture
+#define IR    prefetch_buf[0] // Instruction Register
+#define IRD   ir              // Instruction Register Decoder
 
-
-#include "SSEM68000.h" // there you go...
-
-
-
-
-
-
+#include "SSEM68000.h" // there you go... (TODO)
 
 #if defined(SS_CPU_TRUE_PC)
 #define TRUE_PC M68000.Pc
@@ -197,15 +190,12 @@ inline void TM68000::FetchWord(WORD &dest_word) {
     Operation Clean Streets (Auto 168)
 */
 #if defined(SS_CPU_PREFETCH_TRACE)
-      TRACE_LOG("Prefetched IRC:%X current:%X\n",prefetch_buf[1],*lpfetch);
-      if(IRC!=*lpfetch && !Debug.CpuPrefetchDiffDetected) 
-      {
-        OsdControl.StartScroller("CPU possible prefetch trick");
-        Debug.CpuPrefetchDiffDetected=true;
-      }
+      TRACE_LOG("Prefetched IRC:%X current:%X\n",IRC,*lpfetch);
+      TRACE_OSD("PREFETCH");
 #endif
-#if defined(SS_CPU_NO_PREFETCH)
-      prefetch_buf[1]=*lpfetch; // enabling this cancels prefetch (don't)
+
+#if defined(SS_BETA) && defined(SS_CPU_NO_PREFETCH)
+      IRC=*lpfetch; // enabling this cancels prefetch (don't)
 #endif
     }
     IR=IRC;
@@ -217,7 +207,7 @@ inline void TM68000::FetchWord(WORD &dest_word) {
   if(pc>=MEM_IO_BASE && !(pc>=0xff8240 && pc<0xff8260))
   {
     IR=io_read_w(pc);
-    TRACE_LOG("Fetch word %X in IO zone %X\n",prefetch_buf[0],pc);
+    TRACE_LOG("Fetch word %X in IO zone %X\n",IR,pc);
     return;
   }
   else
@@ -474,11 +464,11 @@ inline void TM68000::PrefetchIrc() {
   else
 #endif
   
-  IRC=*lpfetch; //prefetch_buf[1]=*lpfetch;
+  IRC=*lpfetch;
   prefetched_2=TRUE;
 #if defined(SS_CPU_PREFETCH_TIMING) // we count fetch timing here
 #if defined(SS_DEBUG) && !(defined(_DEBUG) && defined(DEBUG_BUILD))
-  //ASSERT(!NextIrFetched); //strong
+  ASSERT(!NextIrFetched); //strong
   if(NextIrFetched)
   {
     TRACE_LOG("PC %X IR %X double prefetch?\n",pc,ir);
@@ -510,7 +500,6 @@ inline void TM68000::PrefetchIrcNoRound() { // the same except no rounding
   }
   else
 #endif
-  //prefetch_buf[1]=*lpfetch;
   IRC=*lpfetch;
   prefetched_2=TRUE;
 #if defined(SS_CPU_PREFETCH_TIMING) // we count fetch timing here

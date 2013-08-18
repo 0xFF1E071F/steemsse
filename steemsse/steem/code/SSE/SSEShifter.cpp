@@ -1421,7 +1421,7 @@ void TShifter::EndHBL() {
 }
 
 
-int TShifter::IncScanline() { // a big extension of 'scan_y++'!
+void TShifter::IncScanline() { // a big extension of 'scan_y++'!
 
 #if defined(SS_DEBUG)
   Debug.ShifterTricks|=CurrentScanline.Tricks; // for frame
@@ -1486,7 +1486,6 @@ int TShifter::IncScanline() { // a big extension of 'scan_y++'!
   // buffers 2 rasters ahead. We don't do this so to make sdp correct at the
   // end of the line we must add a raster.  
   shifter_skip_raster_for_hscroll = HSCROLL!=0;//SS correct place?
-  return scan_y; // fancy
 }
 
 /*  For simplification, GLUE/MMU/Shifter IO is considered just shifter for what
@@ -1595,7 +1594,7 @@ BYTE TShifter::IORead(MEM_ADDRESS addr) {
   }
 #if defined(SS_SHIFTER_IOR_TRACE)
   // made possible by our structure change
-  TRACE("Shifter read %X=%X\n",addr,ior_byte);
+  TRACE("Shifter read %X=%X\n",addr,ior_byte); // not LOG
 #endif
   return ior_byte;
 }
@@ -1605,7 +1604,7 @@ void TShifter::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
 
   ASSERT( (addr&0xFFFF00)==0xff8200 );
 
-#if defined(SS_SHIFTER_IOW_TRACE)
+#if defined(SS_SHIFTER_IOW_TRACE)  // not LOG
   TRACE("(%d/%d) Shifter write %X=%X\n",scan_y,LINECYCLES,addr,io_src_b);
 #endif  
 
@@ -1670,7 +1669,7 @@ According to ST-CNX, those registers are in the MMU, not in the shifter.
 #endif
       // asserts on SoWatt, Leavin' Terramis, High Fidelity Dreams
       // ...
-//      ASSERT( mem_len>FOUR_MEGS || !(io_src_b&(~b00111111)) ); 
+      ASSERT( mem_len>FOUR_MEGS || !(io_src_b&(~b00111111)) ); 
       if (mem_len<=FOUR_MEGS) 
         io_src_b&=b00111111;
       DWORD_B_2(&xbios2)=io_src_b;

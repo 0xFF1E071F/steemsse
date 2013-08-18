@@ -216,16 +216,6 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
         ACIA_IKBD.tx_flag=true; // = TDRE clear (TDR not free)
 #endif
 
-        /*
-#if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)\
-     || defined(SS_ACIA_TDR_COPY_DELAY)
-#if defined(SS_ACIA_TDR_COPY_DELAY)
-        if(abs(ACT-ACIA_IKBD.last_tx_write_time)>ACIA_TDR_COPY_DELAY)
-#endif        
-        ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
-#endif
-*/
-
 #if !defined(SS_IKBD_MANAGE_ACIA_TX)
 /*  We do this in ikbd.cpp together with handling the byte, it's an 
     optimisation (one agenda instead of two).

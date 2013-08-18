@@ -879,6 +879,7 @@ void m68k_exception::crash() { // copied from cpu.cpp and improved
   {
     M68000.nExceptions++;  
     TRACE_LOG("\nException #%d, %d bombs (",M68000.nExceptions,bombs);
+    TRACE_OSD("%d-%d BOMBS",M68000.nExceptions,bombs);
     switch(bombs)
     {  
     case 2:
@@ -932,6 +933,7 @@ void m68k_exception::crash() { // copied from cpu.cpp and improved
       TRACE_LOG("A%d=%X ",i,areg[i]);
     TRACE_LOG("\n");
   }
+
 #endif
 
   if (sp<bytes_to_stack || sp>FOUR_MEGS)
@@ -1174,7 +1176,8 @@ void m68k_poke_abus2(BYTE x){
     shifter events, and if nothing happens, at the end of the line.
     So if we do nothing it will render wrong memory.
     The test isn't perfect and will cause some "false alerts" but
-    we have performance in mind.
+    we have performance in mind: CPU poke is used a lot, it is rare
+    when the address bus is around the current scanline.
 */
     if(Shifter.FetchingLine() 
       && abus>=shifter_draw_pointer

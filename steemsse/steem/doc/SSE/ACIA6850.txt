@@ -17,7 +17,11 @@ Brataccas
 Delirious 4 fake GEM
 Froggies over the Fence (Menu)
 Hades Nebula
+High Fidelity Dreams
+Nightdawn
 Overdrive by Phalanx
+Pandemonium Demos
+V8 Music System (ACIA/MFP)
 
 
 -------------------------------------------------------------------------------
@@ -120,11 +124,18 @@ be cleared.
 TDR will take a byte however, and this new byte will be shifted after the
 short delay.
 This explains why Delirious IV fails to center the mouse on a real ST as well.
+The byte may be replaced all the time before it's transferred, and after.
+But we must take care not to compute the delay relative to the last write,
+or the Pandemonium Demos menu won't appear.
+TODO: maybe it's a hack in v3.5.3, is it that SR would show "ready" for a
+very short time, which isn't emulated yet? But this demo worked before ACIA
+'enhancements'.
 
 Cases: 
 Delirious 4 fake GEM
 Hades Nebula
 Nightdawn
+Pandemonium Demos
 
 Based on those cases, we set the delay to 200 CPU cycles in Steem. 
 This isn't precise emulation, but it will work with those programs.

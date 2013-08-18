@@ -163,7 +163,7 @@ void run()
   log_write(">>> Start Emulation <<<");
 
 #if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_START_STOP_INFO)
-  Debug.ReportGeneralInfos(TDebug::START);
+  Debug.TraceGeneralInfos(TDebug::START);
 #endif
 
   DEBUG_ONLY( debug_first_instruction=true; ) // Don't break if running from breakpoint
@@ -302,7 +302,7 @@ void run()
   log_write(">>> Stop Emulation <<<");
 
 #if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_START_STOP_INFO)
-  Debug.ReportGeneralInfos(TDebug::STOP);
+  Debug.TraceGeneralInfos(TDebug::STOP);
 #endif
 
 #ifdef WIN32

@@ -129,6 +129,11 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define TRACE_MAX_WRITES 200000 // to avoid too big file
 #endif
 
+#if defined(SS_OSD_DEBUG_MESSAGE)
+#define OSD_DEBUG_MESSAGE_LENGTH 30 // in bytes
+#define OSD_DEBUG_MESSAGE_TIME 2 // in seconds
+#endif
+
 
 /////////
 // DMA //

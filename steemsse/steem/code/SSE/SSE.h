@@ -353,11 +353,9 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_CPU_YACHT_TAS // confirming what Steem authors suspected
 #endif
 
-#if defined(SS_DEBUG)
 //#define SS_CPU_PREFETCH_DETECT_IRC_TRICK // asserts 
 #define SS_CPU_PREFETCH_TRACE 
 #define SS_CPU_TRACE_DETECT 
-#endif
 
 #endif//prefetch
 
@@ -707,12 +705,16 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #if defined(SS_OSD)
 
+#ifdef SS_DEBUG
+#define SS_OSD_DEBUG_MESSAGE // pretty handy
+#endif
 #define SS_OSD_DRIVE_INFO // cool! (v3.5.1)
 #define SS_OSD_DRIVE_INFO2 // no SR when fast
 #define SS_OSD_DRIVE_LED
 #define SS_OSD_DRIVE_LED2 // simpler approach
 #define SS_OSD_DRIVE_LED3 // remove useless variable
-#define SS_OSD_LOGO //hack (temp)
+#define SS_OSD_LOGO // suppress former logo (=3.2 in grx)
+#define SS_OSD_LOGO2 //hack (temp)
 #define SS_OSD_SCROLLER_CONTROL
 
 #endif
@@ -985,7 +987,7 @@ problem, multiple struct/class definition not allowed?
 #define SS_TOS_PATCH106 // a silly bug, a silly hack
 #endif
 
-// fixes by other people:
+// fixes by other people: //TODO, another big category?
 #define SSE_AVTANDIL_FIX_001 // Russin TOS number
 #define SSE_MEGAR_FIX_001 // intercept GEM in extended resolution
 
@@ -1115,6 +1117,11 @@ problem, multiple struct/class definition not allowed?
 #undef SS_ACIA_TDR_COPY_DELAY
 #undef SS_ACIA_USE_REGISTERS
 #undef SS_IKBD_MANAGE_ACIA_TX
+#endif
+
+#if !defined(SS_DEBUG) || !defined(SS_OSD_DEBUG_MESSAGE)
+#undef SS_CPU_PREFETCH_TRACE 
+#undef SS_CPU_TRACE_DETECT 
 #endif
 
 #if !defined(SS_DMA)
