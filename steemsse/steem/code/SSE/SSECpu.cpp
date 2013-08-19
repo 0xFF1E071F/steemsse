@@ -1834,12 +1834,7 @@ void m68k_0010()  //move.l
     if((ir&BITS_876)==BITS_876_000 || (ir & BITS_876)==BITS_876_001)
       PREFETCH_IRC_NO_ROUND;
     else
-#ifdef TEST_01
-      PREFETCH_IRC_NO_ROUND;
-#else
       PREFETCH_IRC;
-#endif
-
   }
 #endif
 
@@ -1930,9 +1925,11 @@ void m68k_0011() //move.w
       INSTRUCTION_TIME(4);
 #endif
 #if defined(SS_CPU_PREFETCH_CLASS)
+#if defined(SS_CPU_PREFETCH_4PIXEL_RASTERS)
       M68000.PrefetchClass=0; 
-      PREFETCH_IRC; // fixes 4pixel Rasters demo
+      PREFETCH_IRC; // the timing here fixes 4pixel Rasters demo
       FETCH_TIMING;
+#endif
 #endif  
 #if defined(SS_CPU_PRE_DEC)
       UpdateAn=-2;
@@ -2037,12 +2034,7 @@ void m68k_0011() //move.w
     if((ir&BITS_876)==BITS_876_000 || (ir & BITS_876)==BITS_876_001)
       PREFETCH_IRC_NO_ROUND;
     else
-#ifdef TEST_01
-      PREFETCH_IRC_NO_ROUND;
-#else
       PREFETCH_IRC;
-#endif
-
   }
 
 #endif

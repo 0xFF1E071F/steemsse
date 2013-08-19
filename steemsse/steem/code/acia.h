@@ -63,7 +63,6 @@ struct ACIA_STRUCT{ // removed _ ..
     TDR,    // transmit data
     RDRS,   // receive data shift
     TDRS;   // transmit data shift
-//#endif
 #ifdef __cplusplus
   inline bool IrqForTx() { return ((CR&BIT_5)&&!(CR&BIT_6)); }
 #endif

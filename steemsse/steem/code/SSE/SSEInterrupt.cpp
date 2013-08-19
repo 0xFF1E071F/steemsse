@@ -1,6 +1,6 @@
 #if defined(SS_INTERRUPT)
 
-#if defined(SS_INT_JITTER) // from Hatari
+#if defined(SS_INT_JITTER) // from Hatari -TODO which is used?
   int HblJitter[] = {8,4,4,0,0}; 
   int HblJitterIndex=0;
   int VblJitter[] = {8,0,4,0,4}; 
@@ -8,7 +8,7 @@
 #endif
 
 #if defined(SS_INT_VBL_STF)
-  int HblTiming=HBL_FOR_STF;//444;
+  int HblTiming=HBL_FOR_STF;
 #endif
 
 #endif

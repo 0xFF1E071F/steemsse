@@ -56,18 +56,16 @@ struct TDebug {
   char m_OsdMessage[OSD_DEBUG_MESSAGE_LENGTH+1]; // +null as usual
   void TraceOsd(char *fmt, ...);
   unsigned long OsdTimer;
-#define TRACE_OSD Debug.TraceOsd
-#else
-
-#define TRACE_OSD(X)
-
 #endif
-
 #endif//c++
+
   int logsection_enabled[100]; // we want a double anyway //bool
   int LogSection;
 
 };
+
+
+
 
 extern struct TDebug Debug;
 
@@ -233,6 +231,19 @@ enum logsection_enum_tag {
 #define TRACE_LOG(x) // no code left?
 #else
 #define TRACE_LOG // some code left to the compiler
+#endif
+#endif
+
+// TRACE_OSD
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+#ifdef __cplusplus // visible only to C++ objects
+#define TRACE_OSD Debug.TraceOsd
+#endif//C++
+#else
+#if defined(VC_BUILD) // OK for Unix?
+#define TRACE_OSD(x) // no code left?
+#else
+#define TRACE_OSD(x) // some code left to the compiler
 #endif
 #endif
 

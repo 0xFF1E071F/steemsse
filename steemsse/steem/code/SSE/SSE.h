@@ -112,7 +112,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_PASTI      // Improvements in Pasti support
 #define SS_PSG        // YM2149 - for portA first
 #define SS_SDL        // Simple DirectMedia Layer (TODO)
-#define SS_SHIFTER    // The legendary custom shifter and all its tricks//TODO can't disable
+#define SS_SHIFTER    // The legendary custom shifter and all its tricks
 #define SS_SOUND      // YM2149, STE DMA sound, Microwire
 #define SS_STF        // switch STF/STE
 #define SS_STRUCTURE
@@ -149,7 +149,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 //////////
 
 #if defined(SS_BETA)
-//#define TEST01
+#define TEST01
 //#define TEST02
 //#define TEST03
 //#define TEST04
@@ -289,7 +289,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_CPU_CHECK_VIDEO_RAM_B
 #define SS_CPU_CHECK_VIDEO_RAM_L
 #define SS_CPU_CHECK_VIDEO_RAM_W // for 36.15 GEN4 by ULM
-#endif
+#endif //poke
 
 #if defined(SS_CPU_PREFETCH)
 
@@ -300,7 +300,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 // Change no timing, just the macro used, so that we can identify what timings
 // are for prefetch:
-#define SS_CPU_FETCH_TIMING  
+#define SS_CPU_FETCH_TIMING  // TODO can't isolate
 
 // Move the timing counting from FETCH_TIMING to PREFETCH_IRC:
 #define SS_CPU_PREFETCH_TIMING //big, big change
@@ -332,7 +332,8 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_CPU_LINE_F_TIMINGS // 1111 Coprocessor Interface/MC68040 and CPU32 Extensions
 #endif
 
-// all those switches because we had some nasty bug...
+// all those switches because we had some nasty bug... 
+
 #define SS_CPU_PREFETCH_ASSERT
 #define SS_CPU_PREFETCH_CALL
 #define SS_CPU_PREFETCH_CLASS
@@ -345,6 +346,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_CPU_PREFETCH_NOP
 #define SS_CPU_PREFETCH_PEA
 
+#define SS_CPU_PREFETCH_4PIXEL_RASTERS //no hack, just disabling switch
 
 #if defined(SS_CPU_PREFETCH_TIMING) || defined(CORRECTING_PREFETCH_TIMING)
 #define SS_CPU_PREFETCH_MOVE_MEM // this was forgotten in v3.5.0! limited impact
@@ -353,7 +355,6 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_CPU_YACHT_TAS // confirming what Steem authors suspected
 #endif
 
-//#define SS_CPU_PREFETCH_DETECT_IRC_TRICK // asserts 
 #define SS_CPU_PREFETCH_TRACE 
 #define SS_CPU_TRACE_DETECT 
 
@@ -1138,6 +1139,11 @@ problem, multiple struct/class definition not allowed?
 
 #if !defined(SS_SHIFTER)
 #undef SS_CPU_3615GEN4_ULM
+
+#undef SS_CPU_CHECK_VIDEO_RAM_B
+#undef SS_CPU_CHECK_VIDEO_RAM_L
+#undef SS_CPU_CHECK_VIDEO_RAM_W
+
 #undef SS_MMU_WAKE_UP_IO_BYTES_R
 #undef SS_MMU_WAKE_UP_IOR_HACK
 #undef SS_MMU_WAKE_UP_IOW_HACK
