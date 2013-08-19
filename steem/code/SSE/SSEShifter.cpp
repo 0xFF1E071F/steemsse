@@ -562,6 +562,7 @@ void TShifter::CheckSideOverscan() {
     r1cycle=CycleOfLastChangeToShiftMode(1);
     if(r1cycle>16 && r1cycle<=40)
     {
+
       // look for switch to R0 before switch to R1
       r0cycle=PreviousShiftModeChange(r1cycle);
       if(r0cycle!=-1 && !ShiftModeChangeAtCycle(r0cycle))
@@ -1388,21 +1389,25 @@ void TShifter::EndHBL() {
     See doc by ST-CNX and LJBK's efforts at AF
     3.5.3
     In which WU state it should work isn't clear. TODO
+    Unfinished business. What with the last 'left off' in Omega?
+    Would there be a definitive impact on SDP?
 */
 
   if(WAKE_UP_STATE && ST_TYPE==STF)
   {
     // Overdrive/Dragon
-    if(CurrentScanline.Tricks==TRICK_LINE_PLUS_26)
+    if((CurrentScanline.Tricks&0xFF)==TRICK_LINE_PLUS_26
+      &&!(CurrentScanline.Tricks&TRICK_STABILISER))
       Preload=1;
     // Death of the Left Border, Omega Full Overscan
-    else if( (CurrentScanline.Tricks&(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_44))
+    else if( (CurrentScanline.Tricks&0xFF)
       ==(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_44)
       &&!(CurrentScanline.Tricks&TRICK_STABILISER)) 
       Preload=3; // becomes 2 at first left off
     else if(CurrentScanline.Cycles==508 && FetchingLine()
       && FreqAtCycle(0)==60 && FreqAtCycle(464)==60)
       Preload=0; // a full 60hz scanline should reset the shifter
+
 #if defined(SS_SHIFTER_PANIC)
     if(WAKE_UP_STATE==3 && (CurrentScanline.Tricks&TRICK_UNSTABLE))
     {
@@ -1757,7 +1762,7 @@ vertical and horizontal blanking or display garbage may result.
 STE only. That's why the low byte is separated from the high & mid bytes.
 Writing on it on a STF does nothing.
 
-Last bit always cleared.
+Last bit always cleared (we must do it).
 */
     case 0xff820d:  //low byte of screen memory address
 #if defined(SS_SHIFTER_EVENTS)
@@ -1770,8 +1775,6 @@ Last bit always cleared.
         break; // fixes Lemmings 40; used by Beyond/Pax Plax Parallax
       }
 #endif
-
-      ASSERT(!(io_src_b&1)); //E605
       io_src_b&=~1;
       xbios2&=0xFFFF00;
       xbios2|=io_src_b;
@@ -1958,8 +1961,10 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
   case DISPATCHER_CPU:
     cycles_since_hbl+=16; // 3615 Gen4 by ULM, override normal delay
     break;
+/*
   case DISPATCHER_DSTE:
     break;
+*/
   case DISPATCHER_SET_PAL:
 #if defined(SS_SHIFTER_PALETTE_TIMING)
 #if defined(SS_MMU_WAKE_UP_PALETTE_STE)

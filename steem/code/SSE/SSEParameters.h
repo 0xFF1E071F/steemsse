@@ -283,7 +283,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 #if defined(SS_INT_VBL_STF) // modest hack still works
 #define HBL_FOR_STE 444
-#define HBL_FOR_STF (444+STF_VERT_OVSCN_OFFSET+4+ (SSE_HACKS_ON ? 4 : 0)) // no good!TODO
+#define HBL_FOR_STF (HBL_FOR_STE+4+(SSE_HACKS_ON?4:0)) //TODO
 #endif
 
 #endif

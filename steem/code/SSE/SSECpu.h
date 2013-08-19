@@ -176,12 +176,6 @@ inline void TM68000::FetchWord(WORD &dest_word) {
   dest_word=IR;
   if(prefetched_2)// already fetched
   {
-#if defined(SS_CPU_PREFETCH_DETECT_IRC_TRICK) && defined(SS_DEBUG)
-    if(!Debug.CpuPrefetchDiffDetected) {
-      ASSERT( IRC==*lpfetch ); 
-      if(IRC!=*lpfetch) Debug.CpuPrefetchDiffDetected=true;
-    }
-#endif
     if(IRC!=*lpfetch)
     {
 /*  The "prefetch trick" was used by some programs to crash when the CPU
@@ -463,15 +457,15 @@ inline void TM68000::PrefetchIrc() {
   }
   else
 #endif
-  
-  IRC=*lpfetch;
-  prefetched_2=TRUE;
+    IRC=*lpfetch;
+  prefetched_2=true;
 #if defined(SS_CPU_PREFETCH_TIMING) // we count fetch timing here
 #if defined(SS_DEBUG) && !(defined(_DEBUG) && defined(DEBUG_BUILD))
-  ASSERT(!NextIrFetched); //strong
+  //ASSERT(!NextIrFetched); //strong
   if(NextIrFetched)
   {
     TRACE_LOG("PC %X IR %X double prefetch?\n",pc,ir);
+    TRACE_OSD("IRC 2X FETCH");
   }
   NextIrFetched=true;
 #endif
@@ -501,13 +495,14 @@ inline void TM68000::PrefetchIrcNoRound() { // the same except no rounding
   else
 #endif
   IRC=*lpfetch;
-  prefetched_2=TRUE;
+  prefetched_2=true;
 #if defined(SS_CPU_PREFETCH_TIMING) // we count fetch timing here
 #if defined(SS_DEBUG) && !(defined(_DEBUG) && defined(DEBUG_BUILD))
-  ASSERT(!NextIrFetched); //strong
+  //ASSERT(!NextIrFetched); //strong
   if(NextIrFetched)
   {
     TRACE_LOG("PC %X IR %X double prefetch?\n",pc,ir);
+    TRACE_OSD("IRC 2X FETCH");
   }
   NextIrFetched=true;
 #endif
@@ -569,7 +564,9 @@ Just before the start of any instruction two words (no more and no less) are
 already fetched. One word will be in IRD and another one in IRC.
 */
 #if defined(SS_CPU_PREFETCH_ASSERT)
+
   ASSERT(prefetched_2); // strong
+
 #endif
 #if defined(SS_CPU_PREFETCH_CLASS)
   PrefetchClass=0; // default, most instructions
