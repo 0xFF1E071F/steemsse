@@ -10,6 +10,154 @@ Steem with required file types.
 #endif
 
 #ifdef WIN32
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_ASSOCIATE_CU)
+/*  v3.5.3
+    The proper way to associate in Win32 is to use current user, not root.
+    HKEY_CURRENT_USER instead of HKEY_CLASSES_ROOT, so you
+    don't need to run as administrator.
+*/
+
+#define LOGSECTION LOGSECTION_INIT
+char key_location[]="Software\\Classes\\"; // where we put the extensions
+
+/*  Function RegDeleteTree() isn't available in older compiler/Windows versions.
+    So we use RegDelnode() and RegDelnodeRecurse() from:
+    http://msdn.microsoft.com/en-au/windows/desktop/ms724235(v=vs.85).aspx
+    In turn, function StringCchCopy() isn't available, so we use strcpy
+    instead.
+    TODO move this to '3rd party'.
+*/
+
+#include <windows.h>
+#include <stdio.h>
+//#include <strsafe.h>
+
+HRESULT StringCchCopy(LPTSTR pszDest,size_t cchDest,LPCTSTR pszSrc) {
+  strcpy(pszDest,pszSrc);
+  return 0;
+}
+
+//*************************************************************
+//
+//  RegDelnodeRecurse()
+//
+//  Purpose:    Deletes a registry key and all its subkeys / values.
+//
+//  Parameters: hKeyRoot    -   Root key
+//              lpSubKey    -   SubKey to delete
+//
+//  Return:     TRUE if successful.
+//              FALSE if an error occurs.
+//
+//*************************************************************
+
+BOOL RegDelnodeRecurse (HKEY hKeyRoot, LPTSTR lpSubKey)
+{
+    LPTSTR lpEnd;
+    LONG lResult;
+    DWORD dwSize;
+    TCHAR szName[MAX_PATH];
+    HKEY hKey;
+    FILETIME ftWrite;
+
+    // First, see if we can delete the key without having
+    // to recurse.
+
+    lResult = RegDeleteKey(hKeyRoot, lpSubKey);
+
+    if (lResult == ERROR_SUCCESS) 
+        return TRUE;
+
+    lResult = RegOpenKeyEx (hKeyRoot, lpSubKey, 0, KEY_READ, &hKey);
+
+    if (lResult != ERROR_SUCCESS) 
+    {
+        if (lResult == ERROR_FILE_NOT_FOUND) {
+            printf("Key not found.\n");
+            return TRUE;
+        } 
+        else {
+            printf("Error opening key.\n");
+            return FALSE;
+        }
+    }
+
+    // Check for an ending slash and add one if it is missing.
+
+    lpEnd = lpSubKey + lstrlen(lpSubKey);
+
+    if (*(lpEnd - 1) != TEXT('\\')) 
+    {
+        *lpEnd =  TEXT('\\');
+        lpEnd++;
+        *lpEnd =  TEXT('\0');
+    }
+
+    // Enumerate the keys
+
+    dwSize = MAX_PATH;
+    lResult = RegEnumKeyEx(hKey, 0, szName, &dwSize, NULL,
+                           NULL, NULL, &ftWrite);
+
+    if (lResult == ERROR_SUCCESS) 
+    {
+        do {
+
+            StringCchCopy (lpEnd, MAX_PATH*2, szName);
+
+            if (!RegDelnodeRecurse(hKeyRoot, lpSubKey)) {
+                break;
+            }
+
+            dwSize = MAX_PATH;
+
+            lResult = RegEnumKeyEx(hKey, 0, szName, &dwSize, NULL,
+                                   NULL, NULL, &ftWrite);
+
+        } while (lResult == ERROR_SUCCESS);
+    }
+
+    lpEnd--;
+    *lpEnd = TEXT('\0');
+
+    RegCloseKey (hKey);
+
+    // Try again to delete the key.
+
+    lResult = RegDeleteKey(hKeyRoot, lpSubKey);
+
+    if (lResult == ERROR_SUCCESS) 
+        return TRUE;
+
+    return FALSE;
+}
+
+//*************************************************************
+//
+//  RegDelnode()
+//
+//  Purpose:    Deletes a registry key and all its subkeys / values.
+//
+//  Parameters: hKeyRoot    -   Root key
+//              lpSubKey    -   SubKey to delete
+//
+//  Return:     TRUE if successful.
+//              FALSE if an error occurs.
+//
+//*************************************************************
+
+BOOL RegDelnode (HKEY hKeyRoot, LPTSTR lpSubKey)
+{
+    TCHAR szDelKey[MAX_PATH*2];
+
+    StringCchCopy (szDelKey, MAX_PATH*2, lpSubKey);
+    return RegDelnodeRecurse(hKeyRoot, szDelKey);
+
+}
+
+#else // defined(STEVEN_SEAGAL) && defined(SS_VAR_ASSOCIATE_CU)
+
 LONG RegCopyKey(HKEY FromKeyParent,char *FromKeyName,HKEY ToKeyParent,char *ToKeyName)
 {
   LONG Ret;
@@ -52,11 +200,74 @@ LONG RegCopyKey(HKEY FromKeyParent,char *FromKeyName,HKEY ToKeyParent,char *ToKe
 
   return Ret;
 }
-#endif
+#endif//else of defined(STEVEN_SEAGAL) && defined(SS_VAR_ASSOCIATE_CU)
+
+#endif//WIN32
 //---------------------------------------------------------------------------
 bool IsSteemAssociated(EasyStr Exts)
 {
 #ifdef WIN32
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_ASSOCIATE_CU)
+
+  LONG ErrorCode;
+  HKEY Key;
+  EasyStr KeyName;
+  DWORD Size;
+
+  if (Exts[0]!='.') 
+    Exts.Insert(".",0); //eg "ST" -> ".ST"
+  Exts.Insert(key_location,0);
+  ErrorCode=RegOpenKeyEx(HKEY_CURRENT_USER,Exts,0,KEY_ALL_ACCESS,&Key);
+  //TRACE_LOG("RegOpenKeyEx %s ErrorCode %d\n",Exts.Text,ErrorCode);
+
+  if(!ErrorCode) // extension recorded, but for us?
+  {
+    // get value and close key
+    Size=400;
+    KeyName.SetLength(Size);
+    RegQueryValueEx(Key,NULL,NULL,NULL,(BYTE*)KeyName.Text,&Size);
+    //TRACE_LOG("RegQueryValueEx %s = %s ErrorCode %d\n",Exts.Text,KeyName.Text,ErrorCode);
+    RegCloseKey(Key);
+    if(KeyName.Empty()) 
+      KeyName=Exts;
+    else
+      KeyName.Insert("Software\\Classes\\",0);
+    // find shell key
+    ErrorCode=RegOpenKeyEx(HKEY_CURRENT_USER,KeyName+"\\Shell",0,
+      KEY_ALL_ACCESS,&Key);
+    //TRACE_LOG("RegOpenKeyEx %s\\Shell ErrorCode %d\n",KeyName.Text,ErrorCode);
+    RegCloseKey(Key);
+    if(!ErrorCode)
+    {
+      ErrorCode=RegOpenKeyEx(HKEY_CURRENT_USER,KeyName+"\\Shell\\OpenSteem\\Command",
+        0,KEY_READ,&Key); 
+      //TRACE_LOG("RegOpenKeyEx %s\\Shell\\OpenSteem\\Command ErrorCode %d\n",KeyName.Text,ErrorCode);
+
+      if(!ErrorCode)
+      {
+        Size=400;
+        EasyStr RegCommand;
+        RegCommand.SetLength(Size);
+        RegQueryValueEx(Key,NULL,NULL,NULL,(BYTE*)RegCommand.Text,&Size);
+        //TRACE_LOG("RegQueryValueEx %s = %s ErrorCode %d\n",Exts.Text,RegCommand.Text,ErrorCode);
+        RegCloseKey(Key);
+
+        EasyStr ThisExeName=GetEXEFileName(); // TODO, no PRGID?
+        EasyStr Command=char('"');
+        Command.SetLength(MAX_PATH+5);
+        GetLongPathName(ThisExeName,Command.Text+1,MAX_PATH);
+        Command+=EasyStr(char('"'))+" \"%1\"";
+        if (IsSameStr_I(Command,RegCommand)) 
+          return true; // yes, our EXE is associated
+      }
+    }
+  }
+
+  return 0; // no, our EXE is not associated
+
+#else//#if defined(STEVEN_SEAGAL) && defined(SS_VAR_ASSOCIATE_CU)
+
   if (Exts[0]!='.') Exts.Insert(".",0);
 
   HKEY Key;
@@ -96,6 +307,7 @@ bool IsSteemAssociated(EasyStr Exts)
       }
     }
   }
+#endif //else of defined(STEVEN_SEAGAL) && defined(SS_VAR_ASSOCIATE_CU)
 #elif defined(UNIX)
 #endif
   return 0;
@@ -104,6 +316,47 @@ bool IsSteemAssociated(EasyStr Exts)
 void AssociateSteem(EasyStr Exts,EasyStr FileClass,bool Force,char *TypeDisplayName,int IconNum,bool IconOnly)
 {
 #ifdef WIN32
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_ASSOCIATE_CU)
+
+  LONG ErrorCode;
+  HKEY Key;
+  EasyStr KeyName,OriginalKeyName;
+  unsigned long Size=400;
+
+  // check before Exts will change
+  bool WasAlreadyAssociated=IsSteemAssociated(Exts); 
+
+  if (Exts[0]!='.') 
+    Exts.Insert(".",0);
+  Exts.Insert(key_location,0);
+
+#if defined(SS_VAR_MAY_REMOVE_ASSOCIATION)
+/*  If this version of Steem is already associated, we come here to
+    remove the association. We didn't create a separate function to spare
+    some code.
+*/
+  if(WasAlreadyAssociated)
+    RegDelnode (HKEY_CURRENT_USER, Exts.c_str() );
+  else
+#endif
+  {
+    // create key
+    Exts+="\\Shell\\OpenSteem\\Command";
+    ErrorCode=RegCreateKeyEx(HKEY_CURRENT_USER,Exts.Text,0,NULL,REG_OPTION_NON_VOLATILE,
+      KEY_ALL_ACCESS,NULL,&Key,NULL);
+    //TRACE_LOG("RegCreateKeyEx %s ErrorCode %d\n",Exts.Text,ErrorCode);
+
+    // set value
+    EasyStr ThisExeName=GetEXEFileName();
+    EasyStr Command=EasyStr("\"")+ThisExeName+"\" \"%1\"";
+    ErrorCode=RegSetValueEx(Key,NULL,0,REG_SZ,(BYTE*)Command.Text,Command.Length()+1);
+    //TRACE_LOG("RegSetValueEx %s ErrorCode %d\n",(BYTE*)Command.Text,ErrorCode);
+    RegCloseKey(Key);
+  }
+#undef LOGSECTION
+#else// defined(STEVEN_SEAGAL) && defined(SS_VAR_ASSOCIATE_CU)
+
   if (Exts[0]!='.') Exts.Insert(".",0);
 
   HKEY Key;
@@ -259,6 +512,9 @@ void AssociateSteem(EasyStr Exts,EasyStr FileClass,bool Force,char *TypeDisplayN
     }
   }
   RegCloseKey(Key);
+
+#endif// defined(STEVEN_SEAGAL) && defined(SS_VAR_ASSOCIATE_CU)
+
 #elif defined(UNIX)
 #endif
 }

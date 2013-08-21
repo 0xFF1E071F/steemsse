@@ -149,7 +149,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 //////////
 
 #if defined(SS_BETA)
-#define TEST01
+//#define TEST01
 //#define TEST02
 //#define TEST03
 //#define TEST04
@@ -378,12 +378,12 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #ifdef SS_DEBUG_TRACE
 #ifdef _DEBUG // VC
-//#define SS_DEBUG_TRACE_IDE
+#define SS_DEBUG_TRACE_IDE
 #endif
 #if defined(DEBUG_BUILD) 
 #define SS_DEBUG_TRACE_FILE
 #else//VC
-#define SS_DEBUG_TRACE_FILE
+//#define SS_DEBUG_TRACE_FILE
 #endif
 #endif
 
@@ -1024,6 +1024,7 @@ problem, multiple struct/class definition not allowed?
 #ifdef WIN32
 #define SS_VAR_CHECK_SNAPSHOT
 #endif
+
 #define SS_VAR_DONT_INSERT_NON_EXISTENT_IMAGES // at startup
 #define SS_VAR_DONT_REMOVE_NON_EXISTENT_IMAGES // at final save
 #if !(defined(_DEBUG) && defined(VC_BUILD)) // it's Windows 'break' key
@@ -1037,9 +1038,20 @@ problem, multiple struct/class definition not allowed?
 #define SS_VAR_INFOBOX4 // readme 80 col 
 #define SS_VAR_INFOBOX5 // don't take 64K on the stack!
 #define SS_VAR_KEYBOARD_CLICK // not a sound nor IKBD option
+
+#define SS_VAR_ASSOCIATE // better and saves 4KB
+#ifdef SS_VAR_ASSOCIATE
+#define SS_VAR_ASSOCIATE_CU // current user, not root
+#define SS_VAR_MAY_REMOVE_ASSOCIATION
+#define SS_VAR_NO_ASSOCIATE_STC // cartridge, who uses that?
+#define SS_VAR_NO_AUTO_ASSOCIATE_DISK_STS_STC // disk images + STS STC
+#define SS_VAR_NO_AUTO_ASSOCIATE_MISC // other .PRG, .TOS...
+#endif
 #define SS_VAR_MOUSE_CAPTURE 
 #define SS_VAR_MSA_CONVERTER // don't prompt if found
-#define SS_VAR_NO_AUTO_ASSOCIATE // + may deassociate ... TODO
+
+
+
 #define SS_VAR_NOTIFY //adding some notify during init
 #define SS_VAR_NO_UPDATE // remove all code in relation to updating
 #define SS_VAR_NO_WINSTON // nuke WinSTon import, saves 16K in VC6 release yeah
