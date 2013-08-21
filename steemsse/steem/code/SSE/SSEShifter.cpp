@@ -1959,6 +1959,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
   // this may look impressive but it's just a bunch of hacks!
   switch(dispatcher) {
   case DISPATCHER_CPU:
+    TRACE_OSD("TRACK SHIFTER");
     cycles_since_hbl+=16; // 3615 Gen4 by ULM, override normal delay
     break;
 /*

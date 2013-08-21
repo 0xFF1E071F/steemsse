@@ -1682,7 +1682,9 @@ void TOptionBox::AssAddToExtensionsLV(char *Ext,char *Desc,int Num)
   SendMessage(But,WM_SETFONT,WPARAM(Font),0);
   if (IsSteemAssociated(Ext)){
     SendMessage(But,WM_SETTEXT,0,LPARAM(T("Associated").Text));
+#if !defined(SS_VAR_MAY_REMOVE_ASSOCIATION)
     EnableWindow(But,0);
+#endif
   }else{
     SendMessage(But,WM_SETTEXT,0,LPARAM(T("Associate").Text));
   }
@@ -1707,10 +1709,17 @@ void TOptionBox::CreateAssocPage()
   AssAddToExtensionsLV(".DIM",T("Disk Image"),4);
   AssAddToExtensionsLV(".STZ",T("Zipped Disk Image"),5);
   AssAddToExtensionsLV(".STS",T("Memory Snapshot"),6);
+#if !(defined(STEVEN_SEAGAL) && defined(SS_VAR_NO_ASSOCIATE_STC))
   AssAddToExtensionsLV(".STC",T("Cartridge Image"),7);
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF_ASSOCIATE)
   AssAddToExtensionsLV(".IPF",T("IPF Disk Image"),8);
 #endif
+#else
+#if defined(STEVEN_SEAGAL) && defined(SS_IPF_ASSOCIATE)
+  AssAddToExtensionsLV(".IPF",T("IPF Disk Image"),7); //height
+#endif
+#endif
+
   Scroller.AutoSize(5,5);
 
   int Wid=GetCheckBoxSize(Font,T("Always open files in new window")).Width;

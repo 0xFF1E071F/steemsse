@@ -848,9 +848,10 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
     }
   }
 
-#if !defined(SS_VAR_NO_AUTO_ASSOCIATE)
-#ifdef WIN32 // SS associates too much?
+#ifdef WIN32 
 #ifndef ONEGAME
+  // SS we associate nothing
+#if !defined(SS_VAR_NO_AUTO_ASSOCIATE_DISK_STS_STC)
   AssociateSteem(".ST","st_disk_image",0,T("ST Disk Image"),DISK_ICON_NUM,0);
   AssociateSteem(".STT","st_disk_image",0,T("ST Disk Image"),DISK_ICON_NUM,0);
   AssociateSteem(".MSA","st_disk_image",0,T("ST Disk Image"),DISK_ICON_NUM,0);
@@ -859,19 +860,24 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #if USE_PASTI
   if (hPasti) AssociateSteem(".STX","st_pasti_disk_image",0,T("ST Disk Image"),DISK_ICON_NUM,0);
 #endif
+  AssociateSteem(".STS","steem_memory_snapshot",0,T("Steem Memory Snapshot"),SNAP_ICON_NUM,0);
+  AssociateSteem(".STC","st_cartridge",0,T("ST ROM Cartridge"),CART_ICON_NUM,0);
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF_ASSOCIATE)
   AssociateSteem(".IPF","st_disk_image",0,T("ST Disk Image"),DISK_ICON_NUM,0);
 #endif
-  AssociateSteem(".STS","steem_memory_snapshot",0,T("Steem Memory Snapshot"),SNAP_ICON_NUM,0);
-  AssociateSteem(".STC","st_cartridge",0,T("ST ROM Cartridge"),CART_ICON_NUM,0);
+#endif//#if !defined(SS_VAR_NO_AUTO_ASSOCIATE_DISK_STS_STC)
+
+#if !defined(SS_VAR_NO_AUTO_ASSOCIATE_MISC)
   AssociateSteem(".PRG","st_program",0,T("ST Program"),PRG_ICON_NUM,true);
   AssociateSteem(".TOS","st_program",0,T("ST Program"),PRG_ICON_NUM,true);
   AssociateSteem(".APP","st_program",0,T("ST Program"),PRG_ICON_NUM,true);
   AssociateSteem(".GTP","st_program",0,T("ST Program"),PRG_ICON_NUM,true);
   AssociateSteem(".TTP","st_program",0,T("ST Program"),PRG_ICON_NUM,true);
-#endif
-#endif
-#endif//#if !defined(SS_VAR_NO_AUTO_ASSOCIATE)
+#endif// !defined(SS_VAR_NO_AUTO_ASSOCIATE_MISC)
+
+#endif//!ONEGAME
+#endif//WIN32
+
 #ifndef ONEGAME
   DestroyNotifyInitWin();
 #endif

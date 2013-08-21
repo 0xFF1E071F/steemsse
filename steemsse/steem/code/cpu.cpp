@@ -6526,7 +6526,7 @@ extern "C" void m68k_0000(){ //immediate stuff
 
 // Note the INSTRUCTION_TIME were commented out by Steem authors, and
 // the other comments are theirs too. We define our versions of the MOVE
-// instructions in SSEM68000.cpp.
+// instructions in SSECpu.cpp.
 
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_MOVE_B)
 void m68k_0001();

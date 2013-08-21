@@ -1287,6 +1287,14 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 
 
         case 5100:case 5101:case 5102:case 5103:case 5104:case 5105:case 5106:
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_ASSOCIATE)
+#if !(defined(STEVEN_SEAGAL) && defined(SS_VAR_NO_ASSOCIATE_STC)) //haha
+        case 5107: //bugfix 3.5.3
+#endif
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_IPF_ASSOCIATE)
+        case 5108: //bugfix 3.5.3
+#endif
           if (HIWORD(wPar)==BN_CLICKED){
             EasyStr Ext;
             switch (LOWORD(wPar)){
@@ -1299,7 +1307,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               case 5104: Ext=".DIM";AssociateSteem(Ext,"st_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
               case 5105: Ext=".STZ";AssociateSteem(Ext,"st_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
               case 5106: Ext=".STS";AssociateSteem(Ext,"steem_memory_snapshot",true,T("Steem Memory Snapshot"),SNAP_ICON_NUM,0); break;
+#if !(defined(STEVEN_SEAGAL) && defined(SS_VAR_NO_ASSOCIATE_STC))
               case 5107: Ext=".STC";AssociateSteem(Ext,"st_cartridge",true,T("ST ROM Cartridge"),CART_ICON_NUM,0); break;
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF_ASSOCIATE)
               case 5108: Ext=".IPF";AssociateSteem(Ext,"st_ipf_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
 #endif
@@ -1307,11 +1317,18 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             HWND But=HWND(lPar);
             if (IsSteemAssociated(Ext)){
               SendMessage(But,WM_SETTEXT,0,LPARAM(T("Associated").Text));
+#if !defined(SS_VAR_MAY_REMOVE_ASSOCIATION)
               EnableWindow(But,0);
+#endif
             }else{
               SendMessage(But,WM_SETTEXT,0,LPARAM(T("Associate").Text));
+#if !defined(SS_VAR_MAY_REMOVE_ASSOCIATION)
               EnableWindow(But,true);
+#endif
             }
+#if defined(SS_VAR_MAY_REMOVE_ASSOCIATION)
+            EnableWindow(But,true);
+#endif
           }
           break;
         case 5502:
