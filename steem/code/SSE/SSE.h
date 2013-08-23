@@ -149,7 +149,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 //////////
 
 #if defined(SS_BETA)
-//#define TEST01
+#define TEST01
 //#define TEST02
 //#define TEST03
 //#define TEST04

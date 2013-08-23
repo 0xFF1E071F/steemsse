@@ -31,7 +31,11 @@ enum {HBLS_50HZ=313,HBLS_60HZ=263,HBLS_71HZ=501};
   (shifter_freq_at_start_of_vbl==HBLS_60HZ?263: HBLS_71HZ/2))
 #endif
 
-#define HBL_PER_SECOND (HBL_PER_FRAME*shifter_freq_at_start_of_vbl)
+#define HBL_PER_SECOND (HBL_PER_FRAME*shifter_freq_at_start_of_vbl)  //still not super accurate
+
+#ifdef TEST01
+#define HBL_PER_SECOND (CpuNormalHz/Shifter.CurrentScanline.Cycles)
+#endif
 
 #endif
 
@@ -157,6 +161,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 #if defined(SS_DRIVE_BYTES_PER_ROTATION)
 #define DRIVE_BYTES_ROTATION (6250+20) // could be true though
+
 #else
 #define DRIVE_BYTES_ROTATION (8000) // Steem 3.2
 #endif

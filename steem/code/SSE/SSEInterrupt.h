@@ -31,7 +31,8 @@ extern int HblJitterIndex,VblJitterIndex;
 // Interesting cases: Auto168, BBC52, Dragonnels/Happy Islands, Xpress/Krig
 
 #if defined(SS_INT_HBL) 
-#if defined(SS_INT_JITTER_HBL) 
+
+#if defined(SS_INT_JITTER_HBL) // fixes BBC52 but see Hatari 1.7
 
 #define HBL_INTERRUPT {\
   hbl_pending=false;\

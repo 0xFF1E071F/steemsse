@@ -417,6 +417,10 @@ int mfp_calc_timer_counter(int timer)
 #define LOGSECTION LOGSECTION_INTERRUPTS//SS
 //SS  check_for_interrupts_pending() concerns not just the MFP...
 
+
+/*  TODO change for higher timer during IACK, but are there cases?
+*/
+
 void ASMCALL check_for_interrupts_pending()
 {
 
@@ -467,6 +471,11 @@ We wouldn't do it here
     }
 */
 #else
+
+/*  TODO check change during IACK but is it useful??
+*/
+
+
      if (vbl_pending){ //SS IPL4
       if ((sr & SR_IPL)<SR_IPL_4){
         VBL_INTERRUPT
