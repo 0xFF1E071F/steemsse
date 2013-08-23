@@ -64,7 +64,11 @@ DESCRIPTION: Completely random accessory functions.
                                     {"MIDI",LOGSECTION_MIDI},
                                     {"-",-1},
                                     {"Speed Limiting",LOGSECTION_SPEEDLIMIT},
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_LOG_OPTIONS)
+                                    {"Init",LOGSECTION_INIT},
+#else
                                     {"Startup",LOGSECTION_INIT},
+#endif
                                     {"Shutdown",LOGSECTION_SHUTDOWN},
                                     {"INI File",LOGSECTION_INIFILE},
                                     {"GUI",LOGSECTION_GUI},
