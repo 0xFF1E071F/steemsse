@@ -954,6 +954,16 @@ detect unstable: switch MED/LOW - Beeshift
     &&!(TrickExecuted&TRICK_LINE_MINUS_2))
   {
     ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );
+
+
+
+#if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_UNSTABLE)
+// wrong, of course, just to have Overdrive menu OK when you come back
+   if(Preload==3)
+      Preload=0;
+#endif
+
+
     overscan_add_extra+=-2;
     CurrentScanline.Bytes+=-2;
     TrickExecuted|=TRICK_LINE_MINUS_2;
@@ -1058,6 +1068,13 @@ detect unstable: switch MED/LOW - Beeshift
     CurrentScanline.EndCycle=460; //or 464?
     overscan=OVERSCAN_MAX_COUNTDOWN; // 25
     right_border_changed=true;
+
+#if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_UNSTABLE)
+// wrong, of course, just to have Overdrive menu OK when you come back
+   if(Preload==3)
+      Preload=0;
+#endif
+
 #ifdef SS_DEBUG___
     if(scan_y==-29)
     {
@@ -1388,16 +1405,23 @@ void TShifter::EndHBL() {
     Left off, right off: 160+26+44=(28*8)+6 -> 3 words preloaded
     See doc by ST-CNX and LJBK's efforts at AF
     3.5.3
-    In which WU state it should work isn't clear. TODO
+    TODO
+    In which WU state it should work isn't clear. 
     Unfinished business. What with the last 'left off' in Omega?
     Would there be a definitive impact on SDP?
+    And why doesn't the nice theory for Dragon work for the main menu, where
+    a 'left off' by itself following a stabilised 230byte line seems to cause
+    no shift (incorrect display with WU)? We "hacked" it for now.
 */
 
   if(WAKE_UP_STATE && ST_TYPE==STF)
   {
     // Overdrive/Dragon
     if((CurrentScanline.Tricks&0xFF)==TRICK_LINE_PLUS_26
-      &&!(CurrentScanline.Tricks&TRICK_STABILISER))
+      &&!(CurrentScanline.Tricks&TRICK_STABILISER)
+      &&(PreviousScanline.Tricks&TRICK_STABILISER)
+      &&(ShiftModeChangeAtCycle(444-512)==2 ) // hack to target on Dragon
+      )
       Preload=1;
     // Death of the Left Border, Omega Full Overscan
     else if( (CurrentScanline.Tricks&0xFF)
@@ -1420,6 +1444,12 @@ void TShifter::EndHBL() {
       }
     }
 #endif
+
+#if defined(SS_DEBUG)
+    if(Preload)
+      TRACE_OSD("Preload %d\n",Preload);
+#endif
+
   }
 #endif
 
