@@ -1989,7 +1989,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
   // this may look impressive but it's just a bunch of hacks!
   switch(dispatcher) {
   case DISPATCHER_CPU:
-    TRACE_OSD("TRACK SHIFTER");
+    TRACE_OSD("TRACK SDP");
     cycles_since_hbl+=16; // 3615 Gen4 by ULM, override normal delay
     break;
 /*
@@ -2049,12 +2049,15 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 #endif
     if(FetchingLine())
     {
+      ASSERT( left_border>=0 );
+/*
       if(left_border<0) // shouldn't happen
       {
         BRK( LB<0 leaving render ) ; //test if should remove...
         TRACE_LOG("LB<0, leaving render\n");
         return; // may avoid crash
       }
+*/
       int border1=0,border2=0,picture=0,hscroll=0; // parameters for ASM routine
       int picture_left_edge=left_border; // 0, BS, BS-4, BS-16 (...)
       //last pixel from extreme left to draw of picture

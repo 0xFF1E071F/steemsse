@@ -745,6 +745,19 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     ReadWriteStruct(Dma);
 #endif
   }
+  else
+  {
+#if defined(SS_SHIFTER)
+    Shifter.m_ShiftMode=screen_res;
+#endif
+#if defined(SS_IKBD_6301)
+    HD6301EMU_ON=0;
+#endif
+#if defined(SS_ACIA_USE_REGISTERS)
+#endif
+#if defined(SS_DMA)
+#endif
+  }
 
 
 #if defined(SS_VAR_CHECK_SNAPSHOT) //stupid!

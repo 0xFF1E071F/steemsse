@@ -216,10 +216,9 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_BLT_BLIT_MODE_CYCLES // #cycles in BLIT Mode in NOPs, not M68K cycles
 #define SS_BLT_BLIT_MODE_INTERRUPT // trigger at once (not after blit phase)
 #define SS_BLT_HOG_MODE_INTERRUPT // no interrupt in hog mode
-//#define SS_BLT_OVERLAP // TODO
+//#define SS_BLT_OVERLAP // TODO ?
 //#define SS_BLT_TIMING // based on a table, but Steem does it better
 #define SS_BLT_YCOUNT // 0=65536
-//TODO smudge?
 
 #endif
 
@@ -511,7 +510,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #endif
 
 #ifdef SS_DRIVE
-#define SS_FDC_VERIFY_AGENDA //TODO can't really disable
+#define SS_FDC_VERIFY_AGENDA 
 #endif
 
 #endif//SS_FDC_ACCURATE
@@ -1151,21 +1150,13 @@ problem, multiple struct/class definition not allowed?
 #undef SS_OSD_DRIVE_INFO2
 #endif
 
-#if !defined(SS_SHIFTER)
-#undef SS_CPU_3615GEN4_ULM
-
-#undef SS_CPU_CHECK_VIDEO_RAM_B
-#undef SS_CPU_CHECK_VIDEO_RAM_L
-#undef SS_CPU_CHECK_VIDEO_RAM_W
-
-#undef SS_MMU_WAKE_UP_IO_BYTES_R
-#undef SS_MMU_WAKE_UP_IOR_HACK
-#undef SS_MMU_WAKE_UP_IOW_HACK
-#undef SS_SHIFTER_EVENTS
+#if !defined(SS_DMA) || !defined(SS_FDC)
+#undef SS_OSD_DRIVE_LED2
+#undef SS_OSD_DRIVE_LED3
 #endif
 
-#if defined(SS_SHIFTER_UNSTABLE)
-#undef SS_SHIFTER_DRAGON1
+#if !defined(SS_DRIVE)
+#undef SS_PASTI_ONLY_STX 
 #endif
 
 #if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
@@ -1176,22 +1167,36 @@ problem, multiple struct/class definition not allowed?
 #undef SS_VAR_SCROLLER_DISK_IMAGE
 #endif
 
+#if !defined(SS_SHIFTER)
+#undef SS_CPU_3615GEN4_ULM
+#undef SS_CPU_CHECK_VIDEO_RAM_B
+#undef SS_CPU_CHECK_VIDEO_RAM_L
+#undef SS_CPU_CHECK_VIDEO_RAM_W
+#undef SS_MMU_WAKE_UP_IO_BYTES_R
+#undef SS_MMU_WAKE_UP_IOR_HACK
+#undef SS_MMU_WAKE_UP_IOW_HACK
+#undef SS_SHIFTER_EVENTS
+#endif
+
+#if defined(SS_SHIFTER_UNSTABLE)
+#undef SS_SHIFTER_DRAGON1
+#endif
 
 #if !defined(SS_SOUND_LOW_PASS_FILTER)
 #undef SS_SOUND_DETECT_SAMPLE_RATE
+#endif
+
+#if !defined(SS_STF)
+#undef SS_SHIFTER_MED_RES_SCROLLING
+#undef SS_SHIFTER_UNSTABLE
 #endif
 
 #if !USE_PASTI
 #undef SS_DMA_FIFO_PASTI
 #endif
 
-#if !defined(SS_DMA) || !defined(SS_FDC)
-#undef SS_OSD_DRIVE_LED2
-#undef SS_OSD_DRIVE_LED3
-#endif
-
-#if !defined(SS_DRIVE)
-#undef SS_PASTI_ONLY_STX 
+#if !defined(SS_VID_BORDERS) || !defined(SS_HACKS)
+#undef SS_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK
 #endif
 
 #if defined(SS_SSE_LEAN_AND_MEAN) //TODO
@@ -1199,10 +1204,6 @@ problem, multiple struct/class definition not allowed?
 #undef SS_VID_CHECK_DDFS
 #undef SS_VID_RECORD_AVI
 #undef SS_VID_SAVE_NEO
-#endif
-
-#if !defined(SS_VID_BORDERS) || !defined(SS_HACKS)
-#undef SS_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK
 #endif
 
 /////////////////////////////////////
