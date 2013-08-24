@@ -1,3 +1,9 @@
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INITSOUND_H)
+
+#include "init_sound.decla.h"
+
+#else//!defined(SS_STRUCTURE_INITSOUND_H)
+
 #ifdef IN_MAIN
 #define EXT
 #define INIT(s) =s
@@ -88,3 +94,4 @@ int rt_unsigned_8bit=0;
 #undef EXT
 #undef INIT
 
+#endif//defined(SS_STRUCTURE_INITSOUND_H)

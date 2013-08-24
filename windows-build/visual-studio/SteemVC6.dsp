@@ -45,7 +45,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /w /W0 /Gm /GX /ZI /Od /D "_VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /I /I /I /I /GZ /c
-# ADD CPP /nologo /G6 /ML /GX /Zi /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /D "_DEBUG" /D "NO_DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /D "SS_DEBUG" /FR /EHa /c
+# ADD CPP /nologo /G6 /ML /w /W0 /GX /Zi /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /D "_DEBUG" /D "NO_DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /D "SS_DEBUG" /FR /EHa /c
 # ADD BASE MTL /nologo /win32
 # ADD MTL /nologo /win32
 # ADD BASE RSC /l 0x409
@@ -73,7 +73,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /w /W0 /GX /Zi /Ox /Ot /Og /Oi /Ob2 /Gy /D "_VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /I /I /I /I /GA /GF
-# ADD CPP /nologo /G6 /MT /W3 /GX /Zi /Os /Oy /Ob2 /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /I "..\..\3rdparty\sim6xxx" /D "NDEBUG" /D "NO_DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /FR /GA /GF /c
+# ADD CPP /nologo /G6 /MT /w /W0 /GX /Zi /Os /Oy /Ob2 /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /I "..\..\3rdparty\sim6xxx" /D "NDEBUG" /D "NO_DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /FR /GA /GF /c
 # SUBTRACT CPP /Og
 # ADD BASE MTL /nologo /win32
 # ADD MTL /nologo /win32
@@ -106,7 +106,7 @@ PostBuild_Cmds=copy "Release\SteemBeta.exe" "G:\emu\ST\bin\steem"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /G6 /Zp16 /MD /W3 /GX /Zi /Ob2 /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /I "..\..\3rdparty\hatari" /D "NDEBUG" /D "NO_DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /FR /GA /GF /c
-# ADD CPP /nologo /G6 /Zp16 /MD /W3 /GX /Zi /Ob2 /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /I "..\..\3rdparty\sim6xxx" /D "NDEBUG" /D "DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /D "SS_DEBUG" /FR /GA /GF /c
+# ADD CPP /nologo /G6 /Zp16 /MD /w /W0 /GX /Zi /Ob2 /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /I "..\..\3rdparty\sim6xxx" /D "NDEBUG" /D "DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /D "SS_DEBUG" /FR /GA /GF /c
 # ADD BASE MTL /nologo /win32
 # ADD MTL /nologo /win32
 # ADD BASE RSC /l 0x409
@@ -259,6 +259,7 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\ikbd.cpp"\
 	"..\..\steem\code\ikbd.decla.h"\
 	"..\..\steem\code\ikbd.h"\
+	"..\..\steem\code\init_sound.decla.h"\
 	"..\..\steem\code\init_sound.h"\
 	"..\..\steem\code\iolist.h"\
 	"..\..\steem\code\ior.cpp"\
@@ -540,6 +541,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\infobox.cpp"\
 	"..\..\steem\code\infobox.h"\
 	"..\..\steem\code\init_sound.cpp"\
+	"..\..\steem\code\init_sound.decla.h"\
 	"..\..\steem\code\init_sound.h"\
 	"..\..\steem\code\iolist.cpp"\
 	"..\..\steem\code\iolist.h"\
@@ -591,6 +593,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\SSE\SSEOption.h"\
 	"..\..\steem\code\SSE\SSEParameters.h"\
 	"..\..\steem\code\SSE\SSESDL.h"\
+	"..\..\steem\code\SSE\SSEShifter.h"\
 	"..\..\steem\code\SSE\SSEShifterEvents.h"\
 	"..\..\steem\code\SSE\SSESTF.h"\
 	"..\..\steem\code\SteemFreeImage.h"\
@@ -813,6 +816,10 @@ SOURCE=..\..\steem\code\include.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\infobox.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\init_sound.decla.h
 # End Source File
 # Begin Source File
 
@@ -1813,6 +1820,7 @@ DEP_CPP_AVIFI=\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEParameters.h"\
 	
 # End Source File
 # Begin Source File
@@ -4924,6 +4932,7 @@ DEP_CPP_SSEOP=\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
 	"..\..\steem\code\SSE\SSEOption.h"\
+	"..\..\steem\code\SSE\SSEParameters.h"\
 	"..\..\steem\code\SSE\SSESTF.h"\
 	
 # End Source File

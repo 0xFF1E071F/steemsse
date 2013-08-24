@@ -241,9 +241,9 @@ enum logsection_enum_tag {
 #endif//C++
 #else
 #if defined(VC_BUILD) // OK for Unix?
-#define TRACE_OSD(x) // no code left?
+#define TRACE_OSD(x) // no code left? 
 #else
-#define TRACE_OSD(x) // some code left to the compiler
+#define TRACE_OSD // some code left to the compiler //?
 #endif
 #endif
 

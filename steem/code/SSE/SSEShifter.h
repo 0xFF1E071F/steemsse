@@ -1030,7 +1030,7 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 #if defined(SS_SHIFTER_EVENTS)
   VideoEvents.Add(scan_y,cycles,'w',((addr&0xF)<<8)|io_src_b);
 #endif
-
+  TRACE_OSD("WRITE SDP");  
 #if defined(SS_STF)
   // some STF programs write to those addresses, it just must be ignored.
   if(ST_TYPE!=STE)
@@ -1038,7 +1038,6 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 #if defined(SS_SHIFTER_SDP_TRACE_LOG)
     TRACE_LOG("STF ignore write to SDP %x %x\n",addr,io_src_b);
 #endif
-//    return FALSE; // fixes Nightdawn
     return; // fixes Nightdawn, STF-only game
   }
 #endif
@@ -1157,14 +1156,13 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 
   CurrentScanline.Tricks|=TRICK_WRITE_SDP; // could be handy
 
-  //return shifter_draw_pointer; // fancy
 }
 
 #endif
 
 #endif//#ifdef IN_EMU
 
-void TShifter::ShiftSDP(int shift) {
+void TShifter::ShiftSDP(int shift) { //inline
   shifter_draw_pointer+=shift; 
   overscan_add_extra-=shift;
 }
