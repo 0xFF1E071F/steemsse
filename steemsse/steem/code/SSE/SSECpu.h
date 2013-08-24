@@ -465,7 +465,7 @@ inline void TM68000::PrefetchIrc() {
   if(NextIrFetched)
   {
     TRACE_LOG("PC %X IR %X double prefetch?\n",pc,ir);
-    TRACE_OSD("IRC 2X FETCH");
+    TRACE_OSD("IRC 2X FETCH"); // generally false alert at start-up
   }
   NextIrFetched=true;
 #endif
@@ -502,7 +502,7 @@ inline void TM68000::PrefetchIrcNoRound() { // the same except no rounding
   if(NextIrFetched)
   {
     TRACE_LOG("PC %X IR %X double prefetch?\n",pc,ir);
-    TRACE_OSD("IRC 2X FETCH");
+    TRACE_OSD("IRC 2X FETCH"); // generally false alert at start-up
   }
   NextIrFetched=true;
 #endif

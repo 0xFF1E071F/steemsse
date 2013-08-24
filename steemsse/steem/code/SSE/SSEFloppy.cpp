@@ -1178,9 +1178,11 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 }
 
 
+#if defined(SS_DEBUG) || defined(SS_OSD_DRIVE_LED)
 int TWD1772::WritingToDisk() {
   return((CR&0xF0)==0xF0 || (CR&0xE0)==0xA0);
 }
+#endif
 
 
 #if defined(SS_DEBUG)

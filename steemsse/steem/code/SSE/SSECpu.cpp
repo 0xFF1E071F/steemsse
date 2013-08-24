@@ -1236,7 +1236,9 @@ void m68k_dpoke_abus2(WORD x){
 #if defined(SS_CPU_CHECK_VIDEO_RAM_W) // 3615 GEN4
     if(Shifter.FetchingLine() 
       && abus>=shifter_draw_pointer
-      && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2)
+      && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2
+      //&& DPEEK(abus)!=x
+      )
       Shifter.Render(LINECYCLES,DISPATCHER_CPU); 
 #endif
     if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)

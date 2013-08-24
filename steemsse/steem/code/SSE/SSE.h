@@ -149,7 +149,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 //////////
 
 #if defined(SS_BETA)
-#define TEST01
+//#define TEST01
 //#define TEST02
 //#define TEST03
 //#define TEST04
@@ -960,6 +960,8 @@ problem, multiple struct/class definition not allowed?
 #define SS_STRUCTURE_HDIMG_H
 //#define SS_STRUCTURE_HISTORYLIST_H
 #define SS_STRUCTURE_IKBD_H
+//#define SS_STRUCTURE_INFOBOX_H // nothing to do?
+#define SS_STRUCTURE_INITSOUND_H
 //...
 #define SS_STRUCTURE_RUN_H
 #endif
