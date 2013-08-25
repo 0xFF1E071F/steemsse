@@ -74,6 +74,10 @@ int cpu_time_of_start_of_event_plan;
 //int cpu_time_of_next_hbl_interrupt=0;
 int time_of_next_timer_b=0;
 int time_of_last_hbl_interrupt;
+#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBL_IACK)
+int time_of_last_vbl_interrupt;
+#endif
+
 int screen_res_at_start_of_vbl;
 int shifter_freq_at_start_of_vbl;
 int scanline_time_in_cpu_cycles_at_start_of_vbl;
@@ -108,7 +112,7 @@ void exception(int exn,exception_action ea,MEM_ADDRESS a)
   ExceptionObject.init(exn,ea,a);
   if (pJmpBuf==NULL){
     log_write(Str("Unhandled exception! pc=")+HEXSl(old_pc,6)+" action="+int(ea)+" address involved="+HEXSl(a,6));
-    BRK( Unhandled exception! ); //never yet
+    BRK( Unhandled exception! ); //emulator crash on bad snapshot etc.
     return;
   }
   longjmp(*pJmpBuf,1);
@@ -536,7 +540,11 @@ void event_hbl()   //just HBL, don't draw yet
     }
   }
 #endif
-  if (abs_quick(cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt)>CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED){
+  if (abs_quick(cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt)>CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED
+#if defined(STEVEN_SEAGAL) && defined(SS_INT_HBL_IACK_FIX)
+    -12 // 28-12 = 16 = IACK cycles
+#endif
+    ){
     hbl_pending=true;
   }
   if (dma_sound_on_this_screen) dma_sound_fetch();//,dma_sound_fetch();
@@ -805,9 +813,28 @@ void event_scanline()
     }
   }
 #endif
-  if (abs_quick(cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt)>CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED){
+  if (abs_quick(cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt)>CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED
+#if defined(STEVEN_SEAGAL) && defined(SS_INT_HBL_IACK_FIX)
+/*  CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED was defined as 28
+    It's a way to have 2 HBL interrupts cleared when the second is set pending
+    during the IACK cycles.
+    So the idea, more formally developped in Hatari 1.7, was already in Steem
+    for HBL and for MFP, but in both cases the values had to be corrected.
+    Here, the too high value would deny the HBL all the time in BBC52
+    (should have seen this before!)
+    28-12 = 16 = IACK cycles, . Or 12?
+    With this fix we can do without the "jitter", using the "wobble".
+    TODO change constant when structure is fixed
+*/
+    -12 // fixes BBC52
+#endif
+    ){ 
     hbl_pending=true;
   }
+#if defined(STEVEN_SEAGAL) && defined(SS_INT_HBL_IACK_FIX) && defined(SS_DEBUG)
+  else if((sr & SR_IPL)<SR_IPL_2)
+    TRACE_OSD("NO HBL"); 
+#endif
   if (dma_sound_on_this_screen) dma_sound_fetch(); 
   screen_event_pointer++;
 }
@@ -872,6 +899,25 @@ void event_vbl_interrupt() //SS misleading name?
 
   //----------- VBL interrupt ---------
 #if !(defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START))
+#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBL_IACK)
+/*  This is for the case when the VBI just started (second VBI pending during
+    IACK is cleared), 
+    Implemented the same way as for MFP, for the same reason it's protected by
+    option 'Hacks'.
+    Cases? Must be pretty rare, usually the problem is not too many VBI but
+    missed VBI
+    But it's in Hatari too.
+    TESTING
+*/
+  if(SSE_HACKS_ON && time_of_last_vbl_interrupt+56+16-ACT>0)
+  {
+#if defined(SS_DEBUG)
+    if((sr & SR_IPL)<SR_IPL_4)
+      TRACE_OSD("VBI %d\n",time_of_last_vbl_interrupt+56+16-ACT);
+#endif
+  }
+  else
+#endif
   vbl_pending=true;
 #endif
 
@@ -1169,7 +1215,7 @@ void event_vbl_interrupt() //SS misleading name?
   event_start_vbl(); // Reset SDP again! //SS check
 #endif
 
-#if defined(SS_SHIFTER_DRAGON1)//temp
+#if defined(SS_SHIFTER_DRAGON1)//not defined in v3.5.2
   if(SS_signal==SS_SIGNAL_SHIFTER_CONFUSED_1)
     SS_signal=SS_SIGNAL_SHIFTER_CONFUSED_2; // stage 2 of our hack
 #endif  
@@ -1198,7 +1244,7 @@ void event_vbl_interrupt() //SS misleading name?
   }
 
 #if defined(STEVEN_SEAGAL) && defined(SS_INT_JITTER)
-    VblJitterIndex++; // like Hatari
+    VblJitterIndex++; // like Hatari  
     if(VblJitterIndex==5)
       VblJitterIndex=0;
 #endif

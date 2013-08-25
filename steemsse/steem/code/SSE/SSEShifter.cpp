@@ -1108,26 +1108,20 @@ void TShifter::CheckVerticalOverscan() {
     not enough.
     Those values are not based on measurements but on how programs work or not.
     Still testing.
+
     STE cases:
     -E605 planet (500:S0)
     -RGBeast (480:S0, sometimes 500:S2)
+    
     STF cases:
     -3615Gen4 Cakeman
-    -Auto 168 
-    with HBL at 444+4+8!:
-    Line -30 - 488:S0000 512:S0002 512:T0100
-    Line -30 - 492:S0000 516:S0002 512:T0100
-
-    with HBL at 444+4:
-    Line -30 - 504:S0000 512:T0100
-    missed
-    Line -30 - 508:S0000
-    Line -29 - 020:S0002 264:j0006
-    No doubt 508 is too high, so yes it's VBI problem
-
+    -Auto 168 (hacks on)
+    30 - 488:S0000 512:S0002 512:T0100
+    30 - 496:S0000 520:S0002 512:T0100
+    30 - 480:S0000 504:S0002 512:T0100
     -European Demos (top 444 60) When it misses there's just no 60 (VBI?)
-    -Musical Wonder 90 (416:S0,504:S2)
-    -SNYD2/Sync Vectorballs II 424:S0000 504:S0002 (every time)
+    -Musical Wonder 90 (199 416:S0,504:S2) 
+    -SNYD2/Sync Vectorballs II (F6) 424:S0000 504:S0002 (every time)
     "the low border of Sync's vectorballs was never stable on my machine"
     This means the MMU didn't react the same to same value in every frame.
 

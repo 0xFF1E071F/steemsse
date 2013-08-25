@@ -21,7 +21,7 @@ extern int HblTiming;
 void m68k_interrupt(MEM_ADDRESS ad);
 #endif
 
-#if defined(SS_INT_JITTER)
+#if defined(SS_INT_JITTER) // not defined in current 3.5.3
 extern int HblJitter[],VblJitter[];
 extern int HblJitterIndex,VblJitterIndex;
 #endif
@@ -82,7 +82,7 @@ inline void VBLInterrupt() {
   if(ST_TYPE==STE) 
 #endif
     INTERRUPT_START_TIME_WOBBLE;
-
+  time_of_last_vbl_interrupt=ABSOLUTE_CPU_TIME;
   INSTRUCTION_TIME_ROUND(SS_INT_VBL_TIMING);
 
   TRACE_LOG("F%d Cycles %d VBI %X #%d\n",FRAME,ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl,LPEEK(0x0070),interrupt_depth);
@@ -105,7 +105,7 @@ inline void VBLInterrupt() {
 #else//inline
 
 #if defined(SS_INT_JITTER_VBL)
-// we use the jitter only for STF, on the STE it breaks Krieg
+// we use the jitter only for STF, on the STE it breaks Krig
 #define VBL_INTERRUPT {\
   vbl_pending=false;    \
   log_to_section(LOGSECTION_INTERRUPTS,EasyStr("INTERRUPT: VBL at PC=")+HEXSl(pc,6)+" time is "+ABSOLUTE_CPU_TIME+" ("+(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl)+" cycles into screen)");\

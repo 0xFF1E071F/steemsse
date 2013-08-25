@@ -155,6 +155,9 @@ either run the VBL interrupt, or the main code.
   So we don't need to split the interrupt timings.
   Because of the way we implement it, the fix is considered a hack, but
   I've seen nothing broken by it yet (since v3.3).
+  CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED = 20
+  But the same concept for HBL = 28
+  We change those values to 12? 16?
 */
   if(abs_quick(when_set-mfp_time_of_start_of_last_interrupt[irq])
     >= (SSE_HACKS_ON
@@ -478,6 +481,7 @@ We wouldn't do it here
 
      if (vbl_pending){ //SS IPL4
       if ((sr & SR_IPL)<SR_IPL_4){
+        //debug1=ACT;
         VBL_INTERRUPT
   ////      if(LPEEK(0x70)!=0xFC06DE) TRACE_LOG("F%d VBI %X\n",FRAME,LPEEK(0x70));
       }

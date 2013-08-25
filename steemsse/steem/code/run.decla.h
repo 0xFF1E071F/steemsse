@@ -51,6 +51,7 @@ EXT int cpu_time_of_last_vbl,shifter_cycle_base;
 
 EXT int cpu_timer_at_start_of_hbl;
 
+
 //#ifdef IN_EMU
 
 #define CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED 28
@@ -80,6 +81,20 @@ EXT int cpu_timer_at_start_of_hbl;
   }
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_INT_VBL) && defined(SS_INT_JITTER) 
+#elif defined(STEVEN_SEAGAL) && defined(SS_INT_VBL_IACK)
+#define VBL_INTERRUPT                                                        \
+          {                                                               \
+            vbl_pending=false;                                             \
+            log_to_section(LOGSECTION_INTERRUPTS,EasyStr("INTERRUPT: VBL at PC=")+HEXSl(pc,6)+" time is "+ABSOLUTE_CPU_TIME+" ("+(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl)+" cycles into screen)");\
+            M68K_UNSTOP;                                                  \
+            INTERRUPT_START_TIME_WOBBLE;                \
+            time_of_last_vbl_interrupt=ACT;\
+            INSTRUCTION_TIME_ROUND(56); \
+            m68k_interrupt(LPEEK(0x0070));                                \
+            sr=(sr&WORD(~SR_IPL))|WORD(SR_IPL_4);                         \
+            debug_check_break_on_irq(BREAK_IRQ_VBL_IDX);    \
+          }
+
 #else
 #define VBL_INTERRUPT                                                        \
           {                                                               \
@@ -239,6 +254,10 @@ EXT int cpu_time_of_start_of_event_plan;
 //int cpu_time_of_next_hbl_interrupt=0;
 EXT int time_of_next_timer_b;
 EXT int time_of_last_hbl_interrupt;
+#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBL_IACK)
+EXT int time_of_last_vbl_interrupt;
+#endif
+
 EXT int screen_res_at_start_of_vbl;
 EXT int shifter_freq_at_start_of_vbl;
 EXT int scanline_time_in_cpu_cycles_at_start_of_vbl;

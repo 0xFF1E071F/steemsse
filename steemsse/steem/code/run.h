@@ -60,7 +60,7 @@ EXT int cpu_timer_at_start_of_hbl;
 
 #ifdef IN_EMU
 
-#define CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED 28
+#define CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED 28//SS don't change here
 
 
 //          INSTRUCTION_TIME(8-((ABSOLUTE_CPU_TIME-shifter_cycle_base) % 12));
