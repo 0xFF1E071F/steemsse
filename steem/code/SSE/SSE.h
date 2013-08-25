@@ -587,13 +587,22 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 // temp there ought to be a better structure
 #if defined(SS_INTERRUPT)
 
-#define SS_INT_JITTER // there's also the wobble of Steem, which are correct?
 #define SS_INT_HBL 
+//#define SS_INT_JITTER // there's also the wobble of Steem, which are correct?
 #define SS_INT_VBL 
-#define SS_INT_VBL_INLINE
+
+
+#if defined(SS_INT_HBL)
+#define SS_INT_HBL_IACK_FIX //BBC52
+#endif
 
 #if defined(SS_INT_JITTER) && defined(SS_INT_HBL)
-#define SS_INT_JITTER_HBL 
+#define SS_INT_JITTER_HBL // BBC52
+#endif
+
+#if defined(SS_INT_VBL)
+#define SS_INT_VBL_IACK
+#define SS_INT_VBL_INLINE //not for the moment?
 #endif
 
 #if defined(SS_INT_JITTER) && defined(SS_INT_VBL) && defined(SS_STF)

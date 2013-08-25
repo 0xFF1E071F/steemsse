@@ -7,6 +7,11 @@
 #define INIT(s)
 
 #define BORDER_TOP 30
+
+#ifdef TEST02
+#define BORDER_TOP 35//for rasters TODO
+#endif
+
 #if !(defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS))
 #define BORDER_SIDE 32 // redefined as variables! check SSEDecla.h
 #define BORDER_BOTTOM 40

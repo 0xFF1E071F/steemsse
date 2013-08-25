@@ -173,6 +173,10 @@ void init_timings()
   scan_y=-scanlines_above_screen[shifter_freq_idx];
 
   time_of_last_hbl_interrupt=ABSOLUTE_CPU_TIME;
+#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBL_IACK)
+  time_of_last_vbl_interrupt=ACT;
+#endif
+
 
   cpu_time_of_first_mfp_tick=ABSOLUTE_CPU_TIME;
   shifter_cycle_base=ABSOLUTE_CPU_TIME;

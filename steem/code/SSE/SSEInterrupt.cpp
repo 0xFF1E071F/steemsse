@@ -1,6 +1,13 @@
 #if defined(SS_INTERRUPT)
 
-#if defined(SS_INT_JITTER) // from Hatari -TODO which is used?
+#if defined(SS_INT_JITTER) 
+/*  This comes from Hatari but was also discussed on AF.
+    Apparently this has been measured and should be correct.
+    In v3.5.3 we use Steem's "wobble" instead, as long as it
+    works, not because it's more correct, but to save some memory
+    bytes, and also because of Krig STE (TODO).
+    SS_INT_JITTER not defined
+*/
   int HblJitter[] = {8,4,4,0,0}; 
   int HblJitterIndex=0;
   int VblJitter[] = {8,0,4,0,4}; 
