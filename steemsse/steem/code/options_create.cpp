@@ -1956,7 +1956,11 @@ void TOptionBox::CreateSSEPage() {
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("Normal (384x270)"));
   SendMessage(BorderSizeOption,CB_ADDSTRING,1,(long)CStrT("Large (400x275)"));
   SendMessage(BorderSizeOption,CB_ADDSTRING,1,(long)CStrT("Large (400x278)"));
+#if defined(SS_VID_BORDERS_BIGTOP)
+  SendMessage(BorderSizeOption,CB_ADDSTRING,1,(long)CStrT("Very large (412x285)"));
+#else
   SendMessage(BorderSizeOption,CB_ADDSTRING,1,(long)CStrT("Very large (412x280)"));
+#endif
   SendMessage(BorderSizeOption,CB_SETCURSEL,min((int)DISPLAY_SIZE,3),0);
   y+=LineHeight;
 #endif

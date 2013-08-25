@@ -6,10 +6,8 @@
 #define EXTC extern "C"
 #define INIT(s)
 
+#if !defined(SS_VID_BORDERS_BIGTOP)
 #define BORDER_TOP 30
-
-#ifdef TEST02
-#define BORDER_TOP 35//for rasters TODO
 #endif
 
 #if !(defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS))
