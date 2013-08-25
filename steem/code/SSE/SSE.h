@@ -602,7 +602,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #if defined(SS_INT_VBL)
 #define SS_INT_VBL_IACK
-#define SS_INT_VBL_INLINE //not for the moment?
+//#define SS_INT_VBL_INLINE //not for the moment?
 #endif
 
 #if defined(SS_INT_JITTER) && defined(SS_INT_VBL) && defined(SS_STF)
@@ -1091,7 +1091,10 @@ problem, multiple struct/class definition not allowed?
 #define SS_VID_BLIT_TRY_BLOCK //?
 
 #define SS_VID_BORDERS // option display size (normal-big-bigger-biggest)
+#if defined(SS_VID_BORDERS)
 #define SS_VID_BORDERS_LB_DX // rendering-stage trick rather than painful hacks
+#define SS_VID_BORDERS_BIGTOP // more lines for palette effects
+#endif
 
 #define SS_VID_BPOC // Best Part of the Creation fit display 800 hack
 #define SS_VID_CHECK_DDFS // is video card/display capable?

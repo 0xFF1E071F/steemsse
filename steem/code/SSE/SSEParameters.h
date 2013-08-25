@@ -415,6 +415,13 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define ORIGINAL_BORDER_BOTTOM 40 
 #define LARGE_BORDER_BOTTOM 45 // & 48 if player wants
 #define VERY_LARGE_BORDER_BOTTOM 50  // counts for raster fx
+
+#if defined(SS_VID_BORDERS_BIGTOP) // more hacks...
+#define NEW_BORDER_TOP 35
+#define BORDER_TOP (  DISPLAY_SIZE==3 ? NEW_BORDER_TOP : 30 ) 
+#endif
+
+
 #endif
 
 #if defined(SS_VID_RECORD_AVI)

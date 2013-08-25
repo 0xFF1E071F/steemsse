@@ -120,7 +120,7 @@ inline void VBLInterrupt() {
 
 
 #else // wobble as in Steem 3.2
-
+/*
 #define VBL_INTERRUPT {\
   vbl_pending=false;    \
   log_to_section(LOGSECTION_INTERRUPTS,EasyStr("INTERRUPT: VBL at PC=")+HEXSl(pc,6)+" time is "+ABSOLUTE_CPU_TIME+" ("+(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl)+" cycles into screen)");\
@@ -131,7 +131,7 @@ inline void VBLInterrupt() {
   sr=(sr& (WORD)(~SR_IPL))|(WORD)(SR_IPL_4);\
   debug_check_break_on_irq(BREAK_IRQ_VBL_IDX);\
 }
-
+*/
 #endif
 #endif//inline
 
