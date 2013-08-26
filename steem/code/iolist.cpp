@@ -10,6 +10,20 @@ addresses and how they should be displayed in the debugger.
 #pragma message("Included for compilation: iolist.cpp")
 #endif
 
+
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_IOLIST_H)
+#define EXT
+#define INIT(s) =s
+
+int iolist_length=0;
+
+iolist_entry iolist[300];
+
+#undef EXT
+#undef INIT
+#endif
+
+
 void iolist_add_entry(MEM_ADDRESS ad,char*name,int bytes,char*bitmask,BYTE*ptr)
 {
   iolist_entry*p=iolist+iolist_length;

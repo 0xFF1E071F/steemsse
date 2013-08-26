@@ -261,6 +261,7 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\ikbd.h"\
 	"..\..\steem\code\init_sound.decla.h"\
 	"..\..\steem\code\init_sound.h"\
+	"..\..\steem\code\iolist.decla.h"\
 	"..\..\steem\code\iolist.h"\
 	"..\..\steem\code\ior.cpp"\
 	"..\..\steem\code\iorw.h"\
@@ -544,6 +545,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\init_sound.decla.h"\
 	"..\..\steem\code\init_sound.h"\
 	"..\..\steem\code\iolist.cpp"\
+	"..\..\steem\code\iolist.decla.h"\
 	"..\..\steem\code\iolist.h"\
 	"..\..\steem\code\iorw.h"\
 	"..\..\steem\code\key_table.h"\
@@ -824,6 +826,10 @@ SOURCE=..\..\steem\code\init_sound.decla.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\init_sound.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\iolist.decla.h
 # End Source File
 # Begin Source File
 
@@ -1355,6 +1361,7 @@ DEP_CPP_6301_=\
 	"..\..\3rdparty\6301\timer.h"\
 	"..\..\3rdparty\6301\tty.c"\
 	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\include\easystr.h"\
 	"..\..\steem\code\acia.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\steem\code\SSE\SSE6301.h"\
@@ -1817,6 +1824,7 @@ SOURCE=..\..\3rdparty\caps\CAPSImg.lib
 SOURCE=..\..\3rdparty\avi\AviFile.cpp
 DEP_CPP_AVIFI=\
 	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\include\easystr.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
@@ -4744,6 +4752,7 @@ SOURCE=..\..\include\wordwrapper.h
 SOURCE=..\..\steem\code\SSE\SSE.cpp
 DEP_CPP_SSE_C=\
 	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\include\easystr.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
@@ -4815,6 +4824,7 @@ SOURCE=..\..\steem\code\SSE\SSECpu.h
 SOURCE=..\..\Steem\code\SSE\SSEDebug.cpp
 DEP_CPP_SSEDE=\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
+	"..\..\steem\code\SSE\SSEParameters.h"\
 	
 
 !IF  "$(CFG)" == "Steem - Win32 Debug"
@@ -4912,6 +4922,7 @@ SOURCE=..\..\steem\code\SSE\SSEM68000.h
 SOURCE=..\..\steem\code\SSE\SSEMMU.cpp
 DEP_CPP_SSEMM=\
 	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\include\easystr.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
 	"..\..\steem\code\SSE\SSEMMU.h"\
@@ -4928,6 +4939,7 @@ SOURCE=..\..\steem\code\SSE\SSEMMU.h
 SOURCE=..\..\steem\code\SSE\SSEOption.cpp
 DEP_CPP_SSEOP=\
 	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\include\easystr.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
