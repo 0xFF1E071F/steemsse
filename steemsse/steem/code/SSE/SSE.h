@@ -970,6 +970,7 @@ problem, multiple struct/class definition not allowed?
 #define SS_STRUCTURE_IKBD_H
 //#define SS_STRUCTURE_INFOBOX_H // nothing to do?
 #define SS_STRUCTURE_INITSOUND_H
+#define SS_STRUCTURE_IOLIST_H//TODO
 //...
 #define SS_STRUCTURE_RUN_H
 #endif

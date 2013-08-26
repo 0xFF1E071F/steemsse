@@ -176,6 +176,15 @@ const POINT WinSize[4][5]={ {{320,200},{640,400},{960, 600},{1280,800},{-1,-1}},
                             {{800,600},{-1,-1}}};
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
+
+// TODO, it works but there ought to be a better way
+
+#if defined(SS_VID_BORDERS_BIGTOP)
+// didn't see any problem, but this takes no chance
+#undef BORDER_TOP
+#define BORDER_TOP 30
+#endif
+
  POINT WinSizeBorderOriginal[4][5]={ {{320+ORIGINAL_BORDER_SIDE*2,200+(BORDER_TOP+ORIGINAL_BORDER_BOTTOM)},
 {640+(ORIGINAL_BORDER_SIDE*2)*2,400+2*(BORDER_TOP+ORIGINAL_BORDER_BOTTOM)},
 {960+(ORIGINAL_BORDER_SIDE*3)*2, 600+3*(BORDER_TOP+ORIGINAL_BORDER_BOTTOM)},
@@ -246,6 +255,12 @@ POINT WinSizeBorderVeryLarge[4][5]={ {{320+VERY_LARGE_BORDER_SIDE_WIN*2,200+(NEW
 {{800,600},
 {-1,-1}}
 };
+
+
+#undef BORDER_TOP
+#define BORDER_TOP (  DISPLAY_SIZE==3 ? NEW_BORDER_TOP : 30 ) 
+
+
 
 #else
 
