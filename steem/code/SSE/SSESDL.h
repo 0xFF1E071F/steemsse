@@ -18,7 +18,7 @@
 #endif//win32
 #endif //!defined(SS_SDL_DEACTIVATE)
 
-#if defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+#if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
 
 struct TSDL {
   bool Available;
@@ -26,9 +26,15 @@ struct TSDL {
   SDL_Surface *Surface;
   TSDL();
   ~TSDL();
-  LeaveSDLVideoMode(); //temp
-  EnterSDLVideoMode(); // temp
-  bool Init(); //0: fail
+  bool Init();
+
+  void EnterSDLVideoMode();
+  void LeaveSDLVideoMode();
+
+  void Lock();
+  void Blit();
+  void Unlock();
+
 
 };
 

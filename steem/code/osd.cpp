@@ -245,8 +245,7 @@ void osd_draw()
     if (osd_old_pos) start_y=25;
     if (BytesPerPixel==1){
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_OSD_LOGO))
-      //SS not sure, haven't seen it in action
+#if !(defined(STEVEN_SEAGAL) && defined(SS_OSD_LOGO1)) // not defined in v3.5.3
       osd_black_box(draw_mem,x-1,start_y,PLASMA_W+2,PLASMA_H+2,draw_line_length);
       for (int y=start_y+1;y<start_y+1+PLASMA_H;y++) osd_blueize_line(x,y,PLASMA_W);
 #endif
@@ -272,9 +271,7 @@ void osd_draw()
         frame=min(int(timer-(osd_start_time+200))/20,14);
       }
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_OSD_LOGO))
-      // Drawing the rectangle where the STEEM ENIGINE logo will be written
-      // Just suppress it for the "new" logo
+#if !(defined(STEVEN_SEAGAL) && defined(SS_OSD_LOGO1))
       if (frame>=0) 
         osd_draw_plasma(x,start_y,frame);
 #endif
@@ -282,25 +279,18 @@ void osd_draw()
     if (frame==14){
       x=x1/2-OSD_LOGO_W/2;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_LOGO2)
-// hack to display correct version number (temp) - and do we even need it?
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_LOGO2) // not defined in v3.5.3
 #define THE_LEFT (0)
 #define THE_RIGHT ((x1))
 #define BUFFER_LENGTH 35
       RECT cliprect={THE_LEFT,0,THE_RIGHT,y1};
-      // must be CAPS for the scroller font
       char tmp_buffer[BUFFER_LENGTH];
-//      strcpy(tmp_buffer,"Steem Engine ");	
-      strcpy(tmp_buffer,"Steem SSE ");	
+      strcpy(tmp_buffer,"STEEM SSE "); // must be CAPS for the scroller font
       // note it's STEem Engine anyway, not STeem Engine
       size_t buffer_length = strlen(tmp_buffer);
-      //ASSERT( buffer_length == 13);
-      ASSERT( buffer_length == 10 );
       size_t version_length = strlen(stem_version_text);
-      ASSERT ( buffer_length + version_length <BUFFER_LENGTH );
       strncat(tmp_buffer,stem_version_text,BUFFER_LENGTH-buffer_length);
       size_t logo_length=strlen(tmp_buffer);
-      ASSERT( buffer_length != logo_length ); // though we never know
       x=x1/2 - logo_length*16/2;
       for(unsigned int i=0;i<logo_length;i++)
       {
@@ -314,13 +304,42 @@ void osd_draw()
 #undef BUFFER_LENGTH
 
 #else
+
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_LOGO3) // defined in v3.5.3
+/*  We write 'Steem SSE' in the nice plazma with scroller letters instead
+    of the 'Steem 3.2' graphics. The result isn't too bad (better than
+    our previous hack logo1&2).
+    - We've never been able to open 'rc/charset.blk' in a graphic editor.
+    - The version number has 3 digits in SSE.
+    - The version number is on the title of the window.
+*/
+
+#define BUFFER_LENGTH sizeof("STEEM SSE")
+      char tmp_buffer[BUFFER_LENGTH];
+#if defined(SS_VARIOUS) // it's silly but saves bytes TODO
+      strncpy(tmp_buffer,STEEM_SSE_FAQ_TXT,BUFFER_LENGTH-1); // not upper
+#else
+      strcpy(tmp_buffer,"STEEM SSE");	
+#endif
+      for(unsigned int i=0;i<BUFFER_LENGTH-1;i++)
+      {
+        int n=(int)(toupper(tmp_buffer[i]))+(60-33);	// need macro?
+        if (n>=60 && n<120)
+          osd_draw_char(osd_font+(n*64),draw_mem,x-11,
+            start_y+PLASMA_H/2-OSD_LOGO_H-1,draw_line_length,col_white,32);
+        x+=16;
+      }//nxt i
+#undef BUFFER_LENGTH
+
+#else //SS this seems to be a graphic
       for (int c=0;c<OSD_LOGO_W/32 + 1;c++){
         osd_draw_char(osd_font+((50+c)*64),draw_mem,x,start_y+PLASMA_H/2-OSD_LOGO_H/2,draw_line_length,col_white,OSD_LOGO_H);
         x+=32;
       }
-#endif
+#endif//logo 3
+#endif//logo 2
 
-	}
+    }
     if (draw_grille_black<4) draw_grille_black=4;
   }else if (osd_plasma_pal){
     delete[] osd_plasma_pal; osd_plasma_pal=NULL;
