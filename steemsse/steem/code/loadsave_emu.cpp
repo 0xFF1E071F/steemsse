@@ -675,6 +675,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   }
 
 #if defined(STEVEN_SEAGAL)
+
   if(Version>=41) // Steem 3.3
   {
 #ifdef SS_STF
@@ -722,6 +723,15 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     }
 #endif
   }
+  else // default to save values
+  {
+#if defined(SS_IKBD_6301)
+    HD6301EMU_ON=0;
+#endif
+#if defined(SS_STF)
+    ST_TYPE=0;
+#endif
+  }
 
   //3.5.0: nothing special
 
@@ -750,12 +760,12 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #if defined(SS_SHIFTER)
     Shifter.m_ShiftMode=screen_res;
 #endif
-#if defined(SS_IKBD_6301)
-    HD6301EMU_ON=0;
-#endif
 #if defined(SS_ACIA_USE_REGISTERS)
 #endif
 #if defined(SS_DMA)
+#endif
+#if defined(SS_MMU_WAKE_UP)
+    WAKE_UP_STATE=0;
 #endif
   }
 

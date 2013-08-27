@@ -2,7 +2,9 @@
 
 #include "SSESDL.h"
 
+
 TSDL SDL; // singleton
+
 
 TSDL::TSDL() {
   Available=InUse=false;
@@ -16,64 +18,8 @@ TSDL::~TSDL() {
 }
 
 
-
-
-
-TSDL::EnterSDLVideoMode() {
-/*
-  ASSERT( Available );
-  TRACE("TSDL::EnterSDLVideoMode()\n");
-  Disp.Release(); // leave current rendering system (GDI or DD)
-  VERIFY( SDL_Init(SDL_INIT_VIDEO) != -1 );
-//  if(!Surface)
-  Surface = SDL_SetVideoMode(800, 600, 16, SDL_SWSURFACE);
-  ASSERT( Surface );
-
-*/
-/*
-The framebuffer surface, or NULL if it fails. 
-The surface returned is freed by SDL_Quit() and should nt be freed
- by the caller.
-...
-You should free all surfaces except the display surface before calling
-SDL_Quit().  It actually should be safe to free that one too, since SDL
-checks internally and doesn't do anything if you try.
-
-*/
-
-
-}
-
-///extern int nUseMethod;
-
-
-TSDL::LeaveSDLVideoMode() {
-/*
-  ASSERT( Available );
-  TRACE("TSDL::LeaveSDLVideoMode()\n");
-//  ASSERT( Surface );
-  if(Surface)
-  {
-   // TRACE("refcount %d\n",Surface->refcount);  // 1
-   // SDL_FreeSurface(Surface); //
-   // TRACE("refcount %d\n",Surface->refcount); // 1: no change?
-    SDL_QuitSubSystem(SDL_INIT_VIDEO);
-    Surface=0;
-//    TRACE("SDL error %s\n",SDL_GetError());
-    Disp.nUseMethod=0;
-    Disp.Init();
-  }
-//  ASSERT( !Surface ); asserts
-*/
-}
-
-
-
-
-
-
-
 #define LOGSECTION LOGSECTION_INIT
+
 
 bool TSDL::Init() {
   Available=true;
@@ -93,6 +39,46 @@ bool TSDL::Init() {
   return Available;
 }
 
-#undef LOGSECTION
 
+void TSDL::EnterSDLVideoMode() {
+  ASSERT( Available );
+  if(SDL_Init(SDL_INIT_VIDEO)!=-1)
+  {
+    Surface = SDL_SetVideoMode(800, 600, 16, SDL_SWSURFACE); //TODO parameters
+    if(Surface)
+    {
+#if !defined(SS_SDL_KEEP_DDRAW_RUNNING)
+      Disp.Release(); // leave current rendering system (GDI or DD)
 #endif
+      InUse=true;
+    }
+  }
+  TRACE_LOG("SDL Init and create surface %s\n",SDL_GetError());
+}
+
+
+void TSDL::LeaveSDLVideoMode() {
+  ASSERT( Available );
+  if(Surface)
+  {
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
+    TRACE_LOG("SDL close window %s\n",SDL_GetError());
+    Surface=0;
+    InUse=false;
+#if !defined(SS_SDL_KEEP_DDRAW_RUNNING)
+    Disp.nUseMethod=0;
+    Disp.Init();
+#endif
+  }
+}
+
+#undef LOGSECTION //init
+
+
+  void TSDL::Lock();
+  void TSDL::Blit();
+  void TSDL::Unlock();
+
+
+
+#endif//#if defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)

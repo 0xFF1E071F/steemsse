@@ -553,6 +553,14 @@ bool SteemDisplay::InitGDI()
 
 HRESULT SteemDisplay::Lock()
 {
+#if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+  if(SDL.InUse)
+  {
+//    TRACE_LOG("F%d lock SDL\n",FRAME);
+    SDL.Lock();
+  }
+#endif
+
   switch (Method){
     case DISPMETHOD_DD:
     {
@@ -573,6 +581,7 @@ HRESULT SteemDisplay::Lock()
 
       draw_line_length=DDBackSurDesc.lPitch;
       draw_mem=LPBYTE(DDBackSurDesc.lpSurface);
+
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
       // trying to make it crash-free (v3.4.1)
       if(FullScreen && BORDER_40)
@@ -642,6 +651,14 @@ void SteemDisplay::Unlock()
   }else if (Method==DISPMETHOD_GDI){
     SetBitmapBits(GDIBmp,GDIBmpSize,GDIBmpMem);
   }
+#if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+  if(SDL.InUse)
+  {
+//    TRACE_LOG("F%d unlock SDL\n",FRAME);
+    SDL.Unlock();
+  }
+#endif
+
 }
 //---------------------------------------------------------------------------
 void SteemDisplay::VSync()
@@ -682,6 +699,16 @@ void SteemDisplay::VSync()
 
 bool SteemDisplay::Blit()
 {
+
+#if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+      if(SDL.InUse)
+      {
+//        TRACE_LOG("F%d blit SDL\n",FRAME);
+        SDL.Blit();
+      }
+#endif
+
+
   if (Method==DISPMETHOD_DD){
     HRESULT hRet;
     if (FullScreen){

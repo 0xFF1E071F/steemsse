@@ -7,7 +7,7 @@
 Steem Steven Seagal Edition (SSE)
 ---------------------------------
 
-This is based on the source code for Steem 3.2 as released by Steem authors,
+This is based on the source code for Steem R63 as released by Steem authors,
 Ant & Russ Hayward.
 Current site for this build: 
 http://ataristeven.t15.org/Steem.htm
@@ -683,7 +683,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 //#define SS_MMU_NO_CONFUSION // Diagnostic cartridge: don't define (v3.5.2)
 #define SS_MMU_WAKE_UP
-#define SS_MMU_WRITE // programs in RAM may write in the MMU
+#define SS_MMU_WRITE // programs in RAM may write in the MMU 
 
 #if defined(SS_MMU_WAKE_UP)
 #if defined(SS_CPU)
@@ -722,8 +722,9 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_OSD_DRIVE_LED
 #define SS_OSD_DRIVE_LED2 // simpler approach
 #define SS_OSD_DRIVE_LED3 // remove useless variable
-#define SS_OSD_LOGO // suppress former logo (=3.2 in grx)
-#define SS_OSD_LOGO2 //hack (temp)
+//#define SS_OSD_LOGO1 // suppress former logo (=3.2 in grx)
+//#define SS_OSD_LOGO2 //hack (temp)
+#define SS_OSD_LOGO3 // nicer
 #define SS_OSD_SCROLLER_CONTROL
 
 #endif
@@ -764,6 +765,9 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if SSE_VERSION<360
 #define SS_SDL_DEACTIVATE // support planned in v3.6
 #endif
+
+#define SS_SDL_KEEP_DDRAW_RUNNING // normally not!
+
 #endif
 
 
@@ -851,8 +855,8 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(SS_DEBUG) 
 //#define SS_SHIFTER_DRAW_DBG  // totally bypass CheckSideOverscan() & Render()
 #define SS_SHIFTER_EVENTS // recording all shifter events in a frame
-#define SS_SHIFTER_EVENTS_PAL // also for palette
-#define SS_SHIFTER_EVENTS_READ_SDP // also for read SDP
+//#define SS_SHIFTER_EVENTS_PAL // also for palette
+//#define SS_SHIFTER_EVENTS_READ_SDP // also for read SDP
 //#define SS_SHIFTER_EVENTS_BYTES // scanline length
 #define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
 #define SS_SHIFTER_EVENTS_TRICKS // "bordermask"
@@ -1167,6 +1171,16 @@ problem, multiple struct/class definition not allowed?
 #undef SS_OSD_DRIVE_LED2
 #undef SS_OSD_DRIVE_LED3
 #endif
+
+#if defined(SS_OSD_LOGO3)
+#undef SS_OSD_LOGO
+#undef SS_OSD_LOGO2
+#endif
+
+#if defined(SS_OSD_LOGO2)
+#undef SS_OSD_LOGO3
+#endif
+
 
 #if !defined(SS_DRIVE)
 #undef SS_PASTI_ONLY_STX 
