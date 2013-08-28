@@ -1,8 +1,6 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_LOADSAVE_H)
-
-#include "loadsave.decla.h"
-
-#else//!SS_STRUCTURE_LOADSAVE_H
+#pragma once
+#ifndef LOADSAVE_DECLA_H
+#define LOADSAVE_DECLA_H
 
 #if defined(STEVEN_SEAGAL)
 // rather silly but so we leave the define here
@@ -37,21 +35,6 @@ extern int LoadSnapShotChangeDisks(Str[2],Str[2],Str[2]);
 extern void LoadSaveChangeNumFloppies(int);
 extern void LoadSavePastiActiveChange();
 
-#ifdef IN_MAIN
-extern void AddSnapShotToHistory(char *);
-extern bool LoadSnapShot(char *,bool,bool,bool);
-extern bool load_TOS(char *);
 extern MEM_ADDRESS get_TOS_address(char *);
-extern void SaveSnapShot(char*,int,bool);
 
-#ifdef ENABLE_LOGFILE
-extern void load_logsections();
-#endif
-
-extern bool load_TOS(char *);
-extern bool load_cart(char *); // return true on failure
-extern void LoadState(GoodConfigStoreFile *);
-extern void SaveState(ConfigStoreFile *);
-#endif
-
-#endif//!SS_STRUCTURE_LOADSAVE_H
+#endif//#ifndef LOADSAVE_DECLA_H
