@@ -723,7 +723,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     }
 #endif
   }
-  else // default to save values
+  else // default to safe values
   {
 #if defined(SS_IKBD_6301)
     HD6301EMU_ON=0;

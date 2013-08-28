@@ -1,22 +1,13 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_IORW_H)
+#pragma once
+#ifndef IORW_DECLA_H
+#define IORW_DECLA_H
 
-#include "iorw.decla.h"
-
-#else//!defined(SS_STRUCTURE_IORW_H)
-
-#ifdef IN_EMU
-#define EXT
-#define INIT(s) =s
-#else
 #define EXT extern
 #define INIT(s)
-
-#endif
 
 extern DWORD get_shifter_draw_pointer(int);
 
 extern "C" {
-
 
 BYTE ASMCALL io_read_b(MEM_ADDRESS);
 WORD ASMCALL io_read_w(MEM_ADDRESS);
@@ -35,7 +26,7 @@ EXT bool io_word_access INIT(0);
 #undef EXT
 #undef INIT
 
-#endif//SS_STRUCTURE_IORW_H
+#endif//IORW_DECLA_H
 
 /*
                              ----------------

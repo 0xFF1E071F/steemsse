@@ -24,7 +24,7 @@ int TVideoEvents::Report() {
     char stime[9];
     _strdate( sdate );
     _strtime( stime );
-    fprintf(fp,"Steem shifter events report - %s -%s\nFrame frequency: %d shift mode: %d\n",
+    fprintf(fp,"Steem shifter events report - %s -%s\nFrame freq: %d shift mode: %d\n",
       sdate,stime,shifter_freq_at_start_of_vbl,screen_res);
 
     if(FloppyDrive[0].DiskInDrive())
@@ -45,6 +45,7 @@ int TVideoEvents::Report() {
     }//nxt
     fclose(fp);
   }
+  fprintf(fp,"\n--"); // so we know it was OK
   m_nReports++;
   return m_nReports;
 }

@@ -855,7 +855,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(SS_DEBUG) 
 //#define SS_SHIFTER_DRAW_DBG  // totally bypass CheckSideOverscan() & Render()
 #define SS_SHIFTER_EVENTS // recording all shifter events in a frame
-//#define SS_SHIFTER_EVENTS_PAL // also for palette
+#define SS_SHIFTER_EVENTS_PAL // also for palette
 //#define SS_SHIFTER_EVENTS_READ_SDP // also for read SDP
 //#define SS_SHIFTER_EVENTS_BYTES // scanline length
 #define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
@@ -974,7 +974,8 @@ problem, multiple struct/class definition not allowed?
 #define SS_STRUCTURE_IKBD_H
 //#define SS_STRUCTURE_INFOBOX_H // nothing to do?
 #define SS_STRUCTURE_INITSOUND_H
-#define SS_STRUCTURE_IOLIST_H//TODO
+#define SS_STRUCTURE_IOLIST_H
+#define SS_STRUCTURE_IORW_H
 //...
 #define SS_STRUCTURE_RUN_H
 #endif

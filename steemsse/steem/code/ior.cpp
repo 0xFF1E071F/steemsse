@@ -9,6 +9,10 @@ that deal with reads from ST I/O addresses ($ff8000 onwards).
 #pragma message("Included for compilation: ior.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_IORW_H)
+bool io_word_access=false;
+#endif
+
 #define LOGSECTION LOGSECTION_IO
 
 #if !defined(STEVEN_SEAGAL) || !defined(SS_SHIFTER_SDP_READ) \
