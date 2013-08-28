@@ -10,6 +10,25 @@ and steem.new.
 #pragma message("Included for compilation: loadsave.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_LOADSAVE_H)
+
+void AddSnapShotToHistory(char *);
+bool LoadSnapShot(char *,bool,bool,bool);
+bool load_TOS(char *);
+MEM_ADDRESS get_TOS_address(char *);
+void SaveSnapShot(char*,int,bool);
+
+#ifdef ENABLE_LOGFILE
+void load_logsections();
+#endif
+
+bool load_TOS(char *);
+bool load_cart(char *); // return true on failure
+void LoadState(GoodConfigStoreFile *);
+void SaveState(ConfigStoreFile *);
+
+#endif
+
 //---------------------------------------------------------------------------
 int LoadSnapShotChangeDisks(Str NewDisk[2],Str NewDiskInZip[2],Str NewDiskName[2])
 {

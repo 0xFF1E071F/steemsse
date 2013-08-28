@@ -15,7 +15,7 @@ SVN code repository is at http://code.google.com/p/steem-engine/ for
 v3.3.0 and at http://sourceforge.net/projects/steemsse/  for later versions.
 
 Added some files to the project. 
-- acia.h in 'steem\code'.
+- acia.h, key_table.cpp in 'steem\code'.
 -In folder 'steem\code\SSE', several files starting with 'SSE', including 
 this one.
 -In folder 'steem\doc\SSE', some doc files (mainly done by me)
@@ -977,6 +977,7 @@ problem, multiple struct/class definition not allowed?
 #define SS_STRUCTURE_IOLIST_H
 #define SS_STRUCTURE_IORW_H
 #define SS_STRUCTURE_KEYTABLE_H
+#define SS_STRUCTURE_LOADSAVE_H
 //...
 #define SS_STRUCTURE_RUN_H
 #endif
