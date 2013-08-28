@@ -37,11 +37,17 @@ To refresh local based on repository
 svn add
 To add a file
 
+svn delete
+To delete a file (use this, not OS)
+
 svn status
 To list files that were changed
 
 svn diff >diff.txt
 To create a file showing all changes
+
+svn revert
+To restore a file as it is in the repository
 
 svn commit -m "the message"
 svn commit -F file.txt
