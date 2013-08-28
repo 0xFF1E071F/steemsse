@@ -857,6 +857,17 @@ Total track                     6250        6250        6256
    
 */
 
+bool TSF314::Adat() {
+  return (!floppy_instant_sector_access
+#if USE_PASTI
+    ||pasti_active 
+#endif
+#if defined(SS_IPF)
+    ||Caps.IsIpf(Id)
+#endif
+    );
+}
+
 WORD TSF314::BytePosition() {
   return HblsToBytes( hbl_count % HblsPerRotation() );
 }

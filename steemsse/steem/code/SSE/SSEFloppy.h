@@ -19,6 +19,13 @@ command is terminated by either polling this input or by triggering an
 interrupt."
 */
 
+#if defined(SS_FLOPPY)
+#ifdef SS_DRIVE
+#define ADAT (SF314[floppy_current_drive()].Adat())
+#else
+#define ADAT (!floppy_instant_sector_access)
+#endif
+#endif
 
 #if defined(SS_DMA)
 /*  We use object TDma to refine emulation of the DMA in Steem.
@@ -131,6 +138,7 @@ extern TDma Dma;
 
 struct TSF314 {
   enum {RPM=DRIVE_RPM,MAX_CYL=DRIVE_MAX_CYL,TRACK_BYTES=DRIVE_BYTES_ROTATION};
+  bool Adat(); // accurate disk access times
   WORD BytePosition();
   WORD BytePositionOfFirstId();
   WORD BytesToHbls(int bytes);
@@ -156,7 +164,6 @@ struct TSF314 {
   BYTE MotorOn;
 #endif
 };
-
 
 extern TSF314 SF314[2]; // 2 double-sided drives, wow!
 
