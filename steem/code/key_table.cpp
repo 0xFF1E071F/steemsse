@@ -1,9 +1,5 @@
 #if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_KEYTABLE_H)
 
-#include "key_table.decla.h"
-
-#else //!defined(SS_STRUCTURE_KEYTABLE_H)
-
 #ifndef STEEMKEYTEST
 // These are the characters that are produced by pressing Alt+[shift]+key.
 // They were really hard to extract from TOS!
@@ -36,7 +32,7 @@ DWORD AltKeys_Swiss[10]={MAKELONG(MAKEWORD(0x1a,2),'@'),  MAKELONG(MAKEWORD(0x1a
                          MAKELONG(MAKEWORD(0x2b,2),'~'),  MAKELONG(MAKEWORD(0x2b,3),'|'),
                          0};
                          
-extern LANGID KeyboardLangID;
+///extern LANGID KeyboardLangID;
 //---------------------------------------------------------------------------
 void GetTOSKeyTableAddresses(MEM_ADDRESS *lpUnshiftTable,MEM_ADDRESS *lpShiftTable)
 {
@@ -103,7 +99,8 @@ void GetAvailablePressChars(DynamicArray<DWORD> *lpChars)
   }
 }
 
-#endif
+#endif//#ifndef STEEMKEYTEST
+
 
 WORD *shift_key_table[4]={NULL,NULL,NULL,NULL};
 
@@ -553,4 +550,4 @@ void UNIX_get_fake_VKs()
 }
 #endif
 
-#endif//defined(SS_STRUCTURE_KEYTABLE_H)
+#endif//#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_KEYTABLE_H)

@@ -343,7 +343,7 @@ BYTE STCharToPCChar[128]={199,  0,233,226,228,224,229,231,234,235,232,239,238,23
                             0,177,  0,  0,  0,  0,247,  0,176,  0,  0,  0,  0,178,179,151};
 
 
-#endif
+//#endif
 
 
 
@@ -353,7 +353,11 @@ BYTE STCharToPCChar[128]={199,  0,233,226,228,224,229,231,234,235,232,239,238,23
 #undef EXT
 #undef INIT
 
-//#endif
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_KEYTABLE_H)
+#include "key_table.cpp" //temp!
+#endif
 
 #include "stemwin.cpp"
 #define LOGSECTION LOGSECTION_INIT
