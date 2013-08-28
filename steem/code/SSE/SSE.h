@@ -97,26 +97,21 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_BLITTER    // spelled BLiTTER by those in the known!
 #define SS_CPU        // MC68000 microprocessor
 #define SS_CARTRIDGE  // ROM Cartridge slot
-#define SS_DMA        // Custom Direct Memory Access chip (disk)
-#define SS_DRIVE      // SF314 floppy disk drive
-#define SS_FDC        // WD1772 floppy disk controller
+#define SS_FLOPPY     // Group switch for disk drive (DMA, FDC, Pasti, etc)
 #define SS_GLUE       // TODO
 #define SS_HACKS      // an option for dubious fixes
 #define SS_IKBD       // HD6301V1 IKBD (keyboard, mouse, joystick controller)
 #define SS_INTERRUPT  // HBL, VBL  
-#define SS_IPF        // CAPS support (IPF disks) 
 #define SS_MFP        // MC68901 Multi-Function Peripheral Chip
 #define SS_MIDI       // 
 #define SS_MMU        // Memory Manager Unit (of the ST, no paging)
-#define SS_OSD        // On Screen Display (drive leds, version)
-#define SS_PASTI      // Improvements in Pasti support
-#define SS_PSG        // YM2149 - for portA first
+#define SS_OSD        // On Screen Display (drive leds, track info, logo)
 #define SS_SDL        // Simple DirectMedia Layer (TODO)
 #define SS_SHIFTER    // The legendary custom shifter and all its tricks
 #define SS_SOUND      // YM2149, STE DMA sound, Microwire
 #define SS_STF        // switch STF/STE
 #define SS_STRUCTURE
-#define SS_TIMINGS    
+#define SS_TIMINGS    // TODO (only HBL now)
 #define SS_TOS        // The Operating System
 #define SS_UNIX       // Linux build must be OK too (may lag)
 #define SS_VARIOUS    // Mouse capture, keyboard click, unrar...
@@ -124,16 +119,9 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #endif
 
-// Adapt switches
+// Adapt some switches (also see by the end of this file)
 #ifdef WIN32
 #undef SS_UNIX
-#endif
-#if !defined(SS_DMA) || !defined(SS_FDC)
-#undef SS_IPF
-#endif
-#if defined(SS_UNIX)
-#undef SS_IPF//TODO
-//#define SS_UNIX_IPF//TODO
 #endif
 
 #if SSE_VERSION<360 && !defined(SS_BETA)
@@ -377,12 +365,12 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #ifdef SS_DEBUG_TRACE
 #ifdef _DEBUG // VC
-#define SS_DEBUG_TRACE_IDE
+//#define SS_DEBUG_TRACE_IDE
 #endif
 #if defined(DEBUG_BUILD) 
 #define SS_DEBUG_TRACE_FILE
 #else//VC
-//#define SS_DEBUG_TRACE_FILE
+#define SS_DEBUG_TRACE_FILE
 #endif
 #endif
 
@@ -434,9 +422,25 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #endif
 
 
-/////////
-// DMA //
-/////////
+////////////
+// FLOPPY //
+////////////
+
+#if defined(SS_FLOPPY)
+
+#define SS_DMA        // Custom Direct Memory Access chip (disk)
+#define SS_DRIVE      // SF314 floppy disk drive
+#define SS_FDC        // WD1772 floppy disk controller
+#if defined(WIN32)
+#define SS_IPF        // CAPS support (IPF disks) 
+#define SS_PASTI      // Improvements in Pasti support
+#endif
+#define SS_PSG        // YM2149 - for portA first
+
+
+/////////////////
+// FLOPPY: DMA //
+/////////////////
 
 #if defined(SS_DMA) // this is the DMA as used for disk operation
 
@@ -458,9 +462,9 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #endif
 
 
-///////////
-// DRIVE //
-///////////
+///////////////////
+// FLOPPY: DRIVE //
+///////////////////
 
 #if defined(SS_DRIVE)
 
@@ -479,9 +483,9 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #endif
 
 
-/////////
-// FDC //
-/////////
+/////////////////
+// FLOPPY: FDC //
+/////////////////
 
 #if defined(SS_FDC)
 
@@ -518,6 +522,59 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 //#define SS_FDC_TRACE_STATUS //spell out status register
 
 #endif
+
+
+
+/////////////////
+// FLOPPY: IPF //
+/////////////////
+
+#if defined(SS_IPF)
+
+// those switches were used for development, normally they ain't necessary
+//#define SS_IPF_CPU // total sync, works but overkill
+//#define SS_IPF_RUN_PRE_IO 
+//#define SS_IPF_RUN_POST_IO
+#define SS_IPF_ASSOCIATE // extension associated with Steem
+#define SS_IPF_OSD // for the little box at reset
+#ifdef SS_BETA
+#define SS_IPF_LETHAL_XCESS // hack useful with capsimg v4.2
+#define SS_IPF_WRITE_HACK // useless hack for v4.2 AFAIK
+#endif
+//#define SS_IPF_SAVE_WRITES //TODO?
+#define SS_IPF_TRACE_SECTORS // show sector info
+
+#endif
+
+
+///////////////////
+// FLOPPY: PASTI //
+///////////////////
+
+#if defined(SS_PASTI) && defined(WIN32)
+
+#define SS_PASTI_ALWAYS_DISPLAY_STX_DISKS
+#define SS_PASTI_AUTO_SWITCH
+#define SS_PASTI_ONLY_STX  // experimental! optional
+#define SS_PASTI_NO_RESET 
+#define SS_PASTI_ON_WARNING // mention in disk manager title
+
+#endif
+
+
+/////////////////
+// FLOPPY: PSG //
+/////////////////
+
+#if defined(SS_PSG)
+
+#ifdef SS_DEBUG
+#define SS_PSG_REPORT_DRIVE_CHANGE // as FDC trace
+#endif
+
+#endif
+
+#endif//SS_FLOPPY
 
 
 //////////
@@ -618,28 +675,6 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 
 /////////
-// IPF //
-/////////
-
-#if defined(SS_IPF)
-
-// those switches were used for development, normally they ain't necessary
-//#define SS_IPF_CPU // total sync, works but overkill
-//#define SS_IPF_RUN_PRE_IO 
-//#define SS_IPF_RUN_POST_IO
-#define SS_IPF_ASSOCIATE // extension associated with Steem
-#define SS_IPF_OSD // for the little box at reset
-#ifdef SS_BETA
-#define SS_IPF_LETHAL_XCESS // hack useful with capsimg v4.2
-#define SS_IPF_WRITE_HACK // useless hack for v4.2 AFAIK
-#endif
-//#define SS_IPF_SAVE_WRITES //TODO?
-#define SS_IPF_TRACE_SECTORS // show sector info
-
-#endif
-
-
-/////////
 // MFP //
 /////////
 
@@ -729,33 +764,6 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #endif
 
-
-///////////
-// PASTI //
-///////////
-
-#if defined(SS_PASTI) && defined(WIN32)
-
-#define SS_PASTI_ALWAYS_DISPLAY_STX_DISKS
-#define SS_PASTI_AUTO_SWITCH
-#define SS_PASTI_ONLY_STX  // experimental! optional
-#define SS_PASTI_NO_RESET 
-#define SS_PASTI_ON_WARNING // mention in disk manager title
-
-#endif
-
-
-/////////
-// PSG //
-/////////
-
-#if defined(SS_PSG)
-
-#ifdef SS_DEBUG
-#define SS_PSG_REPORT_DRIVE_CHANGE // as FDC trace
-#endif
-
-#endif
 
 /////////
 // SDL //

@@ -2,7 +2,7 @@
 #ifndef ACIA_H
 #define ACIA_H
 /*  This file has been added to clarify and improve ACIA emulation.
-    TODO: create acia.cpp, move code aronnd
+    TODO: create acia.cpp, move code around
 */
 
 #if defined(STEVEN_SEAGAL) && defined(SS_ACIA)

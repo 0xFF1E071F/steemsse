@@ -5,11 +5,6 @@
 #define EXT extern
 #define INIT(s)
 
-#if defined(STEVEN_SEAGAL) && (defined(SS_FDC)||defined(SS_DMA))
-// ADAT = Accurate Disk Access Times (Steem option, snails on drives!)
-#define ADAT (!floppy_instant_sector_access) 
-#endif
-
 #define FLOPPY_MAX_BYTESPERSECTOR 512
 #define FLOPPY_MAX_TRACK_NUM      85
 #define FLOPPY_MAX_SECTOR_NUM     26
