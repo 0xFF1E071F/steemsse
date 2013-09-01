@@ -2108,7 +2108,7 @@ void TOptionBox::CreateSSEPage() {
     page_l,y,Wid,25,Handle,(HMENU)7304,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,USE_SDL,0);
   ToolAddWindow(ToolTip,Win,
-    T("Experimental use of SDL for portability..."));
+    T("BETA TESTS - BUGGY"));
   y+=LineHeight;
 #endif
 

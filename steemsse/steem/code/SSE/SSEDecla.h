@@ -174,6 +174,12 @@ extern BYTE SideBorderSize,BottomBorderSize, SideBorderSizeWin;
 int ChangeBorderSize(int size); // gui.cpp
 #endif
 
+#if defined(SS_VID_BORDERS_BIGTOP) // more hacks...
+#define NEW_BORDER_TOP (35) // for The Musical Wonder 1990, 36 tested
+#define BORDER_TOP (  DISPLAY_SIZE==3 ? NEW_BORDER_TOP : 30 ) 
+#endif
+
+
 #if defined(SS_VID_SCANLINES_INTERPOLATED)
 
 #if defined(SS_VID_SCANLINES_INTERPOLATED_MED)

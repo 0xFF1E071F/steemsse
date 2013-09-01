@@ -269,13 +269,14 @@ HRESULT WINAPI SteemDisplay::DDEnumModesCallback(LPDDSURFACEDESC ddsd,LPVOID t)
   ASSERT(! (ddsd->dwFlags & DDSD_ALPHABITDEPTH) );
   ASSERT(! (ddsd->dwFlags & DDSD_ZBUFFERBITDEPTH) );
   ASSERT( ddsd->lPitch== ddsd->dwWidth*(ddsd->ddpfPixelFormat.dwRGBBitCount/8) );
-  
+
+#ifdef SS_VID_CHECK_DDFS2
   TRACE_LOG("DD fullscreen mode %dx%d %d bits %dHz\n",
     ddsd->dwWidth,ddsd->dwHeight,
     ddsd->ddpfPixelFormat.dwRGBBitCount,
     ddsd->dwRefreshRate
     );
-
+#endif
   if (ddsd->ddpfPixelFormat.dwRGBBitCount>16) return DDENUMRET_OK;//SS?
   
   SteemDisplay *This=(SteemDisplay*)t;//SS as passed
@@ -556,8 +557,8 @@ HRESULT SteemDisplay::Lock()
 #if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
   if(SDL.InUse)
   {
-//    TRACE_LOG("F%d lock SDL\n",FRAME);
     SDL.Lock();
+    return DD_OK;
   }
 #endif
 
@@ -607,8 +608,18 @@ HRESULT SteemDisplay::Lock()
 //---------------------------------------------------------------------------
 void SteemDisplay::Unlock()
 {
+
+#if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+  if(SDL.InUse)
+  {
+    SDL.Unlock();
+    return;
+  }
+#endif
+
   if (Method==DISPMETHOD_DD){
     DDBackSur->Unlock(NULL);
+
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
     //TODO reuse objects? possible?
     if(video_recording && runstate==RUNSTATE_RUNNING)
@@ -651,14 +662,6 @@ void SteemDisplay::Unlock()
   }else if (Method==DISPMETHOD_GDI){
     SetBitmapBits(GDIBmp,GDIBmpSize,GDIBmpMem);
   }
-#if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
-  if(SDL.InUse)
-  {
-//    TRACE_LOG("F%d unlock SDL\n",FRAME);
-    SDL.Unlock();
-  }
-#endif
-
 }
 //---------------------------------------------------------------------------
 void SteemDisplay::VSync()
@@ -699,16 +702,13 @@ void SteemDisplay::VSync()
 
 bool SteemDisplay::Blit()
 {
-
 #if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
-      if(SDL.InUse)
-      {
-//        TRACE_LOG("F%d blit SDL\n",FRAME);
-        SDL.Blit();
-      }
+  if(SDL.InUse)
+  {
+    SDL.Blit();
+    return true;
+  }
 #endif
-
-
   if (Method==DISPMETHOD_DD){
     HRESULT hRet;
     if (FullScreen){
@@ -860,6 +860,7 @@ bool SteemDisplay::Blit()
       }
       if (stem_mousemode==STEM_MOUSEMODE_DISABLED && BlitHideMouse) SetCursor(OldCur);
     }
+
     if (hRet==DD_OK) return true;
 
   }else if (Method==DISPMETHOD_GDI){
@@ -1053,12 +1054,13 @@ void SteemDisplay::ScreenChange()
   draw_end();
 
 #if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
-  if(USE_SDL)
-    SDL.EnterSDLVideoMode(); // temp
-  else
-    SDL.LeaveSDLVideoMode(); //temp
-
+  // temp, dubious
+  if(USE_SDL && !SDL.InUse)
+    SDL.EnterSDLVideoMode(); 
+  else if(!USE_SDL && SDL.InUse)
+    SDL.LeaveSDLVideoMode();
 #endif
+
   if (Method==DISPMETHOD_DD){
 // DX4         if (DDObj->TestCooperativeLevel()!=DDERR_EXCLUSIVEMODEALREADYSET)
     if (DDCreateSurfaces()!=DD_OK) Init();

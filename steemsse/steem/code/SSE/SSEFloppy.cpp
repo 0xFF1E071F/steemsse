@@ -857,7 +857,7 @@ Total track                     6250        6250        6256
    
 */
 
-bool TSF314::Adat() {
+bool TSF314::Adat() { // accurate disk access times
   return (!floppy_instant_sector_access
 #if USE_PASTI
     ||pasti_active 

@@ -28,7 +28,7 @@ struct TSDL {
   ~TSDL();
   bool Init();
 
-  void EnterSDLVideoMode();
+  bool EnterSDLVideoMode();
   void LeaveSDLVideoMode();
 
   void Lock();

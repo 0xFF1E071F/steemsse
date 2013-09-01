@@ -165,7 +165,7 @@ void ASMCALL draw_scanline_dont(int,int,int,int) {}
 void draw_begin()
 {
 //  ASSERT(draw_grille_black>0);
-
+//ASSERT( !draw_lock);
   if (draw_lock) return;
   /*
   #ifndef NO_CRAZY_MONITOR

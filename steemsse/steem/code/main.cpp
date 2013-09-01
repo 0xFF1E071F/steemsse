@@ -1175,13 +1175,6 @@ void CleanUpSteem()
 
   WIN_ONLY( if (hUnzip) FreeLibrary(hUnzip); enable_zip=false; hUnzip=NULL; )
 
-/*
-#if defined(STEVEN_SEAGAL) && defined(SS_SDL)
-  if(SDL_OK)
-    SDL_Quit();
-#endif
-*/
-
 #ifdef UNIX
   if (XD){
     XCloseDisplay(XD);

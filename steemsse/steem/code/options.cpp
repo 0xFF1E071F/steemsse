@@ -1514,8 +1514,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if (HIWORD(wPar)==BN_CLICKED){
             USE_SDL=!USE_SDL;
             TRACE_LOG("Option SDL %d\n",USE_SDL);
-            SendMessage(HWND(lPar),BM_SETCHECK,USE_SDL,0);
             Disp.ScreenChange();
+            USE_SDL=SDL.InUse; // it can fail
+            SendMessage(HWND(lPar),BM_SETCHECK,USE_SDL,0);
           }
           break; 
 #endif
