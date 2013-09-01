@@ -1083,6 +1083,16 @@ void HandleButtonMessage(UINT Id,HWND hBut)
 //---------------------------------------------------------------------------
 void SetStemWinSize(int w,int h,int xo,int yo)
 {
+
+#if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+  if(SDL.InUse)
+  {
+    SDL.LeaveSDLVideoMode();
+    SDL.EnterSDLVideoMode();
+    //return;
+  }
+#endif
+
   if (FullScreen){
     rcPreFS.left=max(rcPreFS.left+xo,0l);
     rcPreFS.top=max(int(rcPreFS.top+yo),-GetSystemMetrics(SM_CYCAPTION));

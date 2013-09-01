@@ -4988,6 +4988,51 @@ SOURCE=..\..\steem\code\SSE\SSEParameters.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\steem\code\SSE\SSESDL.cpp
+DEP_CPP_SSESD=\
+	"..\..\3rdparty\SDL-WIN\include\begin_code.h"\
+	"..\..\3rdparty\SDL-WIN\include\close_code.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_active.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_audio.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_cdrom.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_dreamcast.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_macos.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_macosx.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_minimal.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_os2.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_symbian.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_config_win32.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_cpuinfo.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_endian.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_error.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_events.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_joystick.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_keyboard.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_keysym.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_loadso.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_main.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_mouse.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_mutex.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_platform.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_quit.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_rwops.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_stdinc.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_thread.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_timer.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_version.h"\
+	"..\..\3rdparty\SDL-WIN\include\SDL_video.h"\
+	"..\..\steem\code\SSE\SSESDL.h"\
+	
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\SSE\SSESDL.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\steem\code\SSE\SSEShifter.cpp
 
 !IF  "$(CFG)" == "Steem - Win32 Debug"

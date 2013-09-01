@@ -65,6 +65,10 @@ Practically on the ST, the request is placed by clearing the bit in the GPIP.
 
 2013/03/01 [NP] When MFP_IRQ goes from 0 to 1, the resulting signal is visible
 to the CPU only 4 cycles later
+
+Possible explanation: IRQ signal goes first to GLUE, then to CPU, it's
+no direct CPU/MFP connection.
+
 */
     if(SSE_HACKS_ON)
       ioaccess|=IOACCESS_FLAG_DELAY_MFP; // fixes V8 Music System
@@ -158,6 +162,10 @@ either run the VBL interrupt, or the main code.
   CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED = 20
   But the same concept for HBL = 28
   We change those values to 12? 16?
+
+  TODO: This only takes care of 'double pending' case, but there's also
+  the 'higher int during IACK' possibility (cases?)
+
 */
   if(abs_quick(when_set-mfp_time_of_start_of_last_interrupt[irq])
     >= (SSE_HACKS_ON

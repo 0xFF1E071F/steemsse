@@ -106,7 +106,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_MIDI       // 
 #define SS_MMU        // Memory Manager Unit (of the ST, no paging)
 #define SS_OSD        // On Screen Display (drive leds, track info, logo)
-#define SS_SDL        // Simple DirectMedia Layer (TODO)
+#define SS_SDL        // Simple DirectMedia Layer
 #define SS_SHIFTER    // The legendary custom shifter and all its tricks
 #define SS_SOUND      // YM2149, STE DMA sound, Microwire
 #define SS_STF        // switch STF/STE
@@ -365,12 +365,12 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #ifdef SS_DEBUG_TRACE
 #ifdef _DEBUG // VC
-//#define SS_DEBUG_TRACE_IDE
+#define SS_DEBUG_TRACE_IDE
 #endif
 #if defined(DEBUG_BUILD) 
 #define SS_DEBUG_TRACE_FILE
 #else//VC
-#define SS_DEBUG_TRACE_FILE
+//#define SS_DEBUG_TRACE_FILE
 #endif
 #endif
 
@@ -770,11 +770,11 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 /////////
 
 #if defined(SS_SDL)
-#if SSE_VERSION<360
-#define SS_SDL_DEACTIVATE // support planned in v3.6
-#endif
 
-#define SS_SDL_KEEP_DDRAW_RUNNING // normally not!
+#if SSE_VERSION<360
+//#define SS_SDL_DEACTIVATE // support planned in v3.6
+#endif
+//#define SS_SDL_KEEP_DDRAW_RUNNING // normally not!
 
 #endif
 
@@ -1114,7 +1114,7 @@ problem, multiple struct/class definition not allowed?
 
 #define SS_VID_BPOC // Best Part of the Creation fit display 800 hack
 #define SS_VID_CHECK_DDFS // is video card/display capable?
-
+//#define SS_VID_CHECK_DDFS2 //list all modes
 #if defined(WIN32) 
 #define SS_VID_RECORD_AVI //avifile
 #endif
