@@ -127,7 +127,7 @@ EXT BYTE fdc_read_address_buffer[20];
 #define FDC_HBLS_PER_ROTATION (313*50/5) 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_INDEX_PULSE) 
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_INDEX_PULSE1) 
 // 4ms =200ms/50
 #define FDC_HBLS_OF_INDEX_PULSE (FDC_HBLS_PER_ROTATION/ ((ADAT)?50:20)) 
 #else
@@ -216,7 +216,13 @@ bool floppy_handle_file_error(int floppyno,bool Write,int sector,int PosInSector
 //---------------------------------------------------------------------------
 bool floppy_track_index_pulse_active()
 {
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_INDEX_PULSE2)
+  if(ADAT)
+    return (hbl_count%FDC_HBLS_PER_ROTATION<=FDC_HBLS_OF_INDEX_PULSE);
+  else // it's because we only mod ADAT mode
+#endif
   if (floppy_type1_command_active){
+//    TRACE("IP %d\n",(((DWORD)hbl_count) % FDC_HBLS_PER_ROTATION)>=(FDC_HBLS_PER_ROTATION-FDC_HBLS_OF_INDEX_PULSE));
     return (((DWORD)hbl_count) % FDC_HBLS_PER_ROTATION)>=(FDC_HBLS_PER_ROTATION-FDC_HBLS_OF_INDEX_PULSE);
 ////        return ( ( (DWORD)hbl_count) % FDC_HBLS_PER_ROTATION)<=FDC_HBLS_OF_INDEX_PULSE ;
   }
@@ -224,18 +230,9 @@ bool floppy_track_index_pulse_active()
 }
 //---------------------------------------------------------------------------
 void fdc_type1_check_verify()
-
 {
-
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_VERIFY_AGENDA)
-/*  In v3.5.0, verify took 3 REVs which was based on a bad reading of the
-    doc ("max 6 revs, so 3 is average").
-    In fact Verify is completed as soon as an ID field with matching track 
-    number is found. 
-    This is now precisely emulated, using same routine as for 'read address',
-    but more random could be fine.
-    What isn't emulated: ID track is correct?
-*/
+//  What isn't emulated: ID track is correct?
   if(ADAT)
   {
     if(FDC_VERIFY)
@@ -244,6 +241,24 @@ void fdc_type1_check_verify()
       BYTE NextIDNum;
       SF314[DRIVE].NextID(NextIDNum,HBLsToNextSector); // references
       HBLsToNextSector+=MILLISECONDS_TO_HBLS(15); // head settling
+#if defined(SS_DRIVE_EMPTY_VERIFY_LONG)
+/*  When you boot a ST with no disk into the drive, it will hang for
+    a long time then show the desktop with two drive icons.
+    It seems well emulated in SainT, here it's more a hack.
+    Both methods "work" but we have no way of knowing which is worse.
+*/
+      if(SSE_HACKS_ON && ADAT && FloppyDrive[DRIVE].Empty())
+      {
+        HBLsToNextSector=FDC_HBLS_PER_ROTATION*5;
+        TRACE_LOG("No disk %c verify error in %d HBL\n",'A'+DRIVE,HBLsToNextSector);
+      }
+#elif defined(SS_DRIVE_EMPTY_VERIFY_TIME_OUT)
+      if(SSE_HACKS_ON && ADAT && FloppyDrive[DRIVE].Empty())
+      {
+        TRACE_LOG("No disk %c verify times out\n",'A'+DRIVE);
+      }
+      else
+#endif
       agenda_add(agenda_fdc_verify,HBLsToNextSector,1);
     }
     else
@@ -252,7 +267,6 @@ void fdc_type1_check_verify()
     return;
   }
 #endif
-
   if (FDC_VERIFY==0) return;
   // This reads an ID field and checks that track number matches floppy_head_track
   // It will fail on an unformatted track or if there is no disk of course
@@ -266,7 +280,6 @@ void fdc_type1_check_verify()
     if (floppy_current_side() >= floppy->Sides) fdc_str|=FDC_STR_SEEK_ERROR;
   }
 DEBUG_ONLY( if (fdc_str & FDC_STR_SEEK_ERROR) log("     Verify failed (track not formatted)"); )
-
 }
 //---------------------------------------------------------------------------
 /* SS writes to $FF8604 when bits 2&1 of $FF8606 have been cleared
@@ -285,11 +298,12 @@ void floppy_fdc_command(BYTE cm)
     Fixes Japtro loader in the accurate way of v3.5.1 though.
     This demo already worked before because SEEK and STEP were implemented 
     another, less precise way (compensation).
+    TODO: some commands should work or start
 */
   if( ADAT && YM2149.Drive()==TYM2149::NO_VALID_DRIVE && (cm&0xF0)!=0xd0)
   {
     TRACE_LOG("CR %X no drive selected\n",cm);
-    return;
+    return; // time out
   }
 #endif
 
@@ -321,7 +335,25 @@ void floppy_fdc_command(BYTE cm)
       return;
     }
   }
-  mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
+
+#if defined(SS_FDC_FORCE_INTERRUPT)
+/* It is not specified but we guess than any new command will
+   clear the index pulse interrupt?
+*/
+  if(ADAT && WD1772.InterruptCondition==4)
+    WD1772.InterruptCondition=0; 
+/*
+"When using the immediate interrupt condition (i3 = 1) an interrupt
+ is immediately generated and the current command terminated. 
+ Reading the status or writing to the Command Register does not
+ automatically clear the interrupt. The Hex D0 is the only command 
+ that enables the immediate interrupt (Hex D8) to clear on a subsequent 
+ load Command Register or Read Status Register operation. 
+ Follow a Hex D8 with D0 command."
+*/
+  else if(!ADAT||WD1772.InterruptCondition!=8)
+#endif
+    mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
   agenda_delete(agenda_fdc_finished);
 
   floppy_irq_flag=0;
@@ -359,8 +391,11 @@ void floppy_fdc_command(BYTE cm)
     fdc_str=FDC_STR_BUSY | FDC_STR_MOTOR_ON;
     fdc_spinning_up=int(delay_exec ? 2:1);
 #if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_MOTOR_ON)
-    if( ADAT && !FloppyDrive[floppy_current_drive()].Empty() )
+    if( ADAT)//// && !FloppyDrive[floppy_current_drive()].Empty() )
+    {
       SF314[DRIVE].MotorOn=true;
+      SF314[DRIVE].HblOfMotorOn=hbl_count;
+    }
     TRACE_LOG("Motor on drive %c\n",'A'+DRIVE);
 #else
     TRACE_LOG("Motor on\n");
@@ -387,18 +422,14 @@ void floppy_fdc_command(BYTE cm)
 #endif
     }
   }
-
-#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_EMPTY)
-/*  'Motor on' flag in STR being set doesn't mean the drive is spinning
-    especially if we have 2 drives.
-    Fixes European Demos: 'insert disk B' screen
-*/
-  else if(SSE_HACKS_ON && ADAT && FloppyDrive[DRIVE].Empty())
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_EMPTY_SPIN_UP)
+  // hack for European Demos: 'insert disk B' screen
+  else if(SSE_HACKS_ON && ADAT && FloppyDrive[DRIVE].Empty()
+     && (!SF314[DRIVE].MotorOn
+    || hbl_count-SF314[DRIVE].HblOfMotorOn<FDC_HBLS_PER_ROTATION*6 ) )
   {
-#if defined(SS_DEBUG) && defined(SS_DRIVE_MOTOR_ON)
-    ASSERT( !SF314[DRIVE].MotorOn );
-#endif
-    agenda_fdc_finished(0);
+    TRACE_LOG("European Demos hack\n");
+    agenda_fdc_finished(0); //IRQ
     return;
   }
 #endif
@@ -407,23 +438,8 @@ void floppy_fdc_command(BYTE cm)
 //---------------------------------------------------------------------------
 void agenda_fdc_spun_up(int do_exec)
 {
-
-#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_EMPTY)
-/*  If there's no disk, the drive can't catch index and the controller
-    can't count them.
-*/
-  if( SSE_HACKS_ON && ADAT && FloppyDrive[floppy_current_drive()].Empty() )
-  {
-    TRACE_LOG("Drive empty, no spinup\n");
-    fdc_str&=BYTE(FDC_STR_T1_SPINUP_COMPLETE);
-    fdc_str|=FDC_STR_BUSY;
-    agenda_fdc_finished(0);
-    return;
-  }
-#endif
-
   fdc_spinning_up=0;
-  TRACE_LOG("Spin up\n");
+  TRACE_LOG("Spin up - exec:%d\n",do_exec);
   if (do_exec) fdc_execute();
 }
 //---------------------------------------------------------------------------
@@ -439,7 +455,6 @@ void fdc_execute()
   int floppyno=floppy_current_drive();
   TFloppyImage *floppy=&FloppyDrive[floppyno];
   floppy_irq_flag=FLOPPY_IRQ_YES;
-
 #if defined(STEVEN_SEAGAL)&&defined(SS_FDC_PRECISE_HBL)
   int hbls_to_interrupt=64;
 #define hbl_multiply 1
@@ -1063,7 +1078,7 @@ acknowledge Force Interrupt commands only between micro- instructions.
       {
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
         ASSERT(WD1772.CommandType(fdc_cr)==4);
-        TRACE_LOG("Interrupt\n");
+        TRACE_LOG("Force Interrupt\n");
 #endif
         log(Str("FDC: ")+HEXSl(old_pc,6)+" - Force interrupt: t="+hbl_count);
 
@@ -1088,11 +1103,55 @@ acknowledge Force Interrupt commands only between micro- instructions.
         agenda_delete(agenda_fdc_finished);
         fdc_str=BYTE(fdc_str & FDC_STR_MOTOR_ON);
         if (fdc_cr & b1100){
-          TRACE_LOG(" Immediate\n");
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_FORCE_INTERRUPT)
+/*  "The lower four bits of the command determine the conditional 
+interrupt as follows:
+- i0,i1 = Not used with the WD1772
+- i2 = Every Index Pulse
+- i3 = Immediate Interrupt
+The conditional interrupt is enabled when the corresponding bit 
+positions of the command (i3-i0) are set to a 1. When the 
+condition for interrupt is met the INTRQ line goes high signifying
+ that the condition specified has occurred. If i3-i0 are all set
+ to zero (Hex D0), no interrupt occurs but any command presently
+ under execution is immediately terminated. When using the immediate
+ interrupt condition (i3 = 1) an interrupt is immediately generated
+ and the current command terminated. Reading the status or writing
+ to the Command Register does not automatically clear the interrupt.
+ The Hex D0 is the only command that enables the immediate interrupt
+ (Hex D8) to clear on a subsequent load Command Register or Read 
+ Status Register operation. Follow a Hex D8 with D0 command."
+
+  -> D4 (IRQ every index pulse) wasn't implemented yet in Steem. 
+  Done in v3.5.3. Fixes Panzer rotation time returning null times.
+*/          
+          if(fdc_cr&b1000)
+          {
+            ASSERT( fdc_cr==0xD8 );
+            WD1772.InterruptCondition=8;
+            TRACE_LOG("Immediate IRQ\n");
+            agenda_fdc_finished(0); // Interrupt CPU immediately
+          }
+          else //if( WD1772.InterruptCondition==4
+          {
+            ASSERT( fdc_cr==0xD4 );
+            WD1772.InterruptCondition=4;// IRQ at every index pulse
+            floppy_irq_flag=false;
+            WORD hbls_to_next_ip=FDC_HBLS_PER_ROTATION-
+              hbl_count%FDC_HBLS_PER_ROTATION;
+            TRACE_LOG("IP IRQ in %d HBL (%d)\n",hbls_to_next_ip,hbl_count+hbls_to_next_ip);
+            agenda_add(agenda_fdc_finished,hbls_to_next_ip,0);
+          }
+#else
           agenda_fdc_finished(0); // Interrupt CPU immediately
+#endif
         }else{
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_MOTOR_OFF)
           agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION*9,0);
+#endif
+          ASSERT( fdc_cr==0xD0 );
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_FORCE_INTERRUPT)
+          WD1772.InterruptCondition=0;
 #endif
           floppy_irq_flag=0;
           mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
@@ -1150,6 +1209,7 @@ The FDC will automatically turn off the motor after the 10 index pulse
 -> We try to emulate this here, assuming one drive in operation
 (we don't look at  the complication, juggling with drives!)
 */
+
 void agenda_fdc_motor_flag_off(int revs_to_wait)
 {
   //TRACE("%c:agenda_fdc_motor_flag_off %d revs\n",'A'+DRIVE,revs_to_wait);
@@ -1162,6 +1222,8 @@ void agenda_fdc_motor_flag_off(int revs_to_wait)
   else
   {
     fdc_str&=BYTE(~FDC_STR_MOTOR_ON);
+//    fdc_str&=~0x20;//tst
+//    fdc_spinning_up=1;
 #if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_MOTOR_ON)
     TRACE_LOG("Motor off drive %c\n",'A'+DRIVE);
     SF314[DRIVE].MotorOn=false;
@@ -1257,12 +1319,23 @@ void agenda_fdc_finished(int)
     if (floppy_head_track[floppy_current_drive()]==0) fdc_str|=FDC_STR_T1_TRACK_0;
     floppy_type1_command_active=2;
   }
+
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_FORCE_INTERRUPT)
+/*  Command $D4 will trigger an IRQ at each index pulse.
+    Motor keeps running.
+    It's a way to measure rotation time (Panzer)
+*/
+  if(ADAT && WD1772.InterruptCondition==4)
+  {
+    TRACE_LOG("D4 prepare next IP at %d\n",hbl_count+FDC_HBLS_PER_ROTATION);
+    agenda_add(agenda_fdc_finished,FDC_HBLS_PER_ROTATION,0);    
+  } else // suppose SS_FDC_MOTOR_OFF
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_MOTOR_OFF)
   if(ADAT)
   {
     ASSERT( fdc_str&FDC_STR_MOTOR_ON || FloppyDrive[floppy_current_drive()].Empty());
     ASSERT( agenda_get_queue_pos(agenda_fdc_motor_flag_off)<0 );
-
 #if defined(SS_FDC_MOTOR_OFF_COUNT_IP)
     agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION,9); //10?
 #else
