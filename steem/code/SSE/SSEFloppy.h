@@ -162,6 +162,7 @@ struct TSF314 {
 #endif
 #if defined(SS_DRIVE_MOTOR_ON)
   BYTE MotorOn;
+  DWORD HblOfMotorOn;
 #endif
 };
 
@@ -219,11 +220,16 @@ struct TWD1772 {
   BYTE TR;
   BYTE SR;
   BYTE DR;
-
-  
+#ifdef SS_FDC_FORCE_INTERRUPT
+  BYTE InterruptCondition;
+#endif
   BYTE IORead(BYTE Line);
   void IOWrite(BYTE Line,BYTE io_src_b);
   BYTE CommandType(int command=-1); // I->IV
+#if defined(SS_FDC_RESET)
+  void Reset(bool Cold);
+#endif
+
 #if defined(SS_DEBUG) || defined(SS_OSD_DRIVE_LED)
 /*  This is useful for OSD: if we're writing then we need to display a red
     light (green when reading). This is used by pasti & IPF.

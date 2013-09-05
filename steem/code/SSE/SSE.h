@@ -370,7 +370,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(DEBUG_BUILD) 
 #define SS_DEBUG_TRACE_FILE
 #else//VC
-//#define SS_DEBUG_TRACE_FILE
+#define SS_DEBUG_TRACE_FILE
 #endif
 #endif
 
@@ -469,7 +469,10 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(SS_DRIVE)
 
 #define SS_DRIVE_BYTES_PER_ROTATION
-#define SS_DRIVE_EMPTY
+#define SS_DRIVE_EMPTY_SPIN_UP // European Demos
+// one or the other:
+#define SS_DRIVE_EMPTY_VERIFY_LONG // GEM
+//#define SS_DRIVE_EMPTY_VERIFY_TIME_OUT //GEM
 #define SS_DRIVE_MOTOR_ON
 #define SS_DRIVE_MULTIPLE_SECTORS
 #define SS_DRIVE_READ_ADDRESS_TIMING
@@ -496,17 +499,19 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_FDC_CHANGE_COMMAND_DURING_SPINUP // from Hatari
 #define SS_FDC_CHANGE_SECTOR_WHILE_BUSY // from Hatari or Kryoflux
 #define SS_FDC_CHANGE_TRACK_WHILE_BUSY // from Hatari or Kryoflux
+#define SS_FDC_FORCE_INTERRUPT // Panzer
 #define SS_FDC_HEAD_SETTLE
-#define SS_FDC_INDEX_PULSE
+#define SS_FDC_INDEX_PULSE1 // 4ms
+#define SS_FDC_INDEX_PULSE2 // read STR
 #define SS_FDC_MOTOR_OFF 
 #define SS_FDC_PRECISE_HBL
 #define SS_FDC_READ_ADDRESS_UPDATE_SR
+#define SS_FDC_RESET
 #define SS_FDC_RESTORE_AGENDA
 #define SS_FDC_SEEK
 #define SS_FDC_SPIN_UP_AGENDA
 #define SS_FDC_SPIN_UP_STATUS
 #define SS_FDC_STEP
-
 
 #ifdef SS_PSG
 #define SS_FDC_IGNORE_WHEN_NO_DRIVE_SELETED // from Hatari
@@ -519,10 +524,12 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #endif//SS_FDC_ACCURATE
 
-//#define SS_FDC_TRACE_STATUS //spell out status register
-
+#ifdef SS_DEBUG
+#define SS_FDC_TRACE_IRQ
+#define SS_FDC_TRACE_STATUS //spell out status register
 #endif
 
+#endif
 
 
 /////////////////
@@ -772,7 +779,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(SS_SDL)
 
 #if SSE_VERSION<360
-//#define SS_SDL_DEACTIVATE // support planned in v3.6
+#define SS_SDL_DEACTIVATE // support planned in v3.6
 #endif
 //#define SS_SDL_KEEP_DDRAW_RUNNING // normally not!
 
@@ -950,9 +957,9 @@ problem, multiple struct/class definition not allowed?
 
 #define SS_STRUCTURE_BIG_FORWARD // temp
 
-#if !defined(SS_UNIX)
+//#if !defined(SS_UNIX) //we must try with Unix too
 #define SS_STRUCTURE_NEW_H_FILES
-#endif
+//#endif
 
 #define SS_STRUCTURE_DMA_INC_ADDRESS
 //#define SS_STRUCTURE_INFO // just telling files included in modules

@@ -557,6 +557,8 @@ What was in the buffers will go nowhere, the internal counter is reset.
 
 #endif
 
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_FDC
 
 void TDma::UpdateRegs(bool trace_them) {
 /*  This is used for debugging and for pasti drive led
@@ -600,9 +602,11 @@ void TDma::UpdateRegs(bool trace_them) {
     floppy_head_track[1]=Caps.SF314[1].track;
   } 
 #endif
+
+#if defined(SS_FDC_TRACE_IRQ)
   if(trace_them)
   {
-    TRACE_LOG("FDC IRQ CR %X STR %X ",fdc_cr,fdc_str);
+    TRACE_LOG("FDC IRQ HBL %d CR %X STR %X ",hbl_count,fdc_cr,fdc_str);
 #if defined(SS_FDC_TRACE_STATUS)
     WD1772.TraceStatus();
 #endif
@@ -615,6 +619,8 @@ void TDma::UpdateRegs(bool trace_them) {
     TRACE_LOG(" T %d/%d DMA CR %X $%X SR %X #%d PC %X\n",
       floppy_head_track[0],floppy_head_track[1],MCR,BaseAddress,SR,Counter,pc);
   }
+#endif
+
 }
 
 
@@ -1052,12 +1058,9 @@ BYTE TWD1772::IORead(BYTE Line) {
     case 0: // STR
       // Update some flags before returning STR
       // IP
+      STR&=BYTE(~FDC_STR_T1_INDEX_PULSE);
       if(floppy_track_index_pulse_active())
         STR|=FDC_STR_T1_INDEX_PULSE;
-      else
-        // If not type 1 command we will get here, it is okay to clear
-        // it as this bit is only for the DMA chip for type 2/3.
-        STR&=BYTE(~FDC_STR_T1_INDEX_PULSE);
       // WP, SU
       if(floppy_type1_command_active)
       {
@@ -1084,11 +1087,23 @@ BYTE TWD1772::IORead(BYTE Line) {
           " - Reading status register as "+Str(itoa(STR,d2_t_buf,2)).LPad(8,'0')+
           " ($"+HEXSl(STR,2)+"), clearing IRQ"); )
         floppy_irq_flag=0;
-        mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
+#if defined(SS_FDC_FORCE_INTERRUPT)
+/*
+"When using the immediate interrupt condition (i3 = 1) an interrupt
+ is immediately generated and the current command terminated. 
+ Reading the status or writing to the Command Register does not
+ automatically clear the interrupt. The Hex D0 is the only command 
+ that enables the immediate interrupt (Hex D8) to clear on a subsequent 
+ load Command Register or Read Status Register operation. 
+ Follow a Hex D8 with D0 command."
+*/
+        if(WD1772.InterruptCondition!=8)
+#endif
+          mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
       }
       ior_byte=STR;
 #if !defined(SS_DEBUG_TRACE_IDE)
-      TRACE_LOG("FDC STR %X\n",ior_byte);
+      TRACE_LOG("hbl %d FDC STR %X\n",hbl_count,ior_byte);
 #endif
       break;
     case 1:
@@ -1189,6 +1204,16 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 }
 
 
+#if defined(SS_FDC_RESET)
+void TWD1772::Reset(bool Cold) {
+  STR=2;
+#ifdef SS_FDC_FORCE_INTERRUPT
+  InterruptCondition=0;
+#endif
+}
+#endif
+
+
 #if defined(SS_DEBUG) || defined(SS_OSD_DRIVE_LED)
 int TWD1772::WritingToDisk() {
   return((CR&0xF0)==0xF0 || (CR&0xE0)==0xA0);
@@ -1269,7 +1294,7 @@ void TWD1772::TraceStatus() {
     else
       TRACE_LOG("LD ");//Lost Data, normally impossible on ST
   if(STR&0x02)
-    if(type==1) 
+    if(type==1 || type==4) 
       TRACE_LOG("IP "); // index
     else
       TRACE_LOG("DRQ "); // data request

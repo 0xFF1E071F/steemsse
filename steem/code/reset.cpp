@@ -249,6 +249,10 @@ void reset_peripherals(bool Cold)
   Shifter.Reset(Cold);
 #endif
 
+#if defined(SS_FDC_RESET)
+  WD1772.Reset(Cold);
+#endif
+
 #endif
   
   shifter_hscroll=0;
