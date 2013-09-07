@@ -25,7 +25,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_ALWAYS ] = 1;
 #if defined(_DEBUG) && !defined(DEBUG_BUILD) // VC6 IDE debug no boiler
   //TODO move somehow to SSE.H
-  logsection_enabled[ LOGSECTION_FDC ] = 1;
+  logsection_enabled[ LOGSECTION_FDC ] = 0;
   logsection_enabled[ LOGSECTION_IO ] = 0;
   logsection_enabled[ LOGSECTION_MFP_TIMERS ] = 0;
   logsection_enabled[ LOGSECTION_INIT ] =0;
@@ -124,7 +124,7 @@ void TDebug::Trace(char *fmt, ...){
 #if defined(DEBUG_BUILD) || defined(SS_UNIX)
   if(USE_TRACE_FILE)
 #endif      
-    printf(trace_buffer),nTrace++; 
+/////???    printf(trace_buffer),nTrace++; 
   if(TRACE_FILE_REWIND && nTrace>=TRACE_MAX_WRITES)
   {
     nTrace=0;
@@ -220,6 +220,27 @@ void TDebug::TraceGeneralInfos(int when) {
   }
 }
 #endif
+
+
+void TDebug::TraceIde(char *fmt, ...){ 
+  va_list body;	
+  va_start(body, fmt);	
+#if defined(SS_UNIX)
+  int nchars=vsnprintf(trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
+#else
+  int nchars=_vsnprintf(trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
+#endif
+  va_end(body);	
+  if(nchars==-1)
+    strcpy(trace_buffer,"TRACE buffer overrun\n");
+
+#if defined(WIN32)
+  OutputDebugString(trace_buffer);
+#elif defined(SS_UNIX)
+  printf("%s\n",trace_buffer);  // TODO
+#endif
+
+}
 
 
 void TDebug::TraceLog(char *fmt, ...) { // static
