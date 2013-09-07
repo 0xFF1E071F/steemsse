@@ -217,14 +217,15 @@ bool floppy_handle_file_error(int floppyno,bool Write,int sector,int PosInSector
 bool floppy_track_index_pulse_active()
 {
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_INDEX_PULSE2)
+/*  It's not important if we set IP for II/III commands as it is DRQ,
+    which no program will check.
+*/
   if(ADAT)
     return (hbl_count%FDC_HBLS_PER_ROTATION<=FDC_HBLS_OF_INDEX_PULSE);
   else // it's because we only mod ADAT mode
 #endif
   if (floppy_type1_command_active){
-//    TRACE("IP %d\n",(((DWORD)hbl_count) % FDC_HBLS_PER_ROTATION)>=(FDC_HBLS_PER_ROTATION-FDC_HBLS_OF_INDEX_PULSE));
     return (((DWORD)hbl_count) % FDC_HBLS_PER_ROTATION)>=(FDC_HBLS_PER_ROTATION-FDC_HBLS_OF_INDEX_PULSE);
-////        return ( ( (DWORD)hbl_count) % FDC_HBLS_PER_ROTATION)<=FDC_HBLS_OF_INDEX_PULSE ;
   }
   return 0;
 }
@@ -381,7 +382,6 @@ void floppy_fdc_command(BYTE cm)
   // there is a bit in type 1, 2 and 3 commands that will make them execute
   // while the motor is in the middle of spinning up (BIT_3).
   bool delay_exec=0;
-
   if ((fdc_str & FDC_STR_MOTOR_ON)==0){
     if ((cm & (BIT_7+BIT_6+BIT_5+BIT_4))!=0xd0){ // Not force interrupt
       if ((cm & BIT_3)==0){
@@ -404,13 +404,21 @@ void floppy_fdc_command(BYTE cm)
       agenda_add(agenda_fdc_spun_up,MILLISECONDS_TO_HBLS(100),delay_exec);
     }else{
 #if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_SPIN_UP_TIME)
-#ifdef SS_DRIVE_SPIN_UP_TIME2
-      // Make it fall at a multiple of HblsPerRotation
-      int hbl_last_ip=(hbl_count/FDC_HBLS_PER_ROTATION)*FDC_HBLS_PER_ROTATION;
-      ASSERT( hbl_last_ip<=hbl_count );
-      int hbl_next_ip=hbl_last_ip+FDC_HBLS_PER_ROTATION;
-      ASSERT( hbl_next_ip>=hbl_count );
-      int delay=hbl_next_ip-hbl_count+5*FDC_HBLS_PER_ROTATION;
+/*  if SS_FDC_INDEX_PULSE_COUNTER or SS_DRIVE_SPIN_UP_TIME2 is defined,
+    the motor will start at a random hbl but will be spun up at a hbl
+    divisible by FDC_HBLS_PER_ROTATION. We define those spots, arbitrarily,
+    as IP time, and so the command starts right at an IP.
+    The randomness is introduced by the random starting hbl.
+*/
+#if defined(SS_FDC_INDEX_PULSE_COUNTER)
+      //  Set up agenda for next IP
+      WD1772.IndexCounter=0;
+      DWORD delay=SF314[DRIVE].HblsNextIndex();
+      agenda_add(agenda_fdc_spun_up,delay,delay_exec);
+#elif defined(SS_DRIVE_SPIN_UP_TIME2)
+      //  Set up agenda for 6 IP
+      DWORD delay=SF314[DRIVE].HblsNextIndex();
+      delay+=5*FDC_HBLS_PER_ROTATION;
       ASSERT( delay<=FDC_HBLS_PER_ROTATION*6 );
       agenda_add(agenda_fdc_spun_up,delay,delay_exec);
 #else
@@ -438,6 +446,38 @@ void floppy_fdc_command(BYTE cm)
 //---------------------------------------------------------------------------
 void agenda_fdc_spun_up(int do_exec)
 {
+
+#if defined(SS_FDC_INDEX_PULSE_COUNTER)
+/*  
+On the WD1772 all commands, except the Force Interrupt Command,
+ are programmed via the h Flag to delay for spindle motor start 
+ up time. If the h Flag is not set and the MO signal is low when 
+ a command is received, the WD1772 forces MO to a logic 1 and 
+ waits 6 revolutions before executing the command. 
+ At 300 RPM, this guarantees a one second spindle start up time.
+ ->
+ We count IP, only if there's a spinning selected drive
+ Not emulated: if program changes drive and the new drive is spinning
+ too, but at different IP!
+*/
+  if(ADAT)
+  {
+    ASSERT( WD1772.IndexCounter<6 );
+    if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE&&SF314[DRIVE].MotorOn)
+      WD1772.IndexCounter++;
+
+    //TRACE_IDE("HBL %d IP %d diff %d\n",hbl_count,WD1772.IndexCounter,hbl_count-debug1);
+    //debug2+=hbl_count-debug1;
+    //debug1=hbl_count;
+  
+    if(WD1772.IndexCounter<6)
+    {
+      agenda_add(agenda_fdc_spun_up,FDC_HBLS_PER_ROTATION,do_exec);
+      return;
+    }
+    //else TRACE_IDE("%d\n",debug2);
+  }
+#endif
   fdc_spinning_up=0;
   TRACE_LOG("Spin up - exec:%d\n",do_exec);
   if (do_exec) fdc_execute();
@@ -580,24 +620,51 @@ and ends the command.
           fdc_str=FDC_STR_SEEK_ERROR | FDC_STR_MOTOR_ON | FDC_STR_BUSY;
         }else{
           if (floppy_head_track[floppyno]==0){
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_RESTORE)
+/*
+If the FDDC receives this command when the drive head is at track
+zero, the chip sets its Track Register to $00 and ends the command.
+*/
+            if(ADAT)
+            {
+              fdc_tr=0;
+              floppy_irq_flag=0;
+              agenda_fdc_finished(0); // no delay
+              break;
+            }
+            else
+#endif
             hbls_to_interrupt=2;
           }else{
+#if !defined(SS_FDC_RESTORE_AGENDA) || defined(SS_FDC_RESTORE_AGENDA)
             if (floppy_instant_sector_access==0) hbls_to_interrupt*=floppy_head_track[floppyno];
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_RESTORE_AGENDA) && defined(SS_FDC_SEEK)
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_RESTORE) && defined(SS_FDC_SEEK)
             if(!ADAT)
 #endif            
             floppy_head_track[floppyno]=0;
           }
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_RESTORE_AGENDA)
-          // As documented
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_RESTORE)
+/*
+If the head is not at track zero, the FDDC steps the head carriage
+until the head arrives at track 0.  The 177x then sets its Track
+Register to $00 and ends the command.  If the chip's track-zero input
+does not activate after 255 step pulses AND the V bit is set in the
+command word, the 177x sets the Seek Error bit in the status register
+and ends the command.
+*/
           if(ADAT)
           {
-            fdc_tr=255,fdc_dr=0;
+            fdc_tr=255,fdc_dr=0; // like in CAPSimg
             floppy_irq_flag=0;
+#if defined(SS_FDC_RESTORE_AGENDA)
             if(hbls_to_interrupt==2)  //?
               agenda_add(agenda_floppy_seek,2,0);
             else
-              agenda_add(agenda_fdc_restore,(int)(hbls_to_interrupt*hbl_multiply),floppyno);            
+              agenda_add(agenda_fdc_restore,(int)(hbls_to_interrupt*hbl_multiply),floppyno);
+#else
+            agenda_add(agenda_floppy_seek,2,0);
+#endif
           }
           else
 #endif
@@ -1132,13 +1199,12 @@ condition for interrupt is met the INTRQ line goes high signifying
             TRACE_LOG("Immediate IRQ\n");
             agenda_fdc_finished(0); // Interrupt CPU immediately
           }
-          else //if( WD1772.InterruptCondition==4
+          else 
           {
             ASSERT( fdc_cr==0xD4 );
             WD1772.InterruptCondition=4;// IRQ at every index pulse
             floppy_irq_flag=false;
-            WORD hbls_to_next_ip=FDC_HBLS_PER_ROTATION-
-              hbl_count%FDC_HBLS_PER_ROTATION;
+            WORD hbls_to_next_ip=SF314[DRIVE].HblsNextIndex();
             TRACE_LOG("IP IRQ in %d HBL (%d)\n",hbls_to_next_ip,hbl_count+hbls_to_next_ip);
             agenda_add(agenda_fdc_finished,hbls_to_next_ip,0);
           }
@@ -1212,7 +1278,40 @@ The FDC will automatically turn off the motor after the 10 index pulse
 
 void agenda_fdc_motor_flag_off(int revs_to_wait)
 {
-  //TRACE("%c:agenda_fdc_motor_flag_off %d revs\n",'A'+DRIVE,revs_to_wait);
+#if defined(SS_FDC_INDEX_PULSE_COUNTER)
+/*
+If after finishing the command, the device remains idle for
+ 9 revolutions, the MO signal goes back to a logic 0.
+->
+To ensure 9 revs, the controller counts 10 IP.
+We do the same as before, using our new variable IndexCounter
+We don't use 'revs_to_wait'
+
+ We count IP, only if there's a spinning selected drive
+ Not emulated: if program changes drive and the new drive is spinning
+ too, but at different IP!
+*/
+
+  if(ADAT)
+  {
+    ASSERT( WD1772.IndexCounter<10 );
+    if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE&&SF314[DRIVE].MotorOn)
+      WD1772.IndexCounter++;
+    if(WD1772.IndexCounter<10)
+    {
+      agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION,revs_to_wait);
+      return;
+    }
+  }
+  fdc_str&=BYTE(~FDC_STR_MOTOR_ON);
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_MOTOR_ON)
+  TRACE_LOG("Motor off drive %c\n",'A'+DRIVE);
+  SF314[DRIVE].MotorOn=false;
+#else
+  TRACE_LOG("Motor off\n");
+#endif
+}
+#else
   if(ADAT && revs_to_wait>0)
   {
     if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE) // one drive selected?
@@ -1222,8 +1321,6 @@ void agenda_fdc_motor_flag_off(int revs_to_wait)
   else
   {
     fdc_str&=BYTE(~FDC_STR_MOTOR_ON);
-//    fdc_str&=~0x20;//tst
-//    fdc_spinning_up=1;
 #if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_MOTOR_ON)
     TRACE_LOG("Motor off drive %c\n",'A'+DRIVE);
     SF314[DRIVE].MotorOn=false;
@@ -1232,6 +1329,8 @@ void agenda_fdc_motor_flag_off(int revs_to_wait)
 #endif
   }
 }
+#endif
+
 #else
 void agenda_fdc_motor_flag_off(int)
 {
@@ -1246,8 +1345,13 @@ void agenda_fdc_motor_flag_off(int)
 
 
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_RESTORE_AGENDA)
-
+/*  3.5.3, this isn't defined anymore, we use the SEEK routines
+    instead.
+    We used a distinct agenda because we thought there could be
+    a timing difference. Less code to compile!
+*/
 void agenda_fdc_restore(int floppyno) {
+  ASSERT(0);
   ASSERT( ADAT );
   ASSERT( !fdc_dr );
   // we do it in one time, normally it's a series of steps
@@ -1256,7 +1360,6 @@ void agenda_fdc_restore(int floppyno) {
   ASSERT( !fdc_tr );
   fdc_type1_check_verify();
 }
-
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_VERIFY_AGENDA)
@@ -1305,7 +1408,6 @@ void agenda_fdc_verify(int dummy) {
 //---------------------------------------------------------------------------
 void agenda_fdc_finished(int)
 {
-  //ASSERT( !(fdc_str&FDC_STR_BUSY) );//?
 #if defined(STEVEN_SEAGAL) && defined(SS_DMA) && defined(SS_DEBUG)
   if(TRACE_ENABLED) 
     Dma.UpdateRegs(true);
@@ -1337,7 +1439,15 @@ void agenda_fdc_finished(int)
     ASSERT( fdc_str&FDC_STR_MOTOR_ON || FloppyDrive[floppy_current_drive()].Empty());
     ASSERT( agenda_get_queue_pos(agenda_fdc_motor_flag_off)<0 );
 #if defined(SS_FDC_MOTOR_OFF_COUNT_IP)
+#if defined(SS_FDC_INDEX_PULSE_COUNTER)
+    //  Set up agenda for next IP
+    WD1772.IndexCounter=0;
+    DWORD delay=SF314[DRIVE].HblsNextIndex();
+    agenda_add(agenda_fdc_motor_flag_off,delay,0);
+#else
+    // was a little less precise
     agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION,9); //10?
+#endif
 #else
     agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION*9,0);
 #endif
@@ -1388,7 +1498,8 @@ Seek works with DR and TR, not DR and disk track.
         floppy_head_track[floppyno]--;    
       if(!floppy_head_track[floppyno])
       {
-        fdc_tr=0;
+        if(!(fdc_cr&0xF0)) // condition?
+          fdc_tr=0; // this is  how RESTORE works
         fdc_str|=FDC_STR_T1_TRACK_0;
       }
     }

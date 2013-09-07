@@ -138,7 +138,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #if defined(SS_BETA)
 //#define TEST01
-//#define TEST02
+#define TEST02
 //#define TEST03
 //#define TEST04
 //#define TEST05
@@ -365,7 +365,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #ifdef SS_DEBUG_TRACE
 #ifdef _DEBUG // VC
-#define SS_DEBUG_TRACE_IDE
+//#define SS_DEBUG_TRACE_IDE
 #endif
 #if defined(DEBUG_BUILD) 
 #define SS_DEBUG_TRACE_FILE
@@ -507,7 +507,8 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_FDC_PRECISE_HBL
 #define SS_FDC_READ_ADDRESS_UPDATE_SR
 #define SS_FDC_RESET
-#define SS_FDC_RESTORE_AGENDA
+#define SS_FDC_RESTORE
+//#define SS_FDC_RESTORE_AGENDA //or use SEEK (of course!!)
 #define SS_FDC_SEEK
 #define SS_FDC_SPIN_UP_AGENDA
 #define SS_FDC_SPIN_UP_STATUS
@@ -515,6 +516,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #ifdef SS_PSG
 #define SS_FDC_IGNORE_WHEN_NO_DRIVE_SELETED // from Hatari
+#define SS_FDC_INDEX_PULSE_COUNTER
 #define SS_FDC_MOTOR_OFF_COUNT_IP
 #endif
 

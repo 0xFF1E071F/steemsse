@@ -142,7 +142,8 @@ struct TSF314 {
   WORD BytePosition();
   WORD BytePositionOfFirstId();
   WORD BytesToHbls(int bytes);
-  unsigned long HblsAtIndex();
+  DWORD HblsAtIndex();
+  WORD HblsNextIndex();
   WORD HblsPerRotation();
   WORD HblsPerSector();
   WORD HblsToBytes(int hbls);
@@ -220,8 +221,11 @@ struct TWD1772 {
   BYTE TR;
   BYTE SR;
   BYTE DR;
-#ifdef SS_FDC_FORCE_INTERRUPT
+#if defined(SS_FDC_FORCE_INTERRUPT)
   BYTE InterruptCondition;
+#endif
+#if defined(SS_FDC_INDEX_PULSE_COUNTER)
+  BYTE IndexCounter;
 #endif
   BYTE IORead(BYTE Line);
   void IOWrite(BYTE Line,BYTE io_src_b);
