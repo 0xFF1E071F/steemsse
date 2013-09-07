@@ -34,7 +34,9 @@ struct TDebug {
 #if defined(SS_DEBUG_TRACE)
   enum {MAX_TRACE_CHARS=256}; // the function is safe anyway
   void Trace(char *fmt, ...); // one function for both IDE & file
-  static void TraceLog(char *fmt, ...); // if section enabled
+  void TraceIde(char *fmt, ...); // in IDE, not file, whatever the defines
+  // if logsection enabled, static for function pointer, used in '6301':
+  static void TraceLog(char *fmt, ...); 
   char trace_buffer[MAX_TRACE_CHARS];
 #endif
 #endif//c++
@@ -220,6 +222,20 @@ enum logsection_enum_tag {
 #define TRACE_ENABLED (0)
 #endif
 #endif
+
+// TRACE_IDE
+#if defined(SS_DEBUG_TRACE)
+#ifdef __cplusplus
+#define TRACE_IDE Debug.TraceIde
+#endif//c++
+#else
+#if defined(VC_BUILD) // OK for Unix?
+#define TRACE_IDE(x) // no code left?
+#else
+#define TRACE_IDE // some code left to the compiler
+#endif
+#endif//#if defined(SS_DEBUG_TRACE)
+
 
 // TRACE_LOG
 #if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
