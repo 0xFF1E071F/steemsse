@@ -857,9 +857,17 @@ Total track                     6250        6250        6256
  * encountered.
  * So, the position after peak speed is reached is not random, it will always
  * be 0 and we set the index pulse time to "now".
-    " - TODO
+    " 
+    In Steem both the random starting position when the disk starts spinning
+    and the determined position when it's spun up are emulated by setting
+    IP spots absolutely (hbl_couunt%FDC_HBLS_PER_ROTATION=0).
+
     We do our computing using bytes, then convert the result into HBL, the
-    timing unit for drive operations in Steem.
+    timing unit for drive operations in Steem. Some computation is done in 
+    HBL directly.
+
+    Up to now we haven't needed a more precise timing, but who knows, this
+    could explain why we must take 6250+20 bytes/track.
    
 */
 
@@ -889,8 +897,13 @@ WORD TSF314::BytesToHbls(int bytes) {
 }
 
 
-unsigned long TSF314::HblsAtIndex() {
+DWORD TSF314::HblsAtIndex() { // absolute
   return (hbl_count/HblsPerRotation())*HblsPerRotation();
+}
+
+
+WORD TSF314::HblsNextIndex() { // relative
+  return HblsPerRotation()-hbl_count%HblsPerRotation();
 }
 
 
@@ -1103,7 +1116,7 @@ BYTE TWD1772::IORead(BYTE Line) {
       }
       ior_byte=STR;
 #if !defined(SS_DEBUG_TRACE_IDE)
-      TRACE_LOG("hbl %d FDC STR %X\n",hbl_count,ior_byte);
+      TRACE_LOG("FDC HBL %d STR %X\n",hbl_count,ior_byte);
 #endif
       break;
     case 1:
@@ -1209,6 +1222,9 @@ void TWD1772::Reset(bool Cold) {
   STR=2;
 #ifdef SS_FDC_FORCE_INTERRUPT
   InterruptCondition=0;
+#endif
+#if defined(SS_FDC_INDEX_PULSE_COUNTER)
+  IndexCounter=0;
 #endif
 }
 #endif
