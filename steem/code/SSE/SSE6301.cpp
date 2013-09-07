@@ -1,10 +1,10 @@
 #if defined(SS_IKBD_6301)
 
-#define LOGSECTION LOGSECTION_INIT
-
 #include "SSEOption.h"
 
 // note most useful emulation code is in 3rdparty folder '6301'
+
+#define LOGSECTION LOGSECTION_INIT
 
 THD6301 HD6301; // singleton
 
@@ -20,17 +20,44 @@ THD6301::~THD6301() {
 
 void THD6301::Init() { // called in 'main'
   Initialised=Crashed=0;
-  if(hd6301_init()) // calling the 6301 function
+  BYTE* ram=hd6301_init();
+  EasyStr romfile;
+  int checksum=0;
+  FILE *fp;
+
+  if(ram)
   {
-    HD6301_OK=Initialised=1;
-    TRACE_LOG("HD6301 emu initialised\n");
+    romfile=GetEXEDir(); // Steem's function WIN/Linux
+    romfile+=HD6301_ROM_FILENAME;
+    fp=fopen(romfile,"r+b");
+    if(fp)
+    {
+      int n=fread(ram+0xF000,1,4096,fp);
+#if defined(SS_DEBUG)
+      ASSERT(n==4096); // this detected the missing +b above
+      for(int i=0;i<n;i++)
+        checksum+=ram[0xF000+i];
+      ASSERT( checksum==HD6301_ROM_CHECKSUM );
+#endif
+      fclose(fp);
+      HD6301_OK=Initialised=1;
+    }
+    else 
+    {
+      free(ram);
+      ram=NULL;
+    } 
   }
-  else
+
+#if defined(SS_DEBUG)
+  TRACE_LOG("6301 emu %d RAM %d file %s open %d checksum %d\n",HD6301_OK,(bool)ram,romfile.Text,(bool)fp,checksum);
+  if(!Initialised)
   {
-    TRACE_LOG("HD6301 emu NOT initialised\n");
     TRACE_OSD("NO HD6301");
     HD6301EMU_ON=0;
   }
+#endif
+
 }
 
 #undef LOGSECTION//init

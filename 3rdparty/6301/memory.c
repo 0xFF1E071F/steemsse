@@ -55,7 +55,7 @@ mem_init ()
     ram_start = 0;
     ram_end   = size - 1;
     memset (ram, 0, 256);
-    load_rom(); // ST
+//    load_rom(); // ST
   } else {
     printf ("ram already allocated\n");
   }
