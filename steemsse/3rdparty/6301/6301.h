@@ -53,7 +53,7 @@ extern int mousek;
 // variables that Steem must see
 extern int hd6301_completed_transmission_to_MC6850; // for sync
 // functions used by Steem
-int hd6301_init(); // just another name
+BYTE* hd6301_init();
 int hd6301_destroy(); // like a C++ destructor
 int hd6301_reset(int Cold); 
 int hd6301_run_cycles(u_int cycles); // emulate

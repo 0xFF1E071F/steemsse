@@ -150,10 +150,6 @@ int WINAPI WinMain(HINSTANCE Instance,HINSTANCE,char *,int)
   Inst=Instance;
   RunDir=GetEXEDir();
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301) 
-  HD6301.Init();
-#endif
-
   InitializeCriticalSection(&agenda_cs);
 
 #elif defined(UNIX)
@@ -252,7 +248,7 @@ int main(int argc,char *argv[])
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_MOUSE_CAPTURE)
             if(CAPTURE_MOUSE)
 #endif
-            SetStemMouseMode(STEM_MOUSEMODE_WINDOW);
+              SetStemMouseMode(STEM_MOUSEMODE_WINDOW);
           }
           RunBut.set_check(true);
           run();
@@ -690,23 +686,35 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
   log("STARTUP: cpu_routines_init Called");
   cpu_routines_init();
 
-
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_NOTIFY)
+#if defined(STEVEN_SEAGAL)
+#if defined(SS_VAR_NOTIFY)
   SetNotifyInitText("unzipd32.dll");
   WIN_ONLY( LoadUnzipDLL(); )
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+#if defined(SS_VAR_UNRAR)
 #if defined(SS_VAR_NOTIFY)
   SetNotifyInitText("unrar.dll");
 #endif
   WIN_ONLY( LoadUnrarDLL(); )
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
+#if defined(SS_IPF)
+#if defined(SS_VAR_NOTIFY)
+  SetNotifyInitText(T("CAPS library"));
+#endif
   Caps.Init();
 #endif
-
-#if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+#if defined(SS_IKBD_6301) 
+#if defined(SS_VAR_NOTIFY)
+  SetNotifyInitText(T("6301 emu"));
+#endif
+  HD6301.Init();
+#endif
+#if defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+#if defined(SS_VAR_NOTIFY)
+  SetNotifyInitText(T("SDL"));
+#endif
   SDL_OK=SDL.Init();
+#endif
 #endif
 
 #ifdef DEBUG_BUILD

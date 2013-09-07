@@ -208,11 +208,22 @@ SS_SIGNAL_ENUM_EnumDisplayModes, // wait until finished (?)
 #if defined(SS_IKBD)
 
 #if defined(SS_IKBD_6301)
+/*
 #if defined(SS_UNIX)
 #define HD6301_ROM_FILENAME "./HD6301V1ST.img" 
 #else
-#define HD6301_ROM_FILENAME "HD6301V1ST.img" // cooler than 'keyboard.rom'
+#define HD6301_ROM_FILENAME "HD6301V1ST.img"
 #endif
+*/
+
+#if defined(SS_UNIX)
+#define HD6301_ROM_FILENAME "/HD6301V1ST.img" 
+#else
+#define HD6301_ROM_FILENAME "\\HD6301V1ST.img"
+#endif
+
+
+
 #define HD6301_ROM_CHECKSUM 451175 // BTW this rom sends $F1 after reset (80,1)
 #endif
 

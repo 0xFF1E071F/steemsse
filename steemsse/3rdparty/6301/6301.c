@@ -65,6 +65,7 @@ int TotalParameters=0; // #parameters
 #endif
 #endif
 // TRACE
+#undef TRACE
 #if defined(SS_DEBUG) 
 // we use this trick because Trace is a struct function
 void (*hd6301_trace)(char *fmt, ...);
@@ -103,8 +104,8 @@ void (*hd6301_trace)(char *fmt, ...);
 
 // Interface with Steem
 
-hd6301_init() {
-  return (int)mem_init();
+BYTE* hd6301_init() {
+  return mem_init();
 }
 
 
@@ -271,40 +272,6 @@ hd6301_load_save(int one_if_save,unsigned char *buffer) {
 }
 
 // Other functions for ST emulation. Also check ireg.c
-
-load_rom() {
-  FILE *fp;
-  char romfile[20]=HD6301_ROM_FILENAME;
-#if defined(SS_IKBD_6301_TRACE)
-  TRACE("6301: Init RAM, load ROM %s\n",romfile);
-#endif
-  
-  //fp=fopen(romfile,"r+b");
-  fp=fopen("./HD6301V1ST.img","r+b");
-  if(fp)
-  {
-    int i,checksum=0;
-    int n=fread(ram+0xF000,1,4096,fp);
-#if defined(SS_IKBD_6301_TRACE)
-    ASSERT(n==4096); // this detected the missing +b above
-    for(i=0;i<4096;i++)
-      checksum+=ram[0xF000+i];
-    if(checksum!=HD6301_ROM_CHECKSUM)
-      TRACE("checksum of rom=%d expected=%d\n",checksum,HD6301_ROM_CHECKSUM);
-#endif
-    fclose(fp);
-    fprintf(stderr,"6301 OK\n");
-  }
-  else 
-  {
-    TRACE("Failed to open file\n");
-    fprintf(stderr,"6301 KO\n");
-    free(ram);
-    ram=NULL;
-  } 
-  return (int)ram; // pointer as int, 0 if failed to load ROM
-}
-
 
 dump_rom() {
   int i;
