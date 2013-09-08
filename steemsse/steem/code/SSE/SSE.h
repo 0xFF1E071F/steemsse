@@ -138,7 +138,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #if defined(SS_BETA)
 //#define TEST01
-#define TEST02
+//#define TEST02
 //#define TEST03
 //#define TEST04
 //#define TEST05
@@ -365,7 +365,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #ifdef SS_DEBUG_TRACE
 #ifdef _DEBUG // VC
-//#define SS_DEBUG_TRACE_IDE
+#define SS_DEBUG_TRACE_IDE
 #endif
 #if defined(DEBUG_BUILD) 
 #define SS_DEBUG_TRACE_FILE
@@ -808,12 +808,15 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SHIFTER_0BYTE_LINE_RES_HBL //Beyond/Pax Plax Parallax
 #define SS_SHIFTER_0BYTE_LINE_RES_START //Nostalgic-O/Lemmings
 #define SS_SHIFTER_0BYTE_LINE_SYNC //Forest
+#define SS_SHIFTER_0BYTE_LINE_SYNC2 // loSTE screens
 #endif
 #define SS_SHIFTER_4BIT_SCROLL //Let's do the Twist again
 #define SS_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK
 #define SS_SHIFTER_60HZ_OVERSCAN //Leavin' Terramis
 #define SS_SHIFTER_END_OF_LINE_CORRECTION // correct +2, -2 lines 
 #define SS_SHIFTER_LEFT_OFF_TEST_BEFORE_HBL // for Riverside
+#define SS_SHIFTER_LINE_MINUS_106_BLACK // loSTE screens
+#define SS_SHIFTER_LINE_PLUS_2_TEST // loSTE screens
 #define SS_SHIFTER_LINE_PLUS_2_THRESHOLD //Forest
 #define SS_SHIFTER_LINE_PLUS_20 // 224 byte scanline STE only
 #define SS_SHIFTER_LINE_PLUS_20_SHIFT // for Riverside
@@ -822,6 +825,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SHIFTER_NON_STOPPING_LINE // Enchanted Land
 #define SS_SHIFTER_PALETTE_BYTE_CHANGE //Golden Soundtracker
 #define SS_SHIFTER_PALETTE_TIMING //Overscan Demos #6
+///#define SS_SHIFTER_RENDER_SYNC_CHANGES//don't until debug
 #define SS_SHIFTER_RIGHT_OFF_BY_SHIFT_MODE //beeshift0
 #define SS_SHIFTER_STE_MED_HSCROLL // Cool STE
 #define SS_SHIFTER_STE_HSCROLL_LEFT_OFF //MOLZ/Spiral
@@ -872,7 +876,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(SS_DEBUG) 
 //#define SS_SHIFTER_DRAW_DBG  // totally bypass CheckSideOverscan() & Render()
 #define SS_SHIFTER_EVENTS // recording all shifter events in a frame
-#define SS_SHIFTER_EVENTS_PAL // also for palette
+//#define SS_SHIFTER_EVENTS_PAL // also for palette
 //#define SS_SHIFTER_EVENTS_READ_SDP // also for read SDP
 //#define SS_SHIFTER_EVENTS_BYTES // scanline length
 #define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation

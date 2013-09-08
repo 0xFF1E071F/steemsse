@@ -363,8 +363,9 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 // SHIFTER //
 /////////////
 
-//#define SS_SHIFTER_SKIP_SCANLINE 199//-29 // fetch but only draw colour 0 (debug)
-
+#ifdef SS_BETA
+//#define SS_SHIFTER_SKIP_SCANLINE 5//-29 // fetch but only draw colour 0 (debug)
+#endif
 #define VERT_OVSCN_LIMIT (502) //502
 
 #if defined(SS_SHIFTER_EVENTS)

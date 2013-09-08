@@ -148,9 +148,9 @@ void TShifter::CheckSideOverscan() {
 /*  0-byte sync switches are model-dependent and even "wake up state"-
     dependent. They  are used only in a 2006 demo called SHFORSTV.TOS,
     by the dude who also made the Overscan Demos.
-    Also: beeshift; beescroll
-    Switche: STF(1) (56/64), STF(2) (58/68), and STE (40/52).
-    Haven't found other working combinations yet (hacker!)
+    Also: beeshift; beescroll; loSTE screens
+    Switches in Forest: STF(1) (56/64), STF(2) (58/68), and STE (40/52).
+    loSTE STF1 56/68
 */
 
   if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE))
@@ -170,9 +170,16 @@ void TShifter::CheckSideOverscan() {
 #endif // STE:
       s0cycle=40,s2cycle=52; // this also produces a 512 cycles +2 line?
 
-    if(FreqChangeAtCycle(s0cycle)==60 && FreqChangeAtCycle(s2cycle)==50)
+    if(FreqChangeAtCycle(s0cycle)==60 
+      && 
+      (
+      FreqChangeAtCycle(s2cycle)==50
+#if defined(SS_SHIFTER_0BYTE_LINE_SYNC2)
+      ||FreqChangeAtCycle(s2cycle+4)==50 // loSTE screens
+#endif
+      )
+      )
       CurrentScanline.Tricks|=TRICK_0BYTE_LINE;
-
   }
 #endif
 
@@ -474,12 +481,13 @@ void TShifter::CheckSideOverscan() {
     display it, showing black pixels instead. Overscan #5,#6, Forest.
     This, contrary to 0 byte lines, was already in Steem 3.2.
     028:S0000 036:S0002
+    loSTE screens: 028:S0002 112:S0000
 */
 
   if(!draw_line_off && shifter_freq_at_start_of_vbl==50)
   {
 
-    t=LINECYCLE0+28; //trigger point
+    t=LINECYCLE0+28; //trigger point ... 32?
 #if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
     if(MMU.WakeUpState2())
       t+=2;
@@ -551,7 +559,8 @@ void TShifter::CheckSideOverscan() {
     36 for NCG off lines 183, 200 512R2 12R0 36R1 (strange!) shift=2
     16 for Drag/Reset    shift=?
     12 & 16 for PYM/STCNX left off (which is really doing 4bit hardcsroll)
-    D4/Nightmare shift=2
+    D4/Nightmare shift=2:
+082 - 012:R0000 020:R0001 028:R0000 376:S0000 388:S0082 444:R0082 456:R0000 508:R0082 512:T2071
 */
 
 #if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_MED_OVERSCAN)
@@ -571,7 +580,7 @@ void TShifter::CheckSideOverscan() {
         TrickExecuted|=TRICK_OVERSCAN_MED_RES;
         int cycles_in_low_res=r1cycle-r0cycle;
 #if defined(SS_SHIFTER_MED_OVERSCAN_SHIFT)
-        ShiftSDP( (((cycles_in_low_res)/2)%8)/2 );
+        ShiftSDP(-(((cycles_in_low_res)/2)%8)/2); //oops - disappeared in 3.5.2
 #endif
 #if defined(SS_VID_BPOC)
         if(BORDER_40 && SSE_HACKS_ON && cycles_in_low_res==16) 
@@ -595,8 +604,8 @@ void TShifter::CheckSideOverscan() {
     cases). How exactly it happens is worth a study (TODO). 
     It's a pity that it wasn't used more. Was it a French technique?
     PYM/ST-CNX (lines 70-282 (7-219); offset 8, 12, 16, 20) 0R2 12R1 XR0
-    TODO: should be STF-only
     D4/NGC (lines 76-231) 0R2 12R0 20R1 XR0
+015 - 012:R0000 020:R0001 036:R0000 376:S0000 384:S0082 444:R0082 456:R0000 512:R0082 512:T2071
     D4/Nightmare (lines 143-306, cycles 28 32 36 40)
 */
   
@@ -611,8 +620,6 @@ void TShifter::CheckSideOverscan() {
       r0cycle=NextShiftModeChange(r1cycle);
       if(r0cycle>r1cycle && r0cycle<=40 && !ShiftModeChangeAtCycle(r0cycle))
       {
-        CurrentScanline.Tricks|=TRICK_4BIT_SCROLL;
-        TrickExecuted|=TRICK_4BIT_SCROLL;
         int cycles_in_med_res=r0cycle-r1cycle;
         // look for previous switch to R0
         int cycles_in_low_res=0; // 0 ST-CNX
@@ -620,6 +627,9 @@ void TShifter::CheckSideOverscan() {
         if(r0cycle>=0 && !ShiftModeChangeAtCycle(r0cycle))
           cycles_in_low_res=r1cycle-r0cycle; // 8 NGC, Nightmare
         int shift_in_bytes=8-cycles_in_med_res/2+cycles_in_low_res/4;
+        if(ST_TYPE==STF || cycles_in_low_res)
+          CurrentScanline.Tricks|=TRICK_4BIT_SCROLL;
+        TrickExecuted|=TRICK_4BIT_SCROLL;
 
 #if defined(SS_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK)
         // strange corrections now necessary, quick patch. TODO
@@ -648,7 +658,7 @@ void TShifter::CheckSideOverscan() {
         HblPixelShift=13+8-cycles_in_med_res-8; // -7,-3,1, 5, done in Render()
 #if defined(SS_DEBUG)
         ASSERT( HblPixelShift==-7||HblPixelShift==-3||HblPixelShift==1||HblPixelShift==5 );
-        ASSERT( shift_in_bytes==0||shift_in_bytes==2||shift_in_bytes==4||shift_in_bytes==6 );
+//        ASSERT( shift_in_bytes==0||shift_in_bytes==2||shift_in_bytes==4||shift_in_bytes==6 );
       //  if(scan_y==100)  TRACE_LOG("4bit y%d CMR%d CLR%d SH%d PIX%d\n",scan_y,cycles_in_med_res,cycles_in_low_res,shift_in_bytes,HblPixelShift);
 #endif
       }
@@ -663,11 +673,37 @@ void TShifter::CheckSideOverscan() {
 /*  A line that starts at cycle 52 because it's at 60hz, but then is switched
     to 50hz gains 2 bytes because it ends 4 cycles later, at 376 instead of
     372.
-    The Steem test may give false alerts.
-    We keep this test, but we need to check at end of line, and we change the
-    threshold.
+
+Must be taken as +2:
+Forest:
+-28 - 012:R0000 160:R0002 172:R0000 376:S0002 384:S0002 444:R0000 456:R0000 512:T2005
+-27 - 036:S0000 054:S0002 376:S0000 384:S0002 444:R0002 456:R0000 512:T2012
+
+
+Mustn't be taken as +2:
+loSTE screens:
+004 - 040:S0000 052:S0002 512:R0002 
+199 - 484:S0000 512:T0200
+200 - 056:S0002 
+
+The difference between Forest and loSTE is that the Forest scanline -27 starts
+at 50hz, the loSTE scanline 200 starts at 60hz.
+Is it just an internal Steem issue (confusion with 508 cycles lines)?
 */
 
+#if defined(SS_SHIFTER_LINE_PLUS_2_TEST)
+  // new test for line +2
+  if(!(TrickExecuted&TRICK_LINE_PLUS_2) && left_border)
+  {
+    t=(FreqAtCycle(0)==50?56:52);
+#if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
+    if(MMU.WakeUpState2())
+      t+=2;
+#endif
+    if(FreqAtCycle(t)==60 && FreqAtCycle(t+2)==50)
+      CurrentScanline.Tricks|=TRICK_LINE_PLUS_2;
+  }
+#else
   // Steem test
   if(shifter_freq_at_start_of_vbl==50 
     && (left_border==BORDER_SIDE
@@ -679,12 +715,10 @@ void TShifter::CheckSideOverscan() {
   {   
 #if defined(SS_SHIFTER_LINE_PLUS_2_THRESHOLD)
     t=LINECYCLE0+52; // fixes Forest
-
 #if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
     if(MMU.WakeUpState2())
       t+=2;
 #endif
-
 #else
     t=LINECYCLE0+58; 
 #endif
@@ -694,12 +728,14 @@ void TShifter::CheckSideOverscan() {
 
       if(i>=0 && shifter_freq_change[i]==60)
       {
+        //VideoEvents.ReportLine();
         ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );
         CurrentScanline.Tricks|=TRICK_LINE_PLUS_2;
 //        CurrentScanline.Cycles==512;
       }
     }
   }
+#endif
 
   if((CurrentScanline.Tricks&TRICK_LINE_PLUS_2)
     && !(TrickExecuted&TRICK_LINE_PLUS_2))
@@ -722,14 +758,16 @@ void TShifter::CheckSideOverscan() {
   if(right_border_changed) // TODO improve this?
     return; 
 
+
   ///////////////
   // LINE -106 //
   ///////////////
 
-/*  A shift mode switch to 2 at cycle 160 (end of HIRES line) causes the line 
-    to stop there. 106 bytes are not fetched.
-    Just Buggin: 152:R0002 172:R0000 (refix v3.5.2); lower?
+/*  A shift mode switch to 2 before cycle 166 (end of HIRES line) causes 
+    the line to stop there. 106 bytes are not fetched.
+    Just Buggin: 152:R0002 172:R0000
     ST-CNX: 160:R0002 172:R0000
+    loSTE screens: 120[!]:R0002  392:R0000 
 */
 
 #if defined(SS_SHIFTER_STEEM_ORIGINAL) || 0
@@ -751,7 +789,8 @@ void TShifter::CheckSideOverscan() {
   if(act-t>=0 && !(TrickExecuted&TRICK_LINE_MINUS_106))
   {
      i=CheckShiftMode(t);
-     if(i>=0 && shifter_shift_mode_change[i]==2 && ShiftModeChangeCycle(i)>=152/*140*/)
+     if(i>=0 && shifter_shift_mode_change[i]==2 
+       && ShiftModeChangeCycle(i)>=56/*152*//*140*/)
        CurrentScanline.Tricks|=TRICK_LINE_MINUS_106;
 
 #ifdef SS_DEBUG
@@ -776,6 +815,15 @@ void TShifter::CheckSideOverscan() {
     TrickExecuted|=TRICK_LINE_MINUS_106;
     CurrentScanline.Bytes+=-106;
     right_border_changed=true;
+#if defined(SS_SHIFTER_LINE_MINUS_106_BLACK)
+/*  The MMU won't fetch anything more but Steem renders the full scanline.
+    It's in fact data of next scanline. We make sure nothing ugly will appear
+    (loSTE screens).
+*/
+    draw_line_off=true;
+    memset(PCpal,0,sizeof(long)*16); // all colours black
+#endif
+
   }
 
 
@@ -2005,12 +2053,12 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
   case DISPATCHER_SET_SHIFT_MODE:
     RoundCycles(cycles_since_hbl); // eg Drag/Happy Islands, Cool STE
     break; 
-/*
-  case DISPATCHER_SET_SYNC: //not used
+#if defined(SS_SHIFTER_RENDER_SYNC_CHANGES)//no
+  case DISPATCHER_SET_SYNC:
     RoundCycles(cycles_since_hbl); 
     cycles_since_hbl++;
     break;
-*/
+#endif
   case DISPATCHER_WRITE_SDP:
     RoundCycles(cycles_since_hbl); // eg D4/Tekila
     break;
@@ -2400,7 +2448,9 @@ void TShifter::SetSyncMode(BYTE NewSync) {
   int new_freq;  
 
   m_SyncMode=NewSync&3;
-
+#if defined(SS_SHIFTER_RENDER_SYNC_CHANGES)//no
+  Render(CyclesIn,DISPATCHER_SET_SYNC);
+#endif
   if(screen_res>=2) // note this part is not extra-reliable yet
   {
     new_freq=MONO_HZ; //71
