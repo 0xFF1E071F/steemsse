@@ -2125,17 +2125,21 @@ void TOptionBox::SSEUpdateIfVisible() {
   if (Handle==NULL) 
     return;
   HWND Win=GetDlgItem(Handle,1029); //HD6301 emu
-  if(Win==NULL) 
-    return; 
-  if(!HD6301_OK)
-    SendMessage(Win,BN_DISABLE,0,0);
-  else
-    SendMessage(Win,BM_SETCHECK,HD6301EMU_ON,0);
-
+  if(Win!=NULL) 
+  {
+    if(!HD6301_OK)
+      SendMessage(Win,BN_DISABLE,0,0);
+    else
+      SendMessage(Win,BM_SETCHECK,HD6301EMU_ON,0);
+  }
   Win=GetDlgItem(Handle,7301); //kkb click
-  if(Win==NULL) 
-    return; 
-  SendMessage(Win,BM_SETCHECK,PEEK(0x484)&1,0);
+  if(Win!=NULL) 
+    SendMessage(Win,BM_SETCHECK,PEEK(0x484)&1,0);
+
+  Win=GetDlgItem(Handle,211); //ST Model
+  if(Win!=NULL) 
+    SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,SS_STF_ST_MODELS-1),0);
+
 }
 #endif
 
