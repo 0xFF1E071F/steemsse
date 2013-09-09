@@ -87,7 +87,6 @@ When a FIFO is full a bus request is made to the 68000 and when granted,
 have been transferred."
 This feature is emulated in Steem if SS_DMA_DOUBLE_FIFO is defined, but it
 hasn't proved necessary yet.
-
 */
   bool BufferInUse; 
   BYTE Fifo[2][16
@@ -134,6 +133,7 @@ extern TDma Dma;
 #if defined(SS_DRIVE)
 /* How a floppy disk is structured (bytes/track, gaps...) is handled
    here.
+   TODO review, simplify...
 */
 
 struct TSF314 {
@@ -216,11 +216,13 @@ from the Data bus.
 */
 
 struct TWD1772 {
-  BYTE CR;
-  BYTE STR;
-  BYTE TR;
-  BYTE SR;
-  BYTE DR;
+  // Official registers
+  BYTE CR;  // command
+  BYTE STR; // status
+  BYTE TR;  // track
+  BYTE SR;  // sector
+  BYTE DR;  // data
+  // Internal registers
 #if defined(SS_FDC_FORCE_INTERRUPT)
   BYTE InterruptCondition;
 #endif
@@ -246,8 +248,8 @@ struct TWD1772 {
 };
 extern TWD1772 WD1772;
 
-#define fdc_cr WD1772.CR
-#define fdc_str WD1772.STR
+#define fdc_cr WD1772.CR     // problem:
+#define fdc_str WD1772.STR   // not identified in debugger
 #define fdc_tr WD1772.TR
 #define fdc_sr WD1772.SR
 #define fdc_dr WD1772.DR
@@ -257,12 +259,12 @@ extern TWD1772 WD1772;
 #if defined(SS_PSG)
 /*  In v3.5.1, object PSG is only used for drive management.
     Drive is 0 (A:) or 1 (B:), but if both relevant bits in
-    PSG port A are set then no drive is selected (FF).
+    PSG port A are set then no drive is selected ($FF).
 */
 
 struct TYM2149 {
   enum {NO_VALID_DRIVE=0xFF};
-  BYTE Drive();
+  BYTE Drive(); // may return NO_VALID_DRIVE
   BYTE PortA();
   BYTE Side();
 };
@@ -285,14 +287,14 @@ extern TYM2149 YM2149;
    CapsDrive structure must be ored with CAPSDRIVE_DA_IN, or the emulator will 
    not work at all. It got me stuck for a long time.
    In version 3.5.0, most IPF images should run.
-   Known cases: Sundog needs write support, Blood Money not sure if it's a disk
-   problem.
+   Known cases: Sundog needs write support, 
+   Blood Money v3.5.1 (CPU fix)
    It's perfectly possible to give write support in Steem, but it would be 
    better emulated in the plugin itself. We should do it ourselve only if the
    CAPS WD1772 emu is never completed and if it would bring much to players
    (many disk images available).
    In the current state, only Sundog IPF would benefit, and we have Sundog 
-   Pasti. Not worth the code.
+   Pasti, not to mention the disk isn't protected. Not worth the code.
 */
 
 #include <caps/Comtype.h>

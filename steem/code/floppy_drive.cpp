@@ -866,8 +866,8 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   if (this==&FloppyDrive[0]) drive=0;
   if (this==&FloppyDrive[1]) drive=1;
 #ifdef SS_DEBUG
-  if(drive==0 || drive==1)
-    TRACE_LOG("Remove disk from drive %c\n",'A'+drive );
+  if((drive==0 || drive==1) && !Empty())
+    TRACE_LOG("Remove disk %s from drive %c\n",DiskName.Text,'A'+drive );
 #endif
 #endif
 
