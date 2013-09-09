@@ -124,7 +124,7 @@ void TDebug::Trace(char *fmt, ...){
 #if defined(DEBUG_BUILD) || defined(SS_UNIX)
   if(USE_TRACE_FILE)
 #endif      
-/////???    printf(trace_buffer),nTrace++; 
+    printf(trace_buffer),nTrace++; 
   if(TRACE_FILE_REWIND && nTrace>=TRACE_MAX_WRITES)
   {
     nTrace=0;
@@ -209,9 +209,9 @@ void TDebug::TraceGeneralInfos(int when) {
 //    TRACE("debug var 0: %d 1: %d 2: %d 3: %d 4: %d 5: %d 6: %d 7: %d 8: %d 9: %d\n",debug0,debug1,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9);
 //    TRACE("HblTiming %d\n",HblTiming);
     // Vectors
-    TRACE("HBL %X VBL %X\n",LPEEK(0x68),LPEEK(0x70));
-    TRACE("Timers A %X B %X C %X D %X\n",LPEEK(0x134),LPEEK(0x120),LPEEK(0x114),LPEEK(0x110));
-    TRACE("ACIA IKBD %X\n",LPEEK(0x118));
+//    TRACE("HBL %X VBL %X\n",LPEEK(0x68),LPEEK(0x70));
+//    TRACE("Timers A %X B %X C %X D %X\n",LPEEK(0x134),LPEEK(0x120),LPEEK(0x114),LPEEK(0x110));
+//    TRACE("ACIA IKBD %X\n",LPEEK(0x118));
     // Misc
 #if defined(SS_SOUND_MICROWIRE)
     if(dma_sound_bass!=6||dma_sound_treble!=6)
@@ -233,13 +233,11 @@ void TDebug::TraceIde(char *fmt, ...){
   va_end(body);	
   if(nchars==-1)
     strcpy(trace_buffer,"TRACE buffer overrun\n");
-
 #if defined(WIN32)
   OutputDebugString(trace_buffer);
 #elif defined(SS_UNIX)
   printf("%s\n",trace_buffer);  // TODO
 #endif
-
 }
 
 

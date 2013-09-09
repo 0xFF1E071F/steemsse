@@ -68,7 +68,7 @@ void TShifter::CheckSideOverscan() {
 #endif
  
   int act=ABSOLUTE_CPU_TIME,t,i;
-  int CyclesIn=LINECYCLES;
+  WORD CyclesIn=LINECYCLES;
   if(screen_res>=2
     || !FetchingLine() 
     || !act) // if ST is resetting
@@ -531,7 +531,7 @@ void TShifter::CheckSideOverscan() {
       STE 460/468 => R2 0
     000204 : 00bd 0002  those values may be used for a STE patch
     000208 : 005a 000c  that also works in Steem 3.2 (this should
-    00020c : 000d 0001  have been the patch, 12 bytes)
+    00020c : 000d 0001  have been the patch, 12 bytes, no need for STFMBORDER)
 */
 
 #if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_NON_STOPPING_LINE)
@@ -673,36 +673,26 @@ void TShifter::CheckSideOverscan() {
 /*  A line that starts at cycle 52 because it's at 60hz, but then is switched
     to 50hz gains 2 bytes because it ends 4 cycles later, at 376 instead of
     372.
-
-Must be taken as +2:
-Forest:
--28 - 012:R0000 160:R0002 172:R0000 376:S0002 384:S0002 444:R0000 456:R0000 512:T2005
--27 - 036:S0000 054:S0002 376:S0000 384:S0002 444:R0002 456:R0000 512:T2012
-
-
-Mustn't be taken as +2:
-loSTE screens:
-004 - 040:S0000 052:S0002 512:R0002 
-199 - 484:S0000 512:T0200
-200 - 056:S0002 
-
-The difference between Forest and loSTE is that the Forest scanline -27 starts
-at 50hz, the loSTE scanline 200 starts at 60hz.
-Is it just an internal Steem issue (confusion with 508 cycles lines)?
 */
 
-#if defined(SS_SHIFTER_LINE_PLUS_2_TEST)
-  // new test for line +2
+#if defined(SS_SHIFTER_LINE_PLUS_2_TEST_ALT)
   if(!(TrickExecuted&TRICK_LINE_PLUS_2) && left_border)
   {
-    t=(FreqAtCycle(0)==50?56:52);
+    // hack because of Steem confusion with 508 cycles lines in a 50hz frame 
+    // eg loSTE screens STE - TODO: more generic
+    t=(FreqAtCycle(0)==50?52:56) +2; 
 #if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
     if(MMU.WakeUpState2())
       t+=2;
 #endif
-    if(FreqAtCycle(t)==60 && FreqAtCycle(t+2)==50)
+
+    if(
+      CyclesIn>t && 
+      FreqAtCycle(t)==60 // started
+      && (FreqAtCycle(376)==50 || CyclesIn<376 && shifter_freq==50))
       CurrentScanline.Tricks|=TRICK_LINE_PLUS_2;
   }
+
 #else
   // Steem test
   if(shifter_freq_at_start_of_vbl==50 

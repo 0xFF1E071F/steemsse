@@ -565,7 +565,7 @@ inline int TShifter::NextFreqChange(int cycle,int value) {
   int t=cycle+LINECYCLE0; // convert to absolute
   int idx,i,j;
   for(idx=-1,i=shifter_freq_change_idx,j=0
-    ; shifter_freq_change_time[i]-t>0 && j<32
+    ; /*shifter_freq_change_time[i]-t>0 &&*/ j<32
     ; i--,i&=31,j++)
     if(value==-1 || shifter_shift_mode_change[i]==value)
       idx=i;

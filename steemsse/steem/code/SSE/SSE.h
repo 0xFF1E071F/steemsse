@@ -370,7 +370,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(DEBUG_BUILD) 
 #define SS_DEBUG_TRACE_FILE
 #else//VC
-#define SS_DEBUG_TRACE_FILE
+//#define SS_DEBUG_TRACE_FILE
 #endif
 #endif
 
@@ -816,7 +816,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SHIFTER_END_OF_LINE_CORRECTION // correct +2, -2 lines 
 #define SS_SHIFTER_LEFT_OFF_TEST_BEFORE_HBL // for Riverside
 #define SS_SHIFTER_LINE_MINUS_106_BLACK // loSTE screens
-#define SS_SHIFTER_LINE_PLUS_2_TEST // loSTE screens
+#define SS_SHIFTER_LINE_PLUS_2_TEST_ALT // loSTE screens
 #define SS_SHIFTER_LINE_PLUS_2_THRESHOLD //Forest
 #define SS_SHIFTER_LINE_PLUS_20 // 224 byte scanline STE only
 #define SS_SHIFTER_LINE_PLUS_20_SHIFT // for Riverside
