@@ -1312,7 +1312,7 @@ EasyStr Translation(char *s)
   EasyStr UpperS=s;
   strupr(UpperS);
 
-  char *EStart=TranslateUpperBuf-1,*EEnd,*TStart,*TEnd;
+  char *EStart=TranslateUpperBuf-1,*EEnd = 0,*TStart,*TEnd;	// JLG VS2012 uninitialized
   bool Match;
   do{
     EStart=strstr(EStart+1,UpperS);

@@ -2,6 +2,10 @@
 #ifndef SSEDEBUG_H
 #define SSEDEBUG_H
 
+#if _MSC_VER > 1600
+#pragma warning(disable : 4002)		// too many parameter in macro TRACE
+#endif
+
 /*  This file must be included whether STEVEN_SEAGAL is defined or not
     because we need to define macors ASSERT, TRACE etc. anyway, those
     aren't guarded.

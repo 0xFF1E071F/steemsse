@@ -16,6 +16,18 @@ DESCRIPTION: Sets up all conditions that affect the Steem binary.
 #define DEBUG_BUILD
 #endif
 
+#if _MSC_VER > 1600	// JLG VS2012 - disable warnings
+#pragma warning(disable : 4068)		// unknown pragma
+#pragma warning(disable : 4996)		// deprecated
+#pragma warning(disable : 4800)		// forcing value (performance)
+#pragma warning(disable : 4805)		// unsafe mix
+#pragma warning(disable : 4309)		// truncation constant value
+#pragma warning(disable : 4390)		// empty statement
+#pragma warning(disable : 4244)		// possible loss of data
+#pragma warning(disable : 4101)		// unreferenced local var
+#pragma warning(disable : 4018)		// sign unsign mismatch
+#endif
+
 //#include "mmgr/mmgr.h"
 
 #ifndef WIN32
@@ -278,13 +290,12 @@ typedef Window WINDOWTYPE;
 #define NOT_ONEGAME(s) s
 #endif
 
+// JLG VS2012 defining ASMCALL does not work in VC
 #ifndef ASMCALL
-
-#ifdef WIN32
+#if defined(WIN32) && !defined(VC_BUILD)
 #define ASMCALL __cdecl
 #else
 #define ASMCALL
-
 #endif
 
 #endif

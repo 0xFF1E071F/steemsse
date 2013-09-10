@@ -69,7 +69,7 @@ The first argument has to be a double and the compiler chuck on this one
 #if defined(SS_VAR_REWRITE_VC_2012)
     if (n>0) val*=(unsigned long)pow(16.0,n);
 #else
-    if (n>0) val*=(unsigned long)pow(16,n);
+    if (n>0) val*=(unsigned long)pow(16.0,n);	// JLG VS2012
 #endif
     ret+=val;
   }
