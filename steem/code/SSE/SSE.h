@@ -165,7 +165,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SSE_OPTION_PAGE // a new page for all our options
 #define SS_SSE_OPTION_STRUCT // structure SSEOption 
 #define SS_SSE_CONFIG_STRUCT // structure SSEConfig 
-#ifdef WIN32
+#if WIN32 && (_MSC_VER == 1200)	// JLG VS2012 - only allowed in VC6
 #define SS_DELAY_LOAD_DLL // can run without DLL
 #endif
 

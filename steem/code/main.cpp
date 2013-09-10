@@ -31,7 +31,7 @@ other files that make up the Steem module.
 #pragma message("Original 3.2 build")
 #endif
 
-#include "conditions.h"	
+#include "conditions.h"
 
 #include "SSE/SSE.h" // SS
 
@@ -207,8 +207,8 @@ int main(int argc,char *argv[])
   NO_SLASH(RunDir);
 
 #if defined(STEVEN_SEAGAL) // strange, check this again
-
-#elif defined(WIN32) && !defined(DEBUG_BUILD) && !defined(MINGW_BUILD) && !defined(ONEGAME)
+// JLG VS2012
+#elif defined(WIN32) && !defined(DEBUG_BUILD) && !defined(MINGW_BUILD) && !defined(ONEGAME) && !defined(VC_BUILD)
   __try{	// the old try - compile with GX- note: just to make compile
 		// I don't know the use of this
 #else
@@ -271,7 +271,8 @@ int main(int argc,char *argv[])
 /*  if you don't define STEVEN_SEAGAL and you get an error here in VC++,
     try compile switch /GX-
 */
-#elif defined(WIN32) && !defined(DEBUG_BUILD) && !defined(MINGW_BUILD) && !defined(ONEGAME)
+// JLG VS2012 need always a catch clause with VC2010+
+#elif defined(WIN32) && !defined(DEBUG_BUILD) && !defined(MINGW_BUILD) && !defined(ONEGAME) && !defined(VC_BUILD)
   }__except(EXCEPTION_EXECUTE_HANDLER){
     if (AutoLoadSnapShot){
       MoveFileEx(WriteDir+SLASH+AutoSnapShotName+".sts",

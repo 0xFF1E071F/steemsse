@@ -1275,7 +1275,7 @@ void disa_to_file(FILE*f,MEM_ADDRESS dstart,int dlen,bool as_source)
   // text bytes for 1 code byte, need a lot, your typical line is like
   // cmpi.b #$39,$8252                                ; 008078: 0C39 0039 0000 8252 
   const int multiplier=40; 
-  BYTE *buffer,*buffer_ptr;
+  BYTE *buffer = 0,*buffer_ptr = 0;	// JLG VS2012 uninitialized pointers
   if(!f)
   {
     buffer=new BYTE[dlen*multiplier];

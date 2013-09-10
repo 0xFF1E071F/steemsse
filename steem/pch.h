@@ -29,7 +29,7 @@ for pre-compiled headers (to reduce build time on slower development PCs).
 #define DIRECTSOUND_VERSION 0x0200
 #define OEMRESOURCE 1
 #define STRICT 1
-#if _MSC_VER > 1200	// VC6: 1200
+#if _MSC_VER == 1200	// VC6: 1200 - JLG VS2012: modif VC6 only
 #pragma anon_structs on
 #endif
 //---------------------------------------------------------------------------

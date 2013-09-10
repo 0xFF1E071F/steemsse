@@ -328,7 +328,7 @@ void CALLBACK TMIDIIn::InProc(HMIDIIN Handle,UINT Msg,DWORD dwThis,DWORD MidiMes
 
   if (This->Killing) return;
 
-  BYTE *pData;
+  BYTE *pData = 0;	// JLG VS2012 uninitialized
   DWORD DataLen=0;
   MIDIHDR *pSysExHdr=NULL;
   LOG_ONLY( bool Err=0; )
