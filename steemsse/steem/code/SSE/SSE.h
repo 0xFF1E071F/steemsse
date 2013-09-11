@@ -165,7 +165,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SSE_OPTION_PAGE // a new page for all our options
 #define SS_SSE_OPTION_STRUCT // structure SSEOption 
 #define SS_SSE_CONFIG_STRUCT // structure SSEConfig 
-#if WIN32
+#ifdef WIN32
 #define SS_DELAY_LOAD_DLL // can run without DLL
 #endif
 
@@ -878,7 +878,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SHIFTER_EVENTS // recording all shifter events in a frame
 //#define SS_SHIFTER_EVENTS_PAL // also for palette
 //#define SS_SHIFTER_EVENTS_READ_SDP // also for read SDP
-//#define SS_SHIFTER_EVENTS_BYTES // scanline length
+#define SS_SHIFTER_EVENTS_BYTES // scanline length
 #define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
 #define SS_SHIFTER_EVENTS_TRICKS // "bordermask"
 #if !defined(SS_DEBUG_TRACE_IDE)
@@ -1097,7 +1097,6 @@ problem, multiple struct/class definition not allowed?
 #define SS_VAR_OPTIONS_REFRESH
 #define SS_VAR_RESIZE // reduce memory set (int->BYTE etc.)
 #define SS_VAR_REWRITE // to conform to what compilers expect (warnings...)
-#define SS_VAR_REWRITE_VC_2012 // from DrCoolZic
 #define SS_VAR_SCROLLER_DISK_IMAGE
 #define SS_VAR_STEALTH // don't tell we're an emulator (option)
 #ifdef WIN32
@@ -1265,10 +1264,11 @@ problem, multiple struct/class definition not allowed?
 // DrCoolZic is only defined in STEVEN_SEAGAL 
 // This implies that you should define STEVEN_SEAGAL to het my modif
 //
-#define DrCoolZic
-#ifdef DrCoolZic
+#define DR_COOL_ZIC
+#ifdef DR_COOL_ZIC
 
-// Following are flags for generic code modifications that should work regardless of the compiler
+// Following are flags for generic code modifications that should work 
+// regardless of the compiler
 #define SS_VS2012_INIT		// correct uninitialized variables
 #define SS_VS2012_POW		// First arg of pow function should be a real
 
@@ -1282,10 +1282,11 @@ problem, multiple struct/class definition not allowed?
 #define SS_VS2012_POW
 #endif
 #define SS_VS2012_WARNINGS	// remove many VS2012 warnings
-#define SS_VS2012_DELAYDLL	// remove some directives associated with delayed DLL not supported by VS2012
+#define SS_VS2012_DELAYDLL	// remove some directives associated with delayed 
+                            //DLL not supported by VS2012
 #endif	// we are compiling for MS VS2012 or above
 
-#endif	// DrCoolZic
+#endif	// DR_COOL_ZIC
 
 /////////////////////////////////////
 // if STEVEN_SEAGAL is NOT defined //

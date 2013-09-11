@@ -260,9 +260,13 @@ void TShifter::CheckSideOverscan() {
 /*
     Shifter latency could  explain that you may place your switch in the
     first cycles of the line, and the bonus bytes are still 26. My theory!
-    The limits are:
-    STF R2 8 / R0 28
-    STE R2 2 / R0 26
+
+    The limits are (tables by Paolo) TODO
+    STF R2 506 [WU1 504 WU3,4 506 WU2 508] - 6 [WU1 4 WU3,4 6 WU2 8] 
+        R0 8 [WU1 6 WU3,4 8 WU2 10] - 30 [WU1 30 WU3,4 32 WU2 34]
+    STE R2 2 
+        R0 26
+
     Programs not working on a STE because they hit at cycle 4: 
     3615Gen4 by Cakeman
     Cuddly Demos (not patched)
@@ -287,7 +291,7 @@ void TShifter::CheckSideOverscan() {
     int lim_r2=2,lim_r0=26;    
 #if defined(SS_STF) 
     if(ST_TYPE!=STE)
-      lim_r2+=6,lim_r0+=2; // experimental
+      lim_r2+=6,lim_r0+=4; // experimental
 
 #if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
     if(MMU.WakeUpState2())
@@ -673,24 +677,70 @@ void TShifter::CheckSideOverscan() {
 /*  A line that starts at cycle 52 because it's at 60hz, but then is switched
     to 50hz gains 2 bytes because it ends 4 cycles later, at 376 instead of
     372.
+
+    On the STF, the switch back to 50hz can't happen before 54 (WU1) or 56 
+    (WU2) or there's no '+2'.
+    Strange:
+    Also, the switch to 60hz can't happen before cycle 378 of previous line
+    or there's no '+2'.
+
+    Strange:
+    On the STE, the switch to 60hz must happen on cycle 36 of the line or
+    there's no '+2'.
+    
+    Cases:
+
+Forest STE, this must be +2:
+-27 - 036:S0000 056:S0002 376:S0002 384:S0002 444:R0000 456:R0000 512:T2002 512:#0162
+
+loSTE screens STE, this mustn't be +2:
+199 - 484:S0000 512:T0200 512:#0160
+200 - 056:S0002
+It would on a STF, but the timing is different:
+199 - 452:S0000 512:T0200 512:#0160
+200 - 024:S0002
+
+Mindbomb/No Shit: +2; STF-only?
+-30 - 428:S0000 512:T0100 512:#0160
+-29 - 248:S0002 508:T0002 508:#0162
+
+Omega, there's no +2, the switch to 60hz happened at line -60:
+-60 - 288:S0000
+-30 - 508:T0100 508:#0160
+-29 - 120:S00FE 376:S0000 384:S00FE 508:T10002 508:#0162
 */
 
 #if defined(SS_SHIFTER_LINE_PLUS_2_TEST_ALT)
+
   if(!(TrickExecuted&TRICK_LINE_PLUS_2) && left_border)
   {
-    // hack because of Steem confusion with 508 cycles lines in a 50hz frame 
-    // eg loSTE screens STE - TODO: more generic
-    t=(FreqAtCycle(0)==50?52:56) +2; 
+    t=54;
 #if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
     if(MMU.WakeUpState2())
       t+=2;
 #endif
 
     if(
-      CyclesIn>t && 
-      FreqAtCycle(t)==60 // started
+#if defined(SS_STF)
+      (ST_TYPE==STE || CyclesIn>t) && 
+#endif
+      FreqAtCycle(t)==60 // can't switch to 50hz until t
       && (FreqAtCycle(376)==50 || CyclesIn<376 && shifter_freq==50))
-      CurrentScanline.Tricks|=TRICK_LINE_PLUS_2;
+    {
+
+      if(ST_TYPE==STE)
+      {
+        if(FreqChangeAtCycle(36)==60)
+          CurrentScanline.Tricks|=TRICK_LINE_PLUS_2;
+      }
+#if defined(SS_STF)
+      else
+      {
+        if(PreviousFreqChange(52)>376-512) // not perfect, it's beta...
+          CurrentScanline.Tricks|=TRICK_LINE_PLUS_2;
+      }
+#endif
+    }
   }
 
 #else
@@ -733,6 +783,7 @@ void TShifter::CheckSideOverscan() {
 //    ASSERT(left_border==BORDER_SIDE);
     ASSERT(!(CurrentScanline.Tricks&TRICK_LINE_MINUS_2));
 //    ASSERT(CurrentScanline.Cycles==512);
+    TRACE_OSD("%d +2",scan_y);//temp, there aren't so many cases
     left_border-=4; // 2 bytes -> 4 cycles
     overscan_add_extra+=2;
     CurrentScanline.Bytes+=2;
@@ -755,6 +806,8 @@ void TShifter::CheckSideOverscan() {
 
 /*  A shift mode switch to 2 before cycle 166 (end of HIRES line) causes 
     the line to stop there. 106 bytes are not fetched.
+    When combined with a left off, this makes +26-106 = -80, or a line 80 
+    (160-80).
     Just Buggin: 152:R0002 172:R0000
     ST-CNX: 160:R0002 172:R0000
     loSTE screens: 120[!]:R0002  392:R0000 
@@ -959,6 +1012,15 @@ detect unstable: switch MED/LOW - Beeshift
     It's a -2 line if it's at 60hz at cycle 372, the switch doesn't
     need to happen at 372, though it makes more sense there. Sooner, there
     could be distortion on a real ST.
+
+    Thresholds/WU states (from table by Paolo) TODO
+
+      60hz  58 - 372 WU1,3
+            60 - 374 WU2,4
+
+      50hz  374 -... WU1,3
+            376 -... WU2,4
+
 */
 
   if( shifter_freq_at_start_of_vbl!=50)
@@ -967,12 +1029,10 @@ detect unstable: switch MED/LOW - Beeshift
   // Steem test
   t=LINECYCLE0+372; //trigger point for early right border
 
-/*
 #if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
     if(MMU.WakeUpState2())
       t+=2;
 #endif
-*/
 
   if(act-t>=0 && !(TrickExecuted&TRICK_LINE_MINUS_2))
   {
@@ -993,14 +1053,11 @@ detect unstable: switch MED/LOW - Beeshift
   {
     ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );
 
-
-
 #if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_UNSTABLE)
 // wrong, of course, just to have Overdrive menu OK when you come back
    if(Preload==3)
       Preload=0;
 #endif
-
 
     overscan_add_extra+=-2;
     CurrentScanline.Bytes+=-2;
@@ -1037,6 +1094,14 @@ detect unstable: switch MED/LOW - Beeshift
 
     4) Fetching ends at 460 (230x2), not 464 (376+2x44).
     5) Steem already handled 71/50 switch to remove right border.
+
+    6) Thresholds/WU states (from table by Paolo) TODO
+
+      60hz  374 - 376 WU1,3
+            376 - 378 WU2,4
+
+      50hz  378 -... WU1,3
+            380 -... WU2,4
 */
   t=LINECYCLE0+378; //trigger point for right border cut
 
@@ -1079,9 +1144,10 @@ detect unstable: switch MED/LOW - Beeshift
     lines. Hatari hasn't that problem. It's hard to fix.TODO
 */
         if(SSE_HACKS_ON && CurrentScanline.Cycles==508
-          && FreqChangeAtCycle(376)==60)
+          && FreqChangeAtCycle(threshold/*376*/)==60)
         {
           TRACE_LOG("Spurious right off\n");
+          shifter_draw_pointer+=2; // hack (temp :))
         }
         else
 #endif
@@ -1498,7 +1564,8 @@ void TShifter::IncScanline() { // a big extension of 'scan_y++'!
     VideoEvents.Add(scan_y,CurrentScanline.Cycles,'T',CurrentScanline.Tricks);
 #endif
 #if defined(SS_SHIFTER_EVENTS_BYTES)
-  VideoEvents.Add(scan_y,CurrentScanline.Cycles,'#',CurrentScanline.Bytes);
+  if(CurrentScanline.Tricks)
+    VideoEvents.Add(scan_y,CurrentScanline.Cycles,'#',CurrentScanline.Bytes);
 #endif
 #endif
 
