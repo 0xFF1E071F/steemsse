@@ -173,7 +173,7 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
       case 0xfffc00:  //control //SS writing ACIA IKBD control register
 
 #if defined(SS_ACIA_REGISTERS)
-        ASSERT( !((io_src_b&BIT_7==0) && (ACIA_IKBD.SR&BIT_7)) );
+        ASSERT( !(( !(io_src_b&BIT_7)) && (ACIA_IKBD.SR&BIT_7)) );
         ACIA_IKBD.CR=io_src_b; // assign before we send to other functions
 #endif
         if ((io_src_b & 3)==3){
