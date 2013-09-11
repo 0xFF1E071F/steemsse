@@ -722,10 +722,9 @@ Omega, there's no +2, the switch to 60hz happened at line -60:
 
     if(
 #if defined(SS_STF)
-      (ST_TYPE==STE || CyclesIn>t) && 
+      (ST_TYPE==STE || CyclesIn>t && FreqAtCycle(t)==60) &&
 #endif
-      FreqAtCycle(t)==60 // can't switch to 50hz until t
-      && (FreqAtCycle(376)==50 || CyclesIn<376 && shifter_freq==50))
+      (FreqAtCycle(376)==50 || CyclesIn<376 && shifter_freq==50))
     {
 
       if(ST_TYPE==STE)
