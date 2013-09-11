@@ -2,7 +2,7 @@
 #ifndef SSEDEBUG_H
 #define SSEDEBUG_H
 
-#if _MSC_VER > 1600
+#ifdef SS_VS2012_WARNINGS
 #pragma warning(disable : 4002)		// too many parameter in macro TRACE
 #endif
 

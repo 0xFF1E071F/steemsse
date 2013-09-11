@@ -805,8 +805,12 @@ bool SteemDisplay::Blit()
         }
 #endif
       }else{ //not running right now
+#ifdef SS_VS2012_INIT
         HCURSOR OldCur = 0;	// JLG VS2012 uninitialized
-        if (BlitHideMouse) OldCur=SetCursor(NULL);
+#else
+        HCURSOR OldCur;
+#endif
+		if (BlitHideMouse) OldCur=SetCursor(NULL);
         RECT Dest;
         get_fullscreen_rect(&Dest);
         for (int i=0;i<2;i++){
@@ -826,7 +830,11 @@ bool SteemDisplay::Blit()
         if (BlitHideMouse) SetCursor(OldCur);
       }
     }else{  // SS not Fullscreen:
+#ifdef SS_VS2012_INIT
       HCURSOR OldCur = 0;	// JLG VS2012 uninitialized
+#else
+      HCURSOR OldCur;
+#endif
       if (stem_mousemode==STEM_MOUSEMODE_DISABLED && BlitHideMouse) OldCur=SetCursor(NULL);
 
       RECT dest;GetClientRect(StemWin,&dest);

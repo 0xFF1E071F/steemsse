@@ -92,7 +92,9 @@ int SS_signal; // "handy" global mask (future coding horror case)
 
 #ifdef _MSC_VER
 #pragma comment(lib, "../../3rdparty/caps/CAPSImg.lib")
+#ifndef SS_VS2012_DELAYDLL
 #pragma comment(linker, "/delayload:CAPSImg.dll")
+#endif
 #endif
 
 #ifdef __BORLANDC__
@@ -127,7 +129,9 @@ int SS_signal; // "handy" global mask (future coding horror case)
 
 #ifdef _MSC_VER
 #pragma comment(lib, "Delayimp.lib")
+#ifndef SS_VS2012_DELAYDLL
 #pragma comment(linker, "/ignore:4199")
+#endif
 #endif
 
 #ifdef __BORLANDC__

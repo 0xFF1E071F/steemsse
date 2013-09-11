@@ -41,7 +41,9 @@ void LoadUnzipDLL()
 #ifdef _MSC_VER
 #pragma comment(lib,"../../3rdparty/UnRARDLL/unrar.lib")
 #if defined(WIN32) && defined(SS_DELAY_LOAD_DLL)
+#ifndef SS_VS2012_DELAYDLL
 #pragma comment(linker, "/delayload:unrar.dll")
+#endif
 #endif
 #endif
 #ifdef __BORLANDC__

@@ -235,7 +235,11 @@ HRESULT CAviFile::InitMovieCreation(int nFrameWidth, int nFrameHeight, int nBits
   if(SoundBuf)
   {
     // we take the WAVEFORMATEX currently used in DirectSound
+#ifdef SS_VS2012_INIT
+    DWORD dwSizeAllocated=0, dwSizeWritten; 
+#else
     DWORD dwSizeAllocated,dwSizeWritten; 
+#endif
     VERIFY( SoundBuf->GetFormat(NULL,dwSizeAllocated,&dwSizeWritten)==DS_OK );
     ASSERT( dwSizeWritten==sizeof(WAVEFORMATEX) );
     VERIFY( SoundBuf->GetFormat(&wfx,dwSizeWritten,&dwSizeWritten)==DS_OK );

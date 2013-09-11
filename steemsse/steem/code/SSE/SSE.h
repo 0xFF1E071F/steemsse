@@ -165,7 +165,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SSE_OPTION_PAGE // a new page for all our options
 #define SS_SSE_OPTION_STRUCT // structure SSEOption 
 #define SS_SSE_CONFIG_STRUCT // structure SSEConfig 
-#if WIN32 && (_MSC_VER == 1200)	// JLG VS2012 - only allowed in VC6
+#if WIN32
 #define SS_DELAY_LOAD_DLL // can run without DLL
 #endif
 
@@ -1256,6 +1256,36 @@ problem, multiple struct/class definition not allowed?
 #undef SS_VID_RECORD_AVI
 #undef SS_VID_SAVE_NEO
 #endif
+
+/////////////////////////////////
+// DrCoolZic Conditional Flags //
+/////////////////////////////////
+//
+// These flags protects all modifications done by DrCoolZic
+// DrCoolZic is only defined in STEVEN_SEAGAL 
+// This implies that you should define STEVEN_SEAGAL to het my modif
+//
+#define DrCoolZic
+#ifdef DrCoolZic
+
+// Following are flags for generic code modifications that should work regardless of the compiler
+#define SS_VS2012_INIT		// correct uninitialized variables
+#define SS_VS2012_POW		// First arg of pow function should be a real
+
+// Following flags are for successfull compilation with VS 2012
+// They only make sense if you are using VS2012 or above
+#if _MSC_VER > 1600
+#ifndef SS_VS2012_INIT		// required
+#define SS_VS2012_INIT
+#endif
+#ifndef SS_VS2012_POW		// required
+#define SS_VS2012_POW
+#endif
+#define SS_VS2012_WARNINGS	// remove many VS2012 warnings
+#define SS_VS2012_DELAYDLL	// remove some directives associated with delayed DLL not supported by VS2012
+#endif	// we are compiling for MS VS2012 or above
+
+#endif	// DrCoolZic
 
 /////////////////////////////////////
 // if STEVEN_SEAGAL is NOT defined //

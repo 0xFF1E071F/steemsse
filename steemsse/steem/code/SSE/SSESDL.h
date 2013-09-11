@@ -10,7 +10,9 @@
 #ifdef _MSC_VER
 #pragma comment(lib, "../../3rdparty/SDL-WIN/lib/x86/SDL.lib")
 #pragma comment(lib, "../../3rdparty/SDL-WIN/lib/x86/SDLmain.lib")
+#ifndef SS_VS2012_DELAYDLL
 #pragma comment(linker, "/delayload:SDL.dll")
+#endif
 #endif
 #ifdef __BORLANDC__
 #pragma comment(lib, "../../3rdparty/SDL-WIN/bcclib/SDL.lib")
