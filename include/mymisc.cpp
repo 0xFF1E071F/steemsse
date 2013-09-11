@@ -14,6 +14,7 @@ just refuse to be categorized.
 #include <binary.h>
 #include <clarity.h>
 #include <string.h>
+#include "../steem/code/sse/sse.h"	// added for SS_VS2012_POW
 
 #ifndef WIN_ONLY
 #ifdef WIN32
@@ -66,10 +67,10 @@ Visual Studio C++ 2012
 In mymisc.cpp line 64: Can you change pow(16,n) to pow(16.0,n)
 The first argument has to be a double and the compiler chuck on this one
 */
-#if defined(SS_VAR_REWRITE_VC_2012)
+#ifdef SS_VS2012_POW
     if (n>0) val*=(unsigned long)pow(16.0,n);
 #else
-    if (n>0) val*=(unsigned long)pow(16.0,n);	// JLG VS2012
+    if (n>0) val*=(unsigned long)pow(16,n);
 #endif
     ret+=val;
   }

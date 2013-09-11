@@ -7,6 +7,7 @@ DESCRIPTION: Sets up all conditions that affect the Steem binary.
 //---------------------------------------------------------------------------
 //                         Conditional Defines for Steem
 //---------------------------------------------------------------------------
+#include "SSE/SSE.h"	// for SS_VS2012_WARNINGS
 
 #if defined(STEVEN_SEAGAL)
 #pragma once
@@ -16,7 +17,7 @@ DESCRIPTION: Sets up all conditions that affect the Steem binary.
 #define DEBUG_BUILD
 #endif
 
-#if _MSC_VER > 1600	// JLG VS2012 - disable warnings
+#ifdef SS_VS2012_WARNINGS
 #pragma warning(disable : 4068)		// unknown pragma
 #pragma warning(disable : 4996)		// deprecated
 #pragma warning(disable : 4800)		// forcing value (performance)
@@ -290,9 +291,8 @@ typedef Window WINDOWTYPE;
 #define NOT_ONEGAME(s) s
 #endif
 
-// JLG VS2012 defining ASMCALL does not work in VC
 #ifndef ASMCALL
-#if defined(WIN32) && !defined(VC_BUILD)
+#if defined(WIN32)
 #define ASMCALL __cdecl
 #else
 #define ASMCALL
