@@ -90,16 +90,25 @@ int overscan_add_extra;
 
 LPPIXELWISESCANPROC jump_draw_scanline[3][4][3],draw_scanline,draw_scanline_lowres,draw_scanline_medres;
 
-
 int shifter_freq_change_time[32];
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+BYTE shifter_freq_change[32];
+BYTE shifter_freq_change_idx=0;
+#else
 int shifter_freq_change[32];
 int shifter_freq_change_idx=0;
+#endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_TRICKS)
 // keeping a record for shift mode changes as well
 int shifter_shift_mode_change_time[32];
+#if defined(SS_VAR_RESIZE)
+BYTE shifter_shift_mode_change[32];
+BYTE shifter_shift_mode_change_idx=0;
+#else
 int shifter_shift_mode_change[32];
 int shifter_shift_mode_change_idx=0;
+#endif
 #endif
 
 

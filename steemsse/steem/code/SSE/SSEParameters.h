@@ -372,6 +372,13 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define SHIFTER_EVENTS_FILENAME "shifter_tricks.txt"
 #endif
 
+#if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
+#define WU2_PLUS_CYCLES 4 // we make cycles +2
+#else
+#define WU2_PLUS_CYCLES 2 // we don't
+#endif
+
+
 
 ///////////
 // SOUND //

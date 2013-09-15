@@ -110,7 +110,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SHIFTER    // The legendary custom shifter and all its tricks
 #define SS_SOUND      // YM2149, STE DMA sound, Microwire
 #define SS_STF        // switch STF/STE
-#define SS_STRUCTURE
+#define SS_STRUCTURE  // work in progress...
 #define SS_TIMINGS    // TODO (only HBL now)
 #define SS_TOS        // The Operating System
 #define SS_UNIX       // Linux build must be OK too (may lag)
@@ -139,7 +139,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(SS_BETA)
 //#define TEST01
 //#define TEST02
-//#define TEST03
+#define TEST03
 //#define TEST04
 //#define TEST05
 //#define TEST06
@@ -736,14 +736,14 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_MMU_WAKE_UP_0_BYTE_LINE
 #define SS_MMU_WAKE_UP_DELAY_ACCESS // CPU can't access bus when MMU has it
 //#define SS_MMU_WAKE_UP_IO_BYTES_R  // breaks too much (read SDP) TODO
-#define SS_MMU_WAKE_UP_IO_BYTES_W 
-#define SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY
+//#define SS_MMU_WAKE_UP_IO_BYTES_W // no too radical
+//#define SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY // adapt cycles for shifter write
 #define SS_MMU_WAKE_UP_IOR_HACK 
 #define SS_MMU_WAKE_UP_IOW_HACK 
 #define SS_MMU_WAKE_UP_PALETTE_STE // render +1 cycle (pixel) in state 2
-
 //#define SS_MMU_WAKE_UP_READ_SDP
 #define SS_MMU_WAKE_UP_RIGHT_BORDER
+#define SS_MMU_WAKE_UP_SHIFTER_TRICKS // Adapt limit values based on Paolo's table
 //#define SS_MMU_WAKE_UP_STE_STATE2 // STE in same state2 as STF (no)
 //#define SS_MMU_WAKE_UP_WRITE_SDP
 #endif// SS_MMU_WAKE_UP
@@ -795,9 +795,9 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(SS_SHIFTER)
 
 #define SS_SHIFTER_IO // move blocks from ior, iow
-//#define SS_SHIFTER_IOR_TRACE // specific, not "log"
-//#define SS_SHIFTER_IOW_TRACE // specific, not "log"
 
+///#define SS_SHIFTER_RENDER_SYNC_CHANGES//don't until debug
+#define SS_SHIFTER_SDP // SDP=shifter draw pointer
 #define SS_SHIFTER_TRICKS  // based on Steem system, extended
 
 #if defined(SS_SHIFTER_TRICKS)
@@ -809,11 +809,12 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SHIFTER_0BYTE_LINE_RES_START //Nostalgic-O/Lemmings
 #define SS_SHIFTER_0BYTE_LINE_SYNC //Forest
 #define SS_SHIFTER_0BYTE_LINE_SYNC2 // loSTE screens
-#endif
+#endif//0-byte line
 #define SS_SHIFTER_4BIT_SCROLL //Let's do the Twist again
 #define SS_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK
 #define SS_SHIFTER_60HZ_OVERSCAN //Leavin' Terramis
 #define SS_SHIFTER_END_OF_LINE_CORRECTION // correct +2, -2 lines 
+#define SS_SHIFTER_FIX_LINE508_CONFUSION // hack at recording shifter event
 #define SS_SHIFTER_LEFT_OFF_TEST_BEFORE_HBL // for Riverside
 #define SS_SHIFTER_LINE_MINUS_106_BLACK // loSTE screens
 #define SS_SHIFTER_LINE_PLUS_2_TEST_ALT // loSTE screens
@@ -825,7 +826,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SHIFTER_NON_STOPPING_LINE // Enchanted Land
 #define SS_SHIFTER_PALETTE_BYTE_CHANGE //Golden Soundtracker
 #define SS_SHIFTER_PALETTE_TIMING //Overscan Demos #6
-///#define SS_SHIFTER_RENDER_SYNC_CHANGES//don't until debug
+
 #define SS_SHIFTER_RIGHT_OFF_BY_SHIFT_MODE //beeshift0
 #define SS_SHIFTER_STE_MED_HSCROLL // Cool STE
 #define SS_SHIFTER_STE_HSCROLL_LEFT_OFF //MOLZ/Spiral
@@ -842,11 +843,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_STF_VERTICAL_OVERSCAN
 #endif
 
-//#define SS_VID_LEFT_OFF_COMPARE_STEEM_32
-//#define SS_VID_TRACE_SUSPICIOUS2 // suspicious +2 & -2
 #endif//#if defined(SS_SHIFTER_TRICKS)
-
-#define SS_SHIFTER_SDP // SDP=shifter draw pointer
 
 #if defined(SS_SHIFTER_SDP)
 #define SS_SHIFTER_SDP_READ
@@ -877,10 +874,12 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 //#define SS_SHIFTER_DRAW_DBG  // totally bypass CheckSideOverscan() & Render()
 #define SS_SHIFTER_EVENTS // recording all shifter events in a frame
 //#define SS_SHIFTER_EVENTS_PAL // also for palette
-//#define SS_SHIFTER_EVENTS_READ_SDP // also for read SDP
+#define SS_SHIFTER_EVENTS_READ_SDP // also for read SDP
 #define SS_SHIFTER_EVENTS_BYTES // scanline length
 #define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
 #define SS_SHIFTER_EVENTS_TRICKS // "bordermask"
+//#define SS_SHIFTER_IOR_TRACE // specific, not "log"
+//#define SS_SHIFTER_IOW_TRACE // specific, not "log"
 #if !defined(SS_DEBUG_TRACE_IDE)
 #define SS_SHIFTER_REPORT_VBL_TRICKS // a line each VBL
 #endif
@@ -1059,11 +1058,17 @@ problem, multiple struct/class definition not allowed?
 #define NO_RAR_SUPPORT // I removed the library, so it's unconditional
 
 #if defined(SS_VARIOUS)
-
+#define SS_VAR_ASSOCIATE // better and saves 4KB
+#ifdef SS_VAR_ASSOCIATE
+#define SS_VAR_ASSOCIATE_CU // current user, not root
+#define SS_VAR_MAY_REMOVE_ASSOCIATION
+#define SS_VAR_NO_ASSOCIATE_STC // cartridge, who uses that?
+#define SS_VAR_NO_AUTO_ASSOCIATE_DISK_STS_STC // disk images + STS STC
+#define SS_VAR_NO_AUTO_ASSOCIATE_MISC // other .PRG, .TOS...
+#endif
 #ifdef WIN32
 #define SS_VAR_CHECK_SNAPSHOT
 #endif
-
 #define SS_VAR_DONT_INSERT_NON_EXISTENT_IMAGES // at startup
 #define SS_VAR_DONT_REMOVE_NON_EXISTENT_IMAGES // at final save
 #if !(defined(_DEBUG) && defined(VC_BUILD)) // it's Windows 'break' key
@@ -1077,24 +1082,12 @@ problem, multiple struct/class definition not allowed?
 #define SS_VAR_INFOBOX4 // readme 80 col 
 #define SS_VAR_INFOBOX5 // don't take 64K on the stack!
 #define SS_VAR_KEYBOARD_CLICK // not a sound nor IKBD option
-
-#define SS_VAR_ASSOCIATE // better and saves 4KB
-#ifdef SS_VAR_ASSOCIATE
-#define SS_VAR_ASSOCIATE_CU // current user, not root
-#define SS_VAR_MAY_REMOVE_ASSOCIATION
-#define SS_VAR_NO_ASSOCIATE_STC // cartridge, who uses that?
-#define SS_VAR_NO_AUTO_ASSOCIATE_DISK_STS_STC // disk images + STS STC
-#define SS_VAR_NO_AUTO_ASSOCIATE_MISC // other .PRG, .TOS...
-#endif
 #define SS_VAR_MOUSE_CAPTURE 
 #define SS_VAR_MSA_CONVERTER // don't prompt if found
-
-
-
 #define SS_VAR_NOTIFY //adding some notify during init
 #define SS_VAR_NO_UPDATE // remove all code in relation to updating
 #define SS_VAR_NO_WINSTON // nuke WinSTon import, saves 16K in VC6 release yeah
-#define SS_VAR_OPTIONS_REFRESH
+#define SS_VAR_OPTIONS_REFRESH // 6301, STF... up-to-date with snapshot
 #define SS_VAR_RESIZE // reduce memory set (int->BYTE etc.)
 #define SS_VAR_REWRITE // to conform to what compilers expect (warnings...)
 #define SS_VAR_SCROLLER_DISK_IMAGE

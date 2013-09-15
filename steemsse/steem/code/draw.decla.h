@@ -248,14 +248,24 @@ void ASMCALL draw_scanline_24_hires(int,int,int,int),draw_scanline_32_hires(int,
           s+=overscan_add_extra;
 
 EXT int shifter_freq_change_time[32];
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+EXT BYTE shifter_freq_change[32];
+EXT BYTE shifter_freq_change_idx;
+#else
 EXT int shifter_freq_change[32];
 EXT int shifter_freq_change_idx;
+#endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_TRICKS)
 // keeping a record for shift mode changes as well
 EXT int shifter_shift_mode_change_time[32];
+#if defined(SS_VAR_RESIZE)
+EXT BYTE shifter_shift_mode_change[32];
+EXT BYTE shifter_shift_mode_change_idx;
+#else
 EXT int shifter_shift_mode_change[32];
 EXT int shifter_shift_mode_change_idx;
+#endif
 #endif
 
 
