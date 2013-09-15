@@ -31,7 +31,8 @@ State 2
 struct TMMU {
 //  int WakeUpState; // we take the variable in SSEOption
   inline bool OnMmuCycles(int CyclesIn);
-  inline bool WakeUpState2(); 
+  inline bool WakeUpState1(); // for STF
+  inline bool WakeUpState2(); // for STF 
 };
 
 extern TMMU MMU;
@@ -43,15 +44,17 @@ extern TMMU MMU;
     of the complicated defines (as usual in this build).
 */
 inline bool TMMU::OnMmuCycles(int CyclesIn) {
+  return  WakeUpState1()&&(CyclesIn%4) ||  WakeUpState2()&&!(CyclesIn%4) ;
+
+/*
   bool answer=false;
   if(0);
-
 #if defined(SS_MMU_WAKE_UP_DELAY_ACCESS)
   else if(WAKE_UP_STATE==1 && (CyclesIn%4))
     answer=true;
 
 #if defined(SS_STF) || defined(SS_MMU_WAKE_UP_STE_STATE2)
-  else if(WAKE_UP_STATE==2 && !(CyclesIn%4)
+  else if( (WAKE_UP_STATE==2 && !(CyclesIn%4)
 #if !defined(SS_MMU_WAKE_UP_STE_STATE2)
     && ST_TYPE!=STE
 #endif
@@ -61,6 +64,7 @@ inline bool TMMU::OnMmuCycles(int CyclesIn) {
 #endif
 
   return answer;
+*/
 }
 
 /*  A bit confusing. We have option Wake Up State 2 for both STF & STE, but
@@ -68,12 +72,20 @@ inline bool TMMU::OnMmuCycles(int CyclesIn) {
     all shifter tricks may be shifted (lol) by 2 cycles, instead it would just
     be the palette delay (1 cycle).
 */
+inline bool TMMU::WakeUpState1() {
+  return (
+#if defined(SS_STF) && !defined(SS_MMU_WAKE_UP_STE_STATE2)
+  (ST_TYPE!=STE) &&
+#endif
+  (WAKE_UP_STATE==1));
+}
+
 inline bool TMMU::WakeUpState2() {
   return (
 #if defined(SS_STF) && !defined(SS_MMU_WAKE_UP_STE_STATE2)
   (ST_TYPE!=STE) &&
 #endif
-  WAKE_UP_STATE==2);
+  (WAKE_UP_STATE&2));
 }
 
 #endif

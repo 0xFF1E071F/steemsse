@@ -2124,6 +2124,7 @@ void TOptionBox::CreateSSEPage() {
 void TOptionBox::SSEUpdateIfVisible() {
   if (Handle==NULL) 
     return;
+#if defined(SS_IKBD_6301)
   HWND Win=GetDlgItem(Handle,1029); //HD6301 emu
   if(Win!=NULL) 
   {
@@ -2132,14 +2133,15 @@ void TOptionBox::SSEUpdateIfVisible() {
     else
       SendMessage(Win,BM_SETCHECK,HD6301EMU_ON,0);
   }
+#endif
   Win=GetDlgItem(Handle,7301); //kkb click
   if(Win!=NULL) 
     SendMessage(Win,BM_SETCHECK,PEEK(0x484)&1,0);
-
+#if defined(SS_STF)
   Win=GetDlgItem(Handle,211); //ST Model
   if(Win!=NULL) 
     SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,SS_STF_ST_MODELS-1),0);
-
+#endif
 }
 #endif
 

@@ -149,8 +149,9 @@ void TShifter::CheckSideOverscan() {
     dependent. They  are used only in a 2006 demo called SHFORSTV.TOS,
     by the dude who also made the Overscan Demos.
     Also: beeshift; beescroll; loSTE screens
-    Switches in Forest: STF(1) (56/64), STF(2) (58/68), and STE (40/52).
-    loSTE STF1 56/68
+    Switches (60/50):
+    Forest: STF(1) (56/64), STF(2) (58/68), and STE (40/52).
+    loSTE: STF(1) (56/68) STF(2) (58/74) STE (40/52)
 */
 
   if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE))
@@ -161,7 +162,11 @@ void TShifter::CheckSideOverscan() {
     {
 #if defined(SS_MMU_WAKE_UP_0_BYTE_LINE)
       if(WAKE_UP_STATE==2) // OK, Forest says it's 2
-        s0cycle=58,s2cycle=68+2; // but strange according to compile options
+        s0cycle=58,s2cycle=68+WU2_PLUS_CYCLES//2   // but strange according to compile options
+#if defined(SS_SHIFTER_FIX_LINE508_CONFUSION)
+          -2
+#endif
+        ;
       else
 #endif
         s0cycle=56,s2cycle=64; // default STF1 (OK for 'Forest')
@@ -261,9 +266,9 @@ void TShifter::CheckSideOverscan() {
     Shifter latency could  explain that you may place your switch in the
     first cycles of the line, and the bonus bytes are still 26. My theory!
 
-    The limits are (tables by Paolo) TODO
+    The limits are (tables by Paolo)
     STF R2 506 [WU1 504 WU3,4 506 WU2 508] - 6 [WU1 4 WU3,4 6 WU2 8] 
-        R0 8 [WU1 6 WU3,4 8 WU2 10] - 30 [WU1 30 WU3,4 32 WU2 34]
+        R0 8 [WU1 6 WU3,4 8 WU2 10] - 32 [WU1 30 WU3,4 32 WU2 34]
     STE R2 2 
         R0 26
 
@@ -272,7 +277,7 @@ void TShifter::CheckSideOverscan() {
     Cuddly Demos (not patched)
     Musical Wonder 1991
     Imagination/Roller Coaster SNYD/TCB
-    Omega (cycle 8 is only apparent)  ?
+    Omega 
     Overscan Demos original
     SNYD/TCB (F4)
     SNYD2/Sync fullscreen (F5)
@@ -284,20 +289,26 @@ void TShifter::CheckSideOverscan() {
     seems to justify this approach is Forest. In fact fullscreen demos seem
     to expect the same bonus bytes also at the lower overscan limit, with a
     line at 60hz when the shift mode switch happens.
-    But maybe it's something else compensating, as the guy knew his business.
+
+    TCB, solid info by Troed:
+    WU1 (3): Logo offset 48 pix to the left, not shifted -> +26 -2 = 24 = 3x8
+    WU2: Logo centered. -> 160 bytes line
+    This confirms:
+    - after left off at 60hz, sync 0 at 372 does -2 effect
+    - limits for left off according to wake-up
 */
 
 #if defined(SS_SHIFTER_TRICKS) 
     int lim_r2=2,lim_r0=26;    
 #if defined(SS_STF) 
     if(ST_TYPE!=STE)
-      lim_r2+=6,lim_r0+=4; // experimental
-
-#if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
+      lim_r2+=4,lim_r0+=6;
+#if defined(SS_MMU_WAKE_UP_SHIFTER_TRICKS)
+    if(MMU.WakeUpState1())
+      lim_r2+=-2,lim_r0+=-2;
     if(MMU.WakeUpState2())
-      lim_r2+=2,lim_r0+=2;
+      lim_r2+=WU2_PLUS_CYCLES,lim_r0+=WU2_PLUS_CYCLES;
 #endif
-
 #endif
 #endif
 
@@ -312,24 +323,33 @@ void TShifter::CheckSideOverscan() {
           CurrentScanline.Tricks|=TRICK_LINE_PLUS_26;
       }
 #elif defined(SS_SHIFTER_TRICKS)
+//#define TESTLINE -28 // for debug
       r2cycle=NextShiftModeChange(-12,2); // cycle 504 of previous line
-      if(r2cycle!=-1 && r2cycle<=lim_r2)
+      r2cycle=NextShiftModeChange(lim_r2-14,2);
+#ifdef TESTLINE
+      if(scan_y==TESTLINE) TRACE_LOG("R2 %d ",r2cycle);
+#endif
+      if(r2cycle!=-1 && r2cycle>=lim_r2-12 && r2cycle<=lim_r2)
       {
+/*  ShiftMode at r0cycle can be 0 (generally) or 1 (ST-CNX, HighResMode)
+    So we look for any change. 
+    In some rare cases two R2 are found, eg Ultimate GFA Demo boot screen:
+    004:R0002 012:R0000 376:S0000 388:S0002 436:R0002 448:R0000 508:R0002
+    If it happens, we search again.
+*/
         r0cycle=NextShiftModeChange(r2cycle); 
-        // ShiftMode at r0cycle can be 0 (generally) or 1 (ST-CNX, HighResMode)
-        if(r0cycle>r2cycle && r0cycle<=lim_r0)
-        {
-          if(ShiftModeChangeAtCycle(r0cycle)!=2)
-            CurrentScanline.Tricks|=TRICK_LINE_PLUS_26;
-          else // we have R2-R2-R0, like in Ultimate GFA Demo boot screen
-          {
-            r0cycle=NextShiftModeChange(r0cycle,0); // look for next (R0 only)
-            if(r0cycle>-1 && r0cycle<=lim_r0)
-              CurrentScanline.Tricks|=TRICK_LINE_PLUS_26;
-          }
-        } 
+        if(ShiftModeChangeAtCycle(r0cycle)==2)
+          r0cycle=NextShiftModeChange(r0cycle); 
+#ifdef TESTLINE
+        if(scan_y==-28) TRACE_LOG("lims R2 %d-%d R0 %d-%d R2 %d R0 %d",lim_r2-12,lim_r2,lim_r0-24,lim_r0,r2cycle,r0cycle);
+#endif        
+        if(r0cycle>=lim_r0-24 && r0cycle<=lim_r0)
+          CurrentScanline.Tricks|=TRICK_LINE_PLUS_26;
+#ifdef TESTLINE
+        if(scan_y==-28) TRACE_LOG(" left off %d\n", CurrentScanline.Tricks&TRICK_LINE_PLUS_26);
+#endif
       }
-#if defined(SS_VID_LEFT_OFF_COMPARE_STEEM_32)
+#if defined(SS_DEBUG) && defined(SS_VID_LEFT_OFF_COMPARE_STEEM_32)
       // debug compare Steem's original test with ours, report differences
       t=cpu_timer_at_start_of_hbl+2+(ST_TYPE!=STE ? 4 : 0);
       if(act-t>0)
@@ -343,6 +363,7 @@ void TShifter::CheckSideOverscan() {
           TRACE_LOG("F%d y%d left off not detected by Steem 3.2 R2 %d R0 %d\n",FRAME,scan_y,r2cycle,r0cycle);
       }
 #endif
+#undef TESTLINE
 #endif
     }
     
@@ -350,7 +371,6 @@ void TShifter::CheckSideOverscan() {
     if( (CurrentScanline.Tricks&TRICK_LINE_PLUS_26)
       || (CurrentScanline.Tricks&TRICK_LINE_PLUS_20))
     {
-
       ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );
 #if defined(SS_SHIFTER_LINE_PLUS_20)
       if(CurrentScanline.Tricks&TRICK_LINE_PLUS_20)
@@ -392,9 +412,16 @@ void TShifter::CheckSideOverscan() {
         }
         CurrentScanline.Bytes+=26;
 #if defined(SS_SHIFTER_UNSTABLE)
-        // left off eats one preloaded RR, see ST-CNX doc
+/*  Left off eats one preloaded RR, see ST-CNX doc
+    We remove 2 in WU2 for Omega, this is certainly not correct TODO
+*/
         if(Preload>0)
+        {
+          ASSERT( WAKE_UP_STATE );
           Preload--;
+          if(MMU.WakeUpState2())
+            Preload--;
+        }
 #endif
         if(HSCROLL>=12) // STE shifter bug (Steem authors)
           ShiftSDP(8);
@@ -455,6 +482,9 @@ void TShifter::CheckSideOverscan() {
     All kinds of strange effects may result from absence of stabiliser when
     trying to display lines which have a length in bytes not multiple of 8,
     such as the 230 bytes line (left off, right off).
+    Another stabiliser is MED/LO, it's called 'ULM' because it was used by
+    this group.
+    This is also handled by this routine, in fact it would even take a R0/R0!
 */
 
 #if defined(SS_SHIFTER_TRICKS) && defined(TRICK_STABILISER)
@@ -482,19 +512,23 @@ void TShifter::CheckSideOverscan() {
   ////////////////
 
 /*  A sync switch at cycle 28 causes the shifter to fetch the line but not
-    display it, showing black pixels instead. Overscan #5,#6, Forest.
+    display it, showing black pixels instead. Overscan #5,#6, Forest (top line)
     This, contrary to 0 byte lines, was already in Steem 3.2.
     028:S0000 036:S0002
     loSTE screens: 028:S0002 112:S0000
+
+    Paolo table
+    60: 26-28 [WU1,3] 28-30 [WU2,4]
+    50: 30-...[WU1,3] 32-...[WU2,4]
 */
 
   if(!draw_line_off && shifter_freq_at_start_of_vbl==50)
   {
 
-    t=LINECYCLE0+28; //trigger point ... 32?
-#if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
+    t=LINECYCLE0+28; //trigger point (works with 26?)
+#if defined(SS_MMU_WAKE_UP_SHIFTER_TRICKS)
     if(MMU.WakeUpState2())
-      t+=2;
+      t+=2;//WU2_PLUS_CYCLES; // it's different for sync
 #endif
 
     if(act-t>0)
@@ -631,7 +665,9 @@ void TShifter::CheckSideOverscan() {
         if(r0cycle>=0 && !ShiftModeChangeAtCycle(r0cycle))
           cycles_in_low_res=r1cycle-r0cycle; // 8 NGC, Nightmare
         int shift_in_bytes=8-cycles_in_med_res/2+cycles_in_low_res/4;
+#if defined(SS_STF)
         if(ST_TYPE==STF || cycles_in_low_res)
+#endif
           CurrentScanline.Tricks|=TRICK_4BIT_SCROLL;
         TrickExecuted|=TRICK_4BIT_SCROLL;
 
@@ -715,9 +751,9 @@ Omega, there's no +2, the switch to 60hz happened at line -60:
   if(!(TrickExecuted&TRICK_LINE_PLUS_2) && left_border)
   {
     t=54;
-#if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
+#if defined(SS_MMU_WAKE_UP_SHIFTER_TRICKS)
     if(MMU.WakeUpState2())
-      t+=2;
+      t+=2;//WU2_PLUS_CYCLES; //2?
 #endif
 
     if(
@@ -726,8 +762,9 @@ Omega, there's no +2, the switch to 60hz happened at line -60:
 #endif
       (FreqAtCycle(376)==50 || CyclesIn<376 && shifter_freq==50))
     {
-
+#if defined(SS_STF)
       if(ST_TYPE==STE)
+#endif
       {
         if(FreqChangeAtCycle(36)==60)
           CurrentScanline.Tricks|=TRICK_LINE_PLUS_2;
@@ -735,7 +772,8 @@ Omega, there's no +2, the switch to 60hz happened at line -60:
 #if defined(SS_STF)
       else
       {
-        if(PreviousFreqChange(52)>376-512) // not perfect, it's beta...
+//        if(PreviousFreqChange(52)>376-512) // not perfect, it's beta...
+        if(PreviousFreqChange(t-2)>376-512) // not perfect, it's beta...
           CurrentScanline.Tricks|=TRICK_LINE_PLUS_2;
       }
 #endif
@@ -754,9 +792,9 @@ Omega, there's no +2, the switch to 60hz happened at line -60:
   {   
 #if defined(SS_SHIFTER_LINE_PLUS_2_THRESHOLD)
     t=LINECYCLE0+52; // fixes Forest
-#if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
+#if defined(SS_MMU_WAKE_UP_SHIFTER_TRICKS)
     if(MMU.WakeUpState2())
-      t+=2;
+      t+=WU2_PLUS_CYCLES;
 #endif
 #else
     t=LINECYCLE0+58; 
@@ -803,13 +841,17 @@ Omega, there's no +2, the switch to 60hz happened at line -60:
   // LINE -106 //
   ///////////////
 
-/*  A shift mode switch to 2 before cycle 166 (end of HIRES line) causes 
+/*  A shift mode switch to 2 before cycle 168 (end of HIRES line) causes 
     the line to stop there. 106 bytes are not fetched.
     When combined with a left off, this makes +26-106 = -80, or a line 80 
     (160-80).
     Just Buggin: 152:R0002 172:R0000
     ST-CNX: 160:R0002 172:R0000
     loSTE screens: 120[!]:R0002  392:R0000 
+    
+    Paolo table
+    R2 56 [...] -> 164 [WU1] 166 [WU3,4] 168 [WU2]
+
 */
 
 #if defined(SS_SHIFTER_STEEM_ORIGINAL) || 0
@@ -821,18 +863,18 @@ Omega, there's no +2, the switch to 60hz happened at line -60:
        CurrentScanline.Tricks|=TRICK_LINE_MINUS_106;
   }
 #elif defined(SS_SHIFTER_TRICKS) && 1// eg PYM/ST-CNX
-  t=LINECYCLE0+164; // look for R2 <= 164
+  t=LINECYCLE0+164+2; // look for R2 <= 166
 
-#if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
+#if defined(SS_MMU_WAKE_UP_SHIFTER_TRICKS)
     if(MMU.WakeUpState2())
-      t+=2;
+      t+=WU2_PLUS_CYCLES;
 #endif
 
   if(act-t>=0 && !(TrickExecuted&TRICK_LINE_MINUS_106))
   {
      i=CheckShiftMode(t);
      if(i>=0 && shifter_shift_mode_change[i]==2 
-       && ShiftModeChangeCycle(i)>=56/*152*//*140*/)
+       && ShiftModeChangeCycle(i)>=56)  
        CurrentScanline.Tricks|=TRICK_LINE_MINUS_106;
 
 #ifdef SS_DEBUG
@@ -904,7 +946,7 @@ detect unstable: switch MED/LOW - Beeshift
     {
       r0cycle=NextShiftModeChange(r1cycle,0); // detect switch to low
       int cycles_in_med=r0cycle-r1cycle;
-      if(cycles_in_med>0 && cycles_in_med<=20) 
+      if(cycles_in_med>0 && cycles_in_med<=20+4) 
       {
         Preload=((cycles_in_med/4)%4)+4;  // '+4' to make sure >1
 //        TRACE_LOG("y%d R1 %d R0 %d cycles in med %d Preload %d\n",scan_y,r1cycle,r0cycle,cycles_in_med,Preload);
@@ -930,7 +972,7 @@ detect unstable: switch MED/LOW - Beeshift
       {
         r0cycle=NextShiftModeChange(r2cycle,0); // detect switch to low
         int cycles_in_high=r0cycle-r2cycle;
-        if(cycles_in_high>0 && cycles_in_high<=20)
+        if(cycles_in_high>0 && cycles_in_high<=20+4)
         {
           Preload=((cycles_in_high/4)%4);
           if(Preload&1) // if it's 3 or 5
@@ -1012,7 +1054,7 @@ detect unstable: switch MED/LOW - Beeshift
     need to happen at 372, though it makes more sense there. Sooner, there
     could be distortion on a real ST.
 
-    Thresholds/WU states (from table by Paolo) TODO
+    Thresholds/WU states (from table by Paolo)
 
       60hz  58 - 372 WU1,3
             60 - 374 WU2,4
@@ -1028,9 +1070,9 @@ detect unstable: switch MED/LOW - Beeshift
   // Steem test
   t=LINECYCLE0+372; //trigger point for early right border
 
-#if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
+#if defined(SS_MMU_WAKE_UP_SHIFTER_TRICKS)
     if(MMU.WakeUpState2())
-      t+=2;
+      t+=2;//WU2_PLUS_CYCLES;
 #endif
 
   if(act-t>=0 && !(TrickExecuted&TRICK_LINE_MINUS_2))
@@ -1101,16 +1143,17 @@ detect unstable: switch MED/LOW - Beeshift
 
       50hz  378 -... WU1,3
             380 -... WU2,4
-*/
-  t=LINECYCLE0+378; //trigger point for right border cut
 
-#if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
+    Nostalgia menu: must be bad display in WU2
+*/
+  t=LINECYCLE0+376; //trigger point for right border cut
+
+#if defined(SS_MMU_WAKE_UP_SHIFTER_TRICKS)
     if(MMU.WakeUpState2())
-      t+=4; // beeshift0 vs omega
+      t+=2;//WU2_PLUS_CYCLES; 
 #endif
 
-  if(act-t>=0
-    && !(CurrentScanline.Tricks&TRICK_LINE_MINUS_2))
+  if(act-t>=0 && !(CurrentScanline.Tricks&TRICK_LINE_MINUS_2))
   {
     i=CheckFreq(t);
     if(i!=-1)
@@ -1125,7 +1168,7 @@ detect unstable: switch MED/LOW - Beeshift
 #if defined(SS_MMU_WAKE_UP_RIGHT_BORDER) && !defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
       int threshold= (MMU.WakeUpState2()) ? 376 : 374;
 #elif defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
-      int threshold= (WAKE_UP_STATE) ? 376 : 374; // taking care of 'ignore'
+      int threshold= (WAKE_UP_STATE==2) ? 376 : 374; // taking care of 'ignore'
 #else
       int threshold=374;
 #endif
@@ -1141,12 +1184,16 @@ detect unstable: switch MED/LOW - Beeshift
 #if defined(SS_SHIFTER_OMEGA)
 /*  Wrong cycle! It really hits at 372 but Steem is confused by the 508 cycles
     lines. Hatari hasn't that problem. It's hard to fix.TODO
+    SS_SHIFTER_OMEGA not defined in 3.5.3
 */
-        if(SSE_HACKS_ON && CurrentScanline.Cycles==508
-          && FreqChangeAtCycle(threshold/*376*/)==60)
+        if(SSE_HACKS_ON && PreviousScanline.Cycles==508 && CurrentScanline.Cycles==508
+         //&& ( FreqChangeAtCycle(threshold)==60 || FreqChangeAtCycle(threshold+2)==60) )
+          && FreqAtCycle(threshold+4)==60)
         {
+///          ASSERT( Line508Confusion() );//temp, we mean to remove individual hacks
           TRACE_LOG("Spurious right off\n");
-          shifter_draw_pointer+=2; // hack (temp :))
+          shifter_draw_pointer+=-4; // hack (temp :))
+          CurrentScanline.Bytes+=-4;    
         }
         else
 #endif
@@ -1211,6 +1258,8 @@ void TShifter::CheckVerticalOverscan() {
     not enough.
     Those values are not based on measurements but on how programs work or not.
     Still testing.
+    There was variation in some STE & STF and typically some demos wouldn't
+    work on some machines because of top/bottom borders.
 
     STE cases:
     -E605 planet (500:S0)
@@ -1586,13 +1635,22 @@ void TShifter::IncScanline() { // a big extension of 'scan_y++'!
 #if defined(SS_SHIFTER_SDP_WRITE)
   SDPMiddleByte=999; // an impossible value for a byte
 #endif
+//  ASSERT(scan_y!=-28);
   PreviousScanline=CurrentScanline; // auto-generated
   CurrentScanline=NextScanline;
   if(scan_y==-29 && (PreviousScanline.Tricks&TRICK_TOP_OVERSCAN)
     || !scan_y && !PreviousScanline.Bytes)
     CurrentScanline.Bytes=160; // needed by ReadSDP - not perfect (TODO)
   else if(FetchingLine()) 
-    NextScanline.Bytes=(screen_res==2)?80:160;
+    //NextScanline.Bytes=(screen_res==2)?80:160;
+    CurrentScanline.Bytes=(screen_res==2)?80:160;
+  else //if(!FetchingLine()) 
+  {
+    ASSERT( !FetchingLine() );
+    
+    NextScanline.Bytes=0;
+  }
+
   if(shifter_freq==50)
   {
     CurrentScanline.StartCycle=56;
@@ -2412,6 +2470,12 @@ void TShifter::SetShiftMode(BYTE NewMode) {
 */
 
   int CyclesIn=LINECYCLES;
+
+#if defined(SS_SHIFTER_FIX_LINE508_CONFUSION)
+  if( Line508Confusion() )
+    CyclesIn-=4; // this is for correct reporting
+#endif
+
 #if defined(SS_SHIFTER_EVENTS)
   VideoEvents.Add(scan_y,CyclesIn,'R',NewMode); 
   //TRACE_LOG("y%d c%d r%d\n",scan_y,CyclesIn,NewMode);
@@ -2496,6 +2560,11 @@ void TShifter::SetSyncMode(BYTE NewSync) {
 
   int CyclesIn=LINECYCLES;
 
+#if defined(SS_SHIFTER_FIX_LINE508_CONFUSION)
+  if( Line508Confusion() )
+    CyclesIn-=4; // this is for correct reporting
+#endif
+
 #if defined(SS_SHIFTER_EVENTS) 
   VideoEvents.Add(scan_y,CyclesIn,'S',NewSync); 
 //  TRACE_LOG("y%d c%d s%d\n",scan_y,CyclesIn,NewSync);
@@ -2504,6 +2573,7 @@ void TShifter::SetSyncMode(BYTE NewSync) {
   int new_freq;  
 
   m_SyncMode=NewSync&3;
+
 #if defined(SS_SHIFTER_RENDER_SYNC_CHANGES)//no
   Render(CyclesIn,DISPATCHER_SET_SYNC);
 #endif

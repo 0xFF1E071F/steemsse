@@ -1012,6 +1012,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if (HIWORD(wPar)==CBN_SELENDOK)
           {
             WAKE_UP_STATE=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
+            TRACE_LOG("Option WU = %d\n",WAKE_UP_STATE);
 #if defined(SS_SHIFTER_UNSTABLE)
             Shifter.Preload=0; // reset the thing!
 #endif

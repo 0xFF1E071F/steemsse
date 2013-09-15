@@ -114,6 +114,9 @@ struct TShifter {
   void DrawScanlineToEnd();
   inline int FetchingLine();
   void IncScanline();
+#if defined(SS_SHIFTER_FIX_LINE508_CONFUSION)
+  inline bool Line508Confusion();
+#endif
   BYTE IORead(MEM_ADDRESS addr);
   void IOWrite(MEM_ADDRESS addr,BYTE io_src_b);
   void Render(int cycles_since_hbl, int dispatcher=DISPATCHER_NONE);
@@ -297,6 +300,25 @@ inline int TShifter::FetchingLine() {
 }
 
 
+#if defined(SS_SHIFTER_FIX_LINE508_CONFUSION)
+/*  In Steem the timings of all HBLs are prepared for each frame
+    using the "event" system.
+    In a 50hz frame, when there are 60hz (508 cycles) scanlines, 
+    Steem will be off by 4 cycles in its reckoning of the start
+    of the HBL (linecycle 0).
+    This is hard to understand and also to fix without messing other
+    timings (like CPU, MFP...)
+    The little function here will just allow to have the
+    right linecyles on the scanline after the 60hz scanline.
+    Cases where it matters:
+    Omega, TCB
+*/
+inline bool TShifter::Line508Confusion() {
+  return(PreviousScanline.Cycles==508 && CurrentScanline.Cycles==508);
+}
+#endif
+
+
 inline void TShifter::RoundCycles(int& cycles_in) {
   cycles_in-=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN;
   if(shifter_hscroll_extra_fetch && !HSCROLL) 
@@ -426,8 +448,13 @@ inline void TShifter::AddFreqChange(int f) {
   shifter_freq_change_idx++;
   shifter_freq_change_idx&=31;
   shifter_freq_change_time[shifter_freq_change_idx]=ABSOLUTE_CPU_TIME;
+#if defined(SS_SHIFTER_FIX_LINE508_CONFUSION)
+  if( Line508Confusion() )
+    shifter_freq_change_time[shifter_freq_change_idx]-=4;
+#endif
   shifter_freq_change[shifter_freq_change_idx]=f;                    
 }
+
 
 inline void TShifter::AddShiftModeChange(int mode) {
   // called only by SetShiftMode
@@ -435,6 +462,10 @@ inline void TShifter::AddShiftModeChange(int mode) {
   shifter_shift_mode_change_idx++;
   shifter_shift_mode_change_idx&=31;
   shifter_shift_mode_change_time[shifter_shift_mode_change_idx]=ABSOLUTE_CPU_TIME;
+#if defined(SS_SHIFTER_FIX_LINE508_CONFUSION)
+  if( Line508Confusion() )
+    shifter_shift_mode_change_time[shifter_shift_mode_change_idx]-=4;
+#endif
   shifter_shift_mode_change[shifter_shift_mode_change_idx]=mode;                    
 }
 
@@ -565,7 +596,7 @@ inline int TShifter::NextFreqChange(int cycle,int value) {
   int t=cycle+LINECYCLE0; // convert to absolute
   int idx,i,j;
   for(idx=-1,i=shifter_freq_change_idx,j=0
-    ; /*shifter_freq_change_time[i]-t>0 &&*/ j<32
+    ; shifter_freq_change_time[i]-t>0 && j<32
     ; i--,i&=31,j++)
     if(value==-1 || shifter_shift_mode_change[i]==value)
       idx=i;
@@ -839,31 +870,32 @@ inline MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
       starts_counting-=26;
 
 #if defined(SS_SHIFTER_TCB) && defined(SS_SHIFTER_TRICKS)
-/*  There seems to be much confusion caused by 50/60hz switches and when
-    the video counter starts running.
-    This is just a hack so that SNYD/TCB works without breaking, for example,
-    Mindbomb/No Shit.
-    Or maybe there's yet another issue in TCB.
+/*  The following is a hack for SNYD/TCB.
 
-TCB:
--broken:
-Line -30 - 372:S0000 456:S0000 480:r0900 500:r0900 512:T0100
-Line -29 - 008:r0900 028:r0900 048:r0900 068:r0902 512:R0002
-Line -28 - 008:R0000 372:S0000 380:S0002 440:R0002 452:R0000 512:R0002 508:T2009
--OK:
-Line -30 - 372:S0000 456:S0000 480:r0900 500:r0900 512:T0100
-Line -29 - 008:r0900 028:r0900 048:r0900 068:r0900 088:r090A
-Line -28 - 004:R0002 012:R0000 376:S0000 384:S0002 444:R0002 456:R0000 508:T2009
-NoShit:
-- broken:
-Line -30 - 416:S0000 512:T0100
-Line -29 - 236:S0002 244:r0958 260:r0960 508:T0002
-Line -28 - 008:R0002 016:R0000 380:S0000 388:S0002 448:R0002 460:R0000 512:T2001
--OK:
-Line -30 - 432:S0000 512:T0100
-Line -29 - 252:S0002 260:r0962 276:r096A 508:T0002
-Line -28 - 004:R0002 012:R0000 376:S0000 384:S0002 444:R0002 456:R0000 512:T2011
+Troed:
+"I'm still slightly confused over how -29 and -28 are not vertically aligned (WS2) 
+nor right-aligned (WS1/3/4) when they both are 508 cycle lines according to this 
+theory (which seems to pan out). My visual judgment was that -29 is PAL 160 and 
+-28 is NTSC 160, but the code shouldn't be able to produce that due to the failed 
+top border switch to 50Hz."
 
+Not working:
+-30 - 364:S0000 450:S0000 472:r0900 492:r0900 512:r0900 512:T0100 512:#0000
+-29 - 020:r0900 040:r0900 060:r0900 080:r0908 512:R0002
+
+Working:
+-30 - 388:S0000 474:S0000 496:r0900 512:T0100 512:#0000
+-29 - 004:r0900 024:r0900 044:r0900 064:r0900 084:r0908
+
+The difference between not working and not working is that the SDP starts
+running 4 cycles earlier in "not working", as is expected in a line starting
+ at cycle 52 (60hz line).
+But Troed sees that line -29 is a PAL one (50hz).
+Theory says it should start at cycle 52, the fact is that it
+starts at 56!
+It could be the double S0 on the line before, that's what the hack
+looks for. It's not understood yet.
+Cases to consider: TCB, Mindbomb/No Shit, Omega
 */
     else if(SSE_HACKS_ON && CurrentScanline.Cycles==508
       && PreviousScanline.Cycles==512)
