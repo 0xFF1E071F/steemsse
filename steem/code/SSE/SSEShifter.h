@@ -887,7 +887,7 @@ Working:
 -30 - 388:S0000 474:S0000 496:r0900 512:T0100 512:#0000
 -29 - 004:r0900 024:r0900 044:r0900 064:r0900 084:r0908
 
-The difference between not working and not working is that the SDP starts
+The difference between working and not working is that the SDP starts
 running 4 cycles earlier in "not working", as is expected in a line starting
  at cycle 52 (60hz line).
 But Troed sees that line -29 is a PAL one (50hz).

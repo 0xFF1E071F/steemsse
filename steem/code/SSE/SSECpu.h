@@ -846,7 +846,7 @@ NOT_DEBUG(inline) void m68k_poke_abus(BYTE x){
 /*  To save some performance, we do just one basic shifter test in the inline
     part. More precise test is in m68k_poke_abus2().
 */
-  else if(abus<shifter_draw_pointer_at_start_of_line 
+  else if(abus<shifter_draw_pointer_at_start_of_line && abus<himem
     && (abus>=MEM_START_OF_USER_AREA ||super && abus>=MEM_FIRST_WRITEABLE))
 #else
   else if(abus<himem && (abus>=MEM_START_OF_USER_AREA
@@ -869,7 +869,7 @@ NOT_DEBUG(inline) void m68k_dpoke_abus(WORD x){
   else if(abus>=MEM_IO_BASE && super)
       io_write_w(abus,x);
 #if defined(SS_CPU_CHECK_VIDEO_RAM_W) // 3615 GEN4 100
-  else if(abus<shifter_draw_pointer_at_start_of_line 
+  else if(abus<shifter_draw_pointer_at_start_of_line && abus<himem
     && (abus>=MEM_START_OF_USER_AREA ||super && abus>=MEM_FIRST_WRITEABLE))
 #else
   else if(abus<himem && (abus>=MEM_START_OF_USER_AREA
@@ -893,7 +893,7 @@ NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x){
   if(abus>=MEM_IO_BASE && super)
     io_write_l(abus,x);
 #if defined(SS_CPU_CHECK_VIDEO_RAM_L)
-  else if(abus<shifter_draw_pointer_at_start_of_line 
+  else if(abus<shifter_draw_pointer_at_start_of_line && abus<himem
     && (abus>=MEM_START_OF_USER_AREA ||super && abus>=MEM_FIRST_WRITEABLE))
 #else
   else if(abus<himem && (abus>=MEM_START_OF_USER_AREA
