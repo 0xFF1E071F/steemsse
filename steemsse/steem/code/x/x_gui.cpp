@@ -188,7 +188,13 @@ bool MakeGUI()
   ResetBut.create(XD,StemWin,x,0,20,20,StemWinButtonNotifyProc,NULL,
                     BT_ICON,"",102,BkCol);
   ResetBut.set_icon(&Ico16,ICO16_RESET);
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESET_BUTTON)
+  hints.add(ResetBut.handle,T("Reset (Left Click) - Switch off (Right Click)"),StemWin);
+#else
   hints.add(ResetBut.handle,T("Reset (Left Click = Cold, Right Click = Warm)"),StemWin);
+#endif
+
   x+=23;
 
   SnapShotBut.create(XD,StemWin,x,0,20,20,StemWinButtonNotifyProc,NULL,

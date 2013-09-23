@@ -958,7 +958,11 @@ void HandleButtonMessage(UINT Id,HWND hBut)
       break;
     case 102:
     {
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESET_BUTTON)
+      bool Warm=(SendMessage(hBut,BM_GETCLICKBUTTON,0,0)==1);
+#else
       bool Warm=(SendMessage(hBut,BM_GETCLICKBUTTON,0,0)==2);
+#endif
       reset_st(DWORD(Warm ? RESET_WARM:RESET_COLD) | DWORD(Warm ? RESET_NOSTOP:RESET_STOP) |
                   RESET_CHANGESETTINGS | RESET_BACKUP);
       break;

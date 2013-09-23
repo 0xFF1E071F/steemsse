@@ -961,10 +961,10 @@ void m68k_exception::crash() { // copied from cpu.cpp and improved
       MEM_ADDRESS ad=LPEEK(bombs*4); // Get the vector
       if(ad & 1) // bad vector!
       {
-        // Very rare, generally indicates emulation bug
+        // Very rare, generally indicates emulation bug, but there are cases
         bombs=BOMBS_ADDRESS_ERROR;
 #if defined(SS_DEBUG)
-        BRK(odd exception vector);
+        BRK(odd exception vector); // GEN4-OVL
         M68000.nExceptions++;
         TRACE_LOG("->%d bombs\n",bombs);
 #endif
