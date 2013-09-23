@@ -1088,6 +1088,7 @@ problem, multiple struct/class definition not allowed?
 #define SS_VAR_NO_UPDATE // remove all code in relation to updating
 #define SS_VAR_NO_WINSTON // nuke WinSTon import, saves 16K in VC6 release yeah
 #define SS_VAR_OPTIONS_REFRESH // 6301, STF... up-to-date with snapshot
+#define SS_VAR_RESET_BUTTON // invert
 #define SS_VAR_RESIZE // reduce memory set (int->BYTE etc.)
 #define SS_VAR_REWRITE // to conform to what compilers expect (warnings...)
 #define SS_VAR_SCROLLER_DISK_IMAGE

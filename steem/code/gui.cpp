@@ -760,7 +760,13 @@ bool MakeGUI()
 
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_RESET),WS_CHILDWINDOW | WS_VISIBLE |
                           PBS_RIGHTCLICK,x,0,20,20,StemWin,(HMENU)102,Inst,NULL);
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESET_BUTTON)
+  ToolAddWindow(ToolTip,Win,T("Reset (Left Click) - Switch off (Right Click)"));
+#else
   ToolAddWindow(ToolTip,Win,T("Reset (Left Click = Cold, Right Click = Warm)"));
+#endif
+
   x+=23;
 
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_SNAPSHOTBUT),WS_CHILDWINDOW | WS_VISIBLE,

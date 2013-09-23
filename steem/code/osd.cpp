@@ -520,7 +520,13 @@ void osd_draw()
         }
 
 #if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_INFO)
-        // hack to display drive side track sector
+/*  Display drive, side, track, sector
+    Drive is A or B
+    Side is 1 or 2 like in Fastcopy
+    Track is 0-79(+) like in Fastcopy (note ProCopy: 1-80(+))
+    Sector 1-9(+) like in all software. Sector isn't displayed if
+    we're in fast drive mode.
+*/
         if(OSD_DRIVE_INFO)// && seconds>=osd_show_plasma)
         {
 #define THE_LEFT (x1/2)
@@ -538,11 +544,8 @@ void osd_draw()
               floppy_head_track[floppyno]);
           else
 #endif
-          sprintf(tmp_buffer,"%C:%1d-%02d-%02d",'A'+floppyno,floppy_current_side()+1,
-            floppy_head_track[floppyno],fdc_sr);
-
-          //sprintf(tmp_buffer,"CR %2X",fdc_cr);
-
+            sprintf(tmp_buffer,"%C:%1d-%02d-%02d",'A'+floppyno,floppy_current_side()+1,
+              floppy_head_track[floppyno],fdc_sr);
           size_t drive_info_length=strlen(tmp_buffer);
           int x=x1-(drive_info_length+1)*16;
           int start_y=0+8;

@@ -363,7 +363,12 @@ int StemWinButtonNotifyProc(hxc_button *But,int Mess,int *Inf)
       break;
     case 102:
     {
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESET_BUTTON)
+      bool Warm=!(Inf[0]==Button3);
+#else
       bool Warm=(Inf[0]==Button3);
+#endif
       reset_st(DWORD(Warm ? RESET_WARM:RESET_COLD) | DWORD(Warm ? RESET_NOSTOP:RESET_STOP) |
                   RESET_CHANGESETTINGS | RESET_BACKUP);
       break;
