@@ -48,8 +48,8 @@
 #if defined(SS_SHIFTER_UNSTABLE)
 #define TRICK_UNSTABLE 0x10000 // less specific
 #endif
-
-#define TRICK_NEO 0x20000//tests
+#define TRICK_LINE_PLUS_24 0x20000
+#define TRICK_NEO 0x40000//tests
 
 // register names in Atari doc / Steem variable
 #define HSCROLL shifter_hscroll
@@ -77,7 +77,7 @@ enum {BORDERS_NONE, BORDERS_ON, BORDERS_AUTO_OFF, BORDERS_AUTO_ON};
     TODO, but all reversible
 */
 #define SHIFTER_PREFETCH_LATENCY 12 
-#define SHIFTER_RASTER_PREFETCH_TIMING (shifter_freq==72 ? 4 : 16) 
+#define SHIFTER_RASTER_PREFETCH_TIMING 16//(shifter_freq==72 ? 4 : 16) 
 #define SHIFTER_RASTER (shifter_freq==72? 2 : (screen_res ? 4 : 8)) 
 
 
@@ -314,7 +314,8 @@ inline int TShifter::FetchingLine() {
     Omega, TCB
 */
 inline bool TShifter::Line508Confusion() {
-  return(PreviousScanline.Cycles==508 && CurrentScanline.Cycles==508);
+  return(PreviousScanline.Cycles==508 && CurrentScanline.Cycles==508 
+    && shifter_freq_at_start_of_vbl==50);
 }
 #endif
 

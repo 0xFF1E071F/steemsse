@@ -815,6 +815,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SHIFTER_60HZ_OVERSCAN //Leavin' Terramis
 #define SS_SHIFTER_END_OF_LINE_CORRECTION // correct +2, -2 lines 
 #define SS_SHIFTER_FIX_LINE508_CONFUSION // hack at recording shifter event
+#define SS_SHIFTER_LEFT_OFF_60HZ // 24 bytes!
 #define SS_SHIFTER_LEFT_OFF_TEST_BEFORE_HBL // for Riverside
 #define SS_SHIFTER_LINE_MINUS_106_BLACK // loSTE screens
 #define SS_SHIFTER_LINE_PLUS_2_TEST_ALT // loSTE screens
