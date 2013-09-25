@@ -252,20 +252,20 @@ void TShifter::CheckSideOverscan() {
     if(ST_TYPE==STE) 
 #endif
     {
+      ASSERT( !(CurrentScanline.Tricks&TRICK_LINE_PLUS_20) );
+      ASSERT( !(CurrentScanline.Tricks&TRICK_LINE_PLUS_24) );
+      ASSERT( !(CurrentScanline.Tricks&TRICK_LINE_PLUS_26) );
       if(!ShiftModeChangeAtCycle(4) && (ShiftModeChangeAtCycle(-8)==2
         || ShiftModeChangeAtCycle(-4)==2))
         CurrentScanline.Tricks|=TRICK_LINE_PLUS_20;
     }
 #endif
 
-  ///////////////////////////////////
-  //  LEFT BORDER OFF (line +26)   //
-  ///////////////////////////////////
+  ////////////////////////////////////////
+  //  LEFT BORDER OFF (line +26, +24)   //
+  ////////////////////////////////////////
 
 /*
-    Shifter latency could  explain that you may place your switch in the
-    first cycles of the line, and the bonus bytes are still 26. My theory!
-
     The limits are (tables by Paolo)
     STF R2 506 [WU1 504 WU3,4 506 WU2 508] - 6 [WU1 4 WU3,4 6 WU2 8] 
         R0 8 [WU1 6 WU3,4 8 WU2 10] - 32 [WU1 30 WU3,4 32 WU2 34]
@@ -283,19 +283,12 @@ void TShifter::CheckSideOverscan() {
     SNYD2/Sync fullscreen (F5)
     SoWatt/Menu+Sync
 
-    For the moment, emulation works better if we grant +26 for 60Hz as well
-    as 50Hz lines, and we consider a line starting at 56 as well as 0 and
-    ending at 372 (60hz) as -2. Hatari has the same approach. A demo that
-    seems to justify this approach is Forest. In fact fullscreen demos seem
-    to expect the same bonus bytes also at the lower overscan limit, with a
-    line at 60hz when the shift mode switch happens.
-
-    TCB, solid info by Troed:
-    WU1 (3): Logo offset 48 pix to the left, not shifted -> +26 -2 = 24 = 3x8
-    WU2: Logo centered. -> 160 bytes line
-    This confirms:
-    - after left off at 60hz, sync 0 at 372 does -2 effect
-    - limits for left off according to wake-up
+    In highres, DE starts at linecycle 6 (+-WU), not 0 like it is generally
+    assumed.
+    This is why a shift mode switch in the first cycles of the scanline will
+    work.
+    Bonus bytes are 26 because DE is on from 6 to 58 (start of 50hz line), that
+    is 52 cycles. 52/2 = 26.
 */
 
 #if defined(SS_SHIFTER_TRICKS) 
@@ -314,6 +307,8 @@ void TShifter::CheckSideOverscan() {
 
     if(!(CurrentScanline.Tricks&TRICK_LINE_PLUS_20))
     {
+      ASSERT( !(CurrentScanline.Tricks&TRICK_LINE_PLUS_24) );
+      ASSERT( !(CurrentScanline.Tricks&TRICK_LINE_PLUS_26) );
 #if defined(SS_SHIFTER_STEEM_ORIGINAL) // in fact we could keep it? it's simpler
       t=cpu_timer_at_start_of_hbl+2+(ST_TYPE!=STE ? 4 : 0);
       if(act-t>0)
@@ -344,7 +339,42 @@ void TShifter::CheckSideOverscan() {
         if(scan_y==-28) TRACE_LOG("lims R2 %d-%d R0 %d-%d R2 %d R0 %d",lim_r2-12,lim_r2,lim_r0-24,lim_r0,r2cycle,r0cycle);
 #endif        
         if(r0cycle>=lim_r0-24 && r0cycle<=lim_r0)
-          CurrentScanline.Tricks|=TRICK_LINE_PLUS_26;
+        {
+
+#if defined(SS_SHIFTER_LEFT_OFF_60HZ)
+/*
+    In a 60hz line, there are only 24 bonus bytes (6 to 52 = 48, 48/2=24).
+    TODO: STE difference
+
+    TCB, solid info by Troed:
+    WU1 (3): Logo offset 48 pix to the left, not shifted -> +26 -2 = 24 = 3x8
+    WU2: Logo centred. -> 160 bytes line
+
+    In previous versions of Steem, TCB seemed to operate in WU1 because two
+    errors were compensating: 26 bytes were granted for a 60hz left off instead
+    of 24, and a spurious '-2' effect was granted at cycle 372 even though the
+    line was already at 60hz (same as Hatari 1.7.0).
+    In v3.5.3, emulation of TCB is correct for WU1 (offset) and 2 (centred). 
+    There's still a hack in the 'read SDP' part.
+
+SNYD/TCB in WU1:
+-30 - 388:S0000 472:S0000 496:r0900 512:T0100 512:#0000
+-29 - 004:r0900 024:r0900 044:r0900 064:r0900 084:r0908
+-28 - 000:R0002 008:R0000 372:S0000 380:S0002 440:R0002 452:R0000 508:T22000 508:#0184
+Sync is 0 at left border removal, it's a +24 line, not +26, and the 372:S0 
+can't make -2, sync was 0 already.
+
+Transbeauce 2 menu:
+199 - 012:R0000 376:S0000 384:S0082 444:R0082 456:R0000 464:S0000 508:R0082 512:T2211 512:#0230
+200 - 004:S0082 012:R0000 376:S0000 384:S0082 444:R0082 456:R0000 512:R0082 512:T2011 512:#0230
+Sync is set back to 2 between R2 and R0, this is isn't a line +24
+*/
+          if(FreqAtCycle(r2cycle)==60 && FreqAtCycle(r0cycle)==72)
+            CurrentScanline.Tricks|=TRICK_LINE_PLUS_24;
+          else
+#endif
+            CurrentScanline.Tricks|=TRICK_LINE_PLUS_26;
+        }
 #ifdef TESTLINE
         if(scan_y==-28) TRACE_LOG(" left off %d\n", CurrentScanline.Tricks&TRICK_LINE_PLUS_26);
 #endif
@@ -367,8 +397,11 @@ void TShifter::CheckSideOverscan() {
 #endif
     }
     
-    // action for line+26 & line+20
+    // action for line+26, line+24 & line+20
     if( (CurrentScanline.Tricks&TRICK_LINE_PLUS_26)
+#if defined(SS_SHIFTER_LEFT_OFF_60HZ)
+      || (CurrentScanline.Tricks&TRICK_LINE_PLUS_24)
+#endif
       || (CurrentScanline.Tricks&TRICK_LINE_PLUS_20))
     {
       ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );
@@ -400,17 +433,26 @@ void TShifter::CheckSideOverscan() {
 #endif
       {
         if(shifter_freq_at_start_of_vbl==50) 
-        {
 /*  Cases where we see that this shift is necessary:
     - Oh Crikey What a Scorcher Hidden Screen ULM: obvious shift
     - Overdrive/Dragon
     - Overscan Demos #6 (strangely)
+    Not in 60hz frames?
 */
           shifter_pixel+=4;
 
-          overscan_add_extra+=2;  // 8 + 2 + 16 = 26
-        }
+        overscan_add_extra+=2;  // 8 + 2 + 16 = 26
         CurrentScanline.Bytes+=26;
+
+#if defined(SS_SHIFTER_LEFT_OFF_60HZ)
+        if((CurrentScanline.Tricks&TRICK_LINE_PLUS_24))
+        {
+          CurrentScanline.Bytes+=-2; // 24
+          overscan_add_extra+=-2;
+        }
+#endif
+
+
 #if defined(SS_SHIFTER_UNSTABLE)
 /*  Left off eats one preloaded RR, see ST-CNX doc
     We remove 2 in WU2 for Omega, this is certainly not correct TODO
@@ -469,7 +511,7 @@ void TShifter::CheckSideOverscan() {
 #endif
       }
       left_border=0;
-      CurrentScanline.StartCycle=0;
+      CurrentScanline.StartCycle=lim_r2;//0; //not really used
       overscan=OVERSCAN_MAX_COUNTDOWN;
     }
   }
@@ -1079,8 +1121,19 @@ detect unstable: switch MED/LOW - Beeshift
   {
     i=CheckFreq(t);
     if(i==-1)
-      return;                       // vv looks obvious but...
-    if(shifter_freq_change[i]==60 && CurrentScanline.StartCycle!=52)
+      return;
+    if(shifter_freq_change[i]==60
+#if defined(SS_SHIFTER_LEFT_OFF_60HZ)
+/*  An obvious condition for a line-2 to work is that the display
+    should be at 50hz when the switch occurs.
+    I knew that but left it without check for a long time because it
+    made SNYD/TCB seem to work. But it was bogus, the "-2" comes from
+    the left border removal granting +24 insted of +26 for a 60hz
+    scanline. Finally fixed in v3.5.3.
+*/
+      && FreqAtCycle(shifter_freq_change_time[i]-LINECYCLE0)!=60
+#endif
+      )
       CurrentScanline.Tricks|=TRICK_LINE_MINUS_2;
   }
 
@@ -2607,6 +2660,21 @@ void TShifter::SetSyncMode(BYTE NewSync) {
       }
       if(CyclesIn<=372)
         CurrentScanline.EndCycle=376;
+
+
+#if defined(SS_SHIFTER_LEFT_OFF_60HZ)
+      if((CurrentScanline.Tricks&TRICK_LINE_PLUS_24)
+        && CyclesIn<372 // &WU?
+        )
+      {
+        CurrentScanline.Tricks&=~TRICK_LINE_PLUS_24;
+        CurrentScanline.Tricks|=TRICK_LINE_PLUS_26;
+        CurrentScanline.Bytes+=2;
+        overscan_add_extra+=2;
+      }
+#endif
+
+
     }
   }
   else // freq 60hz
