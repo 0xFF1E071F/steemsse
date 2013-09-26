@@ -139,7 +139,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(SS_BETA)
 //#define TEST01
 //#define TEST02
-#define TEST03
+//#define TEST03
 //#define TEST04
 //#define TEST05
 //#define TEST06
@@ -745,6 +745,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_MMU_WAKE_UP_RIGHT_BORDER
 #define SS_MMU_WAKE_UP_SHIFTER_TRICKS // Adapt limit values based on Paolo's table
 //#define SS_MMU_WAKE_UP_STE_STATE2 // STE in same state2 as STF (no)
+#define SS_MMU_WAKE_UP_VERTICAL_OVERSCAN // ijor's wakeup.tos test
 //#define SS_MMU_WAKE_UP_WRITE_SDP
 #endif// SS_MMU_WAKE_UP
 
