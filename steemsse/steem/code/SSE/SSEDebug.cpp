@@ -36,7 +36,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_INTERRUPTS ] = 0;
   logsection_enabled[ LOGSECTION_TRAP ] = 0;
   logsection_enabled[ LOGSECTION_SOUND ] = 0;
-  logsection_enabled[ LOGSECTION_VIDEO ] = 0;
+  logsection_enabled[ LOGSECTION_VIDEO ] = 1;
   logsection_enabled[ LOGSECTION_BLITTER ] = 0;
   logsection_enabled[ LOGSECTION_MIDI ] = 0;
   logsection_enabled[ LOGSECTION_TRACE ] = 0;

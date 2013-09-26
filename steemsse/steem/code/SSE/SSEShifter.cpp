@@ -1335,6 +1335,8 @@ void TShifter::CheckVerticalOverscan() {
 
     6) I know no cases of programs making the screen smaller. It was small
     enough! TODO PYM big border?
+
+    7) The thresholds are wake-up sensitive, ijor's test program uses this.
 */
 
   enum{NO_LIMIT=0,LIMIT_TOP,LIMIT_BOTTOM};
@@ -1370,10 +1372,22 @@ void TShifter::CheckVerticalOverscan() {
     if(ST_TYPE!=STE)
       t+=STF_VERT_OVSCN_OFFSET; //4
 #endif
-    
+
+#if defined(SS_MMU_WAKE_UP_VERTICAL_OVERSCAN)
+  // ijor's wakeup.tos test
+    if(WAKE_UP_STATE==1)
+#if defined(SS_STF)
+      if(ST_TYPE!=STE)
+#endif
+        t-=2;
+#endif
+
     if(FreqAtCycle(t)==60 
 #if defined(SS_SHIFTER_STE_VERTICAL_OVERSCAN) 
       || FreqAtCycle(t-2)==60 && FreqChangeAtCycle(t-2)==50 // fixes RGBeast
+#if defined(SS_STF) && defined(SS_MMU_WAKE_UP_VERTICAL_OVERSCAN)
+      && ST_TYPE==STE
+#endif
 #endif
       )
       freq_at_trigger=60;
@@ -1849,7 +1863,7 @@ void TShifter::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
   ASSERT( (addr&0xFFFF00)==0xff8200 );
 
 #if defined(SS_SHIFTER_IOW_TRACE)  // not LOG
-  TRACE("(%d/%d) Shifter write %X=%X\n",scan_y,LINECYCLES,addr,io_src_b);
+  TRACE("(%d %d/%d) Shifter write %X=%X\n",FRAME,scan_y,LINECYCLES,addr,io_src_b);
 #endif  
 
   if ((addr>=0xff8210 && addr<0xff8240) || addr>=0xff8280){
