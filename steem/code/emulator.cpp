@@ -529,7 +529,7 @@ void ACIA_SetControl(int nACIA,BYTE Val)
 int MILLISECONDS_TO_HBLS(int ms)
 {
 #if defined(STEVEN_SEAGAL) && defined(SS_TIMINGS_MS_TO_HBL)
-/*  All CAPS for some reason, used in fdc, ikbd.
+/*  All CAPS for some reason, used in fdc.
     We make it more precise.
 */
   return ms*HBL_PER_SECOND/1000;

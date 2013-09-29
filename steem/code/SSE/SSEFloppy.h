@@ -156,6 +156,7 @@ struct TSF314 {
   WORD RecordLength();
   BYTE SectorGap();
   BYTE Track();
+  WORD TrackBytes();
   WORD TrackGap();
   BYTE Id; // object has to know if its A: or B:
 #if defined(SS_PASTI_ONLY_STX)

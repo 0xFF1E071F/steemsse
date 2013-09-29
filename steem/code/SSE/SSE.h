@@ -365,12 +365,12 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #ifdef SS_DEBUG_TRACE
 #ifdef _DEBUG // VC
-#define SS_DEBUG_TRACE_IDE
+//#define SS_DEBUG_TRACE_IDE
 #endif
 #if defined(DEBUG_BUILD) 
 #define SS_DEBUG_TRACE_FILE
 #else//VC
-//#define SS_DEBUG_TRACE_FILE
+#define SS_DEBUG_TRACE_FILE
 #endif
 #endif
 
@@ -476,13 +476,18 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_DRIVE_MOTOR_ON
 #define SS_DRIVE_MULTIPLE_SECTORS
 #define SS_DRIVE_READ_ADDRESS_TIMING
+#define SS_DRIVE_11_SECTORS
+#define SS_DRIVE_READ_TRACK_11
+#define SS_DRIVE_READ_TRACK_11B //Gap 4: 1
+#define SS_DRIVE_READ_TRACK_11C //Gap 5
 #define SS_DRIVE_READ_TRACK_TIMING
+#define SS_DRIVE_READ_TRACK_TIMING2
 #define SS_DRIVE_RW_SECTOR_TIMING // start of sector
 #define SS_DRIVE_RW_SECTOR_TIMING2 // end of sector (hack)
 #define SS_DRIVE_SPIN_UP_TIME
 #define SS_DRIVE_SPIN_UP_TIME2 // more precise
 #define SS_DRIVE_WRITE_TRACK_TIMING
-
+//#define SS_DRIVE_WRITE_TRACK_11//TODO
 #endif
 
 
@@ -499,7 +504,8 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_FDC_CHANGE_COMMAND_DURING_SPINUP // from Hatari
 #define SS_FDC_CHANGE_SECTOR_WHILE_BUSY // from Hatari or Kryoflux
 #define SS_FDC_CHANGE_TRACK_WHILE_BUSY // from Hatari or Kryoflux
-#define SS_FDC_FORCE_INTERRUPT // Panzer
+#define SS_FDC_FORCE_INTERRUPT // Panzer rotation using $D4
+#define SS_FDC_FORCE_INTERRUPT_RESET_D4 // not clear
 #define SS_FDC_HEAD_SETTLE
 #define SS_FDC_INDEX_PULSE1 // 4ms
 #define SS_FDC_INDEX_PULSE2 // read STR
@@ -819,7 +825,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SHIFTER_LEFT_OFF_60HZ // 24 bytes!
 #define SS_SHIFTER_LEFT_OFF_TEST_BEFORE_HBL // for Riverside
 #define SS_SHIFTER_LINE_MINUS_106_BLACK // loSTE screens
-#define SS_SHIFTER_LINE_PLUS_2_TEST_ALT // loSTE screens
+#define SS_SHIFTER_LINE_PLUS_2_TEST // loSTE screens
 #define SS_SHIFTER_LINE_PLUS_2_THRESHOLD //Forest
 #define SS_SHIFTER_LINE_PLUS_20 // 224 byte scanline STE only
 #define SS_SHIFTER_LINE_PLUS_20_SHIFT // for Riverside
@@ -828,9 +834,9 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SHIFTER_NON_STOPPING_LINE // Enchanted Land
 #define SS_SHIFTER_PALETTE_BYTE_CHANGE //Golden Soundtracker
 #define SS_SHIFTER_PALETTE_TIMING //Overscan Demos #6
-
 #define SS_SHIFTER_RIGHT_OFF_BY_SHIFT_MODE //beeshift0
 #define SS_SHIFTER_STE_MED_HSCROLL // Cool STE
+#define SS_SHIFTER_STE_HI_HSCROLL
 #define SS_SHIFTER_STE_HSCROLL_LEFT_OFF //MOLZ/Spiral
 #define SS_SHIFTER_STE_VERTICAL_OVERSCAN //RGBeast
 #define SS_SHIFTER_UNSTABLE // DoLB, Omega, Overdrive/Dragon, Beeshift
@@ -876,7 +882,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 //#define SS_SHIFTER_DRAW_DBG  // totally bypass CheckSideOverscan() & Render()
 #define SS_SHIFTER_EVENTS // recording all shifter events in a frame
 //#define SS_SHIFTER_EVENTS_PAL // also for palette
-#define SS_SHIFTER_EVENTS_READ_SDP // also for read SDP
+//#define SS_SHIFTER_EVENTS_READ_SDP // also for read SDP
 #define SS_SHIFTER_EVENTS_BYTES // scanline length
 #define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
 #define SS_SHIFTER_EVENTS_TRICKS // "bordermask"
