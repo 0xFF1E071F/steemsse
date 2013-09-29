@@ -241,6 +241,7 @@ void fdc_type1_check_verify()
       WORD HBLsToNextSector;
       BYTE NextIDNum;
       SF314[DRIVE].NextID(NextIDNum,HBLsToNextSector); // references
+      HBLsToNextSector+=SF314[DRIVE].BytesToHbls(6); // right after ID
       HBLsToNextSector+=MILLISECONDS_TO_HBLS(15); // head settling
 #if defined(SS_DRIVE_EMPTY_VERIFY_LONG)
 /*  When you boot a ST with no disk into the drive, it will hang for
@@ -341,8 +342,10 @@ void floppy_fdc_command(BYTE cm)
 /* It is not specified but we guess than any new command will
    clear the index pulse interrupt?
 */
+#if defined(SS_FDC_FORCE_INTERRUPT_RESET_D4)
   if(ADAT && WD1772.InterruptCondition==4)
     WD1772.InterruptCondition=0; 
+#endif
 /*
 "When using the immediate interrupt condition (i3 = 1) an interrupt
  is immediately generated and the current command terminated. 
@@ -352,7 +355,8 @@ void floppy_fdc_command(BYTE cm)
  load Command Register or Read Status Register operation. 
  Follow a Hex D8 with D0 command."
 */
-  else if(!ADAT||WD1772.InterruptCondition!=8)
+  ///else 
+  if(!ADAT||WD1772.InterruptCondition!=8)
 #endif
     mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
   agenda_delete(agenda_fdc_finished);
@@ -466,16 +470,11 @@ On the WD1772 all commands, except the Force Interrupt Command,
     if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE&&SF314[DRIVE].MotorOn)
       WD1772.IndexCounter++;
 
-    //TRACE_IDE("HBL %d IP %d diff %d\n",hbl_count,WD1772.IndexCounter,hbl_count-debug1);
-    //debug2+=hbl_count-debug1;
-    //debug1=hbl_count;
-  
     if(WD1772.IndexCounter<6)
     {
       agenda_add(agenda_fdc_spun_up,FDC_HBLS_PER_ROTATION,do_exec);
       return;
     }
-    //else TRACE_IDE("%d\n",debug2);
   }
 #endif
   fdc_spinning_up=0;
@@ -888,6 +887,7 @@ CRC.
     start. Important for Microprose Golf 
     TODO review, shouldn't we go for ID first??
 */
+
           if (SectorIdx>-1 && nSects>0) {
             WORD SectorStartingByte= SF314[DRIVE].PostIndexGap()
               +SectorIdx*SF314[DRIVE].RecordLength()
@@ -991,7 +991,7 @@ sets the CRC Error bit in the status register if the CRC is invalid.
 */
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
         ASSERT(WD1772.CommandType(fdc_cr)==3);
-        TRACE_LOG("read address\n");
+        TRACE_LOG("Read address TR %d SR %d byte %d\n",fdc_tr,fdc_sr,SF314[DRIVE].BytePosition());
 #endif
         log(Str("FDC: Type III Command - read address to ")+HEXSl(dma_address,6)+"from drive "+char('A'+floppyno));
 
@@ -1008,8 +1008,9 @@ sets the CRC Error bit in the status register if the CRC is invalid.
 /*  Using a more precise routine for timings, this fixes ProCopy 'Analyze'
 */
             WORD HBLsToNextSector;
-            BYTE NextIDNum;
+            BYTE NextIDNum; // it's index 0 - #sectors-1
             SF314[DRIVE].NextID(NextIDNum,HBLsToNextSector); //references
+//            TRACE_IDE("read address %d in HBL %d\n",NextIDNum,HBLsToNextSector);
             HBLsToNextSector-=2; //see below
 #else
             // Break up the track into nSects sections, agenda_read_address
@@ -1053,7 +1054,7 @@ bytes incorrectly during write-splice time because of synchronization.
       case 0xe0:  //read track
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
         ASSERT(WD1772.CommandType(fdc_cr)==3);
-        TRACE_LOG("read track\n");
+        TRACE_LOG("read track TR %d CYL %d\n",fdc_tr,SF314[DRIVE].Track());
 #endif
         log(Str("FDC: Type III Command - read track to ")+HEXSl(dma_address,6)+" from drive "+char('A'+floppyno)+
                   " dma_sector_count="+dma_sector_count);
@@ -1101,7 +1102,7 @@ $f7 will write a two-byte CRC to the disk.
       case 0xf0:  //write (format) track
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
         ASSERT(WD1772.CommandType(fdc_cr)==3);
-        TRACE_LOG("write track\n");
+        TRACE_LOG("write track TR %d CYL %d\n",fdc_tr,SF314[DRIVE].Track());
 #endif
         log(Str("FDC: - Type III Command - write track from address ")+HEXSl(dma_address,6)+" to drive "+char('A'+floppyno));
 
@@ -1436,8 +1437,8 @@ void agenda_fdc_finished(int)
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_MOTOR_OFF)
   if(ADAT)
   {
-    ASSERT( fdc_str&FDC_STR_MOTOR_ON || FloppyDrive[floppy_current_drive()].Empty());
-    ASSERT( agenda_get_queue_pos(agenda_fdc_motor_flag_off)<0 );
+//tmp    ASSERT( fdc_str&FDC_STR_MOTOR_ON || FloppyDrive[floppy_current_drive()].Empty());
+ //tmp   ASSERT( agenda_get_queue_pos(agenda_fdc_motor_flag_off)<0 );
 #if defined(SS_FDC_MOTOR_OFF_COUNT_IP)
 #if defined(SS_FDC_INDEX_PULSE_COUNTER)
     //  Set up agenda for next IP
@@ -1778,6 +1779,7 @@ transfer).
 //---------------------------------------------------------------------------
 void agenda_floppy_read_address(int idx)
 {
+  ASSERT( fdc_cr==0xC0 );
   int floppyno=floppy_current_drive();
   TFloppyImage *floppy=&FloppyDrive[floppyno];
   FDC_IDField IDList[30];
@@ -1850,6 +1852,7 @@ void agenda_floppy_read_address(int idx)
 
 void agenda_floppy_read_track(int part)
 {
+  ASSERT( fdc_cr==0xE0 );
   static int BytesRead;
   static WORD CRC;
   int floppyno=floppy_current_drive();
@@ -1937,9 +1940,15 @@ void agenda_floppy_read_track(int part)
 
         BYTE pre_sect[200];
         int i=0;
-
         for (int n=0;n<22;n++) pre_sect[i++]=0x4e;  // Gap 1 & 3 (22 bytes)
+#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_READ_TRACK_11)
+/*
+Gap 2 Pre ID                    12+3        12+3         3+3     00+A1
+*/
+        for (int n=0;n< (nSects<11?12:3);n++) pre_sect[i++]=0x00;
+#else
         for (int n=0;n<12;n++) pre_sect[i++]=0x00;  // Gap 3 (12)
+#endif   
         for (int n=0;n<3;n++) pre_sect[i++]=0xa1;   // Marker
         pre_sect[i++]=0xfe;                         // Start of address mark
         pre_sect[i++]=IDList[IDListIdx].Track;
@@ -1951,6 +1960,9 @@ void agenda_floppy_read_track(int part)
         for (int n=0;n<22;n++) pre_sect[i++]=0x4e; // Gap 2
         for (int n=0;n<12;n++) pre_sect[i++]=0x00; // Gap 2
         for (int n=0;n<3;n++) pre_sect[i++]=0xa1;  // Marker
+/*
+Data Address Mark                  1           1           1      FB
+*/
         pre_sect[i++]=0xfb;                        // Start of data
 
         int num_bytes_to_write=16;
@@ -1958,6 +1970,7 @@ void agenda_floppy_read_track(int part)
 
         // Write the gaps/address before the sector
         if (byte_idx<i){
+         // TRACE_IDE("%x TR#%d sector %d\n",fdc_cr,fdc_tr,IDList[IDListIdx].SectorNum);
           while (num_bytes_to_write>0){
             write_to_dma(pre_sect[byte_idx++]);
             num_bytes_to_write--;
@@ -1966,8 +1979,10 @@ void agenda_floppy_read_track(int part)
           }
         }
         byte_idx-=i;
-
         // Write the sector
+/*
+Data                             512         512         512
+*/
         if (num_bytes_to_write>0 && byte_idx>=0 && byte_idx<SectorBytes){
           if (byte_idx==0){
             CRC=0xffff;
@@ -2016,6 +2031,9 @@ void agenda_floppy_read_track(int part)
         byte_idx-=SectorBytes;
 
         // Write CRC
+/*
+CRC                                2           2           2
+*/
         if (num_bytes_to_write>0 && byte_idx>=0 && byte_idx<2){
           if (byte_idx==0){
             write_to_dma(HIBYTE(CRC));          // End of Data Field (CRC)
@@ -2033,6 +2051,29 @@ void agenda_floppy_read_track(int part)
         byte_idx-=2;
 
         // Write Gap 4
+#if defined(SS_DRIVE_READ_TRACK_11B)
+/*
+Gap 4 Post Data                   40          40           1      4E
+*/
+#if defined(SS_DRIVE_READ_TRACK_TIMING2)
+        BYTE gap4bytes=(nSects>=11?1:40);
+#else
+        BYTE gap4bytes=(nSects>=11?1:24);
+#endif
+        if (num_bytes_to_write>0 && byte_idx>=0 && byte_idx<gap4bytes){
+          while (num_bytes_to_write>0){
+            write_to_dma(0x4e);
+            byte_idx++;
+            num_bytes_to_write--;
+            BytesRead++;
+            if (byte_idx>=gap4bytes){
+              // Move to next sector (-1 because we ++ below)
+              part=(IDListIdx+1)*154-1;
+              break;
+            }
+          }
+        }
+#else
         if (num_bytes_to_write>0 && byte_idx>=0 && byte_idx<24){
           while (num_bytes_to_write>0){
             write_to_dma(0x4e);
@@ -2046,10 +2087,18 @@ void agenda_floppy_read_track(int part)
             }
           }
         }
+#endif
       }else{
         // End of track, read in 0x4e
+#if defined(SS_DRIVE_READ_TRACK_11C)
+        //BYTE gap5bytes=(nSects>=11?20:16); //tmp, break nothing
+        BYTE gap5bytes=SF314[DRIVE].PreIndexGap();
+        write_to_dma(0x4e,gap5bytes);
+        BytesRead+=gap5bytes;
+#else
         write_to_dma(0x4e,16);
         BytesRead+=16;
+#endif
       }
     }
   }
@@ -2137,6 +2186,7 @@ The 177x does not require an Index Address Mark.
 
 void agenda_floppy_write_track(int part)
 {
+  ASSERT( fdc_cr==0xF0 );
   static int SectorLen,nSector=-1;
   int floppyno=floppy_current_drive();
   TFloppyImage *floppy=&FloppyDrive[floppyno];
@@ -2188,6 +2238,8 @@ void agenda_floppy_write_track(int part)
         if (Data==0xfe){ // Found address mark
           if (dma_address+4<himem){
             nSector=PEEK(dma_address+2);
+   //         TRACE_IDE("Track %d sector #%d\n",fdc_tr,nSector);
+            TRACE_IDE("%x TR#%d sector %d\n",fdc_cr,fdc_tr,nSector);
             switch (PEEK(dma_address+3)){
               case 0:  SectorLen=128;break;
               case 1:  SectorLen=256;break;

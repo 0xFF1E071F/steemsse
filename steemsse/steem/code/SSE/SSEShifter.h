@@ -184,9 +184,13 @@ struct TShifter {
 #if defined(WIN32)
   BYTE *ScanlineBuffer;
 #endif
+
+#if defined(SS_VAR_RESIZE)
+  BYTE m_ShiftMode,m_SyncMode;
+#else
   int m_ShiftMode; // contrary to screen_res, it's updated at each change
   int m_SyncMode;//
-//  int m_nHbls; //313,263,501 //not used yet
+#endif
   int TrickExecuted; //make sure that each trick will only be applied once
 #if defined(SS_DEBUG)
   int nVbl;

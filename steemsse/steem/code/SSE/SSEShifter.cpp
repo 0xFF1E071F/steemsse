@@ -124,10 +124,10 @@ void TShifter::CheckSideOverscan() {
 
 #if defined(SS_SHIFTER_0BYTE_LINE_RES_START)
 
-/*  A shift mode switch after left border removal prevents the shifter from
+/*  A shift mode switch after left border removal prevents the MMU from
     fetching the line. The switches must be placed on different cycles 
     according to the ST model.
-    Nostalgic-O/Lemmings 28/44 for STF 32/48 for STE
+    Nostalgia/Lemmings 28/44 for STF 32/48 for STE
 */
 
   if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE))
@@ -289,6 +289,8 @@ void TShifter::CheckSideOverscan() {
     work.
     Bonus bytes are 26 because DE is on from 6 to 58 (start of 50hz line), that
     is 52 cycles. 52/2 = 26.
+
+    TODO: STE difference
 */
 
 #if defined(SS_SHIFTER_TRICKS) 
@@ -343,8 +345,7 @@ void TShifter::CheckSideOverscan() {
 
 #if defined(SS_SHIFTER_LEFT_OFF_60HZ)
 /*
-    In a 60hz line, there are only 24 bonus bytes (6 to 52 = 48, 48/2=24).
-    TODO: STE difference
+    In a 60hz line, there are only 24 bonus bytes (6 to 54 = 48, 48/2=24).
 
     TCB, solid info by Troed:
     WU1 (3): Logo offset 48 pix to the left, not shifted -> +26 -2 = 24 = 3x8
@@ -353,7 +354,8 @@ void TShifter::CheckSideOverscan() {
     In previous versions of Steem, TCB seemed to operate in WU1 because two
     errors were compensating: 26 bytes were granted for a 60hz left off instead
     of 24, and a spurious '-2' effect was granted at cycle 372 even though the
-    line was already at 60hz (same as Hatari 1.7.0).
+    line was already at 60hz (same as Hatari 1.7.0; in Hatari this '-2' should
+    be caught at EndHBL tests).
     In v3.5.3, emulation of TCB is correct for WU1 (offset) and 2 (centred). 
     There's still a hack in the 'read SDP' part.
 
@@ -459,7 +461,6 @@ Sync is set back to 2 between R2 and R0, this is isn't a line +24
 */
         if(Preload>0)
         {
-          ASSERT( WAKE_UP_STATE );
           Preload--;
           if(MMU.WakeUpState2())
             Preload--;
@@ -515,6 +516,15 @@ Sync is set back to 2 between R2 and R0, this is isn't a line +24
       overscan=OVERSCAN_MAX_COUNTDOWN;
     }
   }
+
+
+/*
+TODO? 14 bytes line
+STF2:
+025 - 508:R0002
+026 - 044:R0000
+*/
+
 
   ////////////////
   // STABILISER //
@@ -632,8 +642,11 @@ Sync is set back to 2 between R2 and R0, this is isn't a line +24
   //////////////////////
 
 /*  Overscan (230byte lines) is possible in medium resolution too. Because the
-    shifter may have fetched some bytes when the switch occurs, we need to 
-    shift the display according to R1 cycle (No Cooper Greetings), I think. 
+    MMU may have fetched some bytes when the switch occurs, we need to 
+    shift the display according to R1 cycle (No Cooper Greetings),
+    We haven't analysed it at low level, the formula below is pragmatic, just
+    like for 4bit scrolling.
+    . 
     20 for NCG   512R2 12R0 20R1        shift=2
     28 for PYM/BPOC  512R2 12R0 28R1    shift=0
     36 for NCG off lines 183, 200 512R2 12R0 36R1 (strange!) shift=2
@@ -753,73 +766,66 @@ Sync is set back to 2 between R2 and R0, this is isn't a line +24
   /////////////
 
 /*  A line that starts at cycle 52 because it's at 60hz, but then is switched
-    to 50hz gains 2 bytes because it ends 4 cycles later, at 376 instead of
-    372.
+    to 50hz gains 2 bytes because it ends at cycle 376 instead of 372
+    (4 cycles later, 2 bytes).
 
-    On the STF, the switch back to 50hz can't happen before 54 (WU1) or 56 
-    (WU2) or there's no '+2'.
-    Strange:
-    Also, the switch to 60hz can't happen before cycle 378 of previous line
-    or there's no '+2'.
+    (Troed) On the STE, the line must "start" earlier due to HSCROLL: 
+    16 cycles (in low resolution) (others?)
 
-    Strange:
-    On the STE, the switch to 60hz must happen on cycle 36 of the line or
-    there's no '+2'.
-    
     Cases:
 
-Forest STE, this must be +2:
+Forest STF1
+-27 - 036:S0000 054:S0002 376:S0000 384:S0002 444:R0002 456:R0000 512:T42012 512:#0206
+Forest STF2
+-27 - 036:S0000 056:S0002 160:R0002 174:R0000 376:S0002 384:S0002 444:R0002 458:R0000 512:R0002 512:T42006 512:#0056
+Forest STE
 -27 - 036:S0000 056:S0002 376:S0002 384:S0002 444:R0000 456:R0000 512:T2002 512:#0162
 
-loSTE screens STE, this mustn't be +2:
+loSTE: the program tests for +2 after removal of the bottom border
+If we fail to make +2 during those tests, the timings will be wrong later.
+STE mode
+Y200 C0  052:S0002 512:T0002 512:#0162
+VBL 719 shifter tricks 3317
+Y200 C4  056:S0002 512:T0002 512:#0162
+VBL 720 shifter tricks 3317
+Y200 C8  060:S0002 508:T0002 508:#0162
+VBL 721 shifter tricks 3317
+Y200 C12  064:S0002 508:T0002 508:#0162
+VBL 722 shifter tricks 3317
+Y200 C16  068:S0002 508:T0002 508:#0162
+VBL 723 shifter tricks 3317
+Y200 C20  072:S0002 508:T0002 508:#0162
+VBL 724 shifter tricks 3317
+This results in this line during the demo:
+199 - 420:S0000 504:S0002 512:T0200 512:#0160
+But if test fails:
 199 - 484:S0000 512:T0200 512:#0160
-200 - 056:S0002
-It would on a STF, but the timing is different:
-199 - 452:S0000 512:T0200 512:#0160
-200 - 024:S0002
+200 - 056:S0002    -> +2
 
-Mindbomb/No Shit: +2; STF-only?
+Mindbomb/No Shit
 -30 - 428:S0000 512:T0100 512:#0160
--29 - 248:S0002 508:T0002 508:#0162
-
-Omega, there's no +2, the switch to 60hz happened at line -60:
--60 - 288:S0000
--30 - 508:T0100 508:#0160
--29 - 120:S00FE 376:S0000 384:S00FE 508:T10002 508:#0162
+-29 - 248:S0002 508:T0002 508:#0162    
+    
 */
 
-#if defined(SS_SHIFTER_LINE_PLUS_2_TEST_ALT)
+#if defined(SS_SHIFTER_LINE_PLUS_2_TEST)
 
   if(!(TrickExecuted&TRICK_LINE_PLUS_2) && left_border)
   {
-    t=54;
+    t=54-16; //The line must "start" earlier on STE due to HSCROLL
 #if defined(SS_MMU_WAKE_UP_SHIFTER_TRICKS)
     if(MMU.WakeUpState2())
-      t+=2;//WU2_PLUS_CYCLES; //2?
+      t+=2;
 #endif
 
-    if(
 #if defined(SS_STF)
-      (ST_TYPE==STE || CyclesIn>t && FreqAtCycle(t)==60) &&
+    if(ST_TYPE!=STE)
+      t+=16;
 #endif
-      (FreqAtCycle(376)==50 || CyclesIn<376 && shifter_freq==50))
-    {
-#if defined(SS_STF)
-      if(ST_TYPE==STE)
-#endif
-      {
-        if(FreqChangeAtCycle(36)==60)
-          CurrentScanline.Tricks|=TRICK_LINE_PLUS_2;
-      }
-#if defined(SS_STF)
-      else
-      {
-//        if(PreviousFreqChange(52)>376-512) // not perfect, it's beta...
-        if(PreviousFreqChange(t-2)>376-512) // not perfect, it's beta...
-          CurrentScanline.Tricks|=TRICK_LINE_PLUS_2;
-      }
-#endif
-    }
+
+    if(CyclesIn>t && FreqAtCycle(t)==60 &&
+      (FreqAtCycle(376)==50 || CyclesIn<376 && shifter_freq==50)) //TODO WU?
+      CurrentScanline.Tricks|=TRICK_LINE_PLUS_2;
   }
 
 #else
@@ -862,7 +868,7 @@ Omega, there's no +2, the switch to 60hz happened at line -60:
 //    ASSERT(left_border==BORDER_SIDE);
     ASSERT(!(CurrentScanline.Tricks&TRICK_LINE_MINUS_2));
 //    ASSERT(CurrentScanline.Cycles==512);
-    TRACE_OSD("%d +2",scan_y);//temp, there aren't so many cases
+    //TRACE_OSD("%d +2",scan_y);//temp, there aren't so many cases
     left_border-=4; // 2 bytes -> 4 cycles
     overscan_add_extra+=2;
     CurrentScanline.Bytes+=2;
@@ -878,13 +884,14 @@ Omega, there's no +2, the switch to 60hz happened at line -60:
   if(right_border_changed) // TODO improve this?
     return; 
 
-
   ///////////////
   // LINE -106 //
   ///////////////
 
 /*  A shift mode switch to 2 before cycle 168 (end of HIRES line) causes 
     the line to stop there. 106 bytes are not fetched.
+    This limit is another indication that in HIRES DE starts at 6 and stops
+    at 166.
     When combined with a left off, this makes +26-106 = -80, or a line 80 
     (160-80).
     Just Buggin: 152:R0002 172:R0000
@@ -919,15 +926,13 @@ Omega, there's no +2, the switch to 60hz happened at line -60:
        && ShiftModeChangeCycle(i)>=56)  
        CurrentScanline.Tricks|=TRICK_LINE_MINUS_106;
 
-#ifdef SS_DEBUG
+#ifdef SS_DEBUG__
      r2cycle=ShiftModeChangeAtCycle(160);     // Superior160 164 (LOL)
      if( (CurrentScanline.Tricks&TRICK_LINE_MINUS_106) && r2cycle!=2)
      {
        TRACE_LOG("Line -106 R2 cycle %d\n",shifter_shift_mode_change_time[i]-LINECYCLE0);
-//       CurrentScanline.Tricks&=~TRICK_LINE_MINUS_106;
+       CurrentScanline.Tricks&=~TRICK_LINE_MINUS_106;
      }
-
-
 #endif
 
   }
@@ -951,7 +956,6 @@ Omega, there's no +2, the switch to 60hz happened at line -60:
 #endif
 
   }
-
 
   /////////////////////
   // DESTABILISATION //
@@ -1085,7 +1089,6 @@ detect unstable: switch MED/LOW - Beeshift
     CurrentScanline.Tricks|=TRICK_UNSTABLE;
   }
 #endif
-
  
   /////////////
   // LINE -2 //
@@ -1162,8 +1165,6 @@ detect unstable: switch MED/LOW - Beeshift
 
 
   // TODO right off for 60hz...
-
-
 
   /////////////////////////////////
   // RIGHT BORDER OFF (line +44) // 
@@ -1542,7 +1543,12 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
     if(scan_y>=shifter_first_draw_line && scan_y<shifter_last_draw_line)
     {
       nsdp=shifter_draw_pointer+80;
+
+#if defined(SS_SHIFTER_STE_HI_HSCROLL) 
+      shifter_pixel=HSCROLL/4; // will fix something one day
+#else
       shifter_pixel=HSCROLL; //start by drawing this pixel
+#endif
       if(scan_y>=draw_first_possible_line && scan_y<draw_last_possible_line)
       {
         if(border & 1)
@@ -1584,7 +1590,7 @@ void TShifter::EndHBL() {
     Those tests are much like EndHBL in Hatari
     Check shifter stability (preliminary)
 */
-  
+
   if(CurrentScanline.Tricks&TRICK_LINE_PLUS_2 && CurrentScanline.EndCycle==372)     
   {
     CurrentScanline.Tricks&=~TRICK_LINE_PLUS_2;
@@ -1683,6 +1689,9 @@ void TShifter::IncScanline() { // a big extension of 'scan_y++'!
     VideoEvents.Add(scan_y,CurrentScanline.Cycles,'#',CurrentScanline.Bytes);
 #endif
 #endif
+
+//    if( (CurrentScanline.Tricks&TRICK_LINE_PLUS_2) )//tmp
+//        VideoEvents.ReportLine();
 
   scan_y++; 
   
@@ -2739,7 +2748,6 @@ void TShifter::Vbl() {
 #if defined(SS_SHIFTER_EVENTS)
   VideoEvents.Vbl(); 
 #endif
-//  m_nHbls=HBL_PER_FRAME;
 #if defined(SS_DEBUG)
   nVbl++; 
 #endif

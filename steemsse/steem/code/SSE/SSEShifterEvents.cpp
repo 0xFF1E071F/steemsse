@@ -57,6 +57,8 @@ void TVideoEvents::ReportLine() {
   int i=m_nEvents;
   while(i>1 && m_VideoEvent[i].Scanline==scan_y)
     i--;
+  if(m_VideoEvent[i].Cycle>=508)
+    i++; // former line
   TRACE("Y%d C%d ",scan_y,LINECYCLES);
   for(;i<=m_nEvents;i++)
   {

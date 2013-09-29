@@ -788,7 +788,18 @@ int TFloppyImage::GetIDFields(int Side,int Track,FDC_IDField IDList[30])
     for (int n=0;n<int(Format ? FormatMostSectors:SectorsPerTrack);n++){
       IDList[n].Track=BYTE(Track);
       IDList[n].Side=BYTE(Side);
-      IDList[n].SectorNum=BYTE(1+n);
+#if defined(SS_DRIVE_11_SECTORS)
+/*  11 sectors interleave '6': 1 7 2 8 3 9 4 10 5 11 6
+    -Load faster in ADAT mode (Overscan Demos)
+    -ACopy 1.30 & Flofor report interleave = DRIVE_11SEC_INTERLEAVE (6), yeah!
+    -ProCopy Analyse 1.50 'unformated', 2.02 finds IDs.
+    -Write (format) 11 sectors tracks on ST/MSA: forget it
+*/
+      if(SectorsPerTrack>=11)
+        IDList[n].SectorNum=1+(n*DRIVE_11SEC_INTERLEAVE)%SectorsPerTrack;
+      else
+#endif
+        IDList[n].SectorNum=BYTE(1+n);
       switch (BytesPerSector){
         case 128:  IDList[n].SectorLen=0; break;
         case 256:  IDList[n].SectorLen=1; break;

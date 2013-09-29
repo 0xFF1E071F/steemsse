@@ -21,21 +21,25 @@
 
 #define ACT ABSOLUTE_CPU_TIME
 
-enum {HBLS_50HZ=313,HBLS_60HZ=263,HBLS_71HZ=501};
 
-#if defined(SS_FDC_PRECISE_HBL)
-#define HBL_PER_FRAME ( shifter_freq_at_start_of_vbl==50?HBLS_50HZ: \
-  (shifter_freq_at_start_of_vbl==HBLS_60HZ?263: HBLS_71HZ))
+#if defined(SS_SHIFTER_TRICKS) && defined(SS_MFP_RATIO)
+
+#define HBL_PER_SECOND (CpuNormalHz/Shifter.CurrentScanline.Cycles)
+//Frequency   50          60            72
+//#HBL/sec    15666.5 15789.85827 35809.14286
+
+#else 
+#if defined(SS_FDC_PRECISE_HBL)//todo table
+#define HBL_PER_FRAME ( (shifter_freq_at_start_of_vbl==50)?HBLS_50HZ: \
+  ( (shifter_freq_at_start_of_vbl==60)? HBLS_60HZ : HBLS_72HZ))
 #else
 #define HBL_PER_FRAME ( shifter_freq_at_start_of_vbl==50?HBLS_50HZ: \
-  (shifter_freq_at_start_of_vbl==HBLS_60HZ?263: HBLS_71HZ/2))
+  (shifter_freq_at_start_of_vbl==60?HBLS_60HZ:(HBLS_72HZ/2)))
 #endif
 
 #define HBL_PER_SECOND (HBL_PER_FRAME*shifter_freq_at_start_of_vbl)  //still not super accurate
-
-#ifdef TEST01
-#define HBL_PER_SECOND (CpuNormalHz/Shifter.CurrentScanline.Cycles)
 #endif
+
 
 #endif
 
@@ -156,6 +160,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 #if defined(SS_DRIVE)
 
+#define DRIVE_11SEC_INTERLEAVE 6
 #define DRIVE_RPM 300
 #define DRIVE_MAX_CYL 83
 

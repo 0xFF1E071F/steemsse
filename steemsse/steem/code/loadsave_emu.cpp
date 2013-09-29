@@ -769,6 +769,11 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
   }
 
+#if defined(SS_SHIFTER)//don't trust content of snapshot
+  Shifter.m_ShiftMode=(BYTE)screen_res;
+  Shifter.m_SyncMode= (BYTE)((shifter_freq==50)?2:0);
+#endif
+
 
 #if defined(SS_VAR_CHECK_SNAPSHOT) //stupid!
   if(Version>=44)

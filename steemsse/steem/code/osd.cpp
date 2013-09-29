@@ -531,7 +531,11 @@ void osd_draw()
         {
 #define THE_LEFT (x1/2)
 #define THE_RIGHT ((x1))
+#ifdef SS_DEBUG
+#define BUFFER_LENGTH 10+3
+#else
 #define BUFFER_LENGTH 10 //"D:S-TR-SEC" drive-side-track-sector
+#endif
 
           RECT cliprect={THE_LEFT,0,THE_RIGHT,y1};
           
@@ -544,8 +548,13 @@ void osd_draw()
               floppy_head_track[floppyno]);
           else
 #endif
-            sprintf(tmp_buffer,"%C:%1d-%02d-%02d",'A'+floppyno,floppy_current_side()+1,
-              floppy_head_track[floppyno],fdc_sr);
+#ifdef SS_DEBUG // add current command (CR)
+            sprintf(tmp_buffer,"%2X-%C:%1d-%02d-%02d",fdc_cr,'A'+floppyno,
+            floppy_current_side()+1,floppy_head_track[floppyno],fdc_sr);
+#else
+            sprintf(tmp_buffer,"%C:%1d-%02d-%02d",'A'+floppyno,
+              floppy_current_side()+1,floppy_head_track[floppyno],fdc_sr);
+#endif
           size_t drive_info_length=strlen(tmp_buffer);
           int x=x1-(drive_info_length+1)*16;
           int start_y=0+8;

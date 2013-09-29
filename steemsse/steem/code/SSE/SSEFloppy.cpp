@@ -882,13 +882,16 @@ bool TSF314::Adat() { // accurate disk access times
     );
 }
 
+
 WORD TSF314::BytePosition() {
+  // this is independent of #sectors
   return HblsToBytes( hbl_count % HblsPerRotation() );
 }
 
 
-WORD TSF314::BytePositionOfFirstId() { // with +7 for reading ID
-  return ( PostIndexGap() + ( (nSectors()<11)?12+3+7:3+3+7) );
+WORD TSF314::BytePositionOfFirstId() { // with +7 for reading ID //no!
+ // TRACE_IDE("%d %d %d\n",PostIndexGap(),nSectors(),PostIndexGap() + ( (nSectors()<11)?12+3+7-7:3+3+7-7));
+  return ( PostIndexGap() + ( (nSectors()<11)?12+3+7-7+1:3+3+7-7+1) );
 }
 
 
@@ -922,19 +925,19 @@ WORD TSF314::HblsToBytes(int hbls) {
 }
 
 
-void TSF314::NextID(BYTE &Id,WORD &nHbls) {
+void TSF314::NextID(BYTE &RecordId,WORD &nHbls) {
 /*  This routine was written to improve timing of command 'Read Address',
     used by ProCopy. Since it exists, it is also used for 'Verify'.
 */
-  Id=0;
+  RecordId=0;
   nHbls=0;
-  if(FloppyDrive[floppy_current_drive()].Empty()) //3.5.2
-  //if(FloppyDrive[Id].Empty())
+  if(FloppyDrive[Id].Empty())
     return;
   WORD BytesToRun;
   WORD ByteOfNextId=BytePositionOfFirstId();//default
   WORD BytePositionOfLastId=ByteOfNextId+(nSectors()-1)*RecordLength();
   WORD CurrentByte=BytePosition(); 
+
   // still on this rev
   if(CurrentByte<ByteOfNextId) // before first ID
     BytesToRun=ByteOfNextId-CurrentByte;
@@ -943,12 +946,13 @@ void TSF314::NextID(BYTE &Id,WORD &nHbls) {
     while(CurrentByte>=ByteOfNextId)
       ByteOfNextId+=RecordLength();
     BytesToRun=ByteOfNextId-CurrentByte;
-    Id=(ByteOfNextId-BytePositionOfFirstId())/RecordLength();
-    ASSERT( Id>=1 && Id<nSectors() );
+    RecordId=(ByteOfNextId-BytePositionOfFirstId())/RecordLength();
+    ASSERT( RecordId>=1 && RecordId<nSectors() );
   }
   // next rev
   else
     BytesToRun=TRACK_BYTES-CurrentByte+ByteOfNextId;
+
   nHbls=BytesToHbls(BytesToRun);
 }
 
@@ -1025,6 +1029,11 @@ BYTE TSF314::SectorGap() {
 
 BYTE TSF314::Track() {
   return floppy_head_track[Id]; //eh eh
+}
+
+
+WORD TSF314::TrackBytes() {
+  return 6272-(Track()/25)*16; //from fdc.cpp
 }
 
 
@@ -1153,7 +1162,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
     {
 #if defined(SS_DEBUG)
       BYTE drive_char= (psg_reg[PSGR_PORT_A]&6)==6? '?' : 'A'+DRIVE;
-      TRACE_LOG("FDC CR $%2X drive %c side %d TR %d SR %d DR %d\n",io_src_b,drive_char,floppy_current_side(),fdc_tr,fdc_sr,fdc_dr);
+      TRACE_LOG("FDC HBL %d CR $%2X drive %c side %d TR %d SR %d DR %d\n",hbl_count,io_src_b,drive_char,floppy_current_side(),fdc_tr,fdc_sr,fdc_dr);
 #endif
       bool can_send=true; // are we in Steem's native emu?
 #if defined(SS_IPF)
