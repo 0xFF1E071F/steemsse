@@ -1034,6 +1034,7 @@ problem, multiple struct/class definition not allowed?
 
 #ifdef SS_HACKS
 #define SS_TOS_PATCH106 // a silly bug, a silly hack
+#define SS_TOS_STE_FAST_BOOT //from hatari
 #endif
 
 // fixes by other people: //TODO, another big category?

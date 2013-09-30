@@ -449,6 +449,11 @@ bool load_TOS(char *File)
   fclose(f);
 
   tos_version=ROM_DPEEK(2);
+#if defined(SS_TOS_STE_FAST_BOOT) //from hatari
+//  TRACE("tos v %x loaded\n",tos_version);
+  if(SSE_HACKS_ON && (tos_version==0x106||tos_version==0x162))
+    ROM_LPEEK(0x576)=0x4E714E71; // bsr +$e4 -> nop, "dma boot"
+#endif
   return 0;
 }
 
