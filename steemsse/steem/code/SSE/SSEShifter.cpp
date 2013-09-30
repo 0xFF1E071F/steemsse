@@ -272,6 +272,17 @@ void TShifter::CheckSideOverscan() {
     STE R2 2 
         R0 26
 
+    In highres, DE starts at linecycle 6 (+-WU), not 0 like it is generally
+    assumed.
+    This is why a shift mode switch in the first cycles of the scanline will
+    work.
+    Bonus bytes are 26 because DE is on from 6 to 58 (start of 50hz line), that
+    is 52 cycles. 52/2 = 26.
+
+    On a STE, the line "starts" earlier because of HSCROLL.
+    In HIRES, it starts 4 cycles earlier, that's why cycle 2 instead of 6 is
+    the limit for R2 on a STE.
+
     Programs not working on a STE because they hit at cycle 4: 
     3615Gen4 by Cakeman
     Cuddly Demos (not patched)
@@ -283,14 +294,6 @@ void TShifter::CheckSideOverscan() {
     SNYD2/Sync fullscreen (F5)
     SoWatt/Menu+Sync
 
-    In highres, DE starts at linecycle 6 (+-WU), not 0 like it is generally
-    assumed.
-    This is why a shift mode switch in the first cycles of the scanline will
-    work.
-    Bonus bytes are 26 because DE is on from 6 to 58 (start of 50hz line), that
-    is 52 cycles. 52/2 = 26.
-
-    TODO: STE difference
 */
 
 #if defined(SS_SHIFTER_TRICKS) 
@@ -769,8 +772,15 @@ STF2:
     to 50hz gains 2 bytes because it ends at cycle 376 instead of 372
     (4 cycles later, 2 bytes).
 
-    (Troed) On the STE, the line must "start" earlier due to HSCROLL: 
-    16 cycles (in low resolution) (others?)
+    (Troed) On the STE, the line must "start" earlier due to HSCROLL.
+
+    HSCROLL is in pixels, 0-15, which translates in variable bytes and cycles
+    per raster according to shift mode.
+
+    Mode  Pixels Bytes  Cycles
+      0       16     8      16
+      1       16     4       8
+      2       16     2       4
 
     Cases:
 
@@ -783,6 +793,7 @@ Forest STE
 
 loSTE: the program tests for +2 after removal of the bottom border
 If we fail to make +2 during those tests, the timings will be wrong later.
+Note: Troed says there's no such tests, even if it appears so. Bug?
 STE mode
 Y200 C0  052:S0002 512:T0002 512:#0162
 VBL 719 shifter tricks 3317
@@ -821,7 +832,10 @@ Mindbomb/No Shit
 #if defined(SS_STF)
     if(ST_TYPE!=STE)
       t+=16;
+    else
 #endif
+    if(ShiftModeAtCycle(t)==1)
+      t+=8; // MED RES, STE starts only 8 cycles earlier
 
     if(CyclesIn>t && FreqAtCycle(t)==60 &&
       (FreqAtCycle(376)==50 || CyclesIn<376 && shifter_freq==50)) //TODO WU?
@@ -894,13 +908,13 @@ Mindbomb/No Shit
     at 166.
     When combined with a left off, this makes +26-106 = -80, or a line 80 
     (160-80).
+    With two such "sync" lines, you can vertically scroll the screen.
     Just Buggin: 152:R0002 172:R0000
     ST-CNX: 160:R0002 172:R0000
     loSTE screens: 120[!]:R0002  392:R0000 
     
     Paolo table
     R2 56 [...] -> 164 [WU1] 166 [WU3,4] 168 [WU2]
-
 */
 
 #if defined(SS_SHIFTER_STEEM_ORIGINAL) || 0
@@ -1545,9 +1559,34 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
       nsdp=shifter_draw_pointer+80;
 
 #if defined(SS_SHIFTER_STE_HI_HSCROLL) 
-      shifter_pixel=HSCROLL/4; // will fix something one day
+/*  shifter_pixel isn't used, there's no support for hscroll in the assembly
+    routines drawing the monochrome scanlines.
+    Those routines work with a word precision (16 pixels), so they can't be
+    used to implement HSCROLL.
+    Since I can't code in assembly yet I provide the feature in C.
+    At least in monochrome we mustn't deal with bit planes, there's only
+    one plane.
+    We need some examples to test the feature with a correctly set-up screen.
+    SS_SHIFTER_STE_HI_HSCROLL is defined only in the beta or the boiler.
+*/
+//      HSCROLL=FRAME%16;  //test
+      if(HSCROLL)
+      {
+        // save ST memory
+        for(int i=0;i<=20;i++)
+          Scanline[i]=LPEEK(i*4+shifter_draw_pointer); 
+        // shift pixels of full scanline
+        for(MEM_ADDRESS i=shifter_draw_pointer; i<nsdp ;i+=2)
+        {
+          WORD new_value=DPEEK(i)<<HSCROLL;  // shift first bits away
+          new_value|=DPEEK(i+2)>>(16-HSCROLL); // add first bits of next word at the end
+          DPEEK(i)=new_value;
+        }
+      }
 #else
+#if !defined(SS_VAR_RESIZE) // useless line
       shifter_pixel=HSCROLL; //start by drawing this pixel
+#endif
 #endif
       if(scan_y>=draw_first_possible_line && scan_y<draw_last_possible_line)
       {
@@ -1560,7 +1599,13 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
         draw_dest_ad=draw_dest_next_scanline;
         draw_dest_next_scanline+=draw_dest_increase_y;
       }
-
+#if defined(SS_SHIFTER_STE_HI_HSCROLL) 
+      if(HSCROLL) // restore ST memory
+      {
+        for(int i=0;i<=20;i++)
+          LPEEK(i*4+shifter_draw_pointer)=Scanline[i]; 
+      }
+#endif
       shifter_draw_pointer=nsdp;
     }
     else if(scan_y>=draw_first_scanline_for_border && scan_y<draw_last_scanline_for_border)
@@ -1690,9 +1735,6 @@ void TShifter::IncScanline() { // a big extension of 'scan_y++'!
 #endif
 #endif
 
-//    if( (CurrentScanline.Tricks&TRICK_LINE_PLUS_2) )//tmp
-//        VideoEvents.ReportLine();
-
   scan_y++; 
   
   left_border=BORDER_SIDE;
@@ -1744,6 +1786,9 @@ void TShifter::IncScanline() { // a big extension of 'scan_y++'!
     CurrentScanline.StartCycle=0;
     CurrentScanline.EndCycle=160;
     CurrentScanline.Cycles=SCANLINE_TIME_IN_CPU_CYCLES_70HZ;
+#if defined(SS_SHIFTER_STE_HI_HSCROLL)
+    shifter_draw_pointer+=LINEWID*2; // 'AddExtra' wasn't used
+#endif
   }
   TrickExecuted=0;
 

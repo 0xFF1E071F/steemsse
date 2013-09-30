@@ -836,7 +836,9 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SHIFTER_PALETTE_TIMING //Overscan Demos #6
 #define SS_SHIFTER_RIGHT_OFF_BY_SHIFT_MODE //beeshift0
 #define SS_SHIFTER_STE_MED_HSCROLL // Cool STE
+#if defined(SS_BETA) || defined(SS_DEBUG)
 #define SS_SHIFTER_STE_HI_HSCROLL
+#endif
 #define SS_SHIFTER_STE_HSCROLL_LEFT_OFF //MOLZ/Spiral
 #define SS_SHIFTER_STE_VERTICAL_OVERSCAN //RGBeast
 #define SS_SHIFTER_UNSTABLE // DoLB, Omega, Overdrive/Dragon, Beeshift
