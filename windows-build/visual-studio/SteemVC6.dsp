@@ -276,6 +276,7 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\mfp.decla.h"\
 	"..\..\steem\code\mfp.h"\
 	"..\..\steem\code\midi.cpp"\
+	"..\..\steem\code\midi.decla.h"\
 	"..\..\steem\code\midi.h"\
 	"..\..\steem\code\notwindows.h"\
 	"..\..\steem\code\onegame.h"\
@@ -570,6 +571,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\mem_browser.h"\
 	"..\..\steem\code\mfp.decla.h"\
 	"..\..\steem\code\mfp.h"\
+	"..\..\steem\code\midi.decla.h"\
 	"..\..\steem\code\midi.h"\
 	"..\..\steem\code\mr_static.cpp"\
 	"..\..\steem\code\mr_static.h"\
@@ -896,6 +898,10 @@ SOURCE=..\..\steem\code\mfp.decla.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\mfp.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\midi.decla.h
 # End Source File
 # Begin Source File
 

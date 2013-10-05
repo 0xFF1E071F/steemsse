@@ -1,18 +1,10 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_MIDI_H)
+#pragma once
+#ifndef MIDI_DECLA_H
+#define MIDI_DECLA_H
 
-#include "midi.decla.h"
-
-#else//!SS_STRUCTURE_MIDI_H
-
-
-#ifdef IN_EMU
-#define EXT
-#define INIT(s) =s
-#else
 #define EXT extern
 #define INIT(s)
 
-#endif
 
 int MidiGetStatusNumParams(BYTE);
 
@@ -123,4 +115,4 @@ public:
 #undef EXT
 #undef INIT
 
-#endif//SS_STRUCTURE_MIDI_H
+#endif//MIDI_DECLA_H

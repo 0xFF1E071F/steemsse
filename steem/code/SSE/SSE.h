@@ -1011,6 +1011,7 @@ problem, multiple struct/class definition not allowed?
 #define SS_STRUCTURE_MACROS_H
 #define SS_STRUCTURE_MEMBROWSER_H
 #define SS_STRUCTURE_MFP_H
+#define SS_STRUCTURE_MIDI_H
 //...
 #define SS_STRUCTURE_RUN_H
 #endif
