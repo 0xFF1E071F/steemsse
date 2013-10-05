@@ -1,11 +1,12 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_MRSTATIC_H)
+#pragma once
+#ifndef MRSTATIC_DECLA_H
+#define MRSTATIC_DECLA_H
 
-#include "mr_static.decla.h"
+#define EXT extern
+#define INIT(s)
 
-#else//!SS_STRUCTURE_MRSTATIC_H
 
-
-LRESULT __stdcall mr_static_WndProc(HWND,UINT,UINT,long);
+EXT LRESULT __stdcall mr_static_WndProc(HWND,UINT,UINT,long);
 
 enum _mr_static_type{MST_MEMORY=0,MST_REGISTER,MST_HISTORIC_MEMORY,MST_MEM_BROWSER_ADDRESS,
                     MST_ADDRESS,MST_IOLIST,MST_HISTORIC_IOLIST,MST_DECIMAL};
@@ -36,8 +37,12 @@ public:
 };
 
 #define MAX_MR_STATICS 120
-mr_static *m_s[MAX_MR_STATICS];
+EXT mr_static *m_s[MAX_MR_STATICS];
 
 void mr_static_update_all();
 
-#endif//SS_STRUCTURE_MRSTATIC_H
+
+#undef EXT
+#undef INIT
+
+#endif//MRSTATIC_DECLA_H

@@ -10,32 +10,9 @@ in the debugger.
 #pragma message("Included for compilation: mr_static.cpp")
 #endif
 
-mr_static::~mr_static()
-{
-  active=false;
-  for (int n=0;n<MAX_MR_STATICS;n++){
-    if (m_s[n]==this){
-      for(int m=n;m<MAX_MR_STATICS-1;m++)m_s[m]=m_s[m+1];
-      m_s[MAX_MR_STATICS-1]=NULL;
-      n--;
-    }
-  }
-  DestroyWindow(handle);
-  if (hLABEL) DestroyWindow(hLABEL);
-}
-
-void mr_static_delete_children_of(HWND Win)
-{
-  for (int n=0;n<MAX_MR_STATICS;n++){
-    if (m_s[n]!=NULL){
-      if (m_s[n]->owner==Win){
-        delete m_s[n];
-        n--;
-      }
-    }
-  }
-}
-
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_MRSTATIC_H)
+mr_static *m_s[MAX_MR_STATICS];
+#endif
 
 mr_static::mr_static(char*new_label,char*new_name,int x,int y,
     HWND new_owner,HMENU id,MEM_ADDRESS new_ad,int new_bytes,_mr_static_type new_type,
@@ -119,6 +96,33 @@ mr_static::mr_static(char*new_label,char*new_name,int x,int y,
     m_s[n]=this;
   }
 //  return &(m_s[n]);
+}
+
+
+mr_static::~mr_static()
+{
+  active=false;
+  for (int n=0;n<MAX_MR_STATICS;n++){
+    if (m_s[n]==this){
+      for(int m=n;m<MAX_MR_STATICS-1;m++)m_s[m]=m_s[m+1];
+      m_s[MAX_MR_STATICS-1]=NULL;
+      n--;
+    }
+  }
+  DestroyWindow(handle);
+  if (hLABEL) DestroyWindow(hLABEL);
+}
+
+void mr_static_delete_children_of(HWND Win)
+{
+  for (int n=0;n<MAX_MR_STATICS;n++){
+    if (m_s[n]!=NULL){
+      if (m_s[n]->owner==Win){
+        delete m_s[n];
+        n--;
+      }
+    }
+  }
 }
 
 
