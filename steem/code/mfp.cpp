@@ -10,6 +10,45 @@ the ST.
 #pragma message("Included for compilation: mfp.cpp")
 #endif
 
+
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_MFP_H)
+
+#define EXT
+#define INIT(s) =s
+
+EXT BYTE mfp_reg[24]; // 24 directly addressable internal registers, each 8bit
+EXT BYTE mfp_gpip_no_interrupt INIT(0xf7);
+BYTE mfp_gpip_input_buffer=0;
+//resize?
+const int mfp_timer_8mhz_prescale[16]={65535,4,10,16,50,64,100,200,65535,4,10,16,50,64,100,200};
+const int mfp_timer_irq[4]={13,8,5,4};
+int mfp_timer_prescale[16]={65535,4,10,16,50,64,100,200,65535,4,10,16,50,64,100,200};
+int mfp_timer_counter[4];
+int mfp_timer_timeout[4];
+bool mfp_timer_enabled[4]={0,0,0,0};
+int mfp_timer_period[4]={10000,10000,10000,10000};
+#if defined(SS_MFP_RATIO_PRECISION)
+int mfp_timer_period_fraction[4]={0,0,0,0}; //no need to init?
+int mfp_timer_period_current_fraction[4]={0,0,0,0};
+#endif
+bool mfp_timer_period_change[4]={0,0,0,0};
+//int mfp_timer_prescale_counter[4]={0,0,0,0};
+
+const int mfp_gpip_irq[8]={0,1,2,3,6,7,14,15};
+
+//int mfp_gpip_timeout;
+
+bool mfp_interrupt_enabled[16];
+int mfp_time_of_start_of_last_interrupt[16];
+
+int cpu_time_of_first_mfp_tick;
+
+
+#undef EXT
+#undef INIT
+
+#endif
+
 #define LOGSECTION LOGSECTION_INTERRUPTS//SS
 
 //---------------------------------------------------------------------------
