@@ -574,6 +574,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\midi.decla.h"\
 	"..\..\steem\code\midi.h"\
 	"..\..\steem\code\mr_static.cpp"\
+	"..\..\steem\code\mr_static.decla.h"\
 	"..\..\steem\code\mr_static.h"\
 	"..\..\steem\code\notifyinit.cpp"\
 	"..\..\steem\code\notifyinit.h"\
@@ -906,6 +907,10 @@ SOURCE=..\..\steem\code\midi.decla.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\midi.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\mr_static.decla.h
 # End Source File
 # Begin Source File
 
