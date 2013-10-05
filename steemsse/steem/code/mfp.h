@@ -1,3 +1,8 @@
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_MFP_H)
+
+#include "mfp.decla.h"
+
+#else//!SS_STRUCTURE_MFP_H
 
 #ifdef IN_EMU
 #define EXT
@@ -875,3 +880,4 @@ void mfp_check_for_timer_timeouts(); // SS not implemented
 #undef EXT
 #undef INIT
 
+#endif//SS_STRUCTURE_MFP_H
