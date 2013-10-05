@@ -1213,7 +1213,7 @@ bool draw_routines_init()
     clock cycles are used for the Vertical Blank. 
     [This is what the guy believed, that's why there's some trash at the very
     bottom of some Overscan Demos. There are 3 more bottom lines (48 total), 
-    but monitors displaying those were rare.
+    but monitors displaying those were rare.]
 */
     screen_event_struct *evp=event_plan_50hz;
 #if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START)

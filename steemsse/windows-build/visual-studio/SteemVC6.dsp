@@ -270,6 +270,7 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\loadsave.decla.h"\
 	"..\..\steem\code\loadsave.h"\
 	"..\..\steem\code\loadsave_emu.cpp"\
+	"..\..\steem\code\macros.decla.h"\
 	"..\..\steem\code\macros.h"\
 	"..\..\steem\code\mfp.cpp"\
 	"..\..\steem\code\mfp.h"\
@@ -336,6 +337,7 @@ NODEP_CPP_EMU_C=\
 
 SOURCE=..\..\steem\helper.cpp
 DEP_CPP_HELPE=\
+	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\choosefolder.cpp"\
 	"..\..\include\circularbuffer.cpp"\
@@ -393,6 +395,8 @@ DEP_CPP_HELPE=\
 	"..\..\include\x\x_portio.cpp"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\notwindows.h"\
+	"..\..\steem\code\SSE\SSE.h"\
+	"..\..\steem\code\SSE\SSEDecla.h"\
 	"..\..\steem\code\translate.h"\
 	"..\..\steem\pch.h"\
 	
@@ -558,6 +562,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\loadsave.decla.h"\
 	"..\..\steem\code\loadsave.h"\
 	"..\..\steem\code\macros.cpp"\
+	"..\..\steem\code\macros.decla.h"\
 	"..\..\steem\code\macros.h"\
 	"..\..\steem\code\mem_browser.cpp"\
 	"..\..\steem\code\mem_browser.h"\
@@ -864,6 +869,10 @@ SOURCE=..\..\steem\code\loadsave.decla.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\loadsave.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\macros.decla.h
 # End Source File
 # Begin Source File
 
