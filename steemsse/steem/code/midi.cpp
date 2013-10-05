@@ -10,6 +10,23 @@ on to the Windows multimedia MIDI API.
 #pragma message("Included for compilation: midi.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_MIDI_H)
+
+#define EXT
+#define INIT(s) =s
+
+EXT int MIDI_out_running_status_flag INIT(MIDI_NO_RUNNING_STATUS);
+EXT int MIDI_in_running_status_flag INIT(MIDI_NO_RUNNING_STATUS);
+EXT int MIDI_in_n_sysex INIT(2),MIDI_out_n_sysex INIT(2),MIDI_in_speed INIT(100);
+EXT WORD MIDI_out_volume INIT(0xffff);
+EXT DWORD MIDI_in_sysex_max INIT(64*1024),MIDI_out_sysex_max INIT(64*1024);
+
+
+#undef EXT
+#undef INIT
+
+#endif
+
 #define LOGSECTION LOGSECTION_MIDI
 //---------------------------------------------------------------------------
 int MidiGetStatusNumParams(BYTE StatByte)
