@@ -1,3 +1,9 @@
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_MACROS_H)
+
+#include "macros.decla.h"
+
+#else//!SS_STRUCTURE_MACROS_H
+
 #ifdef IN_MAIN
 #define EXT
 #define INIT(s) =s
@@ -70,3 +76,4 @@ MACROVBLINFO *mrsc=NULL,*mpsc=NULL;
 #undef EXT
 #undef INIT
 
+#endif//SS_STRUCTURE_MACROS_H

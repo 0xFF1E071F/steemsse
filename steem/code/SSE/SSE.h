@@ -1008,6 +1008,7 @@ problem, multiple struct/class definition not allowed?
 #define SS_STRUCTURE_IORW_H
 #define SS_STRUCTURE_KEYTABLE_H
 #define SS_STRUCTURE_LOADSAVE_H
+#define SS_STRUCTURE_MACROS_H
 //...
 #define SS_STRUCTURE_RUN_H
 #endif

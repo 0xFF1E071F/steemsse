@@ -9,6 +9,30 @@ replay, load and save user input.
 #pragma message("Included for compilation: macros.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_MACROS_H)
+
+#define EXT
+#define INIT(s) =s
+
+EXT int macro_record INIT(0),macro_play INIT(0),macro_play_until;
+EXT bool macro_play_has_mouse INIT(0),macro_play_has_keys INIT(0),macro_play_has_joys INIT(0);
+EXT int macro_start_after_ikbd_read_count INIT(0);
+EXT int macro_play_max_mouse_speed INIT(MACRO_DEFAULT_MAX_MOUSE);
+
+EXT DWORD macro_jagpad[2];
+
+Str macro_play_file,macro_record_file;
+
+DynamicArray<MACROVBLINFO> macro_record_store,macro_play_store;
+MACROVBLINFO *mrsc=NULL,*mpsc=NULL;
+
+
+#undef EXT
+#undef INIT
+
+
+#endif
+
 //---------------------------------------------------------------------------
 bool macro_mvi_blank(MACROVBLINFO *mvi)
 {
