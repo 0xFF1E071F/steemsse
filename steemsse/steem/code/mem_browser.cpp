@@ -10,6 +10,18 @@ build to view memory and I/O areas.
 #pragma message("Included for compilation: mem_browser.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_MEMBROWSER_H)
+// review this it looks strange
+WNDPROC mem_browser::OldEditWndProc;
+DWORD mem_browser::ex_style=WS_EX_TOOLWINDOW;
+HBITMAP mem_browser::icons_bmp=NULL;
+HDC mem_browser::icons_dc=NULL;
+mem_browser *m_b[MAX_MEMORY_BROWSERS];
+char reg_browser_entry_name[20][8];
+unsigned long *reg_browser_entry_pointer[20];
+
+#endif
+
 LRESULT __stdcall mem_browser_WndProc(HWND,UINT,UINT,long);
 WNDPROC Old_mem_browser_WndProc;
 //---------------------------------------------------------------------------

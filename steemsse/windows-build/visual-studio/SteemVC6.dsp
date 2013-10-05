@@ -565,6 +565,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\macros.decla.h"\
 	"..\..\steem\code\macros.h"\
 	"..\..\steem\code\mem_browser.cpp"\
+	"..\..\steem\code\mem_browser.decla.h"\
 	"..\..\steem\code\mem_browser.h"\
 	"..\..\steem\code\mfp.h"\
 	"..\..\steem\code\midi.h"\
@@ -877,6 +878,10 @@ SOURCE=..\..\steem\code\macros.decla.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\macros.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\mem_browser.decla.h
 # End Source File
 # Begin Source File
 
