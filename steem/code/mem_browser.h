@@ -1,4 +1,8 @@
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_MEMBROWSER_H)
 
+#include "mem_browser.decla.h"
+
+#else//!SS_STRUCTURE_MEMBROWSER_H
 
 enum type_disp_type{DT_INSTRUCTION=0,DT_MEMORY,DT_REGISTERS};// disp_type;
 enum type_mode{MB_MODE_STANDARD=0,MB_MODE_PC,MB_MODE_STACK,MB_MODE_FIXED,MB_MODE_IOLIST};//mode;
@@ -61,3 +65,4 @@ char reg_browser_entry_name[20][8];
 unsigned long *reg_browser_entry_pointer[20];
 #define NUM_REGISTERS_IN_REGISTER_BROWSER 18
 
+#endif//SS_STRUCTURE_MEMBROWSER_H
