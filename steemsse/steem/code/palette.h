@@ -1,3 +1,8 @@
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_PALETTE_H)
+
+#include "palette.decla.h"
+
+#else//!SS_STRUCTURE_PALETTE_H
 
 #ifdef IN_MAIN
 #define EXT
@@ -46,3 +51,5 @@ long logpal[257];
 #endif
 
 #undef EXT
+
+#endif//SS_STRUCTURE_PALETTE_H

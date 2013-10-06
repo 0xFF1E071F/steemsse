@@ -283,6 +283,7 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\onegame.h"\
 	"..\..\steem\code\osd.decla.h"\
 	"..\..\steem\code\osd.h"\
+	"..\..\steem\code\palette.decla.h"\
 	"..\..\steem\code\palette.h"\
 	"..\..\steem\code\psg.cpp"\
 	"..\..\steem\code\psg.h"\
@@ -593,6 +594,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\osd.decla.h"\
 	"..\..\steem\code\osd.h"\
 	"..\..\steem\code\palette.cpp"\
+	"..\..\steem\code\palette.decla.h"\
 	"..\..\steem\code\palette.h"\
 	"..\..\steem\code\patchesbox.cpp"\
 	"..\..\steem\code\patchesbox.h"\
@@ -957,6 +959,10 @@ SOURCE=..\..\steem\code\osd.decla.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\osd.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\palette.decla.h
 # End Source File
 # Begin Source File
 
