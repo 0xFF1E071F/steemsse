@@ -585,6 +585,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\onegame.decla.h"\
 	"..\..\steem\code\onegame.h"\
 	"..\..\steem\code\options.cpp"\
+	"..\..\steem\code\options.decla.h"\
 	"..\..\steem\code\options.h"\
 	"..\..\steem\code\options_create.cpp"\
 	"..\..\steem\code\osd.cpp"\
@@ -938,6 +939,10 @@ SOURCE=..\..\steem\code\onegame.decla.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\onegame.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\options.decla.h
 # End Source File
 # Begin Source File
 
