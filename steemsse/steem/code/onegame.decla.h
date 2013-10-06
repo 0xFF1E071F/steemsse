@@ -33,8 +33,4 @@ EXT int OGStopAction INIT(0);
 #undef EXT
 #undef INIT
 
-
-#undef EXT
-#undef INIT
-
 #endif//ONEGAME_DECLA_H

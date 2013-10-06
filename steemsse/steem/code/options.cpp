@@ -9,6 +9,27 @@ change Steem's many options to their heart's delight.
 #pragma message("Included for compilation: options.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_OPTIONS_H)
+
+bool TOptionBox::USDateFormat=0;
+WIN_ONLY( DirectoryTree TOptionBox::DTree; )
+UNIX_ONLY( hxc_dir_lv TOptionBox::dir_lv; )
+
+
+EasyStr WAVOutputFile;
+EasyStringList DSDriverModuleList;
+
+const int extmon_res[EXTMON_RESOLUTIONS][3]={
+{800,600,1},
+{1024,768,1},
+{1280,960,1},
+{640,400,4},
+{800,600,4},
+{1024,768,4},
+{1280,960,4}};
+
+#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SS_STF_MATCH_TOS)
 EasyStr KnownSTFTosPath,KnownSTETosPath; // global...
 #endif

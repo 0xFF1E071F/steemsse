@@ -1,8 +1,9 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_OPTIONS_H)
+#pragma once
+#ifndef OPTIONS_DECLA_H
+#define OPTIONS_DECLA_H
 
-#include "options.decla.h"
-
-#else//!SS_STRUCTURE_OPTIONS_H
+#define EXT extern
+#define INIT(s)
 
 //---------------------------------------------------------------------------
 class TOptionBox : public TStemDialog
@@ -106,7 +107,7 @@ private:
   hxc_listview drop_lv;
 
   static hxc_dir_lv dir_lv;
-#endif//UNIX
+#endif//WIN/UNIX
   void FullscreenBrightnessBitmap();
 
   EasyStr WAVOutputDir;
@@ -186,7 +187,6 @@ public:
   hxc_button internal_speaker_but; // changed in Sound_Start
 #endif
 
-
 #if defined(STEVEN_SEAGAL) && defined(SS_UNIX)
 
 #if defined(SS_VID_BORDERS)
@@ -256,23 +256,17 @@ public:
   Str ProfileDir,ProfileSel;
 
   Str LastIconPath,LastIconSchemePath;
-};
-bool TOptionBox::USDateFormat=0;
-WIN_ONLY( DirectoryTree TOptionBox::DTree; )
-UNIX_ONLY( hxc_dir_lv TOptionBox::dir_lv; )
+};//class TOptionBox
 
-EasyStr WAVOutputFile;
-EasyStringList DSDriverModuleList;
+
+EXT EasyStr WAVOutputFile;
+EXT EasyStringList DSDriverModuleList;
 
 #define EXTMON_RESOLUTIONS 7
 
-const int extmon_res[EXTMON_RESOLUTIONS][3]={
-{800,600,1},
-{1024,768,1},
-{1280,960,1},
-{640,400,4},
-{800,600,4},
-{1024,768,4},
-{1280,960,4}};
+EXT const int extmon_res[EXTMON_RESOLUTIONS][3];
 
-#endif//SS_STRUCTURE_OPTIONS_H
+#undef EXT
+#undef INIT
+
+#endif//#ifndef OPTIONS_DECLA_H
