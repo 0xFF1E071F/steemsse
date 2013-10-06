@@ -8,6 +8,22 @@ DESCRIPTION: The window that appears while Steem is initialising.
 #pragma message("Included for compilation: notifyinit.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_NOTIFYINIT_H)
+
+#define EXT
+#define INIT(s) =s
+
+#ifdef WIN32
+EXT LRESULT __stdcall NotifyInitWndProc(HWND,UINT,WPARAM,LPARAM);
+EXT HWND NotifyWin INIT(NULL);
+ONEGAME_ONLY( EXT HWND NotifyWinParent; )
+#endif
+
+#undef EXT
+#undef INIT
+
+#endif
+
 #ifdef WIN32
 
 #ifndef ONEGAME
