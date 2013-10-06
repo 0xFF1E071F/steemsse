@@ -1,16 +1,9 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_OSD_H)
+#pragma once
+#ifndef OSD_DECLA_H
+#define OSD_DECLA_H
 
-#include "osd.decla.h"
-
-#else//!SS_STRUCTURE_OSD_H
-
-#ifdef IN_MAIN
-#define EXT
-#define INIT(s) =s
-#else
 #define EXT extern
 #define INIT(s)
-#endif
 
 #define OSD_ICON_SIZE 24
 #define OSD_LOGO_W 124
@@ -62,16 +55,16 @@ WIN_ONLY( EXT HWND ResetInfoWin INIT(NULL); )
 
 UNIX_ONLY( extern "C" long* Get_charset_blk(); )
 
-#ifdef IN_MAIN
+//#ifdef IN_MAIN
 
 void osd_pick_scroller();
 EXT EasyStr get_osd_scroller_text(int n);
 
-EasyStr osd_scroller;
-EasyStringList osd_scroller_array;
+EXT EasyStr osd_scroller;
+EXT EasyStringList osd_scroller_array;
 
-DWORD *osd_plasma_pal=NULL;
-BYTE *osd_plasma=NULL;
+EXT DWORD *osd_plasma_pal;
+EXT BYTE *osd_plasma;
 
 void osd_draw_plasma(int,int,int);
 
@@ -85,7 +78,7 @@ void ASMCALL osd_blueize_line_dont(int,int,int);
 void ASMCALL osd_draw_char_dont(long*,BYTE*,long,long,int,long,long);
 void ASMCALL osd_draw_char_clipped_dont(long*,BYTE*,long,long,int,long,long,RECT*);
 
-long *osd_font=NULL;
+EXT long *osd_font;
 
 typedef void ASMCALL OSDDRAWCHARPROC(long*,BYTE*,long,long,int,long,long);
 typedef void ASMCALL OSDDRAWCHARCLIPPEDPROC (long*,BYTE*,long,long,int,long,long,RECT*);
@@ -96,12 +89,12 @@ typedef OSDDRAWCHARCLIPPEDPROC* LPOSDDRAWCHARCLIPPEDPROC;
 typedef OSDBLUEIZELINEPROC* LPOSDBLUEIZELINEPROC;
 typedef OSDBLACKRECTPROC* LPOSDBLACKRECTPROC;
 
-LPOSDBLUEIZELINEPROC osd_blueize_line;
-LPOSDDRAWCHARPROC jump_osd_draw_char[4]={NULL,NULL,NULL,NULL},osd_draw_char,
-  jump_osd_draw_char_transparent[4]={NULL,NULL,NULL,NULL},osd_draw_char_transparent;
-LPOSDDRAWCHARCLIPPEDPROC jump_osd_draw_char_clipped[4]={NULL,NULL,NULL,NULL},osd_draw_char_clipped,
-  jump_osd_draw_char_clipped_transparent[4]={NULL,NULL,NULL,NULL},osd_draw_char_clipped_transparent;
-LPOSDBLACKRECTPROC jump_osd_black_box[4],osd_black_box;
+EXT LPOSDBLUEIZELINEPROC osd_blueize_line;
+EXT LPOSDDRAWCHARPROC jump_osd_draw_char[4],osd_draw_char,
+  jump_osd_draw_char_transparent[4],osd_draw_char_transparent;
+EXT LPOSDDRAWCHARCLIPPEDPROC jump_osd_draw_char_clipped[4],osd_draw_char_clipped,
+  jump_osd_draw_char_clipped_transparent[4],osd_draw_char_clipped_transparent;
+EXT LPOSDBLACKRECTPROC jump_osd_black_box[4],osd_black_box;
 
 extern "C"{
 void ASMCALL osd_draw_char_clipped_8(long*,BYTE*,long,long,int,long,long,RECT*);
@@ -136,9 +129,9 @@ void ASMCALL osd_black_box_24(void*,int,int,int,int,long);
 void ASMCALL osd_black_box_32(void*,int,int,int,int,long);
 }
 
-#endif
+//#endif//IN_MAIN
 
 #undef EXT
 #undef INIT
 
-#endif//SS_STRUCTURE_OSD_H
+#endif//OSD_DECLA_H

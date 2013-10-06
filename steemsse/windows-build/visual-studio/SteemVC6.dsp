@@ -281,6 +281,7 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\notwindows.h"\
 	"..\..\steem\code\onegame.decla.h"\
 	"..\..\steem\code\onegame.h"\
+	"..\..\steem\code\osd.decla.h"\
 	"..\..\steem\code\osd.h"\
 	"..\..\steem\code\palette.h"\
 	"..\..\steem\code\psg.cpp"\
@@ -589,6 +590,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\options.h"\
 	"..\..\steem\code\options_create.cpp"\
 	"..\..\steem\code\osd.cpp"\
+	"..\..\steem\code\osd.decla.h"\
 	"..\..\steem\code\osd.h"\
 	"..\..\steem\code\palette.cpp"\
 	"..\..\steem\code\palette.h"\
@@ -947,6 +949,10 @@ SOURCE=..\..\steem\code\options.decla.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\options.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\osd.decla.h
 # End Source File
 # Begin Source File
 

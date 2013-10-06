@@ -9,6 +9,55 @@ appears when the emulator begins to run to give useful information.
 #pragma message("Included for compilation: osd.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_OSD_H)
+
+#define EXT
+#define INIT(s) =s
+
+EXT bool osd_no_draw INIT(0),osd_disable INIT(0);
+EXT int osd_show_plasma INIT(4),osd_show_speed INIT(6);
+EXT int osd_show_icons INIT(6),osd_show_cpu INIT(6);
+
+EXT bool osd_old_pos INIT(0);
+
+EXT bool osd_show_disk_light INIT(true),osd_show_scrollers INIT(true);
+EXT DWORD osd_start_time,osd_scroller_start_time,osd_scroller_finish_time;
+EXT bool osd_shown_scroller INIT(0);
+EXT long col_yellow[2],col_blue,col_red,col_green,col_white;
+
+EXT DWORD FDCCantWriteDisplayTimer INIT(0);
+
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
+EXT long col_fd_red[2],col_fd_green[2];
+#if !defined(SS_OSD_DRIVE_LED2)
+EXT DWORD FDCWriting INIT(0);
+EXT DWORD FDCWritingTimer INIT(0);
+#endif
+EXT DWORD HDDisplayTimer INIT(0);
+#endif
+
+WIN_ONLY( EXT HWND ResetInfoWin INIT(NULL); )
+
+EasyStr osd_scroller;
+EasyStringList osd_scroller_array;
+
+DWORD *osd_plasma_pal=NULL;
+BYTE *osd_plasma=NULL;
+long *osd_font=NULL;
+
+LPOSDBLUEIZELINEPROC osd_blueize_line;
+LPOSDDRAWCHARPROC jump_osd_draw_char[4]={NULL,NULL,NULL,NULL},osd_draw_char,
+  jump_osd_draw_char_transparent[4]={NULL,NULL,NULL,NULL},osd_draw_char_transparent;
+LPOSDDRAWCHARCLIPPEDPROC jump_osd_draw_char_clipped[4]={NULL,NULL,NULL,NULL},osd_draw_char_clipped,
+  jump_osd_draw_char_clipped_transparent[4]={NULL,NULL,NULL,NULL},osd_draw_char_clipped_transparent;
+LPOSDBLACKRECTPROC jump_osd_black_box[4],osd_black_box;
+
+
+#undef EXT
+#undef INIT
+
+#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_INFO)//forward
 #if !defined(SS_STRUCTURE_BIG_FORWARD)
 #include "SSE/SSEFloppy.h"
