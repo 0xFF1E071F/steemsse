@@ -3,6 +3,26 @@
 #pragma message("Included for compilation: onegame.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_ONEGAME_H)
+
+#define EXT
+#define INIT(s) =s
+
+EXT char OG_TextMem[OG_TEXT_LEN];
+EXT int OGExtraSamplesPerVBL INIT(300);
+
+Str OGDiskPath;
+bool OGInfinite=0,OGInvincible=0,OGUnlimitedTime=0,OGUnlimitedAmmo=0,OGEasyMode=0;
+int OGNumLives=0;
+WORD *pOGTitle,*pOGExtraScreen[2]={NULL,NULL},*pOGSprites=NULL;
+WORD OGStorePal[16];
+EXT int OGStopAction INIT(0);
+
+#undef EXT
+#undef INIT
+
+#endif
+
 //---------------------------------------------------------------------------
 MEM_ADDRESS write_string_to_memory_255(MEM_ADDRESS ad,char *str)
 {
