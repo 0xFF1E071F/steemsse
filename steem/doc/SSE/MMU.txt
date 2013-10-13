@@ -1,0 +1,103 @@
+MMU
+=====
+
+Sources:
+
+Overscan Techniques by Alien/ST-Connexion translated by Frost/Sector One
+Various discussions at www.atari-forum.com, especially contributions by
+Dio, ijor (Jorge Cwik), ljbk (Paolo), Troed/Sync.
+Some general Atari ST documentation
+Various doc
+Development of Steem
+Hatari source
+
+
+Registers
+===========
+
+Video Base:                                            
+$FFFF8201    0 0 X X X X X X   High Byte     
+$FFFF8203    X X X X X X X X   Mid Byte      
+$FFFF820D    X X X X X X X 0   Low Byte      VBASELO  STE-only
+
+Address of the picture to display on next VBL.
+
+Video Counter:
+$FFFF8205  High Byte
+$FFFF8207  Mid Byte
+$FFFF8209  Low Byte
+
+Address being decoded at this instant.
+STF: read-only, STE: R/W
+The video counter has many names, in Steem it's is the shifter draw pointer 
+(SDP).
+
+Alien:
+    The MMU uses the GLUE's Vsync signal to  reset the video counter  with the 
+    contents of $FFFF8201 and $FFFF8203 (you may also add $FFFF820D on STE).
+
+
+$FFFF820F  LINEWID  STE-only
+Used for horizontal scrolling, #words to add the the SDP at the end of the
+scanline.
+
+
+
+DE
+====
+
+When the MMU gets the DE signal from the GLUE, it fetches video memory
+word by word, every 500ns, or 4 cycles, and raises signal LOAD so that
+the Shifter knows that data is available.
+Each time it has fetched a word, it increments the video counter.
+
+When the MMU sees the  VSync signal  from the GLUE, it resets the video counter
+with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE).
+It also resets VCTR at this time.
+
+When DE is false, the MMU doesn't fetch video, it refreshes DRAM, and on the
+STE it fetches DMA sound.
+
+
+
+
+
+
+
+
+?:
+This integrated circuit controls the Dynamic RAM signals. It is not as powerful 
+as the name suggests, it doesn’t do any memory protection, translation from
+ virtual to physical address or paging. 
+This would be better called a Memory Controller Unit. It multiplexes
+the CPU address lines to Column and Rows. It also contains a counter for 
+sending video data from RAM to the SHIFTER and also a counter for DMA transfers.
+
+CPU controls the main bus. MMU controls the RAM data bus. Both are isolated by 
+a couple of small TTL chips. 
+
+For accesing the RAM bus, MMU allocates 250ns for the main bus 
+(CPU/DMA/Blitter) and 250ns for itself (video, STe sound and RAM refresh). 
+
+If the CPU performs an aligned bus cycle, then MMU can service it immediately 
+and activates DTACK without delay. If the CPU attempts a misaligned access, 
+then MMU inserts wait states by delaying DTACK. 
+
+The TTL chips buffer the data because CPU owns the main bus during both time 
+slots.
+
+
+GLUE has internally a 2Mhz clock (period equivalent to one NOP) for the video 
+state machine. MMU has a 4Mhz clock to round robin grant bus access to the CPU 
+or to the SHIFTER (modified version)
+
+The two clocks are in perfect phase. This means that the active edge of the 
+2Mhz clock coincides with the 4Mhz one. The 2Mhz clock toggles an internal 
+flip-flop. But the initial state of the flip-flop is not deterministic at power 
+up. 
+
+Then, in one wakeup mode, the CPU is granted access concurrently with the 2Mhz 
+period. In the other, it is the SHIFTER.
+
+
+

@@ -1,6 +1,8 @@
 Program counter and exception
+===============================
 
 Scope
+=======
 
 This text doesn't describe the full exception process on the M68000 nor even 
 how the full exception stack frame is built.
@@ -10,6 +12,7 @@ The text only focuses on the exact value of the program counter (PC) that is
 pushed on the stack when an address or bus error exception occurs.
 
 Sources
+=========
 
 - Motorola M68000 Microprocessors User's Manual (www.freescale.com)
 - US patent 4,325,121 assigned to Motorola (which contains microcodes)
@@ -21,6 +24,7 @@ Sources
 discussed.
 
 Why?
+======
 
 This aspect of ST emulation came to attention when it was realised that some
 programs work or crash based on that value being correct, mainly in the context 
@@ -47,6 +51,7 @@ Note that the 24960 exceptions of the BIG Demo are part of the normal loading
 procedure.
 
 Tables
+========
 
 Dio (AF) wrote a test program that issues tables for a lot of cases 
 (also available here: "Exception PC tables"). 
@@ -58,6 +63,7 @@ Up to now those tables have been confirmed by known cases and microcode
 analysis, so we take them to be solid.
 
 User Manual
+=============
 
 The M68000 User's Manual states:
 "Value saved for the program counter is advanced 2–10 bytes beyond the address 
@@ -71,6 +77,7 @@ Based on just that, the programmer who would actually use the pushed PC
 couldn't compute it. He had to be lucky or to test on real hardware.
 
 Fetching
+==========
 
 The PC (program counter) points to a word (16bit value) in memory that is 
 supposed to be fetched. A fetch is copying the value pointed by PC to a 
@@ -80,6 +87,7 @@ Both the instructions and the operands are fetched but only the instructions
 are decoded (going from register IRC to register IRD where decoding is done).
 
 Increment time
+================
 
 When a word is fetched, PC is incremented (PC=PC+2, shortened as 'PC+2') to 
 point to the correct word. 
@@ -100,8 +108,9 @@ has been fetched. After fetching, PC points to the last word having been
 fetched.
 
 Separation of incrementing and fetching
+=========================================
 
-The second question is: does the fetch immediately follow PC increment, or coud
+The second question is: does the fetch immediately follow PC increment, or could
 there be some delay between both events?
 In the first case, the CPU would use one unique routine to fetch program words.
 In the second case, at least two routines would be used to accomplish those 
@@ -110,6 +119,7 @@ Both possibilities makes sense. On the M68000, the second possibility is true:
 increment and fetching are separate.
 
 Microcode and Internal registers
+==================================
 
 All M68000 behaviour is commanded by microcodes, sort of mini-instructions
 (and actually called 'micro' and 'nano' instructions by Motorola) or routines.
@@ -132,6 +142,7 @@ It is the PC register and nothing else that is copied on the stack in case
 of bus/address error, as established by analysis of microcodes.
 
 Effective Address
+===================
 
 On the M68000, generic microcode routines are used to read the effective 
 address in most instructions.
@@ -170,6 +181,7 @@ The values may look strange to the M68000 expert, but they are explained
 by the use of other registers than PC to do the actual fetches.
 
 Seconds part of Instruction
+=============================
 
 It seems that in most instructions, PC is updated at the beginning of execution
 of second part, and that it takes the AU value at the end of EA.
@@ -202,6 +214,7 @@ So at 'clr.w $70fff' of Phaleon that precedes the fatal 'move.l $0.W,$24.w',
 this is a <EA> crash, not a 'write' crash.
 
 Branches
+==========
 
 Apparently, for JSR, JMP, the new PC is computed on AU, then requested on the
 bus before it is set in PC register. In case of crash, the value would still be
@@ -209,6 +222,7 @@ the PC after <EA>.
 For BCC, BSR there's no update of PC either (AU is updated instead).
 
 Steem SSE
+===========
 
 To be sure to push the correct PC in case of crash:
 - Create a new variable 'true PC'.
@@ -221,5 +235,7 @@ If it's a 'read before write' case, we follow the <EA> rules instead.
  macro in the body of specific instruction functions (such as CLR).
 All in all, there's some more code running in the core CPU emulation but that's
 the price we pay for a more satisfying (hopefully) emulation.
+Cost: 4KB
 - For branches, it was already correct in Steem: testing for bus/address error 
 before changing the PC; only the <EA> part had to be corrected, like above.
+

@@ -418,19 +418,13 @@ inline void TM68000::PerformRte() {
   DETECT_CHANGE_TO_USER_MODE;         
   DETECT_TRACE_BIT;       
 #if defined(SS_MFP_IRQ_DELAY2)
-/*  Both SS_MFP_IRQ_DELAY and SS_MFP_IRQ_DELAY2 organise a
-    "dirty quick fix" approach to imitate a feature that's more structurally
-    implemented in Hatari.
-    Because of this, the mods are protected by option 'Hacks'.
-    TODO: more reliable
-
-2013/03/01 [NP] When MFP_IRQ goes from 0 to 1, the resulting signal is visible
-to the CPU only 4 cycles later
+/*  v3.5.3: hack for Audio Artistic Demo removed (SS_MFP_IRQ_DELAY2 not 
+    defined)
+    Doesn't make sense and breaks ST Magazine STE Demo (Stax 65)!
+    See a more robust hack in mfp.cpp, SS_MFP_PATCH_TIMER_D
 */
-
   if(SSE_HACKS_ON && (ioaccess&IOACCESS_FLAG_DELAY_MFP))
   {
-    // fixes Audio Artistic Demo
     ioaccess&=~IOACCESS_FLAG_DELAY_MFP;
     ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE; 
   }

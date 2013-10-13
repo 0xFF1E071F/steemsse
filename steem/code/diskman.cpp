@@ -1601,9 +1601,16 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
           break;
         case 2013: // SS menu ADAT
           floppy_instant_sector_access=!floppy_instant_sector_access;
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_OPTION_SLOW_DISK)
+          This->RefreshSnails();
+#if defined(SS_VAR_OPTIONS_REFRESH) &&defined(WIN32)
+          OptionBox.SSEUpdateIfVisible(); // other way
+#endif
+#else
           InvalidateRect(GetDlgItem(Win,98),NULL,0);
           InvalidateRect(GetDlgItem(Win,99),NULL,0);
           CheckResetDisplay();
+#endif
           break;
         case 2014:
           FloppyArchiveIsReadWrite=!FloppyArchiveIsReadWrite;
@@ -3348,5 +3355,15 @@ Str TDiskManager::GetContentsGetAppendName(Str TOSECName)
   return ShortName;
 }
 //---------------------------------------------------------------------------
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_OPTION_SLOW_DISK)
+
+// mini-function to avoid code duplication
+void TDiskManager::RefreshSnails() {
+  InvalidateRect(GetDlgItem(Handle,98),NULL,0);
+  InvalidateRect(GetDlgItem(Handle,99),NULL,0);
+  CheckResetDisplay();
+}
+
+#endif
 
 #undef LOGSECTION //LOGSECTION_IMAGE_INFO

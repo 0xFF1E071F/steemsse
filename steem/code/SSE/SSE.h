@@ -69,14 +69,14 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #if defined(STEVEN_SEAGAL)
 
-#define SS_BETA //title, OSD, plus some testing
+//#define SS_BETA //title, OSD, plus some testing
 
 #ifdef SS_BETA 
-#define SSE_VERSION 353
-#define SSE_VERSION_TXT "3.5.3" 
-#define WINDOW_TITLE "Steem Beta 3.5.3"
+#define SSE_VERSION 354
+#define SSE_VERSION_TXT "3.5.4" 
+#define WINDOW_TITLE "Steem Beta 3.5.4"
 #else // next planned release
-#define SSE_VERSION 353 
+#define SSE_VERSION 353
 // check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_VERSION_TXT "3.5.3" 
 #define WINDOW_TITLE "Steem SSE 3.5.3" //not 'Engine', too long
@@ -696,8 +696,9 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #if defined(SS_MFP)
 
 #define SS_MFP_IACK_LATENCY
-#define SS_MFP_IRQ_DELAY // from Hatari 
-#define SS_MFP_IRQ_DELAY2
+#define SS_MFP_IRQ_DELAY // V8MS; from Hatari 
+//#define SS_MFP_IRQ_DELAY2 // Audio Artistic Demo (no!)
+#define SS_MFP_PATCH_TIMER_D // from Hatari, hack for Audio Artistic Demo
 #define SS_MFP_RATIO // change the values of CPU & MFP freq!
 #define SS_MFP_RATIO_PRECISION // for short timers
 #define SS_MFP_RATIO_STE // measured (by Steem Authors) for STE?
@@ -812,7 +813,13 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SHIFTER_0BYTE_LINE
 #if defined(SS_SHIFTER_0BYTE_LINE)
 #define SS_SHIFTER_0BYTE_LINE_RES_END //No Buddies Land
+
+#if SSE_VERSION>353
+#define SS_SHIFTER_0BYTE_LINE_RES_HSYNC //Beyond/Pax Plax Parallax
+#else
 #define SS_SHIFTER_0BYTE_LINE_RES_HBL //Beyond/Pax Plax Parallax
+#endif
+
 #define SS_SHIFTER_0BYTE_LINE_RES_START //Nostalgic-O/Lemmings
 #define SS_SHIFTER_0BYTE_LINE_SYNC //Forest
 #define SS_SHIFTER_0BYTE_LINE_SYNC2 // loSTE screens
@@ -960,16 +967,6 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #if defined(SS_STRUCTURE)
 
-/*
-step by step
-we copy all Steem declarations in one file, big_forward.h
-then we may delete all previous forward declarations
-later it will be between big forward and full separation
-still must ve totally reversible, and depends on compiler
-err
-problem, multiple struct/class definition not allowed?
-*/
-
 #define SS_STRUCTURE_BIG_FORWARD // temp
 
 //#if !defined(SS_UNIX) //we must try with Unix too
@@ -1110,6 +1107,7 @@ problem, multiple struct/class definition not allowed?
 #define SS_VAR_NO_UPDATE // remove all code in relation to updating
 #define SS_VAR_NO_WINSTON // nuke WinSTon import, saves 16K in VC6 release yeah
 #define SS_VAR_OPTIONS_REFRESH // 6301, STF... up-to-date with snapshot
+#define SS_VAR_OPTION_SLOW_DISK // because many people miss it in disk manager
 #define SS_VAR_RESET_BUTTON // invert
 #define SS_VAR_RESIZE // reduce memory set (int->BYTE etc.)
 #define SS_VAR_REWRITE // to conform to what compilers expect (warnings...)
@@ -1154,6 +1152,7 @@ problem, multiple struct/class definition not allowed?
 #if defined(WIN32)
 #define SS_VID_SCANLINES_INTERPOLATED // using stretch mode!
 #define SS_VID_SCANLINES_INTERPOLATED_MED
+#define SS_VID_SCANLINES_INTERPOLATED_SSE // put option in SSE page
 #endif
 
 #define SS_VID_SCREENSHOTS_NUMBER

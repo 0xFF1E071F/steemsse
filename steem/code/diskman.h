@@ -135,6 +135,9 @@ public:
   void ShowDatabaseDiag(),ShowContentDiag();
 
 #ifdef WIN32
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_OPTION_SLOW_DISK)
+  void RefreshSnails();
+#endif
   bool HasHandledMessage(MSG*);
   void SetDir(EasyStr,bool,EasyStr="",bool=0,EasyStr="",int=0);
   bool SelectItemWithPath(char *,bool=0,char* = NULL);

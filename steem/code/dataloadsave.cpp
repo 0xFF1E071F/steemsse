@@ -749,7 +749,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SS_PASTI_ONLY_STX)
     PASTI_JUST_STX=pCSF->GetInt("Options","PastiJustStx",PASTI_JUST_STX);
 #endif
-
+#if defined(SS_VID_SCANLINES_INTERPOLATED_SSE)
+    SSE_INTERPOLATE=pCSF->GetInt("Options","InterpolatedScanlines",SSE_INTERPOLATE);
+#endif
 #endif // SS
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS____)
@@ -1104,6 +1106,9 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 #if defined(SS_PASTI_ONLY_STX)
   pCSF->SetStr("Options","PastiJustStx",EasyStr(PASTI_JUST_STX));  
+#endif
+#if defined(SS_VID_SCANLINES_INTERPOLATED_SSE)
+  pCSF->SetStr("Options","InterpolatedScanlines",EasyStr(SSE_INTERPOLATE));  
 #endif
 
 #endif//SS

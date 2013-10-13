@@ -186,7 +186,12 @@ int ChangeBorderSize(int size); // gui.cpp
 
 #if defined(SS_VID_SCANLINES_INTERPOLATED)
 
-#if defined(SS_VID_SCANLINES_INTERPOLATED_MED)
+#if defined(SS_VID_SCANLINES_INTERPOLATED_SSE)
+
+#define SCANLINES_INTERPOLATED \
+ (SSE_INTERPOLATE/*&&draw_win_mode[screen_res]==DWM_GRILLE*/&&!mixed_output&&screen_res<2)
+
+#elif defined(SS_VID_SCANLINES_INTERPOLATED_MED)
 
 #define SCANLINES_INTERPOLATED \
  (draw_win_mode[screen_res]==DWM_STRETCH_SCANLINES&&!mixed_output&&screen_res<2)

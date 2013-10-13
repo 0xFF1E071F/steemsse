@@ -572,7 +572,9 @@ inline int TShifter::ShiftModeChangeIdx(int cycle) {
 
 
 inline int TShifter::FreqAtCycle(int cycle) {
-  // what was the frequency just before we reach this cycle?
+  // what was the frequency at this cycle?
+  if(cycle>LINECYCLES)
+    return 0;
   int t=cycle+LINECYCLE0; // convert to absolute
   int i,j;
   for(i=shifter_freq_change_idx,j=0
@@ -584,7 +586,9 @@ inline int TShifter::FreqAtCycle(int cycle) {
 }
 
 inline int TShifter::ShiftModeAtCycle(int cycle) {
-  // what was the shift mode just before we reach this cycle?
+  // what was the shift mode at this cycle?
+  if(cycle>LINECYCLES) // it's a problem
+    return 8; // binary 1000, not 0, not 1, not 2
   int t=cycle+LINECYCLE0; // convert to absolute
   int i,j;
   for(i=shifter_shift_mode_change_idx,j=0
@@ -592,7 +596,7 @@ inline int TShifter::ShiftModeAtCycle(int cycle) {
     ; i--,i&=31,j++) ;
   if(shifter_shift_mode_change_time[i]-t<0)
     return shifter_shift_mode_change[i];
-  return 0;
+  return m_ShiftMode; //  return 0;
 }
 
 // REDO it stinks
@@ -1047,6 +1051,9 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
     Line 199 - 020:R0000 376:S0000 396:S0002 424:w0503 452:w071D 472:S0000 500:w092C 512:T3111
     Line 200 - 020:S0002 376:S0000 396:S0002 428:P0000 432:P1019 436:P2092 440:P302A 444:P40A3 448:P503B 452:P60B4 456:P704C 460:P80C5 464:P905D 468:PA0D6 472:PB06E 476:PC0E7 480:PD07F 484:PE0FF 488:PF0FF 508:R0002 512:T0010
     Line 201 - 020:R0000 376:S0000 396:S0002 428:P0000 432:P1819 436:P2892 440:P382A 444:P48A3 448:P583B 452:P68B4 456:P784C 460:P88C5 464:P985D 468:PA8D6 472:PB86E 476:PC8E7 480:PD87F 484:PE8FF 488:PF8FF 508:R0002 512:T0011
+
+    ST Magazine STE demo (Stax 065)
+    070 - 032:M0000 036:w0507 040:w0709 044:w09FA 
 
     Sunny
     Line -17 - 400:w09E2 440:w077F 480:w0503 (eg)
