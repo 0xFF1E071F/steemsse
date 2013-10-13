@@ -48,6 +48,7 @@ void TOption::Init() {
   Dsp=1;
   OsdImageName=1;
   PastiJustSTX=1;
+  Interpolate=0;
 }
 
 #endif//#if defined(SS_SSE_OPTION_STRUCT)

@@ -509,7 +509,6 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 #define IOACCESS_INTERCEPT_OS BIT_12
 #define IOACCESS_INTERCEPT_OS2 BIT_13
 
-
 #ifdef ENABLE_LOGFILE
 #define IOACCESS_DEBUG_MEM_WRITE_LOG BIT_14
 extern MEM_ADDRESS debug_mem_write_log_address;

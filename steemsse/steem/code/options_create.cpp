@@ -806,7 +806,8 @@ void TOptionBox::CreateDisplayPage()
   CBAddString(Win,T("Double Size")+" - "+T("No Stretch"),MAKELONG(1,DWM_NOSTRETCH));
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED) \
+  && !defined(SS_VID_SCANLINES_INTERPOLATED_SSE)
   CBAddString(Win,T("Double Size")+" - "+T("Scanlines"),MAKELONG(1,DWM_GRILLE)); //2
   CBAddString(Win,T("Double Size")+" - "+T("Scanlines interpolated"),MAKELONG(1,DWM_STRETCH_SCANLINES)); //3
 #else
@@ -827,7 +828,8 @@ void TOptionBox::CreateDisplayPage()
   CBAddString(Win,T("Double Height")+" - "+T("Stretch"),1);
   CBAddString(Win,T("Double Height")+" - "+T("No Stretch"),MAKELONG(1,DWM_NOSTRETCH));
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED_MED)
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED_MED) \
+  && !defined(SS_VID_SCANLINES_INTERPOLATED_SSE)
   CBAddString(Win,T("Double Height")+" - "+T("Scanlines"),MAKELONG(1,DWM_GRILLE)); //2
   CBAddString(Win,T("Double Height")+" - "+T("Scanlines interpolated"),MAKELONG(1,DWM_STRETCH_SCANLINES)); //3
 #else
@@ -1710,13 +1712,13 @@ void TOptionBox::CreateAssocPage()
   AssAddToExtensionsLV(".STZ",T("Zipped Disk Image"),5);
   AssAddToExtensionsLV(".STS",T("Memory Snapshot"),6);
 #if !(defined(STEVEN_SEAGAL) && defined(SS_VAR_NO_ASSOCIATE_STC))
-  AssAddToExtensionsLV(".STC",T("Cartridge Image"),7);
+  AssAddToExtensionsLV(".STC",T("Cartridge Image"),7); //too rare
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF_ASSOCIATE)
-  AssAddToExtensionsLV(".IPF",T("IPF Disk Image"),8);
+  AssAddToExtensionsLV(".IPF",T("Caps Disk Image"),8);
 #endif
 #else
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF_ASSOCIATE)
-  AssAddToExtensionsLV(".IPF",T("IPF Disk Image"),7); //height
+  AssAddToExtensionsLV(".IPF",T("Caps Disk Image"),7); //height
 #endif
 #endif
 
@@ -1965,11 +1967,23 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
+#if defined(SS_VID_SCANLINES_INTERPOLATED_SSE)
+  Wid=GetCheckBoxSize(Font,T("Interpolated scanlines")).Width;
+  Win=CreateWindow("Button",T("Interpolated scanlines"),
+                          WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
+                          page_l,y,Wid,25,Handle,(HMENU)1032,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,SSE_INTERPOLATE,0);
+  ToolAddWindow(ToolTip,Win,T("This will try to emulate a less sharp monitor (Goldstar?) for more realism"));
+  Offset=Wid+HorizontalSeparation;
+#else
+  Offset=0;
+#endif
+
 #if defined(SS_VAR_MOUSE_CAPTURE)  
   Wid=GetCheckBoxSize(Font,T("Capture mouse")).Width;
   Win=CreateWindow("Button",T("Capture mouse"),
                           WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
-                          page_l,y,Wid,25,Handle,(HMENU)1028,HInstance,NULL);
+                          page_l+Offset,y,Wid,25,Handle,(HMENU)1028,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,CAPTURE_MOUSE,0);
   ToolAddWindow(ToolTip,Win,T("If unchecked, Steem will leave mouse control to Windows until you click in the window"));
   y+=LineHeight;
@@ -1986,7 +2000,9 @@ void TOptionBox::CreateSSEPage() {
 
 #if defined(SS_VAR_STEALTH) 
   y-=LineHeight; // maybe it will be optimised away!
+#if !defined(SS_VID_SCANLINES_INTERPOLATED_SSE)
   Offset=Wid+HorizontalSeparation;
+#endif
   Wid=GetCheckBoxSize(Font,T("Emu detect")).Width;
   Win=CreateWindow("Button",T("Emu detect"),WS_CHILD | WS_TABSTOP |
     BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)1031,HInstance,NULL);
@@ -2017,10 +2033,11 @@ void TOptionBox::CreateSSEPage() {
   MMUWakeUpOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
 	  page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)212,HInstance,NULL);
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Ignore wake-up state"));
+// TODO DL# (WU#, WS#)
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Wake-up state 1"));
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Wake-up state 2"));
-#if defined(SS_SHIFTER_PANIC)
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Wake-up state bad display")); //3
+#if defined(SS_SHIFTER_PANIC) // the # will change when we add WS3, 4
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Shifter panic")); //3
 #endif
   SendMessage(MMUWakeUpOption,CB_SETCURSEL,WAKE_UP_STATE,0);
   y+=LineHeight;
@@ -2086,13 +2103,23 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
+#if defined(SS_VAR_OPTION_SLOW_DISK) // because many people miss it in disk manager
+  Wid=GetCheckBoxSize(Font,T("Slow disk")).Width;
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+  Win=CreateWindow("Button",T("Slow disk"),mask,
+    page_l,y,Wid,25,Handle,(HMENU)7306,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,!floppy_instant_sector_access,0);
+  ToolAddWindow(ToolTip,Win,
+    T("Slow but accurate disk drive emulation"));
+#endif
+
 #if defined(SS_PASTI_ONLY_STX)
   Wid=GetCheckBoxSize(Font,T("Pasti only for STX")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
   if(!hPasti)
     mask|=WS_DISABLED;
   Win=CreateWindow("Button",T("Pasti only for STX"),mask,
-    page_l,y,Wid,25,Handle,(HMENU)7305,HInstance,NULL);
+    page_l+Offset,y,Wid,25,Handle,(HMENU)7305,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,PASTI_JUST_STX,0);
   ToolAddWindow(ToolTip,Win,
     T("When checked, Pasti will only be used for STX disks (not ST, MSA)"));
@@ -2142,6 +2169,12 @@ void TOptionBox::SSEUpdateIfVisible() {
   if(Win!=NULL) 
     SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,SS_STF_ST_MODELS-1),0);
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_OPTION_SLOW_DISK)
+  Win=GetDlgItem(Handle,7306); //Slow disk
+  if(Win!=NULL) 
+    SendMessage(Win,BM_SETCHECK,!floppy_instant_sector_access,0);
+#endif
+
 }
 #endif
 

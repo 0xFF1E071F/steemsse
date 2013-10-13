@@ -52,7 +52,8 @@ EXT int draw_fs_topgap INIT(0);
 #define DWM_STRETCH 0
 #define DWM_NOSTRETCH 1
 #define DWM_GRILLE 2
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED) \
+ && !defined(SS_VID_SCANLINES_INTERPOLATED_SSE)
 #define DWM_STRETCH_SCANLINES 3
 #endif
 

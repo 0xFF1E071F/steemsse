@@ -34,6 +34,7 @@ struct TOption {
   unsigned int Dsp:1; // giving the ability to disable buggy DSP
   unsigned int OsdImageName:1;
   unsigned int PastiJustSTX:1;
+  unsigned int Interpolate:1;
 #ifdef __cplusplus // visible only to C++ objects
   TOption();
   void Init();
@@ -65,6 +66,7 @@ extern struct TOption SSEOption;
 #define DSP_ENABLED (SSEOption.Dsp)
 #define OSD_IMAGE_NAME (SSEOption.OsdImageName)
 #define PASTI_JUST_STX (SSEOption.PastiJustSTX)
+#define SSE_INTERPOLATE (SSEOption.Interpolate)
 #else//!defined(SS_SSE_OPTION_STRUCT)
 
 #endif//#if defined(SS_SSE_OPTION_STRUCT)

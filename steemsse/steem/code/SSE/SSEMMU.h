@@ -33,6 +33,7 @@ struct TMMU {
   inline bool OnMmuCycles(int CyclesIn);
   inline bool WakeUpState1(); // for STF
   inline bool WakeUpState2(); // for STF 
+  BYTE DL; // latency DE-LOAD, can be 3-6
 };
 
 extern TMMU MMU;

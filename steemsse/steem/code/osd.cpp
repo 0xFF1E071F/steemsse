@@ -260,8 +260,17 @@ void osd_draw()
   int x1,y1;
   x1=draw_blit_source_rect.right-draw_blit_source_rect.left;
 
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
+  if(BORDER_40)
+    x1+=16;
+#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
+#if defined(SS_VID_SCANLINES_INTERPOLATED_SSE)
+  if(SSE_INTERPOLATE && FullScreen && !screen_res)
+#else
   if(draw_win_mode[screen_res]==DWM_STRETCH_SCANLINES && FullScreen)
+#endif
     x1/=2;
 #endif
 
@@ -489,6 +498,10 @@ void osd_draw()
     // TODO refactor in basic function?
     RECT cliprect={THE_LEFT,0,THE_RIGHT,y1};
     int x=0;
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
+    if(BORDER_40)
+      x+=16;
+#endif
     int start_y=0+8;
     for(unsigned int i=0;i<strlen(Debug.m_OsdMessage);i++)
     {

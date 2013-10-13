@@ -96,24 +96,23 @@ Practically on the ST, the request is placed by clearing the bit in the GPIP.
     // straight away in case another more important one has just happened).
     mfp_interrupt_pend(mfp_gpip_irq[bit],ABSOLUTE_CPU_TIME);
 #if defined(STEVEN_SEAGAL) && defined(SS_MFP_IRQ_DELAY)
-/*  Both SS_MFP_IRQ_DELAY and SS_MFP_IRQ_DELAY2 organise a
-    "dirty quick fix" approach to imitate a feature that's more structurally
-    implemented in Hatari.
-    Because of this, the mods are protected by option 'Hacks'.
+/*  SS_MFP_IRQ_DELAY uses a "dirty quick fix" approach to partially imitate 
+    a feature that's more structurally implemented in Hatari.
+    Protected by option 'Hacks'.
     TODO: more reliable
 
 2013/03/01 [NP] When MFP_IRQ goes from 0 to 1, the resulting signal is visible
 to the CPU only 4 cycles later
 
-Possible explanation: IRQ signal goes first to GLUE, then to CPU, it's
-no direct CPU/MFP connection.
+    Possible explanation: IRQ signal goes first to GLUE, then to CPU, it's
+    no direct CPU/MFP connection.
 
 */
     if(SSE_HACKS_ON)
       ioaccess|=IOACCESS_FLAG_DELAY_MFP; // fixes V8 Music System
     else
-      ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
 #endif
+      ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
   }
 }
 //---------------------------------------------------------------------------
@@ -264,6 +263,26 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 
         if (new_control){ // Timer running in delay mode
                           // SS or pulse, but it's very unlikely
+
+#if defined(STEVEN_SEAGAL) && defined(SS_MFP_PATCH_TIMER_D)
+/* 
+    From Hatari's mfp.c: 
+    new_tcdcr = IoMem[0xfffa1d] = (IoMem[0xfffa1d] & 0xf0) | 7;
+    It's a hack, not an attempt at a fix, but at least it won't break
+    ST Magazine STE Demo (Stax 65), and with this Audio Artistic Demo
+    plays at a normal sample rate. 
+    Beside it should improve performance a bit.
+    Value of 2 translates in 26.110 CPU cycles
+    Value of 7 instead translates in 91.387 cycles
+    Value of $F instead translates in 195.831 cycles
+    Strange: with '7', Audio Artistic Demo will work with 1MB, not 2MB RAM.
+    With $F, it works with 2MB as well. 
+    But what about RS232?
+    TODO 
+*/
+          if(SSE_HACKS_ON && timer==3)
+            mfp_reg[MFPR_TADR+timer]=(mfp_reg[MFPR_TADR+timer] & 0xf0) | 0x7;
+#endif
           mfp_timer_timeout[timer]=ABSOLUTE_CPU_TIME;
           mfp_timer_timeout[timer]+=int(double(mfp_timer_prescale[new_control]*mfp_timer_counter[timer]/64)*CPU_CYCLES_PER_MFP_CLK);
 //          mfp_timer_timeout[timer]=ABSOLUTE_CPU_TIME+
@@ -275,6 +294,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
           // part as well.  Then every time it times out, increase the fractional part and
           // see if it goes over one.  If it does, make the next time-out a bit later.
           mfp_timer_period[timer]=int( double(mfp_timer_prescale[new_control]*int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+timer]))) * CPU_CYCLES_PER_MFP_CLK);
+
 
 #if defined(STEVEN_SEAGAL) && defined(SS_MFP_RATIO_PRECISION)
 /*  Here we do exactly what Steem authors suggested above, and it does bring the

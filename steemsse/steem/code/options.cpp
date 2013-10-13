@@ -886,7 +886,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if (HIWORD(wPar)==CBN_SELENDOK){
             int proceed=1,new_mode=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);  //carry on, don't change res
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED) \
+  && !defined(SS_VID_SCANLINES_INTERPOLATED_SSE)
             if(new_mode!=DFSM_STRETCHBLIT 
               && draw_win_mode[screen_res]==DWM_STRETCH_SCANLINES)
               draw_win_mode[screen_res]--;
@@ -1098,7 +1099,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
                 draw_win_mode[Res]=HIWORD(dat);
                 redraw=true;
               }
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED) \
+ && !defined(SS_VID_SCANLINES_INTERPOLATED_SSE)
               if(draw_win_mode[screen_res]==DWM_STRETCH_SCANLINES)
                 draw_fs_blit_mode=DFSM_STRETCHBLIT; // only compatible FS mode
 #endif
@@ -1190,6 +1192,19 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 #endif
+
+#if defined(SS_VID_SCANLINES_INTERPOLATED_SSE) // option Interpolate scanlines
+        case 1032:
+          if(HIWORD(wPar)==BN_CLICKED)
+          {
+            SSE_INTERPOLATE=!SSE_INTERPOLATE;
+            TRACE_LOG("Interpolate scanlines: %d\n",SSE_INTERPOLATE);
+            SendMessage(HWND(lPar),BM_SETCHECK,SSE_INTERPOLATE,0);
+            draw_fs_blit_mode=(SSE_INTERPOLATE)?DFSM_STRETCHBLIT:DFSM_STRAIGHTBLIT;
+          }
+          break;
+#endif
+
 #endif//SS
         case 1051://SS screenshot format
           if (HIWORD(wPar)==CBN_SELENDOK){
@@ -1434,7 +1449,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               sound_time_method=nstm;
               if (runstate==RUNSTATE_RUNNING){
 #if defined(STEVEN_SEAGAL) && defined(SS_SOUND_CHANGE_TIME_METHOD_DELAY)
-                Sleep(200);
+                Sleep(200);  //??
 #else
                 Sleep(50);
 #endif
@@ -1492,7 +1507,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_KEYBOARD_CLICK)
+#if defined(STEVEN_SEAGAL)
+
+#if defined(SS_VAR_KEYBOARD_CLICK)
         case 7301: // Keyboard click on/off
           if (HIWORD(wPar)==BN_CLICKED){
             BOOL keyboard_click=( PEEK(0x484)&1 ); // current bit
@@ -1511,7 +1528,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_MICROWIRE) 
+#if defined(SS_SOUND_MICROWIRE) 
         case 7302: // STE Microwire on/off 
           if (HIWORD(wPar)==BN_CLICKED){
             MICROWIRE_ON=!MICROWIRE_ON;
@@ -1521,7 +1538,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_FILTER_STF)
+#if defined(SS_SOUND_FILTER_STF)
         case 7303: // PSG Filter (more open)
           if (HIWORD(wPar)==BN_CLICKED){
             PSG_FILTER_FIX=!PSG_FILTER_FIX;
@@ -1531,7 +1548,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+#if defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
         case 7304: // SDL
           if (HIWORD(wPar)==BN_CLICKED){
             USE_SDL=!USE_SDL;
@@ -1562,6 +1579,20 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break; 
 #endif
+
+#if defined(SS_VAR_OPTION_SLOW_DISK)
+        case 7306: // replicate ADAT option
+          if (HIWORD(wPar)==BN_CLICKED){
+            floppy_instant_sector_access=!floppy_instant_sector_access;
+            SendMessage(HWND(lPar),BM_SETCHECK,ADAT,0);
+            TRACE_LOG("Option ADAT %d\n",ADAT);
+            if(DiskMan.Handle)
+              DiskMan.RefreshSnails();
+          }
+          break; 
+#endif
+
+#endif//SS
 
         case 8100: // Memory size
           if (HIWORD(wPar)==CBN_SELENDOK){

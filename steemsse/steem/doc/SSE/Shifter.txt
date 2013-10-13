@@ -1,27 +1,176 @@
 Shifter
 =========
 
-[TODO]
+Sources:
 
-The shifter in the Atari ST is a custom chip.
-Some unofficial documentation for it was published in ST Magazine (French) by
-Alien/ST-Connexion.
-This text is based on these articles and their traduction, on various 
-discussions at www.atari-forum.com and various doc.
-Not one source is 100% right. This file is!
+Overscan Techniques by Alien/ST-Connexion translated by Frost/Sector One
+Hardware scrolling by ggn on D-Bug forum, http://dbug.kicks-ass.net
+STE FAQ by Paranoid
+Various discussions at www.atari-forum.com, especially contributions by
+Dio, ijor (Jorge Cwik), ljbk (Paolo), Troed/Sync.
+Some general Atari ST documentation
+Various doc
+Development of Steem
+Hatari source
+
+
+Introduction
+==============
+
+The Shifter in the Atari ST is a custom chip. Since it has no other reference,
+we'll call it "the Shifter" with a big S. Many people write it SHIFTER.
+As the name implies, the role of a shifter is to shift data.
+It takes words (16 bit) as input, shift those and use bits one by one, to 
+address the palette and send the image to the screen. According to shift mode,
+the bits of 2 or 4 bit planes are combined.
+It is necessary to shift and combine different bit planes because
+pixels are stored that way in memory. They're stored that way to
+save memory. 
+This makes programming video effects the harder.
+
 
 Other chips
--------------
+=============
 
-GLUE
-MMU
+Other chips are involved in producing the video output: GLUE, MMU. See
+the respective files to get a complete picture (lol).
+
 
 Shifter pins
---------------
+==============
+
+A1              in     Register select
+A2              in     
+A3              in     
+A4              in     
+A5              in     
+D00                    Data lines
+D01
+D02
+D03
+D04
+D05
+D06
+D07
+D08
+D09
+D10
+D11
+D12
+D13
+D14
+D15
+RGB R           out    Video output
+RGB G           out    
+RGB B           out    
+MONOCHROME      out    Video output
+LOAD            in
+DE              in
+
+The Shifter receives DE but it's not clear what it does with it.
+We don't think it is used to switch border/picture, because the timings
+would be off. DE comands fetching by the MMU, which introduces a delay
+before rendering is done.
 
 
-Shifter probable registers
-----------------------------
+
+Registers
+===========
+
+The addresses are those used on the ST, they map somewhere in the Shifter,
+but we don't know the internal addresses. 
+
+
+Palette
+-------
+
+STF:
+    ff 8240   R/W     |-----xxx-xxx-xxx|   Palette Color 0/0 (Border)
+                            ||| ||| |||
+                            ||| ||| || ----   Inverted/_Normal Monochrome
+                            ||| ||| |||
+                            ||| |||  ------   Blue
+                            |||  ----------   Green
+                             --------------   Red
+    ff 8242   R/W     |-----xxx-xxx-xxx|   Palette Color 1/1
+    ff 8244   R/W     |-----xxx-xxx-xxx|   Palette Color 2/2
+    ff 8246   R/W     |-----xxx-xxx-xxx|   Palette Color 3/3
+    ff 8248   R/W     |-----xxx-xxx-xxx|   Palette Color 4
+    ff 824a   R/W     |-----xxx-xxx-xxx|   Palette Color 5
+    ff 824c   R/W     |-----xxx-xxx-xxx|   Palette Color 6
+    ff 824e   R/W     |-----xxx-xxx-xxx|   Palette Color 7
+    ff 8250   R/W     |-----xxx-xxx-xxx|   Palette Color 8
+    ff 8252   R/W     |-----xxx-xxx-xxx|   Palette Color 9
+    ff 8254   R/W     |-----xxx-xxx-xxx|   Palette Color 10
+    ff 8256   R/W     |-----xxx-xxx-xxx|   Palette Color 11
+    ff 8258   R/W     |-----xxx-xxx-xxx|   Palette Color 12
+    ff 825a   R/W     |-----xxx-xxx-xxx|   Palette Color 13
+    ff 825c   R/W     |-----xxx-xxx-xxx|   Palette Color 14
+    ff 825e   R/W     |-----xxx-xxx-xxx|   Palette Color 15
+
+STE:
+FF8240 ---- 0321 0321 0321
+through     Red Green Blue
+FF825E
+
+
+  Palette Register:                                 ST     STE
+
+    $FFFF8240  0 0 0 0 x X X X x X X X x X X X       X     x+X
+
+    $FFFF8242  0 0 0 0 x X X X x X X X x X X X ...
+
+    ...
+
+    $FFFF825E  0 0 0 0 x X X X x X X X x X X X    (16 in total)
+
+                       ---_--- ---_--- ---_---
+
+                         red    green    blue
+
+  These 16 registers serve exactly the same purpose as in the ST. 
+  The only difference is that each Nibble for Red, Green or Blue 
+  consists of 4 bits instead of 3 on the ST.
+
+  For compatibility reasons, each nibble encoding the Red, Green or Blue
+   values is not ordered "8 4 2 1", meaning the least significant 
+   bit represents the value "1" while the most significant one represents 
+   the value "8" - This would make the STE rather incompatible with the ST 
+   and only display dark colours. The sequence of Bits is "0 3 2 1" encoding 
+   the values "1 8 4 2". Therefore to fade from black to white, the sequence 
+   of colours would be $000, $888, $111, $999, $222, $AAA, ...
+
+
+Input
+-----
+
+
+IR1-4: Input registers
+Video RAM is fetched by the MMU word by word and the IR registers are filled one
+by one.
+Each register is 16bit.
+This process is the same for all shift modes.
+When DE is set by the GLUE, prefetch starts and takes 16 cycles in all modes.
+
+SS:
+
+Alien says that DE causes the shifter to display picture instead of border,
+but this is incompatible with the idea of prefetch.
+
+There is also a latency of 12 cycles total for all shift modes before shifting
+is effective.
+You add this to prefetch time to know the difference between 'DE' cycle
+and 'render' cycle, that is, 28.
+
+IRI: input register index
+This guessed register may be just 2bit. 
+It indexes IR registers so that the Shifter knows where to copy the word put 
+on the data bus by the MMU when it receives the LOAD signal.
+
+
+
+Shift
+-----
 
 SR1-4: Shift Registers
 Each register is 16bit.
@@ -29,26 +178,13 @@ Those 16bit registers do the actual shifting from right to left.
 For each pixel, there's one shift. The leftmost bits of SR form the pixel.
 The new rightmost bit is a 0.
 
-IR1-4: Input registers
-Video RAM is fetched by the MMU word by word and the IR registers are filled one
-by one.
-Each register is 16bit.
-
-IRI: input register index
-This register may be just 2bit. It indexes IR registers so that the shifter
-knows where to copy the word put on the data bus by the MMU.
-
-
-
-Schemas
----------
 
 Shift mode 0
 
-  0/1 <-   SR1 [][][][][][][][][][][][][][][][]
-  0/1 <-   SR2 [][][][][][][][][][][][][][][][]
-  0/1 <-   SR3 [][][][][][][][][][][][][][][][]
-  0/1 <-   SR4 [][][][][][][][][][][][][][][][]
+  0/1 <- SR1 [][][][][][][][][][][][][][][][]
+  0/1 <- SR2 [][][][][][][][][][][][][][][][]
+  0/1 <- SR3 [][][][][][][][][][][][][][][][]
+  0/1 <- SR4 [][][][][][][][][][][][][][][][]
    |
    V
  Palette
@@ -56,24 +192,141 @@ Shift mode 0
    V
 Video out
 
-Prefetch
-----------
-16 cycles for all shift modes
 
-Latency
+Shift mode 1
+
+  0/1 <- SR1 [][][][][][][][][][][][][][][][] <- SR3 [][][][][] ... [][][][][]
+  0/1 <- SR2 [][][][][][][][][][][][][][][][] <- SR4 [][][][][] ... [][][][][]
+   |
+   V
+ Palette
+   |
+   V
+Video out
+
+
+
+Shift mode 2
+
+  0/1 <- SR1 <- SR2 <- SR3 <- SR4
+   |
+   V
+ Palette
+   |
+   V
+Video out
+
+
+When the 4 IR are filled, they're copied at once on SR1-4.
+Shift begins. In higher modes, shift is faster and the register
+feeding the video out are fed by other shift registers.
+
+SS:
+The transfer from SR3 to SR1, etc., may be progressive, both
+registers shifting, or immediate as Alien states.
+But is it electronically possible to have, for example, 4 registers shifting
+at 32Mhz for shift mode 2?
+
+
+Toggling?
 ---------
-12 cycles total for all shift modes.
-You add this to prefetch time to know the difference between 'DE' cycle
-and 'render' cycle, that is, 28.
+SS:
+Question: doesn't this operation of copying IR->SR take time?
+There's no way that it takes less than 1 CPU cycle.
+Is it possible that instead of IR and SR, we would have two sets of SR,
+and while one is being filled the other is shifting?
+Or, to explain the latency, is it possible that 12 cycles are needed to
+copy from IR to SR, and that we have IR and two sets of SR?
 
-Shifter counter
------------------
 
-Shifter tricks
-----------------
 
-Wake-up state
----------------
+Mode
+----
+
+$FFFF8260   R/W             |------xx|   Shift Mode
+                                   ||
+                                   00       320 x 200, 4 Plane
+                                   01       640 x 200, 2 Plane
+                                   10       640 x 400, 1 Plane
+                                   11       Reserved
+
+Alien:
+    Both the GLUE and the SHIFTER have a copy of this register.
+    The SHIFTER needs this register because  it needs to know  how to decode the
+    picture data (as 4, 2 or 1 bitplanes) and whether to send the picture out to
+    the RGB pins or the monochrome pin. Indeed, if one of these pins are active,
+    the other is low.  The "hardware"  proof is  that the SHIFTER  receives  the
+    address bus signals A1 to A5 (no need for A0 because every address is even).
+    However only A1 to A4 would be sufficient to access the palette.
+SS:
+He means that with 4 bits you can address 16 registers, if there's one more
+bit you can address 32 registers. On the STF only the Shift Mode register is
+necessary, but on the STE there's also HSCROLL.
+
+If the MMU needs to address the IR registers, 5 bits are also needed, even
+without the need for a Mode register. Though, naturally, the Shifter must
+know the mode somehow.
+
+
+STE Scrolling
+-------------
+
+$FFFF8264 HSCROLL2 STE-only
+Not documented
+This is an odd register, when you change hscroll below to non-zero each
+scanline becomes 4 words longer to allow for extra screen data. This register
+sets hscroll but doesn't do that, instead the left border is increased by
+16 pixels. If you have got hscroll extra fetch turned on then setting this
+to 0 confuses the Shifter and causes it to shrink the left border by 16 pixels.
+
+
+$FFFF8265 HSCROLL STE-only
+
+
+This is a theory built on ggn's text.
+Scrolling is implemented without extra shift registers.
+
+DE and prefetch start earlier on STE:
+16 cycles earlier in mode 0
+8 cycles earlier in mode 1
+4 cycles earlier in mode 2
+
+Let's call this amount of cycles 'PreStart'.
+
+The usual prefetch by the MMU happens so that IR1-4 are filled and copied
+to SR1-4.
+
+During PreStart cycles after prefetch, the Shifter will delay 16-HSCROLL times 
+and shift SRi HSCROLL times. The delay is necessary for the display to be
+correctly aligned. During those PreStart cycles, border colour is
+displayed. The MMU starts fetching for other rasters during those
+PreStart cycles, that is, it didn't stop. It fetches as many words as
+necessary for the shift mode (4 in mode 0, 2 in mode 1, 1, in mode 2).
+
+After PreStart+Prefetch+Latency cycles (84 in low res), at the usual location,
+ pixels start to be displayed. This is an incomplete raster (16-HSCROLL).
+Other rasters are prefetched, shifted and displayed as usual.
+
+For the last raster, that is the extra raster on the right of the screen, it
+is fetched but only HSCROLL pixels are displayed. After those pixels, the
+Shifter shifts the rest (to empty the registers) but displays border colour.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

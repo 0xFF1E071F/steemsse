@@ -436,7 +436,7 @@ void inline prepare_next_event() //SS check this "inline" thing
     new_timeout+=4; \
   }
 
-#else
+#else 
 
 #define HANDLE_TIMEOUT(tn) \
   log(Str("MFP: Timer ")+char('A'+tn)+" timeout at "+ABSOLUTE_CPU_TIME+" timeout was "+mfp_timer_timeout[tn]+ \

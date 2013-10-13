@@ -78,23 +78,41 @@ void TShifter::CheckSideOverscan() {
     int r0cycle,r1cycle,r2cycle,s0cycle,s2cycle;
 #endif
 
+
+#if SSE_VERSION>353 && defined(SS_MMU_WAKE_UP)
+    MMU.DL=5; // WU3, no modifier, temp
+    char WU_res_modifier=5-MMU.DL;
+    char WU_sync_modifier=6-MMU.DL;
+#endif
+
+
   ///////////////////////////
   // 0-BYTE LINE (line-160 //
   ///////////////////////////
 
-/*  Various shift mode or sync mode switches trick the shifter in not fetching
-    a scanline. This is a way to implement "hardware" vertical scrolling 
+/*  Various shift mode or sync mode switches trick the MMU in not fetching
+    a scanline, or the monitor in not displaying it.
+    This is a way to implement "hardware" vertical scrolling 
     (-160 bytes) on a computer where it's not foreseen.
-    The monitor cathodic ray goes on (of course!) and shows a black line.
 */
 
 #if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_0BYTE_LINE)
 
 #if defined(SS_SHIFTER_0BYTE_LINE_RES_END)
 
-/*  A shift mode switch a the end of the line causes the shifter not to fetch
-    video RAM and not to count the line in its internal register.
+/*  A shift mode switch a the end of the line causes the MMU not to fetch
+    video RAM of next scanline and not to count the line in its internal 
+    register.
     Game No Buddies Land (500/508), demo D4/NGC (mistake? 496/508).
+    Explanation: 
+    Because shift mode = 2, HSYNC isn't reset at cycle 500 (50hz).
+    The counter is also incremented at this time.
+
+    TODO, too specific, we could just have
+    ShiftModeAtCycle(500)==2 -> 0byte line,shifter_last_draw_line++
+    (to test with later version)
+
+
 */
 
     if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE)
@@ -107,19 +125,53 @@ void TShifter::CheckSideOverscan() {
     
 #endif
 
+
+#if SSE_VERSION>353
+  // this will be the way in next version
+#if defined(SS_SHIFTER_0BYTE_LINE_RES_HSYNC)
+    if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE)
+      && (ShiftModeAtCycle(464+WU_res_modifier)==2))
+      CurrentScanline.Tricks|=TRICK_0BYTE_LINE;
+#endif
+
+#else
+
 #if defined(SS_SHIFTER_0BYTE_LINE_RES_HBL) && defined(SS_STF)
 
-/*  Beyond/Pax Plax Parallax uses a shift mode switch around the hblank position
+/*  Beyond/Pax Plax Parallax uses a shift mode switch around the HSync position
     (as in Enchanted Land's hardware test), but DE is off (right border on).
     This causes a 0-byte line (from Hatari).
     It seems to do that only in STF mode; in STE mode the program writes the 
     video RAM address to scroll the screen.
-    Maybe the same switch +4 would work on a STE, like for Lemmings?
+[    Maybe the same switch +4 would work on a STE, like for Lemmings?]
+    Explanation:
+    There's no HSync, the line is fetched but the monitor can't display it.
+
+
+scanline 1
+scanline 2 not fetched  (other tricks)
+scanline 3
+
+scanline 1 | scanline 2  (this trick)
+scanline 3
+
+visible effect:
+scanline 1
+scanline 3
+
+
+    TODO, too specific, we could just have
+    ShiftModeAtCycle(464)==2 -> 0byte line  (to test with later version)
+
+
+
 */
 
     if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE) && ST_TYPE!=STE 
       && ShiftModeChangeAtCycle(464-4)==2 && !ShiftModeChangeAtCycle(464+8))
       CurrentScanline.Tricks|=TRICK_0BYTE_LINE;
+#endif
+
 #endif
 
 #if defined(SS_SHIFTER_0BYTE_LINE_RES_START)
@@ -128,6 +180,15 @@ void TShifter::CheckSideOverscan() {
     fetching the line. The switches must be placed on different cycles 
     according to the ST model.
     Nostalgia/Lemmings 28/44 for STF 32/48 for STE
+
+    Explanation:
+    HBlank isn't reset, DE doesn't trigger.
+
+   TODO
+32     IF(RES == LO) BLANK = FALSE
+     
+    ShiftModeAtCycle(32)==2 -> 0byte line  (to test with later version)
+
 */
 
   if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE))
@@ -784,6 +845,9 @@ STF2:
 
     Cases:
 
+Darkside of the Spoon STE
+-29 - 040:S0002 392:S0002 512:T0002 512:#0162 the +2 is wrong
+
 Forest STF1
 -27 - 036:S0000 054:S0002 376:S0000 384:S0002 444:R0002 456:R0000 512:T42012 512:#0206
 Forest STF2
@@ -820,10 +884,12 @@ Mindbomb/No Shit
 */
 
 #if defined(SS_SHIFTER_LINE_PLUS_2_TEST)
-
-  if(!(TrickExecuted&TRICK_LINE_PLUS_2) && left_border)
+// current code is messy but it's been tested with cases above
+  if(!(TrickExecuted&TRICK_LINE_PLUS_2) 
+    && left_border && !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) ) 
   {
-    t=54-16; //The line must "start" earlier on STE due to HSCROLL
+ //   t=56+2-16; //The line must "start" earlier on STE due to HSCROLL
+    t=52-12+2; //The line must "start" earlier on STE due to HSCROLL
 #if defined(SS_MMU_WAKE_UP_SHIFTER_TRICKS)
     if(MMU.WakeUpState2())
       t+=2;
@@ -831,15 +897,20 @@ Mindbomb/No Shit
 
 #if defined(SS_STF)
     if(ST_TYPE!=STE)
-      t+=16;
+//      t+=16-4;
+      t+=12;
     else
 #endif
     if(ShiftModeAtCycle(t)==1)
       t+=8; // MED RES, STE starts only 8 cycles earlier
 
-    if(CyclesIn>t && FreqAtCycle(t)==60 &&
-      (FreqAtCycle(376)==50 || CyclesIn<376 && shifter_freq==50)) //TODO WU?
+    if(FreqAtCycle(t)==60 
+      && (FreqAtCycle(376)==50 || CyclesIn<376 && shifter_freq==50)) //TODO WU?
+    {
       CurrentScanline.Tricks|=TRICK_LINE_PLUS_2;
+//      TRACE("CyclesIn %d t %d freq at t %d\n",CyclesIn,t,FreqAtCycle(t));
+  //    VideoEvents.ReportLine();
+    }
   }
 
 #else
@@ -882,6 +953,7 @@ Mindbomb/No Shit
 //    ASSERT(left_border==BORDER_SIDE);
     ASSERT(!(CurrentScanline.Tricks&TRICK_LINE_MINUS_2));
 //    ASSERT(CurrentScanline.Cycles==512);
+    ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );
     //TRACE_OSD("%d +2",scan_y);//temp, there aren't so many cases
     left_border-=4; // 2 bytes -> 4 cycles
     overscan_add_extra+=2;
@@ -1050,7 +1122,8 @@ detect unstable: switch MED/LOW - Beeshift
 
 #if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_UNSTABLE)
 /*  Shift due to unstable shifter, caused by a line+26 without stabiliser
-    (Dragon) or a MED/LOW switch, or a line+230 without stabiliser:
+    (Dragon) or a MED/LOW switch during DE, or a HI/LOW switch during DE, 
+    or a line+230 without stabiliser:
     apply effect
     Note this isn't exact science, it's in development.
     DOLB, Omega: 3 words preloaded but it becomes 2 due to left off
@@ -1201,7 +1274,8 @@ detect unstable: switch MED/LOW - Beeshift
     The remaining 512-416 = 96 CPU clock cycles are used for the Horizontal 
     Blank. 
 
-    4) Fetching ends at 460 (230x2), not 464 (376+2x44).
+    4) Fetching ends at 464 = 376+2x44 = 4 +230x2. This establishes (again)
+    that it starts at cycle 4 in those 230 bytes lines.
     5) Steem already handled 71/50 switch to remove right border.
 
     6) Thresholds/WU states (from table by Paolo) TODO
@@ -1335,12 +1409,11 @@ void TShifter::CheckVerticalOverscan() {
     
     STF cases:
     -3615Gen4 Cakeman
-    -Auto 168 (hacks on)
-    30 - 488:S0000 512:S0002 512:T0100
-    30 - 496:S0000 520:S0002 512:T0100
-    30 - 480:S0000 504:S0002 512:T0100
+
     -European Demos (top 444 60) When it misses there's just no 60 (VBI?)
+
     -Musical Wonder 90 (199 416:S0,504:S2) 
+
     -SNYD2/Sync Vectorballs II (F6) 424:S0000 504:S0002 (every time)
     "the low border of Sync's vectorballs was never stable on my machine"
     This means the MMU didn't react the same to same value in every frame.
@@ -1352,6 +1425,18 @@ void TShifter::CheckVerticalOverscan() {
     enough! TODO PYM big border?
 
     7) The thresholds are wake-up sensitive, ijor's test program uses this.
+    This could explain why some demos don't seem to work on a machine.
+
+    -Auto 168 (WU1 OK, WU2, STE flicker)
+    30 - 488:S0000 512:S0002 512:T0100
+    30 - 496:S0000 520:S0002 512:T0100
+    30 - 480:S0000 504:S0002 512:T0100
+
+    -Decade title (WU1, STE OK, WU2 flicker)
+    Y-30 C524  372:S0000 520:S0002 OK
+    Y-30 C520  356:S0000 504:S0002 fails in WU2
+
+
 */
 
   enum{NO_LIMIT=0,LIMIT_TOP,LIMIT_BOTTOM};
@@ -1389,7 +1474,14 @@ void TShifter::CheckVerticalOverscan() {
 #endif
 
 #if defined(SS_MMU_WAKE_UP_VERTICAL_OVERSCAN)
-  // ijor's wakeup.tos test
+/*  ijor's wakeup.tos test
+WU1:
+Y-30 C512  496:S0000 504:S0002 shifter tricks 100
+Y-30 C516  504:S0000 512:S0002 -
+WU2:
+Y-30 C512  496:S0000 504:S0002 -
+Y-30 C516  504:S0000 512:S0002 shifter tricks 100
+*/
     if(WAKE_UP_STATE==1)
 #if defined(SS_STF)
       if(ST_TYPE!=STE)
@@ -1444,9 +1536,10 @@ void TShifter::CheckVerticalOverscan() {
       shifter_last_draw_line=247; //?
   }
 
-#if defined(SS_SHIFTER_VERTICAL_OVERSCAN_TRACE_LOG)
+#if defined(SS_SHIFTER_VERTICAL_OVERSCAN_TRACE)
   if(on_overscan_limit) 
-    TRACE_LOG("F%d y%d freq at %d %d at %d %d switch %d to %d, %d to %d, %d to %d overscan %X\n",FRAME,scan_y,t,FreqAtCycle(t),t-2,FreqAtCycle(t-2),PreviousFreqChange(PreviousFreqChange(t)),FreqChangeAtCycle(PreviousFreqChange(PreviousFreqChange(t))),PreviousFreqChange(t),FreqChangeAtCycle(PreviousFreqChange(t)),NextFreqChange(t),FreqChangeAtCycle(NextFreqChange(t)),(bool)(CurrentScanline.Tricks&TRICK_VERTICAL_OVERSCAN));
+    VideoEvents.ReportLine();
+//    TRACE_LOG("F%d y%d freq at %d %d at %d %d switch %d to %d, %d to %d, %d to %d overscan %X\n",FRAME,scan_y,t,FreqAtCycle(t),t-2,FreqAtCycle(t-2),PreviousFreqChange(PreviousFreqChange(t)),FreqChangeAtCycle(PreviousFreqChange(PreviousFreqChange(t))),PreviousFreqChange(t),FreqChangeAtCycle(PreviousFreqChange(t)),NextFreqChange(t),FreqChangeAtCycle(NextFreqChange(t)),CurrentScanline.Tricks);
 #endif
 }
 
