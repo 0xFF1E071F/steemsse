@@ -21,6 +21,11 @@
 #define FALSE 0
 #define BOOL int
 typedef unsigned char BYTE;
+
+
+#define max(a,b) (a>b ? a:b)
+#define min(a,b) (a>b ? b:a)
+
 #endif
 
 #ifdef WIN32

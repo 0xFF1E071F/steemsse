@@ -23,6 +23,22 @@ EXT bool DSOpen INIT(0);
 EXT int UseSound INIT(0);
 
 #ifdef UNIX
+
+#define XS_PA 1
+#define XS_RT 2
+
+EXT int x_sound_lib;
+#ifndef NO_RTAUDIO
+#include <RtAudio.h>
+EXT RtAudio *rt_audio;
+EXT int rt_unsigned_8bit;
+#endif
+
+HRESULT InitSound();
+void SoundRelease();
+
+
+
 EXT void internal_speaker_sound_by_period(int);
 
 EXT EasyStr sound_device_name; // INIT("/dev/dsp");

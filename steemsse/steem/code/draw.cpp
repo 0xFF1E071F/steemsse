@@ -17,8 +17,9 @@ to the PC display.
 #define EXTC
 #define INIT(s) =s
 
+#if !(defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE))
 EXT int stfm_b_timer INIT(0);//tmp
-
+#endif
 
 EXT int bad_drawing INIT(0);
 EXT int draw_fs_blit_mode INIT( UNIX_ONLY(DFSM_STRAIGHTBLIT) WIN_ONLY(DFSM_STRETCHBLIT) );

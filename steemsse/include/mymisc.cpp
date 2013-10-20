@@ -14,7 +14,7 @@ just refuse to be categorized.
 #include <binary.h>
 #include <clarity.h>
 #include <string.h>
-#include "../steem/code/sse/sse.h"	// added for SS_VS2012_POW
+#include "../steem/code/SSE/SSE.h"	// added for SS_VS2012_POW
 
 #ifndef WIN_ONLY
 #ifdef WIN32

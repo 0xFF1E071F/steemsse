@@ -607,8 +607,9 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
       XSetInputFocus(XD,p_lv->handle,RevertToParent,CurrentTime);
       XFlush(XD);
     }
-#if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE) \
-  &&defined(SS_UNIX)
+
+#if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE) && defined(SS_UNIX)
+
 #if defined(SS_VAR_MOUSE_CAPTURE)
     else if(b->id==4002)
       CAPTURE_MOUSE=b->checked;
@@ -623,7 +624,6 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
 #endif
 #if defined(SS_IKBD_6301)
     else if(b->id==4006)
-      //b->checked=HD6301EMU_ON=b->checked&HD6301_OK;
       b->checked=HD6301EMU_ON=b->checked&HD6301_OK;
 #endif
 #if defined(SS_VAR_KEYBOARD_CLICK)
@@ -643,6 +643,11 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
     else if(b->id==4009)
       MICROWIRE_ON=b->checked;
 #endif   
+#if defined(SS_VAR_OPTION_SLOW_DISK)
+    else if(b->id==4010)
+      floppy_instant_sector_access=!b->checked;
+#endif   
+
 #endif
   }
   return 0;

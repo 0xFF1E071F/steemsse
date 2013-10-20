@@ -60,6 +60,27 @@ code changes.
 
 SS_DEBUG, if needed, should be defined in the project/makefile.
 
+TODO: All switches SS_ -> SSE_ to mark the branch rather than the author
+
+Then each author may define his name (STEVEN_SEAGAL)
+
+eg:
+
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH)
+ //... (awesome mod)
+#endif
+
+#if defined(JEAN_CLAUDE_VAN_DAMME) && defined(SS_CPU_PREFETCH)
+ //... (awesome mod)
+#endif
+
+
+So if later Jean Claude Van Damme disrespects me again, all we have to do is:
+
+//#define JEAN_CLAUDE_VAN_DAMME
+
+and all his silly mods are gone!
+
 */
 
 
@@ -137,7 +158,7 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 //////////
 
 #if defined(SS_BETA)
-//#define TEST01
+//#define TEST01 //416 vs 412 pixels
 //#define TEST02
 //#define TEST03
 //#define TEST04
@@ -732,6 +753,8 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #if defined(SS_MMU)
 
+//TODO, properly separate MMU, GLUE, Shifter functions, first proper C++ structure
+
 //#define SS_MMU_NO_CONFUSION // Diagnostic cartridge: don't define (v3.5.2)
 #define SS_MMU_WAKE_UP
 #define SS_MMU_WRITE // programs in RAM may write in the MMU 
@@ -745,6 +768,9 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 //#define SS_MMU_WAKE_UP_IO_BYTES_R  // breaks too much (read SDP) TODO
 //#define SS_MMU_WAKE_UP_IO_BYTES_W // no too radical
 //#define SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY // adapt cycles for shifter write
+#if SSE_VERSION>353
+#define SS_MMU_WAKE_UP_DL // Dio's DE-LOAD delay
+#endif
 #define SS_MMU_WAKE_UP_IOR_HACK 
 #define SS_MMU_WAKE_UP_IOW_HACK 
 #define SS_MMU_WAKE_UP_PALETTE_STE // render +1 cycle (pixel) in state 2
@@ -812,17 +838,20 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #define SS_SHIFTER_0BYTE_LINE
 #if defined(SS_SHIFTER_0BYTE_LINE)
-#define SS_SHIFTER_0BYTE_LINE_RES_END //No Buddies Land
 
 #if SSE_VERSION>353
-#define SS_SHIFTER_0BYTE_LINE_RES_HSYNC //Beyond/Pax Plax Parallax
+#define SS_SHIFTER_0BYTE_LINE_SYNC_DE //Beescroll,Forest,loSTE screens
+#define SS_SHIFTER_0BYTE_LINE_RES_HBLANK //Nostalgic-O/Lemmings
+#define SS_SHIFTER_0BYTE_LINE_RES_HSYNC1 //Beyond/Pax Plax Parallax
+#define SS_SHIFTER_0BYTE_LINE_RES_HSYNC2 //No Buddies Land
 #else
+#define SS_SHIFTER_0BYTE_LINE_RES_END //No Buddies Land
 #define SS_SHIFTER_0BYTE_LINE_RES_HBL //Beyond/Pax Plax Parallax
-#endif
-
 #define SS_SHIFTER_0BYTE_LINE_RES_START //Nostalgic-O/Lemmings
 #define SS_SHIFTER_0BYTE_LINE_SYNC //Forest
 #define SS_SHIFTER_0BYTE_LINE_SYNC2 // loSTE screens
+#endif
+
 #endif//0-byte line
 #define SS_SHIFTER_4BIT_SCROLL //Let's do the Twist again
 #define SS_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK
@@ -850,6 +879,10 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_SHIFTER_STE_VERTICAL_OVERSCAN //RGBeast
 #define SS_SHIFTER_UNSTABLE // DoLB, Omega, Overdrive/Dragon, Beeshift
 #ifdef SS_SHIFTER_UNSTABLE
+//TODO swtiches for Dragon, etc.
+#if SSE_VERSION>353
+#define SS_SHIFTER_LINE_PLUS_2_ON_PRELOAD3 // DSOS STE
+#endif
 #define SS_SHIFTER_HI_RES_SCROLLING // Beeshift2
 #define SS_SHIFTER_MED_RES_SCROLLING // Beeshift
 #define SS_SHIFTER_PANIC // funny effect, interleaved border bands
@@ -874,6 +907,9 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 
 #if defined(SS_HACKS)
 // most hacks concern SDP, there's room for improvement
+#if SSE_VERSION<=353
+#define SS_SHIFTER_LINE_PLUS_2_STE_DSOS // limit 42 instead of 38?
+#endif
 #define SS_SHIFTER_SDP_WRITE_DE_HSCROLL
 #define SS_SHIFTER_SDP_WRITE_MIDDLE_BYTE // stable
 #define SS_SHIFTER_ARMADA_IS_DEAD // no shift contrary to Big Wobble
@@ -1135,7 +1171,10 @@ SS_DEBUG, if needed, should be defined in the project/makefile.
 #define SS_VID_BORDERS // option display size (normal-big-bigger-biggest)
 #if defined(SS_VID_BORDERS)
 #define SS_VID_BORDERS_LB_DX // rendering-stage trick rather than painful hacks
+//#ifdef WIN32
 #define SS_VID_BORDERS_BIGTOP // more lines for palette effects
+//#endif
+// TODO it should be 416 not 412
 #endif
 
 #define SS_VID_BPOC // Best Part of the Creation fit display 800 hack

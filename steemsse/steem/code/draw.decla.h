@@ -40,8 +40,9 @@ EXT void change_window_size_for_border_change(int oldborder,int newborder);
 
 EXT void res_change();
 
+#if !(defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE))
 EXT int stfm_b_timer INIT(0);//tmp
-
+#endif
 
 EXT int bad_drawing INIT(0);
 EXT int draw_fs_blit_mode INIT( UNIX_ONLY(DFSM_STRAIGHTBLIT) WIN_ONLY(DFSM_STRETCHBLIT) );

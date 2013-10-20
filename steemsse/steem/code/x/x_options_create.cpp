@@ -1163,7 +1163,11 @@ void TOptionBox::CreateSSEPage() {
   border_size_dd.additem("Normal (384x270)",0);
   border_size_dd.additem("Large (400x275)",1);
   border_size_dd.additem("Large (400x278)",2);
+#if defined(SS_VID_BORDERS_BIGTOP)
+  border_size_dd.additem("Very large (412x285)",3);  
+#else
   border_size_dd.additem("Very large (412x280)",3);
+#endif
   border_size_dd.select_item_by_data(DISPLAY_SIZE);
   border_size_dd.create(XD,page_p,page_l+5+Wid,y,400-(15+Wid+10),350,
     dd_notify_proc,this);
@@ -1268,11 +1272,19 @@ void TOptionBox::CreateSSEPage() {
   hints.add(ste_microwire_but.handle,
   T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature"),
     page_p);
-//  y+=LineHeight;
+  y+=LineHeight;
 #endif
 
+#if defined(SS_VAR_OPTION_SLOW_DISK) // because many people miss it in disk manager
 
-
+  slow_disk_but.create(XD,page_p,page_l,y,0,25,
+    button_notify_proc,this,BT_CHECKBOX,T("Slow disk"),4010,BkCol);
+  slow_disk_but.set_check(!floppy_instant_sector_access);
+  hints.add(slow_disk_but.handle,
+  T("Slow but accurate disk drive emulation"),
+    page_p);
+//  y+=LineHeight;
+#endif
 
   XFlush(XD);
 }

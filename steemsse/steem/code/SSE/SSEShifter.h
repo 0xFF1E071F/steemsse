@@ -2,6 +2,7 @@
 #ifndef SSESHIFTER_H
 #define SSESHIFTER_H
 
+#include "SSEDecla.h"
 
 #if defined(SS_SHIFTER)
 /*  The ST was a barebone machine made up of cheap components hastily patched
@@ -764,7 +765,10 @@ inline int TShifter::CycleOfLastChangeToShiftMode(int value) {
 
 */
 
-#if defined(SS_SHIFTER_SDP_READ)
+#if defined(SS_SHIFTER_SDP_READ) && defined(IN_EMU) 
+
+#define min(a,b) (a>b ? b:a)
+#define max(a,b) (a>b ? a:b)
 
 inline MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
   if (bad_drawing){

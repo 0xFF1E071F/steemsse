@@ -47,7 +47,7 @@ void TOption::Init() {
   OsdDriveInfo=1;
   Dsp=1;
   OsdImageName=1;
-  PastiJustSTX=1;
+  PastiJustSTX=0; // dangerous?
   Interpolate=0;
 }
 

@@ -68,9 +68,6 @@ bool TrySound=true;
 
 #ifdef UNIX
 
-#define XS_PA 1
-#define XS_RT 2
-
 int x_sound_lib=XS_PA;
 
 #ifndef NO_RTAUDIO
