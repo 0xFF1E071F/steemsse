@@ -281,8 +281,8 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 #if defined(SS_INTERRUPT)
 /*  
-    IACK (interrupt acknowledge)  12
-    Exception processing          44
+    IACK (interrupt acknowledge)  16
+    Exception processing          40
     Total                         56
 */
 
@@ -349,6 +349,21 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define  CPU_STE_PAL (CPU_STF_PAL+64) //64 for DMA sound!
 #define  MFP_CLK_TH 2457
 #define  MFP_CLK_TH_EXACT 2457600 // ( 2^15 * 3 * 5^2 )
+#endif
+
+#endif
+
+
+/////////
+// MFP //
+/////////
+
+#if defined(SS_MMU)
+
+#if defined(SS_MMU_WAKE_UP_DL)
+#define WU_SHIFTER_PANIC 5
+#else
+#define WU_SHIFTER_PANIC 3
 #endif
 
 #endif
@@ -435,7 +450,11 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #endif
 #define LARGE_BORDER_SIDE_WIN 40 // max for 800x600 display (fullscreen)
 #define VERY_LARGE_BORDER_SIDE 48 // 416 pixels wide for emulation
+#ifdef TEST01  // TODO, yet another size for plazmas
+#define VERY_LARGE_BORDER_SIDE_WIN 48
+#else
 #define VERY_LARGE_BORDER_SIDE_WIN 46 // trick, 412 pixels wide for rendering
+#endif
 #define ORIGINAL_BORDER_BOTTOM 40 
 #define LARGE_BORDER_BOTTOM 45 // & 48 if player wants
 #define VERY_LARGE_BORDER_BOTTOM 50  // counts for raster fx

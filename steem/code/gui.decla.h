@@ -325,6 +325,14 @@ int HandleXError(Display*,XErrorEvent*);
 
 int StemWinProc(void*,Window,XEvent*);
 int timerproc(void*,Window,int);
+
+#include "../../include/x/hxc.h"
+#include "../../include/x/hxc_popup.h"
+#include "../../include/x/hxc_popuphints.h"
+#include "../../include/x/hxc_alert.h"
+#include "../../include/x/hxc_fileselect.h"
+
+
 int hyperlink_np(hxc_button*,int,int*);
 
 void steem_hxc_modal_notify(bool);

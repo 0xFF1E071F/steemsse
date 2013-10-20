@@ -40,6 +40,8 @@
 #include "SSE/SSEParameters.h"
 #ifdef WIN32
 #include <windows.h>
+#else
+#include "SSE/SSEDecla.h" // for BYTE
 #endif
 
 #include <stdio.h> // printf...

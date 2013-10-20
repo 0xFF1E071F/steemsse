@@ -3355,7 +3355,7 @@ Str TDiskManager::GetContentsGetAppendName(Str TOSECName)
   return ShortName;
 }
 //---------------------------------------------------------------------------
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_OPTION_SLOW_DISK)
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_OPTION_SLOW_DISK) && defined(WIN32)
 
 // mini-function to avoid code duplication
 void TDiskManager::RefreshSnails() {

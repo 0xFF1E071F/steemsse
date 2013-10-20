@@ -15,7 +15,7 @@
 #endif
 
 #if defined(SS_INT_VBL_STF)
-  int HblTiming=HBL_FOR_STF;
+  int HblTiming=HBL_FOR_STE;//HBL_FOR_STF; // default STE
 #endif
 
 #endif

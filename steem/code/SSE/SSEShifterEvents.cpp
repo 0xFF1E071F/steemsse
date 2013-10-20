@@ -24,8 +24,8 @@ int TVideoEvents::Report() {
     char stime[9];
     _strdate( sdate );
     _strtime( stime );
-    fprintf(fp,"Steem shifter events report - %s -%s\nFrame freq: %d shift mode: %d WU: %d\n",
-      sdate,stime,shifter_freq_at_start_of_vbl,screen_res,WAKE_UP_STATE);
+    fprintf(fp,"Steem shifter events report - %s -%s\nFrame freq: %d shift mode: %d ST: %d WU: %d\n",
+      sdate,stime,shifter_freq_at_start_of_vbl,screen_res,ST_TYPE,WAKE_UP_STATE);
 
     if(FloppyDrive[0].DiskInDrive())
       fprintf(fp,"Disk A: %s",FloppyDrive[0].DiskName.c_str()); 
@@ -79,6 +79,8 @@ int TVideoEvents::Vbl() {
   {
 #define LOGSECTION LOGSECTION_VIDEO
     TRACE_LOG("VBL %d shifter tricks %X\n",nVbl,Debug.ShifterTricks);
+    if(TRACE_ENABLED) 
+      TRACE_OSD("%X",Debug.ShifterTricks);
     Debug.ShifterTricks=0;
   }
 #endif  

@@ -18,6 +18,10 @@ THD6301::~THD6301() {
 }
 
 
+#ifdef UNIX
+extern EasyStr GetEXEDir();
+#endif
+
 void THD6301::Init() { // called in 'main'
   Initialised=Crashed=0;
   BYTE* ram=hd6301_init();

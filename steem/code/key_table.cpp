@@ -141,7 +141,7 @@ void SetSTKeys(char *Letters,int Val1,...)
   }while (Letters[++l]);
 }
 //---------------------------------------------------------------------------
-void SetSTKey(KeySym Sym,BYTE STCode,bool CanOverwrite=0)
+void SetSTKey(KeySym Sym,BYTE STCode,bool CanOverwrite)
 {
   KeyCode Code=XKeysymToKeycode(XD,Sym);
   if (key_table[BYTE(Code)]==0 || CanOverwrite){

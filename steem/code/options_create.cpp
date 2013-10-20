@@ -29,7 +29,6 @@ void TOptionBox::CreatePage(int n)
     case 13:CreateMacrosPage();break;
     case 12:CreatePortsPage();break;
     case 4:CreateMIDIPage();break;
-
     case 0:CreateGeneralPage();break;
     case 5:CreateSoundPage();break;
     case 1:CreateDisplayPage();break;
@@ -2032,12 +2031,29 @@ void TOptionBox::CreateSSEPage() {
     page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
   MMUWakeUpOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
 	  page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)212,HInstance,NULL);
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Ignore wake-up state"));
-// TODO DL# (WU#, WS#)
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Wake-up state 1"));
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Wake-up state 2"));
-#if defined(SS_SHIFTER_PANIC) // the # will change when we add WS3, 4
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Shifter panic")); //3
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,
+    (long)CStrT("Ignore wake-up state")); // 0
+
+#if defined(SS_MMU_WAKE_UP_DL)
+/*
+  DL Latency       WU             WS       MODE    SYNC
+     (Dio)        (ijor)        (LJBK)
+-----------------------------------------------------------
+        3           2 (warm)       2        +2     +2  
+        4           2              4               +2
+        5           1 (cold)       3  
+        6           1              1        -2
+*/
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("DL3 WU2 WS2")); // 1
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("DL4 WU2 WS4")); // 2
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("DL5 WU1 WS3")); // 3
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("DL6 WU1 WS1")); // 4
+#else
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Wake-up state 1"));//1
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Wake-up state 2"));//2
+#endif
+#if defined(SS_SHIFTER_PANIC) // 3 or 5
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Shifter panic"));
 #endif
   SendMessage(MMUWakeUpOption,CB_SETCURSEL,WAKE_UP_STATE,0);
   y+=LineHeight;
