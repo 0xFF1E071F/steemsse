@@ -581,7 +581,7 @@ void event_hbl()   //just HBL, don't draw yet
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF) && !defined(SS_IPF_CPU)
-  if(Caps.Active) 
+  if(Caps.Active==1) 
     Caps.Hbl(); 
 #endif
 }
@@ -779,7 +779,7 @@ void event_scanline()
   cpu_timer_at_start_of_hbl=time_of_next_event; 
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF) && !defined(SS_IPF_CPU)
-  if(Caps.Active)
+  if(Caps.Active==1)
     Caps.Hbl();
 #endif
 

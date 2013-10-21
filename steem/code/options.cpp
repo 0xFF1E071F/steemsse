@@ -1139,7 +1139,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 #if defined(STEVEN_SEAGAL) 
-#if defined(SS_VID_BORDERS) // Option Large borders
+#if defined(SS_VID_BORDERS) // Option Display size
         case 1026:
           if (HIWORD(wPar)==CBN_SELENDOK)
           {

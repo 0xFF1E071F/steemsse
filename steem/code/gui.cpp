@@ -237,7 +237,7 @@ const POINT WinSize[4][5]={ {{320,200},{640,400},{960, 600},{1280,800},{-1,-1}},
 {-1,-1}}
 };
 
-#if defined(SS_VID_BORDERS_BIGTOP)
+#if defined(SS_VID_BORDERS_BIGTOP___)
 
 POINT WinSizeBorderVeryLarge[4][5]={ {{320+VERY_LARGE_BORDER_SIDE_WIN*2,200+(NEW_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
 {640+(VERY_LARGE_BORDER_SIDE_WIN*2)*2,400+2*(NEW_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)}, 
@@ -256,13 +256,7 @@ POINT WinSizeBorderVeryLarge[4][5]={ {{320+VERY_LARGE_BORDER_SIDE_WIN*2,200+(NEW
 {-1,-1}}
 };
 
-
-#undef BORDER_TOP
-#define BORDER_TOP (  DISPLAY_SIZE==3 ? NEW_BORDER_TOP : 30 ) 
-
-
-
-#else
+#else // back to 280 lines for this mode
 
  POINT WinSizeBorderVeryLarge[4][5]={ {{320+VERY_LARGE_BORDER_SIDE_WIN*2,200+(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
 {640+(VERY_LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)}, 
@@ -282,6 +276,33 @@ POINT WinSizeBorderVeryLarge[4][5]={ {{320+VERY_LARGE_BORDER_SIDE_WIN*2,200+(NEW
 };
 
 #endif
+
+
+#if defined(SS_VID_BORDERS_416) // we suppose 416x285 (not x280)
+
+POINT WinSizeBorderMax[4][5]={ {{320+VERY_LARGE_BORDER_SIDE*2,200+(NEW_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{640+(VERY_LARGE_BORDER_SIDE*2)*2,400+2*(NEW_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)}, 
+{960+(VERY_LARGE_BORDER_SIDE*3)*2, 600+3*(NEW_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{1280+(VERY_LARGE_BORDER_SIDE*4)*2,800+4*(NEW_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{-1,-1}},
+{{640+(VERY_LARGE_BORDER_SIDE*2)*2,200+(NEW_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{640+(VERY_LARGE_BORDER_SIDE*2)*2,400+2*(NEW_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{1280+(VERY_LARGE_BORDER_SIDE*4)*2,400+2*(NEW_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{1280+(VERY_LARGE_BORDER_SIDE*4)*2,800+4*(NEW_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{-1,-1}},
+{{640+(VERY_LARGE_BORDER_SIDE*2)*2,400+2*(NEW_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{1280+(VERY_LARGE_BORDER_SIDE*4)*2,800+4*(NEW_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{-1,-1}},
+{{800,600},
+{-1,-1}}
+};
+
+
+#undef BORDER_TOP
+#define BORDER_TOP (  DISPLAY_SIZE==4 ? NEW_BORDER_TOP : 30 ) //yuck!
+
+#endif
+
 
  POINT WinSizeBorder[4][5]={ {{320+BORDER_SIDE*2,200+(BORDER_TOP+BORDER_BOTTOM)},
 {640+(BORDER_SIDE*2)*2,400+2*(BORDER_TOP+BORDER_BOTTOM)}, 
@@ -370,7 +391,7 @@ extern int draw_last_scanline_for_border,res_vertical_scale; // forward
 int ChangeBorderSize(int size_in) {
   TRACE_LOG("Setting display size to %d (%d)\n",size_in,DISPLAY_SIZE);
   int size=size_in;
-  ASSERT(size==0||size==1||size==2||size==3);
+  ASSERT(size>=0 && size<=4);
   if(1||size!=DISPLAY_SIZE) //todo
   {
     DISPLAY_SIZE=size;
@@ -395,6 +416,18 @@ int ChangeBorderSize(int size_in) {
       SideBorderSize=VERY_LARGE_BORDER_SIDE;
       SideBorderSizeWin=VERY_LARGE_BORDER_SIDE_WIN;
       BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
+      break;
+#if defined(SS_VID_BORDERS_416)
+    case 4:
+      SideBorderSize=VERY_LARGE_BORDER_SIDE;
+      SideBorderSizeWin=VERY_LARGE_BORDER_SIDE;
+      BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
+      break;
+#endif
+#ifdef SS_DEBUG
+    default:
+      BRK( bad display size );
+#endif
     }//sw
     int i,j;
     for(i=0;i<4;i++) 
@@ -414,6 +447,12 @@ int ChangeBorderSize(int size_in) {
           break;
         case 3:
           WinSizeBorder[i][j]=WinSizeBorderVeryLarge[i][j];
+          break;
+#if defined(SS_VID_BORDERS_416)
+        case 4:
+          WinSizeBorder[i][j]=WinSizeBorderMax[i][j];
+          break;
+#endif
         }//sw
       }
     }

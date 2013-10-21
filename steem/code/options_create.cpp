@@ -1954,15 +1954,19 @@ void TOptionBox::CreateSSEPage() {
 	  page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
   BorderSizeOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
 	  page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)1026,HInstance,NULL);
-  SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("Normal (384x270)"));
-  SendMessage(BorderSizeOption,CB_ADDSTRING,1,(long)CStrT("Large (400x275)"));
-  SendMessage(BorderSizeOption,CB_ADDSTRING,1,(long)CStrT("Large (400x278)"));
-#if defined(SS_VID_BORDERS_BIGTOP)
-  SendMessage(BorderSizeOption,CB_ADDSTRING,1,(long)CStrT("Very large (412x285)"));
-#else
-  SendMessage(BorderSizeOption,CB_ADDSTRING,1,(long)CStrT("Very large (412x280)"));
+  SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("384 x 270"));
+  SendMessage(BorderSizeOption,CB_ADDSTRING,1,(long)CStrT("400 x 275"));
+  SendMessage(BorderSizeOption,CB_ADDSTRING,2,(long)CStrT("400 x 278"));
+//#if defined(SS_VID_BORDERS_BIGTOP) // adapt to used NEW_TOP_BORDER...
+//  SendMessage(BorderSizeOption,CB_ADDSTRING,3,(long)CStrT("412 x 286"));
+//#else
+  SendMessage(BorderSizeOption,CB_ADDSTRING,3,(long)CStrT("412 x 280"));
+//#endif
+#if defined(SS_VID_BORDERS_416)// && defined(SS_VID_BORDERS_BIGTOP)
+  SendMessage(BorderSizeOption,CB_ADDSTRING,4,(long)CStrT("416 x 286"));
 #endif
-  SendMessage(BorderSizeOption,CB_SETCURSEL,min((int)DISPLAY_SIZE,3),0);
+//  SendMessage(BorderSizeOption,CB_SETCURSEL,min((int)DISPLAY_SIZE,3),0);
+  SendMessage(BorderSizeOption,CB_SETCURSEL,DISPLAY_SIZE,0);
   y+=LineHeight;
 #endif
 
@@ -2019,7 +2023,7 @@ void TOptionBox::CreateSSEPage() {
   SendMessage(STTypeOption,CB_ADDSTRING,0,(long)CStrT("STE"));
   SendMessage(STTypeOption,CB_ADDSTRING,1,(long)CStrT("STF"));
 #if defined(SS_STF_MEGASTF)
-  SendMessage(STTypeOption,CB_ADDSTRING,1,(long)CStrT("Mega ST4"));
+  SendMessage(STTypeOption,CB_ADDSTRING,2,(long)CStrT("Mega ST4"));
 #endif
   SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,SS_STF_ST_MODELS-1),0);
   y+=LineHeight;
@@ -2031,8 +2035,7 @@ void TOptionBox::CreateSSEPage() {
     page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
   MMUWakeUpOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
 	  page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)212,HInstance,NULL);
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,
-    (long)CStrT("Ignore wake-up state")); // 0
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("Ignore wake-up state"));
 
 #if defined(SS_MMU_WAKE_UP_DL)
 /*
@@ -2044,16 +2047,16 @@ void TOptionBox::CreateSSEPage() {
         5           1 (cold)       3  
         6           1              1        -2
 */
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("DL3 WU2 WS2")); // 1
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("DL4 WU2 WS4")); // 2
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("DL5 WU1 WS3")); // 3
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("DL6 WU1 WS1")); // 4
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("DL3 WU2 WS2"));
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,2,(long)CStrT("DL4 WU2 WS4"));
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,3,(long)CStrT("DL5 WU1 WS3"));
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,4,(long)CStrT("DL6 WU1 WS1"));
 #else
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Wake-up state 1"));//1
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Wake-up state 2"));//2
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Wake-up state 1"));
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,2,(long)CStrT("Wake-up state 2"));
 #endif
 #if defined(SS_SHIFTER_PANIC) // 3 or 5
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Shifter panic"));
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,5,(long)CStrT("Shifter panic"));
 #endif
   SendMessage(MMUWakeUpOption,CB_SETCURSEL,WAKE_UP_STATE,0);
   y+=LineHeight;

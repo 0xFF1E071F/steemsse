@@ -763,6 +763,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       {// blurry display in 'no stretch' mode? check here!!!!!!!!!!!!!!!!
         CanUse_400=(cw==(4+640+ 4* SideBorderSizeWin) 
           && ch==(MENUHEIGHT+4+400 + 2*(BORDER_TOP+BottomBorderSize)));
+        TRACE("CanUse_400 %d cw %d %d ch %d %d\n",CanUse_400,cw,(4+640+ 4* SideBorderSizeWin),ch,(MENUHEIGHT+4+400 + 2*(BORDER_TOP+BottomBorderSize)));
       }else{
         CanUse_400=(cw==644 && ch==404+MENUHEIGHT);
       }

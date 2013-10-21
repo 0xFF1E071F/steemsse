@@ -2549,10 +2549,15 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     if(draw_buffer_complex_scanlines && draw_lock)
     {
       if(scan_y>=draw_first_scanline_for_border  
+#if defined(SS_VID_BORDERS_BIGTOP) // avoid horrible crash
+          && (DISPLAY_SIZE<4 || scan_y>=draw_first_scanline_for_border+ 
+               (NEW_BORDER_TOP-ORIGINAL_BORDER_TOP))
+#endif
         && scan_y<draw_last_scanline_for_border)
       {
         if(draw_store_dest_ad==NULL 
-          && pixels_in<BORDER_SIDE+320+BORDER_SIDE)
+          && pixels_in<BORDER_SIDE+320+BORDER_SIDE
+          )
         {
           draw_store_dest_ad=draw_dest_ad;
           ScanlineBuffer=draw_dest_ad=draw_temp_line_buf;
@@ -2563,7 +2568,13 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
       }
     }
 #endif
-    if(FetchingLine())
+    if(FetchingLine()
+#if defined(SS_VID_BORDERS_BIGTOP)
+//          && scan_y>=draw_first_possible_line+(DISPLAY_SIZE>=3?6:0) 
+          && (DISPLAY_SIZE<4 || scan_y>=draw_first_scanline_for_border+ 
+               (NEW_BORDER_TOP-ORIGINAL_BORDER_TOP))
+#endif
+      )
     {
       ASSERT( left_border>=0 );
 /*
@@ -2671,7 +2682,10 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
       if(draw_lock) // draw_lock is set true in draw_begin(), false in draw_end()
       {
         // real lines
-        if(scan_y>=draw_first_possible_line 
+        if(scan_y>=draw_first_possible_line
+#if defined(SS_VID_BORDERS_BIGTOP)
+          + (DISPLAY_SIZE>=3?6:0) 
+#endif
           && scan_y<draw_last_possible_line)
         {
           // actually draw it

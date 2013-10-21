@@ -281,7 +281,8 @@ EXT int shifter_shift_mode_change_idx;
 // restore draw_scanline.
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
-EXT BYTE draw_temp_line_buf[800*4+16+ 200 ]; // overkill but I can't count
+//EXT BYTE draw_temp_line_buf[800*4+16+ 200 ]; // overkill but I can't count
+EXT BYTE draw_temp_line_buf[800*4+16+ 400 ]; // overkill but I can't count
 #else
 EXT BYTE draw_temp_line_buf[800*4+16]; 
 #endif

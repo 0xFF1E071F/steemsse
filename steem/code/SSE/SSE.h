@@ -90,17 +90,17 @@ and all his silly mods are gone!
 
 #if defined(STEVEN_SEAGAL)
 
-//#define SS_BETA //title, OSD, plus some testing
+#define SS_BETA //title, OSD, plus some testing
 
 #ifdef SS_BETA 
 #define SSE_VERSION 354
 #define SSE_VERSION_TXT "3.5.4" 
 #define WINDOW_TITLE "Steem Beta 3.5.4"
 #else // next planned release
-#define SSE_VERSION 353
+#define SSE_VERSION 354
 // check snapshot Version (in LoadSave.h); rc\resource.rc
-#define SSE_VERSION_TXT "3.5.3" 
-#define WINDOW_TITLE "Steem SSE 3.5.3" //not 'Engine', too long
+#define SSE_VERSION_TXT "3.5.4" 
+#define WINDOW_TITLE "Steem SSE 3.5.4" //not 'Engine', too long
 #endif
 
 #endif
@@ -158,7 +158,7 @@ and all his silly mods are gone!
 //////////
 
 #if defined(SS_BETA)
-//#define TEST01 //416 vs 412 pixels
+#define TEST01 //416 vs 412 pixels
 //#define TEST02
 //#define TEST03
 //#define TEST04
@@ -1168,8 +1168,9 @@ and all his silly mods are gone!
 //#define SS_VID_AUTOOFF_DECRUNCHING // bad idea (complaints)
 #define SS_VID_BLIT_TRY_BLOCK //?
 
-#define SS_VID_BORDERS // option display size (normal-big-bigger-biggest)
+#define SS_VID_BORDERS // option display size
 #if defined(SS_VID_BORDERS)
+#define SS_VID_BORDERS_416
 #define SS_VID_BORDERS_LB_DX // rendering-stage trick rather than painful hacks
 //#ifdef WIN32
 #define SS_VID_BORDERS_BIGTOP // more lines for palette effects
