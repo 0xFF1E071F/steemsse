@@ -450,18 +450,17 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #endif
 #define LARGE_BORDER_SIDE_WIN 40 // max for 800x600 display (fullscreen)
 #define VERY_LARGE_BORDER_SIDE 48 // 416 pixels wide for emulation
-#ifdef TEST01  // TODO, yet another size for plazmas
-#define VERY_LARGE_BORDER_SIDE_WIN 48
-#else
 #define VERY_LARGE_BORDER_SIDE_WIN 46 // trick, 412 pixels wide for rendering
-#endif
 #define ORIGINAL_BORDER_BOTTOM 40 
 #define LARGE_BORDER_BOTTOM 45 // & 48 if player wants
 #define VERY_LARGE_BORDER_BOTTOM 50  // counts for raster fx
 
-
+#define ORIGINAL_BORDER_TOP 30
+#define NEW_BORDER_TOP (35+1) // for The Musical Wonder 1990, 36 tested, better?
 
 #endif
+
+
 
 #if defined(SS_VID_RECORD_AVI)
 #define SS_VID_RECORD_AVI_FILENAME "SteemVideo.avi"

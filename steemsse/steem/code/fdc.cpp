@@ -291,7 +291,7 @@ DEBUG_ONLY( if (fdc_str & FDC_STR_SEEK_ERROR) log("     Verify failed (track not
 void floppy_fdc_command(BYTE cm)
 {
   log(Str("FDC: ")+HEXSl(old_pc,6)+" - executing command $"+HEXSl(cm,2));
-  ASSERT(!pasti_active);
+//  ASSERT(!pasti_active);
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_IGNORE_WHEN_NO_DRIVE_SELETED)
 /*  This was missing in Steem up to now but was in Hatari.
     Commands are ignored if no drive is currently selected, except

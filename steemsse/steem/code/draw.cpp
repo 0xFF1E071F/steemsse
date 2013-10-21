@@ -115,7 +115,8 @@ int shifter_shift_mode_change_idx=0;
 
 #ifdef WIN32
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
-BYTE draw_temp_line_buf[800*4+16+ 200 ]; // overkill but I can't count
+//BYTE draw_temp_line_buf[800*4+16+ 200 ]; // overkill but I can't count
+BYTE draw_temp_line_buf[800*4+16+ 400 ]; // overkill but I can't count
 #else
 BYTE draw_temp_line_buf[800*4+16]; 
 #endif
@@ -192,6 +193,12 @@ void draw_begin()
 
   if (border & 1){
     draw_first_possible_line=draw_first_scanline_for_border;
+#if defined(SS_VID_BORDERS_BIGTOP___)
+    if(DISPLAY_SIZE>=3)
+      draw_first_possible_line+=6; // fixes those horrible crashes...
+           // but it doesn't look right either!
+#endif
+
     draw_last_possible_line=draw_last_scanline_for_border;
   }else{
     draw_first_possible_line=0;
@@ -250,7 +257,12 @@ void draw_begin()
       l*=BytesPerPixel;
       BYTE *d=draw_dest_ad+draw_line_length;
       int y=200;
+
+#if defined(STEVEN_SEAGAL) &&  defined(SS_VID_BORDERS_BIGTOP)
+      if (Disp.BorderPossible()) y=200+BORDER_BOTTOM+ 30;
+#else
       if (Disp.BorderPossible()) y=200+BORDER_BOTTOM+BORDER_TOP;
+#endif
       for(;y>0;y--){
         memset(d,0,l);
         d+=draw_dest_increase_y;

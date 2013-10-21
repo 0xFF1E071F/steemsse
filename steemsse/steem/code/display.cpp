@@ -1140,14 +1140,21 @@ void SteemDisplay::ChangeToFullScreen()
       w=monitor_width;
       h=monitor_height;
     }
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_CHECK_DDFS)
     VERIFY( SetWindowPos(StemWin,HWND_TOPMOST,0,0,w,h,0) );
-
+#else
+    SetWindowPos(StemWin,HWND_TOPMOST,0,0,w,h,0);
+#endif
     CheckResetDisplay(true);
 
     ClipWin=CreateWindow("Steem Fullscreen Clip Window","",WS_CHILD | WS_VISIBLE |
                           WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
                           0,MENUHEIGHT,w,h-MENUHEIGHT,StemWin,(HMENU)1111,Inst,NULL);
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_CHECK_DDFS)
     VERIFY( DDClipper->SetHWnd(0,ClipWin)==DD_OK );
+#else
+    DDClipper->SetHWnd(0,ClipWin);
+#endif
 
 #ifndef ONEGAME
     FSQuitBut=CreateWindow("Steem Fullscreen Quit Button","",WS_CHILD,
