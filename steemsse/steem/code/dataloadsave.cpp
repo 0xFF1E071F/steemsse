@@ -727,7 +727,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #endif
 #if defined(SS_VID_BORDERS)
     DISPLAY_SIZE=pCSF->GetInt("Display","BorderSize",DISPLAY_SIZE);
-    if(DISPLAY_SIZE<0||DISPLAY_SIZE>4)
+    if(DISPLAY_SIZE<0||DISPLAY_SIZE>BIGGEST_DISPLAY)
       DISPLAY_SIZE=0;
     ChangeBorderSize(DISPLAY_SIZE);
 #endif

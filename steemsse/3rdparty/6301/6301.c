@@ -126,6 +126,9 @@ hd6301_reset(int Cold) {
   TRACE("6301 emu cpu reset\n");
   cpu_reset();
 
+  if(Cold)
+    memset (ram, 0, 256);
+
   hd6301_completed_transmission_to_MC6850=0;
   Crashed6301=0;
   iram[TRCSR]=0x20;

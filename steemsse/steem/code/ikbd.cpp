@@ -2008,6 +2008,7 @@ void ikbd_set_clock_to_correct_time()
 
 void ikbd_reset(bool Cold)
 {
+  ASSERT( Cold );// !!! always
   agenda_delete(agenda_keyboard_reset);
 
 #if defined(STEVEN_SEAGAL) && defined(SS_ACIA_IRQ_DELAY)
@@ -2022,6 +2023,8 @@ void ikbd_reset(bool Cold)
       TRACE_LOG("6301 reset ikbd.cpp part\n");
       HD6301.Crashed=0;
       ikbd.mouse_upside_down=false;
+//      if(Cold)   //can't work here!
+//        keyboard_buffer_length=0; // cold reset & run, Transbeauce 2
       return;
     }
     else

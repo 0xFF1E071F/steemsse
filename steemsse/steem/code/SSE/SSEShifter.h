@@ -301,7 +301,16 @@ inline void TShifter::DrawBufferedScanlineToVideo() {
 inline int TShifter::FetchingLine() {
   // does the current scan_y involve fetching by the shifter?
   // notice < shifter_last_draw_line, not <=
-  return (scan_y>=shifter_first_draw_line && scan_y<shifter_last_draw_line);
+  return (scan_y>=shifter_first_draw_line && scan_y<shifter_last_draw_line
+
+#if defined(SS_VID_BORDERS_BIGTOP)
+//          && scan_y>=draw_first_possible_line+(DISPLAY_SIZE>=3?6:0) 
+      && (DISPLAY_SIZE<BIGGEST_DISPLAY 
+      || scan_y>=draw_first_scanline_for_border+
+        (VERY_LARGE_BORDER_TOP-ORIGINAL_BORDER_TOP))
+#endif
+
+);
 }
 
 
@@ -766,10 +775,10 @@ inline int TShifter::CycleOfLastChangeToShiftMode(int value) {
 */
 
 #if defined(SS_SHIFTER_SDP_READ) && defined(IN_EMU) 
-
+#ifdef SS_UNIX
 #define min(a,b) (a>b ? b:a)
 #define max(a,b) (a>b ? a:b)
-
+#endif
 inline MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
   if (bad_drawing){
     // Fake SDP
@@ -1161,7 +1170,7 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
       int pxtodraw=320+BORDER_SIDE*2-scanline_drawn_so_far;
       int bytestofetch=pxtodraw/2;
       int bytes_to_run=(CurrentScanline.EndCycle-cycles+SHIFTER_PREFETCH_LATENCY)/2;
-      ASSERT(CurrentScanline.EndCycle==460); bytes_to_run+=2; // is it 460 or 464?
+//      ASSERT(CurrentScanline.EndCycle==460);  bytes_to_run+=2; // is it 460 or 464?//v3.5.4
       overscan_add_extra+=-44+bytes_to_run-bytestofetch;
     }
 

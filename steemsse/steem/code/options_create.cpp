@@ -1955,17 +1955,20 @@ void TOptionBox::CreateSSEPage() {
   BorderSizeOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
 	  page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)1026,HInstance,NULL);
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("384 x 270"));
-  SendMessage(BorderSizeOption,CB_ADDSTRING,1,(long)CStrT("400 x 275"));
-  SendMessage(BorderSizeOption,CB_ADDSTRING,2,(long)CStrT("400 x 278"));
-//#if defined(SS_VID_BORDERS_BIGTOP) // adapt to used NEW_TOP_BORDER...
-//  SendMessage(BorderSizeOption,CB_ADDSTRING,3,(long)CStrT("412 x 286"));
-//#else
-  SendMessage(BorderSizeOption,CB_ADDSTRING,3,(long)CStrT("412 x 280"));
-//#endif
-#if defined(SS_VID_BORDERS_416)// && defined(SS_VID_BORDERS_BIGTOP)
-  SendMessage(BorderSizeOption,CB_ADDSTRING,4,(long)CStrT("416 x 286"));
+  SendMessage(BorderSizeOption,CB_ADDSTRING,1,(long)CStrT("400 x 278"));
+#if defined(SS_VID_BORDERS_BIGTOP) && !defined(SS_VID_BORDERS_416)
+  SendMessage(BorderSizeOption,CB_ADDSTRING,2,(long)CStrT("412 x 286"));
+#else
+  SendMessage(BorderSizeOption,CB_ADDSTRING,2,(long)CStrT("412 x 280"));
 #endif
-//  SendMessage(BorderSizeOption,CB_SETCURSEL,min((int)DISPLAY_SIZE,3),0);
+#if defined(SS_VID_BORDERS_416)
+#if defined(SS_VID_BORDERS_BIGTOP)
+  SendMessage(BorderSizeOption,CB_ADDSTRING,3,(long)CStrT("416 x 286"));
+#else
+  SendMessage(BorderSizeOption,CB_ADDSTRING,3,(long)CStrT("416 x 280"));
+#endif
+#endif
+//  SendMessage(BorderSizeOption,CB_SETCURSEL,min((int)DISPLAY_SIZE,BIGGEST_DISPLAY),0);
   SendMessage(BorderSizeOption,CB_SETCURSEL,DISPLAY_SIZE,0);
   y+=LineHeight;
 #endif
