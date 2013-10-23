@@ -184,9 +184,11 @@ int ChangeBorderSize(int size); // gui.cpp
 #endif
 
 #if defined(SS_VID_BORDERS_BIGTOP) // more hacks...
-#define BORDER_TOP (  DISPLAY_SIZE==4 ? NEW_BORDER_TOP : 30 ) 
+#if defined(SS_VID_BORDERS_BIGTOP)
+#define BORDER_TOP (DISPLAY_SIZE==BIGGEST_DISPLAY \
+  ? VERY_LARGE_BORDER_TOP : ORIGINAL_BORDER_TOP ) 
 #endif
-
+#endif
 
 #if defined(SS_VID_SCANLINES_INTERPOLATED)
 

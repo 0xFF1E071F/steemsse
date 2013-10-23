@@ -55,7 +55,7 @@ extern struct TOption SSEOption;
 #define PSG_FILTER_FIX (SSEOption.PSGFilter)
 #define ST_TYPE (SSEOption.STModel)
 #define CAPTURE_MOUSE (SSEOption.CaptureMouse)
-#define BORDER_40 (SSEOption.DisplaySize==1||SSEOption.DisplaySize==2)
+#define BORDER_40 (SSEOption.DisplaySize==1)//||SSEOption.DisplaySize==2)
 #define DISPLAY_SIZE (SSEOption.DisplaySize)
 #define STEALTH_MODE SSEOption.StealthMode
 #define USE_TRACE_FILE (SSEOption.OutputTraceToFile)

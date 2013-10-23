@@ -193,12 +193,6 @@ void draw_begin()
 
   if (border & 1){
     draw_first_possible_line=draw_first_scanline_for_border;
-#if defined(SS_VID_BORDERS_BIGTOP___)
-    if(DISPLAY_SIZE>=3)
-      draw_first_possible_line+=6; // fixes those horrible crashes...
-           // but it doesn't look right either!
-#endif
-
     draw_last_possible_line=draw_last_scanline_for_border;
   }else{
     draw_first_possible_line=0;
@@ -259,7 +253,8 @@ void draw_begin()
       int y=200;
 
 #if defined(STEVEN_SEAGAL) &&  defined(SS_VID_BORDERS_BIGTOP)
-      if (Disp.BorderPossible()) y=200+BORDER_BOTTOM+ 30;
+     // if (Disp.BorderPossible()) y=200+BORDER_BOTTOM+ 30;
+      if (Disp.BorderPossible()) y=200+BottomBorderSize+ BORDER_TOP;
 #else
       if (Disp.BorderPossible()) y=200+BORDER_BOTTOM+BORDER_TOP;
 #endif
@@ -1151,8 +1146,11 @@ void init_screen()
 
   // These are used to determine where to draw
   draw_first_scanline_for_border=res_vertical_scale*(-BORDER_TOP);
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)//should have redefined
+  draw_last_scanline_for_border=shifter_y+res_vertical_scale*(BottomBorderSize);
+#else
   draw_last_scanline_for_border=shifter_y+res_vertical_scale*(BORDER_BOTTOM);
-
+#endif
   // This is used to know where to cause the timer B event
   CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq);
 //  res_change(); //all this does is resize the window - do we want that to happen?

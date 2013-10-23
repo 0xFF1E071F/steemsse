@@ -299,7 +299,8 @@ void reset_peripherals(bool Cold)
 #endif
   ZeroMemory(mfp_reg,sizeof(mfp_reg));
 #if defined(STEVEN_SEAGAL) && defined(SS_MFP_TxDR_RESET)
-  memcpy(&mfp_reg[MFPR_TADR],&tmp,4);
+  if(!Cold)
+    memcpy(&mfp_reg[MFPR_TADR],&tmp,4);
 #endif
   mfp_reg[MFPR_GPIP]=mfp_gpip_no_interrupt;
   mfp_reg[MFPR_AER]=0x4;   // CTS goes the other way
@@ -338,6 +339,8 @@ void reset_peripherals(bool Cold)
 
 #if defined(SS_IKBD_6301)
   HD6301.ResetChip(Cold);
+  if(Cold) // only cold
+    keyboard_buffer_length=0; // cold reset & run, Transbeauce 2
 #endif
 
 #if defined(SS_ACIA_NO_RESET_PIN) 
@@ -361,7 +364,9 @@ void reset_peripherals(bool Cold)
   M68000.NextIrFetched=false;
 #endif
 
-  if (runstate==RUNSTATE_RUNNING) prepare_event_again();
+  if (runstate==RUNSTATE_RUNNING
+///    &&!Cold
+    ) prepare_event_again();
 }
 #undef LOGSECTION
 //---------------------------------------------------------------------------

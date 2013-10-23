@@ -313,6 +313,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
     case 5:
       SetForegroundWindow(StemWin);
       reset_st(RESET_COLD | RESET_NOSTOP | RESET_CHANGESETTINGS | RESET_BACKUP);
+/////////      runstate=RUNSTATE_RUNNING;
       if (runstate!=RUNSTATE_RUNNING) PostRunMessage();
       break;
     case 6:

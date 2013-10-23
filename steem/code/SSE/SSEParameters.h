@@ -452,11 +452,17 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define VERY_LARGE_BORDER_SIDE 48 // 416 pixels wide for emulation
 #define VERY_LARGE_BORDER_SIDE_WIN 46 // trick, 412 pixels wide for rendering
 #define ORIGINAL_BORDER_BOTTOM 40 
-#define LARGE_BORDER_BOTTOM 45 // & 48 if player wants
+#define LARGE_BORDER_BOTTOM 48
 #define VERY_LARGE_BORDER_BOTTOM 50  // counts for raster fx
 
 #define ORIGINAL_BORDER_TOP 30
-#define NEW_BORDER_TOP (35+1) // for The Musical Wonder 1990, 36 tested, better?
+#define VERY_LARGE_BORDER_TOP 36 // for The Musical Wonder 1990
+
+#if defined(SS_VID_BORDERS_416)
+#define BIGGEST_DISPLAY 3
+#else
+#define BIGGEST_DISPLAY 2
+#endif
 
 #endif
 

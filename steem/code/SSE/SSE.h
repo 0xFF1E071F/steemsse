@@ -158,7 +158,7 @@ and all his silly mods are gone!
 //////////
 
 #if defined(SS_BETA)
-#define TEST01 //416 vs 412 pixels
+//#define TEST01
 //#define TEST02
 //#define TEST03
 //#define TEST04
@@ -386,12 +386,12 @@ and all his silly mods are gone!
 
 #ifdef SS_DEBUG_TRACE
 #ifdef _DEBUG // VC
-//#define SS_DEBUG_TRACE_IDE
+#define SS_DEBUG_TRACE_IDE
 #endif
 #if defined(DEBUG_BUILD) 
 #define SS_DEBUG_TRACE_FILE
 #else//VC
-#define SS_DEBUG_TRACE_FILE
+//#define SS_DEBUG_TRACE_FILE
 #endif
 #endif
 
@@ -1170,12 +1170,11 @@ and all his silly mods are gone!
 
 #define SS_VID_BORDERS // option display size
 #if defined(SS_VID_BORDERS)
-#define SS_VID_BORDERS_416
-#define SS_VID_BORDERS_LB_DX // rendering-stage trick rather than painful hacks
-//#ifdef WIN32
+#ifdef WIN32 // Unix?
+#define SS_VID_BORDERS_416 
 #define SS_VID_BORDERS_BIGTOP // more lines for palette effects
-//#endif
-// TODO it should be 416 not 412
+#define SS_VID_BORDERS_LB_DX // rendering-stage trick rather than painful hacks
+#endif
 #endif
 
 #define SS_VID_BPOC // Best Part of the Creation fit display 800 hack
