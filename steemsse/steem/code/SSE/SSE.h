@@ -775,6 +775,7 @@ and all his silly mods are gone!
 #define SS_MMU_WAKE_UP_IOW_HACK 
 #define SS_MMU_WAKE_UP_PALETTE_STE // render +1 cycle (pixel) in state 2
 //#define SS_MMU_WAKE_UP_READ_SDP
+#define SS_MMU_WAKE_UP_RESET_ON_SWITCH_ST
 #define SS_MMU_WAKE_UP_RIGHT_BORDER
 #define SS_MMU_WAKE_UP_SHIFTER_TRICKS // Adapt limit values based on Paolo's table
 //#define SS_MMU_WAKE_UP_STE_STATE2 // STE in same state2 as STF (no)
@@ -872,9 +873,7 @@ and all his silly mods are gone!
 #define SS_SHIFTER_PALETTE_TIMING //Overscan Demos #6
 #define SS_SHIFTER_RIGHT_OFF_BY_SHIFT_MODE //beeshift0
 #define SS_SHIFTER_STE_MED_HSCROLL // Cool STE
-#if defined(SS_BETA) || defined(SS_DEBUG)
 #define SS_SHIFTER_STE_HI_HSCROLL
-#endif
 #define SS_SHIFTER_STE_HSCROLL_LEFT_OFF //MOLZ/Spiral
 #define SS_SHIFTER_STE_VERTICAL_OVERSCAN //RGBeast
 #define SS_SHIFTER_UNSTABLE // DoLB, Omega, Overdrive/Dragon, Beeshift
@@ -915,6 +914,8 @@ and all his silly mods are gone!
 #define SS_SHIFTER_ARMADA_IS_DEAD // no shift contrary to Big Wobble
 #define SS_SHIFTER_BIG_WOBBLE // Big Wobble shift
 #define SS_SHIFTER_DANGEROUS_FANTAISY // Dangerous Fantaisy credits flicker
+//#define SS_SHIFTER_DOLB_SHIFT1 // based on "unstable overscan"
+#define SS_SHIFTER_DOLB_SHIFT2 // based on cycle of R0
 #define SS_SHIFTER_DRAGON1 // confused shifter, temp hack
 #define SS_SHIFTER_OMEGA  // Omega Full Overscan shift (60hz)
 #define SS_SHIFTER_PACEMAKER // Pacemaker credits flickering line
@@ -1148,6 +1149,7 @@ and all his silly mods are gone!
 #define SS_VAR_RESIZE // reduce memory set (int->BYTE etc.)
 #define SS_VAR_REWRITE // to conform to what compilers expect (warnings...)
 #define SS_VAR_SCROLLER_DISK_IMAGE
+#define SS_VAR_STATUS_STRING // hacking the "path" function
 #define SS_VAR_STEALTH // don't tell we're an emulator (option)
 #ifdef WIN32
 #define SS_VAR_UNRAR // using unrar.dll, up to date

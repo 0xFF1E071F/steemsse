@@ -112,6 +112,12 @@ is issued, and that the reset was active for at least 132 clock cycles [27].
 //---------------------------------------------------------------------------
 void power_on()
 {
+
+#if defined(SS_VAR_STATUS_STRING)
+  GUIRefreshStatusBar();//overkill
+#endif
+
+
   ZeroMemory(Mem+MEM_EXTRA_BYTES,mem_len);
   on_rte=ON_RTE_RTE;
   SET_PC(rom_addr);

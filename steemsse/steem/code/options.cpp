@@ -824,6 +824,9 @@ void TOptionBox::SetBorder(int newborder)
     border=oldborder;
   }
   CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min(border,2),MF_BYCOMMAND);
+#if defined(SS_VAR_STATUS_STRING)
+  GUIRefreshStatusBar();
+#endif
 }
 //---------------------------------------------------------------------------
 #define GET_THIS This=(TOptionBox*)GetWindowLong(Win,GWL_USERDATA);
@@ -977,6 +980,15 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             ST_TYPE=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
             TRACE_LOG("Option ST type = %d\n",ST_TYPE);
             SwitchSTType(ST_TYPE);
+#if defined(SS_MMU_WAKE_UP_RESET_ON_SWITCH_ST)
+            WAKE_UP_STATE=0;
+#endif
+#if defined(SS_VAR_OPTIONS_REFRESH) &&defined(WIN32)
+            OptionBox.SSEUpdateIfVisible(); 
+#endif
+#if defined(SS_VAR_STATUS_STRING)
+            GUIRefreshStatusBar();
+#endif
 #if defined(SS_STF_MATCH_TOS)
             // preselect a compatible TOS 
             if(KnownSTETosPath.Empty()||KnownSTFTosPath.Empty())
@@ -1037,6 +1049,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             TRACE_LOG("Option WU = %d\n",WAKE_UP_STATE);
 #if defined(SS_SHIFTER_UNSTABLE)
             Shifter.Preload=0; // reset the thing!
+#endif
+#if defined(SS_VAR_STATUS_STRING)
+            GUIRefreshStatusBar();
 #endif
           }
           break;
@@ -1113,6 +1128,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               if (ResChangeResize) StemWinResize();
             }
           }
+#if defined(SS_VAR_STATUS_STRING)
+          GUIRefreshStatusBar();
+#endif
           break;
         case 400:
           if (HIWORD(wPar)==BN_CLICKED){

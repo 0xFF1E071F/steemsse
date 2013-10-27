@@ -19,7 +19,7 @@ int SwitchSTType(int new_type) {
 #endif
 #endif
   }
-  else 
+  else //STE
   {
 //    stfm_borders=0;
 #if defined(SS_INT_VBL_STF)
@@ -37,8 +37,8 @@ int SwitchSTType(int new_type) {
     CpuMfpRatio=(double)CPU_STE_TH/(double)MFP_CLK_LE_EXACT;
     CpuNormalHz=CPU_STE_TH;
 #endif
-
 #endif
+
   }
 
 #if defined(SS_MFP_RATIO)

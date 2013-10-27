@@ -456,7 +456,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define VERY_LARGE_BORDER_BOTTOM 50  // counts for raster fx
 
 #define ORIGINAL_BORDER_TOP 30
-#define VERY_LARGE_BORDER_TOP 36 // for The Musical Wonder 1990
+#define BIG_BORDER_TOP 36 // for The Musical Wonder 1990
 
 #if defined(SS_VID_BORDERS_416)
 #define BIGGEST_DISPLAY 3

@@ -758,20 +758,23 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   else
   {
 #if defined(SS_SHIFTER)
-    Shifter.m_ShiftMode=screen_res;
+//    Shifter.m_ShiftMode=screen_res;
 #endif
 #if defined(SS_ACIA_USE_REGISTERS)
 #endif
 #if defined(SS_DMA)
 #endif
 #if defined(SS_MMU_WAKE_UP)
-    WAKE_UP_STATE=0;
+//    WAKE_UP_STATE=0; //wasn't loaded?
 #endif
   }
 
 #if defined(SS_SHIFTER)//don't trust content of snapshot
   Shifter.m_ShiftMode=(BYTE)screen_res;
   Shifter.m_SyncMode= (BYTE)((shifter_freq==50)?2:0);
+#endif
+#if defined(SS_MMU_WAKE_UP)//same
+//  WAKE_UP_STATE=0;
 #endif
 
 
@@ -800,6 +803,14 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #endif
   }
 
+  if(Version>=46) // 3.5.4
+  {
+#if defined(SS_MMU_WAKE_UP)
+    ReadWrite(WAKE_UP_STATE);
+    if(WAKE_UP_STATE>WU_SHIFTER_PANIC)
+      WAKE_UP_STATE=0;
+#endif
+  }
 
 #endif//#if defined(STEVEN_SEAGAL)
 

@@ -63,13 +63,15 @@ yet.
 #define SSEMMU_H
 
 #include "SSEOption.h"
+#include "SSEParameters.h"
 #include "SSESTF.h"
 
 #ifdef SS_MMU
 
 
 struct TMMU {
-  BYTE DL(); // 3 = neutral
+  inline BYTE DL(); // 5 = neutral
+  BYTE WS();
   inline bool OnMmuCycles(int CyclesIn);
   inline bool WakeUpState1(); // for STF
   inline bool WakeUpState2(); // for STF 
@@ -81,9 +83,11 @@ extern TMMU MMU;
 
 inline BYTE TMMU::DL() {
 #if !defined(SS_STF)
-  return 3;
+  return 5;
 #else
-  return (ST_TYPE!=STE && WAKE_UP_STATE) ? WAKE_UP_STATE+2 : 3;
+  if(WAKE_UP_STATE==WU_SHIFTER_PANIC)
+    return 4;
+  return (ST_TYPE!=STE && WAKE_UP_STATE) ? WAKE_UP_STATE+2 : 5;
 #endif
 }
 
@@ -126,7 +130,11 @@ inline bool TMMU::WakeUpState2() {
   (ST_TYPE!=STE) &&
 #endif
 #if defined(SS_MMU_WAKE_UP_DL)
-  (WAKE_UP_STATE==1||WAKE_UP_STATE==2)
+  (WAKE_UP_STATE==1||WAKE_UP_STATE==2
+#if defined(SS_SHIFTER_PANIC) // used for omega only
+  ||WAKE_UP_STATE==WU_SHIFTER_PANIC
+#endif
+  )
 #else
   (WAKE_UP_STATE&2)
 #endif
