@@ -723,7 +723,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     ST_TYPE=pCSF->GetInt("Options","StType",ST_TYPE);
 #endif
 #if defined(SS_MMU_WAKE_UP)
-    WAKE_UP_STATE=pCSF->GetInt("Options","WakeUpState",WAKE_UP_STATE);
+//    WAKE_UP_STATE=pCSF->GetInt("Options","WakeUpState",WAKE_UP_STATE);
 #endif
 #if defined(SS_VID_BORDERS)
     DISPLAY_SIZE=pCSF->GetInt("Display","BorderSize",DISPLAY_SIZE);
@@ -1084,7 +1084,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetStr("Options","StType",EasyStr(ST_TYPE));  
 #endif
 #if defined(SS_MMU_WAKE_UP)
-  pCSF->SetStr("Options","WakeUpState",EasyStr(WAKE_UP_STATE));  
+//  pCSF->SetStr("Options","WakeUpState",EasyStr(WAKE_UP_STATE));  
 #endif
 #if defined(SS_VID_BORDERS)
   pCSF->SetStr("Display","BorderSize",EasyStr(DISPLAY_SIZE));  

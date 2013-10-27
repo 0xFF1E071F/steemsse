@@ -216,6 +216,10 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       return 0;
     }
     case WM_USER+2:   // Update commands
+#if defined(SS_VAR_NO_UPDATE)
+      if (wPar==2323)  // Running?
+        return runstate==RUNSTATE_RUNNING;
+#else
       if (wPar==54542){       // New Steem
         UpdateWin=(HWND)lPar;
         ShowWindow(GetDlgItem(Win,120),int(UpdateWin ? SW_SHOW:SW_HIDE));
@@ -235,6 +239,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         }
         return 0;
       }
+#endif
       break;
     case WM_COMMAND:
       if (LOWORD(wPar)>=100 && LOWORD(wPar)<200){
@@ -971,6 +976,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
     case 106:
       Disp.ChangeToWindowedMode();
       break;
+#if !defined(SS_VAR_NO_UPDATE)
     case 120:
       if (UpdateWin){
         SendMessage(hBut,BM_SETCHECK,1,0);
@@ -978,6 +984,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
         SetForegroundWindow(UpdateWin);
       }
       break;
+#endif
     case 108:
     {
       EasyStringList sl;

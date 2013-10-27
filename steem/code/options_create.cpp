@@ -2059,7 +2059,7 @@ void TOptionBox::CreateSSEPage() {
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,2,(long)CStrT("Wake-up state 2"));
 #endif
 #if defined(SS_SHIFTER_PANIC) // 3 or 5
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,5,(long)CStrT("Shifter panic"));
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,WU_SHIFTER_PANIC,(long)CStrT("Shifter panic"));
 #endif
   SendMessage(MMUWakeUpOption,CB_SETCURSEL,WAKE_UP_STATE,0);
   y+=LineHeight;
@@ -2191,6 +2191,13 @@ void TOptionBox::SSEUpdateIfVisible() {
   if(Win!=NULL) 
     SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,SS_STF_ST_MODELS-1),0);
 #endif
+
+#if defined(SS_MMU_WAKE_UP)
+  Win=GetDlgItem(Handle,212); //WU
+  if(Win!=NULL) 
+    SendMessage(MMUWakeUpOption,CB_SETCURSEL,WAKE_UP_STATE,0);
+#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_OPTION_SLOW_DISK)
   Win=GetDlgItem(Handle,7306); //Slow disk
   if(Win!=NULL) 

@@ -176,6 +176,10 @@ Screen
     if(ST_TYPE!=STE)
     {
       DEcycle+=16-2+WU_sync_modifier+1; // notice +1
+
+// v3.5.4 is good for the Bee programs, in fact we should use the WU
+// modifiers everywhere but it's for a later version, this kind of
+// change tends to break everything, no time to debug
     }
     else //STE
 #endif
@@ -195,7 +199,7 @@ Screen
     according to frequency.
 */
       if(CyclesIn>=28 && 
-        (ShiftModeAtCycle( ((FreqAtCycle(28)==60)?28:32) +WU_res_modifier)&2) ||
+        (ShiftModeAtCycle( ((FreqAtCycle(28)==60)?28:32) +2+WU_res_modifier)&2) ||
 #endif
 #if defined(SS_SHIFTER_0BYTE_LINE_SYNC_DE) //Beescroll,Forest,loSTE screens
 /*  0-byte sync switches are model-dependent and even "wake up state"-
@@ -354,13 +358,15 @@ Screen
     }
 #endif
 
-  /////////////////
-  // LEFT BORDER //
-  /////////////////
+  /////////////////////
+  // LEFT BORDER OFF //
+  /////////////////////
 
 /*  Removing the border can be used with two goals: use a larger display area
     (fullscreen demos are more impressive than borders-on demos), and
     scroll the screen by using "sync lines" (eg Enchanted Land).
+    To do it, the program sets the shift mode to 2 so that the GLUE thinks
+    that it's a high resolution line, and starts DE sooner.
 */
 
   if(left_border
@@ -427,7 +433,7 @@ Screen
     3615Gen4 by Cakeman
     Cuddly Demos (not patched)
     Musical Wonder 1991
-    Imagination/Roller Coaster SNYD/TCB
+    Imagination/Roller Coaster 
     Omega 
     Overscan Demos original
     SNYD/TCB (F4)
@@ -577,13 +583,27 @@ Sync is set back to 2 between R2 and R0, this is isn't a line +24
       else // normal left off
 #endif
       {
-        if(shifter_freq_at_start_of_vbl==50) 
-/*  Cases where we see that this shift is necessary:
+
+/*  
+    A 'left off' grants 26 more bytes but only 24 are visible on
+    the screen. 
+    Cases where we see that this shift is necessary:
     - Oh Crikey What a Scorcher Hidden Screen ULM: obvious shift
     - Overdrive/Dragon
     - Overscan Demos #6 (strangely)
-    Not in 60hz frames?
+
+    Cases with no shift:
+    Death of the Left Border
+027 - 016:R0000 376:S0000 388:S0002 512:R0002 512:T10011 512:#0230
+    It seems to be because shift to R0 happens at cycle 16. Protected by
+    'Hacks' for a while.
+    Not in 60hz frames? Not sure of this condition
 */
+#if defined(SS_SHIFTER_DOLB_SHIFT2)
+        if(r0cycle<16 || !SSE_HACKS_ON)
+#else
+        if(shifter_freq_at_start_of_vbl==50) 
+#endif
           shifter_pixel+=4;
 
         overscan_add_extra+=2;  // 8 + 2 + 16 = 26
@@ -706,8 +726,11 @@ STF2:
   // BLACK LINE //
   ////////////////
 
-/*  A sync switch at cycle 28 causes the shifter to fetch the line but not
-    display it, showing black pixels instead. Overscan #5,#6, Forest (top line)
+/*  A sync switch at cycle 28 makes the GLUE raise DE, so that the MMU fetches 
+    the line, and not clear HBLANK, so that the pixels aren't shown, showing 
+    black pixels instead. 
+    Overscan #5,#6, Forest (top line)
+    The precise way isn't totally understood yet.
     This, contrary to 0 byte lines, was already in Steem 3.2.
     028:S0000 036:S0002
     loSTE screens: 028:S0002 112:S0000
@@ -1114,6 +1137,9 @@ Mindbomb/No Shit
     When combined with a left off, this makes +26-106 = -80, or a line 80 
     (160-80).
     With two such "sync" lines, you can vertically scroll the screen.
+    There were bugs in previous versions because we thought the monitor
+    couldn't run too long in HIRES. Alien's text was correct about it but
+    not Flix's.
     Just Buggin: 152:R0002 172:R0000
     ST-CNX: 160:R0002 172:R0000
     loSTE screens: 120[!]:R0002  392:R0000 
@@ -1280,13 +1306,14 @@ detect unstable: switch MED/LOW - Beeshift
     if(WAKE_UP_STATE==WU_SHIFTER_PANIC)
     {
       shift_sdp+=shifter_draw_pointer_at_start_of_line;
-      for(int i=0;i<=224;i+=16)
+      for(int i=0+8;i<=224-8;i+=16)
       {
         Scanline[i/4]=LPEEK(i+shift_sdp); // save 
         Scanline[i/4+1]=LPEEK(i+shift_sdp+4);
         LPEEK(i+shift_sdp)=0;  // interleaved "border" pixels
         LPEEK(i+shift_sdp+4)=0;
       }
+      
       Scanline[230/4+1]=shift_sdp;
     }
 #endif
@@ -1299,11 +1326,13 @@ detect unstable: switch MED/LOW - Beeshift
       left_border-=(Preload%4)*4;
       right_border+=(Preload%4)*4;
     }
+#if defined(SS_SHIFTER_DOLB_SHIFT1) //undef in v3.5.4, see 'left off'
     else  //  hack for DOLB, Omega, centering the pic
     {
       if(SSE_HACKS_ON)
         HblPixelShift=4; 
     }
+#endif
     //TRACE_LOG("Y%d Preload %d shift SDP %d pixels %d lb %d rb %d\n",scan_y,Preload,shift_sdp,HblPixelShift,left_border,right_border);
 
     CurrentScanline.Tricks|=TRICK_UNSTABLE;
@@ -1356,6 +1385,7 @@ detect unstable: switch MED/LOW - Beeshift
 */
       && FreqAtCycle(shifter_freq_change_time[i]-LINECYCLE0)!=60
 #endif
+//      && FreqAtCycle(52)!=60 //stf... and checked later (?)
       )
       CurrentScanline.Tricks|=TRICK_LINE_MINUS_2;
   }
@@ -1930,7 +1960,7 @@ void TShifter::EndHBL() {
       ==(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_44)
       &&!(CurrentScanline.Tricks&TRICK_STABILISER)) 
       Preload=3; // becomes 2 at first left off
-    else if(CurrentScanline.Cycles==508 && FetchingLine()
+    else if(CurrentScanline.Cycles==508 && Preload && FetchingLine()
       && FreqAtCycle(0)==60 && FreqAtCycle(464)==60)
       Preload=0; // a full 60hz scanline should reset the shifter
 
@@ -1940,7 +1970,7 @@ void TShifter::EndHBL() {
     {
       // restore ST memory
       int shift_sdp=Scanline[230/4+1]; //as stored
-      for(int i=0;i<=224;i+=16)
+      for(int i=0+8;i<=224-8;i+=16)
       {
         LPEEK(i+shift_sdp)=Scanline[i/4];
         LPEEK(i+shift_sdp+4)=Scanline[i/4+1];
@@ -2551,7 +2581,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
       if(scan_y>=draw_first_scanline_for_border  
 #if defined(SS_VID_BORDERS_BIGTOP) // avoid horrible crash
           && (DISPLAY_SIZE<BIGGEST_DISPLAY || scan_y>=draw_first_scanline_for_border+ 
-               (VERY_LARGE_BORDER_TOP-ORIGINAL_BORDER_TOP))
+               (BIG_BORDER_TOP-ORIGINAL_BORDER_TOP))
 #endif
         && scan_y<draw_last_scanline_for_border)
       {

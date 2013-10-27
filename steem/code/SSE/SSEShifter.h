@@ -307,7 +307,7 @@ inline int TShifter::FetchingLine() {
 //          && scan_y>=draw_first_possible_line+(DISPLAY_SIZE>=3?6:0) 
       && (DISPLAY_SIZE<BIGGEST_DISPLAY 
       || scan_y>=draw_first_scanline_for_border+
-        (VERY_LARGE_BORDER_TOP-ORIGINAL_BORDER_TOP))
+        (BIG_BORDER_TOP-ORIGINAL_BORDER_TOP))
 #endif
 
 );
@@ -779,6 +779,7 @@ inline int TShifter::CycleOfLastChangeToShiftMode(int value) {
 #define min(a,b) (a>b ? b:a)
 #define max(a,b) (a>b ? a:b)
 #endif
+
 inline MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
   if (bad_drawing){
     // Fake SDP
