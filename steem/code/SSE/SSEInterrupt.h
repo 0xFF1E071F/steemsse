@@ -78,18 +78,27 @@ inline void VBLInterrupt() {
 
   M68K_UNSTOP;
 
+#if !defined(SS_INT_JITTER_VBL_STE)
 #if defined(SS_INT_JITTER_VBL)
   if(ST_TYPE==STE) 
 #endif
     INTERRUPT_START_TIME_WOBBLE;
-  time_of_last_vbl_interrupt=ABSOLUTE_CPU_TIME;
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBL_IACK)
+  time_of_last_vbl_interrupt=ACT;
+#endif
   INSTRUCTION_TIME_ROUND(SS_INT_VBL_TIMING);
 
   TRACE_LOG("F%d Cycles %d VBI %X #%d\n",FRAME,ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl,LPEEK(0x0070),interrupt_depth);
   m68k_interrupt(LPEEK(0x0070));
-
 #if defined(SS_INT_JITTER_VBL)
+/*  In the current build, VBL "jitter" instead of "wobble" is necessary
+    for demo Japtro, but this could be due to other timing problems. TODO
+*/
+
+#if !defined(SS_INT_JITTER_VBL_STE)
   if(ST_TYPE!=STE) 
+#endif
     INSTRUCTION_TIME(VblJitter[VblJitterIndex]);
 #endif
   sr=(sr& (WORD)(~SR_IPL))|(WORD)(SR_IPL_4);
@@ -102,10 +111,10 @@ inline void VBLInterrupt() {
 
 #define VBL_INTERRUPT VBLInterrupt();
 
-#else//inline
+#else//!inline
 
 #if defined(SS_INT_JITTER_VBL)
-// we use the jitter only for STF, on the STE it breaks Krig
+
 #define VBL_INTERRUPT {\
   vbl_pending=false;    \
   log_to_section(LOGSECTION_INTERRUPTS,EasyStr("INTERRUPT: VBL at PC=")+HEXSl(pc,6)+" time is "+ABSOLUTE_CPU_TIME+" ("+(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl)+" cycles into screen)");\
@@ -120,7 +129,7 @@ inline void VBLInterrupt() {
 
 
 #else // wobble as in Steem 3.2
-/*
+
 #define VBL_INTERRUPT {\
   vbl_pending=false;    \
   log_to_section(LOGSECTION_INTERRUPTS,EasyStr("INTERRUPT: VBL at PC=")+HEXSl(pc,6)+" time is "+ABSOLUTE_CPU_TIME+" ("+(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl)+" cycles into screen)");\
@@ -131,7 +140,7 @@ inline void VBLInterrupt() {
   sr=(sr& (WORD)(~SR_IPL))|(WORD)(SR_IPL_4);\
   debug_check_break_on_irq(BREAK_IRQ_VBL_IDX);\
 }
-*/
+
 #endif
 #endif//inline
 

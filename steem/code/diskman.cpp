@@ -2881,6 +2881,9 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
     if(OSD_IMAGE_NAME)
       OsdControl.StartScroller(Name); // display image disk name
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING_DISK_NAME)
+    GUIRefreshStatusBar();
+#endif
 
     InsertHistoryAdd(Drive,Name,Path,DiskInZip);
 
@@ -3091,7 +3094,10 @@ void TDiskManager::EjectDisk(int Drive)
   if (Handle){
     SendMessage(GetDlgItem(Handle,100+Drive),LVM_DELETEITEM,0,0);
     EnableWindow(GetDlgItem(GetDlgItem(Handle,98+Drive),100),AreNewDisksInHistory(Drive));
-  }     
+  }   
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING_DISK_NAME)
+  GUIRefreshStatusBar();
+#endif
 #elif defined(UNIX)
   UpdateDiskNames(Drive);
 #endif

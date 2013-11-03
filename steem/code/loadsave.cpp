@@ -296,7 +296,7 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
 #endif
       if (Failed==0){
         Failed=int((EasyUncompressToMem(Mem+MEM_EXTRA_BYTES,mem_len,f)!=0) ? 2:0);
-        TRACE("Load memory snapshot %s\n",FilNam);
+        TRACE("Memory snapshot %s loaded\n",FilNam);
       }
       fclose(f);
     }else{
@@ -338,6 +338,9 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_SCROLLER_DISK_IMAGE)
     if(OSD_IMAGE_NAME && !FloppyDrive[0].Empty())
       OsdControl.StartScroller(FloppyDrive[0].DiskName); // display image disk name
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING_DISK_NAME)
+    GUIRefreshStatusBar();
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_OPTIONS_REFRESH) &&defined(WIN32)
     OptionBox.SSEUpdateIfVisible();

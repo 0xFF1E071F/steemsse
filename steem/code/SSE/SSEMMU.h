@@ -37,8 +37,6 @@ WAKE_UP_STATE is WU or 0.
 
 When we use the DL concept (SS_MMU_WAKE_UP_DL defined), WAKE_UP_STATE 
 is more confusing, its value is no wake-up state but just an option index.
-For option 0, we may use DL=5 to simplify code, as there's no Freq or Res
-adjustment.
 
 +------------------------------------------------------------+---------------+
 | Steem  option    |              Wake-up concepts           |    Cycle      |
@@ -68,30 +66,21 @@ yet.
 
 #ifdef SS_MMU
 
-
 struct TMMU {
-  inline BYTE DL(); // 5 = neutral
-  BYTE WS();
+#if defined(SS_MMU_WAKE_UP_DL)
+  BYTE WU[6]; // 0, 1, 2
+  BYTE WS[6]; // 0 + 4 + panic
+  char ResMod[6],FreqMod[6];
+#else
   inline bool OnMmuCycles(int CyclesIn);
   inline bool WakeUpState1(); // for STF
   inline bool WakeUpState2(); // for STF 
+#endif
 };
 
 extern TMMU MMU;
 
-
-
-inline BYTE TMMU::DL() {
-#if !defined(SS_STF)
-  return 5;
-#else
-  if(WAKE_UP_STATE==WU_SHIFTER_PANIC)
-    return 4;
-  return (ST_TYPE!=STE && WAKE_UP_STATE) ? WAKE_UP_STATE+2 : 5;
-#endif
-}
-
-
+#if !defined(SS_MMU_WAKE_UP_DL)
 
 /*  This function tells if the program is attempting a read or write on the
     bus while the MMU has the bus. In that case, access should be delayed by
@@ -140,6 +129,7 @@ inline bool TMMU::WakeUpState2() {
 #endif
   );
 }
+#endif
 
 #endif
 #endif//#ifndef SSEMMU_H

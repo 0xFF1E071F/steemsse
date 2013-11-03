@@ -65,7 +65,7 @@ EXT int cpu_timer_at_start_of_hbl;
           INSTRUCTION_TIME_ROUND(0); \
           INSTRUCTION_TIME((8000000-(ABSOLUTE_CPU_TIME-shifter_cycle_base)) % 10);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_HBL) //&& defined(SS_INT_JITTER)
+#if defined(STEVEN_SEAGAL) && defined(SS_INT_HBL) && defined(SS_INT_JITTER)
 #else
 #define HBL_INTERRUPT  \
   {                  \

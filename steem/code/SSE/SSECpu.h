@@ -185,7 +185,7 @@ inline void TM68000::FetchWord(WORD &dest_word) {
 */
 #if defined(SS_CPU_PREFETCH_TRACE)
       TRACE_LOG("Prefetched IRC:%X current:%X\n",IRC,*lpfetch);
-      TRACE_OSD("PREFETCH");
+//      TRACE_OSD("PREFETCH"); // ST-CNX
 #endif
 
 #if defined(SS_BETA) && defined(SS_CPU_NO_PREFETCH)
@@ -207,7 +207,7 @@ inline void TM68000::FetchWord(WORD &dest_word) {
   else
 #endif
     IR=*lpfetch; // next instr
-  ASSERT( !(pc>=MEM_IO_BASE && !(pc>=0xff8240 && pc<0xff8260)) ); // Warp, Union
+  //ASSERT( !(pc>=MEM_IO_BASE && !(pc>=0xff8240 && pc<0xff8260)) ); // Warp, Union
 #if defined(SS_CPU_FETCH_IO)
   if(pc>=MEM_IO_BASE) // normally it took IRC
     return; //if we test that, we may as well avoid useless inc "PC"
@@ -559,8 +559,10 @@ already fetched. One word will be in IRD and another one in IRC.
 */
 #if defined(SS_CPU_PREFETCH_ASSERT)
 
+#if defined(SS_CPU_MOVE_B) && defined(SS_CPU_MOVE_W) && defined(SS_CPU_MOVE_L)\
+  && defined(SS_CPU_DIV)
   ASSERT(prefetched_2); // strong
-
+#endif
 #endif
 #if defined(SS_CPU_PREFETCH_CLASS)
   PrefetchClass=0; // default, most instructions

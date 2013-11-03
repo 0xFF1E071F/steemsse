@@ -1585,8 +1585,10 @@ WORD ASMCALL io_read_w(MEM_ADDRESS addr)
   WORD return_value;
   int CyclesIn=LINECYCLES;
   if(MMU.OnMmuCycles(CyclesIn))
+  {
+    TRACE("ior %X cycle %d\n",addr,CyclesIn);
     cpu_cycles-=2; // - = + !!!!
-
+  }
   if (addr>=0xff8240 && addr<0xff8260){  //palette
     DEBUG_CHECK_READ_IO_W(addr);
     int n=addr-0xff8240;n/=2;

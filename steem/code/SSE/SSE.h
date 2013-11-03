@@ -349,8 +349,8 @@ and all his silly mods are gone!
 #define SS_CPU_PREFETCH_CHK
 #define SS_CPU_PREFETCH_JSR
 #define SS_CPU_PREFETCH_MOVE_FROM_SR
-#define SS_CPU_PREFETCH_MULS
-#define SS_CPU_PREFETCH_MULU
+//#define SS_CPU_PREFETCH_MULS //not used (TODO?)
+//#define SS_CPU_PREFETCH_MULU
 #define SS_CPU_PREFETCH_NOP
 #define SS_CPU_PREFETCH_PEA
 
@@ -681,25 +681,26 @@ and all his silly mods are gone!
 #if defined(SS_INTERRUPT)
 
 #define SS_INT_HBL 
-//#define SS_INT_JITTER // there's also the wobble of Steem, which are correct?
+#define SS_INT_JITTER // from Hatari 
 #define SS_INT_VBL 
 
 
 #if defined(SS_INT_HBL)
-#define SS_INT_HBL_IACK_FIX //BBC52
+#define SS_INT_HBL_IACK_FIX // from Hatari - BBC52
 #endif
 
 #if defined(SS_INT_JITTER) && defined(SS_INT_HBL)
-#define SS_INT_JITTER_HBL // BBC52
+//#define SS_INT_JITTER_HBL // BBC52
 #endif
 
 #if defined(SS_INT_VBL)
 #define SS_INT_VBL_IACK
-//#define SS_INT_VBL_INLINE //not for the moment?
+#define SS_INT_VBL_INLINE 
 #endif
 
 #if defined(SS_INT_JITTER) && defined(SS_INT_VBL) && defined(SS_STF)
-#define SS_INT_JITTER_VBL // only STF
+#define SS_INT_JITTER_VBL // STF
+#define SS_INT_JITTER_VBL_STE // STF + STE 
 #endif
 
 #if defined(SS_STF) && defined(SS_INT_VBL)
@@ -763,16 +764,16 @@ and all his silly mods are gone!
 #if defined(SS_CPU)
 //#define SS_MMU_WAIT_STATES // extreme, replaces rounding to 4, TODO
 #endif
+#define SS_MMU_WAKE_UP_DL // Dio's DE-LOAD delay
+#if !defined(SS_MMU_WAKE_UP_DL)
 #define SS_MMU_WAKE_UP_0_BYTE_LINE
-#define SS_MMU_WAKE_UP_DELAY_ACCESS // CPU can't access bus when MMU has it
 //#define SS_MMU_WAKE_UP_IO_BYTES_R  // breaks too much (read SDP) TODO
 //#define SS_MMU_WAKE_UP_IO_BYTES_W // no too radical
 //#define SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY // adapt cycles for shifter write
-#if SSE_VERSION>353
-#define SS_MMU_WAKE_UP_DL // Dio's DE-LOAD delay
-#endif
 #define SS_MMU_WAKE_UP_IOR_HACK 
 #define SS_MMU_WAKE_UP_IOW_HACK 
+#endif
+
 #define SS_MMU_WAKE_UP_PALETTE_STE // render +1 cycle (pixel) in state 2
 //#define SS_MMU_WAKE_UP_READ_SDP
 #define SS_MMU_WAKE_UP_RESET_ON_SWITCH_ST
@@ -798,6 +799,8 @@ and all his silly mods are gone!
 #endif
 #define SS_OSD_DRIVE_INFO // cool! (v3.5.1)
 #define SS_OSD_DRIVE_INFO2 // no SR when fast
+//#define SS_OSD_DRIVE_INFO_OSD_PAGE
+#define SS_OSD_DRIVE_INFO_SSE_PAGE
 #define SS_OSD_DRIVE_LED
 #define SS_OSD_DRIVE_LED2 // simpler approach
 #define SS_OSD_DRIVE_LED3 // remove useless variable
@@ -838,24 +841,15 @@ and all his silly mods are gone!
 #if defined(SS_SHIFTER_TRICKS)
 
 #define SS_SHIFTER_0BYTE_LINE
-#if defined(SS_SHIFTER_0BYTE_LINE)
-
-#if SSE_VERSION>353
-#define SS_SHIFTER_0BYTE_LINE_SYNC_DE //Beescroll,Forest,loSTE screens
-#define SS_SHIFTER_0BYTE_LINE_RES_HBLANK //Nostalgic-O/Lemmings
-#define SS_SHIFTER_0BYTE_LINE_RES_HSYNC1 //Beyond/Pax Plax Parallax
-#define SS_SHIFTER_0BYTE_LINE_RES_HSYNC2 //No Buddies Land
-#else
-#define SS_SHIFTER_0BYTE_LINE_RES_END //No Buddies Land
-#define SS_SHIFTER_0BYTE_LINE_RES_HBL //Beyond/Pax Plax Parallax
-#define SS_SHIFTER_0BYTE_LINE_RES_START //Nostalgic-O/Lemmings
-#define SS_SHIFTER_0BYTE_LINE_SYNC //Forest
-#define SS_SHIFTER_0BYTE_LINE_SYNC2 // loSTE screens
-#endif
-
+#if defined(SS_SHIFTER_0BYTE_LINE) // former switch approach
+//#define SS_SHIFTER_0BYTE_LINE_RES_END //No Buddies Land
+//#define SS_SHIFTER_0BYTE_LINE_RES_HBL //Beyond/Pax Plax Parallax
+//#define SS_SHIFTER_0BYTE_LINE_RES_START //Nostalgic-O/Lemmings
+//#define SS_SHIFTER_0BYTE_LINE_SYNC //Forest
+//#define SS_SHIFTER_0BYTE_LINE_SYNC2 // loSTE screens
 #endif//0-byte line
 #define SS_SHIFTER_4BIT_SCROLL //Let's do the Twist again
-#define SS_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK
+//#define SS_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK
 #define SS_SHIFTER_60HZ_OVERSCAN //Leavin' Terramis
 #define SS_SHIFTER_END_OF_LINE_CORRECTION // correct +2, -2 lines 
 #define SS_SHIFTER_FIX_LINE508_CONFUSION // hack at recording shifter event
@@ -872,6 +866,7 @@ and all his silly mods are gone!
 #define SS_SHIFTER_PALETTE_BYTE_CHANGE //Golden Soundtracker
 #define SS_SHIFTER_PALETTE_TIMING //Overscan Demos #6
 #define SS_SHIFTER_RIGHT_OFF_BY_SHIFT_MODE //beeshift0
+#define SS_SHIFTER_STATE_MACHINE //v3.5.4, simpler approach and WS-aware
 #define SS_SHIFTER_STE_MED_HSCROLL // Cool STE
 #define SS_SHIFTER_STE_HI_HSCROLL
 #define SS_SHIFTER_STE_HSCROLL_LEFT_OFF //MOLZ/Spiral
@@ -1148,8 +1143,11 @@ and all his silly mods are gone!
 #define SS_VAR_RESET_BUTTON // invert
 #define SS_VAR_RESIZE // reduce memory set (int->BYTE etc.)
 #define SS_VAR_REWRITE // to conform to what compilers expect (warnings...)
-#define SS_VAR_SCROLLER_DISK_IMAGE
-#define SS_VAR_STATUS_STRING // hacking the "path" function
+//#define SS_VAR_SCROLLER_DISK_IMAGE // move to OSD
+#define SS_VAR_STATUS_STRING
+#define SS_VAR_STATUS_STRING_6301
+#define SS_VAR_STATUS_STRING_PASTI
+#define SS_VAR_STATUS_STRING_DISK_NAME
 #define SS_VAR_STEALTH // don't tell we're an emulator (option)
 #ifdef WIN32
 #define SS_VAR_UNRAR // using unrar.dll, up to date
@@ -1249,6 +1247,10 @@ and all his silly mods are gone!
 #if !defined(SS_DMA) || !defined(SS_FDC)
 #undef SS_OSD_DRIVE_LED2
 #undef SS_OSD_DRIVE_LED3
+#endif
+
+#if !defined(SS_MFP)
+#undef SS_FDC_PRECISE_HBL
 #endif
 
 #if defined(SS_OSD_LOGO3)

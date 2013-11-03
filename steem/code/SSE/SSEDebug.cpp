@@ -1,5 +1,7 @@
 #include "SSEDebug.h"
 
+#include "SSEMMU.h"
+
 #if defined(SS_DEBUG) 
 
 int debug0,debug1,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9;
@@ -154,52 +156,53 @@ void TDebug::TraceGeneralInfos(int when) {
   {
     TRACE(">>> Start Emulation <<<\n");
 #if defined(SS_STF)
-    TRACE("ST model: %d; ",ST_TYPE);
+    TRACE("%s; ",st_model_name[ST_TYPE]);
 #endif
-    TRACE("TOS %X; ",tos_version);
-    TRACE("RAM %dK; ",mem_len/1024);
-    TRACE("Display %s", MONO ? "Monochrome" : "Colour");
+    TRACE("T%X; ",tos_version);
+    TRACE("%dK; ",mem_len/1024);
+    if(MONO)
+      TRACE("Monochrome");  
 #if defined(SS_VID_BORDERS)
-    if(!MONO)
-      TRACE(", Size %d", DISPLAY_SIZE);
+    else if(DISPLAY_SIZE)
+      TRACE("Size %d", DISPLAY_SIZE);
 #endif
     TRACE("\n");
     TRACE("%d drives",num_connected_floppies);
     if(FloppyDrive[0].DiskInDrive())
-    {
       TRACE("; Disk A: %s",FloppyDrive[0].DiskName.c_str()); 
-#if defined(SS_IPF)
-    if(Caps.IsIpf(0)) 
-      TRACE(" (IPF)");
-#endif
-    }
     if(num_connected_floppies==2 && FloppyDrive[1].DiskInDrive())
-    {
       TRACE("; Disk B: %s",FloppyDrive[1].DiskName.c_str()); 
-#if defined(SS_IPF)
-    if(Caps.IsIpf(1)) 
-      TRACE(" (IPF)");
-#endif
-    }
     if(!HardDiskMan.DisableHardDrives && stemdos_current_drive) // check
       TRACE("; HD ON");
 #if defined(SS_FDC)
-    TRACE("; ADAT %d",ADAT);
+    if(ADAT)
+      TRACE("; ADAT");
 #endif
 #if USE_PASTI
-    TRACE("; Pasti %d",pasti_active);
+    if(pasti_active)
+    {
+      TRACE("; Pasti %d",pasti_active);
 #if defined(SS_PASTI_ONLY_STX)
-    TRACE(" STX only %d",PASTI_JUST_STX);
+      if(PASTI_JUST_STX)
+        TRACE(" STX only");
 #endif
+    }
 #endif
 #if defined(SS_HACKS)
-    TRACE("\nHacks %d",SSE_HACKS_ON);
+    if(SSE_HACKS_ON)
+      TRACE("\nHacks");
 #endif
 #if defined(SS_IKBD_6301)
-    TRACE("; HD6301 %d",HD6301EMU_ON);
+    if(HD6301EMU_ON)
+      TRACE("; HD6301");
 #endif
 
-    TRACE("; WU %d",WAKE_UP_STATE);
+#if defined(SS_MMU_WAKE_UP_DL)
+    if(WAKE_UP_STATE)
+      TRACE("; WS%d",MMU.WS[WAKE_UP_STATE]);
+#elif defined(SS_MMU_WAKE_UP)
+    TRACE("; WU%d",WAKE_UP_STATE);
+#endif
 
     TRACE("\n");
   }

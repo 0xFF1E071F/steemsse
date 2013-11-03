@@ -566,7 +566,7 @@ void osd_draw()
     	DWORD col=col_yellow[(hbl_count/512) & 1];
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_INFO)
-        if(osd_show_disk_light)
+        if(osd_show_disk_light && !OSD_DRIVE_INFO)
 #endif
         {
           if (FDCCantWriteDisplayTimer>timer){

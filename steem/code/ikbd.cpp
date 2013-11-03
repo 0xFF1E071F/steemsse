@@ -2008,7 +2008,7 @@ void ikbd_set_clock_to_correct_time()
 
 void ikbd_reset(bool Cold)
 {
-  ASSERT( Cold );// !!! always
+  ASSERT( Cold || !HD6301EMU_ON );// !!! always //check this
   agenda_delete(agenda_keyboard_reset);
 
 #if defined(STEVEN_SEAGAL) && defined(SS_ACIA_IRQ_DELAY)

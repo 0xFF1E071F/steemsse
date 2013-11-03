@@ -973,7 +973,7 @@ void TOptionBox::CreateOSDPage()
 
   SendMessage(Win,BM_SETCHECK,osd_show_disk_light,0);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_INFO_OSD_PAGE)
   long Wid2=Wid;
   Wid=GetCheckBoxSize(Font,T("Disk drive track info")).Width;
   Win=CreateWindow("Button",T("Disk drive track info"),WS_CHILD  | WS_TABSTOP | BS_CHECKBOX,
@@ -1948,12 +1948,41 @@ void TOptionBox::CreateSSEPage() {
     page_l,y,Wid,21,Handle,(HMENU)209,HInstance,NULL);
   y+=LineHeight+10;
 
+#if defined(SS_VAR_STATUS_STRING)
+  Wid=GetCheckBoxSize(Font,T("Status bar")).Width;
+  Win=CreateWindow("Button",T("Status bar"),WS_CHILD | WS_TABSTOP |
+    BS_CHECKBOX,page_l,y,Wid,25,Handle,(HMENU)7307,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,SSE_STATUS_BAR,0);
+  ToolAddWindow(ToolTip,Win,T("Displays some info in the tool bar."));
+#endif
+
+#if defined(SS_HACKS)  
+  Offset=Wid+HorizontalSeparation;
+  Wid=GetCheckBoxSize(Font,T("Hacks")).Width;
+  Win=CreateWindow("Button",T("Hacks"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
+                          page_l+Offset,y,Wid,23,Handle,(HMENU)1027,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,SSE_HACKS_ON,0);
+  ToolAddWindow(ToolTip,Win,T("For an edgier emulation, recommended!"));
+  //y+=LineHeight;
+#endif
+
+#if defined(SS_VAR_STEALTH) 
+  Offset+=Wid+HorizontalSeparation;
+  Wid=GetCheckBoxSize(Font,T("Emu detect")).Width;
+  Win=CreateWindow("Button",T("Emu detect"),WS_CHILD | WS_TABSTOP |
+    BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)1031,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,!STEALTH_MODE,0);
+  ToolAddWindow(ToolTip,Win,T("Enable easy detection of Steem by ST programs."));
+  y+=LineHeight;
+#endif  
+
 #if defined(SS_VID_BORDERS) 
   Wid=get_text_width(T("Display Size"));
   CreateWindow("Static",T("Display Size"),WS_CHILD,
 	  page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
-  BorderSizeOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
-	  page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)1026,HInstance,NULL);
+  Win=BorderSizeOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
+	  //page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)1026,HInstance,NULL);
+    page_l+5+Wid,y,80,200,Handle,(HMENU)1026,HInstance,NULL);
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("384 x 270"));
   SendMessage(BorderSizeOption,CB_ADDSTRING,1,(long)CStrT("400 x 278"));
 #if defined(SS_VID_BORDERS_BIGTOP) && !defined(SS_VID_BORDERS_416)
@@ -1968,88 +1997,53 @@ void TOptionBox::CreateSSEPage() {
   SendMessage(BorderSizeOption,CB_ADDSTRING,3,(long)CStrT("416 x 280"));
 #endif
 #endif
-//  SendMessage(BorderSizeOption,CB_SETCURSEL,min((int)DISPLAY_SIZE,BIGGEST_DISPLAY),0);
   SendMessage(BorderSizeOption,CB_SETCURSEL,DISPLAY_SIZE,0);
-  y+=LineHeight;
+  ToolAddWindow(ToolTip,Win,
+    T("Some border effects will look better in one of the sizes, it really depends on the program, generally smallest is fine."));
+  //y+=LineHeight;
 #endif
 
 #if defined(SS_VID_SCANLINES_INTERPOLATED_SSE)
+  Offset=5+Wid+80+HorizontalSeparation;
   Wid=GetCheckBoxSize(Font,T("Interpolated scanlines")).Width;
   Win=CreateWindow("Button",T("Interpolated scanlines"),
                           WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
-                          page_l,y,Wid,25,Handle,(HMENU)1032,HInstance,NULL);
+                          page_l +Offset,y,Wid,25,Handle,(HMENU)1032,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,SSE_INTERPOLATE,0);
-  ToolAddWindow(ToolTip,Win,T("This will try to emulate a less sharp monitor (Goldstar?) for more realism"));
-  Offset=Wid+HorizontalSeparation;
-#else
-  Offset=0;
-#endif
-
-#if defined(SS_VAR_MOUSE_CAPTURE)  
-  Wid=GetCheckBoxSize(Font,T("Capture mouse")).Width;
-  Win=CreateWindow("Button",T("Capture mouse"),
-                          WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
-                          page_l+Offset,y,Wid,25,Handle,(HMENU)1028,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,CAPTURE_MOUSE,0);
-  ToolAddWindow(ToolTip,Win,T("If unchecked, Steem will leave mouse control to Windows until you click in the window"));
+  ToolAddWindow(ToolTip,Win,T("This will try to emulate a less sharp monitor (Goldstar?) for more realism."));
   y+=LineHeight;
 #endif
-
-#if defined(SS_HACKS)  
-  Wid=GetCheckBoxSize(Font,T("Hacks")).Width;
-  Win=CreateWindow("Button",T("Hacks"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
-                          page_l,y,Wid,23,Handle,(HMENU)1027,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,SSE_HACKS_ON,0);
-  ToolAddWindow(ToolTip,Win,T("For an edgier emulation, recommended!"));
-  y+=LineHeight;
-#endif
-
-#if defined(SS_VAR_STEALTH) 
-  y-=LineHeight; // maybe it will be optimised away!
-#if !defined(SS_VID_SCANLINES_INTERPOLATED_SSE)
-  Offset=Wid+HorizontalSeparation;
-#endif
-  Wid=GetCheckBoxSize(Font,T("Emu detect")).Width;
-  Win=CreateWindow("Button",T("Emu detect"),WS_CHILD | WS_TABSTOP |
-    BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)1031,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,!STEALTH_MODE,0);
-  ToolAddWindow(ToolTip,Win,T("Enable easy detection of Steem by ST programs"));
-  y+=LineHeight;
-#endif  
 
 #if defined(SS_STF) 
   Wid=get_text_width(T("ST Model"));
   CreateWindow("Static",T("ST Model"),WS_CHILD,
     page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
-  STTypeOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
-	  page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)211,HInstance,NULL);
-  SendMessage(STTypeOption,CB_ADDSTRING,0,(long)CStrT("STE"));
-  SendMessage(STTypeOption,CB_ADDSTRING,1,(long)CStrT("STF"));
+  Win=STTypeOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
+	  //page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)211,HInstance,NULL);
+    page_l+5+Wid,y,80,200,Handle,(HMENU)211,HInstance,NULL);
+  SendMessage(STTypeOption,CB_ADDSTRING,0,(long)CStrT(st_model_name[0]));
+  SendMessage(STTypeOption,CB_ADDSTRING,1,(long)CStrT(st_model_name[1]));
 #if defined(SS_STF_MEGASTF)
-  SendMessage(STTypeOption,CB_ADDSTRING,2,(long)CStrT("Mega ST4"));
+  SendMessage(STTypeOption,CB_ADDSTRING,2,(long)CStrT(st_model_name[2]));
 #endif
   SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,SS_STF_ST_MODELS-1),0);
-  y+=LineHeight;
+  ToolAddWindow(ToolTip,Win,
+    T("Some programs will run only with STF or STE. Changing ST model will preselect a TOS for next cold reset."));
+  //y+=LineHeight;
 #endif
 
 #if defined(SS_MMU_WAKE_UP)
+  Offset=5+Wid+80+HorizontalSeparation;
   Wid=get_text_width(T("Wake-up state"));
   CreateWindow("Static",T("Wake-up state"),WS_CHILD,
-    page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
-  MMUWakeUpOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
-	  page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)212,HInstance,NULL);
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("Ignore wake-up state"));
+    //page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
+    page_l+Offset,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
+  Win=MMUWakeUpOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
+	  //page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)212,HInstance,NULL);
+    page_l+5+Wid+Offset,y,85,200,Handle,(HMENU)212,HInstance,NULL);
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("Ignore"));
 
 #if defined(SS_MMU_WAKE_UP_DL)
-/*
-  DL Latency       WU             WS       MODE    SYNC
-     (Dio)        (ijor)        (LJBK)
------------------------------------------------------------
-        3           2 (warm)       2        +2     +2  
-        4           2              4               +2
-        5           1 (cold)       3  
-        6           1              1        -2
-*/
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("DL3 WU2 WS2"));
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,2,(long)CStrT("DL4 WU2 WS4"));
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,3,(long)CStrT("DL5 WU1 WS3"));
@@ -2062,6 +2056,8 @@ void TOptionBox::CreateSSEPage() {
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,WU_SHIFTER_PANIC,(long)CStrT("Shifter panic"));
 #endif
   SendMessage(MMUWakeUpOption,CB_SETCURSEL,WAKE_UP_STATE,0);
+  ToolAddWindow(ToolTip,Win,
+    T("Very technical - Some demos will display correctly only in one of those states."));
   y+=LineHeight;
 #endif
 
@@ -2094,9 +2090,23 @@ void TOptionBox::CreateSSEPage() {
   BOOL keyboard_click=( PEEK(0x484)&1 ); // get current setting
   SendMessage(Win,BM_SETCHECK,keyboard_click,0);
   ToolAddWindow(ToolTip,Win,
-    T("This gives you direct access to bit1 of address $484, which enables or disables the annoying keyboard click"));
+    T("This gives you direct access to bit1 of address $484, which enables or disables the annoying keyboard click (in TOS/GEM programs only)."));
   y+=LineHeight;
 #endif  
+
+#if defined(SS_VAR_MOUSE_CAPTURE)  
+#if defined(SS_VAR_KEYBOARD_CLICK) 
+  y-=LineHeight;
+#endif
+  Offset+=Wid+HorizontalSeparation;
+  Wid=GetCheckBoxSize(Font,T("Capture mouse")).Width;
+  Win=CreateWindow("Button",T("Capture mouse"),
+                          WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
+                          page_l+Offset,y,Wid,25,Handle,(HMENU)1028,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,CAPTURE_MOUSE,0);
+  ToolAddWindow(ToolTip,Win,T("If unchecked, Steem will leave mouse control to Windows until you click in the window."));
+  y+=LineHeight;
+#endif
 
 #if defined(SS_SOUND_FILTER_STF)
   Wid=GetCheckBoxSize(Font,T("PSG Filter")).Width;
@@ -2110,6 +2120,7 @@ void TOptionBox::CreateSSEPage() {
 #endif
 
 #if defined(SS_SOUND_MICROWIRE)
+  Offset=Wid+HorizontalSeparation;
   y-=LineHeight; // maybe it will be optimised away!
   Wid=GetCheckBoxSize(Font,T("STE Microwire")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
@@ -2121,7 +2132,7 @@ void TOptionBox::CreateSSEPage() {
     page_l+Offset,y,Wid,25,Handle,(HMENU)7302,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,MICROWIRE_ON,0);
   ToolAddWindow(ToolTip,Win,
-    T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature"));
+    T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature."));
   y+=LineHeight;
 #endif
 
@@ -2132,10 +2143,22 @@ void TOptionBox::CreateSSEPage() {
     page_l,y,Wid,25,Handle,(HMENU)7306,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,!floppy_instant_sector_access,0);
   ToolAddWindow(ToolTip,Win,
-    T("Slow but accurate disk drive emulation"));
+    T("Slow but accurate disk drive emulation."));
+  y+=LineHeight;
+#endif
+
+#if defined(SS_OSD_DRIVE_INFO_SSE_PAGE)
+  y-=LineHeight;
+  Wid=GetCheckBoxSize(Font,T("Drive track info")).Width;
+  Win=CreateWindow("Button",T("Drive track info"),WS_CHILD  | WS_TABSTOP | BS_CHECKBOX,
+                          page_l + Offset,y,Wid,23,Handle,(HMENU)7308,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,OSD_DRIVE_INFO,0);
+  ToolAddWindow(ToolTip,Win,
+    T("Displays which drive is running, and on which side and track the drive currently is, plus the sector in slow mode."));
 #endif
 
 #if defined(SS_PASTI_ONLY_STX)
+  Offset+=Wid+HorizontalSeparation;
   Wid=GetCheckBoxSize(Font,T("Pasti only for STX")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
   if(!hPasti)
@@ -2202,6 +2225,10 @@ void TOptionBox::SSEUpdateIfVisible() {
   Win=GetDlgItem(Handle,7306); //Slow disk
   if(Win!=NULL) 
     SendMessage(Win,BM_SETCHECK,!floppy_instant_sector_access,0);
+#endif
+
+#if defined(SS_VAR_STATUS_STRING)
+  GUIRefreshStatusBar();//overkill
 #endif
 
 }

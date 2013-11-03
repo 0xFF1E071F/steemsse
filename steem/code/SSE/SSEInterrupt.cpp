@@ -7,6 +7,8 @@
     works, not because it's more correct, but to save some memory
     bytes, and also because of Krig STE (TODO).
     SS_INT_JITTER not defined
+    In v3.5.4, for Japtro we use VBL jitter and not HBL, so
+    that Krig is still OK. 
 */
   int HblJitter[] = {8,4,4,0,0}; 
   int HblJitterIndex=0;

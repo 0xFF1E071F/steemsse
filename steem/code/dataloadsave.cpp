@@ -752,6 +752,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SS_VID_SCANLINES_INTERPOLATED_SSE)
     SSE_INTERPOLATE=pCSF->GetInt("Options","InterpolatedScanlines",SSE_INTERPOLATE);
 #endif
+#if defined(SS_VAR_STATUS_STRING)
+    SSE_STATUS_BAR=pCSF->GetInt("Options","StatusBar",SSE_STATUS_BAR);
+#endif
 #endif // SS
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS____)
@@ -1109,6 +1112,9 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 #if defined(SS_VID_SCANLINES_INTERPOLATED_SSE)
   pCSF->SetStr("Options","InterpolatedScanlines",EasyStr(SSE_INTERPOLATE));  
+#endif
+#if defined(SS_VAR_STATUS_STRING)
+  pCSF->SetStr("Options","StatusBar",EasyStr(SSE_STATUS_BAR));
 #endif
 
 #endif//SS
