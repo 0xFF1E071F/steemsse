@@ -5217,7 +5217,6 @@ void                              m68k_mulu(){
   FETCH_TIMING; 
 #endif
   PREFETCH_IRC; // prefetch before computing (but after <EA>)
-
   INSTRUCTION_TIME(34);  
 
   ///// Hey, this is right apparently
@@ -5389,6 +5388,13 @@ void                              m68k_muls(){
   FETCH_TIMING;
 #endif
   PREFETCH_IRC; // prefetch before computing (but after <EA>)
+/*
+  .for MULS 'm' = concatenate the 16-bit pointed by <ea> with a zero as the LSB
+   'm' is the resultant number of 10 or 01 patterns in the 17-bit source.
+    - Best case : 38 cycles with $0 or $FFFF
+    - Worst case : 70 cycles with $5555
+
+*/
 
   INSTRUCTION_TIME(34);  
 
@@ -6827,6 +6833,7 @@ extern "C" void m68k_0110(){  //bCC //SS + BSR
       }
     }
   }else{
+//#undef SS_CPU_LINE_6_TIMINGS
     if ((ir & 0xf00)==0x100){ //bsr.l //SS .W?
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH_CLASS)
       M68000.PrefetchClass=2;
@@ -6877,6 +6884,7 @@ extern "C" void m68k_0110(){  //bCC //SS + BSR
       }
     }
   }
+//#define SS_CPU_LINE_6_TIMINGS
 }
 
 extern "C" void m68k_0111(){  //moveq

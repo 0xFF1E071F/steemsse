@@ -40,6 +40,11 @@ private:
 
 extern TVideoEvents VideoEvents; // singleton
 
+#if defined(SS_DEBUG)
+#define REPORT_LINE VideoEvents.ReportLine()
+#else
+#define REPORT_LINE
+#endif
 
 // inline functions
 

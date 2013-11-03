@@ -54,13 +54,11 @@ void TShifter::CheckSideOverscan() {
     Other shifter tricks have been refined, and difference between ST models is
     handled.
     The "old" Steem look-up system is still used, instead of the "Hatari" way
-    of acting at the shifter events themselves. 
+    of acting at the "shifter" events themselves. 
     The advantages are that we integrate in what exists, that everything 
     is nicely concentrated in one place and that we don't need to take care 
     of the -1 problem when events occur at 'LineCycles+n' (eg 520).
     Disadvantage could be performance, so it's not definitive.
-    For STF wake up state 2, all thresholds are increased by 2. This isn't
-    rock solid emulation, but it isn't just a few hacks either now.
 */
 #if defined(SS_DEBUG) && defined(SS_SHIFTER_DRAW_DBG)
   draw_check_border_removal(); // base function in Steem 3.2
@@ -81,282 +79,25 @@ void TShifter::CheckSideOverscan() {
 #endif
 #endif
 
+#if defined(SS_SHIFTER_STATE_MACHINE)
 #if defined(SS_MMU_WAKE_UP_DL)
-    char WU_res_modifier=5-MMU.DL();
-    char WU_sync_modifier=6-MMU.DL();
+    char WU_res_modifier=MMU.ResMod[WAKE_UP_STATE]; //-2, 0, 2
+    char WU_sync_modifier=MMU.FreqMod[WAKE_UP_STATE]; // 0 or 2
+#else
+  ?
 #endif
-
-  ////////////////////////////
-  // 0-BYTE LINE (line-160) //
-  ////////////////////////////
-
-/*  Various shift mode or sync mode switches trick the MMU in not fetching
-    a scanline while the monitor is still displaying a line.
-    This is a way to implement "hardware" downward vertical scrolling 
-    (-160 bytes) on a computer where it's not foreseen (No Buddies Land).
-    0-byte lines can also be combined with other sync lines (Forest, etc.).
-
-Normal lines:
-
-Video RAM
-[][][][][][][][][][][][][][][][] (1)
-[][][][][][][][][][][][][][][][] (2)
-[][][][][][][][][][][][][][][][] (3)
-[][][][][][][][][][][][][][][][] (4)
-
-
-Screen
-[][][][][][][][][][][][][][][][] (1)
-[][][][][][][][][][][][][][][][] (2)
-[][][][][][][][][][][][][][][][] (3)
-[][][][][][][][][][][][][][][][] (4)
-
-
-
-0-byte line:
-
-Video RAM
-[][][][][][][][][][][][][][][][] (1)
-[][][][][][][][][][][][][][][][] (2)
-[][][][][][][][][][][][][][][][] (3)
-[][][][][][][][][][][][][][][][] (4)
-
-
-Screen
-[][][][][][][][][][][][][][][][] (1)
--------------------------------- (0-byte line)
-[][][][][][][][][][][][][][][][] (2)
-[][][][][][][][][][][][][][][][] (3)
-[][][][][][][][][][][][][][][][] (4)
-
-
-*/
-
-#if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_0BYTE_LINE)
-
-#if defined(SS_SHIFTER_0BYTE_LINE_RES_END)//old
-
-/*  A shift mode switch a the end of the line causes the MMU not to fetch
-    video RAM of next scanline and not to count the line in its internal 
-    register.
-    Game No Buddies Land (500/508), demo D4/NGC (mistake? 496/508).
-    Explanation: 
-    Because shift mode = 2, HSYNC isn't reset at cycle 500 (50hz).
-    The counter is also incremented at this time.
-*/
-    if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE)
-      && !ShiftModeChangeAtCycle(-4) // 508
-      && (ShiftModeChangeAtCycle(-16)==2 || ShiftModeChangeAtCycle(-12)==2))
-    {
-      CurrentScanline.Tricks|=TRICK_0BYTE_LINE;
-      shifter_last_draw_line++; // fixes lower overscan in D4/NGC
-    }
-#endif    
-
-#if defined(SS_SHIFTER_0BYTE_LINE_RES_HBL) && defined(SS_STF)//old
-
-/*  Beyond/Pax Plax Parallax uses a shift mode switch around the HSync position
-    (as in Enchanted Land's hardware test), but DE is off (right border on).
-    This causes a 0-byte line (from Hatari).
-    It seems to do that only in STF mode; in STE mode the program writes the 
-    video RAM address to scroll the screen.
-[    Maybe the same switch +4 would work on a STE, like for Lemmings?]
-    TODO, too specific, we could just have
-    ShiftModeAtCycle(464)==2 -> 0byte line  (to test with later version)
-*/
-    if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE) && ST_TYPE!=STE 
-      && ShiftModeChangeAtCycle(464-4)==2 && !ShiftModeChangeAtCycle(464+8))
-      CurrentScanline.Tricks|=TRICK_0BYTE_LINE;
-#endif
-
-#if SSE_VERSION>353 // new versions for 0byte lines
-
-    WORD DEcycle=36+2; // used for 0byte and for +2; notice +2
+    WORD DEcycle=36; // DE STE 60hz; used for 0byte and for +2
 #if defined(SS_STF)
     if(ST_TYPE!=STE)
-    {
-      DEcycle+=16-2+WU_sync_modifier+1; // notice +1
-
-// v3.5.4 is good for the Bee programs, in fact we should use the WU
-// modifiers everywhere but it's for a later version, this kind of
-// change tends to break everything, no time to debug
-    }
+      DEcycle+=16+WU_sync_modifier; // STF, 60hz: 52
     else //STE
 #endif
     {
       if(ShiftModeAtCycle(DEcycle)==1)
         DEcycle+=8; // MED RES, STE starts only 8 cycles earlier
     }
-
-    if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE))
-    {
-#if defined(SS_SHIFTER_0BYTE_LINE_RES_HBLANK)
-/*  Nostalgia/Lemmings uses shift mode switches (28/44 for STF, 32/48 for STE)
-    around the "stop HBLANK" position  to obtain 0-byte lines.
-    Explanation:
-    HBlank isn't reset, DE doesn't trigger.
-    Normally there's no difference STF/STE (?), but the threshold is different
-    according to frequency.
-*/
-      if(CyclesIn>=28 && 
-        (ShiftModeAtCycle( ((FreqAtCycle(28)==60)?28:32) +2+WU_res_modifier)&2) ||
-#endif
-#if defined(SS_SHIFTER_0BYTE_LINE_SYNC_DE) //Beescroll,Forest,loSTE screens
-/*  0-byte sync switches are model-dependent and even "wake up state"-
-    dependent. They  are used only in a 2006 demo called SHFORSTV.TOS,
-    by the dude who also made the Overscan Demos.
-    Also: beeshift; beescroll; loSTE screens
-    Switches (60/50):
-    Forest: STF(1) (56/64), STF(2) (58/68), and STE (40/52).
-    loSTE: STF(1) (56/68) STF(2) (58/74) STE (40/52)
-*/
-        CyclesIn>=DEcycle+4 && left_border &&
-        FreqAtCycle(DEcycle)==50 &&  FreqAtCycle(DEcycle+4)==60
-#endif
-      )
-      {
-        CurrentScanline.Tricks|=TRICK_0BYTE_LINE;
-      }
-
-
-#if defined(SS_SHIFTER_0BYTE_LINE_RES_HSYNC1)
-/*  Beyond/Pax Plax Parallax uses a shift mode switch around the HSync position
-    (460/472), as in Enchanted Land's hardware test, but DE is off (right border
-    on). This causes a 0-byte line (from Hatari).
-    It seems to do that only in STF mode; in STE mode the program writes the 
-    video RAM address to scroll the screen.
-    Explanation:
-    There's no HSync, we suppose the cathodic ray isn't reset for next line,
-    but it does get down, the vertical sweep continues at a steady rate, not
-    depending on HSYNC.
-    Why the video RAM isn't fetched isn't clear. It's like the state machine
-    keeps track of whether HSYNC was correctly done and if it wasn't, no DE.
-*/
-      else if( CyclesIn>=464 && 
-        (ShiftModeAtCycle(464+WU_res_modifier)&2) ||
-#endif
-#if defined(SS_SHIFTER_0BYTE_LINE_RES_HSYNC2)
-/*  A shift mode switch a little before the end of the line causes the MMU not
-    to fetch video RAM of next scanline.
-    Game No Buddies Land (500/508), demo D4/NGC (mistake? 496/508).
-    Explanation: 
-    Because shift mode = 2, HSYNC isn't reset at cycle 500 (50hz).
-    Because of that, the state machine will never set DE at next line.
-    HBL counter isn't incremented, so one more line will be displayed.
-*/
-        CyclesIn>=500 && 
-        (ShiftModeAtCycle(500+WU_res_modifier)&2)
-#endif
-      )
-      {
-        CurrentScanline.Tricks|=TRICK_0BYTE_LINE;
-        shifter_last_draw_line++;
-      }
-    }
-#endif//#if SSE_VERSION>353
-
-#if defined(SS_SHIFTER_0BYTE_LINE_RES_START)//old
-
-/*  A shift mode switch after left border removal prevents the MMU from
-    fetching the line. The switches must be placed on different cycles 
-    according to the ST model.
-    Nostalgia/Lemmings 28/44 for STF 32/48 for STE
-
-    Explanation:
-    HBlank isn't reset, DE doesn't trigger.
-
-   TODO
-32     IF(RES == LO) BLANK = FALSE
-     
-    ShiftModeAtCycle(32)==2 -> 0byte line  (to test with later version)
-
-*/
-
-  if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE))
-  {
-    r2cycle=
-#if defined(SS_STF)
-      (ST_TYPE!=STE)?28: 
-#endif
-    32;
-    r0cycle=r2cycle+16; // we take the precise value for performance
-    if(ShiftModeChangeAtCycle(r2cycle)==2 && !ShiftModeChangeAtCycle(r0cycle))
-      CurrentScanline.Tricks|=TRICK_0BYTE_LINE;
-  }
-#endif
-  
-#if defined(SS_SHIFTER_0BYTE_LINE_SYNC) //old
-
-/*  0-byte sync switches are model-dependent and even "wake up state"-
-    dependent. They  are used only in a 2006 demo called SHFORSTV.TOS,
-    by the dude who also made the Overscan Demos.
-    Also: beeshift; beescroll; loSTE screens
-    Switches (60/50):
-    Forest: STF(1) (56/64), STF(2) (58/68), and STE (40/52).
-    loSTE: STF(1) (56/68) STF(2) (58/74) STE (40/52)
-*/
-
-  if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE))
-  {
-
-#if defined(SS_STF) // determine which switches we're looking for
-    if(ST_TYPE!=STE)
-    {
-#if defined(SS_MMU_WAKE_UP_0_BYTE_LINE)
-      if(WAKE_UP_STATE==2) // OK, Forest says it's 2
-        s0cycle=58,s2cycle=68+WU2_PLUS_CYCLES//2   // but strange according to compile options
-#if defined(SS_SHIFTER_FIX_LINE508_CONFUSION)
-          -2
-#endif
-        ;
-      else
-#endif
-        s0cycle=56,s2cycle=64; // default STF1 (OK for 'Forest')
-    }
-    else
-#endif // STE:
-      s0cycle=40,s2cycle=52; // this also produces a 512 cycles +2 line?
-
-    if(FreqChangeAtCycle(s0cycle)==60 
-      && 
-      (
-      FreqChangeAtCycle(s2cycle)==50
-#if defined(SS_SHIFTER_0BYTE_LINE_SYNC2)
-      ||FreqChangeAtCycle(s2cycle+4)==50 // loSTE screens
-#endif
-      )
-      )
-      CurrentScanline.Tricks|=TRICK_0BYTE_LINE;
-  }
 #endif
 
-  // 0-byte line: action
-  if(CurrentScanline.Tricks&TRICK_0BYTE_LINE)
-  {
-    if(!(TrickExecuted&TRICK_0BYTE_LINE))
-    { 
-      draw_line_off=true; // Steem's original flag
-      memset(PCpal,0,sizeof(long)*16); // all colours black
-      shifter_draw_pointer-=160; // hack: Steem will draw black and update SDP
-      CurrentScanline.Bytes=0;
-      TrickExecuted|=TRICK_0BYTE_LINE;
-    //  TRACE_OSD("0byte");
-      TRACE_LOG("0byte\n");
-    }
-//    return; // we must still check for stabiliser (Beescroll)
-  }
-
-#endif//0byte
-
-#if defined(SS_SHIFTER_DRAGON1)//temp
-    if(SS_signal==SS_SIGNAL_SHIFTER_CONFUSED_2
-      && !(CurrentScanline.Tricks&TRICK_CONFUSED_SHIFTER))
-    {
-      CurrentScanline.Tricks|=TRICK_CONFUSED_SHIFTER;
-      ShiftSDP(-2);
-      scanline_drawn_so_far=4;//not perfect...
-    }
-#endif
 
   /////////////////////
   // LEFT BORDER OFF //
@@ -386,6 +127,7 @@ Screen
     The shift mode switches for left border removal produce a 20 bytes bonus
     instead of 26, and the total overscan line is 224 bytes instead of 230. 
     224/8=28,no rest->no shifter confusion.
+    Why this is so is not yet known. 
     Known switches: 504/4 (More or Less Zero); 508/4 (Greets)
     E605 planet 504/8, with stabiliser & STE scrolling: confusing, apparently
     it's not +20, it's +26, but don't we have a -6 shift somewhere instead?
@@ -448,10 +190,15 @@ Screen
     if(ST_TYPE!=STE)
       lim_r2+=4,lim_r0+=6;
 #if defined(SS_MMU_WAKE_UP_SHIFTER_TRICKS)
+#if defined(SS_MMU_WAKE_UP_DL)
+    lim_r2+=WU_res_modifier; // TESTING
+    lim_r0+=WU_res_modifier;
+#else
     if(MMU.WakeUpState1())
       lim_r2+=-2,lim_r0+=-2;
     if(MMU.WakeUpState2())
       lim_r2+=WU2_PLUS_CYCLES,lim_r0+=WU2_PLUS_CYCLES;
+#endif
 #endif
 #endif
 #endif
@@ -487,7 +234,7 @@ Screen
         if(ShiftModeChangeAtCycle(r0cycle)==2)
           r0cycle=NextShiftModeChange(r0cycle); 
 #ifdef TESTLINE
-        if(scan_y==-28) TRACE_LOG("lims R2 %d-%d R0 %d-%d R2 %d R0 %d",lim_r2-12,lim_r2,lim_r0-24,lim_r0,r2cycle,r0cycle);
+        if(scan_y==TESTLINE) TRACE_LOG("lims R2 %d-%d R0 %d-%d R2 %d R0 %d",lim_r2-12,lim_r2,lim_r0-24,lim_r0,r2cycle,r0cycle);
 #endif        
         if(r0cycle>=lim_r0-24 && r0cycle<=lim_r0)
         {
@@ -507,6 +254,7 @@ Screen
     be caught at EndHBL tests).
     In v3.5.3, emulation of TCB is correct for WU1 (offset) and 2 (centred). 
     There's still a hack in the 'read SDP' part.
+    v3.5.4, TCB needs WS2, which is as on hardware.
 
 SNYD/TCB in WU1:
 -30 - 388:S0000 472:S0000 496:r0900 512:T0100 512:#0000
@@ -527,7 +275,9 @@ Sync is set back to 2 between R2 and R0, this is isn't a line +24
             CurrentScanline.Tricks|=TRICK_LINE_PLUS_26;
         }
 #ifdef TESTLINE
-        if(scan_y==-28) TRACE_LOG(" left off %d\n", CurrentScanline.Tricks&TRICK_LINE_PLUS_26);
+        if(scan_y==TESTLINE) TRACE_LOG(" left off %X\n", CurrentScanline.Tricks);
+        if(scan_y==TESTLINE) TRACE_LOG(" freq %d %d %d %d\n",r2cycle,FreqAtCycle(r2cycle),r0cycle,FreqAtCycle(r0cycle));
+        if(scan_y==TESTLINE) REPORT_LINE;
 #endif
       }
 #if defined(SS_DEBUG) && defined(SS_VID_LEFT_OFF_COMPARE_STEEM_32)
@@ -625,7 +375,11 @@ Sync is set back to 2 between R2 and R0, this is isn't a line +24
         if(Preload>0)
         {
           Preload--;
+#if defined(SS_MMU_WAKE_UP_DL)
+          if(MMU.WU[WAKE_UP_STATE]==2)
+#else
           if(MMU.WakeUpState2())
+#endif
             Preload--;
         }
 #endif
@@ -689,36 +443,233 @@ STF2:
 */
 
 
-  ////////////////
-  // STABILISER //
-  ////////////////
+  /////////////////
+  // 0-BYTE LINE //
+  /////////////////
 
-/*  A HI/LO switch after DE "resets" the shifter by emptying its registers.
-    All kinds of strange effects may result from absence of stabiliser when
-    trying to display lines which have a length in bytes not multiple of 8,
-    such as the 230 bytes line (left off, right off).
-    Another stabiliser is MED/LO, it's called 'ULM' because it was used by
-    this group.
-    This is also handled by this routine, in fact it would even take a R0/R0!
+/*  Various shift mode or sync mode switches trick the GLUE and MMU in 
+    not fetching a scanline while the monitor is still displaying a line.
+    This is a way to implement "hardware" downward vertical scrolling 
+    on a computer where it's not foreseen (No Buddies Land - see end of
+    this function).
+    0-byte lines can also be combined with other sync lines (Forest, etc.).
+
+    Normal lines:
+
+    Video RAM
+    [][][][][][][][][][][][][][][][] (1)
+    [][][][][][][][][][][][][][][][] (2)
+    [][][][][][][][][][][][][][][][] (3)
+    [][][][][][][][][][][][][][][][] (4)
+
+
+    Screen
+    [][][][][][][][][][][][][][][][] (1)
+    [][][][][][][][][][][][][][][][] (2)
+    [][][][][][][][][][][][][][][][] (3)
+    [][][][][][][][][][][][][][][][] (4)
+
+
+    0-byte line:
+
+    Video RAM
+    [][][][][][][][][][][][][][][][] (1)
+    [][][][][][][][][][][][][][][][] (2)
+    [][][][][][][][][][][][][][][][] (3)
+    [][][][][][][][][][][][][][][][] (4)
+
+
+    Screen
+    [][][][][][][][][][][][][][][][] (1)
+    -------------------------------- (0-byte line)
+    [][][][][][][][][][][][][][][][] (2)
+    [][][][][][][][][][][][][][][][] (3)
+    [][][][][][][][][][][][][][][][] (4)
+
+
 */
 
-#if defined(SS_SHIFTER_TRICKS) && defined(TRICK_STABILISER)
-  if(!(CurrentScanline.Tricks&TRICK_STABILISER))
-  {
-//    ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) ); //asserts
-    r2cycle=NextShiftModeChange(432/*,2*/); // Forest STF2
-    if(r2cycle>-1 && r2cycle<460)
+#if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_0BYTE_LINE)
+
+#if defined(SS_SHIFTER_STATE_MACHINE)
+
+/*  
+    v3.5.4
+    We use the values in LJBK's table, taking care not to break
+    emulation of other cases..
+    Here we test for tricks at the start of the scanline, affecting
+    current scanline.
+
+    shift mode:
+    0byte line   8-32    Nostalgia/Lemmings 28/44 for STF, 32/48 for STE
+          
+    sync:
+    Forest: STF(1) (56/64), STF(2) (58/68), and STE (40/52).
+    loSTE: STF(1) (56/68) STF(2) (58/74) STE (40/52)
+
+*/
+    if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE))
     {
-      r0cycle=NextShiftModeChange(r2cycle,0);
-      if(r0cycle>-1 && r0cycle<464 ) 
+
+      r2cycle=28; // we start with 60hz lines (no case though)
+      if(FreqAtCycle(r2cycle+2)==50)
+        r2cycle+=4;
+
+      if(CyclesIn>r2cycle && ShiftModeAtCycle(r2cycle+2+WU_res_modifier)&2)
       {
-        CurrentScanline.Tricks|=TRICK_STABILISER;
-#if defined(SS_SHIFTER_UNSTABLE)
-        Preload=0; // "reset" empties RR
-#endif
+        //REPORT_LINE;
+        TRACE_LOG("detect Lemmings type 0byte y %d\n",scan_y);
+        CurrentScanline.Tricks|=TRICK_0BYTE_LINE;
+      }
+      else if(CyclesIn>=DEcycle+4 && left_border &&
+        FreqAtCycle(DEcycle)==50 &&  FreqChangeAtCycle(DEcycle+4)==60)
+        // funny, if FreqAtCycle(DEcycle+2) Enchanted Land broken
+      {
+        //REPORT_LINE;
+        TRACE_LOG("detect Forest type 0byte y %d\n",scan_y);
+        CurrentScanline.Tricks|=TRICK_0BYTE_LINE;
       }
     }
+
+#else//state-machine
+
+#if defined(SS_SHIFTER_0BYTE_LINE_RES_END)//old
+
+/*  A shift mode switch a the end of the line causes the MMU not to fetch
+    video RAM of next scanline and not to count the line in its internal 
+    register.
+    Game No Buddies Land (500/508), demo D4/NGC (mistake? 496/508).
+    Explanation: 
+    Because shift mode = 2, HSYNC isn't reset at cycle 500 (50hz).
+    The counter is also incremented at this time.
+*/
+    if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE)
+      && !ShiftModeChangeAtCycle(-4) // 508
+      && (ShiftModeChangeAtCycle(-16)==2 || ShiftModeChangeAtCycle(-12)==2))
+    {
+      CurrentScanline.Tricks|=TRICK_0BYTE_LINE;
+      shifter_last_draw_line++; // fixes lower overscan in D4/NGC
+    }
+#endif    
+
+#if defined(SS_SHIFTER_0BYTE_LINE_RES_HBL) && defined(SS_STF)//old
+
+/*  Beyond/Pax Plax Parallax uses a shift mode switch around the HSync position
+    (as in Enchanted Land's hardware test), but DE is off (right border on).
+    This causes a 0-byte line (from Hatari).
+    It seems to do that only in STF mode; in STE mode the program writes the 
+    video RAM address to scroll the screen.
+[    Maybe the same switch +4 would work on a STE, like for Lemmings?]
+    TODO, too specific, we could just have
+    ShiftModeAtCycle(464)==2 -> 0byte line  (to test with later version)
+*/
+    if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE) && ST_TYPE!=STE 
+      && ShiftModeChangeAtCycle(464-4)==2 && !ShiftModeChangeAtCycle(464+8))
+      CurrentScanline.Tricks|=TRICK_0BYTE_LINE;
+#endif
+
+#if defined(SS_SHIFTER_0BYTE_LINE_RES_START)//old
+
+/*  A shift mode switch after left border removal prevents the MMU from
+    fetching the line. The switches must be placed on different cycles 
+    according to the ST model.
+    Nostalgia/Lemmings 28/44 for STF 32/48 for STE
+
+    Explanation:
+    HBlank isn't reset, DE doesn't trigger.
+
+   TODO
+32     IF(RES == LO) BLANK = FALSE
+     
+    ShiftModeAtCycle(32)==2 -> 0byte line  (to test with later version)
+
+*/
+
+  if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE))
+  {
+    r2cycle=
+#if defined(SS_STF)
+      (ST_TYPE!=STE)?28: 
+#endif
+    32;
+    r0cycle=r2cycle+16; // we take the precise value for performance
+    if(ShiftModeChangeAtCycle(r2cycle)==2 && !ShiftModeChangeAtCycle(r0cycle))
+      CurrentScanline.Tricks|=TRICK_0BYTE_LINE;
   }
+#endif
+  
+#if defined(SS_SHIFTER_0BYTE_LINE_SYNC) //old
+
+/*  0-byte sync switches are model-dependent and even "wake up state"-
+    dependent. They  are used only in a 2006 demo called SHFORSTV.TOS,
+    by the dude who also made the Overscan Demos.
+    Also: beeshift; beescroll; loSTE screens
+    Switches (60/50):
+    Forest: STF(1) (56/64), STF(2) (58/68), and STE (40/52).
+    loSTE: STF(1) (56/68) STF(2) (58/74) STE (40/52)
+*/
+
+  if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE))
+  {
+
+#if defined(SS_STF) // determine which switches we're looking for
+    if(ST_TYPE!=STE)
+    {
+#if defined(SS_MMU_WAKE_UP_0_BYTE_LINE)
+      if(WAKE_UP_STATE==2) // OK, Forest says it's 2
+        s0cycle=58,s2cycle=68+WU2_PLUS_CYCLES//2   // but strange according to compile options
+#if defined(SS_SHIFTER_FIX_LINE508_CONFUSION)
+          -2
+#endif
+        ;
+      else
+#endif
+        s0cycle=56,s2cycle=64; // default STF1 (OK for 'Forest')
+    }
+    else
+#endif // STE:
+      s0cycle=40,s2cycle=52; // this also produces a 512 cycles +2 line?
+
+    if(FreqChangeAtCycle(s0cycle)==60 
+      && 
+      (
+      FreqChangeAtCycle(s2cycle)==50
+#if defined(SS_SHIFTER_0BYTE_LINE_SYNC2)
+      ||FreqChangeAtCycle(s2cycle+4)==50 // loSTE screens
+#endif
+      )
+      )
+      CurrentScanline.Tricks|=TRICK_0BYTE_LINE;
+  }
+#endif
+#endif//!state-machine
+
+  // 0-byte line: action
+  if(CurrentScanline.Tricks&TRICK_0BYTE_LINE)
+  {
+    if(!(TrickExecuted&TRICK_0BYTE_LINE))
+    { 
+      TRACE_LOG("F%d apply 0byte y %d\n",FRAME,scan_y);
+      draw_line_off=true; // Steem's original flag
+      memset(PCpal,0,sizeof(long)*16); // all colours black
+      shifter_draw_pointer-=160; // hack: Steem will draw black and update SDP
+      CurrentScanline.Bytes=0;
+      TrickExecuted|=TRICK_0BYTE_LINE;
+    //  TRACE_OSD("0byte");
+    }
+//    return; // we must still check for stabiliser (Beescroll)
+  }
+
+#endif//0byte
+
+#if defined(SS_SHIFTER_DRAGON1)//temp (undef in 3.5.X)
+    if(SS_signal==SS_SIGNAL_SHIFTER_CONFUSED_2
+      && !(CurrentScanline.Tricks&TRICK_CONFUSED_SHIFTER))
+    {
+      CurrentScanline.Tricks|=TRICK_CONFUSED_SHIFTER;
+      ShiftSDP(-2);
+      scanline_drawn_so_far=4;//not perfect...
+    }
 #endif
 
 
@@ -743,11 +694,21 @@ STF2:
   if(!draw_line_off && shifter_freq_at_start_of_vbl==50)
   {
 
+    ///t=LINECYCLE0+28; //trigger point (works with 26?)
+#if defined(SS_SHIFTER_STATE_MACHINE) // more or less
+    t=26+WU_sync_modifier;
+
+    if(FreqChangeAtCycle(t)==60 || FreqChangeAtCycle(t+2)==60)
+      CurrentScanline.Tricks|=TRICK_BLACK_LINE;
+
+
+#else
     t=LINECYCLE0+28; //trigger point (works with 26?)
 #if defined(SS_MMU_WAKE_UP_SHIFTER_TRICKS)
     if(MMU.WakeUpState2())
       t+=2;//WU2_PLUS_CYCLES; // it's different for sync
 #endif
+
 
     if(act-t>0)
     {
@@ -755,6 +716,7 @@ STF2:
       if(i>=0 && shifter_freq_change[i]==60 && shifter_freq_change_time[i]==t)
         CurrentScanline.Tricks|=TRICK_BLACK_LINE;
     }
+#endif
   }
 
   if(!draw_line_off && (CurrentScanline.Tricks&TRICK_BLACK_LINE))
@@ -765,43 +727,6 @@ STF2:
     memset(PCpal,0,sizeof(long)*16); // all colours black
   }
 
-  ///////////////////////
-  // NON-STOPPING LINE //
-  ///////////////////////
-
-/*  In the Enchanted Land hardware tests, a HI/LO switch at end of display
-    when the right border has been removed causes the shifter (MMU) to continue 
-    fetching for the rest of the line (24 bytes).
-    I don't see that the left border be removed on the next line (in this
-    emulation, see Hatari).
-    The result of the test is written to $204-$20D and the line +26 trick 
-    timing during the game depends on it. This STF/STE distinction, which 
-    was the point of the test, is emulated in Steem (3.4). It doesn't change
-    the game itself.
-
-      STF 464/472 => R2 4 (wouldn't work on the STE)
-    000204 : 00bd 0003                :
-    000208 : 0059 000d (this was the Steem patch - 4 bytes)
-    00020c : 000d 0000                : 
-
-      STE 460/468 => R2 0
-    000204 : 00bd 0002  those values may be used for a STE patch
-    000208 : 005a 000c  that also works in Steem 3.2 (this should
-    00020c : 000d 0001  have been the patch, 12 bytes, no need for STFMBORDER)
-*/
-
-#if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_NON_STOPPING_LINE)
-  if(CurrentScanline.Bytes==160+44 && (// left on, right off
-#if defined(SS_STF)
-    ST_TYPE!=STE && ShiftModeChangeAtCycle(464)==2 
-    && !ShiftModeChangeAtCycle(464+8)|| ST_TYPE==STE && 
-#endif
-    ShiftModeChangeAtCycle(460)==2 && !ShiftModeChangeAtCycle(460+8)))
-  {
-    TRACE_LOG("F%d y%d c%d Enchanted Land HW test R2 %d R0 %d\n",FRAME,scan_y,CyclesIn,NextShiftModeChange(460-4,2),NextShiftModeChange(460,0));
-    CurrentScanline.Bytes+=24; // "double" right off, fixes Enchanted Land
-  }
-#endif
 
   //////////////////////
   // MED RES OVERSCAN //
@@ -894,6 +819,7 @@ STF2:
 
 #if defined(SS_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK)
         // strange corrections now necessary, quick patch. TODO
+        // 3.5.4 no more need, still don't know why, typical
         if(SSE_HACKS_ON && DISPLAY_SIZE>0 && cycles_in_low_res==8) 
         {
           switch(shift_in_bytes)
@@ -1000,7 +926,6 @@ Mindbomb/No Shit
 */
 
 #if defined(SS_SHIFTER_LINE_PLUS_2_TEST)
-// current code is messy but it's been tested with cases above
   if(!(TrickExecuted&TRICK_LINE_PLUS_2) 
     && left_border && !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) ) 
   {
@@ -1008,8 +933,8 @@ Mindbomb/No Shit
 #if defined(SS_SHIFTER_LINE_PLUS_2_STE_DSOS)//hack (v3.5.3)
     t=52-12+2; //The line must "start" earlier on STE due to HSCROLL
 #else
-#if SSE_VERSION>353
-    t=DEcycle;
+#if defined(SS_SHIFTER_STATE_MACHINE)//#if SSE_VERSION>353
+    t=DEcycle; // eg 52 (60hz start), 54 in  WS 2,4
 #else
     t=52-16+2; //The line must "start" earlier on STE due to HSCROLL
 #endif
@@ -1017,7 +942,7 @@ Mindbomb/No Shit
 
 ///TRACE("t %d freq %d\n",t,FreqAtCycle(t));
 
-#if SSE_VERSION<=353
+#if !defined(SS_SHIFTER_STATE_MACHINE) //already computed
 #if defined(SS_MMU_WAKE_UP_SHIFTER_TRICKS)
     if(MMU.WakeUpState2())// already computed
       t+=2;
@@ -1034,15 +959,16 @@ Mindbomb/No Shit
 #endif
     if(ShiftModeAtCycle(t)==1)
       t+=8; // MED RES, STE starts only 8 cycles earlier
-#endif//#if SSE_VERSION<=353
+#endif
 
-    if(CyclesIn>=t && FreqAtCycle(t)==60 
-      && (FreqAtCycle(376)==50 || CyclesIn<376 && shifter_freq==50)) //TODO WU?
+    if(CyclesIn>t && FreqAtCycle(t+2)==60 // 'before write'
+      && ((CyclesIn<372+WU_sync_modifier+2 && shifter_freq==50) 
+      || FreqAtCycle(372+WU_sync_modifier+2)==50))
     {
 #if defined(SS_SHIFTER_LINE_PLUS_2_ON_PRELOAD3) // DSOS STE
-      if(Preload==3)
+      if(Preload)//==3)
       {
-//        TRACE("no +2, shifter was preloaded\n");
+        TRACE_LOG("no +2, shifter was preloaded\n");
         Preload=0;
         TrickExecuted|=TRICK_LINE_PLUS_2;       
       }
@@ -1053,6 +979,9 @@ Mindbomb/No Shit
 //CyclesIn 524 t 54 freq at t 60 DEcycle 55
   //    VideoEvents.ReportLine();
     }
+//    if(scan_y==-27) REPORT_LINE;
+  //  if(scan_y==-27) TRACE_LOG("FreqAtCycle(%d) %d FreqAtCycle(%d) %d tricks %x\n", t+2,FreqAtCycle(t+2),(376+WU_sync_modifier+2),FreqAtCycle(376+WU_sync_modifier+2),CurrentScanline.Tricks);
+    //ASSERT(FreqAtCycle(t+2)!=60 || (CurrentScanline.Tricks&TRICK_LINE_PLUS_2));
   }
 
 #else
@@ -1092,6 +1021,7 @@ Mindbomb/No Shit
   if((CurrentScanline.Tricks&TRICK_LINE_PLUS_2)
     && !(TrickExecuted&TRICK_LINE_PLUS_2))
   {
+//    TRACE("+2\n");
 //    ASSERT(left_border==BORDER_SIDE);
     ASSERT(!(CurrentScanline.Tricks&TRICK_LINE_MINUS_2));
 //    ASSERT(CurrentScanline.Cycles==512);
@@ -1123,8 +1053,6 @@ Mindbomb/No Shit
 #endif
   }
 
-  if(right_border_changed) // TODO improve this?
-    return; 
 
   ///////////////
   // LINE -106 //
@@ -1148,7 +1076,15 @@ Mindbomb/No Shit
     R2 56 [...] -> 164 [WU1] 166 [WU3,4] 168 [WU2]
 */
 
-#if defined(SS_SHIFTER_STEEM_ORIGINAL) || 0
+#if defined(SS_SHIFTER_STATE_MACHINE)
+
+  t=166+WU_res_modifier;
+  if(CyclesIn>t && !(CurrentScanline.Tricks&TRICK_0BYTE_LINE)
+    && !(CurrentScanline.Tricks&TRICK_LINE_MINUS_106)
+    && (ShiftModeAtCycle(t+2)&2))
+     CurrentScanline.Tricks|=TRICK_LINE_MINUS_106;
+
+#elif defined(SS_SHIFTER_STEEM_ORIGINAL) || 0
   t=cpu_timer_at_start_of_hbl+172; //trigger point for big right border
   if(act-t>=0 && !(TrickExecuted&TRICK_LINE_MINUS_106))
   {
@@ -1172,7 +1108,7 @@ Mindbomb/No Shit
        CurrentScanline.Tricks|=TRICK_LINE_MINUS_106;
 
 #ifdef SS_DEBUG__
-     r2cycle=ShiftModeChangeAtCycle(160);     // Superior160 164 (LOL)
+     r2cycle=ShiftModeChangeAtCycle(160);     //  160 164 (LOL)
      if( (CurrentScanline.Tricks&TRICK_LINE_MINUS_106) && r2cycle!=2)
      {
        TRACE_LOG("Line -106 R2 cycle %d\n",shifter_shift_mode_change_time[i]-LINECYCLE0);
@@ -1199,8 +1135,17 @@ Mindbomb/No Shit
     draw_line_off=true;
     memset(PCpal,0,sizeof(long)*16); // all colours black
 #endif
+#if defined(SS_SHIFTER_UNSTABLE)
+/*  We examine Line -106 before Destabilisation because otherwise it can
+    get horribly complicated with eg ST-CNX, which randomly (?) sets R1 at
+    cycle 148 of some sync lines.
+001 - 012:R0000 148:R0001 160:R0002 172:R0000 444:R0000 456:R0000 512:R0000 512:T2004 512:#0054
+*/
+    ASSERT( !Preload );
+#endif
 
   }
+
 
   /////////////////////
   // DESTABILISATION //
@@ -1338,12 +1283,19 @@ detect unstable: switch MED/LOW - Beeshift
     CurrentScanline.Tricks|=TRICK_UNSTABLE;
   }
 #endif
+
+
+////  if(right_border_changed) // TODO improve this?
+////    return;   // stabiliser is further now
  
   /////////////
   // LINE -2 //
   /////////////
 
 /*  
+    A line starting at 50hz but switched to 60hz before end of DE for
+    60hz will fetch 2 bytes less of video memory.
+
     It's a -2 line if it's at 60hz at cycle 372, the switch doesn't
     need to happen at 372, though it makes more sense there. Sooner, there
     could be distortion on a real ST.
@@ -1361,13 +1313,23 @@ detect unstable: switch MED/LOW - Beeshift
   if( shifter_freq_at_start_of_vbl!=50)
     return; 
 
-  // Steem test
-  t=LINECYCLE0+372; //trigger point for early right border
+#if defined(SS_SHIFTER_STATE_MACHINE)
+  t=372+WU_sync_modifier;
+  if(CyclesIn>372 && FreqAtCycle(DEcycle+2)!=60 && FreqAtCycle(t+2)==60)
+    CurrentScanline.Tricks|=TRICK_LINE_MINUS_2;
+#else
 
+  // Steem test
+#if defined(SS_MMU_WAKE_UP_DL) 
+  t=LINECYCLE0+372+WU_sync_modifier;
+#else
+  t=LINECYCLE0+372; //trigger point for early right border
 #if defined(SS_MMU_WAKE_UP_SHIFTER_TRICKS)
     if(MMU.WakeUpState2())
       t+=2;//WU2_PLUS_CYCLES;
 #endif
+#endif
+
 
   if(act-t>=0 && !(TrickExecuted&TRICK_LINE_MINUS_2))
   {
@@ -1389,6 +1351,7 @@ detect unstable: switch MED/LOW - Beeshift
       )
       CurrentScanline.Tricks|=TRICK_LINE_MINUS_2;
   }
+#endif
 
 #if defined(SS_VID_TRACE_LOG_SUSPICIOUS2)
   if((CurrentScanline.Tricks&TRICK_LINE_MINUS_2)&&!(shifter_freq_change_time[i]-LINECYCLE0>56))
@@ -1398,6 +1361,7 @@ detect unstable: switch MED/LOW - Beeshift
   if((CurrentScanline.Tricks&TRICK_LINE_MINUS_2)
     &&!(TrickExecuted&TRICK_LINE_MINUS_2))
   {
+    //TRACE("-2\n");
     ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );
 
 #if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_UNSTABLE)
@@ -1421,38 +1385,88 @@ detect unstable: switch MED/LOW - Beeshift
   /////////////////////////////////
 
 /* 
-    1) The position to remove right border  is cycle 376 (94x4) in our
-    reckoning, 374 is OK on many machines.
-    2) The number of bonus bytes (44) is quite bigger than for the left
-    border (26). 
-    3) People talk of 416 wide res (208x2), not 460 (230x2).
-    4) Cycle precision is absolutely necessary.
-    
-    Paulo:
-    On the horizontal side we have in fact only 416 pixels displayed in 416 
-    CPU clock cycles: 
-    - 48 left border pixels 
-    - 320 normal pixels 
-    - 48 rigth border pixels 
-    The remaining 512-416 = 96 CPU clock cycles are used for the Horizontal 
-    Blank. 
+    A sync switch to 0 (60hz) at cycle 376 (end of display for 50hz)
+    makes the GLUE fail to stop the line (DE still on).
+    DE will stop only at cycle of HSYNC, 464.
+    This is 88 cycles later and the reason why the trick grants 44 more
+    bytes of video memory for the scanline.
+    However, because of a HI/LO stabiliser or HBLANK at cycle 424, only
+    about 48 more pixels are visible.
+    For a 230byte DE is on from cycle 4 to 464 (230x2=460).
+    Because a 60hz line stops at cycle 372, the sync switch must hit just
+    after that and right before the test for end of 50hz line occurs.
+    That's why cycle 376 is targeted, but according to wake-up state other
+    timings may work.
 
-    4) Fetching ends at 464 = 376+2x44 = 4 +230x2. This establishes (again)
-    that it starts at cycle 4 in those 230 bytes lines.
-    5) Steem already handled 71/50 switch to remove right border.
+    WS thresholds (from table by Paolo) 
 
-    6) Thresholds/WU states (from table by Paolo) TODO
+    Swtich to 60hz  374 - 376 WS1,3
+                    376 - 378 WS2,4
 
-      Swtich to 60hz  374 - 376 WS1,3
-                      376 - 378 WS2,4
-
-      Switch back to 50hz  378 -... WS1,3
-                           380 -... WS2,4
+    Switch back to 50hz  378 -... WS1,3
+                         380 -... WS2,4
 
     Nostalgia menu: must be bad display in WU2
-*/
-  t=LINECYCLE0+376; //trigger point for right border cut
 
+*/
+
+#if defined(SS_SHIFTER_STATE_MACHINE)
+/*
+    We used the following to calibrate (Beeshift3).
+
+LJBK:
+So going back to the tests, the switchs are done at the places indicated:
+-71/50 at 295/305;
+-71/50 at 297/305;
+-60/50 at 295/305;
+and the MMU counter at $FFFF8209.w is read at the end of that line.
+It can be either $CC: 204 or $A0: 160.
+The combination of the three results is then tested:
+WS4: CC A0 CC
+WS3: CC A0 A0
+WS2: CC CC CC Right Border is always open
+WS1: A0 A0 A0 no case where Right Border was open
+
+Emulators_cycle = (cycle_Paulo + 83) mod 512
+
+WS                           1         2         3         4
+ 
+-71/50 at 378/388            N         Y         Y         Y
+-71/50 at 380/388            N         Y         N         N
+-60/50 at 378/388            N         Y         N         Y
+
+Tests are arranged to be efficient.
+
+*/
+
+  // sync
+  t=374+WU_sync_modifier;
+  if(right_border_changed || CyclesIn<t 
+    || (CurrentScanline.Tricks&TRICK_0BYTE_LINE))
+    ;
+  else if(FreqChangeAtCycle(t+2)==60 || FreqChangeAtCycle(t)==60)
+    CurrentScanline.Tricks|=TRICK_LINE_PLUS_44;
+#if defined(SS_SHIFTER_RIGHT_OFF_BY_SHIFT_MODE)
+/*  Like Alien said, it is also possible to remove the right border by setting
+    the shiftmode to 2. This may be done well before cycle 376 (state-machine
+    approach), that's why we use ShiftModeAtCycle() and not 
+    ShiftModeChangeAtCycle().
+
+    WS threshold: WS1:376  WS3,4:378  WS2:380
+
+*/
+  else
+  {  
+    // res
+    t=378+WU_res_modifier;
+    if(ShiftModeAtCycle(t+2)&2) // still this damn offset
+      CurrentScanline.Tricks|=TRICK_LINE_PLUS_44;
+  }
+#endif
+
+#else
+
+  t=LINECYCLE0+376; //trigger point for right border cut
 #if defined(SS_MMU_WAKE_UP_DL)
   t+=WU_sync_modifier+1; // notice +1
 #endif
@@ -1510,10 +1524,13 @@ detect unstable: switch MED/LOW - Beeshift
       }
     }
   }
+#endif//test04
+
 
   if((CurrentScanline.Tricks&TRICK_LINE_PLUS_44)
     && !(TrickExecuted&TRICK_LINE_PLUS_44))
   {
+    //TRACE("right off\n");
     ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );
     ASSERT(!(CurrentScanline.Tricks&TRICK_LINE_MINUS_2));
     right_border=0;
@@ -1547,6 +1564,133 @@ detect unstable: switch MED/LOW - Beeshift
       VideoEvents.ReportLine();
 #endif
   }
+
+  ////////////////
+  // STABILISER //
+  ////////////////
+
+/*  A HI/LO switch after DE "resets" the shifter by emptying its registers.
+    All kinds of strange effects may result from absence of stabiliser when
+    trying to display lines which have a length in bytes not multiple of 8,
+    such as the 230 bytes line (left off, right off).
+    Another stabiliser is MED/LO, it's called 'ULM' because it was used by
+    this group.
+    This is also handled by this routine, in fact it would even take a R0/R0!
+*/
+
+#if defined(SS_SHIFTER_TRICKS) && defined(TRICK_STABILISER)
+  if(!(CurrentScanline.Tricks&TRICK_STABILISER))
+  {
+//    ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) ); //asserts
+    r2cycle=NextShiftModeChange(432/*,2*/); // Forest STF2
+    if(r2cycle>-1 && r2cycle<460)
+    {
+      r0cycle=NextShiftModeChange(r2cycle,0);
+      if(r0cycle>-1 && r0cycle<464 ) 
+      {
+        CurrentScanline.Tricks|=TRICK_STABILISER;
+#if defined(SS_SHIFTER_UNSTABLE)
+        Preload=0; // "reset" empties RR
+#endif
+      }
+    }
+  }
+#endif
+
+  /////////////////////////////////////////////////////////
+  // 0-BYTE LINE 2 (next scanline) and NON-STOPPING LINE //
+  /////////////////////////////////////////////////////////
+
+
+#if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_0BYTE_LINE)
+#if defined(SS_SHIFTER_STATE_MACHINE)
+
+/*  
+    v3.5.4
+    We use the values in LJBK's table, taking care not to break
+    emulation of other cases.
+    Here we test for tricks at the end of the scanline, affecting
+    next scanline.
+
+    shift mode:
+    No line 1 452-464    Beyond/Pax Plax Parallax STF (460/472)
+          note: mustn't break Enchanted Land STF 464/472 STE 460/468
+          no 0byte when DE on (no right border)
+          note D4/Tekila 199: 444:S0000 452:R0082 460:R0000
+    No line 2 466-504    No Buddies Land (500/508); D4/NGC (496/508)
+          note: STE line +20 504/4 (MOLZ) or 504/8 -> 504 is STF-only
+          
+*/
+    if(!(NextScanline.Tricks&TRICK_0BYTE_LINE))
+    {
+
+      r2cycle=460-2; 
+#if defined(SS_STF)
+      if(ST_TYPE!=STE)
+        r2cycle+=2; 
+#endif
+
+      if(FreqAtCycle(r2cycle+2)==50)
+        r2cycle+=4;        
+      
+      if(CyclesIn>r2cycle && ShiftModeAtCycle(r2cycle+WU_res_modifier+2)&2)
+      {
+        //REPORT_LINE;
+        if(right_border)
+        {
+          NextScanline.Tricks|=TRICK_0BYTE_LINE; // next, of course
+          TRACE_LOG("detect Plax type 0byte y %d\n",scan_y+1);
+          shifter_last_draw_line++;//?
+        }
+/*  In the Enchanted Land hardware tests, a HI/LO switch at end of display
+    when the right border has been removed causes the shifter (MMU) to continue 
+    fetching for the rest of the line (24 bytes).
+    I don't see that the left border be removed on the next line (in this
+    emulation, see Hatari).
+    The result of the test is written to $204-$20D and the line +26 trick 
+    timing during the game depends on it. This STF/STE distinction, which 
+    was the point of the test, is emulated in Steem (3.4). It doesn't change
+    the game itself.
+
+      STF 464/472 => R2 4 (wouldn't work on the STE)
+    000204 : 00bd 0003                :
+    000208 : 0059 000d (this was the Steem patch - 4 bytes)
+    00020c : 000d 0000                : 
+
+      STE 460/468 => R2 0
+    000204 : 00bd 0002  those values may be used for a STE patch
+    000208 : 005a 000c  that also works in Steem 3.2 (this should
+    00020c : 000d 0001  have been the patch, 12 bytes, no need for STFMBORDER)
+
+    For performance, this is integrated in 0-byte test.
+
+*/
+        else if(CurrentScanline.Bytes==160+44) // trick to do it only once
+        {
+          TRACE_LOG("F%d y%d c%d Enchanted Land HW test R2 %d R0 %d\n",FRAME,scan_y,CyclesIn,NextShiftModeChange(460-4,2),NextShiftModeChange(460,0));
+          CurrentScanline.Bytes+=24; // "double" right off, fixes Enchanted Land
+        }
+      }
+      else 
+      {
+        r2cycle+=38; // -> 502 (STE)
+#if defined(SS_STF)
+        if(ST_TYPE!=STE)
+          r2cycle+=2; // -> 504 (STF)
+#endif
+        if(CyclesIn>r2cycle && ShiftModeAtCycle(r2cycle+WU_res_modifier+2)&2)
+        {
+          NextScanline.Tricks|=TRICK_0BYTE_LINE;
+          //REPORT_LINE;
+          TRACE_LOG("detect NBL type 0byte y %d\n",scan_y+1);
+          shifter_last_draw_line++;
+        }
+      }
+    }
+
+#endif//state-machine
+#endif//0byte
+
 
 }
 
@@ -1660,7 +1804,11 @@ Y-30 C516  504:S0000 512:S0002 shifter tricks 100
       if(ST_TYPE!=STE)
 #endif
 */
+#if defined(SS_MMU_WAKE_UP_DL)
+    if(MMU.WU[WAKE_UP_STATE]==1)
+#else
     if(MMU.WakeUpState1()) // OK WS1, WS3
+#endif
         t-=2;
 #endif
 
@@ -2025,6 +2173,9 @@ void TShifter::IncScanline() { // a big extension of 'scan_y++'!
 //  ASSERT(scan_y!=-28);
   PreviousScanline=CurrentScanline; // auto-generated
   CurrentScanline=NextScanline;
+
+  ASSERT( CurrentScanline.Tricks==NextScanline.Tricks );
+
   if(scan_y==-29 && (PreviousScanline.Tricks&TRICK_TOP_OVERSCAN)
     || !scan_y && !PreviousScanline.Bytes)
     CurrentScanline.Bytes=160; // needed by ReadSDP - not perfect (TODO)
@@ -2061,7 +2212,9 @@ void TShifter::IncScanline() { // a big extension of 'scan_y++'!
   }
   TrickExecuted=0;
 
-  CurrentScanline.Tricks=0;
+  
+  //CurrentScanline.Tricks=0;
+  NextScanline.Tricks=0; // eg for 0byte lines mess
 
   // In the STE if you make hscroll non-zero in the normal way then the shifter
   // buffers 2 rasters ahead. We don't do this so to make sdp correct at the
@@ -2250,7 +2403,7 @@ According to ST-CNX, those registers are in the MMU, not in the shifter.
 #endif
       // asserts on SoWatt, Leavin' Terramis, High Fidelity Dreams
       // ...
-      ASSERT( mem_len>FOUR_MEGS || !(io_src_b&(~b00111111)) ); 
+      //ASSERT( mem_len>FOUR_MEGS || !(io_src_b&(~b00111111)) ); 
       if (mem_len<=FOUR_MEGS) 
         io_src_b&=b00111111;
       DWORD_B_2(&xbios2)=io_src_b;
@@ -2458,7 +2611,7 @@ rasterline to allow horizontal fine-scrolling.
 #if defined(SS_STF)
       if(ST_TYPE!=STE) 
       {
-        TRACE_LOG("STF write %X to %X\n",io_src_b,addr);
+//        TRACE_LOG("STF write %X to %X\n",io_src_b,addr); //ST-CNX
         break; // fixes Hyperforce
       }
       else
@@ -2903,7 +3056,7 @@ void TShifter::SetShiftMode(BYTE NewMode) {
 
   Render(CyclesIn,DISPATCHER_SET_SHIFT_MODE);
 
-#if defined(SS_SHIFTER_RIGHT_OFF_BY_SHIFT_MODE)
+#if defined(SS_SHIFTER_RIGHT_OFF_BY_SHIFT_MODE) 
   AddFreqChange( (NewMode==2 ? MONO_HZ : shifter_freq) );
 #endif
 

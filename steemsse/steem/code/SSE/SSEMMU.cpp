@@ -3,8 +3,8 @@
 #include "SSEMMU.h"
 
 #if defined(SS_MMU)
-TMMU MMU;
 
+#if defined(SS_MMU_WAKE_UP_DL)
 /*
 +------------------------------------------------------------+---------------+
 | Steem  option    |              Wake-up concepts           |    Cycle      |
@@ -20,16 +20,11 @@ TMMU MMU;
 |        4         |      6        |     1      |      1     |   -2  |    -  |
 +------------------+---------------+------------+------------+-------+-------+
 */
+// yes we can:  WU - WS - MODE - SYNC
+TMMU MMU={{0,2,2,1,1,2},{0,2,4,3,1,2},{0,2,0,0,-2,2},{0,2,2,0,0,2}};
 
-BYTE TMMU::WS() {
-  BYTE WS_val=WAKE_UP_STATE;
-  if(WAKE_UP_STATE==1)
-    WS_val=2;
-  else if(WAKE_UP_STATE==2 || WAKE_UP_STATE==WU_SHIFTER_PANIC)
-    WS_val=4;
-  else if(WAKE_UP_STATE==4)
-    WS_val=1;
-  return WS_val;
-}
+#else
+TMMU MMU;
+#endif
 
 #endif

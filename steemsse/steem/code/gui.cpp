@@ -473,10 +473,14 @@ int ChangeBorderSize(int size_in) {
 #include "SSE/SSEMMU.h"
 
 void GUIRefreshStatusBar() {
-  char status_bar[50];
+
+  // build text of "status bar"
+  char status_bar[100];
+
   char sb_st_model[5],sb_tos[5],sb_ram[7];
+
 #if defined(SS_MMU_WAKE_UP_DL)
-  sprintf(sb_st_model,"%s%d",(ST_TYPE)? "STF":"STE",MMU.WS());
+  sprintf(sb_st_model,"%s%d",(ST_TYPE)? "STF":"STE",MMU.WS[WAKE_UP_STATE]);
   if(!WAKE_UP_STATE)
     sb_st_model[3]=0;
 #else
@@ -485,9 +489,48 @@ void GUIRefreshStatusBar() {
   sprintf(sb_tos,"T%x",tos_version);
   sprintf(sb_ram,"%dK",mem_len/1024);
   sprintf(status_bar,"%s %s %s",sb_st_model,sb_tos,sb_ram);
+
+#if defined(SS_IKBD_6301) && defined(SS_VAR_STATUS_STRING_6301)
+  if(HD6301EMU_ON)
+    strcat(status_bar," 6301");
+#endif
+
+#if USE_PASTI && defined(SS_VAR_STATUS_STRING_PASTI)
+  if(hPasti && pasti_active
+#if defined(SS_DRIVE)&&defined(SS_PASTI_ONLY_STX)
+        && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
+#endif            
+    )
+    strcat(status_bar," Pasti");
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING_DISK_NAME)
+  if(FloppyDrive[floppy_current_drive()].NotEmpty())
+  {
+#define TEXT_LENGTH 45
+    char tmp[TEXT_LENGTH+2+2]=" \"";
+    if( strlen(FloppyDrive[floppy_current_drive()].DiskName.Text)<=TEXT_LENGTH)
+      strncpy(tmp+2,FloppyDrive[floppy_current_drive()].DiskName.Text,TEXT_LENGTH);
+    else
+    {
+      strncpy(tmp+2,FloppyDrive[floppy_current_drive()].DiskName.Text,TEXT_LENGTH-3);
+      strcat(tmp,"...");
+    }
+    strcat(status_bar,tmp);
+    strcat(status_bar,"\"");
+#undef TEXT_LENGTH
+  }
+#endif
+
+
+//  TRACE_LOG("refresh status bar %s\n",status_bar);
+  // get handle
   HWND status_bar_win=GetDlgItem(StemWin,120);
-  ShowWindow(status_bar_win,((border&1)||draw_win_mode[screen_res])?SW_SHOW:SW_HIDE);
+  // change text
   SendMessage(status_bar_win,WM_SETTEXT,0,(LPARAM)(LPCTSTR)status_bar);
+  // should we show or hide that "staus bar"?
+  ShowWindow(status_bar_win,(SSE_STATUS_BAR
+    &&(screen_res>1||draw_win_mode[screen_res])) ? SW_SHOW : SW_HIDE);
 }
 
 #endif
@@ -863,9 +906,24 @@ bool MakeGUI()
 #endif
 
 
-#if defined(SS_VAR_STATUS_STRING)
-  CreateWindow("Steem Path Display",WINDOW_TITLE,WS_CHILD | WS_VISIBLE ,
-                          x+23,0,100,20,StemWin,(HMENU)120,Inst,NULL);
+#if defined(SS_VAR_STATUS_STRING)  
+/*
+    There are various possibilities, with border, white background, etc.
+    The zone is placed once and for all, I don't know how to shift it. This is
+    a problem when we switch borders on/off.
+    WINDOW_TITLE is dummy
+*/
+  
+  //Win=CreateWindow("Steem Path Display",WINDOW_TITLE,WS_CHILD | WS_VISIBLE ,
+  //Win=CreateWindowEx(512,"Steem Path Display",WINDOW_TITLE,WS_CHILD | WS_VISIBLE ,
+#if defined(SS_VAR_STATUS_STRING_DISK_NAME)
+#define WIDTH (370)
+#else
+#define WIDTH (200)
+#endif
+  Win=CreateWindowEx(0,"Static",WINDOW_TITLE,WS_CHILD | WS_VISIBLE|SS_CENTER
+    |SS_CENTERIMAGE/*|SS_SUNKEN*/,x+30, 0,WIDTH,20,StemWin,(HMENU)120,Inst,NULL);
+#undef WIDTH
 #endif
 
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_INFO),WS_CHILD | WS_VISIBLE,

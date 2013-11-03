@@ -1325,7 +1325,7 @@ void                              m68k_divu(){
     INSTRUCTION_TIME_ROUND(0); //Round first for interrupts
     INSTRUCTION_TIME_ROUND(38);
   }else{
-    PREFETCH_IRC;
+    PREFETCH_IRC; // TODO: at the end?
 #if defined(SS_CPU_LINE_8_TIMINGS)
     FETCH_TIMING;
 #endif

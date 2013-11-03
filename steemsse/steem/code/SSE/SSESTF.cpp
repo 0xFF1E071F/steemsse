@@ -1,6 +1,10 @@
 #if defined(SS_STF)
 
+char st_model_name[SS_STF_ST_MODELS][sizeof("Mega ST4")]={"STE","STF","Mega ST4"};
+
 int SwitchSTType(int new_type) {
+
+  ASSERT( sizeof("123")==4 );
   ASSERT(new_type==STE||new_type==STF||new_type==MEGASTF);
   ST_TYPE=new_type;
   if(ST_TYPE!=STE) // all STF types

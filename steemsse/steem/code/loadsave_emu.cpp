@@ -12,6 +12,9 @@ for Steem's memory snapshots system.
 #if defined(STEVEN_SEAGAL)
 extern EasyStr RunDir,WriteDir,INIFile,ScreenShotFol;
 extern EasyStr LastSnapShot,BootStateFile,StateHist[10],AutoSnapShotName;
+
+#define LOGSECTION LOGSECTION_INIT
+
 #endif
 
 //---------------------------------------------------------------------------
@@ -806,9 +809,14 @@ Steem SSE will reset auto.sts and quit\nSorry!",
   if(Version>=46) // 3.5.4
   {
 #if defined(SS_MMU_WAKE_UP)
-    ReadWrite(WAKE_UP_STATE);
+    ReadWrite(WAKE_UP_STATE); // and not struct MMU
+//    TRACE_LOG("WU option L/S %d\n",WAKE_UP_STATE);
     if(WAKE_UP_STATE>WU_SHIFTER_PANIC)
       WAKE_UP_STATE=0;
+#if defined(SS_VAR_STATUS_STRING)
+    GUIRefreshStatusBar();//overkill
+#endif
+    
 #endif
   }
 
@@ -945,4 +953,6 @@ void LoadSnapShotUpdateVars(int Version)
 }
 //---------------------------------------------------------------------------
 
-
+#ifdef STEVEN_SEAGAL
+#undef LOGSECTION 
+#endif

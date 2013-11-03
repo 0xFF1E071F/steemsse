@@ -9,6 +9,8 @@ enum ESTModels {STE,STF,MEGASTF,SS_STF_ST_MODELS};
 
 int SwitchSTType(int new_type); // adapt to new machine
 
+extern char st_model_name[SS_STF_ST_MODELS][sizeof("Mega ST4")];
+
 #endif
 
 #endif// SSSTF_H

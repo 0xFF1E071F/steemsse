@@ -1197,6 +1197,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SendMessage(HWND(lPar),BM_SETCHECK,HD6301EMU_ON,0);
             TRACE_LOG("Option HD6301 emu: %d\n",HD6301EMU_ON);
 //            printf("HD6301 emu: %d\n",HD6301EMU_ON);
+#if defined(SS_VAR_STATUS_STRING)
+            GUIRefreshStatusBar();//overkill
+#endif
           }
           break;
 #endif
@@ -1602,12 +1605,33 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 7306: // replicate ADAT option
           if (HIWORD(wPar)==BN_CLICKED){
             floppy_instant_sector_access=!floppy_instant_sector_access;
-            SendMessage(HWND(lPar),BM_SETCHECK,ADAT,0);
-            TRACE_LOG("Option ADAT %d\n",ADAT);
+            SendMessage(HWND(lPar),BM_SETCHECK,!floppy_instant_sector_access,0);
+            TRACE_LOG("Option ADAT %d\n",!floppy_instant_sector_access);
             if(DiskMan.Handle)
               DiskMan.RefreshSnails();
           }
           break; 
+#endif
+
+#if defined(SS_VAR_STATUS_STRING)
+        case 7307: // status bar
+          if (HIWORD(wPar)==BN_CLICKED){
+            SSE_STATUS_BAR=!SSE_STATUS_BAR;
+            SendMessage(HWND(lPar),BM_SETCHECK,SSE_STATUS_BAR,0);
+            TRACE_LOG("Option status bar %d\n",SSE_STATUS_BAR);
+            GUIRefreshStatusBar();
+          }
+          break; 
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_INFO_SSE_PAGE)
+        case 7308: // drive track info  
+          if (HIWORD(wPar)==BN_CLICKED){
+            OSD_DRIVE_INFO=!OSD_DRIVE_INFO;
+            SendMessage(HWND(lPar),BM_SETCHECK,OSD_DRIVE_INFO,0);
+            TRACE_LOG("Option drive track info %d\n",OSD_DRIVE_INFO);
+          }
+          break;
 #endif
 
 #endif//SS
@@ -2136,7 +2160,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             osd_show_disk_light=!osd_show_disk_light;
             SendMessage(HWND(lPar),BM_SETCHECK,osd_show_disk_light,0);
           }
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_INFO_OSD_PAGE)
         }else if(i==1) {
           if (HIWORD(wPar)==BN_CLICKED){
             OSD_DRIVE_INFO=!OSD_DRIVE_INFO;

@@ -21,7 +21,6 @@
 
 #define ACT ABSOLUTE_CPU_TIME
 
-
 #if defined(SS_SHIFTER_TRICKS) && defined(SS_MFP_RATIO)
 
 #define HBL_PER_SECOND (CpuNormalHz/Shifter.CurrentScanline.Cycles)
@@ -29,6 +28,8 @@
 //#HBL/sec    15666.5 15789.85827 35809.14286
 
 #else 
+
+
 #if defined(SS_FDC_PRECISE_HBL)//todo table
 #define HBL_PER_FRAME ( (shifter_freq_at_start_of_vbl==50)?HBLS_50HZ: \
   ( (shifter_freq_at_start_of_vbl==60)? HBLS_60HZ : HBLS_72HZ))
@@ -37,7 +38,7 @@
   (shifter_freq_at_start_of_vbl==60?HBLS_60HZ:(HBLS_72HZ/2)))
 #endif
 
-#define HBL_PER_SECOND (HBL_PER_FRAME*shifter_freq_at_start_of_vbl)  //still not super accurate
+#define HBL_PER_SECOND HBLS_PER_SECOND_AVE//(HBL_PER_FRAME*shifter_freq_at_start_of_vbl)  //still not super accurate
 #endif
 
 
@@ -419,8 +420,12 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 // STF //
 /////////
 
+
+#if defined(SS_STF)
+
 #define STF_VERT_OVSCN_OFFSET 4
 
+#endif
 
 /////////////
 // VARIOUS //

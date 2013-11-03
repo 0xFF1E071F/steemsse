@@ -117,7 +117,6 @@ void power_on()
   GUIRefreshStatusBar();//overkill
 #endif
 
-
   ZeroMemory(Mem+MEM_EXTRA_BYTES,mem_len);
   on_rte=ON_RTE_RTE;
   SET_PC(rom_addr);

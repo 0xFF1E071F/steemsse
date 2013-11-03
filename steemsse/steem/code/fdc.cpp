@@ -445,6 +445,10 @@ void floppy_fdc_command(BYTE cm)
     return;
   }
 #endif
+#if defined(SS_DRIVE_MOTOR_ON)
+  else
+    SF314[DRIVE].MotorOn=true; // European Demos OVR V (!)
+#endif
   if (delay_exec==0) fdc_execute();
 }
 //---------------------------------------------------------------------------
@@ -488,7 +492,7 @@ void fdc_execute()
   // if the disk spinning up (fdc_spinning_up).
  
 #if defined(STEVEN_SEAGAL)&&defined(SS_PSG)&&defined(SS_FDC)
-  ASSERT( YM2149.Drive()!=TYM2149::NO_VALID_DRIVE || WD1772.CommandType()==4);
+  ASSERT( YM2149.Drive()!=TYM2149::NO_VALID_DRIVE || WD1772.CommandType()==4 ||!ADAT);
 #endif
 
   int floppyno=floppy_current_drive();
@@ -1300,6 +1304,7 @@ We don't use 'revs_to_wait'
       WD1772.IndexCounter++;
     if(WD1772.IndexCounter<10)
     {
+      TRACE_LOG("IP for motor off %d A%d B%d\n",WD1772.IndexCounter,SF314[0].MotorOn,SF314[1].MotorOn);
       agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION,revs_to_wait);
       return;
     }

@@ -35,6 +35,7 @@ struct TOption {
   unsigned int OsdImageName:1;
   unsigned int PastiJustSTX:1;
   unsigned int Interpolate:1;
+  unsigned int StatusBar:1;
 #ifdef __cplusplus // visible only to C++ objects
   TOption();
   void Init();
@@ -67,6 +68,8 @@ extern struct TOption SSEOption;
 #define OSD_IMAGE_NAME (SSEOption.OsdImageName)
 #define PASTI_JUST_STX (SSEOption.PastiJustSTX)
 #define SSE_INTERPOLATE (SSEOption.Interpolate)
+#define SSE_STATUS_BAR (SSEOption.StatusBar)
+
 #else//!defined(SS_SSE_OPTION_STRUCT)
 
 #endif//#if defined(SS_SSE_OPTION_STRUCT)

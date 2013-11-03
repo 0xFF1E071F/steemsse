@@ -46,9 +46,10 @@ void TOption::Init() {
   UseSDL=0;
   OsdDriveInfo=1;
   Dsp=1;
-  OsdImageName=1;
+  OsdImageName=0;
   PastiJustSTX=0; // dangerous?
   Interpolate=0;
+  StatusBar=1;
 }
 
 #endif//#if defined(SS_SSE_OPTION_STRUCT)
