@@ -74,6 +74,12 @@ private:
 
   IDirectDraw2 *DDObj;
   IDirectDrawSurface *DDPrimarySur,*DDBackSur;
+
+#if defined(SS_VID_3BUFFER_WIN)
+  IDirectDrawSurface *DDBackSur2; // our second back buffer
+  bool SurfaceToggle;
+#endif
+
   IDirectDrawClipper *DDClipper;
   DDSURFACEDESC DDBackSurDesc;
   DWORD DDLockFlags;
@@ -155,8 +161,14 @@ public:
   HINSTANCE hFreeImage;
   int ScreenShotFormatOpts;
   Str ScreenShotExt;
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+#if defined(STEVEN_SEAGAL)
+#if defined(SS_VID_SAVE_NEO)
   neochrome_file *pNeoFile;
+#endif
+#if defined(SS_VID_3BUFFER_WIN)
+  long VSyncTiming; // must be public for reset
+  BOOL BlitIfVBlank(); // our polling function
+#endif
 #endif
 
   bool DrawToVidMem,BlitHideMouse;

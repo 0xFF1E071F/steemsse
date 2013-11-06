@@ -50,6 +50,8 @@ void TOption::Init() {
   PastiJustSTX=0; // dangerous?
   Interpolate=0;
   StatusBar=1;
+  WinVSync=0; // really need correct display (50hz, 100hz) or run at 60hz
+  TripleBuffer=0; // CPU intensive
 }
 
 #endif//#if defined(SS_SSE_OPTION_STRUCT)

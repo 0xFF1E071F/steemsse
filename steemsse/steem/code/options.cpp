@@ -1156,6 +1156,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SendMessage(HWND(lPar),BM_SETCHECK,Disp.ScreenShotMinSize,0);
           }
           break;
+
 #if defined(STEVEN_SEAGAL) 
 #if defined(SS_VID_BORDERS) // Option Display size
         case 1026:
@@ -1226,7 +1227,38 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 
+#if defined(SS_VID_VSYNC_WINDOW) // Option Window VSync
+        case 1033:
+          if(HIWORD(wPar)==BN_CLICKED)
+          {
+            SSE_WIN_VSYNC=!SSE_WIN_VSYNC;
+            TRACE_LOG("Option Window VSync: %d\n",SSE_WIN_VSYNC);
+            if(SSE_WIN_VSYNC)
+              SSE_3BUFFER=false;
+//            SendMessage(HWND(lPar),BM_SETCHECK,SSE_WIN_VSYNC,0);
+            OptionBox.SSEUpdateIfVisible();
+            Disp.ScreenChange();
+          }
+          break;
+#endif
+
+#if defined(SS_VID_3BUFFER) // Option Triple Buffer
+        case 1034:
+          if(HIWORD(wPar)==BN_CLICKED)
+          {
+            SSE_3BUFFER=!SSE_3BUFFER;
+            if(SSE_3BUFFER)
+              SSE_WIN_VSYNC=false;
+            TRACE_LOG("Option Triple Buffer: %d\n",SSE_3BUFFER);
+//            SendMessage(HWND(lPar),BM_SETCHECK,SSE_3BUFFER,0);
+            OptionBox.SSEUpdateIfVisible();
+            Disp.ScreenChange();
+          }
+          break;
+#endif
+
 #endif//SS
+
         case 1051://SS screenshot format
           if (HIWORD(wPar)==CBN_SELENDOK){
             Str Ext;

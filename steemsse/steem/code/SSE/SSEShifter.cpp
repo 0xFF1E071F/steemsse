@@ -1392,7 +1392,7 @@ detect unstable: switch MED/LOW - Beeshift
     bytes of video memory for the scanline.
     However, because of a HI/LO stabiliser or HBLANK at cycle 424, only
     about 48 more pixels are visible.
-    For a 230byte DE is on from cycle 4 to 464 (230x2=460).
+    For a 230byte line DE is on from cycle 4 to 464 (230x2=460).
     Because a 60hz line stops at cycle 372, the sync switch must hit just
     after that and right before the test for end of 50hz line occurs.
     That's why cycle 376 is targeted, but according to wake-up state other
@@ -1524,7 +1524,7 @@ Tests are arranged to be efficient.
       }
     }
   }
-#endif//test04
+#endif
 
 
   if((CurrentScanline.Tricks&TRICK_LINE_PLUS_44)
@@ -1741,7 +1741,8 @@ void TShifter::CheckVerticalOverscan() {
     enough! TODO PYM big border?
 
     7) The thresholds are wake-up sensitive, ijor's test program uses this.
-    This could explain why some demos don't seem to work on a machine.
+    This could explain why some demos don't seem to work on a machine,
+    according to users.
 
     -Auto 168 (WU1 OK, WU2, STE flicker)
     30 - 488:S0000 512:S0002 512:T0100
@@ -1752,6 +1753,8 @@ void TShifter::CheckVerticalOverscan() {
     Y-30 C524  372:S0000 520:S0002 OK
     Y-30 C520  356:S0000 504:S0002 fails in WU2
 
+    -Nostalgia/Lemmings end scroller WS3
+    Y-30 C520  448:S0000 504:S0002 sometimes -> breaks screen in WU2
 
 */
 

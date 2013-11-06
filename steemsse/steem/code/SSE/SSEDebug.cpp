@@ -30,7 +30,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_FDC ] = 0;
   logsection_enabled[ LOGSECTION_IO ] = 0;
   logsection_enabled[ LOGSECTION_MFP_TIMERS ] = 0;
-  logsection_enabled[ LOGSECTION_INIT ] =0;
+  logsection_enabled[ LOGSECTION_INIT ] =1;
   logsection_enabled[ LOGSECTION_CRASH ] = 0;
   logsection_enabled[ LOGSECTION_STEMDOS ] = 0;
   logsection_enabled[ LOGSECTION_IKBD ] = 0;
@@ -38,7 +38,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_INTERRUPTS ] = 0;
   logsection_enabled[ LOGSECTION_TRAP ] = 0;
   logsection_enabled[ LOGSECTION_SOUND ] = 0;
-  logsection_enabled[ LOGSECTION_VIDEO ] = 0;
+  logsection_enabled[ LOGSECTION_VIDEO ] = 1;
   logsection_enabled[ LOGSECTION_BLITTER ] = 0;
   logsection_enabled[ LOGSECTION_MIDI ] = 0;
   logsection_enabled[ LOGSECTION_TRACE ] = 0;

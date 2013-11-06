@@ -212,6 +212,11 @@ void power_on()
   hbl_pending=false;
 
   disable_input_vbl_count=50*3; // 3 seconds
+
+#if defined(SS_VID_3BUFFER_WIN)
+  Disp.VSyncTiming=0;
+#endif
+
 }
 //---------------------------------------------------------------------------
 #define LOGSECTION LOGSECTION_ALWAYS

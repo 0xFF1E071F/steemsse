@@ -307,7 +307,11 @@ void draw_set_jumps_and_source()
   bool big_draw=CanUse_400;
   UNIX_ONLY( if (FullScreen) big_draw=true;  )
 #ifdef WIN32
-  if (FullScreen){
+  if (FullScreen
+#if defined(SS_VID_SCANLINES_INTERPOLATED) && defined(SS_VID_3BUFFER)
+        && !(SCANLINES_INTERPOLATED&&SSE_3BUFFER)
+#endif
+    ){
     if (draw_fs_blit_mode==DFSM_STRETCHBLIT || draw_fs_blit_mode==DFSM_LAPTOP) big_draw=0;
   }else if (big_draw){
     if (ResChangeResize==0){
@@ -370,12 +374,21 @@ void draw_set_jumps_and_source()
   
   if (big_draw
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
-    ||SCANLINES_INTERPOLATED
+    || (SCANLINES_INTERPOLATED
+#if defined(SS_VID_SCANLINES_INTERPOLATED) && defined(SS_VID_3BUFFER)
+        && !(SCANLINES_INTERPOLATED&&SSE_3BUFFER)
+#endif
+
+    )
 #endif
     ){
     int p=1; // 640 width 400 height
 #ifdef WIN32
-    if (FullScreen){
+    if (FullScreen
+#if defined(SS_VID_SCANLINES_INTERPOLATED) && defined(SS_VID_3BUFFER)
+        && !(SCANLINES_INTERPOLATED&&SSE_3BUFFER)
+#endif
+      ){
       if (draw_fs_fx==DFSFX_GRILLE) p=2; // 640x200 low/med
     }else if (screen_res<2){
       if (draw_win_mode[screen_res]==DWM_GRILLE) p=2; // 640x200 low/med
@@ -409,11 +422,19 @@ void draw_set_jumps_and_source()
       ow=BORDER_SIDE*2 + 640 + BORDER_SIDE*2;
 #endif
 #ifdef WIN32
-      if (FullScreen){
+      if (FullScreen
+#if defined(SS_VID_SCANLINES_INTERPOLATED) && defined(SS_VID_3BUFFER)
+        && !(SCANLINES_INTERPOLATED&&SSE_3BUFFER)
+#endif
+        ){
         ox=(800-ow)/2;oy=(600-oh)/2;
       }
 #endif
-    }else if (FullScreen){
+    }else if (FullScreen
+#if defined(SS_VID_SCANLINES_INTERPOLATED) && defined(SS_VID_3BUFFER)
+        && !(SCANLINES_INTERPOLATED&&SSE_3BUFFER)
+#endif
+      ){
       WIN_ONLY( oy=int(using_res_640_400 ? 0:40); )
       if (overscan && (border==2)){ //hack overscan
         oy=0;oh=480;
@@ -421,7 +442,18 @@ void draw_set_jumps_and_source()
     }
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
-    if(!screen_res && SCANLINES_INTERPOLATED && !FullScreen) 
+    if(!screen_res && SCANLINES_INTERPOLATED && 
+#if defined(SS_VID_3BUFFER)
+      (!FullScreen ||SSE_3BUFFER
+#if defined(SS_VID_SCANLINES_INTERPOLATED) && defined(SS_VID_3BUFFER)
+        && !(SCANLINES_INTERPOLATED&&SSE_3BUFFER)
+#endif
+      
+      )
+#else
+      !FullScreen
+#endif
+      ) 
       ow/=2;
 #endif
 
@@ -460,7 +492,13 @@ void draw_set_jumps_and_source()
         ow+=(BORDER_SIDE+BORDER_SIDE) * 2;
       }
       oh=shifter_y+res_vertical_scale*(BORDER_TOP+BORDER_BOTTOM);
-    }else if (FullScreen){
+    }else if (FullScreen
+      
+#if defined(SS_VID_SCANLINES_INTERPOLATED) && defined(SS_VID_3BUFFER)
+        && !(SCANLINES_INTERPOLATED&&SSE_3BUFFER)
+#endif
+      
+      ){
       WIN_ONLY( oy=int(using_res_640_400 ? 0:40); )
       if (overscan && (border==2)){ //hack overscan
         oy=0;
@@ -1009,7 +1047,16 @@ void inline draw_scanline_to_end()
 //---------------------------------------------------------------------------
 bool draw_blit()
 {
+#if defined(SS_VID_3BUFFER_WIN)
+  // we blit the unlocked backsurface
+  if (!draw_lock || SSE_3BUFFER 
+#if !defined(SS_VID_3BUFFER_FS)
+    && !FullScreen
+#endif
+    ){ 
+#else
   if (!draw_lock){
+#endif
     if (bAppMinimized==0){
       if (BytesPerPixel==1) palette_flip();
       return Disp.Blit();

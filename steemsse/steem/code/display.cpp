@@ -66,6 +66,11 @@ SteemDisplay::SteemDisplay()
   DDObj=NULL;
   DDPrimarySur=NULL;
   DDBackSur=NULL;
+
+#if defined(SS_VID_3BUFFER_WIN)
+  DDBackSur2=NULL;
+#endif
+
   DDClipper=NULL;
   DDBackSurIsAttached=0;
   DDExclusive=0;
@@ -266,9 +271,6 @@ HRESULT SteemDisplay::InitDD()
 //---------------------------------------------------------------------------
 HRESULT WINAPI SteemDisplay::DDEnumModesCallback(LPDDSURFACEDESC ddsd,LPVOID t)
 {
-  ASSERT(! (ddsd->dwFlags & DDSD_ALPHABITDEPTH) );
-  ASSERT(! (ddsd->dwFlags & DDSD_ZBUFFERBITDEPTH) );
-  ASSERT( ddsd->lPitch== ddsd->dwWidth*(ddsd->ddpfPixelFormat.dwRGBBitCount/8) );
 
 #ifdef SS_VID_CHECK_DDFS2
   TRACE_LOG("DD fullscreen mode %dx%d %d bits %dHz\n",
@@ -281,13 +283,11 @@ HRESULT WINAPI SteemDisplay::DDEnumModesCallback(LPDDSURFACEDESC ddsd,LPVOID t)
   
   SteemDisplay *This=(SteemDisplay*)t;//SS as passed
   int hicol=(ddsd->ddpfPixelFormat.dwRGBBitCount>8),idx=-1;
-  ASSERT( (!hicol) || ddsd->ddpfPixelFormat.dwRGBBitCount==16 );
   if (ddsd->dwWidth==640 && ddsd->dwHeight==480) idx=0;
   if (ddsd->dwWidth==800 && ddsd->dwHeight==600) idx=1;
   if (ddsd->dwWidth==640 && ddsd->dwHeight==400) idx=2;
 
   if (idx>=0){
-    ASSERT( ddsd->dwWidth!=320 );
     This->DDDisplayModePossible[idx][hicol]=true;
     TRACE_LOG("Adding idx %d hicol %d w %d h%d %dHz\n",
       idx,hicol,ddsd->dwWidth,ddsd->dwHeight,ddsd->dwRefreshRate);
@@ -308,6 +308,7 @@ HRESULT WINAPI SteemDisplay::DDEnumModesCallback(LPDDSURFACEDESC ddsd,LPVOID t)
 //---------------------------------------------------------------------------
 HRESULT SteemDisplay::DDCreateSurfaces()
 {
+  //SS this is a private function
   DDSURFACEDESC ddsd;
   HRESULT Ret;
 
@@ -340,18 +341,36 @@ HRESULT SteemDisplay::DDCreateSurfaces()
       break;
     }
   }
+
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+  DDSURFACEDESC PrimaryFeedback;
+  PrimaryFeedback.dwSize=sizeof(DDSURFACEDESC);
+  if (DDPrimarySur->GetSurfaceDesc(&PrimaryFeedback)==DD_OK)
+  {
+    TRACE_LOG("FS %d BackBufferCount %d Refresh Rate %d\n",
+      FullScreen,PrimaryFeedback.dwBackBufferCount,PrimaryFeedback.dwRefreshRate);    
+  }
+#endif
+
   if (FullScreen) DDBackSurIsAttached=true;
 
   if ((Ret=DDPrimarySur->SetClipper(DDClipper))!=DD_OK){
     return DDError("SetClipper FAILED",Ret);
   }
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_FS)
+/*  When option Triple Buffer is set, we use the same system for fullscreen
+    as for window. For the moment stretch mode only.
+*/
+  if(!FullScreen || SSE_3BUFFER
+    || (BORDER_40 && draw_fs_blit_mode==DFSM_STRAIGHTBLIT)) 
+#elif defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
   // we may need a bigger drawing zone in fullscreen mode too
-  if (!FullScreen || (BORDER_40
-    && draw_fs_blit_mode==DFSM_STRAIGHTBLIT) ){
+  if (!FullScreen || (BORDER_40 && draw_fs_blit_mode==DFSM_STRAIGHTBLIT) )
 #else
-  if (FullScreen==0){
+  if (FullScreen==0)
 #endif
+    {
     if (DrawToVidMem==0) ExtraFlags=DDSCAPS_SYSTEMMEMORY; // Like malloc
     for (int n=0;n<2;n++){
       ZeroMemory(&DDBackSurDesc,sizeof(DDSURFACEDESC));
@@ -403,10 +422,25 @@ HRESULT SteemDisplay::DDCreateSurfaces()
           return DDError("CreateSurface for BackSur FAILED",Ret);
         }
       }else{
+#if defined(SS_VID_3BUFFER_WIN)
+        // Let's create a second back surface for our "triple buffer"
+        Ret=DDObj->CreateSurface(&DDBackSurDesc,&DDBackSur2,NULL);
+        if(Ret!=DD_OK)
+        {
+          TRACE_LOG("Failed create DDBackSur2 DDERR %d\n",Ret);
+          DDBackSur2=NULL; // prevents system to be used
+          SSE_3BUFFER=false; // reset option
+          OptionBox.SSEUpdateIfVisible(); 
+        }
+        VSyncTiming=0;
+        SurfaceToggle=true; // will be toggled false at first lock
+        if(FullScreen)
+          draw_fs_blit_mode=DFSM_STRETCHBLIT; // only working one
+#endif
         break;
       }
     }
-  }else{  
+  }else{  // SS Fullscreen
     DDSCAPS caps;
 
     caps.dwCaps=DDSCAPS_BACKBUFFER;
@@ -415,8 +449,8 @@ HRESULT SteemDisplay::DDCreateSurfaces()
       return DDError("CreateSurface for BackSur FAILED",Ret);
     }
   }
-
   DDBackSurDesc.dwSize=sizeof(DDSURFACEDESC);
+
   if ((Ret=DDBackSur->GetSurfaceDesc(&DDBackSurDesc))!=DD_OK){
     return DDError("GetSurfaceDesc for BackSur FAILED",Ret);
   }
@@ -442,6 +476,11 @@ void SteemDisplay::DDDestroySurfaces()
   if (DDBackSur){
     DDBackSur->Release(); DDBackSur=NULL;
   }
+#if defined(SS_VID_3BUFFER_WIN)
+  if (DDBackSur2){
+    DDBackSur2->Release(); DDBackSur2=NULL;
+  }
+#endif
   DDBackSurIsAttached=0;
 }
 //---------------------------------------------------------------------------
@@ -546,7 +585,7 @@ bool SteemDisplay::InitGDI()
 
   return true;
 }
-#undef LOGSECTION
+#undef LOGSECTION//#define LOGSECTION LOGSECTION_INIT
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 
@@ -572,6 +611,26 @@ HRESULT SteemDisplay::Lock()
       if (DDBackSur->IsLost()==DDERR_SURFACELOST) return DDERR_SURFACELOST;
 
       DDBackSurDesc.dwSize=sizeof(DDSURFACEDESC);
+
+#if defined(SS_VID_3BUFFER_WIN)
+      // trying to mind performance and footprint
+      IDirectDrawSurface *OurBackSur;
+      if(SSE_3BUFFER)
+      {
+        SurfaceToggle=!SurfaceToggle; // toggle at lock
+        OurBackSur=(SurfaceToggle && DDBackSur2) ? DDBackSur2: DDBackSur;
+      }
+      else
+        OurBackSur=DDBackSur;
+
+      if ((DErr=OurBackSur->Lock(NULL,&DDBackSurDesc,DDLOCK_WAIT | DDLockFlags,NULL))!=DD_OK){
+        if (DErr!=DDERR_SURFACELOST && DErr!=DDERR_SURFACEBUSY){
+          DDError(T("DirectDraw Lock Error"),DErr);
+          Init();
+        }
+        return DErr;
+      }
+#else
       if ((DErr=DDBackSur->Lock(NULL,&DDBackSurDesc,DDLOCK_WAIT | DDLockFlags,NULL))!=DD_OK){
         if (DErr!=DDERR_SURFACELOST && DErr!=DDERR_SURFACEBUSY){
           DDError(T("DirectDraw Lock Error"),DErr);
@@ -579,6 +638,7 @@ HRESULT SteemDisplay::Lock()
         }
         return DErr;
       }
+#endif
 
       draw_line_length=DDBackSurDesc.lPitch;
       draw_mem=LPBYTE(DDBackSurDesc.lpSurface);
@@ -618,11 +678,18 @@ void SteemDisplay::Unlock()
 #endif
 
   if (Method==DISPMETHOD_DD){
+#if defined(SS_VID_3BUFFER_WIN)
+    IDirectDrawSurface *OurBackSur=
+      (SSE_3BUFFER && SurfaceToggle && DDBackSur2) ? DDBackSur2:DDBackSur;
+    OurBackSur->Unlock(NULL);
+#else
     DDBackSur->Unlock(NULL);
+#endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
+
     //TODO reuse objects? possible?
-    if(video_recording && runstate==RUNSTATE_RUNNING)
+    if(video_recording && runstate==RUNSTATE_RUNNING && !SSE_3BUFFER)
     {
       if(!pAviFile)
       {
@@ -635,18 +702,15 @@ void SteemDisplay::Unlock()
           shifter_freq_at_start_of_vbl/frameskip);
       }
       HDC SurfDC;
-      VERIFY( DDBackSur->GetDC(&SurfDC)==DD_OK );
+      DDBackSur->GetDC(&SurfDC);
       DDSURFACEDESC ddsd;
       ZeroMemory(&ddsd, sizeof(ddsd));
       ddsd.dwSize = sizeof(ddsd);
-      VERIFY( DDBackSur->GetSurfaceDesc(&ddsd)==DD_OK );
+      DDBackSur->GetSurfaceDesc(&ddsd)==DD_OK;
       HBITMAP OffscrBmp = CreateCompatibleBitmap(SurfDC,ddsd.dwWidth,ddsd.
         dwHeight);
-      ASSERT(OffscrBmp);
       HDC OffscrDC = CreateCompatibleDC(SurfDC);
-      ASSERT(OffscrDC);
       HBITMAP OldBmp = (HBITMAP)SelectObject(OffscrDC, OffscrBmp);
-      ASSERT(OldBmp);
       BitBlt(OffscrDC, 0, 0,ddsd.dwWidth,ddsd.dwHeight, SurfDC, 0, 0, SRCCOPY);
       if(pAviFile->AppendNewFrame(OffscrBmp))
       {
@@ -666,21 +730,33 @@ void SteemDisplay::Unlock()
 //---------------------------------------------------------------------------
 void SteemDisplay::VSync()
 {
-  ASSERT(FullScreen);
-
+#if !defined(SS_VID_VSYNC_WINDOW)
   if (FullScreen==0) return;
-
+#endif
   log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: VSYNC - Starting wait for VBL at ")+(timeGetTime()-run_start_time));
 
   BOOL Blanking=FALSE;
   DDObj->GetVerticalBlankStatus(&Blanking);
   if (Blanking==FALSE){
+#if defined(SS_VID_VSYNC_WINDOW)
+    DWORD botline; //=480-40;
+    if(FullScreen)
+      if (border & 1)
+        botline=600-40;
+      else if (using_res_640_400)
+        botline=400-40;
+      else
+        botline=480-40;
+    else // window
+      botline=GetScreenHeight();    
+#else
     DWORD botline=480-40;
     if (border & 1){
       botline=600-40;
     }else if (using_res_640_400){
       botline=400-40;
     }
+#endif
     DWORD line;
     HRESULT hRet;
     do{
@@ -717,7 +793,6 @@ bool SteemDisplay::Blit()
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BLIT_TRY_BLOCK)
         try {
 #endif
-
         switch (draw_fs_blit_mode){
           case DFSM_FLIP:
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
@@ -728,6 +803,7 @@ bool SteemDisplay::Blit()
               break;
             }
 #endif
+
             hRet=DDPrimarySur->Flip(NULL,0); //DDFLIP_WAIT);
             break;
           case DFSM_STRAIGHTBLIT:
@@ -735,14 +811,6 @@ bool SteemDisplay::Blit()
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
             if(BORDER_40) // clip from larger to 800
             {
-              // CLS
-              //HDC dc=GetDC(StemWin);
-              //VERIFY( FillRect(dc,&draw_blit_source_rect,(HBRUSH)GetStockObject(BLACK_BRUSH)) ); 
-
-//TODO bltColorFill(Rect dest, int fillValue);
-
-
-              // trick              
               RECT our_clipping={16,0,816,556-6};
               hRet=DDPrimarySur->Blt(&draw_blit_source_rect,DDBackSur,
                   &our_clipping,DDBLT_WAIT,NULL);
@@ -769,7 +837,32 @@ bool SteemDisplay::Blit()
 #endif
                 draw_blit_source_rect.right/=2; 
 #endif
+
+#if defined(SS_VID_3BUFFER)
+            IDirectDrawSurface *OurBackSur;
+            if(SSE_3BUFFER)
+            {
+              OurBackSur=((!SurfaceToggle)&&DDBackSur2) ? DDBackSur2:DDBackSur;
+              
+              if(OurBackSur->GetBltStatus(DDGBS_CANBLT)==DD_OK)
+                hRet=DDPrimarySur->Blt(&Dest,OurBackSur,&draw_blit_source_rect,
+                DDBLT_WAIT,NULL);
+              else
+                TRACE_LOG("Can't blt\n");
+            }
+            else
+#endif
             hRet=DDPrimarySur->Blt(&Dest,DDBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
+            if(SCANLINES_INTERPOLATED) //restore!
+#if defined(SS_VID_SCANLINES_INTERPOLATED_MED)
+              if(screen_res==1)
+                draw_blit_source_rect.right++;
+              else
+#endif
+                draw_blit_source_rect.right*=2; 
+#endif
             break;
           }
         }
@@ -779,29 +872,22 @@ bool SteemDisplay::Blit()
           hRet=1234; // real ones are negative
         }
 #endif
-        if (hRet==DDERR_SURFACELOST){ // SS can happen if idle for long
+        if (hRet==DDERR_SURFACELOST){ 
           hRet=RestoreSurfaces();
-          if (hRet!=DD_OK){
+          if (hRet!=DD_OK){ // SS can happen if idle for long
             DDError(T("Drawing memory permanently lost"),hRet);
             TRACE_LOG("Drawing memory permanently lost\n");
             Init();
           }
         }
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
-/*  It can fail for whatever reason. First we try to switch to stretch mode,
-    if it still fails we go laptop mode.
+/*  It can fail for whatever reason. In that case we 
+    brutally stop so the player sees it's wrong.
 */
         else if(hRet) 
         {
-          if(draw_fs_blit_mode!=DFSM_STRETCHBLIT)
-            draw_fs_blit_mode=DFSM_STRETCHBLIT;
-          else
-          {
-            draw_fs_blit_mode=DFSM_LAPTOP; //should work
-            change_fullscreen_display_mode(true); // no warning
-            runstate=RUNSTATE_STOPPING;//we lost picture, we must stop
-          }
-          TRACE_LOG("Fullscreen Direct Draw blit failed, error %d, changing to mode %d\n",hRet,draw_fs_blit_mode);
+          TRACE_LOG("Fullscreen blit error %d\n",hRet);
+          runstate=RUNSTATE_STOPPING;
         }
 #endif
       }else{ //not running right now
@@ -814,7 +900,14 @@ bool SteemDisplay::Blit()
         RECT Dest;
         get_fullscreen_rect(&Dest);
         for (int i=0;i<2;i++){
+
+#if defined(SS_VID_3BUFFER_WIN)
+          IDirectDrawSurface *OurBackSur=
+            ( (!SurfaceToggle) && DDBackSur2) ? DDBackSur2: DDBackSur;
+          hRet=DDPrimarySur->Blt(&Dest,OurBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
+#else
           hRet=DDPrimarySur->Blt(&Dest,DDBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
+#endif
           if (hRet==DDERR_SURFACELOST){
             if (i==0) hRet=RestoreSurfaces();
             if (hRet!=DD_OK){
@@ -829,14 +922,16 @@ bool SteemDisplay::Blit()
         }
         if (BlitHideMouse) SetCursor(OldCur);
       }
-    }else{  // SS not Fullscreen:
+    }else{  
+      
+      // SS not Fullscreen:
+
 #ifdef SS_VS2012_INIT
       HCURSOR OldCur = 0;	// JLG VS2012 uninitialized
 #else
       HCURSOR OldCur;
 #endif
       if (stem_mousemode==STEM_MOUSEMODE_DISABLED && BlitHideMouse) OldCur=SetCursor(NULL);
-
       RECT dest;GetClientRect(StemWin,&dest);
       dest.top+=MENUHEIGHT;dest.right-=4;dest.bottom-=4;
       POINT pt={2,2};
@@ -853,8 +948,17 @@ bool SteemDisplay::Blit()
 #endif
 
       for (int i=0;i<2;i++){
+#if defined(SS_VID_3BUFFER)
+        IDirectDrawSurface *OurBackSur=
+          ((SSE_3BUFFER&&!SurfaceToggle)&&DDBackSur2) ? DDBackSur2:DDBackSur;
+        if(OurBackSur->GetBltStatus(DDGBS_CANBLT)==DD_OK)
+          hRet=DDPrimarySur->Blt(&dest,OurBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
+        else
+          TRACE("Can't blt\n");;////SurfaceToggle=!SurfaceToggle;
+#else
         hRet=DDPrimarySur->Blt(&dest,DDBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
-        //hRet=DDPrimarySur->Blt(NULL,DDBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
+#endif
+
         if (hRet==DDERR_SURFACELOST){
           if (i==0) hRet=RestoreSurfaces();
           if (hRet!=DD_OK){
@@ -889,11 +993,13 @@ bool SteemDisplay::Blit()
 void SteemDisplay::WaitForAsyncBlitToFinish()
 {
 }
+#undef LOGSECTION //video
 //---------------------------------------------------------------------------
+
+#define LOGSECTION LOGSECTION_INIT
 void SteemDisplay::RunStart(bool Temp)
 {
   if (FullScreen==0) return;
-  ASSERT( BytesPerPixel==1 || BytesPerPixel==2 );
   if (Temp==0){
     bool ChangeSize=0;
     int w=640,h=400,hz=0;
@@ -961,7 +1067,13 @@ void SteemDisplay::RunEnd(bool Temp)
     SaveSurDesc.dwHeight=h;
     hRet=DDObj->CreateSurface(&SaveSurDesc,&SaveSur,NULL);
     if (hRet==DD_OK){
+#if defined(SS_VID_3BUFFER_WIN)
+      IDirectDrawSurface *OurBackSur=
+        ( (!SurfaceToggle) && DDBackSur2) ? DDBackSur2: DDBackSur;
+      hRet=SaveSur->Blt(&rcDest,OurBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
+#else
       hRet=SaveSur->Blt(&rcDest,DDBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
+#endif
       if (hRet!=DD_OK){
         SaveSur->Release(); SaveSur=NULL;
       }
@@ -1140,21 +1252,14 @@ void SteemDisplay::ChangeToFullScreen()
       w=monitor_width;
       h=monitor_height;
     }
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_CHECK_DDFS)
-    VERIFY( SetWindowPos(StemWin,HWND_TOPMOST,0,0,w,h,0) );
-#else
     SetWindowPos(StemWin,HWND_TOPMOST,0,0,w,h,0);
-#endif
+
     CheckResetDisplay(true);
 
     ClipWin=CreateWindow("Steem Fullscreen Clip Window","",WS_CHILD | WS_VISIBLE |
                           WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
                           0,MENUHEIGHT,w,h-MENUHEIGHT,StemWin,(HMENU)1111,Inst,NULL);
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_CHECK_DDFS)
-    VERIFY( DDClipper->SetHWnd(0,ClipWin)==DD_OK );
-#else
     DDClipper->SetHWnd(0,ClipWin);
-#endif
 
 #ifndef ONEGAME
     FSQuitBut=CreateWindow("Steem Fullscreen Quit Button","",WS_CHILD,
@@ -1279,8 +1384,6 @@ void SteemDisplay::FlipToDialogsScreen()
 //---------------------------------------------------------------------------
 HRESULT SteemDisplay::SetDisplayMode(int w,int h,int bpp,int hz,int *hz_ok)
 {
-  ASSERT( w==640 || w==800 );
-  ASSERT( h==400 || h==480 || h==600 );
   if (Method==DISPMETHOD_DD && DDExclusive){
     int idx=-1;
     if (w==640 && h==480) idx=0;
@@ -1326,6 +1429,12 @@ HRESULT SteemDisplay::RestoreSurfaces()
     HRESULT hRet=DDPrimarySur->Restore();
     if (hRet==DD_OK){
       hRet=DDBackSur->Restore();
+#if defined(SS_VID_3BUFFER_WIN)
+      if(hRet==DD_OK) 
+        hRet=DDBackSur2->Restore();
+      SurfaceToggle=true;
+      VSyncTiming=0;
+#endif
       if (hRet==DD_OK) return hRet;
     }
 
@@ -1763,7 +1872,6 @@ HRESULT SteemDisplay::SaveScreenShot()
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
     if(ScreenShotFormat==IF_NEO)
     {
-      ASSERT( pNeoFile );
       if (pNeoFile)
       {
         pNeoFile->resolution=screen_res;
@@ -1898,6 +2006,31 @@ void SteemDisplay::ScreenShotGetFormatOpts(EasyStringList *pSL)
       break;
   }
 }
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_WIN)
+/*  When the option is on, this function is called a lot
+    during emulation (each scanline) and during VBL idle
+    times too, so the processor is always busy. TODO
+*/
+BOOL SteemDisplay::BlitIfVBlank() {
+
+  //DWORD line;
+  //HRESULT hRet=Disp.DDObj->GetScanLine(&line);
+//  TRACE("dis %d pc y%d\n",dispatcher,line);
+  BOOL Blanking=FALSE;  
+  if(ACT-Disp.VSyncTiming>80000-60000) // avoid bursts
+  {
+    Disp.DDObj->GetVerticalBlankStatus(&Blanking);
+    if(Blanking)
+    {
+//      TRACE("Blit F%d y%d\n",FRAME,scan_y);
+      Disp.VSyncTiming=ACT;
+      draw_blit();
+    }
+  }
+  return Blanking;
+}
+
+#endif
 #endif
 #endif
 //---------------------------------------------------------------------------

@@ -755,6 +755,13 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SS_VAR_STATUS_STRING)
     SSE_STATUS_BAR=pCSF->GetInt("Options","StatusBar",SSE_STATUS_BAR);
 #endif
+#if defined(SS_VID_VSYNC_WINDOW)
+    SSE_WIN_VSYNC=pCSF->GetInt("Options","WinVSync",SSE_WIN_VSYNC);
+#endif
+#if defined(SS_VID_3BUFFER)
+    SSE_3BUFFER=pCSF->GetInt("Options","TripleBuffer",SSE_3BUFFER);
+#endif
+
 #endif // SS
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS____)
@@ -1116,6 +1123,13 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SS_VAR_STATUS_STRING)
   pCSF->SetStr("Options","StatusBar",EasyStr(SSE_STATUS_BAR));
 #endif
+#if defined(SS_VID_VSYNC_WINDOW)
+  pCSF->SetStr("Options","WinVSync",EasyStr(SSE_WIN_VSYNC));
+#endif
+#if defined(SS_VID_3BUFFER)
+  pCSF->SetStr("Options","TripleBuffer",EasyStr(SSE_3BUFFER));
+#endif
+
 
 #endif//SS
 
