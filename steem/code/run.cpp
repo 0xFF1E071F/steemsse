@@ -837,6 +837,15 @@ void event_scanline()
 #endif
   if (dma_sound_on_this_screen) dma_sound_fetch(); 
   screen_event_pointer++;
+
+#if defined(SS_VID_3BUFFER_WIN)
+  if(SSE_3BUFFER
+#if !defined(SS_VID_3BUFFER_FS)
+    && !FullScreen
+#endif
+    )
+    Disp.BlitIfVBlank();
+#endif
 }
 //---------------------------------------------------------------------------
 //#undef LOGSECTION LOGSECTION_INTERRUPTS
@@ -860,7 +869,13 @@ void event_start_vbl()
 //---------------------------------------------------------------------------
 void event_vbl_interrupt() //SS misleading name?
 { 
+#if defined(SS_VID_VSYNC_WINDOW)
+  bool VSyncing=( (SSE_WIN_VSYNC||FSDoVsync&&FullScreen) && fast_forward==0
+    && slow_motion==0);
+#else
   bool VSyncing=(FSDoVsync && FullScreen && fast_forward==0 && slow_motion==0);
+#endif
+
   bool BlitFrame=0;
 #ifndef NO_CRAZY_MONITOR
   if (extended_monitor==0)
@@ -887,7 +902,16 @@ void event_vbl_interrupt() //SS misleading name?
   log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: Finished frame, blitting at ")+(timeGetTime()-run_start_time)+" timer="+(timer-run_start_time));
   if (draw_lock){
     draw_end();
+#if defined(SS_VID_3BUFFER_WIN)
+    if (VSyncing==0 &&( !SSE_3BUFFER
+#if !defined(SS_VID_3BUFFER_FS)
+      || FullScreen
+#endif
+      ))
+      draw_blit();
+#else
     if (VSyncing==0) draw_blit();
+#endif
     BlitFrame=true;
   }else if (bad_drawing & 2){
     // bad_drawing bits: & 1 - bad drawing option selected  & 2 - bad-draw next screen
@@ -1038,6 +1062,16 @@ void event_vbl_interrupt() //SS misleading name?
   LOOP{
     timer=timeGetTime();
 
+#if defined(SS_VID_3BUFFER_WIN)
+  if(SSE_3BUFFER
+#if !defined(SS_VID_3BUFFER_FS)
+    && !FullScreen
+#endif
+    )
+    Disp.BlitIfVBlank();
+#endif
+
+
     // Break if used up enough time and processed at least 3 messages
     if (int(frame_delay_timeout-timer)<=time_for_exact_limit && m>=3) break;
 
@@ -1074,7 +1108,27 @@ void event_vbl_interrupt() //SS misleading name?
     int time_to_sleep=(int(frame_delay_timeout)-int(timeGetTime()))-time_for_exact_limit;
     if (time_to_sleep>0){
       log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: Sleeping for ")+time_to_sleep);
+
+#if defined(SS_VID_3BUFFER_WIN)
+/*  This is the part responsible for high CPU use.
+    Sleep(1) is sure to make us miss VBLANK.
+    Maybe check probability of VBLANK but it depends on HZ
+*/
+      if(SSE_3BUFFER
+#if !defined(SS_VID_3BUFFER_FS)
+        && !FullScreen
+#endif
+        )
+      {
+        int limit=(int)(frame_delay_timeout)-(int)(time_for_exact_limit);
+        do {
+          Disp.BlitIfVBlank();
+        }while( (int)(timeGetTime())<limit);
+      }
+      else
+#endif
       Sleep(DWORD(time_to_sleep));
+
     }
 
     if (VSyncing && BlitFrame){
@@ -1093,6 +1147,14 @@ void event_vbl_interrupt() //SS misleading name?
       // Wait until desired time (to nearest 1000th of a second).
       do{
         timer=timeGetTime();
+#if defined(SS_VID_3BUFFER_WIN)
+        if(SSE_3BUFFER
+#if !defined(SS_VID_3BUFFER_FS)
+          && !FullScreen
+#endif
+          )
+          Disp.BlitIfVBlank();
+#endif
       }while (int(frame_delay_timeout-timer)>0);
       log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: Finished speed limiting at ")+(timer-run_start_time));
 

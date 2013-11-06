@@ -19,7 +19,7 @@ struct TOption {
   // We keep all options in the structure so that snapshots are compatible
   // even if a feature isn't compiled
   BYTE STModel;
-  BYTE DisplaySize;// 0=Steem 3.2 1,2 Large 3 Very large
+  BYTE DisplaySize;
   BYTE WakeUpState; 
   unsigned int Hacks:1;
   unsigned int HD6301Emu:1;
@@ -36,6 +36,8 @@ struct TOption {
   unsigned int PastiJustSTX:1;
   unsigned int Interpolate:1;
   unsigned int StatusBar:1;
+  unsigned int WinVSync:1;
+  unsigned int TripleBuffer:1;
 #ifdef __cplusplus // visible only to C++ objects
   TOption();
   void Init();
@@ -69,7 +71,8 @@ extern struct TOption SSEOption;
 #define PASTI_JUST_STX (SSEOption.PastiJustSTX)
 #define SSE_INTERPOLATE (SSEOption.Interpolate)
 #define SSE_STATUS_BAR (SSEOption.StatusBar)
-
+#define SSE_WIN_VSYNC (SSEOption.WinVSync)
+#define SSE_3BUFFER (SSEOption.TripleBuffer)
 #else//!defined(SS_SSE_OPTION_STRUCT)
 
 #endif//#if defined(SS_SSE_OPTION_STRUCT)

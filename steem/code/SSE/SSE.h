@@ -164,8 +164,8 @@ and all his silly mods are gone!
 //#define TEST04
 //#define TEST05
 //#define TEST06
-//#define TEST07
-//#define TEST08
+//#define TEST07//vsync window
+///#define TEST08
 //#define TEST09
 #endif
 
@@ -1189,12 +1189,24 @@ and all his silly mods are gone!
 #endif
 
 #if defined(WIN32)
+#define SS_VID_3BUFFER // Triple Buffer to remove tearing
+#if defined(SS_VID_3BUFFER)
+#define SS_VID_3BUFFER_FS // fullscreen: stretch mode only
+#define SS_VID_3BUFFER_WIN //windowed mode (necessary for FS)
+#endif
+#endif
+
+#if defined(WIN32)
 #define SS_VID_SCANLINES_INTERPOLATED // using stretch mode!
 #define SS_VID_SCANLINES_INTERPOLATED_MED
 #define SS_VID_SCANLINES_INTERPOLATED_SSE // put option in SSE page
 #endif
 
 #define SS_VID_SCREENSHOTS_NUMBER
+
+#if defined(WIN32)
+#define SS_VID_VSYNC_WINDOW // no tearing and smooth scrolling also in window
+#endif
 
 #if defined(SS_DEBUG) 
 //#define SHOW_DRAW_SPEED //was already in Steem

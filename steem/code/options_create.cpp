@@ -2000,17 +2000,49 @@ void TOptionBox::CreateSSEPage() {
   SendMessage(BorderSizeOption,CB_SETCURSEL,DISPLAY_SIZE,0);
   ToolAddWindow(ToolTip,Win,
     T("Some border effects will look better in one of the sizes, it really depends on the program, generally smallest is fine."));
-  //y+=LineHeight;
+  y+=LineHeight;
 #endif
 
 #if defined(SS_VID_SCANLINES_INTERPOLATED_SSE)
-  Offset=5+Wid+80+HorizontalSeparation;
+  //Offset=5+Wid+80+HorizontalSeparation;
+  Offset=0;
   Wid=GetCheckBoxSize(Font,T("Interpolated scanlines")).Width;
   Win=CreateWindow("Button",T("Interpolated scanlines"),
                           WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           page_l +Offset,y,Wid,25,Handle,(HMENU)1032,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,SSE_INTERPOLATE,0);
   ToolAddWindow(ToolTip,Win,T("This will try to emulate a less sharp monitor (Goldstar?) for more realism."));
+  //y+=LineHeight;
+#endif
+
+#if defined(SS_VID_VSYNC_WINDOW)
+  Offset+=Wid+HorizontalSeparation;
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+//  if(0) // test if OK
+  //  mask|=WS_DISABLED;
+  Wid=GetCheckBoxSize(Font,T("Window VSync")).Width;
+  Win=CreateWindow("Button",T("Window VSync"), mask,
+               page_l +Offset,y,Wid,25,Handle,(HMENU)1033,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,SSE_WIN_VSYNC,0);
+  ToolAddWindow(ToolTip,Win,T("No tearing and smooth scrolling. Works with windows and fullscreen. You need 50hz or 100hz display or speed is wrong."));
+//  y+=LineHeight;
+#endif
+
+#if defined(SS_VID_3BUFFER)
+  Offset+=Wid+HorizontalSeparation;
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+//  if(0) // test if OK
+  //  mask|=WS_DISABLED;
+  Wid=GetCheckBoxSize(Font,T("Triple Buffer")).Width;
+  Win=CreateWindow("Button",T("Triple Buffer"), mask,
+               page_l +Offset,y,Wid,25,Handle,(HMENU)1034,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,SSE_3BUFFER,0);
+  ToolAddWindow(ToolTip,Win,
+#if defined(SS_VID_3BUFFER_FS)
+    T("This reduces tearing at the price of high CPU use. It won't make scrolling smooth. You may use this if VSync doesn't work on your system."));
+#else
+    T("Window mode only. This reduces tearing at the price of CPU use. It won't make scrolling smooth. You may use this if VSync doesn't work on your system."));
+#endif
   y+=LineHeight;
 #endif
 
@@ -2221,7 +2253,7 @@ void TOptionBox::SSEUpdateIfVisible() {
     SendMessage(MMUWakeUpOption,CB_SETCURSEL,WAKE_UP_STATE,0);
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_OPTION_SLOW_DISK)
+#if defined(SS_VAR_OPTION_SLOW_DISK)
   Win=GetDlgItem(Handle,7306); //Slow disk
   if(Win!=NULL) 
     SendMessage(Win,BM_SETCHECK,!floppy_instant_sector_access,0);
@@ -2230,6 +2262,19 @@ void TOptionBox::SSEUpdateIfVisible() {
 #if defined(SS_VAR_STATUS_STRING)
   GUIRefreshStatusBar();//overkill
 #endif
+
+#if defined(SS_VID_VSYNC_WINDOW)
+  Win=GetDlgItem(Handle,1033); 
+  if(Win!=NULL) 
+    SendMessage(Win,BM_SETCHECK,SSE_WIN_VSYNC,0);
+#endif
+
+#if defined(SS_VID_3BUFFER)
+  Win=GetDlgItem(Handle,1034); 
+  if(Win!=NULL) 
+    SendMessage(Win,BM_SETCHECK,SSE_3BUFFER,0);
+#endif
+
 
 }
 #endif
