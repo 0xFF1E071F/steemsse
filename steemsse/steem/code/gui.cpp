@@ -465,7 +465,7 @@ int ChangeBorderSize(int size_in) {
 
 #endif
 
-#if defined(SS_VAR_STATUS_STRING)
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING)
 /*  Cool feature introduced with v3.5.4, a kind of status bar consisting
     in a formatted text string placed on the icon bar of Steem.
 */
@@ -474,63 +474,71 @@ int ChangeBorderSize(int size_in) {
 
 void GUIRefreshStatusBar() {
 
-  // build text of "status bar"
-  char status_bar[100];
+  // horizontal size of window?
+  RECT rc;
+  GetWindowRect(StemWin,&rc);
+  WORD horiz_pixels=rc.right-rc.left;
+ // TRACE("%d\n",horiz_pixels);
 
-  char sb_st_model[5],sb_tos[5],sb_ram[7];
+  HWND status_bar_win=GetDlgItem(StemWin,120); // get handle
 
-#if defined(SS_MMU_WAKE_UP_DL)
-  sprintf(sb_st_model,"%s%d",(ST_TYPE)? "STF":"STE",MMU.WS[WAKE_UP_STATE]);
-  if(!WAKE_UP_STATE)
-    sb_st_model[3]=0;
-#else
-  sprintf(sb_st_model,"%s",(ST_TYPE)? "STF":"STE");
-#endif
-  sprintf(sb_tos,"T%x",tos_version);
-  sprintf(sb_ram,"%dK",mem_len/1024);
-  sprintf(status_bar,"%s %s %s",sb_st_model,sb_tos,sb_ram);
-
-#if defined(SS_IKBD_6301) && defined(SS_VAR_STATUS_STRING_6301)
-  if(HD6301EMU_ON)
-    strcat(status_bar," 6301");
-#endif
-
-#if USE_PASTI && defined(SS_VAR_STATUS_STRING_PASTI)
-  if(hPasti && pasti_active
-#if defined(SS_DRIVE)&&defined(SS_PASTI_ONLY_STX)
-        && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
-#endif            
-    )
-    strcat(status_bar," Pasti");
-#endif
-
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING_DISK_NAME)
-  if(FloppyDrive[floppy_current_drive()].NotEmpty())
-  {
-#define TEXT_LENGTH 45
-    char tmp[TEXT_LENGTH+2+2]=" \"";
-    if( strlen(FloppyDrive[floppy_current_drive()].DiskName.Text)<=TEXT_LENGTH)
-      strncpy(tmp+2,FloppyDrive[floppy_current_drive()].DiskName.Text,TEXT_LENGTH);
-    else
-    {
-      strncpy(tmp+2,FloppyDrive[floppy_current_drive()].DiskName.Text,TEXT_LENGTH-3);
-      strcat(tmp,"...");
-    }
-    strcat(status_bar,tmp);
-    strcat(status_bar,"\"");
-#undef TEXT_LENGTH
-  }
-#endif
-
-
-//  TRACE_LOG("refresh status bar %s\n",status_bar);
-  // get handle
-  HWND status_bar_win=GetDlgItem(StemWin,120);
-  // change text
-  SendMessage(status_bar_win,WM_SETTEXT,0,(LPARAM)(LPCTSTR)status_bar);
   // should we show or hide that "staus bar"?
-  ShowWindow(status_bar_win,(SSE_STATUS_BAR
-    &&(screen_res>1||draw_win_mode[screen_res])) ? SW_SHOW : SW_HIDE);
+  bool should_we_show=(SSE_STATUS_BAR && (horiz_pixels>500));
+
+  // build text of "status bar", only if we're to show it
+  if(should_we_show)
+  {
+    char status_bar[100];
+    
+    char sb_st_model[5],sb_tos[5],sb_ram[7];
+    
+#if defined(SS_MMU_WAKE_UP_DL)
+    sprintf(sb_st_model,"%s%d",(ST_TYPE)? "STF":"STE",MMU.WS[WAKE_UP_STATE]);
+    if(!WAKE_UP_STATE)
+      sb_st_model[3]=0;
+#else
+    sprintf(sb_st_model,"%s",(ST_TYPE)? "STF":"STE");
+#endif
+    sprintf(sb_tos,"T%x",tos_version);
+    sprintf(sb_ram,"%dK",mem_len/1024);
+    sprintf(status_bar,"%s %s %s",sb_st_model,sb_tos,sb_ram);
+    
+#if defined(SS_IKBD_6301) && defined(SS_VAR_STATUS_STRING_6301)
+    if(HD6301EMU_ON)
+      strcat(status_bar," 6301");
+#endif
+    
+#if USE_PASTI && defined(SS_VAR_STATUS_STRING_PASTI)
+    if(hPasti && pasti_active
+#if defined(SS_DRIVE)&&defined(SS_PASTI_ONLY_STX)
+      && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
+#endif            
+      )
+      strcat(status_bar," Pasti");
+#endif
+    
+#if defined(SS_VAR_STATUS_STRING_DISK_NAME)
+    if(FloppyDrive[floppy_current_drive()].NotEmpty() && horiz_pixels>=780)
+    {
+#define TEXT_LENGTH 45
+      char tmp[TEXT_LENGTH+2+2]=" \"";
+      if( strlen(FloppyDrive[floppy_current_drive()].DiskName.Text)<=TEXT_LENGTH)
+        strncpy(tmp+2,FloppyDrive[floppy_current_drive()].DiskName.Text,TEXT_LENGTH);
+      else
+      {
+        strncpy(tmp+2,FloppyDrive[floppy_current_drive()].DiskName.Text,TEXT_LENGTH-3);
+        strcat(tmp,"...");
+      }
+      strcat(status_bar,tmp);
+      strcat(status_bar,"\"");
+#undef TEXT_LENGTH
+    }
+#endif
+    // change text
+    SendMessage(status_bar_win,WM_SETTEXT,0,(LPARAM)(LPCTSTR)status_bar);
+  }
+  // show or hide
+  ShowWindow(status_bar_win, (should_we_show) ? SW_SHOW : SW_HIDE);
 }
 
 #endif
@@ -899,14 +907,14 @@ bool MakeGUI()
 #endif
   UpdatePasteButton();
 
-#if !defined(SS_VAR_NO_UPDATE)
+#if !(defined(STEVEN_SEAGAL) && defined(SS_VAR_NO_UPDATE))
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_UPDATE),WS_CHILD,
                           x,0,20,20,StemWin,(HMENU)120,Inst,NULL);
   ToolAddWindow(ToolTip,Win,T("Steem Update Available! Click Here For Details!"));
 #endif
 
 
-#if defined(SS_VAR_STATUS_STRING)  
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING)  
 /*
     There are various possibilities, with border, white background, etc.
     The zone is placed once and for all, I don't know how to shift it. This is

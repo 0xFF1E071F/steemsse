@@ -424,18 +424,21 @@ HRESULT SteemDisplay::DDCreateSurfaces()
       }else{
 #if defined(SS_VID_3BUFFER_WIN)
         // Let's create a second back surface for our "triple buffer"
-        Ret=DDObj->CreateSurface(&DDBackSurDesc,&DDBackSur2,NULL);
-        if(Ret!=DD_OK)
+        if(SSE_3BUFFER)
         {
-          TRACE_LOG("Failed create DDBackSur2 DDERR %d\n",Ret);
-          DDBackSur2=NULL; // prevents system to be used
-          SSE_3BUFFER=false; // reset option
-          OptionBox.SSEUpdateIfVisible(); 
+          Ret=DDObj->CreateSurface(&DDBackSurDesc,&DDBackSur2,NULL);
+          if(Ret!=DD_OK)
+          {
+            TRACE_LOG("Failed create DDBackSur2 DDERR %d\n",Ret);
+            DDBackSur2=NULL; // prevents system to be used
+            SSE_3BUFFER=false; // reset option
+            OptionBox.SSEUpdateIfVisible(); 
+          }
+          VSyncTiming=0;
+          SurfaceToggle=true; // will be toggled false at first lock
+          if(FullScreen)
+            draw_fs_blit_mode=DFSM_STRETCHBLIT; // only working one
         }
-        VSyncTiming=0;
-        SurfaceToggle=true; // will be toggled false at first lock
-        if(FullScreen)
-          draw_fs_blit_mode=DFSM_STRETCHBLIT; // only working one
 #endif
         break;
       }
@@ -903,8 +906,10 @@ bool SteemDisplay::Blit()
 
 #if defined(SS_VID_3BUFFER_WIN)
           IDirectDrawSurface *OurBackSur=
-            ( (!SurfaceToggle) && DDBackSur2) ? DDBackSur2: DDBackSur;
-          hRet=DDPrimarySur->Blt(&Dest,OurBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
+            (SSE_3BUFFER && !SurfaceToggle && DDBackSur2) 
+            ? DDBackSur2: DDBackSur;
+          hRet=DDPrimarySur->Blt(&Dest,OurBackSur,&draw_blit_source_rect,
+            DDBLT_WAIT,NULL);
 #else
           hRet=DDPrimarySur->Blt(&Dest,DDBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
 #endif
@@ -912,7 +917,7 @@ bool SteemDisplay::Blit()
             if (i==0) hRet=RestoreSurfaces();
             if (hRet!=DD_OK){
               DDError(T("Drawing memory permanently lost"),hRet);
-			        TRACE_LOG("Drawing memory permanently lost\n");
+              TRACE_LOG("Drawing memory permanently lost\n");
               Init();
               break;
             }
@@ -950,11 +955,12 @@ bool SteemDisplay::Blit()
       for (int i=0;i<2;i++){
 #if defined(SS_VID_3BUFFER)
         IDirectDrawSurface *OurBackSur=
-          ((SSE_3BUFFER&&!SurfaceToggle)&&DDBackSur2) ? DDBackSur2:DDBackSur;
+          (SSE_3BUFFER && !SurfaceToggle && DDBackSur2) ? DDBackSur2:DDBackSur;
         if(OurBackSur->GetBltStatus(DDGBS_CANBLT)==DD_OK)
-          hRet=DDPrimarySur->Blt(&dest,OurBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
+          hRet=DDPrimarySur->Blt(&dest,OurBackSur,&draw_blit_source_rect,
+            DDBLT_WAIT,NULL);
         else
-          TRACE("Can't blt\n");;////SurfaceToggle=!SurfaceToggle;
+          TRACE("Can't blt\n");;
 #else
         hRet=DDPrimarySur->Blt(&dest,DDBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
 #endif
@@ -1069,7 +1075,7 @@ void SteemDisplay::RunEnd(bool Temp)
     if (hRet==DD_OK){
 #if defined(SS_VID_3BUFFER_WIN)
       IDirectDrawSurface *OurBackSur=
-        ( (!SurfaceToggle) && DDBackSur2) ? DDBackSur2: DDBackSur;
+        (SSE_3BUFFER && !SurfaceToggle && DDBackSur2) ? DDBackSur2: DDBackSur;
       hRet=SaveSur->Blt(&rcDest,OurBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
 #else
       hRet=SaveSur->Blt(&rcDest,DDBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
@@ -1430,7 +1436,7 @@ HRESULT SteemDisplay::RestoreSurfaces()
     if (hRet==DD_OK){
       hRet=DDBackSur->Restore();
 #if defined(SS_VID_3BUFFER_WIN)
-      if(hRet==DD_OK) 
+      if(SSE_3BUFFER && hRet==DD_OK) 
         hRet=DDBackSur2->Restore();
       SurfaceToggle=true;
       VSyncTiming=0;

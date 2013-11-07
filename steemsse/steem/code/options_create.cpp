@@ -2011,7 +2011,8 @@ void TOptionBox::CreateSSEPage() {
                           WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           page_l +Offset,y,Wid,25,Handle,(HMENU)1032,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,SSE_INTERPOLATE,0);
-  ToolAddWindow(ToolTip,Win,T("This will try to emulate a less sharp monitor (Goldstar?) for more realism."));
+  ToolAddWindow(ToolTip,Win,
+    T("This will try to emulate a less sharp monitor (Goldstar?) for more realism."));
   //y+=LineHeight;
 #endif
 
@@ -2020,11 +2021,12 @@ void TOptionBox::CreateSSEPage() {
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
 //  if(0) // test if OK
   //  mask|=WS_DISABLED;
-  Wid=GetCheckBoxSize(Font,T("Window VSync")).Width;
-  Win=CreateWindow("Button",T("Window VSync"), mask,
+  Wid=GetCheckBoxSize(Font,T("VSync")).Width;
+  Win=CreateWindow("Button",T("VSync"), mask,
                page_l +Offset,y,Wid,25,Handle,(HMENU)1033,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,SSE_WIN_VSYNC,0);
-  ToolAddWindow(ToolTip,Win,T("No tearing and smooth scrolling. Works with windows and fullscreen. You need 50hz or 100hz display or speed is wrong."));
+  ToolAddWindow(ToolTip,Win,
+    T("Works with windows and fullscreen but you need the correct frequency on your monitor. Note: OS display settings may interfere."));
 //  y+=LineHeight;
 #endif
 
@@ -2033,16 +2035,12 @@ void TOptionBox::CreateSSEPage() {
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
 //  if(0) // test if OK
   //  mask|=WS_DISABLED;
-  Wid=GetCheckBoxSize(Font,T("Triple Buffer")).Width;
-  Win=CreateWindow("Button",T("Triple Buffer"), mask,
+  Wid=GetCheckBoxSize(Font,T("Triple Buffering")).Width;
+  Win=CreateWindow("Button",T("Triple Buffering"), mask,
                page_l +Offset,y,Wid,25,Handle,(HMENU)1034,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,SSE_3BUFFER,0);
   ToolAddWindow(ToolTip,Win,
-#if defined(SS_VID_3BUFFER_FS)
-    T("This reduces tearing at the price of high CPU use. It won't make scrolling smooth. You may use this if VSync doesn't work on your system."));
-#else
-    T("Window mode only. This reduces tearing at the price of CPU use. It won't make scrolling smooth. You may use this if VSync doesn't work on your system."));
-#endif
+    T("This may reduce tearing at the price of high CPU use. Don't use if tearing is already handled by the OS!"));
   y+=LineHeight;
 #endif
 

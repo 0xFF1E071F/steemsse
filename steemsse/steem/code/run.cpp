@@ -839,7 +839,7 @@ void event_scanline()
   screen_event_pointer++;
 
 #if defined(SS_VID_3BUFFER_WIN)
-  if(SSE_3BUFFER
+  if(SSE_3BUFFER && !(scan_y%2)
 #if !defined(SS_VID_3BUFFER_FS)
     && !FullScreen
 #endif

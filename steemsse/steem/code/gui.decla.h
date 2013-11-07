@@ -48,11 +48,9 @@ extern "C" ASMCALL int PeekEvent();
 
 UNIX_ONLY( EXT void PostRunMessage(); )
 
-
-#if defined(SS_VAR_STATUS_STRING)
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING)
    void GUIRefreshStatusBar();
 #endif
-
 
 EXT void GUIRunStart(),GUIRunEnd();
 EXT int Alert(char *,char *,UINT);
