@@ -824,7 +824,7 @@ void TOptionBox::SetBorder(int newborder)
     border=oldborder;
   }
   CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min(border,2),MF_BYCOMMAND);
-#if defined(SS_VAR_STATUS_STRING)
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING)
   GUIRefreshStatusBar();
 #endif
 }
@@ -1128,7 +1128,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               if (ResChangeResize) StemWinResize();
             }
           }
-#if defined(SS_VAR_STATUS_STRING)
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING)
           GUIRefreshStatusBar();
 #endif
           break;

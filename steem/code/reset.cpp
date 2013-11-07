@@ -113,7 +113,7 @@ is issued, and that the reset was active for at least 132 clock cycles [27].
 void power_on()
 {
 
-#if defined(SS_VAR_STATUS_STRING)
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING)
   GUIRefreshStatusBar();//overkill
 #endif
 

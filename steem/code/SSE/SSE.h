@@ -1144,7 +1144,7 @@ and all his silly mods are gone!
 #define SS_VAR_RESIZE // reduce memory set (int->BYTE etc.)
 #define SS_VAR_REWRITE // to conform to what compilers expect (warnings...)
 //#define SS_VAR_SCROLLER_DISK_IMAGE // move to OSD
-#define SS_VAR_STATUS_STRING
+#define SS_VAR_STATUS_STRING // "status bar" in the icon bar
 #define SS_VAR_STATUS_STRING_6301
 #define SS_VAR_STATUS_STRING_PASTI
 #define SS_VAR_STATUS_STRING_DISK_NAME
