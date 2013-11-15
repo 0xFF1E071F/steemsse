@@ -335,8 +335,8 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
     reset_st(RESET_COLD | RESET_STOP | RESET_CHANGESETTINGS | RESET_NOBACKUP);
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_SCROLLER_DISK_IMAGE)
-    if(OSD_IMAGE_NAME && !FloppyDrive[0].Empty())
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_SCROLLER_DISK_IMAGE)
+    if(OSD_IMAGE_NAME && !SSE_STATUS_BAR_GAME_NAME && !FloppyDrive[0].Empty())
       OsdControl.StartScroller(FloppyDrive[0].DiskName); // display image disk name
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING_DISK_NAME)

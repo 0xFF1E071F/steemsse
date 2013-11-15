@@ -222,7 +222,7 @@ const POINT WinSize[4][5]={ {{320,200},{640,400},{960, 600},{1280,800},{-1,-1}},
 {-1,-1}}
 };
 
-
+#if defined(SS_VID_BORDERS_412)
 #if defined(SS_VID_BORDERS_BIGTOP) && !defined(SS_VID_BORDERS_416) // 412*286
 POINT WinSizeBorderVeryLarge[4][5]={ 
 {{320+VERY_LARGE_BORDER_SIDE_WIN*2,200+(BIG_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
@@ -260,9 +260,9 @@ POINT WinSizeBorderVeryLarge[4][5]={
 {-1,-1}}
 };
 #endif//bigtop
+#endif//412
 
-
-#if defined(SS_VID_BORDERS_416) // adding a mode 
+#if defined(SS_VID_BORDERS_416)
 
 #if defined(SS_VID_BORDERS_BIGTOP) // 416*286
 POINT WinSizeBorderVeryLarge2[4][5]={ 
@@ -419,11 +419,18 @@ int ChangeBorderSize(int size_in) {
       BottomBorderSize=LARGE_BORDER_BOTTOM;
       break;
     case 2:
+#if defined(SS_VID_BORDERS_412)
       SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
       SideBorderSizeWin=VERY_LARGE_BORDER_SIDE_WIN; // show 412
       BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
+#else
+      SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
+      SideBorderSizeWin=VERY_LARGE_BORDER_SIDE; // show 416
+      BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
+#endif
       break;
-#if defined(SS_VID_BORDERS_416)
+
+#if defined(SS_VID_BORDERS_416) && defined(SS_VID_BORDERS_412)
     case 3:
       SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
       SideBorderSizeWin=VERY_LARGE_BORDER_SIDE; // show 416
@@ -445,9 +452,13 @@ int ChangeBorderSize(int size_in) {
           WinSizeBorder[i][j]=WinSizeBorderLarge[i][j];
           break;
         case 2:
+#if defined(SS_VID_BORDERS_412)
           WinSizeBorder[i][j]=WinSizeBorderVeryLarge[i][j];
+#else
+          WinSizeBorder[i][j]=WinSizeBorderVeryLarge2[i][j];
+#endif
           break;
-#if defined(SS_VID_BORDERS_416)
+#if defined(SS_VID_BORDERS_416) && defined(SS_VID_BORDERS_412)
         case 3:
           WinSizeBorder[i][j]=WinSizeBorderVeryLarge2[i][j];
           break;
@@ -474,69 +485,117 @@ int ChangeBorderSize(int size_in) {
 
 void GUIRefreshStatusBar() {
 
-  // horizontal size of window?
-  RECT rc;
-  GetWindowRect(StemWin,&rc);
-  WORD horiz_pixels=rc.right-rc.left;
- // TRACE("%d\n",horiz_pixels);
-
   HWND status_bar_win=GetDlgItem(StemWin,120); // get handle
 
-  // should we show or hide that "staus bar"?
-  bool should_we_show=(SSE_STATUS_BAR && (horiz_pixels>500));
+  // should we show or hide that "status bar"?
+  bool should_we_show=(SSE_STATUS_BAR||SSE_STATUS_BAR_GAME_NAME); 
+
 
   // build text of "status bar", only if we're to show it
   if(should_we_show)
   {
-    char status_bar[100];
-    
-    char sb_st_model[5],sb_tos[5],sb_ram[7];
-    
-#if defined(SS_MMU_WAKE_UP_DL)
-    sprintf(sb_st_model,"%s%d",(ST_TYPE)? "STF":"STE",MMU.WS[WAKE_UP_STATE]);
-    if(!WAKE_UP_STATE)
-      sb_st_model[3]=0;
-#else
-    sprintf(sb_st_model,"%s",(ST_TYPE)? "STF":"STE");
-#endif
-    sprintf(sb_tos,"T%x",tos_version);
-    sprintf(sb_ram,"%dK",mem_len/1024);
-    sprintf(status_bar,"%s %s %s",sb_st_model,sb_tos,sb_ram);
-    
-#if defined(SS_IKBD_6301) && defined(SS_VAR_STATUS_STRING_6301)
-    if(HD6301EMU_ON)
-      strcat(status_bar," 6301");
-#endif
-    
-#if USE_PASTI && defined(SS_VAR_STATUS_STRING_PASTI)
-    if(hPasti && pasti_active
-#if defined(SS_DRIVE)&&defined(SS_PASTI_ONLY_STX)
-      && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
-#endif            
-      )
-      strcat(status_bar," Pasti");
-#endif
-    
-#if defined(SS_VAR_STATUS_STRING_DISK_NAME)
-    if(FloppyDrive[floppy_current_drive()].NotEmpty() && horiz_pixels>=780)
+    char status_bar[120]="\0";
+
+    if(SSE_STATUS_BAR)
     {
-#define TEXT_LENGTH 45
-      char tmp[TEXT_LENGTH+2+2]=" \"";
-      if( strlen(FloppyDrive[floppy_current_drive()].DiskName.Text)<=TEXT_LENGTH)
-        strncpy(tmp+2,FloppyDrive[floppy_current_drive()].DiskName.Text,TEXT_LENGTH);
+      // basic ST/TOS/RAM
+      char sb_st_model[5],sb_tos[5],sb_ram[7];
+#if defined(SS_MMU_WAKE_UP_DL)
+      sprintf(sb_st_model,"%s%d",(ST_TYPE)? "STF":"STE",MMU.WS[WAKE_UP_STATE]);
+      if(!WAKE_UP_STATE)
+        sb_st_model[3]=0;
+#else
+      sprintf(sb_st_model,"%s",(ST_TYPE)? "STF":"STE");
+#endif
+      sprintf(sb_tos,"T%x",tos_version);
+      sprintf(sb_ram,"%dK",mem_len/1024);
+      sprintf(status_bar,"%s %s %s",sb_st_model,sb_tos,sb_ram);
+      
+      // some options (6301, Pasti...)
+#if defined(SS_IKBD_6301) && defined(SS_VAR_STATUS_STRING_6301)
+      if(HD6301EMU_ON)
+        strcat(status_bar," 6301");
+#endif
+      
+#if USE_PASTI && defined(SS_VAR_STATUS_STRING_PASTI)
+      if(hPasti && pasti_active
+#if defined(SS_DRIVE)&&defined(SS_PASTI_ONLY_STX)
+        && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
+#endif            
+        )
+        strcat(status_bar," Pasti");
+#else
+      if(0);
+#endif
+      
+#if defined(SS_VAR_STATUS_STRING_IPF)
+      else if(Caps.Active)
+        strcat(status_bar," Caps");
+#endif
+      
+#if defined(SS_VAR_STATUS_STRING_ADAT)
+      else if(ADAT)
+        strcat(status_bar," ADAT");
+#endif
+      
+#if defined(SS_VAR_STATUS_STRING_HACKS)
+      if(SSE_HACKS_ON)
+        strcat(status_bar," #"); // which symbol?
+#endif
+      
+    }
+
+#if defined(SS_VAR_STATUS_STRING_DISK_NAME)
+/*  We try to take advantage of all space.
+    Font is proportional so we need a margin.
+    TODO: precise computing
+*/
+    if(SSE_STATUS_BAR_GAME_NAME 
+      && FloppyDrive[floppy_current_drive()].NotEmpty() )
+    {
+#define MAX_TEXT_LENGTH_BORDER_ON (30+62+10) 
+#define MAX_TEXT_LENGTH_BORDER_OFF (30+42+10) 
+      int max_text_length=(border&1)?MAX_TEXT_LENGTH_BORDER_ON:MAX_TEXT_LENGTH_BORDER_OFF;
+      if(SSE_STATUS_BAR)
+        max_text_length-=30;
+      if(SideBorderSizeWin<VERY_LARGE_BORDER_SIDE)
+        max_text_length-=5;
+      if(SideBorderSizeWin==ORIGINAL_BORDER_SIDE)
+        max_text_length-=5;
+      char tmp[MAX_TEXT_LENGTH_BORDER_ON+2+1]=" \"";
+      if( strlen(FloppyDrive[floppy_current_drive()].DiskName.Text)<=max_text_length)
+        strncpy(tmp+2,FloppyDrive[floppy_current_drive()].DiskName.Text,max_text_length);
       else
       {
-        strncpy(tmp+2,FloppyDrive[floppy_current_drive()].DiskName.Text,TEXT_LENGTH-3);
+        strncpy(tmp+2,FloppyDrive[floppy_current_drive()].DiskName.Text,max_text_length-3);
         strcat(tmp,"...");
       }
       strcat(status_bar,tmp);
       strcat(status_bar,"\"");
-#undef TEXT_LENGTH
     }
+#undef MAX_TEXT_LENGTH_BORDER_ON
+#undef MAX_TEXT_LENGTH_BORDER_OFF
+
 #endif
+    //TRACE("status string len %d\n",strlen(status_bar));
     // change text
     SendMessage(status_bar_win,WM_SETTEXT,0,(LPARAM)(LPCTSTR)status_bar);
   }
+
+  if(should_we_show)
+  {
+    // compute free width
+    RECT window_rect1,window_rect2,window_rect3;
+    HWND previous_icon=GetDlgItem(StemWin,114); // paste
+    HWND next_icon=GetDlgItem(StemWin,105); // info
+    GetWindowRect(previous_icon,&window_rect1);
+    GetWindowRect(next_icon,&window_rect2);
+    GetWindowRect(status_bar_win,&window_rect3);
+    int w=window_rect2.left-window_rect1.right-10;
+    // resize status bar without trashing other icons
+    MoveWindow(status_bar_win,23*6,0,w,window_rect3.bottom-window_rect3.top,FALSE);
+  }
+
   // show or hide
   ShowWindow(status_bar_win, (should_we_show) ? SW_SHOW : SW_HIDE);
 }
@@ -915,23 +974,16 @@ bool MakeGUI()
 
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING)  
-/*
-    There are various possibilities, with border, white background, etc.
-    The zone is placed once and for all, I don't know how to shift it. This is
-    a problem when we switch borders on/off.
-    WINDOW_TITLE is dummy
+/*  Create a static control as text status bar. We take the undef update icon's
+    number.
+    WINDOW_TITLE is dummy, the field will be updated later, its size too.
 */
-  
-  //Win=CreateWindow("Steem Path Display",WINDOW_TITLE,WS_CHILD | WS_VISIBLE ,
-  //Win=CreateWindowEx(512,"Steem Path Display",WINDOW_TITLE,WS_CHILD | WS_VISIBLE ,
-#if defined(SS_VAR_STATUS_STRING_DISK_NAME)
-#define WIDTH (370)
-#else
-#define WIDTH (200)
-#endif
-  Win=CreateWindowEx(0,"Static",WINDOW_TITLE,WS_CHILD | WS_VISIBLE|SS_CENTER
-    |SS_CENTERIMAGE/*|SS_SUNKEN*/,x+30, 0,WIDTH,20,StemWin,(HMENU)120,Inst,NULL);
-#undef WIDTH
+
+  Win=CreateWindowEx(0,"Static",WINDOW_TITLE,WS_CHILD | WS_VISIBLE
+    |SS_CENTER // horizontally
+    |SS_CENTERIMAGE // vertically
+  //|SS_SUNKEN // frame
+    ,x, 0,50,20,StemWin,(HMENU)120,Inst,NULL);
 #endif
 
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_INFO),WS_CHILD | WS_VISIBLE,

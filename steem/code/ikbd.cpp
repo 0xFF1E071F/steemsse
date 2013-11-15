@@ -1564,7 +1564,7 @@ or FIRE BUTTON MONITORING mode.
 }
 //---------------------------------------------------------------------------
 
-#if defined(STEVEN_SEAGAL) 
+#if defined(STEVEN_SEAGAL)
 
 #if defined(SS_ACIA_IRQ_DELAY) // not defined anymore (v3.5.2), see MFP
 
@@ -1689,7 +1689,11 @@ void agenda_keyboard_replace(int) {
   // More to process?
   if(keyboard_buffer_length) 
   {
-    agenda_add(agenda_keyboard_replace,SS_6301_TO_ACIA_IN_HBL,0);
+    agenda_add(agenda_keyboard_replace,
+      (HD6301EMU_ON?  SS_6301_TO_ACIA_IN_HBL 
+      : ACIAClockToHBLS(ACIA_IKBD.clock_divide) // bugfix v3.5.4 Sapiens 
+      ) 
+      ,0);
 #if defined(SS_ACIA_USE_REGISTERS)
     ACIA_IKBD.RDRS=keyboard_buffer[keyboard_buffer_length-1];
 #endif

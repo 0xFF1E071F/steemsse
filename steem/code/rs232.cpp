@@ -70,7 +70,7 @@ void RS232_CalculateBaud(bool Div16,BYTE cr,bool SetBaudNow)
                             rs232_bits_per_word*hbls_per_second/MFP_CLK_EXACT,1);
 #endif
     }
-    ASSERT( rs232_hbls_per_word>=0 );
+    //ASSERT( rs232_hbls_per_word>=0 );
     if (SerialPort.IsPCPort()){
       if (SetBaudNow==0){
         UpdateBaud=true;

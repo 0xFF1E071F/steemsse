@@ -164,8 +164,8 @@ and all his silly mods are gone!
 //#define TEST04
 //#define TEST05
 //#define TEST06
-//#define TEST07//vsync window
-///#define TEST08
+//#define TEST07
+//#define TEST08
 //#define TEST09
 #endif
 
@@ -490,10 +490,10 @@ and all his silly mods are gone!
 #if defined(SS_DRIVE)
 
 #define SS_DRIVE_BYTES_PER_ROTATION
-#define SS_DRIVE_EMPTY_SPIN_UP // European Demos
+//#define SS_DRIVE_EMPTY_SPIN_UP // European Demos (undef v3.5.4)
 // one or the other:
-#define SS_DRIVE_EMPTY_VERIFY_LONG // GEM
-//#define SS_DRIVE_EMPTY_VERIFY_TIME_OUT //GEM
+//#define SS_DRIVE_EMPTY_VERIFY_LONG // GEM
+#define SS_DRIVE_EMPTY_VERIFY_TIME_OUT //GEM
 #define SS_DRIVE_MOTOR_ON
 #define SS_DRIVE_MULTIPLE_SECTORS
 #define SS_DRIVE_READ_ADDRESS_TIMING
@@ -808,6 +808,7 @@ and all his silly mods are gone!
 //#define SS_OSD_LOGO2 //hack (temp)
 #define SS_OSD_LOGO3 // nicer
 #define SS_OSD_SCROLLER_CONTROL
+#define SS_OSD_SCROLLER_DISK_IMAGE //TODO sometimes wrong name
 
 #endif
 
@@ -909,9 +910,9 @@ and all his silly mods are gone!
 #define SS_SHIFTER_ARMADA_IS_DEAD // no shift contrary to Big Wobble
 #define SS_SHIFTER_BIG_WOBBLE // Big Wobble shift
 #define SS_SHIFTER_DANGEROUS_FANTAISY // Dangerous Fantaisy credits flicker
-//#define SS_SHIFTER_DOLB_SHIFT1 // based on "unstable overscan"
-#define SS_SHIFTER_DOLB_SHIFT2 // based on cycle of R0
-#define SS_SHIFTER_DRAGON1 // confused shifter, temp hack
+#define SS_SHIFTER_DOLB_SHIFT1 // based on "unstable overscan"
+//#define SS_SHIFTER_DOLB_SHIFT2 // based on cycle of R0
+//#define SS_SHIFTER_DRAGON1 // confused shifter, temp hack
 #define SS_SHIFTER_OMEGA  // Omega Full Overscan shift (60hz)
 #define SS_SHIFTER_PACEMAKER // Pacemaker credits flickering line
 #define SS_SHIFTER_SCHNUSDIE // Reality is a Lie/Schnusdie overscan logo
@@ -1120,6 +1121,7 @@ and all his silly mods are gone!
 #ifdef WIN32
 #define SS_VAR_CHECK_SNAPSHOT
 #endif
+#define SS_VAR_DISK_MANAGER_LONG_NAMES1
 #define SS_VAR_DONT_INSERT_NON_EXISTENT_IMAGES // at startup
 #define SS_VAR_DONT_REMOVE_NON_EXISTENT_IMAGES // at final save
 #if !(defined(_DEBUG) && defined(VC_BUILD)) // it's Windows 'break' key
@@ -1138,16 +1140,20 @@ and all his silly mods are gone!
 #define SS_VAR_NOTIFY //adding some notify during init
 #define SS_VAR_NO_UPDATE // remove all code in relation to updating
 #define SS_VAR_NO_WINSTON // nuke WinSTon import, saves 16K in VC6 release yeah
-#define SS_VAR_OPTIONS_REFRESH // 6301, STF... up-to-date with snapshot
 #define SS_VAR_OPTION_SLOW_DISK // because many people miss it in disk manager
+#define SS_VAR_OPTIONS_ICON_VERSION
+#define SS_VAR_OPTIONS_REFRESH // 6301, STF... up-to-date with snapshot
 #define SS_VAR_RESET_BUTTON // invert
 #define SS_VAR_RESIZE // reduce memory set (int->BYTE etc.)
 #define SS_VAR_REWRITE // to conform to what compilers expect (warnings...)
-//#define SS_VAR_SCROLLER_DISK_IMAGE // move to OSD
 #define SS_VAR_STATUS_STRING // "status bar" in the icon bar
 #define SS_VAR_STATUS_STRING_6301
-#define SS_VAR_STATUS_STRING_PASTI
+#define SS_VAR_STATUS_STRING_ADAT
 #define SS_VAR_STATUS_STRING_DISK_NAME
+#define SS_VAR_STATUS_STRING_DISK_NAME_OPTION
+#define SS_VAR_STATUS_STRING_HACKS
+#define SS_VAR_STATUS_STRING_IPF
+#define SS_VAR_STATUS_STRING_PASTI
 #define SS_VAR_STEALTH // don't tell we're an emulator (option)
 #ifdef WIN32
 #define SS_VAR_UNRAR // using unrar.dll, up to date
@@ -1171,7 +1177,9 @@ and all his silly mods are gone!
 #define SS_VID_BORDERS // option display size
 #if defined(SS_VID_BORDERS)
 #ifdef WIN32 // Unix?
+#define SS_VID_BORDERS_412
 #define SS_VID_BORDERS_416 
+#define SS_VID_BORDERS_416_NO_SHIFT
 #define SS_VID_BORDERS_BIGTOP // more lines for palette effects
 #define SS_VID_BORDERS_LB_DX // rendering-stage trick rather than painful hacks
 #endif
@@ -1192,6 +1200,7 @@ and all his silly mods are gone!
 #define SS_VID_3BUFFER // Triple Buffer to remove tearing
 #if defined(SS_VID_3BUFFER)
 #define SS_VID_3BUFFER_FS // fullscreen: stretch mode only
+//#define SS_VID_3BUFFER_NO_VSYNC // for tests: "VSync" is necessary
 #define SS_VID_3BUFFER_WIN //windowed mode (necessary for FS)
 #endif
 #endif
@@ -1259,6 +1268,12 @@ and all his silly mods are gone!
 #if !defined(SS_DMA) || !defined(SS_FDC)
 #undef SS_OSD_DRIVE_LED2
 #undef SS_OSD_DRIVE_LED3
+#endif
+
+#if !defined(SS_IKBD)
+#undef SS_ACIA_DOUBLE_BUFFER_RX
+#undef SS_ACIA_DOUBLE_BUFFER_TX
+#undef SS_ACIA_TEST_REGISTERS
 #endif
 
 #if !defined(SS_MFP)

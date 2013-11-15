@@ -208,6 +208,8 @@ int main(int argc,char *argv[])
 
 #if defined(STEVEN_SEAGAL) // strange, check this again
 
+#elif defined(_MSC_VER)//SS
+
 #elif defined(WIN32) && !defined(DEBUG_BUILD) && !defined(MINGW_BUILD) && !defined(ONEGAME)
   __try{	// the old try - compile with GX- note: just to make compile
 		// I don't know the use of this
@@ -271,6 +273,8 @@ int main(int argc,char *argv[])
 /*  if you don't define STEVEN_SEAGAL and you get an error here in VC++,
     try compile switch /GX-
 */
+
+#elif defined(_MSC_VER)//SS
 
 #elif defined(WIN32) && !defined(DEBUG_BUILD) && !defined(MINGW_BUILD) && !defined(ONEGAME)
   }__except(EXCEPTION_EXECUTE_HANDLER){

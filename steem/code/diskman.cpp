@@ -400,7 +400,6 @@ void TDiskManager::Show()
   ListView_SetIconSpacing(Win,88,200);
   ListView_SetImageList(Win,il[0],LVSIL_NORMAL);
   SetDriveViewEnable(0,0);
-
   Win=CreateWindow("Steem Disk Manager Drive Icon","B",WS_CHILD | WS_VISIBLE,
                 175,10,64,64,Handle,(HMENU)99,HInstance,NULL);
 
@@ -786,6 +785,7 @@ void TDiskManager::SetDir(EasyStr NewFol,bool AddToHistory,
 //---------------------------------------------------------------------------
 int CALLBACK TDiskManager::CompareFunc(LPARAM lPar1, LPARAM lPar2, LPARAM)
 {
+  //SS the place to change how we sort items, but need to edit DiskManFileInfo
   DiskManFileInfo *Inf1=(DiskManFileInfo*)lPar1;
   DiskManFileInfo *Inf2=(DiskManFileInfo*)lPar2;
 
@@ -1539,6 +1539,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
           }
           break;
         }
+        //SS can make case 1093 for copy-to-clipboard
         case 1099:
         {
           DiskManFileInfo *Inf=This->GetItemInf(This->MenuTarget);
@@ -1605,6 +1606,9 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
           This->RefreshSnails();
 #if defined(SS_VAR_OPTIONS_REFRESH) &&defined(WIN32)
           OptionBox.SSEUpdateIfVisible(); // other way
+#endif
+#if defined(SS_VAR_STATUS_STRING_ADAT)
+          GUIRefreshStatusBar();
 #endif
 #else
           InvalidateRect(GetDlgItem(Win,98),NULL,0);
@@ -1964,6 +1968,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
 
         DestroyMenu(Pop);
       }else if (HWND(wPar)==GetDlgItem(Win,100) || HWND(wPar)==GetDlgItem(Win,101)){
+        //SS right click in box on the right of disk icons
         if (SendMessage(HWND(wPar),LVM_GETITEMCOUNT,0,0)>0){
           HMENU Pop=CreatePopupMenu();
 
@@ -1989,7 +1994,13 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
           InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1101,T("&Remove Disk From Drive")+" \10DEL");
           InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,999,NULL);
           InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1091,T("&Go To Disk"));
-
+#if defined(SS_VAR_DISK_MANAGER_LONG_NAMES1)
+/*  This is so the player can read the full name of the disk without
+    checking at the place of storage.
+    If you click, you go there.
+*/
+          InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1091,Inf->Name.Text);
+#endif
           POINT pt;
           GetCursorPos(&pt);
           TrackPopupMenu(Pop,TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
@@ -2675,7 +2686,6 @@ void TDiskManager::SetDriveViewEnable(int Drive,bool EnableIt)
   }else{
     SetWindowLong(LV,GWL_STYLE,GetWindowLong(LV,GWL_STYLE) & ~WS_TABSTOP);
   }
-
   InvalidateRect(LV,NULL,true);
 }
 #endif//WIN32
@@ -2877,8 +2887,8 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
     }
     FloppyDrive[Drive].DiskName=Name;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_SCROLLER_DISK_IMAGE)
-    if(OSD_IMAGE_NAME)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_SCROLLER_DISK_IMAGE)
+    if(OSD_IMAGE_NAME && !SSE_STATUS_BAR_GAME_NAME)
       OsdControl.StartScroller(Name); // display image disk name
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING_DISK_NAME)

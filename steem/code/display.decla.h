@@ -75,7 +75,7 @@ private:
   IDirectDraw2 *DDObj;
   IDirectDrawSurface *DDPrimarySur,*DDBackSur;
 
-#if defined(SS_VID_3BUFFER_WIN)
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_WIN)
   IDirectDrawSurface *DDBackSur2; // our second back buffer
   bool SurfaceToggle;
 #endif
@@ -166,7 +166,7 @@ public:
   neochrome_file *pNeoFile;
 #endif
 #if defined(SS_VID_3BUFFER_WIN)
-  long VSyncTiming; // must be public for reset
+  long VSyncTiming; // must be public
   BOOL BlitIfVBlank(); // our polling function
 #endif
 #endif
