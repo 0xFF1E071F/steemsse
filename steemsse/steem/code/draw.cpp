@@ -309,6 +309,10 @@ void draw_set_jumps_and_source()
 #ifdef WIN32
   if (FullScreen
 #if defined(SS_VID_SCANLINES_INTERPOLATED) && defined(SS_VID_3BUFFER)
+/*  About this complication, it is necessary to have interpolated
+    scanlines working in fullscreen mode with triple buffer.
+    There are many more places where we test that.
+*/
         && !(SCANLINES_INTERPOLATED&&SSE_3BUFFER)
 #endif
     ){
@@ -523,7 +527,6 @@ void draw_set_jumps_and_source()
 void draw_end()
 {
   if (draw_lock==0) return;
-
 #ifndef ONEGAME
   bool draw_osd=true;
   if (DoSaveScreenShot || slow_motion) draw_osd=0;
@@ -568,6 +571,7 @@ void draw_end()
    There's not so much code but it ran many cases eg Darkside of the Spoon,
    it was missing the 0byte line, 4bit scrolling.
    It has been much expanded and commented in SSEShifter.cpp.
+   This function isn't compiled.
 */
 void draw_check_border_removal()
 {
@@ -1076,7 +1080,17 @@ void draw(bool osd)
   MEM_ADDRESS save_drawn_so_far=scanline_drawn_so_far;
   MEM_ADDRESS save_pixel=shifter_pixel;
   shifter_draw_pointer=xbios2;
+
+#if defined(SS_VID_3BUFFER_WIN)
+  // we blit the unlocked backsurface
+  if (!draw_lock || SSE_3BUFFER 
+#if !defined(SS_VID_3BUFFER_FS)
+    && !FullScreen
+#endif
+    ){ 
+#else
   if (!draw_lock){
+#endif
     draw_begin();
     int yy,yy2;
 #ifndef NO_CRAZY_MONITOR

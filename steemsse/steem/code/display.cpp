@@ -422,7 +422,7 @@ HRESULT SteemDisplay::DDCreateSurfaces()
           return DDError("CreateSurface for BackSur FAILED",Ret);
         }
       }else{
-#if defined(SS_VID_3BUFFER_WIN)
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_WIN)
         // Let's create a second back surface for our "triple buffer"
         if(SSE_3BUFFER)
         {
@@ -479,7 +479,7 @@ void SteemDisplay::DDDestroySurfaces()
   if (DDBackSur){
     DDBackSur->Release(); DDBackSur=NULL;
   }
-#if defined(SS_VID_3BUFFER_WIN)
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_WIN)
   if (DDBackSur2){
     DDBackSur2->Release(); DDBackSur2=NULL;
   }
@@ -615,13 +615,13 @@ HRESULT SteemDisplay::Lock()
 
       DDBackSurDesc.dwSize=sizeof(DDSURFACEDESC);
 
-#if defined(SS_VID_3BUFFER_WIN)
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_WIN)
       // trying to mind performance and footprint
       IDirectDrawSurface *OurBackSur;
-      if(SSE_3BUFFER)
+      if(SSE_3BUFFER && DDBackSur2)
       {
         SurfaceToggle=!SurfaceToggle; // toggle at lock
-        OurBackSur=(SurfaceToggle && DDBackSur2) ? DDBackSur2: DDBackSur;
+        OurBackSur=(SurfaceToggle) ? DDBackSur2: DDBackSur;
       }
       else
         OurBackSur=DDBackSur;
@@ -681,9 +681,9 @@ void SteemDisplay::Unlock()
 #endif
 
   if (Method==DISPMETHOD_DD){
-#if defined(SS_VID_3BUFFER_WIN)
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_WIN)
     IDirectDrawSurface *OurBackSur=
-      (SSE_3BUFFER && SurfaceToggle && DDBackSur2) ? DDBackSur2:DDBackSur;
+      (SSE_3BUFFER && DDBackSur2 && SurfaceToggle) ? DDBackSur2:DDBackSur;
     OurBackSur->Unlock(NULL);
 #else
     DDBackSur->Unlock(NULL);
@@ -841,11 +841,11 @@ bool SteemDisplay::Blit()
                 draw_blit_source_rect.right/=2; 
 #endif
 
-#if defined(SS_VID_3BUFFER)
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_FS)
             IDirectDrawSurface *OurBackSur;
-            if(SSE_3BUFFER)
+            if(SSE_3BUFFER && DDBackSur2)
             {
-              OurBackSur=((!SurfaceToggle)&&DDBackSur2) ? DDBackSur2:DDBackSur;
+              OurBackSur=(!SurfaceToggle) ? DDBackSur2:DDBackSur;
               
               if(OurBackSur->GetBltStatus(DDGBS_CANBLT)==DD_OK)
                 hRet=DDPrimarySur->Blt(&Dest,OurBackSur,&draw_blit_source_rect,
@@ -904,10 +904,20 @@ bool SteemDisplay::Blit()
         get_fullscreen_rect(&Dest);
         for (int i=0;i<2;i++){
 
-#if defined(SS_VID_3BUFFER_WIN)
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_WIN)
           IDirectDrawSurface *OurBackSur=
             (SSE_3BUFFER && !SurfaceToggle && DDBackSur2) 
             ? DDBackSur2: DDBackSur;
+
+#if defined(SS_VID_BORDERS_LB_DX)
+          if(BORDER_40) // clip from larger to 800
+          {
+            RECT our_clipping={16,0,816,556-6};
+            hRet=DDPrimarySur->Blt(&Dest,OurBackSur,
+                &our_clipping,DDBLT_WAIT,NULL);
+            }
+          else
+#endif
           hRet=DDPrimarySur->Blt(&Dest,OurBackSur,&draw_blit_source_rect,
             DDBLT_WAIT,NULL);
 #else
@@ -943,8 +953,11 @@ bool SteemDisplay::Blit()
       ClientToScreen(StemWin,&pt);
       OffsetRect(&dest,pt.x,pt.y);
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
-      if(BORDER_40 && !SCANLINES_INTERPOLATED) // clip from larger to 800
-        OffsetRect(&draw_blit_source_rect,16,0);
+      if(BORDER_40 && draw_win_mode[screen_res]) // clip from larger to 800
+      {
+        OffsetRect(&draw_blit_source_rect,
+        (CanUse_400 && !SCANLINES_INTERPOLATED)?16:8,0);
+      }
 #endif
 
 #if defined(SS_VID_SCANLINES_INTERPOLATED_MED)
@@ -953,7 +966,7 @@ bool SteemDisplay::Blit()
 #endif
 
       for (int i=0;i<2;i++){
-#if defined(SS_VID_3BUFFER)
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER)
         IDirectDrawSurface *OurBackSur=
           (SSE_3BUFFER && !SurfaceToggle && DDBackSur2) ? DDBackSur2:DDBackSur;
         if(OurBackSur->GetBltStatus(DDGBS_CANBLT)==DD_OK)
@@ -1073,9 +1086,9 @@ void SteemDisplay::RunEnd(bool Temp)
     SaveSurDesc.dwHeight=h;
     hRet=DDObj->CreateSurface(&SaveSurDesc,&SaveSur,NULL);
     if (hRet==DD_OK){
-#if defined(SS_VID_3BUFFER_WIN)
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_FS)
       IDirectDrawSurface *OurBackSur=
-        (SSE_3BUFFER && !SurfaceToggle && DDBackSur2) ? DDBackSur2: DDBackSur;
+        (SSE_3BUFFER && DDBackSur2 && !SurfaceToggle) ? DDBackSur2: DDBackSur;
       hRet=SaveSur->Blt(&rcDest,OurBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
 #else
       hRet=SaveSur->Blt(&rcDest,DDBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
@@ -1435,8 +1448,8 @@ HRESULT SteemDisplay::RestoreSurfaces()
     HRESULT hRet=DDPrimarySur->Restore();
     if (hRet==DD_OK){
       hRet=DDBackSur->Restore();
-#if defined(SS_VID_3BUFFER_WIN)
-      if(SSE_3BUFFER && hRet==DD_OK) 
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_WIN)
+      if(SSE_3BUFFER && hRet==DD_OK && DDBackSur2) 
         hRet=DDBackSur2->Restore();
       SurfaceToggle=true;
       VSyncTiming=0;
@@ -2012,13 +2025,20 @@ void SteemDisplay::ScreenShotGetFormatOpts(EasyStringList *pSL)
       break;
   }
 }
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_WIN)
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_WIN) \
+ && !defined(SS_VID_3BUFFER_NO_VSYNC)
 /*  When the option is on, this function is called a lot
     during emulation (each scanline) and during VBL idle
     times too, so the processor is always busy. TODO
+    Scrolling is also sketchy, triple buffering only removes
+    tearing.
+    SS_VID_3BUFFER_NO_VSYNC: this isn't defined, it was used
+    to test what happens when we use Triple Buffering but don't
+    sync on monitor VBlank: there's still some tearing.
+    If we combine with "normal" VSync, it gets smooth, but
+    at monitor speed, and triple buffering is useless anyway.
 */
 BOOL SteemDisplay::BlitIfVBlank() {
-
   //DWORD line;
   //HRESULT hRet=Disp.DDObj->GetScanLine(&line);
 //  TRACE("dis %d pc y%d\n",dispatcher,line);

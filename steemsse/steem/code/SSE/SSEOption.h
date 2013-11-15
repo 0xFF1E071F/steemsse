@@ -38,6 +38,7 @@ struct TOption {
   unsigned int StatusBar:1;
   unsigned int WinVSync:1;
   unsigned int TripleBuffer:1;
+  unsigned int StatusBarGameName:1;
 #ifdef __cplusplus // visible only to C++ objects
   TOption();
   void Init();
@@ -71,6 +72,7 @@ extern struct TOption SSEOption;
 #define PASTI_JUST_STX (SSEOption.PastiJustSTX)
 #define SSE_INTERPOLATE (SSEOption.Interpolate)
 #define SSE_STATUS_BAR (SSEOption.StatusBar)
+#define SSE_STATUS_BAR_GAME_NAME (SSEOption.StatusBarGameName)
 #define SSE_WIN_VSYNC (SSEOption.WinVSync)
 #define SSE_3BUFFER (SSEOption.TripleBuffer)
 #else//!defined(SS_SSE_OPTION_STRUCT)

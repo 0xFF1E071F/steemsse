@@ -838,7 +838,7 @@ void event_scanline()
   if (dma_sound_on_this_screen) dma_sound_fetch(); 
   screen_event_pointer++;
 
-#if defined(SS_VID_3BUFFER_WIN)
+#if defined(SS_VID_3BUFFER_WIN) && !defined(SS_VID_3BUFFER_NO_VSYNC)
   if(SSE_3BUFFER && !(scan_y%2)
 #if !defined(SS_VID_3BUFFER_FS)
     && !FullScreen
@@ -902,7 +902,7 @@ void event_vbl_interrupt() //SS misleading name?
   log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: Finished frame, blitting at ")+(timeGetTime()-run_start_time)+" timer="+(timer-run_start_time));
   if (draw_lock){
     draw_end();
-#if defined(SS_VID_3BUFFER_WIN)
+#if defined(SS_VID_3BUFFER_WIN) && !defined(SS_VID_3BUFFER_NO_VSYNC)
     if (VSyncing==0 &&( !SSE_3BUFFER
 #if !defined(SS_VID_3BUFFER_FS)
       || FullScreen
@@ -1062,7 +1062,7 @@ void event_vbl_interrupt() //SS misleading name?
   LOOP{
     timer=timeGetTime();
 
-#if defined(SS_VID_3BUFFER_WIN)
+#if defined(SS_VID_3BUFFER_WIN) && !defined(SS_VID_3BUFFER_NO_VSYNC)
   if(SSE_3BUFFER
 #if !defined(SS_VID_3BUFFER_FS)
     && !FullScreen
@@ -1109,7 +1109,7 @@ void event_vbl_interrupt() //SS misleading name?
     if (time_to_sleep>0){
       log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: Sleeping for ")+time_to_sleep);
 
-#if defined(SS_VID_3BUFFER_WIN)
+#if defined(SS_VID_3BUFFER_WIN) && !defined(SS_VID_3BUFFER_NO_VSYNC)
 /*  This is the part responsible for high CPU use.
     Sleep(1) is sure to make us miss VBLANK.
     Maybe check probability of VBLANK but it depends on HZ
@@ -1147,7 +1147,7 @@ void event_vbl_interrupt() //SS misleading name?
       // Wait until desired time (to nearest 1000th of a second).
       do{
         timer=timeGetTime();
-#if defined(SS_VID_3BUFFER_WIN)
+#if defined(SS_VID_3BUFFER_WIN) && !defined(SS_VID_3BUFFER_NO_VSYNC)
         if(SSE_3BUFFER
 #if !defined(SS_VID_3BUFFER_FS)
           && !FullScreen

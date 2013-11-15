@@ -743,7 +743,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SS_OSD_DRIVE_INFO)
     OSD_DRIVE_INFO=pCSF->GetInt("Options","OsdDriveInfo", OSD_DRIVE_INFO);
 #endif
-#if defined(SS_VAR_SCROLLER_DISK_IMAGE)
+#if defined(SS_OSD_SCROLLER_DISK_IMAGE)
     OSD_IMAGE_NAME=pCSF->GetInt("Options","OsdImageName", OSD_IMAGE_NAME);
 #endif
 #if defined(SS_PASTI_ONLY_STX)
@@ -754,6 +754,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #endif
 #if defined(SS_VAR_STATUS_STRING)
     SSE_STATUS_BAR=pCSF->GetInt("Options","StatusBar",SSE_STATUS_BAR);
+#endif
+#if defined(SS_VAR_STATUS_STRING_DISK_NAME_OPTION)
+    SSE_STATUS_BAR_GAME_NAME=pCSF->GetInt("Options","StatusBarGameName",SSE_STATUS_BAR_GAME_NAME);
 #endif
 #if defined(SS_VID_VSYNC_WINDOW)
     SSE_WIN_VSYNC=pCSF->GetInt("Options","WinVSync",SSE_WIN_VSYNC);
@@ -1105,13 +1108,13 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SS_SOUND_MICROWIRE)
   pCSF->SetStr("Sound","Microwire",EasyStr(MICROWIRE_ON));  
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_OPTION_DISABLE_DSP)
+#if defined(SS_SOUND_OPTION_DISABLE_DSP)
   pCSF->SetStr("Sound","Dsp",EasyStr(DSP_ENABLED));  
 #endif
 #if defined(SS_OSD_DRIVE_INFO)
   pCSF->SetStr("Options","OsdDriveInfo",EasyStr(OSD_DRIVE_INFO));  
 #endif
-#if defined(SS_VAR_SCROLLER_DISK_IMAGE)
+#if defined(SS_OSD_SCROLLER_DISK_IMAGE)
   pCSF->SetStr("Options","OsdImageName",EasyStr(OSD_IMAGE_NAME));  
 #endif
 #if defined(SS_PASTI_ONLY_STX)
@@ -1122,6 +1125,9 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 #if defined(SS_VAR_STATUS_STRING)
   pCSF->SetStr("Options","StatusBar",EasyStr(SSE_STATUS_BAR));
+#endif
+#if defined(SS_VAR_STATUS_STRING_DISK_NAME_OPTION)
+  pCSF->SetStr("Options","StatusBarGameName",EasyStr(SSE_STATUS_BAR_GAME_NAME));
 #endif
 #if defined(SS_VID_VSYNC_WINDOW)
   pCSF->SetStr("Options","WinVSync",EasyStr(SSE_WIN_VSYNC));

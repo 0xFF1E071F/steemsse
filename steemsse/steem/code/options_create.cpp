@@ -1027,8 +1027,8 @@ void TOptionBox::CreateOSDPage()
   Win=CreateWindow("Button",T("Scrolling messages"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           page_l,y,Wid,23,Handle,(HMENU)12020,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,osd_show_scrollers,0);
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_SCROLLER_DISK_IMAGE)
-  Wid2=Wid;
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_SCROLLER_DISK_IMAGE)
+  long Wid2=Wid;
   Wid=GetCheckBoxSize(Font,T("Disk image names")).Width;
   Win=CreateWindow("Button",T("Disk image names"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           page_l+Wid2,y,Wid,23,Handle,(HMENU)12002,HInstance,NULL);
@@ -1941,9 +1941,10 @@ void TOptionBox::CreateSSEPage() {
   const int LineHeight=30;
   const int HorizontalSeparation=10;
   int mask;
+  EasyStr tip_text;
 
   // Title
-  Wid=get_text_width(T("Steem SSE Options\n================="));
+  Wid=get_text_width(T("Steem SSE Options\n================="))/2;
   CreateWindow("Static",T("Steem SSE Options\n================"),WS_CHILD,
     page_l,y,Wid,21,Handle,(HMENU)209,HInstance,NULL);
   y+=LineHeight+10;
@@ -1956,8 +1957,17 @@ void TOptionBox::CreateSSEPage() {
   ToolAddWindow(ToolTip,Win,T("Displays some info in the tool bar."));
 #endif
 
-#if defined(SS_HACKS)  
+#if defined(SS_VAR_STATUS_STRING_DISK_NAME_OPTION)
   Offset=Wid+HorizontalSeparation;
+  Wid=GetCheckBoxSize(Font,T("Disk name")).Width;
+  Win=CreateWindow("Button",T("Disk name"),WS_CHILD | WS_TABSTOP |
+    BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)7309,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,SSE_STATUS_BAR_GAME_NAME,0);
+  ToolAddWindow(ToolTip,Win,T("Also the name of the current disk."));
+#endif
+
+#if defined(SS_HACKS)  
+  Offset+=Wid+HorizontalSeparation;
   Wid=GetCheckBoxSize(Font,T("Hacks")).Width;
   Win=CreateWindow("Button",T("Hacks"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           page_l+Offset,y,Wid,23,Handle,(HMENU)1027,HInstance,NULL);
@@ -1984,17 +1994,21 @@ void TOptionBox::CreateSSEPage() {
 	  //page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)1026,HInstance,NULL);
     page_l+5+Wid,y,80,200,Handle,(HMENU)1026,HInstance,NULL);
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("384 x 270"));
-  SendMessage(BorderSizeOption,CB_ADDSTRING,1,(long)CStrT("400 x 278"));
+  SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("400 x 278"));
+
+#if defined(SS_VID_BORDERS_412)
 #if defined(SS_VID_BORDERS_BIGTOP) && !defined(SS_VID_BORDERS_416)
-  SendMessage(BorderSizeOption,CB_ADDSTRING,2,(long)CStrT("412 x 286"));
+  SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("412 x 286"));
 #else
-  SendMessage(BorderSizeOption,CB_ADDSTRING,2,(long)CStrT("412 x 280"));
+  SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("412 x 280"));
 #endif
+#endif
+
 #if defined(SS_VID_BORDERS_416)
 #if defined(SS_VID_BORDERS_BIGTOP)
-  SendMessage(BorderSizeOption,CB_ADDSTRING,3,(long)CStrT("416 x 286"));
+  SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("416 x 286"));
 #else
-  SendMessage(BorderSizeOption,CB_ADDSTRING,3,(long)CStrT("416 x 280"));
+  SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("416 x 280"));
 #endif
 #endif
   SendMessage(BorderSizeOption,CB_SETCURSEL,DISPLAY_SIZE,0);
@@ -2016,31 +2030,60 @@ void TOptionBox::CreateSSEPage() {
   //y+=LineHeight;
 #endif
 
+#if defined(SS_VID_VSYNC_WINDOW) || defined(SS_VID_3BUFFER)
+/*
+The following table summarizes the most recent operating system version numbers.
+ Operating system	Version number
+Windows 8.1	6.3*
+Windows Server 2012 R2	6.3*
+Windows 8	6.2
+Windows Server 2012	6.2
+Windows 7	6.1
+Windows Server 2008 R2	6.1
+Windows Server 2008	6.0
+Windows Vista	6.0
+Windows Server 2003 R2	5.2
+Windows Server 2003	5.2
+Windows XP 64-Bit Edition	5.2
+Windows XP	5.1
+Windows 2000	5.0
+*/
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+  OSVERSIONINFO osver;
+  char add_tip[sizeof(" Incompatible with Window Compositing of Windows 8.")]="";
+  osver.dwOSVersionInfoSize = sizeof(osver);
+  if (GetVersionEx(&osver) && osver.dwPlatformId>=2 && osver.dwMajorVersion>=6)
+  {
+    if(osver.dwMinorVersion>=2) //Win 8
+    {
+      strcpy(add_tip," Incompatible with Window Compositing of Windows 8.");
+      mask|=WS_DISABLED;
+    }
+    else // vista+Win7
+      strcpy(add_tip," Don't use together with Window Compositing.");
+  }
+#endif
+
 #if defined(SS_VID_VSYNC_WINDOW)
   Offset+=Wid+HorizontalSeparation;
-  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
-//  if(0) // test if OK
-  //  mask|=WS_DISABLED;
   Wid=GetCheckBoxSize(Font,T("VSync")).Width;
   Win=CreateWindow("Button",T("VSync"), mask,
                page_l +Offset,y,Wid,25,Handle,(HMENU)1033,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,SSE_WIN_VSYNC,0);
-  ToolAddWindow(ToolTip,Win,
-    T("Works with windows and fullscreen but you need the correct frequency on your monitor. Note: OS display settings may interfere."));
-//  y+=LineHeight;
+  tip_text=T("Works with windows and fullscreen but you need the correct frequency on your monitor.");
+  tip_text+=add_tip;
+  ToolAddWindow(ToolTip,Win,tip_text.Text);
 #endif
 
 #if defined(SS_VID_3BUFFER)
   Offset+=Wid+HorizontalSeparation;
-  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
-//  if(0) // test if OK
-  //  mask|=WS_DISABLED;
   Wid=GetCheckBoxSize(Font,T("Triple Buffering")).Width;
   Win=CreateWindow("Button",T("Triple Buffering"), mask,
                page_l +Offset,y,Wid,25,Handle,(HMENU)1034,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,SSE_3BUFFER,0);
-  ToolAddWindow(ToolTip,Win,
-    T("This may reduce tearing at the price of high CPU use. Don't use if tearing is already handled by the OS!"));
+  tip_text=T("This may reduce tearing at the price of high CPU use.");
+  tip_text+=add_tip;
+  ToolAddWindow(ToolTip,Win,tip_text.Text);
   y+=LineHeight;
 #endif
 
@@ -2052,9 +2095,9 @@ void TOptionBox::CreateSSEPage() {
 	  //page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)211,HInstance,NULL);
     page_l+5+Wid,y,80,200,Handle,(HMENU)211,HInstance,NULL);
   SendMessage(STTypeOption,CB_ADDSTRING,0,(long)CStrT(st_model_name[0]));
-  SendMessage(STTypeOption,CB_ADDSTRING,1,(long)CStrT(st_model_name[1]));
+  SendMessage(STTypeOption,CB_ADDSTRING,0,(long)CStrT(st_model_name[1]));
 #if defined(SS_STF_MEGASTF)
-  SendMessage(STTypeOption,CB_ADDSTRING,2,(long)CStrT(st_model_name[2]));
+  SendMessage(STTypeOption,CB_ADDSTRING,0,(long)CStrT(st_model_name[2]));
 #endif
   SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,SS_STF_ST_MODELS-1),0);
   ToolAddWindow(ToolTip,Win,
@@ -2074,13 +2117,13 @@ void TOptionBox::CreateSSEPage() {
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("Ignore"));
 
 #if defined(SS_MMU_WAKE_UP_DL)
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("DL3 WU2 WS2"));
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,2,(long)CStrT("DL4 WU2 WS4"));
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,3,(long)CStrT("DL5 WU1 WS3"));
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,4,(long)CStrT("DL6 WU1 WS1"));
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("DL3 WU2 WS2"));
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("DL4 WU2 WS4"));
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("DL5 WU1 WS3"));
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("DL6 WU1 WS1"));
 #else
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,1,(long)CStrT("Wake-up state 1"));
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,2,(long)CStrT("Wake-up state 2"));
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("Wake-up state 1"));
+  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("Wake-up state 2"));
 #endif
 #if defined(SS_SHIFTER_PANIC) // 3 or 5
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,WU_SHIFTER_PANIC,(long)CStrT("Shifter panic"));
@@ -2145,7 +2188,7 @@ void TOptionBox::CreateSSEPage() {
     page_l,y,Wid,25,Handle,(HMENU)7303,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,PSG_FILTER_FIX,0);
   ToolAddWindow(ToolTip,Win,
-    T("This makes PSG (YM-2149) chip tunes and samples sound less muffled"));
+    T("This makes PSG (YM-2149) chip tunes and samples sound less muffled but the sound of samples could be worse, depends."));
   y+=LineHeight;
 #endif
 
@@ -2173,7 +2216,7 @@ void TOptionBox::CreateSSEPage() {
     page_l,y,Wid,25,Handle,(HMENU)7306,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,!floppy_instant_sector_access,0);
   ToolAddWindow(ToolTip,Win,
-    T("Slow but accurate disk drive emulation."));
+    T("Slow but accurate disk drive emulation (ADAT)."));
   y+=LineHeight;
 #endif
 
@@ -2197,7 +2240,7 @@ void TOptionBox::CreateSSEPage() {
     page_l+Offset,y,Wid,25,Handle,(HMENU)7305,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,PASTI_JUST_STX,0);
   ToolAddWindow(ToolTip,Win,
-    T("When checked, Pasti will only be used for STX disks (not ST, MSA)"));
+    T("When checked, Pasti will only be used for STX disks (not ST, MSA). It's been debugged but if you have problems uncheck it."));
   y+=LineHeight;
 #endif
 
@@ -2217,17 +2260,31 @@ void TOptionBox::CreateSSEPage() {
   CreateWindow("Button",T("Perform cold reset now"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
                   page_l,y,page_w,23,Handle,(HMENU)8601,HInstance,NULL);
 
+#if defined(SS_VAR_OPTIONS_ICON_VERSION) // fancy
+  y+=LineHeight+LineHeight;
+  Offset=85;
+  Win=CreateWindow("Static",NULL,WS_CHILD | WS_VISIBLE | SS_ICON ,
+                          page_l+Offset,y,0,0,Handle,(HMENU)209,HInstance,NULL);
+  SendMessage (Win,STM_SETICON,(WPARAM)hGUIIcon[RC_ICO_APP],0);
+  Offset+=32;
+  Wid=get_text_width(WINDOW_TITLE);
+  Win=CreateWindow("Static",WINDOW_TITLE,WS_CHILD | WS_VISIBLE ,
+                          page_l+Offset,y,Wid,21,Handle,(HMENU)209,HInstance,NULL);
+#endif
+
   SetPageControlsFont();
   ShowPageControls(); // forgot that for a while... where are the controls?
 }
 
 #if defined(SS_VAR_OPTIONS_REFRESH)
 // for SSE options that are saved with memory snapshot
+
 void TOptionBox::SSEUpdateIfVisible() {
   if (Handle==NULL) 
     return;
+  HWND Win;
 #if defined(SS_IKBD_6301)
-  HWND Win=GetDlgItem(Handle,1029); //HD6301 emu
+  Win=GetDlgItem(Handle,1029); //HD6301 emu
   if(Win!=NULL) 
   {
     if(!HD6301_OK)

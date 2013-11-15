@@ -869,7 +869,7 @@ void TOptionBox::CreateOSDPage()
   p_but->set_check(osd_show_scrollers);
   y+=35;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_SCROLLER_DISK_IMAGE)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_SCROLLER_DISK_IMAGE)
   p_but=new hxc_button(XD,page_p,page_l,y,0,25,button_notify_proc,this,
                           BT_CHECKBOX,T("Disk image names"),12002,BkCol);
   p_but->set_check(OSD_IMAGE_NAME);

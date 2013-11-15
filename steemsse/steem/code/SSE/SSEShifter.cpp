@@ -347,25 +347,38 @@ Sync is set back to 2 between R2 and R0, this is isn't a line +24
 027 - 016:R0000 376:S0000 388:S0002 512:R0002 512:T10011 512:#0230
     It seems to be because shift to R0 happens at cycle 16. Protected by
     'Hacks' for a while.
+    Wrong: breaks Forest (funny way) -> SS_SHIFTER_DOLB_SHIFT2 undef
     Not in 60hz frames? Not sure of this condition
 */
-#if defined(SS_SHIFTER_DOLB_SHIFT2)
-        if(r0cycle<16 || !SSE_HACKS_ON)
-#else
-        if(shifter_freq_at_start_of_vbl==50) 
-#endif
-          shifter_pixel+=4;
 
-        overscan_add_extra+=2;  // 8 + 2 + 16 = 26
-        CurrentScanline.Bytes+=26;
+
+        if(
+#if defined(SS_SHIFTER_DOLB_SHIFT2)
+          (r0cycle<16 || !SSE_HACKS_ON)
+#else
+          (shifter_freq_at_start_of_vbl==50) 
+#endif
+#if defined(SS_VID_BORDERS_416_NO_SHIFT)
+/*  Current theory (v3.5.4):
+    This "shift" by 4 pixels is a misconception.
+    A "left off" trick grants 26 extra bytes, that is 52 pixels, and not
+    48. If you believe the #pixels is 48, then you think you must lose
+    4 pixels before the border. If you don't, there's nothing to shift.
+*/
+          && (!SSE_HACKS_ON||SideBorderSize!=VERY_LARGE_BORDER_SIDE)
+#endif
+          )
+          shifter_pixel+=4;
 
 #if defined(SS_SHIFTER_LEFT_OFF_60HZ)
         if((CurrentScanline.Tricks&TRICK_LINE_PLUS_24))
-        {
-          CurrentScanline.Bytes+=-2; // 24
-          overscan_add_extra+=-2;
-        }
+          CurrentScanline.Bytes+=24; // 8 + 16 = 24
+        else
 #endif
+        {
+          CurrentScanline.Bytes+=26;
+          overscan_add_extra+=2;  // 8 + 2 + 16 = 26
+        }
 
 
 #if defined(SS_SHIFTER_UNSTABLE)
@@ -383,8 +396,14 @@ Sync is set back to 2 between R2 and R0, this is isn't a line +24
             Preload--;
         }
 #endif
+
+
         if(HSCROLL>=12) // STE shifter bug (Steem authors)
+#if defined(SS_VID_BORDERS_416_NO_SHIFT) //E605 & Tekila artefacts
+          if(!SSE_HACKS_ON||SideBorderSize!=VERY_LARGE_BORDER_SIDE) 
+#endif
           ShiftSDP(8);
+
 #if defined(SS_VID_BORDERS)
         if(SideBorderSize==ORIGINAL_BORDER_SIDE) // 32
 #endif
@@ -415,7 +434,7 @@ Sync is set back to 2 between R2 and R0, this is isn't a line +24
         if(SSE_HACKS_ON && (PreviousScanline.Tricks&TRICK_WRITE_SDP_POST_DE)
           && HSCROLL  // so it's STE-only
 #if defined(SS_SHIFTER_ARMADA_IS_DEAD)
-          && r0cycle==12
+          && r0cycle==12 // just a hack of course
 #endif
           ) 
           shifter_draw_pointer+=-4; // fixes Big Wobble, see SSEShifter.h
@@ -765,12 +784,15 @@ STF2:
         int cycles_in_low_res=r1cycle-r0cycle;
 #if defined(SS_SHIFTER_MED_OVERSCAN_SHIFT)
         ShiftSDP(-(((cycles_in_low_res)/2)%8)/2); //oops - disappeared in 3.5.2
+        shifter_pixel+=4; // hmm...
 #endif
 #if defined(SS_VID_BPOC)
         if(BORDER_40 && SSE_HACKS_ON && cycles_in_low_res==16) 
         { // fit text of Best Part of the Creation on a 800 display
           ShiftSDP(4);      
-          shifter_pixel+=4;
+#if defined(SS_VID_BORDERS_416_NO_SHIFT)
+          shifter_pixel+=4; 
+#endif
         }
 #endif
       }
@@ -818,8 +840,10 @@ STF2:
         TrickExecuted|=TRICK_4BIT_SCROLL;
 
 #if defined(SS_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK)
-        // strange corrections now necessary, quick patch. TODO
-        // 3.5.4 no more need, still don't know why, typical
+/*  Strange corrections suddenly necessary at some point, quick patch. 
+    when it's necessary or not is a great mystery (undef v3.5.4)
+    TODO
+*/
         if(SSE_HACKS_ON && DISPLAY_SIZE>0 && cycles_in_low_res==8) 
         {
           switch(shift_in_bytes)
@@ -1141,7 +1165,7 @@ Mindbomb/No Shit
     cycle 148 of some sync lines.
 001 - 012:R0000 148:R0001 160:R0002 172:R0000 444:R0000 456:R0000 512:R0000 512:T2004 512:#0054
 */
-    ASSERT( !Preload );
+//    ASSERT( !Preload ); //DSOS!
 #endif
 
   }
@@ -1271,10 +1295,18 @@ detect unstable: switch MED/LOW - Beeshift
       left_border-=(Preload%4)*4;
       right_border+=(Preload%4)*4;
     }
-#if defined(SS_SHIFTER_DOLB_SHIFT1) //undef in v3.5.4, see 'left off'
+#if defined(SS_SHIFTER_DOLB_SHIFT1) 
     else  //  hack for DOLB, Omega, centering the pic
     {
-      if(SSE_HACKS_ON)
+      if(SSE_HACKS_ON
+#if defined(SS_VID_BORDERS_416_NO_SHIFT)
+/*  The fact that the screen of DOLB is good without a special
+    adjustment supports our theory of "no shift, 52 pixels".
+    With display size 412, it's very close to the screenshot.
+*/
+        && (SideBorderSize!=VERY_LARGE_BORDER_SIDE) 
+#endif
+        )
         HblPixelShift=4; 
     }
 #endif
@@ -1712,8 +1744,8 @@ void TShifter::CheckVerticalOverscan() {
     The switch to 60hz mustn't happen too late or it doesn't count.
     It must happen before cycle 502 on a STE and before cycle 506 on a STF. 
     But the switch back to 50hz may happen at cycle 500 on a STE (RGBeast),
-    504 on a STF. So there's overlap, just checking frequency at cycle c is 
-    not enough.
+    504 (WU1), 506 (WU2) on a STF. 
+    So there's overlap, just checking frequency at cycle c is not enough.
     Those values are not based on measurements but on how programs work or not.
     Still testing.
     There was variation in some STE & STF and typically some demos wouldn't
@@ -1740,9 +1772,12 @@ void TShifter::CheckVerticalOverscan() {
     6) I know no cases of programs making the screen smaller. It was small
     enough! TODO PYM big border?
 
-    7) The thresholds are wake-up sensitive, ijor's test program uses this.
+    7) The thresholds are wake-up sensitive, ijor's test program uses this
+    (and so, this isn't merely a hack).
     This could explain why some demos don't seem to work on a machine,
     according to users.
+    TODO: there's got to be a difference between STE as well, but CPU speed
+    could be responsible too.
 
     -Auto 168 (WU1 OK, WU2, STE flicker)
     30 - 488:S0000 512:S0002 512:T0100
@@ -1755,6 +1790,10 @@ void TShifter::CheckVerticalOverscan() {
 
     -Nostalgia/Lemmings end scroller WS3
     Y-30 C520  448:S0000 504:S0002 sometimes -> breaks screen in WU2
+
+    -Superior 85: WU1
+    Y-30 C520  420:S0000 504:S0002 sometimes -> flicker in WU2
+
 
 */
 
@@ -1801,12 +1840,7 @@ WU2:
 Y-30 C512  496:S0000 504:S0002 -
 Y-30 C516  504:S0000 512:S0002 shifter tricks 100
 */
-/*
-    if(WAKE_UP_STATE==1) // !option 1=WU2 now!
-#if defined(SS_STF)
-      if(ST_TYPE!=STE)
-#endif
-*/
+
 #if defined(SS_MMU_WAKE_UP_DL)
     if(MMU.WU[WAKE_UP_STATE]==1)
 #else
@@ -2156,13 +2190,14 @@ void TShifter::IncScanline() { // a big extension of 'scan_y++'!
 #endif
 
   scan_y++; 
-  
+  HblPixelShift=0;  
   left_border=BORDER_SIDE;
   if(HSCROLL) 
     left_border+=16;
   if(shifter_hscroll_extra_fetch) 
     left_border-=16;
   right_border=BORDER_SIDE;
+
 #if defined(SS_DEBUG) && !defined(SS_SHIFTER_DRAW_DBG)
   if( scan_y-1>=shifter_first_draw_line && scan_y+1<shifter_last_draw_line
     && (overscan_add_extra || !ExtraAdded) && screen_res<2)
@@ -2708,6 +2743,15 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
       WAKE_UP_STATE==1))
 #endif
       cycles_since_hbl++; // eg Overscan Demos #6, already in v3.2 TODO why?
+#if defined(SS_VID_BORDERS_416_NO_SHIFT)
+/*  We must compensate the "no shifter_pixel+4" of "left off" to get correct
+    palette timings. This is a hack but we must manage various sizes.
+    OK: Overscan #6, HighResMode STE
+*/
+      if(SSE_HACKS_ON && SideBorderSize==VERY_LARGE_BORDER_SIDE 
+        && !left_border && shifter_freq_at_start_of_vbl==50)
+        cycles_since_hbl+=4;
+#endif
 #endif
     break;
   case DISPATCHER_SET_SHIFT_MODE:
@@ -2769,6 +2813,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
       int picture_left_edge=left_border; // 0, BS, BS-4, BS-16 (...)
       //last pixel from extreme left to draw of picture
       int picture_right_edge=BORDER_SIDE+320+BORDER_SIDE-right_border;
+
       if(pixels_in>picture_left_edge)
       { //might be some picture to draw = fetching RAM
         if(scanline_drawn_so_far>picture_left_edge)
@@ -2788,10 +2833,29 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
       }
       if(scanline_drawn_so_far<left_border)
       {
+
         if(pixels_in>left_border)
+        {
           border1=left_border-scanline_drawn_so_far;
+#if defined(SS_VID_BORDERS_416_NO_SHIFT)
+/*  In very large display mode, we display 52 pixels when the left
+    border is removed. But Steem was built around borders of 32
+    pixels, which were extended to 40, 48, not 52. And borders have
+    the same size on left and right.
+    To make up for larger left border, we shift pixels by 4 to the 
+    right when the left border isn't removed!
+    We do so to avoid far more intricate changes.
+    This is a simple hack that surprisingly works even for:
+    Beeshift, Dragonnels menu
+*/
+          if(SSE_HACKS_ON && SideBorderSize==VERY_LARGE_BORDER_SIDE 
+            && left_border)
+            border1+=4;
+#endif
+        }
         else
           border1=pixels_in-scanline_drawn_so_far; // we're not yet at end of border
+
         if(border1<0) 
           border1=0;
       }

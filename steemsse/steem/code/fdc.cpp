@@ -248,6 +248,7 @@ void fdc_type1_check_verify()
     a long time then show the desktop with two drive icons.
     It seems well emulated in SainT, here it's more a hack.
     Both methods "work" but we have no way of knowing which is worse.
+    v3.5.4: time out makes more sense.
 */
       if(SSE_HACKS_ON && ADAT && FloppyDrive[DRIVE].Empty())
       {
@@ -435,7 +436,10 @@ void floppy_fdc_command(BYTE cm)
     }
   }
 #if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_EMPTY_SPIN_UP)
-  // hack for European Demos: 'insert disk B' screen
+/*  Hack for European Demos: 'insert disk B' screen
+    v3.5.4 not defined after comment by Nicolas
+    It made no sense anyway, SainT was wrong too apparently
+*/
   else if(SSE_HACKS_ON && ADAT && FloppyDrive[DRIVE].Empty()
      && (!SF314[DRIVE].MotorOn
     || hbl_count-SF314[DRIVE].HblOfMotorOn<FDC_HBLS_PER_ROTATION*6 ) )

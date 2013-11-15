@@ -305,9 +305,12 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 #endif
         // agenda the byte to process
         agenda_delete(agenda_ikbd_process); //imprecise - TODO? 
+#if defined(SS_IKBD)
         agenda_add(agenda_ikbd_process,HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL,
           io_src_b);
-
+#else
+        agenda_add(agenda_ikbd_process,IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESS,io_src_b);
+#endif
 #endif//double buffer or not
 
         break;

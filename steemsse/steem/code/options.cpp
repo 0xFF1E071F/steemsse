@@ -987,7 +987,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             OptionBox.SSEUpdateIfVisible(); 
 #endif
 #if defined(SS_VAR_STATUS_STRING)
-            GUIRefreshStatusBar();
+//            GUIRefreshStatusBar();
 #endif
 #if defined(SS_STF_MATCH_TOS)
             // preselect a compatible TOS 
@@ -1051,7 +1051,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             Shifter.Preload=0; // reset the thing!
 #endif
 #if defined(SS_VAR_STATUS_STRING)
-            GUIRefreshStatusBar();
+//            GUIRefreshStatusBar();
 #endif
           }
           break;
@@ -1129,7 +1129,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             }
           }
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING)
-          GUIRefreshStatusBar();
+//          GUIRefreshStatusBar();
 #endif
           break;
         case 400:
@@ -1199,7 +1199,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             TRACE_LOG("Option HD6301 emu: %d\n",HD6301EMU_ON);
 //            printf("HD6301 emu: %d\n",HD6301EMU_ON);
 #if defined(SS_VAR_STATUS_STRING)
-            GUIRefreshStatusBar();//overkill
+//            GUIRefreshStatusBar();//overkill
 #endif
           }
           break;
@@ -1233,8 +1233,10 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           {
             SSE_WIN_VSYNC=!SSE_WIN_VSYNC;
             TRACE_LOG("Option Window VSync: %d\n",SSE_WIN_VSYNC);
+#if !defined(SS_VID_3BUFFER_NO_VSYNC)
             if(SSE_WIN_VSYNC)
               SSE_3BUFFER=false;
+#endif
 //            SendMessage(HWND(lPar),BM_SETCHECK,SSE_WIN_VSYNC,0);
             OptionBox.SSEUpdateIfVisible();
             Disp.ScreenChange();
@@ -1247,8 +1249,10 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if(HIWORD(wPar)==BN_CLICKED)
           {
             SSE_3BUFFER=!SSE_3BUFFER;
+#if !defined(SS_VID_3BUFFER_NO_VSYNC)
             if(SSE_3BUFFER)
               SSE_WIN_VSYNC=false;
+#endif
             TRACE_LOG("Option Triple Buffer: %d\n",SSE_3BUFFER);
 //            SendMessage(HWND(lPar),BM_SETCHECK,SSE_3BUFFER,0);
             OptionBox.SSEUpdateIfVisible();
@@ -1641,6 +1645,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             TRACE_LOG("Option ADAT %d\n",!floppy_instant_sector_access);
             if(DiskMan.Handle)
               DiskMan.RefreshSnails();
+#if defined(SS_VAR_STATUS_STRING_ADAT)
+//            GUIRefreshStatusBar();
+#endif
           }
           break; 
 #endif
@@ -1651,17 +1658,28 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SSE_STATUS_BAR=!SSE_STATUS_BAR;
             SendMessage(HWND(lPar),BM_SETCHECK,SSE_STATUS_BAR,0);
             TRACE_LOG("Option status bar %d\n",SSE_STATUS_BAR);
-            GUIRefreshStatusBar();
+//            GUIRefreshStatusBar();
           }
           break; 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_INFO_SSE_PAGE)
+#if defined(SS_OSD_DRIVE_INFO_SSE_PAGE)
         case 7308: // drive track info  
           if (HIWORD(wPar)==BN_CLICKED){
             OSD_DRIVE_INFO=!OSD_DRIVE_INFO;
             SendMessage(HWND(lPar),BM_SETCHECK,OSD_DRIVE_INFO,0);
             TRACE_LOG("Option drive track info %d\n",OSD_DRIVE_INFO);
+          }
+          break;
+#endif
+
+#if defined(SS_VAR_STATUS_STRING_DISK_NAME_OPTION)
+        case 7309: //  status bar game name
+          if (HIWORD(wPar)==BN_CLICKED){
+            SSE_STATUS_BAR_GAME_NAME=!SSE_STATUS_BAR_GAME_NAME;
+            SendMessage(HWND(lPar),BM_SETCHECK,SSE_STATUS_BAR_GAME_NAME,0);
+            TRACE_LOG("Option status bar game name %d\n",OSD_DRIVE_INFO);
+//            GUIRefreshStatusBar();
           }
           break;
 #endif
@@ -2070,6 +2088,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
       }
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING)
+      GUIRefreshStatusBar();
+#endif
+
       if (LOWORD(wPar)>=14100 && LOWORD(wPar)<14100+RC_NUM_ICONS){ // Icons
         if (HIWORD(wPar)==BN_CLICKED){
           bool AllowDefault=true;
@@ -2199,7 +2222,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SendMessage(HWND(lPar),BM_SETCHECK,OSD_DRIVE_INFO,0);
           }
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_SCROLLER_DISK_IMAGE)
+#if defined(STEVEN_SEAGAL) && defined(SS_OSD_SCROLLER_DISK_IMAGE)
         }else if(i==2) {
           if (HIWORD(wPar)==BN_CLICKED){
             OSD_IMAGE_NAME=!OSD_IMAGE_NAME;

@@ -1159,7 +1159,7 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 #endif
 
 #if defined(SS_SHIFTER_DANGEROUS_FANTAISY)
-    if(SSE_HACKS_ON 
+    if(SSE_HACKS_ON
       && bytes_drawn==CurrentScanline.Bytes-8 && bytes_in>bytes_drawn)
       nsdp+=-8; // hack for Dangerous Fantaisy credits lower overscan flicker
 #endif
@@ -1177,7 +1177,12 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 
     // cancel the Steem 3.2 fix for left off with STE scrolling on
     if(!ExtraAdded && (CurrentScanline.Tricks&TRICK_LINE_PLUS_26)
-      && HSCROLL>=12)
+      && HSCROLL>=12
+#if defined(SS_VID_BORDERS_416_NO_SHIFT) 
+      // don't try to understand this, I don't
+      && (!SSE_HACKS_ON||SideBorderSize!=VERY_LARGE_BORDER_SIDE)
+#endif
+      )
       overscan_add_extra+=8; // fixes bumpy scrolling in E605 Planet
 
 #if defined(SS_SHIFTER_SDP_WRITE_DE_HSCROLL)
@@ -1190,7 +1195,7 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 #else
         ;
 #endif
-      else
+      else 
 #if defined(SS_CPU_PREFETCH_TIMING) || defined(CORRECTING_PREFETCH_TIMING)
         nsdp+=2; // it's because we come sooner (which is more correct)
 #else

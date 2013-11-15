@@ -457,7 +457,7 @@ What was in the buffers will go nowhere, the internal counter is reset.
     
   case 0xff8607:  //low byte of DMA mode
     TRACE_LOG("CR");
-    ASSERT(!(io_src_b&1)); // Omega, Union
+//    ASSERT(!(io_src_b&1)); // Omega, Union
     ASSERT(!(io_src_b&BIT_5));
     MCR&=0xff00;
     MCR|=io_src_b;
