@@ -748,6 +748,8 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     WORD HD6301EMU_ON_tmp=HD6301EMU_ON;
     ReadWrite(HD6301EMU_ON_tmp); // but is it better?
     HD6301EMU_ON=HD6301EMU_ON_tmp!=0;
+    if(!HD6301_OK)
+      HD6301EMU_ON=0;
 #endif
 
 #if defined(SS_ACIA_USE_REGISTERS)
