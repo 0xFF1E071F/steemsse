@@ -1944,8 +1944,8 @@ void TOptionBox::CreateSSEPage() {
   EasyStr tip_text;
 
   // Title
-  Wid=get_text_width(T("Steem SSE Options\n================="))/2;
-  CreateWindow("Static",T("Steem SSE Options\n================"),WS_CHILD,
+  Wid=get_text_width("Steem SSE Options\n=================")/2;
+  CreateWindow("Static","Steem SSE Options\n================",WS_CHILD,
     page_l,y,Wid,21,Handle,(HMENU)209,HInstance,NULL);
   y+=LineHeight+10;
 
@@ -1973,7 +1973,6 @@ void TOptionBox::CreateSSEPage() {
                           page_l+Offset,y,Wid,23,Handle,(HMENU)1027,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,SSE_HACKS_ON,0);
   ToolAddWindow(ToolTip,Win,T("For an edgier emulation, recommended!"));
-  //y+=LineHeight;
 #endif
 
 #if defined(SS_VAR_STEALTH) 
@@ -1991,7 +1990,6 @@ void TOptionBox::CreateSSEPage() {
   CreateWindow("Static",T("Display Size"),WS_CHILD,
 	  page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
   Win=BorderSizeOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
-	  //page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)1026,HInstance,NULL);
     page_l+5+Wid,y,80,200,Handle,(HMENU)1026,HInstance,NULL);
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("384 x 270"));
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("400 x 278"));
@@ -2018,7 +2016,6 @@ void TOptionBox::CreateSSEPage() {
 #endif
 
 #if defined(SS_VID_SCANLINES_INTERPOLATED_SSE)
-  //Offset=5+Wid+80+HorizontalSeparation;
   Offset=0;
   Wid=GetCheckBoxSize(Font,T("Interpolated scanlines")).Width;
   Win=CreateWindow("Button",T("Interpolated scanlines"),
@@ -2027,7 +2024,6 @@ void TOptionBox::CreateSSEPage() {
   SendMessage(Win,BM_SETCHECK,SSE_INTERPOLATE,0);
   ToolAddWindow(ToolTip,Win,
     T("This will try to emulate a less sharp monitor (Goldstar?) for more realism."));
-  //y+=LineHeight;
 #endif
 
 #if defined(SS_VID_VSYNC_WINDOW) || defined(SS_VID_3BUFFER)
@@ -2058,6 +2054,7 @@ Windows 2000	5.0
     {
       strcpy(add_tip," Incompatible with Window Compositing of Windows 8.");
       mask|=WS_DISABLED;
+      SSE_WIN_VSYNC=SSE_3BUFFER=0;
     }
     else // vista+Win7
       strcpy(add_tip," Don't use together with Window Compositing.");
@@ -2092,7 +2089,6 @@ Windows 2000	5.0
   CreateWindow("Static",T("ST Model"),WS_CHILD,
     page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
   Win=STTypeOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
-	  //page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)211,HInstance,NULL);
     page_l+5+Wid,y,80,200,Handle,(HMENU)211,HInstance,NULL);
   SendMessage(STTypeOption,CB_ADDSTRING,0,(long)CStrT(st_model_name[0]));
   SendMessage(STTypeOption,CB_ADDSTRING,0,(long)CStrT(st_model_name[1]));
@@ -2102,17 +2098,14 @@ Windows 2000	5.0
   SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,SS_STF_ST_MODELS-1),0);
   ToolAddWindow(ToolTip,Win,
     T("Some programs will run only with STF or STE. Changing ST model will preselect a TOS for next cold reset."));
-  //y+=LineHeight;
 #endif
 
 #if defined(SS_MMU_WAKE_UP)
   Offset=5+Wid+80+HorizontalSeparation;
   Wid=get_text_width(T("Wake-up state"));
   CreateWindow("Static",T("Wake-up state"),WS_CHILD,
-    //page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
     page_l+Offset,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
   Win=MMUWakeUpOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
-	  //page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)212,HInstance,NULL);
     page_l+5+Wid+Offset,y,85,200,Handle,(HMENU)212,HInstance,NULL);
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("Ignore"));
 
@@ -2139,7 +2132,10 @@ Windows 2000	5.0
   
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
   if(!HD6301_OK)
+  {
+    HD6301EMU_ON=0;
     mask|=WS_DISABLED;
+  }
   
   Win=CreateWindow("Button",T("6301 true emu"),mask,page_l,y,Wid,23,Handle,
     (HMENU)1029,HInstance,NULL);
