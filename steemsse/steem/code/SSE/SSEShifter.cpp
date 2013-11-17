@@ -912,7 +912,7 @@ Last scanline is:
 244 - 012:R0000 376:S0000 392:S0002 512:T0011 512:#0230
 So our explanation is that the Shifter, also on the STE, is preloaded by
 3 words, and the line +2, "somehow", won't count because of that.
-(SS_SHIFTER_LINE_PLUS_2_ON_PRELOAD3) v3.5.4: undef
+(SS_SHIFTER_LINE_PLUS_2_ON_PRELOAD3) v3.5.4: undef 
 
 Forest STF1
 -27 - 036:S0000 054:S0002 376:S0000 384:S0002 444:R0002 456:R0000 512:T42012 512:#0206
@@ -953,7 +953,7 @@ Cuddly Demos STE
 -29 - 048:S0002 512:T0002 512:#0162 (or 40,44) line +2 breaks the screen
 This time no "unstable shifter" to save us.
 
-
+-> going back to "hacky" thresholds for now just to have known cases OK
 */
 
 #if defined(SS_SHIFTER_LINE_PLUS_2_TEST)
