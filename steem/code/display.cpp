@@ -952,9 +952,9 @@ bool SteemDisplay::Blit()
       POINT pt={2,2};
       ClientToScreen(StemWin,&pt);
       OffsetRect(&dest,pt.x,pt.y);
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
-      if(BORDER_40 && draw_win_mode[screen_res]) // clip from larger to 800
-      {
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX) 
+      if(BORDER_40 && (screen_res==2 || draw_win_mode[screen_res]))
+      {// clip from larger to 800
         OffsetRect(&draw_blit_source_rect,
         (CanUse_400 && !SCANLINES_INTERPOLATED)?16:8,0);
       }

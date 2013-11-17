@@ -90,7 +90,7 @@ and all his silly mods are gone!
 
 #if defined(STEVEN_SEAGAL)
 
-#define SS_BETA //title, OSD, plus some testing
+//#define SS_BETA //title, OSD, plus some testing
 
 #ifdef SS_BETA 
 #define SSE_VERSION 354
@@ -592,6 +592,9 @@ and all his silly mods are gone!
 #define SS_PASTI_ALWAYS_DISPLAY_STX_DISKS
 #define SS_PASTI_AUTO_SWITCH
 #define SS_PASTI_ONLY_STX  // experimental! optional
+#ifdef SS_BETA //to test
+#define SS_PASTI_ONLY_STX_HD 
+#endif
 #define SS_PASTI_NO_RESET 
 #define SS_PASTI_ON_WARNING // mention in disk manager title
 
@@ -857,6 +860,7 @@ and all his silly mods are gone!
 #define SS_SHIFTER_LEFT_OFF_60HZ // 24 bytes!
 #define SS_SHIFTER_LEFT_OFF_TEST_BEFORE_HBL // for Riverside
 #define SS_SHIFTER_LINE_MINUS_106_BLACK // loSTE screens
+#define SS_SHIFTER_LINE_PLUS_2_STE // hack?
 #define SS_SHIFTER_LINE_PLUS_2_TEST // loSTE screens
 #define SS_SHIFTER_LINE_PLUS_2_THRESHOLD //Forest
 #define SS_SHIFTER_LINE_PLUS_20 // 224 byte scanline STE only
@@ -876,7 +880,7 @@ and all his silly mods are gone!
 #ifdef SS_SHIFTER_UNSTABLE
 //TODO swtiches for Dragon, etc.
 #if SSE_VERSION>353
-#define SS_SHIFTER_LINE_PLUS_2_ON_PRELOAD3 // DSOS STE
+//#define SS_SHIFTER_LINE_PLUS_2_ON_PRELOAD3 // DSOS STE
 #endif
 #define SS_SHIFTER_HI_RES_SCROLLING // Beeshift2
 #define SS_SHIFTER_MED_RES_SCROLLING // Beeshift
@@ -1177,7 +1181,8 @@ and all his silly mods are gone!
 #define SS_VID_BORDERS // option display size
 #if defined(SS_VID_BORDERS)
 #ifdef WIN32 // Unix?
-#define SS_VID_BORDERS_412
+#define SS_VID_BORDERS_412 // 
+#define SS_VID_BORDERS_413 // best fit for overscan?
 #define SS_VID_BORDERS_416 
 #define SS_VID_BORDERS_416_NO_SHIFT
 #define SS_VID_BORDERS_BIGTOP // more lines for palette effects

@@ -456,8 +456,11 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define LARGE_BORDER_SIDE_WIN 40 // max for 800x600 display (fullscreen)
 
 #define VERY_LARGE_BORDER_SIDE 48 // 416 pixels wide for emulation
-
+#if defined(SS_VID_BORDERS_413)
+#define VERY_LARGE_BORDER_SIDE_WIN (47-1) // 413(+1) pixels wide for rendering
+#else
 #define VERY_LARGE_BORDER_SIDE_WIN 46 // trick, 412 pixels wide for rendering
+#endif
 #define ORIGINAL_BORDER_BOTTOM 40 
 #define LARGE_BORDER_BOTTOM 48
 #define VERY_LARGE_BORDER_BOTTOM 50  // counts for raster fx

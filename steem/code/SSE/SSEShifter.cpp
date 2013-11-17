@@ -912,7 +912,7 @@ Last scanline is:
 244 - 012:R0000 376:S0000 392:S0002 512:T0011 512:#0230
 So our explanation is that the Shifter, also on the STE, is preloaded by
 3 words, and the line +2, "somehow", won't count because of that.
-(SS_SHIFTER_LINE_PLUS_2_ON_PRELOAD3)
+(SS_SHIFTER_LINE_PLUS_2_ON_PRELOAD3) v3.5.4: undef
 
 Forest STF1
 -27 - 036:S0000 054:S0002 376:S0000 384:S0002 444:R0002 456:R0000 512:T42012 512:#0206
@@ -939,6 +939,7 @@ Y200 C20  072:S0002 508:T0002 508:#0162
 VBL 724 shifter tricks 3317
 This results in this line during the demo:
 199 - 420:S0000 504:S0002 512:T0200 512:#0160
+
 But if test fails:
 199 - 484:S0000 512:T0200 512:#0160
 200 - 056:S0002    -> +2
@@ -946,7 +947,13 @@ But if test fails:
 Mindbomb/No Shit
 -30 - 428:S0000 512:T0100 512:#0160
 -29 - 248:S0002 508:T0002 508:#0162    
-    
+
+Cuddly Demos STE
+-30 - 344:w0920 378:w075A 396:w0507 472:S0000 512:T4100 512:#0000
+-29 - 048:S0002 512:T0002 512:#0162 (or 40,44) line +2 breaks the screen
+This time no "unstable shifter" to save us.
+
+
 */
 
 #if defined(SS_SHIFTER_LINE_PLUS_2_TEST)
@@ -954,6 +961,15 @@ Mindbomb/No Shit
     && left_border && !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) ) 
   {
 
+#if defined(SS_SHIFTER_LINE_PLUS_2_STE)
+    t=52-2;
+#ifdef SS_STF
+    if(ST_TYPE!=STE)
+      t+=WU_sync_modifier  +2;
+#endif
+#endif
+
+#if !defined(SS_SHIFTER_LINE_PLUS_2_STE)
 #if defined(SS_SHIFTER_LINE_PLUS_2_STE_DSOS)//hack (v3.5.3)
     t=52-12+2; //The line must "start" earlier on STE due to HSCROLL
 #else
@@ -961,6 +977,7 @@ Mindbomb/No Shit
     t=DEcycle; // eg 52 (60hz start), 54 in  WS 2,4
 #else
     t=52-16+2; //The line must "start" earlier on STE due to HSCROLL
+#endif
 #endif
 #endif
 
@@ -971,6 +988,7 @@ Mindbomb/No Shit
     if(MMU.WakeUpState2())// already computed
       t+=2;
 #endif
+#if !defined(SS_SHIFTER_LINE_PLUS_2_STE) // negate STE specific
 #if defined(SS_STF)
     if(ST_TYPE!=STE)
 #if defined(SS_SHIFTER_LINE_PLUS_2_STE_DSOS)
@@ -984,12 +1002,13 @@ Mindbomb/No Shit
     if(ShiftModeAtCycle(t)==1)
       t+=8; // MED RES, STE starts only 8 cycles earlier
 #endif
+#endif//#if !defined(SS_SHIFTER_LINE_PLUS_2_STE)
 
     if(CyclesIn>t && FreqAtCycle(t+2)==60 // 'before write'
       && ((CyclesIn<372+WU_sync_modifier+2 && shifter_freq==50) 
       || FreqAtCycle(372+WU_sync_modifier+2)==50))
     {
-#if defined(SS_SHIFTER_LINE_PLUS_2_ON_PRELOAD3) // DSOS STE
+#if defined(SS_SHIFTER_LINE_PLUS_2_ON_PRELOAD3__) // DSOS STE
       if(Preload)//==3)
       {
         TRACE_LOG("no +2, shifter was preloaded\n");
@@ -1052,7 +1071,7 @@ Mindbomb/No Shit
     ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );
 //    TRACE_OSD("%d +2",scan_y);//temp, there aren't so many cases
 
-#if defined(SS_SHIFTER_LINE_PLUS_2_ON_PRELOAD3____) // DSOS STE
+#if defined(SS_SHIFTER_LINE_PLUS_2_ON_PRELOAD3) // DSOS STE
     if(Preload==3)
       Preload=0;
     else
@@ -1347,7 +1366,11 @@ detect unstable: switch MED/LOW - Beeshift
 
 #if defined(SS_SHIFTER_STATE_MACHINE)
   t=372+WU_sync_modifier;
+#if defined(SS_SHIFTER_LINE_PLUS_2_STE)
+  if(CyclesIn>372 && FreqAtCycle(56+2)!=60 && FreqAtCycle(t+2)==60)
+#else
   if(CyclesIn>372 && FreqAtCycle(DEcycle+2)!=60 && FreqAtCycle(t+2)==60)
+#endif
     CurrentScanline.Tricks|=TRICK_LINE_MINUS_2;
 #else
 
@@ -1696,6 +1719,8 @@ Tests are arranged to be efficient.
 
     For performance, this is integrated in 0-byte test.
 
+    The test fails in WS1: correct?
+
 */
         else if(CurrentScanline.Bytes==160+44) // trick to do it only once
         {
@@ -1787,6 +1812,8 @@ void TShifter::CheckVerticalOverscan() {
     -Decade title (WU1, STE OK, WU2 flicker)
     Y-30 C524  372:S0000 520:S0002 OK
     Y-30 C520  356:S0000 504:S0002 fails in WU2
+
+    - Dragonnels/Happy Islands: WU1
 
     -Nostalgia/Lemmings end scroller WS3
     Y-30 C520  448:S0000 504:S0002 sometimes -> breaks screen in WU2

@@ -766,7 +766,15 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       }
       else if (border & 1)
       {// blurry display in 'no stretch' mode? check here!!!!!!!!!!!!!!!!
-        CanUse_400=(cw==(4+640+ 4* SideBorderSizeWin) 
+        CanUse_400=
+#if defined(SS_VID_BORDERS_413)
+          (
+          (cw==4+640+4*SideBorderSizeWin) 
+          ||((SideBorderSizeWin==VERY_LARGE_BORDER_SIDE_WIN)&&(cw-2==4+640+4*SideBorderSizeWin)
+          )
+#else
+          (cw==(4+640+ 4* SideBorderSizeWin) 
+#endif
           && ch==(MENUHEIGHT+4+400 + 2*(BORDER_TOP+BottomBorderSize)));
         TRACE("CanUse_400 %d cw %d %d ch %d %d\n",CanUse_400,cw,(4+640+ 4* SideBorderSizeWin),ch,(MENUHEIGHT+4+400 + 2*(BORDER_TOP+BottomBorderSize)));
       }else{
@@ -1095,7 +1103,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
 //---------------------------------------------------------------------------
 void SetStemWinSize(int w,int h,int xo,int yo)
 {
-
+  TRACE("SetStemWinSize w %d,h %d,%d,%d\n",w,h,xo,yo);
 #if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
   if(SDL.InUse)
   {
