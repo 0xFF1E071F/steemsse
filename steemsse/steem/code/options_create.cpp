@@ -1062,6 +1062,9 @@ void TOptionBox::CreateFullscreenPage()
   SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("Stretch Blit"));
   SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("Laptop"));
   SendMessage(Win,CB_SETCURSEL,draw_fs_blit_mode,0);
+#if defined(SS_VID_BORDERS) 
+  ToolAddWindow(ToolTip,Win,T("SSE note: Screen Flip only works with 384 x 270. Straight blit OK with 400 x 278. For higher than 400 first switch to laptop mode."));
+#endif
   y+=30;
 
   int disabledflag=0;
@@ -1995,12 +1998,20 @@ void TOptionBox::CreateSSEPage() {
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("400 x 278"));
 
 #if defined(SS_VID_BORDERS_412)
+#if defined(SS_VID_BORDERS_413) // !
+#if defined(SS_VID_BORDERS_BIGTOP) && !defined(SS_VID_BORDERS_416)
+  SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("413 x 286"));
+#else
+  SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("413 x 280"));//def
+#endif
+#else
 #if defined(SS_VID_BORDERS_BIGTOP) && !defined(SS_VID_BORDERS_416)
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("412 x 286"));
 #else
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("412 x 280"));
 #endif
-#endif
+#endif//413
+#endif//412
 
 #if defined(SS_VID_BORDERS_416)
 #if defined(SS_VID_BORDERS_BIGTOP)
@@ -2011,7 +2022,7 @@ void TOptionBox::CreateSSEPage() {
 #endif
   SendMessage(BorderSizeOption,CB_SETCURSEL,DISPLAY_SIZE,0);
   ToolAddWindow(ToolTip,Win,
-    T("Some border effects will look better in one of the sizes, it really depends on the program, generally smallest is fine."));
+    T("Some border effects (demos) will look better in one of the sizes, it really depends on the program, generally smallest is fine for games."));
   y+=LineHeight;
 #endif
 
@@ -2226,6 +2237,21 @@ Windows 2000	5.0
     T("Displays which drive is running, and on which side and track the drive currently is, plus the sector in slow mode."));
 #endif
 
+#if !defined(SS_PASTI_ONLY_STX_HD)
+#if defined(SS_PASTI_ONLY_STX)
+  Offset+=Wid+HorizontalSeparation;
+  Wid=GetCheckBoxSize(Font,T("Pasti only for floppy STX")).Width;
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+  if(!hPasti)
+    mask|=WS_DISABLED;
+  Win=CreateWindow("Button",T("Pasti only for floppy STX"),mask,
+    page_l+Offset,y,Wid,25,Handle,(HMENU)7305,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,PASTI_JUST_STX,0);
+  ToolAddWindow(ToolTip,Win,
+    T("Advanced. When checked, Pasti will only be used for STX disks (not ST, MSA, not hard drive). It's been debugged but if you have problems uncheck it."));
+  y+=LineHeight;
+#endif
+#else
 #if defined(SS_PASTI_ONLY_STX)
   Offset+=Wid+HorizontalSeparation;
   Wid=GetCheckBoxSize(Font,T("Pasti only for STX")).Width;
@@ -2238,6 +2264,7 @@ Windows 2000	5.0
   ToolAddWindow(ToolTip,Win,
     T("When checked, Pasti will only be used for STX disks (not ST, MSA). It's been debugged but if you have problems uncheck it."));
   y+=LineHeight;
+#endif
 #endif
 
 #if defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)

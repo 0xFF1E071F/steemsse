@@ -422,6 +422,12 @@ void draw_set_jumps_and_source()
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
       // this may not be larger than the window
       ow=SideBorderSizeWin*2 + 640 + SideBorderSizeWin*2;
+
+#if defined(SS_VID_BORDERS_413)
+      if(SideBorderSizeWin==VERY_LARGE_BORDER_SIDE_WIN)
+        ow+=2;
+#endif
+
 #else
       ow=BORDER_SIDE*2 + 640 + BORDER_SIDE*2;
 #endif

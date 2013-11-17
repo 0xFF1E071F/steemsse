@@ -267,6 +267,9 @@ TODO?
 #if defined(SS_PASTI_ONLY_STX)
     && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3
    // ||addr!=0xff8605||MCR&BIT_3||MCR&BIT_4
+#if defined(SS_PASTI_ONLY_STX_HD)
+   || (MCR&BIT_3)
+#endif
     )
 #endif        
     )
@@ -570,7 +573,11 @@ void TDma::UpdateRegs(bool trace_them) {
 #if USE_PASTI
   if(hPasti && pasti_active
 #if defined(SS_PASTI_ONLY_STX) //all or nothing?
-    && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
+    && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3
+#if defined(SS_PASTI_ONLY_STX_HD)
+   || (MCR&BIT_3)
+#endif
+    )
 #endif      
     )
   {
@@ -786,6 +793,9 @@ void TDma::TransferBytes() {
     if(hPasti&&pasti_active
 #if defined(SS_PASTI_ONLY_STX)
     &&(!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
+#if defined(SS_PASTI_ONLY_STX_HD)
+   || (MCR&BIT_3)
+#endif
 #endif        
       )  
       dma_address++;

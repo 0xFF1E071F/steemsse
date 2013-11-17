@@ -1360,6 +1360,9 @@ void event_pasti_update()
   if (hPasti==NULL || pasti_active==false
 #if defined(STEVEN_SEAGAL) && defined(SS_PASTI_ONLY_STX)
     || PASTI_JUST_STX && SF314[floppy_current_drive()].ImageType!=3
+#if defined(SS_PASTI_ONLY_STX_HD)
+    && !(Dma.MCR&BIT_3)
+#endif
 #endif
     ){
 #if defined(STEVEN_SEAGAL) && defined(SS_MFP_RATIO)

@@ -1038,6 +1038,10 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               CheckResetIcon();
             }
 #endif
+#if defined(SS_STF_MEGASTF)
+            if(ST_TYPE==MEGASTF)
+              This->NewMonitorSel=1; // preselect monochrome (v3.5.4)
+#endif
           }
 	  break;
 #endif
