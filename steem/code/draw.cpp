@@ -423,7 +423,7 @@ void draw_set_jumps_and_source()
       // this may not be larger than the window
       ow=SideBorderSizeWin*2 + 640 + SideBorderSizeWin*2;
 
-#if defined(SS_VID_BORDERS_413)
+#if defined(SS_VID_BORDERS_413) // here we go again...
       if(SideBorderSizeWin==VERY_LARGE_BORDER_SIDE_WIN)
         ow+=2;
 #endif
