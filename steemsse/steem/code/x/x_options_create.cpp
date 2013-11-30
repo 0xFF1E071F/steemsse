@@ -19,7 +19,7 @@ void TOptionBox::CreatePage(int n)
     case 6:CreateStartupPage();break;
     case 15:CreatePathsPage();break;
 #if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE)
-    case 16:CreateSSEPage();break;
+    case 16:CreateSSEPage();break;//TODO icon?
 #endif
 	}
 }
@@ -1145,8 +1145,7 @@ void TOptionBox::CreatePathsPage()
 }
 //---------------------------------------------------------------------------
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE) \
-  && defined(SS_UNIX)
+#if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE) && defined(SS_UNIX)
 
 void TOptionBox::CreateSSEPage() {
   int y=10; // top
@@ -1160,15 +1159,38 @@ void TOptionBox::CreateSSEPage() {
     | BT_TEXT,T("Display Size"),0,BkCol);
   border_size_dd.id=4001; //TODO
   border_size_dd.make_empty();
-  border_size_dd.additem("Normal (384x270)",0);
-  border_size_dd.additem("Large (400x275)",1);
-  border_size_dd.additem("Large (400x278)",2);
-#if defined(SS_VID_BORDERS_BIGTOP)
-  border_size_dd.additem("Very large (412x285)",3);  
+  border_size_dd.additem("384 x 270",0);
+//  border_size_dd.additem("Large (400x275)",1);
+  border_size_dd.additem("400 x 278 (buggy)",1);
+#if defined(SS_VID_BORDERS_412)
+#if defined(SS_VID_BORDERS_413) // !
+#if defined(SS_VID_BORDERS_BIGTOP) && !defined(SS_VID_BORDERS_416)
+  border_size_dd.additem("413 x 286",2);  
 #else
-  border_size_dd.additem("Very large (412x280)",3);
+  border_size_dd.additem("413 x 280 (buggy)",2);  
+#endif
+#else
+#if defined(SS_VID_BORDERS_BIGTOP) && !defined(SS_VID_BORDERS_416)
+  border_size_dd.additem("412 x 286",2);  
+#else
+  border_size_dd.additem("412 x 280",2);  
+#endif
+#endif//413
+#endif//412
+
+#if defined(SS_VID_BORDERS_416)
+#if defined(SS_VID_BORDERS_BIGTOP)
+  border_size_dd.additem("416 x 286",3);  
+#else
+  border_size_dd.additem("416 x 280",3);  
+#endif
 #endif
   border_size_dd.select_item_by_data(DISPLAY_SIZE);
+
+  hints.add(border_size_dd.handle, // works?
+    "Some border effects (demos) will look better in one of the sizes, it really depends on the program, generally smallest is fine for games."
+    ,page_p);
+
   border_size_dd.create(XD,page_p,page_l+5+Wid,y,400-(15+Wid+10),350,
     dd_notify_proc,this);
   y+=LineHeight;
@@ -1198,7 +1220,7 @@ void TOptionBox::CreateSSEPage() {
     button_notify_proc,this,BT_CHECKBOX,T("Emu detect"),4004,BkCol);
   stealth_mode_but.set_check(!STEALTH_MODE);
   hints.add(stealth_mode_but.handle,
-  T("Enable easy detection of Steem by ST programs"),page_p);
+  T("Enable easy detection of Steem by ST programs."),page_p);
   y+=LineHeight;
 #endif
 
@@ -1211,9 +1233,14 @@ void TOptionBox::CreateSSEPage() {
   st_type_dd.additem("STE",0);
   st_type_dd.additem("STF",1);
 #if defined(SS_STF_MEGASTF)
-  st_type_dd.additem("Mega STF (with blitter)",2);
+  st_type_dd.additem("Mega ST4",2);
 #endif
   st_type_dd.select_item_by_data(ST_TYPE);
+
+  hints.add(st_type_dd.handle, // works?
+    "Some programs will run only with STF or STE."
+    ,page_p);
+
   st_type_dd.create(XD,page_p,page_l+5+Wid,y,400-(15+Wid+10),350,
     dd_notify_proc,this);
   y+=LineHeight;
@@ -1226,9 +1253,21 @@ void TOptionBox::CreateSSEPage() {
   wake_up_dd.id=4006;
   wake_up_dd.make_empty();
   wake_up_dd.additem("Ignore wake-up state",0);
+#if defined(SS_MMU_WAKE_UP_DL)
+  wake_up_dd.additem("DL3 WU2 WS2",1);
+  wake_up_dd.additem("DL4 WU2 WS4",2);
+  wake_up_dd.additem("DL5 WU1 WS3",3);
+  wake_up_dd.additem("DL6 WU1 WS1",4);
+#else
   wake_up_dd.additem("Wake-up state 1",1);
   wake_up_dd.additem("Wake-up state 2",2);
+#endif
   wake_up_dd.select_item_by_data(WAKE_UP_STATE);
+
+  hints.add(wake_up_dd.handle, // works?
+    "Very technical - Some demos will display correctly only in one of those states."
+    ,page_p);
+
   wake_up_dd.create(XD,page_p,page_l+5+Wid,y,400-(15+Wid+10),350,
     dd_notify_proc,this);
   y+=LineHeight;
@@ -1250,7 +1289,7 @@ void TOptionBox::CreateSSEPage() {
   int keyboard_click=( PEEK(0x484)&1 ); // get current setting
   keyboard_click_but.set_check(keyboard_click);
   hints.add(keyboard_click_but.handle,
-  T("This gives you direct access to bit1 of address $484, which enables or disables the annoying keyboard click"),
+  T("This gives you direct access to bit1 of address $484, which enables or disables the annoying keyboard click (in TOS/GEM programs only)."),
     page_p);
   y+=LineHeight;
 #endif
@@ -1260,7 +1299,7 @@ void TOptionBox::CreateSSEPage() {
     button_notify_proc,this,BT_CHECKBOX,T("PSG Filter"),4008,BkCol);
   psg_filter_but.set_check(PSG_FILTER_FIX);
   hints.add(psg_filter_but.handle,
-  T("This makes PSG (YM-2149) chip tunes and samples sound less muffled"),
+  T("This makes PSG (YM-2149) chip tunes and samples sound less muffled but the sound of samples could be worse, depends."),
     page_p);
   y+=LineHeight;
 #endif
@@ -1270,20 +1309,28 @@ void TOptionBox::CreateSSEPage() {
     button_notify_proc,this,BT_CHECKBOX,T("STE Microwire"),4009,BkCol);
   ste_microwire_but.set_check(MICROWIRE_ON);
   hints.add(ste_microwire_but.handle,
-  T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature"),
+  T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature."),
     page_p);
   y+=LineHeight;
 #endif
 
 #if defined(SS_VAR_OPTION_SLOW_DISK) // because many people miss it in disk manager
-
   slow_disk_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Slow disk"),4010,BkCol);
   slow_disk_but.set_check(!floppy_instant_sector_access);
   hints.add(slow_disk_but.handle,
-  T("Slow but accurate disk drive emulation"),
+  T("Slow but accurate disk drive emulation."),
     page_p);
-//  y+=LineHeight;
+  y+=LineHeight;
+#endif
+
+#if defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+  use_sdl_but.create(XD,page_p,page_l,y,0,25,
+    button_notify_proc,this,BT_CHECKBOX,T("Use SDL"),4011,BkCol);
+  use_sdl_but.set_check(USE_SDL);
+  hints.add(use_sdl_but.handle,
+  T("BETA TESTS - BUGGY"),
+    page_p);
 #endif
 
   XFlush(XD);

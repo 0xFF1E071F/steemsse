@@ -61,12 +61,14 @@ TDebug::TDebug() {
   nTrace=0; // trace counter
   trace_file_pointer=freopen(SS_TRACE_FILE_NAME, "w", stdout );
   ASSERT(trace_file_pointer);
+#ifdef WIN32
   // http://www.ehow.com/how_2190605_use-date-time-c-program.html
   char sdate[9];
   char stime[9];
   _strdate( sdate );
   _strtime( stime );
   printf("Steem SSE TRACE - %s -%s\n",sdate,stime);
+#endif
 #endif
 
 #if defined(SS_IKBD_6301)

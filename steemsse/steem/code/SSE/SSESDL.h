@@ -4,8 +4,10 @@
 
 #if defined(SS_SDL) //&& !defined(SS_SDL_DEACTIVATE)
 
-#if defined(WIN32) && defined(SS_DELAY_LOAD_DLL)
 #include <SDL-WIN/include/SDL.h> 
+
+#if defined(WIN32) && defined(SS_DELAY_LOAD_DLL)
+
 // DLL is 'delay loaded'
 #ifdef _MSC_VER
 #pragma comment(lib, "../../3rdparty/SDL-WIN/lib/x86/SDL.lib")

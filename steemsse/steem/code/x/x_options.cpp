@@ -10,8 +10,7 @@ int SwitchSTType(int new_type);//forward
 TOptionBox::TOptionBox()
 {
   Section="Options";
-
-	Page=9; // Default to machine
+  Page=9; // Default to machine
   NewMemConf0=-1,NewMemConf1=-1,NewMonitorSel=-1;
   RecordWarnOverwrite=true;
   eslTOS_Sort=eslSortByData0;
@@ -152,10 +151,9 @@ void TOptionBox::Show()
   page_lv.sl.Add(T("Startup"),101+ICO16_FUJI16,6);
   page_lv.sl.Add(T("Paths"),101+ICO16_FUJI16,15);
 
-#if defined(STEVEN_SEAGAL)
+#if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE) && defined(SS_UNIX)
   page_lv.sl.Add(T("SSE"),101+74,16);
 #endif
-  
   
   page_lv.lpig=&Ico16;
   page_lv.display_mode=1;
@@ -647,7 +645,10 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
     else if(b->id==4010)
       floppy_instant_sector_access=!b->checked;
 #endif   
-
+#if defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+    else if(b->id==4011)
+      USE_SDL=b->checked;
+#endif   
 #endif
   }
   return 0;
@@ -754,8 +755,7 @@ int TOptionBox::dd_notify_proc(hxc_dropdown*dd,int mess,int i)
     macro_file_options(MACRO_FILE_SET,This->MacroSel,&MFO);
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE) \
-  &&defined(SS_UNIX)
+#if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE) && defined(SS_UNIX)
 #if defined(SS_VID_BORDERS)
   else if(dd->id==4001) // display size
   {
@@ -776,7 +776,6 @@ int TOptionBox::dd_notify_proc(hxc_dropdown*dd,int mess,int i)
   {
     WAKE_UP_STATE=dd->sel;
   }
-
 #endif
 #endif
 

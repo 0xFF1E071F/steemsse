@@ -159,7 +159,11 @@ bool MakeGUI()
 
   DispGC=XCreateGC(XD,StemWin,0,NULL);
 
+#if defined(STEVEN_SEAGAL) && defined(SS_UNIX) && defined(SS_VAR_WINDOW_TITLE)
+  XSetStandardProperties(XD,StemWin,WINDOW_TITLE,"Steem",None,_argv,_argc,NULL);
+#else
   XSetStandardProperties(XD,StemWin,"Steem Engine","Steem",None,_argv,_argc,NULL);
+#endif
 
   StemWinIconPixmap=Ico16.CreateIconPixmap(ICO16_STEEM,DispGC);
   StemWinIconMaskPixmap=Ico16.CreateMaskBitmap(ICO16_STEEM);

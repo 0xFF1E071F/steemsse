@@ -900,7 +900,7 @@ Bit 0 controls Replay off/on, Bit 1 controls Loop off/on (0=off, 1=on).
     if (dma_sound_on_this_screen==0){
       // Pad buffer with last byte from VBL to current position
       bool Mono=bool(dma_sound_mode & BIT_7);
-      TRACE_LOG((Mono) ? "Mono":"Stereo");
+      TRACE_LOG((Mono) ? (char*)"Mono":(char*)"Stereo");
       int freq_idx=0;
       if (shifter_freq_at_start_of_vbl==60) freq_idx=1;
       if (shifter_freq_at_start_of_vbl==MONO_HZ) freq_idx=2;

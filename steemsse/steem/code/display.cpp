@@ -969,7 +969,8 @@ bool SteemDisplay::Blit()
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER)
         IDirectDrawSurface *OurBackSur=
           (SSE_3BUFFER && !SurfaceToggle && DDBackSur2) ? DDBackSur2:DDBackSur;
-        if(OurBackSur->GetBltStatus(DDGBS_CANBLT)==DD_OK)
+        hRet=OurBackSur->GetBltStatus(DDGBS_CANBLT); // for surface lost
+        if(hRet==DD_OK)
           hRet=DDPrimarySur->Blt(&dest,OurBackSur,&draw_blit_source_rect,
             DDBLT_WAIT,NULL);
         else
@@ -981,7 +982,9 @@ bool SteemDisplay::Blit()
         if (hRet==DDERR_SURFACELOST){
           if (i==0) hRet=RestoreSurfaces();
           if (hRet!=DD_OK){
+#if !defined(SS_VID_MEMORY_LOST) // no message box
             DDError(T("Drawing memory permanently lost"),hRet);
+#endif
             Init();
             break;
           }

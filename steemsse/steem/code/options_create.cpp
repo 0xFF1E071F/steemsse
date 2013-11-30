@@ -1937,6 +1937,7 @@ void TOptionBox::CreateIconsPage()
 //---------------------------------------------------------------------------
 
 #if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE)
+
 void TOptionBox::CreateSSEPage() {
   HWND Win;
   long Wid,Offset;
