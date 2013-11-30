@@ -210,6 +210,10 @@ int ChangeBorderSize(int size); // gui.cpp
 
 #endif
 
+#if !defined(SS_VID_SCANLINES_INTERPOLATED_SSE) //unix
+#define SCANLINES_INTERPOLATED (false)
+#endif
+
 #ifndef FRAME
 #define FRAME (-1)
 #endif

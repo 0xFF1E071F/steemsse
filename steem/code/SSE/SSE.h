@@ -90,17 +90,34 @@ and all his silly mods are gone!
 
 #if defined(STEVEN_SEAGAL)
 
-//#define SS_BETA //title, OSD, plus some testing
+#define SS_BETA //title, OSD, plus some testing
 
 #ifdef SS_BETA 
+
+#if defined(WIN32)
+#define SSE_VERSION 355
+#define SSE_VERSION_TXT "3.5.5" 
+#define WINDOW_TITLE "Steem Beta 3.5.5"
+#elif defined(UNIX)
 #define SSE_VERSION 354
 #define SSE_VERSION_TXT "3.5.4" 
 #define WINDOW_TITLE "Steem Beta 3.5.4"
+#endif
+
 #else // next planned release
-#define SSE_VERSION 354
+
+#if defined(WIN32)
+#define SSE_VERSION 355
 // check snapshot Version (in LoadSave.h); rc\resource.rc
+#define SSE_VERSION_TXT "3.5.5" 
+#define WINDOW_TITLE "Steem SSE 3.5.5" //not 'Engine', too long
+#elif defined(UNIX)
+#define SSE_VERSION 354
 #define SSE_VERSION_TXT "3.5.4" 
 #define WINDOW_TITLE "Steem SSE 3.5.4" //not 'Engine', too long
+
+#endif
+
 #endif
 
 #endif
@@ -1098,6 +1115,9 @@ and all his silly mods are gone!
 #if !defined(UNIX)
 #undef SS_UNIX
 #else
+
+#define SS_UNIX_STATIC_VAR_INIT //odd
+
 #if defined(SS_DEBUG)
 #define SS_UNIX_TRACE // TRACE into the terminal (if it's open?)
 #define SS_DEBUG_TRACE_FILE
@@ -1150,6 +1170,7 @@ and all his silly mods are gone!
 #define SS_VAR_RESET_BUTTON // invert
 #define SS_VAR_RESIZE // reduce memory set (int->BYTE etc.)
 #define SS_VAR_REWRITE // to conform to what compilers expect (warnings...)
+#ifdef WIN32
 #define SS_VAR_STATUS_STRING // "status bar" in the icon bar
 #define SS_VAR_STATUS_STRING_6301
 #define SS_VAR_STATUS_STRING_ADAT
@@ -1158,10 +1179,12 @@ and all his silly mods are gone!
 #define SS_VAR_STATUS_STRING_HACKS
 #define SS_VAR_STATUS_STRING_IPF
 #define SS_VAR_STATUS_STRING_PASTI
+#endif
 #define SS_VAR_STEALTH // don't tell we're an emulator (option)
 #ifdef WIN32
 #define SS_VAR_UNRAR // using unrar.dll, up to date
 #endif
+#define SS_VAR_WINDOW_TITLE
 
 
 #endif 
@@ -1180,14 +1203,14 @@ and all his silly mods are gone!
 
 #define SS_VID_BORDERS // option display size
 #if defined(SS_VID_BORDERS)
-#ifdef WIN32 // Unix?
+//#ifdef WIN32 // Unix?
 #define SS_VID_BORDERS_412 // 
 #define SS_VID_BORDERS_413 // best fit for overscan?
 #define SS_VID_BORDERS_416 
 #define SS_VID_BORDERS_416_NO_SHIFT
 #define SS_VID_BORDERS_BIGTOP // more lines for palette effects
 #define SS_VID_BORDERS_LB_DX // rendering-stage trick rather than painful hacks
-#endif
+//#endif
 #endif
 
 #define SS_VID_BPOC // Best Part of the Creation fit display 800 hack
@@ -1209,6 +1232,8 @@ and all his silly mods are gone!
 #define SS_VID_3BUFFER_WIN //windowed mode (necessary for FS)
 #endif
 #endif
+
+#define SS_VID_MEMORY_LOST // no message box
 
 #if defined(WIN32)
 #define SS_VID_SCANLINES_INTERPOLATED // using stretch mode!
@@ -1333,6 +1358,10 @@ and all his silly mods are gone!
 
 #if !USE_PASTI
 #undef SS_DMA_FIFO_PASTI
+#endif
+
+#if defined(SS_UNIX) //temp!
+#define SS_SDL_DEACTIVATE
 #endif
 
 #if !defined(SS_VID_BORDERS) || !defined(SS_HACKS)

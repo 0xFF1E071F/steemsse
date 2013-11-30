@@ -141,6 +141,21 @@ void hxc::alloc_colours(Display *XD)
 
 void hxc::load_res(Display*XD)
 {
+
+#if defined(SS_UNIX) && defined(SS_UNIX_STATIC_VAR_INIT)
+/*  This is the first place where a font would be necessary.
+*/
+  if (font_sl.NumStrings==0){
+    font_sl.Sort=eslNoSort;
+    font_sl.Add("-adobe-helvetica-bold-r-normal-*-14-100-*-*-*-*-iso8859-1");
+    font_sl.Add("-b&h-lucida-medium-r-normal-*-*-120-*-*-p-*-iso8859-1");
+    font_sl.Add("-urw-palatino-medium-r-normal-*-*-140-*-*-p-*-iso8859-1");
+    font_sl.Add("-mdk-helvetica-medium-r-normal-*-*-130-*-*-p-*-tcvn-5712"); // not iso8859-1, accents mangled!
+    font_sl.Add("*sans l-medium-r-normal-*-iso8859-1");
+    font_sl.Add("8x13");
+  }
+#endif
+
   if (res_users==0){
     alloc_colours_vector(XD);
 
@@ -152,10 +167,17 @@ void hxc::load_res(Display*XD)
       if (font) break;
     }
     if (font==NULL) {
+#if defined(SS_UNIX) && defined(SS_UNIX_STATIC_VAR_INIT)
+/*  This isn't good, but the alternative doesn't work either for whatever 
+    reason.
+*/
+      font=XLoadQueryFont(XD,"-adobe-helvetica-bold-r-normal-*-14-100-*-*-*-*-iso8859-1");
+#else
       printf("WARNING: Could not load any pre-configured font - choosing a random font\n");
       int fontCount = 0;
       char** fontList = XListFonts(XD, "*", 1, &fontCount);
       font = XLoadQueryFont(XD,fontList[0]);
+#endif
     }
     XSetFont(XD,gc,font->fid);
     cModal=XUniqueContext();
@@ -397,6 +419,10 @@ hxc::hxc()
   next_hxc=NULL;
   last_hxc=this;
 
+#if !(defined(SS_UNIX) && defined(SS_UNIX_STATIC_VAR_INIT))
+/*  Doing this in the constructor doesn't seem to work in later versions
+    of Linux C++. We do it in load_res instead.
+*/
   if (font_sl.NumStrings==0){
     font_sl.Sort=eslNoSort;
     font_sl.Add("-adobe-helvetica-bold-r-normal-*-14-100-*-*-*-*-iso8859-1");
@@ -406,6 +432,7 @@ hxc::hxc()
     font_sl.Add("*sans l-medium-r-normal-*-iso8859-1");
     font_sl.Add("8x13");
   }
+#endif
 }
 
 hxc::~hxc(){

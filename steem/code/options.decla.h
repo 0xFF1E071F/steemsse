@@ -240,6 +240,10 @@ public:
   hxc_button slow_disk_but;  
 #endif
 
+#if defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+  hxc_button use_sdl_but;    
+#endif
+
 #endif
 
   void MachineUpdateIfVisible();

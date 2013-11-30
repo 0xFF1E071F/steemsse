@@ -1,3 +1,9 @@
+/* SS some functions have the same name in WIN32 and UNIX, some are specific
+
+   added SDL code as in WIN32, to test, missing: init!!!!
+
+*/
+
 //---------------------------------------------------------------------------
 bool SteemDisplay::CheckDisplayMode(DWORD red_mask,DWORD green_mask,DWORD blue_mask)
 {
@@ -57,7 +63,7 @@ bool SteemDisplay::CheckDisplayMode(DWORD red_mask,DWORD green_mask,DWORD blue_m
   return true;
 }
 //---------------------------------------------------------------------------
-bool SteemDisplay::InitX()
+bool SteemDisplay::InitX() //SS normally we rarely do that
 {
   if (XD==NULL) return 0;
 //  TRACE("SteemDisplay::InitX()\n");
@@ -66,8 +72,7 @@ bool SteemDisplay::InitX()
   int Scr=XDefaultScreen(XD);
   int w=640,h=480;
   if (Disp.BorderPossible()){
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS) \
-  && defined(SS_UNIX)
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS) && defined(SS_UNIX)
     w=640+4* (SideBorderSize); // 768 or 800 or 832
     h=400+2*(BORDER_TOP+BottomBorderSize);
 #else
@@ -139,9 +144,8 @@ bool SteemDisplay::InitXSHM()
   int Scr=XDefaultScreen(XD);
   int w=640,h=480;
   if (BorderPossible()){
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS) \
-    && defined(SS_UNIX)
-    w=640+4* (SideBorderSize); // 768 or 800 or 832
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS) && defined(SS_UNIX)
+    w=640+4* (SideBorderSize); // we draw larger
     h=400+2*(BORDER_TOP+BottomBorderSize);
 #else
     w=768;h=400+2*(BORDER_TOP+BORDER_BOTTOM);
@@ -201,6 +205,15 @@ bool SteemDisplay::InitXSHM()
 //---------------------------------------------------------------------------
 HRESULT SteemDisplay::Lock()
 {
+
+#if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+  if(SDL.InUse)
+  {
+    SDL.Lock();
+    return DD_OK;
+  }
+#endif
+
   if (XD==NULL) return DDERR_GENERIC;
 
   WaitForAsyncBlitToFinish();
@@ -274,6 +287,15 @@ void SteemDisplay::VSync()
 
 bool SteemDisplay::Blit()
 {
+
+#if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+  if(SDL.InUse)
+  {
+    SDL.Blit();
+    return true;
+  }
+#endif
+
   if (XD==NULL) return 0;
 
   int sx,sy,sw,sh,dx,dy;
@@ -295,36 +317,118 @@ bool SteemDisplay::Blit()
     dy=max((XVM_FullH-sh)/2,0);
     if (sh>XVM_FullH) sh=XVM_FullH;
   }else{
+
+      // SS not Fullscreen:
+
     ToWin=StemWin;
 
     XWindowAttributes wa;
+
+#ifdef DOC
+typedef struct {
+int x, y; /* location of window */
+int width, height; /* width and height of window */
+int border_width; /* border width of window */
+int depth; /* depth of window */
+Visual *visual; /* the associated visual structure */
+Window root; /*root of screen containing window */
+int class; /* InputOutput, InputOnly*/
+int bit_gravity; /*one of the bit gravity values */
+int win_gravity; /*one of the window gravity values */
+int backing_store; /* NotUseful, WhenMapped, Always */
+unsigned long backing_planes; /* planes to be preserved if possible */
+unsigned long backing_pixel; /*value to be used when restoring planes */
+Bool save_under; /*boolean, should bits under be saved? */
+Colormap colormap; /* color map to be associated with window */
+Bool map_installed; /* boolean, is color map currently installed*/
+int map_state; /* IsUnmapped, IsUnviewable, IsViewable */
+long all_event_masks; /*set of events all people have interest in*/
+long your_event_mask; /*my event mask */
+long do_not_propagate_mask; /* set of events that should not propagate */
+Bool override_redirect; /* boolean value for override-redirect */
+Screen *screen; /* back pointer to correct screen */
+} XWindowAttributes;
+#endif
+
+
     XGetWindowAttributes(XD,StemWin,&wa);
     int w=wa.width-4,h=wa.height-(MENUHEIGHT+4);
     if (w<=0 || h<=0) return true;
 
     dx=(w-draw_blit_source_rect.right)/2;
-  	dy=(h-draw_blit_source_rect.bottom)/2;
-  	sx=draw_blit_source_rect.left;
-  	sy=draw_blit_source_rect.top;
-  	sw=draw_blit_source_rect.right;
-  	sh=draw_blit_source_rect.bottom;
-  	if (dx<0){
-  		sx-=dx;
-  		sw=w;
-  		dx=0;
-  	}
-  	if (dy<0){
-  		sy-=dy;
-  		sh=h;
-  		dy=0;
-  	}
-  	dy+=MENUHEIGHT+2;
-  	dx+=2;
+    dy=(h-draw_blit_source_rect.bottom)/2;
+    sx=draw_blit_source_rect.left;
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
+    if(SideBorderSizeWin==VERY_LARGE_BORDER_SIDE_WIN)
+    {
+      dx=(w-(draw_blit_source_rect.right-4))/2;; // 412 (TODO 413)
+    }
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
+    if(BORDER_40) // clip from larger to 800
+    {
+      sx+=16; // eg BPOC
+    }
+#endif
+
+    sy=draw_blit_source_rect.top;
+    sw=draw_blit_source_rect.right;
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
+    if(SideBorderSizeWin==VERY_LARGE_BORDER_SIDE_WIN)
+    {
+      sw-=4*2; // 412 (TODO 413)
+    }
+#endif
+
+    sh=draw_blit_source_rect.bottom;
+    if (dx<0){
+      sx-=dx;
+      sw=w;
+      dx=0;
+    }
+    if (dy<0){
+    sy-=dy;
+    sh=h;
+    dy=0;
+    }
+    dy+=MENUHEIGHT+2;
+    dx+=2;
   }
 
   bool DoneIt=0;
 //	printf("XPutImage(... ,%i,%i,%i,%i,%i,%i)\n",draw_blit_source_rect.left,draw_blit_source_rect.top,
 //              dx,dy,sw,sh);
+
+
+#ifdef DOC
+XPutImage (display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height)
+Display *display;
+Drawable d;
+GC gc;
+XImage *image;
+int src_x, src_y;
+int dest_x, dest_y;
+unsigned int width, height;
+display Specifies the connection to the X server.
+d Specifies the drawable.
+gc Specifies the GC.
+image Specifies the image you want combined with the rectangle.
+src_x Specifies the offset in X from the left edge of the image defined by the XImage
+structure.
+src_y Specifies the offset in Y from the top edge of the image defined by the XImage
+structure.
+dest_x
+dest_y Specify the x and y coordinates, which are relative to the origin of the drawable
+and are the coordinates of the subimage.
+width
+height Specify the width and height of the subimage, which define the dimensions of the
+rectangle.
+#endif
+
+
   if (Method==DISPMETHOD_X){
     XPutImage(XD,ToWin,DispGC,X_Img,sx,sy,
               dx,dy,sw,sh);
@@ -366,21 +470,37 @@ bool SteemDisplay::Blit()
 //---------------------------------------------------------------------------
 void SteemDisplay::WaitForAsyncBlitToFinish()
 {
+
+  // SS is this the reason for some trouble?
+
 #ifndef NO_SHM
   if (asynchronous_blit_in_progress==0) return;
 
   XEvent ev;
   clock_t wait_till=clock()+(CLOCKS_PER_SEC/50);
+  TRACE("Frame %d WaitForAsyncBlit...",FRAME);
   for (int wait=50000;wait>=0;wait--){
     if (XCheckTypedEvent(XD,SHMCompletion,&ev)) break;
     if (clock()>wait_till) break;
   }
+  TRACE("Done\n");
   asynchronous_blit_in_progress=false;
 #endif
 }
 //---------------------------------------------------------------------------
 void SteemDisplay::Unlock()
 {
+
+#if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+  if(SDL.InUse)
+  {
+    SDL.Unlock();
+    return;
+  }
+#endif
+
+  //SS shouldn't we do something here?
+
 }
 //---------------------------------------------------------------------------
 void SteemDisplay::RunStart(bool)
@@ -398,6 +518,19 @@ void SteemDisplay::RunEnd(bool)
 //---------------------------------------------------------------------------
 void SteemDisplay::ScreenChange()
 {
+
+
+#if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+  // temp, dubious
+  if(USE_SDL && !SDL.InUse)
+  {
+    SDL.EnterSDLVideoMode(); 
+    return;//?
+  }
+  else if(!USE_SDL && SDL.InUse)
+    SDL.LeaveSDLVideoMode();
+#endif
+
   if (Method==DISPMETHOD_X){
     if (InitX()){
       Method=DISPMETHOD_X;

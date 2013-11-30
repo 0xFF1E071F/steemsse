@@ -28,7 +28,7 @@ other files that make up the Steem module.
 #if defined(STEVEN_SEAGAL)
 #pragma message("Steven Seagal build")
 #else
-#pragma message("Original 3.2 build")
+#pragma message("Original 3.2+ build")
 #endif
 
 #include "conditions.h"
@@ -51,7 +51,7 @@ other files that make up the Steem module.
 const char *stem_version_date_text=__DATE__ " - " __TIME__;
 
 #ifndef ONEGAME
-#if defined(STEVEN_SEAGAL)
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_WINDOW_TITLE)
 const char *stem_window_title=WINDOW_TITLE; // in SSE.h
 #else
 const char *stem_window_title="Steem Engine";
@@ -371,7 +371,7 @@ bool Initialise()
     }else if (Type==ARG_QUITQUICKLY){
       QuitNow=true;
     }else if (Type==ARG_SETFONT){
-UNIX_ONLY( hxc::font_sl.Insert(0,0,Path,NULL); )
+/////////////////UNIX_ONLY( hxc::font_sl.Insert(0,0,Path,NULL); )
     }else if (Type==ARG_NONOTIFYINIT){
       ShowNotify=0;
     }

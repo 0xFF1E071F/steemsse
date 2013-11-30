@@ -3142,7 +3142,11 @@ void TShifter::SetShiftMode(BYTE NewMode) {
   // From here, we have a colour display:
   ASSERT( mfp_gpip_no_interrupt & MFP_GPIP_COLOUR );
   if(NewMode==3) 
+#if SSE_VERSION>354
+    NewMode=2; // fixes The World is my Oyster screen #2
+#else
     NewMode=1; // or 2? TESTING
+#endif
 
 #if defined(SS_SHIFTER_TRICKS) // before rendering
   AddShiftModeChange(NewMode); // add time & mode
