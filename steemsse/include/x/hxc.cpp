@@ -418,7 +418,7 @@ hxc::hxc()
   if(first_hxc==NULL)first_hxc=this;
   next_hxc=NULL;
   last_hxc=this;
-
+
 #if !(defined(SS_UNIX) && defined(SS_UNIX_STATIC_VAR_INIT))
 /*  Doing this in the constructor doesn't seem to work in later versions
     of Linux C++. We do it in load_res instead.

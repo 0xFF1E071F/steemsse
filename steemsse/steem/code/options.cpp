@@ -1040,7 +1040,12 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #endif
 #if defined(SS_STF_MEGASTF)
             if(ST_TYPE==MEGASTF)
+            {
               This->NewMonitorSel=1; // preselect monochrome (v3.5.4)
+              HD6301EMU_ON=false; // v3.5.5
+              HardDiskMan.DisableHardDrives=false; // v3.5.5
+              HardDiskMan.update_mount();
+            }
 #endif
           }
 	  break;

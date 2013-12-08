@@ -1361,7 +1361,7 @@ void event_pasti_update()
 #if defined(STEVEN_SEAGAL) && defined(SS_PASTI_ONLY_STX)
     || PASTI_JUST_STX && SF314[floppy_current_drive()].ImageType!=3
 #if defined(SS_PASTI_ONLY_STX_HD)
-    && !(Dma.MCR&BIT_3)
+    && ! ( pasti_active && (Dma.MCR&BIT_3)) // hard disk handling by pasti
 #endif
 #endif
     ){

@@ -38,6 +38,11 @@ void StemWinResize(int xo,int yo)
     SetStemWinSize(WinSize[res][Idx].x,WinSize[res][Idx].y,
       xo*WinSize[res][Idx].x/640,yo*WinSize[res][Idx].y/400);
   }
+
+#if defined(SS_VAR_STATUS_STRING)
+    GUIRefreshStatusBar();//of course (v3.5.5)
+#endif
+
 }
 //---------------------------------------------------------------------------
 void fast_forward_change(bool Down,bool Searchlight)

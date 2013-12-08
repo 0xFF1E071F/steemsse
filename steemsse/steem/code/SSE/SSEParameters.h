@@ -421,7 +421,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 /////////
 
 
-#if defined(SS_STF)
+#if defined(SS_STF_VERT_OVSCN)
 
 #define STF_VERT_OVSCN_OFFSET 4
 

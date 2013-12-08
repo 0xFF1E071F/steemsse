@@ -702,7 +702,7 @@ system exclusive start and end messages (F0 and F7).
 
     case 0xff8900:      //----------------------------------- STE DMA Sound
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STF)
+#if defined(STEVEN_SEAGAL) && defined(SS_STF_DMA)
       if(ST_TYPE!=STE)
       {
         TRACE_LOG("STF write %X to DMA %X\n",io_src_b,addr);
@@ -1821,7 +1821,7 @@ MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
       if (addr>0xff9001) exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
       break;
     }case 0xff9200:{ //paddles
-#if defined(STEVEN_SEAGAL) && defined(SS_STF)
+#if defined(STEVEN_SEAGAL) && defined(SS_STF_PADDLES)
        if(ST_TYPE!=STE)
        {
          TRACE_LOG("STF write %X to %X\n",io_src_b,addr);

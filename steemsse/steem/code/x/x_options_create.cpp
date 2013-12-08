@@ -19,7 +19,7 @@ void TOptionBox::CreatePage(int n)
     case 6:CreateStartupPage();break;
     case 15:CreatePathsPage();break;
 #if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE)
-    case 16:CreateSSEPage();break;//TODO icon?
+    case 16:CreateSSEPage();break;
 #endif
 	}
 }

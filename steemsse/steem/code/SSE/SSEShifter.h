@@ -198,11 +198,10 @@ struct TShifter {
 #endif
 #if defined(SS_SHIFTER_UNSTABLE)
   BYTE Preload; // #words into shifter's RR (shifts display)
-#if defined(SS_SHIFTER_PANIC)
+#endif
+#if defined(SS_SHIFTER_PANIC) || defined(SS_SHIFTER_STE_HI_HSCROLL)
   DWORD Scanline[230/4+2]; // the price of fun
 #endif
-#endif
-
 };
 
 extern TShifter Shifter; // singleton
@@ -422,7 +421,7 @@ FF825E
    of colours would be $000, $888, $111, $999, $222, $AAA, ...
 
 */
-#if defined(SS_STF)
+#if defined(SS_STF_PAL)
   if(ST_TYPE!=STE)
     NewPal &= 0x0777; // fixes Forest HW STF test
   else
@@ -1091,7 +1090,7 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
   VideoEvents.Add(scan_y,cycles,'w',((addr&0xF)<<8)|io_src_b);
 #endif
   TRACE_OSD("WRITE SDP");  
-#if defined(SS_STF)
+#if defined(SS_STF_SDP)
   // some STF programs write to those addresses, it just must be ignored.
   if(ST_TYPE!=STE)
   {

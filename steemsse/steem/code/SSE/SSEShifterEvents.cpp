@@ -26,7 +26,17 @@ int TVideoEvents::Report() {
     _strdate( sdate );
     _strtime( stime );
     fprintf(fp,"Steem shifter events report - %s -%s\nFrame freq %d res %d %s WS%d\n",
-      sdate,stime,shifter_freq_at_start_of_vbl,screen_res,st_model_name[ST_TYPE],MMU.WS[WAKE_UP_STATE]);
+      sdate,stime,shifter_freq_at_start_of_vbl,screen_res,
+#if defined(SS_STF)
+      st_model_name[ST_TYPE]
+#else
+      "STE"
+#endif
+#if defined(SS_MMU_WAKE_UP_DL)
+      ,MMU.WS[WAKE_UP_STATE]);
+#else
+    ,0;
+#endif
 #else
     fprintf(fp,"Steem shifter events report - Frame freq %d res %d %s WS%d\n",
       shifter_freq_at_start_of_vbl,screen_res,st_model_name[ST_TYPE],MMU.WS[WAKE_UP_STATE]);
@@ -83,7 +93,7 @@ int TVideoEvents::Vbl() {
   {
 #define LOGSECTION LOGSECTION_VIDEO
 //    TRACE_LOG("VBL %d shifter tricks %X\n",nVbl,Debug.ShifterTricks);
-    TRACE_LOG("VBL %d shifter tricks %X\n",FRAME,Debug.ShifterTricks);
+    TRACE_LOG("VBL %d shifter tricks %X xbios2 %X\n",FRAME,Debug.ShifterTricks,xbios2);
     if(TRACE_ENABLED) 
       TRACE_OSD("%X",Debug.ShifterTricks);
     Debug.ShifterTricks=0;

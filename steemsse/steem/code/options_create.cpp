@@ -93,6 +93,10 @@ void TOptionBox::CreateMachinePage()
 
   Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST,
                           page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)8100,HInstance,NULL);
+
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU_256K)
+  CBAddString(Win,"256Kb",MAKELONG(MEMCONF_128,MEMCONF_128));
+#endif
   CBAddString(Win,"512Kb",MAKELONG(MEMCONF_512,MEMCONF_0));
   CBAddString(Win,"1 MB",MAKELONG(MEMCONF_512,MEMCONF_512));
   CBAddString(Win,"2 MB",MAKELONG(MEMCONF_2MB,MEMCONF_0));
@@ -199,10 +203,27 @@ void TOptionBox::MachineUpdateIfVisible()
     }else if (mem_len<14*1024*1024){
       memconf=3;
     }
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU_256K)
+  //TRACE("mem_len %d %d\n",mem_len,mem_len/1024);
+  if(mem_len>256*1024)
+    memconf++;
+#endif
   }else{
     if (NewMemConf0==MEMCONF_512) memconf=int((NewMemConf1==MEMCONF_512) ? 1:0); // 1Mb:512Kb
     if (NewMemConf0==MEMCONF_2MB) memconf=int((NewMemConf1==MEMCONF_2MB) ? 3:2); // 4Mb:2Mb
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU_256K)
+    if (NewMemConf0==MEMCONF_128) memconf=int((NewMemConf1==MEMCONF_128) ? 0:4); // 256K:?
+    else//if(mem_len>256*1024)
+      memconf++;
+#endif
   }
+  /*
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU_256K)
+  //TRACE("mem_len %d %d\n",mem_len,mem_len/1024);
+  if(NewMemConf0<0 && mem_len>256*1024)
+    memconf++;
+#endif
+    */
   SendMessage(GetDlgItem(Handle,8100),CB_SETCURSEL,memconf,0);
 
   int monitor_sel=NewMonitorSel;
@@ -2238,21 +2259,6 @@ Windows 2000	5.0
     T("Displays which drive is running, and on which side and track the drive currently is, plus the sector in slow mode."));
 #endif
 
-#if !defined(SS_PASTI_ONLY_STX_HD)
-#if defined(SS_PASTI_ONLY_STX)
-  Offset+=Wid+HorizontalSeparation;
-  Wid=GetCheckBoxSize(Font,T("Pasti only for floppy STX")).Width;
-  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
-  if(!hPasti)
-    mask|=WS_DISABLED;
-  Win=CreateWindow("Button",T("Pasti only for floppy STX"),mask,
-    page_l+Offset,y,Wid,25,Handle,(HMENU)7305,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,PASTI_JUST_STX,0);
-  ToolAddWindow(ToolTip,Win,
-    T("Advanced. When checked, Pasti will only be used for STX disks (not ST, MSA, not hard drive). It's been debugged but if you have problems uncheck it."));
-  y+=LineHeight;
-#endif
-#else
 #if defined(SS_PASTI_ONLY_STX)
   Offset+=Wid+HorizontalSeparation;
   Wid=GetCheckBoxSize(Font,T("Pasti only for STX")).Width;
@@ -2263,9 +2269,12 @@ Windows 2000	5.0
     page_l+Offset,y,Wid,25,Handle,(HMENU)7305,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,PASTI_JUST_STX,0);
   ToolAddWindow(ToolTip,Win,
-    T("When checked, Pasti will only be used for STX disks (not ST, MSA). It's been debugged but if you have problems uncheck it."));
-  y+=LineHeight;
+#if defined(SS_PASTI_ONLY_STX_HD)
+    T("Advanced. When checked, Pasti will only be used for STX disks (not ST, MSA). It's been debugged but if you have problems uncheck it."));
+#else
+    T("Advanced. When checked, Pasti will only be used for STX disks (not ST, MSA, not hard drive). It's been debugged but if you have problems uncheck it."));
 #endif
+  y+=LineHeight;
 #endif
 
 #if defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)

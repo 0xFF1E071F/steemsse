@@ -114,7 +114,7 @@ and all his silly mods are gone!
 #elif defined(UNIX)
 #define SSE_VERSION 354
 #define SSE_VERSION_TXT "3.5.4" 
-#define WINDOW_TITLE "Steem SSE 3.5.4" //not 'Engine', too long
+#define WINDOW_TITLE "Steem SSE 3.5.4"
 
 #endif
 
@@ -609,9 +609,7 @@ and all his silly mods are gone!
 #define SS_PASTI_ALWAYS_DISPLAY_STX_DISKS
 #define SS_PASTI_AUTO_SWITCH
 #define SS_PASTI_ONLY_STX  // experimental! optional
-#ifdef SS_BETA //to test
-#define SS_PASTI_ONLY_STX_HD 
-#endif
+#define SS_PASTI_ONLY_STX_HD //v3.5.5
 #define SS_PASTI_NO_RESET 
 #define SS_PASTI_ON_WARNING // mention in disk manager title
 
@@ -776,6 +774,10 @@ and all his silly mods are gone!
 
 //TODO, properly separate MMU, GLUE, Shifter functions, first proper C++ structure
 
+#if SSE_VERSION>354
+#define SS_MMU_256K // Atari 260 ST
+#endif
+
 //#define SS_MMU_NO_CONFUSION // Diagnostic cartridge: don't define (v3.5.2)
 #define SS_MMU_WAKE_UP
 #define SS_MMU_WRITE // programs in RAM may write in the MMU 
@@ -856,6 +858,9 @@ and all his silly mods are gone!
 #define SS_SHIFTER_IO // move blocks from ior, iow
 
 ///#define SS_SHIFTER_RENDER_SYNC_CHANGES//don't until debug
+#if SSE_VERSION>354
+#define SS_SHIFTER_PALETTE_NOISE //UMD8730 STF
+#endif
 #define SS_SHIFTER_SDP // SDP=shifter draw pointer
 #define SS_SHIFTER_TRICKS  // based on Steem system, extended
 
@@ -870,7 +875,7 @@ and all his silly mods are gone!
 //#define SS_SHIFTER_0BYTE_LINE_SYNC2 // loSTE screens
 #endif//0-byte line
 #define SS_SHIFTER_4BIT_SCROLL //Let's do the Twist again
-//#define SS_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK
+#define SS_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK
 #define SS_SHIFTER_60HZ_OVERSCAN //Leavin' Terramis
 #define SS_SHIFTER_END_OF_LINE_CORRECTION // correct +2, -2 lines 
 #define SS_SHIFTER_FIX_LINE508_CONFUSION // hack at recording shifter event
@@ -880,6 +885,9 @@ and all his silly mods are gone!
 #define SS_SHIFTER_LINE_PLUS_2_STE // hack?
 #define SS_SHIFTER_LINE_PLUS_2_TEST // loSTE screens
 #define SS_SHIFTER_LINE_PLUS_2_THRESHOLD //Forest
+#if SSE_VERSION>354
+#define SS_SHIFTER_LINE_PLUS_2_POST_TOP_OFF // Panic
+#endif
 #define SS_SHIFTER_LINE_PLUS_20 // 224 byte scanline STE only
 #define SS_SHIFTER_LINE_PLUS_20_SHIFT // for Riverside
 #define SS_SHIFTER_MED_OVERSCAN // BPOC
@@ -948,7 +956,7 @@ and all his silly mods are gone!
 //#define SS_SHIFTER_EVENTS_READ_SDP // also for read SDP
 #define SS_SHIFTER_EVENTS_BYTES // scanline length
 #define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
-#define SS_SHIFTER_EVENTS_TRICKS // "bordermask"
+//#define SS_SHIFTER_EVENTS_TRICKS // "bordermask"
 //#define SS_SHIFTER_IOR_TRACE // specific, not "log"
 //#define SS_SHIFTER_IOW_TRACE // specific, not "log"
 #if !defined(SS_DEBUG_TRACE_IDE)
@@ -1005,12 +1013,25 @@ and all his silly mods are gone!
 
 #if defined(SS_STF)
 
+#define SS_STF_0BYTE
 #define SS_STE_2MB // auto make RAM 2MB, more compatible
 #define SS_STF_1MB // auto make RAM 1MB, more compatible
+#define SS_STF_BLITTER
+#define SS_STF_DMA
+#define SS_STF_HSCROLL
+#define SS_STF_LEFT_OFF 
+#define SS_STF_LINEWID
 #ifdef WIN32
 #define SS_STF_MATCH_TOS // select a compatible TOS for next reset
 #endif
 #define SS_STF_MEGASTF // blitter in STF (could be useful?) + 4MB!
+#define SS_STF_MMU_PREFETCH
+#define SS_STF_PADDLES
+#define SS_STF_PAL
+#define SS_STF_SDP
+#define SS_STF_SHIFTER_IOR
+#define SS_STF_VBASELO
+#define SS_STF_VERT_OVSCN
 
 #endif
 
@@ -1116,6 +1137,7 @@ and all his silly mods are gone!
 #undef SS_UNIX
 #else
 
+#define SS_UNIX_OPTIONS_SSE_ICON
 #define SS_UNIX_STATIC_VAR_INIT //odd
 
 #if defined(SS_DEBUG)
