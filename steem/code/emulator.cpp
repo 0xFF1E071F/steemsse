@@ -63,6 +63,14 @@ EXT MEM_ADDRESS bank_length[2];
 
 WIN_ONLY( EXT CRITICAL_SECTION agenda_cs; )
 
+/*
+0       128 KB
+1       512 KB
+2         2 MB
+3         0
+4         7 MB
+*/
+
 const MEM_ADDRESS mmu_bank_length_from_config[5]=
                   {128*1024,512*1024,2*1024*1024,0,7*1024*1024};
 
@@ -700,7 +708,10 @@ void agenda_acia_tx_delay_MIDI(int)
   I thought it was for when TOS resets and tests memory, but now
   it seems to work without it.
   It's quite a lot of code removed.
-  TESTING undefined
+  v3.5.2:
+  Code has been put back because the Atari dignostic cartridge
+  works better with it.
+  TODO is it OK for 256K?
   */
 #define LOGSECTION LOGSECTION_IO//SS
 

@@ -152,7 +152,7 @@ void TOptionBox::Show()
   page_lv.sl.Add(T("Paths"),101+ICO16_FUJI16,15);
 
 #if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE) && defined(SS_UNIX)
-  page_lv.sl.Add(T("SSE"),101+74,16);
+  page_lv.sl.Add(T("SSE"),101+ICO16_SSE_OPTION,16);
 #endif
   
   page_lv.lpig=&Ico16;

@@ -1,3 +1,10 @@
+/*  SS it's scandalous all Steem authors had to do themselves for the GUI in
+    the Unix build.
+    Here for example we have low level functions dealing with icons.
+    To add or edit icons, one must deal with the bmp files in rc.
+    Probably more intuitive tools are available now?
+*/
+
 #ifndef ICONGROUP_CPP
 #define ICONGROUP_CPP
 

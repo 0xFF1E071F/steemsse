@@ -16,7 +16,7 @@ int HandleXError(Display *XD,XErrorEvent *pXErr)
 void InitColoursAndIcons()
 {
   int Scr=XDefaultScreen(XD);
-	if (XDefaultDepth(XD,Scr)==8){ // Oh no! 8-bit!
+  if (XDefaultDepth(XD,Scr)==8){ // Oh no! 8-bit!
     XVisualInfo vith;
     //I want to set the member called "class".  But gcc
     //doesn't like members with reserved words for names!
@@ -70,7 +70,7 @@ void InitColoursAndIcons()
     BkCol=GetColourValue(XD,192 << 8,192 << 8,192 << 8,WhiteCol);
     BorderLightCol=GetColourValue(XD,224 << 8,224 << 8,224 << 8,WhiteCol);;
     BorderDarkCol=GetColourValue(XD,128 << 8,128 << 8,128 << 8,BlackCol);
-  }
+  }//SS 8bit
 
   cWinProc=XUniqueContext();
   cWinThis=XUniqueContext();

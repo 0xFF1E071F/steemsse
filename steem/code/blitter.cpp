@@ -547,7 +547,7 @@ BYTE Blitter_IO_ReadB(MEM_ADDRESS Adr)
   return 0;
 #else
 	
-#if defined(STEVEN_SEAGAL) && defined(SS_STF)
+#if defined(STEVEN_SEAGAL) && defined(SS_STF_BLITTER)
 /*  When TOS>1.00 resets, it tests for Blitter.
     There was a blitter on (some!) Mega STF, in this emulation you're entitled
     to a blitter without having to place an order with Atari.
@@ -632,7 +632,7 @@ void Blitter_IO_WriteB(MEM_ADDRESS Adr,BYTE Val)
   return;
 #else
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STF)
+#if defined(STEVEN_SEAGAL) && defined(SS_STF_BLITTER)
   if(ST_TYPE!=STE && ST_TYPE!=MEGASTF)
   {
     TRACE_LOG("STF: no blitter exception in iow\n");

@@ -377,7 +377,7 @@ typedef BUTNOTIFYPROC* LPBUTNOTIFYPROC;
 int StemWinButtonNotifyProc(Window,int,int,int *);
 
 void SnapShotProcess(int);
-
+//SS check icon16.bmp, there they are!
 #define ICO16_FOLDER 0
 #define ICO16_PARENTDIRECTORY 1
 #define ICO16_EXCLAMATION 2
@@ -447,6 +447,10 @@ void SnapShotProcess(int);
 #define ICO16_FULLSCREEN 62
 #define ICO16_TAKESCREENSHOTBUT 63
 #define ICO16_UNRADIOMARKED 64
+
+#if defined(SS_UNIX_OPTIONS_SSE_ICON)
+#define ICO16_SSE_OPTION 65 // must be in icon16.bmp
+#endif
 
 #define ICO32_JOYDIR 0
 #define ICO32_RECORD 1

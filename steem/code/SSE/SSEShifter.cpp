@@ -87,7 +87,7 @@ void TShifter::CheckSideOverscan() {
   ?
 #endif
     WORD DEcycle=36; // DE STE 60hz; used for 0byte and for +2
-#if defined(SS_STF)
+#if defined(SS_STF_MMU_PREFETCH)
     if(ST_TYPE!=STE)
       DEcycle+=16+WU_sync_modifier; // STF, 60hz: 52
     else //STE
@@ -186,7 +186,7 @@ void TShifter::CheckSideOverscan() {
 
 #if defined(SS_SHIFTER_TRICKS) 
     int lim_r2=2,lim_r0=26;    
-#if defined(SS_STF) 
+#if defined(SS_STF_LEFT_OFF) 
     if(ST_TYPE!=STE)
       lim_r2+=4,lim_r0+=6;
 #if defined(SS_MMU_WAKE_UP_SHIFTER_TRICKS)
@@ -415,7 +415,7 @@ Sync is set back to 2 between R2 and R0, this is isn't a line +24
         //////////////////////////////////
 
 #if defined(SS_SHIFTER_UNSTABLE_LEFT_OFF) && defined(SS_MMU_WAKE_UP) \
-        && defined(SS_STF)
+        && defined(SS_STF_LEFT_OFF)
 /*  Hack for Death of the Left Border, Omega Full Overscan (and?)
     no stabiliser, late switch, unstable overscan: shift +4
     'Hack' option not necessary, choosing wake up state 2 is enough!
@@ -881,7 +881,8 @@ STF2:
   // LINE +2 //
   /////////////
 
-/*  A line that starts at cycle 52 because it's at 60hz, but then is switched
+/*  
+    A line that starts at cycle 52 because it's at 60hz, but then is switched
     to 50hz gains 2 bytes because it ends at cycle 376 instead of 372
     (4 cycles later, 2 bytes).
 
@@ -954,6 +955,15 @@ Cuddly Demos STE
 This time no "unstable shifter" to save us.
 
 -> going back to "hacky" thresholds for now just to have known cases OK
+
+Panic
+-30 - 492:S0000 512:T0100 512:#0000
+-29 - 056:S0082 376:S0000 384:S0082 444:R0082 456:R0000 508:R0082 512:T2012 512:#0206
++2 is wrong
+
+    Note: this part is an absolute mess. There are few cases and we just
+    take care to have those working, without pretention.
+
 */
 
 #if defined(SS_SHIFTER_LINE_PLUS_2_TEST)
@@ -962,12 +972,21 @@ This time no "unstable shifter" to save us.
   {
 
 #if defined(SS_SHIFTER_LINE_PLUS_2_STE)
-    t=52-2;
+    t=52-2
+//      +2   // panic vs forest!
+      ;
 #ifdef SS_STF
     if(ST_TYPE!=STE)
       t+=WU_sync_modifier  +2;
 #endif
 #endif
+
+#if defined(SS_SHIFTER_LINE_PLUS_2_POST_TOP_OFF) //v3.5.5
+////ASSERT(!Line508Confusion());
+    if(scan_y==-29) // 1st line after top border removed
+      t+=2+2;  // panic & forest OK
+#endif
+
 
 #if !defined(SS_SHIFTER_LINE_PLUS_2_STE)
 #if defined(SS_SHIFTER_LINE_PLUS_2_STE_DSOS)//hack (v3.5.3)
@@ -1680,7 +1699,7 @@ Tests are arranged to be efficient.
     {
 
       r2cycle=460-2; 
-#if defined(SS_STF)
+#if defined(SS_STF_0BYTE)
       if(ST_TYPE!=STE)
         r2cycle+=2; 
 #endif
@@ -1731,7 +1750,7 @@ Tests are arranged to be efficient.
       else 
       {
         r2cycle+=38; // -> 502 (STE)
-#if defined(SS_STF)
+#if defined(SS_STF_0BYTE)
         if(ST_TYPE!=STE)
           r2cycle+=2; // -> 504 (STF)
 #endif
@@ -1853,7 +1872,7 @@ void TShifter::CheckVerticalOverscan() {
   else if(on_overscan_limit && shifter_freq_at_start_of_vbl==50)
   {
     t=VERT_OVSCN_LIMIT; //502
-#if defined(SS_STF) && defined(SS_STF_VERTICAL_OVERSCAN)
+#if defined(SS_STF) && defined(SS_STF_VERTICAL_OVERSCAN) && defined(SS_STF_VERT_OVSCN) //!
     if(ST_TYPE!=STE)
       t+=STF_VERT_OVSCN_OFFSET; //4
 #endif
@@ -1925,8 +1944,12 @@ Y-30 C516  504:S0000 512:S0002 shifter tricks 100
 
 #if defined(SS_SHIFTER_VERTICAL_OVERSCAN_TRACE)
   if(on_overscan_limit) 
+  {
     VideoEvents.ReportLine();
-//    TRACE_LOG("F%d y%d freq at %d %d at %d %d switch %d to %d, %d to %d, %d to %d overscan %X\n",FRAME,scan_y,t,FreqAtCycle(t),t-2,FreqAtCycle(t-2),PreviousFreqChange(PreviousFreqChange(t)),FreqChangeAtCycle(PreviousFreqChange(PreviousFreqChange(t))),PreviousFreqChange(t),FreqChangeAtCycle(PreviousFreqChange(t)),NextFreqChange(t),FreqChangeAtCycle(NextFreqChange(t)),CurrentScanline.Tricks);
+    TRACE_LOG("F%d y%d freq at %d %d at %d %d switch %d to %d, %d to %d, %d to %d overscan %X\n",FRAME,scan_y,t,FreqAtCycle(t),t-2,FreqAtCycle(t-2),PreviousFreqChange(PreviousFreqChange(t)),FreqChangeAtCycle(PreviousFreqChange(PreviousFreqChange(t))),PreviousFreqChange(t),FreqChangeAtCycle(PreviousFreqChange(t)),NextFreqChange(t),FreqChangeAtCycle(NextFreqChange(t)),CurrentScanline.Tricks);
+  //  ASSERT( scan_y!=199|| (CurrentScanline.Tricks&TRICK_BOTTOM_OVERSCAN) );
+    //ASSERT( scan_y!=199|| shifter_last_draw_line==247 );
+  }
 #endif
 }
 
@@ -2308,7 +2331,7 @@ BYTE TShifter::IORead(MEM_ADDRESS addr) {
    R FF820D Lemmings40
 */
   BYTE ior_byte= ((addr&1)||addr>0xff8240) ? 0 : 0xFE; 
-#if defined(SS_STF)
+#if defined(SS_STF_SHIFTER_IOR)
   if(ST_TYPE!=STE)
     ior_byte=0xFF; 
 #endif  
@@ -2361,7 +2384,7 @@ BYTE TShifter::IORead(MEM_ADDRESS addr) {
 
     case 0xff820d:  //low byte of screen memory address
       ASSERT(!(xbios2&1));
-#if defined(SS_STF)
+#if defined(SS_STF_VBASELO)
       ASSERT( ST_TYPE==STE || !(xbios2&0xFF) );
       if(ST_TYPE==STE) 
 #endif
@@ -2369,7 +2392,7 @@ BYTE TShifter::IORead(MEM_ADDRESS addr) {
       break;
   
     case 0xff820f: // LINEWID
-#if defined(SS_STF)
+#if defined(SS_STF_LINEWID)
       //ASSERT( ST_TYPE==STE ); //No Cooper, Fuzion 77, 78
       if(ST_TYPE==STE) 
 #endif
@@ -2383,7 +2406,7 @@ BYTE TShifter::IORead(MEM_ADDRESS addr) {
 
     case 0xff8265:  //HSCROLL
       DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) shifter_hscroll_extra_fetch=(shifter_hscroll!=0);
-#if defined(SS_STF)
+#if defined(SS_STF_HSCROLL)
       if(ST_TYPE==STE)
 #endif
         ior_byte=HSCROLL;
@@ -2472,7 +2495,7 @@ According to ST-CNX, those registers are in the MMU, not in the shifter.
       if (mem_len<=FOUR_MEGS) 
         io_src_b&=b00111111;
       DWORD_B_2(&xbios2)=io_src_b;
-#if defined(SS_STF)
+#if defined(SS_STF_VBASELO)
       if(ST_TYPE==STE) 
 #endif
         DWORD_B_0(&xbios2)=0; 
@@ -2485,7 +2508,7 @@ According to ST-CNX, those registers are in the MMU, not in the shifter.
 #endif
       DWORD_B_1(&xbios2)=io_src_b;
 
-#if defined(SS_STF)
+#if defined(SS_STF_VBASELO)
       if(ST_TYPE==STE) 
 #endif
         DWORD_B_0(&xbios2)=0; 
@@ -2562,7 +2585,7 @@ Last bit always cleared (we must do it).
 #if defined(SS_SHIFTER_EVENTS)
       VideoEvents.Add(scan_y,LINECYCLES,'v',io_src_b); 
 #endif
-#if defined(SS_STF)
+#if defined(SS_STF_VBASELO)
       if(ST_TYPE!=STE)
       {
         TRACE_LOG("STF write %X to %X\n",io_src_b,addr);
@@ -2611,7 +2634,7 @@ must NOT be skipped using the Line Offset Register.
 #if defined(SS_SHIFTER_EVENTS)
       VideoEvents.Add(scan_y,LINECYCLES,'F',io_src_b); 
 #endif
-#if defined(SS_STF)
+#if defined(SS_STF_LINEWID)
       if(ST_TYPE!=STE)
       {
         TRACE_LOG("STF write %X to %X\n",io_src_b,addr);
@@ -2673,7 +2696,7 @@ rasterline to allow horizontal fine-scrolling.
 #if defined(SS_SHIFTER_EVENTS)
       VideoEvents.Add(scan_y,LINECYCLES,(addr==0xff8264)?'h':'H',io_src_b); 
 #endif
-#if defined(SS_STF)
+#if defined(SS_STF_HSCROLL)
       if(ST_TYPE!=STE) 
       {
 //        TRACE_LOG("STF write %X to %X\n",io_src_b,addr); //ST-CNX
@@ -3244,7 +3267,7 @@ void TShifter::SetSyncMode(BYTE NewSync) {
 #endif
       WAKE_UP_STATE==2) ? 56+2 :
 #endif
-      54+2;
+      54+2   -2; // 54??
     if(CyclesIn<=limit512)
       CurrentScanline.Cycles=scanline_time_in_cpu_cycles[shifter_freq_idx];
     if(FetchingLine())

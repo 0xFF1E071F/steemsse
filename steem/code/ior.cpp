@@ -529,7 +529,7 @@ Receiver Data Register is retained.
       bool Illegal=false;
       ior_byte=JoyReadSTEAddress(addr,&Illegal);
       if (Illegal
-#if defined(SS_STF)
+#if defined(SS_STF_PADDLES)
         || ST_TYPE!=STE //  Ultimate Arena, thx Petari
 #endif
         )
@@ -568,7 +568,7 @@ Receiver Data Register is retained.
 
     case 0xff8900:    
       if(addr>0xff893f
-#if defined(SS_STF)
+#if defined(SS_STF_DMA)
         ||(ST_TYPE!=STE)
 #endif
         )
@@ -1580,7 +1580,7 @@ FF8240 - FF827F   palette, res
 WORD ASMCALL io_read_w(MEM_ADDRESS addr)
 {
 
-#if defined(STEVEN_SEAGAL) && defined(SS_MMU_WAKE_UP_IOR_HACK)
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU_WAKE_UP_IOR_HACK)//no
 
   WORD return_value;
   int CyclesIn=LINECYCLES;
@@ -1612,7 +1612,16 @@ WORD ASMCALL io_read_w(MEM_ADDRESS addr)
   if (addr>=0xff8240 && addr<0xff8260){  //palette
     DEBUG_CHECK_READ_IO_W(addr);
     int n=addr-0xff8240;n/=2;
+#if defined(SS_SHIFTER_PALETTE_NOISE)
+    WORD palette=STpal[n];
+#if defined(SS_STF)
+    if(ST_TYPE!=STE)
+      palette|=(0x888)&(rand()); // fixes UMD8730 STF
+#endif
+    return palette;
+#else
     return STpal[n];
+#endif
   }else{
     io_word_access=true;
     WORD x=WORD(io_read_b(addr) << 8);

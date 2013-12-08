@@ -266,9 +266,8 @@ TODO?
   if(hPasti && pasti_active
 #if defined(SS_PASTI_ONLY_STX)
     && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3
-   // ||addr!=0xff8605||MCR&BIT_3||MCR&BIT_4
 #if defined(SS_PASTI_ONLY_STX_HD)
-   || (MCR&BIT_3)
+    || (MCR&BIT_3) // hard disk handling by pasti
 #endif
     )
 #endif        
@@ -575,7 +574,7 @@ void TDma::UpdateRegs(bool trace_them) {
 #if defined(SS_PASTI_ONLY_STX) //all or nothing?
     && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3
 #if defined(SS_PASTI_ONLY_STX_HD)
-   || (MCR&BIT_3)
+    || (MCR&BIT_3) // hard disk handling by pasti
 #endif
     )
 #endif      
@@ -794,7 +793,7 @@ void TDma::TransferBytes() {
 #if defined(SS_PASTI_ONLY_STX)
     &&(!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
 #if defined(SS_PASTI_ONLY_STX_HD)
-   || (MCR&BIT_3)
+    || (MCR&BIT_3) // hard disk handling by pasti
 #endif
 #endif        
       )  
