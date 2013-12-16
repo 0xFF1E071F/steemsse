@@ -977,6 +977,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 211:
           if (HIWORD(wPar)==CBN_SELENDOK)
           {
+            BYTE old_st_type=ST_TYPE;//3.5.5
             ST_TYPE=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
             TRACE_LOG("Option ST type = %d\n",ST_TYPE);
             SwitchSTType(ST_TYPE);
@@ -1044,8 +1045,14 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               This->NewMonitorSel=1; // preselect monochrome (v3.5.4)
               HD6301EMU_ON=false; // v3.5.5
               HardDiskMan.DisableHardDrives=false; // v3.5.5
-              HardDiskMan.update_mount();
+
             }
+            else if(old_st_type==MEGASTF) //3.6.0: go colour, no HD by default
+            {
+              This->NewMonitorSel=0;
+              HardDiskMan.DisableHardDrives=true;
+            }
+              HardDiskMan.update_mount();
 #endif
           }
 	  break;
