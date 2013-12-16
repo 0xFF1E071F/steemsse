@@ -459,7 +459,12 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
 
     }//right
 
+#if SSE_VERSION>354
+    (*source_p)++;// don't zero! fixes mute when recording
+#else
     *(*source_p)++=VOLTAGE_FP(VOLTAGE_ZERO_LEVEL);
+#endif
+
     SINE_ONLY( t++ );
     if(*lp_dma_sound_channel<*lp_max_dma_sound_channel) 
       *lp_dma_sound_channel+=2;
