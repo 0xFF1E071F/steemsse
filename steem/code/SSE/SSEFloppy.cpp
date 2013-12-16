@@ -880,6 +880,19 @@ Total track                     6250        6250        6256
    
 */
 
+
+TSF314::TSF314() {
+#if defined(SS_DRIVE_SOUND)
+  //TRACE("null %d sound buffer pointers\n",NSOUNDS);
+  for(int i=0;i<NSOUNDS;i++)
+    Sound_Buffer[i]=NULL;
+#if defined(SS_DRIVE_SOUND_VOLUME)
+  Sound_Volume=0; //changed by option
+#endif
+#endif
+}
+
+
 bool TSF314::Adat() { // accurate disk access times
   return (!floppy_instant_sector_access
 #if USE_PASTI
@@ -1050,6 +1063,203 @@ WORD TSF314::TrackGap() {
   return PostIndexGap()+PreIndexGap();
 }
 
+
+#if defined(SS_DRIVE_SOUND)
+/*
+    This is where we emulate the floppy drive sounds. v3.6
+    DirectSound makes it rather easy, you just load your samples
+    in a secondary buffer and play it as needed, one shot or loop,
+    the mixing is done by the system.
+    Each drive can have its own soundset.
+    In practice we'll use only drive 0.
+*/
+
+#include "../../../3rdparty/various/sound.h" //struct TWavFileFormat
+
+/*
+Those samples come from UAE, and should be replaced with samples
+of an actual Atari drive.
+
+drive_seek:  we added this one, it's just some buzz
+drive_spinnd.wav seems the same as drive_spin.wav
+
+*/
+
+char* drive_sound_wav_files[]={ "drive_startup.wav","drive_spin.wav",
+"drive_click.wav","drive_seek.wav" };
+
+#if defined(SS_DRIVE_SOUND_VOLUME)
+
+void TSF314::Sound_ChangeVolume() {
+/*  Same volume for each buffer
+*/
+   for(int i=0;i<NSOUNDS;i++)
+   {
+     if(Sound_Buffer[i])
+       Sound_Buffer[i]->SetVolume(Sound_Volume);
+   }
+}
+
+#endif
+
+void TSF314::Sound_CheckCommand(BYTE cr) {
+/*  Called at each WD1772 command.
+    If motor wasn't on we play the startup sound.
+    Start a buzz loop when we're seeking across more than one track.
+    This is certainly not accurate but it does sound like typical
+    floppy drive work.
+*/
+
+  if(!(fdc_str&0x80))
+  {
+    if(Sound_Buffer[START])
+      Sound_Buffer[START]->Play(0,0,0);
+  }
+
+  if(
+    (  (cr&(BIT_7+BIT_6+BIT_5+BIT_4))==0x00 && Track()>1 // RESTORE
+    || (cr&(BIT_7+BIT_6+BIT_5+BIT_4))==0x10 &&abs(Track()-fdc_dr)>1  ) // SEEK
+    )
+  {
+    //TRACE("start seek loop from %d to %d\n",Track(),fdc_dr);
+    if(FloppyDrive[DRIVE].Empty())
+      ; // doesn't sound right
+    else if(Sound_Buffer[SEEK])
+      Sound_Buffer[SEEK]->Play(0,0,DSBPLAY_LOOPING);
+  }
+}
+
+
+void TSF314::Sound_CheckIrq() {
+/*  Called at the end of each FDC command (native, pasti, caps).
+    Stop SEEK loop.
+    Emit a click noise if we were effectively seeking.
+*/
+  if(Sound_Buffer[SEEK])
+    Sound_Buffer[SEEK]->Stop();
+
+  if(WD1772.CommandType()==1 && TrackAtCommand!=Track() && Sound_Buffer[STEP])
+  {
+    DWORD dwStatus ;
+    Sound_Buffer[STEP]->GetStatus(&dwStatus);
+    if( (dwStatus&DSBSTATUS_PLAYING) )
+      Sound_Buffer[STEP]->Stop();
+    Sound_Buffer[STEP]->SetCurrentPosition(0);
+    Sound_Buffer[STEP]->Play(0,0,0);
+  }
+}
+
+
+void TSF314::Sound_CheckMotor() {
+/*  Called at each emu VBL, start or stop playing motor sound loop if needed.
+    For the moment we make no difference between empty drive (rare) or not.
+*/
+  if(!Sound_Buffer[MOTOR])
+    return;
+
+  DWORD dwStatus ;
+  Sound_Buffer[MOTOR]->GetStatus(&dwStatus);
+
+  Dma.UpdateRegs();//overkill
+
+  bool motor_on= (fdc_str&0x80);//simplification TODO?
+  if(SSE_DRIVE_SOUND && motor_on && !(dwStatus&DSBSTATUS_PLAYING))
+    Sound_Buffer[MOTOR]->Play(0,0,DSBPLAY_LOOPING); // start motor loop
+  else if((!SSE_DRIVE_SOUND||!motor_on) && (dwStatus&DSBSTATUS_PLAYING))
+    Sound_Buffer[MOTOR]->Stop();
+}
+
+
+void TSF314::Sound_LoadSamples(IDirectSound *DSObj,DSBUFFERDESC *dsbd,WAVEFORMATEX *wfx) {
+/*  Called from init_sound.cpp's DSCreateSoundBuf().
+    We load each sample in its own secondary buffer, each time, which doesn't 
+    seem optimal, but saves memory.
+*/
+
+  //TRACE("TSF314::Sound_LoadSamples\n");
+  HRESULT Ret;
+  TWavFileFormat WavFileFormat;
+  
+  FILE *fp;
+  EasyStr path=GetEXEDir();
+  path+=DRIVE_SOUND_DIRECTORY;
+  path+="\\";
+  EasyStr pathplusfile;
+  for(int i=0;i<NSOUNDS;i++)
+  {
+    pathplusfile=path;
+    pathplusfile+=drive_sound_wav_files[i];
+    fp=fopen(pathplusfile.Text,"rb"); //rb!
+    if(fp)
+    {
+      fread(&WavFileFormat,sizeof(TWavFileFormat),1,fp);
+      wfx->wFormatTag=WAVE_FORMAT_PCM;
+      wfx->nChannels=WavFileFormat.nChannels;
+      wfx->nSamplesPerSec=WavFileFormat.nSamplesPerSec;
+      wfx->wBitsPerSample=WavFileFormat.wBitsPerSample;
+      wfx->nBlockAlign=wfx->nChannels*wfx->wBitsPerSample/8;
+      wfx->nAvgBytesPerSec=WavFileFormat.nAvgBytesPerSec;    //wfx.nSamplesPerSec*wfx.nBlockAlign;
+      wfx->cbSize=0;
+      dsbd->dwFlags|=DSBCAPS_STATIC ;
+      dsbd->dwBufferBytes=WavFileFormat.length;
+      dsbd->lpwfxFormat=wfx;
+      Ret=DSObj->CreateSoundBuffer(dsbd,&Sound_Buffer[i],NULL);
+      if(Ret==DS_OK)
+      {
+        LPVOID lpvAudioPtr1;
+        DWORD dwAudioBytes1;
+        Ret=Sound_Buffer[i]->Lock(0,0,&lpvAudioPtr1,&dwAudioBytes1,NULL,0,DSBLOCK_ENTIREBUFFER );
+        if(Ret==DS_OK)
+        {
+          fread(lpvAudioPtr1,1,dwAudioBytes1,fp);
+          //TRACE("load sample %s\n",pathplusfile.Text);
+        }
+        Ret=Sound_Buffer[i]->Unlock(lpvAudioPtr1,dwAudioBytes1,NULL,0);
+      }
+      fclose(fp);
+    }
+  }//nxt
+#if defined(SS_DRIVE_SOUND_VOLUME)
+  Sound_ChangeVolume();
+#endif
+}
+
+
+void TSF314::Sound_ReleaseBuffers() {
+/* Called from init_sound.cpp's  DSReleaseAllBuffers(HRESULT Ret=DS_OK)
+*/
+  //TRACE("TSF314::Sound_ReleaseBuffers()\n");
+  HRESULT Ret1,Ret2;
+  for(int i=0;i<NSOUNDS;i++)
+  {
+    if(Sound_Buffer[i])
+    {
+      Ret1=Sound_Buffer[i]->Stop();
+      Ret2=Sound_Buffer[i]->Release();
+      Sound_Buffer[i]=NULL;
+      //TRACE("Release Buffer %d: %d %d\n",i,Ret1,Ret2);
+    }
+  }
+}
+
+
+void TSF314::Sound_StopBuffers() {
+  //TRACE("TSF314::Sound_StopBuffers()\n");
+  HRESULT Ret1;
+  for(int i=0;i<NSOUNDS;i++)
+  {
+    if(Sound_Buffer[i])
+    {
+      Ret1=Sound_Buffer[i]->Stop();
+      //TRACE("Stop Buffer %d: %d\n",i,Ret1);
+    }
+  }
+}
+
+
+#endif//sound
+
+
 #endif//drive
 
 
@@ -1173,6 +1383,16 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
       BYTE drive_char= (psg_reg[PSGR_PORT_A]&6)==6? '?' : 'A'+DRIVE;
       TRACE_LOG("FDC HBL %d CR $%2X drive %c side %d TR %d SR %d DR %d\n",hbl_count,io_src_b,drive_char,floppy_current_side(),fdc_tr,fdc_sr,fdc_dr);
 #endif
+
+#if defined(SS_DRIVE_SOUND)
+      if(SSE_DRIVE_SOUND)
+      {
+        Dma.UpdateRegs();
+        SF314[drive].TrackAtCommand=SF314[drive].Track();
+        SF314[0].Sound_CheckCommand(io_src_b);
+      }
+#endif
+
       bool can_send=true; // are we in Steem's native emu?
 #if defined(SS_IPF)
       can_send=can_send&&!Caps.IsIpf(drive);
@@ -1692,6 +1912,10 @@ void TCaps::CallbackIRQ(PCAPSFDC pc, DWORD lineout) {
   ASSERT(pc==&Caps.WD1772);
 #if defined(SS_DEBUG)
   if(TRACE_ENABLED) Dma.UpdateRegs(true);
+#endif
+#if defined(SS_DRIVE_SOUND)
+  if(SSE_DRIVE_SOUND)
+    ::SF314[0].Sound_CheckIrq();
 #endif
   mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,!(lineout&CAPSFDC_LO_INTRQ));
 #if !defined(SS_OSD_DRIVE_LED3)

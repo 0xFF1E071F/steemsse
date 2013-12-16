@@ -1401,10 +1401,19 @@ void TOptionBox::CreateSoundPage()
   Win=CreateWindow(TRACKBAR_CLASS,"",WS_CHILD | WS_TABSTOP |
                     DisableIfMute | TBS_HORZ,
                     page_l+15+Wid,y,(page_w-10-(Wid2+5))-(Wid+15),27,Handle,(HMENU)7100,HInstance,NULL);
+#if defined(SS_SOUND_VOL_LOGARITHMIC) // more intuitive setting
+  SendMessage(Win,TBM_SETRANGE,0,MAKELPARAM(0,100));
+  int db=MaxVolume;
+  int position= pow(10, log10(101)*(db + 10000)/10000 )-1 ;
+  SendMessage(Win,TBM_SETPOS,1,position);
+  SendMessage(Win,TBM_SETLINESIZE,0,1);
+  SendMessage(Win,TBM_SETPAGESIZE,0,10);
+#else
   SendMessage(Win,TBM_SETRANGE,0,MAKELPARAM(0,9000));
   SendMessage(Win,TBM_SETPOS,1,MaxVolume+9000);
   SendMessage(Win,TBM_SETLINESIZE,0,100);
   SendMessage(Win,TBM_SETPAGESIZE,0,1000);
+#endif
   y+=35;
 
   Wid=GetTextSize(Font,T("Frequency")).Width;
@@ -2277,6 +2286,33 @@ Windows 2000	5.0
   y+=LineHeight;
 #endif
 
+#if defined(SS_DRIVE_SOUND)
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+  EasyStr path=GetEXEDir();
+  path+=DRIVE_SOUND_DIRECTORY; // we suppose the sounds are in it!
+  if(!Exists(path.Text))
+  {
+    SSE_DRIVE_SOUND=0;
+    mask|=WS_DISABLED;
+  }
+  Wid=GetCheckBoxSize(Font,T("Drive Sound")).Width;
+  Win=CreateWindow("Button",T("Drive Sound"),mask,
+    page_l,y,Wid,25,Handle,(HMENU)7310,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,SSE_DRIVE_SOUND,0);
+  ToolAddWindow(ToolTip,Win,
+    T("Those aren't samples of an Atari drive unfortunately, for the moment most samples were borrowed from UAE!"));
+  mask&=~BS_CHECKBOX;
+  Win=CreateWindow(TRACKBAR_CLASS,"",mask | TBS_HORZ,
+                    page_l+15+Wid,y,150,20,Handle,(HMENU)7311,HInstance,NULL);
+  SendMessage(Win,TBM_SETRANGE,0,MAKELPARAM(0,100));
+  int db=SF314[0].Sound_Volume;
+  int position= pow(10, log10(101)*(db + 10000)/10000 )-1 ;
+  SendMessage(Win,TBM_SETPOS,1,position);
+  SendMessage(Win,TBM_SETLINESIZE,0,1);
+  SendMessage(Win,TBM_SETPAGESIZE,0,10);
+  y+=LineHeight;
+#endif
+
 #if defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
   Wid=GetCheckBoxSize(Font,T("Use SDL")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
@@ -2289,7 +2325,7 @@ Windows 2000	5.0
     T("BETA TESTS - BUGGY"));
   y+=LineHeight;
 #endif
-
+  
   CreateWindow("Button",T("Perform cold reset now"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
                   page_l,y,page_w,23,Handle,(HMENU)8601,HInstance,NULL);
 

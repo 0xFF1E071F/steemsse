@@ -1,6 +1,9 @@
 #if defined(SS_STF)
 
-char st_model_name[SS_STF_ST_MODELS][sizeof("Mega ST4")]={"STE","STF","Mega ST4"};
+//char st_model_name[SS_STF_ST_MODELS][sizeof("Mega ST4")]={"STE","STF","Mega ST4"};
+//char st_model_name[SS_STF_ST_MODELS][]={"STE","STF","Mega ST4"};
+//char* arr[] = { "foo", "bar" };
+char* st_model_name[]={"STE","STF","Mega ST4"};
 
 int SwitchSTType(int new_type) {
 

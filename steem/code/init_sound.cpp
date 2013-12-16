@@ -8,7 +8,6 @@ for output.
 /*  SS 'init' is a bit of a misnomer as it's used during emulation
 */
 
-
 #if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: init_sound.cpp")
 #endif
@@ -357,11 +356,17 @@ position, but the current write position cannot be changed.
   return s_time;
 }
 //---------------------------------------------------------------------------
-HRESULT DSReleaseAllBuffers(HRESULT Ret=DS_OK)
+HRESULT DSReleaseAllBuffers(HRESULT Ret=DS_OK) //SS what is this horror?
 {
+  
   if (SoundBuf && sound_write_primary==0){
     SoundBuf->Stop();SoundBuf->Release();
   }
+
+#if defined(SS_DRIVE_SOUND)
+  SF314[0].Sound_ReleaseBuffers();
+#endif
+
   if (PrimaryBuf){
     if (sound_write_primary) PrimaryBuf->Stop();
     PrimaryBuf->Release();
@@ -535,6 +540,12 @@ HRESULT DSCreateSoundBuf()
   }else{
     // Successfully created a buffer at DS_SetFormat_freq so make output match it
     if (DS_GetFormat_Wrong) sound_freq=DS_SetFormat_freq;
+
+#if defined(SS_DRIVE_SOUND)
+    if(SSE_DRIVE_SOUND)
+      SF314[0].Sound_LoadSamples(DSObj,&dsbd,&wfx);
+#endif
+
   }
 
   DSBCAPS caps={sizeof(DSBCAPS)};

@@ -137,6 +137,7 @@ extern TDma Dma;
 */
 
 struct TSF314 {
+  TSF314();
   enum {RPM=DRIVE_RPM,MAX_CYL=DRIVE_MAX_CYL,TRACK_BYTES=DRIVE_BYTES_ROTATION};
   bool Adat(); // accurate disk access times
   WORD BytePosition();
@@ -166,6 +167,23 @@ struct TSF314 {
   BYTE MotorOn;
   DWORD HblOfMotorOn;
 #endif
+
+#if defined(SS_DRIVE_SOUND)
+  enum {START,MOTOR,STEP,SEEK,NSOUNDS} ;
+  BYTE TrackAtCommand;
+  IDirectSoundBuffer *Sound_Buffer[NSOUNDS]; // fixed array
+  void Sound_LoadSamples(IDirectSound *DSObj,DSBUFFERDESC *dsbd,WAVEFORMATEX *wfx);
+  void Sound_ReleaseBuffers();
+  void Sound_StopBuffers();
+  void Sound_CheckCommand(BYTE cr);
+  void Sound_CheckIrq();
+  void Sound_CheckMotor();
+#if defined(SS_DRIVE_SOUND_VOLUME)
+  DWORD Sound_Volume;
+  void Sound_ChangeVolume();
+#endif
+#endif
+
 };
 
 extern TSF314 SF314[2]; // 2 double-sided drives, wow!

@@ -167,7 +167,6 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 #if defined(SS_DRIVE_BYTES_PER_ROTATION)
 #define DRIVE_BYTES_ROTATION (6250+20) // could be true though
-
 #else
 #define DRIVE_BYTES_ROTATION (8000) // Steem 3.2
 #endif
@@ -175,6 +174,10 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #if defined(SS_DRIVE_RW_SECTOR_TIMING2)
 #define FDC_SECTOR_GAP_BEFORE_IRQ_9_10 (3+(SSE_HACKS_ON?28:0)) //CRC + hack (FDCTNF by Petari)
 #define FDC_SECTOR_GAP_BEFORE_IRQ_11 (3)
+#endif
+
+#if defined(SS_DRIVE_SOUND)
+#define DRIVE_SOUND_DIRECTORY "\\DriveSound"
 #endif
 
 #endif

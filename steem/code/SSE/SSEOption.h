@@ -39,6 +39,7 @@ struct TOption {
   unsigned int WinVSync:1;
   unsigned int TripleBuffer:1;
   unsigned int StatusBarGameName:1;
+  unsigned int DriveSound:1;
 #ifdef __cplusplus // visible only to C++ objects
   TOption();
   void Init();
@@ -75,6 +76,7 @@ extern struct TOption SSEOption;
 #define SSE_STATUS_BAR_GAME_NAME (SSEOption.StatusBarGameName)
 #define SSE_WIN_VSYNC (SSEOption.WinVSync)
 #define SSE_3BUFFER (SSEOption.TripleBuffer)
+#define SSE_DRIVE_SOUND (SSEOption.DriveSound)
 #else//!defined(SS_SSE_OPTION_STRUCT)
 
 #endif//#if defined(SS_SSE_OPTION_STRUCT)
