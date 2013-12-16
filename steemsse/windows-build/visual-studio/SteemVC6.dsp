@@ -210,6 +210,8 @@ DEP_CPP_EMU_C=\
 	"..\..\3rdparty\SDL-WIN\include\SDL_timer.h"\
 	"..\..\3rdparty\SDL-WIN\include\SDL_version.h"\
 	"..\..\3rdparty\SDL-WIN\include\SDL_video.h"\
+	"..\..\3rdparty\various\neochrome.h"\
+	"..\..\3rdparty\various\sound.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\circularbuffer.h"\
 	"..\..\include\clarity.h"\
@@ -223,6 +225,12 @@ DEP_CPP_EMU_C=\
 	"..\..\include\mymisc.h"\
 	"..\..\include\notwin_mymisc.h"\
 	"..\..\include\portio.h"\
+	"..\..\include\x\hxc.h"\
+	"..\..\include\x\hxc_alert.h"\
+	"..\..\include\x\hxc_fileselect.h"\
+	"..\..\include\x\hxc_popup.h"\
+	"..\..\include\x\hxc_popuphints.h"\
+	"..\..\include\x\icongroup.h"\
 	"..\..\include\x\x_mymisc.h"\
 	"..\..\steem\code\acc.decla.h"\
 	"..\..\steem\code\acc.h"\
@@ -458,6 +466,7 @@ DEP_CPP_MAIN_=\
 	"..\..\3rdparty\SDL-WIN\include\SDL_video.h"\
 	"..\..\3rdparty\UnRARDLL\unrar.h"\
 	"..\..\3rdparty\unrarlib\unrarlib\unrarlib.h"\
+	"..\..\3rdparty\various\neochrome.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\choosefolder.h"\
 	"..\..\include\circularbuffer.h"\
@@ -617,6 +626,7 @@ DEP_CPP_MAIN_=\
 	"..\..\Steem\code\SSE\SSEFloppy.h"\
 	"..\..\steem\code\SSE\SSEInterrupt.h"\
 	"..\..\steem\code\SSE\SSEM68000.h"\
+	"..\..\steem\code\SSE\SSEMMU.h"\
 	"..\..\steem\code\SSE\SSEOption.h"\
 	"..\..\steem\code\SSE\SSEParameters.h"\
 	"..\..\steem\code\SSE\SSESDL.h"\
@@ -2123,6 +2133,18 @@ SOURCE="..\..\3rdparty\SDL-WIN\lib\x86\SDLmain.lib"
 
 !ENDIF 
 
+# End Source File
+# End Group
+# Begin Group "various"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\3rdparty\various\neochrome.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\3rdparty\various\sound.h
 # End Source File
 # End Group
 # End Group
@@ -4917,8 +4939,14 @@ SOURCE=..\..\steem\code\SSE\SSECpu.h
 
 SOURCE=..\..\Steem\code\SSE\SSEDebug.cpp
 DEP_CPP_SSEDE=\
+	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
+	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEMMU.h"\
+	"..\..\steem\code\SSE\SSEOption.h"\
 	"..\..\steem\code\SSE\SSEParameters.h"\
+	"..\..\steem\code\SSE\SSESTF.h"\
 	
 
 !IF  "$(CFG)" == "Steem - Win32 Debug"
@@ -5021,6 +5049,7 @@ DEP_CPP_SSEMM=\
 	"..\..\steem\code\SSE\SSEDecla.h"\
 	"..\..\steem\code\SSE\SSEMMU.h"\
 	"..\..\steem\code\SSE\SSEOption.h"\
+	"..\..\steem\code\SSE\SSEParameters.h"\
 	"..\..\steem\code\SSE\SSESTF.h"\
 	
 # End Source File

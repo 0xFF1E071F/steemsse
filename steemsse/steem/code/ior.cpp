@@ -1613,10 +1613,12 @@ WORD ASMCALL io_read_w(MEM_ADDRESS addr)
     DEBUG_CHECK_READ_IO_W(addr);
     int n=addr-0xff8240;n/=2;
 #if defined(SS_SHIFTER_PALETTE_NOISE)
+/*  
+*/
     WORD palette=STpal[n];
 #if defined(SS_STF)
     if(ST_TYPE!=STE)
-      palette|=(0x888)&(rand()); // fixes UMD8730 STF
+      palette|=(0x888)&(rand()); // fixes UMD8730 STF, maybe Overscan Demos STF
 #endif
     return palette;
 #else

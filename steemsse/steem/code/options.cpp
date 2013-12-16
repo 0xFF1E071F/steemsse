@@ -977,7 +977,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 211:
           if (HIWORD(wPar)==CBN_SELENDOK)
           {
-            BYTE old_st_type=ST_TYPE;//3.5.5
+            BYTE old_st_type=ST_TYPE;//v3.6.0
             ST_TYPE=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
             TRACE_LOG("Option ST type = %d\n",ST_TYPE);
             SwitchSTType(ST_TYPE);
@@ -986,9 +986,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #endif
 #if defined(SS_VAR_OPTIONS_REFRESH) &&defined(WIN32)
             OptionBox.SSEUpdateIfVisible(); 
-#endif
-#if defined(SS_VAR_STATUS_STRING)
-//            GUIRefreshStatusBar();
 #endif
 #if defined(SS_STF_MATCH_TOS)
             // preselect a compatible TOS 
@@ -1043,11 +1040,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             if(ST_TYPE==MEGASTF)
             {
               This->NewMonitorSel=1; // preselect monochrome (v3.5.4)
-              HD6301EMU_ON=false; // v3.5.5
-              HardDiskMan.DisableHardDrives=false; // v3.5.5
+              HD6301EMU_ON=false; // v3.6.0
+              HardDiskMan.DisableHardDrives=false; // v3.6.0
 
             }
-            else if(old_st_type==MEGASTF) //3.6.0: go colour, no HD by default
+            else if(old_st_type==MEGASTF) //v3.6.0: go colour, no HD by default)
             {
               This->NewMonitorSel=0;
               HardDiskMan.DisableHardDrives=true;
@@ -1065,9 +1062,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             TRACE_LOG("Option WU = %d\n",WAKE_UP_STATE);
 #if defined(SS_SHIFTER_UNSTABLE)
             Shifter.Preload=0; // reset the thing!
-#endif
-#if defined(SS_VAR_STATUS_STRING)
-//            GUIRefreshStatusBar();
 #endif
           }
           break;
@@ -1144,9 +1138,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               if (ResChangeResize) StemWinResize();
             }
           }
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING)
-//          GUIRefreshStatusBar();
-#endif
           break;
         case 400:
           if (HIWORD(wPar)==BN_CLICKED){
@@ -1661,9 +1652,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             TRACE_LOG("Option ADAT %d\n",!floppy_instant_sector_access);
             if(DiskMan.Handle)
               DiskMan.RefreshSnails();
-#if defined(SS_VAR_STATUS_STRING_ADAT)
-//            GUIRefreshStatusBar();
-#endif
           }
           break; 
 #endif
@@ -1674,7 +1662,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SSE_STATUS_BAR=!SSE_STATUS_BAR;
             SendMessage(HWND(lPar),BM_SETCHECK,SSE_STATUS_BAR,0);
             TRACE_LOG("Option status bar %d\n",SSE_STATUS_BAR);
-//            GUIRefreshStatusBar();
           }
           break; 
 #endif
@@ -1694,8 +1681,20 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if (HIWORD(wPar)==BN_CLICKED){
             SSE_STATUS_BAR_GAME_NAME=!SSE_STATUS_BAR_GAME_NAME;
             SendMessage(HWND(lPar),BM_SETCHECK,SSE_STATUS_BAR_GAME_NAME,0);
-            TRACE_LOG("Option status bar game name %d\n",OSD_DRIVE_INFO);
-//            GUIRefreshStatusBar();
+            TRACE_LOG("Option status bar game name %d\n",SSE_STATUS_BAR_GAME_NAME);
+          }
+          break;
+#endif
+
+#if defined(SS_DRIVE_SOUND)
+/*  The option can be changed while running but buffers are built only when
+    emulation is starting.
+*/
+        case 7310: //  option Drive Sound  - also see 7311 for volume slider
+          if (HIWORD(wPar)==BN_CLICKED){
+            SSE_DRIVE_SOUND=!SSE_DRIVE_SOUND;
+            SendMessage(HWND(lPar),BM_SETCHECK,SSE_DRIVE_SOUND,0);
+            TRACE_LOG("Option Drive Sound %d\n",SSE_DRIVE_SOUND);
           }
           break;
 #endif
@@ -2364,9 +2363,31 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
         }
         case 7100:
+
+#if defined(SS_SOUND_VOL_LOGARITHMIC) // more intuitive setting
+          {
+            int position=SendMessage(HWND(lPar),TBM_GETPOS,0,0);
+            int db =-( 10000 - 10000 * log10(position+1) / log10(101));
+            MaxVolume=db;
+          }
+#else
           MaxVolume=SendMessage(HWND(lPar),TBM_GETPOS,0,0)-9000;
+#endif
           SoundChangeVolume();
           break;
+
+#if defined(SS_DRIVE_SOUND)
+        case 7311:
+          {
+            int position=SendMessage(HWND(lPar),TBM_GETPOS,0,0);
+            int db =-( 10000 - 10000 * log10(position+1) / log10(101));
+            //TRACE("%d %d\n",position,db);
+            SF314[0].Sound_Volume=db;
+            SF314[0].Sound_ChangeVolume();
+          }
+          break;
+#endif
+
         case 6001:
           MIDI_out_volume=(WORD)SendMessage(HWND(lPar),TBM_GETPOS,0,0);
           if (runstate==RUNSTATE_RUNNING){

@@ -1205,6 +1205,14 @@ void event_vbl_interrupt() //SS misleading name?
   IKBD_VBL();    // Handle ST joysticks and mouse
   RS232_VBL();   // Update all flags, check for the phone ringing
   Sound_VBL();   // Write a VBLs worth + a bit of samples to the sound card
+
+#if defined(SS_DRIVE_SOUND)
+/*  We don't check the option here because we may have to suddenly stop
+    motor sound loop.
+*/
+  SF314[0].Sound_CheckMotor(); 
+#endif
+
   dma_sound_channel_buf_last_write_t=0;  //need to maintain this even if sound off
   dma_sound_on_this_screen=(dma_sound_control & BIT_0) || dma_sound_internal_buf_len;
 

@@ -804,7 +804,25 @@ Steem SSE will reset auto.sts and quit\nSorry!",
   if(Version>=45) //3.5.2
   {
 #if defined(SS_DRIVE)
+    if(Version>=48) // 3.6.0
+    {
+
+    }
+
+#if defined(SS_DRIVE_SOUND)
+    TSF314 SF314Copy=SF314[0];
+#endif
+
     ReadWriteStruct(SF314);
+
+#if defined(SS_DRIVE_SOUND) // avoid crash, restore volume
+#if defined(SS_DRIVE_SOUND_VOLUME)
+    SF314[0].Sound_Volume=SF314Copy.Sound_Volume;
+#endif
+    for(int i=0;i<TSF314::NSOUNDS;i++)
+      SF314[0].Sound_Buffer[i]=SF314Copy.Sound_Buffer[i];
+#endif
+
 #endif
   }
 

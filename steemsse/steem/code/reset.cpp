@@ -216,7 +216,6 @@ void power_on()
 #if defined(SS_VID_3BUFFER_WIN)
   Disp.VSyncTiming=0;
 #endif
-
 }
 //---------------------------------------------------------------------------
 #define LOGSECTION LOGSECTION_ALWAYS
@@ -374,9 +373,14 @@ void reset_peripherals(bool Cold)
   M68000.NextIrFetched=false;
 #endif
 
-  if (runstate==RUNSTATE_RUNNING
-///    &&!Cold
-    ) prepare_event_again();
+  if (runstate==RUNSTATE_RUNNING) 
+    prepare_event_again();
+
+#if defined(SS_DRIVE_SOUND)
+  if(Cold)
+    SF314[0].Sound_StopBuffers();
+#endif
+
 }
 #undef LOGSECTION
 //---------------------------------------------------------------------------

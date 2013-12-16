@@ -60,4 +60,7 @@ void TOsdControl::StartScroller(EasyStr text) {
 
 #endif
 
+
+
+
 #endif//#if defined(STEVEN_SEAGAL)

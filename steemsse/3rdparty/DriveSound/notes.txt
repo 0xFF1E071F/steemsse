@@ -1,0 +1,14 @@
+drive_click.wav
+drive_snatch.wav
+drive_spin.wav
+drive_spinnd.wav
+drive_startup.wav
+
+are part of the WinUAE project
+
+drive_snatch.wav and drive_spinnd.wav aren't used in Steem
+
+drive_seek.wav is another free sample
+
+  If you can please sample some more realistic Atari sounds and upload 
+  them at atari-forum. Please don't rip SainT's samples.

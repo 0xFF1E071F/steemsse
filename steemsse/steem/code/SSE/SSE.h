@@ -95,22 +95,27 @@ and all his silly mods are gone!
 #ifdef SS_BETA 
 
 #if defined(WIN32)
-#define SSE_VERSION 355
-#define SSE_VERSION_TXT "3.5.5" 
-#define WINDOW_TITLE "Steem Beta 3.5.5"
+
+#define SSE_VERSION 360
+#define SSE_VERSION 360 
+#define SSE_VERSION_TXT "3.6.0" 
+#define WINDOW_TITLE "Steem Beta 3.6.0"
+
 #elif defined(UNIX)
+
 #define SSE_VERSION 354
 #define SSE_VERSION_TXT "3.5.4" 
 #define WINDOW_TITLE "Steem Beta 3.5.4"
+
 #endif
 
 #else // next planned release
 
 #if defined(WIN32)
-#define SSE_VERSION 355
+#define SSE_VERSION 360
 // check snapshot Version (in LoadSave.h); rc\resource.rc
-#define SSE_VERSION_TXT "3.5.5" 
-#define WINDOW_TITLE "Steem SSE 3.5.5" //not 'Engine', too long
+#define SSE_VERSION_TXT "3.6.0" 
+#define WINDOW_TITLE "Steem SSE 3.6.0" //not 'Engine', too long
 #elif defined(UNIX)
 #define SSE_VERSION 354
 #define SSE_VERSION_TXT "3.5.4" 
@@ -522,6 +527,10 @@ and all his silly mods are gone!
 #define SS_DRIVE_READ_TRACK_TIMING2
 #define SS_DRIVE_RW_SECTOR_TIMING // start of sector
 #define SS_DRIVE_RW_SECTOR_TIMING2 // end of sector (hack)
+#if SSE_VERSION>=360
+#define SS_DRIVE_SOUND // heavily requested, delivered!
+#define SS_DRIVE_SOUND_VOLUME // logarithmic 
+#endif
 #define SS_DRIVE_SPIN_UP_TIME
 #define SS_DRIVE_SPIN_UP_TIME2 // more precise
 #define SS_DRIVE_WRITE_TRACK_TIMING
@@ -840,10 +849,10 @@ and all his silly mods are gone!
 /////////
 
 #if defined(SS_SDL)
-
-#if SSE_VERSION<360
-#define SS_SDL_DEACTIVATE // support planned in v3.6
-#endif
+// tests - but shouldn't it be a pure SDL build? 
+//#if SSE_VERSION<360
+#define SS_SDL_DEACTIVATE // support planned in v3.6 //nope...
+//#endif
 //#define SS_SDL_KEEP_DDRAW_RUNNING // normally not!
 
 #endif
@@ -956,7 +965,7 @@ and all his silly mods are gone!
 //#define SS_SHIFTER_EVENTS_READ_SDP // also for read SDP
 #define SS_SHIFTER_EVENTS_BYTES // scanline length
 #define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
-//#define SS_SHIFTER_EVENTS_TRICKS // "bordermask"
+#define SS_SHIFTER_EVENTS_TRICKS // "bordermask"
 //#define SS_SHIFTER_IOR_TRACE // specific, not "log"
 //#define SS_SHIFTER_IOW_TRACE // specific, not "log"
 #if !defined(SS_DEBUG_TRACE_IDE)
@@ -997,6 +1006,7 @@ and all his silly mods are gone!
 #endif
 
 #define SS_SOUND_VOL // -6db for PSG chipsound except samples (using DSP)
+#define SS_SOUND_VOL_LOGARITHMIC // more intuitive setting
 #define SS_SOUND_FILTER_STE // same very simple filter as for STF
 
 #ifdef UNIX

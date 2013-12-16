@@ -1422,6 +1422,10 @@ void agenda_fdc_finished(int)
   if(TRACE_ENABLED) 
     Dma.UpdateRegs(true);
 #endif
+#if defined(SS_DRIVE_SOUND)
+  if(SSE_DRIVE_SOUND)
+    SF314[0].Sound_CheckIrq();
+#endif
   log("FDC: Finished command, GPIP bit low.");
   floppy_irq_flag=FLOPPY_IRQ_NOW;
   mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,0); // Sets bit in GPIP low (and it stays low)
@@ -1485,6 +1489,7 @@ issued.
 ->
 Seek works with DR and TR, not DR and disk track.
 */
+
   if(ADAT)
   {
     if(fdc_tr==fdc_dr)
@@ -2392,6 +2397,12 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
       disk_light_off_time=timer+DisableDiskLightAfter;
 #endif
     }
+
+#if defined(SS_DRIVE_SOUND)
+  if(SSE_DRIVE_SOUND)
+    SF314[0].Sound_CheckIrq();
+#endif
+
   }
 
   //SS pasti manages DMA itself, then calls Steem to transfer what it gathered

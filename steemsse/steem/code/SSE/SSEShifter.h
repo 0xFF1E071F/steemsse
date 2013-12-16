@@ -327,8 +327,16 @@ inline int TShifter::FetchingLine() {
     Omega, TCB
 */
 inline bool TShifter::Line508Confusion() {
-  return(PreviousScanline.Cycles==508 && CurrentScanline.Cycles==508 
+  bool rv=(PreviousScanline.Cycles==508 && CurrentScanline.Cycles==508 
     && shifter_freq_at_start_of_vbl==50);
+//  ASSERT(!rv);
+
+//  if(rv) TRACE("508? %d\n",scan_y);
+//  if(rv) REPORT_LINE;
+
+  return rv;
+//  return(PreviousScanline.Cycles==508 && CurrentScanline.Cycles==508 
+  //  && shifter_freq_at_start_of_vbl==50);
 }
 #endif
 
@@ -541,6 +549,10 @@ inline int TShifter::FreqChangeAtCycle(int cycle) {
   // here, we're on the right cycle, or smaller
   int rv=(j<32 && !(shifter_freq_change_time[i]-t))
     ?shifter_freq_change[i]:-1;
+
+//if(scan_y==-26 && cycle==28 && rv==-1)
+  //TRACE("cycle %d t %d i %d j %d shifter_freq_change_time[i] %d shifter_freq_change[i] %d\n",cycle,t,i,j,shifter_freq_change_time[i],shifter_freq_change[i]);
+
   return rv;
 }
 

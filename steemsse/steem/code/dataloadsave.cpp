@@ -764,7 +764,13 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SS_VID_3BUFFER)
     SSE_3BUFFER=pCSF->GetInt("Options","TripleBuffer",SSE_3BUFFER);
 #endif
-
+#if defined(SS_DRIVE_SOUND)
+    SSE_DRIVE_SOUND=pCSF->GetInt("Options","DriveSound",SSE_DRIVE_SOUND);
+#if defined(SS_DRIVE_SOUND_VOLUME)
+    SF314[0].Sound_Volume=pCSF->GetInt("Options","DriveSoundVolume",SF314[0].Sound_Volume);
+    SF314[0].Sound_ChangeVolume();
+#endif
+#endif
 #endif // SS
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS____)
@@ -1134,6 +1140,12 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 #if defined(SS_VID_3BUFFER)
   pCSF->SetStr("Options","TripleBuffer",EasyStr(SSE_3BUFFER));
+#endif
+#if defined(SS_DRIVE_SOUND)
+  pCSF->SetStr("Options","DriveSound",EasyStr(SSE_DRIVE_SOUND));
+#if defined(SS_DRIVE_SOUND_VOLUME)
+  pCSF->SetStr("Options","DriveSoundVolume",EasyStr(SF314[0].Sound_Volume));
+#endif
 #endif
 
 
