@@ -715,6 +715,9 @@ STF2:
 
     ///t=LINECYCLE0+28; //trigger point (works with 26?)
 #if defined(SS_SHIFTER_STATE_MACHINE) // more or less
+
+    ASSERT( !WU_sync_modifier || ST_TYPE!=STE );
+
     t=26+WU_sync_modifier;
 
     if(FreqChangeAtCycle(t)==60 || FreqChangeAtCycle(t+2)==60)
@@ -981,10 +984,9 @@ Panic
 #endif
 #endif
 
-#if defined(SS_SHIFTER_LINE_PLUS_2_POST_TOP_OFF) //v3.5.5
-////ASSERT(!Line508Confusion());
+#if defined(SS_SHIFTER_LINE_PLUS_2_POST_TOP_OFF) //v3.6.0
     if(scan_y==-29) // 1st line after top border removed
-      t+=2+2;  // panic & forest OK
+      t+=2+2;  // panic & forest OK; still just a hack
 #endif
 
 
@@ -2797,9 +2799,11 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 /*  We must compensate the "no shifter_pixel+4" of "left off" to get correct
     palette timings. This is a hack but we must manage various sizes.
     OK: Overscan #6, HighResMode STE
+    bugfix v3.6.0: for STE line +20 there's nothing to compensate! (pcsv62im)
 */
       if(SSE_HACKS_ON && SideBorderSize==VERY_LARGE_BORDER_SIDE 
-        && !left_border && shifter_freq_at_start_of_vbl==50)
+        && shifter_freq_at_start_of_vbl==50
+        && (CurrentScanline.Tricks&TRICK_LINE_PLUS_26))
         cycles_since_hbl+=4;
 #endif
 #endif
@@ -3259,28 +3263,30 @@ void TShifter::SetSyncMode(BYTE NewSync) {
   {
     new_freq=50;
     shifter_freq_idx=0;
-    const int limit512=   // TO CHECK
+/*  This isn't exact science, but the values are compatible with Forest
+    (or we could have wrong 508 cycle lines messing the internal timing for
+    "blank line" ('28' taken for '32').
+*/
+    const int limit512=
 #if defined(SS_STF) && defined (SS_MMU_WAKE_UP)
     (
 #if !defined(SS_MMU_WAKE_UP_STE)
       ST_TYPE!=STE && 
 #endif
-      WAKE_UP_STATE==2) ? 56+2 :
+      //WAKE_UP_STATE==2) ? 56+2 :
+      MMU.WU[WAKE_UP_STATE]==2) ? 56+2 :  // bugfix v3.6.0
 #endif
-      54+2   -2; // 54??
+      54+2 ;
     if(CyclesIn<=limit512)
       CurrentScanline.Cycles=scanline_time_in_cpu_cycles[shifter_freq_idx];
+
     if(FetchingLine())
     {
       if(CyclesIn<=52 && left_border)
-      {
         CurrentScanline.StartCycle=56;
-     ////   CurrentScanline.Cycles=512;
-      }
+
       if(CyclesIn<=372)
         CurrentScanline.EndCycle=376;
-
-
 #if defined(SS_SHIFTER_LEFT_OFF_60HZ)
       if((CurrentScanline.Tricks&TRICK_LINE_PLUS_24)
         && CyclesIn<372 // &WU?
@@ -3306,10 +3312,8 @@ void TShifter::SetSyncMode(BYTE NewSync) {
     if(FetchingLine())
     {
       if(CyclesIn<=52 && left_border) // TO CHECK
-      {
         CurrentScanline.StartCycle=52; 
-      ////  CurrentScanline.Cycles=508;
-      }
+
       if(CyclesIn<=372)
       {
         CurrentScanline.EndCycle=372;
