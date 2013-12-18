@@ -100,6 +100,9 @@ void TOptionBox::CreateMachinePage()
   CBAddString(Win,"512Kb",MAKELONG(MEMCONF_512,MEMCONF_0));
   CBAddString(Win,"1 MB",MAKELONG(MEMCONF_512,MEMCONF_512));
   CBAddString(Win,"2 MB",MAKELONG(MEMCONF_2MB,MEMCONF_0));
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU_256K)
+  CBAddString(Win,"2.5 MB",MAKELONG(MEMCONF_512,MEMCONF_2MB));
+#endif
   CBAddString(Win,"4 MB",MAKELONG(MEMCONF_2MB,MEMCONF_2MB));
   CBAddString(Win,"14 MB",MAKELONG(MEMCONF_7MB,MEMCONF_7MB));
   y+=30;
@@ -192,6 +195,52 @@ void TOptionBox::MachineUpdateIfVisible()
   if (Handle==NULL) return;
   if (GetDlgItem(Handle,8100)==NULL) return;
 
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU_256K) && defined(SS_MMU_2560K) 
+/*  
+
+*/
+  int memconf;
+  long mem_len2;
+
+  if (NewMemConf0<0)
+    mem_len2=mem_len;
+  else 
+  {
+    mem_len2=mmu_bank_length_from_config[NewMemConf0];
+    if(NewMemConf1>=0) 
+      mem_len2+=mmu_bank_length_from_config[NewMemConf1];
+  }
+  
+  switch(mem_len2)//Not smart at all, first we make it work.
+    {
+      case 256*1024:
+        memconf=0;
+        break;
+      case 512*1024:
+        memconf=1;
+        break;
+      case 1024*1024:
+        memconf=2;
+        break;
+      case 2048*1024:
+        memconf=3;
+        break;
+      case 2560*1024:
+        memconf=4;
+        break;
+      case 4096*1024:
+        memconf=5;
+        break;
+      case 14*1024*1024:
+        memconf=6;
+        break;
+      default: 
+        BRK( mem error! );
+        memconf=0;
+    }//sw
+
+#else
+
   int memconf=4;
   if (NewMemConf0<0){
     if (mem_len<1024*1024){
@@ -208,6 +257,8 @@ void TOptionBox::MachineUpdateIfVisible()
   if(mem_len>256*1024)
     memconf++;
 #endif
+
+
   }else{
     if (NewMemConf0==MEMCONF_512) memconf=int((NewMemConf1==MEMCONF_512) ? 1:0); // 1Mb:512Kb
     if (NewMemConf0==MEMCONF_2MB) memconf=int((NewMemConf1==MEMCONF_2MB) ? 3:2); // 4Mb:2Mb
@@ -217,13 +268,9 @@ void TOptionBox::MachineUpdateIfVisible()
       memconf++;
 #endif
   }
-  /*
-#if defined(STEVEN_SEAGAL) && defined(SS_MMU_256K)
-  //TRACE("mem_len %d %d\n",mem_len,mem_len/1024);
-  if(NewMemConf0<0 && mem_len>256*1024)
-    memconf++;
+
 #endif
-    */
+
   SendMessage(GetDlgItem(Handle,8100),CB_SETCURSEL,memconf,0);
 
   int monitor_sel=NewMonitorSel;

@@ -935,6 +935,7 @@ FF8240 - FF827F   palette, res
     /////////////////
 
     case 0xff8000:
+//SS note  mmu_memory_configuration=BYTE((conf0 << 2) | conf1);
       if(addr==0xff8001)
         ior_byte=(mem_len>FOUR_MEGS) ? (BYTE)(MEMCONF_2MB|(MEMCONF_2MB<<2))
                                      : mmu_memory_configuration;

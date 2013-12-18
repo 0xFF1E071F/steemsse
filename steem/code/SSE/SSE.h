@@ -29,6 +29,7 @@ this one.
 timings found by ijor (also author of Pasti).
 -A folder 'SDL-WIN' for future SDL support
 -A folder 'unRARDLL' in '3rdparty' for unrar support
+-A folder 'various' in '3rdparty'
 -Files xxx.decla.h: work in progress
 
 Other mods are in Steem code, inside blocks where STEVEN_SEAGAL is defined.
@@ -97,13 +98,12 @@ and all his silly mods are gone!
 #if defined(WIN32)
 
 #define SSE_VERSION 360
-#define SSE_VERSION 360 
 #define SSE_VERSION_TXT "3.6.0" 
 #define WINDOW_TITLE "Steem Beta 3.6.0"
 
 #elif defined(UNIX)
 
-#define SSE_VERSION 354
+#define SSE_VERSION 354 // but no 355 -> integrate '355' fixes?
 #define SSE_VERSION_TXT "3.5.4" 
 #define WINDOW_TITLE "Steem Beta 3.5.4"
 
@@ -475,8 +475,8 @@ and all his silly mods are gone!
 #define SS_DRIVE      // SF314 floppy disk drive
 #define SS_FDC        // WD1772 floppy disk controller
 #if defined(WIN32)
-#define SS_IPF        // CAPS support (IPF disks) 
-#define SS_PASTI      // Improvements in Pasti support
+#define SS_IPF        // CAPS support (IPF disk images) 
+#define SS_PASTI      // Improvements in Pasti support (STX disk images)
 #endif
 #define SS_PSG        // YM2149 - for portA first
 
@@ -783,8 +783,9 @@ and all his silly mods are gone!
 
 //TODO, properly separate MMU, GLUE, Shifter functions, first proper C++ structure
 
-#if SSE_VERSION>354
+#if defined(WIN32) //TODO Unix
 #define SS_MMU_256K // Atari 260 ST
+#define SS_MMU_2560K // some STE with 2MB memory upgrade
 #endif
 
 //#define SS_MMU_NO_CONFUSION // Diagnostic cartridge: don't define (v3.5.2)

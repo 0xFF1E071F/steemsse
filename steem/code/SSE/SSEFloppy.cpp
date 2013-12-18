@@ -1068,7 +1068,7 @@ WORD TSF314::TrackGap() {
 /*
     This is where we emulate the floppy drive sounds. v3.6
     DirectSound makes it rather easy, you just load your samples
-    in a secondary buffer and play it as needed, one shot or loop,
+    in secondary buffers and play as needed, one shot or loop,
     the mixing is done by the system.
     Each drive can have its own soundset.
     In practice we'll use only drive 0.
@@ -1123,7 +1123,7 @@ void TSF314::Sound_CheckCommand(BYTE cr) {
   {
     //TRACE("start seek loop from %d to %d\n",Track(),fdc_dr);
     if(FloppyDrive[DRIVE].Empty())
-      ; // doesn't sound right
+      ; // wouldn't sound right
     else if(Sound_Buffer[SEEK])
       Sound_Buffer[SEEK]->Play(0,0,DSBPLAY_LOOPING);
   }
@@ -1193,16 +1193,13 @@ void TSF314::Sound_LoadSamples(IDirectSound *DSObj,DSBUFFERDESC *dsbd,WAVEFORMAT
     if(fp)
     {
       fread(&WavFileFormat,sizeof(TWavFileFormat),1,fp);
-      wfx->wFormatTag=WAVE_FORMAT_PCM;
       wfx->nChannels=WavFileFormat.nChannels;
       wfx->nSamplesPerSec=WavFileFormat.nSamplesPerSec;
       wfx->wBitsPerSample=WavFileFormat.wBitsPerSample;
       wfx->nBlockAlign=wfx->nChannels*wfx->wBitsPerSample/8;
       wfx->nAvgBytesPerSec=WavFileFormat.nAvgBytesPerSec;    //wfx.nSamplesPerSec*wfx.nBlockAlign;
-      wfx->cbSize=0;
       dsbd->dwFlags|=DSBCAPS_STATIC ;
       dsbd->dwBufferBytes=WavFileFormat.length;
-      dsbd->lpwfxFormat=wfx;
       Ret=DSObj->CreateSoundBuffer(dsbd,&Sound_Buffer[i],NULL);
       if(Ret==DS_OK)
       {
