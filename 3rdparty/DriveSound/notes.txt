@@ -10,5 +10,8 @@ drive_snatch.wav and drive_spinnd.wav aren't used in Steem
 
 drive_seek.wav is another free sample
 
+_ST files were also downloaded from WinUAE site.
+_edit files were somehow treated.
+
   If you can please sample some more realistic Atari sounds and upload 
   them at atari-forum. Please don't rip SainT's samples.

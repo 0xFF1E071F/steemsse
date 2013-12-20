@@ -178,6 +178,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 #if defined(SS_DRIVE_SOUND)
 #define DRIVE_SOUND_DIRECTORY "\\DriveSound"
+#define DRIVE_SOUND_BUZZ_THRESHOLD 7 // distance between tracks
 #endif
 
 #endif

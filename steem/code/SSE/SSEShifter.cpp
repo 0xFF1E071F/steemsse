@@ -986,7 +986,7 @@ Panic
 
 #if defined(SS_SHIFTER_LINE_PLUS_2_POST_TOP_OFF) //v3.6.0
     if(scan_y==-29) // 1st line after top border removed
-      t+=2+2;  // panic & forest OK; still just a hack
+      t+=2+8;  // panic & forest OK; still just a hack
 #endif
 
 

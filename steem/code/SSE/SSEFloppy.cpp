@@ -815,7 +815,7 @@ void TDma::TransferBytes() {
 
 #endif//dma
 
-
+/////////////////////////////////////////////////////////////////////////////
 
 #if defined(SS_DRIVE)
 /*  Problems concerning the drive itself (RPM...) or the disks (gaps...) are
@@ -1077,16 +1077,28 @@ WORD TSF314::TrackGap() {
 #include "../../../3rdparty/various/sound.h" //struct TWavFileFormat
 
 /*
-Those samples come from UAE, and should be replaced with samples
-of an actual Atari drive.
 
+Those samples come from the UAE project.
 drive_seek:  we added this one, it's just some buzz
 drive_spinnd.wav seems the same as drive_spin.wav
 
+I'm afraid drive_startup_ST.wav and "drive_spin_ST.wav" were ripped from SainT.
+
+drive_click_ST_edit.wav is drive_click.wav after treatment.
+
 */
+
+#if defined(SS_DRIVE_SOUND_EDIT) // ST
+
+char* drive_sound_wav_files[]={ "drive_startup_ST_edit.wav",
+"drive_spin_ST_edit.wav","drive_click_ST_edit.wav","drive_seek_edit.wav" };
+
+#else // Amiga (+ my seek)
 
 char* drive_sound_wav_files[]={ "drive_startup.wav","drive_spin.wav",
 "drive_click.wav","drive_seek.wav" };
+
+#endif
 
 #if defined(SS_DRIVE_SOUND_VOLUME)
 
@@ -1117,14 +1129,20 @@ void TSF314::Sound_CheckCommand(BYTE cr) {
   }
 
   if(
-    (  (cr&(BIT_7+BIT_6+BIT_5+BIT_4))==0x00 && Track()>1 // RESTORE
-    || (cr&(BIT_7+BIT_6+BIT_5+BIT_4))==0x10 &&abs(Track()-fdc_dr)>1  ) // SEEK
+    ( (cr&(BIT_7+BIT_6+BIT_5+BIT_4))==0x00 
+      && Track()>DRIVE_SOUND_BUZZ_THRESHOLD // RESTORE
+    || (cr&(BIT_7+BIT_6+BIT_5+BIT_4))==0x10 
+      &&abs(Track()-fdc_dr)>DRIVE_SOUND_BUZZ_THRESHOLD  ) // SEEK
     )
   {
     //TRACE("start seek loop from %d to %d\n",Track(),fdc_dr);
+
+#if DRIVE_SOUND_BUZZ_THRESHOLD <5
     if(FloppyDrive[DRIVE].Empty())
       ; // wouldn't sound right
-    else if(Sound_Buffer[SEEK])
+    else 
+#endif
+    if(Sound_Buffer[SEEK])
       Sound_Buffer[SEEK]->Play(0,0,DSBPLAY_LOOPING);
   }
 }
@@ -1197,7 +1215,7 @@ void TSF314::Sound_LoadSamples(IDirectSound *DSObj,DSBUFFERDESC *dsbd,WAVEFORMAT
       wfx->nSamplesPerSec=WavFileFormat.nSamplesPerSec;
       wfx->wBitsPerSample=WavFileFormat.wBitsPerSample;
       wfx->nBlockAlign=wfx->nChannels*wfx->wBitsPerSample/8;
-      wfx->nAvgBytesPerSec=WavFileFormat.nAvgBytesPerSec;    //wfx.nSamplesPerSec*wfx.nBlockAlign;
+      wfx->nAvgBytesPerSec=WavFileFormat.nAvgBytesPerSec;
       dsbd->dwFlags|=DSBCAPS_STATIC ;
       dsbd->dwBufferBytes=WavFileFormat.length;
       Ret=DSObj->CreateSoundBuffer(dsbd,&Sound_Buffer[i],NULL);
@@ -1215,6 +1233,9 @@ void TSF314::Sound_LoadSamples(IDirectSound *DSObj,DSBUFFERDESC *dsbd,WAVEFORMAT
       }
       fclose(fp);
     }
+#ifdef SS_DEBUG
+    else TRACE("DriveSound. Can't load sample file %s\n",pathplusfile.Text);
+#endif
   }//nxt
 #if defined(SS_DRIVE_SOUND_VOLUME)
   Sound_ChangeVolume();
@@ -1259,7 +1280,7 @@ void TSF314::Sound_StopBuffers() {
 
 #endif//drive
 
-
+/////////////////////////////////////////////////////////////////////////////
 
 #if defined(SS_FDC)
 
@@ -1403,8 +1424,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #endif
       if(can_send)
         floppy_fdc_command(io_src_b); // in fdc.cpp
- //     else
- //       TRACE_LOG("FDC %X not native, drive %C type %d\n",io_src_b,'A'+YM2149.Drive(),SF314[YM2149.Drive()].ImageType);
+//      else  TRACE_LOG("FDC %X not native, drive %C type %d\n",io_src_b,'A'+YM2149.Drive(),SF314[YM2149.Drive()].ImageType);
     }
     break;
   case 1: // TR
@@ -1590,6 +1610,8 @@ BYTE TYM2149::Side(){
 
 #endif//PSG
 
+
+/////////////////////////////////////////////////////////////////////////////
 
 #if defined(SS_IPF) // Implementation of CAPS support in Steem
 
