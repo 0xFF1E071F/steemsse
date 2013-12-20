@@ -169,9 +169,24 @@ void mfp_interrupt(int,int);
 void mfp_gpip_transition(int,bool);
 void mfp_check_for_timer_timeouts(); // SS not implemented
 #endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_MFP_RATIO_PRECISION)
+
+#define MFP_CALC_TIMER_PERIOD(t)  mfp_timer_period[t]=int(  \
+          double(mfp_timer_prescale[mfp_get_timer_control_register(t)]* \
+            int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+t])))*CPU_CYCLES_PER_MFP_CLK);\
+          mfp_timer_period_fraction[t]=int(  1000*((double(mfp_timer_prescale[mfp_get_timer_control_register(t)]*int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+t]))) * CPU_CYCLES_PER_MFP_CLK)-(double)mfp_timer_period[t])  );\
+         ;// TRACE("MFP_CALC_TIMER_PERIOD %d\n",t);
+         
+#else
+
 #define MFP_CALC_TIMER_PERIOD(t)  mfp_timer_period[t]=int(  \
           double(mfp_timer_prescale[mfp_get_timer_control_register(t)]* \
             int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+t])))*CPU_CYCLES_PER_MFP_CLK);
+
+#endif
+
+
 
 #define mfp_interrupt_i_bit(irq) (BYTE(1 << (irq & 7)))
 #define mfp_interrupt_i_ab(irq) (1-((irq & 8) >> 3))

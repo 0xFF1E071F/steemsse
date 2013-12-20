@@ -529,6 +529,7 @@ and all his silly mods are gone!
 #define SS_DRIVE_RW_SECTOR_TIMING2 // end of sector (hack)
 #if SSE_VERSION>=360
 #define SS_DRIVE_SOUND // heavily requested, delivered!
+#define SS_DRIVE_SOUND_EDIT // soundset
 #define SS_DRIVE_SOUND_VOLUME // logarithmic 
 #endif
 #define SS_DRIVE_SPIN_UP_TIME
@@ -758,6 +759,7 @@ and all his silly mods are gone!
 #if defined(SS_MFP_TIMER_B)
 #define SS_MFP_TIMER_B_AER // earlier trigger (from Hatari)
 #define SS_MFP_TIMER_B_NO_WOBBLE // does it fix anything???
+#define SS_MFP_TIMERS_BASETIME // "vbl" instead of "mfptick"
 #endif
 #define SS_MFP_TxDR_RESET // they're not reset according to doc
 #endif
@@ -1064,6 +1066,7 @@ and all his silly mods are gone!
 #define SS_STRUCTURE_IOR
 
 #if defined(SS_STRUCTURE_NEW_H_FILES)
+//this should be completed before release of v3.6.0
 #define SS_STRUCTURE_ACC_H
 #define SS_STRUCTURE_ARCHIVE_H
 #define SS_STRUCTURE_BLITTER_H

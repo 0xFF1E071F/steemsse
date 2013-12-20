@@ -132,6 +132,9 @@ void calc_time_of_next_timer_b()
    scanline. TODO simplify?
 */
 
+
+//  TRACE("Timer B event count mode\n");
+
   int cycles_in=int(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
   if (cycles_in<cpu_cycles_from_hbl_to_timer_b){
     if (scan_y>=shifter_first_draw_line && scan_y<shifter_last_draw_line){
@@ -303,7 +306,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 */
           mfp_timer_period_fraction[timer]=int(  1000*((double(mfp_timer_prescale[new_control]*int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+timer]))) * CPU_CYCLES_PER_MFP_CLK)-(double)mfp_timer_period[timer])  );
           mfp_timer_period_current_fraction[timer]=0;
-          TRACE_LOG("PC %X MFP set timer %C control %x period %d.%d\n",old_pc,'A'+timer,new_control,mfp_timer_period[timer],mfp_timer_period_fraction[timer]);
+          TRACE_LOG("F%d y%d PC %X MFP set timer %C control %x period %d.%d\n",FRAME,scan_y,old_pc,'A'+timer,new_control,mfp_timer_period[timer],mfp_timer_period_fraction[timer]);
 #endif
 
           // Here mfp_timer_timeout assumes that the next MFP_CLK tick happens
@@ -318,7 +321,17 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
           prescale_count=min(prescale_count,mfp_timer_prescale[new_control]);
 
           // Make manageable time (cpu_time_of_first_mfp_tick is updated every VBL)
+//          TRACE_LOG("timer %d: %d - cpu_time_of_first_mfp_tick %d = %d\n",timer,mfp_timer_timeout[timer],cpu_time_of_first_mfp_tick,mfp_timer_timeout[timer]-cpu_time_of_first_mfp_tick);
+#if defined(SS_MFP_TIMERS_BASETIME)
+/*  Fixes Panic.tos losing vertical overscan for good.
+    Not sure of this, just noticed a timing discrepancy when missing top overscan, that would
+    push timer 30000 cycles later.
+*/
+          mfp_timer_timeout[timer]-=cpu_time_of_last_vbl;
+#else
           mfp_timer_timeout[timer]-=cpu_time_of_first_mfp_tick;
+#endif
+
           
           // Convert to MFP cycles
           mfp_timer_timeout[timer]*=MFP_CLK;
@@ -332,8 +345,11 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
           mfp_timer_timeout[timer]/=MFP_CLK;
 
           // Make absolute time again
+#if defined(SS_MFP_TIMERS_BASETIME)
+          mfp_timer_timeout[timer]+=cpu_time_of_last_vbl;
+#else
           mfp_timer_timeout[timer]+=cpu_time_of_first_mfp_tick;
-
+#endif
           log(EasyStr("    Set control to ")+new_control+
                 " (reg=$"+HEXSl(new_val,2)+"); data="+mfp_reg[MFPR_TADR+timer]+
                 "; counter="+mfp_timer_counter[timer]/64+
@@ -652,6 +668,12 @@ void mfp_interrupt(int irq,int when_fired)
 
             }//sw
 //            ASSERT( interrupt_depth<2 );
+
+
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_MFP_TIMERS
+            if(irq==4||irq==5||irq==8||irq==13)
+              TRACE_LOG("F%d y%d c%d MFP IRQ %d\n",FRAME,scan_y,LINECYCLES,irq);
 #endif
 
 
