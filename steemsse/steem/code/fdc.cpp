@@ -2396,16 +2396,19 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
 #if !(defined(STEVEN_SEAGAL)&&defined(SS_OSD_DRIVE_LED3))
       disk_light_off_time=timer+DisableDiskLightAfter;
 #endif
-    }
 
 #if defined(SS_DRIVE_SOUND)
-  if(SSE_DRIVE_SOUND)
-    SF314[0].Sound_CheckIrq();
+      if(SSE_DRIVE_SOUND)
+        SF314[0].Sound_CheckIrq();
 #endif
+
+    }
 
   }
 
   //SS pasti manages DMA itself, then calls Steem to transfer what it gathered
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_FDC_BYTES // there was some confusion here...
 
   if (pPIOI->haveXfer){
     dma_address=pPIOI->xferInfo.xferSTaddr; //SS not the regs
@@ -2425,9 +2428,10 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
         dma_address++;
 #endif
       }
-      TRACE_LOG("\n");
+      
     }else{
       //      log_to(LOGSECTION_PASTI,Str("PASTI: DMA transfer ")+pPIOI->xferInfo.xferLen+" bytes from pasti buffer to address=$"+HEXSl(dma_address,6));
+      TRACE_LOG("%2d/%2d to %X: ",fdc_tr,fdc_sr,dma_address);
       for (DWORD i=0;i<pPIOI->xferInfo.xferLen;i++){ 
         if (DMA_ADDRESS_IS_VALID_W){
           DEBUG_CHECK_WRITE_B(dma_address);
@@ -2436,11 +2440,13 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
 #else
           PEEK(dma_address)=LPBYTE(pPIOI->xferInfo.xferBuf)[i];
 #endif
+          TRACE_LOG("%02X ",LPBYTE(pPIOI->xferInfo.xferBuf)[i]);
         }
 #if !(defined(STEVEN_SEAGAL) && defined(SS_DMA_FIFO_PASTI))
         dma_address++;
 #endif
       }
+      TRACE_LOG("\n");
     }
   }
 #undef LOGSECTION

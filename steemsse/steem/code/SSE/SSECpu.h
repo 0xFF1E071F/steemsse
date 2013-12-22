@@ -551,7 +551,7 @@ inline void TM68000::Process() {
 #endif
 
   old_pc=pc;  
-
+//ASSERT(old_pc>=0x21bce);
 #if defined(SS_CPU_PREFETCH)
 /*  basic prefetch rule:
 Just before the start of any instruction two words (no more and no less) are 

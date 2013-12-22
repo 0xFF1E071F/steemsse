@@ -1,17 +1,24 @@
-drive_click.wav
-drive_snatch.wav
-drive_spin.wav
-drive_spinnd.wav
-drive_startup.wav
 
-are part of the WinUAE project
+http://www.winuae.net/files/stuff/drive_sounds.zip
 
-drive_snatch.wav and drive_spinnd.wav aren't used in Steem
 
-drive_seek.wav is another free sample
+drive_click.wav                default WinUAE sound
+drive_click_ST_edit.wav        modified drive_click.wav   *
+drive_seek.wav                 downloaded buzz loop
+drive_seek_edit.wav            ... modified               *
+drive_snatch.wav               default WinUAE sound
+drive_spin.wav                 default WinUAE sound
+drive_spin_ST.wav              from WinUAE project
+drive_spin_ST_edit.wav         ... modified               *
+drive_spinnd.wav               default WinUAE sound
+drive_startup.wav              default WinUAE sound
+drive_startup_ST.wav           from WinUAE project
+drive_startup_ST_edit.wav      ... modified               *
 
-_ST files were also downloaded from WinUAE site.
-_edit files were somehow treated.
+  * indicates "used in Steem"
+
+  I suspect that drive_spin_ST.wav and drive_startup_ST.wav were
+  ripped from SainT.
 
   If you can please sample some more realistic Atari sounds and upload 
   them at atari-forum. Please don't rip SainT's samples.

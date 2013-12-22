@@ -1201,6 +1201,8 @@ void m68k_poke_abus2(BYTE x){
     It must crash at 4 for Death of the Clock Cycles (bugfix 3.5.1)
 
     No good explanation for that, we just have programs running.
+
+    Turns out only the one byte version is necessary/OK.
 */
     else if(SUPERFLAG && abus==0 ) 
       ;
@@ -1245,8 +1247,11 @@ void m68k_dpoke_abus2(WORD x){
       DPEEK(abus)=x;
     else if(abus>=MEM_START_OF_USER_AREA)
       DPEEK(abus)=x;
-#if defined(SS_CPU_IGNORE_WRITE_0)
-    else if(SUPERFLAG && !abus)
+#if defined(SS_CPU_IGNORE_WRITE_0__)
+/*  Not for word because it breaks Crazy Cars 2 (bugfix 3.6.0).
+    There's no real explanation. Maybe the bus error detector doesn't 
+    start until after the first byte... :)
+*/    else if(SUPERFLAG && !abus)
       ;
 #endif
     else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
@@ -1473,7 +1478,7 @@ void m68k_0001() {  // move.b
 
 #if defined(SS_CPU_ASSERT_ILLEGAL)
   // We consider ILLEGAL before bus/address error
-  // fixes Transbeauce 2 loader, Titan
+  // fixes Transbeauce 2 loader, Titan, Crazy Cars 2
   if( (ir&BITS_876)==BITS_876_001
     || (ir&BITS_876)==BITS_876_111
     && (ir&BITS_ba9)!=BITS_ba9_000

@@ -1129,6 +1129,7 @@ void TSF314::Sound_CheckCommand(BYTE cr) {
   }
 
   if(
+    Adat() &&
     ( (cr&(BIT_7+BIT_6+BIT_5+BIT_4))==0x00 
       && Track()>DRIVE_SOUND_BUZZ_THRESHOLD // RESTORE
     || (cr&(BIT_7+BIT_6+BIT_5+BIT_4))==0x10 
@@ -1153,11 +1154,13 @@ void TSF314::Sound_CheckIrq() {
     Stop SEEK loop.
     Emit a click noise if we were effectively seeking.
 */
+#if !defined(SS_DRIVE_SOUND_CHECK_SEEK_VBL)
   if(Sound_Buffer[SEEK])
     Sound_Buffer[SEEK]->Stop();
-
+#endif
   if(WD1772.CommandType()==1 && TrackAtCommand!=Track() && Sound_Buffer[STEP])
   {
+    //TRACE("Step track %d\n",Track());
     DWORD dwStatus ;
     Sound_Buffer[STEP]->GetStatus(&dwStatus);
     if( (dwStatus&DSBSTATUS_PLAYING) )
@@ -1185,6 +1188,17 @@ void TSF314::Sound_CheckMotor() {
     Sound_Buffer[MOTOR]->Play(0,0,DSBPLAY_LOOPING); // start motor loop
   else if((!SSE_DRIVE_SOUND||!motor_on) && (dwStatus&DSBSTATUS_PLAYING))
     Sound_Buffer[MOTOR]->Stop();
+
+#if defined(SS_DRIVE_SOUND_CHECK_SEEK_VBL)
+  // because of some buggy programs? (normally not defined)
+  if(Sound_Buffer[SEEK] && !(FRAME%10) && WD1772.CommandType()!=1)
+  {
+    Sound_Buffer[SEEK]->GetStatus(&dwStatus);
+    if((dwStatus&DSBSTATUS_PLAYING))
+      Sound_Buffer[SEEK]->Stop();
+  }
+#endif
+
 }
 
 
