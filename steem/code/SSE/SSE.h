@@ -529,6 +529,7 @@ and all his silly mods are gone!
 #define SS_DRIVE_RW_SECTOR_TIMING2 // end of sector (hack)
 #if SSE_VERSION>=360
 #define SS_DRIVE_SOUND // heavily requested, delivered!
+//#define SS_DRIVE_SOUND_CHECK_SEEK_VBL
 #define SS_DRIVE_SOUND_EDIT // soundset
 #define SS_DRIVE_SOUND_VOLUME // logarithmic 
 #endif

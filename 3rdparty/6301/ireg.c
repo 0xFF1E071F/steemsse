@@ -177,13 +177,10 @@ u_int offs;
 
     The ROM may write either 1 or 0 on DR2.
     When we read, DDR2 is always 1.
-    Steem's mousek is the reverse of what we want:
-    bit 0 set: right button/fire 1
-    bit 1 set: left button/fire 0
-    For the IKBD, we need:
-    bit 1 cleared: left button/fire 0
-    bit 2 cleared: right button/fire 1
-    So in fact we will not negate mousek.
+    Button pressed -> bit cleared (not set)
+    mousek 1 ->   value 2
+    mouesk 2 ->   value 4
+    mousek 3 ->   value 0
 */
 
 static dr2_getb (offs)
@@ -198,8 +195,8 @@ static dr2_getb (offs)
   value=0xFF;
   if(mousek) // clear the correct bit (see above)
   {
-    value&=mousek<<1;
-//    TRACE("HD6301 handling mousek %x -> %x\n",mousek,value);
+    value=(mousek*2)%6;
+   //TRACE("HD6301 handling mousek %x -> %x\n",mousek,value);
   }
   return value;
 }
@@ -303,6 +300,7 @@ static dr4_getb (offs)
 /*  Joystick movements
     Movement is signalled by cleared bits.
 */
+  ASSERT(!ddr4);
   if(!ddr4 && (ddr2&1) && (dr2&1))
   {
     joy0mvt=stick[0]&0xF; // eliminate fire info
@@ -314,6 +312,7 @@ static dr4_getb (offs)
         mouse_y_counter=mouse_x_counter=MOUSE_MASK; 
       value|= joy0mvt | ( joy1mvt<<4);
       value=~value;
+      //TRACE("stick %X\n",value);
     }
   }  
 

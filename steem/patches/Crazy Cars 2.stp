@@ -1,0 +1,8 @@
+[Text]
+Description=Get correct joystick and keyboard control in the pasti version of this game.
+ApplyWhen=At title or during game.
+Version=3.3
+PatchAuthor=Steven Seagal
+
+[Patch]
+021E44 = $4E71 $4E71
