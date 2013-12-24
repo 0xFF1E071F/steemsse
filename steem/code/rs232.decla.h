@@ -1,18 +1,9 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_RS232_H)
+#pragma once
+#ifndef RS232_DECLA_H
+#define RS232_DECLA_H
 
-#include "rs232.decla.h"
-
-#else//!SS_STRUCTURE_RS232_H
-
-
-#ifdef IN_EMU
-#define EXT
-#define INIT(s) =s
-#else
 #define EXT extern
 #define INIT(s)
-
-#endif
 
 extern void RS232_VBL(int DEFVAL(0));
 extern void RS232_CalculateBaud(bool,BYTE,bool);
@@ -39,4 +30,4 @@ extern void agenda_serial_loopback_byte(int);
 #undef EXT
 #undef INIT
 
-#endif//!SS_STRUCTURE_RS232_H
+#endif//#ifndef RS232_DECLA_H
