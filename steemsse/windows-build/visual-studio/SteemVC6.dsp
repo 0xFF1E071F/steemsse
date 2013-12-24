@@ -334,6 +334,7 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\SSE\SSEVideo.cpp"\
 	"..\..\steem\code\SSE\SSEVideo.h"\
 	"..\..\steem\code\SteemFreeImage.h"\
+	"..\..\steem\code\steemh.decla.h"\
 	"..\..\steem\code\steemh.h"\
 	"..\..\steem\code\stemdos.cpp"\
 	"..\..\steem\code\stemdos.h"\
@@ -640,6 +641,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\SSE\SSEShifterEvents.h"\
 	"..\..\steem\code\SSE\SSESTF.h"\
 	"..\..\steem\code\SteemFreeImage.h"\
+	"..\..\steem\code\steemh.decla.h"\
 	"..\..\steem\code\steemh.h"\
 	"..\..\steem\code\steemintro.cpp"\
 	"..\..\steem\code\stemdialogs.cpp"\
@@ -1043,6 +1045,10 @@ SOURCE=..\..\steem\code\shortcutbox.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\SteemFreeImage.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\steemh.decla.h
 # End Source File
 # Begin Source File
 
