@@ -5,19 +5,13 @@ DESCRIPTION: Many crucial variable declarations and macro definitions that
 allow Steem to perform emulation.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STEEMH_H)
+#pragma once
+#ifndef STEEMH_DECLA_H
+#define STEEMH_DECLA_H
 
-#include "steemh.decla.h"
-
-#else//!defined(SS_STRUCTURE_STEEMH_H)
-
-#ifdef IN_EMU
-#define EXT
-#define INIT(s) =s
-#else
 #define EXT extern
 #define INIT(s)
-#endif
+
 
 extern "C"
 {
@@ -79,7 +73,7 @@ EXT BYTE *Mem_End,
      *Cart_End_minus_1,
      *Cart_End_minus_2,
      *Cart_End_minus_4;
-}
+}//extern C
 
 #define PAL_EXTRA_BYTES 16
 EXT BYTE palette_exec_mem[64+PAL_EXTRA_BYTES];
@@ -132,36 +126,32 @@ EXT long palette_table[4096]; // SS 4K!
 
 #if defined(PEEK_RANGE_TEST) && defined(DEBUG_BUILD)
 
-void RangeError(DWORD &ad,DWORD hi_ad)
-{
-//  ad/=0;
-  ad=hi_ad-1;
-}
+void RangeError(DWORD &ad,DWORD hi_ad);
 
 // Have to allow pointer to last byte to be returned for lpDPEEK (SET_PC)
 
 #define RANGE_CHECK_MESSAGE(hi,len,hiadd) if (ad<0 || (ad+(len))>=((hi)+(hiadd))) RangeError(ad,hi-len)
 
-BYTE& PEEK(DWORD ad){ RANGE_CHECK_MESSAGE(mem_len+MEM_EXTRA_BYTES,0,0);return *LPBYTE(Mem_End_minus_1-ad); }
-WORD& DPEEK(DWORD ad){ RANGE_CHECK_MESSAGE(mem_len+MEM_EXTRA_BYTES,1,0);return *LPWORD(Mem_End_minus_2-ad); }
-DWORD& LPEEK(DWORD ad){ RANGE_CHECK_MESSAGE(mem_len+MEM_EXTRA_BYTES,3,0);return *LPDWORD(Mem_End_minus_4-ad); }
-BYTE* lpPEEK(DWORD ad){ RANGE_CHECK_MESSAGE(mem_len+MEM_EXTRA_BYTES,0,0);return LPBYTE(Mem_End_minus_1-ad); }
-WORD* lpDPEEK(DWORD ad){ RANGE_CHECK_MESSAGE(mem_len+MEM_EXTRA_BYTES,1,0);return LPWORD(Mem_End_minus_2-ad); }
-DWORD* lpLPEEK(DWORD ad){ RANGE_CHECK_MESSAGE(mem_len+MEM_EXTRA_BYTES,3,0);return LPDWORD(Mem_End_minus_4-ad); }
+BYTE& PEEK;//(DWORD ad){ RANGE_CHECK_MESSAGE(mem_len+MEM_EXTRA_BYTES,0,0);return *LPBYTE(Mem_End_minus_1-ad); }
+WORD& DPEEK;//(DWORD ad){ RANGE_CHECK_MESSAGE(mem_len+MEM_EXTRA_BYTES,1,0);return *LPWORD(Mem_End_minus_2-ad); }
+DWORD& LPEEK(DWORD ad);//{ RANGE_CHECK_MESSAGE(mem_len+MEM_EXTRA_BYTES,3,0);return *LPDWORD(Mem_End_minus_4-ad); }
+BYTE* lpPEEK(DWORD ad);//{ RANGE_CHECK_MESSAGE(mem_len+MEM_EXTRA_BYTES,0,0);return LPBYTE(Mem_End_minus_1-ad); }
+WORD* lpDPEEK(DWORD ad);//{ RANGE_CHECK_MESSAGE(mem_len+MEM_EXTRA_BYTES,1,0);return LPWORD(Mem_End_minus_2-ad); }
+DWORD* lpLPEEK(DWORD ad;//){ RANGE_CHECK_MESSAGE(mem_len+MEM_EXTRA_BYTES,3,0);return LPDWORD(Mem_End_minus_4-ad); }
 
-BYTE& ROM_PEEK(DWORD ad){ RANGE_CHECK_MESSAGE(tos_len,0,0);return *LPBYTE(Rom_End_minus_1-ad); }
-WORD& ROM_DPEEK(DWORD ad){ RANGE_CHECK_MESSAGE(tos_len,1,0);return *LPWORD(Rom_End_minus_2-ad); }
-DWORD& ROM_LPEEK(DWORD ad){ RANGE_CHECK_MESSAGE(tos_len,3,0);return *LPDWORD(Rom_End_minus_4-ad); }
-BYTE* lpROM_PEEK(DWORD ad){ RANGE_CHECK_MESSAGE(tos_len,0,0);return LPBYTE(Rom_End_minus_1-ad); }
-WORD* lpROM_DPEEK(DWORD ad){ RANGE_CHECK_MESSAGE(tos_len,1,2);return LPWORD(Rom_End_minus_2-ad); }
-DWORD* lpROM_LPEEK(DWORD ad){ RANGE_CHECK_MESSAGE(tos_len,3,0);return LPDWORD(Rom_End_minus_4-ad); }
+BYTE& ROM_PEEK(DWORD ad);//{ RANGE_CHECK_MESSAGE(tos_len,0,0);return *LPBYTE(Rom_End_minus_1-ad); }
+WORD& ROM_DPEEK(DWORD ad);//{ RANGE_CHECK_MESSAGE(tos_len,1,0);return *LPWORD(Rom_End_minus_2-ad); }
+DWORD& ROM_LPEEK(DWORD ad);//{ RANGE_CHECK_MESSAGE(tos_len,3,0);return *LPDWORD(Rom_End_minus_4-ad); }
+BYTE* lpROM_PEEK(DWORD ad);//{ RANGE_CHECK_MESSAGE(tos_len,0,0);return LPBYTE(Rom_End_minus_1-ad); }
+WORD* lpROM_DPEEK(DWORD ad);//{ RANGE_CHECK_MESSAGE(tos_len,1,2);return LPWORD(Rom_End_minus_2-ad); }
+DWORD* lpROM_LPEEK(DWORD ad);//{ RANGE_CHECK_MESSAGE(tos_len,3,0);return LPDWORD(Rom_End_minus_4-ad); }
 
-BYTE& CART_PEEK(DWORD ad){ RANGE_CHECK_MESSAGE(128*1024,0,0);return *LPBYTE(Cart_End_minus_1-ad); }
-WORD& CART_DPEEK(DWORD ad){ RANGE_CHECK_MESSAGE(128*1024,1,0);return *LPWORD(Cart_End_minus_2-ad); }
-DWORD& CART_LPEEK(DWORD ad){ RANGE_CHECK_MESSAGE(128*1024,3,0);return *LPDWORD(Cart_End_minus_4-ad); }
-BYTE* lpCART_PEEK(DWORD ad){ RANGE_CHECK_MESSAGE(128*1024,0,0);return LPBYTE(Cart_End_minus_1-ad); }
-WORD* lpCART_DPEEK(DWORD ad){ RANGE_CHECK_MESSAGE(128*1024,1,2);return LPWORD(Cart_End_minus_2-ad); }
-DWORD* lpCART_LPEEK(DWORD ad){ RANGE_CHECK_MESSAGE(128*1024,3,0);return LPDWORD(Cart_End_minus_4-ad); }
+BYTE& CART_PEEK(DWORD ad);//{ RANGE_CHECK_MESSAGE(128*1024,0,0);return *LPBYTE(Cart_End_minus_1-ad); }
+WORD& CART_DPEEK(DWORD ad);//{ RANGE_CHECK_MESSAGE(128*1024,1,0);return *LPWORD(Cart_End_minus_2-ad); }
+DWORD& CART_LPEEK(DWORD ad);//{ RANGE_CHECK_MESSAGE(128*1024,3,0);return *LPDWORD(Cart_End_minus_4-ad); }
+BYTE* lpCART_PEEK(DWORD ad);//{ RANGE_CHECK_MESSAGE(128*1024,0,0);return LPBYTE(Cart_End_minus_1-ad); }
+WORD* lpCART_DPEEK(DWORD ad);//{ RANGE_CHECK_MESSAGE(128*1024,1,2);return LPWORD(Cart_End_minus_2-ad); }
+DWORD* lpCART_LPEEK(DWORD ad);//{ RANGE_CHECK_MESSAGE(128*1024,3,0);return LPDWORD(Cart_End_minus_4-ad); }
 
 #define PAL_DPEEK(l)   *(WORD*)(palette_exec_mem+64+PAL_EXTRA_BYTES-2-(l))
 #define lpPAL_DPEEK(l) (WORD*)(palette_exec_mem+64+PAL_EXTRA_BYTES-2-(l))
@@ -411,4 +401,4 @@ EXT char m68k_src_b;
 #undef EXT
 #undef INIT
 
-#endif//!SS_STRUCTURE_STEEMH_H
+#endif//STEEMH_DECLA_H
