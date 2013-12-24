@@ -1,16 +1,9 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_SHORTCUTBOX_H)
+#pragma once
+#ifndef SHORTCUTBOX_DECLA_H
+#define SHORTCUTBOX_DECLA_H
 
-#include "shortcutbox.decla.h"
-
-#else//!SS_STRUCTURE_SHORTCUTBOX_H
-
-#ifdef IN_MAIN
-#define EXT
-#define INIT(s) =s
-#else
 #define EXT extern
 #define INIT(s)
-#endif
 
 EXT void ShortcutsCheck();
 EXT bool CutDisableKey[256];
@@ -32,32 +25,20 @@ typedef struct TYPE_SHORTCUTINFO{
   int MacroFileIdx;
   EasyStringList *pESL;
 }SHORTCUTINFO;
-DynamicArray<SHORTCUTINFO> Cuts,CurrentCuts;
-EasyStringList CutsStrings(eslNoSort);
-EasyStringList CurrentCutsStrings(eslNoSort);
+EXT DynamicArray<SHORTCUTINFO> Cuts,CurrentCuts;
+EXT EasyStringList CutsStrings;//(eslNoSort);
+EXT EasyStringList CurrentCutsStrings;//(eslNoSort);
 
-void ClearSHORTCUTINFO(SHORTCUTINFO *pSI)
-{
-  pSI->Id[0]=0xffff;
-  pSI->Id[1]=0xffff;
-  pSI->Id[2]=0xffff;
-  pSI->PressKey=0xffff;
-  pSI->PressChar=0;
-  pSI->OldDown=2;
-  pSI->Down=2;
-  pSI->Action=0;
-  for (int n=0;n<5;n++) pSI->DisableIfCutDownList[n]=NULL;
-  pSI->MacroFileIdx=-1;
-}
+void ClearSHORTCUTINFO(SHORTCUTINFO *pSI);
 
-EasyStringList CutFiles;
+EXT EasyStringList CutFiles;
 
 void DoShortcutDown(SHORTCUTINFO &),DoShortcutUp(SHORTCUTINFO &);
 
-bool CutDisableAxis[MAX_PC_JOYS][20],CutDisablePOV[MAX_PC_JOYS][9];
-DWORD CutButtonMask[MAX_PC_JOYS];
-int MouseWheelMove=0;
-bool CutButtonDown[2]={0,0};
+EXT bool CutDisableAxis[MAX_PC_JOYS][20],CutDisablePOV[MAX_PC_JOYS][9];
+EXT DWORD CutButtonMask[MAX_PC_JOYS];
+EXT int MouseWheelMove;
+EXT bool CutButtonDown[2];
 //---------------------------------------------------------------------------
 #define BPS_NOJOY 1
 #define BPS_INSHORTCUT 2
@@ -144,18 +125,13 @@ public:
   static bool Picking;
   int ScrollPos;
 };
-bool TShortcutBox::Picking=0;
 
-#ifdef WIN32
-HWND TShortcutBox::InfoWin;
-DirectoryTree *TShortcutBox::pChooseMacroTree=NULL;
-DirectoryTree TShortcutBox::DTree;
-#endif
+
 
 OldJoystickPosition JoyOldPos[MAX_PC_JOYS];
-#endif
+#endif//main
 
 #undef EXT
 #undef INIT
 
-#endif//!SS_STRUCTURE_SHORTCUTBOX_H
+#endif//#ifndef SHORTCUTBOX_DECLA_H

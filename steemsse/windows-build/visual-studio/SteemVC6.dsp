@@ -300,10 +300,12 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\reset.h"\
 	"..\..\steem\code\resnum.decla.h"\
 	"..\..\steem\code\rs232.cpp"\
+	"..\..\steem\code\rs232.decla.h"\
 	"..\..\steem\code\rs232.h"\
 	"..\..\steem\code\run.cpp"\
 	"..\..\steem\code\run.decla.h"\
 	"..\..\steem\code\run.h"\
+	"..\..\steem\code\shortcutbox.decla.h"\
 	"..\..\steem\code\shortcutbox.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\steem\code\SSE\SSE6301.cpp"\
@@ -613,12 +615,14 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\reset.h"\
 	"..\..\steem\code\resnum.decla.h"\
 	"..\..\steem\code\resnum.h"\
+	"..\..\steem\code\rs232.decla.h"\
 	"..\..\steem\code\rs232.h"\
 	"..\..\steem\code\run.decla.h"\
 	"..\..\steem\code\run.h"\
 	"..\..\steem\code\screen_saver.cpp"\
 	"..\..\steem\code\screen_saver.h"\
 	"..\..\steem\code\shortcutbox.cpp"\
+	"..\..\steem\code\shortcutbox.decla.h"\
 	"..\..\steem\code\shortcutbox.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\steem\code\SSE\SSE6301.h"\
@@ -1010,6 +1014,10 @@ SOURCE=..\..\steem\code\resnum.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\steem\code\rs232.decla.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\steem\code\rs232.h
 # End Source File
 # Begin Source File
@@ -1023,6 +1031,10 @@ SOURCE=..\..\steem\code\run.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\screen_saver.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\shortcutbox.decla.h
 # End Source File
 # Begin Source File
 

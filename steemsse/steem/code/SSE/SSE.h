@@ -1107,6 +1107,10 @@ and all his silly mods are gone!
 #define SS_STRUCTURE_PALETTE_H
 //#define SS_STRUCTURE_PATCHESBOX_H// nothing to do?
 #define SS_STRUCTURE_PSG_H
+//#define SS_STRUCTURE_RESET_H// nothing to do?
+#define SS_STRUCTURE_RS232_H
+//#define SS_STRUCTURE_SCREENSAVER_H// nothing to do?
+#define SS_STRUCTURE_SHORTCUTBOX_H
 //...
 #define SS_STRUCTURE_RUN_H
 //...

@@ -9,6 +9,59 @@ maps all sorts of user input to all sorts of emulator functions.
 #pragma message("Included for compilation: shortcutbox.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_SHORTCUTBOX_H)
+
+#ifdef IN_MAIN
+#define EXT
+#define INIT(s) =s
+#endif
+
+EXT bool CutDisableKey[256];
+EXT int shortcut_vbl_count INIT(0),cut_slow_motion_speed INIT(0);
+EXT DWORD CutPauseUntilSysEx_Time INIT(0);
+EXT int CutModDown INIT(0);
+
+//#ifdef IN_MAIN
+DynamicArray<SHORTCUTINFO> Cuts,CurrentCuts;
+EasyStringList CutsStrings(eslNoSort);
+EasyStringList CurrentCutsStrings(eslNoSort);
+
+void ClearSHORTCUTINFO(SHORTCUTINFO *pSI)
+{
+  pSI->Id[0]=0xffff;
+  pSI->Id[1]=0xffff;
+  pSI->Id[2]=0xffff;
+  pSI->PressKey=0xffff;
+  pSI->PressChar=0;
+  pSI->OldDown=2;
+  pSI->Down=2;
+  pSI->Action=0;
+  for (int n=0;n<5;n++) pSI->DisableIfCutDownList[n]=NULL;
+  pSI->MacroFileIdx=-1;
+}
+
+EasyStringList CutFiles;
+
+#ifdef WIN32
+HWND TShortcutBox::InfoWin;
+DirectoryTree *TShortcutBox::pChooseMacroTree=NULL;
+DirectoryTree TShortcutBox::DTree;
+#endif
+
+
+bool CutDisableAxis[MAX_PC_JOYS][20],CutDisablePOV[MAX_PC_JOYS][9];
+DWORD CutButtonMask[MAX_PC_JOYS];
+int MouseWheelMove=0;
+bool CutButtonDown[2]={0,0};
+
+bool TShortcutBox::Picking=0;
+//#endif
+
+#undef EXT
+#undef INIT
+
+#endif//#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_SHORTCUTBOX_H)
+
 #if defined(STEVEN_SEAGAL)
 //#if defined(SS_INTERRUPT)
 #include "SSE/SSEInterrupt.h"

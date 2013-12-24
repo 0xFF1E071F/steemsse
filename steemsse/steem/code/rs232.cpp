@@ -8,6 +8,29 @@ DESCRIPTION: Serial port emulation.
 #pragma message("Included for compilation: rs232.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_RS232_H)
+
+#ifdef IN_EMU
+#define EXT
+#define INIT(s) =s
+#endif
+
+EXT bool UpdateBaud INIT(0);
+
+EXT BYTE rs232_recv_byte INIT(0);
+EXT bool rs232_recv_overrun INIT(0);
+
+#if defined(STEVEN_SEAGAL) && defined(SS_MFP_RS232)
+// avoid negative values, prevents freeze in X-Out HD quitting
+EXT unsigned int rs232_bits_per_word INIT(8),rs232_hbls_per_word INIT(1);
+#else
+EXT int rs232_bits_per_word INIT(8),rs232_hbls_per_word INIT(1);
+#endif
+
+
+#endif//#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_RS232_H)
+
+
 //---------------------------------------------------------------------------
 // Send this to modem to test ATDT1471\r
 //---------------------------------------------------------------------------
