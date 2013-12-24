@@ -1,16 +1,12 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STJOY_H)
+#pragma once
+#ifndef STJOY_DECLA_H
+#define STJOY_DECLA_H
 
-#include "stjoy.decla.h"
+///#include "stemdialogs.decla.h"//not yet...
 
-#else//!defined(SS_STRUCTURE_STJOY_H)
 
-#ifdef IN_MAIN
-#define EXT
-#define INIT(s) =s
-#else
 #define EXT extern
 #define INIT(s)
-#endif
 
 EXT void JoyGetPoses(),JoyPosReset(int);
 EXT BYTE JoyReadSTEAddress(MEM_ADDRESS,bool*);
@@ -37,7 +33,7 @@ EXT BYTE stick[8];
 #endif
 EXT void InitJoysticks(int=0),FreeJoysticks();
 
-#ifdef IN_MAIN
+#ifdef IN_MAIN//todo
 
 #ifndef WIN32
 typedef struct{
@@ -55,15 +51,15 @@ typedef struct{
 }JOYINFOEX;
 #endif
 
-static char AxisToName[7]={'X','Y','Z','R','U','V','P'};
+EXT char AxisToName[7];
 //----------------------- Implementation ------------------------
 DWORD GetAxisPosition(int,JOYINFOEX *);
 
-JOYINFOEX JoyPos[MAX_PC_JOYS];
+EXT JOYINFOEX JoyPos[MAX_PC_JOYS];
 
 #define POV_CONV(POV) (((POV)<0xffff) ? ((((POV)+2250)/4500) % 8):0xffff)
 //----------------------- Info about joysticks ---------------------------------
-bool DisablePCJoysticks=0;
+EXT bool DisablePCJoysticks;
 
 #ifdef UNIX
 void XOpenJoystick(int),XCloseJoystick(int);
@@ -75,8 +71,9 @@ void JoyInitAxisRange(int),JoyInitCalibration(int);
 #define PCJOY_READ_DI 1
 #define PCJOY_READ_KERNELDRIVER 0
 
-int JoyReadMethod=PCJOY_READ_WINMM;
+EXT int JoyReadMethod;
 
+/*
 #if defined(WIN32) && defined(NO_DIRECTINPUT)==0
 IDirectInput *DIObj=NULL;
 IDirectInputDevice *DIJoy[MAX_PC_JOYS]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
@@ -84,6 +81,7 @@ IDirectInputDevice2 *DIJoy2[MAX_PC_JOYS]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NUL
 DIJOYSTATE DIJoyPos[MAX_PC_JOYS];
 int DIPOVNum=-1,DIAxisNeg[MAX_PC_JOYS][6],DI_RnMap[MAX_PC_JOYS][3],DIDisconnected[MAX_PC_JOYS];
 #endif
+*/
 
 #define AXIS_X 0
 #define AXIS_Y 1
@@ -93,8 +91,8 @@ int DIPOVNum=-1,DIAxisNeg[MAX_PC_JOYS][6],DI_RnMap[MAX_PC_JOYS][3],DIDisconnecte
 #define AXIS_V 5
 #define AXIS_POV 6
 
-int NumJoysticks=0;
-bool JoyExists[MAX_PC_JOYS]={0,0,0,0,0,0,0,0};
+EXT int NumJoysticks;
+EXT bool JoyExists[MAX_PC_JOYS];
 
 typedef struct{
   UINT AxisMin[6],AxisMax[6]; // On X user sets these
@@ -112,7 +110,7 @@ typedef struct{
   int WaitRead,WaitReadTime;
 #endif
 }JoystickInfo;
-JoystickInfo JoyInfo[MAX_PC_JOYS];
+EXT JoystickInfo JoyInfo[MAX_PC_JOYS];
 
 typedef struct{
   bool Valid;
@@ -120,7 +118,7 @@ typedef struct{
   UINT Buttons;
   DWORD POV;
 }OldJoystickPosition;
-OldJoystickPosition OldJoyPos;
+EXT OldJoystickPosition OldJoyPos;
 //---------------------------------------------------------------------------
 class TJoystickConfig : public TStemDialog
 {
@@ -180,7 +178,7 @@ public:
   hxc_button centre_icon[2];
 #endif
 };
-int TJoystickConfig::BasePort=0;
+//int TJoystickConfig::BasePort=0;
 //----------------- Joystick Interface---------------------
 #define JOY_MODE_OFF 0
 #define JOY_MODE_KEYBOARD 1
@@ -263,15 +261,16 @@ TJoystick::TJoystick()
 }
 
 
-TJoystick Joy[8];
-TJoystick JoySetup[3][8];
-int nJoySetup=0;
+EXT TJoystick Joy[8];
+EXT TJoystick JoySetup[3][8];
+EXT int nJoySetup;
 
 // Bitmasks in which all set bits represent a button that can be pressed to
 // cause fire in Any Button On... mode
-DWORD JoyAnyButtonMask[MAX_PC_JOYS];
-#endif
+EXT DWORD JoyAnyButtonMask[MAX_PC_JOYS];
+#endif//main
+
 
 #undef EXT
 
-#endif//!defined(SS_STRUCTURE_STJOY_H)
+#endif//#ifndef STJOY_DECLA_H

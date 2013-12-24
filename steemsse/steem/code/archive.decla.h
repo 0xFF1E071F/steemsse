@@ -8,7 +8,7 @@
 
 #ifdef WIN32
 /*  from "unzip_win32.h"
-    unzip32.dll seems to be an odd library, couldn't find a h file, and when
+    unzipd32.dll seems to be an odd library, couldn't find a h file, and when
     looking for DLL functions, very few references, and they seems to be related
     to Steem!
 */

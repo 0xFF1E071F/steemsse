@@ -9,6 +9,58 @@ intercepting ST OS calls and translating them to PC OS calls.
 #pragma message("Included for compilation: stemdos.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STEMDOS_H)
+
+#define EXT
+#define INIT(s) =s
+
+EXT bool mount_flag[26];
+EXT EasyStr mount_path[26];
+EXT bool stemdos_comline_read_is_rb INIT(0);
+EXT int stemdos_boot_drive INIT(2);
+EXT bool stemdos_intercept_datetime INIT(0);
+
+//#ifdef IN_EMU
+EasyStr mount_gemdos_path[26];
+int stemdos_rte_action;
+
+stemdos_file_struct stemdos_file[46];
+stemdos_file_struct stemdos_new_file;
+
+int stemdos_std_handle_forced_to[6]={0,0,0,0,0,0};
+stemdos_fsnext_struct_type stemdos_fsnext_struct[MAX_STEMDOS_FSNEXT_STRUCTS];
+int stemdos_command;
+int stemdos_attr;
+//int stemdos_Fattrib_mode;
+EasyStr stemdos_filename;
+EasyStr stemdos_rename_to_filename;
+EasyStr PC_filename;
+
+FILE *stemdos_Pexec_file=NULL;
+MEM_ADDRESS stemdos_Pexec_com,stemdos_Pexec_env;
+int stemdos_Pexec_mode;
+
+int stemdos_Pexec_list_ptr;
+MEM_ADDRESS stemdos_Pexec_list[MAX_STEMDOS_PEXEC_LIST];
+bool stemdos_ignore_next_pexec4=0;
+
+//const char* PC_file_mode[3]={"rb","r+b","r+b"};
+
+MEM_ADDRESS stemdos_dfree_buffer;
+int stemdos_Fattrib_flag;
+MEM_ADDRESS stemdos_dta;
+
+short stemdos_save_sr;
+
+int stemdos_current_drive;
+
+
+#undef EXT
+#undef INIT
+
+
+#endif//#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STEMDOS_H)
+
 #ifndef DISABLE_STEMDOS
 
 // Find "Allow wildcards?"

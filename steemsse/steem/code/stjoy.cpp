@@ -9,6 +9,54 @@ and the code to read the PC joysticks.
 #pragma message("Included for compilation: stjoy.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STJOY_H)
+
+
+#define EXT
+#define INIT(s) =s
+
+EXT WORD paddles_ReadMask INIT(0);
+
+#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+#else
+EXT BYTE stick[8];
+#endif
+
+//#ifdef IN_MAIN
+static char AxisToName[7]={'X','Y','Z','R','U','V','P'};
+JOYINFOEX JoyPos[MAX_PC_JOYS];
+
+bool DisablePCJoysticks=0;
+
+int JoyReadMethod=PCJOY_READ_WINMM;
+
+#if defined(WIN32) && defined(NO_DIRECTINPUT)==0
+IDirectInput *DIObj=NULL;
+IDirectInputDevice *DIJoy[MAX_PC_JOYS]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
+IDirectInputDevice2 *DIJoy2[MAX_PC_JOYS]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
+DIJOYSTATE DIJoyPos[MAX_PC_JOYS];
+int DIPOVNum=-1,DIAxisNeg[MAX_PC_JOYS][6],DI_RnMap[MAX_PC_JOYS][3],DIDisconnected[MAX_PC_JOYS];
+#endif
+
+int NumJoysticks=0;
+bool JoyExists[MAX_PC_JOYS]={0,0,0,0,0,0,0,0};
+JoystickInfo JoyInfo[MAX_PC_JOYS];
+OldJoystickPosition OldJoyPos;
+
+int TJoystickConfig::BasePort=0;
+
+TJoystick Joy[8];
+TJoystick JoySetup[3][8];
+int nJoySetup=0;
+
+// Bitmasks in which all set bits represent a button that can be pressed to
+// cause fire in Any Button On... mode
+DWORD JoyAnyButtonMask[MAX_PC_JOYS];
+
+
+#endif//#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STJOY_H)
+
+
 //---------------------------------------------------------------------------
 bool IsToggled(int j)
 {
