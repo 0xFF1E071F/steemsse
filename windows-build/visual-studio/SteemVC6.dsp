@@ -294,6 +294,7 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\palette.decla.h"\
 	"..\..\steem\code\palette.h"\
 	"..\..\steem\code\psg.cpp"\
+	"..\..\steem\code\psg.decla.h"\
 	"..\..\steem\code\psg.h"\
 	"..\..\steem\code\reset.cpp"\
 	"..\..\steem\code\reset.h"\
@@ -607,6 +608,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\palette.h"\
 	"..\..\steem\code\patchesbox.cpp"\
 	"..\..\steem\code\patchesbox.h"\
+	"..\..\steem\code\psg.decla.h"\
 	"..\..\steem\code\psg.h"\
 	"..\..\steem\code\reset.h"\
 	"..\..\steem\code\resnum.decla.h"\
@@ -985,6 +987,10 @@ SOURCE=..\..\steem\code\patchesbox.h
 # Begin Source File
 
 SOURCE=..\..\steem\pch.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\psg.decla.h
 # End Source File
 # Begin Source File
 

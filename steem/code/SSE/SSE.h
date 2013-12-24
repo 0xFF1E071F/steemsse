@@ -1105,6 +1105,8 @@ and all his silly mods are gone!
 #define SS_STRUCTURE_OPTIONS_H
 #define SS_STRUCTURE_OSD_H
 #define SS_STRUCTURE_PALETTE_H
+//#define SS_STRUCTURE_PATCHESBOX_H// nothing to do?
+#define SS_STRUCTURE_PSG_H
 //...
 #define SS_STRUCTURE_RUN_H
 //...

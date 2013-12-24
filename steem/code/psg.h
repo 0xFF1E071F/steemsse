@@ -1,3 +1,10 @@
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_PSG_H)
+
+#include "psg.decla.h"
+
+#else//!SS_STRUCTURE_PSG_H
+
+
 #ifdef IN_EMU
 #define EXT
 #define INIT(s) =s
@@ -393,3 +400,5 @@ DWORD psg_envelope_start_time=0xfffff000;
 #undef EXT
 #undef INIT
 
+
+#endif//!SS_STRUCTURE_PSG_H
