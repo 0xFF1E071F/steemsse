@@ -1,8 +1,6 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STPORTS_H)
-
-#include "stports.decla.h"
-
-#else//!defined(SS_STRUCTURE_STPORTS_H)
+#pragma once
+#ifndef STPORTS_DECLA_H
+#define STPORTS_DECLA_H
 
 extern void agenda_midi_replace(int);
 extern void MidiInBufNotEmpty();
@@ -16,8 +14,8 @@ extern void SerialInBufNotEmpty();
 
 extern void PortsRunStart(),PortsRunEnd(),PortsOpenAll();
 
-class TMIDIIn;
-class TMIDIOut;
+extern class TMIDIIn;//?
+extern class TMIDIOut;
 
 #define PORTTYPE_NONE 0
 #define PORTTYPE_MIDI 1
@@ -100,10 +98,6 @@ public:
   CircularBuffer *LoopBuf;
 };
 
-#ifdef IN_EMU
-TSTPort STPort[3];
-#else
 extern TSTPort STPort[3];
-#endif
 
-#endif//!defined(SS_STRUCTURE_STPORTS_H)
+#endif//#ifndef STPORTS_DECLA_H

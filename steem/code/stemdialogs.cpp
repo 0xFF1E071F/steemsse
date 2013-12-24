@@ -9,6 +9,21 @@ the emulator and perform additional functions.
 #pragma message("Included for compilation: stemdialogs.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STEMDIALOGS_H)
+WIN_ONLY( bool StemDialog_RetDefVal; )
+
+TStemDialog *DialogList[MAX_DIALOGS]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
+int nStemDialogs=0;
+
+#ifdef WIN32
+// For some reason in 24-bit and 32-bit screen modes on XP ILC_COLOR24 and
+// ILC_COLOR32 icons don't highlight properly, have to be 16-bit.
+const UINT BPPToILC[5]={0,ILC_COLOR4,ILC_COLOR16,ILC_COLOR16,ILC_COLOR16};
+#endif
+
+
+#endif
+
 #ifdef WIN32
 //---------------------------------------------------------------------------
 TStemDialog::TStemDialog()

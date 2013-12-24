@@ -10,6 +10,29 @@ of Steem and displaying information on what happened.
 #pragma message("Included for compilation: trace.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_TRACE_H)
+
+trace_display_entry t_d_e[MAX_TRACE_DISPLAY_ENTRIES];
+unsigned short trace_sr_before,trace_sr_after;
+MEM_ADDRESS trace_pc;
+int trace_entries=0;
+mem_browser m_b_trace;
+HWND trace_window_handle;
+HWND trace_repeat_trace_button;
+HWND trace_hLABEL[MAX_TRACE_DISPLAY_ENTRIES];
+HWND trace_sr_before_display,trace_sr_after_display;
+ScrollControlWin trace_scroller;
+bool trace_show_window=true;
+
+const char*bombs_name[12]={"SSP after reset","PC after reset","bus error","address error",
+                      "illegal instruction","division by zero","CHK instruction",
+                      "TRAPV instruction","Privilege violation","Trace","Line-A","Line-F"};
+
+const char*exception_action_name[4]={"read from","write to","fetch from","instruction execution"};
+
+
+#endif
+
 //---------------------------------------------------------------------------
 void trace()
 {

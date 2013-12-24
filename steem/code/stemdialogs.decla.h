@@ -1,15 +1,17 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STEMDIALOGS_H)
+#pragma once
+#ifndef STEMDIALOGS_DECLA_H
+#define STEMDIALOGS_DECLA_H
 
-#include "stemdialogs.decla.h"
+#define EXT extern
+#define INIT(s)
 
-#else//!defined(SS_STRUCTURE_STEMDIALOGS_H)
+
 
 #define MAX_DIALOGS 20
-
 #define SD_REGISTER 0
 #define SD_UNREGISTER 1
 //---------------------------------------------------------------------------
-WIN_ONLY( bool StemDialog_RetDefVal; )
+WIN_ONLY( EXT bool StemDialog_RetDefVal; )
 
 class TStemDialog
 {
@@ -58,13 +60,16 @@ public:
   EasyStr Section;
 };
 //---------------------------------------------------------------------------
-TStemDialog *DialogList[MAX_DIALOGS]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
-int nStemDialogs=0;
+EXT TStemDialog *DialogList[MAX_DIALOGS];
+EXT int nStemDialogs;
 
 #ifdef WIN32
 // For some reason in 24-bit and 32-bit screen modes on XP ILC_COLOR24 and
 // ILC_COLOR32 icons don't highlight properly, have to be 16-bit.
-const UINT BPPToILC[5]={0,ILC_COLOR4,ILC_COLOR16,ILC_COLOR16,ILC_COLOR16};
+EXT const UINT BPPToILC[5];
 #endif
 
-#endif//!defined(SS_STRUCTURE_STEMDIALOGS_H)
+#undef EXT
+#undef INIT
+
+#endif//#ifndef STEMDIALOGS_DECLA_H

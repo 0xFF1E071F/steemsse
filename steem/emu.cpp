@@ -45,6 +45,30 @@ typedef EasyStr Str; // SS who?
 
 #include "translate.h"
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_TRANSLATE_H)
+#define EXT
+#define INIT(s) =s
+
+EXT EasyStr TranslateString,TranslateFileName;
+EXT char *TranslateBuf INIT(NULL),*TranslateUpperBuf INIT(NULL);
+EXT int TranslateBufLen INIT(0);
+
+EasyStr StripAndT(char *s)
+{
+  EasyStr Ret=Translation(s);
+  for(;;){
+    int i=Ret.InStr("&");
+    if (i<0) break;
+    Ret.Delete(i,1);
+  }
+  return Ret;
+}
+
+#undef EXT
+#undef INIT
+#endif
+
+
 #ifdef ONEGAME
 #include "onegame.h"
 #endif

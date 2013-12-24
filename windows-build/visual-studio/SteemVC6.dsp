@@ -337,10 +337,14 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\steemh.decla.h"\
 	"..\..\steem\code\steemh.h"\
 	"..\..\steem\code\stemdos.cpp"\
+	"..\..\steem\code\stemdos.decla.h"\
 	"..\..\steem\code\stemdos.h"\
+	"..\..\steem\code\stjoy.decla.h"\
 	"..\..\steem\code\stjoy.h"\
 	"..\..\steem\code\stports.cpp"\
+	"..\..\steem\code\stports.decla.h"\
 	"..\..\steem\code\stports.h"\
+	"..\..\steem\code\translate.decla.h"\
 	"..\..\steem\code\translate.h"\
 	"..\..\steem\code\x\x_midi.cpp"\
 	"..\..\steem\pch.h"\
@@ -414,6 +418,7 @@ DEP_CPP_HELPE=\
 	"..\..\steem\code\notwindows.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\translate.decla.h"\
 	"..\..\steem\code\translate.h"\
 	"..\..\steem\pch.h"\
 	
@@ -645,14 +650,19 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\steemh.h"\
 	"..\..\steem\code\steemintro.cpp"\
 	"..\..\steem\code\stemdialogs.cpp"\
+	"..\..\steem\code\stemdialogs.decla.h"\
 	"..\..\steem\code\stemdialogs.h"\
+	"..\..\steem\code\stemdos.decla.h"\
 	"..\..\steem\code\stemdos.h"\
 	"..\..\steem\code\stemwin.cpp"\
 	"..\..\steem\code\stjoy.cpp"\
+	"..\..\steem\code\stjoy.decla.h"\
 	"..\..\steem\code\stjoy.h"\
 	"..\..\steem\code\stjoy_directinput.cpp"\
+	"..\..\steem\code\stports.decla.h"\
 	"..\..\steem\code\stports.h"\
 	"..\..\steem\code\trace.cpp"\
+	"..\..\steem\code\translate.decla.h"\
 	"..\..\steem\code\translate.h"\
 	"..\..\steem\code\unzip_win32.h"\
 	"..\..\steem\code\x\x_controls.cpp"\
@@ -1056,7 +1066,15 @@ SOURCE=..\..\steem\code\steemh.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\steem\code\stemdialogs.decla.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\steem\code\stemdialogs.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\stemdos.decla.h
 # End Source File
 # Begin Source File
 
@@ -1064,7 +1082,15 @@ SOURCE=..\..\steem\code\stemdos.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\steem\code\stjoy.decla.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\steem\code\stjoy.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\stports.decla.h
 # End Source File
 # Begin Source File
 
@@ -1072,7 +1098,15 @@ SOURCE=..\..\steem\code\stports.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\steem\code\trace.decla.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\steem\code\trace.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\translate.decla.h
 # End Source File
 # Begin Source File
 
@@ -4964,6 +4998,7 @@ SOURCE=..\..\steem\code\SSE\SSECpu.h
 SOURCE=..\..\Steem\code\SSE\SSEDebug.cpp
 DEP_CPP_SSEDE=\
 	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\include\easystr.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\

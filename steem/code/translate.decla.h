@@ -1,17 +1,10 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_TRANSLATE_H)
-
-#include "translate.decla.h"
-
-#else//!defined(SS_STRUCTURE_TRANSLATE_H)
+#pragma once
+#ifndef TRANSLATE_DECLA_H
+#define TRANSLATE_DECLA_H
 
 
-#ifdef IN_MAIN
-#define EXT
-#define INIT(s) =s
-#else
 #define EXT extern
 #define INIT(s)
-#endif
 
 #define T(s)       Translation(s)
 #define StrT(s)    Translation(s)
@@ -23,23 +16,10 @@ EXT char *TranslateBuf INIT(NULL),*TranslateUpperBuf INIT(NULL);
 EXT int TranslateBufLen INIT(0);
 
 EXT EasyStr Translation(char *s);
-
-#ifdef IN_MAIN
-EasyStr StripAndT(char *s)
-{
-  EasyStr Ret=Translation(s);
-  for(;;){
-    int i=Ret.InStr("&");
-    if (i<0) break;
-    Ret.Delete(i,1);
-  }
-  return Ret;
-}
-#else
 extern EasyStr StripAndT(char*);
-#endif
+
 
 #undef EXT
 #undef INIT
 
-#endif//!defined(SS_STRUCTURE_TRANSLATE_H)
+#endif//#ifndef TRANSLATE_DECLA_H

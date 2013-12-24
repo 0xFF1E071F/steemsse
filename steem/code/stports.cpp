@@ -8,6 +8,12 @@ DESCRIPTION: Code to handle Steem's flexible port redirection system.
 #pragma message("Included for compilation: stports.cpp")
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STPORTS_H)
+
+TSTPort STPort[3];
+
+#endif
+
 //---------------------------------------------------------------------------
 // MIDI Port
 //---------------------------------------------------------------------------
