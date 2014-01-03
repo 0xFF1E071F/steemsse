@@ -2295,9 +2295,9 @@ Windows 2000	5.0
 #endif
 
 #if defined(SS_VAR_OPTION_SLOW_DISK) // because many people miss it in disk manager
-  Wid=GetCheckBoxSize(Font,T("Slow disk")).Width;
+  Wid=GetCheckBoxSize(Font,T("Slow drive")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
-  Win=CreateWindow("Button",T("Slow disk"),mask,
+  Win=CreateWindow("Button",T("Slow drive"),mask,
     page_l,y,Wid,25,Handle,(HMENU)7306,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,!floppy_instant_sector_access,0);
   ToolAddWindow(ToolTip,Win,

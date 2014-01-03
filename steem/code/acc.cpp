@@ -8,11 +8,16 @@ DESCRIPTION: Completely random accessory functions.
 #pragma message("Included for compilation: acc.cpp")
 #endif
 
+#if !defined(SS_STRUCTURE_CPU_H)
+void m68k_poke(MEM_ADDRESS ad,BYTE x);
+#endif
+
 #if defined(SS_STRUCTURE_ACC_H)
 //#ifdef IN_MAIN // normally yes
 #define EXT
 #define INIT(s) =s
 //#endif
+
 
 
 #ifdef ENABLE_LOGFILE
@@ -349,11 +354,13 @@ void log_io_write(MEM_ADDRESS addr,BYTE io_src_b)
   }
 }
 //---------------------------------------------------------------------------
+#if !defined(SS_DEBUG_CPU_LOG_NO_STOP)
 void stop_cpu_log()
 {
   logsection_enabled[LOGSECTION_CPU]=0;
   DEBUG_ONLY( CheckMenuItem(logsection_menu,300+LOGSECTION_CPU,MF_BYCOMMAND | MF_UNCHECKED); )
 }
+#endif
 //---------------------------------------------------------------------------
 void log_os_call(int trap)
 {

@@ -2,8 +2,14 @@
 
 // Don't look for anything important here, it's a trash can
 
+#include "../pch.h"
+
 #include "SSE.h"
 #include "SSEDecla.h"
+#ifdef SS_UNIX
+//#define KeyCode int
+//typede
+#endif
 #include "SSEParameters.h"
 
 #include "SSEDebug.h"
@@ -18,8 +24,6 @@ extern "C" int iDummy=0;
 extern "C" int SS_signal=0;
 #endif
 
-///extern int aaa;
-///int aaa;
 
 
 #if defined(SS_VID_RECORD_AVI) 

@@ -57,9 +57,9 @@ inline void SVideoEvent::Add(int scanline,int cycle, char type, int value) {
 }
 
 
-#if !defined(SS_STRUCTURE_BIG_FORWARD)
+
 extern int shifter_freq_at_start_of_vbl; // forward
-#endif
+
 
 inline void TVideoEvents::Add(int scanline, int cycle, char type, int value) {
   m_nEvents++;  // starting from 0 each VBL, event 0 is dummy 

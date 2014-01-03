@@ -2,7 +2,13 @@
 #ifndef EMULATOR_DECLA_H
 #define EMULATOR_DECLA_H
 
-#define EXT extern
+
+#if defined(SS_STRUCTURE_SSE6301_OBJ)
+#include <conditions.h>
+#include <dynamicarray.h>
+#endif
+// they've been nuked in conditions -> should do without...
+#define EXT extern 
 #define INIT(s)
 
 
@@ -200,7 +206,19 @@ EXT MEM_ADDRESS on_rte_return_address;
 // This list is used to reinit the agendas after loading a snapshot
 // add any new agendas to the end of the list, replace old agendas
 // with NULL.
-EXT LPAGENDAPROC agenda_list[];
+//EXT LPAGENDAPROC agenda_list[]; // BCC don't like that
+EXT LPAGENDAPROC agenda_list[
+  15+4+1
+#if !(defined(STEVEN_SEAGAL) && defined(SS_IKBD_MANAGE_ACIA_TX))
+  +1
+#endif
+#if defined(SS_FDC_RESTORE_AGENDA)
+  +1
+#endif
+#if defined(SS_FDC_VERIFY_AGENDA)
+  +1
+#endif
+];
 //--------------------------------------------------------------------------- SHIFTER
 
 //#define SHIFTER_DRAWING_NOT 0

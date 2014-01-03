@@ -11,6 +11,11 @@
 #ifndef SSEPARAMETERS_H
 #define SSEPARAMETERS_H
 
+#if defined(SS_STRUCTURE_SSE6301_OBJ) && defined(__cplusplus)
+#include <conditions.h>
+#include <draw.decla.h>
+#endif
+
 
 /////////////
 // GENERAL //

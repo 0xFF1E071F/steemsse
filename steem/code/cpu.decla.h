@@ -1,17 +1,106 @@
 #pragma once
-#ifndef CPU_DECLA_H
+#if !defined(CPU_DECLA_H) //&& defined(SS_STRUCTURE_CPU_H)
 #define CPU_DECLA_H
+//#pragma message("CPU_DECLA_H")
 
-#define BOMBS_BUS_ERROR 2
-#define BOMBS_ADDRESS_ERROR 3
-#define BOMBS_ILLEGAL_INSTRUCTION 4
-#define BOMBS_DIVISION_BY_ZERO 5
-#define BOMBS_CHK 6
-#define BOMBS_TRAPV 7
-#define BOMBS_PRIVILEGE_VIOLATION 8
-#define BOMBS_TRACE_EXCEPTION 9
-#define BOMBS_LINE_A 10
-#define BOMBS_LINE_F 11
+#if defined(SS_STRUCTURE_SSECPU_OBJ)
+
+#include <binary.h>
+#include <conditions.h>
+#include <setjmp.h>
+#include <SSE/SSEDebug.h>
+#include "acc.decla.h"
+#include "emulator.decla.h"
+#include "iorw.decla.h"
+#include "steemh.decla.h"
+
+#endif//#if defined(SS_STRUCTURE_SSECPU_OBJ)
+
+// those are pointers (variables)!
+extern void (*m68k_high_nibble_jump_table[16])();
+extern void (*m68k_jump_line_0[64])();
+extern void (*m68k_jump_line_4[64])();
+extern void (*m68k_jump_line_5[8])();
+extern void (*m68k_jump_line_8[8])();
+extern void (*m68k_jump_line_9[8])();
+extern void (*m68k_jump_line_b[8])();
+extern void (*m68k_jump_line_c[8])();
+extern void (*m68k_jump_line_d[8])();
+extern void (*m68k_jump_line_e[64])();
+extern void (*m68k_jump_line_4_stuff[64])();
+extern void (*m68k_jump_get_source_b[8])();
+extern void (*m68k_jump_get_source_w[8])();
+extern void (*m68k_jump_get_source_l[8])();
+extern void (*m68k_jump_get_source_b_not_a[8])();
+extern void (*m68k_jump_get_source_w_not_a[8])();
+extern void (*m68k_jump_get_source_l_not_a[8])();
+extern void (*m68k_jump_get_dest_b[8])();
+extern void (*m68k_jump_get_dest_w[8])();
+extern void (*m68k_jump_get_dest_l[8])();
+extern void (*m68k_jump_get_dest_b_not_a[8])();
+extern void (*m68k_jump_get_dest_w_not_a[8])();
+extern void (*m68k_jump_get_dest_l_not_a[8])();
+extern void (*m68k_jump_get_dest_b_not_a_or_d[8])();
+extern void (*m68k_jump_get_dest_w_not_a_or_d[8])();
+extern void (*m68k_jump_get_dest_l_not_a_or_d[8])();
+extern void (*m68k_jump_get_dest_b_not_a_faster_for_d[8])();
+extern void (*m68k_jump_get_dest_w_not_a_faster_for_d[8])();
+extern void (*m68k_jump_get_dest_l_not_a_faster_for_d[8])();
+extern bool (*m68k_jump_condition_test[16])();
+
+void m68k_get_source_000_b();
+void m68k_get_source_000_w();
+void m68k_get_source_000_l();
+void m68k_get_source_001_b();
+void m68k_get_source_001_w();
+void m68k_get_source_001_l();
+void m68k_get_source_010_b();
+void m68k_get_source_010_w();
+void m68k_get_source_010_l();
+void m68k_get_source_011_b();
+void m68k_get_source_011_w();
+void m68k_get_source_011_l();
+void m68k_get_source_100_b();
+void m68k_get_source_100_w();
+void m68k_get_source_100_l();
+void m68k_get_source_101_b();
+void m68k_get_source_101_w();
+void m68k_get_source_101_l();
+void m68k_get_source_110_b();
+void m68k_get_source_110_w();
+void m68k_get_source_110_l();
+void m68k_get_source_111_b();
+void m68k_get_source_111_w();
+void m68k_get_source_111_l();
+
+BYTE m68k_fetchB();
+WORD m68k_fetchW();
+LONG m68k_fetchL();
+void ASMCALL perform_crash_and_burn();
+void m68k_unrecognised();
+
+#if defined(SS_VAR_REWRITE)//compiler warning
+extern "C" void ASMCALL m68k_trace(); //execute instruction with trace bit set
+#else
+extern "C" ASMCALL void m68k_trace(); //execute instruction with trace bit set
+#endif
+
+#if defined(SS_CPU_DIV)
+extern "C" unsigned getDivu68kCycles( unsigned long dividend, unsigned short divisor);
+extern "C" unsigned getDivs68kCycles( signed long dividend, signed short divisor);
+#endif
+
+enum nbombs {
+  BOMBS_BUS_ERROR =2
+, BOMBS_ADDRESS_ERROR =3
+, BOMBS_ILLEGAL_INSTRUCTION =4
+, BOMBS_DIVISION_BY_ZERO =5
+, BOMBS_CHK= 6
+, BOMBS_TRAPV= 7
+, BOMBS_PRIVILEGE_VIOLATION= 8
+, BOMBS_TRACE_EXCEPTION= 9
+, BOMBS_LINE_A= 10
+, BOMBS_LINE_F= 11};
 
 enum exception_action{EA_READ=0,EA_WRITE,EA_FETCH,EA_INST};
 
@@ -32,11 +121,12 @@ public:
   void crash();
 };
 
-EXT void exception(int,exception_action,MEM_ADDRESS);
+
+extern void exception(int,exception_action,MEM_ADDRESS);
 
 // GCC try/catch fix:
-EXT m68k_exception ExceptionObject;
-EXT jmp_buf *pJmpBuf INIT(NULL);
+extern m68k_exception ExceptionObject;
+extern jmp_buf *pJmpBuf;
 
 // This is exactly the same as the C++ exceptions except you mustn't return or break
 // out of the exception block without executing the END_M68K_EXCEPTION. If you have
@@ -51,14 +141,16 @@ EXT jmp_buf *pJmpBuf INIT(NULL);
 
 #define areg (r+8)
 
-EXT BYTE  m68k_peek(MEM_ADDRESS ad);
-EXT WORD  m68k_dpeek(MEM_ADDRESS ad);
-EXT LONG  m68k_lpeek(MEM_ADDRESS ad);
+extern BYTE  m68k_peek(MEM_ADDRESS ad);
+extern WORD  m68k_dpeek(MEM_ADDRESS ad);
+extern LONG  m68k_lpeek(MEM_ADDRESS ad);
 
-EXT void cpu_routines_init();
+
+
+extern void cpu_routines_init();
 
 #if !defined(SS_CPU_DIV)
-EXT int m68k_divu_cycles INIT(124),m68k_divs_cycles INIT(140); // +4 for overall time
+extern int m68k_divu_cycles,m68k_divs_cycles;
 #endif
 
 #define PC32 ( (pc&0xffffff)|(pc_high_byte) )
@@ -67,8 +159,8 @@ EXT int m68k_divu_cycles INIT(124),m68k_divs_cycles INIT(140); // +4 for overall
 
 #define MEM_FIRST_WRITEABLE 8
 
-#define SR_IPL (BIT_a+BIT_9+BIT_8)
-#define SR_IPL_7 (BIT_a+BIT_9+BIT_8)
+#define SR_IPL   (BIT_a+BIT_9+BIT_8 )
+#define SR_IPL_7 (BIT_a+BIT_9+BIT_8 )
 #define SR_IPL_6 (BIT_a+BIT_9       )
 #define SR_IPL_5 (BIT_a+      BIT_8 )
 #define SR_IPL_4 (BIT_a             )
@@ -86,18 +178,43 @@ EXT int m68k_divu_cycles INIT(124),m68k_divs_cycles INIT(140); // +4 for overall
 #define SR_USER_BYTE 31
 #define SR_TRACE (WORD(BIT_f))
 
+#if defined(SS_VAR_REWRITE)
+#define SUPERFLAG ( ((sr&SR_SUPER)!=0) ) // warning C4800
+#else
 #define SUPERFLAG ((bool)(sr&SR_SUPER))
+#endif
+
 #define SSP ((MEM_ADDRESS)((SUPERFLAG) ? r[15]:other_sp))
 #define USP ((MEM_ADDRESS)((SUPERFLAG) ? other_sp:r[15]))
 #define lpSSP ((MEM_ADDRESS*)((SUPERFLAG) ? &(r[15]):&other_sp))
 #define lpUSP ((MEM_ADDRESS*)((SUPERFLAG) ? &other_sp:&(r[15])))
 
-
-#if defined(IN_EMU)
-
 inline void m68k_poke(MEM_ADDRESS ad,BYTE x);
 inline void m68k_dpoke(MEM_ADDRESS ad,WORD x);
 inline void m68k_lpoke(MEM_ADDRESS ad,LONG x);
+
+#if !defined(SS_CPU_POKE)
+//must keep them inline also for debug or double def
+inline void m68k_poke_abus(BYTE x);
+inline void m68k_dpoke_abus(WORD x);
+inline void m68k_lpoke_abus(LONG x);
+
+
+inline  void m68k_poke(MEM_ADDRESS ad,BYTE x){
+  abus=ad;
+  m68k_poke_abus(x);
+}
+
+inline  void m68k_dpoke(MEM_ADDRESS ad,WORD x){
+  abus=ad;
+  m68k_dpoke_abus(x);
+}
+
+inline  void m68k_lpoke(MEM_ADDRESS ad,LONG x){
+  abus=ad;
+  m68k_lpoke_abus(x);
+}
+#endif
 
 #if !(defined(STEVEN_SEAGAL) && defined(SS_CPU)) // inlined in SSECpu.h
 #define INSTRUCTION_TIME(t) {cpu_cycles-=(t);}
@@ -105,6 +222,8 @@ inline void m68k_lpoke(MEM_ADDRESS ad,LONG x);
 #endif
 
 #ifdef DEBUG_BUILD
+#include "debug_emu.decla.h"
+void log_history(int bombs,MEM_ADDRESS crash_address);
 
 /*
 This is for the "stop on change to user mode" and "stop on next program run" options.
@@ -135,7 +254,7 @@ for the next change to user mode (when the interrupt has finished).
 
 #ifndef RELEASE_BUILD
 
-EXT MEM_ADDRESS pc_rel_stop_on_ref;
+extern MEM_ADDRESS pc_rel_stop_on_ref;
 
 #define PC_RELATIVE_MONITOR(ad) \
   if (pc_rel_stop_on_ref){ \
@@ -188,14 +307,16 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 
 #endif
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
+#if defined(SS_CPU_INLINE_PREFETCH_SET_PC)
+#define PREFETCH_SET_PC M68000.PrefetchSetPC();
+#else
   #define PREFETCH_SET_PC                       \
   prefetched_2=false; /*will have prefetched 1 word*/ \
   prefetch_buf[0]=*lpfetch;               \
   lpfetch+=MEM_DIR;  /*let's not cause exceptions here*/
 #endif
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
+#if !defined(SS_CPU)
 #define SET_PC(ad)        \
     pc=ad;                               \
     pc_high_byte=pc & 0xff000000;     \
@@ -234,7 +355,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     PREFETCH_SET_PC
 #endif
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
+#if !defined(SS_CPU)
 #define FETCH_W(dest_word)              \
   if(prefetched_2){                     \
     dest_word=prefetch_buf[0];            \
@@ -248,13 +369,13 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
   if(lpfetch MEM_GE lpfetch_bound)exception(BOMBS_BUS_ERROR,EA_FETCH,pc);
 #endif
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
+#if !defined(SS_CPU)
 #define FETCH_TIMING {INSTRUCTION_TIME(4); cpu_cycles&=-4;} 
 #endif
 
 
 #if defined(STEVEN_SEAGAL) && defined(SS_MMU_NO_CONFUSION) 
-
+// SS_MMU_NO_CONFUSION isn't defined
 
 #define m68k_SET_DEST_B_TO_ADDR        \
   abus&=0xffffff;                                   \
@@ -516,8 +637,15 @@ extern int debug_mem_write_log_bytes;
 #endif
 
 #define STOP_INTS_BECAUSE_INTERCEPT_OS bool(ioaccess & (IOACCESS_INTERCEPT_OS | IOACCESS_INTERCEPT_OS2))
+
+
+#if defined(SS_STRUCTURE_SSECPU_OBJ)
+inline void change_to_user_mode();
+inline void change_to_supervisor_mode();
+#else
 void change_to_user_mode();
 void change_to_supervisor_mode();
+#endif
 
 extern bool cpu_stopped;
 extern bool m68k_do_trace_exception;
@@ -792,37 +920,18 @@ extern signed int compare_buffer;
 #define m68k_GET_IMMEDIATE_L m68k_src_l=m68k_fetchL();pc+=4; 
 #define m68k_IMMEDIATE_B (signed char)m68k_fetchB()
 #define m68k_IMMEDIATE_W (short)m68k_fetchW()
+#if !defined(SS_VAR_REWRITE)
 #define m68k_IMMEDIATE_L (long)m68k_fetchL() // SS unused
+#endif
 
-// SS SR has just been loaded, if supervisor bit
-// in it isn't set, go user mode
-#define DETECT_CHANGE_TO_USER_MODE  \
-          if (!SUPERFLAG) change_to_user_mode();
+//SS SR has just been loaded, if supervisor bit in it isn't set, go user mode:
+#define DETECT_CHANGE_TO_USER_MODE if (!SUPERFLAG) change_to_user_mode();
 
 
 
 #define ILLEGAL  exception(BOMBS_ILLEGAL_INSTRUCTION,EA_INST,0);
 
-
-#ifndef DETECT_TRACE_BIT
-
-
-#if defined(SS_CPU_TRACE2___)
-#define DETECT_TRACE_BIT  {\
-  if (sr & SR_TRACE)\
-  {\
-    ioaccess=TRACE_BIT_JUST_SET | (ioaccess & IOACCESS_FLAGS_MASK);\
-    M68000.TraceStatus=TM68000::TRACE_NEXT;\
-  }\
-  else\
-    M68000.TraceStatus=TM68000::NO_TRACE;\
-  }
-  
-#else
 #define DETECT_TRACE_BIT {if (sr & SR_TRACE) ioaccess=TRACE_BIT_JUST_SET | (ioaccess & IOACCESS_FLAGS_MASK);}
-#endif
-
-#endif
 
 #define TRACE_BIT_JUST_SET 0x2b
 
@@ -835,10 +944,10 @@ extern signed int compare_buffer;
 
 extern void sr_check_z_n_l_for_r0();
 
-#else //!IN_EMU
-
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU)
 #define SET_PC(ad) M68000.SetPC(ad);
+#elif defined(STEVEN_SEAGAL)
+// ...
 #else
 #define SET_PC(ad) set_pc(ad);
 extern void set_pc(MEM_ADDRESS);
@@ -851,15 +960,121 @@ extern void perform_rte();
 extern void sr_check_z_n_l_for_r0();
 extern void m68k_process();
 
+#if !(defined(STEVEN_SEAGAL)&&defined(SS_STRUCTURE_CPU_POKE_NOINLINE))
 #define m68k_poke m68k_poke_noinline
 #define m68k_dpoke m68k_dpoke_noinline
 #define m68k_lpoke m68k_lpoke_noinline
 extern void m68k_poke_noinline(MEM_ADDRESS ad,BYTE x);
 extern void m68k_dpoke_noinline(MEM_ADDRESS ad,WORD x);
 extern void m68k_lpoke_noinline(MEM_ADDRESS ad,LONG x);
+#endif
+
+#ifdef SS_STRUCTURE_SSECPU_OBJ
+inline void change_to_user_mode()
+{
+//  if(SUPERFLAG){
+  ASSERT(!SUPERFLAG);//?
+  compare_buffer=r[15];r[15]=other_sp;other_sp=compare_buffer;
+  SR_CLEAR(SR_SUPER);
+//  }
+}
+//---------------------------------------------------------------------------
+inline void change_to_supervisor_mode()
+{
+//  if(!SUPERFLAG){
+  compare_buffer=r[15];r[15]=other_sp;other_sp=compare_buffer;
+  SR_SET(SR_SUPER);
+//  }
+}
+#endif
 
 
-#endif//IN_EMU
+
+#if !defined(SS_CPU_POKE)
+NOT_DEBUG(inline) void m68k_poke_abus(BYTE x){
+  abus&=0xffffff;
+  if(abus>=MEM_IO_BASE){
+    if(SUPERFLAG)
+      io_write_b(abus,x);
+    else
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+  }else if(abus>=himem){
+#if !defined(SS_MMU_NO_CONFUSION)
+    if (mmu_confused){
+      mmu_confused_set_dest_to_addr(1,true);
+      m68k_DEST_B=x;
+    }else
+#endif
+    if (abus>=FOUR_MEGS){
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+    } //otherwise throw away
+  }else{
+    DEBUG_CHECK_WRITE_B(abus);
+    if (SUPERFLAG && abus>=MEM_FIRST_WRITEABLE) //SS !defined
+      PEEK(abus)=x;
+    else if (abus>=MEM_START_OF_USER_AREA)
+      PEEK(abus)=x;
+    else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+  }
+}
 
 
-#endif//CPU_DECLA_H
+NOT_DEBUG(inline) void m68k_dpoke_abus(WORD x){
+  abus&=0xffffff;
+  if(abus&1) exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
+  else if(abus>=MEM_IO_BASE){
+    if(SUPERFLAG)
+      io_write_w(abus,x);
+    else
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+  }else if(abus>=himem){
+#if !defined(SS_MMU_NO_CONFUSION)
+    if(mmu_confused){
+      mmu_confused_set_dest_to_addr(2,true);
+      m68k_DEST_W=x;
+    }else 
+#endif
+    if(abus>=FOUR_MEGS){
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+    } //otherwise throw away
+  }else{
+    DEBUG_CHECK_WRITE_W(abus);
+    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)//SS !defined
+      DPEEK(abus)=x;
+    else if(abus>=MEM_START_OF_USER_AREA)
+      DPEEK(abus)=x;
+    else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+  }
+}
+
+
+NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x){
+  abus&=0xffffff;
+  if(abus&1)exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
+  else if(abus>=MEM_IO_BASE){
+    if(SUPERFLAG)
+      io_write_l(abus,x);
+    else
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+  }else if(abus>=himem){
+#if !defined(SS_MMU_NO_CONFUSION)
+    if(mmu_confused){
+      mmu_confused_set_dest_to_addr(4,true);
+      m68k_DEST_L=x;
+    }else 
+#endif
+    if(abus>=FOUR_MEGS){
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+    } //otherwise throw away
+  }else{
+    DEBUG_CHECK_WRITE_L(abus);
+    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)//SS !defined
+      LPEEK(abus)=x;
+    else if(abus>=MEM_START_OF_USER_AREA)
+      LPEEK(abus)=x;
+    else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+  }
+}
+#endif
+
+#endif//!defined(CPU_DECLA_H) 

@@ -46,7 +46,7 @@ WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 #ifdef ENABLE_LOGFILE
 MEM_ADDRESS debug_mem_write_log_address;
 int debug_mem_write_log_bytes;
-#endif//structure
+#endif
 
 bool cpu_stopped=0;
 bool m68k_do_trace_exception;
@@ -58,8 +58,7 @@ void sr_check_z_n_l_for_r0()
   SR_CHECK_Z_AND_N_L;
 }
 
-
-#endif
+#endif//defined(SS_STRUCTURE_CPU_H)
 
 
 // SS neutralise macros if needs be
@@ -73,7 +72,6 @@ int silly_dummy_for_true_pc;
 #define TRUE_PC silly_dummy_for_true_pc
 #define CHECK_READ silly_dummy_for_true_pc
 #endif
-
 
 void (*m68k_high_nibble_jump_table[16])();
 void (*m68k_jump_line_0[64])();
@@ -106,7 +104,7 @@ void (*m68k_jump_get_dest_w_not_a_faster_for_d[8])();
 void (*m68k_jump_get_dest_l_not_a_faster_for_d[8])();
 bool (*m68k_jump_condition_test[16])();
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
+#if !defined(SS_CPU_INLINE_READ_FROM_ADDR)
 
 #if !defined(SS_MMU_NO_CONFUSION)
 
@@ -333,7 +331,9 @@ bool (*m68k_jump_condition_test[16])();
   }else exception(BOMBS_BUS_ERROR,EA_READ,abus);
 
 #endif//confusion!
-#endif//SS
+#endif//SS_CPU_INLINE_READ_FROM_ADDR
+
+#if !defined(SS_CPU_INLINE_READ_BWL)
 
 #define m68k_READ_B(addr)                              \
   m68k_src_b=m68k_peek(addr);                           \
@@ -344,8 +344,12 @@ bool (*m68k_jump_condition_test[16])();
 #define m68k_READ_L(addr)                              \
   m68k_src_l=m68k_lpeek(addr);                           \
 
+#endif//SS_CPU_INLINE_READ_BWL
+
 //---------------------------------------------------------------------------
 // SS not inlined in VC6
+
+#if !defined(SS_STRUCTURE_SSECPU_OBJ)
 inline void change_to_user_mode()
 {
 //  if(SUPERFLAG){
@@ -362,6 +366,9 @@ inline void change_to_supervisor_mode()
   SR_SET(SR_SUPER);
 //  }
 }
+#endif
+
+
 #define LOGSECTION LOGSECTION_CRASH//SS
 void m68k_exception::init(int a,exception_action ea,MEM_ADDRESS _abus)
 {
@@ -505,7 +512,9 @@ void m68k_exception::crash()
 
 #undef LOGSECTION
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_POKE))
+//#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_POKE))
+
+#if !defined(STEVEN_SEAGAL)
 
 NOT_DEBUG(inline) void m68k_poke_abus(BYTE x){
   abus&=0xffffff;
@@ -592,7 +601,7 @@ NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x){
   }
 }
 
-
+#if !defined(SS_STRUCTURE_CPU_H)
 inline void m68k_poke(MEM_ADDRESS ad,BYTE x){
   abus=ad;
   m68k_poke_abus(x);
@@ -607,6 +616,7 @@ inline void m68k_lpoke(MEM_ADDRESS ad,LONG x){
   abus=ad;
   m68k_lpoke_abus(x);
 }
+#endif
 
 #endif//SS
 
@@ -1123,8 +1133,7 @@ void m68k_get_effective_address()
 #if (defined(STEVEN_SEAGAL) && defined(SS_CPU)) // moved to SSECpu.cpp
 // forward (temp, structure!)
 
-
-#if !defined(SS_STRUCTURE_BIG_FORWARD)
+#if !defined(SS_STRUCTURE_CPU_H) // in cpu.decla.h
 void m68k_get_source_000_b();
 void m68k_get_source_000_w();
 void m68k_get_source_000_l();
@@ -1353,7 +1362,6 @@ void m68k_get_source_111_l(){
 #if (defined(STEVEN_SEAGAL) && defined(SS_CPU)) // moved to SSECpu.cpp
 // forward (temp, structure!)
 
-#if !defined(SS_STRUCTURE_BIG_FORWARD)
 void m68k_get_dest_000_b();
 void m68k_get_dest_000_w();
 void m68k_get_dest_000_l();
@@ -1402,7 +1410,7 @@ void m68k_get_dest_110_l_faster();
 void m68k_get_dest_111_b_faster();
 void m68k_get_dest_111_w_faster();
 void m68k_get_dest_111_l_faster();
-#endif
+
 
 #else
 ////////////////////////////////////////////////////////////////////////////////
@@ -2066,6 +2074,10 @@ void                              m68k_bchg(){
     m68k_DEST_B^=(BYTE)m68k_src_b;
   }
 }
+
+
+//#undef SS_CPU_LINE_0_TIMINGS
+
 void                              m68k_bclr(){
 #if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
@@ -2212,6 +2224,7 @@ void                              m68k_eori_w(){
     SR_CHECK_Z_AND_N_W;
   }
 }
+//#undef SS_CPU_LINE_0_TIMINGS
 void                              m68k_eori_l(){
 #if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
@@ -2229,14 +2242,45 @@ void                              m68k_eori_l(){
   SR_CHECK_Z_AND_N_L;
 }
 
+/*
+-------------------------------------------------------------------------------
+                  |    Exec Time    |               Data Bus Usage
+       CMPI       |  INSTR     EA   | 1st Operand |  2nd OP (ea)  |   INSTR
+------------------+-----------------+-------------+-------------+--------------
+#<data>,<ea> :    |                 |             |               |
+  .B or .W :      |                 |             |               |
+    Dn            |  8(2/0)  0(0/0) |          np |               | np          
+    (An)          |  8(2/0)  4(1/0) |          np |            nr | np          
+    (An)+         |  8(2/0)  4(1/0) |          np |            nr | np          
+    -(An)         |  8(2/0)  6(1/0) |          np | n          nr | np          
+    (d16,An)      |  8(2/0)  8(2/0) |          np |      np    nr | np          
+    (d8,An,Xn)    |  8(2/0) 10(2/0) |          np | n    np    nr | np          
+    (xxx).W       |  8(2/0)  8(2/0) |          np |      np    nr | np          
+    (xxx).L       |  8(2/0) 12(3/0) |          np |   np np    nr | np          
+  .L :            |                 |             |               |
+    Dn            | 14(3/0)  0(0/0) |       np np |               | np       n  
+    (An)          | 12(3/0)  8(2/0) |       np np |         nR nr | np          
+    (An)+         | 12(3/0)  8(2/0) |       np np |         nR nr | np          
+    -(An)         | 12(3/0) 10(2/0) |       np np | n       nR nr | np          
+    (d16,An)      | 12(3/0) 12(3/0) |       np np |      np nR nr | np          
+    (d8,An,Xn)    | 12(3/0) 14(3/0) |       np np | n    np nR nr | np          
+    (xxx).W       | 12(3/0) 12(3/0) |       np np |      np nR nr | np          
+    (xxx).L       | 12(3/0) 16(4/0) |       np np |   np np nR nr | np          
+*/
+
+//#undef SS_CPU_LINE_0_TIMINGS
 void                              m68k_cmpi_b(){
 #if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
 #endif
-
+#if !defined(SS_CPU_PREFETCH_TIMING_CMPI)
   INSTRUCTION_TIME(4);
+#endif
   m68k_GET_IMMEDIATE_B;
   m68k_old_dest=m68k_read_dest_b();
+#if defined(SS_CPU_PREFETCH_TIMING_CMPI)
+  INSTRUCTION_TIME(4);
+#endif
   PREFETCH_IRC;
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
   FETCH_TIMING;
@@ -2251,9 +2295,14 @@ void                              m68k_cmpi_w(){
 #if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
 #endif
+#if !defined(SS_CPU_PREFETCH_TIMING_CMPI)
   INSTRUCTION_TIME(4);
+#endif
   m68k_GET_IMMEDIATE_W;
   m68k_old_dest=m68k_read_dest_w();
+#if defined(SS_CPU_PREFETCH_TIMING_CMPI)
+  INSTRUCTION_TIME(4);
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
   FETCH_TIMING;
 #endif
@@ -2263,23 +2312,33 @@ void                              m68k_cmpi_w(){
   m68k_DEST_W-=m68k_src_w;
   SR_SUB_W(0);
 }
+//#undef SS_CPU_LINE_0_TIMINGS
+
 void                              m68k_cmpi_l(){
 #if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
 #endif
   m68k_GET_IMMEDIATE_L;
+#if !defined(SS_CPU_PREFETCH_TIMING_CMPI)
   if(DEST_IS_REGISTER){INSTRUCTION_TIME(10);} else {INSTRUCTION_TIME(8);}
+#endif
   m68k_old_dest=m68k_read_dest_l();
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
   FETCH_TIMING;
 #endif
   PREFETCH_IRC;
+#if defined(SS_CPU_PREFETCH_TIMING_CMPI)
+/* Japtro disk B overscan dot balls, we were rounding 14 to 16 in v3.5
+*/
+  if(DEST_IS_REGISTER){INSTRUCTION_TIME(10);} else {INSTRUCTION_TIME(8);}
+#endif
   compare_buffer=m68k_old_dest;
   m68k_dest=&compare_buffer;
   m68k_DEST_L-=m68k_src_l;
   SR_SUB_L(0);
 }
 
+//#define SS_CPU_LINE_0_TIMINGS
 void                              m68k_movep_w_to_dN_or_btst(){
 
 #if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
@@ -4217,11 +4276,7 @@ Then (Dn - 1 -> Dn; If Dn  <> -1 Then PC + dn -> PC)
 #endif
     PREFETCH_IRC;
     if(m68k_CONDITION_TEST){
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_REWRITE)
-      m68k_DEST_B=(char)0xff; // just a warning
-#else
       m68k_DEST_B=0xff;
-#endif
       if(DEST_IS_REGISTER){INSTRUCTION_TIME(2);}else {INSTRUCTION_TIME(4);}
     }else{
       m68k_DEST_B=0;
@@ -6984,6 +7039,7 @@ extern "C" void m68k_1111(){  //line-f emulator
 
 #include "cpuinit.cpp"	
 
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU)
+#if defined(STEVEN_SEAGAL) && defined(SS_CPU) \
+  && !defined(SS_STRUCTURE_SSECPU_OBJ)
 #include "SSE/SSECpu.cpp"
 #endif

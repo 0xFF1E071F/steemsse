@@ -481,7 +481,7 @@ inline void Microwire(int channel,int &val
       d_dsp_v=PSGLowFilter[channel].FilterAudio(d_dsp_v,LOW_PASS_FILTER_FREQ,LOW_PASS_FILTER_GAIN);
 #endif
 #endif
-    val=d_dsp_v;
+    val=(int)d_dsp_v;//cast for warning C4244, but is it fine?...
   }
 }
 
@@ -516,7 +516,7 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
       && ST_TYPE==STE // only if option checked and we're on STE
 #endif
       ) 
-      v=PsgGain.FilterAudio(v,-6); // -6DB
+      v=(int)PsgGain.FilterAudio(v,-6); // -6DB  cast for warning C4244, but is it fine?...
 #endif
     val=v + **lp_dma_sound_channel;                           
 
@@ -613,7 +613,7 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
       &&ST_TYPE==STE // only if option checked and we're on STE
 #endif
       ) 
-      v=PsgGain.FilterAudio(v,-6); // -6DB
+      v=(int)PsgGain.FilterAudio(v,-6); // -6DB  cast for warning C4244, but is it fine?...
 #endif
     val=v + **lp_dma_sound_channel;                           
 

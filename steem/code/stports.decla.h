@@ -14,8 +14,8 @@ extern void SerialInBufNotEmpty();
 
 extern void PortsRunStart(),PortsRunEnd(),PortsOpenAll();
 
-extern class TMIDIIn;//?
-extern class TMIDIOut;
+class TMIDIIn;//?
+class TMIDIOut;
 
 #define PORTTYPE_NONE 0
 #define PORTTYPE_MIDI 1

@@ -10,6 +10,10 @@ build and the basis of the debug GUI.
 #pragma message("Included for compilation: boiler.cpp")
 #endif
 
+#if defined(SS_STRUCTURE_SSECPU_OBJ)
+#include "SSE/SSECpu.h" //m68k_lpoke()
+#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_BOILER_H)
 
 MEM_ADDRESS dpc,old_dpc;

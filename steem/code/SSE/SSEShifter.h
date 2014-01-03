@@ -4,6 +4,12 @@
 
 #include "SSEDecla.h"
 
+#define LOGSECTION LOGSECTION_VIDEO
+
+#if defined(SS_STRUCTURE_CPU_H)
+#include <cpu.decla.h>
+#endif
+
 #if defined(SS_SHIFTER)
 /*  The ST was a barebone machine made up of cheap components hastily patched
     together, including the video shifter.
@@ -113,7 +119,11 @@ struct TShifter {
   inline void DrawBufferedScanlineToVideo();
 #endif
   void DrawScanlineToEnd();
-  inline int FetchingLine();
+
+#if !defined(SS_STRUCTURE_SSECPU_OBJ)
+  inline // TODO
+#endif
+    int FetchingLine();
   void IncScanline();
 #if defined(SS_SHIFTER_FIX_LINE508_CONFUSION)
   inline bool Line508Confusion();
@@ -296,8 +306,10 @@ inline void TShifter::DrawBufferedScanlineToVideo() {
 
 #endif
 
-
-inline int TShifter::FetchingLine() {
+#if !defined(SS_STRUCTURE_SSECPU_OBJ)
+inline 
+#endif
+int TShifter::FetchingLine() {
   // does the current scan_y involve fetching by the shifter?
   // notice < shifter_last_draw_line, not <=
   return (scan_y>=shifter_first_draw_line && scan_y<shifter_last_draw_line
@@ -1101,7 +1113,8 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 #if defined(SS_SHIFTER_EVENTS)
   VideoEvents.Add(scan_y,cycles,'w',((addr&0xF)<<8)|io_src_b);
 #endif
-  TRACE_OSD("WRITE SDP");  
+  if(TRACE_ENABLED)
+    TRACE_OSD("WRITE SDP");  
 #if defined(SS_STF_SDP)
   // some STF programs write to those addresses, it just must be ignored.
   if(ST_TYPE!=STE)
@@ -1282,5 +1295,7 @@ void TShifter::ShiftSDP(int shift) { //inline
 
 
 #endif//#if defined(SS_SHIFTER)
+
+#undef LOGSECTION 
 
 #endif//define SSESHIFTER_H

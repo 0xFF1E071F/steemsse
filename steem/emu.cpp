@@ -19,10 +19,6 @@ inline int abs_quick(int i)
 #include "conditions.h" //SS
 #include "SSE/SSE.h" //SS
 
-#if defined(SS_STRUCTURE_BIG_FORWARD)
-#include "big_forward.h"
-#endif
-
 #include "SSE/SSEDebug.h"
 
 #if defined(STEVEN_SEAGAL)
@@ -282,7 +278,10 @@ EXT char m68k_src_b;
 #if defined(STEVEN_SEAGAL)
 #include "SSE/SSEInterrupt.cpp"
 #include "SSE/SSESTF.cpp"
-#include "SSE/SSE6301.cpp" // or in ikbd?
+
+#if !defined(SS_STRUCTURE_SSE6301_OBJ)
+#include "SSE/SSE6301.cpp" 
+#endif
 #include "SSE/SSESDL.cpp" //?
 #endif
 
@@ -316,10 +315,10 @@ void m68k_process()
 
 
 
-
-
+#if !(defined(STEVEN_SEAGAL)&&defined(SS_STRUCTURE_CPU_POKE_NOINLINE))
+// this seems useless?
 void m68k_poke_noinline(MEM_ADDRESS ad,BYTE x){ m68k_poke(ad,x); }
 void m68k_dpoke_noinline(MEM_ADDRESS ad,WORD x){ m68k_dpoke(ad,x); }
 void m68k_lpoke_noinline(MEM_ADDRESS ad,LONG x){ m68k_lpoke(ad,x); }
-
+#endif
 

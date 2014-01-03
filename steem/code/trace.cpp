@@ -10,6 +10,10 @@ of Steem and displaying information on what happened.
 #pragma message("Included for compilation: trace.cpp")
 #endif
 
+#if defined(SS_STRUCTURE_SSECPU_OBJ)
+void m68k_process();
+#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_TRACE_H)
 
 trace_display_entry t_d_e[MAX_TRACE_DISPLAY_ENTRIES];

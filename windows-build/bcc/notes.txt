@@ -1,0 +1,6 @@
+makefile.txt is just a copy of makefile
+The extension (txt) is used for backup purposes (we use FBBackup)
+Hopefully the copy is always up to date
+
+In v3.6, we endeavour to correct the structure of Steem.
+_modules files are the previous way.

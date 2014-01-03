@@ -291,7 +291,7 @@ typedef Window WINDOWTYPE;
 #define NOT_ONEGAME(s) s
 #endif
 
-#ifndef ASMCALL
+#ifndef ASMCALL //SS much used
 #if defined(WIN32)
 #define ASMCALL __cdecl
 #else
@@ -438,3 +438,6 @@ static BOOL SWP_checkforbugs(HWND Win,HWND WinAfter,int x,int y,int w,int h,UINT
 
 #define MAX_PC_JOYS 8
 
+
+#undef EXT//SS
+#undef INIT//SS

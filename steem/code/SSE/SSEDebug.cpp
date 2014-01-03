@@ -143,12 +143,10 @@ void TDebug::Trace(char *fmt, ...){
 #if defined(SS_DEBUG_START_STOP_INFO)
 // A series of TRACE giving precious info at the start & end of emulation
 // forward
-#if !defined(SS_STRUCTURE_BIG_FORWARD)
 
 extern int stemdos_current_drive;
 #if defined(SS_SOUND_MICROWIRE)
 extern int dma_sound_bass,dma_sound_treble;
-#endif
 #endif
 
 

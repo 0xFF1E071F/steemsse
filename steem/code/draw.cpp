@@ -29,7 +29,12 @@ EXT int draw_fs_topgap INIT(0);
 
 WIN_ONLY( EXT int draw_win_mode[2]; ) // Inited by draw_fs_blit_mode
 
+#if defined(SS_STRUCTURE_SSE6301_OBJ) 
+EXTC BYTE FullScreen INIT(0);
+#else
 EXT bool FullScreen INIT(0);
+#endif
+
 EXT bool draw_lock;
 
 EXT BYTE *draw_mem;

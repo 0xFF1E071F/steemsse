@@ -34,9 +34,11 @@ other files that make up the Steem module.
 #include "conditions.h"
 
 #include "SSE/SSE.h" // SS
+//#pragma message("yoho_main")
 
-#if defined(SS_STRUCTURE_BIG_FORWARD)
-#include "big_forward.h"
+
+#if defined(SS_STRUCTURE_SSECPU_OBJ) && defined(BCC_BUILD)//temp
+#include "SSE/SSECpu.h"
 #endif
 
 #include "SSE/SSEDebug.h" //SS

@@ -1,3 +1,17 @@
+
+#include "SSE.h"
+#if defined(SS_STRUCTURE_SSE6301_OBJ)
+
+#include "../pch.h"
+
+#include "SSE6301.h"
+#include "SSEDebug.h"
+#include <mymisc.h>
+#include <acia.h>
+#include <emulator.decla.h>
+#include <ikbd.decla.h>
+#endif
+
 #if defined(SS_IKBD_6301)
 
 #include "SSEOption.h"
@@ -33,7 +47,7 @@ void THD6301::Init() { // called in 'main'
   {
     romfile=GetEXEDir(); // Steem's function WIN/Linux
     romfile+=HD6301_ROM_FILENAME;
-    fp=fopen(romfile,"r+b");
+    fp=fopen(romfile.Text,"r+b");
     if(fp)
     {
       int n=fread(ram+0xF000,1,4096,fp);
@@ -48,8 +62,12 @@ void THD6301::Init() { // called in 'main'
     }
     else 
     {
-      free(ram);
-      ram=NULL;
+      printf("6301 rom error %s %d %d %d\n",romfile.Text,HD6301_OK,Initialised,ram);
+      HD6301_OK=Initialised=0;
+   //   if(ram)
+       // free(ram);//linux: no direct access
+      hd6301_destroy(); 
+//      ram=NULL;
     } 
   }
 
