@@ -1,14 +1,3 @@
-# this file is a txt file, it's easier to edit/backup
-# see if possible to directlty use it else copy to 'makefile' without extension
-
-# Some features are not available in the Unix build:
-# - record to AVI (already shitty enough in the Win32 build)
-# - IPF support
-# I (SS) could envision putting them in but only if I had infinite time, which
-# isn't the case yet, or if IPF format should really take off on the ST
-# - unrar support: not a big deal IMO
-
-# What I will do that could help the Unix build is look into SDL support
 
 # to build XSteem SSE, enter this in the terminal:
 # make -B -fMakefile.txt 3rdparty
@@ -72,7 +61,7 @@ LIBTOOL=libtool
 
 # Objects
 OBJS=./obj/asm_draw.o ./obj/emu.o ./obj/asm_osd.o ./obj/main.o ./obj/helper.o ./obj/resource.o\
- ./obj/SSE.o ./obj/SSEOption.o ./obj/SSEMMU.o
+ ./obj/SSE.o ./obj/SSEOption.o ./obj/SSEMMU.o ./obj/SSE6301.o ./obj/SSECpu.o
 #./obj/dsp.o ./obj/6301.o ./obj/div68kCycleAccurate.o
 # OBJS=./code/draw_c/draw_c.o emu.o main.o urarlib.o helper.o resource.o
 
@@ -87,13 +76,15 @@ all:	asm
 	$(MAKE) -fMakefile.txt SSE
 	$(MAKE) -fMakefile.txt SSEMMU
 	$(MAKE) -fMakefile.txt SSEOption
+	$(MAKE) -fMakefile.txt SSE6301
+	$(MAKE) -fMakefile.txt SSECpu
 	$(MAKE) -fMakefile.txt link
 
 clean:
 	rm -rf obj output
 
 fresh:
-	$(MAKE) -fMakefile.txt clean
+	$(MAKE) -fMakefile_354.txt clean
 #	$(MAKE) urarlib
 	$(MAKE) -fMakefile.txt asm
 	$(MAKE) -fMakefile.txt all
@@ -139,16 +130,18 @@ link_static:
 SSEMMU:
 	$(CC) -o ./obj/SSEMMU.o -c $(ROOT)/steem/code/SSE/SSEMMU.cpp $(CFLAGS) $(STEEMFLAGS)
 
+SSE6301:
+	$(CC) -o ./obj/SSE6301.o -c $(ROOT)/steem/code/SSE/SSE6301.cpp $(CFLAGS) $(STEEMFLAGS)
+
+SSECpu:
+	$(CC) -o ./obj/SSECpu.o -c $(ROOT)/steem/code/SSE/SSECpu.cpp $(CFLAGS) $(STEEMFLAGS)
+
 
 SSE:
 	$(CC) -o ./obj/SSE.o -c $(ROOT)/steem/code/SSE/SSE.cpp $(CFLAGS) $(STEEMFLAGS)
 
-# can't find rule?
-
 SSEOption:
 	$(CC) -o ./obj/SSEOption.o -c $(ROOT)/steem/code/SSE/SSEOption.cpp $(CFLAGS) $(STEEMFLAGS)
-
-
 
 
 #3rdparty:	zlib unrarlib portaudio rtaudio div68kCycleAccurate 6301

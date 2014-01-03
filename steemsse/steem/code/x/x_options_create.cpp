@@ -1316,7 +1316,7 @@ void TOptionBox::CreateSSEPage() {
 
 #if defined(SS_VAR_OPTION_SLOW_DISK) // because many people miss it in disk manager
   slow_disk_but.create(XD,page_p,page_l,y,0,25,
-    button_notify_proc,this,BT_CHECKBOX,T("Slow disk"),4010,BkCol);
+    button_notify_proc,this,BT_CHECKBOX,T("Slow drive"),4010,BkCol);
   slow_disk_but.set_check(!floppy_instant_sector_access);
   hints.add(slow_disk_but.handle,
   T("Slow but accurate disk drive emulation."),

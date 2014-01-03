@@ -1,8 +1,7 @@
 
 # to build XSteem SSE, enter this in the terminal:
-# make -B -fMakefile_dbg.txt 3rdparty
-# make -B -fMakefile_dbg.txt
-
+# make -B -fMakefile_modules_SDL.txt 3rdparty
+# make -B -fMakefile_modules_SDL.txt
 
 #####################################
 #      Makefile for Steem           #
@@ -19,7 +18,7 @@ ROOT=..
 CC=g++
 
 # Parameters given to the compiler
-STEEMFLAGS=-DUNIX -DLINUX -DSTEVEN_SEAGAL -DNO_PORT_AUDIO -DSS_DEBUG
+STEEMFLAGS=-DUNIX -DLINUX -DSTEVEN_SEAGAL -DNO_PORT_AUDIO
 CFLAGS=-I$(ROOT)/include -I$(ROOT)/steem/code \
 -I$(ROOT)/3rdparty \
 -I$(ROOT)/3rdparty/dsp \
@@ -27,12 +26,13 @@ CFLAGS=-I$(ROOT)/include -I$(ROOT)/steem/code \
 -I$(ROOT)/3rdparty/zlib/contrib/minizip \
 -I$(ROOT)/3rdparty/zlib \
 -I$(ROOT)/3rdparty/rtaudio \
+-I$(ROOT)/3rdparty/SDL-Unix/usr/include/SDL \
 -lasound -w -Wfatal-errors
 
 RELEASE_CFLAGS=-O
 
 # Output filename
-OUTPUT="./output/steem_dbg"
+OUTPUT="./output/steem"
 
     LIBS=-lX11 -lXext -lpthread -lXxf86vm \
       $(ROOT)/3rdparty/zlib/crc32.o  \
@@ -49,6 +49,7 @@ OUTPUT="./output/steem_dbg"
       $(ROOT)/3rdparty/rtaudio/tests/Release/RtAudio.o \
       $(ROOT)/X-build/obj/6301.o \
       $(ROOT)/X-build/obj/dsp.o \
+      $(ROOT)/3rdparty/SDL-Unix/usr/lib/libSDL.so \
       $(ROOT)/X-build/obj/div68kCycleAccurate.o 
 #	$(ROOT)/X-build/obj/SSEMMU.o
 
@@ -62,7 +63,7 @@ LIBTOOL=libtool
 
 # Objects
 OBJS=./obj/asm_draw.o ./obj/emu.o ./obj/asm_osd.o ./obj/main.o ./obj/helper.o ./obj/resource.o\
- ./obj/SSE.o ./obj/SSEOption.o ./obj/SSEMMU.o ./obj/SSE6301.o ./obj/SSECpu.o
+ ./obj/SSE.o ./obj/SSEOption.o ./obj/SSEMMU.o
 #./obj/dsp.o ./obj/6301.o ./obj/div68kCycleAccurate.o
 # OBJS=./code/draw_c/draw_c.o emu.o main.o urarlib.o helper.o resource.o
 
@@ -70,37 +71,35 @@ OBJS=./obj/asm_draw.o ./obj/emu.o ./obj/asm_osd.o ./obj/main.o ./obj/helper.o ./
 
 all:	asm
 	mkdir -p obj output
-	$(MAKE) -fMakefile_dbg.txt res
-	$(MAKE) -fMakefile_dbg.txt helper
-	$(MAKE) -fMakefile_dbg.txt main
-	$(MAKE) -fMakefile_dbg.txt emu
-	$(MAKE) -fMakefile_dbg.txt SSE
-	$(MAKE) -fMakefile_dbg.txt SSEMMU
-	$(MAKE) -fMakefile_dbg.txt SSEOption
-	$(MAKE) -fMakefile_dbg.txt SSE6301
-	$(MAKE) -fMakefile_dbg.txt SSECpu
-	$(MAKE) -fMakefile_dbg.txt link
+	$(MAKE) -fMakefile_modules_SDL.txt res
+	$(MAKE) -fMakefile_modules_SDL.txt helper
+	$(MAKE) -fMakefile_modules_SDL.txt main
+	$(MAKE) -fMakefile_modules_SDL.txt emu
+	$(MAKE) -fMakefile_modules_SDL.txt SSE
+	$(MAKE) -fMakefile_modules_SDL.txt SSEMMU
+	$(MAKE) -fMakefile_modules_SDL.txt SSEOption
+	$(MAKE) -fMakefile_modules_SDL.txt link
 
 clean:
 	rm -rf obj output
 
 fresh:
-	$(MAKE) -fMakefile_dbg.txt clean
+	$(MAKE) -fMakefile_modules_SDL.txt clean
 #	$(MAKE) urarlib
-	$(MAKE) -fMakefile_dbg.txt asm
-	$(MAKE) -fMakefile_dbg.txt all
+	$(MAKE) -fMakefile_modules_SDL.txt asm
+	$(MAKE) -fMakefile_modules_SDL.txt all
 
 test:
-	$(MAKE) -fMakefile_dbg.txt all
+	$(MAKE) -fMakefile_modules_SDL.txt all
 	$(OUTPUT)
 
 release:
-	$(MAKE) -fMakefile_dbg.txt clean
-	$(MAKE) -fMakefile_dbg.txt res
+	$(MAKE) -fMakefile_modules_SDL.txt clean
+	$(MAKE) -fMakefile_modules_SDL.txt res
 #	$(MAKE) urarlib
-	$(MAKE) -fMakefile_dbg.txt asm
-	$(MAKE) -fMakefile_dbg.txt release_compile
-	$(MAKE) -fMakefile_dbg.txt link_static
+	$(MAKE) -fMakefile_modules_SDL.txt asm
+	$(MAKE) -fMakefile_modules_SDL.txt release_compile
+	$(MAKE) -fMakefile_modules_SDL.txt link_static
 	strip -s $(OUTPUT)
 
 helper:
@@ -131,11 +130,6 @@ link_static:
 SSEMMU:
 	$(CC) -o ./obj/SSEMMU.o -c $(ROOT)/steem/code/SSE/SSEMMU.cpp $(CFLAGS) $(STEEMFLAGS)
 
-SSE6301:
-	$(CC) -o ./obj/SSE6301.o -c $(ROOT)/steem/code/SSE/SSE6301.cpp $(CFLAGS) $(STEEMFLAGS)
-
-SSECpu:
-	$(CC) -o ./obj/SSECpu.o -c $(ROOT)/steem/code/SSE/SSECpu.cpp $(CFLAGS) $(STEEMFLAGS)
 
 SSE:
 	$(CC) -o ./obj/SSE.o -c $(ROOT)/steem/code/SSE/SSE.cpp $(CFLAGS) $(STEEMFLAGS)
@@ -147,13 +141,14 @@ SSEOption:
 
 
 #3rdparty:	zlib unrarlib portaudio rtaudio div68kCycleAccurate 6301
+# we try not to compile SDL...
 3rdparty:	div68kCycleAccurate 6301 dsp zlib rtaudio 
 
 div68kCycleAccurate:
 	gcc -c $(ROOT)/3rdparty/pasti/div68kCycleAccurate.c $(CFLAGS) -o./obj/div68kCycleAccurate.o
 
 6301:
-	gcc -c $(ROOT)/3rdparty/6301/6301.c $(CFLAGS) -DSTEVEN_SEAGAL -DSS_DEBUG -o./obj/6301.o
+	gcc -c $(ROOT)/3rdparty/6301/6301.c $(CFLAGS) -DSTEVEN_SEAGAL -o./obj/6301.o
 
 dsp:
 	$(CC) -o ./obj/dsp.o -c $(ROOT)/3rdparty/dsp/dsp.cpp $(CFLAGS) $(STEEMFLAGS)

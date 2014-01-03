@@ -594,6 +594,7 @@ signed int compare_buffer;
 //(old_dpc+2)
 
 #if !(defined(STEVEN_SEAGAL)&&defined(SS_CPU)) // inlined in SSECpu.h
+//#if !(defined(STEVEN_SEAGAL)&&defined(SS_CPU)&&defined(SS_STRUCTURE_CPU_H))
 #define m68k_GET_SOURCE_B m68k_jump_get_source_b[(ir&BITS_543)>>3]()
 #define m68k_GET_SOURCE_W m68k_jump_get_source_w[(ir&BITS_543)>>3]()
 #define m68k_GET_SOURCE_L m68k_jump_get_source_l[(ir&BITS_543)>>3]()
@@ -602,6 +603,7 @@ signed int compare_buffer;
 #define m68k_GET_SOURCE_W_NOT_A m68k_jump_get_source_w_not_a[(ir&BITS_543)>>3]()
 #define m68k_GET_SOURCE_L_NOT_A m68k_jump_get_source_l_not_a[(ir&BITS_543)>>3]()
 
+#if !defined(SS_CPU)
 #define m68k_GET_DEST_B m68k_jump_get_dest_b[(ir&BITS_543)>>3]()
 #define m68k_GET_DEST_W m68k_jump_get_dest_w[(ir&BITS_543)>>3]()
 #define m68k_GET_DEST_L m68k_jump_get_dest_l[(ir&BITS_543)>>3]()
@@ -617,6 +619,7 @@ signed int compare_buffer;
 #define m68k_GET_DEST_B_NOT_A_FASTER_FOR_D m68k_jump_get_dest_b_not_a_faster_for_d[(ir&BITS_543)>>3]()
 #define m68k_GET_DEST_W_NOT_A_FASTER_FOR_D m68k_jump_get_dest_w_not_a_faster_for_d[(ir&BITS_543)>>3]()
 #define m68k_GET_DEST_L_NOT_A_FASTER_FOR_D m68k_jump_get_dest_l_not_a_faster_for_d[(ir&BITS_543)>>3]()
+#endif
 #endif//ss-cpu
 
 #define m68k_CONDITION_TEST m68k_jump_condition_test[(ir&0xf00)>>8]()
@@ -925,12 +928,14 @@ extern void perform_rte();
 extern void sr_check_z_n_l_for_r0();
 extern void m68k_process();
 
+#if !(defined(STEVEN_SEAGAL)&&defined(SS_STRUCTURE_CPU_POKE_NOINLINE))
 #define m68k_poke m68k_poke_noinline
 #define m68k_dpoke m68k_dpoke_noinline
 #define m68k_lpoke m68k_lpoke_noinline
 extern void m68k_poke_noinline(MEM_ADDRESS ad,BYTE x);
 extern void m68k_dpoke_noinline(MEM_ADDRESS ad,WORD x);
 extern void m68k_lpoke_noinline(MEM_ADDRESS ad,LONG x);
+#endif
 
 #endif
 

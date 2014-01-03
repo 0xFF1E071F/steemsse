@@ -300,10 +300,15 @@ when it does).
           ACIA_IKBD.irq=(ACIA_IKBD.tx_irq_enabled && ACIA_IKBD.tx_flag==0);
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_ACIA)//compiler warning
+          LOG_ONLY( if (ACIA_IKBD.irq!=(BYTE)old_irq) log_to_section(LOGSECTION_IKBD,Str("IKBD: ")+
+            HEXSl(old_pc,6)+" - Read data ($"+HEXSl(ACIA_IKBD.data,2)+
+            "), changing ACIA IRQ bit from "+old_irq+" to "+ACIA_IKBD.irq); )
+#else
           LOG_ONLY( if (ACIA_IKBD.irq!=old_irq) log_to_section(LOGSECTION_IKBD,Str("IKBD: ")+
             HEXSl(old_pc,6)+" - Read data ($"+HEXSl(ACIA_IKBD.data,2)+
             "), changing ACIA IRQ bit from "+old_irq+" to "+ACIA_IKBD.irq); )
-
+#endif
         }
 
 #if defined(SS_ACIA_TEST_REGISTERS) && defined(SS_ACIA_DOUBLE_BUFFER_RX)

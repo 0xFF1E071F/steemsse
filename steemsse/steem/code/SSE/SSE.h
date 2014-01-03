@@ -30,7 +30,7 @@ timings found by ijor (also author of Pasti).
 -A folder 'SDL-WIN' for future SDL support
 -A folder 'unRARDLL' in '3rdparty' for unrar support
 -A folder 'various' in '3rdparty'
--Files xxx.decla.h: work in progress
+-Files xxx.decla.h to better separate declaration/implementation
 
 Other mods are in Steem code, inside blocks where STEVEN_SEAGAL is defined.
 Many other defines are used to segment code. This is heavy but it makes 
@@ -60,6 +60,11 @@ Normally switches are optional, but they also are useful just to mark
 code changes.
 
 SS_DEBUG, if needed, should be defined in the project/makefile.
+
+LEGACY_BUILD is now needed to build Steem using the 3 big modules
+Steem Emu and Helper.
+Those configurations are marked with '_modules'.
+When it's not defined, more separate units are compiled (work in progress).
 
 TODO: All switches SS_ -> SSE_ to mark the branch rather than the author
 
@@ -95,33 +100,16 @@ and all his silly mods are gone!
 
 #ifdef SS_BETA 
 
-#if defined(WIN32)
-
 #define SSE_VERSION 360
 #define SSE_VERSION_TXT "3.6.0" 
 #define WINDOW_TITLE "Steem Beta 3.6.0"
 
-#elif defined(UNIX)
-
-#define SSE_VERSION 354 // but no 355 -> integrate '355' fixes?
-#define SSE_VERSION_TXT "3.5.4" 
-#define WINDOW_TITLE "Steem Beta 3.5.4"
-
-#endif
-
 #else // next planned release
 
-#if defined(WIN32)
 #define SSE_VERSION 360
 // check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_VERSION_TXT "3.6.0" 
 #define WINDOW_TITLE "Steem SSE 3.6.0" //not 'Engine', too long
-#elif defined(UNIX)
-#define SSE_VERSION 354
-#define SSE_VERSION_TXT "3.5.4" 
-#define WINDOW_TITLE "Steem SSE 3.5.4"
-
-#endif
 
 #endif
 
@@ -131,8 +119,6 @@ and all his silly mods are gone!
 //////////////////
 // BIG SWITCHES //
 //////////////////
-
-// Any switch may be disabled and it should still compile & run
 
 #if defined(STEVEN_SEAGAL)
 
@@ -153,7 +139,7 @@ and all his silly mods are gone!
 #define SS_SHIFTER    // The legendary custom shifter and all its tricks
 #define SS_SOUND      // YM2149, STE DMA sound, Microwire
 #define SS_STF        // switch STF/STE
-#define SS_STRUCTURE  // work in progress...
+#define SS_STRUCTURE  // conditions other switches (that or duplicate all)
 #define SS_TIMINGS    // TODO (only HBL now)
 #define SS_TOS        // The Operating System
 #define SS_UNIX       // Linux build must be OK too (may lag)
@@ -277,6 +263,7 @@ and all his silly mods are gone!
 #define SS_CPU_DIV          // divide like Caesar
 #define SS_CPU_EXCEPTION    // crash like Windows 98
 #define SS_CPU_FETCH_IO     // fetch like a dog in outer space
+#define SS_CPU_INLINE       // supposes TM68000 exists!
 #define SS_CPU_MOVE_B       // move like a superstar
 #define SS_CPU_MOVE_W       
 #define SS_CPU_MOVE_L
@@ -299,7 +286,7 @@ and all his silly mods are gone!
 #define SS_CPU_HACK_WAR_HELI
 #endif
 
-#define SS_CPU_IGNORE_WRITE_0 // for Aladin, may write on 1st word
+#define SS_CPU_IGNORE_WRITE_0 // for Aladin, may write on 1st byte
 #define SS_CPU_POST_INC // no post increment if exception 
 #define SS_CPU_PRE_DEC // no "pre" decrement if exception!
 #define SS_CPU_SET_DEST_TO_0 // for Aladin
@@ -314,11 +301,19 @@ and all his silly mods are gone!
 #define SS_CPU_FETCH_IO_FULL // need all or nothing for: Union Demo!
 #endif
 
+#if defined(SS_CPU_INLINE) //todo
+#define SS_CPU_INLINE_PREFETCH_SET_PC
+#define SS_CPU_INLINE_READ_BWL
+#define SS_CPU_INLINE_READ_FROM_ADDR
+#endif//SS_CPU_INLINE
+
+
+
 #if defined(SS_CPU_POKE)
 //#define SS_CPU_3615GEN4_ULM //targeted for 36.15 GEN4 by ULM
 #define SS_CPU_CHECK_VIDEO_RAM_B
 #define SS_CPU_CHECK_VIDEO_RAM_L
-#define SS_CPU_CHECK_VIDEO_RAM_W // for 36.15 GEN4 by ULM
+#define SS_CPU_CHECK_VIDEO_RAM_W // including: 36.15 GEN4 by ULM
 #endif //poke
 
 #if defined(SS_CPU_PREFETCH)
@@ -335,6 +330,7 @@ and all his silly mods are gone!
 // Move the timing counting from FETCH_TIMING to PREFETCH_IRC:
 #define SS_CPU_PREFETCH_TIMING //big, big change
 #ifdef SS_CPU_PREFETCH_TIMING 
+#define SS_CPU_PREFETCH_TIMING_CMPI // move the instruction timing place
 #define SS_CPU_PREFETCH_TIMING_MOVEM // at wrong place, probably compensates bug
 #define SS_CPU_PREFETCH_TIMING_SET_PC // necessary for some SET PC cases
 //#define SS_CPU_PREFETCH_TIMING_EXCEPT // to mix unique switch + lines
@@ -344,6 +340,7 @@ and all his silly mods are gone!
 #endif
 #ifdef CORRECTING_PREFETCH_TIMING
 // powerful prefetch debugging switches
+
 #define SS_CPU_LINE_0_TIMINGS // 0000 Bit Manipulation/MOVEP/Immediate
 #define SS_CPU_LINE_1_TIMINGS // 0001 Move Byte
 #define SS_CPU_LINE_2_TIMINGS // 0010 Move Long
@@ -360,6 +357,7 @@ and all his silly mods are gone!
 #define SS_CPU_LINE_D_TIMINGS // 1101 ADD/ADDX
 #define SS_CPU_LINE_E_TIMINGS // 1110 Shift/Rotate/Bit Field
 #define SS_CPU_LINE_F_TIMINGS // 1111 Coprocessor Interface/MC68040 and CPU32 Extensions
+
 #endif
 
 // all those switches because we had some nasty bug... 
@@ -419,6 +417,8 @@ and all his silly mods are gone!
 
 #if defined(DEBUG_BUILD) //TODO add other mods here
 #define SS_DEBUG_CLIPBOARD // right-click on 'dump' to copy then paste
+//#define SS_DEBUG_CPU_LOG_NO_STOP // never stop
+#define SS_DEBUG_CPU_TRACE_NO_STOP // depends on 'suspend logging'
 #define SS_DEBUG_DIV // no DIV log necessary
 #endif
 
@@ -527,7 +527,7 @@ and all his silly mods are gone!
 #define SS_DRIVE_READ_TRACK_TIMING2
 #define SS_DRIVE_RW_SECTOR_TIMING // start of sector
 #define SS_DRIVE_RW_SECTOR_TIMING2 // end of sector (hack)
-#if SSE_VERSION>=360
+#if SSE_VERSION>=360 && defined(WIN32) //TODO Unix
 #define SS_DRIVE_SOUND // heavily requested, delivered!
 //#define SS_DRIVE_SOUND_CHECK_SEEK_VBL
 #define SS_DRIVE_SOUND_EDIT // soundset
@@ -831,6 +831,7 @@ and all his silly mods are gone!
 
 #ifdef SS_DEBUG
 #define SS_OSD_DEBUG_MESSAGE // pretty handy
+#define SS_OSD_DEBUG_MESSAGE_FREQ // tell when 60hz (?)
 #endif
 #define SS_OSD_DRIVE_INFO // cool! (v3.5.1)
 #define SS_OSD_DRIVE_INFO2 // no SR when fast
@@ -1056,18 +1057,27 @@ and all his silly mods are gone!
 
 #if defined(SS_STRUCTURE)
 
-#define SS_STRUCTURE_BIG_FORWARD // temp
+#define SS_STRUCTURE_CPU_POKE_NOINLINE //little detail
 
-//#if !defined(SS_UNIX) //we must try with Unix too
-#define SS_STRUCTURE_NEW_H_FILES
-//#endif
+#define SS_STRUCTURE_DECLA // decla.h files
+
+#if defined(LEGACY_BUILD)
+#define SS_STRUCTURE_NEW_H_FILES // for all features
+#endif
+
+#if !defined(LEGACY_BUILD)
+#define SS_STRUCTURE_NEW_H_FILES // necessary
+#define SS_STRUCTURE_SSE_OBJ // try to have all separate SSE objects
+#endif
 
 #define SS_STRUCTURE_DMA_INC_ADDRESS
+#if defined(LEGACY_BUILD)
 //#define SS_STRUCTURE_INFO // just telling files included in modules
+#endif
 #define SS_STRUCTURE_IOR
 
 #if defined(SS_STRUCTURE_NEW_H_FILES)
-//this should be completed before release of v3.6.0
+// those were dev switches (TODO remove, just use SS_STRUCTURE_DECLA)
 #define SS_STRUCTURE_ACC_H
 #define SS_STRUCTURE_ARCHIVE_H
 #define SS_STRUCTURE_BLITTER_H
@@ -1119,7 +1129,15 @@ and all his silly mods are gone!
 #define SS_STRUCTURE_STPORTS_H
 #define SS_STRUCTURE_TRACE_H
 #define SS_STRUCTURE_TRANSLATE_H
-#endif
+#endif//#if defined(SS_STRUCTURE_NEW_H_FILES)
+
+
+#if defined(SS_STRUCTURE_SSE_OBJ)
+#define SS_STRUCTURE_SSE6301_OBJ // 1st as test
+#define SS_STRUCTURE_SSECPU_OBJ
+#endif//#if defined(SS_STRUCTURE_SSE_OBJ)
+
+
 
 #endif
 
@@ -1403,6 +1421,19 @@ and all his silly mods are gone!
 #undef SS_SHIFTER_MED_RES_SCROLLING
 #undef SS_SHIFTER_UNSTABLE
 #endif
+
+#if !defined(SS_STRUCTURE_NEW_H_FILES)
+// mods after we created "decla" files are not duplicated
+#undef SS_INT_VBL_IACK
+#undef SS_VAR_STATUS_STRING
+#undef SS_VAR_STATUS_STRING_ADAT
+#undef SS_VAR_STATUS_STRING_DISK_NAME
+#undef SS_VID_3BUFFER
+#undef SS_VID_3BUFFER_FS
+#undef SS_VID_3BUFFER_WIN
+#undef SS_VID_BORDERS_BIGTOP
+#endif
+
 
 #if !USE_PASTI
 #undef SS_DMA_FIFO_PASTI

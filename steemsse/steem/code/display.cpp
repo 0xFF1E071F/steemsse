@@ -52,9 +52,7 @@ FI_SUPPORTBPPPROC FreeImage_FIFSupportsExportBPP;
 
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI) 
-#if !defined(SS_STRUCTURE_BIG_FORWARD)
 extern int shifter_freq_at_start_of_vbl; //forward
-#endif
 #endif
 
 //SS: the singleton object is Disp
@@ -709,7 +707,7 @@ void SteemDisplay::Unlock()
       DDSURFACEDESC ddsd;
       ZeroMemory(&ddsd, sizeof(ddsd));
       ddsd.dwSize = sizeof(ddsd);
-      DDBackSur->GetSurfaceDesc(&ddsd)==DD_OK;
+      DDBackSur->GetSurfaceDesc(&ddsd);
       HBITMAP OffscrBmp = CreateCompatibleBitmap(SurfDC,ddsd.dwWidth,ddsd.
         dwHeight);
       HDC OffscrDC = CreateCompatibleDC(SurfDC);

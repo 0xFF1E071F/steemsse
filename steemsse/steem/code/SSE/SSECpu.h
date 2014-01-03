@@ -4,14 +4,30 @@
 
 #if defined(SS_CPU)
 
-#define LOGSECTION LOGSECTION_CRASH // not correct, temp, cpu is trouble
+#define LOGSECTION LOGSECTION_CPU
 
 #if defined(SS_STRUCTURE_CPU_H)
-#include "../cpu.decla.h" // hey look it already works for this
 
-#elif defined(SS_STRUCTURE_BIG_FORWARD)
-// ...
-#elif !defined(SS_STRUCTURE_BIG_FORWARD)
+#include <cpu.decla.h>
+
+#ifdef SS_UNIX
+void exception(int,exception_action,MEM_ADDRESS);
+#endif
+
+#if defined(SS_STRUCTURE_SSECPU_OBJ)
+#ifdef DEBUG_BUILD
+#include <debug_emu.decla.h>
+#endif
+#include <run.decla.h>
+#include <blitter.decla.h>
+#include <mfp.decla.h>
+#include "SSEDebug.h"
+#endif//#if defined(SS_STRUCTURE_SSECPU_OBJ)
+
+#else
+
+///#undef IN_EMU
+///#include <cpu.h>
 
 // forward (due to shitty structure)
 #if defined(SS_VAR_REWRITE)
@@ -20,7 +36,6 @@ extern "C" void ASMCALL m68k_trace();
 extern "C" ASMCALL void m68k_trace();
 #endif
 extern void (*m68k_high_nibble_jump_table[16])();
-//void HandleIOAccess();
 void ASMCALL perform_crash_and_burn();
 #if defined(SS_CPU_DIV)
 extern "C" unsigned getDivu68kCycles( unsigned long dividend, unsigned short divisor);
@@ -29,7 +44,6 @@ extern "C" unsigned getDivs68kCycles( signed long dividend, signed short divisor
 #if defined(SS_CPU_PREFETCH_TIMING_EXCEPT)
 bool debug_prefetch_timing(WORD ir);
 #endif
-// forward
 extern void (*m68k_jump_get_dest_b[8])();
 extern void (*m68k_jump_get_dest_w[8])();
 extern void (*m68k_jump_get_dest_l[8])();
@@ -49,7 +63,31 @@ extern void (*m68k_jump_get_source_b_not_a[8])();
 extern void (*m68k_jump_get_source_w_not_a[8])();
 extern void (*m68k_jump_get_source_l_not_a[8])();
 
+#endif//!defined(SS_STRUCTURE_CPU_H)
+
+
+
+
+#if defined(SS_CPU_INLINE_READ_BWL)
+#define m68k_READ_B(addr) M68000.ReadB(addr);
+#define m68k_READ_W(addr) M68000.ReadW(addr);
+#define m68k_READ_L(addr) M68000.ReadL(addr);
 #endif
+
+#if defined(SS_CPU_INLINE_READ_FROM_ADDR)
+#define m68k_READ_B_FROM_ADDR M68000.m68kReadBFromAddr();
+#define m68k_READ_W_FROM_ADDR M68000.m68kReadWFromAddr();
+#define m68k_READ_L_FROM_ADDR M68000.m68kReadLFromAddr();
+#endif
+
+
+
+
+
+
+
+
+
 
 #ifdef DEBUG_BUILD
 #define DEBUG_CHECK_IOACCESS \
@@ -65,7 +103,7 @@ extern void (*m68k_jump_get_source_l_not_a[8])();
 
 
 // keep as macro, wouldn't be inlined in VC6
-// but since we changed trace...
+// but since we changed trace... (change was reverted...)
 
 #define HANDLE_IOACCESS(tracefunc) \
   if (ioaccess){                             \
@@ -109,16 +147,125 @@ void m68k_lpoke_abus2(LONG);
 #define IR    prefetch_buf[0] // Instruction Register
 #define IRD   ir              // Instruction Register Decoder
 
-#include "SSEM68000.h" // there you go... (TODO)
+struct TM68000 {
+  TM68000();
+  inline void FetchTiming();
+  inline void FetchTimingNoRound();
+  inline void FetchWord(WORD &dest_word); 
+  inline void InstructionTime(int n);
+  inline void InstructionTimeRound(int n);
+  void Interrupt(MEM_ADDRESS ad);
+  inline void PerformRte();
+  inline void PrefetchSetPC();
+  inline void Process();
+#if defined(SS_CPU_INLINE_READ_BWL)
+  static inline void ReadB(MEM_ADDRESS addr);
+  static inline void ReadW(MEM_ADDRESS addr);
+  static inline void ReadL(MEM_ADDRESS addr);
+#endif
+#if defined(SS_CPU_INLINE_READ_FROM_ADDR)
+  static void m68kReadBFromAddr();
+  static void m68kReadWFromAddr();
+  static void m68kReadLFromAddr();
+#endif
+  void SetPC(MEM_ADDRESS ad);
+  inline void Unstop();
+  void Reset(bool cold);
+#if defined(SS_DEBUG)
+  int IrAddress; // pc at start
+  int nExceptions;
+  int nInstr;
+  WORD PreviousIr;
+  bool NextIrFetched; // fetched next instruction?
+#endif//debug
+#if defined(SS_CPU_EXCEPTION)
+//  BYTE GetSize(WORD ir);
+#if defined(SS_CPU_TRUE_PC)
+  MEM_ADDRESS Pc;
+  bool CheckRead; // most 'write' instructions read before, crash at read...
+#endif
+#endif
+  inline void GetDestByte();
+  inline void GetDestWord();
+  inline void GetDestLong();
+  inline void GetDestByteNotA();
+  inline void GetDestWordNotA();
+  inline void GetDestLongNotA();
+  inline void GetDestByteNotAOrD();
+  inline void GetDestWordNotAOrD();
+  inline void GetDestLongNotAOrD();
+  inline void GetDestByteNotAFasterForD();
+  inline void GetDestWordNotAFasterForD();
+  inline void GetDestLongNotAFasterForD();
+  inline void GetSourceByte(); 
+  inline void GetSourceWord();
+  inline void GetSourceLong();
+  inline void GetSourceByteNotA(); 
+  inline void GetSourceWordNotA();
+  inline void GetSourceLongNotA();
+
+
+#if defined(SS_CPU_PREFETCH)
+
+#if defined(SS_CPU_PREFETCH_CLASS)
+  int PrefetchClass; // see ijor's article
+#endif
+
+#if defined(SS_CPU_PREFETCH_CALL)
+  BOOL CallPrefetch; 
+  WORD FetchForCall(MEM_ADDRESS ad);
+  WORD *PrefetchAddress; 
+  WORD PrefetchedOpcode;
+#endif
+
+  inline void PrefetchIrc();
+  inline void PrefetchIrcNoRound();
+  inline void RefetchIr();
+
+#endif
+};
+
+extern TM68000 M68000;
+
+
+void TM68000::PrefetchSetPC() { 
+  // called by SetPC; we don't count timing here
+
+#if defined(SS_CPU_FETCH_IO)
+  // don't use lpfetch for fetching in IO zone, use io_read: fixes Warp original
+  if(pc>=MEM_IO_BASE && !(pc>=0xff8240 && pc<0xff8260))
+  {
+    prefetch_buf[0]=io_read_w(pc);
+    prefetch_buf[1]=io_read_w(pc+2);
+    TRACE("Set PC in IO zone %X\n",pc);
+    prefetched_2=true;
+    return;
+  }
+#endif
+  prefetch_buf[0]=*lpfetch;
+  prefetch_buf[1]=*(lpfetch+MEM_DIR); 
+  prefetched_2=true; // was false in Steem 3.2
+#if defined(SS_CPU_PREFETCH_CALL)
+  if(M68000.CallPrefetch) 
+  {
+    ASSERT(M68000.PrefetchedOpcode==prefetch_buf[0]);
+    prefetch_buf[0]=M68000.PrefetchedOpcode;
+    M68000.CallPrefetch=FALSE;
+  }
+#endif
+  lpfetch+=MEM_DIR;
+
+}
+
+
+#define SET_PC(ad) M68000.SetPC(ad);
+
 
 #if defined(SS_CPU_TRUE_PC)
 #define TRUE_PC M68000.Pc
 #define CHECK_READ M68000.CheckRead
 #endif
 
-
-
-// inline functions of TM68000 (instead of macros)
 
 inline void TM68000::FetchTiming() {
 #if !defined(SS_CPU_PREFETCH_TIMING)
@@ -129,9 +276,7 @@ inline void TM68000::FetchTiming() {
   {
     TRACE_LOG("PC %X IR %X double prefetch?\n",pc,ir);
   }
-//#if defined(DEBUG_BUILD)
   NextIrFetched=true;
-//#endif
 #endif  
   InstructionTimeRound(4); 
 #endif
@@ -214,7 +359,7 @@ inline void TM68000::FetchWord(WORD &dest_word) {
 #endif
   lpfetch+=MEM_DIR; // advance the fetch pointer
   if(lpfetch MEM_GE lpfetch_bound) // MEM_GE : <=
-    exception(BOMBS_BUS_ERROR,EA_FETCH,pc);
+    ::exception(BOMBS_BUS_ERROR,EA_FETCH,pc); // :: for gcc "ambiguous" ?
 }
 #define FETCH_W(dest_word) M68000.FetchWord(dest_word);
 
@@ -237,6 +382,7 @@ inline void TM68000::FetchWord(WORD &dest_word) {
 #define m68k_GET_SOURCE_B_NOT_A M68000.GetSourceByteNotA();
 #define m68k_GET_SOURCE_W_NOT_A M68000.GetSourceWordNotA();
 #define m68k_GET_SOURCE_L_NOT_A M68000.GetSourceLongNotA();
+
 
 inline void TM68000::GetDestByte() {
 #if defined(SS_CPU_TRUE_PC)
@@ -391,20 +537,6 @@ inline void TM68000::InstructionTimeRound(int t) {
 #define INSTRUCTION_TIME_ROUND(t) M68000.InstructionTimeRound(t)
 
 
-inline void TM68000::Interrupt(MEM_ADDRESS ad) {
-  WORD _sr=sr;
-  if (!SUPERFLAG) 
-    change_to_supervisor_mode();
-#if defined(SS_CPU_PREFETCH_CLASS)
-  PrefetchClass=2;
-#endif
-  m68k_PUSH_L(PC32);
-  m68k_PUSH_W(_sr);
-  SetPC(ad);
-  SR_CLEAR(SR_TRACE);
-  interrupt_depth++;
-//  TRACE_LOG("%X %d\n",ad,interrupt_depth);
-}
 #define m68k_interrupt(ad) M68000.Interrupt(ad)
 
 
@@ -509,10 +641,15 @@ inline void TM68000::PrefetchIrcNoRound() { // the same except no rounding
 
 }
 
-
 #define EXTRA_PREFETCH //all prefetches actually are "extra"!
 #define PREFETCH_IRC  M68000.PrefetchIrc()
 #define PREFETCH_IRC_NO_ROUND  M68000.PrefetchIrcNoRound()
+
+#else //not defined, macros do nothing
+
+#define EXTRA_PREFETCH
+#define PREFETCH_IRC
+#define PREFETCH_IRC_NO_ROUND
 
 #endif
 
@@ -585,7 +722,7 @@ already fetched. One word will be in IRD and another one in IRC.
   CheckRead=0;
 #endif
 
-#if defined(SS_IPF_CPU) || defined(SS_DEBUG)
+#if defined(SS_IPF_CPU) //|| defined(SS_DEBUG)
   int cycles=cpu_cycles;
 #endif
 
@@ -614,7 +751,7 @@ already fetched. One word will be in IRD and another one in IRC.
 
 inline void TM68000::RefetchIr() {
   ASSERT( IR==*(lpfetch+1) ); // detect cases (none yet!)
-  ASSERT( MEM_DIR==-1 );
+//  ASSERT( MEM_DIR==-1 );
   IR=*(lpfetch-MEM_DIR);
 }
 #define REFETCH_IR  M68000.RefetchIr();
@@ -624,196 +761,27 @@ inline void TM68000::RefetchIr() {
 #endif
 
 
+#if defined(SS_CPU_INLINE_READ_BWL)
 
-// They're not much called
-inline void TM68000::m68kReadBFromAddr() {
-  // Replacing macro m68k_READ_B_FROM_ADDR.
-  abus&=0xffffff;
-  if(abus>=himem)
-  {                                  
-    if(abus>=MEM_IO_BASE)
-    {            
-      if(SUPERFLAG)
-        m68k_src_b=io_read_b(abus);           
-      else 
-        exception(BOMBS_BUS_ERROR,EA_READ,abus);         
-    }
-    else if(abus>=0xfc0000)
-    {                             
-      if(tos_high && abus<(0xfc0000+192*1024))
-        m68k_src_b=ROM_PEEK(abus-rom_addr);   
-      else if (abus<0xfe0000 || abus>=0xfe2000) 
-        exception(BOMBS_BUS_ERROR,EA_READ,abus);  
-    }
-    else if(abus>=MEM_EXPANSION_CARTRIDGE)
-    {           
-      if(cart)
-        m68k_src_b=CART_PEEK(abus-MEM_EXPANSION_CARTRIDGE);  
-      else
-        m68k_src_b=(BYTE)0xff;
-    }
-    else if (abus>=rom_addr)
-    {                         
-      if(abus<(0xe00000+256*1024))
-        m68k_src_b=ROM_PEEK(abus-rom_addr);                           
-      else if (abus>=0xec0000)
-        exception(BOMBS_BUS_ERROR,EA_READ,abus);          
-      else
-        m68k_src_b=(BYTE)0xff;                                          
-    }
-    else if (abus>=0xd00000 && abus<0xd80000)
-      m68k_src_b=(BYTE)0xff;               
-#if !defined(SS_MMU_NO_CONFUSION)      
-    else if(mmu_confused)
-      m68k_src_b=mmu_confused_peek(abus,true);                                         
-#endif
-    else if(abus>=FOUR_MEGS)
-      exception(BOMBS_BUS_ERROR,EA_READ,abus);                          
-    else
-      m68k_src_b=(BYTE)0xff;                                          
-  }
-  else if(abus>=MEM_START_OF_USER_AREA)
-  {                                              
-    DEBUG_CHECK_READ_B(abus);  
-    m68k_src_b=(BYTE)(PEEK(abus));                  
-  }
-  else if(SUPERFLAG)
-  {     
-    DEBUG_CHECK_READ_B(abus);  
-    m68k_src_b=(BYTE)(PEEK(abus));                  
-  }
-  else
-    exception(BOMBS_BUS_ERROR,EA_READ,abus);
+void TM68000::ReadB(MEM_ADDRESS addr)
+{
+  //m68k_READ_B(addr)
+  m68k_src_b=m68k_peek(addr);
 }
-#define m68k_READ_B_FROM_ADDR M68000.m68kReadBFromAddr();        
 
-
-inline void TM68000::m68kReadWFromAddr() {
-  // Replacing macro m68k_READ_W_FROM_ADDR.
-  abus&=0xffffff;                                   
-  if(abus&1)
-    exception(BOMBS_ADDRESS_ERROR,EA_READ,abus);    
-  else if(abus>=himem)
-  {                                  
-    if(abus>=MEM_IO_BASE)
-    {            
-      if(SUPERFLAG)
-        m68k_src_w=io_read_w(abus);           
-      else 
-        exception(BOMBS_BUS_ERROR,EA_READ,abus);         
-    }
-    else if(abus>=0xfc0000)
-    {                             
-      if(tos_high && abus<(0xfc0000+192*1024))
-        m68k_src_w=ROM_DPEEK(abus-rom_addr);   
-      else if(abus<0xfe0000 || abus>=0xfe2000) 
-        exception(BOMBS_BUS_ERROR,EA_READ,abus);  
-    }
-    else if(abus>=MEM_EXPANSION_CARTRIDGE)
-    {           
-      if(cart)
-        m68k_src_w=CART_DPEEK(abus-MEM_EXPANSION_CARTRIDGE);  
-      else
-        m68k_src_w=(WORD)0xffff;                                    
-    }
-    else if(abus>=rom_addr)
-    {                         
-      if(abus<(0xe00000+256*1024)) 
-        m68k_src_w=ROM_DPEEK(abus-rom_addr);                           
-      else if (abus>=0xec0000) 
-        exception(BOMBS_BUS_ERROR,EA_READ,abus);          
-      else 
-        m68k_src_w=(WORD)0xffff;                                          
-    }
-    else if (abus>=0xd00000 && abus<0xd80000)
-      m68k_src_w=(WORD)0xffff;                                          
-#if !defined(SS_MMU_NO_CONFUSION)
-    else if(mmu_confused)
-      m68k_src_w=mmu_confused_dpeek(abus,true);                                         
-#endif
-    else if(abus>=FOUR_MEGS)
-      exception(BOMBS_BUS_ERROR,EA_READ,abus);                          
-    else
-      m68k_src_w=(WORD)0xffff;                                          
-  }
-  else if(abus>=MEM_START_OF_USER_AREA)
-  {                                              
-    DEBUG_CHECK_READ_W(abus);  
-    m68k_src_w=DPEEK(abus);                  
-  }
-  else if(SUPERFLAG)
-  {     
-    DEBUG_CHECK_READ_W(abus);  
-    m68k_src_w=DPEEK(abus);                  
-  }
-  else 
-    exception(BOMBS_BUS_ERROR,EA_READ,abus);
+void TM68000::ReadW(MEM_ADDRESS addr)
+{
+  //m68k_READ_W(addr)
+  m68k_src_w=m68k_dpeek(addr);
 }
-#define m68k_READ_W_FROM_ADDR M68000.m68kReadWFromAddr();
 
-
-inline void TM68000::m68kReadLFromAddr() {
-  // Replacing macro m68k_READ_L_FROM_ADDR.
-  abus&=0xffffff;                                   
-  if(abus&1)
-    exception(BOMBS_ADDRESS_ERROR,EA_READ,abus);    
-  else if(abus>=himem)
-  {                                  
-    if(abus>=MEM_IO_BASE)
-    {           
-      if(SUPERFLAG)
-        m68k_src_l=io_read_l(abus);          
-      else
-        exception(BOMBS_BUS_ERROR,EA_READ,abus);         
-    }
-    else if(abus>=0xfc0000)
-    {                             
-      if(tos_high && abus<(0xfc0000+192*1024-2)) 
-        m68k_src_l=ROM_LPEEK(abus-rom_addr);   
-      else if(abus<0xfe0000 || abus>=0xfe2000)
-        exception(BOMBS_BUS_ERROR,EA_READ,abus);  
-    }
-    else if(abus>=MEM_EXPANSION_CARTRIDGE)
-    {           
-      if(cart)
-        m68k_src_l=CART_LPEEK(abus-MEM_EXPANSION_CARTRIDGE);  
-      else
-        m68k_src_l=0xffffffff;                                    
-    }
-    else if(abus>=rom_addr)
-    {                         
-      if(abus<(0xe00000+256*1024-2)) 
-        m68k_src_l=ROM_LPEEK(abus-rom_addr);   
-      else if(abus>=0xec0000)
-        exception(BOMBS_BUS_ERROR,EA_READ,abus);          
-      else
-        m68k_src_l=0xffffffff;                                          
-    }
-    else if(abus>=0xd00000 && abus<0xd80000-2)
-      m68k_src_l=0xffffffff;                                          
-#if !defined(SS_MMU_NO_CONFUSION)
-    else if (mmu_confused)
-      m68k_src_l=mmu_confused_lpeek(abus,true);                                         
-#endif
-    else if(abus>=FOUR_MEGS)
-      exception(BOMBS_BUS_ERROR,EA_READ,abus);                          
-    else
-      m68k_src_l=0xffffffff;                                          
-  }
-  else if(abus>=MEM_START_OF_USER_AREA)
-  {                                              
-    DEBUG_CHECK_READ_L(abus);  
-    m68k_src_l=LPEEK(abus);                  
-  }
-  else if(SUPERFLAG)
-  {     
-    DEBUG_CHECK_READ_L(abus);  
-    m68k_src_l=LPEEK(abus);                  
-  }
-  else
-    exception(BOMBS_BUS_ERROR,EA_READ,abus);
+void TM68000::ReadL(MEM_ADDRESS addr)
+{
+  //m68k_READ_L(addr)
+  m68k_src_l=m68k_lpeek(addr);
 }
-#define m68k_READ_L_FROM_ADDR M68000.m68kReadLFromAddr();                   
+
+#endif
 
 
 inline void TM68000::Unstop() {
@@ -832,6 +800,14 @@ inline void TM68000::Unstop() {
 
 
 #if defined(SS_CPU_POKE)
+
+#if defined(DEBUG_BUILD)
+
+void m68k_poke_abus(BYTE x);
+void m68k_dpoke_abus(WORD x);
+void m68k_lpoke_abus(LONG x);
+
+#else
 
 NOT_DEBUG(inline) void m68k_poke_abus(BYTE x){
   abus&=0xffffff; // annoying that we must do this
@@ -861,7 +837,7 @@ NOT_DEBUG(inline) void m68k_dpoke_abus(WORD x){
   abus&=0xffffff;
   BOOL super=SUPERFLAG;
   if(abus&1) 
-    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
+    ::exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
   else if(abus>=MEM_IO_BASE && super)
       io_write_w(abus,x);
 #if defined(SS_CPU_CHECK_VIDEO_RAM_W) // 3615 GEN4 100
@@ -884,7 +860,7 @@ NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x){
   abus&=0xffffff;
   BOOL super=SUPERFLAG;
   if(abus&1)
-    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
+    ::exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
   else 
   if(abus>=MEM_IO_BASE && super)
     io_write_l(abus,x);
@@ -904,9 +880,12 @@ NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x){
 }
 
 
-// it's +- a copy of the above because of VC's inlining rules
-// now those ones are not inlined, but in Stemdos (hd emu) so it's a good thing
-inline void m68k_poke(MEM_ADDRESS ad,BYTE x){
+#endif//!debug
+
+
+// those will be inlined where it counts (cpu.cpp), not where it
+// doesn't count (stemdos.cpp)
+void m68k_poke(MEM_ADDRESS ad,BYTE x){
   ASSERT(ad);
   abus=ad&0xffffff;
   BOOL super=SUPERFLAG;
@@ -923,12 +902,12 @@ inline void m68k_poke(MEM_ADDRESS ad,BYTE x){
 }
 
 
-inline void m68k_dpoke(MEM_ADDRESS ad,WORD x){
+void m68k_dpoke(MEM_ADDRESS ad,WORD x){
   ASSERT(ad);
   abus=ad&0xffffff;
   BOOL super=SUPERFLAG;
   if(abus&1) 
-    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
+    ::exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
   else if(abus>=MEM_IO_BASE && super)
       io_write_w(abus,x);
   else if(abus<himem && (abus>=MEM_START_OF_USER_AREA
@@ -942,12 +921,12 @@ inline void m68k_dpoke(MEM_ADDRESS ad,WORD x){
 }
 
 
-inline void m68k_lpoke(MEM_ADDRESS ad,LONG x){
+void m68k_lpoke(MEM_ADDRESS ad,LONG x){
   ASSERT(ad);
   abus=ad&0xffffff;
   BOOL super=SUPERFLAG;
   if(abus&1)
-    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
+    ::exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
   else 
   if(abus>=MEM_IO_BASE && super)
     io_write_l(abus,x);
@@ -961,13 +940,19 @@ inline void m68k_lpoke(MEM_ADDRESS ad,LONG x){
     m68k_lpoke_abus2(x);
 }
 
+
 #endif//poke
+
+
 
 
 
 #if defined(SS_CPU_PREFETCH_TIMING_EXCEPT)
 // this is a silly debug-only function, very useful at some point, we keep
 // it just in case...
+// pb when we undef/def only parts of instructions... not that super
+// important because it's just "read SDP"
+
 bool debug_prefetch_timing(WORD ir) {
   bool answer=false;
 #ifdef SS_CPU_PREFETCH_TIMING_EXCEPT

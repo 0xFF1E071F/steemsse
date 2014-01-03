@@ -3350,6 +3350,12 @@ void TShifter::Vbl() {
 #endif
 #if defined(SS_DEBUG)
   nVbl++; 
+
+#if defined(SS_OSD_DEBUG_MESSAGE_FREQ) // tell when 60hz
+  if(shifter_freq_at_start_of_vbl==60)
+    TRACE_OSD("60HZ");
+#endif
+
 #endif
 #if defined(SS_SHIFTER_UNSTABLE)
   HblPixelShift=0;

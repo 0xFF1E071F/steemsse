@@ -40,7 +40,14 @@ extern WORD*lpfetch,*lpfetch_bound;
 extern bool prefetched_2;///////=false;
 extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 #define INC_PC
-#include "SSE/SSEM68000.h"
+//#include "SSE/SSEM68000.h"
+
+#if defined(SS_STRUCTURE_SSECPU_OBJ)
+#include <SSE/SSECpu.h>
+#else
+#include <SSE/SSEM68000.h> 
+#endif
+
 #endif
 
 #if defined(SS_SHIFTER_UNSTABLE)

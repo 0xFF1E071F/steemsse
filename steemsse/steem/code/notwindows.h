@@ -25,6 +25,10 @@ typedef void* LPVOID;
 
 typedef unsigned long HRESULT;
 
+#define TRUE 1 //SS
+#define FALSE 0 //SS
+typedef BYTE BOOL; //SS - not int
+
 #define DD_OK 0
 #define DDERR_GENERIC 1
 #define DDERR_SURFACELOST 2
@@ -102,6 +106,7 @@ typedef unsigned long LANGID;
 
 #define kbhit() (feof(stdin)==0)
 
+//SS this is a pretty strange part, TODO...
 EXT KeyCode VK_LBUTTON,VK_RBUTTON,VK_MBUTTON;
 EXT KeyCode VK_F11,VK_F12,VK_END;
 EXT KeyCode VK_LEFT,VK_RIGHT,VK_UP,VK_DOWN,VK_TAB;

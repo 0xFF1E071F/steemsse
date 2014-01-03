@@ -17,8 +17,10 @@
 extern IDirectSoundBuffer *PrimaryBuf,*SoundBuf; // VC9 doesn't know that
 unsigned int FormatAviMessage(HRESULT code, char *buf,unsigned int len);
 extern int shifter_freq_at_start_of_vbl;
-extern bool FullScreen;
 
+#if !defined(SS_STRUCTURE_SSE6301_OBJ)
+extern bool FullScreen;
+#endif
 
 #include "avifile.h"
 

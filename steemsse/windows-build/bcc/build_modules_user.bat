@@ -1,21 +1,21 @@
 @echo off
 
-echo Build script for Steem SSE - BCC build with boiler
+echo Build script for Steem SSE - BCC build
 
 rem local:
 
+cd c:\data\prg\st\windows-build\bcc
 set NASMPATH=D:\Console\nasm\
 set BCCROOT=D:\Console\bcc\
 set BCCPATH=D:\Console\bcc\bin\
 set COPYPATH=G:\emu\st\bin\steem\
-set ROOT=c:\data\prg\st\
-rem set ROOT=G:\Downloads\steemsse-code\steemsse\
+rem set ROOT=c:\data\prg\st\
+set ROOT=G:\Downloads\steemsse-code\steemsse\
 rem the rest should be the same for all systems:
 
-set PROGRAMNAME=BoilerBeta BCC.exe
+set PROGRAMNAME=SteemBeta BCC.exe
 rem manually create obj directory if necessary
 set OUT=obj
-rem set ROOT=..\..
 del "%OUT%\*.exe"
 
 rem delete objects if you want to remake them (rare)
@@ -36,12 +36,11 @@ if NOT EXIST obj\asm_portio.obj (
 echo -----------------------------------------------
 echo Building 3rd party code using Borland C/C++ 5.5
 echo -----------------------------------------------
-"%BCCPATH%make.exe" -fmakefile.txt -DFORCE_DEBUG_BUILD 3rdparty
-echo ---------------------------------------------------
-echo Building Steem SSE (Boiler) using Borland C/C++ 5.5
-echo ---------------------------------------------------
-
-"%BCCPATH%make.exe" -fmakefile.txt -B -DFORCE_DEBUG_BUILD -DBCC_BUILD -DSTEVEN_SEAGAL
+"%BCCPATH%make.exe" -fmakefile_modules.txt -DDONT_ALLOW_DEBUG -DSTEVEN_SEAGAL 3rdparty
+echo ------------------------------------------
+echo Building Steem SSE using Borland C/C++ 5.5
+echo ------------------------------------------
+"%BCCPATH%make.exe" -fmakefile_modules.txt -B -DDONT_ALLOW_DEBUG -DBCC_BUILD -DSTEVEN_SEAGAL
 
 ren "%OUT%\Steem.exe" "%PROGRAMNAME%"
 copy "%OUT%\%PROGRAMNAME%" "%COPYPATH%"

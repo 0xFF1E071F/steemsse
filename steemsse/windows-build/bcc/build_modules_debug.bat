@@ -36,12 +36,12 @@ if NOT EXIST obj\asm_portio.obj (
 echo -----------------------------------------------
 echo Building 3rd party code using Borland C/C++ 5.5
 echo -----------------------------------------------
-"%BCCPATH%make.exe" -fmakefile.txt -DFORCE_DEBUG_BUILD 3rdparty
+"%BCCPATH%make.exe" -fmakefile_modules.txt -DFORCE_DEBUG_BUILD 3rdparty
 echo ---------------------------------------------------
 echo Building Steem SSE (Boiler) using Borland C/C++ 5.5
 echo ---------------------------------------------------
 
-"%BCCPATH%make.exe" -fmakefile.txt -B -DFORCE_DEBUG_BUILD -DBCC_BUILD -DSTEVEN_SEAGAL
+"%BCCPATH%make.exe" -fmakefile_modules.txt -B -DFORCE_DEBUG_BUILD -DBCC_BUILD -DSTEVEN_SEAGAL
 
 ren "%OUT%\Steem.exe" "%PROGRAMNAME%"
 copy "%OUT%\%PROGRAMNAME%" "%COPYPATH%"

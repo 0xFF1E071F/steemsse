@@ -1,10 +1,9 @@
-// 6301.h
-
 #pragma once
 #ifndef HD6301_H
 #define HD6301_H
 
-/*  We use Sim6xxx by Arne Riiber to emulate the HD6301V1 chip that was 
+/*  6301.h
+    We use Sim6xxx by Arne Riiber to emulate the HD6301V1 chip that was 
     in the ST, as described in 'doc_6301_ST'.
     This emulation was supposed to run as terminal on a DOS PC. A
     precise integration with another serial device (MC6850 ACIA in the
@@ -36,12 +35,12 @@
     - check ram access range?
 */
 
-#include "SSE/SSE.h"
-#include "SSE/SSEParameters.h"
+#include <SSE/SSE.h>
+#include <SSE/SSEParameters.h>
 #ifdef WIN32
 #include <windows.h>
 #else
-#include "SSE/SSEDecla.h" // for BYTE
+#include <SSE/SSEDecla.h> // for BYTE
 #endif
 
 #include <stdio.h> // printf...

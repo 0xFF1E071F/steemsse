@@ -2,9 +2,9 @@
 
 #include "SSE/SSE6301.h"
 #if defined(SS_STF)
-#if !defined(SS_STRUCTURE_BIG_FORWARD)
+
 int SwitchSTType(int new_type);//forward
-#endif
+
 #endif
 //---------------------------------------------------------------------------
 TOptionBox::TOptionBox()

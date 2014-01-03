@@ -1,5 +1,5 @@
 // this compiles as an apart object
-
+#include "../pch.h"
 #include "SSEMMU.h"
 
 #if defined(SS_MMU)

@@ -32,7 +32,7 @@
  */
 u_int	ram_start;		/* 0x0000; */
 u_int	ram_end;		/* 0xFFFF; */
-u_char  *ram;			/* was [65536]; modified for MSDOS compilers */
+u_char  *ram=0;			/* was [65536]; modified for MSDOS compilers */
 #if !defined(SS_IKBD_6301_DISABLE_BREAKS)
 u_char *breaks;			/* Physical storage for breakpoints */
 int    break_flag;		/* Non-zero if an address containing a
@@ -52,6 +52,7 @@ mem_init ()
       perror ("Couldn't allocate ram");
       return NULL;
     }
+    printf("ram %d allocated OK\n",size);//SS
     ram_start = 0;
     ram_end   = size - 1;
     memset (ram, 0, 256);

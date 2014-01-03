@@ -4,7 +4,7 @@ MODULES: ALL
 DESCRIPTION: System specific includes, declarations and macros. PCH stands
 for pre-compiled headers (to reduce build time on slower development PCs).
 ---------------------------------------------------------------------------*/
-
+#pragma once//SS
 #ifndef __PCH_H
 #define __PCH_H
 
@@ -29,7 +29,8 @@ for pre-compiled headers (to reduce build time on slower development PCs).
 #define DIRECTSOUND_VERSION 0x0200
 #define OEMRESOURCE 1
 #define STRICT 1
-#if _MSC_VER == 1200	// VC6: 1200 - JLG VS2012: modif VC6 only
+//#if _MSC_VER == 1200	// VC6: 1200 - JLG VS2012: modif VC6 only
+#ifdef BCC_BUILD // SS it's in fact a Borland pragma
 #pragma anon_structs on
 #endif
 //---------------------------------------------------------------------------

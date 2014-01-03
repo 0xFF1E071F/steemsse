@@ -1,5 +1,26 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+/*
+*/
+
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO) \
+  && !defined(SS_STRUCTURE_SSECPU_OBJ)
 #pragma message("Included for compilation: SSECpu.cpp")
+#endif
+
+#include "SSE.h"
+
+#if defined(SS_STRUCTURE_SSECPU_OBJ) // defined or not in SSE.h
+
+#include "../pch.h" // Each object should include this precompiled header
+#pragma hdrstop  // Signals the end of precompilation
+
+#include "SSECpu.h"
+#include "SSEShifter.h"
+#include <gui.decla.h>
+
+#endif//#if defined(SS_STRUCTURE_SSECPU_OBJ)
+
+#if !defined(SS_CPU_PREFETCH)
+///#define PREFETCH_IRC
 #endif
 
 #if defined(SS_CPU)
@@ -161,7 +182,10 @@ void m68k_get_source_011_l(){ // .L (An)+
 
     PC: +2 as first step for .B,.W
 */
-
+#if !defined(SS_CPU_EXCEPTION)//temp...
+long silly_dummy_for_true_pc2;
+#define TRUE_PC silly_dummy_for_true_pc2
+#endif
 void m68k_get_source_100_b(){ // .B -(An)
 
   TRUE_PC+=2;
@@ -858,6 +882,261 @@ void m68k_get_dest_111_l_faster(){
 }
 
 
+// Read from address
+
+#if defined(SS_CPU_INLINE_READ_FROM_ADDR)
+// They're not much called, VC6 wouldn't inline them
+
+void TM68000::m68kReadBFromAddr() {
+  // Replacing macro m68k_READ_B_FROM_ADDR.
+  abus&=0xffffff;
+  if(abus>=himem)
+  {                                  
+    if(abus>=MEM_IO_BASE)
+    {            
+      if(SUPERFLAG)
+        m68k_src_b=io_read_b(abus);           
+      else 
+        exception(BOMBS_BUS_ERROR,EA_READ,abus);         
+    }
+    else if(abus>=0xfc0000)
+    {                             
+      if(tos_high && abus<(0xfc0000+192*1024))
+        m68k_src_b=ROM_PEEK(abus-rom_addr);   
+      else if (abus<0xfe0000 || abus>=0xfe2000) 
+        exception(BOMBS_BUS_ERROR,EA_READ,abus);  
+    }
+    else if(abus>=MEM_EXPANSION_CARTRIDGE)
+    {           
+      if(cart)
+        m68k_src_b=CART_PEEK(abus-MEM_EXPANSION_CARTRIDGE);  
+      else
+        m68k_src_b=(BYTE)0xff;
+    }
+    else if (abus>=rom_addr)
+    {                         
+      if(abus<(0xe00000+256*1024))
+        m68k_src_b=ROM_PEEK(abus-rom_addr);                           
+      else if (abus>=0xec0000)
+        exception(BOMBS_BUS_ERROR,EA_READ,abus);          
+      else
+        m68k_src_b=(BYTE)0xff;                                          
+    }
+    else if (abus>=0xd00000 && abus<0xd80000)
+      m68k_src_b=(BYTE)0xff;               
+#if !defined(SS_MMU_NO_CONFUSION)      
+    else if(mmu_confused)
+      m68k_src_b=mmu_confused_peek(abus,true);                                         
+#endif
+    else if(abus>=FOUR_MEGS)
+      exception(BOMBS_BUS_ERROR,EA_READ,abus);                          
+    else
+      m68k_src_b=(BYTE)0xff;                                          
+  }
+  else if(abus>=MEM_START_OF_USER_AREA)
+  {                                              
+    DEBUG_CHECK_READ_B(abus);  
+    m68k_src_b=(BYTE)(PEEK(abus));                  
+  }
+  else if(SUPERFLAG)
+  {     
+    DEBUG_CHECK_READ_B(abus);  
+    m68k_src_b=(BYTE)(PEEK(abus));                  
+  }
+  else
+    exception(BOMBS_BUS_ERROR,EA_READ,abus);
+}
+
+
+void TM68000::m68kReadWFromAddr() {
+  // Replacing macro m68k_READ_W_FROM_ADDR.
+  abus&=0xffffff;                                   
+  if(abus&1)
+    exception(BOMBS_ADDRESS_ERROR,EA_READ,abus);    
+  else if(abus>=himem)
+  {                                  
+    if(abus>=MEM_IO_BASE)
+    {            
+      if(SUPERFLAG)
+        m68k_src_w=io_read_w(abus);           
+      else 
+        exception(BOMBS_BUS_ERROR,EA_READ,abus);         
+    }
+    else if(abus>=0xfc0000)
+    {                             
+      if(tos_high && abus<(0xfc0000+192*1024))
+        m68k_src_w=ROM_DPEEK(abus-rom_addr);   
+      else if(abus<0xfe0000 || abus>=0xfe2000) 
+        exception(BOMBS_BUS_ERROR,EA_READ,abus);  
+    }
+    else if(abus>=MEM_EXPANSION_CARTRIDGE)
+    {           
+      if(cart)
+        m68k_src_w=CART_DPEEK(abus-MEM_EXPANSION_CARTRIDGE);  
+      else
+        m68k_src_w=(WORD)0xffff;                                    
+    }
+    else if(abus>=rom_addr)
+    {                         
+      if(abus<(0xe00000+256*1024)) 
+        m68k_src_w=ROM_DPEEK(abus-rom_addr);                           
+      else if (abus>=0xec0000) 
+        exception(BOMBS_BUS_ERROR,EA_READ,abus);          
+      else 
+        m68k_src_w=(WORD)0xffff;                                          
+    }
+    else if (abus>=0xd00000 && abus<0xd80000)
+      m68k_src_w=(WORD)0xffff;                                          
+#if !defined(SS_MMU_NO_CONFUSION)
+    else if(mmu_confused)
+      m68k_src_w=mmu_confused_dpeek(abus,true);                                         
+#endif
+    else if(abus>=FOUR_MEGS)
+      exception(BOMBS_BUS_ERROR,EA_READ,abus);                          
+    else
+      m68k_src_w=(WORD)0xffff;                                          
+  }
+  else if(abus>=MEM_START_OF_USER_AREA)
+  {                                              
+    DEBUG_CHECK_READ_W(abus);  
+    m68k_src_w=DPEEK(abus);                  
+  }
+  else if(SUPERFLAG)
+  {     
+    DEBUG_CHECK_READ_W(abus);  
+    m68k_src_w=DPEEK(abus);                  
+  }
+  else 
+    exception(BOMBS_BUS_ERROR,EA_READ,abus);
+}
+
+
+void TM68000::m68kReadLFromAddr() {
+  // Replacing macro m68k_READ_L_FROM_ADDR.
+  abus&=0xffffff;                                   
+  if(abus&1)
+    exception(BOMBS_ADDRESS_ERROR,EA_READ,abus);    
+  else if(abus>=himem)
+  {                                  
+    if(abus>=MEM_IO_BASE)
+    {           
+      if(SUPERFLAG)
+        m68k_src_l=io_read_l(abus);          
+      else
+        exception(BOMBS_BUS_ERROR,EA_READ,abus);         
+    }
+    else if(abus>=0xfc0000)
+    {                             
+      if(tos_high && abus<(0xfc0000+192*1024-2)) 
+        m68k_src_l=ROM_LPEEK(abus-rom_addr);   
+      else if(abus<0xfe0000 || abus>=0xfe2000)
+        exception(BOMBS_BUS_ERROR,EA_READ,abus);  
+    }
+    else if(abus>=MEM_EXPANSION_CARTRIDGE)
+    {           
+      if(cart)
+        m68k_src_l=CART_LPEEK(abus-MEM_EXPANSION_CARTRIDGE);  
+      else
+        m68k_src_l=0xffffffff;                                    
+    }
+    else if(abus>=rom_addr)
+    {                         
+      if(abus<(0xe00000+256*1024-2)) 
+        m68k_src_l=ROM_LPEEK(abus-rom_addr);   
+      else if(abus>=0xec0000)
+        exception(BOMBS_BUS_ERROR,EA_READ,abus);          
+      else
+        m68k_src_l=0xffffffff;                                          
+    }
+    else if(abus>=0xd00000 && abus<0xd80000-2)
+      m68k_src_l=0xffffffff;                                          
+#if !defined(SS_MMU_NO_CONFUSION)
+    else if (mmu_confused)
+      m68k_src_l=mmu_confused_lpeek(abus,true);                                         
+#endif
+    else if(abus>=FOUR_MEGS)
+      exception(BOMBS_BUS_ERROR,EA_READ,abus);                          
+    else
+      m68k_src_l=0xffffffff;                                          
+  }
+  else if(abus>=MEM_START_OF_USER_AREA)
+  {                                              
+    DEBUG_CHECK_READ_L(abus);  
+    m68k_src_l=LPEEK(abus);                  
+  }
+  else if(SUPERFLAG)
+  {     
+    DEBUG_CHECK_READ_L(abus);  
+    m68k_src_l=LPEEK(abus);                  
+  }
+  else
+    exception(BOMBS_BUS_ERROR,EA_READ,abus);
+}
+
+#endif
+
+
+// VC6 won't inline this function
+
+void TM68000::SetPC(MEM_ADDRESS ad) {
+    pc=ad;                               
+    pc_high_byte=pc & 0xff000000;     
+    pc&=0xffffff;                    
+    lpfetch=lpDPEEK(0); //Default to instant bus error when fetch
+    lpfetch_bound=lpDPEEK(0);         
+    if (pc>=himem){                                                       
+      if (pc<MEM_IO_BASE){           
+        if (pc>=MEM_EXPANSION_CARTRIDGE){                                
+          if (pc>=0xfc0000){                                                   
+            if (tos_high && pc<(0xfc0000+192*1024)){         
+              lpfetch=lpROM_DPEEK(pc-0xfc0000); 
+              lpfetch_bound=lpROM_DPEEK(192*1024);         
+            }                                                
+          }else if (cart){                    
+            lpfetch=lpCART_DPEEK(pc-MEM_EXPANSION_CARTRIDGE);
+            lpfetch_bound=lpCART_DPEEK(128*1024);       
+          }                   
+        }else if(pc>=rom_addr){            
+          if (pc<(0xe00000 + 256*1024)){   
+            lpfetch=lpROM_DPEEK(pc-0xe00000);
+            lpfetch_bound=lpROM_DPEEK(256*1024);   
+          }              
+        }              
+      }else{   
+        if (pc>=0xff8240 && pc<0xff8260){      
+          lpfetch=lpPAL_DPEEK(pc-0xff8240); 
+          lpfetch_bound=lpPAL_DPEEK(64+PAL_EXTRA_BYTES);     
+        }   
+      }                                   
+    }else{             
+      lpfetch=lpDPEEK(pc); 
+      lpfetch_bound=lpDPEEK(mem_len+(MEM_EXTRA_BYTES/2));  
+    }                        
+#if defined(SS_CPU_CHECK_PC)
+    PC=ad;
+#endif    
+    PrefetchSetPC();//PREFETCH_SET_PC
+
+}
+
+
+// VC6 won't inline this function
+
+void TM68000::Interrupt(MEM_ADDRESS ad) {
+  WORD _sr=sr;
+  if (!SUPERFLAG) 
+    change_to_supervisor_mode();
+#if defined(SS_CPU_PREFETCH_CLASS)
+  PrefetchClass=2;
+#endif
+  m68k_PUSH_L(PC32);
+  m68k_PUSH_W(_sr);
+  SetPC(ad);
+  SR_CLEAR(SR_TRACE);
+  interrupt_depth++;
+//  TRACE_LOG("%X %d\n",ad,interrupt_depth);
+}
+
 
 
 ////////////////
@@ -984,7 +1263,7 @@ void m68k_exception::crash() { // copied from cpu.cpp and improved
     {
       if(!SUPERFLAG) 
         change_to_supervisor_mode();
-      TRY_M68K_EXCEPTION
+      TRY_M68K_EXCEPTION //TODO: warning C4611
       {
 
 #if defined(SS_HACKS) && !defined(SS_CPU_TRUE_PC_AND_NO_HACKS)
@@ -1144,8 +1423,88 @@ WORD TM68000::FetchForCall(MEM_ADDRESS ad) {
 /////////////////////////////////////////////
 // Poke, non inlined part (full functions) //
 /////////////////////////////////////////////
-// TODO: only parts not treated already, but it's dangerous
+
+
 #if defined(SS_CPU_POKE)
+
+
+// TODO: only parts not treated already, but it's dangerous
+
+#if defined(DEBUG_BUILD)
+
+NOT_DEBUG(inline) void m68k_poke_abus(BYTE x){
+  abus&=0xffffff; // annoying that we must do this
+  BOOL super=SUPERFLAG;
+  if(abus>=MEM_IO_BASE && super)
+    io_write_b(abus,x);
+#if defined(SS_CPU_CHECK_VIDEO_RAM_B)
+/*  To save some performance, we do just one basic shifter test in the inline
+    part. More precise test is in m68k_poke_abus2().
+*/
+  else if(abus<shifter_draw_pointer_at_start_of_line && abus<himem
+    && (abus>=MEM_START_OF_USER_AREA ||super && abus>=MEM_FIRST_WRITEABLE))
+#else
+  else if(abus<himem && (abus>=MEM_START_OF_USER_AREA
+    ||super && abus>=MEM_FIRST_WRITEABLE))
+#endif
+  {
+    DEBUG_CHECK_WRITE_B(abus);
+    PEEK(abus)=x;
+  }
+  else 
+    m68k_poke_abus2(x);
+}
+ 
+
+NOT_DEBUG(inline) void m68k_dpoke_abus(WORD x){
+  abus&=0xffffff;
+  BOOL super=SUPERFLAG;
+  if(abus&1) 
+    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
+  else if(abus>=MEM_IO_BASE && super)
+      io_write_w(abus,x);
+#if defined(SS_CPU_CHECK_VIDEO_RAM_W) // 3615 GEN4 100
+  else if(abus<shifter_draw_pointer_at_start_of_line && abus<himem
+    && (abus>=MEM_START_OF_USER_AREA ||super && abus>=MEM_FIRST_WRITEABLE))
+#else
+  else if(abus<himem && (abus>=MEM_START_OF_USER_AREA
+    ||super && abus>=MEM_FIRST_WRITEABLE))
+#endif
+  {
+    DEBUG_CHECK_WRITE_W(abus);
+    DPEEK(abus)=x;
+  }
+  else
+    m68k_dpoke_abus2(x);
+}
+
+
+NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x){
+  abus&=0xffffff;
+  BOOL super=SUPERFLAG;
+  if(abus&1)
+    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
+  else 
+  if(abus>=MEM_IO_BASE && super)
+    io_write_l(abus,x);
+#if defined(SS_CPU_CHECK_VIDEO_RAM_L)
+  else if(abus<shifter_draw_pointer_at_start_of_line && abus<himem
+    && (abus>=MEM_START_OF_USER_AREA ||super && abus>=MEM_FIRST_WRITEABLE))
+#else
+  else if(abus<himem && (abus>=MEM_START_OF_USER_AREA
+    ||super && abus>=MEM_FIRST_WRITEABLE))
+#endif
+  {
+    DEBUG_CHECK_WRITE_L(abus);
+    LPEEK(abus)=x;
+  }
+  else
+    m68k_lpoke_abus2(x);
+}
+
+#endif
+
+
 
 void m68k_poke_abus2(BYTE x){
   abus&=0xffffff;

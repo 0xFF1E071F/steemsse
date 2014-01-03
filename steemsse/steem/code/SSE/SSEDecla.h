@@ -2,7 +2,6 @@
 #ifndef SSEDECLA_H
 #define SSEDECLA_H
 
-
 /////////////////
 // PORTABILITY //
 /////////////////
@@ -17,11 +16,12 @@
 #endif
 
 #if !defined(WIN32)
-#define TRUE 1
-#define FALSE 0
-#define BOOL int
+//#define TRUE 1
+//#define FALSE 0
+//#define BOOL int
 typedef unsigned char BYTE;
-
+//typedef BYTE BOOL;
+//#include <notwindows.h>
 
 #define max(a,b) (a>b ? a:b)
 #define min(a,b) (a>b ? b:a)
@@ -34,8 +34,13 @@ typedef unsigned char BYTE;
 
 
 #if defined(VC_BUILD)
-//#pragma warning (1 : 4710) // function '...' not inlined as warning L1
+#pragma warning (1 : 4710) // function '...' not inlined as warning L1
 #pragma warning (disable : 4800) // 'int' : forcing value to bool 'true' or 'false' (performance warning)
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+#pragma warning (disable : 4127) //conditional expression is constant (for scope trick)
+#endif
+#pragma warning (disable : 4002) //too many actual parameters for macro 'TRACE_LOG'
+#pragma warning (disable : 4244) //conversion from 'int' to 'short', possible loss of data
 #endif
 
 /////////

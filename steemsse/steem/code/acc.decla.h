@@ -2,8 +2,23 @@
 #ifndef ACC_DECLA_H
 #define ACC_DECLA_H
 
+
+
+#if defined(SS_STRUCTURE_SSECPU_OBJ)///?
+#include <easystr.h>
+////#include <include.h> //no!
+typedef EasyStr Str;//?!
+
+#include <dynamicarray.h>
+
+//#include <stdio.h>
+//#include <SSE/SSEDebug.h>
+#endif
+
 #define EXT extern
 #define INIT(s)
+
+
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
 WORD change_endian(WORD x); // double of something?
@@ -46,11 +61,30 @@ WORD change_endian(WORD x); // double of something?
   EXT void stop_cpu_log();
 
 #ifdef DEBUG_BUILD
+#if defined (SS_DEBUG_CPU_TRACE_NO_STOP)
+/*, The limit would uncheck the option at once. 
+    Since we use the same option for the far more
+    limited TRACE output, the limit is removed when logging is
+    suspended (so that user still has choice).
+*/
+  #define LOG_CPU \
+    if (log_cpu_count ||logging_suspended){ \
+      log_to_section(LOGSECTION_CPU,HEXSl(pc,6)+": "+disa_d2(pc)); \
+      if (!logging_suspended &&(--log_cpu_count)==0) stop_cpu_log(); \
+    }
+
+#elif defined(SS_DEBUG_CPU_LOG_NO_STOP)
+/*  A limited #instructions (10000) as defined would spare file IO,
+    but sometimes you want more.
+*/
+  #define LOG_CPU log_to_section(LOGSECTION_CPU,HEXSl(pc,6)+": "+disa_d2(pc));
+#else
   #define LOG_CPU \
     if (log_cpu_count){ \
       log_to_section(LOGSECTION_CPU,HEXSl(pc,6)+": "+disa_d2(pc)); \
       if ((--log_cpu_count)==0) stop_cpu_log(); \
     }
+#endif
 #else
   #define LOG_CPU
 #endif

@@ -1380,16 +1380,16 @@ BYTE TWD1772::IORead(BYTE Line) {
 #endif
       break;
     case 1:
-      TRACE_LOG("FDC R TR %d\n",ior_byte);
       ior_byte=TR;
+      TRACE_LOG("FDC R TR %d\n",ior_byte);
       break;      
     case 2:
-      TRACE_LOG("FDC R SR %d\n",ior_byte);
       ior_byte=SR;
+      TRACE_LOG("FDC R SR %d\n",ior_byte);
       break;
     case 3:
-      TRACE_LOG("FDC R DR %d\n",ior_byte);
       ior_byte=DR;
+      TRACE_LOG("FDC R DR %d\n",ior_byte);
       break;
     }//sw
 
@@ -1644,9 +1644,9 @@ TCaps::~TCaps() {
     CAPSExit();
 }
 
-#if !defined(SS_STRUCTURE_BIG_FORWARD)
+
 void SetNotifyInitText(char*);//forward
-#endif
+
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_INIT//SS
 

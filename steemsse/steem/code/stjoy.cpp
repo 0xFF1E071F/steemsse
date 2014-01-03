@@ -9,6 +9,18 @@ and the code to read the PC joysticks.
 #pragma message("Included for compilation: stjoy.cpp")
 #endif
 
+#ifdef SS_UNIX
+#define EXT extern
+EXT KeyCode VK_F11,VK_F12,VK_END;
+EXT KeyCode VK_LEFT,VK_RIGHT,VK_UP,VK_DOWN,VK_TAB;
+EXT KeyCode VK_SHIFT,VK_LSHIFT,VK_RSHIFT;
+EXT KeyCode VK_MENU,VK_LMENU,VK_RMENU;
+EXT KeyCode VK_CONTROL,VK_LCONTROL,VK_RCONTROL;
+EXT KeyCode VK_NUMLOCK,VK_SCROLL;
+#undef EXT
+#endif
+
+
 #if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STJOY_H)
 
 
@@ -23,7 +35,13 @@ EXT BYTE stick[8];
 #endif
 
 //#ifdef IN_MAIN
+
+#ifdef SS_UNIX
+char AxisToName[7]={'X','Y','Z','R','U','V','P'};
+#else
 static char AxisToName[7]={'X','Y','Z','R','U','V','P'};
+#endif
+
 JOYINFOEX JoyPos[MAX_PC_JOYS];
 
 bool DisablePCJoysticks=0;

@@ -95,25 +95,37 @@ unsigned long agenda_next_time=0x7fffffff;
 
 MEM_ADDRESS on_rte_return_address;
 
-LPAGENDAPROC agenda_list[]={agenda_fdc_spun_up,agenda_fdc_motor_flag_off,agenda_fdc_finished,
-                          agenda_floppy_seek,agenda_floppy_readwrite_sector,agenda_floppy_read_address,
-                          agenda_floppy_read_track,agenda_floppy_write_track,agenda_serial_sent_byte,
-                          agenda_serial_break_boundary,agenda_serial_loopback_byte,agenda_midi_replace,
-                          agenda_check_centronics_interrupt,agenda_ikbd_process,agenda_keyboard_reset,
+LPAGENDAPROC agenda_list[]={
+  agenda_fdc_spun_up,
+  agenda_fdc_motor_flag_off,
+  agenda_fdc_finished,
+  agenda_floppy_seek,
+  agenda_floppy_readwrite_sector,
+  agenda_floppy_read_address,
+  agenda_floppy_read_track,
+  agenda_floppy_write_track,
+  agenda_serial_sent_byte,
+  agenda_serial_break_boundary,
+  agenda_serial_loopback_byte,
+  agenda_midi_replace,
+  agenda_check_centronics_interrupt,
+  agenda_ikbd_process,
+  agenda_keyboard_reset,
 #if !(defined(STEVEN_SEAGAL) && defined(SS_IKBD_MANAGE_ACIA_TX))
-                          agenda_acia_tx_delay_IKBD,
+  agenda_acia_tx_delay_IKBD,
 #endif
-                          agenda_acia_tx_delay_MIDI,ikbd_send_joystick_message,
-                          ikbd_report_abs_mouse,agenda_keyboard_replace,
-                          
+  agenda_acia_tx_delay_MIDI,
+  ikbd_send_joystick_message,
+  ikbd_report_abs_mouse,
+  agenda_keyboard_replace,
 #if defined(SS_FDC_RESTORE_AGENDA)
-                          agenda_fdc_restore,
+  agenda_fdc_restore,
 #endif
 #if defined(SS_FDC_VERIFY_AGENDA)
-                          agenda_fdc_verify,
+  agenda_fdc_verify,
 #endif
-                          (LPAGENDAPROC)1};
-
+  (LPAGENDAPROC)1};
+  
 
 #if !(defined(STEVEN_SEAGAL) && defined(SS_ACIA)) //see new file acia.h
 struct _ACIA_STRUCT acia[2];

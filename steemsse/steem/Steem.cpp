@@ -200,6 +200,7 @@ USEFILE("code\midi.cpp");
 
 USERC("rc\resource.rc");
 //---------------------------------------------------------------------------
+//#pragma message("yoho steem")
 #define IN_MAIN
 #ifndef BCC_BUILD
 #include "conditions.h"

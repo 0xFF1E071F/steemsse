@@ -1,4 +1,7 @@
 // This file is compiled as a distinct module (resulting in an OBJ file)
+
+#include "../pch.h"
+
 #include "SSEOption.h"
 #include "SSEDebug.h"
 #include "SSESTF.h" // for the enum
@@ -14,8 +17,8 @@ TOption SSEOption; // singleton
 #ifdef UNIX
 #include <stdio.h>
 #include <string.h>
-#define TRUE 1 // don't screw this one up...
-#define FALSE 0
+//#define TRUE 1 // don't screw this one up...
+//#define FALSE 0
 #endif
 
 TOption::TOption() {

@@ -478,12 +478,12 @@ void SteemDisplay::WaitForAsyncBlitToFinish()
 
   XEvent ev;
   clock_t wait_till=clock()+(CLOCKS_PER_SEC/50);
-  TRACE("Frame %d WaitForAsyncBlit...",FRAME);
+//  TRACE("Frame %d WaitForAsyncBlit...",FRAME);
   for (int wait=50000;wait>=0;wait--){
     if (XCheckTypedEvent(XD,SHMCompletion,&ev)) break;
     if (clock()>wait_till) break;
   }
-  TRACE("Done\n");
+///!  TRACE("Done\n");
   asynchronous_blit_in_progress=false;
 #endif
 }

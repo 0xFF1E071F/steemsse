@@ -1,6 +1,12 @@
 #pragma once
 #ifndef SSEM68000_H
 #define SSEM68000_H
+//#pragma message("SSEM68000_H")
+
+#if defined(SS_STRUCTURE_SSECPU_OBJ)
+#include "SSEDebug.h"
+#endif
+
 
 /* Because of structure problems, we create this apart file that just contains
    the TM68000 struct definition and some inline functions.
@@ -24,7 +30,7 @@ struct TM68000 {
   inline void m68kReadBFromAddr();
   inline void m68kReadWFromAddr();
   inline void m68kReadLFromAddr();
-  inline void SetPC(MEM_ADDRESS ad);
+  void SetPC(MEM_ADDRESS ad);
   inline void Unstop();
   void Reset(bool cold);
 #if defined(SS_DEBUG)
@@ -114,7 +120,7 @@ void TM68000::PrefetchSetPC() {
 }
 #define PREFETCH_SET_PC M68000.PrefetchSetPC();
 
-
+/*
 void TM68000::SetPC(MEM_ADDRESS ad) {
     pc=ad;                               
     pc_high_byte=pc & 0xff000000;     
@@ -155,6 +161,7 @@ void TM68000::SetPC(MEM_ADDRESS ad) {
     PrefetchSetPC();//PREFETCH_SET_PC
 
 }
+*/
 #define SET_PC(ad) M68000.SetPC(ad);
 
 

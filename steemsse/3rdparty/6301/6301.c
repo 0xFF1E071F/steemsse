@@ -1,12 +1,16 @@
-// This file is compiled as a distinct module (resulting in an OBJ file)
+/*  
+    6301.c
+    This file is compiled as one distinct module (resulting in an OBJ file)
+    We don't compile each C file
+ */
 #include "6301.h"
 #include "SSE/SSE.h"
-#include "SSE/SSEDebug.h"
-#include "SSE/SSE6301.h"
-#include "acia.h"
+#include <SSE/SSEDebug.h>
+#include <SSE/SSE6301.h>
+#include <acia.h>
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
-#include "SSE/SSEOption.h"
+#include <SSE/SSEOption.h>
 
 #ifndef WIN32
 unsigned int _rotr(unsigned int Data, unsigned int Bits) {
@@ -79,7 +83,7 @@ void (*hd6301_trace)(char *fmt, ...);
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_IKBD
 
-#define error TRACE //printf // saves headache
+#define error printf // saves headache
 #define warning TRACE //printf 
 // base
 #if !defined(SS_IKBD_6301_DISABLE_CALLSTACK)
