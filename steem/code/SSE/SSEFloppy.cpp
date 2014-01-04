@@ -1968,11 +1968,15 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   UDWORD flags=DI_LOCK_DENALT|DI_LOCK_DENVAR|DI_LOCK_UPDATEFD|DI_LOCK_TYPE;
   int side=Caps.SF314[drive].side;
   ASSERT( side==!(psg_reg[PSGR_PORT_A]& BIT_0) );
+#if defined(SS_DRIVE_SINGLE_SIDE_IPF)
+  if( SSEOption.SingleSideDriveMap&(floppy_current_drive()+1) )
+    side=0;
+#endif
   int track=Caps.SF314[drive].track;
   if(Caps.LockedTrack[drive]!=-1)
   {
     ASSERT( Caps.LockedSide[drive]!=-1 );
-    ASSERT( track!=Caps.LockedTrack[drive] || side!=Caps.LockedSide[drive] );
+//    ASSERT( track!=Caps.LockedTrack[drive] || side!=Caps.LockedSide[drive] );
     VERIFY( !CAPSUnlockTrack(Caps.ContainerID[drive],Caps.LockedTrack[drive],
       Caps.LockedSide[drive]) );
     TRACE_LOG("CAPS Unlock %c:S%dT%d\n",drive+'A',Caps.LockedSide[drive],
@@ -1980,7 +1984,7 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   }
   VERIFY( !CAPSLockTrack((PCAPSTRACKINFO)&track_info,Caps.ContainerID[drive],
     track,side,flags) );
-  ASSERT( side==track_info.head );
+//  ASSERT( side==track_info.head );
   ASSERT( track==track_info.cylinder );
   ASSERT( !track_info.sectorsize );
   TRACE_LOG("CAPS Lock %c:S%dT%d flags %X sectors %d bits %d overlap %d startbit %d timebuf %x\n",

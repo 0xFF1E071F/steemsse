@@ -665,6 +665,12 @@ bool TFloppyImage::SeekSector(int Side,int Track,int Sector,bool Format)
     log(EasyStr("FDC: Seek Failed - Can't seek to track ")+Track+" on side "+Side);
     return true;
   }
+
+#if defined(SS_DRIVE_SINGLE_SIDE)
+  if( SSEOption.SingleSideDriveMap&(floppy_current_drive()+1) )
+    Side=0;
+#endif
+
   if (STT_File){
     DWORD TrackStart=STT_TrackStart[Side][Track],Magic=0;
     WORD DataFlags;

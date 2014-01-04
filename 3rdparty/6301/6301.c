@@ -250,7 +250,7 @@ hd6301_load_save(int one_if_save,unsigned char *buffer) {
   // ram
   if(one_if_save)
   {
-    TRACE("Snapshot - save RAM\n");
+    TRACE("6301 Snapshot - save RAM\n");
 #if defined(DUMP_RAM)
     dump_ram();
 #endif

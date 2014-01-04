@@ -527,7 +527,10 @@ and all his silly mods are gone!
 #define SS_DRIVE_READ_TRACK_TIMING2
 #define SS_DRIVE_RW_SECTOR_TIMING // start of sector
 #define SS_DRIVE_RW_SECTOR_TIMING2 // end of sector (hack)
-#if SSE_VERSION>=360 && defined(WIN32) //TODO Unix
+#define SS_DRIVE_SINGLE_SIDE
+#define SS_DRIVE_SINGLE_SIDE_IPF
+#define SS_DRIVE_SINGLE_SIDE_PASTI
+#if defined(WIN32) //TODO Unix
 #define SS_DRIVE_SOUND // heavily requested, delivered!
 //#define SS_DRIVE_SOUND_CHECK_SEEK_VBL
 #define SS_DRIVE_SOUND_EDIT // soundset

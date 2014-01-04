@@ -389,6 +389,8 @@ void TDiskManager::Show()
   Win=CreateWindow("Steem Disk Manager Drive Icon","A",WS_CHILD | WS_VISIBLE,
                 10,10,64,64,Handle,(HMENU)98,HInstance,NULL);
 
+//TRACE("Win A %d\n",Win);
+
   int Disabled=(AreNewDisksInHistory(0) ? 0:WS_DISABLED);
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_SMALLDOWNARROW),WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | Disabled,
                 52,52,12,12,Win,(HMENU)100,HInstance,NULL);
@@ -1111,6 +1113,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
     case WM_COMMAND:
     {
       GET_THIS;
+      //TRACE("WM_COMMAND %d\n",LOWORD(wPar));
       switch (LOWORD(wPar)){
         case IDCANCEL: //Esc
         {
@@ -1423,6 +1426,23 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
         case 1030:
           PostMessage(Win,WM_USER,1234,2);
           break;
+
+#if defined(SS_DRIVE_SINGLE_SIDE)
+/*   bit0 A bit 1 B set = single - we toggle bits
+Toggling a bit
+
+The XOR operator (^) can be used to toggle a bit.
+number ^= 1 << x;
+
+That will toggle bit x.
+*/
+        case 1048:  
+        case 1049:
+          SSEOption.SingleSideDriveMap^=1<< (LOWORD(wPar)-1048);
+          //TRACE("%c -> %02x\n",'A'+(LOWORD(wPar)-1048),SSEOption.SingleSideDriveMap);
+          break;
+#endif
+
         case 1050:  // Disk in Drive 1
         case 1051:  // Disk in Drive 2
           This->DragLV=GetDlgItem(Win,int(LOWORD(wPar)==1050 ? 100:101));
@@ -2501,6 +2521,28 @@ LRESULT __stdcall TDiskManager::Drive_Icon_WndProc(HWND Win,UINT Mess,WPARAM wPa
       GET_THIS;
       if (disk==1) This->SetNumFloppies(3-num_connected_floppies);
       return 0;
+
+#if defined(SS_DRIVE_SINGLE_SIDE)
+    case WM_RBUTTONDOWN: // right click on drive, make context menu
+    {
+      GET_THIS;
+      This->MenuTarget=disk;
+      HMENU Pop=CreatePopupMenu();
+      // Only one option now, single side
+      //TRACE("mask %02X  shift menu target %X \n",SSEOption.SingleSideDriveMap,This->MenuTarget+1);
+      InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | 
+        (int)(( (SSEOption.SingleSideDriveMap)&(This->MenuTarget+1)) ? 
+        MF_CHECKED:0),1048+This->MenuTarget,
+        T("SF354 (single side - caution!)"));
+      POINT pt;
+      GetCursorPos(&pt); // menu will appear at the mouse pointer
+      TrackPopupMenu(Pop,TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
+        pt.x,pt.y,0,This->Handle,NULL);
+      DestroyMenu(Pop);
+      return 0; // mimic
+    }
+#endif
+
     case WM_COMMAND:
       GET_THIS;
       if (LOWORD(wPar)==100){
@@ -2842,7 +2884,11 @@ void TDiskManager::InsertHistoryDelete(int d,char *Name,char *Path,char *DiskInZ
 bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChangeDisk,
                                 bool MakeFocus,EasyStr DiskInZip,bool SuppressErr,bool AllowInsert2)
 {
-  TRACE_LOG("%c: Inserting disk %s [%s]\n",Drive+'A',Name.c_str(),Path.c_str());
+  
+#ifdef SS_DEBUG
+  if(!DontChangeDisk)
+    TRACE_LOG("%c: Inserting disk %s [%s]\n",Drive+'A',Name.c_str(),Path.c_str());
+#endif
 
   if (DontChangeDisk==0){
     if (Path.Empty()) 

@@ -1180,6 +1180,12 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 */
 
 #if USE_PASTI // SS Pasti manages this as well
+
+#if defined(SS_DRIVE_SINGLE_SIDE_PASTI)
+          if(SSE_HACKS_ON 
+            && (SSEOption.SingleSideDriveMap&(floppy_current_drive()+1) ))
+            io_src_b|=1; // cheat
+#endif
           if (hPasti && pasti_active) 
             pasti->WritePorta(io_src_b,ABSOLUTE_CPU_TIME);
 #endif
