@@ -282,9 +282,17 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
     With $F, it works with 2MB as well. 
     But what about RS232?
     TODO 
+    Second Reality 2013: this sets timer D, so of course we restrict the
+    hack to changes by TOS
 */
-          if(SSE_HACKS_ON && timer==3)
+          if(SSE_HACKS_ON 
+            && timer==3 // = Timer D
+            && old_pc > rom_addr // for Second Reality 2013 sound
+            )
+          {
+//            TRACE("pc %x timer D %d -> %d",old_pc,mfp_reg[MFPR_TADR+timer],(mfp_reg[MFPR_TADR+timer] & 0xf0) | 0x7);
             mfp_reg[MFPR_TADR+timer]=(mfp_reg[MFPR_TADR+timer] & 0xf0) | 0x7;
+          }
 #endif
           mfp_timer_timeout[timer]=ABSOLUTE_CPU_TIME;
           mfp_timer_timeout[timer]+=int(double(mfp_timer_prescale[new_control]*mfp_timer_counter[timer]/64)*CPU_CYCLES_PER_MFP_CLK);
