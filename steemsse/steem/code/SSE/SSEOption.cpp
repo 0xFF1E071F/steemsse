@@ -57,6 +57,7 @@ void TOption::Init() {
   TripleBuffer=0; // CPU intensive
   StatusBarGameName=1;
   DriveSound=0;
+  SingleSideDriveMap=0;
 }
 
 #endif//#if defined(SS_SSE_OPTION_STRUCT)

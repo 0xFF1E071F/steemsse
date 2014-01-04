@@ -343,7 +343,7 @@ void zipclass::list_contents(char *name,EasyStringList *eslp,bool st_disks_only)
 //---------------------------------------------------------------------------
 bool zipclass::extract_file(char *fn,int offset,char *dest_dir,bool hide,DWORD attrib)
 {
-  TRACE_LOG("zippy extract %s (#%d) to %s\n",fn,offset,dest_dir);
+//  TRACE_LOG("zippy extract %s (#%d) to %s\n",fn,offset,dest_dir);
   if (enable_zip==0) return ZIPPY_FAIL;
 
   if (strcmp(type,"ZIP")==0){

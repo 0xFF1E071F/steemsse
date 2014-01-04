@@ -9,6 +9,8 @@ and its various buttons.
 #pragma message("Included for compilation: stemwin.cpp")
 #endif
 
+#define LOGSECTION LOGSECTION_INIT//SS
+
 //---------------------------------------------------------------------------
 void StemWinResize(int xo,int yo)
 {
@@ -781,7 +783,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           (cw==(4+640+ 4* SideBorderSizeWin) 
 #endif
           && ch==(MENUHEIGHT+4+400 + 2*(BORDER_TOP+BottomBorderSize)));
-        TRACE("CanUse_400 %d cw %d %d ch %d %d\n",CanUse_400,cw,(4+640+ 4* SideBorderSizeWin),ch,(MENUHEIGHT+4+400 + 2*(BORDER_TOP+BottomBorderSize)));
+        TRACE_LOG("CanUse_400 %d cw %d %d ch %d %d\n",CanUse_400,cw,(4+640+ 4* SideBorderSizeWin),ch,(MENUHEIGHT+4+400 + 2*(BORDER_TOP+BottomBorderSize)));
       }else{
         CanUse_400=(cw==644 && ch==404+MENUHEIGHT);
       }
@@ -1108,7 +1110,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
 //---------------------------------------------------------------------------
 void SetStemWinSize(int w,int h,int xo,int yo)
 {
-  TRACE("SetStemWinSize w %d,h %d,%d,%d\n",w,h,xo,yo);
+  TRACE_LOG("SetStemWinSize w %d,h %d,%d,%d\n",w,h,xo,yo);
 #if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
   if(SDL.InUse)
   {
@@ -1433,6 +1435,7 @@ void SnapShotGetOptions(EasyStringList *p_sl)
     }
   }
 }
+#undef LOGSECTION//SS
 //---------------------------------------------------------------------------
 #ifdef UNIX
 #include "x/x_stemwin.cpp"

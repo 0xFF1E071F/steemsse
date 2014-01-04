@@ -40,6 +40,7 @@ struct TOption {
   unsigned int TripleBuffer:1;
   unsigned int StatusBarGameName:1;
   unsigned int DriveSound:1;
+  unsigned int SingleSideDriveMap:2;
 #ifdef __cplusplus // visible only to C++ objects
   TOption();
   void Init();
