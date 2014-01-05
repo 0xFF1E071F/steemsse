@@ -2273,13 +2273,13 @@ void                              m68k_cmpi_b(){
 #if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
 #endif
-#if !defined(SS_CPU_PREFETCH_TIMING_CMPI)
+#if !defined(SS_CPU_PREFETCH_TIMING_CMPI_B)
   INSTRUCTION_TIME(4);
 #endif
   m68k_GET_IMMEDIATE_B;
   m68k_old_dest=m68k_read_dest_b();
-#if defined(SS_CPU_PREFETCH_TIMING_CMPI)
-  INSTRUCTION_TIME(4);
+#if defined(SS_CPU_PREFETCH_TIMING_CMPI_B)
+  INSTRUCTION_TIME(4); // breaks Reality is a Lie/Schnusdie (TODO)
 #endif
   PREFETCH_IRC;
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
@@ -2295,12 +2295,12 @@ void                              m68k_cmpi_w(){
 #if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
 #endif
-#if !defined(SS_CPU_PREFETCH_TIMING_CMPI)
+#if !defined(SS_CPU_PREFETCH_TIMING_CMPI_W)
   INSTRUCTION_TIME(4);
 #endif
   m68k_GET_IMMEDIATE_W;
   m68k_old_dest=m68k_read_dest_w();
-#if defined(SS_CPU_PREFETCH_TIMING_CMPI)
+#if defined(SS_CPU_PREFETCH_TIMING_CMPI_W)
   INSTRUCTION_TIME(4);
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_0_TIMINGS)
@@ -2319,7 +2319,7 @@ void                              m68k_cmpi_l(){
   FETCH_TIMING;
 #endif
   m68k_GET_IMMEDIATE_L;
-#if !defined(SS_CPU_PREFETCH_TIMING_CMPI)
+#if !defined(SS_CPU_PREFETCH_TIMING_CMPI_L)
   if(DEST_IS_REGISTER){INSTRUCTION_TIME(10);} else {INSTRUCTION_TIME(8);}
 #endif
   m68k_old_dest=m68k_read_dest_l();
@@ -2327,7 +2327,7 @@ void                              m68k_cmpi_l(){
   FETCH_TIMING;
 #endif
   PREFETCH_IRC;
-#if defined(SS_CPU_PREFETCH_TIMING_CMPI)
+#if defined(SS_CPU_PREFETCH_TIMING_CMPI_L)
 /* Japtro disk B overscan dot balls, we were rounding 14 to 16 in v3.5
 */
   if(DEST_IS_REGISTER){INSTRUCTION_TIME(10);} else {INSTRUCTION_TIME(8);}
