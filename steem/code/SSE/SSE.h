@@ -332,7 +332,9 @@ and all his silly mods are gone!
 // Move the timing counting from FETCH_TIMING to PREFETCH_IRC:
 #define SS_CPU_PREFETCH_TIMING //big, big change
 #ifdef SS_CPU_PREFETCH_TIMING 
-#define SS_CPU_PREFETCH_TIMING_CMPI // move the instruction timing place
+//#define SS_CPU_PREFETCH_TIMING_CMPI_B // move the instruction timing place-no
+//#define SS_CPU_PREFETCH_TIMING_CMPI_W // move the instruction timing place
+#define SS_CPU_PREFETCH_TIMING_CMPI_L // move the instruction timing place
 #define SS_CPU_PREFETCH_TIMING_MOVEM // at wrong place, probably compensates bug
 #define SS_CPU_PREFETCH_TIMING_SET_PC // necessary for some SET PC cases
 //#define SS_CPU_PREFETCH_TIMING_EXCEPT // to mix unique switch + lines
