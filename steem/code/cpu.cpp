@@ -3433,7 +3433,11 @@ void                              m68k_movem_l_to_regs(){
 
   bool postincrement=false;
   m68k_src_w=m68k_fetchW();pc+=2;  // SS: TODO what if m68k_src_w=0?
+#if defined(SS_CPU_MOVEM_MR_L)
+  INSTRUCTION_TIME_ROUND(4);// fixes Hackabonds Demo instructions scroller
+#else
   INSTRUCTION_TIME(4);
+#endif
   MEM_ADDRESS ad;
   switch(ir&BITS_543){
   case BITS_543_010: //ss (A)

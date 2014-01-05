@@ -1123,6 +1123,11 @@ void TM68000::SetPC(MEM_ADDRESS ad) {
 // VC6 won't inline this function
 
 void TM68000::Interrupt(MEM_ADDRESS ad) {
+
+#if defined(SS_CPU_UNSTOP)
+  M68K_UNSTOP; // fixes trash in Hackabonds Demo intro (STOP in trace)
+#endif
+
   WORD _sr=sr;
   if (!SUPERFLAG) 
     change_to_supervisor_mode();
