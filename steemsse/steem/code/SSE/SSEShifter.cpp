@@ -182,6 +182,8 @@ void TShifter::CheckSideOverscan() {
     SNYD2/Sync fullscreen (F5)
     SoWatt/Menu+Sync
 
+    Hackabonds Demo hits at 504, left off desired, WS1 only?
+
 */
 
 #if defined(SS_SHIFTER_TRICKS) 
@@ -217,8 +219,13 @@ void TShifter::CheckSideOverscan() {
       }
 #elif defined(SS_SHIFTER_TRICKS)
 //#define TESTLINE -28 // for debug
+
+#if defined(SS_SHIFTER_LEFT_OFF_THRESHOLD)
       r2cycle=NextShiftModeChange(-12,2); // cycle 504 of previous line
+#else
       r2cycle=NextShiftModeChange(lim_r2-14,2);
+#endif
+
 #ifdef TESTLINE
       if(scan_y==TESTLINE) TRACE_LOG("R2 %d ",r2cycle);
 #endif
@@ -1438,7 +1445,7 @@ detect unstable: switch MED/LOW - Beeshift
     &&!(TrickExecuted&TRICK_LINE_MINUS_2))
   {
     //TRACE("-2\n");
-    ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );
+    //ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );//false alerts anyway
 
 #if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_UNSTABLE)
 // wrong, of course, just to have Overdrive menu OK when you come back
@@ -1695,6 +1702,7 @@ Tests are arranged to be efficient.
           note D4/Tekila 199: 444:S0000 452:R0082 460:R0000
     No line 2 466-504    No Buddies Land (500/508); D4/NGC (496/508)
           note: STE line +20 504/4 (MOLZ) or 504/8 -> 504 is STF-only
+    Hackabonds Demo hits at 504, 0-byte undesired: WS1 only?
           
 */
     if(!(NextScanline.Tricks&TRICK_0BYTE_LINE))
@@ -1752,7 +1760,7 @@ Tests are arranged to be efficient.
       else 
       {
         r2cycle+=38; // -> 502 (STE)
-#if defined(SS_STF_0BYTE)
+#if defined(SS_STF_0BYTE) && !defined(SS_SHIFTER_0BYTE__LINE_RES_END_THRESHOLD)
         if(ST_TYPE!=STE)
           r2cycle+=2; // -> 504 (STF)
 #endif
@@ -2186,10 +2194,14 @@ void TShifter::EndHBL() {
   if(WAKE_UP_STATE)/// && ST_TYPE==STF)
   {
     // Overdrive/Dragon
+    // 235 - 004:R0002 012:R0000 512:T0001 512:#0186
+    // it was a nice theory, obviously wrong, we keep the hack so it runs
+    // see Hackabonds Demo instructions scroller in WS1
     if((CurrentScanline.Tricks&0xFF)==TRICK_LINE_PLUS_26
       &&!(CurrentScanline.Tricks&TRICK_STABILISER)
       &&(PreviousScanline.Tricks&TRICK_STABILISER)
-      &&(ShiftModeChangeAtCycle(444-512)==2 ) // hack to target on Dragon
+      && SSE_HACKS_ON && scan_y==235 // hack to target on Dragon
+      //&&(ShiftModeChangeAtCycle(444-512)==2 ) // hack to target on Dragon
       )
       Preload=1;
     // Death of the Left Border, Omega Full Overscan

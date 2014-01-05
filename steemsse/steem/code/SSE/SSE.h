@@ -267,10 +267,12 @@ and all his silly mods are gone!
 #define SS_CPU_MOVE_B       // move like a superstar
 #define SS_CPU_MOVE_W       
 #define SS_CPU_MOVE_L
+#define SS_CPU_MOVEM_MR_L
 #define SS_CPU_POKE         // poke like a C64 
 #define SS_CPU_PREFETCH     // prefetch like a dog
 #define SS_CPU_ROUNDING     // round like a rolling stone
 #define SS_CPU_TAS          // 4 cycles fewer if memory
+#define SS_CPU_UNSTOP
 
 #if defined(SS_CPU_EXCEPTION)
 
@@ -890,12 +892,18 @@ and all his silly mods are gone!
 //#define SS_SHIFTER_0BYTE_LINE_RES_START //Nostalgic-O/Lemmings
 //#define SS_SHIFTER_0BYTE_LINE_SYNC //Forest
 //#define SS_SHIFTER_0BYTE_LINE_SYNC2 // loSTE screens
+
+//#define SS_SHIFTER_0BYTE__LINE_RES_END_THRESHOLD//Hackabonds Demo not WS1
+
 #endif//0-byte line
 #define SS_SHIFTER_4BIT_SCROLL //Let's do the Twist again
 #define SS_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK
 #define SS_SHIFTER_60HZ_OVERSCAN //Leavin' Terramis
 #define SS_SHIFTER_END_OF_LINE_CORRECTION // correct +2, -2 lines 
 #define SS_SHIFTER_FIX_LINE508_CONFUSION // hack at recording shifter event
+
+//#define SS_SHIFTER_LEFT_OFF_THRESHOLD//Hackabonds Demo not WS1
+
 #define SS_SHIFTER_LEFT_OFF_60HZ // 24 bytes!
 #define SS_SHIFTER_LEFT_OFF_TEST_BEFORE_HBL // for Riverside
 #define SS_SHIFTER_LINE_MINUS_106_BLACK // loSTE screens
