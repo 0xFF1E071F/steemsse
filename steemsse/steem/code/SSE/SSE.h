@@ -393,7 +393,9 @@ and all his silly mods are gone!
 #endif//prefetch
 
 #if defined(SS_CPU_ROUNDING)
-#define SS_CPU_ROUNDING_SOURCE_100 // -(An)
+//#define SS_CPU_ROUNDING_SOURCE_100_B // -(An)
+//#define SS_CPU_ROUNDING_SOURCE_100_W // -(An): no
+#define SS_CPU_ROUNDING_SOURCE_100_L // -(An)
 #endif//rounding
 
 #define SS_CPU_LINE_F // for interrupt depth counter

@@ -175,22 +175,21 @@ void m68k_get_source_011_l(){ // .L (An)+
 /*  SS_CPU_ROUNDING_SOURCE_100:
     We don't round because the instruction by itself takes 6/10 cycles.
     Fixes Cernit Trandafir demo scren #2 + the similar Summer Delight #5, #7
-    Quite surprised that nothing seems to be broken by the change yet.
-    TESTING
-    INSTRUCTION_TIME_ROUND(4) instead of INSTRUCTION_TIME(6) would break
-    RGBeast for example.
-
+    v3.6.0: .W -(An) mod breaks Ishar 3 cracktro -> only for .L now
+    (mentioned demos still OK)
     PC: +2 as first step for .B,.W
 */
+
 #if !defined(SS_CPU_EXCEPTION)//temp...
 long silly_dummy_for_true_pc2;
 #define TRUE_PC silly_dummy_for_true_pc2
 #endif
+
 void m68k_get_source_100_b(){ // .B -(An)
 
   TRUE_PC+=2;
 
-#if defined(SS_CPU_ROUNDING_SOURCE_100)
+#if defined(SS_CPU_ROUNDING_SOURCE_100_B)
   INSTRUCTION_TIME(6);
 #else
   INSTRUCTION_TIME_ROUND(6);
@@ -209,7 +208,7 @@ void m68k_get_source_100_w(){ // .W -(An)
 
   TRUE_PC+=2;
 
-#if defined(SS_CPU_ROUNDING_SOURCE_100)
+#if defined(SS_CPU_ROUNDING_SOURCE_100_W)
   INSTRUCTION_TIME(6);
 #else
   INSTRUCTION_TIME_ROUND(6);
@@ -224,7 +223,7 @@ void m68k_get_source_100_w(){ // .W -(An)
 
 void m68k_get_source_100_l(){ // .L -(An)
 
-#if defined(SS_CPU_ROUNDING_SOURCE_100)
+#if defined(SS_CPU_ROUNDING_SOURCE_100_L)
   INSTRUCTION_TIME(10);
 #else
   INSTRUCTION_TIME_ROUND(10);
@@ -1116,7 +1115,6 @@ void TM68000::SetPC(MEM_ADDRESS ad) {
     PC=ad;
 #endif    
     PrefetchSetPC();//PREFETCH_SET_PC
-
 }
 
 
