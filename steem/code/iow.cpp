@@ -259,12 +259,25 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
     If the ACIA is shifting and already has a byte in TDR, the byte in TDR
     can be changed (High Fidelity Dreams).
     We record the timing of 'tx' only if the line is free: Pandemonium Demos.
+
+    Brattacas "should" "work" in 6301 true emu mode.
+
+    v3.6 Grumbler by Electricity: key repeat in 6301 true emu mode
+
 */
-        if(!ACIA_IKBD.LineTxBusy)
+        if(!ACIA_IKBD.LineTxBusy
+#if defined(SS_ACIA_TDR_COPY_DELAY) // for Grumbler
+          || ACT-ACIA_IKBD.last_tx_write_time<ACIA_TDR_COPY_DELAY
+#endif
+          )
         {
+          if(ACIA_IKBD.LineTxBusy)//?
+          agenda_delete(agenda_ikbd_process);//cancel previous one...
+
 #if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)\
      || defined(SS_ACIA_TDR_COPY_DELAY)
-          ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
+          if(!ACIA_IKBD.LineTxBusy) // Pandemonium!
+            ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
 #endif
           HD6301.ReceiveByte(io_src_b);
 #if defined(SS_ACIA_REGISTERS)

@@ -217,6 +217,7 @@ and all his silly mods are gone!
 //#define SS_ACIA_DONT_CLEAR_DR //?
 #define SS_ACIA_NO_RESET_PIN // don't reset on warm reset
 #define SS_ACIA_TDR_COPY_DELAY // effect on SR
+#define SS_ACIA_TDR_COPY_DELAY2 // effect on byte flow
 #if defined(SS_DEBUG)
 #define SS_ACIA_TEST_REGISTERS
 #endif
@@ -671,7 +672,7 @@ and all his silly mods are gone!
 //#define SS_IKBD_FAKE_CUSTOM 
 //#define SS_IKBD_FAKE_CUSTOM_TRACE // trace checksums
 #define SS_IKBD_FAKE_MOUSE_SCALE // actually use the scale
-#define SS_IKBD_MANAGE_ACIA_TX
+#define SS_IKBD_MANAGE_ACIA_TX // can't disable...
 #define SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT // hardware quirk?
 #define SS_IKBD_TRACE_CPU_READ
 #define SS_IKBD_TRACE_CPU_READ2 //beware polling
