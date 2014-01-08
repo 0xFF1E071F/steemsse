@@ -253,9 +253,7 @@ void THD6301::ReceiveByte(BYTE data) {
   TRACE_LOG("ACIA TDR->TDRS->IKBD RDRS $%X\n",data);
   ACIA_IKBD.ByteWaitingTx=false;
   agenda_add(agenda_ikbd_process,HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL,data);
-#if defined(SS_ACIA_REGISTERS)
   ACIA_IKBD.TDRS=ACIA_IKBD.TDR; // shift register
-#endif
   ACIA_IKBD.LineTxBusy=true;
 }
 

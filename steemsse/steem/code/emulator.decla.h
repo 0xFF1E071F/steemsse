@@ -184,11 +184,7 @@ void agenda_keyboard_replace(int);
 
 int agenda_get_queue_pos(LPAGENDAPROC);
 //void inline agenda_process();
-void 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_IKBD_MANAGE_ACIA_TX))
-agenda_acia_tx_delay_IKBD(int),
-#endif
-agenda_acia_tx_delay_MIDI(int);
+void agenda_acia_tx_delay_IKBD(int),agenda_acia_tx_delay_MIDI(int);
 
 
 EXT MEM_ADDRESS on_rte_return_address;
@@ -209,9 +205,7 @@ EXT MEM_ADDRESS on_rte_return_address;
 //EXT LPAGENDAPROC agenda_list[]; // BCC don't like that
 EXT LPAGENDAPROC agenda_list[
   15+4+1
-#if !(defined(STEVEN_SEAGAL) && defined(SS_IKBD_MANAGE_ACIA_TX))
   +1
-#endif
 #if defined(SS_FDC_RESTORE_AGENDA)
   +1
 #endif

@@ -10,7 +10,9 @@ Added doc, trace of commands
 V3.3, fake emu borrowed from Hatari for reprogramming
 V3.4, hardware-level emulation
 V3.5.1: fake emu for reprogramming nuked (avoid bloat)
+V3.6.0: all non 6301 true emu mods removed (ACIA + IKBD)
 ---------------------------------------------------------------------------*/
+
 #if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: ikbd.cpp")
 #endif
@@ -357,11 +359,6 @@ void IKBD_VBL()
       }
     }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM)
-    if(ikbd.custom_prg_ID) // visit our fake 6301 emu each VBL
-      keyboard_buffer_write(IKBD_CUSTOM_DUMMY);
-#endif
-
     int report_button_abs=0;
     if (mousek!=old_mousek){
       bool send_change_for_button=true;
@@ -486,10 +483,6 @@ void IKBD_VBL()
   }
   macro_advance();
   if (disable_input_vbl_count) disable_input_vbl_count--;
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_POLL_IN_FRAME)
-  if(SSE_HACKS_ON)
-    ikbd.scanline_to_poll=rand()%200; // is one enough?
-#endif
 }
 //---------------------------------------------------------------------------
 /*
@@ -525,79 +518,32 @@ void ikbd_inc_hack(int &hack_val,int inc_val) // SS using a reference
 void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
 {
   log(EasyStr("IKBD: At ")+hbl_count+" receives $"+HEXSl(src,2));
-
-  //TRACE_LOG("ACIA %X -> IKBD\n",src);
   TRACE_LOG("IKBD RDRS->RDR $%X\n",src);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301) && defined(SS_DEBUG)
-  HD6301.InterpretCommand(src); // our powerful 6301 command interpreter!
+#if defined(SS_DEBUG)
+  // our powerful 6301 command interpreter, working for both emulations
+  HD6301.InterpretCommand(src); 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM)
-/*  Special case of custom programs already running. In fake emu, we ignore 
-    the writes, except when the CPU is sending $FF to Froggies' menu manager.
-    This is just a hack.
-*/
-  if(ikbd.custom_prg_ID)
+#if defined(SS_IKBD_6301)
+  if(HD6301EMU_ON  && !HD6301.Crashed)
   {
-    ASSERT( SSE_HACKS_ON );
-    if(ikbd.custom_prg_ID==IKBD_FROGGIES_MENU && src==0xFF)
-      ikbd_reset(false); // in fact a jump to $F000
-    return;
-  }
+    ACIA_IKBD.SR|=BIT_1; // TDRE
+    if((ACIA_IKBD.CR&BIT_5)&&!(ACIA_IKBD.CR&BIT_6))
+    {
+      ACIA_IKBD.SR|=BIT_7; 
+      mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0); //trigger IRQ
+    }
+
+#if defined(SS_ACIA_DOUBLE_BUFFER_TX)
+    /*  If there's a byte in TDR waiting to be shifted, do it now.
+    */
+    ACIA_IKBD.LineTxBusy=false;
+    if(ACIA_IKBD.ByteWaitingTx) 
+      HD6301.ReceiveByte(ACIA_IKBD.TDR);
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_MANAGE_ACIA_TX)
-/*  As the directive says, we manage the ACIA TX flag here, using our
-    registers or Steem's original way.
-    TDRE bit is set because TDR is free.
-    If necessary, an IRQ is triggered.
-*/
-
-  // TDRE
-#if defined(SS_ACIA_REGISTERS)
-  ACIA_IKBD.SR|=BIT_1;
-#endif
-#if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
-  ACIA_IKBD.tx_flag=0; // ACIA TDR register is free
-#endif
-
-  // IRQ
-#if defined(SS_ACIA_REGISTERS)
- if((ACIA_IKBD.CR&BIT_5)&&!(ACIA_IKBD.CR&BIT_6))
- {
-   ACIA_IKBD.SR|=BIT_7; 
-#if defined(SS_ACIA_USE_REGISTERS)
-   mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0); //trigger
-#endif
- }
-#endif
-
-#if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
-  if(ACIA_IKBD.tx_irq_enabled)
-    ACIA_IKBD.irq=true;
-#if !defined(SS_ACIA_USE_REGISTERS)
-  mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
-#endif
-#endif
-
-#endif//(SS_IKBD_MANAGE_ACIA_TX)
-
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_DOUBLE_BUFFER_TX)
-/*  If there's a byte in TDR waiting to be shifted, do it now.
-*/
-  ACIA_IKBD.LineTxBusy=false;
-  if(ACIA_IKBD.ByteWaitingTx) 
-    HD6301.ReceiveByte(ACIA_IKBD.TDR);
-#endif
-
-#if defined(STEVEN_SEAGAL) &&  defined(SS_IKBD_6301)
-/*  If 6301 true emu is checked, we send the byte to the low-level emulation
-    and we need care about nothing else.
-*/
-  if(HD6301EMU_ON && !HD6301.Crashed) 
-  {
-//    TRACE_LOG("6301 RDRS->RDR %X\n",src);
+    //TRACE_LOG("6301 RDRS->RDR %X\n",src);
     hd6301_transmit_byte(src);// send byte to 6301 emu
     
 #if defined(SS_IKBD_6301_RUN_CYCLES_AT_IO)//no...
@@ -617,91 +563,22 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
     
     // That's it for Steem, the rest is handled by the program in ROM!
     return; 
+   
   }
-
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
-  BOOL IkbdOff=(ikbd.send_nothing); // useless?
-#endif
   ikbd.send_nothing=0;  // This should only happen if valid command is received!
   if(ikbd.command_read_count) // SS: entering command parameters
   { // that is, commands with parameters are handled first (here) 
-    if (ikbd.command!=0x50
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM) 
-/*  Memory protection due to the horrible way we implement 
-    fake 6301 reprogramming (another hack).
-*/
-      && ikbd.command_parameter_counter<8
-#endif
-      ){ //load memory rubbish // SS why 'rubbish'?
+    if (ikbd.command!=0x50){ //load memory rubbish // SS why 'rubbish'?
       ikbd.command_param[ikbd.command_parameter_counter++]=(BYTE)src;
     }else{
       // Save into IKBD RAM, this is in the strange range $0080 to $00FF (128 bytes)
-      if (ikbd.load_memory_address>=0x80 
-#if defined(SS_IKBD_FAKE_CUSTOM)
-/*  Same thing. We take care not to use this system when a custom loader is 
-    supposed to be in action (could overflow since we accept 200 bytes).
-*/
-        && !ikbd.custom_prg_loading
-#endif
-
-        && ikbd.load_memory_address<=0xff){
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM)
-        // this is the checksum for the loader
-        ikbd.custom_prg_checksum+=src;
-#if defined(SS_IKBD_FAKE_CUSTOM_TRACE)
-        TRACE_LOG(" LdrChk: %X ",ikbd.custom_prg_checksum);
-#endif
-#endif
+      if (ikbd.load_memory_address>=0x80 && ikbd.load_memory_address<=0xff){
         ikbd.ram[ikbd.load_memory_address-0x80]=(BYTE)src;
       }
       ikbd.load_memory_address++;
     }
-#if defined(SS_IKBD_FAKE_CUSTOM)
-/* Here we check all bytes coming in for the loader, until we come to
-   a value we know. 
-   We imitate Hatari but to keep our pride we use our own miserable 
-   checksums!
-*/
-      if(ikbd.custom_prg_loading)
-      {
-        ikbd.custom_prg_checksum+=src;
-#if defined(SS_IKBD_FAKE_CUSTOM_TRACE)
-        TRACE_LOG(" PrgChk: %X ",ikbd.custom_prg_checksum);
-#endif
-        ikbd.custom_prg_loading=FALSE;
-#if defined(SS_IKBD_FAKE_CUSTOM_IS_HACK)
-        if(!SSE_HACKS_ON)
-          ikbd.custom_prg_checksum=0; // volontary mess-up
-#endif
-        switch(ikbd.custom_prg_checksum)
-        {
-        case SS_IKBD_FAKE_CUSTOM_CHECKSUM_DRAGONNELS: //TODO no magic cst
-          ikbd.custom_prg_ID=IKBD_DRAGONNELS_MENU;
-          TRACE_LOG("Dragonnels\n");
-          break;
-        case SS_IKBD_FAKE_CUSTOM_CHECKSUM_FROGGIES:
-          ikbd.custom_prg_ID=IKBD_FROGGIES_MENU;
-          TRACE_LOG("Froggies\n");
-          break;
-        case SS_IKBD_FAKE_CUSTOM_CHECKSUM_TB2:
-          ikbd.custom_prg_ID=IKBD_TB2_MENU;
-          TRACE_LOG("Transbeauce 2\n");
-          ikbd.CustomTB2(); // for Transbeauce 2 your really must do that
-          break;
-        default:
-          ikbd.custom_prg_loading=TRUE; // we're not finished
-          break;
-        }//sw
-        if(!ikbd.custom_prg_loading)
-        { // clean  up!
-          keyboard_buffer_length=ikbd.command_read_count=ikbd.command=0;
-          agenda_delete(agenda_keyboard_replace);
-          return;
-        }
-      }
-#endif
     ikbd.command_read_count--;
     if (ikbd.command_read_count<=0)
     {
@@ -726,10 +603,6 @@ treated as part of the mouse logically. When buttons act like keys,
  LEFT=0x74 & RIGHT=0x75.
 */
       case 0x7: // Set what package is returned when mouse buttons are pressed
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD) 
-        ikbd.port_0_joy=false;
-#endif
-        ASSERT(ikbd.command_param[0]>=0 && ikbd.command_param[0]<=4);
         ikbd.mouse_button_press_what_message=ikbd.command_param[0];
         break;
 /*
@@ -753,18 +626,12 @@ wrap between 0 and large positive numbers. Excess motion below 0 is ignored.
         ikbd.mouse_mode=IKBD_MOUSE_MODE_ABSOLUTE;
         ikbd.abs_mouse_max_x=MAKEWORD(ikbd.command_param[1],ikbd.command_param[0]);
         ikbd.abs_mouse_max_y=MAKEWORD(ikbd.command_param[3],ikbd.command_param[2]);
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_ABS_MOUSE)
-/* "Less is more" - Emulation is more accurate without all this code!
-   Fixes Manchester United
-*/
-#else
         ikbd.port_0_joy=false;
         ikbd.abs_mouse_x=ikbd.abs_mouse_max_x/2;
         ikbd.abs_mouse_y=ikbd.abs_mouse_max_y/2;
         ikbd.abs_mousek_flags=0; 
         if (RMB_DOWN(mousek)) ikbd.abs_mousek_flags|=BIT_0;
         if (LMB_DOWN(mousek)) ikbd.abs_mousek_flags|=BIT_2;
-#endif
         break;
 /*
 SET MOUSE KEYCODE MODE
@@ -805,9 +672,6 @@ it does NOT affect the resolution of the data returned to the host. This command
         ikbd.relative_mouse_threshold_x=ikbd.command_param[0];
         ikbd.relative_mouse_threshold_y=ikbd.command_param[1];
         ikbd_inc_hack(ikbd.psyg_hack_stage,1);
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
-        ikbd.port_0_joy=false;
-#endif
         break;
 /*
 SET MOUSE SCALE
@@ -826,12 +690,8 @@ information is available only by interrogating the IKBD in the
  to report on button press or release (see SET MOSE BUTTON ACTION).
 */
       case 0xc://set absolute mouse threshold
-        ASSERT(ikbd.command_param[0]>0 && ikbd.command_param[1]>0);
         ikbd.abs_mouse_scale_x=ikbd.command_param[0];
         ikbd.abs_mouse_scale_y=ikbd.command_param[1];
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
-        ikbd.port_0_joy=false;
-#endif
         break;
 /*
 LOAD MOUSE POSITION
@@ -985,9 +845,6 @@ This command permits the host to load arbitrary values into the IKBD controller
         ikbd.command_read_count=ikbd.command_param[2]; //how many bytes to load
         log(Str("IKBD: Loading next ")+ikbd.command_read_count+" bytes into IKBD memory address "+
               HEXSl(ikbd.load_memory_address,4));
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM)
-        ikbd.custom_prg_checksum=0; // reset
-#endif
         break;
       case 0x50:
         log("IKBD: Finished loading memory");
@@ -1037,25 +894,9 @@ This command allows the host to command the execution of a subroutine in the IKB
    of this function).
 */
       case 0x22:  //execute routine
-#if !(defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM))
 
         log(Str("IKBD: Blimey! Executing IKBD routine at ")+
               HEXSl(MAKEWORD(ikbd.command_param[1],ikbd.command_param[0]),4));
-#else
-        TRACE_LOG("Execute 6301 Program Loader? Checksum %X\n",ikbd.custom_prg_checksum);
-        switch(ikbd.custom_prg_checksum)
-        {
-        case SS_IKBD_FAKE_CUSTOM_CHECKSUM_TB2_LOADER: 
-        case SS_IKBD_FAKE_CUSTOM_CHECKSUM_FROGGIES_LOADER: 
-        case SS_IKBD_FAKE_CUSTOM_CHECKSUM_DRAGONNELS_LOADER: 
-        default:
-          ikbd.custom_prg_loading=TRUE; // faking loader execution
-          ikbd.custom_prg_ID=0;
-          ikbd.custom_prg_checksum=0;
-          ikbd.command_read_count=200; // gross hack
-          break;
-        }//sw
-#endif
         break;   
 /*
 RESET
@@ -1081,8 +922,6 @@ The RESET command or function causes the IKBD to perform a simple self-test.
       case 0x80:  
         if(src==0x01) 
           ikbd_reset(0);
-        else
-          TRACE_LOG("Reset command ignored (not 80-01)\n");
         break;
       }//sw
     }
@@ -1106,7 +945,6 @@ TODO!
     if (ikbd.resetting && src!=0x08 && src!=0x0B && src!=0x14) ikbd.psyg_hack_stage=-1;
     if (ikbd.resetting && src!=0x12 && src!=0x1A) ikbd.reset_121A_hack=-1;
     ikbd.command=(BYTE)src;
-    ASSERT(!ikbd.command_read_count);
     switch (src){  //how many bytes of parameters do we want?
       case 0x7:case 0x17:case 0x80:ikbd.command_read_count=1;break;
 /*
@@ -1171,9 +1009,6 @@ negative in sign and away from the user to be positive.
 */
       case 0xf: //mouse goes upside down
         ikbd.mouse_upside_down=true;
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
-        ikbd.port_0_joy=false;
-#endif
         break;
 /*
 SET Y=0 AT TOP
@@ -1187,9 +1022,6 @@ Makes the origin of the Y axis to be at the top of the logical
 */
       case 0x10: //mouse goes right way up
         ikbd.mouse_upside_down=false;
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
-        ikbd.port_0_joy=false;
-#endif
         break;
 /*
 RESUME
@@ -1268,10 +1100,6 @@ a joystick event record to be generated.
       case 0x14: //return joystick movements
         log("IKBD: Changed joystick mode to change notification");
         ikbd.port_0_joy=true; 
-#if defined(SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT)
-        if(ikbd.mouse_mode==IKBD_MOUSE_MODE_OFF && SSE_HACKS_ON)
-          ikbd_send_joystick_message(0); // Jumping Jackson
-#endif
         ikbd.mouse_mode=IKBD_MOUSE_MODE_OFF;  //disable mouse
         agenda_delete(ikbd_report_abs_mouse);
         if (ikbd.joy_mode!=IKBD_JOY_MODE_AUTO_NOTIFY){
@@ -1314,9 +1142,6 @@ This command is valid in either the JOYSTICK EVENT REPORTING mode
  or the JOYSTICK INTERROGATION MODE.
 */
       case 0x16: //read joystick
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
-        ikbd.port_0_joy=true;
-#endif
         if (ikbd.joy_mode!=IKBD_JOY_MODE_OFF){
           // Ignore command if already calcing and sending packet
           if (agenda_get_queue_pos(ikbd_send_joystick_message)>=0) break;
@@ -1365,8 +1190,6 @@ and SET JOYSTICK KEYCODE MODE.)
         ikbd.joy_mode=IKBD_JOY_MODE_OFF;
         stick[0]=0;stick[1]=0;
         ikbd_inc_hack(ikbd.reset_121A_hack,1);
-        // SS note at some point I disabled the following line,
-        // but I think I was just trying anything
         agenda_delete(ikbd_send_joystick_message); // just in case sending other type of packet
         break;
       case 0x1b:case 0x19:ikbd.command_read_count=6;break;
@@ -1552,165 +1375,81 @@ or FIRE BUTTON MONITORING mode.
         break;
         // > 0x9a all DEAD (tested up to 0xac)
 
-      default: // I'm afraid my hack for Jumping Jackson causes ignored commands
+      default: 
         if(src) TRACE_LOG("Byte ignored",src);  // (TODO)
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
-        ASSERT(!IkbdOff);
-        ikbd.send_nothing=IkbdOff;
-#endif
-    ;}//sw
+    }//sw
     ikbd.command_parameter_counter=0;
   }
 }
 //---------------------------------------------------------------------------
-
-#if defined(STEVEN_SEAGAL)
-
-#if defined(SS_ACIA_IRQ_DELAY) // not defined anymore (v3.5.2), see MFP
-
 void agenda_keyboard_replace(int) {
-  if(keyboard_buffer_length)
+
+#if defined(SS_IKBD_6301)
+  if(HD6301EMU_ON) 
   {
-    if(!ikbd.send_nothing) 
-      ACIA_IKBD.rx_stage=1; // actual work done later, see run.cpp
-    else // we retry later, repairs Cobra Compil 1 
-    {
-      TRACE_LOG("IKBD Input delayed...\n");
-      agenda_add(agenda_keyboard_replace,SS_6301_TO_ACIA_IN_HBL,0);
-    }
-  }
-}
-
-#else
-
-void agenda_keyboard_replace(int) {
-
-  if (keyboard_buffer_length){
-    if (!ikbd.send_nothing){
+    if (keyboard_buffer_length){ //temp still use those var?
+      if (!ikbd.send_nothing){
+        keyboard_buffer_length--;
+        ASSERT( keyboard_buffer_length>=0 );
 
 #if defined(SS_ACIA_DOUBLE_BUFFER_RX)
-      // here we should take care of next byte but we have another
-      // problem anyway (txinterrupts)
-      ASSERT( ACIA_IKBD.LineRxBusy );
-      //if(ACIA_IKBD.LineRxBusy)
-      {
+        // here we should take care of next byte but we have another
+        // problem anyway (txinterrupts)
+        ASSERT( ACIA_IKBD.LineRxBusy );
         ACIA_IKBD.LineRxBusy=false;
-#if defined(SS_IKBD_6301) 
-        if(HD6301EMU_ON)
-          hd6301_completed_transmission_to_MC6850=true;
+        hd6301_completed_transmission_to_MC6850=true;
 #endif
-      }
-#endif
-      keyboard_buffer_length--;
-      ASSERT( keyboard_buffer_length>=0 );
-      if(!HD6301EMU_ON)
-      {
-        if(ikbd.joy_packet_pos>=keyboard_buffer_length) 
-          ikbd.joy_packet_pos=-1;
-        if(ikbd.mouse_packet_pos>=keyboard_buffer_length) 
-          ikbd.mouse_packet_pos=-1;
-      }
 
-
-
-/*  Check overrun.
-    "The Overrun does not occur in the Status Register until the valid character
-    prior to Overrun has been read."
-    => 1. SR is updated at next read of RDR
-       2. The old byte will be read, the new byte is lost
-*/
-#if defined(SS_ACIA_USE_REGISTERS)
-      if(ACIA_IKBD.SR&BIT_0) // RDR full
-#else
-      if(ACIA_IKBD.rx_not_read)
-#endif
-      {
-        TRACE_LOG("ACIA RDRS OVR: $%X->$%X\n",keyboard_buffer[keyboard_buffer_length],keyboard_buffer[keyboard_buffer_length+1]);
-#if defined(SS_ACIA_OVERRUN_REPLACE_BYTE) // normally not
-#if defined(SS_ACIA_REGISTERS)
-        ACIA_IKBD.RDR=ACIA_IKBD.RDRS; 
-#endif
-#if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
-        ACIA_IKBD.data=keyboard_buffer[keyboard_buffer_length];
-#endif
-#endif
-        log("IKBD: Overrun on keyboard ACIA");
-
-        if(ACIA_IKBD.overrun!=ACIA_OVERRUN_YES) 
+        /*  Check overrun.
+        "The Overrun does not occur in the Status Register until the valid character
+        prior to Overrun has been read."
+        => 1. SR is updated at next read of RDR
+        2. The old byte will be read, the new byte is lost
+        */
+        
+        if(ACIA_IKBD.SR&BIT_0) // RDR full
         {
-          //TRACE_LOG("ACIA IKBD OVR\n");
-          ACIA_IKBD.overrun=ACIA_OVERRUN_COMING; // keep original system
-#if defined(SS_ACIA_REGISTERS)
-       //   ACIA_IKBD.SR|=BIT_5; // ACIA bugfix 3.5.2
-#endif
+          TRACE_LOG("ACIA RDRS OVR: $%X->$%X\n",keyboard_buffer[keyboard_buffer_length],keyboard_buffer[keyboard_buffer_length+1]);
+          log("IKBD: Overrun on keyboard ACIA");
+          if(ACIA_IKBD.overrun!=ACIA_OVERRUN_YES) 
+          {
+            ACIA_IKBD.overrun=ACIA_OVERRUN_COMING; // keep original system
+          }
         }
-      }
-      else // not overrun, OK
-      {
-        TRACE_LOG("ACIA RDRS->RDR %X\n",keyboard_buffer[keyboard_buffer_length]);
-#if defined(SS_ACIA_REGISTERS)
-//        TRACE_LOG("ACIA RDRS->RDR %X\n",ACIA_IKBD.RDRS);
-        ACIA_IKBD.RDR=ACIA_IKBD.RDRS; // transfer shifted byte
-        ACIA_IKBD.SR|=BIT_0; // set RDR full
-#endif
-#if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
-        ACIA_IKBD.data=keyboard_buffer[keyboard_buffer_length];
-        ACIA_IKBD.rx_not_read=true;
-#endif
-#if defined(SS_ACIA_TEST_REGISTERS) && defined(SS_ACIA_DOUBLE_BUFFER_RX)
-        ASSERT( ACIA_IKBD.RDR==ACIA_IKBD.data );
-#endif
-      }
+        else // not overrun, OK
+        {
+          TRACE_LOG("ACIA RDRS->RDR %X\n",ACIA_IKBD.RDRS);
+          ACIA_IKBD.RDR=ACIA_IKBD.RDRS; // transfer shifted byte
+          ACIA_IKBD.SR|=BIT_0; // set RDR full
+        }
+        
+        // Check if we must activate IRQ (overrun or normal)
+        if(ACIA_IKBD.CR&BIT_7)
+        {
+          log(EasyStr("IKBD: Changing ACIA IRQ bit from ")+ACIA_IKBD.irq+" to 1");
+          ACIA_IKBD.SR|=BIT_7;
+          TRACE_LOG("ACIA IRQ (RDR)\n");
+          ASSERT(  mfp_reg[MFPR_GPIP]&MFP_GPIP_ACIA_BIT ); // just curious
+          mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0);
+        }
+      }//if (!ikbd.send_nothing){
+    }//if (keyboard_buffer_length)
 
-      // Check if we must activate IRQ (overrun or normal)
-#if defined(SS_ACIA_TEST_REGISTERS)
-      ASSERT( !(!(ACIA_IKBD.CR&BIT_7)^!(ACIA_IKBD.rx_irq_enabled)) );
-#endif
-#if defined(SS_ACIA_USE_REGISTERS)
-      if(ACIA_IKBD.CR&BIT_7)
-#else
-      if(ACIA_IKBD.rx_irq_enabled)
-#endif        
-      {
-        log(EasyStr("IKBD: Changing ACIA IRQ bit from ")+ACIA_IKBD.irq+" to 1");
-#if defined(SS_ACIA_REGISTERS)
-        ACIA_IKBD.SR|=BIT_7;
-#endif
-#if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
-        ACIA_IKBD.irq=true;
-#endif
-        TRACE_LOG("ACIA IRQ (RDR)\n");
-        ASSERT(  mfp_reg[MFPR_GPIP]&MFP_GPIP_ACIA_BIT ); // just curious
-        mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0);
-      }
-    }
-
-  }
-  // More to process?
-  if(keyboard_buffer_length) 
-  {
-    agenda_add(agenda_keyboard_replace,
-      (HD6301EMU_ON?  SS_6301_TO_ACIA_IN_HBL 
-      : ACIAClockToHBLS(ACIA_IKBD.clock_divide) // bugfix v3.5.4 Sapiens 
-      ) 
-      ,0);
-#if defined(SS_ACIA_USE_REGISTERS)
-    ACIA_IKBD.RDRS=keyboard_buffer[keyboard_buffer_length-1];
-#endif
+    // More to process?
+    if(keyboard_buffer_length) 
+    {
+      agenda_add(agenda_keyboard_replace,SS_6301_TO_ACIA_IN_HBL,0);
+      ACIA_IKBD.RDRS=keyboard_buffer[keyboard_buffer_length-1];
 #if defined(SS_ACIA_DOUBLE_BUFFER_RX)
-    ACIA_IKBD.LineRxBusy=true;
+      ACIA_IKBD.LineRxBusy=true;
 #endif
+    }
+    if (macro_start_after_ikbd_read_count) 
+      macro_start_after_ikbd_read_count--;
+    return;
   }
-  if (macro_start_after_ikbd_read_count) 
-    macro_start_after_ikbd_read_count--;
-}
+#endif // Steem 3.2:
 
-#endif
-
-#else // Steem 3.2
-
-void agenda_keyboard_replace(int)
-{
   log(EasyStr("IKBD: agenda_keyboard_replace at time=")+hbl_count+" with keyboard_buffer_length="+keyboard_buffer_length);
 
   if (keyboard_buffer_length){
@@ -1738,7 +1477,6 @@ void agenda_keyboard_replace(int)
   if (macro_start_after_ikbd_read_count) macro_start_after_ikbd_read_count--;
 }
 
-#endif
 
 void keyboard_buffer_write_n_record(BYTE src)
 {
@@ -1747,102 +1485,56 @@ void keyboard_buffer_write_n_record(BYTE src)
 }
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD) 
-/*  Normally SS_IKBD_FAKE_CUSTOM isn't defined (v3.5.1)
-    When it is, the default parameter 'signal' is a hack that avoids the pain 
-    of worse hacks like we did in v 3.3.
+
+/* 
     Function keyboard_buffer_write() receive bytes from the fake or the true
     6301 emu, or from shortcuts or macros, and sets then in an agenda to take
     care of the 6301->ACIA delay.
 */
 
-#if defined(SS_IKBD_FAKE_CUSTOM)
-
-void keyboard_buffer_write(BYTE src,int signal) {
-
-#else
-
 void keyboard_buffer_write(BYTE src) {
 
-#endif
+#if defined(SS_IKBD_6301)
+  if(HD6301EMU_ON)
+  {
 
 #if defined(SS_ACIA_DOUBLE_BUFFER_RX)
-  if(!ACIA_IKBD.LineRxBusy)
-  {
-#endif
-#if defined(SS_ACIA_REGISTERS)
-    ACIA_IKBD.RDRS=src; // byte is being shifted
-#endif
-#if defined(SS_ACIA_DOUBLE_BUFFER_RX)
-  }
-  ACIA_IKBD.LineRxBusy=true;
-#endif
-
-#if defined(SS_ACIA_IRQ_DELAY)// not defined anymore (v3.5.2), see MFP
-  ikbd.timer_when_keyboard_info=ABSOLUTE_CPU_TIME; // record exact timing
-#endif
-
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM)
-/*  We dispatch to correct handler that will call here again (using signal)
-    schema: kbd/joy/mouse event -> keyboard_buffer_write -> ikbd.Custom 
-    -> keyboard_buffer_write(SIGNAL)
-    This is just a hack.
-*/
-  if(!signal && ikbd.custom_prg_ID)
-  {
-    ASSERT(ikbd.custom_prg_ID==IKBD_DRAGONNELS_MENU||ikbd.custom_prg_ID==IKBD_FROGGIES_MENU||ikbd.custom_prg_ID==IKBD_TB2_MENU);
-    switch(ikbd.custom_prg_ID)
+    if(!ACIA_IKBD.LineRxBusy)
     {
-    case IKBD_DRAGONNELS_MENU:
-      ikbd.CustomDragonnels();
-      break;
-    case IKBD_FROGGIES_MENU:
-      ikbd.CustomFroggies();
-      break;
-    case IKBD_TB2_MENU:
-      ikbd.CustomTB2();
-      break;
-    }//sw
-    return; 
-  }
+#endif
+      ACIA_IKBD.RDRS=src; // byte is being shifted
+#if defined(SS_ACIA_DOUBLE_BUFFER_RX)
+    }
+    ACIA_IKBD.LineRxBusy=true;
 #endif
 
 /*  Normally the buffer should be 2 bytes, one being shifted, one in the 
-    register.
+    register. In fake mode, it's much more.
     If this is first byte, we prepare an agenda to emulate the ACIA transmission
     delay.
     If there's already info in the buffer, an agenda was already prepared,
     a new agenda will be prepared when this one is executed. We only need to
     shift the buffer and insert the new value.
+    For the moment we keep this system of keyboard buffer even for 6301 true
+    emu because it is flexible.
 */
-  if(keyboard_buffer_length<MAX_KEYBOARD_BUFFER_SIZE)
-  {
-    if(keyboard_buffer_length)
-      memmove(keyboard_buffer+1,keyboard_buffer,keyboard_buffer_length); // shift
+
+    if(keyboard_buffer_length<MAX_KEYBOARD_BUFFER_SIZE)
+    {
+      if(keyboard_buffer_length)
+        memmove(keyboard_buffer+1,keyboard_buffer,keyboard_buffer_length); // shift
+      else
+        agenda_add(agenda_keyboard_replace,SS_6301_TO_ACIA_IN_HBL,0);
+      keyboard_buffer_length++;
+      keyboard_buffer[0]=src;
+      TRACE_LOG("IKBD +$%X(%d)\n",src,keyboard_buffer_length);
+    }
     else
-      agenda_add(agenda_keyboard_replace,SS_6301_TO_ACIA_IN_HBL,0);
-    keyboard_buffer_length++;
-    keyboard_buffer[0]=src;
-    TRACE_LOG("IKBD +$%X(%d)\n",src,keyboard_buffer_length);
-    log(EasyStr("IKBD: Wrote $")+HEXSl(src,2)+" keyboard buffer length="+keyboard_buffer_length);
-    if(ikbd.joy_packet_pos>=0) 
-      ikbd.joy_packet_pos++;
-    if(ikbd.mouse_packet_pos>=0) 
-      ikbd.mouse_packet_pos++;
+      TRACE_LOG("IKBD: Keyboard buffer overflow\n");
+    return;
   }
-  else
-  {
-    log("IKBD: Keyboard buffer overflow");
-    TRACE_LOG("IKBD: Keyboard buffer overflow\n");
-  }
-}
+#endif // Steem 3.2:
 
-
-#else // Steem 3.2
-
-
-void keyboard_buffer_write(BYTE src)
-{
   if (keyboard_buffer_length<MAX_KEYBOARD_BUFFER_SIZE){
     if (keyboard_buffer_length){
       memmove(keyboard_buffer+1,keyboard_buffer,keyboard_buffer_length);
@@ -1860,19 +1552,15 @@ void keyboard_buffer_write(BYTE src)
   }
 }
 
-#endif
 
 void keyboard_buffer_write_string(int s1,...)
 {
   int *ptr;
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
-  for (ptr=&s1;*ptr!=-1 && ptr-&s1<200 ;ptr++){ 
-#else
   for (ptr=&s1;*ptr!=-1;ptr++){
-#endif
     keyboard_buffer_write(LOBYTE(*ptr));
   }
 }
+
 
 void ikbd_mouse_move(int x,int y,int mousek,int max_mouse_move)
 {
@@ -1908,13 +1596,6 @@ void ikbd_mouse_move(int x,int y,int mousek,int max_mouse_move)
 
   if (ikbd.joy_mode<100 || ikbd.port_0_joy==0) {  //not in duration mode or joystick mode
     if (ikbd.mouse_mode==IKBD_MOUSE_MODE_ABSOLUTE){
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_MOUSE_SCALE)
-/*  This fixes Sentinel slow mouse in fake emu mode. Funny thing is, this
-    obvious detail was forgotten in Steem as well as in Hatari.
-*/
-      x*=ikbd.abs_mouse_scale_x; 
-      y*=ikbd.abs_mouse_scale_y;
-#endif
       ikbd.abs_mouse_x+=x;
       if(ikbd.abs_mouse_x<0)ikbd.abs_mouse_x=0;
       else if(ikbd.abs_mouse_x>ikbd.abs_mouse_max_x)ikbd.abs_mouse_x=ikbd.abs_mouse_max_x;
@@ -2015,10 +1696,6 @@ void ikbd_reset(bool Cold)
   ASSERT( Cold || !HD6301EMU_ON );// !!! always //check this
   agenda_delete(agenda_keyboard_reset);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_IRQ_DELAY)
-  ikbd.timer_when_keyboard_info=0;
-#endif
-
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
   if(HD6301EMU_ON)
   {
@@ -2027,8 +1704,6 @@ void ikbd_reset(bool Cold)
       TRACE_LOG("6301 reset ikbd.cpp part\n");
       HD6301.Crashed=0;
       ikbd.mouse_upside_down=false;
-//      if(Cold)   //can't work here!
-//        keyboard_buffer_length=0; // cold reset & run, Transbeauce 2
       return;
     }
     else
@@ -2045,31 +1720,18 @@ void ikbd_reset(bool Cold)
     ikbd.joy_packet_pos=-1;
     ikbd.mouse_packet_pos=-1;
     agenda_keyboard_reset(0);
-
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM)
-    // fixes Dragonnels "must move mouse to make screen appear"
-    agenda_add(agenda_keyboard_reset,MILLISECONDS_TO_HBLS(300),1);
-#endif
-////if
     ZeroMemory(ST_Key_Down,sizeof(ST_Key_Down));
   }else{ // SS we've received a 0x80 0x01 command (Cold=misnomer)
     agenda_keyboard_reset(0);
     ikbd.resetting=true;
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
-    agenda_add(agenda_keyboard_reset,MILLISECONDS_TO_HBLS(300),1); // parameter = SendF0
-#else
     agenda_add(agenda_keyboard_reset,MILLISECONDS_TO_HBLS(50),true);
-#endif
   }
 }
 //---------------------------------------------------------------------------
 void agenda_keyboard_reset(int SendF0) // SS scheduled by ikbd_reset()
 { // 'F0' because that was in the doc for the first chip
   TRACE_LOG("IKBD: TM %d Execute reset\n",ABSOLUTE_CPU_TIME);
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM)
-  ikbd.custom_prg_loading=FALSE;
-  ikbd.custom_prg_ID=0;
-#endif
+
   if (SendF0==0){
     ikbd.mouse_button_press_what_message=0;
     ikbd.mouse_mode=IKBD_MOUSE_MODE_RELATIVE;
@@ -2216,81 +1878,7 @@ Code:
 }
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM)
-/*  Custom 6301 programs handlers copied from Hatari
-    SS_IKBD_FAKE_CUSTOM isn't defined in v3.5.1.
-*/
 
-
-void IKBD_STRUCT::CustomDragonnels() {
-  BYTE kbd_info = 0;
-  // mouse
-  if(mouse_move_since_last_interrupt_y<0) 
-    kbd_info=0xfc; // up
-  else if(mouse_move_since_last_interrupt_y>0) 
-    kbd_info=0x04; // down
-  if(mousek) 
-    kbd_info=0x80; // select
-#if defined(SS_IKBD_FAKE_CUSTOM_DRAGONNELS) // keyboard selection hack
-  if ( ST_Key_Down[ 0x48 ] )	
-    kbd_info |= 0xfc;		
-  if ( ST_Key_Down[ 0x50 ] )	
-    kbd_info |= 0x04;		
-  if ( ST_Key_Down[ 0x39 ] )	
-    kbd_info = 0x80;
-#endif
-  keyboard_buffer_write(kbd_info,IKBD_CUSTOM_SIGNAL);
-}
-
-
-void IKBD_STRUCT::CustomFroggies() {
-  BYTE kbd_info1 = 0;
-  BYTE kbd_info2 = 0;
-  if ( mouse_move_since_last_interrupt_x < 0 )	
-    kbd_info1 = 0x7a;	// left
-  if ( mouse_move_since_last_interrupt_x > 0 )	
-    kbd_info1 = 0x06;	// right
-  if ( mouse_move_since_last_interrupt_y < 0 )	
-    kbd_info2 = 0x7a;	// up
-  if ( mouse_move_since_last_interrupt_y > 0 )	
-    kbd_info2 = 0x06;	// down
-  if ( mousek&BIT_LMB )	
-    kbd_info1 |= 0x80;
-  if ( ST_Key_Down[ 0x4b ] )			
-    kbd_info1 |= 0x7a;	
-  if ( ST_Key_Down[ 0x4d ] )			
-    kbd_info1 |= 0x06;
-  if ( ST_Key_Down[ 0x48 ] )			
-    kbd_info2 |= 0x7a;
-  if ( ST_Key_Down[ 0x50 ] )			
-    kbd_info2 |= 0x06;
-  if ( ST_Key_Down[ 0x70 ] ) // keypad 0 
-    kbd_info1 |= 0x80;	
-  keyboard_buffer_write(0,IKBD_CUSTOM_SIGNAL); // don't know why but it is 
-  keyboard_buffer_write(0,IKBD_CUSTOM_SIGNAL); // necessary in Steem!
-  keyboard_buffer_write(kbd_info1,IKBD_CUSTOM_SIGNAL);
-  keyboard_buffer_write(kbd_info2,IKBD_CUSTOM_SIGNAL);
-}
-
-
-void IKBD_STRUCT::CustomTB2() {
-  BYTE kbd_info = 0;
-  if ( ST_Key_Down[ 0x48 ] )	// up
-    kbd_info |= 0x01;		
-  if ( ST_Key_Down[ 0x50 ] )	// down
-    kbd_info |= 0x02;		
-  if ( ST_Key_Down[ 0x4b ] )		// left
-    kbd_info |= 0x04;	
-  if ( ST_Key_Down[ 0x4d ] ) // right	
-    kbd_info |= 0x08;		
-  if ( ST_Key_Down[ 0x62 ] )	// help 
-    kbd_info |= 0x40;		
-  if ( ST_Key_Down[ 0x39 ] )	// space 
-    kbd_info |= 0x80;		
-  kbd_info |= ( stick[1] & 0x8f ) ; // joystick
-  keyboard_buffer_write(kbd_info,IKBD_CUSTOM_SIGNAL);
-}
-#endif
 
 //---------------------------------------------------------------------------
 #undef LOGSECTION
