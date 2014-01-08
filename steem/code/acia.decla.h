@@ -54,9 +54,6 @@ struct ACIA_STRUCT{ // removed _ ..
 */
   BYTE ByteWaitingTx;
   BYTE LineTxBusy; // transmitting to 6301 or MIDI
-#if !defined(SS_ACIA_REGISTERS)
-  BYTE WaitingByte; // would be TDR before going to TDRS
-#endif
 #endif
 
 #if defined(SS_ACIA_REGISTERS)

@@ -282,7 +282,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 
   if (Version>=8) ReadWriteStruct(ACIA_IKBD);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_USE_REGISTERS)
+#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_REGISTERS)
   if(Version<44 && LoadOrSave==LS_LOAD) //v3.5.1
   {
     ACIA_IKBD.CR=0x96; // usually
@@ -752,7 +752,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
       HD6301EMU_ON=0;
 #endif
 
-#if defined(SS_ACIA_USE_REGISTERS)
+#if defined(SS_ACIA_REGISTERS)
     ReadWriteStruct(ACIA_MIDI);
 #endif
 
@@ -765,7 +765,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #if defined(SS_SHIFTER)
 //    Shifter.m_ShiftMode=screen_res;
 #endif
-#if defined(SS_ACIA_USE_REGISTERS)
+#if defined(SS_ACIA_REGISTERS)
 #endif
 #if defined(SS_DMA)
 #endif
@@ -944,9 +944,7 @@ void LoadSnapShotUpdateVars(int Version)
     }
     if (fdc_spinning_up) agenda_add(agenda_fdc_spun_up,MILLISECONDS_TO_HBLS(40),fdc_spinning_up==2);
     if (ACIA_MIDI.tx_flag) agenda_add(agenda_acia_tx_delay_MIDI,2,0);
-#if !(defined(STEVEN_SEAGAL) && defined(SS_IKBD_MANAGE_ACIA_TX))
     if (ACIA_IKBD.tx_flag) agenda_add(agenda_acia_tx_delay_IKBD,2,0);
-#endif
   }
 
 #if USE_PASTI

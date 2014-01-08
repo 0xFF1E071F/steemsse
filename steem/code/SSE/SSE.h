@@ -209,19 +209,16 @@ and all his silly mods are gone!
 //#define SS_ACIA_BUS_JAM_PRECISE_WOBBLE //TODO
 #define SS_ACIA_DOUBLE_BUFFER_RX // only from 6301 (not MIDI) 
 #define SS_ACIA_DOUBLE_BUFFER_TX // only to 6301 (not MIDI)
-//#define SS_ACIA_IRQ_DELAY // not defined anymore (v3.5.2), see MFP
+
 //#define SS_ACIA_IRQ_ASSERT_READ_SR //TODO
-//#define SS_ACIA_OVERRUN_REPLACE_BYTE // normally no
+#define SS_ACIA_MIDI_TIMING1 //check
 #define SS_ACIA_REGISTERS // formalising the registers
-//#define SS_ACIA_REMOVE_OLD_VARIABLES // TODO
+
 //#define SS_ACIA_DONT_CLEAR_DR //?
 #define SS_ACIA_NO_RESET_PIN // don't reset on warm reset
 #define SS_ACIA_TDR_COPY_DELAY // effect on SR
 #define SS_ACIA_TDR_COPY_DELAY2 // effect on byte flow
-#if defined(SS_DEBUG)
-#define SS_ACIA_TEST_REGISTERS
-#endif
-#define SS_ACIA_USE_REGISTERS // instead of Steem variables
+
 #endif
 
 
@@ -654,7 +651,7 @@ and all his silly mods are gone!
 
 //////////
 // GLUE //
-//////////
+////////// 
 
 
 
@@ -667,22 +664,13 @@ and all his silly mods are gone!
 #if defined(SS_IKBD)
 
 #define SS_IKBD_6301 // HD6301 true emu, my pride!
-#define SS_IKBD_FAKE_ABS_MOUSE // less is more!
-// 6301 custom programs fake emu from Hatari (4K), disabled in v3.5.1:
-//#define SS_IKBD_FAKE_CUSTOM 
-//#define SS_IKBD_FAKE_CUSTOM_TRACE // trace checksums
-#define SS_IKBD_FAKE_MOUSE_SCALE // actually use the scale
-#define SS_IKBD_MANAGE_ACIA_TX // can't disable...
+
 #define SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT // hardware quirk?
+
 #define SS_IKBD_TRACE_CPU_READ
+
 #define SS_IKBD_TRACE_CPU_READ2 //beware polling
 
-#if defined(SS_HACKS)
-//#define SS_IKBD_FAKE_CUSTOM_IS_HACK // need option Hacks to make them work
-//#define SS_IKBD_FAKE_CUSTOM_DRAGONNELS // keyboard selection
-#define SS_IKBD_POLL_IN_FRAME // poll once during the frame too
-#define SS_IKBD_OVERDRIVE // reset keys?
-#endif
 
 #if defined(SS_IKBD_6301) 
 // Switches for Sim6301 (modded 3rd party) are here too
@@ -1345,19 +1333,14 @@ and all his silly mods are gone!
 
 #if !defined(SS_ACIA)
 #undef SS_IKBD_6301
-#undef SS_IKBD_MANAGE_ACIA_TX
 #endif
 
 #if !defined(SS_ACIA_REGISTERS)
 #undef SS_ACIA_DOUBLE_BUFFER_TX
-#undef SS_ACIA_TEST_REGISTERS
-#undef SS_ACIA_USE_REGISTERS
 #endif
 
 #if !defined(SS_ACIA_DOUBLE_BUFFER_RX) || !defined(SS_ACIA_DOUBLE_BUFFER_TX)
 #undef SS_ACIA_TDR_COPY_DELAY
-#undef SS_ACIA_USE_REGISTERS
-#undef SS_IKBD_MANAGE_ACIA_TX
 #endif
 
 #if !defined(SS_DEBUG) || !defined(SS_OSD_DEBUG_MESSAGE)
@@ -1385,7 +1368,7 @@ and all his silly mods are gone!
 #if !defined(SS_IKBD)
 #undef SS_ACIA_DOUBLE_BUFFER_RX
 #undef SS_ACIA_DOUBLE_BUFFER_TX
-#undef SS_ACIA_TEST_REGISTERS
+
 #endif
 
 #if !defined(SS_MFP)

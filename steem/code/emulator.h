@@ -311,11 +311,7 @@ void agenda_keyboard_replace(int);
 
 int agenda_get_queue_pos(LPAGENDAPROC);
 //void inline agenda_process();
-void 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_IKBD_MANAGE_ACIA_TX))
-agenda_acia_tx_delay_IKBD(int),
-#endif
-agenda_acia_tx_delay_MIDI(int);
+void agenda_acia_tx_delay_IKBD(int),agenda_acia_tx_delay_MIDI(int);
 
 
 MEM_ADDRESS on_rte_return_address;
@@ -338,9 +334,7 @@ LPAGENDAPROC agenda_list[]={agenda_fdc_spun_up,agenda_fdc_motor_flag_off,agenda_
                           agenda_floppy_read_track,agenda_floppy_write_track,agenda_serial_sent_byte,
                           agenda_serial_break_boundary,agenda_serial_loopback_byte,agenda_midi_replace,
                           agenda_check_centronics_interrupt,agenda_ikbd_process,agenda_keyboard_reset,
-#if !(defined(STEVEN_SEAGAL) && defined(SS_IKBD_MANAGE_ACIA_TX))
                           agenda_acia_tx_delay_IKBD,
-#endif
                           agenda_acia_tx_delay_MIDI,ikbd_send_joystick_message,
                           ikbd_report_abs_mouse,agenda_keyboard_replace,
                           

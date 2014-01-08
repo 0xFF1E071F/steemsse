@@ -138,10 +138,6 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
 #undef LOGSECTION 
 #define LOGSECTION LOGSECTION_IKBD
 
-/*  For ACIA emulation, we prefer to explicitly use registers instead of apart
-    variables.
-*/
-
     case 0xfffc00:      
 /*  
     Bus jam:
@@ -187,44 +183,11 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
        |     |Rx data register full ------------------------------'|
 */
 
-#if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
+#if defined(SS_IKBD_6301)
 
-        // Byte is built bit by bit right now at read
-        ior_byte=0; // starting from all bits clear
-
-        // BIT 0 - RX full
-        if(ACIA_IKBD.overrun || ACIA_IKBD.rx_not_read) // ACIA_IKBD = acia[0]
-          ior_byte|=BIT_0;
-
-        // BIT 1 - TX ready (empty)
-        if(!ACIA_IKBD.tx_flag)
-          ior_byte|=BIT_1;
-
-        // BITS 2 - DCD, 3 - CTS, 4 Framing error: ignored
-
-        // BIT 5 - Overrun
-        if (ACIA_IKBD.overrun==ACIA_OVERRUN_YES) 
-          ior_byte|=BIT_5; 
-
-        // BIT 6 - parity error: ignored
-
-        // bit 7 - IRQ
-        if(ACIA_IKBD.irq) 
+        if(HD6301EMU_ON)
         {
-          ASSERT( ACIA_IKBD.rx_irq_enabled );
-          ior_byte|=BIT_7;
-        }
-
-#if defined(SS_DEBUG) && defined(SS_ACIA_TEST_REGISTERS)
-        if(ior_byte!=ACIA_IKBD.SR)
-          TRACE_LOG("ACIA IKBD SR built %X persistent SR %X\n",ior_byte,ACIA_IKBD.SR);
-#endif
-
-#endif
-
-#if defined(SS_ACIA_USE_REGISTERS)
-        ior_byte=ACIA_IKBD.SR; 
-#endif
+          ior_byte=ACIA_IKBD.SR; 
 
 #if defined(SS_ACIA_TDR_COPY_DELAY)
 /*    
@@ -241,105 +204,87 @@ Refix v3.5.3
 that. The number is chosen so as not to break Hades Nebula (interesting screen
 when it does).
 */
-        if(abs(ACT-ACIA_IKBD.last_tx_write_time)<ACIA_TDR_COPY_DELAY)
-        {
-          TRACE_LOG("ACIA SR TDRE not set yet (%d)\n",ACT-ACIA_IKBD.last_tx_write_time);
-          ior_byte&=~BIT_1; // fixes Nightdawn
-        }
+          if(abs(ACT-ACIA_IKBD.last_tx_write_time)<ACIA_TDR_COPY_DELAY)
+          {
+            TRACE_LOG("ACIA SR TDRE not set yet (%d)\n",ACT-ACIA_IKBD.last_tx_write_time);
+            ior_byte&=~BIT_1; // fixes Nightdawn
+          }
 #endif
+          break;
+        }
+        
+#endif // Steem 3.2
 
+        ior_byte=0;
+        if (ACIA_IKBD.rx_not_read || ACIA_IKBD.overrun==ACIA_OVERRUN_YES) ior_byte|=BIT_0; //full bit
+        if (ACIA_IKBD.tx_flag==0) ior_byte|=BIT_1; //empty bit
+        if (ACIA_IKBD.irq) ior_byte|=BIT_7; //irq bit
+        if (ACIA_IKBD.overrun==ACIA_OVERRUN_YES) ior_byte|=BIT_5; //overrun
         break;
 
       // ACIA keyboard read data
       case 0xfffc02:
-      {
         DEBUG_ONLY( if (mode!=STEM_MODE_CPU) return ACIA_IKBD.data; ) // boiler
-        // Update status BIT 0 (RX full)
-#if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
-        ACIA_IKBD.rx_not_read=0; 
-        LOG_ONLY( bool old_irq=ACIA_IKBD.irq; )
-#endif
-#if defined(SS_ACIA_REGISTERS)
-//        ACIA_IKBD.SR&=~BIT_0; // ACIA bugfix 3.5.2, bit cleared only if no OVR
-#endif
-        // Update status BIT 5 (overrun)
-        if(ACIA_IKBD.overrun==ACIA_OVERRUN_COMING) // keep this, it's right
-        {
-          ACIA_IKBD.overrun=ACIA_OVERRUN_YES;
-#if defined(SS_ACIA_REGISTERS)
-          ACIA_IKBD.SR|=BIT_5; // set overrun (only now, conform to doc)
-          if(ACIA_IKBD.CR&BIT_7) // irq enabled
-            ACIA_IKBD.SR|=BIT_7; // there's a new IRQ when overrun bit is set
-#endif
-#if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
-          if(ACIA_IKBD.rx_irq_enabled) 
-            ACIA_IKBD.irq=true;
-#endif
-          LOG_ONLY( log_to_section(LOGSECTION_IKBD,EasyStr("IKBD: ")+HEXSl(old_pc,6)+
-                              " - OVERRUN! Read data ($"+HEXSl(ACIA_IKBD.data,2)+
-                              "), changing ACIA IRQ bit from "+old_irq+" to "+ACIA_IKBD.irq); )
-        }
-        // no overrun, normal
-        else
-        {
-/*
-  "The Overrun indication is reset after the reading of data from the 
-  Receive Data Register."
-*/
-          ACIA_IKBD.overrun=ACIA_OVERRUN_NO;
-
-#if defined(SS_ACIA_REGISTERS)
-          ACIA_IKBD.SR&=~BIT_0; // ACIA bugfix 3.5.2, bit cleared only if no OVR
-          ACIA_IKBD.SR&=~BIT_5;//normally first read SR (TODO)
-          if(!( ACIA_IKBD.IrqForTx() && ACIA_IKBD.SR&BIT_1) )
-            ACIA_IKBD.SR&=~BIT_7; // clear IRQ bit, normally first read SR
-#endif
-
-#if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
-          // IRQ should be off for receive, but could be set for tx empty interrupt
-          ACIA_IKBD.irq=(ACIA_IKBD.tx_irq_enabled && ACIA_IKBD.tx_flag==0);
-#endif
-
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA)//compiler warning
-          LOG_ONLY( if (ACIA_IKBD.irq!=(BYTE)old_irq) log_to_section(LOGSECTION_IKBD,Str("IKBD: ")+
-            HEXSl(old_pc,6)+" - Read data ($"+HEXSl(ACIA_IKBD.data,2)+
-            "), changing ACIA IRQ bit from "+old_irq+" to "+ACIA_IKBD.irq); )
-#else
-          LOG_ONLY( if (ACIA_IKBD.irq!=old_irq) log_to_section(LOGSECTION_IKBD,Str("IKBD: ")+
-            HEXSl(old_pc,6)+" - Read data ($"+HEXSl(ACIA_IKBD.data,2)+
-            "), changing ACIA IRQ bit from "+old_irq+" to "+ACIA_IKBD.irq); )
-#endif
-        }
-
-#if defined(SS_ACIA_TEST_REGISTERS) && defined(SS_ACIA_DOUBLE_BUFFER_RX)
-//        ASSERT( ACIA_IKBD.RDR==ACIA_IKBD.data );
-//        ASSERT( !( (ACIA_IKBD.SR&BIT_7)||(ACIA_MIDI.SR&BIT_7) )==!(ACIA_IKBD.irq||ACIA_MIDI.irq) );
-#endif
-/*
-"The nondestructive read cycle (...) although the data in the
-Receiver Data Register is retained.
-*/        
-#if defined(SS_ACIA_USE_REGISTERS)
-        mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,
-          !( (ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7)) );
-        ior_byte=ACIA_IKBD.RDR;
-#else
-        mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
-        ior_byte=ACIA_IKBD.data;
-#endif
-      
-#if defined(SS_DEBUG) && defined(SS_ACIA_TEST_REGISTERS) \
-  && defined(SS_IKBD_TRACE_CPU_READ)
-        static BYTE previous_read; // avoid trace overflow when polling
-        if(ior_byte!=previous_read)
-          TRACE_LOG("CPU reads ACIA IKBD %X\n",ior_byte);
-        previous_read=ior_byte;
-#elif defined(SS_IKBD_TRACE_CPU_READ2)
-          TRACE_LOG("CPU reads ACIA IKBD %X\n",ior_byte);
-#endif
-        break;
-      }
-
+#if defined(SS_IKBD_6301)
+          
+          if(HD6301EMU_ON)
+          {
+            // Update status BIT 5 (overrun)
+            if(ACIA_IKBD.overrun==ACIA_OVERRUN_COMING) // keep this, it's right
+            {
+              ACIA_IKBD.overrun=ACIA_OVERRUN_YES;
+              ACIA_IKBD.SR|=BIT_5; // set overrun (only now, conform to doc)
+              if(ACIA_IKBD.CR&BIT_7) // irq enabled
+                ACIA_IKBD.SR|=BIT_7; // there's a new IRQ when overrun bit is set
+            }
+            // no overrun, normal
+            else
+            {
+            /*
+            "The Overrun indication is reset after the reading of data from the 
+            Receive Data Register."
+              */
+              ACIA_IKBD.overrun=ACIA_OVERRUN_NO;
+              ACIA_IKBD.SR&=~BIT_0; // ACIA bugfix 3.5.2, bit cleared only if no OVR
+              ACIA_IKBD.SR&=~BIT_5;//normally first read SR (TODO)
+              if(!( ACIA_IKBD.IrqForTx() && ACIA_IKBD.SR&BIT_1) )
+                ACIA_IKBD.SR&=~BIT_7; // clear IRQ bit, normally first read SR
+            }
+            
+            mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,
+              !( (ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7)) );
+              /*
+              "The nondestructive read cycle (...) although the data in the
+              Receiver Data Register is retained.
+            */        
+            ior_byte=ACIA_IKBD.RDR;
+            break;
+          }
+            
+#endif // Steem 3.2
+          {  //scope
+          DEBUG_ONLY( if (mode!=STEM_MODE_CPU) return ACIA_IKBD.data; )
+            //        if (acia[ACIA_IKBD].rx_not_read) keyboard_buffer_length--;
+            ACIA_IKBD.rx_not_read=0;
+          LOG_ONLY( bool old_irq=ACIA_IKBD.irq; )
+            if (ACIA_IKBD.overrun==ACIA_OVERRUN_COMING){
+              ACIA_IKBD.overrun=ACIA_OVERRUN_YES;
+              if (ACIA_IKBD.rx_irq_enabled) ACIA_IKBD.irq=true;
+              LOG_ONLY( log_to_section(LOGSECTION_IKBD,EasyStr("IKBD: ")+HEXSl(old_pc,6)+
+                " - OVERRUN! Read data ($"+HEXSl(ACIA_IKBD.data,2)+
+                "), changing ACIA IRQ bit from "+old_irq+" to "+ACIA_IKBD.irq); )
+            }else{
+              ACIA_IKBD.overrun=ACIA_OVERRUN_NO;
+              // IRQ should be off for receive, but could be set for tx empty interrupt
+              ACIA_IKBD.irq=(ACIA_IKBD.tx_irq_enabled && ACIA_IKBD.tx_flag==0);
+              LOG_ONLY( if (ACIA_IKBD.irq!=old_irq) log_to_section(LOGSECTION_IKBD,Str("IKBD: ")+
+                HEXSl(old_pc,6)+" - Read data ($"+HEXSl(ACIA_IKBD.data,2)+
+                "), changing ACIA IRQ bit from "+old_irq+" to "+ACIA_IKBD.irq); )
+              }
+              mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
+              ior_byte=ACIA_IKBD.data;
+          break;
+          }
 
 #undef LOGSECTION 
 #define LOGSECTION LOGSECTION_MIDI
@@ -347,9 +292,23 @@ Receiver Data Register is retained.
       // ACIA MIDI read status
       case 0xfffc04:  // status
 
-#if defined(SS_ACIA_USE_REGISTERS)
-        ior_byte=ACIA_MIDI.SR; 
-#else
+#if defined(SS_IKBD_6301)
+
+        if(HD6301EMU_ON)
+        {
+          ior_byte=ACIA_MIDI.SR; 
+#if defined(SS_ACIA_TDR_COPY_DELAY)
+          if(abs(ACT-ACIA_MIDI.last_tx_write_time)<ACIA_TDR_COPY_DELAY)
+          {
+            TRACE_LOG("ACIA SR TDRE not set yet (%d)\n",ACT-ACIA_MIDI.last_tx_write_time);
+            ior_byte&=~BIT_1;
+          }
+#endif
+          break;
+        }
+          
+#endif // Steem 3.2
+
         ior_byte=0;
         if (ACIA_MIDI.rx_not_read || ACIA_MIDI.overrun==ACIA_OVERRUN_YES) 
           ior_byte|=BIT_0; //full bit
@@ -359,78 +318,64 @@ Receiver Data Register is retained.
           ior_byte|=BIT_7; //irq bit
         if (ACIA_MIDI.overrun==ACIA_OVERRUN_YES) 
           ior_byte|=BIT_5; //overrun
-
-#if defined(SS_ACIA_TEST_REGISTERS)
-        if(ior_byte!=ACIA_MIDI.SR || !(ior_byte&2) || !(ACIA_MIDI.SR&2))
-          TRACE_LOG("ACIA MIDI SR old way %X new way %X\n",ior_byte,ACIA_MIDI.SR);
-#endif
-
-#endif      
         break;
 
       // ACIA MIDI read data
       case 0xfffc06:
         DEBUG_ONLY(if (mode!=STEM_MODE_CPU) return ACIA_MIDI.data);
-#if defined(SS_ACIA_REGISTERS)
+
+#if defined(SS_IKBD_6301)
+
+        if(HD6301EMU_ON)
+        {
 #if defined(SS_MIDI_TRACE_BYTES_IN)
-        TRACE_LOG("MIDI Read RDR %X\n",ACIA_MIDI.RDR);
+          TRACE_LOG("MIDI Read RDR %X\n",ACIA_MIDI.RDR);
 #endif
-//        ACIA_MIDI.SR&=~BIT_0; // ACIA bugfix 3.5.2, not if overrun
-#endif
-#if !defined(SS_ACIA_USE_REGISTERS)
+          if (ACIA_MIDI.overrun==ACIA_OVERRUN_COMING){
+            ACIA_MIDI.overrun=ACIA_OVERRUN_YES;
+            ACIA_MIDI.SR|=BIT_5; // set overrun (only now, conform to doc)
+            if(ACIA_MIDI.CR&BIT_7) // irq enabled
+              ACIA_MIDI.SR|=BIT_7; // set IRQ  
+            TRACE_LOG("ACIA MIDI overrun\n");
+          }
+          else // normal
+          {
+            ACIA_MIDI.overrun=ACIA_OVERRUN_NO;
+            ACIA_MIDI.SR&=~BIT_0; // ACIA bugfix 3.5.2
+          // IRQ should be off for receive, but could be set for tx empty interrupt
+            ACIA_MIDI.SR&=~BIT_5;// ACIA bugfix 3.5.3
+            if(!( ACIA_MIDI.IrqForTx() && (ACIA_MIDI.SR&BIT_1) )) // TDRE
+              ACIA_MIDI.SR&=~BIT_7; // clear IRQ bit
+          }//check overrun
+
+          mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,
+            !( (ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7)) );
+          ior_byte=ACIA_MIDI.RDR;
+          break;
+        }//6301
+
+#endif // Steem 3.2
+
         ACIA_MIDI.rx_not_read=0;
-#endif
         if (ACIA_MIDI.overrun==ACIA_OVERRUN_COMING){
           ACIA_MIDI.overrun=ACIA_OVERRUN_YES;
-#if !defined(SS_ACIA_USE_REGISTERS)
-          if (ACIA_MIDI.rx_irq_enabled) 
-            ACIA_MIDI.irq=true;
-#endif
-#if defined(SS_ACIA_REGISTERS)
-          ACIA_MIDI.SR|=BIT_5; // set overrun (only now, conform to doc)
-          if(ACIA_MIDI.CR&BIT_7) // irq enabled
-            ACIA_MIDI.SR|=BIT_7; // set IRQ  
-#endif
-          TRACE_LOG("ACIA MIDI overrun\n");
-        }
-        // normal
-        else
-        {
+          if (ACIA_MIDI.rx_irq_enabled) ACIA_MIDI.irq=true;
+        }else{
           ACIA_MIDI.overrun=ACIA_OVERRUN_NO;
-#if defined(SS_ACIA_USE_REGISTERS)
-          ACIA_MIDI.SR&=~BIT_0; // ACIA bugfix 3.5.2
-#endif
           // IRQ should be off for receive, but could be set for tx empty interrupt
-#if !defined(SS_ACIA_USE_REGISTERS)
           ACIA_MIDI.irq=(ACIA_MIDI.tx_irq_enabled && ACIA_MIDI.tx_flag==0);
-#endif
-#if defined(SS_ACIA_REGISTERS)
-          ACIA_MIDI.SR&=~BIT_5;// ACIA bugfix 3.5.3
-          if(!( ACIA_MIDI.IrqForTx() && (ACIA_MIDI.SR&BIT_1) )) // TDRE
-            ACIA_MIDI.SR&=~BIT_7; // clear IRQ bit
-#endif
         }
-
-#if defined(SS_ACIA_USE_REGISTERS)
-        mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,
-          !( (ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7)) );
-        ior_byte=ACIA_MIDI.RDR;
-#else
         mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
-        ior_byte=ACIA_MIDI.data;
-#endif
         log_to(LOGSECTION_MIDI,Str("MIDI: ")+HEXSl(old_pc,6)+" - Read $"+
                 HEXSl(ACIA_MIDI.data,6)+" from MIDI ACIA data register");
-        
+        ior_byte=ACIA_MIDI.data;
+
         break;
       }
-
       break;
 
-#undef LOGSECTION 
-#define LOGSECTION LOGSECTION_IO
-
-
+#undef LOGSECTION //SS
+#define LOGSECTION LOGSECTION_IO //SS
 
     /////////
     //  ?  //

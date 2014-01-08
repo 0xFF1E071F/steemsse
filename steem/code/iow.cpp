@@ -172,10 +172,10 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 
       case 0xfffc00:  //control //SS writing ACIA IKBD control register
 
-#if defined(SS_ACIA_REGISTERS)
-        //ASSERT( !(( !(io_src_b&BIT_7)) && (ACIA_IKBD.SR&BIT_7)) ); //European Demos
-        ACIA_IKBD.CR=io_src_b; // assign before we send to other functions
-#endif
+#if defined(SS_IKBD_6301)
+        if(HD6301EMU_ON)
+          ACIA_IKBD.CR=io_src_b; // assign before we send to other functions
+#endif //... and we run the same functions in 6301 mode too:
         if ((io_src_b & 3)==3){
           log_to(LOGSECTION_IKBD,Str("IKBD: ")+HEXSl(old_pc,6)+" - ACIA reset"); 
           ACIA_Reset(NUM_ACIA_IKBD,0); // SS = 'Master reset'
@@ -183,72 +183,29 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
           // TOS sends 96: irq rx, 8bit1stop, div64
           ACIA_SetControl(NUM_ACIA_IKBD,io_src_b);
         }
-#if defined(SS_ACIA_TEST_REGISTERS)
-        TRACE_LOG("CPU $%X -> ACIA IKBD CR (SR $%X)\n",io_src_b,ACIA_IKBD.SR);
-#endif
         break;
 
       case 0xfffc02:  // data //SS sending data to HD6301
 
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA) 
+#if defined(SS_IKBD_6301)
 
-#if defined(SS_ACIA_TEST_REGISTERS)
-        TRACE_LOG("CPU $%X -> ACIA IKDB TDR (SR $%X)\n",io_src_b,ACIA_IKBD.SR);
-#endif
+        if(HD6301EMU_ON)
+        {
+          TRACE_LOG("CPU $%X -> ACIA IKDB TDR (SR $%X)\n",io_src_b,ACIA_IKBD.SR);
 
-#if defined(SS_ACIA_REGISTERS)
 /*  Effect of write on status register.
     The 'Tx data register empty' (TDRE) bit is cleared: register isn't empty.
     Writing on ACIA TDR clears the IRQ bit if IRQ for transmission
     is enabled. Eg Hades Nebula
 */
-        ACIA_IKBD.SR&=~BIT_1; // clear TDRE bit
-        if(ACIA_IKBD.IrqForTx())
-          ACIA_IKBD.SR&=~BIT_7; // clear IRQ bit
-#if defined(SS_ACIA_USE_REGISTERS)
-        //update in MFP (if needs be)
-        mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,
-          !((ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7)));
-#endif
-#endif
+          ACIA_IKBD.SR&=~BIT_1; // clear TDRE bit
+          if(ACIA_IKBD.IrqForTx())
+            ACIA_IKBD.SR&=~BIT_7; // clear IRQ bit
+          
+          //update in MFP (if needs be)
+          mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,
+            !((ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7)));
 
-#if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
-        ACIA_IKBD.tx_flag=true; // = TDRE clear (TDR not free)
-#endif
-
-#if !defined(SS_IKBD_MANAGE_ACIA_TX)
-/*  We do this in ikbd.cpp together with handling the byte, it's an 
-    optimisation (one agenda instead of two).
-    See agenda_ikbd_process().
-    so there will never be an agenda_acia_tx_delay_IKBD (which
-    has been removed in code).
-*/
-        // no TX in the agenda? 
-        if(agenda_get_queue_pos(agenda_acia_tx_delay_IKBD)<0)
-#endif
-        {
-#if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
-          if(ACIA_IKBD.tx_irq_enabled)
-          {
-            ACIA_IKBD.irq=false;
-#if !defined(SS_ACIA_USE_REGISTERS)
-            mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,
-              !(ACIA_IKBD.irq || ACIA_MIDI.irq));
-#endif
-          }
-#endif
-
-#if defined(SS_ACIA_TEST_REGISTERS)
-          if((!(ACIA_IKBD.irq||ACIA_MIDI.irq))!=(!((ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7))) )
-            TRACE_LOG("ACIA_IKBD.irq %d ACIA_MIDI.irq %d ACIA_IKBD.SR %X ACIA_MIDI.SR %X\n",ACIA_IKBD.irq,ACIA_MIDI.irq,ACIA_IKBD.SR,ACIA_MIDI.SR);
-#endif
-
-#if !defined(SS_IKBD_MANAGE_ACIA_TX)
-          TRACE_LOG("Set agenda for TX\n");
-          agenda_add(agenda_acia_tx_delay_IKBD,
-            ACIAClockToHBLS(ACIA_IKBD.clock_divide),0);
-#endif
-        }//no TX agenda
 
 #if defined(SS_ACIA_DOUBLE_BUFFER_TX) 
 /*  If the line is free, the byte in TDR is copied almost at once into the 
@@ -265,74 +222,59 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
     v3.6 Grumbler by Electricity: key repeat in 6301 true emu mode
 
 */
-        if(!ACIA_IKBD.LineTxBusy
-#if defined(SS_ACIA_TDR_COPY_DELAY) // for Grumbler
-          || ACT-ACIA_IKBD.last_tx_write_time<ACIA_TDR_COPY_DELAY
-#endif
-          )
-        {
-          if(ACIA_IKBD.LineTxBusy)//?
-          agenda_delete(agenda_ikbd_process);//cancel previous one...
 
-#if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)\
-     || defined(SS_ACIA_TDR_COPY_DELAY)
-          if(!ACIA_IKBD.LineTxBusy) // Pandemonium!
-            ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
+          if(!ACIA_IKBD.LineTxBusy
+#if defined(SS_ACIA_TDR_COPY_DELAY) // for Grumbler
+            || ACT-ACIA_IKBD.last_tx_write_time<ACIA_TDR_COPY_DELAY
 #endif
-          HD6301.ReceiveByte(io_src_b);
-#if defined(SS_ACIA_REGISTERS)
-          ACIA_IKBD.SR|=BIT_1; // TDRE free
-          // rare case when IRQ is enabled for transmit
-          if( (ACIA_IKBD.CR&BIT_5)&&!(ACIA_IKBD.CR&BIT_6))
+            )
           {
-            TRACE_LOG("ACIA IKBD TX IRQ\n");            
-            ACIA_IKBD.SR|=BIT_7; 
-#if defined(SS_ACIA_USE_REGISTERS)
-            mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0); //trigger
+            if(ACIA_IKBD.LineTxBusy)//?
+              agenda_delete(agenda_ikbd_process);//cancel previous one...
+
+#if defined(SS_ACIA_TDR_COPY_DELAY)
+            else  // Pandemonium!
+              ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
 #endif
+            HD6301.ReceiveByte(io_src_b);
+            ACIA_IKBD.SR|=BIT_1; // TDRE free (see ior: can be "cancelled")
+            // rare case when IRQ is enabled for transmit
+            if( (ACIA_IKBD.CR&BIT_5)&&!(ACIA_IKBD.CR&BIT_6))
+            {
+              TRACE_LOG("ACIA IKBD TX IRQ\n");            
+              ACIA_IKBD.SR|=BIT_7; 
+              mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0); //trigger
+            }
           }
-#endif
-#if !defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
-          ACIA_IKBD.tx_flag=false;
-#endif
-        }
-        else
-        {
-#if defined(SS_DEBUG)
-          if(!ACIA_IKBD.ByteWaitingTx) // TDR was free 
-            TRACE_LOG("ACIA IKBD byte waiting $%X\n",io_src_b);
           else
-            TRACE_LOG("ACIA IKBD new byte waiting $%X (instead of $%X)\n",io_src_b,ACIA_IKBD.TDR);
+          {
+#if defined(SS_DEBUG)
+            if(!ACIA_IKBD.ByteWaitingTx) // TDR was free 
+              TRACE_LOG("ACIA IKBD byte waiting $%X\n",io_src_b);
+            else
+              TRACE_LOG("ACIA IKBD new byte waiting $%X (instead of $%X)\n",io_src_b,ACIA_IKBD.TDR);
 #endif
-          ACIA_IKBD.TDR=io_src_b; 
-          ACIA_IKBD.ByteWaitingTx=true;
-#if !defined(SS_ACIA_REGISTERS)
-          ACIA_IKBD.WaitingByte=io_src_b;
-#endif
-        }
+            ACIA_IKBD.TDR=io_src_b; // replaces
+            ACIA_IKBD.ByteWaitingTx=true;
+          }
 
 #else //no double buffer
 
-#if defined(SS_ACIA_REGISTERS)
-        ACIA_IKBD.TDRS=ACIA_IKBD.TDR; 
-#endif
-        // agenda the byte to process
-        agenda_delete(agenda_ikbd_process); //imprecise - TODO? 
-#if defined(SS_IKBD)
-        agenda_add(agenda_ikbd_process,HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL,
-          io_src_b);
-#else
-        agenda_add(agenda_ikbd_process,IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESS,io_src_b);
-#endif
-#endif//double buffer or not
+          ACIA_IKBD.TDRS=ACIA_IKBD.TDR; 
+          // agenda the byte to process
+          agenda_delete(agenda_ikbd_process); //imprecise - TODO? 
+          agenda_add(agenda_ikbd_process,HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL,
+            io_src_b);
 
-        break;
+#endif//double buffer or not
 
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_IO//SS
 
-#else // Steem 3.2
-      {
+          break;
+        }
+#endif // Steem 3.2
+        {
         bool TXEmptyAgenda=(agenda_get_queue_pos(agenda_acia_tx_delay_IKBD)>=0);
         if (TXEmptyAgenda==0){
           if (ACIA_IKBD.tx_irq_enabled){
@@ -348,20 +290,16 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
           int n=agenda_get_queue_pos(agenda_ikbd_process);
           if (n>=0){
             log_to(LOGSECTION_IKBD,Str("IKBD: ")+HEXSl(old_pc,6)+" - Received new command before old one was sent, replacing "+
-                                      HEXSl(agenda[n].param,2)+" with "+HEXSl(io_src_b,2));
+              HEXSl(agenda[n].param,2)+" with "+HEXSl(io_src_b,2));
             agenda[n].param=io_src_b;
           }
         }else{
           // there is a delay before the data gets to the IKBD
           ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
-#if defined(SS_ACIA_USE_REGISTERS)
-          ACIA_MIDI.TDRS=ACIA_MIDI.TDR;
-#endif
           agenda_add(agenda_ikbd_process,IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESS,io_src_b);
         }
+        }
         break;
-      }
-#endif
 
     /******************** MIDI ACIA *********************************/
 /*
@@ -455,23 +393,21 @@ system exclusive start and end messages (F0 and F7).
           // TOS sends 95: irq rx, 8bit1stop, div16
           ACIA_SetControl(NUM_ACIA_MIDI,io_src_b); 
         }
-#if defined(SS_ACIA_TEST_REGISTERS)
-        TRACE_LOG("CPU %X -> ACIA MIDI CR SR %X rx_irq_enabled %d tx_irq_enabled %d rx_not_read %d irq %d \n",io_src_b,ACIA_MIDI.SR,ACIA_MIDI.rx_irq_enabled,ACIA_MIDI.tx_irq_enabled,ACIA_MIDI.rx_not_read,ACIA_MIDI.irq);
-#endif
-        
         break;
 
       case 0xfffc06:  //data
       {
-#if defined(SS_ACIA_REGISTERS)
-        if( (ACIA_MIDI.CR&BIT_5)&&!(ACIA_MIDI.CR&BIT_6) )// IRQ transmit enabled
-          ACIA_MIDI.SR&=~BIT_7; // clear IRQ bit
-        ACIA_MIDI.SR&=~BIT_1; // clear TDRE bit
-#if defined(SS_ACIA_USE_REGISTERS)
+#if defined(SS_IKBD_6301)
+        if(HD6301EMU_ON)
+        {
+          if( (ACIA_MIDI.CR&BIT_5)&&!(ACIA_MIDI.CR&BIT_6) )// IRQ transmit enabled
+            ACIA_MIDI.SR&=~BIT_7; // clear IRQ bit
+          ACIA_MIDI.SR&=~BIT_1; // clear TDRE bit
+
         //update in MFP (if needs be)
         mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,
           !((ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7)));
-#endif
+        }
 #endif
         bool TXEmptyAgenda=(agenda_get_queue_pos(agenda_acia_tx_delay_MIDI)
 #if defined(SS_MIDI)   //TODO
@@ -493,12 +429,13 @@ system exclusive start and end messages (F0 and F7).
           ==0
 #endif
           ){
-#if !defined(SS_ACIA_USE_REGISTERS)
+#if defined(SS_IKBD_6301)
+          if(!HD6301EMU_ON)
+#endif
           if (ACIA_MIDI.tx_irq_enabled){
             ACIA_MIDI.irq=false;
             mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
           }
-#endif
 
 #if defined(SS_MIDI)
           agenda_add(agenda_acia_tx_delay_MIDI,ACIAClockToHBLS(ACIA_MIDI.clock_divide),0);

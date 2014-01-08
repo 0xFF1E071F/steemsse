@@ -19,73 +19,43 @@ TSTPort STPort[3];
 //---------------------------------------------------------------------------
 void agenda_midi_replace(int)
 {
-#if defined(STEVEN_SEAGAL)
+#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
 #define LOGSECTION LOGSECTION_MIDI
-  if (MIDIPort.AreBytesToCome()){
-    MIDIPort.NextByte();
-
-  BYTE midi_in=MIDIPort.ReadByte();
+  if(HD6301EMU_ON)
+  {
+    if (MIDIPort.AreBytesToCome()){
+      MIDIPort.NextByte();
+      
+      BYTE midi_in=MIDIPort.ReadByte();
 
 #if defined(SS_MIDI_TRACE_BYTES_IN)
-  TRACE_LOG("Midi in %X\n",midi_in);
+      TRACE_LOG("Midi in %X\n",midi_in);
 #endif
 
-#if defined(SS_ACIA_USE_REGISTERS)
-    if(ACIA_MIDI.SR&BIT_0) {
-#else
-    if (ACIA_MIDI.rx_not_read){
-#endif
-      // discard data and set overrun
-      log_to_section(LOGSECTION_MIDI,"MIDI: Overrun on ACIA! Byte lost!");
-      if (ACIA_MIDI.overrun!=ACIA_OVERRUN_YES) 
-        ACIA_MIDI.overrun=ACIA_OVERRUN_COMING;
+      if(ACIA_MIDI.SR&BIT_0) {
+        
+        // discard data and set overrun
+        log_to_section(LOGSECTION_MIDI,"MIDI: Overrun on ACIA! Byte lost!");
+        if (ACIA_MIDI.overrun!=ACIA_OVERRUN_YES) 
+          ACIA_MIDI.overrun=ACIA_OVERRUN_COMING;
+      }else{
+        ACIA_MIDI.RDR=midi_in;
+        ACIA_MIDI.SR|=BIT_0; // RDR full
+        ACIA_MIDI.SR&=~BIT_5; // no overrun
+      }
+      log_to_section(LOGSECTION_MIDI,EasyStr("MIDI: Fire ACIA interrupt"));
 
-#if defined(SS_ACIA_OVERRUN_REPLACE_BYTE) // normally not
-#if defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
-      TRACE_LOG("Midi in overrun %X not read\n",ACIA_MIDI.RDR);
-      ACIA_MIDI.RDR=midi_in;
-#endif
-#if !defined(SS_ACIA_USE_REGISTERS)
-      ACIA_MIDI.data=midi_in;
-#endif
-#endif
-
-    }else{
-
-#if defined(SS_ACIA_USE_REGISTERS) || defined(SS_ACIA_TEST_REGISTERS)
-      ACIA_MIDI.RDR=midi_in;
-#endif
-#if !defined(SS_ACIA_USE_REGISTERS)
-      ACIA_MIDI.data=midi_in;
-      ACIA_MIDI.rx_not_read=true;
-#endif
-#if defined(SS_ACIA_REGISTERS)
-      ACIA_MIDI.SR|=BIT_0; // RDR full
-      ACIA_MIDI.SR&=~BIT_5; // no overrun
-#endif
+      if(ACIA_MIDI.CR&BIT_7)
+        ACIA_MIDI.SR|=BIT_7;
+      
+      mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!( (ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7) ));
+      
+      if(MIDIPort.AreBytesToCome()) 
+        agenda_add(agenda_midi_replace,ACIAClockToHBLS(ACIA_MIDI.clock_divide,true),0);
     }
-    log_to_section(LOGSECTION_MIDI,EasyStr("MIDI: Fire ACIA interrupt"));
-    
-    
-#if defined(SS_ACIA_REGISTERS)
-    if(ACIA_MIDI.CR&BIT_7)
-      ACIA_MIDI.SR|=BIT_7;
-#endif
-#if !defined(SS_ACIA_USE_REGISTERS)
-    if(ACIA_MIDI.rx_irq_enabled)
-      ACIA_MIDI.irq=true;
-#endif
-
-#if defined(SS_ACIA_USE_REGISTERS)
-    mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!( (ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7) ));
-#else
-    mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
-#endif
-
-    if(MIDIPort.AreBytesToCome()) 
-      agenda_add(agenda_midi_replace,ACIAClockToHBLS(ACIA_MIDI.clock_divide,true),0);
   }
-#else
+  else
+#endif //Steem 3.2
   if (MIDIPort.AreBytesToCome()){
     MIDIPort.NextByte();
 
@@ -105,7 +75,7 @@ void agenda_midi_replace(int)
     if (MIDIPort.AreBytesToCome()) agenda_add(agenda_midi_replace,ACIAClockToHBLS(ACIA_MIDI.clock_divide,true),0);
   }
 #undef LOGSECTION
-#endif
+
 }
 //---------------------------------------------------------------------------
 void MidiInBufNotEmpty()
