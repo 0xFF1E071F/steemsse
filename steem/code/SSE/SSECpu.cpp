@@ -1592,7 +1592,11 @@ void m68k_dpoke_abus2(WORD x){
 #endif
     }else 
 #endif
+#if defined(SS_CPU_IGNORE_RW_4MB)
+    if(abus>FOUR_MEGS){
+#else
     if(abus>=FOUR_MEGS){
+#endif
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
     } //otherwise throw away
   }else{

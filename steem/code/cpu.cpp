@@ -680,7 +680,11 @@ WORD m68k_dpeek(MEM_ADDRESS ad){
     }else if(mmu_confused){
       return mmu_confused_dpeek(ad,true);
 #endif
+#if defined(SS_CPU_IGNORE_RW_4MB)
+    }else if(ad>FOUR_MEGS){
+#else
     }else if(ad>=FOUR_MEGS){
+#endif
       exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else{
       return 0xffff;
