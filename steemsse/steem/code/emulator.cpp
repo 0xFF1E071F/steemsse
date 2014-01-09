@@ -515,7 +515,7 @@ void ACIA_SetControl(int nACIA,BYTE Val)
 #define LOGSECTION LOGSECTION_AGENDA
 int MILLISECONDS_TO_HBLS(int ms)
 {
-#if defined(STEVEN_SEAGAL) && defined(SS_TIMINGS_MS_TO_HBL__)
+#if defined(STEVEN_SEAGAL) && defined(SS_TIMINGS_MS_TO_HBL)
 /*  All CAPS for some reason, used in fdc, ikbd
     We make it more precise.
 */
