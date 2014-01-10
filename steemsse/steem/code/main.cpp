@@ -1053,6 +1053,11 @@ void make_Mem(BYTE conf0,BYTE conf1)
 
 
   himem=mem_len;
+
+#if defined(SS_CPU_HIMEM_BONUS_BYTES) // undefined
+  himem+=MEM_FIRST_WRITEABLE; // #bytes of ROM in RAM zone
+#endif
+
 #if !defined(SS_MMU_NO_CONFUSION)
   mmu_confused=false;
 #endif

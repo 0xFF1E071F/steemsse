@@ -285,7 +285,9 @@ and all his silly mods are gone!
 //#define SS_CPU_HACK_PHALEON // TODO: why does it work with or without?
 #define SS_CPU_HACK_WAR_HELI
 #endif
-//#define SS_CPU_IGNORE_RW_4MB // for F-29
+
+//#define SS_CPU_HIMEM_BONUS_BYTES // for F-29: bad idea
+#define SS_CPU_IGNORE_RW_4MB // for F-29, works but...
 #define SS_CPU_IGNORE_WRITE_0 // for Aladin, may write on 1st byte
 #define SS_CPU_POST_INC // no post increment if exception 
 #define SS_CPU_PRE_DEC // no "pre" decrement if exception!

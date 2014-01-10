@@ -2347,7 +2347,7 @@ Windows 2000	5.0
     page_l,y,Wid,25,Handle,(HMENU)7310,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,SSE_DRIVE_SOUND,0);
   ToolAddWindow(ToolTip,Win,
-    T("Those aren't samples of an Atari drive unfortunately, for the moment most samples were borrowed from UAE!"));
+    T("Epson SMD-480L sound sampled by Stefan jL, thx dude!"));
   mask&=~BS_CHECKBOX;
   Win=CreateWindow(TRACKBAR_CLASS,"",mask | TBS_HORZ,
                     page_l+15+Wid,y,150,20,Handle,(HMENU)7311,HInstance,NULL);
