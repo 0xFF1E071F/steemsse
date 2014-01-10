@@ -818,8 +818,14 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if defined(SS_DRIVE_SOUND) // avoid crash, restore volume
 #if defined(SS_DRIVE_SOUND_VOLUME)
     SF314[0].Sound_Volume=SF314Copy.Sound_Volume;
+#if defined(SS_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
+    SF314[1].Sound_Volume=SF314Copy.Sound_Volume;
+#endif
 #endif
     for(int i=0;i<TSF314::NSOUNDS;i++)
+#if defined(SS_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
+      SF314[1].Sound_Buffer[i]=
+#endif
       SF314[0].Sound_Buffer[i]=SF314Copy.Sound_Buffer[i];
 #endif
 
