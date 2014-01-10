@@ -659,6 +659,7 @@ BYTE m68k_peek(MEM_ADDRESS ad){
 
 WORD m68k_dpeek(MEM_ADDRESS ad){
   ad&=0xffffff;
+//  ASSERT( ad!=0x400000);
   if(ad&1)exception(BOMBS_ADDRESS_ERROR,EA_READ,ad);
   else if(ad>=himem){
     if(ad>=MEM_IO_BASE){
@@ -681,7 +682,8 @@ WORD m68k_dpeek(MEM_ADDRESS ad){
       return mmu_confused_dpeek(ad,true);
 #endif
 #if defined(SS_CPU_IGNORE_RW_4MB)
-    }else if(ad>FOUR_MEGS){
+      // safe mod for RAM<4MB, fixes F-29 4MB, along with poke
+    }else if(ad>=FOUR_MEGS || ad==FOUR_MEGS&&mem_len==4*1024*1024){
 #else
     }else if(ad>=FOUR_MEGS){
 #endif

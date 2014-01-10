@@ -1712,6 +1712,12 @@ MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
           }
 #endif
           himem=(MEM_ADDRESS)(mmu_confused ? 0:mem_len);
+
+#if defined(SS_CPU_HIMEM_BONUS_BYTES) 
+// for F-29, but doesn't work as Peek shouldn't return written value (?)
+          himem+=MEM_FIRST_WRITEABLE;
+#endif
+
 #else
           himem=(MEM_ADDRESS)mem_len;
           int mmu_confused=0;//dbg

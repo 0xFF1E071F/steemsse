@@ -1244,6 +1244,7 @@ detect unstable: switch MED/LOW - Beeshift
     && (PreviousScanline.Tricks&TRICK_STABILISER) // shifter is stable
     && left_border && LINECYCLES>56 && LINECYCLES<372 //'DE'
 #if defined(SS_SHIFTER_HI_RES_SCROLLING)
+    && !(CurrentScanline.Tricks&TRICK_0BYTE_LINE)
     && !(CurrentScanline.Tricks&TRICK_LINE_MINUS_106)  // of course
 #endif
     ) 
@@ -1389,8 +1390,8 @@ detect unstable: switch MED/LOW - Beeshift
 
 */
 
-  if( shifter_freq_at_start_of_vbl!=50)
-    return; 
+//  if( shifter_freq_at_start_of_vbl!=50)
+//    return; 
 
 #if defined(SS_SHIFTER_STATE_MACHINE)
   t=372+WU_sync_modifier;
@@ -1399,7 +1400,9 @@ detect unstable: switch MED/LOW - Beeshift
 #else
   if(CyclesIn>372 && FreqAtCycle(DEcycle+2)!=60 && FreqAtCycle(t+2)==60)
 #endif
-    CurrentScanline.Tricks|=TRICK_LINE_MINUS_2;
+    if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE)
+    && !(CurrentScanline.Tricks&TRICK_LINE_MINUS_106)) //eg Pete Mega Four #1
+      CurrentScanline.Tricks|=TRICK_LINE_MINUS_2;
 #else
 
   // Steem test
@@ -1525,7 +1528,9 @@ Tests are arranged to be efficient.
   // sync
   t=374+WU_sync_modifier;
   if(right_border_changed || CyclesIn<t 
-    || (CurrentScanline.Tricks&TRICK_0BYTE_LINE))
+    || (CurrentScanline.Tricks&TRICK_0BYTE_LINE)
+    || (CurrentScanline.Tricks&TRICK_LINE_MINUS_106)
+    )
     ;
   else if(FreqChangeAtCycle(t+2)==60 || FreqChangeAtCycle(t)==60)
     CurrentScanline.Tricks|=TRICK_LINE_PLUS_44;
