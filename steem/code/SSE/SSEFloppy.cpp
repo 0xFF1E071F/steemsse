@@ -1244,6 +1244,9 @@ void TSF314::Sound_LoadSamples(IDirectSound *DSObj,DSBUFFERDESC *dsbd,WAVEFORMAT
           //TRACE("load sample %s\n",pathplusfile.Text);
         }
         Ret=Sound_Buffer[i]->Unlock(lpvAudioPtr1,dwAudioBytes1,NULL,0);
+#if defined(SS_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
+        SF314[1].Sound_Buffer[i]=Sound_Buffer[i]; // not beautiful C++...
+#endif
       }
       fclose(fp);
     }
@@ -1269,6 +1272,9 @@ void TSF314::Sound_ReleaseBuffers() {
       Ret1=Sound_Buffer[i]->Stop();
       Ret2=Sound_Buffer[i]->Release();
       Sound_Buffer[i]=NULL;
+#if defined(SS_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
+      SF314[1].Sound_Buffer[i]=NULL; // not beautiful C++...
+#endif
       //TRACE("Release Buffer %d: %d %d\n",i,Ret1,Ret2);
     }
   }
@@ -1421,7 +1427,11 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
       {
         Dma.UpdateRegs();
         SF314[drive].TrackAtCommand=SF314[drive].Track();
+#if defined(SS_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
+        SF314[drive].Sound_CheckCommand(io_src_b);
+#else
         SF314[0].Sound_CheckCommand(io_src_b);
+#endif
       }
 #endif
 
@@ -1948,7 +1958,12 @@ void TCaps::CallbackIRQ(PCAPSFDC pc, DWORD lineout) {
 #endif
 #if defined(SS_DRIVE_SOUND)
   if(SSE_DRIVE_SOUND)
+#if defined(SS_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
+    ::SF314[DRIVE].Sound_CheckIrq();
+#else
     ::SF314[0].Sound_CheckIrq();
+#endif
+
 #endif
   mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,!(lineout&CAPSFDC_LO_INTRQ));
 #if !defined(SS_OSD_DRIVE_LED3)

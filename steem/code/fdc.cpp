@@ -1424,7 +1424,11 @@ void agenda_fdc_finished(int)
 #endif
 #if defined(SS_DRIVE_SOUND)
   if(SSE_DRIVE_SOUND)
+#if defined(SS_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
+    SF314[DRIVE].Sound_CheckIrq();
+#else
     SF314[0].Sound_CheckIrq();
+#endif
 #endif
   log("FDC: Finished command, GPIP bit low.");
   floppy_irq_flag=FLOPPY_IRQ_NOW;
@@ -2399,7 +2403,11 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
 
 #if defined(SS_DRIVE_SOUND)
       if(SSE_DRIVE_SOUND)
+#if defined(SS_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
+        SF314[DRIVE].Sound_CheckIrq();
+#else
         SF314[0].Sound_CheckIrq();
+#endif
 #endif
 
     }

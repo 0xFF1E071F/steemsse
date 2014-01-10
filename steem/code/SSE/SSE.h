@@ -537,9 +537,12 @@ and all his silly mods are gone!
 #if defined(WIN32) //TODO Unix
 #define SS_DRIVE_SOUND // heavily requested, delivered!
 //#define SS_DRIVE_SOUND_CHECK_SEEK_VBL
+#if defined(SS_DRIVE_SOUND)
+#define SS_DRIVE_SOUND_SINGLE_SET // drive B uses sounds of A
 #define SS_DRIVE_SOUND_EDIT // soundset
 #define SS_DRIVE_SOUND_VOLUME // logarithmic 
-#endif
+#endif//drive sound
+#endif//win32
 #define SS_DRIVE_SPIN_UP_TIME
 #define SS_DRIVE_SPIN_UP_TIME2 // more precise
 #define SS_DRIVE_WRITE_TRACK_TIMING

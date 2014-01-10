@@ -767,8 +767,14 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SS_DRIVE_SOUND)
     SSE_DRIVE_SOUND=pCSF->GetInt("Options","DriveSound",SSE_DRIVE_SOUND);
 #if defined(SS_DRIVE_SOUND_VOLUME)
+#if defined(SS_DRIVE_SOUND_SINGLE_SET) 
+    SF314[1].Sound_Volume=
+#endif
     SF314[0].Sound_Volume=pCSF->GetInt("Options","DriveSoundVolume",SF314[0].Sound_Volume);
     SF314[0].Sound_ChangeVolume();
+#if defined(SS_DRIVE_SOUND_SINGLE_SET) 
+    SF314[1].Sound_ChangeVolume();
+#endif
 #endif
 #endif
 #endif // SS
@@ -1143,8 +1149,8 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 #if defined(SS_DRIVE_SOUND)
   pCSF->SetStr("Options","DriveSound",EasyStr(SSE_DRIVE_SOUND));
-#if defined(SS_DRIVE_SOUND_VOLUME)
-  pCSF->SetStr("Options","DriveSoundVolume",EasyStr(SF314[0].Sound_Volume));
+#if defined(SS_DRIVE_SOUND_VOLUME) //one for both drives
+  pCSF->SetStr("Options","DriveSoundVolume",EasyStr(SF314[0].Sound_Volume)); 
 #endif
 #endif
 

@@ -1210,7 +1210,7 @@ void event_vbl_interrupt() //SS misleading name?
 /*  We don't check the option here because we may have to suddenly stop
     motor sound loop.
 */
-  SF314[0].Sound_CheckMotor(); 
+  SF314[0].Sound_CheckMotor(); // it will just check STR -> 1 drive enough
 #endif
 
   dma_sound_channel_buf_last_write_t=0;  //need to maintain this even if sound off
