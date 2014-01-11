@@ -1594,7 +1594,7 @@ void m68k_dpoke_abus2(WORD x){
 #endif
 #if defined(SS_CPU_IGNORE_RW_4MB)
       // safe mod for RAM<4MB, fixes F-29 4MB, along with peek
-    if(abus>FOUR_MEGS || abus==FOUR_MEGS&&mem_len==4*1024*1024){
+    if(abus>FOUR_MEGS || abus==FOUR_MEGS&&mem_len<FOUR_MEGS){
 #else
     if(abus>=FOUR_MEGS){
 #endif

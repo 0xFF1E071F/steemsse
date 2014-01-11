@@ -683,7 +683,7 @@ WORD m68k_dpeek(MEM_ADDRESS ad){
 #endif
 #if defined(SS_CPU_IGNORE_RW_4MB)
       // safe mod for RAM<4MB, fixes F-29 4MB, along with poke
-    }else if(ad>=FOUR_MEGS || ad==FOUR_MEGS&&mem_len==4*1024*1024){
+    }else if(ad>FOUR_MEGS || ad==FOUR_MEGS&&mem_len<FOUR_MEGS){
 #else
     }else if(ad>=FOUR_MEGS){
 #endif
