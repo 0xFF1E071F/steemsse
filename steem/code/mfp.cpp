@@ -40,7 +40,9 @@ const int mfp_gpip_irq[8]={0,1,2,3,6,7,14,15};
 
 bool mfp_interrupt_enabled[16];
 int mfp_time_of_start_of_last_interrupt[16];
-
+#if defined(SS_MFP_IRQ_DELAY3)
+int mfp_time_of_set_pending[16];
+#endif
 int cpu_time_of_first_mfp_tick;
 
 
@@ -106,6 +108,10 @@ to the CPU only 4 cycles later
 
     Possible explanation: IRQ signal goes first to GLUE, then to CPU, it's
     no direct CPU/MFP connection.
+
+  v3.6.0: undefined as it breaks Sinfull Sinuses.
+  The problem may be that we act at the "set pending" stage instead
+  of "is it pending?". See SS_MFP_IRQ_DELAY3.
 
 */
     if(SSE_HACKS_ON)
@@ -216,6 +222,9 @@ either run the VBL interrupt, or the main code.
   if (abs_quick(when_set-mfp_time_of_start_of_last_interrupt[irq])>=CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED){
 #endif
     mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)]|=mfp_interrupt_i_bit(irq); // Set pending
+#if defined(SS_MFP_IRQ_DELAY3)
+    mfp_time_of_set_pending[irq]=when_set; // not ACT
+#endif
     return true;
   }
   return (mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)] & mfp_interrupt_i_bit(irq))!=0;
@@ -532,6 +541,17 @@ void ASMCALL check_for_interrupts_pending()
           break;  //time to stop looking for pending interrupts
         }
 
+#if defined(SS_MFP_IRQ_DELAY3)
+/*  Inspired by Hatari, fixes V8 Music System in a less dangerous way than
+    SS_MFP_IRQ_DELAY.
+    There's still something missing (Audio Artistic Demo).
+*/
+        if(ACT-mfp_time_of_set_pending[irq]<4)
+        {
+          TRACE_LOG("IRQ %d set %d cycles ago\n",irq,ACT-mfp_time_of_set_pending[irq]);
+          continue;  
+        }
+#endif
         if (mfp_reg[MFPR_IPRA+i_ab] & i_bit){ //is this interrupt pending?
           if (mfp_reg[MFPR_IMRA+i_ab] & i_bit){ //is it not masked out?
 

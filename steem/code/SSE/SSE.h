@@ -231,6 +231,7 @@ and all his silly mods are gone!
 #define SS_BLT_BLIT_MODE_CYCLES // #cycles in BLIT Mode in NOPs, not M68K cycles
 #define SS_BLT_BLIT_MODE_INTERRUPT // trigger at once (not after blit phase)
 #define SS_BLT_HOG_MODE_INTERRUPT // no interrupt in hog mode
+
 //#define SS_BLT_OVERLAP // TODO ?
 //#define SS_BLT_TIMING // based on a table, but Steem does it better
 #define SS_BLT_YCOUNT // 0=65536
@@ -750,8 +751,9 @@ and all his silly mods are gone!
 #if defined(SS_MFP)
 
 #define SS_MFP_IACK_LATENCY
-#define SS_MFP_IRQ_DELAY // V8MS; from Hatari 
+//#define SS_MFP_IRQ_DELAY // V8MS but breaks Sinfull Sinuses
 //#define SS_MFP_IRQ_DELAY2 // Audio Artistic Demo (no!)
+#define SS_MFP_IRQ_DELAY3 // from Hatari
 #define SS_MFP_PATCH_TIMER_D // from Hatari, hack for Audio Artistic Demo
 #define SS_MFP_RATIO // change the values of CPU & MFP freq!
 #define SS_MFP_RATIO_PRECISION // for short timers
