@@ -1070,26 +1070,14 @@ WORD TSF314::TrackGap() {
     DirectSound makes it rather easy, you just load your samples
     in secondary buffers and play as needed, one shot or loop,
     the mixing is done by the system.
-    Each drive can have its own soundset.
-    In practice we'll use only drive 0.
+    Each drive can have its own soundset, but for the moment it
+    is shared.
 */
 
 #include "../../../3rdparty/various/sound.h" //struct TWavFileFormat
 
-/*
-
-Those samples come from the UAE project.
-drive_seek:  we added this one, it's just some buzz
-drive_spinnd.wav seems the same as drive_spin.wav
-
-I'm afraid drive_startup_ST.wav and "drive_spin_ST.wav" were ripped from SainT.
-
-drive_click_ST_edit.wav is drive_click.wav after treatment.
-
-*/
-
 #if defined(SS_DRIVE_SOUND_EDIT) // ST
-
+//TODO remove _edit
 char* drive_sound_wav_files[]={ "drive_startup_ST_edit.wav",
 "drive_spin_ST_edit.wav","drive_click_ST_edit.wav","drive_seek_edit.wav" };
 
