@@ -422,6 +422,8 @@ and all his silly mods are gone!
 #endif
 #endif
 
+#define SS_DEBUG_REPORT_SCAN_Y_ON_CLICK
+
 #if defined(DEBUG_BUILD) //TODO add other mods here
 #define SS_DEBUG_CLIPBOARD // right-click on 'dump' to copy then paste
 //#define SS_DEBUG_CPU_LOG_NO_STOP // never stop
