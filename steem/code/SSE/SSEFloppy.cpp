@@ -1076,12 +1076,17 @@ WORD TSF314::TrackGap() {
 
 #include "../../../3rdparty/various/sound.h" //struct TWavFileFormat
 
-#if defined(SS_DRIVE_SOUND_EDIT) // ST
-//TODO remove _edit
+#if defined(SS_DRIVE_SOUND_EDIT) // my 1st attempt based on various sources
+
 char* drive_sound_wav_files[]={ "drive_startup_ST_edit.wav",
 "drive_spin_ST_edit.wav","drive_click_ST_edit.wav","drive_seek_edit.wav" };
 
-#else // Amiga (+ my seek)
+#elif defined(SS_DRIVE_SOUND_EPSON) // already better
+
+char* drive_sound_wav_files[]={ "drive_startup_Epson.wav",
+"drive_spin_Epson.wav","drive_click_Epson.wav","drive_seek_Epson.wav" };
+
+#else // Amiga + my seek
 
 char* drive_sound_wav_files[]={ "drive_startup.wav","drive_spin.wav",
 "drive_click.wav","drive_seek.wav" };
