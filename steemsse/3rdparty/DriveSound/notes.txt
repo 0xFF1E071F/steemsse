@@ -3,17 +3,22 @@ http://www.winuae.net/files/stuff/drive_sounds.zip
 
 
 drive_click.wav                default WinUAE sound
-drive_click_ST_edit.wav        modified drive_click.wav   *
+drive_click_ST_edit.wav        modified drive_click.wav   
 drive_seek.wav                 downloaded buzz loop
-drive_seek_edit.wav            ... modified               *
+drive_seek_edit.wav            ... modified               
 drive_snatch.wav               default WinUAE sound
 drive_spin.wav                 default WinUAE sound
 drive_spin_ST.wav              from WinUAE project
-drive_spin_ST_edit.wav         ... modified               *
+drive_spin_ST_edit.wav         ... modified               
 drive_spinnd.wav               default WinUAE sound
 drive_startup.wav              default WinUAE sound
 drive_startup_ST.wav           from WinUAE project
-drive_startup_ST_edit.wav      ... modified               *
+drive_startup_ST_edit.wav      ... modified               
+Sampled by Stefan jL, Epson SMD-480L:
+drive_click_Epson.wav                                      *
+drive_seek_Epson.wav                                       *
+drive_spin_Epson.wav                                       *
+drive_startup_Epson.wav                                    *
 
   * indicates "used in Steem"
 

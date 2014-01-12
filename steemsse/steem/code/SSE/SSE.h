@@ -542,7 +542,8 @@ and all his silly mods are gone!
 //#define SS_DRIVE_SOUND_CHECK_SEEK_VBL
 #if defined(SS_DRIVE_SOUND)
 #define SS_DRIVE_SOUND_SINGLE_SET // drive B uses sounds of A
-#define SS_DRIVE_SOUND_EDIT // soundset
+//#define SS_DRIVE_SOUND_EDIT // 1st beta soundset
+#define SS_DRIVE_SOUND_EPSON // current samples=Epson
 #define SS_DRIVE_SOUND_VOLUME // logarithmic 
 #endif//drive sound
 #endif//win32
