@@ -666,6 +666,25 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           }else if (StartEmuOnClick){
             PostRunMessage();
           }
+#if defined(SS_DEBUG_REPORT_SCAN_Y_ON_CLICK)
+/*  When emulation is stopped, right click in window will tell which
+    scanline we're at.
+    To do this we use the "status bar".
+    We assume double height, not max display, borders on, we don't compute this.
+    While we're at it, we also report guessed X
+*/
+          else if(Mess==WM_RBUTTONDOWN)
+          {
+            int guessed_scan_y=(HIWORD(lPar)-MENUHEIGHT)/2-30;
+#if defined(SS_VAR_STATUS_STRING)
+            HWND status_bar_win=GetDlgItem(StemWin,120); // get handle
+            char tmp[10];
+            sprintf(tmp,"%d %d",LOWORD(lPar)/2,guessed_scan_y);
+            SendMessage(status_bar_win,WM_SETTEXT,0,(LPARAM)(LPCTSTR)tmp);
+#endif
+          }
+
+#endif
         }
       }
       break;
