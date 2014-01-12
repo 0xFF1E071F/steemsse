@@ -495,6 +495,7 @@ and all his silly mods are gone!
 #if defined(SS_DMA) // this is the DMA as used for disk operation
 
 //#define SS_DMA_ADDRESS // enforcing order for write (no use?)
+#define SS_DMA_ADDRESS_EVEN
 //#define SS_DMA_DOUBLE_FIFO // works but overkill  
 //#define SS_DMA_DELAY // works but overkill
 #define SS_DMA_COUNT_CYCLES

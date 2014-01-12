@@ -480,7 +480,7 @@ What was in the buffers will go nowhere, the internal counter is reset.
     
   case 0xff860b:  // DMA Base and Counter Mid
     TRACE_LOG("BaseAddress");
-#if defined(SS_BaseAddress)
+#if defined(SS_DMA_ADDRESS)
 /* 
 "The DMA Address Counter register must be loaded (written) in a Low, Mid, 
   High order."
@@ -497,13 +497,16 @@ What was in the buffers will go nowhere, the internal counter is reset.
   case 0xff860d:  // DMA Base and Counter Low
     TRACE_LOG("BaseAddress L");
     ASSERT( !(io_src_b&1) ); // shouldn't the address be even?
-#if defined(SS_BaseAddress)
+#if defined(SS_DMA_ADDRESS)
     //BaseAddress=0xffff00,BaseAddress|=io_src_b;
     BaseAddress=io_src_b;
 #else
     BaseAddress&=0xffff00;
     BaseAddress|=io_src_b;
-#endif       
+#endif   
+#if defined(SS_DMA_ADDRESS_EVEN)    
+    BaseAddress&=0xfffffe;//remark by Petari: bit0 ignored
+#endif
     break;
     
   case 0xff860e: //high byte of frequency/density control
