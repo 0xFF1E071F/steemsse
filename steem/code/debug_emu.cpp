@@ -194,7 +194,12 @@ void debug_update_cycle_counts()
     if (mfp_timer_enabled[t]){
       debug_time_to_timer_timeout[t]=mfp_timer_timeout[t]-ABSOLUTE_CPU_TIME;
     }else{
-      debug_time_to_timer_timeout[t]=0;
+#if defined(SS_DEBUG_TIMER_B)
+      if(t==1) 
+        debug_time_to_timer_timeout[t]=mfp_timer_counter[t]/64;
+      else
+#endif
+        debug_time_to_timer_timeout[t]=0;
     }
   }
 }

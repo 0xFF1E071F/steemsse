@@ -89,7 +89,8 @@ inline void VBLInterrupt() {
 #endif
   INSTRUCTION_TIME_ROUND(SS_INT_VBL_TIMING);
 
-  TRACE_LOG("F%d Cycles %d VBI %X #%d\n",FRAME,ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl,LPEEK(0x0070),interrupt_depth);
+  //TRACE_LOG("F%d Cycles %d VBI %X #%d\n",FRAME,ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl,LPEEK(0x0070),interrupt_depth);
+  TRACE_LOG("F%d Cycles %d VBI\n",FRAME,ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl);
   m68k_interrupt(LPEEK(0x0070));
 #if defined(SS_INT_JITTER_VBL)
 /*  In the current build, VBL "jitter" instead of "wobble" is necessary

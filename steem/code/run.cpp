@@ -483,6 +483,7 @@ void event_timer_d_timeout()
 #define LOGSECTION LOGSECTION_INTERRUPTS
 void event_timer_b()
 {
+  //TRACE("F%d y%d c%d TB\n",FRAME,scan_y,LINECYCLES);
   if (scan_y<shifter_first_draw_line){
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;
   }else if (scan_y<shifter_last_draw_line){
@@ -494,7 +495,8 @@ void event_timer_b()
       log_to(LOGSECTION_MFP_TIMERS,EasyStr("MFP: Timer B counter decreased to ")+(mfp_timer_counter[1]/64)+" at "+scanline_cycle_log());
       if (mfp_timer_counter[1]<64){
         log(EasyStr("MFP: Timer B timeout at ")+scanline_cycle_log());
-        TRACE_LOG("F%d y%d Timer B%d\n",FRAME,scan_y,1);
+        TRACE_LOG("F%d y%d c%d Timer B pending\n",FRAME,scan_y,LINECYCLES);
+        //TRACE("F%d y%d c%d TB\n",FRAME,scan_y,LINECYCLES);
         mfp_timer_counter[1]=BYTE_00_TO_256(mfp_reg[MFPR_TBDR])*64;
         mfp_interrupt_pend(MFP_INT_TIMER_B,time_of_next_timer_b);
       }
@@ -855,7 +857,7 @@ void event_start_vbl()
 {
   // This happens about 60 cycles into scanline 247 (50Hz)
 
-  TRACE_LOG("F%d L%d reload SDP (%X) <- %X\n",FRAME,scan_y,shifter_draw_pointer,xbios2);
+//  TRACE_LOG("F%d L%d reload SDP (%X) <- %X\n",FRAME,scan_y,shifter_draw_pointer,xbios2);
   shifter_draw_pointer=xbios2; // SS: reload SDP
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
   shifter_pixel=shifter_hscroll;

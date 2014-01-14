@@ -851,9 +851,6 @@ Steem SSE will reset auto.sts and quit\nSorry!",
   }
   else
   {
-#if defined(SS_DRIVE_SINGLE_SIDE)
-    SSEOption.SingleSideDriveMap=0;
-#endif
   }
 #endif//#if defined(STEVEN_SEAGAL)
 

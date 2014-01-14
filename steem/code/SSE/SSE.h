@@ -422,13 +422,15 @@ and all his silly mods are gone!
 #endif
 #endif
 
-#define SS_DEBUG_REPORT_SCAN_Y_ON_CLICK
+#define SS_DEBUG_REPORT_SCAN_Y_ON_CLICK // boiler + IDE
 
 #if defined(DEBUG_BUILD) //TODO add other mods here
 #define SS_DEBUG_CLIPBOARD // right-click on 'dump' to copy then paste
 //#define SS_DEBUG_CPU_LOG_NO_STOP // never stop
 #define SS_DEBUG_CPU_TRACE_NO_STOP // depends on 'suspend logging'
-#define SS_DEBUG_DIV // no DIV log necessary
+#define SS_DEBUG_DIV // no DIV log necessary - TODO recall NODIV
+#define SS_DEBUG_TIMER_B // instead of 0
+#define SS_DEBUG_WIPE_TRACE // as logfile
 #endif
 
 #define SS_DEBUG_LOG_OPTIONS // mine
@@ -981,11 +983,14 @@ and all his silly mods are gone!
 #if defined(SS_DEBUG) 
 //#define SS_SHIFTER_DRAW_DBG  // totally bypass CheckSideOverscan() & Render()
 #define SS_SHIFTER_EVENTS // recording all shifter events in a frame
-//#define SS_SHIFTER_EVENTS_PAL // also for palette
+#if defined(SS_SHIFTER_EVENTS)
+//#define SS_SHIFTER_EVENTS_BLITTER
+#define SS_SHIFTER_EVENTS_PAL // also for palette
 //#define SS_SHIFTER_EVENTS_READ_SDP // also for read SDP
 #define SS_SHIFTER_EVENTS_BYTES // scanline length
 #define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
 #define SS_SHIFTER_EVENTS_TRICKS // "bordermask"
+#endif//shifter_tricks
 //#define SS_SHIFTER_IOR_TRACE // specific, not "log"
 //#define SS_SHIFTER_IOW_TRACE // specific, not "log"
 #if !defined(SS_DEBUG_TRACE_IDE)
