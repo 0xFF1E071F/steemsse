@@ -504,7 +504,7 @@ when it does).
 
     case 0xff8a00:
       ior_byte=Blitter_IO_ReadB(addr); // STF crash there
-#if defined(SS_SHIFTER_EVENTS)
+#if defined(SS_SHIFTER_EVENTS_BLITTER)
       VideoEvents.Add(scan_y,LINECYCLES,'b',((addr-0xff8a00)<<8)|ior_byte);
 #endif
       break;

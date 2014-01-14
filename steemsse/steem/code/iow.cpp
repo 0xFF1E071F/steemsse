@@ -644,7 +644,7 @@ system exclusive start and end messages (F0 and F7).
       break;
 
     case 0xff8a00:      //----------------------------------- Blitter
-#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_EVENTS)
+#if defined(SS_SHIFTER_EVENTS_BLITTER)
       VideoEvents.Add(scan_y,LINECYCLES,'B',((addr-0xff8a00)<<8)|io_src_b);
 #endif
       Blitter_IO_WriteB(addr,io_src_b);
@@ -1130,11 +1130,24 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 */
 
 #if USE_PASTI // SS Pasti manages this as well
-
+/*
+  if ((psg_reg[PSGR_PORT_A] & BIT_1)==0){ // Drive A
+    return 0;
+  }else if ((psg_reg[PSGR_PORT_A] & BIT_2)==0){ // Drive B
+    return 1;
+  }
+*/
 #if defined(SS_DRIVE_SINGLE_SIDE_PASTI)
           if(SSE_HACKS_ON 
-            && (SSEOption.SingleSideDriveMap&(floppy_current_drive()+1) ))
+           // && (SSEOption.SingleSideDriveMap&(floppy_current_drive()+1) ))
+            && (SSEOption.SingleSideDriveMap&(
+            //floppy_current_drive()
+            ( (psg_reg[PSGR_PORT_A] & BIT_2)==0 ? 1: 0  )
+            +1) ))
+          {
             io_src_b|=1; // cheat
+          psg_reg[psg_reg_select]=io_src_b;//also the variable...
+          }
 #endif
           if (hPasti && pasti_active) 
             pasti->WritePorta(io_src_b,ABSOLUTE_CPU_TIME);

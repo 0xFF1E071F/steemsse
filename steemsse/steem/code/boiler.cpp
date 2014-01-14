@@ -1806,6 +1806,11 @@ void logfile_wipe()
     fclose(logfile);
     logfile=fopen(LogFileName,"wb");
   }
+#if defined(SS_DEBUG_WIPE_TRACE)
+  fclose(Debug.trace_file_pointer);
+  Debug.trace_file_pointer=freopen(SS_TRACE_FILE_NAME, "w", stdout );
+#endif
+
 }
 
 void stop_new_program_exec()

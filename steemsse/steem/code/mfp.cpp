@@ -245,6 +245,7 @@ either run the VBL interrupt, or the main code.
 */
 void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 {
+  //if(/*reg==13||*/reg==16)  TRACE("F%d y%d PC %X mfp_set_timer_reg(reg %d,old_val %d,new_val %d)\n",FRAME,scan_y,old_pc,reg,old_val,new_val);
   int timer=0; // SS 0=Timer A 1=Timer B 2=Timer C 3=Timer D
   BYTE new_control;
   if (reg>=MFPR_TACR && reg<=MFPR_TCDCR){ //control reg change
@@ -376,7 +377,12 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
           // This checks all timers to see if they have timed out, if they have then
           // it will set the pend bit. This is dangerous, messes up LXS!
           // mfp_check_for_timer_timeouts(); // ss not implemented
-          TRACE_LOG("MFP Timer %C stopped\n",'A'+timer);
+#ifdef SS_DEBUG
+//          TRACE_LOG("F%d y%d c%d MFP Timer %C stopped/event\n",FRAME,scan_y,LINECYCLES,'A'+timer);
+          if(new_val & BIT_3) // don't report stopping, it's systematic (or should be)
+            TRACE_LOG("F%d y%d c%d Timer %C %d\n",FRAME,scan_y,LINECYCLES,'A'+timer,mfp_timer_counter[timer]/64);
+
+#endif
           mfp_timer_enabled[timer]=false;
           mfp_timer_period_change[timer]=0;
           log(EasyStr("  Set control to ")+new_control+" (reg=$"+HEXSl(new_val,2)+")"+
@@ -542,13 +548,15 @@ void ASMCALL check_for_interrupts_pending()
         }
 
 #if defined(SS_MFP_IRQ_DELAY3)
-/*  Inspired by Hatari, fixes V8 Music System in a less dangerous way than
+/*  Inspired by Hatari, fixes V8 Music System in a "less dangerous" way than
     SS_MFP_IRQ_DELAY.
     There's still something missing (Audio Artistic Demo).
+    + it makes the plasma in Sinfull Sinuses jerky -> restrict to irq 6 (ACIA) 
+    as a quick fix so that V8MS still works
 */
-        if(ACT-mfp_time_of_set_pending[irq]<4)
+        if(irq==6 && ACT-mfp_time_of_set_pending[irq]<4 && ACT-mfp_time_of_set_pending[irq]>=0)
         {
-          TRACE_LOG("IRQ %d set %d cycles ago\n",irq,ACT-mfp_time_of_set_pending[irq]);
+          TRACE_LOG("IRQ %d set pending %d cycles ago\n",irq,ACT-mfp_time_of_set_pending[irq]);
           continue;  
         }
 #endif
@@ -674,7 +682,8 @@ void mfp_interrupt(int irq,int when_fired)
 
 #if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)//tmp
 //            TRACE_LOG("MFP Execute IRQ %d Vector %X Address %X\n",irq,vector,LPEEK(vector));
-            TRACE_LOG("MFP %d IRQ %d ",interrupt_depth,irq);
+            //TRACE_LOG("MFP %d IRQ %d ",interrupt_depth,irq);
+            TRACE_LOG("F%d y%d c%d: IRQ %d ",FRAME,scan_y,LINECYCLES,irq);
             switch(irq)
             {
             case 0:TRACE_LOG("Centronics busy\n");break;
@@ -695,13 +704,13 @@ void mfp_interrupt(int irq,int when_fired)
             case 15:     TRACE_LOG("Monochrome Detect\n");       break;                     
 
             }//sw
-//            ASSERT( interrupt_depth<2 );
 
-
+/*
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_MFP_TIMERS
             if(irq==4||irq==5||irq==8||irq==13)
               TRACE_LOG("F%d y%d c%d MFP IRQ %d\n",FRAME,scan_y,LINECYCLES,irq);
+*/
 #endif
 
 

@@ -678,8 +678,8 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             int guessed_scan_y=(HIWORD(lPar)-MENUHEIGHT)/2-30;
 #if defined(SS_VAR_STATUS_STRING)
             HWND status_bar_win=GetDlgItem(StemWin,120); // get handle
-            char tmp[10];
-            sprintf(tmp,"%d %d",LOWORD(lPar)/2,guessed_scan_y);
+            char tmp[12];
+            sprintf(tmp,"X%d Y%d",LOWORD(lPar)/2,guessed_scan_y);
             SendMessage(status_bar_win,WM_SETTEXT,0,(LPARAM)(LPCTSTR)tmp);
 #endif
           }
