@@ -791,6 +791,15 @@ void event_scanline()
   scan_y++;
 #endif
 
+#if defined(SS_DEBUG_REPORT_SDP)
+  if(Shifter.FetchingLine())
+  {
+    VideoEvents.Add(scan_y,0,'A',(shifter_draw_pointer&0x00FF0000)>>16 ); 
+    VideoEvents.Add(scan_y,0,'a',(shifter_draw_pointer&0xFFFF) ); 
+  }
+#endif
+
+
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_POLL_IN_FRAME)
   // We peek Windows message once during the frame and not just at VBL
   if(scan_y==ikbd.scanline_to_poll
@@ -1336,6 +1345,15 @@ void event_vbl_interrupt() //SS misleading name?
 #if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
   Shifter.Vbl();
 #endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_EVENTS)
+  // important info at start of frame (not events)
+  VideoEvents.Add(scan_y,0,'R',Shifter.m_ShiftMode); 
+  VideoEvents.Add(scan_y,0,'S',Shifter.m_SyncMode); 
+//  VideoEvents.Add(scan_y,0,'A',(xbios2&0x00FF0000)>>16 ); 
+  //VideoEvents.Add(scan_y,0,'a',(xbios2&0xFFFF) ); 
+#endif
+
 }
 //---------------------------------------------------------------------------
 void prepare_cpu_boosted_event_plans()

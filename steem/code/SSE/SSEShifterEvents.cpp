@@ -8,6 +8,49 @@ TVideoEvents::TVideoEvents() {
 } 
 
 
+#if defined(SS_DEBUG_REPORT_SDP_ON_CLICK)
+MEM_ADDRESS TVideoEvents::GetSDP(int x,int guessed_scan_y) {
+  MEM_ADDRESS sdp=NULL;
+  int i,j;
+  //TRACE("m_nEvents %d\n",m_nEvents);
+  //ASSERT( m_nEvents>0 ); //2: vbi passed!
+  for(i=1; i<=MAX_EVENTS ;i++)
+  {
+    if(m_VideoEvent[i].Scanline==guessed_scan_y)
+    {
+      if(m_VideoEvent[i].Type=='A')
+        sdp=m_VideoEvent[i].Value<<16;
+      else if(m_VideoEvent[i].Type=='a')
+      {
+        sdp|=m_VideoEvent[i].Value; // at start of line
+//        TRACE("sdp %X\n",sdp);
+        // look for tricks
+        int trick=0;
+        while( i<=MAX_EVENTS && m_VideoEvent[i].Scanline==guessed_scan_y
+          && m_VideoEvent[i].Type!='T')
+          i++;
+        if(m_VideoEvent[i].Type=='T')
+          trick=m_VideoEvent[i].Value;
+        // this could already help the precision but
+        // it isn't meant to be complete nor accurate!
+        if(trick&TRICK_LINE_PLUS_26)
+          x+=52;
+        else if(trick&TRICK_LINE_PLUS_24)
+          x+=48;
+        else if(trick&TRICK_0BYTE_LINE)
+          x=-1;
+        if(x>0)
+          sdp+=x/2;
+        sdp&=~1; // looks more serious...
+        break;
+      }
+
+    }
+  }//nxt
+  return sdp;
+}
+#endif
+
 void TVideoEvents::Init() {
   m_nEvents=m_nReports=TriggerReport=nVbl=0;
 }
