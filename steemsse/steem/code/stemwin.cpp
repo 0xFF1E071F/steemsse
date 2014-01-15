@@ -676,10 +676,17 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           else if(Mess==WM_RBUTTONDOWN)
           {
             int guessed_scan_y=(HIWORD(lPar)-MENUHEIGHT)/2-30;
+            int guessed_x=LOWORD(lPar)/2-SideBorderSizeWin;
 #if defined(SS_VAR_STATUS_STRING)
             HWND status_bar_win=GetDlgItem(StemWin,120); // get handle
+#if defined(SS_DEBUG_REPORT_SDP_ON_CLICK)
+            char tmp[12+1+6];
+            MEM_ADDRESS computed_sdp = VideoEvents.GetSDP(guessed_x,guessed_scan_y);
+            sprintf(tmp,"X%d Y%d $%6X",guessed_x,guessed_scan_y,computed_sdp);
+#else // 1st, only X & Y
             char tmp[12];
-            sprintf(tmp,"X%d Y%d",LOWORD(lPar)/2,guessed_scan_y);
+            sprintf(tmp,"X%d Y%d",guessed_x,guessed_scan_y);
+#endif
             SendMessage(status_bar_win,WM_SETTEXT,0,(LPARAM)(LPCTSTR)tmp);
 #endif
           }

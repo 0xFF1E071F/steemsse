@@ -422,8 +422,13 @@ and all his silly mods are gone!
 #endif
 #endif
 
-#define SS_DEBUG_REPORT_SCAN_Y_ON_CLICK // boiler + IDE
 
+// boiler + IDE
+#define SS_DEBUG_REPORT_SCAN_Y_ON_CLICK
+#define SS_DEBUG_REPORT_SDP // tracking sdp at start of each scanline
+#define SS_DEBUG_REPORT_SDP_ON_CLICK // yeah!
+
+// boiler
 #if defined(DEBUG_BUILD) //TODO add other mods here
 #define SS_DEBUG_CLIPBOARD // right-click on 'dump' to copy then paste
 //#define SS_DEBUG_CPU_LOG_NO_STOP // never stop

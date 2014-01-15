@@ -32,6 +32,9 @@ public:
   int Vbl(); 
   int nVbl;
   struct SVideoEvent m_VideoEvent[MAX_EVENTS]; // it's public
+#if defined(SS_DEBUG_REPORT_SDP_ON_CLICK)
+  MEM_ADDRESS GetSDP(int guessed_x,int guessed_scan_y);
+#endif
 private:
   int m_nEvents; // how many video events occurred this vbl?
   int m_nReports;
