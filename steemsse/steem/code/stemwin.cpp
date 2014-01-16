@@ -682,7 +682,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 #if defined(SS_DEBUG_REPORT_SDP_ON_CLICK)
             char tmp[12+1+6];
             MEM_ADDRESS computed_sdp = VideoEvents.GetSDP(guessed_x,guessed_scan_y);
-            sprintf(tmp,"X%d Y%d $%6X",guessed_x,guessed_scan_y,computed_sdp);
+            sprintf(tmp,"X%d Y%d $%X",guessed_x,guessed_scan_y,computed_sdp);
 #else // 1st, only X & Y
             char tmp[12];
             sprintf(tmp,"X%d Y%d",guessed_x,guessed_scan_y);

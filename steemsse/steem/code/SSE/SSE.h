@@ -433,7 +433,14 @@ and all his silly mods are gone!
 #define SS_DEBUG_CLIPBOARD // right-click on 'dump' to copy then paste
 //#define SS_DEBUG_CPU_LOG_NO_STOP // never stop
 #define SS_DEBUG_CPU_TRACE_NO_STOP // depends on 'suspend logging'
-#define SS_DEBUG_DIV // no DIV log necessary - TODO recall NODIV
+#define SS_DEBUG_NODIV // no DIV log necessary anymore
+#define SS_DEBUG_MOD_REGS // big letter, no =
+#define SS_DEBUG_NO_SOUND_DAMPING //PSG filter control 'd' and 'a'
+//#define SS_DEBUG_MOUSE_WHEEL //TODO, for browsers
+#define SS_DEBUG_MOVE_OTHER_SP
+//#define SS_DEBUG_SHOW_INTERRUPT // which interrupt are we in?//pb: need a stack!//TODO
+#define SS_DEBUG_SHOW_SDP // not video counter, the draw pointer
+#define SS_DEBUG_SHOW_SR // HEX, not just the flags
 #define SS_DEBUG_TIMER_B // instead of 0
 #define SS_DEBUG_WIPE_TRACE // as logfile
 #endif
