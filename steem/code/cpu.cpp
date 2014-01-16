@@ -4368,7 +4368,7 @@ void                             m68k_or_l_to_dN(){
 void m68k_divu();
 #else
 void                              m68k_divu(){
-#if !(defined(STEVEN_SEAGAL) && defined(SS_DEBUG_DIV))
+#if !(defined(STEVEN_SEAGAL) && defined(SS_DEBUG_NODIV))
   DEBUG_ONLY(    log_to(LOGSECTION_DIV,Str("DIV: ")+HEXSl(old_pc,6)+" - "+disa_d2(old_pc));  )
 #endif
   FETCH_TIMING;
@@ -4516,7 +4516,7 @@ void                             m68k_or_l_from_dN(){
 void m68k_divs();
 #else
 void                              m68k_divs(){
-#if !(defined(STEVEN_SEAGAL) && defined(SS_DEBUG_DIV))
+#if !(defined(STEVEN_SEAGAL) && defined(SS_DEBUG_NODIV))
   DEBUG_ONLY( log_to(LOGSECTION_DIV,Str("DIV: ")+HEXSl(old_pc,6)+" - "+disa_d2(old_pc)); )
 #endif
   FETCH_TIMING;

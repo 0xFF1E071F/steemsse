@@ -354,7 +354,7 @@ inline void CalcVChip(int &v,int &dv,int *source_p) {
   else 
 #endif
   if (v!=*source_p || dv){                            
-#ifdef ENABLE_VARIABLE_SOUND_DAMPING    // was in Steem, don't know what it is
+#ifdef ENABLE_VARIABLE_SOUND_DAMPING    // Boiler control, useless now (undef)
     v+=dv;             
     dv-=(v-(*source_p))*sound_variable_a >> 8;        
     dv*=sound_variable_d;           

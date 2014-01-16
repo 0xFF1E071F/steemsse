@@ -76,7 +76,9 @@ DESCRIPTION: Sets up all conditions that affect the Steem binary.
 #endif
 
 #ifdef DEBUG_BUILD
+#if !defined(SS_DEBUG_NO_SOUND_DAMPING)
 #define ENABLE_VARIABLE_SOUND_DAMPING
+#endif
 #define ENABLE_LOGFILE
 #endif
 

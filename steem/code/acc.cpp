@@ -45,7 +45,7 @@ void m68k_poke(MEM_ADDRESS ad,BYTE x);
                                     {"IO",LOGSECTION_IO},
                                     {"Crash",LOGSECTION_CRASH},
                                     {"CPU",LOGSECTION_CPU},
-#if !(defined(STEVEN_SEAGAL) && defined(SS_DEBUG_DIV))
+#if !(defined(STEVEN_SEAGAL) && defined(SS_DEBUG_NODIV))
                                     {"Div Instructions",LOGSECTION_DIV},
 #endif
                                     {"Trace",LOGSECTION_TRACE},
@@ -452,9 +452,13 @@ EasyStr HEXSl(long n,int ln){
   return bf+8-ln+strlen(bf+8);
 }
 
-#ifdef DEBUG_BUILD
+#ifdef DEBUG_BUILD // SS removed _
 char *reg_name(int n){
-  reg_name_buf[0]="da"[int((n & 8) ? 1:0)]; // SS removed _
+#if defined(SS_DEBUG_MOD_REGS)//interesting technique by the way
+  reg_name_buf[0]="DA"[int((n & 8) ? 1:0)]; 
+#else
+  reg_name_buf[0]="da"[int((n & 8) ? 1:0)]; 
+#endif
   reg_name_buf[1]=(char)('0'+(n & 7));
   reg_name_buf[2]=0;
   return reg_name_buf;

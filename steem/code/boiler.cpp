@@ -473,6 +473,9 @@ long __stdcall sr_display_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
         InvalidateRect(Win,NULL,0);
         InvalidateRect(sr_display,NULL,0);
         InvalidateRect(trace_sr_after_display,NULL,0);
+#if defined(SS_DEBUG_SHOW_SR)
+        mr_static_update_all(); // inefficiency unimportant here
+#endif
       }
     }
     break;
@@ -1608,17 +1611,43 @@ void DWin_init()
 
   log("STARTUP: Creating Child Windows");
 
+
+#if defined(SS_DEBUG_SHOW_SDP)
+  // we also need to move other boxes around
+  x=10;
+  new mr_static(/*label*/"PC",/*name*/"pc",/*x*/x,/*y*/1,
+      /*owner*/DWin,/*id*/(HMENU)201,/*pointer*/(MEM_ADDRESS)&pc,
+      /*bytes*/ 3,/*regflag*/ MST_REGISTER, /*editflag*/true,
+      /*mem_browser to update*/&m_b_mem_disa);
+  x+=70;
+#if !defined(SS_DEBUG_MOVE_OTHER_SP)
+  lpms_other_sp=new mr_static("other sp","other sp",x,1,
+      DWin,(HMENU)203,(MEM_ADDRESS)&other_sp,3,MST_REGISTER,
+      true,NULL);
+  x+=75;
+#endif
+  new mr_static("screen","screen address",x,1,DWin,(HMENU)294,(MEM_ADDRESS)&xbios2,3,MST_REGISTER,true,NULL);
+  x+=80;
+  // we don't compute the real video counter, for now because it's also 
+  // interesting to follow rendering
+  new mr_static("SDP","SDP",x,1,DWin,(HMENU)203,
+      (MEM_ADDRESS)&shifter_draw_pointer,3,MST_REGISTER,false/*edit*/,NULL);
+  //x+=75;
+
+#else
+
   new mr_static(/*label*/"pc=",/*name*/"pc",/*x*/10,/*y*/1,
       /*owner*/DWin,/*id*/(HMENU)201,/*pointer*/(MEM_ADDRESS)&pc,
       /*bytes*/ 3,/*regflag*/ MST_REGISTER, /*editflag*/true,
       /*mem_browser to update*/&m_b_mem_disa);
 
   new mr_static("screen=","screen address",240,1,DWin,(HMENU)294,(MEM_ADDRESS)&xbios2,3,MST_REGISTER,true,NULL);
-
+#if !defined(SS_DEBUG_MOVE_OTHER_SP)
   lpms_other_sp=new mr_static("other sp=","other sp",110,1,
       DWin,(HMENU)203,(MEM_ADDRESS)&other_sp,3,MST_REGISTER,
       true,NULL);
-
+#endif
+#endif
   DWin_trace_button=CreateWindow("Button","Trace Into",WS_VISIBLE |
       WS_CHILD | BS_CHECKBOX | BS_PUSHLIKE,330,1,140,25,DWin,(HMENU)1002,Inst,NULL);
 
@@ -1628,8 +1657,13 @@ void DWin_init()
   DWin_run_button=CreateWindow("Button","Run",WS_VISIBLE | WS_CHILD | BS_CHECKBOX | BS_PUSHLIKE | WS_CLIPSIBLINGS,
       490,1,140,50,DWin,(HMENU)1010,Inst,NULL);
 
+#if defined(SS_DEBUG_SHOW_SR)
+  HWND Win=CreateWindowEx(512,"Combobox","",WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_HASSTRINGS,
+      330+50,26,100-20-30,200,DWin,(HMENU)1020,Inst,NULL);
+#else
   HWND Win=CreateWindowEx(512,"Combobox","",WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_HASSTRINGS,
       330,26,100,200,DWin,(HMENU)1020,Inst,NULL);
+#endif
   CBAddString(Win,"Run to next VBL",MAKELONG(DRU_VBL,0));
   CBAddString(Win,"Run to scanline n",MAKELONG(DRU_SCANLINE,0));
   CBAddString(Win,"Run for n cycles",MAKELONG(DRU_CYCLE,0));
@@ -1641,20 +1675,36 @@ void DWin_init()
   CreateWindow("Button","Go",WS_VISIBLE | WS_CHILD | BS_CHECKBOX | BS_PUSHLIKE | WS_CLIPSIBLINGS,
       490,26,140,25,DWin,(HMENU)1022,Inst,NULL);
 
-
-  CreateWindowEx(0,"Static","sr = ",WS_VISIBLE | WS_CHILDWINDOW | SS_LEFT,
-      10,34,30,20,DWin,(HMENU)274,Inst,NULL);
-
+#if defined(SS_DEBUG_SHOW_SR)
+  // show SR in hex as well as bits
+  new mr_static("SR","SDP",10,30,DWin,(HMENU)203,
+      (MEM_ADDRESS)&sr,2,MST_REGISTER,true,NULL);
 
   sr_display=CreateWindowEx(512,"Static","sr display",WS_BORDER | WS_VISIBLE | WS_CHILDWINDOW | SS_NOTIFY,
+      30+40,30,200,20,DWin,(HMENU)230,Inst,NULL);
+#else
+#if defined(SS_DEBUG_MOD_REGS)
+  CreateWindowEx(0,"Static","SR ",WS_VISIBLE | WS_CHILDWINDOW | SS_LEFT,
+      10,34,30,20,DWin,(HMENU)274,Inst,NULL);
+#else
+  CreateWindowEx(0,"Static","sr = ",WS_VISIBLE | WS_CHILDWINDOW | SS_LEFT,
+      10,34,30,20,DWin,(HMENU)274,Inst,NULL);
+#endif
+  sr_display=CreateWindowEx(512,"Static","sr display",WS_BORDER | WS_VISIBLE | WS_CHILDWINDOW | SS_NOTIFY,
       30,30,200,20,DWin,(HMENU)230,Inst,NULL);
+#endif
   SetWindowLong(sr_display,GWL_USERDATA,(LONG)&sr);
   Old_sr_display_WndProc=(WNDPROC)SetWindowLong(sr_display,GWL_WNDPROC,(long)sr_display_WndProc);
   log("STARTUP: Subclassed sr display");
 
   for(int n=0;n<16;n++){
-    strcpy(ttt,reg_name(n));strcat(ttt,"=");
+    strcpy(ttt,reg_name(n));
+#if defined(SS_DEBUG_MOD_REGS)
+    strcat(ttt," ");
+#else
+    strcat(ttt,"=");
     ttt[2]='=';ttt[3]=0;
+#endif
     x=10+(n&7)*80;
     y=60+(n&8)*3;
 
@@ -1663,6 +1713,14 @@ void DWin_init()
         /*bytes*/ 4,/*regflag*/ MST_REGISTER, /*editflag*/true,
         /*mem_browser to update*/NULL);
   }
+
+
+#if defined(SS_DEBUG_MOVE_OTHER_SP)
+  lpms_other_sp=new mr_static("A7#2","other sp",x+80,y,
+      DWin,(HMENU)203,(MEM_ADDRESS)&other_sp,3,MST_REGISTER,
+      true,NULL);
+#endif
+
 
   m_b_mem_disa.handle=CreateWindowEx(512,WC_LISTVIEW,"",
       LVS_REPORT | LVS_SHAREIMAGELISTS | LVS_NOSORTHEADER | LVS_OWNERDRAWFIXED |
@@ -1769,8 +1827,10 @@ void DWin_init()
   insp_menu=CreatePopupMenu();
   log("STARTUP: insp_menu Created");
 
-  #ifdef ENABLE_VARIABLE_SOUND_DAMPING
-
+#ifdef ENABLE_VARIABLE_SOUND_DAMPING
+//SS this was to tune the PSG filter, we don't use it now - undef
+//so much screen real estate saved, and a mystery solved, what were
+// those d & a in the boiler!
   int xx=240,yy=30;
   new mr_static(/*label*/"a ",/*name*/"Sound A /256",/*x*/xx,/*y*/yy,
       /*owner*/DWin,/*id*/(HMENU)50066,/*pointer*/(MEM_ADDRESS)&sound_variable_a,
@@ -1781,7 +1841,7 @@ void DWin_init()
       /*bytes*/ 1,/*regflag*/ MST_REGISTER, /*editflag*/true,
       /*mem_browser to update*/NULL);
 
-  #endif
+#endif
 
   debug_plugin_load();
   if (debug_plugins.NumItems){
