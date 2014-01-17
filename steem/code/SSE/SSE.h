@@ -436,7 +436,7 @@ and all his silly mods are gone!
 #define SS_DEBUG_NODIV // no DIV log necessary anymore
 #define SS_DEBUG_MOD_REGS // big letter, no =
 #define SS_DEBUG_NO_SOUND_DAMPING //PSG filter control 'd' and 'a'
-//#define SS_DEBUG_MOUSE_WHEEL //TODO, for browsers
+#define SS_DEBUG_MOUSE_WHEEL // yeah!
 #define SS_DEBUG_MOVE_OTHER_SP
 //#define SS_DEBUG_SHOW_INTERRUPT // which interrupt are we in?//pb: need a stack!//TODO
 #define SS_DEBUG_SHOW_SDP // not video counter, the draw pointer

@@ -1085,8 +1085,11 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
             case 900:case 901:
             {
               mem_browser *mb=new mem_browser(pc,type_disp_type(LOWORD(wPar)==900 ? DT_MEMORY:DT_INSTRUCTION));
+#if !defined(SS_DEBUG_MOUSE_WHEEL)
+// we don't want to preselect address, we want the wheel to work at once
               SetFocus(GetDlgItem(mb->owner,3));
               SendMessage(GetDlgItem(mb->owner,3),WM_LBUTTONDOWN,0,0);
+#endif
               break;
             }
             case 902:
@@ -1678,7 +1681,7 @@ void DWin_init()
 #if defined(SS_DEBUG_SHOW_SR)
   // show SR in hex as well as bits
   new mr_static("SR","SDP",10,30,DWin,(HMENU)203,
-      (MEM_ADDRESS)&sr,2,MST_REGISTER,true,NULL);
+      (MEM_ADDRESS)&sr,2,MST_REGISTER,false,NULL);//no need to edit this
 
   sr_display=CreateWindowEx(512,"Static","sr display",WS_BORDER | WS_VISIBLE | WS_CHILDWINDOW | SS_NOTIFY,
       30+40,30,200,20,DWin,(HMENU)230,Inst,NULL);
