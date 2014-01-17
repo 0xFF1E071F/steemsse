@@ -1409,6 +1409,46 @@ LRESULT __stdcall mem_browser_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
         }
       }
       return 0;
+
+#if defined(SS_DEBUG_MOUSE_WHEEL)
+/*
+Long requested I think, the mouse wheel will now scroll the memory and
+instruction browsers. Shift or left button command 'scroll page'.
+As an unexpected bonus, it also works in the main Boiler.
+
+http://msdn.microsoft.com/en-us/library/windows/desktop/ms645617(v=vs.85).aspx
+
+"The high-order word indicates the distance the wheel is rotated, expressed
+ in multiples or divisions of WHEEL_DELTA, which is 120. A positive value 
+indicates that the wheel was rotated forward, away from the user; a negative
+ value indicates that the wheel was rotated backward, toward the user."
+
+Note: the macros WHEEL_DELTA,
+fwKeys = GET_KEYSTATE_WPARAM(wParam);
+zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+aren't defined in BCC nor VC6, but they're not necessary
+
+*/
+    case WM_MOUSEWHEEL:
+//      TRACE_OSD("wheel");
+      mb=mem_browser_get_pointer(Win);
+      if (mb->handle!=NULL){
+        int zDelta = (signed)wPar>>16;
+// TRACE_OSD("%d",zDelta);
+        if(wPar&(MK_SHIFT|MK_LBUTTON))
+        {
+          if(zDelta>0)
+            mb->vscroll(-(mb->lb_height)+1);
+          else
+            mb->vscroll((mb->lb_height)-1);
+        }
+        else
+          mb->vscroll(-(zDelta/120));
+        return 0;
+     }
+     break;
+#endif
+
     case WM_PAINT:
       mb=mem_browser_get_pointer(Win);
       if (mb){
