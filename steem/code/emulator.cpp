@@ -861,6 +861,9 @@ void extended_monitor_hack()
       m68k_PUSH_W(0x48); //malloc
 
 //      log_write(HEXSl(pc,6)+EasyStr("Calling Malloc(")+HEXSl((bytes_required+255)&-256,6));
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+      Debug.RecordInterrupt("TRP",1);
+#endif
       m68k_interrupt(os_gemdos_vector);
 //      log_write_stack();
       sr|=SR_IPL_7;

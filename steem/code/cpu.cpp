@@ -1059,6 +1059,9 @@ extern "C" ASMCALL void m68k_trace() //execute instruction with trace bit set
     // instruction but are called reguarly, we don't want to slow things down.
     INSTRUCTION_TIME_ROUND(0); // Round first for interrupts
     INSTRUCTION_TIME_ROUND(34);
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+    Debug.RecordInterrupt("TRACE");
+#endif
     m68k_interrupt(LPEEK(BOMBS_TRACE_EXCEPTION*4));
   }
   ioaccess|=store_ioaccess;
@@ -3707,6 +3710,9 @@ void                              m68k_chk(){
   }else{
     m68k_GET_SOURCE_W;
     INSTRUCTION_TIME(4);
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+    Debug.RecordInterrupt("CHK");
+#endif
     if(r[PARAM_N]&0x8000){
       SR_SET(SR_N);
       m68k_interrupt(LPEEK(BOMBS_CHK*4));
@@ -3787,6 +3793,9 @@ void                              m68k_trap(){
       if (os_xbios_vector==0) if (Vector>=rom_addr) os_xbios_vector=Vector;
       break;
   }
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+  Debug.RecordInterrupt("TRAP",(ir&0xF));
+#endif
   m68k_interrupt(Vector);
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
   INSTRUCTION_TIME(26-4);
@@ -4041,6 +4050,9 @@ void                              m68k_rts(){
 }
 void                              m68k_trapv(){
   if (sr & SR_V){
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+    Debug.RecordInterrupt("TRAPV");
+#endif
     m68k_interrupt(LPEEK(BOMBS_TRAPV*4));
     INSTRUCTION_TIME_ROUND(0); //Round first for interrupts
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
@@ -6996,6 +7008,9 @@ extern "C" void m68k_1010() //line-a
 #else
   INSTRUCTION_TIME_ROUND(34);
 #endif
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+  Debug.RecordInterrupt("LINEA");
+#endif
   m68k_interrupt(LPEEK(BOMBS_LINE_A*4));
   m68k_do_trace_exception=0;
   debug_check_break_on_irq(BREAK_IRQ_LINEA_IDX);
@@ -7039,6 +7054,9 @@ extern "C" void m68k_1111(){  //line-f emulator
 #endif
 #else
   INSTRUCTION_TIME_ROUND(34);
+#endif
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+  Debug.RecordInterrupt("LINEF");
 #endif
   m68k_interrupt(LPEEK(BOMBS_LINE_F*4));
   m68k_do_trace_exception=0;

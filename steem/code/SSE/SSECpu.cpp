@@ -1078,6 +1078,12 @@ void TM68000::m68kReadLFromAddr() {
 // VC6 won't inline this function
 
 void TM68000::SetPC(MEM_ADDRESS ad) {
+
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+  if(ad==rom_addr)
+    Debug.InterruptIdx=0;
+#endif
+
     pc=ad;                               
     pc_high_byte=pc & 0xff000000;     
     pc&=0xffffff;                    
@@ -1343,6 +1349,9 @@ void m68k_exception::crash() { // copied from cpu.cpp and improved
       END_M68K_EXCEPTION
 
       TRACE_LOG("PC = %X\n\n",LPEEK(bombs*4));
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+      Debug.RecordInterrupt("BOMBS",bombs);
+#endif
       SET_PC(LPEEK(bombs*4)); // includes final prefetch
 
       SR_CLEAR(SR_TRACE);
@@ -1693,6 +1702,9 @@ void                              m68k_divu(){
   if (m68k_src_w==0){ // div by 0
     // Clear V flag when dividing by zero. Fixes...?
     SR_CLEAR(SR_V);
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+    Debug.RecordInterrupt("DIV");
+#endif
     m68k_interrupt(LPEEK(BOMBS_DIVISION_BY_ZERO*4));
     INSTRUCTION_TIME_ROUND(0); //Round first for interrupts
     INSTRUCTION_TIME_ROUND(38);
@@ -1729,6 +1741,9 @@ void                              m68k_divs(){
     /* Clear V flag when dividing by zero - Alcatraz Odyssey demo depends
      * on this (actually, it's doing a DIVS).  */
     SR_CLEAR(SR_V);
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+    Debug.RecordInterrupt("DIV");
+#endif
     m68k_interrupt(LPEEK(BOMBS_DIVISION_BY_ZERO*4));
     INSTRUCTION_TIME_ROUND(0); //Round first for interrupts
     INSTRUCTION_TIME_ROUND(38);
