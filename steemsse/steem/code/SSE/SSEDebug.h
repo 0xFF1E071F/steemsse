@@ -63,10 +63,27 @@ struct TDebug {
   void TraceOsd(char *fmt, ...);
   unsigned long OsdTimer;
 #endif
+
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+  enum {MAX_INTERRUPTS=256,DESCRIPTION_LENGTH=8};//
+  struct SInterruptTable {
+    char description[DESCRIPTION_LENGTH]; // eg MFP VBI TRACE...
+    BYTE num; // eg 13 for timer A
+  } InterruptTable[MAX_INTERRUPTS];
+
+  short InterruptIdx;
+  HWND InterruptReportingZone; // record static control handle in Boiler
+  void ClickInterrupt();
+  void RecordInterrupt(char *description, BYTE num=0);
+  void ReportInterrupt();
+  void Rte();
+#endif
+
 #endif//c++
 
-  int logsection_enabled[100]; // we want a double anyway //bool
+  BYTE logsection_enabled[100]; // we want a double anyway //bool
   int LogSection;
+
 
 };
 

@@ -404,6 +404,10 @@ void update_register_display(bool reset_pc_display)
   mr_static_update_all();
   mem_browser_update_all();
 
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+  Debug.ReportInterrupt();
+#endif
+
 /*  for(int n=0;n<MAX_MEMORY_BROWSERS;n++){
     if(m_b[n].active){
       if(m_b[n].disp_type==DT_REGISTERS){
@@ -635,6 +639,11 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
         }else{
 
           switch (id){
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+            case 274:
+              Debug.ClickInterrupt();
+              break;
+#endif
             case 3001:
               new mem_browser(pc,DT_INSTRUCTION);
               break;
@@ -1677,6 +1686,19 @@ void DWin_init()
 
   CreateWindow("Button","Go",WS_VISIBLE | WS_CHILD | BS_CHECKBOX | BS_PUSHLIKE | WS_CLIPSIBLINGS,
       490,26,140,25,DWin,(HMENU)1022,Inst,NULL);
+
+
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+#if defined(SS_DEBUG_SHOW_SDP)
+  x+=80;
+#else
+  x=100;
+#endif
+  Debug.InterruptReportingZone=CreateWindowEx(0,"Static","EXC INFO",
+    WS_VISIBLE | WS_CHILDWINDOW | SS_LEFT | SS_NOTIFY,
+      x,4,80,20,DWin,(HMENU)274,Inst,NULL);
+#endif
+
 
 #if defined(SS_DEBUG_SHOW_SR)
   // show SR in hex as well as bits

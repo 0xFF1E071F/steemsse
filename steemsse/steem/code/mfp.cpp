@@ -601,6 +601,9 @@ We wouldn't do it here
      if (vbl_pending){ //SS IPL4
       if ((sr & SR_IPL)<SR_IPL_4){
         //debug1=ACT;
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+        Debug.RecordInterrupt("VBI");
+#endif
         VBL_INTERRUPT
   ////      if(LPEEK(0x70)!=0xFC06DE) TRACE_LOG("F%d VBI %X\n",FRAME,LPEEK(0x70));
       }
@@ -614,6 +617,9 @@ We wouldn't do it here
         // but the event hasn't fired yet.
         if (int(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl)<scanline_time_in_cpu_cycles_at_start_of_vbl){
           ASSERT(!Blit.HasBus);
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+          Debug.RecordInterrupt("HBI");
+#endif
           HBL_INTERRUPT;
         }
 #if defined(STEVEN_SEAGAL) && defined(SS_INT_HBL) // can happen quite a lot
@@ -713,7 +719,9 @@ void mfp_interrupt(int irq,int when_fired)
 */
 #endif
 
-
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+            Debug.RecordInterrupt("MFP",irq);
+#endif
             m68k_interrupt(LPEEK(vector));
             sr=WORD((sr & (~SR_IPL)) | SR_IPL_6);
             log_to_section(LOGSECTION_INTERRUPTS,EasyStr("  IRQ fired - vector=")+HEXSl(LPEEK(vector),6));

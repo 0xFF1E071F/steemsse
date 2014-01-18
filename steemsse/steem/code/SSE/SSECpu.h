@@ -561,6 +561,11 @@ inline void TM68000::PerformRte() {
     ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE; 
   }
 #endif
+
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+  Debug.Rte();
+#endif
+
 }
 #define M68K_PERFORM_RTE(checkints) M68000.PerformRte()
 

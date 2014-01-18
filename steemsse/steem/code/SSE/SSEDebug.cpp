@@ -79,6 +79,10 @@ TDebug::TDebug() {
   TraceOsd("Debug Build"); // implies clean init
 #endif
 
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+  ZeroMemory(&InterruptTable,sizeof(SInterruptTable));
+#endif
+
 }
 
 
@@ -315,5 +319,69 @@ void TDebug::TraceOsd(char *fmt, ...) {
 }
 #endif
 
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+/*  
+    It tries to figure out which interrupt if any is being
+    executed when the Boiler is stopped.
+    MAIN means the CPU isn't executing an interrupt 
+    OVF means 'Overflow', interrupts keep coming without corresponding
+    RTE. This happens with a lot of programs that directly manipulate the 
+    stack. Even the TOS does it on bus error.
+    That's why Steem's original interrupt_depth variables quickly goes
+    all the way.
+    For this reason, a click on the control will reset it if in
+    overflow. If not, it will show previous interrupt. So much power!
+    TODO: there are ways to check those fake RTS/RTE
+*/
+
+void TDebug::ClickInterrupt() {  // user clicked on control
+  if(InterruptIdx>=MAX_INTERRUPTS)
+    InterruptIdx=0; // user reset
+  else if(InterruptIdx>0)
+    InterruptIdx--; // show previous "interrupted interrupt"
+  ReportInterrupt(); // update display
+}
+
+
+void TDebug::RecordInterrupt(char *description, BYTE num) {
+  InterruptIdx++;
+  if(InterruptIdx<MAX_INTERRUPTS 
+    && (num!=InterruptTable[InterruptIdx-1].num // basic test
+    || strcmp(InterruptTable[InterruptIdx-1].description,description)))
+  {
+    strncpy(InterruptTable[InterruptIdx].description,description,DESCRIPTION_LENGTH);
+    InterruptTable[InterruptIdx].num=num;
+  }
+}
+
+
+void TDebug::ReportInterrupt() {
+  char tmp[20];
+  if(!InterruptIdx)
+    strcpy(tmp,"MAIN");
+  else if(InterruptIdx<MAX_INTERRUPTS)
+    if(InterruptTable[InterruptIdx].num)
+      sprintf(tmp,"%d:%s %d",InterruptIdx,
+        InterruptTable[InterruptIdx].description,
+        InterruptTable[InterruptIdx].num);
+    else
+      sprintf(tmp,"%d:%s",InterruptIdx,
+        InterruptTable[InterruptIdx].description);
+  else
+  {
+    strcpy(tmp,"OVF");//very common
+    //for(int i=0;i<MAX_INTERRUPTS;i++)
+      //TRACE("%d:%s %d\n",i,InterruptTable[i].description,InterruptTable[i].num);
+  }
+  SetWindowText(InterruptReportingZone,tmp);
+}
+
+
+void TDebug::Rte() {
+  if(InterruptIdx>0)
+    InterruptIdx--;
+}
+
+#endif
 
 #endif//#if defined(SS_DEBUG) 

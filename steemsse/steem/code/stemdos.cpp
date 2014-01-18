@@ -1814,7 +1814,9 @@ NOT_DEBUG(inline) void stemdos_trap_1_Pexec_basepage(){
   m68k_PUSH_L(0);
   m68k_PUSH_W(5);
   m68k_PUSH_W(0x4b);
-
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+  Debug.RecordInterrupt("TRP",1);
+#endif
   m68k_interrupt(os_gemdos_vector);             //want to return from this interrupt into GEMDOS
 }
 
@@ -1822,6 +1824,9 @@ NOT_DEBUG(inline) void stemdos_trap_1_Pexec_basepage(){
 NOT_DEBUG(inline) void stemdos_trap_1_Mfree(MEM_ADDRESS ad){
   m68k_PUSH_L(ad);
   m68k_PUSH_W(0x49);
+#if defined(SS_DEBUG_SHOW_INTERRUPT)
+  Debug.RecordInterrupt("TRP",1);
+#endif
   m68k_interrupt(os_gemdos_vector);
 }
 /*
