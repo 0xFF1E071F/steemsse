@@ -388,9 +388,10 @@ Sync is set back to 2 between R2 and R0, this is isn't a line +24
         }
 
 
-#if defined(SS_SHIFTER_UNSTABLE)
+#if defined(SS_SHIFTER_UNSTABLE___)
 /*  Left off eats one preloaded RR, see ST-CNX doc
     We remove 2 in WU2 for Omega, this is certainly not correct TODO
+    v3.6.0, see below and EndHBL()
 */
         if(Preload>0)
         {
@@ -436,6 +437,29 @@ Sync is set back to 2 between R2 and R0, this is isn't a line +24
             shifter_pixel+=-4;
         }
 #endif
+
+/*
+Modest hacks to have DOLB, Omega still working without breaking:
+Dragon, newly added Ventura/Naos and of course Beeshift
+DOLB:
+007 - 000:A0007 000:a5204 016:R0000 376:S0000 388:S0002 500:P1000 512:R0002 512:T10011 512:#0230
+Omega:
+-22 - 000:A0007 000:a0604 008:R00FE 020:R0000 376:S0000 384:S00FE 512:P0707 512:T10011 512:#0230
+*/
+
+#if defined(SS_SHIFTER_UNSTABLE_DOLB)
+        if(Preload && SSE_HACKS_ON && r0cycle==16 && !r2cycle) 
+          ShiftSDP(-2);
+#endif
+
+/*
+#if defined(SS_SHIFTER_UNSTABLE_OMEGA)
+        if(Preload && SSE_HACKS_ON && MMU.WU[WAKE_UP_STATE]==2 && r0cycle==20 && r2cycle==8) 
+          ShiftSDP(0);
+#endif
+*/
+
+
 
 #if defined(SS_SHIFTER_BIG_WOBBLE) && defined(SS_SHIFTER_SDP_WRITE)
         if(SSE_HACKS_ON && (PreviousScanline.Tricks&TRICK_WRITE_SDP_POST_DE)
@@ -723,7 +747,7 @@ STF2:
     ///t=LINECYCLE0+28; //trigger point (works with 26?)
 #if defined(SS_SHIFTER_STATE_MACHINE) // more or less
 
-    ASSERT( !WU_sync_modifier || ST_TYPE!=STE );
+//    ASSERT( !WU_sync_modifier || ST_TYPE!=STE );
 
     t=26+WU_sync_modifier;
 
@@ -1226,7 +1250,7 @@ Panic
     This will load some words into the shifter, the shifter will start displaying
     shifted planes and shifted pixels in low res.
     Because there could be extra SDP shifts when rendering pixel shifts, we
-    need to offset those here. Those hacks aren't important.
+    need to offset those here. Those hacks aren't important. (v3.6.0 removed)
 */
 
 #if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_MED_RES_SCROLLING)
@@ -1241,7 +1265,7 @@ detect unstable: switch MED/LOW - Beeshift
 
   if( WAKE_UP_STATE && ST_TYPE==STF // condition STF for now
     && !(CurrentScanline.Tricks&TRICK_UNSTABLE) 
-    && (PreviousScanline.Tricks&TRICK_STABILISER) // shifter is stable
+    && !Preload // would complicate matters
     && left_border && LINECYCLES>56 && LINECYCLES<372 //'DE'
 #if defined(SS_SHIFTER_HI_RES_SCROLLING)
     && !(CurrentScanline.Tricks&TRICK_0BYTE_LINE)
@@ -1256,7 +1280,8 @@ detect unstable: switch MED/LOW - Beeshift
       int cycles_in_med=r0cycle-r1cycle;
       if(cycles_in_med>0 && cycles_in_med<=20+4) 
       {
-        Preload=((cycles_in_med/4)%4)+4;  // '+4' to make sure >1
+        Preload=((cycles_in_med/4)%4)+4-4;  // '+4' to make sure >1 (3.6.0 no)
+        CurrentScanline.Tricks|=TRICK_UNSTABLE;//don't apply on this line
 //        TRACE_LOG("y%d R1 %d R0 %d cycles in med %d Preload %d\n",scan_y,r1cycle,r0cycle,cycles_in_med,Preload);
       }
     }
@@ -1283,9 +1308,10 @@ detect unstable: switch MED/LOW - Beeshift
         if(cycles_in_high>0 && cycles_in_high<=20+4)
         {
           Preload=((cycles_in_high/4)%4);
+          CurrentScanline.Tricks|=TRICK_UNSTABLE;//don't apply on this line
           if(Preload&1) // if it's 3 or 5
             Preload+=(4-Preload)*2; // swap value
-          Preload+=4; // like for MED, hack for correct SDP shift
+//          Preload+=4; // like for MED, hack for correct SDP shift
 //          TRACE_LOG("y%d R1 %d R0 %d cycles in HI %d Preload %d\n",scan_y,r1cycle,r0cycle,cycles_in_high,Preload);
         }
       }
@@ -1305,18 +1331,20 @@ detect unstable: switch MED/LOW - Beeshift
     DOLB, Omega: 3 words preloaded but it becomes 2 due to left off
     Dragon: 1 word preloaded    
     It could be that both determining preload and using preload are wrong!
+    v3.6.0: it's one word for +26 or 230; ignore when line +2 (TODO)
 */
   
   if( ST_TYPE==STF && WAKE_UP_STATE // 1 & 2
-    && Preload && !(CurrentScanline.Tricks&TRICK_UNSTABLE)
-    && CyclesIn>40   // wait for left-off check (->Preload--, Omega)
-    ) 
+    && Preload
+    && !(CurrentScanline.Tricks&TRICK_UNSTABLE)
+    && !(CurrentScanline.Tricks&TRICK_LINE_PLUS_2) // Beescroll
+    && CyclesIn>56)   // wait for eventual +2
   {
 
     // 1. planes
     int shift_sdp=-(Preload%4)*2; // unique formula
-    if(Preload>1 && shift_sdp) // but...      
-      shift_sdp+=8; // hack!
+//    if(Preload>1 && shift_sdp) // and...      
+  //    shift_sdp+=8; // one hack less!
     ShiftSDP(shift_sdp); // correct plane shift
 
 #if defined(SS_SHIFTER_PANIC) //fun, bad scanlines (unoptimised code!)
@@ -1452,8 +1480,8 @@ detect unstable: switch MED/LOW - Beeshift
 
 #if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_UNSTABLE)
 // wrong, of course, just to have Overdrive menu OK when you come back
-   if(Preload==3)
-      Preload=0;
+//   if(Preload)//==3) //3.6.0: other way now, see EndHBL()
+  //    Preload=0;
 #endif
 
     overscan_add_extra+=-2;
@@ -1635,8 +1663,12 @@ Tests are arranged to be efficient.
 
 #if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_UNSTABLE)
 // wrong, of course, just to have Overdrive menu OK when you come back
-   if(Preload==3)
-      Preload=0;
+// v3.6.0 Ventura/Naos: we see very well that it's wrong
+    //for doc:
+// 50hz 'right off' has no effect on the shifter registers. Two words are
+// fetched from the video RAM, but they're not loaded.
+//   if(Preload==3)
+//      Preload=0;
 #endif
 
 #ifdef SS_DEBUG___
@@ -1664,6 +1696,7 @@ Tests are arranged to be efficient.
     Another stabiliser is MED/LO, it's called 'ULM' because it was used by
     this group.
     This is also handled by this routine, in fact it would even take a R0/R0!
+    v3.6.0: we don't take R0/R0 anymore: Ventura/Naos
 */
 
 #if defined(SS_SHIFTER_TRICKS) && defined(TRICK_STABILISER)
@@ -1671,10 +1704,10 @@ Tests are arranged to be efficient.
   {
 //    ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) ); //asserts
     r2cycle=NextShiftModeChange(432/*,2*/); // Forest STF2
-    if(r2cycle>-1 && r2cycle<460)
+    if(r2cycle>-1 && r2cycle<460 && ShiftModeChangeAtCycle(r2cycle))
     {
       r0cycle=NextShiftModeChange(r2cycle,0);
-      if(r0cycle>-1 && r0cycle<464 ) 
+      if(r0cycle>-1 && r0cycle<464) 
       {
         CurrentScanline.Tricks|=TRICK_STABILISER;
 #if defined(SS_SHIFTER_UNSTABLE)
@@ -2194,30 +2227,37 @@ void TShifter::EndHBL() {
     And why doesn't the nice theory for Dragon work for the main menu, where
     a 'left off' by itself following a stabilised 230byte line seems to cause
     no shift (incorrect display with WU)? We "hacked" it for now.
+    3.6.0
+    In current version those effects work better with WU2.
+    To support both Overdrive/Dragon and Overdrive/Menu, we must compare
+    the cycle when stabiliser is triggered!
+    Preload is 1 for both 186 and 230 byte lines, the right off doesn't
+    count. This simplifies code.
+
+menu, wrong
+003 - 000:A0002 000:a9CE0 004:R0002 012:R0000 376:S0000 384:S0002 448:R0002 460:R0000 512:T2011 512:#0230
+004 - 000:A0002 000:a9DC6 004:R0002 012:R0000 512:T0001 512:#0186 512:L0001
+
+dragon, right
+234 - 000:A0006 000:aD9F2 004:R0002 012:R0000 376:S0000 384:S0002 444:R0002 456:R0000 512:T2011 512:#0230
+235 - 000:A0006 000:aDAD8 004:R0002 012:R0000 512:T0001 512:#0186 512:L0001    
 */
 
   if(WAKE_UP_STATE)/// && ST_TYPE==STF)
   {
-    // Overdrive/Dragon
-    // 235 - 004:R0002 012:R0000 512:T0001 512:#0186
-    // it was a nice theory, obviously wrong, we keep the hack so it runs
-    // see Hackabonds Demo instructions scroller in WS1
-    if((CurrentScanline.Tricks&0xFF)==TRICK_LINE_PLUS_26
+    
+    if(MMU.WU[WAKE_UP_STATE]==2 
+      && (CurrentScanline.Tricks&TRICK_LINE_PLUS_26)
       &&!(CurrentScanline.Tricks&TRICK_STABILISER)
-      &&(PreviousScanline.Tricks&TRICK_STABILISER)
-      && SSE_HACKS_ON && scan_y==235 // hack to target on Dragon
-      //&&(ShiftModeChangeAtCycle(444-512)==2 ) // hack to target on Dragon
+//      &&!((PreviousScanline.Tricks&TRICK_STABILISER)&&PreviousScanline.Bytes==CurrentScanline.Bytes)
+      &&!((PreviousScanline.Tricks&TRICK_STABILISER)&&ShiftModeChangeAtCycle(448-512)==2)
+      &&!(CurrentScanline.Tricks&TRICK_LINE_MINUS_2)
       )
       Preload=1;
-    // Death of the Left Border, Omega Full Overscan
-    else if( (CurrentScanline.Tricks&0xFF)
-      ==(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_44)
-      &&!(CurrentScanline.Tricks&TRICK_STABILISER)) 
-      Preload=3; // becomes 2 at first left off
     else if(CurrentScanline.Cycles==508 && Preload && FetchingLine()
       && FreqAtCycle(0)==60 && FreqAtCycle(464)==60)
       Preload=0; // a full 60hz scanline should reset the shifter
-
+    
 #if defined(SS_SHIFTER_PANIC)
     if(WAKE_UP_STATE==WU_SHIFTER_PANIC 
       && (CurrentScanline.Tricks&TRICK_UNSTABLE))

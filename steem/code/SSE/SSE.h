@@ -949,6 +949,8 @@ and all his silly mods are gone!
 #if SSE_VERSION>353
 //#define SS_SHIFTER_LINE_PLUS_2_ON_PRELOAD3 // DSOS STE
 #endif
+#define SS_SHIFTER_UNSTABLE_DOLB
+#define SS_SHIFTER_UNSTABLE_OMEGA
 #define SS_SHIFTER_HI_RES_SCROLLING // Beeshift2
 #define SS_SHIFTER_MED_RES_SCROLLING // Beeshift
 #define SS_SHIFTER_PANIC // funny effect, interleaved border bands
@@ -996,7 +998,7 @@ and all his silly mods are gone!
 #define SS_SHIFTER_EVENTS // recording all shifter events in a frame
 #if defined(SS_SHIFTER_EVENTS)
 //#define SS_SHIFTER_EVENTS_BLITTER
-#define SS_SHIFTER_EVENTS_PAL // also for palette
+//#define SS_SHIFTER_EVENTS_PAL // also for palette
 //#define SS_SHIFTER_EVENTS_READ_SDP // also for read SDP
 #define SS_SHIFTER_EVENTS_BYTES // scanline length
 #define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation

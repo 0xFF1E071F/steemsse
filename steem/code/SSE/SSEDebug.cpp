@@ -51,7 +51,7 @@ TDebug::TDebug() {
 // additions
   logsection_enabled[ LOGSECTION_FDC_BYTES ] = 0;
   logsection_enabled[ LOGSECTION_IPF_LOCK_INFO ] = 0; //remove option
-  logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 1;
+  logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 0;
 #endif
   logsection_enabled[ LOGSECTION_OPTIONS ] = 1; // no boiler control
 #endif
