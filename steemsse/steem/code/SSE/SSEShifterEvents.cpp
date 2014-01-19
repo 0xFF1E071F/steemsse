@@ -68,8 +68,7 @@ int TVideoEvents::Report() {
     char stime[9];
     _strdate( sdate );
     _strtime( stime );
-    fprintf(fp,"Steem shifter events report - %s -%s\nFrame freq %d res %d %s WS%d\n",
-      sdate,stime,shifter_freq_at_start_of_vbl,screen_res,
+    fprintf(fp,"Steem shifter events report - %s -%s \n%s WS%d\n",sdate,stime,
 #if defined(SS_STF)
       st_model_name[ST_TYPE]
 #else
@@ -81,8 +80,8 @@ int TVideoEvents::Report() {
     ,0;
 #endif
 #else
-    fprintf(fp,"Steem shifter events report - Frame freq %d res %d %s WS%d\n",
-      shifter_freq_at_start_of_vbl,screen_res,st_model_name[ST_TYPE],MMU.WS[WAKE_UP_STATE]);
+    fprintf(fp,"Steem shifter events report - %s WS%d\n",
+      st_model_name[ST_TYPE],MMU.WS[WAKE_UP_STATE]);
 #endif
     if(FloppyDrive[0].DiskInDrive())
       fprintf(fp,"Disk A: %s",FloppyDrive[0].DiskName.c_str()); 
@@ -126,7 +125,6 @@ void TVideoEvents::ReportLine() {
         TRACE(" %03d:%c%04X",m_VideoEvent[i].Cycle,m_VideoEvent[i].Type,m_VideoEvent[i].Value);
   }
   TRACE("\n");
-
 }
 
 
