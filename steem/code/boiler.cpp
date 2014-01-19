@@ -1624,29 +1624,6 @@ void DWin_init()
   log("STARTUP: Creating Child Windows");
 
 
-#if defined(SS_DEBUG_SHOW_SDP)
-  // we also need to move other boxes around
-  x=10;
-  new mr_static(/*label*/"PC",/*name*/"pc",/*x*/x,/*y*/1,
-      /*owner*/DWin,/*id*/(HMENU)201,/*pointer*/(MEM_ADDRESS)&pc,
-      /*bytes*/ 3,/*regflag*/ MST_REGISTER, /*editflag*/true,
-      /*mem_browser to update*/&m_b_mem_disa);
-  x+=70;
-#if !defined(SS_DEBUG_MOVE_OTHER_SP)
-  lpms_other_sp=new mr_static("other sp","other sp",x,1,
-      DWin,(HMENU)203,(MEM_ADDRESS)&other_sp,3,MST_REGISTER,
-      true,NULL);
-  x+=75;
-#endif
-  new mr_static("screen","screen address",x,1,DWin,(HMENU)294,(MEM_ADDRESS)&xbios2,3,MST_REGISTER,true,NULL);
-  x+=80;
-  // we don't compute the real video counter, for now because it's also 
-  // interesting to follow rendering
-  new mr_static("SDP","SDP",x,1,DWin,(HMENU)203,
-      (MEM_ADDRESS)&shifter_draw_pointer,3,MST_REGISTER,false/*edit*/,NULL);
-  //x+=75;
-
-#else
 
   new mr_static(/*label*/"pc=",/*name*/"pc",/*x*/10,/*y*/1,
       /*owner*/DWin,/*id*/(HMENU)201,/*pointer*/(MEM_ADDRESS)&pc,
@@ -1658,7 +1635,6 @@ void DWin_init()
   lpms_other_sp=new mr_static("other sp=","other sp",110,1,
       DWin,(HMENU)203,(MEM_ADDRESS)&other_sp,3,MST_REGISTER,
       true,NULL);
-#endif
 #endif
   DWin_trace_button=CreateWindow("Button","Trace Into",WS_VISIBLE |
       WS_CHILD | BS_CHECKBOX | BS_PUSHLIKE,330,1,140,25,DWin,(HMENU)1002,Inst,NULL);
@@ -1689,11 +1665,7 @@ void DWin_init()
 
 
 #if defined(SS_DEBUG_SHOW_INTERRUPT)
-#if defined(SS_DEBUG_SHOW_SDP)
-  x+=80;
-#else
   x=100;
-#endif
   Debug.InterruptReportingZone=CreateWindowEx(0,"Static","EXC INFO",
     WS_VISIBLE | WS_CHILDWINDOW | SS_LEFT | SS_NOTIFY,
       x,4,80,20,DWin,(HMENU)274,Inst,NULL);

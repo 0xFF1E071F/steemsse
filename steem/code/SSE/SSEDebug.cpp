@@ -339,12 +339,17 @@ void TDebug::ClickInterrupt() {  // user clicked on control
     InterruptIdx=0; // user reset
   else if(InterruptIdx>0)
     InterruptIdx--; // show previous "interrupted interrupt"
+  ASSERT( InterruptIdx>=0 );
   ReportInterrupt(); // update display
 }
 
 
+#include <limits.h>
+
 void TDebug::RecordInterrupt(char *description, BYTE num) {
-  InterruptIdx++;
+  if(InterruptIdx<SHRT_MAX) // bad crash else, eg Nitzer Ebb
+    InterruptIdx++;
+  ASSERT( InterruptIdx>0 );
   if(InterruptIdx<MAX_INTERRUPTS 
     && (num!=InterruptTable[InterruptIdx-1].num // basic test
     || strcmp(InterruptTable[InterruptIdx-1].description,description)))
@@ -360,6 +365,8 @@ void TDebug::ReportInterrupt() {
   if(!InterruptIdx)
     strcpy(tmp,"MAIN");
   else if(InterruptIdx<MAX_INTERRUPTS)
+  {
+    ASSERT( InterruptIdx>0 );
     if(InterruptTable[InterruptIdx].num)
       sprintf(tmp,"%d:%s %d",InterruptIdx,
         InterruptTable[InterruptIdx].description,
@@ -367,6 +374,7 @@ void TDebug::ReportInterrupt() {
     else
       sprintf(tmp,"%d:%s",InterruptIdx,
         InterruptTable[InterruptIdx].description);
+  }
   else
   {
     strcpy(tmp,"OVF");//very common

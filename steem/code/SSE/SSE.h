@@ -439,8 +439,7 @@ and all his silly mods are gone!
 #define SS_DEBUG_MOUSE_WHEEL // yeah!
 #define SS_DEBUG_MOVE_OTHER_SP
 #define SS_DEBUG_SHOW_INTERRUPT // yeah!
-//#define SS_DEBUG_SHOW_SDP // imbecile, it was already there TODO remove
-#define SS_DEBUG_SHOW_SR // HEX, not just the flags
+#define SS_DEBUG_SHOW_SR // in HEX on the left of bit flags
 #define SS_DEBUG_TIMER_B // instead of 0
 #define SS_DEBUG_WIPE_TRACE // as logfile
 #endif

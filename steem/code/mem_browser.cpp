@@ -63,7 +63,11 @@ void mem_browser::new_window(MEM_ADDRESS address,type_disp_type new_disp_type)
           Title="FDC (WD-1772) + DMA";
           break;
         case IOLIST_PSEUDO_AD_IKBD:
+#if defined(SS_IKBD_6301) 
+          Title="IKBD (fake only)";
+#else
           Title="IKBD";
+#endif
           break;
       }
     }else if (new_disp_type==DT_REGISTERS){

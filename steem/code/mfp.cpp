@@ -553,8 +553,12 @@ void ASMCALL check_for_interrupts_pending()
     There's still something missing (Audio Artistic Demo).
     + it makes the plasma in Sinfull Sinuses jerky -> restrict to irq 6 (ACIA) 
     as a quick fix so that V8MS still works
+    This should be further reviewed, when irq isn't 6 a lot of programs are
+    broken. We also protect this with the Hacks option (even if for ACIA the 
+    risks seem to be limited)
 */
-        if(irq==6 && ACT-mfp_time_of_set_pending[irq]<4 && ACT-mfp_time_of_set_pending[irq]>=0)
+        if(irq==6 && SSE_HACKS_ON
+          && ACT-mfp_time_of_set_pending[irq]<4 && ACT-mfp_time_of_set_pending[irq]>=0)
         {
           TRACE_LOG("IRQ %d set pending %d cycles ago\n",irq,ACT-mfp_time_of_set_pending[irq]);
           continue;  
