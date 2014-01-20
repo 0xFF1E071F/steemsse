@@ -394,9 +394,14 @@ and all his silly mods are gone!
 #endif//prefetch
 
 #if defined(SS_CPU_ROUNDING)
+
+#define SS_CPU_ROUNDING_ADD_L // EA = -(An)
+#define SS_CPU_ROUNDING_ADDA_L // EA = -(An)
+
 //#define SS_CPU_ROUNDING_SOURCE_100_B // -(An)
 //#define SS_CPU_ROUNDING_SOURCE_100_W // -(An): no
-#define SS_CPU_ROUNDING_SOURCE_100_L // -(An)
+//#define SS_CPU_ROUNDING_SOURCE_100_L // -(An): no!
+
 #endif//rounding
 
 #define SS_CPU_LINE_F // for interrupt depth counter
@@ -430,6 +435,7 @@ and all his silly mods are gone!
 
 // boiler
 #if defined(DEBUG_BUILD) //TODO add other mods here
+#define SS_DEBUG_BROWSER_VECTORS
 #define SS_DEBUG_CLIPBOARD // right-click on 'dump' to copy then paste
 //#define SS_DEBUG_CPU_LOG_NO_STOP // never stop
 #define SS_DEBUG_CPU_TRACE_NO_STOP // depends on 'suspend logging'

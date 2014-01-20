@@ -174,9 +174,11 @@ void m68k_get_source_011_l(){ // .L (An)+
 
 /*  SS_CPU_ROUNDING_SOURCE_100:
     We don't round because the instruction by itself takes 6/10 cycles.
-    Fixes Cernit Trandafir demo scren #2 + the similar Summer Delight #5, #7
-    v3.6.0: .W -(An) mod breaks Ishar 3 cracktro -> only for .L now
-    (mentioned demos still OK)
+    Fixes Cernit Trandafir demo scren #2 + the similar Summer Delights #5, #7
+    v3.6.0: this "fix" was bad, the .W version breaks Ishar 3 cracktro and
+    the .L version breaks Fullparts (HMD).
+    We fall back on the specific fixes on ADDL.L -(An),D and ADDA.L -(An),A
+    (see SS_CPU_ROUNDING_ADD_L, SS_CPU_ROUNDING_ADDA_L )
     PC: +2 as first step for .B,.W
 */
 
@@ -222,7 +224,10 @@ void m68k_get_source_100_w(){ // .W -(An)
 
 
 void m68k_get_source_100_l(){ // .L -(An)
-
+/*
+breaks HMD Fullparts -> gotta be more specific in the fix
+for Cernit
+*/
 #if defined(SS_CPU_ROUNDING_SOURCE_100_L)
   INSTRUCTION_TIME(10);
 #else
