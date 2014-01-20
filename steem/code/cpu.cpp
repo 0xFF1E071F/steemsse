@@ -5573,7 +5573,11 @@ void                             m68k_add_l_to_dN(){ // add.l ea,dn or adda.l ea
 
   m68k_GET_SOURCE_L;   //A is allowed
   if(SOURCE_IS_REGISTER_OR_IMMEDIATE){INSTRUCTION_TIME(4);}
-  else {INSTRUCTION_TIME(2);
+  else {
+#if defined(SS_CPU_ROUNDING_ADD_L) // EA = -(An) Cernit Trandafir #2 right border
+    if((ir&BITS_543)!=BITS_543_100)
+#endif
+    INSTRUCTION_TIME(2);
   }
   m68k_dest=&r[PARAM_N];
   m68k_old_dest=m68k_DEST_L;
@@ -5800,6 +5804,27 @@ void                              m68k_add_l_from_dN(){
   }
   INSTRUCTION_TIME_ROUND(0); //SS?
 }
+
+/*
+------------------------------------------------------------------------------- 
+                  |    Exec Time    |               Data Bus Usage              
+    ADDA, SUBA    |  INSTR     EA   |  1st OP (ea)  |          INSTR            
+------------------+-----------------+---------------+-------------------------- 
+<ea>,An :         |                 |               |
+
+  .L :            |                 |               |
+    Dn            |  8(1/0)  0(0/0) |               |               np       nn 
+    An            |  8(1/0)  0(0/0) |               |               np       nn 
+    (An)          |  6(1/0)  8(2/0) |         nR nr |               np       n  
+    (An)+         |  6(1/0)  8(2/0) |         nR nr |               np       n  
+    -(An)         |  6(1/0) 10(2/0) | n       nR nr |               np       n  
+    (d16,An)      |  6(1/0) 12(3/0) |      np nR nr |               np       n  
+    (d8,An,Xn)    |  6(1/0) 14(3/0) | n    np nR nr |               np       n  
+    (xxx).W       |  6(1/0) 12(3/0) |      np nR nr |               np       n  
+    (xxx).L       |  6(1/0) 16(4/0) |   np np nR nr |               np       n  
+    #<data>       |  8(1/0)  8(2/0) |   np np       |               np       nn 
+*/
+
 void                             m68k_adda_l(){
 #if !defined(SS_CPU_LINE_D_TIMINGS)
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
@@ -5822,6 +5847,9 @@ void                             m68k_adda_l(){
   if (SOURCE_IS_REGISTER_OR_IMMEDIATE){
     INSTRUCTION_TIME(4);
   }else{
+#if defined(SS_CPU_ROUNDING_ADDA_L) // EA = -(An) Cernit Trandafir and Summer Delights
+    if((ir&BITS_543)!=BITS_543_100)
+#endif
     INSTRUCTION_TIME(2);
   }
 

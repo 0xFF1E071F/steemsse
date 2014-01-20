@@ -133,8 +133,8 @@ int TVideoEvents::Vbl() {
   if(Debug.ShifterTricks)
   {
 #define LOGSECTION LOGSECTION_VIDEO
-//    TRACE_LOG("VBL %d shifter tricks %X\n",nVbl,Debug.ShifterTricks);
-    TRACE_LOG("VBL %d shifter tricks %X xbios2 %X\n",FRAME,Debug.ShifterTricks,xbios2);
+    TRACE_LOG("VBL %d shifter tricks %X\n",nVbl,Debug.ShifterTricks);
+//    TRACE_LOG("VBL %d shifter tricks %X xbios2 %X\n",FRAME,Debug.ShifterTricks,xbios2);
     if(TRACE_ENABLED) 
       TRACE_OSD("%X",Debug.ShifterTricks);
     Debug.ShifterTricks=0;

@@ -1144,6 +1144,13 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               pasti->DlgStatus(DWin);
               break;
 #endif
+
+#if defined(SS_DEBUG_BROWSER_VECTORS)
+            case 911:
+              new mem_browser(0x000008,DT_MEMORY);
+              break;
+#endif
+
             case 1022:
             {
               DWORD dat=CBGetSelectedItemData(GetDlgItem(Win,1020));
@@ -1470,6 +1477,9 @@ void DWin_init()
   AppendMenu(mem_browser_menu,MF_STRING,900,"New &Memory Browser");
   AppendMenu(mem_browser_menu,MF_STRING,901,"New &Instruction Browser");
   AppendMenu(mem_browser_menu,MF_STRING,902,"New &Register Browser");
+#if defined(SS_DEBUG_BROWSER_VECTORS)
+  AppendMenu(mem_browser_menu,MF_STRING,911,"New &Vectors Browser");
+#endif
   AppendMenu(mem_browser_menu,MF_STRING,903,"New &PSG Browser");
   AppendMenu(mem_browser_menu,MF_STRING,904,"New M&FP Browser");
   AppendMenu(mem_browser_menu,MF_STRING,906,"New &Text Browser");
