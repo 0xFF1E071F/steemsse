@@ -333,6 +333,14 @@ Sync is set back to 2 between R2 and R0, this is isn't a line +24
         TrickExecuted|=TRICK_LINE_PLUS_20;
 #if defined(SS_SHIFTER_LINE_PLUS_20_SHIFT)
         HblPixelShift=-8; // fixes Riverside shift
+
+#if defined(SS_VID_BORDERS_416_NO_SHIFT)
+/*  bugfix v3.6.0 see below for line +26, it's the same problem
+*/
+        if(SSE_HACKS_ON&&SideBorderSize==VERY_LARGE_BORDER_SIDE)
+          HblPixelShift+=4;
+#endif
+
         if(SideBorderSize!=ORIGINAL_BORDER_SIDE)
           ShiftSDP(-8);
 #endif
@@ -469,6 +477,19 @@ Omega:
 #endif
           ) 
           shifter_draw_pointer+=-4; // fixes Big Wobble, see SSEShifter.h
+#endif
+
+#if defined(SS_SHIFTER_XMAS2004)
+/*  Those are just hacks, as ususal for those cases, but they correct
+    the last screen of XMAS 2004. TODO: a nice theory...
+*/
+        if(SSE_HACKS_ON && (PreviousScanline.Tricks&TRICK_WRITE_SDP_POST_DE)
+          && r0cycle==16 && !HSCROLL && LINEWID)
+          shifter_draw_pointer+=4;
+
+        if(SSE_HACKS_ON && (PreviousScanline.Tricks&TRICK_WRITE_SDP_POST_DE)
+          && r0cycle==16 && HSCROLL && LINEWID)
+          shifter_draw_pointer+=-2;
 #endif
 
 #if defined(SS_SHIFTER_SCHNUSDIE) && defined(SS_SHIFTER_TRICKS)
