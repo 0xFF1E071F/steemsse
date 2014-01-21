@@ -784,10 +784,25 @@ This address is being used to feed the National LMC both address and data
  two bits of the 11 bit package need to be a "10" to address the LMC1992. 
 */
           case 0xff8922: // Set high byte of MicroWire_Data
+#if defined(SS_SOUND_MICROWIRE_WRITE_LATENCY)
+/*
+
+ The mask register must be written before the data register. Sending commences 
+ when the data register is written and takes approximately 16 psec. Subsequent 
+ writes to the data and mask registers are blocked until sending is complete. 
+*/
+            if(ACT-MicroWire_StartTime<MICROWIRE_LATENCY_CYCLES) 
+              break; // fixes XMas 2004 scroller
+#endif
             MicroWire_Data=MAKEWORD(LOBYTE(MicroWire_Data),io_src_b);
             break;
           case 0xff8923: // Set low byte of MicroWire_Data
+#if defined(SS_SOUND_MICROWIRE_WRITE_LATENCY)
+            if(ACT-MicroWire_StartTime<MICROWIRE_LATENCY_CYCLES) 
+              break;
+#endif
           {
+
             MicroWire_Data=MAKEWORD(io_src_b,HIBYTE(MicroWire_Data));
             MicroWire_StartTime=ABSOLUTE_CPU_TIME;
             int dat=MicroWire_Data & MicroWire_Mask;
@@ -959,9 +974,17 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
  feature 11 "1"s and 5 "0"s.
 */
           case 0xff8924:  // Set high byte of MicroWire_Mask
+#if defined(SS_SOUND_MICROWIRE_WRITE_LATENCY)
+            if(ACT-MicroWire_StartTime<MICROWIRE_LATENCY_CYCLES) 
+              break;
+#endif
             MicroWire_Mask=MAKEWORD(LOBYTE(MicroWire_Mask),io_src_b);
             break;
           case 0xff8925:  // Set low byte of MicroWire_Mask
+#if defined(SS_SOUND_MICROWIRE_WRITE_LATENCY)
+            if(ACT-MicroWire_StartTime<MICROWIRE_LATENCY_CYCLES) 
+              break; // fixes XMas 2004 scroller
+#endif
             MicroWire_Mask=MAKEWORD(io_src_b,HIBYTE(MicroWire_Mask));
             break;
           case 0xFF8902:

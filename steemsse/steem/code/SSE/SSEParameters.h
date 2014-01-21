@@ -424,6 +424,10 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define SS_SOUND_FILTER_STF_DV (v)//((*source_p+dv)/2)
 #endif
 
+#if defined(SS_SOUND_MICROWIRE_WRITE_LATENCY)
+// to make XMAS 2004 scroller work, should it be lower?
+#define MICROWIRE_LATENCY_CYCLES (128+16)
+#endif
 
 /////////
 // STF //

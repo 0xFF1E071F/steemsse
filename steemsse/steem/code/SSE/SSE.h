@@ -997,6 +997,7 @@ and all his silly mods are gone!
 #define SS_SHIFTER_SCHNUSDIE // Reality is a Lie/Schnusdie overscan logo
 #define SS_SHIFTER_TCB // Swedish New Year Demo/TCB SDP (60hz)
 #define SS_SHIFTER_TEKILA // Delirious 4/Tekila
+#define SS_SHIFTER_XMAS2004 // XMas 2004 by Paradox shift
 #endif
 
 #if defined(SS_DEBUG) 
@@ -1039,6 +1040,7 @@ and all his silly mods are gone!
 //#define SS_SOUND_LOW_PASS_FILTER  // Float exceptions, no thanks
 
 #define SS_SOUND_MICROWIRE // volume, balance, bass & treble, primitive DSP
+#define SS_SOUND_MICROWIRE_WRITE_LATENCY // as documented
 #define SS_SOUND_NO_EXTRA_PER_VBL //compensating hack? changes what?
 
 #define SS_SOUND_OPTIMISE
