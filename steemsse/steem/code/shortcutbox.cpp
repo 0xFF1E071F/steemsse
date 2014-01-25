@@ -103,6 +103,12 @@ const char *ShortcutNames[NUM_SHORTCUTS*2]=
 #ifdef DEBUG_BUILD
   "Trace Into",(char*)200,"Step Over",(char*)203,"Run to/for",(char*)204,
   "Run to RTE",(char*)201,"Toggle Suspend Logging",(char*)202,
+#if defined(SS_DEBUG_RUN_TO_RTS)
+  "Run to RTS",(char*)205,
+#endif
+#if defined(SS_DEBUG_BLAZING_STEP_OVER)
+  "Quick Step Over",(char*)206,
+#endif
 #endif
   "Press ST Key ->",(char*)CUT_PRESSKEY,"Type ST Character ->",(char*)CUT_PRESSCHAR,
 
@@ -317,6 +323,9 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
   }
   switch (Inf.Action){
     case 20:case 21:case 34:case 35:case 36:case 37:case 43:
+#if defined(SS_DEBUG_BLAZING_STEP_OVER)
+    case 206: // don't press key for each NOP: key repeat
+#endif
       break;
     default:
       if (Inf.OldDown) return;
@@ -669,6 +678,9 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       }
       break;
     case 203: // Step Over
+#if defined(SS_DEBUG_BLAZING_STEP_OVER)
+    case 206: // Quick Step Over
+#endif
       if (runstate!=RUNSTATE_RUNNING || GetForegroundWindow()!=StemWin){
         PostMessage(DWin,WM_COMMAND,MAKEWPARAM(1003,BN_CLICKED),0);
       }
@@ -688,6 +700,14 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
         PostMessage(DWin,WM_COMMAND,MAKEWPARAM(1022,BN_CLICKED),0);
       }
       break;
+#if defined(SS_DEBUG_RUN_TO_RTS)
+    case 205: // Run to RTS
+      if (runstate!=RUNSTATE_RUNNING || GetForegroundWindow()!=StemWin){
+        PostMessage(DWin,WM_COMMAND,MAKEWPARAM(1015,BN_CLICKED),0);
+      }
+      break;
+#endif
+
 #endif
   }
 }

@@ -1887,6 +1887,10 @@ void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
 
 void psg_write_buffer(int abc,DWORD to_t)
 {
+#if defined(SS_DEBUG_MUTE_PSG_CHANNEL)
+  if( (1<<abc) & Debug.PsgMask) 
+    return; // skip this channel
+#endif
   //buffer starts at time time_of_last_vbl
   //we've written up to psg_buf_pointer[abc]
   //so start at pointer and write to to_t,

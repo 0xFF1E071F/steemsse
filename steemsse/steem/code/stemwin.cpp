@@ -670,12 +670,16 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 /*  When emulation is stopped, right click in window will tell which
     scanline we're at.
     To do this we use the "status bar".
-    We assume double height, not max display, borders on, we don't compute this.
+    We assume double height, we don't compute this.
     While we're at it, we also report guessed X
 */
           else if(Mess==WM_RBUTTONDOWN)
           {
-            int guessed_scan_y=(HIWORD(lPar)-MENUHEIGHT)/2-30;
+            int guessed_scan_y=(HIWORD(lPar)-MENUHEIGHT)-1;
+            if(1)
+              guessed_scan_y/=2;
+            if(border)
+              guessed_scan_y-=BORDER_TOP;
             int guessed_x=LOWORD(lPar)/2-SideBorderSizeWin;
 #if defined(SS_VAR_STATUS_STRING)
             HWND status_bar_win=GetDlgItem(StemWin,120); // get handle

@@ -28,6 +28,9 @@ EXT WORD tos_version;
 #define ON_RTE_EMHACK 3
 #define ON_RTE_DONE_MALLOC_FOR_EM 4
 #define ON_RTE_STOP 400
+#if defined(SS_DEBUG_RUN_TO_RTS)
+#define ON_RTS_STOP 401
+#endif
 
 #if defined(SS_CPU_LINE_F)
 #define ON_RTE_LINE_F 5

@@ -23,6 +23,11 @@ HMENU insp_menu=NULL;
 HMENU mem_browser_menu,history_menu,logsection_menu;
 HMENU menu1;
 HMENU boiler_op_menu,shift_screen_menu;
+
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+HMENU sse_menu;
+#endif
+
 HWND sr_display,DWin_edit;
 mr_static *lpms_other_sp;
 HWND DWin_trace_button,DWin_trace_over_button,DWin_run_button;
@@ -404,11 +409,15 @@ void update_register_display(bool reset_pc_display)
   mr_static_update_all();
   mem_browser_update_all();
 
+#if defined(SS_DEBUG_TIMERS_ACTIVE)
+  InvalidateRect( HWND(DWin_timings_scroller),NULL,0 );
+#endif
+
 #if defined(SS_DEBUG_SHOW_INTERRUPT)
   Debug.ReportInterrupt();
 #endif
 
-/*  for(int n=0;n<MAX_MEMORY_BROWSERS;n++){
+/*  for(int n=0;n<MAX_MEMORY_BROWSERS;n++){//SS commented out by Steem authors
     if(m_b[n].active){
       if(m_b[n].disp_type==DT_REGISTERS){
         mem_browser_update(&(m_b[n]));
@@ -490,8 +499,34 @@ long __stdcall sr_display_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 //---------------------------------------------------------------------------
 LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 {
-	if (Win==HiddenParent) return DefWindowProc(Win,Mess,wPar,lPar);
-	switch (Mess){
+  if (Win==HiddenParent) return DefWindowProc(Win,Mess,wPar,lPar);
+  switch (Mess){
+
+#if defined(SS_DEBUG_TIMERS_ACTIVE)
+//http://msdn.microsoft.com/en-us/library/windows/desktop/bb787524(v=vs.85).aspx
+    case WM_CTLCOLORSTATIC:
+    {
+      // reverse video timers in use
+      MFP_CALC_INTERRUPTS_ENABLED; //call macro first
+      for(int n=0;n<4;n++)
+      {
+        bool enabled=  
+          mfp_interrupt_enabled[mfp_timer_irq[n]] //control register
+          && ((mfp_get_timer_control_register(n) & 7)&&n!=1 //timers A, C, D
+          || n==1 && (mfp_get_timer_control_register(n) & 8)); //event count B
+
+        if(enabled && Debug.boiler_timer_hwnd[n]==(HWND)lPar)
+        { // from the example
+          HDC hdcStatic = (HDC) wPar;
+          SetTextColor(hdcStatic, RGB(255,255,255));
+          SetBkColor(hdcStatic, RGB(0,0,0));
+          return (INT_PTR) CreateSolidBrush(RGB(0,0,0));
+        }
+      }
+      break; 
+    } 
+#endif
+
     case WM_SIZE:
       MoveWindow(DWin_trace_button,340,1,(LOWORD(lPar)-350)/4 - 5,27,true);
       MoveWindow(DWin_trace_over_button,340+(LOWORD(lPar)-350)/4,1,(LOWORD(lPar)-350)/4 - 5,27,true);
@@ -938,17 +973,39 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 #if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
             case 1517: // Output TRACE to file
               USE_TRACE_FILE=!USE_TRACE_FILE;
-              CheckMenuItem(boiler_op_menu,1517,
+              CheckMenuItem(sse_menu,1517,
                 MF_BYCOMMAND|((int)(USE_TRACE_FILE)
                 ?MF_CHECKED:MF_UNCHECKED));
               break;
             case 1518: // Limit TRACE file size
               TRACE_FILE_REWIND=!TRACE_FILE_REWIND;
-              CheckMenuItem(boiler_op_menu,1518,
+              CheckMenuItem(sse_menu,1518,
                 MF_BYCOMMAND|((int)(TRACE_FILE_REWIND)
                 ? MF_CHECKED : MF_UNCHECKED));
               break;
 #endif
+
+#if defined(SS_DEBUG_MUTE_PSG_CHANNEL)
+/*
+Toggling a bit
+
+The XOR operator (^) can be used to toggle a bit.
+number ^= 1 << x;
+
+This isn't saved through the sessions
+*/
+            case 1519: // mute PSG c (?)
+            case 1520: //b
+            case 1521: //a
+              Debug.PsgMask ^= 1 << (1521-id);
+
+              CheckMenuItem(sse_menu,id,
+                MF_BYCOMMAND|((int)( Debug.PsgMask & 1 << (1521-id)) 
+                  ? MF_CHECKED:MF_UNCHECKED));
+
+              break;
+#endif
+
             case 1780: //turn screen red
             {
               MEM_ADDRESS ad=xbios2;
@@ -1011,7 +1068,16 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               }
               break;
             }
-// SS TODO run to RTS
+#if defined(SS_DEBUG_RUN_TO_RTS)
+            case 1015:  //run to rts
+            {
+              if (runstate==RUNSTATE_STOPPED){
+                on_rte=ON_RTS_STOP;
+                PostRunMessage();
+              }
+              break;
+            }
+#endif
             case 1100:  //clear all breakpoints
               for (int i=0;i<debug_ads.NumItems;i++){
                 if (debug_ads[i].bwr & BIT_0){
@@ -1151,6 +1217,18 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               break;
 #endif
 
+#if defined(SS_DEBUG_BROWSER_SHIFTER)
+            case 912:
+              new mem_browser(0xFF8240,DT_MEMORY);
+              break;
+#endif
+
+#if defined(SS_DEBUG_BROWSER_DMASOUND)
+            case 913:
+              new mem_browser(0xFF8900,DT_MEMORY);
+              break;
+#endif
+
             case 1022:
             {
               DWORD dat=CBGetSelectedItemData(GetDlgItem(Win,1020));
@@ -1221,6 +1299,17 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 #if USE_PASTI
         if (hPasti) items=14;
 #endif
+
+#if defined(SS_DEBUG_BROWSER_DMASOUND)
+        items++;
+#endif
+#if defined(SS_DEBUG_BROWSER_SHIFTER)
+        items++;
+#endif
+#if defined(SS_DEBUG_BROWSER_VECTORS)
+        items++;
+#endif
+
         for (int i=0;i<n-items;i++){
           DeleteMenu(mem_browser_menu,items,MF_BYPOSITION);
         }
@@ -1446,7 +1535,9 @@ void DWin_init()
   AppendMenu(menu1,MF_STRING,1002,"&Trace");
   AppendMenu(menu1,MF_STRING,1010,"&Run");
   AppendMenu(menu1,MF_STRING,1011,"Run to RT&E");
-
+#if defined(SS_DEBUG_RUN_TO_RTS)
+  AppendMenu(menu1,MF_STRING,1015,"Run to RTS");
+#endif
   AppendMenu(menu1,MF_STRING|MF_SEPARATOR,0,"-");
   AppendMenu(menu1,MF_STRING,1004,"&Cold Reset");
 
@@ -1480,6 +1571,12 @@ void DWin_init()
 #if defined(SS_DEBUG_BROWSER_VECTORS)
   AppendMenu(mem_browser_menu,MF_STRING,911,"New &Vectors Browser");
 #endif
+#if defined(SS_DEBUG_BROWSER_SHIFTER)
+  AppendMenu(mem_browser_menu,MF_STRING,912,"New &Shifter Browser");
+#endif
+#if defined(SS_DEBUG_BROWSER_DMASOUND)
+  AppendMenu(mem_browser_menu,MF_STRING,913,"New &DMA Sound Browser");
+#endif
   AppendMenu(mem_browser_menu,MF_STRING,903,"New &PSG Browser");
   AppendMenu(mem_browser_menu,MF_STRING,904,"New M&FP Browser");
   AppendMenu(mem_browser_menu,MF_STRING,906,"New &Text Browser");
@@ -1496,6 +1593,7 @@ void DWin_init()
                             907,"Put Browsers On Taskbar");
   AppendMenu(mem_browser_menu,MF_STRING|MF_SEPARATOR,0,NULL);
   AppendMenu(mem_browser_menu,MF_STRING,905,"&Close All");
+
   log("STARTUP: mem_browser menu done");
 
   history_menu=CreatePopupMenu();
@@ -1543,12 +1641,31 @@ void DWin_init()
   AppendMenu(boiler_op_menu,MF_STRING | MF_CHECKED,1514,"Show trace window");
   AppendMenu(boiler_op_menu,MF_STRING,1515,"Monospaced disassembly");
   AppendMenu(boiler_op_menu,MF_STRING,1516,"Uppercase disassembly");
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
-  AppendMenu(boiler_op_menu,MF_STRING,1517,"Output TRACE to file");
-  AppendMenu(boiler_op_menu,MF_STRING,1518,"Limit TRACE file size");
-#endif
+
+
+
 //  AppendMenu(boiler_op_menu,MF_STRING|MF_SEPARATOR,0,"-");
   AppendMenu(menu,MF_STRING|MF_POPUP,(UINT)boiler_op_menu,"&Options");
+
+
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+  sse_menu=CreatePopupMenu();
+  AppendMenu(menu,MF_STRING | MF_POPUP,(UINT)sse_menu,"&SSE");
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+ // AppendMenu(boiler_op_menu,MF_STRING|MF_SEPARATOR,0,NULL);
+  AppendMenu(sse_menu,MF_STRING,1517,"Output TRACE to file");
+  AppendMenu(sse_menu,MF_STRING,1518,"Limit TRACE file size");
+#endif
+
+#if defined(SS_DEBUG_MUTE_PSG_CHANNEL)
+  AppendMenu(sse_menu,MF_STRING|MF_SEPARATOR,0,NULL);
+  AppendMenu(sse_menu,MF_STRING,1521,"mute PSG A");
+  AppendMenu(sse_menu,MF_STRING,1520,"mute PSG B");
+  AppendMenu(sse_menu,MF_STRING,1519,"mute PSG C");
+#endif
+
 
   log("STARTUP: calling iolist_init");
 
@@ -1634,11 +1751,17 @@ void DWin_init()
   log("STARTUP: Creating Child Windows");
 
 
-
+#if defined(SS_DEBUG_MOD_REGS) //big PC
+  new mr_static(/*label*/"PC",/*name*/"pc",/*x*/10,/*y*/1,
+      /*owner*/DWin,/*id*/(HMENU)201,/*pointer*/(MEM_ADDRESS)&pc,
+      /*bytes*/ 3,/*regflag*/ MST_REGISTER, /*editflag*/true,
+      /*mem_browser to update*/&m_b_mem_disa);
+#else
   new mr_static(/*label*/"pc=",/*name*/"pc",/*x*/10,/*y*/1,
       /*owner*/DWin,/*id*/(HMENU)201,/*pointer*/(MEM_ADDRESS)&pc,
       /*bytes*/ 3,/*regflag*/ MST_REGISTER, /*editflag*/true,
       /*mem_browser to update*/&m_b_mem_disa);
+#endif
 
   new mr_static("screen=","screen address",240,1,DWin,(HMENU)294,(MEM_ADDRESS)&xbios2,3,MST_REGISTER,true,NULL);
 #if !defined(SS_DEBUG_MOVE_OTHER_SP)
@@ -1795,15 +1918,42 @@ void DWin_init()
     ms=new mr_static("Current Video Address ","",5,y,Par,
         NULL,(MEM_ADDRESS)&debug_VAP,3,MST_REGISTER,0,NULL);
     GetWindowRectRelativeToParent(ms->handle,&rc);
-    
+
+#if defined(SS_DEBUG_SHOW_SDP) // the draw pointer
+
+    new mr_static("Current Draw Pointer ","",rc.right+5,y,Par,
+        NULL,(MEM_ADDRESS)&shifter_draw_pointer,3,MST_REGISTER,0,NULL);
+    y+=30;
+    new mr_static("Current Scanline ","",5,y,Par,
+        NULL,(MEM_ADDRESS)&scan_y,2,MST_DECIMAL,0,NULL);
+
+#if defined(SS_DEBUG_SHOW_RES)
+    GetWindowRectRelativeToParent(ms->handle,&rc);
+    ms=new mr_static("Shift ","",rc.right+5,y,Par,
+        NULL,(MEM_ADDRESS)&Shifter.m_ShiftMode,1,MST_REGISTER,0,NULL);
+#endif
+
+#if defined(SS_DEBUG_SHOW_FREQ)
+    GetWindowRectRelativeToParent(ms->handle,&rc);
+    new mr_static("Sync ","",rc.right+5,y,Par,
+        NULL,(MEM_ADDRESS)&Shifter.m_SyncMode,1,MST_REGISTER,0,NULL);
+#endif
+
+#else    
     new mr_static("Current Scanline ","",rc.right+5,y,Par,
         NULL,(MEM_ADDRESS)&scan_y,2,MST_DECIMAL,0,NULL);
+#endif
     y+=30;
 
     int x=5;
     for (int t=0;t<4;t++){
       ms=new mr_static(Str("Timer ")+char('A'+t)+" ","",x,y,Par,
             NULL,(MEM_ADDRESS)&debug_time_to_timer_timeout[t],4,MST_DECIMAL,0,NULL);
+#if defined(SS_DEBUG_TIMERS_ACTIVE)
+      ASSERT(ms);// record handles to edit properties on update
+      Debug.boiler_timer_hwnd[t]=ms->hLABEL;
+//      TRACE("hnd? %d Par %d hnd %d=%d\n",HWND(DWin_timings_scroller),Par,t,ms->hLABEL);
+#endif
       y+=30;
       if (t==1){
         y-=60;

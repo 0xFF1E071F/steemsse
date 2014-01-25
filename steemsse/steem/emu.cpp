@@ -10,14 +10,15 @@ functions. Basically includes all the files that are in the object.
 
 #define IN_EMU
 
-inline int abs_quick(int i)
+#include "conditions.h" //SS
+#include "SSE/SSE.h" //SS
+#if !(defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_MFP_H))
+inline int abs_quick(int i) // -> mfp.decla.h
 {
   if (i>=0) return i;
   return -i;
 }
-
-#include "conditions.h" //SS
-#include "SSE/SSE.h" //SS
+#endif
 
 #include "SSE/SSEDebug.h"
 

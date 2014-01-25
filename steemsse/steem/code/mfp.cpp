@@ -158,6 +158,9 @@ void calc_time_of_next_timer_b()
   }
 }
 //---------------------------------------------------------------------------
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_MFP_H)
+// -> mfp.decla.h
+#else
 inline BYTE mfp_get_timer_control_register(int n)
 {
   if (n==0){
@@ -229,6 +232,7 @@ either run the VBL interrupt, or the main code.
   }
   return (mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)] & mfp_interrupt_i_bit(irq))!=0;
 }
+#endif
 
 #undef LOGSECTION//ss
 #define LOGSECTION LOGSECTION_MFP_TIMERS

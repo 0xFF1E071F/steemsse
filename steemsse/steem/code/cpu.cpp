@@ -4047,6 +4047,17 @@ void                              m68k_rts(){
   m68k_READ_W(effective_address); // Check for bus/address errors
   SET_PC(effective_address);
   intercept_os();
+#if defined(SS_DEBUG_RUN_TO_RTS)
+  if(on_rte==ON_RTS_STOP)
+  {
+    if (runstate==RUNSTATE_RUNNING){
+      runstate=RUNSTATE_STOPPING;
+      SET_WHY_STOP(HEXSl(old_pc,6)+": RTS");
+    }
+    on_rte=ON_RTE_RTE;
+  }
+#endif
+
 }
 void                              m68k_trapv(){
   if (sr & SR_V){
