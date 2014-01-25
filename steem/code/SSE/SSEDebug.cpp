@@ -83,6 +83,10 @@ TDebug::TDebug() {
   ZeroMemory(&InterruptTable,sizeof(SInterruptTable));
 #endif
 
+#if defined(SS_DEBUG_MUTE_PSG_CHANNEL)
+  PsgMask=0; //0=no mod
+#endif
+
 }
 
 
@@ -375,11 +379,22 @@ void TDebug::ReportInterrupt() {
       sprintf(tmp,"%d:%s",InterruptIdx,
         InterruptTable[InterruptIdx].description);
   }
-  else
+  else//very common
   {
-    strcpy(tmp,"OVF");//very common
-    //for(int i=0;i<MAX_INTERRUPTS;i++)
-      //TRACE("%d:%s %d\n",i,InterruptTable[i].description,InterruptTable[i].num);
+    //first check vectors to guess
+    if(pc==LPEEK(0x70))
+      strcpy(tmp,"VBI?");
+    else  if(pc==LPEEK(0x114))
+      strcpy(tmp,"Timer C?");
+    else  if(pc==LPEEK(0x134))
+      strcpy(tmp,"Timer A?");
+    else  if(pc==LPEEK(0x118))
+      strcpy(tmp,"ACIA?");
+// etc.
+    else // admit we're lost
+      strcpy(tmp,"OVF");
+    for(int i=0;i<MAX_INTERRUPTS;i++)
+      TRACE("%d:%s %d\n",i,InterruptTable[i].description,InterruptTable[i].num);
   }
   SetWindowText(InterruptReportingZone,tmp);
 }

@@ -2,8 +2,15 @@
 #ifndef MFP_DECLA_H
 #define MFP_DECLA_H
 
+#include "SSE/SSEOption.h"
 #define EXT extern
 #define INIT(s)
+
+inline int abs_quick(int i) //was in emu.cpp (!)
+{
+  if (i>=0) return i;
+  return -i;
+}
 
 #if defined(STEVEN_SEAGAL) && defined(SS_MFP_TIMER_B_NO_WOBBLE)
 #define TB_TIME_WOBBLE (0) // no wobble for Timer B
@@ -76,7 +83,11 @@ EXT BYTE mfp_gpip_no_interrupt INIT(0xf7);
 #define MFP_GPIP_RING_BIT 6
 #define MFP_GPIP_MONO_BIT 7
 
-#ifdef IN_EMU
+//#ifdef IN_EMU
+
+#if defined(SS_MFP_IRQ_DELAY3)
+EXT int mfp_time_of_set_pending[16];
+#endif
 
 EXT BYTE mfp_gpip_input_buffer;
 
@@ -200,7 +211,81 @@ void mfp_check_for_timer_timeouts(); // SS not implemented
                                 "pending after timeout"); )             \
   } 
 
+
+inline BYTE mfp_get_timer_control_register(int n) //was in mfp.cpp
+{
+  if (n==0){
+    return mfp_reg[MFPR_TACR];
+  }else if (n==1){
+    return mfp_reg[MFPR_TBCR];
+  }else if (n==2){
+    return BYTE((mfp_reg[MFPR_TCDCR] & b01110000) >> 4);
+  }else{
+    return BYTE(mfp_reg[MFPR_TCDCR] & b00000111);
+  }
+}
+
+inline bool mfp_set_pending(int irq,int when_set) //was in mfp.cpp
+{
+#if defined(STEVEN_SEAGAL) && defined(SS_MFP_IACK_LATENCY)
+/*
+Final Conflict
+
+http://www.atari-forum.com/viewtopic.php?f=51&t=15885#p195733 (ijor):
+
+The CPU takes several cycles between the moment it decides to take an interrupt
+ (and which one), until it actually acks the interrupt to the MFP. 
+And only at the latter time the MFP clears its pending bit (and interrupt 
+state). The former happens (in this case) during execution of the RTE 
+instruction. 
+The latter on the Interrupt ACK bus cycle, part of the interrupt exception 
+sequence. Let's call those two critical moments, "t1" and "t2".
+
+Let's consider a timer interrupt happening just before "t2", the Int ACK 
+cycle (interrupt is being processed as a consequence of the previous timer
+ interrupt). The MFP would clear this new interrupt, even when the CPU
+ meant to ack the previous one. In other words, MFP doesn't signal any
+ interrupt any more, at least not until the next timer period. But if the
+ timing is right, the next timer interrupt would happen just after "t1".
+ So by the time the next interrupt happens, the CPU already dediced to 
+either run the VBL interrupt, or the main code.
+  =>
+  Timer A is pending...      check interrupts... start IACK (12 cycles)
+  During those 12 cycles, Timer A triggers again! On a real ST, the MFP
+  clears the interrupt for both occurrences.
+  In Steem:
+  Without the fix, 56 cycles will be counted for first interrupt, then
+  timers will be checked and Timer A will be set pending again.
+  With the fix, being too close to former one, Timer A will be ignored.
+  So we don't need to split the interrupt timings.
+  Because of the way we implement it, the fix is considered a hack, but
+  I've seen nothing broken by it yet (since v3.3).
+  CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED = 20
+  But the same concept for HBL = 28
+  We change those values to 12? 16?
+
+  TODO: This only takes care of 'double pending' case, but there's also
+  the 'higher int during IACK' possibility (cases?)
+
+*/
+  if(abs_quick(when_set-mfp_time_of_start_of_last_interrupt[irq])
+    >= (SSE_HACKS_ON
+    ?56-8+CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED
+    :CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED)){
+#else
+  if (abs_quick(when_set-mfp_time_of_start_of_last_interrupt[irq])>=CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED){
 #endif
+    mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)]|=mfp_interrupt_i_bit(irq); // Set pending
+#if defined(SS_MFP_IRQ_DELAY3)
+    mfp_time_of_set_pending[irq]=when_set; // not ACT
+#endif
+    return true;
+  }
+  return (mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)] & mfp_interrupt_i_bit(irq))!=0;
+}
+
+
+//#endif//in_emu
 
 #undef EXT
 #undef INIT

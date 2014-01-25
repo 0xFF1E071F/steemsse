@@ -435,18 +435,27 @@ and all his silly mods are gone!
 
 // boiler
 #if defined(DEBUG_BUILD) //TODO add other mods here
+#define SS_DEBUG_BLAZING_STEP_OVER 
+#define SS_DEBUG_BROWSER_DMASOUND
+#define SS_DEBUG_BROWSER_SHIFTER
 #define SS_DEBUG_BROWSER_VECTORS
 #define SS_DEBUG_CLIPBOARD // right-click on 'dump' to copy then paste
 //#define SS_DEBUG_CPU_LOG_NO_STOP // never stop
 #define SS_DEBUG_CPU_TRACE_NO_STOP // depends on 'suspend logging'
-#define SS_DEBUG_NODIV // no DIV log necessary anymore
-#define SS_DEBUG_MOD_REGS // big letter, no =
+#define SS_DEBUG_MOD_REGS // big letters, no =
+#define SS_DEBUG_MUTE_PSG_CHANNEL
 #define SS_DEBUG_NO_SOUND_DAMPING //PSG filter control 'd' and 'a'
 #define SS_DEBUG_MOUSE_WHEEL // yeah!
 #define SS_DEBUG_MOVE_OTHER_SP
+#define SS_DEBUG_NODIV // no DIV log necessary anymore
+#define SS_DEBUG_RUN_TO_RTS
+#define SS_DEBUG_SHOW_FREQ // sync mode
 #define SS_DEBUG_SHOW_INTERRUPT // yeah!
+#define SS_DEBUG_SHOW_RES // shift mode
+#define SS_DEBUG_SHOW_SDP // the draw pointer
 #define SS_DEBUG_SHOW_SR // in HEX on the left of bit flags
 #define SS_DEBUG_TIMER_B // instead of 0
+#define SS_DEBUG_TIMERS_ACTIVE // (in reverse video) yeah!
 #define SS_DEBUG_WIPE_TRACE // as logfile
 #endif
 

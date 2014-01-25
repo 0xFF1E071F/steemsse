@@ -79,6 +79,14 @@ struct TDebug {
   void Rte();
 #endif
 
+#if defined(SS_DEBUG_MUTE_PSG_CHANNEL)
+  BYTE PsgMask; // bit0-2: mute a-c (if set)
+#endif
+
+#if defined(SS_DEBUG_TIMERS_ACTIVE)
+  HWND boiler_timer_hwnd[4];//to record WIN handles
+#endif
+
 #endif//c++
 
   BYTE logsection_enabled[100]; // we want a double anyway //bool

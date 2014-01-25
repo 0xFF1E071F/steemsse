@@ -688,9 +688,9 @@ void LoadState(GoodConfigStoreFile *pCSF)
   CheckMenuItem(boiler_op_menu,1516,MF_BYCOMMAND | int(debug_uppercase_disa ? MF_CHECKED:MF_UNCHECKED));
 
 #if defined(STEVEN_SEAGAL) //&& defined(SS_DEBUG)
-  CheckMenuItem(boiler_op_menu,1517,MF_BYCOMMAND|
+  CheckMenuItem(sse_menu,1517,MF_BYCOMMAND|
     ((USE_TRACE_FILE)?MF_CHECKED:MF_UNCHECKED));
-  CheckMenuItem(boiler_op_menu,1518,MF_BYCOMMAND|
+  CheckMenuItem(sse_menu,1518,MF_BYCOMMAND|
     ((TRACE_FILE_REWIND)?MF_CHECKED:MF_UNCHECKED));
 #endif
   
