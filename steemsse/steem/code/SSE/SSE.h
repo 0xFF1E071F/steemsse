@@ -1183,8 +1183,9 @@ and all his silly mods are gone!
 
 
 #if defined(SS_STRUCTURE_SSE_OBJ)
-#define SS_STRUCTURE_SSE6301_OBJ // 1st as test
+#define SS_STRUCTURE_SSE6301_OBJ
 #define SS_STRUCTURE_SSECPU_OBJ
+#define SS_STRUCTURE_SSEDEBUG_OBJ
 #endif//#if defined(SS_STRUCTURE_SSE_OBJ)
 
 

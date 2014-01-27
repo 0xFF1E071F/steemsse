@@ -62,7 +62,7 @@ LIBTOOL=libtool
 
 # Objects
 OBJS=./obj/asm_draw.o ./obj/emu.o ./obj/asm_osd.o ./obj/main.o ./obj/helper.o ./obj/resource.o\
- ./obj/SSE.o ./obj/SSEOption.o ./obj/SSEMMU.o ./obj/SSE6301.o ./obj/SSECpu.o
+ ./obj/SSE.o ./obj/SSEOption.o ./obj/SSEMMU.o ./obj/SSE6301.o ./obj/SSECpu.o ./obj/SSEDebug.o
 #./obj/dsp.o ./obj/6301.o ./obj/div68kCycleAccurate.o
 # OBJS=./code/draw_c/draw_c.o emu.o main.o urarlib.o helper.o resource.o
 
@@ -79,6 +79,7 @@ all:	asm
 	$(MAKE) -fMakefile_dbg.txt SSEOption
 	$(MAKE) -fMakefile_dbg.txt SSE6301
 	$(MAKE) -fMakefile_dbg.txt SSECpu
+	$(MAKE) -fMakefile_dbg.txt SSEDebug
 	$(MAKE) -fMakefile_dbg.txt link
 
 clean:
@@ -136,6 +137,10 @@ SSE6301:
 
 SSECpu:
 	$(CC) -o ./obj/SSECpu.o -c $(ROOT)/steem/code/SSE/SSECpu.cpp $(CFLAGS) $(STEEMFLAGS)
+
+SSEDebug:
+	$(CC) -o ./obj/SSEDebug.o -c $(ROOT)/steem/code/SSE/SSEDebug.cpp $(CFLAGS) $(STEEMFLAGS)
+
 
 SSE:
 	$(CC) -o ./obj/SSE.o -c $(ROOT)/steem/code/SSE/SSE.cpp $(CFLAGS) $(STEEMFLAGS)

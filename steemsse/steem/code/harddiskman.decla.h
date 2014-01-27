@@ -2,6 +2,11 @@
 #pragma once
 #endif
 
+#if defined(SS_STRUCTURE_SSEDEBUG_OBJ)
+#include <stemdialogs.decla.h>
+#endif
+
+
 #define MAX_HARDDRIVES 10
 
 typedef struct{
@@ -54,3 +59,6 @@ public:
 };
 
 
+#if defined(SS_STRUCTURE_SSEDEBUG_OBJ)
+extern THardDiskManager HardDiskMan; // singleton defined in main.cpp
+#endif

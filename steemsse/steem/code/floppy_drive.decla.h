@@ -2,6 +2,10 @@
 #ifndef FLOPPYDRIVE_DECLA_H
 #define FLOPPYDRIVE_DECLA_H
 
+#if defined(SS_STRUCTURE_SSEDEBUG_OBJ)
+#include <stdio.h>
+#endif
+
 //#define EXT extern
 //#define INIT(s)
 
