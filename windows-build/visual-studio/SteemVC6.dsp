@@ -77,7 +77,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /w /W0 /GX /Zi /Ox /Ot /Og /Oi /Ob2 /Gy /D "_VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /I /I /I /I /GA /GF
-# ADD CPP /nologo /G6 /MT /W4 /GX /Zi /Os /Oy /Ob2 /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /I "..\..\3rdparty\sim6xxx" /D "NDEBUG" /D "NO_DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /FR /GA /GF /c
+# ADD CPP /nologo /G6 /MT /GX /Zi /Os /Oy /Ob2 /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /I "..\..\3rdparty\sim6xxx" /D "NDEBUG" /D "NO_DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /FR /GA /GF /c
 # SUBTRACT CPP /Og
 # ADD BASE MTL /nologo /win32
 # ADD MTL /nologo /win32
@@ -690,6 +690,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\gui.decla.h"\
 	"..\..\steem\code\gui.h"\
 	"..\..\steem\code\harddiskman.cpp"\
+	"..\..\steem\code\harddiskman.decla.h"\
 	"..\..\steem\code\harddiskman.h"\
 	"..\..\steem\code\hdimg.cpp"\
 	"..\..\steem\code\hdimg.decla.h"\
@@ -976,6 +977,10 @@ SOURCE=..\..\steem\code\gui.decla.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\gui.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\harddiskman.decla.h
 # End Source File
 # Begin Source File
 
@@ -1644,6 +1649,8 @@ DEP_CPP_6301_=\
 	"..\..\3rdparty\6301\tty.c"\
 	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\include\binary.h"\
+	"..\..\include\clarity.h"\
+	"..\..\include\easystr.h"\
 	"..\..\steem\code\acia.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\draw.decla.h"\
@@ -1654,6 +1661,7 @@ DEP_CPP_6301_=\
 	"..\..\steem\code\SSE\SSEDecla.h"\
 	"..\..\steem\code\SSE\SSEOption.h"\
 	"..\..\steem\code\SSE\SSEParameters.h"\
+	"..\..\steem\pch.h"\
 	
 # End Source File
 # Begin Source File
@@ -2409,6 +2417,9 @@ SOURCE=..\..\3rdparty\caps\CAPSImg.lib
 SOURCE=..\..\3rdparty\avi\AviFile.cpp
 DEP_CPP_AVIFI=\
 	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\include\binary.h"\
+	"..\..\include\clarity.h"\
+	"..\..\include\easystr.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\draw.decla.h"\
 	"..\..\steem\code\notwindows.h"\
@@ -2416,6 +2427,7 @@ DEP_CPP_AVIFI=\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
 	"..\..\steem\code\SSE\SSEParameters.h"\
+	"..\..\steem\pch.h"\
 	
 # End Source File
 # Begin Source File
@@ -7565,6 +7577,7 @@ DEP_CPP_SSE_C=\
 	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\clarity.h"\
+	"..\..\include\easystr.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\draw.decla.h"\
 	"..\..\steem\code\notwindows.h"\
@@ -7588,6 +7601,7 @@ DEP_CPP_SSE63=\
 	"..\..\include\binary.h"\
 	"..\..\include\clarity.h"\
 	"..\..\include\dynamicarray.h"\
+	"..\..\include\easystr.h"\
 	"..\..\include\mymisc.h"\
 	"..\..\include\notwin_mymisc.h"\
 	"..\..\include\x\x_mymisc.h"\
@@ -7685,6 +7699,7 @@ DEP_CPP_SSECP=\
 	"..\..\steem\code\SSE\SSECpu.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEOption.h"\
 	"..\..\steem\code\SSE\SSEParameters.h"\
 	"..\..\steem\code\SSE\SSEShifter.h"\
 	"..\..\steem\code\steemh.decla.h"\
@@ -7733,32 +7748,57 @@ SOURCE=..\..\steem\code\SSE\SSECpu.h
 SOURCE=..\..\Steem\code\SSE\SSEDebug.cpp
 DEP_CPP_SSEDE=\
 	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\3rdparty\caps\CapsAPI.h"\
+	"..\..\3rdparty\caps\CapsFDC.h"\
+	"..\..\3rdparty\caps\CapsLib.h"\
+	"..\..\3rdparty\caps\comlib.h"\
+	"..\..\3rdparty\caps\Comtype.h"\
+	"..\..\include\binary.h"\
+	"..\..\include\clarity.h"\
+	"..\..\include\configstorefile.h"\
+	"..\..\include\directory_tree.h"\
+	"..\..\include\dynamicarray.h"\
+	"..\..\include\easystr.h"\
+	"..\..\include\easystringlist.h"\
+	"..\..\include\mymisc.h"\
+	"..\..\include\notwin_mymisc.h"\
+	"..\..\include\x\hxc.h"\
+	"..\..\include\x\icongroup.h"\
+	"..\..\include\x\x_mymisc.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\draw.decla.h"\
+	"..\..\steem\code\emulator.decla.h"\
+	"..\..\steem\code\fdc.decla.h"\
+	"..\..\steem\code\floppy_drive.decla.h"\
+	"..\..\steem\code\harddiskman.decla.h"\
+	"..\..\steem\code\mfp.decla.h"\
 	"..\..\steem\code\notwindows.h"\
+	"..\..\steem\code\run.decla.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\Steem\code\SSE\SSEFloppy.h"\
 	"..\..\steem\code\SSE\SSEMMU.h"\
 	"..\..\steem\code\SSE\SSEOption.h"\
 	"..\..\steem\code\SSE\SSEParameters.h"\
 	"..\..\steem\code\SSE\SSESTF.h"\
+	"..\..\steem\code\steemh.decla.h"\
+	"..\..\steem\code\stemdialogs.decla.h"\
+	"..\..\steem\pch.h"\
+	
+NODEP_CPP_SSEDE=\
+	"..\..\include\beos\be_mymisc.h"\
 	
 
 !IF  "$(CFG)" == "Steem - Win32 Debug"
-
-# PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Release"
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
 
-# PROP Exclude_From_Build 1
-
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Debug_modules"
 
@@ -7897,6 +7937,7 @@ DEP_CPP_SSEMM=\
 	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\clarity.h"\
+	"..\..\include\easystr.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\draw.decla.h"\
 	"..\..\steem\code\notwindows.h"\
@@ -7920,6 +7961,7 @@ DEP_CPP_SSEOP=\
 	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\clarity.h"\
+	"..\..\include\easystr.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\draw.decla.h"\
 	"..\..\steem\code\notwindows.h"\

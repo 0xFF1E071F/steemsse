@@ -6,6 +6,10 @@
 #define EXT extern
 #define INIT(s)
 
+#if defined(SS_STRUCTURE_SSEDEBUG_OBJ)
+#include <binary.h>
+#endif
+
 inline int abs_quick(int i) //was in emu.cpp (!)
 {
   if (i>=0) return i;

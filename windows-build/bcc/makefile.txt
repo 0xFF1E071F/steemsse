@@ -20,7 +20,7 @@ INCLUDEPATHS = $(STEEMROOT)\code;$(BCCROOT)\Include;$(INCDIR);$(3RDPARTYROOT);$(
 
 ALLOBJS = $(ASMOBJDIR)\asm_draw.obj obj\emu.obj c0w32.obj obj\Steem.obj $(ASMOBJS) obj\helper.obj
 ALLOBJS = $(ALLOBJS) $(ASMOBJDIR)\asm_osd_draw.obj $(ASMINCOBJDIR)\asm_portio.obj
-ALLOBJS = $(ALLOBJS) obj\SSE.obj obj\SSEOption.obj obj\SSEMMU.obj obj\SSE6301.obj obj\SSECpu.obj
+ALLOBJS = $(ALLOBJS) obj\SSE.obj obj\SSEOption.obj obj\SSEMMU.obj obj\SSE6301.obj obj\SSECpu.obj obj\SSEDebug.obj
 
 !ifndef ONEGAME
 
@@ -47,7 +47,7 @@ LINKOPTS = -L$(BCCROOT)\Lib;$(BCCROOT)\Lib\PSDK -aa -Tpe -t -x -w -v- -C -Gn
 #LINKOPTS = -L$(3RDPARTYROOT)\SDL-WIN\BccLib;-dSDL.DLL $(LINKOPTS)
 LINKOPTS = -L$(3RDPARTYROOT)\UnRARDLL\bcclib;-dunrar.DLL $(LINKOPTS)
 LINKOPTS = -L$(3RDPARTYROOT)\caps\BccLib;-dCAPSImg.DLL $(LINKOPTS)
-#LINKOPTS = -L$(3RDPARTYROOT)\SDL-WIN\BccLib $(LINKOPTS)
+LINKOPTS = -L$(3RDPARTYROOT)\SDL-WIN\BccLib $(LINKOPTS)
 #    Set the compiler options
 STEEMFLAGS = -DBCC_BUILD -DWIN32 -DSTEVEN_SEAGAL
 #STEEMFLAGS = -DBCC_BUILD -DWIN32
@@ -107,7 +107,7 @@ CPPFLAGS= -I$(INCLUDEPATHS) $(CCOPTS)
 ######################################################################################
 
 ALL: Steem.res Steem.obj helper.obj emu.obj SSE.obj SSEOption.obj \
-  SSEMMU.obj SSE6301.obj SSECpu.obj $(NAME).exe
+  SSEMMU.obj SSE6301.obj SSECpu.obj SSEDebug.obj $(NAME).exe
 
 Steem.res:
            $(RC) $(RC_PATH) -foobj\Steem.res
@@ -135,6 +135,9 @@ SSE6301.obj:
 
 SSECpu.obj:
            $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSECpu.obj $(STEEMROOT)\code\SSE\SSECpu.cpp
+
+SSEDebug.obj:
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSEDebug.obj $(STEEMROOT)\code\SSE\SSEDebug.cpp
 
 
 $(NAME).exe:

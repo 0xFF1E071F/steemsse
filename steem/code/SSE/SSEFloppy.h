@@ -19,6 +19,12 @@ command is terminated by either polling this input or by triggering an
 interrupt."
 */
 
+#if defined(SS_DRIVE_SOUND) && defined(SS_STRUCTURE_SSEDEBUG_OBJ)
+#ifdef WIN32
+#include <dsound.h>
+#endif
+#endif
+
 #if defined(SS_FLOPPY)
 #ifdef SS_DRIVE
 #define ADAT (SF314[floppy_current_drive()].Adat())

@@ -12,6 +12,8 @@ DESCRIPTION: Sets up all conditions that affect the Steem binary.
 #if defined(STEVEN_SEAGAL)
 #pragma once
 #endif
+#if !defined(CONDITIONS_H) //SS
+#define CONDITIONS_H //SS
 
 #if !defined(NO_DEBUG_BUILD) && !defined(DEBUG_BUILD) && !defined(ONEGAME) && defined(WIN32)
 #define DEBUG_BUILD
@@ -443,3 +445,5 @@ static BOOL SWP_checkforbugs(HWND Win,HWND WinAfter,int x,int y,int w,int h,UINT
 
 #undef EXT//SS
 #undef INIT//SS
+
+#endif//#if !defined(CONDITIONS_H) //SS

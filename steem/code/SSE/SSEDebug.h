@@ -1,21 +1,35 @@
-#pragma once
-#ifndef SSEDEBUG_H
-#define SSEDEBUG_H
-
-#ifdef SS_VS2012_WARNINGS
-#pragma warning(disable : 4002)		// too many parameter in macro TRACE
-#endif
-
 /*  This file must be included whether STEVEN_SEAGAL is defined or not
     because we need to define macors ASSERT, TRACE etc. anyway, those
     aren't guarded.
     We use '__cplusplus' to make some parts accessible to C objects.
 */
 
+#pragma once
+#ifndef SSEDEBUG_H
+#define SSEDEBUG_H
+
+#include "SSE.h" // get switches
+
+#if !defined(SS_DEBUG) && defined(UNIX)
+#include "../pch.h"
+#pragma hdrstop
+#endif
+
+#if defined(SS_STRUCTURE_SSEDEBUG_OBJ) && defined(__cplusplus)
+#ifdef WIN32
+#include <windows.h>
+#endif
+#include "../conditions.h"
+#endif
+
 #include "SSEParameters.h"
 
 #if defined(SS_DEBUG_TRACE_FILE)
 #include <stdio.h>
+#endif
+
+#ifdef SS_VS2012_WARNINGS
+#pragma warning(disable : 4002)		// too many parameter in macro TRACE
 #endif
 
 #if defined(SS_DEBUG) // boiler build or ide debug build

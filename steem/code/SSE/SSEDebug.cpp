@@ -4,6 +4,25 @@
 
 #if defined(SS_DEBUG) 
 
+#ifdef UNIX
+#include "../pch.h" 
+#pragma hdrstop 
+#endif
+
+#if defined(SS_STRUCTURE_SSEDEBUG_OBJ)
+#ifdef WIN32
+#include <time.h>
+#endif
+#include <emulator.decla.h>
+#include <fdc.decla.h>
+#include <floppy_drive.decla.h>
+#include <harddiskman.decla.h>
+#include <mfp.decla.h>
+#include <run.decla.h>
+#include <steemh.decla.h>
+#include "SSEFloppy.h"
+#endif
+
 int debug0,debug1,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9;
 
 #if defined(SS_IKBD_6301)

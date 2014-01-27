@@ -1,3 +1,9 @@
+
+#pragma once //SS
+#ifndef INCLUDE_H //SS
+#define INCLUDE_H //SS
+
+
 #ifdef UNIX
 bool enable_zip=true;
 #else
@@ -150,3 +156,4 @@ typedef EasyStr Str;
 #include "onegame.h"
 #endif
 
+#endif//#ifndef INCLUDE_H //SS

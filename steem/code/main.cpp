@@ -100,7 +100,7 @@ TPatchesBox PatchesBox;
 #include "init_sound.cpp"
 #include "acc.cpp"
 
-#if defined(STEVEN_SEAGAL)
+#if defined(STEVEN_SEAGAL) && !defined(SS_STRUCTURE_SSEDEBUG_OBJ)
 #include "SSE/SSEDebug.cpp"
 #endif
 
