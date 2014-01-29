@@ -117,7 +117,7 @@ WORD change_endian(WORD x); // double of something?
 #endif
   extern const char *name_of_mfp_interrupt[21];
 
-#ifdef IN_MAIN
+//#ifdef IN_MAIN
   struct struct_logsection{
     char *Name;
     int Index;
@@ -138,7 +138,7 @@ WORD change_endian(WORD x); // double of something?
   EXT FILE *logfile;
   EXT EasyStr LogFileName;
 
-#endif
+//#endif
 
 #else
   #define log(s)
