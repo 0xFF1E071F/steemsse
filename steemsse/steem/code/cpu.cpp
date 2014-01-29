@@ -3950,7 +3950,42 @@ void                              m68k_stop(){
   }
 }
 void                              m68k_rte(){
+#if !defined(SS_TOS_NO_INTERCEPT_ON_RTE1)
+/*  Megamax C would hang while trying to compile the ReDMCSB project.
+    http://www.dungeon-master.com/forum/viewtopic.php?f=25&t=29805
+    The bug was tracked down to this part. Gemdos command PTerm() would
+    be executed twice, unduly terminating another process:
+    Apparently Timer C triggers while the TOS trap is executing. That's
+    why there's a random aspect in the hanging: depends on when we launch
+    the program.
+    At the RTE of timer C ($FC431A), Steem peeks the stack and finds the PTerm
+    command again.
+
+Trap 1 $40 Fwrite(handle=0009,count=000000C3,buf=0002A244)
+Trap 1 $49 Mfree(addr=0002A244)
+Trap 1 $3E Fclose(handle=0009)
+Close file 9
+Trap 1 $49 Mfree(addr=0002A044)
+Trap 1 $4C Pterm(retcode=0000)
+PC 24FEE terminate process 4
+Trap 1 $4C Pterm(retcode=0000)
+PC FC07A0 terminate process 3
+pexec, close file 6
+pexec, close file 7
+pexec, close file 8
+Trap 1 $3F Fread(handle=0008,count=00000001,buf=0001ED58)
+File 8 not open
+    The file 8 is BUILDINI.BAT
+    When SS_TOS_NO_INTERCEPT_ON_RTE1 is defined the project will compile 
+    to completion, but we don't know what this mod could break. 
+    Why intercept at the RTE?
+    Disabling this is radical so: TESTING
+    If it breaks anything we could try to disable only gemdos 
+    intercept on RTE.
+*/
   bool dont_intercept_os=false;
+#endif
+  //ASSERT( old_pc!=0xFC431A);
   if (SUPERFLAG){
     DEBUG_ONLY( int debug_old_sr=sr; )
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
@@ -3981,7 +4016,9 @@ void                              m68k_rte(){
 #ifndef DISABLE_STEMDOS
           case ON_RTE_STEMDOS:
             stemdos_rte();
+#if !defined(SS_TOS_NO_INTERCEPT_ON_RTE1)
             dont_intercept_os=true;
+#endif
             break;
 #endif
 
@@ -4020,8 +4057,9 @@ void                              m68k_rte(){
     interrupt_depth--;
     ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
 //    check_for_interrupts_pending();// was commented out
+#if !defined(SS_TOS_NO_INTERCEPT_ON_RTE1)
     if (!dont_intercept_os) intercept_os();
-
+#endif
     CHECK_STOP_ON_USER_CHANGE;
   }else{
     exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
@@ -7048,7 +7086,7 @@ extern "C" void m68k_1010() //line-a
   INSTRUCTION_TIME_ROUND(34);
 #endif
 #if defined(SS_DEBUG_SHOW_INTERRUPT)
-  Debug.RecordInterrupt("LINEA");
+//  Debug.RecordInterrupt("LINEA");
 #endif
   m68k_interrupt(LPEEK(BOMBS_LINE_A*4));
   m68k_do_trace_exception=0;
@@ -7095,7 +7133,7 @@ extern "C" void m68k_1111(){  //line-f emulator
   INSTRUCTION_TIME_ROUND(34);
 #endif
 #if defined(SS_DEBUG_SHOW_INTERRUPT)
-  Debug.RecordInterrupt("LINEF");
+//  Debug.RecordInterrupt("LINEF");
 #endif
   m68k_interrupt(LPEEK(BOMBS_LINE_F*4));
   m68k_do_trace_exception=0;

@@ -53,13 +53,14 @@ void m68k_poke(MEM_ADDRESS ad,BYTE x);
                                     {"FDC",LOGSECTION_FDC},
                                      
 #if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_LOG_OPTIONS)
-  {"Floppy data",LOGSECTION_FDC_BYTES},
-  {"Image info",LOGSECTION_IMAGE_INFO},
-  {"IPF sector info",LOGSECTION_IPF_LOCK_INFO},
+                                    {"Floppy data",LOGSECTION_FDC_BYTES},
+                                    {"Image info",LOGSECTION_IMAGE_INFO},
+                                    {"IPF sector info",LOGSECTION_IPF_LOCK_INFO},
+                                    {"Hard Disk",LOGSECTION_STEMDOS},
 #else
-  {"Pasti",LOGSECTION_PASTI},
-#endif
+                                    {"Pasti",LOGSECTION_PASTI},
                                     {"Stemdos",LOGSECTION_STEMDOS},
+#endif
                                     {"Trap",LOGSECTION_TRAP},
                                     {"-",-1},
                                     {"IKBD",LOGSECTION_IKBD},

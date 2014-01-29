@@ -61,6 +61,11 @@ int stemdos_current_drive;
 
 #endif//#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STEMDOS_H)
 
+
+#ifdef SS_DEBUG
+#include <acc.decla.h>
+#endif
+
 #ifndef DISABLE_STEMDOS
 
 // Find "Allow wildcards?"
@@ -120,6 +125,8 @@ bool stemdos_any_files_open()
 //---------------------------------------------------------------------------
 void stemdos_final_rte() //clear stack from original GEMDOS call
 {
+//  ASSERT( on_rte==ON_RTE_RTE );
+//  on_rte=ON_RTE_RTE;//tst
   M68K_PERFORM_RTE(;);
   interrupt_depth--;
   check_for_interrupts_pending();
@@ -151,6 +158,8 @@ void stemdos_rte()
       stemdos_finished(); //error code in d0
       stemdos_final_rte();  //kill the original GEMDOS call.
     }
+    TRACE_LOG("file handle = %d, process %d\n",r[0],stemdos_file[r[0]].owner_program);
+    ASSERT( stemdos_file[r[0]].open) ;
   }else if (stemdos_rte_action==STEMDOS_RTE_GET_DTA_FOR_FSFIRST){
     areg[7]+=2; //correct stack
     stemdos_dta=(r[0] & 0xffffff); //get DTA
@@ -223,7 +232,6 @@ void stemdos_open_file(int param)
   FILE *f=NULL;
   stemdos_get_PC_path();
   log(EasyStr("STEMDOS: PC filename is ")+PC_filename);
-
   stemdos_new_file.attrib=0;
   r[0]=0;
   if (PC_filename.RightChar()==SLASHCHAR){ // Don't allow empty names
@@ -292,6 +300,7 @@ void stemdos_open_file(int param)
       log("STEMDOS: Set new attributes for Fcreate file");
 
       f=fopen(PC_filename,"w+b");
+      TRACE_LOG("Create file %s handle %d\n",PC_filename.Text,h);
       log("STEMDOS: Opened Fcreate file for write");
       if (f!=NULL) fseek(f,0,SEEK_SET); // Always start at offset 0
     }
@@ -317,6 +326,7 @@ void stemdos_open_file(int param)
 
 void stemdos_close_all_files()
 {
+  //TRACE_LOG("stemdos_close_all_files\n");
   if (stemdos_new_file.open) stemdos_close_file(&stemdos_new_file);
   if (stemdos_Pexec_file){
     fclose(stemdos_Pexec_file);
@@ -368,6 +378,7 @@ void stemdos_read(int h,MEM_ADDRESS sp)
   MEM_ADDRESS buf=m68k_lpeek(sp+8);
 
   log(EasyStr("STEMDOS: fread(Handle=")+h+", Count="+count+")");
+//  TRACE_LOG("read %d from %d to %X\n",count,h,buf);
   int c=0,i;
   while (c<count){
     i=fgetc(stemdos_file[h].f);
@@ -388,6 +399,7 @@ void stemdos_write(int h,MEM_ADDRESS sp)
 {
   long count=m68k_lpeek(sp+4);
   MEM_ADDRESS buf=m68k_lpeek(sp+8);
+//  TRACE_LOG("write %d from %X to %d\n",count,buf,h);
   int c=0,i;
   while(c<count){
     i=m68k_peek(buf);
@@ -905,11 +917,12 @@ void stemdos_Pexec() //called from stemdos_rte, nothing done after this fn calle
 
 
       log_stack;
-
+      TRACE_LOG("Start process %d\n",stemdos_Pexec_list_ptr);
       if ((MEM_ADDRESS)(basepage+0x100UL+text+data+bss) > (MEM_ADDRESS)(m68k_lpeek(basepage+0x4))){ //basepage+4 contains hi-tpa
         r[0]=-39;  //out of memory
         log("STEMDOS: Program too big! Out of memory.");
         TRACE_LOG("STEMDOS: Program too big! Out of memory.\n");
+        TRACE_LOG("(basepage+4):%x  basepage %x + 0x100UL + text %x + data %x + bss %x = %x\n",m68k_lpeek(basepage+0x4),basepage,text,data,bss,basepage+0x100UL+text+data+bss);
         fclose(stemdos_Pexec_file);
         stemdos_Pexec_file=NULL;
         stemdos_mfree_from_Pexec_list();
@@ -1018,6 +1031,7 @@ bool stemdos_mfree_from_Pexec_list()
     for (int n=6;n<=45;n++){
       if (stemdos_file[n].open){
         if (stemdos_file[n].owner_program==stemdos_Pexec_list_ptr){
+          TRACE_LOG("pexec, close file %d\n",n);
           stemdos_close_file(&(stemdos_file[n]));
         }
       }
@@ -1065,6 +1079,46 @@ void stemdos_intercept_trap_1()
   if (Invalid) return;
 
   stemdos_command=m68k_dpeek(sp);
+#if defined(SS_DEBUG) && defined(DEBUG_BUILD)
+  if(TRACE_ENABLED) TRACE_OSD("TRAP1 %X",stemdos_command);
+  //TRACE_LOG("8: %d\n",stemdos_file[8].open);
+  switch(stemdos_command)
+  {
+  case 2://conout
+    break;
+  default:
+    //  This is copied from acc.cpp
+
+    {
+      MEM_ADDRESS spp=sp+2;
+      long lpar;
+      EasyStr l="",a="";
+      if(stemdos_command>=0 && stemdos_command<0x58)
+        a=gemdos_calls[stemdos_command];
+      
+      for(int i=0;i<a.Length();i++){
+        if(a[i]=='%'){
+          lpar=m68k_lpeek(spp);spp+=4;
+          l+=HEXSl(lpar,8);
+        }else if(a[i]=='&'){
+          l+=HEXSl(m68k_dpeek(spp),4);spp+=2;
+        }else if(a[i]=='$'){
+          char c;
+          int ii;
+          for (ii=0;ii<30;ii++){
+            c=(char)m68k_peek(lpar+ii);
+            if(!c)break;
+            l+=c;
+          }
+          if(ii>=30)l+="...";
+        }else{
+          l+=a[i];
+        }
+      }      
+      TRACE_LOG("Trap 1 $%X %s\n",stemdos_command,l.Text);
+    }
+  }
+#endif
   switch (stemdos_command){
 /*
     case 0x0e:{  //set current drive
@@ -1149,11 +1203,17 @@ void stemdos_intercept_trap_1()
 #if defined(STEVEN_SEAGAL) && defined(SS_TOS)
       if(stemdos_command==0x3D)
       {
-        TRACE_LOG("Opening file %s\n",stemdos_filename.c_str());
+        TRACE_LOG("Open file %s\n",stemdos_filename.c_str());
 #if defined(SS_TOS_PATCH106) // miserable hack
         if(SSE_HACKS_ON && tos_version==0x106 && stemdos_filename=="DESKTOP.INF")
           SS_signal=SS_SIGNAL_TOS_PATCH106;
 #endif
+      }
+#endif
+#ifdef SS_DEBUG
+      else
+      {
+        TRACE_LOG("Create file %s\n",stemdos_filename.c_str());
       }
 #endif
 
@@ -1228,7 +1288,14 @@ void stemdos_intercept_trap_1()
           stemdos_read(h,sp);
           stemdos_final_rte(); //prevent GEMDOS
         }
+#ifdef SS_DEBUG
+        else {
+          TRACE_LOG("File %d not open\n",h);
+          //     ASSERT(!stemdos_any_files_open());//!!
+        }
+#endif
       }
+      else TRACE_LOG("no read h%d\n",h);
       return;
     }case 0x40:{ //write
       int h=m68k_dpeek(sp+2);
@@ -1278,6 +1345,9 @@ void stemdos_intercept_trap_1()
 
       stemdos_filename=read_string_from_memory(m68k_lpeek(sp+2),100);
       log(EasyStr("STEMDOS: Got filename as ")+stemdos_filename);
+#ifdef SS_DEBUG
+      if(stemdos_command==0x41) TRACE_LOG("Del %s\n",stemdos_filename.Text);
+#endif
       int x=stemdos_get_file_path();
       if (x==STEMDOS_FILE_IS_STEMDOS){
         log(EasyStr("STEMDOS: Intercepting the call"));
@@ -1544,6 +1614,7 @@ void stemdos_intercept_trap_1()
       //      if(!SUPERFLAG)change_to_supervisor_mode();
       log("STEMDOS: Intercepted Pexec");
       int mode=m68k_dpeek(sp+2);
+//      TRACE_LOG("mode %d\n",mode);
       if (mode==0 || mode==3){
         stemdos_save_sr=sr;
         sr|=SR_IPL_7;
@@ -1591,6 +1662,7 @@ void stemdos_intercept_trap_1()
         }
       }else if (mode==4){
         if (stemdos_ignore_next_pexec4){
+//          TRACE_LOG("ignore\n");
           // This is a hard drive program, we change the mode 0 call to mode 4
           stemdos_ignore_next_pexec4=0;
         }else{
@@ -1600,7 +1672,10 @@ void stemdos_intercept_trap_1()
       return;
     }case 0:case 0x4c:{  //Pterm0, PtermRet()
       log(EasyStr("STEMDOS: Pterm at address $")+HEXSl(pc,6));
+//      TRACE_LOG("FRAME %d y %d PC %X process %d return code %d\n",FRAME,scan_y,old_pc,stemdos_Pexec_list_ptr,m68k_dpeek(sp+2)); // 
+      TRACE_LOG("PC %X terminate process %d\n",old_pc,stemdos_Pexec_list_ptr);
       if (stemdos_mfree_from_Pexec_list()){ //free memory if it was ours
+//SS the lines below where commented out by Steem authors, except on_rte=ON_RTE_STEMDOS;
 //        stemdos_save_sr=sr;
 //        sr|=SR_IPL_7;  don't disable interrupts, or freeze
         on_rte=ON_RTE_STEMDOS;
@@ -1613,6 +1688,7 @@ void stemdos_intercept_trap_1()
         sr|=SR_IPL_7;
         log(EasyStr("STEMDOS: Calling Mfree($")+HEXSl(stemdos_Pexec_list[stemdos_Pexec_list_ptr],6)+")");
         on_rte_interrupt_depth=interrupt_depth+1;
+//        TRACE_LOG("free %X\n",stemdos_Pexec_list[stemdos_Pexec_list_ptr]);
         stemdos_trap_1_Mfree(stemdos_Pexec_list[stemdos_Pexec_list_ptr]);
         stemdos_rte_action=STEMDOS_RTE_MFREE2;
       }
@@ -1847,6 +1923,7 @@ void stemdos_restore_path_buffer(){
 
 void stemdos_init()
 {
+  TRACE_LOG("stemdos_init!\n");
   for (int n=0;n<26;n++){
     mount_flag[n]=false;
     mount_path[n]="";

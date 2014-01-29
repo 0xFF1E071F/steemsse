@@ -1215,6 +1215,8 @@ and all his silly mods are gone!
 #define SS_TOS_STE_FAST_BOOT //from hatari
 #endif
 
+#define SS_TOS_NO_INTERCEPT_ON_RTE1 // fix Megamax C on ReDMCSB
+
 // fixes by other people: //TODO, another big category?
 #define SSE_AVTANDIL_FIX_001 // Russin TOS number
 #define SSE_MEGAR_FIX_001 // intercept GEM in extended resolution
