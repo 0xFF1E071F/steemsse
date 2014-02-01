@@ -101,11 +101,23 @@ struct TDebug {
   HWND boiler_timer_hwnd[4];//to record WIN handles
 #endif
 
+#if defined(SS_DEBUG_MONITOR_VALUE)
+  BYTE MonitorValueSpecified;
+  int MonitorValue; // trick we set a flag in higher bits
+#endif
+
+#if defined(SS_DEBUG_MONITOR_RANGE)
+  BYTE MonitorRange; //check from ad1 to ad2
+#endif
+
+#if defined(SS_DEBUG_68030_STACK_FRAME)
+  BYTE M68030StackFrame;
+#endif
+
 #endif//c++
 
   BYTE logsection_enabled[100]; // we want a double anyway //bool
   int LogSection;
-
 
 };
 

@@ -5,11 +5,6 @@
 #define EXT extern
 #define INIT(s)
 
-
-//////#include "cpu.decla.h"
-
-
-
 extern EasyStr disa_d2(MEM_ADDRESS);
 void breakpoint_check();
 extern int debug_get_ad_mode(MEM_ADDRESS);
@@ -61,6 +56,84 @@ EXT int debug_screen_shift INIT(0);
 EXT void debug_hit_mon(MEM_ADDRESS,int);
 EXT void debug_hit_io_mon_write(MEM_ADDRESS,int);
 
+#if defined(SS_DEBUG_MONITOR_RANGE)
+/*  Adding range check: is ad between ad1 and ad2
+    We use the first 2 watches
+*/
+
+inline bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adarr,bool wr) {
+  MEM_ADDRESS ad1=0,ad2=0;
+  for(int i=0;i<num;i++)
+  {
+    if(!ad1)
+      ad1=adarr[i];
+    else if(!ad2)
+    {
+      ad2=adarr[i];
+      break;
+    }
+  }
+  if(ad1&&ad2&& (ad1<ad2 && ad1<=ad && ad<=ad2
+    || ad1>ad2 && ad2<=ad && ad<=ad1))
+  {
+    return true;
+  }
+  return false;
+}
+
+
+#define DEBUG_CHECK_WR_B(ad,num,adarr,maskarr,hit,wr) \
+  if (num){ \
+    WORD mask=WORD((ad & 1) ? 0x00ff:0xff00); \
+    MEM_ADDRESS test_ad=ad & ~1;  \
+    if(Debug.MonitorRange&&debug_check_wr_check_range(test_ad,num,adarr,wr)) \
+      hit(ad,wr);\
+    else\
+    for (int i=0;i<num;i++){ \
+      if (adarr[i]==test_ad){ \
+        if (mask & maskarr[i]){ \
+          hit(ad,wr); \
+          break; \
+        }   \
+      }         \
+    }            \
+  }
+
+#define DEBUG_CHECK_WR_W(ad,num,adarr,hit,wr) \
+  if (num){ \
+    if(Debug.MonitorRange&&debug_check_wr_check_range(ad,num,adarr,wr)) \
+      hit(ad,wr);\
+    else\
+    for (int i=0;i<num;i++){ \
+      if (adarr[i]==ad){ \
+        hit(ad,wr); \
+        break; \
+      }         \
+    }            \
+  }
+
+
+//ad+2 is hypothesis
+#define DEBUG_CHECK_WR_L(ad,num,adarr,hit,wr) \
+  if (num){ \
+    if(Debug.MonitorRange&&debug_check_wr_check_range(ad,num,adarr,wr)) \
+      hit(ad,wr),hit(ad+2,wr);\
+    else\
+    for (int i=0;i<num;i++){ \
+      if (adarr[i]==ad){ \
+        hit(ad,wr); \
+        break; \
+      }         \
+      if (adarr[i]==ad+2){ \
+        hit(ad+2,wr); \
+        break; \
+      }         \
+    }            \
+  }
+
+
+#else
+
 #define DEBUG_CHECK_WR_B(ad,num,adarr,maskarr,hit,wr) \
   if (num){ \
     WORD mask=WORD((ad & 1) ? 0x00ff:0xff00); \
@@ -98,6 +171,8 @@ EXT void debug_hit_io_mon_write(MEM_ADDRESS,int);
       }         \
     }            \
   }
+
+#endif
 
 
 #define DEBUG_CHECK_WRITE_B(ad) DEBUG_CHECK_WR_B(ad,debug_num_mon_writes,debug_mon_write_ad,debug_mon_write_mask,debug_hit_mon,0)

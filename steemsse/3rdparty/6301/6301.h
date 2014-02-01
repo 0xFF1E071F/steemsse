@@ -83,4 +83,12 @@ int hd6301_transmit_byte(u_char byte_in); // just passing through
 
 #endif 
 
+
+extern 
+#ifdef __cplusplus
+"C" 
+#endif
+int dump_ram();
+
+
 #endif // HD6301_H

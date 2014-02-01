@@ -1014,6 +1014,7 @@ LRESULT __stdcall mem_browser_window_WndProc(HWND Win,UINT Mess,UINT wPar,long l
           }else if (LOWORD(wPar)==6){
             debug_load_file_to_address(Win,mb->ad & 0xffffff);
           }else if (LOWORD(wPar)==9 || LOWORD(wPar)==10){
+            //TRACE("find up (9)  or down (10): %d\n",LOWORD(wPar));
             int dir=int((LOWORD(wPar)==9) ? -1:1);
             EasyStr Text;
             Text.SetLength(200);
@@ -1179,7 +1180,6 @@ void mem_browser::setup_contextmenu(int row,int col)
         HMENU MonPop[2]={CreatePopupMenu(),CreatePopupMenu()};
         AppendMenu(insp_menu,MF_BYCOMMAND | MF_POPUP | (mask[0] ? MF_CHECKED:0),(UINT)MonPop[0],"Monitor writes to");
         AppendMenu(insp_menu,MF_BYCOMMAND | MF_POPUP | (mask[1] ? MF_CHECKED:0),(UINT)MonPop[1],"Monitor reads of");
-
         for (int n=0;n<2;n++){
           int mask_base=id_base+2+n*4;
           AppendMenu(MonPop[n],MF_BYCOMMAND,mask_base,"None");
@@ -1260,7 +1260,7 @@ void mem_browser::setup_contextmenu(int row,int col)
 LRESULT __stdcall mem_browser_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 {
   mem_browser *mb;
-	switch (Mess){
+  switch (Mess){
     case WM_LBUTTONUP:   
     case WM_RBUTTONDOWN: case WM_RBUTTONDBLCLK:
     case WM_MBUTTONUP:   case WM_MBUTTONDOWN:   case WM_MBUTTONDBLCLK:
@@ -1297,6 +1297,25 @@ LRESULT __stdcall mem_browser_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
                 if (pda) bk=(pda->bwr & BIT_0);
                 debug_set_bk(ad,!bk);
               }else{
+#if defined(SS_DEBUG_MONITOR_VALUE)
+//                TRACE("clicked in monitor column\n");
+                if(Debug.MonitorValueSpecified)
+                {
+                  EasyStr Text;
+                  Text.SetLength(10);
+                  SendDlgItemMessage(mb->owner,8,WM_GETTEXT,10,LPARAM(Text.Text));
+                  char *dummy;
+                  if( Text.IsEmpty() )
+                    Debug.MonitorValue=-1; // signal don't bother
+                  else if(Text[0]=='!')
+                    Debug.MonitorValue=0xF0000000 | strtol((Text.Text)+1,&dummy,10);
+                  else if(Text[0]=='$')
+                    Debug.MonitorValue=strtol((Text.Text)+1,&dummy,16);
+                  else
+                    Debug.MonitorValue=strtol(Text.Text,&dummy,10);
+//                  TRACE("text: %s, value dec %d hex %x\n",Text.Text,Debug.MonitorValue,Debug.MonitorValue);
+                }
+#endif                
                 if (pda){
                   int cur=pda->bwr & (BIT_1 | BIT_2);
                   if (cur==BIT_1 && pda->mask[0]==0xffff){

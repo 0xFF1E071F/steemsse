@@ -35,6 +35,11 @@ Str ProfileSectionGetStrFromID(int ID)
 }
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(DEBUG_BUILD)
+#include <boiler.decla.h> //sse_menu;
+#endif
+
+
 //---------------------------------------------------------------------------
 void LoadAllDialogData(bool FirstLoad,Str INIFile,bool *SecDisabled,GoodConfigStoreFile *pCSF)
 {
@@ -777,6 +782,36 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #endif
 #endif
 #endif
+
+#if defined(SS_DEBUG_SSE_PERSISTENT)
+    USE_TRACE_FILE=pCSF->GetInt("Debug","UseTraceFile",USE_TRACE_FILE);
+    CheckMenuItem(sse_menu,1517,MF_BYCOMMAND|
+      ((USE_TRACE_FILE)?MF_CHECKED:MF_UNCHECKED));
+    TRACE_FILE_REWIND=pCSF->GetInt("Debug","TraceFileRewind",TRACE_FILE_REWIND);
+    CheckMenuItem(sse_menu,1518,MF_BYCOMMAND|
+      ((TRACE_FILE_REWIND)?MF_CHECKED:MF_UNCHECKED));
+    Debug.PsgMask=pCSF->GetInt("Debug","PsgMask",Debug.PsgMask);
+    for(int id=1519;id<=1521;id++) // updating a bit more difficult
+      CheckMenuItem(sse_menu,id,
+        MF_BYCOMMAND|((int)( Debug.PsgMask & 1 << (1521-id)) 
+        ? MF_CHECKED:MF_UNCHECKED));
+#if defined(SS_DEBUG_MONITOR_VALUE)
+    Debug.MonitorValueSpecified=pCSF->GetInt("Debug","MonitorValueSpecified",Debug.MonitorValueSpecified);
+    CheckMenuItem(sse_menu,1522,MF_BYCOMMAND|
+      ((Debug.MonitorValueSpecified)?MF_CHECKED:MF_UNCHECKED));
+#endif
+#if defined(SS_DEBUG_MONITOR_RANGE)
+    Debug.MonitorRange=pCSF->GetInt("Debug","MonitorRange",Debug.MonitorRange); 
+    CheckMenuItem(sse_menu,1523,MF_BYCOMMAND|
+      ((Debug.MonitorRange)?MF_CHECKED:MF_UNCHECKED));
+#endif
+#if defined(SS_DEBUG_68030_STACK_FRAME)
+    Debug.M68030StackFrame=pCSF->GetInt("Debug","M68030StackFrame",Debug.M68030StackFrame); 
+    CheckMenuItem(sse_menu,1525,MF_BYCOMMAND|
+      ((Debug.M68030StackFrame)?MF_CHECKED:MF_UNCHECKED));
+#endif
+#endif//debug
+
 #endif // SS
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS____)
@@ -1153,6 +1188,21 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetStr("Options","DriveSoundVolume",EasyStr(SF314[0].Sound_Volume)); 
 #endif
 #endif
+
+#if defined(SS_DEBUG_SSE_PERSISTENT)
+  pCSF->SetStr("Debug","UseTraceFile",EasyStr(USE_TRACE_FILE)); 
+  pCSF->SetStr("Debug","TraceFileRewind",EasyStr(TRACE_FILE_REWIND)); 
+  pCSF->SetStr("Debug","PsgMask",EasyStr(Debug.PsgMask)); 
+#if defined(SS_DEBUG_MONITOR_VALUE)
+  pCSF->SetStr("Debug","MonitorValueSpecified",EasyStr(Debug.MonitorValueSpecified)); 
+#endif
+#if defined(SS_DEBUG_MONITOR_RANGE)
+  pCSF->SetStr("Debug","MonitorRange",EasyStr(Debug.MonitorRange)); 
+#endif
+#if defined(SS_DEBUG_68030_STACK_FRAME)
+  pCSF->SetStr("Debug","M68030StackFrame",EasyStr(Debug.M68030StackFrame)); 
+#endif
+#endif//debug
 
 
 #endif//SS

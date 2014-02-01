@@ -2743,6 +2743,7 @@ bool TDiskManager::CreateDiskImage(char *STName,int Sectors,int SecsPerTrack,int
     char zeros[512];
     ZeroMemory(zeros,sizeof(zeros));
     for (int n=0;n<Sectors;n++) fwrite(zeros,1,512,f);
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //LITTLE-ENDIAN ONLY             ******************************************************
     int buf;
     fseek(f,0,SEEK_SET);
@@ -2755,15 +2756,34 @@ bool TDiskManager::CreateDiskImage(char *STName,int Sectors,int SecsPerTrack,int
     buf=2;                            fwrite(&buf,1,1,f); //FATs
     buf=112;                          fwrite(&buf,2,1,f); //Dir Entries
     buf=Sectors;                      fwrite(&buf,2,1,f);
+#if defined(SS_DRIVE_CREATE_ST_DISK_FIX) // from Petari
+    buf=249;                          fwrite(&buf,1,1,f); //Unused - MSDOS signo in fact
+    
+    // 3 sectors per FAT is enough up to 1MB disk capacity
+    // 5 sectors per FAT up to 1700 KB - so HD, 20 sectors per track too
+    
+    if (Sectors<2000)     buf=3;                           
+    else      buf=5;   
+    fwrite(&buf,2,1,f);    //Sectors Per FAT
+#else   
     buf=249;                          fwrite(&buf,1,1,f); //Unused
     buf=5;                            fwrite(&buf,2,1,f); //Sectors Per FAT
+#endif
     buf=SecsPerTrack;                 fwrite(&buf,2,1,f);
     buf=Sides;                        fwrite(&buf,2,1,f);
     buf=0;                            fwrite(&buf,2,1,f); //Hidden Sectors
     fseek(f,510,SEEK_SET);
+#if defined(SS_DRIVE_CREATE_ST_DISK_FIX) // from Petari
+    fputc(0x97,f);fputc(0xc7,f);  // WTF ?
+    fputc(0xf0,f);fputc(0xff,f);fputc(0xff,f);  // First FAT begin
+    // Second FAT too ! :
+    if (Sectors<2000)    fseek(f,2048,SEEK_SET);
+    else  fseek(f,3072,SEEK_SET);
+    fputc(0xf0,f);fputc(0xff,f);fputc(0xff,f);  // Second FAT begin
+#else
     fputc(0x97,f);fputc(0xc7,f);
     fputc(0xf0,f);fputc(0xff,f);fputc(0xff,f);
-
+#endif
     fclose(f);
 
     DeleteFile(Str(STName)+".steembpb");

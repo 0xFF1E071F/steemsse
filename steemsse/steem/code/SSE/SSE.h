@@ -166,7 +166,7 @@ and all his silly mods are gone!
 //////////
 
 #if defined(SS_BETA)
-//#define TEST01
+#define TEST01
 //#define TEST02
 //#define TEST03
 //#define TEST04
@@ -435,25 +435,31 @@ and all his silly mods are gone!
 
 // boiler
 #if defined(DEBUG_BUILD) //TODO add other mods here
+#define SS_DEBUG_68030_STACK_FRAME //request, to check compatibility
 #define SS_DEBUG_BLAZING_STEP_OVER 
+#define SS_DEBUG_BROWSER_6301//TODO
 #define SS_DEBUG_BROWSER_DMASOUND
 #define SS_DEBUG_BROWSER_SHIFTER
 #define SS_DEBUG_BROWSER_VECTORS
 #define SS_DEBUG_CLIPBOARD // right-click on 'dump' to copy then paste
 //#define SS_DEBUG_CPU_LOG_NO_STOP // never stop
 #define SS_DEBUG_CPU_TRACE_NO_STOP // depends on 'suspend logging'
+#define SS_DEBUG_DUMP_6301_RAM
 #define SS_DEBUG_MOD_REGS // big letters, no =
-#define SS_DEBUG_MUTE_PSG_CHANNEL
-#define SS_DEBUG_NO_SOUND_DAMPING //PSG filter control 'd' and 'a'
+#define SS_DEBUG_MONITOR_RANGE // will stop for every address between 2 stops
+#define SS_DEBUG_MONITOR_VALUE // specify value (RW) that triggers stop
 #define SS_DEBUG_MOUSE_WHEEL // yeah!
 #define SS_DEBUG_MOVE_OTHER_SP
+#define SS_DEBUG_MUTE_PSG_CHANNEL
 #define SS_DEBUG_NODIV // no DIV log necessary anymore
+#define SS_DEBUG_NO_SOUND_DAMPING //PSG filter control 'd' and 'a'
 #define SS_DEBUG_RUN_TO_RTS
 #define SS_DEBUG_SHOW_FREQ // sync mode
 #define SS_DEBUG_SHOW_INTERRUPT // yeah!
 #define SS_DEBUG_SHOW_RES // shift mode
 #define SS_DEBUG_SHOW_SDP // the draw pointer
 #define SS_DEBUG_SHOW_SR // in HEX on the left of bit flags
+#define SS_DEBUG_SSE_PERSISTENT // L/S options 
 #define SS_DEBUG_TIMER_B // instead of 0
 #define SS_DEBUG_TIMERS_ACTIVE // (in reverse video) yeah!
 #define SS_DEBUG_WIPE_TRACE // as logfile
@@ -475,6 +481,7 @@ and all his silly mods are gone!
 #define SS_IPF_TRACE_SECTORS // show sector info (IPF)
 
 #define SS_IKBD_6301_DUMP_RAM
+//#define SS_IKBD_6301_DUMP_RAM_ON_LS//no
 #define SS_IKBD_6301_TRACE 
 #define SS_IKBD_6301_TRACE_SCI_RX
 #define SS_IKBD_6301_TRACE_SCI_TX
@@ -553,6 +560,7 @@ and all his silly mods are gone!
 //#define SS_DRIVE_EMPTY_SPIN_UP // European Demos (undef v3.5.4)
 // one or the other:
 //#define SS_DRIVE_EMPTY_VERIFY_LONG // GEM
+#define SS_DRIVE_CREATE_ST_DISK_FIX // from Petari
 #define SS_DRIVE_EMPTY_VERIFY_TIME_OUT //GEM
 #define SS_DRIVE_MOTOR_ON
 #define SS_DRIVE_MULTIPLE_SECTORS
@@ -1215,6 +1223,7 @@ and all his silly mods are gone!
 #define SS_TOS_STE_FAST_BOOT //from hatari
 #endif
 
+#define SS_TOS_FILETIME_FIX //from Petari
 #define SS_TOS_NO_INTERCEPT_ON_RTE1 // fix Megamax C on ReDMCSB
 
 // fixes by other people: //TODO, another big category?
