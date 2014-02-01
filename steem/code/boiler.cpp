@@ -69,6 +69,11 @@ THistoryList HistList;
 
 #endif
 
+#if defined(SS_DEBUG_DUMP_6301_RAM)
+//extern "C" int dump_ram();
+#include <6301/6301.h>
+#endif
+
 /* SS
   Mods in the debug build (Steem Boiler):
   - not sure CPU mods are reckoned but it seems so (TODO)
@@ -657,7 +662,6 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
             case 7: mask=0xffff;read=true; break;
             case 8: mask=0xff00;read=true; break;
             case 9: mask=0x00ff;read=true; break;
-
             case 16:case 17:case 18:case 19:
               pda->mode=action-16;
               breakpoint_menu_setup();
@@ -983,8 +987,35 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
                 MF_BYCOMMAND|((int)(TRACE_FILE_REWIND)
                 ? MF_CHECKED : MF_UNCHECKED));
               break;
+#if defined(SS_DEBUG_MONITOR_VALUE)
+            case 1522: 
+              Debug.MonitorValueSpecified=!Debug.MonitorValueSpecified;
+              CheckMenuItem(sse_menu,1522,
+                MF_BYCOMMAND|((int)(Debug.MonitorValueSpecified)
+                ? MF_CHECKED : MF_UNCHECKED));
+              break;
 #endif
-
+#if defined(SS_DEBUG_MONITOR_RANGE)
+            case 1523: 
+              Debug.MonitorRange=!Debug.MonitorRange;
+              CheckMenuItem(sse_menu,1523,
+                MF_BYCOMMAND|((int)(Debug.MonitorRange)
+                ? MF_CHECKED : MF_UNCHECKED));
+              break;
+#endif
+#if defined(SS_DEBUG_DUMP_6301_RAM)
+            case 1524:
+              dump_ram();
+              break;
+#endif
+#if defined(SS_DEBUG_68030_STACK_FRAME)
+            case 1525: 
+              Debug.M68030StackFrame=!Debug.M68030StackFrame;
+              CheckMenuItem(sse_menu,1525,
+                MF_BYCOMMAND|((int)(Debug.M68030StackFrame)
+                ? MF_CHECKED : MF_UNCHECKED));
+              break;
+#endif
 #if defined(SS_DEBUG_MUTE_PSG_CHANNEL)
 /*
 Toggling a bit
@@ -998,13 +1029,13 @@ This isn't saved through the sessions
             case 1520: //b
             case 1521: //a
               Debug.PsgMask ^= 1 << (1521-id);
-
               CheckMenuItem(sse_menu,id,
                 MF_BYCOMMAND|((int)( Debug.PsgMask & 1 << (1521-id)) 
                   ? MF_CHECKED:MF_UNCHECKED));
 
               break;
 #endif
+#endif//SS
 
             case 1780: //turn screen red
             {
@@ -1657,15 +1688,28 @@ void DWin_init()
  // AppendMenu(boiler_op_menu,MF_STRING|MF_SEPARATOR,0,NULL);
   AppendMenu(sse_menu,MF_STRING,1517,"Output TRACE to file");
   AppendMenu(sse_menu,MF_STRING,1518,"Limit TRACE file size");
+#if defined(SS_DEBUG_DUMP_6301_RAM)
+  AppendMenu(sse_menu,MF_STRING,1524,"Dump 6301 RAM");
+#endif
 #endif
 
+#if defined(SS_DEBUG_MONITOR_VALUE)
+  AppendMenu(sse_menu,MF_STRING|MF_SEPARATOR,0,NULL);
+  AppendMenu(sse_menu,MF_STRING,1522,"Monitor: specific value");
+#endif
+#if defined(SS_DEBUG_MONITOR_RANGE)
+  AppendMenu(sse_menu,MF_STRING,1523,"Monitor: address range");
+#endif
+#if defined(SS_DEBUG_68030_STACK_FRAME)
+  AppendMenu(sse_menu,MF_STRING|MF_SEPARATOR,0,NULL);
+  AppendMenu(sse_menu,MF_STRING,1525,"68030 stack frame");
+#endif
 #if defined(SS_DEBUG_MUTE_PSG_CHANNEL)
   AppendMenu(sse_menu,MF_STRING|MF_SEPARATOR,0,NULL);
-  AppendMenu(sse_menu,MF_STRING,1521,"mute PSG A");
-  AppendMenu(sse_menu,MF_STRING,1520,"mute PSG B");
-  AppendMenu(sse_menu,MF_STRING,1519,"mute PSG C");
+  AppendMenu(sse_menu,MF_STRING,1521,"Mute PSG channel A");
+  AppendMenu(sse_menu,MF_STRING,1520,"Mute PSG channel B");
+  AppendMenu(sse_menu,MF_STRING,1519,"Mute PSG channel C");
 #endif
-
 
   log("STARTUP: calling iolist_init");
 

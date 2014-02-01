@@ -272,7 +272,7 @@ bool TScreenSaver::isActive(){
 }
 
 void inline TScreenSaver::checkMessage(MSG* mess){
-    
+
     if (FullScreen){
         if (screen_saver_turned_on){
             switch(mess->message){

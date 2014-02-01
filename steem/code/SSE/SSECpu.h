@@ -545,7 +545,11 @@ inline void TM68000::PerformRte() {
   MEM_ADDRESS pushed_return_address=m68k_lpeek(r[15]+2);
   // An Illegal routine could manipulate this value.
   SetPC(pushed_return_address);
-  sr=m68k_dpeek(r[15]);r[15]+=6;      
+  sr=m68k_dpeek(r[15]);r[15]+=6;    
+#if defined(SS_DEBUG_68030_STACK_FRAME)
+  if(Debug.M68030StackFrame)
+    r[15]+=2;   
+#endif  
   sr&=SR_VALID_BITMASK;               
   DETECT_CHANGE_TO_USER_MODE;         
   DETECT_TRACE_BIT;       

@@ -219,6 +219,18 @@ void debug_hit_mon(MEM_ADDRESS ad,int read)
   if (mask==0xff00) bytes=1;
   if (mask==0x00ff) bytes=1, ad++;
   int val=int((bytes==1) ? int(d2_peek(ad)):int(d2_dpeek(ad)));
+
+#if defined(SS_DEBUG_MONITOR_VALUE)
+  if(Debug.MonitorValueSpecified && Debug.MonitorValue!=-1 
+    && ( (Debug.MonitorValue&0xF0000000) && val==(Debug.MonitorValue&0xFFFF))
+    || (!(Debug.MonitorValue&0xF0000000) && val!=Debug.MonitorValue))
+  {
+    //TRACE("refuse add %X value %X expected %X\n",ad,val,Debug.MonitorValue);
+    return;
+  }
+  //else TRACE("accept add %X value %X expected %X\n",ad,val,Debug.MonitorValue);
+#endif
+
   Str mess;
   if (read){
     mess=HEXSl(old_pc,6)+": Read "+val+" ($"+HEXSl(val,bytes*2)+") from address $"+HEXSl(ad,6);
@@ -226,6 +238,10 @@ void debug_hit_mon(MEM_ADDRESS ad,int read)
     mess=HEXSl(old_pc,6)+": Write to address $"+HEXSl(ad,6);
   }
   int mode=debug_get_ad_mode(ad & ~1);
+#if defined(SS_DEBUG_MONITOR_RANGE) // mode is likely 0 (ad not found)
+  if(Debug.MonitorRange)
+    mode=2;
+#endif
   if (mode==2){
     if (runstate==RUNSTATE_RUNNING){
       runstate=RUNSTATE_STOPPING;
@@ -248,11 +264,23 @@ void debug_hit_io_mon_write(MEM_ADDRESS ad,int val)
 #else
   WORD mask=debug_get_ad_mask(ad,read);
 #endif
+
+#if defined(SS_DEBUG_MONITOR_VALUE)
+  if(Debug.MonitorValueSpecified && Debug.MonitorValue!=-1 
+    && ( (Debug.MonitorValue&0xF0000000) && val==(Debug.MonitorValue&0xFFFF))
+    || (!(Debug.MonitorValue&0xF0000000) && val!=Debug.MonitorValue))
+    return;
+#endif
+
   int bytes=2;
   if (mask==0xff00) bytes=1;
   if (mask==0x00ff) bytes=1, ad++;
   Str mess=HEXSl(old_pc,6)+": Wrote to address $"+HEXSl(ad,6)+", new value is "+val+" ($"+HEXSl(val,bytes*2)+")";
   int mode=debug_get_ad_mode(ad & ~1);
+#if defined(SS_DEBUG_MONITOR_RANGE)
+  if(Debug.MonitorRange)
+    mode=2;
+#endif
   if (mode==2){
     if (runstate==RUNSTATE_RUNNING){
       runstate=RUNSTATE_STOPPING;

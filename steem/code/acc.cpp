@@ -165,6 +165,12 @@ int count_bits_set_in_word(unsigned short w)
 MEM_ADDRESS get_sp_before_trap(bool *pInvalid)
 {
   MEM_ADDRESS sp=(areg[7] & 0xffffff)+6;
+
+#if defined(SS_DEBUG_68030_STACK_FRAME)
+  if(Debug.M68030StackFrame)
+    sp+=2;
+#endif
+
   // sp now points to first byte after the exception stack frame
   if (sp<mem_len){
     // First byte on stack is high byte of sr

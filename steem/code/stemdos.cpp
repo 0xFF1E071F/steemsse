@@ -468,7 +468,11 @@ void stemdos_Fdatime(int h,MEM_ADDRESS sp)
 #ifdef WIN32
       FILETIME local_ft;
       DirSearch ds(stemdos_file[h].filename);
+#if defined(SS_TOS_FILETIME_FIX) //from Petari
+      FileTimeToLocalFileTime(&ds.LastWriteTime,&local_ft); // Convert from GMT
+#else
       FileTimeToLocalFileTime(&ds.CreationTime,&local_ft); // Convert from GMT
+#endif
       FileTimeToDosDateTime(&local_ft,&date,&time);
 #elif defined(UNIX)
       struct stat s;
@@ -614,11 +618,20 @@ void stemdos_fsnext()
             WORD CreateDate,CreateTime;
 #ifdef WIN32
             FILETIME lft;
+#if defined(SS_TOS_FILETIME_FIX) //from Petari
+            FileTimeToLocalFileTime(&ds.LastWriteTime,&lft); // File time is always GMT
+#else
             FileTimeToLocalFileTime(&ds.CreationTime,&lft); // File time is always GMT
+#endif
             FileTimeToDosDateTime(&lft,&CreateDate,&CreateTime);
 #elif defined(UNIX)
+#if defined(SS_TOS_FILETIME_FIX) //from Petari
+            CreateDate=WORD(ds.LastWriteTime >> 16);
+            CreateTime=WORD(ds.LastWriteTime);
+#else
 						CreateDate=WORD(ds.CreationTime >> 16);
 						CreateTime=WORD(ds.CreationTime);
+#endif
 #endif
             m68k_poke(stemdos_dta+22,HIBYTE(CreateTime)); //file clock time
             m68k_poke(stemdos_dta+23,LOBYTE(CreateTime)); //file clock time

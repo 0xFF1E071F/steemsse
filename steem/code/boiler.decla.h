@@ -12,6 +12,9 @@ EXT HMENU insp_menu;
 EXT HMENU mem_browser_menu,history_menu,logsection_menu;
 EXT HMENU menu1;
 EXT HMENU boiler_op_menu,shift_screen_menu;
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+extern HMENU sse_menu;
+#endif
 EXT HWND sr_display,DWin_edit;
 EXT mr_static *lpms_other_sp;
 EXT HWND DWin_trace_button,DWin_trace_over_button,DWin_run_button;

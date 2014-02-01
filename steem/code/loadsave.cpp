@@ -686,14 +686,6 @@ void LoadState(GoodConfigStoreFile *pCSF)
   CheckMenuItem(boiler_op_menu,1514,MF_BYCOMMAND | int(trace_show_window ? MF_CHECKED:MF_UNCHECKED));
   CheckMenuItem(boiler_op_menu,1515,MF_BYCOMMAND | int(debug_monospace_disa ? MF_CHECKED:MF_UNCHECKED));
   CheckMenuItem(boiler_op_menu,1516,MF_BYCOMMAND | int(debug_uppercase_disa ? MF_CHECKED:MF_UNCHECKED));
-
-#if defined(STEVEN_SEAGAL) //&& defined(SS_DEBUG)
-  CheckMenuItem(sse_menu,1517,MF_BYCOMMAND|
-    ((USE_TRACE_FILE)?MF_CHECKED:MF_UNCHECKED));
-  CheckMenuItem(sse_menu,1518,MF_BYCOMMAND|
-    ((TRACE_FILE_REWIND)?MF_CHECKED:MF_UNCHECKED));
-#endif
-  
   CheckMenuItem(logsection_menu,1013,MF_BYCOMMAND | int(debug_wipe_log_on_reset ? MF_CHECKED:MF_UNCHECKED));
   CheckMenuItem(breakpoint_menu,1103,MF_BYCOMMAND | int((monitor_mode==2) ? MF_CHECKED:MF_UNCHECKED));
   CheckMenuItem(breakpoint_menu,1104,MF_BYCOMMAND | int((monitor_mode==3) ? MF_CHECKED:MF_UNCHECKED));
