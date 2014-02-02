@@ -83,12 +83,21 @@ int hd6301_transmit_byte(u_char byte_in); // just passing through
 
 #endif 
 
-
+// for use by the Steem boiler
+#if defined(SS_DEBUG_DUMP_6301_RAM)
 extern 
 #ifdef __cplusplus
 "C" 
 #endif
-int dump_ram();
+int hd6301_dump_ram();
+#endif
 
+#if defined(SS_DEBUG_BROWSER_6301)
+extern 
+#ifdef __cplusplus
+"C" 
+#endif
+int hd6301_copy_ram(unsigned char *ptr);
+#endif
 
 #endif // HD6301_H

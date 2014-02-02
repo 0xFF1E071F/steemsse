@@ -189,9 +189,9 @@ static dr2_getb (offs)
   u_char value;
 #if !defined(NDEBUG)
   u_char ddr2=iram[DDR2];
-  ASSERT(ddr2==1); // strong
+  //ASSERT(ddr2==1); // strong
 #endif
-  ASSERT(offs==P2);
+  //ASSERT(offs==P2);
   value=0xFF;
   if(mousek) // clear the correct bit (see above)
   {

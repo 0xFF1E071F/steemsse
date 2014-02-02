@@ -939,7 +939,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       break;
     case WM_CLOSE:
 #ifdef TEST01
-    case WM_ENDSESSION://tst
+//    case WM_ENDSESSION://tst -> useless
 #endif
       QuitSteem();
       return false;

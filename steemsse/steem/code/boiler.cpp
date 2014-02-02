@@ -70,7 +70,6 @@ THistoryList HistList;
 #endif
 
 #if defined(SS_DEBUG_DUMP_6301_RAM)
-//extern "C" int dump_ram();
 #include <6301/6301.h>
 #endif
 
@@ -1005,7 +1004,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 #endif
 #if defined(SS_DEBUG_DUMP_6301_RAM)
             case 1524:
-              dump_ram();
+              hd6301_dump_ram();
               break;
 #endif
 #if defined(SS_DEBUG_68030_STACK_FRAME)
@@ -1190,9 +1189,10 @@ This isn't saved through the sessions
             //////////////////// Browsers Menu
             case 900:case 901:
             {
-              mem_browser *mb=new mem_browser(pc,type_disp_type(LOWORD(wPar)==900 ? DT_MEMORY:DT_INSTRUCTION));
+
 #if !defined(SS_DEBUG_MOUSE_WHEEL)
 // we don't want to preselect address, we want the wheel to work at once
+              mem_browser *mb=new mem_browser(pc,type_disp_type(LOWORD(wPar)==900 ? DT_MEMORY:DT_INSTRUCTION));              
               SetFocus(GetDlgItem(mb->owner,3));
               SendMessage(GetDlgItem(mb->owner,3),WM_LBUTTONDOWN,0,0);
 #endif
@@ -1257,6 +1257,12 @@ This isn't saved through the sessions
 #if defined(SS_DEBUG_BROWSER_DMASOUND)
             case 913:
               new mem_browser(0xFF8900,DT_MEMORY);
+              break;
+#endif
+
+#if defined(SS_DEBUG_BROWSER_6301)
+            case 914:
+              new mem_browser(IOLIST_PSEUDO_AD_6301,DT_MEMORY);
               break;
 #endif
 
@@ -1612,7 +1618,14 @@ void DWin_init()
   AppendMenu(mem_browser_menu,MF_STRING,904,"New M&FP Browser");
   AppendMenu(mem_browser_menu,MF_STRING,906,"New &Text Browser");
   AppendMenu(mem_browser_menu,MF_STRING,908,"New &FDC Browser");
+
+#if defined(SS_DEBUG_BROWSER_6301)
+  AppendMenu(mem_browser_menu,MF_STRING,909,"New I&KBD 6301 fake emu Browser");
+  AppendMenu(mem_browser_menu,MF_STRING,914,"New IKBD 6301 true emu Browser");
+#else
   AppendMenu(mem_browser_menu,MF_STRING,909,"New I&KBD Browser");
+#endif
+
 #if USE_PASTI
   if (hPasti){
     AppendMenu(mem_browser_menu,MF_STRING|MF_SEPARATOR,0,NULL);
@@ -1951,13 +1964,35 @@ void DWin_init()
     RECT rc;
     int y=5;
     mr_static *ms;
+
+#if defined(SS_DEBUG_SHOW_FRAME)
+    ms=new mr_static("Frame ","",5,y,Par,
+        NULL,(MEM_ADDRESS)&FRAME,3,MST_DECIMAL,0,NULL);
+    GetWindowRectRelativeToParent(ms->handle,&rc);
+    ms=new mr_static("Cycles Since VBL ","",rc.right+5,y,Par,
+        NULL,(MEM_ADDRESS)&debug_cycles_since_VBL,3,MST_DECIMAL,0,NULL);
+
+#else
     ms=new mr_static("Cycles Since VBL ","",5,y,Par,
         NULL,(MEM_ADDRESS)&debug_cycles_since_VBL,3,MST_DECIMAL,0,NULL);
+#endif
     GetWindowRectRelativeToParent(ms->handle,&rc);
+
+#if defined(SS_DEBUG_SHOW_ACT)
+    ms=
+#endif
 
     new mr_static("Since HBL ","",rc.right+5,y,Par,
         NULL,(MEM_ADDRESS)&debug_cycles_since_HBL,2,MST_DECIMAL,0,NULL);
+
+#if defined(SS_DEBUG_SHOW_ACT)
+    GetWindowRectRelativeToParent(ms->handle,&rc);
+    new mr_static("Absolute ","",rc.right+5,y,Par,
+        NULL,(MEM_ADDRESS)&debug_ACT,4,MST_DECIMAL,0,NULL);
+#endif
+
     y+=30;
+
 
     ms=new mr_static("Current Video Address ","",5,y,Par,
         NULL,(MEM_ADDRESS)&debug_VAP,3,MST_REGISTER,0,NULL);

@@ -64,11 +64,16 @@ void mem_browser::new_window(MEM_ADDRESS address,type_disp_type new_disp_type)
           break;
         case IOLIST_PSEUDO_AD_IKBD:
 #if defined(SS_IKBD_6301) 
-          Title="IKBD (fake only)";
+          Title="IKBD 6301 fake emu";
 #else
           Title="IKBD";
 #endif
           break;
+#if defined(SS_DEBUG_BROWSER_6301)
+        case IOLIST_PSEUDO_AD_6301:
+          Title="IKBD 6301 true emu";
+          break;
+#endif
       }
     }else if (new_disp_type==DT_REGISTERS){
       Title="Registers";
@@ -226,6 +231,10 @@ void mem_browser::init()
     bool PSG=(ad & 0xfffff000)==IOLIST_PSEUDO_AD_PSG;
     bool FDC=(ad & 0xfffff000)==IOLIST_PSEUDO_AD_FDC;
     bool IKBD=(ad & 0xfffff000)==IOLIST_PSEUDO_AD_IKBD;
+#if defined(SS_DEBUG_BROWSER_6301)
+    if((ad & 0xfffff000)==IOLIST_PSEUDO_AD_6301)
+      IKBD=true;
+#endif
     bool Pseudo=(PSG || FDC || IKBD);
 
     lc.cx=30;
@@ -1116,7 +1125,11 @@ void mem_browser::vscroll(int of)
     MEM_ADDRESS ad_high=ad & 0xff000000;
     if (disp_type==DT_INSTRUCTION){
       ad=oi(ad & 0xffffff,of);  //offset instruction
+#if defined(SS_DEBUG_BROWSER_PSEUDO_IO_SCROLL)
+    }else if (disp_type==DT_MEMORY){// 6301 true emu browser is bigger
+#else
     }else if (disp_type==DT_MEMORY && IS_IOLIST_PSEUDO_ADDRESS(ad)==0){
+#endif
       ad+=2*(wpl)*of;
       ad&=0xfffffe;
     }else if(disp_type==DT_REGISTERS){
@@ -1421,6 +1434,7 @@ LRESULT __stdcall mem_browser_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
             mb->vscroll(-1);
             break;
           case VK_DOWN:
+            //TRACE("down");
             mb->vscroll(1);
             break;
           case VK_LEFT:case VK_RIGHT:

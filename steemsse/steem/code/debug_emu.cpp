@@ -23,6 +23,9 @@ EXT int stop_on_next_program_run INIT(0);
 EXT bool debug_first_instruction INIT(0);
 EXT Str runstate_why_stop;
 EXT DWORD debug_cycles_since_VBL,debug_cycles_since_HBL;
+#if defined(SS_DEBUG_SHOW_ACT)
+EXT DWORD debug_ACT;
+#endif
 EXT MEM_ADDRESS debug_VAP;
 EXT int debug_time_to_timer_timeout[4];
 EXT int debug_cycle_colours INIT(0);
@@ -188,6 +191,13 @@ void debug_update_cycle_counts()
   debug_VAP=Shifter.ReadSDP(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
 #else
   debug_VAP=get_shifter_draw_pointer(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
+#endif
+#if defined(SS_DEBUG_SHOW_ACT)
+  debug_ACT=ACT;
+#endif
+
+#if defined(SS_DEBUG_BROWSER_6301)
+  hd6301_copy_ram(Debug.HD6301RamBuffer); // in 6301.c
 #endif
 
   for (int t=0;t<4;t++){
@@ -367,6 +377,17 @@ void iolist_debug_add_pseudo_addresses()
   iolist_add_entry(IOLIST_PSEUDO_AD_IKBD+0x026,"IKBD Absolute Mouse Buttons",1,
             "RMB Down|RMB Was Down|LMB Down|LMB Was Down",lpDWORD_B_0(&ikbd.abs_mousek_flags));
   iolist_add_entry(IOLIST_PSEUDO_AD_IKBD+0x028,"IKBD Joy Button Duration",1,NULL,lpDWORD_B_0(&ikbd.duration));
+
+#if defined(SS_DEBUG_BROWSER_6301)
+  // TODO identify and name variables
+  char buffer[10];
+  for(int i=0;i<256;i++)
+  {
+    sprintf(buffer,"%2X",i);
+    iolist_add_entry(IOLIST_PSEUDO_AD_6301+i*2,buffer,1,NULL,&Debug.HD6301RamBuffer[i]);
+  }
+#endif
+
 }
 //---------------------------------------------------------------------------
 int __stdcall debug_plugin_read_mem(DWORD ad,BYTE *buf,int len)

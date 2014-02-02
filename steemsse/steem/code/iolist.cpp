@@ -17,7 +17,11 @@ addresses and how they should be displayed in the debugger.
 
 int iolist_length=0;
 
-iolist_entry iolist[300];
+iolist_entry iolist[300
+#if defined(SS_DEBUG_BROWSER_6301)
++256 // in fact 300 was too much without 6301, but with it it would crash
+#endif
+];
 
 #undef EXT
 #undef INIT

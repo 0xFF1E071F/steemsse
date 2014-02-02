@@ -41,6 +41,9 @@ EXT bool debug_first_instruction INIT(0);
 
 EXT Str runstate_why_stop;
 EXT DWORD debug_cycles_since_VBL,debug_cycles_since_HBL;
+#if defined(SS_DEBUG_SHOW_ACT)
+EXT DWORD debug_ACT;
+#endif
 EXT MEM_ADDRESS debug_VAP;
 EXT int debug_time_to_timer_timeout[4];
 EXT void debug_check_for_events();
