@@ -252,7 +252,7 @@ hd6301_load_save(int one_if_save,unsigned char *buffer) {
   {
     TRACE("6301 Snapshot - save RAM\n");
 #if defined(SS_DEBUG_DUMP_6301_RAM_ON_LS)
-    dump_ram();
+    hd6301_dump_ram();
 #endif
     memmove(i,&ram[0x80],128);
   }
@@ -261,7 +261,7 @@ hd6301_load_save(int one_if_save,unsigned char *buffer) {
     TRACE("Snapshot - load RAM\n");
     memmove(&ram[0x80],i,128);
 #if defined(SS_DEBUG_DUMP_6301_RAM_ON_LS)
-    dump_ram();
+    hd6301_dump_ram();
 #endif
   }
   i+=128;
@@ -322,18 +322,21 @@ dump_rom() {
 
 #if defined(SS_DEBUG_DUMP_6301_RAM)
 
-dump_ram() { // commanded by Boiler
-  int i;
-  //TRACE("6301 RAM dump\n    \t00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F\n");
+hd6301_dump_ram() { // commanded by Boiler
   printf("6301 RAM dump\n    \t00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F\n");
-  //mem_print (0x80,128,16);
   mem_print (0,256,16);
-  /*
-  TRACE("RAM disassembly\n");
-  //for(i=0x80;i<0x80+128;i++)
+}
+
+#endif
+
+#if defined(SS_DEBUG_BROWSER_6301)
+/*  We copy the memory instead of having direct access.
+    TODO: use proper separation methods?
+*/
+hd6301_copy_ram(unsigned char *ptr) {
+  int i;
   for(i=0;i<256;i++)
-    i+=instr_print (i)-1; // what was that?
-    */
+    ptr[i]=mem_getb (i);
 }
 
 #endif

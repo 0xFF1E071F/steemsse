@@ -114,6 +114,10 @@ struct TDebug {
   BYTE M68030StackFrame;
 #endif
 
+#if defined(SS_DEBUG_BROWSER_6301)
+  BYTE HD6301RamBuffer[256+8];
+#endif
+
 #endif//c++
 
   BYTE logsection_enabled[100]; // we want a double anyway //bool

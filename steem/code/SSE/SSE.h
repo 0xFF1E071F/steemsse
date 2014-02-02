@@ -166,7 +166,7 @@ and all his silly mods are gone!
 //////////
 
 #if defined(SS_BETA)
-#define TEST01
+//#define TEST01
 //#define TEST02
 //#define TEST03
 //#define TEST04
@@ -437,8 +437,9 @@ and all his silly mods are gone!
 #if defined(DEBUG_BUILD) //TODO add other mods here
 #define SS_DEBUG_68030_STACK_FRAME //request, to check compatibility
 #define SS_DEBUG_BLAZING_STEP_OVER 
-#define SS_DEBUG_BROWSER_6301//TODO
+#define SS_DEBUG_BROWSER_6301
 #define SS_DEBUG_BROWSER_DMASOUND
+#define SS_DEBUG_BROWSER_PSEUDO_IO_SCROLL // for the bigger 6301 browser
 #define SS_DEBUG_BROWSER_SHIFTER
 #define SS_DEBUG_BROWSER_VECTORS
 #define SS_DEBUG_CLIPBOARD // right-click on 'dump' to copy then paste
@@ -454,6 +455,8 @@ and all his silly mods are gone!
 #define SS_DEBUG_NODIV // no DIV log necessary anymore
 #define SS_DEBUG_NO_SOUND_DAMPING //PSG filter control 'd' and 'a'
 #define SS_DEBUG_RUN_TO_RTS
+//#define SS_DEBUG_SHOW_ACT //useful?
+//#define SS_DEBUG_SHOW_FRAME //useful?
 #define SS_DEBUG_SHOW_FREQ // sync mode
 #define SS_DEBUG_SHOW_INTERRUPT // yeah!
 #define SS_DEBUG_SHOW_RES // shift mode

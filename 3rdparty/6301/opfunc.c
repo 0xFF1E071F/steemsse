@@ -434,7 +434,7 @@ trap ()
 #endif
 	char  *p       = (char *) sym_find_name (routine);
 #if defined(SS_DEBUG_DUMP_6301_RAM)
-	dump_ram();
+	hd6301_dump_ram();
 #endif
   warning ("trap: pc:%04x\nSubroutine: %04x %s\n",
 		 reg_getpc (), routine, p ? p : "");

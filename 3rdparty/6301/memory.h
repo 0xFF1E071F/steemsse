@@ -72,7 +72,7 @@ mem_getb (addr)
       return 0xFF; // as in HD6301V1 doc
     }
 #endif
-    ASSERT(offs!=P3); // DR3 never read by ROM
+    //ASSERT(offs!=P3); // DR3 never read by ROM
     if (ireg_getb_func[offs])
     {  
       return (*ireg_getb_func[offs])(offs);    }
