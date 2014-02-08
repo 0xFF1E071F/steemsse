@@ -288,6 +288,7 @@ DEBUG_ONLY( if (fdc_str & FDC_STR_SEEK_ERROR) log("     Verify failed (track not
 /* SS writes to $FF8604 when bits 2&1 of $FF8606 have been cleared
                 WD1772 CR                DMA CR
    directly come here
+   In some cases the write may be blocked (register not changed)
 */
 void floppy_fdc_command(BYTE cm)
 {
@@ -459,7 +460,7 @@ void floppy_fdc_command(BYTE cm)
 void agenda_fdc_spun_up(int do_exec)
 {
 
-#if defined(SS_FDC_INDEX_PULSE_COUNTER)
+#if defined(SS_FDC_INDEX_PULSE_COUNTER) && defined(SS_DRIVE)
 /*  
 On the WD1772 all commands, except the Force Interrupt Command,
  are programmed via the h Flag to delay for spindle motor start 
@@ -997,7 +998,7 @@ Byte #     Meaning                |     Sector length code     Sector length
 The 177x copies the track address into the Sector Register.  The chip
 sets the CRC Error bit in the status register if the CRC is invalid.
 */
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG) && defined(SS_DRIVE)
         ASSERT(WD1772.CommandType(fdc_cr)==3);
         TRACE_LOG("Read address TR %d SR %d byte %d\n",fdc_tr,fdc_sr,SF314[DRIVE].BytePosition());
 #endif
@@ -1060,7 +1061,7 @@ the AM detector has found an address mark.]  The chip may read gap
 bytes incorrectly during write-splice time because of synchronization.
 */
       case 0xe0:  //read track
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG) && defined(SS_DRIVE)
         ASSERT(WD1772.CommandType(fdc_cr)==3);
         TRACE_LOG("read track TR %d CYL %d\n",fdc_tr,SF314[DRIVE].Track());
 #endif
@@ -1108,7 +1109,7 @@ MFM clock transition between bits 3 and 4.  A Data Register value of
 $f7 will write a two-byte CRC to the disk.
 */
       case 0xf0:  //write (format) track
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC) && defined(SS_DEBUG) && defined(SS_DRIVE)
         ASSERT(WD1772.CommandType(fdc_cr)==3);
         TRACE_LOG("write track TR %d CYL %d\n",fdc_tr,SF314[DRIVE].Track());
 #endif
@@ -1179,7 +1180,7 @@ acknowledge Force Interrupt commands only between micro- instructions.
         agenda_delete(agenda_fdc_finished);
         fdc_str=BYTE(fdc_str & FDC_STR_MOTOR_ON);
         if (fdc_cr & b1100){
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_FORCE_INTERRUPT)
+#if defined(STEVEN_SEAGAL) && defined(SS_FDC_FORCE_INTERRUPT) && defined(SS_DRIVE)
 /*  "The lower four bits of the command determine the conditional 
 interrupt as follows:
 - i0,i1 = Not used with the WD1772
@@ -1287,7 +1288,7 @@ The FDC will automatically turn off the motor after the 10 index pulse
 
 void agenda_fdc_motor_flag_off(int revs_to_wait)
 {
-#if defined(SS_FDC_INDEX_PULSE_COUNTER)
+#if defined(SS_FDC_INDEX_PULSE_COUNTER) && defined(SS_DRIVE)
 /*
 If after finishing the command, the device remains idle for
  9 revolutions, the MO signal goes back to a logic 0.
@@ -1457,7 +1458,7 @@ void agenda_fdc_finished(int)
 //tmp    ASSERT( fdc_str&FDC_STR_MOTOR_ON || FloppyDrive[floppy_current_drive()].Empty());
  //tmp   ASSERT( agenda_get_queue_pos(agenda_fdc_motor_flag_off)<0 );
 #if defined(SS_FDC_MOTOR_OFF_COUNT_IP)
-#if defined(SS_FDC_INDEX_PULSE_COUNTER)
+#if defined(SS_FDC_INDEX_PULSE_COUNTER) && defined(SS_DRIVE)
     //  Set up agenda for next IP
     WD1772.IndexCounter=0;
     DWORD delay=SF314[DRIVE].HblsNextIndex();
@@ -1618,7 +1619,7 @@ instant_sector_access_loop:
   if (SectorStage==0){
     if (floppy->SeekSector(floppy_current_side(),floppy_head_track[floppyno],fdc_sr,FromFormat)){
       // Error seeking sector, it doesn't exist
-      TRACE_LOG("Seek error sector %d\n",fdc_sr);
+      TRACE_LOG("H%d T%d RNF %d\n",floppy_current_side(),floppy_head_track[floppyno],fdc_sr);
       floppy_irq_flag=FLOPPY_IRQ_ONESEC;  //end command after 1 second
     }
 #ifdef ONEGAME
@@ -1724,7 +1725,7 @@ instant_sector_access_loop:
 #if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_MULTIPLE_SECTORS)
       if(ADAT)
       {
-        // the drive must find next sector
+        // The drive must find next sector
         agenda_add(agenda_floppy_readwrite_sector,SF314[DRIVE].SectorGap(),
           MAKELONG(++Part,Command));
         return;
@@ -1741,7 +1742,7 @@ instant_sector_access_loop:
       fdc_str=BYTE(WriteProtect | FDC_STR_MOTOR_ON); //SS War Heli
 //      TRACE_LOG("Sector R/W OK\n");
 #if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_RW_SECTOR_TIMING2)\
-      && defined(SS_FDC)
+      && defined(SS_FDC_ACCURATE)
       // For test program FDCT by Petari
       if(ADAT)
         agenda_add(agenda_fdc_finished,SF314[DRIVE].BytesToHbls(nSects<11?

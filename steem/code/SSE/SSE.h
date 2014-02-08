@@ -166,8 +166,8 @@ and all his silly mods are gone!
 //////////
 
 #if defined(SS_BETA)
-//#define TEST01
-//#define TEST02
+//#define TEST01//end session?
+//#define TEST02// ste shifter prefetch?
 //#define TEST03
 //#define TEST04
 //#define TEST05
@@ -438,6 +438,7 @@ and all his silly mods are gone!
 #define SS_DEBUG_68030_STACK_FRAME //request, to check compatibility
 #define SS_DEBUG_BLAZING_STEP_OVER 
 #define SS_DEBUG_BROWSER_6301
+#define SS_DEBUG_BROWSER_BLITTER
 #define SS_DEBUG_BROWSER_DMASOUND
 #define SS_DEBUG_BROWSER_PSEUDO_IO_SCROLL // for the bigger 6301 browser
 #define SS_DEBUG_BROWSER_SHIFTER
@@ -447,6 +448,7 @@ and all his silly mods are gone!
 #define SS_DEBUG_CPU_TRACE_NO_STOP // depends on 'suspend logging'
 #define SS_DEBUG_DUMP_6301_RAM
 #define SS_DEBUG_MOD_REGS // big letters, no =
+#define SS_DEBUG_MONITOR_IO_FIX1 // ? word check, not 2x byte on word access
 #define SS_DEBUG_MONITOR_RANGE // will stop for every address between 2 stops
 #define SS_DEBUG_MONITOR_VALUE // specify value (RW) that triggers stop
 #define SS_DEBUG_MOUSE_WHEEL // yeah!
@@ -586,6 +588,7 @@ and all his silly mods are gone!
 #define SS_DRIVE_SOUND_SINGLE_SET // drive B uses sounds of A
 //#define SS_DRIVE_SOUND_EDIT // 1st beta soundset
 #define SS_DRIVE_SOUND_EPSON // current samples=Epson
+#define SS_DRIVE_SOUND_PASTI_EMPTY // different (none)
 #define SS_DRIVE_SOUND_VOLUME // logarithmic 
 #endif//drive sound
 #endif//win32
@@ -737,13 +740,14 @@ and all his silly mods are gone!
 //#define SS_IKBD_6301_TRACE // defined in SS_DEBUG
 #if defined(SS_IKBD_6301_TRACE)
 //#define SS_IKBD_6301_DISASSEMBLE_ROM 
+//#define SS_IKBD_6301_DUMP_RAM
 //#define SS_IKBD_6301_TRACE_SCI_RX
 //#define SS_IKBD_6301_TRACE_SCI_TX
 //#define SS_IKBD_6301_TRACE_INT_TIMER
 //#define SS_IKBD_6301_TRACE_INT_SCI
 //#define SS_IKBD_6301_TRACE_STATUS
-//#define SS_IKBD_6301_DUMP_RAM
 //#define SS_IKBD_6301_TRACE_KEYS
+//#define SS_IKBD_6301_TRACE_WRITES
 #endif
 #endif//#if defined(SS_IKBD_6301)
 
@@ -953,9 +957,7 @@ and all his silly mods are gone!
 #define SS_SHIFTER_LINE_PLUS_2_STE // hack?
 #define SS_SHIFTER_LINE_PLUS_2_TEST // loSTE screens
 #define SS_SHIFTER_LINE_PLUS_2_THRESHOLD //Forest
-#if SSE_VERSION>354
-#define SS_SHIFTER_LINE_PLUS_2_POST_TOP_OFF // Panic
-#endif
+//#define SS_SHIFTER_LINE_PLUS_2_POST_TOP_OFF // Panic
 #define SS_SHIFTER_LINE_PLUS_20 // 224 byte scanline STE only
 #define SS_SHIFTER_LINE_PLUS_20_SHIFT // for Riverside
 #define SS_SHIFTER_MED_OVERSCAN // BPOC
@@ -1024,8 +1026,8 @@ and all his silly mods are gone!
 //#define SS_SHIFTER_DRAW_DBG  // totally bypass CheckSideOverscan() & Render()
 #define SS_SHIFTER_EVENTS // recording all shifter events in a frame
 #if defined(SS_SHIFTER_EVENTS)
-//#define SS_SHIFTER_EVENTS_BLITTER
-//#define SS_SHIFTER_EVENTS_PAL // also for palette
+#define SS_SHIFTER_EVENTS_BLITTER
+#define SS_SHIFTER_EVENTS_PAL // also for palette
 //#define SS_SHIFTER_EVENTS_READ_SDP // also for read SDP
 #define SS_SHIFTER_EVENTS_BYTES // scanline length
 #define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
@@ -1415,6 +1417,7 @@ and all his silly mods are gone!
 
 #if !defined(SS_DMA_FIFO)
 #undef SS_IPF
+#undef SS_IPF_OSD
 #endif
 
 #if !defined(SS_FDC)
@@ -1424,6 +1427,11 @@ and all his silly mods are gone!
 #if !defined(SS_DMA) || !defined(SS_FDC)
 #undef SS_OSD_DRIVE_LED2
 #undef SS_OSD_DRIVE_LED3
+#endif
+
+#if !defined(SS_FLOPPY)
+#undef SS_VAR_STATUS_STRING_IPF
+#undef SS_VAR_STATUS_STRING_ADAT
 #endif
 
 #if !defined(SS_IKBD)

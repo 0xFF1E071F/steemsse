@@ -102,8 +102,9 @@ struct TDebug {
 #endif
 
 #if defined(SS_DEBUG_MONITOR_VALUE)
-  BYTE MonitorValueSpecified;
-  int MonitorValue; // trick we set a flag in higher bits
+  BYTE MonitorValueSpecified; // boiler SSE option
+  BYTE MonitorComparison; // as is, none found = 0 means no value to look for
+  WORD MonitorValue;
 #endif
 
 #if defined(SS_DEBUG_MONITOR_RANGE)

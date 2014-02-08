@@ -19,7 +19,7 @@ int iolist_length=0;
 
 iolist_entry iolist[300
 #if defined(SS_DEBUG_BROWSER_6301)
-+256 // in fact 300 was too much without 6301, but with it it would crash
++256+16 // in fact 300 was too much without 6301, but with it it would crash
 #endif
 ];
 

@@ -272,6 +272,7 @@ void intercept_os() // SS could we do much more here?
     intercept_xbios();
     ioaccess|=IOACCESS_INTERCEPT_OS;
   }
+//TRACE("hdimg_active %d\n",hdimg_active);//0 for "img"
   if (hdimg_active) hdimg_intercept(pc);
 
 #ifndef NO_CRAZY_MONITOR

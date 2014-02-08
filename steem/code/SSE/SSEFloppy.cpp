@@ -13,7 +13,9 @@
 TDma Dma;
 
 TDma::TDma() {
+#if defined(SS_DMA_FIFO)
   Request=false;
+#endif
 #if defined(SS_DMA_DOUBLE_FIFO)
   BufferInUse=0;
 #endif
@@ -258,7 +260,7 @@ TODO?
     ior_byte=0;
     break;
   }//sw
-
+////#define LOGSECTION LOGSECTION_FDC//tmp
 #if USE_PASTI 
 /*  Pasti handles all Dma reads - this cancels the first value
     of ior_byte, but allows to go through TRACE and update our variables..
@@ -550,6 +552,7 @@ What was in the buffers will go nowhere, the internal counter is reset.
       pioi.cycles=ABSOLUTE_CPU_TIME;
       //          log_to(LOGSECTION_PASTI,Str("PASTI: IO write addr=$")+HEXSl(addr,6)+" data=$"+
       //                            HEXSl(io_src_b,2)+" ("+io_src_b+") pc=$"+HEXSl(pc,6)+" cycles="+pioi.cycles);
+//      TRACE("Pasti: %X->%X\n",data,addr);
       pasti->Io(PASTI_IOWRITE,&pioi); //SS send to DLL
       pasti_handle_return(&pioi);
     }
@@ -615,11 +618,16 @@ void TDma::UpdateRegs(bool trace_them) {
 #if defined(SS_FDC_TRACE_IRQ)
   if(trace_them)
   {
-    TRACE_LOG("FDC IRQ HBL %d CR %X STR %X ",hbl_count,fdc_cr,fdc_str);
+    if(MCR&BIT_3)
+      TRACE_LOG("HDC IRQ HBL %d ",hbl_count);
+    else
+    {
+      TRACE_LOG("FDC IRQ HBL %d CR %X STR %X ",hbl_count,fdc_cr,fdc_str);
 #if defined(SS_FDC_TRACE_STATUS)
-    WD1772.TraceStatus();
+      WD1772.TraceStatus();
 #endif
-    TRACE_LOG("TR %d SR %d DR %d ($%X)",fdc_tr,fdc_sr,fdc_dr,fdc_dr);
+      TRACE_LOG("TR %d SR %d DR %d ($%X)",fdc_tr,fdc_sr,fdc_dr,fdc_dr);
+    }
 #if defined(SS_PSG)
     BYTE drive=YM2149.Drive();
     BYTE side=YM2149.Side();
@@ -761,7 +769,7 @@ void TDma::TransferBytes() {
   ASSERT( MCR&0x80 ); // bit 7 or no transfer
   ASSERT(!(MCR&BIT_5));
   ASSERT( Request );
-  ASSERT( MCR==0x80 || MCR==0x90 || MCR==0x180 || MCR==0x190 );
+  ASSERT( MCR==0x80 || MCR==0x90 || MCR==0x180 || MCR==0x190 );//monaco gp
 
   if(!(MCR&0x100)) // disk -> RAM
     TRACE_LOG("%2d/%2d/%3d to %X: ",fdc_tr,fdc_sr,ByteCount,BaseAddress);
@@ -1154,6 +1162,7 @@ void TSF314::Sound_CheckIrq() {
   if(Sound_Buffer[SEEK])
     Sound_Buffer[SEEK]->Stop();
 #endif
+#if defined(SS_FDC)
   if(WD1772.CommandType()==1 && TrackAtCommand!=Track() && Sound_Buffer[STEP])
   {
     //TRACE("Step track %d\n",Track());
@@ -1164,6 +1173,7 @@ void TSF314::Sound_CheckIrq() {
     Sound_Buffer[STEP]->SetCurrentPosition(0);
     Sound_Buffer[STEP]->Play(0,0,0);
   }
+#endif
 }
 
 
@@ -1176,10 +1186,14 @@ void TSF314::Sound_CheckMotor() {
 
   DWORD dwStatus ;
   Sound_Buffer[MOTOR]->GetStatus(&dwStatus);
-
+#if defined(SS_DMA)
   Dma.UpdateRegs();//overkill
-
-  bool motor_on= (fdc_str&0x80);//simplification TODO?
+#endif
+  bool motor_on= ((fdc_str&0x80)//;//simplification TODO?
+#if defined(SS_DRIVE_SOUND_PASTI_EMPTY)
+    && (!pasti_active|| !FloppyDrive[floppy_current_drive()].Empty()) 
+#endif
+    );
   if(SSE_DRIVE_SOUND && motor_on && !(dwStatus&DSBSTATUS_PLAYING))
     Sound_Buffer[MOTOR]->Play(0,0,DSBPLAY_LOOPING); // start motor loop
   else if((!SSE_DRIVE_SOUND||!motor_on) && (dwStatus&DSBSTATUS_PLAYING))
@@ -1331,11 +1345,14 @@ BYTE TWD1772::IORead(BYTE Line) {
     // Steem handling
     switch(Line){
     case 0: // STR
+
       // Update some flags before returning STR
       // IP
-      STR&=BYTE(~FDC_STR_T1_INDEX_PULSE);
+//      debug1=STR;
       if(floppy_track_index_pulse_active())
         STR|=FDC_STR_T1_INDEX_PULSE;
+      else
+        STR&=BYTE(~FDC_STR_T1_INDEX_PULSE);
       // WP, SU
       if(floppy_type1_command_active)
       {
@@ -1344,17 +1361,22 @@ BYTE TWD1772::IORead(BYTE Line) {
         {
           if(floppy_mediach[drive]/10!=1) 
             STR|=FDC_STR_WRITE_PROTECT;
-          else if (FloppyDrive[drive].ReadOnly)
-            STR|=FDC_STR_WRITE_PROTECT;
         }
+        else if (FloppyDrive[drive].ReadOnly)
+          STR|=FDC_STR_WRITE_PROTECT;
+
         // seems OK, no reset after command:
         if(fdc_spinning_up)
           STR&=BYTE(~FDC_STR_T1_SPINUP_COMPLETE);
         else
           STR|=FDC_STR_T1_SPINUP_COMPLETE;
-        if(ADAT&&fdc_tr) { // (ADAT: v3.5.1, No Cooper) //TR or CYL?
+/*
+        // it's done in another part anyway - agenda_fdc_finished
+        // here it will only break programs with useless bloat
+        if(ADAT&&fdc_tr  // (ADAT: v3.5.1, No Cooper) //TR or CYL?
+          && WD1772.CommandType()==1) // v3.6.0: Super Monaco Grand Prix 
           STR|=FDC_STR_T1_TRACK_0;
-        }
+*/ 
       } // else it should be set in fdc_execute()
       if ((mfp_reg[MFPR_GPIP] & BIT_5)==0)
       {
@@ -1371,12 +1393,70 @@ BYTE TWD1772::IORead(BYTE Line) {
  that enables the immediate interrupt (Hex D8) to clear on a subsequent 
  load Command Register or Read Status Register operation. 
  Follow a Hex D8 with D0 command."
+ v3.6:
+ This is wrong apparently, disabled:
+ Super Monaco Grand Prix (SMGP.MSA on Pirate Gold CD)
+ 
 */
-        if(WD1772.InterruptCondition!=8)
+//        if(WD1772.InterruptCondition!=8)
 #endif
           mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
       }
       ior_byte=STR;
+
+#if 0 //debug section, original steem
+          {
+            fdc_str=debug1;
+            int fn=floppy_current_drive();
+            if (floppy_track_index_pulse_active()){
+              fdc_str|=FDC_STR_T1_INDEX_PULSE;
+            }else{
+              // If not type 1 command we will get here, it is okay to clear
+              // it as this bit is only for the DMA chip for type 2/3.
+              fdc_str&=BYTE(~FDC_STR_T1_INDEX_PULSE);
+            }
+            if (floppy_type1_command_active){
+              /* From Jorge Cwik
+                The FDC has two different
+                type of status. There is a "Type I" status after any Type I command,
+                and there is a different "status" after types II & III commands. The
+                meaning of some of the status bits is different (this probably you
+                already know),  but the updating of these bits is different too.
+
+                In a Type II-III status, the write protect bit is updated from the write
+                protect signal only when trying to write to the disk (write sector
+                or format track), otherwise is clear. This bit is static, once it was
+                updated or cleared, it will never change until a new command is
+                issued to the FDC.
+              */
+              fdc_str&=(~FDC_STR_WRITE_PROTECT);
+              if (floppy_mediach[fn]){
+                if (floppy_mediach[fn]/10!=1) fdc_str|=FDC_STR_WRITE_PROTECT;
+              }else if (FloppyDrive[fn].ReadOnly){
+                fdc_str|=FDC_STR_WRITE_PROTECT;
+              }
+              if (fdc_spinning_up){
+                fdc_str&=BYTE(~FDC_STR_T1_SPINUP_COMPLETE);
+              }else{
+                fdc_str|=FDC_STR_T1_SPINUP_COMPLETE;
+              }
+            } // else it should be set in fdc_execute()
+            if ((mfp_reg[MFPR_GPIP] & BIT_5)==0){
+              LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
+                          " - Reading status register as "+Str(itoa(fdc_str,d2_t_buf,2)).LPad(8,'0')+
+                          " ($"+HEXSl(fdc_str,2)+"), clearing IRQ"); )
+              floppy_irq_flag=0;
+              mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
+            }
+//            log_DELETE_SOON(Str("FDC: ")+HEXSl(old_pc,6)+" - reading FDC status register as $"+HEXSl(fdc_str,2));
+/*
+            LOG_ONLY( if (mode==STEM_MODE_CPU) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
+                            " - Read status register as $"+HEXSl(fdc_str,2)); )
+*/
+            ASSERT(ior_byte==fdc_str);
+          }
+#endif//debug
+
 #if !defined(SS_DEBUG_TRACE_IDE)
       TRACE_LOG("FDC HBL %d STR %X\n",hbl_count,ior_byte);
 #endif
@@ -1413,7 +1493,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
   {
   case 0: // CR - could be blocked, can't record here :(
     {
-#if defined(SS_DEBUG)
+#if defined(SS_DEBUG) && defined(SS_DRIVE)
       BYTE drive_char= (psg_reg[PSGR_PORT_A]&6)==6? '?' : 'A'+DRIVE;
       TRACE_LOG("FDC HBL %d CR $%2X drive %c side %d TR %d SR %d DR %d\n",hbl_count,io_src_b,drive_char,floppy_current_side(),fdc_tr,fdc_sr,fdc_dr);
 #endif
@@ -1421,7 +1501,9 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #if defined(SS_DRIVE_SOUND)
       if(SSE_DRIVE_SOUND)
       {
+#if defined(SS_DMA)
         Dma.UpdateRegs();
+#endif
         SF314[drive].TrackAtCommand=SF314[drive].Track();
 #if defined(SS_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
         SF314[drive].Sound_CheckCommand(io_src_b);

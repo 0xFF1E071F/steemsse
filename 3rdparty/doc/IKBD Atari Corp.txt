@@ -71,7 +71,7 @@ do_relocation    %111110xy             ; mouse position record flag
                                    ; where y is the right button state
                                    ; and x is the left button state
     X                        ; delta x as twos complement integer
-    Y                        ; delta y as twos complement integer [/code]
+    Y                        ; delta y as twos complement integer
 
 Note that the value of the button state bits should be valid even if the MOUSE 
 BUTTON ACTION has set the buttons to act like part of the keyboard. If the 

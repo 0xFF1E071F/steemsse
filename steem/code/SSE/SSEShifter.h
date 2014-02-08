@@ -825,8 +825,13 @@ inline MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
     int bytes_to_count=CurrentScanline.Bytes; // implicit fixes (Forest)
     if(shifter_skip_raster_for_hscroll)
       bytes_to_count+=SHIFTER_RASTER_PREFETCH_TIMING/2;
+#ifdef TEST02
+    int bytes_ahead=(ST_TYPE==STE) 
+      ?(SHIFTER_RASTER_PREFETCH_TIMING/2)*2:(SHIFTER_RASTER_PREFETCH_TIMING/2);
+#else
     int bytes_ahead=(shifter_hscroll_extra_fetch) 
       ?(SHIFTER_RASTER_PREFETCH_TIMING/2)*2:(SHIFTER_RASTER_PREFETCH_TIMING/2);
+#endif
     int starts_counting=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN/2 - bytes_ahead;
 /*
     84/2-8 = 34

@@ -7086,7 +7086,7 @@ extern "C" void m68k_1010() //line-a
   INSTRUCTION_TIME_ROUND(34);
 #endif
 #if defined(SS_DEBUG_SHOW_INTERRUPT)
-//  Debug.RecordInterrupt("LINEA");
+  Debug.RecordInterrupt("LINEA");
 #endif
   m68k_interrupt(LPEEK(BOMBS_LINE_A*4));
   m68k_do_trace_exception=0;

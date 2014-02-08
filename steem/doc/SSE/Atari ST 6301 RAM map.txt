@@ -1,0 +1,256 @@
+$00	DDR1
+$01	DDR2
+$02	DR1
+$03	DR2
+$04	DDR3
+$05	DDR4
+$06	DR3
+$07	DR4
+$08	TCSR
+$09	FRC
+$0A	FRC
+$0B	OCR
+$0C	OCR
+$0D	ICR
+$0E	ICR
+$0F	CSR
+$10	RMCR
+$11	TRCSR
+$12	RDR
+$13	TDR
+$14	RCR
+$15	-
+$16	NULL
+$17	NULL
+$18	NULL
+$19	NULL
+$1A	NULL
+$1B	NULL
+$1C	NULL
+$1D	NULL
+$1E	NULL
+$1F	NULL
+$20	NULL
+$21	NULL
+$22	NULL
+$23	NULL
+$24	NULL
+$25	NULL
+$26	NULL
+$27	NULL
+$28	NULL
+$29	NULL
+$2A	NULL
+$2B	NULL
+$2C	NULL
+$2D	NULL
+$2E	NULL
+$2F	NULL
+$30	NULL
+$31	NULL
+$32	NULL
+$33	NULL
+$34	NULL
+$35	NULL
+$36	NULL
+$37	NULL
+$38	NULL
+$39	NULL
+$3A	NULL
+$3B	NULL
+$3C	NULL
+$3D	NULL
+$3E	NULL
+$3F	NULL
+$40	NULL
+$41	NULL
+$42	NULL
+$43	NULL
+$44	NULL
+$45	NULL
+$46	NULL
+$47	NULL
+$48	NULL
+$49	NULL
+$4A	NULL
+$4B	NULL
+$4C	NULL
+$4D	NULL
+$4E	NULL
+$4F	NULL
+$50	NULL
+$51	NULL
+$52	NULL
+$53	NULL
+$54	NULL
+$55	NULL
+$56	NULL
+$57	NULL
+$58	NULL
+$59	NULL
+$5A	NULL
+$5B	NULL
+$5C	NULL
+$5D	NULL
+$5E	NULL
+$5F	NULL
+$60	NULL
+$61	NULL
+$62	NULL
+$63	NULL
+$64	NULL
+$65	NULL
+$66	NULL
+$67	NULL
+$68	NULL
+$69	NULL
+$6A	NULL
+$6B	NULL
+$6C	NULL
+$6D	NULL
+$6E	NULL
+$6F	NULL
+$70	NULL
+$71	NULL
+$72	NULL
+$73	NULL
+$74	NULL
+$75	NULL
+$76	NULL
+$77	NULL
+$78	NULL
+$79	NULL
+$7A	NULL
+$7B	NULL
+$7C	NULL
+$7D	NULL
+$7E	NULL
+$7F	NULL
+$80	
+$81	
+$82	
+$83	
+$84	
+$85	
+$86	
+$87	
+$88	Init ($AA: yes), after each reset and F1 sent
+$89	
+$8A	
+$8B	
+$8C	
+$8D	
+$8E	
+$8F	
+$90	
+$91	
+$92	
+$93	
+$94	
+$95	
+$96	
+$97	
+$98	
+$99	
+$9A	
+$9B	
+$9C	
+$9D	
+$9E	
+$9F	
+$A0	
+$A1	
+$A2	
+$A3	
+$A4	Joystick 0 for interrogate joystick
+$A5	Joystick 1 for interrogate joystick
+$A6	
+$A7	
+$A8	
+$A9	
+$AA	Abs X
+$AB	Abs X
+$AC	Abs Y
+$AD	Abs Y
+$AE	
+$AF	
+$B0	Threshold X
+$B1	Threshold Y
+$B2	
+$B3	
+$B4	
+$B5	
+$B6	
+$B7	
+$B8	
+$B9	
+$BA	
+$BB	
+$BC	Mouse event X
+$BD	Mouse event Y
+$BE	
+$BF	
+$C0	Mouse event buttons
+$C1	
+$C2	
+$C3	
+$C4	
+$C5	
+$C6	
+$C7	
+$C8	
+$C9	Mouse/Joystick mode
+$CA	
+$CB	
+$CC	
+$CD	Input buffer
+$CE	Input buffer
+$CF	Input buffer
+$D0	Input buffer
+$D1	Input buffer
+$D2	Input buffer
+$D3	Input buffer
+$D4	Input buffer
+$D5	
+$D6	
+$D7	
+$D8	
+$D9	Output buffer
+$DA	Output buffer
+$DB	Output buffer
+$DC	Output buffer
+$DD	Output buffer
+$DE	Output buffer
+$DF	Output buffer
+$E0	Output buffer
+$E1	Output buffer
+$E2	Output buffer
+$E3	Output buffer
+$E4	Output buffer
+$E5	Output buffer
+$E6	Output buffer
+$E7	Output buffer
+$E8	Output buffer
+$E9	Output buffer
+$EA	Output buffer
+$EB	Output buffer
+$EC	Output buffer
+$ED	Output buffer
+$EE	
+$EF	
+$F0	
+$F1	
+$F2	
+$F3	
+$F4	
+$F5	
+$F6	
+$F7	
+$F8	
+$F9	
+$FA	
+$FB	
+$FC	
+$FD	
+$FE	
+$FF	

@@ -335,7 +335,9 @@ hd6301_dump_ram() { // commanded by Boiler
 */
 hd6301_copy_ram(unsigned char *ptr) {
   int i;
-  for(i=0;i<256;i++)
+  for(i=0;i<0x16;i++)
+    ptr[i]=iram[i];
+  for(i=0x16;i<256;i++)
     ptr[i]=mem_getb (i);
 }
 
