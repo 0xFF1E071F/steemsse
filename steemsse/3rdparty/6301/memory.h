@@ -131,6 +131,16 @@ mem_putb (addr, value)
 		else
 			iram [offs] = value;
 	} else if (addr >= ram_start && addr <= ram_end) {
+#if defined(SS_IKBD_6301_TRACE_WRITES)
+		// "watches"
+		switch(addr) {
+                case 0x88: // init
+		case 0xC9: // mouse/joy mode
+                default: // reveal all!
+			TRACE("6301 $%X->$%X\n",value,addr);
+			break;
+		}//sw
+#endif
 		ram [addr] = value;
 	} else {
 #if defined(SS_IKBD_6301_DISABLE_CALLSTACK)

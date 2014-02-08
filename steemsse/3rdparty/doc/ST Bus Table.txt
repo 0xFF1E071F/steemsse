@@ -282,14 +282,15 @@ $FF8007|byte |Falcon Bus Control                    BIT 5 . . 2 . 0|R/W (F030)
 -------+-----+-----------------------------------------------------+----------
 ##############SHIFTER Video Controller                             ###########
 -------+-----+-----------------------------------------------------+----------
+
+NOTE (SS): the registers are located in the Shifter, in the MMU and in the GLUE
+
 $FF8201|byte |Video screen memory position (High byte)             |R/W
 $FF8203|byte |Video screen memory position (Mid byte)              |R/W
 $FF820D|byte |Video screen memory position (Low byte)              |R/W  (STe)
-(According to ijor, FF8205,7,9 are not shifter but MMU)
 $FF8205|byte |Video address pointer (High byte)                    |R STE: R/W
 $FF8207|byte |Video address pointer (Mid byte)                     |R STE: R/W
 $FF8209|byte |Video address pointer (Low byte)                     |R STE: R/W
-
 $FF820E|word |Offset to next line                                  |R/W (F030)
 $FF820F|byte |Width of a scanline (width in words-1)               |R/W  (STe)
 $FF8210|word |Width of a scanline (width in words)                 |R/W (F030)

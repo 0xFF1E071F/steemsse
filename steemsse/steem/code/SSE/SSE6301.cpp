@@ -188,7 +188,7 @@ void THD6301::InterpretCommand(BYTE ByteIn) {
 void THD6301::ReportCommand() {
   ASSERT( CurrentCommand!=-1 );
   // give command code
-  TRACE_LOG("[IKBD interpreter $%02X ",CurrentCommand);
+  TRACE_LOG("[IKBDi $%02X ",CurrentCommand);//i for interpreter
   // spell out command (as in Atari manual)
   switch(CurrentCommand) {
     case 0x80: TRACE_LOG("RESET"); break;

@@ -514,8 +514,9 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
       MFP_CALC_INTERRUPTS_ENABLED; //call macro first
       for(int n=0;n<4;n++)
       {
-        bool enabled=  
-          mfp_interrupt_enabled[mfp_timer_irq[n]] //control register
+        bool enabled=
+          ((sr & SR_IPL) < SR_IPL_6) // SR control
+          && mfp_interrupt_enabled[mfp_timer_irq[n]] //control register
           && ((mfp_get_timer_control_register(n) & 7)&&n!=1 //timers A, C, D
           || n==1 && (mfp_get_timer_control_register(n) & 8)); //event count B
 
@@ -1189,10 +1190,9 @@ This isn't saved through the sessions
             //////////////////// Browsers Menu
             case 900:case 901:
             {
-
+              mem_browser *mb=new mem_browser(pc,type_disp_type(LOWORD(wPar)==900 ? DT_MEMORY:DT_INSTRUCTION));
 #if !defined(SS_DEBUG_MOUSE_WHEEL)
 // we don't want to preselect address, we want the wheel to work at once
-              mem_browser *mb=new mem_browser(pc,type_disp_type(LOWORD(wPar)==900 ? DT_MEMORY:DT_INSTRUCTION));              
               SetFocus(GetDlgItem(mb->owner,3));
               SendMessage(GetDlgItem(mb->owner,3),WM_LBUTTONDOWN,0,0);
 #endif
@@ -1263,6 +1263,12 @@ This isn't saved through the sessions
 #if defined(SS_DEBUG_BROWSER_6301)
             case 914:
               new mem_browser(IOLIST_PSEUDO_AD_6301,DT_MEMORY);
+              break;
+#endif
+
+#if defined(SS_DEBUG_BROWSER_BLITTER)
+            case 915:
+              new mem_browser(0xFF8A00,DT_MEMORY);
               break;
 #endif
 
@@ -1346,7 +1352,12 @@ This isn't saved through the sessions
 #if defined(SS_DEBUG_BROWSER_VECTORS)
         items++;
 #endif
-
+#if defined(SS_DEBUG_BROWSER_6301)
+        items++;
+#endif
+#if defined(SS_DEBUG_BROWSER_BLITTER)
+        items++;
+#endif
         for (int i=0;i<n-items;i++){
           DeleteMenu(mem_browser_menu,items,MF_BYPOSITION);
         }
@@ -1614,6 +1625,10 @@ void DWin_init()
 #if defined(SS_DEBUG_BROWSER_DMASOUND)
   AppendMenu(mem_browser_menu,MF_STRING,913,"New &DMA Sound Browser");
 #endif
+#if defined(SS_DEBUG_BROWSER_BLITTER)
+  AppendMenu(mem_browser_menu,MF_STRING,915,"New Blitter Browser");
+#endif
+
   AppendMenu(mem_browser_menu,MF_STRING,903,"New &PSG Browser");
   AppendMenu(mem_browser_menu,MF_STRING,904,"New M&FP Browser");
   AppendMenu(mem_browser_menu,MF_STRING,906,"New &Text Browser");

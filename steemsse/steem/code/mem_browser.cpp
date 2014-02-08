@@ -1311,6 +1311,10 @@ LRESULT __stdcall mem_browser_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
                 debug_set_bk(ad,!bk);
               }else{
 #if defined(SS_DEBUG_MONITOR_VALUE)
+/*  Capture the string in the 'find' box and interpret it.
+    Value must be a WORD in hexadecimal, without $, eg FE20.
+    One comparison character (=,!,<,>) is required.
+*/
 //                TRACE("clicked in monitor column\n");
                 if(Debug.MonitorValueSpecified)
                 {
@@ -1319,14 +1323,20 @@ LRESULT __stdcall mem_browser_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
                   SendDlgItemMessage(mb->owner,8,WM_GETTEXT,10,LPARAM(Text.Text));
                   char *dummy;
                   if( Text.IsEmpty() )
-                    Debug.MonitorValue=-1; // signal don't bother
-                  else if(Text[0]=='!')
-                    Debug.MonitorValue=0xF0000000 | strtol((Text.Text)+1,&dummy,10);
-                  else if(Text[0]=='$')
-                    Debug.MonitorValue=strtol((Text.Text)+1,&dummy,16);
-                  else
-                    Debug.MonitorValue=strtol(Text.Text,&dummy,10);
-//                  TRACE("text: %s, value dec %d hex %x\n",Text.Text,Debug.MonitorValue,Debug.MonitorValue);
+                    Debug.MonitorComparison=0;
+                  else switch(Text[0])
+                  {
+                  case '=':
+                  case '!': // different
+                  case '<':
+                  case '>':
+                    Debug.MonitorComparison=Text[0]; // load byte
+                    Debug.MonitorValue=strtol((Text.Text)+1,&dummy,16); // load word
+                    TRACE("text: %s, comp %c, value %x\n",Text.Text,Debug.MonitorComparison,Debug.MonitorValue);
+                    break;
+                  default:
+                    Debug.MonitorComparison=0;
+                  }
                 }
 #endif                
                 if (pda){

@@ -231,14 +231,22 @@ void debug_hit_mon(MEM_ADDRESS ad,int read)
   int val=int((bytes==1) ? int(d2_peek(ad)):int(d2_dpeek(ad)));
 
 #if defined(SS_DEBUG_MONITOR_VALUE)
-  if(Debug.MonitorValueSpecified && Debug.MonitorValue!=-1 
-    && ( (Debug.MonitorValue&0xF0000000) && val==(Debug.MonitorValue&0xFFFF))
-    || (!(Debug.MonitorValue&0xF0000000) && val!=Debug.MonitorValue))
+/*  When the option is checked, we will stop Steem only if the condition
+    is met when R/W on the address.
+*/
+  if(Debug.MonitorValueSpecified && Debug.MonitorComparison)
   {
-    //TRACE("refuse add %X value %X expected %X\n",ad,val,Debug.MonitorValue);
-    return;
+    if(
+      (Debug.MonitorComparison=='=' && val!=Debug.MonitorValue)
+      || (Debug.MonitorComparison=='!' && val==Debug.MonitorValue)
+      || (Debug.MonitorComparison=='<' && val>=Debug.MonitorValue)
+      || (Debug.MonitorComparison=='>' && val<=Debug.MonitorValue))
+    {
+      return;
+    }
+    else
+      TRACE("addr %X value %X %c %X\n",ad,val,Debug.MonitorComparison,Debug.MonitorValue);
   }
-  //else TRACE("accept add %X value %X expected %X\n",ad,val,Debug.MonitorValue);
 #endif
 
   Str mess;
@@ -275,11 +283,24 @@ void debug_hit_io_mon_write(MEM_ADDRESS ad,int val)
   WORD mask=debug_get_ad_mask(ad,read);
 #endif
 
+
 #if defined(SS_DEBUG_MONITOR_VALUE)
-  if(Debug.MonitorValueSpecified && Debug.MonitorValue!=-1 
-    && ( (Debug.MonitorValue&0xF0000000) && val==(Debug.MonitorValue&0xFFFF))
-    || (!(Debug.MonitorValue&0xF0000000) && val!=Debug.MonitorValue))
-    return;
+/*  When the option is checked, we will stop Steem only if the condition
+    is met when R/W on the address.
+*/
+  if(Debug.MonitorValueSpecified && Debug.MonitorComparison)
+  {
+    if(
+      (Debug.MonitorComparison=='=' && val!=Debug.MonitorValue)
+      || (Debug.MonitorComparison=='!' && val==Debug.MonitorValue)
+      || (Debug.MonitorComparison=='<' && val>=Debug.MonitorValue)
+      || (Debug.MonitorComparison=='>' && val<=Debug.MonitorValue))
+    {
+      return;
+    }
+    else
+      TRACE("addr %X value %X %c %X\n",ad,val,Debug.MonitorComparison,Debug.MonitorValue);
+  }
 #endif
 
   int bytes=2;
@@ -379,13 +400,78 @@ void iolist_debug_add_pseudo_addresses()
   iolist_add_entry(IOLIST_PSEUDO_AD_IKBD+0x028,"IKBD Joy Button Duration",1,NULL,lpDWORD_B_0(&ikbd.duration));
 
 #if defined(SS_DEBUG_BROWSER_6301)
-  // TODO identify and name variables
-  char buffer[10];
+  char buffer[30],mask[40];
+  // internal registers $0-$15
   for(int i=0;i<256;i++)
   {
-    sprintf(buffer,"%2X",i);
-    iolist_add_entry(IOLIST_PSEUDO_AD_6301+i*2,buffer,1,NULL,&Debug.HD6301RamBuffer[i]);
+    mask[0]=NULL;
+    sprintf(buffer,(i<0x16)?"IREG %02X":"RAM %02X",i);
+    if(i==0x00) 
+      strcat(buffer," DDR1");
+    else if(i==0x01) 
+      strcat(buffer," DDR2");
+    else if(i==0x02) 
+      strcat(buffer," DR1");
+    else if(i==0x03) 
+      strcat(buffer," DR2");
+    else if(i==0x04) 
+      strcat(buffer," DDR3");
+    else if(i==0x05) 
+      strcat(buffer," DDR4");
+    else if(i==0x06) 
+      strcat(buffer," DR3");
+    else if(i==0x07) 
+      strcat(buffer," DR4");
+    else if(i==0x08) 
+      strcat(buffer," TCSR");
+    else if(i==0x09 || i==0x0A)
+      strcat(buffer," FRC");
+    else if(i==0x0B || i==0x0C)
+      strcat(buffer," OCR");
+    else if(i==0x0D || i==0x0E)
+      strcat(buffer," ICR");
+    else if(i==0x0F) 
+      strcat(buffer," CSR");
+    else if(i==0x10) 
+      strcat(buffer," RMCR");
+    else if(i==0x11) 
+      strcat(buffer," TRCSR");
+    else if(i==0x12) 
+      strcat(buffer," RDR");
+    else if(i==0x13) 
+      strcat(buffer," TDR");
+    else if(i==0x14) 
+      strcat(buffer," RCR");
+    else if(i<0x80)
+      strcat(buffer," (NULL)");
+    else if(i==0x88)
+      strcat(buffer," Init"); // $AA
+    else if(i==0xAA || i==0xAB) 
+      strcat(buffer," AbsX"); // sure
+    else if(i==0xAC || i==0xAD)
+      strcat(buffer," AbsY");
+    else if(i==0xB0)
+      strcat(buffer," Threshold X");
+    else if(i==0xB1)
+      strcat(buffer," Threshold Y");
+    else if(i==0xBC)
+      strcat(buffer," Mouse X");
+    else if(i==0xBD)
+      strcat(buffer," Mouse Y");
+    else if(i==0xC0)
+      strcat(buffer," Mouse buttons");
+    else if(i==0xC9)
+    {
+      strcat(buffer," Mouse mode");
+      strcpy(mask,"on|.|abs|joy|.|.|.|."); //abs is sure, the rest not
+   }
+    else if(i>=0xCD && i<=0xD4) 
+      strcat(buffer," Input buffer");
+    else if(i>=0xD9 && i<=0xED) 
+      strcat(buffer," Output buffer");
+    iolist_add_entry(IOLIST_PSEUDO_AD_6301+i*2,buffer,1,mask[0]?mask:NULL,&Debug.HD6301RamBuffer[i]);
   }
+
 #endif
 
 }

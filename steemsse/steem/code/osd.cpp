@@ -531,7 +531,10 @@ void osd_draw()
       Dma.UpdateRegs();
       bool FDCWriting=WD1772.WritingToDisk();
       if(WD1772.STR&0x80 // motor on, simply
-        && (!pasti_active|| !FloppyDrive[floppy_current_drive()].Empty()) ) 
+#if defined(SS_DRIVE_SOUND_PASTI_EMPTY)
+        && (!pasti_active|| !FloppyDrive[floppy_current_drive()].Empty())
+#endif
+        ) 
 #else
     if(  (psg_reg[PSGR_PORT_A]&6) != 6
     //  psg_reg[PSGR_PORT_A] & b0110)==BIT_1 // drive A?

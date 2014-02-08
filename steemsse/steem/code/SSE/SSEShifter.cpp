@@ -951,6 +951,19 @@ STF2:
       1       16     4       8
       2       16     2       4
 
+    Yet, when HSCROLL=0, we know that the line isn't prefetched earlier than
+    on STF, because the video counter starts at the same time, or most 
+    fullscreens would be broken, which isn't the case.
+    
+    Paolo also said that to get a +2 line, one must set to 60hz before cycle 
+    40, whereas on the STF, it must be before cycle 52.
+
+    We have a problem with programs that remove the top border (switch to 
+    60hz) then come back to 50hz before cycle 52. 
+ 
+    Tests by Troed indicate that we then have a +2 line, but this should break
+    demos like Cuddly, DSOS, etc.
+
     Cases:
 
 Darkside of the Spoon STE
@@ -1037,6 +1050,9 @@ Panic
 #endif
 
 #if defined(SS_SHIFTER_LINE_PLUS_2_POST_TOP_OFF) //v3.6.0
+/*  As test in v3.6.0, but undefined as long as we don't know
+    whether Panic should work on a STE.
+*/
     if(scan_y==-29) // 1st line after top border removed
       t+=2+8;  // panic & forest OK; still just a hack
 #endif
@@ -3430,7 +3446,7 @@ void TShifter::Vbl() {
   nVbl++; 
 
 #if defined(SS_OSD_DEBUG_MESSAGE_FREQ) // tell when 60hz
-  if(shifter_freq_at_start_of_vbl==60)
+  if(!TRACE_ENABLED  && shifter_freq_at_start_of_vbl==60)
     TRACE_OSD("60HZ");
 #endif
 

@@ -54,6 +54,9 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 #endif
 
 #ifdef DEBUG_BUILD
+#if defined(SS_DEBUG_MONITOR_IO_FIX1)
+  if(!io_word_access)
+#endif
   DEBUG_CHECK_WRITE_IO_B(addr,io_src_b);
 #endif
 
@@ -1892,6 +1895,9 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
 //SS this is the way chosen by Steem authors, word accesses are treated byte 
 //by byte
     io_word_access=true;
+#if defined(DEBUG_BUILD) && defined(SS_DEBUG_MONITOR_IO_FIX1)
+    DEBUG_CHECK_WRITE_IO_W(addr,io_src_w);
+#endif
     io_write_b(addr,HIBYTE(io_src_w));
     io_write_b(addr+1,LOBYTE(io_src_w));
     io_word_access=0;

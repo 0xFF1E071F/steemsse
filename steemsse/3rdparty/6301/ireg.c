@@ -196,7 +196,7 @@ static dr2_getb (offs)
   if(mousek) // clear the correct bit (see above)
   {
     value=(mousek*2)%6;
-   //TRACE("HD6301 handling mousek %x -> %x\n",mousek,value);
+//    TRACE("HD6301 handling mousek %x -> %x\n",mousek,value);
   }
   return value;
 }

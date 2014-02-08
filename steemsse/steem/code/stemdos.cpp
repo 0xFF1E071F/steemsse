@@ -1090,7 +1090,6 @@ void stemdos_intercept_trap_1()
   bool Invalid=0;
   MEM_ADDRESS sp=get_sp_before_trap(&Invalid);
   if (Invalid) return;
-
   stemdos_command=m68k_dpeek(sp);
 #if defined(SS_DEBUG) && defined(DEBUG_BUILD)
   if(TRACE_ENABLED) TRACE_OSD("TRAP1 %X",stemdos_command);
@@ -1098,6 +1097,7 @@ void stemdos_intercept_trap_1()
   switch(stemdos_command)
   {
   case 2://conout
+  case 6://Crawio
     break;
   default:
     //  This is copied from acc.cpp

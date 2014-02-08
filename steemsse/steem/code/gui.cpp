@@ -568,7 +568,7 @@ void GUIRefreshStatusBar() {
       if(0);
 #endif
       
-#if defined(SS_VAR_STATUS_STRING_IPF)
+#if defined(SS_VAR_STATUS_STRING_IPF) && defined(SS_IPF)
       else if(Caps.Active)
         strcat(status_bar," Caps");
 #endif
