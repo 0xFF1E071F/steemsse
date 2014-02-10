@@ -41,6 +41,7 @@ struct TOption {
   unsigned int StatusBarGameName:1;
   unsigned int DriveSound:1;
   unsigned int SingleSideDriveMap:2;
+  unsigned int PSGMod:1;
 #ifdef __cplusplus // visible only to C++ objects
   TOption();
   void Init();

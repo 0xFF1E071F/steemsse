@@ -2266,7 +2266,20 @@ Windows 2000	5.0
   y+=LineHeight;
 #endif
 
-#if defined(SS_SOUND_FILTER_STF)
+#if defined(SS_PSG_ALT_TABLES) 
+  Wid=GetCheckBoxSize(Font,T("PSG Mods")).Width;
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+  Win=CreateWindow("Button",T("PSG Mods"),mask,
+    page_l,y,Wid,25,Handle,(HMENU)7311,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,SSEOption.PSGMod,0);
+  ToolAddWindow(ToolTip,Win,
+    T("This uses other values to render PSG (YM-2149) sound. The low-pass filter is also different."));
+  y+=LineHeight;
+#endif
+
+#if defined(SS_SOUND_FILTER_STF) && !defined(SS_PSG_ALT_TABLES)
+  Offset=Wid+HorizontalSeparation;
+  y-=LineHeight; // maybe it will be optimised away!
   Wid=GetCheckBoxSize(Font,T("PSG Filter")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
   Win=CreateWindow("Button",T("PSG Filter"),mask,
@@ -2306,6 +2319,7 @@ Windows 2000	5.0
 #endif
 
 #if defined(SS_OSD_DRIVE_INFO_SSE_PAGE)
+  Offset=Wid+HorizontalSeparation;
   y-=LineHeight;
   Wid=GetCheckBoxSize(Font,T("Drive track info")).Width;
   Win=CreateWindow("Button",T("Drive track info"),WS_CHILD  | WS_TABSTOP | BS_CHECKBOX,
