@@ -1609,12 +1609,23 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
-#if defined(SS_SOUND_FILTER_STF)
+#if defined(SS_SOUND_FILTER_STF) && !defined(SS_PSG_ALT_TABLES)
         case 7303: // PSG Filter (more open)
           if (HIWORD(wPar)==BN_CLICKED){
             PSG_FILTER_FIX=!PSG_FILTER_FIX;
             TRACE_LOG("Option PSG filter %d\n",PSG_FILTER_FIX);
             SendMessage(HWND(lPar),BM_SETCHECK,PSG_FILTER_FIX,0);
+          }
+          break; 
+#endif
+
+#if defined(SS_PSG_ALT_TABLES)
+        case 7311: // PSG Mods
+          if (HIWORD(wPar)==BN_CLICKED){
+            SSEOption.PSGMod=!SSEOption.PSGMod;
+            PSG_FILTER_FIX=SSEOption.PSGMod;
+            TRACE_LOG("Option PSG mods %d\n",SSEOption.PSGMod);
+            SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.PSGMod,0);
           }
           break; 
 #endif

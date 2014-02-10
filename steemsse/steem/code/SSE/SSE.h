@@ -1054,6 +1054,18 @@ and all his silly mods are gone!
 
 #if defined(SS_SOUND)
 
+#ifndef SS_PSG // also used for drive
+#define SS_PSG
+#endif
+
+#ifdef SS_PSG
+#define SS_PSG_ALT_TABLES // option PsgMod
+#define SS_PSG_FIXED_VOL_FIX1 // from doc
+#define SS_PSG_FIXED_VOL_FIX2 // from ljbk
+#define SS_PSG_ENV_FIX1 // from doc
+//#define SS_PSG_WRITE_SAME_VALUE //test
+#endif
+
 #define SS_SOUND_CHANGE_TIME_METHOD_DELAY //detail
 //#define SS_SOUND_DETECT_SAMPLE_RATE//?
 #define SS_SOUND_FILTER_STF // a very simple filter
@@ -1063,7 +1075,7 @@ and all his silly mods are gone!
 
 #define SS_SOUND_MICROWIRE // volume, balance, bass & treble, primitive DSP
 #define SS_SOUND_MICROWIRE_WRITE_LATENCY // as documented
-#define SS_SOUND_NO_EXTRA_PER_VBL //compensating hack? changes what?
+//#define SS_SOUND_NO_EXTRA_PER_VBL //compensating hack? changes what?
 
 #define SS_SOUND_OPTIMISE
 //#define SS_SOUND_OPTION_DISABLE_DSP // not needed if no anti-aliasing

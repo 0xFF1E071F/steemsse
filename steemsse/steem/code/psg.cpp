@@ -7,10 +7,6 @@ frame of sound to the output buffer. The I/O code isn't included here, see
 ior.cpp and iow.cpp for the lowest level emulation.
 ---------------------------------------------------------------------------*/
 
-/*  We really would like to improve sound emulation, but available C/C++ DSP 
-    code is poor or buggy.
-*/
-
 #if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
 #pragma message("Included for compilation: psg.cpp")
 #endif
@@ -137,7 +133,11 @@ int psg_buf_pointer[3];
 DWORD psg_tone_start_time[3];
 char psg_noise[PSG_NOISE_ARRAY];
 
-
+/*
+  SS This table was in original psg.h. 
+  Where does it come from?
+  We can see that they took the values of the second column.
+*/
 /*
 0 0     0      0
 1 0.001 0.0045 0.0041
@@ -157,40 +157,61 @@ E 0.71  0.648  0.67
 F 1     1      1
 */
 
-/*SS: 8x64=512; 16x16=256, x16=4096; 8*512=4096
-psg_envelope_level[envshape][psg_envstage & 63];
-there are 8 shapes, what are the 64 values?
-
-they should be how the wave changes with time, with a
-precision of 64 steps
-in sc68 it would be 256?
-
-
-
-#define VOLTAGE_ZERO_LEVEL 0
-#define VOLTAGE_FIXED_POINT 256
-#define PSG_CHANNEL_AMPLITUDE 60
 
 #define VFP VOLTAGE_FIXED_POINT
 #define VZL VOLTAGE_ZERO_LEVEL
-#define VA VFP*PSG_CHANNEL_AMPLITUDE
+#define VA VFP*(PSG_CHANNEL_AMPLITUDE)
 
-
-1000*VA/1000+VZL*VFP -> 1000* (256*60)/1000 + 0*256
-YM master frequency in Atari ST:2Mhz
-static u16 ymout[16*16*16] =
-#include "io68/ym_fixed_vol.h"
-*/
-
-#define VFP VOLTAGE_FIXED_POINT
-#define VZL VOLTAGE_ZERO_LEVEL
-#define VA VFP*PSG_CHANNEL_AMPLITUDE
 
 
 const int psg_flat_volume_level[16]={0*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,8*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,
                                       17*VA/1000+VZL*VFP,24*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,48*VA/1000+VZL*VFP,
                                       69*VA/1000+VZL*VFP,95*VA/1000+VZL*VFP,139*VA/1000+VZL*VFP,191*VA/1000+VZL*VFP,
                                       287*VA/1000+VZL*VFP,407*VA/1000+VZL*VFP,648*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP};
+
+
+#if defined(SS_PSG_FIXED_VOL_FIX1)
+/*  Values based on the graphic in Yamaha doc.
+    It remains to be seen/heard if the sound is better with these values or
+    Steem original values.
+    For that reason, the mod is optional (PSG Mods).
+*/
+
+const int psg_flat_volume_level2[16]=
+{0*VA/1000+VZL*VFP,3*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,13*VA/1000+VZL*VFP,
+22*VA/1000+VZL*VFP,31*VA/1000+VZL*VFP,41*VA/1000+VZL*VFP,63*VA/1000+VZL*VFP,
+89*VA/1000+VZL*VFP,125*VA/1000+VZL*VFP,177*VA/1000+VZL*VFP,250*VA/1000+VZL*VFP,
+354*VA/1000+VZL*VFP,500*VA/1000+VZL*VFP,707*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP};
+
+#endif
+
+#if defined(SS_PSG_FIXED_VOL_FIX2) 
+/*  For this mod we use ljbk's table when we reckon we're playing samples.
+    This is the case when tone and noise generators are disabled.
+    Note that some games play samples on only some channel(s) or with another
+    technique. eg Goldrunner, for those the table isn't used, it's a
+    different sound.
+    We shift the values of the table one bit to the right (/2) to avoid
+    saturation, at the price of some precision. Even so, it's very loud,
+    louder than Hatari, which isn't normal.
+    This has something to do with the way sound is rendered in Steem and 
+    still must be investigated. TODO
+*/
+
+const WORD fixed_vol_3voices[16][16][16]= 
+#include "../../3rdparty/various/ym2149_fixed_vol.h"
+
+inline bool playing_samples() {
+  return (psg_reg[PSGR_MIXER] & b00111111)==b00111111; // 1 = disabled
+}
+
+inline get_fixed_volume() {
+  ASSERT( playing_samples() );
+  return fixed_vol_3voices[psg_reg[10]&15][psg_reg[9]&15][psg_reg[8]&15]/2;//!
+}
+
+#endif
+
 
 const int psg_envelope_level[8][64]={
     {1000*VA/1000+VZL*VFP,841*VA/1000+VZL*VFP,707*VA/1000+VZL*VFP,590*VA/1000+VZL*VFP,510*VA/1000+VZL*VFP,420*VA/1000+VZL*VFP,354*VA/1000+VZL*VFP,290*VA/1000+VZL*VFP,250*VA/1000+VZL*VFP,210*VA/1000+VZL*VFP,178*VA/1000+VZL*VFP,149*VA/1000+VZL*VFP,125*VA/1000+VZL*VFP,110*VA/1000+VZL*VFP,100*VA/1000+VZL*VFP,88*VA/1000+VZL*VFP,80*VA/1000+VZL*VFP,70*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,55*VA/1000+VZL*VFP,50*VA/1000+VZL*VFP,30*VA/1000+VZL*VFP,20*VA/1000+VZL*VFP,10*VA/1000+VZL*VFP,5*VA/1000+VZL*VFP,3*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,1*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,
@@ -210,6 +231,33 @@ const int psg_envelope_level[8][64]={
     {0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,1*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,3*VA/1000+VZL*VFP,5*VA/1000+VZL*VFP,10*VA/1000+VZL*VFP,20*VA/1000+VZL*VFP,30*VA/1000+VZL*VFP,50*VA/1000+VZL*VFP,55*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,70*VA/1000+VZL*VFP,80*VA/1000+VZL*VFP,88*VA/1000+VZL*VFP,100*VA/1000+VZL*VFP,110*VA/1000+VZL*VFP,125*VA/1000+VZL*VFP,149*VA/1000+VZL*VFP,178*VA/1000+VZL*VFP,210*VA/1000+VZL*VFP,250*VA/1000+VZL*VFP,290*VA/1000+VZL*VFP,354*VA/1000+VZL*VFP,420*VA/1000+VZL*VFP,510*VA/1000+VZL*VFP,590*VA/1000+VZL*VFP,707*VA/1000+VZL*VFP,841*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP,
     VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP}};
 
+
+#if defined(SS_PSG_ENV_FIX1)
+/*  Values based on the graphic in Yamaha doc.
+    It remains to be seen/heard if the sound is better with these values or
+    Steem original values.
+    For that reason, the mod is optional (PSG Mods).
+*/
+
+const int psg_envelope_level2[8][64]={
+    {1000*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,
+    1000*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP},
+    {1000*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,
+    VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP},
+    {1000*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,
+    0*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP},
+    {1000*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,
+    VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP},
+    {0*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP,
+    0*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP},
+    {0*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP,
+    VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP},
+    {0*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP,
+    1000*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP},
+    {0*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP,
+    VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP}};
+#endif
+
 #undef VFP
 #undef VZL
 #undef VA
@@ -228,7 +276,7 @@ DWORD psg_envelope_start_time=0xfffff000;
 extern IDirectSoundBuffer *PrimaryBuf,*SoundBuf;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_DETECT_SAMPLE_RATE)
+#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_DETECT_SAMPLE_RATE)//no
 /*  This is a poor attempt, not working very well...
     It is just based on #calls to PSG IO
     Problem: increases cracks
@@ -271,11 +319,19 @@ HRESULT Sound_Start()
   // Work out startup voltage
   int envshape=psg_reg[13] & 15;
   int flatlevel=0;
+#if defined(SS_PSG_FIXED_VOL_FIX2)
+  if(SSEOption.PSGMod&& playing_samples())
+    flatlevel=get_fixed_volume();
+  else
+#endif
   for (int abc=0;abc<3;abc++){
     if ((psg_reg[8+abc] & BIT_4)==0){
-      flatlevel+=psg_flat_volume_level[psg_reg[8+abc] & 15];
+#if defined(SS_PSG_FIXED_VOL_FIX1)
+      flatlevel+=SSEOption.PSGMod?psg_flat_volume_level2[psg_reg[8+abc] & 15]:
+        psg_flat_volume_level[psg_reg[8+abc] & 15];
+#endif
     }else if (envshape==b1011 || envshape==b1101){
-      flatlevel+=psg_flat_volume_level[15];
+      flatlevel+=psg_flat_volume_level[15]; //SS 15 = 1 anyway
     }
   }
   psg_voltage=flatlevel;psg_dv=0;
@@ -289,7 +345,7 @@ HRESULT Sound_Start()
   if (SoundStartBuffer((signed char)current_l,(signed char)current_r)!=DS_OK){
     return DDERR_GENERIC;
   }
-  for (int n=PSG_NOISE_ARRAY-1;n>=0;n--) psg_noise[n]=(BYTE)random(2);
+  for (int n=PSG_NOISE_ARRAY-1;n>=0;n--) psg_noise[n]=(BYTE)random(2);//SS TODO?
 
 #ifdef ONEGAME
   // Make sure sound is still good(ish) if you are running below 80% speed
@@ -345,7 +401,8 @@ void SoundStopInternalSpeaker()
 
 inline void CalcVChip(int &v,int &dv,int *source_p) {
   //CALC_V_CHIP
-#if defined(SS_SOUND_FILTER_STF) 
+
+#if defined(SS_SOUND_FILTER_STF) //tests
   if(PSG_FILTER_FIX) // Option PSG Filter
   {
     v=SS_SOUND_FILTER_STF_V;
@@ -354,7 +411,12 @@ inline void CalcVChip(int &v,int &dv,int *source_p) {
   else 
 #endif
   if (v!=*source_p || dv){                            
-#ifdef ENABLE_VARIABLE_SOUND_DAMPING    // Boiler control, useless now (undef)
+#if 1 //for tests
+    v+=dv;             
+    dv-=(v-(*source_p))>> 3;        
+    dv*=13;           
+    dv>>=4;   
+#elif ENABLE_VARIABLE_SOUND_DAMPING    // Boiler control, useless now (undef)
     v+=dv;             
     dv-=(v-(*source_p))*sound_variable_a >> 8;        
     dv*=sound_variable_d;           
@@ -518,7 +580,12 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
       ) 
       v=PsgGain.FilterAudio(v,-6);
 #endif
-    val=v + **lp_dma_sound_channel;                           
+
+    val=v;
+
+   // ASSERT(dma_sound_on_this_screen || !(**lp_dma_sound_channel) );//asserts!
+    if(dma_sound_on_this_screen) //bugfix v3.6
+      val+= (**lp_dma_sound_channel);                           
 
 #if defined(SS_SOUND_MICROWIRE)
     Microwire(0,val
@@ -548,7 +615,10 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
     // stereo: do the same for right channel
     if(sound_num_channels==2){    
       
-      val=v + *(*lp_dma_sound_channel+1); 
+      val=v;
+      if(dma_sound_on_this_screen) //bugfix v3.6
+        val+= (*(*lp_dma_sound_channel+1)); 
+
 #if defined(SS_SOUND_MICROWIRE)
     Microwire(1,val
 #if defined(SS_SOUND_LOW_PASS_FILTER)
@@ -556,7 +626,7 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
 #endif
       );
 #endif
-      
+
       if(val<VOLTAGE_FP(0))
         val=VOLTAGE_FP(0); 
       else if (val>VOLTAGE_FP(255))
@@ -615,7 +685,9 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
       ) 
       v=PsgGain.FilterAudio(v,-6); 
 #endif
-    val=v + **lp_dma_sound_channel;                           
+
+    if(dma_sound_on_this_screen) //bugfix v3.6
+      val+= (**lp_dma_sound_channel);    
 
 #if defined(SS_SOUND_MICROWIRE)
     Microwire(0,val
@@ -641,7 +713,9 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
 
     if(sound_num_channels==2){    
       
-      val=v + *(*lp_dma_sound_channel+1); 
+      if(dma_sound_on_this_screen) //bugfix v3.6
+        val+= (*(*lp_dma_sound_channel+1)); 
+
 #if defined(SS_SOUND_MICROWIRE)
     Microwire(1,val
 #if defined(SS_SOUND_LOW_PASS_FILTER)
@@ -666,11 +740,7 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
 
     }//right
 
-#if SSE_VERSION>354
-    (*source_p)++;// don't zero! fixes mute when recording
-#else
-    *(*source_p)++=VOLTAGE_FP(VOLTAGE_ZERO_LEVEL);
-#endif
+    (*source_p)++;// don't zero! (or mute when recording)
 
     SINE_ONLY( t++ );
     if(*lp_dma_sound_channel<*lp_max_dma_sound_channel) 
@@ -1349,7 +1419,7 @@ HRESULT Sound_VBL()
     DWORD t=write_time_1;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_DETECT_SAMPLE_RATE)
+#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_DETECT_SAMPLE_RATE) //no
     bool playing_sample=sound_mode==SOUND_MODE_CHIP &&(psg_reg[PSGR_MIXER] & b00111111)==b00111111;
     if(!playing_sample || ABSOLUTE_CPU_TIME-time_of_last_call>2000)
       guessed_sr=0;
@@ -1791,6 +1861,36 @@ void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
 #define PSG_PULSE_TONE_t64  ((t*64 / psg_tonemodulo_2) & 1)
 
 
+#if defined(SS_PSG_ENV_FIX1)
+#define PSG_PREPARE_ENVELOPE                                \
+      int envperiod=max( (((int)psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]) <<8) + psg_reg[PSGR_ENVELOPE_PERIOD_LOW],1);  \
+      af=envperiod;                              \
+      af*=sound_freq;                  \
+      af*=((double)(1<<13))/15625;                               \
+      psg_envmodulo=(int)af; \
+      bf=(((DWORD)t)-psg_envelope_start_time); \
+      bf*=(double)(1<<17); \
+      psg_envstage=(int)floor(bf/af); \
+      bf=fmod(bf,af); /*remainder*/ \
+      psg_envcountdown=psg_envmodulo-(int)bf; \
+      envdeath=-1;                                                                  \
+      if ((psg_reg[PSGR_ENVELOPE_SHAPE] & PSG_ENV_SHAPE_CONT)==0 ||                  \
+           (psg_reg[PSGR_ENVELOPE_SHAPE] & PSG_ENV_SHAPE_HOLD)){                      \
+        if(psg_reg[PSGR_ENVELOPE_SHAPE]==11 || psg_reg[PSGR_ENVELOPE_SHAPE]==13){      \
+          envdeath=psg_flat_volume_level[15];                                           \
+        }else{                                                                           \
+          envdeath=psg_flat_volume_level[0];                                              \
+        }                                                                                   \
+      }                                                                                      \
+      envshape=psg_reg[PSGR_ENVELOPE_SHAPE] & 7;                    \
+      if (psg_envstage>=32 && envdeath!=-1){                           \
+        envvol=envdeath;                                             \
+      }else{                                                       \
+        envvol=SSEOption.PSGMod?psg_envelope_level2[envshape][psg_envstage & 63]            \
+          :psg_envelope_level[envshape][psg_envstage & 63];\
+      }																															\
+
+#else
 #define PSG_PREPARE_ENVELOPE                                \
       int envperiod=max( (((int)psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]) <<8) + psg_reg[PSGR_ENVELOPE_PERIOD_LOW],1);  \
       af=envperiod;                              \
@@ -1817,6 +1917,9 @@ void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
       }else{                                                       \
         envvol=psg_envelope_level[envshape][psg_envstage & 63];            \
       }																															\
+
+#endif
+
 
 #define PSG_PREPARE_NOISE                                \
       int noiseperiod=(1+(psg_reg[PSGR_NOISE_PERIOD]&0x1f));      \
@@ -1870,6 +1973,22 @@ void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
             psg_noisetoggle=psg_noise[psg_noisecounter];   \
           }
 
+#if defined(SS_PSG_ENV_FIX1)
+
+#define PSG_ENVELOPE_ADVANCE                                   \
+          psg_envcountdown-=TWO_TO_SEVENTEEN;  \
+          while (psg_envcountdown<0){           \
+            psg_envcountdown+=psg_envmodulo;             \
+            psg_envstage++;                   \
+            if (psg_envstage>=32 && envdeath!=-1){                           \
+              envvol=envdeath;                                             \
+            }else{                                                       \
+              envvol=(SSEOption.PSGMod)?psg_envelope_level2[envshape][psg_envstage & 63]            \
+                :psg_envelope_level[envshape][psg_envstage & 63];\
+            }																															\
+          }
+#else
+
 #define PSG_ENVELOPE_ADVANCE                                   \
           psg_envcountdown-=TWO_TO_SEVENTEEN;  \
           while (psg_envcountdown<0){           \
@@ -1881,7 +2000,7 @@ void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
               envvol=psg_envelope_level[envshape][psg_envstage & 63];            \
             }																															\
           }
-
+#endif
 
   //            envvol=(psg_envstage&255)*64;
 
@@ -1907,7 +2026,28 @@ void psg_write_buffer(int abc,DWORD to_t)
   int toneperiod=(((int)psg_reg[abc*2+1] & 0xf) << 8) + psg_reg[abc*2];
 
   if ((psg_reg[abc+8] & BIT_4)==0){ // Not Enveloped
+#if defined(SS_PSG_FIXED_VOL_FIX2)
+/*  One unique volume. It's possible because we sync rendering in case
+    of sample playing (see below).
+*/
+    int vol;
+    if(playing_samples() && SSEOption.PSGMod)
+      vol=get_fixed_volume(); 
+    else
+#if defined(SS_PSG_FIXED_VOL_FIX1)
+      vol=SSEOption.PSGMod?psg_flat_volume_level2[psg_reg[8+abc] & 15]:
+        psg_flat_volume_level[psg_reg[8+abc] & 15];
+#else
+      vol=psg_flat_volume_level[psg_reg[abc+8] & 15];
+#endif
+#else
+#if defined(SS_PSG_FIXED_VOL_FIX1)
+    int vol=SSEOption.PSGMod?psg_flat_volume_level2[psg_reg[8+abc] & 15]:
+        psg_flat_volume_level[psg_reg[8+abc] & 15];
+#else
     int vol=psg_flat_volume_level[psg_reg[abc+8] & 15];
+#endif
+#endif
     if ((psg_reg[PSGR_MIXER] & (1 << abc))==0 && (toneperiod>9)){ //tone enabled
       PSG_PREPARE_TONE
       if ((psg_reg[PSGR_MIXER] & (8 << abc))==0){ //noise enabled
@@ -2047,12 +2187,13 @@ DWORD psg_adjust_envelope_start_time(DWORD t,DWORD new_envperiod)
     It takes care of writing the appropriate part of the VBL sound buffer
     before the register change.
     old_val has just been read in the PSG register by iow.cpp
+    new_val will be put into the register after this function has executed
 */
 
 void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
 {
   ASSERT(reg<=15);
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_DETECT_SAMPLE_RATE)
+#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_DETECT_SAMPLE_RATE)//no
   int act=ABSOLUTE_CPU_TIME;
   if(!(sound_mode==SOUND_MODE_CHIP &&(psg_reg[PSGR_MIXER] & b00111111)==b00111111))
   {
@@ -2082,8 +2223,10 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
     new_val&=31;
   }
   if (reg>=PSGR_PORT_A) return; //SS 14,15
+  //ASSERT(!(old_val==new_val && reg!=PSGR_ENVELOPE_SHAPE));
+#if !defined(SS_PSG_WRITE_SAME_VALUE) //test?
   if (old_val==new_val && reg!=PSGR_ENVELOPE_SHAPE) return;
-
+#endif
   if (psg_capture_file){
     psg_capture_check_boundary();
     DWORD cycle=int(ABSOLUTE_CPU_TIME-psg_capture_cycle_base);
@@ -2150,7 +2293,21 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
 
       // ST doesn't quantize, it changes the level straight away.
       //  t=psg_quantize_time(reg-8,t);
+#if defined(SS_PSG_FIXED_VOL_FIX2)
+/*  The fixed volume being chosen for all channels at once in case of sample
+    playing, we render them before so that volume values are correct at
+    each time.
+*/
+      if(playing_samples() && SSEOption.PSGMod)
+      {
+        psg_write_buffer(0,t);
+        psg_write_buffer(1,t);
+        psg_write_buffer(2,t);
+      }
+      else
+#endif
       psg_write_buffer(reg-8,t);
+
 //        psg_tone_start_time[reg-8]=t;
       break;
     case 11: //changing envelope period low
