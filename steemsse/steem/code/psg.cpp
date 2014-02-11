@@ -191,11 +191,6 @@ const int psg_flat_volume_level2[16]=
     Note that some games play samples on only some channel(s) or with another
     technique. eg Goldrunner, for those the table isn't used, it's a
     different sound.
-    We shift the values of the table one bit to the right (/2) to avoid
-    saturation, at the price of some precision. Even so, it's very loud,
-    louder than Hatari, which isn't normal.
-    This has something to do with the way sound is rendered in Steem and 
-    still must be investigated. TODO
 */
 
 const WORD fixed_vol_3voices[16][16][16]= 
@@ -207,7 +202,7 @@ inline bool playing_samples() {
 
 inline get_fixed_volume() {
   ASSERT( playing_samples() );
-  return fixed_vol_3voices[psg_reg[10]&15][psg_reg[9]&15][psg_reg[8]&15]/2;//!
+  return fixed_vol_3voices[psg_reg[10]&15][psg_reg[9]&15][psg_reg[8]&15];
 }
 
 #endif
@@ -291,7 +286,6 @@ extern IDirectSoundBuffer *PrimaryBuf,*SoundBuf;
 #define LOW_SHELF_FREQ 80 // 50
 #define HIGH_SHELF_FREQ (dma_sound_freq) // doesn't work very well
 #endif
-
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -407,6 +401,13 @@ inline void CalcVChip(int &v,int &dv,int *source_p) {
   {
     v=SS_SOUND_FILTER_STF_V;
     dv=SS_SOUND_FILTER_STF_DV;
+// it's not the filter...
+/*
+    v+=dv;             
+    dv-=(v-(*source_p))>> (3+1-1);        
+    dv*=13;           
+    dv>>=4;   
+*/
   }
   else 
 #endif
@@ -549,6 +550,13 @@ inline void Microwire(int channel,int &val
 
 #endif
 
+/*  The function is called at VBL. The sounds have already been computed.
+    The function adds an optional low-pass filter to PSG sound and adds
+    PSG and DMA sound together. (Ground for improvement).
+    It also applies Microwire filters.
+    It shouldn't be important that it be inline.
+*/
+
 
 inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
   int &v,int &dv,int **source_p,WORD**lp_dma_sound_channel,
@@ -631,7 +639,7 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
         val=VOLTAGE_FP(0); 
       else if (val>VOLTAGE_FP(255))
         val=VOLTAGE_FP(255); 
-      
+
       if(Size==sizeof(BYTE))
       {
         *(BYTE*)*(BYTE**)Out_P=(BYTE)((val&0x00FF00)>>8);
@@ -1861,6 +1869,43 @@ void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
 #define PSG_PULSE_TONE_t64  ((t*64 / psg_tonemodulo_2) & 1)
 
 
+#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_INLINE___)//TODO
+
+void psg_prepare_envelope() {
+      int envperiod=max( (((int)psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]) <<8) + psg_reg[PSGR_ENVELOPE_PERIOD_LOW],1);  \
+      af=envperiod;                              \
+      af*=sound_freq;                  \
+      af*=((double)(1<<13))/15625;                               \
+      psg_envmodulo=(int)af; \
+      bf=(((DWORD)t)-psg_envelope_start_time); \
+      bf*=(double)(1<<17); \
+      psg_envstage=(int)floor(bf/af); \
+      bf=fmod(bf,af); /*remainder*/ \
+      psg_envcountdown=psg_envmodulo-(int)bf; \
+      envdeath=-1;                                                                  \
+      if ((psg_reg[PSGR_ENVELOPE_SHAPE] & PSG_ENV_SHAPE_CONT)==0 ||                  \
+           (psg_reg[PSGR_ENVELOPE_SHAPE] & PSG_ENV_SHAPE_HOLD)){                      \
+        if(psg_reg[PSGR_ENVELOPE_SHAPE]==11 || psg_reg[PSGR_ENVELOPE_SHAPE]==13){      \
+          envdeath=psg_flat_volume_level[15];                                           \
+        }else{                                                                           \
+          envdeath=psg_flat_volume_level[0];                                              \
+        }                                                                                   \
+      }                                                                                      \
+      envshape=psg_reg[PSGR_ENVELOPE_SHAPE] & 7;                    \
+      if (psg_envstage>=32 && envdeath!=-1){                           \
+        envvol=envdeath;                                             \
+      }else{                                                       \
+        envvol=SSEOption.PSGMod?psg_envelope_level2[envshape][psg_envstage & 63]            \
+          :psg_envelope_level[envshape][psg_envstage & 63];\
+      }																															\
+}
+
+#define PSG_PREPARE_ENVELOPE psg_prepare_envelope();
+
+
+#else
+
+
 #if defined(SS_PSG_ENV_FIX1)
 #define PSG_PREPARE_ENVELOPE                                \
       int envperiod=max( (((int)psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]) <<8) + psg_reg[PSGR_ENVELOPE_PERIOD_LOW],1);  \
@@ -1919,7 +1964,7 @@ void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
       }																															\
 
 #endif
-
+#endif//inline
 
 #define PSG_PREPARE_NOISE                                \
       int noiseperiod=(1+(psg_reg[PSGR_NOISE_PERIOD]&0x1f));      \
@@ -2004,6 +2049,11 @@ void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
 
   //            envvol=(psg_envstage&255)*64;
 
+/*
+    This function renders one PSG channel until timing to_t.
+*/
+
+
 void psg_write_buffer(int abc,DWORD to_t)
 {
 #if defined(SS_DEBUG_MUTE_PSG_CHANNEL)
@@ -2019,10 +2069,14 @@ void psg_write_buffer(int abc,DWORD to_t)
   double af,bf;
   bool psg_tonetoggle=true,psg_noisetoggle;
   int *p=psg_channels_buf+psg_buf_pointer[abc];
-  DWORD t=(psg_time_of_last_vbl_for_writing+psg_buf_pointer[abc]);
-  to_t=max(to_t,t);
-  to_t=min(to_t,psg_time_of_last_vbl_for_writing+PSG_CHANNEL_BUF_LENGTH);
-  int count=max(min((int)(to_t-t),PSG_CHANNEL_BUF_LENGTH-psg_buf_pointer[abc]),0);
+  DWORD t=(psg_time_of_last_vbl_for_writing+psg_buf_pointer[abc]);//SS where we are now
+  to_t=max(to_t,t);//SS can't go backwards
+  to_t=min(to_t,psg_time_of_last_vbl_for_writing+PSG_CHANNEL_BUF_LENGTH);//SS don't exceed buffer
+  int count=max(min((int)(to_t-t),PSG_CHANNEL_BUF_LENGTH-psg_buf_pointer[abc]),0);//SS don't exceed buffer
+#if defined(SS_PSG_OPT1)
+  if(!count)
+    return;
+#endif
   int toneperiod=(((int)psg_reg[abc*2+1] & 0xf) << 8) + psg_reg[abc*2];
 
   if ((psg_reg[abc+8] & BIT_4)==0){ // Not Enveloped
@@ -2083,8 +2137,18 @@ void psg_write_buffer(int abc,DWORD to_t)
         PSG_NOISE_ADVANCE
       }
 
-    }else{ //nothing enabled
+    }else{ //nothing enabled //SS playing samples
+      //TRACE("F%d y%d PSG %x: %d at %d\n",FRAME,scan_y,abc+8,count,vol);
       for (;count>0;count--){
+#if defined(SS_PSG_FIXED_VOL_FIX2)
+/*  We don't add, we set (so there are useless rewrites), so we can use the
+    full table value (no >> shift).
+    If DMA sound is added to this, too bad!
+*/
+        if(playing_samples() && SSEOption.PSGMod)
+          *(p++)=vol;
+        else
+#endif
         *(p++)+=vol;
       }
     }
@@ -2297,6 +2361,7 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
 /*  The fixed volume being chosen for all channels at once in case of sample
     playing, we render them before so that volume values are correct at
     each time.
+    We could render just once instead, but then we should update pointers TODO
 */
       if(playing_samples() && SSEOption.PSGMod)
       {

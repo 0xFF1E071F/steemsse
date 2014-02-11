@@ -300,7 +300,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define SS_INT_MFP_TIMING 56
 #endif
 #if defined(SS_INT_HBL)
-#define SS_INT_HBL_TIMING 56
+#define SS_INT_HBL_TIMING (56)
 #endif
 #if defined(SS_INT_VBL)
 #define SS_INT_VBL_TIMING 56
