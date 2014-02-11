@@ -221,7 +221,7 @@ void psg_write_buffer(int,DWORD);
 #define VOLTAGE_FP(x) ((x) << 8)
 
 //BYTE psg_channel_buf[3][PSG_CHANNEL_BUF_LENGTH];
-EXT int psg_channels_buf[PSG_CHANNEL_BUF_LENGTH+16];
+EXT int psg_channels_buf[PSG_CHANNEL_BUF_LENGTH+16]; //SS Steem will add channels into one integer
 EXT int psg_buf_pointer[3];
 EXT DWORD psg_tone_start_time[3];
 
@@ -267,7 +267,7 @@ EXT char psg_noise[PSG_NOISE_ARRAY];
 #define PSG_ENV_SHAPE_ATTACK BIT_2
 #define PSG_ENV_SHAPE_CONT BIT_3
 
-#define PSG_CHANNEL_AMPLITUDE 60
+#define PSG_CHANNEL_AMPLITUDE 60 //SS what is this?
 
 //#define PSG_VOLSCALE(vl) (volscale[vl]/4+VOLTAGE_ZERO_LEVEL)
 /*

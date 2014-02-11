@@ -168,7 +168,7 @@ and all his silly mods are gone!
 #if defined(SS_BETA)
 //#define TEST01//end session?
 //#define TEST02// ste shifter prefetch?
-//#define TEST03
+//#define TEST03//hbl?
 //#define TEST04
 //#define TEST05
 //#define TEST06
@@ -1064,6 +1064,7 @@ and all his silly mods are gone!
 #define SS_PSG_FIXED_VOL_FIX2 // from ljbk
 #define SS_PSG_ENV_FIX1 // from doc
 //#define SS_PSG_WRITE_SAME_VALUE //test
+#define SS_PSG_OPT1
 #endif
 
 #define SS_SOUND_CHANGE_TIME_METHOD_DELAY //detail
@@ -1075,7 +1076,7 @@ and all his silly mods are gone!
 
 #define SS_SOUND_MICROWIRE // volume, balance, bass & treble, primitive DSP
 #define SS_SOUND_MICROWIRE_WRITE_LATENCY // as documented
-//#define SS_SOUND_NO_EXTRA_PER_VBL //compensating hack? changes what?
+#define SS_SOUND_NO_EXTRA_PER_VBL //compensating hack? changes what?
 
 #define SS_SOUND_OPTIMISE
 //#define SS_SOUND_OPTION_DISABLE_DSP // not needed if no anti-aliasing

@@ -48,6 +48,23 @@ extern int HblJitterIndex,VblJitterIndex;
 
 #else // wobble as in Steem 3.2
 
+#ifdef TEST03
+
+
+#define HBL_INTERRUPT {\
+  hbl_pending=false;\
+  log_to_section(LOGSECTION_INTERRUPTS,Str("INTERRUPT: HBL at PC=")+HEXSl(pc,6)+" "+scanline_cycle_log());\
+  M68K_UNSTOP;\
+  time_of_last_hbl_interrupt=ABSOLUTE_CPU_TIME;\
+  INSTRUCTION_TIME_ROUND(SS_INT_HBL_TIMING);\
+  m68k_interrupt(LPEEK(0x0068));       \
+  if(!SSE_HACKS_ON)INTERRUPT_START_TIME_WOBBLE; \
+  sr=(sr & (WORD)(~SR_IPL)) | (WORD)(SR_IPL_2);\
+  debug_check_break_on_irq(BREAK_IRQ_HBL_IDX); \
+}
+
+#else
+
 #define HBL_INTERRUPT {\
   hbl_pending=false;\
   log_to_section(LOGSECTION_INTERRUPTS,Str("INTERRUPT: HBL at PC=")+HEXSl(pc,6)+" "+scanline_cycle_log());\
@@ -59,6 +76,7 @@ extern int HblJitterIndex,VblJitterIndex;
   sr=(sr & (WORD)(~SR_IPL)) | (WORD)(SR_IPL_2);\
   debug_check_break_on_irq(BREAK_IRQ_HBL_IDX); \
 }
+#endif
 
 #endif
 #endif
