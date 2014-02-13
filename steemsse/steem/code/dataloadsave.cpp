@@ -798,6 +798,10 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
       CheckMenuItem(sse_menu,id,
         MF_BYCOMMAND|((int)( Debug.PsgMask & 1 << (1521-id)) 
         ? MF_CHECKED:MF_UNCHECKED));
+    CheckMenuItem(sse_menu,1526,
+      MF_BYCOMMAND|((int)( Debug.PsgMask & 1 << 3) 
+      ? MF_CHECKED:MF_UNCHECKED));
+
 #if defined(SS_DEBUG_MONITOR_VALUE)
     Debug.MonitorValueSpecified=pCSF->GetInt("Debug","MonitorValueSpecified",Debug.MonitorValueSpecified);
     CheckMenuItem(sse_menu,1522,MF_BYCOMMAND|

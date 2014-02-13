@@ -881,8 +881,8 @@ void event_start_vbl()
 void event_vbl_interrupt() //SS misleading name?
 { 
 #if defined(SS_VID_VSYNC_WINDOW)
-  bool VSyncing=( (SSE_WIN_VSYNC||FSDoVsync&&FullScreen) && fast_forward==0
-    && slow_motion==0);
+  bool VSyncing=( (SSE_WIN_VSYNC&&!bAppMinimized||FSDoVsync&&FullScreen) 
+    && fast_forward==0 && slow_motion==0);
 #else
   bool VSyncing=(FSDoVsync && FullScreen && fast_forward==0 && slow_motion==0);
 #endif
