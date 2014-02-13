@@ -453,6 +453,7 @@ and all his silly mods are gone!
 #define SS_DEBUG_MONITOR_VALUE // specify value (RW) that triggers stop
 #define SS_DEBUG_MOUSE_WHEEL // yeah!
 #define SS_DEBUG_MOVE_OTHER_SP
+#define SS_DEBUG_MUTE_DMA_SOUND
 #define SS_DEBUG_MUTE_PSG_CHANNEL
 #define SS_DEBUG_NODIV // no DIV log necessary anymore
 #define SS_DEBUG_NO_SOUND_DAMPING //PSG filter control 'd' and 'a'
@@ -739,7 +740,7 @@ and all his silly mods are gone!
 #define SS_IKBD_6301_TIMER_FIX // not sure there was a problem
 //#define SS_IKBD_6301_TRACE // defined in SS_DEBUG
 #if defined(SS_IKBD_6301_TRACE)
-//#define SS_IKBD_6301_DISASSEMBLE_ROM 
+#define SS_IKBD_6301_DISASSEMBLE_ROM 
 //#define SS_IKBD_6301_DUMP_RAM
 //#define SS_IKBD_6301_TRACE_SCI_RX
 //#define SS_IKBD_6301_TRACE_SCI_TX
@@ -1067,6 +1068,8 @@ and all his silly mods are gone!
 #define SS_PSG_OPT1
 #endif
 
+#define SS_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
+
 #define SS_SOUND_CHANGE_TIME_METHOD_DELAY //detail
 //#define SS_SOUND_DETECT_SAMPLE_RATE//?
 #define SS_SOUND_FILTER_STF // a very simple filter
@@ -1363,6 +1366,7 @@ and all his silly mods are gone!
 #define SS_VID_CHECK_DDFS // is video card/display capable?
 //#define SS_VID_CHECK_DDFS2 //list all modes
 #if defined(WIN32) 
+#define SS_VID_DIRECT3D // TODO, like in WinUAE there's an option
 #define SS_VID_RECORD_AVI //avifile
 #endif
 

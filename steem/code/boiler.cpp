@@ -1035,6 +1035,16 @@ This isn't saved through the sessions
 
               break;
 #endif
+
+#if defined(SS_DEBUG_MUTE_DMA_SOUND)
+            case 1526: // mute DMA - use same mask
+              Debug.PsgMask ^= (1 << 3);
+              CheckMenuItem(sse_menu,id,
+                MF_BYCOMMAND|((int)( Debug.PsgMask & (1 << 3) )
+                  ? MF_CHECKED:MF_UNCHECKED));
+              break;
+#endif
+
 #endif//SS
 
             case 1780: //turn screen red
@@ -1737,6 +1747,9 @@ void DWin_init()
   AppendMenu(sse_menu,MF_STRING,1521,"Mute PSG channel A");
   AppendMenu(sse_menu,MF_STRING,1520,"Mute PSG channel B");
   AppendMenu(sse_menu,MF_STRING,1519,"Mute PSG channel C");
+#endif
+#if defined(SS_DEBUG_MUTE_DMA_SOUND)
+  AppendMenu(sse_menu,MF_STRING,1526,"Mute DMA sound");
 #endif
 
   log("STARTUP: calling iolist_init");

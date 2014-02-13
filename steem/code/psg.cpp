@@ -593,7 +593,10 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
 
    // ASSERT(dma_sound_on_this_screen || !(**lp_dma_sound_channel) );//asserts!
     if(dma_sound_on_this_screen) //bugfix v3.6
-      val+= (**lp_dma_sound_channel);                           
+#if defined(SS_DEBUG_MUTE_DMA_SOUND)
+      if(!(Debug.PsgMask & (1<<3))) 
+#endif
+        val+= (**lp_dma_sound_channel);                           
 
 #if defined(SS_SOUND_MICROWIRE)
     Microwire(0,val
@@ -625,7 +628,10 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
       
       val=v;
       if(dma_sound_on_this_screen) //bugfix v3.6
-        val+= (*(*lp_dma_sound_channel+1)); 
+#if defined(SS_DEBUG_MUTE_DMA_SOUND)
+        if(!(Debug.PsgMask & (1<<3))) 
+#endif
+          val+= (*(*lp_dma_sound_channel+1)); 
 
 #if defined(SS_SOUND_MICROWIRE)
     Microwire(1,val
@@ -2362,8 +2368,14 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
     playing, we render them before so that volume values are correct at
     each time.
     We could render just once instead, but then we should update pointers TODO
+    When user tries to mute PSG channels, we give up this rendering system
+    because it's all or nothing.
 */
-      if(playing_samples() && SSEOption.PSGMod)
+      if(playing_samples() && SSEOption.PSGMod
+#if defined(SS_DEBUG_MUTE_PSG_CHANNEL)
+        &&! (Debug.PsgMask&7)
+#endif
+        )
       {
         psg_write_buffer(0,t);
         psg_write_buffer(1,t);

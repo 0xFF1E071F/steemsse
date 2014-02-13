@@ -100,10 +100,14 @@ In Sim6xx, there are defines for each bit (WU, etc.).
   This must be emulated because it does happen with some programs. 
   Fascinatingly, if you fail to emulate this Barbarian will be stuck, but for
   a totally different reason as in fake emulation ("Psygnosys hack").
--Bit 7 (RO) : Receive Data Register Full (RDRF 0x80)
+-Bit 7 (RO?) : Receive Data Register Full (RDRF 0x80)
   Set when a byte was received, cleared when TRSCR then RDR are read
 
 The read-only bits are set and cleared by the hardware (or the emulation).
+It seems the ROM tries to clear bit 7:
+f990	71 ef 11	aim ef11			;TRCSR clear bit7 RDRF
+fcfe	71 ef 11	aim ef11
+
 
 
 

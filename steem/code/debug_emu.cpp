@@ -400,7 +400,7 @@ void iolist_debug_add_pseudo_addresses()
   iolist_add_entry(IOLIST_PSEUDO_AD_IKBD+0x028,"IKBD Joy Button Duration",1,NULL,lpDWORD_B_0(&ikbd.duration));
 
 #if defined(SS_DEBUG_BROWSER_6301)
-  char buffer[30],mask[40];
+  char buffer[80],mask[80]; //overkill for a time
   // internal registers $0-$15
   for(int i=0;i<256;i++)
   {
@@ -463,7 +463,7 @@ void iolist_debug_add_pseudo_addresses()
     else if(i==0xC9)
     {
       strcat(buffer," Mouse mode");
-      strcpy(mask,"on|.|abs|joy|.|.|.|."); //abs is sure, the rest not
+      strcpy(mask,"on|.|abs mse|Joy events|.|.|Interrogate joy|."); //abs is sure, the rest not
    }
     else if(i>=0xCD && i<=0xD4) 
       strcat(buffer," Input buffer");
