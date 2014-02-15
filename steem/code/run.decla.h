@@ -211,7 +211,21 @@ typedef struct{
   EVENTPROC event;
 }screen_event_struct;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START)
+
+
+#if defined(STEVEN_SEAGAL) && defined(SS_TIMINGS_FIX_EVENT_PLAN1)
+
+//why x2??
+EXT screen_event_struct event_plan_50hz[2*313*2+2],
+      event_plan_60hz[2*263*2+2],
+      event_plan_70hz[2*600*2+2+1],
+      event_plan_boosted_50hz[2*313*2+2],
+      event_plan_boosted_60hz[2*263*2+2],
+      event_plan_boosted_70hz[2*600*2+2];
+
+
+
+#elif defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START)
 EXT screen_event_struct event_plan_50hz[313*2+2+1],event_plan_60hz[263*2+2+1],event_plan_70hz[600*2+2+1],
                     event_plan_boosted_50hz[313*2+2+1],event_plan_boosted_60hz[263*2+2+1],event_plan_boosted_70hz[600*2+2+1];
 

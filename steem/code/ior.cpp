@@ -1564,7 +1564,10 @@ WORD ASMCALL io_read_w(MEM_ADDRESS addr)
     DEBUG_CHECK_READ_IO_W(addr);
     int n=addr-0xff8240;n/=2;
 #if defined(SS_SHIFTER_PALETTE_NOISE)
-/*  
+/*  When one reads the palette on a STF, the high bit of each nibble
+    isn't always 0, nor always 1.
+    The value could have something to do with the last values on the
+    data bus, but we don't emulate that, we just add random noise.
 */
     WORD palette=STpal[n];
 #if defined(SS_STF)

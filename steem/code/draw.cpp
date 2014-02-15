@@ -1299,7 +1299,8 @@ bool draw_routines_init()
     but monitors displaying those were rare.]
 */
     screen_event_struct *evp=event_plan_50hz;
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START)
+
+#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START)//no
     evp->time=SS_INT_VBI_START; // 68
 #if defined(SS_STF) 
     if(ST_TYPE!=STE)
@@ -1308,6 +1309,48 @@ bool draw_routines_init()
     evp->event=event_trigger_vbi;
     evp++;
 #endif  
+
+#if defined(STEVEN_SEAGAL) && defined(SS_TIMINGS_FIX_EVENT_PLAN1)
+/*  There's a hack/something to correct here?
+
+
+     0                       444 event_hbl (hbl pending)
+                             444+512 event_scanline (includes hbl pending)
+                             444+512*2 event_scanline 
+                             ...
+    
+                             444+512*312 (160188) event_scanline (+68) 160256 event_vbl_interrupt
+
+
+    Framestart = 0
+    First HBL = 444 framecycles
+    second HBL = 512 linecycles in line 1 but 444+512 framecycles
+
+    the hack being that first line is only 444 cycles!
+
+
+*/
+
+    for (int y=0;y<313;y++){
+      evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_50HZ + y*512; //444
+      evp->event=event_hbl;
+      evp++;
+      evp->time=512 + y*512;
+      evp->event=event_scanline;
+      evp++;
+      if ((CYCLES_FOR_VERTICAL_RETURN_IN_50HZ+y*512) <= (160256-CYCLES_FROM_START_VBL_TO_INTERRUPT) &&
+          (CYCLES_FOR_VERTICAL_RETURN_IN_50HZ+y*512+512) > (160256-CYCLES_FROM_START_VBL_TO_INTERRUPT)){
+        evp->time=160256-CYCLES_FROM_START_VBL_TO_INTERRUPT; //SS -1544
+        evp->event=event_start_vbl;
+        evp++;
+      }
+    }
+    evp->time=160256;
+    evp->event=event_vbl_interrupt;
+    evp++;
+    evp->event=NULL;
+#else
+
     // SS for line 0, event is not scanline but hbl, but for all the others,
     // it is scanline, placed at the hbl timing...
     evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_50HZ; // 444
@@ -1319,7 +1362,7 @@ bool draw_routines_init()
       evp++;
       if ((CYCLES_FOR_VERTICAL_RETURN_IN_50HZ+y*512) <= (160256-CYCLES_FROM_START_VBL_TO_INTERRUPT) &&
           (CYCLES_FOR_VERTICAL_RETURN_IN_50HZ+y*512+512) > (160256-CYCLES_FROM_START_VBL_TO_INTERRUPT)){
-        evp->time=160256-CYCLES_FROM_START_VBL_TO_INTERRUPT;
+        evp->time=160256-CYCLES_FROM_START_VBL_TO_INTERRUPT; //SS -1544
         evp->event=event_start_vbl;
         evp++;
       }
@@ -1328,6 +1371,8 @@ bool draw_routines_init()
     evp->event=event_vbl_interrupt;
     evp++;
     evp->event=NULL;
+
+#endif
 
     /* 60Hz:
       VBLs spaced by 133604 cycles (59.87Hz)

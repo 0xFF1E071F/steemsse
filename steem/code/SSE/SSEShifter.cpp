@@ -154,6 +154,9 @@ void TShifter::CheckSideOverscan() {
   ////////////////////////////////////////
 
 /*
+    A swtich to shiftmode 2 and back at the start of the line will trigger
+    early display and remove the left border.
+
     The limits are (tables by Paolo)
     STF R2 506 [WU1 504 WU3,4 506 WU2 508] - 6 [WU1 4 WU3,4 6 WU2 8] 
         R0 8 [WU1 6 WU3,4 8 WU2 10] - 32 [WU1 30 WU3,4 32 WU2 34]

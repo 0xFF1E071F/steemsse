@@ -1609,7 +1609,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
-#if defined(SS_SOUND_FILTER_STF) && !defined(SS_PSG_ALT_TABLES)
+#if defined(SS_SOUND_FILTER_STF)
         case 7303: // PSG Filter (more open)
           if (HIWORD(wPar)==BN_CLICKED){
             PSG_FILTER_FIX=!PSG_FILTER_FIX;
@@ -1619,13 +1619,22 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
-#if defined(SS_PSG_ALT_TABLES)
-        case 7311: // PSG Mods
+#if defined(SS_PSG_FIX_TABLES)
+        case 7311: // PSG Mods Yamaha doc
           if (HIWORD(wPar)==BN_CLICKED){
             SSEOption.PSGMod=!SSEOption.PSGMod;
-            PSG_FILTER_FIX=SSEOption.PSGMod;
             TRACE_LOG("Option PSG mods %d\n",SSEOption.PSGMod);
             SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.PSGMod,0);
+          }
+          break; 
+#endif
+
+#if defined(SS_PSG_FIXED_VOL_FIX2)
+        case 7312: // PSG samples ljbk
+          if (HIWORD(wPar)==BN_CLICKED){
+            SSEOption.PSGFixedVolume=!SSEOption.PSGFixedVolume;
+            TRACE_LOG("Option PSGFixedVolume %d\n",SSEOption.PSGFixedVolume);
+            SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.PSGFixedVolume,0);
           }
           break; 
 #endif

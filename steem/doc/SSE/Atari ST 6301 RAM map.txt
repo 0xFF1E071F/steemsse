@@ -153,17 +153,17 @@ $97
 $98	
 $99	
 $9A	
-$9B	6: joystick on
+$9B	Mouse(joystick) buttons
 $9C	
-$9D	
+$9D	0 when mouse direction been copied to $BE,$BF
 $9E	
 $9F	
 $A0	
 $A1	
 $A2	
 $A3	
-$A4	Joystick 0 for joystick event (%x000yyyy)
-$A5	Joystick 1 for joystick event (%x000yyyy)
+$A4	Joystick 0 ; 0 for FIRE BUTTON MONITORING
+$A5	Joystick 1 ; 8 for FIRE BUTTON MONITORING
 $A6	
 $A7	
 $A8	
@@ -172,36 +172,36 @@ $AA	Abs X eg Sentinel
 $AB	Abs X
 $AC	Abs Y
 $AD	Abs Y
-$AE	
-$AF	
+$AE	Mouse keycode
+$AF	Mouse keycode
 $B0	Threshold X
 $B1	Threshold Y
 $B2	Mouse scale X
 $B3	Mouse scale Y
-$B4	
+$B4	Mouse button action
 $B5	Abs. mouse BUTTONS 0000dcba (see atari doc)
 $B6	XMSB
 $B7	XLSB
 $B8	YMSB       
 $B9	YLSB
-$BA	
-$BB	
+$BA	Mouse
+$BB	Mouse
 $BC	Mouse event X
 $BD	Mouse event Y
-$BE	
-$BF	
+$BE	Mouse direction X (2bits)
+$BF	Mouse direction Y (2bits)
 $C0	Mouse event buttons
-$C1	
-$C2	Mouse abs buttons (copied on B5 when command $D received)
+$C1	buttons 1=pressed
+$C2	Mouse abs buttons (copied on B5 then cleared when command $D received)
 $C3	
 $C4	
 $C5	Status report # other bytes
 $C6	Status report byte 1
 $C7	
 $C8	
-$C9	Mouse/Joystick mode (bit0 Y reversed bit1 joystick on bit3 bit4 mouse /(joystick?) event  bit5 absolute mouse  bit7 mouse on)
-$CA	bit5 Joysticks enabled ;;;;     Joysitck event map (bit6 joystick 1) / joystick mode $28 event $30 interr
-$CB	bit3 no output bit5 
+$C9	Mouse mode (bit7 enabled bit6 keycode bit5 absolute mouse bit4 mouse event bit3...  bit1 button monitoring bit0 Y reversed)
+$CA	Joystick mode (bit5 enabled bit4 interrogate bit3 event bit2 keycode bit1 monitoring bit0 trigger monitoring)
+$CB	(bit3 no output bit5...) 
 $CC	Input buffer counter   / command???
 $CD	Input buffer
 $CE	Input buffer

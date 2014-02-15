@@ -444,31 +444,56 @@ void iolist_debug_add_pseudo_addresses()
       strcat(buffer," RCR");
     else if(i<0x80)
       strcat(buffer," (NULL)");
+    else if(i>=0x82 && i<=0x87) 
+      strcat(buffer," Date+time");
     else if(i==0x88)
       strcat(buffer," Init"); // $AA
+    else if(i==0x9B) 
+      strcat(buffer," Buttons");
+    else if(i==0xA4) 
+      strcat(buffer," Joystick 0");
+    else if(i==0xA5)
+      strcat(buffer," Joystick 1");
     else if(i==0xAA || i==0xAB) 
-      strcat(buffer," AbsX"); // sure
+      strcat(buffer," AbsX"); 
     else if(i==0xAC || i==0xAD)
       strcat(buffer," AbsY");
-    else if(i==0xB0)
-      strcat(buffer," Threshold X");
-    else if(i==0xB1)
-      strcat(buffer," Threshold Y");
+    else if(i==0xAE || i==0xAE)
+      strcat(buffer," Mouse keycode");
+    else if(i==0xB0 || i==0xB1)
+      strcat(buffer," Mouse threshold ");
+    else if(i==0xB2 || i==0xB3)
+      strcat(buffer," Mouse scale ");
+    else if(i==0xB4)
+      strcat(buffer," Mouse button action");
+    else if(i>=0xB5 && i<=0xB9)
+      strcat(buffer," Abs Mouse report");
     else if(i==0xBC)
       strcat(buffer," Mouse X");
     else if(i==0xBD)
       strcat(buffer," Mouse Y");
+    else if(i==0xBE)
+      strcat(buffer," Mouse move X");
+    else if(i==0xBF)
+      strcat(buffer," Mouse move Y");
     else if(i==0xC0)
       strcat(buffer," Mouse buttons");
     else if(i==0xC9)
     {
       strcat(buffer," Mouse mode");
-      strcpy(mask,"on|.|abs mse|Joy events|.|.|Interrogate joy|."); //abs is sure, the rest not
-   }
+      strcpy(mask,"on|key|abs|evt|.|.|mon|rev"); //abs is sure, the rest not
+    }
+    else if(i==0xCA)
+    {
+      strcat(buffer," Joystick mode");
+      strcpy(mask,".|.|on|int|evt|key|mon|but"); //abs is sure, the rest not
+    }
     else if(i>=0xCD && i<=0xD4) 
       strcat(buffer," Input buffer");
     else if(i>=0xD9 && i<=0xED) 
       strcat(buffer," Output buffer");
+    else if(i==0xFF)
+      strcat(buffer," Stack");
     iolist_add_entry(IOLIST_PSEUDO_AD_6301+i*2,buffer,1,mask[0]?mask:NULL,&Debug.HD6301RamBuffer[i]);
   }
 

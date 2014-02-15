@@ -27,7 +27,7 @@ f028	97 10		staa 10				;write '5' in $10 RMCR
 f02a	86 1a		ldaa #1a			;$1A=Receive Interrupt Enable,Receive Enable,Transmit Enable
 f02c	97 11		staa 11				;write '1A' in $11 TRCSR
 f02e	96 11		ldaa 11				;TRCSR		
-f030	96 12		ldaa 12
+f030	96 12		ldaa 12				;RDR
 f032	c1 89		cmpb #89
 f034	27 12		beq  12 (F048)
 f036	4f		clra
@@ -156,7 +156,7 @@ f11f	86 fe		ldaa #fe
 f121	97 03		staa 03
 f123	4f		clra
 f124	97 05		staa 05
-f126	bd fb 8e	jsr  fb8e
+f126	bd fb 8e	jsr  fb8e			;Read Mouse
 f129	dc 09		ldd  09
 f12b	cb 13		addb #13
 f12d	d1 0c		cmpb 0c
@@ -1138,8 +1138,8 @@ f8fd	58		lslb
 f8fe	ce f9 30	ldx  #f930			;routine table start
 f901	3a		abx				;index with B
 f902	ee 00		ldx  00,x			;load word in X
-f904	27 10		beq  10 (F916)
-f906	85 80		bita #80
+f904	27 10		beq  10 (F916)			;0->exit
+f906	85 80		bita #80			;bit7
 f908	27 0a		beq  0a (F914)
 f90a	7b 08 cb	tim 08cb
 f90d	26 07		bne  07 (F916)
@@ -1188,26 +1188,26 @@ f960	00 00  ..
 f962	fb d4  ..					;$20 MEMORY LOAD
 f964	fc 16  ..					;$21 MEMORY READ
 f966	fc 3b  .;					;$22 CONTROLLER EXECUTE
-f968	fc 59  .Y
-f96a	fc 62  .b
+f968	fc 59  .Y					;0x87    mouse button action
+f96a	fc 62  .b					;0x88 (or 0x89 or 0x8A)  ; request mouse mode
 f96c	fc 62  .b
 f96e	fc 62  .b
-f970	fc 83  ..
-f972	fc 8c  ..
+f970	fc 83  ..					;0x8B    mouse threshold
+f972	fc 8c  ..					;0x8C    mouse scale
 f974	00 00  ..
 f976	00 00  ..
-f978	fc 95  ..
-f97a	fc 95  ..
+f978	fc 95  ..					;0x8F    mouse vertical coordinates
+f97a	fc 95  ..					;0x90    (0x0F Y=0 at bottom  0x10 Y=0 at top)
 f97c	00 00  ..
-f97e	fc a2  ..
+f97e	fc a2  ..					;0x92    mouse enable/disable (0x00 enabled 0x12 disabled)
 f980	00 00  ..
-f982	fc ae  ..
-f984	fc ae  ..
-f986	00 00  ..
+f982	fc ae  ..					;0x94    joystick mode 
+f984	fc ae  ..					;0x95    joystick mode
+f986	00 00  ..					
 f988	00 00  ..
 f98a	00 00  ..
-f98c	fc ae  ..
-f98e	fc c9  ..
+f98c	fc ae  ..					;0x99    joystick mode (and not $96)
+f98e	fc c9  ..					;0x9A    joystick enable/disable (0x00 enabled 0x1A disabled)
 
 f990	71 ef 11	aim ef11			;TRCSR clear bit7 RDRF
 f993	c6 02		ldab #02
@@ -1236,29 +1236,28 @@ f9bc	97 d8		staa d8				;D8=D5
 f9be	7e f9 29	jmp f929			;done
 
 ;$14 SET JOYSTICK EVENT REPORTING
-f9c1	86 28		ldaa #28
+f9c1	86 28		ldaa #28			;bit5+3
 f9c3	20 02		bra  02 (F9C7)
 ;$15 SET JOYSTICK INTERROGATION MODE
-f9c5	86 30		ldaa #30
+f9c5	86 30		ldaa #30			;bit5+4
 f9c7	97 ca		staa ca				;CA joystick mode
 f9c9	7e fa 47	jmp fa47
 
 ;$16 JOYSTICK INTERROGATE
-f9cc	96 ca		ldaa ca
-f9ce	85 20		bita #20
+f9cc	96 ca		ldaa ca				;CA joystick mode
+f9ce	85 20		bita #20			;test bit5 (joystick enabled)
 f9d0	26 03		bne  03 (F9D5)
-f9d2	7e f9 29	jmp f929
-
-f9d5	85 18		bita #18
+f9d2	7e f9 29	jmp f929			;done
+f9d5	85 18		bita #18			;
 f9d7	27 17		beq  17 (F9F0)
-f9d9	7b 02 c9	tim 02c9			;test Mouse/Joystick mode bit1
-f9dc	26 03		bne  03 (F9E1)                  ;set? Interrogate joystick is on
-f9de	7f 00 a4	clr 00a4			;no: erase joystick info
+f9d9	7b 02 c9	tim 02c9			;test Mouse mode bit1 button monitoring
+f9dc	26 03		bne  03 (F9E1)                  ;
+f9de	7f 00 a4	clr 00a4			;monitoring->A4=0 (A5 kept)
 ;send joystick info
 f9e1	0f		sei				;disable interrupts
-f9e2	86 fd		ldaa #fd			;joystick report header (command $16)
+f9e2	86 fd		ldaa #fd			;joystick report header
 f9e4	c6 02		ldab #02			;2 byte parameters
-f9e6	ce 00 a4	ldx  #00a4			;address of parameters
+f9e6	ce 00 a4	ldx  #00a4			;address of parameters=A4
 f9e9	bd fd 34	jsr  fd34			;send
 f9ec	0e		cli				;enable interrupts
 f9ed	7e f9 1b	jmp f91b			;command $11 RESUME
@@ -1274,16 +1273,16 @@ f9ff	97 94		staa 94
 fa01	97 a7		staa a7
 fa03	86 0a		ldaa #0a
 fa05	97 a6		staa a6
-fa07	86 22		ldaa #22
-fa09	97 ca		staa ca
+fa07	86 22		ldaa #22			;bit5+1
+fa09	97 ca		staa ca				;CA joystick mode
 fa0b	7e fa 47	jmp fa47
 fa0e	72 10 11	oim 1011			;TRCSR set bit4 RIE
 fa11	39		rts
 
 ;$18 SET FIRE BUTTON MONITORING
-fa12	86 21		ldaa #21
-fa14	97 ca		staa ca
-fa16	72 02 c9	oim 2c9
+fa12	86 21		ldaa #21			;bit5+0
+fa14	97 ca		staa ca				;CA joystick mode
+fa16	72 02 c9	oim 2c9				;bit1 of C9 mouse mode
 fa19	cc 00 08	ldd  #0008
 fa1c	dd a4		std  a4
 fa1e	7e f9 1b	jmp f91b			;command $11 RESUME
@@ -1299,8 +1298,8 @@ fa2f	5f		clrb
 fa30	97 94		staa 94
 fa32	97 a1		staa a1
 fa34	dd a2		std  a2
-fa36	86 24		ldaa #24
-fa38	97 ca		staa ca
+fa36	86 24		ldaa #24			;bit5+2
+fa38	97 ca		staa ca				;CA joystick mode
 fa3a	7e fa 47	jmp fa47
 fa3d	72 10 11	oim 1011			;TRCSR set bit4 RIE
 fa40	39		rts
@@ -1366,14 +1365,14 @@ faa4	c6 02		ldab #02
 faa6	bd fc fe	jsr  fcfe
 faa9	24 0a		bcc  0a (FAB5)
 faab	71 f8 cb	aim f8cb
-faae	96 ce		ldaa ce
-fab0	97 b4		staa b4
+faae	96 ce		ldaa ce				;read in input buffer
+fab0	97 b4		staa b4				;store in $B4
 fab2	7e f9 1b	jmp f91b			;command $11 RESUME
 fab5	72 10 11	oim 1011			;TRCSR set bit4 RIE
 fab8	39		rts
 
 ;$8 SET RELATIVE MOUSE POSITION REPORTING
-fab9	bd fb 8e	jsr  fb8e
+fab9	bd fb 8e	jsr  fb8e			;Read Mouse
 fabc	71 0f c9	aim 0fc9
 fabf	72 90 c9	oim 90c9			;set bits 7 (mouse on) & 5 (relative mouse)
 fac2	7f 00 bd	clr 00bd			;clear mouse event
@@ -1386,28 +1385,29 @@ facd	bd fc fe	jsr  fcfe
 fad0	24 12		bcc  12 (FAE4)
 fad2	ce 00 aa	ldx  #00aa
 fad5	bd fd 1e	jsr  fd1e			;copy parameters from input buffer to $AA
-fad8	bd fb 8e	jsr  fb8e
+fad8	bd fb 8e	jsr  fb8e			;Read Mouse
 fadb	71 0f c9	aim 0fc9
-fade	72 a0 c9	oim a0c9
+fade	72 a0 c9	oim a0c9			;C9 Mouse mode bit7+5
 fae1	7e fb af	jmp fbaf
 fae4	72 10 11	oim 1011			;TRCSR set bit4 RIE
 fae7	39		rts
 
 ;$A SET MOUSE KEYCODE MOUSE
-fae8	c6 03		ldab #03			; command + 2 parameter bytes Absolute X&Y
+fae8	c6 03		ldab #03			;command $A+ 2 parameter bytes
 faea	bd fc fe	jsr  fcfe
 faed	24 18		bcc  18 (FB07)
 faef	ce 00 ae	ldx  #00ae
 faf2	bd fd 1e	jsr  fd1e			;copy parameters from input buffer to $AE
-faf5	bd fb 8e	jsr  fb8e
+faf5	bd fb 8e	jsr  fb8e			;Read Mouse
 faf8	71 0f c9	aim 0fc9
-fafb	72 c0 c9	oim c0c9
+fafb	72 c0 c9	oim c0c9			;C9 Mouse mode bit7+6
 fafe	7f 00 ba	clr 00ba
 fb01	7f 00 bb	clr 00bb
 fb04	7e fb af	jmp fbaf
 fb07	72 10 11	oim 1011			;TRCSR set bit4 RIE
 fb0a	39		rts
 
+;$B SET MOUSE THRESHOLD
 fb0b	c6 03		ldab #03
 fb0d	bd fc fe	jsr  fcfe
 fb10	24 0f		bcc  0f (FB21)
@@ -1430,9 +1430,9 @@ fb35	72 10 11	oim 1011			;TRCSR set bit4 RIE
 fb38	39		rts
 
 ;$D INTERROGATE MOUSE POSITION
-fb39	96 c9		ldaa c9				;Mouse mode
-fb3b	85 02		bita #02			;bit1?
-fb3d	26 1d		bne  1d (FB5C)			;no: leave
+fb39	96 c9		ldaa c9				;$C9 Mouse mode
+fb3b	85 02		bita #02			;
+fb3d	26 1d		bne  1d (FB5C)			;bit1 (monitoring) set -> leave
 fb3f	4d		tsta				;0?
 fb40	2a 1a		bpl  1a (FB5C)			;yes: leave
 fb42	85 20		bita #20			;bit5? (Absolute mouse on)
@@ -1474,27 +1474,28 @@ fb85	7e f9 1b	jmp f91b			;command $11 RESUME
 fb88	71 7f c9	aim 7fc9			;Mouse mode, clear bit7
 fb8b	7e f9 1b	jmp f91b			;command $11 RESUME
 
-fb8e	96 07		ldaa 07
-fb90	16		tab
-fb91	84 03		anda #03
-fb93	97 be		staa be
+;Read Mouse
+fb8e	96 07		ldaa 07				;DR4 mouse & joysticks directions
+fb90	16		tab				;B=A  
+fb91	84 03		anda #03			;
+fb93	97 be		staa be				;store mouse X on 2 bits in $BE 
 fb95	54		lsrb
 fb96	54		lsrb
 fb97	c4 03		andb #03
-fb99	d7 bf		stab bf
+fb99	d7 bf		stab bf				;store mouse X on 2 bits in $BF 
 fb9b	5f		clrb
-fb9c	d7 9d		stab 9d
-fb9e	96 03		ldaa 03
-fba0	84 06		anda #06
-fba2	97 9b		staa 9b
-fba4	27 04		beq  04 (FBAA)
+fb9c	d7 9d		stab 9d				;$9D=0
+fb9e	96 03		ldaa 03				;DR2 buttons (mouse bit2 joystick bit1, 0 for on)
+fba0	84 06		anda #06			;& b110
+fba2	97 9b		staa 9b				;store buttons in $9B
+fba4	27 04		beq  04 (FBAA)			;0 = both pressed
 fba6	81 06		cmpa #06
-fba8	26 02		bne  02 (FBAC)
+fba8	26 02		bne  02 (FBAC)			;none pressed
 fbaa	88 06		eora #06
-fbac	97 c0		staa c0
+fbac	97 c0		staa c0				;buttons 1=pressed
 fbae	39		rts
 
-
+;...joystick
 fbaf	71 fd c9	aim fdc9
 fbb2	7b 07 ca	tim 07ca
 fbb5	26 0e		bne  0e (FBC5)
@@ -1578,35 +1579,46 @@ fc52	7e f9 1b	jmp f91b			;command $11 RESUME
 fc55	72 10 11	oim 1011			;TRCSR set bit4 RIE
 fc58	39		rts
 
+;STATUS INQUIRY
+;0x87    mouse button action
 fc59	86 07		ldaa #07
-fc5b	ce 00 b4	ldx  #00b4
+fc5b	ce 00 b4	ldx  #00b4			;
 fc5e	c6 02		ldab #02
 fc60	20 75		bra  75 (FCD7)
-fc62	96 c9		ldaa c9
+
+;0x88 (or 0x89 or 0x8A)  ; request mouse mode
+fc62	96 c9		ldaa c9				;Mouse mode
 fc64	48		lsla
 fc65	48		lsla
-fc66	25 09		bcs  09 (FC71)
+fc66	25 09		bcs  09 (FC71)			;bit6
 fc68	48		lsla
 fc69	25 0f		bcs  0f (FC7A)
 fc6b	86 08		ldaa #08
 fc6d	c6 01		ldab #01
 fc6f	20 66		bra  66 (FCD7)
-fc71	86 0a		ldaa #0a
+fc71	86 0a		ldaa #0a			;0x0A is KEYCODE
 fc73	ce 00 ae	ldx  #00ae
 fc76	c6 03		ldab #03
-fc78	20 5d		bra  5d (FCD7)
+fc78	20 5d		bra  5d (FCD7)			;send status report
 fc7a	86 09		ldaa #09
 fc7c	ce 00 aa	ldx  #00aa
 fc7f	c6 05		ldab #05
 fc81	20 54		bra  54 (FCD7)
+
+;0x8B    mouse threshold
 fc83	86 0b		ldaa #0b
 fc85	ce 00 b0	ldx  #00b0
 fc88	c6 03		ldab #03
 fc8a	20 4b		bra  4b (FCD7)
+
+;0x8C    mouse scale
 fc8c	86 0c		ldaa #0c
 fc8e	ce 00 b2	ldx  #00b2
 fc91	c6 03		ldab #03
 fc93	20 42		bra  42 (FCD7)
+
+;0x8F    mouse vertical coordinates
+;0x90    (0x0F Y=0 at bottom  0x10 Y=0 at top)
 fc95	96 c9		ldaa c9
 fc97	44		lsra
 fc98	25 04		bcs  04 (FC9E)
@@ -1614,6 +1626,8 @@ fc9a	86 10		ldaa #10
 fc9c	20 37		bra  37 (FCD5)
 fc9e	86 0f		ldaa #0f
 fca0	20 33		bra  33 (FCD5)
+
+;0x92    mouse enable/disable (0x00 enabled 0x12 disabled)
 fca2	96 c9		ldaa c9
 fca4	48		lsla
 fca5	25 04		bcs  04 (FCAB)
@@ -1621,6 +1635,10 @@ fca7	86 12		ldaa #12
 fca9	20 2a		bra  2a (FCD5)
 fcab	4f		clra
 fcac	20 27		bra  27 (FCD5)
+
+;0x94    joystick mode (0x00 enabled 0x1A disabled)
+;0x95
+;0x99
 fcae	96 ca		ldaa ca
 fcb0	44		lsra
 fcb1	44		lsra
@@ -1636,14 +1654,19 @@ fcc1	c6 07		ldab #07
 fcc3	20 12		bra  12 (FCD7)
 fcc5	86 14		ldaa #14
 fcc7	20 0c		bra  0c (FCD5)
+
+;0x9A    joystick enable/disable
 fcc9	7b 20 ca	tim 20ca
 fccc	26 04		bne  04 (FCD2)
-fcce	86 1a		ldaa #1a
+fcce	86 1a		ldaa #1a			;"disabled"
 fcd0	20 03		bra  03 (FCD5)
 fcd2	4f		clra
 fcd3	20 00		bra  00 (FCD5)
 
 fcd5	c6 01		ldab #01
+
+; send status report
+; C6
 fcd7	97 c6		staa c6				;
 fcd9	d7 c5		stab c5				;$C5=1
 fcdb	0f		sei				;disable interrupts
@@ -1652,8 +1675,8 @@ fcdd	86 f6		ldaa #f6			;F6=status report header
 fcdf	5f		clrb				;0byte parameter
 fce0	bd fd 34	jsr  fd34			;send jut 'F6'
 fce3	38		pulx
-fce4	96 c6		ldaa c6				;
-fce6	d6 c5		ldab c5				;#bytes
+fce4	96 c6		ldaa c6				;first byte
+fce6	d6 c5		ldab c5				;#bytes (7?)
 fce8	5a		decb
 fce9	bd fd 34	jsr  fd34			;send
 fcec	d6 c5		ldab c5
