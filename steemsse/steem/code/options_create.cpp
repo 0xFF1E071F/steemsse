@@ -1415,7 +1415,7 @@ void TOptionBox::CreateSoundPage()
                   page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)7099,HInstance,NULL),
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("None (Mute)"));
 #if defined(STEVEN_SEAGAL) && defined(SS_SOUND_FILTER_STF)
-  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Simulated Monitor Speaker"));
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Monitor Speaker"));
 #else
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Simulated ST Speaker"));
 #endif
@@ -2266,24 +2266,37 @@ Windows 2000	5.0
   y+=LineHeight;
 #endif
 
-#if defined(SS_PSG_ALT_TABLES) 
-  Wid=GetCheckBoxSize(Font,T("PSG Mods")).Width;
+#if defined(SS_PSG_FIX_TABLES) 
+  Wid=GetCheckBoxSize(Font,T("P.S.G.")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
-  Win=CreateWindow("Button",T("PSG Mods"),mask,
+  Win=CreateWindow("Button",T("P.S.G."),mask,
     page_l,y,Wid,25,Handle,(HMENU)7311,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,SSEOption.PSGMod,0);
   ToolAddWindow(ToolTip,Win,
-    T("This uses other values to render PSG (YM-2149) sound. The low-pass filter is also different."));
+    T("This uses values from Yamaha doc to render P.S.G. (YM-2149) sound."));
   y+=LineHeight;
 #endif
 
-#if defined(SS_SOUND_FILTER_STF) && !defined(SS_PSG_ALT_TABLES)
+#if defined(SS_PSG_FIXED_VOL_FIX2)
   Offset=Wid+HorizontalSeparation;
+  y-=LineHeight; // maybe it will be optimised away!
+  Wid=GetCheckBoxSize(Font,T("Samples")).Width;
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+  Win=CreateWindow("Button",T("Samples"),mask,
+    page_l+Offset,y,Wid,25,Handle,(HMENU)7312,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,SSEOption.PSGFixedVolume,0);
+  ToolAddWindow(ToolTip,Win,
+    T("Punchier samples using a table by ljbk, thx dude!"));
+  y+=LineHeight;
+#endif
+
+#if defined(SS_SOUND_FILTER_STF)
+  Offset+=Wid+HorizontalSeparation;
   y-=LineHeight; // maybe it will be optimised away!
   Wid=GetCheckBoxSize(Font,T("PSG Filter")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
-  Win=CreateWindow("Button",T("PSG Filter"),mask,
-    page_l,y,Wid,25,Handle,(HMENU)7303,HInstance,NULL);
+  Win=CreateWindow("Button",T("Filter"),mask,
+    page_l+Offset,y,Wid,25,Handle,(HMENU)7303,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,PSG_FILTER_FIX,0);
   ToolAddWindow(ToolTip,Win,
     T("This makes PSG (YM-2149) chip tunes and samples sound less muffled but the sound of samples could be worse, depends."));
@@ -2291,7 +2304,7 @@ Windows 2000	5.0
 #endif
 
 #if defined(SS_SOUND_MICROWIRE)
-  Offset=Wid+HorizontalSeparation;
+  Offset+=Wid+HorizontalSeparation;
   y-=LineHeight; // maybe it will be optimised away!
   Wid=GetCheckBoxSize(Font,T("STE Microwire")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;

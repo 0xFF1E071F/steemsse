@@ -306,8 +306,18 @@ dump_rom() {
     }
     else if(i==0xf679)
     {
-      mem_print (i, 8,8); 
+      mem_print (i, 8,2); 
       i+=8;
+    }
+    else if(i==0xf87a)//arrows?
+    {
+      mem_print (i, 4,2); 
+      i+=4-1;
+    }
+    else if(i==0xf930)
+    {
+      mem_print (i, 0xf990-0xf930,2); 
+      i+=0xf990-0xf930-1;
     }
     else if(i==0xfed0)
     {

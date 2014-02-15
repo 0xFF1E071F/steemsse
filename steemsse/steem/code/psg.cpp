@@ -191,6 +191,7 @@ const int psg_flat_volume_level2[16]=
     Note that some games play samples on only some channel(s) or with another
     technique. eg Goldrunner, for those the table isn't used, it's a
     different sound.
+    This doesn't fix all sample playing problems.
 */
 
 const WORD fixed_vol_3voices[16][16][16]= 
@@ -231,7 +232,7 @@ const int psg_envelope_level[8][64]={
 /*  Values based on the graphic in Yamaha doc.
     It remains to be seen/heard if the sound is better with these values or
     Steem original values.
-    For that reason, the mod is optional (PSG Mods).
+    For that reason, the mod is optional.
 */
 
 const int psg_envelope_level2[8][64]={
@@ -314,7 +315,7 @@ HRESULT Sound_Start()
   int envshape=psg_reg[13] & 15;
   int flatlevel=0;
 #if defined(SS_PSG_FIXED_VOL_FIX2)
-  if(SSEOption.PSGMod&& playing_samples())
+  if(SSEOption.PSGFixedVolume&& playing_samples())
     flatlevel=get_fixed_volume();
   else
 #endif
@@ -2091,7 +2092,7 @@ void psg_write_buffer(int abc,DWORD to_t)
     of sample playing (see below).
 */
     int vol;
-    if(playing_samples() && SSEOption.PSGMod)
+    if(SSEOption.PSGFixedVolume && playing_samples())
       vol=get_fixed_volume(); 
     else
 #if defined(SS_PSG_FIXED_VOL_FIX1)
@@ -2151,7 +2152,7 @@ void psg_write_buffer(int abc,DWORD to_t)
     full table value (no >> shift).
     If DMA sound is added to this, too bad!
 */
-        if(playing_samples() && SSEOption.PSGMod)
+        if(SSEOption.PSGFixedVolume && playing_samples())
           *(p++)=vol;
         else
 #endif
@@ -2371,7 +2372,7 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
     When user tries to mute PSG channels, we give up this rendering system
     because it's all or nothing.
 */
-      if(playing_samples() && SSEOption.PSGMod
+      if(SSEOption.PSGFixedVolume && playing_samples()
 #if defined(SS_DEBUG_MUTE_PSG_CHANNEL)
         &&! (Debug.PsgMask&7)
 #endif

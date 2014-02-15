@@ -867,6 +867,10 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       break;
     case WM_ACTIVATEAPP:
       bAppActive=(bool)wPar;
+#if defined(SS_VID_VSYNC_WINDOW)
+      if(!bAppActive)
+        SSE_WIN_VSYNC=SSE_3BUFFER=false; // avoid crash going in or out
+#endif
       if (FullScreen){
         if (wPar){  //Activating
           if (using_res_640_400){

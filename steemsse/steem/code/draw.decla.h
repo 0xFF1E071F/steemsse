@@ -133,7 +133,7 @@ EXT int cpu_cycles_from_hbl_to_timer_b;
 #endif
 
 #define CYCLES_FOR_VERTICAL_RETURN_IN_70HZ 200
-#define CYCLES_FROM_START_VBL_TO_INTERRUPT 1544
+#define CYCLES_FROM_START_VBL_TO_INTERRUPT 1544 //SS same for all freqs?
 // SS we keep this also for medres or it complicates 4bit scroll a lot (TODO):
 #define CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN 84
 

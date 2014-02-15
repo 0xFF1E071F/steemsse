@@ -925,9 +925,7 @@ and all his silly mods are gone!
 #define SS_SHIFTER_IO // move blocks from ior, iow
 
 ///#define SS_SHIFTER_RENDER_SYNC_CHANGES//don't until debug
-#if SSE_VERSION>354
-#define SS_SHIFTER_PALETTE_NOISE //UMD8730 STF
-#endif
+
 #define SS_SHIFTER_SDP // SDP=shifter draw pointer
 #define SS_SHIFTER_TRICKS  // based on Steem system, extended
 
@@ -965,6 +963,7 @@ and all his silly mods are gone!
 #define SS_SHIFTER_MED_OVERSCAN_SHIFT // No Cooper/greetings
 #define SS_SHIFTER_NON_STOPPING_LINE // Enchanted Land
 #define SS_SHIFTER_PALETTE_BYTE_CHANGE //Golden Soundtracker
+#define SS_SHIFTER_PALETTE_NOISE //UMD8730 STF
 #define SS_SHIFTER_PALETTE_TIMING //Overscan Demos #6
 #define SS_SHIFTER_RIGHT_OFF_BY_SHIFT_MODE //beeshift0
 #define SS_SHIFTER_STATE_MACHINE //v3.5.4, simpler approach and WS-aware
@@ -1060,10 +1059,15 @@ and all his silly mods are gone!
 #endif
 
 #ifdef SS_PSG
-#define SS_PSG_ALT_TABLES // option PsgMod
-#define SS_PSG_FIXED_VOL_FIX1 // from doc
-#define SS_PSG_FIXED_VOL_FIX2 // from ljbk
-#define SS_PSG_ENV_FIX1 // from doc
+
+#define SS_PSG_FIX_TABLES // based on Yamaha doc
+#if defined(SS_PSG_FIX_TABLES)
+#define SS_PSG_FIXED_VOL_FIX1
+#define SS_PSG_ENV_FIX1
+#endif
+
+#define SS_PSG_FIXED_VOL_FIX2 // from ljbk, measured output
+
 //#define SS_PSG_WRITE_SAME_VALUE //test
 #define SS_PSG_OPT1
 #endif
@@ -1229,6 +1233,7 @@ and all his silly mods are gone!
 #if defined(SS_TIMINGS)
 
 #define SS_TIMINGS_MS_TO_HBL
+//#define SS_TIMINGS_FIX_EVENT_PLAN1 //for later!
 
 #endif
 

@@ -733,6 +733,9 @@ void SteemDisplay::VSync()
 {
 #if !defined(SS_VID_VSYNC_WINDOW)
   if (FullScreen==0) return;
+#else
+  if(!DDObj)
+    return;
 #endif
   log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: VSYNC - Starting wait for VBL at ")+(timeGetTime()-run_start_time));
 
@@ -2044,7 +2047,7 @@ BOOL SteemDisplay::BlitIfVBlank() {
   //HRESULT hRet=Disp.DDObj->GetScanLine(&line);
 //  TRACE("dis %d pc y%d\n",dispatcher,line);
   BOOL Blanking=FALSE;  
-  if(ACT-Disp.VSyncTiming>80000-60000) // avoid bursts
+  if(Disp.DDObj && ACT-Disp.VSyncTiming>80000-60000) // avoid bursts
   {
     Disp.DDObj->GetVerticalBlankStatus(&Blanking);
     if(Blanking)
