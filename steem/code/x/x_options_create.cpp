@@ -1342,7 +1342,7 @@ void TOptionBox::CreateSSEPage() {
   T("Slow but accurate disk drive emulation."),
     page_p);
   y+=LineHeight;
-#endif
+#endif//no more room after this option!
 
 #if defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
   use_sdl_but.create(XD,page_p,page_l,y,0,25,

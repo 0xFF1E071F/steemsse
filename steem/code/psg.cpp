@@ -201,7 +201,7 @@ inline bool playing_samples() {
   return (psg_reg[PSGR_MIXER] & b00111111)==b00111111; // 1 = disabled
 }
 
-inline get_fixed_volume() {
+inline WORD get_fixed_volume() {
   ASSERT( playing_samples() );
   return fixed_vol_3voices[psg_reg[10]&15][psg_reg[9]&15][psg_reg[8]&15];
 }
