@@ -10,7 +10,7 @@
 
 #include "SSE.h" // get switches
 
-#if !defined(SS_DEBUG) && defined(UNIX)
+#if /*!defined(SS_DEBUG) &&*/ defined(UNIX)
 #include "../pch.h"
 #pragma hdrstop
 #endif
@@ -19,7 +19,11 @@
 #ifdef WIN32
 #include <windows.h>
 #endif
+#ifdef UNIX
+//typedef int KeyCode;
+#endif
 #include "../conditions.h"
+
 #endif
 
 #include "SSEParameters.h"

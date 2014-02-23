@@ -300,7 +300,9 @@ void stemdos_open_file(int param)
       log("STEMDOS: Set new attributes for Fcreate file");
 
       f=fopen(PC_filename,"w+b");
+#ifdef WIN32
       TRACE_LOG("Create file %s handle %d\n",PC_filename.Text,h);
+#endif
       log("STEMDOS: Opened Fcreate file for write");
       if (f!=NULL) fseek(f,0,SEEK_SET); // Always start at offset 0
     }
