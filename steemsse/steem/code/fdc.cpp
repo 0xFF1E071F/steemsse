@@ -439,7 +439,8 @@ void floppy_fdc_command(BYTE cm)
 #if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_EMPTY_SPIN_UP)
 /*  Hack for European Demos: 'insert disk B' screen
     v3.5.4 not defined after comment by Nicolas
-    It made no sense anyway, SainT was wrong too apparently
+    It made no sense anyway, it seemed to work in SainT because there's
+    only one drive!
 */
   else if(SSE_HACKS_ON && ADAT && FloppyDrive[DRIVE].Empty()
      && (!SF314[DRIVE].MotorOn
@@ -1221,7 +1222,7 @@ condition for interrupt is met the INTRQ line goes high signifying
 #else
           agenda_fdc_finished(0); // Interrupt CPU immediately
 #endif
-        }else{
+        }else{ //SS D0
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_MOTOR_OFF)
           agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION*9,0);
 #endif
@@ -1300,6 +1301,8 @@ We don't use 'revs_to_wait'
  We count IP, only if there's a spinning selected drive
  Not emulated: if program changes drive and the new drive is spinning
  too, but at different IP!
+
+ TODO we have the case Symic deselecting drive at IP7, is this correct?
 */
 
   if(ADAT)
@@ -1313,6 +1316,7 @@ We don't use 'revs_to_wait'
       agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION,revs_to_wait);
       return;
     }
+    WD1772.IndexCounter=0; 
   }
   fdc_str&=BYTE(~FDC_STR_MOTOR_ON);
 #if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_MOTOR_ON)
@@ -1450,9 +1454,10 @@ void agenda_fdc_finished(int)
   {
     TRACE_LOG("D4 prepare next IP at %d\n",hbl_count+FDC_HBLS_PER_ROTATION);
     agenda_add(agenda_fdc_finished,FDC_HBLS_PER_ROTATION,0);    
-  } else // suppose SS_FDC_MOTOR_OFF
+  } 
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_MOTOR_OFF)
+  else // suppose SS_FDC_FORCE_INTERRUPT
   if(ADAT)
   {
 //tmp    ASSERT( fdc_str&FDC_STR_MOTOR_ON || FloppyDrive[floppy_current_drive()].Empty());
@@ -1871,7 +1876,7 @@ void agenda_floppy_read_address(int idx)
 
 void agenda_floppy_read_track(int part)
 {
-  ASSERT( fdc_cr==0xE0 );
+  ASSERT((fdc_cr&0xF0)==0xE0); //we see $E0, $E4, $E8
   static int BytesRead;
   static WORD CRC;
   int floppyno=floppy_current_drive();
@@ -2075,6 +2080,10 @@ CRC                                2           2           2
 Gap 4 Post Data                   40          40           1      4E
 */
 #if defined(SS_DRIVE_READ_TRACK_TIMING2)
+/*  defined in v3.5.3, it was a bug that broke Jumping Jackson MCA, 
+    undefined in v3.6.0
+    TODO
+*/
         BYTE gap4bytes=(nSects>=11?1:40);
 #else
         BYTE gap4bytes=(nSects>=11?1:24);

@@ -83,7 +83,7 @@ int nbytes;
 #if defined(SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT)
   if(HD6301.LastCommand==0x12 && SSE_HACKS_ON)
   {
-    // for Jumping Jackson Auto but it seems there's sthg else
+    // for Jumping Jackson Auto
     TRACE("Disable mouse hardware quirk\n");
     mouse_x_counter=mouse_y_counter=~MOUSE_MASK; 
   }

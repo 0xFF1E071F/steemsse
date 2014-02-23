@@ -126,7 +126,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 #if defined(SS_CPU)
 
-
+//todo move clock here
 #endif
 
 
@@ -307,9 +307,9 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #endif
 
 
-#if defined(SS_INT_VBI_START)// note this doesn't work anymore, at all TODO
+#if defined(SS_INT_VBI_START)
 #undef SS_INT_VBI_START
-#define SS_INT_VBI_START (68) 
+#define SS_INT_VBI_START (68) // default = STE
 #endif
 
 #if defined(SS_INT_VBL_STF) // modest hack still works

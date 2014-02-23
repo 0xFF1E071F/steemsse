@@ -56,7 +56,7 @@ void m68k_poke(MEM_ADDRESS ad,BYTE x);
                                     {"Floppy data",LOGSECTION_FDC_BYTES},
                                     {"Image info",LOGSECTION_IMAGE_INFO},
                                     {"IPF sector info",LOGSECTION_IPF_LOCK_INFO},
-                                    {"Hard Disk",LOGSECTION_STEMDOS},
+                                    {"Gemdos",LOGSECTION_STEMDOS},
 #else
                                     {"Pasti",LOGSECTION_PASTI},
                                     {"Stemdos",LOGSECTION_STEMDOS},

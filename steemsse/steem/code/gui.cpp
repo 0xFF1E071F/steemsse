@@ -582,7 +582,12 @@ void GUIRefreshStatusBar() {
       if(SSE_HACKS_ON)
         strcat(status_bar," #"); // which symbol?
 #endif
-      
+
+#if defined(SS_VAR_STATUS_STRING_VSYNC)
+      if(SSE_WIN_VSYNC)
+        strcat(status_bar," V"); // V for VSync!
+#endif
+
     }
 
 #if defined(SS_VAR_STATUS_STRING_DISK_NAME)

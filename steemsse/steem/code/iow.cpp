@@ -1172,8 +1172,15 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
             +1) ))
           {
             io_src_b|=1; // cheat
-          psg_reg[psg_reg_select]=io_src_b;//also the variable...
+            psg_reg[psg_reg_select]=io_src_b;//also the variable...
           }
+#endif
+
+#if defined(SS_FDC_INDEX_PULSE_COUNTER) && defined(SS_DRIVE) && defined(SS_DEBUG)
+/* Symic Demo
+*/
+          if(WD1772.IndexCounter && YM2149.Drive()==TYM2149::NO_VALID_DRIVE)
+            TRACE("drive deselect while IP counter %d\n",WD1772.IndexCounter);
 #endif
           if (hPasti && pasti_active) 
             pasti->WritePorta(io_src_b,ABSOLUTE_CPU_TIME);

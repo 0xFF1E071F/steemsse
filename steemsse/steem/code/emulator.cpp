@@ -177,8 +177,8 @@ void init_timings()
     screen_event_pointer=event_plan[shifter_freq_idx];
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START) // normally not defined
-  screen_event_pointer++; // best part of the creation
+#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START) 
+  screen_event_pointer++; // best part of the creation - hack
 #endif
 
   screen_event_vector=screen_event_pointer->event;
@@ -198,7 +198,7 @@ void init_timings()
 
   cpu_time_of_first_mfp_tick=ABSOLUTE_CPU_TIME;
   shifter_cycle_base=ABSOLUTE_CPU_TIME;
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START)
+#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START___) //test...
   // We lose the vertical overscan at restart pretty often with this mod.
   TRACE("Init timings PC %X VBI %X pending %d\n",pc,LPEEK(0x0070),vbl_pending);
 #else

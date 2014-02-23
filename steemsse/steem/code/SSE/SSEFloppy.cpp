@@ -678,7 +678,7 @@ void TDma::IncAddress() {
     and disk image. Now there's a real automatic buffer working both
     ways.
     SS_DMA_DOUBLE_FIFO has been tested but isn't defined, overkill, 
-    so we spare some data bytes(17); strangely EXE size stays the same.
+    so we spare some data bytes(17).
 */
 
 void TDma::AddToFifo(BYTE data) {
@@ -761,21 +761,50 @@ void TDma::Event() {
 #endif
 
 
-#define LOGSECTION LOGSECTION_FDC_BYTES
-
 
 void TDma::TransferBytes() {
   // execute the DMA transfer (assume floppy)
   ASSERT( MCR&0x80 ); // bit 7 or no transfer
   ASSERT(!(MCR&BIT_5));
   ASSERT( Request );
-  ASSERT( MCR==0x80 || MCR==0x90 || MCR==0x180 || MCR==0x190 );//monaco gp
+  ASSERT( MCR==0x80 || MCR==0x90 || MCR==0x180 || MCR==0x190 );
 
+#if defined(SS_DRIVE_COMPUTE_BOOT_CHECKSUM)
+/*  Computing the checksum if it's bootsector.
+    We do it here in DMA because it should work with naitve, STX, IPF.
+*/
+
+#define LOGSECTION LOGSECTION_IMAGE_INFO
+
+  if(fdc_cr==0x80 && !fdc_tr && fdc_sr==1 && !(MCR&0x100))
+  {
+    for(int i=0;i<16;i+=2)
+    {
+      SF314[floppy_current_drive()].SectorChecksum+=Fifo
+#if defined(SS_DMA_DOUBLE_FIFO)
+        [!BufferInUse]
+#endif
+        [i]<<8; 
+      SF314[floppy_current_drive()].SectorChecksum+=Fifo
+#if defined(SS_DMA_DOUBLE_FIFO)
+        [!BufferInUse]
+#endif
+        [i+1]; 
+    }
+    //ASSERT( SF314[floppy_current_drive()].SectorChecksum!=0x1234 );
+    //TRACE_LOG("Boot sector of %c checksum %X\n",'A'+floppy_current_drive(),SF314[floppy_current_drive()].SectorChecksum);
+  }
+
+#undef LOGSECTION
+
+#endif//checksum
+
+#define LOGSECTION LOGSECTION_FDC_BYTES
   if(!(MCR&0x100)) // disk -> RAM
     TRACE_LOG("%2d/%2d/%3d to %X: ",fdc_tr,fdc_sr,ByteCount,BaseAddress);
   else  // RAM -> disk
     TRACE_LOG("%2d/%2d/%3d from %X: ",fdc_tr,fdc_sr,ByteCount,BaseAddress);
-  
+
   for(int i=0;i<16;i++) // burst, 16byte packets strictly, 8 words
   {
     if(!(MCR&0x100)&& DMA_ADDRESS_IS_VALID_W) // disk -> RAM
@@ -893,6 +922,7 @@ Total track                     6250        6250        6256
 
 
 TSF314::TSF314() {
+
 #if defined(SS_DRIVE_SOUND)
   //TRACE("null %d sound buffer pointers\n",NSOUNDS);
   for(int i=0;i<NSOUNDS;i++)
@@ -900,7 +930,12 @@ TSF314::TSF314() {
 #if defined(SS_DRIVE_SOUND_VOLUME)
   Sound_Volume=0; //changed by option
 #endif
+#endif//sound
+
+#if defined(SS_DRIVE_COMPUTE_BOOT_CHECKSUM)
+  SectorChecksum=0;
 #endif
+
 }
 
 
@@ -915,6 +950,8 @@ bool TSF314::Adat() { // accurate disk access times
     );
 }
 
+
+// those are for native only...
 
 WORD TSF314::BytePosition() {
   // this is independent of #sectors
@@ -1121,9 +1158,7 @@ void TSF314::Sound_ChangeVolume() {
 void TSF314::Sound_CheckCommand(BYTE cr) {
 /*  Called at each WD1772 command.
     If motor wasn't on we play the startup sound.
-    Start a buzz loop when we're seeking across more than one track.
-    This is certainly not accurate but it does sound like typical
-    floppy drive work.
+    We also play the (rattling!) SEEK noise.
 */
 
   if(!(fdc_str&0x80))
@@ -1156,7 +1191,7 @@ void TSF314::Sound_CheckCommand(BYTE cr) {
 void TSF314::Sound_CheckIrq() {
 /*  Called at the end of each FDC command (native, pasti, caps).
     Stop SEEK loop.
-    Emit a click noise if we were effectively seeking.
+    Emit a "STEP" click noise if we were effectively seeking.
 */
 #if !defined(SS_DRIVE_SOUND_CHECK_SEEK_VBL)
   if(Sound_Buffer[SEEK])
@@ -1511,7 +1546,24 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
         SF314[0].Sound_CheckCommand(io_src_b);
 #endif
       }
-#endif
+#endif//sound
+
+#if defined(SS_DRIVE_COMPUTE_BOOT_CHECKSUM)
+
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_IMAGE_INFO
+/*  Used this for Auto239.
+    Gives the checksum of bootsector.
+    $1234 means executable. Use last WORD to adjust.
+*/
+      if(SF314[floppy_current_drive()].SectorChecksum)
+        TRACE_LOG("%c: bootsector checksum=$%X\n",'A'+floppy_current_drive(),SF314[floppy_current_drive()].SectorChecksum);
+      SF314[floppy_current_drive()].SectorChecksum=0;
+
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_FDC
+
+#endif//checksum
 
       bool can_send=true; // are we in Steem's native emu?
 #if defined(SS_IPF)

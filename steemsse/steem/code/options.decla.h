@@ -224,6 +224,14 @@ public:
   hxc_button keyboard_click_but; 
 #endif
 
+#if defined(SS_PSG_FIX_TABLES) 
+  hxc_button psg_fixtables_but;
+#endif
+
+#if defined(SS_PSG_FIXED_VOL_FIX2)
+  hxc_button psg_samples_but;
+#endif
+
 #if defined(SS_SOUND_FILTER_STF)
   hxc_button psg_filter_but;
 #endif

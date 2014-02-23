@@ -1938,6 +1938,10 @@ void TShifter::CheckVerticalOverscan() {
     on_overscan_limit=LIMIT_TOP;
   else if(scan_y==shifter_last_draw_line-1 && scan_y<245)
     on_overscan_limit=LIMIT_BOTTOM;
+#ifdef SS_SHIFTER_VERTICAL_OPTIM1
+  else
+    return;
+#endif
 
   int t,i=shifter_freq_change_idx;
   int freq_at_trigger=0; 
@@ -3457,6 +3461,9 @@ void TShifter::Vbl() {
 #if defined(SS_SHIFTER_UNSTABLE)
   HblPixelShift=0;
 #endif
+
+  //CurrentScanline.Tricks=0;
+  //freq_change_this_scanline=0;
 }
 
 #undef LOGSECTION

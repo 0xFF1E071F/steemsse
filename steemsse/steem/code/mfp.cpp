@@ -323,12 +323,18 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 
 #if defined(STEVEN_SEAGAL) && defined(SS_MFP_RATIO_PRECISION)
 /*  Here we do exactly what Steem authors suggested above, and it does bring the
-    timing measurements at the same level as SainT and Hatari (HWTST001.PRG),
-    so it's definitely an improvement, and it isn't complicated at all!
+    timing measurements at the same level as SainT and Hatari, at least in
+    HWTST001.PRG by ljbk, so it's definitely an improvement, and it isn't 
+    complicated at all!
 */
           mfp_timer_period_fraction[timer]=int(  1000*((double(mfp_timer_prescale[new_control]*int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+timer]))) * CPU_CYCLES_PER_MFP_CLK)-(double)mfp_timer_period[timer])  );
           mfp_timer_period_current_fraction[timer]=0;
-          TRACE_LOG("F%d y%d PC %X MFP set timer %C control %x period %d.%d\n",FRAME,scan_y,old_pc,'A'+timer,new_control,mfp_timer_period[timer],mfp_timer_period_fraction[timer]);
+          TRACE_LOG("F%d y%d PC %X MFP set timer %C control %x prescale %d data %x ticks %d cycles %d.%d %dHz\n",
+            FRAME,scan_y,old_pc,'A'+timer,new_control,mfp_timer_prescale[new_control],mfp_reg[MFPR_TADR+timer],
+            int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+timer])) * mfp_timer_prescale[new_control],
+            mfp_timer_period[timer],mfp_timer_period_fraction[timer],
+            MFP_CLK_TH_EXACT/((int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+timer])) * mfp_timer_prescale[new_control]))
+            );
 #endif
 
           // Here mfp_timer_timeout assumes that the next MFP_CLK tick happens
@@ -584,23 +590,6 @@ void ASMCALL check_for_interrupts_pending()
         }
       }//nxt irq
     }
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START) // normally, no
-/*
-We wouldn't do it here
-    if (
-#ifdef SS_SHIFTER
-      Shifter.nVbl && // hack for resuming emu (auto.sts)
-#endif
-      vbl_pending && ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl>64+4){
-      //TRACE_LOG("delayed vbl %d y %d SR %X\n",FRAME,scan_y,sr);
-      if ((sr & SR_IPL)<SR_IPL_4){
-        ASSERT(!Blit.HasBus);
-        VBL_INTERRUPT
-//        if(LPEEK(0x70)!=0xFC06DE) TRACE_LOG("VBL %d vector %X\n",Shifter.nVbl,LPEEK(0x70));
-      }
-    }
-*/
-#else
 
 /*  TODO check change during IACK but is it useful??
 */
@@ -617,8 +606,6 @@ We wouldn't do it here
       }
     }
 
-#endif
-
     if (hbl_pending){ //SS IPL2 - rare
       if ((sr & SR_IPL)<SR_IPL_2){
         // Make sure this HBL can't occur when another HBL has already happened
@@ -627,6 +614,10 @@ We wouldn't do it here
           ASSERT(!Blit.HasBus);
 #if defined(SS_DEBUG_SHOW_INTERRUPT)
           Debug.RecordInterrupt("HBI");
+#endif
+#if defined(SS_INT_OSD_REPORT_HBI) && defined(SS_DEBUG)
+          if(!TRACE_ENABLED)
+            TRACE_OSD("HBI");
 #endif
           HBL_INTERRUPT;
         }

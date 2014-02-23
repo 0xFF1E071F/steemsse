@@ -51,18 +51,7 @@ EXT int cpu_timer_at_start_of_hbl;
 
 //#ifdef IN_EMU
 
-#if defined(STEVEN_SEAGAL) && defined(SS_TIMINGS_FIX_EVENT_PLAN1)
-
-//why x2??
-EXT screen_event_struct event_plan_50hz[2*313*2+2],
-      event_plan_60hz[2*263*2+2],
-      event_plan_70hz[2*600*2+2+1],
-      event_plan_boosted_50hz[2*313*2+2],
-      event_plan_boosted_60hz[2*263*2+2],
-      event_plan_boosted_70hz[2*600*2+2];
-
-
-#elif defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START)
+#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START)
 screen_event_struct event_plan_50hz[313*2+2+1],event_plan_60hz[263*2+2+1],event_plan_70hz[600*2+2+1],
                     event_plan_boosted_50hz[313*2+2+1],event_plan_boosted_60hz[263*2+2+1],event_plan_boosted_70hz[600*2+2+1];
 
@@ -520,6 +509,9 @@ void event_timer_b()
 }
 #undef LOGSECTION
 //---------------------------------------------------------------------------
+
+#if defined(SS_INT_VBI_START) || defined(SS_INT_HBL_ONE_FUNCTION)
+#else
 void event_hbl()   //just HBL, don't draw yet
 {
 /* 
@@ -536,21 +528,14 @@ void event_hbl()   //just HBL, don't draw yet
 #undef LOGSECTION
 
   log_to_section(LOGSECTION_VIDEO,EasyStr("VIDEO: Event HBL at end of line ")+scan_y+", cycle "+(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl));
-#if !(defined(STEVEN_SEAGAL) && defined(SS_TIMINGS_FIX_EVENT_PLAN1))
   right_border_changed=0;//SS useful in SSE?
   scanline_drawn_so_far=0;
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
-#endif
-
-#if !(defined(STEVEN_SEAGAL) && defined(SS_TIMINGS_FIX_EVENT_PLAN1))
   cpu_timer_at_start_of_hbl=time_of_next_event; // SS as defined in draw.cpp
-#endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
-#if !(defined(STEVEN_SEAGAL) && defined(SS_TIMINGS_FIX_EVENT_PLAN1))
   Shifter.IncScanline();
   ASSERT(scan_y==-32 || scan_y==-62 || scan_y==-33);
-#endif
 #else
   scan_y++;
 #endif
@@ -568,12 +553,9 @@ void event_hbl()   //just HBL, don't draw yet
     ){
     hbl_pending=true;
   }
-#if !(defined(STEVEN_SEAGAL) && defined(SS_TIMINGS_FIX_EVENT_PLAN1))
   if (dma_sound_on_this_screen) dma_sound_fetch();//,dma_sound_fetch();
-#endif
   screen_event_pointer++;  
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_TIMINGS_FIX_EVENT_PLAN1))
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
   // we run some 6301 cycles at the end of each scanline (x1)
   if(HD6301EMU_ON && !HD6301.Crashed)
@@ -603,15 +585,13 @@ void event_hbl()   //just HBL, don't draw yet
 #endif
   }
 #endif//6301
-#endif
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_TIMINGS_FIX_EVENT_PLAN1))
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF) && !defined(SS_IPF_CPU)
   if(Caps.Active==1) 
     Caps.Hbl(); 
 #endif
-#endif
 }
+#endif
 //---------------------------------------------------------------------------
 
 //SS: The pointer to this function is used, so don't mess with it C++ like!
@@ -803,11 +783,7 @@ void event_scanline()
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
   /////// SS as defined in draw.cpp,
   /////// and relative to cpu_time_of_last_vbl:
-//#if !(defined(STEVEN_SEAGAL) && defined(SS_TIMINGS_FIX_EVENT_PLAN1))
   cpu_timer_at_start_of_hbl=time_of_next_event; //linecycle0 stays the same
-  //this would then only change the timing of HBI, and of course break things
-  //but TODO after 3.6.0
-//#endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF) && !defined(SS_IPF_CPU)
   if(Caps.Active==1)
@@ -820,7 +796,7 @@ void event_scanline()
   scan_y++;
 #endif
 
-#if defined(SS_DEBUG_REPORT_SDP)
+#if defined(SS_DEBUG_REPORT_SDP) && defined(SS_SHIFTER)
   if(Shifter.FetchingLine())
   {
     VideoEvents.Add(scan_y,0,'A',(shifter_draw_pointer&0x00FF0000)>>16 ); 
@@ -831,6 +807,7 @@ void event_scanline()
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IKBD_POLL_IN_FRAME)
   // We peek Windows message once during the frame and not just at VBL
+  // note: undefined for now
   if(scan_y==ikbd.scanline_to_poll
     && shifter_freq_at_start_of_vbl!=60 // HighRes Mode (hack) TODO: why?
 #if defined(SS_HACKS)
@@ -854,9 +831,6 @@ void event_scanline()
   }
 #endif
 
-
-#if !(defined(STEVEN_SEAGAL) && defined(SS_TIMINGS_FIX_EVENT_PLAN1))
-//HBL pending has its own event
   if (abs_quick(cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt)>CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED
 #if defined(STEVEN_SEAGAL) && defined(SS_INT_HBL_IACK_FIX)
 /*  CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED was defined as 28
@@ -879,7 +853,6 @@ void event_scanline()
 #if defined(STEVEN_SEAGAL) && defined(SS_INT_HBL_IACK_FIX) && defined(SS_DEBUG)
   else if((sr & SR_IPL)<SR_IPL_2)
     TRACE_OSD("NO HBL"); 
-#endif
 #endif
 
 
@@ -918,7 +891,7 @@ void event_start_vbl()
 void event_vbl_interrupt() //SS misleading name?
 { 
 #if defined(SS_VID_VSYNC_WINDOW)
-  bool VSyncing=( (SSE_WIN_VSYNC/*&&bAppActive*/||FSDoVsync&&FullScreen) 
+  bool VSyncing=( (SSE_WIN_VSYNC&&bAppActive||FSDoVsync&&FullScreen) 
     && fast_forward==0 && slow_motion==0);
 #else
   bool VSyncing=(FSDoVsync && FullScreen && fast_forward==0 && slow_motion==0);
@@ -971,6 +944,10 @@ void event_vbl_interrupt() //SS misleading name?
 
   //----------- VBL interrupt ---------
 #if !(defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START))
+/*  
+    VBI isn't set pending now but in 64 or so cycles.
+    TODO: implement SS_INT_VBL_IACK in the vbi event
+*/
 #if defined(STEVEN_SEAGAL) && defined(SS_INT_VBL_IACK)
 /*  This is for the case when the VBI just started (second VBI pending during
     IACK is cleared), 
@@ -1454,17 +1431,23 @@ void event_pasti_update()
 #if defined(STEVEN_SEAGAL) // added events
 //removed ikbd event, undefined and not up to date
 
-#if defined(SS_INT_VBI_START) // normally not used
+#if defined(SS_INT_VBI_START)
 
-void event_trigger_vbi() { 
-  if ((sr & SR_IPL)<SR_IPL_4)// && vbl_pending)
+void event_trigger_vbi() { //6X cycles into frame (reference end of HSYNC)
+  //if ((sr & SR_IPL)<SR_IPL_4) // of course not!
   {
-    ASSERT( !Blit.HasBus );
-    ASSERT( !vbl_pending );
+///    ASSERT( !Blit.HasBus );
+//    ASSERT( !vbl_pending );
+#ifdef SS_DEBUG
+#define LOGSECTION LOGSECTION_INTERRUPTS
+    if(vbl_pending) TRACE_LOG("Frame %d vbl already pending\n",FRAME);
+#undef LOGSECTION
+#endif
     vbl_pending=true;
-    VBL_INTERRUPT
+ //   VBL_INTERRUPT //of course not here, no wonder it didn't work!
   }
   screen_event_pointer++;
 }
 #endif
 #endif
+

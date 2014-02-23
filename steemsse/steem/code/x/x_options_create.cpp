@@ -1154,7 +1154,7 @@ void TOptionBox::CreateSSEPage() {
   const int HorizontalSeparation=10;
 
 #if defined(SS_VID_BORDERS)
-  Wid=hxc::get_text_width(XD,T("Display Size"));
+  Wid=hxc::get_text_width(XD,T("Display size"));
   border_size_label.create(XD,page_p,page_l,y,Wid,25,NULL,this,BT_STATIC 
     | BT_TEXT,T("Display Size"),0,BkCol);
   border_size_dd.id=4001; //TODO
@@ -1225,7 +1225,7 @@ void TOptionBox::CreateSSEPage() {
 #endif
 
 #if defined(SS_STF)
-  Wid=hxc::get_text_width(XD,T("ST Model"));
+  Wid=hxc::get_text_width(XD,T("ST model"));
   st_type_label.create(XD,page_p,page_l,y,Wid,25,NULL,this,BT_STATIC 
     | BT_TEXT,T("ST Model"),0,BkCol);
   st_type_dd.id=4005;
@@ -1294,19 +1294,39 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
+#if defined(SS_PSG_FIX_TABLES) 
+  psg_fixtables_but.create(XD,page_p,page_l,y,0,25,
+    button_notify_proc,this,BT_CHECKBOX,T("P.S.G."),4012,BkCol);
+  psg_fixtables_but.set_check(SSEOption.PSGMod);
+  hints.add(psg_fixtables_but.handle,
+    T("This uses values from Yamaha doc to render P.S.G. (YM-2149) sound."),
+    page_p);
+  y+=LineHeight;
+#endif
+
+#if defined(SS_PSG_FIXED_VOL_FIX2)
+  psg_samples_but.create(XD,page_p,page_l,y,0,25,
+    button_notify_proc,this,BT_CHECKBOX,T("Samples"),4013,BkCol);
+  psg_samples_but.set_check(SSEOption.PSGFixedVolume);
+  hints.add(psg_samples_but.handle,
+    T("Punchier samples using a table by ljbk, thx dude!"),
+    page_p);
+  y+=LineHeight;
+#endif
+
 #if defined(SS_SOUND_FILTER_STF)
   psg_filter_but.create(XD,page_p,page_l,y,0,25,
-    button_notify_proc,this,BT_CHECKBOX,T("PSG Filter"),4008,BkCol);
+    button_notify_proc,this,BT_CHECKBOX,T("Filter"),4008,BkCol);
   psg_filter_but.set_check(PSG_FILTER_FIX);
   hints.add(psg_filter_but.handle,
-  T("This makes PSG (YM-2149) chip tunes and samples sound less muffled but the sound of samples could be worse, depends."),
+    T("This makes PSG (YM-2149) chip tunes and samples sound less muffled but the sound of samples could be worse, depends."),
     page_p);
   y+=LineHeight;
 #endif
 
 #if defined(SS_SOUND_MICROWIRE)
   ste_microwire_but.create(XD,page_p,page_l,y,0,25,
-    button_notify_proc,this,BT_CHECKBOX,T("STE Microwire"),4009,BkCol);
+    button_notify_proc,this,BT_CHECKBOX,T("Microwire"),4009,BkCol);
   ste_microwire_but.set_check(MICROWIRE_ON);
   hints.add(ste_microwire_but.handle,
   T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature."),

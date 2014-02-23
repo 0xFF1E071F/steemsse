@@ -1427,6 +1427,16 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
           PostMessage(Win,WM_USER,1234,2);
           break;
 
+#if defined(SS_DRIVE_SWITCH_OFF_MOTOR)
+        case 1046:
+        case 1047:
+          SF314[(LOWORD(wPar)-1046)].MotorOn=false;
+         // fdc_str&=0xEF; 
+//          WD1772.STR&=~FDC_STR_MOTOR_ON;
+          fdc_str&=~FDC_STR_MOTOR_ON;
+          break;
+#endif
+
 #if defined(SS_DRIVE_SINGLE_SIDE)
 /*   bit0 A bit 1 B set = single - we toggle bits
 Toggling a bit
@@ -2534,6 +2544,14 @@ LRESULT __stdcall TDiskManager::Drive_Icon_WndProc(HWND Win,UINT Mess,WPARAM wPa
         (int)(( (SSEOption.SingleSideDriveMap)&(This->MenuTarget+1)) ? 
         MF_CHECKED:0),1048+This->MenuTarget,
         T("SF354 (single side - caution!)"));
+
+#if defined(SS_DRIVE_SWITCH_OFF_MOTOR)
+      if(SF314[This->MenuTarget].MotorOn)
+      {
+        InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,
+          1046+This->MenuTarget,T("Stop motor"));
+      }
+#endif
       POINT pt;
       GetCursorPos(&pt); // menu will appear at the mouse pointer
       TrackPopupMenu(Pop,TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,

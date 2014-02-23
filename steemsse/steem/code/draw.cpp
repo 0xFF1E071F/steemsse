@@ -1300,61 +1300,36 @@ bool draw_routines_init()
 */
     screen_event_struct *evp=event_plan_50hz;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START)//no
+#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START)
+/*
+    Setting VBI at 0 then having one 444 cycles line is a hack
+    but removing it isn't trivial.
+    Not working with this:
+    Panic.tos + bad auto.sts??? corruption somewhere
+    Maybe other timings are synced with "framecycle 0=VBI pending"
+*/
+    ASSERT( SS_INT_VBI_START==68 );
     evp->time=SS_INT_VBI_START; // 68
 #if defined(SS_STF) 
     if(ST_TYPE!=STE)
-      evp->time-=4; // fixes 36.15 Gen4 demo by Cakeman (or used to!)
+      evp->time-=4; // fixes 36.15 Gen4 demo by Cakeman
 #endif
     evp->event=event_trigger_vbi;
     evp++;
 #endif  
 
-#if defined(STEVEN_SEAGAL) && defined(SS_TIMINGS_FIX_EVENT_PLAN1)
-/*  There's a hack/something to correct here?
-
-
-     0                       444 event_hbl (hbl pending)
-                             444+512 event_scanline (includes hbl pending)
-                             444+512*2 event_scanline 
-                             ...
-    
-                             444+512*312 (160188) event_scanline (+68) 160256 event_vbl_interrupt
-
-
-    Framestart = 0
-    First HBL = 444 framecycles
-    second HBL = 512 linecycles in line 1 but 444+512 framecycles
-
-    the hack being that first line is only 444 cycles!
-
-
-*/
-
-    for (int y=0;y<313;y++){
-      evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_50HZ + y*512; //444
-      evp->event=event_hbl;
-      evp++;
-      evp->time=512 + y*512;
-      evp->event=event_scanline;
-      evp++;
-      if ((CYCLES_FOR_VERTICAL_RETURN_IN_50HZ+y*512) <= (160256-CYCLES_FROM_START_VBL_TO_INTERRUPT) &&
-          (CYCLES_FOR_VERTICAL_RETURN_IN_50HZ+y*512+512) > (160256-CYCLES_FROM_START_VBL_TO_INTERRUPT)){
-        evp->time=160256-CYCLES_FROM_START_VBL_TO_INTERRUPT; //SS -1544
-        evp->event=event_start_vbl;
-        evp++;
-      }
-    }
-    evp->time=160256;
-    evp->event=event_vbl_interrupt;
-    evp++;
-    evp->event=NULL;
+#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START)
+    evp->time=512; 
+    evp->event=event_scanline;
+#elif defined(SS_INT_HBL_ONE_FUNCTION)
+    evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_50HZ; 
+    evp->event=event_scanline;
 #else
-
     // SS for line 0, event is not scanline but hbl, but for all the others,
-    // it is scanline, placed at the hbl timing...
-    evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_50HZ; // 444
+    // it is scanline, placed at the hbl timing..
+    evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_50HZ; // 444 -> this is the hack
     evp->event=event_hbl;
+#endif
     evp++;
     for (int y=1;y<313;y++){
       evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_50HZ + y*512;
@@ -1362,7 +1337,11 @@ bool draw_routines_init()
       evp++;
       if ((CYCLES_FOR_VERTICAL_RETURN_IN_50HZ+y*512) <= (160256-CYCLES_FROM_START_VBL_TO_INTERRUPT) &&
           (CYCLES_FOR_VERTICAL_RETURN_IN_50HZ+y*512+512) > (160256-CYCLES_FROM_START_VBL_TO_INTERRUPT)){
-        evp->time=160256-CYCLES_FROM_START_VBL_TO_INTERRUPT; //SS -1544
+        evp->time=160256-CYCLES_FROM_START_VBL_TO_INTERRUPT //SS -1544
+#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START)
+          +SS_INT_VBI_START // it's relative to VBI (?)
+#endif
+        ; 
         evp->event=event_start_vbl;
         evp++;
       }
@@ -1371,8 +1350,6 @@ bool draw_routines_init()
     evp->event=event_vbl_interrupt;
     evp++;
     evp->event=NULL;
-
-#endif
 
     /* 60Hz:
       VBLs spaced by 133604 cycles (59.87Hz)
@@ -1391,8 +1368,17 @@ bool draw_routines_init()
     evp->event=event_trigger_vbi;
     evp++;
 #endif  
+
+#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START)
+    evp->time=508;
+    evp->event=event_scanline;
+#elif defined(SS_INT_HBL_ONE_FUNCTION)
+    evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_60HZ; 
+    evp->event=event_scanline;
+#else
     evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_60HZ;
     evp->event=event_hbl;
+#endif
     evp++;
     for(int y=1;y<263;y++){
       evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_60HZ + y*508;
@@ -1400,7 +1386,11 @@ bool draw_routines_init()
       evp++;
       if ((CYCLES_FOR_VERTICAL_RETURN_IN_60HZ+y*508) <= (133604-CYCLES_FROM_START_VBL_TO_INTERRUPT) &&
           (CYCLES_FOR_VERTICAL_RETURN_IN_60HZ+y*508+508) > (133604-CYCLES_FROM_START_VBL_TO_INTERRUPT)){
-        evp->time=133604-CYCLES_FROM_START_VBL_TO_INTERRUPT;
+        evp->time=133604-CYCLES_FROM_START_VBL_TO_INTERRUPT
+#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START)
+          +SS_INT_VBI_START
+#endif
+          ;
         evp->event=event_start_vbl;
         evp++;
       }
@@ -1419,7 +1409,7 @@ bool draw_routines_init()
     */
     evp=event_plan_70hz;
 #if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START)
-    evp->time=SS_INT_VBI_START;
+    evp->time=SS_INT_VBI_START;//probably wrong
 #if defined(SS_STF)
     if(ST_TYPE!=STE)
       evp->time-=4;
