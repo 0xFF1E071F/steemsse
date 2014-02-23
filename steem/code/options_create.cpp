@@ -2031,8 +2031,8 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight+10;
 
 #if defined(SS_VAR_STATUS_STRING)
-  Wid=GetCheckBoxSize(Font,T("Status bar")).Width;
-  Win=CreateWindow("Button",T("Status bar"),WS_CHILD | WS_TABSTOP |
+  Wid=GetCheckBoxSize(Font,T("Status info")).Width;
+  Win=CreateWindow("Button",T("Status info"),WS_CHILD | WS_TABSTOP |
     BS_CHECKBOX,page_l,y,Wid,25,Handle,(HMENU)7307,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,SSE_STATUS_BAR,0);
   ToolAddWindow(ToolTip,Win,T("Displays some info in the tool bar."));
@@ -2067,8 +2067,8 @@ void TOptionBox::CreateSSEPage() {
 #endif  
 
 #if defined(SS_VID_BORDERS) 
-  Wid=get_text_width(T("Display Size"));
-  CreateWindow("Static",T("Display Size"),WS_CHILD,
+  Wid=get_text_width(T("Display size"));
+  CreateWindow("Static",T("Display size"),WS_CHILD,
 	  page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
   Win=BorderSizeOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
     page_l+5+Wid,y,80,200,Handle,(HMENU)1026,HInstance,NULL);
@@ -2163,8 +2163,8 @@ Windows 2000	5.0
 
 #if defined(SS_VID_3BUFFER)
   Offset+=Wid+HorizontalSeparation;
-  Wid=GetCheckBoxSize(Font,T("Triple Buffering")).Width;
-  Win=CreateWindow("Button",T("Triple Buffering"), mask,
+  Wid=GetCheckBoxSize(Font,T("Triple buffering")).Width;
+  Win=CreateWindow("Button",T("Triple buffering"), mask,
                page_l +Offset,y,Wid,25,Handle,(HMENU)1034,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,SSE_3BUFFER,0);
   tip_text=T("This may reduce tearing at the price of high CPU use.");
@@ -2174,8 +2174,8 @@ Windows 2000	5.0
 #endif
 
 #if defined(SS_STF) 
-  Wid=get_text_width(T("ST Model"));
-  CreateWindow("Static",T("ST Model"),WS_CHILD,
+  Wid=get_text_width(T("ST model"));
+  CreateWindow("Static",T("ST model"),WS_CHILD,
     page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
   Win=STTypeOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
     page_l+5+Wid,y,80,200,Handle,(HMENU)211,HInstance,NULL);
@@ -2293,7 +2293,7 @@ Windows 2000	5.0
 #if defined(SS_SOUND_FILTER_STF)
   Offset+=Wid+HorizontalSeparation;
   y-=LineHeight; // maybe it will be optimised away!
-  Wid=GetCheckBoxSize(Font,T("PSG Filter")).Width;
+  Wid=GetCheckBoxSize(Font,T("Filter")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
   Win=CreateWindow("Button",T("Filter"),mask,
     page_l+Offset,y,Wid,25,Handle,(HMENU)7303,HInstance,NULL);
@@ -2306,13 +2306,13 @@ Windows 2000	5.0
 #if defined(SS_SOUND_MICROWIRE)
   Offset+=Wid+HorizontalSeparation;
   y-=LineHeight; // maybe it will be optimised away!
-  Wid=GetCheckBoxSize(Font,T("STE Microwire")).Width;
+  Wid=GetCheckBoxSize(Font,T("Microwire")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
 #if defined(STEVEN_SEAGAL) && defined(SS_SOUND_OPTION_DISABLE_DSP)
   if(!DSP_ENABLED)
     mask|=WS_DISABLED;
 #endif
-  Win=CreateWindow("Button",T("STE Microwire"),mask,
+  Win=CreateWindow("Button",T("Microwire"),mask,
     page_l+Offset,y,Wid,25,Handle,(HMENU)7302,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,MICROWIRE_ON,0);
   ToolAddWindow(ToolTip,Win,
@@ -2369,8 +2369,8 @@ Windows 2000	5.0
     SSE_DRIVE_SOUND=0;
     mask|=WS_DISABLED;
   }
-  Wid=GetCheckBoxSize(Font,T("Drive Sound")).Width;
-  Win=CreateWindow("Button",T("Drive Sound"),mask,
+  Wid=GetCheckBoxSize(Font,T("Drive sound")).Width;
+  Win=CreateWindow("Button",T("Drive sound"),mask,
     page_l,y,Wid,25,Handle,(HMENU)7310,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,SSE_DRIVE_SOUND,0);
   ToolAddWindow(ToolTip,Win,
@@ -2472,7 +2472,7 @@ void TOptionBox::SSEUpdateIfVisible() {
   if(Win!=NULL) 
     SendMessage(Win,BM_SETCHECK,SSE_3BUFFER,0);
 #endif
-
+  InvalidateRect(Handle,NULL,true);
 
 }
 #endif

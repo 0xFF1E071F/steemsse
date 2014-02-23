@@ -633,6 +633,14 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
         PEEK(0x484)&=0xFFFE;
     }
 #endif         
+#if defined(SS_PSG_FIX_TABLES) 
+    else if(b->id==4012)
+      SSEOption.PSGMod=b->checked;
+#endif
+#if defined(SS_PSG_FIXED_VOL_FIX2)
+    else if(b->id==4013)
+      SSEOption.PSGFixedVolume=b->checked;
+#endif
 #if defined(SS_SOUND_FILTER_STF)
     else if(b->id==4008)
       PSG_FILTER_FIX=b->checked;

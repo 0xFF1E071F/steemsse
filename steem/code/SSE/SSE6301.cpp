@@ -100,8 +100,8 @@ void THD6301::InterpretCommand(BYTE ByteIn) {
   // custom program (boot) loading?
   else if(CustomProgram==CUSTOM_PROGRAM_LOADING)
   {
-    Parameter[CurrentParameter-1]--;   // bugfix 1
-    if(!Parameter[CurrentParameter-1])  // bugfix 2
+    Parameter[CurrentParameter-1]--;
+    if(!Parameter[CurrentParameter-1])
       CustomProgram=CUSTOM_PROGRAM_LOADED; // we don't try and ID the program
   }
   // new command?

@@ -140,6 +140,7 @@ extern TDma Dma;
 /* How a floppy disk is structured (bytes/track, gaps...) is handled
    here.
    TODO review, simplify...
+   TODO separate native/pasti/etc... 
 */
 
 struct TSF314 {
@@ -167,7 +168,8 @@ struct TSF314 {
   WORD TrackGap();
   BYTE Id; // object has to know if its A: or B:
 #if defined(SS_PASTI_ONLY_STX)
-  BYTE ImageType;
+  BYTE ImageType; //TODO use this to make it more general (0 none + nativeST + pasti + ipf...)
+//maybe "handler" (steem, pasti...) + type (st,msa,stx...)
 #endif
 #if defined(SS_DRIVE_MOTOR_ON)
   BYTE MotorOn;
@@ -188,6 +190,10 @@ struct TSF314 {
   DWORD Sound_Volume;
   void Sound_ChangeVolume();
 #endif
+#endif//sound
+
+#if defined(SS_DRIVE_COMPUTE_BOOT_CHECKSUM)
+  WORD SectorChecksum;
 #endif
 
 };

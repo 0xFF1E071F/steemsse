@@ -1,21 +1,21 @@
 $00	DDR1
 $01	DDR2
-$02	DR1
-$03	DR2
+$02	DR1		keyboard lines
+$03	DR2		buttons
 $04	DDR3
 $05	DDR4
-$06	DR3
-$07	DR4
-$08	TCSR
-$09	FRC
+$06	DR3		keyboard rows
+$07	DR4		keyboard rows; mouse/joystick direction
+$08	TCSR		Timer Control/Status Register
+$09	FRC		Free Running Counter
 $0A	FRC
-$0B	OCR
+$0B	OCR		Output Compare Register
 $0C	OCR
 $0D	ICR
 $0E	ICR
 $0F	CSR
 $10	RMCR		should be 5 = 4MHz, 7812.5 bits/s (Steem doesn't use this register)
-$11	TRCSR
+$11	TRCSR		Transmit/Receive Control & Status Register
 $12	RDR
 $13	TDR
 $14	RCR
@@ -136,9 +136,9 @@ $86	minute
 $87	second  EG Captain Blood
 $88	Init ($AA: yes), after each reset and F1 sent
 $89	
-$8A	
+$8A	init 1,2 ?
 $8B	
-$8C	
+$8C	init 2,FD ?
 $8D	
 $8E	
 $8F	
@@ -201,16 +201,16 @@ $C7
 $C8	
 $C9	Mouse mode (bit7 enabled bit6 keycode bit5 absolute mouse bit4 mouse event bit3...  bit1 button monitoring bit0 Y reversed)
 $CA	Joystick mode (bit5 enabled bit4 interrogate bit3 event bit2 keycode bit1 monitoring bit0 trigger monitoring)
-$CB	(bit3 no output bit5...) 
-$CC	Input buffer counter   / command???
-$CD	Input buffer
-$CE	Input buffer
-$CF	Input buffer
-$D0	Input buffer
-$D1	Input buffer
-$D2	Input buffer
-$D3	Input buffer
-$D4	Input buffer
+$CB	Flags (bit7 new command bit5 input full bit4,3 command in complete bit0-2:#parameters still missing)
+$CC	Input buffer counter
+$CD	Input buffer (command)
+$CE	Input buffer (parameters)
+$CF	Input buffer (parameters)
+$D0	Input buffer (parameters)
+$D1	Input buffer (parameters)
+$D2	Input buffer (parameters)
+$D3	Input buffer (parameters)
+$D4	Input buffer (parameters)
 $D5	
 $D6	index in output buffer
 $D7	ouput buffer counter, <0 = OVF
@@ -236,7 +236,7 @@ $EA	Output buffer
 $EB	Output buffer
 $EC	Output buffer
 $ED	Output buffer
-$EE	Temp buffer for eg Read RAM ($21) + fc4d
+$EE	Temp buffer 
 $EF	Temp buffer
 $F0	Temp buffer
 $F1	Temp buffer

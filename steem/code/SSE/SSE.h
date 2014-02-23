@@ -563,10 +563,13 @@ and all his silly mods are gone!
 #if defined(SS_DRIVE)
 
 #define SS_DRIVE_BYTES_PER_ROTATION
+#ifdef SS_DEBUG
+#define SS_DRIVE_COMPUTE_BOOT_CHECKSUM // to mod a boot sector
+#endif
+#define SS_DRIVE_CREATE_ST_DISK_FIX // from Petari
 //#define SS_DRIVE_EMPTY_SPIN_UP // European Demos (undef v3.5.4)
 // one or the other:
 //#define SS_DRIVE_EMPTY_VERIFY_LONG // GEM
-#define SS_DRIVE_CREATE_ST_DISK_FIX // from Petari
 #define SS_DRIVE_EMPTY_VERIFY_TIME_OUT //GEM
 #define SS_DRIVE_MOTOR_ON
 #define SS_DRIVE_MULTIPLE_SECTORS
@@ -576,14 +579,14 @@ and all his silly mods are gone!
 #define SS_DRIVE_READ_TRACK_11B //Gap 4: 1
 #define SS_DRIVE_READ_TRACK_11C //Gap 5
 #define SS_DRIVE_READ_TRACK_TIMING
-#define SS_DRIVE_READ_TRACK_TIMING2
+//#define SS_DRIVE_READ_TRACK_TIMING2 //3.5.3, was a bug 
 #define SS_DRIVE_RW_SECTOR_TIMING // start of sector
 #define SS_DRIVE_RW_SECTOR_TIMING2 // end of sector (hack)
-#define SS_DRIVE_SINGLE_SIDE
-#define SS_DRIVE_SINGLE_SIDE_IPF
-#define SS_DRIVE_SINGLE_SIDE_PASTI
+#define SS_DRIVE_SINGLE_SIDE //3.6.0
+#define SS_DRIVE_SINGLE_SIDE_IPF //3.6.0
+#define SS_DRIVE_SINGLE_SIDE_PASTI //3.6.0
 #if defined(WIN32) //TODO Unix
-#define SS_DRIVE_SOUND // heavily requested, delivered!
+#define SS_DRIVE_SOUND // heavily requested, delivered!//3.6.0
 //#define SS_DRIVE_SOUND_CHECK_SEEK_VBL
 #if defined(SS_DRIVE_SOUND)
 #define SS_DRIVE_SOUND_SINGLE_SET // drive B uses sounds of A
@@ -595,6 +598,7 @@ and all his silly mods are gone!
 #endif//win32
 #define SS_DRIVE_SPIN_UP_TIME
 #define SS_DRIVE_SPIN_UP_TIME2 // more precise
+#define SS_DRIVE_SWITCH_OFF_MOTOR //hack//3.6.0
 #define SS_DRIVE_WRITE_TRACK_TIMING
 //#define SS_DRIVE_WRITE_TRACK_11//TODO
 #endif
@@ -632,7 +636,9 @@ and all his silly mods are gone!
 #ifdef SS_PSG
 #define SS_FDC_IGNORE_WHEN_NO_DRIVE_SELETED // from Hatari
 #define SS_FDC_INDEX_PULSE_COUNTER
+#ifdef SS_FDC_MOTOR_OFF
 #define SS_FDC_MOTOR_OFF_COUNT_IP
+#endif
 #endif
 
 #ifdef SS_DRIVE
@@ -740,7 +746,7 @@ and all his silly mods are gone!
 #define SS_IKBD_6301_TIMER_FIX // not sure there was a problem
 //#define SS_IKBD_6301_TRACE // defined in SS_DEBUG
 #if defined(SS_IKBD_6301_TRACE)
-#define SS_IKBD_6301_DISASSEMBLE_ROM 
+//#define SS_IKBD_6301_DISASSEMBLE_ROM 
 //#define SS_IKBD_6301_DUMP_RAM
 //#define SS_IKBD_6301_TRACE_SCI_RX
 //#define SS_IKBD_6301_TRACE_SCI_TX
@@ -767,7 +773,11 @@ and all his silly mods are gone!
 
 
 #if defined(SS_INT_HBL)
+#define SS_INT_OSD_REPORT_HBI
 #define SS_INT_HBL_IACK_FIX // from Hatari - BBC52
+#ifdef SS_BETA
+#define SS_INT_HBL_ONE_FUNCTION // remove event_hbl()
+#endif
 #endif
 
 #if defined(SS_INT_JITTER) && defined(SS_INT_HBL)
@@ -777,6 +787,7 @@ and all his silly mods are gone!
 #if defined(SS_INT_VBL)
 #define SS_INT_VBL_IACK
 #define SS_INT_VBL_INLINE 
+//#define SS_INT_VBI_START // generally working now but not 100%
 #endif
 
 #if defined(SS_INT_JITTER) && defined(SS_INT_VBL) && defined(SS_STF)
@@ -784,9 +795,8 @@ and all his silly mods are gone!
 #define SS_INT_JITTER_VBL_STE // STF + STE 
 #endif
 
-#if defined(SS_STF) && defined(SS_INT_VBL)
-//#define SS_INT_VBI_START // using event system / broken
-#define SS_INT_VBL_STF // more a hack 
+#if defined(SS_STF) && defined(SS_INT_VBL) && !defined(SS_INT_VBI_START)
+#define SS_INT_VBL_STF // more a hack but works
 #endif
 
 #endif
@@ -982,6 +992,7 @@ and all his silly mods are gone!
 #define SS_SHIFTER_HI_RES_SCROLLING // Beeshift2
 #define SS_SHIFTER_MED_RES_SCROLLING // Beeshift
 #define SS_SHIFTER_PANIC // funny effect, interleaved border bands
+#define SS_SHIFTER_VERTICAL_OPTIM1 //avoid useless tests
 #endif
 //#define SS_SHIFTER_UNSTABLE_LEFT_OFF // DoLB, Omega, Overdrive/Dragon old hack
 
@@ -1233,7 +1244,6 @@ and all his silly mods are gone!
 #if defined(SS_TIMINGS)
 
 #define SS_TIMINGS_MS_TO_HBL
-//#define SS_TIMINGS_FIX_EVENT_PLAN1 //for later!
 
 #endif
 
@@ -1333,6 +1343,7 @@ and all his silly mods are gone!
 #define SS_VAR_STATUS_STRING_HACKS
 #define SS_VAR_STATUS_STRING_IPF
 #define SS_VAR_STATUS_STRING_PASTI
+#define SS_VAR_STATUS_STRING_VSYNC
 #endif
 #define SS_VAR_STEALTH // don't tell we're an emulator (option)
 #ifdef WIN32
@@ -1400,6 +1411,9 @@ and all his silly mods are gone!
 
 #if defined(WIN32)
 #define SS_VID_VSYNC_WINDOW // no tearing and smooth scrolling also in window
+#define SS_VID_VSYNC_WINDOW_CRASH_FIX1
+//#define SS_VID_VSYNC_WINDOW_CRASH_FIX2 //safer but annoying
+#define SS_VID_VSYNC_WINDOW_CRASH_FIX3 //TODO find something better?
 #endif
 
 #if defined(SS_DEBUG) 

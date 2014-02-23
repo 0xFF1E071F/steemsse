@@ -759,9 +759,10 @@ already fetched. One word will be in IRD and another one in IRC.
 #if defined(SS_CPU_PREFETCH)
 
 inline void TM68000::RefetchIr() {
-  ASSERT( IR==*(lpfetch+1) ); // detect cases (none yet!)
+//this is no fix, it was already in Steem 3.2
+  ASSERT( IR==*(lpfetch+1) ); // detect cases Synth Dream Sound Demo II
 //  ASSERT( MEM_DIR==-1 );
-  IR=*(lpfetch-MEM_DIR);
+  IR=*(lpfetch-MEM_DIR); //needed for Synth Dream Sound Demo II!
 }
 #define REFETCH_IR  M68000.RefetchIr();
 #else

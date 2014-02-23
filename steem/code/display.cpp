@@ -733,7 +733,8 @@ void SteemDisplay::VSync()
 {
 #if !defined(SS_VID_VSYNC_WINDOW)
   if (FullScreen==0) return;
-#else
+#endif
+#if defined(SS_VID_VSYNC_WINDOW_CRASH_FIX1)
   if(!DDObj)
     return;
 #endif

@@ -586,6 +586,7 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
 #if defined(SS_STF)
       && ST_TYPE==STE // only if option checked and we're on STE
 #endif
+      &&dma_sound_on_this_screen//and there's DMA sound
       ) 
       v=PsgGain.FilterAudio(v,-6);
 #endif
@@ -697,6 +698,7 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
 #if defined(SS_STF)
       &&ST_TYPE==STE // only if option checked and we're on STE
 #endif
+      &&dma_sound_on_this_screen
       ) 
       v=PsgGain.FilterAudio(v,-6); 
 #endif

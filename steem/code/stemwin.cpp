@@ -683,7 +683,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             int guessed_x=LOWORD(lPar)/2-SideBorderSizeWin;
 #if defined(SS_VAR_STATUS_STRING)
             HWND status_bar_win=GetDlgItem(StemWin,120); // get handle
-#if defined(SS_DEBUG_REPORT_SDP_ON_CLICK)
+#if defined(SS_DEBUG_REPORT_SDP_ON_CLICK) && defined(SS_SHIFTER)
             char tmp[12+1+6];
             MEM_ADDRESS computed_sdp = VideoEvents.GetSDP(guessed_x,guessed_scan_y);
             sprintf(tmp,"X%d Y%d $%X",guessed_x,guessed_scan_y,computed_sdp);
@@ -867,9 +867,12 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       break;
     case WM_ACTIVATEAPP:
       bAppActive=(bool)wPar;
-#if defined(SS_VID_VSYNC_WINDOW)
+#if defined(SS_VID_VSYNC_WINDOW_CRASH_FIX2)
       if(!bAppActive)
+      {
         SSE_WIN_VSYNC=SSE_3BUFFER=false; // avoid crash going in or out
+        OptionBox.SSEUpdateIfVisible();
+      }
 #endif
       if (FullScreen){
         if (wPar){  //Activating
