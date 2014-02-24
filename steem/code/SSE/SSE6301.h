@@ -29,9 +29,11 @@ struct THD6301 {
 #ifdef __cplusplus //isolate member functions, for C it's just POD
   THD6301();
   ~THD6301();
-#if defined(SS_DEBUG)
+#if defined(SS_DEBUG) || defined(SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT)
   void InterpretCommand(BYTE ByteIn);
+#if defined(SS_DEBUG)
   void ReportCommand();
+#endif
 #endif
 #if defined(SS_ACIA_DOUBLE_BUFFER_TX)
   void ReceiveByte(BYTE data);

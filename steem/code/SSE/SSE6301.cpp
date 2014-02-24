@@ -85,7 +85,7 @@ void THD6301::Init() { // called in 'main'
 #undef LOGSECTION//init
 #define LOGSECTION LOGSECTION_IKBD
 
-#if defined(SS_DEBUG)
+#if defined(SS_DEBUG) || defined(SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT)
 /*  This should work for both 'fake' and 'true' 6301 emulation.
     We know command codes & parameters, we report this info through trace.
     when the command is complete.
@@ -166,7 +166,9 @@ void THD6301::InterpretCommand(BYTE ByteIn) {
   // report?
   if(CurrentCommand!=-1 && nParameters==CurrentParameter)
   {
+#if defined(SS_DEBUG)
     ReportCommand();
+#endif
     // how to treat further bytes?
     switch(CurrentCommand) {
     case 0x20:
@@ -184,6 +186,8 @@ void THD6301::InterpretCommand(BYTE ByteIn) {
 }
 
 #define LOGSECTION LOGSECTION_IKBD
+
+#if defined(SS_DEBUG)
 
 void THD6301::ReportCommand() {
   ASSERT( CurrentCommand!=-1 );
@@ -242,7 +246,9 @@ void THD6301::ReportCommand() {
   TRACE_LOG("]\n");
 }
 
-#endif//debug
+#endif
+
+#endif
 
 #if defined(SS_ACIA_DOUBLE_BUFFER_TX)
 
