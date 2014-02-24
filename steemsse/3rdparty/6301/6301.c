@@ -304,12 +304,12 @@ dump_rom() {
       mem_print (i, 0xF370-0xf2f3+1,14); 
       i+=0xF370-0xf2f3;
     }
-    else if(i==0xf679)
+    else if(i==0xf679)//arrows +...
     {
-      mem_print (i, 8,2); 
-      i+=8;
+      mem_print (i, 7,2); 
+      i+=7;
     }
-    else if(i==0xf87a)//arrows?
+    else if(i==0xf87a)//arrows
     {
       mem_print (i, 4,2); 
       i+=4-1;

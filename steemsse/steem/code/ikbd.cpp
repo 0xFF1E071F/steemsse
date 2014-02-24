@@ -520,7 +520,7 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
   log(EasyStr("IKBD: At ")+hbl_count+" receives $"+HEXSl(src,2));
   TRACE_LOG("IKBD RDRS->RDR $%X\n",src);
 
-#if defined(SS_DEBUG)
+#if defined(SS_DEBUG) || defined(SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT)
   // our powerful 6301 command interpreter, working for both emulations
   HD6301.InterpretCommand(src); 
 #endif
