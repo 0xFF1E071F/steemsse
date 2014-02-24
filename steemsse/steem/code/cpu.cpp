@@ -60,6 +60,9 @@ void sr_check_z_n_l_for_r0()
 
 #endif//defined(SS_STRUCTURE_CPU_H)
 
+#if defined(SS_DEBUG_MONITOR_VALUE2)
+///#include "debug_emu.decla.h"
+#endif
 
 // SS neutralise macros if needs be
 #if !defined(PREFETCH_IRC)
@@ -2698,6 +2701,10 @@ void                              m68k_clr_b(){
   FETCH_TIMING;
 #endif
   m68k_DEST_B=0;
+#if defined(SS_DEBUG_MONITOR_VALUE3)
+  if (DEST_IS_REGISTER==0)
+    DEBUG_CHECK_WRITE_B(abus);
+#endif
   SR_CLEAR(SR_N+SR_V+SR_C);
   SR_SET(SR_Z);
 }void                             m68k_clr_w(){
@@ -2712,6 +2719,10 @@ void                              m68k_clr_b(){
   FETCH_TIMING;
 #endif
   m68k_DEST_W=0;
+#if defined(SS_DEBUG_MONITOR_VALUE3)
+  if (DEST_IS_REGISTER==0)
+    DEBUG_CHECK_WRITE_W(abus);
+#endif
   SR_CLEAR(SR_N+SR_V+SR_C);
   SR_SET(SR_Z);
 }void                             m68k_clr_l(){
@@ -2726,6 +2737,10 @@ void                              m68k_clr_b(){
   FETCH_TIMING;
 #endif
   m68k_DEST_L=0;
+#if defined(SS_DEBUG_MONITOR_VALUE3)
+  if (DEST_IS_REGISTER==0)
+    DEBUG_CHECK_WRITE_L(abus);
+#endif
   SR_CLEAR(SR_N+SR_V+SR_C);
   SR_SET(SR_Z);
 }

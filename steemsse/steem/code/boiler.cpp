@@ -1282,6 +1282,12 @@ This isn't saved through the sessions
               break;
 #endif
 
+#if defined(SS_DEBUG_BROWSER_ACIA)
+            case 916:
+              new mem_browser(0xFFFC00,DT_MEMORY);
+              break;
+#endif
+
             case 1022:
             {
               DWORD dat=CBGetSelectedItemData(GetDlgItem(Win,1020));
@@ -1363,6 +1369,9 @@ This isn't saved through the sessions
         items++;
 #endif
 #if defined(SS_DEBUG_BROWSER_6301)
+        items++;
+#endif
+#if defined(SS_DEBUG_BROWSER_ACIA)
         items++;
 #endif
 #if defined(SS_DEBUG_BROWSER_BLITTER)
@@ -1643,6 +1652,10 @@ void DWin_init()
   AppendMenu(mem_browser_menu,MF_STRING,904,"New M&FP Browser");
   AppendMenu(mem_browser_menu,MF_STRING,906,"New &Text Browser");
   AppendMenu(mem_browser_menu,MF_STRING,908,"New &FDC Browser");
+
+#if defined(SS_DEBUG_BROWSER_ACIA)
+  AppendMenu(mem_browser_menu,MF_STRING,916,"New ACIA Browser");
+#endif
 
 #if defined(SS_DEBUG_BROWSER_6301)
   AppendMenu(mem_browser_menu,MF_STRING,909,"New I&KBD 6301 fake emu Browser");

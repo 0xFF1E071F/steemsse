@@ -438,6 +438,7 @@ and all his silly mods are gone!
 #define SS_DEBUG_68030_STACK_FRAME //request, to check compatibility
 #define SS_DEBUG_BLAZING_STEP_OVER 
 #define SS_DEBUG_BROWSER_6301
+#define SS_DEBUG_BROWSER_ACIA
 #define SS_DEBUG_BROWSER_BLITTER
 #define SS_DEBUG_BROWSER_DMASOUND
 #define SS_DEBUG_BROWSER_PSEUDO_IO_SCROLL // for the bigger 6301 browser
@@ -451,6 +452,8 @@ and all his silly mods are gone!
 #define SS_DEBUG_MONITOR_IO_FIX1 // ? word check, not 2x byte on word access
 #define SS_DEBUG_MONITOR_RANGE // will stop for every address between 2 stops
 #define SS_DEBUG_MONITOR_VALUE // specify value (RW) that triggers stop
+#define SS_DEBUG_MONITOR_VALUE2 // write before check
+#define SS_DEBUG_MONITOR_VALUE3 // add checks for CLR
 #define SS_DEBUG_MOUSE_WHEEL // yeah!
 #define SS_DEBUG_MOVE_OTHER_SP
 #define SS_DEBUG_MUTE_DMA_SOUND
@@ -746,8 +749,10 @@ and all his silly mods are gone!
 #define SS_IKBD_6301_TIMER_FIX // not sure there was a problem
 //#define SS_IKBD_6301_TRACE // defined in SS_DEBUG
 #if defined(SS_IKBD_6301_TRACE)
+#ifdef SS_BETA
 //#define SS_IKBD_6301_DISASSEMBLE_ROM 
 //#define SS_IKBD_6301_DUMP_RAM
+#endif
 //#define SS_IKBD_6301_TRACE_SCI_RX
 //#define SS_IKBD_6301_TRACE_SCI_TX
 //#define SS_IKBD_6301_TRACE_INT_TIMER

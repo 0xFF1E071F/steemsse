@@ -835,8 +835,13 @@ NOT_DEBUG(inline) void m68k_poke_abus(BYTE x){
     ||super && abus>=MEM_FIRST_WRITEABLE))
 #endif
   {
+#if defined(SS_DEBUG_MONITOR_VALUE2)
+    PEEK(abus)=x;
+    DEBUG_CHECK_WRITE_B(abus);
+#else
     DEBUG_CHECK_WRITE_B(abus);
     PEEK(abus)=x;
+#endif
   }
   else 
     m68k_poke_abus2(x);
@@ -858,8 +863,13 @@ NOT_DEBUG(inline) void m68k_dpoke_abus(WORD x){
     ||super && abus>=MEM_FIRST_WRITEABLE))
 #endif
   {
+#if defined(SS_DEBUG_MONITOR_VALUE2)
+    DPEEK(abus)=x;
+    DEBUG_CHECK_WRITE_W(abus);
+#else
     DEBUG_CHECK_WRITE_W(abus);
     DPEEK(abus)=x;
+#endif
   }
   else
     m68k_dpoke_abus2(x);
@@ -904,8 +914,13 @@ void m68k_poke(MEM_ADDRESS ad,BYTE x){
   else if(abus<himem && (abus>=MEM_START_OF_USER_AREA
     ||super && abus>=MEM_FIRST_WRITEABLE))
   {
+#if defined(SS_DEBUG_MONITOR_VALUE2)
+    PEEK(abus)=x;
+    DEBUG_CHECK_WRITE_B(abus);
+#else
     DEBUG_CHECK_WRITE_B(abus);
     PEEK(abus)=x;
+#endif
   }
   else 
     m68k_poke_abus2(x);
@@ -923,8 +938,13 @@ void m68k_dpoke(MEM_ADDRESS ad,WORD x){
   else if(abus<himem && (abus>=MEM_START_OF_USER_AREA
     ||super && abus>=MEM_FIRST_WRITEABLE))
   {
+#if defined(SS_DEBUG_MONITOR_VALUE2)
+    DPEEK(abus)=x;
+    DEBUG_CHECK_WRITE_W(abus);
+#else
     DEBUG_CHECK_WRITE_W(abus);
     DPEEK(abus)=x;
+#endif
   }
   else
     m68k_dpoke_abus2(x);

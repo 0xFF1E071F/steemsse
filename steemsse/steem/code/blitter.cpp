@@ -84,8 +84,13 @@ void Blitter_DPoke(MEM_ADDRESS abus,WORD x)
     CATCH_M68K_EXCEPTION
     END_M68K_EXCEPTION
   }else if (abus>=MEM_FIRST_WRITEABLE && abus<himem){
+#if defined(SS_DEBUG_MONITOR_VALUE2)
+    DPEEK(abus)=x;
+    DEBUG_CHECK_WRITE_W(abus);
+#else
     DEBUG_CHECK_WRITE_W(abus);
     DPEEK(abus)=x;
+#endif
   }
 }
 //---------------------------------------------------------------------------
