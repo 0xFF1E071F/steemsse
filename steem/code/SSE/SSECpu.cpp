@@ -1473,8 +1473,13 @@ NOT_DEBUG(inline) void m68k_poke_abus(BYTE x){
     ||super && abus>=MEM_FIRST_WRITEABLE))
 #endif
   {
+#if defined(SS_DEBUG_MONITOR_VALUE2)
+    PEEK(abus)=x;
+    DEBUG_CHECK_WRITE_B(abus);
+#else
     DEBUG_CHECK_WRITE_B(abus);
     PEEK(abus)=x;
+#endif
   }
   else 
     m68k_poke_abus2(x);
@@ -1496,8 +1501,13 @@ NOT_DEBUG(inline) void m68k_dpoke_abus(WORD x){
     ||super && abus>=MEM_FIRST_WRITEABLE))
 #endif
   {
+#if defined(SS_DEBUG_MONITOR_VALUE2)
+    DPEEK(abus)=x;
+    DEBUG_CHECK_WRITE_W(abus);
+#else
     DEBUG_CHECK_WRITE_W(abus);
     DPEEK(abus)=x;
+#endif
   }
   else
     m68k_dpoke_abus2(x);
@@ -1552,7 +1562,9 @@ void m68k_poke_abus2(BYTE x){
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
     } //otherwise throw away
   }else{
+#if !defined(SS_DEBUG_MONITOR_VALUE2)
     DEBUG_CHECK_WRITE_B(abus);
+#endif
 #if defined(SS_CPU_CHECK_VIDEO_RAM_B)
 /*  If we're going to write in video RAM of the current scanline,
     we check whether we need to render before. Some programs write
@@ -1592,6 +1604,9 @@ void m68k_poke_abus2(BYTE x){
       ;
 #endif
     else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+#if defined(SS_DEBUG_MONITOR_VALUE2)
+    DEBUG_CHECK_WRITE_B(abus);
+#endif
   }
 }
 
@@ -1623,7 +1638,9 @@ void m68k_dpoke_abus2(WORD x){
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
     } //otherwise throw away
   }else{
+#if !defined(SS_DEBUG_MONITOR_VALUE2)
     DEBUG_CHECK_WRITE_W(abus);
+#endif
 #if defined(SS_CPU_CHECK_VIDEO_RAM_W) // 3615 GEN4
     if(Shifter.FetchingLine() 
       && abus>=shifter_draw_pointer
@@ -1644,6 +1661,10 @@ void m68k_dpoke_abus2(WORD x){
       ;
 #endif
     else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+#if defined(SS_DEBUG_MONITOR_VALUE2)
+    DEBUG_CHECK_WRITE_W(abus);
+#endif
+
   }
 }
 

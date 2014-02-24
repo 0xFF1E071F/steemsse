@@ -220,7 +220,7 @@ extern WORD d2_dpeek(MEM_ADDRESS);
 void debug_hit_mon(MEM_ADDRESS ad,int read)
 {
   if (mode!=STEM_MODE_CPU) return;
-#if defined(STEVEN_SEAGAL)
+#if defined(STEVEN_SEAGAL___)//mistake!
   WORD mask=debug_get_ad_mask(ad,TRUE);
 #else
   WORD mask=debug_get_ad_mask(ad,read);
@@ -233,6 +233,8 @@ void debug_hit_mon(MEM_ADDRESS ad,int read)
 #if defined(SS_DEBUG_MONITOR_VALUE)
 /*  When the option is checked, we will stop Steem only if the condition
     is met when R/W on the address.
+    Problem: Steem didn't foresee it and more changes are needed for
+    write (what value?)
 */
   if(Debug.MonitorValueSpecified && Debug.MonitorComparison)
   {

@@ -170,8 +170,13 @@ void write_to_dma(int Val,int Num=1)
     if (dma_sector_count==0) break;
 
     if (DMA_ADDRESS_IS_VALID_W){
+#if defined(SS_DEBUG_MONITOR_VALUE2)
+      PEEK(dma_address)=BYTE(Val);
+      DEBUG_CHECK_WRITE_B(dma_address);
+#else
       DEBUG_CHECK_WRITE_B(dma_address);
       PEEK(dma_address)=BYTE(Val);
+#endif
     }
     if (Num<=0) break;
     DMA_INC_ADDRESS;
@@ -2452,11 +2457,16 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
       TRACE_LOG("%2d/%2d to %X: ",fdc_tr,fdc_sr,dma_address);
       for (DWORD i=0;i<pPIOI->xferInfo.xferLen;i++){ 
         if (DMA_ADDRESS_IS_VALID_W){
+#if !defined(SS_DEBUG_MONITOR_VALUE2)
           DEBUG_CHECK_WRITE_B(dma_address);
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SS_DMA_FIFO_PASTI)
           Dma.AddToFifo(LPBYTE(pPIOI->xferInfo.xferBuf)[i]);
 #else
           PEEK(dma_address)=LPBYTE(pPIOI->xferInfo.xferBuf)[i];
+#endif
+#if defined(SS_DEBUG_MONITOR_VALUE2)
+          DEBUG_CHECK_WRITE_B(dma_address);
 #endif
           TRACE_LOG("%02X ",LPBYTE(pPIOI->xferInfo.xferBuf)[i]);
         }
