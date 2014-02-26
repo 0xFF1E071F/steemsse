@@ -225,17 +225,16 @@ void debug_hit_mon(MEM_ADDRESS ad,int read)
 #else
   WORD mask=debug_get_ad_mask(ad,read);
 #endif
-  int bytes=2;
-  if (mask==0xff00) bytes=1;
-  if (mask==0x00ff) bytes=1, ad++;
-  int val=int((bytes==1) ? int(d2_peek(ad)):int(d2_dpeek(ad)));
 
+  int bytes=2;
 #if defined(SS_DEBUG_MONITOR_VALUE)
 /*  When the option is checked, we will stop Steem only if the condition
     is met when R/W on the address.
     Problem: Steem didn't foresee it and more changes are needed for
     write (what value?)
+    We only check words.
 */
+  int val=(int)(d2_dpeek(ad)); //d2_dpeek?
   if(Debug.MonitorValueSpecified && Debug.MonitorComparison)
   {
     if(
@@ -249,6 +248,10 @@ void debug_hit_mon(MEM_ADDRESS ad,int read)
     else
       TRACE("addr %X value %X %c %X\n",ad,val,Debug.MonitorComparison,Debug.MonitorValue);
   }
+#else
+  if (mask==0xff00) bytes=1;
+  if (mask==0x00ff) bytes=1, ad++;
+  int val=int((bytes==1) ? int(d2_peek(ad)):int(d2_dpeek(ad)));
 #endif
 
   Str mess;
@@ -437,7 +440,10 @@ void iolist_debug_add_pseudo_addresses()
     else if(i==0x10) 
       strcat(buffer," RMCR");
     else if(i==0x11) 
+    {
       strcat(buffer," TRCSR");
+      strcpy(mask,"RDRF|OVR|TDRE|RIE|RE|TIE|TE|WU"); //yeah!
+    }
     else if(i==0x12) 
       strcat(buffer," RDR");
     else if(i==0x13) 
@@ -446,6 +452,8 @@ void iolist_debug_add_pseudo_addresses()
       strcat(buffer," RCR");
     else if(i<0x80)
       strcat(buffer," (NULL)");
+    else if(i==0x80)
+      strcat(buffer," [speculation ahead]");
     else if(i>=0x82 && i<=0x87) 
       strcat(buffer," Date+time");
     else if(i==0x88)
@@ -478,23 +486,32 @@ void iolist_debug_add_pseudo_addresses()
       strcat(buffer," Mouse move X");
     else if(i==0xBF)
       strcat(buffer," Mouse move Y");
-    else if(i==0xC0)
+    else if(i>=0xC0 && i<=0xC2)
       strcat(buffer," Mouse buttons");
     else if(i==0xC9)
     {
       strcat(buffer," Mouse mode");
-      strcpy(mask,"on|key|abs|evt|.|.|mon|rev"); //abs is sure, the rest not
+      strcpy(mask,"on|key|abs|evt|.|.|mon|rev"); 
     }
     else if(i==0xCA)
     {
       strcat(buffer," Joystick mode");
-      strcpy(mask,".|.|on|int|evt|key|mon|but"); //abs is sure, the rest not
+      strcpy(mask,".|.|on|int|evt|key|mon|but"); 
+    }
+    else if(i==0xCB)
+    {
+      strcat(buffer," Command status");
+      strcpy(mask,"new|.|input full|complete|complete|par|par|par"); 
     }
     else if(i>=0xCD && i<=0xD4) 
       strcat(buffer," Input buffer");
+    else if(i==0xD6)
+      strcat(buffer," Output buffer index");
+    else if(i==0xD7)
+      strcat(buffer," Output buffer counter");
     else if(i>=0xD9 && i<=0xED) 
       strcat(buffer," Output buffer");
-    else if(i==0xFF)
+    else if(i>=0xFF-6) // size?
       strcat(buffer," Stack");
     iolist_add_entry(IOLIST_PSEUDO_AD_6301+i*2,buffer,1,mask[0]?mask:NULL,&Debug.HD6301RamBuffer[i]);
   }

@@ -81,9 +81,16 @@ int nbytes;
   }
 #if defined(SS_IKBD_6301_CHECK_COMMANDS)
 #if defined(SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT)
+/*  Hack for Jumping Jackson Auto.
+    3.6.0:
+    What happens: DISABLE MOUSE is internally followed by RESUME, which
+    triggers reading of some variables.
+    The mouse bits at rest are 00, this is interpreted as a joystick
+    move event.
+    So this is undefined, check SS_IKBD_6301_MOUSE_MASK
+*/
   if(HD6301.LastCommand==0x12 && SSE_HACKS_ON)
   {
-    // for Jumping Jackson Auto
     TRACE("Disable mouse hardware quirk\n");
     mouse_x_counter=mouse_y_counter=~MOUSE_MASK; 
   }

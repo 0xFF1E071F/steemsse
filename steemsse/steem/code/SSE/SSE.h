@@ -169,7 +169,7 @@ and all his silly mods are gone!
 //#define TEST01//end session?
 //#define TEST02// ste shifter prefetch?
 //#define TEST03//hbl?
-//#define TEST04
+//#define TEST04//6301 mousemask?
 //#define TEST05
 //#define TEST06
 //#define TEST07
@@ -727,8 +727,6 @@ and all his silly mods are gone!
 
 #define SS_IKBD_6301 // HD6301 true emu, my pride!
 
-#define SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT // hardware quirk?
-
 #define SS_IKBD_TRACE_CPU_READ
 
 #define SS_IKBD_TRACE_CPU_READ2 //beware polling
@@ -744,6 +742,8 @@ and all his silly mods are gone!
 #define SS_IKBD_6301_DISABLE_CALLSTACK // to save 3k on the PC stack
 //#define SS_IKBD_6301_RUN_CYCLES_AT_IO // overkill
 #define SS_IKBD_6301_MOUSE_ADJUST_SPEED //poor attempt
+#define SS_IKBD_6301_MOUSE_MASK // Jumping Jackson auto
+//#define SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT // hardware quirk? (hack)
 #define SS_IKBD_6301_RUN_IRQ_TO_END // hack around Sim6xxx's working
 #define SS_IKBD_6301_SET_TDRE
 #define SS_IKBD_6301_TIMER_FIX // not sure there was a problem
