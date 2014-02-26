@@ -226,7 +226,12 @@ static dr2_getb (offs)
     Y# vertical movement
 */
 
+#if defined(SS_IKBD_6301_MOUSE_MASK)
+#define MOUSE_MASK 0xCCCCCCCC // fixes Jumping Jackson auto
+#else
 #define MOUSE_MASK 0x33333333 // series of 11001100... for rotation
+#endif
+
 static unsigned int mouse_x_counter=MOUSE_MASK;
 static unsigned int mouse_y_counter=MOUSE_MASK;
 static int mouse_click_x_time=0;

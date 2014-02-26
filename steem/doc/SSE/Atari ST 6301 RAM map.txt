@@ -136,9 +136,9 @@ $86	minute
 $87	second  EG Captain Blood
 $88	Init ($AA: yes), after each reset and F1 sent
 $89	
-$8A	init 1,2 ?
+$8A	
 $8B	
-$8C	init 2,FD ?
+$8C	Key?
 $8D	
 $8E	
 $8F	
@@ -188,8 +188,8 @@ $BA	Mouse
 $BB	Mouse
 $BC	Mouse event X
 $BD	Mouse event Y
-$BE	Mouse direction X (2bits)
-$BF	Mouse direction Y (2bits)
+$BE	Mouse direction X (2bits, raw)
+$BF	Mouse direction Y (2bits, raw)
 $C0	Mouse event buttons
 $C1	buttons 1=pressed
 $C2	Mouse abs buttons (copied on B5 then cleared when command $D received)
@@ -197,11 +197,11 @@ $C3
 $C4	
 $C5	Status report # other bytes
 $C6	Status report byte 1
-$C7	
+$C7	Direction (kbd)
 $C8	
 $C9	Mouse mode (bit7 enabled bit6 keycode bit5 absolute mouse bit4 mouse event bit3...  bit1 button monitoring bit0 Y reversed)
 $CA	Joystick mode (bit5 enabled bit4 interrogate bit3 event bit2 keycode bit1 monitoring bit0 trigger monitoring)
-$CB	Flags (bit7 new command bit5 input full bit4,3 command in complete bit0-2:#parameters still missing)
+$CB	Flags (bit7 new command bit5 input full bit4,3 no command bit0-2:#parameters still missing)
 $CC	Input buffer counter
 $CD	Input buffer (command)
 $CE	Input buffer (parameters)
@@ -252,5 +252,5 @@ $FA
 $FB	
 $FC	
 $FD	
-$FE	
+$FE	...
 $FF	Stack

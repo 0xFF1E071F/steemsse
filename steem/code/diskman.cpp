@@ -1431,8 +1431,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
         case 1046:
         case 1047:
           SF314[(LOWORD(wPar)-1046)].MotorOn=false;
-         // fdc_str&=0xEF; 
-//          WD1772.STR&=~FDC_STR_MOTOR_ON;
+         // fdc_str&=0xEF; //it's 7F, once again displaying my ignorance...
           fdc_str&=~FDC_STR_MOTOR_ON;
           break;
 #endif

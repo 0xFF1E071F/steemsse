@@ -16,7 +16,7 @@ f00e	26 fb		bne  fb (F00B)			;loop
 f010	0f		sei				;disable interrupts
 f011	cc 00 89	ldd  #0089			;specify: save clock and init code
 f014	8e 00 ff	lds  #00ff			;stack=$FF
-f017	4f		clra
+f017	4f		clra			;A=0
 f018	97 00		staa 00				;DDR1=0
 f01a	4c		inca
 f01b	97 03		staa 03				;DR2=1
@@ -32,7 +32,7 @@ f02e	96 11		ldaa 11				;TRCSR
 f030	96 12		ldaa 12				;RDR
 f032	c1 89		cmpb #89
 f034	27 12		beq  12 (F048)
-f036	4f		clra
+f036	4f		clra			;A=0
 f037	4a		deca
 f038	01		nop
 f039	26 fc		bne  fc (F037)
@@ -65,7 +65,7 @@ f068	81 a5		cmpa #a5
 f06a	27 04		beq  04 (F070)			;OK
 f06c	86 a5		ldaa #a5
 f06e	20 de		bra  de (F04E)			;do test again
-f070	4f		clra				;RAM has been tested OK
+f070	4f		clra			;A=0
 ;test ROM
 f071	ce f0 00	ldx  #f000			;start of ROM
 f074	a9 00		adca 00,x
@@ -75,21 +75,21 @@ f079	8c ff 6f	cpx  #ff6f			;reached end of code?
 f07c	26 f6		bne  f6 (F074)
 f07e	ce ff f0	ldx  #fff0			;skip part of ROM
 f081	20 f1		bra  f1 (F074)
-f083	43		coma				;NOT A
+f083	43		coma			;NOT A
 f084	26 c6		bne  c6 (F04C)			;must be 0 or redo RAM+ROM test
 
 f086	c6 01		ldab #01
 f088	d7 8a		stab 8a				;$8A=1
-f08a	4f		clra
+f08a	4f		clra			;A=0
 f08b	5c		incb
 
 f08c	dd 8c		std  8c
-f08e	43		coma
-f08f	53		comb
+f08e	43		coma			;NOT A
+f08f	53		comb			;NOT B
 f090	d7 06		stab 06				;DR3		keyboard rows
 f092	97 07		staa 07				;DR4
 f094	96 02		ldaa 02				;DR1
-f096	43		coma				;A=0
+f096	43		coma			;NOT A
 f097	26 0a		bne  0a (F0A3)
 f099	7c 00 8a	inc 008a
 f09c	dc 8c		ldd  8c
@@ -129,7 +129,7 @@ f0d6	85 20		bita #20			;bit5 TDRE
 f0d8	27 fa		beq  fa (F0D4)			;wait 
 f0da	86 f1		ldaa #f1
 f0dc	97 13		staa 13				;TDR=F1 (post reset message)
-f0de	4f		clra
+f0de	4f		clra			;A=0
 f0df	ce 00 00	ldx  #0000
 f0e2	d6 82		ldab 82
 f0e4	c1 a5		cmpb #a5			;check if RAM was zeroed already		
@@ -167,7 +167,7 @@ f11b	86 95		ldaa #95
 f11d	97 d7		staa d7
 f11f	86 fe		ldaa #fe
 f121	97 03		staa 03
-f123	4f		clra
+f123	4f		clra			;A=0
 f124	97 05		staa 05
 f126	bd fb 8e	jsr  fb8e			;Read Mouse
 f129	dc 09		ldd  09
@@ -179,20 +179,20 @@ f132	dc 09		ldd  09				;FRC
 f134	c3 00 10	addd #0010
 f137	dd 0b		std  0b				;OCR
 f139	0e		cli				;enable interrupts
-f13a	96 cb		ldaa cb
-f13c	2a 03		bpl  03 (F141)
-f13e	bd f8 d4	jsr  f8d4
-f141	d6 c9		ldab c9				;Mouse mode
-f143	c5 02		bitb #02
+f13a	96 cb		ldaa cb			;command status
+f13c	2a 03		bpl  03 (F141)		;bit7?
+f13e	bd f8 d4	jsr  f8d4		;check commands
+f141	d6 c9		ldab c9			;Mouse mode
+f143	c5 02		bitb #02		
 f145	26 2a		bne  2a (F171)
 f147	5d		tstb	
 f148	2a 0d		bpl  0d (F157)
 f14a	bd f1 86	jsr  f186
 f14d	7e f3 71	jmp f371
-f150	96 cb		ldaa cb
+f150	96 cb		ldaa cb				;command status
 f152	2a 1d		bpl  1d (F171)
-f154	bd f8 d4	jsr  f8d4
-f157	7b 20 ca	tim 20ca
+f154	bd f8 d4	jsr  f8d4		;check commands
+f157	7b 20 ca	tim 20ca		;Joystick mode on?
 f15a	27 de		beq  de (F13A)
 f15c	96 c9		ldaa c9	         
 f15e	2a 0b		bpl  0b (F16B)
@@ -221,7 +221,7 @@ f18e	d6 9d		ldab 9d
 f190	27 15		beq  15 (F1A7)
 f192	c1 0a		cmpb #0a
 f194	25 1a		bcs  1a (F1B0)
-f196	5f		clrb
+f196	5f		clrb			;B=0
 f197	d7 9d		stab 9d
 f199	97 c5		staa c5
 f19b	16		tab
@@ -241,24 +241,24 @@ f1b4	26 fa		bne  fa (F1B0)
 f1b6	39		rts
 
 f1b7	86 01		ldaa #01
-f1b9	97 03		staa 03				;DR2		buttons
-f1bb	dc 8c		ldd  8c
-f1bd	43		coma
-f1be	53		comb
+f1b9	97 03		staa 03				;DR2		buttons =1
+f1bb	dc 8c		ldd  8c				;$8C
+f1bd	43		coma			;NOT A
+f1be	53		comb			;NOT B
 f1bf	d7 06		stab 06				;DR3		keyboard rows
 f1c1	c6 ff		ldab #ff
-f1c3	d7 05		stab 05				;DDR4
-f1c5	97 07		staa 07				;DR4
-f1c7	96 02		ldaa 02				;DR1
+f1c3	d7 05		stab 05				;DDR4		output mode
+f1c5	97 07		staa 07				;DR4 
+f1c7	96 02		ldaa 02				;DR1		read keyboard
 f1c9	91 02		cmpa 02
 f1cb	26 fa		bne  fa (F1C7)
 f1cd	ce ff ff	ldx  #ffff
 f1d0	df 06		stx  06				;DR3
 f1d2	c6 fe		ldab #fe
 f1d4	d7 03		stab 03
-f1d6	5f		clrb
+f1d6	5f		clrb			;B=0
 f1d7	d7 05		stab 05
-f1d9	43		coma
+f1d9	43		coma			;NOT A
 f1da	26 07		bne  07 (F1E3)
 f1dc	d6 89		ldab 89
 f1de	26 03		bne  03 (F1E3)
@@ -278,7 +278,7 @@ f1f7	a6 00		ldaa 00,x
 f1f9	3a		abx
 f1fa	e6 00		ldab 00,x
 f1fc	20 0c		bra  0c (F20A)
-f1fe	04		lsrd  ;probably data
+f1fe	04		lsrd  ;probably data??
 f1ff	08		inx
 f200	10		sba
 f201	20 10		bra  10 (F213)
@@ -288,7 +288,7 @@ f207	2a 38		bpl  38 (F241)
 f209	36		psha
 f20a	95 8e		bita 8e
 f20c	27 12		beq  12 (F220)
-f20e	43		coma
+f20e	43		coma			;NOT A
 f20f	94 8e		anda 8e
 f211	97 8e		staa 8e
 f213	96 93		ldaa 93
@@ -296,19 +296,19 @@ f215	95 89		bita 89
 f217	26 1e		bne  1e (F237)
 f219	9a 89		oraa 89
 f21b	97 89		staa 89
-f21d	4f		clra
+f21d	4f		clra			;A=0
 f21e	20 0f		bra  0f (F22F)
 f220	96 89		ldaa 89
 f222	95 93		bita 93
 f224	27 11		beq  11 (F237)
 f226	96 93		ldaa 93
-f228	43		coma
+f228	43		coma			;NOT A
 f229	94 89		anda 89
 f22b	97 89		staa 89
 f22d	86 80		ldaa #80
 f22f	d7 93		stab 93
 f231	9a 93		oraa 93
-f233	5f		clrb
+f233	5f		clrb			;B=0
 f234	bd fd 34	jsr  fd34			;send
 f237	96 8a		ldaa 8a
 f239	81 01		cmpa #01
@@ -330,8 +330,8 @@ f25a	c4 03		andb #03
 f25c	5a		decb
 f25d	c1 02		cmpb #02
 f25f	26 0a		bne  0a (F26B)
-f261	4f		clra
-f262	5f		clrb
+f261	4f		clra			;A=0
+f262	5f		clrb			;B=0
 f263	20 06		bra  06 (F26B)
 f265	d6 93		ldab 93
 f267	26 66		bne  66 (F2CF)
@@ -348,18 +348,18 @@ f278	09		dex
 f279	a6 00		ldaa 00,x
 f27b	95 8e		bita 8e
 f27d	27 07		beq  07 (F286)
-f27f	43		coma
+f27f	43		coma			;NOT A
 f280	94 8e		anda 8e
 f282	97 8e		staa 8e
 f284	20 df		bra  df (F265)
 f286	5c		incb
-f287	53		comb
+f287	53		comb			;NOT B
 f288	d4 89		anda 89
 f28a	d7 89		stab 89
 f28c	bd f2 e8	jsr  f2e8
 f28f	bd f2 f7	jsr  f2f7
 f292	8a 80		oraa #80
-f294	5f		clrb
+f294	5f		clrb			;B=0
 f295	bd fd 34	jsr  fd34			;send
 f298	20 cb		bra  cb (F265)
 f29a	96 8e		ldaa 8e
@@ -371,7 +371,7 @@ f2a3	44		lsra
 f2a4	24 fc		bcc  fc (F2A2)
 f2a6	17		tba
 f2a7	d7 93		stab 93
-f2a9	53		comb
+f2a9	53		comb			;NOT B
 f2aa	d4 8e		anda 8e
 f2ac	d7 8e		stab 8e
 f2ae	d6 8b		ldab 8b
@@ -389,7 +389,7 @@ f2c1	d7 89		stab 89
 f2c3	bd f2 e8	jsr  f2e8
 f2c6	96 93		ldaa 93
 f2c8	bd f2 f7	jsr  f2f7
-f2cb	5f		clrb
+f2cb	5f		clrb			;B=0
 f2cc	bd fd 34	jsr  fd34			;send
 f2cf	96 8b		ldaa 8b
 f2d1	81 02		cmpa #02
@@ -421,6 +421,8 @@ f339	42 09 0a 16 17 24 25 32 43 0b 0c 18 19 26  B....$%2C....&
 f347	33 39 44 0d 29 1a 1b 27 34 3a 62 0e 53 52  39D.)..'4:b.SR
 f355	2b 1c 28 35 61 48 47 4b 50 4d 6d 70 63 64  +.(5aHGKPMmpcd
 f363	67 68 6a 6b 6e 71 65 66 69 4a 6c 4e 6f 72  ghjknqefiJlNor
+
+
 f371	84 0f		anda #0f
 f373	97 c6		staa c6
 f375	84 03		anda #03
@@ -458,8 +460,8 @@ f3b5	54		lsrb
 f3b6	da c6		orab c6
 f3b8	c4 05		andb #05
 f3ba	d7 c1		stab c1
-f3bc	43		coma
-f3bd	16		tab
+f3bc	43		coma			;NOT A
+f3bd	16		tab				;B=A  
 f3be	d4 c5		anda c5
 f3c0	d7 c6		stab c6
 f3c2	58		lslb
@@ -494,7 +496,7 @@ f3f5	e6 00		ldab 00,x
 f3f7	27 07		beq  07 (F400)
 f3f9	c1 03		cmpb #03
 f3fb	27 03		beq  03 (F400)
-f3fd	43		coma
+f3fd	43		coma			;NOT A
 f3fe	84 03		anda #03
 f400	33		pulb
 f401	81 01		cmpa #01
@@ -550,7 +552,7 @@ f45e	7b 04 b4	tim 04b4
 f461	27 03		beq  03 (F466)
 f463	7e f6 2b	jmp f62b
 
-f466	4f		clra
+f466	4f		clra			;A=0
 f467	c5 05		bitb #05
 f469	27 02		beq  02 (F46D)
 f46b	8a 01		oraa #01
@@ -667,26 +669,25 @@ f542	96 c6		ldaa c6
 f544	27 15		beq  15 (F55B)
 f546	84 c0		anda #c0
 f548	26 37		bne  37 (F581)
-f54a	7b 08 c9	tim 08c9
+f54a	7b 08 c9	tim 08c9		;test bit3 of mouse mode (set by RESUME)
 f54d	26 07		bne  07 (F556)
-f54f	7b 0f c1	tim 0fc1
+f54f	7b 0f c1	tim 0fc1		;test buttons
 f552	27 51		beq  51 (F5A5)
 f554	20 2b		bra  2b (F581)
-f556	7b 80 d7	tim 80d7
+f556	7b 80 d7	tim 80d7		;test bit7 of output buffer counter
 f559	26 26		bne  26 (F581)
-f55b	7b 0f c1	tim 0fc1
+f55b	7b 0f c1	tim 0fc1		;test buttons
 f55e	27 45		beq  45 (F5A5)
-f560	7b 04 b4	tim 04b4
+f560	7b 04 b4	tim 04b4		;test button action
 f563	27 03		beq  03 (F568)
 f565	7e f6 2b	jmp f62b
-
-f568	96 c0		ldaa c0				;buttons are at $C0
-f56a	44		lsra				;shift<<
-f56b	8a f8		oraa #f8			;"F8" mouse packet + buttons
-f56d	ce 00 bc	ldx  #00bc			;bytes are at $BC
-f570	0f		sei				;disable interrupts
-f571	c6 02		ldab #02			;2byte parameters (x,y)
-f573	bd fd 34	jsr  fd34			;send
+f568	96 c0		ldaa c0			;buttons are at $C0
+f56a	44		lsra			;shift<<
+f56b	8a f8		oraa #f8		;"F8" mouse packet + buttons
+f56d	ce 00 bc	ldx  #00bc		;bytes are at $BC
+f570	0f		sei			;disable interrupts
+f571	c6 02		ldab #02		;2byte parameters (x,y)
+f573	bd fd 34	jsr  fd34		;send
 f576	24 06		bcc  06 (F57E)
 f578	7f 00 bd	clr 00bd
 f57b	7f 00 bc	clr 00bc
@@ -797,30 +798,35 @@ f64e	c6 06		ldab #06
 f650	bd f6 56	jsr  f656
 f653	7e f1 50	jmp f150
 f656	7f 00 c7	clr 00c7
-f659	ce f6 79	ldx  #f679;data?
+f659	ce f6 79	ldx  #f679			;arrows table
 f65c	3a		abx
 f65d	a6 00		ldaa 00,x
 f65f	81 60		cmpa #60
 f661	24 02		bcc  02 (F665)
 f663	97 c7		staa c7
 f665	0f		sei				;disable interrupts
-f666	5f		clrb
+f666	5f		clrb			;B=0
 f667	bd fd 34	jsr  fd34			;send
 f66a	24 0b		bcc  0b (F677)
-f66c	96 c7		ldaa c7
+f66c	96 c7		ldaa c7				;C7
 f66e	27 07		beq  07 (F677)
 f670	8a 80		oraa #80
 f672	7f 00 c7	clr 00c7
 f675	20 ee		bra  ee (F665)
 f677	0e		cli				;enable interrupts
 f678	39		rts
-
-f679	48 50 4d 4b 74 75 f4 f5  HPMKtu..
+;arrows 48 up 50 down 4D right 4B left
+f679	48 50  HP
+f67b	4d 4b  MK
+f67d	74 75  tu ;?
+f67f	f4     ..
+;this address is jumped to, it's code
+f681	43		coma			;NOT A
 f682	d6 9e		ldab 9e
 f684	27 15		beq  15 (F69B)
 f686	c1 05		cmpb #05
 f688	25 1a		bcs  1a (F6A4)
-f68a	5f		clrb
+f68a	5f		clrb			;B=0
 f68b	d7 9e		stab 9e
 f68d	97 c5		staa c5
 f68f	16		tab
@@ -837,8 +843,8 @@ f6a1	7c 00 9e	inc 009e
 f6a4	7b 04 ca	tim 04ca
 f6a7	27 03		beq  03 (F6AC)
 f6a9	7e f7 a6	jmp f7a6
-f6ac	96 9f		ldaa 9f
-f6ae	91 a9		cmpa a9
+f6ac	96 9f		ldaa 9f			;A=($9F)
+f6ae	91 a9		cmpa a9			;A<>($A9)?
 f6b0	26 0e		bne  0e (F6C0)
 f6b2	96 9b		ldaa 9b
 f6b4	d6 c9		ldab c9	
@@ -847,8 +853,8 @@ f6b8	26 4d		bne  4d (F707)
 f6ba	5d		tstb
 f6bb	2a 48		bpl  48 (F705)
 f6bd	7e f1 3a	jmp f13a
-f6c0	97 a9		staa a9
-f6c2	7b 02 c9	tim 02c9
+f6c0	97 a9		staa a9			;($A9)=A
+f6c2	7b 02 c9	tim 02c9		;Mouse mode monitoring?
 f6c5	26 05		bne  05 (F6CC)
 f6c7	ce ff ff	ldx  #ffff
 f6ca	20 1e		bra  1e (F6EA)
@@ -886,7 +892,7 @@ f6ff	5d		tstb
 f700	2a 03		bpl  03 (F705)
 f702	7e f7 41	jmp f741
 f705	8a fb		oraa #fb
-f707	43		coma
+f707	43		coma			;NOT A
 f708	91 a8		cmpa a8
 f70a	27 35		beq  35 (F741)
 f70c	97 a8		staa a8
@@ -951,7 +957,7 @@ f778	b6 00 a7	ldaa 00a7
 f77b	26 d2		bne  d2 (F74F)
 f77d	96 94		ldaa 94
 f77f	b7 00 a7	staa 00a7
-f782	4f		clra
+f782	4f		clra			;A=0
 f783	d6 a4		ldab a4
 f785	2a 02		bpl  02 (F789)
 f787	8a 02		oraa #02
@@ -981,11 +987,11 @@ f7b4	26 17		bne  17 (F7CD)
 f7b6	d6 c5		ldab c5
 f7b8	d5 94		bita 94
 f7ba	27 0e		beq  0e (F7CA)
-f7bc	4f		clra
+f7bc	4f		clra			;A=0
 f7bd	a7 a4		staa a4,x
 f7bf	a7 a6		staa a6,x
 f7c1	a7 a8		staa a8,x
-f7c3	53		comb
+f7c3	53		comb			;NOT B
 f7c4	d4 94		anda 94
 f7c6	d7 94		stab 94
 f7c8	8d 25		bsr  25 (F7EF)
@@ -997,7 +1003,7 @@ f7d4	96 94		ldaa 94
 f7d6	94 c5		anda c5
 f7d8	11		cba
 f7d9	27 20		beq  20 (F7FB)
-f7db	43		coma
+f7db	43		coma			;NOT A
 f7dc	94 94		anda 94
 f7de	1b		aba
 f7df	97 94		staa 94
@@ -1086,9 +1092,9 @@ f879	39		rts
 f87a	48 50  HP
 f87c	4b 4d  KM
 
-f87e	86 74		ldaa #74
-f880	d6 a1		ldab a1
-f882	7b 02 9b	tim 029b
+f87e	86 74		ldaa #74		;A=$74
+f880	d6 a1		ldab a1			;B=(A1)
+f882	7b 02 9b	tim 029b		;test bit1 of $9B (buttons)
 f885	26 08		bne  08 (F88F)
 f887	c5 02		bitb #02
 f889	26 14		bne  14 (F89F)
@@ -1100,7 +1106,7 @@ f893	c4 fd		andb #fd
 f895	8a 80		oraa #80
 f897	d7 a1		stab a1
 f899	0f		sei				;disable interrupts
-f89a	5f		clrb
+f89a	5f		clrb			;B=0
 f89b	bd fd 34	jsr  fd34			;send
 f89e	0e		cli				;enable interrupts
 f89f	7e f1 3a	jmp f13a
@@ -1129,40 +1135,42 @@ f8cd	27 fb		beq  fb (F8CA)
 f8cf	97 13		staa 13
 f8d1	7e f1 3a	jmp f13a
 
-; 
-f8d4	71 78 cb	aim 78cb
-f8d7	d6 cd		ldab cd				;B=($CD)=command
-f8d9	17		tba				;A=B=command
-f8da	2a 17		bpl  17 (F8F3)			;bit7=0?
-f8dc	c1 80		cmpb #80			;command $80 (reset)?
+;routine check for commands 
+f8d4	71 78 cb	aim 78cb		;($CB) clear bit7
+f8d7	d6 cd		ldab cd			;B=($CD)=command
+f8d9	17		tba			;A=B=command
+f8da	2a 17		bpl  17 (F8F3)		;bit7=0?
+; checking commands >=$80
+f8dc	c1 80		cmpb #80		;command $80 (reset)?
 f8de	26 03		bne  03 (F8E3)
 f8e0	7e f9 90	jmp f990
-f8e3	c1 87		cmpb #87
+f8e3	c1 87		cmpb #87		;min status command
 f8e5	25 2f		bcs  2f (F916)
-f8e7	c1 9b		cmpb #9b
+f8e7	c1 9b		cmpb #9b		;max status command
 f8e9	24 2b		bcc  2b (F916)
 f8eb	c4 7f		andb #7f
 f8ed	c0 07		subb #07
-f8ef	cb 1c		addb #1c
+f8ef	cb 1c		addb #1c		;<1=$C?
 f8f1	20 0a		bra  0a (F8FD)
-f8f3	c1 07		cmpb #07
+; checking commands <$80
+f8f3	c1 07		cmpb #07		;min
 f8f5	25 1f		bcs  1f (F916)
-f8f7	c1 23		cmpb #23
+f8f7	c1 23		cmpb #23		;max
 f8f9	24 1b		bcc  1b (F916)
-f8fb	c0 07		subb #07
+f8fb	c0 07		subb #07		;make index...
 f8fd	58		lslb
-f8fe	ce f9 30	ldx  #f930			;routine table start
-f901	3a		abx				;index with B
-f902	ee 00		ldx  00,x			;load word in X
-f904	27 10		beq  10 (F916)			;0->exit
-f906	85 80		bita #80			;bit7
+f8fe	ce f9 30	ldx  #f930		;routine table start
+f901	3a		abx			;index with B
+f902	ee 00		ldx  00,x		;load word in X
+f904	27 10		beq  10 (F916)		;0->exit
+f906	85 80		bita #80		;bit7
 f908	27 0a		beq  0a (F914)
-f90a	7b 08 cb	tim 08cb			;CB bit3 BUSY?
+f90a	7b 08 cb	tim 08cb		;CB bit3 BUSY?
 f90d	26 07		bne  07 (F916)
-f90f	7b 03 ca	tim 03ca			;CA bit0,1 BUSY?
+f90f	7b 03 ca	tim 03ca		;CA bit0,1 BUSY?
 f912	26 02		bne  02 (F916)
-f914	6e 00		jmp 00,x			;jump to one of handling routines
-f916	71 18 cb	aim 18cb			;
+f914	6e 00		jmp 00,x		;jump to one of handling routines
+f916	71 18 cb	aim 18cb		;"no command"
 f919	20 0e		bra  0e (F929)
 
 ;$11 RESUME
@@ -1175,7 +1183,7 @@ f929	7f 00 cc	clr 00cc			;clear command
 f92c	72 10 11	oim 1011			;TRCSR set bit4 RIE
 f92f	39		rts
 
-;data: routines to handle commands (+...)		(logically, to check!)
+;data: routine addresses to handle IKBD commands
 f930	fa a4  ..					;$7 SET MOUSE BUTTON ACTION
 f932	fa b9  ..					;$8 SET RELATIVE MOUSE POSITION REPORTING
 f934	fa cb  ..					;$9 SET ABSOLUTE MOUSE POSITIONING
@@ -1261,7 +1269,7 @@ f9c7	97 ca		staa ca				;CA joystick mode
 f9c9	7e fa 47	jmp fa47
 
 ;$16 JOYSTICK INTERROGATE
-f9cc	96 ca		ldaa ca				;CA joystick mode
+f9cc	96 ca		ldaa ca				;($CA) joystick mode
 f9ce	85 20		bita #20			;test bit5 (joystick enabled)
 f9d0	26 03		bne  03 (F9D5)
 f9d2	7e f9 29	jmp f929			;done
@@ -1310,8 +1318,8 @@ fa23	bd fc fe	jsr  fcfe
 fa26	24 15		bcc  15 (FA3D)
 fa28	ce 00 95	ldx  #0095
 fa2b	bd fd 1e	jsr  fd1e			;copy parameters from input buffer to $95
-fa2e	4f		clra
-fa2f	5f		clrb
+fa2e	4f		clra			;A=0
+fa2f	5f		clrb			;B=0
 fa30	97 94		staa 94
 fa32	97 a1		staa a1
 fa34	dd a2		std  a2
@@ -1326,8 +1334,8 @@ fa41	71 df ca	aim dfca			;$CA clear bit5
 fa44	7e f9 1b	jmp f91b			;command $11 RESUME
 
 ;commands $14 and $15 (joystick) jump here
-fa47	4f		clra
-fa48	5f		clrb
+fa47	4f		clra			;A=0
+fa48	5f		clrb			;B=0
 fa49	dd a4		std  a4
 fa4b	dd 9d		std  9d
 fa4d	dd a8		std  a8
@@ -1343,7 +1351,7 @@ fa5d	bd fc fe	jsr  fcfe
 fa60	24 2f		bcc  2f (FA91)
 fa62	71 f8 cb	aim f8cb
 fa65	0f		sei				;disable interrupts
-fa66	5f		clrb
+fa66	5f		clrb			;B=0
 fa67	ce 00 ce	ldx  #00ce
 fa6a	3a		abx
 fa6b	a6 00		ldaa 00,x
@@ -1492,24 +1500,24 @@ fb88	71 7f c9	aim 7fc9			;Mouse mode, clear bit7
 fb8b	7e f9 1b	jmp f91b			;command $11 RESUME
 
 ;Read Mouse
-fb8e	96 07		ldaa 07				;DR4 mouse & joysticks directions
-fb90	16		tab				;B=A  
-fb91	84 03		anda #03			;
-fb93	97 be		staa be				;store mouse X on 2 bits in $BE 
-fb95	54		lsrb
-fb96	54		lsrb
-fb97	c4 03		andb #03
-fb99	d7 bf		stab bf				;store mouse X on 2 bits in $BF 
-fb9b	5f		clrb
-fb9c	d7 9d		stab 9d				;$9D=0
-fb9e	96 03		ldaa 03				;DR2 buttons (mouse bit2 joystick bit1, 0 for on)
-fba0	84 06		anda #06			;& b110
-fba2	97 9b		staa 9b				;store buttons in $9B
-fba4	27 04		beq  04 (FBAA)			;0 = both pressed
+fb8e	96 07		ldaa 07			;DR4 mouse & joysticks directions
+fb90	16		tab			;B=A  
+fb91	84 03		anda #03		;take only first 2 bits (port 0)
+fb93	97 be		staa be			;store mouse X on 2 bits in $BE 
+fb95	54		lsrb			;B<<
+fb96	54		lsrb			;B<<
+fb97	c4 03		andb #03		;isolate 2 bits for Y
+fb99	d7 bf		stab bf			;store mouse Y on 2 bits in $BF 
+fb9b	5f		clrb			;B=0
+fb9c	d7 9d		stab 9d			;$9D=0
+fb9e	96 03		ldaa 03			;DR2 buttons (mouse bit2 joystick bit1, 0 for on)
+fba0	84 06		anda #06		;& b110
+fba2	97 9b		staa 9b			;store buttons in $9B
+fba4	27 04		beq  04 (FBAA)		;0 = both pressed
 fba6	81 06		cmpa #06
-fba8	26 02		bne  02 (FBAC)			;none pressed
+fba8	26 02		bne  02 (FBAC)		;none pressed
 fbaa	88 06		eora #06
-fbac	97 c0		staa c0				;buttons 1=pressed
+fbac	97 c0		staa c0			;buttons 1=pressed
 fbae	39		rts
 
 ;...joystick
@@ -1523,8 +1531,8 @@ fbc0	71 04 a8	aim 04a8
 fbc3	20 0c		bra  0c (FBD1)
 fbc5	86 28		ldaa #28
 fbc7	97 ca		staa ca
-fbc9	4f		clra
-fbca	5f		clrb
+fbc9	4f		clra			;A=0
+fbca	5f		clrb			;B=0
 fbcb	dd a4		std  a4
 fbcd	dd a8		std  a8
 fbcf	dd 9e		std  9e
@@ -1571,7 +1579,7 @@ fc1d	ce 00 ee	ldx  #00ee			;temp buffer
 fc20	bd fd 1e	jsr  fd1e			;copy parameters from input buffer
 fc23	0f		sei				;disable interrupts
 fc24	86 f6		ldaa #f6			;status header (command $21)
-fc26	5f		clrb				;0 parameters
+fc26	5f		clrb			;B=0
 fc27	bd fd 34	jsr  fd34			;send 'F6'
 fc2a	86 20		ldaa #20			;memory access code=$20
 fc2c	c6 06		ldab #06			;6 byte parameters
@@ -1650,7 +1658,7 @@ fca4	48		lsla
 fca5	25 04		bcs  04 (FCAB)
 fca7	86 12		ldaa #12
 fca9	20 2a		bra  2a (FCD5)
-fcab	4f		clra
+fcab	4f		clra			;A=0
 fcac	20 27		bra  27 (FCD5)
 
 ;0x94    joystick mode (0x00 enabled 0x1A disabled)
@@ -1673,11 +1681,11 @@ fcc5	86 14		ldaa #14
 fcc7	20 0c		bra  0c (FCD5)
 
 ;0x9A    joystick enable/disable
-fcc9	7b 20 ca	tim 20ca
-fccc	26 04		bne  04 (FCD2)
-fcce	86 1a		ldaa #1a			;"disabled"
+fcc9	7b 20 ca	tim 20ca		;Joystick mode on?
+fccc	26 04		bne  04 (FCD2)		;
+fcce	86 1a		ldaa #1a		;"disabled"
 fcd0	20 03		bra  03 (FCD5)
-fcd2	4f		clra
+fcd2	4f		clra			;A=0
 fcd3	20 00		bra  00 (FCD5)
 
 fcd5	c6 01		ldab #01
@@ -1689,7 +1697,7 @@ fcd9	d7 c5		stab c5				;$C5=1
 fcdb	0f		sei				;disable interrupts
 fcdc	3c		pshx
 fcdd	86 f6		ldaa #f6			;F6=status report header
-fcdf	5f		clrb				;0byte parameter
+fcdf	5f		clrb			;B=0
 fce0	bd fd 34	jsr  fd34			;send jut 'F6'
 fce3	38		pulx
 fce4	96 c6		ldaa c6				;first byte
@@ -1729,7 +1737,7 @@ fd1c	0d		sec				;set carry (as signal command complete)
 fd1d	39		rts
 
 ; copy values in buffer ($EE...)
-fd1e	5f		clrb
+fd1e	5f		clrb			;B=0
 fd1f	3c		pshx				;save x
 fd20	ce 00 cd	ldx  #00cd			;input buffer start
 fd23	3a		abx
@@ -1753,7 +1761,7 @@ fd39	d1 d7		cmpb d7
 fd3b	24 2a		bcc  2a (FD67)
 fd3d	3c		pshx
 fd3e	18		xgdx
-fd3f	4f		clra
+fd3f	4f		clra			;A=0
 fd40	d6 d5		ldab d5
 fd42	18		xgdx
 fd43	a7 d9		staa d9,x			;header -> output buffer
@@ -1761,7 +1769,7 @@ fd45	96 d5		ldaa d5
 fd47	4c		inca
 fd48	81 15		cmpa #15
 fd4a	26 01		bne  01 (FD4D)
-fd4c	4f		clra
+fd4c	4f		clra			;A=0
 fd4d	97 d5		staa d5
 fd4f	7a 00 d7	dec 00d7
 fd52	38		pulx
@@ -1797,7 +1805,7 @@ fd84	72 04 11	oim 411 			;TRCSR bit 2 Transmit Interrupt Enable
 fd87	4c		inca				;index++
 fd88	81 15		cmpa #15
 fd8a	26 01		bne  01 (FD8D)
-fd8c	4f		clra				;if index==$15 (21) then index=0
+fd8c	4f		clra			;A=0
 fd8d	97 d6		staa d6				;D6=index
 fd8f	96 d7		ldaa d7				;check D7
 fd91	84 7f		anda #7f			;make positive
@@ -1841,7 +1849,7 @@ fdd4	8c 00 00	cpx  #0000
 fdd7	27 4e		beq  4e (FE27)
 fdd9	11		cba
 fdda	26 4b		bne  4b (FE27)
-fddc	4f		clra
+fddc	4f		clra			;A=0
 fddd	a7 82		staa 82,x
 fddf	8c 00 05	cpx  #0005
 fde2	27 ea		beq  ea (FDCE)
@@ -1866,18 +1874,18 @@ fe08	84 03		anda #03
 fe0a	26 c2		bne  c2 (FDCE)
 fe0c	c6 30		ldab #30
 fe0e	20 be		bra  be (FDCE)
-fe10	ce fe d0	ldx  #fed0
-fe13	d6 83		ldab 83
-fe15	5a		decb
-fe16	3a		abx
-fe17	e6 00		ldab 00,x
+fe10	ce fe d0	ldx  #fed0		;table
+fe13	d6 83		ldab 83			;B=($83) month
+fe15	5a		decb			;B--
+fe16	3a		abx			;index table
+fe17	e6 00		ldab 00,x		;B=get in table
 fe19	ce 00 03	ldx  #0003
 fe1c	20 b0		bra  b0 (FDCE)
 fe1e	86 01		ldaa #01
-fe20	a7 82		staa 82,x
+fe20	a7 82		staa 82,x		;update timer
 fe22	c6 13		ldab #13
 fe24	7e fd ce	jmp fdce
-fe27	a7 82		staa 82,x
+fe27	a7 82		staa 82,x		;update timer
 fe29	96 d4		ldaa d4
 fe2b	27 21		beq  21 (FE4E)
 fe2d	81 cd		cmpa #cd
@@ -1889,7 +1897,7 @@ fe38	8e 00 f8	lds  #00f8
 fe3b	7e fe cf	jmp fecf
 fe3e	7b 01 11	tim 0111
 fe41	26 08		bne  08 (FE4B)
-fe43	4f		clra
+fe43	4f		clra			;A=0
 fe44	71 ef cb	aim efcb
 fe47	72 04 11	oim 411
 fe4a	6d 4c		tst 4c,x
@@ -1962,6 +1970,7 @@ fec9	7e f1 b7	jmp f1b7
 fecc	75 80 89	eim 8089
 fecf	3b		rti
 
+;data
 fed0	32 29 32 31 32 31 32 32 31 00 00 00 00 00 00 32 31  2)2121221......21
 
 SCI interrupt start (rx 0) (Serial line)
@@ -2025,17 +2034,17 @@ ff34	85 07		bita #07			;if<0????
 ff36	26 f7		bne  f7 (FF2F)
 ff38	84 18		anda #18			;bit3,4
 ff3a	97 cb		staa cb
-ff3c	4f		clra
-ff3d	97 cc		staa cc				;Input buffer counter=0
+ff3c	4f		clra			;A=0
+ff3d	97 cc		staa cc			;Input buffer counter=0
 ff3f	39		rts
 
 ;OVR routine
-ff40	d6 12		ldab 12
-ff42	72 01 11	oim 111				;TRCSR
-ff45	86 20		ldaa #20
+ff40	d6 12		ldab 12			;RDR
+ff42	72 01 11	oim 111			;set TRCSR bit0 WU (sleep)
+ff45	86 20		ldaa #20		;wait some cycles
 ff47	4a		deca
 ff48	26 fd		bne  fd (FF47)
-ff4a	7b 01 11	tim 0111			;TRCSR
+ff4a	7b 01 11	tim 0111		;TRCSR (WU?)
 ff4d	27 09		beq  09 (FF58)
 ff4f	7c 00 d4	inc 00d4
 ff52	72 10 cb	oim 10cb
@@ -2047,8 +2056,8 @@ ff5e	4a		deca
 ff5f	85 07		bita #07
 ff61	26 06		bne  06 (FF69)
 ff63	84 08		anda #08
-ff65	5f		clrb
-ff66	d7 cc		stab cc
+ff65	5f		clrb			;B=0
+ff66	d7 cc		stab cc			;command counter=0
 ff68	7d 8a 20	tst 8a20
 ff6b	97 cb		staa cb
 ff6d	39		rts
@@ -2119,9 +2128,9 @@ ffe9	01 00  ..
 ffeb	f3 1c  ..
 ffed	00  .
 ffee	00 ff  ..
-fff0	fe e2  ..
+fff0	fe e2  ..		;SCI vector
 fff2	f0 00  ..
-fff4	fd 9d  ..
+fff4	fd 9d  ..		;OCF vector
 fff6	f0 00  ..
 fff8	f0 00  ..
 fffa	f0 00  ..
