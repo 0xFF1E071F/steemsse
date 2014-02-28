@@ -273,16 +273,22 @@ of DR2 may be 0 (Froggies) or 1 (GEM). For the joystick, it seems to be set.
 
 As the mouse ball rotates, two axes spin and cause the rotation
 of a 0011 bit sequence in the hardware, two bits going to the 
-registry when read. To emulate this, we rotate a $33333333 sequence and
+registry when read. To emulate this, we rotate a $CCCCCCCC sequence and
 send the last bits to register bits 0-1 for horizontal movement, 2-3
 for vertical movement. 
-It seems that at rest, '11' are sent, but disabling the mouse would somehow
-change that value, as if something was happening in the hardware.
+It seems that at rest, '00' are sent.
+
 We rotate the sequence left for mouse moving to the left or up, right for 
 right or down.
 
 Joystick movements are a bit easier to emulate. When they're checked, set bit
  means no movement, a 0 indicates movement.
+
+This explains the oddity of 'Jumping Jackson Auto239'.
+The DISABLE MOUSE command causes a last reading of the mouse (jump to RESUME
+in the rom), which is sent by the 6301 to the CPU as a joystick event, 
+because '0' means movement for the joystick.
+Without emulating that, the game switches to a buggy black screen.
 
 On the ST, moving the mouse when joystick moves were expected would trigger
 endless movements, but plugging a joystick and taking control would fix the 

@@ -1003,7 +1003,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
                 ? MF_CHECKED : MF_UNCHECKED));
               break;
 #endif
-#if defined(SS_DEBUG_DUMP_6301_RAM)
+#if defined(SS_DEBUG_DUMP_6301_RAM) && defined(SS_ACIA)
             case 1524:
               hd6301_dump_ram();
               break;
@@ -2047,13 +2047,13 @@ void DWin_init()
     new mr_static("Current Scanline ","",5,y,Par,
         NULL,(MEM_ADDRESS)&scan_y,2,MST_DECIMAL,0,NULL);
 
-#if defined(SS_DEBUG_SHOW_RES)
+#if defined(SS_DEBUG_SHOW_RES) && defined(SS_SHIFTER)
     GetWindowRectRelativeToParent(ms->handle,&rc);
     ms=new mr_static("Shift ","",rc.right+5,y,Par,
         NULL,(MEM_ADDRESS)&Shifter.m_ShiftMode,1,MST_REGISTER,0,NULL);
 #endif
 
-#if defined(SS_DEBUG_SHOW_FREQ)
+#if defined(SS_DEBUG_SHOW_FREQ) && defined(SS_SHIFTER)
     GetWindowRectRelativeToParent(ms->handle,&rc);
     new mr_static("Sync ","",rc.right+5,y,Par,
         NULL,(MEM_ADDRESS)&Shifter.m_SyncMode,1,MST_REGISTER,0,NULL);

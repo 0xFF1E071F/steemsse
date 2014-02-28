@@ -1131,7 +1131,7 @@ Panic
   {   
 #if defined(SS_SHIFTER_LINE_PLUS_2_THRESHOLD)
     t=LINECYCLE0+52; // fixes Forest
-#if defined(SS_MMU_WAKE_UP_SHIFTER_TRICKS)
+#if defined(SS_MMU_WAKE_UP_SHIFTER_TRICKS___)//TODO
     if(MMU.WakeUpState2())
       t+=WU2_PLUS_CYCLES;
 #endif

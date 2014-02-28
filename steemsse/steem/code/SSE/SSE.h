@@ -96,7 +96,7 @@ and all his silly mods are gone!
 
 #if defined(STEVEN_SEAGAL)
 
-#define SS_BETA //title, OSD, plus some testing
+//#define SS_BETA //title, OSD, plus some testing
 
 #ifdef SS_BETA 
 
@@ -153,7 +153,7 @@ and all his silly mods are gone!
 #undef SS_UNIX
 #endif
 
-#if SSE_VERSION<360 && !defined(SS_BETA)
+#if SSE_VERSION<370 && !defined(SS_BETA)
 #undef SS_SDL 
 #endif
 
@@ -166,10 +166,10 @@ and all his silly mods are gone!
 //////////
 
 #if defined(SS_BETA)
-//#define TEST01//end session?
-//#define TEST02// ste shifter prefetch?
-//#define TEST03//hbl?
-//#define TEST04//6301 mousemask?
+//#define TEST01
+//#define TEST02
+//#define TEST03
+//#define TEST04
 //#define TEST05
 //#define TEST06
 //#define TEST07
@@ -266,12 +266,12 @@ and all his silly mods are gone!
 #define SS_CPU_MOVE_B       // move like a superstar
 #define SS_CPU_MOVE_W       
 #define SS_CPU_MOVE_L
-#define SS_CPU_MOVEM_MR_L
+#define SS_CPU_MOVEM_MR_L//v3.6.0
 #define SS_CPU_POKE         // poke like a C64 
 #define SS_CPU_PREFETCH     // prefetch like a dog
 #define SS_CPU_ROUNDING     // round like a rolling stone
 #define SS_CPU_TAS          // 4 cycles fewer if memory
-#define SS_CPU_UNSTOP
+#define SS_CPU_UNSTOP//v3.6.0
 
 #if defined(SS_CPU_EXCEPTION)
 
@@ -281,14 +281,14 @@ and all his silly mods are gone!
 //#define SS_CPU_DETECT_STACK_PC_USE // push garbage!!
 #endif
 
-#if defined(SS_HACKS) // hacks on: we don't use 'true PC'
+#if defined(SS_HACKS) // hacks on: we don't use 'true PC', but this is undef further
 #define SS_CPU_HACK_BLOOD_MONEY
 //#define SS_CPU_HACK_PHALEON // TODO: why does it work with or without?
 #define SS_CPU_HACK_WAR_HELI
 #endif
 
 //#define SS_CPU_HIMEM_BONUS_BYTES // for F-29: bad idea
-#define SS_CPU_IGNORE_RW_4MB // for F-29, works but...
+#define SS_CPU_IGNORE_RW_4MB // for F-29, works but... //v3.6.0
 #define SS_CPU_IGNORE_WRITE_0 // for Aladin, may write on 1st byte
 #define SS_CPU_POST_INC // no post increment if exception 
 #define SS_CPU_PRE_DEC // no "pre" decrement if exception!
@@ -395,8 +395,8 @@ and all his silly mods are gone!
 
 #if defined(SS_CPU_ROUNDING)
 
-#define SS_CPU_ROUNDING_ADD_L // EA = -(An)
-#define SS_CPU_ROUNDING_ADDA_L // EA = -(An)
+#define SS_CPU_ROUNDING_ADD_L // EA = -(An) //v3.6.0
+#define SS_CPU_ROUNDING_ADDA_L // EA = -(An) //v3.6.0
 
 //#define SS_CPU_ROUNDING_SOURCE_100_B // -(An)
 //#define SS_CPU_ROUNDING_SOURCE_100_W // -(An): no
@@ -567,9 +567,9 @@ and all his silly mods are gone!
 
 #define SS_DRIVE_BYTES_PER_ROTATION
 #ifdef SS_DEBUG
-#define SS_DRIVE_COMPUTE_BOOT_CHECKSUM // to mod a boot sector
+#define SS_DRIVE_COMPUTE_BOOT_CHECKSUM // to mod a boot sector//v3.6.0
 #endif
-#define SS_DRIVE_CREATE_ST_DISK_FIX // from Petari
+#define SS_DRIVE_CREATE_ST_DISK_FIX // from Petari//v3.6.0
 //#define SS_DRIVE_EMPTY_SPIN_UP // European Demos (undef v3.5.4)
 // one or the other:
 //#define SS_DRIVE_EMPTY_VERIFY_LONG // GEM
@@ -668,8 +668,8 @@ and all his silly mods are gone!
 //#define SS_IPF_CPU // total sync, works but overkill
 //#define SS_IPF_RUN_PRE_IO 
 //#define SS_IPF_RUN_POST_IO
-#define SS_IPF_ASSOCIATE // extension associated with Steem
-#define SS_IPF_OSD // for the little box at reset
+#define SS_IPF_ASSOCIATE // extension may be associated with Steem
+#define SS_IPF_OSD // for the little box at reset - silly?
 #ifdef SS_BETA
 #define SS_IPF_LETHAL_XCESS // hack useful with capsimg v4.2
 #define SS_IPF_WRITE_HACK // useless hack for v4.2 AFAIK
@@ -742,7 +742,7 @@ and all his silly mods are gone!
 #define SS_IKBD_6301_DISABLE_CALLSTACK // to save 3k on the PC stack
 //#define SS_IKBD_6301_RUN_CYCLES_AT_IO // overkill
 #define SS_IKBD_6301_MOUSE_ADJUST_SPEED //poor attempt
-#define SS_IKBD_6301_MOUSE_MASK // Jumping Jackson auto
+#define SS_IKBD_6301_MOUSE_MASK // Jumping Jackson auto//v3.6.0
 //#define SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT // hardware quirk? (hack)
 #define SS_IKBD_6301_RUN_IRQ_TO_END // hack around Sim6xxx's working
 #define SS_IKBD_6301_SET_TDRE
@@ -781,23 +781,25 @@ and all his silly mods are gone!
 #define SS_INT_OSD_REPORT_HBI
 #define SS_INT_HBL_IACK_FIX // from Hatari - BBC52
 #ifdef SS_BETA
-#define SS_INT_HBL_ONE_FUNCTION // remove event_hbl()
+#define SS_INT_HBL_ONE_FUNCTION // remove event_hbl(), seems OK but...
 #endif
 #endif
 
 #if defined(SS_INT_JITTER) && defined(SS_INT_HBL)
-//#define SS_INT_JITTER_HBL // BBC52
+#define SS_INT_JITTER_HBL //3.6.0 defined again
 #endif
 
 #if defined(SS_INT_VBL)
 #define SS_INT_VBL_IACK
 #define SS_INT_VBL_INLINE 
-//#define SS_INT_VBI_START // generally working now but not 100%
+#ifdef SS_BETA
+#define SS_INT_VBI_START // generally working now but not 100%
+#endif
 #endif
 
 #if defined(SS_INT_JITTER) && defined(SS_INT_VBL) && defined(SS_STF)
 #define SS_INT_JITTER_VBL // STF
-#define SS_INT_JITTER_VBL_STE // STF + STE 
+//#define SS_INT_JITTER_VBL_STE // STF + STE 
 #endif
 
 #if defined(SS_STF) && defined(SS_INT_VBL) && !defined(SS_INT_VBI_START)
@@ -855,8 +857,8 @@ and all his silly mods are gone!
 //TODO, properly separate MMU, GLUE, Shifter functions, first proper C++ structure
 
 #if defined(WIN32) //TODO Unix
-#define SS_MMU_256K // Atari 260 ST
-#define SS_MMU_2560K // some STE with 2MB memory upgrade
+#define SS_MMU_256K // Atari 260 ST//v3.6.0
+#define SS_MMU_2560K // some STE with 2MB memory upgrade//v3.6.0
 #endif
 
 //#define SS_MMU_NO_CONFUSION // Diagnostic cartridge: don't define (v3.5.2)
@@ -957,6 +959,7 @@ and all his silly mods are gone!
 //#define SS_SHIFTER_0BYTE__LINE_RES_END_THRESHOLD//Hackabonds Demo not WS1
 
 #endif//0-byte line
+
 #define SS_SHIFTER_4BIT_SCROLL //Let's do the Twist again
 #define SS_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK
 #define SS_SHIFTER_60HZ_OVERSCAN //Leavin' Terramis
@@ -1055,7 +1058,9 @@ and all his silly mods are gone!
 #define SS_SHIFTER_REPORT_VBL_TRICKS // a line each VBL
 #endif
 //#define SS_SHIFTER_VERTICAL_OVERSCAN_TRACE
+
 //#define SS_SHIFTER_STEEM_ORIGINAL // only for debugging/separate blocks
+
 #else
 #define draw_check_border_removal Shifter.CheckSideOverscan
 #define draw_scanline_to(cycles_since_hbl) Shifter.Render(cycles_since_hbl)
@@ -1076,16 +1081,16 @@ and all his silly mods are gone!
 
 #ifdef SS_PSG
 
-#define SS_PSG_FIX_TABLES // based on Yamaha doc
+#define SS_PSG_FIX_TABLES // based on Yamaha doc//v3.6.0
 #if defined(SS_PSG_FIX_TABLES)
 #define SS_PSG_FIXED_VOL_FIX1
 #define SS_PSG_ENV_FIX1
 #endif
 
-#define SS_PSG_FIXED_VOL_FIX2 // from ljbk, measured output
+#define SS_PSG_FIXED_VOL_FIX2 // from ljbk, measured output//v3.6.0
 
 //#define SS_PSG_WRITE_SAME_VALUE //test
-#define SS_PSG_OPT1
+#define SS_PSG_OPT1//v3.6.0
 #endif
 
 #define SS_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
@@ -1126,7 +1131,7 @@ and all his silly mods are gone!
 /////////////////////////////////
 
 #if defined(SS_STF)
-
+//note all those switches have been useful for SS_SHIFTER_PALETTE_NOISE
 #define SS_STF_0BYTE
 #define SS_STE_2MB // auto make RAM 2MB, more compatible
 #define SS_STF_1MB // auto make RAM 1MB, more compatible
@@ -1232,9 +1237,9 @@ and all his silly mods are gone!
 
 
 #if defined(SS_STRUCTURE_SSE_OBJ)
-#define SS_STRUCTURE_SSE6301_OBJ
-#define SS_STRUCTURE_SSECPU_OBJ
-#define SS_STRUCTURE_SSEDEBUG_OBJ
+#define SS_STRUCTURE_SSE6301_OBJ//3.6.0
+#define SS_STRUCTURE_SSECPU_OBJ//3.6.0
+#define SS_STRUCTURE_SSEDEBUG_OBJ//3.6.0
 #endif//#if defined(SS_STRUCTURE_SSE_OBJ)
 
 
@@ -1256,7 +1261,6 @@ and all his silly mods are gone!
 /////////
 // TOS //
 /////////
-
 #if defined(SS_TOS)
 
 #ifdef SS_HACKS
@@ -1264,8 +1268,8 @@ and all his silly mods are gone!
 #define SS_TOS_STE_FAST_BOOT //from hatari
 #endif
 
-#define SS_TOS_FILETIME_FIX //from Petari
-#define SS_TOS_NO_INTERCEPT_ON_RTE1 // fix Megamax C on ReDMCSB
+#define SS_TOS_FILETIME_FIX //from Petari//3.6.0
+#define SS_TOS_NO_INTERCEPT_ON_RTE1 // fix Megamax C on ReDMCSB//3.6.0
 
 // fixes by other people: //TODO, another big category?
 #define SSE_AVTANDIL_FIX_001 // Russin TOS number
@@ -1348,7 +1352,7 @@ and all his silly mods are gone!
 #define SS_VAR_STATUS_STRING_HACKS
 #define SS_VAR_STATUS_STRING_IPF
 #define SS_VAR_STATUS_STRING_PASTI
-#define SS_VAR_STATUS_STRING_VSYNC
+#define SS_VAR_STATUS_STRING_VSYNC//3.6.0
 #endif
 #define SS_VAR_STEALTH // don't tell we're an emulator (option)
 #ifdef WIN32
@@ -1416,7 +1420,7 @@ and all his silly mods are gone!
 
 #if defined(WIN32)
 #define SS_VID_VSYNC_WINDOW // no tearing and smooth scrolling also in window
-#define SS_VID_VSYNC_WINDOW_CRASH_FIX1
+#define SS_VID_VSYNC_WINDOW_CRASH_FIX1//3.6.0
 //#define SS_VID_VSYNC_WINDOW_CRASH_FIX2 //safer but annoying
 #define SS_VID_VSYNC_WINDOW_CRASH_FIX3 //TODO find something better?
 #endif

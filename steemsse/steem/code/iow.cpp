@@ -1177,7 +1177,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 #endif
 
 #if defined(SS_FDC_INDEX_PULSE_COUNTER) && defined(SS_DRIVE) && defined(SS_DEBUG)
-/* Symic Demo
+/* Symic Demo TODO right or wrong?
 */
           if(WD1772.IndexCounter && YM2149.Drive()==TYM2149::NO_VALID_DRIVE)
             TRACE("drive deselect while IP counter %d\n",WD1772.IndexCounter);

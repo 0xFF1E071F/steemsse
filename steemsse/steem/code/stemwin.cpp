@@ -945,9 +945,6 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       SetStemMouseMode(STEM_MOUSEMODE_DISABLED);
       break;
     case WM_CLOSE:
-#ifdef TEST01
-//    case WM_ENDSESSION://tst -> useless
-#endif
       QuitSteem();
       return false;
     case WM_QUERYENDSESSION:

@@ -1364,8 +1364,6 @@ void event_vbl_interrupt() //SS misleading name?
   // important info at start of frame (not events)
   VideoEvents.Add(scan_y,0,'R',Shifter.m_ShiftMode); 
   VideoEvents.Add(scan_y,0,'S',Shifter.m_SyncMode); 
-//  VideoEvents.Add(scan_y,0,'A',(xbios2&0x00FF0000)>>16 ); 
-  //VideoEvents.Add(scan_y,0,'a',(xbios2&0xFFFF) ); 
 #endif
 
 }
@@ -1429,23 +1427,10 @@ void event_pasti_update()
 #endif
 //---------------------------------------------------------------------------
 #if defined(STEVEN_SEAGAL) // added events
-//removed ikbd event, undefined and not up to date
 
 #if defined(SS_INT_VBI_START)
-
 void event_trigger_vbi() { //6X cycles into frame (reference end of HSYNC)
-  //if ((sr & SR_IPL)<SR_IPL_4) // of course not!
-  {
-///    ASSERT( !Blit.HasBus );
-//    ASSERT( !vbl_pending );
-#ifdef SS_DEBUG
-#define LOGSECTION LOGSECTION_INTERRUPTS
-    if(vbl_pending) TRACE_LOG("Frame %d vbl already pending\n",FRAME);
-#undef LOGSECTION
-#endif
-    vbl_pending=true;
- //   VBL_INTERRUPT //of course not here, no wonder it didn't work!
-  }
+  vbl_pending=true;
   screen_event_pointer++;
 }
 #endif
