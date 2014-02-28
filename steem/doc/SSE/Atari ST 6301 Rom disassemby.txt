@@ -3,6 +3,7 @@
 * by Sim6xxx as modified for Steem                         *
 ************************************************************
 
+
 f000	96 88		ldaa 88
 f002	81 aa		cmpa #aa
 f004	27 0a		beq  0a (F010)
@@ -792,7 +793,11 @@ f675	20 ee		bra  ee (F665)
 f677	0e		cli
 f678	39		rts
 
-f679	48 50 4d 4b 74 75 f4 f5  HPMKtu..
+f679	48 50  HP
+f67b	4d 4b  MK
+f67d	74 75  tu
+f67f	f4     ..
+f681	43		coma
 f682	d6 9e		ldab 9e
 f684	27 15		beq  15 (F69B)
 f686	c1 05		cmpb #05
@@ -1056,10 +1061,8 @@ f874	7d 8a 40	tst 8a40
 f877	97 a1		staa a1
 f879	39		rts
 
-f87a	48		lsla
-f87b	50		negb
-f87c	4b		---
-f87d	4d		tsta
+f87a	48 50  HP
+f87c	4b 4d  KM
 f87e	86 74		ldaa #74
 f880	d6 a1		ldab a1
 f882	7b 02 9b	tim 029b
@@ -1145,56 +1148,55 @@ f929	7f 00 cc	clr 00cc
 f92c	72 10 11	oim 1011
 f92f	39		rts
 
-f930	fa a4 fa	orab a4fa
-f933	b9 fa cb	adca facb
-f936	fa e8 fb	orab e8fb
-f939	0b		sev
-f93a	fb 25 fb	addb 25fb
-f93d	39		rts
-
-f93e	fb 5f fb	addb 5ffb
-f941	7c fb 82	inc fb82
-f944	f9 1b fb	adcb 1bfb
-f947	88 f9		eora #f9
-f949	af f9		sts  f9,x
-f94b	c1 f9		cmpb #f9
-f94d	c5 f9		bitb #f9
-f94f	cc f9 f3	ldd  #f9f3
-f952	fa 12 fa	orab 12fa
-f955	21 fa		brn  fa (F951)
-f957	41		---
-f958	fa 5b fa	orab 5bfa
-f95b	95 00		bita 00
-f95d	00		nop0
-f95e	00		nop0
-f95f	00		nop0
-f960	00		nop0
-f961	00		nop0
-f962	fb d4 fc	addb d4fc
-f965	16		tab
-f966	fc 3b fc	ldd  3bfc
-f969	59		rolb
-f96a	fc 62 fc	ldd  62fc
-f96d	62 fc 62	oim fc62,x
-f970	fc 83 fc	ldd  83fc
-f973	8c 00 00	cpx  #0000
-f976	00		nop0
-f977	00		nop0
-f978	fc 95 fc	ldd  95fc
-f97b	95 00		bita 00
-f97d	00		nop0
-f97e	fc a2 00	ldd  a200
-f981	00		nop0
-f982	fc ae fc	ldd  aefc
-f985	ae 00		lds  00,x
-f987	00		nop0
-f988	00		nop0
-f989	00		nop0
-f98a	00		nop0
-f98b	00		nop0
-f98c	fc ae fc	ldd  aefc
-f98f	c9 71		adcb #71
-f991	ef 11		stx  11,x
+f930	fa a4  ..
+f932	fa b9  ..
+f934	fa cb  ..
+f936	fa e8  ..
+f938	fb 0b  ..
+f93a	fb 25  .%
+f93c	fb 39  .9
+f93e	fb 5f  ._
+f940	fb 7c  .|
+f942	fb 82  ..
+f944	f9 1b  ..
+f946	fb 88  ..
+f948	f9 af  ..
+f94a	f9 c1  ..
+f94c	f9 c5  ..
+f94e	f9 cc  ..
+f950	f9 f3  ..
+f952	fa 12  ..
+f954	fa 21  .!
+f956	fa 41  .A
+f958	fa 5b  .[
+f95a	fa 95  ..
+f95c	00 00  ..
+f95e	00 00  ..
+f960	00 00  ..
+f962	fb d4  ..
+f964	fc 16  ..
+f966	fc 3b  .;
+f968	fc 59  .Y
+f96a	fc 62  .b
+f96c	fc 62  .b
+f96e	fc 62  .b
+f970	fc 83  ..
+f972	fc 8c  ..
+f974	00 00  ..
+f976	00 00  ..
+f978	fc 95  ..
+f97a	fc 95  ..
+f97c	00 00  ..
+f97e	fc a2  ..
+f980	00 00  ..
+f982	fc ae  ..
+f984	fc ae  ..
+f986	00 00  ..
+f988	00 00  ..
+f98a	00 00  ..
+f98c	fc ae  ..
+f98e	fc c9  ..
+f990	71 ef 11	aim ef11
 f993	c6 02		ldab #02
 f995	bd fc fe	jsr  fcfe
 f998	24 11		bcc  11 (F9AB)

@@ -196,7 +196,7 @@ void debug_update_cycle_counts()
   debug_ACT=ACT;
 #endif
 
-#if defined(SS_DEBUG_BROWSER_6301)
+#if defined(SS_DEBUG_BROWSER_6301) && defined(SS_ACIA)
   hd6301_copy_ram(Debug.HD6301RamBuffer); // in 6301.c
 #endif
 
