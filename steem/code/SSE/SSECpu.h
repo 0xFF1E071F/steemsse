@@ -892,8 +892,13 @@ NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x){
     ||super && abus>=MEM_FIRST_WRITEABLE))
 #endif
   {
+#if defined(SS_DEBUG_MONITOR_VALUE2)//3.6.1, also for long of course (argh!)
+    LPEEK(abus)=x;
+    DEBUG_CHECK_WRITE_L(abus);
+#else
     DEBUG_CHECK_WRITE_L(abus);
     LPEEK(abus)=x;
+#endif
   }
   else
     m68k_lpoke_abus2(x);
@@ -963,8 +968,13 @@ void m68k_lpoke(MEM_ADDRESS ad,LONG x){
   else if(abus<himem && (abus>=MEM_START_OF_USER_AREA
     ||super && abus>=MEM_FIRST_WRITEABLE))
   {
+#if defined(SS_DEBUG_MONITOR_VALUE2)//3.6.1, also for long of course (argh!)
+    LPEEK(abus)=x;
+    DEBUG_CHECK_WRITE_L(abus);
+#else
     DEBUG_CHECK_WRITE_L(abus);
     LPEEK(abus)=x;
+#endif
   }
   else
     m68k_lpoke_abus2(x);

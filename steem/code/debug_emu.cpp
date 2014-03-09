@@ -234,7 +234,9 @@ void debug_hit_mon(MEM_ADDRESS ad,int read)
     write (what value?)
     We only check words.
 */
-  int val=(int)(d2_dpeek(ad)); //d2_dpeek?
+  if(ad&1) ad--; //...
+  int val=(int)(DPEEK(ad));//(d2_dpeek(ad)); //d2_dpeek?
+  //TRACE("%x = %x\n",ad,val);
   if(Debug.MonitorValueSpecified && Debug.MonitorComparison)
   {
     if(
@@ -245,8 +247,7 @@ void debug_hit_mon(MEM_ADDRESS ad,int read)
     {
       return;
     }
-    else
-      TRACE("addr %X value %X %c %X\n",ad,val,Debug.MonitorComparison,Debug.MonitorValue);
+    //else TRACE("addr %X value %X %c %X\n",ad,val,Debug.MonitorComparison,Debug.MonitorValue);
   }
 #else
   if (mask==0xff00) bytes=1;
@@ -303,8 +304,7 @@ void debug_hit_io_mon_write(MEM_ADDRESS ad,int val)
     {
       return;
     }
-    else
-      TRACE("addr %X value %X %c %X\n",ad,val,Debug.MonitorComparison,Debug.MonitorValue);
+    //else TRACE("addr %X value %X %c %X\n",ad,val,Debug.MonitorComparison,Debug.MonitorValue);
   }
 #endif
 

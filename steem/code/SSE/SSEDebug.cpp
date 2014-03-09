@@ -33,7 +33,6 @@ extern "C" void (_stdcall *hd6301_trace)(char *fmt, ...);
 #endif
 #endif
 
-
 TDebug Debug; // singleton
 
 TDebug::TDebug() {
@@ -51,7 +50,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_MFP_TIMERS ] = 0;
   logsection_enabled[ LOGSECTION_INIT ] =0;
   logsection_enabled[ LOGSECTION_CRASH ] = 0;
-  logsection_enabled[ LOGSECTION_STEMDOS ] = 0;
+  logsection_enabled[ LOGSECTION_STEMDOS ] = 1;
   logsection_enabled[ LOGSECTION_IKBD ] = 0;
   logsection_enabled[ LOGSECTION_AGENDA ] = 0;
   logsection_enabled[ LOGSECTION_INTERRUPTS ] = 0;
@@ -250,6 +249,7 @@ void TDebug::TraceGeneralInfos(int when) {
     if(dma_sound_bass!=6||dma_sound_treble!=6)
       TRACE("Microwire %d dma bass %X treble %X\n",MICROWIRE_ON,dma_sound_bass,dma_sound_treble);
 #endif
+
   }
 }
 #endif

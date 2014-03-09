@@ -231,7 +231,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
 #ifdef DISABLE_STEMDOS
   int stemdos_Pexec_list_ptr=0;
-  MEM_ADDRESS stemdos_Pexec_list[76];
+  MEM_ADDRESS stemdos_Pexec_list[76];//SS must be MAX_STEMDOS_PEXEC_LIST
   ZeroMemory(stemdos_Pexec_list,sizeof(stemdos_Pexec_list));
   int stemdos_current_drive=0;
 #endif
