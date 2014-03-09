@@ -96,20 +96,27 @@ and all his silly mods are gone!
 
 #if defined(STEVEN_SEAGAL)
 
-//#define SS_BETA //title, OSD, plus some testing
+#define SS_BETA //title, OSD, plus some testing
 
 #ifdef SS_BETA 
 
-#define SSE_VERSION 360
-#define SSE_VERSION_TXT "3.6.0" 
-#define WINDOW_TITLE "Steem Beta 3.6.0"
-
+#define SSE_VERSION 361
+#define SSE_VERSION_TXT "3.6.1" 
+#ifdef DEBUG_BUILD
+#define WINDOW_TITLE "Steem Boiler 3.6.1B"
+#else
+#define WINDOW_TITLE "Steem Beta 3.6.1"
+#endif
 #else // next planned release
 
-#define SSE_VERSION 360
+#define SSE_VERSION 361
 // check snapshot Version (in LoadSave.h); rc\resource.rc
-#define SSE_VERSION_TXT "3.6.0" 
-#define WINDOW_TITLE "Steem SSE 3.6.0" //not 'Engine', too long
+#define SSE_VERSION_TXT "3.6.1" 
+#ifdef DEBUG_BUILD
+#define WINDOW_TITLE "Steem Boiler 3.6.1"
+#else
+#define WINDOW_TITLE "Steem SSE 3.6.1"
+#endif
 
 #endif
 
@@ -259,6 +266,7 @@ and all his silly mods are gone!
 
 #if defined(SS_CPU)
 
+#define SS_CPU_ALT_REG_NAMES  // convenience
 #define SS_CPU_DIV          // divide like Caesar
 #define SS_CPU_EXCEPTION    // crash like Windows 98
 #define SS_CPU_FETCH_IO     // fetch like a dog in outer space
@@ -454,6 +462,7 @@ and all his silly mods are gone!
 #define SS_DEBUG_MONITOR_VALUE // specify value (RW) that triggers stop
 #define SS_DEBUG_MONITOR_VALUE2 // write before check
 #define SS_DEBUG_MONITOR_VALUE3 // add checks for CLR
+#define SS_DEBUG_MONITOR_VALUE4 // 3.6.1 corrections (W on .L)
 #define SS_DEBUG_MOUSE_WHEEL // yeah!
 #define SS_DEBUG_MOVE_OTHER_SP
 #define SS_DEBUG_MUTE_DMA_SOUND
@@ -1269,7 +1278,20 @@ and all his silly mods are gone!
 #endif
 
 #define SS_TOS_FILETIME_FIX //from Petari//3.6.0
-#define SS_TOS_NO_INTERCEPT_ON_RTE1 // fix Megamax C on ReDMCSB//3.6.0
+#define SS_TOS_GEMDOS_NOINLINE//3.6.1
+#define SS_TOS_GEMDOS_PEXEC6 //3.6.1 ReDMCSB 100% in TOS104
+#define SS_TOS_GEMDOS_STRUCT//3.6.1
+#define SS_TOS_GEMDOS_VAR1 //various unimportant fixes 361
+
+//#define SS_TOS_NO_INTERCEPT_ON_RTE1 // fix (not) Megamax C on ReDMCSB//3.6.0
+#define SS_TOS_NO_INTERCEPT_ON_RTE2 //try to be less radical... ReDMCSB 50% in TOS102//361
+
+#ifdef SS_DEBUG
+#define SS_TOS_DONT_TRACE_3F//read file//3.6.1
+#define SS_TOS_DONT_TRACE_40//write file//3.6.1
+#define SS_TOS_DONT_TRACE_42//seek file//3.6.1
+#define SS_TOS_TRACE_CONOUT//3.6.1
+#endif
 
 // fixes by other people: //TODO, another big category?
 #define SSE_AVTANDIL_FIX_001 // Russin TOS number

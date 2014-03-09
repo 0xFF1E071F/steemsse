@@ -29,7 +29,7 @@ EXT void stemdos_init();
 EXT int stemdos_boot_drive INIT(2);
 EXT bool stemdos_intercept_datetime INIT(0);
 
-#ifdef IN_EMU
+//#ifdef IN_EMU
 
 EXT EasyStr mount_gemdos_path[26];
 
@@ -142,6 +142,16 @@ EXT short stemdos_save_sr;
 
 EXT int stemdos_current_drive;
 
+#if defined(SS_TOS_GEMDOS_NOINLINE)
+
+void stemdos_trap_1_Fdup();
+void stemdos_trap_1_Mfree(MEM_ADDRESS ad);
+void stemdos_trap_1_Fgetdta();
+void stemdos_trap_1_Fclose(int);
+void stemdos_trap_1_Pexec_basepage();
+
+#else
+
 NOT_DEBUG(inline) void stemdos_trap_1_Fdup();
 NOT_DEBUG(inline) void stemdos_trap_1_Mfree(MEM_ADDRESS ad);
 
@@ -152,6 +162,8 @@ void inline stemdos_trap_1_Dgetpath();
 NOT_DEBUG(inline) void stemdos_trap_1_Fgetdta();
 NOT_DEBUG(inline) void stemdos_trap_1_Fclose(int);
 NOT_DEBUG(inline) void stemdos_trap_1_Pexec_basepage();
+
+#endif
 
 void stemdos_finished();
 void stemdos_final_rte(); //clear stack from original GEMDOS call
@@ -164,11 +176,24 @@ void stemdos_save_path_buffer(MEM_ADDRESS ad);
 void stemdos_restore_path_buffer();
 */
 char* StrUpperNoSpecial(char*);
+
+#if !defined(SS_TOS_GEMDOS_VAR1) //function does nothing
 void STStringToPC(char*),PCStringToST(char*);
+#endif
+//#endif//#ifdef IN_EMU
+
+
+#ifdef SS_TOS_GEMDOS_STRUCT
+
+struct TGemdos {
+  BYTE LastPTermedProcess; //to go around bug...
+};
+
+extern TGemdos Gemdos;
 
 #endif
 
-#endif
+#endif//#ifndef DISABLE_STEMDOS
 
 #undef EXT
 #undef INIT

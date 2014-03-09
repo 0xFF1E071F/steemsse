@@ -3996,7 +3996,8 @@ File 8 not open
     Why intercept at the RTE?
     Disabling this is radical so: TESTING
     If it breaks anything we could try to disable only gemdos 
-    intercept on RTE.
+    intercept on RTE. // v361: done
+Also see SS_TOS_GEMDOS_PEXEC6 for ReDMCSB
 */
   bool dont_intercept_os=false;
 #endif
@@ -4030,6 +4031,7 @@ File 8 not open
 #endif
 #ifndef DISABLE_STEMDOS
           case ON_RTE_STEMDOS:
+            //ASSERT( stemdos_rte_action!=STEMDOS_RTE_MALLOC );
             stemdos_rte();
 #if !defined(SS_TOS_NO_INTERCEPT_ON_RTE1)
             dont_intercept_os=true;
@@ -4073,6 +4075,24 @@ File 8 not open
     ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
 //    check_for_interrupts_pending();// was commented out
 #if !defined(SS_TOS_NO_INTERCEPT_ON_RTE1)
+#if defined(SS_TOS_NO_INTERCEPT_ON_RTE2)
+/*  This is less heavy-handed than the 1st mod, but we need a new
+    variable.
+    It's better but not enough for ReDMCSB, that will only complete 50%
+    with TOS1.02.
+*/
+    if(stemdos_command==0x4c)// && stemdos_rte_action!=STEMDOS_RTE_MFREE2)
+    {
+      //if(stemdos_Pexec_list_ptr==debug1)
+      if(stemdos_Pexec_list_ptr==Gemdos.LastPTermedProcess)
+      {
+       // TRACE("refuse intercept OS for $%X\n",stemdos_Pexec_list_ptr);
+        dont_intercept_os=true;
+      }
+      else
+        Gemdos.LastPTermedProcess=stemdos_Pexec_list_ptr;
+    }
+#endif
     if (!dont_intercept_os) intercept_os();
 #endif
     CHECK_STOP_ON_USER_CHANGE;

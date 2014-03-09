@@ -152,6 +152,10 @@ FARPROC WINAPI MyLoadFailureHook(dliNotification dliNotify, DelayLoadInfo * pdli
 #endif
 
 
+#define TIMING_INFO FRAME,scan_y,LINECYCLES
+
+
+
 ///////////
 // VIDEO //
 ///////////
