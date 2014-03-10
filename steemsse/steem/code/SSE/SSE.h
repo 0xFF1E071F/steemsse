@@ -281,6 +281,12 @@ and all his silly mods are gone!
 #define SS_CPU_TAS          // 4 cycles fewer if memory
 #define SS_CPU_UNSTOP//v3.6.0
 
+
+#if defined(SS_CPU_DIV)
+#define SS_CPU_DIVS_OVERFLOW//v3.6.1
+#define SS_CPU_DIVU_OVERFLOW//v3.6.1
+#endif
+
 #if defined(SS_CPU_EXCEPTION)
 
 #define SS_CPU_ASSERT_ILLEGAL // assert before trying to execute (not general)
@@ -302,7 +308,7 @@ and all his silly mods are gone!
 #define SS_CPU_PRE_DEC // no "pre" decrement if exception!
 #define SS_CPU_SET_DEST_TO_0 // for Aladin
 
-// PC as pushed in case of bus error, based on microcodes, cost 4KB:
+// PC as pushed in case of bus error, based on microcodes
 #define SS_CPU_TRUE_PC 
 #define SS_CPU_TRUE_PC_AND_NO_HACKS // option 'Hacks' or not: true PC
 
