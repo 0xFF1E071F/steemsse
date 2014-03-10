@@ -1766,6 +1766,16 @@ void                              m68k_divu(){
     q=(unsigned long)((unsigned long)dividend)/(unsigned long)((unsigned short)divisor);
     if(q&0xffff0000){
       SR_SET(SR_V);
+#if defined(SS_CPU_DIVU_OVERFLOW)
+/*  
+N — Set if the quotient is negative; cleared otherwise; undefined if overflow or divide
+by zero occurs.
+    Setting it fixes Sadeness and Spectrum Analyzer by Axxept.
+    The value of SR is used by the trace protection decoder of those demos.
+    But Z must be cleared.
+*/
+      SR_SET(SR_N);
+#endif
     }else{
       SR_CLEAR(SR_Z+SR_N+SR_C+SR_V);
       if(q&MSB_W)SR_SET(SR_N);
@@ -1805,6 +1815,9 @@ void                              m68k_divs(){
     q=(signed long)((signed long)dividend)/(signed long)((signed short)divisor);
     if(q<-32768 || q>32767){
       SR_SET(SR_V);
+#if defined(SS_CPU_DIVS_OVERFLOW)
+      SR_SET(SR_N); // maybe, see SS_CPU_DIVU_OVERFLOW
+#endif
     }else{
       SR_CLEAR(SR_Z+SR_N+SR_C+SR_V);
       if(q&MSB_W)SR_SET(SR_N);

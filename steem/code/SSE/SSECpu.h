@@ -551,6 +551,7 @@ inline void TM68000::PerformRte() {
     r[15]+=2;   
 #endif  
   sr&=SR_VALID_BITMASK;               
+
   DETECT_CHANGE_TO_USER_MODE;         
   DETECT_TRACE_BIT;       
 #if defined(SS_MFP_IRQ_DELAY2)
@@ -747,10 +748,11 @@ already fetched. One word will be in IRD and another one in IRC.
   }
 #endif
 #if defined(SS_DEBUG)
- NextIrFetched=false; // in FETCH_TIMING or...// check_interrut
+  NextIrFetched=false; // in FETCH_TIMING or...// check_interrut
 #endif//debug
 
   HANDLE_IOACCESS( m68k_trace(); ); // keep as macro, wouldn't be inlined
+
   DEBUG_ONLY( debug_first_instruction=0 );
 }
 #define m68k_PROCESS M68000.Process();

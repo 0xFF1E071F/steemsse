@@ -988,7 +988,7 @@ LONG m68k_read_dest_l(){
   DEBUG_ONLY( debug_first_instruction=0 );
 #endif
 
-#if !defined(SS_CPU_TRACE) // we finally wrote our buggy version
+#if !defined(SS_CPU_TRACE) // we finally wrote our buggy version //then removed...
 
 #define LOGSECTION LOGSECTION_TRACE
 
@@ -1065,6 +1065,7 @@ extern "C" ASMCALL void m68k_trace() //execute instruction with trace bit set
 #if defined(SS_DEBUG_SHOW_INTERRUPT)
     Debug.RecordInterrupt("TRACE");
 #endif
+//    TRACE_LOG("SR=%X\n",sr);
     m68k_interrupt(LPEEK(BOMBS_TRACE_EXCEPTION*4));
   }
   ioaccess|=store_ioaccess;
