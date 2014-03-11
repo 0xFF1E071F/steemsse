@@ -54,6 +54,10 @@ void mem_browser::new_window(MEM_ADDRESS address,type_disp_type new_disp_type)
                   MB_ICONEXCLAMATION | MB_SETFOREGROUND | MB_TASKMODAL | MB_TOPMOST);
   }else{
     Str Title="Memory";
+#if defined(SS_DEBUG_BROWSER_INSTRUCTIONS)
+    if(!new_disp_type)
+      Title="Instructions"; //at last!
+#endif
     if (IS_IOLIST_PSEUDO_ADDRESS(address)){
       switch (address & 0xfffff000){
         case IOLIST_PSEUDO_AD_PSG:
