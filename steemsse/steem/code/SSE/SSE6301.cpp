@@ -191,6 +191,12 @@ void THD6301::InterpretCommand(BYTE ByteIn) {
 
 void THD6301::ReportCommand() {
   ASSERT( CurrentCommand!=-1 );
+
+#if defined(SS_OSD_CONTROL)
+  if(OSD_MASK1 & OSD_CONTROL_IKBD)
+    TRACE_OSD("IKBD $%02X ",CurrentCommand); 
+#endif
+
   // give command code
   TRACE_LOG("[IKBDi $%02X ",CurrentCommand);//i for interpreter
   // spell out command (as in Atari manual)
@@ -207,10 +213,9 @@ void THD6301::ReportCommand() {
     case 0x0E: TRACE_LOG("LOAD MOUSE POSITION"); break;
     case 0x19: TRACE_LOG("SET JOYSTICK KEYCODE MODE"); break;
     case 0x1B: TRACE_LOG("TIME-OF-DAY CLOCK SET"); break;
-    case 0x20: 
-      TRACE_LOG("MEMORY LOAD"); 
-      TRACE_OSD("IKBD-PRG");
-      break;
+    case 0x20: TRACE_LOG("MEMORY LOAD"); break;
+//      TRACE_OSD("IKBD-PRG");//MFD
+//      break;
     case 0x08: TRACE_LOG("SET RELATIVE MOUSE POSITION REPORTING"); break;
     case 0x0D: TRACE_LOG("INTERROGATE MOUSE POSITION"); break;
     case 0x0F: TRACE_LOG("SET Y=0 AT BOTTOM"); break;

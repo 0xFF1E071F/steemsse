@@ -184,9 +184,11 @@ void stemdos_rte()
     // called by Stemdos itself when a program calls PEXEC mode
     // 0 or 3 for a HD file
     log("STEMDOS: Created basepage for new program");
+/*
     ASSERT( DPEEK(SP)==0x4B );
     ASSERT( DPEEK(SP+2)==5 );
     ASSERT( !LPEEK(SP+4) );
+*/
     areg[7]+=16; //correct stack, 3 longs and 2 words
     stemdos_Pexec(); //SS only place of calling
   }else if (stemdos_rte_action==STEMDOS_RTE_MFREE){
@@ -766,7 +768,7 @@ void stemdos_rmdir()
   }else{
     r[0]=0; //succeed!
   }
-  TRACE_LOG("RM dir %s : %d\n",PC_filename.Text,D0);
+//  TRACE_LOG("RM dir %s : %d\n",PC_filename.Text,D0);
 #if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
@@ -920,7 +922,7 @@ void stemdos_Pexec() //called from stemdos_rte, nothing done after this fn calle
   BYTE b;
   if (r[0]<0){
     log(EasyStr("STEMDOS: Exec returned error ")+r[0]);
-    TRACE_LOG("PExec error %d\n",D0);
+  //  TRACE_LOG("PExec error %d\n",D0);
     fclose(stemdos_Pexec_file);
     stemdos_Pexec_file=NULL;
     stemdos_finished();
@@ -928,7 +930,7 @@ void stemdos_Pexec() //called from stemdos_rte, nothing done after this fn calle
   }else{
     if (STfile_read_word(stemdos_Pexec_file)!=0x601a){ //not executable
       r[0]=-66;  //not executable
-      TRACE_LOG("PExec error %d\n",D0);
+  //    TRACE_LOG("PExec error %d\n",D0);
       log("STEMDOS: Exec didn't find magic number in file");
       fclose(stemdos_Pexec_file);
       stemdos_Pexec_file=NULL;
@@ -1370,7 +1372,7 @@ void stemdos_intercept_trap_1()
         }
 #ifdef SS_DEBUG
         else {
-          TRACE_LOG("File %d not open\n",h);
+          ///TRACE_LOG("File %d not open\n",h); //MFD
           //     ASSERT(!stemdos_any_files_open());//!!
         }
 #endif

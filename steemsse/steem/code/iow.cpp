@@ -120,6 +120,14 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 #if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_EVENTS)
           VideoEvents.Add(scan_y,LINECYCLES,'J',rel_cycle+6); 
 #endif
+#if defined(SS_DEBUG_FRAME_REPORT_ACIA)
+      FrameEvents.Add(scan_y,LINECYCLES,'A',rel_cycle+6);
+#endif
+#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+      if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_ACIA)
+        FrameEvents.Add(scan_y,LINECYCLES,'A',rel_cycle+6);
+#endif
+
           BUS_JAM_TIME(rel_cycle+6); //SS just 6 (TODO)
         }
       }
@@ -649,6 +657,13 @@ system exclusive start and end messages (F0 and F7).
     case 0xff8a00:      //----------------------------------- Blitter
 #if defined(SS_SHIFTER_EVENTS_BLITTER)
       VideoEvents.Add(scan_y,LINECYCLES,'B',((addr-0xff8a00)<<8)|io_src_b);
+#endif
+#if defined(SS_DEBUG_FRAME_REPORT_BLITTER)
+      FrameEvents.Add(scan_y,LINECYCLES,'B',((addr-0xff8a00)<<8)|io_src_b);
+#endif
+#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+      if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_BLITTER)
+        FrameEvents.Add(scan_y,LINECYCLES,'B',((addr-0xff8a00)<<8)|io_src_b);
 #endif
       Blitter_IO_WriteB(addr,io_src_b);
       break;
@@ -1863,7 +1878,7 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
   TRACE_LOG("PC %X write word %X to %X\n",pc-2,io_src_w,addr);
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_MMU_WAKE_UP_IOW_HACK)
+#if defined(STEVEN_SEAGAL) && defined(SS_MMU_WAKE_UP_IOW_HACK)//no
   int CyclesIn=LINECYCLES;
   if(MMU.OnMmuCycles(CyclesIn))
       cpu_cycles-=2; // - = + !!!!
@@ -1880,6 +1895,21 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
       VideoEvents.Add(scan_y,LINECYCLES,'Q',(n<<12)|io_src_w); 
     else
       VideoEvents.Add(scan_y,LINECYCLES,'P',(n<<12)|io_src_w); 
+#endif
+#if defined(SS_DEBUG_FRAME_REPORT_PAL)
+    if(Blit.HasBus)
+      FrameEvents.Add(scan_y,LINECYCLES,'Q',(n<<12)|io_src_w); 
+    else
+      FrameEvents.Add(scan_y,LINECYCLES,'P',(n<<12)|io_src_w); 
+#endif
+#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+  if(FRAME_REPORT_MASK1&FRAME_REPORT_MASK_PAL) 
+  {
+    if(Blit.HasBus)
+      FrameEvents.Add(scan_y,LINECYCLES,'Q',(n<<12)|io_src_w); 
+    else
+      FrameEvents.Add(scan_y,LINECYCLES,'P',(n<<12)|io_src_w); 
+  }
 #endif
     Shifter.SetPal(n,io_src_w); 
     log_to(LOGSECTION_VIDEO,Str("VIDEO: ")+HEXSl(old_pc,6)+" - Palette change at scan_y="+scan_y+" cycles so far="+(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl));

@@ -332,6 +332,10 @@ inline void TM68000::FetchWord(WORD &dest_word) {
       TRACE_LOG("Prefetched IRC:%X current:%X\n",IRC,*lpfetch);
 //      TRACE_OSD("PREFETCH"); // ST-CNX
 #endif
+#if defined(SS_OSD_CONTROL)
+  if(OSD_MASK1 & OSD_CONTROL_CPUPREFETCH) 
+    TRACE_OSD("PREFETCH");
+#endif
 
 #if defined(SS_BETA) && defined(SS_CPU_NO_PREFETCH)
       IRC=*lpfetch; // enabling this cancels prefetch (don't)

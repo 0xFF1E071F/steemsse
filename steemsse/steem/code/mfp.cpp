@@ -619,6 +619,11 @@ void ASMCALL check_for_interrupts_pending()
           if(!TRACE_ENABLED)
             TRACE_OSD("HBI");
 #endif
+#if defined(SS_OSD_CONTROL)
+          if(OSD_MASK1 & OSD_CONTROL_HBI) 
+            TRACE_OSD("HBI");
+#endif
+
           HBL_INTERRUPT;
         }
 #if defined(STEVEN_SEAGAL) && defined(SS_INT_HBL) // can happen quite a lot

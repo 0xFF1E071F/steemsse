@@ -196,6 +196,41 @@ void iolist_init()
   iolist_add_entry(0xfffa2d,"MFP TSR (23)",1,"empty|underrun|auto turnaround|end|break|H|L|enable");
   iolist_add_entry(0xfffa2f,"MFP UDR (24)",1);
 
+#if defined(SS_DEBUG_FAKE_IO)
+/*  We may name those variables how we wish. 
+    Each is 1 word but we use only higher byte for readability and
+    we must complete with . fields.
+    With this system, many controls are easy to add.
+    Ideas:
+    -OSD control 60hz, HBI, shifter tricks etc
+*/
+
+#if defined(SS_DEBUG_FRAME_REPORT)
+  iolist_add_entry(FAKE_IO_START,"Frame report1",2,
+    "Sync|Mode|Pal|SDP R|SDP W|SDP lines|Hscroll|Base|.|.|.|.|.|.|.|.");
+  iolist_add_entry(FAKE_IO_START+2,"Frame report2",2,
+    "Acia|Blitter|Tricks|Bytes|.|.|.|.|.|.|.|.|.|.|.|.");
+#endif
+
+#if defined(SS_OSD_CONTROL)
+  iolist_add_entry(FAKE_IO_START+4,"OSD1",2,
+    "Trace|Prefetch|HBI|IKBD|60hz|.|.|.|.|.|.|.|.|.|.|.");
+  iolist_add_entry(FAKE_IO_START+6,"OSD2 Shifter",2,
+    "Tricks|Load|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
+  iolist_add_entry(FAKE_IO_START+8,"OSD3 STE",2,
+    "Dma|Blt|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
+#endif
+
+#if defined(SS_DEBUG_TRACE_CONTROL)
+  iolist_add_entry(FAKE_IO_START+10,"TRACE1 Shifter",2,
+    "Vert|.|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
+  iolist_add_entry(FAKE_IO_START+12,"TRACE2",2,
+    "FdcStr|.|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
+#endif
+
+
+#endif
+
   iolist_add_entry(0xfffc00,"Keyboard ACIA Control",1,"IRQ|Parity Err|Rx Overrun|Framing Err|CTS|DCD|Tx Data Empty|Rx Data Full");
   iolist_add_entry(0xfffc02,"Keyboard ACIA Data",1);
   iolist_add_entry(0xfffc04,"MIDI ACIA Control",1,"IRQ|Parity Err|Rx Overrun|Framing Err|CTS|DCD|Tx Data Empty|Rx Data Full");

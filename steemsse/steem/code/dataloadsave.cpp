@@ -820,6 +820,15 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     CheckMenuItem(sse_menu,1525,MF_BYCOMMAND|
       ((Debug.M68030StackFrame)?MF_CHECKED:MF_UNCHECKED));
 #endif
+#if defined(SS_DEBUG_FAKE_IO)
+    for(int i=0;i<FAKE_IO_LENGTH/2;i++)
+    {
+      char buffer[15];
+      sprintf(buffer,"ControlMask%d",i);
+      Debug.ControlMask[i]=(WORD)pCSF->GetInt("Debug",buffer,Debug.ControlMask[i]);
+    }
+#endif
+
 #endif//debug
 
 #endif // SS
@@ -1218,6 +1227,15 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SS_DEBUG_68030_STACK_FRAME)
   pCSF->SetStr("Debug","M68030StackFrame",EasyStr(Debug.M68030StackFrame)); 
 #endif
+#if defined(SS_DEBUG_FAKE_IO)
+    for(int i=0;i<FAKE_IO_LENGTH/2;i++)
+    {
+      char buffer[15];
+      sprintf(buffer,"ControlMask%d",i);
+      pCSF->SetStr("Debug",buffer,EasyStr(Debug.ControlMask[i]));
+    }
+#endif
+
 #endif//debug
 
 

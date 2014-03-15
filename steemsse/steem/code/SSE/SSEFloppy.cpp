@@ -1493,8 +1493,13 @@ BYTE TWD1772::IORead(BYTE Line) {
 #endif//debug
 
 #if !defined(SS_DEBUG_TRACE_IDE)
-      TRACE_LOG("FDC HBL %d STR %X\n",hbl_count,ior_byte);
+//      TRACE_LOG("FDC HBL %d STR %X\n",hbl_count,ior_byte);
 #endif
+#if defined(SS_DEBUG_TRACE_CONTROL)
+  if(TRACE_MASK2 & TRACE_CONTROL_FDCSTR)
+    TRACE_LOG("FDC STR %X\n",ior_byte);
+#endif
+
       break;
     case 1:
       ior_byte=TR;

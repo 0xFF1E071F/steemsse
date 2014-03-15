@@ -58,6 +58,10 @@ void mem_browser::new_window(MEM_ADDRESS address,type_disp_type new_disp_type)
     if(!new_disp_type)
       Title="Instructions"; //at last!
 #endif
+#if defined(SS_DEBUG_FAKE_IO)
+    if(ad==FAKE_IO_START)
+      Title=STR_FAKE_IO_CONTROL;
+#endif
     if (IS_IOLIST_PSEUDO_ADDRESS(address)){
       switch (address & 0xfffff000){
         case IOLIST_PSEUDO_AD_PSG:

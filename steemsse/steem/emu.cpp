@@ -248,7 +248,15 @@ EXT char m68k_src_b;
 #include "SSE/SSECpu.h"
 //#include "SSE/SSEInterrupt.h"
 #include "SSE/SSESTF.h"
+
+#if defined(SS_SHIFTER_EVENTS)
 #include "SSE/SSEShifterEvents.h"
+#endif
+
+#if defined(SS_DEBUG_FRAME_REPORT) //temp, same place
+#include "SSE/SSEFrameReport.h"
+#endif
+
 #include "SSE/SSEShifter.h"
 #include "SSE/SSEInterrupt.h"
 #include "SSE/SSEVideo.h"

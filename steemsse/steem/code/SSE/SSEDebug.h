@@ -123,10 +123,20 @@ struct TDebug {
   BYTE HD6301RamBuffer[256+8];
 #endif
 
+
 #endif//c++
 
   BYTE logsection_enabled[100]; // we want a double anyway //bool
   int LogSection;
+
+#if defined(SS_DEBUG_FAKE_IO)
+/*  Hack. A free zone in IO is mapped to an array of masks to control 
+    a lot of debug options using the Boiler's built-in features.
+    Memory browsers display words so we use words even if bytes are
+    handier (less GUI clutter).
+*/
+  WORD ControlMask[FAKE_IO_LENGTH];
+#endif
 
 };
 
@@ -192,6 +202,48 @@ enum logsection_enum_tag {
  NUM_LOGSECTIONS,
  };
 #endif
+
+
+#if defined(SS_OSD_CONTROL)
+
+#define OSD_MASK1 (Debug.ControlMask[2])
+#define OSD_CONTROL_CPUTRACE           (1<<15)
+#define OSD_CONTROL_CPUPREFETCH                (1<<14)
+#define OSD_CONTROL_HBI                   (1<<13)
+#define OSD_CONTROL_IKBD                  (1<<12)
+#define OSD_CONTROL_60HZ              (1<<11)
+//#define OSD_CONTROL         (1<<10)
+//#define OSD_CONTROL                (1<<9)
+//#define OSD_CONTROL                (1<<8)
+
+
+#define OSD_MASK2 (Debug.ControlMask[3])
+#define OSD_CONTROL_SHIFTERTRICKS           (1<<15)
+#define OSD_CONTROL_PRELOAD (1<<14)
+
+#define OSD_MASK3 (Debug.ControlMask[4])
+#define OSD_CONTROL_DMASND                  (1<<15)
+#define OSD_CONTROL_STEBLT                  (1<<14)
+
+#endif//osdcontrol
+
+#if defined(SS_DEBUG_TRACE_CONTROL)
+/*  We use this to better control trace output, log section is still
+    used.
+    For example, log Video for shifter events, and trace control Vert
+    for vertical overscan.
+*/
+
+#define TRACE_MASK1 (Debug.ControlMask[5])
+#define TRACE_CONTROL_VERTOVSC (1<<15)
+
+
+
+#define TRACE_MASK2 (Debug.ControlMask[6])
+#define TRACE_CONTROL_FDCSTR (1<<15)
+
+#endif
+
 
 // debug macros
 

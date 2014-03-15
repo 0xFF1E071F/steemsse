@@ -162,6 +162,13 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
 #if defined(SS_SHIFTER_EVENTS)
         VideoEvents.Add(scan_y,LINECYCLES,'j',wait_states);
 #endif
+#if defined(SS_DEBUG_FRAME_REPORT_ACIA)
+      FrameEvents.Add(scan_y,LINECYCLES,'a',wait_states);
+#endif
+#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+      if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_ACIA)
+        FrameEvents.Add(scan_y,LINECYCLES,'a',wait_states);
+#endif
         BUS_JAM_TIME(wait_states); // =INSTRUCTION_TIME_ROUND
       }
 
@@ -506,6 +513,13 @@ when it does).
       ior_byte=Blitter_IO_ReadB(addr); // STF crash there
 #if defined(SS_SHIFTER_EVENTS_BLITTER)
       VideoEvents.Add(scan_y,LINECYCLES,'b',((addr-0xff8a00)<<8)|ior_byte);
+#endif
+#if defined(SS_DEBUG_FRAME_REPORT_BLITTER)
+      FrameEvents.Add(scan_y,LINECYCLES,'b',((addr-0xff8a00)<<8)|ior_byte);
+#endif
+#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+      if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_BLITTER)
+        FrameEvents.Add(scan_y,LINECYCLES,'b',((addr-0xff8a00)<<8)|ior_byte);
 #endif
       break;
 
