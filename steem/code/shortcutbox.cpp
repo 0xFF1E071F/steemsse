@@ -69,6 +69,9 @@ bool TShortcutBox::Picking=0;
 #if defined(SS_SHIFTER_EVENTS)
 #include "SSE/SSEShifterEvents.h"
 #endif
+#if defined(SS_DEBUG_FRAME_REPORT) //temp, same place
+#include "SSE/SSEFrameReport.h"
+#endif
 #endif
 
 #define CUT_PRESSKEY 0
@@ -650,10 +653,14 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       HardDiskMan.update_mount();
       break;
 #if defined(SS_SHIFTER_EVENTS) && !defined(SS_SHIFTER_EVENTS_ON_STOP)
-      // Trigger a report of all video events for the current VBL
-      // so as to investigate shifter tricks (txt file)
-    case CUT_REPORTSHIFTERTRICKS:	
+      // Trigger a report of all recorded events for the current VBL (frame)
+    case CUT_REPORTSHIFTERTRICKS:
+#if defined(SS_SHIFTER_EVENTS)
       VideoEvents.TriggerReport=2;
+#endif
+#if defined(SS_DEBUG_FRAME_REPORT) // normally this one (3.6.1)
+      FrameEvents.TriggerReport=2;
+#endif
       break;
 #endif
 #if defined(SS_VID_RECORD_AVI)

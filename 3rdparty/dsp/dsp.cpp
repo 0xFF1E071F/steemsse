@@ -148,8 +148,7 @@ double TIirFilter::FilterAudio(double Input,double Frequency,double Q,
          Output = b0*Input + b1*i1 + b0*i2 - a1*o1 - a2*o2;
          break;
       case 5:                                                  /* low shelving */
-        Output = b0*Input + b1*i1 + b2*i2 - a1*o1 - a2*o2;
-      case 6:
+      case 6://high=same
         Output = b0*Input + b1*i1 + b2*i2 - a1*o1 - a2*o2;
          break;
       case 7:                                                  /* peaking */
@@ -167,8 +166,10 @@ double TIirLowPass::FilterAudio(double Input,double Frequency,double Gain) {
 
 
 double TIirHighShelf::FilterAudio(double Input,double Frequency,double Gain) {
-    double rv=TIirFilter::FilterAudio(Input,Frequency,0,Gain,6);
-    return rv;
+//    double rv=TIirFilter::FilterAudio(Input,Frequency,50,Gain,6);
+  //  double rv=TIirFilter::FilterAudio(Input,Frequency,3,Gain>0?Gain:0,4);
+   // return rv;
+return Input;//...
 }
 
 

@@ -402,8 +402,10 @@ and all his silly mods are gone!
 #define SS_CPU_YACHT_TAS // confirming what Steem authors suspected
 #endif
 
+#if !defined(SS_OSD_CONTROL)
 #define SS_CPU_PREFETCH_TRACE 
-#define SS_CPU_TRACE_DETECT 
+#define SS_CPU_TRACE_DETECT //was in prefetch define zone BTW
+#endif
 
 #endif//prefetch
 
@@ -443,6 +445,36 @@ and all his silly mods are gone!
 
 
 // boiler + IDE
+
+#define SS_DEBUG_FRAME_REPORT // instead of just shifter events (SS_SHIFTER_EVENTS)
+
+#if defined(SS_DEBUG_FRAME_REPORT)
+
+#define SS_DEBUG_FRAME_REPORT_ON_STOP // each time we stop emulation
+
+#if defined(DEBUG_BUILD)
+#define SS_DEBUG_FRAME_REPORT_MASK // for interactive control in boiler//3.6.1
+#endif
+
+#if !defined(SS_DEBUG_FRAME_REPORT_MASK) // control by define
+#define SS_DEBUG_FRAME_REPORT_ACIA
+#define SS_DEBUG_FRAME_REPORT_BLITTER
+#define SS_DEBUG_FRAME_REPORT_PAL
+#define SS_DEBUG_FRAME_REPORT_HSCROLL // & linewid
+#define SS_DEBUG_FRAME_REPORT_SDP_LINES
+#define SS_DEBUG_FRAME_REPORT_SDP_READ
+#define SS_DEBUG_FRAME_REPORT_SDP_WRITE
+#define SS_DEBUG_FRAME_REPORT_SHIFTER_TRICKS
+#define SS_DEBUG_FRAME_REPORT_SHIFTER_TRICKS_BYTES
+#define SS_DEBUG_FRAME_REPORT_SHIFTMODE
+#define SS_DEBUG_FRAME_REPORT_SYNCMODE
+#define SS_DEBUG_FRAME_REPORT_VIDEOBASE
+
+///#define SS_DEBUG_FRAME_REPORT_VERTICAL_OVERSCAN//no, sthg else!
+#endif
+
+#endif//frame report
+
 #define SS_DEBUG_REPORT_SCAN_Y_ON_CLICK
 #define SS_DEBUG_REPORT_SDP // tracking sdp at start of each scanline
 #define SS_DEBUG_REPORT_SDP_ON_CLICK // yeah!
@@ -455,7 +487,7 @@ and all his silly mods are gone!
 #define SS_DEBUG_BROWSER_ACIA
 #define SS_DEBUG_BROWSER_BLITTER
 #define SS_DEBUG_BROWSER_DMASOUND
-#define SS_DEBUG_BROWSER_INSTRUCTIONS
+#define SS_DEBUG_BROWSER_INSTRUCTIONS //window name
 #define SS_DEBUG_BROWSER_PSEUDO_IO_SCROLL // for the bigger 6301 browser
 #define SS_DEBUG_BROWSER_SHIFTER
 #define SS_DEBUG_BROWSER_VECTORS
@@ -463,6 +495,10 @@ and all his silly mods are gone!
 //#define SS_DEBUG_CPU_LOG_NO_STOP // never stop
 #define SS_DEBUG_CPU_TRACE_NO_STOP // depends on 'suspend logging'
 #define SS_DEBUG_DUMP_6301_RAM
+#define SS_DEBUG_FAKE_IO //3.6.1 to control some debug options
+#if defined(SS_DEBUG_FAKE_IO)
+#define SS_DEBUG_TRACE_CONTROL //3.6.1 beyond log options
+#endif
 #define SS_DEBUG_MOD_REGS // big letters, no =
 #define SS_DEBUG_MONITOR_IO_FIX1 // ? word check, not 2x byte on word access
 #define SS_DEBUG_MONITOR_RANGE // will stop for every address between 2 stops
@@ -497,11 +533,12 @@ and all his silly mods are gone!
 
 #define SS_DEBUG_TRACE_IO
 
-#define SS_SHIFTER_EVENTS // record all shifter events of the frame
+
+//#define SS_SHIFTER_EVENTS // record all shifter events of the frame
 #if !defined(SS_UNIX)
 #define SS_SHIFTER_REPORT_VBL_TRICKS // a line each VBL
 #endif
-#define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
+///#define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
 #define SS_DEBUG_START_STOP_INFO
 #define SS_IPF_TRACE_SECTORS // show sector info (IPF)
 
@@ -597,8 +634,8 @@ and all his silly mods are gone!
 #define SS_DRIVE_READ_TRACK_11
 #define SS_DRIVE_READ_TRACK_11B //Gap 4: 1
 #define SS_DRIVE_READ_TRACK_11C //Gap 5
-#define SS_DRIVE_READ_TRACK_TIMING
-//#define SS_DRIVE_READ_TRACK_TIMING2 //3.5.3, was a bug 
+//#define SS_DRIVE_READ_TRACK_TIMING //3.5.1, was a bug //MFD
+//#define SS_DRIVE_READ_TRACK_TIMING2 //3.5.3, was a bug //MFD
 #define SS_DRIVE_RW_SECTOR_TIMING // start of sector
 #define SS_DRIVE_RW_SECTOR_TIMING2 // end of sector (hack)
 #define SS_DRIVE_SINGLE_SIDE //3.6.0
@@ -794,7 +831,11 @@ and all his silly mods are gone!
 
 
 #if defined(SS_INT_HBL)
+
+#if !defined(SS_DEBUG_TRACE_CONTROL)
 #define SS_INT_OSD_REPORT_HBI
+#endif
+
 #define SS_INT_HBL_IACK_FIX // from Hatari - BBC52
 #ifdef SS_BETA
 #define SS_INT_HBL_ONE_FUNCTION // remove event_hbl(), seems OK but...
@@ -810,6 +851,7 @@ and all his silly mods are gone!
 #define SS_INT_VBL_INLINE 
 #ifdef SS_BETA
 #define SS_INT_VBI_START // generally working now but not 100%
+// Auto168; Panic
 #endif
 #endif
 
@@ -917,8 +959,13 @@ and all his silly mods are gone!
 
 #ifdef SS_DEBUG
 #define SS_OSD_DEBUG_MESSAGE // pretty handy
+
+#if defined(SS_DEBUG_FAKE_IO)
+#define SS_OSD_CONTROL //3.6.1
+#else
 #define SS_OSD_DEBUG_MESSAGE_FREQ // tell when 60hz (?)
-#endif
+#endif//fakeio
+#endif//debug
 #define SS_OSD_DRIVE_INFO // cool! (v3.5.1)
 #define SS_OSD_DRIVE_INFO2 // no SR when fast
 //#define SS_OSD_DRIVE_INFO_OSD_PAGE
@@ -1059,7 +1106,9 @@ and all his silly mods are gone!
 
 #if defined(SS_DEBUG) 
 //#define SS_SHIFTER_DRAW_DBG  // totally bypass CheckSideOverscan() & Render()
-#define SS_SHIFTER_EVENTS // recording all shifter events in a frame
+
+
+//#define SS_SHIFTER_EVENTS // recording all shifter events in a frame
 #if defined(SS_SHIFTER_EVENTS)
 #define SS_SHIFTER_EVENTS_BLITTER
 #define SS_SHIFTER_EVENTS_PAL // also for palette
@@ -1068,12 +1117,18 @@ and all his silly mods are gone!
 #define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
 #define SS_SHIFTER_EVENTS_TRICKS // "bordermask"
 #endif//shifter_tricks
+
+
 //#define SS_SHIFTER_IOR_TRACE // specific, not "log"
 //#define SS_SHIFTER_IOW_TRACE // specific, not "log"
 #if !defined(SS_DEBUG_TRACE_IDE)
 #define SS_SHIFTER_REPORT_VBL_TRICKS // a line each VBL
 #endif
+
+#if !defined(SS_DEBUG_TRACE_CONTROL)
+//#define SS_DEBUG_FRAME_REPORT_VERTICAL_OVERSCAN
 //#define SS_SHIFTER_VERTICAL_OVERSCAN_TRACE
+#endif
 
 //#define SS_SHIFTER_STEEM_ORIGINAL // only for debugging/separate blocks
 
@@ -1112,11 +1167,11 @@ and all his silly mods are gone!
 #define SS_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
 
 #define SS_SOUND_CHANGE_TIME_METHOD_DELAY //detail
-//#define SS_SOUND_DETECT_SAMPLE_RATE//?
+//#define SS_SOUND_DETECT_SAMPLE_RATE//?//MFD
 #define SS_SOUND_FILTER_STF // a very simple filter
 
 #define SS_SOUND_INLINE // macro->inline, easier for my tests, but hard to do
-//#define SS_SOUND_LOW_PASS_FILTER  // Float exceptions, no thanks
+//#define SS_SOUND_LOW_PASS_FILTER  // Float exceptions, no thanks //MFD
 
 #define SS_SOUND_MICROWIRE // volume, balance, bass & treble, primitive DSP
 #define SS_SOUND_MICROWIRE_WRITE_LATENCY // as documented
@@ -1288,7 +1343,7 @@ and all his silly mods are gone!
 #define SS_TOS_GEMDOS_NOINLINE//3.6.1
 #define SS_TOS_GEMDOS_PEXEC6 //3.6.1 ReDMCSB 100% in TOS104
 #define SS_TOS_GEMDOS_STRUCT//3.6.1
-#define SS_TOS_GEMDOS_VAR1 //various unimportant fixes 361
+#define SS_TOS_GEMDOS_VAR1 //various unimportant fixes 3.6.1
 
 //#define SS_TOS_NO_INTERCEPT_ON_RTE1 // fix (not) Megamax C on ReDMCSB//3.6.0
 #define SS_TOS_NO_INTERCEPT_ON_RTE2 //try to be less radical... ReDMCSB 50% in TOS102//361
@@ -1336,7 +1391,7 @@ and all his silly mods are gone!
 #define NO_RAR_SUPPORT // I removed the library, so it's unconditional
 
 #if defined(SS_VARIOUS)
-#define SS_VAR_ASSOCIATE // better and saves 4KB
+#define SS_VAR_ASSOCIATE
 #ifdef SS_VAR_ASSOCIATE
 #define SS_VAR_ASSOCIATE_CU // current user, not root
 #define SS_VAR_MAY_REMOVE_ASSOCIATION
@@ -1549,6 +1604,7 @@ and all his silly mods are gone!
 #undef SS_MMU_WAKE_UP_IOR_HACK
 #undef SS_MMU_WAKE_UP_IOW_HACK
 #undef SS_SHIFTER_EVENTS
+#undef SS_DEBUG_FRAME_REPORT//same
 #endif
 
 #if defined(SS_SHIFTER_UNSTABLE)

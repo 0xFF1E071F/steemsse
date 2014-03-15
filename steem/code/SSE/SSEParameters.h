@@ -148,6 +148,21 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define OSD_DEBUG_MESSAGE_TIME 2 // in seconds
 #endif
 
+#if defined(SS_DEBUG_FAKE_IO)
+#define FAKE_IO_START 0xfffb00
+#define FAKE_IO_LENGTH 64*2 // in bytes
+#define FAKE_IO_END (FAKE_IO_START+FAKE_IO_LENGTH-2) // starting address of last one
+#define STR_FAKE_IO_CONTROL "Control mask browser"
+#endif
+
+#if defined(SS_DEBUG_FRAME_REPORT)
+#if defined(SS_UNIX)
+#define FRAME_REPORT_FILENAME "./FrameReport.txt" //a fix?
+#else
+#define FRAME_REPORT_FILENAME "FrameReport.txt"
+#endif
+#endif
+
 
 /////////
 // DMA //

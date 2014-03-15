@@ -12,6 +12,10 @@
 #include "SSEShifterEvents.cpp" // debug module, the Steem way...
 #endif
 
+#if defined(SS_DEBUG_FRAME_REPORT) //temp, same place
+#include "SSEFrameReport.cpp"
+#endif
+
 
 TShifter Shifter; // singleton
 
@@ -1701,28 +1705,6 @@ Tests are arranged to be efficient.
     overscan=OVERSCAN_MAX_COUNTDOWN; // 25
     right_border_changed=true;
 
-#if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_UNSTABLE)
-// wrong, of course, just to have Overdrive menu OK when you come back
-// v3.6.0 Ventura/Naos: we see very well that it's wrong
-    //for doc:
-// 50hz 'right off' has no effect on the shifter registers. Two words are
-// fetched from the video RAM, but they're not loaded.
-//   if(Preload==3)
-//      Preload=0;
-#endif
-
-#ifdef SS_DEBUG___
-    if(scan_y==-29)
-    {
-      TRACE_LOG("Steem detects right off at %d\n",shifter_freq_change_time[i]-LINECYCLE0);
-      VideoEvents.ReportLine();
-    }
-#endif
-
-#if defined(SS_SHIFTER_IOW_TRACE)
-    if(TRACE_ENABLED)
-      VideoEvents.ReportLine();
-#endif
   }
 
   ////////////////
@@ -1938,7 +1920,7 @@ void TShifter::CheckVerticalOverscan() {
     on_overscan_limit=LIMIT_TOP;
   else if(scan_y==shifter_last_draw_line-1 && scan_y<245)
     on_overscan_limit=LIMIT_BOTTOM;
-#ifdef SS_SHIFTER_VERTICAL_OPTIM1
+#if defined(SS_SHIFTER_VERTICAL_OPTIM1)
   else
     return;
 #endif
@@ -2034,6 +2016,14 @@ Y-30 C516  504:S0000 512:S0002 shifter tricks 100
       shifter_last_draw_line=247; //?
   }
 
+#if defined(SS_DEBUG_FRAME_REPORT_VERTICAL_OVERSCAN)
+  if(on_overscan_limit) 
+  {
+    FrameEvents.ReportLine();
+    TRACE_LOG("F%d y%d freq at %d %d at %d %d switch %d to %d, %d to %d, %d to %d overscan %X\n",FRAME,scan_y,t,FreqAtCycle(t),t-2,FreqAtCycle(t-2),PreviousFreqChange(PreviousFreqChange(t)),FreqChangeAtCycle(PreviousFreqChange(PreviousFreqChange(t))),PreviousFreqChange(t),FreqChangeAtCycle(PreviousFreqChange(t)),NextFreqChange(t),FreqChangeAtCycle(NextFreqChange(t)),CurrentScanline.Tricks);
+  }
+#endif
+
 #if defined(SS_SHIFTER_VERTICAL_OVERSCAN_TRACE)
   if(on_overscan_limit) 
   {
@@ -2043,6 +2033,28 @@ Y-30 C516  504:S0000 512:S0002 shifter tricks 100
     //ASSERT( scan_y!=199|| shifter_last_draw_line==247 );
   }
 #endif
+
+#if defined(SS_DEBUG_TRACE_CONTROL)
+  if(TRACE_MASK1 & TRACE_CONTROL_VERTOVSC) 
+  {
+    FrameEvents.ReportLine();
+    TRACE_LOG("F%d y%d freq at %d %d at %d %d switch %d to %d, %d to %d, %d to %d overscan %X\n",FRAME,scan_y,t,FreqAtCycle(t),t-2,FreqAtCycle(t-2),PreviousFreqChange(PreviousFreqChange(t)),FreqChangeAtCycle(PreviousFreqChange(PreviousFreqChange(t))),PreviousFreqChange(t),FreqChangeAtCycle(PreviousFreqChange(t)),NextFreqChange(t),FreqChangeAtCycle(NextFreqChange(t)),CurrentScanline.Tricks);
+  //  ASSERT( scan_y!=199|| (CurrentScanline.Tricks&TRICK_BOTTOM_OVERSCAN) );
+    //ASSERT( scan_y!=199|| shifter_last_draw_line==247 );
+  }
+#endif
+
+/* no!
+#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+    if(on_overscan_limit
+      && Debug.FrameReportMask&FRAME_REPORT_MASK_VERTICAL_OVERSCAN)
+  {
+    FrameEvents.ReportLine();
+    TRACE_LOG("F%d y%d freq at %d %d at %d %d switch %d to %d, %d to %d, %d to %d overscan %X\n",FRAME,scan_y,t,FreqAtCycle(t),t-2,FreqAtCycle(t-2),PreviousFreqChange(PreviousFreqChange(t)),FreqChangeAtCycle(PreviousFreqChange(PreviousFreqChange(t))),PreviousFreqChange(t),FreqChangeAtCycle(PreviousFreqChange(t)),NextFreqChange(t),FreqChangeAtCycle(NextFreqChange(t)),CurrentScanline.Tricks);
+  }
+
+#endif
+*/
 }
 
 
@@ -2317,6 +2329,9 @@ dragon, right
 #endif
 
 #if defined(SS_DEBUG)
+#if defined(SS_DEBUG_TRACE_CONTROL)
+    if(OSD_MASK2 & OSD_CONTROL_PRELOAD) 
+#endif
     if(Preload)
       TRACE_OSD("Preload %d\n",Preload);
 #endif
@@ -2331,6 +2346,27 @@ void TShifter::IncScanline() { // a big extension of 'scan_y++'!
 
 #if defined(SS_DEBUG)
   Debug.ShifterTricks|=CurrentScanline.Tricks; // for frame
+
+#if defined(SS_DEBUG_FRAME_REPORT_SHIFTER_TRICKS)
+  // Record the 'tricks' mask at the end of scanline
+  if(CurrentScanline.Tricks)
+    FrameEvents.Add(scan_y,CurrentScanline.Cycles,'T',CurrentScanline.Tricks);
+#endif
+
+#if defined(SS_DEBUG_FRAME_REPORT_SHIFTER_TRICKS_BYTES)
+  if(CurrentScanline.Tricks)
+    FrameEvents.Add(scan_y,CurrentScanline.Cycles,'#',CurrentScanline.Bytes);
+#endif
+
+#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+  if((FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_SHIFTER_TRICKS) 
+    && CurrentScanline.Tricks)
+    FrameEvents.Add(scan_y,CurrentScanline.Cycles,'T',CurrentScanline.Tricks);
+  if((FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_SHIFTER_TRICKS_BYTES)
+    && CurrentScanline.Tricks)
+    FrameEvents.Add(scan_y,CurrentScanline.Cycles,'#',CurrentScanline.Bytes);
+#endif
+
 #if defined(SS_SHIFTER_EVENTS_TRICKS) 
   // Record the 'tricks' mask at the end of scanline
   if(CurrentScanline.Tricks)
@@ -2477,6 +2513,13 @@ BYTE TShifter::IORead(MEM_ADDRESS addr) {
 #if defined(SS_SHIFTER_EVENTS) && defined(SS_SHIFTER_EVENTS_READ_SDP)
       VideoEvents.Add(scan_y,LINECYCLES,'r',((addr&0xF)<<8)|ior_byte);
 #endif
+#if defined(SS_DEBUG_FRAME_REPORT_READ_SDP) // c for counter now
+      FrameEvents.Add(scan_y,LINECYCLES,'c',((addr&0xF)<<8)|ior_byte); 
+#endif
+#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SDP_READ)
+        FrameEvents.Add(scan_y,LINECYCLES,'c',((addr&0xF)<<8)|ior_byte);
+#endif
       }
       break;
       
@@ -2546,8 +2589,16 @@ void TShifter::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
     
     // Writing byte to palette writes that byte to both the low and high byte!
     WORD new_pal=MAKEWORD(io_src_b,io_src_b & 0xf);
+
 #if defined(SS_SHIFTER_EVENTS) && defined(SS_SHIFTER_EVENTS_PAL)
     VideoEvents.Add(scan_y,LINECYCLES,'p', (n<<12)|io_src_b);  // little p
+#endif
+#if defined(SS_DEBUG_FRAME_REPORT_PAL)
+      FrameEvents.Add(scan_y,LINECYCLES,'p', (n<<12)|io_src_b);  // little p
+#endif
+#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_PAL)
+        FrameEvents.Add(scan_y,LINECYCLES,'p', (n<<12)|io_src_b);  // little p
 #endif
     
 #if defined(SS_SHIFTER_PALETTE_BYTE_CHANGE) 
@@ -2592,6 +2643,14 @@ According to ST-CNX, those registers are in the MMU, not in the shifter.
 #if defined(SS_SHIFTER_EVENTS)
       VideoEvents.Add(scan_y,LINECYCLES,'V',io_src_b); 
 #endif
+#if defined(SS_DEBUG_FRAME_REPORT_VIDEOBASE)
+      FrameEvents.Add(scan_y,LINECYCLES,'V',io_src_b); 
+#endif
+#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_VIDEOBASE)
+        FrameEvents.Add(scan_y,LINECYCLES,'V',io_src_b); 
+#endif
+
       // asserts on SoWatt, Leavin' Terramis, High Fidelity Dreams
       // ...
       //ASSERT( mem_len>FOUR_MEGS || !(io_src_b&(~b00111111)) ); 
@@ -2609,6 +2668,14 @@ According to ST-CNX, those registers are in the MMU, not in the shifter.
 #if defined(SS_SHIFTER_EVENTS)
       VideoEvents.Add(scan_y,LINECYCLES,'M',io_src_b); 
 #endif
+#if defined(SS_DEBUG_FRAME_REPORT_VIDEOBASE)
+      FrameEvents.Add(scan_y,LINECYCLES,'M',io_src_b); 
+#endif
+#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_VIDEOBASE)
+        FrameEvents.Add(scan_y,LINECYCLES,'M',io_src_b); 
+#endif
+
       DWORD_B_1(&xbios2)=io_src_b;
 
 #if defined(SS_STF_VBASELO)
@@ -2688,6 +2755,14 @@ Last bit always cleared (we must do it).
 #if defined(SS_SHIFTER_EVENTS)
       VideoEvents.Add(scan_y,LINECYCLES,'v',io_src_b); 
 #endif
+#if defined(SS_DEBUG_FRAME_REPORT_VIDEOBASE)
+      FrameEvents.Add(scan_y,LINECYCLES,'v',io_src_b); 
+#endif
+#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_VIDEOBASE)
+        FrameEvents.Add(scan_y,LINECYCLES,'v',io_src_b); 
+#endif
+
 #if defined(SS_STF_VBASELO)
       if(ST_TYPE!=STE)
       {
@@ -2737,6 +2812,14 @@ must NOT be skipped using the Line Offset Register.
 #if defined(SS_SHIFTER_EVENTS)
       VideoEvents.Add(scan_y,LINECYCLES,'F',io_src_b); 
 #endif
+#if defined(SS_DEBUG_FRAME_REPORT_HSCROLL)
+      FrameEvents.Add(scan_y,LINECYCLES,'L',io_src_b); //we choose L now
+#endif
+#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_HSCROLL)
+        FrameEvents.Add(scan_y,LINECYCLES,'L',io_src_b); 
+#endif
+
 #if defined(SS_STF_LINEWID)
       if(ST_TYPE!=STE)
       {
@@ -2798,6 +2881,13 @@ rasterline to allow horizontal fine-scrolling.
     case 0xff8265:  // Hscroll
 #if defined(SS_SHIFTER_EVENTS)
       VideoEvents.Add(scan_y,LINECYCLES,(addr==0xff8264)?'h':'H',io_src_b); 
+#endif
+#if defined(SS_DEBUG_FRAME_REPORT_HSCROLL)
+      FrameEvents.Add(scan_y,LINECYCLES,(addr==0xff8264)?'h':'H',io_src_b); 
+#endif
+#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_HSCROLL)
+        FrameEvents.Add(scan_y,LINECYCLES,(addr==0xff8264)?'h':'H',io_src_b); 
 #endif
 #if defined(SS_STF_HSCROLL)
       if(ST_TYPE!=STE) 
@@ -3253,6 +3343,13 @@ void TShifter::SetShiftMode(BYTE NewMode) {
   VideoEvents.Add(scan_y,CyclesIn,'R',NewMode); 
   //TRACE_LOG("y%d c%d r%d\n",scan_y,CyclesIn,NewMode);
 #endif
+#if defined(SS_DEBUG_FRAME_REPORT_SHIFTMODE)
+      FrameEvents.Add(scan_y,CyclesIn,'R',NewMode); 
+#endif
+#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SHIFTMODE)
+        FrameEvents.Add(scan_y,CyclesIn,'R',NewMode); 
+#endif
   NewMode&=3; // only two lines would physically exist
   m_ShiftMode=NewMode; // update, used by ior now (v3.5.1)
 
@@ -3346,7 +3443,13 @@ void TShifter::SetSyncMode(BYTE NewSync) {
   VideoEvents.Add(scan_y,CyclesIn,'S',NewSync); 
 //  TRACE_LOG("y%d c%d s%d\n",scan_y,CyclesIn,NewSync);
 #endif
-
+#if defined(SS_DEBUG_FRAME_REPORT_SYNCMODE)
+      FrameEvents.Add(scan_y,CyclesIn,'S',NewSync); 
+#endif
+#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SYNCMODE)
+        FrameEvents.Add(scan_y,CyclesIn,'S',NewSync); 
+#endif
   int new_freq;  
 
   m_SyncMode=NewSync&3;
@@ -3449,11 +3552,20 @@ void TShifter::Vbl() {
 #if defined(SS_SHIFTER_EVENTS)
   VideoEvents.Vbl(); 
 #endif
+#if defined(SS_DEBUG_FRAME_REPORT)
+  FrameEvents.Vbl(); 
+#endif
+
+
 #if defined(SS_DEBUG)
   nVbl++; 
 
 #if defined(SS_OSD_DEBUG_MESSAGE_FREQ) // tell when 60hz
   if(!TRACE_ENABLED  && shifter_freq_at_start_of_vbl==60)
+    TRACE_OSD("60HZ");
+#endif
+#if defined(SS_OSD_CONTROL)
+  if(OSD_MASK1 & OSD_CONTROL_60HZ) 
     TRACE_OSD("60HZ");
 #endif
 

@@ -1045,6 +1045,12 @@ This isn't saved through the sessions
               break;
 #endif
 
+#if defined(SS_DEBUG_FAKE_IO)
+            case 1527: // fake IO zone for boiler control
+              new mem_browser(FAKE_IO_START,DT_MEMORY); 
+              break;
+#endif
+
 #endif//SS
 
             case 1780: //turn screen red
@@ -1742,7 +1748,7 @@ void DWin_init()
 #if defined(SS_DEBUG_DUMP_6301_RAM)
   AppendMenu(sse_menu,MF_STRING,1524,"Dump 6301 RAM");
 #endif
-#endif
+
 
 #if defined(SS_DEBUG_MONITOR_VALUE)
   AppendMenu(sse_menu,MF_STRING|MF_SEPARATOR,0,NULL);
@@ -1764,6 +1770,11 @@ void DWin_init()
 #if defined(SS_DEBUG_MUTE_DMA_SOUND)
   AppendMenu(sse_menu,MF_STRING,1526,"Mute DMA sound");
 #endif
+#if defined(SS_DEBUG_FAKE_IO)
+  AppendMenu(sse_menu,MF_STRING|MF_SEPARATOR,0,NULL);
+  AppendMenu(sse_menu,MF_STRING,1527,STR_FAKE_IO_CONTROL);
+#endif
+#endif//ss_debug
 
   log("STARTUP: calling iolist_init");
 

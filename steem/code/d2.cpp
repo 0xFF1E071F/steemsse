@@ -164,6 +164,7 @@ LONG d2_fetchL()
 
 BYTE d2_peek(MEM_ADDRESS ad){
   d2_peekvalid=0; //all valid
+
   if(ad>=himem){
     ad&=0xffffff;
     if(ad>=MEM_IO_BASE){
@@ -204,6 +205,18 @@ BYTE d2_peek(MEM_ADDRESS ad){
 WORD d2_dpeek(MEM_ADDRESS ad)
 {
   d2_peekvalid=0; //all valid
+
+
+#if defined(SS_DEBUG_FAKE_IO)
+/*  Intercept reads of fake IO zone to return control mask
+    variables.
+*/
+  if(ad>=FAKE_IO_START && ad<=FAKE_IO_END)
+  {
+    return Debug.ControlMask[(ad-FAKE_IO_START)/2];
+  }
+#endif
+
   if(ad>=mem_len){
     ad&=0xffffff;
     if(ad>=MEM_IO_BASE){
@@ -316,6 +329,18 @@ bool d2_poke(MEM_ADDRESS ad,BYTE val){
 bool d2_dpoke(MEM_ADDRESS ad,WORD val){
   ad&=0xffffff;
   if(ad&1)return false;
+
+#if defined(SS_DEBUG_FAKE_IO)
+/*  Intercept writes to fake IO zone to change control mask
+    variables.
+*/
+  if(ad>=FAKE_IO_START && ad<=FAKE_IO_END)
+  {
+    Debug.ControlMask[(ad-FAKE_IO_START)/2]=val;
+    return true;
+  }
+#endif
+
   if(ad>=mem_len){
     if(ad>=MEM_IO_BASE){
 //      try{

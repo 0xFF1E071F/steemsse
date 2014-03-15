@@ -1080,8 +1080,12 @@ bytes incorrectly during write-splice time because of synchronization.
           agenda_delete(agenda_floppy_read_track);
         DWORD DiskPosition=hbl_count % FDC_HBLS_PER_ROTATION;
 #if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_READ_TRACK_TIMING)
-/*  agenda_floppy_read_track starts at first sector, so we add the post 
+/*  v3.5.1
+    agenda_floppy_read_track starts at first sector, so we add the post 
     index gap here
+    v3.6.1 disabled as this breaks "English for Business", also notice 
+    useless code, and that it is not protected by "ADAT" as it should.
+    This feature was never finished for some reason.
 */
           FDC_IDField IDList[30];
           int nSects=floppy->GetIDFields(floppy_current_side(),floppy_head_track[floppyno],IDList);
@@ -2087,7 +2091,6 @@ Gap 4 Post Data                   40          40           1      4E
 #if defined(SS_DRIVE_READ_TRACK_TIMING2)
 /*  defined in v3.5.3, it was a bug that broke Jumping Jackson MCA, 
     undefined in v3.6.0
-    TODO
 */
         BYTE gap4bytes=(nSects>=11?1:40);
 #else

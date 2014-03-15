@@ -1015,6 +1015,10 @@ extern "C" ASMCALL void m68k_trace() //execute instruction with trace bit set
 #if defined(STEVEN_SEAGAL) && defined(SS_CPU_TRACE_DETECT)
   TRACE_OSD("TRACE");
 #endif
+#if defined(SS_OSD_CONTROL)
+  if(OSD_MASK1 & OSD_CONTROL_CPUTRACE) 
+    TRACE_OSD("TRACE");
+#endif
 
   LOG_CPU
 

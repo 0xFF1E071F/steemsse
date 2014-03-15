@@ -346,6 +346,7 @@ DEP_CPP_EMU_C=\
 	"..\..\3rdparty\SDL-WIN\include\SDL_video.h"\
 	"..\..\3rdparty\various\neochrome.h"\
 	"..\..\3rdparty\various\sound.h"\
+	"..\..\3rdparty\various\ym2149_fixed_vol.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\circularbuffer.h"\
 	"..\..\include\clarity.h"\
@@ -449,6 +450,8 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\SSE\SSEDecla.h"\
 	"..\..\Steem\code\SSE\SSEFloppy.cpp"\
 	"..\..\Steem\code\SSE\SSEFloppy.h"\
+	"..\..\steem\code\SSE\SSEFrameReport.cpp"\
+	"..\..\steem\code\SSE\SSEFrameReport.h"\
 	"..\..\steem\code\SSE\SSEInline.h"\
 	"..\..\steem\code\SSE\SSEInterrupt.cpp"\
 	"..\..\steem\code\SSE\SSEInterrupt.h"\
@@ -769,6 +772,7 @@ DEP_CPP_MAIN_=\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
 	"..\..\Steem\code\SSE\SSEFloppy.h"\
+	"..\..\steem\code\SSE\SSEFrameReport.h"\
 	"..\..\steem\code\SSE\SSEInterrupt.h"\
 	"..\..\steem\code\SSE\SSEM68000.h"\
 	"..\..\steem\code\SSE\SSEMMU.h"\
@@ -7880,6 +7884,15 @@ SOURCE=..\..\Steem\code\SSE\SSEFloppy.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\steem\code\SSE\SSEFrameReport.cpp
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\SSE\SSEFrameReport.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\steem\code\SSE\SSEInline.h
 # End Source File
 # Begin Source File
@@ -7937,7 +7950,6 @@ DEP_CPP_SSEMM=\
 	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\clarity.h"\
-	"..\..\include\easystr.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\draw.decla.h"\
 	"..\..\steem\code\notwindows.h"\

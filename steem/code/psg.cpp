@@ -174,7 +174,7 @@ const int psg_flat_volume_level[16]={0*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,8*VA/10
 /*  Values based on the graphic in Yamaha doc.
     It remains to be seen/heard if the sound is better with these values or
     Steem original values.
-    For that reason, the mod is optional (PSG Mods).
+    For that reason, the mod is optional ("P.S.G.").
 */
 
 const int psg_flat_volume_level2[16]=
@@ -195,7 +195,7 @@ const int psg_flat_volume_level2[16]=
 */
 
 const WORD fixed_vol_3voices[16][16][16]= 
-#include "../../3rdparty/various/ym2149_fixed_vol.h"
+#include "../../3rdparty/various/ym2149_fixed_vol.h" //more bloat...
 
 inline bool playing_samples() {
   return (psg_reg[PSGR_MIXER] & b00111111)==b00111111; // 1 = disabled
@@ -524,10 +524,12 @@ inline void Microwire(int channel,int &val
       if(dma_sound_bass!=6)
         d_dsp_v=MicrowireBass[channel].FilterAudio(d_dsp_v,LOW_SHELF_FREQ,
           dma_sound_bass-6);
-      if(dma_sound_treble!=6)
-        d_dsp_v=MicrowireTreble[channel].FilterAudio(d_dsp_v,HIGH_SHELF_FREQ,
-          dma_sound_treble-6);
-      if(dma_sound_volume<0x28||dma_sound_l_volume<0x14)
+//      if(dma_sound_treble!=6)  //3.6.1? too buggy
+  //      d_dsp_v=MicrowireTreble[channel].FilterAudio(d_dsp_v,HIGH_SHELF_FREQ
+    //     ,dma_sound_treble-6);
+      if(dma_sound_volume<0x28
+        ||dma_sound_l_volume<0x14 &&!channel 
+        ||dma_sound_r_volume<0x14 &&channel)//3.6.1: 2 channels
         d_dsp_v=MicrowireVolume[channel].FilterAudio(d_dsp_v,
           dma_sound_volume-0x28+dma_sound_l_volume-0x14);
 #if defined(SS_STF)
@@ -594,7 +596,14 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
     val=v;
 
    // ASSERT(dma_sound_on_this_screen || !(**lp_dma_sound_channel) );//asserts!
-    if(dma_sound_on_this_screen) //bugfix v3.6
+    if(dma_sound_on_this_screen) //bugfix v3.6.0
+    {//3.6.1
+#if defined(SS_OSD_CONTROL)
+  if(OSD_MASK3 & OSD_CONTROL_DMASND) 
+    TRACE_OSD("F%d %cV%d %d %d B%d T%d",dma_sound_freq,(dma_sound_mode & BIT_7)?'M':'S',dma_sound_volume,dma_sound_l_volume,dma_sound_r_volume,dma_sound_bass,dma_sound_treble);
+#endif
+      
+
 #if defined(SS_DEBUG_MUTE_DMA_SOUND)
       if(!(Debug.PsgMask & (1<<3))) 
 #endif
@@ -607,6 +616,7 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
 #endif
       );
 #endif
+    }
 
     if (val<VOLTAGE_FP(0))
       val=VOLTAGE_FP(0); 
@@ -630,6 +640,7 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
       
       val=v;
       if(dma_sound_on_this_screen) //bugfix v3.6
+      {
 #if defined(SS_DEBUG_MUTE_DMA_SOUND)
         if(!(Debug.PsgMask & (1<<3))) 
 #endif
@@ -642,6 +653,7 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
 #endif
       );
 #endif
+      }
 
       if(val<VOLTAGE_FP(0))
         val=VOLTAGE_FP(0); 
@@ -1634,7 +1646,7 @@ void dma_sound_set_mode(BYTE new_mode)
 */
 
 #if defined(STEVEN_SEAGAL) && defined(SS_SOUND)
-  ASSERT(!(new_mode&~0x8F));
+//  ASSERT(!(new_mode&~0x8F));
   new_mode&=0x8F;
   TRACE_LOG("DMA sound mode %X freq %d\n",new_mode,dma_sound_mode_to_freq[new_mode & 3]);
 #endif

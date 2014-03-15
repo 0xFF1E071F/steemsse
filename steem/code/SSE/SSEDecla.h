@@ -166,6 +166,8 @@ FARPROC WINAPI MyLoadFailureHook(dliNotification dliNotify, DelayLoadInfo * pdli
 
 #if defined(SS_SHIFTER) && defined(SS_DEBUG)
 #define FRAME (Shifter.nVbl) 
+#elif defined(SS_DEBUG_FRAME_REPORT)
+#define FRAME (FrameEvents.nVbl)
 #elif defined(SS_SHIFTER_EVENTS)
 #define FRAME (VideoEvents.nVbl)
 #else 

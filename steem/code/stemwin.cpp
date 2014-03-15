@@ -584,6 +584,10 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 #if defined(SS_SHIFTER_EVENTS) && defined(SS_SHIFTER_EVENTS_ON_STOP)
             VideoEvents.Report(); // shifter tricks report
 #endif
+#if defined(SS_DEBUG_FRAME_REPORT) && defined(SS_DEBUG_FRAME_REPORT_ON_STOP)
+            FrameEvents.Report();
+#endif
+
             runstate=RUNSTATE_STOPPING;
           }
         }
@@ -597,6 +601,9 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             if (FullScreen || GetKeyState(VK_SHIFT)<0){
 #if defined(SS_SHIFTER_EVENTS) && defined(SS_SHIFTER_EVENTS_ON_STOP)
               VideoEvents.Report(); // shifter tricks report
+#endif
+#if defined(SS_DEBUG_FRAME_REPORT) && defined(SS_DEBUG_FRAME_REPORT_ON_STOP)
+              FrameEvents.Report();
 #endif
               runstate=RUNSTATE_STOPPING;
             }else{
@@ -685,7 +692,12 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             HWND status_bar_win=GetDlgItem(StemWin,120); // get handle
 #if defined(SS_DEBUG_REPORT_SDP_ON_CLICK) && defined(SS_SHIFTER)
             char tmp[12+1+6];
+#if defined(SS_SHIFTER_EVENTS)
             MEM_ADDRESS computed_sdp = VideoEvents.GetSDP(guessed_x,guessed_scan_y);
+#endif
+#if defined(SS_DEBUG_FRAME_REPORT)
+            MEM_ADDRESS computed_sdp = FrameEvents.GetSDP(guessed_x,guessed_scan_y);
+#endif
             sprintf(tmp,"X%d Y%d $%X",guessed_x,guessed_scan_y,computed_sdp);
 #else // 1st, only X & Y
             char tmp[12];
@@ -1009,6 +1021,10 @@ void HandleButtonMessage(UINT Id,HWND hBut)
 #if defined(SS_SHIFTER_EVENTS) && defined(SS_SHIFTER_EVENTS_ON_STOP)
           VideoEvents.Report(); // shifter tricks report
 #endif
+#if defined(SS_DEBUG_FRAME_REPORT) && defined(SS_DEBUG_FRAME_REPORT_ON_STOP)
+          FrameEvents.Report();
+#endif
+
           runstate=RUNSTATE_STOPPING;
           SetStemMouseMode(STEM_MOUSEMODE_DISABLED);
         }
