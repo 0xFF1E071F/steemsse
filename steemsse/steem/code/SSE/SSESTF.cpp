@@ -46,7 +46,10 @@ int SwitchSTType(int new_type) {
   }
 
 #if defined(SS_MFP_RATIO)
-  n_cpu_cycles_per_second=CpuNormalHz; // no wrong CPU speed icon in OSD
+#if defined(SS_MFP_RATIO_HIGH_SPEED) //fix v3.6.1 (broken v3.5.1)
+  if(n_cpu_cycles_per_second<10000000) // avoid interference with ST CPU Speed option
+#endif
+    n_cpu_cycles_per_second=CpuNormalHz; // no wrong CPU speed icon in OSD (3.5.1)
 #endif
 
 #if defined(SS_INT_VBI_START) || defined(SS_INT_VBL_STF)

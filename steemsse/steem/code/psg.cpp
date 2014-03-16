@@ -1802,7 +1802,7 @@ void dma_sound_fetch()
       }
     }
 #if defined (STEVEN_SEAGAL) && defined(SS_MFP_RATIO)
-    ASSERT( n_cpu_cycles_per_second==CpuNormalHz );
+///    ASSERT( n_cpu_cycles_per_second==CpuNormalHz );//MFD
 #endif
     dma_sound_samples_countdown-=n_cpu_cycles_per_second;
 
@@ -2331,7 +2331,7 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
     log(Str("SOUND: ")+HEXSl(old_pc,6)+" - PSG reg "+reg+" changed to "+new_val+" at "+scanline_cycle_log());
     return;
   }
-//  ASSERT( n_cpu_cycles_per_second==8000000 );
+//  ASSERT( n_cpu_cycles_per_second==8000000 );//MFD
   int cpu_cycles_per_vbl=n_cpu_cycles_per_second/shifter_freq; //160000 at 50hz
 
 #if SCREENS_PER_SOUND_VBL != 1
