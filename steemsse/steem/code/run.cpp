@@ -95,10 +95,14 @@ void event_pasti_update();
 #undef EXT
 #undef INIT
 
-
-#endif
+#endif//SS_STRUCTURE_RUN_H
 
 #include "SSE/SSEDebug.h"
+
+#if defined(SS_STRUCTURE_SSEFLOPPY_OBJ)
+#include "SSE/SSEFloppy.h"
+#endif
+
 
 #ifdef SHOW_DRAW_SPEED
 extern HWND  StemWin;

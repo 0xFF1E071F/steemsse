@@ -52,7 +52,12 @@ DynamicArray<DEBUGPLUGININFO> debug_plugins;
 
 #undef EXT
 #undef INIT
+
+#if defined(SS_STRUCTURE_SSEFLOPPY_OBJ)
+#include "SSE/SSEFloppy.h"
 #endif
+
+#endif//SS_STRUCTURE_DEBUGEMU_H
 
 //---------------------------------------------------------------------------
 // This is for if the emu is half way though the screen, it should be called

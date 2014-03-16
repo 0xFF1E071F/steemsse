@@ -148,6 +148,13 @@ EXT BYTE fdc_read_address_buffer[20];
 
 //#endif
 
+#define DMA_ADDRESS_IS_VALID_R (dma_address<himem)
+#define DMA_ADDRESS_IS_VALID_W (dma_address<himem && dma_address>=MEM_FIRST_WRITEABLE)
+
+#if defined(SS_DRIVE)
+#define DRIVE floppy_current_drive() // 0 or 1 guaranteed
+#endif
+
 #undef EXT
 #undef INIT
 

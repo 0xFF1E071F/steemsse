@@ -1312,6 +1312,7 @@ and all his silly mods are gone!
 #define SS_STRUCTURE_SSE6301_OBJ//3.6.0
 #define SS_STRUCTURE_SSECPU_OBJ//3.6.0
 #define SS_STRUCTURE_SSEDEBUG_OBJ//3.6.0
+#define SS_STRUCTURE_SSEFLOPPY_OBJ//3.6.1
 #endif//#if defined(SS_STRUCTURE_SSE_OBJ)
 
 

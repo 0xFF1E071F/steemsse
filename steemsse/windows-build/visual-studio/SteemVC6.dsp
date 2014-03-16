@@ -7837,23 +7837,57 @@ SOURCE=..\..\steem\code\SSE\SSEDecla.h
 # Begin Source File
 
 SOURCE=..\..\Steem\code\SSE\SSEFloppy.cpp
+DEP_CPP_SSEFL=\
+	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\3rdparty\caps\CapsAPI.h"\
+	"..\..\3rdparty\caps\CapsFDC.h"\
+	"..\..\3rdparty\caps\CapsLib.h"\
+	"..\..\3rdparty\caps\comlib.h"\
+	"..\..\3rdparty\caps\Comtype.h"\
+	"..\..\3rdparty\dsp\dsp.h"\
+	"..\..\3rdparty\pasti\pasti.h"\
+	"..\..\3rdparty\various\sound.h"\
+	"..\..\include\binary.h"\
+	"..\..\include\clarity.h"\
+	"..\..\include\dynamicarray.h"\
+	"..\..\include\easystr.h"\
+	"..\..\steem\code\acc.decla.h"\
+	"..\..\steem\code\blitter.decla.h"\
+	"..\..\steem\code\conditions.h"\
+	"..\..\steem\code\cpu.decla.h"\
+	"..\..\steem\code\debug_emu.decla.h"\
+	"..\..\steem\code\draw.decla.h"\
+	"..\..\steem\code\emulator.decla.h"\
+	"..\..\steem\code\fdc.decla.h"\
+	"..\..\steem\code\floppy_drive.decla.h"\
+	"..\..\steem\code\iorw.decla.h"\
+	"..\..\steem\code\mfp.decla.h"\
+	"..\..\steem\code\notwindows.h"\
+	"..\..\steem\code\psg.decla.h"\
+	"..\..\steem\code\run.decla.h"\
+	"..\..\steem\code\SSE\SSE.h"\
+	"..\..\steem\code\SSE\SSECpu.h"\
+	"..\..\Steem\code\SSE\SSEDebug.h"\
+	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\Steem\code\SSE\SSEFloppy.h"\
+	"..\..\steem\code\SSE\SSEInterrupt.h"\
+	"..\..\steem\code\SSE\SSEOption.h"\
+	"..\..\steem\code\SSE\SSEParameters.h"\
+	"..\..\steem\code\SSE\SSEShifter.h"\
+	"..\..\steem\code\SSE\SSESTF.h"\
+	"..\..\steem\code\steemh.decla.h"\
+	"..\..\steem\pch.h"\
+	
 
 !IF  "$(CFG)" == "Steem - Win32 Debug"
 
-# PROP Exclude_From_Build 1
-
 !ELSEIF  "$(CFG)" == "Steem - Win32 Release"
 
-# PROP Exclude_From_Build 1
-
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
-
-# PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Debug_modules"
 
@@ -7950,6 +7984,7 @@ DEP_CPP_SSEMM=\
 	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\clarity.h"\
+	"..\..\include\easystr.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\draw.decla.h"\
 	"..\..\steem\code\notwindows.h"\
