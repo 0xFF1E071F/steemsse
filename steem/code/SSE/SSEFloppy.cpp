@@ -2,11 +2,25 @@
 
 #if defined(STEVEN_SEAGAL)
 
+#if defined(SS_STRUCTURE_SSEFLOPPY_OBJ)
+#include "../pch.h"
+#include <cpu.decla.h>
+#include <fdc.decla.h>
+#include <floppy_drive.decla.h>
+#include <iorw.decla.h>
+#include <psg.decla.h>
+#include <run.decla.h>
+#include "SSECpu.h"
+#include "SSEInterrupt.h"
+#include "SSEShifter.h"
+#include <pasti/pasti.h>
+EasyStr GetEXEDir();//#include <mymisc.h>//missing...
+#endif//#if defined(SS_STRUCTURE_SSEFLOPPY_OBJ)
+
 #include "SSEDecla.h"
 #include "SSEDebug.h"
 #include "SSEFloppy.h"
 #include "SSEOption.h"
-
 
 #if defined(SS_DMA)
 

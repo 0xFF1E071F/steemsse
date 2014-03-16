@@ -100,10 +100,12 @@ EXT BYTE fdc_read_address_buffer[20];
 #undef EXT
 #undef INIT
 
-#endif
+#endif//SS_STRUCTURE_FDC_H
 
+#if !defined(SS_STRUCTURE_FDC_H)
 #define DMA_ADDRESS_IS_VALID_R (dma_address<himem)
 #define DMA_ADDRESS_IS_VALID_W (dma_address<himem && dma_address>=MEM_FIRST_WRITEABLE)
+#endif
 
 #if !(defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DMA_INC_ADDRESS))
 #define DMA_INC_ADDRESS                                    \
@@ -120,7 +122,7 @@ EXT BYTE fdc_read_address_buffer[20];
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_DRIVE)
-#define DRIVE floppy_current_drive() // 0 or 1 guaranteed
+//#define DRIVE floppy_current_drive() // 0 or 1 guaranteed
 #define FDC_HBLS_PER_ROTATION  (SF314[DRIVE].HblsPerRotation()) 
 #else
 // 5 revolutions per second, 313*50 HBLs per second
@@ -2527,5 +2529,7 @@ void pasti_warn_proc(const char *text)
 #undef LOGSECTION
 
 #if defined(STEVEN_SEAGAL) 
+#if !defined(SS_STRUCTURE_SSEFLOPPY_OBJ)
 #include "SSE/SSEFloppy.cpp" // we use Steem's variables there too
+#endif
 #endif

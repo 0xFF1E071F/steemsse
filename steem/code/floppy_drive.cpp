@@ -18,7 +18,7 @@ bool FloppyArchiveIsReadWrite=0;
 
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)    
 //#include "SSE/SSEOption.h"
-//#include "SSE/SSEFloppy.h"
+//#include "SSE/SSEFloppy.h"//MFD
 #endif
 
 #if defined(STEVEN_SEAGAL)

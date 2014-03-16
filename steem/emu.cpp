@@ -26,7 +26,9 @@ inline int abs_quick(int i) // -> mfp.decla.h
 #include "SSE/SSEDecla.h"
 #include "SSE/SSEParameters.h"
 #include "SSE/SSEOption.h"
+#if !defined(SS_STRUCTURE_SSEFLOPPY_OBJ)
 #include "SSE/SSEFloppy.h"
+#endif
 #endif
 
 #if USE_PASTI
