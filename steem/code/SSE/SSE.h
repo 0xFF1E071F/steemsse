@@ -879,6 +879,7 @@ and all his silly mods are gone!
 #define SS_MFP_IRQ_DELAY3 // from Hatari
 #define SS_MFP_PATCH_TIMER_D // from Hatari, hack for Audio Artistic Demo
 #define SS_MFP_RATIO // change the values of CPU & MFP freq!
+#define SS_MFP_RATIO_HIGH_SPEED //fix v3.6.1
 #define SS_MFP_RATIO_PRECISION // for short timers
 #define SS_MFP_RATIO_STE // measured (by Steem Authors) for STE?
 #define SS_MFP_RATIO_STF // theoretical for STF
