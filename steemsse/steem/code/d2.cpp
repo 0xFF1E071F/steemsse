@@ -333,10 +333,11 @@ bool d2_dpoke(MEM_ADDRESS ad,WORD val){
 #if defined(SS_DEBUG_FAKE_IO)
 /*  Intercept writes to fake IO zone to change control mask
     variables.
+    Enforce low byte = 0 (for the GUI)
 */
   if(ad>=FAKE_IO_START && ad<=FAKE_IO_END)
   {
-    Debug.ControlMask[(ad-FAKE_IO_START)/2]=val;
+    Debug.ControlMask[(ad-FAKE_IO_START)/2]=val&0xFF00;
     return true;
   }
 #endif

@@ -624,6 +624,9 @@ system exclusive start and end messages (F0 and F7).
             // The MFP doesn't update for about 8 cycles, so we should execute the next
             // instruction before causing any interrupts
             ioaccess=old_ioaccess;
+#if defined(SS_MFP_WRITE_DELAY1)
+            time_of_last_write_to_mfp_reg=ACT;
+#endif
             if ((ioaccess & (IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE | IOACCESS_FLAG_FOR_CHECK_INTRS |
                                 IOACCESS_FLAG_DELAY_MFP))==0){
               ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE;
@@ -1129,6 +1132,8 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
     case 0xff8800:{  //--------------------------------------- sound chip
       if ((ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_W)==0){
         DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) BUS_JAM_TIME(4);
+//        DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) BUS_JAM_TIME(2);//
+//        DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) INSTRUCTION_TIME(2);//
         ioaccess|=IOACCESS_FLAG_PSG_BUS_JAM_W;
       }
       if ((addr & 1) && io_word_access) break; //odd addresses ignored on word writes

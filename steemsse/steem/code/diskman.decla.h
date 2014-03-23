@@ -5,6 +5,12 @@
 #define DISK_UNCOMPRESSED 1
 #define DISK_COMPRESSED 2
 #define DISK_PASTI 3
+#if defined(SS_DRIVE_IPF1)
+#define DISK_IPF 4
+#endif
+#if defined(SS_SCP)
+#define DISK_SCP 4
+#endif
 
 #define FileIsDisk(s) ExtensionIsDisk(strrchr(s,'.'))
 

@@ -2016,7 +2016,7 @@ void stemdos_trap_1_Mfree(MEM_ADDRESS ad){
   m68k_PUSH_W(0x49); //SS: Mfree()
 
 #if defined(SS_DEBUG_SHOW_INTERRUPT)
-  //Debug.RecordInterrupt("TRP",1);
+  Debug.RecordInterrupt("TRP",1);
 #endif
 
   m68k_interrupt(os_gemdos_vector);//ss not trap

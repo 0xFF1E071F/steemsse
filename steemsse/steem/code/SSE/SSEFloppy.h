@@ -396,6 +396,27 @@ struct TCaps {
 
 extern TCaps Caps;
 
-#endif
+#endif//ipf
+
+#if defined(SS_SCP)//TODO
+/* SCP images are big, we must decide if we load in memory or not
+
+*/
+struct TScpImageInfo {
+  BYTE DiskIn;
+  EasyStr File; // name of the actual file (may be tmp)
+};
+
+struct TScp {
+
+  TScpImageInfo ImageInfo[2];
+
+  int InsertDisk(int drive,char* File);
+
+};
+
+extern TScp Scp;
+
+#endif//scp
 
 #endif//SSEFLOPPY_H

@@ -54,7 +54,13 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
   int ret=0;
   if (MatchesAnyString_I(Ext,"ST","STT","DIM","MSA",
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
-    "IPF",
+    "IPF", 
+#ifdef SS_IPF_CTRAW
+    SS_IPF_CTRAW,
+#endif
+#endif    
+#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+    "SCP",
 #endif    
     NULL)){
     ret=DISK_UNCOMPRESSED;

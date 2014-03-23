@@ -49,9 +49,7 @@ EXT bool prefer_res_640_400 INIT(0),using_res_640_400 INIT(0);
 extern int prefer_pc_hz[2][3];
 extern WORD tested_pc_hz[2][3];
 EXT int overscan INIT(0)
-#if !(defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE) \
- && defined(SS_SHIFTER) && !defined(SS_SHIFTER_DRAW_DBG) \
- && defined(SS_STRUCTURE))
+#if !defined(SS_SHIFTER_REMOVE_USELESS_VAR) || defined(SS_SHIFTER_DRAW_DBG)
 ,stfm_borders INIT(0)
 #endif
 ;
@@ -1312,7 +1310,7 @@ bool draw_routines_init()
     evp->time=SS_INT_VBI_START; // 68
 #if defined(SS_STF) 
     if(ST_TYPE!=STE)
-      evp->time-=4; // fixes 36.15 Gen4 demo by Cakeman
+      evp->time-=4; // fixes 36.15 Gen4 demo by Cakeman (no...)
 #endif
     evp->event=event_trigger_vbi;
     evp++;

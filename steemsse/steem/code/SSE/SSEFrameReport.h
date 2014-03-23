@@ -33,6 +33,10 @@
 #define FRAME_REPORT_MASK_BLITTER                  (1<<14)
 #define FRAME_REPORT_MASK_SHIFTER_TRICKS           (1<<13)
 #define FRAME_REPORT_MASK_SHIFTER_TRICKS_BYTES     (1<<12)
+//possible to make just one:
+#define FRAME_REPORT_MASK_VBI                      (1<<11)
+#define FRAME_REPORT_MASK_HBI                      (1<<10)
+#define FRAME_REPORT_MASK_MFP                      (1<<9)
 
 
 #endif

@@ -397,6 +397,10 @@ void SoundStopInternalSpeaker()
 inline void CalcVChip(int &v,int &dv,int *source_p) {
   //CALC_V_CHIP
 
+#define NBITS 5
+
+#define proportion 10
+
 #if defined(SS_SOUND_FILTER_STF) //tests
   if(PSG_FILTER_FIX) // Option PSG Filter
   {
@@ -607,6 +611,9 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
 #if defined(SS_DEBUG_MUTE_DMA_SOUND)
       if(!(Debug.PsgMask & (1<<3))) 
 #endif
+#if defined(SS_DEBUG_MUTE_SOUNDCHANNELS)
+      if(! (d2_dpeek(FAKE_IO_START+20)>>15) ) 
+#endif
         val+= (**lp_dma_sound_channel);                           
 
 #if defined(SS_SOUND_MICROWIRE)
@@ -643,6 +650,9 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
       {
 #if defined(SS_DEBUG_MUTE_DMA_SOUND)
         if(!(Debug.PsgMask & (1<<3))) 
+#endif
+#if defined(SS_DEBUG_MUTE_SOUNDCHANNELS)
+        if(! (d2_dpeek(FAKE_IO_START+20)>>15) ) 
 #endif
           val+= (*(*lp_dma_sound_channel+1)); 
 
@@ -2081,6 +2091,13 @@ void psg_write_buffer(int abc,DWORD to_t)
   if( (1<<abc) & Debug.PsgMask) 
     return; // skip this channel
 #endif
+
+#if defined(SS_DEBUG_MUTE_SOUNDCHANNELS)
+  if( (1<<abc) & (d2_dpeek(FAKE_IO_START+20)>>12 ))
+    return; // skip this channel
+#endif
+
+
   //buffer starts at time time_of_last_vbl
   //we've written up to psg_buf_pointer[abc]
   //so start at pointer and write to to_t,
@@ -2389,6 +2406,9 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
       if(SSEOption.PSGFixedVolume && playing_samples()
 #if defined(SS_DEBUG_MUTE_PSG_CHANNEL)
         &&! (Debug.PsgMask&7)
+#endif
+#if defined(SS_DEBUG_MUTE_SOUNDCHANNELS)
+        &&! ((d2_dpeek(FAKE_IO_START+20)>>12)&7)
 #endif
         )
       {

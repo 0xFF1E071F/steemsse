@@ -67,8 +67,10 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_GUI ] = 0;
   // no PASTI, no DIV
 // additions
+#if !defined(SS_DEBUG_TRACE_CONTROL)
   logsection_enabled[ LOGSECTION_FDC_BYTES ] = 0;
   logsection_enabled[ LOGSECTION_IPF_LOCK_INFO ] = 0; //remove option
+#endif
   logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 0;
 #endif
   logsection_enabled[ LOGSECTION_OPTIONS ] = 1; // no boiler control
@@ -120,6 +122,39 @@ TDebug::~TDebug() {
   }
 #endif
 }
+
+
+void TDebug::Vbl(){ 
+#if defined(SS_DEBUG_FRAME_INTERRUPTS)
+/*  This system so that we only report these once per frame, giving
+    convenient info about VBI, HBI, and MFP IRQ.
+*/
+  if((OSD_MASK1 & OSD_CONTROL_INTERRUPT) && FrameInterrupts)
+  {
+    char buf1[40]="",buf2[4];
+    if(FrameInterrupts&1)
+      strcat(buf1,"V");
+    if(FrameInterrupts&2)
+      strcat(buf1,"H");
+    if(FrameMfpIrqs)
+    {
+      strcat(buf1," MFP ");
+      for(int i=15;i>=0;i--)
+      {
+        if( FrameMfpIrqs&(1<<i) )
+        {
+          sprintf(buf2,"%d ",i);
+          strcat(buf1,buf2);
+        }
+      }
+    } 
+    TRACE_OSD(buf1);
+  }
+  FrameInterrupts=0;
+  FrameMfpIrqs=0;
+#endif  
+}
+
 
 
 #if defined(SS_DEBUG_TRACE)
@@ -415,8 +450,8 @@ void TDebug::ReportInterrupt() {
 // etc.
     else // admit we're lost
       strcpy(tmp,"OVF");
-    for(int i=0;i<MAX_INTERRUPTS;i++)
-      TRACE("%d:%s %d\n",i,InterruptTable[i].description,InterruptTable[i].num);
+//    for(int i=0;i<MAX_INTERRUPTS;i++)
+  //    TRACE("%d:%s %d\n",i,InterruptTable[i].description,InterruptTable[i].num);
   }
   SetWindowText(InterruptReportingZone,tmp);
 }

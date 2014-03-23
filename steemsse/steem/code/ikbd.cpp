@@ -1421,6 +1421,13 @@ void agenda_keyboard_replace(int) {
           TRACE_LOG("ACIA RDRS->RDR %X\n",ACIA_IKBD.RDRS);
           ACIA_IKBD.RDR=ACIA_IKBD.RDRS; // transfer shifted byte
           ACIA_IKBD.SR|=BIT_0; // set RDR full
+
+#if defined(SS_ACIA_IRQ_DELAY2)
+/*  This variable was defined but never used in Steem, we use it now for
+    a little hack.
+*/
+          ACIA_IKBD.last_rx_read_time=ACT;
+#endif
         }
         
         // Check if we must activate IRQ (overrun or normal)

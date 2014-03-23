@@ -467,6 +467,7 @@ void event_timer_a_timeout()
 void event_timer_b_timeout()
 {
   HANDLE_TIMEOUT(1);
+//BRK(yoho);
   mfp_interrupt_pend(MFP_INT_TIMER_B,mfp_timer_timeout[1]);
   mfp_timer_timeout[1]=new_timeout;
 }
@@ -485,8 +486,9 @@ void event_timer_d_timeout()
 #undef LOGSECTION
 //---------------------------------------------------------------------------
 #define LOGSECTION LOGSECTION_INTERRUPTS
-void event_timer_b()
+void event_timer_b() 
 {
+//BRK(yoho);//??? not used in panic...
   //TRACE("F%d y%d c%d TB\n",FRAME,scan_y,LINECYCLES);
   if (scan_y<shifter_first_draw_line){
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;
@@ -502,6 +504,8 @@ void event_timer_b()
         TRACE_LOG("F%d y%d c%d Timer B pending\n",FRAME,scan_y,LINECYCLES);
         //TRACE("F%d y%d c%d TB\n",FRAME,scan_y,LINECYCLES);
         mfp_timer_counter[1]=BYTE_00_TO_256(mfp_reg[MFPR_TBDR])*64;
+//BRK(yoho);
+//FrameEvents.Add(scan_y,LINECYCLES,'B',0);
         mfp_interrupt_pend(MFP_INT_TIMER_B,time_of_next_timer_b);
       }
     }
@@ -869,13 +873,17 @@ void event_scanline()
     hbl_pending=true;
   }
 
+/* //MFD  -conflicts with vbl osd reporting
 #if defined(STEVEN_SEAGAL) && defined(SS_INT_HBL_IACK_FIX) && defined(SS_DEBUG)
 #if defined(SS_OSD_CONTROL)
-  else if((sr & SR_IPL)<SR_IPL_2 && (OSD_MASK1 & OSD_CONTROL_HBI) )
+  else if((sr & SR_IPL)<SR_IPL_2 && (OSD_MASK1 & OSD_CONTROL_INTERRUPT) )
+  {
     TRACE_OSD("NO HBL"); 
+    ///TRACE("No HBL\n");//temp
+  }
 #endif
 #endif
-
+*/
 
   if (dma_sound_on_this_screen) dma_sound_fetch(); 
   screen_event_pointer++;
@@ -1375,6 +1383,10 @@ void event_vbl_interrupt() //SS misleading name?
     if (runstate==RUNSTATE_RUNNING) runstate=RUNSTATE_STOPPING;
   }
   debug_vbl();
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)//3.6.1
+  Debug.Vbl();
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)

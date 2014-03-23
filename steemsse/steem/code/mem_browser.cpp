@@ -1485,11 +1485,9 @@ aren't defined in BCC nor VC6, but they're not necessary
 
 */
     case WM_MOUSEWHEEL:
-//      TRACE_OSD("wheel");
       mb=mem_browser_get_pointer(Win);
       if (mb->handle!=NULL){
         int zDelta = (signed)wPar>>16;
-// TRACE_OSD("%d",zDelta);
         if(wPar&(MK_SHIFT|MK_LBUTTON))
         {
           if(zDelta>0)

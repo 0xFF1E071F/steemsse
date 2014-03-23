@@ -530,27 +530,43 @@ void GUIRefreshStatusBar() {
   // should we show or hide that "status bar"?
   bool should_we_show=(SSE_STATUS_BAR||SSE_STATUS_BAR_GAME_NAME); 
 
-
   // build text of "status bar", only if we're to show it
   if(should_we_show)
   {
-    char status_bar[120]="\0";
+    char status_bar[120+10]="\0";
 
     if(SSE_STATUS_BAR)
     {
       // basic ST/TOS/RAM
-      char sb_st_model[5],sb_tos[5],sb_ram[7];
+      char 
+#if !defined(SS_VAR_STATUS_STRING_FULL_ST_MODEL)
+        sb_st_model[5],
+#endif
+        sb_tos[5],sb_ram[7];
 #if defined(SS_MMU_WAKE_UP_DL)
+#if !defined(SS_VAR_STATUS_STRING_FULL_ST_MODEL)
       sprintf(sb_st_model,"%s%d",(ST_TYPE)? "STF":"STE",MMU.WS[WAKE_UP_STATE]);
       if(!WAKE_UP_STATE)
         sb_st_model[3]=0;
+#endif
 #else
       sprintf(sb_st_model,"%s",(ST_TYPE)? "STF":"STE");
 #endif
       sprintf(sb_tos,"T%x",tos_version);
       sprintf(sb_ram,"%dK",mem_len/1024);
+#if defined(SS_VAR_STATUS_STRING_FULL_ST_MODEL)
+      sprintf(status_bar,"%s %s %s",st_model_name[ST_TYPE],sb_tos,sb_ram);
+#if defined(SS_MMU_WAKE_UP_DL)
+      if(WAKE_UP_STATE)
+      {
+        char sb_wu[6];
+        sprintf(sb_wu," WS%c",'0'+MMU.WS[WAKE_UP_STATE]);
+        strcat(status_bar,sb_wu);
+      }
+#endif
+#else
       sprintf(status_bar,"%s %s %s",sb_st_model,sb_tos,sb_ram);
-      
+#endif 
       // some options (6301, Pasti...)
 #if defined(SS_IKBD_6301) && defined(SS_VAR_STATUS_STRING_6301)
       if(HD6301EMU_ON)
@@ -1389,7 +1405,7 @@ void ParseCommandLine(int NumArgs,char *Arg[],int Level)
       case ARG_SETPABUFSIZE:  UNIX_ONLY( pa_output_buffer_size=atoi(Path); ) break;
       case ARG_ALLOWREADOPEN: stemdos_comline_read_is_rb=true; break;
       case ARG_NOINTS:        no_ints=true; break; // SS removed _
-#if !(defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE))
+#if !(defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_REMOVE_USELESS_VAR))
       case ARG_STFMBORDER:    stfm_borders=4; break;
 #endif
       case ARG_SCREENSHOTUSEFULLNAME: Disp.ScreenShotUseFullName=true; break;

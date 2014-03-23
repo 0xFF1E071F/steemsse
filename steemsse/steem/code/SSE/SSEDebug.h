@@ -1,5 +1,5 @@
 /*  This file must be included whether STEVEN_SEAGAL is defined or not
-    because we need to define macors ASSERT, TRACE etc. anyway, those
+    because we need to define macros ASSERT, TRACE etc. anyway, those
     aren't guarded.
     We use '__cplusplus' to make some parts accessible to C objects.
 */
@@ -10,7 +10,7 @@
 
 #include "SSE.h" // get switches
 
-#if /*!defined(SS_DEBUG) &&*/ defined(UNIX)
+#if defined(UNIX)
 #include "../pch.h"
 #pragma hdrstop
 #endif
@@ -123,6 +123,7 @@ struct TDebug {
   BYTE HD6301RamBuffer[256+8];
 #endif
 
+  void Vbl(); //3.6.1
 
 #endif//c++
 
@@ -136,6 +137,11 @@ struct TDebug {
     handier (less GUI clutter).
 */
   WORD ControlMask[FAKE_IO_LENGTH];
+#endif
+
+#if defined(SS_DEBUG_FRAME_INTERRUPTS)
+  BYTE FrameInterrupts; //bit0 VBI 1 HBI 2 MFP
+  WORD FrameMfpIrqs; // for OSD report
 #endif
 
 };
@@ -195,27 +201,26 @@ enum logsection_enum_tag {
  LOGSECTION_CPU ,
  LOGSECTION_INIFILE ,
  LOGSECTION_GUI ,
+#if !defined(SS_DEBUG_TRACE_CONTROL)
  LOGSECTION_FDC_BYTES, // was DIV
- LOGSECTION_IMAGE_INFO, //was Pasti
  LOGSECTION_IPF_LOCK_INFO,
+#endif
+ LOGSECTION_IMAGE_INFO, //was Pasti
  LOGSECTION_OPTIONS,
  NUM_LOGSECTIONS,
  };
 #endif
 
+#if defined(SS_DEBUG_FAKE_IO)
 
 #if defined(SS_OSD_CONTROL)
 
 #define OSD_MASK1 (Debug.ControlMask[2])
 #define OSD_CONTROL_CPUTRACE           (1<<15)
 #define OSD_CONTROL_CPUPREFETCH                (1<<14)
-#define OSD_CONTROL_HBI                   (1<<13)
+#define OSD_CONTROL_INTERRUPT               (1<<13)
 #define OSD_CONTROL_IKBD                  (1<<12)
 #define OSD_CONTROL_60HZ              (1<<11)
-//#define OSD_CONTROL         (1<<10)
-//#define OSD_CONTROL                (1<<9)
-//#define OSD_CONTROL                (1<<8)
-
 
 #define OSD_MASK2 (Debug.ControlMask[3])
 #define OSD_CONTROL_SHIFTERTRICKS           (1<<15)
@@ -224,6 +229,7 @@ enum logsection_enum_tag {
 #define OSD_MASK3 (Debug.ControlMask[4])
 #define OSD_CONTROL_DMASND                  (1<<15)
 #define OSD_CONTROL_STEBLT                  (1<<14)
+#define OSD_CONTROL_WRITESDP                (1<<13)
 
 #endif//osdcontrol
 
@@ -234,16 +240,33 @@ enum logsection_enum_tag {
     for vertical overscan.
 */
 
-#define TRACE_MASK1 (Debug.ControlMask[5])
+#define TRACE_MASK1 (Debug.ControlMask[5]) //shifter
 #define TRACE_CONTROL_VERTOVSC (1<<15)
-
-
+#define TRACE_CONTROL_1LINE (1<<14) // report line of 'go'
+#define TRACE_CONTROL_SUMMARY (1<<13) //all tricks of the frame orred
+#define TRACE_CONTROL_LINEOFF (1<<12) //don't draw
+#define TRACE_CONTROL_ADJUSTMENT (1<<11) //-2, +2 corrections
 
 #define TRACE_MASK2 (Debug.ControlMask[6])
+#define TRACE_CONTROL_MFP (1<<15)
+#define TRACE_CONTROL_VBI (1<<14)
+#define TRACE_CONTROL_HBI   (1<<13)
+
+#define TRACE_MASK3 (Debug.ControlMask[7])
 #define TRACE_CONTROL_FDCSTR (1<<15)
+#define TRACE_CONTROL_FDCBYTES (1<<14)//no logsection needed
+#define TRACE_CONTROL_FDCIPF1 (1<<13)//lock info
+#define TRACE_CONTROL_FDCIPF2 (1<<12)//sectors
 
 #endif
 
+#if defined(SS_DEBUG_VIDEO_CONTROL)
+#define VIDEO_CONTROL_MASK (Debug.ControlMask[9])
+#define VIDEO_CONTROL_LINEOFF (1<<15)
+
+#endif
+
+#endif//#if defined(SS_DEBUG_FAKE_IO)
 
 // debug macros
 
@@ -399,8 +422,8 @@ enum logsection_enum_tag {
 #define VERIFY(x) x
 #endif
 
-#if !defined(STEVEN_SEAGAL) || !defined(SS_DEBUG)
-enum {
+#if !defined(STEVEN_SEAGAL) || !defined(SS_DEBUG) 
+enum { // to pass compilation
  LOGSECTION_FDC_BYTES, // was DIV
  LOGSECTION_IMAGE_INFO, //was Pasti
  LOGSECTION_IPF_LOCK_INFO,

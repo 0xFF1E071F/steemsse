@@ -351,6 +351,7 @@ DEP_CPP_EMU_C=\
 	"..\..\include\circularbuffer.h"\
 	"..\..\include\clarity.h"\
 	"..\..\include\configstorefile.h"\
+	"..\..\include\directory_tree.h"\
 	"..\..\include\dirsearch.h"\
 	"..\..\include\dynamicarray.h"\
 	"..\..\include\easycompress.h"\
@@ -381,6 +382,7 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\debug_emu.cpp"\
 	"..\..\steem\code\debug_emu.decla.h"\
 	"..\..\steem\code\debug_emu.h"\
+	"..\..\steem\code\diskman.decla.h"\
 	"..\..\steem\code\display.decla.h"\
 	"..\..\steem\code\display.h"\
 	"..\..\steem\code\draw.cpp"\
@@ -471,6 +473,8 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\SteemFreeImage.h"\
 	"..\..\steem\code\steemh.decla.h"\
 	"..\..\steem\code\steemh.h"\
+	"..\..\steem\code\stemdialogs.decla.h"\
+	"..\..\steem\code\stemdialogs.h"\
 	"..\..\steem\code\stemdos.cpp"\
 	"..\..\steem\code\stemdos.decla.h"\
 	"..\..\steem\code\stemdos.h"\
@@ -845,6 +849,10 @@ SOURCE=..\..\steem\code\acc.decla.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\acc.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\acia.decla.h
 # End Source File
 # Begin Source File
 
@@ -7849,13 +7857,22 @@ DEP_CPP_SSEFL=\
 	"..\..\3rdparty\various\sound.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\clarity.h"\
+	"..\..\include\configstorefile.h"\
+	"..\..\include\directory_tree.h"\
 	"..\..\include\dynamicarray.h"\
 	"..\..\include\easystr.h"\
+	"..\..\include\easystringlist.h"\
+	"..\..\include\mymisc.h"\
+	"..\..\include\notwin_mymisc.h"\
+	"..\..\include\x\hxc.h"\
+	"..\..\include\x\icongroup.h"\
+	"..\..\include\x\x_mymisc.h"\
 	"..\..\steem\code\acc.decla.h"\
 	"..\..\steem\code\blitter.decla.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\cpu.decla.h"\
 	"..\..\steem\code\debug_emu.decla.h"\
+	"..\..\steem\code\diskman.decla.h"\
 	"..\..\steem\code\draw.decla.h"\
 	"..\..\steem\code\emulator.decla.h"\
 	"..\..\steem\code\fdc.decla.h"\
@@ -7876,7 +7893,12 @@ DEP_CPP_SSEFL=\
 	"..\..\steem\code\SSE\SSEShifter.h"\
 	"..\..\steem\code\SSE\SSESTF.h"\
 	"..\..\steem\code\steemh.decla.h"\
+	"..\..\steem\code\stemdialogs.decla.h"\
+	"..\..\steem\code\stemdialogs.h"\
 	"..\..\steem\pch.h"\
+	
+NODEP_CPP_SSEFL=\
+	"..\..\include\beos\be_mymisc.h"\
 	
 
 !IF  "$(CFG)" == "Steem - Win32 Debug"

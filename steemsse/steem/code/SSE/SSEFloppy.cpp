@@ -15,6 +15,12 @@
 #include "SSEShifter.h"
 #include <pasti/pasti.h>
 EasyStr GetEXEDir();//#include <mymisc.h>//missing...
+
+#if defined(SS_DRIVE_IPF1)
+#include <stemdialogs.h>//temp...
+#include <diskman.decla.h>
+#endif
+
 #endif//#if defined(SS_STRUCTURE_SSEFLOPPY_OBJ)
 
 #include "SSEDecla.h"
@@ -621,6 +627,14 @@ void TDma::UpdateRegs(bool trace_them) {
     int ext=0;
     fdc_cr=CAPSFdcGetInfo(cfdciR_Command, &Caps.WD1772,ext);
     fdc_str=CAPSFdcGetInfo(cfdciR_ST, &Caps.WD1772,ext);
+#if defined(SS_DRIVE_MOTOR_ON_IPF)
+/*  when disk A is non IPF and disk B is IPF, we may get bogus
+    motor on, how to fix that? - rare anyway
+    TODO
+*/
+//    SF314[floppy_current_drive()].MotorOn=(bool)(fdc_str&0x80);
+  //  TRACE_OSD("%d %X",floppy_current_drive(),fdc_str);
+#endif
     fdc_tr=CAPSFdcGetInfo(cfdciR_Track, &Caps.WD1772,ext);
     fdc_sr=CAPSFdcGetInfo(cfdciR_Sector, &Caps.WD1772,ext);
     fdc_dr=CAPSFdcGetInfo(cfdciR_Data, &Caps.WD1772,ext);
@@ -809,15 +823,22 @@ void TDma::TransferBytes() {
     //TRACE_LOG("Boot sector of %c checksum %X\n",'A'+floppy_current_drive(),SF314[floppy_current_drive()].SectorChecksum);
   }
 
-#undef LOGSECTION
-
 #endif//checksum
 
-#define LOGSECTION LOGSECTION_FDC_BYTES
-  if(!(MCR&0x100)) // disk -> RAM
-    TRACE_LOG("%2d/%2d/%3d to %X: ",fdc_tr,fdc_sr,ByteCount,BaseAddress);
-  else  // RAM -> disk
-    TRACE_LOG("%2d/%2d/%3d from %X: ",fdc_tr,fdc_sr,ByteCount,BaseAddress);
+#undef LOGSECTION
+#if defined(SS_DEBUG_TRACE_CONTROL)
+#define LOGSECTION LOGSECTION_ALWAYS // for just the bytes 
+#else
+#define LOGSECTION LOGSECTION_FDC_BYTES 
+#endif
+
+#if defined(SS_DEBUG_TRACE_CONTROL)
+  if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
+#endif
+    if(!(MCR&0x100)) // disk -> RAM
+      TRACE_LOG("%2d/%2d/%3d to %X: ",fdc_tr,fdc_sr,ByteCount,BaseAddress);
+    else  // RAM -> disk
+      TRACE_LOG("%2d/%2d/%3d from %X: ",fdc_tr,fdc_sr,ByteCount,BaseAddress);
 
   for(int i=0;i<16;i++) // burst, 16byte packets strictly, 8 words
   {
@@ -835,8 +856,15 @@ void TDma::TransferBytes() {
         [BufferInUse] // because we fill the new buffer
 #endif
         [15-i]=PEEK(BaseAddress);
-    else TRACE_LOG("!!!");
-    TRACE_LOG("%02X ",Fifo
+    else 
+#if defined(SS_DEBUG_TRACE_CONTROL)
+      if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
+#endif
+          TRACE_LOG("!!!");
+#if defined(SS_DEBUG_TRACE_CONTROL)
+    if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
+#endif
+      TRACE_LOG("%02X ",Fifo
 #if defined(SS_DMA_DOUBLE_FIFO)
       [!BufferInUse]
 #endif
@@ -859,7 +887,10 @@ void TDma::TransferBytes() {
 #if defined(SS_DMA_COUNT_CYCLES) 
   INSTRUCTION_TIME(8); 
 #endif
-  TRACE_LOG("\n");
+#if defined(SS_DEBUG_TRACE_CONTROL)
+  if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
+#endif
+    TRACE_LOG("\n");
   Request=FALSE;
 }
 
@@ -1510,7 +1541,7 @@ BYTE TWD1772::IORead(BYTE Line) {
 //      TRACE_LOG("FDC HBL %d STR %X\n",hbl_count,ior_byte);
 #endif
 #if defined(SS_DEBUG_TRACE_CONTROL)
-  if(TRACE_MASK2 & TRACE_CONTROL_FDCSTR)
+  if(TRACE_MASK3 & TRACE_CONTROL_FDCSTR)
     TRACE_LOG("FDC STR %X\n",ior_byte);
 #endif
 
@@ -1836,7 +1867,7 @@ int TCaps::Init() {
   ASSERT( !versioninfo.type );
   TRACE_LOG("Using CapsImg library V%d.%d\n",versioninfo.release,versioninfo.revision);
   Version=versioninfo.release*10+versioninfo.revision; 
-  ASSERT( Version==42 );
+  //ASSERT( Version==42 || Version==50 );
   CAPSIMG_OK= (Version>0);
   // controller init
   WD1772.type=sizeof(CapsFdc);  // must be >=sizeof(CapsFdc)
@@ -1917,6 +1948,9 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
   }
   Active=TRUE;
   SF314[drive].diskattr|=CAPSDRIVE_DA_IN; // indispensable!
+#if defined(SS_DRIVE_IPF1)
+  ::SF314[drive].ImageType=DISK_IPF; // the other SF314 (confusing)
+#endif
   if(!FileIsReadOnly)
     SF314[drive].diskattr&=~CAPSDRIVE_DA_WP; // Sundog
   CAPSFdcInvalidateTrack(&WD1772,drive); // Galaxy Force II
@@ -2003,7 +2037,7 @@ void TCaps::WriteWD1772(BYTE Line,int data) {
 #endif  
 
 #if defined(SS_FDC) && defined(SS_IPF_LETHAL_XCESS)
-  if(SSE_HACKS_ON && !Line && Version==42) 
+  if(SSE_HACKS_ON && !Line && (Version==42||Version==50)) 
   { //targeted hack to make up for something missing in capsimg (?)
     if( (::WD1772.CR&0xF0)==0xD0 && (data&0xF0)==0xE0 ) 
     {
@@ -2018,12 +2052,12 @@ void TCaps::WriteWD1772(BYTE Line,int data) {
   {
     // TODO drive selection problem
     mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Double Dragon II
-    if(Version==42 && (data&0xE0)==0xA0)
+    if( (Version==42||Version==50) && (data&0xF0)==0xA0)
     {
-      TRACE_LOG("IPF unimplemented command",data);
+      TRACE_LOG("IPF unimplemented command %d\n",data);
 
 #if defined(SS_IPF_WRITE_HACK)
-      if(SSE_HACKS_ON && (data&0xE0)==0xA0) // =write sector (not track!)
+      if(SSE_HACKS_ON)// && (data&0xF0)==0xA0) // =write sector (not track!)
       {
         TRACE_LOG("Hack for write to IPF %d sectors\n",Dma.Counter);
         Dma.BaseAddress+=512*Dma.Counter;
@@ -2102,17 +2136,24 @@ void TCaps::CallbackDRQ(PCAPSFDC pc, UDWORD setting) {
 
 void TCaps::CallbackIRQ(PCAPSFDC pc, DWORD lineout) {
   ASSERT(pc==&Caps.WD1772);
+  //TRACE_OSD("%X",::fdc_cr);
+
 #if defined(SS_DEBUG)
   if(TRACE_ENABLED) Dma.UpdateRegs(true);
 #endif
+  
 #if defined(SS_DRIVE_SOUND)
   if(SSE_DRIVE_SOUND)
+  {
+#if defined(SS_DRIVE_SOUND_IPF)
+    Dma.UpdateRegs(); // why it only worked in boiler, log on...
+#endif
 #if defined(SS_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
     ::SF314[DRIVE].Sound_CheckIrq();
 #else
     ::SF314[0].Sound_CheckIrq();
 #endif
-
+  }
 #endif
   mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,!(lineout&CAPSFDC_LO_INTRQ));
 #if !defined(SS_OSD_DRIVE_LED3)
@@ -2120,8 +2161,10 @@ void TCaps::CallbackIRQ(PCAPSFDC pc, DWORD lineout) {
 #endif
 }
 
+#if !defined(SS_DEBUG_TRACE_CONTROL)
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_IPF_LOCK_INFO
+#endif
 
 void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   ASSERT( !drive||drive==1 );
@@ -2143,6 +2186,9 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
 //    ASSERT( track!=Caps.LockedTrack[drive] || side!=Caps.LockedSide[drive] );
     VERIFY( !CAPSUnlockTrack(Caps.ContainerID[drive],Caps.LockedTrack[drive],
       Caps.LockedSide[drive]) );
+#if defined(SS_DEBUG_TRACE_CONTROL)
+    if(TRACE_MASK3 & TRACE_CONTROL_FDCIPF1)
+#endif
     TRACE_LOG("CAPS Unlock %c:S%dT%d\n",drive+'A',Caps.LockedSide[drive],
       Caps.LockedTrack[drive]);
   }
@@ -2161,6 +2207,10 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   Caps.LockedTrack[drive]=track;
 
 #if defined(SS_IPF_TRACE_SECTORS)  // debug info
+#if defined(SS_DEBUG_TRACE_CONTROL) // controlled by boiler now (3.6.1)
+  if(TRACE_MASK3 & TRACE_CONTROL_FDCIPF2)
+  {
+#endif
   CapsSectorInfo CSI;
   int sec_num;
   TRACE_LOG("sector info (encoder,cell type,data,gap info)\n");
@@ -2182,12 +2232,41 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
       CSI.gapws0mode,   // gap size mode before write splice
       CSI.gapws1mode);   // gap size mode after write splice
   }
+#if defined(SS_DEBUG_TRACE_CONTROL)
+  }
+#endif
 #endif
 
 }
 
+#undef LOGSECTION
+
 #endif//ipf
 
-#undef LOGSECTION
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+
+#if defined(SS_SCP) // Implementation of STC support in Steem
+//TODO
+
+TScp Scp;
+
+int TScp::InsertDisk(int drive,char* File) {
+  //TRACE("file = %s\n",File); // may be temp zip file eg path\ZIP3A52.tmp
+
+//  return FIMAGE_WRONGFORMAT;
+
+//else
+  ImageInfo[drive].DiskIn=true;
+  ImageInfo[drive].File=File;
+
+//return what?
+  return 0;
+}
+
+#endif
+
 
 #endif//#if defined(STEVEN_SEAGAL)

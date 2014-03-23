@@ -281,7 +281,6 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
       SaveSnapShot(WriteDir+SLASH+"auto_loadsnapshot_backup.sts",-1,0);
     }
     reset_st(RESET_COLD | RESET_STOP | RESET_NOCHANGESETTINGS | RESET_NOBACKUP);
-
     FILE *f=fopen(FilNam,"rb");
     if (f){
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_CHECK_SNAPSHOT)
@@ -297,6 +296,9 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
       if (Failed==0){
         Failed=int((EasyUncompressToMem(Mem+MEM_EXTRA_BYTES,mem_len,f)!=0) ? 2:0);
         TRACE("Memory snapshot %s loaded\n",FilNam);
+#if defined(SS_TOS_WARNING1)
+        CheckSTTypeAndTos();
+#endif
       }
       fclose(f);
     }else{
@@ -452,6 +454,7 @@ bool load_TOS(char *File)
   fclose(f);
 
   tos_version=ROM_DPEEK(2);
+
 #if defined(SS_TOS_STE_FAST_BOOT) //from hatari
 //  TRACE("tos v %x loaded\n",tos_version);
   if(SSE_HACKS_ON && (tos_version==0x106||tos_version==0x162)

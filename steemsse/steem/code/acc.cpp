@@ -53,9 +53,11 @@ void m68k_poke(MEM_ADDRESS ad,BYTE x);
                                     {"FDC",LOGSECTION_FDC},
                                      
 #if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_LOG_OPTIONS)
+#if !defined(SS_DEBUG_TRACE_CONTROL)
                                     {"Floppy data",LOGSECTION_FDC_BYTES},
-                                    {"Image info",LOGSECTION_IMAGE_INFO},
                                     {"IPF sector info",LOGSECTION_IPF_LOCK_INFO},
+#endif
+                                    {"Image info",LOGSECTION_IMAGE_INFO},
                                     {"Gemdos",LOGSECTION_STEMDOS},
 #else
                                     {"Pasti",LOGSECTION_PASTI},

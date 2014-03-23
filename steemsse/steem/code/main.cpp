@@ -902,10 +902,13 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
   log("STARTUP: LoadState Called");
   LoadState(&CSF);
   log("STARTUP: LoadState finished");
-
+#if defined(SS_VAR_POWERON1)//3.6.1 spare one "power on"  
+  bool must_power_on=true;
+#else
+  TRACE_IDE("main->power on\n");
   log("STARTUP: power_on Called");
   power_on();
-
+#endif
 #ifdef WIN32
 #ifndef ONEGAME
   if (CSF.GetInt("Update","AutoUpdateEnabled",true)){
@@ -982,10 +985,24 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
       }
       if (Load){
         LoadSnapShot(WriteDir+SLASH+AutoSnapShotName+".sts",0,true,0); // Don't add to history, don't change disks
+#if defined(SS_VAR_POWERON1) 
+        must_power_on=false; //loading snapshot calls power_on
+#endif
       }
     }
   }
-  if (OptionBox.NeedReset()) reset_st(RESET_COLD | RESET_STOP | RESET_CHANGESETTINGS | RESET_NOBACKUP);
+  if (OptionBox.NeedReset()
+#if defined(SS_VAR_POWERON1) 
+        ||must_power_on
+#endif
+    ) 
+    reset_st(RESET_COLD | RESET_STOP | RESET_CHANGESETTINGS | RESET_NOBACKUP);
+
+#if defined(SS_TOS_WARNING1) && defined(SS_VAR_POWERON1)
+  if(must_power_on)
+    CheckSTTypeAndTos();
+#endif
+
   CheckResetDisplay();
 
   if (Disp.CanGoToFullScreen()){

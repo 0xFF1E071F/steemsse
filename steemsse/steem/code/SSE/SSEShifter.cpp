@@ -462,12 +462,12 @@ Omega:
 -22 - 000:A0007 000:a0604 008:R00FE 020:R0000 376:S0000 384:S00FE 512:P0707 512:T10011 512:#0230
 */
 
-#if defined(SS_SHIFTER_UNSTABLE_DOLB)
+#if defined(SS_SHIFTER_UNSTABLE_DOLB) && defined(SS_STF)
         if(Preload && SSE_HACKS_ON && r0cycle==16 && !r2cycle) 
           ShiftSDP(-2);
 #endif
 
-/*
+/*MFD
 #if defined(SS_SHIFTER_UNSTABLE_OMEGA)
         if(Preload && SSE_HACKS_ON && MMU.WU[WAKE_UP_STATE]==2 && r0cycle==20 && r2cycle==8) 
           ShiftSDP(0);
@@ -1522,7 +1522,7 @@ detect unstable: switch MED/LOW - Beeshift
     //TRACE("-2\n");
     //ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );//false alerts anyway
 
-#if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_UNSTABLE)
+#if defined(SS_SHIFTER_TRICKS) && defined(SS_SHIFTER_UNSTABLE)//MFD
 // wrong, of course, just to have Overdrive menu OK when you come back
 //   if(Preload)//==3) //3.6.0: other way now, see EndHBL()
   //    Preload=0;
@@ -1959,6 +1959,7 @@ Y-30 C516  504:S0000 512:S0002 -
 WU2:
 Y-30 C512  496:S0000 504:S0002 -
 Y-30 C516  504:S0000 512:S0002 shifter tricks 100
+Problem: too many cases of WU1, that should be the rarer one
 */
 
 #if defined(SS_MMU_WAKE_UP_DL)
@@ -2017,7 +2018,7 @@ Y-30 C516  504:S0000 512:S0002 shifter tricks 100
   }
 
 #if defined(SS_DEBUG_FRAME_REPORT_VERTICAL_OVERSCAN)
-  if(on_overscan_limit) 
+  if(on_overscan_limit && TRACE_ENABLED) 
   {
     FrameEvents.ReportLine();
     TRACE_LOG("F%d y%d freq at %d %d at %d %d switch %d to %d, %d to %d, %d to %d overscan %X\n",FRAME,scan_y,t,FreqAtCycle(t),t-2,FreqAtCycle(t-2),PreviousFreqChange(PreviousFreqChange(t)),FreqChangeAtCycle(PreviousFreqChange(PreviousFreqChange(t))),PreviousFreqChange(t),FreqChangeAtCycle(PreviousFreqChange(t)),NextFreqChange(t),FreqChangeAtCycle(NextFreqChange(t)),CurrentScanline.Tricks);
@@ -2035,7 +2036,7 @@ Y-30 C516  504:S0000 512:S0002 shifter tricks 100
 #endif
 
 #if defined(SS_DEBUG_TRACE_CONTROL)
-  if(TRACE_MASK1 & TRACE_CONTROL_VERTOVSC) 
+  if(TRACE_ENABLED&&(TRACE_MASK1 & TRACE_CONTROL_VERTOVSC)) 
   {
     FrameEvents.ReportLine();
     TRACE_LOG("F%d y%d freq at %d %d at %d %d switch %d to %d, %d to %d, %d to %d overscan %X\n",FRAME,scan_y,t,FreqAtCycle(t),t-2,FreqAtCycle(t-2),PreviousFreqChange(PreviousFreqChange(t)),FreqChangeAtCycle(PreviousFreqChange(PreviousFreqChange(t))),PreviousFreqChange(t),FreqChangeAtCycle(PreviousFreqChange(t)),NextFreqChange(t),FreqChangeAtCycle(NextFreqChange(t)),CurrentScanline.Tricks);
@@ -2247,7 +2248,10 @@ void TShifter::EndHBL() {
   {
     CurrentScanline.Tricks&=~TRICK_LINE_PLUS_2;
     shifter_draw_pointer-=2; // eg SNYD/TCB at scan_y -29
-    TRACE_LOG("scan_y %d cancel +2\n",scan_y);
+#if defined(SS_DEBUG_TRACE_CONTROL)
+    if(TRACE_MASK1 & TRACE_CONTROL_ADJUSTMENT)
+#endif
+      TRACE_LOG("y %d cancel +2\n",scan_y);
   } // no 'else', they're false alerts!
 
   if(CurrentScanline.Tricks&TRICK_LINE_MINUS_2     
@@ -2255,7 +2259,10 @@ void TShifter::EndHBL() {
   {
     CurrentScanline.Tricks&=~TRICK_LINE_MINUS_2;
     shifter_draw_pointer+=2;
-    TRACE_LOG("scan_y %d cancel -2\n",scan_y);
+#if defined(SS_DEBUG_TRACE_CONTROL)
+    if(TRACE_MASK1 & TRACE_CONTROL_ADJUSTMENT)
+#endif
+      TRACE_LOG("y %d cancel -2\n",scan_y);
   }
 #endif//#if defined(SS_SHIFTER_END_OF_LINE_CORRECTION)
 
@@ -2276,7 +2283,6 @@ void TShifter::EndHBL() {
     Left off, right off: 160+26+44=(28*8)+6 -> 3 words preloaded
     See doc by ST-CNX and LJBK's efforts at AF
     3.5.3
-    TODO
     In which WU state it should work isn't clear. 
     Unfinished business. What with the last 'left off' in Omega?
     Would there be a definitive impact on SDP?
@@ -2376,6 +2382,23 @@ void TShifter::IncScanline() { // a big extension of 'scan_y++'!
   if(CurrentScanline.Tricks)
     VideoEvents.Add(scan_y,CurrentScanline.Cycles,'#',CurrentScanline.Bytes);
 #endif
+#endif
+
+#ifdef TEST02
+if(scan_y==100) REPORT_LINE;
+#endif
+
+#if defined(SS_DEBUG_TRACE_CONTROL)
+/*  It works but the value has to be validated at least once by clicking
+    'Go'. If not it defaults to 0. That way we don't duplicate code.
+*/
+  if( (TRACE_MASK1 & TRACE_CONTROL_1LINE) 
+    && TRACE_ENABLED
+    && scan_y==debug_run_until_val)
+  {
+    REPORT_LINE;
+    TRACE_OSD("y %d %X %d",scan_y,CurrentScanline.Tricks,CurrentScanline.Bytes);
+  }
 #endif
 
   scan_y++; 
@@ -3197,6 +3220,11 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
           if(scan_y==SS_SHIFTER_SKIP_SCANLINE) 
             border1+=picture,picture=0;
 #endif
+#if defined(SS_DEBUG_VIDEO_CONTROL)
+          if((VIDEO_CONTROL_MASK & VIDEO_CONTROL_LINEOFF) 
+            && scan_y==debug_run_until_val)
+            border1+=picture,picture=0; // just border colour
+#endif
           if(border1<0||picture<0||border2<0||hscroll<0||hscroll>15)
           {
             TRACE_LOG("F%d y%d p%d Render error %d %d %d %d\n",
@@ -3529,7 +3557,12 @@ void TShifter::SetSyncMode(BYTE NewSync) {
     }
   }
   if(shifter_freq!=new_freq)
+  {
     freq_change_this_scanline=TRUE;  
+#if defined(SS_MFP_TIMER_B_RECOMPUTE)
+    CALC_CYCLES_FROM_HBL_TO_TIMER_B(new_freq); //3.6.1B test
+#endif
+  }
   shifter_freq=new_freq;
   
 #if defined(SS_SHIFTER_TRICKS)
@@ -3565,7 +3598,7 @@ void TShifter::Vbl() {
     TRACE_OSD("60HZ");
 #endif
 #if defined(SS_OSD_CONTROL)
-  if(OSD_MASK1 & OSD_CONTROL_60HZ) 
+  if(OSD_MASK1 & OSD_CONTROL_60HZ && shifter_freq_at_start_of_vbl==60) 
     TRACE_OSD("60HZ");
 #endif
 

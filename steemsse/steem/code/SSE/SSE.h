@@ -98,7 +98,7 @@ and all his silly mods are gone!
 
 #define SS_BETA //title, OSD, plus some testing
 
-#ifdef SS_BETA 
+#ifdef SS_BETA //TODO check before release what will stay beta...
 
 #define SSE_VERSION 361
 #define SSE_VERSION_TXT "3.6.1" 
@@ -173,8 +173,8 @@ and all his silly mods are gone!
 //////////
 
 #if defined(SS_BETA)
-//#define TEST01
-//#define TEST02
+//#define TEST01//mfp
+//#define TEST02//trace
 //#define TEST03
 //#define TEST04
 //#define TEST05
@@ -216,11 +216,10 @@ and all his silly mods are gone!
 //#define SS_ACIA_BUS_JAM_PRECISE_WOBBLE //TODO
 #define SS_ACIA_DOUBLE_BUFFER_RX // only from 6301 (not MIDI) 
 #define SS_ACIA_DOUBLE_BUFFER_TX // only to 6301 (not MIDI)
-
 //#define SS_ACIA_IRQ_ASSERT_READ_SR //TODO
+#define SS_ACIA_IRQ_DELAY2//3.6.1 back to this approach
 #define SS_ACIA_MIDI_TIMING1 //check
 #define SS_ACIA_REGISTERS // formalising the registers
-
 //#define SS_ACIA_DONT_CLEAR_DR //?
 #define SS_ACIA_NO_RESET_PIN // don't reset on warm reset
 #define SS_ACIA_TDR_COPY_DELAY // effect on SR
@@ -497,6 +496,7 @@ and all his silly mods are gone!
 #define SS_DEBUG_DUMP_6301_RAM
 #define SS_DEBUG_FAKE_IO //3.6.1 to control some debug options
 #if defined(SS_DEBUG_FAKE_IO)
+#define SS_DEBUG_FRAME_INTERRUPTS//3.6.1 OSD, handy
 #define SS_DEBUG_TRACE_CONTROL //3.6.1 beyond log options
 #endif
 #define SS_DEBUG_MOD_REGS // big letters, no =
@@ -508,8 +508,12 @@ and all his silly mods are gone!
 #define SS_DEBUG_MONITOR_VALUE4 // 3.6.1 corrections (W on .L)
 #define SS_DEBUG_MOUSE_WHEEL // yeah!
 #define SS_DEBUG_MOVE_OTHER_SP
-#define SS_DEBUG_MUTE_DMA_SOUND
-#define SS_DEBUG_MUTE_PSG_CHANNEL
+//#define SS_DEBUG_MUTE_DMA_SOUND
+//#define SS_DEBUG_MUTE_PSG_CHANNEL
+//#define SS_DEBUG_MUTE_PSG_CHANNEL1//MFD
+#if defined(SS_DEBUG_FAKE_IO)
+#define SS_DEBUG_MUTE_SOUNDCHANNELS //fake io, 3.6.1
+#endif
 #define SS_DEBUG_NODIV // no DIV log necessary anymore
 #define SS_DEBUG_NO_SOUND_DAMPING //PSG filter control 'd' and 'a'
 #define SS_DEBUG_RUN_TO_RTS
@@ -523,6 +527,9 @@ and all his silly mods are gone!
 #define SS_DEBUG_SSE_PERSISTENT // L/S options 
 #define SS_DEBUG_TIMER_B // instead of 0
 #define SS_DEBUG_TIMERS_ACTIVE // (in reverse video) yeah!
+#if defined(SS_DEBUG_FAKE_IO)
+#define SS_DEBUG_VIDEO_CONTROL //3.6.1
+#endif
 #define SS_DEBUG_WIPE_TRACE // as logfile
 #endif
 
@@ -540,6 +547,7 @@ and all his silly mods are gone!
 #endif
 ///#define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
 #define SS_DEBUG_START_STOP_INFO
+
 #define SS_IPF_TRACE_SECTORS // show sector info (IPF)
 
 #define SS_IKBD_6301_DUMP_RAM
@@ -583,6 +591,9 @@ and all his silly mods are gone!
 #if defined(WIN32)
 #define SS_IPF        // CAPS support (IPF disk images) 
 #define SS_PASTI      // Improvements in Pasti support (STX disk images)
+#ifdef SS_BETA
+#define SS_SCP //TODO
+#endif
 #endif
 #define SS_PSG        // YM2149 - for portA first
 
@@ -628,6 +639,7 @@ and all his silly mods are gone!
 //#define SS_DRIVE_EMPTY_VERIFY_LONG // GEM
 #define SS_DRIVE_EMPTY_VERIFY_TIME_OUT //GEM
 #define SS_DRIVE_MOTOR_ON
+#define SS_DRIVE_MOTOR_ON_IPF//3.6.1 TODO
 #define SS_DRIVE_MULTIPLE_SECTORS
 #define SS_DRIVE_READ_ADDRESS_TIMING
 #define SS_DRIVE_11_SECTORS
@@ -648,6 +660,7 @@ and all his silly mods are gone!
 #define SS_DRIVE_SOUND_SINGLE_SET // drive B uses sounds of A
 //#define SS_DRIVE_SOUND_EDIT // 1st beta soundset
 #define SS_DRIVE_SOUND_EPSON // current samples=Epson
+#define SS_DRIVE_SOUND_IPF // fix 3.6.1
 #define SS_DRIVE_SOUND_PASTI_EMPTY // different (none)
 #define SS_DRIVE_SOUND_VOLUME // logarithmic 
 #endif//drive sound
@@ -716,16 +729,20 @@ and all his silly mods are gone!
 /////////////////
 
 #if defined(SS_IPF)
+#ifdef SS_DRIVE
+#define SS_DRIVE_IPF1 // 3.6.1 know image type (not used yet TODO)
+#endif
 
 // those switches were used for development, normally they ain't necessary
 //#define SS_IPF_CPU // total sync, works but overkill
 //#define SS_IPF_RUN_PRE_IO 
 //#define SS_IPF_RUN_POST_IO
 #define SS_IPF_ASSOCIATE // extension may be associated with Steem
-#define SS_IPF_OSD // for the little box at reset - silly?
+#define SS_IPF_CTRAW//2nd type of file recognised by caps v5.0 (?) //3.6.1
+//#define SS_IPF_OSD // for the little box at reset - silly?
 #ifdef SS_BETA
-#define SS_IPF_LETHAL_XCESS // hack useful with capsimg v4.2
-#define SS_IPF_WRITE_HACK // useless hack for v4.2 AFAIK
+#define SS_IPF_LETHAL_XCESS // hack useful with capsimg v4.2+5.0
+//#define SS_IPF_WRITE_HACK // useless hack for v4.2 AFAIK
 #endif
 //#define SS_IPF_SAVE_WRITES //TODO?
 #define SS_IPF_TRACE_SECTORS // show sector info
@@ -742,7 +759,7 @@ and all his silly mods are gone!
 #define SS_PASTI_ALWAYS_DISPLAY_STX_DISKS
 #define SS_PASTI_AUTO_SWITCH
 #define SS_PASTI_ONLY_STX  // experimental! optional
-#define SS_PASTI_ONLY_STX_HD //v3.5.5
+#define SS_PASTI_ONLY_STX_HD //v3.6.0
 #define SS_PASTI_NO_RESET 
 #define SS_PASTI_ON_WARNING // mention in disk manager title
 
@@ -760,6 +777,16 @@ and all his silly mods are gone!
 #endif
 
 #endif
+
+
+/////////////////
+// FLOPPY: SCP //
+/////////////////
+
+#if defined(SS_SCP)
+
+#endif
+
 
 #endif//SS_FLOPPY
 
@@ -837,21 +864,18 @@ and all his silly mods are gone!
 #endif
 
 #define SS_INT_HBL_IACK_FIX // from Hatari - BBC52
-#ifdef SS_BETA
-#define SS_INT_HBL_ONE_FUNCTION // remove event_hbl(), seems OK but...
-#endif
+#define SS_INT_HBL_ONE_FUNCTION // 3.6.1 remove event_hbl()
 #endif
 
 #if defined(SS_INT_JITTER) && defined(SS_INT_HBL)
-#define SS_INT_JITTER_HBL //3.6.0 defined again
+#define SS_INT_JITTER_HBL //3.6.0 defined again for 3615HMD
 #endif
 
 #if defined(SS_INT_VBL)
 #define SS_INT_VBL_IACK
 #define SS_INT_VBL_INLINE 
 #ifdef SS_BETA
-#define SS_INT_VBI_START // generally working now but not 100%
-// Auto168; Panic
+//#define SS_INT_VBI_START // generally working now but not 100% TODO
 #endif
 #endif
 
@@ -876,8 +900,8 @@ and all his silly mods are gone!
 #define SS_MFP_IACK_LATENCY
 //#define SS_MFP_IRQ_DELAY // V8MS but breaks Sinfull Sinuses
 //#define SS_MFP_IRQ_DELAY2 // Audio Artistic Demo (no!)
-#define SS_MFP_IRQ_DELAY3 // from Hatari
-#define SS_MFP_PATCH_TIMER_D // from Hatari, hack for Audio Artistic Demo
+//#define SS_MFP_IRQ_DELAY3 // V8MS from Hatari 3.6.1:undef
+#define SS_MFP_PATCH_TIMER_D // from Hatari, we keep it for performance
 #define SS_MFP_RATIO // change the values of CPU & MFP freq!
 #define SS_MFP_RATIO_HIGH_SPEED //fix v3.6.1
 #define SS_MFP_RATIO_PRECISION // for short timers
@@ -889,9 +913,11 @@ and all his silly mods are gone!
 #if defined(SS_MFP_TIMER_B)
 #define SS_MFP_TIMER_B_AER // earlier trigger (from Hatari)
 #define SS_MFP_TIMER_B_NO_WOBBLE // does it fix anything???
-#define SS_MFP_TIMERS_BASETIME // "vbl" instead of "mfptick"
+#define SS_MFP_TIMER_B_RECOMPUTE //3.6.1
 #endif
+#define SS_MFP_TIMERS_BASETIME // "vbl" instead of "mfptick"
 #define SS_MFP_TxDR_RESET // they're not reset according to doc
+#define SS_MFP_WRITE_DELAY1//3.6.1 (Audio Artistic)
 #endif
 
 
@@ -921,8 +947,10 @@ and all his silly mods are gone!
 #endif
 
 //#define SS_MMU_NO_CONFUSION // Diagnostic cartridge: don't define (v3.5.2)
+#ifdef SS_STF
 #define SS_MMU_WAKE_UP
-#define SS_MMU_WRITE // programs in RAM may write in the MMU 
+#endif
+#define SS_MMU_WRITE // programs in RAM may write in the MMU
 
 #if defined(SS_MMU_WAKE_UP)
 #if defined(SS_CPU)
@@ -1064,6 +1092,7 @@ and all his silly mods are gone!
 #define SS_SHIFTER_HI_RES_SCROLLING // Beeshift2
 #define SS_SHIFTER_MED_RES_SCROLLING // Beeshift
 #define SS_SHIFTER_PANIC // funny effect, interleaved border bands
+#define SS_SHIFTER_REMOVE_USELESS_VAR //6.3.1
 #define SS_SHIFTER_VERTICAL_OPTIM1 //avoid useless tests
 #endif
 //#define SS_SHIFTER_UNSTABLE_LEFT_OFF // DoLB, Omega, Overdrive/Dragon old hack
@@ -1087,7 +1116,7 @@ and all his silly mods are gone!
 #if defined(SS_HACKS)
 // most hacks concern SDP, there's room for improvement
 #if SSE_VERSION<=353
-#define SS_SHIFTER_LINE_PLUS_2_STE_DSOS // limit 42 instead of 38?
+#define SS_SHIFTER_LINE_PLUS_2_STE_DSOS // limit 42 instead of 38?//MFD
 #endif
 #define SS_SHIFTER_SDP_WRITE_DE_HSCROLL
 #define SS_SHIFTER_SDP_WRITE_MIDDLE_BYTE // stable
@@ -1097,7 +1126,7 @@ and all his silly mods are gone!
 #define SS_SHIFTER_DOLB_SHIFT1 // based on "unstable overscan"
 //#define SS_SHIFTER_DOLB_SHIFT2 // based on cycle of R0
 //#define SS_SHIFTER_DRAGON1 // confused shifter, temp hack
-#define SS_SHIFTER_OMEGA  // Omega Full Overscan shift (60hz)
+//#define SS_SHIFTER_OMEGA  // Omega Full Overscan shift (60hz)//MFD ???!!! was defined?
 #define SS_SHIFTER_PACEMAKER // Pacemaker credits flickering line
 #define SS_SHIFTER_SCHNUSDIE // Reality is a Lie/Schnusdie overscan logo
 #define SS_SHIFTER_TCB // Swedish New Year Demo/TCB SDP (60hz)
@@ -1106,10 +1135,11 @@ and all his silly mods are gone!
 #endif
 
 #if defined(SS_DEBUG) 
+#ifdef SS_BETA
 //#define SS_SHIFTER_DRAW_DBG  // totally bypass CheckSideOverscan() & Render()
+#endif
 
-
-//#define SS_SHIFTER_EVENTS // recording all shifter events in a frame
+//#define SS_SHIFTER_EVENTS // recording all shifter events in a frame//MFD
 #if defined(SS_SHIFTER_EVENTS)
 #define SS_SHIFTER_EVENTS_BLITTER
 #define SS_SHIFTER_EVENTS_PAL // also for palette
@@ -1207,6 +1237,7 @@ and all his silly mods are gone!
 #define SS_STF_0BYTE
 #define SS_STE_2MB // auto make RAM 2MB, more compatible
 #define SS_STF_1MB // auto make RAM 1MB, more compatible
+#define SS_STF_8MHZ // 3.6.1 - for Panic study!
 #define SS_STF_BLITTER
 #define SS_STF_DMA
 #define SS_STF_HSCROLL
@@ -1309,6 +1340,7 @@ and all his silly mods are gone!
 
 
 #if defined(SS_STRUCTURE_SSE_OBJ)
+// We begin with our SSE additions. Notice that it already slows down compiling
 #define SS_STRUCTURE_SSE6301_OBJ//3.6.0
 #define SS_STRUCTURE_SSECPU_OBJ//3.6.0
 #define SS_STRUCTURE_SSEDEBUG_OBJ//3.6.0
@@ -1356,6 +1388,8 @@ and all his silly mods are gone!
 #define SS_TOS_DONT_TRACE_42//seek file//3.6.1
 #define SS_TOS_TRACE_CONOUT//3.6.1
 #endif
+
+#define SS_TOS_WARNING1 // version/ST type//3.6.1
 
 // fixes by other people: //TODO, another big category?
 #define SSE_AVTANDIL_FIX_001 // Russin TOS number
@@ -1426,6 +1460,7 @@ and all his silly mods are gone!
 #define SS_VAR_OPTION_SLOW_DISK // because many people miss it in disk manager
 #define SS_VAR_OPTIONS_ICON_VERSION
 #define SS_VAR_OPTIONS_REFRESH // 6301, STF... up-to-date with snapshot
+#define SS_VAR_POWERON1//3.6.1 spare one "power on"
 #define SS_VAR_RESET_BUTTON // invert
 #define SS_VAR_RESIZE // reduce memory set (int->BYTE etc.)
 #define SS_VAR_REWRITE // to conform to what compilers expect (warnings...)
@@ -1435,6 +1470,7 @@ and all his silly mods are gone!
 #define SS_VAR_STATUS_STRING_ADAT
 #define SS_VAR_STATUS_STRING_DISK_NAME
 #define SS_VAR_STATUS_STRING_DISK_NAME_OPTION
+#define SS_VAR_STATUS_STRING_FULL_ST_MODEL//3.6.1
 #define SS_VAR_STATUS_STRING_HACKS
 #define SS_VAR_STATUS_STRING_IPF
 #define SS_VAR_STATUS_STRING_PASTI

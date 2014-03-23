@@ -15,6 +15,9 @@ TFrameEvents::TFrameEvents() {
 MEM_ADDRESS TFrameEvents::GetSDP(int x,int guessed_scan_y) {
   MEM_ADDRESS sdp=NULL;
   int i,j;
+#if defined(SS_DEBUG_FRAME_REPORT_MASK) //skip if not recorded
+  if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SDP_LINES) 
+#endif
   for(i=1; i<=MAX_EVENTS ;i++)
   {
     if(m_FrameEvent[i].Scanline==guessed_scan_y)
@@ -132,14 +135,20 @@ int TFrameEvents::Vbl() {
 #if defined(SS_SHIFTER_REPORT_VBL_TRICKS)
   if(Debug.ShifterTricks)
   {
+#undef LOGSECTION
 #define LOGSECTION LOGSECTION_VIDEO
-    TRACE_LOG("VBL %d shifter tricks %X\n",nVbl,Debug.ShifterTricks);
+#if defined(SS_DEBUG_TRACE_CONTROL)
+    if(TRACE_MASK1 & TRACE_CONTROL_SUMMARY)
+#endif
+      TRACE_LOG("VBL %d shifter tricks %X\n",nVbl,Debug.ShifterTricks);
+#undef LOGSECTION
+
 #if defined(SS_OSD_CONTROL)
     if(OSD_MASK2 & OSD_CONTROL_SHIFTERTRICKS)
 #else
     if(TRACE_ENABLED) 
 #endif
-      TRACE_OSD("Tricks $%X",Debug.ShifterTricks);
+      TRACE_OSD("T%X",Debug.ShifterTricks);
 
     Debug.ShifterTricks=0;
   }
