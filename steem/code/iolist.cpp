@@ -198,34 +198,46 @@ void iolist_init()
 
 #if defined(SS_DEBUG_FAKE_IO)
 /*  We may name those variables how we wish. 
-    Each is 1 word but we use only higher byte for readability and
-    we must complete with . fields.
+    Each is 1 word but we use only higher byte at most for readability.
+    It seems the GUI is more confused when there are . before real fields.
     With this system, many controls are easy to add.
-    Ideas:
-    -OSD control 60hz, HBI, shifter tricks etc
 */
 
 #if defined(SS_DEBUG_FRAME_REPORT)
   iolist_add_entry(FAKE_IO_START,"Frame report1",2,
-    "Sync|Mode|Pal|SDP R|SDP W|SDP lines|Hscroll|Base|.|.|.|.|.|.|.|.");
+    "sync|mode|pal|rsdp|wsdp|sdp lines|hscroll|base|.|.|.|.|.|.|.|.");
   iolist_add_entry(FAKE_IO_START+2,"Frame report2",2,
-    "Acia|Blitter|Tricks|Bytes|.|.|.|.|.|.|.|.|.|.|.|.");
+    "Acia|Blt|Tricks|Bytes|hbi|vbi|mfp|.|.|.|.|.|.|.|.|.");
 #endif
 
 #if defined(SS_OSD_CONTROL)
   iolist_add_entry(FAKE_IO_START+4,"OSD1",2,
-    "Trace|Prefetch|HBI|IKBD|60hz|.|.|.|.|.|.|.|.|.|.|.");
+    "Trace|Prefetch|Interrupt|IKBD|60hz|.|.|.|.|.|.|.|.|.|.|.");
   iolist_add_entry(FAKE_IO_START+6,"OSD2 Shifter",2,
     "Tricks|Load|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
   iolist_add_entry(FAKE_IO_START+8,"OSD3 STE",2,
-    "Dma|Blt|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
+    "Dma|Blt|Sdp|.|.|.|.|.|.|.|.|.|.|.|.|.");
 #endif
 
+
 #if defined(SS_DEBUG_TRACE_CONTROL)
-  iolist_add_entry(FAKE_IO_START+10,"TRACE1 Shifter",2,
-    "Vert|.|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
-  iolist_add_entry(FAKE_IO_START+12,"TRACE2",2,
-    "FdcStr|.|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
+  iolist_add_entry(FAKE_IO_START+10,"TRACE Shifter",2,
+    "vert|1line|vbl|adj|.|.|.|.|.|.|.|.|.|.|.|.");
+  iolist_add_entry(FAKE_IO_START+12,"TRACE exc",2,
+    "mfp|vbi|hbi|.|.|.|.|.|.|.|.|.|.|.|.|.");
+  iolist_add_entry(FAKE_IO_START+14,"TRACE floppy",2,
+    "str|bytes|ipf1|ipf2|.|.|.|.|.|.|.|.|.|.|.|.");
+
+#endif
+
+#if defined(SS_DEBUG_VIDEO_CONTROL)
+  iolist_add_entry(FAKE_IO_START+18,"Video",2,
+    "lineoff|.|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
+#endif
+
+#if defined(SS_DEBUG_MUTE_SOUNDCHANNELS)
+  iolist_add_entry(FAKE_IO_START+20,"Snd mute",2,
+    "dma|psg1|psg2|psg3|.|.|.|.|.|.|.|.|.|.|.|."); //order?
 #endif
 
 

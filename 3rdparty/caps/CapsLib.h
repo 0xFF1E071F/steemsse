@@ -5,11 +5,7 @@
 #ifdef CAPS_USER
 #define LIB_USER
 #endif
-
-//////#define LIB_USER
-
-
-#include "comlib.h"
+#include "ComLib.h"
 
 ExtSub SDWORD __cdecl CAPSInit();
 ExtSub SDWORD __cdecl CAPSExit();
@@ -34,5 +30,6 @@ ExtSub void   __cdecl CAPSFdcWrite(PCAPSFDC pc, UDWORD address, UDWORD data);
 ExtSub SDWORD __cdecl CAPSFdcInvalidateTrack(PCAPSFDC pc, SDWORD drive);
 ExtSub SDWORD __cdecl CAPSFormatDataToMFM(PVOID pformattrack, UDWORD flag);
 ExtSub SDWORD __cdecl CAPSGetInfo(PVOID pinfo, SDWORD id, UDWORD cylinder, UDWORD head, UDWORD inftype, UDWORD infid);
+ExtSub SDWORD __cdecl CAPSSetRevolution(SDWORD id, UDWORD value);
 
 #endif

@@ -36,6 +36,9 @@ public:
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)    
     IPFDisk=
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+    SCPDisk=
+#endif 
     0;PastiBuf=NULL;RemoveDisk();}
 
   ~TFloppyImage()            { RemoveDisk(); }
@@ -53,6 +56,10 @@ public:
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
     || IPFDisk
 #endif    
+#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+    || SCPDisk
+#endif    
+
     ; }
   bool NotEmpty() { return DiskInDrive(); }
   bool Empty()       { return DiskInDrive()==0; }
@@ -79,7 +86,9 @@ public:
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
   bool IPFDisk;
 #endif
-
+#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+  bool SCPDisk;
+#endif
   DWORD STT_TrackStart[2][FLOPPY_MAX_TRACK_NUM+1];
   WORD STT_TrackLen[2][FLOPPY_MAX_TRACK_NUM+1];
 

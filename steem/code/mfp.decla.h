@@ -93,6 +93,10 @@ EXT BYTE mfp_gpip_no_interrupt INIT(0xf7);
 EXT int mfp_time_of_set_pending[16];
 #endif
 
+#if defined(SS_MFP_WRITE_DELAY1)
+EXT int time_of_last_write_to_mfp_reg;
+#endif
+
 EXT BYTE mfp_gpip_input_buffer;
 
 #define MFP_CLK 2451

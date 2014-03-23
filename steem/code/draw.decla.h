@@ -90,9 +90,7 @@ extern WORD tested_pc_hz[2][3];
 
 EXT void get_fullscreen_rect(RECT *);
 EXT int overscan INIT(0)
-#if !(defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE) \
- && defined(SS_SHIFTER) && !defined(SS_SHIFTER_DRAW_DBG) \
- && defined(SS_STRUCTURE))
+#if !defined(SS_SHIFTER_REMOVE_USELESS_VAR) || defined(SS_SHIFTER_DRAW_DBG)
 ,stfm_borders INIT(0)
 #endif
 ;

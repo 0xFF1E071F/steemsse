@@ -2184,6 +2184,10 @@ Windows 2000	5.0
 #if defined(SS_STF_MEGASTF)
   SendMessage(STTypeOption,CB_ADDSTRING,0,(long)CStrT(st_model_name[2]));
 #endif
+#if defined(SS_STF_8MHZ)
+  SendMessage(STTypeOption,CB_ADDSTRING,0,(long)CStrT(st_model_name[3]));
+#endif
+
   SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,SS_STF_ST_MODELS-1),0);
   ToolAddWindow(ToolTip,Win,
     T("Some programs will run only with STF or STE. Changing ST model will preselect a TOS for next cold reset."));

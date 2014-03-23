@@ -73,6 +73,11 @@ THistoryList HistList;
 #include <6301/6301.h>
 #endif
 
+
+#if defined(SS_SHIFTER)
+#include <SSE/SSEShifter.h>
+#endif
+
 /* SS
   Mods in the debug build (Steem Boiler):
   - not sure CPU mods are reckoned but it seems so (TODO)
@@ -512,19 +517,23 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
     {
       // reverse video timers in use
       MFP_CALC_INTERRUPTS_ENABLED; //call macro first
+      MFP_CALC_TIMERS_ENABLED
       for(int n=0;n<4;n++)
       {
         bool enabled=
-          ((sr & SR_IPL) < SR_IPL_6) // SR control
-          && mfp_interrupt_enabled[mfp_timer_irq[n]] //control register
-          && ((mfp_get_timer_control_register(n) & 7)&&n!=1 //timers A, C, D
+        //  ((sr & SR_IPL) < SR_IPL_6) && // SR control  ?
+          mfp_interrupt_enabled[mfp_timer_irq[n]] //control register
+          && ((mfp_get_timer_control_register(n) & 7)//&&n!=1 
           || n==1 && (mfp_get_timer_control_register(n) & 8)); //event count B
 
         if(enabled && Debug.boiler_timer_hwnd[n]==(HWND)lPar)
         { // from the example
           HDC hdcStatic = (HDC) wPar;
           SetTextColor(hdcStatic, RGB(255,255,255));
-          SetBkColor(hdcStatic, RGB(0,0,0));
+          if(n==1 && (mfp_get_timer_control_register(n) & 8))
+            SetBkColor(hdcStatic, RGB(128,128,128));//event count B
+          else
+            SetBkColor(hdcStatic, RGB(0,0,0));//regular timer
           return (INT_PTR) CreateSolidBrush(RGB(0,0,0));
         }
       }
@@ -1016,7 +1025,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
                 ? MF_CHECKED : MF_UNCHECKED));
               break;
 #endif
-#if defined(SS_DEBUG_MUTE_PSG_CHANNEL)
+#if defined(SS_DEBUG_MUTE_PSG_CHANNEL1)
 /*
 Toggling a bit
 
@@ -1036,7 +1045,7 @@ This isn't saved through the sessions
               break;
 #endif
 
-#if defined(SS_DEBUG_MUTE_DMA_SOUND)
+#if defined(SS_DEBUG_MUTE_DMA_SOUND1)
             case 1526: // mute DMA - use same mask
               Debug.PsgMask ^= (1 << 3);
               CheckMenuItem(sse_menu,id,
@@ -1294,7 +1303,7 @@ This isn't saved through the sessions
               break;
 #endif
 
-            case 1022:
+            case 1022://SS this is when you click on 'Go'
             {
               DWORD dat=CBGetSelectedItemData(GetDlgItem(Win,1020));
               debug_run_until=LOWORD(dat);
@@ -1693,7 +1702,11 @@ void DWin_init()
   AppendMenu(logsection_menu,MF_STRING,1014,"&Set Log Viewing Program");
   AppendMenu(logsection_menu,MF_SEPARATOR,0,NULL);
   AppendMenu(logsection_menu,MF_STRING,1006,"Add &Mark");
+#if defined(SS_DEBUG_WIPE_TRACE)
+  AppendMenu(logsection_menu,MF_STRING,1007,"Wipe Logfile/TRACE");
+#else
   AppendMenu(logsection_menu,MF_STRING,1007,"Wipe Logfile");
+#endif
   AppendMenu(logsection_menu,MF_STRING|
         int(debug_wipe_log_on_reset ? MF_CHECKED:MF_UNCHECKED),1013,"Wipe On Reset");
   AppendMenu(logsection_menu,MF_SEPARATOR,0,NULL);
@@ -1761,13 +1774,13 @@ void DWin_init()
   AppendMenu(sse_menu,MF_STRING|MF_SEPARATOR,0,NULL);
   AppendMenu(sse_menu,MF_STRING,1525,"68030 stack frame");
 #endif
-#if defined(SS_DEBUG_MUTE_PSG_CHANNEL)
+#if defined(SS_DEBUG_MUTE_PSG_CHANNEL1)
   AppendMenu(sse_menu,MF_STRING|MF_SEPARATOR,0,NULL);
   AppendMenu(sse_menu,MF_STRING,1521,"Mute PSG channel A");
   AppendMenu(sse_menu,MF_STRING,1520,"Mute PSG channel B");
   AppendMenu(sse_menu,MF_STRING,1519,"Mute PSG channel C");
 #endif
-#if defined(SS_DEBUG_MUTE_DMA_SOUND)
+#if defined(SS_DEBUG_MUTE_DMA_SOUND1)
   AppendMenu(sse_menu,MF_STRING,1526,"Mute DMA sound");
 #endif
 #if defined(SS_DEBUG_FAKE_IO)

@@ -217,6 +217,18 @@ when it does).
             ior_byte&=~BIT_1; // fixes Nightdawn
           }
 #endif
+
+#if defined(SS_ACIA_IRQ_DELAY2)
+/*  Not necessary for V8MS but it's logical
+*/
+          if(SSE_HACKS_ON && 
+            abs(ACT-ACIA_IKBD.last_rx_read_time)<ACIA_RDRF_DELAY)
+          {
+            TRACE_LOG("ACIA SR RDRF not set yet (%d)\n",ACT-ACIA_IKBD.last_rx_read_time);
+            ior_byte&=~BIT_0;
+          }
+
+#endif
           break;
         }
         

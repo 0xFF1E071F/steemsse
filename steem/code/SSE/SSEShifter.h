@@ -1113,8 +1113,14 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 #if defined(SS_SHIFTER_EVENTS)
   VideoEvents.Add(scan_y,cycles,'w',((addr&0xF)<<8)|io_src_b);
 #endif
+
+#if defined(SS_OSD_CONTROL)
+  if(OSD_MASK3 & OSD_CONTROL_WRITESDP) 
+#else
   if(TRACE_ENABLED)
+#endif
     TRACE_OSD("WRITE SDP");  
+
 #if defined(SS_STF_SDP)
   // some STF programs write to those addresses, it just must be ignored.
   if(ST_TYPE!=STE)

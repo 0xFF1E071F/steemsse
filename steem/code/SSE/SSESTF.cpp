@@ -1,11 +1,19 @@
 #if defined(SS_STF)
 
-char* st_model_name[]={"STE","STF","Mega ST4"};
+// note this is global here, not in classes. TODO?
+
+char* st_model_name[]={"STE","STF","Mega ST4","STF 8.0 MHZ"};
+
+#if defined(SS_TOS_WARNING1)
+int CheckSTTypeAndTos() {
+  if(tos_version<0x106 && ST_TYPE==STE || tos_version>=0x106 && ST_TYPE!=STE)
+    Alert("TOS and ST type normally not compatible","Warning",MB_OK|MB_ICONWARNING);
+}
+#endif
 
 int SwitchSTType(int new_type) {
 
-  ASSERT( sizeof("123")==4 );
-  ASSERT(new_type==STE||new_type==STF||new_type==MEGASTF);
+  ASSERT(new_type>=0 && new_type<SS_STF_ST_MODELS);
   ST_TYPE=new_type;
   if(ST_TYPE!=STE) // all STF types
   {
@@ -15,8 +23,20 @@ int SwitchSTType(int new_type) {
 #endif
 #if defined(SS_MFP_RATIO)
 #if defined(SS_MFP_RATIO_STF)
-    CpuMfpRatio=(double)CPU_STF_PAL/(double)MFP_CLK_TH_EXACT;
-    CpuNormalHz=CPU_STF_PAL;
+
+#if defined(SS_STF_8MHZ)
+    if(ST_TYPE==STF8MHZ) // this removes artefacts in panic.tos, is it normal?
+    {
+      CpuMfpRatio=(double)CPU_STF_ALT/(double)MFP_CLK_TH_EXACT;
+      CpuNormalHz=CPU_STF_ALT;
+    }
+    else
+#endif
+    {
+      CpuMfpRatio=(double)CPU_STF_PAL/(double)MFP_CLK_TH_EXACT;
+      CpuNormalHz=CPU_STF_PAL;
+    }
+
 #else
     CpuMfpRatio=(double)CPU_STE_TH/(double)MFP_CLK_LE_EXACT;
     CpuNormalHz=CPU_STE_TH;

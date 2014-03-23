@@ -67,9 +67,17 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   STT=IsSameStr_I(Ext,"STT");
   DIM=IsSameStr_I(Ext,"DIM");
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
-  bool IPF=IsSameStr_I(Ext,"IPF");
+  bool IPF=IsSameStr_I(Ext,"IPF") 
+#ifdef SS_IPF_CTRAW
+    || IsSameStr_I(Ext,SS_IPF_CTRAW)
+#endif
+    ;
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+  bool SCP=IsSameStr_I(Ext,"SCP");
 #endif
   
+
   // NewDiskInZip will be blank for default disk, RealDiskInZip will be the
   // actual name of the file in the zip that is a disk image
   EasyStr NewDiskInZip,RealDiskInZip;
@@ -106,9 +114,17 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
               STT=has_extension(fn,"STT");
               DIM=has_extension(fn,"DIM");
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
-              IPF=has_extension(fn,"IPF");
+              IPF=has_extension(fn,"IPF") 
+#ifdef SS_IPF_CTRAW
+                || has_extension(fn,SS_IPF_CTRAW)
 #endif
-//              /*
+                ;
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+              SCP=has_extension(fn,"SCP");
+#endif
+
+//              /*//MFD
 #if defined(SS_PASTI_AUTO_SWITCH)
               pasti_active=false;
 #endif
@@ -231,6 +247,14 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     BytesPerSector=SectorsPerTrack=0; 
     Sides=img_info.maxhead+1;
     TracksPerSide=img_info.maxcylinder;
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+  }else if(SCP) { 
+//    ScpImageInfo...
+    int Ret=Scp.InsertDisk(drive,File);
+    if(Ret==FIMAGE_WRONGFORMAT)
+        return Ret;
+//...
 #endif
   }else{
     // Open for read for an MSA (going to convert to ST and write to that)
@@ -550,6 +574,9 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
   IPFDisk=IPF;
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+  SCPDisk=SCP;
+#endif
   WrittenTo=0;
 
   // Media change, write protect for 10 VBLs, unprotect for 10 VBLs, wp for 10
@@ -576,6 +603,10 @@ bool TFloppyImage::ReinsertDisk()
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
     || IPFDisk
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+    || SCPDisk //not right, but we're starting...
+#endif
+
     ) return 0;
 
   fclose(f);
@@ -599,7 +630,10 @@ bool TFloppyImage::OpenFormatFile()
   if (f==NULL || ReadOnly || Format_f || STT_File || PastiDisk
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
     || IPFDisk
-#endif    
+#endif 
+#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+    || SCPDisk
+#endif   
     ) return 0;
 
   // The format file is just a max size ST file, any formatted tracks
@@ -637,6 +671,9 @@ bool TFloppyImage::ReopenFormatFile()
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
     || IPFDisk
 #endif    
+#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+    || SCPDisk
+#endif
     ) return 0;
 
   fclose(Format_f);
@@ -890,6 +927,10 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
 #endif
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+//TODO
+#endif
+
   if (f && ReadOnly==0 && LoseChanges==0 && WrittenTo && ZipTempFile.Empty()){
     short MSASecsPerTrack,MSAStartTrack=0,MSAEndTrack,MSASides;
     bool MSAResize=0;
@@ -1140,6 +1181,9 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   if(CAPSIMG_OK && drive!=-1 && Caps.IsIpf(drive))
     Caps.RemoveDisk(drive);
   IPFDisk=0;
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+  SCPDisk=0;
 #endif
 
   if (f) fclose(f);

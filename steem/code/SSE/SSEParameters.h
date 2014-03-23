@@ -93,6 +93,10 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define ACIA_TDR_COPY_DELAY (200) // Hades Nebula vs. Nightdawn (???)
 #endif
 
+#if defined(SS_ACIA_IRQ_DELAY2)
+#define ACIA_RDRF_DELAY (20)
+#endif
+
 #else //!ACIA
 #define SS_6301_TO_ACIA_IN_HBL (screen_res==2?24:12) // to be <7200
 #endif
@@ -342,6 +346,11 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #if defined(SS_IPF)
 #define SS_IPF_PLUGIN_FILE "CAPSImg.dll" //Windows
 #define SS_IPF_FREQU 8000000//? CPU speed? - even for that I wasn't helped!
+
+#ifdef SS_IPF_CTRAW
+#undef SS_IPF_CTRAW
+#define SS_IPF_CTRAW "CTR" 
+#endif
 #endif
 
 
@@ -371,16 +380,21 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define  CPU_STE_TH 8000000 // Steem 3.2
 #define  MFP_CLK_STE_EXACT 2451182 // not if 'STE as STF' is defined
 #define  CPU_STF_PAL (8021248) // ( 2^8 * 31333 )
+#define  CPU_STF_ALT (8007100) //ljbk's?
 #define  CPU_STE_PAL (CPU_STF_PAL+64) //64 for DMA sound!
 #define  MFP_CLK_TH 2457
 #define  MFP_CLK_TH_EXACT 2457600 // ( 2^15 * 3 * 5^2 )
 #endif
 
+#if defined(SS_MFP_WRITE_DELAY1)
+#define MFP_WRITE_LATENCY 8 // 8 = the smallest for Audio Artistic
 #endif
+
+#endif//mfp
 
 
 /////////
-// MFP //
+// MMMU //
 /////////
 
 #if defined(SS_MMU)
@@ -409,7 +423,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 /////////////
 
 #ifdef SS_BETA
-//#define SS_SHIFTER_SKIP_SCANLINE 5//-29 // fetch but only draw colour 0 (debug)
+//#define SS_SHIFTER_SKIP_SCANLINE 5//-29 // fetch but only draw colour 0 (debug)//MFD
 #endif
 #define VERT_OVSCN_LIMIT (502) //502
 

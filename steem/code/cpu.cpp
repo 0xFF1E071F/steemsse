@@ -3449,7 +3449,6 @@ void                              m68k_movem_l_from_regs_or_ext_l(){
     int s=count_bits_set_in_word(m68k_src_w)*2; //number of words to write
     if(s>4)BUS_JAM_TIME((s-1)&-4);  //we've already had a bus jam of 4, for s=5..8 want extra bus jam of 4
   }
-
 }
 
 //#define SS_CPU_LINE_4_TIMINGS
