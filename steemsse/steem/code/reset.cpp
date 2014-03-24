@@ -414,7 +414,7 @@ void reset_st(DWORD flags)
     }
   }else{
     if (ChangeSettings) GUIColdResetChangeSettings();
-    TRACE_IDE("reset_st->power on\n");
+//    TRACE("reset_st->power on\n");
     power_on();
     palette_convert_all();
 

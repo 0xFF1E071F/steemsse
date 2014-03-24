@@ -266,7 +266,13 @@ void AddSnapShotToHistory(char *FilNam)
   StateHist[0]=FilNam;
 }
 //---------------------------------------------------------------------------
-bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bool ChangeDisks=true)
+//SS C++ horror, TODO
+
+bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bool ChangeDisks=true
+#if defined(SS_VAR_POWERON2)
+  ,bool NoNeedToReset=false // in main, we already called reset_st
+#endif
+  )
 {
 #ifndef ONEGAME
   int Failed=2,Version=0;
@@ -280,7 +286,11 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
       DeleteFile(WriteDir+SLASH+"auto_reset_backup.sts");
       SaveSnapShot(WriteDir+SLASH+"auto_loadsnapshot_backup.sts",-1,0);
     }
+#if defined(SS_VAR_POWERON2)
+    if(!NoNeedToReset)
+#endif
     reset_st(RESET_COLD | RESET_STOP | RESET_NOCHANGESETTINGS | RESET_NOBACKUP);
+
     FILE *f=fopen(FilNam,"rb");
     if (f){
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_CHECK_SNAPSHOT)
@@ -296,7 +306,7 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
       if (Failed==0){
         Failed=int((EasyUncompressToMem(Mem+MEM_EXTRA_BYTES,mem_len,f)!=0) ? 2:0);
         TRACE("Memory snapshot %s loaded\n",FilNam);
-#if defined(SS_TOS_WARNING1)
+#if defined(SS_TOS_WARNING1) && defined(SS_VAR_POWERON1)//MFD
         CheckSTTypeAndTos();
 #endif
       }
