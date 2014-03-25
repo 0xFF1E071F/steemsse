@@ -313,16 +313,25 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
     IACK (interrupt acknowledge)  16
     Exception processing          40
     Total                         56
+
+Motorola:
+Interrupt* 46(5/4)
+
+* The interrupt acknowledge and breakpoint cycles
+are assumed to take four clock periods.
+
 */
 
 #if defined(SS_INT_MFP)
-#define SS_INT_MFP_TIMING 56
+#define SS_INT_MFP_TIMING 56 // many cases
 #endif
 #if defined(SS_INT_HBL)
-#define SS_INT_HBL_TIMING (56)
+#define SS_INT_HBL_TIMING 56 // SNYD/TCB
 #endif
 #if defined(SS_INT_VBL)
-#define SS_INT_VBL_TIMING 56
+#ifdef SS_BETA//temp test (we don't think it's correct)
+#define SS_INT_VBL_TIMING 52//56
+#endif
 #endif
 
 
