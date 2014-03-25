@@ -1376,12 +1376,19 @@ and all his silly mods are gone!
 #define SS_TOS_FILETIME_FIX //from Petari//3.6.0
 #define SS_TOS_GEMDOS_NOINLINE//3.6.1
 #define SS_TOS_GEMDOS_PEXEC6 //3.6.1 ReDMCSB 100% in TOS104
-#define SS_TOS_GEMDOS_STRUCT//3.6.1
+
+#define SS_TOS_STRUCT//3.6.1
+
 #define SS_TOS_GEMDOS_VAR1 //various unimportant fixes 3.6.1
 
 //#define SS_TOS_NO_INTERCEPT_ON_RTE1 // fix (not) Megamax C on ReDMCSB//3.6.0
-#define SS_TOS_NO_INTERCEPT_ON_RTE2 //try to be less radical... ReDMCSB 50% in TOS102//361
-
+#if defined(SS_TOS_STRUCT)
+#define SS_TOS_NO_INTERCEPT_ON_RTE2 //3.6.1//try to be less radical... ReDMCSB 50% in TOS102
+#define SS_TOS_SNAPSHOT_AUTOSELECT//3.6.1
+//#define SS_TOS_SNAPSHOT_AUTOSELECT1//3.6.1//working but code duplication
+#define SS_TOS_SNAPSHOT_AUTOSELECT2//3.6.1//with refactoring
+#define SS_TOS_SNAPSHOT_AUTOSELECT3//3.6.1//options.cpp uses refactoring
+#endif
 #ifdef SS_DEBUG
 #define SS_TOS_DONT_TRACE_3F//read file//3.6.1
 #define SS_TOS_DONT_TRACE_40//write file//3.6.1

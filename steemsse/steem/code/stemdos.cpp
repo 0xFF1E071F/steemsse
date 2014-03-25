@@ -58,9 +58,9 @@ int stemdos_current_drive;
 #undef EXT
 #undef INIT
 
-#ifdef SS_TOS_GEMDOS_STRUCT
+#ifdef SS_TOS_STRUCT
 
-TGemdos Gemdos;
+TTos Tos;
 
 #endif
 
@@ -2032,6 +2032,59 @@ void stemdos_restore_path_buffer(){
   for(int n=0;n<64;n++)m68k_poke(stemdos_path_buffer+n,stemdos_old_buffer[n]);
 }
 */
+
+#if defined(SS_TOS_SNAPSHOT_AUTOSELECT2)
+// refactoring to avoid duplication, code was originally in options.cpp
+
+EasyStr TTos::GetNextTos(DirSearch &ds) { // to enumerate TOS files
+  EasyStr Path;
+  if((ds.Attrib & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_HIDDEN))==0)
+  {
+    Path=RunDir+SLASH+ds.Name;
+#ifdef WIN32
+    if (has_extension(Path,"LNK")){
+       WIN32_FIND_DATA wfd;
+       EasyStr DestPath=GetLinkDest(Path,&wfd);
+       if (has_extension_list(DestPath,"IMG","ROM",NULL)){
+         if (Exists(DestPath)) Path=DestPath;
+       }
+     }
+#elif defined(UNIX)
+     memset(LinkPath,0,MAX_PATH+1);
+     if (readlink(Path,LinkPath,MAX_PATH)>0){
+       if (has_extension_list(LinkPath,"IMG","ROM",NULL)){
+         if (Exists(LinkPath)){
+           Path=LinkPath;
+         }else{
+           Path="";
+         }
+       }
+     }
+#endif
+  }
+  return Path;
+}
+
+void TTos::GetTosProperties(EasyStr Path,WORD &Ver,BYTE &Country,WORD &Date) {
+  FILE *f=fopen(Path,"rb");
+  if (f){
+    fseek(f,2,SEEK_SET);
+    BYTE b_high,b_low;
+    fread(&b_high,1,1,f);fread(&b_low,1,1,f);
+    Ver=MAKEWORD(b_low,b_high);
+    
+    fseek(f,0x1d,SEEK_SET);
+    fread(&Country,1,1,f);
+    
+    fseek(f,0x1e,SEEK_SET);
+    fread(&b_high,1,1,f);fread(&b_low,1,1,f);
+    Date=MAKEWORD(b_low,b_high);
+    
+    fclose(f);
+  }
+}
+
+#endif//#if defined(SS_TOS_SNAPSHOT_AUTOSELECT2)
 
 #undef LOGSECTION
 

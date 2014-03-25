@@ -248,7 +248,7 @@ int TOptionBox::TOSLangToFlagIdx(int Lang)
   return -1;
 }
 //---------------------------------------------------------------------------
-void TOptionBox::TOSRefreshBox(EasyStr Sel)
+void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
 { //SS this creates the TOS list in the option page
 #ifdef WIN32
   HWND Win=GetDlgItem(Handle,8300);
@@ -288,7 +288,7 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel)
 	char LinkPath[MAX_PATH+1];
 #endif
 
-  EasyStr Fol=RunDir;
+  EasyStr Fol=RunDir; //SS links are in rundir
   EasyStr VersionPath; // The first TOS found which matches the current TOS version
 
 #if defined(STEVEN_SEAGAL) && defined(SS_STF_MATCH_TOS)
@@ -299,19 +299,23 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel)
 
   if (Sel.Empty()){
     if (NewROMFile.Empty()){
-      Sel=ROMFile;
+      Sel=ROMFile; //SS current TOS
     }else{
-      Sel=NewROMFile;
+      Sel=NewROMFile; //SS next TOS already selected by user
     }
   }
 #if defined(STEVEN_SEAGAL) && defined(SS_STF_MATCH_TOS)
   }
 #endif
 
- 	DirSearch ds;
+  DirSearch ds;
   if (ds.Find(Fol+SLASH+"*.*")){
     EasyStr Path;
     do{
+#if defined(SS_TOS_SNAPSHOT_AUTOSELECT3) //3.6.1//options.cpp uses refactoring
+      {//temp, todo
+      Path=Tos.GetNextTos(ds);
+#else
       if ((ds.Attrib & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_HIDDEN))==0){
         Path=Fol+SLASH+ds.Name;
 #ifdef WIN32
@@ -334,9 +338,14 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel)
           }
         }
 #endif
+#endif//SS_TOS_SNAPSHOT_AUTOSELECT3
+
         if (has_extension_list(Path,"IMG","ROM",NULL)){
           WORD Ver,Date;
           BYTE Country;
+#if defined(SS_TOS_SNAPSHOT_AUTOSELECT3)
+          Tos.GetTosProperties(Path,Ver,Country,Date);
+#else
           FILE *f=fopen(Path,"rb");
 
           if (f){
@@ -353,34 +362,36 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel)
             Date=MAKEWORD(b_low,b_high);
 
             fclose(f);
-
-#if defined(STEVEN_SEAGAL) && defined(SS_STF_MATCH_TOS)
-            // remember paths of TOS102 (STF) & TOS106 (STE)
-            if(Ver==0x102 && KnownSTFTosPath.Empty())
-            {
-              //TRACE_LOG("Memorising %s for TOS%X\n",Path.c_str(),Ver);
-              KnownSTFTosPath=Path;
-            }
-            else if(Ver==0x106 && KnownSTETosPath.Empty())
-            {
-              //TRACE_LOG("Memorising %s for TOS%X\n",Path.c_str(),Ver);
-              KnownSTETosPath=Path;
-            }
-#endif
-
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
-            if(Ver!=0x81AA) // 6301 ST Rom mustn't be listed
-#endif
-#if defined(STEVEN_SEAGAL) && defined(SS_STF_MATCH_TOS)
-  if(Win) {
-#endif
-            eslTOS.Add(3,Str(GetFileNameFromPath(Path))+"\01"+Path,
-                            Ver,Country,Date);
-            if (Ver==tos_version && VersionPath.Empty()) VersionPath=Path;
-#if defined(STEVEN_SEAGAL) && defined(SS_STF_MATCH_TOS)
-  }
-#endif
           }
+#endif//SS_TOS_SNAPSHOT_AUTOSELECT3
+
+#if defined(STEVEN_SEAGAL) && defined(SS_STF_MATCH_TOS)
+          // remember paths of TOS102 (STF) & TOS106 (STE)
+          if(Ver==0x102 && KnownSTFTosPath.Empty())
+          {
+            //TRACE_LOG("Memorising %s for TOS%X\n",Path.c_str(),Ver);
+            KnownSTFTosPath=Path;
+          }
+          else if(Ver==0x106 && KnownSTETosPath.Empty())
+          {
+            //TRACE_LOG("Memorising %s for TOS%X\n",Path.c_str(),Ver);
+            KnownSTETosPath=Path;
+          }
+#endif
+          
+#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+          if(Ver!=0x81AA) // 6301 ST Rom mustn't be listed
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_STF_MATCH_TOS)
+            if(Win) {
+#endif
+              eslTOS.Add(3,Str(GetFileNameFromPath(Path))+"\01"+Path,
+                Ver,Country,Date);
+              if (Ver==tos_version && VersionPath.Empty()) VersionPath=Path;
+#if defined(STEVEN_SEAGAL) && defined(SS_STF_MATCH_TOS)
+            }
+#endif
+            
         }
       }
     }while (ds.Next());

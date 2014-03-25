@@ -183,13 +183,17 @@ void STStringToPC(char*),PCStringToST(char*);
 //#endif//#ifdef IN_EMU
 
 
-#ifdef SS_TOS_GEMDOS_STRUCT
+#ifdef SS_TOS_STRUCT
 
-struct TGemdos {
-  BYTE LastPTermedProcess; //to go around bug...
+struct TTos {
+  BYTE LastPTermedProcess; //to go around (Steem) bug...
+#if defined(SS_TOS_SNAPSHOT_AUTOSELECT2) //version with refactoring
+  EasyStr GetNextTos(DirSearch &ds); // to enumerate TOS files
+  void GetTosProperties(EasyStr Path,WORD &Ver,BYTE &Country,WORD &Date);
+#endif
 };
 
-extern TGemdos Gemdos;
+extern TTos Tos;
 
 #endif
 

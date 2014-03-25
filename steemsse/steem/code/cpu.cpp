@@ -4088,13 +4088,13 @@ Also see SS_TOS_GEMDOS_PEXEC6 for ReDMCSB
     if(stemdos_command==0x4c)// && stemdos_rte_action!=STEMDOS_RTE_MFREE2)
     {
       //if(stemdos_Pexec_list_ptr==debug1)
-      if(stemdos_Pexec_list_ptr==Gemdos.LastPTermedProcess)
+      if(stemdos_Pexec_list_ptr==Tos.LastPTermedProcess)
       {
        // TRACE("refuse intercept OS for $%X\n",stemdos_Pexec_list_ptr);
         dont_intercept_os=true;
       }
       else
-        Gemdos.LastPTermedProcess=stemdos_Pexec_list_ptr;
+        Tos.LastPTermedProcess=stemdos_Pexec_list_ptr;
     }
 #endif
     if (!dont_intercept_os) intercept_os();
