@@ -344,7 +344,7 @@ Sync is set back to 2 between R2 and R0, this is isn't a line +24
 #if defined(SS_VID_BORDERS_416_NO_SHIFT)
 /*  bugfix v3.6.0 see below for line +26, it's the same problem
 */
-        if(SSE_HACKS_ON&&SideBorderSize==VERY_LARGE_BORDER_SIDE)
+        if(SSE_HACKS_ON&&SideBorderSize==VERY_LARGE_BORDER_SIDE&&border)
           HblPixelShift+=4;
 #endif
 
@@ -387,7 +387,7 @@ Sync is set back to 2 between R2 and R0, this is isn't a line +24
     48. If you believe the #pixels is 48, then you think you must lose
     4 pixels before the border. If you don't, there's nothing to shift.
 */
-          && (!SSE_HACKS_ON||SideBorderSize!=VERY_LARGE_BORDER_SIDE)
+          && (!SSE_HACKS_ON||SideBorderSize!=VERY_LARGE_BORDER_SIDE||!border)
 #endif
           )
           shifter_pixel+=4;
@@ -423,7 +423,7 @@ Sync is set back to 2 between R2 and R0, this is isn't a line +24
 
         if(HSCROLL>=12) // STE shifter bug (Steem authors)
 #if defined(SS_VID_BORDERS_416_NO_SHIFT) //E605 & Tekila artefacts
-          if(!SSE_HACKS_ON||SideBorderSize!=VERY_LARGE_BORDER_SIDE) 
+          if(!SSE_HACKS_ON||SideBorderSize!=VERY_LARGE_BORDER_SIDE||!border) 
 #endif
           ShiftSDP(8);
 
@@ -849,7 +849,7 @@ STF2:
         shifter_pixel+=4; // hmm...
 #endif
 #if defined(SS_VID_BPOC)
-        if(BORDER_40 && SSE_HACKS_ON && cycles_in_low_res==16) 
+        if(BORDER_40 && border && SSE_HACKS_ON && cycles_in_low_res==16) 
         { // fit text of Best Part of the Creation on a 800 display
           ShiftSDP(4);      
 #if defined(SS_VID_BORDERS_416_NO_SHIFT)
@@ -1424,7 +1424,7 @@ detect unstable: switch MED/LOW - Beeshift
     adjustment supports our theory of "no shift, 52 pixels".
     With display size 412, it's very close to the screenshot.
 */
-        && (SideBorderSize!=VERY_LARGE_BORDER_SIDE) 
+        && (SideBorderSize!=VERY_LARGE_BORDER_SIDE||border) 
 #endif
         )
         HblPixelShift=4; 
@@ -3015,7 +3015,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     OK: Overscan #6, HighResMode STE
     bugfix v3.6.0: for STE line +20 there's nothing to compensate! (pcsv62im)
 */
-      if(SSE_HACKS_ON && SideBorderSize==VERY_LARGE_BORDER_SIDE 
+      if(SSE_HACKS_ON && SideBorderSize==VERY_LARGE_BORDER_SIDE  && border
         && shifter_freq_at_start_of_vbl==50
         && (CurrentScanline.Tricks&TRICK_LINE_PLUS_26))
         cycles_since_hbl+=4;
@@ -3117,7 +3117,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     Beeshift, Dragonnels menu
 */
           if(SSE_HACKS_ON && SideBorderSize==VERY_LARGE_BORDER_SIDE 
-            && left_border)
+            && left_border && border)
             border1+=4;
 #endif
         }

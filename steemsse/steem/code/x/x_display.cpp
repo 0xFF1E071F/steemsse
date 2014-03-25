@@ -308,7 +308,7 @@ bool SteemDisplay::Blit()
     sw=draw_blit_source_rect.right;
     sh=draw_blit_source_rect.bottom;
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
-    if(BORDER_40) // clip from larger to 800
+    if(BORDER_40 && border) // clip from larger to 800
     {
       sx+=16; // eg BPOC
     }
@@ -367,7 +367,7 @@ Screen *screen; /* back pointer to correct screen */
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
-    if(BORDER_40) // clip from larger to 800
+    if(BORDER_40 && border) // clip from larger to 800
     {
       sx+=16; // eg BPOC
     }

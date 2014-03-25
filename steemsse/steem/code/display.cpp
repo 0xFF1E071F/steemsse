@@ -361,7 +361,7 @@ HRESULT SteemDisplay::DDCreateSurfaces()
     as for window. For the moment stretch mode only.
 */
   if(!FullScreen || SSE_3BUFFER
-    || (BORDER_40 && draw_fs_blit_mode==DFSM_STRAIGHTBLIT)) 
+    || (BORDER_40 && border && draw_fs_blit_mode==DFSM_STRAIGHTBLIT)) 
 #elif defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
   // we may need a bigger drawing zone in fullscreen mode too
   if (!FullScreen || (BORDER_40 && draw_fs_blit_mode==DFSM_STRAIGHTBLIT) )
@@ -646,7 +646,7 @@ HRESULT SteemDisplay::Lock()
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
       // trying to make it crash-free (v3.4.1)
-      if(FullScreen && BORDER_40)
+      if(FullScreen && BORDER_40 && border)
       {
         try { //try to erase memory (black screen) //note use fillrect ok?
           ZeroMemory(draw_mem,800*8*200);
@@ -801,7 +801,7 @@ bool SteemDisplay::Blit()
         switch (draw_fs_blit_mode){
           case DFSM_FLIP:
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
-            if(BORDER_40) // bad framing in flip mode
+            if(BORDER_40 && border) // bad framing in flip mode
             {
               draw_fs_blit_mode=DFSM_STRAIGHTBLIT;
               TRACE_LOG("Fullscreen BorderSize %d changing to mode %d\n",DISPLAY_SIZE,draw_fs_blit_mode);
@@ -814,7 +814,7 @@ bool SteemDisplay::Blit()
           case DFSM_STRAIGHTBLIT:
           {
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
-            if(BORDER_40) // clip from larger to 800
+            if(BORDER_40 && border) // clip from larger to 800
             {
               RECT our_clipping={16,0,816,556-6};
               hRet=DDPrimarySur->Blt(&draw_blit_source_rect,DDBackSur,
@@ -912,7 +912,7 @@ bool SteemDisplay::Blit()
             ? DDBackSur2: DDBackSur;
 
 #if defined(SS_VID_BORDERS_LB_DX)
-          if(BORDER_40) // clip from larger to 800
+          if(BORDER_40 && border) // clip from larger to 800
           {
             RECT our_clipping={16,0,816,556-6};
             hRet=DDPrimarySur->Blt(&Dest,OurBackSur,
@@ -955,7 +955,7 @@ bool SteemDisplay::Blit()
       ClientToScreen(StemWin,&pt);
       OffsetRect(&dest,pt.x,pt.y);
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX) 
-      if(BORDER_40 && (screen_res==2 || draw_win_mode[screen_res]))
+      if(BORDER_40 && border && (screen_res==2 || draw_win_mode[screen_res]))
       {// clip from larger to 800
         OffsetRect(&draw_blit_source_rect,
         (CanUse_400 && !SCANLINES_INTERPOLATED)?16:8,0);
