@@ -261,7 +261,7 @@ void osd_draw()
   x1=draw_blit_source_rect.right-draw_blit_source_rect.left;
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
-  if(BORDER_40 && !SCANLINES_INTERPOLATED)
+  if(BORDER_40 && border && !SCANLINES_INTERPOLATED)
     x1+=16;
 #endif
 
@@ -499,7 +499,7 @@ void osd_draw()
     RECT cliprect={THE_LEFT,0,THE_RIGHT,y1};
     int x=0;
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
-    if(BORDER_40 && !SCANLINES_INTERPOLATED)
+    if(BORDER_40 && border && !SCANLINES_INTERPOLATED)
       x+=16;
 #endif
     int start_y=0+8;

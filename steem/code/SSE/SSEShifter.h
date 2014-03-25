@@ -1210,7 +1210,7 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
       && HSCROLL>=12
 #if defined(SS_VID_BORDERS_416_NO_SHIFT) 
       // don't try to understand this, I don't
-      && (!SSE_HACKS_ON||SideBorderSize!=VERY_LARGE_BORDER_SIDE)
+      && (!SSE_HACKS_ON||SideBorderSize!=VERY_LARGE_BORDER_SIDE||!border)
 #endif
       )
       overscan_add_extra+=8; // fixes bumpy scrolling in E605 Planet

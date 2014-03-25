@@ -330,7 +330,7 @@ are assumed to take four clock periods.
 #endif
 #if defined(SS_INT_VBL)
 #ifdef SS_BETA//temp test (we don't think it's correct)
-#define SS_INT_VBL_TIMING 52//56
+#define SS_INT_VBL_TIMING 56
 #endif
 #endif
 
