@@ -192,6 +192,13 @@ extern BYTE SideBorderSize,BottomBorderSize, SideBorderSizeWin;
 #define BORDER_EXTRA (SideBorderSize-ORIGINAL_BORDER_SIDE) // 0 8 16, in pixels
 #define BORDER_BOTTOM BottomBorderSize // !!!!!!!!!!!!!!!!!!!!!!!
 int ChangeBorderSize(int size); // gui.cpp
+
+
+#if defined(SS_VID_BORDERS_LB_DX1) // see SSEDecla.h
+#define BORDER_40 (SSEOption.DisplaySize==1&&border) // avoids verbosity
+#endif
+
+
 #endif
 
 #if defined(SS_VID_BORDERS_BIGTOP) // more hacks...
