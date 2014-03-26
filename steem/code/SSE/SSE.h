@@ -1512,8 +1512,10 @@ and all his silly mods are gone!
 #define SS_VID_BORDERS_413 // best fit for overscan?
 #define SS_VID_BORDERS_416 
 #define SS_VID_BORDERS_416_NO_SHIFT
+#define SS_VID_BORDERS_416_NO_SHIFT1 //3.6.1: check border on/off
 #define SS_VID_BORDERS_BIGTOP // more lines for palette effects
 #define SS_VID_BORDERS_LB_DX // rendering-stage trick rather than painful hacks
+#define SS_VID_BORDERS_LB_DX1 //3.6.1: check border on/off
 //#endif
 #endif
 
