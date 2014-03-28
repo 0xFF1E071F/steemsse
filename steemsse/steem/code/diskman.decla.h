@@ -5,11 +5,15 @@
 #define DISK_UNCOMPRESSED 1
 #define DISK_COMPRESSED 2
 #define DISK_PASTI 3
+//SS this should be improved
 #if defined(SS_DRIVE_IPF1)
 #define DISK_IPF 4
 #endif
+#if defined(SS_IPF_CTRAW)
+#define DISK_CTR 5
+#endif
 #if defined(SS_SCP)
-#define DISK_SCP 4
+#define DISK_SCP 7
 #endif
 
 #define FileIsDisk(s) ExtensionIsDisk(strrchr(s,'.'))

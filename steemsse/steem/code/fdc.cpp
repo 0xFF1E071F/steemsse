@@ -447,7 +447,7 @@ void floppy_fdc_command(BYTE cm)
 /*  Hack for European Demos: 'insert disk B' screen
     v3.5.4 not defined after comment by Nicolas
     It made no sense anyway, it seemed to work in SainT because there's
-    only one drive!
+    only one drive!//MFD
 */
   else if(SSE_HACKS_ON && ADAT && FloppyDrive[DRIVE].Empty()
      && (!SF314[DRIVE].MotorOn
@@ -939,6 +939,7 @@ CRC.
             fdc_str=FDC_STR_MOTOR_ON | FDC_STR_BUSY;
 
           }else{
+//TRACE("SectorIdx %d nSects %d\n",SectorIdx,nSects);
             floppy_irq_flag=FLOPPY_IRQ_ONESEC;
             fdc_str=FDC_STR_MOTOR_ON | FDC_STR_SEEK_ERROR | FDC_STR_BUSY;  //sector not found
           }

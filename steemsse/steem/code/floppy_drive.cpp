@@ -67,9 +67,12 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   STT=IsSameStr_I(Ext,"STT");
   DIM=IsSameStr_I(Ext,"DIM");
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
-  bool IPF=IsSameStr_I(Ext,"IPF") 
+  bool IPF=IsSameStr_I(Ext,"IPF");
 #ifdef SS_IPF_CTRAW
-    || IsSameStr_I(Ext,SS_IPF_CTRAW)
+  bool CTR=IsSameStr_I(Ext,SS_IPF_CTRAW);
+#endif
+#ifdef SS_IPF_KFSTREAM
+  bool RAW=IsSameStr_I(Ext,SS_IPF_KFSTREAM);
 #endif
     ;
 #endif
@@ -114,17 +117,19 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
               STT=has_extension(fn,"STT");
               DIM=has_extension(fn,"DIM");
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
-              IPF=has_extension(fn,"IPF") 
+              IPF=has_extension(fn,"IPF");
 #ifdef SS_IPF_CTRAW
-                || has_extension(fn,SS_IPF_CTRAW)
+              CTR=has_extension(fn,SS_IPF_CTRAW);
 #endif
-                ;
+#ifdef SS_IPF_KFSTREAM
+              RAW=has_extension(fn,SS_IPF_KFSTREAM);
 #endif
+#endif//ipf
 #if defined(STEVEN_SEAGAL) && defined(SS_SCP)
               SCP=has_extension(fn,"SCP");
 #endif
 
-//              /*//MFD
+//              /*
 #if defined(SS_PASTI_AUTO_SWITCH)
               pasti_active=false;
 #endif
@@ -238,11 +243,25 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     }
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
-  }else if(CAPSIMG_OK && IPF) { 
+  }else if(CAPSIMG_OK &&
+#if defined(SS_IPF_CTRAW)
+    (CTR||IPF))
+#else
+    IPF) 
+#endif
+  { 
+#if defined(SS_IPF_CTRAW)
+    SF314[drive].ImageType=IPF?DISK_IPF:DISK_CTR;
+#endif
     CapsImageInfo img_info;
     int Ret=Caps.InsertDisk(drive,File,&img_info);
     if(Ret==FIMAGE_WRONGFORMAT)
+    {
+#if defined(SS_IPF_CTRAW) //wrong switch TODO
+        SF314[drive].ImageType=0;
+#endif
         return Ret;
+    }
     // for properties box
     BytesPerSector=SectorsPerTrack=0; 
     Sides=img_info.maxhead+1;
@@ -573,6 +592,9 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   PastiDisk=f_PastiDisk;
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
   IPFDisk=IPF;
+#ifdef SS_IPF_CTRAW
+  CTRDisk=CTR;
+#endif
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_SCP)
   SCPDisk=SCP;
@@ -602,6 +624,10 @@ bool TFloppyImage::ReinsertDisk()
   if (Empty() || PastiDisk
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
     || IPFDisk
+#ifdef SS_IPF_CTRAW
+    || CTRDisk
+#endif
+
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_SCP)
     || SCPDisk //not right, but we're starting...
@@ -630,6 +656,9 @@ bool TFloppyImage::OpenFormatFile()
   if (f==NULL || ReadOnly || Format_f || STT_File || PastiDisk
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
     || IPFDisk
+#ifdef SS_IPF_CTRAW
+    || CTRDisk
+#endif
 #endif 
 #if defined(STEVEN_SEAGAL) && defined(SS_SCP)
     || SCPDisk
@@ -670,6 +699,9 @@ bool TFloppyImage::ReopenFormatFile()
   if (Format_f==NULL || f==NULL || ReadOnly || PastiDisk
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
     || IPFDisk
+#ifdef SS_IPF_CTRAW
+    || CTRDisk
+#endif
 #endif    
 #if defined(STEVEN_SEAGAL) && defined(SS_SCP)
     || SCPDisk
@@ -840,7 +872,8 @@ int TFloppyImage::GetIDFields(int Side,int Track,FDC_IDField IDList[30])
     -ProCopy Analyse 1.50 'unformated', 2.02 finds IDs.
     -Write (format) 11 sectors tracks on ST/MSA: forget it
 */
-      if(SectorsPerTrack>=11)
+//      if(SectorsPerTrack>=11)
+      if(SectorsPerTrack==11) // bugfix v3.6.1, HD floppies in ADAT mode
         IDList[n].SectorNum=1+(n*DRIVE_11SEC_INTERLEAVE)%SectorsPerTrack;
       else
 #endif
@@ -1180,7 +1213,11 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
   if(CAPSIMG_OK && drive!=-1 && Caps.IsIpf(drive))
     Caps.RemoveDisk(drive);
-  IPFDisk=0;
+  IPFDisk=
+#ifdef SS_IPF_CTRAW
+    CTRDisk=
+#endif
+    0;
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_SCP)
   SCPDisk=0;

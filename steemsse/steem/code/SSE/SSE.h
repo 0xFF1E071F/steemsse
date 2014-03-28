@@ -177,7 +177,7 @@ and all his silly mods are gone!
 //#define TEST02//trace
 //#define TEST03
 //#define TEST04
-//#define TEST05
+#define TEST05
 //#define TEST06
 //#define TEST07
 //#define TEST08
@@ -670,6 +670,7 @@ and all his silly mods are gone!
 #define SS_DRIVE_SWITCH_OFF_MOTOR //hack//3.6.0
 #define SS_DRIVE_WRITE_TRACK_TIMING
 //#define SS_DRIVE_WRITE_TRACK_11//TODO
+#define SS_DRIVE_WRONG_IMAGE_ALERT//3.6.1
 #endif
 
 
@@ -739,6 +740,9 @@ and all his silly mods are gone!
 //#define SS_IPF_RUN_POST_IO
 #define SS_IPF_ASSOCIATE // extension may be associated with Steem
 #define SS_IPF_CTRAW//2nd type of file recognised by caps v5.0 (?) //3.6.1
+#define SS_IPF_CTRAW_REV //3.6.1 manage different rev data
+//#define SS_IPF_KFSTREAM//3rd type of file recognised by caps v5.1 (?) //3.6.1
+//#define SS_IPF_DRAFT//4th type of file recognised by caps v5.1 (?) //3.6.1
 //#define SS_IPF_OSD // for the little box at reset - silly?
 #ifdef SS_BETA
 #define SS_IPF_LETHAL_XCESS // hack useful with capsimg v4.2+5.0
