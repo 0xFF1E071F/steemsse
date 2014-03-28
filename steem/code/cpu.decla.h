@@ -502,9 +502,12 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 
 #if defined(SS_CPU_SET_DEST_TO_0)
 
+// 3.6.1 disgusting targeted hack for Aladin, TODO = change
+// those macros into regular code, part inline part function
+// like for poke
+
 #define m68k_SET_DEST_W_TO_ADDR        \
   abus&=0xffffff;                                   \
-  if(abus) {\
   if(abus&1){                                      \
     exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);    \
   }else if(abus>=MEM_IO_BASE){               \
@@ -523,8 +526,8 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     }else{                                                        \
       m68k_dest=&iobuffer;                             \
     }                                       \
-  }else{                               \
-    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){                       \
+  }else{                              \
+    if(SUPERFLAG && (abus>=MEM_FIRST_WRITEABLE|| ir==0x4251)){                       \
       m68k_dest=lpDPEEK(abus);           \
     }else if(abus>=MEM_START_OF_USER_AREA){ \
       m68k_dest=lpDPEEK(abus);           \
@@ -532,7 +535,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
     }                                           \
     DEBUG_CHECK_WRITE_W(abus);  \
-  }}
+  }
 
 #else//!SS_CPU_SET_DEST_TO_0 //todo, it's defined
 #define m68k_SET_DEST_W_TO_ADDR        \
