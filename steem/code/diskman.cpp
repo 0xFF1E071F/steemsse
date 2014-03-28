@@ -1,3 +1,4 @@
+
 /*---------------------------------------------------------------------------
 FILE: diskman.cpp
 MODULE: Steem
@@ -56,7 +57,10 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
     "IPF", 
 #ifdef SS_IPF_CTRAW
-    SS_IPF_CTRAW,
+    SS_IPF_CTRAW, //CTR
+#endif
+#ifdef SS_IPF_KFSTREAM
+    SS_IPF_KFSTREAM, //RAW
 #endif
 #endif    
 #if defined(STEVEN_SEAGAL) && defined(SS_SCP)
@@ -2943,7 +2947,11 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
       if (SuppressErr==0){
         switch (Err){
           case FIMAGE_WRONGFORMAT:
+#if defined(SS_DRIVE_WRONG_IMAGE_ALERT)//3.6.1
+            Alert(Path+": "+T("image not recognised!"),T("Disk Image Error"),MB_ICONEXCLAMATION);
+#else
             Alert(Path+" "+T("is not in the correct format, it may be corrupt!"),T("Disk Image Error"),MB_ICONEXCLAMATION);
+#endif
             break;
           case FIMAGE_CANTOPEN:
             Alert(Path+" "+T("cannot be opened."),T("Disk Image Error"),MB_ICONEXCLAMATION);

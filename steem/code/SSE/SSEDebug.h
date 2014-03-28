@@ -255,8 +255,10 @@ enum logsection_enum_tag {
 #define TRACE_MASK3 (Debug.ControlMask[7])
 #define TRACE_CONTROL_FDCSTR (1<<15)
 #define TRACE_CONTROL_FDCBYTES (1<<14)//no logsection needed
+#define TRACE_CONTROL_FDCPSG (1<<13)//sectors
 #define TRACE_CONTROL_FDCIPF1 (1<<13)//lock info
-#define TRACE_CONTROL_FDCIPF2 (1<<12)//sectors
+#define TRACE_CONTROL_FDCIPF2 (1<<11)//sectors
+
 
 #endif
 

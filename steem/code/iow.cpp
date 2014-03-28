@@ -1213,10 +1213,14 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
           SerialPort.SetRTS(io_src_b & BIT_3);
           if ((old_val & (BIT_1+BIT_2))!=(io_src_b & (BIT_1+BIT_2))){
 
-#if defined(STEVEN_SEAGAL) && defined(SS_PSG_REPORT_DRIVE_CHANGE)
+
+#if defined(SS_PSG_REPORT_DRIVE_CHANGE)||defined(SS_DEBUG_TRACE_CONTROL)
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_FDC
-            TRACE_LOG("PSG-A %X %c%d:\n",io_src_b,'A'+YM2149.Drive(),YM2149.Side());
+#if defined(SS_DEBUG_TRACE_CONTROL) // controlled by boiler now (3.6.1)
+            if(TRACE_MASK3 & TRACE_CONTROL_FDCPSG)
+#endif
+              TRACE_LOG("PSG-A %X %c%d:\n",io_src_b,'A'+YM2149.Drive(),YM2149.Side());
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_IO
 #endif

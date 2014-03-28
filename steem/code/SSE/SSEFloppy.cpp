@@ -21,6 +21,10 @@ EasyStr GetEXEDir();//#include <mymisc.h>//missing...
 #include <diskman.decla.h>
 #endif
 
+#if !defined(SS_CPU)
+#include <mfp.decla.h>
+#endif
+
 #endif//#if defined(SS_STRUCTURE_SSEFLOPPY_OBJ)
 
 #include "SSEDecla.h"
@@ -632,8 +636,8 @@ void TDma::UpdateRegs(bool trace_them) {
     motor on, how to fix that? - rare anyway
     TODO
 */
-//    SF314[floppy_current_drive()].MotorOn=(bool)(fdc_str&0x80);
-  //  TRACE_OSD("%d %X",floppy_current_drive(),fdc_str);
+    if(!(fdc_str&FDC_STR_MOTOR_ON)) // assume this drive!
+      ::SF314[DRIVE].MotorOn=false;
 #endif
     fdc_tr=CAPSFdcGetInfo(cfdciR_Track, &Caps.WD1772,ext);
     fdc_sr=CAPSFdcGetInfo(cfdciR_Sector, &Caps.WD1772,ext);
@@ -664,6 +668,11 @@ void TDma::UpdateRegs(bool trace_them) {
     TRACE_LOG(" T %d/%d DMA CR %X $%X SR %X #%d PC %X\n",
       floppy_head_track[0],floppy_head_track[1],MCR,BaseAddress,SR,Counter,pc);
   }
+#endif
+
+#ifdef TEST05//temp form
+  if((fdc_str&0x10) && WD1772.CommandType(fdc_cr)!=1)
+    TRACE_OSD("RNF");
 #endif
 
 }
@@ -1441,9 +1450,11 @@ BYTE TWD1772::IORead(BYTE Line) {
         {
           if(floppy_mediach[drive]/10!=1) 
             STR|=FDC_STR_WRITE_PROTECT;
+          else if (FloppyDrive[drive].ReadOnly)//refix 3.6.1: Aladin!
+            STR|=FDC_STR_WRITE_PROTECT;
         }
-        else if (FloppyDrive[drive].ReadOnly)
-          STR|=FDC_STR_WRITE_PROTECT;
+//        else if (FloppyDrive[drive].ReadOnly)//refix 3.6.1
+  //        STR|=FDC_STR_WRITE_PROTECT;
 
         // seems OK, no reset after command:
         if(fdc_spinning_up)
@@ -1935,7 +1946,11 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
   {
     if((img_info->platform[i])!=ciipNA)
       TRACE_LOG("%s ",CAPSGetPlatformName(img_info->platform[i]));
-    if(img_info->platform[i]==ciipAtariST || SSE_HACKS_ON) //MPS GOlf 'test'
+    if(img_info->platform[i]==ciipAtariST 
+#if defined(SS_IPF_CTRAW) 
+      || ::SF314[drive].ImageType!=DISK_IPF // the other SF314 (confusing)
+#endif
+      || SSE_HACKS_ON) //MPS GOlf 'test'
       found=true;
   }
   TRACE_LOG("Sides:%d Tracks:%d-%d\n",img_info->maxhead+1,img_info->mincylinder,
@@ -1948,8 +1963,8 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
   }
   Active=TRUE;
   SF314[drive].diskattr|=CAPSDRIVE_DA_IN; // indispensable!
-#if defined(SS_DRIVE_IPF1)
-  ::SF314[drive].ImageType=DISK_IPF; // the other SF314 (confusing)
+#if defined(SS_DRIVE_IPF1)//MFD
+//  ::SF314[drive].ImageType=DISK_IPF; // the other SF314 (confusing)
 #endif
   if(!FileIsReadOnly)
     SF314[drive].diskattr&=~CAPSDRIVE_DA_WP; // Sundog
@@ -2069,6 +2084,17 @@ void TCaps::WriteWD1772(BYTE Line,int data) {
       }
 #endif
     }
+
+#if defined(SS_DRIVE_MOTOR_ON_IPF)
+    // record time of motor start in hbl (TODO use)
+    if(!(::WD1772.STR&FDC_STR_MOTOR_ON)) // assume no cycle run!
+    {
+      //TRACE_LOG("record hbl %d\n");
+      ::SF314[DRIVE].MotorOn=true;
+      ::SF314[DRIVE].HblOfMotorOn=hbl_count;
+    }
+#endif
+
   }
 
   CAPSFdcWrite(&WD1772,Line,data); // send to DLL
@@ -2180,6 +2206,7 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
     side=0;
 #endif
   int track=Caps.SF314[drive].track;
+
   if(Caps.LockedTrack[drive]!=-1)
   {
     ASSERT( Caps.LockedSide[drive]!=-1 );
@@ -2191,9 +2218,27 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
 #endif
     TRACE_LOG("CAPS Unlock %c:S%dT%d\n",drive+'A',Caps.LockedSide[drive],
       Caps.LockedTrack[drive]);
+#if defined(SS_IPF_CTRAW_REV)
+    if(::SF314[drive].ImageType!=DISK_IPF)
+    {
+      if(Caps.LockedSide[drive]==side && Caps.LockedTrack[drive]==track)
+      { // not tested!
+        CapsRevolutionInfo CRI;
+        CAPSGetInfo(&CRI,Caps.ContainerID[drive],track,side,cgiitRevolution,0);
+        TRACE_LOG("max rev %d next %d\n",CRI.max,CRI.next);
+        if(CRI.max>1 && CRI.max==CRI.next)
+          CAPSSetRevolution(Caps.ContainerID[drive],0);
+      }
+      else
+        CAPSSetRevolution(Caps.ContainerID[drive],0);
+    }
+#endif
+
   }
+
   VERIFY( !CAPSLockTrack((PCAPSTRACKINFO)&track_info,Caps.ContainerID[drive],
     track,side,flags) );
+
 //  ASSERT( side==track_info.head );
   ASSERT( track==track_info.cylinder );
   ASSERT( !track_info.sectorsize );

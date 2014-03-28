@@ -35,6 +35,9 @@ public:
   TFloppyImage()             { f=NULL;Format_f=NULL;PastiDisk=
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)    
     IPFDisk=
+#ifdef SS_IPF_CTRAW
+    CTRDisk=
+#endif
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_SCP)
     SCPDisk=
@@ -55,6 +58,9 @@ public:
   bool DiskInDrive() { return f!=NULL || PastiDisk 
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
     || IPFDisk
+#ifdef SS_IPF_CTRAW
+    || CTRDisk
+#endif
 #endif    
 #if defined(STEVEN_SEAGAL) && defined(SS_SCP)
     || SCPDisk
@@ -85,6 +91,9 @@ public:
   bool STT_File,PastiDisk;
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
   bool IPFDisk;
+#ifdef SS_IPF_CTRAW
+  bool CTRDisk;
+#endif
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_SCP)
   bool SCPDisk;

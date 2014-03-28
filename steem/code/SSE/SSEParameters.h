@@ -360,7 +360,18 @@ are assumed to take four clock periods.
 #undef SS_IPF_CTRAW
 #define SS_IPF_CTRAW "CTR" 
 #endif
+#ifdef SS_IPF_KFSTREAM
+#undef SS_IPF_KFSTREAM
+#define SS_IPF_KFSTREAM "RAW" 
 #endif
+#ifdef SS_IPF_DRAFT
+#undef SS_IPF_DRAFT
+#define SS_IPF_DRAFT "RAW"  //?
+#endif
+
+
+
+#endif//ipf
 
 
 /////////
