@@ -9,6 +9,9 @@
 */
 #if defined(SS_DEBUG_FRAME_REPORT)
 
+#if defined(SS_STRUCTURE_SSEFRAMEREPORT_OBJ)
+#include "SSEDebug.h"
+#endif
 
 #if defined(SS_DEBUG_FRAME_REPORT_MASK)
 /*  We use the new general fake io control masks, they are 16bit, but 

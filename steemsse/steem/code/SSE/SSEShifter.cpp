@@ -12,7 +12,7 @@
 #include "SSEShifterEvents.cpp" // debug module, the Steem way...
 #endif
 
-#if defined(SS_DEBUG_FRAME_REPORT) //temp, same place
+#if defined(SS_DEBUG_FRAME_REPORT) && !defined(SS_STRUCTURE_SSEFRAMEREPORT_OBJ)
 #include "SSEFrameReport.cpp"
 #endif
 

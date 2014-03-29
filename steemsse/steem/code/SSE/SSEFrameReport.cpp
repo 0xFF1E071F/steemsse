@@ -1,3 +1,23 @@
+#include "SSE.h"
+
+#if defined(STEVEN_SEAGAL)
+
+#if defined(SS_STRUCTURE_SSEFRAMEREPORT_OBJ)
+#include "../pch.h"
+#include <conditions.h>
+#include <EasyStr.h>
+#include <fdc.decla.h>
+#include <floppy_drive.decla.h>
+#include <run.decla.h>
+#include "SSEFrameReport.h"
+#include "SSEMMU.h"
+#include "SSEOption.h"
+#include "SSEShifter.h"
+#include "SSESTF.h"
+#endif
+
+
+
 #if defined(SS_DEBUG_FRAME_REPORT)
 
 // based on a copy of SSEShifterEvents, with 'Frame' instead of
@@ -168,3 +188,4 @@ int TFrameEvents::Vbl() {
 
 #endif//#if defined(SS_DEBUG_FRAME_REPORT)
 
+#endif//#if defined(STEVEN_SEAGAL)
