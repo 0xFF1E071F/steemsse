@@ -7941,7 +7941,33 @@ SOURCE=..\..\Steem\code\SSE\SSEFloppy.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\SSE\SSEFrameReport.cpp
+
+!IF  "$(CFG)" == "Steem - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Debug_modules"
+
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Release_modules"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler_modules"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug_modules"
+
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
