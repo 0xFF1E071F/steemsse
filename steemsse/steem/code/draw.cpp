@@ -142,8 +142,10 @@ bool freq_change_this_scanline=false;
 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
+#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER) 
+#if !defined(SS_STRUCTURE_SSESHIFTER_OBJ)
 #include "SSE/SSEShifter.cpp"
+#endif
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)

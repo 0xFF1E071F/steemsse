@@ -1662,7 +1662,6 @@ DEP_CPP_6301_=\
 	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\clarity.h"\
-	"..\..\include\easystr.h"\
 	"..\..\steem\code\acia.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\draw.decla.h"\
@@ -2431,7 +2430,6 @@ DEP_CPP_AVIFI=\
 	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\clarity.h"\
-	"..\..\include\easystr.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\draw.decla.h"\
 	"..\..\steem\code\notwindows.h"\
@@ -7589,7 +7587,6 @@ DEP_CPP_SSE_C=\
 	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\clarity.h"\
-	"..\..\include\easystr.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\draw.decla.h"\
 	"..\..\steem\code\notwindows.h"\
@@ -7613,7 +7610,6 @@ DEP_CPP_SSE63=\
 	"..\..\include\binary.h"\
 	"..\..\include\clarity.h"\
 	"..\..\include\dynamicarray.h"\
-	"..\..\include\easystr.h"\
 	"..\..\include\mymisc.h"\
 	"..\..\include\notwin_mymisc.h"\
 	"..\..\include\x\x_mymisc.h"\
@@ -7941,6 +7937,35 @@ SOURCE=..\..\Steem\code\SSE\SSEFloppy.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\SSE\SSEFrameReport.cpp
+DEP_CPP_SSEFR=\
+	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\include\binary.h"\
+	"..\..\include\clarity.h"\
+	"..\..\include\dynamicarray.h"\
+	"..\..\include\easystr.h"\
+	"..\..\steem\code\acc.decla.h"\
+	"..\..\steem\code\conditions.h"\
+	"..\..\steem\code\cpu.decla.h"\
+	"..\..\steem\code\debug_emu.decla.h"\
+	"..\..\steem\code\draw.decla.h"\
+	"..\..\steem\code\emulator.decla.h"\
+	"..\..\steem\code\fdc.decla.h"\
+	"..\..\steem\code\floppy_drive.decla.h"\
+	"..\..\steem\code\iorw.decla.h"\
+	"..\..\steem\code\notwindows.h"\
+	"..\..\steem\code\run.decla.h"\
+	"..\..\steem\code\SSE\SSE.h"\
+	"..\..\Steem\code\SSE\SSEDebug.h"\
+	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEFrameReport.h"\
+	"..\..\steem\code\SSE\SSEMMU.h"\
+	"..\..\steem\code\SSE\SSEOption.h"\
+	"..\..\steem\code\SSE\SSEParameters.h"\
+	"..\..\steem\code\SSE\SSEShifter.h"\
+	"..\..\steem\code\SSE\SSESTF.h"\
+	"..\..\steem\code\steemh.decla.h"\
+	"..\..\steem\pch.h"\
+	
 
 !IF  "$(CFG)" == "Steem - Win32 Debug"
 
@@ -8032,7 +8057,6 @@ DEP_CPP_SSEMM=\
 	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\clarity.h"\
-	"..\..\include\easystr.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\draw.decla.h"\
 	"..\..\steem\code\notwindows.h"\
@@ -8056,7 +8080,6 @@ DEP_CPP_SSEOP=\
 	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\clarity.h"\
-	"..\..\include\easystr.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\draw.decla.h"\
 	"..\..\steem\code\notwindows.h"\
@@ -8163,23 +8186,51 @@ SOURCE=..\..\steem\code\SSE\SSESDL.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\SSE\SSEShifter.cpp
+DEP_CPP_SSESH=\
+	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\3rdparty\various\neochrome.h"\
+	"..\..\include\binary.h"\
+	"..\..\include\clarity.h"\
+	"..\..\include\dynamicarray.h"\
+	"..\..\include\easystr.h"\
+	"..\..\steem\code\acc.decla.h"\
+	"..\..\steem\code\conditions.h"\
+	"..\..\steem\code\cpu.decla.h"\
+	"..\..\steem\code\debug_emu.decla.h"\
+	"..\..\steem\code\display.decla.h"\
+	"..\..\steem\code\draw.decla.h"\
+	"..\..\steem\code\emulator.decla.h"\
+	"..\..\steem\code\fdc.decla.h"\
+	"..\..\steem\code\floppy_drive.decla.h"\
+	"..\..\steem\code\iorw.decla.h"\
+	"..\..\steem\code\mfp.decla.h"\
+	"..\..\steem\code\notwindows.h"\
+	"..\..\steem\code\palette.decla.h"\
+	"..\..\steem\code\run.decla.h"\
+	"..\..\steem\code\SSE\SSE.h"\
+	"..\..\Steem\code\SSE\SSEDebug.h"\
+	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEFrameReport.cpp"\
+	"..\..\steem\code\SSE\SSEFrameReport.h"\
+	"..\..\steem\code\SSE\SSEMMU.h"\
+	"..\..\steem\code\SSE\SSEOption.h"\
+	"..\..\steem\code\SSE\SSEParameters.h"\
+	"..\..\steem\code\SSE\SSEShifter.h"\
+	"..\..\steem\code\SSE\SSEShifterEvents.cpp"\
+	"..\..\steem\code\SSE\SSESTF.h"\
+	"..\..\steem\code\steemh.decla.h"\
+	"..\..\steem\pch.h"\
+	
 
 !IF  "$(CFG)" == "Steem - Win32 Debug"
 
-# PROP Exclude_From_Build 1
-
 !ELSEIF  "$(CFG)" == "Steem - Win32 Release"
 
-# PROP Exclude_From_Build 1
-
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
-
-# PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Debug_modules"
 
