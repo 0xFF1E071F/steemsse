@@ -5,6 +5,11 @@
 #define EXT extern
 #define INIT(s)
 
+#if defined(SS_STRUCTURE_SSESHIFTER_OBJ)
+#include <EasyStr.h>
+typedef EasyStr Str;
+#endif
+
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
 //http://wiki.multimedia.cx/index.php?title=Neochrome

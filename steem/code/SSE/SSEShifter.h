@@ -10,6 +10,10 @@
 #include <cpu.decla.h>
 #endif
 
+#if defined(SS_STRUCTURE_SSESHIFTER_OBJ)
+#define inline // he he
+#endif
+
 #if defined(SS_SHIFTER)
 /*  The ST was a barebone machine made up of cheap components hastily patched
     together, including the video shifter.
@@ -222,7 +226,7 @@ extern TShifter Shifter; // singleton
 ////////////////////////////////
 
 
-#if defined(IN_EMU) //temp...
+#if defined(IN_EMU) && !defined(SS_STRUCTURE_SSESHIFTER_OBJ)//temp...
 
 inline void TShifter::AddExtraToShifterDrawPointerAtEndOfLine(unsigned long &extra) {
   // What a beautiful name!
@@ -466,7 +470,6 @@ FF825E
         palette_convert(n);
     }
 }
-
 
 #if defined(SS_SHIFTER_TRICKS)
 
@@ -726,7 +729,7 @@ inline int TShifter::PreviousFreqChangeIdx(int cycle) {
   return -1;
 }
 
-inline int TShifter::PreviousShiftModeChangeIdx(int cycle) {
+int TShifter::PreviousShiftModeChangeIdx(int cycle) {
   // return idx of previous change before this cycle
   int t=cycle+LINECYCLE0; // convert to absolute
   int i,j;
@@ -1262,8 +1265,8 @@ void TShifter::ShiftSDP(int shift) { //inline
   overscan_add_extra-=shift;
 }
 
-
 #endif// defined(IN_EMU)
+
 
 
 // just taking some unimportant code out of Render for clarity
@@ -1303,5 +1306,9 @@ void TShifter::ShiftSDP(int shift) { //inline
 #endif//#if defined(SS_SHIFTER)
 
 #undef LOGSECTION 
+
+#if defined(SS_STRUCTURE_SSESHIFTER_OBJ)
+#undef inline
+#endif
 
 #endif//define SSESHIFTER_H

@@ -1,0 +1,9 @@
+[Text]
+Description=There's a bug in pasti.dll that uselessly randomises some bytes when reading a track. The patch just neutralises the protection check of the game.
+ApplyWhen=Before the game asks you to "insert original", right after boot.
+Version=Tested on 3.6.1, STF, TOS1.02
+
+PatchAuthor=Steven Seagal
+
+[Patch]
+00EED4 = $4e71
