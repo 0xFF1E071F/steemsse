@@ -813,7 +813,8 @@ void TDma::TransferBytes() {
 
 #define LOGSECTION LOGSECTION_IMAGE_INFO
 
-  if(fdc_cr==0x80 && !fdc_tr && fdc_sr==1 && !(MCR&0x100))
+  if(fdc_cr==0x80 && !fdc_tr && fdc_sr==1 && !(MCR&0x100)
+    &&!floppy_current_side())//3.6.1: side 0
   {
     for(int i=0;i<16;i+=2)
     {
@@ -844,10 +845,20 @@ void TDma::TransferBytes() {
 #if defined(SS_DEBUG_TRACE_CONTROL)
   if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
 #endif
+  {
+#if defined(SS_DMA_TRACK_TRANSFER)
+    Datachunk++; 
+    if(!(MCR&0x100)) // disk -> RAM
+      TRACE_LOG("chunk %03d (sec %02d) to %06X: ",Datachunk,fdc_sr,BaseAddress);
+    else  // RAM -> disk
+      TRACE_LOG("chunk %03d (sec %02d) from %06X: ",Datachunk,fdc_sr,BaseAddress);
+#else//MFD
     if(!(MCR&0x100)) // disk -> RAM
       TRACE_LOG("%2d/%2d/%3d to %X: ",fdc_tr,fdc_sr,ByteCount,BaseAddress);
     else  // RAM -> disk
       TRACE_LOG("%2d/%2d/%3d from %X: ",fdc_tr,fdc_sr,ByteCount,BaseAddress);
+#endif
+  }
 
   for(int i=0;i<16;i++) // burst, 16byte packets strictly, 8 words
   {
@@ -877,7 +888,7 @@ void TDma::TransferBytes() {
 #if defined(SS_DMA_DOUBLE_FIFO)
       [!BufferInUse]
 #endif
-      [i]);
+      [(MCR&0x100)?15-i:i]);//bugfix 3.6.1 reverse order
 
 #if USE_PASTI    
     if(hPasti&&pasti_active
@@ -894,7 +905,8 @@ void TDma::TransferBytes() {
       DMA_INC_ADDRESS; // use Steem's existing routine
   }
 #if defined(SS_DMA_COUNT_CYCLES) 
-  INSTRUCTION_TIME(8); 
+  if(ADAT)//3.6.1 condition
+    INSTRUCTION_TIME(8); 
 #endif
 #if defined(SS_DEBUG_TRACE_CONTROL)
   if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
@@ -1279,7 +1291,9 @@ void TSF314::Sound_CheckMotor() {
   Dma.UpdateRegs();//overkill
 #endif
   bool motor_on= ((fdc_str&0x80)//;//simplification TODO?
-#if defined(SS_DRIVE_SOUND_PASTI_EMPTY)
+#if defined(SS_DRIVE_SOUND_EMPTY) // but clicks still on
+    && !FloppyDrive[floppy_current_drive()].Empty()
+#elif defined(SS_DRIVE_SOUND_PASTI_EMPTY)
     && (!pasti_active|| !FloppyDrive[floppy_current_drive()].Empty()) 
 #endif
     );
@@ -1849,7 +1863,7 @@ TCaps::~TCaps() {
 void SetNotifyInitText(char*);//forward
 
 #undef LOGSECTION
-#define LOGSECTION LOGSECTION_INIT//SS
+#define LOGSECTION LOGSECTION_INIT
 
 
 int TCaps::Init() {
@@ -1990,7 +2004,7 @@ void TCaps::RemoveDisk(int drive) {
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_FDC
 
-void TCaps::WritePsgA(int data) {
+void TCaps::WritePsgA(int data) {//TODO use data
   // drive selection 
   if ((psg_reg[PSGR_PORT_A]&BIT_1)==0 /*&& DriveIsIPF[0]*/)
     WD1772.drivenew=0;
@@ -2293,7 +2307,7 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
 
 /////////////////////////////////////////////////////////////////////////////
 
-#if defined(SS_SCP) // Implementation of STC support in Steem
+#if defined(SS_SCP) // Future implementation of SCP support in Steem
 //TODO
 
 TScp Scp;

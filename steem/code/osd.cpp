@@ -531,7 +531,7 @@ void osd_draw()
       Dma.UpdateRegs();
       bool FDCWriting=WD1772.WritingToDisk();
       if(WD1772.STR&0x80 // motor on, simply
-#if defined(SS_DRIVE_SOUND_PASTI_EMPTY)
+#if defined(SS_DRIVE_SOUND_PASTI_EMPTY)//MFD?
         && (!pasti_active|| !FloppyDrive[floppy_current_drive()].Empty())
 #endif
         ) 

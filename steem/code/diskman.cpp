@@ -316,14 +316,20 @@ void TDiskManager::Show()
 
   ManageWindowClasses(SD_REGISTER);
 #if defined(STEVEN_SEAGAL) && USE_PASTI && defined(SS_PASTI_ON_WARNING)
+#if !defined(SS_PASTI_ON_WARNING2)
     sDiskManagerWindowCaption[12]=(pasti_active
 #if defined(SS_PASTI_ONLY_STX)
-      && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)    
+      && (!PASTI_JUST_STX 
+      || SF314[floppy_current_drive()].ImageType==DISK_PASTI)    
 #endif
     ) ? ' ' : '\0';
+#endif
   Handle=CreateWindowEx(WS_EX_CONTROLPARENT | WS_EX_APPWINDOW,"Steem Disk Manager",sDiskManagerWindowCaption,
       WS_CAPTION | WS_SYSMENU | WS_SIZEBOX | WS_MAXIMIZEBOX | WS_MINIMIZEBOX,
       Left,Top,Width,Height,ParentWin,NULL,HInstance,NULL);
+#if defined(SS_PASTI_ON_WARNING2)
+  RefreshPastiStatus();
+#endif
 #else
   Handle=CreateWindowEx(WS_EX_CONTROLPARENT | WS_EX_APPWINDOW,"Steem Disk Manager",T("Disk Manager"),
       WS_CAPTION | WS_SYSMENU | WS_SIZEBOX | WS_MAXIMIZEBOX | WS_MINIMIZEBOX,
@@ -1721,13 +1727,19 @@ That will toggle bit x.
               CheckResetDisplay();
             }
 #endif
+
+#if defined(SS_PASTI_ON_WARNING2)
+            This->RefreshPastiStatus();
+#else
 #if defined(STEVEN_SEAGAL) && defined(SS_PASTI_ON_WARNING)
             sDiskManagerWindowCaption[12]=(pasti_active
 #if defined(SS_PASTI_ONLY_STX)
-              && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
+              && (!PASTI_JUST_STX 
+              || SF314[floppy_current_drive()].ImageType==DISK_PASTI)
 #endif              
               ) ? ' ' : '\0';// primitive!
             SetWindowText(This->Handle,sDiskManagerWindowCaption);
+#endif
 #endif
           }
           break;
@@ -2767,9 +2779,11 @@ bool TDiskManager::CreateDiskImage(char *STName,int Sectors,int SecsPerTrack,int
 {
   FILE *f=fopen(STName,"wb");
   if (f){
+    {//scope to free stack (3.6.1)
     char zeros[512];
     ZeroMemory(zeros,sizeof(zeros));
     for (int n=0;n<Sectors;n++) fwrite(zeros,1,512,f);
+    }//SS scope
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //LITTLE-ENDIAN ONLY             ******************************************************
     int buf;
@@ -2812,9 +2826,7 @@ bool TDiskManager::CreateDiskImage(char *STName,int Sectors,int SecsPerTrack,int
     fputc(0xf0,f);fputc(0xff,f);fputc(0xff,f);
 #endif
     fclose(f);
-
     DeleteFile(Str(STName)+".steembpb");
-
     return true;
   }
   return 0;
@@ -3064,16 +3076,19 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
   UpdateDiskNames(Drive);
 #endif
 
+#if defined(SS_PASTI_ON_WARNING2)
+  RefreshPastiStatus();
+#else
 #if defined(STEVEN_SEAGAL) && USE_PASTI && defined(SS_PASTI_ON_WARNING)
   // check Pasti caption
   sDiskManagerWindowCaption[12]=(pasti_active
 #if defined(SS_PASTI_ONLY_STX)
-    && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)    
+    && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==DISK_PASTI)    
 #endif    
     ) ? ' ' : '\0';
   SetWindowText(Handle,sDiskManagerWindowCaption);
 #endif
-
+#endif
 
   return true;
 }
@@ -3468,7 +3483,8 @@ Str TDiskManager::GetContentsGetAppendName(Str TOSECName)
   return ShortName;
 }
 //---------------------------------------------------------------------------
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_OPTION_SLOW_DISK) && defined(WIN32)
+#if defined(STEVEN_SEAGAL) && defined(WIN32)
+#if defined(SS_VAR_OPTION_SLOW_DISK) 
 
 // mini-function to avoid code duplication
 void TDiskManager::RefreshSnails() {
@@ -3477,6 +3493,21 @@ void TDiskManager::RefreshSnails() {
   CheckResetDisplay();
 }
 
+#endif
+#if defined(SS_PASTI_ON_WARNING2)
+
+void TDiskManager::RefreshPastiStatus() {
+  // check Pasti caption
+  sDiskManagerWindowCaption[12]=(pasti_active
+#if defined(SS_PASTI_ONLY_STX)
+    && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==DISK_PASTI)    
+#endif    
+    ) ? ' ' : '\0';
+  SetWindowText(Handle,sDiskManagerWindowCaption);
+  //TRACE_IDE("pasti %d\n",pasti_active);
+}
+
+#endif
 #endif
 
 #undef LOGSECTION //LOGSECTION_IMAGE_INFO
