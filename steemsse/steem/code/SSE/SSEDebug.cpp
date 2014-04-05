@@ -50,7 +50,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_MFP_TIMERS ] = 0;
   logsection_enabled[ LOGSECTION_INIT ] =0;
   logsection_enabled[ LOGSECTION_CRASH ] = 0;
-  logsection_enabled[ LOGSECTION_STEMDOS ] = 1;
+  logsection_enabled[ LOGSECTION_STEMDOS ] = 0;
   logsection_enabled[ LOGSECTION_IKBD ] = 0;
   logsection_enabled[ LOGSECTION_AGENDA ] = 0;
   logsection_enabled[ LOGSECTION_INTERRUPTS ] = 0;
@@ -71,7 +71,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_FDC_BYTES ] = 0;
   logsection_enabled[ LOGSECTION_IPF_LOCK_INFO ] = 0; //remove option
 #endif
-  logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 0;
+  logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 1;
 #endif
   logsection_enabled[ LOGSECTION_OPTIONS ] = 1; // no boiler control
 #endif

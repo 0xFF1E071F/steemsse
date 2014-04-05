@@ -136,8 +136,13 @@ public:
   void ShowDatabaseDiag(),ShowContentDiag();
 
 #ifdef WIN32
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_OPTION_SLOW_DISK)
+#if defined(STEVEN_SEAGAL)
+#if defined(SS_PASTI_ON_WARNING2)
+  void RefreshPastiStatus();
+#endif
+#if defined(SS_VAR_OPTION_SLOW_DISK)
   void RefreshSnails();
+#endif
 #endif
   bool HasHandledMessage(MSG*);
   void SetDir(EasyStr,bool,EasyStr="",bool=0,EasyStr="",int=0);

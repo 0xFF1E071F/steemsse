@@ -628,6 +628,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
         BYTE*buf=new BYTE[l];
         psi.buffer=(void*)buf;
         if (pasti->SaveState(&psi)){
+          //TRACE("Saving pasti state\n");
           ReadWriteVar(buf,l,f,LS_SAVE,1,Version);
         }else{
           l=0;
@@ -846,8 +847,19 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #endif
   }
 
-  if(Version>=47) // 3.6.0
+  if(Version>=48) // 3.6.1
   {
+#if defined(SS_IPF_RESUME)//3.6.1
+/*  This just restore registers, not internal state.
+    Funny to see how the "drive" then finds back its track,
+    in some cases it will work, in other fail.
+*/
+    Caps.WritePsgA(psg_reg[PSGR_PORT_A]);
+    Caps.WriteWD1772(0,fdc_cr);
+    Caps.WriteWD1772(1,fdc_tr);
+    Caps.WriteWD1772(2,fdc_sr);
+    Caps.WriteWD1772(3,fdc_dr);
+#endif
   }
   else
   {

@@ -352,8 +352,16 @@ bool TDiskManager::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetStr("Disks","Disk_B_DiskInZip",FloppyDrive[1].DiskInZip);
 
   if (FinalSave){
+#if defined(SS_PASTI_ONLY_STX)
+    {//scope
+    bool pasti_active_save=pasti_active; //3.6.1, because RemoveDisk clears it
+#endif
     FloppyDrive[0].RemoveDisk();
     FloppyDrive[1].RemoveDisk();
+#if defined(SS_PASTI_ONLY_STX)
+    pasti_active=pasti_active_save; //we want correct state saved
+    }
+#endif
   }
 
   for (int n=0;n<10;n++){

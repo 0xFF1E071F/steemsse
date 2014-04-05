@@ -586,6 +586,7 @@ and all his silly mods are gone!
 #if defined(SS_FLOPPY)
 
 #define SS_DMA        // Custom Direct Memory Access chip (disk)
+#define SS_DISK       // Disk images 3.6.1
 #define SS_DRIVE      // SF314 floppy disk drive
 #define SS_FDC        // WD1772 floppy disk controller
 #if defined(WIN32)
@@ -596,6 +597,17 @@ and all his silly mods are gone!
 #endif
 #endif
 #define SS_PSG        // YM2149 - for portA first
+
+
+//////////////////
+// FLOPPY: DISK //
+//////////////////
+
+//TODO move much SS_DRIVE code here
+
+#if defined(SS_DISK)
+
+#endif
 
 
 /////////////////
@@ -619,13 +631,16 @@ and all his silly mods are gone!
 #define SS_DMA_READ_STATUS 
 #define SS_DMA_SECTOR_COUNT
 #define SS_DMA_WRITE_CONTROL
-
+#ifdef SS_DEBUG
+#define SS_DMA_TRACK_TRANSFER //add one var...
+#endif
 #endif
 
 
 ///////////////////
 // FLOPPY: DRIVE //
 ///////////////////
+
 
 #if defined(SS_DRIVE)
 
@@ -638,6 +653,7 @@ and all his silly mods are gone!
 // one or the other:
 //#define SS_DRIVE_EMPTY_VERIFY_LONG // GEM
 #define SS_DRIVE_EMPTY_VERIFY_TIME_OUT //GEM
+#define SS_DRIVE_EMPTY_VERIFY_TIME_OUT2 //3.6.1 motor led still on
 #define SS_DRIVE_MOTOR_ON
 #define SS_DRIVE_MOTOR_ON_IPF//3.6.1 TODO
 #define SS_DRIVE_MULTIPLE_SECTORS
@@ -660,15 +676,16 @@ and all his silly mods are gone!
 #define SS_DRIVE_SOUND_SINGLE_SET // drive B uses sounds of A
 //#define SS_DRIVE_SOUND_EDIT // 1st beta soundset
 #define SS_DRIVE_SOUND_EPSON // current samples=Epson
+#define SS_DRIVE_SOUND_EMPTY // different 3.6.1 (none)
 #define SS_DRIVE_SOUND_IPF // fix 3.6.1
-#define SS_DRIVE_SOUND_PASTI_EMPTY // different (none)
+//#define SS_DRIVE_SOUND_PASTI_EMPTY // different (none)//undef 3.6.1
 #define SS_DRIVE_SOUND_VOLUME // logarithmic 
 #endif//drive sound
 #endif//win32
 #define SS_DRIVE_SPIN_UP_TIME
 #define SS_DRIVE_SPIN_UP_TIME2 // more precise
 #define SS_DRIVE_SWITCH_OFF_MOTOR //hack//3.6.0
-#define SS_DRIVE_WRITE_TRACK_TIMING
+//#define SS_DRIVE_WRITE_TRACK_TIMING//undef3.6.1, MFD, most probably wrong like for read
 //#define SS_DRIVE_WRITE_TRACK_11//TODO
 #define SS_DRIVE_WRONG_IMAGE_ALERT//3.6.1
 #endif
@@ -745,9 +762,10 @@ and all his silly mods are gone!
 //#define SS_IPF_DRAFT//4th type of file recognised by caps v5.1 (?) //3.6.1
 //#define SS_IPF_OSD // for the little box at reset - silly?
 #ifdef SS_BETA
-#define SS_IPF_LETHAL_XCESS // hack useful with capsimg v4.2+5.0
-//#define SS_IPF_WRITE_HACK // useless hack for v4.2 AFAIK
+//#define SS_IPF_LETHAL_XCESS // hack useful with capsimg v4.2+5.0//MFD
+//#define SS_IPF_WRITE_HACK // useless hack for v4.2 AFAIK//MFD
 #endif
+#define SS_IPF_RESUME//3.6.1 TODO
 //#define SS_IPF_SAVE_WRITES //TODO?
 #define SS_IPF_TRACE_SECTORS // show sector info
 
@@ -766,6 +784,7 @@ and all his silly mods are gone!
 #define SS_PASTI_ONLY_STX_HD //v3.6.0
 #define SS_PASTI_NO_RESET 
 #define SS_PASTI_ON_WARNING // mention in disk manager title
+#define SS_PASTI_ON_WARNING2 // v3.6.1 refactoring
 
 #endif
 

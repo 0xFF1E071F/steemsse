@@ -183,6 +183,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     TRACE_LOG("Disk type 0\n");
     return FIMAGE_WRONGFORMAT;
   }
+//  TRACE("pasti %d\n",pasti_active);
 //#if !(defined(STEVEN_SEAGAL) && defined(SS_PASTI_ONLY_STX))
 #if !(defined(STEVEN_SEAGAL) && defined(SS_DRIVE))
   int drive=-1;
@@ -201,7 +202,9 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     int Ret=0;
     if (drive>=0 && hPasti){
       RemoveDisk();
-
+#if defined(SS_PASTI_ONLY_STX)
+      pasti_active=true; //3.6.1, because RemoveDisk clears it
+#endif
       FILE *nf=fopen(File,"rb");
       if (nf){
         PastiBufLen=GetFileLength(nf);
@@ -451,7 +454,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       SectorsPerTrack=0xff; // Variable
     }else{
       BPBINFO bpbi={0,0,0,0};
-      int HeaderLen=int(DIM ? 32:0);
+      int HeaderLen=int(DIM ? 32:0); //SS 0 for .ST
       f_DiskFileLen-=HeaderLen;
 
       if (DIM){
@@ -486,10 +489,10 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       bool HasBPBFile=(GetCSFInt("BPB","Sides",0,BPBFile)!=0);
 
       if (MSA){
-        bpbi.BytesPerSector=512;
+        bpbi.BytesPerSector=512; //SS MSA no choice
       }else{
         fseek(nf,HeaderLen+11,SEEK_SET);
-        fread(&bpbi.BytesPerSector,2,1,nf);
+        fread(&bpbi.BytesPerSector,2,1,nf); //SS .ST, .DIM, we have choice?
       }
       fseek(nf,HeaderLen+19,SEEK_SET);
       fread(&bpbi.Sectors,2,1,nf);
@@ -501,10 +504,9 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       // A BPB is corrupt when one of its fields is totally wrong
       bool BPBCorrupt=0;
       if (bpbi.BytesPerSector!=128 && bpbi.BytesPerSector!=256 &&
-            bpbi.BytesPerSector!=512 && bpbi.BytesPerSector!=1024) BPBCorrupt=true;
+            bpbi.BytesPerSector!=512 && bpbi.BytesPerSector!=1024) BPBCorrupt=true;//SS 1024 possible
       if (bpbi.SectorsPerTrack<1 || bpbi.SectorsPerTrack>FLOPPY_MAX_SECTOR_NUM) BPBCorrupt=true;
       if (bpbi.Sides<1 || bpbi.Sides>2) BPBCorrupt=true;
-
       // Has to be exact length for Steem to accept it
       if (DWORD(bpbi.Sectors*bpbi.BytesPerSector)!=f_DiskFileLen || BPBCorrupt){
         f_ValidBPB=0;
@@ -1203,6 +1205,16 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
       }
     }
     pasti->Eject(drive,ABSOLUTE_CPU_TIME);
+#if defined(SS_PASTI_ONLY_STX)
+/*  3.6.1 Disable Pasti at once when ejecting STX disk if the other disk
+    isn't STX and option 'Pasti only for STX' is checked.
+*/
+    if(PASTI_JUST_STX && SF314[1-floppy_current_drive()].ImageType!=DISK_PASTI)
+    {
+      pasti_active=false;
+      DiskMan.RefreshPastiStatus();
+    }
+#endif
   }
 #endif
   if (PastiBuf) delete[] PastiBuf;

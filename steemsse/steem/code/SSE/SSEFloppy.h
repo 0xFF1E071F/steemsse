@@ -93,6 +93,7 @@ When a FIFO is full a bus request is made to the 68000 and when granted,
 have been transferred."
 This feature is emulated in Steem if SS_DMA_DOUBLE_FIFO is defined, but it
 hasn't proved necessary yet.
+TODO: maybe use the feature and remove #define to make code more readable?
 */
   bool BufferInUse; 
   BYTE Fifo[2][16
@@ -127,6 +128,10 @@ heavy. It was a test.
 */
   static void Event(); 
   int TransferTime;
+#endif
+
+#if defined(SS_DMA_TRACK_TRANSFER)//debug-only
+  WORD Datachunk; // to check # 16byte parts
 #endif
 
 };
@@ -168,8 +173,9 @@ struct TSF314 {
   WORD TrackGap();
   BYTE Id; // object has to know if its A: or B:
 #if defined(SS_PASTI_ONLY_STX)
-  BYTE ImageType; //TODO use this to make it more general (0 none + nativeST + pasti + ipf...)
+  //BYTE ImageType; //TODO use this to make it more general (0 none + nativeST + pasti + ipf...)
 //maybe "handler" (steem, pasti...) + type (st,msa,stx...)
+  WORD ImageType; //3.6.1, for future extension, snapshot problem?
 #endif
 #if defined(SS_DRIVE_MOTOR_ON)
   BYTE MotorOn;
