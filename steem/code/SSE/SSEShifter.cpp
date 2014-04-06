@@ -11,13 +11,11 @@
 #include <run.decla.h>
 #include "SSEFrameReport.h"
 #include "SSEShifter.h"
+#elif defined(SS_STRUCTURE_INFO)
+#pragma message("Included for compilation: SSEShifter.cpp")
 #endif//SS_STRUCTURE_SSESHIFTER_OBJ
 
 #if defined(SS_SHIFTER)
-
-#if defined(SS_STRUCTURE_INFO) && !defined(SS_STRUCTURE_SSESHIFTER_OBJ)
-#pragma message("Included for compilation: SSEShifter.cpp")
-#endif
 
 #if defined(SS_MMU)
 #include "SSEMMU.h"

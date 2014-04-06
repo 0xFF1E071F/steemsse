@@ -288,8 +288,9 @@ EXT char m68k_src_b;
 
 #if defined(STEVEN_SEAGAL)
 #include "SSE/SSEInterrupt.cpp"
+#if !defined(SS_STRUCTURE_SSESTF_OBJ)
 #include "SSE/SSESTF.cpp"
-
+#endif
 #if !defined(SS_STRUCTURE_SSE6301_OBJ)
 #include "SSE/SSE6301.cpp" 
 #endif

@@ -1371,6 +1371,8 @@ and all his silly mods are gone!
 #define SS_STRUCTURE_SSEFRAMEREPORT_OBJ//3.6.1
 //#define SS_STRUCTURE_SSE_INTERRUPT_OBJ//skip for now...
 #define SS_STRUCTURE_SSESHIFTER_OBJ//3.6.1
+#define SS_STRUCTURE_SSESTF_OBJ//3.6.1
+#define SS_STRUCTURE_SSESTF_VIDEO//3.6.1
 #endif//#if defined(SS_STRUCTURE_SSE_OBJ)
 
 

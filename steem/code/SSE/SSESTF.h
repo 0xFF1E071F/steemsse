@@ -9,7 +9,7 @@
 enum ESTModels {STE,STF,MEGASTF,STF8MHZ,SS_STF_ST_MODELS}; 
 
 #if defined(SS_TOS_WARNING1)
-int CheckSTTypeAndTos();
+void CheckSTTypeAndTos();
 #endif
 
 int SwitchSTType(int new_type); // adapt to new machine

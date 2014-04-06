@@ -1662,6 +1662,7 @@ DEP_CPP_6301_=\
 	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\clarity.h"\
+	"..\..\include\easystr.h"\
 	"..\..\steem\code\acia.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\draw.decla.h"\
@@ -2430,6 +2431,7 @@ DEP_CPP_AVIFI=\
 	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\clarity.h"\
+	"..\..\include\easystr.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\draw.decla.h"\
 	"..\..\steem\code\notwindows.h"\
@@ -7587,6 +7589,7 @@ DEP_CPP_SSE_C=\
 	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\clarity.h"\
+	"..\..\include\easystr.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\draw.decla.h"\
 	"..\..\steem\code\notwindows.h"\
@@ -7610,6 +7613,7 @@ DEP_CPP_SSE63=\
 	"..\..\include\binary.h"\
 	"..\..\include\clarity.h"\
 	"..\..\include\dynamicarray.h"\
+	"..\..\include\easystr.h"\
 	"..\..\include\mymisc.h"\
 	"..\..\include\notwin_mymisc.h"\
 	"..\..\include\x\x_mymisc.h"\
@@ -8057,6 +8061,7 @@ DEP_CPP_SSEMM=\
 	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\clarity.h"\
+	"..\..\include\easystr.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\draw.decla.h"\
 	"..\..\steem\code\notwindows.h"\
@@ -8080,6 +8085,7 @@ DEP_CPP_SSEOP=\
 	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\clarity.h"\
+	"..\..\include\easystr.h"\
 	"..\..\steem\code\conditions.h"\
 	"..\..\steem\code\draw.decla.h"\
 	"..\..\steem\code\notwindows.h"\
@@ -8310,23 +8316,56 @@ SOURCE=..\..\steem\code\SSE\SSEShifterEvents.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\SSE\SSESTF.cpp
+DEP_CPP_SSEST=\
+	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\3rdparty\pasti\pasti.h"\
+	"..\..\include\binary.h"\
+	"..\..\include\circularbuffer.h"\
+	"..\..\include\clarity.h"\
+	"..\..\include\configstorefile.h"\
+	"..\..\include\dirsearch.h"\
+	"..\..\include\dynamicarray.h"\
+	"..\..\include\easycompress.h"\
+	"..\..\include\easystr.h"\
+	"..\..\include\easystringlist.h"\
+	"..\..\include\mymisc.h"\
+	"..\..\include\notwin_mymisc.h"\
+	"..\..\include\portio.h"\
+	"..\..\include\x\hxc.h"\
+	"..\..\include\x\hxc_alert.h"\
+	"..\..\include\x\hxc_fileselect.h"\
+	"..\..\include\x\hxc_popup.h"\
+	"..\..\include\x\hxc_popuphints.h"\
+	"..\..\include\x\icongroup.h"\
+	"..\..\include\x\x_mymisc.h"\
+	"..\..\steem\code\conditions.h"\
+	"..\..\steem\code\draw.decla.h"\
+	"..\..\steem\code\emulator.decla.h"\
+	"..\..\steem\code\gui.decla.h"\
+	"..\..\steem\code\notwindows.h"\
+	"..\..\steem\code\resnum.decla.h"\
+	"..\..\steem\code\SSE\SSE.h"\
+	"..\..\Steem\code\SSE\SSEDebug.h"\
+	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEInterrupt.h"\
+	"..\..\steem\code\SSE\SSEOption.h"\
+	"..\..\steem\code\SSE\SSEParameters.h"\
+	"..\..\steem\code\SSE\SSESTF.h"\
+	"..\..\steem\pch.h"\
+	
+NODEP_CPP_SSEST=\
+	"..\..\include\beos\be_mymisc.h"\
+	
 
 !IF  "$(CFG)" == "Steem - Win32 Debug"
 
-# PROP Exclude_From_Build 1
-
 !ELSEIF  "$(CFG)" == "Steem - Win32 Release"
 
-# PROP Exclude_From_Build 1
-
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
-
-# PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Debug_modules"
 
@@ -8358,23 +8397,30 @@ SOURCE=..\..\steem\code\SSE\SSESTF.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\SSE\SSEVideo.cpp
+DEP_CPP_SSEVI=\
+	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\include\binary.h"\
+	"..\..\include\clarity.h"\
+	"..\..\include\easystr.h"\
+	"..\..\steem\code\conditions.h"\
+	"..\..\steem\code\draw.decla.h"\
+	"..\..\steem\code\notwindows.h"\
+	"..\..\steem\code\SSE\SSE.h"\
+	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEParameters.h"\
+	"..\..\steem\code\SSE\SSEVideo.h"\
+	"..\..\steem\pch.h"\
+	
 
 !IF  "$(CFG)" == "Steem - Win32 Debug"
 
-# PROP Exclude_From_Build 1
-
 !ELSEIF  "$(CFG)" == "Steem - Win32 Release"
 
-# PROP Exclude_From_Build 1
-
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
-
-# PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
 
 # PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Debug_modules"
 

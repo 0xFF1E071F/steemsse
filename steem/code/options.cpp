@@ -1807,9 +1807,10 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
         case 8601: // Cold reset
-          if (HIWORD(wPar)==BN_CLICKED) reset_st(RESET_COLD | RESET_STOP | RESET_CHANGESETTINGS | RESET_BACKUP);
+          if (HIWORD(wPar)==BN_CLICKED) 
+            reset_st(RESET_COLD | RESET_STOP | RESET_CHANGESETTINGS | RESET_BACKUP);
 #if defined(SS_TOS_WARNING1)
-          CheckSTTypeAndTos();
+            CheckSTTypeAndTos();
 #endif
           break;
         case 8401: // Keyboard language

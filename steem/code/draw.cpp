@@ -139,19 +139,19 @@ bool freq_change_this_scanline=false;
 #undef EXTC
 #undef INIT
 
-
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER) 
-#if !defined(SS_STRUCTURE_SSESHIFTER_OBJ)
+#if defined(STEVEN_SEAGAL)
+
+#if defined(SS_SHIFTER) && !defined(SS_STRUCTURE_SSESHIFTER_OBJ)
 #include "SSE/SSEShifter.cpp"
 #endif
-#endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VIDEO)
+#if defined(SS_VIDEO) && !defined(SS_STRUCTURE_SSESTF_OBJ)
 #include "SSE/SSEVideo.cpp"
 #endif
 
+#endif
 //---------------------------------------------------------------------------
 void ASMCALL draw_scanline_dont(int,int,int,int) {}
 
