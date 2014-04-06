@@ -1,3 +1,18 @@
+#include "SSE.h"
+
+#if defined(STEVEN_SEAGAL)
+
+#if defined(SS_STRUCTURE_SSESTF_OBJ)
+#include "../pch.h"
+#include <conditions.h>
+#include <emulator.decla.h>
+#include <gui.decla.h>
+#include "SSEDebug.h"
+#include "SSEInterrupt.h"
+#include "SSESTF.h"
+#include "SSEOption.h"
+#endif//SS_STRUCTURE_SSESTF_OBJ
+
 #if defined(SS_STF)
 
 // note this is global here, not in classes. TODO?
@@ -5,7 +20,7 @@
 char* st_model_name[]={"STE","STF","Mega ST4","STF 8.0 MHZ"};
 
 #if defined(SS_TOS_WARNING1)
-int CheckSTTypeAndTos() {
+void CheckSTTypeAndTos() {
   if(tos_version<0x106 && ST_TYPE==STE || tos_version>=0x106 && ST_TYPE!=STE)
     Alert("TOS and ST type normally not compatible","Warning",MB_OK|MB_ICONWARNING);
 }
@@ -79,3 +94,4 @@ int SwitchSTType(int new_type) {
 }
 
 #endif//#if defined(SS_STF)
+#endif//#if defined(STEVEN_SEAGAL)

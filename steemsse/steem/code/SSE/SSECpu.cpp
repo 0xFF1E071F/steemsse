@@ -1,8 +1,7 @@
 /*
 */
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO) \
-  && !defined(SS_STRUCTURE_SSECPU_OBJ)
+#if defined(SS_STRUCTURE_INFO) && !defined(SS_STRUCTURE_SSECPU_OBJ)
 #pragma message("Included for compilation: SSECpu.cpp")
 #endif
 

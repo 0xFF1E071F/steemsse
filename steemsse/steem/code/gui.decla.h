@@ -6,7 +6,7 @@
 #define INIT(s)
 
 /*
-#include <easystr.h>
+
 #include <mymisc.h>
 #include <easycompress.h>
 #include <easystringlist.h>
@@ -18,6 +18,8 @@
 #include <pasti/pasti.h>
 #endif
 */
+#include <easystr.h>//SSESTF.obj
+typedef EasyStr Str;//SSESTF.obj
 #include <configstorefile.h>
 #include "resnum.decla.h"
 
@@ -51,7 +53,8 @@ UNIX_ONLY( EXT void PostRunMessage(); )
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING)
    void GUIRefreshStatusBar();
 #endif
-
+#define EXT extern//SSESTF.obj-tmp
+#define INIT(s)//SSESTF.obj-tmp
 EXT void GUIRunStart(),GUIRunEnd();
 EXT int Alert(char *,char *,UINT);
 EXT void QuitSteem();
