@@ -6,7 +6,7 @@
 #define INIT(s)
 
 #if defined(SS_STRUCTURE_SSESHIFTER_OBJ)
-#include <EasyStr.h>
+#include <easystr.h>//unix case-sensitive
 typedef EasyStr Str;
 #endif
 

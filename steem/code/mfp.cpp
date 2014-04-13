@@ -331,7 +331,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 */
           mfp_timer_period_fraction[timer]=int(  1000*((double(mfp_timer_prescale[new_control]*int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+timer]))) * CPU_CYCLES_PER_MFP_CLK)-(double)mfp_timer_period[timer])  );
           mfp_timer_period_current_fraction[timer]=0;
-#ifdef SS_DEBUG
+#if defined(SS_DEBUG) && defined(SS_MFP_RATIO)
           if(reg==MFPR_TBCR && new_val==8)
             TRACE_LOG("F%d y%d PC %X MFP set timer B\n",//TODO
             FRAME,scan_y,old_pc);
@@ -398,7 +398,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 #ifdef SS_DEBUG
 //          TRACE_LOG("F%d y%d c%d MFP Timer %C stopped/event\n",FRAME,scan_y,LINECYCLES,'A'+timer);
           if(new_val & BIT_3) // don't report stopping, it's systematic (or should be)
-            TRACE_LOG("F%d y%d c%d Timer %C %d\n",FRAME,scan_y,LINECYCLES,'A'+timer,mfp_timer_counter[timer]/64);
+            TRACE_LOG("F%d y%d c%d set Timer %C %d\n",FRAME,scan_y,LINECYCLES,'A'+timer,mfp_timer_counter[timer]/64);
 
 #endif
           mfp_timer_enabled[timer]=false;
@@ -615,7 +615,7 @@ void ASMCALL check_for_interrupts_pending()
         if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_VBI)
           FrameEvents.Add(scan_y,LINECYCLES,'I',0x60);
 #endif
-#if defined(SS_DEBUG_TRACE_CONTROL)
+#if defined(SS_DEBUG_TRACE_CONTROL) && defined(SS_INT_JITTER)
           if(TRACE_MASK2 & TRACE_CONTROL_VBI) 
             TRACE("y%d c%d VBI jit %d\n",scan_y,LINECYCLES,VblJitter[VblJitterIndex]);
 #endif
@@ -658,7 +658,7 @@ void ASMCALL check_for_interrupts_pending()
           Debug.FrameInterrupts|=2;
 #endif
 
-#if defined(SS_DEBUG_TRACE_CONTROL)
+#if defined(SS_DEBUG_TRACE_CONTROL) && defined(SS_INT_JITTER)
           if(TRACE_MASK2 & TRACE_CONTROL_HBI) 
             TRACE("y%d c%d HBI jit %d\n",scan_y,LINECYCLES,HblJitter[HblJitterIndex]);
 #endif

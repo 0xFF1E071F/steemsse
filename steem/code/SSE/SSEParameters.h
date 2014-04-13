@@ -289,7 +289,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define HD6301_MOUSE_SPEED_CYCLES_PER_CHUNK 1000
 
 
-#if defined(SS_IKBD_FAKE_CUSTOM)
+#if defined(SS_IKBD_FAKE_CUSTOM)//MFD
 /*  This is not some complicated technical aspect of emulation.
     Checksums are used for gross hacks.
 */
@@ -329,9 +329,7 @@ are assumed to take four clock periods.
 #define SS_INT_HBL_TIMING 56 // SNYD/TCB
 #endif
 #if defined(SS_INT_VBL)
-#ifdef SS_BETA//temp test (we don't think it's correct)
 #define SS_INT_VBL_TIMING 56
-#endif
 #endif
 
 
@@ -360,11 +358,11 @@ are assumed to take four clock periods.
 #undef SS_IPF_CTRAW
 #define SS_IPF_CTRAW "CTR" 
 #endif
-#ifdef SS_IPF_KFSTREAM
+#ifdef SS_IPF_KFSTREAM//no
 #undef SS_IPF_KFSTREAM
 #define SS_IPF_KFSTREAM "RAW" 
 #endif
-#ifdef SS_IPF_DRAFT
+#ifdef SS_IPF_DRAFT//no
 #undef SS_IPF_DRAFT
 #define SS_IPF_DRAFT "RAW"  //?
 #endif
@@ -498,6 +496,7 @@ are assumed to take four clock periods.
 #define README_FONT_NAME "Courier New"
 #define README_FONT_HEIGHT 16
 #define STEEM_SSE_FAQ_TXT "Steem SSE FAQ.txt"
+#define STEEM_HINTS_TXT "SpecificHints.txt"
 
 #endif
 

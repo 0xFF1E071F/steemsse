@@ -39,6 +39,16 @@ EXT MEM_ADDRESS pc_rel_stop_on_ref;
 #undef EXT
 #undef INIT
 
+#ifdef SS_UNIX
+//temp! Don't understand what's going on
+//#include "SSE/SSEDecla.h"
+#if !defined(min)
+#define min(a,b) (a>b ? b:a)
+#define max(a,b) (a>b ? a:b)
+#endif
+
+#endif
+
 WORD*lpfetch,*lpfetch_bound;
 bool prefetched_2=false;
 WORD prefetch_buf[2]; // SS the 2 words prefetch queue

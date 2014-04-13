@@ -1143,7 +1143,7 @@ void TM68000::Interrupt(MEM_ADDRESS ad) {
   PrefetchClass=2;
 #endif
 
-#if defined(SS_DEBUG_68030_STACK_FRAME)
+#if defined(SS_DEBUG_STACK_68030_FRAME)
   if(Debug.M68030StackFrame)
   {//macro must be scoped!
     m68k_PUSH_W(0); // format + offset, both may be 0

@@ -115,12 +115,16 @@ struct TDebug {
   BYTE MonitorRange; //check from ad1 to ad2
 #endif
 
-#if defined(SS_DEBUG_68030_STACK_FRAME)
-  BYTE M68030StackFrame;
+#if defined(SS_DEBUG_STACK_68030_FRAME)
+  BYTE M68030StackFrame;//flag
 #endif
 
 #if defined(SS_DEBUG_BROWSER_6301)
   BYTE HD6301RamBuffer[256+8];
+#endif
+
+#if defined(SS_DEBUG_STACK_CHOICE)
+  BYTE StackDisplayUseOtherSp;//flag
 #endif
 
   void Vbl(); //3.6.1
@@ -255,9 +259,10 @@ enum logsection_enum_tag {
 #define TRACE_MASK3 (Debug.ControlMask[7])
 #define TRACE_CONTROL_FDCSTR (1<<15)
 #define TRACE_CONTROL_FDCBYTES (1<<14)//no logsection needed
-#define TRACE_CONTROL_FDCPSG (1<<13)//sectors
-#define TRACE_CONTROL_FDCIPF1 (1<<13)//lock info
-#define TRACE_CONTROL_FDCIPF2 (1<<11)//sectors
+#define TRACE_CONTROL_FDCPSG (1<<13)//drive/side
+#define TRACE_CONTROL_FDCREGS (1<<12)// writes to registers CR,TR,SR,DR
+#define TRACE_CONTROL_FDCIPF1 (1<<11)//lock info
+#define TRACE_CONTROL_FDCIPF2 (1<<10)//sectors
 
 
 #endif

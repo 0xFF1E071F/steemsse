@@ -409,6 +409,9 @@ void update_register_display(bool reset_pc_display)
     m_b_stack.ad=r[15];
   }
 
+#if defined(SS_DEBUG_STACK_CHOICE)
+  m_b_stack.ad=Debug.StackDisplayUseOtherSp?other_sp:r[15];//that's it
+#endif
   debug_update_cycle_counts();
 
   InvalidateRect(sr_display,NULL,0);
@@ -1017,12 +1020,25 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               hd6301_dump_ram();
               break;
 #endif
-#if defined(SS_DEBUG_68030_STACK_FRAME)
+#if defined(SS_DEBUG_STACK_68030_FRAME)
             case 1525: 
               Debug.M68030StackFrame=!Debug.M68030StackFrame;
               CheckMenuItem(sse_menu,1525,
                 MF_BYCOMMAND|((int)(Debug.M68030StackFrame)
                 ? MF_CHECKED : MF_UNCHECKED));
+              break;
+#endif
+#if defined(SS_DEBUG_STACK_CHOICE)
+/*  v3.6.1 Handy feature, in the SSE menu you may decide which version
+    of A7=SP, USP or SSP will be displayed. As usual USP or SSP depends
+    on supervisor bit.
+*/
+            case 1528: 
+              Debug.StackDisplayUseOtherSp=!Debug.StackDisplayUseOtherSp;
+              CheckMenuItem(sse_menu,1528,
+                MF_BYCOMMAND|((int)(Debug.StackDisplayUseOtherSp)
+                ? MF_CHECKED : MF_UNCHECKED));
+              update_register_display(false);
               break;
 #endif
 #if defined(SS_DEBUG_MUTE_PSG_CHANNEL1)
@@ -1770,9 +1786,12 @@ void DWin_init()
 #if defined(SS_DEBUG_MONITOR_RANGE)
   AppendMenu(sse_menu,MF_STRING,1523,"Monitor: address range");
 #endif
-#if defined(SS_DEBUG_68030_STACK_FRAME)
+#if defined(SS_DEBUG_STACK_68030_FRAME)
   AppendMenu(sse_menu,MF_STRING|MF_SEPARATOR,0,NULL);
   AppendMenu(sse_menu,MF_STRING,1525,"68030 stack frame");
+#endif
+#if defined(SS_DEBUG_STACK_CHOICE)
+  AppendMenu(sse_menu,MF_STRING,1528,"Display other stack");
 #endif
 #if defined(SS_DEBUG_MUTE_PSG_CHANNEL1)
   AppendMenu(sse_menu,MF_STRING|MF_SEPARATOR,0,NULL);
@@ -1949,6 +1968,9 @@ void DWin_init()
   Old_sr_display_WndProc=(WNDPROC)SetWindowLong(sr_display,GWL_WNDPROC,(long)sr_display_WndProc);
   log("STARTUP: Subclassed sr display");
 
+
+//SS note char reg_name_buf[8];
+
   for(int n=0;n<16;n++){
     strcpy(ttt,reg_name(n));
 #if defined(SS_DEBUG_MOD_REGS)
@@ -1968,11 +1990,19 @@ void DWin_init()
 
 
 #if defined(SS_DEBUG_MOVE_OTHER_SP)
-  lpms_other_sp=new mr_static("A7#2","other sp",x+80,y,
+#if defined(SS_DEBUG_MOVE_OTHER_SP2)
+      new mr_static("SSP","SSP",x+80,y,
+      DWin,(HMENU)203,(MEM_ADDRESS)&debug_SSP,4,MST_REGISTER,
+      true,NULL);
+      new mr_static("USP","USP",x+80,y-24,
+      DWin,(HMENU)203,(MEM_ADDRESS)&debug_USP,4,MST_REGISTER,
+      true,NULL);
+#else
+  lpms_other_sp=new mr_static("A7'","other sp",x+80,y,
       DWin,(HMENU)203,(MEM_ADDRESS)&other_sp,3,MST_REGISTER,
       true,NULL);
 #endif
-
+#endif
 
   m_b_mem_disa.handle=CreateWindowEx(512,WC_LISTVIEW,"",
       LVS_REPORT | LVS_SHAREIMAGELISTS | LVS_NOSORTHEADER | LVS_OWNERDRAWFIXED |

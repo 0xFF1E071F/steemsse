@@ -15,20 +15,29 @@ void TGeneralInfo::CreatePage(int pg)
     case INFOPAGE_ABOUT:
       CreateAboutPage();
       break;
+#if defined(SS_VAR_INFOBOX0) && defined(DEBUG_BUILD) 
     case INFOPAGE_DRAWSPEED:
       CreateSpeedPage();
       break;
+#endif
     case INFOPAGE_LINKS:
       CreateLinksPage();
       break;
     case INFOPAGE_README:
     case INFOPAGE_HOWTO_DISK:
+#if !defined(SS_VAR_INFOBOX6)
     case INFOPAGE_HOWTO_CART:
+#endif
     case INFOPAGE_FAQ:
+#if defined(SS_VAR_INFOBOX0) && defined(UNIX)
     case INFOPAGE_UNIXREADME:
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX2)
     case INFOPAGE_README_SSE: 
     case INFOPAGE_FAQ_SSE: 
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX7)
+    case INFOPAGE_HINTS:
 #endif
       CreateReadmePage(pg);
       break;
@@ -184,6 +193,9 @@ void TGeneralInfo::LoadIcons()
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX2)
                               ,hGUIIcon[RC_ICO_OPS_SSE],hGUIIcon[RC_ICO_OPS_SSE]
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX7)
+                              ,hGUIIcon[RC_ICO_OPS_SSE]
+#endif
                               ,0);
   }
   SendMessage(PageTree,TVM_SETIMAGELIST,TVSIL_NORMAL,(LPARAM)il);
@@ -243,13 +255,16 @@ void TGeneralInfo::Show()
 #endif
   AddPageLabel(T("Links"),INFOPAGE_LINKS);
   if (Exists(RunDir+"\\disk image howto.txt")) AddPageLabel("Disk Image Howto",INFOPAGE_HOWTO_DISK);
+#if !defined(SS_VAR_INFOBOX5)
   if (Exists(RunDir+"\\cart image howto.txt")) AddPageLabel("Cartridge Image Howto",INFOPAGE_HOWTO_CART);
-
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX2)
   if (Exists(RunDir+"\\"+WINDOW_TITLE+".txt")) AddPageLabel(WINDOW_TITLE,INFOPAGE_README_SSE);
   if (Exists(RunDir+"\\"+STEEM_SSE_FAQ_TXT)) AddPageLabel("SSE FAQ",INFOPAGE_FAQ_SSE);
 #endif
-
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX7)
+  if (Exists(RunDir+"\\"+STEEM_HINTS_TXT)) AddPageLabel("Hints",INFOPAGE_HINTS);
+#endif
   page_l=2+TreeGetMaxItemWidth(PageTree)+5+2+10;
 #if !(defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX4))
   page_w=min(page_w,620-page_l);
@@ -470,11 +485,16 @@ void TGeneralInfo::CreateReadmePage(int p)
   switch (p){
     case INFOPAGE_README: TextFile+="readme.txt"; break;
     case INFOPAGE_HOWTO_DISK: TextFile+="disk image howto.txt"; break;
+#if !defined(SS_VAR_INFOBOX5)
     case INFOPAGE_HOWTO_CART: TextFile+="cart image howto.txt"; break;
+#endif
     case INFOPAGE_FAQ: TextFile+="faq.txt"; break;
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX2)
     case INFOPAGE_README_SSE: TextFile+=WINDOW_TITLE; TextFile+=".txt"; break;
     case INFOPAGE_FAQ_SSE: TextFile+=STEEM_SSE_FAQ_TXT; break;
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX2)
+    case INFOPAGE_HINTS: TextFile+=STEEM_HINTS_TXT; break;
 #endif
   }
   FILE *f=fopen(TextFile,"rb");
@@ -604,7 +624,10 @@ LRESULT __stdcall TGeneralInfo::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
               if (GetDlgItem(Win,500)){ // On text page
                 switch (tvi.lParam){
                   case INFOPAGE_README:case INFOPAGE_HOWTO_DISK:
-                  case INFOPAGE_HOWTO_CART:case INFOPAGE_FAQ:
+#if !defined(SS_VAR_INFOBOX5)
+                  case INFOPAGE_HOWTO_CART:
+#endif
+                  case INFOPAGE_FAQ:
                     Destroy=0;
                     break;
                 }

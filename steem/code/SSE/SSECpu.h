@@ -4,7 +4,7 @@
 
 #if defined(SS_CPU)
 
-#define LOGSECTION LOGSECTION_CPU
+
 
 #if defined(SS_STRUCTURE_CPU_H)
 
@@ -22,6 +22,10 @@ void exception(int,exception_action,MEM_ADDRESS);
 #include <blitter.decla.h>
 #include <mfp.decla.h>
 #include "SSEDebug.h"
+
+#include "SSEShifter.h" //TIMING_INFO
+#define LOGSECTION LOGSECTION_CPU 
+
 #endif//#if defined(SS_STRUCTURE_SSECPU_OBJ)
 
 #else
@@ -550,7 +554,7 @@ inline void TM68000::PerformRte() {
   // An Illegal routine could manipulate this value.
   SetPC(pushed_return_address);
   sr=m68k_dpeek(r[15]);r[15]+=6;    
-#if defined(SS_DEBUG_68030_STACK_FRAME)
+#if defined(SS_DEBUG_STACK_68030_FRAME)
   if(Debug.M68030StackFrame)
     r[15]+=2;   
 #endif  
@@ -702,6 +706,11 @@ inline void TM68000::Process() {
 #endif
 
   old_pc=pc;  
+
+  //temp...MFD
+//  if(pc==0x036AEE) 
+  //  TRACE("PC %X reached at %d-%d-%d\n",pc,TIMING_INFO);
+
 //ASSERT(old_pc!=0x006164);
 #if defined(SS_CPU_PREFETCH)
 /*  basic prefetch rule:

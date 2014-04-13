@@ -44,6 +44,9 @@ EXT DWORD debug_cycles_since_VBL,debug_cycles_since_HBL;
 #if defined(SS_DEBUG_SHOW_ACT)
 EXT DWORD debug_ACT;
 #endif
+#if defined(SS_DEBUG_MOVE_OTHER_SP2)
+EXT DWORD debug_USP,debug_SSP;
+#endif
 EXT MEM_ADDRESS debug_VAP;
 EXT int debug_time_to_timer_timeout[4];
 EXT void debug_check_for_events();

@@ -704,7 +704,7 @@ the head to the desired track number and update the Track Register.
 
 */
       case 0x10: //seek to track number in data register
-        TRACE_LOG("Seek %d (TR %d CYL %d)\n",fdc_dr,fdc_tr,floppy_head_track[floppyno]);
+//        TRACE_LOG("Seek %d (TR %d CYL %d)\n",fdc_dr,fdc_tr,floppy_head_track[floppyno]);
         agenda_add(agenda_floppy_seek,2,0);
         fdc_str=FDC_STR_MOTOR_ON | FDC_STR_BUSY;
         floppy_irq_flag=0;
