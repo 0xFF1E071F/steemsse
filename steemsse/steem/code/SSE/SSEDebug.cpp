@@ -103,10 +103,6 @@ TDebug::TDebug() {
   ZeroMemory(&InterruptTable,sizeof(SInterruptTable));
 #endif
 
-#if defined(SS_DEBUG_MUTE_PSG_CHANNEL)
-  PsgMask=0; //0=no mod
-#endif
-
 #if defined(SS_DEBUG_STACK_68030_FRAME)
   M68030StackFrame=0;
 #endif

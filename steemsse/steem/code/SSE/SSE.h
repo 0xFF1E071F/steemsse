@@ -173,11 +173,11 @@ and all his silly mods are gone!
 //////////
 
 #if defined(SS_BETA)
-//#define TEST01//mfp
-//#define TEST02//trace
+//#define TEST01
+//#define TEST02
 //#define TEST03
 //#define TEST04
-#define TEST05
+//#define TEST05
 //#define TEST06
 //#define TEST07
 //#define TEST08
@@ -445,7 +445,7 @@ and all his silly mods are gone!
 
 // boiler + IDE
 
-#define SS_DEBUG_FRAME_REPORT // instead of just shifter events (SS_SHIFTER_EVENTS)
+#define SS_DEBUG_FRAME_REPORT
 
 #if defined(SS_DEBUG_FRAME_REPORT)
 
@@ -508,9 +508,6 @@ and all his silly mods are gone!
 #define SS_DEBUG_MOUSE_WHEEL // yeah!
 #define SS_DEBUG_MOVE_OTHER_SP
 #define SS_DEBUG_MOVE_OTHER_SP2//3.6.1, SSP+USP
-//#define SS_DEBUG_MUTE_DMA_SOUND
-//#define SS_DEBUG_MUTE_PSG_CHANNEL
-//#define SS_DEBUG_MUTE_PSG_CHANNEL1//MFD
 #if defined(SS_DEBUG_FAKE_IO)
 #define SS_DEBUG_MUTE_SOUNDCHANNELS //fake io, 3.6.1
 #endif
@@ -542,12 +539,10 @@ and all his silly mods are gone!
 
 #define SS_DEBUG_TRACE_IO
 
-
-//#define SS_SHIFTER_EVENTS // record all shifter events of the frame
 #if !defined(SS_UNIX)
 #define SS_SHIFTER_REPORT_VBL_TRICKS // a line each VBL
 #endif
-///#define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
+
 #define SS_DEBUG_START_STOP_INFO
 
 #define SS_IPF_TRACE_SECTORS // show sector info (IPF)
@@ -651,7 +646,6 @@ and all his silly mods are gone!
 #define SS_DRIVE_COMPUTE_BOOT_CHECKSUM // to mod a boot sector//v3.6.0
 #endif
 #define SS_DRIVE_CREATE_ST_DISK_FIX // from Petari//v3.6.0
-//#define SS_DRIVE_EMPTY_SPIN_UP // European Demos (undef v3.5.4)
 // one or the other:
 //#define SS_DRIVE_EMPTY_VERIFY_LONG // GEM
 #define SS_DRIVE_EMPTY_VERIFY_TIME_OUT //GEM
@@ -664,8 +658,6 @@ and all his silly mods are gone!
 #define SS_DRIVE_READ_TRACK_11
 #define SS_DRIVE_READ_TRACK_11B //Gap 4: 1
 #define SS_DRIVE_READ_TRACK_11C //Gap 5
-//#define SS_DRIVE_READ_TRACK_TIMING //3.5.1, was a bug //MFD
-//#define SS_DRIVE_READ_TRACK_TIMING2 //3.5.3, was a bug //MFD
 #define SS_DRIVE_RW_SECTOR_TIMING // start of sector
 #define SS_DRIVE_RW_SECTOR_TIMING2 // end of sector (hack)
 #define SS_DRIVE_SINGLE_SIDE //3.6.0
@@ -680,14 +672,12 @@ and all his silly mods are gone!
 #define SS_DRIVE_SOUND_EPSON // current samples=Epson
 #define SS_DRIVE_SOUND_EMPTY // different 3.6.1 (none)
 #define SS_DRIVE_SOUND_IPF // fix 3.6.1
-//#define SS_DRIVE_SOUND_PASTI_EMPTY // different (none)//undef 3.6.1
 #define SS_DRIVE_SOUND_VOLUME // logarithmic 
 #endif//drive sound
 #endif//win32
 #define SS_DRIVE_SPIN_UP_TIME
 #define SS_DRIVE_SPIN_UP_TIME2 // more precise
 #define SS_DRIVE_SWITCH_OFF_MOTOR //hack//3.6.0
-//#define SS_DRIVE_WRITE_TRACK_TIMING//undef3.6.1, MFD, most probably wrong like for read
 //#define SS_DRIVE_WRITE_TRACK_11//TODO
 #define SS_DRIVE_WRONG_IMAGE_ALERT//3.6.1
 #endif
@@ -716,7 +706,6 @@ and all his silly mods are gone!
 #define SS_FDC_READ_ADDRESS_UPDATE_SR
 #define SS_FDC_RESET
 #define SS_FDC_RESTORE
-//#define SS_FDC_RESTORE_AGENDA //or use SEEK (of course!!)
 #define SS_FDC_SEEK
 #define SS_FDC_SPIN_UP_AGENDA
 #define SS_FDC_SPIN_UP_STATUS
@@ -763,10 +752,6 @@ and all his silly mods are gone!
 //#define SS_IPF_KFSTREAM//3rd type of file recognised by caps v5.1 (?) //3.6.1
 //#define SS_IPF_DRAFT//4th type of file recognised by caps v5.1 (?) //3.6.1
 //#define SS_IPF_OSD // for the little box at reset - silly?
-#ifdef SS_BETA
-//#define SS_IPF_LETHAL_XCESS // hack useful with capsimg v4.2+5.0//MFD
-//#define SS_IPF_WRITE_HACK // useless hack for v4.2 AFAIK//MFD
-#endif
 #define SS_IPF_RESUME//3.6.1 TODO
 //#define SS_IPF_SAVE_WRITES //TODO?
 #define SS_IPF_TRACE_SECTORS // show sector info
@@ -1143,9 +1128,6 @@ and all his silly mods are gone!
 
 #if defined(SS_HACKS)
 // most hacks concern SDP, there's room for improvement
-#if SSE_VERSION<=353
-#define SS_SHIFTER_LINE_PLUS_2_STE_DSOS // limit 42 instead of 38?//MFD
-#endif
 #define SS_SHIFTER_SDP_WRITE_DE_HSCROLL
 #define SS_SHIFTER_SDP_WRITE_MIDDLE_BYTE // stable
 #define SS_SHIFTER_ARMADA_IS_DEAD // no shift contrary to Big Wobble
@@ -1154,7 +1136,6 @@ and all his silly mods are gone!
 #define SS_SHIFTER_DOLB_SHIFT1 // based on "unstable overscan"
 //#define SS_SHIFTER_DOLB_SHIFT2 // based on cycle of R0
 //#define SS_SHIFTER_DRAGON1 // confused shifter, temp hack
-//#define SS_SHIFTER_OMEGA  // Omega Full Overscan shift (60hz)//MFD ???!!! was defined?
 #define SS_SHIFTER_PACEMAKER // Pacemaker credits flickering line
 #define SS_SHIFTER_SCHNUSDIE // Reality is a Lie/Schnusdie overscan logo
 #define SS_SHIFTER_TCB // Swedish New Year Demo/TCB SDP (60hz)
@@ -1166,16 +1147,6 @@ and all his silly mods are gone!
 #ifdef SS_BETA
 //#define SS_SHIFTER_DRAW_DBG  // totally bypass CheckSideOverscan() & Render()
 #endif
-
-//#define SS_SHIFTER_EVENTS // recording all shifter events in a frame//MFD
-#if defined(SS_SHIFTER_EVENTS)
-#define SS_SHIFTER_EVENTS_BLITTER
-#define SS_SHIFTER_EVENTS_PAL // also for palette
-//#define SS_SHIFTER_EVENTS_READ_SDP // also for read SDP
-#define SS_SHIFTER_EVENTS_BYTES // scanline length
-#define SS_SHIFTER_EVENTS_ON_STOP // each time we stop emulation
-#define SS_SHIFTER_EVENTS_TRICKS // "bordermask"
-#endif//shifter_tricks
 
 
 //#define SS_SHIFTER_IOR_TRACE // specific, not "log"
@@ -1226,11 +1197,10 @@ and all his silly mods are gone!
 #define SS_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
 
 #define SS_SOUND_CHANGE_TIME_METHOD_DELAY //detail
-//#define SS_SOUND_DETECT_SAMPLE_RATE//?//MFD
+
 #define SS_SOUND_FILTER_STF // a very simple filter
 
 #define SS_SOUND_INLINE // macro->inline, easier for my tests, but hard to do
-//#define SS_SOUND_LOW_PASS_FILTER  // Float exceptions, no thanks //MFD
 
 #define SS_SOUND_MICROWIRE // volume, balance, bass & treble, primitive DSP
 #define SS_SOUND_MICROWIRE_WRITE_LATENCY // as documented
@@ -1419,7 +1389,6 @@ and all his silly mods are gone!
 #define SS_TOS_NO_INTERCEPT_ON_RTE2 //3.6.1//try to be less radical... ReDMCSB 50% in TOS102
 #ifdef WIN32
 #define SS_TOS_SNAPSHOT_AUTOSELECT//3.6.1
-//#define SS_TOS_SNAPSHOT_AUTOSELECT1//3.6.1//working but code duplication
 #define SS_TOS_SNAPSHOT_AUTOSELECT2//3.6.1//with refactoring
 #define SS_TOS_SNAPSHOT_AUTOSELECT3//3.6.1//options.cpp uses refactoring
 #endif//win32
@@ -1506,7 +1475,6 @@ and all his silly mods are gone!
 #define SS_VAR_OPTION_SLOW_DISK // because many people miss it in disk manager
 #define SS_VAR_OPTIONS_ICON_VERSION
 #define SS_VAR_OPTIONS_REFRESH // 6301, STF... up-to-date with snapshot
-//#define SS_VAR_POWERON1//3.6.1 spare one "power on"; crash reported :)
 #define SS_VAR_POWERON2 //3.6.1 try other, safer way ;)
 #define SS_VAR_RESET_BUTTON // invert
 #define SS_VAR_RESIZE // reduce memory set (int->BYTE etc.)
@@ -1690,16 +1658,11 @@ and all his silly mods are gone!
 #undef SS_MMU_WAKE_UP_IO_BYTES_R
 #undef SS_MMU_WAKE_UP_IOR_HACK
 #undef SS_MMU_WAKE_UP_IOW_HACK
-#undef SS_SHIFTER_EVENTS
 #undef SS_DEBUG_FRAME_REPORT//same
 #endif
 
 #if defined(SS_SHIFTER_UNSTABLE)
 #undef SS_SHIFTER_DRAGON1
-#endif
-
-#if !defined(SS_SOUND_LOW_PASS_FILTER)
-#undef SS_SOUND_DETECT_SAMPLE_RATE
 #endif
 
 #if !defined(SS_STF)

@@ -116,9 +116,6 @@ LPAGENDAPROC agenda_list[]={
   ikbd_send_joystick_message,
   ikbd_report_abs_mouse,
   agenda_keyboard_replace,
-#if defined(SS_FDC_RESTORE_AGENDA)
-  agenda_fdc_restore,
-#endif
 #if defined(SS_FDC_VERIFY_AGENDA)
   agenda_fdc_verify,
 #endif

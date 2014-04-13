@@ -183,80 +183,6 @@ int LoadSnapShotChangeTOS(Str NewROM,int NewROMVer)
   bool Fail=0;
   if (load_TOS(NewROM)){
 
-#if defined(SS_TOS_SNAPSHOT_AUTOSELECT1)
-/*  Steem couldn't load this precise file.
-    Before prompting user, have a go at matching a TOS with the same
-    version number.
-    Much code duplicated from options.cpp here, so we define
-    SS_TOS_SNAPSHOT_AUTOSELECT2 instead, see just below.
-*/
-    if(SSE_HACKS_ON)
-    {
-      //MFD
-      EasyStr Fol=RunDir;
-      DirSearch ds;
-      
-      if (ds.Find(Fol+SLASH+"*.*")){
-        EasyStr Path;
-        do{
-          if ((ds.Attrib & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_HIDDEN))==0){
-            Path=Fol+SLASH+ds.Name;
-#ifdef WIN32
-            if (has_extension(Path,"LNK")){
-              WIN32_FIND_DATA wfd;
-              EasyStr DestPath=GetLinkDest(Path,&wfd);
-              if (has_extension_list(DestPath,"IMG","ROM",NULL)){
-                if (Exists(DestPath)) Path=DestPath;
-              }
-            }
-#elif defined(UNIX)
-            memset(LinkPath,0,MAX_PATH+1);
-            if (readlink(Path,LinkPath,MAX_PATH)>0){
-              if (has_extension_list(LinkPath,"IMG","ROM",NULL)){
-                if (Exists(LinkPath)){
-                  Path=LinkPath;
-                }else{
-                  Path="";
-                }
-              }
-            }
-#endif
-            if (has_extension_list(Path,"IMG","ROM",NULL)){
-              WORD Ver,Date;
-              BYTE Country;
-              FILE *f=fopen(Path,"rb");
-              
-              if (f){
-                fseek(f,2,SEEK_SET);
-                BYTE b_high,b_low;
-                fread(&b_high,1,1,f);fread(&b_low,1,1,f);
-                Ver=MAKEWORD(b_low,b_high);
-                
-                fseek(f,0x1d,SEEK_SET);
-                fread(&Country,1,1,f);
-                
-                fseek(f,0x1e,SEEK_SET);
-                fread(&b_high,1,1,f);fread(&b_low,1,1,f);
-                Date=MAKEWORD(b_low,b_high);
-                
-                fclose(f);
-                
-                if(Ver==NewROMVer)
-                {
-                  ROMFile=Path;
-                  //tos_version=Ver;
-                  return load_TOS(ROMFile); // 0 = OK
-                }
-              }
-            }
-          }
-        }while (ds.Next());
-        ds.Close();
-      }
-      
-    }//sse_hacks_on
-#endif
-
 #if defined(SS_TOS_SNAPSHOT_AUTOSELECT2)
 /*  Steem couldn't load this precise file.
     Before prompting user, have a go at matching a TOS with the same
@@ -409,9 +335,6 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
       if (Failed==0){
         Failed=int((EasyUncompressToMem(Mem+MEM_EXTRA_BYTES,mem_len,f)!=0) ? 2:0);
         TRACE("Memory snapshot %s loaded\n",FilNam);
-#if defined(SS_TOS_WARNING1) && defined(SS_VAR_POWERON1)//MFD
-        CheckSTTypeAndTos();
-#endif
       }
       fclose(f);
     }else{

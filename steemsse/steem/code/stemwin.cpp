@@ -581,9 +581,6 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           { PostRunMessage();} // it's a macro
           else
           {
-#if defined(SS_SHIFTER_EVENTS) && defined(SS_SHIFTER_EVENTS_ON_STOP)
-            VideoEvents.Report(); // shifter tricks report
-#endif
 #if defined(SS_DEBUG_FRAME_REPORT) && defined(SS_DEBUG_FRAME_REPORT_ON_STOP)
             FrameEvents.Report();
 #endif
@@ -599,9 +596,6 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         if (wPar==VK_PAUSE){
           if (Mess==WM_KEYUP || Mess==WM_SYSKEYUP){
             if (FullScreen || GetKeyState(VK_SHIFT)<0){
-#if defined(SS_SHIFTER_EVENTS) && defined(SS_SHIFTER_EVENTS_ON_STOP)
-              VideoEvents.Report(); // shifter tricks report
-#endif
 #if defined(SS_DEBUG_FRAME_REPORT) && defined(SS_DEBUG_FRAME_REPORT_ON_STOP)
               FrameEvents.Report();
 #endif
@@ -692,9 +686,6 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             HWND status_bar_win=GetDlgItem(StemWin,120); // get handle
 #if defined(SS_DEBUG_REPORT_SDP_ON_CLICK) && defined(SS_SHIFTER)
             char tmp[12+1+6];
-#if defined(SS_SHIFTER_EVENTS)
-            MEM_ADDRESS computed_sdp = VideoEvents.GetSDP(guessed_x,guessed_scan_y);
-#endif
 #if defined(SS_DEBUG_FRAME_REPORT)
             MEM_ADDRESS computed_sdp = FrameEvents.GetSDP(guessed_x,guessed_scan_y);
 #endif
@@ -1018,9 +1009,6 @@ void HandleButtonMessage(UINT Id,HWND hBut)
         SendMessage(hBut,BM_SETCHECK,0,0);
       }else{
         if (runstate==RUNSTATE_RUNNING){
-#if defined(SS_SHIFTER_EVENTS) && defined(SS_SHIFTER_EVENTS_ON_STOP)
-          VideoEvents.Report(); // shifter tricks report
-#endif
 #if defined(SS_DEBUG_FRAME_REPORT) && defined(SS_DEBUG_FRAME_REPORT_ON_STOP)
           FrameEvents.Report();
 #endif

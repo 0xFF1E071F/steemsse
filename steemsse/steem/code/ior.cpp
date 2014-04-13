@@ -159,9 +159,6 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
         wait_states+=(8000000-(ABSOLUTE_CPU_TIME-shifter_cycle_base))%10;
 #endif
 
-#if defined(SS_SHIFTER_EVENTS)
-        VideoEvents.Add(scan_y,LINECYCLES,'j',wait_states);
-#endif
 #if defined(SS_DEBUG_FRAME_REPORT_ACIA)
       FrameEvents.Add(scan_y,LINECYCLES,'a',wait_states);
 #endif
@@ -523,9 +520,6 @@ when it does).
 
     case 0xff8a00:
       ior_byte=Blitter_IO_ReadB(addr); // STF crash there
-#if defined(SS_SHIFTER_EVENTS_BLITTER)
-      VideoEvents.Add(scan_y,LINECYCLES,'b',((addr-0xff8a00)<<8)|ior_byte);
-#endif
 #if defined(SS_DEBUG_FRAME_REPORT_BLITTER)
       FrameEvents.Add(scan_y,LINECYCLES,'b',((addr-0xff8a00)<<8)|ior_byte);
 #endif

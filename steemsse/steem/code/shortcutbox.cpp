@@ -66,9 +66,6 @@ bool TShortcutBox::Picking=0;
 //#if defined(SS_INTERRUPT)
 #include "SSE/SSEInterrupt.h"
 //#endif
-#if defined(SS_SHIFTER_EVENTS)
-#include "SSE/SSEShifterEvents.h"
-#endif
 #if defined(SS_DEBUG_FRAME_REPORT) //temp, same place
 #include "SSE/SSEFrameReport.h"
 #endif
@@ -86,9 +83,6 @@ bool TShortcutBox::Picking=0;
 
 enum {
   CUT_TOGGLEHARDDRIVES=231,
-#if defined(SS_SHIFTER_EVENTS) && !defined(SS_SHIFTER_EVENTS_ON_STOP)
-  CUT_REPORTSHIFTERTRICKS,
-#endif
 #if defined(SS_VID_RECORD_AVI)
   CUT_RECORD_VIDEO,
 #endif
@@ -128,9 +122,6 @@ const char *ShortcutNames[NUM_SHORTCUTS*2]=
 
 #if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS)
 	"Toggle Hard Drives On/Off",(char*)CUT_TOGGLEHARDDRIVES,
-#if defined(SS_SHIFTER_EVENTS) && !defined(SS_SHIFTER_EVENTS_ON_STOP)
-   "Report shifter tricks",(char*)CUT_REPORTSHIFTERTRICKS,
-#endif
 #if defined(SS_VID_RECORD_AVI)
    "Record Video",(char*)CUT_RECORD_VIDEO,
 #endif
@@ -652,17 +643,6 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       HardDiskMan.DisableHardDrives=!HardDiskMan.DisableHardDrives;	// toggle
       HardDiskMan.update_mount();
       break;
-#if defined(SS_SHIFTER_EVENTS) && !defined(SS_SHIFTER_EVENTS_ON_STOP)
-      // Trigger a report of all recorded events for the current VBL (frame)
-    case CUT_REPORTSHIFTERTRICKS:
-#if defined(SS_SHIFTER_EVENTS)
-      VideoEvents.TriggerReport=2;
-#endif
-#if defined(SS_DEBUG_FRAME_REPORT) // normally this one (3.6.1)
-      FrameEvents.TriggerReport=2;
-#endif
-      break;
-#endif
 #if defined(SS_VID_RECORD_AVI)
 #define LOGSECTION LOGSECTION_VIDEO
     case CUT_RECORD_VIDEO:

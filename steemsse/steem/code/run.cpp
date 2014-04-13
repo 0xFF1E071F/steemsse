@@ -807,10 +807,6 @@ void event_scanline()
 #if defined(SS_DEBUG_REPORT_SDP) && defined(SS_SHIFTER)
   if(Shifter.FetchingLine())
   {
-#if defined(SS_SHIFTER_EVENTS)
-    VideoEvents.Add(scan_y,0,'A',(shifter_draw_pointer&0x00FF0000)>>16 ); 
-    VideoEvents.Add(scan_y,0,'a',(shifter_draw_pointer&0xFFFF) ); 
-#endif
 #if defined(SS_DEBUG_FRAME_REPORT_SDP_LINES) // A is for ACIA now
     FrameEvents.Add(scan_y,0,'@',(shifter_draw_pointer&0x00FF0000)>>16 ); 
     FrameEvents.Add(scan_y,0,'@',(shifter_draw_pointer&0xFFFF) ); 
@@ -872,18 +868,6 @@ void event_scanline()
     ){ 
     hbl_pending=true;
   }
-
-/* //MFD  -conflicts with vbl osd reporting
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_HBL_IACK_FIX) && defined(SS_DEBUG)
-#if defined(SS_OSD_CONTROL)
-  else if((sr & SR_IPL)<SR_IPL_2 && (OSD_MASK1 & OSD_CONTROL_INTERRUPT) )
-  {
-    TRACE_OSD("NO HBL"); 
-    ///TRACE("No HBL\n");//temp
-  }
-#endif
-#endif
-*/
 
   if (dma_sound_on_this_screen) dma_sound_fetch(); 
   screen_event_pointer++;
@@ -1392,13 +1376,6 @@ void event_vbl_interrupt() //SS misleading name?
 #if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
   Shifter.Vbl();
 #endif
-
-#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_EVENTS)
-  // important info at start of frame (not events)
-  VideoEvents.Add(scan_y,0,'R',Shifter.m_ShiftMode); 
-  VideoEvents.Add(scan_y,0,'S',Shifter.m_SyncMode); 
-#endif
-
 #if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_FRAME_REPORT_SHIFTMODE)
   FrameEvents.Add(scan_y,0,'R',Shifter.m_ShiftMode); 
 #endif

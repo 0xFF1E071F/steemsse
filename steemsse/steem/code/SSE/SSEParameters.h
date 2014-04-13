@@ -288,19 +288,6 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define HD6301_MOUSE_SPEED_CHUNKS 15
 #define HD6301_MOUSE_SPEED_CYCLES_PER_CHUNK 1000
 
-
-#if defined(SS_IKBD_FAKE_CUSTOM)//MFD
-/*  This is not some complicated technical aspect of emulation.
-    Checksums are used for gross hacks.
-*/
-#define SS_IKBD_FAKE_CUSTOM_CHECKSUM_DRAGONNELS_LOADER 0x789
-#define SS_IKBD_FAKE_CUSTOM_CHECKSUM_DRAGONNELS 0x2643
-#define SS_IKBD_FAKE_CUSTOM_CHECKSUM_FROGGIES_LOADER 0x784
-#define SS_IKBD_FAKE_CUSTOM_CHECKSUM_FROGGIES 0x66FE
-#define SS_IKBD_FAKE_CUSTOM_CHECKSUM_TB2_LOADER 0x5CA
-#define SS_IKBD_FAKE_CUSTOM_CHECKSUM_TB2 0x356C
-#endif
-
 #endif
 
 
@@ -440,14 +427,8 @@ are assumed to take four clock periods.
 // SHIFTER //
 /////////////
 
-#ifdef SS_BETA
-//#define SS_SHIFTER_SKIP_SCANLINE 5//-29 // fetch but only draw colour 0 (debug)//MFD
-#endif
 #define VERT_OVSCN_LIMIT (502) //502
 
-#if defined(SS_SHIFTER_EVENTS)
-#define SHIFTER_EVENTS_FILENAME "shifter_tricks.txt"
-#endif
 
 #if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
 #define WU2_PLUS_CYCLES 4 // we make cycles +2
@@ -460,11 +441,6 @@ are assumed to take four clock periods.
 ///////////
 // SOUND //
 ///////////
-
-#if defined(SS_SOUND_LOW_PASS_FILTER)
-#define LOW_PASS_FILTER_FREQ 6000
-#define LOW_PASS_FILTER_GAIN (0)
-#endif
 
 #if defined(SS_SOUND_FILTER_STF)
 #define SS_SOUND_FILTER_STF_V ((*source_p+dv)/2)

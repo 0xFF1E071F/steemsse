@@ -672,7 +672,7 @@ void TDma::UpdateRegs(bool trace_them) {
   }
 #endif
 
-#ifdef SS_DEBUG//no mask yet but important info ?TEST05//temp form
+#ifdef SS_DEBUG//no mask yet but important info
   if((fdc_str&0x10) && WD1772.CommandType(fdc_cr)!=1)
     TRACE_OSD("RNF");
 #endif
@@ -854,11 +854,7 @@ void TDma::TransferBytes() {
       TRACE_LOG("#%03d (%d-%02d-%02d) to %06X: ",Datachunk,floppy_current_side(),floppy_head_track[DRIVE],fdc_sr,BaseAddress);
     else  // RAM -> disk
       TRACE_LOG("#%03d (%d-%02d-%02d) from %06X: ",Datachunk,floppy_current_side(),floppy_head_track[DRIVE],fdc_sr,BaseAddress);
-#else//MFD
-    if(!(MCR&0x100)) // disk -> RAM
-      TRACE_LOG("%2d/%2d/%3d to %X: ",fdc_tr,fdc_sr,ByteCount,BaseAddress);
-    else  // RAM -> disk
-      TRACE_LOG("%2d/%2d/%3d from %X: ",fdc_tr,fdc_sr,ByteCount,BaseAddress);
+#else
 #endif
   }
 
@@ -1295,8 +1291,6 @@ void TSF314::Sound_CheckMotor() {
   bool motor_on= ((fdc_str&0x80)//;//simplification TODO?
 #if defined(SS_DRIVE_SOUND_EMPTY) // but clicks still on
     && !FloppyDrive[floppy_current_drive()].Empty()
-#elif defined(SS_DRIVE_SOUND_PASTI_EMPTY)
-    && (!pasti_active|| !FloppyDrive[floppy_current_drive()].Empty()) 
 #endif
     );
   if(SSE_DRIVE_SOUND && motor_on && !(dwStatus&DSBSTATUS_PLAYING))
@@ -1996,9 +1990,6 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
   }
   Active=TRUE;
   SF314[drive].diskattr|=CAPSDRIVE_DA_IN; // indispensable!
-#if defined(SS_DRIVE_IPF1)//MFD
-//  ::SF314[drive].ImageType=DISK_IPF; // the other SF314 (confusing)
-#endif
   if(!FileIsReadOnly)
     SF314[drive].diskattr&=~CAPSDRIVE_DA_WP; // Sundog
   CAPSFdcInvalidateTrack(&WD1772,drive); // Galaxy Force II
@@ -2084,38 +2075,13 @@ void TCaps::WriteWD1772(BYTE Line,int data) {
   CyclesRun+=CYCLES_PRE_IO;
 #endif  
 
-#if defined(SS_FDC) && defined(SS_IPF_LETHAL_XCESS)
-  if(SSE_HACKS_ON && !Line && (Version==42||Version==50)) 
-  { //targeted hack to make up for something missing in capsimg (?)
-    if( (::WD1772.CR&0xF0)==0xD0 && (data&0xF0)==0xE0 ) 
-    {
-      TRACE_LOG("hack Lethal Xcess\n");
-      WD1772.lineout&=~CAPSFDC_LO_INTIP; // fixes Lethal Xcess
-      // in current beta, this doesn't work anymore?
-    }
-  }
-#endif
-
   if(!Line) // command
   {
     // TODO drive selection problem
     mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Double Dragon II
-    if( (Version==42||Version==50) && (data&0xF0)==0xA0)
+    if( (Version==42||Version==50||Version==51) && (data&0xF0)==0xA0)
     {
       TRACE_LOG("IPF unimplemented command %d\n",data);
-
-#if defined(SS_IPF_WRITE_HACK)
-      if(SSE_HACKS_ON)// && (data&0xF0)==0xA0) // =write sector (not track!)
-      {
-        TRACE_LOG("Hack for write to IPF %d sectors\n",Dma.Counter);
-        Dma.BaseAddress+=512*Dma.Counter;
-#if defined(SS_DMA_COUNT_CYCLES)
-        INSTRUCTION_TIME(256*Dma.Counter);
-#endif
-        Dma.Counter=0;
-        Dma.SR=1;
-      }
-#endif
     }
 
 #if defined(SS_DRIVE_MOTOR_ON_IPF)

@@ -21,10 +21,6 @@
 #include "SSEMMU.h"
 #endif
 
-#if defined(SS_SHIFTER_EVENTS)//no
-#include "SSEShifterEvents.cpp" // debug module, the Steem way...
-#endif
-
 #if defined(SS_DEBUG_FRAME_REPORT) && !defined(SS_STRUCTURE_SSEFRAMEREPORT_OBJ)
 #include "SSEFrameReport.cpp"
 #endif
@@ -2438,19 +2434,6 @@ void TShifter::IncScanline() { // a big extension of 'scan_y++'!
     FrameEvents.Add(scan_y,CurrentScanline.Cycles,'#',CurrentScanline.Bytes);
 #endif
 
-#if defined(SS_SHIFTER_EVENTS_TRICKS) 
-  // Record the 'tricks' mask at the end of scanline
-  if(CurrentScanline.Tricks)
-    VideoEvents.Add(scan_y,CurrentScanline.Cycles,'T',CurrentScanline.Tricks);
-#endif
-#if defined(SS_SHIFTER_EVENTS_BYTES)
-  if(CurrentScanline.Tricks)
-    VideoEvents.Add(scan_y,CurrentScanline.Cycles,'#',CurrentScanline.Bytes);
-#endif
-#endif
-
-#ifdef TEST02
-if(scan_y==100) REPORT_LINE;
 #endif
 
 #if defined(SS_DEBUG_TRACE_CONTROL)
@@ -2598,9 +2581,6 @@ BYTE TShifter::IORead(MEM_ADDRESS addr) {
       }
 #endif
       ior_byte=DWORD_B(&sdp,(2-(addr-0xff8205)/2)); // change for big endian !!!!!!!!!
-#if defined(SS_SHIFTER_EVENTS) && defined(SS_SHIFTER_EVENTS_READ_SDP)
-      VideoEvents.Add(scan_y,LINECYCLES,'r',((addr&0xF)<<8)|ior_byte);
-#endif
 #if defined(SS_DEBUG_FRAME_REPORT_READ_SDP) // c for counter now
       FrameEvents.Add(scan_y,LINECYCLES,'c',((addr&0xF)<<8)|ior_byte); 
 #endif
@@ -2678,9 +2658,6 @@ void TShifter::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
     // Writing byte to palette writes that byte to both the low and high byte!
     WORD new_pal=MAKEWORD(io_src_b,io_src_b & 0xf);
 
-#if defined(SS_SHIFTER_EVENTS) && defined(SS_SHIFTER_EVENTS_PAL)
-    VideoEvents.Add(scan_y,LINECYCLES,'p', (n<<12)|io_src_b);  // little p
-#endif
 #if defined(SS_DEBUG_FRAME_REPORT_PAL)
       FrameEvents.Add(scan_y,LINECYCLES,'p', (n<<12)|io_src_b);  // little p
 #endif
@@ -2728,9 +2705,6 @@ According to ST-CNX, those registers are in the MMU, not in the shifter.
 */
      
     case 0xff8201:  //high byte of screen memory address
-#if defined(SS_SHIFTER_EVENTS)
-      VideoEvents.Add(scan_y,LINECYCLES,'V',io_src_b); 
-#endif
 #if defined(SS_DEBUG_FRAME_REPORT_VIDEOBASE)
       FrameEvents.Add(scan_y,LINECYCLES,'V',io_src_b); 
 #endif
@@ -2753,9 +2727,6 @@ According to ST-CNX, those registers are in the MMU, not in the shifter.
       break;
       
     case 0xff8203:  //mid byte of screen memory address
-#if defined(SS_SHIFTER_EVENTS)
-      VideoEvents.Add(scan_y,LINECYCLES,'M',io_src_b); 
-#endif
 #if defined(SS_DEBUG_FRAME_REPORT_VIDEOBASE)
       FrameEvents.Add(scan_y,LINECYCLES,'M',io_src_b); 
 #endif
@@ -2840,9 +2811,6 @@ Writing on it on a STF does nothing.
 Last bit always cleared (we must do it).
 */
     case 0xff820d:  //low byte of screen memory address
-#if defined(SS_SHIFTER_EVENTS)
-      VideoEvents.Add(scan_y,LINECYCLES,'v',io_src_b); 
-#endif
 #if defined(SS_DEBUG_FRAME_REPORT_VIDEOBASE)
       FrameEvents.Add(scan_y,LINECYCLES,'v',io_src_b); 
 #endif
@@ -2897,9 +2865,6 @@ the Shifter has to read (a few bits) more each rasterline and these bits
 must NOT be skipped using the Line Offset Register. 
 */
     case 0xff820f:   
-#if defined(SS_SHIFTER_EVENTS)
-      VideoEvents.Add(scan_y,LINECYCLES,'F',io_src_b); 
-#endif
 #if defined(SS_DEBUG_FRAME_REPORT_HSCROLL)
       FrameEvents.Add(scan_y,LINECYCLES,'L',io_src_b); //we choose L now
 #endif
@@ -2967,9 +2932,6 @@ rasterline to allow horizontal fine-scrolling.
       // 16 pixels. If you have got hscroll extra fetch turned on then setting this
       // to 0 confuses the shifter and causes it to shrink the left border by 16 pixels.
     case 0xff8265:  // Hscroll
-#if defined(SS_SHIFTER_EVENTS)
-      VideoEvents.Add(scan_y,LINECYCLES,(addr==0xff8264)?'h':'H',io_src_b); 
-#endif
 #if defined(SS_DEBUG_FRAME_REPORT_HSCROLL)
       FrameEvents.Add(scan_y,LINECYCLES,(addr==0xff8264)?'h':'H',io_src_b); 
 #endif
@@ -3439,16 +3401,12 @@ void TShifter::SetShiftMode(BYTE NewMode) {
     CyclesIn-=4; // this is for correct reporting
 #endif
 
-#if defined(SS_SHIFTER_EVENTS)
-  VideoEvents.Add(scan_y,CyclesIn,'R',NewMode); 
-  //TRACE_LOG("y%d c%d r%d\n",scan_y,CyclesIn,NewMode);
-#endif
 #if defined(SS_DEBUG_FRAME_REPORT_SHIFTMODE)
-      FrameEvents.Add(scan_y,CyclesIn,'R',NewMode); 
+  FrameEvents.Add(scan_y,CyclesIn,'R',NewMode); 
 #endif
 #if defined(SS_DEBUG_FRAME_REPORT_MASK)
-      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SHIFTMODE)
-        FrameEvents.Add(scan_y,CyclesIn,'R',NewMode); 
+  if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SHIFTMODE)
+    FrameEvents.Add(scan_y,CyclesIn,'R',NewMode); 
 #endif
   NewMode&=3; // only two lines would physically exist
   m_ShiftMode=NewMode; // update, used by ior now (v3.5.1)
@@ -3539,10 +3497,6 @@ void TShifter::SetSyncMode(BYTE NewSync) {
     CyclesIn-=4; // this is for correct reporting
 #endif
 
-#if defined(SS_SHIFTER_EVENTS) 
-  VideoEvents.Add(scan_y,CyclesIn,'S',NewSync); 
-  //  TRACE_LOG("y%d c%d s%d\n",scan_y,CyclesIn,NewSync);
-#endif
 #if defined(SS_DEBUG_FRAME_REPORT_SYNCMODE)
   FrameEvents.Add(scan_y,CyclesIn,'S',NewSync); 
 #endif
@@ -3655,13 +3609,9 @@ void TShifter::SetSyncMode(BYTE NewSync) {
 
 void TShifter::Vbl() {
   // called at the very end of event_vbl_interrupt()
-#if defined(SS_SHIFTER_EVENTS)
-  VideoEvents.Vbl(); 
-#endif
 #if defined(SS_DEBUG_FRAME_REPORT)
   FrameEvents.Vbl(); 
 #endif
-
 
 #if defined(SS_DEBUG)
   nVbl++; 
@@ -4574,9 +4524,6 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 
 #if defined(SS_SHIFTER_SDP_TRACE_LOG2)
   TRACE_LOG("F%d y%d c%d Write %X to %X\n",FRAME,scan_y,cycles,io_src_b,addr);
-#endif
-#if defined(SS_SHIFTER_EVENTS)
-  VideoEvents.Add(scan_y,cycles,'w',((addr&0xF)<<8)|io_src_b);
 #endif
 
 #ifdef SS_DEBUG

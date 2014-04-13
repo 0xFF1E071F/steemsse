@@ -1370,12 +1370,6 @@ void stemdos_intercept_trap_1()
           stemdos_read(h,sp);
           stemdos_final_rte(); //prevent GEMDOS
         }
-#ifdef SS_DEBUG
-        else {
-          ///TRACE_LOG("File %d not open\n",h); //MFD
-          //     ASSERT(!stemdos_any_files_open());//!!
-        }
-#endif
       }
       else TRACE_LOG("no read h%d\n",h);
       return;

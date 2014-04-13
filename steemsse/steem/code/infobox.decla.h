@@ -17,7 +17,7 @@ enum {
  NUM_INFOPAGE
 };
 
-#else //MFD the ss_parts...
+#else 
 
 #define INFOPAGE_ABOUT 0
 #define INFOPAGE_DRAWSPEED 1

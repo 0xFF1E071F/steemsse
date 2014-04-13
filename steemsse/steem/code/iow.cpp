@@ -117,9 +117,6 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
           rel_cycle%=10;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_EVENTS)
-          VideoEvents.Add(scan_y,LINECYCLES,'J',rel_cycle+6); 
-#endif
 #if defined(SS_DEBUG_FRAME_REPORT_ACIA)
       FrameEvents.Add(scan_y,LINECYCLES,'A',rel_cycle+6);
 #endif
@@ -658,9 +655,6 @@ system exclusive start and end messages (F0 and F7).
       break;
 
     case 0xff8a00:      //----------------------------------- Blitter
-#if defined(SS_SHIFTER_EVENTS_BLITTER)
-      VideoEvents.Add(scan_y,LINECYCLES,'B',((addr-0xff8a00)<<8)|io_src_b);
-#endif
 #if defined(SS_DEBUG_FRAME_REPORT_BLITTER)
       FrameEvents.Add(scan_y,LINECYCLES,'B',((addr-0xff8a00)<<8)|io_src_b);
 #endif
@@ -1899,12 +1893,6 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
 
 #if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
   
-#if defined(SS_SHIFTER_EVENTS) && defined(SS_SHIFTER_EVENTS_PAL) //debug
-    if(Blit.HasBus)
-      VideoEvents.Add(scan_y,LINECYCLES,'Q',(n<<12)|io_src_w); 
-    else
-      VideoEvents.Add(scan_y,LINECYCLES,'P',(n<<12)|io_src_w); 
-#endif
 #if defined(SS_DEBUG_FRAME_REPORT_PAL)
     if(Blit.HasBus)
       FrameEvents.Add(scan_y,LINECYCLES,'Q',(n<<12)|io_src_w); 

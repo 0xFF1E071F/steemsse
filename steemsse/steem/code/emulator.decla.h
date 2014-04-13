@@ -209,9 +209,6 @@ EXT MEM_ADDRESS on_rte_return_address;
 EXT LPAGENDAPROC agenda_list[
   15+4+1
   +1
-#if defined(SS_FDC_RESTORE_AGENDA)
-  +1
-#endif
 #if defined(SS_FDC_VERIFY_AGENDA)
   +1
 #endif

@@ -214,8 +214,6 @@ void THD6301::ReportCommand() {
     case 0x19: TRACE_LOG("SET JOYSTICK KEYCODE MODE"); break;
     case 0x1B: TRACE_LOG("TIME-OF-DAY CLOCK SET"); break;
     case 0x20: TRACE_LOG("MEMORY LOAD"); break;
-//      TRACE_OSD("IKBD-PRG");//MFD
-//      break;
     case 0x08: TRACE_LOG("SET RELATIVE MOUSE POSITION REPORTING"); break;
     case 0x0D: TRACE_LOG("INTERROGATE MOUSE POSITION"); break;
     case 0x0F: TRACE_LOG("SET Y=0 AT BOTTOM"); break;
