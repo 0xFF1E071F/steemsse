@@ -619,10 +619,6 @@ void ASMCALL check_for_interrupts_pending()
           if(TRACE_MASK2 & TRACE_CONTROL_VBI) 
             TRACE("y%d c%d VBI jit %d\n",scan_y,LINECYCLES,VblJitter[VblJitterIndex]);
 #endif
-#if defined(SS_OSD_CONTROL__)//MFD
-          if(OSD_MASK1 & OSD_CONTROL_VBI) 
-            TRACE_OSD("VBI");
-#endif
 #if defined(SS_DEBUG_FRAME_INTERRUPTS)
         Debug.FrameInterrupts|=1;
 #endif
@@ -636,21 +632,13 @@ void ASMCALL check_for_interrupts_pending()
       if ((sr & SR_IPL)<SR_IPL_2){
         // Make sure this HBL can't occur when another HBL has already happened
         // but the event hasn't fired yet.
-#if defined(TEST01)
-        if(1){
-#else
         if (int(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl)<scanline_time_in_cpu_cycles_at_start_of_vbl){
-#endif
           ASSERT(!Blit.HasBus);
 #if defined(SS_DEBUG_SHOW_INTERRUPT)
           Debug.RecordInterrupt("HBI");
 #endif
 #if defined(SS_INT_OSD_REPORT_HBI) && defined(SS_DEBUG)
           if(!TRACE_ENABLED)
-            TRACE_OSD("HBI");
-#endif
-#if defined(SS_OSD_CONTROL__)//MFD
-          if(OSD_MASK1 & OSD_CONTROL_HBI) 
             TRACE_OSD("HBI");
 #endif
 
@@ -666,12 +654,6 @@ void ASMCALL check_for_interrupts_pending()
           if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_HBI)
             FrameEvents.Add(scan_y,LINECYCLES,'I',0x40);
 #endif
-
-#if defined(TEST01)
-        if(!(int(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl)<scanline_time_in_cpu_cycles_at_start_of_vbl))
-          TRACE("note ! %d-%d<%d\n",ABSOLUTE_CPU_TIME,cpu_timer_at_start_of_hbl,scanline_time_in_cpu_cycles_at_start_of_vbl);
-#endif
-
           HBL_INTERRUPT;
         }
 #if defined(STEVEN_SEAGAL) && defined(SS_INT_HBL) // can happen quite a lot
@@ -804,30 +786,12 @@ void mfp_interrupt(int irq,int when_fired)
             case 15:     TRACE_LOG("Monochrome Detect\n");       break;                     
 
             }//sw
-
-/*//MFD
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_MFP_TIMERS
-            if(irq==4||irq==5||irq==8||irq==13)
-              TRACE_LOG("F%d y%d c%d MFP IRQ %d\n",FRAME,scan_y,LINECYCLES,irq);
-*/
-#endif
-
-#if defined(SS_OSD_CONTROL___)//MFD
-            if((OSD_MASK1 & OSD_CONTROL_TD) &&irq==4)
-              TRACE_OSD("T-D");//rather rare
-//          if((OSD_MASK1 & OSD_CONTROL_MFP))
-  //          TRACE_OSD("%d",irq);//not good!
-#if defined(SS_DEBUG_MFP_FRAME)  // for OSD report
-            Debug.FrameMfpIrqs|= 1<<irq;
-#endif
 #endif
 
 #if defined(SS_DEBUG_FRAME_INTERRUPTS)
             Debug.FrameInterrupts|=4;
             Debug.FrameMfpIrqs|= 1<<irq;
 #endif
-
 
 #if defined(SS_DEBUG_SHOW_INTERRUPT)
             Debug.RecordInterrupt("MFP",irq);

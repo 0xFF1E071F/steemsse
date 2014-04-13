@@ -706,11 +706,6 @@ inline void TM68000::Process() {
 #endif
 
   old_pc=pc;  
-
-  //temp...MFD
-//  if(pc==0x036AEE) 
-  //  TRACE("PC %X reached at %d-%d-%d\n",pc,TIMING_INFO);
-
 //ASSERT(old_pc!=0x006164);
 #if defined(SS_CPU_PREFETCH)
 /*  basic prefetch rule:

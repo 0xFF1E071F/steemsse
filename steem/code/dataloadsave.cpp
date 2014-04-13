@@ -804,16 +804,6 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     TRACE_FILE_REWIND=pCSF->GetInt("Debug","TraceFileRewind",TRACE_FILE_REWIND);
     CheckMenuItem(sse_menu,1518,MF_BYCOMMAND|
       ((TRACE_FILE_REWIND)?MF_CHECKED:MF_UNCHECKED));
-#if defined(SS_DEBUG_MUTE_PSG_CHANNEL)//MFD!
-    Debug.PsgMask=pCSF->GetInt("Debug","PsgMask",Debug.PsgMask);
-    for(int id=1519;id<=1521;id++) // updating a bit more difficult
-      CheckMenuItem(sse_menu,id,
-        MF_BYCOMMAND|((int)( Debug.PsgMask & 1 << (1521-id)) 
-        ? MF_CHECKED:MF_UNCHECKED));
-    CheckMenuItem(sse_menu,1526,
-      MF_BYCOMMAND|((int)( Debug.PsgMask & 1 << 3) 
-      ? MF_CHECKED:MF_UNCHECKED));
-#endif
 #if defined(SS_DEBUG_MONITOR_VALUE)
     Debug.MonitorValueSpecified=pCSF->GetInt("Debug","MonitorValueSpecified",Debug.MonitorValueSpecified);
     CheckMenuItem(sse_menu,1522,MF_BYCOMMAND|
@@ -1231,9 +1221,6 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SS_DEBUG_SSE_PERSISTENT)
   pCSF->SetStr("Debug","UseTraceFile",EasyStr(USE_TRACE_FILE)); 
   pCSF->SetStr("Debug","TraceFileRewind",EasyStr(TRACE_FILE_REWIND)); 
-#if defined(SS_DEBUG_MUTE_PSG_CHANNEL)
-  pCSF->SetStr("Debug","PsgMask",EasyStr(Debug.PsgMask)); 
-#endif
 #if defined(SS_DEBUG_MONITOR_VALUE)
   pCSF->SetStr("Debug","MonitorValueSpecified",EasyStr(Debug.MonitorValueSpecified)); 
 #endif

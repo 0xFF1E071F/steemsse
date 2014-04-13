@@ -443,21 +443,6 @@ void floppy_fdc_command(BYTE cm)
 #endif
     }
   }
-#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_EMPTY_SPIN_UP)
-/*  Hack for European Demos: 'insert disk B' screen
-    v3.5.4 not defined after comment by Nicolas
-    It made no sense anyway, it seemed to work in SainT because there's
-    only one drive!//MFD
-*/
-  else if(SSE_HACKS_ON && ADAT && FloppyDrive[DRIVE].Empty()
-     && (!SF314[DRIVE].MotorOn
-    || hbl_count-SF314[DRIVE].HblOfMotorOn<FDC_HBLS_PER_ROTATION*6 ) )
-  {
-    TRACE_LOG("European Demos hack\n");
-    agenda_fdc_finished(0); //IRQ
-    return;
-  }
-#endif
 #if defined(SS_DRIVE_MOTOR_ON)
   else
     SF314[DRIVE].MotorOn=true; // European Demos OVR V (!)
@@ -658,7 +643,7 @@ zero, the chip sets its Track Register to $00 and ends the command.
 #endif
             hbls_to_interrupt=2;
           }else{
-#if !defined(SS_FDC_RESTORE_AGENDA) || defined(SS_FDC_RESTORE_AGENDA)
+#if !defined(SS_FDC_RESTORE_AGENDA) || defined(SS_FDC_RESTORE_AGENDA) //argh, check that!
             if (floppy_instant_sector_access==0) hbls_to_interrupt*=floppy_head_track[floppyno];
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_RESTORE) && defined(SS_FDC_SEEK)
@@ -679,14 +664,7 @@ and ends the command.
           {
             fdc_tr=255,fdc_dr=0; // like in CAPSimg
             floppy_irq_flag=0;
-#if defined(SS_FDC_RESTORE_AGENDA)
-            if(hbls_to_interrupt==2)  //?
-              agenda_add(agenda_floppy_seek,2,0);
-            else
-              agenda_add(agenda_fdc_restore,(int)(hbls_to_interrupt*hbl_multiply),floppyno);
-#else
             agenda_add(agenda_floppy_seek,2,0);
-#endif
           }
           else
 #endif
@@ -1091,20 +1069,7 @@ bytes incorrectly during write-splice time because of synchronization.
         if (floppy->DiskInDrive()){
           agenda_delete(agenda_floppy_read_track);
         DWORD DiskPosition=hbl_count % FDC_HBLS_PER_ROTATION;
-#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_READ_TRACK_TIMING)
-/*  v3.5.1
-    agenda_floppy_read_track starts at first sector, so we add the post 
-    index gap here
-    v3.6.1 disabled as this breaks "English for Business", also notice 
-    useless code, and that it is not protected by "ADAT" as it should.
-    This feature was never finished for some reason.
-*/
-          FDC_IDField IDList[30];
-          int nSects=floppy->GetIDFields(floppy_current_side(),floppy_head_track[floppyno],IDList);
-          DiskPosition-=SF314[DRIVE].BytesToHbls(SF314[DRIVE].PostIndexGap());
-#endif
-
-          agenda_add(agenda_floppy_read_track,int(hbl_multiply*(FDC_HBLS_PER_ROTATION-DiskPosition)),0);
+        agenda_add(agenda_floppy_read_track,int(hbl_multiply*(FDC_HBLS_PER_ROTATION-DiskPosition)),0);
         }
         break;
 /*
@@ -1144,11 +1109,6 @@ $f7 will write a two-byte CRC to the disk.
           if (floppy->Format_f){
             agenda_delete(agenda_floppy_write_track);
             DWORD DiskPosition=hbl_count % FDC_HBLS_PER_ROTATION;
-
-#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_WRITE_TRACK_TIMING)
-            DiskPosition+=SF314[DRIVE].BytesToHbls(SF314[DRIVE].PostIndexGap()); 
-#endif
-
             agenda_add(agenda_floppy_write_track,int(hbl_multiply*(FDC_HBLS_PER_ROTATION-DiskPosition)),0);
             floppy_write_track_bytes_done=0;
           }
@@ -1185,9 +1145,6 @@ acknowledge Force Interrupt commands only between micro- instructions.
                             agenda_get_queue_pos(agenda_floppy_read_address)>=0 ||
                             agenda_get_queue_pos(agenda_floppy_read_track)>=0 ||
                             agenda_get_queue_pos(agenda_floppy_write_track)>=0);
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_RESTORE_AGENDA)
-        agenda_delete(agenda_fdc_restore);
-#endif
         agenda_delete(agenda_floppy_seek);
         agenda_delete(agenda_floppy_readwrite_sector);
         agenda_delete(agenda_floppy_read_address);
@@ -1382,25 +1339,6 @@ void agenda_fdc_motor_flag_off(int)
 }
 #endif
 //---------------------------------------------------------------------------
-
-
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_RESTORE_AGENDA)
-/*  3.5.3, this isn't defined anymore, we use the SEEK routines
-    instead.
-    We used a distinct agenda because we thought there could be
-    a timing difference. Less code to compile! MFD
-*/
-void agenda_fdc_restore(int floppyno) {
-  ASSERT(0);
-  ASSERT( ADAT );
-  ASSERT( !fdc_dr );
-  // we do it in one time, normally it's a series of steps
-  ASSERT( fdc_tr==255 );
-  floppy_head_track[floppyno]=fdc_tr=fdc_dr;
-  ASSERT( !fdc_tr );
-  fdc_type1_check_verify();
-}
-#endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_VERIFY_AGENDA)
 
@@ -1973,11 +1911,6 @@ void agenda_floppy_read_track(int part)
       // Find out if it is a high density track
       TrackBytes=0;
       for (int n=0;n<nSects;n++) TrackBytes+=22+12+3+1+6+22+12+3+1 + (128 << IDList[n].SectorLen) + 26;
-
-#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_READ_TRACK_TIMING)
-      // counted before we came
-      DDBytes-=SF314[DRIVE].BytesToHbls(SF314[DRIVE].PostIndexGap()); 
-#endif
       if (TrackBytes>DDBytes){
         TrackBytes=DDBytes*2;
       }else{
@@ -2186,14 +2119,7 @@ CRC                                2           2           2
 /*
 Gap 4 Post Data                   40          40           1      4E
 */
-#if defined(SS_DRIVE_READ_TRACK_TIMING2)
-/*  defined in v3.5.3, it was a bug that broke Jumping Jackson MCA, 
-    undefined in v3.6.0
-*/
-        BYTE gap4bytes=(nSects>=11?1:40);
-#else
         BYTE gap4bytes=(nSects>=11?1:24);
-#endif
         if (num_bytes_to_write>0 && byte_idx>=0 && byte_idx<gap4bytes){
 
 #if defined(SS_DMA_TRACK_TRANSFER)

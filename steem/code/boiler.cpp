@@ -1041,34 +1041,6 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               update_register_display(false);
               break;
 #endif
-#if defined(SS_DEBUG_MUTE_PSG_CHANNEL1)
-/*
-Toggling a bit
-
-The XOR operator (^) can be used to toggle a bit.
-number ^= 1 << x;
-
-This isn't saved through the sessions
-*/
-            case 1519: // mute PSG c (?)
-            case 1520: //b
-            case 1521: //a
-              Debug.PsgMask ^= 1 << (1521-id);
-              CheckMenuItem(sse_menu,id,
-                MF_BYCOMMAND|((int)( Debug.PsgMask & 1 << (1521-id)) 
-                  ? MF_CHECKED:MF_UNCHECKED));
-
-              break;
-#endif
-
-#if defined(SS_DEBUG_MUTE_DMA_SOUND1)
-            case 1526: // mute DMA - use same mask
-              Debug.PsgMask ^= (1 << 3);
-              CheckMenuItem(sse_menu,id,
-                MF_BYCOMMAND|((int)( Debug.PsgMask & (1 << 3) )
-                  ? MF_CHECKED:MF_UNCHECKED));
-              break;
-#endif
 
 #if defined(SS_DEBUG_FAKE_IO)
             case 1527: // fake IO zone for boiler control
@@ -1792,15 +1764,6 @@ void DWin_init()
 #endif
 #if defined(SS_DEBUG_STACK_CHOICE)
   AppendMenu(sse_menu,MF_STRING,1528,"Display other stack");
-#endif
-#if defined(SS_DEBUG_MUTE_PSG_CHANNEL1)
-  AppendMenu(sse_menu,MF_STRING|MF_SEPARATOR,0,NULL);
-  AppendMenu(sse_menu,MF_STRING,1521,"Mute PSG channel A");
-  AppendMenu(sse_menu,MF_STRING,1520,"Mute PSG channel B");
-  AppendMenu(sse_menu,MF_STRING,1519,"Mute PSG channel C");
-#endif
-#if defined(SS_DEBUG_MUTE_DMA_SOUND1)
-  AppendMenu(sse_menu,MF_STRING,1526,"Mute DMA sound");
 #endif
 #if defined(SS_DEBUG_FAKE_IO)
   AppendMenu(sse_menu,MF_STRING|MF_SEPARATOR,0,NULL);

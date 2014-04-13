@@ -902,13 +902,9 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
   log("STARTUP: LoadState Called");
   LoadState(&CSF);
   log("STARTUP: LoadState finished");
-#if defined(SS_VAR_POWERON1)//3.6.1 spare one "power on"  //MFD
-  bool must_power_on=true;
-#else
 //  TRACE("main->power on\n");
   log("STARTUP: power_on Called");
   power_on();
-#endif
 #ifdef WIN32
 #ifndef ONEGAME
   if (CSF.GetInt("Update","AutoUpdateEnabled",true)){
@@ -989,23 +985,11 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
           ,true // no need to reset, we just did
 #endif
           ); // Don't add to history, don't change disks
-#if defined(SS_VAR_POWERON1) 
-        must_power_on=false; //loading snapshot calls power_on
-#endif
       }
     }
   }
-  if (OptionBox.NeedReset()
-#if defined(SS_VAR_POWERON1) //MFD
-        ||must_power_on
-#endif
-    ) 
+  if (OptionBox.NeedReset()) 
     reset_st(RESET_COLD | RESET_STOP | RESET_CHANGESETTINGS | RESET_NOBACKUP);
-
-#if defined(SS_TOS_WARNING1) && defined(SS_VAR_POWERON1)
-  if(must_power_on)
-    CheckSTTypeAndTos();
-#endif
 
 #if defined(SS_TOS_WARNING1) && defined(SS_VAR_POWERON2)
   CheckSTTypeAndTos();

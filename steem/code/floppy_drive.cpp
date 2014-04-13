@@ -16,11 +16,6 @@ TFloppyImage FloppyDrive[2];
 bool FloppyArchiveIsReadWrite=0;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF)    
-//#include "SSE/SSEOption.h"
-//#include "SSE/SSEFloppy.h"//MFD
-#endif
-
 #if defined(STEVEN_SEAGAL)
 #include "SSE/SSEOption.h"
 #include "SSE/SSEFloppy.h"

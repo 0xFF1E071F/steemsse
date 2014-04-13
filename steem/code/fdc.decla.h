@@ -42,9 +42,6 @@ EXT void agenda_floppy_read_address(int);
 EXT void agenda_floppy_read_track(int);
 EXT void agenda_floppy_write_track(int);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_FDC_RESTORE_AGENDA)
-EXT void agenda_fdc_restore(int);
-#endif
 #if defined(STEVEN_SEAGAL) && defined(SS_FDC_VERIFY_AGENDA)
 EXT void agenda_fdc_verify(int a);
 #endif
