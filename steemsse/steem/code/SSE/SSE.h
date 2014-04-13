@@ -96,7 +96,7 @@ and all his silly mods are gone!
 
 #if defined(STEVEN_SEAGAL)
 
-#define SS_BETA //title, OSD, plus some testing
+//#define SS_BETA //title, OSD, plus some testing
 
 #ifdef SS_BETA //TODO check before release what will stay beta...
 
@@ -480,7 +480,6 @@ and all his silly mods are gone!
 
 // boiler
 #if defined(DEBUG_BUILD) //TODO add other mods here
-#define SS_DEBUG_68030_STACK_FRAME //request, to check compatibility
 #define SS_DEBUG_BLAZING_STEP_OVER 
 #define SS_DEBUG_BROWSER_6301
 #define SS_DEBUG_BROWSER_ACIA
@@ -508,6 +507,7 @@ and all his silly mods are gone!
 #define SS_DEBUG_MONITOR_VALUE4 // 3.6.1 corrections (W on .L)
 #define SS_DEBUG_MOUSE_WHEEL // yeah!
 #define SS_DEBUG_MOVE_OTHER_SP
+#define SS_DEBUG_MOVE_OTHER_SP2//3.6.1, SSP+USP
 //#define SS_DEBUG_MUTE_DMA_SOUND
 //#define SS_DEBUG_MUTE_PSG_CHANNEL
 //#define SS_DEBUG_MUTE_PSG_CHANNEL1//MFD
@@ -525,6 +525,8 @@ and all his silly mods are gone!
 #define SS_DEBUG_SHOW_SDP // the draw pointer
 #define SS_DEBUG_SHOW_SR // in HEX on the left of bit flags
 #define SS_DEBUG_SSE_PERSISTENT // L/S options 
+#define SS_DEBUG_STACK_68030_FRAME //request, to check compatibility
+#define SS_DEBUG_STACK_CHOICE//3.6.1
 #define SS_DEBUG_TIMER_B // instead of 0
 #define SS_DEBUG_TIMERS_ACTIVE // (in reverse video) yeah!
 #if defined(SS_DEBUG_FAKE_IO)
@@ -631,9 +633,9 @@ and all his silly mods are gone!
 #define SS_DMA_READ_STATUS 
 #define SS_DMA_SECTOR_COUNT
 #define SS_DMA_WRITE_CONTROL
-#ifdef SS_DEBUG
+///#ifdef SS_DEBUG //will be useful for release version too...
 #define SS_DMA_TRACK_TRANSFER //add one var...
-#endif
+#///endif
 #endif
 
 
@@ -898,12 +900,14 @@ and all his silly mods are gone!
 #define SS_INT_VBL_IACK
 #define SS_INT_VBL_INLINE 
 #ifdef SS_BETA
-//#define SS_INT_VBI_START // generally working now but not 100% TODO
+//#define SS_INT_VBI_START // generally working now
 #endif
 #endif
 
 #if defined(SS_INT_JITTER) && defined(SS_INT_VBL) && defined(SS_STF)
+#define SS_INT_JITTER_RESET//3.6.1
 #define SS_INT_JITTER_VBL // STF
+#define SS_INT_JITTER_VBL2 //3.6.1
 //#define SS_INT_JITTER_VBL_STE // STF + STE 
 #endif
 
@@ -941,6 +945,7 @@ and all his silly mods are gone!
 #define SS_MFP_TIMERS_BASETIME // "vbl" instead of "mfptick"
 #define SS_MFP_TxDR_RESET // they're not reset according to doc
 #define SS_MFP_WRITE_DELAY1//3.6.1 (Audio Artistic)
+
 #endif
 
 
@@ -1329,7 +1334,7 @@ and all his silly mods are gone!
 #define SS_STRUCTURE_HDIMG_H
 //#define SS_STRUCTURE_HISTORYLIST_H
 #define SS_STRUCTURE_IKBD_H
-//#define SS_STRUCTURE_INFOBOX_H // nothing to do?
+#define SS_STRUCTURE_INFOBOX_H //systematic use of .decla.h
 #define SS_STRUCTURE_INITSOUND_H
 #define SS_STRUCTURE_IOLIST_H
 #define SS_STRUCTURE_IORW_H
@@ -1412,10 +1417,12 @@ and all his silly mods are gone!
 //#define SS_TOS_NO_INTERCEPT_ON_RTE1 // fix (not) Megamax C on ReDMCSB//3.6.0
 #if defined(SS_TOS_STRUCT)
 #define SS_TOS_NO_INTERCEPT_ON_RTE2 //3.6.1//try to be less radical... ReDMCSB 50% in TOS102
+#ifdef WIN32
 #define SS_TOS_SNAPSHOT_AUTOSELECT//3.6.1
 //#define SS_TOS_SNAPSHOT_AUTOSELECT1//3.6.1//working but code duplication
 #define SS_TOS_SNAPSHOT_AUTOSELECT2//3.6.1//with refactoring
 #define SS_TOS_SNAPSHOT_AUTOSELECT3//3.6.1//options.cpp uses refactoring
+#endif//win32
 #endif
 #ifdef SS_DEBUG
 #define SS_TOS_DONT_TRACE_3F//read file//3.6.1
@@ -1481,11 +1488,15 @@ and all his silly mods are gone!
 #endif
 #define SS_VAR_FULLSCREEN_DONT_START // disable run when going fullscreen - option?
 //#define SS_VAR_HIDE_OPTIONS_AT_START // hack before debugging
+#define SS_VAR_INFOBOX0 // enum 3.6.1
 #define SS_VAR_INFOBOX1 // SSE internet sites
 #define SS_VAR_INFOBOX2 // SSE readme + FAQ
 #define SS_VAR_INFOBOX3 // readme text font
 #define SS_VAR_INFOBOX4 // readme 80 col 
 #define SS_VAR_INFOBOX5 // don't take 64K on the stack!
+#define SS_VAR_INFOBOX6 // no cartridge howto 3.6.1
+#define SS_VAR_INFOBOX7 // specific hints 3.6.1
+//TODO also in unix
 #define SS_VAR_KEYBOARD_CLICK // not a sound nor IKBD option
 #define SS_VAR_MOUSE_CAPTURE 
 #define SS_VAR_MSA_CONVERTER // don't prompt if found

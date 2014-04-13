@@ -27,8 +27,9 @@ void TGeneralInfo::Show()
   if (ShowDrawSpeed) page_lv.sl.Add(T("Draw Speed"),101+ICO16_DRAWSPEED,INFOPAGE_DRAWSPEED);
   page_lv.sl.Add(T("Links"),101+ICO16_LINKS,INFOPAGE_LINKS);
   if (ShowDiskHowto) page_lv.sl.Add("Disk Image Howto",101+ICO16_DISK,INFOPAGE_HOWTO_DISK);
+#if !defined(SS_VAR_INFOBOX6)
   if (ShowCartHowto) page_lv.sl.Add("Cartridge Image Howto",101+ICO16_CHIP,INFOPAGE_HOWTO_CART);
-
+#endif
   page_lv.lpig=&Ico16;
   page_lv.display_mode=1;
   int page_lv_w=page_lv.get_max_width(XD);
@@ -121,7 +122,9 @@ void TGeneralInfo::CreateReadmePage(int p)
 	switch (p){
 		case INFOPAGE_README: ShowTheReadme("win32.help"); break;
 		case INFOPAGE_HOWTO_DISK: ShowTheReadme("disk image howto.txt"); break;
+#if !defined(SS_VAR_INFOBOX6)
 		case INFOPAGE_HOWTO_CART: ShowTheReadme("cart image howto.txt"); break;
+#endif
 		case INFOPAGE_FAQ: ShowTheReadme("FAQ"); break;
 		case INFOPAGE_UNIXREADME:	ShowTheReadme("README",true); break;
 	}

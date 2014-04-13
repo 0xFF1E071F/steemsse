@@ -83,18 +83,24 @@ inline void VBLInterrupt() {
   log_to_section(LOGSECTION_INTERRUPTS,EasyStr("INTERRUPT: VBL at PC=")+HEXSl(pc,6)+" time is "+ABSOLUTE_CPU_TIME+" ("+(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl)+" cycles into screen)");
 
   M68K_UNSTOP;
-
-#if !defined(SS_INT_JITTER_VBL_STE)
+  //TRACE("VBI %d",LINECYCLES);
+#if defined(SS_INT_JITTER_VBL_STE)
+ // no wobble for STF, STE
+#else
 #if defined(SS_INT_JITTER_VBL)
-  if(ST_TYPE==STE) 
+  if(ST_TYPE==STE)  // jitter for STF
 #endif
-    INTERRUPT_START_TIME_WOBBLE;
+  {//3.6.1: Argh! macro must be scoped!
+    INTERRUPT_START_TIME_WOBBLE; //wobble for STE
+  }
+#endif
+  //TRACE("->%d",LINECYCLES);//surprise!
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_INT_VBL_IACK)
   time_of_last_vbl_interrupt=ACT;
 #endif
   INSTRUCTION_TIME_ROUND(SS_INT_VBL_TIMING);
-
+  //TRACE("->%d",LINECYCLES);
   //TRACE_LOG("F%d Cycles %d VBI %X #%d\n",FRAME,ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl,LPEEK(0x0070),interrupt_depth);
   TRACE_LOG("F%d Cycles %d VBI\n",FRAME,ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl);
   m68k_interrupt(LPEEK(0x0070));
@@ -106,8 +112,12 @@ inline void VBLInterrupt() {
 #if !defined(SS_INT_JITTER_VBL_STE)
   if(ST_TYPE!=STE) 
 #endif
-    INSTRUCTION_TIME(VblJitter[VblJitterIndex]);
+#if defined(SS_INT_JITTER_VBL2)//3.6.1
+    if(LINECYCLES<132 || !SSE_HACKS_ON) // hack for Demoniak 100%
 #endif
+      INSTRUCTION_TIME(VblJitter[VblJitterIndex]);
+  //TRACE("->%d\n",LINECYCLES);
+
   sr=(sr& (WORD)(~SR_IPL))|(WORD)(SR_IPL_4);
 
   debug_check_break_on_irq(BREAK_IRQ_VBL_IDX);

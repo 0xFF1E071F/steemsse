@@ -226,7 +226,7 @@ void iolist_init()
   iolist_add_entry(FAKE_IO_START+12,"TRACE exc",2,
     "mfp|vbi|hbi|.|.|.|.|.|.|.|.|.|.|.|.|.");
   iolist_add_entry(FAKE_IO_START+14,"TRACE floppy",2,
-    "str|bytes|psg|ipf1|ipf2|.|.|.|.|.|.|.|.|.|.|.");
+    "str|bytes|psg|reg|ipf1|ipf2|.|.|.|.|.|.|.|.|.|.");
 
 #endif
 

@@ -332,7 +332,7 @@ Sync is set back to 2 between R2 and R0, this is isn't a line +24
 #endif
       || (CurrentScanline.Tricks&TRICK_LINE_PLUS_20))
     {
-      ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );
+      //ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );
 #if defined(SS_SHIFTER_LINE_PLUS_20)
       if(CurrentScanline.Tricks&TRICK_LINE_PLUS_20)
       {
@@ -832,7 +832,7 @@ STF2:
 
   if(!draw_line_off && (CurrentScanline.Tricks&TRICK_BLACK_LINE))
   {
-    ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );
+    //ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );
     //TRACE_LOG("%d BLK\n",scan_y);
     draw_line_off=true;
     memset(PCpal,0,sizeof(long)*16); // all colours black
@@ -1000,6 +1000,37 @@ STF2:
  
     Tests by Troed indicate that we then have a +2 line, but this should break
     demos like Cuddly, DSOS, etc.
+
+
+http://www.atari-forum.com/viewtopic.php?f=68&t=9527&start=125
+  ljbk
+Here are some examples for Glue wake up 2 using my scale 
+(number of dots/cycles before the PAL screen starts) to get a +2 bytes line: 
+-41/-29 -> you get a 512 cycles line 
+-41/-27..-19 -> you get a 508 cycles line 
+-45/-29 -> you get a 512 cycles line 
+-45/-27..-23 -> you get a 508 cycles line
+
+Edit: 
+A rule working for both GLUE wake up states, to get a 508 cycles line with
+ +2 bytes, is: "set 60 before pixel -29 and do not return to 50 before pixel
+ -25". 
+So you can have your code synchronized with an HBL with a STOP leading always
+ to a +2 bytes line with 508 cycles but with bending bitmap in case 320 
+ pixels lines follow (i do not know yet what occurs if fullscreen lines 
+ follow: i have to test it). 
+By the way, this trick only allows 56 bytes and 162 bytes lines for the 
+first line. As we only have 508 cycles, if you remove the right border,
+ you will read 2 bytes less (42 instead of 44), leading to the same 204
+ bytes and not 206. 
+So from my point of view, without full sync, a 206 bytes lines is not
+ possible for the 1st line, not even altering sync. 
+
+Edit2: 
+Bitmap bending also occurs if fullscreens lines follow a +2 bytes
+ 60 Hz 508 cycles line.
+
+
 
     Cases:
 
@@ -1179,7 +1210,7 @@ Panic
       if(i>=0 && shifter_freq_change[i]==60)
       {
         //VideoEvents.ReportLine();
-        ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );
+        //ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );
         CurrentScanline.Tricks|=TRICK_LINE_PLUS_2;
 //        CurrentScanline.Cycles==512;
       }
@@ -1194,7 +1225,7 @@ Panic
 //    ASSERT(left_border==BORDER_SIDE);
     ASSERT(!(CurrentScanline.Tricks&TRICK_LINE_MINUS_2));
 //    ASSERT(CurrentScanline.Cycles==512);
-    ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );
+    //ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );
 //    TRACE_OSD("%d +2",scan_y);//temp, there aren't so many cases
 
 #if defined(SS_SHIFTER_LINE_PLUS_2_ON_PRELOAD3) // DSOS STE
@@ -1291,7 +1322,7 @@ Panic
   if((CurrentScanline.Tricks&TRICK_LINE_MINUS_106)
     && !(TrickExecuted&TRICK_LINE_MINUS_106))
   {
-    ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );
+    //ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );
     overscan_add_extra+=-106;
     TrickExecuted|=TRICK_LINE_MINUS_106;
     CurrentScanline.Bytes+=-106;
@@ -1725,7 +1756,7 @@ Tests are arranged to be efficient.
     && !(TrickExecuted&TRICK_LINE_PLUS_44))
   {
     //TRACE("right off\n");
-    ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );
+    //ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );
     ASSERT(!(CurrentScanline.Tricks&TRICK_LINE_MINUS_2));
     right_border=0;
     overscan_add_extra+=OVERSCAN_ADD_EXTRA_FOR_RIGHT_BORDER_REMOVAL;  // 28 (+16=44)
@@ -3510,14 +3541,15 @@ void TShifter::SetSyncMode(BYTE NewSync) {
 
 #if defined(SS_SHIFTER_EVENTS) 
   VideoEvents.Add(scan_y,CyclesIn,'S',NewSync); 
-//  TRACE_LOG("y%d c%d s%d\n",scan_y,CyclesIn,NewSync);
+  //  TRACE_LOG("y%d c%d s%d\n",scan_y,CyclesIn,NewSync);
 #endif
 #if defined(SS_DEBUG_FRAME_REPORT_SYNCMODE)
-      FrameEvents.Add(scan_y,CyclesIn,'S',NewSync); 
+  FrameEvents.Add(scan_y,CyclesIn,'S',NewSync); 
 #endif
 #if defined(SS_DEBUG_FRAME_REPORT_MASK)
-      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SYNCMODE)
-        FrameEvents.Add(scan_y,CyclesIn,'S',NewSync); 
+  if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SYNCMODE)
+    FrameEvents.Add(scan_y,CyclesIn,'S',NewSync); 
+  //TRACE_LOG("y%d c%d s%d\n",scan_y,CyclesIn,NewSync);//TEMP
 #endif
   int new_freq;  
 

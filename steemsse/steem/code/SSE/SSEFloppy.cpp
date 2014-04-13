@@ -13,7 +13,9 @@
 #include "SSECpu.h"
 #include "SSEInterrupt.h"
 #include "SSEShifter.h"
+#if defined(WIN32)
 #include <pasti/pasti.h>
+#endif
 EasyStr GetEXEDir();//#include <mymisc.h>//missing...
 
 #if defined(SS_DRIVE_IPF1)
@@ -654,11 +656,11 @@ void TDma::UpdateRegs(bool trace_them) {
       TRACE_LOG("HDC IRQ HBL %d ",hbl_count);
     else
     {
-      TRACE_LOG("FDC IRQ HBL %d CR %X STR %X ",hbl_count,fdc_cr,fdc_str);
+      TRACE_LOG("FDC IRQ CR %X STR %X ",fdc_cr,fdc_str);
 #if defined(SS_FDC_TRACE_STATUS)
       WD1772.TraceStatus();
 #endif
-      TRACE_LOG("TR %d SR %d DR %d ($%X)",fdc_tr,fdc_sr,fdc_dr,fdc_dr);
+      TRACE_LOG("TR %d SR %d DR %d ($%X) HBL %d",fdc_tr,fdc_sr,fdc_dr,fdc_dr,hbl_count);
     }
 #if defined(SS_PSG)
     BYTE drive=YM2149.Drive();
@@ -670,7 +672,7 @@ void TDma::UpdateRegs(bool trace_them) {
   }
 #endif
 
-#ifdef TEST05//temp form
+#ifdef SS_DEBUG//no mask yet but important info ?TEST05//temp form
   if((fdc_str&0x10) && WD1772.CommandType(fdc_cr)!=1)
     TRACE_OSD("RNF");
 #endif
@@ -849,9 +851,9 @@ void TDma::TransferBytes() {
 #if defined(SS_DMA_TRACK_TRANSFER)
     Datachunk++; 
     if(!(MCR&0x100)) // disk -> RAM
-      TRACE_LOG("chunk %03d (sec %02d) to %06X: ",Datachunk,fdc_sr,BaseAddress);
+      TRACE_LOG("#%03d (%d-%02d-%02d) to %06X: ",Datachunk,floppy_current_side(),floppy_head_track[DRIVE],fdc_sr,BaseAddress);
     else  // RAM -> disk
-      TRACE_LOG("chunk %03d (sec %02d) from %06X: ",Datachunk,fdc_sr,BaseAddress);
+      TRACE_LOG("#%03d (%d-%02d-%02d) from %06X: ",Datachunk,floppy_current_side(),floppy_head_track[DRIVE],fdc_sr,BaseAddress);
 #else//MFD
     if(!(MCR&0x100)) // disk -> RAM
       TRACE_LOG("%2d/%2d/%3d to %X: ",fdc_tr,fdc_sr,ByteCount,BaseAddress);
@@ -1604,8 +1606,13 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
   case 0: // CR - could be blocked, can't record here :(
     {
 #if defined(SS_DEBUG) && defined(SS_DRIVE)
-      BYTE drive_char= (psg_reg[PSGR_PORT_A]&6)==6? '?' : 'A'+DRIVE;
-      TRACE_LOG("FDC HBL %d CR $%2X drive %c side %d TR %d SR %d DR %d\n",hbl_count,io_src_b,drive_char,floppy_current_side(),fdc_tr,fdc_sr,fdc_dr);
+#if defined(SS_DEBUG_TRACE_CONTROL)
+  if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
+  {
+    BYTE drive_char= (psg_reg[PSGR_PORT_A]&6)==6? '?' : 'A'+DRIVE;
+    TRACE_LOG("FDC CR $%2X drive %c side %d TR %d SR %d DR %d\n",io_src_b,drive_char,floppy_current_side(),fdc_tr,fdc_sr,fdc_dr);
+  }
+#endif
 #endif
 
 #if defined(SS_DRIVE_SOUND)
@@ -1656,8 +1663,12 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 //      else  TRACE_LOG("FDC %X not native, drive %C type %d\n",io_src_b,'A'+YM2149.Drive(),SF314[YM2149.Drive()].ImageType);
     }
     break;
+
   case 1: // TR
+#if defined(SS_DEBUG_TRACE_CONTROL)
+  if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
     TRACE_LOG("FDC TR %d\n",io_src_b);
+#endif
 #if defined(SS_FDC_CHANGE_TRACK_WHILE_BUSY)
     if(!(STR&FDC_STR_BUSY)||ADAT)
       fdc_tr=io_src_b;
@@ -1670,8 +1681,12 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
     }
 #endif
     break;
+
   case 2: // SR
+#if defined(SS_DEBUG_TRACE_CONTROL)
+  if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
     TRACE_LOG("FDC SR %d\n",io_src_b);
+#endif
 #if defined(SS_FDC_CHANGE_SECTOR_WHILE_BUSY)
     if(!(STR&FDC_STR_BUSY)||ADAT)
       SR=io_src_b; // fixes Delirious 4 loader without Pasti
@@ -1685,8 +1700,12 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
     }
 #endif
     break;
+
   case 3: // DR
+#if defined(SS_DEBUG_TRACE_CONTROL)
+  if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
     TRACE_LOG("FDC DR %d\n",io_src_b);
+#endif
     log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC data register to "+io_src_b);
     DR=io_src_b;
     break;

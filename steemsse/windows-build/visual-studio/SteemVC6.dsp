@@ -708,6 +708,7 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\ikbd.h"\
 	"..\..\steem\code\include.h"\
 	"..\..\steem\code\infobox.cpp"\
+	"..\..\steem\code\infobox.decla.h"\
 	"..\..\steem\code\infobox.h"\
 	"..\..\steem\code\init_sound.cpp"\
 	"..\..\steem\code\init_sound.decla.h"\
@@ -1021,6 +1022,10 @@ SOURCE=..\..\steem\code\ikbd.h
 # Begin Source File
 
 SOURCE=..\..\steem\code\include.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\infobox.decla.h
 # End Source File
 # Begin Source File
 

@@ -1,3 +1,9 @@
+#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFOBOX_H)
+
+#include "infobox.decla.h"
+
+#else//!defined(SS_STRUCTURE_STJOY_H)
+
 #define INFOPAGE_LINK_ID_BASE 200
 
 #define INFOPAGE_ABOUT 0
@@ -85,3 +91,4 @@ public:
 };
 WIN_ONLY( WINDOWPROC TGeneralInfo::OldEditWndProc; );
 
+#endif//#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STJOY_H)

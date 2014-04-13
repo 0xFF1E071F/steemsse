@@ -107,8 +107,11 @@ TDebug::TDebug() {
   PsgMask=0; //0=no mod
 #endif
 
-#if defined(SS_DEBUG_68030_STACK_FRAME)
+#if defined(SS_DEBUG_STACK_68030_FRAME)
   M68030StackFrame=0;
+#endif
+#if defined(SS_DEBUG_STACK_CHOICE)
+  StackDisplayUseOtherSp=0;
 #endif
 }
 

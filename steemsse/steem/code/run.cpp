@@ -1357,7 +1357,7 @@ void event_vbl_interrupt() //SS misleading name?
   if (screen_event_pointer->event==NULL){
     cpu_time_of_start_of_event_plan=cpu_time_of_last_vbl;
 #if defined(STEVEN_SEAGAL) && defined(SS_MFP_RATIO)
-    if (n_cpu_cycles_per_second>CpuNormalHz){ // in fact should leave as is?
+    if (n_cpu_cycles_per_second>CpuNormalHz){
 #else
     if (n_cpu_cycles_per_second>8000000){
 #endif

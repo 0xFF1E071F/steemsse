@@ -5,7 +5,7 @@
 #if defined(SS_STRUCTURE_SSEFRAMEREPORT_OBJ)
 #include "../pch.h"
 #include <conditions.h>
-#include <EasyStr.h>
+#include <easystr.h>
 #include <fdc.decla.h>
 #include <floppy_drive.decla.h>
 #include <run.decla.h>

@@ -2033,7 +2033,7 @@ void stemdos_restore_path_buffer(){
 }
 */
 
-#if defined(SS_TOS_SNAPSHOT_AUTOSELECT2)
+#if defined(SS_TOS_SNAPSHOT_AUTOSELECT2) && defined(WIN32)
 // refactoring to avoid duplication, code was originally in options.cpp
 
 EasyStr TTos::GetNextTos(DirSearch &ds) { // to enumerate TOS files

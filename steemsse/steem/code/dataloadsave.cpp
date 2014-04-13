@@ -824,10 +824,15 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     CheckMenuItem(sse_menu,1523,MF_BYCOMMAND|
       ((Debug.MonitorRange)?MF_CHECKED:MF_UNCHECKED));
 #endif
-#if defined(SS_DEBUG_68030_STACK_FRAME)
+#if defined(SS_DEBUG_STACK_68030_FRAME)
     Debug.M68030StackFrame=pCSF->GetInt("Debug","M68030StackFrame",Debug.M68030StackFrame); 
     CheckMenuItem(sse_menu,1525,MF_BYCOMMAND|
       ((Debug.M68030StackFrame)?MF_CHECKED:MF_UNCHECKED));
+#endif
+#if defined(SS_DEBUG_STACK_CHOICE)
+    Debug.StackDisplayUseOtherSp=pCSF->GetInt("Debug","StackDisplayUseOtherSp",Debug.StackDisplayUseOtherSp); 
+    CheckMenuItem(sse_menu,1528,MF_BYCOMMAND|
+      ((Debug.StackDisplayUseOtherSp)?MF_CHECKED:MF_UNCHECKED));
 #endif
 #if defined(SS_DEBUG_FAKE_IO)
     for(int i=0;i<FAKE_IO_LENGTH/2;i++)
@@ -1235,8 +1240,11 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SS_DEBUG_MONITOR_RANGE)
   pCSF->SetStr("Debug","MonitorRange",EasyStr(Debug.MonitorRange)); 
 #endif
-#if defined(SS_DEBUG_68030_STACK_FRAME)
+#if defined(SS_DEBUG_STACK_68030_FRAME)
   pCSF->SetStr("Debug","M68030StackFrame",EasyStr(Debug.M68030StackFrame)); 
+#endif
+#if defined(SS_DEBUG_STACK_CHOICE)
+  pCSF->SetStr("Debug","StackDisplayUseOtherSp",EasyStr(Debug.StackDisplayUseOtherSp)); 
 #endif
 #if defined(SS_DEBUG_FAKE_IO)
     for(int i=0;i<FAKE_IO_LENGTH/2;i++)

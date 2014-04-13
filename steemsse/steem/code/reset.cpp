@@ -262,6 +262,14 @@ void reset_peripherals(bool Cold)
   WD1772.Reset(Cold);
 #endif
 
+#if defined(SS_INT_JITTER_RESET) 
+  if(Cold)
+  {
+    HblJitterIndex=0;
+    VblJitterIndex=0;
+  }
+#endif
+
 #endif
   
   shifter_hscroll=0;
