@@ -293,7 +293,13 @@ TODO?
 */
   if(hPasti && pasti_active
 #if defined(SS_PASTI_ONLY_STX)
-    && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3
+    && (!PASTI_JUST_STX || 
+#if defined(SS_DISK_IMAGETYPE)
+// in fact we should refactor this
+    SF314[floppy_current_drive()].ImageType.Extension==EXT_STX
+#else
+    SF314[floppy_current_drive()].ImageType==DISK_PASTI
+#endif
 #if defined(SS_PASTI_ONLY_STX_HD)
     || (MCR&BIT_3) // hard disk handling by pasti
 #endif
@@ -552,7 +558,12 @@ What was in the buffers will go nowhere, the internal counter is reset.
   if(hPasti && pasti_active
     
 #if defined(SS_DRIVE)&&defined(SS_PASTI_ONLY_STX)
-    && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3
+    && (!PASTI_JUST_STX 
+#if defined(SS_DISK_IMAGETYPE)
+    || SF314[floppy_current_drive()].ImageType.Extension==EXT_STX
+#else
+    || SF314[floppy_current_drive()].ImageType==DISK_PASTI
+#endif
     ||addr!=0xff8605||MCR&BIT_3||MCR&BIT_4
     )
 #endif        
@@ -604,7 +615,13 @@ void TDma::UpdateRegs(bool trace_them) {
 #if USE_PASTI
   if(hPasti && pasti_active
 #if defined(SS_PASTI_ONLY_STX) //all or nothing?
-    && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3
+    && (!PASTI_JUST_STX || 
+#if defined(SS_DISK_IMAGETYPE)
+// in fact we should refactor this
+    SF314[floppy_current_drive()].ImageType.Extension==EXT_STX
+#else
+    SF314[floppy_current_drive()].ImageType==DISK_PASTI
+#endif
 #if defined(SS_PASTI_ONLY_STX_HD)
     || (MCR&BIT_3) // hard disk handling by pasti
 #endif
@@ -891,7 +908,13 @@ void TDma::TransferBytes() {
 #if USE_PASTI    
     if(hPasti&&pasti_active
 #if defined(SS_PASTI_ONLY_STX)
-    &&(!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
+    &&(!PASTI_JUST_STX || 
+#if defined(SS_DISK_IMAGETYPE)
+// in fact we should refactor this
+    SF314[floppy_current_drive()].ImageType.Extension==EXT_STX)
+#else
+    SF314[floppy_current_drive()].ImageType==DISK_PASTI)
+#endif    
 #if defined(SS_PASTI_ONLY_STX_HD)
     || (MCR&BIT_3) // hard disk handling by pasti
 #endif
@@ -1471,7 +1494,7 @@ BYTE TWD1772::IORead(BYTE Line) {
           STR&=BYTE(~FDC_STR_T1_SPINUP_COMPLETE);
         else
           STR|=FDC_STR_T1_SPINUP_COMPLETE;
-/*
+/* //MFD
         // it's done in another part anyway - agenda_fdc_finished
         // here it will only break programs with useless bloat
         if(ADAT&&fdc_tr  // (ADAT: v3.5.1, No Cooper) //TR or CYL?
@@ -1648,7 +1671,13 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #if USE_PASTI 
       can_send=can_send&&!(hPasti && pasti_active
 #if defined(SS_DRIVE)&&defined(SS_PASTI_ONLY_STX)
-        && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
+        && (!PASTI_JUST_STX || 
+#if defined(SS_DISK_IMAGETYPE)
+// in fact we should refactor this
+        SF314[floppy_current_drive()].ImageType.Extension==EXT_STX)
+#else
+        SF314[floppy_current_drive()].ImageType==DISK_PASTI)
+#endif
 #endif            
         );
 #endif
@@ -1860,7 +1889,7 @@ BYTE TYM2149::Side(){
 #define CYCLES_PRE_IO 100 // those aren't
 #define CYCLES_POST_IO 100 // used
 
-TCaps Caps; // singleton
+TCaps Caps; // singleton //TODO rename CapsLib
 
 TCaps::TCaps() {
   // we init in main to keep control of timing
@@ -1975,7 +2004,11 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
       TRACE_LOG("%s ",CAPSGetPlatformName(img_info->platform[i]));
     if(img_info->platform[i]==ciipAtariST 
 #if defined(SS_IPF_CTRAW) 
+#if defined(SS_DISK_IMAGETYPE)
+      || ::SF314[drive].ImageType.Extension!=EXT_IPF
+#else
       || ::SF314[drive].ImageType!=DISK_IPF // the other SF314 (confusing)
+#endif
 #endif
       || SSE_HACKS_ON) //MPS GOlf 'test'
       found=true;
@@ -2218,7 +2251,11 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
     TRACE_LOG("CAPS Unlock %c:S%dT%d\n",drive+'A',Caps.LockedSide[drive],
       Caps.LockedTrack[drive]);
 #if defined(SS_IPF_CTRAW_REV)
+#if defined(SS_DISK_IMAGETYPE)
+    if(::SF314[drive].ImageType.Extension!=EXT_IPF)
+#else
     if(::SF314[drive].ImageType!=DISK_IPF)
+#endif
     {
       if(Caps.LockedSide[drive]==side && Caps.LockedTrack[drive]==track)
       { // not tested!

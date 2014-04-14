@@ -1,4 +1,3 @@
-
 /*---------------------------------------------------------------------------
 FILE: diskman.cpp
 MODULE: Steem
@@ -3500,7 +3499,13 @@ void TDiskManager::RefreshPastiStatus() {
   // check Pasti caption
   sDiskManagerWindowCaption[12]=(pasti_active
 #if defined(SS_PASTI_ONLY_STX)
-    && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==DISK_PASTI)    
+    && (!PASTI_JUST_STX || 
+#if defined(SS_DISK_IMAGETYPE)
+      SF314[floppy_current_drive()].ImageType.Extension==EXT_STX
+#else
+      SF314[floppy_current_drive()].ImageType==DISK_PASTI
+#endif
+    )    
 #endif    
     ) ? ' ' : '\0';
   SetWindowText(Handle,sDiskManagerWindowCaption);

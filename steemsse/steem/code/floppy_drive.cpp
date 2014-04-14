@@ -44,7 +44,11 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #if defined(STEVEN_SEAGAL) && defined(SS_PASTI_ONLY_STX)  
   //bugfix 3.5.4, this part would reset ImageType right before we leave... (^^)
   if(drive!=-1)
+#if defined(SS_DISK_IMAGETYPE)
+    ZeroMemory(&SF314[drive].ImageType,sizeof(SF314[drive].ImageType));
+#else
     SF314[drive].ImageType=0;//default, this will detect STX disks (3)
+#endif
 #endif
 
   if (Exists(File)==0) return FIMAGE_FILEDOESNTEXIST;
@@ -100,7 +104,12 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
               if(drive!=-1)
               {
                 TRACE_LOG("Disk in %c is STX\n",'A'+drive);
+#if defined(SS_DISK_IMAGETYPE)
+                SF314[drive].ImageType.Manager=MNGR_PASTI;
+                SF314[drive].ImageType.Extension=EXT_STX;
+#else
                 SF314[drive].ImageType=DISK_PASTI;
+#endif
               }
 #endif
               f_PastiDisk=true;
@@ -167,7 +176,12 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     if(drive!=-1)
     {
       TRACE_LOG("Disk in %c is STX\n",'A'+drive);
+#if defined(SS_DISK_IMAGETYPE)
+      SF314[drive].ImageType.Manager=MNGR_PASTI;
+      SF314[drive].ImageType.Extension=EXT_STX;
+#else
       SF314[drive].ImageType=DISK_PASTI;
+#endif
     }
 #endif
     f_PastiDisk=true;
@@ -249,16 +263,25 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #endif
   { 
 #if defined(SS_IPF_CTRAW)
+#if defined(SS_DISK_IMAGETYPE)
+    SF314[drive].ImageType.Manager=MNGR_CAPS;
+    SF314[drive].ImageType.Extension=IPF?EXT_IPF:EXT_CTR;
+#else
     SF314[drive].ImageType=IPF?DISK_IPF:DISK_CTR;
+#endif
 #endif
     CapsImageInfo img_info;
     int Ret=Caps.InsertDisk(drive,File,&img_info);
     if(Ret==FIMAGE_WRONGFORMAT)
     {
 #if defined(SS_IPF_CTRAW) //wrong switch TODO
-        SF314[drive].ImageType=0;
+#if defined(SS_DISK_IMAGETYPE)
+      ZeroMemory(&SF314[drive].ImageType,sizeof(SF314[drive].ImageType));
+#else
+      SF314[drive].ImageType=0;
 #endif
-        return Ret;
+#endif
+      return Ret;
     }
     // for properties box
     BytesPerSector=SectorsPerTrack=0; 
@@ -1204,7 +1227,12 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
 /*  3.6.1 Disable Pasti at once when ejecting STX disk if the other disk
     isn't STX and option 'Pasti only for STX' is checked.
 */
-    if(PASTI_JUST_STX && SF314[1-floppy_current_drive()].ImageType!=DISK_PASTI)
+    if(PASTI_JUST_STX && 
+#if defined(SS_DISK_IMAGETYPE)
+      SF314[1-floppy_current_drive()].ImageType.Extension!=EXT_STX)
+#else
+      SF314[1-floppy_current_drive()].ImageType!=DISK_PASTI)
+#endif
     {
       pasti_active=false;
       DiskMan.RefreshPastiStatus();

@@ -26,12 +26,34 @@ interrupt."
 #endif
 
 #if defined(SS_FLOPPY)
+
 #ifdef SS_DRIVE
 #define ADAT (SF314[floppy_current_drive()].Adat())
 #else
 #define ADAT (!floppy_instant_sector_access)
 #endif
 #endif
+
+#if defined(SS_DISK)
+
+#if defined(SS_DISK_IMAGETYPE) //for v3.6.2
+/*  v3.6.2 We separate disk image type in two:
+    who's in charge, and what kind of image we have. 
+    We start enums at 1 because 0 is used to clear status.
+    This info is recorded for each drive.
+*/
+  enum { MNGR_STEEM=1,MNGR_PASTI,MNGR_CAPS,NMANAGERS };
+  enum { EXT_ST=1,EXT_MSA,EXT_DIM,EXT_STT,EXT_STX,EXT_IPF,EXT_CTR,EXT_STW,NEXTENSIONS };
+
+  struct TImageType {
+    BYTE Manager;
+    BYTE Extension;
+  };
+
+#endif//defined(SS_DISK_IMAGETYPE) 
+
+#endif//defined(SS_DISK)
+
 
 #if defined(SS_DMA)
 /*  We use object TDma to refine emulation of the DMA in Steem.
@@ -130,7 +152,7 @@ heavy. It was a test.
   int TransferTime;
 #endif
 
-#if defined(SS_DMA_TRACK_TRANSFER)//debug-only
+#if defined(SS_DMA_TRACK_TRANSFER)
   WORD Datachunk; // to check # 16byte parts
 #endif
 
@@ -173,9 +195,11 @@ struct TSF314 {
   WORD TrackGap();
   BYTE Id; // object has to know if its A: or B:
 #if defined(SS_PASTI_ONLY_STX)
-  //BYTE ImageType; //TODO use this to make it more general (0 none + nativeST + pasti + ipf...)
-//maybe "handler" (steem, pasti...) + type (st,msa,stx...)
+#if defined(SS_DISK_IMAGETYPE)
+  TImageType ImageType; //WORD size, 3.6.2
+#else
   WORD ImageType; //3.6.1, for future extension, snapshot problem?
+#endif
 #endif
 #if defined(SS_DRIVE_MOTOR_ON)
   BYTE MotorOn;
