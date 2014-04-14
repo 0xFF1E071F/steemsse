@@ -96,16 +96,16 @@ and all his silly mods are gone!
 
 #if defined(STEVEN_SEAGAL)
 
-//#define SS_BETA //title, OSD, plus some testing
+#define SS_BETA //title, OSD, plus some testing
 
 #ifdef SS_BETA //TODO check before release what will stay beta...
 
-#define SSE_VERSION 361
-#define SSE_VERSION_TXT "3.6.1" 
+#define SSE_VERSION 362
+#define SSE_VERSION_TXT "3.6.2" 
 #ifdef DEBUG_BUILD
-#define WINDOW_TITLE "Steem Boiler 3.6.1B"
+#define WINDOW_TITLE "Steem Boiler 3.6.2B"
 #else
-#define WINDOW_TITLE "Steem Beta 3.6.1"
+#define WINDOW_TITLE "Steem Beta 3.6.2"
 #endif
 #else // next planned release
 
@@ -603,7 +603,7 @@ and all his silly mods are gone!
 //TODO move much SS_DRIVE code here
 
 #if defined(SS_DISK)
-
+#define SS_DISK_IMAGETYPE //3.6.2
 #endif
 
 
@@ -1693,6 +1693,10 @@ and all his silly mods are gone!
 
 #if !defined(SS_VID_BORDERS) || !defined(SS_HACKS)
 #undef SS_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK
+#endif
+
+#if defined(SS_DISK_IMAGETYPE) && !defined(SS_PASTI_ON_WARNING2)//3.6.2
+#error("Incompatible switches") // or remove some old code after tested OK
 #endif
 
 #if defined(SS_SSE_LEAN_AND_MEAN) //TODO

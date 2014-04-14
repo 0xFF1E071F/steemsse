@@ -576,7 +576,11 @@ void GUIRefreshStatusBar() {
 #if USE_PASTI && defined(SS_VAR_STATUS_STRING_PASTI)
       if(hPasti && pasti_active
 #if defined(SS_DRIVE)&&defined(SS_PASTI_ONLY_STX)
+#if defined(SS_DISK_IMAGETYPE)
+        && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType.Extension==EXT_STX)
+#else
         && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
+#endif
 #endif            
         )
         strcat(status_bar," Pasti");
