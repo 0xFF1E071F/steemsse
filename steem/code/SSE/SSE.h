@@ -1475,7 +1475,7 @@ and all his silly mods are gone!
 #define SS_VAR_OPTION_SLOW_DISK // because many people miss it in disk manager
 #define SS_VAR_OPTIONS_ICON_VERSION
 #define SS_VAR_OPTIONS_REFRESH // 6301, STF... up-to-date with snapshot
-#define SS_VAR_POWERON2 //3.6.1 try other, safer way ;)
+//#define SS_VAR_POWERON2 //3.6.1 try other, safer way ;) //3.6.2: not safe either :)
 #define SS_VAR_RESET_BUTTON // invert
 #define SS_VAR_RESIZE // reduce memory set (int->BYTE etc.)
 #define SS_VAR_REWRITE // to conform to what compilers expect (warnings...)
