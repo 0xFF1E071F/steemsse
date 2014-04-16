@@ -96,7 +96,7 @@ and all his silly mods are gone!
 
 #if defined(STEVEN_SEAGAL)
 
-#define SS_BETA //title, OSD, plus some testing
+//#define SS_BETA //title, OSD, plus some testing
 
 #ifdef SS_BETA //TODO check before release what will stay beta...
 
@@ -109,13 +109,13 @@ and all his silly mods are gone!
 #endif
 #else // next planned release
 
-#define SSE_VERSION 361
+#define SSE_VERSION 362
 // check snapshot Version (in LoadSave.h); rc\resource.rc
-#define SSE_VERSION_TXT "3.6.1" 
+#define SSE_VERSION_TXT "3.6.2" 
 #ifdef DEBUG_BUILD
-#define WINDOW_TITLE "Steem Boiler 3.6.1"
+#define WINDOW_TITLE "Steem Boiler 3.6.2"
 #else
-#define WINDOW_TITLE "Steem SSE 3.6.1"
+#define WINDOW_TITLE "Steem SSE 3.6.2"
 #endif
 
 #endif
