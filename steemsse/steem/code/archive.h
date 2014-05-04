@@ -1,4 +1,4 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_ARCHIVE_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_ARCHIVE_H)
 
 #include "archive.decla.h"
 
@@ -20,7 +20,7 @@
 #include <unrarlib/unrarlib/unrarlib.h>	
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
 #include "SSE/SSEOption.h"
 #include <UnRARDLL/unrar.h>
 #endif
@@ -44,7 +44,7 @@ public:
 #ifdef RAR_SUPPORT
   ArchiveList_struct *rar_list,*rar_current;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
   // persistent, good idea?
   RAROpenArchiveData ArchiveData;
   RARHeaderData HeaderData; // no Ex?
@@ -70,13 +70,13 @@ public:
   bool extract_file(char*,int,char*,bool=false,DWORD=0);
 }zippy; 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
 
 #define LOGSECTION LOGSECTION_INIT//SS
 
 #ifdef _MSC_VER
 #pragma comment(lib,"../../3rdparty/UnRARDLL/unrar.lib")
-#if defined(WIN32) && defined(SS_DELAY_LOAD_DLL)
+#if defined(WIN32) && defined(SSE_DELAY_LOAD_DLL)
 #ifndef SS_VS2012_DELAYDLL
 #pragma comment(linker, "/delayload:unrar.dll")
 #endif
@@ -114,4 +114,4 @@ void LoadUnrarDLL() {
 #undef LOGSECTION
 #endif//ss
 
-#endif//#if defined(SS_STRUCTURE_ARCHIVE_H)
+#endif//#if defined(SSE_STRUCTURE_ARCHIVE_H)

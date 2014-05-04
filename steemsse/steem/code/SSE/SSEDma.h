@@ -6,7 +6,7 @@
 Custom Atari DMA chip.
 */
 
-#if defined(SS_DMA)
+#if defined(SSE_DMA)
 //TODO apart files; works for RW track
 /*  We use object TDma to refine emulation of the DMA in Steem.
     Steem original variables are defined as the new ones.
@@ -35,16 +35,16 @@ struct TDma {
 */
   void UpdateRegs(bool trace_them=false);
 
-#if defined(SS_STRUCTURE_DMA_INC_ADDRESS)
+#if defined(SSE_STRUCTURE_DMA_INC_ADDRESS)
   void IncAddress();
 #define DMA_INC_ADDRESS Dma.IncAddress();
 #endif
 
-#if defined(SS_DMA_FIFO)
+#if defined(SSE_DMA_FIFO)
 
   void AddToFifo(BYTE data);
 
-#if defined(SS_DMA_DRQ)
+#if defined(SSE_DMA_DRQ)
   void Drq(); // void?
 #endif
 
@@ -67,11 +67,11 @@ struct TDma {
 #else
   bool Request;
   BYTE Fifo_idx;
-#if defined(SS_DMA_DOUBLE_FIFO)
+#if defined(SSE_DMA_DOUBLE_FIFO)
   bool BufferInUse; 
 #endif
 #endif
-#if defined(SS_DMA_DOUBLE_FIFO)
+#if defined(SSE_DMA_DOUBLE_FIFO)
 /*
 "Internally the DMA has two 16 bytes FIFOs that are used alternatively. 
 This feature allows the DMA to continue to receive bytes from the FDC/HDC
@@ -79,7 +79,7 @@ This feature allows the DMA to continue to receive bytes from the FDC/HDC
 When a FIFO is full a bus request is made to the 68000 and when granted,
  the FIFO is transferred to the memory. This continues until all bytes 
 have been transferred."
-This feature is emulated in Steem if SS_DMA_DOUBLE_FIFO is defined, but it
+This feature is emulated in Steem if SSE_DMA_DOUBLE_FIFO is defined, but it
 hasn't proved necessary yet.
 TODO: maybe use the feature and remove #define to make code more readable?
 */
@@ -87,19 +87,19 @@ TODO: maybe use the feature and remove #define to make code more readable?
 //  bool BufferInUse; 
 #endif
   BYTE Fifo[2][16
-#if defined(SS_DMA_FIFO_READ_ADDRESS) && !defined(SS_DMA_FIFO_READ_ADDRESS2)
+#if defined(SSE_DMA_FIFO_READ_ADDRESS) && !defined(SSE_DMA_FIFO_READ_ADDRESS2)
     +4 // see fdc.h, replaces fdc_read_address_buffer[20]//review this!
 #endif
     ];
 #else
   BYTE Fifo[16
-#if defined(SS_DMA_FIFO_READ_ADDRESS) && !defined(SS_DMA_FIFO_READ_ADDRESS2)
+#if defined(SSE_DMA_FIFO_READ_ADDRESS) && !defined(SSE_DMA_FIFO_READ_ADDRESS2)
     +4 // see fdc.h, replaces fdc_read_address_buffer[20]
 #endif
     ];
 #endif
 #endif//FIFO
-#if defined(SS_DMA_DELAY)
+#if defined(SSE_DMA_DELAY)
 /*
 "In read mode, when one of the FIFO is full (i.e. when 16 bytes have been
  transferred from the FDC or HDC) the DMA chip performs a bus request to
@@ -109,9 +109,9 @@ bus is released to the system. As the processor takes time to grant
 the bus and as transferring data from FIFO to memory also takes time,
  the other FIFO is used for continuing the data transfer with the FD/HD
  controllers."
-When SS_DMA_DELAY is defined (normally not), an arbitrary delay 
+When SSE_DMA_DELAY is defined (normally not), an arbitrary delay 
 (SSEParameters.h) is applied before the transfer takes place. 
-SS_DMA_DOUBLE_FIFO should also be defined (or the single buffer would be
+SSE_DMA_DOUBLE_FIFO should also be defined (or the single buffer would be
 overwritten).
 This feature uses Steem's event system, which is cycle accurate but also 
 heavy. It was a test.
@@ -124,7 +124,7 @@ heavy. It was a test.
   int TransferTime;
 #endif
 
-#if defined(SS_DMA_TRACK_TRANSFER)
+#if defined(SSE_DMA_TRACK_TRANSFER)
   WORD Datachunk; // to check # 16byte parts
 #endif
 

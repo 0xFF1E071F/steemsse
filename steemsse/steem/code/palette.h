@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_PALETTE_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_PALETTE_H)
 
 #include "palette.decla.h"
 
-#else//!SS_STRUCTURE_PALETTE_H
+#else//!SSE_STRUCTURE_PALETTE_H
 
 #ifdef IN_MAIN
 #define EXT
@@ -52,4 +52,4 @@ long logpal[257];
 
 #undef EXT
 
-#endif//SS_STRUCTURE_PALETTE_H
+#endif//SSE_STRUCTURE_PALETTE_H

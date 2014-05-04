@@ -9,7 +9,7 @@
 #include <SSE/SSE6301.h>
 #include <acia.h>
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
 #include <SSE/SSEOption.h>
 
 #ifndef WIN32
@@ -36,7 +36,7 @@ int hd6301_completed_transmission_to_MC6850; // for sync
 // additional variables for our module
 
 unsigned char rec_byte;
-#if defined(SS_IKBD_6301_RUN_IRQ_TO_END)
+#if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
 
 #define NOT_EXECUTING_INT 0
 #define EXECUTING_INT 1
@@ -46,7 +46,7 @@ int ExecutingInt=NOT_EXECUTING_INT;
 #endif
 int Crashed6301=0;
 
-#if defined(SS_IKBD_6301_CHECK_COMMANDS) 
+#if defined(SSE_IKBD_6301_CHECK_COMMANDS) 
 int LoadingMemory=0; // ID command $20
 int CustomPrgAddress=0; // parameters 1&2
 int BytesToLoad=0; // parameter 3
@@ -70,7 +70,7 @@ int TotalParameters=0; // #parameters
 #endif
 // TRACE
 #undef TRACE
-#if defined(SS_DEBUG) 
+#if defined(SSE_DEBUG) 
 // we use this trick because Trace is a struct function
 void (*hd6301_trace)(char *fmt, ...);
 #define TRACE hd6301_trace
@@ -86,7 +86,7 @@ void (*hd6301_trace)(char *fmt, ...);
 #define error printf // saves headache
 #define warning TRACE //printf 
 // base
-#if !defined(SS_IKBD_6301_DISABLE_CALLSTACK)
+#if !defined(SSE_IKBD_6301_DISABLE_CALLSTACK)
 #include "callstac.c"
 #endif
 #include "cpu.c"
@@ -118,7 +118,7 @@ hd6301_destroy() {
   if(ram) 
     free(ram);
   ram=NULL;
-#if !defined(SS_IKBD_6301_DISABLE_BREAKS)
+#if !defined(SSE_IKBD_6301_DISABLE_BREAKS)
   if(breaks) 
     free(breaks);
   breaks=NULL;
@@ -136,7 +136,7 @@ hd6301_reset(int Cold) {
   hd6301_completed_transmission_to_MC6850=0;
   Crashed6301=0;
   iram[TRCSR]=0x20;
-#if defined(SS_IKBD_6301_RUN_IRQ_TO_END)
+#if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
   ExecutingInt=NOT_EXECUTING_INT;
 #endif
   cpu_start(); // since we don't use the command.c file
@@ -148,7 +148,7 @@ hd6301_run_cycles(u_int cycles_to_run) {
   int pc;
   int cycles_run=0;
   int i=0;
-#if defined(SS_IKBD_6301_ADJUST_CYCLES)
+#if defined(SSE_IKBD_6301_ADJUST_CYCLES)
   static int cycles_to_give_back=0;
 #endif
   int starting_cycles=cpu.ncycles;
@@ -159,7 +159,7 @@ hd6301_run_cycles(u_int cycles_to_run) {
     cpu_start();
   }
   if((iram[TRCSR]&1) 
-#if defined(SS_ACIA_DOUBLE_BUFFER_TX)
+#if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
     && !ACIA_IKBD.LineTxBusy
 #endif
     )
@@ -173,7 +173,7 @@ hd6301_run_cycles(u_int cycles_to_run) {
     TRACE("PC out of range, resetting chip\n"); 
     reset(); // hack
   }
-#if defined(SS_IKBD_6301_ADJUST_CYCLES)
+#if defined(SSE_IKBD_6301_ADJUST_CYCLES)
   if(cycles_to_give_back)
   {
     // we really must go slowly here, better lose some time sync
@@ -192,7 +192,7 @@ hd6301_run_cycles(u_int cycles_to_run) {
 #endif
 
   while(!Crashed6301 && (cycles_run<cycles_to_run 
-#if defined(SS_IKBD_6301_RUN_IRQ_TO_END)
+#if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
     || ExecutingInt==EXECUTING_INT
 #endif
   ))
@@ -200,14 +200,14 @@ hd6301_run_cycles(u_int cycles_to_run) {
     instr_exec (); // execute one instruction
     cycles_run=cpu.ncycles-starting_cycles;
   }
-#if defined(SS_IKBD_6301_RUN_IRQ_TO_END)
+#if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
   if(ExecutingInt)
   {
     ASSERT( ExecutingInt==FINISHED_EXECUTING_INT );
     ExecutingInt=NOT_EXECUTING_INT;
   }
 #endif
-#if defined(SS_IKBD_6301_ADJUST_CYCLES)
+#if defined(SSE_IKBD_6301_ADJUST_CYCLES)
 //  ASSERT( !cycles_to_give_back );
   cycles_to_give_back+=cycles_run-cycles_to_run;
 #endif
@@ -239,7 +239,7 @@ hd6301_load_save(int one_if_save,unsigned char *buffer) {
   else
     memmove(&cpu,i,sizeof(cpu));
   i+=sizeof(cpu);
-#if !defined(SS_IKBD_6301_DISABLE_CALLSTACK)
+#if !defined(SSE_IKBD_6301_DISABLE_CALLSTACK)
   // callstack - it's a debug feature, useless for us, lots of space
   if(one_if_save)
     memmove(i,&callstack,sizeof(callstack));
@@ -251,7 +251,7 @@ hd6301_load_save(int one_if_save,unsigned char *buffer) {
   if(one_if_save)
   {
     TRACE("6301 Snapshot - save RAM\n");
-#if defined(SS_DEBUG_DUMP_6301_RAM_ON_LS)
+#if defined(SSE_DEBUG_DUMP_6301_RAM_ON_LS)
     hd6301_dump_ram();
 #endif
     memmove(i,&ram[0x80],128);
@@ -260,7 +260,7 @@ hd6301_load_save(int one_if_save,unsigned char *buffer) {
   {
     TRACE("Snapshot - load RAM\n");
     memmove(&ram[0x80],i,128);
-#if defined(SS_DEBUG_DUMP_6301_RAM_ON_LS)
+#if defined(SSE_DEBUG_DUMP_6301_RAM_ON_LS)
     hd6301_dump_ram();
 #endif
   }
@@ -330,7 +330,7 @@ dump_rom() {
   }//nxt
 }
 
-#if defined(SS_DEBUG_DUMP_6301_RAM)
+#if defined(SSE_DEBUG_DUMP_6301_RAM)
 
 hd6301_dump_ram() { // commanded by Boiler
   printf("6301 RAM dump\n    \t00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F\n");
@@ -339,7 +339,7 @@ hd6301_dump_ram() { // commanded by Boiler
 
 #endif
 
-#if defined(SS_DEBUG_BROWSER_6301)
+#if defined(SSE_DEBUG_BROWSER_6301)
 /*  We copy the memory instead of having direct access.
     TODO: use proper separation methods?
 */

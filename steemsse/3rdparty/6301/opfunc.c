@@ -117,7 +117,7 @@ jsr_addr (addr)
 {
 	pushword (reg_getpc ());	/* Return address */
 	reg_setpc (addr);
-#if !defined(SS_IKBD_6301_DISABLE_CALLSTACK)
+#if !defined(SSE_IKBD_6301_DISABLE_CALLSTACK)
 	callstack_push (addr);	/* subroutine ref. */
 #endif
 }
@@ -144,11 +144,11 @@ int_addr (addr)
 	pushbyte (reg_getaccb ());
 	pushbyte (reg_getccr());
 	reg_setpc (mem_getw (addr));
-#if !defined(SS_IKBD_6301_DISABLE_CALLSTACK)
+#if !defined(SSE_IKBD_6301_DISABLE_CALLSTACK)
 	callstack_push (reg_getpc ());               /* new subroutine ref. */
 #endif
 	reg_setiflag (1);
-#if defined(SS_IKBD_6301_RUN_IRQ_TO_END)
+#if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
 	ExecutingInt=EXECUTING_INT; //SS
 #endif
 }
@@ -373,7 +373,7 @@ rti_inh ()
 	reg_setacca (popbyte ());
 	reg_setix   (popword ());
 	reg_setpc   (popword ());
-#if defined(SS_IKBD_6301_RUN_IRQ_TO_END)
+#if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
 	ExecutingInt=FINISHED_EXECUTING_INT;
 #endif
 }
@@ -427,13 +427,13 @@ tpa_inh ()	{reg_setacca (reg_getccr ());}
  */
 trap ()
 {
-#if defined(SS_IKBD_6301_DISABLE_CALLSTACK)
+#if defined(SSE_IKBD_6301_DISABLE_CALLSTACK)
   u_int  routine = 0;
 #else
 	u_int  routine = callstack_peek_addr ();
 #endif
 	char  *p       = (char *) sym_find_name (routine);
-#if defined(SS_DEBUG_DUMP_6301_RAM)
+#if defined(SSE_DEBUG_DUMP_6301_RAM)
 	hd6301_dump_ram();
 #endif
   warning ("trap: pc:%04x\nSubroutine: %04x %s\n",
@@ -683,7 +683,7 @@ int_6811 (addr)
 	pushbyte (reg_getaccb ());
 	pushbyte (reg_getccr ());
 	reg_setpc (mem_getw (addr));
-#if !defined(SS_IKBD_6301_DISABLE_CALLSTACK)
+#if !defined(SSE_IKBD_6301_DISABLE_CALLSTACK)
 	callstack_push (reg_getpc ());               /* new subroutine ref. */
 #endif
 	reg_setiflag (1);
@@ -876,7 +876,7 @@ swi_6811 ()	{int_6811 (0xfff6);}
 test_inh ()	{reg_setpc (reg_getpc () -1);} /* Infinite loop */
 trap_6811 ()
 {
-#if defined(SS_IKBD_6301_DISABLE_CALLSTACK)
+#if defined(SSE_IKBD_6301_DISABLE_CALLSTACK)
 	u_int  routine = 0;
 #else
 	u_int  routine = callstack_peek_addr ();
@@ -1184,7 +1184,7 @@ int_6805 (addr)
 	pushbyte (reg_getacca ());
 	pushbyte (reg_getccr ());
 	reg_setpc (mem_getw (addr));
-#if !defined(SS_IKBD_6301_DISABLE_CALLSTACK)
+#if !defined(SSE_IKBD_6301_DISABLE_CALLSTACK)
 	callstack_push (reg_getpc ());               /* new subroutine ref. */
 #endif
 	reg_setiflag (1);
@@ -1206,7 +1206,7 @@ swi_6805  ()
 
 trap_6805 ()
 {
-#if defined(SS_IKBD_6301_DISABLE_CALLSTACK)
+#if defined(SSE_IKBD_6301_DISABLE_CALLSTACK)
 	warning ("trap: pc:%04x\n",reg_getpc ());
 #else
 	warning ("trap: pc:%04x\nSubroutine: %04x\n",

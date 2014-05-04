@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_EMULATOR_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_EMULATOR_H)
 
 #include "emulator.decla.h"
 
-#else//!defined(SS_STRUCTURE_EMULATOR_H)
+#else//!defined(SSE_STRUCTURE_EMULATOR_H)
 
 
 #ifdef IN_EMU
@@ -159,7 +159,7 @@ EXT WORD tos_version;
 #define ON_RTE_DONE_MALLOC_FOR_EM 4
 #define ON_RTE_STOP 400
 
-#if defined(SS_CPU_LINE_F)
+#if defined(SSE_CPU_LINE_F)
 #define ON_RTE_LINE_F 5
 #endif
 
@@ -175,7 +175,7 @@ EXT int on_rte_interrupt_depth;
 extern "C"
 {
 EXT MEM_ADDRESS shifter_draw_pointer;
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
 EXT BYTE shifter_hscroll, shifter_skip_raster_for_hscroll; // the latter bool
 #else
 EXT int shifter_hscroll,shifter_skip_raster_for_hscroll;
@@ -190,7 +190,7 @@ EXT int shifter_x,shifter_y;
 EXT int shifter_first_draw_line;
 EXT int shifter_last_draw_line;
 EXT int shifter_scanline_width_in_bytes;
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
 EXT BYTE shifter_fetch_extra_words;
 #else
 EXT int shifter_fetch_extra_words;
@@ -228,7 +228,7 @@ EXT int scan_y;
 #define KB512 (512*1024)
 #define KB128 (128*1024)
 
-#if !defined(SS_MMU_NO_CONFUSION)
+#if !defined(SSE_MMU_NO_CONFUSION)
 EXT MEM_ADDRESS mmu_confused_address(MEM_ADDRESS ad);
 extern "C"{
 BYTE ASMCALL mmu_confused_peek(MEM_ADDRESS ad,bool cause_exception);
@@ -317,7 +317,7 @@ void agenda_acia_tx_delay_IKBD(int),agenda_acia_tx_delay_MIDI(int);
 MEM_ADDRESS on_rte_return_address;
 
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU))
 #define M68K_UNSTOP                         \
   if (cpu_stopped){ \
                    \
@@ -338,10 +338,10 @@ LPAGENDAPROC agenda_list[]={agenda_fdc_spun_up,agenda_fdc_motor_flag_off,agenda_
                           agenda_acia_tx_delay_MIDI,ikbd_send_joystick_message,
                           ikbd_report_abs_mouse,agenda_keyboard_replace,
                           
-#if defined(SS_FDC_RESTORE_AGENDA)
+#if defined(SSE_FDC_RESTORE_AGENDA)
                           agenda_fdc_restore,
 #endif
-#if defined(SS_FDC_VERIFY_AGENDA)
+#if defined(SSE_FDC_VERIFY_AGENDA)
                           agenda_fdc_verify,
 #endif
                           (LPAGENDAPROC)1};
@@ -363,7 +363,7 @@ int ACIAClockToHBLS(int,bool=0);
 void ACIA_Reset(int,bool);
 void ACIA_SetControl(int,BYTE);
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_ACIA)) //see new file acia.h
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_ACIA)) //see new file acia.h
 struct _ACIA_STRUCT{
   int clock_divide;
 
@@ -413,4 +413,4 @@ MEM_ADDRESS vdi_intout=0;
 #undef EXT
 #undef INIT
 
-#endif//SS_STRUCTURE_EMULATOR_H
+#endif//SSE_STRUCTURE_EMULATOR_H

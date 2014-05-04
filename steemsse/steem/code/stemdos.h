@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STEMDOS_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_STEMDOS_H)
 
 #include "stemdos.decla.h"
 
-#else//!defined(SS_STRUCTURE_STEMDOS_H)
+#else//!defined(SSE_STRUCTURE_STEMDOS_H)
 
 #ifdef IN_EMU
 #define EXT
@@ -179,4 +179,4 @@ void STStringToPC(char*),PCStringToST(char*);
 #undef EXT
 #undef INIT
 
-#endif//!defined(SS_STRUCTURE_STEMDOS_H)
+#endif//!defined(SSE_STRUCTURE_STEMDOS_H)

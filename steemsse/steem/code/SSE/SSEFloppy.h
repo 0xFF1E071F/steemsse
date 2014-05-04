@@ -23,7 +23,7 @@ interrupt."
 #include <conditions.h>
 #include "SSEParameters.h"
 
-#if defined(SS_DRIVE_SOUND) && defined(SS_STRUCTURE_SSEDEBUG_OBJ)
+#if defined(SSE_DRIVE_SOUND) && defined(SSE_STRUCTURE_SSEDEBUG_OBJ)
 #ifdef WIN32
 #include <dsound.h>
 #endif
@@ -32,36 +32,36 @@ interrupt."
 #include "SSECapsImg.h"
 #include "SSEDma.h"
 #include "SSEDrive.h"
-#if defined(SS_DISK_GHOST) //3.7.0
+#if defined(SSE_DISK_GHOST) //3.7.0
 #include "SSEGhostDisk.h"
 #endif
 #include "SSEPsg.h"
 #include "SSEScp.h"
-#if defined(SS_DISK_STW) //3.7.0
+#if defined(SSE_DISK_STW) //3.7.0
 #include "SSESTW.h"
 #endif
 #include "SSEWD1772.h"
 
-#if defined(SS_FLOPPY)
+#if defined(SSE_FLOPPY)
 
-#ifdef SS_DRIVE
+#ifdef SSE_DRIVE
 #define ADAT (SF314[floppy_current_drive()].Adat())
 #else
 #define ADAT (!floppy_instant_sector_access)
 #endif
 #endif
 
-#if defined(SS_DISK_GHOST)
+#if defined(SSE_DISK_GHOST)
 //struct TGhostDisk;//ouch! this works in VC, not BCC -> create apart files
 extern TGhostDisk GhostDisk[2];
 #endif
 
-#if defined(SS_DISK_STW)
+#if defined(SSE_DISK_STW)
 extern TImageSTW ImageSTW[2];
 #define IMAGE_STW (SF314[DRIVE].ImageType.Extension==EXT_STW)
 #endif
 
-#if defined(SS_DMA)
+#if defined(SSE_DMA)
 extern TDma Dma;
 #define dma_sector_count Dma.Counter
 #define dma_address Dma.BaseAddress
@@ -70,11 +70,11 @@ extern TDma Dma;
 #define dma_status Dma.SR
 #endif//dma
 
-#if defined(SS_DRIVE)
+#if defined(SSE_DRIVE)
 extern TSF314 SF314[2]; // 2 double-sided drives, wow!
 #endif
 
-#if defined(SS_FDC)
+#if defined(SSE_FDC)
 extern TWD1772 WD1772;
 #define fdc_cr WD1772.CR     // problem:
 #define fdc_str WD1772.STR   // not identified in debugger
@@ -87,11 +87,11 @@ extern TWD1772 WD1772;
 extern TYM2149 YM2149;
 #endif
 
-#if defined(SS_IPF)
+#if defined(SSE_IPF)
 extern TCaps Caps;
 #endif
 
-#if defined(SS_SCP)
+#if defined(SSE_SCP)
 extern TScp Scp;
 #endif
 

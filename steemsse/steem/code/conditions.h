@@ -78,7 +78,7 @@ DESCRIPTION: Sets up all conditions that affect the Steem binary.
 #endif
 
 #ifdef DEBUG_BUILD
-#if !defined(SS_DEBUG_NO_SOUND_DAMPING)
+#if !defined(SSE_DEBUG_NO_SOUND_DAMPING)
 #define ENABLE_VARIABLE_SOUND_DAMPING
 #endif
 #define ENABLE_LOGFILE
@@ -396,7 +396,7 @@ extern bool logsection_enabled[100];
 class EasyStr;
 extern void log_write(EasyStr);
 
-//#if !(defined(STEVEN_SEAGAL)) && defined(SS_DEBUG_LOG_OPTIONS))
+//#if !(defined(STEVEN_SEAGAL)) && defined(SSE_DEBUG_LOG_OPTIONS))
 #define LOGSECTION_INIFILE 19
 #define LOGSECTION_GUI 20
 //#endif

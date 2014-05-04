@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_KEYTABLE_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_KEYTABLE_H)
 
 #include "key_table.decla.h"
 
-#else //!defined(SS_STRUCTURE_KEYTABLE_H)
+#else //!defined(SSE_STRUCTURE_KEYTABLE_H)
 
 #ifndef STEEMKEYTEST
 // These are the characters that are produced by pressing Alt+[shift]+key.
@@ -504,7 +504,7 @@ void InitKeyTable()
           Key #221 = ASCII å (#-27) = ST keycode 0x1a
           Key #222 = ASCII æ (#-26) = ST keycode 0x27
         */
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_REWRITE) // stops a warning L2
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_REWRITE) // stops a warning L2
         char char_list[]= {(char)168,43,39,(char)248,(char)229,(char)230,0};
 #else
         char char_list[]= {168,43,39,248,229,230,0};        
@@ -553,4 +553,4 @@ void UNIX_get_fake_VKs()
 }
 #endif
 
-#endif//defined(SS_STRUCTURE_KEYTABLE_H)
+#endif//defined(SSE_STRUCTURE_KEYTABLE_H)

@@ -24,7 +24,7 @@ All the address-related auxilary registers such as X-Count/Y-Count,
   short DestXInc,DestYInc;
   MEM_ADDRESS DestAdr;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_BLT_YCOUNT)
+#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_YCOUNT)
   WORD XCount;
   DWORD YCount; // hack, we need more than 16 bit for the 0=65536 thing
 #else
@@ -54,7 +54,7 @@ All the address-related auxilary registers such as X-Count/Y-Count,
 
 
   bool InBlitter_Draw; //are we in the routine?
-#if defined(STEVEN_SEAGAL) && defined(SS_BLT_BLIT_MODE_CYCLES)
+#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_BLIT_MODE_CYCLES)
   // we check every 64 cycles when we run for 256 cycles
   int TimeToCheckIrq; // same name style!
 #endif

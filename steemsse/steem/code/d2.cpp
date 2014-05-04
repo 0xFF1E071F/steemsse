@@ -9,11 +9,11 @@ disa_d2 (see bottom of file) to disassemble an instruction and
 d2_routines_init to initialise the debugger.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: d2.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_D2_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_D2_H)
 LONG d2_peekvalid;
 EasyStr d2_src,d2_dest,d2_command,d2_pc_rel_ex;
 WORD d2_ap;
@@ -190,7 +190,7 @@ BYTE d2_peek(MEM_ADDRESS ad){
     }else if(ad>=rom_addr){
       if(ad<=(0xe00000+256*1024))return ROM_PEEK(ad-rom_addr);
       else{d2_peekvalid=0xff;return 0;}
-#if !defined(SS_MMU_NO_CONFUSION)
+#if !defined(SSE_MMU_NO_CONFUSION)
     }else if(mmu_confused){
       return mmu_confused_peek(ad,false);
 #endif
@@ -207,7 +207,7 @@ WORD d2_dpeek(MEM_ADDRESS ad)
   d2_peekvalid=0; //all valid
 
 
-#if defined(SS_DEBUG_FAKE_IO)
+#if defined(SSE_DEBUG_FAKE_IO)
 /*  Intercept reads of fake IO zone to return control mask
     variables.
 */
@@ -244,7 +244,7 @@ WORD d2_dpeek(MEM_ADDRESS ad)
     }else if(ad>=rom_addr){
       if(ad<=(0xe00000+256*1024))      return (WORD)ROM_DPEEK(ad-rom_addr);
       else {d2_peekvalid=0xffff;return 0;}
-#if !defined(SS_MMU_NO_CONFUSION)
+#if !defined(SSE_MMU_NO_CONFUSION)
     }else if(mmu_confused){
       return mmu_confused_dpeek(ad,false);
 #endif
@@ -287,7 +287,7 @@ LONG d2_lpeek(MEM_ADDRESS ad){
     }else if(ad>=rom_addr){
       if(ad<=(0xe00000+256*1024))      return (LONG)ROM_LPEEK(ad-rom_addr);
       else {d2_peekvalid=0xffffffff;return 0;}
-#if !defined(SS_MMU_NO_CONFUSION)
+#if !defined(SSE_MMU_NO_CONFUSION)
     }else if(mmu_confused){
       return mmu_confused_lpeek(ad,false);
 #endif
@@ -330,7 +330,7 @@ bool d2_dpoke(MEM_ADDRESS ad,WORD val){
   ad&=0xffffff;
   if(ad&1)return false;
 
-#if defined(SS_DEBUG_FAKE_IO)
+#if defined(SSE_DEBUG_FAKE_IO)
 /*  Intercept writes to fake IO zone to change control mask
     variables.
     Enforce low byte = 0 (for the GUI)

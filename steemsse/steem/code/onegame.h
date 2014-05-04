@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_ONEGAME_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_ONEGAME_H)
 
 #include "onegame.decla.h"
 
-#else//!SS_STRUCTURE_ONEGAME_H
+#else//!SSE_STRUCTURE_ONEGAME_H
 
 
 #ifdef IN_MAIN
@@ -42,4 +42,4 @@ EXT int OGStopAction INIT(0);
 #undef EXT
 #undef INIT
 
-#endif//SS_STRUCTURE_ONEGAME_H
+#endif//SSE_STRUCTURE_ONEGAME_H

@@ -7,13 +7,13 @@
     interesting events. Later SSEShifterEvents will be 
     removed.
 */
-#if defined(SS_DEBUG_FRAME_REPORT)
+#if defined(SSE_DEBUG_FRAME_REPORT)
 
-#if defined(SS_STRUCTURE_SSEFRAMEREPORT_OBJ)
+#if defined(SSE_STRUCTURE_SSEFRAMEREPORT_OBJ)
 #include "SSEDebug.h"
 #endif
 
-#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
 /*  We use the new general fake io control masks, they are 16bit, but 
     only 8 bits should be used for the GUI.
     Higher bits also for the GUI.
@@ -67,7 +67,7 @@ public:
   int Vbl(); 
   int nVbl;
   struct SFrameEvent m_FrameEvent[MAX_EVENTS]; // it's public
-#if defined(SS_DEBUG_REPORT_SDP_ON_CLICK)
+#if defined(SSE_DEBUG_REPORT_SDP_ON_CLICK)
   MEM_ADDRESS GetSDP(int guessed_x,int guessed_scan_y);
 #endif
 private:
@@ -78,7 +78,7 @@ private:
 
 extern TFrameEvents FrameEvents; // singleton
 
-#if defined(SS_DEBUG)
+#if defined(SSE_DEBUG)
 #define REPORT_LINE FrameEvents.ReportLine()
 #else
 #define REPORT_LINE

@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_FLOPPYDRIVE_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_FLOPPYDRIVE_H)
 
 #include "floppy_drive.decla.h"
 
-#else//!defined(SS_STRUCTURE_FLOPPYDRIVE_H)
+#else//!defined(SSE_STRUCTURE_FLOPPYDRIVE_H)
 
 
 #define FIMAGE_OK                  0
@@ -29,7 +29,7 @@ private:
   EasyStr ImageFile,MSATempFile,ZipTempFile,FormatTempFile;
 public:
   TFloppyImage()             { f=NULL;Format_f=NULL;PastiDisk=
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF)    
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)    
     IPFDisk=
 #endif
     0;PastiBuf=NULL;RemoveDisk();}
@@ -37,7 +37,7 @@ public:
   ~TFloppyImage()            { RemoveDisk(); }
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_PASTI_NO_RESET)
+#if defined(STEVEN_SEAGAL) && defined(SSE_PASTI_NO_RESET)
   EasyStr GetImageFile() {return ImageFile;}
 #endif
 
@@ -46,7 +46,7 @@ public:
   bool ReinsertDisk();
   void RemoveDisk(bool=0);
   bool DiskInDrive() { return f!=NULL || PastiDisk 
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
     || IPFDisk
 #endif    
     ; }
@@ -72,7 +72,7 @@ public:
   BYTE *PastiBuf; // SS same for IPF?
   int PastiBufLen;
   bool STT_File,PastiDisk;
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
   bool IPFDisk;
 #endif
 
@@ -94,4 +94,4 @@ bool FloppyArchiveIsReadWrite=0;
 extern TFloppyImage FloppyDrive[2];
 #endif
 
-#endif//!defined(SS_STRUCTURE_FLOPPYDRIVE_H)
+#endif//!defined(SSE_STRUCTURE_FLOPPYDRIVE_H)

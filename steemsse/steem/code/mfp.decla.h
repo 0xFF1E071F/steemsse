@@ -6,17 +6,19 @@
 #define EXT extern
 #define INIT(s)
 
-#if defined(SS_STRUCTURE_SSEDEBUG_OBJ)
+#if defined(SSE_STRUCTURE_SSEDEBUG_OBJ)
 #include <binary.h>
 #endif
 
+//#ifdef SSE_UNIX //? to check...
 inline int abs_quick(int i) //was in emu.cpp (!)
 {
   if (i>=0) return i;
   return -i;
 }
+//#endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_MFP_TIMER_B_NO_WOBBLE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_TIMER_B_NO_WOBBLE)
 #define TB_TIME_WOBBLE (0) // no wobble for Timer B
 #else
 #define TB_TIME_WOBBLE (rand() & 4)
@@ -89,11 +91,11 @@ EXT BYTE mfp_gpip_no_interrupt INIT(0xf7);
 
 //#ifdef IN_EMU
 
-#if defined(SS_MFP_IRQ_DELAY3)
+#if defined(SSE_MFP_IRQ_DELAY3)
 EXT int mfp_time_of_set_pending[16];
 #endif
 
-#if defined(SS_MFP_WRITE_DELAY1)
+#if defined(SSE_MFP_WRITE_DELAY1)
 EXT int time_of_last_write_to_mfp_reg;
 #endif
 
@@ -112,7 +114,7 @@ EXT BYTE mfp_gpip_input_buffer;
 
 //#define MFP_CLK_EXACT 2450780  old version, checked inaccurately
 
-#if defined(STEVEN_SEAGAL) && defined(SS_MFP_RATIO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_RATIO)
 // it's a variable now! See SSE.h !!!!!!!!!!!!
 #else
 #define CPU_CYCLES_PER_MFP_CLK (8000000.0/double(MFP_CLK_EXACT))
@@ -140,7 +142,7 @@ EXT int mfp_timer_counter[4];
 EXT int mfp_timer_timeout[4];
 EXT bool mfp_timer_enabled[4];
 EXT int mfp_timer_period[4];
-#if defined(SS_MFP_RATIO_PRECISION)
+#if defined(SSE_MFP_RATIO_PRECISION)
 EXT int mfp_timer_period_fraction[4];
 EXT int mfp_timer_period_current_fraction[4];
 #endif
@@ -189,7 +191,7 @@ void mfp_gpip_transition(int,bool);
 void mfp_check_for_timer_timeouts(); // SS not implemented
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_MFP_RATIO_PRECISION)
+#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_RATIO_PRECISION)
 
 #define MFP_CALC_TIMER_PERIOD(t)  mfp_timer_period[t]=int(  \
           double(mfp_timer_prescale[mfp_get_timer_control_register(t)]* \
@@ -235,7 +237,7 @@ inline BYTE mfp_get_timer_control_register(int n) //was in mfp.cpp
 
 inline bool mfp_set_pending(int irq,int when_set) //was in mfp.cpp
 {
-#if defined(STEVEN_SEAGAL) && defined(SS_MFP_IACK_LATENCY)
+#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_IACK_LATENCY)
 /*
 Final Conflict
 
@@ -284,7 +286,7 @@ either run the VBL interrupt, or the main code.
   if (abs_quick(when_set-mfp_time_of_start_of_last_interrupt[irq])>=CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED){
 #endif
     mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)]|=mfp_interrupt_i_bit(irq); // Set pending
-#if defined(SS_MFP_IRQ_DELAY3)
+#if defined(SSE_MFP_IRQ_DELAY3)
     mfp_time_of_set_pending[irq]=when_set; // not ACT
 #endif
     return true;

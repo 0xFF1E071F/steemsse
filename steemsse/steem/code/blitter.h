@@ -1328,11 +1328,11 @@ LOP| 0  1  2  3    HOP = Halftone Operation
 
 */
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_BLITTER_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_BLITTER_H)
 
 #include "blitter.decla.h"
 
-#else//!defined(SS_STRUCTURE_BLITTER_H)
+#else//!defined(SSE_STRUCTURE_BLITTER_H)
 
 extern "C" void ASMCALL Blitter_Start_Now();
 extern void Blitter_Draw();
@@ -1383,7 +1383,7 @@ All the address-related auxilary registers such as X-Count/Y-Count,
 
 
   bool InBlitter_Draw; //are we in the routine?
-#if defined(STEVEN_SEAGAL) && defined(SS_BLT_BLIT_MODE_CYCLES)
+#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_BLIT_MODE_CYCLES)
   // we check every 64 cycles when we run for 256 cycles
   int TimeToCheckIrq; // same name style!
 #endif
@@ -1394,4 +1394,4 @@ BYTE Blitter_IO_ReadB(MEM_ADDRESS);
 void Blitter_IO_WriteB(MEM_ADDRESS,BYTE);
 #endif
 
-#endif//!defined(SS_STRUCTURE_BLITTER_H)
+#endif//!defined(SSE_STRUCTURE_BLITTER_H)

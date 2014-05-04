@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_BOILER_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_BOILER_H)
 
 #include "boiler.decla.h"
 
-#else//!defined(SS_STRUCTURE_BOILER_H)
+#else//!defined(SSE_STRUCTURE_BOILER_H)
 
 
 MEM_ADDRESS dpc,old_dpc;
@@ -76,4 +76,4 @@ THistoryList HistList;
 void debug_plugin_load(),debug_plugin_free();
 
 
-#endif//SS_STRUCTURE_BOILER_H
+#endif//SSE_STRUCTURE_BOILER_H

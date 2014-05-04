@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_IOLIST_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_IOLIST_H)
 
 #include "iolist.decla.h"
 
-#else//!#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_IOLIST_H)
+#else//!#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_IOLIST_H)
 
 #ifdef IN_MAIN
 #define EXT
@@ -46,4 +46,4 @@ int iolist_box_width(iolist_entry*);
 #undef EXT
 #undef INIT
 
-#endif//#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_IOLIST_H)
+#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_IOLIST_H)

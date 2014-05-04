@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFOBOX_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFOBOX_H)
 
 #include "infobox.decla.h"
 
-#else//!defined(SS_STRUCTURE_STJOY_H)
+#else//!defined(SSE_STRUCTURE_STJOY_H)
 
 #define INFOPAGE_LINK_ID_BASE 200
 
@@ -15,7 +15,7 @@
 #define INFOPAGE_HOWTO_CART 6
 #define INFOPAGE_FAQ 7
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX2)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX2)
 #define INFOPAGE_README_SSE 8
 #define INFOPAGE_FAQ_SSE 9
 #define NUM_INFOPAGE 10
@@ -45,7 +45,7 @@ private:
   HIMAGELIST il;
   int MaxLinkID;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX3)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX3)
   HFONT hFontCourier;
 #endif
 
@@ -91,4 +91,4 @@ public:
 };
 WIN_ONLY( WINDOWPROC TGeneralInfo::OldEditWndProc; );
 
-#endif//#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STJOY_H)
+#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_STJOY_H)

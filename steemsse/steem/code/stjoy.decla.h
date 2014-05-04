@@ -27,7 +27,7 @@ EXT bool joy_is_key_used(BYTE);
 #define N_JOY_PARALLEL_1 7
 
 EXT WORD paddles_ReadMask INIT(0);
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
 #else
 EXT BYTE stick[8];
 #endif

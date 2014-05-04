@@ -48,13 +48,13 @@ extern "C" int ASMCALL  PeekEvent();
 extern "C" ASMCALL int PeekEvent();
 #endif
 
-#ifdef SS_UNIX//temp
+#ifdef SSE_UNIX//temp
 UNIX_ONLY( extern void PostRunMessage(); )
 #else
 UNIX_ONLY( EXT void PostRunMessage(); )
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_STATUS_STRING)
    void GUIRefreshStatusBar();
 #endif
 #define EXT extern//SSESTF.obj-tmp
@@ -231,7 +231,7 @@ int GetComLineArgType(char *,EasyStr &);
 #define ARG_SETTRANSFILE 102
 #define ARG_SETFONT 103
 #define ARG_SETCUTSFILE 104
-#if !defined(SS_CPU_DIV)
+#if !defined(SSE_CPU_DIV)
 #define ARG_SETDIVUTIME 105
 #define ARG_SETDIVSTIME 106
 #endif
@@ -254,7 +254,7 @@ int GetComLineArgType(char *,EasyStr &);
 #define ARG_ALWAYSNEWINSTANCE 251
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_UNIX_TRACE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_UNIX_TRACE)
 #define ARG_LOGSECTION 252
 #define ARG_TRACEFILE 253
 #endif
@@ -455,7 +455,7 @@ void SnapShotProcess(int);
 #define ICO16_TAKESCREENSHOTBUT 63
 #define ICO16_UNRADIOMARKED 64
 
-#if defined(SS_UNIX_OPTIONS_SSE_ICON)
+#if defined(SSE_UNIX_OPTIONS_SSE_ICON)
 #define ICO16_SSE_OPTION 65 // must be in icon16.bmp
 #endif
 
@@ -564,7 +564,7 @@ EXT bool NoINI;
 
 EXT const POINT WinSize[4][5];
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS)
 
 EXT  POINT WinSizeBorderOriginal[4][5];
 
@@ -574,7 +574,7 @@ EXT  POINT WinSizeBorderLarge[4][5];
 
 EXT  POINT WinSizeBorderVeryLarge[4][5];
 
-#if defined(SS_VID_BORDERS_416)
+#if defined(SSE_VID_BORDERS_416)
 EXT  POINT WinSizeBorderVeryLarge2[4][5];
 #endif
 

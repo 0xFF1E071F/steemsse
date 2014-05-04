@@ -8,11 +8,11 @@ to be scheduled to the nearest cycle. Speed limiting and drawing is also
 handled here, in event_scanline and event_vbl_interrupt.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: run.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_RUN_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_RUN_H)
 
 #define EXT
 #define INIT(s) =s
@@ -32,7 +32,7 @@ EXT DWORD speed_limit_wait_till;
 EXT int avg_frame_time_counter INIT(0);
 EXT DWORD auto_frameskip_target_time;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS___)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VARIOUS___)
 EXT int frameskip INIT(1);
 #else
 EXT int frameskip INIT(AUTO_FRAMESKIP);
@@ -51,7 +51,7 @@ EXT int cpu_timer_at_start_of_hbl;
 
 //#ifdef IN_EMU
 
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START)
 screen_event_struct event_plan_50hz[313*2+2+1],event_plan_60hz[263*2+2+1],event_plan_70hz[600*2+2+1],
                     event_plan_boosted_50hz[313*2+2+1],event_plan_boosted_60hz[263*2+2+1],event_plan_boosted_70hz[600*2+2+1];
 
@@ -74,7 +74,7 @@ int cpu_time_of_start_of_event_plan;
 //int cpu_time_of_next_hbl_interrupt=0;
 int time_of_next_timer_b=0;
 int time_of_last_hbl_interrupt;
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBL_IACK)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBL_IACK)
 int time_of_last_vbl_interrupt;
 #endif
 
@@ -95,11 +95,11 @@ void event_pasti_update();
 #undef EXT
 #undef INIT
 
-#endif//SS_STRUCTURE_RUN_H
+#endif//SSE_STRUCTURE_RUN_H
 
 #include "SSE/SSEDebug.h"
 
-#if defined(SS_STRUCTURE_SSEFLOPPY_OBJ)
+#if defined(SSE_STRUCTURE_SSEFLOPPY_OBJ)
 #include "SSE/SSEFloppy.h"
 #endif
 
@@ -151,7 +151,7 @@ void run()
 
   Sound_Start();
 
-#if defined (STEVEN_SEAGAL) && defined(SS_SHIFTER_TRICKS)
+#if defined (STEVEN_SEAGAL) && defined(SSE_SHIFTER_TRICKS)
   Shifter.AddFreqChange(shifter_freq);
 #else
   ADD_SHIFTER_FREQ_CHANGE(shifter_freq);
@@ -170,7 +170,7 @@ void run()
 
   log_write(">>> Start Emulation <<<");
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_START_STOP_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_START_STOP_INFO)
   Debug.TraceGeneralInfos(TDebug::START);
 #endif
 
@@ -309,7 +309,7 @@ void run()
 
   log_write(">>> Stop Emulation <<<");
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_START_STOP_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_START_STOP_INFO)
   Debug.TraceGeneralInfos(TDebug::STOP);
 #endif
 
@@ -360,15 +360,15 @@ void inline prepare_event_again() //might be an earlier one
     
     PREPARE_EVENT_CHECK_FOR_PASTI;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_FLOPPY_EVENT)
+#if defined(STEVEN_SEAGAL) && defined(SSE_FLOPPY_EVENT)
     PREPARE_EVENT_CHECK_FOR_FLOPPY;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DMA_DELAY)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DMA_DELAY)
     PREPARE_EVENT_CHECK_FOR_DMA;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_IRQ_DELAY)
+#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_IRQ_DELAY)
 // not defined anymore (v3.5.2), see MFP//MFD
     PREPARE_EVENT_CHECK_FOR_ACIA_IKBD_IN;
 #endif
@@ -400,15 +400,15 @@ void inline prepare_next_event() //SS check this "inline" thing
       
     PREPARE_EVENT_CHECK_FOR_PASTI;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_FLOPPY_EVENT)
+#if defined(STEVEN_SEAGAL) && defined(SSE_FLOPPY_EVENT)
     PREPARE_EVENT_CHECK_FOR_FLOPPY;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DMA_DELAY)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DMA_DELAY)
     PREPARE_EVENT_CHECK_FOR_DMA;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_IRQ_DELAY)
+#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_IRQ_DELAY)
 // not defined anymore (v3.5.2), see MFP//MFD
     PREPARE_EVENT_CHECK_FOR_ACIA_IKBD_IN;
 #endif
@@ -427,7 +427,7 @@ void inline prepare_next_event() //SS check this "inline" thing
 #define LOGSECTION LOGSECTION_MFP_TIMERS
 
 
-#if defined(SS_MFP_RATIO_PRECISION)
+#if defined(SSE_MFP_RATIO_PRECISION)
 
 #define HANDLE_TIMEOUT(tn) \
   log(Str("MFP: Timer ")+char('A'+tn)+" timeout at "+ABSOLUTE_CPU_TIME+" timeout was "+mfp_timer_timeout[tn]+ \
@@ -527,7 +527,7 @@ void event_timer_b()
 #undef LOGSECTION
 //---------------------------------------------------------------------------
 
-#if defined(SS_INT_VBI_START) || defined(SS_INT_HBL_ONE_FUNCTION)
+#if defined(SSE_INT_VBI_START) || defined(SSE_INT_HBL_ONE_FUNCTION)
 #else
 void event_hbl()   //just HBL, don't draw yet
 {
@@ -550,7 +550,7 @@ void event_hbl()   //just HBL, don't draw yet
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
   cpu_timer_at_start_of_hbl=time_of_next_event; // SS as defined in draw.cpp
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER)
   Shifter.IncScanline();
   ASSERT(scan_y==-32 || scan_y==-62 || scan_y==-33);
 #else
@@ -564,7 +564,7 @@ void event_hbl()   //just HBL, don't draw yet
   }
 #endif
   if (abs_quick(cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt)>CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_HBL_IACK_FIX)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_HBL_IACK_FIX)
     -12 // 28-12 = 16 = IACK cycles
 #endif
     ){
@@ -573,17 +573,17 @@ void event_hbl()   //just HBL, don't draw yet
   if (dma_sound_on_this_screen) dma_sound_fetch();//,dma_sound_fetch();
   screen_event_pointer++;  
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
   // we run some 6301 cycles at the end of each scanline (x1)
   if(HD6301EMU_ON && !HD6301.Crashed)
   {
-#if defined(SS_IKBD_6301_RUN_CYCLES_AT_IO)
+#if defined(SSE_IKBD_6301_RUN_CYCLES_AT_IO)
     if(!HD6301.RunThisHbl) 
 #endif
     {
       ASSERT(HD6301_OK);
       int n6301cycles;
-#if defined(SS_SHIFTER)
+#if defined(SSE_SHIFTER)
       n6301cycles=Shifter.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
 #else
       n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
@@ -597,13 +597,13 @@ void event_hbl()   //just HBL, don't draw yet
         HD6301.Crashed=1; 
       }
     }
-#if defined(SS_IKBD_6301_RUN_CYCLES_AT_IO)
+#if defined(SSE_IKBD_6301_RUN_CYCLES_AT_IO)
     HD6301.RunThisHbl=0; // reset for next hbl
 #endif
   }
 #endif//6301
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF) && !defined(SS_IPF_CPU)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF) && !defined(SSE_IPF_CPU)
   if(Caps.Active==1) 
     Caps.Hbl(); 
 #endif
@@ -618,17 +618,17 @@ void event_scanline()
   CHECK_AGENDA;
 #undef LOGSECTION
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
   // we run some 6301 cycles at the end of each scanline (x312)
   if(HD6301EMU_ON && !HD6301.Crashed)
   {
-#if defined(SS_IKBD_6301_RUN_CYCLES_AT_IO)
+#if defined(SSE_IKBD_6301_RUN_CYCLES_AT_IO)
     if(!HD6301.RunThisHbl) 
 #endif
     {
       ASSERT(HD6301_OK);
       int n6301cycles;
-#if defined(SS_SHIFTER)
+#if defined(SSE_SHIFTER)
       n6301cycles=Shifter.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
 #else
       n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
@@ -642,7 +642,7 @@ void event_scanline()
         HD6301.Crashed=1; 
       }
     }
-#if defined(SS_IKBD_6301_RUN_CYCLES_AT_IO)
+#if defined(SSE_IKBD_6301_RUN_CYCLES_AT_IO)
     HD6301.RunThisHbl=0; // reset for next hbl
 #endif
   }
@@ -650,13 +650,13 @@ void event_scanline()
 
 #if defined(STEVEN_SEAGAL)
 /*  Note: refactoring here is very dangerous!
-    We must separate SS_SHIFTER from SS_INTERRUPT, which makes for many
+    We must separate SSE_SHIFTER from SSE_INTERRUPT, which makes for many
     #if blocks.
 */
   if (scan_y<shifter_first_draw_line-1){
     if (scan_y>=draw_first_scanline_for_border){
       if (bad_drawing==0) 
-#if defined(SS_SHIFTER) &&!defined(SS_SHIFTER_DRAW_DBG)
+#if defined(SSE_SHIFTER) &&!defined(SSE_SHIFTER_DRAW_DBG)
         Shifter.DrawScanlineToEnd();
 #else
         draw_scanline_to_end();
@@ -665,7 +665,7 @@ void event_scanline()
     }
   }else if (scan_y<shifter_first_draw_line){ //next line is first visible
     if (bad_drawing==0) 
-#if defined(SS_SHIFTER) &&!defined(SS_SHIFTER_DRAW_DBG)
+#if defined(SSE_SHIFTER) &&!defined(SSE_SHIFTER_DRAW_DBG)
       Shifter.DrawScanlineToEnd();
 #else
       draw_scanline_to_end();
@@ -674,21 +674,21 @@ void event_scanline()
       +cpu_cycles_from_hbl_to_timer_b+TB_TIME_WOBBLE;
   }else if (scan_y<shifter_last_draw_line-1){
     if (bad_drawing==0) 
-#if defined(SS_SHIFTER) &&!defined(SS_SHIFTER_DRAW_DBG)
+#if defined(SSE_SHIFTER) &&!defined(SSE_SHIFTER_DRAW_DBG)
       Shifter.DrawScanlineToEnd();
 #else
       draw_scanline_to_end();
 #endif
     time_of_next_timer_b=time_of_next_event
       +cpu_cycles_from_hbl_to_timer_b+TB_TIME_WOBBLE;
-#if defined(SS_MFP_TIMER_B_AER)
+#if defined(SSE_MFP_TIMER_B_AER)
 //  from Hatari, fixes Seven Gates of Jambala; Trex Warrior
     if(mfp_reg[1]&8)
       time_of_next_timer_b-=320; //gross?
 #endif
   }else if (scan_y<draw_last_scanline_for_border){
     if (bad_drawing==0) 
-#if defined(SS_SHIFTER) &&!defined(SS_SHIFTER_DRAW_DBG)
+#if defined(SSE_SHIFTER) &&!defined(SSE_SHIFTER_DRAW_DBG)
       Shifter.DrawScanlineToEnd();
 #else
       draw_scanline_to_end();
@@ -718,7 +718,7 @@ void event_scanline()
 
   log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: Event Scanline at end of line ")+scan_y+" sdp is $"+HEXSl(shifter_draw_pointer,6));
   
-#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER) &&!defined(SS_SHIFTER_DRAW_DBG)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER) &&!defined(SSE_SHIFTER_DRAW_DBG)
   Shifter.EndHBL(); // check for +2 -2 errors + unstable shifter
   Shifter.CheckVerticalOverscan(); // top & bottom borders
 #else // Steem 3.2's vertical overscan check
@@ -779,7 +779,7 @@ void event_scanline()
 #endif
 
   if (freq_change_this_scanline){
-#if defined(SS_SHIFTER_TRICKS)
+#if defined(SSE_SHIFTER_TRICKS)
     if(shifter_freq_change_time[shifter_freq_change_idx]<time_of_next_event-16
       && shifter_shift_mode_change_time[shifter_shift_mode_change_idx]
       <time_of_next_event-16)
@@ -802,26 +802,26 @@ void event_scanline()
   /////// and relative to cpu_time_of_last_vbl:
   cpu_timer_at_start_of_hbl=time_of_next_event; //linecycle0 stays the same
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF) && !defined(SS_IPF_CPU)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF) && !defined(SSE_IPF_CPU)
   if(Caps.Active==1)
     Caps.Hbl();
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER)
   Shifter.IncScanline();
 #else
   scan_y++;
 #endif
 
-#if defined(SS_DEBUG_REPORT_SDP) && defined(SS_SHIFTER)
+#if defined(SSE_DEBUG_REPORT_SDP) && defined(SSE_SHIFTER)
   if(Shifter.FetchingLine())
   {
-#if defined(SS_DEBUG_FRAME_REPORT_SDP_LINES) // A is for ACIA now
+#if defined(SSE_DEBUG_FRAME_REPORT_SDP_LINES) // A is for ACIA now
     FrameEvents.Add(scan_y,0,'@',(shifter_draw_pointer&0x00FF0000)>>16 ); 
     FrameEvents.Add(scan_y,0,'@',(shifter_draw_pointer&0xFFFF) ); 
 #endif
 
-#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SDP_LINES) 
   {
     FrameEvents.Add(scan_y,0,'@',(shifter_draw_pointer&0x00FF0000)>>16 ); 
@@ -833,19 +833,19 @@ void event_scanline()
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_POLL_IN_FRAME)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_POLL_IN_FRAME)
   // We peek Windows message once during the frame and not just at VBL
   // note: undefined for now
   if(scan_y==ikbd.scanline_to_poll
     && shifter_freq_at_start_of_vbl!=60 // HighRes Mode (hack) TODO: why?
-#if defined(SS_HACKS)
+#if defined(SSE_HACKS)
     && SSE_HACKS_ON // in case there's more trouble
 #endif
     ) // scanline_to_poll is different each VBL
     PeekEvent();  // fixes Corporation STE, but messes HighResMode
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_JITTER)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_JITTER)
     HblJitterIndex++; // exactly like in Hatari
     if(HblJitterIndex==5)
       HblJitterIndex=0;
@@ -860,7 +860,7 @@ void event_scanline()
 #endif
 
   if (abs_quick(cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt)>CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_HBL_IACK_FIX)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_HBL_IACK_FIX)
 /*  CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED was defined as 28
     It's a way to have 2 HBL interrupts cleared when the second is set pending
     during the IACK cycles.
@@ -881,9 +881,9 @@ void event_scanline()
   if (dma_sound_on_this_screen) dma_sound_fetch(); 
   screen_event_pointer++;
 
-#if defined(SS_VID_3BUFFER_WIN) && !defined(SS_VID_3BUFFER_NO_VSYNC)
+#if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC)
   if(SSE_3BUFFER && !(scan_y%2)
-#if !defined(SS_VID_3BUFFER_FS)
+#if !defined(SSE_VID_3BUFFER_FS)
     && !FullScreen
 #endif
     )
@@ -912,7 +912,7 @@ void event_start_vbl()
 //---------------------------------------------------------------------------
 void event_vbl_interrupt() //SS misleading name?
 { 
-#if defined(SS_VID_VSYNC_WINDOW)
+#if defined(SSE_VID_VSYNC_WINDOW)
   bool VSyncing=( (SSE_WIN_VSYNC&&bAppActive||FSDoVsync&&FullScreen) 
     && fast_forward==0 && slow_motion==0);
 #else
@@ -925,7 +925,7 @@ void event_vbl_interrupt() //SS misleading name?
 #endif
   { // Make sure whole screen is drawn (in 60Hz and 70Hz there aren't enough lines)
     while (scan_y<draw_last_scanline_for_border){
-#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER)
       if(!bad_drawing) 
         Shifter.DrawScanlineToEnd();
       scanline_drawn_so_far=0;
@@ -945,9 +945,9 @@ void event_vbl_interrupt() //SS misleading name?
   log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: Finished frame, blitting at ")+(timeGetTime()-run_start_time)+" timer="+(timer-run_start_time));
   if (draw_lock){
     draw_end();
-#if defined(SS_VID_3BUFFER_WIN) && !defined(SS_VID_3BUFFER_NO_VSYNC)
+#if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC)
     if (VSyncing==0 &&( !SSE_3BUFFER
-#if !defined(SS_VID_3BUFFER_FS)
+#if !defined(SSE_VID_3BUFFER_FS)
       || FullScreen
 #endif
       ))
@@ -965,12 +965,12 @@ void event_vbl_interrupt() //SS misleading name?
   log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: Finished blitting at ")+(timeGetTime()-run_start_time)+" timer="+(timer-run_start_time));
 
   //----------- VBL interrupt ---------
-#if !(defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START))
 /*  
     VBI isn't set pending now but in 64 or so cycles.
-    TODO: implement SS_INT_VBL_IACK in the vbi event
+    TODO: implement SSE_INT_VBL_IACK in the vbi event
 */
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBL_IACK)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBL_IACK)
 /*  This is for the case when the VBI just started (second VBI pending during
     IACK is cleared), 
     Implemented the same way as for MFP, for the same reason it's protected by
@@ -982,7 +982,7 @@ void event_vbl_interrupt() //SS misleading name?
 */
   if(SSE_HACKS_ON && time_of_last_vbl_interrupt+56+16-ACT>0)
   {
-#if defined(SS_DEBUG)
+#if defined(SSE_DEBUG)
     if((sr & SR_IPL)<SR_IPL_4)
       TRACE_OSD("VBI %d\n",time_of_last_vbl_interrupt+56+16-ACT);
 #endif
@@ -1109,9 +1109,9 @@ void event_vbl_interrupt() //SS misleading name?
   LOOP{
     timer=timeGetTime();
 
-#if defined(SS_VID_3BUFFER_WIN) && !defined(SS_VID_3BUFFER_NO_VSYNC)
+#if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC)
   if(SSE_3BUFFER
-#if !defined(SS_VID_3BUFFER_FS)
+#if !defined(SSE_VID_3BUFFER_FS)
     && !FullScreen
 #endif
     )
@@ -1156,13 +1156,13 @@ void event_vbl_interrupt() //SS misleading name?
     if (time_to_sleep>0){
       log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: Sleeping for ")+time_to_sleep);
 
-#if defined(SS_VID_3BUFFER_WIN) && !defined(SS_VID_3BUFFER_NO_VSYNC)
+#if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC)
 /*  This is the part responsible for high CPU use.
     Sleep(1) is sure to make us miss VBLANK.
     Maybe check probability of VBLANK but it depends on HZ
 */
       if(SSE_3BUFFER
-#if !defined(SS_VID_3BUFFER_FS)
+#if !defined(SSE_VID_3BUFFER_FS)
         && !FullScreen
 #endif
         )
@@ -1194,9 +1194,9 @@ void event_vbl_interrupt() //SS misleading name?
       // Wait until desired time (to nearest 1000th of a second).
       do{
         timer=timeGetTime();
-#if defined(SS_VID_3BUFFER_WIN) && !defined(SS_VID_3BUFFER_NO_VSYNC)
+#if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC)
         if(SSE_3BUFFER //&& SSE_WIN_VSYNC
-#if !defined(SS_VID_3BUFFER_FS)
+#if !defined(SSE_VID_3BUFFER_FS)
           && !FullScreen 
 #endif
           )
@@ -1253,7 +1253,7 @@ void event_vbl_interrupt() //SS misleading name?
   RS232_VBL();   // Update all flags, check for the phone ringing
   Sound_VBL();   // Write a VBLs worth + a bit of samples to the sound card
 
-#if defined(SS_DRIVE_SOUND)
+#if defined(SSE_DRIVE_SOUND)
 /*  We don't check the option here because we may have to suddenly stop
     motor sound loop.
 */
@@ -1328,11 +1328,11 @@ void event_vbl_interrupt() //SS misleading name?
     overscan=OVERSCAN_MAX_COUNTDOWN;
   }
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_INT_RELOAD_SDP_TIMING))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_INT_RELOAD_SDP_TIMING))
   event_start_vbl(); // Reset SDP again! //SS check
 #endif
 
-#if defined(SS_SHIFTER_DRAGON1)//not defined in v3.5.2
+#if defined(SSE_SHIFTER_DRAGON1)//not defined in v3.5.2
   if(SS_signal==SS_SIGNAL_SHIFTER_CONFUSED_1)
     SS_signal=SS_SIGNAL_SHIFTER_CONFUSED_2; // stage 2 of our hack
 #endif  
@@ -1349,7 +1349,7 @@ void event_vbl_interrupt() //SS misleading name?
   screen_event_pointer++;
   if (screen_event_pointer->event==NULL){
     cpu_time_of_start_of_event_plan=cpu_time_of_last_vbl;
-#if defined(STEVEN_SEAGAL) && defined(SS_MFP_RATIO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_RATIO)
     if (n_cpu_cycles_per_second>CpuNormalHz){
 #else
     if (n_cpu_cycles_per_second>8000000){
@@ -1360,7 +1360,7 @@ void event_vbl_interrupt() //SS misleading name?
     }
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_JITTER)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_JITTER)
     VblJitterIndex++; // like Hatari  
     if(VblJitterIndex==5)
       VblJitterIndex=0;
@@ -1378,21 +1378,21 @@ void event_vbl_interrupt() //SS misleading name?
   debug_vbl();
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)//3.6.1
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)//3.6.1
   Debug.Vbl();
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER)
   Shifter.Vbl();
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_FRAME_REPORT_SHIFTMODE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_FRAME_REPORT_SHIFTMODE)
   FrameEvents.Add(scan_y,0,'R',Shifter.m_ShiftMode); 
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_FRAME_REPORT_SYNCMODE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_FRAME_REPORT_SYNCMODE)
   FrameEvents.Add(scan_y,0,'S',Shifter.m_SyncMode); 
 #endif
 
-#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SHIFTMODE) 
     FrameEvents.Add(scan_y,0,'R',Shifter.m_ShiftMode); 
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SYNCMODE)
@@ -1431,19 +1431,19 @@ void prepare_cpu_boosted_event_plans()
 void event_pasti_update()
 {
   if (hPasti==NULL || pasti_active==false
-#if defined(STEVEN_SEAGAL) && defined(SS_PASTI_ONLY_STX)
+#if defined(STEVEN_SEAGAL) && defined(SSE_PASTI_ONLY_STX)
     || PASTI_JUST_STX && 
-#if defined(SS_DISK_IMAGETYPE)
+#if defined(SSE_DISK_IMAGETYPE)
     SF314[floppy_current_drive()].ImageType.Extension!=EXT_STX
 #else
     SF314[floppy_current_drive()].ImageType!=3
 #endif
-#if defined(SS_PASTI_ONLY_STX_HD) && defined(SS_DMA)
+#if defined(SSE_PASTI_ONLY_STX_HD) && defined(SSE_DMA)
     && ! ( pasti_active && (Dma.MCR&BIT_3)) // hard disk handling by pasti
 #endif
 #endif
     ){
-#if defined(STEVEN_SEAGAL) && defined(SS_MFP_RATIO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_RATIO)
     pasti_update_time=ABSOLUTE_CPU_TIME+CpuNormalHz;
 #else
     pasti_update_time=ABSOLUTE_CPU_TIME+8000000;
@@ -1466,14 +1466,14 @@ void event_pasti_update()
 //---------------------------------------------------------------------------
 #if defined(STEVEN_SEAGAL) // added events
 
-#if defined(SS_INT_VBI_START)
+#if defined(SSE_INT_VBI_START)
 void event_trigger_vbi() { //6X cycles into frame (reference end of HSYNC)
   vbl_pending=true;
   screen_event_pointer++;
 }
 #endif
 
-#if defined(SS_FLOPPY_EVENT)
+#if defined(SSE_FLOPPY_EVENT)
 /*  There's an event for floppy now because we want to handle DRQ for each
     byte, and the resolution of HBL is too gross for that:
 

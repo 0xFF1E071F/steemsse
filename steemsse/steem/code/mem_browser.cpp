@@ -6,11 +6,11 @@ DESCRIPTION: The code for Steem's memory browsers, used heavily in the debug
 build to view memory and I/O areas.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: mem_browser.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_MEMBROWSER_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_MEMBROWSER_H)
 // review this it looks strange
 WNDPROC mem_browser::OldEditWndProc;
 DWORD mem_browser::ex_style=WS_EX_TOOLWINDOW;
@@ -54,11 +54,11 @@ void mem_browser::new_window(MEM_ADDRESS address,type_disp_type new_disp_type)
                   MB_ICONEXCLAMATION | MB_SETFOREGROUND | MB_TASKMODAL | MB_TOPMOST);
   }else{
     Str Title="Memory";
-#if defined(SS_DEBUG_BROWSER_INSTRUCTIONS)
+#if defined(SSE_DEBUG_BROWSER_INSTRUCTIONS)
     if(!new_disp_type)
       Title="Instructions"; //at last!
 #endif
-#if defined(SS_DEBUG_FAKE_IO)
+#if defined(SSE_DEBUG_FAKE_IO)
     if(address==FAKE_IO_START)
       Title=STR_FAKE_IO_CONTROL;
 #endif
@@ -71,13 +71,13 @@ void mem_browser::new_window(MEM_ADDRESS address,type_disp_type new_disp_type)
           Title="FDC (WD-1772) + DMA";
           break;
         case IOLIST_PSEUDO_AD_IKBD:
-#if defined(SS_IKBD_6301) 
+#if defined(SSE_IKBD_6301) 
           Title="IKBD 6301 fake emu";
 #else
           Title="IKBD";
 #endif
           break;
-#if defined(SS_DEBUG_BROWSER_6301)
+#if defined(SSE_DEBUG_BROWSER_6301)
         case IOLIST_PSEUDO_AD_6301:
           Title="IKBD 6301 true emu";
           break;
@@ -177,7 +177,7 @@ void mem_browser::new_window(MEM_ADDRESS address,type_disp_type new_disp_type)
           CBAddString(Win,"2MB",2*1024*1024);
           CBAddString(Win,"2.5MB",(2048+512)*1024);
           CBAddString(Win,"4MB",4*1024*1024);
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
           SendMessage(Win,WM_SETTEXT,0,LPARAM("5Kb"));
 #else
           SendMessage(Win,WM_SETTEXT,0,LPARAM("100Kb"));
@@ -239,7 +239,7 @@ void mem_browser::init()
     bool PSG=(ad & 0xfffff000)==IOLIST_PSEUDO_AD_PSG;
     bool FDC=(ad & 0xfffff000)==IOLIST_PSEUDO_AD_FDC;
     bool IKBD=(ad & 0xfffff000)==IOLIST_PSEUDO_AD_IKBD;
-#if defined(SS_DEBUG_BROWSER_6301)
+#if defined(SSE_DEBUG_BROWSER_6301)
     if((ad & 0xfffff000)==IOLIST_PSEUDO_AD_6301)
       IKBD=true;
 #endif
@@ -923,7 +923,7 @@ LRESULT __stdcall mem_browser_window_WndProc(HWND Win,UINT Mess,UINT wPar,long l
   mem_browser *mb;
   switch (Mess){
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_CLIPBOARD)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_CLIPBOARD)
     // right click on 'Dump' button -> put assembly in clipboard
     case WM_CONTEXTMENU:
     {
@@ -1133,7 +1133,7 @@ void mem_browser::vscroll(int of)
     MEM_ADDRESS ad_high=ad & 0xff000000;
     if (disp_type==DT_INSTRUCTION){
       ad=oi(ad & 0xffffff,of);  //offset instruction
-#if defined(SS_DEBUG_BROWSER_PSEUDO_IO_SCROLL)
+#if defined(SSE_DEBUG_BROWSER_PSEUDO_IO_SCROLL)
     }else if (disp_type==DT_MEMORY){// 6301 true emu browser is bigger
 #else
     }else if (disp_type==DT_MEMORY && IS_IOLIST_PSEUDO_ADDRESS(ad)==0){
@@ -1318,7 +1318,7 @@ LRESULT __stdcall mem_browser_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
                 if (pda) bk=(pda->bwr & BIT_0);
                 debug_set_bk(ad,!bk);
               }else{
-#if defined(SS_DEBUG_MONITOR_VALUE)
+#if defined(SSE_DEBUG_MONITOR_VALUE)
 /*  Capture the string in the 'find' box and interpret it.
     Value must be a WORD in hexadecimal, without $, eg FE20.
     One comparison character (=,!,<,>) is required.
@@ -1465,7 +1465,7 @@ LRESULT __stdcall mem_browser_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
       }
       return 0;
 
-#if defined(SS_DEBUG_MOUSE_WHEEL)
+#if defined(SSE_DEBUG_MOUSE_WHEEL)
 /*
 Long requested I think, the mouse wheel will now scroll the memory and
 instruction browsers. Shift or left button command 'scroll page'.

@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_IKBD_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_IKBD_H)
 
 #include "ikbd.decla.h"
 
-#else//!defined(SS_STRUCTURE_IKBD_H)
+#else//!defined(SSE_STRUCTURE_IKBD_H)
 
 #ifdef IN_EMU
 #define EXT
@@ -117,9 +117,9 @@ release it will be 0xF1, and so on.)
 SS: most ST's had a 6301 that sent '$F1'
 */
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_FAKE_CUSTOM)
 extern "C" void keyboard_buffer_write(BYTE,int signal=0);
-#elif defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+#elif defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
 extern "C" void keyboard_buffer_write(BYTE);
 #else
 EXT void keyboard_buffer_write(BYTE);
@@ -129,7 +129,7 @@ EXT void keyboard_buffer_write_n_record(BYTE);
 EXT void keyboard_buffer_write_string(int s1,...);
 EXT bool ikbd_keys_disabled();
 EXT void ikbd_mouse_move(int,int,int,int DEFVAL(IKBD_DEFAULT_MOUSE_MOVE_MAX));
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
 //extern "C" int ST_Key_Down[128];
 #else
 EXT bool ST_Key_Down[128];
@@ -155,7 +155,7 @@ extern bool CutTaskSwitchVKDown[4];
 
 EXT int mouse_move_since_last_interrupt_x,mouse_move_since_last_interrupt_y;
 EXT bool mouse_change_since_last_interrupt;
-#if !(defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301))
 EXT int mousek;
 #endif
 #ifndef CYGWIN
@@ -252,7 +252,7 @@ void ikbd_send_joystick_message(int);
 
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM) // fixes Drag/Unlimited Bobs
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_FAKE_CUSTOM) // fixes Drag/Unlimited Bobs
 #define IKBD_SCANLINES_FROM_ABS_MOUSE_POLL_TO_SEND int((MONO) ? 50:60)
 #else
 #define IKBD_SCANLINES_FROM_ABS_MOUSE_POLL_TO_SEND int((MONO) ? 50:30)
@@ -305,17 +305,17 @@ logically connected to it. If a mouse disable command is received while port 0
   int reset_1214_hack;
   int joy_packet_pos;
   int mouse_packet_pos;
-#if defined(STEVEN_SEAGAL) //&& defined(SS_IKBD)
+#if defined(STEVEN_SEAGAL) //&& defined(SSE_IKBD)
 /*  WRT memory snapshots we can safely modify the structures, the size is 
     recorded along with data
 */
-#if defined(SS_ACIA_IRQ_DELAY)// not defined anymore (v3.5.2), see MFP
+#if defined(SSE_ACIA_IRQ_DELAY)// not defined anymore (v3.5.2), see MFP
   int timer_when_keyboard_info; // to improve accuracy of keyboard IRQ timing
 #endif
-#if defined(SS_IKBD_POLL_IN_FRAME)
+#if defined(SSE_IKBD_POLL_IN_FRAME)
   int scanline_to_poll; // each VBL, we poll IKBD during a random scanline
 #endif
-#if defined(SS_IKBD_FAKE_CUSTOM)
+#if defined(SSE_IKBD_FAKE_CUSTOM)
   int custom_prg_checksum; // for 6301 custom programs ID (boot & main)
   BOOL custom_prg_loading; // faking loader execution
   int custom_prg_ID; 
@@ -327,7 +327,7 @@ logically connected to it. If a mouse disable command is received while port 0
 
 }ikbd;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_FAKE_CUSTOM)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_FAKE_CUSTOM)
 #define IKBD_CUSTOM_DUMMY 1 
 #define IKBD_CUSTOM_SIGNAL 1 
 #define IKBD_DRAGONNELS_MENU 1
@@ -338,14 +338,14 @@ logically connected to it. If a mouse disable command is received while port 0
 BYTE keyboard_buffer_read();
 
 
-#if (defined(STEVEN_SEAGAL) && defined(SS_ACIA)) 
+#if (defined(STEVEN_SEAGAL) && defined(SSE_ACIA)) 
 //temp moved from emulator.h to have it compile
 #include "acia.h"
 ACIA_STRUCT acia[2];
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_IRQ_DELAY)
+#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_IRQ_DELAY)
 // not defined anymore (v3.5.2), see MFP
 inline void PrepareEventCheckForAciaIkbdIn() {
   if(acia[0].rx_stage)
@@ -353,7 +353,7 @@ inline void PrepareEventCheckForAciaIkbdIn() {
     int tt=ikbd.timer_when_keyboard_info+SS_6301_TO_ACIA_IN_CYCLES;
     if(acia[0].rx_stage==2)
     {
-      tt+=SS_ACIA_IRQ_DELAY_CYCLES; // fixes V8 Music Studio (from Hatari)
+      tt+=SSE_ACIA_IRQ_DELAY_CYCLES; // fixes V8 Music Studio (from Hatari)
     }
     if((time_of_next_event-tt) >= 0)
     {
@@ -371,4 +371,4 @@ inline void PrepareEventCheckForAciaIkbdIn() {
 #undef EXT
 #undef INIT
 
-#endif//SS_STRUCTURE_IKBD_H
+#endif//SSE_STRUCTURE_IKBD_H

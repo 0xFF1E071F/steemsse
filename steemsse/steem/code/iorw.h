@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_IORW_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_IORW_H)
 
 #include "iorw.decla.h"
 
-#else//!defined(SS_STRUCTURE_IORW_H)
+#else//!defined(SSE_STRUCTURE_IORW_H)
 
 #ifdef IN_EMU
 #define EXT
@@ -35,7 +35,7 @@ EXT bool io_word_access INIT(0);
 #undef EXT
 #undef INIT
 
-#endif//SS_STRUCTURE_IORW_H
+#endif//SSE_STRUCTURE_IORW_H
 
 /*
                              ----------------

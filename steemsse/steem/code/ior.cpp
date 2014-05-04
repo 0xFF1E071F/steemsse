@@ -5,18 +5,18 @@ DESCRIPTION: I/O address reads. This file contains crucial core functions
 that deal with reads from ST I/O addresses ($ff8000 onwards).
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: ior.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_IORW_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_IORW_H)
 bool io_word_access=false;
 #endif
 
 #define LOGSECTION LOGSECTION_IO
 
-#if !defined(STEVEN_SEAGAL) || !defined(SS_SHIFTER_SDP_READ) \
-  || defined(SS_SHIFTER_DRAW_DBG) || !defined(SS_STRUCTURE)
+#if !defined(STEVEN_SEAGAL) || !defined(SSE_SHIFTER_SDP_READ) \
+  || defined(SSE_SHIFTER_DRAW_DBG) || !defined(SSE_STRUCTURE)
 
 MEM_ADDRESS get_shifter_draw_pointer(int cycles_since_hbl)
 { 
@@ -110,7 +110,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
   }
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_IOR)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_IOR)
 /*  We've rewritten this full block because we don't want to directly return
     values, we think it's better style to assign the value to a variable 
     (ior_byte) then return it at the end, with eventual trace.
@@ -121,7 +121,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
 
   BYTE ior_byte=0xff; // default value
 
-#if defined(SS_MMU_WAKE_UP_IO_BYTES_R)
+#if defined(SSE_MMU_WAKE_UP_IO_BYTES_R)
   bool adjust_cycles=!io_word_access && MMU.OnMmuCycles(LINECYCLES);
   if(adjust_cycles)
     cpu_cycles+=-2; // = +2 cycles
@@ -155,14 +155,14 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
         (!io_word_access||!(addr & 1)) ) //Only cause bus jam once per word
       {
         BYTE wait_states=6;
-#if !defined(SS_ACIA_BUS_JAM_NO_WOBBLE)
+#if !defined(SSE_ACIA_BUS_JAM_NO_WOBBLE)
         wait_states+=(8000000-(ABSOLUTE_CPU_TIME-shifter_cycle_base))%10;
 #endif
 
-#if defined(SS_DEBUG_FRAME_REPORT_ACIA)
+#if defined(SSE_DEBUG_FRAME_REPORT_ACIA)
       FrameEvents.Add(scan_y,LINECYCLES,'a',wait_states);
 #endif
-#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
       if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_ACIA)
         FrameEvents.Add(scan_y,LINECYCLES,'a',wait_states);
 #endif
@@ -187,13 +187,13 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
        |     |Rx data register full ------------------------------'|
 */
 
-#if defined(SS_IKBD_6301)
+#if defined(SSE_IKBD_6301)
 
         if(HD6301EMU_ON)
         {
           ior_byte=ACIA_IKBD.SR; 
 
-#if defined(SS_ACIA_TDR_COPY_DELAY)
+#if defined(SSE_ACIA_TDR_COPY_DELAY)
 /*    
 Double buffering means that two bytes may be written very fast one after
 the other on TDR. The first byte will be transferred almost at once into
@@ -215,7 +215,7 @@ when it does).
           }
 #endif
 
-#if defined(SS_ACIA_IRQ_DELAY2)
+#if defined(SSE_ACIA_IRQ_DELAY2)
 /*  Not necessary for V8MS but it's logical
 */
           if(SSE_HACKS_ON && 
@@ -241,7 +241,7 @@ when it does).
       // ACIA keyboard read data
       case 0xfffc02:
         DEBUG_ONLY( if (mode!=STEM_MODE_CPU) return ACIA_IKBD.data; ) // boiler
-#if defined(SS_IKBD_6301)
+#if defined(SSE_IKBD_6301)
           
           if(HD6301EMU_ON)
           {
@@ -308,12 +308,12 @@ when it does).
       // ACIA MIDI read status
       case 0xfffc04:  // status
 
-#if defined(SS_IKBD_6301)
+#if defined(SSE_IKBD_6301)
 
         if(HD6301EMU_ON)
         {
           ior_byte=ACIA_MIDI.SR; 
-#if defined(SS_ACIA_TDR_COPY_DELAY)
+#if defined(SSE_ACIA_TDR_COPY_DELAY)
           if(abs(ACT-ACIA_MIDI.last_tx_write_time)<ACIA_TDR_COPY_DELAY)
           {
             TRACE_LOG("ACIA SR TDRE not set yet (%d)\n",ACT-ACIA_MIDI.last_tx_write_time);
@@ -340,11 +340,11 @@ when it does).
       case 0xfffc06:
         DEBUG_ONLY(if (mode!=STEM_MODE_CPU) return ACIA_MIDI.data);
 
-#if defined(SS_IKBD_6301)
+#if defined(SSE_IKBD_6301)
 
         if(HD6301EMU_ON)
         {
-#if defined(SS_MIDI_TRACE_BYTES_IN)
+#if defined(SSE_MIDI_TRACE_BYTES_IN)
           TRACE_LOG("MIDI Read RDR %X\n",ACIA_MIDI.RDR);
 #endif
           if (ACIA_MIDI.overrun==ACIA_OVERRUN_COMING){
@@ -495,7 +495,7 @@ when it does).
       bool Illegal=false;
       ior_byte=JoyReadSTEAddress(addr,&Illegal);
       if (Illegal
-#if defined(SS_STF_PADDLES)
+#if defined(SSE_STF_PADDLES)
         || ST_TYPE!=STE //  Ultimate Arena, thx Petari
 #endif
         )
@@ -520,10 +520,10 @@ when it does).
 
     case 0xff8a00:
       ior_byte=Blitter_IO_ReadB(addr); // STF crash there
-#if defined(SS_DEBUG_FRAME_REPORT_BLITTER)
+#if defined(SSE_DEBUG_FRAME_REPORT_BLITTER)
       FrameEvents.Add(scan_y,LINECYCLES,'b',((addr-0xff8a00)<<8)|ior_byte);
 #endif
-#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
       if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_BLITTER)
         FrameEvents.Add(scan_y,LINECYCLES,'b',((addr-0xff8a00)<<8)|ior_byte);
 #endif
@@ -538,7 +538,7 @@ when it does).
 
     case 0xff8900:    
       if(addr>0xff893f
-#if defined(SS_STF_DMA)
+#if defined(SSE_STF_DMA)
         ||(ST_TYPE!=STE)
 #endif
         )
@@ -572,7 +572,7 @@ when it does).
         case 0xff890B:   //MidByte of frame address counter
         case 0xff890D:   //LoByte of frame address counter
 
-#if defined(SS_DEBUG)
+#if defined(SSE_DEBUG)
           if(addr==0xff890d) 
             TRACE_LOG("F%d Y%d PC%X C%d Read DMA counter %X (%X->%X)\n",FRAME,scan_y,old_pc,LINECYCLES,dma_sound_fetch_address,dma_sound_start,dma_sound_end);
 #endif
@@ -691,7 +691,7 @@ when it does).
 
     case 0xff8600:   
 
-#if defined(SS_DMA) // taken out of here, in SSEFloppy
+#if defined(SSE_DMA) // taken out of here, in SSEFloppy
       ior_byte=Dma.IORead(addr);
 
 //if(addr==0xff8605) TRACE("pc %x read %x = %x\n",old_pc,addr,ior_byte);
@@ -838,7 +838,7 @@ when it does).
 
     case 0xff8200:
 
-#if defined(SS_SHIFTER_IO)
+#if defined(SSE_SHIFTER_IO)
       ior_byte=Shifter.IORead(addr);
       break;
 
@@ -991,7 +991,7 @@ FF8240 - FF827F   palette, res
       exception(BOMBS_BUS_ERROR,EA_READ,addr);
   }//sw
 
-#if defined(SS_DEBUG_TRACE_IO)
+#if defined(SSE_DEBUG_TRACE_IO)
   if(!io_word_access
     && (addr&0xFFFF00)!=0xFFFA00 // many MFP reads
     && addr!=0xFFFC02  // if IKBD data polling...
@@ -999,7 +999,7 @@ FF8240 - FF827F   palette, res
     TRACE_LOG("PC %X IOR.B %X = %X\n",pc-2,addr,ior_byte);
 #endif
 
-#if defined(SS_MMU_WAKE_UP_IO_BYTES_R)
+#if defined(SSE_MMU_WAKE_UP_IO_BYTES_R)
   if(adjust_cycles)
     cpu_cycles+=2; 
 #endif
@@ -1555,7 +1555,7 @@ FF8240 - FF827F   palette, res
 WORD ASMCALL io_read_w(MEM_ADDRESS addr)
 {
 
-#if defined(STEVEN_SEAGAL) && defined(SS_MMU_WAKE_UP_IOR_HACK)//no
+#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_WAKE_UP_IOR_HACK)//no
 
   WORD return_value;
   int CyclesIn=LINECYCLES;
@@ -1573,7 +1573,7 @@ WORD ASMCALL io_read_w(MEM_ADDRESS addr)
     WORD x=WORD(io_read_b(addr) << 8);
     x|=io_read_b(addr+1);
     io_word_access=0;
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_TRACE_IO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_TRACE_IO)
     TRACE_LOG("PC %X read word %X at %X\n",old_pc,x,addr);
 #endif
     return_value=x;
@@ -1587,14 +1587,14 @@ WORD ASMCALL io_read_w(MEM_ADDRESS addr)
   if (addr>=0xff8240 && addr<0xff8260){  //palette
     DEBUG_CHECK_READ_IO_W(addr);
     int n=addr-0xff8240;n/=2;
-#if defined(SS_SHIFTER_PALETTE_NOISE)
+#if defined(SSE_SHIFTER_PALETTE_NOISE)
 /*  When one reads the palette on a STF, the high bit of each nibble
     isn't always 0, nor always 1.
     The value could have something to do with the last values on the
     data bus, but we don't emulate that, we just add random noise.
 */
     WORD palette=STpal[n];
-#if defined(SS_STF)
+#if defined(SSE_STF)
     if(ST_TYPE!=STE)
       palette|=(0x888)&(rand()); // fixes UMD8730 STF, maybe Overscan Demos STF
 #endif
@@ -1607,7 +1607,7 @@ WORD ASMCALL io_read_w(MEM_ADDRESS addr)
     WORD x=WORD(io_read_b(addr) << 8);
     x|=io_read_b(addr+1);
     io_word_access=0;
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_TRACE_IO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_TRACE_IO)
     TRACE_LOG("PC %X read word %X at %X\n",old_pc,x,addr);
 #endif
     return x;

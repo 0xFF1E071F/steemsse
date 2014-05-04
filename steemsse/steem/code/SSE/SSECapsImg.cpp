@@ -2,7 +2,7 @@
 
 #if defined(STEVEN_SEAGAL)
 
-#if defined(SS_STRUCTURE_SSEFLOPPY_OBJ)
+#if defined(SSE_STRUCTURE_SSEFLOPPY_OBJ)
 #include "../pch.h"
 #include <cpu.decla.h>
 #include <fdc.decla.h>
@@ -18,28 +18,28 @@
 #endif
 EasyStr GetEXEDir();//#include <mymisc.h>//missing...
 
-#if defined(SS_DRIVE_IPF1)
+#if defined(SSE_DRIVE_IPF1)
 #include <stemdialogs.h>//temp...
 #include <diskman.decla.h>
 #endif
 
-#if !defined(SS_CPU)
+#if !defined(SSE_CPU)
 #include <mfp.decla.h>
 #endif
 
-#endif//#if defined(SS_STRUCTURE_SSEFLOPPY_OBJ)
+#endif//#if defined(SSE_STRUCTURE_SSEFLOPPY_OBJ)
 
 #include "SSECapsImg.h"
 #include "SSEDecla.h"
 #include "SSEDebug.h"
 #include "SSEFloppy.h"
 #include "SSEOption.h"
-#if defined(SS_DISK_GHOST)
+#if defined(SSE_DISK_GHOST)
 #include "SSEGhostDisk.h"
 #endif
 
 
-#if defined(SS_IPF) // Implementation of CAPS support in Steem
+#if defined(SSE_IPF) // Implementation of CAPS support in Steem
 
 #define CYCLES_PRE_IO 100 // those aren't
 #define CYCLES_POST_IO 100 // used
@@ -71,11 +71,11 @@ int TCaps::Init() {
   ContainerID[0]=ContainerID[1]=-1;
   LockedSide[0]=LockedSide[1]=-1;
   LockedTrack[0]=LockedTrack[1]=-1; 
-#if defined(SS_IPF_RUN_PRE_IO) || defined(SS_IPF_RUN_POST_IO)
+#if defined(SSE_IPF_RUN_PRE_IO) || defined(SSE_IPF_RUN_POST_IO)
   CyclesRun=0;
 #endif
-#if defined(SS_VAR_NOTIFY)
-  SetNotifyInitText(SS_IPF_PLUGIN_FILE);
+#if defined(SSE_VAR_NOTIFY)
+  SetNotifyInitText(SSE_IPF_PLUGIN_FILE);
 #endif
 
   CapsVersionInfo versioninfo;
@@ -95,7 +95,7 @@ int TCaps::Init() {
   // controller init
   WD1772.type=sizeof(CapsFdc);  // must be >=sizeof(CapsFdc)
   WD1772.model=cfdcmWD1772;
-  WD1772.clockfrq=SS_IPF_FREQU; 
+  WD1772.clockfrq=SSE_IPF_FREQU; 
   WD1772.drive=SF314; // ain't it cool?
   WD1772.drivecnt=2;
   WD1772.drivemax=0;
@@ -159,8 +159,8 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
     if((img_info->platform[i])!=ciipNA)
       TRACE_LOG("%s ",CAPSGetPlatformName(img_info->platform[i]));
     if(img_info->platform[i]==ciipAtariST 
-#if defined(SS_IPF_CTRAW) 
-#if defined(SS_DISK_IMAGETYPE)
+#if defined(SSE_IPF_CTRAW) 
+#if defined(SSE_DISK_IMAGETYPE)
       || ::SF314[drive].ImageType.Extension!=EXT_IPF
 #else
       || ::SF314[drive].ImageType!=DISK_IPF // the other SF314 (confusing)
@@ -221,11 +221,11 @@ void TCaps::WritePsgA(int data) {//TODO use data
 
 UDWORD TCaps::ReadWD1772(BYTE Line) {
 
-#if defined(SS_DEBUG)
+#if defined(SSE_DEBUG)
   Dma.UpdateRegs();
 #endif
 
-#if defined(SS_IPF_RUN_PRE_IO)
+#if defined(SSE_IPF_RUN_PRE_IO)
   CAPSFdcEmulate(&WD1772,CYCLES_PRE_IO);
   CyclesRun+=CYCLES_PRE_IO;
 #endif
@@ -246,7 +246,7 @@ UDWORD TCaps::ReadWD1772(BYTE Line) {
     }
   }
 
-#if defined(SS_IPF_RUN_POST_IO)
+#if defined(SSE_IPF_RUN_POST_IO)
   CAPSFdcEmulate(&WD1772,CYCLES_POST_IO);
   CyclesRun+=CYCLES_POST_IO;
 #endif
@@ -259,7 +259,7 @@ void TCaps::WriteWD1772(BYTE Line,int data) {
 
   Dma.UpdateRegs();
 
-#if defined(SS_IPF_RUN_PRE_IO)
+#if defined(SSE_IPF_RUN_PRE_IO)
   CAPSFdcEmulate(&WD1772,CYCLES_PRE_IO);
   CyclesRun+=CYCLES_PRE_IO;
 #endif  
@@ -273,7 +273,7 @@ void TCaps::WriteWD1772(BYTE Line,int data) {
       TRACE_LOG("IPF unimplemented command %x\n",data);
     }
 
-#if defined(SS_DRIVE_MOTOR_ON_IPF)
+#if defined(SSE_DRIVE_MOTOR_ON_IPF)
     // record time of motor start in hbl (TODO use)
     if(!(::WD1772.STR&FDC_STR_MOTOR_ON)) // assume no cycle run!
     {
@@ -287,7 +287,7 @@ void TCaps::WriteWD1772(BYTE Line,int data) {
 
   CAPSFdcWrite(&WD1772,Line,data); // send to DLL
 
-#if defined(SS_IPF_RUN_POST_IO)
+#if defined(SSE_IPF_RUN_POST_IO)
   CAPSFdcEmulate(&WD1772,CYCLES_POST_IO);
   CyclesRun+=CYCLES_POST_IO;
 #endif
@@ -297,13 +297,13 @@ void TCaps::WriteWD1772(BYTE Line,int data) {
 void TCaps::Hbl() {
 
   // we run cycles at each HBL if there's an IPF file in. Performance OK
-#if defined(SS_SHIFTER)
+#if defined(SSE_SHIFTER)
   ASSERT( Shifter.CurrentScanline.Cycles>100)
-#if defined(SS_IPF_RUN_PRE_IO) || defined(SS_IPF_RUN_POST_IO)
+#if defined(SSE_IPF_RUN_PRE_IO) || defined(SSE_IPF_RUN_POST_IO)
   ASSERT( Shifter.CurrentScanline.Cycles-Caps.CyclesRun>0 );
 #endif
   CAPSFdcEmulate(&WD1772,Shifter.CurrentScanline.Cycles
-#if defined(SS_IPF_RUN_PRE_IO) || defined(SS_IPF_RUN_POST_IO)
+#if defined(SSE_IPF_RUN_PRE_IO) || defined(SSE_IPF_RUN_POST_IO)
     -CyclesRun
 #endif
     );
@@ -311,7 +311,7 @@ void TCaps::Hbl() {
   CAPSFdcEmulate(&WD1772,screen_res==2? 224 : 512);
 #endif
 
-#if defined(SS_IPF_RUN_PRE_IO) || defined(SS_IPF_RUN_POST_IO)
+#if defined(SSE_IPF_RUN_PRE_IO) || defined(SSE_IPF_RUN_POST_IO)
   CyclesRun=0;
 #endif
 
@@ -328,7 +328,7 @@ int TCaps::IsIpf(int drive) {
 */
 
 void TCaps::CallbackDRQ(PCAPSFDC pc, UDWORD setting) {
-#if defined(SS_DEBUG) || !defined(VC_BUILD)
+#if defined(SSE_DEBUG) || !defined(VC_BUILD)
   Dma.UpdateRegs();
   ASSERT( Dma.MCR&BIT_7 ); // DMA enabled
   ASSERT(!(Dma.MCR&BIT_6)); // DMA enabled
@@ -338,7 +338,7 @@ void TCaps::CallbackDRQ(PCAPSFDC pc, UDWORD setting) {
 )
   {
 //Dma.UpdateRegs();
-#if defined(SS_DMA_DRQ)
+#if defined(SSE_DMA_DRQ)
     ::WD1772.DR=Caps.WD1772.r_data;
     Dma.Drq();
     Caps.WD1772.r_data=::WD1772.DR;
@@ -360,7 +360,7 @@ void TCaps::CallbackIRQ(PCAPSFDC pc, DWORD lineout) {
   ASSERT(pc==&Caps.WD1772);
   //TRACE_OSD("%X",::fdc_cr);
 
-#if defined(SS_DEBUG)
+#if defined(SSE_DEBUG)
   if(TRACE_ENABLED) 
   {
     TRACE("caps ");
@@ -371,13 +371,13 @@ void TCaps::CallbackIRQ(PCAPSFDC pc, DWORD lineout) {
 #endif
     Dma.UpdateRegs(); // why it only worked in boiler, log on...
   
-#if defined(SS_DRIVE_SOUND)
-  if(SSE_DRIVE_SOUND)
+#if defined(SSE_DRIVE_SOUND)
+  if(SSEOption.DriveSound)
   {
-#if defined(SS_DRIVE_SOUND_IPF)
+#if defined(SSE_DRIVE_SOUND_IPF)
     Dma.UpdateRegs(); // why it only worked in boiler, log on...
 #endif
-#if defined(SS_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
+#if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
     ::SF314[DRIVE].Sound_CheckIrq();
 #else
     ::SF314[0].Sound_CheckIrq();
@@ -385,12 +385,12 @@ void TCaps::CallbackIRQ(PCAPSFDC pc, DWORD lineout) {
   }
 #endif
   mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,!(lineout&CAPSFDC_LO_INTRQ));
-#if !defined(SS_OSD_DRIVE_LED3)
+#if !defined(SSE_OSD_DRIVE_LED3)
   disk_light_off_time=timeGetTime()+DisableDiskLightAfter;
 #endif
 }
 
-#if !defined(SS_DEBUG_TRACE_CONTROL)
+#if !defined(SSE_DEBUG_TRACE_CONTROL)
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_IPF_LOCK_INFO
 #endif
@@ -404,7 +404,7 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   UDWORD flags=DI_LOCK_DENALT|DI_LOCK_DENVAR|DI_LOCK_UPDATEFD|DI_LOCK_TYPE;
   int side=Caps.SF314[drive].side;
   ASSERT( side==!(psg_reg[PSGR_PORT_A]& BIT_0) );
-#if defined(SS_DRIVE_SINGLE_SIDE_IPF)
+#if defined(SSE_DRIVE_SINGLE_SIDE_IPF)
   if( SSEOption.SingleSideDriveMap&(floppy_current_drive()+1) )
     side=0;
 #endif
@@ -416,13 +416,13 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
 //    ASSERT( track!=Caps.LockedTrack[drive] || side!=Caps.LockedSide[drive] );
     VERIFY( !CAPSUnlockTrack(Caps.ContainerID[drive],Caps.LockedTrack[drive],
       Caps.LockedSide[drive]) );
-#if defined(SS_DEBUG_TRACE_CONTROL)
+#if defined(SSE_DEBUG_TRACE_CONTROL)
     if(TRACE_MASK3 & TRACE_CONTROL_FDCIPF1)
 #endif
     TRACE_LOG("CAPS Unlock %c:S%dT%d\n",drive+'A',Caps.LockedSide[drive],
       Caps.LockedTrack[drive]);
-#if defined(SS_IPF_CTRAW_REV)
-#if defined(SS_DISK_IMAGETYPE)
+#if defined(SSE_IPF_CTRAW_REV)
+#if defined(SSE_DISK_IMAGETYPE)
     if(::SF314[drive].ImageType.Extension!=EXT_IPF)
 #else
     if(::SF314[drive].ImageType!=DISK_IPF)
@@ -458,8 +458,8 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   Caps.LockedSide[drive]=side;
   Caps.LockedTrack[drive]=track;
 
-#if defined(SS_IPF_TRACE_SECTORS)  // debug info
-#if defined(SS_DEBUG_TRACE_CONTROL) // controlled by boiler now (3.6.1)
+#if defined(SSE_IPF_TRACE_SECTORS)  // debug info
+#if defined(SSE_DEBUG_TRACE_CONTROL) // controlled by boiler now (3.6.1)
   if(TRACE_MASK3 & TRACE_CONTROL_FDCIPF2)
   {
 #endif
@@ -484,7 +484,7 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
       CSI.gapws0mode,   // gap size mode before write splice
       CSI.gapws1mode);   // gap size mode after write splice
   }
-#if defined(SS_DEBUG_TRACE_CONTROL)
+#if defined(SSE_DEBUG_TRACE_CONTROL)
   }
 #endif
 #endif

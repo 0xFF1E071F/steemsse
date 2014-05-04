@@ -6,11 +6,11 @@ of Steem's DirID system. A DirID is an integer representing a PC input that
 can be mapped to perform a function.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: dir_id.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DIRID_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DIRID_H)
 char *KeyboardButtonName[256]={NULL};
 #endif
 

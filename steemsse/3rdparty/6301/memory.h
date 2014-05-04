@@ -38,7 +38,7 @@ extern u_char  *ram;		/* Physical storage for simulated RAM */
  * There is currently no breaks_start and breaks_end variables,
  * so another start value than 0 will not work.
  */
-#if !defined(SS_IKBD_6301_DISABLE_BREAKS)
+#if !defined(SSE_IKBD_6301_DISABLE_BREAKS)
 extern u_char *breaks;		/* Physical storage for breakpoints */
 extern int    break_flag;	/* Non-zero if an address containing a
 				   breakpoint has been accessed by mem_xxx */
@@ -53,7 +53,7 @@ mem_getb (addr)
 	u_int addr;
 {
 	int offs = addr - ireg_start;
-#if !defined(SS_IKBD_6301_DISABLE_BREAKS)
+#if !defined(SSE_IKBD_6301_DISABLE_BREAKS)
   if (breaks[addr]) {
 		break_flag = 1; /* Signal execution loop to stop */
 		break_addr = addr;
@@ -61,7 +61,7 @@ mem_getb (addr)
 #endif
   ASSERT(!ireg_start);
   if (offs >= 0 && offs < NIREGS) {
-#if defined(SS_IKBD_6301_CHECK_IREG_WO) // some registers are write-only
+#if defined(SSE_IKBD_6301_CHECK_IREG_WO) // some registers are write-only
     if(offs==DDR1||offs==DDR2||offs==DDR3||offs==DDR4
       ||offs==TDR) 
     {
@@ -81,7 +81,7 @@ mem_getb (addr)
     } else if (addr >= ram_start && addr <= ram_end) {
     return ram[addr];
   } else {
-#if defined(SS_IKBD_6301_DISABLE_CALLSTACK)
+#if defined(SSE_IKBD_6301_DISABLE_CALLSTACK)
     error ("mem_getb: addr=%04x\n",addr);
 #else
     error ("mem_getb: addr=%04x, subroutine %04x\n",
@@ -110,14 +110,14 @@ mem_putb (addr, value)
 	u_char  value;
 {
 	int offs = addr - ireg_start; /* Address of on-chip memory */
-#if !defined(SS_IKBD_6301_DISABLE_BREAKS)
+#if !defined(SSE_IKBD_6301_DISABLE_BREAKS)
 	if (breaks[addr]) {
 		break_flag = 1; /* Signal execution loop to stop */
 		break_addr = addr;
 	}
 #endif
 	if (offs >= 0 && offs < NIREGS) {
-#if defined(SS_IKBD_6301_CHECK_IREG_RO) // some registers are read-only
+#if defined(SSE_IKBD_6301_CHECK_IREG_RO) // some registers are read-only
     if(offs==RDR||offs==FRC||offs==ICR)
     {
 #if !defined(NDEBUG)
@@ -131,7 +131,7 @@ mem_putb (addr, value)
 		else
 			iram [offs] = value;
 	} else if (addr >= ram_start && addr <= ram_end) {
-#if defined(SS_IKBD_6301_TRACE_WRITES)
+#if defined(SSE_IKBD_6301_TRACE_WRITES)
 		// "watches"
 		switch(addr) {
                 case 0x88: // init
@@ -143,7 +143,7 @@ mem_putb (addr, value)
 #endif
 		ram [addr] = value;
 	} else {
-#if defined(SS_IKBD_6301_DISABLE_CALLSTACK)
+#if defined(SSE_IKBD_6301_DISABLE_CALLSTACK)
     error ("mem_putb: addr=%04x\n",	addr);
 #else
 		error ("mem_putb: addr=%04x, subroutine %04x\n",

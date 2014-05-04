@@ -4,7 +4,7 @@ MODULE: Steem
 DESCRIPTION: The dialogs that can be shown by the Disk Manager.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: diskman_diags.cpp")
 #endif
 
@@ -362,7 +362,7 @@ void TDiskManager::ShowLinksDiag()
 }
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-#ifndef SS_VAR_NO_WINSTON
+#ifndef SSE_VAR_NO_WINSTON
 void TDiskManager::ShowImportDiag()
 {
   ImportDiag=CreateWindowEx(WS_EX_CONTROLPARENT,"Steem Disk Manager Dialog",T("Import WinSTon Favourites"),WS_CAPTION,
@@ -1027,7 +1027,7 @@ LRESULT __stdcall TDiskManager::Dialog_WndProc(HWND Win,UINT Mess,WPARAM wPar,LP
     switch (Mess){
       case WM_COMMAND:
         switch (LOWORD(wPar)){
-#ifndef SS_VAR_NO_WINSTON
+#ifndef SSE_VAR_NO_WINSTON
           case IDOK:
             if (This->DoImport()==0) break;
 #endif
@@ -1258,7 +1258,7 @@ bool TDiskManager::DoCreateMultiLinks()
 }
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-#ifndef SS_VAR_NO_WINSTON
+#ifndef SSE_VAR_NO_WINSTON
 bool TDiskManager::ImportDiskExists(char *Disk,EasyStr &FullDisk)
 {
   if (Disk==NULL) return 0;
@@ -1297,7 +1297,7 @@ bool TDiskManager::ImportDiskExists(char *Disk,EasyStr &FullDisk)
 }
 #endif
 //---------------------------------------------------------------------------
-#ifndef SS_VAR_NO_WINSTON
+#ifndef SSE_VAR_NO_WINSTON
 HRESULT TDiskManager::CreateLinkCheckForOverwrite(char *LinkPath,char *TargetPath,
                           IShellLink *Link,IPersistFile* File)
 {
@@ -1332,7 +1332,7 @@ HRESULT TDiskManager::CreateLinkCheckForOverwrite(char *LinkPath,char *TargetPat
 }
 #endif
 //---------------------------------------------------------------------------
-#ifndef SS_VAR_NO_WINSTON
+#ifndef SSE_VAR_NO_WINSTON
 bool TDiskManager::DoImport()
 {
   WinSTonPath.SetLength(MAX_PATH);

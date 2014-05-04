@@ -4,7 +4,7 @@
 
 // This h file will be included in a C and in a C++ module
 // so it's gotta be compatible.
-#if defined(SS_IKBD_6301)
+#if defined(SSE_IKBD_6301)
 
 #include "SSEDecla.h"
 
@@ -29,13 +29,13 @@ struct THD6301 {
 #ifdef __cplusplus //isolate member functions, for C it's just POD
   THD6301();
   ~THD6301();
-#if defined(SS_DEBUG) || defined(SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT)
+#if defined(SSE_DEBUG) || defined(SSE_IKBD_MOUSE_OFF_JOYSTICK_EVENT)
   void InterpretCommand(BYTE ByteIn);
-#if defined(SS_DEBUG)
+#if defined(SSE_DEBUG)
   void ReportCommand();
 #endif
 #endif
-#if defined(SS_ACIA_DOUBLE_BUFFER_TX)
+#if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
   void ReceiveByte(BYTE data);
 #endif
   void ResetChip(int Cold);
@@ -43,7 +43,7 @@ struct THD6301 {
   void Init();
 #endif
   BYTE Initialised; // we do need a rom
-#if defined(SS_IKBD_6301_RUN_CYCLES_AT_IO)
+#if defined(SSE_IKBD_6301_RUN_CYCLES_AT_IO)
   BYTE RunThisHbl; 
 #endif
   BYTE Crashed; // oops
@@ -66,6 +66,6 @@ extern
 #endif
 struct THD6301 HD6301;
 
-#endif//#if defined(SS_IKBD_6301)
+#endif//#if defined(SSE_IKBD_6301)
 
 #endif//#ifndef SSE6301_H

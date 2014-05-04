@@ -1,9 +1,9 @@
 #pragma once
-#if !defined(CPU_DECLA_H) //&& defined(SS_STRUCTURE_CPU_H)
+#if !defined(CPU_DECLA_H) //&& defined(SSE_STRUCTURE_CPU_H)
 #define CPU_DECLA_H
 //#pragma message("CPU_DECLA_H")
 
-#if defined(SS_STRUCTURE_SSECPU_OBJ)
+#if defined(SSE_STRUCTURE_SSECPU_OBJ)
 
 #include <binary.h>
 #include <conditions.h>
@@ -14,7 +14,7 @@
 #include "iorw.decla.h"
 #include "steemh.decla.h"
 
-#endif//#if defined(SS_STRUCTURE_SSECPU_OBJ)
+#endif//#if defined(SSE_STRUCTURE_SSECPU_OBJ)
 
 // those are pointers (variables)!
 extern void (*m68k_high_nibble_jump_table[16])();
@@ -79,13 +79,13 @@ LONG m68k_fetchL();
 void ASMCALL perform_crash_and_burn();
 void m68k_unrecognised();
 
-#if defined(SS_VAR_REWRITE)//compiler warning
+#if defined(SSE_VAR_REWRITE)//compiler warning
 extern "C" void ASMCALL m68k_trace(); //execute instruction with trace bit set
 #else
 extern "C" ASMCALL void m68k_trace(); //execute instruction with trace bit set
 #endif
 
-#if defined(SS_CPU_DIV)
+#if defined(SSE_CPU_DIV)
 extern "C" unsigned getDivu68kCycles( unsigned long dividend, unsigned short divisor);
 extern "C" unsigned getDivs68kCycles( signed long dividend, signed short divisor);
 #endif
@@ -141,7 +141,7 @@ extern jmp_buf *pJmpBuf;
 
 #define areg (r+8)
 
-#ifdef SS_CPU_ALT_REG_NAMES
+#ifdef SSE_CPU_ALT_REG_NAMES
 #define D0 r[0]
 #define SP areg[7]  // note Steem already defines USP and SSP
 #endif
@@ -154,7 +154,7 @@ extern LONG  m68k_lpeek(MEM_ADDRESS ad);
 
 extern void cpu_routines_init();
 
-#if !defined(SS_CPU_DIV)
+#if !defined(SSE_CPU_DIV)
 extern int m68k_divu_cycles,m68k_divs_cycles;
 #endif
 
@@ -183,7 +183,7 @@ extern int m68k_divu_cycles,m68k_divs_cycles;
 #define SR_USER_BYTE 31
 #define SR_TRACE (WORD(BIT_f))
 
-#if defined(SS_VAR_REWRITE)
+#if defined(SSE_VAR_REWRITE)
 #define SUPERFLAG ( ((sr&SR_SUPER)!=0) ) // warning C4800
 #else
 #define SUPERFLAG ((bool)(sr&SR_SUPER))
@@ -198,7 +198,7 @@ inline void m68k_poke(MEM_ADDRESS ad,BYTE x);
 inline void m68k_dpoke(MEM_ADDRESS ad,WORD x);
 inline void m68k_lpoke(MEM_ADDRESS ad,LONG x);
 
-#if !defined(SS_CPU_POKE)
+#if !defined(SSE_CPU_POKE)
 //must keep them inline also for debug or double def
 inline void m68k_poke_abus(BYTE x);
 inline void m68k_dpoke_abus(WORD x);
@@ -221,7 +221,7 @@ inline  void m68k_lpoke(MEM_ADDRESS ad,LONG x){
 }
 #endif
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU)) // inlined in SSECpu.h
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU)) // inlined in SSECpu.h
 #define INSTRUCTION_TIME(t) {cpu_cycles-=(t);}
 #define INSTRUCTION_TIME_ROUND(t) {INSTRUCTION_TIME(t); cpu_cycles&=-4;}
 #endif
@@ -300,7 +300,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     EXTRA_PREFETCH               \
   }
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU))
 // SS I can't find one instance where checkints is passed.
 #define M68K_PERFORM_RTE(checkints)             \
             SET_PC(m68k_lpeek(r[15]+2));        \
@@ -312,7 +312,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 
 #endif
 
-#if defined(SS_CPU_INLINE_PREFETCH_SET_PC)
+#if defined(SSE_CPU_INLINE_PREFETCH_SET_PC)
 #define PREFETCH_SET_PC M68000.PrefetchSetPC();
 #else
   #define PREFETCH_SET_PC                       \
@@ -321,7 +321,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
   lpfetch+=MEM_DIR;  /*let's not cause exceptions here*/
 #endif
 
-#if !defined(SS_CPU)
+#if !defined(SSE_CPU)
 #define SET_PC(ad)        \
     pc=ad;                               \
     pc_high_byte=pc & 0xff000000;     \
@@ -360,7 +360,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     PREFETCH_SET_PC
 #endif
 
-#if !defined(SS_CPU)
+#if !defined(SSE_CPU)
 #define FETCH_W(dest_word)              \
   if(prefetched_2){                     \
     dest_word=prefetch_buf[0];            \
@@ -374,13 +374,13 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
   if(lpfetch MEM_GE lpfetch_bound)exception(BOMBS_BUS_ERROR,EA_FETCH,pc);
 #endif
 
-#if !defined(SS_CPU)
+#if !defined(SSE_CPU)
 #define FETCH_TIMING {INSTRUCTION_TIME(4); cpu_cycles&=-4;} 
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_MMU_NO_CONFUSION) 
-// SS_MMU_NO_CONFUSION isn't defined
+#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_NO_CONFUSION) 
+// SSE_MMU_NO_CONFUSION isn't defined
 
 #define m68k_SET_DEST_B_TO_ADDR        \
   abus&=0xffffff;                                   \
@@ -468,7 +468,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
   }
 
 
-#elif defined(SS_DEBUG_MONITOR_VALUE4) // changing the order of set/check
+#elif defined(SSE_DEBUG_MONITOR_VALUE4) // changing the order of set/check
 
 
 #define m68k_SET_DEST_B_TO_ADDR        \
@@ -500,7 +500,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     DEBUG_CHECK_WRITE_B(abus); \
   }
 
-#if defined(SS_CPU_SET_DEST_TO_0)
+#if defined(SSE_CPU_SET_DEST_TO_0)
 
 // 3.6.1 disgusting targeted hack for Aladin, TODO = change
 // those macros into regular code, part inline part function
@@ -537,7 +537,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     DEBUG_CHECK_WRITE_W(abus);  \
   }
 
-#else//!SS_CPU_SET_DEST_TO_0 //todo, it's defined
+#else//!SSE_CPU_SET_DEST_TO_0 //todo, it's defined
 #define m68k_SET_DEST_W_TO_ADDR        \
   abus&=0xffffff;                                   \
   if(abus&1){                                      \
@@ -635,7 +635,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     }                                           \
   }
 
-#if defined(SS_CPU_SET_DEST_TO_0)
+#if defined(SSE_CPU_SET_DEST_TO_0)
 
 // 3.6.1 disgusting targeted hack for Aladin, TODO = change
 // those macros into regular code, part inline part function
@@ -673,7 +673,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     }                                           \
   }
 
-#else//!SS_CPU_SET_DEST_TO_0
+#else//!SSE_CPU_SET_DEST_TO_0
 
 #define m68k_SET_DEST_W_TO_ADDR        \
   abus&=0xffffff;                                   \
@@ -739,7 +739,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     }                                           \
   }
 
-#endif//#if defined(STEVEN_SEAGAL) && defined(SS_MMU_NO_CONFUSION)
+#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_NO_CONFUSION)
 
 
 #define m68k_SET_DEST_B(addr)           \
@@ -756,7 +756,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 
 
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH))
 #define EXTRA_PREFETCH                    \
   prefetch_buf[1]=*lpfetch;              \
   prefetched_2=true;
@@ -775,7 +775,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 #define IOACCESS_INTERCEPT_OS2 BIT_13
 
 #ifdef ENABLE_LOGFILE
-#define IOACCESS_DEBUG_MEM_WRITE_LOG BIT_14
+#define IOACCESSE_DEBUG_MEM_WRITE_LOG BIT_14
 extern MEM_ADDRESS debug_mem_write_log_address;
 extern int debug_mem_write_log_bytes;
 #endif
@@ -783,7 +783,7 @@ extern int debug_mem_write_log_bytes;
 #define STOP_INTS_BECAUSE_INTERCEPT_OS bool(ioaccess & (IOACCESS_INTERCEPT_OS | IOACCESS_INTERCEPT_OS2))
 
 
-#if defined(SS_STRUCTURE_SSECPU_OBJ)
+#if defined(SSE_STRUCTURE_SSECPU_OBJ)
 inline void change_to_user_mode();
 inline void change_to_supervisor_mode();
 #else
@@ -799,7 +799,7 @@ extern signed int compare_buffer;
 //(old_pc+2)
 //(old_dpc+2)
 
-#if !(defined(STEVEN_SEAGAL)&&defined(SS_CPU)) // inlined in SSECpu.h
+#if !(defined(STEVEN_SEAGAL)&&defined(SSE_CPU)) // inlined in SSECpu.h
 #define m68k_GET_SOURCE_B m68k_jump_get_source_b[(ir&BITS_543)>>3]()
 #define m68k_GET_SOURCE_W m68k_jump_get_source_w[(ir&BITS_543)>>3]()
 #define m68k_GET_SOURCE_L m68k_jump_get_source_l[(ir&BITS_543)>>3]()
@@ -1064,7 +1064,7 @@ extern signed int compare_buffer;
 #define m68k_GET_IMMEDIATE_L m68k_src_l=m68k_fetchL();pc+=4; 
 #define m68k_IMMEDIATE_B (signed char)m68k_fetchB()
 #define m68k_IMMEDIATE_W (short)m68k_fetchW()
-#if !defined(SS_VAR_REWRITE)
+#if !defined(SSE_VAR_REWRITE)
 #define m68k_IMMEDIATE_L (long)m68k_fetchL() // SS unused
 #endif
 
@@ -1088,7 +1088,7 @@ extern signed int compare_buffer;
 
 extern void sr_check_z_n_l_for_r0();
 
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU)
+#if defined(STEVEN_SEAGAL) && defined(SSE_CPU)
 #define SET_PC(ad) M68000.SetPC(ad);
 #elif defined(STEVEN_SEAGAL)
 // ...
@@ -1097,14 +1097,14 @@ extern void sr_check_z_n_l_for_r0();
 extern void set_pc(MEM_ADDRESS);
 #endif
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU))
 extern void perform_rte();
 #endif
 
 extern void sr_check_z_n_l_for_r0();
 extern void m68k_process();
 
-#if !(defined(STEVEN_SEAGAL)&&defined(SS_STRUCTURE_CPU_POKE_NOINLINE))
+#if !(defined(STEVEN_SEAGAL)&&defined(SSE_STRUCTURE_CPU_POKE_NOINLINE))
 #define m68k_poke m68k_poke_noinline
 #define m68k_dpoke m68k_dpoke_noinline
 #define m68k_lpoke m68k_lpoke_noinline
@@ -1113,7 +1113,7 @@ extern void m68k_dpoke_noinline(MEM_ADDRESS ad,WORD x);
 extern void m68k_lpoke_noinline(MEM_ADDRESS ad,LONG x);
 #endif
 
-#ifdef SS_STRUCTURE_SSECPU_OBJ
+#ifdef SSE_STRUCTURE_SSECPU_OBJ
 inline void change_to_user_mode()
 {
 //  if(SUPERFLAG){
@@ -1134,7 +1134,7 @@ inline void change_to_supervisor_mode()
 
 
 
-#if !defined(SS_CPU_POKE)
+#if !defined(SSE_CPU_POKE)
 NOT_DEBUG(inline) void m68k_poke_abus(BYTE x){
   abus&=0xffffff;
   if(abus>=MEM_IO_BASE){
@@ -1143,7 +1143,7 @@ NOT_DEBUG(inline) void m68k_poke_abus(BYTE x){
     else
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
   }else if(abus>=himem){
-#if !defined(SS_MMU_NO_CONFUSION)
+#if !defined(SSE_MMU_NO_CONFUSION)
     if (mmu_confused){
       mmu_confused_set_dest_to_addr(1,true);
       m68k_DEST_B=x;
@@ -1172,7 +1172,7 @@ NOT_DEBUG(inline) void m68k_dpoke_abus(WORD x){
     else
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
   }else if(abus>=himem){
-#if !defined(SS_MMU_NO_CONFUSION)
+#if !defined(SSE_MMU_NO_CONFUSION)
     if(mmu_confused){
       mmu_confused_set_dest_to_addr(2,true);
       m68k_DEST_W=x;
@@ -1201,7 +1201,7 @@ NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x){
     else
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
   }else if(abus>=himem){
-#if !defined(SS_MMU_NO_CONFUSION)
+#if !defined(SSE_MMU_NO_CONFUSION)
     if(mmu_confused){
       mmu_confused_set_dest_to_addr(4,true);
       m68k_DEST_L=x;

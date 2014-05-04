@@ -6,13 +6,13 @@
 #define DISK_COMPRESSED 2
 #define DISK_PASTI 3
 //SS this should be improved
-#if defined(SS_DRIVE_IPF1)
+#if defined(SSE_DRIVE_IPF1)
 #define DISK_IPF 4
 #endif
-#if defined(SS_IPF_CTRAW)
+#if defined(SSE_IPF_CTRAW)
 #define DISK_CTR 5
 #endif
-#if defined(SS_SCP)
+#if defined(SSE_SCP)
 #define DISK_SCP 7
 #endif
 
@@ -54,12 +54,12 @@ private:
   static LRESULT __stdcall Dialog_WndProc(HWND,UINT,WPARAM,LPARAM);
   static int CALLBACK CompareFunc(LPARAM,LPARAM,LPARAM);
   void BeginDrag(int,HWND),MoveDrag(),EndDrag(int,int,bool);
-#ifndef SS_VAR_NO_WINSTON
+#ifndef SSE_VAR_NO_WINSTON
   HRESULT CreateLinkCheckForOverwrite(char *,char *,IShellLink *,IPersistFile *);
   bool ImportDiskExists(char *,EasyStr &);
 #endif
   bool DoCreateMultiLinks()
-#ifndef SS_VAR_NO_WINSTON    
+#ifndef SSE_VAR_NO_WINSTON    
     ,DoImport()
 #endif
   ;
@@ -137,10 +137,10 @@ public:
 
 #ifdef WIN32
 #if defined(STEVEN_SEAGAL)
-#if defined(SS_PASTI_ON_WARNING2)
+#if defined(SSE_PASTI_ON_WARNING2)
   void RefreshPastiStatus();
 #endif
-#if defined(SS_VAR_OPTION_SLOW_DISK)
+#if defined(SSE_VAR_OPTION_SLOW_DISK)
   void RefreshSnails();
 #endif
 #endif
@@ -179,7 +179,7 @@ public:
   bool AtHome;
   bool ExplorerFolders;
 
-#ifndef SS_VAR_NO_WINSTON
+#ifndef SSE_VAR_NO_WINSTON
   EasyStr WinSTonPath,WinSTonDiskPath,ImportPath;
   bool ImportOnlyIfExist;
   int ImportConflictAction;

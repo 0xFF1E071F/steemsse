@@ -158,7 +158,7 @@ u_int offs;
       if(found)
       {
         value&=~mask; // clear bit
-#if defined(SS_IKBD_6301_TRACE_KEYS)
+#if defined(SSE_IKBD_6301_TRACE_KEYS)
         TRACE("Read DR1 %X\n",value);
 #endif
       }
@@ -226,7 +226,7 @@ static dr2_getb (offs)
     Y# vertical movement
 */
 
-#if defined(SS_IKBD_6301_MOUSE_MASK)
+#if defined(SSE_IKBD_6301_MOUSE_MASK)
 #define MOUSE_MASK 0xCCCCCCCC // fixes Jumping Jackson auto
 #else
 #define MOUSE_MASK 0x33333333 // series of 11001100... for rotation

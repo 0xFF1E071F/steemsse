@@ -2,9 +2,9 @@
 #include "../pch.h"
 #include "SSEMMU.h"
 
-#if defined(SS_MMU)
+#if defined(SSE_MMU)
 
-#if defined(SS_MMU_WAKE_UP_DL)
+#if defined(SSE_MMU_WAKE_UP_DL)
 /*
 +------------------------------------------------------------+---------------+
 | Steem  option    |              Wake-up concepts           |    Cycle      |

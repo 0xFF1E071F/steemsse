@@ -13,17 +13,17 @@ V3.5.1: fake emu for reprogramming nuked (avoid bloat)
 V3.6.0: all non 6301 true emu mods removed (ACIA + IKBD)
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: ikbd.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_IKBD_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_IKBD_H)
 
 #define EXT
 #define INIT(s) =s
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
 //extern "C" int ST_Key_Down[128];
 #else
 EXT bool ST_Key_Down[128];
@@ -38,7 +38,7 @@ EXT int mouse_speed INIT(10);
 
 EXT int mouse_move_since_last_interrupt_x,mouse_move_since_last_interrupt_y;
 EXT bool mouse_change_since_last_interrupt;
-#if !(defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301))
 EXT int mousek;
 #endif
 #ifndef CYGWIN
@@ -115,7 +115,7 @@ const int ikbd_clock_max_val[6]={99,12,0,23,59,59};
 
 IKBD_STRUCT ikbd;
 
-#if (defined(STEVEN_SEAGAL) && defined(SS_ACIA)) 
+#if (defined(STEVEN_SEAGAL) && defined(SSE_ACIA)) 
 ACIA_STRUCT acia[2];
 #endif
 
@@ -208,7 +208,7 @@ void IKBD_VBL()
     if (IsJoyActive(N_JOY_PARALLEL_0)) stick[N_JOY_PARALLEL_0]|=BIT_4;
     if (IsJoyActive(N_JOY_PARALLEL_1)) stick[N_JOY_PARALLEL_1]|=BIT_4;
   }
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
   if(HD6301EMU_ON) ; else // we write no packets ourselves, the ROM will do it
 #endif
   switch (ikbd.joy_mode){
@@ -398,7 +398,7 @@ void IKBD_VBL()
       mouse_move_since_last_interrupt_x=0;
       mouse_move_since_last_interrupt_y=0;
     }
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
     else if(HD6301EMU_ON)
     {
       HD6301.MouseVblDeltaX=HD6301.MouseVblDeltaY=0;
@@ -445,14 +445,14 @@ void IKBD_VBL()
     if (ModDown & b00001100) mss.LCtrl=true;
     if (ModDown & b00110000) mss.LAlt=true;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_REWRITE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_REWRITE)
     if((bool)ST_Key_Down[key_table[VK_LSHIFT]]!=mss.LShift){
 #else
     if (ST_Key_Down[key_table[VK_LSHIFT]]!=mss.LShift){
 #endif
       HandleKeyPress(VK_LSHIFT,mss.LShift==0,IGNORE_EXTEND);
     }
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_REWRITE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_REWRITE)
     if((bool)ST_Key_Down[key_table[VK_RSHIFT]]!=mss.RShift){
 #else
     if (ST_Key_Down[key_table[VK_RSHIFT]]!=mss.RShift){
@@ -520,12 +520,12 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
   log(EasyStr("IKBD: At ")+hbl_count+" receives $"+HEXSl(src,2));
   TRACE_LOG("IKBD RDRS->RDR $%X\n",src);
 
-#if (defined(SS_DEBUG) || defined(SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT)) && defined(SS_ACIA)
+#if (defined(SSE_DEBUG) || defined(SSE_IKBD_MOUSE_OFF_JOYSTICK_EVENT)) && defined(SSE_ACIA)
   // our powerful 6301 command interpreter, working for both emulations
   HD6301.InterpretCommand(src); 
 #endif
 
-#if defined(SS_IKBD_6301)
+#if defined(SSE_IKBD_6301)
   if(HD6301EMU_ON  && !HD6301.Crashed)
   {
     ACIA_IKBD.SR|=BIT_1; // TDRE
@@ -535,7 +535,7 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
       mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0); //trigger IRQ
     }
 
-#if defined(SS_ACIA_DOUBLE_BUFFER_TX)
+#if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
     /*  If there's a byte in TDR waiting to be shifted, do it now.
     */
     ACIA_IKBD.LineTxBusy=false;
@@ -546,9 +546,9 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
     //TRACE_LOG("6301 RDRS->RDR %X\n",src);
     hd6301_transmit_byte(src);// send byte to 6301 emu
     
-#if defined(SS_IKBD_6301_RUN_CYCLES_AT_IO)//no...
+#if defined(SSE_IKBD_6301_RUN_CYCLES_AT_IO)//no...
     ASSERT(!HD6301.RunThisHbl); 
-#if defined(SS_SHIFTER)
+#if defined(SSE_SHIFTER)
     int n6301cycles=Shifter.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
 #else
     int n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
@@ -1312,7 +1312,7 @@ or FIRE BUTTON MONITORING mode.
                                       ikbd.abs_mouse_scale_y,
                                       0,0,0,0,(-1));
         break;
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD)
  // we want it to hit default
 #else
       case 0x8d: /*DEAD*/ break;
@@ -1327,7 +1327,7 @@ or FIRE BUTTON MONITORING mode.
         }
         keyboard_buffer_write_string(0,0,0,0,0,0,(-1));
         break;
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD)
 #else
       case 0x91: /*DEAD*/ break;
 #endif
@@ -1340,7 +1340,7 @@ or FIRE BUTTON MONITORING mode.
         }
         keyboard_buffer_write_string(0,0,0,0,0,0,(-1));
         break;
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD)
 #else
       case 0x93: /*DEAD*/ break;
 #endif
@@ -1358,7 +1358,7 @@ or FIRE BUTTON MONITORING mode.
         }
         break;
       }
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD)
 #else
       case 0x96: /*DEAD*/ break;
       case 0x97: /*DEAD*/ break;
@@ -1384,7 +1384,7 @@ or FIRE BUTTON MONITORING mode.
 //---------------------------------------------------------------------------
 void agenda_keyboard_replace(int) {
 
-#if defined(SS_IKBD_6301)
+#if defined(SSE_IKBD_6301)
   if(HD6301EMU_ON) 
   {
     if (keyboard_buffer_length){ //temp still use those var?
@@ -1392,7 +1392,7 @@ void agenda_keyboard_replace(int) {
         keyboard_buffer_length--;
         ASSERT( keyboard_buffer_length>=0 );
 
-#if defined(SS_ACIA_DOUBLE_BUFFER_RX)
+#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
         // here we should take care of next byte but we have another
         // problem anyway (txinterrupts)
         ASSERT( ACIA_IKBD.LineRxBusy );
@@ -1422,7 +1422,7 @@ void agenda_keyboard_replace(int) {
           ACIA_IKBD.RDR=ACIA_IKBD.RDRS; // transfer shifted byte
           ACIA_IKBD.SR|=BIT_0; // set RDR full
 
-#if defined(SS_ACIA_IRQ_DELAY2)
+#if defined(SSE_ACIA_IRQ_DELAY2)
 /*  This variable was defined but never used in Steem, we use it now for
     a little hack.
 */
@@ -1447,7 +1447,7 @@ void agenda_keyboard_replace(int) {
     {
       agenda_add(agenda_keyboard_replace,SS_6301_TO_ACIA_IN_HBL,0);
       ACIA_IKBD.RDRS=keyboard_buffer[keyboard_buffer_length-1];
-#if defined(SS_ACIA_DOUBLE_BUFFER_RX)
+#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
       ACIA_IKBD.LineRxBusy=true;
 #endif
     }
@@ -1501,16 +1501,16 @@ void keyboard_buffer_write_n_record(BYTE src)
 
 void keyboard_buffer_write(BYTE src) {
 
-#if defined(SS_IKBD_6301)
+#if defined(SSE_IKBD_6301)
   if(HD6301EMU_ON)
   {
 
-#if defined(SS_ACIA_DOUBLE_BUFFER_RX)
+#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
     if(!ACIA_IKBD.LineRxBusy)
     {
 #endif
       ACIA_IKBD.RDRS=src; // byte is being shifted
-#if defined(SS_ACIA_DOUBLE_BUFFER_RX)
+#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
     }
     ACIA_IKBD.LineRxBusy=true;
 #endif
@@ -1573,10 +1573,10 @@ void ikbd_mouse_move(int x,int y,int mousek,int max_mouse_move)
 {
   log(EasyStr("Mouse moves ")+x+","+y);
   
-#if defined(STEVEN_SEAGAL) &&defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) &&defined(SSE_IKBD_6301)
   if(HD6301EMU_ON)
   {
-#if defined(SS_IKBD_6301_MOUSE_ADJUST_SPEED)
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
     //TODO still our attempts to get a smoother mouse
     const int max_step=20+20*screen_res; //18
     const int multiplier=1; //2
@@ -1703,7 +1703,7 @@ void ikbd_reset(bool Cold)
   ASSERT( Cold || !HD6301EMU_ON );// !!! always //check this
   agenda_delete(agenda_keyboard_reset);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
   if(HD6301EMU_ON)
   {
     if(HD6301_OK) 
@@ -1773,7 +1773,7 @@ void agenda_keyboard_reset(int SendF0) // SS scheduled by ikbd_reset()
   }else{
     log(EasyStr("IKBD: Finished reset at ")+hbl_count);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
     if(HD6301EMU_ON) 
       HD6301.ResetProgram();
     else
@@ -1795,7 +1795,7 @@ void agenda_keyboard_reset(int SendF0) // SS scheduled by ikbd_reset()
     }
     ikbd.mouse_button_press_what_message=0; // Hack to fix No Second Prize
     ikbd.send_nothing=0; // Fix Just Bugging (probably correct though)
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
     if(!HD6301EMU_ON) 
 #endif
     for (int n=1;n<118;n++){
@@ -1806,7 +1806,7 @@ void agenda_keyboard_reset(int SendF0) // SS scheduled by ikbd_reset()
   }
   ikbd.resetting=0;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_IRQ_DELAY)
+#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_IRQ_DELAY)
   ikbd.timer_when_keyboard_info=0;
 #endif
 

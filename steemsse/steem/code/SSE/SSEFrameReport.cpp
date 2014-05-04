@@ -2,7 +2,7 @@
 
 #if defined(STEVEN_SEAGAL)
 
-#if defined(SS_STRUCTURE_SSEFRAMEREPORT_OBJ)
+#if defined(SSE_STRUCTURE_SSEFRAMEREPORT_OBJ)
 #include "../pch.h"
 #include <conditions.h>
 #include <easystr.h>
@@ -18,7 +18,7 @@
 
 
 
-#if defined(SS_DEBUG_FRAME_REPORT)
+#if defined(SSE_DEBUG_FRAME_REPORT)
 
 // based on a copy of SSEShifterEvents, with 'Frame' instead of
 // 'Shifter'
@@ -31,11 +31,11 @@ TFrameEvents::TFrameEvents() {
 } 
 
 
-#if defined(SS_DEBUG_REPORT_SDP_ON_CLICK)
+#if defined(SSE_DEBUG_REPORT_SDP_ON_CLICK)
 MEM_ADDRESS TFrameEvents::GetSDP(int x,int guessed_scan_y) {
   MEM_ADDRESS sdp=NULL;
   int i,j;
-#if defined(SS_DEBUG_FRAME_REPORT_MASK) //skip if not recorded
+#if defined(SSE_DEBUG_FRAME_REPORT_MASK) //skip if not recorded
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SDP_LINES) 
 #endif
   for(i=1; i<=MAX_EVENTS ;i++)
@@ -92,12 +92,12 @@ int TFrameEvents::Report() {
     _strdate( sdate );
     _strtime( stime );
     fprintf(fp,"Steem frame report - %s -%s \n%s WS%d\n",sdate,stime,
-#if defined(SS_STF)
+#if defined(SSE_STF)
       st_model_name[ST_TYPE]
 #else
       "STE"
 #endif
-#if defined(SS_MMU_WAKE_UP_DL)
+#if defined(SSE_MMU_WAKE_UP_DL)
       ,MMU.WS[WAKE_UP_STATE]);
 #else
     ,0;
@@ -152,18 +152,18 @@ void TFrameEvents::ReportLine() {
 
 
 int TFrameEvents::Vbl() {
-#if defined(SS_SHIFTER_REPORT_VBL_TRICKS)
+#if defined(SSE_SHIFTER_REPORT_VBL_TRICKS)
   if(Debug.ShifterTricks)
   {
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_VIDEO
-#if defined(SS_DEBUG_TRACE_CONTROL)
+#if defined(SSE_DEBUG_TRACE_CONTROL)
     if(TRACE_MASK1 & TRACE_CONTROL_SUMMARY)
 #endif
       TRACE_LOG("VBL %d shifter tricks %X\n",nVbl,Debug.ShifterTricks);
 #undef LOGSECTION
 
-#if defined(SS_OSD_CONTROL)
+#if defined(SSE_OSD_CONTROL)
     if(OSD_MASK2 & OSD_CONTROL_SHIFTERTRICKS)
 #else
     if(TRACE_ENABLED) 
@@ -186,6 +186,6 @@ int TFrameEvents::Vbl() {
   return rv;
 }
 
-#endif//#if defined(SS_DEBUG_FRAME_REPORT)
+#endif//#if defined(SSE_DEBUG_FRAME_REPORT)
 
 #endif//#if defined(STEVEN_SEAGAL)

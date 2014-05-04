@@ -10,7 +10,7 @@
 #include "reg.h"
 
 #ifdef USE_PROTOTYPES
-#if !defined(SS_IKBD_6301_DISABLE_CALLSTACK)
+#if !defined(SSE_IKBD_6301_DISABLE_CALLSTACK)
 #include "callstac.h"
 #endif
 #endif
@@ -19,7 +19,7 @@ struct regs regs;
 
 reg_setsp (value) u_int value;
 {
-#if !defined(SS_IKBD_6301_DISABLE_CALLSTACK)
+#if !defined(SSE_IKBD_6301_DISABLE_CALLSTACK)
 	if (value > regs.sp)
 	{
 		/*

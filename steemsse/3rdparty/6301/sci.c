@@ -52,7 +52,7 @@ int nbytes;
 {
   int i;
   u_char trcsr=iram[TRCSR];
-#if defined(SS_IKBD_6301_CHECK_COMMANDS)
+#if defined(SSE_IKBD_6301_CHECK_COMMANDS)
   int pc=reg_getpc(); // word
 #endif
 
@@ -79,15 +79,15 @@ int nbytes;
     //recvbuf[0]=recvbuf[rxinterrupts-1]; // replace 
     rxinterrupts=1; // there can be only one byte to read
   }
-#if defined(SS_IKBD_6301_CHECK_COMMANDS)
-#if defined(SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT)
+#if defined(SSE_IKBD_6301_CHECK_COMMANDS)
+#if defined(SSE_IKBD_MOUSE_OFF_JOYSTICK_EVENT)
 /*  Hack for Jumping Jackson Auto.
     3.6.0:
     What happens: DISABLE MOUSE is internally followed by RESUME, which
     triggers reading of some variables.
     The mouse bits at rest are 00, this is interpreted as a joystick
     move event.
-    So this is undefined, check SS_IKBD_6301_MOUSE_MASK
+    So this is undefined, check SSE_IKBD_6301_MOUSE_MASK
 */
   if(HD6301.LastCommand==0x12 && SSE_HACKS_ON)
   {
@@ -166,7 +166,7 @@ trcsr_getb (offs)
   else
     rv&= ~RDRF;
 
-#if defined(SS_ACIA_DOUBLE_BUFFER_RX)
+#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
 /*  This is guess work
 */
   if(!ACIA_IKBD.LineRxBusy||!ACIA_IKBD.ByteWaitingRx)
@@ -175,7 +175,7 @@ trcsr_getb (offs)
     rv&=~TDRE; // is full
 #endif
 
-#if defined(SS_IKBD_6301_TRACE_STATUS)
+#if defined(SSE_IKBD_6301_TRACE_STATUS)
   if(ACIA_IKBD.LineRxBusy&&!ACIA_IKBD.ByteWaitingRx&&(rv&TDRE))
     TRACE("TRCSR %X transmit OK, line busy\n",rv);
   else if(rv&TDRE)
@@ -201,7 +201,7 @@ trcsr_putb (offs, value)
   if(value&1)
     TRACE("Set 6301 stand-by\n");
   
-#if defined(SS_IKBD_6301_SET_TDRE)
+#if defined(SSE_IKBD_6301_SET_TDRE)
 /*  Here we do as if the program could set bit 5 of TRCSR - correct?
     Cobra Compil 1: if we don't, "keyboard panic" (maybe we're compensating
     another bug)
@@ -210,7 +210,7 @@ trcsr_putb (offs, value)
   if(value&TDRE/*0x20*/) 
   {
     if((value & TIE)
-#if defined(SS_ACIA_DOUBLE_BUFFER_RX)
+#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
       &&!ACIA_IKBD.LineRxBusy
 #endif
       ) 
@@ -255,7 +255,7 @@ rdr_getb (offs)
     if (rxinterrupts) {
 
       rec_byte=recvbuf[rxindex];
-#if defined(SS_IKBD_6301_TRACE_SCI_RX)
+#if defined(SSE_IKBD_6301_TRACE_SCI_RX)
       TRACE("6301 SCI read RX $%x (#%d)\n",rec_byte,rxindex);
 #endif
 
@@ -314,14 +314,14 @@ tdr_putb (offs, value)
     txinterrupts = 1;
 #endif
 
-#if defined(SS_ACIA_DOUBLE_BUFFER_RX)
+#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
 /*  Froggies: the line is never busy, but bytes are transmitted when
     the ACIA is in overrun. If we "blocked" them, Froggies wouldn't work
     at all.
 */
   if(ACIA_IKBD.LineRxBusy)
   {
-#if defined(SS_IKBD_6301_TRACE_SCI_TX)
+#if defined(SSE_IKBD_6301_TRACE_SCI_TX)
     TRACE("HD6301: $%X waits in TDR\n",value);
 #endif
     ASSERT( !ACIA_IKBD.ByteWaitingRx );
@@ -330,7 +330,7 @@ tdr_putb (offs, value)
   else
 #endif
   {
-#if defined(SS_IKBD_6301_TRACE_SCI_TX)
+#if defined(SSE_IKBD_6301_TRACE_SCI_TX)
     TRACE("HD6301: $%X ->ACIA RDRS\n",value);
 #endif
     keyboard_buffer_write(value); // call Steem's ikbd function

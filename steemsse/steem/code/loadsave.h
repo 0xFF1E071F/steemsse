@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_LOADSAVE_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_LOADSAVE_H)
 
 #include "loadsave.decla.h"
 
-#else//!SS_STRUCTURE_LOADSAVE_H
+#else//!SSE_STRUCTURE_LOADSAVE_H
 
 #if defined(STEVEN_SEAGAL)
 // rather silly but so we leave the define here
@@ -54,4 +54,4 @@ extern void LoadState(GoodConfigStoreFile *);
 extern void SaveState(ConfigStoreFile *);
 #endif
 
-#endif//!SS_STRUCTURE_LOADSAVE_H
+#endif//!SSE_STRUCTURE_LOADSAVE_H

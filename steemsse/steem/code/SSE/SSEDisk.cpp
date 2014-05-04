@@ -4,7 +4,7 @@
 
 #include "../pch.h"
 
-#if defined(SS_DISK)
+#if defined(SSE_DISK)
 
 #endif//disk
 

@@ -2,8 +2,8 @@
 #ifndef SSEVIDEO_H
 #define SSEVIDEO_H
 
-#if defined(SS_VIDEO)
+#if defined(SSE_VIDEO)
 
-#endif //defined(SS_VIDEO)
+#endif //defined(SSE_VIDEO)
 
 #endif//SSEVIDEO_H

@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_HARDDISKMAN_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_HARDDISKMAN_H)
 #pragma once
 #endif
 
-#if defined(SS_STRUCTURE_SSEDEBUG_OBJ)
+#if defined(SSE_STRUCTURE_SSEDEBUG_OBJ)
 #include <stemdialogs.decla.h>
 #endif
 
@@ -59,6 +59,6 @@ public:
 };
 
 
-#if defined(SS_STRUCTURE_SSEDEBUG_OBJ)
+#if defined(SSE_STRUCTURE_SSEDEBUG_OBJ)
 extern THardDiskManager HardDiskMan; // singleton defined in main.cpp
 #endif

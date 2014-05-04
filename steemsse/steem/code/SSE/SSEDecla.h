@@ -54,7 +54,7 @@ typedef unsigned char BYTE;
 // Hacks //
 ///////////
 
-#if ! defined(SS_SSE_CONFIG_STRUCT)
+#if ! defined(SSE_SSE_CONFIG_STRUCT)
 extern
 #ifdef __cplusplus
  "C" 
@@ -64,7 +64,7 @@ int iDummy;// can be l-value
 
 
 
-#if defined(SS_HACKS)
+#if defined(SSE_HACKS)
 extern 
 #ifdef __cplusplus
  "C" 
@@ -78,7 +78,7 @@ int SS_signal; // "handy" global mask (future coding horror case)
 // IKBD //
 //////////
 
-#if defined(SS_IKBD)
+#if defined(SSE_IKBD)
 
 #endif
 
@@ -87,7 +87,7 @@ int SS_signal; // "handy" global mask (future coding horror case)
 // INTERRUPT //
 ///////////////
 
-#if defined(SS_MFP_RATIO) 
+#if defined(SSE_MFP_RATIO) 
 #define CPU_CYCLES_PER_MFP_CLK CpuMfpRatio
 #endif
 
@@ -96,9 +96,9 @@ int SS_signal; // "handy" global mask (future coding horror case)
 // IPF //
 /////////
 
-#if defined(SS_IPF)
+#if defined(SSE_IPF)
 
-#if defined(WIN32) && defined(SS_DELAY_LOAD_DLL)
+#if defined(WIN32) && defined(SSE_DELAY_LOAD_DLL)
 
 #ifdef _MSC_VER
 #pragma comment(lib, "../../3rdparty/caps/CAPSImg.lib")
@@ -129,7 +129,7 @@ int SS_signal; // "handy" global mask (future coding horror case)
 // VARIOUS //
 /////////////
 
-#if defined(SS_DELAY_LOAD_DLL)
+#if defined(SSE_DELAY_LOAD_DLL)
 // Delay loading DLLs
 // No switch because code depends on it and it's desireable,
 // and we can't make a switch for Borland (option directly in makefile)
@@ -164,17 +164,17 @@ FARPROC WINAPI MyLoadFailureHook(dliNotification dliNotify, DelayLoadInfo * pdli
 #define LINECYCLES (ABSOLUTE_CPU_TIME-LINECYCLE0) 
 #define FRAMECYCLES (ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl)
 
-#if defined(SS_SHIFTER) && defined(SS_DEBUG)
+#if defined(SSE_SHIFTER) && defined(SSE_DEBUG)
 #define FRAME (Shifter.nVbl) 
-#elif defined(SS_DEBUG_FRAME_REPORT)
+#elif defined(SSE_DEBUG_FRAME_REPORT)
 #define FRAME (FrameEvents.nVbl)
 #else 
 #define FRAME (-1)
 #endif
 
-#if defined(SS_VIDEO)
+#if defined(SSE_VIDEO)
 
-#if defined(SS_VID_RECORD_AVI) && defined(__cplusplus)
+#if defined(SSE_VID_RECORD_AVI) && defined(__cplusplus)
 #define _T(X) X
 #define _tcscpy strcpy
 #define _tcsncpy strncpy
@@ -184,7 +184,7 @@ extern BYTE video_recording;
 extern char *video_recording_codec;
 #endif
 
-#if defined(SS_VID_BORDERS)
+#if defined(SSE_VID_BORDERS)
 extern BYTE SideBorderSize,BottomBorderSize, SideBorderSizeWin;
 #define BORDER_SIDE SideBorderSize // avoids much rewriting in Steem!!!!!!!!!!!
 #define BORDER_EXTRA (SideBorderSize-ORIGINAL_BORDER_SIDE) // 0 8 16, in pixels
@@ -192,20 +192,20 @@ extern BYTE SideBorderSize,BottomBorderSize, SideBorderSizeWin;
 int ChangeBorderSize(int size); // gui.cpp
 
 
-#if defined(SS_VID_BORDERS_LB_DX1) // see SSEDecla.h
+#if defined(SSE_VID_BORDERS_LB_DX1) // see SSEDecla.h
 #define BORDER_40 (SSEOption.DisplaySize==1&&border) // avoids verbosity
 #endif
 
 
 #endif
 
-#if defined(SS_VID_BORDERS_BIGTOP) // more hacks...
+#if defined(SSE_VID_BORDERS_BIGTOP) // more hacks...
 #undef BORDER_TOP
 #define BORDER_TOP (  (DISPLAY_SIZE==BIGGEST_DISPLAY) \
   ? BIG_BORDER_TOP : ORIGINAL_BORDER_TOP )
 #endif
 
-#if defined(SS_VID_FREEIMAGE4)
+#if defined(SSE_VID_FREEIMAGE4)
 #ifdef _MSC_VER
 #pragma comment(lib,"../../3rdparty/FreeImage/FreeImage.lib")
 #ifndef SS_VS2012_DELAYDLL
@@ -220,14 +220,14 @@ int ChangeBorderSize(int size); // gui.cpp
 
 #endif
 
-#if defined(SS_VID_SCANLINES_INTERPOLATED)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED)
 
-#if defined(SS_VID_SCANLINES_INTERPOLATED_SSE)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
 
 #define SCANLINES_INTERPOLATED \
  (SSE_INTERPOLATE/*&&draw_win_mode[screen_res]==DWM_GRILLE*/&&!mixed_output&&screen_res<2)
 
-#elif defined(SS_VID_SCANLINES_INTERPOLATED_MED)
+#elif defined(SSE_VID_SCANLINES_INTERPOLATED_MED)
 
 #define SCANLINES_INTERPOLATED \
  (draw_win_mode[screen_res]==DWM_STRETCH_SCANLINES&&!mixed_output&&screen_res<2)
@@ -241,7 +241,7 @@ int ChangeBorderSize(int size); // gui.cpp
 
 #endif
 
-#if !defined(SS_VID_SCANLINES_INTERPOLATED_SSE) //unix
+#if !defined(SSE_VID_SCANLINES_INTERPOLATED_SSE) //unix
 #define SCANLINES_INTERPOLATED (false)
 #endif
 
@@ -250,7 +250,7 @@ int ChangeBorderSize(int size); // gui.cpp
 #endif
 
 #ifdef __cplusplus
-#if defined(SS_OSD_SCROLLER_CONTROL)
+#if defined(SSE_OSD_SCROLLER_CONTROL)
 #include "../../../include/easystr.h"
 
 struct TOsdControl {

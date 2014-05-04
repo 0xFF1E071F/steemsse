@@ -4,20 +4,20 @@ MODULE: emu
 DESCRIPTION: Emulation of the STE only blitter chip.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: blitter.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_BLITTER_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_BLITTER_H)
 TBlitter Blit;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_BLT_TIMING)
+#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING)
 /*  This follows a table giving total execution times.
     Using this or Steem's way seems to give equivalent results.
     Steem's way should be more accurate anyway, using this table, 
     up to 3x4 cycles are added at once. Normally we keep Steem's
-    system (SS_BLT_TIMING isn't defined).
+    system (SSE_BLT_TIMING isn't defined).
     Lines are OP, columns HOP. The comment columns are the original timings.
 */
 int blitter_cycles[16][4]= 
@@ -84,7 +84,7 @@ void Blitter_DPoke(MEM_ADDRESS abus,WORD x)
     CATCH_M68K_EXCEPTION
     END_M68K_EXCEPTION
   }else if (abus>=MEM_FIRST_WRITEABLE && abus<himem){
-#if defined(SS_DEBUG_MONITOR_VALUE2)
+#if defined(SSE_DEBUG_MONITOR_VALUE2)
     DPEEK(abus)=x;
     DEBUG_CHECK_WRITE_W(abus);
 #else
@@ -222,7 +222,7 @@ void Blitter_Blit_Word() //SS Data is blitted word by word
       }
     }else{
       Blitter_ReadSource(Blit.SrcAdr);
-#if !defined(STEVEN_SEAGAL) || !defined(SS_BLT_TIMING)
+#if !defined(STEVEN_SEAGAL) || !defined(SSE_BLT_TIMING)
       INSTRUCTION_TIME_ROUND(4);
 #endif
     }
@@ -306,7 +306,7 @@ void Blitter_Blit_Word() //SS Data is blitted word by word
   if (Blit.NeedDestRead || Blit.Mask!=0xffff){
     DestDat=Blitter_DPeek(Blit.DestAdr);
     NewDat=DestDat & WORD(~(Blit.Mask));
-#if !defined(STEVEN_SEAGAL) ||!defined(SS_BLT_TIMING)
+#if !defined(STEVEN_SEAGAL) ||!defined(SSE_BLT_TIMING)
     INSTRUCTION_TIME_ROUND(4);
 #endif
   }else{
@@ -349,7 +349,7 @@ void Blitter_Blit_Word() //SS Data is blitted word by word
 
   Blitter_DPoke(Blit.DestAdr,NewDat); //SS writing the word to dest
 
-#if defined(STEVEN_SEAGAL) && defined(SS_BLT_TIMING) 
+#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING) 
   INSTRUCTION_TIME_ROUND(blitter_cycles[Blit.Op][Blit.Hop]*4); // all at once
 #else
   INSTRUCTION_TIME_ROUND(4);
@@ -444,9 +444,9 @@ void Blitter_Draw()
 //#endif
 
   Blit.HasBus=true;
-#if defined(STEVEN_SEAGAL) && defined(SS_BLT_BLIT_MODE_CYCLES)
-  Blit.TimeToCheckIrq=ABSOLUTE_CPU_TIME+SS_BLT_BLIT_MODE_IRQ_CHK;
-  Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+SS_BLT_BLIT_MODE_CYCLES;
+#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_BLIT_MODE_CYCLES)
+  Blit.TimeToCheckIrq=ABSOLUTE_CPU_TIME+SSE_BLT_BLIT_MODE_IRQ_CHK;
+  Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+SSE_BLT_BLIT_MODE_CYCLES;
 #else
   Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+64;
 #endif
@@ -471,12 +471,12 @@ void Blitter_Draw()
         CHECK_BREAKPOINT
       }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_BLT_BLIT_MODE_CYCLES)
+#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_BLIT_MODE_CYCLES)
       // make sure to check for interrupts often enough
       if(!Blit.Hog 
         && ABSOLUTE_CPU_TIME-Blit.TimeToCheckIrq>=0)
       {
-        Blit.TimeToCheckIrq+=SS_BLT_BLIT_MODE_IRQ_CHK;
+        Blit.TimeToCheckIrq+=SSE_BLT_BLIT_MODE_IRQ_CHK;
         check_for_interrupts_pending();
       }
 #endif
@@ -490,9 +490,9 @@ void Blitter_Draw()
             }else{
               log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Swapping bus to CPU at "+ABSOLUTE_CPU_TIME);
             }
-#if defined(SS_BLT_BLIT_MODE_CYCLES)
-            Blit.TimeToCheckIrq=Blit.TimeToSwapBus+SS_BLT_BLIT_MODE_IRQ_CHK;
-            Blit.TimeToSwapBus+=SS_BLT_BLIT_MODE_CYCLES;
+#if defined(SSE_BLT_BLIT_MODE_CYCLES)
+            Blit.TimeToCheckIrq=Blit.TimeToSwapBus+SSE_BLT_BLIT_MODE_IRQ_CHK;
+            Blit.TimeToSwapBus+=SSE_BLT_BLIT_MODE_CYCLES;
 #else
             Blit.TimeToSwapBus+=64;
 #endif
@@ -500,7 +500,7 @@ void Blitter_Draw()
         }
       }else{
         Blit.HasBus=false;  
-#if defined(SS_BLT_BLIT_MODE_CYCLES)
+#if defined(SSE_BLT_BLIT_MODE_CYCLES)
         Blit.TimeToCheckIrq=0;
 #endif
         break;
@@ -516,7 +516,7 @@ void Blitter_Draw()
     while (cpu_cycles<=0){
       screen_event_vector();
       prepare_next_event();
-#if defined(STEVEN_SEAGAL) && defined(SS_BLT_HOG_MODE_INTERRUPT)
+#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_HOG_MODE_INTERRUPT)
 /*  
 " The Hog-Mode of the Blitter does not allow the CPU to access to bus while 
 the Blitter is active - Not even for interrupts. "
@@ -552,7 +552,7 @@ BYTE Blitter_IO_ReadB(MEM_ADDRESS Adr)
   return 0;
 #else
 	
-#if defined(STEVEN_SEAGAL) && defined(SS_STF_BLITTER)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STF_BLITTER)
 /*  When TOS>1.00 resets, it tests for Blitter.
     There was a blitter on (some!) Mega STF, in this emulation you're entitled
     to a blitter without having to place an order with Atari.
@@ -637,7 +637,7 @@ void Blitter_IO_WriteB(MEM_ADDRESS Adr,BYTE Val)
   return;
 #else
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STF_BLITTER)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STF_BLITTER)
   if(ST_TYPE!=STE && ST_TYPE!=MEGASTF)
   {
     TRACE_LOG("STF: no blitter exception in iow\n");
@@ -867,13 +867,13 @@ Byte instructions can not be used to read or write this register.
 */
     case 0x38:
       WORD_B_1(&Blit.YCount)=Val;
-#if defined(STEVEN_SEAGAL) && defined(SS_BLT_YCOUNT)
+#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_YCOUNT)
       Blit.YCount&=0xFFFF; // hack, YCount is now 32bit
 #endif
       return;
     case 0x39:
       WORD_B_0(&Blit.YCount)=Val;
-#if defined(STEVEN_SEAGAL) && defined(SS_BLT_YCOUNT)
+#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_YCOUNT)
       if (Blit.YCount==0) 
         Blit.YCount=65536; // hack... (TODO)
 #endif
@@ -962,7 +962,7 @@ Byte instructions can not be used to read or write this register.
           TRACE_LOG("F%d y%d c%d Blt %X Hg%d Hp%d Op%d x%d y%d NF%d FX%d Sk%d from %X (x+%d y+%d) to %X (x+%d y+%d) Msk %X %X %X\n",
             FRAME,scan_y,LINECYCLES,Val,Blit.Hog,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.NFSR,Blit.FXSR,Blit.Skew,Blit.SrcAdr,Blit.SrcXInc,Blit.SrcYInc,Blit.DestAdr,Blit.DestXInc,Blit.DestYInc,Blit.EndMask[0],Blit.EndMask[1],Blit.EndMask[2]);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_BLT_OVERLAP)//TODO
+#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_OVERLAP)//TODO
           // GEM doc viewer, Braindamage - no glitch visible
           if(!(Blit.SrcAdr > Blit.DestAdr || Blit.DestAdr-Blit.SrcAdr>Blit.XCount/2)) // bad test!
           {
@@ -1010,9 +1010,9 @@ Byte instructions can not be used to read or write this register.
           Blit.HasBus=true;
 //          Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+64;
 
-#if defined(SS_BLT_BLIT_MODE_CYCLES)
-          Blit.TimeToCheckIrq=Blit.TimeToSwapBus+SS_BLT_BLIT_MODE_IRQ_CHK;
-          Blit.TimeToSwapBus+=SS_BLT_BLIT_MODE_CYCLES;
+#if defined(SSE_BLT_BLIT_MODE_CYCLES)
+          Blit.TimeToCheckIrq=Blit.TimeToSwapBus+SSE_BLT_BLIT_MODE_IRQ_CHK;
+          Blit.TimeToSwapBus+=SSE_BLT_BLIT_MODE_CYCLES;
 #else
           Blit.TimeToSwapBus+=64;
 #endif

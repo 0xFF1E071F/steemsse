@@ -58,7 +58,7 @@ extern HINSTANCE hUnzip;
 #include <unrarlib/unrarlib/unrarlib.h>	
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
 #include <UnRARDLL/unrar.h>
 void LoadUnrarDLL();
 #endif
@@ -82,7 +82,7 @@ public:
 #ifdef RAR_SUPPORT
   ArchiveList_struct *rar_list,*rar_current;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
   // persistent, good idea?
   RAROpenArchiveData ArchiveData;
   RARHeaderData HeaderData; // no Ex?

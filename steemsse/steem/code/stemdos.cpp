@@ -5,11 +5,11 @@ DESCRIPTION: Steem's virtual hard drive emulation. This is achieved through
 intercepting ST OS calls and translating them to PC OS calls.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: stemdos.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STEMDOS_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_STEMDOS_H)
 
 #define EXT
 #define INIT(s) =s
@@ -58,16 +58,16 @@ int stemdos_current_drive;
 #undef EXT
 #undef INIT
 
-#ifdef SS_TOS_STRUCT
+#ifdef SSE_TOS_STRUCT
 
 TTos Tos;
 
 #endif
 
-#endif//#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STEMDOS_H)
+#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_STEMDOS_H)
 
 
-#ifdef SS_DEBUG
+#ifdef SSE_DEBUG
 #include <acc.decla.h>
 #endif
 
@@ -402,7 +402,7 @@ void stemdos_read(int h,MEM_ADDRESS sp)
   }
   r[0]=c; //number of characters read
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
+#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DRIVE_LED)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -426,7 +426,7 @@ void stemdos_write(int h,MEM_ADDRESS sp)
   }
   r[0]=c; //number of characters written
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
+#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DRIVE_LED)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -462,7 +462,7 @@ void stemdos_seek(int h,MEM_ADDRESS sp)
     r[0]=ftell(stemdos_file[h].f);
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
+#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DRIVE_LED)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -482,7 +482,7 @@ void stemdos_Fdatime(int h,MEM_ADDRESS sp)
 #ifdef WIN32
       FILETIME local_ft;
       DirSearch ds(stemdos_file[h].filename);
-#if defined(SS_TOS_FILETIME_FIX) //from Petari
+#if defined(SSE_TOS_FILETIME_FIX) //from Petari
       FileTimeToLocalFileTime(&ds.LastWriteTime,&local_ft); // Convert from GMT
 #else
       FileTimeToLocalFileTime(&ds.CreationTime,&local_ft); // Convert from GMT
@@ -632,14 +632,14 @@ void stemdos_fsnext()
             WORD CreateDate,CreateTime;
 #ifdef WIN32
             FILETIME lft;
-#if defined(SS_TOS_FILETIME_FIX) //from Petari
+#if defined(SSE_TOS_FILETIME_FIX) //from Petari
             FileTimeToLocalFileTime(&ds.LastWriteTime,&lft); // File time is always GMT
 #else
             FileTimeToLocalFileTime(&ds.CreationTime,&lft); // File time is always GMT
 #endif
             FileTimeToDosDateTime(&lft,&CreateDate,&CreateTime);
 #elif defined(UNIX)
-#if defined(SS_TOS_FILETIME_FIX) //from Petari
+#if defined(SSE_TOS_FILETIME_FIX) //from Petari
             CreateDate=WORD(ds.LastWriteTime >> 16);
             CreateTime=WORD(ds.LastWriteTime);
 #else
@@ -657,7 +657,7 @@ void stemdos_fsnext()
 
             m68k_poke(stemdos_dta+28,BYTE((ds.SizeLow & 0xff00) >> 8) ); //file size, mid-low byte
             m68k_poke(stemdos_dta+29,BYTE(ds.SizeLow & 0xff) ); //file size, low byte
-#if !defined(SS_TOS_GEMDOS_VAR1) //function does nothing
+#if !defined(SSE_TOS_GEMDOS_VAR1) //function does nothing
             PCStringToST(fname);
 #endif
             for (int n=0;n<14;n++) m68k_poke(stemdos_dta+30+n,fname[n]);
@@ -752,7 +752,7 @@ void stemdos_mkdir()
     r[0]=0; //succeed!
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
+#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DRIVE_LED)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -769,7 +769,7 @@ void stemdos_rmdir()
     r[0]=0; //succeed!
   }
 //  TRACE_LOG("RM dir %s : %d\n",PC_filename.Text,D0);
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
+#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DRIVE_LED)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -795,7 +795,7 @@ void stemdos_Fdelete()
     r[0]=0; //succeed!
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
+#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DRIVE_LED)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -804,7 +804,7 @@ void stemdos_Fdelete()
 void stemdos_Fattrib()
 {
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
+#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DRIVE_LED)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -857,7 +857,7 @@ void stemdos_Fattrib()
 void stemdos_rename()
 {
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
+#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DRIVE_LED)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -1046,7 +1046,7 @@ void stemdos_Pexec() //called from stemdos_rte, nothing done after this fn calle
           //->OK same as when intercepting, so it's like the 0 had been
           //transformed into a 4
           m68k_dpoke(sp,0x4b);  //SS PEXEC
-#if defined(SS_TOS_GEMDOS_PEXEC6)
+#if defined(SSE_TOS_GEMDOS_PEXEC6)
 /*  Later Gemdos had a new Pexec mode 6 where you don't need to delete
     memory of the child process, contrary to mode 4.
     Using this instead of 4 + Mfree at pterm fixes the
@@ -1136,35 +1136,35 @@ void stemdos_intercept_trap_1()
   ASSERT( !Invalid );
   if (Invalid) return;
 
-#if defined(SS_TOS_TRACE_CONOUT)
+#if defined(SSE_TOS_TRACE_CONOUT)
   if(stemdos_command==2 && m68k_dpeek(sp)!=2)
     TRACE_LOG("\n");//show some class!
 #endif
 
   stemdos_command=m68k_dpeek(sp);
 
-#if defined(SS_DEBUG) && defined(DEBUG_BUILD)
+#if defined(SSE_DEBUG) && defined(DEBUG_BUILD)
 
   if(TRACE_ENABLED) TRACE_OSD("TRAP1 %X",stemdos_command);
 
   switch(stemdos_command)
   {
   case 2://conout
-#if defined(SS_TOS_TRACE_CONOUT)
+#if defined(SSE_TOS_TRACE_CONOUT)
     TRACE_LOG("%c",(BYTE)m68k_dpeek(sp+2));
 #endif
     break;
   case 6://Crawio
     break;
-#if defined(SS_TOS_DONT_TRACE_3F)
+#if defined(SSE_TOS_DONT_TRACE_3F)
       case 0x3F: //read file
     break;
 #endif
-#if defined(SS_TOS_DONT_TRACE_40)
+#if defined(SSE_TOS_DONT_TRACE_40)
       case 0x40: //write file
     break;
 #endif
-#if defined(SS_TOS_DONT_TRACE_42)
+#if defined(SSE_TOS_DONT_TRACE_42)
       case 0x42: //seek file
     break;
 #endif
@@ -1284,16 +1284,16 @@ void stemdos_intercept_trap_1()
       stemdos_filename=read_string_from_memory(m68k_lpeek(sp+2),100);
       log(EasyStr("STEMDOS: Got filename as ")+stemdos_filename);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_TOS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_TOS)
       if(stemdos_command==0x3D)
       {
         ///TRACE_LOG("Open file %s\n",stemdos_filename.c_str());
-#if defined(SS_TOS_PATCH106) // miserable hack
+#if defined(SSE_TOS_PATCH106) // miserable hack
         if(SSE_HACKS_ON && tos_version==0x106 && stemdos_filename=="DESKTOP.INF")
           SS_signal=SS_SIGNAL_TOS_PATCH106;
 #endif
       }
-#ifdef SS_DEBUG
+#ifdef SSE_DEBUG
       else
       {
         TRACE_LOG("Create file %s\n",stemdos_filename.c_str());
@@ -1328,9 +1328,9 @@ void stemdos_intercept_trap_1()
       sr|=SR_IPL_7;
       int h=m68k_dpeek(sp+2);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_TOS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_TOS)
       TRACE_LOG("Close file %d\n",h);
-#if defined(SS_TOS_PATCH106)
+#if defined(SSE_TOS_PATCH106)
       if(SS_signal==SS_SIGNAL_TOS_PATCH106)
       { // stupid hack because I can't patch the TOS itself - TODO
         BYTE tmp=PEEK(0xF0EF);
@@ -1423,7 +1423,7 @@ void stemdos_intercept_trap_1()
 
       stemdos_filename=read_string_from_memory(m68k_lpeek(sp+2),100);
       log(EasyStr("STEMDOS: Got filename as ")+stemdos_filename);
-#ifdef SS_DEBUG
+#ifdef SSE_DEBUG
       if(stemdos_command==0x41) TRACE_LOG("Del %s\n",stemdos_filename.Text);
 #endif
       int x=stemdos_get_file_path();
@@ -1740,7 +1740,7 @@ void stemdos_intercept_trap_1()
           stemdos_finished();
         }
       }else if (mode==4
-#if defined(SS_TOS_GEMDOS_PEXEC6)
+#if defined(SSE_TOS_GEMDOS_PEXEC6)
         || mode==6 
 #endif
         ){
@@ -1757,7 +1757,7 @@ void stemdos_intercept_trap_1()
 
       log(EasyStr("STEMDOS: Pterm at address $")+HEXSl(pc,6));
 
-#if defined(SS_TOS_GEMDOS_PEXEC6)
+#if defined(SSE_TOS_GEMDOS_PEXEC6)
        // quite simple with higher TOS, Steem must do nothing
       if(tos_version<0x104||!SSE_HACKS_ON)
 #endif
@@ -1812,7 +1812,7 @@ void stemdos_parse_path()  //remove \..\ etc.
 {
   log(EasyStr("STEMDOS: Parsing path ")+stemdos_filename);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
+#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DRIVE_LED)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -1888,7 +1888,7 @@ void stemdos_parse_path()  //remove \..\ etc.
 
 int stemdos_get_file_path()
 {
-#if !defined(SS_TOS_GEMDOS_VAR1) //function does nothing
+#if !defined(SSE_TOS_GEMDOS_VAR1) //function does nothing
   STStringToPC(stemdos_filename);
 #endif
 
@@ -1943,7 +1943,7 @@ void stemdos_check_paths()
 }
 //ss inlining for this shouldn't be important + we're in cpp
 
-#if !defined(SS_TOS_GEMDOS_NOINLINE)
+#if !defined(SSE_TOS_GEMDOS_NOINLINE)
 NOT_DEBUG(inline) 
 #endif
 void stemdos_trap_1_Fdup(){
@@ -1968,7 +1968,7 @@ void inline stemdos_trap_1_Dgetpath(){
 }
 */
 
-#if !defined(SS_TOS_GEMDOS_NOINLINE)
+#if !defined(SSE_TOS_GEMDOS_NOINLINE)
 NOT_DEBUG(inline) 
 #endif
 void stemdos_trap_1_Fgetdta(){
@@ -1977,7 +1977,7 @@ void stemdos_trap_1_Fgetdta(){
   STEMDOS_TRAP_1;
 }
 
-#if !defined(SS_TOS_GEMDOS_NOINLINE)
+#if !defined(SSE_TOS_GEMDOS_NOINLINE)
 NOT_DEBUG(inline) 
 #endif
 void stemdos_trap_1_Fclose(int h){
@@ -1987,7 +1987,7 @@ void stemdos_trap_1_Fclose(int h){
   STEMDOS_TRAP_1;
 }
 
-#if !defined(SS_TOS_GEMDOS_NOINLINE)
+#if !defined(SSE_TOS_GEMDOS_NOINLINE)
 NOT_DEBUG(inline) 
 #endif
 void stemdos_trap_1_Pexec_basepage(){
@@ -1997,14 +1997,14 @@ void stemdos_trap_1_Pexec_basepage(){
   m68k_PUSH_L(0);
   m68k_PUSH_W(5);
   m68k_PUSH_W(0x4b);
-#if defined(SS_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_DEBUG_SHOW_INTERRUPT)
   Debug.RecordInterrupt("TRP",1);
 #endif
   m68k_interrupt(os_gemdos_vector);             //want to return from this interrupt into GEMDOS
 }
 
 //ss not inlined in VC6
-#if !defined(SS_TOS_GEMDOS_NOINLINE)
+#if !defined(SSE_TOS_GEMDOS_NOINLINE)
 NOT_DEBUG(inline) 
 #endif
 void stemdos_trap_1_Mfree(MEM_ADDRESS ad){
@@ -2012,7 +2012,7 @@ void stemdos_trap_1_Mfree(MEM_ADDRESS ad){
   m68k_PUSH_L(ad);
   m68k_PUSH_W(0x49); //SS: Mfree()
 
-#if defined(SS_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_DEBUG_SHOW_INTERRUPT)
   Debug.RecordInterrupt("TRP",1);
 #endif
 
@@ -2030,7 +2030,7 @@ void stemdos_restore_path_buffer(){
 }
 */
 
-#if defined(SS_TOS_SNAPSHOT_AUTOSELECT2) && defined(WIN32)
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2) && defined(WIN32)
 // refactoring to avoid duplication, code was originally in options.cpp
 
 EasyStr TTos::GetNextTos(DirSearch &ds) { // to enumerate TOS files
@@ -2081,7 +2081,7 @@ void TTos::GetTosProperties(EasyStr Path,WORD &Ver,BYTE &Country,WORD &Date) {
   }
 }
 
-#endif//#if defined(SS_TOS_SNAPSHOT_AUTOSELECT2)
+#endif//#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2)
 
 #undef LOGSECTION
 
@@ -2127,7 +2127,7 @@ char* StrUpperNoSpecial(char *Str)
   return Str;
 }
 //---------------------------------------------------------------------------
-#if !defined(SS_TOS_GEMDOS_VAR1) //function does nothing
+#if !defined(SSE_TOS_GEMDOS_VAR1) //function does nothing
 
 void PCStringToST(char *)
 {
@@ -2156,7 +2156,7 @@ void STStringToPC(char *)
   }
 */
 }
-#endif//#if !defined(SS_TOS_GEMDOS_VAR1) 
+#endif//#if !defined(SSE_TOS_GEMDOS_VAR1) 
 
 //---------------------------------------------------------------------------
 #endif

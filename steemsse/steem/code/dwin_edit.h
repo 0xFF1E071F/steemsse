@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DWINEDIT_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DWINEDIT_H)
 
 #include "dwin_edit.decla.h"
 
-#else//!defined(SS_STRUCTURE_DWINEDIT_H)
+#else//!defined(SSE_STRUCTURE_DWINEDIT_H)
 
 
 /////////////////////////////// DWin_edit ////////////////////////////////////
@@ -18,4 +18,4 @@ bool DWin_edit_is_being_temporarily_defocussed=false;
 void set_DWin_edit(int type,void*subject,int n,int col);
 void DWin_edit_finish(bool);
 
-#endif//SS_STRUCTURE_DWINEDIT_H
+#endif//SSE_STRUCTURE_DWINEDIT_H

@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_MFP_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_MFP_H)
 
 #include "mfp.decla.h"
 
-#else//!SS_STRUCTURE_MFP_H
+#else//!SSE_STRUCTURE_MFP_H
 
 #ifdef IN_EMU
 #define EXT
@@ -127,7 +127,7 @@ status interface to the programmer.
 The MFP is a derivative of the MK3801, a Z80 family peripheral.
 */
 
-#if defined(STEVEN_SEAGAL) && defined(SS_MFP_TIMER_B_NO_WOBBLE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_TIMER_B_NO_WOBBLE)
 #define TB_TIME_WOBBLE (0) // no wobble for Timer B
 #else
 #define TB_TIME_WOBBLE (rand() & 4)
@@ -775,7 +775,7 @@ BYTE mfp_gpip_input_buffer=0;
 
 //#define MFP_CLK_EXACT 2450780  old version, checked inaccurately
 
-#if defined(STEVEN_SEAGAL) && defined(SS_MFP_RATIO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_RATIO)
 // it's a variable now! See SSE.h !!!!!!!!!!!!
 #else
 #define CPU_CYCLES_PER_MFP_CLK (8000000.0/double(MFP_CLK_EXACT))
@@ -811,7 +811,7 @@ int mfp_timer_counter[4];
 int mfp_timer_timeout[4];
 bool mfp_timer_enabled[4]={0,0,0,0};
 int mfp_timer_period[4]={10000,10000,10000,10000};
-#if defined(SS_MFP_RATIO_PRECISION)
+#if defined(SSE_MFP_RATIO_PRECISION)
 int mfp_timer_period_fraction[4]={0,0,0,0};
 int mfp_timer_period_current_fraction[4]={0,0,0,0};
 #endif
@@ -880,4 +880,4 @@ void mfp_check_for_timer_timeouts(); // SS not implemented
 #undef EXT
 #undef INIT
 
-#endif//SS_STRUCTURE_MFP_H
+#endif//SSE_STRUCTURE_MFP_H

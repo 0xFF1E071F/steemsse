@@ -19,7 +19,7 @@ State 2
 +-----+
 
 
-When we don't use the DL concept (SS_MMU_WAKE_UP_DL not defined), variable 
+When we don't use the DL concept (SSE_MMU_WAKE_UP_DL not defined), variable 
 WAKE_UP_STATE is WU or 0.
 
 +--------------------------------------------+---------------+
@@ -35,7 +35,7 @@ WAKE_UP_STATE is WU or 0.
 +------------------+------------+------------+-------+-------+
 
 
-When we use the DL concept (SS_MMU_WAKE_UP_DL defined), WAKE_UP_STATE 
+When we use the DL concept (SSE_MMU_WAKE_UP_DL defined), WAKE_UP_STATE 
 is more confusing, its value is no wake-up state but just an option index.
 
 +------------------------------------------------------------+---------------+
@@ -64,10 +64,10 @@ yet.
 #include "SSEParameters.h"
 #include "SSESTF.h"
 
-#ifdef SS_MMU
+#ifdef SSE_MMU
 
 struct TMMU {
-#if defined(SS_MMU_WAKE_UP_DL)
+#if defined(SSE_MMU_WAKE_UP_DL)
   BYTE WU[6]; // 0, 1, 2
   BYTE WS[6]; // 0 + 4 + panic
   char ResMod[6],FreqMod[6];
@@ -80,7 +80,7 @@ struct TMMU {
 
 extern TMMU MMU;
 
-#if !defined(SS_MMU_WAKE_UP_DL)
+#if !defined(SSE_MMU_WAKE_UP_DL)
 
 /*  This function tells if the program is attempting a read or write on the
     bus while the MMU has the bus. In that case, access should be delayed by
@@ -101,11 +101,11 @@ inline bool TMMU::OnMmuCycles(int CyclesIn) {
 */
 inline bool TMMU::WakeUpState1() {
   return (
-#if defined(SS_STF) && !defined(SS_MMU_WAKE_UP_STE_STATE2)
+#if defined(SSE_STF) && !defined(SSE_MMU_WAKE_UP_STE_STATE2)
   (ST_TYPE!=STE) &&
 #endif
 
-#if defined(SS_MMU_WAKE_UP_DL)
+#if defined(SSE_MMU_WAKE_UP_DL)
   (WAKE_UP_STATE==3||WAKE_UP_STATE==4)
 #else
   (WAKE_UP_STATE==1)
@@ -115,12 +115,12 @@ inline bool TMMU::WakeUpState1() {
 
 inline bool TMMU::WakeUpState2() {
   return (
-#if defined(SS_STF) && !defined(SS_MMU_WAKE_UP_STE_STATE2)
+#if defined(SSE_STF) && !defined(SSE_MMU_WAKE_UP_STE_STATE2)
   (ST_TYPE!=STE) &&
 #endif
-#if defined(SS_MMU_WAKE_UP_DL)
+#if defined(SSE_MMU_WAKE_UP_DL)
   (WAKE_UP_STATE==1||WAKE_UP_STATE==2
-#if defined(SS_SHIFTER_PANIC) // used for omega only
+#if defined(SSE_SHIFTER_PANIC) // used for omega only
   ||WAKE_UP_STATE==WU_SHIFTER_PANIC
 #endif
   )

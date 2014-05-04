@@ -5,11 +5,11 @@ DESCRIPTION: A class to encapsulate the process of outputting to the display.
 This contains the DirectDraw code used by Windows Steem for output.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: display.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DISPLAY_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DISPLAY_H)
 #define EXT
 #define INIT(s) =s
 
@@ -36,7 +36,7 @@ UNIX_ONLY( bool TrySHM=true; )
 //#include "SteemFreeImage.h"
 // definition part of SteemFreeImage.h
 
-#if defined(SS_VID_FREEIMAGE4)
+#if defined(SSE_VID_FREEIMAGE4)
 
 FI_FREEPROC FreeImage_Free;
 
@@ -58,7 +58,7 @@ FI_SUPPORTBPPPROC FreeImage_FIFSupportsExportBPP;
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI) 
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_RECORD_AVI) 
 extern int shifter_freq_at_start_of_vbl; //forward
 #endif
 
@@ -72,7 +72,7 @@ SteemDisplay::SteemDisplay()
   DDPrimarySur=NULL;
   DDBackSur=NULL;
 
-#if defined(SS_VID_3BUFFER_WIN)
+#if defined(SSE_VID_3BUFFER_WIN)
   DDBackSur2=NULL;
 #endif
 
@@ -113,7 +113,7 @@ SteemDisplay::SteemDisplay()
   ScreenShotFormat=0;
   ScreenShotUseFullName=0;ScreenShotAlwaysAddNum=0;
   ScreenShotMinSize=0;
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SAVE_NEO)
   pNeoFile=NULL;
 #endif
   RunOnChangeToWindow=0;
@@ -255,7 +255,7 @@ HRESULT SteemDisplay::InitDD()
     ZeroMemory(DDDisplayModePossible,sizeof(DDDisplayModePossible));
     ZeroMemory(DDClosestHz,sizeof(DDClosestHz));
     DDObj->EnumDisplayModes(DDEDM_REFRESHRATES,NULL,this,DDEnumModesCallback);
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_CHECK_DDFS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_CHECK_DDFS)
     TRACE_LOG("DD fullscreen mask %X\n",DD_FULLSCREEN);
 #endif
 
@@ -277,7 +277,7 @@ HRESULT SteemDisplay::InitDD()
 HRESULT WINAPI SteemDisplay::DDEnumModesCallback(LPDDSURFACEDESC ddsd,LPVOID t)
 {
 
-#ifdef SS_VID_CHECK_DDFS2
+#ifdef SSE_VID_CHECK_DDFS2
   TRACE_LOG("DD fullscreen mode %dx%d %d bits %dHz\n",
     ddsd->dwWidth,ddsd->dwHeight,
     ddsd->ddpfPixelFormat.dwRGBBitCount,
@@ -296,7 +296,7 @@ HRESULT WINAPI SteemDisplay::DDEnumModesCallback(LPDDSURFACEDESC ddsd,LPVOID t)
     This->DDDisplayModePossible[idx][hicol]=true;
     TRACE_LOG("Adding idx %d hicol %d w %d h%d %dHz\n",
       idx,hicol,ddsd->dwWidth,ddsd->dwHeight,ddsd->dwRefreshRate);
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_CHECK_DDFS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_CHECK_DDFS)
     DD_FULLSCREEN|=(1<<(idx+(hicol*4))); //$77 if all found
 #endif
     for (int n=1;n<NUM_HZ;n++){
@@ -347,7 +347,7 @@ HRESULT SteemDisplay::DDCreateSurfaces()
     }
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
   DDSURFACEDESC PrimaryFeedback;
   PrimaryFeedback.dwSize=sizeof(DDSURFACEDESC);
   if (DDPrimarySur->GetSurfaceDesc(&PrimaryFeedback)==DD_OK)
@@ -363,13 +363,13 @@ HRESULT SteemDisplay::DDCreateSurfaces()
     return DDError("SetClipper FAILED",Ret);
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_FS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_3BUFFER_FS)
 /*  When option Triple Buffer is set, we use the same system for fullscreen
     as for window. For the moment stretch mode only.
 */
   if(!FullScreen || SSE_3BUFFER
     || (BORDER_40 && draw_fs_blit_mode==DFSM_STRAIGHTBLIT)) 
-#elif defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
+#elif defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS_LB_DX)
   // we may need a bigger drawing zone in fullscreen mode too
   if (!FullScreen || (BORDER_40 && draw_fs_blit_mode==DFSM_STRAIGHTBLIT) )
 #else
@@ -389,14 +389,14 @@ HRESULT SteemDisplay::DDCreateSurfaces()
       }else
 #endif
       if (Disp.BorderPossible()){
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
-#if defined(SS_VID_BORDERS_LB_DX)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS)
+#if defined(SSE_VID_BORDERS_LB_DX)
         DDBackSurDesc.dwWidth=640+4* (SideBorderSize); // we draw larger
 #else
         DDBackSurDesc.dwWidth=640+4* (SideBorderSizeWin);
 #endif
         DDBackSurDesc.dwHeight=400+2*(BORDER_TOP+BottomBorderSize
-#if defined(SS_VID_ADJUST_DRAWING_ZONE1)
+#if defined(SSE_VID_ADJUST_DRAWING_ZONE1)
         +1 // hack to fix crash on video emu panic, last 'border' scanline
 #endif
         );
@@ -408,7 +408,7 @@ HRESULT SteemDisplay::DDCreateSurfaces()
         DDBackSurDesc.dwWidth=640;
         DDBackSurDesc.dwHeight=480;
       }
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_ADJUST_DRAWING_ZONE2)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_ADJUST_DRAWING_ZONE2)
       // because we can increase or decrease display size ?
       draw_blit_source_rect.right=int(DDBackSurDesc.dwWidth)-1;
       draw_blit_source_rect.bottom=int(DDBackSurDesc.dwHeight)-1;
@@ -427,7 +427,7 @@ HRESULT SteemDisplay::DDCreateSurfaces()
           return DDError("CreateSurface for BackSur FAILED",Ret);
         }
       }else{
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_WIN)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_3BUFFER_WIN)
         // Let's create a second back surface for our "triple buffer"
         if(SSE_3BUFFER)
         {
@@ -484,7 +484,7 @@ void SteemDisplay::DDDestroySurfaces()
   if (DDBackSur){
     DDBackSur->Release(); DDBackSur=NULL;
   }
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_WIN)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_3BUFFER_WIN)
   if (DDBackSur2){
     DDBackSur2->Release(); DDBackSur2=NULL;
   }
@@ -528,7 +528,7 @@ bool SteemDisplay::InitGDI()
   }else
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS)
   if(GetSystemMetrics(SM_CXSCREEN)>640+4*SideBorderSizeWin
     // testing also vertical pixels (bugfix 3.4.1) but... GDI? (useless)
     && GetSystemMetrics(SM_CYSCREEN)>400+2*(BORDER_TOP+BORDER_BOTTOM)
@@ -601,7 +601,7 @@ bool SteemDisplay::InitGDI()
 
 HRESULT SteemDisplay::Lock()
 {
-#if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
   if(SDL.InUse)
   {
     SDL.Lock();
@@ -620,7 +620,7 @@ HRESULT SteemDisplay::Lock()
 
       DDBackSurDesc.dwSize=sizeof(DDSURFACEDESC);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_WIN)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_3BUFFER_WIN)
       // trying to mind performance and footprint
       IDirectDrawSurface *OurBackSur;
       if(SSE_3BUFFER && DDBackSur2)
@@ -651,7 +651,7 @@ HRESULT SteemDisplay::Lock()
       draw_line_length=DDBackSurDesc.lPitch;
       draw_mem=LPBYTE(DDBackSurDesc.lpSurface);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS_LB_DX)
       // trying to make it crash-free (v3.4.1)
       if(FullScreen && BORDER_40)
       {
@@ -677,7 +677,7 @@ HRESULT SteemDisplay::Lock()
 void SteemDisplay::Unlock()
 {
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
   if(SDL.InUse)
   {
     SDL.Unlock();
@@ -686,7 +686,7 @@ void SteemDisplay::Unlock()
 #endif
 
   if (Method==DISPMETHOD_DD){
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_WIN)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_3BUFFER_WIN)
     IDirectDrawSurface *OurBackSur=
       (SSE_3BUFFER && DDBackSur2 && SurfaceToggle) ? DDBackSur2:DDBackSur;
     OurBackSur->Unlock(NULL);
@@ -694,7 +694,7 @@ void SteemDisplay::Unlock()
     DDBackSur->Unlock(NULL);
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_RECORD_AVI)
 
     //TODO reuse objects? possible?
     if(video_recording && runstate==RUNSTATE_RUNNING && !SSE_3BUFFER)
@@ -703,8 +703,8 @@ void SteemDisplay::Unlock()
       {
         if(!frameskip||frameskip==8) // error||auto
           frameskip=1;
-        TRACE_LOG("Start AVI recording, codec %s, frameskip %d\n",SS_VID_RECORD_AVI_CODEC,frameskip);
-        pAviFile=new CAviFile(SS_VID_RECORD_AVI_FILENAME,
+        TRACE_LOG("Start AVI recording, codec %s, frameskip %d\n",SSE_VID_RECORD_AVI_CODEC,frameskip);
+        pAviFile=new CAviFile(SSE_VID_RECORD_AVI_FILENAME,
           mmioFOURCC(video_recording_codec[0],video_recording_codec[1],
           video_recording_codec[2],video_recording_codec[3]),
           shifter_freq_at_start_of_vbl/frameskip);
@@ -738,10 +738,10 @@ void SteemDisplay::Unlock()
 //---------------------------------------------------------------------------
 void SteemDisplay::VSync()
 {
-#if !defined(SS_VID_VSYNC_WINDOW)
+#if !defined(SSE_VID_VSYNC_WINDOW)
   if (FullScreen==0) return;
 #endif
-#if defined(SS_VID_VSYNC_WINDOW_CRASH_FIX1)
+#if defined(SSE_VID_VSYNC_WINDOW_CRASH_FIX1)
   if(!DDObj)
     return;
 #endif
@@ -750,7 +750,7 @@ void SteemDisplay::VSync()
   BOOL Blanking=FALSE;
   DDObj->GetVerticalBlankStatus(&Blanking);
   if (Blanking==FALSE){
-#if defined(SS_VID_VSYNC_WINDOW)
+#if defined(SSE_VID_VSYNC_WINDOW)
     DWORD botline; //=480-40;
     if(FullScreen)
       if (border & 1)
@@ -790,7 +790,7 @@ void SteemDisplay::VSync()
 
 bool SteemDisplay::Blit()
 {
-#if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
   if(SDL.InUse)
   {
     SDL.Blit();
@@ -802,12 +802,12 @@ bool SteemDisplay::Blit()
     if (FullScreen){
       if (runstate==RUNSTATE_RUNNING){
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_BLIT_TRY_BLOCK)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BLIT_TRY_BLOCK)
         try {
 #endif
         switch (draw_fs_blit_mode){
           case DFSM_FLIP:
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS_LB_DX)
             if(BORDER_40) // bad framing in flip mode
             {
               draw_fs_blit_mode=DFSM_STRAIGHTBLIT;
@@ -820,7 +820,7 @@ bool SteemDisplay::Blit()
             break;
           case DFSM_STRAIGHTBLIT:
           {
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS_LB_DX)
             if(BORDER_40) // clip from larger to 800
             {
               RECT our_clipping={16,0,816,556-6};
@@ -840,9 +840,9 @@ bool SteemDisplay::Blit()
           {
             RECT Dest;
             get_fullscreen_rect(&Dest);
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SCANLINES_INTERPOLATED)
             if(SCANLINES_INTERPOLATED)
-#if defined(SS_VID_SCANLINES_INTERPOLATED_MED)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED_MED)
               if(screen_res==1)
                 draw_blit_source_rect.right--; // and another hack...
               else
@@ -850,7 +850,7 @@ bool SteemDisplay::Blit()
                 draw_blit_source_rect.right/=2; 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_FS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_3BUFFER_FS)
             IDirectDrawSurface *OurBackSur;
             if(SSE_3BUFFER && DDBackSur2)
             {
@@ -866,9 +866,9 @@ bool SteemDisplay::Blit()
 #endif
             hRet=DDPrimarySur->Blt(&Dest,DDBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SCANLINES_INTERPOLATED)
             if(SCANLINES_INTERPOLATED) //restore!
-#if defined(SS_VID_SCANLINES_INTERPOLATED_MED)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED_MED)
               if(screen_res==1)
                 draw_blit_source_rect.right++;
               else
@@ -878,7 +878,7 @@ bool SteemDisplay::Blit()
             break;
           }
         }
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_BLIT_TRY_BLOCK)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BLIT_TRY_BLOCK)
         }
         catch(...) { // VC6: catches system exceptions
           hRet=1234; // real ones are negative
@@ -892,7 +892,7 @@ bool SteemDisplay::Blit()
             Init();
           }
         }
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS)
 /*  It can fail for whatever reason. In that case we 
     brutally stop so the player sees it's wrong.
 */
@@ -903,7 +903,7 @@ bool SteemDisplay::Blit()
         }
 #endif
       }else{ //not running right now
-#ifdef SS_VS2012_INIT
+#ifdef SSE_VS2012_INIT
         HCURSOR OldCur = 0;	// JLG VS2012 uninitialized
 #else
         HCURSOR OldCur;
@@ -913,12 +913,12 @@ bool SteemDisplay::Blit()
         get_fullscreen_rect(&Dest);
         for (int i=0;i<2;i++){
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_WIN)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_3BUFFER_WIN)
           IDirectDrawSurface *OurBackSur=
             (SSE_3BUFFER && !SurfaceToggle && DDBackSur2) 
             ? DDBackSur2: DDBackSur;
 
-#if defined(SS_VID_BORDERS_LB_DX)
+#if defined(SSE_VID_BORDERS_LB_DX)
           if(BORDER_40) // clip from larger to 800
           {
             RECT our_clipping={16,0,816,556-6};
@@ -950,7 +950,7 @@ bool SteemDisplay::Blit()
       
       // SS not Fullscreen:
 
-#ifdef SS_VS2012_INIT
+#ifdef SSE_VS2012_INIT
       HCURSOR OldCur = 0;	// JLG VS2012 uninitialized
 #else
       HCURSOR OldCur;
@@ -961,7 +961,7 @@ bool SteemDisplay::Blit()
       POINT pt={2,2};
       ClientToScreen(StemWin,&pt);
       OffsetRect(&dest,pt.x,pt.y);
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS_LB_DX) 
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS_LB_DX) 
       if(BORDER_40 && (screen_res==2 || draw_win_mode[screen_res]))
       {// clip from larger to 800
         OffsetRect(&draw_blit_source_rect,
@@ -969,13 +969,13 @@ bool SteemDisplay::Blit()
       }
 #endif
 
-#if defined(SS_VID_SCANLINES_INTERPOLATED_MED)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED_MED)
       if(screen_res==1&&SCANLINES_INTERPOLATED)
         draw_blit_source_rect.right--; // and another hack...
 #endif
 
       for (int i=0;i<2;i++){
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_3BUFFER)
         IDirectDrawSurface *OurBackSur=
           (SSE_3BUFFER && !SurfaceToggle && DDBackSur2) ? DDBackSur2:DDBackSur;
         hRet=OurBackSur->GetBltStatus(DDGBS_CANBLT); // for surface lost
@@ -991,7 +991,7 @@ bool SteemDisplay::Blit()
         if (hRet==DDERR_SURFACELOST){
           if (i==0) hRet=RestoreSurfaces();
           if (hRet!=DD_OK){
-#if !defined(SS_VID_MEMORY_LOST) // no message box
+#if !defined(SSE_VID_MEMORY_LOST) // no message box
             DDError(T("Drawing memory permanently lost"),hRet);
 #endif
             Init();
@@ -1098,7 +1098,7 @@ void SteemDisplay::RunEnd(bool Temp)
     SaveSurDesc.dwHeight=h;
     hRet=DDObj->CreateSurface(&SaveSurDesc,&SaveSur,NULL);
     if (hRet==DD_OK){
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_FS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_3BUFFER_FS)
       IDirectDrawSurface *OurBackSur=
         (SSE_3BUFFER && DDBackSur2 && !SurfaceToggle) ? DDBackSur2: DDBackSur;
       hRet=SaveSur->Blt(&rcDest,OurBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
@@ -1204,7 +1204,7 @@ void SteemDisplay::ScreenChange()
 {
   draw_end();
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
   // temp, dubious
   if(USE_SDL && !SDL.InUse)
     SDL.EnterSDLVideoMode(); 
@@ -1230,7 +1230,7 @@ void SteemDisplay::ChangeToFullScreen()
 
   TRACE_LOG("Going fullscreen...\n");
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_CHECK_DDFS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_CHECK_DDFS)
     if(!DD_FULLSCREEN)
     {
       Alert("Your display setup won't allow Steem fullscreen!","Direct Draw Error!",0);
@@ -1238,7 +1238,7 @@ void SteemDisplay::ChangeToFullScreen()
     }
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCANLINES_INTERPOLATED)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SCANLINES_INTERPOLATED)
     if(SCANLINES_INTERPOLATED)
       draw_fs_blit_mode=DFSM_STRETCHBLIT; // only compatible FS mode
 #endif
@@ -1334,7 +1334,7 @@ void SteemDisplay::ChangeToFullScreen()
       palette_convert_all();
 
       ONEGAME_ONLY( DestroyNotifyInitWin(); )
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_FULLSCREEN_DONT_START)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_FULLSCREEN_DONT_START)
       // there would always be stuttering anyway
 #else
       PostRunMessage();
@@ -1400,7 +1400,7 @@ void SteemDisplay::ChangeToWindowedMode(bool Emergency)
 bool SteemDisplay::CanGoToFullScreen()
 {
   if (Method==DISPMETHOD_DD){
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_CHECK_DDFS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_CHECK_DDFS)
     if(DD_FULLSCREEN)
 #endif
     return true;
@@ -1460,7 +1460,7 @@ HRESULT SteemDisplay::RestoreSurfaces()
     HRESULT hRet=DDPrimarySur->Restore();
     if (hRet==DD_OK){
       hRet=DDBackSur->Restore();
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_WIN)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_3BUFFER_WIN)
       if(SSE_3BUFFER && hRet==DD_OK && DDBackSur2) 
         hRet=DDBackSur2->Restore();
       SurfaceToggle=true;
@@ -1546,7 +1546,7 @@ void SteemDisplay::ScreenShotCheckFreeImageLoad()
     if (hFreeImage==NULL) hFreeImage=LoadLibrary(RunDir+"\\FreeImage\\FreeImage\\FreeImage.dll");
     if (hFreeImage==NULL) hFreeImage=LoadLibrary("FreeImage.dll");
     if (hFreeImage==NULL) return;
-#if defined(SS_VID_FREEIMAGE4)
+#if defined(SSE_VID_FREEIMAGE4)
     FreeImage_Free=(FI_FREEPROC)GetProcAddress(hFreeImage,"_FreeImage_Free@4");
 #else
     FreeImage_Initialise=(FI_INITPROC)GetProcAddress(hFreeImage,"_FreeImage_Initialise@4");
@@ -1559,7 +1559,7 @@ void SteemDisplay::ScreenShotCheckFreeImageLoad()
     FreeImage_Free=(FI_FREEPROC)GetProcAddress(hFreeImage,"_FreeImage_Free@4");
 #endif
 
-#if defined(SS_VID_FREEIMAGE1) //3.6.3 init library
+#if defined(SSE_VID_FREEIMAGE1) //3.6.3 init library
     if(!FreeImage_Free) // breaking change!
       FreeImage_Free=(FI_FREEPROC)GetProcAddress(hFreeImage,"_FreeImage_Unload@4");
 #endif
@@ -1595,7 +1595,7 @@ HRESULT SteemDisplay::SaveScreenShot()
 
     Str Exts="bmp";
     WIN_ONLY( if (hFreeImage) Exts=ScreenShotExt; )//SS only when needed
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SAVE_NEO)
     if(ScreenShotFormat==IF_NEO)
       Exts="NEO";
 #endif
@@ -1615,7 +1615,7 @@ HRESULT SteemDisplay::SaveScreenShot()
     if (AddNumExt){
       int Num=0;
       do{
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SCREENSHOTS_NUMBER)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SCREENSHOTS_NUMBER)
         if (++Num >= 100000) return DDERR_GENERIC;
         ShotFile=ScreenShotFol+SLASH+FirstWord+"_"+(EasyStr("00000")+Num).Rights(5)+"."+Exts;
 #else
@@ -1747,7 +1747,7 @@ HRESULT SteemDisplay::SaveScreenShot()
 
 	BYTE *Pixels=SurMem;
   bool ConvertPixels=true;
-#if !defined(SS_VID_FREEIMAGE2) //3.6.3 always convert pixels
+#if !defined(SSE_VID_FREEIMAGE2) //3.6.3 always convert pixels
 #ifdef WIN32
   if (hFreeImage && ToClipboard==0){
     if (BytesPerPixel>1){
@@ -1883,7 +1883,7 @@ bitmap in the desired bit depth, FALSE otherwise.
 
   if (ToClipboard==0){
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SAVE_NEO)
     //v3.6.3: moved up so that FreeImage doesn't get it
     if(ScreenShotFormat==IF_NEO)
     {
@@ -1930,7 +1930,7 @@ bitmap in the desired bit depth, FALSE otherwise.
             break;
         }
 
-#if defined(SS_VID_FREEIMAGE3) //3.6.3 flip pic
+#if defined(SSE_VID_FREEIMAGE3) //3.6.3 flip pic
 /*  I don't know if the library changed, but this was doing the 
     opposite of what it should (pics were upside down).
 */
@@ -1942,7 +1942,7 @@ bitmap in the desired bit depth, FALSE otherwise.
           r_mask,g_mask,b_mask,0);
 #endif
       }else{
-#if defined(SS_VID_FREEIMAGE3) //3.6.3 flip pic
+#if defined(SSE_VID_FREEIMAGE3) //3.6.3 flip pic
         FIBmp=FreeImage_ConvertFromRawBits(Pixels,w,h,w*3,24,
                                           0xff0000,0x00ff00,0x0000ff,false);
 #else
@@ -2037,7 +2037,7 @@ void SteemDisplay::ScreenShotGetFormats(EasyStringList *pSL)
     pSL->Add("PNG",FIF_PNG);
     pSL->Add("TARGA (.tga)",FIF_TARGA);
     pSL->Add("TIFF",FIF_TIFF);
-#if !defined(SS_VID_FREEIMAGE3) //3.6.3 remove WBMP
+#if !defined(SSE_VID_FREEIMAGE3) //3.6.3 remove WBMP
     // it just crashes
     pSL->Add("WBMP",FIF_WBMP);
 #endif
@@ -2045,7 +2045,7 @@ void SteemDisplay::ScreenShotGetFormats(EasyStringList *pSL)
     pSL->Add("PGM",FIF_PGM);
     pSL->Add("PPM",FIF_PPM);
   }
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SAVE_NEO)
   pSL->Add("NEO",IF_NEO);
 #endif
 }
@@ -2074,14 +2074,14 @@ void SteemDisplay::ScreenShotGetFormatOpts(EasyStringList *pSL)
       break;
   }
 }
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_WIN) \
- && !defined(SS_VID_3BUFFER_NO_VSYNC)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_3BUFFER_WIN) \
+ && !defined(SSE_VID_3BUFFER_NO_VSYNC)
 /*  When the option is on, this function is called a lot
     during emulation (each scanline) and during VBL idle
     times too, so the processor is always busy. TODO
     Scrolling is also sketchy, triple buffering only removes
     tearing.
-    SS_VID_3BUFFER_NO_VSYNC: this isn't defined, it was used
+    SSE_VID_3BUFFER_NO_VSYNC: this isn't defined, it was used
     to test what happens when we use Triple Buffering but don't
     sync on monitor VBlank: there's still some tearing.
     If we combine with "normal" VSync, it gets smooth, but

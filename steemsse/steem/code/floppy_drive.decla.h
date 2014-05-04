@@ -4,7 +4,7 @@
 
 //SS this is ambiguous in Steem, class is 'image' but object is 'drive'
 
-#if defined(SS_STRUCTURE_SSEDEBUG_OBJ)
+#if defined(SSE_STRUCTURE_SSEDEBUG_OBJ)
 #include <stdio.h>
 #endif
 
@@ -12,7 +12,7 @@
 #include "fdc.decla.h"//FLOPPY_MAX_TRACK_NUM?
 
 
-#if defined(SS_DISK_GHOST__)
+#if defined(SSE_DISK_GHOST__)
 #include <easystr.h>
 #include "fdc.decla.h"
 #endif
@@ -45,13 +45,13 @@ private:
   EasyStr ImageFile,MSATempFile,ZipTempFile,FormatTempFile;
 public:
   TFloppyImage()             { f=NULL;Format_f=NULL;PastiDisk=
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF)    
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)    
     IPFDisk=
-#ifdef SS_IPF_CTRAW
+#ifdef SSE_IPF_CTRAW
     CTRDisk=
 #endif
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
     SCPDisk=
 #endif 
     0;PastiBuf=NULL;RemoveDisk();}
@@ -59,7 +59,7 @@ public:
   ~TFloppyImage()            { RemoveDisk(); }
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_PASTI_NO_RESET)
+#if defined(STEVEN_SEAGAL) && defined(SSE_PASTI_NO_RESET)
   EasyStr GetImageFile() {return ImageFile;}
 #endif
 
@@ -68,13 +68,13 @@ public:
   bool ReinsertDisk();
   void RemoveDisk(bool=0);
   bool DiskInDrive() { return f!=NULL || PastiDisk 
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
     || IPFDisk
-#ifdef SS_IPF_CTRAW
+#ifdef SSE_IPF_CTRAW
     || CTRDisk
 #endif
 #endif    
-#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
     || SCPDisk
 #endif    
 
@@ -101,13 +101,13 @@ public:
   BYTE *PastiBuf; // SS same for IPF?
   int PastiBufLen;
   bool STT_File,PastiDisk;
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
   bool IPFDisk;
-#ifdef SS_IPF_CTRAW
+#ifdef SSE_IPF_CTRAW
   bool CTRDisk;
 #endif
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
   bool SCPDisk;
 #endif
   DWORD STT_TrackStart[2][FLOPPY_MAX_TRACK_NUM+1];

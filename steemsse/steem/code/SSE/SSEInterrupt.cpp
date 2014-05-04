@@ -1,6 +1,6 @@
-#if defined(SS_INTERRUPT)
+#if defined(SSE_INTERRUPT)
 
-#if defined(SS_INT_JITTER) 
+#if defined(SSE_INT_JITTER) 
 /*  This comes from Hatari but was also discussed on AF.
 http://www.atari-forum.com/viewtopic.php?f=68&t=9527&p=188067#p188067
 "
@@ -12,7 +12,7 @@ It is identical with GLUE wake up state 1 and 2: it is cyclic with
     In v3.5.3 we use Steem's "wobble" instead, as long as it
     works, not because it's more correct, but to save some memory
     bytes, and also because of Krig STE.
-    SS_INT_JITTER not defined
+    SSE_INT_JITTER not defined
     In v3.5.4, for Japtro we use VBL jitter and not HBL, so
     that Krig is still OK. 
     In v3.6.0 we use HBL jitter again, for 3615 GEN4 HMD
@@ -24,14 +24,14 @@ It is identical with GLUE wake up state 1 and 2: it is cyclic with
   int VblJitterIndex;
 #endif
 
-#if defined(SS_INT_VBL_STF)
+#if defined(SSE_INT_VBL_STF)
   int HblTiming=HBL_FOR_STE;//HBL_FOR_STF; // default STE
 #endif
 
 #endif
 
-#if defined(SS_MFP_RATIO) // need no SS_STF
-#if defined(SS_MFP_RATIO_STE)
+#if defined(SSE_MFP_RATIO) // need no SSE_STF
+#if defined(SSE_MFP_RATIO_STE)
 double CpuMfpRatio=(double)CPU_STE_TH/(double)MFP_CLK_STE_EXACT;
 #else
 double CpuMfpRatio=(double)CPU_STE_TH/(double)MFP_CLK_LE_EXACT;

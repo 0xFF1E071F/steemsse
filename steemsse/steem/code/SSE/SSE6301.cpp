@@ -1,6 +1,6 @@
 
 #include "SSE.h"
-#if defined(SS_STRUCTURE_SSE6301_OBJ)
+#if defined(SSE_STRUCTURE_SSE6301_OBJ)
 
 #include "../pch.h"
 
@@ -12,7 +12,7 @@
 #include <ikbd.decla.h>
 #endif
 
-#if defined(SS_IKBD_6301)
+#if defined(SSE_IKBD_6301)
 
 #include "SSEOption.h"
 
@@ -51,7 +51,7 @@ void THD6301::Init() { // called in 'main'
     if(fp)
     {
       int n=fread(ram+0xF000,1,4096,fp);
-#if defined(SS_DEBUG)
+#if defined(SSE_DEBUG)
       ASSERT(n==4096); // this detected the missing +b above
       for(int i=0;i<n;i++)
         checksum+=ram[0xF000+i];
@@ -71,7 +71,7 @@ void THD6301::Init() { // called in 'main'
     } 
   }
 
-#if defined(SS_DEBUG)
+#if defined(SSE_DEBUG)
   TRACE_LOG("6301 emu %d RAM %d file %s open %d checksum %d\n",HD6301_OK,(bool)ram,romfile.Text,(bool)fp,checksum);
   if(!Initialised)
   {
@@ -85,7 +85,7 @@ void THD6301::Init() { // called in 'main'
 #undef LOGSECTION//init
 #define LOGSECTION LOGSECTION_IKBD
 
-#if defined(SS_DEBUG) || defined(SS_IKBD_MOUSE_OFF_JOYSTICK_EVENT)
+#if defined(SSE_DEBUG) || defined(SSE_IKBD_MOUSE_OFF_JOYSTICK_EVENT)
 /*  This should work for both 'fake' and 'true' 6301 emulation.
     We know command codes & parameters, we report this info through trace.
     when the command is complete.
@@ -166,7 +166,7 @@ void THD6301::InterpretCommand(BYTE ByteIn) {
   // report?
   if(CurrentCommand!=-1 && nParameters==CurrentParameter)
   {
-#if defined(SS_DEBUG)
+#if defined(SSE_DEBUG)
     ReportCommand();
 #endif
     // how to treat further bytes?
@@ -187,12 +187,12 @@ void THD6301::InterpretCommand(BYTE ByteIn) {
 
 #define LOGSECTION LOGSECTION_IKBD
 
-#if defined(SS_DEBUG)
+#if defined(SSE_DEBUG)
 
 void THD6301::ReportCommand() {
   ASSERT( CurrentCommand!=-1 );
 
-#if defined(SS_OSD_CONTROL)
+#if defined(SSE_OSD_CONTROL)
   if(OSD_MASK1 & OSD_CONTROL_IKBD)
     TRACE_OSD("IKBD $%02X ",CurrentCommand); 
 #endif
@@ -253,7 +253,7 @@ void THD6301::ReportCommand() {
 
 #endif
 
-#if defined(SS_ACIA_DOUBLE_BUFFER_TX)
+#if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
 
 void THD6301::ReceiveByte(BYTE data) {
 /*  Transfer byte to 6301 (call of this function initiates transfer).
@@ -272,14 +272,14 @@ void THD6301::ResetChip(int Cold) {
   TRACE_LOG("6301 Reset chip %d\n",Cold);
   CustomProgram=CUSTOM_PROGRAM_NONE;
   ResetProgram();
-#if defined(SS_IKBD_6301)
+#if defined(SSE_IKBD_6301)
   if(HD6301_OK && HD6301EMU_ON)
   {
     HD6301.Crashed=0;
     hd6301_reset(Cold);
   }
 #endif
-#if defined(SS_IKBD_TRACE_CPU_READ)
+#if defined(SSE_IKBD_TRACE_CPU_READ)
 /*  It's not clear at all what should be done, so 'Hacks' serves as an
     option here. It made a difference for Overdrive Demo: going back to
     menu at some point, then not anymore (? v3.5.2)

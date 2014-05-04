@@ -96,7 +96,7 @@ public:
 	/// </Summary>
 	LPCTSTR GetLastErrorMessage() const {	return m_szErrMsg;	}
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_RECORD_AVI)
 private:
 	PAVISTREAM			m_pAviStreamA;//for audio
 	PAVISTREAM			m_pAviCompressedStreamA;

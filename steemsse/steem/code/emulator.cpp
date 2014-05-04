@@ -7,11 +7,11 @@ the code for Steem's agenda system that schedules tasks to be performed at
 the end of scanlines.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: emulator.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_EMULATOR_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_EMULATOR_H)
 #define EXT
 #define INIT(s) =s
 
@@ -32,7 +32,7 @@ EXT int on_rte;
 EXT int on_rte_interrupt_depth;
 
 EXT MEM_ADDRESS shifter_draw_pointer;
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
 EXT BYTE shifter_hscroll, shifter_skip_raster_for_hscroll; // the latter bool
 #else
 EXT int shifter_hscroll,shifter_skip_raster_for_hscroll;
@@ -46,7 +46,7 @@ EXT int shifter_x,shifter_y;
 EXT int shifter_first_draw_line;
 EXT int shifter_last_draw_line;
 EXT int shifter_scanline_width_in_bytes;
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
 EXT BYTE shifter_fetch_extra_words;
 #else
 EXT int shifter_fetch_extra_words;
@@ -116,13 +116,13 @@ LPAGENDAPROC agenda_list[]={
   ikbd_send_joystick_message,
   ikbd_report_abs_mouse,
   agenda_keyboard_replace,
-#if defined(SS_FDC_VERIFY_AGENDA)
+#if defined(SSE_FDC_VERIFY_AGENDA)
   agenda_fdc_verify,
 #endif
   (LPAGENDAPROC)1};
   
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_ACIA)) //see new file acia.h
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_ACIA)) //see new file acia.h
 struct _ACIA_STRUCT acia[2];
 #endif
 
@@ -146,7 +146,7 @@ MEM_ADDRESS vdi_intout=0;
 void init_timings()
 {
   // don't do anything to agendas here!
-#if !(defined(STEVEN_SEAGAL)&&defined(SS_OSD_DRIVE_LED3))
+#if !(defined(STEVEN_SEAGAL)&&defined(SSE_OSD_DRIVE_LED3))
   disk_light_off_time=timeGetTime()+DisableDiskLightAfter;
 #endif
   fdc_str&=BYTE(~FDC_STR_MOTOR_ON);
@@ -164,7 +164,7 @@ void init_timings()
   hbl_pending=true;
 
   cpu_time_of_start_of_event_plan=0; //0x7f000000; // test overflow
-#if defined(STEVEN_SEAGAL) && defined(SS_MFP_RATIO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_RATIO)
   if (n_cpu_cycles_per_second>CpuNormalHz){
 #else
   if (n_cpu_cycles_per_second>8000000){
@@ -174,7 +174,7 @@ void init_timings()
     screen_event_pointer=event_plan[shifter_freq_idx];
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START) 
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START) 
   screen_event_pointer++; // best part of the creation - hack
 #endif
 
@@ -188,14 +188,14 @@ void init_timings()
   scan_y=-scanlines_above_screen[shifter_freq_idx];
 
   time_of_last_hbl_interrupt=ABSOLUTE_CPU_TIME;
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBL_IACK)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBL_IACK)
   time_of_last_vbl_interrupt=ACT;
 #endif
 
 
   cpu_time_of_first_mfp_tick=ABSOLUTE_CPU_TIME;
   shifter_cycle_base=ABSOLUTE_CPU_TIME;
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START___) //test...
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START___) //test...
   // We lose the vertical overscan at restart pretty often with this mod.
   TRACE("Init timings PC %X VBI %X pending %d\n",pc,LPEEK(0x0070),vbl_pending);
 #else
@@ -236,15 +236,15 @@ void init_timings()
   dma_sound_channel_buf_last_write_t=0;
 
 #if USE_PASTI
-#if defined(STEVEN_SEAGAL) && defined(SS_MFP_RATIO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_RATIO)
   pasti_update_time=ABSOLUTE_CPU_TIME+CpuNormalHz;
 #else
   pasti_update_time=ABSOLUTE_CPU_TIME+8000000;
 #endif
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DMA_DELAY)
-#if defined(SS_MFP_RATIO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DMA_DELAY)
+#if defined(SSE_MFP_RATIO)
     Dma.TransferTime=ABSOLUTE_CPU_TIME+CpuNormalHz;
 #else
     Dma.TransferTime=ABSOLUTE_CPU_TIME+8000000;
@@ -362,7 +362,7 @@ void intercept_xbios()
     log_os_call(14);
   }
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_STEALTH)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_STEALTH)
   if (!STEALTH_MODE 
     && m68k_dpeek(sp)==37 && r[6]==r[7] && r[7]==0x456d753f){ // Vsync with Emu?, emudtect
 #else
@@ -415,7 +415,7 @@ int ACIAClockToHBLS(int ClockDivide,bool MIDI_In)
     }
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_MIDI_TIMING1)
+#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_MIDI_TIMING1)
     HBLs--;
 #endif
 
@@ -442,7 +442,7 @@ void ACIA_Reset(int nACIA,bool Cold)
   LOG_ONLY( if (nACIA==0 && acia[nACIA].irq) log_to_section(LOGSECTION_IKBD,EasyStr("IKBD: ACIA reset - Changing ACIA IRQ bit from ")+ACIA_IKBD.irq+" to 0"); )
   acia[nACIA].irq=false;
 
-#if defined(SS_IKBD_6301)
+#if defined(SSE_IKBD_6301)
   if(HD6301EMU_ON)
   {
     if(Cold) 
@@ -451,11 +451,11 @@ void ACIA_Reset(int nACIA,bool Cold)
       acia[nACIA].CR=0x80; //?
       acia[nACIA].RDRS=0;
       acia[nACIA].TDRS=0;
-#if defined(SS_ACIA_DOUBLE_BUFFER_RX)
+#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
       acia[nACIA].LineRxBusy=0;
       acia[nACIA].ByteWaitingRx=0;
 #endif
-#if defined(SS_ACIA_DOUBLE_BUFFER_TX)
+#if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
       acia[nACIA].ByteWaitingTx=0;
       acia[nACIA].LineTxBusy=0;
 #endif
@@ -467,7 +467,7 @@ void ACIA_Reset(int nACIA,bool Cold)
       */
       acia[nACIA].SR&=~(BIT_0|BIT_5); // from doc
       ////    acia[nACIA].SR=2;
-#if !defined(SS_ACIA_DONT_CLEAR_DR)
+#if !defined(SSE_ACIA_DONT_CLEAR_DR)
       acia[nACIA].RDR=0;//?
       acia[nACIA].TDR=0;
 #endif
@@ -485,11 +485,11 @@ void ACIA_SetControl(int nACIA,BYTE Val)
   acia[nACIA].rx_irq_enabled=bool(Val & b10000000);
   LOG_ONLY( if (nACIA==0) log_to(LOGSECTION_IKBD,EasyStr("IKBD: ACIA control set to ")+itoa(Val,d2_t_buf,2)); )
 
-#if defined(SS_IKBD_6301)
+#if defined(SSE_IKBD_6301)
   if(HD6301EMU_ON)
   {
     if((ACIA_IKBD.CR&BIT_5)&&!(ACIA_IKBD.CR&BIT_6) 
-#if defined(SS_ACIA_DOUBLE_BUFFER_TX)
+#if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
       && !ACIA_IKBD.ByteWaitingTx
 #endif
       )
@@ -513,7 +513,7 @@ void ACIA_SetControl(int nACIA,BYTE Val)
 #define LOGSECTION LOGSECTION_AGENDA
 int MILLISECONDS_TO_HBLS(int ms)
 {
-#if defined(STEVEN_SEAGAL) && defined(SS_TIMINGS_MS_TO_HBL)
+#if defined(STEVEN_SEAGAL) && defined(SSE_TIMINGS_MS_TO_HBL)
 /*  All CAPS for some reason, used in fdc, ikbd
     We make it more precise.
 */
@@ -526,7 +526,7 @@ int MILLISECONDS_TO_HBLS(int ms)
 
 void agenda_add(LPAGENDAPROC action,int pause,int param)
 {
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
   ASSERT( pause>=0 );
   int i;
   for(i=0;i<256 && agenda_list[i]!=(LPAGENDAPROC)1;i++)
@@ -602,7 +602,7 @@ void agenda_acia_tx_delay_IKBD(int)
 void agenda_acia_tx_delay_MIDI(int)
 {
   ACIA_MIDI.tx_flag=0; //finished transmitting
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
   if(HD6301EMU_ON)
   {
     ACIA_MIDI.SR|=BIT_1; // TDRE
@@ -615,14 +615,14 @@ void agenda_acia_tx_delay_MIDI(int)
     return;
   }
 #endif
-#if !(defined(STEVEN_SEAGAL) && defined(SS_ACIA_REMOVE_OLD_VARIABLES))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_ACIA_REMOVE_OLD_VARIABLES))
   if (ACIA_MIDI.tx_irq_enabled) ACIA_MIDI.irq=true;
   mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
 #endif
 }
 #undef LOGSECTION
 //-------------------------------------------------- MMU Confused
-#if !(defined(STEVEN_SEAGAL) && defined(SS_MMU_NO_CONFUSION))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_MMU_NO_CONFUSION))
   /* SS I still don't know what's the use.
   I thought it was for when TOS resets and tests memory, but now
   it seems to work without it.
@@ -636,7 +636,7 @@ void agenda_acia_tx_delay_MIDI(int)
 
 MEM_ADDRESS mmu_confused_address(MEM_ADDRESS ad)
 {
-#if defined(SS_DEBUG)
+#if defined(SSE_DEBUG)
   MEM_ADDRESS ad1=ad; // save for trace
 #endif
 
@@ -714,7 +714,7 @@ MEM_ADDRESS mmu_confused_address(MEM_ADDRESS ad)
     ad=0xfffffe; //gap
   }
   if (bank==1 && ad<FOUR_MEGS) ad+=bank_length[0];
-#if defined(SS_DEBUG)
+#if defined(SSE_DEBUG)
   TRACE_LOG("MMU confused ad %X -> %X\n",ad1,ad);
 #endif
   return ad;
@@ -781,7 +781,7 @@ void ASMCALL mmu_confused_set_dest_to_addr(int bytes,bool cause_exception)
   TRACE_LOG("MMU confused set dest %X\n",m68k_dest);
 }
 #undef LOGSECTION
-#endif//#if !defined(SS_MMU_NO_CONFUSION)
+#endif//#if !defined(SSE_MMU_NO_CONFUSION)
 
 
 #ifndef NO_CRAZY_MONITOR
@@ -792,10 +792,10 @@ void call_a000()
   on_rte_return_address=(PC32);
   //now save regs a0,a1,d0 ?
   INSTRUCTION_TIME_ROUND(0);  // Round first for interrupts
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
+#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
   INSTRUCTION_TIME_ROUND(34-4);
   FETCH_TIMING;
-#if defined(SS_CPU_PREFETCH_TIMING_SET_PC)
+#if defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
     INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
 #endif
 #else
@@ -859,7 +859,7 @@ void extended_monitor_hack()
       m68k_PUSH_W(0x48); //malloc
 
 //      log_write(HEXSl(pc,6)+EasyStr("Calling Malloc(")+HEXSl((bytes_required+255)&-256,6));
-#if defined(SS_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_DEBUG_SHOW_INTERRUPT)
       Debug.RecordInterrupt("TRP",1);
 #endif
       m68k_interrupt(os_gemdos_vector);

@@ -6,15 +6,15 @@
 
 #define LOGSECTION LOGSECTION_VIDEO
 
-#if defined(SS_STRUCTURE_CPU_H)
+#if defined(SSE_STRUCTURE_CPU_H)
 #include <cpu.decla.h>
 #endif
 
-#if defined(SS_STRUCTURE_SSESHIFTER_OBJ)
+#if defined(SSE_STRUCTURE_SSESHIFTER_OBJ)
 #define inline // he he
 #endif
 
-#if defined(SS_SHIFTER)
+#if defined(SSE_SHIFTER)
 /*  The ST was a barebone machine made up of cheap components hastily patched
     together, including the video shifter.
     A shifter was needed to translate the video RAM into the picture.
@@ -53,10 +53,10 @@
 #define TRICK_STABILISER 0x2000
 #define TRICK_WRITE_SDP 0x4000
 #define TRICK_WRITE_SDP_POST_DE 0x8000
-#if defined(SS_SHIFTER_DRAGON1)
+#if defined(SSE_SHIFTER_DRAGON1)
 #define TRICK_CONFUSED_SHIFTER 0x10000//tmp hack
 #endif
-#if defined(SS_SHIFTER_UNSTABLE)
+#if defined(SSE_SHIFTER_UNSTABLE)
 #define TRICK_UNSTABLE 0x10000 // less specific
 #endif
 #define TRICK_LINE_PLUS_24 0x20000
@@ -124,12 +124,12 @@ struct TShifter {
 #endif
   void DrawScanlineToEnd();
 
-#if !defined(SS_STRUCTURE_SSECPU_OBJ)
+#if !defined(SSE_STRUCTURE_SSECPU_OBJ)
   inline // TODO
 #endif
     int FetchingLine();
   void IncScanline();
-#if defined(SS_SHIFTER_FIX_LINE508_CONFUSION)
+#if defined(SSE_SHIFTER_FIX_LINE508_CONFUSION)
   inline bool Line508Confusion();
 #endif
   BYTE IORead(MEM_ADDRESS addr);
@@ -143,7 +143,7 @@ struct TShifter {
   inline void ShiftSDP(int shift);
   void Vbl();
 
-#if defined(SS_SHIFTER_TRICKS) // some functions aren't used
+#if defined(SSE_SHIFTER_TRICKS) // some functions aren't used
   inline void AddFreqChange(int f);
   inline void AddShiftModeChange(int r);
   inline int CheckShiftMode(int t);
@@ -176,11 +176,11 @@ struct TShifter {
   inline int CycleOfLastChangeToShiftMode(int value);
 #endif
 
-#if defined(SS_SHIFTER_SDP)
-#ifdef SS_SHIFTER_SDP_READ
+#if defined(SSE_SHIFTER_SDP)
+#ifdef SSE_SHIFTER_SDP_READ
   inline MEM_ADDRESS ReadSDP(int cycles_since_hbl,int dispatcher=DISPATCHER_NONE);
 #endif
-#ifdef SS_SHIFTER_SDP_WRITE
+#ifdef SSE_SHIFTER_SDP_WRITE
 //#if defined(_DEBUG) // VC IDE
 //  int WriteSDP(MEM_ADDRESS addr, BYTE io_src_b);
 //#else
@@ -200,20 +200,20 @@ struct TShifter {
   BYTE *ScanlineBuffer;
 #endif
 
-#if defined(SS_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE)
   BYTE m_ShiftMode,m_SyncMode;
 #else
   int m_ShiftMode; // contrary to screen_res, it's updated at each change
   int m_SyncMode;//
 #endif
   int TrickExecuted; //make sure that each trick will only be applied once
-#if defined(SS_DEBUG)
+#if defined(SSE_DEBUG)
   int nVbl;
 #endif
-#if defined(SS_SHIFTER_UNSTABLE)
+#if defined(SSE_SHIFTER_UNSTABLE)
   BYTE Preload; // #words into shifter's RR (shifts display)
 #endif
-#if defined(SS_SHIFTER_PANIC) || defined(SS_SHIFTER_STE_HI_HSCROLL)
+#if defined(SSE_SHIFTER_PANIC) || defined(SSE_SHIFTER_STE_HI_HSCROLL)
   DWORD Scanline[230/4+2]; // the price of fun
 #endif
 };
@@ -226,7 +226,7 @@ extern TShifter Shifter; // singleton
 ////////////////////////////////
 
 
-#if defined(IN_EMU) && !defined(SS_STRUCTURE_SSESHIFTER_OBJ)//temp...
+#if defined(IN_EMU) && !defined(SSE_STRUCTURE_SSESHIFTER_OBJ)//temp...
 
 inline void TShifter::AddExtraToShifterDrawPointerAtEndOfLine(unsigned long &extra) {
   // What a beautiful name!
@@ -248,7 +248,7 @@ what we do here. Maybe.
 Also, when must this be applied? Should be moved?
 */
   if(shifter_skip_raster_for_hscroll) 
-#if defined(SS_SHIFTER_STE_MED_HSCROLL)
+#if defined(SSE_SHIFTER_STE_MED_HSCROLL)
     extra+= (left_border) ? 
     (screen_res==1) ? 4 : 8 // handle MED RES, fixes Cool STE unreadable scrollers
     : 2; 
@@ -310,7 +310,7 @@ inline void TShifter::DrawBufferedScanlineToVideo() {
 
 #endif
 
-#if !defined(SS_STRUCTURE_SSECPU_OBJ)
+#if !defined(SSE_STRUCTURE_SSECPU_OBJ)
 inline 
 #endif
 int TShifter::FetchingLine() {
@@ -318,7 +318,7 @@ int TShifter::FetchingLine() {
   // notice < shifter_last_draw_line, not <=
   return (scan_y>=shifter_first_draw_line && scan_y<shifter_last_draw_line
 
-#if defined(SS_VID_BORDERS_BIGTOP)
+#if defined(SSE_VID_BORDERS_BIGTOP)
 //          && scan_y>=draw_first_possible_line+(DISPLAY_SIZE>=3?6:0) 
       && (DISPLAY_SIZE<BIGGEST_DISPLAY 
       || scan_y>=draw_first_scanline_for_border+
@@ -329,7 +329,7 @@ int TShifter::FetchingLine() {
 }
 
 
-#if defined(SS_SHIFTER_FIX_LINE508_CONFUSION)
+#if defined(SSE_SHIFTER_FIX_LINE508_CONFUSION)
 /*  In Steem the timings of all HBLs are prepared for each frame
     using the "event" system.
     In a 50hz frame, when there are 60hz (508 cycles) scanlines, 
@@ -445,13 +445,13 @@ FF825E
    of colours would be $000, $888, $111, $999, $222, $AAA, ...
 
 */
-#if defined(SS_STF_PAL)
+#if defined(SSE_STF_PAL)
   if(ST_TYPE!=STE)
     NewPal &= 0x0777; // fixes Forest HW STF test
   else
 #endif
     NewPal &= 0x0FFF;
-#if defined(SS_VID_AUTOOFF_DECRUNCHING)
+#if defined(SSE_VID_AUTOOFF_DECRUNCHING)
   if(!n && NewPal && NewPal!=0x777) // basic test, but who uses autoborder?
     overscan=OVERSCAN_MAX_COUNTDOWN;
 #endif
@@ -471,7 +471,7 @@ FF825E
     }
 }
 
-#if defined(SS_SHIFTER_TRICKS)
+#if defined(SSE_SHIFTER_TRICKS)
 
 /* V.3.3 used Hatari analysis. Now that we do without this hack, we need
    look-up functions to extend the existing Steem system.
@@ -485,7 +485,7 @@ inline void TShifter::AddFreqChange(int f) {
   shifter_freq_change_idx++;
   shifter_freq_change_idx&=31;
   shifter_freq_change_time[shifter_freq_change_idx]=ABSOLUTE_CPU_TIME;
-#if defined(SS_SHIFTER_FIX_LINE508_CONFUSION)
+#if defined(SSE_SHIFTER_FIX_LINE508_CONFUSION)
   if( Line508Confusion() )
     shifter_freq_change_time[shifter_freq_change_idx]-=4;
 #endif
@@ -499,7 +499,7 @@ inline void TShifter::AddShiftModeChange(int mode) {
   shifter_shift_mode_change_idx++;
   shifter_shift_mode_change_idx&=31;
   shifter_shift_mode_change_time[shifter_shift_mode_change_idx]=ABSOLUTE_CPU_TIME;
-#if defined(SS_SHIFTER_FIX_LINE508_CONFUSION)
+#if defined(SSE_SHIFTER_FIX_LINE508_CONFUSION)
   if( Line508Confusion() )
     shifter_shift_mode_change_time[shifter_shift_mode_change_idx]-=4;
 #endif
@@ -762,7 +762,7 @@ inline int TShifter::CycleOfLastChangeToShiftMode(int value) {
   return -1;
 }
 
-#endif//#if defined(SS_SHIFTER_TRICKS)
+#endif//#if defined(SSE_SHIFTER_TRICKS)
 
 
 
@@ -800,8 +800,8 @@ inline int TShifter::CycleOfLastChangeToShiftMode(int value) {
 
 */
 
-#if defined(SS_SHIFTER_SDP_READ) && defined(IN_EMU) 
-#ifdef SS_UNIX
+#if defined(SSE_SHIFTER_SDP_READ) && defined(IN_EMU) 
+#ifdef SSE_UNIX
 #define min(a,b) (a>b ? b:a)
 #define max(a,b) (a>b ? a:b)
 #endif
@@ -809,7 +809,7 @@ inline int TShifter::CycleOfLastChangeToShiftMode(int value) {
 inline MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
   if (bad_drawing){
     // Fake SDP
-#if defined(SS_SHIFTER_SDP_TRACE_LOG)
+#if defined(SSE_SHIFTER_SDP_TRACE_LOG)
     TRACE_LOG("fake SDP\n");
 #endif
     if (scan_y<0){
@@ -843,62 +843,62 @@ inline MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
 
     TODO: modify CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN
     Before that, we keep this big debug block (normally only 
-    SS_CPU_PREFETCH_TIMING will be defined).
+    SSE_CPU_PREFETCH_TIMING will be defined).
 */
 
-#if defined(SS_CPU_PREFETCH_TIMING)
+#if defined(SSE_CPU_PREFETCH_TIMING)
   starts_counting-=2;
 #else
   if(0);
-#if defined(SS_CPU_LINE_0_TIMINGS)
+#if defined(SSE_CPU_LINE_0_TIMINGS)
   else if( (ir&0xF000)==0x0000)
     starts_counting-=2;
 #endif
-#if defined(SS_CPU_LINE_1_TIMINGS)
+#if defined(SSE_CPU_LINE_1_TIMINGS)
   else if( (ir&0xF000)==0x1000)
     starts_counting-=2;
 #endif
-#if defined(SS_CPU_LINE_2_TIMINGS)
+#if defined(SSE_CPU_LINE_2_TIMINGS)
   else if( (ir&0xF000)==0x2000) 
     starts_counting-=2;
 #endif
-#if defined(SS_CPU_LINE_3_TIMINGS)
+#if defined(SSE_CPU_LINE_3_TIMINGS)
   else if( (ir&0xF000)==0x3000) 
     starts_counting-=2;
 #endif
-#if defined(SS_CPU_LINE_4_TIMINGS)
+#if defined(SSE_CPU_LINE_4_TIMINGS)
   else if( (ir&0xF000)==0x4000) 
     starts_counting-=2;
 #endif
-#if defined(SS_CPU_LINE_5_TIMINGS)
+#if defined(SSE_CPU_LINE_5_TIMINGS)
   else if( (ir&0xF000)==0x5000) 
     starts_counting-=2;
 #endif
-#if defined(SS_CPU_LINE_8_TIMINGS)
+#if defined(SSE_CPU_LINE_8_TIMINGS)
   else if( (ir&0xF000)==0x8000) 
     starts_counting-=2;
 #endif
-#if defined(SS_CPU_LINE_9_TIMINGS)
+#if defined(SSE_CPU_LINE_9_TIMINGS)
   else if( (ir&0xF000)==0x9000)
     starts_counting-=2;
 #endif
-#if defined(SS_CPU_LINE_B_TIMINGS)
+#if defined(SSE_CPU_LINE_B_TIMINGS)
   else if( (ir&0xF000)==0xB000) // CMP & EOR
     starts_counting-=2;
 #endif
-#if defined(SS_CPU_LINE_C_TIMINGS)
+#if defined(SSE_CPU_LINE_C_TIMINGS)
   else if( (ir&0xF000)==0xC000) // (+ ABCD, EXG, MUL, line C)
     starts_counting-=2;
 #endif
-#if defined(SS_CPU_LINE_D_TIMINGS)
+#if defined(SSE_CPU_LINE_D_TIMINGS)
   else if( (ir&0xF000)==0xD000) // (+ ABCD, EXG, MUL, line C)
     starts_counting-=2;
 #endif
-#if defined(SS_CPU_LINE_E_TIMINGS)
+#if defined(SSE_CPU_LINE_E_TIMINGS)
   else if( (ir&0xF000)==0xE000) 
     starts_counting-=2;
 #endif
-#if defined(SS_DEBUG_TRACE_LOG_SDP_READ_IR)
+#if defined(SSE_DEBUG_TRACE_LOG_SDP_READ_IR)
   else 
   {
     if(ir!=debug1)
@@ -918,7 +918,7 @@ inline MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
     if(!left_border)
       starts_counting-=26;
 
-#if defined(SS_SHIFTER_TCB) && defined(SS_SHIFTER_TRICKS)
+#if defined(SSE_SHIFTER_TCB) && defined(SSE_SHIFTER_TRICKS)
 /*  The following is a hack for SNYD/TCB.
 
 Troed:
@@ -966,7 +966,7 @@ Cases to consider: TCB, Mindbomb/No Shit, Omega
       sdp+=c;
     }
     
-#if defined(SS_SHIFTER_SDP_TRACE_LOG3) // compare with Steem (can't be 100%)
+#if defined(SSE_SHIFTER_SDP_TRACE_LOG3) // compare with Steem (can't be 100%)
     if(sdp>shifter_draw_pointer_at_start_of_line)
     {
       MEM_ADDRESS sdpdbg=get_shifter_draw_pointer(CyclesIn);
@@ -981,7 +981,7 @@ Cases to consider: TCB, Mindbomb/No Shit, Omega
   else // lines witout fetching (before or after frame)
     sdp=shifter_draw_pointer;
 
-#if defined(SS_SHIFTER_SDP_TRACE_LOG2)
+#if defined(SSE_SHIFTER_SDP_TRACE_LOG2)
   if(scan_y==-29) TRACE_LOG("Read SDP F%d y%d c%d SDP %X (%d - %d) sdp %X\n",FRAME,scan_y,CyclesIn,sdp,sdp-shifter_draw_pointer_at_start_of_line,CurrentScanline.Bytes,shifter_draw_pointer);
 #endif
   int nbytes=sdp-shifter_draw_pointer_at_start_of_line;
@@ -992,7 +992,7 @@ Cases to consider: TCB, Mindbomb/No Shit, Omega
 
 #ifdef IN_EMU//temp
 
-#ifdef SS_SHIFTER_SDP_WRITE
+#ifdef SSE_SHIFTER_SDP_WRITE
 
 void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 /*
@@ -1110,22 +1110,22 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 
   int cycles=LINECYCLES; // cycle in shifter reckoning
 
-#if defined(SS_SHIFTER_SDP_TRACE_LOG2)
+#if defined(SSE_SHIFTER_SDP_TRACE_LOG2)
   TRACE_LOG("F%d y%d c%d Write %X to %X\n",FRAME,scan_y,cycles,io_src_b,addr);
 #endif
 
-#if defined(SS_OSD_CONTROL)
+#if defined(SSE_OSD_CONTROL)
   if(OSD_MASK3 & OSD_CONTROL_WRITESDP) 
 #else
   if(TRACE_ENABLED)
 #endif
     TRACE_OSD("WRITE SDP");  
 
-#if defined(SS_STF_SDP)
+#if defined(SSE_STF_SDP)
   // some STF programs write to those addresses, it just must be ignored.
   if(ST_TYPE!=STE)
   {
-#if defined(SS_SHIFTER_SDP_TRACE_LOG)
+#if defined(SSE_SHIFTER_SDP_TRACE_LOG)
     TRACE_LOG("STF ignore write to SDP %x %x\n",addr,io_src_b);
 #endif
     return; // fixes Nightdawn, STF-only game
@@ -1135,7 +1135,7 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
   // some bits will stay at 0 in the STE whatever you write
   if(mem_len<=FOUR_MEGS && addr==0xFF8205) // already in Steem 3.2 (not in 3.3!)
     io_src_b&=0x3F; // fixes Delirious IV bugged STE detection routine
-#if defined(SS_SHIFTER_SDP_WRITE_LOWER_BYTE)
+#if defined(SSE_SHIFTER_SDP_WRITE_LOWER_BYTE)
   else if(addr==0xFF8209)
     io_src_b&=0xFE; // fixes RGBeast mush (yoho!)
 #endif
@@ -1150,7 +1150,7 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 
   Render(cycles,DISPATCHER_WRITE_SDP);
 
-#if defined(SS_SHIFTER_SDP_READ)
+#if defined(SSE_SHIFTER_SDP_READ)
   MEM_ADDRESS sdp_real=ReadSDP(cycles,DISPATCHER_WRITE_SDP); 
 #else
   MEM_ADDRESS sdp_real=get_shifter_draw_pointer(cycles);
@@ -1165,7 +1165,7 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
     int current_sdp_middle_byte=(shifter_draw_pointer&0xFF00)>>8;
     if(current_sdp_middle_byte != SDPMiddleByte) // need to restore?
     {
-#if defined(SS_SHIFTER_SDP_TRACE_LOG)
+#if defined(SSE_SHIFTER_SDP_TRACE_LOG)
       TRACE_LOG("F%d y%d c%d SDP %X reset middle byte from %X to %X\n",FRAME,scan_y,cycles,shifter_draw_pointer,current_sdp_middle_byte,SDPMiddleByte);
 #endif
       DWORD_B(&shifter_draw_pointer,(0xff8209-0xff8207)/2)=SDPMiddleByte;
@@ -1180,7 +1180,7 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
   if(addr==0xFF8209 && de)
   {
 
-#if defined(SS_SHIFTER_PACEMAKER)
+#if defined(SSE_SHIFTER_PACEMAKER)
     if(SSE_HACKS_ON&&(bytes_drawn==8||bytes_drawn==16)) 
     {
       nsdp+=bytes_drawn; // hack for Pacemaker credits line 70 flicker/shift
@@ -1188,7 +1188,7 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
     }
 #endif
 
-#if defined(SS_SHIFTER_DANGEROUS_FANTAISY)
+#if defined(SSE_SHIFTER_DANGEROUS_FANTAISY)
     if(SSE_HACKS_ON
       && bytes_drawn==CurrentScanline.Bytes-8 && bytes_in>bytes_drawn)
       nsdp+=-8; // hack for Dangerous Fantaisy credits lower overscan flicker
@@ -1208,25 +1208,25 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
     // cancel the Steem 3.2 fix for left off with STE scrolling on
     if(!ExtraAdded && (CurrentScanline.Tricks&TRICK_LINE_PLUS_26)
       && HSCROLL>=12
-#if defined(SS_VID_BORDERS_416_NO_SHIFT) 
+#if defined(SSE_VID_BORDERS_416_NO_SHIFT) 
       // don't try to understand this, I don't
       && (!SSE_HACKS_ON||SideBorderSize!=VERY_LARGE_BORDER_SIDE||!border)
 #endif
       )
       overscan_add_extra+=8; // fixes bumpy scrolling in E605 Planet
 
-#if defined(SS_SHIFTER_SDP_WRITE_DE_HSCROLL)
+#if defined(SSE_SHIFTER_SDP_WRITE_DE_HSCROLL)
     if(SSE_HACKS_ON
       &&shifter_skip_raster_for_hscroll && !left_border && !ExtraAdded)
     {
       if(PreviousScanline.Tricks&TRICK_STABILISER)
-#if defined(SS_SHIFTER_TEKILA)
+#if defined(SSE_SHIFTER_TEKILA)
         nsdp+=-2; // fixes D4/Tekila shift
 #else
         ;
 #endif
       else 
-#if defined(SS_CPU_PREFETCH_TIMING) || defined(CORRECTING_PREFETCH_TIMING)
+#if defined(SSE_CPU_PREFETCH_TIMING) || defined(CORRECTING_PREFETCH_TIMING)
         nsdp+=2; // it's because we come sooner (which is more correct)
 #else
         nsdp+=4; // fixes E605 Planet shift
@@ -1243,7 +1243,7 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
   shifter_draw_pointer_at_start_of_line+=nsdp;
   shifter_draw_pointer=nsdp;
 
-#if defined(SS_SHIFTER_SDP_WRITE_MIDDLE_BYTE)
+#if defined(SSE_SHIFTER_SDP_WRITE_MIDDLE_BYTE)
   // hack, record middle byte, programmer couldn't intend it to change
   if(SSE_HACKS_ON && fl && addr==0xff8207)  
     SDPMiddleByte=io_src_b; // fixes Pacemaker credits, Tekila
@@ -1300,11 +1300,11 @@ void TShifter::ShiftSDP(int shift) { //inline
           }
 
 
-#endif//#if defined(SS_SHIFTER)
+#endif//#if defined(SSE_SHIFTER)
 
 #undef LOGSECTION 
 
-#if defined(SS_STRUCTURE_SSESHIFTER_OBJ)
+#if defined(SSE_STRUCTURE_SSESHIFTER_OBJ)
 #undef inline
 #endif
 

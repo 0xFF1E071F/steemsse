@@ -702,7 +702,7 @@ LONG m68k_read_dest_l(){
 }
 #ifdef _DEBUG_BUILD
 #define DEBUG_CHECK_IOACCESS \
-  if (ioaccess & IOACCESS_DEBUG_MEM_WRITE_LOG){ \
+  if (ioaccess & IOACCESSE_DEBUG_MEM_WRITE_LOG){ \
     int val=int((debug_mem_write_log_bytes==1) ? int(m68k_peek(debug_mem_write_log_address)):int(m68k_dpeek(debug_mem_write_log_address))); \
     log_write(HEXSl(old_pc,6)+": Write to address $"+HEXSl(debug_mem_write_log_address,6)+ \
                   ", new value is "+val+" ($"+HEXSl(val,debug_mem_write_log_bytes*2)+")"); \

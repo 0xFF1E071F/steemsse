@@ -8,11 +8,11 @@ for output.
 /*  SS 'init' is a bit of a misnomer as it's used during emulation
 */
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: init_sound.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INITSOUND_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INITSOUND_H)
 #define EXT
 #define INIT(s) =s
 
@@ -155,7 +155,7 @@ HRESULT InitSound()
 
   HRESULT Ret;
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_SOUND_SKIP_DSOUND_TEST)) //stupid?
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_SOUND_SKIP_DSOUND_TEST)) //stupid?
   // Hey, this allows Steem to run even if there is no DSound.dll
   log("SOUND: Attempting to load dsound.dll");
   HINSTANCE hDSDll=LoadLibrary("dsound");
@@ -332,7 +332,7 @@ position, but the current write position cannot be changed.
 
 */
     SoundBuf->GetCurrentPosition(&play_cursor,&write_cursor);
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_OPTIMISE) // one DIV fewer!
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_OPTIMISE) // one DIV fewer!
     DWORD cursor=(sound_time_method==0) ? play_cursor:write_cursor;
     cursor/=sound_bytes_per_sample;
 #else
@@ -363,7 +363,7 @@ HRESULT DSReleaseAllBuffers(HRESULT Ret=DS_OK) //SS what is this horror?
     SoundBuf->Stop();SoundBuf->Release();
   }
 
-#if defined(SS_DRIVE_SOUND)
+#if defined(SSE_DRIVE_SOUND)
   SF314[0].Sound_ReleaseBuffers();
 #endif
 
@@ -541,8 +541,8 @@ HRESULT DSCreateSoundBuf()
     // Successfully created a buffer at DS_SetFormat_freq so make output match it
     if (DS_GetFormat_Wrong) sound_freq=DS_SetFormat_freq;
 
-#if defined(SS_DRIVE_SOUND)
-    if(SSE_DRIVE_SOUND)
+#if defined(SSE_DRIVE_SOUND)
+    if(SSEOption.DriveSound)
       SF314[0].Sound_LoadSamples(DSObj,&dsbd,&wfx);
 #endif
 

@@ -1,10 +1,10 @@
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DIRID_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DIRID_H)
 
 #include "dir_id.decla.h"
 
-#else//!SS_STRUCTURE_DIRID_H
+#else//!SSE_STRUCTURE_DIRID_H
 
 
 
@@ -34,4 +34,4 @@ char *KeyboardButtonName[256]={NULL};
 #define NOT_BLANK_DIRID(i) (HIBYTE(i)!=0xff)
 #endif
 
-#endif//#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DIRID_H)
+#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DIRID_H)

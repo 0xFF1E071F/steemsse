@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_NOTIFYINIT_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_NOTIFYINIT_H)
 
 #include "notifyinit.decla.h"
 
-#else//!SS_STRUCTURE_NOTIFYINIT_H
+#else//!SSE_STRUCTURE_NOTIFYINIT_H
 
 void CreateNotifyInitWin();
 void DestroyNotifyInitWin();
@@ -15,4 +15,4 @@ HWND NotifyWin=NULL;
 ONEGAME_ONLY( HWND NotifyWinParent; )
 #endif
 
-#endif//SS_STRUCTURE_NOTIFYINIT_H
+#endif//SSE_STRUCTURE_NOTIFYINIT_H

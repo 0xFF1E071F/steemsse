@@ -5,13 +5,13 @@ DESCRIPTION: The code to perform the sometimes confusing task of associating
 Steem with required file types.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: associate.cpp")
 #endif
 
 #ifdef WIN32
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_ASSOCIATE_CU)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ASSOCIATE_CU)
 /*  v3.5.3
     The proper way to associate in Win32 is to use current user, not root.
     HKEY_CURRENT_USER instead of HKEY_CLASSES_ROOT, so you
@@ -156,7 +156,7 @@ BOOL RegDelnode (HKEY hKeyRoot, LPTSTR lpSubKey)
 
 }
 
-#else // defined(STEVEN_SEAGAL) && defined(SS_VAR_ASSOCIATE_CU)
+#else // defined(STEVEN_SEAGAL) && defined(SSE_VAR_ASSOCIATE_CU)
 
 LONG RegCopyKey(HKEY FromKeyParent,char *FromKeyName,HKEY ToKeyParent,char *ToKeyName)
 {
@@ -200,7 +200,7 @@ LONG RegCopyKey(HKEY FromKeyParent,char *FromKeyName,HKEY ToKeyParent,char *ToKe
 
   return Ret;
 }
-#endif//else of defined(STEVEN_SEAGAL) && defined(SS_VAR_ASSOCIATE_CU)
+#endif//else of defined(STEVEN_SEAGAL) && defined(SSE_VAR_ASSOCIATE_CU)
 
 #endif//WIN32
 //---------------------------------------------------------------------------
@@ -208,7 +208,7 @@ bool IsSteemAssociated(EasyStr Exts)
 {
 #ifdef WIN32
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_ASSOCIATE_CU)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ASSOCIATE_CU)
 
   LONG ErrorCode;
   HKEY Key;
@@ -266,7 +266,7 @@ bool IsSteemAssociated(EasyStr Exts)
 
   return 0; // no, our EXE is not associated
 
-#else//#if defined(STEVEN_SEAGAL) && defined(SS_VAR_ASSOCIATE_CU)
+#else//#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ASSOCIATE_CU)
 
   if (Exts[0]!='.') Exts.Insert(".",0);
 
@@ -307,7 +307,7 @@ bool IsSteemAssociated(EasyStr Exts)
       }
     }
   }
-#endif //else of defined(STEVEN_SEAGAL) && defined(SS_VAR_ASSOCIATE_CU)
+#endif //else of defined(STEVEN_SEAGAL) && defined(SSE_VAR_ASSOCIATE_CU)
 #elif defined(UNIX)
 #endif
   return 0;
@@ -317,7 +317,7 @@ void AssociateSteem(EasyStr Exts,EasyStr FileClass,bool Force,char *TypeDisplayN
 {
 #ifdef WIN32
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_ASSOCIATE_CU)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ASSOCIATE_CU)
 
   LONG ErrorCode;
   HKEY Key;
@@ -331,7 +331,7 @@ void AssociateSteem(EasyStr Exts,EasyStr FileClass,bool Force,char *TypeDisplayN
     Exts.Insert(".",0);
   Exts.Insert(key_location,0);
 
-#if defined(SS_VAR_MAY_REMOVE_ASSOCIATION)
+#if defined(SSE_VAR_MAY_REMOVE_ASSOCIATION)
 /*  If this version of Steem is already associated, we come here to
     remove the association. We didn't create a separate function to spare
     some code.
@@ -355,7 +355,7 @@ void AssociateSteem(EasyStr Exts,EasyStr FileClass,bool Force,char *TypeDisplayN
     RegCloseKey(Key);
   }
 #undef LOGSECTION
-#else// defined(STEVEN_SEAGAL) && defined(SS_VAR_ASSOCIATE_CU)
+#else// defined(STEVEN_SEAGAL) && defined(SSE_VAR_ASSOCIATE_CU)
 
   if (Exts[0]!='.') Exts.Insert(".",0);
 
@@ -513,7 +513,7 @@ void AssociateSteem(EasyStr Exts,EasyStr FileClass,bool Force,char *TypeDisplayN
   }
   RegCloseKey(Key);
 
-#endif// defined(STEVEN_SEAGAL) && defined(SS_VAR_ASSOCIATE_CU)
+#endif// defined(STEVEN_SEAGAL) && defined(SSE_VAR_ASSOCIATE_CU)
 
 #elif defined(UNIX)
 #endif

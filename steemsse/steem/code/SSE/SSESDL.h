@@ -2,11 +2,11 @@
 #ifndef SSESDL_H
 #define SSESDL_H
 
-#if defined(SS_SDL) //&& !defined(SS_SDL_DEACTIVATE)
+#if defined(SSE_SDL) //&& !defined(SSE_SDL_DEACTIVATE)
 
 #include <SDL-WIN/include/SDL.h> 
 
-#if defined(WIN32) && defined(SS_DELAY_LOAD_DLL)
+#if defined(WIN32) && defined(SSE_DELAY_LOAD_DLL)
 
 // DLL is 'delay loaded'
 #ifdef _MSC_VER
@@ -20,9 +20,9 @@
 #pragma comment(lib, "../../3rdparty/SDL-WIN/bcclib/SDL.lib")
 #endif
 #endif//win32
-#endif //!defined(SS_SDL_DEACTIVATE)
+#endif //!defined(SSE_SDL_DEACTIVATE)
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
 
 struct TSDL {
   bool Available;
@@ -44,6 +44,6 @@ struct TSDL {
 
 extern TSDL SDL;
 
-#endif//!defined(SS_SDL_DEACTIVATE)
+#endif//!defined(SSE_SDL_DEACTIVATE)
 
 #endif//SSESDL_H

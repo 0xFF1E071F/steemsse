@@ -6,11 +6,11 @@ GUI functions. It creates the main window in MakeGUI, handles translations
 and (for some reason) command-line options.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: gui.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_GUI_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_GUI_H)
 
 #define EXT
 #define INIT(s) =s
@@ -175,11 +175,11 @@ const POINT WinSize[4][5]={ {{320,200},{640,400},{960, 600},{1280,800},{-1,-1}},
                             {{640,400},{1280,800},{-1,-1}},
                             {{800,600},{-1,-1}}};
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS)
 
 // TODO, it works but there ought to be a better way
 
-#if defined(SS_VID_BORDERS_BIGTOP)
+#if defined(SSE_VID_BORDERS_BIGTOP)
 // didn't see any problem, but this takes no chance, more like an assert
 #undef BORDER_TOP
 #define BORDER_TOP 30
@@ -222,10 +222,10 @@ const POINT WinSize[4][5]={ {{320,200},{640,400},{960, 600},{1280,800},{-1,-1}},
 {-1,-1}}
 };
 
-#if defined(SS_VID_BORDERS_412)
+#if defined(SSE_VID_BORDERS_412)
 
-#if defined(SS_VID_BORDERS_413)
-#if defined(SS_VID_BORDERS_BIGTOP) && !defined(SS_VID_BORDERS_416) // 412*286
+#if defined(SSE_VID_BORDERS_413)
+#if defined(SSE_VID_BORDERS_BIGTOP) && !defined(SSE_VID_BORDERS_416) // 412*286
 POINT WinSizeBorderVeryLarge[4][5]={ 
 {{320+VERY_LARGE_BORDER_SIDE_WIN*2,200+(BIG_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
 {640+(VERY_LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BIG_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)}, 
@@ -263,7 +263,7 @@ POINT WinSizeBorderVeryLarge[4][5]={
 };
 #endif//bigtop
 #else//!413
-#if defined(SS_VID_BORDERS_BIGTOP) && !defined(SS_VID_BORDERS_416) // 412*286
+#if defined(SSE_VID_BORDERS_BIGTOP) && !defined(SSE_VID_BORDERS_416) // 412*286
 POINT WinSizeBorderVeryLarge[4][5]={ 
 {{320+VERY_LARGE_BORDER_SIDE_WIN*2,200+(BIG_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
 {640+(VERY_LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BIG_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)}, 
@@ -304,9 +304,9 @@ POINT WinSizeBorderVeryLarge[4][5]={
 #endif//412
 
 
-#if defined(SS_VID_BORDERS_416)
+#if defined(SSE_VID_BORDERS_416)
 
-#if defined(SS_VID_BORDERS_BIGTOP) // 416*286
+#if defined(SSE_VID_BORDERS_BIGTOP) // 416*286
 POINT WinSizeBorderVeryLarge2[4][5]={ 
 {{320+VERY_LARGE_BORDER_SIDE*2,200+(BIG_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
 {640+(VERY_LARGE_BORDER_SIDE*2)*2,400+2*(BIG_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)}, 
@@ -345,7 +345,7 @@ POINT WinSizeBorderVeryLarge2[4][5]={
 #endif//bigtop
 #endif//416
 
-#if defined(SS_VID_BORDERS_BIGTOP)
+#if defined(SSE_VID_BORDERS_BIGTOP)
 #undef BORDER_TOP
 #define BORDER_TOP (  (DISPLAY_SIZE==BIGGEST_DISPLAY) \
   ? BIG_BORDER_TOP : ORIGINAL_BORDER_TOP )
@@ -425,7 +425,7 @@ BYTE STCharToPCChar[128]={199,  0,233,226,228,224,229,231,234,235,232,239,238,23
 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_KEYTABLE_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_KEYTABLE_H)
 #include "key_table.cpp" //temp!
 #endif
 
@@ -434,7 +434,7 @@ BYTE STCharToPCChar[128]={199,  0,233,226,228,224,229,231,234,235,232,239,238,23
 
 #if defined(STEVEN_SEAGAL)
 
-#if defined(SS_VID_BORDERS)
+#if defined(SSE_VID_BORDERS)
 
 extern int draw_last_scanline_for_border,res_vertical_scale; // forward
 
@@ -459,7 +459,7 @@ int ChangeBorderSize(int size_in) {
       BottomBorderSize=LARGE_BORDER_BOTTOM;
       break;
     case 2:
-#if defined(SS_VID_BORDERS_412)
+#if defined(SSE_VID_BORDERS_412)
       SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
       SideBorderSizeWin=VERY_LARGE_BORDER_SIDE_WIN; // show 412
       BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
@@ -470,7 +470,7 @@ int ChangeBorderSize(int size_in) {
 #endif
       break;
 
-#if defined(SS_VID_BORDERS_416) && defined(SS_VID_BORDERS_412)
+#if defined(SSE_VID_BORDERS_416) && defined(SSE_VID_BORDERS_412)
     case 3:
       SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
       SideBorderSizeWin=VERY_LARGE_BORDER_SIDE; // show 416
@@ -492,13 +492,13 @@ int ChangeBorderSize(int size_in) {
           WinSizeBorder[i][j]=WinSizeBorderLarge[i][j];
           break;
         case 2:
-#if defined(SS_VID_BORDERS_412)
+#if defined(SSE_VID_BORDERS_412)
           WinSizeBorder[i][j]=WinSizeBorderVeryLarge[i][j];
 #else
           WinSizeBorder[i][j]=WinSizeBorderVeryLarge2[i][j];
 #endif
           break;
-#if defined(SS_VID_BORDERS_416) && defined(SS_VID_BORDERS_412)
+#if defined(SSE_VID_BORDERS_416) && defined(SSE_VID_BORDERS_412)
         case 3:
           WinSizeBorder[i][j]=WinSizeBorderVeryLarge2[i][j];
           break;
@@ -516,7 +516,7 @@ int ChangeBorderSize(int size_in) {
 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_STATUS_STRING)
 /*  Cool feature introduced with v3.5.4, a kind of status bar consisting
     in a formatted text string placed on the icon bar of Steem.
 */
@@ -539,12 +539,12 @@ void GUIRefreshStatusBar() {
     {
       // basic ST/TOS/RAM
       char 
-#if !defined(SS_VAR_STATUS_STRING_FULL_ST_MODEL)
+#if !defined(SSE_VAR_STATUS_STRING_FULL_ST_MODEL)
         sb_st_model[5],
 #endif
         sb_tos[5],sb_ram[7];
-#if defined(SS_MMU_WAKE_UP_DL)
-#if !defined(SS_VAR_STATUS_STRING_FULL_ST_MODEL)
+#if defined(SSE_MMU_WAKE_UP_DL)
+#if !defined(SSE_VAR_STATUS_STRING_FULL_ST_MODEL)
       sprintf(sb_st_model,"%s%d",(ST_TYPE)? "STF":"STE",MMU.WS[WAKE_UP_STATE]);
       if(!WAKE_UP_STATE)
         sb_st_model[3]=0;
@@ -554,9 +554,9 @@ void GUIRefreshStatusBar() {
 #endif
       sprintf(sb_tos,"T%x",tos_version);
       sprintf(sb_ram,"%dK",mem_len/1024);
-#if defined(SS_VAR_STATUS_STRING_FULL_ST_MODEL)
+#if defined(SSE_VAR_STATUS_STRING_FULL_ST_MODEL)
       sprintf(status_bar,"%s %s %s",st_model_name[ST_TYPE],sb_tos,sb_ram);
-#if defined(SS_MMU_WAKE_UP_DL)
+#if defined(SSE_MMU_WAKE_UP_DL)
       if(WAKE_UP_STATE)
       {
         char sb_wu[6];
@@ -568,15 +568,15 @@ void GUIRefreshStatusBar() {
       sprintf(status_bar,"%s %s %s",sb_st_model,sb_tos,sb_ram);
 #endif 
       // some options (6301, Pasti...)
-#if defined(SS_IKBD_6301) && defined(SS_VAR_STATUS_STRING_6301)
+#if defined(SSE_IKBD_6301) && defined(SSE_VAR_STATUS_STRING_6301)
       if(HD6301EMU_ON)
         strcat(status_bar," 6301");
 #endif
       
-#if USE_PASTI && defined(SS_VAR_STATUS_STRING_PASTI)
+#if USE_PASTI && defined(SSE_VAR_STATUS_STRING_PASTI)
       if(hPasti && pasti_active
-#if defined(SS_DRIVE)&&defined(SS_PASTI_ONLY_STX)
-#if defined(SS_DISK_IMAGETYPE)
+#if defined(SSE_DRIVE)&&defined(SSE_PASTI_ONLY_STX)
+#if defined(SSE_DISK_IMAGETYPE)
         && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType.Extension==EXT_STX)
 #else
         && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
@@ -588,29 +588,29 @@ void GUIRefreshStatusBar() {
       if(0);
 #endif
       
-#if defined(SS_VAR_STATUS_STRING_IPF) && defined(SS_IPF)
+#if defined(SSE_VAR_STATUS_STRING_IPF) && defined(SSE_IPF)
       else if(Caps.Active)
         strcat(status_bar," Caps");
 #endif
       
-#if defined(SS_VAR_STATUS_STRING_ADAT)
+#if defined(SSE_VAR_STATUS_STRING_ADAT)
       else if(ADAT)
         strcat(status_bar," ADAT");
 #endif
       
-#if defined(SS_VAR_STATUS_STRING_HACKS)
+#if defined(SSE_VAR_STATUS_STRING_HACKS)
       if(SSE_HACKS_ON)
         strcat(status_bar," #"); // which symbol?
 #endif
 
-#if defined(SS_VAR_STATUS_STRING_VSYNC)
+#if defined(SSE_VAR_STATUS_STRING_VSYNC)
       if(SSE_WIN_VSYNC)
         strcat(status_bar," V"); // V for VSync!
 #endif
 
     }
 
-#if defined(SS_VAR_STATUS_STRING_DISK_NAME)
+#if defined(SSE_VAR_STATUS_STRING_DISK_NAME)
 /*  We try to take advantage of all space.
     Font is proportional so we need a margin.
     TODO: precise computing
@@ -1003,7 +1003,7 @@ bool MakeGUI()
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_RESET),WS_CHILDWINDOW | WS_VISIBLE |
                           PBS_RIGHTCLICK,x,0,20,20,StemWin,(HMENU)102,Inst,NULL);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESET_BUTTON)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESET_BUTTON)
   ToolAddWindow(ToolTip,Win,T("Reset (Left Click) - Switch off (Right Click)"));
 #else
   ToolAddWindow(ToolTip,Win,T("Reset (Left Click = Cold, Right Click = Warm)"));
@@ -1031,14 +1031,14 @@ bool MakeGUI()
 #endif
   UpdatePasteButton();
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_VAR_NO_UPDATE))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_NO_UPDATE))
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_UPDATE),WS_CHILD,
                           x,0,20,20,StemWin,(HMENU)120,Inst,NULL);
   ToolAddWindow(ToolTip,Win,T("Steem Update Available! Click Here For Details!"));
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING)  
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_STATUS_STRING)  
 /*  Create a static control as text status bar. We take the undef update icon's
     number.
     WINDOW_TITLE is dummy, the field will be updated later, its size too.
@@ -1300,7 +1300,7 @@ int GetComLineArgType(char *Arg,EasyStr &Path)
   }else if (ComLineArgCompare(Arg,"SCREENSHOT",true)){
     Path="";
     return ARG_TAKESHOT;
-#if !defined(SS_CPU_DIV)
+#if !defined(SSE_CPU_DIV)
   }else if (ComLineArgCompare(Arg,"DIVUTIME=",true)){
     Path=strchr(Arg,'=')+1;
     return ARG_SETDIVUTIME;
@@ -1318,7 +1318,7 @@ int GetComLineArgType(char *Arg,EasyStr &Path)
     Path=strchr(Arg,'=')+1;
     return ARG_RTBUFNUM;
   }
-#if defined(STEVEN_SEAGAL) && defined(SS_UNIX_TRACE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_UNIX_TRACE)
   else if (ComLineArgCompare(Arg,"TRACEFILE=",true)){ //Y,N
     Path=strchr(Arg,'=')+1;
     return ARG_TRACEFILE;
@@ -1394,7 +1394,7 @@ void ParseCommandLine(int NumArgs,char *Arg[],int Level)
       case ARG_ACCURATEFDC: floppy_instant_sector_access=0; break;
       case ARG_NOPCJOYSTICKS: DisablePCJoysticks=true; break;
       case ARG_OLDPORTIO: WIN_ONLY( TPortIO::AlwaysUseNTMethod=0; ) break;
-#if !defined(SS_CPU_DIV)
+#if !defined(SSE_CPU_DIV)
       case ARG_SETDIVUTIME: m68k_divu_cycles=atoi(Path)-4; break;
       case ARG_SETDIVSTIME: m68k_divs_cycles=atoi(Path)-4; break;
 #endif
@@ -1409,7 +1409,7 @@ void ParseCommandLine(int NumArgs,char *Arg[],int Level)
       case ARG_SETPABUFSIZE:  UNIX_ONLY( pa_output_buffer_size=atoi(Path); ) break;
       case ARG_ALLOWREADOPEN: stemdos_comline_read_is_rb=true; break;
       case ARG_NOINTS:        no_ints=true; break; // SS removed _
-#if !(defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_REMOVE_USELESS_VAR))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER_REMOVE_USELESS_VAR))
       case ARG_STFMBORDER:    stfm_borders=4; break;
 #endif
       case ARG_SCREENSHOTUSEFULLNAME: Disp.ScreenShotUseFullName=true; break;
@@ -1575,7 +1575,7 @@ EasyStr Translation(char *s)
   EasyStr UpperS=s;
   strupr(UpperS);
 
-#ifdef SS_VS2012_INIT
+#ifdef SSE_VS2012_INIT
   char *EStart=TranslateUpperBuf-1,*EEnd = 0,*TStart,*TEnd;	// JLG VS2012 uninitialized
 #else
   char *EStart=TranslateUpperBuf-1,*EEnd,*TStart,*TEnd;
@@ -1671,7 +1671,7 @@ char *FSTypes(int Type,...)
 #ifdef RAR_SUPPORT
     strcpy(tp,";*.rar");tp+=strlen(tp);
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
     if(UNRAR_OK)
       strcpy(tp,";*.rar");tp+=strlen(tp);
 #endif
@@ -1834,21 +1834,21 @@ void HandleKeyPress(UINT VKCode,bool Up,int Extended)
   
   if (STCode==0) STCode=key_table[BYTE(VKCode)]; //SS: +- ASCII -> ST scancode
   if (STCode
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_F12)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_F12)
     && VKCode!=VK_F12
 #endif
     ){
     ST_Key_Down[STCode]=!Up; // this is used by ikbd.cpp & ireg.c
 
 
-#if defined(SS_DEBUG) //&& defined(SS_IKBD_6301_TRACE_KEYS)
+#if defined(SSE_DEBUG) //&& defined(SSE_IKBD_6301_TRACE_KEYS)
 #define LOGSECTION LOGSECTION_IKBD
     TRACE_LOG("Key PC $%X ST $%X ",VKCode,STCode);
     TRACE_LOG( (Up) ? "-\n" : "+\n");
 #undef LOGSECTION
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
 /*  We don't write in a buffer, 6301 emu will do it after having scanned
     ST_Key_Down.
 */
@@ -2293,7 +2293,7 @@ void UpdateSTKeys()
 {
 	for (int n=0;n<128;n++){
     if (ST_Key_Down[n]){
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
       if(!HD6301EMU_ON)
 #endif
       keyboard_buffer_write(BYTE(n | BIT_7));

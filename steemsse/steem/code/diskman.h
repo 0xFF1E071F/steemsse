@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DISKMAN_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DISKMAN_H)
 
 #include "diskman.decla.h"
 
-#else//!defined(SS_STRUCTURE_DISKMAN_H)
+#else//!defined(SSE_STRUCTURE_DISKMAN_H)
 
 
 #define DISK_UNCOMPRESSED 1
@@ -53,12 +53,12 @@ private:
   static LRESULT __stdcall Dialog_WndProc(HWND,UINT,WPARAM,LPARAM);
   static int CALLBACK CompareFunc(LPARAM,LPARAM,LPARAM);
   void BeginDrag(int,HWND),MoveDrag(),EndDrag(int,int,bool);
-#ifndef SS_VAR_NO_WINSTON
+#ifndef SSE_VAR_NO_WINSTON
   HRESULT CreateLinkCheckForOverwrite(char *,char *,IShellLink *,IPersistFile *);
   bool ImportDiskExists(char *,EasyStr &);
 #endif
   bool DoCreateMultiLinks()
-#ifndef SS_VAR_NO_WINSTON    
+#ifndef SSE_VAR_NO_WINSTON    
     ,DoImport()
 #endif
   ;
@@ -135,7 +135,7 @@ public:
   void ShowDatabaseDiag(),ShowContentDiag();
 
 #ifdef WIN32
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_OPTION_SLOW_DISK)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_OPTION_SLOW_DISK)
   void RefreshSnails();
 #endif
   bool HasHandledMessage(MSG*);
@@ -173,7 +173,7 @@ public:
   bool AtHome;
   bool ExplorerFolders;
 
-#ifndef SS_VAR_NO_WINSTON
+#ifndef SSE_VAR_NO_WINSTON
   EasyStr WinSTonPath,WinSTonDiskPath,ImportPath;
   bool ImportOnlyIfExist;
   int ImportConflictAction;
@@ -221,4 +221,4 @@ void TDiskManager::RefreshDiskView(EasyStr SelPath,bool EditLabel,EasyStr SelLin
 }
 #endif
 
-#endif//SS_STRUCTURE_DISKMAN_H
+#endif//SSE_STRUCTURE_DISKMAN_H

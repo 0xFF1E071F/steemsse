@@ -1,4 +1,4 @@
-#if defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+#if defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
 
 #include "SSESDL.h"
 
@@ -57,12 +57,12 @@ bool TSDL::EnterSDLVideoMode() {
     ASSERT( Surface );
     if(Surface)
     {
-#if !defined(SS_SDL_KEEP_DDRAW_RUNNING)
+#if !defined(SSE_SDL_KEEP_DDRAW_RUNNING)
       Disp.Release(); // leave current rendering system (GDI or DD)
 #endif
       InUse=true;
     }
-#if defined(SS_DEBUG)
+#if defined(SSE_DEBUG)
     else
       TRACE_LOG("SDL error %s\n",SDL_GetError());
 #endif
@@ -79,7 +79,7 @@ void TSDL::LeaveSDLVideoMode() {
     TRACE_LOG("SDL close window %s\n",SDL_GetError());
     Surface=0;
     InUse=false;
-#if !defined(SS_SDL_KEEP_DDRAW_RUNNING)
+#if !defined(SSE_SDL_KEEP_DDRAW_RUNNING)
     Disp.nUseMethod=0;
     Disp.Init();
 #endif
@@ -106,4 +106,4 @@ void TSDL::Unlock(){
 
 
 
-#endif//#if defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+#endif//#if defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)

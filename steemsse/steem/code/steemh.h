@@ -5,11 +5,11 @@ DESCRIPTION: Many crucial variable declarations and macro definitions that
 allow Steem to perform emulation.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STEEMH_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_STEEMH_H)
 
 #include "steemh.decla.h"
 
-#else//!defined(SS_STRUCTURE_STEEMH_H)
+#else//!defined(SSE_STRUCTURE_STEEMH_H)
 
 #ifdef IN_EMU
 #define EXT
@@ -39,12 +39,12 @@ EXT MEM_ADDRESS rom_addr;     //128
 EXT unsigned long tos_len;    //132
 EXT unsigned long mem_len;    //136
 EXT bool tos_high;            //140
-#if !defined(SS_MMU_NO_CONFUSION)
+#if !defined(SSE_MMU_NO_CONFUSION)
 EXT bool mmu_confused;        //144 
 #endif
 EXT unsigned long hbl_count INIT(0);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
 // it's silly but I need to place those 'C' declarations here
 EXT int cpu_timer;  
 EXT BYTE stick[8];
@@ -246,7 +246,7 @@ EXT MEM_ADDRESS abus;
 EXT long m68k_old_dest;
 EXT MEM_ADDRESS effective_address;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
 #else
 EXT int cpu_timer;
 #endif
@@ -411,4 +411,4 @@ EXT char m68k_src_b;
 #undef EXT
 #undef INIT
 
-#endif//!SS_STRUCTURE_STEEMH_H
+#endif//!SSE_STRUCTURE_STEEMH_H
