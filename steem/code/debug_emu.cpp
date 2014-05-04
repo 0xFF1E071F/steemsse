@@ -4,11 +4,11 @@ MODULE: emu
 DESCRIPTION: General low-level debugging functions.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: debug_emu.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DEBUGEMU_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DEBUGEMU_H)
 #define EXT
 #define INIT(s) =s
 
@@ -23,10 +23,10 @@ EXT int stop_on_next_program_run INIT(0);
 EXT bool debug_first_instruction INIT(0);
 EXT Str runstate_why_stop;
 EXT DWORD debug_cycles_since_VBL,debug_cycles_since_HBL;
-#if defined(SS_DEBUG_SHOW_ACT)
+#if defined(SSE_DEBUG_SHOW_ACT)
 EXT DWORD debug_ACT;
 #endif
-#if defined(SS_DEBUG_MOVE_OTHER_SP2)
+#if defined(SSE_DEBUG_MOVE_OTHER_SP2)
 EXT DWORD debug_USP,debug_SSP;
 #endif
 EXT MEM_ADDRESS debug_VAP;
@@ -56,11 +56,11 @@ DynamicArray<DEBUGPLUGININFO> debug_plugins;
 #undef EXT
 #undef INIT
 
-#if defined(SS_STRUCTURE_SSEFLOPPY_OBJ)
+#if defined(SSE_STRUCTURE_SSEFLOPPY_OBJ)
 #include "SSE/SSEFloppy.h"
 #endif
 
-#endif//SS_STRUCTURE_DEBUGEMU_H
+#endif//SSE_STRUCTURE_DEBUGEMU_H
 
 //---------------------------------------------------------------------------
 // This is for if the emu is half way though the screen, it should be called
@@ -120,7 +120,7 @@ void update_display_after_trace()
     int horz_scale=0;
     debug_update_drawing_position(&horz_scale);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER)
     Shifter.Render(LINECYCLES);
 #else
     draw_scanline_to(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
@@ -195,16 +195,16 @@ void debug_update_cycle_counts()
 {
   debug_cycles_since_VBL=ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl;
   debug_cycles_since_HBL=ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl;
-#if defined(STEVEN_SEAGAL) && defined(SS_SHIFTER_SDP_READ)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER_SDP_READ)
   debug_VAP=Shifter.ReadSDP(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
 #else
   debug_VAP=get_shifter_draw_pointer(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
 #endif
-#if defined(SS_DEBUG_SHOW_ACT)
+#if defined(SSE_DEBUG_SHOW_ACT)
   debug_ACT=ACT;
 #endif
 
-#if defined(SS_DEBUG_BROWSER_6301) && defined(SS_ACIA)
+#if defined(SSE_DEBUG_BROWSER_6301) && defined(SSE_ACIA)
   hd6301_copy_ram(Debug.HD6301RamBuffer); // in 6301.c
 #endif
 
@@ -212,7 +212,7 @@ void debug_update_cycle_counts()
     if (mfp_timer_enabled[t]){
       debug_time_to_timer_timeout[t]=mfp_timer_timeout[t]-ABSOLUTE_CPU_TIME;
     }else{
-#if defined(SS_DEBUG_TIMER_B)
+#if defined(SSE_DEBUG_TIMER_B)
       if(t==1) 
         debug_time_to_timer_timeout[t]=mfp_timer_counter[t]/64;
       else
@@ -221,7 +221,7 @@ void debug_update_cycle_counts()
     }
   }
 
-#if defined(SS_DEBUG_MOVE_OTHER_SP2)
+#if defined(SSE_DEBUG_MOVE_OTHER_SP2)
   debug_USP=USP;
   debug_SSP=SSP;
 #endif
@@ -241,7 +241,7 @@ void debug_hit_mon(MEM_ADDRESS ad,int read)
 #endif
 
   int bytes=2;
-#if defined(SS_DEBUG_MONITOR_VALUE)
+#if defined(SSE_DEBUG_MONITOR_VALUE)
 /*  When the option is checked, we will stop Steem only if the condition
     is met when R/W on the address.
     Problem: Steem didn't foresee it and more changes are needed for
@@ -276,7 +276,7 @@ void debug_hit_mon(MEM_ADDRESS ad,int read)
     mess=HEXSl(old_pc,6)+": Write to address $"+HEXSl(ad,6);
   }
   int mode=debug_get_ad_mode(ad & ~1);
-#if defined(SS_DEBUG_MONITOR_RANGE) // mode is likely 0 (ad not found)
+#if defined(SSE_DEBUG_MONITOR_RANGE) // mode is likely 0 (ad not found)
   if(Debug.MonitorRange)
     mode=2;
 #endif
@@ -290,7 +290,7 @@ void debug_hit_mon(MEM_ADDRESS ad,int read)
   }else{
     debug_mem_write_log_address=ad;
     debug_mem_write_log_bytes=bytes;
-    ioaccess|=IOACCESS_DEBUG_MEM_WRITE_LOG;
+    ioaccess|=IOACCESSE_DEBUG_MEM_WRITE_LOG;
   }
 }
 //---------------------------------------------------------------------------
@@ -304,7 +304,7 @@ void debug_hit_io_mon_write(MEM_ADDRESS ad,int val)
 #endif
 
 
-#if defined(SS_DEBUG_MONITOR_VALUE)
+#if defined(SSE_DEBUG_MONITOR_VALUE)
 /*  When the option is checked, we will stop Steem only if the condition
     is met when R/W on the address.
 */
@@ -327,7 +327,7 @@ void debug_hit_io_mon_write(MEM_ADDRESS ad,int val)
   if (mask==0x00ff) bytes=1, ad++;
   Str mess=HEXSl(old_pc,6)+": Wrote to address $"+HEXSl(ad,6)+", new value is "+val+" ($"+HEXSl(val,bytes*2)+")";
   int mode=debug_get_ad_mode(ad & ~1);
-#if defined(SS_DEBUG_MONITOR_RANGE)
+#if defined(SSE_DEBUG_MONITOR_RANGE)
   if(Debug.MonitorRange)
     mode=2;
 #endif
@@ -418,7 +418,7 @@ void iolist_debug_add_pseudo_addresses()
             "RMB Down|RMB Was Down|LMB Down|LMB Was Down",lpDWORD_B_0(&ikbd.abs_mousek_flags));
   iolist_add_entry(IOLIST_PSEUDO_AD_IKBD+0x028,"IKBD Joy Button Duration",1,NULL,lpDWORD_B_0(&ikbd.duration));
 
-#if defined(SS_DEBUG_BROWSER_6301)
+#if defined(SSE_DEBUG_BROWSER_6301)
   char buffer[80],mask[80]; //overkill for a time
   // internal registers $0-$15
   for(int i=0;i<256;i++)

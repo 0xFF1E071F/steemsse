@@ -5,7 +5,7 @@
 #include "../pch.h"
 
 
-#if defined(SS_DRIVE)
+#if defined(SSE_DRIVE)
 
 #include <cpu.decla.h>
 #include <fdc.decla.h>
@@ -88,20 +88,20 @@ Total track                     6250        6250        6256
 
 TSF314::TSF314() {
 
-#if defined(SS_DRIVE_SOUND)
+#if defined(SSE_DRIVE_SOUND)
   //TRACE("null %d sound buffer pointers\n",NSOUNDS);
   for(int i=0;i<NSOUNDS;i++)
     Sound_Buffer[i]=NULL;
-#if defined(SS_DRIVE_SOUND_VOLUME)
+#if defined(SSE_DRIVE_SOUND_VOLUME)
   Sound_Volume=0; //changed by option
 #endif
 #endif//sound
 
-#if defined(SS_DRIVE_COMPUTE_BOOT_CHECKSUM)
+#if defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)
   SectorChecksum=0;
 #endif
 
-#if defined(SS_DISK_GHOST)
+#if defined(SSE_DISK_GHOST)
   //Ghost=0;
 #endif
 }
@@ -112,10 +112,10 @@ bool TSF314::Adat() { // accurate disk access times
 #if USE_PASTI
     ||pasti_active 
 #endif
-#if defined(SS_IPF)
+#if defined(SSE_IPF)
     ||Caps.IsIpf(Id)
 #endif
-#if defined(SS_DISK_STW)
+#if defined(SSE_DISK_STW)
     ||ImageType.Extension==EXT_STW
 #endif
     );
@@ -149,7 +149,7 @@ WORD TSF314::BytesToHbls(int bytes) {
 }
 
 
-#if defined(SS_DRIVE_RW_SECTOR_TIMING3)
+#if defined(SSE_DRIVE_RW_SECTOR_TIMING3)
 
 WORD TSF314::BytesToID(BYTE &num,WORD &nHbls) {
 /*  Compute distance in bytes between current byte and desired ID
@@ -165,7 +165,7 @@ WORD TSF314::BytesToID(BYTE &num,WORD &nHbls) {
   if(FloppyDrive[Id].Empty())
     ;
   else
-#if defined(SS_DISK_STW)
+#if defined(SSE_DISK_STW)
   if(ImageType.Extension==EXT_STW)
     bytes_to_id=ImageSTW[DRIVE].BytesToId(current_byte,num);
   else
@@ -199,7 +199,7 @@ WORD TSF314::BytesToID(BYTE &num,WORD &nHbls) {
   return bytes_to_id;
 }
 
-#endif//#if defined(SS_DRIVE_RW_SECTOR_TIMING3)
+#endif//#if defined(SSE_DRIVE_RW_SECTOR_TIMING3)
 
 DWORD TSF314::HblsAtIndex() { // absolute
   return (hbl_count/HblsPerRotation())*HblsPerRotation();
@@ -235,7 +235,7 @@ void TSF314::NextID(BYTE &RecordId,WORD &nHbls) {
   if(FloppyDrive[Id].Empty())
     return;
 
-#if defined(SS_DISK_STW)
+#if defined(SSE_DISK_STW)
 
   if(ImageType.Extension==EXT_STW)
   {
@@ -360,7 +360,7 @@ WORD TSF314::TrackGap() {
 }
 
 
-#if defined(SS_DRIVE_SOUND)
+#if defined(SSE_DRIVE_SOUND)
 /*
     This is where we emulate the floppy drive sounds. v3.6
     DirectSound makes it rather easy, you just load your samples
@@ -372,12 +372,12 @@ WORD TSF314::TrackGap() {
 
 #include "../../../3rdparty/various/sound.h" //struct TWavFileFormat
 
-#if defined(SS_DRIVE_SOUND_EDIT) // my 1st attempt based on various sources
+#if defined(SSE_DRIVE_SOUND_EDIT) // my 1st attempt based on various sources
 
 char* drive_sound_wav_files[]={ "drive_startup_ST_edit.wav",
 "drive_spin_ST_edit.wav","drive_click_ST_edit.wav","drive_seek_edit.wav" };
 
-#elif defined(SS_DRIVE_SOUND_EPSON) // already better
+#elif defined(SSE_DRIVE_SOUND_EPSON) // already better
 
 char* drive_sound_wav_files[]={ "drive_startup_Epson.wav",
 "drive_spin_Epson.wav","drive_click_Epson.wav","drive_seek_Epson.wav" };
@@ -389,7 +389,7 @@ char* drive_sound_wav_files[]={ "drive_startup.wav","drive_spin.wav",
 
 #endif
 
-#if defined(SS_DRIVE_SOUND_VOLUME)
+#if defined(SSE_DRIVE_SOUND_VOLUME)
 
 void TSF314::Sound_ChangeVolume() {
 /*  Same volume for each buffer
@@ -441,11 +441,11 @@ void TSF314::Sound_CheckIrq() {
     Stop SEEK loop.
     Emit a "STEP" click noise if we were effectively seeking.
 */
-#if !defined(SS_DRIVE_SOUND_CHECK_SEEK_VBL)
+#if !defined(SSE_DRIVE_SOUND_CHECK_SEEK_VBL)
   if(Sound_Buffer[SEEK])
     Sound_Buffer[SEEK]->Stop();
 #endif
-#if defined(SS_FDC)
+#if defined(SSE_FDC)
   if(WD1772.CommandType()==1 && TrackAtCommand!=Track() && Sound_Buffer[STEP])
   {
     //TRACE("Step track %d\n",Track());
@@ -469,20 +469,20 @@ void TSF314::Sound_CheckMotor() {
 
   DWORD dwStatus ;
   Sound_Buffer[MOTOR]->GetStatus(&dwStatus);
-#if defined(SS_DMA)
+#if defined(SSE_DMA)
   Dma.UpdateRegs();//overkill
 #endif
   bool motor_on= ((fdc_str&0x80)//;//simplification TODO?
-#if defined(SS_DRIVE_SOUND_EMPTY) // but clicks still on
+#if defined(SSE_DRIVE_SOUND_EMPTY) // but clicks still on
     && !FloppyDrive[floppy_current_drive()].Empty()
 #endif
     );
-  if(SSE_DRIVE_SOUND && motor_on && !(dwStatus&DSBSTATUS_PLAYING))
+  if(SSEOption.DriveSound && motor_on && !(dwStatus&DSBSTATUS_PLAYING))
     Sound_Buffer[MOTOR]->Play(0,0,DSBPLAY_LOOPING); // start motor loop
-  else if((!SSE_DRIVE_SOUND||!motor_on) && (dwStatus&DSBSTATUS_PLAYING))
+  else if((!SSEOption.DriveSound||!motor_on) && (dwStatus&DSBSTATUS_PLAYING))
     Sound_Buffer[MOTOR]->Stop();
 
-#if defined(SS_DRIVE_SOUND_CHECK_SEEK_VBL)
+#if defined(SSE_DRIVE_SOUND_CHECK_SEEK_VBL)
   // because of some buggy programs? (normally not defined)
   if(Sound_Buffer[SEEK] && !(FRAME%10) && WD1772.CommandType()!=1)
   {
@@ -537,17 +537,17 @@ void TSF314::Sound_LoadSamples(IDirectSound *DSObj,DSBUFFERDESC *dsbd,WAVEFORMAT
           //TRACE("load sample %s\n",pathplusfile.Text);
         }
         Ret=Sound_Buffer[i]->Unlock(lpvAudioPtr1,dwAudioBytes1,NULL,0);
-#if defined(SS_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
+#if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
         SF314[1].Sound_Buffer[i]=Sound_Buffer[i]; // not beautiful C++...
 #endif
       }
       fclose(fp);
     }
-#ifdef SS_DEBUG
+#ifdef SSE_DEBUG
     else TRACE("DriveSound. Can't load sample file %s\n",pathplusfile.Text);
 #endif
   }//nxt
-#if defined(SS_DRIVE_SOUND_VOLUME)
+#if defined(SSE_DRIVE_SOUND_VOLUME)
   Sound_ChangeVolume();
 #endif
 }
@@ -565,7 +565,7 @@ void TSF314::Sound_ReleaseBuffers() {
       Ret1=Sound_Buffer[i]->Stop();
       Ret2=Sound_Buffer[i]->Release();
       Sound_Buffer[i]=NULL;
-#if defined(SS_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
+#if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
       SF314[1].Sound_Buffer[i]=NULL; // not beautiful C++...
 #endif
       //TRACE("Release Buffer %d: %d %d\n",i,Ret1,Ret2);

@@ -2,14 +2,14 @@
 
 #include "SSEMMU.h"
 
-#if defined(SS_DEBUG) 
+#if defined(SSE_DEBUG) 
 
 #ifdef UNIX
 #include "../pch.h" 
 #pragma hdrstop 
 #endif
 
-#if defined(SS_STRUCTURE_SSEDEBUG_OBJ)
+#if defined(SSE_STRUCTURE_SSEDEBUG_OBJ)
 #ifdef WIN32
 #include <time.h>
 #endif
@@ -25,8 +25,8 @@
 
 int debug0,debug1,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9;
 
-#if defined(SS_IKBD_6301)
-#if defined(SS_UNIX)
+#if defined(SSE_IKBD_6301)
+#if defined(SSE_UNIX)
 extern "C" void (*hd6301_trace)(char *fmt, ...);
 #else
 extern "C" void (_stdcall *hd6301_trace)(char *fmt, ...);
@@ -39,7 +39,7 @@ TDebug::TDebug() {
 
   ZeroMemory(&debug0,10*sizeof(int));  
 
-#if defined(SS_DEBUG_LOG_OPTIONS)
+#if defined(SSE_DEBUG_LOG_OPTIONS)
   //  We must init those variables for the builds without the boiler
   ZeroMemory(logsection_enabled,100*sizeof(bool)); // 100> our need
   logsection_enabled[ LOGSECTION_ALWAYS ] = 1;
@@ -67,7 +67,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_GUI ] = 0;
   // no PASTI, no DIV
 // additions
-#if !defined(SS_DEBUG_TRACE_CONTROL)
+#if !defined(SSE_DEBUG_TRACE_CONTROL)
   logsection_enabled[ LOGSECTION_FDC_BYTES ] = 0;
   logsection_enabled[ LOGSECTION_IPF_LOCK_INFO ] = 0; //remove option
 #endif
@@ -76,7 +76,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_OPTIONS ] = 1; // no boiler control
 #endif
 
-#if defined(SS_DEBUG_TRACE_FILE)
+#if defined(SSE_DEBUG_TRACE_FILE)
   IgnoreErrors=0; 
   nTrace=0; // trace counter
   trace_file_pointer=freopen(SS_TRACE_FILE_NAME, "w", stdout );
@@ -91,29 +91,29 @@ TDebug::TDebug() {
 #endif
 #endif
 
-#if defined(SS_IKBD_6301)
+#if defined(SSE_IKBD_6301)
   hd6301_trace=&TDebug::TraceLog;
 #endif
 
-#if defined(SS_OSD_DEBUG_MESSAGE)
+#if defined(SSE_OSD_DEBUG_MESSAGE)
   TraceOsd("Debug Build"); // implies clean init
 #endif
 
-#if defined(SS_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_DEBUG_SHOW_INTERRUPT)
   ZeroMemory(&InterruptTable,sizeof(SInterruptTable));
 #endif
 
-#if defined(SS_DEBUG_STACK_68030_FRAME)
+#if defined(SSE_DEBUG_STACK_68030_FRAME)
   M68030StackFrame=0;
 #endif
-#if defined(SS_DEBUG_STACK_CHOICE)
+#if defined(SSE_DEBUG_STACK_CHOICE)
   StackDisplayUseOtherSp=0;
 #endif
 }
 
 
 TDebug::~TDebug() {
-#if defined(SS_DEBUG_TRACE_FILE)
+#if defined(SSE_DEBUG_TRACE_FILE)
   if(trace_file_pointer)
   {
     TRACE("Closing TRACE file...\n"); // silly but it shows it's OK
@@ -124,7 +124,7 @@ TDebug::~TDebug() {
 
 
 void TDebug::Vbl(){ 
-#if defined(SS_DEBUG_FRAME_INTERRUPTS)
+#if defined(SSE_DEBUG_FRAME_INTERRUPTS)
 /*  This system so that we only report these once per frame, giving
     convenient info about VBI, HBI, and MFP IRQ.
 */
@@ -156,12 +156,12 @@ void TDebug::Vbl(){
 
 
 
-#if defined(SS_DEBUG_TRACE)
+#if defined(SSE_DEBUG_TRACE)
 //note: #define TRACE Debug.Trace
 
 #include <stdio.h>
 #include <stdarg.h>
-#if defined(SS_DEBUG_TRACE_IDE) && defined(WIN32)
+#if defined(SSE_DEBUG_TRACE_IDE) && defined(WIN32)
 #include <windows.h>
 #endif
 
@@ -169,7 +169,7 @@ void TDebug::Trace(char *fmt, ...){
   // Our TRACE facility has no MFC dependency.
   va_list body;	
   va_start(body, fmt);	
-#if defined(SS_UNIX)
+#if defined(SSE_UNIX)
   int nchars=vsnprintf(trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
 #else
   int nchars=_vsnprintf(trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
@@ -178,17 +178,17 @@ void TDebug::Trace(char *fmt, ...){
   if(nchars==-1)
     strcpy(trace_buffer,"TRACE buffer overrun\n");
 
-#if defined(SS_DEBUG_TRACE_IDE) && defined(WIN32)
+#if defined(SSE_DEBUG_TRACE_IDE) && defined(WIN32)
   OutputDebugString(trace_buffer);
 #endif
 
-#if defined(SS_UNIX_TRACE)
+#if defined(SSE_UNIX_TRACE)
   if(!USE_TRACE_FILE)  
     fprintf(stderr,trace_buffer);
 #endif 
   
-#if defined(SS_DEBUG_TRACE_FILE)
-#if defined(DEBUG_BUILD) || defined(SS_UNIX)
+#if defined(SSE_DEBUG_TRACE_FILE)
+#if defined(DEBUG_BUILD) || defined(SSE_UNIX)
   if(USE_TRACE_FILE)
 #endif      
     printf(trace_buffer),nTrace++; 
@@ -203,12 +203,12 @@ void TDebug::Trace(char *fmt, ...){
 }
 
 
-#if defined(SS_DEBUG_START_STOP_INFO)
+#if defined(SSE_DEBUG_START_STOP_INFO)
 // A series of TRACE giving precious info at the start & end of emulation
 // forward
 
 extern int stemdos_current_drive;
-#if defined(SS_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE)
 extern int dma_sound_bass,dma_sound_treble;
 #endif
 
@@ -218,14 +218,14 @@ void TDebug::TraceGeneralInfos(int when) {
   if(when==START)
   {
     TRACE(">>> Start Emulation <<<\n");
-#if defined(SS_STF)
+#if defined(SSE_STF)
     TRACE("%s; ",st_model_name[ST_TYPE]);
 #endif
     TRACE("T%X; ",tos_version);
     TRACE("%dK; ",mem_len/1024);
     if(MONO)
       TRACE("Monochrome");  
-#if defined(SS_VID_BORDERS)
+#if defined(SSE_VID_BORDERS)
     else if(DISPLAY_SIZE)
       TRACE("Size %d", DISPLAY_SIZE);
 #endif
@@ -237,7 +237,7 @@ void TDebug::TraceGeneralInfos(int when) {
       TRACE("; Disk B: %s",FloppyDrive[1].DiskName.c_str()); 
     if(!HardDiskMan.DisableHardDrives && stemdos_current_drive) // check
       TRACE("; HD ON");
-#if defined(SS_FDC)
+#if defined(SSE_FDC)
     if(ADAT)
       TRACE("; ADAT");
 #endif
@@ -245,25 +245,25 @@ void TDebug::TraceGeneralInfos(int when) {
     if(pasti_active)
     {
       TRACE("; Pasti %d",pasti_active);
-#if defined(SS_PASTI_ONLY_STX)
+#if defined(SSE_PASTI_ONLY_STX)
       if(PASTI_JUST_STX)
         TRACE(" STX only");
 #endif
     }
 #endif
-#if defined(SS_HACKS)
+#if defined(SSE_HACKS)
     if(SSE_HACKS_ON)
       TRACE("\nHacks");
 #endif
-#if defined(SS_IKBD_6301)
+#if defined(SSE_IKBD_6301)
     if(HD6301EMU_ON)
       TRACE("; HD6301");
 #endif
 
-#if defined(SS_MMU_WAKE_UP_DL)
+#if defined(SSE_MMU_WAKE_UP_DL)
     if(WAKE_UP_STATE)
       TRACE("; WS%d",MMU.WS[WAKE_UP_STATE]);
-#elif defined(SS_MMU_WAKE_UP)
+#elif defined(SSE_MMU_WAKE_UP)
     TRACE("; WU%d",WAKE_UP_STATE);
 #endif
 
@@ -279,7 +279,7 @@ void TDebug::TraceGeneralInfos(int when) {
     TRACE("Timers A %X B %X C %X D %X\n",LPEEK(0x134),LPEEK(0x120),LPEEK(0x114),LPEEK(0x110));
 //    TRACE("ACIA IKBD %X\n",LPEEK(0x118));
     // Misc
-#if defined(SS_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE)
     if(dma_sound_bass!=6||dma_sound_treble!=6)
       TRACE("Microwire %d dma bass %X treble %X\n",MICROWIRE_ON,dma_sound_bass,dma_sound_treble);
 #endif
@@ -292,7 +292,7 @@ void TDebug::TraceGeneralInfos(int when) {
 void TDebug::TraceIde(char *fmt, ...){ 
   va_list body;	
   va_start(body, fmt);	
-#if defined(SS_UNIX)
+#if defined(SSE_UNIX)
   int nchars=vsnprintf(trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
 #else
   int nchars=_vsnprintf(trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
@@ -302,7 +302,7 @@ void TDebug::TraceIde(char *fmt, ...){
     strcpy(trace_buffer,"TRACE buffer overrun\n");
 #if defined(WIN32)
   OutputDebugString(trace_buffer);
-#elif defined(SS_UNIX)
+#elif defined(SSE_UNIX)
   printf("%s\n",trace_buffer);  // TODO
 #endif
 }
@@ -320,7 +320,7 @@ void TDebug::TraceLog(char *fmt, ...) { // static
     // trivial (TODO)
     va_list body;	
     va_start(body, fmt);
-#if defined(SS_UNIX)
+#if defined(SSE_UNIX)
     int nchars=vsnprintf(Debug.trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
 #else
     int nchars=_vsnprintf(Debug.trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
@@ -331,17 +331,17 @@ void TDebug::TraceLog(char *fmt, ...) { // static
     if(nchars==-1)
       strcpy(Debug.trace_buffer,"TRACE buffer overrun\n");
 
-#if defined(SS_DEBUG_TRACE_IDE) && defined(WIN32)
+#if defined(SSE_DEBUG_TRACE_IDE) && defined(WIN32)
     OutputDebugString(Debug.trace_buffer);
 #endif
 
-#if defined(SS_UNIX_TRACE)
+#if defined(SSE_UNIX_TRACE)
     if(!USE_TRACE_FILE)
       fprintf(stderr,Debug.trace_buffer);
 #endif 
     
-#if defined(SS_DEBUG_TRACE_FILE)
-#if defined(DEBUG_BUILD) || defined(SS_UNIX)
+#if defined(SSE_DEBUG_TRACE_FILE)
+#if defined(DEBUG_BUILD) || defined(SSE_UNIX)
     if(USE_TRACE_FILE)
 #endif      
       printf(Debug.trace_buffer),Debug.nTrace++; 
@@ -358,7 +358,7 @@ void TDebug::TraceLog(char *fmt, ...) { // static
 #endif
 
 
-#if defined(SS_OSD_DEBUG_MESSAGE)
+#if defined(SSE_OSD_DEBUG_MESSAGE)
 /*  This is a little something that will help a lot.
     Current systems are powerful enough to accomodate a lot of those
     messages, eg when the CPU is in trace mode (Transbeauce 2).
@@ -367,7 +367,7 @@ void TDebug::TraceOsd(char *fmt, ...) {
 
   va_list body;	
   va_start(body, fmt);	
-#if defined(SS_UNIX)
+#if defined(SSE_UNIX)
   int nchars=vsnprintf(m_OsdMessage,OSD_DEBUG_MESSAGE_LENGTH,fmt,body); // check for overrun 
 #else
   int nchars=_vsnprintf(m_OsdMessage,OSD_DEBUG_MESSAGE_LENGTH,fmt,body); // check for overrun 
@@ -379,7 +379,7 @@ void TDebug::TraceOsd(char *fmt, ...) {
 }
 #endif
 
-#if defined(SS_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_DEBUG_SHOW_INTERRUPT)
 /*  
     It tries to figure out which interrupt if any is being
     executed when the Boiler is stopped.
@@ -463,4 +463,4 @@ void TDebug::Rte() {
 
 #endif
 
-#endif//#if defined(SS_DEBUG) 
+#endif//#if defined(SSE_DEBUG) 

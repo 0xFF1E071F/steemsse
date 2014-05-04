@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STEMDIALOGS_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_STEMDIALOGS_H)
 
 #include "stemdialogs.decla.h"
 
-#else//!defined(SS_STRUCTURE_STEMDIALOGS_H)
+#else//!defined(SSE_STRUCTURE_STEMDIALOGS_H)
 
 #define MAX_DIALOGS 20
 
@@ -67,4 +67,4 @@ int nStemDialogs=0;
 const UINT BPPToILC[5]={0,ILC_COLOR4,ILC_COLOR16,ILC_COLOR16,ILC_COLOR16};
 #endif
 
-#endif//!defined(SS_STRUCTURE_STEMDIALOGS_H)
+#endif//!defined(SSE_STRUCTURE_STEMDIALOGS_H)

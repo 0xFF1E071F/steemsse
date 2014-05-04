@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_TRANSLATE_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_TRANSLATE_H)
 
 #include "translate.decla.h"
 
-#else//!defined(SS_STRUCTURE_TRANSLATE_H)
+#else//!defined(SSE_STRUCTURE_TRANSLATE_H)
 
 
 #ifdef IN_MAIN
@@ -42,4 +42,4 @@ extern EasyStr StripAndT(char*);
 #undef EXT
 #undef INIT
 
-#endif//!defined(SS_STRUCTURE_TRANSLATE_H)
+#endif//!defined(SSE_STRUCTURE_TRANSLATE_H)

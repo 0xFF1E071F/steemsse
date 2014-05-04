@@ -2,9 +2,9 @@
 #ifndef SSEDISK_H
 #define SSEDISK_H
 
-#if defined(SS_DISK)
+#if defined(SSE_DISK)
 
-#if defined(SS_DISK_IMAGETYPE) 
+#if defined(SSE_DISK_IMAGETYPE) 
 
 /*  v3.7.0 We separate disk image type in two:
     who's in charge (manager), and what kind of image we have (extension).
@@ -18,11 +18,11 @@
     BYTE Manager;
     BYTE Extension;
   };
-#endif//defined(SS_DISK_IMAGETYPE) 
+#endif//defined(SSE_DISK_IMAGETYPE) 
 
 
 //TODO move gap stuff from drive here
 
-#endif//#if defined(SS_DISK)
+#endif//#if defined(SSE_DISK)
 
 #endif//#ifndef SSEDISK_H

@@ -1,4 +1,4 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_CPU_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_CPU_H)
 
 #define EXT extern
 #define INIT(s)
@@ -8,7 +8,7 @@
 #undef EXT
 #undef INIT
 
-#else//!defined(SS_STRUCTURE_CPU_H)
+#else//!defined(SSE_STRUCTURE_CPU_H)
 
 #ifdef IN_EMU
 #define EXT
@@ -115,7 +115,7 @@ inline void m68k_poke(MEM_ADDRESS ad,BYTE x);
 inline void m68k_dpoke(MEM_ADDRESS ad,WORD x);
 inline void m68k_lpoke(MEM_ADDRESS ad,LONG x);
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU)) // inlined in SSECpu.h
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU)) // inlined in SSECpu.h
 #define INSTRUCTION_TIME(t) {cpu_cycles-=(t);}
 #define INSTRUCTION_TIME_ROUND(t) {INSTRUCTION_TIME(t); cpu_cycles&=-4;}
 #endif
@@ -191,7 +191,7 @@ WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     EXTRA_PREFETCH               \
   }
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU))
 // SS I can't find one instance where checkints is passed.
 #define M68K_PERFORM_RTE(checkints)             \
             SET_PC(m68k_lpeek(r[15]+2));        \
@@ -203,14 +203,14 @@ WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 
 #endif
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU))
   #define PREFETCH_SET_PC                       \
   prefetched_2=false; /*will have prefetched 1 word*/ \
   prefetch_buf[0]=*lpfetch;               \
   lpfetch+=MEM_DIR;  /*let's not cause exceptions here*/
 #endif
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU))
 #define SET_PC(ad)        \
     pc=ad;                               \
     pc_high_byte=pc & 0xff000000;     \
@@ -249,7 +249,7 @@ WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     PREFETCH_SET_PC
 #endif
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU))
 #define FETCH_W(dest_word)              \
   if(prefetched_2){                     \
     dest_word=prefetch_buf[0];            \
@@ -263,14 +263,14 @@ WORD prefetch_buf[2]; // SS the 2 words prefetch queue
   if(lpfetch MEM_GE lpfetch_bound)exception(BOMBS_BUS_ERROR,EA_FETCH,pc);
 #endif
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU))
 #define FETCH_TIMING {INSTRUCTION_TIME(4); cpu_cycles&=-4;} 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_MMU_NO_CONFUSION)
+#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_NO_CONFUSION)
 
 
-#if defined(SS_CPU_SET_DEST_TO_0)
+#if defined(SSE_CPU_SET_DEST_TO_0)
 
 #define m68k_SET_DEST_B_TO_ADDR        \
   abus&=0xffffff;                                   \
@@ -540,7 +540,7 @@ WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     }                                           \
   }
 
-#endif//#if defined(STEVEN_SEAGAL) && defined(SS_MMU_NO_CONFUSION)
+#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_NO_CONFUSION)
 
 #define m68k_SET_DEST_B(addr)           \
   abus=addr;                            \
@@ -556,7 +556,7 @@ WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 
 
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH))
 #define EXTRA_PREFETCH                    \
   prefetch_buf[1]=*lpfetch;              \
   prefetched_2=true;
@@ -575,7 +575,7 @@ WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 #define IOACCESS_INTERCEPT_OS2 BIT_13
 
 #ifdef ENABLE_LOGFILE
-#define IOACCESS_DEBUG_MEM_WRITE_LOG BIT_14
+#define IOACCESSE_DEBUG_MEM_WRITE_LOG BIT_14
 MEM_ADDRESS debug_mem_write_log_address;
 int debug_mem_write_log_bytes;
 #endif
@@ -593,8 +593,8 @@ signed int compare_buffer;
 //(old_pc+2)
 //(old_dpc+2)
 
-#if !(defined(STEVEN_SEAGAL)&&defined(SS_CPU)) // inlined in SSECpu.h
-//#if !(defined(STEVEN_SEAGAL)&&defined(SS_CPU)&&defined(SS_STRUCTURE_CPU_H))
+#if !(defined(STEVEN_SEAGAL)&&defined(SSE_CPU)) // inlined in SSECpu.h
+//#if !(defined(STEVEN_SEAGAL)&&defined(SSE_CPU)&&defined(SSE_STRUCTURE_CPU_H))
 #define m68k_GET_SOURCE_B m68k_jump_get_source_b[(ir&BITS_543)>>3]()
 #define m68k_GET_SOURCE_W m68k_jump_get_source_w[(ir&BITS_543)>>3]()
 #define m68k_GET_SOURCE_L m68k_jump_get_source_l[(ir&BITS_543)>>3]()
@@ -603,7 +603,7 @@ signed int compare_buffer;
 #define m68k_GET_SOURCE_W_NOT_A m68k_jump_get_source_w_not_a[(ir&BITS_543)>>3]()
 #define m68k_GET_SOURCE_L_NOT_A m68k_jump_get_source_l_not_a[(ir&BITS_543)>>3]()
 
-#if !defined(SS_CPU)
+#if !defined(SSE_CPU)
 #define m68k_GET_DEST_B m68k_jump_get_dest_b[(ir&BITS_543)>>3]()
 #define m68k_GET_DEST_W m68k_jump_get_dest_w[(ir&BITS_543)>>3]()
 #define m68k_GET_DEST_L m68k_jump_get_dest_l[(ir&BITS_543)>>3]()
@@ -876,7 +876,7 @@ signed int compare_buffer;
 #ifndef DETECT_TRACE_BIT
 
 
-#if defined(SS_CPU_TRACE2___)
+#if defined(SSE_CPU_TRACE2___)
 #define DETECT_TRACE_BIT  {\
   if (sr & SR_TRACE)\
   {\
@@ -911,7 +911,7 @@ void sr_check_z_n_l_for_r0()
 
 #else //inemu
 
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU)
+#if defined(STEVEN_SEAGAL) && defined(SSE_CPU)
 #define SET_PC(ad) M68000.SetPC(ad);
 #else
 #define SET_PC(ad) set_pc(ad);
@@ -921,14 +921,14 @@ extern void set_pc(MEM_ADDRESS);
 
 
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_CPU))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU))
 extern void perform_rte();
 #endif
 
 extern void sr_check_z_n_l_for_r0();
 extern void m68k_process();
 
-#if !(defined(STEVEN_SEAGAL)&&defined(SS_STRUCTURE_CPU_POKE_NOINLINE))
+#if !(defined(STEVEN_SEAGAL)&&defined(SSE_STRUCTURE_CPU_POKE_NOINLINE))
 #define m68k_poke m68k_poke_noinline
 #define m68k_dpoke m68k_dpoke_noinline
 #define m68k_lpoke m68k_lpoke_noinline
@@ -942,4 +942,4 @@ extern void m68k_lpoke_noinline(MEM_ADDRESS ad,LONG x);
 #undef EXT
 #undef INIT
 
-#endif//SS_STRUCTURE_CPU_H
+#endif//SSE_STRUCTURE_CPU_H

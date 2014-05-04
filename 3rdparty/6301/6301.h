@@ -46,7 +46,7 @@
 #include <stdio.h> // printf...
 #include <sys/types.h>
 
-#if defined(SS_IKBD_6301)
+#if defined(SSE_IKBD_6301)
 
 // variables from Steem we declare here as 'C' linkage
 extern int ST_Key_Down[128];
@@ -84,7 +84,7 @@ int hd6301_transmit_byte(u_char byte_in); // just passing through
 #endif 
 
 // for use by the Steem boiler
-#if defined(SS_DEBUG_DUMP_6301_RAM)
+#if defined(SSE_DEBUG_DUMP_6301_RAM)
 extern 
 #ifdef __cplusplus
 "C" 
@@ -92,7 +92,7 @@ extern
 int hd6301_dump_ram();
 #endif
 
-#if defined(SS_DEBUG_BROWSER_6301)
+#if defined(SSE_DEBUG_BROWSER_6301)
 extern 
 #ifdef __cplusplus
 "C" 

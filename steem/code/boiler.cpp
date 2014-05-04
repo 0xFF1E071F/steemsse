@@ -6,15 +6,15 @@ DESCRIPTION: This file contains a lot of utility functions for Steem's debug
 build and the basis of the debug GUI.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: boiler.cpp")
 #endif
 
-#if defined(SS_STRUCTURE_SSECPU_OBJ)
+#if defined(SSE_STRUCTURE_SSECPU_OBJ)
 #include "SSE/SSECpu.h" //m68k_lpoke()
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_BOILER_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_BOILER_H)
 
 MEM_ADDRESS dpc,old_dpc;
 HWND DWin=NULL,HiddenParent=NULL;
@@ -24,7 +24,7 @@ HMENU mem_browser_menu,history_menu,logsection_menu;
 HMENU menu1;
 HMENU boiler_op_menu,shift_screen_menu;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
 HMENU sse_menu;
 #endif
 
@@ -69,12 +69,12 @@ THistoryList HistList;
 
 #endif
 
-#if defined(SS_DEBUG_DUMP_6301_RAM)
+#if defined(SSE_DEBUG_DUMP_6301_RAM)
 #include <6301/6301.h>
 #endif
 
 
-#if defined(SS_SHIFTER)
+#if defined(SSE_SHIFTER)
 #include <SSE/SSEShifter.h>
 #endif
 
@@ -409,7 +409,7 @@ void update_register_display(bool reset_pc_display)
     m_b_stack.ad=r[15];
   }
 
-#if defined(SS_DEBUG_STACK_CHOICE)
+#if defined(SSE_DEBUG_STACK_CHOICE)
   m_b_stack.ad=Debug.StackDisplayUseOtherSp?other_sp:r[15];//that's it
 #endif
   debug_update_cycle_counts();
@@ -421,11 +421,11 @@ void update_register_display(bool reset_pc_display)
   mr_static_update_all();
   mem_browser_update_all();
 
-#if defined(SS_DEBUG_TIMERS_ACTIVE)
+#if defined(SSE_DEBUG_TIMERS_ACTIVE)
   InvalidateRect( HWND(DWin_timings_scroller),NULL,0 );
 #endif
 
-#if defined(SS_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_DEBUG_SHOW_INTERRUPT)
   Debug.ReportInterrupt();
 #endif
 
@@ -498,7 +498,7 @@ long __stdcall sr_display_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
         InvalidateRect(Win,NULL,0);
         InvalidateRect(sr_display,NULL,0);
         InvalidateRect(trace_sr_after_display,NULL,0);
-#if defined(SS_DEBUG_SHOW_SR)
+#if defined(SSE_DEBUG_SHOW_SR)
         mr_static_update_all(); // inefficiency unimportant here
 #endif
       }
@@ -514,7 +514,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
   if (Win==HiddenParent) return DefWindowProc(Win,Mess,wPar,lPar);
   switch (Mess){
 
-#if defined(SS_DEBUG_TIMERS_ACTIVE)
+#if defined(SSE_DEBUG_TIMERS_ACTIVE)
 //http://msdn.microsoft.com/en-us/library/windows/desktop/bb787524(v=vs.85).aspx
     case WM_CTLCOLORSTATIC:
     {
@@ -690,7 +690,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
         }else{
 
           switch (id){
-#if defined(SS_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_DEBUG_SHOW_INTERRUPT)
             case 274:
               Debug.ClickInterrupt();
               break;
@@ -986,7 +986,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               CheckMenuItem(boiler_op_menu,1516,MF_BYCOMMAND | int(debug_uppercase_disa ? MF_CHECKED:MF_UNCHECKED));
               mem_browser_update_all();
               break;
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
             case 1517: // Output TRACE to file
               USE_TRACE_FILE=!USE_TRACE_FILE;
               CheckMenuItem(sse_menu,1517,
@@ -999,7 +999,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
                 MF_BYCOMMAND|((int)(TRACE_FILE_REWIND)
                 ? MF_CHECKED : MF_UNCHECKED));
               break;
-#if defined(SS_DEBUG_MONITOR_VALUE)
+#if defined(SSE_DEBUG_MONITOR_VALUE)
             case 1522: 
               Debug.MonitorValueSpecified=!Debug.MonitorValueSpecified;
               CheckMenuItem(sse_menu,1522,
@@ -1007,7 +1007,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
                 ? MF_CHECKED : MF_UNCHECKED));
               break;
 #endif
-#if defined(SS_DEBUG_MONITOR_RANGE)
+#if defined(SSE_DEBUG_MONITOR_RANGE)
             case 1523: 
               Debug.MonitorRange=!Debug.MonitorRange;
               CheckMenuItem(sse_menu,1523,
@@ -1015,12 +1015,12 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
                 ? MF_CHECKED : MF_UNCHECKED));
               break;
 #endif
-#if defined(SS_DEBUG_DUMP_6301_RAM) && defined(SS_ACIA)
+#if defined(SSE_DEBUG_DUMP_6301_RAM) && defined(SSE_ACIA)
             case 1524:
               hd6301_dump_ram();
               break;
 #endif
-#if defined(SS_DEBUG_STACK_68030_FRAME)
+#if defined(SSE_DEBUG_STACK_68030_FRAME)
             case 1525: 
               Debug.M68030StackFrame=!Debug.M68030StackFrame;
               CheckMenuItem(sse_menu,1525,
@@ -1028,7 +1028,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
                 ? MF_CHECKED : MF_UNCHECKED));
               break;
 #endif
-#if defined(SS_DEBUG_STACK_CHOICE)
+#if defined(SSE_DEBUG_STACK_CHOICE)
 /*  v3.6.1 Handy feature, in the SSE menu you may decide which version
     of A7=SP, USP or SSP will be displayed. As usual USP or SSP depends
     on supervisor bit.
@@ -1042,7 +1042,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               break;
 #endif
 
-#if defined(SS_DEBUG_FAKE_IO)
+#if defined(SSE_DEBUG_FAKE_IO)
             case 1527: // fake IO zone for boiler control
               new mem_browser(FAKE_IO_START,DT_MEMORY); 
               break;
@@ -1112,7 +1112,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               }
               break;
             }
-#if defined(SS_DEBUG_RUN_TO_RTS)
+#if defined(SSE_DEBUG_RUN_TO_RTS)
             case 1015:  //run to rts
             {
               if (runstate==RUNSTATE_STOPPED){
@@ -1204,7 +1204,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
             case 900:case 901:
             {
               mem_browser *mb=new mem_browser(pc,type_disp_type(LOWORD(wPar)==900 ? DT_MEMORY:DT_INSTRUCTION));
-#if !defined(SS_DEBUG_MOUSE_WHEEL)
+#if !defined(SSE_DEBUG_MOUSE_WHEEL)
 // we don't want to preselect address, we want the wheel to work at once
               SetFocus(GetDlgItem(mb->owner,3));
               SendMessage(GetDlgItem(mb->owner,3),WM_LBUTTONDOWN,0,0);
@@ -1255,37 +1255,37 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               break;
 #endif
 
-#if defined(SS_DEBUG_BROWSER_VECTORS)
+#if defined(SSE_DEBUG_BROWSER_VECTORS)
             case 911:
               new mem_browser(0x000008,DT_MEMORY);
               break;
 #endif
 
-#if defined(SS_DEBUG_BROWSER_SHIFTER)
+#if defined(SSE_DEBUG_BROWSER_SHIFTER)
             case 912:
               new mem_browser(0xFF8240,DT_MEMORY);
               break;
 #endif
 
-#if defined(SS_DEBUG_BROWSER_DMASOUND)
+#if defined(SSE_DEBUG_BROWSER_DMASOUND)
             case 913:
               new mem_browser(0xFF8900,DT_MEMORY);
               break;
 #endif
 
-#if defined(SS_DEBUG_BROWSER_6301)
+#if defined(SSE_DEBUG_BROWSER_6301)
             case 914:
               new mem_browser(IOLIST_PSEUDO_AD_6301,DT_MEMORY);
               break;
 #endif
 
-#if defined(SS_DEBUG_BROWSER_BLITTER)
+#if defined(SSE_DEBUG_BROWSER_BLITTER)
             case 915:
               new mem_browser(0xFF8A00,DT_MEMORY);
               break;
 #endif
 
-#if defined(SS_DEBUG_BROWSER_ACIA)
+#if defined(SSE_DEBUG_BROWSER_ACIA)
             case 916:
               new mem_browser(0xFFFC00,DT_MEMORY);
               break;
@@ -1362,22 +1362,22 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
         if (hPasti) items=14;
 #endif
 
-#if defined(SS_DEBUG_BROWSER_DMASOUND)
+#if defined(SSE_DEBUG_BROWSER_DMASOUND)
         items++;
 #endif
-#if defined(SS_DEBUG_BROWSER_SHIFTER)
+#if defined(SSE_DEBUG_BROWSER_SHIFTER)
         items++;
 #endif
-#if defined(SS_DEBUG_BROWSER_VECTORS)
+#if defined(SSE_DEBUG_BROWSER_VECTORS)
         items++;
 #endif
-#if defined(SS_DEBUG_BROWSER_6301)
+#if defined(SSE_DEBUG_BROWSER_6301)
         items++;
 #endif
-#if defined(SS_DEBUG_BROWSER_ACIA)
+#if defined(SSE_DEBUG_BROWSER_ACIA)
         items++;
 #endif
-#if defined(SS_DEBUG_BROWSER_BLITTER)
+#if defined(SSE_DEBUG_BROWSER_BLITTER)
         items++;
 #endif
         for (int i=0;i<n-items;i++){
@@ -1429,7 +1429,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
   return DefWindowProc(Win,Mess,wPar,lPar);
 }
 //---------------------------------------------------------------------------
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_CLIPBOARD)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_CLIPBOARD)
 BOOL SetClipboardText(LPCTSTR pszText) // from the 'net, for disa_to_file mod
 {
    BOOL ok = FALSE;
@@ -1456,11 +1456,11 @@ void disa_to_file(FILE*f,MEM_ADDRESS dstart,int dlen,bool as_source)
   int tp;
   char t[20];
   dpc=dstart;
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_CLIPBOARD)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_CLIPBOARD)
   // text bytes for 1 code byte, need a lot, your typical line is like
   // cmpi.b #$39,$8252                                ; 008078: 0C39 0039 0000 8252 
   const int multiplier=40; 
-#ifdef SS_VS2012_INIT
+#ifdef SSE_VS2012_INIT
   BYTE *buffer = 0,*buffer_ptr = 0;	// JLG VS2012 uninitialized pointers
 #else
   BYTE *buffer,*buffer_ptr;
@@ -1488,7 +1488,7 @@ void disa_to_file(FILE*f,MEM_ADDRESS dstart,int dlen,bool as_source)
         odpc+=2;
       }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_CLIPBOARD)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_CLIPBOARD)
       // we don't want disassembly for data dump
     }
     else if(!f) {
@@ -1527,7 +1527,7 @@ void disa_to_file(FILE*f,MEM_ADDRESS dstart,int dlen,bool as_source)
       }
       ot+=dt;
     }
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_CLIPBOARD)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_CLIPBOARD)
     if(!f)
     {
       int c=sprintf((char*)buffer_ptr,"%s\r\n",ot.Text);
@@ -1544,7 +1544,7 @@ void disa_to_file(FILE*f,MEM_ADDRESS dstart,int dlen,bool as_source)
 #endif
     fprintf(f,"%s\r\n",ot.Text);
   }
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_CLIPBOARD)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_CLIPBOARD)
   if(!f)
   {
     SetClipboardText( (LPCTSTR) buffer);
@@ -1605,7 +1605,7 @@ void DWin_init()
   AppendMenu(menu1,MF_STRING,1002,"&Trace");
   AppendMenu(menu1,MF_STRING,1010,"&Run");
   AppendMenu(menu1,MF_STRING,1011,"Run to RT&E");
-#if defined(SS_DEBUG_RUN_TO_RTS)
+#if defined(SSE_DEBUG_RUN_TO_RTS)
   AppendMenu(menu1,MF_STRING,1015,"Run to RTS");
 #endif
   AppendMenu(menu1,MF_STRING|MF_SEPARATOR,0,"-");
@@ -1638,16 +1638,16 @@ void DWin_init()
   AppendMenu(mem_browser_menu,MF_STRING,900,"New &Memory Browser");
   AppendMenu(mem_browser_menu,MF_STRING,901,"New &Instruction Browser");
   AppendMenu(mem_browser_menu,MF_STRING,902,"New &Register Browser");
-#if defined(SS_DEBUG_BROWSER_VECTORS)
+#if defined(SSE_DEBUG_BROWSER_VECTORS)
   AppendMenu(mem_browser_menu,MF_STRING,911,"New &Vectors Browser");
 #endif
-#if defined(SS_DEBUG_BROWSER_SHIFTER)
+#if defined(SSE_DEBUG_BROWSER_SHIFTER)
   AppendMenu(mem_browser_menu,MF_STRING,912,"New &Shifter Browser");
 #endif
-#if defined(SS_DEBUG_BROWSER_DMASOUND)
+#if defined(SSE_DEBUG_BROWSER_DMASOUND)
   AppendMenu(mem_browser_menu,MF_STRING,913,"New &DMA Sound Browser");
 #endif
-#if defined(SS_DEBUG_BROWSER_BLITTER)
+#if defined(SSE_DEBUG_BROWSER_BLITTER)
   AppendMenu(mem_browser_menu,MF_STRING,915,"New Blitter Browser");
 #endif
 
@@ -1656,11 +1656,11 @@ void DWin_init()
   AppendMenu(mem_browser_menu,MF_STRING,906,"New &Text Browser");
   AppendMenu(mem_browser_menu,MF_STRING,908,"New &FDC Browser");
 
-#if defined(SS_DEBUG_BROWSER_ACIA)
+#if defined(SSE_DEBUG_BROWSER_ACIA)
   AppendMenu(mem_browser_menu,MF_STRING,916,"New ACIA Browser");
 #endif
 
-#if defined(SS_DEBUG_BROWSER_6301)
+#if defined(SSE_DEBUG_BROWSER_6301)
   AppendMenu(mem_browser_menu,MF_STRING,909,"New I&KBD 6301 fake emu Browser");
   AppendMenu(mem_browser_menu,MF_STRING,914,"New IKBD 6301 true emu Browser");
 #else
@@ -1690,7 +1690,7 @@ void DWin_init()
   AppendMenu(logsection_menu,MF_STRING,1014,"&Set Log Viewing Program");
   AppendMenu(logsection_menu,MF_SEPARATOR,0,NULL);
   AppendMenu(logsection_menu,MF_STRING,1006,"Add &Mark");
-#if defined(SS_DEBUG_WIPE_TRACE)
+#if defined(SSE_DEBUG_WIPE_TRACE)
   AppendMenu(logsection_menu,MF_STRING,1007,"Wipe Logfile/TRACE");
 #else
   AppendMenu(logsection_menu,MF_STRING,1007,"Wipe Logfile");
@@ -1737,35 +1737,35 @@ void DWin_init()
   AppendMenu(menu,MF_STRING|MF_POPUP,(UINT)boiler_op_menu,"&Options");
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
   sse_menu=CreatePopupMenu();
   AppendMenu(menu,MF_STRING | MF_POPUP,(UINT)sse_menu,"&SSE");
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
  // AppendMenu(boiler_op_menu,MF_STRING|MF_SEPARATOR,0,NULL);
   AppendMenu(sse_menu,MF_STRING,1517,"Output TRACE to file");
   AppendMenu(sse_menu,MF_STRING,1518,"Limit TRACE file size");
-#if defined(SS_DEBUG_DUMP_6301_RAM)
+#if defined(SSE_DEBUG_DUMP_6301_RAM)
   AppendMenu(sse_menu,MF_STRING,1524,"Dump 6301 RAM");
 #endif
 
 
-#if defined(SS_DEBUG_MONITOR_VALUE)
+#if defined(SSE_DEBUG_MONITOR_VALUE)
   AppendMenu(sse_menu,MF_STRING|MF_SEPARATOR,0,NULL);
   AppendMenu(sse_menu,MF_STRING,1522,"Monitor: specific value");
 #endif
-#if defined(SS_DEBUG_MONITOR_RANGE)
+#if defined(SSE_DEBUG_MONITOR_RANGE)
   AppendMenu(sse_menu,MF_STRING,1523,"Monitor: address range");
 #endif
-#if defined(SS_DEBUG_STACK_68030_FRAME)
+#if defined(SSE_DEBUG_STACK_68030_FRAME)
   AppendMenu(sse_menu,MF_STRING|MF_SEPARATOR,0,NULL);
   AppendMenu(sse_menu,MF_STRING,1525,"68030 stack frame");
 #endif
-#if defined(SS_DEBUG_STACK_CHOICE)
+#if defined(SSE_DEBUG_STACK_CHOICE)
   AppendMenu(sse_menu,MF_STRING,1528,"Display other stack");
 #endif
-#if defined(SS_DEBUG_FAKE_IO)
+#if defined(SSE_DEBUG_FAKE_IO)
   AppendMenu(sse_menu,MF_STRING|MF_SEPARATOR,0,NULL);
   AppendMenu(sse_menu,MF_STRING,1527,STR_FAKE_IO_CONTROL);
 #endif
@@ -1855,7 +1855,7 @@ void DWin_init()
   log("STARTUP: Creating Child Windows");
 
 
-#if defined(SS_DEBUG_MOD_REGS) //big PC
+#if defined(SSE_DEBUG_MOD_REGS) //big PC
   new mr_static(/*label*/"PC",/*name*/"pc",/*x*/10,/*y*/1,
       /*owner*/DWin,/*id*/(HMENU)201,/*pointer*/(MEM_ADDRESS)&pc,
       /*bytes*/ 3,/*regflag*/ MST_REGISTER, /*editflag*/true,
@@ -1868,7 +1868,7 @@ void DWin_init()
 #endif
 
   new mr_static("screen=","screen address",240,1,DWin,(HMENU)294,(MEM_ADDRESS)&xbios2,3,MST_REGISTER,true,NULL);
-#if !defined(SS_DEBUG_MOVE_OTHER_SP)
+#if !defined(SSE_DEBUG_MOVE_OTHER_SP)
   lpms_other_sp=new mr_static("other sp=","other sp",110,1,
       DWin,(HMENU)203,(MEM_ADDRESS)&other_sp,3,MST_REGISTER,
       true,NULL);
@@ -1882,7 +1882,7 @@ void DWin_init()
   DWin_run_button=CreateWindow("Button","Run",WS_VISIBLE | WS_CHILD | BS_CHECKBOX | BS_PUSHLIKE | WS_CLIPSIBLINGS,
       490,1,140,50,DWin,(HMENU)1010,Inst,NULL);
 
-#if defined(SS_DEBUG_SHOW_SR)
+#if defined(SSE_DEBUG_SHOW_SR)
   HWND Win=CreateWindowEx(512,"Combobox","",WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_HASSTRINGS,
       330+50,26,100-20-30,200,DWin,(HMENU)1020,Inst,NULL);
 #else
@@ -1901,7 +1901,7 @@ void DWin_init()
       490,26,140,25,DWin,(HMENU)1022,Inst,NULL);
 
 
-#if defined(SS_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_DEBUG_SHOW_INTERRUPT)
   x=100;
   Debug.InterruptReportingZone=CreateWindowEx(0,"Static","EXC INFO",
     WS_VISIBLE | WS_CHILDWINDOW | SS_LEFT | SS_NOTIFY,
@@ -1909,7 +1909,7 @@ void DWin_init()
 #endif
 
 
-#if defined(SS_DEBUG_SHOW_SR)
+#if defined(SSE_DEBUG_SHOW_SR)
   // show SR in hex as well as bits
   new mr_static("SR","SDP",10,30,DWin,(HMENU)203,
       (MEM_ADDRESS)&sr,2,MST_REGISTER,false,NULL);//no need to edit this
@@ -1917,7 +1917,7 @@ void DWin_init()
   sr_display=CreateWindowEx(512,"Static","sr display",WS_BORDER | WS_VISIBLE | WS_CHILDWINDOW | SS_NOTIFY,
       30+40,30,200,20,DWin,(HMENU)230,Inst,NULL);
 #else
-#if defined(SS_DEBUG_MOD_REGS)
+#if defined(SSE_DEBUG_MOD_REGS)
   CreateWindowEx(0,"Static","SR ",WS_VISIBLE | WS_CHILDWINDOW | SS_LEFT,
       10,34,30,20,DWin,(HMENU)274,Inst,NULL);
 #else
@@ -1936,7 +1936,7 @@ void DWin_init()
 
   for(int n=0;n<16;n++){
     strcpy(ttt,reg_name(n));
-#if defined(SS_DEBUG_MOD_REGS)
+#if defined(SSE_DEBUG_MOD_REGS)
     strcat(ttt," ");
 #else
     strcat(ttt,"=");
@@ -1952,8 +1952,8 @@ void DWin_init()
   }
 
 
-#if defined(SS_DEBUG_MOVE_OTHER_SP)
-#if defined(SS_DEBUG_MOVE_OTHER_SP2)
+#if defined(SSE_DEBUG_MOVE_OTHER_SP)
+#if defined(SSE_DEBUG_MOVE_OTHER_SP2)
       new mr_static("SSP","SSP",x+80,y,
       DWin,(HMENU)203,(MEM_ADDRESS)&debug_SSP,4,MST_REGISTER,
       true,NULL);
@@ -2023,7 +2023,7 @@ void DWin_init()
     int y=5;
     mr_static *ms;
 
-#if defined(SS_DEBUG_SHOW_FRAME)
+#if defined(SSE_DEBUG_SHOW_FRAME)
     ms=new mr_static("Frame ","",5,y,Par,
         NULL,(MEM_ADDRESS)&FRAME,3,MST_DECIMAL,0,NULL);
     GetWindowRectRelativeToParent(ms->handle,&rc);
@@ -2036,14 +2036,14 @@ void DWin_init()
 #endif
     GetWindowRectRelativeToParent(ms->handle,&rc);
 
-#if defined(SS_DEBUG_SHOW_ACT)
+#if defined(SSE_DEBUG_SHOW_ACT)
     ms=
 #endif
 
     new mr_static("Since HBL ","",rc.right+5,y,Par,
         NULL,(MEM_ADDRESS)&debug_cycles_since_HBL,2,MST_DECIMAL,0,NULL);
 
-#if defined(SS_DEBUG_SHOW_ACT)
+#if defined(SSE_DEBUG_SHOW_ACT)
     GetWindowRectRelativeToParent(ms->handle,&rc);
     new mr_static("Absolute ","",rc.right+5,y,Par,
         NULL,(MEM_ADDRESS)&debug_ACT,4,MST_DECIMAL,0,NULL);
@@ -2056,7 +2056,7 @@ void DWin_init()
         NULL,(MEM_ADDRESS)&debug_VAP,3,MST_REGISTER,0,NULL);
     GetWindowRectRelativeToParent(ms->handle,&rc);
 
-#if defined(SS_DEBUG_SHOW_SDP) // the draw pointer
+#if defined(SSE_DEBUG_SHOW_SDP) // the draw pointer
 
     new mr_static("Current Draw Pointer ","",rc.right+5,y,Par,
         NULL,(MEM_ADDRESS)&shifter_draw_pointer,3,MST_REGISTER,0,NULL);
@@ -2064,13 +2064,13 @@ void DWin_init()
     new mr_static("Current Scanline ","",5,y,Par,
         NULL,(MEM_ADDRESS)&scan_y,2,MST_DECIMAL,0,NULL);
 
-#if defined(SS_DEBUG_SHOW_RES) && defined(SS_SHIFTER)
+#if defined(SSE_DEBUG_SHOW_RES) && defined(SSE_SHIFTER)
     GetWindowRectRelativeToParent(ms->handle,&rc);
     ms=new mr_static("Shift ","",rc.right+5,y,Par,
         NULL,(MEM_ADDRESS)&Shifter.m_ShiftMode,1,MST_REGISTER,0,NULL);
 #endif
 
-#if defined(SS_DEBUG_SHOW_FREQ) && defined(SS_SHIFTER)
+#if defined(SSE_DEBUG_SHOW_FREQ) && defined(SSE_SHIFTER)
     GetWindowRectRelativeToParent(ms->handle,&rc);
     new mr_static("Sync ","",rc.right+5,y,Par,
         NULL,(MEM_ADDRESS)&Shifter.m_SyncMode,1,MST_REGISTER,0,NULL);
@@ -2086,7 +2086,7 @@ void DWin_init()
     for (int t=0;t<4;t++){
       ms=new mr_static(Str("Timer ")+char('A'+t)+" ","",x,y,Par,
             NULL,(MEM_ADDRESS)&debug_time_to_timer_timeout[t],4,MST_DECIMAL,0,NULL);
-#if defined(SS_DEBUG_TIMERS_ACTIVE)
+#if defined(SSE_DEBUG_TIMERS_ACTIVE)
       ASSERT(ms);// record handles to edit properties on update
       Debug.boiler_timer_hwnd[t]=ms->hLABEL;
 //      TRACE("hnd? %d Par %d hnd %d=%d\n",HWND(DWin_timings_scroller),Par,t,ms->hLABEL);
@@ -2160,7 +2160,7 @@ void logfile_wipe()
     fclose(logfile);
     logfile=fopen(LogFileName,"wb");
   }
-#if defined(SS_DEBUG_WIPE_TRACE)
+#if defined(SSE_DEBUG_WIPE_TRACE)
   fclose(Debug.trace_file_pointer);
   Debug.trace_file_pointer=freopen(SS_TRACE_FILE_NAME, "w", stdout );
 #endif

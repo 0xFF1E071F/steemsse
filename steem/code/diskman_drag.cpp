@@ -4,7 +4,7 @@ MODULE: Steem
 DESCRIPTION: Routines to handle dragging in the Disk Manager.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: diskman_drag.cpp")
 #endif
 

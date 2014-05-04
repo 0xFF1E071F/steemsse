@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DISPLAY_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DISPLAY_H)
 
 #include "display.decla.h"
 
-#else//!defined(SS_STRUCTURE_DISPLAY_H)
+#else//!defined(SSE_STRUCTURE_DISPLAY_H)
 
 
 
@@ -16,7 +16,7 @@
 //---------------------------------------------------------------------------
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SAVE_NEO)
 //http://wiki.multimedia.cx/index.php?title=Neochrome
 #define uint8_t BYTE
 #define uint16_t WORD
@@ -163,7 +163,7 @@ public:
   HINSTANCE hFreeImage;
   int ScreenShotFormatOpts;
   Str ScreenShotExt;
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SAVE_NEO)
   neochrome_file *pNeoFile;
 #endif
 
@@ -220,4 +220,4 @@ SET_GUID(IID_IDirectDraw2,                  0xB3A6F3E0,0x2B43,0x11CF,0xA2,0xDE,0
 #undef INIT
 
 
-#endif//SS_STRUCTURE_DISPLAY_H
+#endif//SSE_STRUCTURE_DISPLAY_H

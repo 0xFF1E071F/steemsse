@@ -37,23 +37,23 @@ other files that make up the Steem module.
 //#pragma message("yoho_main")
 
 
-#if defined(SS_STRUCTURE_SSECPU_OBJ) && defined(BCC_BUILD)//temp
+#if defined(SSE_STRUCTURE_SSECPU_OBJ) && defined(BCC_BUILD)//temp
 #include "SSE/SSECpu.h"
 #endif
 
 #include "SSE/SSEDebug.h" //SS
 
-#if defined(SS_STF)
+#if defined(SSE_STF)
 #include "SSE/SSESTF.h"//unix
 #endif
-#if defined(SS_SDL)
+#if defined(SSE_SDL)
 #include "SSE/SSESDL.h"
 #endif
 
 const char *stem_version_date_text=__DATE__ " - " __TIME__;
 
 #ifndef ONEGAME
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_WINDOW_TITLE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_WINDOW_TITLE)
 const char *stem_window_title=WINDOW_TITLE; // in SSE.h
 #else
 const char *stem_window_title="Steem Engine";
@@ -100,7 +100,7 @@ TPatchesBox PatchesBox;
 #include "init_sound.cpp"
 #include "acc.cpp"
 
-#if defined(STEVEN_SEAGAL) && !defined(SS_STRUCTURE_SSEDEBUG_OBJ)
+#if defined(STEVEN_SEAGAL) && !defined(SSE_STRUCTURE_SSEDEBUG_OBJ)
 #include "SSE/SSEDebug.cpp"
 #endif
 
@@ -136,7 +136,7 @@ TPatchesBox PatchesBox;
 #include "onegame.cpp"
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301) 
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301) 
 #include "SSE/SSE6301.h" //TODO
 #endif  
 
@@ -188,7 +188,7 @@ int main(int argc,char *argv[])
   printf(EasyStr("\n-- Steem Engine v")+stem_version_text+" --\n\n");
   printf(EasyStr("Steem will save all its settings to ")+RunDir.Text+"\n");
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301) 
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301) 
   HD6301.Init(); // we don't forget to do this in Linux as well...
 #endif  
   
@@ -249,7 +249,7 @@ int main(int argc,char *argv[])
           int RevertFlag;
           XGetInputFocus(XD,&FocusWin,&RevertFlag);
           if (FocusWin==StemWin && fast_forward!=RUNSTATE_STOPPED+1 && slow_motion!=RUNSTATE_STOPPED+1){
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_MOUSE_CAPTURE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_MOUSE_CAPTURE)
             if(CAPTURE_MOUSE)
 #endif
               SetStemMouseMode(STEM_MOUSEMODE_WINDOW);
@@ -291,7 +291,7 @@ int main(int argc,char *argv[])
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI) 
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_RECORD_AVI) 
   if(pAviFile)
     delete pAviFile;
 #endif
@@ -377,7 +377,7 @@ bool Initialise()
     }else if (Type==ARG_NONOTIFYINIT){
       ShowNotify=0;
     }
-#if defined(STEVEN_SEAGAL) && defined(SS_UNIX_TRACE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_UNIX_TRACE)
     else if (Type==ARG_TRACEFILE){
       if(Path.Length()>0) // room for improvement...
         USE_TRACE_FILE=(Path.Mids(0,1)=="Y" || Path.Mids(0,1)=="y") ? 1 : 0;
@@ -506,7 +506,7 @@ bool Initialise()
     bool CrashedLastTime=CleanupTempFiles();
     if (TwoSteems==0){
       if (CrashedLastTime){
-#if defined (STEVEN_SEAGAL) && defined(SS_DEBUG)
+#if defined (STEVEN_SEAGAL) && defined(SSE_DEBUG)
         // Crashes are common while testing
         StepByStepInit=0;
 #else
@@ -682,42 +682,42 @@ bool Initialise()
 
   SetNotifyInitText(T("Jump Tables"));
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DELAY_LOAD_DLL) \
+#if defined(STEVEN_SEAGAL) && defined(SSE_DELAY_LOAD_DLL) \
   && defined(__BORLANDC__)
 __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #endif
 
-#ifndef SS_VAR_NOTIFY
+#ifndef SSE_VAR_NOTIFY
   WIN_ONLY( LoadUnzipDLL(); )
 #endif
   log("STARTUP: cpu_routines_init Called");
   cpu_routines_init();
 
 #if defined(STEVEN_SEAGAL)
-#if defined(SS_VAR_NOTIFY)
+#if defined(SSE_VAR_NOTIFY)
   SetNotifyInitText("unzipd32.dll");
   WIN_ONLY( LoadUnzipDLL(); )
 #endif
-#if defined(SS_VAR_UNRAR)
-#if defined(SS_VAR_NOTIFY)
+#if defined(SSE_VAR_UNRAR)
+#if defined(SSE_VAR_NOTIFY)
   SetNotifyInitText("unrar.dll");
 #endif
   WIN_ONLY( LoadUnrarDLL(); )
 #endif
-#if defined(SS_IPF)
-#if defined(SS_VAR_NOTIFY)
+#if defined(SSE_IPF)
+#if defined(SSE_VAR_NOTIFY)
   SetNotifyInitText(T("CAPS library"));
 #endif
   Caps.Init();
 #endif
-#if defined(SS_IKBD_6301) 
-#if defined(SS_VAR_NOTIFY)
+#if defined(SSE_IKBD_6301) 
+#if defined(SSE_VAR_NOTIFY)
   SetNotifyInitText(T("6301 emu"));
 #endif
   HD6301.Init();
 #endif
-#if defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
-#if defined(SS_VAR_NOTIFY)
+#if defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
+#if defined(SSE_VAR_NOTIFY)
   SetNotifyInitText(T("SDL"));
 #endif
   SDL_OK=SDL.Init();
@@ -866,7 +866,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #ifdef WIN32 
 #ifndef ONEGAME
   // SS we associate nothing
-#if !defined(SS_VAR_NO_AUTO_ASSOCIATE_DISK_STS_STC)
+#if !defined(SSE_VAR_NO_AUTO_ASSOCIATE_DISK_STS_STC)
   AssociateSteem(".ST","st_disk_image",0,T("ST Disk Image"),DISK_ICON_NUM,0);
   AssociateSteem(".STT","st_disk_image",0,T("ST Disk Image"),DISK_ICON_NUM,0);
   AssociateSteem(".MSA","st_disk_image",0,T("ST Disk Image"),DISK_ICON_NUM,0);
@@ -877,18 +877,18 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #endif
   AssociateSteem(".STS","steem_memory_snapshot",0,T("Steem Memory Snapshot"),SNAP_ICON_NUM,0);
   AssociateSteem(".STC","st_cartridge",0,T("ST ROM Cartridge"),CART_ICON_NUM,0);
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF_ASSOCIATE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF_ASSOCIATE)
   AssociateSteem(".IPF","st_disk_image",0,T("ST Disk Image"),DISK_ICON_NUM,0);
 #endif
-#endif//#if !defined(SS_VAR_NO_AUTO_ASSOCIATE_DISK_STS_STC)
+#endif//#if !defined(SSE_VAR_NO_AUTO_ASSOCIATE_DISK_STS_STC)
 
-#if !defined(SS_VAR_NO_AUTO_ASSOCIATE_MISC)
+#if !defined(SSE_VAR_NO_AUTO_ASSOCIATE_MISC)
   AssociateSteem(".PRG","st_program",0,T("ST Program"),PRG_ICON_NUM,true);
   AssociateSteem(".TOS","st_program",0,T("ST Program"),PRG_ICON_NUM,true);
   AssociateSteem(".APP","st_program",0,T("ST Program"),PRG_ICON_NUM,true);
   AssociateSteem(".GTP","st_program",0,T("ST Program"),PRG_ICON_NUM,true);
   AssociateSteem(".TTP","st_program",0,T("ST Program"),PRG_ICON_NUM,true);
-#endif// !defined(SS_VAR_NO_AUTO_ASSOCIATE_MISC)
+#endif// !defined(SSE_VAR_NO_AUTO_ASSOCIATE_MISC)
 
 #endif//!ONEGAME
 #endif//WIN32
@@ -981,7 +981,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
       }
       if (Load){
         LoadSnapShot(WriteDir+SLASH+AutoSnapShotName+".sts",0,true,0
-#if defined(SS_VAR_POWERON2)
+#if defined(SSE_VAR_POWERON2)
           ,true // no need to reset, we just did
 #endif
           ); // Don't add to history, don't change disks
@@ -991,7 +991,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
   if (OptionBox.NeedReset()) 
     reset_st(RESET_COLD | RESET_STOP | RESET_CHANGESETTINGS | RESET_NOBACKUP);
 
-#if defined(SS_TOS_WARNING1) && defined(SS_VAR_POWERON2)
+#if defined(SSE_TOS_WARNING1) && defined(SSE_VAR_POWERON2)
   CheckSTTypeAndTos();
 #endif
 
@@ -1063,11 +1063,11 @@ void make_Mem(BYTE conf0,BYTE conf1)
 
   himem=mem_len;
 
-#if defined(SS_CPU_HIMEM_BONUS_BYTES) // undefined
+#if defined(SSE_CPU_HIMEM_BONUS_BYTES) // undefined
   himem+=MEM_FIRST_WRITEABLE; // #bytes of ROM in RAM zone
 #endif
 
-#if !defined(SS_MMU_NO_CONFUSION)
+#if !defined(SSE_MMU_NO_CONFUSION)
   mmu_confused=false;
 #endif
 }

@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_GUI_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_GUI_H)
 
 #include "gui.decla.h"
 
-#else//!defined(SS_STRUCTURE_GUI_H)
+#else//!defined(SSE_STRUCTURE_GUI_H)
 
 #ifdef IN_MAIN
 #define EXT
@@ -208,7 +208,7 @@ int GetComLineArgType(char *,EasyStr &);
 #define ARG_SETTRANSFILE 102
 #define ARG_SETFONT 103
 #define ARG_SETCUTSFILE 104
-#if !defined(SS_CPU_DIV)
+#if !defined(SSE_CPU_DIV)
 #define ARG_SETDIVUTIME 105
 #define ARG_SETDIVSTIME 106
 #endif
@@ -231,7 +231,7 @@ int GetComLineArgType(char *,EasyStr &);
 #define ARG_ALWAYSNEWINSTANCE 251
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_UNIX_TRACE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_UNIX_TRACE)
 #define ARG_LOGSECTION 252
 #define ARG_TRACEFILE 253
 #endif
@@ -578,7 +578,7 @@ const POINT WinSize[4][5]={ {{320,200},{640,400},{960, 600},{1280,800},{-1,-1}},
                             {{640,400},{1280,800},{-1,-1}},
                             {{800,600},{-1,-1}}};
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS)
  POINT WinSizeBorderOriginal[4][5]={ {{320+ORIGINAL_BORDER_SIDE*2,200+(BORDER_TOP+ORIGINAL_BORDER_BOTTOM)},
 {640+(ORIGINAL_BORDER_SIDE*2)*2,400+2*(BORDER_TOP+ORIGINAL_BORDER_BOTTOM)},
 {960+(ORIGINAL_BORDER_SIDE*3)*2, 600+3*(BORDER_TOP+ORIGINAL_BORDER_BOTTOM)},
@@ -736,4 +736,4 @@ BYTE STCharToPCChar[128]={199,  0,233,226,228,224,229,231,234,235,232,239,238,23
 #undef EXT
 #undef INIT
 
-#endif//SS_STRUCTURE_GUI_H
+#endif//SSE_STRUCTURE_GUI_H

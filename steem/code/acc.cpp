@@ -4,15 +4,15 @@ MODULE: Steem
 DESCRIPTION: Completely random accessory functions.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: acc.cpp")
 #endif
 
-#if !defined(SS_STRUCTURE_CPU_H)
+#if !defined(SSE_STRUCTURE_CPU_H)
 void m68k_poke(MEM_ADDRESS ad,BYTE x);
 #endif
 
-#if defined(SS_STRUCTURE_ACC_H)
+#if defined(SSE_STRUCTURE_ACC_H)
 //#ifdef IN_MAIN // normally yes
 #define EXT
 #define INIT(s) =s
@@ -23,7 +23,7 @@ void m68k_poke(MEM_ADDRESS ad,BYTE x);
 #ifdef ENABLE_LOGFILE
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VARIOUS)
   EXT bool logging_suspended INIT(TRUE);
 #else
   EXT bool logging_suspended INIT(false);
@@ -45,15 +45,15 @@ void m68k_poke(MEM_ADDRESS ad,BYTE x);
                                     {"IO",LOGSECTION_IO},
                                     {"Crash",LOGSECTION_CRASH},
                                     {"CPU",LOGSECTION_CPU},
-#if !(defined(STEVEN_SEAGAL) && defined(SS_DEBUG_NODIV))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_NODIV))
                                     {"Div Instructions",LOGSECTION_DIV},
 #endif
                                     {"Trace",LOGSECTION_TRACE},
                                     {"-",-1},
                                     {"FDC",LOGSECTION_FDC},
                                      
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_LOG_OPTIONS)
-#if !defined(SS_DEBUG_TRACE_CONTROL)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_LOG_OPTIONS)
+#if !defined(SSE_DEBUG_TRACE_CONTROL)
                                     {"Floppy data",LOGSECTION_FDC_BYTES},
                                     {"IPF sector info",LOGSECTION_IPF_LOCK_INFO},
 #endif
@@ -72,7 +72,7 @@ void m68k_poke(MEM_ADDRESS ad,BYTE x);
                                     {"MIDI",LOGSECTION_MIDI},
                                     {"-",-1},
                                     {"Speed Limiting",LOGSECTION_SPEEDLIMIT},
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_LOG_OPTIONS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_LOG_OPTIONS)
                                     {"Init",LOGSECTION_INIT},
 #else
                                     {"Startup",LOGSECTION_INIT},
@@ -168,7 +168,7 @@ MEM_ADDRESS get_sp_before_trap(bool *pInvalid)
 {
   MEM_ADDRESS sp=(areg[7] & 0xffffff)+6;
 
-#if defined(SS_DEBUG_STACK_68030_FRAME)
+#if defined(SSE_DEBUG_STACK_68030_FRAME)
   if(Debug.M68030StackFrame)
     sp+=2;
 #endif
@@ -363,7 +363,7 @@ void log_io_write(MEM_ADDRESS addr,BYTE io_src_b)
   }
 }
 //---------------------------------------------------------------------------
-#if !defined(SS_DEBUG_CPU_LOG_NO_STOP)
+#if !defined(SSE_DEBUG_CPU_LOG_NO_STOP)
 void stop_cpu_log()
 {
   logsection_enabled[LOGSECTION_CPU]=0;
@@ -463,7 +463,7 @@ EasyStr HEXSl(long n,int ln){
 
 #ifdef DEBUG_BUILD // SS removed _
 char *reg_name(int n){
-#if defined(SS_DEBUG_MOD_REGS)//interesting technique by the way
+#if defined(SSE_DEBUG_MOD_REGS)//interesting technique by the way
   reg_name_buf[0]="DA"[int((n & 8) ? 1:0)]; 
 #else
   reg_name_buf[0]="da"[int((n & 8) ? 1:0)]; 
@@ -679,7 +679,7 @@ Str scanline_cycle_log()
 }
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SAVE_NEO)
 WORD change_endian(WORD x) {
   BYTE high=x>>8;
   BYTE low=x&0xFF;

@@ -5,11 +5,11 @@ DESCRIPTION: Functions to implement Steem's flexible shortcuts system that
 maps all sorts of user input to all sorts of emulator functions.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: shortcutbox.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_SHORTCUTBOX_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_SHORTCUTBOX_H)
 
 #ifdef IN_MAIN
 #define EXT
@@ -60,13 +60,13 @@ bool TShortcutBox::Picking=0;
 #undef EXT
 #undef INIT
 
-#endif//#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_SHORTCUTBOX_H)
+#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_SHORTCUTBOX_H)
 
 #if defined(STEVEN_SEAGAL)
-//#if defined(SS_INTERRUPT)
+//#if defined(SSE_INTERRUPT)
 #include "SSE/SSEInterrupt.h"
 //#endif
-#if defined(SS_DEBUG_FRAME_REPORT) //temp, same place
+#if defined(SSE_DEBUG_FRAME_REPORT) //temp, same place
 #include "SSE/SSEFrameReport.h"
 #endif
 #endif
@@ -79,11 +79,11 @@ bool TShortcutBox::Picking=0;
 #define CUT_TOGGLEFULLSCREEN 17
 #define CUT_TAKESCREENSHOT 29
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VARIOUS)
 
 enum {
   CUT_TOGGLEHARDDRIVES=231,
-#if defined(SS_VID_RECORD_AVI)
+#if defined(SSE_VID_RECORD_AVI)
   CUT_RECORD_VIDEO,
 #endif
   CUT_LAST_ITEM_SS
@@ -100,10 +100,10 @@ const char *ShortcutNames[NUM_SHORTCUTS*2]=
 #ifdef DEBUG_BUILD
   "Trace Into",(char*)200,"Step Over",(char*)203,"Run to/for",(char*)204,
   "Run to RTE",(char*)201,"Toggle Suspend Logging",(char*)202,
-#if defined(SS_DEBUG_RUN_TO_RTS)
+#if defined(SSE_DEBUG_RUN_TO_RTS)
   "Run to RTS",(char*)205,
 #endif
-#if defined(SS_DEBUG_BLAZING_STEP_OVER)
+#if defined(SSE_DEBUG_BLAZING_STEP_OVER)
   "Quick Step Over",(char*)206,
 #endif
 #endif
@@ -120,9 +120,9 @@ const char *ShortcutNames[NUM_SHORTCUTS*2]=
 
   "Save Over Last Memory Snapshot",(char*)53,"Load Last Memory Snapshot",(char*)54,
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VARIOUS)
 	"Toggle Hard Drives On/Off",(char*)CUT_TOGGLEHARDDRIVES,
-#if defined(SS_VID_RECORD_AVI)
+#if defined(SSE_VID_RECORD_AVI)
    "Record Video",(char*)CUT_RECORD_VIDEO,
 #endif
 #endif
@@ -305,7 +305,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
 #endif
   if (ShortcutBox.Picking) return;
   if (bAppActive==0) return;
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_F12)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_F12)
   if(Inf.Id[0]==VK_F12)
     return; // ignore this shortcut (v3.5)
 #endif
@@ -317,7 +317,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
   }
   switch (Inf.Action){
     case 20:case 21:case 34:case 35:case 36:case 37:case 43:
-#if defined(SS_DEBUG_BLAZING_STEP_OVER)
+#if defined(SSE_DEBUG_BLAZING_STEP_OVER)
     case 206: // don't press key for each NOP: key repeat
 #endif
       break;
@@ -489,7 +489,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       }
       break;
     case 21:
-#if defined(STEVEN_SEAGAL) && defined(SS_MFP_RATIO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_RATIO)
       if (n_cpu_cycles_per_second>CpuNormalHz){
 #else
       if (n_cpu_cycles_per_second>8000000){
@@ -500,7 +500,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       }
       break;
     case 22:
-#if defined(STEVEN_SEAGAL) && defined(SS_MFP_RATIO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_RATIO)
       n_cpu_cycles_per_second=CpuNormalHz;
 #else
       n_cpu_cycles_per_second=8000000;
@@ -638,12 +638,12 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       }
       break;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VARIOUS)
     case CUT_TOGGLEHARDDRIVES:	// toggle hard drives on/off
       HardDiskMan.DisableHardDrives=!HardDiskMan.DisableHardDrives;	// toggle
       HardDiskMan.update_mount();
       break;
-#if defined(SS_VID_RECORD_AVI)
+#if defined(SSE_VID_RECORD_AVI)
 #define LOGSECTION LOGSECTION_VIDEO
     case CUT_RECORD_VIDEO:
       if(video_recording)
@@ -665,7 +665,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       }
       break;
     case 203: // Step Over
-#if defined(SS_DEBUG_BLAZING_STEP_OVER)
+#if defined(SSE_DEBUG_BLAZING_STEP_OVER)
     case 206: // Quick Step Over
 #endif
       if (runstate!=RUNSTATE_RUNNING || GetForegroundWindow()!=StemWin){
@@ -687,7 +687,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
         PostMessage(DWin,WM_COMMAND,MAKEWPARAM(1022,BN_CLICKED),0);
       }
       break;
-#if defined(SS_DEBUG_RUN_TO_RTS)
+#if defined(SSE_DEBUG_RUN_TO_RTS)
     case 205: // Run to RTS
       if (runstate!=RUNSTATE_RUNNING || GetForegroundWindow()!=StemWin){
         PostMessage(DWin,WM_COMMAND,MAKEWPARAM(1015,BN_CLICKED),0);

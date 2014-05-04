@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_OPTIONS_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_OPTIONS_H)
 
 #include "options.decla.h"
 
-#else//!SS_STRUCTURE_OPTIONS_H
+#else//!SSE_STRUCTURE_OPTIONS_H
 
 //---------------------------------------------------------------------------
 class TOptionBox : public TStemDialog
@@ -124,14 +124,14 @@ public:
   void CreateMachinePage(),CreateTOSPage(),CreateGeneralPage(),CreatePortsPage();
   void CreateSoundPage(),CreateDisplayPage(),CreateBrightnessPage();
   void CreateMacrosPage(),CreateProfilesPage(),CreateStartupPage(),CreateOSDPage();
-#if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE)
   void CreateSSEPage();
 #endif
 
 #ifdef WIN32
   void CreateFullscreenPage(),CreateMIDIPage();
   void 
-#ifndef SS_VAR_NO_UPDATE
+#ifndef SSE_VAR_NO_UPDATE
     CreateUpdatePage(),
 #endif
     CreateAssocPage();
@@ -172,13 +172,13 @@ public:
   void UpdateParallel();
 
   HWND BorderOption;
-#if defined(STEVEN_SEAGAL) && defined(SS_STF)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STF)
   HWND STTypeOption;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_MMU_WAKE_UP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_WAKE_UP)
   HWND MMUWakeUpOption;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS)
   HWND BorderSizeOption;
 #endif
 #elif defined(UNIX)
@@ -187,60 +187,60 @@ public:
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_UNIX)
+#if defined(STEVEN_SEAGAL) && defined(SSE_UNIX)
 
-#if defined(SS_VID_BORDERS)
+#if defined(SSE_VID_BORDERS)
   hxc_button border_size_label; 
   hxc_dropdown border_size_dd;
 #endif
 
-#if defined(SS_VAR_MOUSE_CAPTURE)
+#if defined(SSE_VAR_MOUSE_CAPTURE)
   hxc_button capture_mouse_but;
 #endif
 
-#if defined(SS_HACKS)
+#if defined(SSE_HACKS)
   hxc_button specific_hacks_but;
 #endif
 
-#if defined(SS_VAR_STEALTH) 
+#if defined(SSE_VAR_STEALTH) 
   hxc_button stealth_mode_but;
 #endif
 
-#if defined(SS_STF)
+#if defined(SSE_STF)
   hxc_button st_type_label;
   hxc_dropdown st_type_dd;
 #endif
 
-#if defined(SS_MMU_WAKE_UP)
+#if defined(SSE_MMU_WAKE_UP)
   hxc_button wake_up_label; 
   hxc_dropdown wake_up_dd;
 #endif
 
-#if defined(SS_IKBD_6301) 
+#if defined(SSE_IKBD_6301) 
   hxc_button hd6301emu_but;
 #endif
 
-#if defined(SS_VAR_KEYBOARD_CLICK)
+#if defined(SSE_VAR_KEYBOARD_CLICK)
   hxc_button keyboard_click_but; 
 #endif
 
-#if defined(SS_SOUND_FILTER_STF)
+#if defined(SSE_SOUND_FILTER_STF)
   hxc_button psg_filter_but;
 #endif
 
-#if defined(SS_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE)
   hxc_button ste_microwire_but;
   hxc_button enable_dsp_but;
 #endif
 
-#if defined(SS_VAR_OPTION_SLOW_DISK)
+#if defined(SSE_VAR_OPTION_SLOW_DISK)
   hxc_button slow_disk_but;  
 #endif
 
 #endif
 
   void MachineUpdateIfVisible();
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_OPTIONS_REFRESH)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_OPTIONS_REFRESH)
   void SSEUpdateIfVisible();
 #endif
 
@@ -279,4 +279,4 @@ const int extmon_res[EXTMON_RESOLUTIONS][3]={
 {1024,768,4},
 {1280,960,4}};
 
-#endif//SS_STRUCTURE_OPTIONS_H
+#endif//SSE_STRUCTURE_OPTIONS_H

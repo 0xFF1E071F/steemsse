@@ -19,7 +19,7 @@ ROOT=..
 CC=g++
 
 # Parameters given to the compiler
-STEEMFLAGS=-DUNIX -DLINUX -DSTEVEN_SEAGAL -DNO_PORT_AUDIO -DSS_DEBUG
+STEEMFLAGS=-DUNIX -DLINUX -DSTEVEN_SEAGAL -DNO_PORT_AUDIO -DSSE_DEBUG
 CFLAGS=-I$(ROOT)/include -I$(ROOT)/steem/code \
 -I$(ROOT)/3rdparty \
 -I$(ROOT)/3rdparty/dsp \

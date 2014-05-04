@@ -4,7 +4,7 @@ MODULE: Steem
 DESCRIPTION: Steem's general information dialog.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: infobox.cpp")
 #endif
 
@@ -15,7 +15,7 @@ void TGeneralInfo::CreatePage(int pg)
     case INFOPAGE_ABOUT:
       CreateAboutPage();
       break;
-#if defined(SS_VAR_INFOBOX0) && defined(DEBUG_BUILD) 
+#if defined(SSE_VAR_INFOBOX0) && defined(DEBUG_BUILD) 
     case INFOPAGE_DRAWSPEED:
       CreateSpeedPage();
       break;
@@ -25,18 +25,18 @@ void TGeneralInfo::CreatePage(int pg)
       break;
     case INFOPAGE_README:
     case INFOPAGE_HOWTO_DISK:
-#if !defined(SS_VAR_INFOBOX6)
+#if !defined(SSE_VAR_INFOBOX6)
     case INFOPAGE_HOWTO_CART:
 #endif
     case INFOPAGE_FAQ:
-#if defined(SS_VAR_INFOBOX0) && defined(UNIX)
+#if defined(SSE_VAR_INFOBOX0) && defined(UNIX)
     case INFOPAGE_UNIXREADME:
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX2)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX2)
     case INFOPAGE_README_SSE: 
     case INFOPAGE_FAQ_SSE: 
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX7)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX7)
     case INFOPAGE_HINTS:
 #endif
       CreateReadmePage(pg);
@@ -100,7 +100,7 @@ void TGeneralInfo::GetHyperlinkLists(EasyStringList &desc_sl,EasyStringList &lin
   desc_sl.Add(T("Official Steem website (legacy)"),0);
   link_sl.Add(STEEM_WEB);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX1)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX1)
   desc_sl.Add(T("Steem SSE sourceforge"),0);
   link_sl.Add("http:/""/sourceforge.net/projects/steemsse/");
   desc_sl.Add(T("Steven Seagal's Atari ST Site"),0);
@@ -148,7 +148,7 @@ void TGeneralInfo::GetHyperlinkLists(EasyStringList &desc_sl,EasyStringList &lin
 TGeneralInfo::TGeneralInfo()
 {
   page_l=160;
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX4)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX4)
   page_w=82*8;//with Courier New, should give 80 visible columns
 #else  
   page_w=500;
@@ -190,10 +190,10 @@ void TGeneralInfo::LoadIcons()
                               hGUIIcon[RC_ICO_FUJILINK],hGUIIcon[RC_ICO_TEXT],
                               hGUIIcon[RC_ICO_INFO] /*unused*/,hGUIIcon[RC_ICO_DISK_HOWTO],
                               hGUIIcon[RC_ICO_CART_HOWTO],hGUIIcon[RC_ICO_INFO_FAQ]
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX2)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX2)
                               ,hGUIIcon[RC_ICO_OPS_SSE],hGUIIcon[RC_ICO_OPS_SSE]
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX7)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX7)
                               ,hGUIIcon[RC_ICO_OPS_SSE]
 #endif
                               ,0);
@@ -229,7 +229,7 @@ void TGeneralInfo::Show()
     return;
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX3)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX3)
   hFontCourier=CreateFont (README_FONT_HEIGHT, 0, 0, 0, FW_DONTCARE, FALSE, 
     FALSE, FALSE, ANSI_CHARSET,OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
     DEFAULT_QUALITY,DEFAULT_PITCH | FF_SWISS,README_FONT_NAME);
@@ -255,18 +255,18 @@ void TGeneralInfo::Show()
 #endif
   AddPageLabel(T("Links"),INFOPAGE_LINKS);
   if (Exists(RunDir+"\\disk image howto.txt")) AddPageLabel("Disk Image Howto",INFOPAGE_HOWTO_DISK);
-#if !defined(SS_VAR_INFOBOX5)
+#if !defined(SSE_VAR_INFOBOX5)
   if (Exists(RunDir+"\\cart image howto.txt")) AddPageLabel("Cartridge Image Howto",INFOPAGE_HOWTO_CART);
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX2)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX2)
   if (Exists(RunDir+"\\"+WINDOW_TITLE+".txt")) AddPageLabel(WINDOW_TITLE,INFOPAGE_README_SSE);
   if (Exists(RunDir+"\\"+STEEM_SSE_FAQ_TXT)) AddPageLabel("SSE FAQ",INFOPAGE_FAQ_SSE);
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX7)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX7)
   if (Exists(RunDir+"\\"+STEEM_HINTS_TXT)) AddPageLabel("Hints",INFOPAGE_HINTS);
 #endif
   page_l=2+TreeGetMaxItemWidth(PageTree)+5+2+10;
-#if !(defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX4))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX4))
   page_w=min(page_w,620-page_l);
 #endif
 
@@ -485,21 +485,21 @@ void TGeneralInfo::CreateReadmePage(int p)
   switch (p){
     case INFOPAGE_README: TextFile+="readme.txt"; break;
     case INFOPAGE_HOWTO_DISK: TextFile+="disk image howto.txt"; break;
-#if !defined(SS_VAR_INFOBOX5)
+#if !defined(SSE_VAR_INFOBOX5)
     case INFOPAGE_HOWTO_CART: TextFile+="cart image howto.txt"; break;
 #endif
     case INFOPAGE_FAQ: TextFile+="faq.txt"; break;
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX2)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX2)
     case INFOPAGE_README_SSE: TextFile+=WINDOW_TITLE; TextFile+=".txt"; break;
     case INFOPAGE_FAQ_SSE: TextFile+=STEEM_SSE_FAQ_TXT; break;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX2)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX2)
     case INFOPAGE_HINTS: TextFile+=STEEM_HINTS_TXT; break;
 #endif
   }
   FILE *f=fopen(TextFile,"rb");
   if (f){
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX5)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX5)
     char *text=(char*)malloc(64000);
 #else
     char text[64000];
@@ -507,14 +507,14 @@ void TGeneralInfo::CreateReadmePage(int p)
     text[fread(text,1,64000,f)]=0;
     fclose(f);
     SendMessage(GetDlgItem(Handle,500),WM_SETTEXT,0,(LPARAM)text);
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX5)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX5)
     free(text);
 #endif
   }
 
   if (Focus==NULL) Focus=GetDlgItem(Handle,504);
   SetPageControlsFont();
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX3)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX3)
   SendMessage (GetDlgItem(Handle,500), WM_SETFONT, WPARAM (hFontCourier), TRUE);
 #endif
 
@@ -528,7 +528,7 @@ void TGeneralInfo::Hide()
   ShowWindow(Handle,SW_HIDE);
   if (FullScreen) SetFocus(StemWin);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_INFOBOX3)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX3)
   DeleteObject(hFontCourier);
 #endif
 
@@ -624,7 +624,7 @@ LRESULT __stdcall TGeneralInfo::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
               if (GetDlgItem(Win,500)){ // On text page
                 switch (tvi.lParam){
                   case INFOPAGE_README:case INFOPAGE_HOWTO_DISK:
-#if !defined(SS_VAR_INFOBOX5)
+#if !defined(SSE_VAR_INFOBOX5)
                   case INFOPAGE_HOWTO_CART:
 #endif
                   case INFOPAGE_FAQ:

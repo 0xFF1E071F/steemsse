@@ -5,13 +5,13 @@
 #define EXT extern
 #define INIT(s)
 
-#if defined(SS_STRUCTURE_SSESHIFTER_OBJ)
+#if defined(SSE_STRUCTURE_SSESHIFTER_OBJ)
 #include <easystr.h>//unix case-sensitive
 typedef EasyStr Str;
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SAVE_NEO)
 //http://wiki.multimedia.cx/index.php?title=Neochrome
 #include "../../3rdparty/various/neochrome.h"
 #endif
@@ -57,7 +57,7 @@ private:
   IDirectDraw2 *DDObj;
   IDirectDrawSurface *DDPrimarySur,*DDBackSur;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_3BUFFER_WIN)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_3BUFFER_WIN)
   IDirectDrawSurface *DDBackSur2; // our second back buffer
   bool SurfaceToggle;
 #endif
@@ -144,10 +144,10 @@ public:
   int ScreenShotFormatOpts;
   Str ScreenShotExt;
 #if defined(STEVEN_SEAGAL)
-#if defined(SS_VID_SAVE_NEO)
+#if defined(SSE_VID_SAVE_NEO)
   neochrome_file *pNeoFile;
 #endif
-#if defined(SS_VID_3BUFFER_WIN)
+#if defined(SSE_VID_3BUFFER_WIN)
   long VSyncTiming; // must be public
   BOOL BlitIfVBlank(); // our polling function
 #endif
@@ -190,11 +190,11 @@ UNIX_ONLY( EXT bool TrySHM; )
 
 #ifdef WIN32
 
-#if defined(SS_VID_FREEIMAGE4) //3.6.4 use official header
+#if defined(SSE_VID_FREEIMAGE4) //3.6.4 use official header
 
 #include <FreeImage/FreeImage.h>
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SAVE_NEO)
 enum {IF_NEO=FIF_LBM+1};
 #endif
 
@@ -236,7 +236,7 @@ FI_ENUM(FREE_IMAGE_FORMAT) {
 	FIF_PSD,
 	FIF_CUT,
 	FIF_IFF = FIF_LBM,
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SAVE_NEO)
   IF_NEO,
 #endif
 };
@@ -292,7 +292,7 @@ SET_GUID(IID_IDirectDraw,			0x6C14DB80,0xA733,0x11CE,0xA5,0x21,0x00,0x20,0xAF,0x
 SET_GUID(IID_IDirectDraw2,                  0xB3A6F3E0,0x2B43,0x11CF,0xA2,0xDE,0x00,0xAA,0x00,0xB9,0x33,0x56 );
 
 #endif
-#endif//#if defined(SS_VID_FREEIMAGE4)
+#endif//#if defined(SSE_VID_FREEIMAGE4)
 
 
 #undef EXT

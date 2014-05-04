@@ -4,11 +4,11 @@ MODULE: emu
 DESCRIPTION: Code to handle Steem's flexible port redirection system.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: stports.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STPORTS_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_STPORTS_H)
 
 TSTPort STPort[3];
 
@@ -19,7 +19,7 @@ TSTPort STPort[3];
 //---------------------------------------------------------------------------
 void agenda_midi_replace(int)
 {
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
 #define LOGSECTION LOGSECTION_MIDI
   if(HD6301EMU_ON)
   {
@@ -28,7 +28,7 @@ void agenda_midi_replace(int)
       
       BYTE midi_in=MIDIPort.ReadByte();
 
-#if defined(SS_MIDI_TRACE_BYTES_IN)
+#if defined(SSE_MIDI_TRACE_BYTES_IN)
       TRACE_LOG("Midi in %X\n",midi_in);
 #endif
 

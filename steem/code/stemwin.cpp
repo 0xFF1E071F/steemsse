@@ -5,7 +5,7 @@ DESCRIPTION: This file (included from gui.cpp) handles the main Steem window
 and its various buttons.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: stemwin.cpp")
 #endif
 
@@ -41,7 +41,7 @@ void StemWinResize(int xo,int yo)
       xo*WinSize[res][Idx].x/640,yo*WinSize[res][Idx].y/400);
   }
 
-#if defined(SS_VAR_STATUS_STRING)
+#if defined(SSE_VAR_STATUS_STRING)
     GUIRefreshStatusBar();//of course (v3.5.5)
 #endif
 
@@ -223,7 +223,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       return 0;
     }
     case WM_USER+2:   // Update commands
-#if defined(SS_VAR_NO_UPDATE)
+#if defined(SSE_VAR_NO_UPDATE)
       if (wPar==2323)  // Running?
         return runstate==RUNSTATE_RUNNING;
 #else
@@ -571,7 +571,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       }
 #endif
       
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_F12)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_F12)
       // Adding F12 as emulator start/stop.
       if(wPar==VK_F12)
       {
@@ -581,7 +581,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           { PostRunMessage();} // it's a macro
           else
           {
-#if defined(SS_DEBUG_FRAME_REPORT) && defined(SS_DEBUG_FRAME_REPORT_ON_STOP)
+#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_DEBUG_FRAME_REPORT_ON_STOP)
             FrameEvents.Report();
 #endif
 
@@ -596,7 +596,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         if (wPar==VK_PAUSE){
           if (Mess==WM_KEYUP || Mess==WM_SYSKEYUP){
             if (FullScreen || GetKeyState(VK_SHIFT)<0){
-#if defined(SS_DEBUG_FRAME_REPORT) && defined(SS_DEBUG_FRAME_REPORT_ON_STOP)
+#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_DEBUG_FRAME_REPORT_ON_STOP)
               FrameEvents.Report();
 #endif
               runstate=RUNSTATE_STOPPING;
@@ -667,7 +667,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           }else if (StartEmuOnClick){
             PostRunMessage();
           }
-#if defined(SS_DEBUG_REPORT_SCAN_Y_ON_CLICK)
+#if defined(SSE_DEBUG_REPORT_SCAN_Y_ON_CLICK)
 /*  When emulation is stopped, right click in window will tell which
     scanline we're at.
     To do this we use the "status bar".
@@ -682,11 +682,11 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             if(border)
               guessed_scan_y-=BORDER_TOP;
             int guessed_x=LOWORD(lPar)/2-SideBorderSizeWin;
-#if defined(SS_VAR_STATUS_STRING)
+#if defined(SSE_VAR_STATUS_STRING)
             HWND status_bar_win=GetDlgItem(StemWin,120); // get handle
-#if defined(SS_DEBUG_REPORT_SDP_ON_CLICK) && defined(SS_SHIFTER)
+#if defined(SSE_DEBUG_REPORT_SDP_ON_CLICK) && defined(SSE_SHIFTER)
             char tmp[12+1+6];
-#if defined(SS_DEBUG_FRAME_REPORT)
+#if defined(SSE_DEBUG_FRAME_REPORT)
             MEM_ADDRESS computed_sdp = FrameEvents.GetSDP(guessed_x,guessed_scan_y);
 #endif
             sprintf(tmp,"X%d Y%d $%X",guessed_x,guessed_scan_y,computed_sdp);
@@ -802,12 +802,12 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       if (FullScreen){
         CanUse_400=true;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_BORDERS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS)
       }
       else if (border & 1)
       {// blurry display in 'no stretch' mode? check here!!!!!!!!!!!!!!!!
         CanUse_400=
-#if defined(SS_VID_BORDERS_413)
+#if defined(SSE_VID_BORDERS_413)
           (
           (cw==4+640+4*SideBorderSizeWin) 
           ||((SideBorderSizeWin==VERY_LARGE_BORDER_SIDE_WIN)&&(cw-2==4+640+4*SideBorderSizeWin)
@@ -870,7 +870,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       break;
     case WM_ACTIVATEAPP:
       bAppActive=(bool)wPar;
-#if defined(SS_VID_VSYNC_WINDOW_CRASH_FIX2)
+#if defined(SSE_VID_VSYNC_WINDOW_CRASH_FIX2)
       if(!bAppActive)
       {
         SSE_WIN_VSYNC=SSE_3BUFFER=false; // avoid crash going in or out
@@ -998,7 +998,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
 
         if (GetForegroundWindow()==StemWin && GetCapture()==NULL && IsIconic(StemWin)==0 &&
             fast_forward!=RUNSTATE_STOPPED+1 && slow_motion!=RUNSTATE_STOPPED+1){
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_MOUSE_CAPTURE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_MOUSE_CAPTURE)
           if(CAPTURE_MOUSE)
 #endif
           SetStemMouseMode(STEM_MOUSEMODE_WINDOW);
@@ -1009,7 +1009,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
         SendMessage(hBut,BM_SETCHECK,0,0);
       }else{
         if (runstate==RUNSTATE_RUNNING){
-#if defined(SS_DEBUG_FRAME_REPORT) && defined(SS_DEBUG_FRAME_REPORT_ON_STOP)
+#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_DEBUG_FRAME_REPORT_ON_STOP)
           FrameEvents.Report();
 #endif
 
@@ -1020,7 +1020,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
       break;
     case 102:
     {
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESET_BUTTON)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESET_BUTTON)
       bool Warm=(SendMessage(hBut,BM_GETCLICKBUTTON,0,0)==1);
 #else
       bool Warm=(SendMessage(hBut,BM_GETCLICKBUTTON,0,0)==2);
@@ -1032,7 +1032,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
     case 106:
       Disp.ChangeToWindowedMode();
       break;
-#if !defined(SS_VAR_NO_UPDATE)
+#if !defined(SSE_VAR_NO_UPDATE)
     case 120:
       if (UpdateWin){
         SendMessage(hBut,BM_SETCHECK,1,0);
@@ -1128,7 +1128,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
         
         DestroyMenu(Pop);
       }else{
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SAVE_NEO)
           if(Disp.ScreenShotFormat==IF_NEO)
           {
             ASSERT( sizeof(neochrome_file)==32128 );
@@ -1152,7 +1152,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
 void SetStemWinSize(int w,int h,int xo,int yo)
 {
   TRACE_LOG("SetStemWinSize w %d,h %d,%d,%d\n",w,h,xo,yo);
-#if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
   if(SDL.InUse)
   {
     SDL.LeaveSDLVideoMode();
@@ -1398,7 +1398,7 @@ void SnapShotGetOptions(EasyStringList *p_sl)
 
   EasyStr NoSaveExplain="";
 #ifndef DISABLE_STEMDOS
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_LINE_F)
+#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_F)
   if (on_rte!=ON_RTE_RTE && on_rte!=ON_RTE_LINE_F){
 #else
   if (on_rte!=ON_RTE_RTE){

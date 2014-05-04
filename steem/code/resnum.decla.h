@@ -86,7 +86,7 @@
 #define RC_ICO_TAKESCREENSHOTBUT 72
 #define RC_ICO_DISKMANTOOLS 73
 
-//#if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE)                          
+//#if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE)                          
 #define RC_ICO_OPS_SSE 74
 #define RC_NUM_ICONS 75
 //#else

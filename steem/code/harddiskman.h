@@ -1,4 +1,4 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_HARDDISKMAN_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_HARDDISKMAN_H)
 #pragma once
 #endif
 

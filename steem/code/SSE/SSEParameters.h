@@ -11,7 +11,7 @@
 #ifndef SSEPARAMETERS_H
 #define SSEPARAMETERS_H
 
-#if defined(SS_STRUCTURE_SSE6301_OBJ) && defined(__cplusplus)
+#if defined(SSE_STRUCTURE_SSE6301_OBJ) && defined(__cplusplus)
 #include <conditions.h>
 #include <draw.decla.h>
 #endif
@@ -26,7 +26,7 @@
 
 #define ACT ABSOLUTE_CPU_TIME
 
-#if defined(SS_SHIFTER_TRICKS) && defined(SS_MFP_RATIO)
+#if defined(SSE_SHIFTER_TRICKS) && defined(SSE_MFP_RATIO)
 
 #define HBL_PER_SECOND (CpuNormalHz/Shifter.CurrentScanline.Cycles)
 //Frequency   50          60            72
@@ -35,7 +35,7 @@
 #else 
 
 
-#if defined(SS_FDC_PRECISE_HBL)//todo table
+#if defined(SSE_FDC_PRECISE_HBL)//todo table
 #define HBL_PER_FRAME ( (shifter_freq_at_start_of_vbl==50)?HBLS_50HZ: \
   ( (shifter_freq_at_start_of_vbl==60)? HBLS_60HZ : HBLS_72HZ))
 #else
@@ -54,11 +54,11 @@
 // ACIA //
 //////////
 
-#if defined(SS_ACIA)
+#if defined(SSE_ACIA)
 
-#if defined(SS_ACIA_IRQ_DELAY)// not defined anymore (v3.5.2), see MFP
+#if defined(SSE_ACIA_IRQ_DELAY)// not defined anymore (v3.5.2), see MFP
 
-#define SS_ACIA_IRQ_DELAY_CYCLES 20 // est. gap between RX and IRQ in CPU cycles
+#define SSE_ACIA_IRQ_DELAY_CYCLES 20 // est. gap between RX and IRQ in CPU cycles
 /*  Delay before keys sent by the IKBD are received by the ACIA.
     It was about 20 in Steem 3.2 (>10.000 cycles), I brought it back to
     12 in 3.3 to be closer to 7.200 cycles mentioned in WinsTON/Hatari, but
@@ -66,7 +66,7 @@
     vindicating Steem authors! Though it is all guessing.
 */
 
-#if !defined(SS_IKBD)
+#if !defined(SSE_IKBD)
 #define HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL \
 (1350*8/ \
 (shifter_freq_at_start_of_vbl==50?SCANLINE_TIME_IN_CPU_CYCLES_50HZ:\
@@ -76,7 +76,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 #endif
 
-#if defined(SS_IKBD_6301)
+#if defined(SSE_IKBD_6301)
 
 #define SS_6301_TO_ACIA_IN_CYCLES (HD6301_CYCLES_TO_SEND_BYTE*HD6301_CYCLE_DIVISOR)
 #define SS_6301_TO_ACIA_IN_HBL (HD6301EMU_ON?HD6301_CYCLES_TO_SEND_BYTE_IN_HBL:(screen_res==2?24:12))
@@ -88,12 +88,12 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 #endif
 
-#if defined(SS_ACIA_TDR_COPY_DELAY)
+#if defined(SSE_ACIA_TDR_COPY_DELAY)
 //#define ACIA_TDR_COPY_DELAY ACIA_CYCLES_NEEDED_TO_START_TX //formerly
 #define ACIA_TDR_COPY_DELAY (200) // Hades Nebula vs. Nightdawn (???)
 #endif
 
-#if defined(SS_ACIA_IRQ_DELAY2)
+#if defined(SSE_ACIA_IRQ_DELAY2)
 #define ACIA_RDRF_DELAY (20)
 #endif
 
@@ -106,8 +106,8 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 // BLITTER //
 /////////////
 
-#if defined(SS_BLITTER)
-#if defined(SS_BLT_BLIT_MODE_CYCLES) 
+#if defined(SSE_BLITTER)
+#if defined(SSE_BLT_BLIT_MODE_CYCLES) 
 /*  It's not so clear in the doc, but the 64 shared bus cycles are not in CPU
     cycles but in NOP units (4 cycles). 
     It could be deduced from the example program and the mention restarting 
@@ -117,9 +117,9 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
     Since we prolong the access times, we make sure to check for interrupts
     more often. The smaller the value, the higher the emulation load!
 */
-#undef SS_BLT_BLIT_MODE_CYCLES
-#define SS_BLT_BLIT_MODE_CYCLES (65*4) // 'NOP' x 4 = cycles
-#define SS_BLT_BLIT_MODE_IRQ_CHK (64) // when we check for IRQ, in cycles
+#undef SSE_BLT_BLIT_MODE_CYCLES
+#define SSE_BLT_BLIT_MODE_CYCLES (65*4) // 'NOP' x 4 = cycles
+#define SSE_BLT_BLIT_MODE_IRQ_CHK (64) // when we check for IRQ, in cycles
 #endif
 #endif
 
@@ -128,7 +128,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 // CPU //
 /////////
 
-#if defined(SS_CPU)
+#if defined(SSE_CPU)
 
 //todo move clock here
 #endif
@@ -138,8 +138,8 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 // DEBUG //
 ///////////
 
-#if defined(SS_DEBUG) 
-#if defined(SS_UNIX)
+#if defined(SSE_DEBUG) 
+#if defined(SSE_UNIX)
 #define SS_TRACE_FILE_NAME "./TRACE.txt"
 #else
 #define SS_TRACE_FILE_NAME "TRACE.txt"
@@ -147,20 +147,20 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define TRACE_MAX_WRITES 200000 // to avoid too big file
 #endif
 
-#if defined(SS_OSD_DEBUG_MESSAGE)
+#if defined(SSE_OSD_DEBUG_MESSAGE)
 #define OSD_DEBUG_MESSAGE_LENGTH 30 // in bytes
 #define OSD_DEBUG_MESSAGE_TIME 2 // in seconds
 #endif
 
-#if defined(SS_DEBUG_FAKE_IO)
+#if defined(SSE_DEBUG_FAKE_IO)
 #define FAKE_IO_START 0xfffb00
 #define FAKE_IO_LENGTH 64*2 // in bytes
 #define FAKE_IO_END (FAKE_IO_START+FAKE_IO_LENGTH-2) // starting address of last one
 #define STR_FAKE_IO_CONTROL "Control mask browser"
 #endif
 
-#if defined(SS_DEBUG_FRAME_REPORT)
-#if defined(SS_UNIX)
+#if defined(SSE_DEBUG_FRAME_REPORT)
+#if defined(SSE_UNIX)
 #define FRAME_REPORT_FILENAME "./FrameReport.txt" //a fix?
 #else
 #define FRAME_REPORT_FILENAME "FrameReport.txt"
@@ -169,7 +169,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 
 
-#if defined(SS_DISK_GHOST)
+#if defined(SSE_DISK_GHOST)
 #define AVG_HBLS_SECTOR (200)
 #endif
 
@@ -181,9 +181,9 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 // DMA //
 /////////
 
-#if defined(SS_DMA)
-#if defined(SS_DMA_DELAY)
-#define SS_DMA_ACCESS_DELAY 20
+#if defined(SSE_DMA)
+#if defined(SSE_DMA_DELAY)
+#define SSE_DMA_ACCESS_DELAY 20
 #endif
 #endif
 
@@ -191,24 +191,24 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 // DRIVE //
 ///////////
 
-#if defined(SS_DRIVE)
+#if defined(SSE_DRIVE)
 
 #define DRIVE_11SEC_INTERLEAVE 6
 #define DRIVE_RPM 300
 #define DRIVE_MAX_CYL 83
 
-#if defined(SS_DRIVE_BYTES_PER_ROTATION)
+#if defined(SSE_DRIVE_BYTES_PER_ROTATION)
 #define DRIVE_BYTES_ROTATION (6250+20) // could be true though //hack MPS golf...
 #else
 #define DRIVE_BYTES_ROTATION (8000) // Steem 3.2
 #endif
 
-#if defined(SS_DRIVE_RW_SECTOR_TIMING2)
+#if defined(SSE_DRIVE_RW_SECTOR_TIMING2)
 #define FDC_SECTOR_GAP_BEFORE_IRQ_9_10 (3+(SSE_HACKS_ON?28:0)) //CRC + hack (FDCTNF by Petari)
 #define FDC_SECTOR_GAP_BEFORE_IRQ_11 (3)
 #endif
 
-#if defined(SS_DRIVE_SOUND)
+#if defined(SSE_DRIVE_SOUND)
 #define DRIVE_SOUND_DIRECTORY "\\DriveSound"
 #define DRIVE_SOUND_BUZZ_THRESHOLD 7 // distance between tracks
 #endif
@@ -220,19 +220,19 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 // FDC //
 /////////
 
-#if defined(SS_FDC)
+#if defined(SSE_FDC)
 
-#if defined(SS_FDC_ACCURATE)
-#endif//#if defined(SS_FDC_ACCURATE)
+#if defined(SSE_FDC_ACCURATE)
+#endif//#if defined(SSE_FDC_ACCURATE)
 
-#endif//#if defined(SS_FDC)
+#endif//#if defined(SSE_FDC)
 
 
 ///////////
 // Hacks //
 ///////////
 
-#if defined(SS_HACKS)
+#if defined(SSE_HACKS)
 enum {
 SS_SIGNAL_TOS_PATCH106=1, // checking all ST files we open
 SS_SIGNAL_SHIFTER_CONFUSED_1,// temp hacks for 3.4
@@ -247,18 +247,18 @@ SS_SIGNAL_ENUM_EnumDisplayModes, // wait until finished (?)
 // IKBD //
 //////////
 
-#if defined(SS_IKBD)
+#if defined(SSE_IKBD)
 
-#if defined(SS_IKBD_6301)
+#if defined(SSE_IKBD_6301)
 /*
-#if defined(SS_UNIX)
+#if defined(SSE_UNIX)
 #define HD6301_ROM_FILENAME "./HD6301V1ST.img" 
 #else
 #define HD6301_ROM_FILENAME "HD6301V1ST.img"
 #endif
 */
 
-#if defined(SS_UNIX)
+#if defined(SSE_UNIX)
 #define HD6301_ROM_FILENAME "/HD6301V1ST.img" 
 #else
 #define HD6301_ROM_FILENAME "\\HD6301V1ST.img"
@@ -271,7 +271,7 @@ SS_SIGNAL_ENUM_EnumDisplayModes, // wait until finished (?)
 
 // Parameters used in true and fake 6301 emu
 
-#define HD6301_CYCLES_PER_SCANLINE 64 // used if SS_SHIFTER not defined
+#define HD6301_CYCLES_PER_SCANLINE 64 // used if SSE_SHIFTER not defined
 #define HD6301_CYCLE_DIVISOR 8 // the 6301 runs at 1MHz (verified by Stefan jL)
 
 // in HBL, for Steem, -1 for precise timing (RX/IRQ delay)
@@ -303,7 +303,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 // INTERRUPT //
 ///////////////
 
-#if defined(SS_INTERRUPT)
+#if defined(SSE_INTERRUPT)
 /*  
     IACK (interrupt acknowledge)  16
     Exception processing          40
@@ -317,23 +317,23 @@ are assumed to take four clock periods.
 
 */
 
-#if defined(SS_INT_MFP)
-#define SS_INT_MFP_TIMING 56 // many cases
+#if defined(SSE_INT_MFP)
+#define SSE_INT_MFP_TIMING 56 // many cases
 #endif
-#if defined(SS_INT_HBL)
-#define SS_INT_HBL_TIMING 56 // SNYD/TCB
+#if defined(SSE_INT_HBL)
+#define SSE_INT_HBL_TIMING 56 // SNYD/TCB
 #endif
-#if defined(SS_INT_VBL)
-#define SS_INT_VBL_TIMING 56
-#endif
-
-
-#if defined(SS_INT_VBI_START)
-#undef SS_INT_VBI_START
-#define SS_INT_VBI_START (68) // default = STE
+#if defined(SSE_INT_VBL)
+#define SSE_INT_VBL_TIMING 56
 #endif
 
-#if defined(SS_INT_VBL_STF) // modest hack still works
+
+#if defined(SSE_INT_VBI_START)
+#undef SSE_INT_VBI_START
+#define SSE_INT_VBI_START (68) // default = STE
+#endif
+
+#if defined(SSE_INT_VBL_STF) // modest hack still works
 #define HBL_FOR_STE 444
 #define HBL_FOR_STF (HBL_FOR_STE+4+(SSE_HACKS_ON?4:0)) //TODO
 #endif
@@ -345,21 +345,21 @@ are assumed to take four clock periods.
 // IPF //
 /////////
 
-#if defined(SS_IPF)
-#define SS_IPF_PLUGIN_FILE "CAPSImg.dll" //Windows
-#define SS_IPF_FREQU 8000000//? CPU speed? - even for that I wasn't helped!
+#if defined(SSE_IPF)
+#define SSE_IPF_PLUGIN_FILE "CAPSImg.dll" //Windows
+#define SSE_IPF_FREQU 8000000//? CPU speed? - even for that I wasn't helped!
 
-#ifdef SS_IPF_CTRAW
-#undef SS_IPF_CTRAW
-#define SS_IPF_CTRAW "CTR" 
+#ifdef SSE_IPF_CTRAW
+#undef SSE_IPF_CTRAW
+#define SSE_IPF_CTRAW "CTR" 
 #endif
-#ifdef SS_IPF_KFSTREAM//no
-#undef SS_IPF_KFSTREAM
-#define SS_IPF_KFSTREAM "RAW" 
+#ifdef SSE_IPF_KFSTREAM//no
+#undef SSE_IPF_KFSTREAM
+#define SSE_IPF_KFSTREAM "RAW" 
 #endif
-#ifdef SS_IPF_DRAFT//no
-#undef SS_IPF_DRAFT
-#define SS_IPF_DRAFT "RAW"  //?
+#ifdef SSE_IPF_DRAFT//no
+#undef SSE_IPF_DRAFT
+#define SSE_IPF_DRAFT "RAW"  //?
 #endif
 
 
@@ -371,15 +371,15 @@ are assumed to take four clock periods.
 // MFP //
 /////////
 
-#if defined(SS_MFP)
+#if defined(SSE_MFP)
 
-#if defined(SS_MFP_RATIO) 
+#if defined(SSE_MFP_RATIO) 
 /*  There was a hack in Steem up to v3.3, where the CPU/MFP frequency ratio
     was set different from what was measured on an STE by Steem authors, that
     allowed Lethal Xcess to run. This hack was hiding a blitter timing problem,
     however (the 64 NOP issue), which explains why the game wasn't sensitive
     to the ratio in STF mode. Now that the blitter bug has been corrected,
-    we use the measured value (when SS_MFP_RATIO_STE is defined).
+    we use the measured value (when SSE_MFP_RATIO_STE is defined).
     For STF we use the precise value of the MFP quarts and the real value of
     a typical "PAL" STF, as read on atari-forum (ijor?)
     3.5.1: same ratio for STE, it could make DMA sound emu more precise
@@ -399,7 +399,7 @@ are assumed to take four clock periods.
 #define  MFP_CLK_TH_EXACT 2457600 // ( 2^15 * 3 * 5^2 )
 #endif
 
-#if defined(SS_MFP_WRITE_DELAY1)
+#if defined(SSE_MFP_WRITE_DELAY1)
 #define MFP_WRITE_LATENCY 8 // 8 = the smallest for Audio Artistic
 #endif
 
@@ -410,9 +410,9 @@ are assumed to take four clock periods.
 // MMMU //
 /////////
 
-#if defined(SS_MMU)
+#if defined(SSE_MMU)
 
-#if defined(SS_MMU_WAKE_UP_DL)
+#if defined(SSE_MMU_WAKE_UP_DL)
 #define WU_SHIFTER_PANIC 5
 #else
 #define WU_SHIFTER_PANIC 3
@@ -425,7 +425,7 @@ are assumed to take four clock periods.
 // OSD //
 /////////
 
-#if defined(SS_OSD)
+#if defined(SSE_OSD)
 #define RED_LED_DELAY 1500 // Red floppy led for writing, in ms
 #define HD_TIMER 100 // Yellow hard disk led (imperfect timing)
 #endif
@@ -438,7 +438,7 @@ are assumed to take four clock periods.
 #define VERT_OVSCN_LIMIT (502) //502
 
 
-#if defined(SS_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
+#if defined(SSE_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
 #define WU2_PLUS_CYCLES 4 // we make cycles +2
 #else
 #define WU2_PLUS_CYCLES 2 // we don't
@@ -450,12 +450,12 @@ are assumed to take four clock periods.
 // SOUND //
 ///////////
 
-#if defined(SS_SOUND_FILTER_STF)
-#define SS_SOUND_FILTER_STF_V ((*source_p+dv)/2)
-#define SS_SOUND_FILTER_STF_DV (v)//((*source_p+dv)/2)
+#if defined(SSE_SOUND_FILTER_STF)
+#define SSE_SOUND_FILTER_STF_V ((*source_p+dv)/2)
+#define SSE_SOUND_FILTER_STF_DV (v)//((*source_p+dv)/2)
 #endif
 
-#if defined(SS_SOUND_MICROWIRE_WRITE_LATENCY)
+#if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY)
 // to make XMAS 2004 scroller work, should it be lower?
 #define MICROWIRE_LATENCY_CYCLES (128+16)
 #endif
@@ -465,7 +465,7 @@ are assumed to take four clock periods.
 /////////
 
 
-#if defined(SS_STF_VERT_OVSCN)
+#if defined(SSE_STF_VERT_OVSCN)
 
 #define STF_VERT_OVSCN_OFFSET 4
 
@@ -475,7 +475,7 @@ are assumed to take four clock periods.
 // VARIOUS //
 /////////////
 
-#if defined(SS_VARIOUS)
+#if defined(SSE_VARIOUS)
 
 #define README_FONT_NAME "Courier New"
 #define README_FONT_HEIGHT 16
@@ -489,11 +489,11 @@ are assumed to take four clock periods.
 // VIDEO //
 ///////////
 
-#if defined(SS_VIDEO)
+#if defined(SSE_VIDEO)
 
-#if defined(SS_VID_BORDERS)
+#if defined(SSE_VID_BORDERS)
 #define ORIGINAL_BORDER_SIDE 32
-#if defined(SS_VID_BORDERS_LB_DX)
+#if defined(SSE_VID_BORDERS_LB_DX)
 #define LARGE_BORDER_SIDE 48 // trick, making it 40 at rendering
 #else
 #define LARGE_BORDER_SIDE 40 // making many hacks necessary 
@@ -509,7 +509,7 @@ are assumed to take four clock periods.
 #define ORIGINAL_BORDER_TOP 30
 #define BIG_BORDER_TOP 36 // for The Musical Wonder 1990
 
-#if defined(SS_VID_BORDERS_416) && defined(SS_VID_BORDERS_412)
+#if defined(SSE_VID_BORDERS_416) && defined(SSE_VID_BORDERS_412)
 #define BIGGEST_DISPLAY 3
 #else
 #define BIGGEST_DISPLAY 2
@@ -519,9 +519,9 @@ are assumed to take four clock periods.
 
 
 
-#if defined(SS_VID_RECORD_AVI)
-#define SS_VID_RECORD_AVI_FILENAME "SteemVideo.avi"
-#define SS_VID_RECORD_AVI_CODEC "MPG4"
+#if defined(SSE_VID_RECORD_AVI)
+#define SSE_VID_RECORD_AVI_FILENAME "SteemVideo.avi"
+#define SSE_VID_RECORD_AVI_CODEC "MPG4"
 #endif
 
 #endif

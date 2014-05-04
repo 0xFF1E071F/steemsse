@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_RS232_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_RS232_H)
 
 #include "rs232.decla.h"
 
-#else//!SS_STRUCTURE_RS232_H
+#else//!SSE_STRUCTURE_RS232_H
 
 
 #ifdef IN_EMU
@@ -24,7 +24,7 @@ EXT bool UpdateBaud INIT(0);
 EXT BYTE rs232_recv_byte INIT(0);
 EXT bool rs232_recv_overrun INIT(0);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_MFP_RS232)
+#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_RS232)
 // avoid negative values, prevents freeze in X-Out HD quitting
 EXT unsigned int rs232_bits_per_word INIT(8),rs232_hbls_per_word INIT(1);
 #else
@@ -39,4 +39,4 @@ extern void agenda_serial_loopback_byte(int);
 #undef EXT
 #undef INIT
 
-#endif//!SS_STRUCTURE_RS232_H
+#endif//!SSE_STRUCTURE_RS232_H

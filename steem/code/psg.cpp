@@ -7,11 +7,11 @@ frame of sound to the output buffer. The I/O code isn't included here, see
 ior.cpp and iow.cpp for the lowest level emulation.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: psg.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_PSG_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_PSG_H)
 
 #ifdef IN_EMU
 #define EXT
@@ -113,14 +113,14 @@ int dma_sound_mixer=1,dma_sound_volume=40;
 int dma_sound_l_volume=20,dma_sound_r_volume=20;
 int dma_sound_l_top_val=128,dma_sound_r_top_val=128;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_MICROWIRE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_MICROWIRE)
 #include "../../3rdparty/dsp/dsp.h"
 int dma_sound_bass=6; // 6 is neutral value
 int dma_sound_treble=6;
 TIirVolume MicrowireVolume[2];
 TIirLowShelf MicrowireBass[2];
 TIirHighShelf MicrowireTreble[2];
-#if defined(SS_SOUND_VOL)
+#if defined(SSE_SOUND_VOL)
 TIirVolume PsgGain;
 #endif
 #endif//microwire
@@ -261,15 +261,15 @@ DWORD psg_envelope_start_time=0xfffff000;
 #undef INIT
 
 
-#endif//#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_PSG_H)
+#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_PSG_H)
 
 #define LOGSECTION LOGSECTION_SOUND
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI) && defined(WIN32)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_RECORD_AVI) && defined(WIN32)
 extern IDirectSoundBuffer *PrimaryBuf,*SoundBuf;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_MICROWIRE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_MICROWIRE)
 #define LOW_SHELF_FREQ 80 // 50
 #define HIGH_SHELF_FREQ (dma_sound_freq) // doesn't work very well
 #endif
@@ -373,7 +373,7 @@ void SoundStopInternalSpeaker()
   internal_speaker_sound_by_period(0);
 }
 //---------------------------------------------------------------------------
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_INLINE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_INLINE)
 /*  We transform some macros into inline functions to make conditional 
     compilation easier.
     We use tricks to make the macro calls work without change
@@ -387,11 +387,11 @@ inline void CalcVChip(int &v,int &dv,int *source_p) {
 
 #define proportion 10
 
-#if defined(SS_SOUND_FILTER_STF) //tests
+#if defined(SSE_SOUND_FILTER_STF) //tests
   if(PSG_FILTER_FIX) // Option PSG Filter
   {
-    v=SS_SOUND_FILTER_STF_V;
-    dv=SS_SOUND_FILTER_STF_DV;
+    v=SSE_SOUND_FILTER_STF_V;
+    dv=SSE_SOUND_FILTER_STF_DV;
 // it's not the filter...
 /*
     v+=dv;             
@@ -425,11 +425,11 @@ inline void CalcVChip(int &v,int &dv,int *source_p) {
 
 inline void CalcVChip25Khz(int &v,int &dv,int *source_p) {
   //CALC_V_CHIP_25KHZ = low quality
-#if defined(SS_SOUND_FILTER_STF) 
+#if defined(SSE_SOUND_FILTER_STF) 
   if(PSG_FILTER_FIX) // Option PSG Filter
   {
-    v=SS_SOUND_FILTER_STF_V;
-    dv=SS_SOUND_FILTER_STF_DV;
+    v=SSE_SOUND_FILTER_STF_V;
+    dv=SSE_SOUND_FILTER_STF_DV;
   }
   else 
 #endif
@@ -493,17 +493,17 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
     CalcVEmu(v,source_p);                     
 }
 
-#if defined(SS_SOUND_MICROWIRE)   // microwire this!
+#if defined(SSE_SOUND_MICROWIRE)   // microwire this!
 
 inline void Microwire(int channel,int &val) {
   if(
-#if defined(SS_SOUND_OPTION_DISABLE_DSP)
+#if defined(SSE_SOUND_OPTION_DISABLE_DSP)
     DSP_ENABLED&&
 #endif
     MICROWIRE_ON)
   {
     double d_dsp_v=val;
-#if defined(SS_STF)
+#if defined(SSE_STF)
     if(ST_TYPE==STE)
     {
 #endif
@@ -518,7 +518,7 @@ inline void Microwire(int channel,int &val) {
         ||dma_sound_r_volume<0x14 &&channel)//3.6.1: 2 channels
         d_dsp_v=MicrowireVolume[channel].FilterAudio(d_dsp_v,
           dma_sound_volume-0x28+dma_sound_l_volume-0x14);
-#if defined(SS_STF)
+#if defined(SSE_STF)
     }
 #endif
     val=d_dsp_v;
@@ -544,7 +544,7 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
     AlterV(Alter_V,v,dv,*source_p);
 
 
-#if defined(SS_SOUND_MICROWIRE_MIXMODE)//3.6.3
+#if defined(SSE_SOUND_MICROWIRE_MIXMODE)//3.6.3
 /*
 
 "In STe, YM sound is only audible when Input1 is selected (this is default TOS 
@@ -559,35 +559,35 @@ always audible."
     Must be =1 to mix YM and DMA, -12db doesn't work.
 */
     if(MICROWIRE_ON 
-#if defined(SS_STF)
+#if defined(SSE_STF)
       && ST_TYPE==STE // only if option checked and we're on STE
 #endif
       )
     {
       if(dma_sound_mixer!=1)
         v=0; // dma-only
-#if defined(SS_SOUND_VOL)
+#if defined(SSE_SOUND_VOL)
       else if(dma_sound_on_this_screen)
         v=PsgGain.FilterAudio(v,-6); 
 #endif
     }
-#endif//SS_SOUND_MICROWIRE_MIXMODE
+#endif//SSE_SOUND_MICROWIRE_MIXMODE
 
     val=v; //inefficient?
 
     if(dma_sound_on_this_screen) //bugfix v3.6.0
     {//3.6.1
-#if defined(SS_OSD_CONTROL)
+#if defined(SSE_OSD_CONTROL)
     if(OSD_MASK3 & OSD_CONTROL_DMASND) 
       TRACE_OSD("F%d %cV%d %d %d B%d T%d",dma_sound_freq,(dma_sound_mode & BIT_7)?'M':'S',dma_sound_volume,dma_sound_l_volume,dma_sound_r_volume,dma_sound_bass,dma_sound_treble);
 #endif
       
-#if defined(SS_DEBUG_MUTE_SOUNDCHANNELS)
+#if defined(SSE_DEBUG_MUTE_SOUNDCHANNELS)
       if(! (d2_dpeek(FAKE_IO_START+20)>>15) ) 
 #endif
         val+= (**lp_dma_sound_channel);                           
 
-#if defined(SS_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE)
     Microwire(0,val);
 #endif
     }
@@ -615,12 +615,12 @@ always audible."
       val=v;
       if(dma_sound_on_this_screen) //bugfix v3.6
       {
-#if defined(SS_DEBUG_MUTE_SOUNDCHANNELS)
+#if defined(SSE_DEBUG_MUTE_SOUNDCHANNELS)
         if(! (d2_dpeek(FAKE_IO_START+20)>>15) ) 
 #endif
           val+= (*(*lp_dma_sound_channel+1)); 
 
-#if defined(SS_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE)
         Microwire(1,val);
 #endif
       }
@@ -664,28 +664,28 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
   {       
     AlterV(Alter_V,v,dv,*source_p);
 
-#if defined(SS_SOUND_MICROWIRE_MIXMODE)//3.6.3
+#if defined(SSE_SOUND_MICROWIRE_MIXMODE)//3.6.3
     if(MICROWIRE_ON 
-#if defined(SS_STF)
+#if defined(SSE_STF)
       && ST_TYPE==STE // only if option checked and we're on STE
 #endif
       )
     {
       if(dma_sound_mixer!=1)
         v=0; // dma-only
-#if defined(SS_SOUND_VOL)
+#if defined(SSE_SOUND_VOL)
       else if(dma_sound_on_this_screen)
         v=PsgGain.FilterAudio(v,-6); 
 #endif
     }
-#endif//SS_SOUND_MICROWIRE_MIXMODE
+#endif//SSE_SOUND_MICROWIRE_MIXMODE
 
     val=v;//3.6.3, was it missing???
 
     if(dma_sound_on_this_screen) //bugfix v3.6
       val+= (**lp_dma_sound_channel);    
 
-#if defined(SS_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE)
     Microwire(0,val);
 #endif
 
@@ -708,7 +708,7 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
       if(dma_sound_on_this_screen) //bugfix v3.6
         val+= (*(*lp_dma_sound_channel+1)); 
 
-#if defined(SS_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE)
     Microwire(1,val);
 #endif
       
@@ -739,15 +739,15 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
 
 #define SOUND_RECORD(Alter_V,WRITE) SoundRecord(Alter_V,WRITE,c,val,v,dv,&source_p,&lp_dma_sound_channel,&lp_max_dma_sound_channel,wav_file)
 
-#elif defined(SS_SOUND) // reintegrate macros for debugging
+#elif defined(SSE_SOUND) // reintegrate macros for debugging
 
 
 
 #ifdef ENABLE_VARIABLE_SOUND_DAMPING //SS for boiler...
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_FILTER_STF)  
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF)  
 // a simplisctic but better (in my ears) low-pass filter, optional
-#define CALC_V_CHIP if(PSG_FILTER_FIX && (v!=*source_p || dv)) v=SS_SOUND_FILTER_STF_V,dv=SS_SOUND_FILTER_STF_DV;\
+#define CALC_V_CHIP if(PSG_FILTER_FIX && (v!=*source_p || dv)) v=SSE_SOUND_FILTER_STF_V,dv=SSE_SOUND_FILTER_STF_DV;\
                     else if (v!=*source_p || dv){                            \
                   v+=dv;                                            \
                   dv-=(v-(*source_p))*sound_variable_a >> 8;        \
@@ -775,9 +775,9 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
 
 #else
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_FILTER_STF)  
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF)  
 // a simplisctic but better (in my ears) low-pass filter, optional
-#define CALC_V_CHIP if(PSG_FILTER_FIX && (v!=*source_p || dv)) v=SS_SOUND_FILTER_STF_V,dv=SS_SOUND_FILTER_STF_DV;\
+#define CALC_V_CHIP if(PSG_FILTER_FIX && (v!=*source_p || dv)) v=SSE_SOUND_FILTER_STF_V,dv=SSE_SOUND_FILTER_STF_DV;\
                     else if (v!=*source_p || dv){                            \
                   v+=dv;                                            \
                   dv-=(v-(*source_p)) >> 3;                         \
@@ -835,7 +835,7 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
 
 #define SINE_ONLY(s)
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_MICROWIRE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_MICROWIRE)
 /*
 The LMC1992 is not a chip that controls the DMA-sound in its digital 
 form but manipulates the analogue sound that comes out of the DMA chip. 
@@ -846,7 +846,7 @@ in a very ugly sound.
 ->
 We redefine this macro to send to our DSP filters when Microwire is used,
 for: volume, balance, bass, treble.
-We define twice because of the SS_SOUND_VOL option (v -6db for YM chip effects)
+We define twice because of the SSE_SOUND_VOL option (v -6db for YM chip effects)
 Demos using bass/treble:
 Beat; White Spirit
 TODO simplify, make more efficient
@@ -856,7 +856,7 @@ double d_dsp_v; // a bit silly, heavy, and maybe not optimal
 #define HIGH_SHELF_FREQ (dma_sound_freq) // doesn't work very well
 
 
-#if defined(SS_SOUND_VOL) // -6db for PSG sound (using DSP), if Microwire on
+#if defined(SSE_SOUND_VOL) // -6db for PSG sound (using DSP), if Microwire on
 
 #define WRITE_SOUND_LOOP(Alter_V,Out_P,Size,GetSize)         \
              while (c>0){                                                  \
@@ -1393,7 +1393,7 @@ HRESULT Sound_VBL()
       }
     }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI) 
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_RECORD_AVI) 
     if(video_recording&&SoundBuf&&pAviFile&&pAviFile->Initialised)
     {
       VERIFY( pAviFile->AppendSound(DatAdr[0],LockLength[0])==0 );
@@ -1489,7 +1489,7 @@ Bit 0 controls Replay off/on, Bit 1 controls Loop off/on (0=off, 1=on).
   TRACE_LOG(" Freq %d\n",dma_sound_freq);
   log_to(LOGSECTION_SOUND,EasyStr("SOUND: ")+HEXSl(old_pc,6)+" - DMA sound control set to "+(io_src_b & 3)+" from "+(dma_sound_control & 3));
  
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_VOL)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_VOL)
   ASSERT(!(io_src_b&~3));
   io_src_b&=3;
 #endif
@@ -1524,7 +1524,7 @@ void dma_sound_set_mode(BYTE new_mode)
   the CPU to mix the sample information together.
 */
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND)
 //  ASSERT(!(new_mode&~0x8F));
   new_mode&=0x8F;
   TRACE_LOG("DMA sound mode %X freq %d\n",new_mode,dma_sound_mode_to_freq[new_mode & 3]);
@@ -1532,7 +1532,7 @@ void dma_sound_set_mode(BYTE new_mode)
 
   dma_sound_mode=new_mode;
   dma_sound_freq=dma_sound_mode_to_freq[dma_sound_mode & 3];
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_MICROWIRE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_MICROWIRE)
   SampleRate=dma_sound_freq; // global of 3rd party dsp
 #endif
   log_to(LOGSECTION_SOUND,EasyStr("SOUND: ")+HEXSl(old_pc,6)+" - DMA sound mode set to $"+HEXSl(dma_sound_mode,2)+" freq="+dma_sound_freq);
@@ -1654,7 +1654,7 @@ void dma_sound_fetch()
       while (dma_sound_output_countdown>=0){
         if (dma_sound_channel_buf_last_write_t>=DMA_SOUND_BUFFER_LENGTH) break;
 
-#if defined (STEVEN_SEAGAL) && defined(SS_SOUND_FILTER_STE_________)
+#if defined (STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STE_________)
         // exactly the same low-pass filter as for STF sound
         // ->3.6.3 it filters but also pollutes the sound, MFD
         if(MICROWIRE_ON
@@ -1769,7 +1769,7 @@ void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
 #define PSG_PULSE_TONE_t64  ((t*64 / psg_tonemodulo_2) & 1)
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_INLINE___)//TODO
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_INLINE___)//TODO
 
 void psg_prepare_envelope() {
       int envperiod=max( (((int)psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]) <<8) + psg_reg[PSGR_ENVELOPE_PERIOD_LOW],1);  \
@@ -1957,7 +1957,7 @@ void psg_prepare_envelope() {
 void psg_write_buffer(int abc,DWORD to_t)
 {
 
-#if defined(SS_DEBUG_MUTE_SOUNDCHANNELS)
+#if defined(SSE_DEBUG_MUTE_SOUNDCHANNELS)
   if( (1<<abc) & (d2_dpeek(FAKE_IO_START+20)>>12 ))
     return; // skip this channel
 #endif
@@ -2245,7 +2245,7 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
     because it's all or nothing.
 */
       if(SSEOption.PSGFixedVolume && playing_samples()
-#if defined(SS_DEBUG_MUTE_SOUNDCHANNELS)
+#if defined(SSE_DEBUG_MUTE_SOUNDCHANNELS)
         &&! ((d2_dpeek(FAKE_IO_START+20)>>12)&7)
 #endif
         )

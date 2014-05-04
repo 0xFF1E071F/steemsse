@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_MIDI_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_MIDI_H)
 
 #include "midi.decla.h"
 
-#else//!SS_STRUCTURE_MIDI_H
+#else//!SSE_STRUCTURE_MIDI_H
 
 
 #ifdef IN_EMU
@@ -123,4 +123,4 @@ public:
 #undef EXT
 #undef INIT
 
-#endif//SS_STRUCTURE_MIDI_H
+#endif//SSE_STRUCTURE_MIDI_H

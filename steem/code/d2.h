@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_D2_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_D2_H)
 
 #include "d2.decla.h"
 
-#else//!defined(SS_STRUCTURE_D2_H)
+#else//!defined(SSE_STRUCTURE_D2_H)
 
 #define D2_PC_RELATIVE_PC dpc
 
@@ -74,4 +74,4 @@ EasyStr d2_src,d2_dest,d2_command,d2_pc_rel_ex;
 WORD d2_ap;
 int d2_n_movem_regs;
 
-#endif//SS_STRUCTURE_D2_H
+#endif//SSE_STRUCTURE_D2_H

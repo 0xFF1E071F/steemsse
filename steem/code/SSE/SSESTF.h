@@ -2,13 +2,13 @@
 #ifndef SSSTF_H
 #define SSSTF_H
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STF)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STF)
 
 // starting with 0 is easier for GUI; default is STE
 // we list them all even if not defined (TODO?)
-enum ESTModels {STE,STF,MEGASTF,STF8MHZ,SS_STF_ST_MODELS}; 
+enum ESTModels {STE,STF,MEGASTF,STF8MHZ,SSE_STF_ST_MODELS}; 
 
-#if defined(SS_TOS_WARNING1)
+#if defined(SSE_TOS_WARNING1)
 void CheckSTTypeAndTos();
 #endif
 

@@ -4,7 +4,7 @@
 
 
 
-#if defined(SS_STRUCTURE_SSECPU_OBJ)///?
+#if defined(SSE_STRUCTURE_SSECPU_OBJ)///?
 #include <easystr.h>
 ////#include <include.h> //no!
 typedef EasyStr Str;//?!
@@ -20,7 +20,7 @@ typedef EasyStr Str;//?!
 
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SAVE_NEO)
 WORD change_endian(WORD x); // double of something?
 #endif
 
@@ -48,7 +48,7 @@ WORD change_endian(WORD x); // double of something?
   #define log_to_section(section,s) if (logsection_enabled[section] && logging_suspended==0) log_write(s);
   #define log_to(section,s)  if (logsection_enabled[section] && logging_suspended==0) log_write(s);
   EXT void log_write_stack();
-#if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VARIOUS)
   EXT bool logging_suspended INIT(TRUE);
 #else
   EXT bool logging_suspended INIT(false);
@@ -61,7 +61,7 @@ WORD change_endian(WORD x); // double of something?
   EXT void stop_cpu_log();
 
 #ifdef DEBUG_BUILD
-#if defined (SS_DEBUG_CPU_TRACE_NO_STOP)
+#if defined (SSE_DEBUG_CPU_TRACE_NO_STOP)
 /*, The limit would uncheck the option at once. 
     Since we use the same option for the far more
     limited TRACE output, the limit is removed when logging is
@@ -73,7 +73,7 @@ WORD change_endian(WORD x); // double of something?
       if (!logging_suspended &&(--log_cpu_count)==0) stop_cpu_log(); \
     }
 
-#elif defined(SS_DEBUG_CPU_LOG_NO_STOP)
+#elif defined(SSE_DEBUG_CPU_LOG_NO_STOP)
 /*  A limited #instructions (10000) as defined would spare file IO,
     but sometimes you want more.
 */
@@ -89,7 +89,7 @@ WORD change_endian(WORD x); // double of something?
   #define LOG_CPU
 #endif
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_DEBUG_LOG_OPTIONS))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_LOG_OPTIONS))
   #define LOGSECTION_ALWAYS 0
   #define LOGSECTION_FDC 1
   #define LOGSECTION_IO 2

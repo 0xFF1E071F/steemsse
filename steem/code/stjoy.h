@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STJOY_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_STJOY_H)
 
 #include "stjoy.decla.h"
 
-#else//!defined(SS_STRUCTURE_STJOY_H)
+#else//!defined(SSE_STRUCTURE_STJOY_H)
 
 #ifdef IN_MAIN
 #define EXT
@@ -31,7 +31,7 @@ EXT bool joy_is_key_used(BYTE);
 #define N_JOY_PARALLEL_1 7
 
 EXT WORD paddles_ReadMask INIT(0);
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
 #else
 EXT BYTE stick[8];
 #endif
@@ -274,4 +274,4 @@ DWORD JoyAnyButtonMask[MAX_PC_JOYS];
 
 #undef EXT
 
-#endif//!defined(SS_STRUCTURE_STJOY_H)
+#endif//!defined(SSE_STRUCTURE_STJOY_H)

@@ -27,7 +27,7 @@ reset ()
 {
   reg_setpc (mem_getw (RESVECTOR));
   reg_setiflag (1);
-#if defined(SS_IKBD_6301_DISASSEMBLE_ROM) // disassemble ST's 6301 rom
+#if defined(SSE_IKBD_6301_DISASSEMBLE_ROM) // disassemble ST's 6301 rom
   {//scope
   static int RomWasDisassembled=0;
   if(!RomWasDisassembled) 
@@ -61,23 +61,23 @@ instr_exec ()
 */
   if(hd6301_completed_transmission_to_MC6850)
   {
-#if defined(SS_IKBD_6301_TRACE_SCI_TX)
+#if defined(SSE_IKBD_6301_TRACE_SCI_TX)
     TRACE("6301 send byte completed\n");
 #endif
     hd6301_completed_transmission_to_MC6850--;
     ASSERT(!hd6301_completed_transmission_to_MC6850);
 
-#if defined(SS_IKBD_6301_RUN_IRQ_TO_END)
+#if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
     ASSERT( ExecutingInt!=EXECUTING_INT );
 #endif
 
-//#if !defined(SS_ACIA_DOUBLE_BUFFER_RX)
+//#if !defined(SSE_ACIA_DOUBLE_BUFFER_RX)
     // this is very dubious, we need it, because of this, do we have
     // working double buffer?
     txinterrupts=1; // we may trigger IRQ 
 //#endif
 
-#if defined(SS_ACIA_DOUBLE_BUFFER_RX)
+#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
 /*  We may also start shifting the waiting byte...
 */
     if(ACIA_IKBD.ByteWaitingRx)
@@ -91,7 +91,7 @@ instr_exec ()
 
 
   if (!reg_getiflag () 
-#if defined(SS_IKBD_6301_RUN_IRQ_TO_END)
+#if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
     && ExecutingInt!=EXECUTING_INT
 #endif
   ) 
@@ -100,14 +100,14 @@ instr_exec ()
      * Check for interrupts in priority order
      */
     if ((ireg_getb (TCSR) & OCF) && (ireg_getb (TCSR) & EOCI)) {
-#if defined(SS_IKBD_6301_TRACE_INT_TIMER)
+#if defined(SSE_IKBD_6301_TRACE_INT_TIMER)
       TRACE("ACT %d Timer interrupt\n",act);
 #endif
       int_addr (OCFVECTOR);
       interrupted = 1;
     } 
     else if (serial_int ()) {
-#if defined(SS_IKBD_6301_TRACE_INT_SCI)
+#if defined(SSE_IKBD_6301_TRACE_INT_SCI)
       TRACE("SCI interrupt TRCSR=%X RXi=%d TXi=%d\n",ireg_getb (TRCSR),rxinterrupts,txinterrupts);
 #endif
       txinterrupts=0; 
@@ -210,7 +210,7 @@ instr_print (addr)
     if (symname = sym_find_name (mem_getw (pc + 1)))
       printf ("\t%s", symname);
   }
-#if !defined(SS_IKBD_6301_DISASSEMBLE_ROM)
+#if !defined(SSE_IKBD_6301_DISASSEMBLE_ROM)
   TRACE ("\t[%d]\n", cpu_getncycles ());
 #endif
   putchar('\n');

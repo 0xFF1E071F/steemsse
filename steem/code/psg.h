@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_PSG_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_PSG_H)
 
 #include "psg.decla.h"
 
-#else//!SS_STRUCTURE_PSG_H
+#else//!SSE_STRUCTURE_PSG_H
 
 
 #ifdef IN_EMU
@@ -201,17 +201,17 @@ int dma_sound_mixer=1,dma_sound_volume=40;
 int dma_sound_l_volume=20,dma_sound_r_volume=20;
 int dma_sound_l_top_val=128,dma_sound_r_top_val=128;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_MICROWIRE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_MICROWIRE)
 #include "../../3rdparty/dsp/dsp.h"
 int dma_sound_bass=6; // 6 is neutral value
 int dma_sound_treble=6;
 TIirVolume MicrowireVolume[2];
 TIirLowShelf MicrowireBass[2];
 TIirHighShelf MicrowireTreble[2];
-#if defined(SS_SOUND_VOL)
+#if defined(SSE_SOUND_VOL)
 TIirVolume PsgGain;
 #endif
-#if defined(SS_SOUND_LOW_PASS_FILTER)
+#if defined(SSE_SOUND_LOW_PASS_FILTER)
 TIirLowPass PSGLowFilter[2];
 #endif
 #endif//microwire
@@ -232,7 +232,7 @@ void psg_write_buffer(int,DWORD);
 #ifndef ONEGAME
 #define PSG_WRITE_EXTRA 300
 #else
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_NO_EXTRA_PER_VBL)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_NO_EXTRA_PER_VBL)
 #define PSG_WRITE_EXTRA 0
 #else
 #define PSG_WRITE_EXTRA OGExtraSamplesPerVBL
@@ -401,4 +401,4 @@ DWORD psg_envelope_start_time=0xfffff000;
 #undef INIT
 
 
-#endif//!SS_STRUCTURE_PSG_H
+#endif//!SSE_STRUCTURE_PSG_H

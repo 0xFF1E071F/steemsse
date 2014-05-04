@@ -142,7 +142,7 @@ EXT short stemdos_save_sr;
 
 EXT int stemdos_current_drive;
 
-#if defined(SS_TOS_GEMDOS_NOINLINE)
+#if defined(SSE_TOS_GEMDOS_NOINLINE)
 
 void stemdos_trap_1_Fdup();
 void stemdos_trap_1_Mfree(MEM_ADDRESS ad);
@@ -177,17 +177,17 @@ void stemdos_restore_path_buffer();
 */
 char* StrUpperNoSpecial(char*);
 
-#if !defined(SS_TOS_GEMDOS_VAR1) //function does nothing
+#if !defined(SSE_TOS_GEMDOS_VAR1) //function does nothing
 void STStringToPC(char*),PCStringToST(char*);
 #endif
 //#endif//#ifdef IN_EMU
 
 
-#ifdef SS_TOS_STRUCT
+#ifdef SSE_TOS_STRUCT
 
 struct TTos {
   BYTE LastPTermedProcess; //to go around (Steem) bug...
-#if defined(SS_TOS_SNAPSHOT_AUTOSELECT2) //version with refactoring
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2) //version with refactoring
   EasyStr GetNextTos(DirSearch &ds); // to enumerate TOS files
   void GetTosProperties(EasyStr Path,WORD &Ver,BYTE &Country,WORD &Date);
 #endif

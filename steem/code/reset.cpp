@@ -4,7 +4,7 @@ MODULE: emu
 DESCRIPTION: Functions to reset the emulator to a startup state.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: reset.cpp")
 #endif
 
@@ -113,7 +113,7 @@ is issued, and that the reset was active for at least 132 clock cycles [27].
 void power_on()
 {
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_STATUS_STRING)
   GUIRefreshStatusBar();//overkill
 #endif
 
@@ -170,9 +170,9 @@ void power_on()
   fdc_str=BIT_2;
   for (int floppyno=0;floppyno<2;floppyno++){
     floppy_head_track[floppyno]=0;
-#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DRIVE)
     SF314[floppyno].Id=floppyno;
-#if defined(SS_DRIVE_MOTOR_ON)
+#if defined(SSE_DRIVE_MOTOR_ON)
     SF314[floppyno].MotorOn=false;
 #endif
 #endif
@@ -188,15 +188,15 @@ void power_on()
 
 #if defined(STEVEN_SEAGAL) 
 
-#if defined(SS_DMA_WRITE_CONTROL)
+#if defined(SSE_DMA_WRITE_CONTROL)
   dma_mode=0; // see reset_peripherals()
 #endif
 
-#if defined(SS_STF)
+#if defined(SSE_STF)
   SwitchSTType(ST_TYPE);
 #endif
 
-#if defined(SS_MFP_TxDR_RESET)
+#if defined(SSE_MFP_TxDR_RESET)
   ZeroMemory(&mfp_reg[MFPR_TADR],4);
 #endif
 
@@ -213,7 +213,7 @@ void power_on()
 
   disable_input_vbl_count=50*3; // 3 seconds
 
-#if defined(SS_VID_3BUFFER_WIN)
+#if defined(SSE_VID_3BUFFER_WIN)
   Disp.VSyncTiming=0;
 #endif
 }
@@ -250,19 +250,19 @@ void reset_peripherals(bool Cold)
   
 #if defined(STEVEN_SEAGAL)
 
-#if defined(SS_CPU)
+#if defined(SSE_CPU)
   M68000.Reset(Cold);
 #endif
 
-#if defined(SS_SHIFTER)
+#if defined(SSE_SHIFTER)
   Shifter.Reset(Cold);
 #endif
 
-#if defined(SS_FDC_RESET)
+#if defined(SSE_FDC_RESET)
   WD1772.Reset(Cold);
 #endif
 
-#if defined(SS_INT_JITTER_RESET) 
+#if defined(SSE_INT_JITTER_RESET) 
   if(Cold)
   {
     HblJitterIndex=0;
@@ -281,7 +281,7 @@ void reset_peripherals(bool Cold)
   vbl_pending=false;
 
   dma_status=1;  //no error, apparently
-#if defined(STEVEN_SEAGAL) && defined(SS_DMA_WRITE_CONTROL)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DMA_WRITE_CONTROL)
 /*
           The actual DMA operation is performed through a 32 byte
           FIFO  programmed  via  the  DMA  Mode Control Register (word
@@ -293,7 +293,7 @@ void reset_peripherals(bool Cold)
   dma_mode=0;
   dma_sector_count=0xffff;
 #endif
-#if !(defined(STEVEN_SEAGAL) && defined(SS_DMA_FIFO_READ_ADDRESS2))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_DMA_FIFO_READ_ADDRESS2))
   fdc_read_address_buffer_len=0;
 #endif
   dma_bytes_written_for_sector_count=0;
@@ -305,17 +305,17 @@ void reset_peripherals(bool Cold)
   }
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
   if(CAPSIMG_OK)
     Caps.Reset();
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_MFP_TxDR_RESET)
+#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_TxDR_RESET)
   DWORD tmp;
   memcpy(&tmp,&mfp_reg[MFPR_TADR],4);
 #endif
   ZeroMemory(mfp_reg,sizeof(mfp_reg));
-#if defined(STEVEN_SEAGAL) && defined(SS_MFP_TxDR_RESET)
+#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_TxDR_RESET)
   if(!Cold)
     memcpy(&mfp_reg[MFPR_TADR],&tmp,4);
 #endif
@@ -344,23 +344,23 @@ void reset_peripherals(bool Cold)
   dma_sound_r_top_val=128;
   dma_sound_mixer=1;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_MICROWIRE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_MICROWIRE)
   dma_sound_bass=6; // 6 is neutral value
   dma_sound_treble=6;
 #endif
-#if defined(SS_ACIA_NO_RESET_PIN) 
+#if defined(SSE_ACIA_NO_RESET_PIN) 
   if(Cold) // don't reset ACIA on warm reset, fixes Dragonnels/Plazma
 #endif
   ACIA_Reset(NUM_ACIA_IKBD,true);
   ikbd_reset(true); // Always cold reset, soft reset is different
 
-#if defined(SS_IKBD_6301)
+#if defined(SSE_IKBD_6301)
   HD6301.ResetChip(Cold);
   if(Cold) // only cold
     keyboard_buffer_length=0; // cold reset & run, Transbeauce 2
 #endif
 
-#if defined(SS_ACIA_NO_RESET_PIN) 
+#if defined(SSE_ACIA_NO_RESET_PIN) 
   if(Cold) 
 #endif
   ACIA_Reset(NUM_ACIA_MIDI,true);
@@ -377,14 +377,14 @@ void reset_peripherals(bool Cold)
   ZeroMemory(&Blit,sizeof(Blit));
 
   cpu_stopped=false;
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU) && defined(SS_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SSE_CPU) && defined(SSE_DEBUG)
   M68000.NextIrFetched=false;
 #endif
 
   if (runstate==RUNSTATE_RUNNING) 
     prepare_event_again();
 
-#if defined(SS_DRIVE_SOUND)
+#if defined(SSE_DRIVE_SOUND)
   if(Cold)
     SF314[0].Sound_StopBuffers();
 #endif
@@ -394,7 +394,7 @@ void reset_peripherals(bool Cold)
 //---------------------------------------------------------------------------
 void reset_st(DWORD flags)
 {
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_PREFETCH)
+#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH)
   prefetched_2=FALSE;
 #endif
   bool Stop=bool(flags & RESET_NOSTOP)==0;

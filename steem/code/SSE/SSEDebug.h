@@ -15,7 +15,7 @@
 #pragma hdrstop
 #endif
 
-#if defined(SS_STRUCTURE_SSEDEBUG_OBJ) && defined(__cplusplus)
+#if defined(SSE_STRUCTURE_SSEDEBUG_OBJ) && defined(__cplusplus)
 #ifdef WIN32
 #include <windows.h>
 #endif
@@ -28,7 +28,7 @@
 
 #include "SSEParameters.h"
 
-#if defined(SS_DEBUG_TRACE_FILE)
+#if defined(SSE_DEBUG_TRACE_FILE)
 #include <stdio.h>
 #endif
 
@@ -36,7 +36,7 @@
 #pragma warning(disable : 4002)		// too many parameter in macro TRACE
 #endif
 
-#if defined(SS_DEBUG) // boiler build or ide debug build
+#if defined(SSE_DEBUG) // boiler build or ide debug build
 // general use debug variables;
 extern 
 #ifdef __cplusplus
@@ -45,7 +45,7 @@ extern
 int debug0,debug1,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9;
 #endif
 
-#if defined(SS_DEBUG)
+#if defined(SSE_DEBUG)
 
 // a structure that may be used by C++ and C objects
 struct TDebug {
@@ -53,7 +53,7 @@ struct TDebug {
   TDebug();
   ~TDebug();
   int ShifterTricks;
-#if defined(SS_DEBUG_TRACE)
+#if defined(SSE_DEBUG_TRACE)
   enum {MAX_TRACE_CHARS=256}; // the function is safe anyway
   void Trace(char *fmt, ...); // one function for both IDE & file
   void TraceIde(char *fmt, ...); // in IDE, not file, whatever the defines
@@ -62,7 +62,7 @@ struct TDebug {
   char trace_buffer[MAX_TRACE_CHARS];
 #endif
 #endif//c++
-#if defined(SS_DEBUG_TRACE_FILE)
+#if defined(SSE_DEBUG_TRACE_FILE)
   FILE *trace_file_pointer; 
   int nTrace;
 #endif
@@ -71,18 +71,18 @@ struct TDebug {
 
 #ifdef __cplusplus // visible only to C++ objects
 
-#if defined(SS_DEBUG_START_STOP_INFO)
+#if defined(SSE_DEBUG_START_STOP_INFO)
   enum {START,STOP} ;
   void TraceGeneralInfos(int when);
 #endif
 
-#if defined(SS_OSD_DEBUG_MESSAGE)
+#if defined(SSE_OSD_DEBUG_MESSAGE)
   char m_OsdMessage[OSD_DEBUG_MESSAGE_LENGTH+1]; // +null as usual
   void TraceOsd(char *fmt, ...);
   unsigned long OsdTimer;
 #endif
 
-#if defined(SS_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_DEBUG_SHOW_INTERRUPT)
   enum {MAX_INTERRUPTS=256,DESCRIPTION_LENGTH=8};//
   struct SInterruptTable {
     char description[DESCRIPTION_LENGTH]; // eg MFP VBI TRACE...
@@ -97,29 +97,29 @@ struct TDebug {
   void Rte();
 #endif
 
-#if defined(SS_DEBUG_TIMERS_ACTIVE)
+#if defined(SSE_DEBUG_TIMERS_ACTIVE)
   HWND boiler_timer_hwnd[4];//to record WIN handles
 #endif
 
-#if defined(SS_DEBUG_MONITOR_VALUE)
+#if defined(SSE_DEBUG_MONITOR_VALUE)
   BYTE MonitorValueSpecified; // boiler SSE option
   BYTE MonitorComparison; // as is, none found = 0 means no value to look for
   WORD MonitorValue;
 #endif
 
-#if defined(SS_DEBUG_MONITOR_RANGE)
+#if defined(SSE_DEBUG_MONITOR_RANGE)
   BYTE MonitorRange; //check from ad1 to ad2
 #endif
 
-#if defined(SS_DEBUG_STACK_68030_FRAME)
+#if defined(SSE_DEBUG_STACK_68030_FRAME)
   BYTE M68030StackFrame;//flag
 #endif
 
-#if defined(SS_DEBUG_BROWSER_6301)
+#if defined(SSE_DEBUG_BROWSER_6301)
   BYTE HD6301RamBuffer[256+8];
 #endif
 
-#if defined(SS_DEBUG_STACK_CHOICE)
+#if defined(SSE_DEBUG_STACK_CHOICE)
   BYTE StackDisplayUseOtherSp;//flag
 #endif
 
@@ -130,7 +130,7 @@ struct TDebug {
   BYTE logsection_enabled[100]; // we want a double anyway //bool
   int LogSection;
 
-#if defined(SS_DEBUG_FAKE_IO)
+#if defined(SSE_DEBUG_FAKE_IO)
 /*  Hack. A free zone in IO is mapped to an array of masks to control 
     a lot of debug options using the Boiler's built-in features.
     Memory browsers display words so we use words even if bytes are
@@ -139,7 +139,7 @@ struct TDebug {
   WORD ControlMask[FAKE_IO_LENGTH];
 #endif
 
-#if defined(SS_DEBUG_FRAME_INTERRUPTS)
+#if defined(SSE_DEBUG_FRAME_INTERRUPTS)
   BYTE FrameInterrupts; //bit0 VBI 1 HBI 2 MFP
   WORD FrameMfpIrqs; // for OSD report
 #endif
@@ -151,7 +151,7 @@ struct TDebug {
 
 extern struct TDebug Debug;
 
-#endif//#if defined(SS_DEBUG)
+#endif//#if defined(SSE_DEBUG)
 
 #ifdef __cplusplus
 #if defined(DEBUG_BUILD)
@@ -163,7 +163,7 @@ extern void debug_set_bk(unsigned long ad,bool set); //bool set
 #endif
 #endif//#ifdef __cplusplus
 
-#if defined(SS_DEBUG_LOG_OPTIONS)
+#if defined(SSE_DEBUG_LOG_OPTIONS)
 /* 
    We replace defines (that were in acc.h but also other places!) with an enum
    and we change some of the sections to better suit our needs.
@@ -201,7 +201,7 @@ enum logsection_enum_tag {
  LOGSECTION_CPU ,
  LOGSECTION_INIFILE ,
  LOGSECTION_GUI ,
-#if !defined(SS_DEBUG_TRACE_CONTROL)
+#if !defined(SSE_DEBUG_TRACE_CONTROL)
  LOGSECTION_FDC_BYTES, // was DIV
  LOGSECTION_IPF_LOCK_INFO,
 #endif
@@ -211,9 +211,9 @@ enum logsection_enum_tag {
  };
 #endif
 
-#if defined(SS_DEBUG_FAKE_IO)
+#if defined(SSE_DEBUG_FAKE_IO)
 
-#if defined(SS_OSD_CONTROL)
+#if defined(SSE_OSD_CONTROL)
 
 #define OSD_MASK1 (Debug.ControlMask[2])
 #define OSD_CONTROL_CPUTRACE           (1<<15)
@@ -233,7 +233,7 @@ enum logsection_enum_tag {
 
 #endif//osdcontrol
 
-#if defined(SS_DEBUG_TRACE_CONTROL)
+#if defined(SSE_DEBUG_TRACE_CONTROL)
 /*  We use this to better control trace output, log section is still
     used.
     For example, log Video for shifter events, and trace control Vert
@@ -263,22 +263,22 @@ enum logsection_enum_tag {
 
 #endif
 
-#if defined(SS_DEBUG_VIDEO_CONTROL)
+#if defined(SSE_DEBUG_VIDEO_CONTROL)
 #define VIDEO_CONTROL_MASK (Debug.ControlMask[9])
 #define VIDEO_CONTROL_LINEOFF (1<<15)
 
 #endif
 
-#endif//#if defined(SS_DEBUG_FAKE_IO)
+#endif//#if defined(SSE_DEBUG_FAKE_IO)
 
 // debug macros
 
 // ASSERT
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
 #if defined(_DEBUG) && defined(VC_BUILD)
 // Our ASSERT facility has no MFC dependency.
 #define ASSERT(x) {if(!(x) && !FullScreen) _asm{int 0x03}}
-#elif defined(SS_UNIX_TRACE)
+#elif defined(SSE_UNIX_TRACE)
 #define ASSERT(x) if (!(x)) {TRACE("Assert failed: %s\n",#x);} 
 #elif defined(DEBUG_BUILD) // for boiler
 #ifdef __cplusplus
@@ -289,15 +289,15 @@ enum logsection_enum_tag {
   Debug.IgnoreErrors=(debug9==IDIGNORE);}}}
 #endif//c++
 #endif//vc
-#else //!SS_DEBUG
+#else //!SSE_DEBUG
 #define ASSERT(x)
 #endif
 
 // BREAKPOINT 
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
 #if defined(_DEBUG) && defined(VC_BUILD)
 #define BREAKPOINT _asm { int 3 }
-#elif defined(SS_UNIX_TRACE)
+#elif defined(SSE_UNIX_TRACE)
 #define BREAKPOINT TRACE("BREAKPOINT\n"); // extremely silly, I know
 #elif defined(DEBUG_BUILD) // for boiler
 #ifdef __cplusplus
@@ -306,12 +306,12 @@ enum logsection_enum_tag {
   Debug.IgnoreErrors=!(MessageBox(0,"no message","Breakpoint",MB_ICONWARNING|MB_OKCANCEL)==IDOK);}}
 #endif//c++
 #endif
-#else //!SS_DEBUG
+#else //!SSE_DEBUG
 #define BREAKPOINT {}
 #endif
 
 // BRK(x) 
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
 
 #if defined(DEBUG_BUILD)
 
@@ -321,7 +321,7 @@ enum logsection_enum_tag {
   Debug.IgnoreErrors=!(MessageBox(0,#x,"Breakpoint",MB_ICONWARNING|MB_OKCANCEL)==IDOK);}}
 #endif//c++
 
-#elif defined(SS_UNIX_TRACE)
+#elif defined(SSE_UNIX_TRACE)
 
 #define BRK(x) TRACE("BRK %s\n",#x);
 
@@ -331,14 +331,14 @@ enum logsection_enum_tag {
 
 #endif
 
-#else //!SS_DEBUG
+#else //!SSE_DEBUG
 
 #define BRK(x)
 
 #endif
 
 // TRACE
-#if defined(SS_DEBUG_TRACE)
+#if defined(SSE_DEBUG_TRACE)
 #ifdef __cplusplus
 #define TRACE Debug.Trace
 #endif//c++
@@ -348,7 +348,7 @@ enum logsection_enum_tag {
 #else
 #define TRACE // some code left to the compiler
 #endif
-#endif//#if defined(SS_DEBUG_TRACE)
+#endif//#if defined(SSE_DEBUG_TRACE)
 
 // TRACE_ENABLED
 #if defined(STEVEN_SEAGAL) && defined(DEBUG_BUILD) // boiler
@@ -366,7 +366,7 @@ enum logsection_enum_tag {
 #endif
 
 // TRACE_IDE
-#if defined(SS_DEBUG_TRACE)
+#if defined(SSE_DEBUG_TRACE)
 #ifdef __cplusplus
 #define TRACE_IDE Debug.TraceIde
 #endif//c++
@@ -376,11 +376,11 @@ enum logsection_enum_tag {
 #else
 #define TRACE_IDE // some code left to the compiler
 #endif
-#endif//#if defined(SS_DEBUG_TRACE)
+#endif//#if defined(SSE_DEBUG_TRACE)
 
 
 // TRACE_LOG
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
 #ifdef __cplusplus // visible only to C++ objects
 #define TRACE_LOG Debug.LogSection=LOGSECTION, Debug.TraceLog //!
 #endif//C++
@@ -394,7 +394,7 @@ enum logsection_enum_tag {
 
 // v3.6.3 introducing more traces,  verbose here, short in code
 // TRACE_FDC
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
 #ifdef __cplusplus // visible only to C++ objects
 #define TRACE_FDC Debug.LogSection=LOGSECTION_FDC, Debug.TraceLog //!
 #endif//C++
@@ -409,7 +409,7 @@ enum logsection_enum_tag {
 
 
 // TRACE_OSD
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
 #ifdef __cplusplus // visible only to C++ objects
 #define TRACE_OSD Debug.TraceOsd
 #endif//C++
@@ -422,11 +422,11 @@ enum logsection_enum_tag {
 #endif
 
 // VERIFY
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
 #if defined(_DEBUG) && defined(VC_BUILD)
 // Our VERIFY facility has no MFC dependency.
 #define VERIFY(x) {if(!(x) && !FullScreen) _asm{int 0x03}}
-#elif defined(SS_UNIX_TRACE)
+#elif defined(SSE_UNIX_TRACE)
 #define VERIFY(x) if (!(x)) {TRACE("Verify failed: %s\n",#x);} 
 #elif defined(DEBUG_BUILD) // for boiler
 #ifdef __cplusplus
@@ -437,11 +437,11 @@ enum logsection_enum_tag {
   Debug.IgnoreErrors=(debug9==IDIGNORE);}}}
 #endif//C++
 #endif
-#else //!SS_DEBUG
+#else //!SSE_DEBUG
 #define VERIFY(x) x
 #endif
 
-#if !defined(STEVEN_SEAGAL) || !defined(SS_DEBUG) 
+#if !defined(STEVEN_SEAGAL) || !defined(SSE_DEBUG) 
 enum { // to pass compilation
  LOGSECTION_FDC_BYTES, // was DIV
  LOGSECTION_IMAGE_INFO, //was Pasti

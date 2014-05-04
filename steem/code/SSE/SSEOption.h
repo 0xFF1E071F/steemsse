@@ -13,7 +13,7 @@
 
 #include "SSEDecla.h" //BYTE
 
-#if defined(SS_SSE_OPTION_STRUCT)
+#if defined(SSE_SSE_OPTION_STRUCT)
 
 struct TOption {
   // We keep all options in the structure so that snapshots are compatible
@@ -64,7 +64,7 @@ extern struct TOption SSEOption;
 #define PSG_FILTER_FIX (SSEOption.PSGFilter)
 #define ST_TYPE (SSEOption.STModel)
 #define CAPTURE_MOUSE (SSEOption.CaptureMouse)
-#if !defined(SS_VID_BORDERS_LB_DX1) // see SSEDecla.h
+#if !defined(SSE_VID_BORDERS_LB_DX1) // see SSEDecla.h
 #define BORDER_40 (SSEOption.DisplaySize==1)
 #endif
 #define DISPLAY_SIZE (SSEOption.DisplaySize)
@@ -82,14 +82,14 @@ extern struct TOption SSEOption;
 #define SSE_STATUS_BAR_GAME_NAME (SSEOption.StatusBarGameName)
 #define SSE_WIN_VSYNC (SSEOption.WinVSync)
 #define SSE_3BUFFER (SSEOption.TripleBuffer)
-#define SSE_DRIVE_SOUND (SSEOption.DriveSound)
+//#define SSE_DRIVE_SOUND (SSEOption.DriveSound)
 #define SSE_GHOST_DISK (SSEOption.GhostDisk)
-#else//!defined(SS_SSE_OPTION_STRUCT)
+#else//!defined(SSE_SSE_OPTION_STRUCT)
 
-#endif//#if defined(SS_SSE_OPTION_STRUCT)
+#endif//#if defined(SSE_SSE_OPTION_STRUCT)
 
 
-#if defined(SS_SSE_CONFIG_STRUCT)
+#if defined(SSE_SSE_CONFIG_STRUCT)
 
 struct TConfig {
 
@@ -123,7 +123,7 @@ extern struct TConfig SSEConfig;
 
 
 
-#else//#if ! defined(SS_SSE_CONFIG_STRUCT)
+#else//#if ! defined(SSE_SSE_CONFIG_STRUCT)
 
 #define CAPSIMG_OK (Caps.Version)
 #define DD_FULLSCREEN (iDummy)
@@ -131,7 +131,7 @@ extern struct TConfig SSEConfig;
 #define SDL_OK (iDummy)
 #define UNRAR_OK (iDummy)
 
-#endif//#if defined(SS_SSE_CONFIG_STRUCT)
+#endif//#if defined(SSE_SSE_CONFIG_STRUCT)
 
 #endif//#ifndef SSEOPTION_H
 

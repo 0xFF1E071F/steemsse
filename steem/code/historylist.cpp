@@ -6,7 +6,7 @@ DESCRIPTION: The history list window in the debug build that shows a list of
 recently executed commands.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: historylist.cpp")
 #endif
 

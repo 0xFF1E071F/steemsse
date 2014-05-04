@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_ACC_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_ACC_H)
 
 #include "acc.decla.h"
 
-#else//!defined(SS_STRUCTURE_ACC_H)
+#else//!defined(SSE_STRUCTURE_ACC_H)
 
 #ifdef IN_MAIN
 #define EXT
@@ -12,7 +12,7 @@
 #define INIT(s)
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SAVE_NEO)
 WORD change_endian(WORD x); // double of something?
 #endif
 
@@ -40,7 +40,7 @@ WORD change_endian(WORD x); // double of something?
   #define log_to_section(section,s) if (logsection_enabled[section] && logging_suspended==0) log_write(s);
   #define log_to(section,s)  if (logsection_enabled[section] && logging_suspended==0) log_write(s);
   EXT void log_write_stack();
-#if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VARIOUS)
   EXT bool logging_suspended INIT(TRUE);
 #else
   EXT bool logging_suspended INIT(false);
@@ -62,7 +62,7 @@ WORD change_endian(WORD x); // double of something?
   #define LOG_CPU
 #endif
 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_DEBUG_LOG_OPTIONS))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_LOG_OPTIONS))
   #define LOGSECTION_ALWAYS 0
   #define LOGSECTION_FDC 1
   #define LOGSECTION_IO 2
@@ -101,14 +101,14 @@ WORD change_endian(WORD x); // double of something?
                                     {"IO",LOGSECTION_IO},
                                     {"Crash",LOGSECTION_CRASH},
                                     {"CPU",LOGSECTION_CPU},
-#if !(defined(STEVEN_SEAGAL) && defined(SS_DEBUG_NODIV))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_NODIV))
                                     {"Div Instructions",LOGSECTION_DIV},
 #endif
                                     {"Trace",LOGSECTION_TRACE},
                                     {"-",-1},
                                     {"FDC",LOGSECTION_FDC},
                                      
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG_LOG_OPTIONS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_LOG_OPTIONS)
   {"Floppy data",LOGSECTION_FDC_BYTES},
   {"Image info",LOGSECTION_IMAGE_INFO},
   {"IPF sector info",LOGSECTION_IPF_LOCK_INFO},
@@ -248,4 +248,4 @@ EasyStr GetEXEFileName();
 #undef EXT
 #undef INIT
 
-#endif//defined(SS_STRUCTURE_ACC_H)
+#endif//defined(SSE_STRUCTURE_ACC_H)

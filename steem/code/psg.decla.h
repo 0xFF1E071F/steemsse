@@ -184,7 +184,7 @@ EXT int dma_sound_mixer,dma_sound_volume;
 EXT int dma_sound_l_volume,dma_sound_r_volume;
 EXT int dma_sound_l_top_val,dma_sound_r_top_val;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_MICROWIRE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_MICROWIRE)
 #include "../../3rdparty/dsp/dsp.h"
 EXT int dma_sound_bass;
 EXT int dma_sound_treble;
@@ -204,7 +204,7 @@ void psg_write_buffer(int,DWORD);
 #ifndef ONEGAME
 #define PSG_WRITE_EXTRA 300
 #else
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_NO_EXTRA_PER_VBL)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_NO_EXTRA_PER_VBL)
 #define PSG_WRITE_EXTRA 0
 #else
 #define PSG_WRITE_EXTRA OGExtraSamplesPerVBL

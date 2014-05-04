@@ -6,11 +6,11 @@ these functions are used in the emulation of Steem for vital processes such
 as changing disk images and determining what files are disks.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: diskman.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DISKMAN_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DISKMAN_H)
 
 #ifdef WIN32
 void TDiskManager::RefreshDiskView(EasyStr SelPath,bool EditLabel,EasyStr SelLinkPath,int iItem)
@@ -21,7 +21,7 @@ void TDiskManager::RefreshDiskView(EasyStr SelPath,bool EditLabel,EasyStr SelLin
 
 #endif
 
-#if defined(STEVEN_SEAGAL) && USE_PASTI && defined(SS_PASTI_ON_WARNING)
+#if defined(STEVEN_SEAGAL) && USE_PASTI && defined(SSE_PASTI_ON_WARNING)
 char sDiskManagerWindowCaption[]="Disk Manager (Pasti On)"; // and a nice global
 #endif
 
@@ -33,7 +33,7 @@ bool ExtensionIsPastiDisk(char *Ext)
 #if USE_PASTI
   if (Ext==NULL || hPasti==NULL) return false;
   if (*Ext=='.') Ext++;
-#if defined(SS_PASTI_ONLY_STX)
+#if defined(SSE_PASTI_ONLY_STX)
   if(PASTI_JUST_STX)
     return (IsSameStr_I(Ext,"STX")) ? true : false;
 #endif
@@ -53,19 +53,19 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
   if (*Ext=='.') Ext++;
   int ret=0;
   if (MatchesAnyString_I(Ext,"ST","STT","DIM","MSA",
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
     "IPF", 
-#ifdef SS_IPF_CTRAW
-    SS_IPF_CTRAW, //CTR
+#ifdef SSE_IPF_CTRAW
+    SSE_IPF_CTRAW, //CTR
 #endif
-#ifdef SS_IPF_KFSTREAM
-    SS_IPF_KFSTREAM, //RAW
+#ifdef SSE_IPF_KFSTREAM
+    SSE_IPF_KFSTREAM, //RAW
 #endif
 #endif    
-#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
     "SCP",
 #endif    
-#if defined(STEVEN_SEAGAL) && defined(SS_DISK_STW)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
     "STW",
 #endif  
     NULL)){
@@ -77,7 +77,7 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
   }else if (MatchesAnyString_I(Ext,"RAR",NULL)){
     ret=DISK_COMPRESSED;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
   }else if(UNRAR_OK&&MatchesAnyString_I(Ext,"RAR",NULL)){
     ret=DISK_COMPRESSED;
 #endif
@@ -86,12 +86,12 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
 
 #if USE_PASTI
   if (hPasti 
-#if !(defined(STEVEN_SEAGAL) && defined(SS_PASTI_ALWAYS_DISPLAY_STX_DISKS))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_PASTI_ALWAYS_DISPLAY_STX_DISKS))
     && pasti_active
 #endif
     ){
     if (ExtensionIsPastiDisk(Ext)
-#if defined(SS_PASTI_AUTO_SWITCH)
+#if defined(SSE_PASTI_AUTO_SWITCH)
     && (IsSameStr_I(Ext,"STX")||pasti_active)
 #endif
     ){
@@ -99,7 +99,7 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
     }else if (ret==DISK_COMPRESSED){
       return ret;
     }
-#if !(defined(STEVEN_SEAGAL) && defined(SS_PASTI_AUTO_SWITCH))    
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_PASTI_AUTO_SWITCH))    
     else{
       if (returnPastiDisksOnlyWhenPastiOn) return 0;
     }
@@ -148,7 +148,7 @@ void TDiskManager::PerformInsertAction(int Action,EasyStr Name,EasyStr Path,Easy
     if (runstate!=RUNSTATE_RUNNING){
       PostRunMessage();
     }else{
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_MOUSE_CAPTURE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_MOUSE_CAPTURE)
       if(CAPTURE_MOUSE)
         SetStemMouseMode(STEM_MOUSEMODE_WINDOW);
       else
@@ -167,7 +167,7 @@ void TDiskManager::SetNumFloppies(int NewNum)
   ASSERT( NewNum==1 || NewNum==2 );
   num_connected_floppies=NewNum;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
   // it's not easy mixing IPF and native!
   if(Caps.IsIpf(1)) // there's an IPF disk in drive B
   {
@@ -246,7 +246,7 @@ TDiskManager::TDiskManager()
   EjectDisksWhenQuit=0;
 
   MSAConvProcess=NULL;
-#ifndef SS_VAR_NO_WINSTON
+#ifndef SSE_VAR_NO_WINSTON
   HKEY Key;
   WinSTonPath="C:\\Program Files\\WinSTon";
   if (RegOpenKey(HKEY_CURRENT_USER,"Software\\WinSTon",&Key)==ERROR_SUCCESS){
@@ -262,7 +262,7 @@ TDiskManager::TDiskManager()
   WinSTonDiskPath=WinSTonPath+"\\Discs";
 #endif
   MSAConvPath="";
-#ifndef SS_VAR_NO_WINSTON
+#ifndef SSE_VAR_NO_WINSTON
   ImportOnlyIfExist=true;
   ImportConflictAction=0;
 
@@ -317,10 +317,10 @@ void TDiskManager::Show()
   bool MaximizeIt=bool(FullScreen ? FSMaximized:Maximized);
 
   ManageWindowClasses(SD_REGISTER);
-#if defined(STEVEN_SEAGAL) && USE_PASTI && defined(SS_PASTI_ON_WARNING)
-#if !defined(SS_PASTI_ON_WARNING2)
+#if defined(STEVEN_SEAGAL) && USE_PASTI && defined(SSE_PASTI_ON_WARNING)
+#if !defined(SSE_PASTI_ON_WARNING2)
     sDiskManagerWindowCaption[12]=(pasti_active
-#if defined(SS_PASTI_ONLY_STX)
+#if defined(SSE_PASTI_ONLY_STX)
       && (!PASTI_JUST_STX 
       || SF314[floppy_current_drive()].ImageType==DISK_PASTI)    
 #endif
@@ -329,7 +329,7 @@ void TDiskManager::Show()
   Handle=CreateWindowEx(WS_EX_CONTROLPARENT | WS_EX_APPWINDOW,"Steem Disk Manager",sDiskManagerWindowCaption,
       WS_CAPTION | WS_SYSMENU | WS_SIZEBOX | WS_MAXIMIZEBOX | WS_MINIMIZEBOX,
       Left,Top,Width,Height,ParentWin,NULL,HInstance,NULL);
-#if defined(SS_PASTI_ON_WARNING2)
+#if defined(SSE_PASTI_ON_WARNING2)
   RefreshPastiStatus();
 #endif
 #else
@@ -915,7 +915,7 @@ Str TDiskManager::GetMSAConverterPath()
     //if (Exists(MSAConvPath)) return MSAConvPath;
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_MSA_CONVERTER)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_MSA_CONVERTER)
 #if defined(_DEBUG)
   BRK(Auto MSA path wont work in _DEBUG);
 #else
@@ -1362,7 +1362,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,2010,T("Find In Current Folder"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,2030,T("Run MSA Converter")+"\10F6");
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,0,NULL);
-#ifndef SS_VAR_NO_WINSTON
+#ifndef SSE_VAR_NO_WINSTON
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,2001,T("Import &WinSTon Favourites"));
 #endif
             RECT rc;
@@ -1428,9 +1428,9 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
           This->ShowDiskDiag();
           break;
 
-#if defined(SS_DISK_STW_DISK_MANAGER)
+#if defined(SSE_DISK_STW_DISK_MANAGER)
         case 1003:  // STW
-#if defined(SS_DISK_STW_DISK_MANAGER1) //copy TODO refactor
+#if defined(SSE_DISK_STW_DISK_MANAGER1) //copy TODO refactor
         {
           EasyStr STName=This->DisksFol+"\\"+T("Blank Disk")+".STW";
           int n=2;
@@ -1468,7 +1468,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
           PostMessage(Win,WM_USER,1234,2);
           break;
 
-#if defined(SS_DRIVE_SWITCH_OFF_MOTOR)
+#if defined(SSE_DRIVE_SWITCH_OFF_MOTOR)
         case 1046:
         case 1047:
           SF314[(LOWORD(wPar)-1046)].MotorOn=false;
@@ -1477,7 +1477,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
           break;
 #endif
 
-#if defined(SS_DRIVE_SINGLE_SIDE)
+#if defined(SSE_DRIVE_SINGLE_SIDE)
 /*   bit0 A bit 1 B set = single - we toggle bits
 Toggling a bit
 
@@ -1656,7 +1656,7 @@ That will toggle bit x.
         case 2007:case 2008:case 2009:
           This->DoubleClickAction=LOWORD(wPar)-2007;
           break;
-#ifndef SS_VAR_NO_WINSTON
+#ifndef SSE_VAR_NO_WINSTON
         case 2001:  // Import
           This->ShowImportDiag();
           break;
@@ -1672,12 +1672,12 @@ That will toggle bit x.
           break;
         case 2013: // SS menu ADAT
           floppy_instant_sector_access=!floppy_instant_sector_access;
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_OPTION_SLOW_DISK)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_OPTION_SLOW_DISK)
           This->RefreshSnails();
-#if defined(SS_VAR_OPTIONS_REFRESH) &&defined(WIN32)
+#if defined(SSE_VAR_OPTIONS_REFRESH) &&defined(WIN32)
           OptionBox.SSEUpdateIfVisible(); // other way
 #endif
-#if defined(SS_VAR_STATUS_STRING_ADAT)
+#if defined(SSE_VAR_STATUS_STRING_ADAT)
           GUIRefreshStatusBar();
 #endif
 #else
@@ -1713,7 +1713,7 @@ That will toggle bit x.
           }
           if (LOWORD(wPar)==2023){ //SS option use pasti
 
-#if defined(STEVEN_SEAGAL) && defined(SS_PASTI_NO_RESET)
+#if defined(STEVEN_SEAGAL) && defined(SSE_PASTI_NO_RESET)
 /*  More complicated than it looked, not foolproof.
     Maybe there's a better way but we created TFloppyDrive::GetImageFile()
     for the occasion.
@@ -1753,12 +1753,12 @@ That will toggle bit x.
             }
 #endif
 
-#if defined(SS_PASTI_ON_WARNING2)
+#if defined(SSE_PASTI_ON_WARNING2)
             This->RefreshPastiStatus();
 #else
-#if defined(STEVEN_SEAGAL) && defined(SS_PASTI_ON_WARNING)
+#if defined(STEVEN_SEAGAL) && defined(SSE_PASTI_ON_WARNING)
             sDiskManagerWindowCaption[12]=(pasti_active
-#if defined(SS_PASTI_ONLY_STX)
+#if defined(SSE_PASTI_ONLY_STX)
               && (!PASTI_JUST_STX 
               || SF314[floppy_current_drive()].ImageType==DISK_PASTI)
 #endif              
@@ -2036,7 +2036,7 @@ That will toggle bit x.
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1000,T("New &Folder"));
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1001,T("New Standard &Disk Image"));
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1002,T("New Custom Disk &Image"));
-#if defined(SS_DISK_STW_DISK_MANAGER) //new context option
+#if defined(SSE_DISK_STW_DISK_MANAGER) //new context option
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1003,T("New ST&W Disk Image"));
 #endif
         POINT pt;
@@ -2072,7 +2072,7 @@ That will toggle bit x.
           InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1101,T("&Remove Disk From Drive")+" \10DEL");
           InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,999,NULL);
           InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1091,T("&Go To Disk"));
-#if defined(SS_VAR_DISK_MANAGER_LONG_NAMES1)
+#if defined(SSE_VAR_DISK_MANAGER_LONG_NAMES1)
 /*  This is so the player can read the full name of the disk without
     checking at the place of storage.
     If you click, you go there.
@@ -2580,7 +2580,7 @@ LRESULT __stdcall TDiskManager::Drive_Icon_WndProc(HWND Win,UINT Mess,WPARAM wPa
       if (disk==1) This->SetNumFloppies(3-num_connected_floppies);
       return 0;
 
-#if defined(SS_DRIVE_SINGLE_SIDE)
+#if defined(SSE_DRIVE_SINGLE_SIDE)
     case WM_RBUTTONDOWN: // right click on drive, make context menu
     {
       GET_THIS;
@@ -2593,7 +2593,7 @@ LRESULT __stdcall TDiskManager::Drive_Icon_WndProc(HWND Win,UINT Mess,WPARAM wPa
         MF_CHECKED:0),1048+This->MenuTarget,
         T("SF354 (single side - caution!)"));
 
-#if defined(SS_DRIVE_SWITCH_OFF_MOTOR)
+#if defined(SSE_DRIVE_SWITCH_OFF_MOTOR)
       if(SF314[This->MenuTarget].MotorOn)
       {
         InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,
@@ -2824,7 +2824,7 @@ bool TDiskManager::CreateDiskImage(char *STName,int Sectors,int SecsPerTrack,int
     buf=2;                            fwrite(&buf,1,1,f); //FATs
     buf=112;                          fwrite(&buf,2,1,f); //Dir Entries
     buf=Sectors;                      fwrite(&buf,2,1,f);
-#if defined(SS_DRIVE_CREATE_ST_DISK_FIX) // from Petari
+#if defined(SSE_DRIVE_CREATE_ST_DISK_FIX) // from Petari
     buf=249;                          fwrite(&buf,1,1,f); //Unused - MSDOS signo in fact
     
     // 3 sectors per FAT is enough up to 1MB disk capacity
@@ -2841,7 +2841,7 @@ bool TDiskManager::CreateDiskImage(char *STName,int Sectors,int SecsPerTrack,int
     buf=Sides;                        fwrite(&buf,2,1,f);
     buf=0;                            fwrite(&buf,2,1,f); //Hidden Sectors
     fseek(f,510,SEEK_SET);
-#if defined(SS_DRIVE_CREATE_ST_DISK_FIX) // from Petari
+#if defined(SSE_DRIVE_CREATE_ST_DISK_FIX) // from Petari
     fputc(0x97,f);fputc(0xc7,f);  // WTF ?
     fputc(0xf0,f);fputc(0xff,f);fputc(0xff,f);  // First FAT begin
     // Second FAT too ! :
@@ -2971,7 +2971,7 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
                                 bool MakeFocus,EasyStr DiskInZip,bool SuppressErr,bool AllowInsert2)
 {
   
-#ifdef SS_DEBUG
+#ifdef SSE_DEBUG
   if(!DontChangeDisk)
     TRACE_LOG("%c: Inserting disk %s [%s]\n",Drive+'A',Name.c_str(),Path.c_str());
 #endif
@@ -2986,7 +2986,7 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
       if (SuppressErr==0){
         switch (Err){
           case FIMAGE_WRONGFORMAT:
-#if defined(SS_DRIVE_WRONG_IMAGE_ALERT)//3.6.1
+#if defined(SSE_DRIVE_WRONG_IMAGE_ALERT)//3.6.1
             Alert(Path+": "+T("image not recognised!"),T("Disk Image Error"),MB_ICONEXCLAMATION);
 #else
             Alert(Path+" "+T("is not in the correct format, it may be corrupt!"),T("Disk Image Error"),MB_ICONEXCLAMATION);
@@ -3023,11 +3023,11 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
     }
     FloppyDrive[Drive].DiskName=Name;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_SCROLLER_DISK_IMAGE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_SCROLLER_DISK_IMAGE)
     if(OSD_IMAGE_NAME && !SSE_STATUS_BAR_GAME_NAME)
       OsdControl.StartScroller(Name); // display image disk name
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING_DISK_NAME)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_STATUS_STRING_DISK_NAME)
     GUIRefreshStatusBar();
 #endif
 
@@ -3103,13 +3103,13 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
   UpdateDiskNames(Drive);
 #endif
 
-#if defined(SS_PASTI_ON_WARNING2)
+#if defined(SSE_PASTI_ON_WARNING2)
   RefreshPastiStatus();
 #else
-#if defined(STEVEN_SEAGAL) && USE_PASTI && defined(SS_PASTI_ON_WARNING)
+#if defined(STEVEN_SEAGAL) && USE_PASTI && defined(SSE_PASTI_ON_WARNING)
   // check Pasti caption
   sDiskManagerWindowCaption[12]=(pasti_active
-#if defined(SS_PASTI_ONLY_STX)
+#if defined(SSE_PASTI_ONLY_STX)
     && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==DISK_PASTI)    
 #endif    
     ) ? ' ' : '\0';
@@ -3244,7 +3244,7 @@ void TDiskManager::EjectDisk(int Drive)
     SendMessage(GetDlgItem(Handle,100+Drive),LVM_DELETEITEM,0,0);
     EnableWindow(GetDlgItem(GetDlgItem(Handle,98+Drive),100),AreNewDisksInHistory(Drive));
   }   
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING_DISK_NAME)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_STATUS_STRING_DISK_NAME)
   GUIRefreshStatusBar();
 #endif
 #elif defined(UNIX)
@@ -3511,7 +3511,7 @@ Str TDiskManager::GetContentsGetAppendName(Str TOSECName)
 }
 //---------------------------------------------------------------------------
 #if defined(STEVEN_SEAGAL) && defined(WIN32)
-#if defined(SS_VAR_OPTION_SLOW_DISK) 
+#if defined(SSE_VAR_OPTION_SLOW_DISK) 
 
 // mini-function to avoid code duplication
 void TDiskManager::RefreshSnails() {
@@ -3521,14 +3521,14 @@ void TDiskManager::RefreshSnails() {
 }
 
 #endif
-#if defined(SS_PASTI_ON_WARNING2)
+#if defined(SSE_PASTI_ON_WARNING2)
 
 void TDiskManager::RefreshPastiStatus() {
   // check Pasti caption
   sDiskManagerWindowCaption[12]=(pasti_active
-#if defined(SS_PASTI_ONLY_STX)
+#if defined(SSE_PASTI_ONLY_STX)
     && (!PASTI_JUST_STX || 
-#if defined(SS_DISK_IMAGETYPE)
+#if defined(SSE_DISK_IMAGETYPE)
       SF314[floppy_current_drive()].ImageType.Extension==EXT_STX
 #else
       SF314[floppy_current_drive()].ImageType==DISK_PASTI

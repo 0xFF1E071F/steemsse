@@ -5,14 +5,14 @@ DESCRIPTION: This file contains the code for zipclass, Steem's abstraction
 of the various unarchiving libraries it can use.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: archive.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_ARCHIVE_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_ARCHIVE_H)
 zipclass zippy; 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
 
 #define LOGSECTION LOGSECTION_INIT
 
@@ -40,7 +40,7 @@ void LoadUnzipDLL()
 
 #ifdef _MSC_VER
 #pragma comment(lib,"../../3rdparty/UnRARDLL/unrar.lib")
-#if defined(WIN32) && defined(SS_DELAY_LOAD_DLL)
+#if defined(WIN32) && defined(SSE_DELAY_LOAD_DLL)
 #ifndef SS_VS2012_DELAYDLL
 #pragma comment(linker, "/delayload:unrar.dll")
 #endif
@@ -89,7 +89,7 @@ zipclass::zipclass()
   is_open=false;
   current_file_n=0;
   err=0;
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
   hArcData=0;
 #endif
 }
@@ -164,7 +164,7 @@ bool zipclass::first(char *name)
 
     return ZIPPY_SUCCEED;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
   }
   else if (strcmp(type,"RAR")==0 && UNRAR_OK)
   {
@@ -237,7 +237,7 @@ bool zipclass::next()
     return ZIPPY_SUCCEED;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
   }else if (strcmp(type,"RAR")==0){
 
     if (is_open==0 || !UNRAR_OK || !hArcData) 
@@ -281,7 +281,7 @@ char* zipclass::filename_in_zip()
   }else if (strcmp(type,"RAR")==0){
     if (rar_current) return rar_current->item.Name;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
   }else if (strcmp(type,"RAR")==0){
     if(UNRAR_OK&&hArcData) 
       return HeaderData.FileName;
@@ -306,7 +306,7 @@ bool zipclass::close()
       is_open=false;
       return ZIPPY_SUCCEED;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
     }else if (strcmp(type,"RAR")==0 && UNRAR_OK){
 //      TRACE_LOG("closing RAR archive\n");
       VERIFY( !RARCloseArchive(hArcData) );
@@ -476,7 +476,7 @@ bool zipclass::extract_file(char *fn,int offset,char *dest_dir,bool hide,DWORD a
 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_UNRAR)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
   }else if (strcmp(type,"RAR")==0 && UNRAR_OK){
     if (is_open) 
       close();

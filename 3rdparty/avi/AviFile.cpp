@@ -5,7 +5,7 @@
 //#include "StdAfx.h" // no MFC for Steem
 #include "..\steem\code\SSE\SSE.h" // get all switches
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_RECORD_AVI)
 #pragma comment(lib, "vfw32.Lib")  //  OK for VC6
 #include "dsound.h" // VC9 can't do that? need SDK?
 
@@ -18,7 +18,7 @@ extern IDirectSoundBuffer *PrimaryBuf,*SoundBuf; // VC9 doesn't know that
 unsigned int FormatAviMessage(HRESULT code, char *buf,unsigned int len);
 extern int shifter_freq_at_start_of_vbl;
 
-#if !defined(SS_STRUCTURE_SSE6301_OBJ)
+#if !defined(SSE_STRUCTURE_SSE6301_OBJ)
 extern bool FullScreen;
 #endif
 
@@ -62,7 +62,7 @@ CAviFile:: CAviFile(LPCSTR lpszFileName /* =_T("Output.avi") */,
 
 	m_nAppendFuncSelector=1;		//0=Dummy	1=FirstTime	2=Usual
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_RECORD_AVI)
 	m_lSampleA=0; // A for audio
 	m_pAviStreamA=NULL;
 	Initialised=0; // our usual trick to avoid crashes
@@ -96,7 +96,7 @@ void CAviFile::ReleaseMemory()
 		m_pAviStream=NULL;
 	}
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_RECORD_AVI)
 	if(m_pAviStreamA)
 	{
 		AVIStreamRelease(m_pAviStreamA);
@@ -124,7 +124,7 @@ void CAviFile::ReleaseMemory()
 void CAviFile::SetErrorMessage(LPCTSTR lpszErrorMessage)
 {
 	_tcsncpy(m_szErrMsg, lpszErrorMessage, __countof(m_szErrMsg)-1);
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_RECORD_AVI)
 	TRACE_LOG("%s\n",m_szErrMsg);
 #endif
 }
@@ -156,7 +156,7 @@ HRESULT CAviFile::InitMovieCreation(int nFrameWidth, int nFrameHeight, int nBits
     SetErrorMessage("Unable to Allocate Memory on Heap");
     return E_FAIL;
   }
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_RECORD_AVI)
   DeleteFile(m_szFileName);
 #endif
   if(FAILED(AVIFileOpen(&m_pAviFile, m_szFileName, OF_CREATE|OF_WRITE, NULL)))
@@ -184,7 +184,7 @@ HRESULT CAviFile::InitMovieCreation(int nFrameWidth, int nFrameHeight, int nBits
   ZeroMemory(&m_AviCompressOptions,sizeof(AVICOMPRESSOPTIONS));
   m_AviCompressOptions.fccType=streamtypeVIDEO;
   m_AviCompressOptions.fccHandler=m_AviStreamInfo.fccHandler;
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_RECORD_AVI)
   m_AviCompressOptions.dwFlags=AVICOMPRESSF_KEYFRAMES|AVICOMPRESSF_VALID|AVICOMPRESSF_DATARATE;
 #else
   m_AviCompressOptions.dwFlags=AVICOMPRESSF_KEYFRAMES|AVICOMPRESSF_VALID;//|AVICOMPRESSF_DATARATE;
@@ -193,7 +193,7 @@ HRESULT CAviFile::InitMovieCreation(int nFrameWidth, int nFrameHeight, int nBits
 	//m_AviCompressOptions.dwBytesPerSecond=1000/8;
 	//m_AviCompressOptions.dwQuality=100;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_RECORD_AVI)
   if(FAILED(AVIMakeCompressedStream(&m_pAviCompressedStream,m_pAviStream,&m_AviCompressOptions,NULL)))
   {
     TRACE_LOG("Fall back to MSVC codec\n");
@@ -232,12 +232,12 @@ HRESULT CAviFile::InitMovieCreation(int nFrameWidth, int nFrameHeight, int nBits
     return E_FAIL;
   }
   
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_RECORD_AVI)
   // Add audio stream if there's one (uncompressed)
   if(SoundBuf)
   {
     // we take the WAVEFORMATEX currently used in DirectSound
-#ifdef SS_VS2012_INIT
+#ifdef SSE_VS2012_INIT
     DWORD dwSizeAllocated=0, dwSizeWritten; 
 #else
     DWORD dwSizeAllocated,dwSizeWritten; 
@@ -370,7 +370,7 @@ HRESULT	CAviFile::AppendDummy(int nWidth, int nHeight, LPVOID pBits,int nBitsPer
 }
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_RECORD_AVI)
 
 HRESULT	CAviFile::AppendSound(LPVOID pAudBuf,int numbytes) {
   unsigned long numsamps = numbytes*8 / wfx.wBitsPerSample;
@@ -395,4 +395,4 @@ HRESULT	CAviFile::AppendSound(LPVOID pAudBuf,int numbytes) {
 #undef _tcsncpy
 #endif
 
-#endif //defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI)
+#endif //defined(STEVEN_SEAGAL) && defined(SSE_VID_RECORD_AVI)

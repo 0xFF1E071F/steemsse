@@ -5,7 +5,7 @@ DESCRIPTION: Functions to load and save emulation variables. This is mainly
 for Steem's memory snapshots system.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: loadsave_emu.cpp")
 #endif
 
@@ -139,7 +139,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(shifter_x);            //4
   ReadWrite(shifter_y);            //4
   ReadWrite(shifter_scanline_width_in_bytes); //4 //SS: unused
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
   {
     int tmp=shifter_fetch_extra_words;
     ReadWrite(tmp);       //4
@@ -204,7 +204,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(dma_mode);          //2
   ReadWrite(dma_status);        //1
   ReadWrite(dma_address);       //4
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
   {
     int dma_sector_count_tmp=dma_sector_count;
     ReadWrite(dma_sector_count_tmp);
@@ -220,7 +220,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(fdc_dr);                     //1
   ReadWrite(fdc_last_step_inwards_flag); //1
   ReadWriteArray(floppy_head_track);
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
   {
     int floppy_mediach_tmp[2];
     floppy_mediach_tmp[0]=floppy_mediach[0];
@@ -285,7 +285,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 
   if (Version>=8) ReadWriteStruct(ACIA_IKBD);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_REGISTERS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_REGISTERS)
   if(Version<44 && LoadOrSave==LS_LOAD) //v3.5.1
   {
     ACIA_IKBD.CR=0x96; // usually
@@ -294,10 +294,10 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     ACIA_MIDI.SR=2; // usually
   }
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_DOUBLE_BUFFER_RX)
+#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_DOUBLE_BUFFER_RX)
   ACIA_IKBD.LineRxBusy=0;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_DOUBLE_BUFFER_TX)
+#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_DOUBLE_BUFFER_TX)
   ACIA_IKBD.LineTxBusy=0;
 #endif
 
@@ -473,7 +473,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   bool spin_up=bool(fdc_spinning_up);
   if (Version>=32) ReadWrite(spin_up);
   if (Version>=33){
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
     {
       int fdc_spinning_up_tmp=fdc_spinning_up;
       ReadWrite(fdc_spinning_up_tmp);
@@ -491,11 +491,11 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   if (Version>=35){
     ReadWrite(psg_reg_data);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DMA_FIFO_READ_ADDRESS2)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DMA_FIFO_READ_ADDRESS2)
     BYTE fdc_read_address_buffer_len=0;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
     {
       int floppy_type1_command_active_tmp=floppy_type1_command_active;
       ReadWrite(floppy_type1_command_active_tmp);
@@ -510,7 +510,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DMA_FIFO_READ_ADDRESS2)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DMA_FIFO_READ_ADDRESS2)
     {
       BYTE fdc_read_address_buffer_fake[20];
       ReadWriteArray(fdc_read_address_buffer_fake);
@@ -520,7 +520,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_RESIZE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
     {
       int dma_bytes_written_for_sector_count_tmp=dma_bytes_written_for_sector_count;
       ReadWrite(dma_bytes_written_for_sector_count_tmp);
@@ -599,7 +599,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   BYTE *pasti_block=NULL;
   DWORD pasti_block_len=0;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_REWRITE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_REWRITE)
   bool pasti_old_active;
 #else
   int pasti_old_active;
@@ -685,7 +685,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #if defined(STEVEN_SEAGAL)
   if(Version>=41) // Steem 3.3
   {
-#ifdef SS_STF
+#ifdef SSE_STF
     ReadWrite(ST_TYPE);
     SwitchSTType(ST_TYPE);
 #endif
@@ -694,7 +694,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   }
   if(Version>=42) // Steem 3.4
   {
-#if defined(SS_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE)
     ReadWrite(SampleRate); // global of 3rd party
     if(SampleRate<6258 || SampleRate>50066)
       SampleRate=12517;
@@ -706,11 +706,11 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
       dma_sound_treble=6;
 #endif
 
-#if defined(SS_IKBD_6301)
+#if defined(SSE_IKBD_6301)
 /*  If it must work with ReadWrite, we must use a variable that
     can be used with sizeof, so we take on the stack.
 */
-#if !defined(SS_IKBD_6301_DISABLE_CALLSTACK)
+#if !defined(SSE_IKBD_6301_DISABLE_CALLSTACK)
     BYTE buffer_for_hd6301[3260];
 #else
     BYTE buffer_for_hd6301[200]; // spare the stack!
@@ -731,10 +731,10 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   }
   else // default to safe values
   {
-#if defined(SS_IKBD_6301)
+#if defined(SSE_IKBD_6301)
     HD6301EMU_ON=0;
 #endif
-#if defined(SS_STF)
+#if defined(SSE_STF)
     ST_TYPE=0;
 #endif
   }
@@ -742,11 +742,11 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   //3.5.0: nothing special
   if(Version>=44) // Steem 3.5.1
   {
-#if defined(SS_SHIFTER)
+#if defined(SSE_SHIFTER)
     ReadWriteStruct(Shifter); // for res & sync
 #endif
 
-#if defined(SS_IKBD_6301) // too bad it was forgotten before
+#if defined(SSE_IKBD_6301) // too bad it was forgotten before
     WORD HD6301EMU_ON_tmp=HD6301EMU_ON;
     ReadWrite(HD6301EMU_ON_tmp); // but is it better?
     HD6301EMU_ON=HD6301EMU_ON_tmp!=0;
@@ -754,38 +754,38 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
       HD6301EMU_ON=0;
 #endif
 
-#if defined(SS_ACIA_REGISTERS)
+#if defined(SSE_ACIA_REGISTERS)
     ReadWriteStruct(ACIA_MIDI);
 #endif
 
-#if defined(SS_DMA)
+#if defined(SSE_DMA)
     ReadWriteStruct(Dma);
 #endif
   }
   else
   {
-#if defined(SS_SHIFTER)
+#if defined(SSE_SHIFTER)
 //    Shifter.m_ShiftMode=screen_res;
 #endif
-#if defined(SS_ACIA_REGISTERS)
+#if defined(SSE_ACIA_REGISTERS)
 #endif
-#if defined(SS_DMA)
+#if defined(SSE_DMA)
 #endif
-#if defined(SS_MMU_WAKE_UP)
+#if defined(SSE_MMU_WAKE_UP)
 //    WAKE_UP_STATE=0; //wasn't loaded?
 #endif
   }
 
-#if defined(SS_SHIFTER)//don't trust content of snapshot
+#if defined(SSE_SHIFTER)//don't trust content of snapshot
   Shifter.m_ShiftMode=(BYTE)screen_res;
   Shifter.m_SyncMode= (BYTE)((shifter_freq==50)?2:0);
 #endif
-#if defined(SS_MMU_WAKE_UP)//same
+#if defined(SSE_MMU_WAKE_UP)//same
 //  WAKE_UP_STATE=0;
 #endif
 
 
-#if defined(SS_VAR_CHECK_SNAPSHOT) //stupid!
+#if defined(SSE_VAR_CHECK_SNAPSHOT) //stupid!
   if(Version>=44)
   {
     int magic=123456;
@@ -804,27 +804,27 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #endif
   if(Version>=45) //3.5.2
   {
-#if defined(SS_DRIVE)
+#if defined(SSE_DRIVE)
     if(Version>=48) // 3.6.0
     {
 
     }
 
-#if defined(SS_DRIVE_SOUND)
+#if defined(SSE_DRIVE_SOUND)
     TSF314 SF314Copy=SF314[0];
 #endif
 
     ReadWriteStruct(SF314);
 
-#if defined(SS_DRIVE_SOUND) // avoid crash, restore volume
-#if defined(SS_DRIVE_SOUND_VOLUME)
+#if defined(SSE_DRIVE_SOUND) // avoid crash, restore volume
+#if defined(SSE_DRIVE_SOUND_VOLUME)
     SF314[0].Sound_Volume=SF314Copy.Sound_Volume;
-#if defined(SS_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
+#if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
     SF314[1].Sound_Volume=SF314Copy.Sound_Volume;
 #endif
 #endif
     for(int i=0;i<TSF314::NSOUNDS;i++)
-#if defined(SS_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
+#if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
       SF314[1].Sound_Buffer[i]=
 #endif
       SF314[0].Sound_Buffer[i]=SF314Copy.Sound_Buffer[i];
@@ -834,12 +834,12 @@ Steem SSE will reset auto.sts and quit\nSorry!",
   }
   if(Version>=46) // 3.5.4
   {
-#if defined(SS_MMU_WAKE_UP)
+#if defined(SSE_MMU_WAKE_UP)
     ReadWrite(WAKE_UP_STATE); // and not struct MMU
 //    TRACE_LOG("WU option L/S %d\n",WAKE_UP_STATE);
     if(WAKE_UP_STATE>WU_SHIFTER_PANIC)
       WAKE_UP_STATE=0;
-#if defined(SS_VAR_STATUS_STRING)
+#if defined(SSE_VAR_STATUS_STRING)
     GUIRefreshStatusBar();//overkill
 #endif
     
@@ -847,7 +847,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
   }
   if(Version>=48) // 3.6.1
   {
-#if defined(SS_IPF_RESUME)//3.6.1
+#if defined(SSE_IPF_RESUME)//3.6.1
 /*  This just restore registers, not internal state.
     Funny to see how the "drive" then finds back its track,
     in some cases it will work, in other fail.

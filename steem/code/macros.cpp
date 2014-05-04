@@ -5,11 +5,11 @@ DESCRIPTION: These functions are used by Steem's macro system, to record,
 replay, load and save user input.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: macros.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_MACROS_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_MACROS_H)
 
 #define EXT
 #define INIT(s) =s

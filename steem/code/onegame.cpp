@@ -1,9 +1,9 @@
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: onegame.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_ONEGAME_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_ONEGAME_H)
 
 #define EXT
 #define INIT(s) =s

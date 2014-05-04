@@ -6,11 +6,11 @@ to and from files. This includes loading TOS images and handling steem.ini
 and steem.new.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: loadsave.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_LOADSAVE_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_LOADSAVE_H)
 
 void AddSnapShotToHistory(char *);
 bool LoadSnapShot(char *,bool,bool,bool);
@@ -183,7 +183,7 @@ int LoadSnapShotChangeTOS(Str NewROM,int NewROMVer)
   bool Fail=0;
   if (load_TOS(NewROM)){
 
-#if defined(SS_TOS_SNAPSHOT_AUTOSELECT2)
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2)
 /*  Steem couldn't load this precise file.
     Before prompting user, have a go at matching a TOS with the same
     version number.
@@ -298,7 +298,7 @@ void AddSnapShotToHistory(char *FilNam)
 //SS C++ horror, TODO
 
 bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bool ChangeDisks=true
-#if defined(SS_VAR_POWERON2) //this isn't defined (v3.6.2)
+#if defined(SSE_VAR_POWERON2) //this isn't defined (v3.6.2)
   ,bool NoNeedToReset=false // in main, we already called reset_st
 #endif
   )
@@ -319,18 +319,18 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
       DeleteFile(WriteDir+SLASH+"auto_reset_backup.sts");
       SaveSnapShot(WriteDir+SLASH+"auto_loadsnapshot_backup.sts",-1,0);
     }
-#if defined(SS_VAR_POWERON2)
+#if defined(SSE_VAR_POWERON2)
     if(!NoNeedToReset)
 #endif
     reset_st(RESET_COLD | RESET_STOP | RESET_NOCHANGESETTINGS | RESET_NOBACKUP);
 
     FILE *f=fopen(FilNam,"rb");
     if (f){
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_CHECK_SNAPSHOT)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_CHECK_SNAPSHOT)
     try {
 #endif
       Failed=LoadSaveAllStuff(f,LS_LOAD,-1,ChangeDisks,&Version);
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_CHECK_SNAPSHOT)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_CHECK_SNAPSHOT)
     }
     catch(...) { //Works in VC6 - BCC? Unix certainly not.
       TRACE("Exception in LoadSaveAllStuff\n");
@@ -379,14 +379,14 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
     reset_st(RESET_COLD | RESET_STOP | RESET_CHANGESETTINGS | RESET_NOBACKUP);
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_SCROLLER_DISK_IMAGE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_SCROLLER_DISK_IMAGE)
     if(OSD_IMAGE_NAME && !SSE_STATUS_BAR_GAME_NAME && !FloppyDrive[0].Empty())
       OsdControl.StartScroller(FloppyDrive[0].DiskName); // display image disk name
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_STATUS_STRING_DISK_NAME)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_STATUS_STRING_DISK_NAME)
     GUIRefreshStatusBar();
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VAR_OPTIONS_REFRESH) &&defined(WIN32)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_OPTIONS_REFRESH) &&defined(WIN32)
     OptionBox.SSEUpdateIfVisible();
 #endif
 
@@ -498,7 +498,7 @@ bool load_TOS(char *File)
 
   tos_version=ROM_DPEEK(2);
 
-#if defined(SS_TOS_STE_FAST_BOOT) //from hatari
+#if defined(SSE_TOS_STE_FAST_BOOT) //from hatari
 //  TRACE("tos v %x loaded\n",tos_version);
   if(SSE_HACKS_ON && (tos_version==0x106||tos_version==0x162)
 #if USE_PASTI
@@ -526,7 +526,7 @@ bool load_TOS(char *)
 }
 #endif
 //---------------------------------------------------------------------------
-#if defined(STEVEN_SEAGAL) && defined(SS_CARTRIDGE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_CARTRIDGE)
 /*  Loading a ROM cartridge.
     Steem format STC has 4 null bytes at the start, then the 128 KB
     of the cartridge.
@@ -547,12 +547,12 @@ bool load_cart(char *filename) {
     DWORD FirstBytes;
     int offset=0;
     switch(FileLen) {
-#if defined(SS_CARTRIDGE_64KB_OK)
+#if defined(SSE_CARTRIDGE_64KB_OK)
     case 64*1024:
       offset=FileLen+4;
       break;
 #endif
-#if defined(SS_CARTRIDGE_NO_EXTRA_BYTES_OK)
+#if defined(SSE_CARTRIDGE_NO_EXTRA_BYTES_OK)
     case 128*1024:
       offset=4;
       break;
@@ -569,7 +569,7 @@ bool load_cart(char *filename) {
     {
       fread(&FirstBytes,4,1,f);
       switch(FirstBytes) {
-#if defined(SS_CARTRIDGE_DIAGNOSTIC)
+#if defined(SSE_CARTRIDGE_DIAGNOSTIC)
       case 0x5F2352FA: // $FA52235F reversed - diagnostic
         break;
 #endif
@@ -596,7 +596,7 @@ bool load_cart(char *filename) {
         if(pc>=MEM_EXPANSION_CARTRIDGE && pc<0xfc0000){
           SET_PC(PC32);        
         }
-#if defined(SS_CARTRIDGE_DIAGNOSTIC)
+#if defined(SSE_CARTRIDGE_DIAGNOSTIC)
         /*  If these four bytes are found, the computer will transfer control
         to memory location $FA0004, where you should start placing your 
         MC68000 machine language instructions.

@@ -33,7 +33,7 @@
 u_int	ram_start;		/* 0x0000; */
 u_int	ram_end;		/* 0xFFFF; */
 u_char  *ram=0;			/* was [65536]; modified for MSDOS compilers */
-#if !defined(SS_IKBD_6301_DISABLE_BREAKS)
+#if !defined(SSE_IKBD_6301_DISABLE_BREAKS)
 u_char *breaks;			/* Physical storage for breakpoints */
 int    break_flag;		/* Non-zero if an address containing a
 				   breakpoint has been accessed by mem_xxx */
@@ -60,7 +60,7 @@ mem_init ()
   } else {
     printf ("ram already allocated\n");
   }
-#if !defined(SS_IKBD_6301_DISABLE_BREAKS)
+#if !defined(SSE_IKBD_6301_DISABLE_BREAKS)
   /*
    * This is done here since ram and breaks are sisters
    */

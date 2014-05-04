@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_MRSTATIC_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_MRSTATIC_H)
 
 #include "mr_static.decla.h"
 
-#else//!SS_STRUCTURE_MRSTATIC_H
+#else//!SSE_STRUCTURE_MRSTATIC_H
 
 
 LRESULT __stdcall mr_static_WndProc(HWND,UINT,UINT,long);
@@ -40,4 +40,4 @@ mr_static *m_s[MAX_MR_STATICS];
 
 void mr_static_update_all();
 
-#endif//SS_STRUCTURE_MRSTATIC_H
+#endif//SSE_STRUCTURE_MRSTATIC_H

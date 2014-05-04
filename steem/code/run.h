@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_RUN_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_RUN_H)
 
 #include "run.decla.h"
 
-#else//!defined(SS_STRUCTURE_RUN_H)
+#else//!defined(SSE_STRUCTURE_RUN_H)
 
 #ifdef IN_EMU
 #define EXT
@@ -36,7 +36,7 @@ EXT DWORD speed_limit_wait_till;
 EXT int avg_frame_time_counter INIT(0);
 EXT DWORD auto_frameskip_target_time;
 #define AUTO_FRAMESKIP 8
-#if defined(STEVEN_SEAGAL) && defined(SS_VARIOUS___)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VARIOUS___)
 EXT int frameskip INIT(1);
 #else
 EXT int frameskip INIT(AUTO_FRAMESKIP);
@@ -71,7 +71,7 @@ EXT int cpu_timer_at_start_of_hbl;
           INSTRUCTION_TIME_ROUND(0); \
           INSTRUCTION_TIME((8000000-(ABSOLUTE_CPU_TIME-shifter_cycle_base)) % 10);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_HBL) && defined(SS_INT_JITTER)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_HBL) && defined(SSE_INT_JITTER)
 #else
 #define HBL_INTERRUPT  \
   {                  \
@@ -86,7 +86,7 @@ EXT int cpu_timer_at_start_of_hbl;
     debug_check_break_on_irq(BREAK_IRQ_HBL_IDX);    \
   }
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBL) && defined(SS_INT_JITTER) 
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBL) && defined(SSE_INT_JITTER) 
 #else
 #define VBL_INTERRUPT                                                        \
           {                                                               \
@@ -183,7 +183,7 @@ EXT int cpu_timer_at_start_of_hbl;
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DMA_DELAY)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DMA_DELAY)
 #define PREPARE_EVENT_CHECK_FOR_DMA       \
   if ((time_of_next_event-Dma.TransferTime) >= 0){                 \
     time_of_next_event=Dma.TransferTime;  \
@@ -203,7 +203,7 @@ typedef struct{
   EVENTPROC event;
 }screen_event_struct;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_VBI_START)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START)
 screen_event_struct event_plan_50hz[313*2+2+1],event_plan_60hz[263*2+2+1],event_plan_70hz[600*2+2+1],
                     event_plan_boosted_50hz[313*2+2+1],event_plan_boosted_60hz[263*2+2+1],event_plan_boosted_70hz[600*2+2+1];
 
@@ -225,7 +225,7 @@ void event_timer_d_timeout();
 void event_scanline();
 void event_timer_b();
 
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_IRQ_DELAY)
+#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_IRQ_DELAY)
 void event_acia_rx_irq();// not defined anymore (v3.5.2), see MFP
 #endif
 
@@ -275,4 +275,4 @@ void event_pasti_update();
 #undef EXT
 #undef INIT
 
-#endif//SS_STRUCTURE_RUN_H
+#endif//SSE_STRUCTURE_RUN_H

@@ -6,12 +6,12 @@ DESCRIPTION: The core of Steem's Multi Function Processor emulation
 the ST.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: mfp.cpp")
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_MFP_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_MFP_H)
 
 #define EXT
 #define INIT(s) =s
@@ -27,7 +27,7 @@ int mfp_timer_counter[4];
 int mfp_timer_timeout[4];
 bool mfp_timer_enabled[4]={0,0,0,0};
 int mfp_timer_period[4]={10000,10000,10000,10000};
-#if defined(SS_MFP_RATIO_PRECISION)
+#if defined(SSE_MFP_RATIO_PRECISION)
 int mfp_timer_period_fraction[4]={0,0,0,0}; //no need to init?
 int mfp_timer_period_current_fraction[4]={0,0,0,0};
 #endif
@@ -40,10 +40,10 @@ const int mfp_gpip_irq[8]={0,1,2,3,6,7,14,15};
 
 bool mfp_interrupt_enabled[16];
 int mfp_time_of_start_of_last_interrupt[16];
-#if defined(SS_MFP_IRQ_DELAY3)
+#if defined(SSE_MFP_IRQ_DELAY3)
 int mfp_time_of_set_pending[16];
 #endif
-#if defined(SS_MFP_WRITE_DELAY1)
+#if defined(SSE_MFP_WRITE_DELAY1)
 int time_of_last_write_to_mfp_reg=ACT;
 #endif
 int cpu_time_of_first_mfp_tick;
@@ -100,8 +100,8 @@ Practically on the ST, the request is placed by clearing the bit in the GPIP.
     // Transition the right way! Make the interrupt pend (don't cause an intr
     // straight away in case another more important one has just happened).
     mfp_interrupt_pend(mfp_gpip_irq[bit],ABSOLUTE_CPU_TIME);
-#if defined(STEVEN_SEAGAL) && defined(SS_MFP_IRQ_DELAY)
-/*  SS_MFP_IRQ_DELAY uses a "dirty quick fix" approach to partially imitate 
+#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_IRQ_DELAY)
+/*  SSE_MFP_IRQ_DELAY uses a "dirty quick fix" approach to partially imitate 
     a feature that's more structurally implemented in Hatari.
     Protected by option 'Hacks'.
 
@@ -113,7 +113,7 @@ to the CPU only 4 cycles later
 
   v3.6.0: undefined as it breaks Sinfull Sinuses.
   The problem may be that we act at the "set pending" stage instead
-  of "is it pending?". See SS_MFP_IRQ_DELAY3.
+  of "is it pending?". See SSE_MFP_IRQ_DELAY3.
 
 */
     if(SSE_HACKS_ON)
@@ -146,7 +146,7 @@ void calc_time_of_next_timer_b()
   int cycles_in=int(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
   if (cycles_in<cpu_cycles_from_hbl_to_timer_b){
     if (scan_y>=shifter_first_draw_line && scan_y<shifter_last_draw_line){
-#if defined(SS_MFP_TIMER_B)
+#if defined(SSE_MFP_TIMER_B)
       if(mfp_reg[1]&8)
         time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;  //put into future
       else
@@ -160,7 +160,7 @@ void calc_time_of_next_timer_b()
   }
 }
 //---------------------------------------------------------------------------
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_MFP_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_MFP_H)
 // -> mfp.decla.h
 #else
 inline BYTE mfp_get_timer_control_register(int n)
@@ -178,7 +178,7 @@ inline BYTE mfp_get_timer_control_register(int n)
 
 inline bool mfp_set_pending(int irq,int when_set)
 {
-#if defined(STEVEN_SEAGAL) && defined(SS_MFP_IACK_LATENCY)
+#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_IACK_LATENCY)
 /*
 Final Conflict
 
@@ -227,7 +227,7 @@ either run the VBL interrupt, or the main code.
   if (abs_quick(when_set-mfp_time_of_start_of_last_interrupt[irq])>=CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED){
 #endif
     mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)]|=mfp_interrupt_i_bit(irq); // Set pending
-#if defined(SS_MFP_IRQ_DELAY3)
+#if defined(SSE_MFP_IRQ_DELAY3)
     mfp_time_of_set_pending[irq]=when_set; // not ACT
 #endif
     return true;
@@ -283,7 +283,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
         if (new_control){ // Timer running in delay mode
                           // SS or pulse, but it's very unlikely
 
-#if defined(STEVEN_SEAGAL) && defined(SS_MFP_PATCH_TIMER_D)
+#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_PATCH_TIMER_D)
 /* 
     From Hatari's mfp.c: 
     new_tcdcr = IoMem[0xfffa1d] = (IoMem[0xfffa1d] & 0xf0) | 7;
@@ -299,7 +299,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
     But what about RS232?
     Second Reality 2013: this sets timer D, so of course we restrict the
     hack to changes by TOS
-    Update3.6.1B: see SS_MFP_WRITE_DELAY1, we may have a better fix now.
+    Update3.6.1B: see SSE_MFP_WRITE_DELAY1, we may have a better fix now.
 */
           if(SSE_HACKS_ON 
             && timer==3 // = Timer D
@@ -323,7 +323,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
           mfp_timer_period[timer]=int( double(mfp_timer_prescale[new_control]*int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+timer]))) * CPU_CYCLES_PER_MFP_CLK);
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_MFP_RATIO_PRECISION)
+#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_RATIO_PRECISION)
 /*  Here we do exactly what Steem authors suggested above, and it does bring the
     timing measurements at the same level as SainT and Hatari, at least in
     HWTST001.PRG by ljbk, so it's definitely an improvement, and it isn't 
@@ -331,7 +331,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 */
           mfp_timer_period_fraction[timer]=int(  1000*((double(mfp_timer_prescale[new_control]*int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+timer]))) * CPU_CYCLES_PER_MFP_CLK)-(double)mfp_timer_period[timer])  );
           mfp_timer_period_current_fraction[timer]=0;
-#if defined(SS_DEBUG) && defined(SS_MFP_RATIO)
+#if defined(SSE_DEBUG) && defined(SSE_MFP_RATIO)
           if(reg==MFPR_TBCR && new_val==8)
             TRACE_LOG("F%d y%d PC %X MFP set timer B\n",//TODO
             FRAME,scan_y,old_pc);
@@ -358,7 +358,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 
           // Make manageable time (cpu_time_of_first_mfp_tick is updated every VBL)
 //          TRACE_LOG("timer %d: %d - cpu_time_of_first_mfp_tick %d = %d\n",timer,mfp_timer_timeout[timer],cpu_time_of_first_mfp_tick,mfp_timer_timeout[timer]-cpu_time_of_first_mfp_tick);
-#if defined(SS_MFP_TIMERS_BASETIME)
+#if defined(SSE_MFP_TIMERS_BASETIME)
 /*  Fixes Panic.tos losing vertical overscan for good.
     Not sure of this, just noticed a timing discrepancy when missing top overscan, that would
     push timer 30000 cycles later.
@@ -381,7 +381,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
           mfp_timer_timeout[timer]/=MFP_CLK;
 
           // Make absolute time again
-#if defined(SS_MFP_TIMERS_BASETIME)
+#if defined(SSE_MFP_TIMERS_BASETIME)
           mfp_timer_timeout[timer]+=cpu_time_of_last_vbl;
 #else
           mfp_timer_timeout[timer]+=cpu_time_of_first_mfp_tick;
@@ -395,7 +395,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
           // This checks all timers to see if they have timed out, if they have then
           // it will set the pend bit. This is dangerous, messes up LXS!
           // mfp_check_for_timer_timeouts(); // ss not implemented
-#ifdef SS_DEBUG
+#ifdef SSE_DEBUG
 //          TRACE_LOG("F%d y%d c%d MFP Timer %C stopped/event\n",FRAME,scan_y,LINECYCLES,'A'+timer);
           if(new_val & BIT_3) // don't report stopping, it's systematic (or should be)
             TRACE_LOG("F%d y%d c%d set Timer %C %d\n",FRAME,scan_y,LINECYCLES,'A'+timer,mfp_timer_counter[timer]/64);
@@ -565,9 +565,9 @@ void ASMCALL check_for_interrupts_pending()
           break;  //time to stop looking for pending interrupts
         }
 
-#if defined(SS_MFP_IRQ_DELAY3)
+#if defined(SSE_MFP_IRQ_DELAY3)
 /*  Inspired by Hatari, fixes V8 Music System in a "less dangerous" way than
-    SS_MFP_IRQ_DELAY.
+    SSE_MFP_IRQ_DELAY.
     There's still something missing (Audio Artistic Demo).
     + it makes the plasma in Sinfull Sinuses jerky -> restrict to irq 6 (ACIA) 
     as a quick fix so that V8MS still works
@@ -575,7 +575,7 @@ void ASMCALL check_for_interrupts_pending()
     broken. We also protect this with the Hacks option (even if for ACIA the 
     risks seem to be limited)
     3.6.1: wonder if the delay isn't in the ACIA instead, like we emulated
-    before, SS_MFP_IRQ_DELAY3 not defined.
+    before, SSE_MFP_IRQ_DELAY3 not defined.
 */
         if(irq==6 && SSE_HACKS_ON
           && ACT-mfp_time_of_set_pending[irq]<4 && ACT-mfp_time_of_set_pending[irq]>=0)
@@ -587,7 +587,7 @@ void ASMCALL check_for_interrupts_pending()
         if (mfp_reg[MFPR_IPRA+i_ab] & i_bit){ //is this interrupt pending?
           if (mfp_reg[MFPR_IMRA+i_ab] & i_bit){ //is it not masked out?
 
-#if defined(STEVEN_SEAGAL) && defined(SS_BLT_BLIT_MODE_INTERRUPT)
+#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_BLIT_MODE_INTERRUPT)
 /*  Stop blitter to start interrupt. This is a bugfix and necessary for Lethal
     Xcess if we use the correct BLIT mode cycles (64x4). (I think)
 */
@@ -608,18 +608,18 @@ void ASMCALL check_for_interrupts_pending()
      if (vbl_pending){ //SS IPL4
       if ((sr & SR_IPL)<SR_IPL_4){
         //debug1=ACT;
-#if defined(SS_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_DEBUG_SHOW_INTERRUPT)
         Debug.RecordInterrupt("VBI");
 #endif
-#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
         if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_VBI)
           FrameEvents.Add(scan_y,LINECYCLES,'I',0x60);
 #endif
-#if defined(SS_DEBUG_TRACE_CONTROL) && defined(SS_INT_JITTER)
+#if defined(SSE_DEBUG_TRACE_CONTROL) && defined(SSE_INT_JITTER)
           if(TRACE_MASK2 & TRACE_CONTROL_VBI) 
             TRACE("y%d c%d VBI jit %d\n",scan_y,LINECYCLES,VblJitter[VblJitterIndex]);
 #endif
-#if defined(SS_DEBUG_FRAME_INTERRUPTS)
+#if defined(SSE_DEBUG_FRAME_INTERRUPTS)
         Debug.FrameInterrupts|=1;
 #endif
 
@@ -634,29 +634,29 @@ void ASMCALL check_for_interrupts_pending()
         // but the event hasn't fired yet.
         if (int(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl)<scanline_time_in_cpu_cycles_at_start_of_vbl){
           ASSERT(!Blit.HasBus);
-#if defined(SS_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_DEBUG_SHOW_INTERRUPT)
           Debug.RecordInterrupt("HBI");
 #endif
-#if defined(SS_INT_OSD_REPORT_HBI) && defined(SS_DEBUG)
+#if defined(SSE_INT_OSD_REPORT_HBI) && defined(SSE_DEBUG)
           if(!TRACE_ENABLED)
             TRACE_OSD("HBI");
 #endif
 
-#if defined(SS_DEBUG_FRAME_INTERRUPTS)
+#if defined(SSE_DEBUG_FRAME_INTERRUPTS)
           Debug.FrameInterrupts|=2;
 #endif
 
-#if defined(SS_DEBUG_TRACE_CONTROL) && defined(SS_INT_JITTER)
+#if defined(SSE_DEBUG_TRACE_CONTROL) && defined(SSE_INT_JITTER)
           if(TRACE_MASK2 & TRACE_CONTROL_HBI) 
             TRACE("y%d c%d HBI jit %d\n",scan_y,LINECYCLES,HblJitter[HblJitterIndex]);
 #endif
-#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
           if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_HBI)
             FrameEvents.Add(scan_y,LINECYCLES,'I',0x40);
 #endif
           HBL_INTERRUPT;
         }
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_HBL) // can happen quite a lot
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_HBL) // can happen quite a lot
         else if(LPEEK(0x0068)<0xFC0000) TRACE_LOG("no hbl %X\n",LPEEK(0x0068));
 #endif
       }
@@ -667,13 +667,13 @@ void ASMCALL check_for_interrupts_pending()
 //---------------------------------------------------------------------------
 void mfp_interrupt(int irq,int when_fired)
 {
-#if defined(SS_MFP_WRITE_DELAY1)
+#if defined(SSE_MFP_WRITE_DELAY1)
 /*  
     We try to enforce a delay between writes to MFP registers
     and triggering of (all)  interrupts.
     Fixes Audio Artistic Demo without the patch Timer D hack
     That patch is still enabled for performance so to test this you
-    must undef SS_MFP_PATCH_TIMER_D
+    must undef SSE_MFP_PATCH_TIMER_D
     Audio Artistic enables timer D, then it changes the value.
     Without the mod, it has no time to change the value, timer D
     loops forever.
@@ -698,7 +698,7 @@ void mfp_interrupt(int irq,int when_fired)
         log_to_section(LOGSECTION_INTERRUPTS,EasyStr("  but masked"));
       }else if ((mfp_reg[MFPR_ISRA+mfp_interrupt_i_ab(irq)] & (-mfp_interrupt_i_bit(irq))) || (mfp_interrupt_i_ab(irq) && mfp_reg[MFPR_ISRA])){
         log_to_section(LOGSECTION_INTERRUPTS,EasyStr("  but outprioritized - ISR = ")+HEXSl(mfp_reg[MFPR_ISRA],2)+HEXSl(mfp_reg[MFPR_ISRB],2));
-#if defined(SS_ACIA_IRQ_DELAY2)
+#if defined(SSE_ACIA_IRQ_DELAY2)
 /*  We do it here in a hacky way for now to spare code (no extra event
     like before) and because we wonder what's the real problem: 
     latency inside ACIA, or MFP/CPU? 
@@ -718,7 +718,7 @@ void mfp_interrupt(int irq,int when_fired)
             }else{
               mfp_reg[MFPR_ISRA+mfp_interrupt_i_ab(irq)]&=BYTE(~mfp_interrupt_i_bit(irq));
             }
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF) 
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF) 
             // should be rare, most programs, including TOS, poll
             if(irq==7 && Caps.Active && (Caps.WD1772.lineout&CAPSFDC_LO_INTRQ))
             {
@@ -730,39 +730,39 @@ void mfp_interrupt(int irq,int when_fired)
             vector=    (mfp_reg[MFPR_VR] & 0xf0)  +(irq);
             vector*=4;
             mfp_time_of_start_of_last_interrupt[irq]=ABSOLUTE_CPU_TIME;
-#if defined(STEVEN_SEAGAL) && defined(SS_INT_MFP)
-#if defined(SS_CPU_FETCH_TIMING)
-#if defined(STEVEN_SEAGAL) && defined(SS_CPU_FETCH_TIMING)
-            INSTRUCTION_TIME_ROUND(SS_INT_MFP_TIMING-4);
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP)
+#if defined(SSE_CPU_FETCH_TIMING)
+#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
+            INSTRUCTION_TIME_ROUND(SSE_INT_MFP_TIMING-4);
             FETCH_TIMING;
-#if defined(SS_CPU_PREFETCH_TIMING_SET_PC)
+#if defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
     INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
 #endif
 #else
             INSTRUCTION_TIME_ROUND(34);
 #endif
 #else
-            INSTRUCTION_TIME_ROUND(SS_INT_MFP_TIMING); // same
+            INSTRUCTION_TIME_ROUND(SSE_INT_MFP_TIMING); // same
 #endif
 #else
             INSTRUCTION_TIME_ROUND(56);
 #endif
 
-#if defined(SS_DEBUG_TRACE_CONTROL__________)
+#if defined(SSE_DEBUG_TRACE_CONTROL__________)
           if(irq==8&&(TRACE_MASK2 & TRACE_CONTROL_TIMERB))
             TRACE("y%d c%d PC %X TB (%X)\n",scan_y,LINECYCLES,old_pc,LPEEK(vector));
 #endif
-#if defined(SS_DEBUG_TRACE_CONTROL)
+#if defined(SSE_DEBUG_TRACE_CONTROL)
           if(TRACE_MASK2 & TRACE_CONTROL_MFP) 
             TRACE("y%d c%d MFP irq %d\n",scan_y,LINECYCLES,irq);
 #endif
-#if defined(SS_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
           if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_MFP)
             FrameEvents.Add(scan_y,LINECYCLES,'I',0x70+irq);
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)//tmp
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)//tmp
 //            TRACE_LOG("MFP Execute IRQ %d Vector %X Address %X\n",irq,vector,LPEEK(vector));
             //TRACE_LOG("MFP %d IRQ %d ",interrupt_depth,irq);
             TRACE_LOG("F%d y%d c%d: IRQ %d ",FRAME,scan_y,LINECYCLES,irq);
@@ -788,12 +788,12 @@ void mfp_interrupt(int irq,int when_fired)
             }//sw
 #endif
 
-#if defined(SS_DEBUG_FRAME_INTERRUPTS)
+#if defined(SSE_DEBUG_FRAME_INTERRUPTS)
             Debug.FrameInterrupts|=4;
             Debug.FrameMfpIrqs|= 1<<irq;
 #endif
 
-#if defined(SS_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_DEBUG_SHOW_INTERRUPT)
             Debug.RecordInterrupt("MFP",irq);
 #endif
             m68k_interrupt(LPEEK(vector));

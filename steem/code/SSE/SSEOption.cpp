@@ -9,7 +9,7 @@
 
 
 
-#if defined(SS_SSE_OPTION_STRUCT)
+#if defined(SSE_SSE_OPTION_STRUCT)
 
 TOption SSEOption; // singleton
 
@@ -27,12 +27,12 @@ TOption::TOption() {
 
 
 void TOption::Init() {
-#if defined(SS_HACKS)
+#if defined(SSE_HACKS)
   Hacks=TRUE;
 #endif
   HD6301Emu=0;
   STEMicrowire=0;
-#if defined(SS_SOUND_FILTER_STF)
+#if defined(SSE_SOUND_FILTER_STF)
   PSGFilter=1;
 #endif
   STModel=0;//STE;
@@ -61,10 +61,10 @@ void TOption::Init() {
   GhostDisk=0;
 }
 
-#endif//#if defined(SS_SSE_OPTION_STRUCT)
+#endif//#if defined(SSE_SSE_OPTION_STRUCT)
 
 
-#if defined(SS_SSE_CONFIG_STRUCT)
+#if defined(SSE_SSE_CONFIG_STRUCT)
 
 TConfig SSEConfig;
 
@@ -76,4 +76,4 @@ TConfig::TConfig() {
 #endif
 }
 
-#endif//#if defined(SS_SSE_CONFIG_STRUCT)
+#endif//#if defined(SSE_SSE_CONFIG_STRUCT)

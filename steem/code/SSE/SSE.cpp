@@ -6,7 +6,7 @@
 
 #include "SSE.h"
 #include "SSEDecla.h"
-#ifdef SS_UNIX
+#ifdef SSE_UNIX
 //#define KeyCode int
 //typede
 #endif
@@ -16,24 +16,24 @@
 
 #if defined(STEVEN_SEAGAL)
 
-#if ! defined(SS_SSE_CONFIG_STRUCT)
+#if ! defined(SSE_SSE_CONFIG_STRUCT)
 extern "C" int iDummy=0;
 #endif
 
-#if defined(SS_HACKS)
+#if defined(SSE_HACKS)
 extern "C" int SS_signal=0;
 #endif
 
 
 
-#if defined(SS_VID_RECORD_AVI) 
+#if defined(SSE_VID_RECORD_AVI) 
 #include <AVI/AviFile.h>
 CAviFile *pAviFile=0;
 BYTE video_recording=0;
-char *video_recording_codec=SS_VID_RECORD_AVI_CODEC;
+char *video_recording_codec=SSE_VID_RECORD_AVI_CODEC;
 #endif
 
-#if defined(SS_DELAY_LOAD_DLL) && defined(__BORLANDC__)
+#if defined(SSE_DELAY_LOAD_DLL) && defined(__BORLANDC__)
 // http://edn.embarcadero.com/article/28515
 FARPROC WINAPI MyLoadFailureHook(dliNotification dliNotify,DelayLoadInfo * pdli)
 {
@@ -42,7 +42,7 @@ FARPROC WINAPI MyLoadFailureHook(dliNotification dliNotify,DelayLoadInfo * pdli)
 }
 #endif
 
-#if defined(SS_OSD_SCROLLER_CONTROL)
+#if defined(SSE_OSD_SCROLLER_CONTROL)
 
 TOsdControl OsdControl;
 

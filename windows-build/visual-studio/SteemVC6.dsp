@@ -49,7 +49,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /w /W0 /Gm /GX /ZI /Od /D "_VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /I /I /I /I /GZ /c
-# ADD CPP /nologo /G6 /ML /GX /Zi /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /D "_DEBUG" /D "NO_DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /D "SS_DEBUG" /FR /EHa /c
+# ADD CPP /nologo /G6 /ML /GX /Zi /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /D "_DEBUG" /D "NO_DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /D "SSE_DEBUG" /FR /EHa /c
 # ADD BASE MTL /nologo /win32
 # ADD MTL /nologo /win32
 # ADD BASE RSC /l 0x409
@@ -110,7 +110,7 @@ PostBuild_Cmds=copy "Release\SteemBeta.exe" "G:\emu\ST\bin\steem"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /G6 /Zp16 /MD /W3 /GX /Zi /Ob2 /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /I "..\..\3rdparty\hatari" /D "NDEBUG" /D "NO_DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /FR /GA /GF /c
-# ADD CPP /nologo /G6 /Zp16 /MD /GX /Zi /Ob2 /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /I "..\..\3rdparty\sim6xxx" /D "NDEBUG" /D "DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /D "SS_DEBUG" /FR /GA /GF /c
+# ADD CPP /nologo /G6 /Zp16 /MD /GX /Zi /Ob2 /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /I "..\..\3rdparty\sim6xxx" /D "NDEBUG" /D "DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /D "SSE_DEBUG" /FR /GA /GF /c
 # ADD BASE MTL /nologo /win32
 # ADD MTL /nologo /win32
 # ADD BASE RSC /l 0x409
@@ -143,7 +143,7 @@ PostBuild_Cmds=copy "Release\BoilerBeta.exe" "G:\emu\ST\bin\steem"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /G6 /ML /GX /Zi /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /D "_DEBUG" /D "NO_DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /FR /EHa /c
-# ADD CPP /nologo /G6 /ML /GX /Zi /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /D "_DEBUG" /D "DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /D "SS_DEBUG" /FR /EHa /c
+# ADD CPP /nologo /G6 /ML /GX /Zi /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /D "_DEBUG" /D "DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /D "SSE_DEBUG" /FR /EHa /c
 # ADD BASE MTL /nologo /win32
 # ADD MTL /nologo /win32
 # ADD BASE RSC /l 0x409
@@ -172,7 +172,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /G6 /ML /w /W0 /GX /Zi /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /D "_DEBUG" /D "NO_DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /D "SS_DEBUG" /FR /EHa /c
-# ADD CPP /nologo /G6 /ML /GX /Zi /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /D "_DEBUG" /D "NO_DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /D "SS_DEBUG" /D "LEGACY_BUILD" /FR /EHa /c
+# ADD CPP /nologo /G6 /ML /GX /Zi /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /D "_DEBUG" /D "NO_DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /D "SSE_DEBUG" /D "LEGACY_BUILD" /FR /EHa /c
 # ADD BASE MTL /nologo /win32
 # ADD MTL /nologo /win32
 # ADD BASE RSC /l 0x409
@@ -236,7 +236,7 @@ PostBuild_Cmds=copy "Release\SteemBeta.exe" "G:\emu\ST\bin\steem"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /G6 /Zp16 /MD /w /W0 /GX /Zi /Ob2 /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /I "..\..\3rdparty\sim6xxx" /D "NDEBUG" /D "DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /D "SS_DEBUG" /FR /GA /GF /c
-# ADD CPP /nologo /G6 /Zp16 /MD /w /W0 /GX /Zi /Ob2 /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /I "..\..\3rdparty\sim6xxx" /D "NDEBUG" /D "DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /D "SS_DEBUG" /D "LEGACY_BUILD" /FR /GA /GF /c
+# ADD CPP /nologo /G6 /Zp16 /MD /w /W0 /GX /Zi /Ob2 /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /I "..\..\3rdparty\sim6xxx" /D "NDEBUG" /D "DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /D "SSE_DEBUG" /D "LEGACY_BUILD" /FR /GA /GF /c
 # ADD BASE MTL /nologo /win32
 # ADD MTL /nologo /win32
 # ADD BASE RSC /l 0x409
@@ -269,7 +269,7 @@ PostBuild_Cmds=copy "Release\BoilerBeta.exe" "G:\emu\ST\bin\steem"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /G6 /ML /GX /Zi /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /D "_DEBUG" /D "DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /D "SS_DEBUG" /FR /EHa /c
-# ADD CPP /nologo /G6 /ML /GX /Zi /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /D "_DEBUG" /D "DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /D "SS_DEBUG" /D "LEGACY_BUILD" /FR /EHa /c
+# ADD CPP /nologo /G6 /ML /GX /Zi /Gy /I "..\..\include\\" /I "..\..\steem\code\\" /I "..\..\3rdparty\\" /D "_DEBUG" /D "DEBUG_BUILD" /D "VC_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "STEVEN_SEAGAL" /D "SSE_DEBUG" /D "LEGACY_BUILD" /FR /EHa /c
 # ADD BASE MTL /nologo /win32
 # ADD MTL /nologo /win32
 # ADD BASE RSC /l 0x409
@@ -451,6 +451,7 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\SSE\SSECpu.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEDisk.h"\
 	"..\..\steem\code\SSE\SSEDma.h"\
 	"..\..\steem\code\SSE\SSEDrive.h"\
 	"..\..\Steem\code\SSE\SSEFloppy.cpp"\
@@ -784,6 +785,7 @@ DEP_CPP_MAIN_=\
 	"..\..\Steem\code\SSE\SSEDebug.cpp"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEDisk.h"\
 	"..\..\steem\code\SSE\SSEDma.h"\
 	"..\..\steem\code\SSE\SSEDrive.h"\
 	"..\..\Steem\code\SSE\SSEFloppy.h"\
@@ -7744,6 +7746,7 @@ DEP_CPP_SSECA=\
 	"..\..\steem\code\SSE\SSECpu.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEDisk.h"\
 	"..\..\steem\code\SSE\SSEDma.h"\
 	"..\..\steem\code\SSE\SSEDrive.h"\
 	"..\..\Steem\code\SSE\SSEFloppy.h"\
@@ -7891,6 +7894,7 @@ DEP_CPP_SSEDE=\
 	"..\..\steem\code\SSE\SSECapsImg.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEDisk.h"\
 	"..\..\steem\code\SSE\SSEDma.h"\
 	"..\..\steem\code\SSE\SSEDrive.h"\
 	"..\..\Steem\code\SSE\SSEFloppy.h"\
@@ -8012,6 +8016,7 @@ DEP_CPP_SSEDM=\
 	"..\..\steem\code\SSE\SSECpu.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEDisk.h"\
 	"..\..\steem\code\SSE\SSEDma.h"\
 	"..\..\steem\code\SSE\SSEDrive.h"\
 	"..\..\Steem\code\SSE\SSEFloppy.h"\
@@ -8074,6 +8079,7 @@ DEP_CPP_SSEDR=\
 	"..\..\steem\code\SSE\SSECpu.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEDisk.h"\
 	"..\..\steem\code\SSE\SSEDma.h"\
 	"..\..\steem\code\SSE\SSEDrive.h"\
 	"..\..\Steem\code\SSE\SSEFloppy.h"\
@@ -8139,6 +8145,7 @@ DEP_CPP_SSEFL=\
 	"..\..\steem\code\SSE\SSECpu.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEDisk.h"\
 	"..\..\steem\code\SSE\SSEDma.h"\
 	"..\..\steem\code\SSE\SSEDrive.h"\
 	"..\..\Steem\code\SSE\SSEFloppy.h"\
@@ -8466,6 +8473,7 @@ DEP_CPP_SSESC=\
 	"..\..\steem\code\SSE\SSECpu.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEDisk.h"\
 	"..\..\steem\code\SSE\SSEDma.h"\
 	"..\..\steem\code\SSE\SSEDrive.h"\
 	"..\..\Steem\code\SSE\SSEFloppy.h"\
@@ -8894,6 +8902,7 @@ DEP_CPP_SSEWD=\
 	"..\..\steem\code\SSE\SSECapsImg.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEDisk.h"\
 	"..\..\steem\code\SSE\SSEDma.h"\
 	"..\..\steem\code\SSE\SSEDrive.h"\
 	"..\..\Steem\code\SSE\SSEFloppy.h"\

@@ -6,11 +6,11 @@ takes the raw bytes from the MIDI ACIA and buffers them before sending them
 on to the Windows multimedia MIDI API. 
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: midi.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_MIDI_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_MIDI_H)
 
 #define EXT
 #define INIT(s) =s
@@ -345,7 +345,7 @@ void CALLBACK TMIDIIn::InProc(HMIDIIN Handle,UINT Msg,DWORD dwThis,DWORD MidiMes
 
   if (This->Killing) return;
 
-#ifdef SS_VS2012_INIT
+#ifdef SSE_VS2012_INIT
   BYTE *pData = 0;	// JLG VS2012 uninitialized
 #else
   BYTE *pData;

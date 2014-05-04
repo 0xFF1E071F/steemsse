@@ -5,11 +5,11 @@ DESCRIPTION: This file contains both the code for the Steem joysticks dialog
 and the code to read the PC joysticks.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: stjoy.cpp")
 #endif
 
-#ifdef SS_UNIX
+#ifdef SSE_UNIX
 #define EXT extern
 EXT KeyCode VK_F11,VK_F12,VK_END;
 EXT KeyCode VK_LEFT,VK_RIGHT,VK_UP,VK_DOWN,VK_TAB;
@@ -21,7 +21,7 @@ EXT KeyCode VK_NUMLOCK,VK_SCROLL;
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STJOY_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_STJOY_H)
 
 
 #define EXT
@@ -29,14 +29,14 @@ EXT KeyCode VK_NUMLOCK,VK_SCROLL;
 
 EXT WORD paddles_ReadMask INIT(0);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
 #else
 EXT BYTE stick[8];
 #endif
 
 //#ifdef IN_MAIN
 
-#ifdef SS_UNIX
+#ifdef SSE_UNIX
 char AxisToName[7]={'X','Y','Z','R','U','V','P'};
 #else
 static char AxisToName[7]={'X','Y','Z','R','U','V','P'};
@@ -72,7 +72,7 @@ int nJoySetup=0;
 DWORD JoyAnyButtonMask[MAX_PC_JOYS];
 
 
-#endif//#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_STJOY_H)
+#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_STJOY_H)
 
 
 //---------------------------------------------------------------------------

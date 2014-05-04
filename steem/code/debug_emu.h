@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DEBUGEMU_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DEBUGEMU_H)
 
 #include "debug_emu.decla.h"
 
-#else//!SS_STRUCTURE_DEBUGEMU_H
+#else//!SSE_STRUCTURE_DEBUGEMU_H
 
 #ifdef IN_EMU
 #define EXT
@@ -182,4 +182,4 @@ DynamicArray<DEBUGPLUGININFO> debug_plugins;
 #undef INIT
 //---------------------------------------------------------------------------
 
-#endif//!SS_STRUCTURE_DEBUGEMU_H
+#endif//!SSE_STRUCTURE_DEBUGEMU_H

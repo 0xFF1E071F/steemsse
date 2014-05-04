@@ -22,7 +22,7 @@
 
 #include "SSEFloppy.h"//temp!!
 
-#if defined(SS_FDC)
+#if defined(SSE_FDC)
 
 #define LOGSECTION LOGSECTION_FDC
 
@@ -53,7 +53,7 @@ BYTE TWD1772::IORead(BYTE Line) {
     switch(Line){
     case 0: // STR
 
-#if defined(SS_DISK_GHOST)
+#if defined(SSE_DISK_GHOST)
       if(CommandWasIntercepted)
       {
         ior_byte=STR; // just "motor on" $80
@@ -62,7 +62,7 @@ BYTE TWD1772::IORead(BYTE Line) {
       }
 #endif
 
-#if defined(SS_DISK_STW)
+#if defined(SSE_DISK_STW)
       if(SF314[drive].ImageType.Extension==EXT_STW)
       {
         ior_byte=STR;
@@ -111,7 +111,7 @@ BYTE TWD1772::IORead(BYTE Line) {
           " - Reading status register as "+Str(itoa(STR,d2_t_buf,2)).LPad(8,'0')+
           " ($"+HEXSl(STR,2)+"), clearing IRQ"); )
         floppy_irq_flag=0;
-#if defined(SS_FDC_FORCE_INTERRUPT)
+#if defined(SSE_FDC_FORCE_INTERRUPT)
 /*
 "When using the immediate interrupt condition (i3 = 1) an interrupt
  is immediately generated and the current command terminated. 
@@ -184,10 +184,10 @@ BYTE TWD1772::IORead(BYTE Line) {
           }
 #endif//debug
 L1://temp
-#if !defined(SS_DEBUG_TRACE_IDE)
+#if !defined(SSE_DEBUG_TRACE_IDE)
 //      TRACE_LOG("FDC HBL %d STR %X\n",hbl_count,ior_byte);
 #endif
-#if defined(SS_DEBUG_TRACE_CONTROL)
+#if defined(SSE_DEBUG_TRACE_CONTROL)
   if(TRACE_MASK3 & TRACE_CONTROL_FDCSTR)
     TRACE_LOG("FDC STR %X\n",ior_byte);
 #endif
@@ -208,7 +208,7 @@ L1://temp
     }//sw
 
     // IPF handling
-#if defined(SS_IPF)
+#if defined(SSE_IPF)
     if(Caps.IsIpf(drive))
       ior_byte=Caps.ReadWD1772(Line);
 #endif
@@ -227,13 +227,13 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
   case 0: // CR - could be blocked, can't record here :(
     {
 
-#if defined(SS_DISK_GHOST)
+#if defined(SSE_DISK_GHOST)
       //if(CommandWasIntercepted) TRACE("clear CommandWasIntercepted\n");
       CommandWasIntercepted=0; // reset this at each new command
 #endif
 
-#if defined(SS_DEBUG) && defined(SS_DRIVE)
-#if defined(SS_DEBUG_TRACE_CONTROL)
+#if defined(SSE_DEBUG) && defined(SSE_DRIVE)
+#if defined(SSE_DEBUG_TRACE_CONTROL)
       if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
       {
         BYTE drive_char= (psg_reg[PSGR_PORT_A]&6)==6? '?' : 'A'+DRIVE;
@@ -242,14 +242,14 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #endif
 #endif
 
-#if defined(SS_DRIVE_SOUND)
-      if(SSE_DRIVE_SOUND)
+#if defined(SSE_DRIVE_SOUND)
+      if(SSEOption.DriveSound)
       {
-#if defined(SS_DMA)
+#if defined(SSE_DMA)
         Dma.UpdateRegs();
 #endif
         SF314[drive].TrackAtCommand=SF314[drive].Track();
-#if defined(SS_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
+#if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
         SF314[drive].Sound_CheckCommand(io_src_b);
 #else
         SF314[0].Sound_CheckCommand(io_src_b);
@@ -257,7 +257,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
       }
 #endif//sound
 
-#if defined(SS_DRIVE_COMPUTE_BOOT_CHECKSUM)
+#if defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)
 
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_IMAGE_INFO
@@ -275,15 +275,15 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #endif//checksum
 
       bool can_send=true; // are we in Steem's native emu?
-#if defined(SS_IPF)
+#if defined(SSE_IPF)
       can_send=can_send&&!Caps.IsIpf(drive);
 #endif
 
 #if USE_PASTI 
       can_send=can_send&&!(hPasti && pasti_active
-#if defined(SS_DRIVE)&&defined(SS_PASTI_ONLY_STX)
+#if defined(SSE_DRIVE)&&defined(SSE_PASTI_ONLY_STX)
         && (!PASTI_JUST_STX || 
-#if defined(SS_DISK_IMAGETYPE)
+#if defined(SSE_DISK_IMAGETYPE)
 // in fact we should refactor this
         SF314[floppy_current_drive()].ImageType.Extension==EXT_STX)
 #else
@@ -293,16 +293,16 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
         );
 #endif//pasti
 
-#if defined(SS_DISK_STW)
+#if defined(SSE_DISK_STW)
       can_send=can_send && SF314[drive].ImageType.Extension!=EXT_STW;
 #endif
 
       //if(!can_send) TRACE("Not native\n");
 
-#if defined(SS_DISK_GHOST)
+#if defined(SSE_DISK_GHOST)
       if(!can_send && SSE_GHOST_DISK) //should we intercept?
       {
-#if defined(SS_DISK_GHOST_SECTOR)
+#if defined(SSE_DISK_GHOST_SECTOR)
 
         TWD1772IDField IDField;
         IDField.track=TR;
@@ -316,7 +316,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
           CR=io_src_b; //update this...
           if(!SF314[DRIVE].State.Ghost) // need to open ghost image?
           {
-            EasyStr STGPath=FloppyDrive[DRIVE].GetImageFile();//SS_PASTI_NO_RESET
+            EasyStr STGPath=FloppyDrive[DRIVE].GetImageFile();//SSE_PASTI_NO_RESET
             STGPath+=".STG"; 
             if(GhostDisk[DRIVE].Open(STGPath.Text))
               SF314[DRIVE].State.Ghost=1; 
@@ -334,10 +334,10 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
           {
             *(GhostDisk[DRIVE].SectorData+i)=PEEK(Dma.BaseAddress);
 
-#if defined(SS_DEBUG_TRACE_CONTROL)
+#if defined(SSE_DEBUG_TRACE_CONTROL)
             if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
             {
-#if defined(SS_DMA_TRACK_TRANSFER)
+#if defined(SSE_DMA_TRACK_TRANSFER)
               if( ! (i%16) )
               {//TODO we know the direction
                 Dma.Datachunk++; 
@@ -353,7 +353,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 
             Dma.IncAddress();
           }
-#if defined(SS_DEBUG_TRACE_CONTROL)
+#if defined(SSE_DEBUG_TRACE_CONTROL)
           if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
             TRACE("\n");
 #endif
@@ -371,7 +371,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
           // need to open ghost image?
           if(!SF314[DRIVE].State.Ghost) 
           {
-            EasyStr STGPath=FloppyDrive[DRIVE].GetImageFile();//SS_PASTI_NO_RESET
+            EasyStr STGPath=FloppyDrive[DRIVE].GetImageFile();//SSE_PASTI_NO_RESET
             STGPath+=".STG"; 
             if(Exists(STGPath)) // else it would create STG file
             {
@@ -390,10 +390,10 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
             {
               PEEK(Dma.BaseAddress)=*(GhostDisk[drive].SectorData+i);
 
-#if defined(SS_DEBUG_TRACE_CONTROL)
+#if defined(SSE_DEBUG_TRACE_CONTROL)
               if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
               {
-#if defined(SS_DMA_TRACK_TRANSFER)
+#if defined(SSE_DMA_TRACK_TRANSFER)
                 if( ! (i%16) )
                 {
                   Dma.Datachunk++; // !!!!!!!!! debug,boiler,"bytes" only!!!!
@@ -406,7 +406,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #endif
               Dma.IncAddress();
             }            
-#if defined(SS_DEBUG_TRACE_CONTROL)
+#if defined(SSE_DEBUG_TRACE_CONTROL)
             if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
               TRACE("\n");
 #endif
@@ -414,7 +414,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
             WD1772.CommandWasIntercepted=1;
             agenda_fdc_finished(0); 
 
-#if defined(SS_DISK_GHOST_SECTOR_STX1)
+#if defined(SSE_DISK_GHOST_SECTOR_STX1)
 #if USE_PASTI
             if(hPasti && pasti_active && SF314[drive].ImageType.Manager==MNGR_PASTI)
             {
@@ -430,19 +430,19 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
   //            TRACE("pasti BaseAddress=%x\n",ppi.dmaBase);
             }
 #endif//#if USE_PASTI 
-#endif//#if defined(SS_DISK_GHOST_SECTOR_STX1)
+#endif//#if defined(SSE_DISK_GHOST_SECTOR_STX1)
 
           }
         }
 #endif
       }
-#endif//#if defined(SS_DISK_GHOST)
+#endif//#if defined(SSE_DISK_GHOST)
 
       if(can_send)
         floppy_fdc_command(io_src_b); // in fdc.cpp
 //      else  TRACE_LOG("FDC %X not native, drive %C type %d\n",io_src_b,'A'+YM2149.Drive(),SF314[YM2149.Drive()].ImageType);
 
-#if defined(SS_DISK_STW)
+#if defined(SSE_DISK_STW)
       if(SF314[drive].ImageType.Extension==EXT_STW)
         WriteCR(io_src_b);
 #endif
@@ -452,11 +452,11 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
     break;
 
   case 1: // TR
-#if defined(SS_DEBUG_TRACE_CONTROL)
+#if defined(SSE_DEBUG_TRACE_CONTROL)
   if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
     TRACE_LOG("FDC TR %d\n",io_src_b);
 #endif
-#if defined(SS_FDC_CHANGE_TRACK_WHILE_BUSY)
+#if defined(SSE_FDC_CHANGE_TRACK_WHILE_BUSY)
     if(!(STR&FDC_STR_BUSY)||ADAT)
       fdc_tr=io_src_b;
 #else
@@ -470,11 +470,11 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
     break;
 
   case 2: // SR
-#if defined(SS_DEBUG_TRACE_CONTROL)
+#if defined(SSE_DEBUG_TRACE_CONTROL)
   if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
     TRACE_LOG("FDC SR %d (pc %x)\n",io_src_b,old_pc );
 #endif
-#if defined(SS_FDC_CHANGE_SECTOR_WHILE_BUSY)
+#if defined(SSE_FDC_CHANGE_SECTOR_WHILE_BUSY)
     if(!(STR&FDC_STR_BUSY)||ADAT)
       SR=io_src_b; // fixes Delirious 4 loader without Pasti
     
@@ -489,7 +489,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
     break;
 
   case 3: // DR
-#if defined(SS_DEBUG_TRACE_CONTROL)
+#if defined(SSE_DEBUG_TRACE_CONTROL)
   if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
     TRACE_LOG("FDC DR %d\n",io_src_b);
 #endif
@@ -499,10 +499,10 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
   }
   
   // IPF handling
-#if defined(SS_IPF)
+#if defined(SSE_IPF)
 
   if(Caps.IsIpf(drive)) 
-#if defined(SS_DISK_GHOST)
+#if defined(SSE_DISK_GHOST)
     if(SSE_GHOST_DISK && WD1772.CommandWasIntercepted)
     {
       TRACE_LOG("Caps doesn't get command %x\n",io_src_b);
@@ -518,17 +518,17 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 }
 
 
-#if defined(SS_FDC_RESET)
+#if defined(SSE_FDC_RESET)
 void TWD1772::Reset(bool Cold) {
   STR=2;
-#ifdef SS_FDC_FORCE_INTERRUPT
+#ifdef SSE_FDC_FORCE_INTERRUPT
   InterruptCondition=0;
 #endif
-#if defined(SS_FDC_INDEX_PULSE_COUNTER)
+#if defined(SSE_FDC_INDEX_PULSE_COUNTER)
   IndexCounter=0;
 #endif
 
-#if defined(SS_DISK_GHOST)
+#if defined(SSE_DISK_GHOST)
   CommandWasIntercepted=0;
 #endif
 
@@ -536,14 +536,14 @@ void TWD1772::Reset(bool Cold) {
 #endif
 
 
-#if defined(SS_DEBUG) || defined(SS_OSD_DRIVE_LED)
+#if defined(SSE_DEBUG) || defined(SSE_OSD_DRIVE_LED)
 int TWD1772::WritingToDisk() {
   return((CR&0xF0)==0xF0 || (CR&0xE0)==0xA0);
 }
 #endif
 
 
-#if defined(SS_DEBUG)
+#if defined(SSE_DEBUG)
 
 /*
 Bits:
@@ -627,7 +627,7 @@ void TWD1772::TraceStatus() {
 
 #endif//debug
 
-#if defined(SS_DISK_STW)
+#if defined(SSE_DISK_STW)
 
 /*  Managing STW images, a nice challenge!
 */
@@ -655,4 +655,4 @@ WORD TWD1772::ByteOfNextID(WORD current_byte) {
 #endif
 
 
-#endif//SS_FDC
+#endif//SSE_FDC

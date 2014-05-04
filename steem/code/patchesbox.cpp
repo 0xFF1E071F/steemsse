@@ -6,7 +6,7 @@ apply patches to fix ST programs that don't work or are incompatible with
 Steem.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: patchesbox.cpp")
 #endif
 

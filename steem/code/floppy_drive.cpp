@@ -7,11 +7,11 @@ to move to the correct place in the disk image file and then reads/writes
 data.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: floppydrive.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_FLOPPYDRIVE_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_FLOPPYDRIVE_H)
 TFloppyImage FloppyDrive[2];
 bool FloppyArchiveIsReadWrite=0;
 #endif
@@ -28,18 +28,18 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 
   TRACE_LOG("SetDisk %s %s\n",File.c_str(),CompressedDiskName.c_str());
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DRIVE)
   int drive=-1;
   if (this==&FloppyDrive[0]) drive=0;
   if (this==&FloppyDrive[1]) drive=1;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_DRIVE_MOTOR_ON)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DRIVE_MOTOR_ON)
   if(drive!=-1)
     SF314[drive].MotorOn=false;
 #endif
 
-#if defined(SS_DISK_GHOST)
+#if defined(SSE_DISK_GHOST)
   // SetDisk() may be called without call to RemoveDisk() first
   if(SF314[drive].State.Ghost) 
     GhostDisk[drive].Close();
@@ -48,10 +48,10 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 
   if (IsSameStr_I(File,ImageFile) && IsSameStr_I(CompressedDiskName,DiskInZip)) return 0;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_PASTI_ONLY_STX)  
+#if defined(STEVEN_SEAGAL) && defined(SSE_PASTI_ONLY_STX)  
   //bugfix 3.5.4, this part would reset ImageType right before we leave... (^^)
   if(drive!=-1)
-#if defined(SS_DISK_IMAGETYPE)
+#if defined(SSE_DISK_IMAGETYPE)
     ZeroMemory(&SF314[drive].ImageType,sizeof(SF314[drive].ImageType));
 #else
     SF314[drive].ImageType=0;//default, this will detect STX disks (3)
@@ -72,17 +72,17 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   MSA=IsSameStr_I(Ext,"MSA");
   STT=IsSameStr_I(Ext,"STT");
   DIM=IsSameStr_I(Ext,"DIM");
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
   bool IPF=IsSameStr_I(Ext,"IPF");
-#ifdef SS_IPF_CTRAW
-  bool CTR=IsSameStr_I(Ext,SS_IPF_CTRAW);
+#ifdef SSE_IPF_CTRAW
+  bool CTR=IsSameStr_I(Ext,SSE_IPF_CTRAW);
 #endif
-#ifdef SS_IPF_KFSTREAM
-  bool RAW=IsSameStr_I(Ext,SS_IPF_KFSTREAM);
+#ifdef SSE_IPF_KFSTREAM
+  bool RAW=IsSameStr_I(Ext,SSE_IPF_KFSTREAM);
 #endif
     ;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
   bool SCP=IsSameStr_I(Ext,"SCP");
 #endif
   
@@ -107,11 +107,11 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
           if (CompressedDiskName.Empty() || IsSameStr_I(CompressedDiskName,fn.Text)){
             // Blank DiskInZip name means default disk (first in zip)
             if (Type==DISK_PASTI){
-#if defined(STEVEN_SEAGAL) && defined(SS_PASTI_ONLY_STX)
+#if defined(STEVEN_SEAGAL) && defined(SSE_PASTI_ONLY_STX)
               if(drive!=-1)
               {
                 TRACE_LOG("Disk in %c is STX\n",'A'+drive);
-#if defined(SS_DISK_IMAGETYPE)
+#if defined(SSE_DISK_IMAGETYPE)
                 SF314[drive].ImageType.Manager=MNGR_PASTI;
                 SF314[drive].ImageType.Extension=EXT_STX;
 #else
@@ -120,28 +120,28 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
               }
 #endif
               f_PastiDisk=true;
-#if defined(SS_PASTI_AUTO_SWITCH)
+#if defined(SSE_PASTI_AUTO_SWITCH)
               pasti_active=true;
 #endif
             }else{
               MSA=has_extension(fn,"MSA");
               STT=has_extension(fn,"STT");
               DIM=has_extension(fn,"DIM");
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
               IPF=has_extension(fn,"IPF");
-#ifdef SS_IPF_CTRAW
-              CTR=has_extension(fn,SS_IPF_CTRAW);
+#ifdef SSE_IPF_CTRAW
+              CTR=has_extension(fn,SSE_IPF_CTRAW);
 #endif
-#ifdef SS_IPF_KFSTREAM
-              RAW=has_extension(fn,SS_IPF_KFSTREAM);
+#ifdef SSE_IPF_KFSTREAM
+              RAW=has_extension(fn,SSE_IPF_KFSTREAM);
 #endif
 #endif//ipf
-#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
               SCP=has_extension(fn,"SCP");
 #endif
 
 //              /*
-#if defined(SS_PASTI_AUTO_SWITCH)
+#if defined(SSE_PASTI_AUTO_SWITCH)
               pasti_active=false;
 #endif
 //              */
@@ -175,15 +175,15 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       return FIMAGE_NODISKSINZIP;
     }
   }else if (Type==DISK_PASTI
-#if defined(SS_PASTI_AUTO_SWITCH)
+#if defined(SSE_PASTI_AUTO_SWITCH)
     && (IsSameStr_I(Ext,"STX")||pasti_active)
 #endif
     ){
-#if defined(STEVEN_SEAGAL)&&defined(SS_PASTI_ONLY_STX)
+#if defined(STEVEN_SEAGAL)&&defined(SSE_PASTI_ONLY_STX)
     if(drive!=-1)
     {
       TRACE_LOG("Disk in %c is STX\n",'A'+drive);
-#if defined(SS_DISK_IMAGETYPE)
+#if defined(SSE_DISK_IMAGETYPE)
       SF314[drive].ImageType.Manager=MNGR_PASTI;
       SF314[drive].ImageType.Extension=EXT_STX;
 #else
@@ -192,7 +192,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     }
 #endif
     f_PastiDisk=true;
-#if defined(SS_PASTI_AUTO_SWITCH)
+#if defined(SSE_PASTI_AUTO_SWITCH)
     pasti_active=true;
 #endif
   }else if (Type==0){
@@ -200,15 +200,15 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     return FIMAGE_WRONGFORMAT;
   }
 //  TRACE("pasti %d\n",pasti_active);
-//#if !(defined(STEVEN_SEAGAL) && defined(SS_PASTI_ONLY_STX))
-#if !(defined(STEVEN_SEAGAL) && defined(SS_DRIVE))
+//#if !(defined(STEVEN_SEAGAL) && defined(SSE_PASTI_ONLY_STX))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_DRIVE))
   int drive=-1;
   if (this==&FloppyDrive[0]) drive=0;
   if (this==&FloppyDrive[1]) drive=1;
 #endif
   if (drive==-1) f_PastiDisk=0; // Never use pasti for extra drives
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
   if(CAPSIMG_OK && drive!=-1 && Caps.IsIpf(drive))
     RemoveDisk();
 #endif
@@ -218,7 +218,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     int Ret=0;
     if (drive>=0 && hPasti){
       RemoveDisk();
-#if defined(SS_PASTI_ONLY_STX)
+#if defined(SSE_PASTI_ONLY_STX)
       pasti_active=true; //3.6.1, because RemoveDisk clears it
 #endif
       FILE *nf=fopen(File,"rb");
@@ -261,16 +261,16 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       return Ret;
     }
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
   }else if(CAPSIMG_OK &&
-#if defined(SS_IPF_CTRAW)
+#if defined(SSE_IPF_CTRAW)
     (CTR||IPF))
 #else
     IPF) 
 #endif
   { 
-#if defined(SS_IPF_CTRAW)
-#if defined(SS_DISK_IMAGETYPE)
+#if defined(SSE_IPF_CTRAW)
+#if defined(SSE_DISK_IMAGETYPE)
     SF314[drive].ImageType.Manager=MNGR_CAPS;
     SF314[drive].ImageType.Extension=IPF?EXT_IPF:EXT_CTR;
 #else
@@ -281,8 +281,8 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     int Ret=Caps.InsertDisk(drive,File,&img_info);
     if(Ret==FIMAGE_WRONGFORMAT)
     {
-#if defined(SS_IPF_CTRAW) //wrong switch TODO
-#if defined(SS_DISK_IMAGETYPE)
+#if defined(SSE_IPF_CTRAW) //wrong switch TODO
+#if defined(SSE_DISK_IMAGETYPE)
       ZeroMemory(&SF314[drive].ImageType,sizeof(SF314[drive].ImageType));
 #else
       SF314[drive].ImageType=0;
@@ -295,7 +295,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     Sides=img_info.maxhead+1;
     TracksPerSide=img_info.maxcylinder;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
   }else if(SCP) { 
 //    ScpImageInfo...
     int Ret=Scp.InsertDisk(drive,File);
@@ -617,13 +617,13 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   DiskInZip=NewDiskInZip;
   ImageFile=OriginalFile;
   PastiDisk=f_PastiDisk;
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
   IPFDisk=IPF;
-#ifdef SS_IPF_CTRAW
+#ifdef SSE_IPF_CTRAW
   CTRDisk=CTR;
 #endif
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
   SCPDisk=SCP;
 #endif
   WrittenTo=0;
@@ -653,14 +653,14 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 bool TFloppyImage::ReinsertDisk()
 {
   if (Empty() || PastiDisk
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
     || IPFDisk
-#ifdef SS_IPF_CTRAW
+#ifdef SSE_IPF_CTRAW
     || CTRDisk
 #endif
 
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
     || SCPDisk //not right, but we're starting...
 #endif
 
@@ -685,13 +685,13 @@ bool TFloppyImage::ReinsertDisk()
 bool TFloppyImage::OpenFormatFile()
 {
   if (f==NULL || ReadOnly || Format_f || STT_File || PastiDisk
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
     || IPFDisk
-#ifdef SS_IPF_CTRAW
+#ifdef SSE_IPF_CTRAW
     || CTRDisk
 #endif
 #endif 
-#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
     || SCPDisk
 #endif   
     ) return 0;
@@ -728,13 +728,13 @@ bool TFloppyImage::OpenFormatFile()
 bool TFloppyImage::ReopenFormatFile()
 {
   if (Format_f==NULL || f==NULL || ReadOnly || PastiDisk
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
     || IPFDisk
-#ifdef SS_IPF_CTRAW
+#ifdef SSE_IPF_CTRAW
     || CTRDisk
 #endif
 #endif    
-#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
     || SCPDisk
 #endif
     ) return 0;
@@ -766,11 +766,11 @@ bool TFloppyImage::SeekSector(int Side,int Track,int Sector,bool Format)
     return true;
   }
 
-#if defined(SS_DRIVE_SINGLE_SIDE_NAT1)
+#if defined(SSE_DRIVE_SINGLE_SIDE_NAT1)
   if( SSEOption.SingleSideDriveMap&(floppy_current_drive()+1) )
     Side=0;
 #endif
-#if defined(SS_DRIVE_SINGLE_SIDE_RND)//3.7.0
+#if defined(SSE_DRIVE_SINGLE_SIDE_RND)//3.7.0
   if( SSEOption.SingleSideDriveMap&(floppy_current_drive()+1) && Side==1)
     return true;// -> RNF
 #endif
@@ -900,7 +900,7 @@ int TFloppyImage::GetIDFields(int Side,int Track,FDC_IDField IDList[30])
     for (int n=0;n<int(Format ? FormatMostSectors:SectorsPerTrack);n++){
       IDList[n].Track=BYTE(Track);
       IDList[n].Side=BYTE(Side);
-#if defined(SS_DRIVE_11_SECTORS)
+#if defined(SSE_DRIVE_11_SECTORS)
 /*  11 sectors interleave '6': 1 7 2 8 3 9 4 10 5 11 6
     -Load faster in ADAT mode (Overscan Demos)
     -ACopy 1.30 & Flofor report interleave = DRIVE_11SEC_INTERLEAVE (6), yeah!
@@ -975,7 +975,7 @@ int TFloppyImage::GetRawTrackData(int Side,int Track)
 void TFloppyImage::RemoveDisk(bool LoseChanges)
 {
 
-#if defined(STEVEN_SEAGAL) &&  defined(SS_VAR_DONT_REMOVE_NON_EXISTENT_IMAGES)
+#if defined(STEVEN_SEAGAL) &&  defined(SSE_VAR_DONT_REMOVE_NON_EXISTENT_IMAGES)
   if(Empty()) // nothing to do
     return;
 #endif
@@ -985,17 +985,17 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   if (Removing) return;
   Removing=true;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
   int drive=-1;
   if (this==&FloppyDrive[0]) drive=0;
   if (this==&FloppyDrive[1]) drive=1;
-#ifdef SS_DEBUG
+#ifdef SSE_DEBUG
   if((drive==0 || drive==1) && !Empty())
     TRACE_LOG("Remove disk %s from drive %c\n",DiskName.Text,'A'+drive );
 #endif
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
 //TODO
 #endif
 
@@ -1217,7 +1217,7 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
 
 #if USE_PASTI
   if (PastiDisk){
-#if !(defined(STEVEN_SEAGAL) && defined(SS_IPF)) // put above
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_IPF)) // put above
     int drive=-1;
     if (this==&FloppyDrive[0]) drive=0;
     if (this==&FloppyDrive[1]) drive=1;
@@ -1229,7 +1229,7 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
       pdi.fileBuf=PastiBuf;
       pdi.bufSize=PastiBufLen;
       if (pasti->SaveImg(drive,0,&pdi)==FALSE){
-#if !(defined(STEVEN_SEAGAL) && defined(SS_PASTI_NO_RESET))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_PASTI_NO_RESET))
         int err=pasti->GetLastError();
         if (err!=pastiErrUnimpl){
           Alert(T("Unable to save to disk image, changes have been lost!"),T("Disk Image Error"),MB_OK);
@@ -1238,12 +1238,12 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
       }
     }
     pasti->Eject(drive,ABSOLUTE_CPU_TIME);
-#if defined(SS_PASTI_ONLY_STX)
+#if defined(SSE_PASTI_ONLY_STX)
 /*  3.6.1 Disable Pasti at once when ejecting STX disk if the other disk
     isn't STX and option 'Pasti only for STX' is checked.
 */
     if(PASTI_JUST_STX && 
-#if defined(SS_DISK_IMAGETYPE)
+#if defined(SSE_DISK_IMAGETYPE)
       SF314[1-floppy_current_drive()].ImageType.Extension!=EXT_STX)
 #else
       SF314[1-floppy_current_drive()].ImageType!=DISK_PASTI)
@@ -1260,16 +1260,16 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   PastiBufLen=0;
   PastiDisk=0;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
   if(CAPSIMG_OK && drive!=-1 && Caps.IsIpf(drive))
     Caps.RemoveDisk(drive);
   IPFDisk=
-#ifdef SS_IPF_CTRAW
+#ifdef SSE_IPF_CTRAW
     CTRDisk=
 #endif
     0;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SS_SCP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
   SCPDisk=0;
 #endif
 
@@ -1278,7 +1278,7 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   if (Format_f) fclose(Format_f);
   Format_f=NULL;
 
-#if defined(SS_DISK_GHOST)
+#if defined(SSE_DISK_GHOST)
   // This makes sure to update the image before leaving, though
   // there's a destructor. Really needed?
   if(SSE_GHOST_DISK && SF314[drive].State.Ghost)

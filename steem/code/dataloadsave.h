@@ -1,8 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SS_STRUCTURE_DATALOADSAVE_H)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DATALOADSAVE_H)
 
 #include "dataloadsave.decla.h"
 
-#else//!SS_STRUCTURE_DATALOADSAVE_H
+#else//!SSE_STRUCTURE_DATALOADSAVE_H
 
 #define SEC(n) if (SecDisabled[int(n)]==0)
 
