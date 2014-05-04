@@ -310,6 +310,7 @@ DEP_CPP_EMU_C=\
 	"..\..\3rdparty\caps\comlib.h"\
 	"..\..\3rdparty\caps\Comtype.h"\
 	"..\..\3rdparty\dsp\dsp.h"\
+	"..\..\3rdparty\FreeImage\FreeImage.h"\
 	"..\..\3rdparty\pasti\pasti.h"\
 	"..\..\3rdparty\SDL-WIN\include\begin_code.h"\
 	"..\..\3rdparty\SDL-WIN\include\close_code.h"\
@@ -345,7 +346,6 @@ DEP_CPP_EMU_C=\
 	"..\..\3rdparty\SDL-WIN\include\SDL_version.h"\
 	"..\..\3rdparty\SDL-WIN\include\SDL_video.h"\
 	"..\..\3rdparty\various\neochrome.h"\
-	"..\..\3rdparty\various\sound.h"\
 	"..\..\3rdparty\various\ym2149_fixed_vol.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\circularbuffer.h"\
@@ -446,30 +446,36 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\steem\code\SSE\SSE6301.cpp"\
 	"..\..\steem\code\SSE\SSE6301.h"\
+	"..\..\steem\code\SSE\SSECapsImg.h"\
 	"..\..\steem\code\SSE\SSECpu.cpp"\
 	"..\..\steem\code\SSE\SSECpu.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEDma.h"\
+	"..\..\steem\code\SSE\SSEDrive.h"\
 	"..\..\Steem\code\SSE\SSEFloppy.cpp"\
 	"..\..\Steem\code\SSE\SSEFloppy.h"\
 	"..\..\steem\code\SSE\SSEFrameReport.cpp"\
 	"..\..\steem\code\SSE\SSEFrameReport.h"\
+	"..\..\steem\code\SSE\SSEGhostDisk.h"\
 	"..\..\steem\code\SSE\SSEInline.h"\
 	"..\..\steem\code\SSE\SSEInterrupt.cpp"\
 	"..\..\steem\code\SSE\SSEInterrupt.h"\
 	"..\..\steem\code\SSE\SSEMMU.h"\
 	"..\..\steem\code\SSE\SSEOption.h"\
 	"..\..\steem\code\SSE\SSEParameters.h"\
+	"..\..\steem\code\SSE\SSEPsg.h"\
+	"..\..\steem\code\SSE\SSEScp.h"\
 	"..\..\steem\code\SSE\SSESDL.cpp"\
 	"..\..\steem\code\SSE\SSESDL.h"\
 	"..\..\steem\code\SSE\SSEShifter.cpp"\
 	"..\..\steem\code\SSE\SSEShifter.h"\
-	"..\..\steem\code\SSE\SSEShifterEvents.cpp"\
-	"..\..\steem\code\SSE\SSEShifterEvents.h"\
 	"..\..\steem\code\SSE\SSESTF.cpp"\
 	"..\..\steem\code\SSE\SSESTF.h"\
+	"..\..\steem\code\SSE\SSESTW.h"\
 	"..\..\steem\code\SSE\SSEVideo.cpp"\
 	"..\..\steem\code\SSE\SSEVideo.h"\
+	"..\..\steem\code\SSE\SSEWD1772.h"\
 	"..\..\steem\code\SteemFreeImage.h"\
 	"..\..\steem\code\steemh.decla.h"\
 	"..\..\steem\code\steemh.h"\
@@ -578,6 +584,7 @@ DEP_CPP_MAIN_=\
 	"..\..\3rdparty\caps\comlib.h"\
 	"..\..\3rdparty\caps\Comtype.h"\
 	"..\..\3rdparty\dsp\dsp.h"\
+	"..\..\3rdparty\FreeImage\FreeImage.h"\
 	"..\..\3rdparty\pasti\pasti.h"\
 	"..\..\3rdparty\SDL-WIN\include\begin_code.h"\
 	"..\..\3rdparty\SDL-WIN\include\close_code.h"\
@@ -772,21 +779,28 @@ DEP_CPP_MAIN_=\
 	"..\..\steem\code\shortcutbox.h"\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\steem\code\SSE\SSE6301.h"\
+	"..\..\steem\code\SSE\SSECapsImg.h"\
 	"..\..\steem\code\SSE\SSECpu.h"\
 	"..\..\Steem\code\SSE\SSEDebug.cpp"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEDma.h"\
+	"..\..\steem\code\SSE\SSEDrive.h"\
 	"..\..\Steem\code\SSE\SSEFloppy.h"\
 	"..\..\steem\code\SSE\SSEFrameReport.h"\
+	"..\..\steem\code\SSE\SSEGhostDisk.h"\
 	"..\..\steem\code\SSE\SSEInterrupt.h"\
 	"..\..\steem\code\SSE\SSEM68000.h"\
 	"..\..\steem\code\SSE\SSEMMU.h"\
 	"..\..\steem\code\SSE\SSEOption.h"\
 	"..\..\steem\code\SSE\SSEParameters.h"\
+	"..\..\steem\code\SSE\SSEPsg.h"\
+	"..\..\steem\code\SSE\SSEScp.h"\
 	"..\..\steem\code\SSE\SSESDL.h"\
 	"..\..\steem\code\SSE\SSEShifter.h"\
-	"..\..\steem\code\SSE\SSEShifterEvents.h"\
 	"..\..\steem\code\SSE\SSESTF.h"\
+	"..\..\steem\code\SSE\SSESTW.h"\
+	"..\..\steem\code\SSE\SSEWD1772.h"\
 	"..\..\steem\code\SteemFreeImage.h"\
 	"..\..\steem\code\steemh.decla.h"\
 	"..\..\steem\code\steemh.h"\
@@ -2706,6 +2720,18 @@ SOURCE=..\..\3rdparty\various\neochrome.h
 # Begin Source File
 
 SOURCE=..\..\3rdparty\various\sound.h
+# End Source File
+# End Group
+# Begin Group "FreeImage"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\3rdparty\FreeImage\FreeImage.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\3rdparty\FreeImage\FreeImage.lib
 # End Source File
 # End Group
 # End Group
@@ -7676,6 +7702,76 @@ SOURCE=..\..\steem\code\SSE\SSE6301.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\steem\code\SSE\SSECapsImg.cpp
+DEP_CPP_SSECA=\
+	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\3rdparty\caps\CapsAPI.h"\
+	"..\..\3rdparty\caps\CapsFDC.h"\
+	"..\..\3rdparty\caps\CapsLib.h"\
+	"..\..\3rdparty\caps\comlib.h"\
+	"..\..\3rdparty\caps\Comtype.h"\
+	"..\..\3rdparty\dsp\dsp.h"\
+	"..\..\3rdparty\pasti\pasti.h"\
+	"..\..\include\binary.h"\
+	"..\..\include\clarity.h"\
+	"..\..\include\configstorefile.h"\
+	"..\..\include\directory_tree.h"\
+	"..\..\include\dynamicarray.h"\
+	"..\..\include\easystr.h"\
+	"..\..\include\easystringlist.h"\
+	"..\..\include\mymisc.h"\
+	"..\..\include\notwin_mymisc.h"\
+	"..\..\include\x\hxc.h"\
+	"..\..\include\x\icongroup.h"\
+	"..\..\include\x\x_mymisc.h"\
+	"..\..\steem\code\acc.decla.h"\
+	"..\..\steem\code\blitter.decla.h"\
+	"..\..\steem\code\conditions.h"\
+	"..\..\steem\code\cpu.decla.h"\
+	"..\..\steem\code\debug_emu.decla.h"\
+	"..\..\steem\code\diskman.decla.h"\
+	"..\..\steem\code\draw.decla.h"\
+	"..\..\steem\code\emulator.decla.h"\
+	"..\..\steem\code\fdc.decla.h"\
+	"..\..\steem\code\floppy_drive.decla.h"\
+	"..\..\steem\code\iorw.decla.h"\
+	"..\..\steem\code\mfp.decla.h"\
+	"..\..\steem\code\notwindows.h"\
+	"..\..\steem\code\psg.decla.h"\
+	"..\..\steem\code\run.decla.h"\
+	"..\..\steem\code\SSE\SSE.h"\
+	"..\..\steem\code\SSE\SSECapsImg.h"\
+	"..\..\steem\code\SSE\SSECpu.h"\
+	"..\..\Steem\code\SSE\SSEDebug.h"\
+	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEDma.h"\
+	"..\..\steem\code\SSE\SSEDrive.h"\
+	"..\..\Steem\code\SSE\SSEFloppy.h"\
+	"..\..\steem\code\SSE\SSEGhostDisk.h"\
+	"..\..\steem\code\SSE\SSEInterrupt.h"\
+	"..\..\steem\code\SSE\SSEOption.h"\
+	"..\..\steem\code\SSE\SSEParameters.h"\
+	"..\..\steem\code\SSE\SSEPsg.h"\
+	"..\..\steem\code\SSE\SSEScp.h"\
+	"..\..\steem\code\SSE\SSEShifter.h"\
+	"..\..\steem\code\SSE\SSESTF.h"\
+	"..\..\steem\code\SSE\SSESTW.h"\
+	"..\..\steem\code\SSE\SSEWD1772.h"\
+	"..\..\steem\code\steemh.decla.h"\
+	"..\..\steem\code\stemdialogs.decla.h"\
+	"..\..\steem\code\stemdialogs.h"\
+	"..\..\steem\pch.h"\
+	
+NODEP_CPP_SSECA=\
+	"..\..\include\beos\be_mymisc.h"\
+	
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\SSE\SSECapsImg.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\steem\code\SSE\SSECpu.cpp
 DEP_CPP_SSECP=\
 	"..\..\3rdparty\avi\AviFile.h"\
@@ -7792,13 +7888,21 @@ DEP_CPP_SSEDE=\
 	"..\..\steem\code\notwindows.h"\
 	"..\..\steem\code\run.decla.h"\
 	"..\..\steem\code\SSE\SSE.h"\
+	"..\..\steem\code\SSE\SSECapsImg.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEDma.h"\
+	"..\..\steem\code\SSE\SSEDrive.h"\
 	"..\..\Steem\code\SSE\SSEFloppy.h"\
+	"..\..\steem\code\SSE\SSEGhostDisk.h"\
 	"..\..\steem\code\SSE\SSEMMU.h"\
 	"..\..\steem\code\SSE\SSEOption.h"\
 	"..\..\steem\code\SSE\SSEParameters.h"\
+	"..\..\steem\code\SSE\SSEPsg.h"\
+	"..\..\steem\code\SSE\SSEScp.h"\
 	"..\..\steem\code\SSE\SSESTF.h"\
+	"..\..\steem\code\SSE\SSESTW.h"\
+	"..\..\steem\code\SSE\SSEWD1772.h"\
 	"..\..\steem\code\steemh.decla.h"\
 	"..\..\steem\code\stemdialogs.decla.h"\
 	"..\..\steem\pch.h"\
@@ -7849,8 +7953,25 @@ SOURCE=..\..\steem\code\SSE\SSEDecla.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\Steem\code\SSE\SSEFloppy.cpp
-DEP_CPP_SSEFL=\
+SOURCE=..\..\steem\code\SSE\SSEDisk.cpp
+DEP_CPP_SSEDI=\
+	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\include\binary.h"\
+	"..\..\include\clarity.h"\
+	"..\..\include\easystr.h"\
+	"..\..\steem\code\SSE\SSE.h"\
+	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\pch.h"\
+	
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\SSE\SSEDisk.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\SSE\SSEDma.cpp
+DEP_CPP_SSEDM=\
 	"..\..\3rdparty\avi\AviFile.h"\
 	"..\..\3rdparty\caps\CapsAPI.h"\
 	"..\..\3rdparty\caps\CapsFDC.h"\
@@ -7859,7 +7980,6 @@ DEP_CPP_SSEFL=\
 	"..\..\3rdparty\caps\Comtype.h"\
 	"..\..\3rdparty\dsp\dsp.h"\
 	"..\..\3rdparty\pasti\pasti.h"\
-	"..\..\3rdparty\various\sound.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\clarity.h"\
 	"..\..\include\configstorefile.h"\
@@ -7888,15 +8008,150 @@ DEP_CPP_SSEFL=\
 	"..\..\steem\code\psg.decla.h"\
 	"..\..\steem\code\run.decla.h"\
 	"..\..\steem\code\SSE\SSE.h"\
+	"..\..\steem\code\SSE\SSECapsImg.h"\
 	"..\..\steem\code\SSE\SSECpu.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEDma.h"\
+	"..\..\steem\code\SSE\SSEDrive.h"\
 	"..\..\Steem\code\SSE\SSEFloppy.h"\
+	"..\..\steem\code\SSE\SSEGhostDisk.h"\
 	"..\..\steem\code\SSE\SSEInterrupt.h"\
 	"..\..\steem\code\SSE\SSEOption.h"\
 	"..\..\steem\code\SSE\SSEParameters.h"\
+	"..\..\steem\code\SSE\SSEPsg.h"\
+	"..\..\steem\code\SSE\SSEScp.h"\
 	"..\..\steem\code\SSE\SSEShifter.h"\
 	"..\..\steem\code\SSE\SSESTF.h"\
+	"..\..\steem\code\SSE\SSESTW.h"\
+	"..\..\steem\code\SSE\SSEWD1772.h"\
+	"..\..\steem\code\steemh.decla.h"\
+	"..\..\steem\code\stemdialogs.decla.h"\
+	"..\..\steem\code\stemdialogs.h"\
+	"..\..\steem\pch.h"\
+	
+NODEP_CPP_SSEDM=\
+	"..\..\include\beos\be_mymisc.h"\
+	
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\SSE\SSEDma.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\SSE\SSEDrive.cpp
+DEP_CPP_SSEDR=\
+	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\3rdparty\caps\CapsAPI.h"\
+	"..\..\3rdparty\caps\CapsFDC.h"\
+	"..\..\3rdparty\caps\CapsLib.h"\
+	"..\..\3rdparty\caps\comlib.h"\
+	"..\..\3rdparty\caps\Comtype.h"\
+	"..\..\3rdparty\dsp\dsp.h"\
+	"..\..\3rdparty\pasti\pasti.h"\
+	"..\..\3rdparty\various\sound.h"\
+	"..\..\include\binary.h"\
+	"..\..\include\clarity.h"\
+	"..\..\include\dynamicarray.h"\
+	"..\..\include\easystr.h"\
+	"..\..\steem\code\acc.decla.h"\
+	"..\..\steem\code\blitter.decla.h"\
+	"..\..\steem\code\conditions.h"\
+	"..\..\steem\code\cpu.decla.h"\
+	"..\..\steem\code\debug_emu.decla.h"\
+	"..\..\steem\code\draw.decla.h"\
+	"..\..\steem\code\emulator.decla.h"\
+	"..\..\steem\code\fdc.decla.h"\
+	"..\..\steem\code\floppy_drive.decla.h"\
+	"..\..\steem\code\iorw.decla.h"\
+	"..\..\steem\code\mfp.decla.h"\
+	"..\..\steem\code\notwindows.h"\
+	"..\..\steem\code\psg.decla.h"\
+	"..\..\steem\code\run.decla.h"\
+	"..\..\steem\code\SSE\SSE.h"\
+	"..\..\steem\code\SSE\SSECapsImg.h"\
+	"..\..\steem\code\SSE\SSECpu.h"\
+	"..\..\Steem\code\SSE\SSEDebug.h"\
+	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEDma.h"\
+	"..\..\steem\code\SSE\SSEDrive.h"\
+	"..\..\Steem\code\SSE\SSEFloppy.h"\
+	"..\..\steem\code\SSE\SSEGhostDisk.h"\
+	"..\..\steem\code\SSE\SSEInterrupt.h"\
+	"..\..\steem\code\SSE\SSEOption.h"\
+	"..\..\steem\code\SSE\SSEParameters.h"\
+	"..\..\steem\code\SSE\SSEPsg.h"\
+	"..\..\steem\code\SSE\SSEScp.h"\
+	"..\..\steem\code\SSE\SSEShifter.h"\
+	"..\..\steem\code\SSE\SSESTF.h"\
+	"..\..\steem\code\SSE\SSESTW.h"\
+	"..\..\steem\code\SSE\SSEWD1772.h"\
+	"..\..\steem\code\steemh.decla.h"\
+	"..\..\steem\pch.h"\
+	
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\SSE\SSEDrive.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\Steem\code\SSE\SSEFloppy.cpp
+DEP_CPP_SSEFL=\
+	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\3rdparty\caps\CapsAPI.h"\
+	"..\..\3rdparty\caps\CapsFDC.h"\
+	"..\..\3rdparty\caps\CapsLib.h"\
+	"..\..\3rdparty\caps\comlib.h"\
+	"..\..\3rdparty\caps\Comtype.h"\
+	"..\..\3rdparty\dsp\dsp.h"\
+	"..\..\3rdparty\pasti\pasti.h"\
+	"..\..\include\binary.h"\
+	"..\..\include\clarity.h"\
+	"..\..\include\configstorefile.h"\
+	"..\..\include\directory_tree.h"\
+	"..\..\include\dynamicarray.h"\
+	"..\..\include\easystr.h"\
+	"..\..\include\easystringlist.h"\
+	"..\..\include\mymisc.h"\
+	"..\..\include\notwin_mymisc.h"\
+	"..\..\include\x\hxc.h"\
+	"..\..\include\x\icongroup.h"\
+	"..\..\include\x\x_mymisc.h"\
+	"..\..\steem\code\acc.decla.h"\
+	"..\..\steem\code\blitter.decla.h"\
+	"..\..\steem\code\conditions.h"\
+	"..\..\steem\code\cpu.decla.h"\
+	"..\..\steem\code\debug_emu.decla.h"\
+	"..\..\steem\code\diskman.decla.h"\
+	"..\..\steem\code\draw.decla.h"\
+	"..\..\steem\code\emulator.decla.h"\
+	"..\..\steem\code\fdc.decla.h"\
+	"..\..\steem\code\floppy_drive.decla.h"\
+	"..\..\steem\code\iorw.decla.h"\
+	"..\..\steem\code\mfp.decla.h"\
+	"..\..\steem\code\notwindows.h"\
+	"..\..\steem\code\psg.decla.h"\
+	"..\..\steem\code\run.decla.h"\
+	"..\..\steem\code\SSE\SSE.h"\
+	"..\..\steem\code\SSE\SSECapsImg.h"\
+	"..\..\steem\code\SSE\SSECpu.h"\
+	"..\..\Steem\code\SSE\SSEDebug.h"\
+	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEDma.h"\
+	"..\..\steem\code\SSE\SSEDrive.h"\
+	"..\..\Steem\code\SSE\SSEFloppy.h"\
+	"..\..\steem\code\SSE\SSEGhostDisk.h"\
+	"..\..\steem\code\SSE\SSEInterrupt.h"\
+	"..\..\steem\code\SSE\SSEOption.h"\
+	"..\..\steem\code\SSE\SSEParameters.h"\
+	"..\..\steem\code\SSE\SSEPsg.h"\
+	"..\..\steem\code\SSE\SSEScp.h"\
+	"..\..\steem\code\SSE\SSEShifter.h"\
+	"..\..\steem\code\SSE\SSESTF.h"\
+	"..\..\steem\code\SSE\SSESTW.h"\
+	"..\..\steem\code\SSE\SSEWD1772.h"\
 	"..\..\steem\code\steemh.decla.h"\
 	"..\..\steem\code\stemdialogs.decla.h"\
 	"..\..\steem\code\stemdialogs.h"\
@@ -8009,6 +8264,30 @@ SOURCE=..\..\steem\code\SSE\SSEFrameReport.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\steem\code\SSE\SSEGhostDisk.cpp
+DEP_CPP_SSEGH=\
+	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\include\binary.h"\
+	"..\..\include\clarity.h"\
+	"..\..\include\easystr.h"\
+	"..\..\steem\code\conditions.h"\
+	"..\..\steem\code\draw.decla.h"\
+	"..\..\steem\code\notwindows.h"\
+	"..\..\steem\code\SSE\SSE.h"\
+	"..\..\Steem\code\SSE\SSEDebug.h"\
+	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEGhostDisk.h"\
+	"..\..\steem\code\SSE\SSEParameters.h"\
+	"..\..\steem\code\SSE\SSEWD1772.h"\
+	"..\..\steem\pch.h"\
+	
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\SSE\SSEGhostDisk.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\steem\code\SSE\SSEInline.h
 # End Source File
 # Begin Source File
@@ -8113,6 +8392,108 @@ SOURCE=..\..\steem\code\SSE\SSEParameters.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\steem\code\SSE\SSEPsg.cpp
+DEP_CPP_SSEPS=\
+	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\3rdparty\dsp\dsp.h"\
+	"..\..\include\binary.h"\
+	"..\..\include\clarity.h"\
+	"..\..\include\dynamicarray.h"\
+	"..\..\include\easystr.h"\
+	"..\..\steem\code\acc.decla.h"\
+	"..\..\steem\code\conditions.h"\
+	"..\..\steem\code\cpu.decla.h"\
+	"..\..\steem\code\debug_emu.decla.h"\
+	"..\..\steem\code\draw.decla.h"\
+	"..\..\steem\code\emulator.decla.h"\
+	"..\..\steem\code\iorw.decla.h"\
+	"..\..\steem\code\notwindows.h"\
+	"..\..\steem\code\psg.decla.h"\
+	"..\..\steem\code\SSE\SSE.h"\
+	"..\..\Steem\code\SSE\SSEDebug.h"\
+	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEParameters.h"\
+	"..\..\steem\code\SSE\SSEPsg.h"\
+	"..\..\steem\code\steemh.decla.h"\
+	"..\..\steem\pch.h"\
+	
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\SSE\SSEPsg.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\SSE\SSEScp.cpp
+DEP_CPP_SSESC=\
+	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\3rdparty\caps\CapsAPI.h"\
+	"..\..\3rdparty\caps\CapsFDC.h"\
+	"..\..\3rdparty\caps\CapsLib.h"\
+	"..\..\3rdparty\caps\comlib.h"\
+	"..\..\3rdparty\caps\Comtype.h"\
+	"..\..\3rdparty\dsp\dsp.h"\
+	"..\..\3rdparty\pasti\pasti.h"\
+	"..\..\include\binary.h"\
+	"..\..\include\clarity.h"\
+	"..\..\include\configstorefile.h"\
+	"..\..\include\directory_tree.h"\
+	"..\..\include\dynamicarray.h"\
+	"..\..\include\easystr.h"\
+	"..\..\include\easystringlist.h"\
+	"..\..\include\mymisc.h"\
+	"..\..\include\notwin_mymisc.h"\
+	"..\..\include\x\hxc.h"\
+	"..\..\include\x\icongroup.h"\
+	"..\..\include\x\x_mymisc.h"\
+	"..\..\steem\code\acc.decla.h"\
+	"..\..\steem\code\blitter.decla.h"\
+	"..\..\steem\code\conditions.h"\
+	"..\..\steem\code\cpu.decla.h"\
+	"..\..\steem\code\debug_emu.decla.h"\
+	"..\..\steem\code\diskman.decla.h"\
+	"..\..\steem\code\draw.decla.h"\
+	"..\..\steem\code\emulator.decla.h"\
+	"..\..\steem\code\fdc.decla.h"\
+	"..\..\steem\code\floppy_drive.decla.h"\
+	"..\..\steem\code\iorw.decla.h"\
+	"..\..\steem\code\mfp.decla.h"\
+	"..\..\steem\code\notwindows.h"\
+	"..\..\steem\code\psg.decla.h"\
+	"..\..\steem\code\run.decla.h"\
+	"..\..\steem\code\SSE\SSE.h"\
+	"..\..\steem\code\SSE\SSECapsImg.h"\
+	"..\..\steem\code\SSE\SSECpu.h"\
+	"..\..\Steem\code\SSE\SSEDebug.h"\
+	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEDma.h"\
+	"..\..\steem\code\SSE\SSEDrive.h"\
+	"..\..\Steem\code\SSE\SSEFloppy.h"\
+	"..\..\steem\code\SSE\SSEGhostDisk.h"\
+	"..\..\steem\code\SSE\SSEInterrupt.h"\
+	"..\..\steem\code\SSE\SSEOption.h"\
+	"..\..\steem\code\SSE\SSEParameters.h"\
+	"..\..\steem\code\SSE\SSEPsg.h"\
+	"..\..\steem\code\SSE\SSEScp.h"\
+	"..\..\steem\code\SSE\SSEShifter.h"\
+	"..\..\steem\code\SSE\SSESTF.h"\
+	"..\..\steem\code\SSE\SSESTW.h"\
+	"..\..\steem\code\SSE\SSEWD1772.h"\
+	"..\..\steem\code\steemh.decla.h"\
+	"..\..\steem\code\stemdialogs.decla.h"\
+	"..\..\steem\code\stemdialogs.h"\
+	"..\..\steem\pch.h"\
+	
+NODEP_CPP_SSESC=\
+	"..\..\include\beos\be_mymisc.h"\
+	
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\SSE\SSEScp.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\steem\code\SSE\SSESDL.cpp
 DEP_CPP_SSESD=\
 	"..\..\3rdparty\SDL-WIN\include\begin_code.h"\
@@ -8199,6 +8580,7 @@ SOURCE=..\..\steem\code\SSE\SSESDL.h
 SOURCE=..\..\steem\code\SSE\SSEShifter.cpp
 DEP_CPP_SSESH=\
 	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\3rdparty\FreeImage\FreeImage.h"\
 	"..\..\3rdparty\various\neochrome.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\clarity.h"\
@@ -8227,7 +8609,6 @@ DEP_CPP_SSESH=\
 	"..\..\steem\code\SSE\SSEOption.h"\
 	"..\..\steem\code\SSE\SSEParameters.h"\
 	"..\..\steem\code\SSE\SSEShifter.h"\
-	"..\..\steem\code\SSE\SSEShifterEvents.cpp"\
 	"..\..\steem\code\SSE\SSESTF.h"\
 	"..\..\steem\code\steemh.decla.h"\
 	"..\..\steem\pch.h"\
@@ -8401,6 +8782,30 @@ SOURCE=..\..\steem\code\SSE\SSESTF.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\steem\code\SSE\SSESTW.cpp
+DEP_CPP_SSESTW=\
+	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\include\binary.h"\
+	"..\..\include\clarity.h"\
+	"..\..\include\easystr.h"\
+	"..\..\steem\code\conditions.h"\
+	"..\..\steem\code\draw.decla.h"\
+	"..\..\steem\code\notwindows.h"\
+	"..\..\steem\code\SSE\SSE.h"\
+	"..\..\Steem\code\SSE\SSEDebug.h"\
+	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEParameters.h"\
+	"..\..\steem\code\SSE\SSESTW.h"\
+	"..\..\steem\code\SSE\SSEWD1772.h"\
+	"..\..\steem\pch.h"\
+	
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\SSE\SSESTW.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\steem\code\SSE\SSEVideo.cpp
 DEP_CPP_SSEVI=\
 	"..\..\3rdparty\avi\AviFile.h"\
@@ -8418,6 +8823,8 @@ DEP_CPP_SSEVI=\
 	
 
 !IF  "$(CFG)" == "Steem - Win32 Debug"
+
+# ADD CPP /Zp1
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Release"
 
@@ -8453,6 +8860,57 @@ DEP_CPP_SSEVI=\
 # Begin Source File
 
 SOURCE=..\..\steem\code\SSE\SSEVideo.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\SSE\SSEWD1772.cpp
+DEP_CPP_SSEWD=\
+	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\3rdparty\caps\CapsAPI.h"\
+	"..\..\3rdparty\caps\CapsFDC.h"\
+	"..\..\3rdparty\caps\CapsLib.h"\
+	"..\..\3rdparty\caps\comlib.h"\
+	"..\..\3rdparty\caps\Comtype.h"\
+	"..\..\3rdparty\dsp\dsp.h"\
+	"..\..\3rdparty\pasti\pasti.h"\
+	"..\..\include\binary.h"\
+	"..\..\include\clarity.h"\
+	"..\..\include\dynamicarray.h"\
+	"..\..\include\easystr.h"\
+	"..\..\steem\code\acc.decla.h"\
+	"..\..\steem\code\conditions.h"\
+	"..\..\steem\code\cpu.decla.h"\
+	"..\..\steem\code\debug_emu.decla.h"\
+	"..\..\steem\code\draw.decla.h"\
+	"..\..\steem\code\emulator.decla.h"\
+	"..\..\steem\code\fdc.decla.h"\
+	"..\..\steem\code\floppy_drive.decla.h"\
+	"..\..\steem\code\iorw.decla.h"\
+	"..\..\steem\code\mfp.decla.h"\
+	"..\..\steem\code\notwindows.h"\
+	"..\..\steem\code\psg.decla.h"\
+	"..\..\steem\code\run.decla.h"\
+	"..\..\steem\code\SSE\SSE.h"\
+	"..\..\steem\code\SSE\SSECapsImg.h"\
+	"..\..\Steem\code\SSE\SSEDebug.h"\
+	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEDma.h"\
+	"..\..\steem\code\SSE\SSEDrive.h"\
+	"..\..\Steem\code\SSE\SSEFloppy.h"\
+	"..\..\steem\code\SSE\SSEGhostDisk.h"\
+	"..\..\steem\code\SSE\SSEOption.h"\
+	"..\..\steem\code\SSE\SSEParameters.h"\
+	"..\..\steem\code\SSE\SSEPsg.h"\
+	"..\..\steem\code\SSE\SSEScp.h"\
+	"..\..\steem\code\SSE\SSESTW.h"\
+	"..\..\steem\code\SSE\SSEWD1772.h"\
+	"..\..\steem\code\steemh.decla.h"\
+	"..\..\steem\pch.h"\
+	
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\code\SSE\SSEWD1772.h
 # End Source File
 # End Group
 # Begin Group "Unix"

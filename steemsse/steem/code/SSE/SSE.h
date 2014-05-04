@@ -96,26 +96,38 @@ and all his silly mods are gone!
 
 #if defined(STEVEN_SEAGAL)
 
-//#define SS_BETA //title, OSD, plus some testing
+//#define SS_BETA //title, OSD, plus some testing - new features
+//#define SS_BETA_BUGFIX // beta for just bugfixes
 
-#ifdef SS_BETA //TODO check before release what will stay beta...
+#if defined(SS_BETA) //TODO check before release what will stay beta...
 
-#define SSE_VERSION 362
-#define SSE_VERSION_TXT "3.6.2" 
+#define SSE_VERSION 370 // big features coming up
+#define SSE_VERSION_TXT "3.7.0" 
 #ifdef DEBUG_BUILD
-#define WINDOW_TITLE "Steem Boiler 3.6.2B"
+#define WINDOW_TITLE "Steem Boiler 3.7.0B"
 #else
-#define WINDOW_TITLE "Steem Beta 3.6.2"
+#define WINDOW_TITLE "Steem Beta 3.7.0"
 #endif
-#else // next planned release
 
-#define SSE_VERSION 362
-// check snapshot Version (in LoadSave.h); rc\resource.rc
-#define SSE_VERSION_TXT "3.6.2" 
+#elif defined(SS_BETA_BUGFIX) // bugfixes (point release)
+
+#define SSE_VERSION 363
+#define SSE_VERSION_TXT "3.6.3" 
 #ifdef DEBUG_BUILD
-#define WINDOW_TITLE "Steem Boiler 3.6.2"
+#define WINDOW_TITLE "Steem Boiler 3.6.3B"
 #else
-#define WINDOW_TITLE "Steem SSE 3.6.2"
+#define WINDOW_TITLE "Steem Beta 3.6.3"
+#endif
+
+#else // release
+
+#define SSE_VERSION 363
+// check snapshot Version (in LoadSave.h); rc\resource.rc
+#define SSE_VERSION_TXT "3.6.3" 
+#ifdef DEBUG_BUILD
+#define WINDOW_TITLE "Steem Boiler 3.6.3"
+#else
+#define WINDOW_TITLE "Steem SSE 3.6.3"
 #endif
 
 #endif
@@ -160,7 +172,7 @@ and all his silly mods are gone!
 #undef SS_UNIX
 #endif
 
-#if SSE_VERSION<370 && !defined(SS_BETA)
+#if SSE_VERSION<380 && !defined(SS_BETA)
 #undef SS_SDL 
 #endif
 
@@ -172,7 +184,7 @@ and all his silly mods are gone!
 // TEMP //
 //////////
 
-#if defined(SS_BETA)
+#if defined(SS_BETA) || defined(SS_BETA_BUGFIX)
 //#define TEST01
 //#define TEST02
 //#define TEST03
@@ -586,6 +598,9 @@ and all his silly mods are gone!
 #define SS_DISK       // Disk images 3.6.1
 #define SS_DRIVE      // SF314 floppy disk drive
 #define SS_FDC        // WD1772 floppy disk controller
+#if SSE_VERSION>=370
+#define SS_FLOPPY_EVENT//TODO
+#endif
 #if defined(WIN32)
 #define SS_IPF        // CAPS support (IPF disk images) 
 #define SS_PASTI      // Improvements in Pasti support (STX disk images)
@@ -603,7 +618,26 @@ and all his silly mods are gone!
 //TODO move much SS_DRIVE code here
 
 #if defined(SS_DISK)
-#define SS_DISK_IMAGETYPE //3.6.2
+
+#if SSE_VERSION>=370
+
+//imagetype needed for ghost & stw
+#define SS_DISK_GHOST //3.7.0
+#define SS_DISK_IMAGETYPE //3.7.0
+#define SS_DISK_STW // 3.7.0
+
+#if defined(SS_DISK_GHOST)
+#define SS_DISK_GHOST_SECTOR // intercept write 1 sector
+#define SS_DISK_GHOST_SECTOR_STX1 // in pasti
+#endif
+
+#if defined(SS_DISK_STW)
+#define SS_DISK_STW_DISK_MANAGER //new context option
+#define SS_DISK_STW_DISK_MANAGER1 // no custom
+#endif
+
+#endif//v3.7.0 
+
 #endif
 
 
@@ -615,16 +649,25 @@ and all his silly mods are gone!
 
 //#define SS_DMA_ADDRESS // enforcing order for write (no use?)
 #define SS_DMA_ADDRESS_EVEN
-//#define SS_DMA_DOUBLE_FIFO // works but overkill  
-//#define SS_DMA_DELAY // works but overkill
+
+#if SSE_VERSION>=370
+#define SS_DMA_DOUBLE_FIFO // works but overkill  //3.7.0 define then remove def?
+#endif
+
+#if SSE_VERSION>=370
+#define SS_DMA_DRQ
+#endif
+
+//#define SS_DMA_DELAY // works but overkill 3.7.0 -> use generic floppy event?
 #define SS_DMA_COUNT_CYCLES
 #define SS_DMA_FDC_ACCESS
-//#define SS_DMA_FDC_READ_HIGH_BYTE // like pasti, 0
+//#define SS_DMA_FDC_READ_HIGH_BYTE // like pasti, 0  
 #define SS_DMA_FIFO // first made for CAPS 
 #define SS_DMA_FIFO_NATIVE // then extended for Steem native (not R/W tracks)
 #define SS_DMA_FIFO_PASTI // and Pasti
 #define SS_DMA_FIFO_READ_ADDRESS // save some bytes...
 #define SS_DMA_FIFO_READ_ADDRESS2 // save 4 bytes more...
+#define SS_DMA_IO
 #define SS_DMA_READ_STATUS 
 #define SS_DMA_SECTOR_COUNT
 #define SS_DMA_WRITE_CONTROL
@@ -654,15 +697,25 @@ and all his silly mods are gone!
 #define SS_DRIVE_MOTOR_ON_IPF//3.6.1 TODO
 #define SS_DRIVE_MULTIPLE_SECTORS
 #define SS_DRIVE_READ_ADDRESS_TIMING
-#define SS_DRIVE_11_SECTORS
+#define SS_DRIVE_11_SECTORS //TODO acopy13A?
 #define SS_DRIVE_READ_TRACK_11
 #define SS_DRIVE_READ_TRACK_11B //Gap 4: 1
 #define SS_DRIVE_READ_TRACK_11C //Gap 5
 #define SS_DRIVE_RW_SECTOR_TIMING // start of sector
 #define SS_DRIVE_RW_SECTOR_TIMING2 // end of sector (hack)
-#define SS_DRIVE_SINGLE_SIDE //3.6.0
+
+#if SSE_VERSION>=370
+#define SS_DRIVE_RW_SECTOR_TIMING3 //test v3.7.0 use ID... (?)
+#endif
+
+#define SS_DRIVE_SINGLE_SIDE //3.6.0 
+#if SSE_VERSION>=370
+#define SS_DRIVE_SINGLE_SIDE_RND//3.7.0//TODO random data instead
+#else
 #define SS_DRIVE_SINGLE_SIDE_IPF //3.6.0
+#define SS_DRIVE_SINGLE_SIDE_NAT1 //3.6.0
 #define SS_DRIVE_SINGLE_SIDE_PASTI //3.6.0
+#endif
 #if defined(WIN32) //TODO Unix
 #define SS_DRIVE_SOUND // heavily requested, delivered!//3.6.0
 //#define SS_DRIVE_SOUND_CHECK_SEEK_VBL
@@ -699,6 +752,9 @@ and all his silly mods are gone!
 #define SS_FDC_FORCE_INTERRUPT // Panzer rotation using $D4
 #define SS_FDC_FORCE_INTERRUPT_RESET_D4 // not clear
 #define SS_FDC_HEAD_SETTLE
+#if SSE_VERSION>=370
+#define SS_FDC_IDFIELD_IGNORE_SIDE 
+#endif
 #define SS_FDC_INDEX_PULSE1 // 4ms
 #define SS_FDC_INDEX_PULSE2 // read STR
 #define SS_FDC_MOTOR_OFF 
@@ -781,6 +837,11 @@ and all his silly mods are gone!
 /////////////////
 
 #if defined(SS_PSG)
+
+#if SSE_VERSION>=370
+#define SS_PSG1 // selected drive, side as variables
+#define SS_PSG2 // adpat drive motor status to FDC STR at each change
+#endif
 
 #ifdef SS_DEBUG
 #define SS_PSG_REPORT_DRIVE_CHANGE // as FDC trace
@@ -986,6 +1047,7 @@ and all his silly mods are gone!
 #define SS_MMU_WAKE_UP_SHIFTER_TRICKS // Adapt limit values based on Paolo's table
 //#define SS_MMU_WAKE_UP_STE_STATE2 // STE in same state2 as STF (no)
 #define SS_MMU_WAKE_UP_VERTICAL_OVERSCAN // ijor's wakeup.tos test
+#define SS_MMU_WAKE_UP_VERTICAL_OVERSCAN1 //3.6.3 defaults to WU1
 //#define SS_MMU_WAKE_UP_WRITE_SDP
 #endif// SS_MMU_WAKE_UP
 
@@ -1061,7 +1123,7 @@ and all his silly mods are gone!
 //#define SS_SHIFTER_0BYTE_LINE_SYNC //Forest
 //#define SS_SHIFTER_0BYTE_LINE_SYNC2 // loSTE screens
 
-//#define SS_SHIFTER_0BYTE__LINE_RES_END_THRESHOLD//Hackabonds Demo not WS1
+//#define SS_SHIFTER_0BYTE_LINE_RES_END_THRESHOLD//Hackabonds Demo not WS1
 
 #endif//0-byte line
 
@@ -1085,7 +1147,7 @@ and all his silly mods are gone!
 #define SS_SHIFTER_MED_OVERSCAN // BPOC
 #define SS_SHIFTER_MED_OVERSCAN_SHIFT // No Cooper/greetings
 #define SS_SHIFTER_NON_STOPPING_LINE // Enchanted Land
-#define SS_SHIFTER_PALETTE_BYTE_CHANGE //Golden Soundtracker
+//#define SS_SHIFTER_PALETTE_BYTE_CHANGE //Golden Soundtracker
 #define SS_SHIFTER_PALETTE_NOISE //UMD8730 STF
 #define SS_SHIFTER_PALETTE_TIMING //Overscan Demos #6
 #define SS_SHIFTER_RIGHT_OFF_BY_SHIFT_MODE //beeshift0
@@ -1098,7 +1160,7 @@ and all his silly mods are gone!
 #ifdef SS_SHIFTER_UNSTABLE
 //TODO swtiches for Dragon, etc.
 #if SSE_VERSION>353
-//#define SS_SHIFTER_LINE_PLUS_2_ON_PRELOAD3 // DSOS STE
+//#define SS_SHIFTER_LINE_PLUS_2_ON_PRELOAD3 // DSOS STE //MFD?
 #endif
 #define SS_SHIFTER_UNSTABLE_DOLB
 #define SS_SHIFTER_UNSTABLE_OMEGA
@@ -1203,7 +1265,9 @@ and all his silly mods are gone!
 #define SS_SOUND_INLINE // macro->inline, easier for my tests, but hard to do
 
 #define SS_SOUND_MICROWIRE // volume, balance, bass & treble, primitive DSP
-#define SS_SOUND_MICROWIRE_WRITE_LATENCY // as documented
+#define SS_SOUND_MICROWIRE_MIXMODE//3.6.3
+
+#define SS_SOUND_MICROWIRE_WRITE_LATENCY // as documented (3.XX?)
 #define SS_SOUND_NO_EXTRA_PER_VBL //compensating hack? changes what?
 
 #define SS_SOUND_OPTIMISE
@@ -1214,7 +1278,7 @@ and all his silly mods are gone!
 //#define SS_SOUND_SKIP_DSOUND_TEST
 #endif
 
-#define SS_SOUND_VOL // -6db for PSG chipsound except samples (using DSP)
+#define SS_SOUND_VOL // -6db for PSG chipsound (using DSP)
 #define SS_SOUND_VOL_LOGARITHMIC // more intuitive setting
 #define SS_SOUND_FILTER_STE // same very simple filter as for STF
 
@@ -1544,9 +1608,19 @@ and all his silly mods are gone!
 #define SS_VID_3BUFFER_FS // fullscreen: stretch mode only
 //#define SS_VID_3BUFFER_NO_VSYNC // for tests: "VSync" is necessary
 #define SS_VID_3BUFFER_WIN //windowed mode (necessary for FS)
+#endif//SS_VID_3BUFFER
+#ifdef SS_BETA 
+#define SS_VID_D3D // TODO for v3.7
 #endif
 #endif
 
+#define SS_VID_FREEIMAGE1 //3.6.3 init library
+#define SS_VID_FREEIMAGE2 //3.6.3 always convert pixels
+#define SS_VID_FREEIMAGE3 //3.6.3 flip pic
+#define SS_VID_FREEIMAGE3 //3.6.3 remove WBMP
+#if defined(SS_DELAY_LOAD_DLL)
+#define SS_VID_FREEIMAGE4 //3.6.4 use official header
+#endif
 #define SS_VID_MEMORY_LOST // no message box
 
 #if defined(WIN32)

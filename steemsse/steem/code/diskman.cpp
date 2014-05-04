@@ -65,6 +65,9 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
 #if defined(STEVEN_SEAGAL) && defined(SS_SCP)
     "SCP",
 #endif    
+#if defined(STEVEN_SEAGAL) && defined(SS_DISK_STW)
+    "STW",
+#endif  
     NULL)){
     ret=DISK_UNCOMPRESSED;
   }else if (MatchesAnyString_I(Ext,"STZ","ZIP",NULL)){
@@ -1424,6 +1427,29 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
         case 1002:  // Custom disk image
           This->ShowDiskDiag();
           break;
+
+#if defined(SS_DISK_STW_DISK_MANAGER)
+        case 1003:  // STW
+#if defined(SS_DISK_STW_DISK_MANAGER1) //copy TODO refactor
+        {
+          EasyStr STName=This->DisksFol+"\\"+T("Blank Disk")+".STW";
+          int n=2;
+          while (Exists(STName)){
+            STName=This->DisksFol+"\\"+T("Blank Disk")+" ("+(n++)+").STW";
+          }
+         // if (This->CreateDiskImage(STName,1440,9,2)){
+          if(ImageSTW[0].Create(STName)) {
+            This->RefreshDiskView(STName,true);
+          }else{
+            Alert(EasyStr(T("Could not create the disk image "))+STName,T("Error"),MB_ICONEXCLAMATION);
+          }
+
+
+          return 0;
+        }
+#endif
+
+#endif
         case 1005:
           PostMessage(Win,WM_COMMAND,IDCANCEL,0);
           break;
@@ -2010,7 +2036,9 @@ That will toggle bit x.
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1000,T("New &Folder"));
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1001,T("New Standard &Disk Image"));
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1002,T("New Custom Disk &Image"));
-
+#if defined(SS_DISK_STW_DISK_MANAGER) //new context option
+        InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1003,T("New ST&W Disk Image"));
+#endif
         POINT pt;
         GetCursorPos(&pt);
         TrackPopupMenu(Pop,TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,

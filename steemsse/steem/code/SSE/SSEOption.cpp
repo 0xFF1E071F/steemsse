@@ -30,27 +30,27 @@ void TOption::Init() {
 #if defined(SS_HACKS)
   Hacks=TRUE;
 #endif
-  HD6301Emu=FALSE;
-  STEMicrowire=FALSE;
+  HD6301Emu=0;
+  STEMicrowire=0;
 #if defined(SS_SOUND_FILTER_STF)
-  PSGFilter=TRUE;
+  PSGFilter=1;
 #endif
   STModel=0;//STE;
-  CaptureMouse=TRUE;
+  CaptureMouse=1;
   DisplaySize=0; // original Steem 3.2
-  StealthMode=FALSE;
+  StealthMode=0;
 #if defined(DEBUG_BUILD)  
-  OutputTraceToFile=TRUE; // can be disabled in Boiler
+  OutputTraceToFile=1; // can be disabled in Boiler
 #else
-  OutputTraceToFile=FALSE; 
+  OutputTraceToFile=0; 
 #endif
-  TraceFileLimit=FALSE;//TRUE; // stop TRACING to file at +-3+MB
+  TraceFileLimit=0;
   WakeUpState=0; 
   UseSDL=0;
   OsdDriveInfo=1;
-  Dsp=1;
+  Dsp=1;//irrelevant
   OsdImageName=0;
-  PastiJustSTX=0; // dangerous?
+  PastiJustSTX=0; // dangerous? but handy!
   Interpolate=0;
   StatusBar=1;
   WinVSync=0; // really need correct display (50hz, 100hz) or run at 60hz
@@ -58,6 +58,7 @@ void TOption::Init() {
   StatusBarGameName=1;
   DriveSound=0;
   SingleSideDriveMap=0;
+  GhostDisk=0;
 }
 
 #endif//#if defined(SS_SSE_OPTION_STRUCT)

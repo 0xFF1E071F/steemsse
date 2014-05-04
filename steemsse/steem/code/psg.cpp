@@ -543,25 +543,43 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
   {       
     AlterV(Alter_V,v,dv,*source_p);
 
-#if defined(SS_SOUND_VOL)
-    // make chip sound quieter to better mix with DMA sound
+
+#if defined(SS_SOUND_MICROWIRE_MIXMODE)//3.6.3
+/*
+
+"In STe, YM sound is only audible when Input1 is selected (this is default TOS 
+setting). In case of Steem, whether you choose Input1/2/3/4 or Open YM is 
+always audible."
+                              0 0  = DMA + (YM2149 - 12 db)
+                              0 1  = DMA + YM2149
+                              1 0  = DMA only
+                              1 1  = reserved
+
+    Variable dma_sound_mixer was updated in iow.cpp, but not used.
+    Must be =1 to mix YM and DMA, -12db doesn't work.
+*/
     if(MICROWIRE_ON 
 #if defined(SS_STF)
       && ST_TYPE==STE // only if option checked and we're on STE
 #endif
-      &&dma_sound_on_this_screen//and there's DMA sound
-      ) 
-      v=PsgGain.FilterAudio(v,-6);
+      )
+    {
+      if(dma_sound_mixer!=1)
+        v=0; // dma-only
+#if defined(SS_SOUND_VOL)
+      else if(dma_sound_on_this_screen)
+        v=PsgGain.FilterAudio(v,-6); 
 #endif
+    }
+#endif//SS_SOUND_MICROWIRE_MIXMODE
 
-    val=v;
+    val=v; //inefficient?
 
-   // ASSERT(dma_sound_on_this_screen || !(**lp_dma_sound_channel) );//asserts!
     if(dma_sound_on_this_screen) //bugfix v3.6.0
     {//3.6.1
 #if defined(SS_OSD_CONTROL)
-  if(OSD_MASK3 & OSD_CONTROL_DMASND) 
-    TRACE_OSD("F%d %cV%d %d %d B%d T%d",dma_sound_freq,(dma_sound_mode & BIT_7)?'M':'S',dma_sound_volume,dma_sound_l_volume,dma_sound_r_volume,dma_sound_bass,dma_sound_treble);
+    if(OSD_MASK3 & OSD_CONTROL_DMASND) 
+      TRACE_OSD("F%d %cV%d %d %d B%d T%d",dma_sound_freq,(dma_sound_mode & BIT_7)?'M':'S',dma_sound_volume,dma_sound_l_volume,dma_sound_r_volume,dma_sound_bass,dma_sound_treble);
 #endif
       
 #if defined(SS_DEBUG_MUTE_SOUNDCHANNELS)
@@ -603,7 +621,7 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
           val+= (*(*lp_dma_sound_channel+1)); 
 
 #if defined(SS_SOUND_MICROWIRE)
-    Microwire(1,val);
+        Microwire(1,val);
 #endif
       }
 
@@ -646,16 +664,23 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
   {       
     AlterV(Alter_V,v,dv,*source_p);
 
-#if defined(SS_SOUND_VOL)
-    // make chip sound quieter to better mix with DMA sound
+#if defined(SS_SOUND_MICROWIRE_MIXMODE)//3.6.3
     if(MICROWIRE_ON 
 #if defined(SS_STF)
-      &&ST_TYPE==STE // only if option checked and we're on STE
+      && ST_TYPE==STE // only if option checked and we're on STE
 #endif
-      &&dma_sound_on_this_screen
-      ) 
-      v=PsgGain.FilterAudio(v,-6); 
+      )
+    {
+      if(dma_sound_mixer!=1)
+        v=0; // dma-only
+#if defined(SS_SOUND_VOL)
+      else if(dma_sound_on_this_screen)
+        v=PsgGain.FilterAudio(v,-6); 
 #endif
+    }
+#endif//SS_SOUND_MICROWIRE_MIXMODE
+
+    val=v;//3.6.3, was it missing???
 
     if(dma_sound_on_this_screen) //bugfix v3.6
       val+= (**lp_dma_sound_channel);    
@@ -1371,7 +1396,7 @@ HRESULT Sound_VBL()
 #if defined(STEVEN_SEAGAL) && defined(SS_VID_RECORD_AVI) 
     if(video_recording&&SoundBuf&&pAviFile&&pAviFile->Initialised)
     {
-      VERIFY( !pAviFile->AppendSound(DatAdr[0],LockLength[0]) );
+      VERIFY( pAviFile->AppendSound(DatAdr[0],LockLength[0])==0 );
     }
 #endif
     SoundUnlock(DatAdr[0],LockLength[0],DatAdr[1],LockLength[1]);
@@ -1561,7 +1586,6 @@ void dma_sound_fetch()
 */
 
   if (Mono){  //play half as many words
-    //SS Dynabusters+
     dma_sound_samples_countdown+=dma_sound_freq*scanline_time_in_cpu_cycles_at_start_of_vbl/2;
     left_vol_top_val=(dma_sound_l_top_val >> 1)+(dma_sound_r_top_val >> 1);
     right_vol_top_val=left_vol_top_val;
@@ -1630,9 +1654,12 @@ void dma_sound_fetch()
       while (dma_sound_output_countdown>=0){
         if (dma_sound_channel_buf_last_write_t>=DMA_SOUND_BUFFER_LENGTH) break;
 
-#if defined (STEVEN_SEAGAL) && defined(SS_SOUND_FILTER_STE)
+#if defined (STEVEN_SEAGAL) && defined(SS_SOUND_FILTER_STE_________)
         // exactly the same low-pass filter as for STF sound
-        if(MICROWIRE_ON&&dma_sound_channel_buf_last_write_t>3)
+        // ->3.6.3 it filters but also pollutes the sound, MFD
+        if(MICROWIRE_ON
+          &&PSG_FILTER_FIX //for v3.6.3 tests
+          &&dma_sound_channel_buf_last_write_t>3)
         {
           int tmp=(w1+
             + dma_sound_channel_buf[dma_sound_channel_buf_last_write_t-2])/2;
@@ -1655,7 +1682,8 @@ void dma_sound_fetch()
 
       }
     }
-    dma_sound_samples_countdown-=n_cpu_cycles_per_second;
+    dma_sound_samples_countdown-=n_cpu_cycles_per_second; 
+                            //SS putting back 8000000 sounds worse
 
   }//while (dma_sound_samples_countdown>=0)
 

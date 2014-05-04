@@ -39,6 +39,13 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     SF314[drive].MotorOn=false;
 #endif
 
+#if defined(SS_DISK_GHOST)
+  // SetDisk() may be called without call to RemoveDisk() first
+  if(SF314[drive].State.Ghost) 
+    GhostDisk[drive].Close();
+  SF314[drive].State.Ghost=false;
+#endif
+
   if (IsSameStr_I(File,ImageFile) && IsSameStr_I(CompressedDiskName,DiskInZip)) return 0;
 
 #if defined(STEVEN_SEAGAL) && defined(SS_PASTI_ONLY_STX)  
@@ -621,6 +628,10 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #endif
   WrittenTo=0;
 
+  //SS note that options haven't been retrieved yet when starting
+  //steem and auto.sts is loaded with its disks -> we can't open a
+  //ghost image here, we don't know if option is set
+
   // Media change, write protect for 10 VBLs, unprotect for 10 VBLs, wp for 10
   if (this==&FloppyDrive[0]) floppy_mediach[0]=30;
   if (this==&FloppyDrive[1]) floppy_mediach[1]=30;
@@ -755,9 +766,13 @@ bool TFloppyImage::SeekSector(int Side,int Track,int Sector,bool Format)
     return true;
   }
 
-#if defined(SS_DRIVE_SINGLE_SIDE)
+#if defined(SS_DRIVE_SINGLE_SIDE_NAT1)
   if( SSEOption.SingleSideDriveMap&(floppy_current_drive()+1) )
     Side=0;
+#endif
+#if defined(SS_DRIVE_SINGLE_SIDE_RND)//3.7.0
+  if( SSEOption.SingleSideDriveMap&(floppy_current_drive()+1) && Side==1)
+    return true;// -> RNF
 #endif
 
   if (STT_File){
@@ -1262,6 +1277,16 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   f=NULL;
   if (Format_f) fclose(Format_f);
   Format_f=NULL;
+
+#if defined(SS_DISK_GHOST)
+  // This makes sure to update the image before leaving, though
+  // there's a destructor. Really needed?
+  if(SSE_GHOST_DISK && SF314[drive].State.Ghost)
+  {
+    GhostDisk[drive].Close();
+    SF314[drive].State.Ghost=0; 
+  }
+#endif
 
   if (ZipTempFile.NotEmpty())    DeleteFile(ZipTempFile);
   if (MSATempFile.NotEmpty())    DeleteFile(MSATempFile);

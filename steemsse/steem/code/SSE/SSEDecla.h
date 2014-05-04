@@ -109,7 +109,6 @@ int SS_signal; // "handy" global mask (future coding horror case)
 
 #ifdef __BORLANDC__
 #pragma comment(lib, "../../3rdparty/caps/bcclib/CAPSImg.lib")
-///#pragma comment(linker, "/delayload:CAPSImg.dll")
 #endif
 
 #endif
@@ -144,6 +143,7 @@ int SS_signal; // "handy" global mask (future coding horror case)
 #endif
 #endif
 
+//TODO broken! the BCC needs the DLL anyway 
 #ifdef __BORLANDC__
 extern DelayedLoadHook _EXPDATA __pfnDliFailureHook;
 FARPROC WINAPI MyLoadFailureHook(dliNotification dliNotify, DelayLoadInfo * pdli);
@@ -203,6 +203,21 @@ int ChangeBorderSize(int size); // gui.cpp
 #undef BORDER_TOP
 #define BORDER_TOP (  (DISPLAY_SIZE==BIGGEST_DISPLAY) \
   ? BIG_BORDER_TOP : ORIGINAL_BORDER_TOP )
+#endif
+
+#if defined(SS_VID_FREEIMAGE4)
+#ifdef _MSC_VER
+#pragma comment(lib,"../../3rdparty/FreeImage/FreeImage.lib")
+#ifndef SS_VS2012_DELAYDLL
+#pragma comment(linker, "/delayload:FreeImage.dll")
+#endif
+#endif
+#ifdef __BORLANDC__
+#pragma comment(lib,"../../3rdparty/FreeImage/bcclib/FreeImage.lib")
+// Borland: delay load DLL in makefile
+#endif
+
+
 #endif
 
 #if defined(SS_VID_SCANLINES_INTERPOLATED)

@@ -112,6 +112,9 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 {
   ONEGAME_ONLY( BYTE *pStartByte=f; )
 
+  //temp debugging traces
+  //TRACE("LoadSaveAllStuff(L/S%d,V%d (%d),%d)\n",LoadOrSave,Version,SNAPSHOT_VERSION,ChangeDisksAndCart);
+
   if (Version==-1) Version=SNAPSHOT_VERSION;
   ReadWrite(Version);        //4
   if (pVerRet) *pVerRet=Version;
@@ -606,6 +609,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #else
   pasti_old_active=0;
 #endif
+
   if (Version>=40){
 #if USE_PASTI==0
     int pasti_active=0;
@@ -679,7 +683,6 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   }
 
 #if defined(STEVEN_SEAGAL)
-
   if(Version>=41) // Steem 3.3
   {
 #ifdef SS_STF
@@ -689,7 +692,6 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     int dummy=0; // dummy for former Program ID
     ReadWrite(dummy);
   }
-
   if(Version>=42) // Steem 3.4
   {
 #if defined(SS_SOUND_MICROWIRE)
@@ -738,7 +740,6 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   }
 
   //3.5.0: nothing special
-
   if(Version>=44) // Steem 3.5.1
   {
 #if defined(SS_SHIFTER)
@@ -801,7 +802,6 @@ Steem SSE will reset auto.sts and quit\nSorry!",
     }
   }
 #endif
-
   if(Version>=45) //3.5.2
   {
 #if defined(SS_DRIVE)
@@ -832,7 +832,6 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 
 #endif
   }
-
   if(Version>=46) // 3.5.4
   {
 #if defined(SS_MMU_WAKE_UP)
@@ -846,24 +845,40 @@ Steem SSE will reset auto.sts and quit\nSorry!",
     
 #endif
   }
-
   if(Version>=48) // 3.6.1
   {
 #if defined(SS_IPF_RESUME)//3.6.1
 /*  This just restore registers, not internal state.
     Funny to see how the "drive" then finds back its track,
     in some cases it will work, in other fail.
+    v3.6.2: do it only for load ...
+    v3.6.3: check that Caps is active before ...
 */
-    Caps.WritePsgA(psg_reg[PSGR_PORT_A]);
-    Caps.WriteWD1772(0,fdc_cr);
-    Caps.WriteWD1772(1,fdc_tr);
-    Caps.WriteWD1772(2,fdc_sr);
-    Caps.WriteWD1772(3,fdc_dr);
+    //TRACE("CAPSIMG_OK%d\n",CAPSIMG_OK);
+    if(LoadOrSave==LS_LOAD //3.6.2
+      && CAPSIMG_OK //3.6.3
+      ) 
+    {
+      Caps.WritePsgA(psg_reg[PSGR_PORT_A]);
+      Caps.WriteWD1772(0,fdc_cr);
+      Caps.WriteWD1772(1,fdc_tr);
+      Caps.WriteWD1772(2,fdc_sr);
+      Caps.WriteWD1772(3,fdc_dr);
+    }
 #endif
   }
   else
   {
   }
+
+  if(Version>=49) // 3.7.0
+  {
+#if defined(SS_PSG1)
+    ReadWriteStruct(YM2149);
+#endif
+  }
+
+
 #endif//#if defined(STEVEN_SEAGAL)
 
 

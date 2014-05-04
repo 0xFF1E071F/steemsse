@@ -189,10 +189,23 @@ UNIX_ONLY( EXT bool TrySHM; )
 #define IF_TOCLIPBOARD 0xfff0
 
 #ifdef WIN32
+
+#if defined(SS_VID_FREEIMAGE4) //3.6.4 use official header
+
+#include <FreeImage/FreeImage.h>
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+enum {IF_NEO=FIF_LBM+1};
+#endif
+
+typedef void (__stdcall *FI_FREEPROC)(FIBITMAP*);
+
+#else
+
 //#include "SteemFreeImage.h"
 
 // declaration part of SteemFreeImage.h
-
+//SS this is a part of a .h we should include instead
 #define FI_ENUM(x)      enum x
 #define FI_STRUCT(x)	struct x
 
@@ -279,7 +292,7 @@ SET_GUID(IID_IDirectDraw,			0x6C14DB80,0xA733,0x11CE,0xA5,0x21,0x00,0x20,0xAF,0x
 SET_GUID(IID_IDirectDraw2,                  0xB3A6F3E0,0x2B43,0x11CF,0xA2,0xDE,0x00,0xAA,0x00,0xB9,0x33,0x56 );
 
 #endif
-
+#endif//#if defined(SS_VID_FREEIMAGE4)
 
 
 #undef EXT

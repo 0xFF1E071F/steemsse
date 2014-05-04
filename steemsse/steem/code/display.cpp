@@ -31,9 +31,16 @@ UNIX_ONLY( bool TrySHM=false; )
 UNIX_ONLY( bool TrySHM=true; )
 #endif
 
+
 #ifdef WIN32
 //#include "SteemFreeImage.h"
 // definition part of SteemFreeImage.h
+
+#if defined(SS_VID_FREEIMAGE4)
+
+FI_FREEPROC FreeImage_Free;
+
+#else
 
 FI_INITPROC FreeImage_Initialise;
 FI_DEINITPROC FreeImage_DeInitialise;
@@ -41,7 +48,7 @@ FI_CONVFROMRAWPROC FreeImage_ConvertFromRawBits;
 FI_SAVEPROC FreeImage_Save;
 FI_FREEPROC FreeImage_Free;
 FI_SUPPORTBPPPROC FreeImage_FIFSupportsExportBPP;
-
+#endif
 #endif
   
 
@@ -1539,7 +1546,9 @@ void SteemDisplay::ScreenShotCheckFreeImageLoad()
     if (hFreeImage==NULL) hFreeImage=LoadLibrary(RunDir+"\\FreeImage\\FreeImage\\FreeImage.dll");
     if (hFreeImage==NULL) hFreeImage=LoadLibrary("FreeImage.dll");
     if (hFreeImage==NULL) return;
-
+#if defined(SS_VID_FREEIMAGE4)
+    FreeImage_Free=(FI_FREEPROC)GetProcAddress(hFreeImage,"_FreeImage_Free@4");
+#else
     FreeImage_Initialise=(FI_INITPROC)GetProcAddress(hFreeImage,"_FreeImage_Initialise@4");
     FreeImage_DeInitialise=(FI_DEINITPROC)GetProcAddress(hFreeImage,"_FreeImage_DeInitialise@0");
     FreeImage_ConvertFromRawBits=
@@ -1548,12 +1557,18 @@ void SteemDisplay::ScreenShotCheckFreeImageLoad()
           (FI_SUPPORTBPPPROC)GetProcAddress(hFreeImage,"_FreeImage_FIFSupportsExportBPP@8");
     FreeImage_Save=(FI_SAVEPROC)GetProcAddress(hFreeImage,"_FreeImage_Save@16");
     FreeImage_Free=(FI_FREEPROC)GetProcAddress(hFreeImage,"_FreeImage_Free@4");
+#endif
 
+#if defined(SS_VID_FREEIMAGE1) //3.6.3 init library
+    if(!FreeImage_Free) // breaking change!
+      FreeImage_Free=(FI_FREEPROC)GetProcAddress(hFreeImage,"_FreeImage_Unload@4");
+#endif
 
     if (FreeImage_Initialise==NULL || FreeImage_DeInitialise==NULL ||
           FreeImage_ConvertFromRawBits==NULL || FreeImage_Save==NULL ||
           FreeImage_FIFSupportsExportBPP==NULL || FreeImage_Free==NULL){
       FreeLibrary(hFreeImage);hFreeImage=NULL;
+      TRACE("FreeLibrary failed to init\n");
       return;
     }
     FreeImage_Initialise(TRUE);
@@ -1732,14 +1747,21 @@ HRESULT SteemDisplay::SaveScreenShot()
 
 	BYTE *Pixels=SurMem;
   bool ConvertPixels=true;
+#if !defined(SS_VID_FREEIMAGE2) //3.6.3 always convert pixels
 #ifdef WIN32
   if (hFreeImage && ToClipboard==0){
     if (BytesPerPixel>1){
+/*
+Returns TRUE if the plugin belonging to the given FREE_IMAGE_FORMAT can save a
+bitmap in the desired bit depth, FALSE otherwise.
+-> Then you had a nice black screen on PNG
+*/
       if (FreeImage_FIFSupportsExportBPP((FREE_IMAGE_FORMAT)ScreenShotFormat,BytesPerPixel*8)){
         ConvertPixels=0;
       }
     }
   }
+#endif
 #endif
 
   if (ToClipboard){
@@ -1860,6 +1882,30 @@ HRESULT SteemDisplay::SaveScreenShot()
   }
 
   if (ToClipboard==0){
+
+#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
+    //v3.6.3: moved up so that FreeImage doesn't get it
+    if(ScreenShotFormat==IF_NEO)
+    {
+      if (pNeoFile)
+      {
+        pNeoFile->resolution=screen_res;
+        // palette was already copied (sooner=better)
+        for(int i=0;i<16000;i++)
+          pNeoFile->data[i]=change_endian(DPEEK(xbios2+i*2));
+        FILE *f=fopen(ShotFile,"wb");
+        if(f)
+        {
+          fwrite(pNeoFile,sizeof(neochrome_file),1,f);
+          fclose(f);
+        }
+        delete pNeoFile;
+        pNeoFile=NULL;
+      }
+     }
+    else
+#endif
+
 #ifdef WIN32
     if (hFreeImage){
       FIBITMAP *FIBmp;
@@ -1883,36 +1929,31 @@ HRESULT SteemDisplay::SaveScreenShot()
             b_mask=0x0000ff << rgb32_bluestart_bit;
             break;
         }
+
+#if defined(SS_VID_FREEIMAGE3) //3.6.3 flip pic
+/*  I don't know if the library changed, but this was doing the 
+    opposite of what it should (pics were upside down).
+*/
         FIBmp=FreeImage_ConvertFromRawBits(SurMem,w,h,SurLineLen,BytesPerPixel*8,
-                                          r_mask,g_mask,b_mask,0);
+          r_mask,g_mask,b_mask,true);
+#else
+
+        FIBmp=FreeImage_ConvertFromRawBits(SurMem,w,h,SurLineLen,BytesPerPixel*8,                                         
+          r_mask,g_mask,b_mask,0);
+#endif
       }else{
+#if defined(SS_VID_FREEIMAGE3) //3.6.3 flip pic
+        FIBmp=FreeImage_ConvertFromRawBits(Pixels,w,h,w*3,24,
+                                          0xff0000,0x00ff00,0x0000ff,false);
+#else
         FIBmp=FreeImage_ConvertFromRawBits(Pixels,w,h,w*3,24,
                                           0xff0000,0x00ff00,0x0000ff,true);
+#endif
       }
+      TRACE("ImageFree save %s format %d convert%d\n",ShotFile.Text,ScreenShotFormat,ConvertPixels);
       FreeImage_Save((FREE_IMAGE_FORMAT)ScreenShotFormat,FIBmp,ShotFile,ScreenShotFormatOpts);
       FreeImage_Free(FIBmp);
     }else
-#endif
-#if defined(STEVEN_SEAGAL) && defined(SS_VID_SAVE_NEO)
-    if(ScreenShotFormat==IF_NEO)
-    {
-      if (pNeoFile)
-      {
-        pNeoFile->resolution=screen_res;
-        // palette was already copied (sooner=better)
-        for(int i=0;i<16000;i++)
-          pNeoFile->data[i]=change_endian(DPEEK(xbios2+i*2));
-        FILE *f=fopen(ShotFile,"wb");
-        if(f)
-        {
-          fwrite(pNeoFile,sizeof(neochrome_file),1,f);
-          fclose(f);
-        }
-        delete pNeoFile;
-        pNeoFile=NULL;
-      }
-     }
-    else
 #endif
     {
       BITMAPINFOHEADER bih;
@@ -1996,7 +2037,10 @@ void SteemDisplay::ScreenShotGetFormats(EasyStringList *pSL)
     pSL->Add("PNG",FIF_PNG);
     pSL->Add("TARGA (.tga)",FIF_TARGA);
     pSL->Add("TIFF",FIF_TIFF);
+#if !defined(SS_VID_FREEIMAGE3) //3.6.3 remove WBMP
+    // it just crashes
     pSL->Add("WBMP",FIF_WBMP);
+#endif
     pSL->Add("PBM",FIF_PBM);
     pSL->Add("PGM",FIF_PGM);
     pSL->Add("PPM",FIF_PPM);

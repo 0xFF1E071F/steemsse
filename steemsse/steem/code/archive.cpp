@@ -47,7 +47,7 @@ void LoadUnzipDLL()
 #endif
 #endif
 #ifdef __BORLANDC__
-#pragma comment(lib,"../../3rdparty/UnRARDLL/bcc/unrar.lib")
+#pragma comment(lib,"../../3rdparty/UnRARDLL/bcclib/unrar.lib")
 // Borland: delay load DLL in makefile
 #endif
 

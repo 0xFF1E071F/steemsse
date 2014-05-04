@@ -360,12 +360,16 @@ void inline prepare_event_again() //might be an earlier one
     
     PREPARE_EVENT_CHECK_FOR_PASTI;
 
+#if defined(STEVEN_SEAGAL) && defined(SS_FLOPPY_EVENT)
+    PREPARE_EVENT_CHECK_FOR_FLOPPY;
+#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SS_DMA_DELAY)
     PREPARE_EVENT_CHECK_FOR_DMA;
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SS_ACIA_IRQ_DELAY)
-// not defined anymore (v3.5.2), see MFP
+// not defined anymore (v3.5.2), see MFP//MFD
     PREPARE_EVENT_CHECK_FOR_ACIA_IKBD_IN;
 #endif
 
@@ -396,11 +400,16 @@ void inline prepare_next_event() //SS check this "inline" thing
       
     PREPARE_EVENT_CHECK_FOR_PASTI;
 
+#if defined(STEVEN_SEAGAL) && defined(SS_FLOPPY_EVENT)
+    PREPARE_EVENT_CHECK_FOR_FLOPPY;
+#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SS_DMA_DELAY)
     PREPARE_EVENT_CHECK_FOR_DMA;
 #endif
+
 #if defined(STEVEN_SEAGAL) && defined(SS_ACIA_IRQ_DELAY)
-// not defined anymore (v3.5.2), see MFP
+// not defined anymore (v3.5.2), see MFP//MFD
     PREPARE_EVENT_CHECK_FOR_ACIA_IKBD_IN;
 #endif
 
@@ -1427,7 +1436,7 @@ void event_pasti_update()
 #if defined(SS_DISK_IMAGETYPE)
     SF314[floppy_current_drive()].ImageType.Extension!=EXT_STX
 #else
-    SF314[floppy_current_drive()].ImageType!=DISK_PASTI
+    SF314[floppy_current_drive()].ImageType!=3
 #endif
 #if defined(SS_PASTI_ONLY_STX_HD) && defined(SS_DMA)
     && ! ( pasti_active && (Dma.MCR&BIT_3)) // hard disk handling by pasti
@@ -1463,5 +1472,28 @@ void event_trigger_vbi() { //6X cycles into frame (reference end of HSYNC)
   screen_event_pointer++;
 }
 #endif
+
+#if defined(SS_FLOPPY_EVENT)
+/*  There's an event for floppy now because we want to handle DRQ for each
+    byte, and the resolution of HBL is too gross for that:
+
+    6256 bytes/ track , 5 revs /s = 31280 bytes
+    1 second = 8021248 CPU cycles in our emu
+    8021248/31280  = 256,433 cycles / byte
+    8000000/31280  = 255,754 cycles / byte
+    One HBL = 512 cycles at 50hz.
+
+    Caps works with HBL because it hold its own cycle account.
+    
+    Here we should transfer control, or dispatch to handlers
+*/
+
+int floppy_update_time=0;
+
+void event_floppy() {
+  floppy_update_time=ACT+n_cpu_cycles_per_second; // put into future
+}
 #endif
+
+#endif//seagal
 

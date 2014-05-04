@@ -1824,6 +1824,8 @@ Tests are arranged to be efficient.
     No line 2 466-504    No Buddies Land (500/508); D4/NGC (496/508)
           note: STE line +20 504/4 (MOLZ) or 504/8 -> 504 is STF-only
     Hackabonds Demo hits at 504, 0-byte undesired: WS1 only?
+    Note that if we relax the threshold here, Hackabonds will still
+    display wrong because of another WS1 threshold. Curious case. TODO
           
 */
     if(!(NextScanline.Tricks&TRICK_0BYTE_LINE))
@@ -1881,7 +1883,7 @@ Tests are arranged to be efficient.
       else 
       {
         r2cycle+=38; // -> 502 (STE)
-#if defined(SS_STF_0BYTE) && !defined(SS_SHIFTER_0BYTE__LINE_RES_END_THRESHOLD)
+#if defined(SS_STF_0BYTE) && !defined(SS_SHIFTER_0BYTE_LINE_RES_END_THRESHOLD)
         if(ST_TYPE!=STE)
           r2cycle+=2; // -> 504 (STF)
 #endif
@@ -2024,7 +2026,11 @@ Problem: too many cases of WU1, that should be the rarer one
 */
 
 #if defined(SS_MMU_WAKE_UP_DL)
-    if(MMU.WU[WAKE_UP_STATE]==1)
+    if(MMU.WU[WAKE_UP_STATE]==1
+#if defined(SS_MMU_WAKE_UP_VERTICAL_OVERSCAN1)
+      || !WAKE_UP_STATE //3.6.3 defaults to this for several cases
+#endif
+      )
 #else
     if(MMU.WakeUpState1()) // OK WS1, WS3
 #endif
@@ -2668,6 +2674,7 @@ void TShifter::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
     
 #if defined(SS_SHIFTER_PALETTE_BYTE_CHANGE) 
     // TESTING maybe Steem was right, Hatari is wrong
+    // v3.6.3 apparently Steem was right, undef
     if(addr&1) // the double write happens only on even addresses (?)
     {
       new_pal=(STpal[n]&0xFF00)|io_src_b; // fixes Golden Soundtracker demo

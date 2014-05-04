@@ -202,8 +202,20 @@ EXT int cpu_timer_at_start_of_hbl;
 #define PREPARE_EVENT_CHECK_FOR_DMA
 #endif
 
+//SS how to optimise when we don't use it?
 
-// SS:PREPARE_EVENT_CHECK_FOR_ACIA_IKBD_IN is defined in ikbd.h
+#if defined(STEVEN_SEAGAL) && defined(SS_FLOPPY_EVENT)
+#define PREPARE_EVENT_CHECK_FOR_FLOPPY       \
+  if ((time_of_next_event-floppy_update_time) >= 0){                 \
+    time_of_next_event=floppy_update_time;  \
+    screen_event_vector=event_floppy;                    \
+  }
+
+#else
+#define PREPARE_EVENT_CHECK_FOR_FLOPPY
+#endif
+
+// SS:PREPARE_EVENT_CHECK_FOR_ACIA_IKBD_IN is defined in ikbd.h//MFD
 
 typedef void(*EVENTPROC)();
 typedef struct{
@@ -234,7 +246,7 @@ void event_timer_d_timeout();
 void event_scanline();
 void event_timer_b();
 
-#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_IRQ_DELAY)
+#if defined(STEVEN_SEAGAL) && defined(SS_ACIA_IRQ_DELAY)//MFD
 void event_acia_rx_irq(); // not defined anymore (v3.5.2), see MFP
 #endif
 
@@ -282,6 +294,11 @@ EXT int cpu_timer_at_res_change;
 
 #if USE_PASTI
 void event_pasti_update();
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SS_FLOPPY_EVENT)
+void event_floppy();
+extern int floppy_update_time;
 #endif
 
 #undef EXT

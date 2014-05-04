@@ -2380,14 +2380,32 @@ Windows 2000	5.0
   ToolAddWindow(ToolTip,Win,
     T("Epson SMD-480L sound sampled by Stefan jL, thx dude!"));
   mask&=~BS_CHECKBOX;
+#if defined(SS_DISK_GHOST)//ridiculous, due to all the switches
   Win=CreateWindow(TRACKBAR_CLASS,"",mask | TBS_HORZ,
-                    page_l+15+Wid,y,150,20,Handle,(HMENU)7311,HInstance,NULL);
+     page_l+15+Wid,y,150-50,20,Handle,(HMENU)7311,HInstance,NULL);
+#else
+  Win=CreateWindow(TRACKBAR_CLASS,"",mask | TBS_HORZ,
+     page_l+15+Wid,y,150,20,Handle,(HMENU)7311,HInstance,NULL);
+#endif
   SendMessage(Win,TBM_SETRANGE,0,MAKELPARAM(0,100));
   int db=SF314[0].Sound_Volume;
   int position= pow(10, log10(101)*(db + 10000)/10000 )-1 ;
   SendMessage(Win,TBM_SETPOS,1,position);
   SendMessage(Win,TBM_SETLINESIZE,0,1);
   SendMessage(Win,TBM_SETPAGESIZE,0,10);
+  y+=LineHeight;
+#endif
+
+#if defined(SS_DISK_GHOST)
+  y-=LineHeight;
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+  Offset=Wid+15+100+10;
+  Wid=GetCheckBoxSize(Font,T("Ghost disk")).Width;
+  Win=CreateWindow("Button",T("Ghost disk"),mask,
+    page_l+Offset,y,Wid,25,Handle,(HMENU)7313,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,SSE_GHOST_DISK,0);
+  ToolAddWindow(ToolTip,Win,
+    T("Intercept writes and save on a STW image"));
   y+=LineHeight;
 #endif
 

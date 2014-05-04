@@ -693,6 +693,10 @@ when it does).
 
 #if defined(SS_DMA) // taken out of here, in SSEFloppy
       ior_byte=Dma.IORead(addr);
+
+//if(addr==0xff8605) TRACE("pc %x read %x = %x\n",old_pc,addr,ior_byte);
+
+
       break;
 #else 
     {  
