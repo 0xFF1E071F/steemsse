@@ -168,6 +168,15 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #endif
 
 
+
+#if defined(SS_DISK_GHOST)
+#define AVG_HBLS_SECTOR (200)
+#endif
+
+//SF314[DRIVE].HblsPerRotation()
+
+
+
 /////////
 // DMA //
 /////////
@@ -177,7 +186,6 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define SS_DMA_ACCESS_DELAY 20
 #endif
 #endif
-
 
 ///////////
 // DRIVE //
@@ -190,7 +198,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define DRIVE_MAX_CYL 83
 
 #if defined(SS_DRIVE_BYTES_PER_ROTATION)
-#define DRIVE_BYTES_ROTATION (6250+20) // could be true though
+#define DRIVE_BYTES_ROTATION (6250+20) // could be true though //hack MPS golf...
 #else
 #define DRIVE_BYTES_ROTATION (8000) // Steem 3.2
 #endif

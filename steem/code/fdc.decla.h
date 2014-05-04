@@ -59,6 +59,9 @@ EXT char pasti_file_exts[160];
 EXT WORD pasti_store_byte_access;
 EXT bool pasti_active INIT(0);
 //EXT DynamicArray<pastiBREAKINFO> pasti_bks;
+#if defined(STEVEN_SEAGAL) && defined(SS_DISK_GHOST_SECTOR_STX1)
+EXT void pasti_update_reg(unsigned addr,unsigned data);
+#endif
 #endif
 
 
@@ -149,7 +152,13 @@ EXT BYTE fdc_read_address_buffer[20];
 #define DMA_ADDRESS_IS_VALID_W (dma_address<himem && dma_address>=MEM_FIRST_WRITEABLE)
 
 #if defined(SS_DRIVE)
+#if defined(SS_PSG1) //3.7.0
+#define DRIVE (YM2149.SelectedDrive)
+#define CURRENT_SIDE (YM2149.SelectedSide)
+#else
 #define DRIVE floppy_current_drive() // 0 or 1 guaranteed
+#define CURRENT_SIDE floppy_current_side()
+#endif
 #endif
 
 #undef EXT

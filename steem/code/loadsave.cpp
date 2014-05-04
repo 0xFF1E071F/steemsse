@@ -298,7 +298,7 @@ void AddSnapShotToHistory(char *FilNam)
 //SS C++ horror, TODO
 
 bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bool ChangeDisks=true
-#if defined(SS_VAR_POWERON2)
+#if defined(SS_VAR_POWERON2) //this isn't defined (v3.6.2)
   ,bool NoNeedToReset=false // in main, we already called reset_st
 #endif
   )
@@ -307,7 +307,11 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
   int Failed=2,Version=0;
   bool FileError=0;
 
-  if (Exists(FilNam)==0) FileError=true;
+  if (Exists(FilNam)==0) 
+  { //SS scope
+    FileError=true;
+    TRACE("File %s doesn't exist\n",FilNam);
+  }
   if (FileError==0){
     bool LoadingResetBackup=IsSameStr_I(FilNam,WriteDir+SLASH+"auto_reset_backup.sts");
     bool LoadingLoadSnapBackup=IsSameStr_I(FilNam,WriteDir+SLASH+"auto_loadsnapshot_backup.sts");
@@ -329,6 +333,7 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
 #if defined(STEVEN_SEAGAL) && defined(SS_VAR_CHECK_SNAPSHOT)
     }
     catch(...) { //Works in VC6 - BCC? Unix certainly not.
+      TRACE("Exception in LoadSaveAllStuff\n");
       Failed=FileError=true;
     }
 #endif
@@ -338,6 +343,7 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
       }
       fclose(f);
     }else{
+      TRACE("File open error on %s\n",FilNam);
       FileError=true;
     }
   }
@@ -752,6 +758,7 @@ void LoadState(GoodConfigStoreFile *pCSF)
       SendMessage(mb->handle,WM_SETREDRAW,1,0);
     }
     MoveWindow(mb->owner,browsers[b].x,browsers[b].y,browsers[b].w,browsers[b].h,true);
+    //TRACE("name %s\n",browsers[b].name);
     SetWindowText(mb->owner,browsers[b].name);
   }
 

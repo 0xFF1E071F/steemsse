@@ -50,22 +50,16 @@ OUTPUT="./output/steem_dbg"
       $(ROOT)/X-build/obj/6301.o \
       $(ROOT)/X-build/obj/dsp.o \
       $(ROOT)/X-build/obj/div68kCycleAccurate.o 
-#	$(ROOT)/X-build/obj/SSEMMU.o
 
-#      ./obj/dsp.o ./obj/6301.o ./obj/div68kCycleAccurate.o
-
-
-#      $(ROOT)/3rdparty/pasti/div68kCycleAccurate.o
-
-#LIBTOOL=$(ROOT)/3rdparty/portaudio/libtool
 LIBTOOL=libtool
 
 # Objects
-OBJS=./obj/asm_draw.o ./obj/emu.o ./obj/asm_osd.o ./obj/main.o ./obj/helper.o ./obj/resource.o\
- ./obj/SSE.o ./obj/SSEOption.o ./obj/SSEMMU.o ./obj/SSE6301.o ./obj/SSECpu.o ./obj/SSEDebug.o \
- ./obj/SSEFloppy.o ./obj/SSEFrameReport.o ./obj/SSEShifter.o ./obj/SSESTF.o ./obj/SSEVideo.o
-#./obj/dsp.o ./obj/6301.o ./obj/div68kCycleAccurate.o
-# OBJS=./code/draw_c/draw_c.o emu.o main.o urarlib.o helper.o resource.o
+OBJS=./obj/asm_draw.o ./obj/emu.o ./obj/asm_osd.o ./obj/main.o ./obj/helper.o \
+ ./obj/resource.o ./obj/SSE.o ./obj/SSEOption.o ./obj/SSEMMU.o ./obj/SSE6301.o\
+ ./obj/SSECpu.o ./obj/SSEDebug.o ./obj/SSEFrameReport.o ./obj/SSEShifter.o    \
+ ./obj/SSESTF.o ./obj/SSEVideo.o ./obj/SSEFloppy.o ./obj/SSEWD1772.o          \
+ ./obj/SSEDrive.o ./obj/SSEDisk.o ./obj/SSEYM2149.o ./obj/SSEDma.o ./obj/SSEPsg.o
+
 
 # Targets
 
@@ -86,6 +80,12 @@ all:	asm
 	$(MAKE) -fMakefile_dbg.txt SSEFrameReport
 	$(MAKE) -fMakefile_dbg.txt SSESTF
 	$(MAKE) -fMakefile_dbg.txt SSEVideo
+	$(MAKE) -fMakefile_dbg.txt SSEWD1772
+	$(MAKE) -fMakefile_dbg.txt SSEDrive
+	$(MAKE) -fMakefile_dbg.txt SSEDisk
+	$(MAKE) -fMakefile_dbg.txt SSEYM2149
+	$(MAKE) -fMakefile_dbg.txt SSEDma
+	$(MAKE) -fMakefile_dbg.txt SSEPsg
 	$(MAKE) -fMakefile_dbg.txt link
 
 clean:
@@ -147,9 +147,6 @@ SSECpu:
 SSEDebug:
 	$(CC) -o ./obj/SSEDebug.o -c $(ROOT)/steem/code/SSE/SSEDebug.cpp $(CFLAGS) $(STEEMFLAGS)
 
-SSEFloppy:
-	$(CC) -o ./obj/SSEFloppy.o -c $(ROOT)/steem/code/SSE/SSEFloppy.cpp $(CFLAGS) $(STEEMFLAGS)
-
 SSESTF:
 	$(CC) -o ./obj/SSESTF.o -c $(ROOT)/steem/code/SSE/SSESTF.cpp $(CFLAGS) $(STEEMFLAGS)
 
@@ -168,7 +165,26 @@ SSE:
 SSEOption:
 	$(CC) -o ./obj/SSEOption.o -c $(ROOT)/steem/code/SSE/SSEOption.cpp $(CFLAGS) $(STEEMFLAGS)
 
+SSEFloppy:
+	$(CC) -o ./obj/SSEFloppy.o -c $(ROOT)/steem/code/SSE/SSEFloppy.cpp $(CFLAGS) $(STEEMFLAGS)
 
+SSEWD1772:
+	$(CC) -o ./obj/SSEWD1772.o -c $(ROOT)/steem/code/SSE/SSEWD1772.cpp $(CFLAGS) $(STEEMFLAGS)
+
+SSEDrive:
+	$(CC) -o ./obj/SSEDrive.o -c $(ROOT)/steem/code/SSE/SSEDrive.cpp $(CFLAGS) $(STEEMFLAGS)
+
+SSEDisk:
+	$(CC) -o ./obj/SSEDisk.o -c $(ROOT)/steem/code/SSE/SSEDisk.cpp $(CFLAGS) $(STEEMFLAGS)
+
+SSEYM2149:
+	$(CC) -o ./obj/SSEYM2149.o -c $(ROOT)/steem/code/SSE/SSEYM2149.cpp $(CFLAGS) $(STEEMFLAGS)
+
+SSEDma:
+	$(CC) -o ./obj/SSEDma.o -c $(ROOT)/steem/code/SSE/SSEDma.cpp $(CFLAGS) $(STEEMFLAGS)
+
+SSEPsg:
+	$(CC) -o ./obj/SSEPsg.o -c $(ROOT)/steem/code/SSE/SSEPsg.cpp $(CFLAGS) $(STEEMFLAGS)
 
 
 #3rdparty:	zlib unrarlib portaudio rtaudio div68kCycleAccurate 6301

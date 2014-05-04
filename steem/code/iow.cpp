@@ -671,7 +671,8 @@ system exclusive start and end messages (F0 and F7).
       if(ST_TYPE!=STE)
       {
         TRACE_LOG("STF write %X to DMA %X\n",io_src_b,addr);
-        exception(BOMBS_BUS_ERROR,EA_WRITE,addr); // fixes PYM/ST-CNX, SoWatt, etc.
+       // crashing fixes PYM/ST-CNX, SoWatt, etc., which use this as test
+        exception(BOMBS_BUS_ERROR,EA_WRITE,addr); 
         break;
       }
 #endif
@@ -1189,15 +1190,14 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
             psg_reg[psg_reg_select]=io_src_b;//also the variable...
           }
 #endif
-
+          if (hPasti && pasti_active) 
+            pasti->WritePorta(io_src_b,ABSOLUTE_CPU_TIME);
+#endif//pasti
 #if defined(SS_FDC_INDEX_PULSE_COUNTER) && defined(SS_DRIVE) && defined(SS_DEBUG)
 /* Symic Demo TODO right or wrong?
 */
           if(WD1772.IndexCounter && YM2149.Drive()==TYM2149::NO_VALID_DRIVE)
-            TRACE("drive deselect while IP counter %d\n",WD1772.IndexCounter);
-#endif
-          if (hPasti && pasti_active) 
-            pasti->WritePorta(io_src_b,ABSOLUTE_CPU_TIME);
+            TRACE_FDC("drive deselect while IP counter %d\n",WD1772.IndexCounter);
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SS_IPF)
           if(Caps.Active) // like the above (we imitate!)
@@ -1207,18 +1207,23 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
           SerialPort.SetRTS(io_src_b & BIT_3);
           if ((old_val & (BIT_1+BIT_2))!=(io_src_b & (BIT_1+BIT_2))){
 
+#if defined(SS_PSG1) //3.7.0
+            YM2149.SelectedDrive=floppy_current_drive();
+            YM2149.SelectedSide=floppy_current_side();
+#endif
+#if defined(SS_PSG2) //3.7.0
+            if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE)
+              SF314[YM2149.SelectedDrive].MotorOn=!!(fdc_str&0x80);
+#endif
 
+#if !defined(SS_DEBUG_TRACE_IDE) && defined(SS_PSG1)
 #if defined(SS_PSG_REPORT_DRIVE_CHANGE)||defined(SS_DEBUG_TRACE_CONTROL)
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_FDC
 #if defined(SS_DEBUG_TRACE_CONTROL) // controlled by boiler now (3.6.1)
             if(TRACE_MASK3 & TRACE_CONTROL_FDCPSG)
 #endif
-              TRACE_LOG("PSG-A %X %c%d:\n",io_src_b,'A'+YM2149.Drive(),YM2149.Side());
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_IO
+              TRACE_FDC("PSG-A %X %c%d:\n",io_src_b,'A'+YM2149.SelectedDrive,YM2149.SelectedDrive);
 #endif
-
+#endif//#ifndef SS_DEBUG_TRACE_IDE
 #ifdef ENABLE_LOGFILE
             if ((psg_reg[PSGR_PORT_A] & BIT_1)==0){ //drive 0
               log_to_section(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Set current drive to A:");

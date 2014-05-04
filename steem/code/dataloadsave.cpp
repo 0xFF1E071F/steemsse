@@ -715,6 +715,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
   SEC(PSEC_DISPFULL){
 
 #if defined(STEVEN_SEAGAL) // load SSE options
+//    TRACE("Retrieve SSE options\n");
 #if defined(SS_HACKS)
     SSE_HACKS_ON=pCSF->GetInt("Options","SpecificHacks",SSE_HACKS_ON);
 #endif
@@ -795,7 +796,11 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     SF314[1].Sound_ChangeVolume();
 #endif
 #endif
+#if defined(SS_DISK_GHOST)
+    SSE_GHOST_DISK=pCSF->GetInt("Options","GhostDisk",SSE_GHOST_DISK);
 #endif
+#endif//steven_seagal
+
 
 #if defined(SS_DEBUG_SSE_PERSISTENT)
     USE_TRACE_FILE=pCSF->GetInt("Debug","UseTraceFile",USE_TRACE_FILE);
@@ -1216,6 +1221,9 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SS_DRIVE_SOUND_VOLUME) //one for both drives
   pCSF->SetStr("Options","DriveSoundVolume",EasyStr(SF314[0].Sound_Volume)); 
 #endif
+#endif
+#if defined(SS_DISK_GHOST)
+  pCSF->SetStr("Options","GhostDisk",EasyStr(SSE_GHOST_DISK)); 
 #endif
 
 #if defined(SS_DEBUG_SSE_PERSISTENT)

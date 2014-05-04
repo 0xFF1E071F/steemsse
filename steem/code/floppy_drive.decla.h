@@ -2,9 +2,21 @@
 #ifndef FLOPPYDRIVE_DECLA_H
 #define FLOPPYDRIVE_DECLA_H
 
+//SS this is ambiguous in Steem, class is 'image' but object is 'drive'
+
 #if defined(SS_STRUCTURE_SSEDEBUG_OBJ)
 #include <stdio.h>
 #endif
+
+#include <easystr.h>
+#include "fdc.decla.h"//FLOPPY_MAX_TRACK_NUM?
+
+
+#if defined(SS_DISK_GHOST__)
+#include <easystr.h>
+#include "fdc.decla.h"
+#endif
+
 
 //#define EXT extern
 //#define INIT(s)

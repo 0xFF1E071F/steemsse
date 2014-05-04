@@ -1737,6 +1737,16 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 
+#if defined(SS_DISK_GHOST)
+        case 7313: // option Ghost disk 
+          if (HIWORD(wPar)==BN_CLICKED){
+            SSE_GHOST_DISK=!SSE_GHOST_DISK;
+            SendMessage(HWND(lPar),BM_SETCHECK,SSE_GHOST_DISK,0);
+            TRACE_LOG("Option Ghost disk %d\n",SSE_GHOST_DISK);
+          }
+          break;
+#endif
+
 #endif//SS
 
         case 8100: // Memory size

@@ -392,6 +392,22 @@ enum logsection_enum_tag {
 #endif
 #endif
 
+// v3.6.3 introducing more traces,  verbose here, short in code
+// TRACE_FDC
+#if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
+#ifdef __cplusplus // visible only to C++ objects
+#define TRACE_FDC Debug.LogSection=LOGSECTION_FDC, Debug.TraceLog //!
+#endif//C++
+#else
+#if defined(VC_BUILD) // OK for Unix?
+#define TRACE_FDC(x) // no code left?
+#else
+#define TRACE_FDC // some code left to the compiler
+#endif
+#endif
+
+
+
 // TRACE_OSD
 #if defined(STEVEN_SEAGAL) && defined(SS_DEBUG)
 #ifdef __cplusplus // visible only to C++ objects
