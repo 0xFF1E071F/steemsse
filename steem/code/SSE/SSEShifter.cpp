@@ -2029,6 +2029,7 @@ Problem: too many cases of WU1, that should be the rarer one
     if(MMU.WU[WAKE_UP_STATE]==1
 #if defined(SSE_MMU_WAKE_UP_VERTICAL_OVERSCAN1)
       || !WAKE_UP_STATE //3.6.3 defaults to this for several cases
+      && ST_TYPE!=STE//3.6.4
 #endif
       )
 #else
