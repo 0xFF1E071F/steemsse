@@ -32,7 +32,7 @@
 #include <stdio.h>
 #endif
 
-#ifdef SS_VS2012_WARNINGS
+#ifdef SSE_VS2012_WARNINGS
 #pragma warning(disable : 4002)		// too many parameter in macro TRACE
 #endif
 
@@ -144,6 +144,8 @@ struct TDebug {
   WORD FrameMfpIrqs; // for OSD report
 #endif
 
+  WORD nHbis; // counter for each frame
+
 };
 
 
@@ -203,7 +205,7 @@ enum logsection_enum_tag {
  LOGSECTION_GUI ,
 #if !defined(SSE_DEBUG_TRACE_CONTROL)
  LOGSECTION_FDC_BYTES, // was DIV
- LOGSECTION_IPF_LOCK_INFO,
+// LOGSECTION_IPF_LOCK_INFO,
 #endif
  LOGSECTION_IMAGE_INFO, //was Pasti
  LOGSECTION_OPTIONS,
@@ -221,6 +223,7 @@ enum logsection_enum_tag {
 #define OSD_CONTROL_INTERRUPT               (1<<13)
 #define OSD_CONTROL_IKBD                  (1<<12)
 #define OSD_CONTROL_60HZ              (1<<11)
+#define OSD_CONTROL_RESET            (1<<10)
 
 #define OSD_MASK2 (Debug.ControlMask[3])
 #define OSD_CONTROL_SHIFTERTRICKS           (1<<15)
@@ -445,7 +448,7 @@ enum logsection_enum_tag {
 enum { // to pass compilation
  LOGSECTION_FDC_BYTES, // was DIV
  LOGSECTION_IMAGE_INFO, //was Pasti
- LOGSECTION_IPF_LOCK_INFO,
+// LOGSECTION_IPF_LOCK_INFO,
  LOGSECTION_OPTIONS,
  NUM_LOGSECTIONS,
  };

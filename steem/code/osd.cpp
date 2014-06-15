@@ -585,39 +585,31 @@ void osd_draw()
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DRIVE_INFO)
 /*  Display drive, side, track, sector
-    Drive is A or B
-    Side is 1 or 2 like in Fastcopy
-    Track is 0-79(+) like in Fastcopy (note ProCopy: 1-80(+))
-    Sector 1-9(+) like in all software. Sector isn't displayed if
-    we're in fast drive mode.
+    Sector only for type II commands
 */
         if(OSD_DRIVE_INFO)// && seconds>=osd_show_plasma)
         {
 #define THE_LEFT (x1/2)
 #define THE_RIGHT ((x1))
 #ifdef SSE_DEBUG
-#define BUFFER_LENGTH 10+3
+#define BUFFER_LENGTH (10+2+3) //2bytes for command
 #else
-#define BUFFER_LENGTH 10 //"D:S-TR-SEC" drive-side-track-sector
+#define BUFFER_LENGTH (10+2) //"D:S-TR-SEC" drive-side-track-sector
 #endif
 
-          RECT cliprect={THE_LEFT,0,THE_RIGHT,y1};
+          RECT cliprect={THE_LEFT,0,THE_RIGHT,y1}; //refactor...
           
-          BYTE floppyno=floppy_current_drive();      
+          //BYTE floppyno=DRIVE;//floppy_current_drive();      
           char tmp_buffer[BUFFER_LENGTH];
 
-#if defined(SSE_OSD_DRIVE_INFO2)
-          if(!ADAT)
-            sprintf(tmp_buffer,"%C:%1d-%02d",'A'+floppyno,floppy_current_side()+1,
-              floppy_head_track[floppyno]);
-          else
-#endif
 #ifdef SSE_DEBUG // add current command (CR)
-            sprintf(tmp_buffer,"%2X-%C:%1d-%02d-%02d",fdc_cr,'A'+floppyno,
-            floppy_current_side()+1,floppy_head_track[floppyno],fdc_sr);
+          sprintf(tmp_buffer,"%2X-%C:%1d-%02d-%02d",fdc_cr,'A'+DRIVE,
+            CURRENT_SIDE,floppy_head_track[DRIVE],
+            (WD1772.CommandType()==2)?fdc_sr:0);
 #else
-            sprintf(tmp_buffer,"%C:%1d-%02d-%02d",'A'+floppyno,
-              floppy_current_side()+1,floppy_head_track[floppyno],fdc_sr);
+          sprintf(tmp_buffer,"%C:%1d-%02d-%02d",'A'+DRIVE,
+            CURRENT_SIDE,floppy_head_track[DRIVE],
+            (WD1772.CommandType()==2)?fdc_sr:0);
 #endif
           size_t drive_info_length=strlen(tmp_buffer);
           int x=x1-(drive_info_length+1)*16;

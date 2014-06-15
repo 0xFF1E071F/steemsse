@@ -173,9 +173,20 @@ void power_on()
 #if defined(STEVEN_SEAGAL) && defined(SSE_DRIVE)
     SF314[floppyno].Id=floppyno;
 #if defined(SSE_DRIVE_MOTOR_ON)
-    SF314[floppyno].MotorOn=false;
+    SF314[floppyno].motor_on=false;
+    SF314[floppyno].State.motor=false;
+#ifdef SSE_DISK_STW
+    SF314[floppyno].rpm=300; // temp
+    WD1772.Lines.motor=false;
+#endif
+
 #endif
 #endif
+
+#if defined(SSE_DISK1)
+    Disk[floppyno].Id=floppyno;//same idea
+#endif
+
   }
   fdc_tr=0;fdc_sr=0;fdc_dr=0;
 
@@ -226,6 +237,12 @@ void reset_peripherals(bool Cold)
     TRACE_LOG("Reset peripherals (cold)\n");
   else
     TRACE_LOG("Reset peripherals (warm)\n");
+
+#if defined(SSE_OSD_CONTROL)
+  if( !Cold && (OSD_MASK1&OSD_CONTROL_RESET)) 
+    TRACE_OSD("RESET");
+#endif
+
 #ifndef NO_CRAZY_MONITOR
   if (extended_monitor){
     if (em_planes==1){

@@ -65,8 +65,8 @@ EXT int cpu_timer_at_start_of_hbl;
           INSTRUCTION_TIME_ROUND(0); \
           INSTRUCTION_TIME((8000000-(ABSOLUTE_CPU_TIME-shifter_cycle_base)) % 10);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_HBL) && defined(SSE_INT_JITTER)
-#else
+// see SSEInterrupt.h for new definitions
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_INT_HBL_INLINE))
 #define HBL_INTERRUPT  \
   {                  \
     hbl_pending=false;                 \
@@ -80,22 +80,8 @@ EXT int cpu_timer_at_start_of_hbl;
     debug_check_break_on_irq(BREAK_IRQ_HBL_IDX);    \
   }
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBL) && defined(SSE_INT_JITTER) 
-#elif defined(STEVEN_SEAGAL) && defined(SSE_INT_VBL_IACK)
-#define VBL_INTERRUPT                                                        \
-          {                                                               \
-            vbl_pending=false;                                             \
-            log_to_section(LOGSECTION_INTERRUPTS,EasyStr("INTERRUPT: VBL at PC=")+HEXSl(pc,6)+" time is "+ABSOLUTE_CPU_TIME+" ("+(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl)+" cycles into screen)");\
-            M68K_UNSTOP;                                                  \
-            INTERRUPT_START_TIME_WOBBLE;                \
-            time_of_last_vbl_interrupt=ACT;\
-            INSTRUCTION_TIME_ROUND(56); \
-            m68k_interrupt(LPEEK(0x0070));                                \
-            sr=(sr&WORD(~SR_IPL))|WORD(SR_IPL_4);                         \
-            debug_check_break_on_irq(BREAK_IRQ_VBL_IDX);    \
-          }
 
-#else
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_INT_VBL_INLINE))
 #define VBL_INTERRUPT                                                        \
           {                                                               \
             vbl_pending=false;                                             \
@@ -205,11 +191,46 @@ EXT int cpu_timer_at_start_of_hbl;
 //SS how to optimise when we don't use it?
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_FLOPPY_EVENT)
+
+// version with 3 events: 1 for WD1772, 1 for each drive
+#define PREPARE_EVENT_CHECK_FOR_FLOPPY       \
+if ((time_of_next_event-SF314[0].time_of_next_ip) >= 0){                 \
+    time_of_next_event=SF314[0].time_of_next_ip;  \
+    screen_event_vector=event_driveA_ip;                    \
+  }\
+  else if ((time_of_next_event-SF314[1].time_of_next_ip) >= 0){                 \
+    time_of_next_event=SF314[1].time_of_next_ip;  \
+    screen_event_vector=event_driveB_ip;                    \
+  }\
+  else if ((time_of_next_event-WD1772.update_time) >= 0){                 \
+    time_of_next_event=WD1772.update_time;  \
+    screen_event_vector=event_wd1772;                    \
+  }
+
+/*
+#define PREPARE_EVENT_CHECK_FOR_FLOPPY       \
+  if ((time_of_next_event-WD1772.update_time) >= 0){                 \
+    time_of_next_event=WD1772.update_time;  \
+    screen_event_vector=event_wd1772;                    \
+  }\
+  else if ((time_of_next_event-SF314[0].time_of_next_ip) >= 0){                 \
+    time_of_next_event=SF314[0].time_of_next_ip;  \
+    screen_event_vector=event_driveA_ip;                    \
+  }\
+  else if ((time_of_next_event-SF314[1].time_of_next_ip) >= 0){                 \
+    time_of_next_event=SF314[1].time_of_next_ip;  \
+    screen_event_vector=event_driveB_ip;                    \
+  }
+*/
+
+/*
 #define PREPARE_EVENT_CHECK_FOR_FLOPPY       \
   if ((time_of_next_event-floppy_update_time) >= 0){                 \
     time_of_next_event=floppy_update_time;  \
     screen_event_vector=event_floppy;                    \
   }
+
+*/
 
 #else
 #define PREPARE_EVENT_CHECK_FOR_FLOPPY
@@ -297,8 +318,17 @@ void event_pasti_update();
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_FLOPPY_EVENT)
-void event_floppy();
-extern int floppy_update_time;
+
+/*  1 event for FDC: various parts of its program
+    1 event for each drive: IP
+*/
+
+void event_wd1772();
+void event_driveA_ip();
+void event_driveB_ip();
+
+//void event_floppy();
+//extern int floppy_update_time;
 #endif
 
 #undef EXT

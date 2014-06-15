@@ -55,7 +55,7 @@ void m68k_poke(MEM_ADDRESS ad,BYTE x);
 #if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_LOG_OPTIONS)
 #if !defined(SSE_DEBUG_TRACE_CONTROL)
                                     {"Floppy data",LOGSECTION_FDC_BYTES},
-                                    {"IPF sector info",LOGSECTION_IPF_LOCK_INFO},
+//                                    {"IPF sector info",LOGSECTION_IPF_LOCK_INFO},
 #endif
                                     {"Image info",LOGSECTION_IMAGE_INFO},
                                     {"Gemdos",LOGSECTION_STEMDOS},
@@ -679,10 +679,13 @@ Str scanline_cycle_log()
 }
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SAVE_NEO)
+#if defined(STEVEN_SEAGAL) 
+#if defined(SSE_VID_SAVE_NEO) || defined(SSE_DISK_STW)
 WORD change_endian(WORD x) {
+  // it mustn't be efficient for current use
   BYTE high=x>>8;
   BYTE low=x&0xFF;
   return (low<<8) | high;
 }
+#endif
 #endif

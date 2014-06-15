@@ -1,7 +1,5 @@
-#ifndef COMTYPE_H
-#define COMTYPE_H
-
-
+#ifndef COMMONTYPES_H
+#define COMMONTYPES_H
 
 typedef void *PVOID;
 typedef BYTE *PBYTE;
@@ -46,38 +44,38 @@ typedef SQUAD *PSQUAD;
 #define SDWORD_MAX LONG_MAX
 
 enum {
-  DB_0,
-  DB_1,
-  DB_2,
-  DB_3,
-  DB_4,
-  DB_5,
-  DB_6,
-  DB_7,
-  DB_8,
-  DB_9,
-  DB_10,
-  DB_11,
-  DB_12,
-  DB_13,
-  DB_14,
-  DB_15,
-  DB_16,
-  DB_17,
-  DB_18,
-  DB_19,
-  DB_20,
-  DB_21,
-  DB_22,
-  DB_23,
-  DB_24,
-  DB_25,
-  DB_26,
-  DB_27,
-  DB_28,
-  DB_29,
-  DB_30,
-  DB_31
+	DB_0 = 0,
+	DB_1,
+	DB_2,
+	DB_3,
+	DB_4,
+	DB_5,
+	DB_6,
+	DB_7,
+	DB_8,
+	DB_9,
+	DB_10,
+	DB_11,
+	DB_12,
+	DB_13,
+	DB_14,
+	DB_15,
+	DB_16,
+	DB_17,
+	DB_18,
+	DB_19,
+	DB_20,
+	DB_21,
+	DB_22,
+	DB_23,
+	DB_24,
+	DB_25,
+	DB_26,
+	DB_27,
+	DB_28,
+	DB_29,
+	DB_30,
+	DB_31
 };
 
 #define DF_0 (1UL<<DB_0)
@@ -114,9 +112,14 @@ enum {
 #define DF_31 (1UL<<DB_31)
 
 #define DllImport __declspec(dllimport)
-#ifndef DllExport//SS...by pasti.h
-#define DllExport __declspec(dllexport)   
-#endif
+#define DllExport __declspec(dllexport)
+
 #define Naked __declspec(naked)
+
+#ifdef _DEBUG
+#define NODEFAULT   assert(0)
+#else
+#define NODEFAULT   __assume(0)
+#endif
 
 #endif

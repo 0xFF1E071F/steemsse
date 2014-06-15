@@ -1399,6 +1399,20 @@ void event_vbl_interrupt() //SS misleading name?
     FrameEvents.Add(scan_y,0,'S',Shifter.m_SyncMode); 
 #endif
 
+#if defined(SSE_TIMINGS_FRAME_ADJUSTMENT)
+  if(shifter_freq_at_start_of_vbl==50)
+  {
+
+    event_plan_50hz[314
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START)
+      +1 //TODO check if correct...
+#endif
+      ].time=160256;//restore!!!
+
+  }
+#endif
+
+
 }
 //---------------------------------------------------------------------------
 void prepare_cpu_boosted_event_plans()
@@ -1434,7 +1448,8 @@ void event_pasti_update()
 #if defined(STEVEN_SEAGAL) && defined(SSE_PASTI_ONLY_STX)
     || PASTI_JUST_STX && 
 #if defined(SSE_DISK_IMAGETYPE)
-    SF314[floppy_current_drive()].ImageType.Extension!=EXT_STX
+    //SF314[0].ImageType.Extension!=EXT_STX && SF314[1].ImageType.Extension!=EXT_STX
+    SF314[YM2149.SelectedDrive].ImageType.Extension!=EXT_STX
 #else
     SF314[floppy_current_drive()].ImageType!=3
 #endif
@@ -1487,12 +1502,28 @@ void event_trigger_vbi() { //6X cycles into frame (reference end of HSYNC)
     
     Here we should transfer control, or dispatch to handlers
 */
-
+/*
 int floppy_update_time=0;
 
 void event_floppy() {
   floppy_update_time=ACT+n_cpu_cycles_per_second; // put into future
 }
+*/
+
+void event_wd1772() {
+  WD1772.OnUpdate();
+}
+
+
+void event_driveA_ip() {
+  SF314[0].IndexPulse();
+}
+
+
+void event_driveB_ip() {
+  SF314[1].IndexPulse();
+}
+
 #endif
 
 #endif//seagal

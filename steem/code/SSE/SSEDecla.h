@@ -102,13 +102,16 @@ int SS_signal; // "handy" global mask (future coding horror case)
 
 #ifdef _MSC_VER
 #pragma comment(lib, "../../3rdparty/caps/CAPSImg.lib")
-#ifndef SS_VS2012_DELAYDLL
+#ifndef SSE_VS2012_DELAYDLL
 #pragma comment(linker, "/delayload:CAPSImg.dll")
 #endif
 #endif
 
 #ifdef __BORLANDC__
+///Lib:DelayImp.lib
+//#pragma comment(lib, "DelayImp.lib")
 #pragma comment(lib, "../../3rdparty/caps/bcclib/CAPSImg.lib")
+///#pragma comment(linker, "/delayload:CAPSImg.dll")
 #endif
 
 #endif
@@ -138,12 +141,12 @@ int SS_signal; // "handy" global mask (future coding horror case)
 
 #ifdef _MSC_VER
 #pragma comment(lib, "Delayimp.lib")
-#ifndef SS_VS2012_DELAYDLL
+#ifndef SSE_VS2012_DELAYDLL
 #pragma comment(linker, "/ignore:4199")
 #endif
 #endif
 
-//TODO broken! the BCC needs the DLL anyway 
+//TODO broken! the BCC build needs the DLL anyway 
 #ifdef __BORLANDC__
 extern DelayedLoadHook _EXPDATA __pfnDliFailureHook;
 FARPROC WINAPI MyLoadFailureHook(dliNotification dliNotify, DelayLoadInfo * pdli);
@@ -208,7 +211,7 @@ int ChangeBorderSize(int size); // gui.cpp
 #if defined(SSE_VID_FREEIMAGE4)
 #ifdef _MSC_VER
 #pragma comment(lib,"../../3rdparty/FreeImage/FreeImage.lib")
-#ifndef SS_VS2012_DELAYDLL
+#ifndef SSE_VS2012_DELAYDLL
 #pragma comment(linker, "/delayload:FreeImage.dll")
 #endif
 #endif

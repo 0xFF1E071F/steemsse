@@ -167,7 +167,7 @@ const int psg_flat_volume_level[16]={0*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,8*VA/10
                                       287*VA/1000+VZL*VFP,407*VA/1000+VZL*VFP,648*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP};
 
 
-#if defined(SS_PSG_FIXED_VOL_FIX1)
+#if defined(SSE_YM2149_FIXED_VOL_FIX1)
 /*  Values based on the graphic in Yamaha doc.
     It remains to be seen/heard if the sound is better with these values or
     Steem original values.
@@ -182,7 +182,7 @@ const int psg_flat_volume_level2[16]=
 
 #endif
 
-#if defined(SS_PSG_FIXED_VOL_FIX2) 
+#if defined(SSE_YM2149_FIXED_VOL_FIX2) 
 /*  For this mod we use ljbk's table when we reckon we're playing samples.
     This is the case when tone and noise generators are disabled.
     Note that some games play samples on only some channel(s) or with another
@@ -225,7 +225,7 @@ const int psg_envelope_level[8][64]={
     VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP}};
 
 
-#if defined(SS_PSG_ENV_FIX1)
+#if defined(SSE_YM2149_ENV_FIX1)
 /*  Values based on the graphic in Yamaha doc.
     It remains to be seen/heard if the sound is better with these values or
     Steem original values.
@@ -300,14 +300,14 @@ HRESULT Sound_Start()
   // Work out startup voltage
   int envshape=psg_reg[13] & 15;
   int flatlevel=0;
-#if defined(SS_PSG_FIXED_VOL_FIX2)
+#if defined(SSE_YM2149_FIXED_VOL_FIX2)
   if(SSEOption.PSGFixedVolume&& playing_samples())
     flatlevel=get_fixed_volume();
   else
 #endif
   for (int abc=0;abc<3;abc++){
     if ((psg_reg[8+abc] & BIT_4)==0){
-#if defined(SS_PSG_FIXED_VOL_FIX1)
+#if defined(SSE_YM2149_FIXED_VOL_FIX1)
       flatlevel+=SSEOption.PSGMod?psg_flat_volume_level2[psg_reg[8+abc] & 15]:
         psg_flat_volume_level[psg_reg[8+abc] & 15];
 #endif
@@ -1806,7 +1806,7 @@ void psg_prepare_envelope() {
 #else
 
 
-#if defined(SS_PSG_ENV_FIX1)
+#if defined(SSE_YM2149_ENV_FIX1)
 #define PSG_PREPARE_ENVELOPE                                \
       int envperiod=max( (((int)psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]) <<8) + psg_reg[PSGR_ENVELOPE_PERIOD_LOW],1);  \
       af=envperiod;                              \
@@ -1918,7 +1918,7 @@ void psg_prepare_envelope() {
             psg_noisetoggle=psg_noise[psg_noisecounter];   \
           }
 
-#if defined(SS_PSG_ENV_FIX1)
+#if defined(SSE_YM2149_ENV_FIX1)
 
 #define PSG_ENVELOPE_ADVANCE                                   \
           psg_envcountdown-=TWO_TO_SEVENTEEN;  \
@@ -1976,14 +1976,14 @@ void psg_write_buffer(int abc,DWORD to_t)
   to_t=max(to_t,t);//SS can't go backwards
   to_t=min(to_t,psg_time_of_last_vbl_for_writing+PSG_CHANNEL_BUF_LENGTH);//SS don't exceed buffer
   int count=max(min((int)(to_t-t),PSG_CHANNEL_BUF_LENGTH-psg_buf_pointer[abc]),0);//SS don't exceed buffer
-#if defined(SS_PSG_OPT1)
+#if defined(SSE_YM2149_OPT1)
   if(!count)
     return;
 #endif
   int toneperiod=(((int)psg_reg[abc*2+1] & 0xf) << 8) + psg_reg[abc*2];
 
   if ((psg_reg[abc+8] & BIT_4)==0){ // Not Enveloped
-#if defined(SS_PSG_FIXED_VOL_FIX2)
+#if defined(SSE_YM2149_FIXED_VOL_FIX2)
 /*  One unique volume. It's possible because we sync rendering in case
     of sample playing (see below).
 */
@@ -1991,14 +1991,14 @@ void psg_write_buffer(int abc,DWORD to_t)
     if(SSEOption.PSGFixedVolume && playing_samples())
       vol=get_fixed_volume(); 
     else
-#if defined(SS_PSG_FIXED_VOL_FIX1)
+#if defined(SSE_YM2149_FIXED_VOL_FIX1)
       vol=SSEOption.PSGMod?psg_flat_volume_level2[psg_reg[8+abc] & 15]:
         psg_flat_volume_level[psg_reg[8+abc] & 15];
 #else
       vol=psg_flat_volume_level[psg_reg[abc+8] & 15];
 #endif
 #else
-#if defined(SS_PSG_FIXED_VOL_FIX1)
+#if defined(SSE_YM2149_FIXED_VOL_FIX1)
     int vol=SSEOption.PSGMod?psg_flat_volume_level2[psg_reg[8+abc] & 15]:
         psg_flat_volume_level[psg_reg[8+abc] & 15];
 #else
@@ -2043,7 +2043,7 @@ void psg_write_buffer(int abc,DWORD to_t)
     }else{ //nothing enabled //SS playing samples
       //TRACE("F%d y%d PSG %x: %d at %d\n",FRAME,scan_y,abc+8,count,vol);
       for (;count>0;count--){
-#if defined(SS_PSG_FIXED_VOL_FIX2)
+#if defined(SSE_YM2149_FIXED_VOL_FIX2)
 /*  We don't add, we set (so there are useless rewrites), so we can use the
     full table value (no >> shift).
     If DMA sound is added to this, too bad!
@@ -2168,7 +2168,7 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
   }
   if (reg>=PSGR_PORT_A) return; //SS 14,15
   //ASSERT(!(old_val==new_val && reg!=PSGR_ENVELOPE_SHAPE));
-#if !defined(SS_PSG_WRITE_SAME_VALUE) //test?
+#if !defined(SSE_YM2149_WRITE_SAME_VALUE) //test?
   if (old_val==new_val && reg!=PSGR_ENVELOPE_SHAPE) return;
 #endif
   if (psg_capture_file){
@@ -2236,7 +2236,7 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
 
       // ST doesn't quantize, it changes the level straight away.
       //  t=psg_quantize_time(reg-8,t);
-#if defined(SS_PSG_FIXED_VOL_FIX2)
+#if defined(SSE_YM2149_FIXED_VOL_FIX2)
 /*  The fixed volume being chosen for all channels at once in case of sample
     playing, we render them before so that volume values are correct at
     each time.

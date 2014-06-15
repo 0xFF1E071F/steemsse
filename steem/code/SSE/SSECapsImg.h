@@ -25,7 +25,7 @@ struct TCaps {
   void Reset();
   void Hbl(); // run the emulator for the HBL (512 cycles at 50hz)
   int InsertDisk(int drive, char *File,CapsImageInfo *img_info);
-  int IsIpf(int drive);
+  int IsIpf(BYTE drive); //TODO: use ImageType instead
   void RemoveDisk(int drive);
   UDWORD ReadWD1772(BYTE Line);
   void WritePsgA(int data);

@@ -77,7 +77,7 @@ public:
 #ifdef _MSC_VER
 #pragma comment(lib,"../../3rdparty/UnRARDLL/unrar.lib")
 #if defined(WIN32) && defined(SSE_DELAY_LOAD_DLL)
-#ifndef SS_VS2012_DELAYDLL
+#ifndef SSE_VS2012_DELAYDLL
 #pragma comment(linker, "/delayload:unrar.dll")
 #endif
 #endif

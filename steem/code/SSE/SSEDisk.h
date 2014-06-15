@@ -4,6 +4,8 @@
 
 #if defined(SSE_DISK)
 
+#include "SSEWD1772.h"
+
 #if defined(SSE_DISK_IMAGETYPE) 
 
 /*  v3.7.0 We separate disk image type in two:
@@ -22,6 +24,32 @@
 
 
 //TODO move gap stuff from drive here
+
+
+/* v3.7.0 We create a new object 'Disk', as global duet for
+   floppy drives inserted in drives.
+   Global to avoid long references (drive[0].disk.etc.) and 
+   because we prefer interdependent objects to a hierarchy. 
+   This could change.
+   Disk[0] is the one inserted in drive A:
+   Disk[1] is the one inserted in drive B:
+   Most functions are for "current track"
+   Current track and side are drive's
+*/
+
+#if defined(SSE_DISK1)
+
+  struct TDisk {
+    BYTE Id; //0,1, same as drive
+    WORD current_byte;
+    WORD TrackBytes;
+    //TWD1772MfmDecoded GetByte(WORD position=0xFFFF);
+    WORD GetByte(WORD position=0xFFFF);
+    TDisk();
+  };
+
+#endif
+
 
 #endif//#if defined(SSE_DISK)
 

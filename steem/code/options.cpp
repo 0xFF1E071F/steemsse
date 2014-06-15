@@ -1630,7 +1630,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
-#if defined(SS_PSG_FIX_TABLES)
+#if defined(SSE_YM2149_FIX_TABLES)
         case 7311: // PSG Mods Yamaha doc
           if (HIWORD(wPar)==BN_CLICKED){
             SSEOption.PSGMod=!SSEOption.PSGMod;
@@ -1640,7 +1640,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
-#if defined(SS_PSG_FIXED_VOL_FIX2)
+#if defined(SSE_YM2149_FIXED_VOL_FIX2)
         case 7312: // PSG samples ljbk
           if (HIWORD(wPar)==BN_CLICKED){
             SSEOption.PSGFixedVolume=!SSEOption.PSGFixedVolume;

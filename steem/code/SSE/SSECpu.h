@@ -227,6 +227,17 @@ struct TM68000 {
   inline void RefetchIr();
 
 #endif
+
+#if defined(SSE_CPU_E_CLOCK)
+  bool EClock_synced;
+ 
+#ifdef SSE_CPU_E_CLOCK_DISPATCHER
+enum {ECLOCK_ACIA,ECLOCK_HBL,ECLOCK_VBL}; //debug/hacks
+void SyncEClock(int dispatcher);
+#else
+void SyncEClock();
+#endif
+#endif
 };
 
 extern TM68000 M68000;
@@ -575,6 +586,12 @@ inline void TM68000::PerformRte() {
   }
 #endif
 
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_INTERRUPTS 
+  TRACE_LOG("%d %d %d pc %X RTE to %X\n",TIMING_INFO,old_pc,pushed_return_address);
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_CPU 
+
 #if defined(SSE_DEBUG_SHOW_INTERRUPT)
   Debug.Rte();
 #endif
@@ -625,6 +642,10 @@ inline void TM68000::PrefetchIrc() {
 
 inline void TM68000::PrefetchIrcNoRound() { // the same except no rounding
 
+#if defined(SSE_CPU_ROUNDING_MOVE) // &&...
+  // normally not called anymore depending on defines
+//  BRK(PrefetchIrcNoRound);
+#endif
 #if defined(SSE_DEBUG) && !(defined(_DEBUG) && defined(DEBUG_BUILD))
   ASSERT(!prefetched_2); // strong, only once per instruction 
 #endif
@@ -707,6 +728,10 @@ inline void TM68000::Process() {
 
   old_pc=pc;  
 //ASSERT(old_pc!=0x006164);
+//if(pc==0x00FB1A) TRACE("%d %d %d pc %X reached\n",TIMING_INFO,pc);
+//if(pc==0x01255E) TRACE("%d %d %d pc %X reached\n",TIMING_INFO,pc);
+//if(pc==0x01290A) TRACE("%d %d %d pc %X reached\n",TIMING_INFO,pc);
+
 #if defined(SSE_CPU_PREFETCH)
 /*  basic prefetch rule:
 Just before the start of any instruction two words (no more and no less) are 
@@ -740,6 +765,11 @@ already fetched. One word will be in IRD and another one in IRC.
   CheckRead=0;
 #endif
 
+#if defined(SSE_CPU_E_CLOCK)
+  EClock_synced=false; // one more bool in Process()!
+#endif
+
+//not defined
 #if defined(SSE_IPF_CPU) //|| defined(SSE_DEBUG)
   int cycles=cpu_cycles;
 #endif

@@ -25,7 +25,6 @@
 #include "SSEFrameReport.cpp"
 #endif
 
-
 TShifter Shifter; // singleton
 
 
@@ -350,10 +349,13 @@ Sync is set back to 2 between R2 and R0, this is isn't a line +24
 #if defined(SSE_SHIFTER_LINE_PLUS_20_SHIFT)
         HblPixelShift=-8; // fixes Riverside shift
 
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT)
+#if defined(SSE_VID_BORDERS_416_NO_SHIFT0)
 /*  bugfix v3.6.0 see below for line +26, it's the same problem
+    This is necessary because normal scanlines are pushed 4 pixels to the right
+    in this mode (eg Riverside).
+    There's trash in the border, that should be black (TODO).
 */
-        if(SSE_HACKS_ON&&SideBorderSize==VERY_LARGE_BORDER_SIDE
+        if(SSE_HACKS_ON && SideBorderSize==VERY_LARGE_BORDER_SIDE
 #if defined(SSE_VID_BORDERS_416_NO_SHIFT1)
 /*  v3.6.1, not really a bugfix, but a convenience, so that player
     doesn't need to adjust 'Display size' if borders are not always
@@ -2093,10 +2095,10 @@ Problem: too many cases of WU1, that should be the rarer one
   }
 #endif
 
-#if defined(SSE_SHIFTER_VERTICAL_OVERSCAN_TRACE)
+#if defined(SSE_SHIFTER_VERTICAL_OVERSCAN_TRACE)//MFD
   if(on_overscan_limit) 
   {
-    VideoEvents.ReportLine();
+   ///////// FrameEvents.ReportLine();
     TRACE_LOG("F%d y%d freq at %d %d at %d %d switch %d to %d, %d to %d, %d to %d overscan %X\n",FRAME,scan_y,t,FreqAtCycle(t),t-2,FreqAtCycle(t-2),PreviousFreqChange(PreviousFreqChange(t)),FreqChangeAtCycle(PreviousFreqChange(PreviousFreqChange(t))),PreviousFreqChange(t),FreqChangeAtCycle(PreviousFreqChange(t)),NextFreqChange(t),FreqChangeAtCycle(NextFreqChange(t)),CurrentScanline.Tricks);
   //  ASSERT( scan_y!=199|| (CurrentScanline.Tricks&TRICK_BOTTOM_OVERSCAN) );
     //ASSERT( scan_y!=199|| shifter_last_draw_line==247 );
@@ -2455,6 +2457,22 @@ void TShifter::IncScanline() { // a big extension of 'scan_y++'!
     TRACE_OSD("y %d %X %d",scan_y,CurrentScanline.Tricks,CurrentScanline.Bytes);
   }
 #endif
+
+#if defined(SSE_TIMINGS_FRAME_ADJUSTMENT)
+  // this reduces frame cycles, which isn't foreseen in Steem
+  if(CurrentScanline.Cycles==508 && shifter_freq_at_start_of_vbl==50)
+  {
+    event_plan_50hz[314
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START)
+      +1 //TODO check if correct... //+ make a define... 
+#endif
+].time-=4;
+    n508lines++; //that or adjust all plan?
+    TRACE_LOG("F%d y%d: frame cycles -4 (correction#%d)\n",FRAME,scan_y,n508lines);
+    
+  }
+#endif
+
 
   scan_y++; 
   HblPixelShift=0;  
@@ -3511,8 +3529,8 @@ void TShifter::SetSyncMode(BYTE NewSync) {
 #if defined(SSE_DEBUG_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SYNCMODE)
     FrameEvents.Add(scan_y,CyclesIn,'S',NewSync); 
-  //TRACE_LOG("y%d c%d s%d\n",scan_y,CyclesIn,NewSync);//TEMP
 #endif
+  //TRACE("F%d y%d c%d s%d frame %d\n",TIMING_INFO,NewSync,shifter_freq_at_start_of_vbl);//TEMP
   int new_freq;  
 
   m_SyncMode=NewSync&3;
@@ -3629,7 +3647,7 @@ void TShifter::Vbl() {
     TRACE_OSD("60HZ");
 #endif
 #if defined(SSE_OSD_CONTROL)
-  if(OSD_MASK1 & OSD_CONTROL_60HZ && shifter_freq_at_start_of_vbl==60) 
+  if( (OSD_MASK1&OSD_CONTROL_60HZ) && shifter_freq_at_start_of_vbl==60) 
     TRACE_OSD("60HZ");
 #endif
 
@@ -3638,8 +3656,9 @@ void TShifter::Vbl() {
   HblPixelShift=0;
 #endif
 
-  //CurrentScanline.Tricks=0;
-  //freq_change_this_scanline=0;
+#if defined(SSE_TIMINGS_FRAME_ADJUSTMENT)
+  n508lines=0;
+#endif
 }
 
 #undef LOGSECTION
@@ -4401,10 +4420,16 @@ Cases to consider: TCB, Mindbomb/No Shit, Omega
   else // lines witout fetching (before or after frame)
     sdp=shifter_draw_pointer;
 
-#if defined(SSE_SHIFTER_SDP_TRACE_LOG2)
-  if(scan_y==-29) TRACE_LOG("Read SDP F%d y%d c%d SDP %X (%d - %d) sdp %X\n",FRAME,scan_y,CyclesIn,sdp,sdp-shifter_draw_pointer_at_start_of_line,CurrentScanline.Bytes,shifter_draw_pointer);
-#endif
+#if defined(SSE_SHIFTER_SDP_TRACE2)
   int nbytes=sdp-shifter_draw_pointer_at_start_of_line;
+  if(nbytes && scan_y==-29) TRACE("Read SDP F%d y%d c%d SDP %X (%d - %d) sdp %X\n",FRAME,scan_y,CyclesIn,sdp,sdp-shifter_draw_pointer_at_start_of_line,CurrentScanline.Bytes,shifter_draw_pointer);
+#endif
+
+
+
+///////////////////////////if(nbytes==2) sdp-=2;//TEST
+
+
   return sdp;
 }
 

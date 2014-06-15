@@ -18,7 +18,7 @@ void TOptionBox::CreatePage(int n)
     case 11:CreateProfilesPage();break;
     case 6:CreateStartupPage();break;
     case 15:CreatePathsPage();break;
-#if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE)
     case 16:CreateSSEPage();break;
 #endif
 	}
@@ -520,7 +520,7 @@ void TOptionBox::CreateGeneralPage()
               page_p);
 
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_OPTION_DISABLE_DSP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_OPTION_DISABLE_DSP)
   y+=35;
   enable_dsp_but.create(XD,page_p,page_l,y,0,25,
           button_notify_proc,this,BT_CHECKBOX,
@@ -546,7 +546,7 @@ void TOptionBox::CreateSoundPage()
   sound_mode_dd.id=5001;
   sound_mode_dd.make_empty();
   sound_mode_dd.additem(T("None (Mute)"));
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_FILTER_STF)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF)
   sound_mode_dd.additem(T("Simulated Monitor Speaker"));
 #else
   sound_mode_dd.additem(T("Simulated ST Speaker"));
@@ -819,7 +819,7 @@ void TOptionBox::CreateOSDPage()
   hxc_button *p_but;
   hxc_dropdown *p_dd;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_LED)
+#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DRIVE_LED)
   p_but=new hxc_button(XD,page_p,page_l,y,0,25,button_notify_proc,this,
                           BT_CHECKBOX,T("Disk access light"),12000,BkCol);
 #else
@@ -829,7 +829,7 @@ void TOptionBox::CreateOSDPage()
   p_but->set_check(osd_show_disk_light);
   y+=35;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DRIVE_INFO)
   p_but=new hxc_button(XD,page_p,page_l,y,0,25,button_notify_proc,this,
                           BT_CHECKBOX,T("Disk drive track info"),12001,BkCol);
   p_but->set_check(OSD_DRIVE_INFO);
@@ -869,7 +869,7 @@ void TOptionBox::CreateOSDPage()
   p_but->set_check(osd_show_scrollers);
   y+=35;
 
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_SCROLLER_DISK_IMAGE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_SCROLLER_DISK_IMAGE)
   p_but=new hxc_button(XD,page_p,page_l,y,0,25,button_notify_proc,this,
                           BT_CHECKBOX,T("Disk image names"),12002,BkCol);
   p_but->set_check(OSD_IMAGE_NAME);
@@ -1145,7 +1145,7 @@ void TOptionBox::CreatePathsPage()
 }
 //---------------------------------------------------------------------------
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE) && defined(SS_UNIX)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE) && defined(SSE_UNIX)
 
 void TOptionBox::CreateSSEPage() {
   int y=10; // top
@@ -1153,7 +1153,7 @@ void TOptionBox::CreateSSEPage() {
   const int LineHeight=30;
   const int HorizontalSeparation=10;
 
-#if defined(SS_VID_BORDERS)
+#if defined(SSE_VID_BORDERS)
   Wid=hxc::get_text_width(XD,T("Display size"));
   border_size_label.create(XD,page_p,page_l,y,Wid,25,NULL,this,BT_STATIC 
     | BT_TEXT,T("Display Size"),0,BkCol);
@@ -1162,15 +1162,15 @@ void TOptionBox::CreateSSEPage() {
   border_size_dd.additem("384 x 270",0);
 //  border_size_dd.additem("Large (400x275)",1);
   border_size_dd.additem("400 x 278 (buggy)",1);
-#if defined(SS_VID_BORDERS_412)
-#if defined(SS_VID_BORDERS_413) // !
-#if defined(SS_VID_BORDERS_BIGTOP) && !defined(SS_VID_BORDERS_416)
+#if defined(SSE_VID_BORDERS_412)
+#if defined(SSE_VID_BORDERS_413) // !
+#if defined(SSE_VID_BORDERS_BIGTOP) && !defined(SSE_VID_BORDERS_416)
   border_size_dd.additem("413 x 286",2);  
 #else
   border_size_dd.additem("413 x 280 (buggy)",2);  
 #endif
 #else
-#if defined(SS_VID_BORDERS_BIGTOP) && !defined(SS_VID_BORDERS_416)
+#if defined(SSE_VID_BORDERS_BIGTOP) && !defined(SSE_VID_BORDERS_416)
   border_size_dd.additem("412 x 286",2);  
 #else
   border_size_dd.additem("412 x 280",2);  
@@ -1178,8 +1178,8 @@ void TOptionBox::CreateSSEPage() {
 #endif//413
 #endif//412
 
-#if defined(SS_VID_BORDERS_416)
-#if defined(SS_VID_BORDERS_BIGTOP)
+#if defined(SSE_VID_BORDERS_416)
+#if defined(SSE_VID_BORDERS_BIGTOP)
   border_size_dd.additem("416 x 286",3);  
 #else
   border_size_dd.additem("416 x 280",3);  
@@ -1196,7 +1196,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SS_VAR_MOUSE_CAPTURE)
+#if defined(SSE_VAR_MOUSE_CAPTURE)
   capture_mouse_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Capture mouse"),4002,BkCol);
   capture_mouse_but.set_check(CAPTURE_MOUSE);
@@ -1206,7 +1206,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SS_HACKS)
+#if defined(SSE_HACKS)
   specific_hacks_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Hacks"),4003,BkCol);
   specific_hacks_but.set_check(SSE_HACKS_ON);
@@ -1215,7 +1215,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SS_VAR_STEALTH) 
+#if defined(SSE_VAR_STEALTH) 
   stealth_mode_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Emu detect"),4004,BkCol);
   stealth_mode_but.set_check(!STEALTH_MODE);
@@ -1224,7 +1224,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SS_STF)
+#if defined(SSE_STF)
   Wid=hxc::get_text_width(XD,T("ST model"));
   st_type_label.create(XD,page_p,page_l,y,Wid,25,NULL,this,BT_STATIC 
     | BT_TEXT,T("ST Model"),0,BkCol);
@@ -1232,7 +1232,7 @@ void TOptionBox::CreateSSEPage() {
   st_type_dd.make_empty();
   st_type_dd.additem("STE",0);
   st_type_dd.additem("STF",1);
-#if defined(SS_STF_MEGASTF)
+#if defined(SSE_STF_MEGASTF)
   st_type_dd.additem("Mega ST4",2);
 #endif
   st_type_dd.select_item_by_data(ST_TYPE);
@@ -1246,14 +1246,14 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SS_MMU_WAKE_UP)
+#if defined(SSE_MMU_WAKE_UP)
   Wid=hxc::get_text_width(XD,T("Wake-up state"));
   wake_up_label.create(XD,page_p,page_l,y,Wid,25,NULL,this,BT_STATIC 
     | BT_TEXT,T("Wake-up state"),0,BkCol);
   wake_up_dd.id=4006;
   wake_up_dd.make_empty();
   wake_up_dd.additem("Ignore wake-up state",0);
-#if defined(SS_MMU_WAKE_UP_DL)
+#if defined(SSE_MMU_WAKE_UP_DL)
   wake_up_dd.additem("DL3 WU2 WS2",1);
   wake_up_dd.additem("DL4 WU2 WS4",2);
   wake_up_dd.additem("DL5 WU1 WS3",3);
@@ -1273,7 +1273,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SS_IKBD_6301) 
+#if defined(SSE_IKBD_6301) 
   hd6301emu_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("6301 true emu"),4006,BkCol);
   hd6301emu_but.set_check(HD6301EMU_ON);
@@ -1283,7 +1283,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SS_VAR_KEYBOARD_CLICK)
+#if defined(SSE_VAR_KEYBOARD_CLICK)
   keyboard_click_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Keyboard click"),4007,BkCol);
   int keyboard_click=( PEEK(0x484)&1 ); // get current setting
@@ -1294,7 +1294,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SS_PSG_FIX_TABLES) 
+#if defined(SSE_YM2149_FIX_TABLES) 
   psg_fixtables_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("P.S.G."),4012,BkCol);
   psg_fixtables_but.set_check(SSEOption.PSGMod);
@@ -1304,7 +1304,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SS_PSG_FIXED_VOL_FIX2)
+#if defined(SSE_YM2149_FIXED_VOL_FIX2)
   psg_samples_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Samples"),4013,BkCol);
   psg_samples_but.set_check(SSEOption.PSGFixedVolume);
@@ -1314,7 +1314,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SS_SOUND_FILTER_STF)
+#if defined(SSE_SOUND_FILTER_STF)
   psg_filter_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Filter"),4008,BkCol);
   psg_filter_but.set_check(PSG_FILTER_FIX);
@@ -1324,7 +1324,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SS_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE)
   ste_microwire_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Microwire"),4009,BkCol);
   ste_microwire_but.set_check(MICROWIRE_ON);
@@ -1334,7 +1334,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SS_VAR_OPTION_SLOW_DISK) // because many people miss it in disk manager
+#if defined(SSE_VAR_OPTION_SLOW_DISK) // because many people miss it in disk manager
   slow_disk_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Slow drive"),4010,BkCol);
   slow_disk_but.set_check(!floppy_instant_sector_access);
@@ -1344,7 +1344,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif//no more room after this option!
 
-#if defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+#if defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
   use_sdl_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Use SDL"),4011,BkCol);
   use_sdl_but.set_check(USE_SDL);

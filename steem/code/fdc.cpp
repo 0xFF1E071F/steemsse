@@ -250,10 +250,6 @@ void fdc_type1_check_verify()
     {
       WORD HBLsToNextID;
       BYTE NextIDNum=0;//370 init
-#if defined(SSE_DISK_STW)
-      if(IMAGE_STW)
-        ImageSTW[DRIVE].LoadTrack(CURRENT_SIDE,floppy_head_track[DRIVE]);
-#endif
       //this should work with STW as well:
       SF314[DRIVE].NextID(NextIDNum,HBLsToNextID); // C++ references
       HBLsToNextID+=SF314[DRIVE].BytesToHbls(6); // right after ID
@@ -417,7 +413,7 @@ void floppy_fdc_command(BYTE cm)
 #if defined(STEVEN_SEAGAL) && defined(SSE_DRIVE_MOTOR_ON)
     if( ADAT)//// && !FloppyDrive[floppy_current_drive()].Empty() )
     {
-      SF314[DRIVE].MotorOn=true;
+      SF314[DRIVE].motor_on=true;
       SF314[DRIVE].HblOfMotorOn=hbl_count;
     }
     TRACE_LOG("Motor on drive %c\n",'A'+DRIVE);
@@ -457,7 +453,7 @@ void floppy_fdc_command(BYTE cm)
 #if defined(SSE_DRIVE_MOTOR_ON)
   else
   {
-    SF314[DRIVE].MotorOn=true;
+    SF314[DRIVE].motor_on=true;
     SF314[DRIVE].HblOfMotorOn=hbl_count;
   }
 #endif
@@ -483,9 +479,9 @@ On the WD1772 all commands, except the Force Interrupt Command,
   if(ADAT)
   {
     ASSERT( WD1772.IndexCounter<6 );
-    if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE&&SF314[DRIVE].MotorOn)
+    if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE&&SF314[DRIVE].motor_on)
       WD1772.IndexCounter++;
-
+/////TRACE_LOG("agenda_fdc_spun_up %d \n",WD1772.IndexCounter);
     if(WD1772.IndexCounter<6)
     {
       agenda_add(agenda_fdc_spun_up,FDC_HBLS_PER_ROTATION,do_exec);
@@ -503,7 +499,7 @@ void fdc_execute()
   // We need to do something here to make the command take more time
   // if the disk spinning up (fdc_spinning_up).
  
-#if defined(STEVEN_SEAGAL)&&defined(SS_PSG)&&defined(SSE_FDC)
+#if defined(STEVEN_SEAGAL)&&defined(SSE_YM2149)&&defined(SSE_FDC)
   ASSERT( YM2149.Drive()!=TYM2149::NO_VALID_DRIVE || WD1772.CommandType()==4 ||!ADAT);
 #endif
 
@@ -1331,16 +1327,17 @@ We don't use 'revs_to_wait'
   if(ADAT)
   {
     ASSERT( WD1772.IndexCounter<10 );//TODO +1?
-    if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE&&SF314[DRIVE].MotorOn
+    if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE&&SF314[DRIVE].motor_on
 #if defined(SSE_DRIVE_EMPTY_VERIFY_TIME_OUT2)
       &&!FloppyDrive[DRIVE].Empty()
 #endif
       )
       WD1772.IndexCounter++;
+//TRACE("agenda_motor_flag_off %d \n",WD1772.IndexCounter);
     if(WD1772.IndexCounter<10)
     {
 #ifndef SSE_DEBUG_TRACE_IDE
-///TODO mask      TRACE_LOG("IP for motor off %d A%d B%d\n",WD1772.IndexCounter,SF314[0].MotorOn,SF314[1].MotorOn);
+///TODO mask      TRACE_LOG("IP for motor off %d A%d B%d\n",WD1772.IndexCounter,SF314[0].motor_on,SF314[1].motor_on);
 #endif
       agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION,revs_to_wait);
       return;
@@ -1350,7 +1347,7 @@ We don't use 'revs_to_wait'
   fdc_str&=BYTE(~FDC_STR_MOTOR_ON);
 #if defined(STEVEN_SEAGAL) && defined(SSE_DRIVE_MOTOR_ON)
   TRACE_LOG("Motor off drive %c\n",'A'+DRIVE);
-  SF314[DRIVE].MotorOn=false;
+  SF314[DRIVE].motor_on=false;
 #else
   TRACE_LOG("Motor off\n");
 #endif
@@ -1367,7 +1364,7 @@ We don't use 'revs_to_wait'
     fdc_str&=BYTE(~FDC_STR_MOTOR_ON);
 #if defined(STEVEN_SEAGAL) && defined(SSE_DRIVE_MOTOR_ON)
     TRACE_LOG("Motor off drive %c\n",'A'+DRIVE);
-    SF314[DRIVE].MotorOn=false;
+    SF314[DRIVE].motor_on=false;
 #else
     TRACE_LOG("Motor off\n");
 #endif
@@ -1381,7 +1378,7 @@ void agenda_fdc_motor_flag_off(int)
   TRACE_LOG("Motor off\n");
   fdc_str&=BYTE(~FDC_STR_MOTOR_ON);
 #if defined(STEVEN_SEAGAL) && defined(SSE_DRIVE_MOTOR_ON)
-    SF314[DRIVE].MotorOn=false;
+    SF314[DRIVE].motor_on=false;
 #endif
 }
 #endif
@@ -2346,7 +2343,7 @@ void agenda_floppy_write_track(int part)
   BYTE Data;
   int TrackBytes=6448; // Double density format only
 
-  if (floppy->ReadOnly || floppy->STT_File){
+  if (floppy->ReadOnly || floppy->STT_File){ //SS STT is no solution for Format
     fdc_str=FDC_STR_MOTOR_ON | FDC_STR_WRITE_PROTECT;
     agenda_fdc_finished(0);
     return;
@@ -2649,7 +2646,8 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
 #if defined(STEVEN_SEAGAL) && defined(SSE_DMA) && defined(SSE_DEBUG)
   if(TRACE_ENABLED&&!old_irq&&old_irq!=(bool)pPIOI->intrqState) 
   {
-////    TRACE("pasti ");
+    //ASSERT(fdc_cr!=0xF0);
+    TRACE_LOG("STX "); // important info
     Dma.UpdateRegs(true); // finally! simple & elegant
   }
 #endif
@@ -2702,7 +2700,7 @@ void pasti_update_reg(unsigned addr,unsigned data) {
   pioi.data=data;
   pasti->Io(PASTI_IOWRITE,&pioi);
 }
-#endif//#if defined(SSE_DISK_GHOST_SECTOR_STX1)
+#endif
 
 #endif//#if USE_PASTI
 //---------------------------------------------------------------------------

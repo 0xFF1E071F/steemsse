@@ -221,7 +221,11 @@ HRESULT SteemDisplay::InitDD()
     }
 
     log("STARTUP: Calling QueryInterface");
+#if defined(SSE_VID_DD7)
+    if ((Ret=DDObj1->QueryInterface(IID_IDirectDraw7,(LPVOID*)&DDObj)) != DD_OK)
+#else
     if ((Ret=DDObj1->QueryInterface(IID_IDirectDraw2,(LPVOID*)&DDObj)) != DD_OK)
+#endif
         return DDError("QueryInterface FAILED",Ret);
 
     log("STARTUP: Calling SetCooperativeLevel");

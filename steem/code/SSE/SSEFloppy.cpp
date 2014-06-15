@@ -1,5 +1,9 @@
 #include "SSE.h"
 
+/*  SSEFloppy just instantiates as global variables the floppy drive-related
+    objects we define in other files, such as Dma, WD1772, SF314, etc.
+*/
+
 #if defined(STEVEN_SEAGAL)
 
 #if defined(SSE_STRUCTURE_SSEFLOPPY_OBJ)
@@ -45,7 +49,7 @@ EasyStr GetEXEDir();//#include <mymisc.h>//missing...
 #endif
 
 #if defined(SSE_DISK_STW)
-  TImageSTW ImageSTW[2];
+TImageSTW ImageSTW[2];
 #endif
 
 #if defined(SSE_DMA)
@@ -56,11 +60,15 @@ TDma Dma;
 TSF314 SF314[2]; // cool!
 #endif
 
+#if defined(SSE_DISK1)
+TDisk Disk[2]; // 
+#endif
+
 #if defined(SSE_FDC)
 TWD1772 WD1772;
 #endif
 
-#if defined(SS_PSG)
+#if defined(SSE_YM2149)
 TYM2149 YM2149;
 #endif
 

@@ -25,6 +25,8 @@ EasyStr GetEXEDir();//#include <mymisc.h>//missing...
 #include "SSEDrive.h"
 #include "SSEFloppy.h"
 
+#define LOGSECTION LOGSECTION_FDC
+
 /*  Problems concerning the drive itself (RPM...) or the disks (gaps...) are
     treated here.
 */
@@ -101,9 +103,13 @@ TSF314::TSF314() {
   SectorChecksum=0;
 #endif
 
-#if defined(SSE_DISK_GHOST)
-  //Ghost=0;
+#if defined(SSE_DRIVE_INDEX_PULSE)
+  rpm=300; // could be changed in other version
+
+  time_of_next_ip=0;//useful?
+  time_of_last_ip=0;//useful?
 #endif
+
 }
 
 
@@ -122,8 +128,6 @@ bool TSF314::Adat() { // accurate disk access times
 }
 
 
-// those are for native only...
-
 WORD TSF314::BytePosition() {
 /* 
     This assumes constant bytes/track (some protected disks have more)
@@ -132,8 +136,18 @@ WORD TSF314::BytePosition() {
     This is independent of disk type
     This is based on Index Pulse, that is sent by the drive 
 */
-
-  return HblsToBytes( hbl_count % HblsPerRotation() );
+  WORD position=0;
+#ifdef SSE_DISK_STW
+  if(IMAGE_STW) // called by Read() and Write()
+  {
+    int nb=time_of_next_ip-time_of_last_ip;
+    nb/=cycles_per_byte;//temp!
+    position=(ACT-time_of_last_ip)/cycles_per_byte;
+  }
+  else
+#endif
+    position=HblsToBytes( hbl_count% HblsPerRotation() );
+  return position;
 
 }
 
@@ -165,11 +179,6 @@ WORD TSF314::BytesToID(BYTE &num,WORD &nHbls) {
   if(FloppyDrive[Id].Empty())
     ;
   else
-#if defined(SSE_DISK_STW)
-  if(ImageType.Extension==EXT_STW)
-    bytes_to_id=ImageSTW[DRIVE].BytesToId(current_byte,num);
-  else
-#endif
   {
     //here we assume normal ST disk image, sectors are 1...10
     WORD record_length=RecordLength();
@@ -194,12 +203,44 @@ WORD TSF314::BytesToID(BYTE &num,WORD &nHbls) {
       bytes_to_id=TRACK_BYTES-current_byte+byte_target_id;
   }
   nHbls=BytesToHbls(bytes_to_id);
-  //ASSERT( hbl_count<= HblsAtIndex()+nHbls);
-  //TRACE("%d %d %d\n",fdc_tr,num,bytes_to_id);
   return bytes_to_id;
 }
 
 #endif//#if defined(SSE_DRIVE_RW_SECTOR_TIMING3)
+
+
+#if defined(SSE_DISK_GHOST)
+
+bool TSF314::CheckGhostDisk(bool write) {
+  if(!State.ghost) // need to open ghost image?
+  {
+    EasyStr STGPath=FloppyDrive[Id].GetImageFile();
+    STGPath+=".STG"; 
+    if(write || Exists(STGPath))
+    {
+      if(GhostDisk[Id].Open(STGPath.Text))
+        State.ghost=1; 
+    }
+  }
+  return State.ghost;
+}
+
+#endif
+
+
+#ifdef SSE_DISK_STW
+
+int TSF314::CyclesPerByte() {
+  int cycles=CpuNormalHz; // per second  
+  cycles/=rpm/60; // per rotation (300/60 = 5)
+  cycles/=Disk[Id].TrackBytes; // per byte
+  cycles_per_byte=cycles; // save
+  return cycles;
+}
+
+#endif
+
+
 
 DWORD TSF314::HblsAtIndex() { // absolute
   return (hbl_count/HblsPerRotation())*HblsPerRotation();
@@ -226,6 +267,51 @@ WORD TSF314::HblsToBytes(int hbls) {
 }
 
 
+
+#if defined(SSE_DRIVE_INDEX_PULSE)
+
+/*  Function called by event manager in run.cpp
+    Motor must be on, a floppy disk must be inside.
+    For the moment it must be a STW image.
+    If conditions are not met, we put timing of next check 1 second away,
+    because it seems to be Steem's way. TODO: better way with less checking,
+    though 1/sec is OK!
+*/
+
+void TSF314::IndexPulse() {
+  if(!IMAGE_STW||FloppyDrive[Id].Empty()||!State.motor)
+  {
+    time_of_next_ip=ACT+n_cpu_cycles_per_second; // put into future
+    return; 
+  }
+  Disk[Id].current_byte=0;
+  State.reading=State.writing=0;
+  time_of_last_ip=ACT; // record timing
+
+  if(YM2149.Drive()==Id) // WD1772 gets no IP if drive not selected
+    WD1772.OnIndexPulse();
+  // No more IP if motor isn't on. The motor is turned off by WD1772.
+  // (just above)
+  if(State.motor)
+      time_of_next_ip=time_of_last_ip + CyclesPerByte() * Disk[0].TrackBytes;
+}
+
+
+void TSF314::Motor(bool state) {
+/*  If we're starting the motor, we must program time of next IP.
+    For the moment, we use a random starting position.
+    If we're stopping the motor, just having the variable cleared
+    will stop Index Pulse being processed.
+*/
+  if(!State.motor && state)
+    time_of_next_ip=ACT + (rand()%Disk[Id].TrackBytes) * CyclesPerByte();
+  State.motor=state;
+  TRACE_LOG("Drive %c motor %s\n",'A'+Id,state?"on":"off");
+}
+
+#endif
+
+
 void TSF314::NextID(BYTE &RecordId,WORD &nHbls) {
 /*  This routine was written to improve timing of command 'Read Address',
     used by ProCopy. Since it exists, it is also used for 'Verify'.
@@ -234,18 +320,6 @@ void TSF314::NextID(BYTE &RecordId,WORD &nHbls) {
   nHbls=0;
   if(FloppyDrive[Id].Empty())
     return;
-
-#if defined(SSE_DISK_STW)
-
-  if(ImageType.Extension==EXT_STW)
-  {
-    WORD current_byte=BytePosition();
-    WORD bytes_to_next_id=ImageSTW[DRIVE].BytesToId(current_byte,RecordId);
-    nHbls=BytesToHbls(bytes_to_next_id);
-    return;
-  }
-
-#endif
 
   WORD BytesToRun;
   WORD ByteOfNextId=BytePositionOfFirstId();//default
@@ -274,11 +348,11 @@ void TSF314::NextID(BYTE &RecordId,WORD &nHbls) {
 BYTE TSF314::nSectors() { 
   // should we add IPF, STX? - here we do native
   BYTE nSects;
-#if defined(SS_PSG)
+#if defined(SSE_YM2149)
   if(FloppyDrive[Id].STT_File)
   {
     FDC_IDField IDList[30]; // much work each time, but STT rare
-#if defined(SS_PSG1)
+#if defined(SSE_YM2149A)
     nSects=FloppyDrive[Id].GetIDFields(YM2149.SelectedSide,Track(),IDList);
 #else
     nSects=FloppyDrive[Id].GetIDFields(YM2149.Side(),Track(),IDList);
@@ -335,6 +409,38 @@ WORD TSF314::PreIndexGap() {
 }
 
 
+#if defined(SSE_DISK_STW)
+
+
+void TSF314::Read() {
+/*  We "sync" on data in the beginning of a sequence.
+    After that, we do each successive byte until the command is
+    finished. That way, we won't lose any byte.
+*/
+  ASSERT(!State.writing);
+  ASSERT(IMAGE_STW); // only for those now
+
+  if(!State.reading)
+  {
+    State.reading=true; 
+    Disk[Id].current_byte=BytePosition();
+    TRACE_LOG("Start reading at byte %d\n",Disk[Id].current_byte);
+  }
+  else // get next byte regardless of timing
+    Disk[Id].current_byte++;
+
+  if(IMAGE_STW)
+    WD1772.Mfm.encoded=ImageSTW[Id].GetMfmData(Disk[Id].current_byte);
+
+  // set up next byte event
+  if(Disk[Id].current_byte<=Disk[Id].TrackBytes)
+    WD1772.update_time=time_of_last_ip+cycles_per_byte*(Disk[Id].current_byte+1);
+
+}
+
+#endif
+
+
 WORD TSF314::RecordLength() {
   return (nSectors()<11)? 614 : 566;
 }
@@ -345,13 +451,29 @@ BYTE TSF314::SectorGap() {
 }
 
 
-BYTE TSF314::Track() {
-  return floppy_head_track[Id]; //eh eh
+#if defined(SSE_DRIVE_INDEX_STEP)
+
+void TSF314::Step(int direction) {
+  if(direction)
+  {
+    floppy_head_track[Id]++;
+  }
+  else
+  {
+    floppy_head_track[Id]--;
+  }
+  WD1772.Lines.track0=(floppy_head_track[Id]==0);
+  if(WD1772.Lines.track0)
+    WD1772.STR|=FDC_STR_T1_TRACK_0; // doing it here?
+  CyclesPerByte();  // compute - should be the same
+  TRACE_LOG("Drive %d Step d%d new track: %d\n",Id,direction,floppy_head_track[Id]);
 }
 
+#endif
 
-WORD TSF314::TrackBytes() {
-  return 6272-(Track()/25)*16; //from fdc.cpp, not used
+
+BYTE TSF314::Track() {
+  return floppy_head_track[Id]; //eh eh
 }
 
 
@@ -360,6 +482,40 @@ WORD TSF314::TrackGap() {
 }
 
 
+#if defined(SSE_DISK_STW)
+
+void TSF314::Write() {
+/*  We "sync" on data in the beginning of a sequence.
+    After that, we do each successive byte until the command is
+    finished. That way, we won't lose any byte.
+*/
+  ASSERT(IMAGE_STW); // only for those now
+  if(!State.writing)
+  {
+    if(State.reading)
+      Disk[Id].current_byte++;
+    else
+      Disk[Id].current_byte=BytePosition();
+    State.writing=true; 
+    State.reading=false;
+    TRACE_LOG("Start writing at byte %d\n",Disk[Id].current_byte);
+  }
+  else
+    Disk[Id].current_byte++;
+
+  if(IMAGE_STW)
+    ImageSTW[Id].SetMfmData(Disk[Id].current_byte,WD1772.Mfm.encoded);
+
+  // set up next byte event
+  if(Disk[Id].current_byte<=Disk[Id].TrackBytes)
+    WD1772.update_time=time_of_last_ip+cycles_per_byte*(Disk[Id].current_byte+1);
+}
+
+#endif
+
+
+
+///////////////////////////////////////////////////////////////////////////////
 #if defined(SSE_DRIVE_SOUND)
 /*
     This is where we emulate the floppy drive sounds. v3.6
@@ -431,19 +587,25 @@ void TSF314::Sound_CheckCommand(BYTE cr) {
     else 
 #endif
     if(Sound_Buffer[SEEK])
+    {
       Sound_Buffer[SEEK]->Play(0,0,DSBPLAY_LOOPING);
+      //TRACE("play seek sound\n");
+    }
   }
 }
 
 
 void TSF314::Sound_CheckIrq() {
-/*  Called at the end of each FDC command (native, pasti, caps).
+/*  Called at the end of each FDC command (native, pasti, caps, stw).
     Stop SEEK loop.
     Emit a "STEP" click noise if we were effectively seeking.
 */
 #if !defined(SSE_DRIVE_SOUND_CHECK_SEEK_VBL)
   if(Sound_Buffer[SEEK])
+  {
     Sound_Buffer[SEEK]->Stop();
+//    TRACE("stop seek sound\n");
+  }
 #endif
 #if defined(SSE_FDC)
   if(WD1772.CommandType()==1 && TrackAtCommand!=Track() && Sound_Buffer[STEP])
@@ -476,13 +638,14 @@ void TSF314::Sound_CheckMotor() {
 #if defined(SSE_DRIVE_SOUND_EMPTY) // but clicks still on
     && !FloppyDrive[floppy_current_drive()].Empty()
 #endif
+    && floppy_current_drive()==YM2149.Drive() //3.6.4,must be selected
     );
   if(SSEOption.DriveSound && motor_on && !(dwStatus&DSBSTATUS_PLAYING))
     Sound_Buffer[MOTOR]->Play(0,0,DSBPLAY_LOOPING); // start motor loop
   else if((!SSEOption.DriveSound||!motor_on) && (dwStatus&DSBSTATUS_PLAYING))
     Sound_Buffer[MOTOR]->Stop();
 
-#if defined(SSE_DRIVE_SOUND_CHECK_SEEK_VBL)
+#if defined(SSE_DRIVE_SOUND_CHECK_SEEK_VBL)//no, MFD
   // because of some buggy programs? (normally not defined)
   if(Sound_Buffer[SEEK] && !(FRAME%10) && WD1772.CommandType()!=1)
   {

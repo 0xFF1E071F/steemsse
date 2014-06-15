@@ -684,6 +684,7 @@ bool Initialise()
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_DELAY_LOAD_DLL) \
   && defined(__BORLANDC__)
+///__pfnDliNotifyHook=
 __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #endif
 
@@ -957,6 +958,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
       if (BootPasti!=BOOT_PASTI_DEFAULT){
         bool old_pasti=pasti_active;
         pasti_active=BootPasti==BOOT_PASTI_ON;
+        //TRACE_LOG("pasti_active %d\n",pasti_active);
         if (DiskMan.IsVisible() && old_pasti!=pasti_active) DiskMan.RefreshDiskView();
       }
 #endif

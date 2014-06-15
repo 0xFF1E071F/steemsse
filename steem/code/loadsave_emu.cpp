@@ -814,7 +814,27 @@ Steem SSE will reset auto.sts and quit\nSorry!",
     TSF314 SF314Copy=SF314[0];
 #endif
 
+#if SSE_VERSION>=370
+/*  The line for drives was:
     ReadWriteStruct(SF314);
+    But this wasn't correct as there are 2 drives.
+    Now (v3.7.0) we R/W 2 drives. 
+    v3.7.0 adds variables anyway, so snapshots wouldn't be correct. 
+    TODO!!!
+*/
+    for(int drive=0;drive<2;drive++)
+    {
+      // same problem as for Pasti, we should find a shorter way to do that
+      TImageType image_type=SF314[drive].ImageType;
+      ReadWriteStruct(SF314[drive]);
+      SF314[drive].ImageType=image_type;
+
+      SF314[drive].State.motor=0;//temp!
+      //ASSERT(SF314[drive].rpm==300);
+      SF314[drive].rpm=300;//temp!
+    }
+#endif
+
 
 #if defined(SSE_DRIVE_SOUND) // avoid crash, restore volume
 #if defined(SSE_DRIVE_SOUND_VOLUME)
@@ -847,16 +867,17 @@ Steem SSE will reset auto.sts and quit\nSorry!",
   }
   if(Version>=48) // 3.6.1
   {
-#if defined(SSE_IPF_RESUME)//3.6.1
+#if defined(SSE_IPF_RESUME_____)//3.6.1
 /*  This just restore registers, not internal state.
     Funny to see how the "drive" then finds back its track,
     in some cases it will work, in other fail.
     v3.6.2: do it only for load ...
-    v3.6.3: check that Caps is active before ...
+    v3.6.3: check that Caps is loaded before ...
 */
     //TRACE("CAPSIMG_OK%d\n",CAPSIMG_OK);
     if(LoadOrSave==LS_LOAD //3.6.2
       && CAPSIMG_OK //3.6.3
+      && Caps.Active
       ) 
     {
       Caps.WritePsgA(psg_reg[PSGR_PORT_A]);
@@ -873,7 +894,31 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 
   if(Version>=49) // 3.7.0
   {
-#if defined(SS_PSG1)
+
+#if defined(SSE_IPF_RESUME)
+/*  This just restore registers, not internal state.
+    Funny to see how the "drive" then finds back its track,
+    in some cases it will work, in other fail.
+    v3.6.2: do it only for load...
+    v3.6.3: check that Caps is loaded...
+    v3.7.0: check that Caps was active...
+*/
+    //TRACE("CAPSIMG_OK%d\n",CAPSIMG_OK);
+    ReadWrite(Caps.Active);//3.7.0
+    if(LoadOrSave==LS_LOAD //3.6.2
+      && CAPSIMG_OK //3.6.3
+      && Caps.Active //3.7.0
+      ) 
+    {
+      Caps.WritePsgA(psg_reg[PSGR_PORT_A]);
+      Caps.WriteWD1772(0,fdc_cr);
+      Caps.WriteWD1772(1,fdc_tr);
+      Caps.WriteWD1772(2,fdc_sr);
+      Caps.WriteWD1772(3,fdc_dr);
+    }
+#endif
+
+#if defined(SSE_YM2149A)
     ReadWriteStruct(YM2149);
 #endif
   }

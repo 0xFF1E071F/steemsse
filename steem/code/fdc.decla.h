@@ -152,8 +152,8 @@ EXT BYTE fdc_read_address_buffer[20];
 #define DMA_ADDRESS_IS_VALID_W (dma_address<himem && dma_address>=MEM_FIRST_WRITEABLE)
 
 #if defined(SSE_DRIVE)
-#if defined(SS_PSG1) //3.7.0
-#define DRIVE (YM2149.SelectedDrive)
+#if defined(SSE_YM2149A)
+#define DRIVE (YM2149.SelectedDrive) // 0 or 1 guaranteed
 #define CURRENT_SIDE (YM2149.SelectedSide)
 #else
 #define DRIVE floppy_current_drive() // 0 or 1 guaranteed

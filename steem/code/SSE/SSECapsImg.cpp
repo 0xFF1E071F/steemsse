@@ -268,17 +268,19 @@ void TCaps::WriteWD1772(BYTE Line,int data) {
   {
     // TODO drive selection problem
     mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Double Dragon II
+#ifdef SSE_DEBUG
     if( (Version==42||Version==50||Version==51) && (data&0xF0)==0xA0)
     {
+      ASSERT(!SSE_GHOST_DISK);
       TRACE_LOG("IPF unimplemented command %x\n",data);
     }
-
+#endif
 #if defined(SSE_DRIVE_MOTOR_ON_IPF)
     // record time of motor start in hbl (TODO use)
     if(!(::WD1772.STR&FDC_STR_MOTOR_ON)) // assume no cycle run!
     {
       //TRACE_LOG("record hbl %d\n");
-      ::SF314[DRIVE].MotorOn=true;
+      ::SF314[DRIVE].motor_on=true;
       ::SF314[DRIVE].HblOfMotorOn=hbl_count;
     }
 #endif
@@ -317,9 +319,8 @@ void TCaps::Hbl() {
 
 }
 
-int TCaps::IsIpf(int drive) {
-  ASSERT(!drive||drive==1);
-  return (DriveMap&(drive+1)); // not <<!
+int TCaps::IsIpf(BYTE drive) {
+  return (DriveMap&((drive&1)+1)); // not <<!
 }
 
 
@@ -337,7 +338,6 @@ void TCaps::CallbackDRQ(PCAPSFDC pc, UDWORD setting) {
   if((Dma.MCR&BIT_7) //&& !(Dma.MCR&BIT_6) //3.7.0, 
 )
   {
-//Dma.UpdateRegs();
 #if defined(SSE_DMA_DRQ)
     ::WD1772.DR=Caps.WD1772.r_data;
     Dma.Drq();
@@ -358,7 +358,6 @@ void TCaps::CallbackDRQ(PCAPSFDC pc, UDWORD setting) {
 
 void TCaps::CallbackIRQ(PCAPSFDC pc, DWORD lineout) {
   ASSERT(pc==&Caps.WD1772);
-  //TRACE_OSD("%X",::fdc_cr);
 
 #if defined(SSE_DEBUG)
   if(TRACE_ENABLED) 
@@ -392,35 +391,48 @@ void TCaps::CallbackIRQ(PCAPSFDC pc, DWORD lineout) {
 
 #if !defined(SSE_DEBUG_TRACE_CONTROL)
 #undef LOGSECTION
-#define LOGSECTION LOGSECTION_IPF_LOCK_INFO
+//#define LOGSECTION LOGSECTION_IPF_LOCK_INFO
+#define LOGSECTION LOGSECTION_IMAGE_INFO
 #endif
 
 void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   ASSERT( !drive||drive==1 );
   ASSERT( Caps.IsIpf(drive) );
   ASSERT( drive==floppy_current_drive() );
-  CapsTrackInfoT2 track_info; // apparently we must use type 2...
-  track_info.type=2; 
-  UDWORD flags=DI_LOCK_DENALT|DI_LOCK_DENVAR|DI_LOCK_UPDATEFD|DI_LOCK_TYPE;
+
   int side=Caps.SF314[drive].side;
   ASSERT( side==!(psg_reg[PSGR_PORT_A]& BIT_0) );
-#if defined(SSE_DRIVE_SINGLE_SIDE_IPF)
+  int track=Caps.SF314[drive].track;
+  CapsTrackInfoT2 track_info; // apparently we must use type 2...
+  track_info.type=1;
+  UDWORD flags=DI_LOCK_DENALT|DI_LOCK_DENVAR|DI_LOCK_UPDATEFD|DI_LOCK_TYPE;
+
+#if defined(SSE_DRIVE_SINGLE_SIDE_IPF) // wait for IPF feature, not defined
   if( SSEOption.SingleSideDriveMap&(floppy_current_drive()+1) )
     side=0;
 #endif
-  int track=Caps.SF314[drive].track;
+  
+  CapsRevolutionInfo CRI;
+
+
+#if !defined(SSE_IPF_CTRAW_NO_UNLOCK) 
+/*  This part is undefined, since unlocking messes internal variables that are
+    important for games using "weak bits" protections, such as Outrun, Vroom.
+*/
 
   if(Caps.LockedTrack[drive]!=-1)
   {
     ASSERT( Caps.LockedSide[drive]!=-1 );
 //    ASSERT( track!=Caps.LockedTrack[drive] || side!=Caps.LockedSide[drive] );
+
     VERIFY( !CAPSUnlockTrack(Caps.ContainerID[drive],Caps.LockedTrack[drive],
       Caps.LockedSide[drive]) );
 #if defined(SSE_DEBUG_TRACE_CONTROL)
     if(TRACE_MASK3 & TRACE_CONTROL_FDCIPF1)
 #endif
-    TRACE_LOG("CAPS Unlock %c:S%dT%d\n",drive+'A',Caps.LockedSide[drive],
-      Caps.LockedTrack[drive]);
+    TRACE_LOG("CAPS Unlock %c:S%dT%d\n",drive+'A',Caps.LockedSide[drive],Caps.LockedTrack[drive]);
+
+
 #if defined(SSE_IPF_CTRAW_REV)
 #if defined(SSE_DISK_IMAGETYPE)
     if(::SF314[drive].ImageType.Extension!=EXT_IPF)
@@ -430,23 +442,37 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
     {
       if(Caps.LockedSide[drive]==side && Caps.LockedTrack[drive]==track)
       { // not tested!
-        CapsRevolutionInfo CRI;
         CAPSGetInfo(&CRI,Caps.ContainerID[drive],track,side,cgiitRevolution,0);
-        TRACE_LOG("max rev %d next %d\n",CRI.max,CRI.next);
-        if(CRI.max>1 && CRI.max==CRI.next)
-          CAPSSetRevolution(Caps.ContainerID[drive],0);
+        TRACE_LOG("Same track, keep rev %d\n",CRI.next);
       }
       else
+      {
+        TRACE_LOG("New track, reset rev\n");
         CAPSSetRevolution(Caps.ContainerID[drive],0);
+      }
     }
-#endif
+#endif//SSE_IPF_CTRAW_NO_UNLOCK
 
   }
+#endif
+
+#if defined(SSE_IPF_CTRAW_1ST_LOCK)
+/*  We've changed track, we reset # revs as recommended by caps authors.
+    Up to now we haven't seen the difference (eg Turrican works with or
+    without) so we "protect" this with option Hacks.
+*/
+  if(Caps.LockedSide[drive]!=side || Caps.LockedTrack[drive]!=track)
+  {
+    if(SSE_HACKS_ON)
+      CAPSSetRevolution(Caps.ContainerID[drive],0);
+  }
+#endif
 
   VERIFY( !CAPSLockTrack((PCAPSTRACKINFO)&track_info,Caps.ContainerID[drive],
     track,side,flags) );
 
-//  ASSERT( side==track_info.head );
+  CAPSGetInfo(&CRI,Caps.ContainerID[drive],track,side,cgiitRevolution,0);
+  TRACE_LOG("max rev %d real %d next %d\n",CRI.max,CRI.real,CRI.next);
   ASSERT( track==track_info.cylinder );
   ASSERT( !track_info.sectorsize );
   TRACE_LOG("CAPS Lock %c:S%dT%d flags %X sectors %d bits %d overlap %d startbit %d timebuf %x\n",
@@ -455,38 +481,40 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   Caps.SF314[drive].timebuf=track_info.timebuf;
   Caps.SF314[drive].tracklen = track_info.tracklen;
   Caps.SF314[drive].overlap = track_info.overlap;
+  Caps.SF314[drive].ttype=track_info.type;//?
   Caps.LockedSide[drive]=side;
   Caps.LockedTrack[drive]=track;
 
-#if defined(SSE_IPF_TRACE_SECTORS)  // debug info
+#if defined(SSE_IPF_TRACE_SECTORS) &&defined(SSE_DISK_IMAGETYPE) // debug info
+  if(::SF314[drive].ImageType.Extension==EXT_IPF)
+  {
 #if defined(SSE_DEBUG_TRACE_CONTROL) // controlled by boiler now (3.6.1)
-  if(TRACE_MASK3 & TRACE_CONTROL_FDCIPF2)
-  {
+    if(TRACE_MASK3&TRACE_CONTROL_FDCIPF2) 
 #endif
-  CapsSectorInfo CSI;
-  int sec_num;
-  TRACE_LOG("sector info (encoder,cell type,data,gap info)\n");
-  for(sec_num=1;sec_num<=track_info.sectorcnt;sec_num++)
-  {
-    CAPSGetInfo(&CSI,Caps.ContainerID[drive],track,side,cgiitSector,sec_num-1);
-    TRACE_LOG("#%d|%d|%d|%d %d %d|%d %d %d %d %d %d %d\n",
-      sec_num,
-      CSI.enctype,      // encoder type
-      CSI.celltype,     // bitcell type
-      CSI.descdatasize, // data size in bits from IPF descriptor
-      CSI.datasize,     // data size in bits from decoder
-      CSI.datastart,    // data start position in bits from decoder
-      CSI.descgapsize,  // gap size in bits from IPF descriptor
-      CSI.gapsize,      // gap size in bits from decoder
-      CSI.gapstart,     // gap start position in bits from decoder
-      CSI.gapsizews0,   // gap size before write splice
-      CSI.gapsizews1,   // gap size after write splice
-      CSI.gapws0mode,   // gap size mode before write splice
-      CSI.gapws1mode);   // gap size mode after write splice
+    {
+      CapsSectorInfo CSI;
+      int sec_num;
+      TRACE_LOG("sector info (encoder,cell type,data,gap info)\n");
+      for(sec_num=1;sec_num<=track_info.sectorcnt;sec_num++)
+      {
+        CAPSGetInfo(&CSI,Caps.ContainerID[drive],track,side,cgiitSector,sec_num-1);
+        TRACE_LOG("#%d|%d|%d|%d %d %d|%d %d %d %d %d %d %d\n",
+          sec_num,
+          CSI.enctype,      // encoder type
+          CSI.celltype,     // bitcell type
+          CSI.descdatasize, // data size in bits from IPF descriptor
+          CSI.datasize,     // data size in bits from decoder
+          CSI.datastart,    // data start position in bits from decoder
+          CSI.descgapsize,  // gap size in bits from IPF descriptor
+          CSI.gapsize,      // gap size in bits from decoder
+          CSI.gapstart,     // gap start position in bits from decoder
+          CSI.gapsizews0,   // gap size before write splice
+          CSI.gapsizews1,   // gap size after write splice
+          CSI.gapws0mode,   // gap size mode before write splice
+          CSI.gapws1mode);   // gap size mode after write splice
+      }
+    }
   }
-#if defined(SSE_DEBUG_TRACE_CONTROL)
-  }
-#endif
 #endif
 
 }

@@ -8,15 +8,6 @@ Just tested the STOP jitter behaviour.
 It is identical with GLUE wake up state 1 and 2: it is cyclic with
  5 positions [8,0,4,0,4],8,0,4,0,4,8, ...
  "
-    Apparently this has been measured and should be correct.
-    In v3.5.3 we use Steem's "wobble" instead, as long as it
-    works, not because it's more correct, but to save some memory
-    bytes, and also because of Krig STE.
-    SSE_INT_JITTER not defined
-    In v3.5.4, for Japtro we use VBL jitter and not HBL, so
-    that Krig is still OK. 
-    In v3.6.0 we use HBL jitter again, for 3615 GEN4 HMD
-    TODO
 */
   int HblJitter[] = {8,4,4,0,0}; 
   int HblJitterIndex;  // 3.6.1 reset at cold reset
@@ -25,7 +16,7 @@ It is identical with GLUE wake up state 1 and 2: it is cyclic with
 #endif
 
 #if defined(SSE_INT_VBL_STF)
-  int HblTiming=HBL_FOR_STE;//HBL_FOR_STF; // default STE
+  int HblTiming=HBL_FOR_STE; // default STE
 #endif
 
 #endif

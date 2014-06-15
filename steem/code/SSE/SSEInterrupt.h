@@ -21,147 +21,148 @@ extern int HblTiming;
 void m68k_interrupt(MEM_ADDRESS ad);
 #endif
 
-#if defined(SSE_INT_JITTER) // not defined in current 3.5.3
+#if defined(SSE_INT_JITTER) 
 extern int HblJitter[],VblJitter[];
 extern int HblJitterIndex,VblJitterIndex;
 #endif
 
-// We must define multiple times for various defines.
-// Those macros wouldn't be inlined by VC6.
-// Interesting cases: Auto168, BBC52, Dragonnels/Happy Islands, Xpress/Krig
-
-#if defined(SSE_INT_HBL) 
-
-#if defined(SSE_INT_JITTER_HBL) 
-/*  This is from Hatari
-    It fixes BBC52 if SSE_INT_HBL_IACK_FIX isn't defined (it should
-    be)
-    It fixes 3615GEN4 HMD Giga (probably along with other mods)
-    When we define it, we mustn't define "jitter" for VBI in STE
-    mode. This isn't normal but we try to make programs run.
-*/
-#define HBL_INTERRUPT {\
-  hbl_pending=false;\
-  log_to_section(LOGSECTION_INTERRUPTS,Str("INTERRUPT: HBL at PC=")+HEXSl(pc,6)+" "+scanline_cycle_log());\
-  M68K_UNSTOP;\
-  time_of_last_hbl_interrupt=ABSOLUTE_CPU_TIME;\
-  INSTRUCTION_TIME_ROUND(SSE_INT_HBL_TIMING);\
-  m68k_interrupt(LPEEK(0x0068));       \
-  INSTRUCTION_TIME(HblJitter[HblJitterIndex]);\
-  sr=(sr & (WORD)(~SR_IPL)) | (WORD)(SR_IPL_2);\
-  debug_check_break_on_irq(BREAK_IRQ_HBL_IDX); \
-}
-
-#else // wobble as in Steem 3.2
-
-#define HBL_INTERRUPT {\
-  hbl_pending=false;\
-  log_to_section(LOGSECTION_INTERRUPTS,Str("INTERRUPT: HBL at PC=")+HEXSl(pc,6)+" "+scanline_cycle_log());\
-  M68K_UNSTOP;\
-  INTERRUPT_START_TIME_WOBBLE; \
-  time_of_last_hbl_interrupt=ABSOLUTE_CPU_TIME;\
-  INSTRUCTION_TIME_ROUND(SSE_INT_HBL_TIMING);\
-  m68k_interrupt(LPEEK(0x0068));       \
-  sr=(sr & (WORD)(~SR_IPL)) | (WORD)(SR_IPL_2);\
-  debug_check_break_on_irq(BREAK_IRQ_HBL_IDX); \
-}
-
-#endif
-#endif
-
-#if defined(SSE_INT_VBL) 
-
-#if defined(SSE_INT_VBL_INLINE)
-
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_INTERRUPTS
 
+#if defined(SSE_INT_HBL) 
+#if defined(SSE_INT_HBL_INLINE)
+
+// no more multiple defines, all switches in inline function
+
+inline void HBLInterrupt() {
+  ASSERT(hbl_pending);
+  hbl_pending=false;
+
+  log_to_section(LOGSECTION_INTERRUPTS,Str("INTERRUPT: HBL at PC=")+HEXSl(pc,6)+" "+scanline_cycle_log());
+  
+  if (cpu_stopped)
+    M68K_UNSTOP;
+
+  // wobble?
+#if !defined(SSE_INT_JITTER_HBL)
+#if defined(SSE_INT_E_CLOCK)
+  if(!HD6301EMU_ON) // not if mode "E-Clock"
+#endif
+  {
+    INTERRUPT_START_TIME_WOBBLE; //Steem 3.2
+  }
+#endif
+
+  // E-clock?
+#if defined(SSE_INT_E_CLOCK)
+  if(HD6301EMU_ON)
+#ifdef SSE_CPU_E_CLOCK_DISPATCHER
+    M68000.SyncEClock(TM68000::ECLOCK_HBL);
+#else
+    M68000.SyncEClock();
+#endif
+#endif
+
+  time_of_last_hbl_interrupt=ABSOLUTE_CPU_TIME;
+
+  INSTRUCTION_TIME_ROUND(SSE_INT_HBL_TIMING); 
+
+  // jitter?
+#if defined(SSE_INT_JITTER_HBL)
+#if defined(SSE_INT_E_CLOCK)
+  if(!HD6301EMU_ON)
+#endif
+    INSTRUCTION_TIME(HblJitter[HblJitterIndex]); //Hatari
+#endif
+
+#ifdef SSE_DEBUG
+  Debug.nHbis++;
+  TRACE_LOG("%d %d %d HBI #%d PC %X\n",TIMING_INFO,Debug.nHbis,LPEEK(0x0068));
+#endif
+
+
+  // set CPU registers
+  m68k_interrupt(LPEEK(0x0068));       
+  sr=(sr & (WORD)(~SR_IPL)) | (WORD)(SR_IPL_2);
+  debug_check_break_on_irq(BREAK_IRQ_HBL_IDX); 
+
+}
+#define HBL_INTERRUPT HBLInterrupt(); // called in mpf.cpp
+#endif//inline
+#endif//hbl
+
+
+#if defined(SSE_INT_VBL) 
+#if defined(SSE_INT_VBL_INLINE)
+
+// no more multiple defines, all switches in inline function
+
 inline void VBLInterrupt() {
+
   ASSERT( vbl_pending );
   vbl_pending=false; 
 
   log_to_section(LOGSECTION_INTERRUPTS,EasyStr("INTERRUPT: VBL at PC=")+HEXSl(pc,6)+" time is "+ABSOLUTE_CPU_TIME+" ("+(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl)+" cycles into screen)");
 
-  M68K_UNSTOP;
-  //TRACE("VBI %d",LINECYCLES);
+  if (cpu_stopped)
+    M68K_UNSTOP;
+
+  // wobble?
 #if defined(SSE_INT_JITTER_VBL_STE)
- // no wobble for STF, STE
+ // no wobble for STE nor STF, but jitter
 #else
-#if defined(SSE_INT_JITTER_VBL)
-  if(ST_TYPE==STE)  // jitter for STF
+#if defined(SSE_INT_JITTER_VBL) && !defined(SSE_INT_E_CLOCK)
+  if(ST_TYPE==STE)  // jitter for STF, wobble for STE
 #endif
-  {//3.6.1: Argh! macro must be scoped!
-    INTERRUPT_START_TIME_WOBBLE; //wobble for STE
-  }
+#if defined(SSE_INT_E_CLOCK)
+    if(!HD6301EMU_ON) // no jitter no wobble if "E-clock"
 #endif
-  //TRACE("->%d",LINECYCLES);//surprise!
+    {//3.6.1: Argh! macro must be scoped!
+      INTERRUPT_START_TIME_WOBBLE; //wobble for STE
+    }
 #endif
+
+    // E-Clock?
+#if defined(SSE_INT_E_CLOCK)
+  if(HD6301EMU_ON)
+#ifdef SSE_CPU_E_CLOCK_DISPATCHER
+    M68000.SyncEClock(TM68000::ECLOCK_VBL);
+#else
+    M68000.SyncEClock();
+#endif
+#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBL_IACK)
   time_of_last_vbl_interrupt=ACT;
 #endif
-  INSTRUCTION_TIME_ROUND(SSE_INT_VBL_TIMING);
-  //TRACE("->%d",LINECYCLES);
-  //TRACE_LOG("F%d Cycles %d VBI %X #%d\n",FRAME,ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl,LPEEK(0x0070),interrupt_depth);
-  TRACE_LOG("F%d Cycles %d VBI\n",FRAME,ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl);
-  m68k_interrupt(LPEEK(0x0070));
-#if defined(SSE_INT_JITTER_VBL)
-/*  In the current build, VBL "jitter" instead of "wobble" is necessary
-    for demo Japtro, but this could be due to other timing problems. TODO
-*/
 
+  INSTRUCTION_TIME_ROUND(SSE_INT_VBL_TIMING);
+
+  m68k_interrupt(LPEEK(0x0070));
+
+  // jitter?
+#if defined(SSE_INT_JITTER_VBL)
 #if !defined(SSE_INT_JITTER_VBL_STE)
   if(ST_TYPE!=STE) 
 #endif
-#if defined(SSE_INT_JITTER_VBL2)//3.6.1
-    if(LINECYCLES<132 || !SSE_HACKS_ON) // hack for Demoniak 100%
+#if defined(SSE_INT_E_CLOCK)
+    if(!HD6301EMU_ON)
 #endif
       INSTRUCTION_TIME(VblJitter[VblJitterIndex]);
-  //TRACE("->%d\n",LINECYCLES);
+#endif
+
+  TRACE_LOG("%d %d %d VBI PC %X\n",TIMING_INFO,LPEEK(0x0070));
 
   sr=(sr& (WORD)(~SR_IPL))|(WORD)(SR_IPL_4);
 
   debug_check_break_on_irq(BREAK_IRQ_VBL_IDX);
   ASSERT(!vbl_pending);
 }
+#define VBL_INTERRUPT VBLInterrupt(); // called in mpf.cpp
+#endif//inline
+#endif//vbl
 
 #undef LOGSECTION
-
-#define VBL_INTERRUPT VBLInterrupt();
-
-#else//!inline
-
-#if defined(SSE_INT_JITTER_VBL)
-
-#define VBL_INTERRUPT {\
-  vbl_pending=false;    \
-  log_to_section(LOGSECTION_INTERRUPTS,EasyStr("INTERRUPT: VBL at PC=")+HEXSl(pc,6)+" time is "+ABSOLUTE_CPU_TIME+" ("+(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl)+" cycles into screen)");\
-  M68K_UNSTOP;\
-  if(ST_TYPE==STE) INTERRUPT_START_TIME_WOBBLE;\
-  INSTRUCTION_TIME_ROUND(SSE_INT_VBL_TIMING);\
-  m68k_interrupt(LPEEK(0x0070));\
-  if(ST_TYPE!=STE) INSTRUCTION_TIME(VblJitter[VblJitterIndex]);\
-  sr=(sr& (WORD)(~SR_IPL))|(WORD)(SR_IPL_4);\
-  debug_check_break_on_irq(BREAK_IRQ_VBL_IDX);\
-}
-
-
-#else // wobble as in Steem 3.2
-
-#define VBL_INTERRUPT {\
-  vbl_pending=false;    \
-  log_to_section(LOGSECTION_INTERRUPTS,EasyStr("INTERRUPT: VBL at PC=")+HEXSl(pc,6)+" time is "+ABSOLUTE_CPU_TIME+" ("+(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl)+" cycles into screen)");\
-  M68K_UNSTOP;\
-  INTERRUPT_START_TIME_WOBBLE; \
-  INSTRUCTION_TIME_ROUND(SSE_INT_VBL_TIMING);\
-  m68k_interrupt(LPEEK(0x0070));\
-  sr=(sr& (WORD)(~SR_IPL))|(WORD)(SR_IPL_4);\
-  debug_check_break_on_irq(BREAK_IRQ_VBL_IDX);\
-}
-
-#endif
-#endif//inline
-
-#endif
 
 #endif//defined(IN_EMU)
 #endif//#if defined(SSE_INTERRUPT)

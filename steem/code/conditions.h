@@ -7,7 +7,7 @@ DESCRIPTION: Sets up all conditions that affect the Steem binary.
 //---------------------------------------------------------------------------
 //                         Conditional Defines for Steem
 //---------------------------------------------------------------------------
-#include "SSE/SSE.h"	// for SS_VS2012_WARNINGS
+#include "SSE/SSE.h"	// for SSE_VS2012_WARNINGS
 
 #if defined(STEVEN_SEAGAL)
 #pragma once
@@ -19,7 +19,7 @@ DESCRIPTION: Sets up all conditions that affect the Steem binary.
 #define DEBUG_BUILD
 #endif
 
-#ifdef SS_VS2012_WARNINGS
+#ifdef SSE_VS2012_WARNINGS
 #pragma warning(disable : 4068)		// unknown pragma
 #pragma warning(disable : 4996)		// deprecated
 #pragma warning(disable : 4800)		// forcing value (performance)
