@@ -615,10 +615,12 @@ void ASMCALL check_for_interrupts_pending()
         if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_VBI)
           FrameEvents.Add(scan_y,LINECYCLES,'I',0x60);
 #endif
+/*
 #if defined(SSE_DEBUG_TRACE_CONTROL) && defined(SSE_INT_JITTER)
           if(TRACE_MASK2 & TRACE_CONTROL_VBI) 
             TRACE("y%d c%d VBI jit %d\n",scan_y,LINECYCLES,VblJitter[VblJitterIndex]);
 #endif
+*/
 #if defined(SSE_DEBUG_FRAME_INTERRUPTS)
         Debug.FrameInterrupts|=1;
 #endif
@@ -630,10 +632,12 @@ void ASMCALL check_for_interrupts_pending()
 
     if (hbl_pending){ //SS IPL2 - rare
       if ((sr & SR_IPL)<SR_IPL_2){
+
         // Make sure this HBL can't occur when another HBL has already happened
         // but the event hasn't fired yet.
         if (int(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl)<scanline_time_in_cpu_cycles_at_start_of_vbl){
           ASSERT(!Blit.HasBus);
+
 #if defined(SSE_DEBUG_SHOW_INTERRUPT)
           Debug.RecordInterrupt("HBI");
 #endif
@@ -641,19 +645,20 @@ void ASMCALL check_for_interrupts_pending()
           if(!TRACE_ENABLED)
             TRACE_OSD("HBI");
 #endif
-
 #if defined(SSE_DEBUG_FRAME_INTERRUPTS)
           Debug.FrameInterrupts|=2;
 #endif
-
+/*
 #if defined(SSE_DEBUG_TRACE_CONTROL) && defined(SSE_INT_JITTER)
-          if(TRACE_MASK2 & TRACE_CONTROL_HBI) 
+          if(!HD6301_ON && (TRACE_MASK2 & TRACE_CONTROL_HBI)) 
             TRACE("y%d c%d HBI jit %d\n",scan_y,LINECYCLES,HblJitter[HblJitterIndex]);
 #endif
+*/
 #if defined(SSE_DEBUG_FRAME_REPORT_MASK)
           if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_HBI)
             FrameEvents.Add(scan_y,LINECYCLES,'I',0x40);
 #endif
+
           HBL_INTERRUPT;
         }
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_HBL) // can happen quite a lot
@@ -730,13 +735,13 @@ void mfp_interrupt(int irq,int when_fired)
             vector=    (mfp_reg[MFPR_VR] & 0xf0)  +(irq);
             vector*=4;
             mfp_time_of_start_of_last_interrupt[irq]=ABSOLUTE_CPU_TIME;
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP) //confusing  #if? yes!
 #if defined(SSE_CPU_FETCH_TIMING)
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
             INSTRUCTION_TIME_ROUND(SSE_INT_MFP_TIMING-4);
             FETCH_TIMING;
 #if defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-    INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+            INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
 #endif
 #else
             INSTRUCTION_TIME_ROUND(34);
@@ -765,7 +770,8 @@ void mfp_interrupt(int irq,int when_fired)
 #if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)//tmp
 //            TRACE_LOG("MFP Execute IRQ %d Vector %X Address %X\n",irq,vector,LPEEK(vector));
             //TRACE_LOG("MFP %d IRQ %d ",interrupt_depth,irq);
-            TRACE_LOG("F%d y%d c%d: IRQ %d ",FRAME,scan_y,LINECYCLES,irq);
+            //TRACE_LOG("F%d y%d c%d: IRQ %d PC %X ",FRAME,scan_y,LINECYCLES,irq,LPEEK(vector));
+            TRACE_LOG("%d %d %d IRQ %d PC %X ",TIMING_INFO,irq,LPEEK(vector));
             switch(irq)
             {
             case 0:TRACE_LOG("Centronics busy\n");break;

@@ -96,7 +96,7 @@ and all his silly mods are gone!
 
 #if defined(STEVEN_SEAGAL)
 
-#define SSE_BETA //title, OSD, plus some testing - new features
+//#define SSE_BETA //title, OSD, plus some testing - new features
 //#define SSE_BETA_BUGFIX // beta for just bugfixes
 
 #if defined(SSE_BETA) //TODO check before release what will stay beta...
@@ -111,23 +111,23 @@ and all his silly mods are gone!
 
 #elif defined(SSE_BETA_BUGFIX) // bugfixes (point release)
 
-#define SSE_VERSION 363
-#define SSE_VERSION_TXT "3.6.3" 
+#define SSE_VERSION 364
+#define SSE_VERSION_TXT "3.6.4" 
 #ifdef DEBUG_BUILD
-#define WINDOW_TITLE "Steem Boiler 3.6.3B"
+#define WINDOW_TITLE "Steem Boiler 3.6.4B"
 #else
-#define WINDOW_TITLE "Steem Beta 3.6.3"
+#define WINDOW_TITLE "Steem Beta 3.6.4"
 #endif
 
 #else // release
 
-#define SSE_VERSION 363
+#define SSE_VERSION 364
 // check snapshot Version (in LoadSave.h); rc\resource.rc
-#define SSE_VERSION_TXT "3.6.3" 
+#define SSE_VERSION_TXT "3.6.4" 
 #ifdef DEBUG_BUILD
-#define WINDOW_TITLE "Steem Boiler 3.6.3"
+#define WINDOW_TITLE "Steem Boiler 3.6.4"
 #else
-#define WINDOW_TITLE "Steem SSE 3.6.3"
+#define WINDOW_TITLE "Steem SSE 3.6.4"
 #endif
 
 #endif
@@ -194,6 +194,20 @@ and all his silly mods are gone!
 //#define TEST07
 //#define TEST08
 //#define TEST09
+
+#if SSE_VERSION>=370
+
+// some switches for STW, we'll sort them out later
+#define SSE_DRIVE_INDEX_PULSE
+#define SSE_DRIVE_INDEX_STEP
+
+#define SSE_WD1772_REG2 // DSR, dir...
+#define SSE_WD1772_PHASE
+
+#define SSE_DISK1
+
+#endif
+
 #endif
 
 
@@ -215,6 +229,7 @@ and all his silly mods are gone!
 #define SSE_SSE_CONFIG_STRUCT // structure SSEConfig 
 #ifdef WIN32
 #define SSE_DELAY_LOAD_DLL // can run without DLL
+//never worked with bcc??? depends on os???
 #endif
 
 
@@ -224,8 +239,8 @@ and all his silly mods are gone!
 
 #if defined(SSE_ACIA)
 
-#define SSE_ACIA_BUS_JAM_NO_WOBBLE // simple "fix"
-//#define SSE_ACIA_BUS_JAM_PRECISE_WOBBLE //TODO
+//#define SSE_ACIA_BUS_JAM_NO_WOBBLE // simple "fix" //undef 3.6.4
+#define SSE_ACIA_BUS_JAM_PRECISE_WOBBLE // option 6301 on //3.6.4
 #define SSE_ACIA_DOUBLE_BUFFER_RX // only from 6301 (not MIDI) 
 #define SSE_ACIA_DOUBLE_BUFFER_TX // only to 6301 (not MIDI)
 //#define SSE_ACIA_IRQ_ASSERT_READ_SR //TODO
@@ -279,6 +294,7 @@ and all his silly mods are gone!
 
 #define SSE_CPU_ALT_REG_NAMES  // convenience
 #define SSE_CPU_DIV          // divide like Caesar
+#define SSE_CPU_E_CLOCK      // it's time for E
 #define SSE_CPU_EXCEPTION    // crash like Windows 98
 #define SSE_CPU_FETCH_IO     // fetch like a dog in outer space
 #define SSE_CPU_INLINE       // supposes TM68000 exists!
@@ -298,6 +314,12 @@ and all his silly mods are gone!
 #define SSE_CPU_DIVU_OVERFLOW//v3.6.1
 #endif
 
+#if defined(SSE_CPU_E_CLOCK)
+#if defined(SSE_DEBUG) || defined(SSE_HACKS)
+#define SSE_CPU_E_CLOCK_DISPATCHER // "who" wants to sync?
+#endif
+#endif
+
 #if defined(SSE_CPU_EXCEPTION)
 
 #define SSE_CPU_ASSERT_ILLEGAL // assert before trying to execute (not general)
@@ -312,7 +334,7 @@ and all his silly mods are gone!
 #define SSE_CPU_HACK_WAR_HELI
 #endif
 
-//#define SSE_CPU_HIMEM_BONUS_BYTES // for F-29: bad idea
+//#define SSE_CPU_HIMEM_BONUS_BYTES // for F-29: bad idea //MFD
 #define SSE_CPU_IGNORE_RW_4MB // for F-29, works but... //v3.6.0
 #define SSE_CPU_IGNORE_WRITE_0 // for Aladin, may write on 1st byte
 #define SSE_CPU_POST_INC // no post increment if exception 
@@ -338,7 +360,7 @@ and all his silly mods are gone!
 
 
 #if defined(SSE_CPU_POKE)
-//#define SSE_CPU_3615GEN4_ULM //targeted for 36.15 GEN4 by ULM
+//#define SSE_CPU_3615GEN4_ULM //targeted for 36.15 GEN4 by ULM  //MFD
 #define SSE_CPU_CHECK_VIDEO_RAM_B
 #define SSE_CPU_CHECK_VIDEO_RAM_L
 #define SSE_CPU_CHECK_VIDEO_RAM_W // including: 36.15 GEN4 by ULM
@@ -358,9 +380,10 @@ and all his silly mods are gone!
 // Move the timing counting from FETCH_TIMING to PREFETCH_IRC:
 #define SSE_CPU_PREFETCH_TIMING //big, big change
 #ifdef SSE_CPU_PREFETCH_TIMING 
-//#define SSE_CPU_PREFETCH_TIMING_CMPI_B // move the instruction timing place-no
-//#define SSE_CPU_PREFETCH_TIMING_CMPI_W // move the instruction timing place
-#define SSE_CPU_PREFETCH_TIMING_CMPI_L // move the instruction timing place
+
+//#define SSE_CPU_PREFETCH_TIMING_CMPI_BW //3.6.4
+#define SSE_CPU_PREFETCH_TIMING_CMPI_L // 3.6.4 (changed)
+
 #define SSE_CPU_PREFETCH_TIMING_MOVEM // at wrong place, probably compensates bug
 #define SSE_CPU_PREFETCH_TIMING_SET_PC // necessary for some SET PC cases
 //#define SSE_CPU_PREFETCH_TIMING_EXCEPT // to mix unique switch + lines
@@ -421,9 +444,23 @@ and all his silly mods are gone!
 #endif//prefetch
 
 #if defined(SSE_CPU_ROUNDING)
+//only 2 are defined in v3.6.4 to limit risks
+//#define SSE_CPU_ROUNDING_ADD_BW_DN // to DN
+//#define SSE_CPU_ROUNDING_ADD_BW_DN2 // from DN
+#define SSE_CPU_ROUNDING_ADD_L_DN //v3.6.4
+//#define SSE_CPU_ROUNDING_ADD_L_DN2
+//#define SSE_CPU_ROUNDING_SUB_BW_DN
+//#define SSE_CPU_ROUNDING_SUB_BW_DN2
+//#define SSE_CPU_ROUNDING_SUB_L_DN
+//#define SSE_CPU_ROUNDING_SUB_L_DN2
+//#define SSE_CPU_ROUNDING_ADDA_W_DN
+#define SSE_CPU_ROUNDING_ADDA_L_DN //v3.6.4
+//#define SSE_CPU_ROUNDING_SUBA_W_DN
+//#define SSE_CPU_ROUNDING_SUBA_L_DN
+//#define SSE_CPU_ROUNDING_MOVE
+//#define SSE_CPU_ROUNDING_MOVEM
+//#define SSE_CPU_ROUNDING_MOVEM6
 
-#define SSE_CPU_ROUNDING_ADD_L // EA = -(An) //v3.6.0
-#define SSE_CPU_ROUNDING_ADDA_L // EA = -(An) //v3.6.0
 
 //#define SSE_CPU_ROUNDING_SOURCE_100_B // -(An)
 //#define SSE_CPU_ROUNDING_SOURCE_100_W // -(An): no
@@ -608,7 +645,8 @@ and all his silly mods are gone!
 #define SSE_SCP //TODO
 #endif
 #endif
-#define SS_PSG        // YM2149 - for portA first
+//#define SS_PSG        // YM2149 - for portA first//MFD
+#define SSE_YM2149    // for port A 
 
 
 //////////////////
@@ -619,24 +657,25 @@ and all his silly mods are gone!
 
 #if defined(SSE_DISK)
 
-#if SSE_VERSION>=370
 
-//imagetype needed for ghost & stw
+#define SSE_DISK_IMAGETYPE //3.6.4
+
+#if SSE_VERSION>=370
 #define SSE_DISK_GHOST //3.7.0
-#define SSE_DISK_IMAGETYPE //3.7.0
 #define SSE_DISK_STW // 3.7.0
+#endif//v3.7.0 
 
 #if defined(SSE_DISK_GHOST)
-#define SSE_DISK_GHOST_SECTOR // intercept write 1 sector
+#define SSE_DISK_GHOST_FAKE_FORMAT
+#define SSE_DISK_GHOST_SECTOR // commands $A#/$8#
+#define SSE_DISK_GHOST_MULTIPLE_SECTORS // commands $B#/$9#
 #define SSE_DISK_GHOST_SECTOR_STX1 // in pasti
 #endif
 
 #if defined(SSE_DISK_STW)
 #define SSE_DISK_STW_DISK_MANAGER //new context option
-#define SSE_DISK_STW_DISK_MANAGER1 // no custom
+#define SSE_DISK_STW_MFM // bytes are MFM encoded on the disk
 #endif
-
-#endif//v3.7.0 
 
 #endif
 
@@ -659,7 +698,7 @@ and all his silly mods are gone!
 #endif
 
 //#define SSE_DMA_DELAY // works but overkill 3.7.0 -> use generic floppy event?
-#define SSE_DMA_COUNT_CYCLES
+//#define SSE_DMA_COUNT_CYCLES //no, it's like video, shared with CPU
 #define SSE_DMA_FDC_ACCESS
 //#define SSE_DMA_FDC_READ_HIGH_BYTE // like pasti, 0  
 #define SSE_DMA_FIFO // first made for CAPS 
@@ -670,10 +709,8 @@ and all his silly mods are gone!
 #define SSE_DMA_IO
 #define SSE_DMA_READ_STATUS 
 #define SSE_DMA_SECTOR_COUNT
+#define SSE_DMA_TRACK_TRANSFER // debug + possible later use
 #define SSE_DMA_WRITE_CONTROL
-///#ifdef SSE_DEBUG //will be useful for release version too...
-#define SSE_DMA_TRACK_TRANSFER //add one var...
-#///endif
 #endif
 
 
@@ -686,7 +723,7 @@ and all his silly mods are gone!
 
 #define SSE_DRIVE_BYTES_PER_ROTATION
 #ifdef SSE_DEBUG
-#define SSE_DRIVE_COMPUTE_BOOT_CHECKSUM // to mod a boot sector//v3.6.0
+//#define SSE_DRIVE_COMPUTE_BOOT_CHECKSUM // to mod a boot sector//v3.6.0//TODO boiler control
 #endif
 #define SSE_DRIVE_CREATE_ST_DISK_FIX // from Petari//v3.6.0
 // one or the other:
@@ -705,14 +742,14 @@ and all his silly mods are gone!
 #define SSE_DRIVE_RW_SECTOR_TIMING2 // end of sector (hack)
 
 #if SSE_VERSION>=370
-#define SSE_DRIVE_RW_SECTOR_TIMING3 //test v3.7.0 use ID... (?)
+///#define SSE_DRIVE_RW_SECTOR_TIMING3 //test v3.7.0 use ID... (?)
 #endif
 
 #define SSE_DRIVE_SINGLE_SIDE //3.6.0 
 #if SSE_VERSION>=370
 #define SSE_DRIVE_SINGLE_SIDE_RND//3.7.0//TODO random data instead
 #else
-#define SSE_DRIVE_SINGLE_SIDE_IPF //3.6.0
+//#define SSE_DRIVE_SINGLE_SIDE_IPF //3.6.0
 #define SSE_DRIVE_SINGLE_SIDE_NAT1 //3.6.0
 #define SSE_DRIVE_SINGLE_SIDE_PASTI //3.6.0
 #endif
@@ -725,6 +762,7 @@ and all his silly mods are gone!
 #define SSE_DRIVE_SOUND_EPSON // current samples=Epson
 #define SSE_DRIVE_SOUND_EMPTY // different 3.6.1 (none)
 #define SSE_DRIVE_SOUND_IPF // fix 3.6.1
+#define SSE_DRIVE_SOUND_STW //3.7.0
 #define SSE_DRIVE_SOUND_VOLUME // logarithmic 
 #endif//drive sound
 #endif//win32
@@ -767,7 +805,7 @@ and all his silly mods are gone!
 #define SSE_FDC_SPIN_UP_STATUS
 #define SSE_FDC_STEP
 
-#ifdef SS_PSG
+#ifdef SSE_YM2149
 #define SSE_FDC_IGNORE_WHEN_NO_DRIVE_SELETED // from Hatari
 #define SSE_FDC_INDEX_PULSE_COUNTER
 #ifdef SSE_FDC_MOTOR_OFF
@@ -804,12 +842,16 @@ and all his silly mods are gone!
 //#define SSE_IPF_RUN_POST_IO
 #define SSE_IPF_ASSOCIATE // extension may be associated with Steem
 #define SSE_IPF_CTRAW//2nd type of file recognised by caps v5.0 (?) //3.6.1
+#define SSE_IPF_CTRAW_1ST_LOCK//3.6.4
 #define SSE_IPF_CTRAW_REV //3.6.1 manage different rev data
+#define SSE_IPF_CTRAW_NO_UNLOCK//3.6.4
 //#define SSE_IPF_KFSTREAM//3rd type of file recognised by caps v5.1 (?) //3.6.1
 //#define SSE_IPF_DRAFT//4th type of file recognised by caps v5.1 (?) //3.6.1
 //#define SSE_IPF_OSD // for the little box at reset - silly?
 #define SSE_IPF_RESUME//3.6.1 TODO
 //#define SSE_IPF_SAVE_WRITES //TODO?
+
+
 #define SSE_IPF_TRACE_SECTORS // show sector info
 
 #endif
@@ -836,15 +878,15 @@ and all his silly mods are gone!
 // FLOPPY: PSG //
 /////////////////
 
-#if defined(SS_PSG)
+#if defined(SSE_YM2149)
 
-#if SSE_VERSION>=370
-#define SS_PSG1 // selected drive, side as variables
-#define SS_PSG2 // adpat drive motor status to FDC STR at each change
+#if SSE_VERSION>=364//370
+#define SSE_YM2149A // selected drive, side as variables
+#define SSE_YM2149B // adapt drive motor status to FDC STR at each change
 #endif
 
 #ifdef SSE_DEBUG
-#define SS_PSG_REPORT_DRIVE_CHANGE // as FDC trace
+#define SSE_YM2149_REPORT_DRIVE_CHANGE // as FDC trace
 #endif
 
 #endif
@@ -921,10 +963,12 @@ and all his silly mods are gone!
 // INTERRUPT //
 ///////////////
 // temp there ought to be a better structure
+
 #if defined(SSE_INTERRUPT)
 
+#define SSE_INT_E_CLOCK // wait_states=f(cpu cycles) (option 6301/Acia checked)
 #define SSE_INT_HBL 
-#define SSE_INT_JITTER // from Hatari 
+#define SSE_INT_JITTER // from Hatari (option 6301/Acia unchecked)
 #define SSE_INT_VBL 
 
 
@@ -934,7 +978,12 @@ and all his silly mods are gone!
 #define SSE_INT_OSD_REPORT_HBI
 #endif
 
-#define SSE_INT_HBL_IACK_FIX // from Hatari - BBC52
+#if defined(SSE_HACKS)
+#define SSE_INT_HBL_E_CLOCK_HACK //3.6.4, 3615GEN4 HMD #1
+#endif
+
+#define SSE_INT_HBL_IACK_FIX // from Hatari - BBC52 (works without?)
+#define SSE_INT_HBL_INLINE //3.6.4
 #define SSE_INT_HBL_ONE_FUNCTION // 3.6.1 remove event_hbl()
 #endif
 
@@ -945,15 +994,13 @@ and all his silly mods are gone!
 #if defined(SSE_INT_VBL)
 #define SSE_INT_VBL_IACK
 #define SSE_INT_VBL_INLINE 
-#ifdef SSE_BETA
-//#define SSE_INT_VBI_START // generally working now
-#endif
+//#define SSE_INT_VBI_START // generally working now, but helps nothing
 #endif
 
 #if defined(SSE_INT_JITTER) && defined(SSE_INT_VBL) && defined(SSE_STF)
 #define SSE_INT_JITTER_RESET//3.6.1
 #define SSE_INT_JITTER_VBL // STF
-#define SSE_INT_JITTER_VBL2 //3.6.1
+//#define SSE_INT_JITTER_VBL2 //3.6.1 hack Demoniak
 //#define SSE_INT_JITTER_VBL_STE // STF + STE 
 #endif
 
@@ -969,7 +1016,7 @@ and all his silly mods are gone!
 /////////
 
 #if defined(SSE_MFP)
-
+#define SSE_INT_MFP//temp, was missing
 #define SSE_MFP_IACK_LATENCY
 //#define SSE_MFP_IRQ_DELAY // V8MS but breaks Sinfull Sinuses
 //#define SSE_MFP_IRQ_DELAY2 // Audio Artistic Demo (no!)
@@ -1135,7 +1182,7 @@ and all his silly mods are gone!
 
 //#define SSE_SHIFTER_LEFT_OFF_THRESHOLD//Hackabonds Demo not WS1
 
-#define SSE_SHIFTER_LEFT_OFF_60HZ // 24 bytes!
+#define SSE_SHIFTER_LEFT_OFF_60HZ //3.5.3 24 bytes!
 #define SSE_SHIFTER_LEFT_OFF_TEST_BEFORE_HBL // for Riverside
 #define SSE_SHIFTER_LINE_MINUS_106_BLACK // loSTE screens
 #define SSE_SHIFTER_LINE_PLUS_2_STE // hack?
@@ -1184,7 +1231,7 @@ and all his silly mods are gone!
 #define SSE_SHIFTER_SDP_WRITE_ADD_EXTRA
 #define SSE_SHIFTER_SDP_WRITE_LOWER_BYTE
 //#define SSE_SHIFTER_SDP_TRACE 
-//#define SSE_SHIFTER_SDP_TRACE2
+//#define SSE_SHIFTER_SDP_TRACE2//todo control mask?
 //#define SSE_SHIFTER_SDP_TRACE3 // report differences with Steem v3.2 
 #endif
 
@@ -1219,7 +1266,7 @@ and all his silly mods are gone!
 
 #if !defined(SSE_DEBUG_TRACE_CONTROL)
 //#define SSE_DEBUG_FRAME_REPORT_VERTICAL_OVERSCAN
-//#define SSE_SHIFTER_VERTICAL_OVERSCAN_TRACE
+#define SSE_SHIFTER_VERTICAL_OVERSCAN_TRACE
 #endif
 
 //#define SSE_SHIFTER_STEEM_ORIGINAL // only for debugging/separate blocks
@@ -1238,22 +1285,21 @@ and all his silly mods are gone!
 
 #if defined(SSE_SOUND)
 
-#ifndef SS_PSG // also used for drive
-#define SS_PSG
+//keep this for the moment but it's not part of YM2149 object
+#ifndef SSE_YM2149 // normally also used for drive
+#define SSE_YM2149
 #endif
 
-#ifdef SS_PSG
+#ifdef SSE_YM2149 
 
-#define SS_PSG_FIX_TABLES // based on Yamaha doc//v3.6.0
-#if defined(SS_PSG_FIX_TABLES)
-#define SS_PSG_FIXED_VOL_FIX1
-#define SS_PSG_ENV_FIX1
+#define SSE_YM2149_FIX_TABLES // based on Yamaha doc//v3.6.0
+#if defined(SSE_YM2149_FIX_TABLES)
+#define SSE_YM2149_FIXED_VOL_FIX1
+#define SSE_YM2149_ENV_FIX1
 #endif
 
-#define SS_PSG_FIXED_VOL_FIX2 // from ljbk, measured output//v3.6.0
-
-//#define SS_PSG_WRITE_SAME_VALUE //test
-#define SS_PSG_OPT1//v3.6.0
+#define SSE_YM2149_FIXED_VOL_FIX2 // from ljbk, measured output//v3.6.0
+#define SSE_YM2149_OPT1//v3.6.0
 #endif
 
 #define SSE_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
@@ -1425,6 +1471,7 @@ and all his silly mods are gone!
 
 #if defined(SSE_TIMINGS)
 
+#define SSE_TIMINGS_FRAME_ADJUSTMENT // due to shifter tricks 3.6.4
 #define SSE_TIMINGS_MS_TO_HBL
 
 #endif
@@ -1560,7 +1607,7 @@ and all his silly mods are gone!
 #define SSE_VAR_UNRAR // using unrar.dll, up to date
 #endif
 #define SSE_VAR_WINDOW_TITLE
-
+#define SSE_VAR_WRONG_IMAGE_ALERT1
 
 #endif 
 
@@ -1583,6 +1630,7 @@ and all his silly mods are gone!
 #define SSE_VID_BORDERS_413 // best fit for overscan?
 #define SSE_VID_BORDERS_416 
 #define SSE_VID_BORDERS_416_NO_SHIFT
+#define SSE_VID_BORDERS_416_NO_SHIFT0 //3.6.4 added a switch
 #define SSE_VID_BORDERS_416_NO_SHIFT1 //3.6.1: check border on/off
 #define SSE_VID_BORDERS_BIGTOP // more lines for palette effects
 #define SSE_VID_BORDERS_LB_DX // rendering-stage trick rather than painful hacks
@@ -1610,7 +1658,12 @@ and all his silly mods are gone!
 #define SSE_VID_3BUFFER_WIN //windowed mode (necessary for FS)
 #endif//SSE_VID_3BUFFER
 #ifdef SSE_BETA 
+#if defined(_MSC_VER) // BCC: forget it?
+// or http://realmike.org/blog/projects/directx-8-borland-libs-download-page/
 #define SSE_VID_D3D // TODO for v3.7
+#endif
+///#define SSE_VID_DD7 // tests... -> we need SDK...
+
 #endif
 #endif
 
@@ -1662,6 +1715,10 @@ and all his silly mods are gone!
 
 #if !defined(SSE_ACIA_DOUBLE_BUFFER_RX) || !defined(SSE_ACIA_DOUBLE_BUFFER_TX)
 #undef SSE_ACIA_TDR_COPY_DELAY
+#endif
+
+#if !defined(SSE_CPU_E_CLOCK)
+#undef SSE_ACIA_BUS_JAM_PRECISE_WOBBLE
 #endif
 
 #if !defined(SSE_DEBUG) || !defined(SSE_OSD_DEBUG_MESSAGE)

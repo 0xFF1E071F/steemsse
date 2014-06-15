@@ -92,7 +92,7 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
     ){
     if (ExtensionIsPastiDisk(Ext)
 #if defined(SSE_PASTI_AUTO_SWITCH)
-    && (IsSameStr_I(Ext,"STX")||pasti_active)
+    && (IsSameStr_I(Ext,"STX")||!PASTI_JUST_STX&&pasti_active)
 #endif
     ){
       return DISK_PASTI;
@@ -105,6 +105,11 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
     }
 #endif
   }
+#endif
+
+#ifdef SSE_IPF_CTRAW
+  if(IsSameStr_I(Ext,"CTR") && Caps.Version<50)
+    ret=0;
 #endif
 
   return ret;
@@ -1430,26 +1435,21 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
 
 #if defined(SSE_DISK_STW_DISK_MANAGER)
         case 1003:  // STW
-#if defined(SSE_DISK_STW_DISK_MANAGER1) //copy TODO refactor
         {
-          EasyStr STName=This->DisksFol+"\\"+T("Blank Disk")+".STW";
+          EasyStr STName=This->DisksFol+"\\"+T("STW Disk")+".STW";
           int n=2;
           while (Exists(STName)){
-            STName=This->DisksFol+"\\"+T("Blank Disk")+" ("+(n++)+").STW";
+            STName=This->DisksFol+"\\"+T("STW Disk")+" ("+(n++)+").STW";
           }
-         // if (This->CreateDiskImage(STName,1440,9,2)){
           if(ImageSTW[0].Create(STName)) {
             This->RefreshDiskView(STName,true);
           }else{
             Alert(EasyStr(T("Could not create the disk image "))+STName,T("Error"),MB_ICONEXCLAMATION);
           }
-
-
           return 0;
         }
 #endif
 
-#endif
         case 1005:
           PostMessage(Win,WM_COMMAND,IDCANCEL,0);
           break;
@@ -1471,7 +1471,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
 #if defined(SSE_DRIVE_SWITCH_OFF_MOTOR)
         case 1046:
         case 1047:
-          SF314[(LOWORD(wPar)-1046)].MotorOn=false;
+          SF314[(LOWORD(wPar)-1046)].motor_on=false;
          // fdc_str&=0xEF; //it's 7F, once again displaying my ignorance...
           fdc_str&=~FDC_STR_MOTOR_ON;
           break;
@@ -1721,6 +1721,7 @@ That will toggle bit x.
     disk in, the disk will just disappear.
 */
             pasti_active=!pasti_active;
+            //TRACE_LOG("pasti_active %d\n",pasti_active);
             for(int i=0;i<2;i++)
             {
               if(FloppyDrive[i].NotEmpty())
@@ -2594,7 +2595,7 @@ LRESULT __stdcall TDiskManager::Drive_Icon_WndProc(HWND Win,UINT Mess,WPARAM wPa
         T("SF354 (single side - caution!)"));
 
 #if defined(SSE_DRIVE_SWITCH_OFF_MOTOR)
-      if(SF314[This->MenuTarget].MotorOn)
+      if(SF314[This->MenuTarget].motor_on)
       {
         InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,
           1046+This->MenuTarget,T("Stop motor"));
@@ -3122,7 +3123,11 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
 //---------------------------------------------------------------------------
 void TDiskManager::ExtractArchiveToSTHardDrive(Str Path)
 {
+#if defined(SSE_VAR_WRONG_IMAGE_ALERT1)
+  if (Alert(Path+": "+T("Steem doesn't recognise any disk images.")+"\n\n"+
+#else
   if (Alert(Path+" "+T("doesn't contain any disk images.")+"\n\n"+
+#endif
           T("Would you like to extract the contents of this archive to an ST hard drive?"),
           T("Extract Contents?"),MB_ICONQUESTION | MB_YESNO)==IDNO) return;
 
@@ -3529,7 +3534,9 @@ void TDiskManager::RefreshPastiStatus() {
 #if defined(SSE_PASTI_ONLY_STX)
     && (!PASTI_JUST_STX || 
 #if defined(SSE_DISK_IMAGETYPE)
-      SF314[floppy_current_drive()].ImageType.Extension==EXT_STX
+
+//    1  //SF314[floppy_current_drive()].ImageType.Extension==EXT_STX
+      SF314[YM2149.SelectedDrive].ImageType.Extension==EXT_STX
 #else
       SF314[floppy_current_drive()].ImageType==DISK_PASTI
 #endif

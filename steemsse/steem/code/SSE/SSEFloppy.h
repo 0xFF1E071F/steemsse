@@ -35,7 +35,7 @@ interrupt."
 #if defined(SSE_DISK_GHOST) //3.7.0
 #include "SSEGhostDisk.h"
 #endif
-#include "SSEPsg.h"
+#include "SSEYM2149.h"
 #include "SSEScp.h"
 #if defined(SSE_DISK_STW) //3.7.0
 #include "SSESTW.h"
@@ -74,6 +74,10 @@ extern TDma Dma;
 extern TSF314 SF314[2]; // 2 double-sided drives, wow!
 #endif
 
+#if defined(SSE_DISK1)
+extern TDisk Disk[2]; // 
+#endif
+
 #if defined(SSE_FDC)
 extern TWD1772 WD1772;
 #define fdc_cr WD1772.CR     // problem:
@@ -83,7 +87,7 @@ extern TWD1772 WD1772;
 #define fdc_dr WD1772.DR
 #endif //FDC
 
-#if defined(SS_PSG)
+#if defined(SSE_YM2149)
 extern TYM2149 YM2149;
 #endif
 

@@ -577,7 +577,7 @@ void GUIRefreshStatusBar() {
       if(hPasti && pasti_active
 #if defined(SSE_DRIVE)&&defined(SSE_PASTI_ONLY_STX)
 #if defined(SSE_DISK_IMAGETYPE)
-        && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType.Extension==EXT_STX)
+//        && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType.Extension==EXT_STX)
 #else
         && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
 #endif
@@ -593,11 +593,18 @@ void GUIRefreshStatusBar() {
         strcat(status_bar," Caps");
 #endif
       
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)//make proper switch
+      else if(IMAGE_STW)
+        strcat(status_bar," STW");//temp?
+#endif      
+
 #if defined(SSE_VAR_STATUS_STRING_ADAT)
       else if(ADAT)
         strcat(status_bar," ADAT");
 #endif
-      
+
+
+
 #if defined(SSE_VAR_STATUS_STRING_HACKS)
       if(SSE_HACKS_ON)
         strcat(status_bar," #"); // which symbol?

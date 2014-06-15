@@ -1,33 +1,30 @@
 #include "SSE.h"
 
+/*
+    The DMA was a custom chip developed by Atari.
+    It uses 16byte FIFO buffers to handle byte transfers between the 
+    drive  controller (floppy or hard disk) and memory so that the CPU is
+    freed from the task.
+    Transfers occur at the end of the scanline, when the MMU/Shifter
+    aren't using the bus (and we mustn't count cycles for the transfer ;))
+    We use object Dma to refine emulation of the DMA in Steem.
+*/
+
 #if defined(STEVEN_SEAGAL)
-//some incl. useless?
-#if defined(SSE_STRUCTURE_SSEFLOPPY_OBJ)
+
+//#if defined(SSE_STRUCTURE_SSEFLOPPY_OBJ)
 #include "../pch.h"
 #include <cpu.decla.h>
 #include <fdc.decla.h>
 #include <floppy_drive.decla.h>
-#include <iorw.decla.h>
-#include <psg.decla.h>
-#include <run.decla.h>
 #include "SSECpu.h"
-#include "SSEInterrupt.h"
-#include "SSEShifter.h"
 #if defined(WIN32)
 #include <pasti/pasti.h>
 #endif
-EasyStr GetEXEDir();//#include <mymisc.h>//missing...
-
-#if defined(SSE_DRIVE_IPF1)
-#include <stemdialogs.h>//temp...
-#include <diskman.decla.h>
-#endif
-
 #if !defined(SSE_CPU)
 #include <mfp.decla.h>
 #endif
-
-#endif//#if defined(SSE_STRUCTURE_SSEFLOPPY_OBJ)
+//#endif//#if defined(SSE_STRUCTURE_SSEFLOPPY_OBJ)
 
 #include "SSEDecla.h"
 #include "SSEDebug.h"
@@ -55,16 +52,15 @@ TDma::TDma() {
     In previous versions the bytes were directly moved between ST RAM
     and disk image. Now there's a real automatic buffer working both
     ways.
-    SSE_DMA_DOUBLE_FIFO has been tested but isn't defined, overkill, 
-    so we spare some data bytes(17).
 */
 
 void TDma::AddToFifo(BYTE data) {
   // DISK -> FIFO -> RAM = 'read disk' = 'write dma'
 
-  ASSERT( (MCR&BIT_7) && !(MCR&BIT_6) );
-  ASSERT( !(MCR&BIT_8) ); // disk->RAM (Read floppy)
+  ASSERT( !(MCR&CR_WRITE) ); // disk->RAM (Read media)
   ASSERT( Fifo_idx<16 );
+  ASSERT(!(MCR&CR_DISABLE));//TODO handle if it was disabled
+
 
   Fifo
 #if defined(SSE_DMA_DOUBLE_FIFO)
@@ -84,28 +80,30 @@ void TDma::AddToFifo(BYTE data) {
 /*  This just transfers one byte between controller's DR and Fifo at request.
     Direction depends on control register.
 */
-void TDma::Drq() {
-
-  if(MCR&BIT_7) // the DRQ from the FDC is acknowledged
+bool TDma::Drq() {
+  SR|=SR_DRQ;
+  if(MCR&CR_DISABLE)
+    return false; //TODO: so on hardware?
+  if(MCR&CR_DRQ_FDC_OR_HDC) // the DRQ from the FDC is acknowledged
   {
-    if(!(Dma.MCR&BIT_8)) // disk->RAM (reading disk)
-    {
-      AddToFifo(WD1772.DR);
-    }
-    else // // RAM -> disk (writing to disk)
-    {
+    if(Dma.MCR&CR_WRITE) // RAM -> disk (writing to disk)
       WD1772.DR=GetFifoByte();
-    }
+    else // disk->RAM (reading disk)
+      AddToFifo(WD1772.DR);
+    return true;
   }
   else // the DRQ from the HDC is acknowledged
   {
+    //TODO one day?
+    return false;
   }
+  SR&=~SR_DRQ;
 }
 
 #endif
 
 
-#if defined(SSE_DMA_DELAY) // normally not //370 -> replace with generic event?
+#if defined(SSE_DMA_DELAY) // normally not 
 // this is a Steem 'event' (static member function)
 
 void TDma::Event() {
@@ -121,11 +119,42 @@ void TDma::Event() {
 #endif
 
 
+#if defined(SSE_DMA_FIFO)
+/*  For writing to disk, we use the FIFO in the other direction,
+    because we want it to fill up when empty.
+    On a real ST, the first DMA transfer happens right when the
+    sector count has been set.
+    This could be important in theory, but know no case, to simplify
+    we only request byte when drive is ready.
+*/
+
+BYTE TDma::GetFifoByte() {
+  // RAM -> FIFO -> DISK = 'write disk' = 'read dma'
+  
+  ASSERT( (MCR&CR_WRITE) ); // RAM -> disk (Write floppy)
+  ASSERT(!(MCR&CR_DISABLE));
+
+  if(!Fifo_idx)
+    Dma.RequestTransfer();
+
+  BYTE data=Fifo
+#if defined(SSE_DMA_DOUBLE_FIFO)
+    [BufferInUse]
+#endif
+    [--Fifo_idx];
+
+  return data;  
+
+}
+
+#endif
+
+
 #if defined(SSE_DMA_IO) 
 /*  Read/write on disk DMA registers.
 */
 
-#define LOGSECTION LOGSECTION_IO // DMA+FDC
+#define LOGSECTION LOGSECTION_IO
 
 /*  DMA/Disk IO table based on Atari doc
 
@@ -164,6 +193,7 @@ BYTE TDma::IORead(MEM_ADDRESS addr) {
 
   ASSERT( (addr&0xFFFF00)==0xFF8600 );
   BYTE ior_byte=0xFF;
+  BYTE drive=DRIVE;//YM2149.SelectedDrive;
 
   TRACE_LOG("DMA R %X ",addr);
 
@@ -176,8 +206,8 @@ BYTE TDma::IORead(MEM_ADDRESS addr) {
 
   case 0xff8604:
     // sector counter
-    ASSERT(!(MCR & BIT_4)); 
-    if(MCR & BIT_4) 
+    ASSERT( !(MCR&CR_COUNT_OR_REGS) ); 
+    if(MCR&CR_COUNT_OR_REGS) 
     {
 #if defined(SSE_DMA_SECTOR_COUNT)
 /*
@@ -191,7 +221,7 @@ BYTE TDma::IORead(MEM_ADDRESS addr) {
       //TRACE("read %x as %x\n",addr,ior_byte);
     }
     // HD access
-    else if(MCR & BIT_3) 
+    else if(MCR&CR_HDC_OR_FDC) 
     {
       LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
         " - Reading high byte of HDC register #"+((MCR & BIT_1) ? 1:0)); )
@@ -212,7 +242,7 @@ is ignored and when reading the 8 upper bits consistently reads 1."
 
   case 0xff8605: 
     // sector counter
-    if(MCR & BIT_4) 
+    if(MCR&CR_COUNT_OR_REGS) 
     {
       TRACE_LOG("Counter");
 #if defined(SSE_DMA_SECTOR_COUNT)
@@ -223,7 +253,7 @@ is ignored and when reading the 8 upper bits consistently reads 1."
       //TRACE("read %x as %x\n",addr,ior_byte);
     }
     // HD access
-    else if(MCR & BIT_3) 
+    else if(MCR&CR_HDC_OR_FDC) 
     {
       TRACE_LOG("HD");
       LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
@@ -237,14 +267,14 @@ Disk Controller is acknowledged; otherwise, the DRQ from the Hard Disk
 interface is acknowledged. For some reason this bit must also be set 
 to generate DMA bus cycle.
 */
-    else if(!(MCR&BIT_7)) // we can't
+    else if(!(MCR&CR_DRQ_FDC_OR_HDC)) // we can't
     {
       TRACE_LOG("No FDC access DMA MCR %x",MCR);
     }
 #endif
     else
 #if defined(SSE_FDC)
-      ior_byte=WD1772.IORead( (MCR&(BIT_1+BIT_2))/2 );
+      ior_byte=WD1772.IORead( (MCR&(CR_A1|CR_A0))/2 );
 #else // old ior block... ugly but flexible - normally not compiled
     {
         // Read FDC register
@@ -307,7 +337,7 @@ to generate DMA bus cycle.
             return fdc_dr; //data register
         }
     }
-#endif
+#endif//
     //if(!(dma_mode & (BIT_1+BIT_2))) TRACE("read STR pre pasti as %X\n",ior_byte);
     break;
 
@@ -346,14 +376,13 @@ TODO?
   case 0xff860d:  // DMA Base and Counter Low
     TRACE_LOG("BaseAddress");
     ior_byte=(BYTE)((BaseAddress&0xff));
-   //TRACE("read %x as %x\n",addr,ior_byte);
+//   TRACE("read %x as %x\n",addr,ior_byte);
 //    if(addr==0xff860d) TRACE("base %x ",BaseAddress);
     break;
 
   case 0xff860e: //frequency/density control
   {
     TRACE_LOG("Density");
-    BYTE drive=floppy_current_drive();
     if(FloppyDrive[drive].STT_File) 
       ior_byte=0;
     else
@@ -382,12 +411,12 @@ TODO?
     && (!PASTI_JUST_STX || 
 #if defined(SSE_DISK_IMAGETYPE)
 // in fact we should refactor this
-    SF314[floppy_current_drive()].ImageType.Extension==EXT_STX
+    SF314[drive].ImageType.Extension==EXT_STX
 #else
-    SF314[floppy_current_drive()].ImageType==DISK_PASTI
+    SF314[floppy_current_drive()].ImageType==3//DISK_PASTI
 #endif
 #if defined(SSE_PASTI_ONLY_STX_HD)
-    || (MCR&BIT_3) // hard disk handling by pasti
+    || (MCR&CR_HDC_OR_FDC) // hard disk handling by pasti
 #endif
     )
 #endif        
@@ -447,17 +476,18 @@ void TDma::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
   {
 
   case 0xff8604:
-    //write DMA sector counter, 0x190
-    if(MCR & BIT_4)
+    
+    if(MCR&CR_COUNT_OR_REGS)
     { 
-      ASSERT(!io_src_b);
-      Counter&=0xff;
-      Counter|=int(io_src_b) << 8;
+      //write DMA sector counter, 0x190
+      ASSERT(!io_src_b); // it's an 8bit reg 
+      //Counter&=0xff;
+      //Counter|=int(io_src_b) << 8;
       log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Set DMA sector count to "+dma_sector_count);
       break;
     }
     // HD access
-    if(MCR & BIT_3)
+    if(MCR&CR_HDC_OR_FDC)
     { 
       log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Writing $"+HEXSl(io_src_b,2)+"xx to HDC register #"+((dma_mode & BIT_1) ? 1:0));
       break;
@@ -471,16 +501,16 @@ is ignored and when reading the 8 upper bits consistently reads 1."
     
   case 0xff8605:  
     //write FDC sector counter, 0x190
-    if (MCR & BIT_4)
+    if (MCR&CR_COUNT_OR_REGS)
     { 
       TRACE_LOG("Counter");
       Counter&=0xff00;
       Counter|=io_src_b;
       // We need do that only once (word access):
       if (Counter)
-        SR|=BIT_1;
+        SR|=SR_COUNT;
       else
-        SR&=BYTE(~BIT_1); //status register bit for 0 count
+        SR&=BYTE(~SR_COUNT); //status register bit for 0 count 
       ByteCount=0;
 /*
 "It is interesting to note that when the DMA is in write mode, the two internal
@@ -493,7 +523,7 @@ is ignored and when reading the 8 upper bits consistently reads 1."
       break;
     }
     // HD access
-    if (MCR & BIT_3){ 
+    if (MCR&CR_HDC_OR_FDC){ 
       TRACE_LOG("HD");
       log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Writing $xx"+HEXSl(io_src_b,2)+" to HDC register #"+((dma_mode & BIT_1) ? 1:0));
       break;
@@ -506,13 +536,13 @@ Disk Controller is acknowledged; otherwise, the DRQ from the Hard Disk
 interface is acknowledged. For some reason this bit must also be set 
 to generate DMA bus cycle."
 */
-    ASSERT( MCR&BIT_7 );
-    if(!(MCR&BIT_7))
+    ASSERT( MCR&CR_DRQ_FDC_OR_HDC );
+    if(!(MCR&CR_DRQ_FDC_OR_HDC))
       break;
 #endif
 
 #if defined(SSE_FDC)
-    WD1772.IOWrite((MCR&(BIT_1+BIT_2))/2,io_src_b);
+    WD1772.IOWrite((MCR&(CR_A1|CR_A0))/2,io_src_b);
 #else // old iow block... ugly but flexible - normally not compiled
     {
             switch (dma_mode & (BIT_1+BIT_2)){
@@ -557,7 +587,7 @@ RAM". Note that "flushing to disk" would be impossible.
 What was in the buffers will go nowhere, the internal counter is reset.
 */
     // detect toggling of bit 8 (boolean !x ^ !y = logical x ^^ y)
-    if( !(MCR&0x100) ^ !(io_src_b) ) // fixes Archipelagos IPF
+    if( !(MCR&CR_WRITE) ^ !(io_src_b) ) // fixes Archipelagos IPF
     {
       TRACE_LOG("Reset");
 #if !defined(SSE_DMA_FIFO_READ_ADDRESS2)
@@ -565,7 +595,7 @@ What was in the buffers will go nowhere, the internal counter is reset.
 #endif
       Counter=0;
       ByteCount=0;
-      SR=1;
+      SR=SR_NO_ERROR;
       Request=false;
       Fifo_idx=0;
 #if defined(SSE_DMA_DOUBLE_FIFO) 
@@ -586,8 +616,6 @@ What was in the buffers will go nowhere, the internal counter is reset.
     
   case 0xff8607:  //low byte of DMA mode
     TRACE_LOG("CR");
-//    ASSERT(!(io_src_b&1)); // Omega, Union
-//    ASSERT(!(io_src_b&BIT_5)); // Do Things
     MCR&=0xff00;
     MCR|=io_src_b;
 #if !defined(SSE_DMA_WRITE_CONTROL) // see above
@@ -654,15 +682,18 @@ What was in the buffers will go nowhere, the internal counter is reset.
 #if defined(SSE_DRIVE)&&defined(SSE_PASTI_ONLY_STX)
     && (!PASTI_JUST_STX 
 #if defined(SSE_DISK_IMAGETYPE)
-    || SF314[floppy_current_drive()].ImageType.Extension==EXT_STX
+    || SF314[YM2149.SelectedDrive].ImageType.Extension==EXT_STX
 #else
-    || SF314[floppy_current_drive()].ImageType==DISK_PASTI
+    || SF314[floppy_current_drive()].ImageType==3//DISK_PASTI
 #endif
-    ||addr!=0xff8605||MCR&BIT_3||MCR&BIT_4
+    //||addr!=0xff8605
+    ||MCR&BIT_3 // let pass when HD selected
+    //||MCR&BIT_4 //counter
     )
 #endif        
     )
   {
+    //ASSERT( io_src_b!=0xF0 );
     TRACE_LOG(" Pasti");
     WORD data=io_src_b;
 
@@ -726,7 +757,7 @@ void TDma::UpdateRegs(bool trace_them) {
 // in fact we should refactor this
     SF314[floppy_current_drive()].ImageType.Extension==EXT_STX
 #else
-    SF314[floppy_current_drive()].ImageType==DISK_PASTI
+    SF314[floppy_current_drive()].ImageType==3//DISK_PASTI
 #endif
 #if defined(SSE_PASTI_ONLY_STX_HD)
     || (MCR&BIT_3) // hard disk handling by pasti
@@ -768,7 +799,7 @@ void TDma::UpdateRegs(bool trace_them) {
     TODO
 */
     if(!(fdc_str&FDC_STR_MOTOR_ON)) // assume this drive!
-      ::SF314[DRIVE].MotorOn=false;
+      ::SF314[DRIVE].motor_on=false;
 #endif
     fdc_tr=CAPSFdcGetInfo(cfdciR_Track, &Caps.WD1772,ext);
     fdc_sr=CAPSFdcGetInfo(cfdciR_Sector, &Caps.WD1772,ext);
@@ -781,7 +812,7 @@ void TDma::UpdateRegs(bool trace_them) {
 #if defined(SSE_FDC_TRACE_IRQ)
   if(trace_them)
   {
-    if(MCR&BIT_3)
+    if(MCR&CR_HDC_OR_FDC)
       TRACE_LOG("HDC IRQ HBL %d ",hbl_count);
     else
     {
@@ -791,7 +822,7 @@ void TDma::UpdateRegs(bool trace_them) {
 #endif
       TRACE_LOG("TR %d SR %d DR %d ($%X) HBL %d",fdc_tr,fdc_sr,fdc_dr,fdc_dr,hbl_count);
     }
-#if defined(SS_PSG1)//
+#if defined(SSE_YM2149A)//
     TRACE_LOG(" %c%d:",'A'+YM2149.SelectedDrive,YM2149.SelectedSide);
 #endif
     TRACE_LOG(" T %d/%d DMA CR %X $%X SR %X #%d PC %X\n",
@@ -829,45 +860,12 @@ void TDma::IncAddress() {
     {        
       ByteCount=0;              
       Counter--;                                  
-      SR|=BIT_1;  // DMA sector count not 0
+      SR|=SR_COUNT;  // DMA sector count not 0
       if(!(Counter&0xFF)) 
-        SR&=~BIT_1;     
+        SR&=~SR_COUNT;     
     }                                                      
   }
 }
-#endif
-
-
-
-
-
-#if defined(SSE_DMA_FIFO)
-/*  For writing to disk, we use the FIFO in the other direction,
-    because we want it to fill up when empty.
-    On a real ST, the first DMA transfer happens right when the
-    sector count has been set.
-    This could be important in theory, but know no case.
-*/
-
-BYTE TDma::GetFifoByte() {
-  // RAM -> FIFO -> DISK = 'write disk' = 'read dma'
-
-  ASSERT( (MCR&BIT_7) && !(MCR&BIT_6) );
-  ASSERT( (MCR&BIT_8) ); // RAM -> disk (Write floppy)
-
-  if(!Fifo_idx)
-    Dma.RequestTransfer();
-
-  BYTE data=Fifo
-#if defined(SSE_DMA_DOUBLE_FIFO)
-    [BufferInUse]
-#endif
-    [--Fifo_idx];
-
-  return data;  
-
-}
-
 #endif
 
 
@@ -877,14 +875,15 @@ void TDma::RequestTransfer() {
   // we make this function to avoid code duplication
   Request=true; 
   
-  Fifo_idx= (MCR&0x100) ? 16 : 0;
+  Fifo_idx= (MCR&CR_WRITE) ? 16 : 0;
 
 #if defined(SSE_DMA_DOUBLE_FIFO)
   BufferInUse=!BufferInUse; // toggle 16byte buffer
 #endif
 
 #if defined(SSE_DMA_DELAY) // normally not - set event
-  TransferTime=ABSOLUTE_CPU_TIME+SSE_DMA_ACCESS_DELAY;
+  // in fact we should taret linecycle "end DE"
+  TransferTime=ABSOLUTE_CPU_TIME+SSE_DMA_ACCESS_DELAY; 
   PREPARE_EVENT_CHECK_FOR_DMA
 #else
   TransferBytes(); // direct transfer
@@ -897,29 +896,27 @@ void TDma::RequestTransfer() {
 
 void TDma::TransferBytes() {
   // execute the DMA transfer (assume floppy)
-  ASSERT( MCR&0x80 ); // bit 7 or no transfer
-  ASSERT(!(MCR&BIT_5));
   ASSERT( Request );
-  ASSERT( MCR==0x80 || MCR==0x90 || MCR==0x180 || MCR==0x190 );
+  ASSERT( MCR&CR_DRQ_FDC_OR_HDC ); // bit 7 or no transfer ???
+  ASSERT(!(MCR&CR_RESERVED)); // reserved bits
 
 #if defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)
 /*  Computing the checksum if it's bootsector.
-    We do it here in DMA because it should work with naitve, STX, IPF.
+    We do it here in DMA because it should work with native, STX, IPF.
 */
 
 #define LOGSECTION LOGSECTION_IMAGE_INFO
 
-  if(fdc_cr==0x80 && !fdc_tr && fdc_sr==1 && !(MCR&0x100)
-    &&!floppy_current_side())//3.6.1: side 0
+  if(fdc_cr==0x80 && !fdc_tr && fdc_sr==1 && !(MCR&CR_WRITE) && !CURRENT_SIDE)
   {
     for(int i=0;i<16;i+=2)
     {
-      SF314[floppy_current_drive()].SectorChecksum+=Fifo
+      SF314[DRIVE].SectorChecksum+=Fifo
 #if defined(SSE_DMA_DOUBLE_FIFO)
         [!BufferInUse]
 #endif
         [i]<<8; 
-      SF314[floppy_current_drive()].SectorChecksum+=Fifo
+      SF314[DRIVE].SectorChecksum+=Fifo
 #if defined(SSE_DMA_DOUBLE_FIFO)
         [!BufferInUse]
 #endif
@@ -944,10 +941,7 @@ void TDma::TransferBytes() {
   {
 #if defined(SSE_DMA_TRACK_TRANSFER)
     Datachunk++; 
-    if(!(MCR&0x100)) // disk -> RAM
-      TRACE_LOG("#%03d (%d-%02d-%02d) to %06X: ",Datachunk,floppy_current_side(),floppy_head_track[DRIVE],fdc_sr,BaseAddress);
-    else  // RAM -> disk
-      TRACE_LOG("#%03d (%d-%02d-%02d) from %06X: ",Datachunk,floppy_current_side(),floppy_head_track[DRIVE],fdc_sr,BaseAddress);
+    TRACE_LOG("#%03d (%d-%02d-%02d) %s %06X: ",Datachunk,floppy_current_side(),floppy_head_track[DRIVE],WD1772.CommandType()==2?fdc_sr:0,(MCR&0x100)?"from":"to",BaseAddress);
 #else
 #endif
   }
@@ -980,7 +974,7 @@ void TDma::TransferBytes() {
 #if defined(SSE_DMA_DOUBLE_FIFO)
       [!BufferInUse]
 #endif
-      [(MCR&0x100)?15-i:i]);//bugfix 3.6.1 reverse order
+      [(MCR&CR_WRITE)?15-i:i]);//bugfix 3.6.1 reverse order
 
 #if USE_PASTI    
     if(hPasti&&pasti_active
@@ -988,12 +982,12 @@ void TDma::TransferBytes() {
     &&(!PASTI_JUST_STX || 
 #if defined(SSE_DISK_IMAGETYPE)
 // in fact we should refactor this
-    SF314[floppy_current_drive()].ImageType.Extension==EXT_STX)
+    SF314[DRIVE].ImageType.Extension==EXT_STX)
 #else
-    SF314[floppy_current_drive()].ImageType==DISK_PASTI)
+    SF314[floppy_current_drive()].ImageType==3)//DISK_PASTI)
 #endif    
 #if defined(SSE_PASTI_ONLY_STX_HD)
-    || (MCR&BIT_3) // hard disk handling by pasti
+    || (MCR&CR_HDC_OR_FDC) // hard disk handling by pasti
 #endif
 #endif        
       )  
@@ -1002,7 +996,7 @@ void TDma::TransferBytes() {
 #endif
       DMA_INC_ADDRESS; // use Steem's existing routine (?)
   }
-#if defined(SSE_DMA_COUNT_CYCLES) 
+#if defined(SSE_DMA_COUNT_CYCLES) //undef 3.7
   if(ADAT)//3.6.1 condition
     INSTRUCTION_TIME(8); 
 #endif

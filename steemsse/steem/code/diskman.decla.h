@@ -15,6 +15,9 @@
 #if defined(SSE_SCP)
 #define DISK_SCP 7
 #endif
+#if defined(SSE_DISK_STW)
+#define DISK_STW 8 
+#endif
 
 #define FileIsDisk(s) ExtensionIsDisk(strrchr(s,'.'))
 

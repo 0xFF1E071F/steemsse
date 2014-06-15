@@ -142,11 +142,20 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
 /*  
     Bus jam:
     In Hatari, each access causes 8 cycles of wait states.
-    In v1.7.0, more complicated
+    In v1.7.0, more complicated:
+
+  "CPU cycles in the ST :
+    When accessing an ACIA register, an additional delay will be added to the usual number of
+    cycles for this CPU instruction. This delay is made of 2 parts (for a 68000 at 8 MHz) :
+	- a fixed delay of 6 cycles.
+	- a variable delay of 0 to 8 cycles to synchronise with the E Clock."
+    This is the same idea as in Steem 3.2
     In Steem, we count 6 cycles, but with rounding.
     We removed extra cycles since v3.4 as it broke Spectrum 512
     If we want to make it more precise, we probably must act on
     different aspects at once.
+    v3.6.4: Because there is ACIA jitter on real ST (eg NOJITTER.PRG), 
+    we reintroduce variable wait states without breaking Spectrum 512.
 */
       if( 
 #if defined(DEBUG_BUILD)
@@ -155,20 +164,28 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
         (!io_word_access||!(addr & 1)) ) //Only cause bus jam once per word
       {
         BYTE wait_states=6;
-#if !defined(SSE_ACIA_BUS_JAM_NO_WOBBLE)
-        wait_states+=(8000000-(ABSOLUTE_CPU_TIME-shifter_cycle_base))%10;
-#endif
 
-#if defined(SSE_DEBUG_FRAME_REPORT_ACIA)
-      FrameEvents.Add(scan_y,LINECYCLES,'a',wait_states);
+#if defined(SSE_ACIA_BUS_JAM_PRECISE_WOBBLE) //v3.6.4
+
+        if(HD6301EMU_ON)
+        {
+          INSTRUCTION_TIME(wait_states); 
+#ifdef SSE_CPU_E_CLOCK_DISPATCHER
+          M68000.SyncEClock(TM68000::ECLOCK_ACIA);
+#else
+          M68000.SyncEClock();
 #endif
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
-      if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_ACIA)
-        FrameEvents.Add(scan_y,LINECYCLES,'a',wait_states);
+        }
+        else
 #endif
-        BUS_JAM_TIME(wait_states); // =INSTRUCTION_TIME_ROUND
+        {
+#if !defined(SSE_ACIA_BUS_JAM_NO_WOBBLE) // Steem 3.2
+          wait_states+=(8000000-(ACT-shifter_cycle_base))%10;
+#endif
+          BUS_JAM_TIME(wait_states); 
+        }
       }
-
+      
       switch (addr) // ACIA registers
       {
 

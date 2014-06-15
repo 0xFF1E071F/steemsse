@@ -89,43 +89,44 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
       {
         if (io_word_access==0 || (addr & 1)==0)
         {
-//          if (passed VBL or HBL point){ //SS: those // are not mine
+#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA)
+          BYTE wait_states=6;
+#if defined(SSE_ACIA_BUS_JAM_PRECISE_WOBBLE) //v3.6.4
+          if(HD6301EMU_ON)
+          {
+            INSTRUCTION_TIME(wait_states);
+#ifdef SSE_CPU_E_CLOCK_DISPATCHER
+            M68000.SyncEClock(TM68000::ECLOCK_ACIA);
+#else
+            M68000.SyncEClock();
+#endif
+          }
+          else
+#endif
+          {
+#if !defined(SSE_ACIA_BUS_JAM_NO_WOBBLE)
+/*  This is a part from Steem 3.2, but in ior.cpp.
+    With this instead of the original part iow.cpp below,
+    Spectrum 512 is fixed also without option 6301/ACIA.
+*/
+            wait_states+=(8000000-(ACT-shifter_cycle_base))%10;
+#endif
+            BUS_JAM_TIME(wait_states);
+          }
+
+#else //Steem 3.2
+//          if (passed VBL or HBL point){
 //            BUS_JAM_TIME(4);
 //          }else{
 //          int waitTable[10]={0,9,8,7,6,5,4,3,2,1};
 //          BUS_JAM_TIME(waitTable[ABSOLUTE_CPU_TIME % 10]+6);
-
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_BUS_JAM_NO_WOBBLE)
-          const int rel_cycle=0; // hoping it will be trashed by compiler
-#else // Steem 3.2, 3.3
-
-//          if (passed VBL or HBL point){//SS: those // are not mine
-//            BUS_JAM_TIME(4);
-//          }else{
-          // Jorge Cwik:
-          // Access to the ACIA is synchronized to the E signal. Which is a clock with
-          // one tenth the frequency of the main CPU clock (800 Khz). So the timing
-          // should depend on the phase relationship between both clocks.
-
           int rel_cycle=ABSOLUTE_CPU_TIME-shifter_cycle_base;
-#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_RATIO)
-          rel_cycle=CpuNormalHz-rel_cycle;
-#else
           rel_cycle=8000000-rel_cycle;
-#endif
           rel_cycle%=10;
+          BUS_JAM_TIME(rel_cycle+6);
+//          BUS_JAM_TIME(8);
 #endif
 
-#if defined(SSE_DEBUG_FRAME_REPORT_ACIA)
-      FrameEvents.Add(scan_y,LINECYCLES,'A',rel_cycle+6);
-#endif
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
-      if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_ACIA)
-        FrameEvents.Add(scan_y,LINECYCLES,'A',rel_cycle+6);
-#endif
-
-          BUS_JAM_TIME(rel_cycle+6); //SS just 6 (TODO)
         }
       }
 
@@ -1126,6 +1127,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 */
     case 0xff8800:{  //--------------------------------------- sound chip
       if ((ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_W)==0){
+        //SS this will jam only once for .W or .L
         DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) BUS_JAM_TIME(4);
 //        DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) BUS_JAM_TIME(2);//
 //        DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) INSTRUCTION_TIME(2);//
@@ -1207,17 +1209,17 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
           SerialPort.SetRTS(io_src_b & BIT_3);
           if ((old_val & (BIT_1+BIT_2))!=(io_src_b & (BIT_1+BIT_2))){
 
-#if defined(SS_PSG1) //3.7.0
+#if defined(SSE_YM2149A)
             YM2149.SelectedDrive=floppy_current_drive();
             YM2149.SelectedSide=floppy_current_side();
 #endif
-#if defined(SS_PSG2) //3.7.0
+#if defined(SSE_YM2149B)
             if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE)
-              SF314[YM2149.SelectedDrive].MotorOn=!!(fdc_str&0x80);
+              SF314[YM2149.SelectedDrive].motor_on=!!(fdc_str&0x80);
 #endif
 
-#if !defined(SSE_DEBUG_TRACE_IDE) && defined(SS_PSG1)
-#if defined(SS_PSG_REPORT_DRIVE_CHANGE)||defined(SSE_DEBUG_TRACE_CONTROL)
+#if !defined(SSE_DEBUG_TRACE_IDE) && defined(SSE_YM2149A)
+#if defined(SSE_YM2149_REPORT_DRIVE_CHANGE)||defined(SSE_DEBUG_TRACE_CONTROL)
 #if defined(SSE_DEBUG_TRACE_CONTROL) // controlled by boiler now (3.6.1)
             if(TRACE_MASK3 & TRACE_CONTROL_FDCPSG)
 #endif

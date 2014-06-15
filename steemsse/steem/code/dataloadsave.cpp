@@ -745,10 +745,10 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
       DISPLAY_SIZE=0;
     ChangeBorderSize(DISPLAY_SIZE);
 #endif
-#if defined(SS_PSG_FIX_TABLES)
+#if defined(SSE_YM2149_FIX_TABLES)
     PSG_FILTER_FIX=SSEOption.PSGMod=pCSF->GetInt("Sound","PsgMod",SSEOption.PSGMod);
 #endif
-#if defined(SS_PSG_FIXED_VOL_FIX2)
+#if defined(SSE_YM2149_FIXED_VOL_FIX2)
     SSEOption.PSGFixedVolume=pCSF->GetInt("Sound","PsgFixedVolume",SSEOption.PSGFixedVolume);
 #endif
 #if defined(SSE_SOUND_FILTER_STF)
@@ -1177,10 +1177,10 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_VID_BORDERS)
   pCSF->SetStr("Display","BorderSize",EasyStr(DISPLAY_SIZE));  
 #endif
-#if defined(SS_PSG_FIX_TABLES)
+#if defined(SSE_YM2149_FIX_TABLES)
   pCSF->SetStr("Sound","PsgMod",EasyStr(SSEOption.PSGMod));  
 #endif
-#if defined(SS_PSG_FIXED_VOL_FIX2)
+#if defined(SSE_YM2149_FIXED_VOL_FIX2)
   pCSF->SetStr("Sound","PsgFixedVolume",EasyStr(SSEOption.PSGFixedVolume));  
 #endif
 #if defined(SSE_SOUND_FILTER_STF)

@@ -1,7 +1,7 @@
 #define OPTIONS_HEIGHT 400
 
 #include "SSE/SSE6301.h"
-#if defined(SS_STF)
+#if defined(SSE_STF)
 
 int SwitchSTType(int new_type);//forward
 
@@ -151,7 +151,7 @@ void TOptionBox::Show()
   page_lv.sl.Add(T("Startup"),101+ICO16_FUJI16,6);
   page_lv.sl.Add(T("Paths"),101+ICO16_FUJI16,15);
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE) && defined(SS_UNIX)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE) && defined(SSE_UNIX)
   page_lv.sl.Add(T("SSE"),101+ICO16_SSE_OPTION,16);
 #endif
   
@@ -289,7 +289,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
       floppy_access_ff=b->checked;
     }else if (b->id==140){
       StartEmuOnClick=b->checked;
-#if defined(STEVEN_SEAGAL) && defined(SS_SOUND_OPTION_DISABLE_DSP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_OPTION_DISABLE_DSP)
     }else if (b->id==141){
       DSP_ENABLED=b->checked;
 #endif
@@ -576,7 +576,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
 
     }else if (b->id==12000){
       osd_show_disk_light=b->checked;
-#if defined(STEVEN_SEAGAL) && defined(SS_OSD_DRIVE_INFO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DRIVE_INFO)
     }else if (b->id==12001){
       OSD_DRIVE_INFO=b->checked;
 #endif
@@ -606,25 +606,25 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
       XFlush(XD);
     }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE) && defined(SS_UNIX)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE) && defined(SSE_UNIX)
 
-#if defined(SS_VAR_MOUSE_CAPTURE)
+#if defined(SSE_VAR_MOUSE_CAPTURE)
     else if(b->id==4002)
       CAPTURE_MOUSE=b->checked;
 #endif
-#if defined(SS_HACKS)
+#if defined(SSE_HACKS)
     else if(b->id==4003)
       SSE_HACKS_ON=b->checked;
 #endif
-#if defined(SS_VAR_STEALTH)
+#if defined(SSE_VAR_STEALTH)
     else if(b->id==4004)
       STEALTH_MODE=!b->checked;
 #endif
-#if defined(SS_IKBD_6301)
+#if defined(SSE_IKBD_6301)
     else if(b->id==4006)
       b->checked=HD6301EMU_ON=b->checked&HD6301_OK;
 #endif
-#if defined(SS_VAR_KEYBOARD_CLICK)
+#if defined(SSE_VAR_KEYBOARD_CLICK)
     else if(b->id==4007)
     {
       if(b->checked)// pathetic, there must be a better way
@@ -633,27 +633,27 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
         PEEK(0x484)&=0xFFFE;
     }
 #endif         
-#if defined(SS_PSG_FIX_TABLES) 
+#if defined(SSE_YM2149_FIX_TABLES) 
     else if(b->id==4012)
       SSEOption.PSGMod=b->checked;
 #endif
-#if defined(SS_PSG_FIXED_VOL_FIX2)
+#if defined(SSE_YM2149_FIXED_VOL_FIX2)
     else if(b->id==4013)
       SSEOption.PSGFixedVolume=b->checked;
 #endif
-#if defined(SS_SOUND_FILTER_STF)
+#if defined(SSE_SOUND_FILTER_STF)
     else if(b->id==4008)
       PSG_FILTER_FIX=b->checked;
 #endif
-#if defined(SS_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE)
     else if(b->id==4009)
       MICROWIRE_ON=b->checked;
 #endif   
-#if defined(SS_VAR_OPTION_SLOW_DISK)
+#if defined(SSE_VAR_OPTION_SLOW_DISK)
     else if(b->id==4010)
       floppy_instant_sector_access=!b->checked;
 #endif   
-#if defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+#if defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
     else if(b->id==4011)
       USE_SDL=b->checked;
 #endif   
@@ -763,15 +763,15 @@ int TOptionBox::dd_notify_proc(hxc_dropdown*dd,int mess,int i)
     macro_file_options(MACRO_FILE_SET,This->MacroSel,&MFO);
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SSE_OPTION_PAGE) && defined(SS_UNIX)
-#if defined(SS_VID_BORDERS)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE) && defined(SSE_UNIX)
+#if defined(SSE_VID_BORDERS)
   else if(dd->id==4001) // display size
   {
     DISPLAY_SIZE=dd->sel;
     ChangeBorderSize(DISPLAY_SIZE);
   }
 #endif
-#if defined(SS_STF)
+#if defined(SSE_STF)
   else if(dd->id==4005) // ST model
   {
     ST_TYPE=dd->sel;
@@ -779,7 +779,7 @@ int TOptionBox::dd_notify_proc(hxc_dropdown*dd,int mess,int i)
     // TODO: add TOS matching, Mega STF 4MB 
   }
 #endif
-#if defined(SS_MMU_WAKE_UP)
+#if defined(SSE_MMU_WAKE_UP)
   else if(dd->id==4006) // wake-up state
   {
     WAKE_UP_STATE=dd->sel;

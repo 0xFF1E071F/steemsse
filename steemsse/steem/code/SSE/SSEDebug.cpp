@@ -45,7 +45,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_ALWAYS ] = 1;
 #if defined(_DEBUG) && !defined(DEBUG_BUILD) // VC6 IDE debug no boiler
   //TODO move somehow to SSE.H
-  logsection_enabled[ LOGSECTION_FDC ] = 0;
+  logsection_enabled[ LOGSECTION_FDC ] = 1;
   logsection_enabled[ LOGSECTION_IO ] = 0;
   logsection_enabled[ LOGSECTION_MFP_TIMERS ] = 0;
   logsection_enabled[ LOGSECTION_INIT ] =0;
@@ -69,9 +69,9 @@ TDebug::TDebug() {
 // additions
 #if !defined(SSE_DEBUG_TRACE_CONTROL)
   logsection_enabled[ LOGSECTION_FDC_BYTES ] = 0;
-  logsection_enabled[ LOGSECTION_IPF_LOCK_INFO ] = 0; //remove option
+  //logsection_enabled[ LOGSECTION_IPF_LOCK_INFO ] = 0; //remove option
 #endif
-  logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 1;
+  logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 0;
 #endif
   logsection_enabled[ LOGSECTION_OPTIONS ] = 1; // no boiler control
 #endif
@@ -152,6 +152,7 @@ void TDebug::Vbl(){
   FrameInterrupts=0;
   FrameMfpIrqs=0;
 #endif  
+  nHbis=0;
 }
 
 
@@ -279,7 +280,7 @@ void TDebug::TraceGeneralInfos(int when) {
     TRACE("Timers A %X B %X C %X D %X\n",LPEEK(0x134),LPEEK(0x120),LPEEK(0x114),LPEEK(0x110));
 //    TRACE("ACIA IKBD %X\n",LPEEK(0x118));
     // Misc
-#if defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE___)
     if(dma_sound_bass!=6||dma_sound_treble!=6)
       TRACE("Microwire %d dma bass %X treble %X\n",MICROWIRE_ON,dma_sound_bass,dma_sound_treble);
 #endif

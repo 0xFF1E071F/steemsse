@@ -212,7 +212,7 @@ void iolist_init()
 
 #if defined(SSE_OSD_CONTROL)
   iolist_add_entry(FAKE_IO_START+4,"OSD1",2,
-    "Trace|Prefetch|Interrupt|IKBD|60hz|.|.|.|.|.|.|.|.|.|.|.");
+    "Trace|Prefetch|Interrupt|IKBD|60hz|reset|.|.|.|.|.|.|.|.|.|.");
   iolist_add_entry(FAKE_IO_START+6,"OSD2 Shifter",2,
     "Tricks|Load|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
   iolist_add_entry(FAKE_IO_START+8,"OSD3 STE",2,

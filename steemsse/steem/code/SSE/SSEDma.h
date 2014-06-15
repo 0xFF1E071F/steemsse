@@ -2,16 +2,10 @@
 #ifndef SSEDMA_H
 #define SSEDMA_H
 
-/*
-Custom Atari DMA chip.
-*/
 
 #if defined(SSE_DMA)
-//TODO apart files; works for RW track
-/*  We use object TDma to refine emulation of the DMA in Steem.
-    Steem original variables are defined as the new ones.
-*/
 
+//   Steem original variables are defined as the new ones.
 #define dma_sector_count Dma.Counter
 #define dma_address Dma.BaseAddress
 #define dma_bytes_written_for_sector_count Dma.ByteCount
@@ -20,6 +14,28 @@ Custom Atari DMA chip.
 
 struct TDma {
 
+/*
+    ff 8606   R       |-------------xxx|   DMA Status (Word Access)
+                                    |||
+                                    || ----   _Error Status (1=OK)
+                                    | -----   _Sector Count Zero Status
+                                     ------   _Data Request Inactive Status
+
+    ff 8606   W       |-------xxxxxxxx-|   DMA Mode Control (Word Access)
+                              ||||||||     0  Reserved (0)
+                              ||||||| -----1  A0 lines of FDC/HDC
+                              |||||| ------2  A1 ................ 
+                              ||||| -------3  HDC (1) / FDC (0) Register Select
+                              |||| --------4  Sector Count Register Select
+                              |||0         5  Reserved (0)
+                              || ----------6  Disable (1) / Enable (0) DMA
+                              | -----------7  FDC DRQ (1) / HDC DRQ (0) 
+                               ------------8  Write (1) / Read (0)
+*/
+
+  enum {SR_DRQ=BIT_2,SR_COUNT=BIT_1,SR_NO_ERROR=BIT_0};
+  enum {CR_WRITE=BIT_8,CR_DRQ_FDC_OR_HDC=BIT_7,CR_DISABLE=BIT_6,CR_COUNT_OR_REGS=BIT_4,
+  CR_HDC_OR_FDC=BIT_3,CR_A1=BIT_2,CR_A0=BIT_1,CR_RESERVED=BIT_5|BIT_0};
   MEM_ADDRESS BaseAddress; // Base Address Register
   WORD MCR; // mode control register
   BYTE SR; // status register
@@ -45,7 +61,7 @@ struct TDma {
   void AddToFifo(BYTE data);
 
 #if defined(SSE_DMA_DRQ)
-  void Drq(); // void?
+  bool Drq(); // void?
 #endif
 
   BYTE GetFifoByte();
@@ -118,7 +134,7 @@ heavy. It was a test.
 
 
   // if we use event for all, there's no need for this one (which delay
-  we're not sure we need to emulate
+  we're not sure we need to emulate)
 */
   static void Event(); 
   int TransferTime;
@@ -129,8 +145,6 @@ heavy. It was a test.
 #endif
 
 };
-
-extern TDma Dma;
 
 #endif//dma
 

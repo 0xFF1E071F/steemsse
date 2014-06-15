@@ -54,7 +54,11 @@ private:
   // GDI Only
   bool InitGDI();
 
+#if defined(SSE_VID_DD7)
+  IDirectDraw7 *DDObj;
+#else
   IDirectDraw2 *DDObj;
+#endif
   IDirectDrawSurface *DDPrimarySur,*DDBackSur;
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_3BUFFER_WIN)

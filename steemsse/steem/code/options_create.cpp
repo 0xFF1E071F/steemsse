@@ -2141,6 +2141,7 @@ Windows 2000	5.0
   {
     if(osver.dwMinorVersion>=2) //Win 8
     {
+      //TODO don't even display option?
       strcpy(add_tip," Incompatible with Window Compositing of Windows 8.");
       mask|=WS_DISABLED;
       SSE_WIN_VSYNC=SSE_3BUFFER=0;
@@ -2230,14 +2231,17 @@ Windows 2000	5.0
     mask|=WS_DISABLED;
   }
   
-  Win=CreateWindow("Button",T("6301 true emu"),mask,page_l,y,Wid,23,Handle,
+//  Win=CreateWindow("Button",T("6301 true emu"),mask,page_l,y,Wid,23,Handle,
+  Win=CreateWindow("Button",T("6301/ACIA"),mask,page_l,y,Wid,23,Handle,
     (HMENU)1029,HInstance,NULL);
   if(!HD6301_OK)
     SendMessage(Win,BN_DISABLE,0,0);
   else
     SendMessage(Win,BM_SETCHECK,HD6301EMU_ON,0);
   ToolAddWindow(ToolTip,Win,
-    T("This enables a real emulation of the IKBD keyboard chip (using the Sim6xxx code by Arne Riiber, thx dude!)"));
+  T("This enables a low level emulation of the IKBD keyboard chip (using\
+ the Sim6xxx code by Arne Riiber, thx dude!), as well as ACIA improvements\
+ or bugs"));
   y+=LineHeight;
 #endif
 
@@ -2270,7 +2274,7 @@ Windows 2000	5.0
   y+=LineHeight;
 #endif
 
-#if defined(SS_PSG_FIX_TABLES) 
+#if defined(SSE_YM2149_FIX_TABLES) 
   Wid=GetCheckBoxSize(Font,T("P.S.G.")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
   Win=CreateWindow("Button",T("P.S.G."),mask,
@@ -2281,7 +2285,7 @@ Windows 2000	5.0
   y+=LineHeight;
 #endif
 
-#if defined(SS_PSG_FIXED_VOL_FIX2)
+#if defined(SSE_YM2149_FIXED_VOL_FIX2)
   Offset=Wid+HorizontalSeparation;
   y-=LineHeight; // maybe it will be optimised away!
   Wid=GetCheckBoxSize(Font,T("Samples")).Width;
@@ -2346,7 +2350,7 @@ Windows 2000	5.0
     T("Displays which drive is running, and on which side and track the drive currently is, plus the sector in slow mode."));
 #endif
 
-#if defined(SSE_PASTI_ONLY_STX)
+#if defined(SSE_PASTI_ONLY_STX) // TODO debug then no more option
   Offset+=Wid+HorizontalSeparation;
   Wid=GetCheckBoxSize(Font,T("Pasti only for STX")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
@@ -2405,7 +2409,7 @@ Windows 2000	5.0
     page_l+Offset,y,Wid,25,Handle,(HMENU)7313,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,SSE_GHOST_DISK,0);
   ToolAddWindow(ToolTip,Win,
-    T("Intercept writes and save on a STW image"));
+    T("Intercept writes and save in a STG file"));
   y+=LineHeight;
 #endif
 

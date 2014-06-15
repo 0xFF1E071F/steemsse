@@ -35,20 +35,21 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_DRIVE_MOTOR_ON)
-  if(drive!=-1)
-    SF314[drive].MotorOn=false;
+  // no: braindamage ADAT (3.6.4)
+//  if(drive!=-1)
+//    SF314[drive].motor_on=false;
 #endif
 
 #if defined(SSE_DISK_GHOST)
   // SetDisk() may be called without call to RemoveDisk() first
-  if(SF314[drive].State.Ghost) 
+  if(SF314[drive].State.ghost) 
     GhostDisk[drive].Close();
-  SF314[drive].State.Ghost=false;
+  SF314[drive].State.ghost=false;
 #endif
 
   if (IsSameStr_I(File,ImageFile) && IsSameStr_I(CompressedDiskName,DiskInZip)) return 0;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_PASTI_ONLY_STX)  
+#if defined(STEVEN_SEAGAL) && defined(SSE_PASTI_ONLY_STX_____)  //MFD
   //bugfix 3.5.4, this part would reset ImageType right before we leave... (^^)
   if(drive!=-1)
 #if defined(SSE_DISK_IMAGETYPE)
@@ -85,6 +86,10 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
   bool SCP=IsSameStr_I(Ext,"SCP");
 #endif
+#if defined(SSE_DISK_STW)
+  bool STW=IsSameStr_I(Ext,DISK_EXT_STW);
+#endif
+
   
 
   // NewDiskInZip will be blank for default disk, RealDiskInZip will be the
@@ -92,6 +97,8 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   EasyStr NewDiskInZip,RealDiskInZip;
 
   int Type=ExtensionIsDisk(dot);
+
+
   if (Type==DISK_COMPRESSED){
     if (!enable_zip) return FIMAGE_WRONGFORMAT;
 
@@ -106,8 +113,11 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
         if (Type==DISK_UNCOMPRESSED || Type==DISK_PASTI){
           if (CompressedDiskName.Empty() || IsSameStr_I(CompressedDiskName,fn.Text)){
             // Blank DiskInZip name means default disk (first in zip)
+
+            
             if (Type==DISK_PASTI){
 #if defined(STEVEN_SEAGAL) && defined(SSE_PASTI_ONLY_STX)
+              ASSERT(drive!=-1);
               if(drive!=-1)
               {
                 TRACE_LOG("Disk in %c is STX\n",'A'+drive);
@@ -122,6 +132,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
               f_PastiDisk=true;
 #if defined(SSE_PASTI_AUTO_SWITCH)
               pasti_active=true;
+              //TRACE_LOG("pasti_active %d\n",pasti_active);
 #endif
             }else{
               MSA=has_extension(fn,"MSA");
@@ -139,12 +150,21 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
               SCP=has_extension(fn,"SCP");
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
+              STW=has_extension(fn,DISK_EXT_STW); // in archive, makes less sense
+#endif
 
-//              /*
+#if defined(STEVEN_SEAGAL) && SSE_VERSION>=370
+              if(PASTI_JUST_STX&& drive!=-1 && SF314[1-drive].ImageType.Extension!=EXT_STX)
+                pasti_active=false;
+              //TRACE_LOG("pasti_active %d\n",pasti_active);
+#endif
+
+              /*    ??
 #if defined(SSE_PASTI_AUTO_SWITCH)
               pasti_active=false;
 #endif
-//              */
+              */
             }
             HOffset=zippy.current_file_offset;
             NewDiskInZip=CompressedDiskName;
@@ -179,11 +199,15 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     && (IsSameStr_I(Ext,"STX")||pasti_active)
 #endif
     ){
+    /*
+    //moved below, here it's useless because RemoveDisk() will be called //MFD
 #if defined(STEVEN_SEAGAL)&&defined(SSE_PASTI_ONLY_STX)
+    ASSERT(drive!=-1);
     if(drive!=-1)
     {
-      TRACE_LOG("Disk in %c is STX\n",'A'+drive);
+      //TRACE_LOG("Disk in %c is STX\n",'A'+drive);
 #if defined(SSE_DISK_IMAGETYPE)
+      TRACE_LOG("Set ImageType STX\n");
       SF314[drive].ImageType.Manager=MNGR_PASTI;
       SF314[drive].ImageType.Extension=EXT_STX;
 #else
@@ -191,9 +215,12 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #endif
     }
 #endif
+    */
     f_PastiDisk=true;
 #if defined(SSE_PASTI_AUTO_SWITCH)
+//    TRACE_LOG("Activate pasti 1\n");
     pasti_active=true;
+    //TRACE_LOG("pasti_active %d\n",pasti_active);
 #endif
   }else if (Type==0){
     TRACE_LOG("Disk type 0\n");
@@ -219,8 +246,27 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     if (drive>=0 && hPasti){
       RemoveDisk();
 #if defined(SSE_PASTI_ONLY_STX)
+//      TRACE_LOG("Activate pasti 2\n");
       pasti_active=true; //3.6.1, because RemoveDisk clears it
+      //TRACE_LOG("pasti_active %d\n",pasti_active);
 #endif
+      
+#if defined(STEVEN_SEAGAL)&&defined(SSE_PASTI_ONLY_STX)
+      ASSERT(drive!=-1);
+      if(drive!=-1)
+      {
+        //TRACE_LOG("Disk in %c is STX\n",'A'+drive);
+#if defined(SSE_DISK_IMAGETYPE)
+//        TRACE_LOG("Set ImageType STX\n");
+        SF314[drive].ImageType.Manager=MNGR_PASTI;
+        SF314[drive].ImageType.Extension=EXT_STX;
+#else
+        SF314[drive].ImageType=DISK_PASTI;
+#endif
+      }
+#endif
+
+
       FILE *nf=fopen(File,"rb");
       if (nf){
         PastiBufLen=GetFileLength(nf);
@@ -271,6 +317,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   { 
 #if defined(SSE_IPF_CTRAW)
 #if defined(SSE_DISK_IMAGETYPE)
+//    TRACE_LOG("Set ImageType Caps\n");
     SF314[drive].ImageType.Manager=MNGR_CAPS;
     SF314[drive].ImageType.Extension=IPF?EXT_IPF:EXT_CTR;
 #else
@@ -303,6 +350,27 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
         return Ret;
 //...
 #endif
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
+  }else if(STW) { 
+    if(drive==-1  || !ImageSTW[drive].Open(File))       //stupid bug was if(!ImageSTW[2].Open(File))
+      return FIMAGE_WRONGFORMAT;
+
+#if defined(SSE_DISK_IMAGETYPE)//necessary of course
+    TRACE_LOG("Disk in %c is STW, pasti %d\n",'A'+drive,pasti_active);
+//    ASSERT(!pasti_active);
+    if(SF314[1-drive].ImageType.Extension!=EXT_STX)
+      pasti_active=false;
+    //TRACE_LOG("pasti_active %d\n",pasti_active);
+//    TRACE_LOG("Set ImageType STW\n");
+    SF314[drive].ImageType.Manager=MNGR_STEEM;
+    SF314[drive].ImageType.Extension=EXT_STW;
+#endif
+
+ 
+#endif
+
+
   }else{
     // Open for read for an MSA (going to convert to ST and write to that)
     // and if the file is read-only, otherwise open for update
@@ -626,6 +694,10 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
   SCPDisk=SCP;
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
+  STWDisk=STW;
+#endif
+
   WrittenTo=0;
 
   //SS note that options haven't been retrieved yet when starting
@@ -663,7 +735,6 @@ bool TFloppyImage::ReinsertDisk()
 #if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
     || SCPDisk //not right, but we're starting...
 #endif
-
     ) return 0;
 
   fclose(f);
@@ -694,6 +765,9 @@ bool TFloppyImage::OpenFormatFile()
 #if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
     || SCPDisk
 #endif   
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
+    || STWDisk
+#endif
     ) return 0;
 
   // The format file is just a max size ST file, any formatted tracks
@@ -736,6 +810,9 @@ bool TFloppyImage::ReopenFormatFile()
 #endif    
 #if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
     || SCPDisk
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
+    || STWDisk
 #endif
     ) return 0;
 
@@ -1249,7 +1326,9 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
       SF314[1-floppy_current_drive()].ImageType!=DISK_PASTI)
 #endif
     {
+      //TRACE_LOG("deactivate pasti 1\n");
       pasti_active=false;
+      //TRACE_LOG("pasti_active %d\n",pasti_active);
       DiskMan.RefreshPastiStatus();
     }
 #endif
@@ -1269,8 +1348,17 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
 #endif
     0;
 #endif
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
   SCPDisk=0;
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
+  //if(IMAGE_STW)
+  if(SF314[drive].ImageType.Extension==EXT_STW)
+    ImageSTW[drive].Close();
+  //ASSERT( ! ImageSTW[drive].fCurrentImage );
+  STWDisk=0;
 #endif
 
   if (f) fclose(f);
@@ -1278,13 +1366,19 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   if (Format_f) fclose(Format_f);
   Format_f=NULL;
 
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_IMAGETYPE) 
+//  TRACE_LOG("Remove disk: reset ImageType\n");
+  SF314[drive].ImageType.Manager=0;
+  SF314[drive].ImageType.Extension=0;
+#endif
+
 #if defined(SSE_DISK_GHOST)
   // This makes sure to update the image before leaving, though
   // there's a destructor. Really needed?
-  if(SSE_GHOST_DISK && SF314[drive].State.Ghost)
+  if(SSE_GHOST_DISK && SF314[drive].State.ghost)
   {
     GhostDisk[drive].Close();
-    SF314[drive].State.Ghost=0; 
+    SF314[drive].State.ghost=0; 
   }
 #endif
 

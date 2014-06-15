@@ -2,7 +2,7 @@
 void SetStemWinSize(int w,int h,int xo,int yo)
 {
 
-#if defined(STEVEN_SEAGAL) && defined(SS_SDL) && !defined(SS_SDL_DEACTIVATE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
   if(SDL.InUse)
   {
     SDL.LeaveSDLVideoMode();
@@ -130,7 +130,7 @@ int StemWinProc(void*,Window Win,XEvent *Ev)
           }else if (runstate==RUNSTATE_STOPPED){
             return PEEKED_RUN;
           }
-#if defined(STEVEN_SEAGAL) && defined(SS_UNIX) && defined(SS_VAR_F12)   
+#if defined(STEVEN_SEAGAL) && defined(SSE_UNIX) && defined(SSE_VAR_F12)   
         }
         else if(Ev->xkey.keycode==VK_F12 && Up)
         {
@@ -374,7 +374,7 @@ int StemWinButtonNotifyProc(hxc_button *But,int Mess,int *Inf)
     case 102:
     {
 
-#if defined(STEVEN_SEAGAL) && defined(SS_UNIX) && defined(SS_VAR_RESET_BUTTON)
+#if defined(STEVEN_SEAGAL) && defined(SSE_UNIX) && defined(SSE_VAR_RESET_BUTTON)
       bool Warm=!(Inf[0]==Button3);
 #else
       bool Warm=(Inf[0]==Button3);

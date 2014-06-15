@@ -2,7 +2,11 @@
 #ifndef SSEDRIVE_H
 #define SSEDRIVE_H
 
+
+
 #if defined(SSE_DRIVE)
+
+#include "SSEParameters.h"
 
 #if defined(SSE_DISK_IMAGETYPE)
 #include "SSEDisk.h"
@@ -25,6 +29,12 @@ struct TSF314 {
 #if defined(SSE_DRIVE_RW_SECTOR_TIMING3)
   WORD BytesToID(BYTE &num,WORD &nHbls);// if num=0, next ID
 #endif
+
+#ifdef SSE_DISK_STW
+  int CyclesPerByte();
+  int cycles_per_byte;
+#endif
+
   DWORD HblsAtIndex();
   WORD HblsNextIndex();
   WORD HblsPerRotation();
@@ -48,8 +58,9 @@ struct TSF314 {
 #elif defined(SSE_PASTI_ONLY_STX)
   WORD ImageType; //3.6.1, for future extension, snapshot problem?
 #endif
+
 #if defined(SSE_DRIVE_MOTOR_ON)
-  BYTE MotorOn;
+  BYTE motor_on;
   DWORD HblOfMotorOn;
 #endif
 
@@ -72,19 +83,42 @@ struct TSF314 {
 #if defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)//debug only?
   WORD SectorChecksum;
 #endif
+
+#if defined(SSE_DRIVE_INDEX_PULSE)
+  void IndexPulse();
+  void Motor(bool state);
+#endif
+
 //not protected...
   struct  {
-    unsigned int MotorOn:1;
-    unsigned int SingleSided:1;
-    unsigned int Ghost:1;
-    unsigned int :5;
+    unsigned int motor:1;
+    unsigned int single_sided:1;
+    unsigned int ghost:1;
+    unsigned int empty:1; //TODO
+    unsigned int reading:1;
+    unsigned int writing:1;
+    unsigned int :4;
   }State;
-  WORD Rpm; // default 300
-/*
-#if defined(SSE_DISK_GHOST)//TODO mask for that, motor, single sided, etc.
-  BYTE Ghost; // flag 1 if ghost image is open
+
+#if defined(SSE_DRIVE_INDEX_PULSE)
+  WORD rpm; // default 300
+  int time_of_next_ip;
+  int time_of_last_ip;
 #endif
-*/
+
+#if defined(SSE_DISK_GHOST)
+  bool CheckGhostDisk(bool write);
+#endif
+
+#if defined(SSE_DISK_STW)
+  void Read();
+  void Write();
+#endif
+
+#if defined(SSE_DRIVE_INDEX_STEP)
+  void Step(int direction);
+#endif
+
 
 };
 

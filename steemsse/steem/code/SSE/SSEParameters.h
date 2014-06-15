@@ -315,16 +315,22 @@ Interrupt* 46(5/4)
 * The interrupt acknowledge and breakpoint cycles
 are assumed to take four clock periods.
 
+-> that's quite a lot of cycles and you still must add jitter
+   for HBL, VBL
+
+  cases to check those timings:
+  Reality is a Lie Schnusdie STE (VBI)
+  TCB (HBI)
 */
 
 #if defined(SSE_INT_MFP)
-#define SSE_INT_MFP_TIMING 56 // many cases
+#define SSE_INT_MFP_TIMING (56)
 #endif
 #if defined(SSE_INT_HBL)
-#define SSE_INT_HBL_TIMING 56 // SNYD/TCB
+#define SSE_INT_HBL_TIMING (56) 
 #endif
 #if defined(SSE_INT_VBL)
-#define SSE_INT_VBL_TIMING 56
+#define SSE_INT_VBL_TIMING (56)
 #endif
 
 
@@ -335,7 +341,14 @@ are assumed to take four clock periods.
 
 #if defined(SSE_INT_VBL_STF) // modest hack still works
 #define HBL_FOR_STE 444
+
+#if SSE_VERSION<364//70
+//this particular hack doesn't look useful for anything now
 #define HBL_FOR_STF (HBL_FOR_STE+4+(SSE_HACKS_ON?4:0)) //TODO
+#else
+#define HBL_FOR_STF (HBL_FOR_STE+4)
+#endif
+
 #endif
 
 #endif
@@ -471,6 +484,19 @@ are assumed to take four clock periods.
 
 #endif
 
+
+
+/////////
+// STW //
+/////////
+
+#if defined(SSE_DISK_STW)
+
+#define DISK_EXT_STW "STW"
+
+#endif
+
+
 /////////////
 // VARIOUS //
 /////////////
@@ -480,7 +506,7 @@ are assumed to take four clock periods.
 #define README_FONT_NAME "Courier New"
 #define README_FONT_HEIGHT 16
 #define STEEM_SSE_FAQ_TXT "Steem SSE FAQ.txt"
-#define STEEM_HINTS_TXT "SpecificHints.txt"
+#define STEEM_HINTS_TXT "Hints.txt"
 
 #endif
 
