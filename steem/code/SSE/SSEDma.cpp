@@ -59,8 +59,6 @@ void TDma::AddToFifo(BYTE data) {
 
   ASSERT( !(MCR&CR_WRITE) ); // disk->RAM (Read media)
   ASSERT( Fifo_idx<16 );
-  ASSERT(!(MCR&CR_DISABLE));//TODO handle if it was disabled
-
 
   Fifo
 #if defined(SSE_DMA_DOUBLE_FIFO)
@@ -79,24 +77,38 @@ void TDma::AddToFifo(BYTE data) {
 
 /*  This just transfers one byte between controller's DR and Fifo at request.
     Direction depends on control register.
+    For the moment only DRQ for FDC is really handled.
+    Note that bits 6 (CR_DISABLE) and 7 (CR_DRQ_FDC_OR_HDC) don't count,
+    DMA transfer will happen whatever their value.
+    This is observed for example in Kick Off 2 (IPF).
+    That's pretty strange when you consider that the DMA chip was designed and
+    documented by Atari.
 */
+
 bool TDma::Drq() {
+
   SR|=SR_DRQ;
-  if(MCR&CR_DISABLE)
-    return false; //TODO: so on hardware?
-  if(MCR&CR_DRQ_FDC_OR_HDC) // the DRQ from the FDC is acknowledged
+  
+  if(Dma.MCR&CR_WRITE) // RAM -> disk (writing to disk)
   {
-    if(Dma.MCR&CR_WRITE) // RAM -> disk (writing to disk)
+    if(!(MCR&CR_HDC_OR_FDC)) //floppy select
       WD1772.DR=GetFifoByte();
-    else // disk->RAM (reading disk)
-      AddToFifo(WD1772.DR);
-    return true;
+#if defined(SSE_DMA_DRQ_RND)
+    else // hd
+      GetFifoByte(); //TODO: put it on HD DR?
+#endif
   }
-  else // the DRQ from the HDC is acknowledged
+  else // disk->RAM (reading disk)
   {
-    //TODO one day?
-    return false;
+    if(!(MCR&CR_HDC_OR_FDC))
+      AddToFifo(WD1772.DR);
+#if defined(SSE_DMA_DRQ_RND)
+    else
+      AddToFifo( (BYTE)rand() ); //TODO take HD DR?
+#endif
   }
+  return true;
+
   SR&=~SR_DRQ;
 }
 
@@ -262,10 +274,11 @@ is ignored and when reading the 8 upper bits consistently reads 1."
     // Read FDC register
 #if defined(SSE_DMA_FDC_ACCESS)
 /*
-Bit 7:FDC/HDC transfers acknowledge; when set the DRQ from the Floppy 
+"Bit 7:FDC/HDC transfers acknowledge; when set the DRQ from the Floppy 
 Disk Controller is acknowledged; otherwise, the DRQ from the Hard Disk 
 interface is acknowledged. For some reason this bit must also be set 
-to generate DMA bus cycle.
+to generate DMA bus cycle."
+note: this isn't clear, see Drq()
 */
     else if(!(MCR&CR_DRQ_FDC_OR_HDC)) // we can't
     {
@@ -517,7 +530,7 @@ is ignored and when reading the 8 upper bits consistently reads 1."
  FIFOS are filled immediately after the Count Register is written."
  RAM to disk
  -> to simplify emulation, we fill FIFO only at first DRQ (and each time
-    it' empty)
+    it's empty)
 */
       log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Set DMA sector count to "+dma_sector_count);
       break;
@@ -897,7 +910,7 @@ void TDma::RequestTransfer() {
 void TDma::TransferBytes() {
   // execute the DMA transfer (assume floppy)
   ASSERT( Request );
-  ASSERT( MCR&CR_DRQ_FDC_OR_HDC ); // bit 7 or no transfer ???
+ // ASSERT( MCR&CR_DRQ_FDC_OR_HDC ); // bit 7 or no transfer ???->no
   ASSERT(!(MCR&CR_RESERVED)); // reserved bits
 
 #if defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)
