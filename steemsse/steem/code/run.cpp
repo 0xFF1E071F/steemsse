@@ -1250,6 +1250,11 @@ void event_vbl_interrupt() //SS misleading name?
     }
   }
   IKBD_VBL();    // Handle ST joysticks and mouse
+#if defined(SSE_IKBD_6301_VBL)
+  if(HD6301EMU_ON)
+    HD6301.Vbl();
+#endif
+
   RS232_VBL();   // Update all flags, check for the phone ringing
   Sound_VBL();   // Write a VBLs worth + a bit of samples to the sound card
 
@@ -1411,8 +1416,6 @@ void event_vbl_interrupt() //SS misleading name?
 
   }
 #endif
-
-
 }
 //---------------------------------------------------------------------------
 void prepare_cpu_boosted_event_plans()
@@ -1448,7 +1451,6 @@ void event_pasti_update()
 #if defined(STEVEN_SEAGAL) && defined(SSE_PASTI_ONLY_STX)
     || PASTI_JUST_STX && 
 #if defined(SSE_DISK_IMAGETYPE)
-    //SF314[0].ImageType.Extension!=EXT_STX && SF314[1].ImageType.Extension!=EXT_STX
     SF314[YM2149.SelectedDrive].ImageType.Extension!=EXT_STX
 #else
     SF314[floppy_current_drive()].ImageType!=3

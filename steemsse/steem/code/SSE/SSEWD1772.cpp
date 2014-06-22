@@ -1285,9 +1285,11 @@ r1       r0            1772
     break;
 
   case WD_TYPEII_TEST_ID:
-    
+
+#ifdef SSE_DEBUG
     ASSERT(!n_format_bytes);
     IDField.Trace();
+#endif
     if(IDField.track==TR && IDField.num==SR)
     {
       ByteCount=IDField.nBytes();

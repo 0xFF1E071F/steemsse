@@ -31,6 +31,7 @@ struct TDma {
                               || ----------6  Disable (1) / Enable (0) DMA
                               | -----------7  FDC DRQ (1) / HDC DRQ (0) 
                                ------------8  Write (1) / Read (0)
+   See notes in SSEDma.cpp, not all bits are used.
 */
 
   enum {SR_DRQ=BIT_2,SR_COUNT=BIT_1,SR_NO_ERROR=BIT_0};

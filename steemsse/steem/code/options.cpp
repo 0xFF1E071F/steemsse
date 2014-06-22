@@ -1058,9 +1058,10 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             if(ST_TYPE==MEGASTF)
             {
               This->NewMonitorSel=1; // preselect monochrome (v3.5.4)
-              HD6301EMU_ON=false; // v3.6.0 - because mouse is slow in high res
+              //HD6301EMU_ON=false; // v3.6.0 - because mouse is slow in high res//fixed 3.7.0
               HardDiskMan.DisableHardDrives=false; // v3.6.0
               floppy_instant_sector_access=true;// v3.6.0
+              FloppyDrive[0].RemoveDisk(); // to boot on hd//3.7.0
             }
             else if(old_st_type==MEGASTF) //v3.6.0: go colour, no HD by default)
             {

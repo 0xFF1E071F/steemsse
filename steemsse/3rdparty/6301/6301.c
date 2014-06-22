@@ -6,6 +6,9 @@
 #include "6301.h"
 #include "SSE/SSE.h"
 #include <SSE/SSEDebug.h>
+
+//extern struct TDebug Debug;
+
 #include <SSE/SSE6301.h>
 #include <acia.h>
 
@@ -55,6 +58,10 @@ int CurrentParameter=0;
 int TotalParameters=0; // #parameters
 #endif
 
+#if defined(SSE_IKBD_6301_VBL)
+int hd6301_vbl_cycles;
+#endif
+
 // Debug facilities
 // ASSERT
 #if defined(_MSC_VER) && defined(_DEBUG)
@@ -73,15 +80,16 @@ int TotalParameters=0; // #parameters
 #if defined(SSE_DEBUG) 
 // we use this trick because Trace is a struct function
 void (*hd6301_trace)(char *fmt, ...);
-#define TRACE hd6301_trace
+#undef LOGSECTION
+//#define LOGSECTION LOGSECTION_IKBD
+#define TRACE Debug.LogSection=7/*LOGSECTION_IKBD*/,hd6301_trace
 #else
 #define TRACE
 #endif
 
 // constructing our module (OBJ) the good old Steem way, hem
 
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_IKBD
+
 
 #define error printf // saves headache
 #define warning TRACE //printf 
@@ -153,6 +161,7 @@ hd6301_run_cycles(u_int cycles_to_run) {
 #endif
   int starting_cycles=cpu.ncycles;
   // make sure our 6301 is running OK
+  ASSERT(cycles_to_run<200);//64 in low res
   if(!cpu_isrunning())
   {
     TRACE("6301 starting cpu\n");
@@ -185,8 +194,7 @@ hd6301_run_cycles(u_int cycles_to_run) {
     if(cycles_given_back>20)
       cycles_given_back=20;
 #endif
-    cycles_to_run-=cycles_given_back;         //cycles_to_give_back;
-    //cycles_to_give_back=0;
+    cycles_to_run-=cycles_given_back;
     cycles_to_give_back-=cycles_given_back;
   }
 #endif
@@ -210,6 +218,9 @@ hd6301_run_cycles(u_int cycles_to_run) {
 #if defined(SSE_IKBD_6301_ADJUST_CYCLES)
 //  ASSERT( !cycles_to_give_back );
   cycles_to_give_back+=cycles_run-cycles_to_run;
+#endif
+#if defined(SSE_IKBD_6301_VBL)
+  hd6301_vbl_cycles+=cycles_run;
 #endif
   return (Crashed6301) ? 0 : cycles_run; 
 }
@@ -280,6 +291,7 @@ hd6301_load_save(int one_if_save,unsigned char *buffer) {
 
 // Other functions for ST emulation. Also check ireg.c
 
+#if defined(SSE_IKBD_6301_DISASSEMBLE_ROM)
 dump_rom() {
   int i;
   TRACE("************************************************************\n");
@@ -329,6 +341,7 @@ dump_rom() {
       i+=instr_print (i)-1;
   }//nxt
 }
+#endif
 
 #if defined(SSE_DEBUG_DUMP_6301_RAM)
 
@@ -352,6 +365,8 @@ hd6301_copy_ram(unsigned char *ptr) {
 }
 
 #endif
+
+
 
 #undef LOGSECTION
 

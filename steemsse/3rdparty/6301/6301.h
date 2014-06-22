@@ -61,6 +61,11 @@ int hd6301_run_cycles(u_int cycles); // emulate
 int hd6301_load_save(int one_if_save, unsigned char *buffer); // for snaphot
 int hd6301_transmit_byte(u_char byte_in); // just passing through
 
+#if defined(SSE_IKBD_6301_VBL)
+extern int hd6301_vbl_cycles;
+#endif
+
+
 #define USE_PROTOTYPES 
 
 
@@ -99,5 +104,8 @@ extern
 #endif
 int hd6301_copy_ram(unsigned char *ptr);
 #endif
+
+
+
 
 #endif // HD6301_H

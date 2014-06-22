@@ -15,6 +15,7 @@
 #if defined(SSE_IKBD_6301)
 
 #include "SSEOption.h"
+#include "SSEShifter.h" //frame
 
 // note most useful emulation code is in 3rdparty folder '6301'
 
@@ -85,7 +86,7 @@ void THD6301::Init() { // called in 'main'
 #undef LOGSECTION//init
 #define LOGSECTION LOGSECTION_IKBD
 
-#if defined(SSE_DEBUG) || defined(SSE_IKBD_MOUSE_OFF_JOYSTICK_EVENT)
+#if defined(SSE_DEBUG) 
 /*  This should work for both 'fake' and 'true' 6301 emulation.
     We know command codes & parameters, we report this info through trace.
     when the command is complete.
@@ -300,6 +301,41 @@ void THD6301::ResetProgram() {
   CurrentParameter=0;
   nParameters=0;
 }
+
+#if defined(SSE_IKBD_6301_VBL)
+
+void THD6301::Vbl() {
+  //TRACE_LOG("6301 VBL cycles %d\n",hd6301_vbl_cycles);
+  hd6301_vbl_cycles=0;
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
+// if both are defined, Hacks makes the difference, for comparison (beta)
+  if(SSE_HACKS_ON)
+#endif
+  {
+    click_x=click_y=0;
+    // the following avoids the mouse going backward at high speed
+    const int max_pix_h=(screen_res)?30:50-10;
+    const int max_pix_v=(screen_res==2)?30:50-10;
+    //if(screen_res==1) MouseVblDeltaX*=2;//?
+    if(MouseVblDeltaX>max_pix_h)
+      MouseVblDeltaX=max_pix_h;
+    else if(MouseVblDeltaX<-max_pix_h)
+      MouseVblDeltaX=-max_pix_h;
+    if(MouseVblDeltaY>max_pix_v)
+      MouseVblDeltaY=max_pix_v;
+    else if(MouseVblDeltaY<-max_pix_v)
+      MouseVblDeltaY=-max_pix_v;
+    
+#ifdef SSE_DEBUG
+    if(MouseVblDeltaX||MouseVblDeltaX)
+      TRACE_LOG("F%d 6301 mouse move %d,%d\n",FRAME,MouseVblDeltaX,MouseVblDeltaY);
+#endif
+  }
+#endif
+}
+
+#endif
 
 #undef LOGSECTION
 

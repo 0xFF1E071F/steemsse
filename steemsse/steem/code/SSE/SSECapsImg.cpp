@@ -329,30 +329,26 @@ int TCaps::IsIpf(BYTE drive) {
 */
 
 void TCaps::CallbackDRQ(PCAPSFDC pc, UDWORD setting) {
+
 #if defined(SSE_DEBUG) || !defined(VC_BUILD)
   Dma.UpdateRegs();
-  ASSERT( Dma.MCR&BIT_7 ); // DMA enabled
-  ASSERT(!(Dma.MCR&BIT_6)); // DMA enabled
-  ASSERT(!(Dma.MCR&BIT_3)); // Floppy
-#endif
-  if((Dma.MCR&BIT_7) //&& !(Dma.MCR&BIT_6) //3.7.0, 
-)
-  {
-#if defined(SSE_DMA_DRQ)
-    ::WD1772.DR=Caps.WD1772.r_data;
-    Dma.Drq();
-    Caps.WD1772.r_data=::WD1772.DR;
-#else
-    // transfer one byte
-    if(!(Dma.MCR&BIT_8)) // disk->RAM
-      Dma.AddToFifo( CAPSFdcGetInfo(cfdciR_Data,&Caps.WD1772,0) );
-    else // RAM -> disk
-      Caps.WD1772.r_data=Dma.GetFifoByte();  
 #endif
 
-    Caps.WD1772.r_st1&=~CAPSFDC_SR_IP_DRQ; // The Pawn
-    Caps.WD1772.lineout&=~CAPSFDC_LO_DRQ;
-  }
+#if defined(SSE_DMA_DRQ)
+  ::WD1772.DR=Caps.WD1772.r_data;
+  Dma.Drq();
+  Caps.WD1772.r_data=::WD1772.DR;
+#else
+  // transfer one byte
+  if(!(Dma.MCR&BIT_8)) // disk->RAM
+    Dma.AddToFifo( CAPSFdcGetInfo(cfdciR_Data,&Caps.WD1772,0) );
+  else // RAM -> disk
+    Caps.WD1772.r_data=Dma.GetFifoByte();  
+#endif
+  
+  Caps.WD1772.r_st1&=~CAPSFDC_SR_IP_DRQ; // The Pawn
+  Caps.WD1772.lineout&=~CAPSFDC_LO_DRQ;
+
 }
 
 

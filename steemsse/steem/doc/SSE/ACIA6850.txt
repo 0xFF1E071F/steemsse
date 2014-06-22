@@ -190,9 +190,71 @@ There's also a start bit, so you must count 10bit/byte.
 
 Timings
 
+
 ACIA <--> IKBD timings
 
-7812.5 bit/s, 10bits-> 1280 ACIA cycles/byte
+Data is transmitted at 7812.5 bauds between the ACIA and the HD6301.
+7812.5 bit/s, 10bits should translate into 1280 ACIA cycles/byte
+(Even less if we should count 8 bits: 1024).
+
+In Steem, we must use 1350 cycles instead, that is 70 cycles more, 
+or Froggies menu won't work well.
+No improvement in ACIA emu could lower this number, so we try and
+justify it instead ;)
+
+Froggies: 
+When the CPU sends $4, IKBD sends 4 bytes.
+With adapted timing, 2 bytes are ignored due to ACIA OVR, the
+program uses the 2 remaining bytes and it works.
+With theoretical timings, 3 bytes are ignored and it's broken.
+
+Possible explanation: there's starting & finishing delay for each byte,
+because copying TDR to TDRS and RDRS to RDR takes some time in both chips,
+maybe more in one that the other.
+
+For example:
+
+ACIA/IKBD transfer 
+
+Baud                          7812.5
+#bits                             10
+bytes/s	                      781.25
+
+ACIA frequency               1000000
+ACIA cycles/byte                1280
+
+TDR->TDRS delay                   25
+in CPU cycles                    200 (value OK for Nightdawn and Hades Nebula)
+RDRS->RDR delay                   25
+in CPU cycles                    200
+
+ACIA cycles/byte                1330
+
+MC68000 real frequency       8021248
+MC68000 used frequency       8000000
+ratio                       1.002656
+
+ACIA cycles/byte          1333.53248
+More delay in 6301?             16.5
+ACIA cycles/byte          1350.03248 (value OK for Froggies over the Fence)
+MC68000 cycles/byte      10800.25984
+
+This is speculative.
+Anyway, a difference of 70 ACIA cycles isn't too terrible. It looked worse
+before because 
+- WinSTon/Hatari used a "measured" value of 7200 (CPU cycles)
+That was the older versions. In current version of Hatari there's a low level
+emulation of the ACIA, but we notice a hack for Froggies in it as well, where
+the timings are made longer than theory.
+- 7812.5 baud is ambiguous, it isn't clear that you must add control bits to 
+get real speed.
+
+
+
+
+ACIA <--> IKBD timings
+
+7812.5 bit/s, 10bits-> 1280 HD6301 cycles/byte
 
 In Steem, we must use 1350 cycles instead, that is 70 cycles more, 
 or Froggies menu won't work well.
@@ -329,3 +391,24 @@ Apparently yes, and the new byte replaces the byte currently waiting in RDRS.
 Cases:
 Froggies
 
+
+
+
+////////:
+
+
+CPU-Clock  E-clock Keyboard read
+  000000   00000.0     28
+  160256   16025.6     20
+  320512   32051.2     24
+  480768   48076.8     20
+  641024   64102.4     24
+  801280   80128.0     28
+  961536   96153.6     20
+ 1121792  112179.2     24
+ 1282048  128204.8     20
+ 1442304  144230.4     24
+
+
+
+  int VblJitter[] = {8,0,4,0,4}; 

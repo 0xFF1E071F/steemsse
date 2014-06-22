@@ -12,7 +12,8 @@
    use the existing Steem system, improved.
 */
 
-#include <caps/Comtype.h>
+//#include <caps/Comtype.h>
+#include <caps/CommonTypes.h>
 #include <caps/CapsAPI.h>
 #include <caps/CapsFDC.h>
 #include<caps/CapsLib.h>

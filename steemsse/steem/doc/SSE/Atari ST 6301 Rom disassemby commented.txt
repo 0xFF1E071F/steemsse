@@ -283,9 +283,9 @@ f1ff	08		inx
 f200	10		sba
 f201	20 10		bra  10 (F213)
 f203	20 40		bra  40 (F245)
-f205	80 1d		suba #1d
-f207	2a 38		bpl  38 (F241)
-f209	36		psha
+f205	80 1d		suba #1d        ; 1D	CTRL 
+f207	2a 38		bpl  38 (F241)  ; 2A	(LEFT) SHIFT   38	ALT		    
+f209	36		psha  ;36	(RIGHT) SHIFT
 f20a	95 8e		bita 8e
 f20c	27 12		beq  12 (F220)
 f20e	43		coma			;NOT A
