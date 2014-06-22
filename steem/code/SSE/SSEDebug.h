@@ -48,11 +48,24 @@ int debug0,debug1,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9;
 #if defined(SSE_DEBUG)
 
 // a structure that may be used by C++ and C objects
+
+//todo, all C above
+
 struct TDebug {
+#if defined(SSE_DEBUG_TRACE_FILE)
+  FILE *trace_file_pointer; 
+  int nTrace;
+#endif
+  int IgnoreErrors; 
+  BYTE logsection_enabled[100]; // we want a double anyway //bool
+  int LogSection;
+
+
 #ifdef __cplusplus // visible only to C++ objects
   TDebug();
   ~TDebug();
   int ShifterTricks;
+
 #if defined(SSE_DEBUG_TRACE)
   enum {MAX_TRACE_CHARS=256}; // the function is safe anyway
   void Trace(char *fmt, ...); // one function for both IDE & file
@@ -62,12 +75,6 @@ struct TDebug {
   char trace_buffer[MAX_TRACE_CHARS];
 #endif
 #endif//c++
-#if defined(SSE_DEBUG_TRACE_FILE)
-  FILE *trace_file_pointer; 
-  int nTrace;
-#endif
-  int IgnoreErrors; 
-
 
 #ifdef __cplusplus // visible only to C++ objects
 
@@ -127,9 +134,6 @@ struct TDebug {
 
 #endif//c++
 
-  BYTE logsection_enabled[100]; // we want a double anyway //bool
-  int LogSection;
-
 #if defined(SSE_DEBUG_FAKE_IO)
 /*  Hack. A free zone in IO is mapped to an array of masks to control 
     a lot of debug options using the Boiler's built-in features.
@@ -149,9 +153,11 @@ struct TDebug {
 };
 
 
-
-
-extern struct TDebug Debug;
+extern 
+#ifdef __cplusplus
+"C" 
+#endif
+struct TDebug Debug;
 
 #endif//#if defined(SSE_DEBUG)
 

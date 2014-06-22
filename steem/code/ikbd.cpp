@@ -520,7 +520,7 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
   log(EasyStr("IKBD: At ")+hbl_count+" receives $"+HEXSl(src,2));
   TRACE_LOG("IKBD RDRS->RDR $%X\n",src);
 
-#if (defined(SSE_DEBUG) || defined(SSE_IKBD_MOUSE_OFF_JOYSTICK_EVENT)) && defined(SSE_ACIA)
+#if defined(SSE_DEBUG) && defined(SSE_ACIA)
   // our powerful 6301 command interpreter, working for both emulations
   HD6301.InterpretCommand(src); 
 #endif
@@ -1445,7 +1445,7 @@ void agenda_keyboard_replace(int) {
     // More to process?
     if(keyboard_buffer_length) 
     {
-      agenda_add(agenda_keyboard_replace,SS_6301_TO_ACIA_IN_HBL,0);
+      agenda_add(agenda_keyboard_replace,HD6301_TO_ACIA_IN_HBL,0);
       ACIA_IKBD.RDRS=keyboard_buffer[keyboard_buffer_length-1];
 #if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
       ACIA_IKBD.LineRxBusy=true;
@@ -1531,7 +1531,7 @@ void keyboard_buffer_write(BYTE src) {
       if(keyboard_buffer_length)
         memmove(keyboard_buffer+1,keyboard_buffer,keyboard_buffer_length); // shift
       else
-        agenda_add(agenda_keyboard_replace,SS_6301_TO_ACIA_IN_HBL,0);
+        agenda_add(agenda_keyboard_replace,HD6301_TO_ACIA_IN_HBL,0);
       keyboard_buffer_length++;
       keyboard_buffer[0]=src;
       TRACE_LOG("IKBD +$%X(%d)\n",src,keyboard_buffer_length);
@@ -1577,6 +1577,11 @@ void ikbd_mouse_move(int x,int y,int mousek,int max_mouse_move)
   if(HD6301EMU_ON)
   {
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
+// if both are defined, Hacks makes the difference, for comparison (beta)
+    if(!SSE_HACKS_ON)
+#endif
+    {
     //TODO still our attempts to get a smoother mouse
     const int max_step=20+20*screen_res; //18
     const int multiplier=1; //2
@@ -1594,6 +1599,7 @@ void ikbd_mouse_move(int x,int y,int mousek,int max_mouse_move)
       y=max_step;
     if(y<-max_step)
       y=-max_step;
+    }
 #endif
 
     HD6301.MouseVblDeltaX=x,HD6301.MouseVblDeltaY=y;

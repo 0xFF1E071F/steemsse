@@ -96,7 +96,7 @@ and all his silly mods are gone!
 
 #if defined(STEVEN_SEAGAL)
 
-//#define SSE_BETA //title, OSD, plus some testing - new features
+#define SSE_BETA //title, OSD, plus some testing - new features
 //#define SSE_BETA_BUGFIX // beta for just bugfixes
 
 #if defined(SSE_BETA) //TODO check before release what will stay beta...
@@ -596,8 +596,7 @@ and all his silly mods are gone!
 
 #define SSE_IPF_TRACE_SECTORS // show sector info (IPF)
 
-#define SSE_IKBD_6301_DUMP_RAM
-//#define SSE_IKBD_6301_DUMP_RAM_ON_LS//no
+
 #define SSE_IKBD_6301_TRACE 
 #define SSE_IKBD_6301_TRACE_SCI_RX
 #define SSE_IKBD_6301_TRACE_SCI_TX
@@ -608,7 +607,7 @@ and all his silly mods are gone!
 #define SSE_DEBUG_START_STOP_INFO
 #define SSE_DEBUG_TRACE_IO
 
-#define SSE_IKBD_6301_DUMP_RAM
+
 #define SSE_IKBD_6301_TRACE 
 #define SSE_IKBD_6301_TRACE_SCI_RX
 #define SSE_IKBD_6301_TRACE_SCI_TX
@@ -657,7 +656,6 @@ and all his silly mods are gone!
 
 #if defined(SSE_DISK)
 
-
 #define SSE_DISK_IMAGETYPE //3.6.4
 
 #if SSE_VERSION>=370
@@ -684,17 +682,18 @@ and all his silly mods are gone!
 // FLOPPY: DMA //
 /////////////////
 
-#if defined(SSE_DMA) // this is the DMA as used for disk operation
+#if defined(SSE_DMA) // this is the DMA chip used for disk operation
 
 //#define SSE_DMA_ADDRESS // enforcing order for write (no use?)
 #define SSE_DMA_ADDRESS_EVEN
 
-#if SSE_VERSION>=370
+#if SSE_VERSION>364//=370
 #define SSE_DMA_DOUBLE_FIFO // works but overkill  //3.7.0 define then remove def?
 #endif
 
-#if SSE_VERSION>=370
+#if SSE_VERSION>364//=370
 #define SSE_DMA_DRQ
+//#define SSE_DMA_DRQ_RND 
 #endif
 
 //#define SSE_DMA_DELAY // works but overkill 3.7.0 -> use generic floppy event?
@@ -921,22 +920,23 @@ and all his silly mods are gone!
 #define SSE_IKBD_6301 // HD6301 true emu, my pride!
 
 #define SSE_IKBD_TRACE_CPU_READ
-
 #define SSE_IKBD_TRACE_CPU_READ2 //beware polling
-
 
 #if defined(SSE_IKBD_6301) 
 // Switches for Sim6301 (modded 3rd party) are here too
 #define SSE_IKBD_6301_ADJUST_CYCLES // stay in sync! (check with clock)
+#ifdef SSE_DEBUG
 #define SSE_IKBD_6301_CHECK_COMMANDS
+#endif
 #define SSE_IKBD_6301_CHECK_IREG_RO // some registers are read-only
 #define SSE_IKBD_6301_CHECK_IREG_WO // some registers are write-only
-#define SSE_IKBD_6301_DISABLE_BREAKS // to save 64k (we still consume 64k)
+#define SSE_IKBD_6301_DISABLE_BREAKS // to save 64k RAM (we still consume 64k)
 #define SSE_IKBD_6301_DISABLE_CALLSTACK // to save 3k on the PC stack
-//#define SSE_IKBD_6301_RUN_CYCLES_AT_IO // overkill
-#define SSE_IKBD_6301_MOUSE_ADJUST_SPEED //poor attempt
+//#define SSE_IKBD_6301_MOUSE_ADJUST_SPEED //poor attempt
+#define SSE_IKBD_6301_MOUSE_ADJUST_SPEED2 //better //3.7.0
 #define SSE_IKBD_6301_MOUSE_MASK // Jumping Jackson auto//v3.6.0
-//#define SSE_IKBD_MOUSE_OFF_JOYSTICK_EVENT // hardware quirk? (hack)
+#define SSE_IKBD_6301_ROM_KEYTABLE //spare an array TODO//3.7.0
+//#define SSE_IKBD_6301_RUN_CYCLES_AT_IO // overkill
 #define SSE_IKBD_6301_RUN_IRQ_TO_END // hack around Sim6xxx's working
 #define SSE_IKBD_6301_SET_TDRE
 #define SSE_IKBD_6301_TIMER_FIX // not sure there was a problem
@@ -944,7 +944,6 @@ and all his silly mods are gone!
 #if defined(SSE_IKBD_6301_TRACE)
 #ifdef SSE_BETA
 //#define SSE_IKBD_6301_DISASSEMBLE_ROM 
-//#define SSE_IKBD_6301_DUMP_RAM
 #endif
 //#define SSE_IKBD_6301_TRACE_SCI_RX
 //#define SSE_IKBD_6301_TRACE_SCI_TX
@@ -954,6 +953,9 @@ and all his silly mods are gone!
 //#define SSE_IKBD_6301_TRACE_KEYS
 //#define SSE_IKBD_6301_TRACE_WRITES
 #endif
+
+#define SSE_IKBD_6301_VBL //3.7.0
+
 #endif//#if defined(SSE_IKBD_6301)
 
 #endif

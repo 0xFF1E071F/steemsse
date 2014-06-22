@@ -6,7 +6,6 @@
 /* opfunc.c - functions that execute Motorola 68xx instructions */
 /*====================================================================*/
 
-
 #include "defs.h"
 
 #ifdef USE_PROTOTYPES
@@ -468,7 +467,7 @@ asld_inh ()   {lsld_inh ();}	/*  Equal to Logical Shift Left */
 brn_rel ()    {branch_expr (0);}
 jsr_dir ()    {jsr_addr (getaddr_dir ());}
 ldd_imm ()    {reg_setaccd (alu_bittestword (getword_imm ()));}
-#if defined(NDEBUG)
+#if 1 || defined(NDEBUG)
 ldd_dir ()    {reg_setaccd (alu_bittestword (getword_dir ()));}
 #else
 ldd_dir ()    {
@@ -782,14 +781,21 @@ idiv_inh ()
 		reg_setix (-1);
 		reg_setaccd (0);
 		reg_setcflag (1);
+#if !defined(SSE_VAR_REWRITE)
 		return;
+#endif
 	}
 
+#if defined(SSE_VAR_REWRITE)
+  else
+#endif
+  {//SS
 	reg_setix (d / x);
 	result = d % x;
 	reg_setaccd (result);
 	reg_setzflag (result == 0);
 	reg_setcflag (result > 65535); /* 0 */
+  }//SS
 }
 
 
@@ -812,15 +818,21 @@ fdiv_inh ()
 	if (d > x)
 	{
 		reg_setvflag (1);
+#if !defined(SSE_VAR_REWRITE)
 		return;
-	}
-
+#endif
+  }
+#if defined(SSE_VAR_REWRITE)
+  else
+#endif
+  {//SS
 	reg_setix    ((d << 16) / x);
 	reg_setaccd  ((d << 16) % x);
 	reg_setzflag (reg_getaccd() == 0);
 	reg_setvflag ((d & 0x8000) == (x & 0x8000) &&
 		      (x & 0x8000) != (reg_getaccd() & 0x8000));
 	reg_setcflag (reg_getaccd() > 65535); /* 0 */
+  }//SS
 }
 
 inc_ind_y ()	{inc_addr  (getaddr_iy ());}

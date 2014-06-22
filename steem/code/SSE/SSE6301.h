@@ -29,7 +29,7 @@ struct THD6301 {
 #ifdef __cplusplus //isolate member functions, for C it's just POD
   THD6301();
   ~THD6301();
-#if defined(SSE_DEBUG) || defined(SSE_IKBD_MOUSE_OFF_JOYSTICK_EVENT)
+#if defined(SSE_DEBUG)
   void InterpretCommand(BYTE ByteIn);
 #if defined(SSE_DEBUG)
   void ReportCommand();
@@ -41,7 +41,12 @@ struct THD6301 {
   void ResetChip(int Cold);
   void ResetProgram();
   void Init();
+#if defined(SSE_IKBD_6301_VBL)
+  void Vbl();
 #endif
+
+#endif//c++?
+
   BYTE Initialised; // we do need a rom
 #if defined(SSE_IKBD_6301_RUN_CYCLES_AT_IO)
   BYTE RunThisHbl; 
@@ -55,6 +60,9 @@ struct THD6301 {
   BYTE CustomProgram;
   short MouseVblDeltaX; // must keep separate for true emu
   short MouseVblDeltaY;
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
+  BYTE click_x,click_y; // current click
+#endif
 };
 
 #ifdef __cplusplus

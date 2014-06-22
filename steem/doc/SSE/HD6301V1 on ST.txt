@@ -149,7 +149,7 @@ short delay, and of course read a byte while another is being shifted.
 Another is that if you write two bytes in quick succession, the second will
 replace the first only if the shift register is busy.
 Not sure it makes a difference, but it's implemented in Steem (optional 
-#define).
+#define). Sort of, as the 3rd party code we use didn't plan that.
 
 
 
@@ -190,8 +190,6 @@ The hex codes are the scancodes that will be returned by the 6301 program.
 We have this funny situation where we send a scancode to the emulator, so that
 it knows which registers to change to have the program send the very same 
 scancode!
-Most of the table can also be found in the ROM ($F319->$F370 + special keys),
-each column following the other from #4 on ($3E,$1,$2,$F,...).
 
   //               DR3                |                  DR4                  |
   //  1 |  2 |  3 |  4 |  5 |  6 |  7 |  0 |  1 |  2 |  3 |  4 |  5 |  6 |  7 |
@@ -237,6 +235,24 @@ scancodes/keys.
 18	O	32	M	4C	{ NOT USED }	70	KEYPAD 0
 19	P	33	,	4D	RIGHT ARROW	71	KEYPAD .
 1A	[	34	.	4E	KEYPAD +	72	KEYPAD ENTER
+
+
+The table can also be found in the ROM ($F319->$F370 + special keys),
+each column following the other from #4 on ($3E,$1,$2,$F,...).
+
+f206	1d 2a 38 36: shift etc.
+...  
+f2f3	80 01 00 02 ce f3 11 d6 8a c1 05 25 0d c0  ...........%..
+f301	04 58 58 58 3a 5f 20 01 5c 44 24 fc 3a a6  .XXX:_ .\D$.:.
+f30f	00 39 00 00 3b 3c 3d 00 00 00 3e 01 02 0f  .9..;<=...>...
+f31d	10 1e 60 2c 3f 03 04 11 12 1f 20 2d 40 05  ..`,?..... -@.
+f32b	06 13 14 21 2e 2f 41 07 08 15 22 23 30 31  ...!./A..."#01
+f339	42 09 0a 16 17 24 25 32 43 0b 0c 18 19 26  B....$%2C....&
+f347	33 39 44 0d 29 1a 1b 27 34 3a 62 0e 53 52  39D.)..'4:b.SR
+f355	2b 1c 28 35 61 48 47 4b 50 4d 6d 70 63 64  +.(5aHGKPMmpcd
+f363	67 68 6a 6b 6e 71 65 66 69 4a 6c 4e 6f 72  ghjknqefiJlNor
+
+Steem v3.7 uses the rom to spare some memory.
 
 
 Mouse & Joysticks buttons
@@ -289,6 +305,15 @@ The DISABLE MOUSE command causes a last reading of the mouse (jump to RESUME
 in the rom), which is sent by the 6301 to the CPU as a joystick event, 
 because '0' means movement for the joystick.
 Without emulating that, the game switches to a buggy black screen.
+
+Note:
+mouse 400 pixels = 5 rotations
+wheel : 20 ticks
+4 sensors
+
+4x20x5=400: vertical pixels of mono
+
+
 
 On the ST, moving the mouse when joystick moves were expected would trigger
 endless movements, but plugging a joystick and taking control would fix the 

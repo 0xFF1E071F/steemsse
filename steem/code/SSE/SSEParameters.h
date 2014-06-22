@@ -78,13 +78,13 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 #if defined(SSE_IKBD_6301)
 
-#define SS_6301_TO_ACIA_IN_CYCLES (HD6301_CYCLES_TO_SEND_BYTE*HD6301_CYCLE_DIVISOR)
-#define SS_6301_TO_ACIA_IN_HBL (HD6301EMU_ON?HD6301_CYCLES_TO_SEND_BYTE_IN_HBL:(screen_res==2?24:12))
+#define HD6301_TO_ACIA_IN_CYCLES (HD6301_CYCLES_TO_SEND_BYTE*HD6301_CYCLE_DIVISOR)
+#define HD6301_TO_ACIA_IN_HBL (HD6301EMU_ON?HD6301_CYCLES_TO_SEND_BYTE_IN_HBL:(screen_res==2?24:12))
 
 #else
 
-#define SS_6301_TO_ACIA_IN_CYCLES (7200) // from WinSTon
-#define SS_6301_TO_ACIA_IN_HBL (screen_res==2?24:12) // to be <7200
+#define HD6301_TO_ACIA_IN_CYCLES (7200) // from WinSTon
+#define HD6301_TO_ACIA_IN_HBL (screen_res==2?24:12) // to be <7200
 
 #endif
 
@@ -98,7 +98,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #endif
 
 #else //!ACIA
-#define SS_6301_TO_ACIA_IN_HBL (screen_res==2?24:12) // to be <7200
+#define HD6301_TO_ACIA_IN_HBL (screen_res==2?24:12) // to be <7200
 #endif
 
 
@@ -271,8 +271,14 @@ SS_SIGNAL_ENUM_EnumDisplayModes, // wait until finished (?)
 
 // Parameters used in true and fake 6301 emu
 
+
 #define HD6301_CYCLES_PER_SCANLINE 64 // used if SSE_SHIFTER not defined
 #define HD6301_CYCLE_DIVISOR 8 // the 6301 runs at 1MHz (verified by Stefan jL)
+
+#if defined(SSE_MFP_RATIO)
+#define HD6301_CLOCK (1000000) //used in 6301/ireg.c
+#endif
+
 
 // in HBL, for Steem, -1 for precise timing (RX/IRQ delay)
 #define HD6301_CYCLES_TO_SEND_BYTE_IN_HBL \
@@ -420,7 +426,7 @@ are assumed to take four clock periods.
 
 
 /////////
-// MMMU //
+// MMU //
 /////////
 
 #if defined(SSE_MMU)

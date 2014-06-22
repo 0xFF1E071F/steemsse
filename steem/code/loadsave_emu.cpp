@@ -904,10 +904,10 @@ Steem SSE will reset auto.sts and quit\nSorry!",
     v3.7.0: check that Caps was active...
 */
     //TRACE("CAPSIMG_OK%d\n",CAPSIMG_OK);
-    ReadWrite(Caps.Active);//3.7.0
+    /////ReadWrite(Caps.Active);//3.7.0//wrong
     if(LoadOrSave==LS_LOAD //3.6.2
       && CAPSIMG_OK //3.6.3
-      && Caps.Active //3.7.0
+//////      && Caps.Active //3.7.0
       ) 
     {
       Caps.WritePsgA(psg_reg[PSGR_PORT_A]);

@@ -89,7 +89,7 @@ bool TDma::Drq() {
 
   SR|=SR_DRQ;
   
-  if(Dma.MCR&CR_WRITE) // RAM -> disk (writing to disk)
+  if(MCR&CR_WRITE) // RAM -> disk (writing to disk)
   {
     if(!(MCR&CR_HDC_OR_FDC)) //floppy select
       WD1772.DR=GetFifoByte();

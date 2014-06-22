@@ -60,6 +60,7 @@ static dr4_getb P_((u_int offs));
     we depend on the ROM.
 */
 
+#if !defined(SSE_IKBD_6301_ROM_KEYTABLE) || defined(SSE_DEBUG)
 int dr_table[8][15] = {
   //               DR3                |                  DR4                  |
   //  1 |  2 |  3 |  4 |  5 |  6 |  7 |  0 |  1 |  2 |  3 |  4 |  5 |  6 |  7 |
@@ -77,6 +78,46 @@ int dr_table[8][15] = {
   {0x00,0x00,0x38,0x00,0x60,0x20,0x2E,0x30,0x25,0x33,0x34,0x28,0x6D,0x6E,0x6F},// 6
   {0x00,0x00,0x00,0x36,0x2C,0x2D,0x2F,0x31,0x32,0x39,0x3A,0x35,0x70,0x71,0x72} // 7
   };
+#endif
+/*
+f206	1d 2a 38 36: shift etc.
+...  
+f2f3	80 01 00 02 ce f3 11 d6 8a c1 05 25 0d c0  ...........%..
+f301	04 58 58 58 3a 5f 20 01 5c 44 24 fc 3a a6  .XXX:_ .\D$.:.
+f30f	00 39 00 00 3b 3c 3d 00 00 00 3e 01 02 0f  .9..;<=...>...
+f31d	10 1e 60 2c 3f 03 04 11 12 1f 20 2d 40 05  ..`,?..... -@.
+f32b	06 13 14 21 2e 2f 41 07 08 15 22 23 30 31  ...!./A..."#01
+f339	42 09 0a 16 17 24 25 32 43 0b 0c 18 19 26  B....$%2C....&
+f347	33 39 44 0d 29 1a 1b 27 34 3a 62 0e 53 52  39D.)..'4:b.SR
+f355	2b 1c 28 35 61 48 47 4b 50 4d 6d 70 63 64  +.(5aHGKPMmpcd
+f363	67 68 6a 6b 6e 71 65 66 69 4a 6c 4e 6f 72  ghjknqefiJlNor
+
+*/
+#if defined(SSE_IKBD_6301_ROM_KEYTABLE)
+
+BYTE get_scancode(int dr1bit,int column) {
+  BYTE val=0;
+  ASSERT(dr1bit<8);
+  ASSERT(column<15);
+  ASSERT(ram[0xF319]==0x3E);
+  ASSERT(ram[0xF206]==0x1D);
+  if(column<4)
+  {
+    if(!dr1bit)
+      val=ram[0xF312+column];
+    else if(dr1bit-4==column)
+      val=ram[0xF206+column];
+  }
+  else
+    val=ram[0xF319+dr1bit+((column-4)*8)];
+#if defined(SSE_DEBUG)
+  ASSERT(val==dr_table[dr1bit][column]);
+#endif
+  return val;
+}
+#endif
+
+
 
 /*
 
@@ -139,7 +180,11 @@ u_int offs;
       for(column=0;column<7&&!found;column++)
       {
         mask2=1<<(column+1);
+#if defined(SSE_IKBD_6301_ROM_KEYTABLE)
+        if(ST_Key_Down[ get_scancode(dr1bit,column) ] 
+#else
         if(ST_Key_Down[ dr_table[dr1bit][column] ] 
+#endif
           &&  (dr3&mask2)   // must be set?, ST Mag doc said cleared
           &&  (ddr3&mask2)
           )
@@ -149,7 +194,11 @@ u_int offs;
       for(column=7;column<15&&!found;column++)
       {
         mask2=1<<(column-7);
+#if defined(SSE_IKBD_6301_ROM_KEYTABLE)
+        if(ST_Key_Down[ get_scancode(dr1bit,column) ] 
+#else
         if(ST_Key_Down[ dr_table[dr1bit][column] ] 
+#endif
           &&  (dr4&mask2)   // must be set?
           &&  (ddr4&mask2)
           )
@@ -234,8 +283,16 @@ static dr2_getb (offs)
 
 static unsigned int mouse_x_counter=MOUSE_MASK;
 static unsigned int mouse_y_counter=MOUSE_MASK;
+
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED) \
+  || !defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
 static int mouse_click_x_time=0;
 static int mouse_click_y_time=0; 
+#endif
+
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
+extern int shifter_freq;
+#endif
 
 static dr4_getb (offs)
   u_int offs;
@@ -247,6 +304,7 @@ static dr4_getb (offs)
   int joy0mvt=0,joy1mvt=0;
   ASSERT(offs==P4);
   ASSERT(!ddr4); // strong
+  ASSERT(ddr2&1); // strong
   value=0xFF;
                 
 /*  Mouse movements
@@ -263,49 +321,104 @@ static dr4_getb (offs)
     It seems to be the hardest part (also not perfect in SainT), but maybe we
     should make sure the send/receive timings are correct before we fiddle 
     again with mouse speed.
-    TODO: speed, accuracy...
+    v3.7.0: mouse speed improved (SSE_IKBD_6301_MOUSE_ADJUST_SPEED2), now it's
+    satisfactory.
 */
+
   if(!(ddr4&0xF) && (ddr2&1) 
     && (HD6301.MouseVblDeltaX || HD6301.MouseVblDeltaY) )
   {
-    int n_chunk=HD6301_MOUSE_SPEED_CHUNKS; // 20 // 15
-    int cycles_per_chunk=HD6301_MOUSE_SPEED_CYCLES_PER_CHUNK;// 1250;// 500 
-    int movement,cycles_for_a_click;
+
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
+// if both are defined, Hacks makes the difference, for comparison (beta)
+    if(SSE_HACKS_ON)
+#endif
+    {
+    int cycles_per_frame=HD6301_CLOCK/shifter_freq;   
+
     if(HD6301.MouseVblDeltaX) // horizontal
     { 
-      int amx=abs(HD6301.MouseVblDeltaX);
-      movement=__min((int)amx,n_chunk-1);
-      cycles_for_a_click=cycles_per_chunk*(n_chunk-movement);
-      if(cpu.ncycles-mouse_click_x_time>cycles_for_a_click)
+      int clicks=abs(HD6301.MouseVblDeltaX);
+      int cycles_for_a_click=cycles_per_frame/clicks;
+      int current_click=hd6301_vbl_cycles/cycles_for_a_click;
+
+      if(current_click>=HD6301.click_x)
       {
         if(HD6301.MouseVblDeltaX<0) // left
           mouse_x_counter=_rotl(mouse_x_counter,1);
         else  // right
           mouse_x_counter=_rotr(mouse_x_counter,1);
-        mouse_click_x_time=cpu.ncycles;
+        HD6301.click_x++;
       }
     }
     
     if(HD6301.MouseVblDeltaY) // vertical
     {
-      int amy=abs(HD6301.MouseVblDeltaY);
-      movement=__min(amy,n_chunk-1);
-      cycles_for_a_click=cycles_per_chunk*(n_chunk-movement);
-      if(cpu.ncycles-mouse_click_y_time>cycles_for_a_click)
+      int clicks=abs(HD6301.MouseVblDeltaY);
+      int cycles_for_a_click=cycles_per_frame/clicks;
+      int current_click=hd6301_vbl_cycles/cycles_for_a_click;
+      if(current_click>=HD6301.click_y)
       {
         if(HD6301.MouseVblDeltaY<0) // up
           mouse_y_counter=_rotl(mouse_y_counter,1);
         else  // down
           mouse_y_counter=_rotr(mouse_y_counter,1);
-        mouse_click_y_time=cpu.ncycles;
+        HD6301.click_y++;
       }
     }   
+    TRACE("Read mouse %d/%d,%d/%d\n",HD6301.click_x,HD6301.MouseVblDeltaX,HD6301.click_y,HD6301.MouseVblDeltaY);
+    }
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
+    else//don't forget this or the movement gets pretty erratic ;)
+#endif
+#endif
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED) || \
+      !defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
+    {
+      
+      int n_chunk=HD6301_MOUSE_SPEED_CHUNKS; // 20 // 15
+      int cycles_per_chunk=HD6301_MOUSE_SPEED_CYCLES_PER_CHUNK;// 1250;// 500 
+      int movement,cycles_for_a_click;
+      
+      if(HD6301.MouseVblDeltaX) // horizontal
+      { 
+        int amx=abs(HD6301.MouseVblDeltaX);
+        movement=__min((int)amx,n_chunk-1);
+        cycles_for_a_click=cycles_per_chunk*(n_chunk-movement);
+        
+        if(cpu.ncycles-mouse_click_x_time>cycles_for_a_click)
+        {
+          if(HD6301.MouseVblDeltaX<0) // left
+            mouse_x_counter=_rotl(mouse_x_counter,1);
+          else  // right
+            mouse_x_counter=_rotr(mouse_x_counter,1);
+          mouse_click_x_time=cpu.ncycles;
+        }
+      }
+      
+      if(HD6301.MouseVblDeltaY) // vertical
+      {
+        int amy=abs(HD6301.MouseVblDeltaY);
+        movement=__min(amy,n_chunk-1);
+        cycles_for_a_click=cycles_per_chunk*(n_chunk-movement);
+        
+        if(cpu.ncycles-mouse_click_y_time>cycles_for_a_click)
+        {
+          if(HD6301.MouseVblDeltaY<0) // up
+            mouse_y_counter=_rotl(mouse_y_counter,1);
+          else  // down
+            mouse_y_counter=_rotr(mouse_y_counter,1);
+          mouse_click_y_time=cpu.ncycles;
+        }
+      }   
+    }
+#endif
   }
 
 /*  Joystick movements
     Movement is signalled by cleared bits.
 */
-  ASSERT(!ddr4);
   if(!ddr4 && (ddr2&1) && (dr2&1))
   {
     joy0mvt=stick[0]&0xF; // eliminate fire info
@@ -321,9 +434,16 @@ static dr4_getb (offs)
     }
   }  
 
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
   // We do it that way because mouse speed is better if we don't update that
   // value only when the mouse has moved.
-  if(!joy0mvt)
+  if(!joy0mvt
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
+  // if both are defined, Hacks makes the difference, for comparison (beta)
+    || !SSE_HACKS_ON
+#endif
+    )
+#endif
     value = (value&(~0xF))  | (mouse_x_counter&3) | ((mouse_y_counter&3)<<2);
 
   iram[offs]=value;

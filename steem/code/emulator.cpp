@@ -40,6 +40,9 @@ EXT int shifter_hscroll,shifter_skip_raster_for_hscroll;
 
 EXT MEM_ADDRESS xbios2,shifter_draw_pointer_at_start_of_line;
 EXT int shifter_pixel;
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
+extern "C" 
+#endif
 EXT int shifter_freq INIT(60);
 EXT int shifter_freq_idx INIT(1);
 EXT int shifter_x,shifter_y;

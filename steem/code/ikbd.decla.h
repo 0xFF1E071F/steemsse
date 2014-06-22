@@ -320,7 +320,7 @@ EXT ACIA_STRUCT acia[2];
 inline void PrepareEventCheckForAciaIkbdIn() {
   if(acia[0].rx_stage)
   {
-    int tt=ikbd.timer_when_keyboard_info+SS_6301_TO_ACIA_IN_CYCLES;
+    int tt=ikbd.timer_when_keyboard_info+HD6301_TO_ACIA_IN_CYCLES;
     if(acia[0].rx_stage==2)
     {
       tt+=SSE_ACIA_IRQ_DELAY_CYCLES; // fixes V8 Music Studio (from Hatari)
