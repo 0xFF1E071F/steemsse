@@ -6,9 +6,6 @@
 #include "6301.h"
 #include "SSE/SSE.h"
 #include <SSE/SSEDebug.h>
-
-//extern struct TDebug Debug;
-
 #include <SSE/SSE6301.h>
 #include <acia.h>
 
@@ -81,8 +78,7 @@ int hd6301_vbl_cycles;
 // we use this trick because Trace is a struct function
 void (*hd6301_trace)(char *fmt, ...);
 #undef LOGSECTION
-//#define LOGSECTION LOGSECTION_IKBD
-#define TRACE Debug.LogSection=7/*LOGSECTION_IKBD*/,hd6301_trace
+#define TRACE Debug.LogSection=LOGSECTION_IKBD,hd6301_trace
 #else
 #define TRACE
 #endif
@@ -161,7 +157,6 @@ hd6301_run_cycles(u_int cycles_to_run) {
 #endif
   int starting_cycles=cpu.ncycles;
   // make sure our 6301 is running OK
-  ASSERT(cycles_to_run<200);//64 in low res
   if(!cpu_isrunning())
   {
     TRACE("6301 starting cpu\n");
