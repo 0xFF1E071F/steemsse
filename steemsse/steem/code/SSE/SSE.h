@@ -509,9 +509,9 @@ and all his silly mods are gone!
 #define SSE_DEBUG_FRAME_REPORT_BLITTER
 #define SSE_DEBUG_FRAME_REPORT_PAL
 #define SSE_DEBUG_FRAME_REPORT_HSCROLL // & linewid
-#define SSE_DEBUG_FRAME_REPORT_SDP_LINES
-#define SSE_DEBUG_FRAME_REPORT_SDP_READ
-#define SSE_DEBUG_FRAME_REPORT_SDP_WRITE
+//#define SSE_DEBUG_FRAME_REPORT_SDP_LINES
+//#define SSE_DEBUG_FRAME_REPORT_SDP_READ//?
+//#define SSE_DEBUG_FRAME_REPORT_SDP_WRITE//?
 #define SSE_DEBUG_FRAME_REPORT_SHIFTER_TRICKS
 #define SSE_DEBUG_FRAME_REPORT_SHIFTER_TRICKS_BYTES
 #define SSE_DEBUG_FRAME_REPORT_SHIFTMODE
@@ -697,7 +697,8 @@ and all his silly mods are gone!
 #endif
 
 //#define SSE_DMA_DELAY // works but overkill 3.7.0 -> use generic floppy event?
-//#define SSE_DMA_COUNT_CYCLES //no, it's like video, shared with CPU
+#define SSE_DMA_COUNT_CYCLES //no, it's like video, shared with CPU (3.6.4)
+//in fact, Alien says that CPU is interrupted by MMU for DMA transfers...
 #define SSE_DMA_FDC_ACCESS
 //#define SSE_DMA_FDC_READ_HIGH_BYTE // like pasti, 0  
 #define SSE_DMA_FIFO // first made for CAPS 
@@ -1181,9 +1182,8 @@ and all his silly mods are gone!
 #define SSE_SHIFTER_60HZ_OVERSCAN //Leavin' Terramis
 #define SSE_SHIFTER_END_OF_LINE_CORRECTION // correct +2, -2 lines 
 #define SSE_SHIFTER_FIX_LINE508_CONFUSION // hack at recording shifter event
-
+#define SSE_SHIFTER_HIRES_OVERSCAN//3.7.0
 //#define SSE_SHIFTER_LEFT_OFF_THRESHOLD//Hackabonds Demo not WS1
-
 #define SSE_SHIFTER_LEFT_OFF_60HZ //3.5.3 24 bytes!
 #define SSE_SHIFTER_LEFT_OFF_TEST_BEFORE_HBL // for Riverside
 #define SSE_SHIFTER_LINE_MINUS_106_BLACK // loSTE screens
