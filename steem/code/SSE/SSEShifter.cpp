@@ -59,14 +59,14 @@ TShifter::~TShifter() {
 
 void TShifter::CheckSideOverscan() {
 /*  An overbloated version of Steem's draw_check_border_removal()
-    This function is called before rendering if there have been shifter events.
+    This function is called before rendering if there have been Shifter events.
     It takes care of all "side overscan" business.
     Some features have been added on the v3.2 basis:
     STE-only left border off (line +20), 0-byte line, 4bit hardscroll, etc.
     Other shifter tricks have been refined, and difference between ST models is
     handled.
     The "old" Steem look-up system is still used, instead of the "Hatari" way
-    of acting at the "shifter" events themselves. 
+    of acting at the Shifter events themselves. 
     The advantages are that we integrate in what exists, that everything 
     is nicely concentrated in one place and that we don't need to take care 
     of the -1 problem when events occur at 'LineCycles+n' (eg 520).
@@ -79,10 +79,50 @@ void TShifter::CheckSideOverscan() {
  
   int act=ABSOLUTE_CPU_TIME,t,i;
   WORD CyclesIn=LINECYCLES;
+
+#if defined(SSE_SHIFTER_HIRES_OVERSCAN)//3.7.0
+/*  Yes! You may abuse the GLUE when you have a monochrome screen too.
+    It's the same idea: changing shift mode when it's about to make 
+    decisions.
+    R0 parts in black not emulated, and visibly other things, very trashy
+    effect for the moment.
+
+    Eg: Monoscreen by Dead Braincells
+    004:R0000 012:R0002                       -> 0byte ?
+    016:R0000 024:R0002 156:R0000 184:R0002   -> right off + ... ? 
+*/
+
+  if(!FetchingLine() || screen_res>2 || !act)
+    return;
+  else if(screen_res==2) 
+  {
+    if(!freq_change_this_scanline)
+      return;
+    int bonus_bytes=0;
+    if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE)
+      && ShiftModeAtCycle(6)!=2)
+    {
+      CurrentScanline.Tricks|=TRICK_0BYTE_LINE;
+      bonus_bytes=-80;
+      draw_line_off=true;
+    }
+    else if( !(CurrentScanline.Tricks&2) 
+      && ShiftModeAtCycle(164)!=2)
+    {
+      CurrentScanline.Tricks|=2;
+      bonus_bytes=14;
+    }
+    //else REPORT_LINE;//and there's nothing else in "Monoscreen"
+    shifter_draw_pointer+=bonus_bytes;
+    CurrentScanline.Bytes+=bonus_bytes;
+    return;
+  }
+#else
   if(screen_res>=2
     || !FetchingLine() 
     || !act) // if ST is resetting
     return;
+#endif
 
 #if defined(SSE_SHIFTER_TRICKS) 
     short r0cycle,r1cycle,r2cycle;
@@ -2234,6 +2274,20 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
   {
     if(scan_y>=shifter_first_draw_line && scan_y<shifter_last_draw_line)
     {
+#if defined(SSE_SHIFTER_HIRES_OVERSCAN)
+      if(freq_change_this_scanline)
+      {
+        CheckSideOverscan();
+        if(draw_line_off)
+        {
+          for(int i=0;i<=20;i++)
+          {
+            Scanline[i]=LPEEK(i*4+shifter_draw_pointer); // save ST memory
+            LPEEK(i*4+shifter_draw_pointer)=0;
+          }
+        }
+      }
+#endif
       nsdp=shifter_draw_pointer+80;
 
 #if defined(SSE_SHIFTER_STE_HI_HSCROLL) 
@@ -2270,6 +2324,14 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
       {
         if(border & 1)
           ///////////////// RENDER VIDEO /////////////////
+
+#if defined(SSE_SHIFTER_HIRES_OVERSCAN)
+// experimental, right off, left off?
+          if((CurrentScanline.Tricks&2))
+            draw_scanline((BORDER_SIDE*2)/16-16, 640/16+16*2, (BORDER_SIDE*2)/16-16,0);
+            //draw_scanline((BORDER_SIDE*2)/16, 640/16+16*2, (BORDER_SIDE*2)/16-16*2,0);
+          else
+#endif
           draw_scanline((BORDER_SIDE*2)/16, 640/16, (BORDER_SIDE*2)/16,0);
         else
           ///////////////// RENDER VIDEO /////////////////
@@ -2278,12 +2340,19 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
         draw_dest_next_scanline+=draw_dest_increase_y;
       }
 #if defined(SSE_SHIFTER_STE_HI_HSCROLL) 
-      if(HSCROLL) // restore ST memory
+      if(
+#if defined(SSE_SHIFTER_HIRES_OVERSCAN)
+        draw_line_off ||
+#endif        
+        HSCROLL) 
       {
-        for(int i=0;i<=20;i++)
+        for(int i=0;i<=20;i++)// restore ST memory
           LPEEK(i*4+shifter_draw_pointer)=Scanline[i]; 
       }
 #endif
+
+
+
       shifter_draw_pointer=nsdp;
     }
     else if(scan_y>=draw_first_scanline_for_border && scan_y<draw_last_scanline_for_border)
@@ -3437,7 +3506,13 @@ void TShifter::SetShiftMode(BYTE NewMode) {
   NewMode&=3; // only two lines would physically exist
   m_ShiftMode=NewMode; // update, used by ior now (v3.5.1)
 
-  if(screen_res>=2|| emudetect_falcon_mode!=EMUD_FALC_MODE_OFF)
+  if(screen_res
+#if defined(SSE_SHIFTER_HIRES_OVERSCAN)
+    >
+#else
+    >=
+#endif
+    2|| emudetect_falcon_mode!=EMUD_FALC_MODE_OFF)
     return; // if not, bad display in high resolution
 
 #ifndef NO_CRAZY_MONITOR
@@ -3448,8 +3523,11 @@ void TShifter::SetShiftMode(BYTE NewMode) {
   }
 #endif
 
+#if !defined(SSE_SHIFTER_HIRES_OVERSCAN)
   // From here, we have a colour display:
   ASSERT( mfp_gpip_no_interrupt & MFP_GPIP_COLOUR );
+#endif
+
   if(NewMode==3) 
 #if SSE_VERSION>354
     NewMode=2; // fixes The World is my Oyster screen #2
@@ -3465,6 +3543,14 @@ void TShifter::SetShiftMode(BYTE NewMode) {
 
 #if defined(SSE_SHIFTER_RIGHT_OFF_BY_SHIFT_MODE) 
   AddFreqChange( (NewMode==2 ? MONO_HZ : shifter_freq) );
+#endif
+
+#if defined(SSE_SHIFTER_HIRES_OVERSCAN)
+  if(screen_res==2)
+  {
+    freq_change_this_scanline=true;
+    return;
+  }
 #endif
 
   int old_screen_res=screen_res;
@@ -4063,7 +4149,8 @@ int TShifter::FreqAtCycle(int cycle) {
 int TShifter::ShiftModeAtCycle(int cycle) {
   // what was the shift mode at this cycle?
   if(cycle>LINECYCLES) // it's a problem
-    return 8; // binary 1000, not 0, not 1, not 2
+  //  return 8; // binary 1000, not 0, not 1, not 2
+    return m_ShiftMode;
   int t=cycle+LINECYCLE0; // convert to absolute
   int i,j;
   for(i=shifter_shift_mode_change_idx,j=0
@@ -4269,6 +4356,10 @@ MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
       bytes_to_count+=SHIFTER_RASTER_PREFETCH_TIMING/2;
     int bytes_ahead=(shifter_hscroll_extra_fetch) 
       ?(SHIFTER_RASTER_PREFETCH_TIMING/2)*2:(SHIFTER_RASTER_PREFETCH_TIMING/2);
+
+////bytes_ahead=2;//8 in HIRES, prefetch always 16cycles
+
+
     int starts_counting=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN/2 - bytes_ahead;
 /*
     84/2-8 = 34
@@ -4354,7 +4445,11 @@ MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
 #endif
 #endif
 
-    if(!left_border)
+    if(!left_border
+#if defined(SSE_SHIFTER_HIRES_OVERSCAN)
+      || screen_res==2
+#endif      
+      )
       starts_counting-=26;
 
 #if defined(SSE_SHIFTER_TCB) && defined(SSE_SHIFTER_TRICKS)

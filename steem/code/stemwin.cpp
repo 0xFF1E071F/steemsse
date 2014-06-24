@@ -677,10 +677,11 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           else if(Mess==WM_RBUTTONDOWN)
           {
             int guessed_scan_y=(HIWORD(lPar)-MENUHEIGHT)-1;
-            if(1)
+            if(screen_res<2)
               guessed_scan_y/=2;
             if(border)
-              guessed_scan_y-=BORDER_TOP;
+              guessed_scan_y-=(screen_res==2)?BORDER_TOP*2:BORDER_TOP;
+
             int guessed_x=LOWORD(lPar)/2-SideBorderSizeWin;
 #if defined(SSE_VAR_STATUS_STRING)
             HWND status_bar_win=GetDlgItem(StemWin,120); // get handle
