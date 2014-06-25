@@ -722,7 +722,7 @@ cycles before the first stepping pulse.
 */
       default: //step, step in, step out
       {
-#if defined(STEVEN_SEAGAL) && defined(SSE_FDC_STEP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_FDC_STEP___)// v3.7.0 bugfix Treasure Trap
         if(ADAT)
           floppy_irq_flag=0;
 #endif
@@ -744,6 +744,10 @@ cycles before the first stepping pulse.
           }else{ //can step
             floppy_head_track[floppyno]+=d;
             log(Str("FDC: Stepped drive ")+char('A'+floppyno)+" to track "+floppy_head_track[floppyno]);
+#if defined(STEVEN_SEAGAL) && defined(SSE_FDC_STEP)
+            if(ADAT)
+              floppy_irq_flag=0;// IRQ set in fdc_type1_check_verify()
+#endif
             fdc_type1_check_verify();
           }
           floppy_type1_command_active=1;
