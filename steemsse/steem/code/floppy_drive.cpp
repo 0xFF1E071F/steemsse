@@ -26,40 +26,35 @@ bool FloppyArchiveIsReadWrite=0;
 int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDetectBPB,BPBINFO *pFileBPB)
 {
 
-  TRACE_LOG("SetDisk %s %s\n",File.c_str(),CompressedDiskName.c_str());
-
 #if defined(STEVEN_SEAGAL) && defined(SSE_DRIVE)
   int drive=-1;
-  if (this==&FloppyDrive[0]) drive=0;
-  if (this==&FloppyDrive[1]) drive=1;
+  if (this==&FloppyDrive[0]) drive=0; // and not according to PSG
+  if (this==&FloppyDrive[1]) drive=1; // it's different here!
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_DRIVE_MOTOR_ON)
-  // no: braindamage ADAT (3.6.4)
-//  if(drive!=-1)
-//    SF314[drive].motor_on=false;
+  TRACE_LOG("%c: SetDisk %s\n",'A'+drive,File.c_str());
+
+#if defined(SSE_DISK1)
+//  Disk[drive].Init(); //seriously bugged
+//  ASSERT(Disk[drive].TrackBytes==6270);
 #endif
+
+  // SS: note that the drive may still be spinning when a floppy is removed
+  // or inserted -> that state mustn't be changed (Braindamage)
 
 #if defined(SSE_DISK_GHOST)
-  // SetDisk() may be called without call to RemoveDisk() first
+  // SetDisk() may be called without call to RemoveDisk() first so we
+  // must do this here too
   if(SF314[drive].State.ghost) 
     GhostDisk[drive].Close();
   SF314[drive].State.ghost=false;
 #endif
 
-  if (IsSameStr_I(File,ImageFile) && IsSameStr_I(CompressedDiskName,DiskInZip)) return 0;
+  if (IsSameStr_I(File,ImageFile) && IsSameStr_I(CompressedDiskName,DiskInZip)) 
+    return 0;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_PASTI_ONLY_STX_____)  //MFD
-  //bugfix 3.5.4, this part would reset ImageType right before we leave... (^^)
-  if(drive!=-1)
-#if defined(SSE_DISK_IMAGETYPE)
-    ZeroMemory(&SF314[drive].ImageType,sizeof(SF314[drive].ImageType));
-#else
-    SF314[drive].ImageType=0;//default, this will detect STX disks (3)
-#endif
-#endif
-
-  if (Exists(File)==0) return FIMAGE_FILEDOESNTEXIST;
+  if (Exists(File)==0) 
+    return FIMAGE_FILEDOESNTEXIST;
 
   EasyStr OriginalFile=File,NewZipTemp;
 
@@ -81,7 +76,6 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #ifdef SSE_IPF_KFSTREAM
   bool RAW=IsSameStr_I(Ext,SSE_IPF_KFSTREAM);
 #endif
-    ;
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
   bool SCP=IsSameStr_I(Ext,"SCP");
@@ -89,7 +83,6 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #if defined(SSE_DISK_STW)
   bool STW=IsSameStr_I(Ext,DISK_EXT_STW);
 #endif
-
   
 
   // NewDiskInZip will be blank for default disk, RealDiskInZip will be the
@@ -236,7 +229,13 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   if (drive==-1) f_PastiDisk=0; // Never use pasti for extra drives
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
-  if(CAPSIMG_OK && drive!=-1 && Caps.IsIpf(drive))
+  if(CAPSIMG_OK && drive!=-1 && 
+#if defined(SSE_DISK_IMAGETYPE1)
+    SF314[drive].ImageType.Manager==MNGR_CAPS
+#else
+    Caps.IsIpf(drive)
+#endif 
+    )
     RemoveDisk();
 #endif
 
@@ -353,22 +352,23 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
   }else if(STW) { 
-    if(drive==-1  || !ImageSTW[drive].Open(File))       //stupid bug was if(!ImageSTW[2].Open(File))
+    if(drive==-1  || !ImageSTW[drive].Open(File))
       return FIMAGE_WRONGFORMAT;
 
-#if defined(SSE_DISK_IMAGETYPE)//necessary of course
-    TRACE_LOG("Disk in %c is STW, pasti %d\n",'A'+drive,pasti_active);
-//    ASSERT(!pasti_active);
+#if defined(SSE_DISK_IMAGETYPE)
     if(SF314[1-drive].ImageType.Extension!=EXT_STX)
       pasti_active=false;
-    //TRACE_LOG("pasti_active %d\n",pasti_active);
-//    TRACE_LOG("Set ImageType STW\n");
-    SF314[drive].ImageType.Manager=MNGR_STEEM;
+
+    SF314[drive].ImageType.Manager=MNGR_WD1772;
     SF314[drive].ImageType.Extension=EXT_STW;
 #endif
-
- 
+#if defined(SSE_DISK1)
+    Disk[drive].TrackBytes=ImageSTW[drive].nBytes;
+    ASSERT(Disk[drive].TrackBytes==DRIVE_BYTES_ROTATION_STW);
 #endif
+    SF314[drive].State.reading=SF314[drive].State.writing=0;
+
+#endif//stw
 
 
   }else{
@@ -844,11 +844,11 @@ bool TFloppyImage::SeekSector(int Side,int Track,int Sector,bool Format)
   }
 
 #if defined(SSE_DRIVE_SINGLE_SIDE_NAT1)
-  if( SSEOption.SingleSideDriveMap&(floppy_current_drive()+1) )
+  if(SSEOption.SingleSideDriveMap&(floppy_current_drive()+1))
     Side=0;
 #endif
 #if defined(SSE_DRIVE_SINGLE_SIDE_RND)//3.7.0
-  if( SSEOption.SingleSideDriveMap&(floppy_current_drive()+1) && Side==1)
+  if(SSEOption.SingleSideDriveMap&(DRIVE+1) && Side==1)
     return true;// -> RNF
 #endif
 
@@ -1058,7 +1058,7 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
 #endif
 
   static bool Removing=0;
-
+  ASSERT(!Removing);//there must be a reason
   if (Removing) return;
   Removing=true;
 
@@ -1329,7 +1329,9 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
       //TRACE_LOG("deactivate pasti 1\n");
       pasti_active=false;
       //TRACE_LOG("pasti_active %d\n",pasti_active);
+#if defined(SSE_PASTI_ON_WARNING2)
       DiskMan.RefreshPastiStatus();
+#endif
     }
 #endif
   }
@@ -1340,7 +1342,13 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   PastiDisk=0;
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
-  if(CAPSIMG_OK && drive!=-1 && Caps.IsIpf(drive))
+  if(CAPSIMG_OK && drive!=-1 && 
+#if defined(SSE_DISK_IMAGETYPE1)
+    SF314[drive].ImageType.Manager==MNGR_CAPS
+#else
+    Caps.IsIpf(drive)
+#endif     
+    )
     Caps.RemoveDisk(drive);
   IPFDisk=
 #ifdef SSE_IPF_CTRAW
@@ -1359,6 +1367,7 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
     ImageSTW[drive].Close();
   //ASSERT( ! ImageSTW[drive].fCurrentImage );
   STWDisk=0;
+  SF314[drive].State.reading=SF314[drive].State.writing=0;
 #endif
 
   if (f) fclose(f);
@@ -1368,7 +1377,7 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_IMAGETYPE) 
 //  TRACE_LOG("Remove disk: reset ImageType\n");
-  SF314[drive].ImageType.Manager=0;
+  SF314[drive].ImageType.Manager=MNGR_STEEM; //default
   SF314[drive].ImageType.Extension=0;
 #endif
 

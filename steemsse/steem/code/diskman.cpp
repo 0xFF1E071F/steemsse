@@ -37,11 +37,13 @@ bool ExtensionIsPastiDisk(char *Ext)
   if(PASTI_JUST_STX)
     return (IsSameStr_I(Ext,"STX")) ? true : false;
 #endif
+#if !defined(SSE_PASTI_ONLY_STX_OPTION1)
   char *t=pasti_file_exts;
   while (*t){
     if (IsSameStr_I(Ext,t)) return true;
     t+=strlen(t)+1;
   }
+#endif
 #endif
   return false;
 }
@@ -174,7 +176,12 @@ void TDiskManager::SetNumFloppies(int NewNum)
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
   // it's not easy mixing IPF and native!
+
+#if defined(SSE_DISK_IMAGETYPE1)
+  if(SF314[1].ImageType.Manager==MNGR_CAPS)
+#else
   if(Caps.IsIpf(1)) // there's an IPF disk in drive B
+#endif 
   {
     if(NewNum==1) // deactivated
       Caps.SF314[1].diskattr&=~CAPSDRIVE_DA_IN;
@@ -1311,7 +1318,9 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #if USE_PASTI
             if (hPasti){
+#if !defined(SSE_PASTI_ONLY_STX_OPTION2)
               InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(pasti_active ? MF_CHECKED:0),2023,T("Use Pasti"));
+#endif
               InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,2024,T("Pasti Configuration"));
 //              InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(pasti_use_all_possible_disks ? MF_CHECKED:0),
 //                                    2024,T("Use Pasti For All Compatible Images"));
@@ -1471,7 +1480,11 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
 #if defined(SSE_DRIVE_SWITCH_OFF_MOTOR)
         case 1046:
         case 1047:
+#if defined(SSE_DRIVE_STATE)
+          SF314[(LOWORD(wPar)-1046)].State.motor=false;
+#else
           SF314[(LOWORD(wPar)-1046)].motor_on=false;
+#endif
          // fdc_str&=0xEF; //it's 7F, once again displaying my ignorance...
           fdc_str&=~FDC_STR_MOTOR_ON;
           break;
@@ -1711,6 +1724,7 @@ That will toggle bit x.
           if (LOWORD(wPar)==2024){
             pasti->DlgConfig(HWND(FullScreen ? StemWin:This->Handle),0,NULL);
           }
+#if !defined(SSE_PASTI_ONLY_STX_OPTION2)
           if (LOWORD(wPar)==2023){ //SS option use pasti
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_PASTI_NO_RESET)
@@ -1767,7 +1781,8 @@ That will toggle bit x.
             SetWindowText(This->Handle,sDiskManagerWindowCaption);
 #endif
 #endif
-          }
+          }//if (LOWORD(wPar)==2023
+#endif//!defined(SSE_PASTI_ONLY_STX_OPTION2)
           break;
 #endif//pasti
         case 2025:
@@ -2595,7 +2610,11 @@ LRESULT __stdcall TDiskManager::Drive_Icon_WndProc(HWND Win,UINT Mess,WPARAM wPa
         T("SF354 (single side - caution!)"));
 
 #if defined(SSE_DRIVE_SWITCH_OFF_MOTOR)
+#if defined(SSE_DRIVE_STATE)
+      if(SF314[This->MenuTarget].State.motor)
+#else
       if(SF314[This->MenuTarget].motor_on)
+#endif
       {
         InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,
           1046+This->MenuTarget,T("Stop motor"));
@@ -3526,7 +3545,7 @@ void TDiskManager::RefreshSnails() {
 }
 
 #endif
-#if defined(SSE_PASTI_ON_WARNING2)
+#if defined(SSE_PASTI_ON_WARNING2)//no more
 
 void TDiskManager::RefreshPastiStatus() {
   // check Pasti caption

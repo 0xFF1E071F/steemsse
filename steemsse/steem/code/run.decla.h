@@ -193,6 +193,7 @@ EXT int cpu_timer_at_start_of_hbl;
 #if defined(STEVEN_SEAGAL) && defined(SSE_FLOPPY_EVENT)
 
 // version with 3 events: 1 for WD1772, 1 for each drive
+/*
 #define PREPARE_EVENT_CHECK_FOR_FLOPPY       \
 if ((time_of_next_event-SF314[0].time_of_next_ip) >= 0){                 \
     time_of_next_event=SF314[0].time_of_next_ip;  \
@@ -206,8 +207,8 @@ if ((time_of_next_event-SF314[0].time_of_next_ip) >= 0){                 \
     time_of_next_event=WD1772.update_time;  \
     screen_event_vector=event_wd1772;                    \
   }
+*/
 
-/*
 #define PREPARE_EVENT_CHECK_FOR_FLOPPY       \
   if ((time_of_next_event-WD1772.update_time) >= 0){                 \
     time_of_next_event=WD1772.update_time;  \
@@ -221,7 +222,7 @@ if ((time_of_next_event-SF314[0].time_of_next_ip) >= 0){                 \
     time_of_next_event=SF314[1].time_of_next_ip;  \
     screen_event_vector=event_driveB_ip;                    \
   }
-*/
+
 
 /*
 #define PREPARE_EVENT_CHECK_FOR_FLOPPY       \

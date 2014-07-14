@@ -2,20 +2,31 @@
 #define COMMONTYPES_H
 
 typedef void *PVOID;
-typedef BYTE *PBYTE;
-typedef WORD *PWORD;
-typedef DWORD *PDWORD;
 typedef char *PCHAR;
-typedef long IOREG;
 
-typedef unsigned char UBYTE;
-typedef unsigned short UWORD;
-typedef unsigned long UDWORD;
-typedef unsigned __int64 UQUAD;
-typedef signed char SBYTE;
-typedef signed short SWORD;
-typedef signed long SDWORD;
-typedef signed __int64 SQUAD;
+
+
+#ifdef STEVEN_SEAGAL
+typedef signed __int8		int8_t;
+typedef unsigned __int8		uint8_t;
+typedef signed __int16		int16_t;
+typedef unsigned __int16	uint16_t;
+typedef signed __int32		int32_t;
+typedef unsigned __int32	uint32_t;
+typedef signed __int64		int64_t;
+typedef unsigned __int64	uint64_t;
+#endif
+
+
+
+typedef uint8_t UBYTE;
+typedef uint16_t UWORD;
+typedef uint32_t UDWORD;
+typedef uint64_t UQUAD;
+typedef int8_t SBYTE;
+typedef int16_t SWORD;
+typedef int32_t SDWORD;
+typedef int64_t SQUAD;
 
 typedef UBYTE *PUBYTE;
 typedef UWORD *PUWORD;
@@ -25,23 +36,6 @@ typedef SBYTE *PSBYTE;
 typedef SWORD *PSWORD;
 typedef SDWORD *PSDWORD;
 typedef SQUAD *PSQUAD;
-
-#define UCHAR_MIN 0
-#define USHRT_MIN 0
-#define ULONG_MIN 0
-
-#define UBYTE_MIN UCHAR_MIN
-#define UBYTE_MAX UCHAR_MAX
-#define UWORD_MIN USHRT_MIN
-#define UWORD_MAX USHRT_MAX
-#define UDWORD_MIN ULONG_MIN
-#define UDWORD_MAX ULONG_MAX
-#define SBYTE_MIN SCHAR_MIN
-#define SBYTE_MAX SCHAR_MAX
-#define SWORD_MIN SHRT_MIN
-#define SWORD_MAX SHRT_MAX
-#define SDWORD_MIN LONG_MIN
-#define SDWORD_MAX LONG_MAX
 
 enum {
 	DB_0 = 0,
@@ -112,7 +106,10 @@ enum {
 #define DF_31 (1UL<<DB_31)
 
 #define DllImport __declspec(dllimport)
+
+#if !(defined(STEVEN_SEAGAL) && defined(DllExport))
 #define DllExport __declspec(dllexport)
+#endif
 
 #define Naked __declspec(naked)
 

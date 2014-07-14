@@ -1181,6 +1181,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
   }
 */
 #if defined(SSE_DRIVE_SINGLE_SIDE_PASTI)
+          ghghghg
           if(SSE_HACKS_ON 
            // && (SSEOption.SingleSideDriveMap&(floppy_current_drive()+1) ))
             && (SSEOption.SingleSideDriveMap&(
@@ -1215,7 +1216,11 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 #endif
 #if defined(SSE_YM2149B)
             if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE)
+#if defined(SSE_DRIVE_STATE)
+              SF314[YM2149.SelectedDrive].State.motor=!!(fdc_str&0x80);
+#else
               SF314[YM2149.SelectedDrive].motor_on=!!(fdc_str&0x80);
+#endif
 #endif
 
 #if !defined(SSE_DEBUG_TRACE_IDE) && defined(SSE_YM2149A)
@@ -1223,7 +1228,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 #if defined(SSE_DEBUG_TRACE_CONTROL) // controlled by boiler now (3.6.1)
             if(TRACE_MASK3 & TRACE_CONTROL_FDCPSG)
 #endif
-              TRACE_FDC("PSG-A %X %c%d:\n",io_src_b,'A'+YM2149.SelectedDrive,YM2149.SelectedDrive);
+              TRACE_FDC("PSG-A %X %c%d:\n",io_src_b,'A'+YM2149.SelectedDrive,YM2149.SelectedSide);
 #endif
 #endif//#ifndef SSE_DEBUG_TRACE_IDE
 #ifdef ENABLE_LOGFILE

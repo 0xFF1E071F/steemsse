@@ -60,7 +60,9 @@ struct TSF314 {
 #endif
 
 #if defined(SSE_DRIVE_MOTOR_ON)
+#if !defined(SSE_DRIVE_STATE)
   BYTE motor_on;
+#endif
   DWORD HblOfMotorOn;
 #endif
 
@@ -78,6 +80,10 @@ struct TSF314 {
   DWORD Sound_Volume;
   void Sound_ChangeVolume();
 #endif
+
+#if defined(SSE_DRIVE_SOUND_SEEK2)
+  void Sound_Step();
+#endif
 #endif//sound
 
 #if defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)//debug only?
@@ -89,7 +95,8 @@ struct TSF314 {
   void Motor(bool state);
 #endif
 
-//not protected...
+
+#if defined(SSE_DRIVE_STATE)
   struct  {
     unsigned int motor:1;
     unsigned int single_sided:1;
@@ -99,6 +106,7 @@ struct TSF314 {
     unsigned int writing:1;
     unsigned int :4;
   }State;
+#endif
 
 #if defined(SSE_DRIVE_INDEX_PULSE)
   WORD rpm; // default 300
@@ -118,6 +126,8 @@ struct TSF314 {
 #if defined(SSE_DRIVE_INDEX_STEP)
   void Step(int direction);
 #endif
+
+
 
 
 };

@@ -15,7 +15,7 @@ Byte #     Meaning                |     Sector length code     Sector length
 5          CRC byte 1             |
 6          CRC byte 2             |
 
-The structure is used for by SSEWD1772.cpp, but also by SSEGhostDisk.cpp.
+The structure is used by SSEWD1772.cpp, but also by SSEGhostDisk.cpp.
 
 */
 
@@ -27,20 +27,11 @@ struct TWD1772IDField {
   BYTE CRC[2]; // not a WORD because ST was big-endian
   TWD1772IDField();
   WORD nBytes();
-#ifdef SSE_DEBUG
-  void Trace();
-#endif  
+//#ifdef SSE_DEBUG
+  void Trace(); // empty body if not debug
+//#endif  
 };
 
-
-/*
-    MFM encoding is partly for fun.
-    Correct field must be filled in before calling a function:
-    data -> Encode() -> clock and encoded word available 
-    encoded word -> Decode() -> data & clock available 
-    If mode is FORMAT_CLOCK, the clock BYTE will have a missing bit
-    for bytes $A1 and $C2.
-*/
 
 struct TWD1772MFM {
   enum {NORMAL_CLOCK,FORMAT_CLOCK};
@@ -53,19 +44,11 @@ struct TWD1772MFM {
 };
 
 
-/*  CRC logic.
-    Some insights were gained thanks to the game Dragonflight, that 
-    uses CRC tricks.
-*/
-
 struct TWD1772Crc {
   WORD crc;
   void Reset();
   void Add(BYTE data);
   bool Check(TWD1772IDField *IDField);
-#ifdef SSE_DEBUG
-  WORD bytes_since_reset;
-#endif
 };
 
 
@@ -161,30 +144,26 @@ struct TWD1772 {
     variables coherently. 
     Since snapshots won't be OK for this, we may change sizes too.
 */
-  BYTE DSR; // shift register
+  BYTE DSR; // shift register - official
 #if defined(SSE_DISK_STW)
-  WORD ByteCount; 
+  WORD ByteCount; // guessed
 #endif
-
+#ifdef SSE_WD1772_REG2_B
+  BYTE StatusType; // guessed
+#endif
   // definition is outside the class but objects belong to the class
   TWD1772IDField IDField; // to R/W those fields
   TWD1772Crc CrcChecker;
   TWD1772MFM Mfm;
-
-
 #endif
 
 
 #if defined(SSE_FDC_FORCE_INTERRUPT)
-  BYTE InterruptCondition;
+  BYTE InterruptCondition; // guessed
 #endif
 #if defined(SSE_FDC_INDEX_PULSE_COUNTER)
-  BYTE IndexCounter;
+  BYTE IndexCounter; // guessed
 #endif
-
-
-/////#endif
-
 
 /*  Lines (pins). Some are necessary (eg direction), others not
     really yet (eg write_gate).
@@ -195,7 +174,7 @@ struct TWD1772 {
     unsigned int drq:1;
     unsigned int irq:1;
     unsigned int motor:1;
-    unsigned int direction:1;  
+    unsigned int direction:1;  // can't take the address of this for Boiler
     unsigned int track0:1;  
     unsigned int step:1; 
     unsigned int read:1;
@@ -203,24 +182,18 @@ struct TWD1772 {
     unsigned int write_protect:1;
     unsigned int write_gate:1;
     unsigned int ip:1;
+#if defined(SSE_DISK_GHOST)
+    unsigned int CommandWasIntercepted:1; // pseudo
+#endif
   }Lines;
 #endif
 
-/*  pseudo internal registers, variables useful to us
-*/
-
-#if defined(SSE_DISK_GHOST)
-  unsigned int CommandWasIntercepted:1;
-#endif
 #if defined(SSE_DISK_STW)
   BYTE n00,nFF,n_format_bytes; // to examine sequences before ID
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_FLOPPY_EVENT)
-  int update_time;
-#endif
-#if defined(SSE_DRIVE_INDEX_PULSE)
-  //int time_of_last_ip; //both drive and WD record this
+  int update_time; // when do we need to come back?
 #endif
 
 
@@ -251,15 +224,15 @@ struct TWD1772 {
 
 #endif//#if defined(SSE_WD1772_REG2) //v3.7.0
 
-//#if defined(SSE_DEBUG) || defined(SSE_OSD_DRIVE_LED)
+#if defined(SSE_DEBUG) || defined(SSE_OSD_DRIVE_LED)
 /*  This is useful for OSD: if we're writing then we need to display a red
     light (green when reading). This is used by pasti & IPF.
 */
   int WritingToDisk();
-//#endif
+#endif
 
 #if defined(SSE_DRIVE_INDEX_PULSE)
-  void OnIndexPulse(); // called by drive (activates ip line)
+  void OnIndexPulse(int id); // called by drives (activates ip line)
 #endif
 
 #if defined(SSE_DISK_GHOST)

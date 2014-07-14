@@ -1456,7 +1456,8 @@ void event_pasti_update()
     SF314[floppy_current_drive()].ImageType!=3
 #endif
 #if defined(SSE_PASTI_ONLY_STX_HD) && defined(SSE_DMA)
-    && ! ( pasti_active && (Dma.MCR&BIT_3)) // hard disk handling by pasti
+    //&& ! ( pasti_active && (Dma.MCR&BIT_3)) // hard disk handling by pasti
+    && ! ( pasti_active && (Dma.MCR&TDma::CR_HDC_OR_FDC)) // hard disk handling by pasti
 #endif
 #endif
     ){
@@ -1500,17 +1501,11 @@ void event_trigger_vbi() { //6X cycles into frame (reference end of HSYNC)
     8000000/31280  = 255,754 cycles / byte
     One HBL = 512 cycles at 50hz.
 
-    Caps works with HBL because it hold its own cycle account.
+    Caps works with HBL because it hold its own cycle count.
     
     Here we should transfer control, or dispatch to handlers
 */
-/*
-int floppy_update_time=0;
 
-void event_floppy() {
-  floppy_update_time=ACT+n_cpu_cycles_per_second; // put into future
-}
-*/
 
 void event_wd1772() {
   WD1772.OnUpdate();

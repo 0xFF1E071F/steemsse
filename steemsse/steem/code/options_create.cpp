@@ -2350,7 +2350,7 @@ Windows 2000	5.0
     T("Displays which drive is running, and on which side and track the drive currently is, plus the sector in slow mode."));
 #endif
 
-#if defined(SSE_PASTI_ONLY_STX) // TODO debug then no more option
+#if defined(SSE_PASTI_ONLY_STX) && !defined(SSE_PASTI_ONLY_STX_OPTION1) 
   Offset+=Wid+HorizontalSeparation;
   Wid=GetCheckBoxSize(Font,T("Pasti only for STX")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
@@ -2365,8 +2365,9 @@ Windows 2000	5.0
 #else
     T("Advanced. When checked, Pasti will only be used for STX disks (not ST, MSA, not hard drive). It's been debugged but if you have problems uncheck it."));
 #endif
-  y+=LineHeight;
 #endif
+
+  y+=LineHeight;
 
 #if defined(SSE_DRIVE_SOUND)
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;

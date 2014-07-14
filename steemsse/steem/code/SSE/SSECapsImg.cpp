@@ -67,7 +67,10 @@ void SetNotifyInitText(char*);//forward
 int TCaps::Init() {
 
   Active=FALSE;
-  DriveMap=Version=0;
+#if !defined(SSE_DISK_IMAGETYPE)
+  DriveMap=0;
+#endif
+  Version=0;
   ContainerID[0]=ContainerID[1]=-1;
   LockedSide[0]=LockedSide[1]=-1;
   LockedTrack[0]=LockedTrack[1]=-1; 
@@ -145,7 +148,9 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
   ASSERT( img_info );
   ASSERT( ContainerID[drive]!=-1 );
   ASSERT( ContainerID[drive]!=-1 );
+#if !defined(SSE_DISK_IMAGETYPE)
   DriveMap|=(drive+1); // not <<!
+#endif
   bool FileIsReadOnly=bool(GetFileAttributes(File) & FILE_ATTRIBUTE_READONLY);
   VERIFY( !CAPSLockImage(ContainerID[drive],File) ); // open the IPF file
   VERIFY( !CAPSGetImageInfo(img_info,ContainerID[drive]) );
@@ -181,6 +186,13 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
   SF314[drive].diskattr|=CAPSDRIVE_DA_IN; // indispensable!
   if(!FileIsReadOnly)
     SF314[drive].diskattr&=~CAPSDRIVE_DA_WP; // Sundog
+#if defined(SSE_DRIVE_SINGLE_SIDE_CAPS)
+  if(SSEOption.SingleSideDriveMap&(drive+1) && Caps.Version>50)
+  {
+    //TRACE("single side!\n");
+    SF314[drive].diskattr|=CAPSDRIVE_DA_SS; //tested OK on Dragonflight
+  }
+#endif
   CAPSFdcInvalidateTrack(&WD1772,drive); // Galaxy Force II
   LockedTrack[drive]=LockedSide[drive]=-1;
   return 0;
@@ -194,8 +206,14 @@ void TCaps::RemoveDisk(int drive) {
   TRACE_LOG("Drive %c removing image\n",drive+'A');
   VERIFY( !CAPSUnlockImage(Caps.ContainerID[drive]) ); // eject disk
   SF314[drive].diskattr&=~CAPSDRIVE_DA_IN;
+#if !defined(SSE_DISK_IMAGETYPE)
   DriveMap&=~(drive+1); // not <<!
+#endif
+#if defined(SSE_DISK_IMAGETYPE1)
+  if(::SF314[!drive].ImageType.Manager==MNGR_CAPS)
+#else
   if(!IsIpf(!drive)) // other drive
+#endif 
     Active=FALSE; 
 }
 
@@ -267,11 +285,17 @@ void TCaps::WriteWD1772(BYTE Line,int data) {
   if(!Line) // command
   {
     // TODO drive selection problem
-    mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Double Dragon II
+  //  mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Double Dragon II
+// + it's not correct, shouldn't we take cap's?
+
+    //DWORD lineout = WD1772.lineout;
+    //mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,!!!(WD1772.lineout&CAPSFDC_LO_INTRQ));//to test...
+
+
 #ifdef SSE_DEBUG
     if( (Version==42||Version==50||Version==51) && (data&0xF0)==0xA0)
     {
-      ASSERT(!SSE_GHOST_DISK);
+      //ASSERT(!SSE_GHOST_DISK);//may assert on reload
       TRACE_LOG("IPF unimplemented command %x\n",data);
     }
 #endif
@@ -280,7 +304,11 @@ void TCaps::WriteWD1772(BYTE Line,int data) {
     if(!(::WD1772.STR&FDC_STR_MOTOR_ON)) // assume no cycle run!
     {
       //TRACE_LOG("record hbl %d\n");
+#if defined(SSE_DRIVE_STATE)
+      ::SF314[DRIVE].State.motor=true;
+#else
       ::SF314[DRIVE].motor_on=true;
+#endif
       ::SF314[DRIVE].HblOfMotorOn=hbl_count;
     }
 #endif
@@ -288,7 +316,8 @@ void TCaps::WriteWD1772(BYTE Line,int data) {
   }
 
   CAPSFdcWrite(&WD1772,Line,data); // send to DLL
-
+  // update MFP register according to Caps' lineout; better?
+  mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,!!!(WD1772.lineout&CAPSFDC_LO_INTRQ));
 #if defined(SSE_IPF_RUN_POST_IO)
   CAPSFdcEmulate(&WD1772,CYCLES_POST_IO);
   CyclesRun+=CYCLES_POST_IO;
@@ -312,16 +341,24 @@ void TCaps::Hbl() {
 #else
   CAPSFdcEmulate(&WD1772,screen_res==2? 224 : 512);
 #endif
-
 #if defined(SSE_IPF_RUN_PRE_IO) || defined(SSE_IPF_RUN_POST_IO)
   CyclesRun=0;
 #endif
 
 }
 
+#if !defined(SSE_DISK_IMAGETYPE1) // step 2 remove function
+
 int TCaps::IsIpf(BYTE drive) {
+  //step1, replace function body
+#if defined(SSE_DISK_IMAGETYPE)
+  return (::SF314[drive].ImageType.Manager==MNGR_CAPS );
+#else
   return (DriveMap&((drive&1)+1)); // not <<!
+#endif
 }
+
+#endif
 
 
 /*  Callback functions. Since they're static, they access object data like
@@ -352,15 +389,14 @@ void TCaps::CallbackDRQ(PCAPSFDC pc, UDWORD setting) {
 }
 
 
-void TCaps::CallbackIRQ(PCAPSFDC pc, DWORD lineout) {
+void TCaps::CallbackIRQ(PCAPSFDC pc, UDWORD lineout) {
   ASSERT(pc==&Caps.WD1772);
 
 #if defined(SSE_DEBUG)
   if(TRACE_ENABLED) 
   {
-    TRACE("caps ");
+//    TRACE("caps ");
     Dma.UpdateRegs(true);
-
   }
     else
 #endif
@@ -370,7 +406,7 @@ void TCaps::CallbackIRQ(PCAPSFDC pc, DWORD lineout) {
   if(SSEOption.DriveSound)
   {
 #if defined(SSE_DRIVE_SOUND_IPF)
-    Dma.UpdateRegs(); // why it only worked in boiler, log on...
+ //   Dma.UpdateRegs(); // why it only worked in boiler, log on...
 #endif
 #if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
     ::SF314[DRIVE].Sound_CheckIrq();
@@ -379,6 +415,7 @@ void TCaps::CallbackIRQ(PCAPSFDC pc, DWORD lineout) {
 #endif
   }
 #endif
+//  TRACE_FDC("ipf MFP_GPIP_FDC_BIT: %d\n",!(lineout&CAPSFDC_LO_INTRQ));
   mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,!(lineout&CAPSFDC_LO_INTRQ));
 #if !defined(SSE_OSD_DRIVE_LED3)
   disk_light_off_time=timeGetTime()+DisableDiskLightAfter;
@@ -393,7 +430,11 @@ void TCaps::CallbackIRQ(PCAPSFDC pc, DWORD lineout) {
 
 void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   ASSERT( !drive||drive==1 );
+#if defined(SSE_DISK_IMAGETYPE1)  
+  ASSERT( ::SF314[drive].ImageType.Manager==MNGR_CAPS );
+#else
   ASSERT( Caps.IsIpf(drive) );
+#endif
   ASSERT( drive==floppy_current_drive() );
 
   int side=Caps.SF314[drive].side;
@@ -403,7 +444,7 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   track_info.type=1;
   UDWORD flags=DI_LOCK_DENALT|DI_LOCK_DENVAR|DI_LOCK_UPDATEFD|DI_LOCK_TYPE;
 
-#if defined(SSE_DRIVE_SINGLE_SIDE_IPF) // wait for IPF feature, not defined
+#if defined(SSE_DRIVE_SINGLE_SIDE_IPF) // wait for IPF feature, not defined//MFD
   if( SSEOption.SingleSideDriveMap&(floppy_current_drive()+1) )
     side=0;
 #endif

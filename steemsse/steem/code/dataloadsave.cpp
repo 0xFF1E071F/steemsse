@@ -767,7 +767,11 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     OSD_IMAGE_NAME=pCSF->GetInt("Options","OsdImageName", OSD_IMAGE_NAME);
 #endif
 #if defined(SSE_PASTI_ONLY_STX)
+#if !defined(SSE_PASTI_ONLY_STX_OPTION1)
     PASTI_JUST_STX=pCSF->GetInt("Options","PastiJustStx",PASTI_JUST_STX);
+#else
+    PASTI_JUST_STX=true; // we trust it works (and wait for bug reports :))
+#endif
 #endif
 #if defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
     SSE_INTERPOLATE=pCSF->GetInt("Options","InterpolatedScanlines",SSE_INTERPOLATE);
@@ -1198,7 +1202,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_OSD_SCROLLER_DISK_IMAGE)
   pCSF->SetStr("Options","OsdImageName",EasyStr(OSD_IMAGE_NAME));  
 #endif
-#if defined(SSE_PASTI_ONLY_STX)
+#if !defined(SSE_PASTI_ONLY_STX_OPTION1)
   pCSF->SetStr("Options","PastiJustStx",EasyStr(PASTI_JUST_STX));  
 #endif
 #if defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)

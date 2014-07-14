@@ -195,16 +195,47 @@ and all his silly mods are gone!
 //#define TEST08
 //#define TEST09
 
-#if SSE_VERSION>=370
+// we put all new switches here, will be sorted later
+// so there's only one #if
+#if SSE_VERSION>=370 
 
-// some switches for STW, we'll sort them out later
+#define SSE_CPU_HALT//no reset, just stop
+#define SSE_DISK1//struct
+#define SSE_DISK_GHOST
+#define SSE_DISK_STW
 #define SSE_DRIVE_INDEX_PULSE
 #define SSE_DRIVE_INDEX_STEP
+#define SSE_DRIVE_SINGLE_SIDE_CAPS //using the new feature
+#define SSE_DRIVE_SINGLE_SIDE_RND//3.7.0//random data instead
+#define SSE_DRIVE_SOUND_SEEK2 // = step? v3.7.0 problem: pasti,stx...
+//#define SSE_DRIVE_SOUND_SEEK3 // not 3.7.0 former buzz 
+#define SSE_DRIVE_SOUND_SEEK4//3.7.0 
+#define SSE_DRIVE_SOUND_STW //3.7.0
+#define SSE_DRIVE_STATE //mask
+#define SSE_DRIVE_REM_HACKS
 
-#define SSE_WD1772_REG2 // DSR, dir...
+#define SSE_FDC_FORCE_INTERRUPT_D8
+
+//#define SSE_FDC_FORCE_INTERRUPT_D0 //no irq
+//#define SSE_FDC_FORCE_INTERRUPT_D8A // status
+//#define SSE_FDC_FORCE_INTERRUPT_D8B // command
+
+#define SSE_FDC_IDFIELD_IGNORE_SIDE 
+#define SSE_FDC_MULTIPLE_SECTORS
+#define SSE_FLOPPY_EVENT
+#define SSE_IKBD_6301_MOUSE_ADJUST_SPEED2 //better //3.7.0
+#define SSE_IKBD_6301_NOT_OPTIONAL // TODO, at least the switch
+#define SSE_IKBD_6301_ROM_KEYTABLE //spare an array //3.7.0
+#define SSE_PASTI_ONLY_STX_OPTION1 //remove SSE option
+#define SSE_PASTI_ONLY_STX_OPTION2 //remove disk manager option
+#define SSE_SHIFTER_HIRES_OVERSCAN//3.7.0
+#if defined(_MSC_VER) // BCC: forget it?
+// or http://realmike.org/blog/projects/directx-8-borland-libs-download-page/
+#define SSE_VID_D3D // TODO for v3.7
+#endif
 #define SSE_WD1772_PHASE
-
-#define SSE_DISK1
+#define SSE_WD1772_REG2 // DSR, ByteCount
+#define SSE_WD1772_REG2_B // StatusType
 
 #endif
 
@@ -634,9 +665,6 @@ and all his silly mods are gone!
 #define SSE_DISK       // Disk images 3.6.1
 #define SSE_DRIVE      // SF314 floppy disk drive
 #define SSE_FDC        // WD1772 floppy disk controller
-#if SSE_VERSION>=370
-#define SSE_FLOPPY_EVENT//TODO
-#endif
 #if defined(WIN32)
 #define SSE_IPF        // CAPS support (IPF disk images) 
 #define SSE_PASTI      // Improvements in Pasti support (STX disk images)
@@ -658,16 +686,15 @@ and all his silly mods are gone!
 
 #define SSE_DISK_IMAGETYPE //3.6.4
 
-#if SSE_VERSION>=370
-#define SSE_DISK_GHOST //3.7.0
-#define SSE_DISK_STW // 3.7.0
-#endif//v3.7.0 
-
 #if defined(SSE_DISK_GHOST)
 #define SSE_DISK_GHOST_FAKE_FORMAT
 #define SSE_DISK_GHOST_SECTOR // commands $A#/$8#
 #define SSE_DISK_GHOST_MULTIPLE_SECTORS // commands $B#/$9#
 #define SSE_DISK_GHOST_SECTOR_STX1 // in pasti
+#endif
+
+#if defined(SSE_DISK_IMAGETYPE)
+#define SSE_DISK_IMAGETYPE1 // replace "TCaps::IsIpf()"
 #endif
 
 #if defined(SSE_DISK_STW)
@@ -687,11 +714,11 @@ and all his silly mods are gone!
 //#define SSE_DMA_ADDRESS // enforcing order for write (no use?)
 #define SSE_DMA_ADDRESS_EVEN
 
-#if SSE_VERSION>364//=370
-#define SSE_DMA_DOUBLE_FIFO // works but overkill  //3.7.0 define then remove def?
+#if SSE_VERSION>364
+#define SSE_DMA_DOUBLE_FIFO // works but overkill
 #endif
 
-#if SSE_VERSION>364//=370
+#if SSE_VERSION>364
 #define SSE_DMA_DRQ
 //#define SSE_DMA_DRQ_RND 
 #endif
@@ -739,19 +766,21 @@ and all his silly mods are gone!
 #define SSE_DRIVE_READ_TRACK_11B //Gap 4: 1
 #define SSE_DRIVE_READ_TRACK_11C //Gap 5
 #define SSE_DRIVE_RW_SECTOR_TIMING // start of sector
-#define SSE_DRIVE_RW_SECTOR_TIMING2 // end of sector (hack)
 
-#if SSE_VERSION>=370
-///#define SSE_DRIVE_RW_SECTOR_TIMING3 //test v3.7.0 use ID... (?)
+#if !defined(SSE_DRIVE_REM_HACKS)
+#define SSE_DRIVE_RW_SECTOR_TIMING2 // end of sector (hack) 
+#endif
+
+#if defined(SSE_DRIVE_REM_HACKS)
+#define SSE_DRIVE_RW_SECTOR_TIMING3 //test v3.7.0 use ID... (?)
 #endif
 
 #define SSE_DRIVE_SINGLE_SIDE //3.6.0 
 #if SSE_VERSION>=370
-#define SSE_DRIVE_SINGLE_SIDE_RND//3.7.0//TODO random data instead
 #else
 //#define SSE_DRIVE_SINGLE_SIDE_IPF //3.6.0
-#define SSE_DRIVE_SINGLE_SIDE_NAT1 //3.6.0
-#define SSE_DRIVE_SINGLE_SIDE_PASTI //3.6.0
+//#define SSE_DRIVE_SINGLE_SIDE_NAT1 //3.6.0
+//#define SSE_DRIVE_SINGLE_SIDE_PASTI //3.6.0
 #endif
 #if defined(WIN32) //TODO Unix
 #define SSE_DRIVE_SOUND // heavily requested, delivered!//3.6.0
@@ -762,7 +791,6 @@ and all his silly mods are gone!
 #define SSE_DRIVE_SOUND_EPSON // current samples=Epson
 #define SSE_DRIVE_SOUND_EMPTY // different 3.6.1 (none)
 #define SSE_DRIVE_SOUND_IPF // fix 3.6.1
-#define SSE_DRIVE_SOUND_STW //3.7.0
 #define SSE_DRIVE_SOUND_VOLUME // logarithmic 
 #endif//drive sound
 #endif//win32
@@ -788,13 +816,13 @@ and all his silly mods are gone!
 #define SSE_FDC_CHANGE_SECTOR_WHILE_BUSY // from Hatari or Kryoflux
 #define SSE_FDC_CHANGE_TRACK_WHILE_BUSY // from Hatari or Kryoflux
 #define SSE_FDC_FORCE_INTERRUPT // Panzer rotation using $D4
-#define SSE_FDC_FORCE_INTERRUPT_RESET_D4 // not clear
+
+
+//#define SSE_FDC_FORCE_INTERRUPT_D4
 #define SSE_FDC_HEAD_SETTLE
-#if SSE_VERSION>=370
-#define SSE_FDC_IDFIELD_IGNORE_SIDE 
-#endif
 #define SSE_FDC_INDEX_PULSE1 // 4ms
 #define SSE_FDC_INDEX_PULSE2 // read STR
+
 #define SSE_FDC_MOTOR_OFF 
 #define SSE_FDC_PRECISE_HBL
 #define SSE_FDC_READ_ADDRESS_UPDATE_SR
@@ -822,6 +850,7 @@ and all his silly mods are gone!
 #ifdef SSE_DEBUG
 #define SSE_FDC_TRACE_IRQ
 #define SSE_FDC_TRACE_STATUS //spell out status register
+//#define SSE_FDC_TRACE_STR // trace read STR (careful)
 #endif
 
 #endif
@@ -868,8 +897,8 @@ and all his silly mods are gone!
 #define SSE_PASTI_ONLY_STX  // experimental! optional
 #define SSE_PASTI_ONLY_STX_HD //v3.6.0
 #define SSE_PASTI_NO_RESET 
-#define SSE_PASTI_ON_WARNING // mention in disk manager title
-#define SSE_PASTI_ON_WARNING2 // v3.6.1 refactoring
+//#define SSE_PASTI_ON_WARNING // mention in disk manager title
+//#define SSE_PASTI_ON_WARNING2 // v3.6.1 refactoring
 
 #endif
 
@@ -880,7 +909,7 @@ and all his silly mods are gone!
 
 #if defined(SSE_YM2149)
 
-#if SSE_VERSION>=364//370
+#if SSE_VERSION>=364
 #define SSE_YM2149A // selected drive, side as variables
 #define SSE_YM2149B // adapt drive motor status to FDC STR at each change
 #endif
@@ -934,9 +963,8 @@ and all his silly mods are gone!
 #define SSE_IKBD_6301_DISABLE_BREAKS // to save 64k RAM (we still consume 64k)
 #define SSE_IKBD_6301_DISABLE_CALLSTACK // to save 3k on the PC stack
 //#define SSE_IKBD_6301_MOUSE_ADJUST_SPEED //poor attempt
-#define SSE_IKBD_6301_MOUSE_ADJUST_SPEED2 //better //3.7.0
+
 #define SSE_IKBD_6301_MOUSE_MASK // Jumping Jackson auto//v3.6.0
-#define SSE_IKBD_6301_ROM_KEYTABLE //spare an array TODO//3.7.0
 //#define SSE_IKBD_6301_RUN_CYCLES_AT_IO // overkill
 #define SSE_IKBD_6301_RUN_IRQ_TO_END // hack around Sim6xxx's working
 #define SSE_IKBD_6301_SET_TDRE
@@ -955,7 +983,7 @@ and all his silly mods are gone!
 //#define SSE_IKBD_6301_TRACE_WRITES
 #endif
 
-#define SSE_IKBD_6301_VBL //3.7.0
+#define SSE_IKBD_6301_VBL //3.6.4
 
 #endif//#if defined(SSE_IKBD_6301)
 
@@ -978,7 +1006,7 @@ and all his silly mods are gone!
 #if defined(SSE_INT_HBL)
 
 #if !defined(SSE_DEBUG_TRACE_CONTROL)
-#define SSE_INT_OSD_REPORT_HBI
+//#define SSE_INT_OSD_REPORT_HBI
 #endif
 
 #if defined(SSE_HACKS)
@@ -1142,7 +1170,7 @@ and all his silly mods are gone!
 
 #if defined(SSE_SDL)
 // tests - but shouldn't it be a pure SDL build? 
-//#if SSE_VERSION<360
+//#if SSE_VERSION<380
 #define SSE_SDL_DEACTIVATE // support planned in v3.6 //nope...
 //#endif
 //#define SSE_SDL_KEEP_DDRAW_RUNNING // normally not!
@@ -1182,7 +1210,6 @@ and all his silly mods are gone!
 #define SSE_SHIFTER_60HZ_OVERSCAN //Leavin' Terramis
 #define SSE_SHIFTER_END_OF_LINE_CORRECTION // correct +2, -2 lines 
 #define SSE_SHIFTER_FIX_LINE508_CONFUSION // hack at recording shifter event
-#define SSE_SHIFTER_HIRES_OVERSCAN//3.7.0
 //#define SSE_SHIFTER_LEFT_OFF_THRESHOLD//Hackabonds Demo not WS1
 #define SSE_SHIFTER_LEFT_OFF_60HZ //3.5.3 24 bytes!
 #define SSE_SHIFTER_LEFT_OFF_TEST_BEFORE_HBL // for Riverside
@@ -1600,8 +1627,11 @@ and all his silly mods are gone!
 #define SSE_VAR_STATUS_STRING_DISK_NAME_OPTION
 #define SSE_VAR_STATUS_STRING_FULL_ST_MODEL//3.6.1
 #define SSE_VAR_STATUS_STRING_HACKS
-#define SSE_VAR_STATUS_STRING_IPF
-#define SSE_VAR_STATUS_STRING_PASTI
+//#define SSE_VAR_STATUS_STRING_IPF //undef 3.7.0 what if mixed?
+//#define SSE_VAR_STATUS_STRING_PASTI //undef 3.7.0 what if mixed?
+#if defined(SSE_DISK_STW)
+//#define SSE_VAR_STATUS_STRING_STW // what if mixed? (not def 3.7.0)
+#endif
 #define SSE_VAR_STATUS_STRING_VSYNC//3.6.0
 #endif
 #define SSE_VAR_STEALTH // don't tell we're an emulator (option)
@@ -1660,10 +1690,7 @@ and all his silly mods are gone!
 #define SSE_VID_3BUFFER_WIN //windowed mode (necessary for FS)
 #endif//SSE_VID_3BUFFER
 #ifdef SSE_BETA 
-#if defined(_MSC_VER) // BCC: forget it?
-// or http://realmike.org/blog/projects/directx-8-borland-libs-download-page/
-#define SSE_VID_D3D // TODO for v3.7
-#endif
+
 ///#define SSE_VID_DD7 // tests... -> we need SDK...
 
 #endif
@@ -1735,6 +1762,11 @@ and all his silly mods are gone!
 #if !defined(SSE_DMA_FIFO)
 #undef SSE_IPF
 #undef SSE_IPF_OSD
+#endif
+
+#if !defined(SSE_DISK_IMAGETYPE)
+#undef SSE_DISK_GHOST
+#undef SSE_DISK_STW
 #endif
 
 #if !defined(SSE_FDC)
@@ -1829,7 +1861,7 @@ and all his silly mods are gone!
 #endif
 
 #if defined(SSE_DISK_IMAGETYPE) && !defined(SSE_PASTI_ON_WARNING2)//3.6.2
-#error("Incompatible switches") // or remove some old code after tested OK
+//#error("Incompatible switches") // or remove some old code after tested OK
 #endif
 
 #if defined(SS_SSE_LEAN_AND_MEAN) //TODO
