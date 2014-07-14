@@ -50,7 +50,11 @@ void TOption::Init() {
   OsdDriveInfo=1;
   Dsp=1;//irrelevant
   OsdImageName=0;
+#if defined(SSE_PASTI_ONLY_STX_OPTION1)
+  PastiJustSTX=1; // go for it! (needed for autoload)
+#else
   PastiJustSTX=0; // dangerous? but handy!
+#endif
   Interpolate=0;
   StatusBar=1;
   WinVSync=0; // really need correct display (50hz, 100hz) or run at 60hz
