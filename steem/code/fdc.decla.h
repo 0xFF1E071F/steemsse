@@ -91,7 +91,10 @@ EXT BYTE dma_status;
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_FDC))
 EXT BYTE fdc_cr,fdc_tr,fdc_sr,fdc_str,fdc_dr; // made struct
 #endif
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW))
 EXT bool fdc_last_step_inwards_flag;
+#endif
+
 EXT BYTE floppy_head_track[2];
 
 void floppy_fdc_command(BYTE);
@@ -112,7 +115,9 @@ EXT WORD dma_sector_count;
 #endif
 EXT WORD floppy_write_track_bytes_done;
 EXT BYTE fdc_spinning_up;
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_WD1772_REG2_B))
 EXT BYTE floppy_type1_command_active;  // Default to type 1 status
+#endif
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_DMA))
 EXT WORD dma_bytes_written_for_sector_count;
 #endif
@@ -152,13 +157,16 @@ EXT BYTE fdc_read_address_buffer[20];
 #define DMA_ADDRESS_IS_VALID_W (dma_address<himem && dma_address>=MEM_FIRST_WRITEABLE)
 
 #if defined(SSE_DRIVE)
-#if defined(SSE_YM2149A)
+#if defined(SSE_YM2149A___) // seriously bugged??
 #define DRIVE (YM2149.SelectedDrive) // 0 or 1 guaranteed
 #define CURRENT_SIDE (YM2149.SelectedSide)
 #else
 #define DRIVE floppy_current_drive() // 0 or 1 guaranteed
 #define CURRENT_SIDE floppy_current_side()
 #endif
+
+#define CURRENT_TRACK (SF314[DRIVE].Track())
+
 #endif
 
 #undef EXT

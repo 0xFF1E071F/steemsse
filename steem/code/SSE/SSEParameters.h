@@ -28,7 +28,18 @@
 
 #if defined(SSE_SHIFTER_TRICKS) && defined(SSE_MFP_RATIO)
 
+#if defined(SSE_DRIVE_REM_HACKS)
+/* The higher clock would increase #HBL and so make the drive slower!
+*/
+#define HBL_PER_SECOND (8000000/Shifter.CurrentScanline.Cycles)
+//#define HBL_PER_SECOND (8007680/Shifter.CurrentScanline.Cycles)
+#else
 #define HBL_PER_SECOND (CpuNormalHz/Shifter.CurrentScanline.Cycles)
+#endif
+
+
+
+
 //Frequency   50          60            72
 //#HBL/sec    15666.5 15789.85827 35809.14286
 
@@ -198,7 +209,19 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define DRIVE_MAX_CYL 83
 
 #if defined(SSE_DRIVE_BYTES_PER_ROTATION)
-#define DRIVE_BYTES_ROTATION (6250+20) // could be true though //hack MPS golf...
+/*  #bytes/track
+    The value generally seen is 6250.
+    The value for 11 sectors is 6256. It's possible if the clock is higher than
+    8mhz, which is the case on the ST.
+*/
+
+#if defined(SSE_DRIVE_REM_HACKS)
+#define DRIVE_BYTES_ROTATION (6256)
+#else
+#define DRIVE_BYTES_ROTATION (6256+14)
+#endif
+
+#define DRIVE_BYTES_ROTATION_STW (6256)
 #else
 #define DRIVE_BYTES_ROTATION (8000) // Steem 3.2
 #endif
@@ -298,7 +321,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define HD6301_CYCLES_TO_SEND_BYTE (1350) // see ACIA6850.txt
 #define HD6301_CYCLES_TO_RECEIVE_BYTE (1350)
 
-// far from ideal, but maybe we must change method or timings instead
+// far from ideal, but maybe we must change method or timings instead //v3.7 done!
 #define HD6301_MOUSE_SPEED_CHUNKS 15
 #define HD6301_MOUSE_SPEED_CYCLES_PER_CHUNK 1000
 

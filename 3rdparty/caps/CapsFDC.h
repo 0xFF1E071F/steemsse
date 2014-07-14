@@ -5,13 +5,15 @@
 #define CAPSDRIVE_35DD_RPM 300
 #define CAPSDRIVE_35DD_HST 83
 
-// drive attributes
+// disk & drive attributes
 // 0: true disk inserted (if not inserted it is write protected)
 // 1: true disk write protected
 // 2: true motor on
+// 3: true single sided drive
 #define CAPSDRIVE_DA_IN DF_0
 #define CAPSDRIVE_DA_WP DF_1
 #define CAPSDRIVE_DA_MO DF_2
+#define CAPSDRIVE_DA_SS DF_3
 
 // index pulse only available if disk is inserted and motor is running
 #define CAPSDRIVE_DA_IPMASK (CAPSDRIVE_DA_IN|CAPSDRIVE_DA_MO)

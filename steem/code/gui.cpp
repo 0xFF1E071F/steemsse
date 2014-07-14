@@ -585,7 +585,7 @@ void GUIRefreshStatusBar() {
         )
         strcat(status_bar," Pasti");
 #else
-      if(0);
+      //if(0);
 #endif
       
 #if defined(SSE_VAR_STATUS_STRING_IPF) && defined(SSE_IPF)
@@ -593,14 +593,19 @@ void GUIRefreshStatusBar() {
         strcat(status_bar," Caps");
 #endif
       
-#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)//make proper switch
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_STATUS_STRING_STW)
       else if(IMAGE_STW)
         strcat(status_bar," STW");//temp?
 #endif      
 
 #if defined(SSE_VAR_STATUS_STRING_ADAT)
+#if defined(SSE_VAR_STATUS_STRING_PASTI)
       else if(ADAT)
         strcat(status_bar," ADAT");
+#else
+      if(!floppy_instant_sector_access) // the option only //3.7.0
+        strcat(status_bar," ADAT");
+#endif
 #endif
 
 

@@ -218,8 +218,14 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(fdc_sr);            //1
   ReadWrite(fdc_str);           //1
   ReadWrite(fdc_dr);                     //1
+#if (defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW))
+  BYTE dummy_byte;
+  ReadWrite(dummy_byte);
+#else
   ReadWrite(fdc_last_step_inwards_flag); //1
+#endif
   ReadWriteArray(floppy_head_track);
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
   {
     int floppy_mediach_tmp[2];
@@ -828,10 +834,11 @@ Steem SSE will reset auto.sts and quit\nSorry!",
       TImageType image_type=SF314[drive].ImageType;
       ReadWriteStruct(SF314[drive]);
       SF314[drive].ImageType=image_type;
+      ASSERT( SF314[drive].Id==drive );
 
-      SF314[drive].State.motor=0;//temp!
+      //SF314[drive].State.motor=0;//temp!
       //ASSERT(SF314[drive].rpm==300);
-      SF314[drive].rpm=300;//temp!
+      //SF314[drive].rpm=300;//temp!
     }
 #endif
 

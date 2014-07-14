@@ -26,7 +26,9 @@ struct TCaps {
   void Reset();
   void Hbl(); // run the emulator for the HBL (512 cycles at 50hz)
   int InsertDisk(int drive, char *File,CapsImageInfo *img_info);
-  int IsIpf(BYTE drive); //TODO: use ImageType instead
+#if !defined(SSE_DISK_IMAGETYPE1)  
+  int IsIpf(BYTE drive); //TODO: use ImageType instead//done
+#endif
   void RemoveDisk(int drive);
   UDWORD ReadWD1772(BYTE Line);
   void WritePsgA(int data);
@@ -69,7 +71,9 @@ struct TCaps {
 #endif
   //TODO: save space
   // for drive A & B
+#if !defined(SSE_DISK_IMAGETYPE)
   BYTE DriveMap; // bit0=drive A bit1=drive B
+#endif
   SDWORD ContainerID[2]; 
   SDWORD LockedSide[2];
   SDWORD LockedTrack[2]; 

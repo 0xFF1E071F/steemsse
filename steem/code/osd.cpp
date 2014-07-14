@@ -585,7 +585,7 @@ void osd_draw()
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DRIVE_INFO)
 /*  Display drive, side, track, sector
-    Sector only for type II commands
+    Sector for type II commands and 'Read Address'
 */
         if(OSD_DRIVE_INFO)// && seconds>=osd_show_plasma)
         {
@@ -603,14 +603,15 @@ void osd_draw()
           char tmp_buffer[BUFFER_LENGTH];
 
 #ifdef SSE_DEBUG // add current command (CR)
-          sprintf(tmp_buffer,"%2X-%C:%1d-%02d-%02d",fdc_cr,'A'+DRIVE,
+          sprintf(tmp_buffer,"%2X-%C:%d-%02d-%02d",fdc_cr,'A'+DRIVE,
             CURRENT_SIDE,floppy_head_track[DRIVE],
-            (WD1772.CommandType()==2)?fdc_sr:0);
+            (WD1772.CommandType()==2||WD1772.CR&0xF0==0xC0)?fdc_sr:0);
 #else
-          sprintf(tmp_buffer,"%C:%1d-%02d-%02d",'A'+DRIVE,
+          sprintf(tmp_buffer,"%C:%d-%02d-%02d",'A'+DRIVE,
             CURRENT_SIDE,floppy_head_track[DRIVE],
-            (WD1772.CommandType()==2)?fdc_sr:0);
+            (WD1772.CommandType()==2||WD1772.CR&0xF0==0xC0)?fdc_sr:0);
 #endif
+          ASSERT( strlen(tmp_buffer) < BUFFER_LENGTH );
           size_t drive_info_length=strlen(tmp_buffer);
           int x=x1-(drive_info_length+1)*16;
           int start_y=0+8;
@@ -837,12 +838,24 @@ void osd_get_reset_info(EasyStringList *sl)
   sl->Add(T("ST CPU speed")+": "+(n_millions_cycles_per_sec)+" "+T("Megahertz"));
   t=T("Active drives")+": A";
 #if defined(STEVEN_SEAGAL) && defined(SSE_IPF_OSD)
-  if(CAPSIMG_OK && Caps.IsIpf(0))
+  if(CAPSIMG_OK && 
+#if defined(SSE_DISK_IMAGETYPE1)
+    SF314[0].ImageType.Manager==MNGR_CAPS
+#else
+    Caps.IsIpf(0)
+#endif 
+    )
     t+=" (IPF)";
 #endif
   if (num_connected_floppies==2) t+=", B";
 #if defined(STEVEN_SEAGAL) && defined(SSE_IPF_OSD)
-  if(CAPSIMG_OK && Caps.IsIpf(1))
+  if(CAPSIMG_OK && 
+#if defined(SSE_DISK_IMAGETYPE1)
+    SF314[1].ImageType.Manager==MNGR_CAPS
+#else
+    Caps.IsIpf(1)
+#endif 
+    )
     t+=" (IPF)";
 #endif
   for (int n=2;n<26;n++) if (mount_flag[n]) t+=Str(", ")+char('A'+n);

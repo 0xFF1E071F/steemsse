@@ -1663,7 +1663,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
-#if defined(SSE_PASTI_ONLY_STX)
+#if !defined(SSE_PASTI_ONLY_STX_OPTION1)
         case 7305: // Pasti only STX
           if (HIWORD(wPar)==BN_CLICKED){
             PASTI_JUST_STX=!PASTI_JUST_STX;

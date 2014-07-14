@@ -5,9 +5,10 @@
     It uses 16byte FIFO buffers to handle byte transfers between the 
     drive  controller (floppy or hard disk) and memory so that the CPU is
     freed from the task.
+    Transfers compete with the CPU, it's like the Blitter, so we must
+    count cycles  ;) (see Alien's Overscan articles)
+    It has no impact on programs working or not AFAIK.
     Transfers occur at the end of the scanline, when the MMU/Shifter
-    aren't using the bus (and we mustn't count cycles for the transfer ;))
-    We use object Dma to refine emulation of the DMA in Steem.
 */
 
 #if defined(STEVEN_SEAGAL)
@@ -107,9 +108,8 @@ bool TDma::Drq() {
       AddToFifo( (BYTE)rand() ); //TODO take HD DR?
 #endif
   }
-  return true;
-
   SR&=~SR_DRQ;
+  return true;
 }
 
 #endif
@@ -333,6 +333,7 @@ note: this isn't clear, see Drq()
                           " - Reading status register as "+Str(itoa(fdc_str,d2_t_buf,2)).LPad(8,'0')+
                           " ($"+HEXSl(fdc_str,2)+"), clearing IRQ"); )
               floppy_irq_flag=0;
+              //TRACE_FDC("dma MFP_GPIP_FDC_BIT: %d\n",true);
               mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
             }
 //            log_DELETE_SOON(Str("FDC: ")+HEXSl(old_pc,6)+" - reading FDC status register as $"+HEXSl(fdc_str,2));
@@ -434,7 +435,7 @@ TODO?
     )
 #endif        
 #if defined(SSE_DISK_GHOST_SECTOR_STX1)
-     &&! (WD1772.CommandWasIntercepted)
+     &&! (WD1772.Lines.CommandWasIntercepted)
 #endif
     )
   {
@@ -730,7 +731,7 @@ What was in the buffers will go nowhere, the internal counter is reset.
 //      TRACE("Pasti: %X->%X\n",data,addr);
 
 #if defined(SSE_DISK_GHOST_SECTOR_STX1)
-      if(SSE_GHOST_DISK && WD1772.CommandWasIntercepted
+      if(SSE_GHOST_DISK && WD1772.Lines.CommandWasIntercepted
         && addr==0xff8604 && !(MCR&(BIT_1+BIT_2+BIT_3)) // FDC commands
         )
       {
@@ -779,7 +780,7 @@ void TDma::UpdateRegs(bool trace_them) {
 #endif//defined(SSE_PASTI_ONLY_STX)
 #if defined(SSE_DISK_GHOST_SECTOR_STX1)
     // regs should be alright since last update (?)
-    &&!(SSE_GHOST_DISK&&WD1772.CommandWasIntercepted)
+    &&!(SSE_GHOST_DISK&&WD1772.Lines.CommandWasIntercepted)
 #endif
     )
   {
@@ -801,7 +802,13 @@ void TDma::UpdateRegs(bool trace_them) {
   }
 #endif
 #if defined(SSE_IPF)
-  if(CAPSIMG_OK && Caps.IsIpf(floppy_current_drive()))
+  if(CAPSIMG_OK && 
+#if defined(SSE_DISK_IMAGETYPE1)
+    SF314[DRIVE].ImageType.Manager==MNGR_CAPS
+#else
+    Caps.IsIpf(floppy_current_drive())
+#endif 
+    )
   {
     int ext=0;
     fdc_cr=CAPSFdcGetInfo(cfdciR_Command, &Caps.WD1772,ext);
@@ -812,7 +819,11 @@ void TDma::UpdateRegs(bool trace_them) {
     TODO
 */
     if(!(fdc_str&FDC_STR_MOTOR_ON)) // assume this drive!
+#if defined(SSE_DRIVE_STATE)
+      ::SF314[DRIVE].State.motor=false;
+#else
       ::SF314[DRIVE].motor_on=false;
+#endif
 #endif
     fdc_tr=CAPSFdcGetInfo(cfdciR_Track, &Caps.WD1772,ext);
     fdc_sr=CAPSFdcGetInfo(cfdciR_Sector, &Caps.WD1772,ext);
@@ -825,27 +836,33 @@ void TDma::UpdateRegs(bool trace_them) {
 #if defined(SSE_FDC_TRACE_IRQ)
   if(trace_them)
   {
+    ASSERT(fdc_str);
     if(MCR&CR_HDC_OR_FDC)
-      TRACE_LOG("HDC IRQ HBL %d ",hbl_count);
+      TRACE_LOG("HDC IRQ ");
     else
     {
-      TRACE_LOG("FDC IRQ CR %X STR %X ",fdc_cr,fdc_str);
+      TRACE_LOG("FDC(%d) IRQ CR %X STR %X ",SF314[DRIVE].ImageType.Manager,fdc_cr,fdc_str);
 #if defined(SSE_FDC_TRACE_STATUS)
       WD1772.TraceStatus();
 #endif
-      TRACE_LOG("TR %d SR %d DR %d ($%X) HBL %d",fdc_tr,fdc_sr,fdc_dr,fdc_dr,hbl_count);
+      TRACE_LOG("TR %d SR %d DR %d",fdc_tr,fdc_sr,fdc_dr);
     }
 #if defined(SSE_YM2149A)//
     TRACE_LOG(" %c%d:",'A'+YM2149.SelectedDrive,YM2149.SelectedSide);
 #endif
-    TRACE_LOG(" T %d/%d DMA CR %X $%X SR %X #%d PC %X\n",
-      floppy_head_track[0],floppy_head_track[1],MCR,BaseAddress,SR,Counter,pc);
+    TRACE_LOG(" CYL %d byte %d DMA CR %X $%X #%d %d\n",
+      floppy_head_track[DRIVE],SF314[DRIVE].BytePosition(),MCR,BaseAddress,Counter,ACT);
   }
 #endif
 
 #ifdef SSE_DEBUG//no mask yet but important info
-  if((fdc_str&0x10) && WD1772.CommandType(fdc_cr)!=1)
-    TRACE_OSD("RNF");
+
+  if((fdc_str&0x10))
+    TRACE_OSD("RNF"); 
+
+  if((fdc_str&0x08))
+    TRACE_OSD("CRC"); 
+
 #endif
 
 }
@@ -1009,7 +1026,7 @@ void TDma::TransferBytes() {
 #endif
       DMA_INC_ADDRESS; // use Steem's existing routine (?)
   }
-#if defined(SSE_DMA_COUNT_CYCLES) //undef 3.7
+#if defined(SSE_DMA_COUNT_CYCLES)
   if(ADAT)//3.6.1 condition
     INSTRUCTION_TIME(8); 
 #endif

@@ -28,11 +28,12 @@ To specify which version we want
 svn switch --relocate http://svn.code.sf.net/p/steemsse/code/trunk https://svn.code.sf.net/p/steemsse/code/trunk
 If you downloaded with http and want to commit
 
-svn info
-To get address and current revision
-
 svn update
 To refresh local based on repository
+Always start with this command or "svn info" will be outdated
+
+svn info
+To get address and current revision
 
 svn add
 To add a file
@@ -55,3 +56,18 @@ To upload changes
 
 svn copy https://svn.code.sf.net/p/steemsse/code/trunk https://svn.code.sf.net/p/steemsse/code/tags/V3.4.0 -m "tag release 3.4.0"
 To create a tag (release point)
+
+$ svn copy https://svn.code.sf.net/p/steemsse/code/trunk https://svn.code.sf.net/p/steemsse/code/branches/STWdev -m "create branch for STW development"
+To create a branch (development copy)
+
+svn checkout https://svn.code.sf.net/p/steemsse/code/branches/STWdev
+To check out the branch if you will
+
+svn switch --relocate https://svn.code.sf.net/p/steemsse/code/trunk https://svn.code.sf.net/p/steemsse/code/branches/STWdev
+svn switch --relocate https://svn.code.sf.net/p/steemsse/code/branches/STWdev http://svn.code.sf.net/p/steemsse/code/trunk
+to select where you will upload (1st line: in dev branch, 2nd line: in main trunk)
+
+svn switch https://svn.code.sf.net/p/steemsse/code/branches/STWdev
+svn switch https://svn.code.sf.net/p/steemsse/code/trunk
+even simpler way, apparently recommended, lot of "delete/add" though
+
