@@ -472,6 +472,27 @@ TODO?
   //if(addr==0xff860b) TRACE("read %x as %x\n",addr,ior_byte);
   //TRACE("post pasti read %x as %x\n",addr,ior_byte);
 
+#if defined(SSE_DRIVE_MEDIACHANGE)
+/*  Media change (changing the floppy disk) on the ST is managed in
+    an intricate way, using a timed interrupt to check "write protect"
+    status. A change in this status indicates that a disk is being moved
+    before the diode in the drive that detects "write protect".
+    This is handled in Steem but it must also be forwarded to other
+    WD1772 emus.
+    Of course we mess with this only if the media has been changed recently.
+    eg 4 Wheel Drive/Combo Racer STX
+*/
+  if( floppy_mediach[drive] && 
+    (SF314[drive].ImageType.Manager==MNGR_PASTI
+    ||SF314[drive].ImageType.Manager==MNGR_CAPS)
+    && addr==0xFF8605 && !(MCR&CR_COUNT_OR_REGS) && !(MCR & (CR_A0|CR_A1)) )
+  {
+    ior_byte&=~FDC_STR_WRITE_PROTECT;
+    if(floppy_mediach[drive]/10!=1) 
+      ior_byte|=FDC_STR_WRITE_PROTECT;
+  }
+#endif
+
   return ior_byte;
 }
 

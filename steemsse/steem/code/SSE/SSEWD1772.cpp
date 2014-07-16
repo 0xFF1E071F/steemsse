@@ -273,16 +273,22 @@ BYTE TWD1772::IORead(BYTE Line) {
       if(floppy_type1_command_active)
 #endif
       {
-        STR&=(~FDC_STR_WRITE_PROTECT);
+#if SSE_VERSION<370
+        // It was a stupid bug because of Aladin.
+        // The Macintosh boot disk mustn't be write protected (Hint).
+        STR&=(~FDC_STR_WRITE_PROTECT); 
+#endif
+        // disk has just been changed (30 VBL set at SetDisk())
         if(floppy_mediach[drive])
         {
+#if SSE_VERSION>=370
+          STR&=(~FDC_STR_WRITE_PROTECT);
+#endif
           if(floppy_mediach[drive]/10!=1) 
             STR|=FDC_STR_WRITE_PROTECT;
-          else if (FloppyDrive[drive].ReadOnly)//refix 3.6.1: Aladin!
-            STR|=FDC_STR_WRITE_PROTECT;
         }
-#if SSE_VERSION>=370
-        //refix 3.7.0: all disks were unprotected TODO refactor again
+#if SSE_VERSION>=370 
+        // Permanent status if disk is in
         else if (FloppyDrive[drive].ReadOnly && !FloppyDrive[drive].Empty())
           STR|=FDC_STR_WRITE_PROTECT;
 #endif
