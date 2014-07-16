@@ -442,7 +442,13 @@ MEM_ADDRESS get_TOS_address(char *File)
   BYTE HiHi=0,LoHi=0,HiLo=0,LoLo=0;
   fread(&HiLo,1,1,f);
   fread(&LoLo,1,1,f);
-  if (HiLo==0x60 && LoLo==0x08){ // Pre-tos machines, need boot disk, no header
+  if (HiLo==0x60 
+#if defined(STEVEN_SEAGAL) && defined(SSE_TOS_BOOTER1)    
+    && LoLo==0x06 // the loader we know of starts with $6006, not $6008
+#else
+    && LoLo==0x08
+#endif
+    ){ // Pre-tos machines, need boot disk, no header
     fclose(f);
     return 0xfc0000;
   }else{
@@ -459,6 +465,7 @@ MEM_ADDRESS get_TOS_address(char *File)
   }
   return 0;
 }
+
 
 bool load_TOS(char *File)
 {
