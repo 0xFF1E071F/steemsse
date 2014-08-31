@@ -1,0 +1,38 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Steem", "SteemVS2008.vcproj", "{9975320C-A18B-4425-B093-B11C1F35E3A4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Boiler Debug_modules|Win32 = Boiler Debug_modules|Win32
+		Boiler Debug|Win32 = Boiler Debug|Win32
+		Boiler_modules|Win32 = Boiler_modules|Win32
+		Boiler|Win32 = Boiler|Win32
+		Debug_modules|Win32 = Debug_modules|Win32
+		Debug|Win32 = Debug|Win32
+		Release_modules|Win32 = Release_modules|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Boiler Debug_modules|Win32.ActiveCfg = Boiler Debug_modules|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Boiler Debug_modules|Win32.Build.0 = Boiler Debug_modules|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Boiler Debug|Win32.ActiveCfg = Boiler Debug|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Boiler Debug|Win32.Build.0 = Boiler Debug|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Boiler_modules|Win32.ActiveCfg = Boiler_modules|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Boiler_modules|Win32.Build.0 = Boiler_modules|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Boiler|Win32.ActiveCfg = Boiler|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Boiler|Win32.Build.0 = Boiler|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Debug_modules|Win32.ActiveCfg = Debug_modules|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Debug_modules|Win32.Build.0 = Debug_modules|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Debug|Win32.Build.0 = Debug|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Release_modules|Win32.ActiveCfg = Release_modules|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Release_modules|Win32.Build.0 = Release_modules|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Release|Win32.ActiveCfg = Release|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

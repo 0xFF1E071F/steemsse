@@ -1451,7 +1451,11 @@ void TOptionBox::CreateSoundPage()
 #if defined(SSE_SOUND_VOL_LOGARITHMIC) // more intuitive setting
   SendMessage(Win,TBM_SETRANGE,0,MAKELPARAM(0,100));
   int db=MaxVolume;
+#if defined(SSE_VS2008)
+  int position= pow(10, log10((float)101)*(db + 10000)/10000 )-1 ;
+#else
   int position= pow(10, log10(101)*(db + 10000)/10000 )-1 ;
+#endif
   SendMessage(Win,TBM_SETPOS,1,position);
   SendMessage(Win,TBM_SETLINESIZE,0,1);
   SendMessage(Win,TBM_SETPAGESIZE,0,10);
@@ -2394,7 +2398,11 @@ Windows 2000	5.0
 #endif
   SendMessage(Win,TBM_SETRANGE,0,MAKELPARAM(0,100));
   int db=SF314[0].Sound_Volume;
+#if defined(SSE_VS2008)
+  int position= pow(10, log10((float)101)*(db + 10000)/10000 )-1 ;
+#else
   int position= pow(10, log10(101)*(db + 10000)/10000 )-1 ;
+#endif
   SendMessage(Win,TBM_SETPOS,1,position);
   SendMessage(Win,TBM_SETLINESIZE,0,1);
   SendMessage(Win,TBM_SETPAGESIZE,0,10);
