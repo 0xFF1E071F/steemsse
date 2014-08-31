@@ -2420,7 +2420,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_SOUND_VOL_LOGARITHMIC) // more intuitive setting
           {
             int position=SendMessage(HWND(lPar),TBM_GETPOS,0,0);
+#if defined(SSE_VS2008)
+            int db =-( 10000 - 10000 * log10((float)(position+1)) / log10((float)101));
+#else
             int db =-( 10000 - 10000 * log10(position+1) / log10(101));
+#endif
             MaxVolume=db;
           }
 #else
@@ -2433,7 +2437,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 7311:
           {
             int position=SendMessage(HWND(lPar),TBM_GETPOS,0,0);
+#if defined(SSE_VS2008)
+			int db =-( 10000 - 10000 * log10((float)(position+1)) / log10((float)101));
+#else
             int db =-( 10000 - 10000 * log10(position+1) / log10(101));
+#endif
             //TRACE("%d %d\n",position,db);
             SF314[0].Sound_Volume=db;
             SF314[0].Sound_ChangeVolume();
