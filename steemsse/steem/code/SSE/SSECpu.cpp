@@ -2037,8 +2037,19 @@ void m68k_0001() {  // move.b
   if( (ir&BITS_876)==BITS_876_001
     || (ir&BITS_876)==BITS_876_111
     && (ir&BITS_ba9)!=BITS_ba9_000
-    && (ir&BITS_ba9)!=BITS_ba9_001 )
-    m68k_unrecognised(); 
+    && (ir&BITS_ba9)!=BITS_ba9_001 
+#if defined(SSE_CPU_ASSERT_ILLEGAL2)
+/* v3.7
+     "For byte size operation, address register direct is not allowed."
+     ->  move.b EA=an is illegal
+	 Note: this EA is used by Blood Money -SUP, by coincidence crashing
+	 would make the game fail, but this was because of how subsequent
+	 exceptions should be handled, see SSE_CPU_EXCEPTION_FCO.
+*/
+    || (ir&BITS_543)==BITS_543_001 // source = An
+#endif
+    )
+    m68k_unrecognised();
 #endif
 
   // Source
