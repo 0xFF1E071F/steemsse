@@ -9,7 +9,15 @@ instruction and cpu_routines_init in cpuinit.cpp.
 ---------------------------------------------------------------------------*/
 
 /*  Core of Steem's remarkable MC68000 emulation.
-    Also check SSECpu.h and SSECpu.cpp
+    It's a classic emulation in the sense that each instruction is
+    emulated by a function that runs from start to end.
+    Timings are handled in a microcode way, they're not added at once.
+    As it is, Steem runs many, many programs, but this structure is
+    a liability in some rare cases.
+    An ideal emulation would have a 1 cycle loop, with each chip changing
+    its state cycle by cycle. This could hurt performance. And we're still
+    in trouble because of the different clock for the MFP (not a multiple).
+    Also check SSECpu.h and SSECpu.cpp (eg MOVE rewritten)
     This part was already frightening, now it's worse with all the #ifdef
 */
 
@@ -4685,6 +4693,59 @@ void                              m68k_or_b_from_dN_or_sbcd(){
       CHECK_READ=true;
       m68k_SET_DEST_B(areg[PARAM_N]);
     }
+#if defined(SSE_CPU_SBCD)
+/*  It's more complicated than ABCD if anything.
+    eg 22-14 = 8
+    2-4 = $FE
+    $E-6=8
+    one borrow 2-1-1=0
+    result: 08
+
+    eg 10-14
+    0-4 = $FC
+    $C-6=6
+    one borrow 1-1-1=$FF
+    $F-6=9
+    result: 94 with carry ?
+
+    this must be tested
+*/
+  BRK(SBCD); //Hades Nebula, LoSTE screens STF, Super Off-Road Racer
+
+
+#ifdef SSE_DEBUG
+    int n=100+
+       ( ((m68k_DEST_B&0xf0)>>4)*10+(m68k_DEST_B&0xf) )
+      -( ((m68k_src_b&0xf0)>>4)*10+(m68k_src_b&0xf) );
+    if(sr&SR_X)n--;
+    n%=100;
+    n=(BYTE)( (((n/10)%10)<<4)+(n%10) );
+#endif
+
+  BYTE src = m68k_src_b;
+  BYTE dst = (m68k_DEST_B&0xff);
+  BYTE lo_nibble=(dst & 0xF) - (src & 0xF) - ((sr&SR_X)?1:0);
+  SR_CLEAR(SR_X+SR_C+SR_N);
+  if(lo_nibble&0xF0)
+  {
+    lo_nibble-=6;
+    SR_SET(SR_C);//internal
+  }
+
+  WORD hi_nibble=(dst & 0xF0) - (src & 0xF0) - ((sr&SR_C)?0x10:0);
+  SR_CLEAR(SR_C);//clear internal bit
+  if(hi_nibble&0xF00)
+  {
+    hi_nibble-=0x60;
+    SR_SET(SR_X+SR_C+SR_N);
+  }
+  m68k_DEST_B=(hi_nibble&0xF0)+(lo_nibble&0xF);
+  ASSERT( m68k_DEST_B==n );
+  if(!m68k_DEST_B)
+    SR_SET(SR_Z)
+
+
+#else
     int n=100+
        ( ((m68k_DEST_B&0xf0)>>4)*10+(m68k_DEST_B&0xf) )
       -( ((m68k_src_b&0xf0)>>4)*10+(m68k_src_b&0xf) );
@@ -4701,6 +4762,7 @@ void                              m68k_or_b_from_dN_or_sbcd(){
     PREFETCH_IRC;
 */
     m68k_DEST_B=(BYTE)( (((n/10)%10)<<4)+(n%10) );
+#endif
     break;
   }default://or.b
     INSTRUCTION_TIME(4);
@@ -5742,8 +5804,9 @@ void                              m68k_and_b_from_dN_or_abcd(){
 #endif
 
   switch (ir & BITS_543){
-  case BITS_543_000:case BITS_543_001:{
-    if((ir&BITS_543)==BITS_543_000){
+  case BITS_543_000:case BITS_543_001:{ //SS ABCD
+    if((ir&BITS_543)==BITS_543_000){ //SS R+R
+//      ASSERT(r[7]!=0x4AC6E606 || r[6]!=0x35381D1E);
       PREFETCH_IRC;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_C_TIMINGS)
       FETCH_TIMING;
@@ -5751,7 +5814,7 @@ void                              m68k_and_b_from_dN_or_abcd(){
       INSTRUCTION_TIME(2);
       m68k_src_b=LOBYTE(r[PARAM_M]);
       m68k_dest=&(r[PARAM_N]);
-    }else{
+    }else{ //SS M+M
       PREFETCH_IRC;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_C_TIMINGS)
       FETCH_TIMING;
@@ -5765,6 +5828,44 @@ void                              m68k_and_b_from_dN_or_abcd(){
       CHECK_READ=true;
       m68k_SET_DEST_B(areg[PARAM_N]);
     }
+
+
+#if defined(SSE_CPU_ABCD)
+/*
+  http://en.wikipedia.org/wiki/Binary-coded_decimal#Addition_with_BCD
+  each decimal digit is coded on 4bit
+
+    0-9  0-9   +   0-9  0-9   
+    ---- ----      ---- ----  
+
+  The Steem way works for normal operands but when an operand
+  is illegal (nibble>9), the result isn't the same as on a MC68000,
+  that uses the "+6" trick.
+  http://tams-www.informatik.uni-hamburg.de/applets/hades/webdemos/20-arithmetic/10-adders/bcd-adder.html
+  In the MC68000, the 'DAA' decimal adjust accumulator is integrated into ABCD.
+  It is correct in Hatari, so we use the same way now.
+  Fixes Espana 92 -ICS
+*/
+  BYTE src = m68k_src_b;
+  BYTE dst = (m68k_DEST_B&0xff);
+  BYTE lo_nibble=(src & 0xF) + (dst & 0xF) + ( (sr&SR_X) ? 1 : 0);
+  SR_CLEAR(SR_X+SR_C+SR_N);
+  if(lo_nibble>9)
+    lo_nibble+=6;
+  WORD hi_nibble=(src & 0xF0) + (dst & 0xF0) + (lo_nibble&0xF0);
+  if(hi_nibble>0x90)
+  {
+    hi_nibble+=0x60;
+    SR_SET(SR_X+SR_C);
+  }
+  m68k_DEST_B=(hi_nibble&0xF0)+(lo_nibble&0xF);
+  if(!m68k_DEST_B)
+    SR_SET(SR_Z)
+  else if(m68k_DEST_B<0)
+    SR_SET(SR_N) // not sure of that, it's so in Hatari
+  break;
+
+#else  // Steem 3.2
     int n=
        ( ((m68k_DEST_B&0xf0)>>4)*10+(m68k_DEST_B&0xf) )
       +( ((m68k_src_b&0xf0)>>4)*10+(m68k_src_b&0xf) );
@@ -5775,6 +5876,7 @@ void                              m68k_and_b_from_dN_or_abcd(){
     if(n)SR_CLEAR(SR_Z);
     m68k_DEST_B=(BYTE)( (((n/10)%10)<<4)+(n%10) );
     break;
+#endif
   }default:
     INSTRUCTION_TIME(4);
     EXTRA_PREFETCH; 
