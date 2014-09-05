@@ -8,25 +8,21 @@
 #include "SSE.h"
 
 #if defined(SSE_STRUCTURE_SSECPU_OBJ) // defined or not in SSE.h
-
 #include "../pch.h" // Each object should include this precompiled header
 #pragma hdrstop  // Signals the end of precompilation
-
+#include <gui.decla.h> //PeekEvent()
 #include "SSECpu.h"
 #include "SSEFrameReport.h"
-
-#include "SSEShifter.h"
-#include <gui.decla.h>
-
-#endif//#if defined(SSE_STRUCTURE_SSECPU_OBJ)
-
-#if !defined(SSE_CPU_PREFETCH)
-///#define PREFETCH_IRC
+#if defined(DEBUG_BUILD)
+////////#include <trace.decla.h>
+extern const char*exception_action_name[4];//={"read from","write to","fetch from","instruction execution"};
 #endif
+#endif//#if defined(SSE_STRUCTURE_SSECPU_OBJ)
 
 #if defined(SSE_CPU)
 
 TM68000 M68000; // singleton
+
 
 TM68000::TM68000() {
   Reset(true);
@@ -43,7 +39,6 @@ void TM68000::Reset(bool cold) {
   CallPrefetch=FALSE;
 #endif
 }
-
 
 
 //////////////////////////////
@@ -74,7 +69,26 @@ b543	b210         Mode           .B, .W             .L
 111	100          #<data>         PC+2              PC+4
 
 */
+/*
+Effective Address 						
+						
+		Mode Field	Reg Field	Cycles (n(r/w))		
+Addressing Mode 	source	b543	b210	Byte, Word 	Long	
+	dest	b876	bBA9			
+Dn		000	R	0(0/0)	0(0/0)	Data Register Direct
+An		001	R	0(0/0)	0(0/0)	Address Register Direct
+(An)		010	R	4(1/0)	8(2/0)	Address Register Indirect
+(An)+		011	R	4(1/0)	8(2/0)	Address Register Indirect with Postincrement
+–(An)		100	R	6(1/0)	10(2/0)	Address Register Indirect with Predecrement
+(d16, An)		101	R	8(2/0)	12(3/0)	Address Register Indirect with Displacement
+(d8, An, Xn)*		110	R	10(2/0)	14(3/0)	Address Register Indirect with Index
+(xxx).W		111	000	8(2/0)	12(3/0)	Absolute Short
+(xxx).L		111	001	12(3/0)	16(4/0)	Absolute Long
+(d16, PC)		111	010	8(2/0)	12(3/0)	Program Counter Indirect with Displacement
+(d8, PC, Xn)*		111	011	10(2/0)	14(3/0)	Program Counter Indirect with Index - 8-Bit Displacement
+#<data>		111	100	4(1/0)	8(2/0)	Immediate
 
+*/
 
 // Dn
 
@@ -173,29 +187,16 @@ void m68k_get_source_011_l(){ // .L (An)+
 
 // -(An)
 
-/*  SSE_CPU_ROUNDING_SOURCE_100:
-    We don't round because the instruction by itself takes 6/10 cycles.
-    Fixes Cernit Trandafir demo scren #2 + the similar Summer Delights #5, #7
-    v3.6.0: this "fix" was bad, the .W version breaks Ishar 3 cracktro and
-    the .L version breaks Fullparts (HMD).
-    We fall back on the specific fixes on ADDL.L -(An),D and ADDA.L -(An),A
-    PC: +2 as first step for .B,.W
-*/
-
 #if !defined(SSE_CPU_EXCEPTION)//temp...
-long silly_dummy_for_true_pc2;
-#define TRUE_PC silly_dummy_for_true_pc2
+//long silly_dummy_for_true_pc2;
+//#define TRUE_PC silly_dummy_for_true_pc2
 #endif
 
 void m68k_get_source_100_b(){ // .B -(An)
-
+#if defined(SSE_CPU_TRUE_PC)
   TRUE_PC+=2;
-
-#if defined(SSE_CPU_ROUNDING_SOURCE_100_B)
-  INSTRUCTION_TIME(6);
-#else
-  INSTRUCTION_TIME_ROUND(6);
 #endif
+  INSTRUCTION_TIME_ROUND(6);
 
   areg[PARAM_M]--;
   if(PARAM_M==7)
@@ -207,12 +208,9 @@ void m68k_get_source_100_b(){ // .B -(An)
 
 
 void m68k_get_source_100_w(){ // .W -(An)
-
+#if defined(SSE_CPU_TRUE_PC)
   TRUE_PC+=2;
-
-#if defined(SSE_CPU_ROUNDING_SOURCE_100_W)
-  INSTRUCTION_TIME(6);
-#else
+#endif
   INSTRUCTION_TIME_ROUND(6);
 
   areg[PARAM_M]-=2;
@@ -223,15 +221,8 @@ void m68k_get_source_100_w(){ // .W -(An)
 
 
 void m68k_get_source_100_l(){ // .L -(An)
-/*
-breaks HMD Fullparts -> gotta be more specific in the fix
-for Cernit
-*/
-#if defined(SSE_CPU_ROUNDING_SOURCE_100_L)
-  INSTRUCTION_TIME(10);
-#else
+
   INSTRUCTION_TIME_ROUND(10);
-#endif
 
   areg[PARAM_M]-=4;
 
@@ -347,7 +338,9 @@ void m68k_get_source_111_b(){
 
   switch(ir&0x7){
   case 0:{ // .B (xxx).W
+#if defined(SSE_CPU_TRUE_PC)
     TRUE_PC+=2;
+#endif
     INSTRUCTION_TIME_ROUND(8);
     register signed int fw=(signed short)m68k_fetchW();
     pc+=2; 
@@ -355,7 +348,9 @@ void m68k_get_source_111_b(){
     break;
   }
   case 1:{ // .B (xxx).L
+#if defined(SSE_CPU_TRUE_PC)
     TRUE_PC+=4;
+#endif
     INSTRUCTION_TIME_ROUND(12);
     register MEM_ADDRESS fl=m68k_fetchL();
     pc+=4;  
@@ -386,7 +381,9 @@ void m68k_get_source_111_b(){
     break;       //what do bits 8,9,a  of extra word do?  (not always 0)
   }
   case 4:{ // .B #<data>
+#if defined(SSE_CPU_TRUE_PC)
     TRUE_PC+=2;
+#endif
     INSTRUCTION_TIME_ROUND(4);
     pc+=2;
     m68k_src_b=m68k_fetchB();
@@ -402,14 +399,24 @@ void m68k_get_source_111_w(){
 
   switch(ir&0x7){
   case 0:{ // .W (xxx).W
+#if defined(SSE_CPU_TRUE_PC)
     TRUE_PC+=2;
+#endif
     INSTRUCTION_TIME_ROUND(8);
     register signed int fw=(signed short)m68k_fetchW();
     pc+=2; 
+
+#if defined(SSE_CPU_DATABUS)
+///    TRACE("dbus %x -> %x\n", M68000.dbus,IRC);
+    M68000.dbus=IRC;
+#endif
+
     m68k_READ_W(fw)
     break;
   }case 1:{ // .W (xxx).L
+#if defined(SSE_CPU_TRUE_PC)
     TRUE_PC+=4;
+#endif
     INSTRUCTION_TIME_ROUND(12);
     register MEM_ADDRESS fl=m68k_fetchL();
     pc+=4;  
@@ -435,7 +442,9 @@ void m68k_get_source_111_w(){
     pc+=2; 
     break;       //what do bits 8,9,a  of extra word do?  (not always 0)
   }case 4:{ // .B #<data>
+#if defined(SSE_CPU_TRUE_PC)
     TRUE_PC+=2;
+#endif
     INSTRUCTION_TIME_ROUND(4);
 //      ap=m68k_fetchL();pc+=4;
     pc+=2;
@@ -451,14 +460,18 @@ void m68k_get_source_111_l(){
 
   switch(ir&0x7){
   case 0:{ // .L (xxx).W
+#if defined(SSE_CPU_TRUE_PC)
     TRUE_PC+=2;
+#endif
     INSTRUCTION_TIME_ROUND(12);
     register signed int fw=(signed short)m68k_fetchW();
     pc+=2; 
     m68k_READ_L(fw) 
     break;
   }case 1:{ // .L (xxx).L
+#if defined(SSE_CPU_TRUE_PC)
     TRUE_PC+=4;
+#endif
     INSTRUCTION_TIME_ROUND(16);
     register MEM_ADDRESS fl=m68k_fetchL();
     pc+=4;  
@@ -484,7 +497,9 @@ void m68k_get_source_111_l(){
     m68k_READ_L_FROM_ADDR
     break;       //what do bits 8,9,a  of extra word do?  (not always 0)
   }case 4:{ // .B #<data>
+#if defined(SSE_CPU_TRUE_PC)
     TRUE_PC+=4;
+#endif
     INSTRUCTION_TIME_ROUND(8);
     m68k_src_l=m68k_fetchL();
     pc+=4;  
@@ -1051,7 +1066,7 @@ void TM68000::m68kReadLFromAddr() {
       else
         m68k_src_l=0xffffffff;                                          
     }
-    else if(abus>=0xd00000 && abus<0xd80000-2)
+    else if (abus>=0xd00000 && abus<0xd80000-2)
       m68k_src_l=0xffffffff;                                          
 #if !defined(SSE_MMU_NO_CONFUSION)
     else if (mmu_confused)
@@ -1083,7 +1098,7 @@ void TM68000::m68kReadLFromAddr() {
 
 void TM68000::SetPC(MEM_ADDRESS ad) {
 
-#if defined(SSE_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
   if(ad==rom_addr)
     Debug.InterruptIdx=0;
 #endif
@@ -1151,7 +1166,7 @@ void TM68000::Interrupt(MEM_ADDRESS ad) {
   PrefetchClass=2;
 #endif
 
-#if defined(SSE_DEBUG_STACK_68030_FRAME)
+#if defined(SSE_BOILER_STACK_68030_FRAME)
   if(Debug.M68030StackFrame)
   {//macro must be scoped!
     m68k_PUSH_W(0); // format + offset, both may be 0
@@ -1220,6 +1235,10 @@ FC2 FC1 FC0 Address Space
   {
     M68000.nExceptions++;  
     TRACE_LOG("\nException #%d, %d bombs (",M68000.nExceptions,bombs);
+
+#if defined(SSE_OSD_CONTROL)
+    if(OSD_MASK_CPU & OSD_CONTROL_CPUBOMBS) 
+#endif
     TRACE_OSD("%d-%d BOMBS",M68000.nExceptions,bombs);
     switch(bombs)
     {  
@@ -1255,7 +1274,11 @@ FC2 FC1 FC0 Address Space
       break;
     }//sw
 #if defined(SSE_CPU_TRUE_PC)
+#if defined(DEBUG_BUILD)
+    TRACE_LOG(") during \"%s\"\n",exception_action_name[action]);
+#else
     TRACE_LOG(") during %s\n",(action==EA_READ||CHECK_READ)?"Read":"Write");
+#endif
 #else
     TRACE_LOG(") during %s\n",(action==EA_READ)?"Read":"Write (maybe!)");
 #endif
@@ -1297,7 +1320,7 @@ FC2 FC1 FC0 Address Space
     {
       if(!SUPERFLAG) 
         change_to_supervisor_mode();
-      TRACE_LOG("Push crash address %X on %X\n",(crash_address & 0x00ffffff) | pc_high_byte,r[15]-4);
+      TRACE_LOG("Push crash address %X->%X on %X\n",crash_address,(crash_address & 0x00ffffff) | pc_high_byte,r[15]-4);
       m68k_PUSH_L((crash_address & 0x00ffffff) | pc_high_byte); 
       INSTRUCTION_TIME_ROUND(8);
       TRACE_LOG("Push SR %X on %X\n",_sr,r[15]-2);
@@ -1332,49 +1355,10 @@ FC2 FC1 FC0 Address Space
       TRY_M68K_EXCEPTION //TODO: warning C4611
       {
 
-#if defined(SSE_HACKS) && !defined(SSE_CPU_TRUE_PC_AND_NO_HACKS)
-/*  Using opcode specific adjustments, disabled in v3.5.1
-*/
-        int offset=0;
-
-        if(SSE_HACKS_ON)
-        {
-          switch(_ir) // opcode in IR at crash
-          {
-#if defined(SSE_CPU_HACK_PHALEON)
-          case 0x21F8: // move.l $0.W,$24.w
-            TRACE_LOG("Protected demo (European, Phaleon, Transbeauce 2?\n");
-            offset=-2; // used to fix those protected demos, but now no need?
-            break;
-#endif
-#if defined(SSE_CPU_HACK_WAR_HELI)
-          case 0x2285: // move.l d5,(a1)
-            TRACE_LOG("War Heli? (use ADAT)\n");
-            offset=2; // fixes War Heli, already in Steem 3.2., but too generic
-            break;
-#endif
-#if defined(SSE_CPU_HACK_BLOOD_MONEY)
-          case 0x48d6: // movem.l a0-5,(a6)
-            TRACE_LOG("Blood Money?\n");
-            offset=2;
-            break;
-#endif
-          }//sw
-        }//hacks
-        if(offset)
-           TRACE_LOG("Adjusting stacked PC %X (%d) %X\n",_pc,offset,_pc+offset);
-        _pc+=offset;
-#endif//hack opcode
-
-
 #if defined(SSE_CPU_DETECT_STACK_PC_USE)
         _pc=0x123456; // push garbage!
 #elif defined(SSE_CPU_TRUE_PC) 
-        if(
-#if !defined(SSE_CPU_TRUE_PC_AND_NO_HACKS)
-          !SSE_HACKS_ON && 
-#endif
-          _pc!=M68000.Pc)
+        if(_pc!=M68000.Pc)
         {
           TRACE_LOG("pc %X true PC %X\n",_pc,M68000.Pc);
           _pc=M68000.Pc;
@@ -1386,8 +1370,13 @@ FC2 FC1 FC0 Address Space
         m68k_PUSH_W(_sr);
         TRACE_LOG("Push IR %X on %X\n",_ir,r[15]-2);
         m68k_PUSH_W(_ir);
+#if defined(SSE_CPU_BUS_ERROR_ADDRESS) //no reason to do it only for illegal
+        TRACE_LOG("Push crash address %X->%X on %X\n",address,(address & 0x00ffffff) | pc_high_byte,r[15]-4);
+        m68k_PUSH_L((address & 0x00ffffff) | pc_high_byte); 
+#else
         TRACE_LOG("Push address %X on %X\n",address,r[15]-4);
         m68k_PUSH_L(address);
+#endif
         // status
         WORD x=WORD(_ir & 0xffe0); 
         if(action!=EA_WRITE) x|=B6_010000;
@@ -1409,7 +1398,7 @@ FC2 FC1 FC0 Address Space
       END_M68K_EXCEPTION
 
       TRACE_LOG("PC = %X\n\n",LPEEK(bombs*4));
-#if defined(SSE_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
       Debug.RecordInterrupt("BOMBS",bombs);
 #endif
       SET_PC(LPEEK(bombs*4)); // includes final prefetch
@@ -1515,7 +1504,7 @@ NOT_DEBUG(inline) void m68k_poke_abus(BYTE x){
   if(abus>=MEM_IO_BASE && super)
     io_write_b(abus,x);
 #if defined(SSE_CPU_CHECK_VIDEO_RAM_B)
-/*  To save some performance, we do just one basic shifter test in the inline
+/*  To save some performance, we do just one basic Shifter test in the inline
     part. More precise test is in m68k_poke_abus2().
 */
   else if(abus<shifter_draw_pointer_at_start_of_line && abus<himem
@@ -1525,7 +1514,7 @@ NOT_DEBUG(inline) void m68k_poke_abus(BYTE x){
     ||super && abus>=MEM_FIRST_WRITEABLE))
 #endif
   {
-#if defined(SSE_DEBUG_MONITOR_VALUE2)
+#if defined(SSE_BOILER_MONITOR_VALUE2)
     PEEK(abus)=x;
     DEBUG_CHECK_WRITE_B(abus);
 #else
@@ -1553,7 +1542,7 @@ NOT_DEBUG(inline) void m68k_dpoke_abus(WORD x){
     ||super && abus>=MEM_FIRST_WRITEABLE))
 #endif
   {
-#if defined(SSE_DEBUG_MONITOR_VALUE2)
+#if defined(SSE_BOILER_MONITOR_VALUE2)
     DPEEK(abus)=x;
     DEBUG_CHECK_WRITE_W(abus);
 #else
@@ -1582,7 +1571,7 @@ NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x){
     ||super && abus>=MEM_FIRST_WRITEABLE))
 #endif
   {
-#if defined(SSE_DEBUG_MONITOR_VALUE4)//3.6.1, also for long of course (argh!)
+#if defined(SSE_BOILER_MONITOR_VALUE4)//3.6.1, also for long of course (argh!)
     LPEEK(abus)=x;
     DEBUG_CHECK_WRITE_L(abus);
 #else
@@ -1619,14 +1608,14 @@ void m68k_poke_abus2(BYTE x){
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
     } //otherwise throw away
   }else{
-#if !defined(SSE_DEBUG_MONITOR_VALUE2)
+#if !defined(SSE_BOILER_MONITOR_VALUE2)
     DEBUG_CHECK_WRITE_B(abus);
 #endif
 #if defined(SSE_CPU_CHECK_VIDEO_RAM_B)
 /*  If we're going to write in video RAM of the current scanline,
     we check whether we need to render before. Some programs write
     just after the memory has been fetched, but Steem renders at
-    shifter events, and if nothing happens, at the end of the line.
+    Shifter events, and if nothing happens, at the end of the line.
     So if we do nothing it will render wrong memory.
     The test isn't perfect and will cause some "false alerts" but
     we have performance in mind: CPU poke is used a lot, it is rare
@@ -1641,7 +1630,7 @@ void m68k_poke_abus2(BYTE x){
       PEEK(abus)=x;
     else if (abus>=MEM_START_OF_USER_AREA)
       PEEK(abus)=x;
-#if defined(SSE_CPU_IGNORE_WRITE_0)
+#if defined(SSE_CPU_IGNORE_WRITE_B_0)
 /*  Atari doc states:
     A 4 word portion  of ROM  is  shadowed  at  the  start of RAM for 
     the reset stack  pointer and program counter.  
@@ -1656,12 +1645,19 @@ void m68k_poke_abus2(BYTE x){
     No good explanation for that, we just have programs running.
 
     Turns out only the one byte version is necessary/OK.
+
+    Not for long because it breaks Fuzion 77, 78, 84 (bugfix 3.5.2).
+
+    Not for word because it breaks Crazy Cars 2 (bugfix 3.6.0).
+
+    There's no real explanation. Maybe the bus error detector doesn't 
+    start until after the first byte... :)
 */
     else if(SUPERFLAG && abus==0 ) 
       ;
 #endif
     else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
-#if defined(SSE_DEBUG_MONITOR_VALUE2)
+#if defined(SSE_BOILER_MONITOR_VALUE2)
     DEBUG_CHECK_WRITE_B(abus);
 #endif
   }
@@ -1695,7 +1691,7 @@ void m68k_dpoke_abus2(WORD x){
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
     } //otherwise throw away
   }else{
-#if !defined(SSE_DEBUG_MONITOR_VALUE2)
+#if !defined(SSE_BOILER_MONITOR_VALUE2)
     DEBUG_CHECK_WRITE_W(abus);
 #endif
 #if defined(SSE_CPU_CHECK_VIDEO_RAM_W) // 3615 GEN4
@@ -1710,15 +1706,8 @@ void m68k_dpoke_abus2(WORD x){
       DPEEK(abus)=x;
     else if(abus>=MEM_START_OF_USER_AREA)
       DPEEK(abus)=x;
-#if defined(SSE_CPU_IGNORE_WRITE_0__)
-/*  Not for word because it breaks Crazy Cars 2 (bugfix 3.6.0).
-    There's no real explanation. Maybe the bus error detector doesn't 
-    start until after the first byte... :)
-*/    else if(SUPERFLAG && !abus)
-      ;
-#endif
     else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
-#if defined(SSE_DEBUG_MONITOR_VALUE2)
+#if defined(SSE_BOILER_MONITOR_VALUE2)
     DEBUG_CHECK_WRITE_W(abus);
 #endif
 
@@ -1748,7 +1737,7 @@ void m68k_lpoke_abus2(LONG x){
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
     } //otherwise throw away
   }else{
-#if !defined(SSE_DEBUG_MONITOR_VALUE4)
+#if !defined(SSE_BOILER_MONITOR_VALUE4)
     DEBUG_CHECK_WRITE_L(abus);
 #endif
 #if defined(SSE_CPU_CHECK_VIDEO_RAM_L)
@@ -1761,17 +1750,8 @@ void m68k_lpoke_abus2(LONG x){
       LPEEK(abus)=x;
     else if(abus>=MEM_START_OF_USER_AREA)
       LPEEK(abus)=x;
-#if defined(SSE_CPU_IGNORE_WRITE_0__)
-/*  Not for long because it breaks Fuzion 77, 78, 84 (bugfix 3.5.2).
-    There's no real explanation. Maybe the bus error detector doesn't 
-    start until after the first word.
-*/
-  
-    else if(SUPERFLAG && !abus)
-      ;
-#endif
     else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
-#if !defined(SSE_DEBUG_MONITOR_VALUE2)
+#if !defined(SSE_BOILER_MONITOR_VALUE2)
     DEBUG_CHECK_WRITE_L(abus);
 #endif
 
@@ -1909,9 +1889,9 @@ void                              m68k_divu(){
 #endif
   m68k_GET_SOURCE_W_NOT_A;
   if (m68k_src_w==0){ // div by 0
-    // Clear V flag when dividing by zero. Fixes...?
+    // Clear V flag when dividing by zero. 
     SR_CLEAR(SR_V);
-#if defined(SSE_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
     Debug.RecordInterrupt("DIV");
 #endif
     m68k_interrupt(LPEEK(BOMBS_DIVISION_BY_ZERO*4));
@@ -1958,9 +1938,11 @@ void                              m68k_divs(){
   m68k_GET_SOURCE_W_NOT_A;
   if (m68k_src_w==0){
     /* Clear V flag when dividing by zero - Alcatraz Odyssey demo depends
-     * on this (actually, it's doing a DIVS).  */
+     * on this (actually, it's doing a DIVS).  
+    SS: it's an Amiga demo. 
+    */
     SR_CLEAR(SR_V);
-#if defined(SSE_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
     Debug.RecordInterrupt("DIV");
 #endif
     m68k_interrupt(LPEEK(BOMBS_DIVISION_BY_ZERO*4));
@@ -2108,9 +2090,9 @@ void m68k_0001() {  // move.b
   m68k_GET_SOURCE_B;
 
   // Destination
-
+#if defined(SSE_CPU_TRUE_PC)
   TRUE_PC=pc+2;
-
+#endif
   if((ir&BITS_876)==BITS_876_000)
   { // Dn
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
@@ -2234,6 +2216,11 @@ void m68k_0001() {  // move.b
     if(m68k_src_b&MSB_B){
       SR_SET(SR_N);
     }
+
+#if defined(SSE_CPU_DATABUS)
+    M68000.dbus|=m68k_src_b;
+#endif
+
     m68k_poke_abus(m68k_src_b); // write; could crash
 
 #if defined(SSE_CPU_POST_INC) || defined(SSE_CPU_PRE_DEC)
@@ -2304,9 +2291,9 @@ void m68k_0010()  //move.l
   m68k_GET_SOURCE_L; // where tb2 etc crash
 
   // Destination
-
+#if defined(SSE_CPU_TRUE_PC)
   TRUE_PC=pc+2; // eg. War Heli move.l d5,(a1)
-
+#endif
   if ((ir & BITS_876)==BITS_876_000) // Dn
   { 
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
@@ -2435,6 +2422,11 @@ void m68k_0010()  //move.l
     if(m68k_src_l&MSB_L){
       SR_SET(SR_N);
     }
+
+#if defined(SSE_CPU_DATABUS)
+    M68000.dbus=m68k_src_l&0xFFFF; // 2nd part?
+#endif
+
     m68k_lpoke_abus(m68k_src_l);
 
 #if defined(SSE_CPU_POST_INC) || defined(SSE_CPU_PRE_DEC)
@@ -2504,9 +2496,9 @@ void m68k_0011() //move.w
   m68k_GET_SOURCE_W;
 
   // Destination
-
+#if defined(SSE_CPU_TRUE_PC)
   TRUE_PC=pc+2;
-
+#endif
   if ((ir & BITS_876)==BITS_876_000) // Dn
   {
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
@@ -2575,13 +2567,6 @@ void m68k_0011() //move.w
       INSTRUCTION_TIME(4);
 #endif
       abus=areg[PARAM_N]+(signed short)m68k_fetchW();
-#if defined(SSE_CPU_3615GEN4_ULM) && defined(SSE_SHIFTER)
-      // Writing in video RAM just after it's been fetched into the shifter
-      // fixes 3615Gen4 by ULM, but maybe not 100% (glitch in left border?)
-      if(abus>=shifter_draw_pointer && abus<=shifter_draw_pointer+32 
-        && Shifter.FetchingLine())
-        Shifter.Render(LINECYCLES,DISPATCHER_CPU); 
-#endif
       pc+=2; 
       break;
     case BITS_876_110: // (d8, An, Xn)
@@ -2638,6 +2623,11 @@ void m68k_0011() //move.w
     if (m68k_src_w & MSB_W){
       SR_SET(SR_N);
     }
+
+#if defined(SSE_CPU_DATABUS)
+//    M68000.dbus=m68k_src_w;
+#endif
+
     m68k_dpoke_abus(m68k_src_w);
 
 #if defined(SSE_CPU_POST_INC) || defined(SSE_CPU_PRE_DEC)
