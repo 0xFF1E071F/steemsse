@@ -1014,9 +1014,11 @@ LONG m68k_read_dest_l(){
   DEBUG_ONLY( debug_first_instruction=0 );
 #endif
 
-#if !defined(SSE_CPU_TRACE) // we finally wrote our buggy version //then removed...
-
 #define LOGSECTION LOGSECTION_TRACE
+
+#if defined(SSE_CPU_TRACE_REFACTOR)
+// See TM68000:Process in SSECpu.h
+#else
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_VAR_REWRITE)//compiler warning
 
@@ -1038,11 +1040,11 @@ extern "C" ASMCALL void m68k_trace() //execute instruction with trace bit set
 
   ASSERT( sr&SR_TRACE );
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_TRACE_DETECT)
+#if defined(SSE_CPU_TRACE_DETECT) && !defined(DEBUG_BUILD)
   TRACE_OSD("TRACE");
 #endif
 #if defined(SSE_OSD_CONTROL)
-  if(OSD_MASK1 & OSD_CONTROL_CPUTRACE) 
+  if(OSD_MASK_CPU & OSD_CONTROL_CPUTRACE) 
     TRACE_OSD("TRACE");
 #endif
 
@@ -1058,8 +1060,6 @@ extern "C" ASMCALL void m68k_trace() //execute instruction with trace bit set
   ir=m68k_fetchW();
 #endif
 
-  TRACE_LOG("TRACE PC %X IR %X SR %X\n",pc,ir,sr);
-
   pc+=2;
 
 #if defined(SSE_CPU_TRUE_PC)
@@ -1071,7 +1071,7 @@ extern "C" ASMCALL void m68k_trace() //execute instruction with trace bit set
   int store_ioaccess=ioaccess & (IOACCESS_FLAG_DO_BLIT | IOACCESS_FLAG_FOR_CHECK_INTRS |
     IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE);
   ioaccess=0;
-  m68k_do_trace_exception=true;
+  m68k_do_trace_exception=true; //SS this flag won't be reset
 #if defined(STEVEN_SEAGAL) 
 #if defined(SSE_CPU) && defined(SSE_DEBUG)
   M68000.PreviousIr=ir;
@@ -1083,6 +1083,9 @@ extern "C" ASMCALL void m68k_trace() //execute instruction with trace bit set
 #endif
  //ASSERT(ir!=0x19F3); // dbg: break on opcode...
   m68k_high_nibble_jump_table[ir>>12](); //SS call in trace
+
+  ///TRACE_LOG("SR = %x\n",sr);
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU) && defined(SSE_DEBUG)
   M68000.NextIrFetched=false;
 #endif
@@ -1090,21 +1093,34 @@ extern "C" ASMCALL void m68k_trace() //execute instruction with trace bit set
     // This flag is used for exceptions that we don't want to do a proper exception
     // for but should really. i.e Line-A/F, they are just as serious as illegal
     // instruction but are called reguarly, we don't want to slow things down.
+
+#ifdef DEBUG_BUILD
+    TRACE_LOG("TRACE PC %X SR %X VEC %X",old_pc,sr,LPEEK(0x24));
+    EasyStr instr=disa_d2(old_pc); // take advantage of the disassembler
+    //TRACE_LOG("\n");
+    TRACE_LOG("IR %X: %s\n",ir,instr.Text);
+    //TRACE_LOG("TRACE PC %X VEC %X\n",pc,LPEEK(0x24));
+#else
+    TRACE_LOG("TRACE PC %X IR %X SR %X $24 %X\n",pc,ir,sr,LPEEK(0x24));
+#endif
+
+    // this timing is precisely tested by My Socks are Weapons
     INSTRUCTION_TIME_ROUND(0); // Round first for interrupts
     INSTRUCTION_TIME_ROUND(34);
-#if defined(SSE_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
     Debug.RecordInterrupt("TRACE");
 #endif
 //    TRACE_LOG("SR=%X\n",sr);
     m68k_interrupt(LPEEK(BOMBS_TRACE_EXCEPTION*4));
+
   }
   ioaccess|=store_ioaccess;
 
   // In case of IOACCESS_FLAG_FOR_CHECK_INTRS interrupt must happen after trace
   HANDLE_IOACCESS(;)
 }
+#endif//#if defined(SSE_CPU_TRACE_REFACTOR)
 #undef LOGSECTION
-#endif//!trace
 
 void m68k_get_effective_address()
 {

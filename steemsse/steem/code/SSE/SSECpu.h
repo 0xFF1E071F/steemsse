@@ -753,11 +753,31 @@ inline void TM68000::Process() {
 #endif
 #endif
 
+#if defined(SSE_CPU_TRACE_REFACTOR)
+  if(ProcessingState==TRACE_MODE)
+  {
+    ProcessingState=NORMAL;
+  }
+  else if(sr&SR_TRACE)
+  {
+    ProcessingState=TRACE_MODE; //internal flag: trace after this instruction
+#if defined(SSE_CPU_TRACE_DETECT) && !defined(DEBUG_BUILD)
+    TRACE_OSD("TRACE");
+#endif
+#if defined(SSE_OSD_CONTROL)
+    if(OSD_MASK_CPU & OSD_CONTROL_CPUTRACE) 
+      TRACE_OSD("TRACE");
+#endif
+    
+  }
+#endif
+
   old_pc=pc;  
 //ASSERT(old_pc!=0x006164);
 //if(pc==0x00FB1A) TRACE("%d %d %d pc %X reached\n",TIMING_INFO,pc);
 //if(pc==0x01255E) TRACE("%d %d %d pc %X reached\n",TIMING_INFO,pc);
 //if(pc==0x01290A) TRACE("%d %d %d pc %X reached\n",TIMING_INFO,pc);
+//if(pc==0x28) TRACE("$14 %X D5 %X D6 %X D7 %X\n",LPEEK(0x14),r[5],r[6],r[7]);
 
 #if defined(SSE_CPU_PREFETCH)
 /*  basic prefetch rule:
@@ -804,6 +824,36 @@ already fetched. One word will be in IRD and another one in IRC.
   //ASSERT(ir!=0x91AE); // dbg: break on opcode
   /////////// JUMP TO CPU EMU: ///////////////
   m68k_high_nibble_jump_table[ir>>12](); // go to instruction...
+
+#if defined(SSE_CPU_TRACE_REFACTOR)
+/*  Why refactor something that works?
+    Because the former way causes a glitch in the Boiler, where
+    the instruction being traced always seems to be skipped (can't 
+    step, can't set breakpoint). Now this works.
+    Because it seems more natural, formalising a flag that must
+    be in the CPU.
+    Issue: more tests in Process
+*/
+  if(ProcessingState==TRACE_MODE)
+  {
+#ifdef DEBUG_BUILD
+    TRACE_LOG("TRACE PC %X SR %X VEC %X",old_pc,sr,LPEEK(0x24));
+    EasyStr instr=disa_d2(old_pc); // take advantage of the disassembler
+    //TRACE_LOG("\n");
+    TRACE_LOG("IR %X: %s\n",ir,instr.Text);
+    //TRACE_LOG("TRACE PC %X VEC %X\n",pc,LPEEK(0x24));
+#else
+    TRACE_LOG("TRACE PC %X IR %X SR %X $24 %X\n",pc,ir,sr,LPEEK(0x24));
+#endif
+    INSTRUCTION_TIME_ROUND(0); // Round first for interrupts
+    INSTRUCTION_TIME_ROUND(34);
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
+    Debug.RecordInterrupt("TRACE");
+#endif
+    m68k_interrupt(LPEEK(BOMBS_TRACE_EXCEPTION*4));
+  }
+#endif
+
 #if defined(SSE_IPF_CPU) // no
  if(Caps.Active)
   {
@@ -816,8 +866,13 @@ already fetched. One word will be in IRD and another one in IRC.
   NextIrFetched=false; // in FETCH_TIMING or...// check_interrut
 #endif//debug
 
+#if defined(SSE_CPU_TRACE_REFACTOR)
+   // this won't care for trace
+   HANDLE_IOACCESS( ; );
+#else
+  // this will execute the next instruction then trigger trace interrupt
   HANDLE_IOACCESS( m68k_trace(); ); // keep as macro, wouldn't be inlined
-
+#endif
   DEBUG_ONLY( debug_first_instruction=0 );
 }
 #define m68k_PROCESS M68000.Process();
