@@ -1175,6 +1175,39 @@ void m68k_exception::crash() { // copied from cpu.cpp and improved
   MEM_ADDRESS sp=(MEM_ADDRESS)(SUPERFLAG 
     ? (areg[7] & 0xffffff):(other_sp & 0xffffff));
 
+#if defined(SSE_CPU_EXCEPTION_FCO)
+/*
+Table 6-1. Reference Classification
+Function Code Output
+FC2 FC1 FC0 Address Space
+0 0 0 (Undefined, Reserved)*
+0 0 1 User Data
+0 1 0 User Program
+0 1 1 (Undefined, Reserved)*
+1 0 0 (Undefined, Reserved)*
+1 0 1 Supervisor Data
+1 1 0 Supervisor Program
+1 1 1 CPU Space
+*Address space 3 is reserved for user definition, while 0 and
+4 are reserved for future use by Motorola.
+
+  For those cases, we generally get "data" at this point, but "program"
+  may be more appropriate.
+  
+
+*/
+  if(bombs==BOMBS_BUS_ERROR || bombs==BOMBS_ADDRESS_ERROR)
+  {
+    switch(_ir)
+    {
+    case 0x4e73://rte
+    case 0x4e75://rts - Fixes Blood Money -SUP 1MB
+      action=EA_FETCH;
+    }
+  }
+#endif
+
+
 #if defined(SSE_DEBUG)   
   if(M68000.nExceptions!=-1)
   {
