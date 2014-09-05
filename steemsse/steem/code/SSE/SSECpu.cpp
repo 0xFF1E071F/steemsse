@@ -1288,6 +1288,10 @@ FC2 FC1 FC0 Address Space
   }
   else
   {
+#if defined(SSE_CPU_HALT)
+    M68000.ProcessingState=TM68000::EXCEPTION;
+#endif
+
     //SS:never quite understood this rounding for interrupts thing
     INSTRUCTION_TIME_ROUND(0); //Round first for interrupts 
     if(bombs==BOMBS_ILLEGAL_INSTRUCTION || bombs==BOMBS_PRIVILEGE_VIOLATION)
@@ -1398,6 +1402,9 @@ FC2 FC1 FC0 Address Space
       CATCH_M68K_EXCEPTION
       {
         TRACE_LOG("Exception during exception...\n");
+#if defined(SSE_CPU_HALT)
+        perform_crash_and_burn(); //wait for cases...
+#endif
         r[15]=0xf000; // R15=A7  // should be halt?
       }
       END_M68K_EXCEPTION
@@ -1425,6 +1432,11 @@ FC2 FC1 FC0 Address Space
     }
     DEBUG_ONLY(log_history(bombs,crash_address));
   }
+#if defined(SSE_CPU_HALT) || defined(SSE_CPU_TRACE_REFACTOR)
+  // formalising that there's no trace after a crash
+  M68000.ProcessingState=TM68000::NORMAL;
+#endif
+
   PeekEvent(); // Stop exception freeze
 }
 

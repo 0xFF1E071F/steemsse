@@ -654,6 +654,13 @@ void GUIRefreshStatusBar() {
 #undef MAX_TEXT_LENGTH_BORDER_OFF
 
 #endif
+
+
+#if defined(SSE_VAR_STATUS_STRING_HALT) && defined(SSE_CPU_HALT)
+    if(M68000.ProcessingState==TM68000::HALTED)
+      strcpy(status_bar,T("HALT (ST crashed)"));
+#endif
+
     //TRACE("status string len %d\n",strlen(status_bar));
     // change text
     SendMessage(status_bar_win,WM_SETTEXT,0,(LPARAM)(LPCTSTR)status_bar);
