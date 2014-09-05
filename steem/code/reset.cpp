@@ -230,6 +230,12 @@ void power_on()
 #if defined(SSE_VID_3BUFFER_WIN)
   Disp.VSyncTiming=0;
 #endif
+
+#if defined(SSE_CPU_HALT)
+  M68000.ProcessingState=TM68000::NORMAL; //care later for exception
+#endif
+
+
 }
 //---------------------------------------------------------------------------
 #define LOGSECTION LOGSECTION_ALWAYS

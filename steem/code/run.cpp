@@ -124,6 +124,12 @@ void exception(int exn,exception_action ea,MEM_ADDRESS a)
 //---------------------------------------------------------------------------
 void run()
 {
+
+#if defined(SSE_CPU_HALT)
+  if(M68000.ProcessingState==TM68000::HALTED)
+    return; // cancel "run" until cold reset
+#endif
+
   bool ExcepHappened;
 
   Disp.RunStart();

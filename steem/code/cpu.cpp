@@ -405,11 +405,19 @@ void m68k_exception::init(int a,exception_action ea,MEM_ADDRESS _abus)
 //---------------------------------------------------------------------------
 void ASMCALL perform_crash_and_burn()
 {
+#if !defined(SSE_CPU_HALT)
   reset_st(RESET_COLD | RESET_NOSTOP | RESET_CHANGESETTINGS | RESET_NOBACKUP);
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
   TRACE("==============\nCRASH AND BURN\n==============\n");
 #endif
+#if defined(SSE_CPU_HALT)
+  runstate=RUNSTATE_STOPPING;
+  M68000.ProcessingState=TM68000::HALTED;
+  GUIRefreshStatusBar(); // no OSD, it's mentioned there
+#else
   osd_start_scroller(T("CRASH AND BURN - ST RESET"));
+#endif
 }
 //---------------------------------------------------------------------------
 #ifdef DEBUG_BUILD
