@@ -1088,7 +1088,7 @@ void TM68000::SetPC(MEM_ADDRESS ad) {
   if(ad==rom_addr)
     Debug.InterruptIdx=0;
 #endif
-
+//ASSERT(pc!=0x80000);
     pc=ad;                               
     pc_high_byte=pc & 0xff000000;     
     pc&=0xffffff;                    
@@ -1111,12 +1111,20 @@ void TM68000::SetPC(MEM_ADDRESS ad) {
             lpfetch=lpROM_DPEEK(pc-0xe00000);
             lpfetch_bound=lpROM_DPEEK(256*1024);   
           }              
-        }              
+        }  
+#if defined(SSE_CPU_FETCH_80000A)
+        if(pc>=0x80000 && pc<0x3FFFFF)
+        {
+          TRACE("fake fetching address for %x\n",pc);
+          lpfetch=lpDPEEK(xbios2); 
+          lpfetch_bound=lpDPEEK(mem_len+(MEM_EXTRA_BYTES/2)); 
+        }
+#endif            
       }else{   
         if (pc>=0xff8240 && pc<0xff8260){      
           lpfetch=lpPAL_DPEEK(pc-0xff8240); 
           lpfetch_bound=lpPAL_DPEEK(64+PAL_EXTRA_BYTES);     
-        }   
+        }                                          
       }                                   
     }else{             
       lpfetch=lpDPEEK(pc); 

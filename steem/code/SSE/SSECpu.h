@@ -257,15 +257,25 @@ void TM68000::PrefetchSetPC() {
     return;
   }
 #endif
+#if defined(SSE_CPU_FETCH_80000A)
+  // don't crash, but the correct value would be 'dbus'
+  if(pc>himem && pc>=0x80000 && pc<0x3FFFFF)
+  {
+    prefetch_buf[0]=prefetch_buf[1]=0xFFFF; // default, incorrect?
+    prefetched_2=true;
+    TRACE("Set PC in empty zone %X\n",pc);
+    return;
+  }
+#endif
   prefetch_buf[0]=*lpfetch;
   prefetch_buf[1]=*(lpfetch+MEM_DIR); 
   prefetched_2=true; // was false in Steem 3.2
 #if defined(SSE_CPU_PREFETCH_CALL)
-  if(M68000.CallPrefetch) 
+  if(CallPrefetch) 
   {
-    ASSERT(M68000.PrefetchedOpcode==prefetch_buf[0]);
-    prefetch_buf[0]=M68000.PrefetchedOpcode;
-    M68000.CallPrefetch=FALSE;
+    ASSERT(PrefetchedOpcode==prefetch_buf[0]);
+    prefetch_buf[0]=PrefetchedOpcode;
+    CallPrefetch=FALSE;
   }
 #endif
   lpfetch+=MEM_DIR;
@@ -366,6 +376,15 @@ inline void TM68000::FetchWord(WORD &dest_word) {
   {
     IR=io_read_w(pc);
     TRACE_LOG("Fetch word %X in IO zone %X\n",IR,pc);
+    return;
+  }
+  else
+#endif
+#if defined(SSE_CPU_FETCH_80000B)
+  if(pc>himem && pc>=0x80000 && pc<0x3FFFFF)
+  {
+    IR=0xFFFF;
+    TRACE("Fetch IR %X in empty zone %X\n",IR,pc);
     return;
   }
   else
@@ -615,6 +634,14 @@ inline void TM68000::PrefetchIrc() {
   {
     IRC=io_read_w(pc); 
     TRACE_LOG("IRC %X in IO zone %X\n",IRC,pc);
+  }
+  else
+#endif
+#if defined(SSE_CPU_FETCH_80000C)
+  if(pc>himem && pc>=0x80000 && pc<0x3FFFFF)
+  {
+    IRC=0xFFFF;
+    TRACE("Fetch IRC %X in empty zone %X\n",IRC,pc);
   }
   else
 #endif
