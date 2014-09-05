@@ -468,7 +468,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
   }
 
 
-#elif defined(SSE_DEBUG_MONITOR_VALUE4) // changing the order of set/check
+#elif defined(SSE_BOILER_MONITOR_VALUE4) // changing the order of set/check
 
 
 #define m68k_SET_DEST_B_TO_ADDR        \
@@ -500,7 +500,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     DEBUG_CHECK_WRITE_B(abus); \
   }
 
-#if defined(SSE_CPU_SET_DEST_TO_0)
+#if defined(SSE_CPU_SET_DEST_W_TO_0)
 
 // 3.6.1 disgusting targeted hack for Aladin, TODO = change
 // those macros into regular code, part inline part function
@@ -537,7 +537,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     DEBUG_CHECK_WRITE_W(abus);  \
   }
 
-#else//!SSE_CPU_SET_DEST_TO_0 //todo, it's defined
+#else//!SSE_CPU_SET_DEST_W_TO_0 //todo, it's defined
 #define m68k_SET_DEST_W_TO_ADDR        \
   abus&=0xffffff;                                   \
   if(abus&1){                                      \
@@ -635,7 +635,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     }                                           \
   }
 
-#if defined(SSE_CPU_SET_DEST_TO_0)
+#if defined(SSE_CPU_SET_DEST_W_TO_0)
 
 // 3.6.1 disgusting targeted hack for Aladin, TODO = change
 // those macros into regular code, part inline part function
@@ -673,7 +673,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     }                                           \
   }
 
-#else//!SSE_CPU_SET_DEST_TO_0
+#else//!SSE_CPU_SET_DEST_W_TO_0
 
 #define m68k_SET_DEST_W_TO_ADDR        \
   abus&=0xffffff;                                   \

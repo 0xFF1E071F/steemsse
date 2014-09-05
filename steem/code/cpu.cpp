@@ -78,7 +78,7 @@ void sr_check_z_n_l_for_r0()
 
 #endif//defined(SSE_STRUCTURE_CPU_H)
 
-#if defined(SSE_DEBUG_MONITOR_VALUE2)
+#if defined(SSE_BOILER_MONITOR_VALUE2)
 ///#include "debug_emu.decla.h"
 #endif
 
@@ -97,9 +97,9 @@ void sr_check_z_n_l_for_r0()
 #endif
 
 #if !defined(TRUE_PC)
-int silly_dummy_for_true_pc;
-#define TRUE_PC silly_dummy_for_true_pc
-#define CHECK_READ silly_dummy_for_true_pc
+//int silly_dummy_for_true_pc;
+//#define TRUE_PC silly_dummy_for_true_pc //we guard now
+//#define CHECK_READ silly_dummy_for_true_pc //we guard now
 #endif
 
 void (*m68k_high_nibble_jump_table[16])();
@@ -697,6 +697,7 @@ BYTE m68k_peek(MEM_ADDRESS ad){
 WORD m68k_dpeek(MEM_ADDRESS ad){
   ad&=0xffffff;
 //  ASSERT( ad!=0x400000);
+//  ASSERT( ad!=0x080000);
   if(ad&1)exception(BOMBS_ADDRESS_ERROR,EA_READ,ad);
   else if(ad>=himem){
     if(ad>=MEM_IO_BASE){
@@ -1113,8 +1114,13 @@ extern "C" ASMCALL void m68k_trace() //execute instruction with trace bit set
 #endif
 
     // this timing is precisely tested by My Socks are Weapons
+#if defined(SSE_CPU_TRACE_TIMING)
+    //tests
+    INSTRUCTION_TIME_ROUND(36); //same effect
+#else
     INSTRUCTION_TIME_ROUND(0); // Round first for interrupts
     INSTRUCTION_TIME_ROUND(34);
+#endif
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
     Debug.RecordInterrupt("TRACE");
 #endif
@@ -1126,6 +1132,8 @@ extern "C" ASMCALL void m68k_trace() //execute instruction with trace bit set
 
   // In case of IOACCESS_FLAG_FOR_CHECK_INTRS interrupt must happen after trace
   HANDLE_IOACCESS(;)
+
+
 }
 #endif//#if defined(SSE_CPU_TRACE_REFACTOR)
 #undef LOGSECTION
@@ -1161,13 +1169,17 @@ void m68k_get_effective_address()
         INSTRUCTION_TIME_ROUND(4);
         effective_address=(signed long)(signed short)m68k_fetchW();
         pc+=2; 
+#if defined(SSE_CPU_TRUE_PC)
         TRUE_PC+=2;
+#endif
         break;
       case 1:
         INSTRUCTION_TIME_ROUND(8);
         effective_address=m68k_fetchL();
         pc+=4;  
+#if defined(SSE_CPU_TRUE_PC)
         TRUE_PC+=4;
+#endif
         break;
       case 2:
         INSTRUCTION_TIME_ROUND(4);
@@ -1912,6 +1924,12 @@ void                              m68k_andi_b(){
   }else{
     INSTRUCTION_TIME(8);
     m68k_GET_IMMEDIATE_B;
+
+
+#if defined(SSE_CPU_DATABUS)
+    M68000.dbus|=m68k_src_b;
+#endif
+
     m68k_GET_DEST_B_NOT_A_FASTER_FOR_D;
     PREFETCH_IRC;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS)
@@ -1949,6 +1967,12 @@ void                              m68k_andi_w(){
     m68k_GET_IMMEDIATE_W;
     m68k_GET_DEST_W_NOT_A_FASTER_FOR_D;
 //    PREFETCH_IRC;
+
+#if defined(SSE_CPU_DATABUS)
+    M68000.dbus=m68k_src_w;
+#endif
+
+
     m68k_DEST_W&=m68k_src_w;
     PREFETCH_IRC;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS)
@@ -1965,6 +1989,11 @@ void                              m68k_andi_l(){
 
   INSTRUCTION_TIME(16);
   m68k_GET_IMMEDIATE_L;
+
+#if defined(SSE_CPU_DATABUS)
+    M68000.dbus=m68k_src_l&0xFFFF;
+#endif
+
   m68k_GET_DEST_L_NOT_A_FASTER_FOR_D;
 
   PREFETCH_IRC;
@@ -2577,6 +2606,7 @@ void                              m68k_movep_l_to_dN_or_bchg(){
     CPU_ABUS_ACCESS_READ;
 #endif
     ///// Should handle blitter here, blitter would start 1 word after busy is set
+    //SS not here, in "to memory"
     m68k_READ_B(addr)
     DWORD_B_3(&r[PARAM_N])=m68k_src_b;
 #if !defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
@@ -2722,6 +2752,9 @@ void                              m68k_movep_w_from_dN_or_bclr(){
 }
 
 void                              m68k_movep_l_from_dN_or_bset(){
+
+  //SS there's a TODO for blitter, maybe need a case
+
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
 #endif
@@ -2873,7 +2906,9 @@ void                              m68k_negx_b(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
 #endif
-  CHECK_READ=true;
+#if defined(SSE_CPU_TRUE_PC)
+  CHECK_READ=true; //this is how we "emulate" the read before write behaviour
+#endif
   m68k_GET_DEST_B_NOT_A;
   PREFETCH_IRC;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
@@ -2892,7 +2927,9 @@ void                              m68k_negx_b(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
 #endif
+#if defined(SSE_CPU_TRUE_PC)
   CHECK_READ=true;
+#endif
   m68k_GET_DEST_W_NOT_A;
   PREFETCH_IRC;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
@@ -2912,7 +2949,9 @@ void                             m68k_negx_l(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
 #endif
+#if defined(SSE_CPU_TRUE_PC)
   CHECK_READ=true;
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU) //TODO add macro
   m68k_GET_DEST_L_NOT_A;
   PREFETCH_IRC;
@@ -2942,14 +2981,16 @@ void                              m68k_clr_b(){
   FETCH_TIMING;
 #endif
   if (DEST_IS_REGISTER==0){INSTRUCTION_TIME(4);}
-  CHECK_READ=true;
+#if defined(SSE_CPU_TRUE_PC)
+  CHECK_READ=true; //it's only important for crashes
+#endif
   m68k_GET_DEST_B_NOT_A;
   PREFETCH_IRC;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
   FETCH_TIMING;
 #endif
   m68k_DEST_B=0;
-#if defined(SSE_DEBUG_MONITOR_VALUE3)
+#if defined(SSE_BOILER_MONITOR_VALUE3)
   if (DEST_IS_REGISTER==0)
     DEBUG_CHECK_WRITE_B(abus);
 #endif
@@ -2960,14 +3001,16 @@ void                              m68k_clr_b(){
   FETCH_TIMING;
 #endif
   if(DEST_IS_REGISTER==0){INSTRUCTION_TIME(4);}
+#if defined(SSE_CPU_TRUE_PC)
   CHECK_READ=true;
+#endif
   m68k_GET_DEST_W_NOT_A; //SS this crashes as 'write'
   PREFETCH_IRC;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
   FETCH_TIMING;
 #endif
   m68k_DEST_W=0;
-#if defined(SSE_DEBUG_MONITOR_VALUE3)
+#if defined(SSE_BOILER_MONITOR_VALUE3)
   if (DEST_IS_REGISTER==0)
     DEBUG_CHECK_WRITE_W(abus);
 #endif
@@ -2978,14 +3021,29 @@ void                              m68k_clr_b(){
   FETCH_TIMING;
 #endif
   if(DEST_IS_REGISTER){INSTRUCTION_TIME(2);}else {INSTRUCTION_TIME(8);}
+#if defined(SSE_CPU_TRUE_PC)
   CHECK_READ=true;
+#endif
   m68k_GET_DEST_L_NOT_A;
+
   PREFETCH_IRC;
+
+#if defined(SSE_CPU_DATABUS)
+//  M68000.dbus=IRC;
+#endif
+
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
   FETCH_TIMING;
 #endif
+
+#if defined(SSE_CPU_DATABUS)
+//  M68000.dbus=0;//m68k_DEST_L&0xFFFF;
+  M68000.dbus=pc+2;
+#endif
+
   m68k_DEST_L=0;
-#if defined(SSE_DEBUG_MONITOR_VALUE3)
+#if defined(SSE_BOILER_MONITOR_VALUE3)
   if (DEST_IS_REGISTER==0)
     DEBUG_CHECK_WRITE_L(abus);
 #endif
@@ -2999,7 +3057,9 @@ void                              m68k_neg_b(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
 #endif
+#if defined(SSE_CPU_TRUE_PC)
   CHECK_READ=true;
+#endif
   if(DEST_IS_REGISTER==0){INSTRUCTION_TIME(4);}
   m68k_GET_DEST_B_NOT_A;
   PREFETCH_IRC;
@@ -3017,7 +3077,9 @@ void                              m68k_neg_b(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
 #endif
+#if defined(SSE_CPU_TRUE_PC)
   CHECK_READ=true;
+#endif
   if(DEST_IS_REGISTER==0){INSTRUCTION_TIME(4);}
   m68k_GET_DEST_W_NOT_A;
   PREFETCH_IRC;
@@ -3036,7 +3098,9 @@ void                             m68k_neg_l(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
 #endif
+#if defined(SSE_CPU_TRUE_PC)
   CHECK_READ=true;
+#endif
   if(DEST_IS_REGISTER){INSTRUCTION_TIME(2);}else {INSTRUCTION_TIME(8);}
   m68k_GET_DEST_L_NOT_A;
   PREFETCH_IRC;
@@ -3055,7 +3119,9 @@ void                              m68k_not_b(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
 #endif
+#if defined(SSE_CPU_TRUE_PC)
   CHECK_READ=true;
+#endif
   if(DEST_IS_REGISTER==0){INSTRUCTION_TIME(4);} //SS should be further, and rounded
   m68k_GET_DEST_B_NOT_A;
   PREFETCH_IRC;
@@ -3069,7 +3135,9 @@ void                              m68k_not_b(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
 #endif
+#if defined(SSE_CPU_TRUE_PC)
   CHECK_READ=true;
+#endif
   if(DEST_IS_REGISTER==0){INSTRUCTION_TIME(4);}
   m68k_GET_DEST_W_NOT_A;
   PREFETCH_IRC;
@@ -3083,7 +3151,9 @@ void                              m68k_not_b(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
 #endif
+#if defined(SSE_CPU_TRUE_PC)
   CHECK_READ=true;
+#endif
   if (DEST_IS_REGISTER){INSTRUCTION_TIME(2);}else {INSTRUCTION_TIME(8);}
   m68k_GET_DEST_L_NOT_A;
   PREFETCH_IRC;
@@ -3232,7 +3302,9 @@ void                              m68k_tas(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
     FETCH_TIMING;
 #endif
+#if defined(SSE_CPU_TRUE_PC)
     CHECK_READ=true;
+#endif
     m68k_GET_DEST_B_NOT_A;
 
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_YACHT_TAS))
@@ -3271,7 +3343,9 @@ void                              m68k_move_from_sr(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
 #endif
+#if defined(SSE_CPU_TRUE_PC)
   CHECK_READ=true;
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_MOVE_FROM_SR)
   m68k_GET_DEST_W_NOT_A; // DSOS loader
 #endif
@@ -3355,7 +3429,9 @@ void                              m68k_nbcd(){
   FETCH_TIMING;
 #endif
   if (DEST_IS_REGISTER){INSTRUCTION_TIME(2);}else {INSTRUCTION_TIME(4);}
+#if defined(SSE_CPU_TRUE_PC)
   CHECK_READ=true;
+#endif
   m68k_GET_DEST_B_NOT_A;
   PREFETCH_IRC;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
@@ -3366,10 +3442,20 @@ void                              m68k_nbcd(){
   if(m&0xf)n=0x9a;
   if(sr&SR_X)n=0x99;
 
+
+
   SR_CLEAR(SR_X+SR_C);
   if(m)SR_SET(SR_X+SR_C); //there will be a carry
   m68k_DEST_B=(BYTE)(n-m);
   if(m68k_DEST_B){SR_CLEAR(SR_Z);}
+
+#ifdef TEST01
+if(m68k_DEST_B<0)
+  SR_SET(SR_N)
+  else
+SR_CLEAR(SR_N)
+#endif
+
 }
 void                              m68k_pea_or_swap(){
   if((ir&BITS_543)==BITS_543_000){ // SWAP
@@ -3638,7 +3724,9 @@ void                              m68k_movem_l_from_regs_or_ext_l(){
 #endif
     PREFETCH_IRC;
 #endif
+#if defined(SSE_CPU_TRUE_PC)
     TRUE_PC=pc+2;
+#endif
     short mask=1;
     for (int n=0;n<16;n++){
       if (m68k_src_w & mask){
@@ -4157,7 +4245,7 @@ void                              m68k_chk(){
   }else{
     m68k_GET_SOURCE_W;
     INSTRUCTION_TIME(4);
-#if defined(SSE_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
     Debug.RecordInterrupt("CHK");
 #endif
     if(r[PARAM_N]&0x8000){
@@ -4240,7 +4328,7 @@ void                              m68k_trap(){
       if (os_xbios_vector==0) if (Vector>=rom_addr) os_xbios_vector=Vector;
       break;
   }
-#if defined(SSE_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
   Debug.RecordInterrupt("TRAP",(ir&0xF));
 #endif
   m68k_interrupt(Vector);
@@ -4552,7 +4640,7 @@ void                              m68k_rts(){
   m68k_READ_W(effective_address); // Check for bus/address errors
   SET_PC(effective_address);
   intercept_os();
-#if defined(SSE_DEBUG_RUN_TO_RTS)
+#if defined(SSE_BOILER_RUN_TO_RTS)
   if(on_rte==ON_RTS_STOP)
   {
     if (runstate==RUNSTATE_RUNNING){
@@ -4566,7 +4654,7 @@ void                              m68k_rts(){
 }
 void                              m68k_trapv(){
   if (sr & SR_V){
-#if defined(SSE_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
     Debug.RecordInterrupt("TRAPV");
 #endif
     m68k_interrupt(LPEEK(BOMBS_TRAPV*4));
@@ -4634,7 +4722,9 @@ void                              m68k_addq_b(){
 #endif
   INSTRUCTION_TIME(4);
   m68k_src_b=(BYTE)PARAM_N;if(m68k_src_b==0)m68k_src_b=8;
+#if defined(SSE_CPU_TRUE_PC)
   CHECK_READ=true;
+#endif
   m68k_GET_DEST_B_NOT_A_FASTER_FOR_D;
   m68k_old_dest=m68k_DEST_B;
   PREFETCH_IRC;
@@ -4658,7 +4748,12 @@ void                              m68k_addq_b(){
     areg[PARAM_M]+=m68k_src_w;
   }else{
     INSTRUCTION_TIME(4);
+#if defined(SSE_CPU_TRUE_PC)
     CHECK_READ=true;
+#endif
+#if defined(SSE_CPU_DATABUS)
+  //  M68000.dbus=IRC;
+#endif
     m68k_GET_DEST_W_NOT_A_FASTER_FOR_D;
     m68k_old_dest=m68k_DEST_W;
     PREFETCH_IRC;
@@ -4666,6 +4761,9 @@ void                              m68k_addq_b(){
     FETCH_TIMING;
 #endif
     m68k_DEST_W+=m68k_src_w;
+#if defined(SSE_CPU_DATABUS)
+    M68000.dbus=m68k_old_dest+m68k_src_w;
+#endif
     SR_ADD_W;
   }
 }void                             m68k_addq_l(){
@@ -4684,7 +4782,9 @@ void                              m68k_addq_b(){
     
   }else{
     INSTRUCTION_TIME(8);
+#if defined(SSE_CPU_TRUE_PC)
     CHECK_READ=true;
+#endif
     m68k_GET_DEST_L_NOT_A_FASTER_FOR_D;
     m68k_old_dest=m68k_DEST_L;
     PREFETCH_IRC;
@@ -4702,7 +4802,9 @@ void                              m68k_subq_b(){
 
   m68k_src_b=(BYTE)PARAM_N;if(m68k_src_b==0)m68k_src_b=8;
   INSTRUCTION_TIME(4);
+#if defined(SSE_CPU_TRUE_PC)
   CHECK_READ=true;
+#endif
   m68k_GET_DEST_B_NOT_A_FASTER_FOR_D;
   m68k_old_dest=m68k_DEST_B;
   PREFETCH_IRC;
@@ -4726,7 +4828,9 @@ void                              m68k_subq_b(){
     areg[PARAM_M]-=m68k_src_w;
   }else{
     INSTRUCTION_TIME(4);
+#if defined(SSE_CPU_TRUE_PC)
     CHECK_READ=true;
+#endif
     m68k_GET_DEST_W_NOT_A_FASTER_FOR_D;
     m68k_old_dest=m68k_DEST_W;
     PREFETCH_IRC;
@@ -4734,6 +4838,9 @@ void                              m68k_subq_b(){
     FETCH_TIMING;
 #endif
     m68k_DEST_W-=m68k_src_w;
+#if defined(SSE_CPU_DATABUS)
+//    M68000.dbus=m68k_old_dest-m68k_src_w;
+#endif
     SR_SUB_W(SR_X);
   }
 }void                             m68k_subq_l(){
@@ -4751,7 +4858,9 @@ void                              m68k_subq_b(){
 #endif
   }else{
     INSTRUCTION_TIME(8);
+#if defined(SSE_CPU_TRUE_PC)
     CHECK_READ=true;
+#endif
     m68k_GET_DEST_L_NOT_A_FASTER_FOR_D;
     m68k_old_dest=m68k_DEST_L;
     PREFETCH_IRC;
@@ -4807,7 +4916,9 @@ Then (Dn - 1 -> Dn; If Dn  <> -1 Then PC + dn -> PC)
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_5_TIMINGS))
     FETCH_TIMING;
 #endif
+#if defined(SSE_CPU_TRUE_PC)
     CHECK_READ=true;
+#endif
     m68k_GET_DEST_B;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_5_TIMINGS)
     FETCH_TIMING;
@@ -4896,7 +5007,7 @@ void                             m68k_or_l_to_dN(){
 void m68k_divu();
 #else
 void                              m68k_divu(){
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_NODIV))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_BOILER_NODIV))
   DEBUG_ONLY(    log_to(LOGSECTION_DIV,Str("DIV: ")+HEXSl(old_pc,6)+" - "+disa_d2(old_pc));  )
 #endif
   FETCH_TIMING;
@@ -4951,7 +5062,9 @@ void                              m68k_or_b_from_dN_or_sbcd(){
       if(PARAM_M==7)areg[PARAM_M]--;
       if(PARAM_N==7)areg[PARAM_N]--;
       m68k_src_b=m68k_peek(areg[PARAM_M]);
+#if defined(SSE_CPU_TRUE_PC)
       CHECK_READ=true;
+#endif
       m68k_SET_DEST_B(areg[PARAM_N]);
     }
 #if defined(SSE_CPU_SBCD)
@@ -5028,7 +5141,9 @@ void                              m68k_or_b_from_dN_or_sbcd(){
   }default://or.b
     INSTRUCTION_TIME(4);
     EXTRA_PREFETCH; 
+#if defined(SSE_CPU_TRUE_PC)
     CHECK_READ=true;
+#endif
     m68k_GET_DEST_B_NOT_A;
     m68k_src_b=LOBYTE(r[PARAM_N]);  
     PREFETCH_IRC;
@@ -5054,7 +5169,9 @@ void                             m68k_or_w_from_dN(){
   default:
     INSTRUCTION_TIME(4);
     EXTRA_PREFETCH; 
+#if defined(SSE_CPU_TRUE_PC)
     CHECK_READ=true;
+#endif
     m68k_GET_DEST_W_NOT_A;
     m68k_src_w=LOWORD(r[PARAM_N]);
     PREFETCH_IRC;
@@ -5081,7 +5198,9 @@ void                             m68k_or_l_from_dN(){
   default:
     INSTRUCTION_TIME(8);
     EXTRA_PREFETCH; 
+#if defined(SSE_CPU_TRUE_PC)
     CHECK_READ=true;
+#endif
     m68k_GET_DEST_L_NOT_A;
     m68k_src_l=r[PARAM_N];
     PREFETCH_IRC;
@@ -5098,7 +5217,7 @@ void                             m68k_or_l_from_dN(){
 void m68k_divs();
 #else
 void                              m68k_divs(){
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_NODIV))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_BOILER_NODIV))
   DEBUG_ONLY( log_to(LOGSECTION_DIV,Str("DIV: ")+HEXSl(old_pc,6)+" - "+disa_d2(old_pc)); )
 #endif
   FETCH_TIMING;
@@ -5400,7 +5519,9 @@ void                              m68k_sub_b_from_dN(){
       areg[PARAM_M]--;      if(PARAM_M==7)areg[PARAM_M]--;
       m68k_src_b=m68k_peek(areg[PARAM_M]);
       areg[PARAM_N]--;      if(PARAM_N==7)areg[PARAM_N]--;
+#if defined(SSE_CPU_TRUE_PC)
       CHECK_READ=true;
+#endif
       m68k_SET_DEST_B(areg[PARAM_N]);
     }
     m68k_old_dest=m68k_DEST_B;
@@ -5412,7 +5533,9 @@ void                              m68k_sub_b_from_dN(){
     INSTRUCTION_TIME(4);
     EXTRA_PREFETCH; 
     m68k_src_b=LOBYTE(r[PARAM_N]);
+#if defined(SSE_CPU_TRUE_PC)
     CHECK_READ=true;
+#endif
     m68k_GET_DEST_B_NOT_A;
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_9_TIMINGS)
@@ -5454,9 +5577,9 @@ void                              m68k_sub_w_from_dN(){
   case BITS_543_001:
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_9_TIMINGS)
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
+    FETCH_TIMING_NO_ROUND;
 #else
-  INSTRUCTION_TIME(4);
+    INSTRUCTION_TIME(4);
 #endif
 #endif
 
@@ -5473,7 +5596,9 @@ void                              m68k_sub_w_from_dN(){
     }else{
       INSTRUCTION_TIME_ROUND(14);
       areg[PARAM_M]-=2;m68k_src_w=m68k_dpeek(areg[PARAM_M]);
+#if defined(SSE_CPU_TRUE_PC)
       CHECK_READ=true;
+#endif
       areg[PARAM_N]-=2;m68k_SET_DEST_W(areg[PARAM_N]);
     }
     m68k_old_dest=m68k_DEST_W;
@@ -5485,7 +5610,9 @@ void                              m68k_sub_w_from_dN(){
     INSTRUCTION_TIME(4);
     EXTRA_PREFETCH; 
     m68k_src_w=LOWORD(r[PARAM_N]);
+#if defined(SSE_CPU_TRUE_PC)
     CHECK_READ=true;
+#endif
     m68k_GET_DEST_W_NOT_A;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_9_TIMINGS)
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
@@ -5542,7 +5669,9 @@ void                              m68k_sub_l_from_dN(){
       m68k_dest=&(r[PARAM_N]);
     }else{
       areg[PARAM_M]-=4;m68k_src_l=m68k_lpeek(areg[PARAM_M]);
+#if defined(SSE_CPU_TRUE_PC)
       CHECK_READ=true;
+#endif
       areg[PARAM_N]-=4;m68k_SET_DEST_L(areg[PARAM_N]);
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_9_TIMINGS)
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
@@ -5802,7 +5931,9 @@ Dn,<ea> :         |                 |               |
     (xxx).L       |  8(1/1) 12(3/0) |   np np    nr |               np nw	
 */
     INSTRUCTION_TIME(4);
+#if defined(SSE_CPU_TRUE_PC)
     CHECK_READ=true;
+#endif
     m68k_GET_DEST_B_NOT_A_FASTER_FOR_D;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_B_TIMINGS)
     FETCH_TIMING;
@@ -5833,7 +5964,9 @@ void                             m68k_eor_w(){
     SR_SUB_W(0);
   }else{
     INSTRUCTION_TIME(4);
+#if defined(SSE_CPU_TRUE_PC)
     CHECK_READ=true;
+#endif
     m68k_GET_DEST_W_NOT_A_FASTER_FOR_D; //SS: with 'extra prefetch'
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_B_TIMINGS)
     FETCH_TIMING;
@@ -5880,7 +6013,9 @@ Dn,<ea> :         |                 |               |
     (xxx).L       | 12(1/2) 16(4/0) |   np np nR nr |               np nw nW    
 */
     INSTRUCTION_TIME(8);
+#if defined(SSE_CPU_TRUE_PC)
     CHECK_READ=true;
+#endif
     m68k_GET_DEST_L_NOT_A_FASTER_FOR_D;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_B_TIMINGS)
     FETCH_TIMING;
@@ -5925,7 +6060,7 @@ void                             m68k_cmpa_l(){
   compare_buffer=m68k_old_dest;
   m68k_dest=&compare_buffer;
   m68k_DEST_L-=m68k_src_l;
-  SR_SUB_L(0);
+  SR_SUB_L(0);//SS SR_X would break Death of the Clock Cycles
 }
 //#define SSE_CPU_LINE_B_TIMINGS
 
@@ -6086,7 +6221,9 @@ void                              m68k_and_b_from_dN_or_abcd(){
       areg[PARAM_N]--;
             if(PARAM_N==7)areg[PARAM_N]--;
       m68k_src_b=m68k_peek(areg[PARAM_M]);
+#if defined(SSE_CPU_TRUE_PC)
       CHECK_READ=true;
+#endif
       m68k_SET_DEST_B(areg[PARAM_N]);
     }
 
@@ -6185,7 +6322,9 @@ void                             m68k_and_w_from_dN_or_exg_like(){
   default:
     INSTRUCTION_TIME(4);
     EXTRA_PREFETCH; 
+#if defined(SSE_CPU_TRUE_PC)
     CHECK_READ=true;
+#endif
     m68k_GET_DEST_W_NOT_A;
     m68k_src_w=LOWORD(r[PARAM_N]);
     PREFETCH_IRC;
@@ -6226,7 +6365,9 @@ void                             m68k_and_l_from_dN_or_exg_unlike(){
   default:
     INSTRUCTION_TIME(8);
     EXTRA_PREFETCH; 
+#if defined(SSE_CPU_TRUE_PC)
     CHECK_READ=true;
+#endif
     m68k_GET_DEST_L_NOT_A;
     m68k_src_l=r[PARAM_N];
     PREFETCH_IRC;
@@ -6524,7 +6665,9 @@ void                              m68k_add_b_from_dN(){
       m68k_src_b=m68k_peek(areg[PARAM_M]);
       areg[PARAM_N]--;
       if(PARAM_N==7)areg[PARAM_N]--;
+#if defined(SSE_CPU_TRUE_PC)
       CHECK_READ=true;
+#endif
       m68k_SET_DEST_B(areg[PARAM_N]);
     }
     m68k_old_dest=m68k_DEST_B;
@@ -6551,7 +6694,9 @@ void                              m68k_add_b_from_dN(){
     INSTRUCTION_TIME(4);
     EXTRA_PREFETCH; 
     m68k_src_b=LOBYTE(r[PARAM_N]);
+#if defined(SSE_CPU_TRUE_PC)
     CHECK_READ=true;
+#endif
     m68k_GET_DEST_B_NOT_A;
     m68k_old_dest=m68k_DEST_B;
 
@@ -6597,7 +6742,9 @@ void                              m68k_add_w_from_dN(){
     }else{
       INSTRUCTION_TIME_ROUND(14);
       areg[PARAM_M]-=2;m68k_src_w=m68k_dpeek(areg[PARAM_M]);
+#if defined(SSE_CPU_TRUE_PC)
       CHECK_READ=true;
+#endif
       areg[PARAM_N]-=2;m68k_SET_DEST_W(areg[PARAM_N]);
     }
     m68k_old_dest=m68k_DEST_W;
@@ -6626,7 +6773,9 @@ void                              m68k_add_w_from_dN(){
     INSTRUCTION_TIME(4);
     EXTRA_PREFETCH; 
     m68k_src_w=LOWORD(r[PARAM_N]);
+#if defined(SSE_CPU_TRUE_PC)
     CHECK_READ=true;
+#endif
     m68k_GET_DEST_W_NOT_A;
     m68k_old_dest=m68k_DEST_W;
 
@@ -6676,7 +6825,9 @@ void                              m68k_add_l_from_dN(){
     }else{ //SS -(An), -(An)
       INSTRUCTION_TIME_ROUND(26);
       areg[PARAM_M]-=4;m68k_src_l=m68k_lpeek(areg[PARAM_M]);
+#if defined(SSE_CPU_TRUE_PC)
       CHECK_READ=true;
+#endif
       areg[PARAM_N]-=4;m68k_SET_DEST_L(areg[PARAM_N]);
     }
     m68k_old_dest=m68k_DEST_L;
@@ -6748,9 +6899,18 @@ void                              m68k_add_l_from_dN(){
     (xxx).W       |  6(1/0) 12(3/0) |      np nR nr |               np       n  
     (xxx).L       |  6(1/0) 16(4/0) |   np np nR nr |               np       n  
     #<data>       |  8(1/0)  8(2/0) |   np np       |               np       nn 
+
+
+SS: does it make sense?
+The CPU must do the same once it has the <EA>: prefetch and add.
+Why would it take more time with Rn and #?
+Cases:  Cernit Trandafir - wants shorter timings
+        Pulsion 172 - wants longer timings
+For the moment, it's a hack. Needs more research.
 */
 
 void                             m68k_adda_l(){
+
 #if !defined(SSE_CPU_LINE_D_TIMINGS)
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
   FETCH_TIMING_NO_ROUND;
@@ -7450,7 +7610,9 @@ void                              m68k_bit_shift_right_to_mem(){
   FETCH_TIMING;
 #endif
   INSTRUCTION_TIME(4);
+#if defined(SSE_CPU_TRUE_PC)
   CHECK_READ=true;
+#endif
   m68k_GET_DEST_W_NOT_A_OR_D;
   PREFETCH_IRC;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_E_TIMINGS)
@@ -7507,7 +7669,9 @@ void                              m68k_bit_shift_left_to_mem(){
   FETCH_TIMING;
 #endif
   INSTRUCTION_TIME(4);
+#if defined(SSE_CPU_TRUE_PC)
   CHECK_READ=true;
+#endif
   m68k_GET_DEST_W_NOT_A_OR_D;
   PREFETCH_IRC;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_E_TIMINGS)
@@ -7985,7 +8149,7 @@ extern "C" void m68k_1010() //line-a
 #else
   INSTRUCTION_TIME_ROUND(34);
 #endif
-#if defined(SSE_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
   Debug.RecordInterrupt("LINEA");
 #endif
   m68k_interrupt(LPEEK(BOMBS_LINE_A*4));
@@ -8032,7 +8196,7 @@ extern "C" void m68k_1111(){  //line-f emulator
 #else
   INSTRUCTION_TIME_ROUND(34);
 #endif
-#if defined(SSE_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
 //  Debug.RecordInterrupt("LINEF");
 #endif
   m68k_interrupt(LPEEK(BOMBS_LINE_F*4));
