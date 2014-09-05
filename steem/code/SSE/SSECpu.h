@@ -223,7 +223,9 @@ struct TM68000 {
 #endif
 
   inline void PrefetchIrc();
+#if !defined(SSE_CPU_ROUNDING2)
   inline void PrefetchIrcNoRound();
+#endif
   inline void RefetchIr();
 
 #endif
@@ -574,6 +576,10 @@ inline void TM68000::InstructionTimeRound(int t) {
 }
 #define INSTRUCTION_TIME_ROUND(t) M68000.InstructionTimeRound(t)
 
+#ifdef CPU_ABUS_ACCESS //just new macros
+#define CPU_ABUS_ACCESS_READ  M68000.InstructionTimeRound(4)
+#define CPU_ABUS_ACCESS_WRITE  M68000.InstructionTimeRound(4)
+#endif
 
 #define m68k_interrupt(ad) M68000.Interrupt(ad)
 
@@ -709,26 +715,28 @@ inline void TM68000::PrefetchIrcNoRound() { // the same except no rounding
 
 #define EXTRA_PREFETCH //all prefetches actually are "extra"!
 #define PREFETCH_IRC  M68000.PrefetchIrc()
+#if !defined(SSE_CPU_ROUNDING2)
 #define PREFETCH_IRC_NO_ROUND  M68000.PrefetchIrcNoRound()
-
+#endif
 #else //not defined, macros do nothing
 
 #define EXTRA_PREFETCH
 #define PREFETCH_IRC
+#if !defined(SSE_CPU_ROUNDING2)
 #define PREFETCH_IRC_NO_ROUND
-
+#endif
 #endif
 
 // core function, dispatches in cpu emu, inlining m68k_PROCESS
 
 inline void TM68000::Process() {
+
   LOG_CPU  
 #if defined(SSE_DEBUG)
   IrAddress=pc;
   PreviousIr=IRD;
   nInstr++;
 #if defined(SSE_CPU_FETCH_TIMING) && defined(DEBUG_BUILD) \
-  && defined(SSE_DEBUG_TRACE_PREFETCH)
   // 4e72 = STOP, where no fetching occurs
   // 4afc = ILLEGAL
 //  ASSERT( NextIrFetched || ir==0x4e72 || ir==0x4afc); // strong

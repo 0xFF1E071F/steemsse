@@ -214,7 +214,6 @@ void m68k_get_source_100_w(){ // .W -(An)
   INSTRUCTION_TIME(6);
 #else
   INSTRUCTION_TIME_ROUND(6);
-#endif
 
   areg[PARAM_M]-=2;
 

@@ -86,8 +86,16 @@ void sr_check_z_n_l_for_r0()
 #if !defined(PREFETCH_IRC)
 #define PREFETCH_IRC 
 #define REFETCH_IR 
+#if !defined(SSE_CPU_ROUNDING2)
 #define PREFETCH_IRC_NO_ROUND
 #endif
+#endif
+
+#ifndef CPU_ABUS_ACCESS
+#define CPU_ABUS_ACCESS_READ INSTRUCTION_TIME_ROUND(4)
+#define CPU_ABUS_ACCESS_WRITE INSTRUCTION_TIME_ROUND(4)
+#endif
+
 #if !defined(TRUE_PC)
 int silly_dummy_for_true_pc;
 #define TRUE_PC silly_dummy_for_true_pc
@@ -2376,8 +2384,8 @@ void                              m68k_cmpi_b(){
   FETCH_TIMING;
 #endif
 
-#if defined(SSE_CPU_PREFETCH_TIMING_CMPI_BW) //3.6.4
-  INSTRUCTION_TIME_ROUND(4); // this counte cycles for immediate
+#if defined(SSE_CPU_ROUNDING_CMPI_BW)
+  CPU_ABUS_ACCESS_READ;
 #else
   INSTRUCTION_TIME(4);
 #endif
@@ -2403,8 +2411,8 @@ void                              m68k_cmpi_w(){
   FETCH_TIMING;
 #endif
 
-#if defined(SSE_CPU_PREFETCH_TIMING_CMPI_BW) //3.6.4
-  INSTRUCTION_TIME_ROUND(4);
+#if defined(SSE_CPU_ROUNDING_CMPI_BW)
+  CPU_ABUS_ACCESS_READ;
 #else
   INSTRUCTION_TIME(4);
 #endif
@@ -2427,22 +2435,30 @@ void                              m68k_cmpi_l(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
 #endif
+
+#if defined(SSE_CPU_ROUNDING_CMPI_L) && defined(SSE_CPU_ROUNDING_CMPI_L2)
+  CPU_ABUS_ACCESS_READ;
+  CPU_ABUS_ACCESS_READ;
+#endif
+
   m68k_GET_IMMEDIATE_L; //SS this doesn't count cycles
 
-#if defined(SSE_CPU_PREFETCH_TIMING_CMPI_L)
+#if defined(SSE_CPU_ROUNDING_CMPI_L) && !defined(SSE_CPU_ROUNDING_CMPI_L2)
   INSTRUCTION_TIME_ROUND(8); // for immediate
-#else
+#endif
+
+#if !defined(SSE_CPU_ROUNDING_CMPI_L)
   if(DEST_IS_REGISTER){INSTRUCTION_TIME(10);} else {INSTRUCTION_TIME(8);}
 #endif
 
   m68k_old_dest=m68k_read_dest_l(); //SS this counts cycles
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS)
   FETCH_TIMING;
 #endif
-
   PREFETCH_IRC;
 
-#if defined(SSE_CPU_PREFETCH_TIMING_CMPI_L)
+#if defined(SSE_CPU_ROUNDING_CMPI_L)
 /* Japtro disk B overscan dot balls, we were rounding 14 to 16 in v3.5
 */
   if(DEST_IS_REGISTER){INSTRUCTION_TIME(2);}
@@ -2454,6 +2470,19 @@ void                              m68k_cmpi_l(){
   SR_SUB_L(0);
 }
 
+/*
+-------------------------------------------------------------------------------
+                  |    Exec Time    |               Data Bus Usage
+      MOVEP       |      INSTR      |                  INSTR
+------------------+-----------------+------------------------------------------
+Dx,(d16,Ay) :     |                 |
+  .W :            | 16(2/2)         |                np    nW    nw np          
+  .L :            | 24(2/4)         |                np nW nW nw nw np          
+(d16,Ay),Dx :     |                 |
+  .W :            | 16(4/0)         |                np    nR    nr np          
+  .L :            | 24(6/0)         |                np nR nR nr nr np          
+*/
+
 //#define SSE_CPU_LINE_0_TIMINGS
 void                              m68k_movep_w_to_dN_or_btst(){
 
@@ -2464,15 +2493,31 @@ void                              m68k_movep_w_to_dN_or_btst(){
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_CLASS)
     M68000.PrefetchClass=1;
 #endif
+#if defined(SSE_CPU_ROUNDING_MOVEP_MR_W)
+    CPU_ABUS_ACCESS_READ;
+#endif
     MEM_ADDRESS addr=areg[PARAM_M]+(signed short)m68k_fetchW();
+#if !defined(SSE_CPU_ROUNDING_MOVEP_MR_W)
     INSTRUCTION_TIME(4);
+#endif
     pc+=2; 
+#if defined(SSE_CPU_ROUNDING_MOVEP_MR_W)
+    CPU_ABUS_ACCESS_READ;
+#endif
     m68k_READ_B(addr);
     DWORD_B_1(&r[PARAM_N])=m68k_src_b; //high byte
+#if !defined(SSE_CPU_ROUNDING_MOVEP_MR_W)
     INSTRUCTION_TIME(4);
+#endif
+#if defined(SSE_CPU_ROUNDING_MOVEP_MR_W)
+    CPU_ABUS_ACCESS_READ;
+#endif
     m68k_READ_B(addr+2);
     DWORD_B_0(&r[PARAM_N])=m68k_src_b; //low byte
+#if !defined(SSE_CPU_ROUNDING_MOVEP_MR_W)
     INSTRUCTION_TIME(4);
+#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS)
     FETCH_TIMING;
 #endif
@@ -2518,26 +2563,53 @@ void                              m68k_movep_l_to_dN_or_bchg(){
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_CLASS)
     M68000.PrefetchClass=1;
 #endif
+
+#if defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
+    CPU_ABUS_ACCESS_READ;
+#endif
     MEM_ADDRESS addr=areg[PARAM_M]+(signed short)m68k_fetchW();
     pc+=2; 
-    INSTRUCTION_TIME(4);
 
+#if !defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
+    INSTRUCTION_TIME(4);
+#endif
+#if defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
+    CPU_ABUS_ACCESS_READ;
+#endif
     ///// Should handle blitter here, blitter would start 1 word after busy is set
     m68k_READ_B(addr)
     DWORD_B_3(&r[PARAM_N])=m68k_src_b;
+#if !defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
     INSTRUCTION_TIME(4);
+#endif
 
+#if defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
+    CPU_ABUS_ACCESS_READ;
+#endif
     m68k_READ_B(addr+2)
     DWORD_B_2(&r[PARAM_N])=m68k_src_b;
+#if !defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
     INSTRUCTION_TIME(4);
+#endif
 
+#if defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
+    CPU_ABUS_ACCESS_READ;
+#endif
     m68k_READ_B(addr+4)
     DWORD_B_1(&r[PARAM_N])=m68k_src_b;
+#if !defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
     INSTRUCTION_TIME(4);
+#endif
 
+#if defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
+    CPU_ABUS_ACCESS_READ;
+#endif
     m68k_READ_B(addr+6)
     DWORD_B_0(&r[PARAM_N])=m68k_src_b;
+#if !defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
     INSTRUCTION_TIME(4);
+#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS)
     FETCH_TIMING;
 #endif
@@ -2586,13 +2658,27 @@ void                              m68k_movep_w_from_dN_or_bclr(){
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_CLASS)
     M68000.PrefetchClass=1;
 #endif
+
+#if defined(SSE_CPU_ROUNDING_MOVEP_RM_W)
+    CPU_ABUS_ACCESS_READ;
+#endif
     MEM_ADDRESS ad=areg[PARAM_M]+(short)m68k_fetchW();
     pc+=2; 
+#if !defined(SSE_CPU_ROUNDING_MOVEP_RM_W)
     INSTRUCTION_TIME(4);
+#endif
+#if defined(SSE_CPU_ROUNDING_MOVEP_RM_W)
+    CPU_ABUS_ACCESS_WRITE;
+#else
     INSTRUCTION_TIME(4);
+#endif
     m68k_poke(ad,DWORD_B_1(&r[PARAM_N]));
     ad+=2;
+#if defined(SSE_CPU_ROUNDING_MOVEP_RM_W)
+    CPU_ABUS_ACCESS_WRITE;
+#else
     INSTRUCTION_TIME(4);
+#endif
     m68k_poke(ad,DWORD_B_0(&r[PARAM_N]));
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS)
     FETCH_TIMING;
@@ -2644,24 +2730,51 @@ void                              m68k_movep_l_from_dN_or_bset(){
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_CLASS)
     M68000.PrefetchClass=1; 
 #endif
+
+#if defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
+    CPU_ABUS_ACCESS_READ;
+#endif
     MEM_ADDRESS ad=areg[PARAM_M]+(signed short)m68k_fetchW();
     pc+=2; 
+#if !defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
     INSTRUCTION_TIME(4);
+#endif
 
     BYTE *p=(BYTE*)(&r[PARAM_N]);
+
+#if defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
+    CPU_ABUS_ACCESS_WRITE;
+#endif
+#if !defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
     INSTRUCTION_TIME(4);
+#endif
     m68k_poke(ad,DWORD_B_3(p));
     ad+=2;
 
+#if defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
+    CPU_ABUS_ACCESS_WRITE;
+#endif
+#if !defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
     INSTRUCTION_TIME(4);
+#endif
     m68k_poke(ad,DWORD_B_2(p));
     ad+=2;
 
+#if defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
+    CPU_ABUS_ACCESS_WRITE;
+#endif
+#if !defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
     INSTRUCTION_TIME(4);
+#endif
     m68k_poke(ad,DWORD_B_1(p));
     ad+=2;
 
+#if defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
+    CPU_ABUS_ACCESS_WRITE;
+#endif
+#if !defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
     INSTRUCTION_TIME(4);
+#endif
     m68k_poke(ad,DWORD_B_0(p));
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS)
@@ -3325,19 +3438,22 @@ void                              m68k_movem_w_from_regs_or_ext_w(){
 #endif
     m68k_DEST_W=(signed short)((signed char)LOBYTE(r[PARAM_M]));
     SR_CHECK_Z_AND_N_W;
-  }else if ((ir & BITS_543)==BITS_543_100){ //predecrement //SS MOVEM -(An)
+  }
+  //SS MOVEM R->M -(An)
+  else if ((ir & BITS_543)==BITS_543_100){ //predecrement 
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_CLASS)
     M68000.PrefetchClass=1; 
 #endif
-    m68k_src_w=m68k_fetchW();pc+=2; 
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-    INSTRUCTION_TIME_ROUND(4);
-#else
+    CPU_ABUS_ACCESS_READ;
+#endif
+    m68k_src_w=m68k_fetchW();pc+=2; 
+#if !defined(SSE_CPU_ROUNDING_MOVEM)
     INSTRUCTION_TIME(4);
 #endif
     MEM_ADDRESS ad=areg[PARAM_M];
     DWORD areg_hi=(areg[PARAM_M] & 0xff000000);
-#if defined(SSE_CPU_PREFETCH_TIMING_MOVEM)
+#if defined(SSE_CPU_PREFETCH_TIMING_MOVEM_W_R2M2)
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
     FETCH_TIMING;
 #endif
@@ -3347,8 +3463,13 @@ void                              m68k_movem_w_from_regs_or_ext_w(){
     for (int n=0;n<16;n++){
       if (m68k_src_w & mask){
         ad-=2;
+#if defined(SSE_CPU_MOVEM_RM_W_TIMING2)
+        CPU_ABUS_ACCESS_WRITE;
+#endif
         m68k_dpoke(ad,LOWORD(r[15-n]));
+#if !defined(SSE_CPU_MOVEM_RM_W_TIMING2)
         INSTRUCTION_TIME(4);
+#endif
         if (ioaccess & IOACCESS_FLAG_DO_BLIT){
           // After word that starts blitter must write one more word, then blit
           if ((++BlitterStart)==2){
@@ -3362,7 +3483,7 @@ void                              m68k_movem_w_from_regs_or_ext_w(){
     // The register written to memory should be the original one, so
     // predecrement afterwards.
     areg[PARAM_M]=ad | areg_hi;
-#if !defined(SSE_CPU_PREFETCH_TIMING_MOVEM)
+#if !defined(SSE_CPU_PREFETCH_TIMING_MOVEM_W_R2M2)
     PREFETCH_IRC;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
     FETCH_TIMING;
@@ -3372,10 +3493,11 @@ void                              m68k_movem_w_from_regs_or_ext_w(){
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_CLASS)
     M68000.PrefetchClass=1; 
 #endif
-    m68k_src_w=m68k_fetchW();pc+=2; 
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-    INSTRUCTION_TIME_ROUND(4);
-#else
+    CPU_ABUS_ACCESS_READ;
+#endif
+    m68k_src_w=m68k_fetchW();pc+=2; 
+#if !defined(SSE_CPU_ROUNDING_MOVEM)
     INSTRUCTION_TIME(4);
 #endif
     MEM_ADDRESS ad;
@@ -3385,28 +3507,48 @@ void                              m68k_movem_w_from_regs_or_ext_w(){
       ad=areg[PARAM_M];
       break;
     case BITS_543_101: // (d16,An)
+#if defined(SSE_CPU_ROUNDING_MOVEM)
+      CPU_ABUS_ACCESS_READ;
+#else
       INSTRUCTION_TIME(4);
+#endif
       ad=areg[PARAM_M]+(signed short)m68k_fetchW();
       pc+=2; 
       break;
     case BITS_543_110: // (d8, An, Xn)
+#if defined(SSE_CPU_ROUNDING_MOVEM6)
+      CPU_ABUS_ACCESS_READ;
+#else
       INSTRUCTION_TIME(6);
+#endif
       m68k_iriwo=m68k_fetchW();pc+=2; 
       if(m68k_iriwo&BIT_b){  //.l
         ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
       }else{         //.w
         ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
       }
+#if defined(SSE_CPU_ROUNDING_MOVEM6)
+      INSTRUCTION_TIME(2);
+#endif
       break;
     case BITS_543_111:
       switch(ir&0x7){
       case 0:
+#if defined(SSE_CPU_ROUNDING_MOVEM6)
+        CPU_ABUS_ACCESS_READ;
+#else
         INSTRUCTION_TIME(4);
+#endif
         ad=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
         pc+=2; 
         break;
       case 1:
+#if defined(SSE_CPU_ROUNDING_MOVEM6)
+        CPU_ABUS_ACCESS_READ;
+        CPU_ABUS_ACCESS_READ;
+#else
         INSTRUCTION_TIME(8);
+#endif
         ad=0xffffff & m68k_fetchL();
         pc+=4;  
         break;
@@ -3420,7 +3562,7 @@ void                              m68k_movem_w_from_regs_or_ext_w(){
       ad=0; // This is to stop an annoying warning
       m68k_unrecognised();
     }
-#if defined(SSE_CPU_PREFETCH_TIMING_MOVEM)
+#if defined(SSE_CPU_PREFETCH_TIMING_MOVEM_W_R2M)
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
     FETCH_TIMING;
 #endif
@@ -3429,8 +3571,13 @@ void                              m68k_movem_w_from_regs_or_ext_w(){
     short mask=1,BlitterStart=0;
     for (int n=0;n<16;n++){
       if (m68k_src_w & mask){
+#if defined(SSE_CPU_MOVEM_RM_W_TIMING)
+        CPU_ABUS_ACCESS_WRITE;
+#endif
         m68k_dpoke(ad,LOWORD(r[n]));
+#if !defined(SSE_CPU_MOVEM_RM_W_TIMING)
         INSTRUCTION_TIME(4);
+#endif
         ad+=2;
         if (ioaccess & IOACCESS_FLAG_DO_BLIT){
           // After word that starts blitter must write one more word, then blit
@@ -3442,7 +3589,7 @@ void                              m68k_movem_w_from_regs_or_ext_w(){
       }
       mask<<=1;
     }
-#if !defined(SSE_CPU_PREFETCH_TIMING_MOVEM)
+#if !defined(SSE_CPU_PREFETCH_TIMING_MOVEM_W_R2M)
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
     FETCH_TIMING;
 #endif
@@ -3476,15 +3623,16 @@ void                              m68k_movem_l_from_regs_or_ext_l(){
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_CLASS) 
     M68000.PrefetchClass=1; 
 #endif
-    m68k_src_w=m68k_fetchW();pc+=2; 
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-    INSTRUCTION_TIME_ROUND(4);
-#else
+    CPU_ABUS_ACCESS_READ;
+#endif
+    m68k_src_w=m68k_fetchW();pc+=2; 
+#if !defined(SSE_CPU_ROUNDING_MOVEM)
     INSTRUCTION_TIME(4);
 #endif
     MEM_ADDRESS ad=areg[PARAM_M];
     DWORD areg_hi=(areg[PARAM_M] & 0xff000000);
-#if defined(SSE_CPU_PREFETCH_TIMING_MOVEM)
+#if defined(SSE_CPU_PREFETCH_TIMING_MOVEM_L_R2M2)
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
     FETCH_TIMING;
 #endif
@@ -3495,9 +3643,16 @@ void                              m68k_movem_l_from_regs_or_ext_l(){
     for (int n=0;n<16;n++){
       if (m68k_src_w & mask){
         ad-=4;
+#if defined(SSE_CPU_MOVEM_RM_L_TIMING2)
+        CPU_ABUS_ACCESS_WRITE;
+        CPU_ABUS_ACCESS_WRITE;
+#else
         INSTRUCTION_TIME(4);
+#endif
         m68k_lpoke(ad,r[15-n]);
+#if !defined(SSE_CPU_MOVEM_RM_L_TIMING2)
         INSTRUCTION_TIME(4);
+#endif
         if (ioaccess & IOACCESS_FLAG_DO_BLIT) Blitter_Start_Now();
       }
       mask<<=1;
@@ -3505,7 +3660,7 @@ void                              m68k_movem_l_from_regs_or_ext_l(){
     // The register written to memory should be the original one, so
     // predecrement afterwards.
     areg[PARAM_M]=ad | areg_hi;
-#if !defined(SSE_CPU_PREFETCH_TIMING_MOVEM)
+#if !defined(SSE_CPU_PREFETCH_TIMING_MOVEM_L_R2M2)
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
     FETCH_TIMING;
 #endif
@@ -3515,20 +3670,22 @@ void                              m68k_movem_l_from_regs_or_ext_l(){
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_CLASS) 
     M68000.PrefetchClass=1; 
 #endif
-    m68k_src_w=m68k_fetchW();pc+=2; 
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-    INSTRUCTION_TIME_ROUND(4);
-#else
+    CPU_ABUS_ACCESS_READ;
+#endif
+    m68k_src_w=m68k_fetchW();pc+=2; 
+#if !defined(SSE_CPU_ROUNDING_MOVEM)
     INSTRUCTION_TIME(4);
 #endif
     MEM_ADDRESS ad;
+//    ASSERT(scan_y!=200);
     switch(ir&BITS_543){
     case BITS_543_010:
       ad=areg[PARAM_M];
       break;
     case BITS_543_101:
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-      INSTRUCTION_TIME_ROUND(4);
+      CPU_ABUS_ACCESS_READ;
 #else
       INSTRUCTION_TIME(4);
 #endif
@@ -3538,7 +3695,8 @@ void                              m68k_movem_l_from_regs_or_ext_l(){
     case BITS_543_110:
       m68k_ap=m68k_fetchW();pc+=2; 
 #if defined(SSE_CPU_ROUNDING_MOVEM6)
-      INSTRUCTION_TIME_ROUND(6);
+      CPU_ABUS_ACCESS_READ;
+      ///INSTRUCTION_TIME_ROUND(6);
 #else
       INSTRUCTION_TIME(6);
 #endif
@@ -3547,28 +3705,34 @@ void                              m68k_movem_l_from_regs_or_ext_l(){
       }else{         //.w
         ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_ap)+(signed short)r[m68k_ap>>12];
       }
+#if defined(SSE_CPU_ROUNDING_MOVEM6)
+      INSTRUCTION_TIME(2);
+#endif
       break;
     case BITS_543_111:
       switch(ir&0x7){
-      case 0:
-        ad=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
+      case 0://(xxx).W
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-        INSTRUCTION_TIME_ROUND(4);
-#else
+        CPU_ABUS_ACCESS_READ;
+#endif
+        ad=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
+#if !defined(SSE_CPU_ROUNDING_MOVEM)
         INSTRUCTION_TIME(4);
 #endif
         pc+=2; 
         break;
-      case 1:
-        ad=0xffffff&m68k_fetchL();
+      case 1://(xxx).L
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-        INSTRUCTION_TIME_ROUND(8);
-#else
+        CPU_ABUS_ACCESS_READ;
+        CPU_ABUS_ACCESS_READ;
+#endif
+        ad=0xffffff&m68k_fetchL();
+#if !defined(SSE_CPU_ROUNDING_MOVEM)
         INSTRUCTION_TIME(8);
 #endif
         pc+=4;  
         break;
-      default:
+      default: //ILLEGAL
         ad=0; // This is to stop an annoying warning
         m68k_unrecognised();
         break;
@@ -3578,34 +3742,48 @@ void                              m68k_movem_l_from_regs_or_ext_l(){
       ad=0; // This is to stop an annoying warning
       m68k_unrecognised();
     }
-#if defined(SSE_CPU_PREFETCH_TIMING_MOVEM)
-    PREFETCH_IRC; // this is wrong but: Dragonnels menu at overscan limit
-#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
-    FETCH_TIMING;
-#endif
-#endif
-    TRUE_PC=pc+2; // Blood Money original
-#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PC_FIXES)
-    pc+=2; // Blood Money original
-#endif
-    short mask=1;
-    for (int n=0;n<16;n++){
-      if (m68k_src_w&mask){
-        INSTRUCTION_TIME_ROUND(4);
-        m68k_lpoke(ad,r[n]);
-        ad+=4;
-        INSTRUCTION_TIME(4);
-      }
-      mask<<=1;
-    }
-#if !defined(SSE_CPU_PREFETCH_TIMING_MOVEM)
+#if defined(SSE_CPU_PREFETCH_TIMING_MOVEM_L_R2M)
+/* see below, we must define either SSE_CPU_PREFETCH_TIMING_MOVEM_L_R2M
+   or SSE_CPU_MOVEM_RM_L_TIMING for Dragonnel menu correct display on
+   line 200.
+   SSE_CPU_PREFETCH_TIMING_MOVEM_L_R2M = hack before 3.7
+   SSE_CPU_MOVEM_RM_L_TIMING = legit fix in Steem CPU since 3.7
+*/
     PREFETCH_IRC; 
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
     FETCH_TIMING;
 #endif
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PC_FIXES)
-    pc-=2; // back to Steem reckoning
+#if defined(SSE_CPU_TRUE_PC)
+    TRUE_PC=pc+2; // Blood Money original
+#endif
+    short mask=1;
+    for (int n=0;n<16;n++){
+      if (m68k_src_w&mask){
+#if defined(SSE_CPU_MOVEM_RM_L_TIMING)
+/*  It seems that timing should be counted at once during the long
+    move.
+    With this switch Dragonnels menu is correct and prefetch is
+    correctly placed, at the end of the instruction, at last.
+*/
+        CPU_ABUS_ACCESS_WRITE;
+        CPU_ABUS_ACCESS_WRITE;
+#else
+        INSTRUCTION_TIME_ROUND(4);
+#endif
+        m68k_lpoke(ad,r[n]);
+        ad+=4;
+#if !defined(SSE_CPU_MOVEM_RM_L_TIMING)
+        INSTRUCTION_TIME(4);
+#endif
+      }
+      mask<<=1;
+    }
+#if !defined(SSE_CPU_PREFETCH_TIMING_MOVEM_L_R2M)
+    PREFETCH_IRC; 
+#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
+    FETCH_TIMING;
+#endif
 #endif
   }
 
@@ -3624,10 +3802,11 @@ void                              m68k_movem_l_to_regs(){
 #endif
 
   bool postincrement=false;
+#if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
+  CPU_ABUS_ACCESS_READ;// fixes Hackabonds Demo instructions scroller
+#endif
   m68k_src_w=m68k_fetchW();pc+=2;  // SS: TODO what if m68k_src_w=0?
-#if defined(SSE_CPU_MOVEM_MR_L)
-  INSTRUCTION_TIME_ROUND(4);// fixes Hackabonds Demo instructions scroller
-#else
+#if !defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
   INSTRUCTION_TIME(4);
 #endif
   MEM_ADDRESS ad;
@@ -3640,44 +3819,76 @@ void                              m68k_movem_l_to_regs(){
     postincrement=true;
     break;
   case BITS_543_101:
+#if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
+    CPU_ABUS_ACCESS_READ;
+#endif
     ad=areg[PARAM_M]+(signed short)m68k_fetchW();
+#if !defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
     INSTRUCTION_TIME(4);
+#endif
     pc+=2; 
     break;
   case BITS_543_110:
+#if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
+    CPU_ABUS_ACCESS_READ;
+#else
     INSTRUCTION_TIME(6);
+#endif
     m68k_iriwo=m68k_fetchW();pc+=2; 
     if(m68k_iriwo&BIT_b){  //.l
       ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
     }else{         //.w
       ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
     }
+#if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
+    INSTRUCTION_TIME(2);
+#endif
     break;
   case BITS_543_111:
     switch(ir&0x7){
     case 0:
+#if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
+      CPU_ABUS_ACCESS_READ;
+#else
       INSTRUCTION_TIME(4);
+#endif
       ad=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
       pc+=2; 
       break;
     case 1:
+#if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
+      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ;
+#else
       INSTRUCTION_TIME(8);
+#endif
       ad=0xffffff&m68k_fetchL();
       pc+=4;  
       break;
     case 2:
+#if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
+      CPU_ABUS_ACCESS_READ;
+#else
       INSTRUCTION_TIME(4);
+#endif
       ad=pc+(signed short)m68k_fetchW();
       pc+=2; 
       break;
     case 3:
+#if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
+      CPU_ABUS_ACCESS_READ;
+#else
       INSTRUCTION_TIME(6);
+#endif
       m68k_iriwo=m68k_fetchW();
       if(m68k_iriwo&BIT_b){  //.l
         ad=pc+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
       }else{         //.w
         ad=pc+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
       }
+#if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
+      INSTRUCTION_TIME(2);
+#endif
       pc+=2; 
       break;
     default:
@@ -3690,20 +3901,30 @@ void                              m68k_movem_l_to_regs(){
     ad=0; // This is to stop an annoying warning
     m68k_unrecognised();
   }
-#if defined(SSE_CPU_PREFETCH_TIMING_MOVEM)
+#if defined(SSE_CPU_PREFETCH_TIMING_MOVEM_L_M2R)
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
   FETCH_TIMING;
 #endif
   PREFETCH_IRC;
 #endif
+#if defined(SSE_CPU_TRUE_PC)
   TRUE_PC=pc+2;
+#endif
   DWORD areg_hi=(areg[PARAM_M] & 0xff000000);
   short mask=1;
   for (int n=0;n<16;n++){
     if (m68k_src_w & mask){
+      
+#if defined(SSE_CPU_MOVEM_MR_L_TIMING)
+      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ;
+#else
       INSTRUCTION_TIME_ROUND(4);
+#endif
       r[n]=m68k_lpeek(ad);
+#if !defined(SSE_CPU_MOVEM_MR_L_TIMING)
       INSTRUCTION_TIME(4);
+#endif
       ad+=4;
     }
     mask<<=1;
@@ -3711,7 +3932,7 @@ void                              m68k_movem_l_to_regs(){
   if (postincrement) areg[PARAM_M]=ad | areg_hi;
   m68k_dpeek(ad); //extra word read (discarded)
   INSTRUCTION_TIME_ROUND(4);
-#if !defined(SSE_CPU_PREFETCH_TIMING_MOVEM)
+#if !defined(SSE_CPU_PREFETCH_TIMING_MOVEM_L_M2R)
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
   FETCH_TIMING;
 #endif
@@ -3733,7 +3954,7 @@ void                              m68k_movem_w_to_regs(){
 
   bool postincrement=false;
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-  INSTRUCTION_TIME_ROUND(4);
+  CPU_ABUS_ACCESS_READ;
 #else
   INSTRUCTION_TIME(4);
 #endif
@@ -3750,7 +3971,7 @@ void                              m68k_movem_w_to_regs(){
     break;
   case BITS_543_101:
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-    INSTRUCTION_TIME_ROUND(4);
+    CPU_ABUS_ACCESS_READ;
 #else
     INSTRUCTION_TIME(4);
 #endif
@@ -3759,7 +3980,8 @@ void                              m68k_movem_w_to_regs(){
     break;
   case BITS_543_110:
 #if defined(SSE_CPU_ROUNDING_MOVEM6)
-    INSTRUCTION_TIME_ROUND(6);
+    CPU_ABUS_ACCESS_READ;
+    //INSTRUCTION_TIME_ROUND(6);
 #else
     INSTRUCTION_TIME(6);
 #endif
@@ -3769,12 +3991,15 @@ void                              m68k_movem_w_to_regs(){
     }else{         //.w
       ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
     }
+#if defined(SSE_CPU_ROUNDING_MOVEM6)
+    INSTRUCTION_TIME(2);
+#endif
     break;
   case BITS_543_111:
     switch(ir&0x7){
     case 0:
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-      INSTRUCTION_TIME_ROUND(4);
+      CPU_ABUS_ACCESS_READ;
 #else
       INSTRUCTION_TIME(4);
 #endif      
@@ -3783,7 +4008,8 @@ void                              m68k_movem_w_to_regs(){
       break;
     case 1:
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-      INSTRUCTION_TIME_ROUND(8);
+      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ;
 #else
       INSTRUCTION_TIME(8);
 #endif      
@@ -3792,16 +4018,17 @@ void                              m68k_movem_w_to_regs(){
       break;
     case 2:
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-    INSTRUCTION_TIME_ROUND(4);
+      CPU_ABUS_ACCESS_READ;
 #else
-    INSTRUCTION_TIME(4);
+      INSTRUCTION_TIME(4);
 #endif
       ad=pc+(signed short)m68k_fetchW();
       pc+=2; 
       break;
     case 3:
 #if defined(SSE_CPU_ROUNDING_MOVEM6)
-      INSTRUCTION_TIME_ROUND(6);
+      CPU_ABUS_ACCESS_READ;
+      //INSTRUCTION_TIME_ROUND(6);
 #else
       INSTRUCTION_TIME(6);
 #endif
@@ -3811,6 +4038,9 @@ void                              m68k_movem_w_to_regs(){
       }else{         //.w
         ad=pc+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
       }
+#if defined(SSE_CPU_ROUNDING_MOVEM6)
+      INSTRUCTION_TIME(2);
+#endif
       pc+=2; 
       // m68k_src_w=// D2_IRIWO_PC;
       break;
@@ -3824,19 +4054,26 @@ void                              m68k_movem_w_to_regs(){
     ad=0; // This is to stop an annoying warning
     m68k_unrecognised();
   }
-#if defined(SSE_CPU_PREFETCH_TIMING_MOVEM)
+#if defined(SSE_CPU_PREFETCH_TIMING_MOVEM_W_M2R)
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
   FETCH_TIMING;
 #endif
   PREFETCH_IRC;
 #endif
   DWORD areg_hi=(areg[PARAM_M] & 0xff000000);
+#if defined(SSE_CPU_TRUE_PC)
   TRUE_PC=pc+2;
+#endif
   short mask=1;
   for(int n=0;n<16;n++){
     if (m68k_src_w & mask){
+#if defined(SSE_CPU_MOVEM_MR_W_TIMING)
+      CPU_ABUS_ACCESS_READ;
+#endif
       r[n]=(signed long)((signed short)m68k_dpeek(ad));
+#if !defined(SSE_CPU_MOVEM_MR_W_TIMING)
       INSTRUCTION_TIME_ROUND(4);
+#endif
       ad+=2;
     }
     mask<<=1;
@@ -3844,7 +4081,7 @@ void                              m68k_movem_w_to_regs(){
   if (postincrement) areg[PARAM_M]=ad | areg_hi;
   m68k_dpeek(ad); //extra word read (discarded)
   INSTRUCTION_TIME_ROUND(4);
-#if !defined(SSE_CPU_PREFETCH_TIMING_MOVEM)
+#if !defined(SSE_CPU_PREFETCH_TIMING_MOVEM_W_M2R)
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
   FETCH_TIMING;
 #endif
@@ -6528,9 +6765,15 @@ void                             m68k_adda_l(){
   PREFETCH_IRC;
 #endif
 
-  if (SOURCE_IS_REGISTER_OR_IMMEDIATE){
+  if (SOURCE_IS_REGISTER_OR_IMMEDIATE
+#if defined(SSE_CPU_ROUNDING_ADDA_L_DN2)
+    || (ir& (BITS_543|7))==b00111001 // (xxx).L bugfix Pulsion 172
+#endif
+    ){
     INSTRUCTION_TIME(4);
   }else{
+    //Cernit Trandafir:  (An)+, -(An)
+    //ASSERT((ir&BITS_543)==b00011000 || (ir&BITS_543)==b00100000); 
     INSTRUCTION_TIME(2);
   }
 
