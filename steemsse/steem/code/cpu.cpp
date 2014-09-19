@@ -3579,6 +3579,28 @@ void                              m68k_movem_w_from_regs_or_ext_w(){
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_CLASS)
     M68000.PrefetchClass=1; 
 #endif
+
+#if defined(SSE_CPU_ASSERT_ILLEGAL4)
+    switch (ir & BITS_543){
+    case BITS_543_010: // (An)
+    case BITS_543_101: // (d16,An)
+    case BITS_543_110: // (d8, An, Xn)
+      break;
+    case BITS_543_111:
+      switch(ir&0x7){
+      case 0:
+        break;
+      case 1:
+        break;
+      default:
+        m68k_unrecognised();
+      }
+      break;
+    default:
+      m68k_unrecognised();
+    }
+#endif
+
 #if defined(SSE_CPU_ROUNDING_MOVEM)
     CPU_ABUS_ACCESS_READ;
 #endif
@@ -3638,15 +3660,19 @@ void                              m68k_movem_w_from_regs_or_ext_w(){
         ad=0xffffff & m68k_fetchL();
         pc+=4;  
         break;
+#if !defined(SSE_CPU_ASSERT_ILLEGAL4)
       default:
         ad=0; // This is to stop an annoying warning
         m68k_unrecognised();
         break;
+#endif
       }
       break;
+#if !defined(SSE_CPU_ASSERT_ILLEGAL4)
     default:
       ad=0; // This is to stop an annoying warning
       m68k_unrecognised();
+#endif
     }
 #if defined(SSE_CPU_PREFETCH_TIMING_MOVEM_W_R2M)
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
@@ -3709,6 +3735,8 @@ void                              m68k_movem_l_from_regs_or_ext_l(){
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_CLASS) 
     M68000.PrefetchClass=1; 
 #endif
+
+
 #if defined(SSE_CPU_ROUNDING_MOVEM)
     CPU_ABUS_ACCESS_READ;
 #endif
@@ -3758,6 +3786,28 @@ void                              m68k_movem_l_from_regs_or_ext_l(){
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_CLASS) 
     M68000.PrefetchClass=1; 
 #endif
+
+#if defined(SSE_CPU_ASSERT_ILLEGAL5)
+    switch (ir & BITS_543){
+    case BITS_543_010: // (An)
+    case BITS_543_101: // (d16,An)
+    case BITS_543_110: // (d8, An, Xn)
+      break;
+    case BITS_543_111:
+      switch(ir&0x7){
+      case 0:
+      case 1:
+        break;
+      default:
+        m68k_unrecognised();
+      }
+      break;
+    default:
+      m68k_unrecognised();
+    }
+#endif
+
+
 #if defined(SSE_CPU_ROUNDING_MOVEM)
     CPU_ABUS_ACCESS_READ;
 #endif
@@ -3820,15 +3870,19 @@ void                              m68k_movem_l_from_regs_or_ext_l(){
 #endif
         pc+=4;  
         break;
+#if !defined(SSE_CPU_ASSERT_ILLEGAL5)
       default: //ILLEGAL
         ad=0; // This is to stop an annoying warning
         m68k_unrecognised();
         break;
+#endif
       }
       break;
+#if !defined(SSE_CPU_ASSERT_ILLEGAL5)
     default:
       ad=0; // This is to stop an annoying warning
       m68k_unrecognised();
+#endif
     }
 #if defined(SSE_CPU_PREFETCH_TIMING_MOVEM_L_R2M)
 /* see below, we must define either SSE_CPU_PREFETCH_TIMING_MOVEM_L_R2M
@@ -3888,6 +3942,28 @@ void                              m68k_movem_l_to_regs(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
 #endif
+
+#if defined(SSE_CPU_ASSERT_ILLEGAL5B)
+    switch (ir & BITS_543){
+    case BITS_543_010: // (An)
+    case BITS_543_101: // (d16,An)
+    case BITS_543_110: // (d8, An, Xn)
+      break;
+    case BITS_543_111:
+      switch(ir&0x7){
+      case 0:
+      case 1:
+        break;
+      default:
+        m68k_unrecognised();
+      }
+      break;
+    default:
+      m68k_unrecognised();
+    }
+#endif
+
+
 
   bool postincrement=false;
 #if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
@@ -3979,15 +4055,19 @@ void                              m68k_movem_l_to_regs(){
 #endif
       pc+=2; 
       break;
+#if !defined(SSE_CPU_ASSERT_ILLEGAL5B)
     default:
       ad=0; // This is to stop an annoying warning
       m68k_unrecognised();
       break;
+#endif
     }
     break;
+#if !defined(SSE_CPU_ASSERT_ILLEGAL5B)
   default:
     ad=0; // This is to stop an annoying warning
     m68k_unrecognised();
+#endif
   }
 #if defined(SSE_CPU_PREFETCH_TIMING_MOVEM_L_M2R)
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
@@ -4039,6 +4119,27 @@ void                              m68k_movem_w_to_regs(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
 #endif
+
+#if defined(SSE_CPU_ASSERT_ILLEGAL4B)
+    switch (ir & BITS_543){
+    case BITS_543_010: // (An)
+    case BITS_543_101: // (d16,An)
+    case BITS_543_110: // (d8, An, Xn)
+      break;
+    case BITS_543_111:
+      switch(ir&0x7){
+      case 0:
+      case 1:
+        break;
+      default:
+        m68k_unrecognised();
+      }
+      break;
+    default:
+      m68k_unrecognised();
+    }
+#endif
+
 
   bool postincrement=false;
 #if defined(SSE_CPU_ROUNDING_MOVEM)
@@ -4132,15 +4233,19 @@ void                              m68k_movem_w_to_regs(){
       pc+=2; 
       // m68k_src_w=// D2_IRIWO_PC;
       break;
+#if !defined(SSE_CPU_ASSERT_ILLEGAL4B)
     default:
       ad=0; // This is to stop an annoying warning
       m68k_unrecognised();
       break;
+#endif
     }
     break;
+#if !defined(SSE_CPU_ASSERT_ILLEGAL4B)
   default:
     ad=0; // This is to stop an annoying warning
     m68k_unrecognised();
+#endif
   }
 #if defined(SSE_CPU_PREFETCH_TIMING_MOVEM_W_M2R)
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
@@ -5084,7 +5189,7 @@ void                              m68k_or_b_from_dN_or_sbcd(){
 
     this must be tested
 */
-  BRK(SBCD); //Hades Nebula, LoSTE screens STF, Super Off-Road Racer
+ // BRK(SBCD); //Hades Nebula, LoSTE screens STF, Super Off-Road Racer
 
 
 #ifdef SSE_DEBUG
@@ -5792,6 +5897,13 @@ void                              m68k_cmp_b(){
 #if !defined(SSE_CPU_LINE_B_TIMINGS)
   FETCH_TIMING;
 #endif
+
+#if defined(SSE_CPU_ASSERT_ILLEGAL3)
+  if((ir&BITS_543)==BITS_543_001) // .B An...
+    m68k_unrecognised();
+//    ILLEGAL
+#endif
+
   m68k_GET_SOURCE_B;
   m68k_old_dest=LOBYTE(r[PARAM_N]);
   compare_buffer=m68k_old_dest;
@@ -7609,7 +7721,20 @@ void                              m68k_bit_shift_right_to_mem(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
 #endif
-  INSTRUCTION_TIME(4);
+
+#if defined(SSE_CPU_ASSERT_ILLEGAL6)
+  switch(ir&BITS_ba9){
+  case BITS_ba9_000:
+  case BITS_ba9_001:
+  case BITS_ba9_010:
+  case BITS_ba9_011:
+    break;
+  default:
+    m68k_unrecognised();
+  }
+#endif
+
+  INSTRUCTION_TIME(4); //SS TODO...
 #if defined(SSE_CPU_TRUE_PC)
   CHECK_READ=true;
 #endif
@@ -7659,15 +7784,31 @@ void                              m68k_bit_shift_right_to_mem(){
     SR_CHECK_Z_AND_N_W;
     break;
 
-  }default:
+  }
+#if !defined(SSE_CPU_ASSERT_ILLEGAL6)  
+  default:
     m68k_unrecognised(); // SS it doesn't pay to crash before
     break;
+#endif
   }
 }
 void                              m68k_bit_shift_left_to_mem(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
 #endif
+
+#if defined(SSE_CPU_ASSERT_ILLEGAL6)
+  switch(ir&BITS_ba9){
+  case BITS_ba9_000:
+  case BITS_ba9_001:
+  case BITS_ba9_010:
+  case BITS_ba9_011:
+    break;
+  default:
+    m68k_unrecognised();
+  }
+#endif
+
   INSTRUCTION_TIME(4);
 #if defined(SSE_CPU_TRUE_PC)
   CHECK_READ=true;
@@ -7720,9 +7861,12 @@ void                              m68k_bit_shift_left_to_mem(){
     *((unsigned short*)m68k_dest)<<=1;if(old_x)m68k_DEST_W|=1;
     SR_CHECK_Z_AND_N_W;
     break;
-  }default:
+  }
+#if !defined(SSE_CPU_ASSERT_ILLEGAL6)    
+  default:
     m68k_unrecognised();
     break;
+#endif
   }
 }
 
