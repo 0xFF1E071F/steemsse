@@ -3946,6 +3946,7 @@ void                              m68k_movem_l_to_regs(){
 #if defined(SSE_CPU_ASSERT_ILLEGAL5B)
     switch (ir & BITS_543){
     case BITS_543_010: // (An)
+    case BITS_543_011:
     case BITS_543_101: // (d16,An)
     case BITS_543_110: // (d8, An, Xn)
       break;
@@ -3953,6 +3954,8 @@ void                              m68k_movem_l_to_regs(){
       switch(ir&0x7){
       case 0:
       case 1:
+      case 2:
+      case 3:
         break;
       default:
         m68k_unrecognised();
@@ -4123,6 +4126,7 @@ void                              m68k_movem_w_to_regs(){
 #if defined(SSE_CPU_ASSERT_ILLEGAL4B)
     switch (ir & BITS_543){
     case BITS_543_010: // (An)
+    case BITS_543_011:
     case BITS_543_101: // (d16,An)
     case BITS_543_110: // (d8, An, Xn)
       break;
@@ -4130,6 +4134,8 @@ void                              m68k_movem_w_to_regs(){
       switch(ir&0x7){
       case 0:
       case 1:
+      case 2:
+      case 3:
         break;
       default:
         m68k_unrecognised();
