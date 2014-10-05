@@ -1226,6 +1226,8 @@ FC2 FC1 FC0 Address Space
     case 0x4e75://rts - Fixes Blood Money -SUP 1MB
       action=EA_FETCH;
     }
+    if((_ir&0xF000)==0x6000) //bra etc
+      action=EA_FETCH;
   }
 #endif
 
@@ -1284,7 +1286,8 @@ FC2 FC1 FC0 Address Space
 #endif
 #ifdef DEBUG_BUILD 
     EasyStr instr=disa_d2(old_pc); // take advantage of the disassembler
-    TRACE_LOG("PC=%X-IR=%X-Ins: %s -SR=%X-Bus=%X",old_pc,ir,instr.Text,sr,abus);
+    //TRACE_LOG("PC=%X-IR=%X-Ins: %s -SR=%X-Bus=%X",old_pc,ir,instr.Text,sr,abus);
+    TRACE_LOG("PC=%X-IR=%X-Ins: %s -SR=%X-Bus=%X",old_pc,_ir,instr.Text,sr,abus);
 #else
     TRACE_LOG("PC=%X-IR=%X-SR=%X-Bus=%X",old_pc,ir,sr,abus);
 #endif
@@ -1364,8 +1367,13 @@ FC2 FC1 FC0 Address Space
           _pc=M68000.Pc;
         }
 #endif
+#if defined(SSE_CPU_BUS_ERROR_ADDRESS2)
+        TRACE_LOG("Push PC %X on %X\n",_pc | pc_high_byte,r[15]-4);
+        m68k_PUSH_L(_pc| pc_high_byte);
+#else
         TRACE_LOG("Push PC %X on %X\n",_pc,r[15]-4);
         m68k_PUSH_L(_pc);
+#endif
         TRACE_LOG("Push SR %X on %X\n",_sr,r[15]-2);
         m68k_PUSH_W(_sr);
         TRACE_LOG("Push IR %X on %X\n",_ir,r[15]-2);
@@ -2610,7 +2618,7 @@ void m68k_0011() //move.w
         abus=m68k_fetchL()&0xffffff;
         pc+=4;  
         break;
-#if defined(SSE_CPU_ASSERT_ILLEGAL)
+#if !defined(SSE_CPU_ASSERT_ILLEGAL)
       default:
         m68k_unrecognised();
 #endif

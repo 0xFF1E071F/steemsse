@@ -873,10 +873,14 @@ already fetched. One word will be in IRD and another one in IRC.
 #endif
 
   //ASSERT(ir!=0x91AE); // dbg: break on opcode
+  //ASSERT(ir!=0x3dc0);
+  //ASSERT(ir!=0xe8d0);
   /////////// JUMP TO CPU EMU: ///////////////
   m68k_high_nibble_jump_table[ir>>12](); // go to instruction...
 
 #if defined(SSE_CPU_TRACE_REFACTOR)
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_TRACE
 /*  Why refactor something that works?
     Because the former way causes a glitch in the Boiler, where
     the instruction being traced always seems to be skipped (can't 
@@ -888,7 +892,7 @@ already fetched. One word will be in IRD and another one in IRC.
   if(ProcessingState==TRACE_MODE)
   {
 #ifdef DEBUG_BUILD
-    TRACE_LOG("TRACE PC %X SR %X VEC %X",old_pc,sr,LPEEK(0x24));
+    TRACE_LOG("TRACE PC %X SR %X VEC %X ",old_pc,sr,LPEEK(0x24));
     EasyStr instr=disa_d2(old_pc); // take advantage of the disassembler
     //TRACE_LOG("\n");
     TRACE_LOG("IR %X: %s\n",ir,instr.Text);
@@ -903,7 +907,9 @@ already fetched. One word will be in IRD and another one in IRC.
 #endif
     m68k_interrupt(LPEEK(BOMBS_TRACE_EXCEPTION*4));
   }
-#endif
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_CPU 
+#endif//SSE_CPU_TRACE_REFACTOR
 
 #if defined(SSE_IPF_CPU) // no
  if(Caps.Active)
