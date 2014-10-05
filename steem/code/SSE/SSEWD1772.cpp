@@ -240,6 +240,7 @@ BYTE TWD1772::IORead(BYTE Line) {
 #ifdef SSE_DEBUG
   ASSERT( Line>=0 && Line<=3 );
   BYTE drive=DRIVE;
+  //drive=floppy_current_drive();
 #else
 #define drive DRIVE
 #endif
@@ -261,11 +262,24 @@ BYTE TWD1772::IORead(BYTE Line) {
 #endif
     {
       // IP
-      if(floppy_track_index_pulse_active())
+      if(floppy_track_index_pulse_active()
+        //&& CommandType()==1
+        )
         STR|=FDC_STR_T1_INDEX_PULSE;
       else
         STR&=BYTE(~FDC_STR_T1_INDEX_PULSE);
       
+
+
+      /////ASSERT(!(STR&2)||CommandType()==1&&CR!=0xD0&&CR!=0x90);
+#if defined(SSE_DISK_STW)
+ //     if(SF314[drive].ImageType.Extension==EXT_STW)
+ //       floppy_type1_command_active= CommandType()==1 ; // TODO
+#endif
+      
+
+
+
       // WP, SU
 #if defined(SSE_WD1772_REG2_B)
       if(StatusType)
@@ -273,7 +287,7 @@ BYTE TWD1772::IORead(BYTE Line) {
       if(floppy_type1_command_active)
 #endif
       {
-#if SSE_VERSION<370
+#if SSE_VERSION<=364
         // It was a stupid bug because of Aladin.
         // The Macintosh boot disk mustn't be write protected (Hint).
         STR&=(~FDC_STR_WRITE_PROTECT); 
@@ -281,13 +295,13 @@ BYTE TWD1772::IORead(BYTE Line) {
         // disk has just been changed (30 VBL set at SetDisk())
         if(floppy_mediach[drive])
         {
-#if SSE_VERSION>=370
+#if SSE_VERSION>364
           STR&=(~FDC_STR_WRITE_PROTECT);
 #endif
           if(floppy_mediach[drive]/10!=1) 
             STR|=FDC_STR_WRITE_PROTECT;
         }
-#if SSE_VERSION>=370 
+#if SSE_VERSION>364 
         // Permanent status if disk is in
         else if (FloppyDrive[drive].ReadOnly && !FloppyDrive[drive].Empty())
           STR|=FDC_STR_WRITE_PROTECT;
@@ -325,7 +339,7 @@ WD doc:
     Some cases show that this is wrong:
 
     Super Monaco Grand Prix -HTL  D8 is cleared by read STR + new command
-    Wipe-Out-RPL                  IRQ isn't cleared by just D8-D0
+    Wipe-Out -RPL                 IRQ isn't cleared by just D8-D0
 
 
     So, with D8, for both read STR (here) and write CR, we would have:
@@ -349,13 +363,71 @@ WD doc:
       ior_byte=STR;
     }
 
-#if defined(SSE_DEBUG_TRACE_CONTROL)
+#if 0 //debug section, original steem
+          {
+            fdc_str=debug1;
+            int fn=floppy_current_drive();
+            if (floppy_track_index_pulse_active()){
+              fdc_str|=FDC_STR_T1_INDEX_PULSE;
+            }else{
+              // If not type 1 command we will get here, it is okay to clear
+              // it as this bit is only for the DMA chip for type 2/3.
+              fdc_str&=BYTE(~FDC_STR_T1_INDEX_PULSE);
+            }
+            if (floppy_type1_command_active){
+              /* From Jorge Cwik
+                The FDC has two different
+                type of status. There is a "Type I" status after any Type I command,
+                and there is a different "status" after types II & III commands. The
+                meaning of some of the status bits is different (this probably you
+                already know),  but the updating of these bits is different too.
+
+                In a Type II-III status, the write protect bit is updated from the write
+                protect signal only when trying to write to the disk (write sector
+                or format track), otherwise is clear. This bit is static, once it was
+                updated or cleared, it will never change until a new command is
+                issued to the FDC.
+              */
+              fdc_str&=(~FDC_STR_WRITE_PROTECT);
+              if (floppy_mediach[fn]){
+                if (floppy_mediach[fn]/10!=1) fdc_str|=FDC_STR_WRITE_PROTECT;
+              }else if (FloppyDrive[fn].ReadOnly){
+                fdc_str|=FDC_STR_WRITE_PROTECT;
+              }
+              if (fdc_spinning_up){
+                fdc_str&=BYTE(~FDC_STR_T1_SPINUP_COMPLETE);
+              }else{
+                fdc_str|=FDC_STR_T1_SPINUP_COMPLETE;
+              }
+            } // else it should be set in fdc_execute()
+            if ((mfp_reg[MFPR_GPIP] & BIT_5)==0){
+              LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
+                          " - Reading status register as "+Str(itoa(fdc_str,d2_t_buf,2)).LPad(8,'0')+
+                          " ($"+HEXSl(fdc_str,2)+"), clearing IRQ"); )
+              floppy_irq_flag=0;
+//              TRACE_FDC("R STR MFP_GPIP_FDC_BIT: %d\n",true);
+              mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
+            }
+//            log_DELETE_SOON(Str("FDC: ")+HEXSl(old_pc,6)+" - reading FDC status register as $"+HEXSl(fdc_str,2));
+/*
+            LOG_ONLY( if (mode==STEM_MODE_CPU) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
+                            " - Read status register as $"+HEXSl(fdc_str,2)); )
+*/
+            ASSERT(ior_byte==fdc_str);
+          }
+#endif//debug
+
+
+
+
+#if defined(SSE_BOILER_TRACE_CONTROL)
   if(TRACE_MASK3 & TRACE_CONTROL_FDCSTR)
 #endif
+  {
 #if !defined(SSE_DEBUG_TRACE_IDE) || defined(SSE_FDC_TRACE_STR)
     TRACE_LOG("FDC STR %X PC %X\n",ior_byte,old_pc);
 #endif
-
+  }
       break;
 
     case 1:
@@ -407,9 +479,9 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
   switch(Line)
   {
   case 0: // CR - could be blocked, can't record here :(
-
+  //{
 #if defined(SSE_DEBUG) && defined(SSE_DRIVE)
-#if defined(SSE_DEBUG_TRACE_CONTROL)
+#if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
 #endif
     {
@@ -436,6 +508,102 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_FDC
 #endif//checksum
+
+
+
+//old block "can_send" MFD
+#ifdef SSE_DEBUG__
+      bool can_send=true; // are we in Steem's native emu?
+#if defined(SSE_IPF)
+      can_send=can_send&&!Caps.IsIpf(drive);
+#endif
+
+#if USE_PASTI 
+      can_send=can_send&&!(hPasti && pasti_active
+#if defined(SSE_DRIVE)&&defined(SSE_PASTI_ONLY_STX)
+        && (!PASTI_JUST_STX || 
+#if defined(SSE_DISK_IMAGETYPE)
+// in fact we should refactor this
+        SF314[drive].ImageType.Extension==EXT_STX)
+#else
+        SF314[floppy_current_drive()].ImageType==3)
+#endif
+#endif            
+        );
+#endif//pasti
+
+#if defined(SSE_DISK_STW)
+      can_send=can_send && SF314[drive].ImageType.Extension!=EXT_STW;
+#endif
+
+#ifdef SSE_DEBUG
+
+#endif
+
+#ifdef SSE_DEBUG
+      if(can_send)
+      {
+#ifdef SSE_DISK_STW
+        ASSERT(!IMAGE_STW);
+#endif
+//        TRACE_LOG("Can send, drive %d extension %d\n",drive,SF314[drive].ImageType.Extension);
+      }
+#endif
+
+#endif
+
+
+//#ifdef SSE_DEBUG
+#if defined(SSE_DISK_IMAGETYPE__)
+    BYTE manager=SF314[drive].ImageType.Manager;
+    BYTE extension=SF314[drive].ImageType.Extension;
+//#endif
+//MFD
+
+#ifdef SSE_DEBUG___
+    if(manager==MNGR_CAPS)
+    {
+      ASSERT(!can_send);
+      ASSERT(Caps.IsIpf(drive));
+    }
+    if(manager==MNGR_PASTI)
+    {
+      ASSERT(!can_send);
+      ASSERT(hPasti && pasti_active);
+      ASSERT(!PASTI_JUST_STX || extension==EXT_STX);
+    }
+    if(manager==MNGR_STEEM)
+    {
+      ASSERT(can_send || SSE_GHOST_DISK);//temp
+    }
+    if(manager==MNGR_WD1772)
+    {
+      ASSERT(!can_send);
+      ASSERT(IMAGE_STW);//to begin with
+    }
+    if(can_send)
+    {
+     // TRACE_LOG("drv %d mngr %d ext %d\n",drive, manager , extension);
+      ASSERT(manager==MNGR_STEEM);
+    }
+    else
+    {
+      if(manager==MNGR_STEEM)
+      {
+        ASSERT(SSE_GHOST_DISK);
+      }
+      else
+      {
+        ASSERT(manager==MNGR_CAPS || manager==MNGR_PASTI || manager==MNGR_WD1772);
+      }
+    }
+#endif
+
+
+#endif
+
+
+////ASSERT(!Lines.CommandWasIntercepted);
 
 #if defined(SSE_DISK_GHOST)
 /*  For STX, IPF, CTR, we check if we should intercept FDC command
@@ -469,18 +637,21 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
       }
 #endif//sound
 
+	////ASSERT(SF314[drive].ImageType.Manager==MNGR_STEEM);
       // Steem's native and WD1772 managers
+          ////if(manager==MNGR_STEEM)
+
     if(SF314[drive].ImageType.Manager==MNGR_STEEM)
       floppy_fdc_command(io_src_b); // in fdc.cpp for ST, MSA, DIM, STT
 #if defined(SSE_DISK_STW)
     else if(SF314[drive].ImageType.Manager==MNGR_WD1772)
       WriteCR(io_src_b); // for STW
 #endif
-
+  //}
     break;
 
   case 1: // TR
-#if defined(SSE_DEBUG_TRACE_CONTROL)
+#if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
 #endif
     TRACE_LOG("FDC TR W %d PC %X\n",io_src_b,old_pc);
@@ -499,7 +670,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
     break;
 
   case 2: // SR
-#if defined(SSE_DEBUG_TRACE_CONTROL)
+#if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
 #endif
     TRACE_LOG("FDC SR W %d PC %X\n",io_src_b,old_pc);
@@ -520,7 +691,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
     break;
 
   case 3: // DR
-#if defined(SSE_DEBUG_TRACE_CONTROL)
+#if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
 #endif
 //    TRACE_LOG("FDC DR %d\n",io_src_b);
@@ -932,7 +1103,7 @@ void TWD1772::NewCommand(BYTE command) {
   case 1: // I
     // Set Busy, Reset CRC, Seek error, DRQ, INTRQ
     STR|=STR_BUSY;
-    STR&=~(STR_CRC|STR_SE);
+    STR&=~(STR_CRC|STR_SE |STR_WP);
     Drq(0); // this takes care of status bit
     if(InterruptCondition!=8)
       Irq(0);
@@ -1185,37 +1356,40 @@ void TWD1772::OnUpdate() {
         Lines.direction=false; 
       // goto B or C according to flag u
       prg_phase=(CR&CR_U)?WD_TYPEI_STEP_UPDATE:WD_TYPEI_STEP;
-
+      OnUpdate();
     }
     else  // else it's seek/restore
     {
+      prg_phase=WD_TYPEI_SEEK; // goto 'A'
       if((CR&CR_SEEK)==CR_RESTORE) // restore?
       {
         TR=0xFF;
-        
         Lines.track0=(floppy_head_track[DRIVE]==0);
         if(Lines.track0)
           TR=0;
         DR=0;
+        // imitate Steem native, eg My Socks are Weapons
+        // not documented; only restore?
+        update_time=ACT+1024; 
       }    
-      prg_phase=WD_TYPEI_SEEK; // goto 'A'
+      else
+       OnUpdate(); // some recursion is always cool   
+      
     }
-    OnUpdate(); // some recursion is always cool
+   // OnUpdate(); // some recursion is always cool
+
     break;
 
   case WD_TYPEI_SEEK: // 'A'
     DSR=DR;
     if(TR==DSR)
-    {
       prg_phase=WD_TYPEI_CHECK_VERIFY;
-      OnUpdate(); // some recursion is always cool
-    }
     else
     {
       Lines.direction=(DSR>TR);
       prg_phase=WD_TYPEI_STEP_UPDATE;
-      OnUpdate(); // some recursion is always cool
     }
+    OnUpdate(); // some recursion is always cool
     break;
 
   case WD_TYPEI_STEP_UPDATE: // 'B'
@@ -1312,7 +1486,6 @@ r1       r0            1772
   case WD_TYPEI_FIND_ID:
   case WD_TYPEII_FIND_ID:
   case WD_TYPEIII_FIND_ID:
-
 /*  From doc, sequence is 12x0, 3xA1, FE or FF, it must strictly be respected.
     But Platoon: it may be $FF instead of 00, 11 bytes may be enough, and
     a series of 11 x 0 + 1 x 2 is OK. We try to handle this (even if it doesn't
@@ -1744,7 +1917,6 @@ r1       r0            1772
 #endif
 
     }
-
     break;
 
   case WD_TYPEIII_WRITE_DATA2:
