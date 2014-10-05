@@ -27,35 +27,9 @@ EasyStr GetEXEDir();//#include <mymisc.h>//missing...
 
 #define LOGSECTION LOGSECTION_FDC
 
-/*  Problems concerning the drive itself (RPM...) or the disks (gaps...) are
-    treated here.
-*/
 
 TSF314::TSF314() {
-
-#if defined(SSE_DRIVE_SOUND)
-  //TRACE("null %d sound buffer pointers\n",NSOUNDS);
-  for(int i=0;i<NSOUNDS;i++)
-    Sound_Buffer[i]=NULL;
-#if defined(SSE_DRIVE_SOUND_VOLUME)
-  Sound_Volume=0; //changed by option
-#endif
-#endif//sound
-
-#if defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)
-  SectorChecksum=0;
-#endif
-
-#if defined(SSE_DRIVE_INDEX_PULSE)
-  rpm=300; // could be changed in other version
-
-  time_of_next_ip=0;//useful?
-  time_of_last_ip=0;//useful?
-#endif
-
-#if defined(SSE_DISK_IMAGETYPE) 
-  ImageType.Manager=MNGR_STEEM; //default
-#endif
+  Init();
 }
 
 
@@ -137,6 +111,35 @@ bool TSF314::CheckGhostDisk(bool write) {
 }
 
 #endif
+
+
+void TSF314::Init() {
+
+#if defined(SSE_DRIVE_SOUND)
+  //TRACE("null %d sound buffer pointers\n",NSOUNDS);
+  for(int i=0;i<NSOUNDS;i++)
+    Sound_Buffer[i]=NULL;
+#if defined(SSE_DRIVE_SOUND_VOLUME)
+  Sound_Volume=0; //changed by option
+#endif
+#endif//sound
+
+#if defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)
+  SectorChecksum=0;
+#endif
+
+#if defined(SSE_DRIVE_INDEX_PULSE)
+  rpm=300; // could be changed in other version
+
+  time_of_next_ip=0;//useful?
+  time_of_last_ip=0;//useful?
+#endif
+
+#if defined(SSE_DISK_IMAGETYPE) 
+  ImageType.Manager=MNGR_STEEM; //default
+#endif
+
+}
 
 
 BYTE TSF314::Track() {
@@ -241,8 +244,8 @@ WORD TSF314::BytesToID(BYTE &num,WORD &nHbls) {
       bytes_to_id=byte_target_id-current_byte;
     else                            // next rev
     {
-      TRACE_FDC("%d next rev current %d target %d diff %d\n",num,current_byte,byte_target_id,current_byte-byte_target_id);
       bytes_to_id=TRACK_BYTES-current_byte+byte_target_id;
+      TRACE_FDC("%d next rev current %d target %d diff %d to id %d\n",num,current_byte,byte_target_id,current_byte-byte_target_id,bytes_to_id);
     }
   }
   nHbls=BytesToHbls(bytes_to_id);
@@ -359,14 +362,14 @@ WORD TSF314::PreIndexGap() {
   switch(nSectors())
   {
   case 9:
-#if defined(SSE_DRIVE_REM_HACKS)
+#if defined(SSE_DRIVE_REM_HACKS2)
     gap=664+6; // 6256 vs 6250
 #else
     gap=664;
 #endif
     break;
   case 10:
-#if defined(SSE_DRIVE_REM_HACKS)
+#if defined(SSE_DRIVE_REM_HACKS2)
     gap=50+6;
 #else
     gap=50;
@@ -477,7 +480,8 @@ void TSF314::Motor(bool state) {
   }
 #endif
   if(!State.motor && state)
-    time_of_next_ip=ACT + (rand()%Disk[Id].TrackBytes) * CyclesPerByte();
+    //time_of_next_ip=ACT + (rand()%Disk[Id].TrackBytes) * CyclesPerByte();
+    time_of_next_ip=ACT + (Disk[Id].TrackBytes-(Disk[Id].current_byte%Disk[Id].TrackBytes)) * CyclesPerByte();
   State.motor=state;
 
 }

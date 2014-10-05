@@ -21,6 +21,7 @@
 
 struct TSF314 {
   TSF314();
+  void Init();
   enum {RPM=DRIVE_RPM,MAX_CYL=DRIVE_MAX_CYL,TRACK_BYTES=DRIVE_BYTES_ROTATION};
   bool Adat(); // accurate disk access times
   WORD BytePosition(); //this has to do with IP and rotation speed
