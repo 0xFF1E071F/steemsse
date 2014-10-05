@@ -721,9 +721,12 @@ What was in the buffers will go nowhere, the internal counter is reset.
 #else
     || SF314[floppy_current_drive()].ImageType==3//DISK_PASTI
 #endif
-    //||addr!=0xff8605
-    ||MCR&BIT_3 // let pass when HD selected
-    //||MCR&BIT_4 //counter
+#if SSES_VERSION!=364
+    ||addr!=0xff8605 // quick fix, TODO...
+#endif
+    //|| MCR&BIT_3 // let pass when HD selected
+    || (MCR&CR_HDC_OR_FDC)//3.7
+//    || (MCR&BIT_4) //counter
     )
 #endif        
     )
@@ -773,7 +776,6 @@ What was in the buffers will go nowhere, the internal counter is reset.
 }
 
 #endif//dmaio
-
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_FDC
 
@@ -980,13 +982,13 @@ void TDma::TransferBytes() {
 #endif//checksum
 
 #undef LOGSECTION
-#if defined(SSE_DEBUG_TRACE_CONTROL)
+#if defined(SSE_BOILER_TRACE_CONTROL)
 #define LOGSECTION LOGSECTION_ALWAYS // for just the bytes 
 #else
 #define LOGSECTION LOGSECTION_FDC_BYTES 
 #endif
 
-#if defined(SSE_DEBUG_TRACE_CONTROL)
+#if defined(SSE_BOILER_TRACE_CONTROL)
   if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
 #endif
   {
@@ -1014,11 +1016,11 @@ void TDma::TransferBytes() {
 #endif
         [15-i]=PEEK(BaseAddress);
     else 
-#if defined(SSE_DEBUG_TRACE_CONTROL)
+#if defined(SSE_BOILER_TRACE_CONTROL)
       if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
 #endif
           TRACE_LOG("!!!");
-#if defined(SSE_DEBUG_TRACE_CONTROL)
+#if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
 #endif
       TRACE_LOG("%02X ",Fifo
@@ -1051,7 +1053,7 @@ void TDma::TransferBytes() {
   if(ADAT)//3.6.1 condition
     INSTRUCTION_TIME(8); 
 #endif
-#if defined(SSE_DEBUG_TRACE_CONTROL)
+#if defined(SSE_BOILER_TRACE_CONTROL)
   if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
 #endif
     TRACE_LOG("\n");
