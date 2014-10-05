@@ -115,6 +115,24 @@ int stemdos_get_boot_drive()
   bool NoControl=true;
   if (CutDisableKey[VK_CONTROL]==0) NoControl=(GetKeyState(VK_CONTROL)<0)==0;
   if (FloppyDrive[0].DiskInDrive() && NoControl) return 0;
+#if defined(SSE_TOS_PRG_AUTORUN)
+  if(SF314[0].ImageType.Extension!=EXT_PRG 
+#if defined(SSE_TOS_TOS_AUTORUN)
+    && SF314[0].ImageType.Extension!=EXT_TOS 
+#endif
+    && FloppyDrive[0].DiskInDrive()
+    && stemdos_boot_drive==AUTORUN_HD)
+    return 0;
+#endif
+
+#if defined(SSE_TOS_PRG_AUTORUN)
+  if(SF314[0].ImageType.Extension==EXT_PRG
+#if defined(SSE_TOS_TOS_AUTORUN)
+    || SF314[0].ImageType.Extension==EXT_TOS 
+#endif
+    )
+    return AUTORUN_HD;
+#endif
 
   return int(stemdos_check_mount(stemdos_boot_drive) ? stemdos_boot_drive:0);
 }
@@ -184,11 +202,6 @@ void stemdos_rte()
     // called by Stemdos itself when a program calls PEXEC mode
     // 0 or 3 for a HD file
     log("STEMDOS: Created basepage for new program");
-/*
-    ASSERT( DPEEK(SP)==0x4B );
-    ASSERT( DPEEK(SP+2)==5 );
-    ASSERT( !LPEEK(SP+4) );
-*/
     areg[7]+=16; //correct stack, 3 longs and 2 words
     stemdos_Pexec(); //SS only place of calling
   }else if (stemdos_rte_action==STEMDOS_RTE_MFREE){
@@ -1997,7 +2010,7 @@ void stemdos_trap_1_Pexec_basepage(){
   m68k_PUSH_L(0);
   m68k_PUSH_W(5);
   m68k_PUSH_W(0x4b);
-#if defined(SSE_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
   Debug.RecordInterrupt("TRP",1);
 #endif
   m68k_interrupt(os_gemdos_vector);             //want to return from this interrupt into GEMDOS
@@ -2012,7 +2025,7 @@ void stemdos_trap_1_Mfree(MEM_ADDRESS ad){
   m68k_PUSH_L(ad);
   m68k_PUSH_W(0x49); //SS: Mfree()
 
-#if defined(SSE_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
   Debug.RecordInterrupt("TRP",1);
 #endif
 

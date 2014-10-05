@@ -36,7 +36,6 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 
 #if defined(SSE_DISK1)
 //  Disk[drive].Init(); //seriously bugged
-//  ASSERT(Disk[drive].TrackBytes==6270);
 #endif
 
   // SS: note that the drive may still be spinning when a floppy is removed
@@ -51,8 +50,12 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #endif
 
   if (IsSameStr_I(File,ImageFile) && IsSameStr_I(CompressedDiskName,DiskInZip)) 
+  {//SS
+    TRACE_LOG("Same file %s, exit SetDisk\n",File.Text);
+#ifndef SSE_VAR_RESET_SAME_DISK
     return 0;
-
+#endif
+  }//SS
   if (Exists(File)==0) 
     return FIMAGE_FILEDOESNTEXIST;
 
@@ -83,6 +86,12 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #if defined(SSE_DISK_STW)
   bool STW=IsSameStr_I(Ext,DISK_EXT_STW);
 #endif
+#if defined(SSE_TOS_PRG_AUTORUN)
+  bool PRG=IsSameStr_I(Ext,"PRG");
+#endif
+#if defined(SSE_TOS_TOS_AUTORUN)
+  bool TOS=IsSameStr_I(Ext,"TOS");
+#endif
   
 
   // NewDiskInZip will be blank for default disk, RealDiskInZip will be the
@@ -102,7 +111,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       do{
         EasyStr fn=zippy.filename_in_zip();
 //        TRACE_LOG("File in zip %s\n",fn.c_str());
-        Type=FileIsDisk(fn);
+        Type=FileIsDisk(fn); // SS this changes Type
         if (Type==DISK_UNCOMPRESSED || Type==DISK_PASTI){
           if (CompressedDiskName.Empty() || IsSameStr_I(CompressedDiskName,fn.Text)){
             // Blank DiskInZip name means default disk (first in zip)
@@ -146,6 +155,13 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
               STW=has_extension(fn,DISK_EXT_STW); // in archive, makes less sense
 #endif
+#if defined(SSE_TOS_PRG_AUTORUN)
+              PRG=has_extension(fn,"PRG");
+#endif
+#if defined(SSE_TOS_TOS_AUTORUN)
+              TOS=has_extension(fn,"TOS");
+#endif
+
 
 #if defined(STEVEN_SEAGAL) && SSE_VERSION>=370
               if(PASTI_JUST_STX&& drive!=-1 && SF314[1-drive].ImageType.Extension!=EXT_STX)
@@ -370,8 +386,76 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 
 #endif//stw
 
+  }
 
-  }else{
+#if defined(SSE_TOS_PRG_AUTORUN)
+/*  v3.7
+    Support for PRG and TOS files
+    Not disk images but single PRG or TOS files may be selected.
+    In that case we copy to harddisk Z: and boot from it.
+    This approach minimises RAM/code use.
+*/
+  else if(PRG 
+#if defined(SSE_TOS_TOS_AUTORUN)
+    || TOS
+#endif
+    )
+  {
+    bool old_DisableHardDrives=HardDiskMan.DisableHardDrives;
+    HardDiskMan.DisableHardDrives=false; // or mount path is wrong
+    HardDiskMan.update_mount();
+    Str PrgPath=mount_path[AUTORUN_HD]; // Z: (2+'Z'-'C')
+    //TRACE_LOG("PRG/TOS, path of disk %c: is %s\n",AUTORUN_HD+'A',PrgPath.Text);
+    if(!strncmp(PrgPath.Rights(3),"PRG",3)) //our dedicated folder
+    {
+      RemoveDisk();
+      SF314[drive].ImageType.Manager=MNGR_STEEM;
+#if defined(SSE_TOS_TOS_AUTORUN)
+      if(TOS)
+        SF314[drive].ImageType.Extension=EXT_TOS;
+      else
+#endif
+        SF314[drive].ImageType.Extension=EXT_PRG;
+      Str NewPath,AutoPath;
+      AutoPath=PrgPath+SLASH+"AUTO"+SLASH+"AUTORUN.PRG";
+      DeleteFile(AutoPath.Text); // anyway
+      if(TOS || tos_version<=0x102 || tos_version>=0x200)
+      {
+        // we'll use AUTO, provided in PRG folder
+        NewPath=AutoPath;
+      }
+      else
+      {
+        // we'll use DESKTOP.INF, provided in PRG folder
+        NewPath=PrgPath+SLASH+"AUTORUN.PRG";
+        DeleteFile(NewPath.Text);
+      }
+      //TRACE_LOG("copy %s to %s\n",File.Text,NewPath.Text);
+      CopyFile(File.Text,NewPath.Text,FALSE);
+      
+    }//if
+    else
+      HardDiskMan.DisableHardDrives=old_DisableHardDrives;
+  }
+#endif  
+
+  else{
+
+#if defined(SSE_DISK_IMAGETYPE2)
+
+#if defined(SSE_TOS_PRG_AUTORUN)
+    if(SF314[drive].ImageType.Extension==EXT_PRG
+#if defined(SSE_TOS_TOS_AUTORUN)
+      || SF314[drive].ImageType.Extension==EXT_TOS
+#endif
+      )
+      HardDiskMan.DisableHardDrives=true; // we guess
+#endif
+
+    SF314[drive].ImageType.Manager=MNGR_STEEM;
+    SF314[drive].ImageType.Extension=MSA?EXT_MSA:EXT_ST; //DIM?
+#endif
+
     // Open for read for an MSA (going to convert to ST and write to that)
     // and if the file is read-only, otherwise open for update
     FILE *nf=fopen(File,LPSTR((MSA || FileIsReadOnly) ? "rb":"r+b"));

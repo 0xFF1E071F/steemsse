@@ -70,6 +70,13 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
     "STW",
 #endif  
+#if defined(SSE_TOS_PRG_AUTORUN)
+    "PRG",//not a disk, must be handled differently
+#endif
+#if defined(SSE_TOS_TOS_AUTORUN)
+    "TOS",//not a disk, must be handled differently
+#endif
+
     NULL)){
     ret=DISK_UNCOMPRESSED;
   }else if (MatchesAnyString_I(Ext,"STZ","ZIP",NULL)){

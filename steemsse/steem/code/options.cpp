@@ -1002,7 +1002,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_MMU_WAKE_UP_RESET_ON_SWITCH_ST)
             WAKE_UP_STATE=0;
 #endif
-#if defined(SSE_VAR_OPTIONS_REFRESH) &&defined(WIN32)
+#if defined(SSE_VAR_OPTIONS_REFRESH)
             OptionBox.SSEUpdateIfVisible(); 
 #endif
 #if defined(SSE_STF_MATCH_TOS)
@@ -1028,7 +1028,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               This->NewROMFile=KnownSTFTosPath;
             }
 #endif
-#if defined(SSE_STF_MEGASTF) || defined(SS_STE_2MB) ||  defined(SSE_STF_1MB)
+#if defined(SSE_STF_MEGASTF) || defined(SSE_STE_2MB) ||  defined(SSE_STF_1MB)
 /*  Preselect a RAM configuration acording to the ST model.
 */
             DWORD Conf=0;
@@ -1036,7 +1036,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             if(ST_TYPE==MEGASTF)
               Conf=MAKELONG(MEMCONF_2MB,MEMCONF_2MB);
 #endif
-#if defined(SS_STE_2MB)
+#if defined(SSE_STE_2MB)
             if(ST_TYPE==STE) // STE with 2MB (not Mega STE!)
               Conf=MAKELONG(MEMCONF_2MB,MEMCONF_0);
 #endif
@@ -1057,16 +1057,28 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_STF_MEGASTF)
             if(ST_TYPE==MEGASTF)
             {
+#if SSE_VERSION>=354
               This->NewMonitorSel=1; // preselect monochrome (v3.5.4)
-              //HD6301EMU_ON=false; // v3.6.0 - because mouse is slow in high res//fixed 3.7.0
+#endif
+#if SSE_VERSION>=360 && SSE_VERSION<370
+              HD6301EMU_ON=false; // v3.6.0 - because mouse is slow in high res
+#endif
+#if SSE_VERSION>=360
               HardDiskMan.DisableHardDrives=false; // v3.6.0
+//              TRACE("hd off %d\n",HardDiskMan.DisableHardDrives);
+#endif
+#if SSE_VERSION>=360 && SSE_VERSION<370
               floppy_instant_sector_access=true;// v3.6.0
-              FloppyDrive[0].RemoveDisk(); // to boot on hd//3.7.0
+#endif
+#if SSE_VERSION>=364 && SSE_VERSION<370
+              FloppyDrive[0].RemoveDisk(); // to boot on hd//3.6.4
+#endif
             }
             else if(old_st_type==MEGASTF) //v3.6.0: go colour, no HD by default)
             {
               This->NewMonitorSel=0;
               HardDiskMan.DisableHardDrives=true;
+//              TRACE("hd off %d\n",HardDiskMan.DisableHardDrives);
             }
               HardDiskMan.update_mount();
 #endif
@@ -1264,7 +1276,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               SSE_3BUFFER=false;
 #endif
 //            SendMessage(HWND(lPar),BM_SETCHECK,SSE_WIN_VSYNC,0);
+#if defined(SSE_VAR_OPTIONS_REFRESH)
             OptionBox.SSEUpdateIfVisible();
+#endif
             Disp.ScreenChange();
           }
           break;
@@ -1281,7 +1295,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #endif
             TRACE_LOG("Option Triple Buffer: %d\n",SSE_3BUFFER);
 //            SendMessage(HWND(lPar),BM_SETCHECK,SSE_3BUFFER,0);
+#if defined(SSE_VAR_OPTIONS_REFRESH)
             OptionBox.SSEUpdateIfVisible();
+#endif
             Disp.ScreenChange();
           }
           break;
@@ -1409,12 +1425,20 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 5100:case 5101:case 5102:case 5103:case 5104:case 5105:case 5106:
 #if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ASSOCIATE)
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_NO_ASSOCIATE_STC)) //haha
-        case 5107: //bugfix 3.5.3
+        case 5107: //bugfix 3.5.3//hmm...
 #endif
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_IPF_ASSOCIATE)
-        case 5108: //bugfix 3.5.3
+        //case 5108: //bugfix 3.5.3//hmm...
+        case 5107://???
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_TOS_PRG_AUTORUN)
+        case 5108:
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_TOS_TOS_AUTORUN)
+        case 5109:
+#endif
+
           if (HIWORD(wPar)==BN_CLICKED){
             EasyStr Ext;
             switch (LOWORD(wPar)){
@@ -1431,8 +1455,15 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               case 5107: Ext=".STC";AssociateSteem(Ext,"st_cartridge",true,T("ST ROM Cartridge"),CART_ICON_NUM,0); break;
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_IPF_ASSOCIATE)
-              case 5108: Ext=".IPF";AssociateSteem(Ext,"st_ipf_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
+              case 5107: Ext=".IPF";AssociateSteem(Ext,"st_ipf_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_TOS_PRG_AUTORUN)
+              case 5108: Ext=".PRG";AssociateSteem(Ext,"st_atari_prg_executable",true,T("Atari PRG executable"),DISK_ICON_NUM,0); break;
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_TOS_TOS_AUTORUN)
+              case 5109:Ext=".TOS"; AssociateSteem(Ext,"st_atari_prg_executable",true,T("Atari TOS executable"),DISK_ICON_NUM,0); break;
+#endif
+
             }
             HWND But=HWND(lPar);
             if (IsSteemAssociated(Ext)){

@@ -526,6 +526,14 @@ are assumed to take four clock periods.
 #endif
 
 
+/////////
+// TOS //
+/////////
+
+#if defined(SSE_TOS_PRG_AUTORUN)
+#define AUTORUN_HD (2+'Z'-'C')//2=C, Z: is used for PRG support
+#endif
+
 /////////////
 // VARIOUS //
 /////////////

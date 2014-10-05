@@ -41,7 +41,7 @@ void LoadUnzipDLL()
 #ifdef _MSC_VER
 #pragma comment(lib,"../../3rdparty/UnRARDLL/unrar.lib")
 #if defined(WIN32) && defined(SSE_DELAY_LOAD_DLL)
-#ifndef SSE_VS2012_DELAYDLL
+#ifndef SSE_VS2003_DELAYDLL
 #pragma comment(linker, "/delayload:unrar.dll")
 #endif
 #endif
@@ -329,7 +329,12 @@ void zipclass::list_contents(char *name,EasyStringList *eslp,bool st_disks_only)
       EasyStr a=filename_in_zip();
       bool addflag=true;
       if (st_disks_only){
-        if (FileIsDisk(a)==DISK_UNCOMPRESSED || FileIsDisk(a)==DISK_PASTI){
+        if (FileIsDisk(a)==DISK_UNCOMPRESSED
+#if defined(SSE_TOS_PRG_AUTORUN)
+          // no interference with context menu, MSA Converter
+          && !MatchesAnyString_I(strrchr(a.Text,'.')+1,"PRG","TOS",NULL)
+#endif
+          || FileIsDisk(a)==DISK_PASTI){
           addflag=true;
         }else{
           addflag=0;
