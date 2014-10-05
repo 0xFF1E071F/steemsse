@@ -1347,6 +1347,38 @@ void event_vbl_interrupt() //SS misleading name?
   if(SS_signal==SS_SIGNAL_SHIFTER_CONFUSED_1)
     SS_signal=SS_SIGNAL_SHIFTER_CONFUSED_2; // stage 2 of our hack
 #endif  
+
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
+/*  v3.7
+    The ST could be set on high resolution for a long time
+    on a colour screen.
+    Without damaging the screen?
+    In that case we must adapt Steem timings as if we had a
+    monochrome monitor. Display will be off.
+    The test is so so, curious to see what it will break :)
+    Fixes My Socks are Weapons.
+    The protection of this demo is rather vicious. It sets the
+    ST in highres, then uses the video counter in the middle of
+    its trace decoding routine.
+*/
+  if( screen_res<2 && (Shifter.m_ShiftMode&2) && COLOUR_MONITOR
+    && (ACT-Shifter.CycleOfLastChangeToShiftMode(2)>512)) //weak
+  {
+    TRACE_OSD("RES2");
+    screen_res=2;
+    shifter_freq=MONO_HZ;
+    shifter_freq_idx=2;
+    init_screen(); //radical but spares much code
+  }
+  else if(screen_res==2 && !(Shifter.m_ShiftMode&2) && COLOUR_MONITOR) 
+  {
+    screen_res=Shifter.m_ShiftMode&2;//0;//back to LORES
+    shifter_freq=50;
+    shifter_freq_idx=0;
+    init_screen();
+  }
+#endif
+
   shifter_freq_at_start_of_vbl=shifter_freq;
   scanline_time_in_cpu_cycles_at_start_of_vbl=scanline_time_in_cpu_cycles[shifter_freq_idx];
   CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq);

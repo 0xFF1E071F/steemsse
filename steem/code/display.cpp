@@ -655,6 +655,19 @@ HRESULT SteemDisplay::Lock()
       draw_line_length=DDBackSurDesc.lPitch;
       draw_mem=LPBYTE(DDBackSurDesc.lpSurface);
 
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY2)
+      //  shift mode 2 will switch the RGB port off -> black screen
+      if(COLOUR_MONITOR && screen_res==2)
+      {
+        HDC hdc;
+        DDBackSur->GetDC(&hdc);
+        RECT r={0,0,SurfaceWidth,SurfaceHeight};
+        FillRect(hdc,&r,(HBRUSH)GetStockObject(BLACK_BRUSH));
+        DDBackSur->ReleaseDC(hdc);
+      }
+#endif
+
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS_LB_DX)
       // trying to make it crash-free (v3.4.1)
       if(FullScreen && BORDER_40)

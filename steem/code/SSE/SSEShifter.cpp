@@ -2322,9 +2322,14 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
 #endif
       if(scan_y>=draw_first_possible_line && scan_y<draw_last_possible_line)
       {
+
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY3)
+        if(!COLOUR_MONITOR) 
+#endif
+        {
+        ASSERT(screen_res==2);
         if(border & 1)
           ///////////////// RENDER VIDEO /////////////////
-
 #if defined(SSE_SHIFTER_HIRES_OVERSCAN)
 // experimental, right off, left off?
           if((CurrentScanline.Tricks&2))
@@ -2336,6 +2341,7 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
         else
           ///////////////// RENDER VIDEO /////////////////
           draw_scanline(0,640/16,0,0);
+        }
         draw_dest_ad=draw_dest_next_scanline;
         draw_dest_next_scanline+=draw_dest_increase_y;
       }
@@ -2350,21 +2356,25 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
           LPEEK(i*4+shifter_draw_pointer)=Scanline[i]; 
       }
 #endif
-
-
-
       shifter_draw_pointer=nsdp;
     }
     else if(scan_y>=draw_first_scanline_for_border && scan_y<draw_last_scanline_for_border)
     {
       if(scan_y>=draw_first_possible_line && scan_y<draw_last_possible_line)
       {
+
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY3)
+        if(!COLOUR_MONITOR)
+#endif
+        {
+        ASSERT(screen_res==2);
         if(border & 1)
           ///////////////// RENDER VIDEO /////////////////
           draw_scanline((BORDER_SIDE*2+640+BORDER_SIDE*2)/16,0,0,0); // rasters!
         else
           ///////////////// RENDER VIDEO /////////////////
           draw_scanline(640/16,0,0,0);
+        }
         draw_dest_ad=draw_dest_next_scanline;
         draw_dest_next_scanline+=draw_dest_increase_y;
       }
