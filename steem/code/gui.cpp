@@ -628,7 +628,15 @@ void GUIRefreshStatusBar() {
     TODO: precise computing
 */
     if(SSE_STATUS_BAR_GAME_NAME 
-      && FloppyDrive[floppy_current_drive()].NotEmpty() )
+      && (FloppyDrive[floppy_current_drive()].NotEmpty() 
+#if defined(SSE_TOS_PRG_AUTORUN)
+      || SF314[0].ImageType.Extension==EXT_PRG
+#endif
+#if defined(SSE_TOS_TOS_AUTORUN)
+      || SF314[0].ImageType.Extension==EXT_TOS
+#endif
+
+      ))
     {
 #define MAX_TEXT_LENGTH_BORDER_ON (30+62+10) 
 #define MAX_TEXT_LENGTH_BORDER_OFF (30+42+10) 
@@ -641,7 +649,18 @@ void GUIRefreshStatusBar() {
         max_text_length-=5;
       char tmp[MAX_TEXT_LENGTH_BORDER_ON+2+1]=" \"";
       if( strlen(FloppyDrive[floppy_current_drive()].DiskName.Text)<=max_text_length)
+      {
         strncpy(tmp+2,FloppyDrive[floppy_current_drive()].DiskName.Text,max_text_length);
+#if defined(SSE_TOS_PRG_AUTORUN)
+        if(SF314[0].ImageType.Extension==EXT_PRG)
+          strcat(tmp,".PRG");
+#if defined(SSE_TOS_TOS_AUTORUN)
+        else if(SF314[0].ImageType.Extension==EXT_TOS)
+          strcat(tmp,".TOS");
+#endif
+
+#endif
+      }
       else
       {
         strncpy(tmp+2,FloppyDrive[floppy_current_drive()].DiskName.Text,max_text_length-3);
@@ -676,6 +695,13 @@ void GUIRefreshStatusBar() {
     GetWindowRect(next_icon,&window_rect2);
     GetWindowRect(status_bar_win,&window_rect3);
     int w=window_rect2.left-window_rect1.right-10;
+
+#if defined(SSE_VAR_STATUS_STRING_THRESHOLD)
+    if(w<200)
+      should_we_show=false;
+    else
+#endif    
+
     // resize status bar without trashing other icons
     MoveWindow(status_bar_win,23*6,0,w,window_rect3.bottom-window_rect3.top,FALSE);
   }

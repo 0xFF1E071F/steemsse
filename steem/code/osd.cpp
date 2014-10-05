@@ -532,7 +532,14 @@ void osd_draw()
       bool FDCWriting=WD1772.WritingToDisk();
       if(WD1772.STR&0x80 //) // motor on, simply
           && (psg_reg[PSGR_PORT_A]&6) != 6 //3.6.3
-                )
+#if defined(SSE_TOS_PRG_AUTORUN)
+          && SF314[0].ImageType.Extension!=EXT_PRG
+#if defined(SSE_TOS_TOS_AUTORUN)
+          && SF314[0].ImageType.Extension!=EXT_TOS
+#endif
+          && FloppyDrive[DRIVE].DiskInDrive() 
+#endif
+          )
 #else
     if(  (psg_reg[PSGR_PORT_A]&6) != 6
     //  psg_reg[PSGR_PORT_A] & b0110)==BIT_1 // drive A?

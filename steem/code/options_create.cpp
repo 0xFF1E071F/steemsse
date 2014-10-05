@@ -1803,6 +1803,12 @@ void TOptionBox::CreateAssocPage()
 #if defined(STEVEN_SEAGAL) && defined(SSE_IPF_ASSOCIATE)
   AssAddToExtensionsLV(".IPF",T("Caps Disk Image"),7); //height
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_TOS_PRG_AUTORUN)
+  AssAddToExtensionsLV(".PRG",T("Atari PRG executable"),8);
+#if defined(STEVEN_SEAGAL) && defined(SSE_TOS_TOS_AUTORUN)
+  AssAddToExtensionsLV(".TOS",T("Atari TOS executable"),9);
+#endif
+#endif
 #endif
 
   Scroller.AutoSize(5,5);
