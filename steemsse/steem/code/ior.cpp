@@ -135,6 +135,8 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
     // ACIAs (IKBD and MIDI) //
     ///////////////////////////
 
+
+
 #undef LOGSECTION 
 #define LOGSECTION LOGSECTION_IKBD
 
@@ -1604,17 +1606,176 @@ WORD ASMCALL io_read_w(MEM_ADDRESS addr)
   if (addr>=0xff8240 && addr<0xff8260){  //palette
     DEBUG_CHECK_READ_IO_W(addr);
     int n=addr-0xff8240;n/=2;
+
 #if defined(SSE_SHIFTER_PALETTE_NOISE)
 /*  When one reads the palette on a STF, the high bit of each nibble
     isn't always 0, nor always 1.
     The value could have something to do with the last values on the
-    data bus, but we don't emulate that, we just add random noise.
+    data bus.
+    v3.7
+    Cases:
+    1) Random noise when PC is set on the palette would cause
+    a crash of Union demo (illegal instead of bus error).
+    Steem uses the direct "lpfetch" pointers however, so we have no
+    problem with this for now.
+    2) Random noise worsens Awesome 4
+	nop                                              ; 00CEDE: 4E71 
+	nop                                              ; 00CEE0: 4E71 
+	lea $ff8240,a0                                   ; 00CEE2: 41F9 00FF 8240 
+	move.w #$e4,d2                                   ; 00CEE8: 343C 00E4 
+	move.w (a3)+,(a0)                                ; 00CEEC: 309B 
+data bus: ?
+	addq.w #1,$ff8240                                ; 00CEEE: 5279 00FF 8240 
+data bus: that new value?
+	addq.w #1,$ff8240                                ; 00CEF4: 5279 00FF 8240 
+	addq.w #1,$ff8240                                ; 00CEFA: 5279 00FF 8240 
+	addq.w #1,$ff8240                                ; 00CF00: 5279 00FF 8240 
+	addq.w #1,$ff8240                                ; 00CF06: 5279 00FF 8240 
+	addq.w #1,$ff8240                                ; 00CF0C: 5279 00FF 8240 
+	addq.w #1,$ff8240                                ; 00CF12: 5279 00FF 8240 
+	subq.w #1,$ff8240                                ; 00CF18: 5379 00FF 8240 
+	subq.w #1,$ff8240                                ; 00CF1E: 5379 00FF 8240 
+	subq.w #1,$ff8240                                ; 00CF24: 5379 00FF 8240 
+	subq.w #1,$ff8240                                ; 00CF2A: 5379 00FF 8240 
+	subq.w #1,$ff8240                                ; 00CF30: 5379 00FF 8240 
+	subq.w #1,$ff8240                                ; 00CF36: 5379 00FF 8240 
+	subq.w #1,$ff8240                                ; 00CF3C: 5379 00FF 8240 
+	addq.w #1,$ff8240                                ; 00CF42: 5279 00FF 8240 
+	addq.w #1,$ff8240                                ; 00CF48: 5279 00FF 8240 
+	addq.w #1,$ff8240                                ; 00CF4E: 5279 00FF 8240 
+	addq.w #1,$ff8240                                ; 00CF54: 5279 00FF 8240 
+	addq.w #1,$ff8240                                ; 00CF5A: 5279 00FF 8240 
+	subq.w #1,$ff8240                                ; 00CF60: 5379 00FF 8240 
+	subq.w #1,$ff8240                                ; 00CF66: 5379 00FF 8240 
+	subq.w #1,$ff8240                                ; 00CF6C: 5379 00FF 8240 
+	subq.w #1,$ff8240                                ; 00CF72: 5379 00FF 8240 
+	subq.w #1,$ff8240                                ; 00CF78: 5379 00FF 8240 
+      Emulation of this intro wasn't satisfying without that noise either, we
+      see that noise is necessary, only not random.
+    3) Random noise seems to fix UMD8730
+	move.l d7,-(a7)                                  ; 033D2C: 2F07 
+	lea $340d2,a2                                    ; 033D2E: 45F9 0003 40D2 
+	lea $340e2,a3                                    ; 033D34: 47F9 0003 40E2 
+	clr.l d0                                         ; 033D3A: 4280 
+	clr.l d1                                         ; 033D3C: 4281 
+	clr.l d3                                         ; 033D3E: 4283 
+	clr.l d4                                         ; 033D40: 4284 
+	clr.l d5                                         ; 033D42: 4285 
+	clr.l d6                                         ; 033D44: 4286 
+	move.w #$f,d7                                    ; 033D46: 3E3C 000F 
+Loop palettes
+	clr.l d2                                         ; 033D4A: 4282 
+	movea.w (a0),a4                                  ; 033D4C: 3850 
+Reading palette
+	move.w a4,d6                                     ; 033D4E: 3C0C 
+	andi.w #$f,d6                                    ; 033D50: 0246 000F 
+	move.b 0(a2,D6.W),d0                             ; 033D54: 1032 6000 
+	move.w a4,d6                                     ; 033D58: 3C0C 
+	lsr.b #4,d6                                      ; 033D5A: E80E 
+	andi.w #$f,d6                                    ; 033D5C: 0246 000F 
+	move.b 0(a2,D6.W),d1                             ; 033D60: 1232 6000 
+	move.w a4,d6                                     ; 033D64: 3C0C 
+	lsr.w #8,d6                                      ; 033D66: E04E 
+	andi.w #$f,d6                                    ; 033D68: 0246 000F 
+	move.b 0(a2,D6.W),d2                             ; 033D6C: 1432 6000 
+	movea.w (a1)+,a4                                 ; 033D70: 3859 
+	move.w a4,d6                                     ; 033D72: 3C0C 
+	andi.w #$f,d6                                    ; 033D74: 0246 000F 
+	move.b 0(a2,D6.W),d3                             ; 033D78: 1632 6000 
+	move.w a4,d6                                     ; 033D7C: 3C0C 
+	lsr.b #4,d6                                      ; 033D7E: E80E 
+	andi.w #$f,d6                                    ; 033D80: 0246 000F 
+	move.b 0(a2,D6.W),d4                             ; 033D84: 1832 6000 
+	move.w a4,d6                                     ; 033D88: 3C0C 
+	lsr.w #8,d6                                      ; 033D8A: E04E 
+	andi.w #$f,d6                                    ; 033D8C: 0246 000F 
+	move.b 0(a2,D6.W),d5                             ; 033D90: 1A32 6000 
+	cmp.b d3,d0                                      ; 033D94: B003 
+	beq.s +12 {$033DA4}                              ; 033D96: 670C 
+	bgt.s +6 {$033DA0}                               ; 033D98: 6E06 
+	addi.b #$1,d0                                    ; 033D9A: 0600 0001 
+	bra.s +4 {$033DA4}                               ; 033D9E: 6004 
+	subi.b #$1,d0                                    ; 033DA0: 0400 0001 
+	cmp.b d4,d1                                      ; 033DA4: B204 
+	beq.s +12 {$033DB4}                              ; 033DA6: 670C 
+	bgt.s +6 {$033DB0}                               ; 033DA8: 6E06 
+	addi.b #$1,d1                                    ; 033DAA: 0601 0001 
+	bra.s +4 {$033DB4}                               ; 033DAE: 6004 
+	subi.b #$1,d1                                    ; 033DB0: 0401 0001 
+	cmp.b d5,d2                                      ; 033DB4: B405 
+	beq.s +12 {$033DC4}                              ; 033DB6: 670C 
+	bgt.s +6 {$033DC0}                               ; 033DB8: 6E06 
+	addi.b #$1,d2                                    ; 033DBA: 0602 0001 
+	bra.s +4 {$033DC4}                               ; 033DBE: 6004 
+	subi.b #$1,d2                                    ; 033DC0: 0402 0001 
+	move.b 0(a3,D2.W),d2                             ; 033DC4: 1433 2000 
+	lsl.b #4,d2                                      ; 033DC8: E90A 
+	or.b 0(a3,D1.W),d2                               ; 033DCA: 8433 1000 
+	lsl.w #4,d2                                      ; 033DCE: E94A 
+	or.b 0(a3,D0.W),d2                               ; 033DD0: 8433 0000 
+	move.w d2,(a0)+                                  ; 033DD4: 30C2 
+Writing palette, ++
+	dbra d7,-142 {$033D4A}                           ; 033DD6: 51CF FF72 
+Loop on
+	move.l (a7)+,d7                                  ; 033DDA: 2E1F 
+	rts                                              ; 033DDC: 4E75 
+Done one cycle of all palettes
+    4) Forest HW test has a double palette test, noise seems to be expected
+       for $555.
+	move.b #$0,$8260.w                               ; 014BD6: 11FC 0000 8260 
+	move.b #$2,$820a.w                               ; 014BDC: 11FC 0002 820A 
+	move.w #$555,d0                                  ; 014BE2: 303C 0555 
+	move.w #$aaa,d1                                  ; 014BE6: 323C 0AAA 
+	move.w d0,$825e.w                                ; 014BEA: 31C0 825E 
+	move.w $825e.W,d2                                ; 014BEE: 3438 825E 
+	andi.w #$fff,d2                                  ; 014BF2: 0242 0FFF 
+	move.w d1,$825e.w                                ; 014BF6: 31C1 825E 
+	move.w $825e.W,d3                                ; 014BFA: 3638 825E 
+	andi.w #$fff,d3                                  ; 014BFE: 0243 0FFF 
+	cmp.w d0,d2                                      ; 014C02: B440 
+	bne.s +8 {$014C0E}                               ; 014C04: 6608 
+	cmp.w d1,d3                                      ; 014C06: B641 
+	bne.s +4 {$014C0E}                               ; 014C08: 6604 
+	moveq #1,d4                                      ; 014C0A: 7801 
+"STE"
+	bra.s +2 {$014C10}                               ; 014C0C: 6002 
+	moveq #0,d4                                      ; 014C0E: 7800 
+
+   v3.7
+   We can't emulate this correctly yet, so we will hack it instead:
+   - Do the random thing only for UMDUMD8730
+   - Try to update "data bus" for Awesome 04
+   It's not bad to target ir, as data bus would depend on those. 
+   
 */
+
+#if defined(SSE_SHIFTER_PALETTE_STF)//no
+    WORD palette=PAL_DPEEK(n*2); // breaks Forest STE test
+#else
     WORD palette=STpal[n];
+#endif
+
 #if defined(SSE_STF)
     if(ST_TYPE!=STE)
-      palette|=(0x888)&(rand()); // fixes UMD8730 STF, maybe Overscan Demos STF
+    {
+      if(SSE_HACKS_ON)
+#if defined(SSE_SHIFTER_PALETTE_NOISE2)
+        if(ir==0x3850)
+          palette|=(0xF888)&(rand()); // UMD8730
+#if defined(SSE_CPU_DATABUS)
+        else if(ir==0x5279 || ir==0x5379)
+          palette|=0xF888&M68000.dbus; // Awesome 04
 #endif
+#elif defined(SSE_CPU_DATABUS)
+        palette|=0xF888&M68000.dbus;
+#else
+        palette|=(0x888)&(rand());
+#endif
+    }
+#endif//STF
+
+//    TRACE("PC %X R PAL %X %X\n",old_pc,n,palette);
+
     return palette;
 #else
     return STpal[n];
