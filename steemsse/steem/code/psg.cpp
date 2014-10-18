@@ -593,8 +593,12 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
         interpolate[abc]=index[abc]=0;
       else if((*source_p)&BIT_6) // envelope 
       {
-        interpolate[abc]=(*source_p)&1; // lower bit is on -> interpolate
-        index[abc]=((*source_p)>>1)&0xF; // 4bit volume
+        index[abc]=( ((*source_p)>>1))&0xF; // 4bit volume
+        if(index[abc]<15)
+          interpolate[abc]=(*source_p)&1; // lower bit is on -> interpolate
+        else // FFFF as max, not FFFF "+"
+          interpolate[abc]=0;
+        ASSERT( index[abc]+interpolate[abc]<=15 );
       }
       else // fixed
       {
@@ -610,6 +614,9 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
 
     if(*(int*)(&interpolate[0]))
     {
+      ASSERT( index[0]+interpolate[0]<=15 );
+      ASSERT( index[1]+interpolate[1]<=15 );
+      ASSERT( index[2]+interpolate[2]<=15 );
       int vol2=fixed_vol_3voices[index[2]+interpolate[2]] 
         [index[1]+interpolate[1]] [index[0]+interpolate[0]];
       vol= (int) sqrt( (float) vol * (float) vol2); 
