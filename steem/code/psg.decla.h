@@ -73,7 +73,11 @@ EXT int sound_freq INIT(50066),sound_comline_freq INIT(0),sound_chosen_freq INIT
 EXT int sound_mode INIT(SOUND_MODE_CHIP),sound_last_mode INIT(SOUND_MODE_CHIP);
 EXT BYTE sound_num_channels INIT(1),sound_num_bits INIT(8);
 EXT int sound_bytes_per_sample INIT(1);
+#if defined(SSE_SOUND_VOL_LOGARITHMIC_2)
+EXT int MaxVolume INIT(0xffff);
+#else
 EXT DWORD MaxVolume INIT(0xffff);
+#endif
 EXT bool sound_low_quality INIT(0);
 EXT bool sound_write_primary INIT( NOT_ONEGAME(0) ONEGAME_ONLY(true) );
 EXT bool sound_click_at_start INIT(0);
