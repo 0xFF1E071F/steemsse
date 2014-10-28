@@ -171,7 +171,7 @@ const int psg_flat_volume_level[16]={0*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,8*VA/10
                                       287*VA/1000+VZL*VFP,407*VA/1000+VZL*VFP,648*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP};
 
 
-#if defined(SSE_YM2149_FIXED_VOL_FIX1)
+#if defined(SSE_YM2149_FIXED_VOL_FIX1) //undef v3.7.0
 /*  Values based on the graphic in Yamaha doc.
     It remains to be seen/heard if the sound is better with these values or
     Steem original values.
@@ -186,7 +186,7 @@ const int psg_flat_volume_level2[16]=
 
 #endif
 
-#if defined(SSE_YM2149_FIXED_VOL_FIX2) 
+#if defined(SSE_YM2149_FIXED_VOL_TABLE) 
 /*  For this mod we use ljbk's table when we reckon we're playing samples.
     This is the case when tone and noise generators are disabled.
     Note that some games play samples on only some channel(s) or with another
@@ -194,6 +194,7 @@ const int psg_flat_volume_level2[16]=
     different sound.
     This doesn't fix all sample playing problems.
     ST-CNX scroller, ...
+    v3.7.0: table used all the time, eg also for Goldrunner
 */
 
 const WORD fixed_vol_3voices[16][16][16]= 
@@ -202,10 +203,11 @@ const WORD fixed_vol_3voices[16][16][16]=
 //TODO load only when check option
 
 inline bool playing_samples() {
-#if defined(SSE_YM2149_FIXED_VOL_FIX3)
+#if defined(SSE_SOUND_FILTER_STF3)
 /*  This test is more complicated but will work with
-    My socks are weapons.
+    eg My socks are weapons.
 */
+  ASSERT( PSG_FILTER_FIX );
   int yes=((psg_reg[PSGR_MIXER]&b00111111)==b00111111);
   if(!yes)
   {
@@ -259,6 +261,7 @@ const int psg_envelope_level[8][64]={
     Steem original values.
     For that reason, the mod is optional.
     v3.7.0: this mod was wrong, we must take the values mentioned in the doc 841, 707, etc.
+    What was I thinking?
     SSE_YM2149_ENV_FIX1 undef
 */
 
@@ -281,8 +284,10 @@ const int psg_envelope_level2[8][64]={
     VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP}};
 #endif
 
-#if defined(SSE_YM2149_MIXING)
-/*  Rendering is done later, we save the 5bit value instead of the 16bit volume.
+#if defined(SSE_YM2149_DELAY_RENDERING)
+/*  Rendering is done later, we save the 5bit digital value instead of the 
+    16bit "rendered" volume.
+    TODO: something smarter than a dumb table?
 */
   
 const BYTE psg_envelope_level3[8][64]={
@@ -354,7 +359,7 @@ HRESULT Sound_Start() // SS called by
   // Work out startup voltage
   int envshape=psg_reg[13] & 15;
   int flatlevel=0;
-#if defined(SSE_YM2149_FIXED_VOL_FIX2) && !defined(SSE_YM2149_MIXINGC)
+#if defined(SSE_YM2149_FIXED_VOL_TABLE) && !defined(SSE_YM2149_NO_SAMPLES_OPTION)
   if(SSEOption.PSGFixedVolume&& playing_samples())
     flatlevel=get_fixed_volume();
   else
@@ -536,7 +541,7 @@ inline void CalcVEmu(int &v,int *source_p) {
 
 inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
 
-#if defined(SSE_YM2149_MIXING)
+#if defined(SSE_YM2149_DELAY_RENDERING)
 /*
     each *source_p element is a 32bit integer made up like this:
 
@@ -545,41 +550,29 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
     byte 2: channel C
 
     each channel byte is made up like this:
-    bit 0-4: volume on 4bit (fixed) or 5bit (envelope)
-    bit 5: on (1) /off (0) (tone and noise mixed)
+    bit 0-4: volume on 5bit
     bit 6: envelope (1) /fixed (0)
 
 */  
 
-#if defined(SSE_YM2149_MIXINGA)  
-/*  as 1st coding step, we compute volumes as if fixed volume, single
-    table and add channels
-    it's controlled by option P.S.G.
-*/
-
-  if(SSE_OPTION_PSG)
-  {
-    int vol=0;
-    for(int abc=0;abc<3;abc++)
-    {
-      int vol_5bit=(*source_p)&0x1F; // 5bit volume
-      if( ! ((*source_p)&BIT_5) )
-        vol+=0;
-      else if((*source_p)&BIT_6) // envelope 
-        vol+=psg_flat_volume_level[vol_5bit>>1];   // we miss the env volumes...
-      else // fixed
-        vol+=psg_flat_volume_level[vol_5bit];
-      *source_p>>=8;
-    }
-    *source_p=vol;
-  }//SSE_OPTION_PSG
-#endif
-
-#if defined(SSE_YM2149_MIXINGB)  
-/*  2nd step, we use the fixed volume table 
+#if defined(SSE_YM2149_DELAY_RENDERING1)  
+/*  we use the fixed volume table to render sound on 3 channels
     this table is 16x16x16, but envelope volume is coded on 5bit, so
     we need to interpolate somehow
-    PSG tunes sound distorted like in Hatari, is it correct?
+    We can interpolate 15 values, so we have 15+16 but need 32
+    31 -> 15
+    30 -> 14.5
+    29 -> 14
+    ...
+    2 -> 0.5
+    1 -> 0 !
+    0 -> 0
+    We sacrifice the lowest value, of course.
+    We interpolate when the last bit isn't set.
+    Because of that, we need to know if it was enveloped:
+    11110 is max for fixed, 11111 is max for enveloped
+    bit 6 is used for that (1: enveloped)
+    PSG tunes sound distorted like in Hatari but that's correct
     eg Ace 2 on BIG demo
 */
 
@@ -589,22 +582,11 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
     BYTE index[3],interpolate[3];
     for(int abc=0;abc<3;abc++)
     {
-      if( ! ((*source_p)&BIT_5) )
-        interpolate[abc]=index[abc]=0;
-      else if((*source_p)&BIT_6) // envelope 
-      {
-        index[abc]=( ((*source_p)>>1))&0xF; // 4bit volume
-        if(index[abc]<15)
-          interpolate[abc]=(*source_p)&1; // lower bit is on -> interpolate
-        else // FFFF as max, not FFFF "+"
-          interpolate[abc]=0;
-        ASSERT( index[abc]+interpolate[abc]<=15 );
-      }
-      else // fixed
-      {
-        interpolate[abc]=0; 
-        index[abc]=((*source_p))&0xF; // 4bit volume
-      }
+      index[abc]=( ((*source_p)>>1))&0xF; // 4bit volume
+
+      interpolate[abc]=
+        ( ((*source_p)&BIT_6) && index[abc]>0 && !((*source_p)&1)) ? 1 : 0;
+
       *source_p>>=8;
       ASSERT( interpolate[abc]<=1 );
       ASSERT( index[abc]<=15 );
@@ -614,13 +596,19 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
 
     if(*(int*)(&interpolate[0]))
     {
+      /*//not when -1
       ASSERT( index[0]+interpolate[0]<=15 );
       ASSERT( index[1]+interpolate[1]<=15 );
       ASSERT( index[2]+interpolate[2]<=15 );
-      int vol2=fixed_vol_3voices[index[2]+interpolate[2]] 
-        [index[1]+interpolate[1]] [index[0]+interpolate[0]];
+      */
+      ASSERT( !((index[0]-interpolate[0]<=15)&0x80) );
+      ASSERT( !((index[1]-interpolate[1]<=15)&0x80) );
+      ASSERT( !((index[2]-interpolate[2]<=15)&0x80) );
+      int vol2=fixed_vol_3voices[index[2]-interpolate[2]] 
+        [index[1]-interpolate[1]] [index[0]-interpolate[0]];
       vol= (int) sqrt( (float) vol * (float) vol2); 
     }
+
     *source_p=vol;
   }//SSE_OPTION_PSG
 #endif
@@ -1915,14 +1903,17 @@ void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
 #define PSG_PULSE_TONE_t64  ((t*64 / psg_tonemodulo_2) & 1)
 
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_INLINE2)
+//#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_INLINE2)
 /*  Second round of inlining
-    Necessary for SSE_YM2149_MIXING
+    Necessary for SSE_YM2149_DELAY_RENDERING
 */
+
+#if defined(SSE_SOUND_INLINE2A)
 
 void psg_prepare_envelope(double &af,double &bf,int &psg_envmodulo,DWORD t,
   int &psg_envstage,int &psg_envcountdown,int &envdeath,int &envshape,int &envvol) {
-      int envperiod=1|psg_reg[PSGR_ENVELOPE_PERIOD_LOW]+((psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]) <<8);
+      //int envperiod=1|psg_reg[PSGR_ENVELOPE_PERIOD_LOW]+((psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]) <<8);//buggy!
+    int envperiod=max( (((int)psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]) <<8) + psg_reg[PSGR_ENVELOPE_PERIOD_LOW],1);
       af=envperiod;
       af*=sound_freq;                  
       af*=((double)(1<<13))/15625;                               
@@ -1936,14 +1927,14 @@ void psg_prepare_envelope(double &af,double &bf,int &psg_envmodulo,DWORD t,
       if ((psg_reg[PSGR_ENVELOPE_SHAPE] & PSG_ENV_SHAPE_CONT)==0 ||                  
            (psg_reg[PSGR_ENVELOPE_SHAPE] & PSG_ENV_SHAPE_HOLD)){                     
         if(psg_reg[PSGR_ENVELOPE_SHAPE]==11 || psg_reg[PSGR_ENVELOPE_SHAPE]==13){      
-#if defined(SSE_YM2149_MIXING)  
+#if defined(SSE_YM2149_DELAY_RENDERING)  
           envdeath=(SSE_OPTION_PSG)?15:psg_flat_volume_level[15];                                           
 #else
           envdeath=psg_flat_volume_level[15];                                           
 #endif
         }else{       
-#if defined(SSE_YM2149_MIXING)  
-          envdeath=(SSE_OPTION_PSG || SSE_OPTION_PSG_FIXED)?0:psg_flat_volume_level[0];                                       
+#if defined(SSE_YM2149_DELAY_RENDERING)  
+          envdeath=(SSE_OPTION_PSG)?0:psg_flat_volume_level[0];                                       
 #else                                                                    
           envdeath=psg_flat_volume_level[0];     
 #endif                                         
@@ -1953,8 +1944,8 @@ void psg_prepare_envelope(double &af,double &bf,int &psg_envmodulo,DWORD t,
       if (psg_envstage>=32 && envdeath!=-1){                           
         envvol=envdeath;                                             
       }else{        
-#if defined(SSE_YM2149_MIXING)  
-        envvol=(SSE_OPTION_PSG || SSE_OPTION_PSG_FIXED) 
+#if defined(SSE_YM2149_DELAY_RENDERING)  
+        envvol=(SSE_OPTION_PSG) 
           ? psg_envelope_level3[envshape][psg_envstage & 63]
           : psg_envelope_level[envshape][psg_envstage & 63] ;                   
 
@@ -1969,104 +1960,11 @@ void psg_prepare_envelope(double &af,double &bf,int &psg_envmodulo,DWORD t,
 }
 
 #define PSG_PREPARE_ENVELOPE psg_prepare_envelope(af,bf,psg_envmodulo,t,psg_envstage,psg_envcountdown,envdeath,envshape,envvol);
+// double &af,double &bf,int &psg_envmodulo,DWORD t,
+//  int &psg_envstage,int &psg_envcountdown,int &envdeath,int &envshape,int &envvol
 
 
-void psg_prepare_noise(double &af,double &bf,int &psg_noisemodulo,DWORD t,
-    int &psg_noisecountdown, int &psg_noisecounter,bool &psg_noisetoggle) {
-
-      int noiseperiod=(psg_reg[PSGR_NOISE_PERIOD]&0x1f)|1;      
-      af=((int)noiseperiod*sound_freq);                              
-      af*=((double)(1<<17))/15625; 
-      psg_noisemodulo=(int)af; 
-      bf=t; \
-      bf*=(double)(1<<20); 
-      psg_noisecounter=(int)floor(bf/af); 
-      psg_noisecounter &= (PSG_NOISE_ARRAY-1); 
-      bf=fmod(bf,af); 
-      psg_noisecountdown=psg_noisemodulo-(int)bf; 
-      psg_noisetoggle=psg_noise[psg_noisecounter];
-
-}
-
-#define PSG_PREPARE_NOISE psg_prepare_noise(af,bf,psg_noisemodulo,t,psg_noisecountdown,psg_noisecounter,psg_noisetoggle);
-
-
-void psg_prepare_tone(int toneperiod,double &af,double &bf,
-                      int &psg_tonemodulo_2,int abc,DWORD t,
-                      int &psg_tonecountdown,bool &psg_tonetoggle) {
-
-      af=((int)toneperiod*sound_freq);                              \
-      af*=((double)(1<<17))/15625;                               \
-      psg_tonemodulo_2=(int)af; \
-      bf=(((DWORD)t)-psg_tone_start_time[abc]); \
-      bf*=(double)(1<<21); \
-      bf=fmod(bf,af*2); \
-      af=bf-af;               \
-      if(af>=0){                  \
-        psg_tonetoggle=false;       \
-        bf=af;                      \
-      }                           \
-      psg_tonecountdown=psg_tonemodulo_2-(int)bf; \
-}
-
-#define PSG_PREPARE_TONE psg_prepare_tone(toneperiod,af,bf,psg_tonemodulo_2,abc,t,psg_tonecountdown,psg_tonetoggle);
-
-
-void psg_envelope_advance(int &psg_envmodulo,int &psg_envstage,int &psg_envcountdown,int &envdeath,int &envshape,int &envvol) {
-
-          psg_envcountdown-=TWO_TO_SEVENTEEN; //  131072
-          while (psg_envcountdown<0){           \
-            psg_envcountdown+=psg_envmodulo;             \
-            psg_envstage++;                   \
-            if (psg_envstage>=32 && envdeath!=-1){                           \
-              envvol=envdeath;                                             \
-            }else{   
-#if defined(SSE_YM2149_MIXING)  
-        envvol=(SSE_OPTION_PSG || SSE_OPTION_PSG_FIXED) 
-          ? psg_envelope_level3[envshape][psg_envstage & 63]
-          : psg_envelope_level[envshape][psg_envstage & 63] ;                   
-                 
-#elif defined(SSE_YM2149_ENV_FIX1)
-              envvol=(SSEOption.PSGMod)?psg_envelope_level2[envshape][psg_envstage & 63]            \
-                :psg_envelope_level[envshape][psg_envstage & 63];
-#else                                                    
-              envvol=psg_envelope_level[envshape][psg_envstage & 63];
-#endif
-            }																															\
-          }
-}
-
-#define PSG_ENVELOPE_ADVANCE  psg_envelope_advance(psg_envmodulo,psg_envstage,psg_envcountdown,envdeath,envshape,envvol);
-
-
-void psg_tone_advance(int &psg_tonemodulo_2,int &psg_tonecountdown,bool &psg_tonetoggle) {
-
-          psg_tonecountdown-=TWO_MILLION;  \
-          while (psg_tonecountdown<0){           \
-            psg_tonecountdown+=psg_tonemodulo_2;             \
-            psg_tonetoggle=!psg_tonetoggle;                   \
-          }
-}
-
-#define PSG_TONE_ADVANCE psg_tone_advance(psg_tonemodulo_2,psg_tonecountdown,psg_tonetoggle);
-
-
-void psg_noise_advance(int &psg_noisemodulo,int &psg_noisecountdown,int &psg_noisecounter,bool &psg_noisetoggle) {
-          psg_noisecountdown-=ONE_MILLION;   \
-          while (psg_noisecountdown<0){   \
-            psg_noisecountdown+=psg_noisemodulo;      \
-            psg_noisecounter++;                        \
-            if(psg_noisecounter>=PSG_NOISE_ARRAY){      \
-              psg_noisecounter=0;                        \
-            }                                             \
-            psg_noisetoggle=psg_noise[psg_noisecounter];   \
-          }
-}
-
-#define PSG_NOISE_ADVANCE  psg_noise_advance(psg_noisemodulo,psg_noisecountdown,psg_noisecounter,psg_noisetoggle);
-
-
-#else//!inline2
+#else
 
 #if defined(SSE_YM2149_ENV_FIX1)
 #define PSG_PREPARE_ENVELOPE                                \
@@ -2127,6 +2025,31 @@ void psg_noise_advance(int &psg_noisemodulo,int &psg_noisecountdown,int &psg_noi
 
 #endif
 
+#endif//a
+
+
+#if defined(SSE_SOUND_INLINE2B)
+
+void psg_prepare_noise(double &af,double &bf,int &psg_noisemodulo,DWORD t,
+    int &psg_noisecountdown, int &psg_noisecounter,bool &psg_noisetoggle) {
+
+      int noiseperiod=(psg_reg[PSGR_NOISE_PERIOD]&0x1f)|1;      
+      af=((int)noiseperiod*sound_freq);                              
+      af*=((double)(1<<17))/15625; 
+      psg_noisemodulo=(int)af; 
+      bf=t; \
+      bf*=(double)(1<<20); 
+      psg_noisecounter=(int)floor(bf/af); 
+      psg_noisecounter &= (PSG_NOISE_ARRAY-1); 
+      bf=fmod(bf,af); 
+      psg_noisecountdown=psg_noisemodulo-(int)bf; 
+      psg_noisetoggle=psg_noise[psg_noisecounter];
+
+}
+#define PSG_PREPARE_NOISE psg_prepare_noise(af,bf,psg_noisemodulo,t,psg_noisecountdown,psg_noisecounter,psg_noisetoggle);
+
+#else
+
 #define PSG_PREPARE_NOISE                                \
       int noiseperiod=(1+(psg_reg[PSGR_NOISE_PERIOD]&0x1f));      \
       af=((int)noiseperiod*sound_freq);                              \
@@ -2144,6 +2067,32 @@ void psg_noise_advance(int &psg_noisemodulo,int &psg_noisecountdown,int &psg_noi
       if (abc==0) log_write(Str("toneperiod=")+toneperiod+" sound_freq="+sound_freq+" psg_tonemodulo_2="+psg_tonemodulo_2); \
       */
 
+#endif//b
+
+#if defined(SSE_SOUND_INLINE2C)
+
+void psg_prepare_tone(int toneperiod,double &af,double &bf,
+                      int &psg_tonemodulo_2,int abc,DWORD t,
+                      int &psg_tonecountdown,bool &psg_tonetoggle) {
+
+      af=((int)toneperiod*sound_freq);                              \
+      af*=((double)(1<<17))/15625;                               \
+      psg_tonemodulo_2=(int)af; \
+      bf=(((DWORD)t)-psg_tone_start_time[abc]); \
+      bf*=(double)(1<<21); \
+      bf=fmod(bf,af*2); \
+      af=bf-af;               \
+      if(af>=0){                  \
+        psg_tonetoggle=false;       \
+        bf=af;                      \
+      }                           \
+      psg_tonecountdown=psg_tonemodulo_2-(int)bf; \
+}
+
+#define PSG_PREPARE_TONE psg_prepare_tone(toneperiod,af,bf,psg_tonemodulo_2,abc,t,psg_tonecountdown,psg_tonetoggle);
+
+#else
+
 #define PSG_PREPARE_TONE                                 \
       af=((int)toneperiod*sound_freq);                              \
       af*=((double)(1<<17))/15625;                               \
@@ -2159,24 +2108,39 @@ void psg_noise_advance(int &psg_noisemodulo,int &psg_noisecountdown,int &psg_noi
       psg_tonecountdown=psg_tonemodulo_2-(int)bf; \
 
 
-#define PSG_TONE_ADVANCE                                   \
-          psg_tonecountdown-=TWO_MILLION;  \
-          while (psg_tonecountdown<0){           \
-            psg_tonecountdown+=psg_tonemodulo_2;             \
-            psg_tonetoggle=!psg_tonetoggle;                   \
-          }
+#endif//c
 
 
-#define PSG_NOISE_ADVANCE                           \
-          psg_noisecountdown-=ONE_MILLION;   \
-          while (psg_noisecountdown<0){   \
-            psg_noisecountdown+=psg_noisemodulo;      \
-            psg_noisecounter++;                        \
-            if(psg_noisecounter>=PSG_NOISE_ARRAY){      \
-              psg_noisecounter=0;                        \
-            }                                             \
-            psg_noisetoggle=psg_noise[psg_noisecounter];   \
+#if defined(SSE_SOUND_INLINE2D)
+
+void psg_envelope_advance(int &psg_envmodulo,int &psg_envstage,int &psg_envcountdown,int &envdeath,int &envshape,int &envvol) {
+
+          psg_envcountdown-=TWO_TO_SEVENTEEN; //  131072
+          while (psg_envcountdown<0){           \
+            psg_envcountdown+=psg_envmodulo;             \
+            psg_envstage++;                   \
+            if (psg_envstage>=32 && envdeath!=-1){                           \
+              envvol=envdeath;                                             \
+            }else{   
+#if defined(SSE_YM2149_DELAY_RENDERING)  
+        envvol=(SSE_OPTION_PSG) 
+          ? psg_envelope_level3[envshape][psg_envstage & 63]
+          : psg_envelope_level[envshape][psg_envstage & 63] ;                   
+                 
+#elif defined(SSE_YM2149_ENV_FIX1)
+              envvol=(SSEOption.PSGMod)?psg_envelope_level2[envshape][psg_envstage & 63]            \
+                :psg_envelope_level[envshape][psg_envstage & 63];
+#else                                                    
+              envvol=psg_envelope_level[envshape][psg_envstage & 63];
+#endif
+            }																															\
           }
+}
+
+#define PSG_ENVELOPE_ADVANCE  psg_envelope_advance(psg_envmodulo,psg_envstage,psg_envcountdown,envdeath,envshape,envvol);
+
+
+#else
 
 #if defined(SSE_YM2149_ENV_FIX1)
 
@@ -2210,7 +2174,81 @@ void psg_noise_advance(int &psg_noisemodulo,int &psg_noisecountdown,int &psg_noi
   //            envvol=(psg_envstage&255)*64;
 
 
-#endif//inline2?
+#endif//d
+
+
+#if defined(SSE_SOUND_INLINE2E)
+
+void psg_tone_advance(int psg_tonemodulo_2,int &psg_tonecountdown,bool &psg_tonetoggle) {
+
+          psg_tonecountdown-=TWO_MILLION;  \
+          while (psg_tonecountdown<0){           \
+            psg_tonecountdown+=psg_tonemodulo_2;             \
+            psg_tonetoggle=!psg_tonetoggle;                   \
+          }
+}
+
+#define PSG_TONE_ADVANCE psg_tone_advance(psg_tonemodulo_2,psg_tonecountdown,psg_tonetoggle);
+
+#else
+
+#define PSG_TONE_ADVANCE                                   \
+          psg_tonecountdown-=TWO_MILLION;  \
+          while (psg_tonecountdown<0){           \
+            psg_tonecountdown+=psg_tonemodulo_2;             \
+            psg_tonetoggle=!psg_tonetoggle;                   \
+          }
+
+#endif//e
+
+
+#if defined(SSE_SOUND_INLINE2F)
+
+void psg_noise_advance(int psg_noisemodulo,int &psg_noisecountdown,int &psg_noisecounter,bool &psg_noisetoggle) {
+          psg_noisecountdown-=ONE_MILLION;   \
+          while (psg_noisecountdown<0){   \
+            psg_noisecountdown+=psg_noisemodulo;      \
+            psg_noisecounter++;                        \
+            if(psg_noisecounter>=PSG_NOISE_ARRAY){      \
+              psg_noisecounter=0;                        \
+            }                                             \
+            psg_noisetoggle=psg_noise[psg_noisecounter];   \
+          }
+}
+
+#define PSG_NOISE_ADVANCE  psg_noise_advance(psg_noisemodulo,psg_noisecountdown,psg_noisecounter,psg_noisetoggle);
+
+#else
+
+#define PSG_NOISE_ADVANCE                           \
+          psg_noisecountdown-=ONE_MILLION;   \
+          while (psg_noisecountdown<0){   \
+            psg_noisecountdown+=psg_noisemodulo;      \
+            psg_noisecounter++;                        \
+            if(psg_noisecounter>=PSG_NOISE_ARRAY){      \
+              psg_noisecounter=0;                        \
+            }                                             \
+            psg_noisetoggle=psg_noise[psg_noisecounter];   \
+          }
+
+#endif//f
+
+
+//#else//!inline2
+
+
+
+
+
+
+
+
+
+
+
+
+
+//#endif//inline2?
 
 
 /*  SS:This function renders one PSG channel until timing to_t.
@@ -2266,12 +2304,11 @@ void psg_write_buffer(int abc,DWORD to_t)
 
   if ((psg_reg[abc+8] & BIT_4)==0){ // Not Enveloped //SS bit 'M' in those registers
 
-#if defined(SSE_YM2149_FIXED_VOL_FIX2) && !defined(SSE_YM2149_MIXINGC)
+#if defined(SSE_YM2149_FIXED_VOL_TABLE) && !defined(SSE_YM2149_NO_SAMPLES_OPTION)
 /*  One unique volume. It's possible because we sync rendering in case
     of sample playing (see below).
     v3.7.0 because the table is used all the time, this block isn't
     defined anymore.
-    vol is set, but will be used only if option 'P.S.G.' isn't checked.
 */
     int vol;
 #if defined(SSE_YM2149_FIXED_VOL_FIX1)
@@ -2284,7 +2321,7 @@ void psg_write_buffer(int abc,DWORD to_t)
 #if defined(SSE_YM2149_FIXED_VOL_FIX1)
     int vol=SSEOption.PSGMod?psg_flat_volume_level2[psg_reg[8+abc] & 15]:
         psg_flat_volume_level[psg_reg[8+abc] & 15];
-#else
+#else//Steem 3.2; vol will be used only if option 'P.S.G.' isn't checked
     int vol=psg_flat_volume_level[psg_reg[abc+8] & 15];
 #endif
 #endif
@@ -2299,23 +2336,29 @@ void psg_write_buffer(int abc,DWORD to_t)
 
         PSG_PREPARE_NOISE
         for (;count>0;count--){
-#if defined(SSE_YM2149_MIXING)
+#if defined(SSE_YM2149_DELAY_RENDERING)
 /*  We don't render (compute volume) here, we record digital volume
     instead if option 'P.S.G.' is checked
+    Volume is coded on 5 bit (fixed volume is shifted)
+
+
+      if( ! ((*source_p)&BIT_5) )
+        interpolate[abc]=index[abc]=0;
+
+
 */
-          if(SSE_OPTION_PSG || SSE_OPTION_PSG_FIXED)
+          if(SSE_OPTION_PSG)
           {
             int t=0;
             if(psg_tonetoggle || psg_noisetoggle)
               ; // mimic Steem's way
             else
-              t=BIT_5; 
-            t|=(psg_reg[abc+8] & 15); // vol 4bit
+              t|=(psg_reg[abc+8] & 15)<<1; // vol 4bit
             t<<=8*abc;
             *p|=t;
             p++;
           }else
-#endif
+#endif // Steem 3.2's immediate rendering
           if(psg_tonetoggle || psg_noisetoggle){
             p++;
           }else{
@@ -2326,18 +2369,17 @@ void psg_write_buffer(int abc,DWORD to_t)
         }
       }else{ //tone only
         for (;count>0;count--){
-#if defined(SSE_YM2149_MIXING)
-          if(SSE_OPTION_PSG || SSE_OPTION_PSG_FIXED)
+#if defined(SSE_YM2149_DELAY_RENDERING)
+          if(SSE_OPTION_PSG)
           {
-          int t=0;
-          if(psg_tonetoggle)
-            ;
-          else
-            t=BIT_5; 
-          t|=(psg_reg[abc+8] & 15); // vol 4bit
-          t<<=8*abc;
-          *p|=t;
-          p++;
+            int t=0;
+            if(psg_tonetoggle)
+              ;
+            else
+              t|=(psg_reg[abc+8] & 15)<<1; // vol 4bit
+            t<<=8*abc;
+            *p|=t;
+            p++;
           } else
 #endif
           if(psg_tonetoggle){
@@ -2355,19 +2397,18 @@ void psg_write_buffer(int abc,DWORD to_t)
       (psg_reg[PSGR_MIXER] & (8 << abc))==0){ //noise enabled
       PSG_PREPARE_NOISE
       for (;count>0;count--){
-#if defined(SSE_YM2149_MIXING)
-          if(SSE_OPTION_PSG || SSE_OPTION_PSG_FIXED)
-          {
+#if defined(SSE_YM2149_DELAY_RENDERING)
+        if(SSE_OPTION_PSG || SSE_OPTION_PSG_FIXED)
+        {
           int t=0;
           if(psg_noisetoggle)
             ;
           else
-            t=BIT_5; 
-          t|=(psg_reg[abc+8] & 15); // vol 4bit
+            t|=(psg_reg[abc+8] & 15)<<1; // vol 4bit
           t<<=8*abc;
           *p|=t;
           p++;
-          } else
+        } else
 #endif
 
         if(psg_noisetoggle){
@@ -2381,18 +2422,17 @@ void psg_write_buffer(int abc,DWORD to_t)
     }else{ //nothing enabled //SS playing samples
       //TRACE("F%d y%d PSG %x: %d at %d\n",FRAME,scan_y,abc+8,count,vol);
       for (;count>0;count--){
-#if defined(SSE_YM2149_MIXING)
-          if(SSE_OPTION_PSG || SSE_OPTION_PSG_FIXED)
-          {
+#if defined(SSE_YM2149_DELAY_RENDERING)
+        if(SSE_OPTION_PSG || SSE_OPTION_PSG_FIXED)
+        {
           int t=0;
-          t=BIT_5; 
-          t|=(psg_reg[abc+8] & 15); // vol 4bit
+          t|=(psg_reg[abc+8] & 15)<<1; // vol 4bit
           t<<=8*abc;
           *p|=t;
           p++;
-          } else
+        } else
 #endif
-#if defined(SSE_YM2149_FIXED_VOL_FIX2) && !defined(SSE_YM2149_MIXINGC)
+#if defined(SSE_YM2149_FIXED_VOL_TABLE) && !defined(SSE_YM2149_NO_SAMPLES_OPTION)
 /*  We don't add, we set (so there are useless rewrites), so we can use the
     full table value (no >> shift).
     If DMA sound is added to this, too bad!
@@ -2419,7 +2459,8 @@ void psg_write_buffer(int abc,DWORD to_t)
     int psg_envmodulo,envvol,psg_envcountdown;
 #endif
     PSG_PREPARE_ENVELOPE;
-
+// double &af,double &bf,int &psg_envmodulo,DWORD t,
+//  int &psg_envstage,int &psg_envcountdown,int &envdeath,int &envshape,int &envvol
     if ((psg_reg[PSGR_MIXER] & (1 << abc))==0 && (toneperiod>9)){ //tone enabled
       PSG_PREPARE_TONE
       if (
@@ -2429,18 +2470,17 @@ void psg_write_buffer(int abc,DWORD to_t)
         (psg_reg[PSGR_MIXER] & (8 << abc))==0){ //noise enabled
         PSG_PREPARE_NOISE
         for (;count>0;count--){
-#if defined(SSE_YM2149_MIXING)
+#if defined(SSE_YM2149_DELAY_RENDERING)
           if(SSE_OPTION_PSG || SSE_OPTION_PSG_FIXED)
           {
-          int t=BIT_6; // code for enveloped
-          if(psg_tonetoggle || psg_noisetoggle)
-            ;
-          else
-            t|=BIT_5; 
-          t|=envvol; // vol 5bit - check 'prepare'
-          t<<=8*abc;
-          *p|=t;
-          p++;
+            int t=BIT_6; // code for enveloped
+            if(psg_tonetoggle || psg_noisetoggle)
+              ;
+            else
+              t|=envvol; // vol 5bit - check 'prepare'
+            t<<=8*abc;
+            *p|=t;
+            p++;
           } else
 #endif
           if(psg_tonetoggle || psg_noisetoggle){
@@ -2454,18 +2494,17 @@ void psg_write_buffer(int abc,DWORD to_t)
         }
       }else{ //tone only
         for (;count>0;count--){
-#if defined(SSE_YM2149_MIXING)
+#if defined(SSE_YM2149_DELAY_RENDERING)
           if(SSE_OPTION_PSG || SSE_OPTION_PSG_FIXED)
           {
-          int t=BIT_6;
-          if(psg_tonetoggle)
-            ;
-          else
-            t|=BIT_5; 
-          t|=envvol; // vol 5bit
-          t<<=8*abc;
-          *p|=t;
-          p++;
+            int t=BIT_6;
+            if(psg_tonetoggle)
+              ;
+            else
+              t|=envvol; // vol 5bit
+            t<<=8*abc;
+            *p|=t;
+            p++;
           } else
 #endif
           if(psg_tonetoggle){
@@ -2482,24 +2521,20 @@ void psg_write_buffer(int abc,DWORD to_t)
         !((1<<11)&d2_dpeek(FAKE_IO_START+20)) &&
 #endif
       (psg_reg[PSGR_MIXER] & (8 << abc))==0){ //noise enabled
-
-
       PSG_PREPARE_NOISE
       for (;count>0;count--){
-#if defined(SSE_YM2149_MIXING)
-          if(SSE_OPTION_PSG || SSE_OPTION_PSG_FIXED)
-          {
+#if defined(SSE_YM2149_DELAY_RENDERING)
+        if(SSE_OPTION_PSG || SSE_OPTION_PSG_FIXED)
+        {
           int t=BIT_6;
           if(psg_noisetoggle)
             ;
           else
-            t|=BIT_5; 
-          t|=envvol; // vol 5bit
+            t|=envvol; // vol 5bit
           t<<=8*abc;
           *p|=t;
           p++;
-          } else
-
+        } else
 #endif
         if(psg_noisetoggle){
           p++;
@@ -2512,15 +2547,15 @@ void psg_write_buffer(int abc,DWORD to_t)
     }else{ //nothing enabled
       for (;count>0;count--){
 
-#if defined(SSE_YM2149_MIXING)
-          if(SSE_OPTION_PSG || SSE_OPTION_PSG_FIXED)
-          {
-          int t=BIT_6|BIT_5; 
+#if defined(SSE_YM2149_DELAY_RENDERING)
+        if(SSE_OPTION_PSG || SSE_OPTION_PSG_FIXED)
+        {
+          int t=BIT_6; 
           t|=envvol; // vol 5bit
           t<<=8*abc;
           *p|=t;
           p++;
-          } else
+        } else
 #endif
         *(p++)+=envvol;
         PSG_ENVELOPE_ADVANCE
@@ -2658,7 +2693,7 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
 
       // ST doesn't quantize, it changes the level straight away.
       //  t=psg_quantize_time(reg-8,t);
-#if defined(SSE_YM2149_FIXED_VOL_FIX2)
+#if defined(SSE_YM2149_FIXED_VOL_TABLE)
 /*  The fixed volume being chosen for all channels at once in case of sample
     playing, we render them before so that volume values are correct at
     each time.
