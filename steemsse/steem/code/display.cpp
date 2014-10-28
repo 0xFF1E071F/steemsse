@@ -10,6 +10,7 @@ This contains the DirectDraw code used by Windows Steem for output.
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DISPLAY_H)
+
 #define EXT
 #define INIT(s) =s
 
@@ -20,7 +21,11 @@ EXT bool rgb555 INIT(0);
 EXT int monitor_width,monitor_height; //true size of monitor, for LAPTOP mode.
 }
 
+#if defined(SSE_VAR_RESIZE_370)
+BYTE HzIdxToHz[NUM_HZ]={0,50,60,MONO_HZ,100,120};
+#else
 int HzIdxToHz[NUM_HZ]={0,50,60,MONO_HZ,100,120};
+#endif
 
 EXT SteemDisplay Disp;
 
@@ -30,7 +35,6 @@ UNIX_ONLY( bool TrySHM=false; )
 #else
 UNIX_ONLY( bool TrySHM=true; )
 #endif
-
 
 #ifdef WIN32
 //#include "SteemFreeImage.h"
@@ -50,19 +54,30 @@ FI_FREEPROC FreeImage_Free;
 FI_SUPPORTBPPPROC FreeImage_FIFSupportsExportBPP;
 #endif
 #endif
-  
-
 
 #undef EXT
 #undef INIT
-#endif
 
+#endif//defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DISPLAY_H)
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_RECORD_AVI) 
 extern int shifter_freq_at_start_of_vbl; //forward
 #endif
 
+#if defined(SSE_VID_DD7) 
+#if _MSC_VER == 1200 //VC6
+// we can't link to a more recent dxguid.lib because of some M$ bug
+#define DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
+        EXTERN_C const GUID name \
+                = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
+DEFINE_GUID( IID_IDirectDraw7,0x15e65ec0,0x3b9c,0x11d2,0xb9,0x2f,0x00,0x60,0x97,0x97,0xea,0x5b );
+#endif
+#endif
+
+
 //SS: the singleton object is Disp
+
+#define LOGSECTION LOGSECTION_INIT
 
 //---------------------------------------------------------------------------
 SteemDisplay::SteemDisplay()
@@ -90,6 +105,13 @@ SteemDisplay::SteemDisplay()
   DrawToVidMem=true;
   BlitHideMouse=true;
   DrawLetterboxWithGDI=0;
+
+#if defined(SSE_VID_D3D)
+  pD3D       = NULL;	// Used to create the D3DDevice
+  pD3DDevice = NULL;	// Our rendering device
+  pD3DTexture=NULL;
+  pD3DSprite=NULL;
+#endif
 
 #elif defined(UNIX)
   X_Img=NULL;
@@ -145,11 +167,22 @@ HRESULT SteemDisplay::Init()
     monitor_height=GetScreenHeight();
   }
 
+  TRACE_LOG("Display init\n");
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D)
+  if(!D3D9_OK)
+  {
+    if(D3DInit()==D3D_OK)
+      D3D9_OK=true;
+  }
+#endif
+
   while (nUseMethod<5){
 #ifdef WIN32
     if (UseMethods[nUseMethod]==DISPMETHOD_DD){
       if (InitDD()==DD_OK) return (Method=UseMethods[nUseMethod++]);
     }else if (UseMethods[nUseMethod]==DISPMETHOD_GDI){
+      TRACE_LOG("Switching to GDI\n");
       if (InitGDI()) return (Method=UseMethods[nUseMethod++]);
     }
 #elif defined(UNIX)
@@ -170,12 +203,13 @@ HRESULT SteemDisplay::Init()
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 #ifdef WIN32
-
+#undef LOGSECTION //SS
 #define LOGSECTION LOGSECTION_INIT
 
 HRESULT SteemDisplay::InitDD()
 {
   SetNotifyInitText("DirectDraw");
+  TRACE_LOG("DD Init\n");
 
   HRESULT Ret;
   try{
@@ -205,7 +239,7 @@ HRESULT SteemDisplay::InitDD()
       Err=EasyStr("CoCreateInstance error\n\n")+Err;
       log_write("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
       log_write(Err);
-      TRACE_LOG("%s\n",Err);
+      TRACE_LOG("%s\n",Err.Text); //bug (no .Text) found by MinGW
       log_write("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 #ifndef ONEGAME
       MessageBox(NULL,Err,T("Steem Engine DirectDraw Error"),
@@ -222,6 +256,11 @@ HRESULT SteemDisplay::InitDD()
 
     log("STARTUP: Calling QueryInterface");
 #if defined(SSE_VID_DD7)
+/*  Apparently using DirectDraw 7 instead of 2 doesn't change anything.
+    This was cheap to do anyway.
+    It is defined in the D3D build, that needs a very up-to-date computer
+    anyway, DirectX 9, so why not?
+*/
     if ((Ret=DDObj1->QueryInterface(IID_IDirectDraw7,(LPVOID*)&DDObj)) != DD_OK)
 #else
     if ((Ret=DDObj1->QueryInterface(IID_IDirectDraw2,(LPVOID*)&DDObj)) != DD_OK)
@@ -245,7 +284,11 @@ HRESULT SteemDisplay::InitDD()
 
     log("STARTUP: Performing lock test");
     DDLockFlags=DDLOCK_NOSYSLOCK;
+#if defined(SSE_VID_DD7)
+    DDSURFACEDESC2 ddsd;
+#else
     DDSURFACEDESC ddsd;
+#endif
     ddsd.dwSize=sizeof(DDSURFACEDESC);
     if (DDBackSur->Lock(NULL,&ddsd,DDLOCK_WAIT | DDLockFlags,NULL)!=DD_OK){
       DDLockFlags=0;
@@ -260,7 +303,7 @@ HRESULT SteemDisplay::InitDD()
     ZeroMemory(DDClosestHz,sizeof(DDClosestHz));
     DDObj->EnumDisplayModes(DDEDM_REFRESHRATES,NULL,this,DDEnumModesCallback);
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_CHECK_DDFS)
-    TRACE_LOG("DD fullscreen mask %X\n",DD_FULLSCREEN);
+    TRACE_LOG("DD fullscreen mask %X\n",DX_FULLSCREEN);
 #endif
 
     for (int idx=0;idx<3;idx++){
@@ -278,20 +321,26 @@ HRESULT SteemDisplay::InitDD()
   }
 }
 //---------------------------------------------------------------------------
+#if defined(SSE_VID_DD7)
+HRESULT WINAPI SteemDisplay::DDEnumModesCallback(LPDDSURFACEDESC2 ddsd,LPVOID t)
+#else
 HRESULT WINAPI SteemDisplay::DDEnumModesCallback(LPDDSURFACEDESC ddsd,LPVOID t)
-{
-
-#ifdef SSE_VID_CHECK_DDFS2
-  TRACE_LOG("DD fullscreen mode %dx%d %d bits %dHz\n",
-    ddsd->dwWidth,ddsd->dwHeight,
-    ddsd->ddpfPixelFormat.dwRGBBitCount,
-    ddsd->dwRefreshRate
-    );
 #endif
-  if (ddsd->ddpfPixelFormat.dwRGBBitCount>16) return DDENUMRET_OK;//SS?
-  
+{  
+
+#ifdef SSE_VID_CHECK_DDFS2 // list all modes
+  TRACE_LOG("DD mode %dx%d %dbit %dHz\n",ddsd->dwWidth,ddsd->dwHeight,ddsd->ddpfPixelFormat.dwRGBBitCount,ddsd->dwRefreshRate);
+#endif
+
+  if (ddsd->ddpfPixelFormat.dwRGBBitCount>16) 
+    return DDENUMRET_OK;//SS: it's 8bit or 16bit, not 32bit
+
+  //SS: this is a static function, hence the need for This 
   SteemDisplay *This=(SteemDisplay*)t;//SS as passed
-  int hicol=(ddsd->ddpfPixelFormat.dwRGBBitCount>8),idx=-1;
+
+  int hicol=(ddsd->ddpfPixelFormat.dwRGBBitCount>8),idx=-1; //hicol=16bit
+
+  //SS: Steem looks for 3 modes only, 640x480, 800x600, 640x400
   if (ddsd->dwWidth==640 && ddsd->dwHeight==480) idx=0;
   if (ddsd->dwWidth==800 && ddsd->dwHeight==600) idx=1;
   if (ddsd->dwWidth==640 && ddsd->dwHeight==400) idx=2;
@@ -301,7 +350,7 @@ HRESULT WINAPI SteemDisplay::DDEnumModesCallback(LPDDSURFACEDESC ddsd,LPVOID t)
     TRACE_LOG("Adding idx %d hicol %d w %d h%d %dHz\n",
       idx,hicol,ddsd->dwWidth,ddsd->dwHeight,ddsd->dwRefreshRate);
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_CHECK_DDFS)
-    DD_FULLSCREEN|=(1<<(idx+(hicol*4))); //$77 if all found
+    DX_FULLSCREEN|=(1<<(idx+(hicol*4))); //$77 if all found
 #endif
     for (int n=1;n<NUM_HZ;n++){
       int diff=abs(HzIdxToHz[n]-int(ddsd->dwRefreshRate));
@@ -318,18 +367,34 @@ HRESULT WINAPI SteemDisplay::DDEnumModesCallback(LPDDSURFACEDESC ddsd,LPVOID t)
 HRESULT SteemDisplay::DDCreateSurfaces()
 {
   //SS this is a private function
+
+#if defined(SSE_VID_DD7)
+  DDSURFACEDESC2 ddsd;
+#else
   DDSURFACEDESC ddsd;
+#endif
   HRESULT Ret;
 
   DDDestroySurfaces();
 
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D)
+  if(D3D9_OK && SSE_OPTION_D3D && FullScreen)
+    return D3DCreateSurfaces();
+#endif
+
   int ExtraFlags=0;
   if (DrawToVidMem==0) ExtraFlags=DDSCAPS_SYSTEMMEMORY; // Like malloc
+  //SS those 2 lines were commented out by Steem authors
 //  ExtraFlags=DDSCAPS_VIDEOMEMORY | DDSCAPS_NONLOCALVIDMEM; // AGP?
 //  ExtraFlags=DDSCAPS_VIDEOMEMORY | DDSCAPS_LOCALVIDMEM; // Video card?
   for (int n=0;n<2;n++){
+#if defined(SSE_VID_DD7)
+    ZeroMemory(&ddsd,sizeof(DDSURFACEDESC2));
+    ddsd.dwSize=sizeof(DDSURFACEDESC2);
+#else
     ZeroMemory(&ddsd,sizeof(DDSURFACEDESC));
     ddsd.dwSize=sizeof(DDSURFACEDESC);
+#endif
     ddsd.dwFlags=DDSD_CAPS;
     ddsd.ddsCaps.dwCaps=DDSCAPS_PRIMARYSURFACE | ExtraFlags;
     if (FullScreen){
@@ -337,6 +402,10 @@ HRESULT SteemDisplay::DDCreateSurfaces()
       ddsd.dwFlags|=DDSD_BACKBUFFERCOUNT;
       ddsd.dwBackBufferCount=1;
     }
+#if defined(SSE_VID_CHECK_POINTERS)
+    if(!DDObj)
+      return Ret;
+#endif
     if ((Ret=DDObj->CreateSurface(&ddsd,&DDPrimarySur,NULL))!=DD_OK){
       if (n==0){
         ExtraFlags=0;
@@ -352,8 +421,13 @@ HRESULT SteemDisplay::DDCreateSurfaces()
   }
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#if defined(SSE_VID_DD7)
+  DDSURFACEDESC2 PrimaryFeedback;
+  PrimaryFeedback.dwSize=sizeof(DDSURFACEDESC2);
+#else
   DDSURFACEDESC PrimaryFeedback;
   PrimaryFeedback.dwSize=sizeof(DDSURFACEDESC);
+#endif
   if (DDPrimarySur->GetSurfaceDesc(&PrimaryFeedback)==DD_OK)
   {
     TRACE_LOG("FS %d BackBufferCount %d Refresh Rate %d\n",
@@ -382,8 +456,13 @@ HRESULT SteemDisplay::DDCreateSurfaces()
     {
     if (DrawToVidMem==0) ExtraFlags=DDSCAPS_SYSTEMMEMORY; // Like malloc
     for (int n=0;n<2;n++){
+#if defined(SSE_VID_DD7)
+      ZeroMemory(&DDBackSurDesc,sizeof(DDSURFACEDESC2));
+      DDBackSurDesc.dwSize=sizeof(DDSURFACEDESC2);
+#else
       ZeroMemory(&DDBackSurDesc,sizeof(DDSURFACEDESC));
       DDBackSurDesc.dwSize=sizeof(DDSURFACEDESC);
+#endif
       DDBackSurDesc.dwFlags=DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
       DDBackSurDesc.ddsCaps.dwCaps=DDSCAPS_OFFSCREENPLAIN | ExtraFlags;
 #ifndef NO_CRAZY_MONITOR
@@ -392,7 +471,7 @@ HRESULT SteemDisplay::DDCreateSurfaces()
         DDBackSurDesc.dwHeight=GetScreenHeight();
       }else
 #endif
-      if (Disp.BorderPossible()){
+      if (Disp.BorderPossible()){ //SS: GetScreenWidth()>640
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS)
 #if defined(SSE_VID_BORDERS_LB_DX)
         DDBackSurDesc.dwWidth=640+4* (SideBorderSize); // we draw larger
@@ -441,7 +520,9 @@ HRESULT SteemDisplay::DDCreateSurfaces()
             TRACE_LOG("Failed create DDBackSur2 DDERR %d\n",Ret);
             DDBackSur2=NULL; // prevents system to be used
             SSE_3BUFFER=false; // reset option
+#if defined(SSE_VAR_OPTIONS_REFRESH)
             OptionBox.SSEUpdateIfVisible(); 
+#endif
           }
           VSyncTiming=0;
           SurfaceToggle=true; // will be toggled false at first lock
@@ -453,15 +534,23 @@ HRESULT SteemDisplay::DDCreateSurfaces()
       }
     }
   }else{  // SS Fullscreen
+#if defined(SSE_VID_DD7)
+    DDSCAPS2 caps;
+    ZeroMemory(&caps,sizeof(DDSCAPS2));
+#else
     DDSCAPS caps;
-
+#endif
     caps.dwCaps=DDSCAPS_BACKBUFFER;
 
     if ((Ret=DDPrimarySur->GetAttachedSurface(&caps,&DDBackSur))!=DD_OK){
       return DDError("CreateSurface for BackSur FAILED",Ret);
     }
   }
+#if defined(SSE_VID_DD7)
+  DDBackSurDesc.dwSize=sizeof(DDSURFACEDESC2);
+#else
   DDBackSurDesc.dwSize=sizeof(DDSURFACEDESC);
+#endif
 
   if ((Ret=DDBackSur->GetSurfaceDesc(&DDBackSurDesc))!=DD_OK){
     return DDError("GetSurfaceDesc for BackSur FAILED",Ret);
@@ -481,6 +570,10 @@ HRESULT SteemDisplay::DDCreateSurfaces()
 //---------------------------------------------------------------------------
 void SteemDisplay::DDDestroySurfaces()
 {
+  //TRACE_LOG("DD Destroy Surfaces\n");
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D)
+  D3DDestroySurfaces();
+#endif
   if (DDPrimarySur){
     DDPrimarySur->Release(); DDPrimarySur=NULL;
     if (DDBackSurIsAttached) DDBackSur=NULL;
@@ -603,6 +696,8 @@ bool SteemDisplay::InitGDI()
 
 #define LOGSECTION LOGSECTION_VIDEO//SS
 
+// for each frame, sequence is lock-write frame (emulate)-unlock-blit
+
 HRESULT SteemDisplay::Lock()
 {
 #if defined(STEVEN_SEAGAL) && defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
@@ -613,20 +708,39 @@ HRESULT SteemDisplay::Lock()
   }
 #endif
 
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D)
+  if(D3D9_OK && SSE_OPTION_D3D && FullScreen && pD3DTexture)
+  {
+    return D3DLock();
+  }
+#endif
+
   switch (Method){
     case DISPMETHOD_DD:
     {
-      HRESULT DErr;
+      HRESULT DErr
+#if defined(SSE_VID_CHECK_POINTERS)
+        =1234;
+#endif
+        ;
 
       if (DDBackSur==NULL) return DDERR_SURFACELOST;
 
       if (DDBackSur->IsLost()==DDERR_SURFACELOST) return DDERR_SURFACELOST;
-
+#if defined(SSE_VID_DD7)
+      DDBackSurDesc.dwSize=sizeof(DDSURFACEDESC2);
+#else
       DDBackSurDesc.dwSize=sizeof(DDSURFACEDESC);
+#endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_3BUFFER_WIN)
       // trying to mind performance and footprint
+#if defined(SSE_VID_DD7)
+      IDirectDrawSurface7 *OurBackSur;
+#else
       IDirectDrawSurface *OurBackSur;
+#endif
       if(SSE_3BUFFER && DDBackSur2)
       {
         SurfaceToggle=!SurfaceToggle; // toggle at lock
@@ -634,6 +748,11 @@ HRESULT SteemDisplay::Lock()
       }
       else
         OurBackSur=DDBackSur;
+
+#if defined(SSE_VID_CHECK_POINTERS)
+      if(!OurBackSur)
+        return DErr;
+#endif
 
       if ((DErr=OurBackSur->Lock(NULL,&DDBackSurDesc,DDLOCK_WAIT | DDLockFlags,NULL))!=DD_OK){
         if (DErr!=DDERR_SURFACELOST && DErr!=DDERR_SURFACEBUSY){
@@ -702,9 +821,22 @@ void SteemDisplay::Unlock()
   }
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D)
+  if(D3D9_OK && SSE_OPTION_D3D && FullScreen)
+  {
+    D3DUnlock();
+    return;
+  }
+#endif
+
   if (Method==DISPMETHOD_DD){
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_3BUFFER_WIN)
-    IDirectDrawSurface *OurBackSur=
+#if defined(SSE_VID_DD7)
+    IDirectDrawSurface7 
+#else
+    IDirectDrawSurface 
+#endif
+      *OurBackSur=
       (SSE_3BUFFER && DDBackSur2 && SurfaceToggle) ? DDBackSur2:DDBackSur;
     OurBackSur->Unlock(NULL);
 #else
@@ -769,7 +901,11 @@ void SteemDisplay::VSync()
   if (Blanking==FALSE){
 #if defined(SSE_VID_VSYNC_WINDOW)
     DWORD botline; //=480-40;
-    if(FullScreen)
+    if(FullScreen
+#if defined(SSE_VID_D3D)
+      && !(D3D9_OK && SSE_OPTION_D3D)
+#endif
+      )
       if (border & 1)
         botline=600-40;
       else if (using_res_640_400)
@@ -814,6 +950,14 @@ bool SteemDisplay::Blit()
     return true;
   }
 #endif
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D)
+  if(D3D9_OK && SSE_OPTION_D3D && FullScreen)
+  {
+    return D3DBlit();
+  }
+#endif
+
   if (Method==DISPMETHOD_DD){
     HRESULT hRet;
     if (FullScreen){
@@ -868,7 +1012,12 @@ bool SteemDisplay::Blit()
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_3BUFFER_FS)
-            IDirectDrawSurface *OurBackSur;
+#if defined(SSE_VID_DD7)
+            IDirectDrawSurface7 
+#else
+            IDirectDrawSurface 
+#endif
+              *OurBackSur;
             if(SSE_3BUFFER && DDBackSur2)
             {
               OurBackSur=(!SurfaceToggle) ? DDBackSur2:DDBackSur;
@@ -931,7 +1080,12 @@ bool SteemDisplay::Blit()
         for (int i=0;i<2;i++){
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_3BUFFER_WIN)
-          IDirectDrawSurface *OurBackSur=
+#if defined(SSE_VID_DD7)
+          IDirectDrawSurface7 
+#else
+          IDirectDrawSurface 
+#endif
+            *OurBackSur=
             (SSE_3BUFFER && !SurfaceToggle && DDBackSur2) 
             ? DDBackSur2: DDBackSur;
 
@@ -993,7 +1147,12 @@ bool SteemDisplay::Blit()
 
       for (int i=0;i<2;i++){
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_3BUFFER)
-        IDirectDrawSurface *OurBackSur=
+#if defined(SSE_VID_DD7)
+        IDirectDrawSurface7 
+#else
+        IDirectDrawSurface 
+#endif
+          *OurBackSur=
           (SSE_3BUFFER && !SurfaceToggle && DDBackSur2) ? DDBackSur2:DDBackSur;
         hRet=OurBackSur->GetBltStatus(DDGBS_CANBLT); // for surface lost
         if(hRet==DD_OK)
@@ -1044,7 +1203,8 @@ void SteemDisplay::WaitForAsyncBlitToFinish()
 #undef LOGSECTION //video
 //---------------------------------------------------------------------------
 
-#define LOGSECTION LOGSECTION_INIT
+#define LOGSECTION LOGSECTION_INIT //SS
+
 void SteemDisplay::RunStart(bool Temp)
 {
   if (FullScreen==0) return;
@@ -1076,8 +1236,10 @@ void SteemDisplay::RunStart(bool Temp)
       }
     }
   }
-
-  DDPrimarySur->SetClipper(NULL);
+#ifdef SSE_VID_CHECK_POINTERS
+  if(DDPrimarySur)
+#endif
+    DDPrimarySur->SetClipper(NULL);
 
   ShowAllDialogs(0);
 
@@ -1094,8 +1256,11 @@ void SteemDisplay::RunStart(bool Temp)
 //---------------------------------------------------------------------------
 void SteemDisplay::RunEnd(bool Temp)
 {
+  //TRACE_LOG("FS RunEnd(%d)\n",using_res_640_400);
   if (FullScreen==0) return;
-
+#if defined(SSE_VID_D3D)
+  if(!(D3D9_OK && SSE_OPTION_D3D))
+#endif
   if (using_res_640_400 && Temp==0 && bAppActive){
     // Save background
     RECT rcDest;
@@ -1104,8 +1269,13 @@ void SteemDisplay::RunEnd(bool Temp)
     int w=rcDest.right,h=rcDest.bottom;
 
     HRESULT hRet;
+#if defined(SSE_VID_DD7)
+    IDirectDrawSurface7 *SaveSur=NULL;
+    DDSURFACEDESC2 SaveSurDesc;
+#else
     IDirectDrawSurface *SaveSur=NULL;
     DDSURFACEDESC SaveSurDesc;
+#endif
 
     ZeroMemory(&SaveSurDesc,sizeof(DDSURFACEDESC));
     SaveSurDesc.dwSize=sizeof(DDSURFACEDESC);
@@ -1116,7 +1286,12 @@ void SteemDisplay::RunEnd(bool Temp)
     hRet=DDObj->CreateSurface(&SaveSurDesc,&SaveSur,NULL);
     if (hRet==DD_OK){
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_3BUFFER_FS)
-      IDirectDrawSurface *OurBackSur=
+#if defined(SSE_VID_DD7)
+      IDirectDrawSurface7 
+#else
+      IDirectDrawSurface 
+#endif
+          *OurBackSur=
         (SSE_3BUFFER && DDBackSur2 && !SurfaceToggle) ? DDBackSur2: DDBackSur;
       hRet=SaveSur->Blt(&rcDest,OurBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
 #else
@@ -1137,11 +1312,32 @@ void SteemDisplay::RunEnd(bool Temp)
       SaveSur->Release();
     }
   }
-  DDObj->FlipToGDISurface();
+#if defined(SSE_VID_D3D)
+  if(!(D3D9_OK && SSE_OPTION_D3D))
+#endif
+    DDObj->FlipToGDISurface();
+
   LockWindowUpdate(NULL);
-  DDPrimarySur->SetClipper(DDClipper);
+#ifdef SSE_VID_CHECK_POINTERS
+  if(DDPrimarySur)
+#endif
+    DDPrimarySur->SetClipper(DDClipper);
 
   while (ShowCursor(true)<0);
+
+#if defined(SSE_VID_D3D)
+/*  On some computers we will get the GUI back every other time, on
+    some never. It displays but is then hidden. Player can click.
+    Additionally, the icons on the right aren't well placed.
+    To fix this, we leave fullscreen on stop: radical and recommended
+    by the Microsoft clowns.
+*/
+  if(D3D9_OK && SSE_OPTION_D3D)
+  {
+    ChangeToWindowedMode();
+    return;
+  }
+#endif
 
   ShowAllDialogs(true);
 
@@ -1152,6 +1348,12 @@ void SteemDisplay::DrawFullScreenLetterbox()
 {
   if (FullScreen==0 || using_res_640_400) return;
   if (draw_fs_blit_mode==DFSM_LAPTOP) return;
+
+#if defined(SSE_VID_CHECK_POINTERS)
+  if(!DDBackSur || !DDPrimarySur)
+    return;
+#endif
+
 #ifndef NO_CRAZY_MONITOR
   if (extended_monitor) return;
 #endif
@@ -1220,7 +1422,7 @@ void SteemDisplay::DrawFullScreenLetterbox()
 void SteemDisplay::ScreenChange()
 {
   draw_end();
-
+  TRACE_LOG("ScreenChange()\n");
 #if defined(STEVEN_SEAGAL) && defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
   // temp, dubious
   if(USE_SDL && !SDL.InUse)
@@ -1241,6 +1443,17 @@ void SteemDisplay::ScreenChange()
   }
 }
 //---------------------------------------------------------------------------
+
+/* SS player clicked on 'maximize'
+
+
+  Disp.ChangeToFullScreen()
+    |
+    L-> change_fullscreen_display_mode(0),
+          |
+          L-> Disp.SetDisplayMode(w,h,bits,hz,&hz_ok)
+*/
+
 void SteemDisplay::ChangeToFullScreen()
 {
   if (CanGoToFullScreen()==0 || FullScreen || DDExclusive) return;
@@ -1248,7 +1461,11 @@ void SteemDisplay::ChangeToFullScreen()
   TRACE_LOG("Going fullscreen...\n");
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_CHECK_DDFS)
-    if(!DD_FULLSCREEN)
+    if(!DX_FULLSCREEN 
+#if defined(SSE_VID_D3D)
+    && !(D3D9_OK && SSE_OPTION_D3D)
+#endif
+      )
     {
       Alert("Your display setup won't allow Steem fullscreen!","Direct Draw Error!",0);
       return;
@@ -1272,6 +1489,9 @@ void SteemDisplay::ChangeToFullScreen()
     PostMessage(StemWin,WM_SYSCOMMAND,SC_MAXIMIZE,0);
   }else{
     bool MaximizeDiskMan=0;
+#if defined(SSE_VID_D3D)
+    if(!(D3D9_OK && SSE_OPTION_D3D))
+#endif
     if (DiskMan.IsVisible()){
       if (IsIconic(DiskMan.Handle)) ShowWindow(DiskMan.Handle,SW_RESTORE);
       MaximizeDiskMan=DiskMan.FSMaximized;
@@ -1282,10 +1502,11 @@ void SteemDisplay::ChangeToFullScreen()
 
     DirectoryTree::PopupParent=StemWin;
     
-    GetWindowRect(StemWin,&rcPreFS);
-    
-    ShowWindow(GetDlgItem(StemWin,106),SW_SHOWNA);
-
+    GetWindowRect(StemWin,&rcPreFS); //SS "before fullscreen"
+#if defined(SSE_VID_D3D)
+    if(!(D3D9_OK && SSE_OPTION_D3D))
+#endif    
+    ShowWindow(GetDlgItem(StemWin,106),SW_SHOWNA); //SS icon "back to windowed"
     SetWindowLong(StemWin,GWL_STYLE,WS_VISIBLE);
     int w=640,h=480;
     if (border & 1){
@@ -1300,13 +1521,23 @@ void SteemDisplay::ChangeToFullScreen()
       w=monitor_width;
       h=monitor_height;
     }
+#if defined(SSE_VID_D3D)
+//    if(!(D3D9_OK && SSE_OPTION_D3D))
+#endif
     SetWindowPos(StemWin,HWND_TOPMOST,0,0,w,h,0);
 
     CheckResetDisplay(true);
 
+#if defined(SSE_VID_D3D)
+    if(!(D3D9_OK && SSE_OPTION_D3D))
+#endif
     ClipWin=CreateWindow("Steem Fullscreen Clip Window","",WS_CHILD | WS_VISIBLE |
                           WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
                           0,MENUHEIGHT,w,h-MENUHEIGHT,StemWin,(HMENU)1111,Inst,NULL);
+
+#if defined(SSE_VID_D3D)
+    if(!(D3D9_OK && SSE_OPTION_D3D))
+#endif
     DDClipper->SetHWnd(0,ClipWin);
 
 #ifndef ONEGAME
@@ -1324,7 +1555,10 @@ void SteemDisplay::ChangeToFullScreen()
     InfoBox.Hide();
 
     SetParent(ToolTip,StemWin);
-
+#if defined(SSE_VID_D3D)
+    if(!(D3D9_OK && SSE_OPTION_D3D))
+#endif
+    {//SS
     HRESULT Ret=DDObj->SetCooperativeLevel(StemWin,DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN |
                                             DDSCL_ALLOWREBOOT);
     if (Ret!=DD_OK){
@@ -1332,6 +1566,7 @@ void SteemDisplay::ChangeToFullScreen()
       Init();
       return;
     }
+    }//SS
     DDExclusive=true;
 
     if (change_fullscreen_display_mode(0)==DD_OK){
@@ -1346,18 +1581,18 @@ void SteemDisplay::ChangeToFullScreen()
       OptionBox.EnableBorderOptions(true);
 
       SetForegroundWindow(StemWin);
+
       SetFocus(StemWin);
 
       palette_convert_all();
 
       ONEGAME_ONLY( DestroyNotifyInitWin(); )
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_FULLSCREEN_DONT_START)
-      // there would always be stuttering anyway
-#else
+
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_FULLSCREEN_DONT_START))
       PostRunMessage();
 #endif
     }else{ //back to windowed mode
-      TRACE_LOG("Can't go fullscreen\n");
+      TRACE_LOG("Can't go fullscreen 2\n");
       ChangeToWindowedMode(true);
     }
   }
@@ -1381,7 +1616,6 @@ void SteemDisplay::ChangeToWindowedMode(bool Emergency)
   if (CanChangeNow || Emergency){
     if (DDExclusive){
       draw_end();
-
       DDDestroySurfaces();
       DDObj->RestoreDisplayMode();
       DDObj->SetCooperativeLevel(StemWin,DDSCL_NORMAL);
@@ -1406,7 +1640,7 @@ void SteemDisplay::ChangeToWindowedMode(bool Emergency)
     LockWindowUpdate(NULL);
 
     if (border==3) overscan=OVERSCAN_MAX_COUNTDOWN; // Make sure auto border turns off
-    
+
     // Sometimes things won't work if you do them immediately after switching to
     // windowed mode, so post a message and resize all the windows back when we can
     PostMessage(StemWin,WM_USER,12,0);
@@ -1418,20 +1652,37 @@ bool SteemDisplay::CanGoToFullScreen()
 {
   if (Method==DISPMETHOD_DD){
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_CHECK_DDFS)
-    if(DD_FULLSCREEN)
+    if(DX_FULLSCREEN
+#if defined(SSE_VID_D3D)
+      || (D3D9_OK && SSE_OPTION_D3D)
+#endif
+      )
 #endif
     return true;
   }
+  TRACE_LOG("Can't go fullscreen 1, Method #%d\n",Method);
   return 0;
 }
 //---------------------------------------------------------------------------
-void SteemDisplay::FlipToDialogsScreen()
+void SteemDisplay::FlipToDialogsScreen() //SS called by Alert()
 {
   if (Method==DISPMETHOD_DD) DDObj->FlipToGDISurface();
 }
 //---------------------------------------------------------------------------
 HRESULT SteemDisplay::SetDisplayMode(int w,int h,int bpp,int hz,int *hz_ok)
 {
+  ASSERT(FullScreen);
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D)
+/*  We ignore parameters, we use other values for size.
+    DDCreateSurfaces() destroys surfaces and calls D3DCreateSurfaces().
+*/
+  TRACE_LOG("D3D9 ok%d option %d\n",D3D9_OK,SSE_OPTION_D3D);
+  if(D3D9_OK && SSE_OPTION_D3D)
+    return DDCreateSurfaces();
+#endif  
+
+  TRACE_LOG("SetDisplayMode %dx%d %dbit %dhz\n",w,h,bpp,hz);
   if (Method==DISPMETHOD_DD && DDExclusive){
     int idx=-1;
     if (w==640 && h==480) idx=0;
@@ -1446,26 +1697,28 @@ HRESULT SteemDisplay::SetDisplayMode(int w,int h,int bpp,int hz,int *hz_ok)
       }
     }
     log_write(Str("PC DISPLAY: Changing mode to ")+w+"x"+h+"x"+bpp+" "+hz+"hz");
-    HRESULT Ret=DDObj->SetDisplayMode(w,h,bpp,hz,0);
-    if (Ret!=DD_OK){
-      log_write("  It failed");
-      if (hz_ok) *hz_ok=0;
-      Ret=DDObj->SetDisplayMode(w,h,bpp,0,0);
-    }else{
-      log_write("  Success");
-      if (hz_ok) *hz_ok=1;
-    }
-    if (Ret!=DD_OK){
-//      DDError(T("Can't SetDisplayMode"),Ret);
-//      Init();
-      TRACE_LOG("DD error %d\n",Ret);
-      return Ret;
-    }
 
-    if ((Ret=DDCreateSurfaces())!=DD_OK) Init();
-    if (Ret!=DD_OK)
-      TRACE_LOG("DD error %d\n",Ret);
-    return Ret;
+      HRESULT Ret=DDObj->SetDisplayMode(w,h,bpp,hz,0);
+      if (Ret!=DD_OK){
+        log_write("  It failed");
+        if (hz_ok) *hz_ok=0;
+        Ret=DDObj->SetDisplayMode(w,h,bpp,0,0);
+      }else{
+        log_write("  Success");
+        if (hz_ok) *hz_ok=1;
+      }
+      if (Ret!=DD_OK){
+        //      DDError(T("Can't SetDisplayMode"),Ret);
+        //      Init();
+        TRACE_LOG("DD error %d\n",Ret);
+        return Ret;
+      }
+
+      if ((Ret=DDCreateSurfaces())!=DD_OK) Init();
+      if (Ret!=DD_OK)
+        TRACE_LOG("DD error %d\n",Ret);
+      return Ret;
+
   }
   return DDERR_GENERIC;
 }
@@ -1485,7 +1738,6 @@ HRESULT SteemDisplay::RestoreSurfaces()
 #endif
       if (hRet==DD_OK) return hRet;
     }
-
     return DDCreateSurfaces();
   }
   return DD_OK;
@@ -1519,6 +1771,9 @@ void SteemDisplay::Release()
     DDObj->Release();
     DDObj=NULL;
   }
+#if defined(SSE_VID_D3D)
+  D3DRelease();
+#endif
   palette_remove();
   Method=DISPMETHOD_NONE;
 }
@@ -1585,7 +1840,7 @@ void SteemDisplay::ScreenShotCheckFreeImageLoad()
           FreeImage_ConvertFromRawBits==NULL || FreeImage_Save==NULL ||
           FreeImage_FIFSupportsExportBPP==NULL || FreeImage_Free==NULL){
       FreeLibrary(hFreeImage);hFreeImage=NULL;
-      TRACE("FreeLibrary failed to init\n");
+      //TRACE("FreeImage failed to init\n");
       return;
     }
     FreeImage_Initialise(TRUE);
@@ -1648,7 +1903,11 @@ HRESULT SteemDisplay::SaveScreenShot()
   int w,h;
 
 #ifdef WIN32
+#if defined(SSE_VID_DD7)
+  IDirectDrawSurface7 *SaveSur=NULL;
+#else
   IDirectDrawSurface *SaveSur=NULL;
+#endif
   HBITMAP SaveBmp=NULL;
 
   // Need to create new surfaces so we can blit in the same way we do to the
@@ -1678,8 +1937,11 @@ HRESULT SteemDisplay::SaveScreenShot()
     w=rcDest.right;h=rcDest.bottom;
 
     HRESULT hRet;
+#if defined(SSE_VID_DD7)
+    DDSURFACEDESC2 SaveSurDesc;
+#else
     DDSURFACEDESC SaveSurDesc;
-
+#endif
     ZeroMemory(&SaveSurDesc,sizeof(DDSURFACEDESC));
     SaveSurDesc.dwSize=sizeof(DDSURFACEDESC);
     SaveSurDesc.dwFlags=DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
@@ -2138,6 +2400,333 @@ void draw_init_resdependent()
   }
 }
 //---------------------------------------------------------------------------
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_UTIL)
+// miscellaneous functions
+
+int SteemDisplay::STXPixels() {
+  int st_x_pixels=320+(border&1)*SideBorderSizeWin*2; //displayed
+  //st_x_pixels=320+SideBorderSizeWin*2; //test
+  return st_x_pixels;
+}
+
+
+int SteemDisplay::STYPixels() {
+  int st_y_pixels=200+(border&1)*(BORDER_TOP+BORDER_BOTTOM);
+  //st_y_pixels=200+(BORDER_TOP+BORDER_BOTTOM); //test
+  return st_y_pixels;
+}
+
+#endif
+
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D)
+
+/* Direct3D support
+   There's no complaint about DirectDraw in window mode, only fullscreen,
+   and we can't replicate all our DirectDraw tricks in Direct3D, so for
+   now we limit Direct3D support to fullscreen.
+   Two modes are offered:
+   Straight: double pixel, centred
+   Stretch: keeping aspect ratio, the biggest we can
+   We use DirectX9 and the ID3DXSprite interface.
+   DirectDraw modes are still available, so nothing that worked is changed,
+   more options are offered.
+   This is commanded by SSE option 'D3D fullscreen'.
+*/
+
+bool SteemDisplay::D3DBlit() {
+  HRESULT d3derr=E_FAIL;
+  if(pD3DDevice && pD3DSprite)
+  {
+    d3derr=pD3DDevice->BeginScene();
+    d3derr=pD3DSprite->Begin(0); // the picture is one big sprite
+    d3derr=pD3DSprite->Draw(pD3DTexture,NULL,NULL,NULL,0xFFFFFFFF);
+    d3derr=pD3DSprite->End();
+    d3derr=pD3DDevice->EndScene();
+    d3derr=pD3DDevice->Present(NULL,NULL,NULL,NULL);
+  }
+#ifdef SSE_DEBUG
+  if(d3derr)
+    TRACE_LOG("D3D fail blit\n");
+#endif
+  return !d3derr;
+}
+
+
+// local helper for D3DCreateSurfaces()
+
+HRESULT check_device_type(D3DDEVTYPE DeviceType,D3DFORMAT DisplayFormat) {
+  HRESULT d3derr;
+  d3derr=Disp.pD3D->CheckDeviceType(D3DADAPTER_DEFAULT,DeviceType,DisplayFormat,DisplayFormat,false);
+  TRACE_LOG("CheckDeviceType %d format %d err %d\n",DeviceType,DisplayFormat,d3derr);
+  return d3derr;
+}
+
+
+HRESULT SteemDisplay::D3DCreateSurfaces() {
+/*  The function is long but this is necessary, we can't take hardware
+    capabilities for granted, many PC with motherboard video cards would
+    fail, for those we use software rendering.
+    Too bad all this burden is on our programmers' shoulders.
+*/
+  HRESULT d3derr=E_FAIL;
+  if(!pD3D)
+    return d3derr;
+
+  // Get the current desktop display info
+  D3DDISPLAYMODE d3ddm;
+  d3derr=pD3D->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &d3ddm);
+  HDC hdc = GetDC(StemWin);
+  WORD bitsperpixel= GetDeviceCaps(hdc, BITSPIXEL); // another D3D shortcoming
+  ReleaseDC(StemWin, hdc);
+  TRACE_LOG("Screen %dx%d %dhz format %d %dbit err %d\n",d3ddm.Width,d3ddm.Height,d3ddm.RefreshRate,d3ddm.Format,bitsperpixel,d3derr);
+
+  // Probe capacities of video card, starting with desktop mode, HW
+  // http://en.wikibooks.org/wiki/DirectX/9.0/Direct3D/Initialization
+  D3DFORMAT DisplayFormat=d3ddm.Format;
+  D3DDEVTYPE DeviceType=D3DDEVTYPE_HAL;
+  
+  d3derr=check_device_type(DeviceType,DisplayFormat);
+  if(d3derr) // could be "alpha" in desktop format?
+  {
+    DisplayFormat=D3DFMT_X8R8G8B8; // try X8R8G8B8 format
+    d3derr=check_device_type(DeviceType,DisplayFormat);
+    if(d3derr) // no HW abilities?
+    {
+      TRACE("D3D: poor hardware detected, software rendering\n");
+      D3DDEVTYPE DeviceType=D3DDEVTYPE_REF; // try software processing (slow)
+      d3derr=check_device_type(DeviceType,DisplayFormat);
+    }
+  }
+
+  if(d3derr)
+    return d3derr; //forget it
+
+  D3DCAPS9 caps;
+  d3derr=pD3D->GetDeviceCaps(D3DADAPTER_DEFAULT,DeviceType,&caps);
+  TRACE_LOG("DevCaps $%X HW quality %X err %d\n",caps.DevCaps,caps.DevCaps&(D3DDEVCAPS_HWTRANSFORMANDLIGHT|D3DDEVCAPS_PUREDEVICE),d3derr);
+
+  DWORD vtx_proc;
+  if( caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT ) {
+    vtx_proc = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+    if( caps.DevCaps & D3DDEVCAPS_PUREDEVICE ) {
+      vtx_proc |= D3DCREATE_PUREDEVICE;
+    }
+  } else {
+    vtx_proc = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+  }
+
+  D3DPRESENT_PARAMETERS d3dpp; 
+  ZeroMemory(&d3dpp, sizeof(d3dpp));
+  d3dpp.Windowed=!FullScreen; // we're in fullscreen mode
+  d3dpp.SwapEffect=D3DSWAPEFFECT_COPY;
+  d3dpp.BackBufferFormat=DisplayFormat; 
+  d3dpp.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER|D3DPRESENTFLAG_DEVICECLIP;
+  d3dpp.hDeviceWindow=StemWin;
+  UINT Width=monitor_width;
+  UINT Height=monitor_height;
+  d3dpp.BackBufferCount=1;
+  d3dpp.BackBufferWidth=Width;
+  d3dpp.BackBufferHeight=Height;
+  d3dpp.FullScreen_RefreshRateInHz=d3ddm.RefreshRate;
+  d3derr=pD3D->CreateDevice(D3DADAPTER_DEFAULT,DeviceType,StemWin,vtx_proc,&d3dpp,&pD3DDevice);
+  TRACE_LOG("D3D CreateDevice %dx%d %dhz vertex %X flags %X err %d\n",
+    d3dpp.BackBufferWidth,d3dpp.BackBufferHeight,d3dpp.FullScreen_RefreshRateInHz,vtx_proc,d3dpp.Flags,d3derr);
+
+  if(!pD3DDevice)
+    return d3derr;
+
+  d3derr=pD3DDevice->SetDialogBoxMode(TRUE); //changes nothing?
+
+  // Create texture
+  UINT Levels=1;
+  DWORD Usage= D3DUSAGE_DYNAMIC;
+  D3DFORMAT Format=d3dpp.BackBufferFormat;
+  D3DPOOL Pool=D3DPOOL_DEFAULT;
+  HANDLE *pSharedHandle=NULL; //always
+  d3derr=pD3DDevice->CreateTexture(Width,Height,Levels,Usage,Format,
+    Pool,&pD3DTexture,pSharedHandle);
+  TRACE_LOG("D3D CreateTexture %dx%d levels %d Usage %d Format %d Pool %d Err %d\n",
+    Width,Height,Levels,Usage,Format,Pool,d3derr);
+  if(!pD3DTexture)
+    return d3derr;
+
+  BytesPerPixel= bitsperpixel/8; // Steem can do 16bit, 32bit (and more?)
+  SurfaceWidth=d3dpp.BackBufferWidth;
+  SurfaceHeight=d3dpp.BackBufferHeight;
+
+  D3DSpriteInit();
+
+  draw_init_resdependent();
+  palette_prepare(true);
+  return d3derr;
+}
+
+
+VOID SteemDisplay::D3DDestroySurfaces() {
+  if(pD3DSprite)
+  {
+    pD3DSprite->Release();
+    pD3DSprite=NULL;
+  }
+  if (pD3DTexture)
+  {
+    pD3DTexture->Release();
+    pD3DTexture=NULL;
+  }
+  if (pD3DDevice)
+  {
+    pD3DDevice->Release();
+    pD3DDevice = NULL;
+  }
+}
+
+
+HRESULT SteemDisplay::D3DInit()
+{
+  SetNotifyInitText("DirectD3D");
+  if(pD3D)
+    pD3D->Release();
+  // Create the D3D object - computer needs DirectX9
+  if ((pD3D = Direct3DCreate9(D3D_SDK_VERSION)) == NULL) 
+  {
+    TRACE_LOG("D3D Init Fail!\n");
+    return E_FAIL; 
+  }
+  TRACE_LOG("D3D Init OK\n");
+  return S_OK;
+}
+
+
+HRESULT SteemDisplay::D3DLock() {
+  HRESULT D3DErr=E_FAIL;
+  if(pD3DTexture)
+  {
+    D3DLOCKED_RECT LockedRect;
+    D3DErr=pD3DTexture->LockRect(0,&LockedRect,NULL,0);
+    draw_line_length=LockedRect.Pitch;
+    draw_mem=(BYTE*)LockedRect.pBits;
+#if !defined(SSE_VID_D3D_STRETCH_FORCE)
+    // straight blit at the centre of the screen, for stretch it's arranged
+    // in SpriteInit
+    if(draw_fs_blit_mode==DFSM_STRAIGHTBLIT||draw_fs_blit_mode==DFSM_FLIP)
+    {
+      int st_x_pixels=2*STXPixels();//? med?
+      int st_y_pixels=2*STYPixels();
+      draw_mem+=draw_line_length*((SurfaceHeight-st_y_pixels)/2-1);
+      draw_mem+=BytesPerPixel*((SurfaceWidth-st_x_pixels)/2-1);
+    }
+#endif
+  }
+  return D3DErr;
+}
+
+
+VOID SteemDisplay::D3DRelease()
+{
+  // called by void SteemDisplay::Release()
+
+  D3DDestroySurfaces(); // destroys texture, sprite, device
+  if (pD3D)
+  {
+    pD3D->Release();
+    pD3D = NULL;
+  }
+}
+
+
+void SteemDisplay::D3DUnlock() {
+  HRESULT d3derr=E_FAIL;
+  if(pD3DTexture)
+    d3derr=pD3DTexture->UnlockRect(0);
+  return;
+}
+
+
+HRESULT SteemDisplay::D3DSpriteInit() {
+
+  // called by D3DCreateSurfaces()
+  // ScreenChange() calls DDCreateSurfaces()
+
+  HRESULT hr=E_FAIL;
+  if(pD3DSprite)
+    pD3DSprite->Release(); //so we can init sprite anytime
+  hr = D3DXCreateSprite(pD3DDevice,&pD3DSprite); 
+  if(!pD3DSprite)
+    return hr;
+#if defined(SSE_VID_D3D_STRETCH)
+/*  Use SetTransform to stretch & translate if needs be, restore if not.
+    We will draw small on the big backbuffer and this will be stretched and
+    translated by the hardware before rendering.
+*/
+  float sw=1,sh=1;
+  float tx=0,ty=0;
+#if !defined(SSE_VID_D3D_STRETCH_FORCE)
+  if(draw_fs_blit_mode==DFSM_STRETCHBLIT || draw_fs_blit_mode==DFSM_LAPTOP)
+#endif
+  {
+    int stx=STXPixels();
+    int sty=STYPixels();
+
+#if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO) 
+/*  Imitating a feature first seen in SainT, the screen is higher than it
+    should, so that circles aren't perfect, squares are rectangles, etc.
+    Note: you could use some settings on your monitor to cancel this effect.
+*/
+#if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION)
+    if(OPTION_ST_ASPECT_RATIO)
+#endif
+      sty*=ST_ASPECT_RATIO_DISTORTION; // "reserve" more pixels
+#endif
+
+    TRACE_LOG("Sprite STX %d STY %d Surface W %d H %d res %d mixed %d 16/9 %d\n",
+      stx,sty,SurfaceWidth,SurfaceHeight,screen_res,mixed_output,
+      (SurfaceWidth>(stx*SurfaceHeight)/sty));
+    if(SurfaceWidth>(stx*SurfaceHeight)/sty) // "16:9" - not tested
+    {
+      sw=sh=(float)SurfaceHeight/sty;
+      tx=(SurfaceWidth-SurfaceHeight*stx/sty)/2;
+    }
+    else // "4:3"
+    {
+      sh=sw=(float)SurfaceWidth/stx;
+//      TRACE("");
+      ty=(SurfaceHeight-SurfaceWidth*sty/stx)/2;
+//      if(!(border&1))
+  //      ty-= 2*(BORDER_TOP+BORDER_BOTTOM);// not really correct
+    }
+
+#if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO) 
+#if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION)
+    if(OPTION_ST_ASPECT_RATIO)
+#endif
+      sh*=ST_ASPECT_RATIO_DISTORTION; // stretch more
+#endif
+
+    // resolution adjustments, a bit ad hoc for now...
+    if(screen_res ||mixed_output)
+      sw/=2;
+    if(screen_res>=2 ||SCANLINES_INTERPOLATED)
+      sh/=2;
+    if(BORDER_40)
+      tx-=16*sw; // same old trick (BPOC 400 pixels)
+    TRACE_LOG("sw %f tx %f sh %f ty %f\n",sw,tx,sh,ty);
+  }
+  D3DMATRIX matrix= {
+    sw,              0.0f,            0.0f,            0.0f,
+    0.0f,            sh,              0.0f,            0.0f,
+    0.0f,            0.0f,            1.0f,            0.0f,
+    tx,              ty,              0.0f,            1.0f
+  };
+  pD3DSprite->SetTransform((D3DXMATRIX*)&matrix);
+#endif
+  return hr;
+}
+
+#endif//d3d
+
+
 #ifdef UNIX
 #include "x/x_display.cpp"
 #endif

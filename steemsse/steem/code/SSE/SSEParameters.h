@@ -580,7 +580,9 @@ are assumed to take four clock periods.
 
 #endif
 
-
+#if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO) // like SainT, higher pixels
+#define ST_ASPECT_RATIO_DISTORTION 1.15//110 //in % of Y axis
+#endif
 
 #if defined(SSE_VID_RECORD_AVI)
 #define SSE_VID_RECORD_AVI_FILENAME "SteemVideo.avi"

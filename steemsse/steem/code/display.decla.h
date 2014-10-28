@@ -5,6 +5,56 @@
 #define EXT extern
 #define INIT(s)
 
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D)
+
+#ifdef BCC_BUILD
+// yes sir, the old BCC5.5 will build the new DX9 option too
+#pragma comment(lib, "../../3rdparty/d3d/bcc/d3d9.lib")
+#pragma comment(lib, "../../3rdparty/d3d/bcc/d3dx9_43.lib")
+#pragma message DD v DIRECTDRAW_VERSION D3D v DIRECT3D_VERSION
+#define D3D_DISABLE_9EX
+#define sqrtf (sqrt)  // so that it compiles, hopefully not used...
+#pragma message("BCC including d3d9 files...")
+#endif
+
+
+#if _MSC_VER == 1200 // VC6 -  also for this dinosaur
+#define D3D_DISABLE_9EX
+#pragma comment(lib, "../../3rdparty/d3d/d3d9.lib")
+#pragma comment(lib, "../../3rdparty/d3d/d3dx9.lib")
+#endif
+
+#if _MSC_VER == 1200
+#include "d3d\sal.h"
+#include "d3d\d3d9.h"
+#include "d3d\d3dx9core.h"
+#include "d3d\D3d9types.h"
+#include "d3d\D3dx9math.h"
+#else
+#include "d3d9.h"
+#include "d3dx9core.h"
+#include "D3d9types.h"
+#include "D3dx9math.h"
+#endif
+
+
+
+#endif//d3d
+
+#if defined(SSE_VID_DD7)
+#if _MSC_VER == 1200
+//#pragma comment(lib, "../../3rdparty/d3d/ddraw.lib")
+
+//DEFINE_GUID( IID_IDirectDraw7,0x15e65ec0,0x3b9c,0x11d2,0xb9,0x2f,0x00,0x60,0x97,0x97,0xea,0x5b );
+
+//http://forums.codeguru.com/showthread.php?305064-LNK2001-Unresolved-External-Symbol
+//Try linking your program with dxguid.lib 
+//#pragma comment(lib, "../../3rdparty/d3d/dxguid.lib")
+//"Fatal error LNK1103: debugging information corrupt"
+#endif
+#endif
+
+
 #if defined(SSE_STRUCTURE_SSESHIFTER_OBJ)
 #include <easystr.h>//unix case-sensitive
 typedef EasyStr Str;
@@ -37,8 +87,11 @@ EXT int monitor_width,monitor_height; //true size of monitor, for LAPTOP mode.
 #define NUM_HZ 6
 #define DISP_MAX_FREQ_LEEWAY 5
 
+#if defined(SSE_VAR_RESIZE_370)
+EXT BYTE HzIdxToHz[NUM_HZ];
+#else
 EXT int HzIdxToHz[NUM_HZ];
-
+#endif
 //---------------------------------------------------------------------------
 class SteemDisplay
 {
@@ -46,28 +99,62 @@ private:
 #ifdef WIN32
   // DD Only
   HRESULT InitDD();
+#if defined(SSE_VID_DD7)
+  static HRESULT WINAPI DDEnumModesCallback(LPDDSURFACEDESC2,LPVOID);
+#else
   static HRESULT WINAPI DDEnumModesCallback(LPDDSURFACEDESC,LPVOID);
+#endif
   HRESULT DDCreateSurfaces();
   void DDDestroySurfaces();
   HRESULT DDError(char *,HRESULT);
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_UTIL)
+  int STXPixels();
+  int STYPixels();
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D)
+  HRESULT D3DInit(); 
+  HRESULT D3DCreateSurfaces();
+public:
+  HRESULT D3DSpriteInit();
+private:
+  void D3DDestroySurfaces();
+  VOID D3DRelease();
+  HRESULT D3DLock();
+  void D3DUnlock();
+  bool D3DBlit();
+  friend HRESULT check_device_type(D3DDEVTYPE DeviceType,D3DFORMAT DisplayFormat);
+  LPDIRECT3D9 pD3D;
+  LPDIRECT3DDEVICE9  pD3DDevice;
+  IDirect3DTexture9* pD3DTexture;
+  ID3DXSprite* pD3DSprite;
+#endif//d3d
 
   // GDI Only
   bool InitGDI();
 
 #if defined(SSE_VID_DD7)
   IDirectDraw7 *DDObj;
+  IDirectDrawSurface7 *DDPrimarySur,*DDBackSur;
+  DDSURFACEDESC2 DDBackSurDesc;
 #else
   IDirectDraw2 *DDObj;
-#endif
   IDirectDrawSurface *DDPrimarySur,*DDBackSur;
+  DDSURFACEDESC DDBackSurDesc;
+#endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_3BUFFER_WIN)
+#if defined(SSE_VID_DD7)
+  IDirectDrawSurface7 *DDBackSur2; // our second back buffer
+#else
   IDirectDrawSurface *DDBackSur2; // our second back buffer
+#endif
   bool SurfaceToggle;
 #endif
 
   IDirectDrawClipper *DDClipper;
-  DDSURFACEDESC DDBackSurDesc;
+  
   DWORD DDLockFlags;
   bool DDBackSurIsAttached,DDExclusive;
   bool DDDisplayModePossible[3][2];
@@ -126,7 +213,6 @@ public:
   void Release();
   HRESULT SaveScreenShot();
   bool BorderPossible();
-
   int Method,UseMethods[5],nUseMethod;
   bool RunOnChangeToWindow;
   int SurfaceWidth,SurfaceHeight;
