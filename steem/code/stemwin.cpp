@@ -14,6 +14,7 @@ and its various buttons.
 //---------------------------------------------------------------------------
 void StemWinResize(int xo,int yo)
 {
+  TRACE_INIT("StemWinResize(%d,%d)\n",xo,yo);
   int res=screen_res;
   if (mixed_output)
     res=1;
@@ -40,9 +41,14 @@ void StemWinResize(int xo,int yo)
     SetStemWinSize(WinSize[res][Idx].x,WinSize[res][Idx].y,
       xo*WinSize[res][Idx].x/640,yo*WinSize[res][Idx].y/400);
   }
+#if defined(SSE_VID_D3D1)
+  if(D3D9_OK && SSE_OPTION_D3D)
+    Disp.D3DSpriteInit(); //smooth res changes (eg in GEM)
+    //Disp.ScreenChange(); //radical
+#endif
 
 #if defined(SSE_VAR_STATUS_STRING)
-    GUIRefreshStatusBar();//of course (v3.5.5)
+  GUIRefreshStatusBar();//of course (v3.5.5)
 #endif
 
 }
@@ -152,9 +158,12 @@ void GetRealVKCodeForKeypad(WPARAM &wPar,LPARAM &lPar)
 
 LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 {
-	switch (Mess){
+  switch (Mess){
     case WM_PAINT:
     {
+      //TRACE("WM_PAINT %d %x %x\n",Win,wPar,lPar);
+      //d3d we get and execute all wm_paint, but windows fails
+      //to redraw gui every twice, yet controls respond, mouse appears
       RECT dest;
 
       GetClientRect(Win,&dest);
@@ -171,6 +180,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 #endif
 
       if (FullScreen){
+        //TRACE("draw for FS... mode %d\n",draw_fs_blit_mode);
         int menu_bottom=0 NOT_ONEGAME(+MENUHEIGHT+2);
 #ifndef ONEGAME
         dest.bottom=menu_bottom;
@@ -195,6 +205,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 
         HBRUSH br=(HBRUSH)GetStockObject(BLACK_BRUSH);
         RECT rc;
+        //TRACE("x_gap %d y_gap %d\n",x_gap,y_gap);
         if (x_gap){
           rc.top=menu_bottom;rc.left=0;rc.bottom=Height;rc.right=x_gap;
           FillRect(ps.hdc,&rc,br);
@@ -465,6 +476,17 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           Disp.RunOnChangeToWindow=0;
         }
       }
+
+//tmp
+      else if (wPar==14)
+      {
+        if(timeGetTime()<Disp.ChangeToWinTimeOut)
+          PostMessage(StemWin,WM_USER,14,0);
+        else
+          InvalidateRect(StemWin,NULL,true);
+      }
+
+
       break;
     case WM_NCLBUTTONDBLCLK:
       if (wPar==HTCAPTION){
@@ -535,7 +557,11 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         case 110:case 111:case 112: //Borders
           OptionBox.SetBorder(wPar-110);
           OptionBox.UpdateWindowSizeAndBorder();
+#if defined(SSE_VAR_RESIZE_370)
+          CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min((int)border,2),MF_BYCOMMAND);
+#else
           CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min(border,2),MF_BYCOMMAND);
+#endif
           return 0;
         case 113:
           OptionBox.ChangeOSDDisable(!osd_disable);
@@ -681,8 +707,11 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
               guessed_scan_y/=2;
             if(border)
               guessed_scan_y-=(screen_res==2)?BORDER_TOP*2:BORDER_TOP;
-
+#if defined(SS_VID_BORDERS)
             int guessed_x=LOWORD(lPar)/2-SideBorderSizeWin;
+#else
+            int guessed_x=LOWORD(lPar)/2;
+#endif
 #if defined(SSE_VAR_STATUS_STRING)
             HWND status_bar_win=GetDlgItem(StemWin,120); // get handle
 #if defined(SSE_DEBUG_REPORT_SDP_ON_CLICK) && defined(SSE_SHIFTER)
@@ -875,7 +904,9 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       if(!bAppActive)
       {
         SSE_WIN_VSYNC=SSE_3BUFFER=false; // avoid crash going in or out
+#if defined(SSE_VAR_OPTIONS_REFRESH)
         OptionBox.SSEUpdateIfVisible();
+#endif
       }
 #endif
       if (FullScreen){
@@ -918,7 +949,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           if (pt.x>2 && pt.x<rc.right-2 && pt.y>MENUHEIGHT+1 && pt.y<rc.bottom-2){
             if (stem_mousemode==STEM_MOUSEMODE_WINDOW){
               if (no_set_cursor_pos){
-                SetCursor(LoadCursor(NULL,RCNUM(IDC_CROSS)));
+                SetCursor(LoadCursor(NULL,RCNUM(IDC_CROSS)));//SS TODO?
               }else{
                 SetCursor(NULL);
               }
@@ -1152,7 +1183,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
 //---------------------------------------------------------------------------
 void SetStemWinSize(int w,int h,int xo,int yo)
 {
-  TRACE_LOG("SetStemWinSize w %d,h %d,%d,%d\n",w,h,xo,yo);
+  //TRACE_LOG("SetStemWinSize w %d,h %d,%d,%d\n",w,h,xo,yo); //not that important
 #if defined(STEVEN_SEAGAL) && defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
   if(SDL.InUse)
   {
@@ -1336,7 +1367,8 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
     rc.right=monitor_width;rc.bottom=monitor_height;
   }
 
-  if ((Ret=Disp.SetDisplayMode(rc.right,rc.bottom,bpp,hz,&hz_ok))!=DD_OK) return Ret;
+  if ((Ret=Disp.SetDisplayMode(rc.right,rc.bottom,bpp,hz,&hz_ok))!=DD_OK) 
+    return Ret;
   if (hz) tested_pc_hz[hz256][1+(border & 1)]=MAKEWORD(hz,hz_ok);
 
 #ifdef WIN32

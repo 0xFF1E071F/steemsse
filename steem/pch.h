@@ -5,6 +5,7 @@ DESCRIPTION: System specific includes, declarations and macros. PCH stands
 for pre-compiled headers (to reduce build time on slower development PCs).
 ---------------------------------------------------------------------------*/
 #pragma once//SS
+#include "SSE/SSE.h"//SS
 #ifndef __PCH_H
 #define __PCH_H
 
@@ -24,7 +25,16 @@ for pre-compiled headers (to reduce build time on slower development PCs).
 
 #define WINVER 0x0400
 #define _WIN32_WINNT 0x0300
+#if defined(SSE_VID_DD7)
+#if defined(BCC_BUILD) || _MSC_VER == 1200
+#define DIRECT3D_VERSION 0x0900
+#define DIRECTDRAW_VERSION 0x0700
+#else
+#define DIRECTDRAW_VERSION 0x0700
+#endif
+#else
 #define DIRECTDRAW_VERSION 0x0200
+#endif
 #define DIRECTINPUT_VERSION 0x0500
 #define DIRECTSOUND_VERSION 0x0200
 #define OEMRESOURCE 1
@@ -45,10 +55,21 @@ for pre-compiled headers (to reduce build time on slower development PCs).
 #include <time.h>
 #include <setjmp.h>
 #include <clarity.h>
-
+#if defined(SSE_VID_D3D)
+#if defined(BCC_BUILD)
+#include "d3d/ddraw.h"
+#include "d3d/dinput.h"
+#include "d3d/dsound.h"
+#elif _MSC_VER == 1200
+#include "d3d/ddraw.h"
+#include "d3d/dinput.h"
+#include "d3d/dsound.h" 
+#endif
+#else
 #include <ddraw.h>
 #include <dsound.h>
 #include <dinput.h>
+#endif
 
 #if defined(_BCB_BUILD) || defined(BCC_BUILD)
 
