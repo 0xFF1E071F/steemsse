@@ -56,7 +56,9 @@ mem_init ()
     ram_start = 0;
     ram_end   = size - 1;
     memset (ram, 0, 256);
-//    load_rom(); // ST
+#if SSE_VERSION<=350
+    load_rom(); // ST
+#endif
   } else {
     printf ("ram already allocated\n");
   }
