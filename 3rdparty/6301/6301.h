@@ -53,6 +53,14 @@ extern int ST_Key_Down[128];
 extern int mousek;
 // variables that Steem must see
 extern int hd6301_completed_transmission_to_MC6850; // for sync
+
+#if SSE_VERSION<=350
+extern int hd6301_receiving_from_MC6850; // for sync
+extern int hd6301_transmitting_to_MC6850; // for sync
+extern int hd6301_mouse_move_since_last_interrupt_x; // different lifetime
+extern int hd6301_mouse_move_since_last_interrupt_y;
+#endif
+
 // functions used by Steem
 BYTE* hd6301_init();
 int hd6301_destroy(); // like a C++ destructor
@@ -70,7 +78,8 @@ extern int hd6301_vbl_cycles;
 
 
 // ensure compiling, TODO, find the BCC ID instead
-#if !defined(_MSC_VER) 
+//#if !defined(_MSC_VER) 
+#if defined(BCC_BUILD)//defined in makefile
 #pragma warn- 8008
 #pragma warn- 8019 // code has no effect
 #pragma warn- 8045
@@ -89,7 +98,7 @@ extern int hd6301_vbl_cycles;
 #endif 
 
 // for use by the Steem boiler
-#if defined(SSE_DEBUG_DUMP_6301_RAM)
+#if defined(SSE_BOILER_DUMP_6301_RAM)
 extern 
 #ifdef __cplusplus
 "C" 
@@ -97,7 +106,7 @@ extern
 int hd6301_dump_ram();
 #endif
 
-#if defined(SSE_DEBUG_BROWSER_6301)
+#if defined(SSE_BOILER_BROWSER_6301)
 extern 
 #ifdef __cplusplus
 "C" 

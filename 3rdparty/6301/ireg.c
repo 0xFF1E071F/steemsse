@@ -56,7 +56,7 @@ static dr4_getb P_((u_int offs));
     We also use a table with key states (already used in Steem), and a function 
     that builds DR1 bit by bit. 
     It's slow but performance isn't needed for the keyboard.
-    TODO we could fetch the values in the ROM F319-> F370 + special, but then
+    v3.7 we fetch the values in the ROM F319-> F370 + special, but now
     we depend on the ROM.
 */
 
@@ -96,6 +96,7 @@ f363	67 68 6a 6b 6e 71 65 66 69 4a 6c 4e 6f 72  ghjknqefiJlNor
 #if defined(SSE_IKBD_6301_ROM_KEYTABLE)
 
 BYTE get_scancode(int dr1bit,int column) {
+  // go fetch the value in 6301 rom instead of in a fat table!
   BYTE val=0;
   ASSERT(dr1bit<8);
   ASSERT(column<15);
@@ -335,6 +336,7 @@ static dr4_getb (offs)
     if(SSE_HACKS_ON)
 #endif
     {
+
     int cycles_per_frame=HD6301_CLOCK/shifter_freq;   
 
     if(HD6301.MouseVblDeltaX) // horizontal

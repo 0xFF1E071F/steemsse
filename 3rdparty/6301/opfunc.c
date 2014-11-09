@@ -432,7 +432,7 @@ trap ()
 	u_int  routine = callstack_peek_addr ();
 #endif
 	char  *p       = (char *) sym_find_name (routine);
-#if defined(SSE_DEBUG_DUMP_6301_RAM)
+#if defined(SSE_BOILER_DUMP_6301_RAM)
 	hd6301_dump_ram();
 #endif
   warning ("trap: pc:%04x\nSubroutine: %04x %s\n",

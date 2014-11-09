@@ -32,6 +32,13 @@ int ST_Key_Down[128]; // not better than what I envisioned but effective!
 int mousek;
 // our variables that Steem must see
 int hd6301_completed_transmission_to_MC6850; // for sync
+#if SSE_VERSION<=350
+int hd6301_receiving_from_MC6850; // for sync
+int hd6301_transmitting_to_MC6850; // for sync
+int hd6301_mouse_move_since_last_interrupt_x; // different lifetime
+int hd6301_mouse_move_since_last_interrupt_y;
+#endif
+
 
 // additional variables for our module
 
@@ -85,7 +92,10 @@ void (*hd6301_trace)(char *fmt, ...);
 
 // constructing our module (OBJ) the good old Steem way, hem
 
-
+#ifdef MINGW_BUILD
+//#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
+#endif
 
 #define error printf // saves headache
 #define warning TRACE //printf 
@@ -257,7 +267,7 @@ hd6301_load_save(int one_if_save,unsigned char *buffer) {
   if(one_if_save)
   {
     TRACE("6301 Snapshot - save RAM\n");
-#if defined(SSE_DEBUG_DUMP_6301_RAM_ON_LS)
+#if defined(SSE_BOILER_DUMP_6301_RAM_ON_LS)
     hd6301_dump_ram();
 #endif
     memmove(i,&ram[0x80],128);
@@ -266,7 +276,7 @@ hd6301_load_save(int one_if_save,unsigned char *buffer) {
   {
     TRACE("Snapshot - load RAM\n");
     memmove(&ram[0x80],i,128);
-#if defined(SSE_DEBUG_DUMP_6301_RAM_ON_LS)
+#if defined(SSE_BOILER_DUMP_6301_RAM_ON_LS)
     hd6301_dump_ram();
 #endif
   }
@@ -338,7 +348,7 @@ dump_rom() {
 }
 #endif
 
-#if defined(SSE_DEBUG_DUMP_6301_RAM)
+#if defined(SSE_BOILER_DUMP_6301_RAM)
 
 hd6301_dump_ram() { // commanded by Boiler
   printf("6301 RAM dump\n    \t00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F\n");
@@ -347,22 +357,60 @@ hd6301_dump_ram() { // commanded by Boiler
 
 #endif
 
-#if defined(SSE_DEBUG_BROWSER_6301)
+#if defined(SSE_BOILER_BROWSER_6301)
 /*  We copy the memory instead of having direct access.
     TODO: use proper separation methods?
 */
 hd6301_copy_ram(unsigned char *ptr) {
   int i;
+  if(!ram)//during init
+    return -1;
   for(i=0;i<0x16;i++)
     ptr[i]=iram[i];
   for(i=0x16;i<256;i++)
     ptr[i]=mem_getb (i);
+  return 0;
 }
 
 #endif
 
+#if SSE_VERSION<=350
+load_rom() {
+  FILE *fp;
+  char romfile[20]=HD6301_ROM_FILENAME;
+#if defined(SS_IKBD_6301_TRACE)
+  TRACE("6301: Init RAM, load ROM %s\n",romfile);
+#endif
+  
+  fp=fopen(romfile,"r+b");
+  if(fp)
+  {
+    int i,checksum=0;
+    int n=fread(ram+0xF000,1,4096,fp);
+#if defined(SS_IKBD_6301_TRACE)
+    ASSERT(n==4096); // this detected the missing +b above
+    for(i=0;i<4096;i++)
+      checksum+=ram[0xF000+i];
+    if(checksum!=HD6301_ROM_CHECKSUM)
+      TRACE("checksum of rom=%d expected=%d\n",checksum,HD6301_ROM_CHECKSUM);
+#endif
+    fclose(fp);
+  }
+  else 
+  {
+    TRACE("Failed to open file\n");
+    free(ram);
+    ram=NULL;
+  } 
+  return (int)ram; // pointer as int, 0 if failed to load ROM
+}
+#endif
 
 
 #undef LOGSECTION
+
+#ifdef MINGW_BUILD
+//#pragma GCC diagnostic pop
+#endif
 
 #endif
