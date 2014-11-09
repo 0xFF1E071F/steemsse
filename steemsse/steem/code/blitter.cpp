@@ -40,12 +40,12 @@ int blitter_cycles[16][4]=
  1,  1,  1,  1};// 15 | 1  1  1  1
 
 #define BLITTER_START_WAIT 4 // this also doesn't seem to matter, but
-#define BLITTER_END_WAIT 4 // we must have 1+2=8
+#define BLITTER_END_WAIT 4 // we must have 1+2=8 eg:?
 
 #else
 
-#define BLITTER_START_WAIT 8
-#define BLITTER_END_WAIT 0
+#define BLITTER_START_WAIT 8//8
+#define BLITTER_END_WAIT 0//0
 
 #endif
 
@@ -84,7 +84,7 @@ void Blitter_DPoke(MEM_ADDRESS abus,WORD x)
     CATCH_M68K_EXCEPTION
     END_M68K_EXCEPTION
   }else if (abus>=MEM_FIRST_WRITEABLE && abus<himem){
-#if defined(SSE_DEBUG_MONITOR_VALUE2)
+#if defined(SSE_BOILER_MONITOR_VALUE2)
     DPEEK(abus)=x;
     DEBUG_CHECK_WRITE_W(abus);
 #else
@@ -140,6 +140,7 @@ void Blitter_Start_Line()
 #if BLITTER_END_WAIT!=0
     INSTRUCTION_TIME_ROUND(BLITTER_END_WAIT);
 #endif
+
     log(Str("BLITTER: ")+HEXSl(old_pc,6)+" ------------- BLITTING DONE --------------");
 
 #ifdef DEBUG_BUILD
@@ -178,6 +179,7 @@ void ASMCALL Blitter_Start_Now()
 //  ASSERT( Blit.YCount!=65536 );
   /*Only want to start the line if not in the middle of one.*/
   if (WORD(Blit.XCounter-Blit.XCount)==0) Blitter_Start_Line();
+///////////////////:else INSTRUCTION_TIME(4);
   Blitter_Draw();
   check_for_interrupts_pending();
 }
@@ -425,6 +427,15 @@ void Blitter_Draw()
     return;
   }else{
     Blit.YCounter=Blit.YCount;
+
+#if defined(SSE_BLITTER_RELAPSE)
+    // for research...
+    if(SSE_HACKS_ON 
+      && IR==0x4E71  // maybe
+      && Blit.YCount==1) // targetting
+      INSTRUCTION_TIME_ROUND(4); // fixes Relapse plasma
+#endif
+
   }
 
 //  WORD SrcDat,DestDat,Mask,NewDat;
@@ -962,6 +973,12 @@ Byte instructions can not be used to read or write this register.
           TRACE_LOG("F%d y%d c%d Blt %X Hg%d Hp%d Op%d x%d y%d NF%d FX%d Sk%d from %X (x+%d y+%d) to %X (x+%d y+%d) Msk %X %X %X\n",
             FRAME,scan_y,LINECYCLES,Val,Blit.Hog,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.NFSR,Blit.FXSR,Blit.Skew,Blit.SrcAdr,Blit.SrcXInc,Blit.SrcYInc,Blit.DestAdr,Blit.DestXInc,Blit.DestYInc,Blit.EndMask[0],Blit.EndMask[1],Blit.EndMask[2]);
 
+#if defined(SSE_OSD_CONTROL)
+          if(OSD_MASK3 & OSD_CONTROL_STEBLT) 
+            TRACE_OSD("%X %dx%d",Val,Blit.XCount,Blit.YCount);
+#endif
+
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_BLT_OVERLAP)//TODO
           // GEM doc viewer, Braindamage - no glitch visible
           if(!(Blit.SrcAdr > Blit.DestAdr || Blit.DestAdr-Blit.SrcAdr>Blit.XCount/2)) // bad test!
@@ -1004,7 +1021,6 @@ Byte instructions can not be used to read or write this register.
      * The original BUSY flag state must be restored however, before
      * termination of the interrupt service routine.)
 */
-
         if (Val & BIT_7){ // Restart
           log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Blitter restarted - swapping bus to Blitter at "+ABSOLUTE_CPU_TIME);
           Blit.HasBus=true;
