@@ -143,7 +143,7 @@ public:
 #if defined(SSE_PASTI_ON_WARNING2)
   void RefreshPastiStatus();
 #endif
-#if defined(SSE_VAR_OPTION_SLOW_DISK)
+#if defined(SSE_GUI_OPTION_SLOW_DISK_SSE)
   void RefreshSnails();
 #endif
 #endif

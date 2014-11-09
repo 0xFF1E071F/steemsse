@@ -162,7 +162,7 @@ void TDiskManager::PerformInsertAction(int Action,EasyStr Name,EasyStr Path,Easy
     if (runstate!=RUNSTATE_RUNNING){
       PostRunMessage();
     }else{
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_MOUSE_CAPTURE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_MOUSE_CAPTURE)
       if(CAPTURE_MOUSE)
         SetStemMouseMode(STEM_MOUSEMODE_WINDOW);
       else
@@ -372,6 +372,35 @@ void TDiskManager::Show()
     DiskView=CreateWindowEx(WS_EX_ACCEPTFILES | 512,WC_LISTVIEW,"",WS_CHILD | WS_VISIBLE | WS_TABSTOP |
                       LVS_ICON | LVS_SHAREIMAGELISTS | LVS_SINGLESEL | LVS_EDITLABELS,
                       10,105,480,200,Handle,(HMENU)102,HInstance,NULL);
+/*
+SS
+Another way Vista is a pile!
+When you click on an item of the list, the OS emits a stupid beep. 
+Not Steem's fault.
+Made a "reg" file based on info below.
+--
+
+Run Regedit and then delete the default value for
+ HKEY_CURRENT_USER\AppEvents\Schemes\Apps\.Default\CCSelect\.current
+
+
+HKEY_CURRENT_USER\AppEvents\Schemes\Apps\.Default\CCSelect\.current\(Default) has a null value set. Just double click it and empty out anything in it if there is and then click ok. Sound should go away.
+To duplicate the effect just insert some bad text in the field.
+
+
+Okay, I found a solution.  Apparently this IS a Vista-specific bug, and is not related to my code.  I found the answer on a Google Group: http://groups.google.com.au/group/microsoft.public.win32.programmer.gdi/browse_thread/thread/99a2b1f68b47c4d5/681bf4f839f72ee8
+ 
+ 
+ 
+The solution is to run regedit and browse to HKEY_CURRENT_USER\AppEvents\Schemes\Apps\.Default\CCSelect\.current\
+ 
+then double-click the (Default) value, clear out any data that's in that key, then click OK.  (Click OK even if it appears blank.)  Then the beep goes away on its own.
+
+  +
+http://www.microsoft-questions.com/microsoft/Platform-SDK-Shell/32138755/vista-listview-beep-problem.aspx
+
+
+*/
     if (DiskView) break;
     Sleep(50);
     if ((--Countdown)<=0){
@@ -457,8 +486,15 @@ void TDiskManager::Show()
   {
     int ico=RC_ICO_HARDDRIVES;
     if (IsSameStr_I(T("File"),"Fichier")) ico=RC_ICO_HARDDRIVES_FR;
+#if defined(SSE_GUI_DISK_MANAGER_RGT_CLK_HD2)
+    Win=CreateWindow("Steem Flat PicButton",Str(ico),
+      WS_CHILD | WS_VISIBLE | WS_TABSTOP | PBS_RIGHTCLICK,
+                  400,10,60,64,Handle,(HMENU)10,HInstance,NULL);
+#else
+
     Win=CreateWindow("Steem Flat PicButton",Str(ico),WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                   400,10,60,64,Handle,(HMENU)10,HInstance,NULL);
+#endif
     ToolAddWindow(ToolTip,Win,T("Hard Drive Manager"));
   }
 
@@ -934,7 +970,7 @@ Str TDiskManager::GetMSAConverterPath()
     //if (Exists(MSAConvPath)) return MSAConvPath;
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_MSA_CONVERTER)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_MSA_CONVERTER)
 #if defined(_DEBUG)
   BRK(Auto MSA path wont work in _DEBUG);
 #else
@@ -1151,6 +1187,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
     {
       GET_THIS;
       //TRACE("WM_COMMAND %d\n",LOWORD(wPar));
+     // ASSERT( LOWORD(wPar)!=84 );
       switch (LOWORD(wPar)){
         case IDCANCEL: //Esc
         {
@@ -1170,10 +1207,31 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
           break;
         }
         case 10:  //Hard Drives
+#if defined(SSE_GUI_DISK_MANAGER_RGT_CLK_HD2)
+/*  Right click on HD manager icon toggles HD
+*/
+          {
+            //TRACE("clk HD icon wpar %x lpar %x\n",wPar,lPar);//same for left & right
+            HWND icon_handle=GetDlgItem(Win,10);
+            if (SendMessage(icon_handle,BM_GETCLICKBUTTON,0,0)==2)
+            {
+              HardDiskMan.DisableHardDrives=!HardDiskMan.DisableHardDrives;
+              HardDiskMan.update_mount();
+#if defined(SSE_GUI_STATUS_STRING)
+              GUIRefreshStatusBar();
+#endif
+            }
+            else if (HIWORD(wPar)==BN_CLICKED){
+              SendMessage(icon_handle,BM_SETCHECK,1,0);
+              HardDiskMan.Show();
+            }
+          }
+#else
           if (HIWORD(wPar)==BN_CLICKED){
             SendMessage(GetDlgItem(Win,10),BM_SETCHECK,1,0);
             HardDiskMan.Show();
           }
+#endif
           break;
         case 80:  // Go Home
           if (This->Dragging>-1) break;
@@ -1484,6 +1542,13 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
           PostMessage(Win,WM_USER,1234,2);
           break;
 
+#if defined(SSE_DRIVE_SOUND_SEEK5)
+        case 1044:
+        case 1045:
+          DRIVE_SOUND_SEEK_SAMPLE=!DRIVE_SOUND_SEEK_SAMPLE;
+          break;
+#endif
+
 #if defined(SSE_DRIVE_SWITCH_OFF_MOTOR)
         case 1046:
         case 1047:
@@ -1692,12 +1757,12 @@ That will toggle bit x.
           break;
         case 2013: // SS menu ADAT
           floppy_instant_sector_access=!floppy_instant_sector_access;
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_OPTION_SLOW_DISK)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_OPTION_SLOW_DISK_SSE)
           This->RefreshSnails();
-#if defined(SSE_VAR_OPTIONS_REFRESH) &&defined(WIN32)
+#if defined(SSE_GUI_OPTIONS_REFRESH)
           OptionBox.SSEUpdateIfVisible(); // other way
 #endif
-#if defined(SSE_VAR_STATUS_STRING_ADAT)
+#if defined(SSE_GUI_STATUS_STRING_ADAT)
           GUIRefreshStatusBar();
 #endif
 #else
@@ -1873,7 +1938,7 @@ That will toggle bit x.
             case 1:
             {
               EnableAllWindows(0,Win);
-
+              // SS: this allows player to select a network folder as well
               EasyStr NewFol=ChooseFolder(HWND(FullScreen ? StemWin:Win),T("Pick a Folder"),This->DisksFol);
               if (NewFol.NotEmpty()){
                 This->QuickFol[n]=NewFol;
@@ -2095,7 +2160,7 @@ That will toggle bit x.
           InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1101,T("&Remove Disk From Drive")+" \10DEL");
           InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,999,NULL);
           InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1091,T("&Go To Disk"));
-#if defined(SSE_VAR_DISK_MANAGER_LONG_NAMES1)
+#if defined(SSE_GUI_DISK_MANAGER_LONG_NAMES1)
 /*  This is so the player can read the full name of the disk without
     checking at the place of storage.
     If you click, you go there.
@@ -2420,6 +2485,12 @@ That will toggle bit x.
             }
           }
         }
+
+#if defined(SSE_GUI_DISK_MANAGER_DOUBLE_CLK_GO_UP) //easy, not optimised
+        else if(!lPar)
+          lPar++; // go up
+#endif
+
         if (lPar==1){  // Go Up
           EasyStr Fol=This->DisksFol;
           char *LastSlash=strrchr(Fol,'\\');
@@ -2603,14 +2674,16 @@ LRESULT __stdcall TDiskManager::Drive_Icon_WndProc(HWND Win,UINT Mess,WPARAM wPa
       if (disk==1) This->SetNumFloppies(3-num_connected_floppies);
       return 0;
 
-#if defined(SSE_DRIVE_SINGLE_SIDE)
+#if defined(SSE_DRIVE_SINGLE_SIDE) //TODO switch for those context options
     case WM_RBUTTONDOWN: // right click on drive, make context menu
     {
       GET_THIS;
       This->MenuTarget=disk;
+      ASSERT(disk==disk&1);
       HMENU Pop=CreatePopupMenu();
-      // Only one option now, single side
-      //TRACE("mask %02X  shift menu target %X \n",SSEOption.SingleSideDriveMap,This->MenuTarget+1);
+#if defined(SSE_DRIVE_SINGLE_SIDE_NOPASTI)
+      if(SF314[disk].ImageType.Manager!=MNGR_PASTI)
+#endif
       InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | 
         (int)(( (SSEOption.SingleSideDriveMap)&(This->MenuTarget+1)) ? 
         MF_CHECKED:0),1048+This->MenuTarget,
@@ -2626,6 +2699,15 @@ LRESULT __stdcall TDiskManager::Drive_Icon_WndProc(HWND Win,UINT Mess,WPARAM wPa
         InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,
           1046+This->MenuTarget,T("Stop motor"));
       }
+
+#if defined(SSE_DRIVE_SOUND_SEEK5)
+      if(SSEOption.DriveSound)
+      {
+        InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,
+          1044+This->MenuTarget,T("Seek sound"));
+      }
+#endif
+
 #endif
       POINT pt;
       GetCursorPos(&pt); // menu will appear at the mouse pointer
@@ -3054,7 +3136,7 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
     if(OSD_IMAGE_NAME && !SSE_STATUS_BAR_GAME_NAME)
       OsdControl.StartScroller(Name); // display image disk name
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_STATUS_STRING_DISK_NAME)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_STATUS_STRING_DISK_NAME)
     GUIRefreshStatusBar();
 #endif
 
@@ -3062,10 +3144,12 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
 
     if (AllowInsert2 && Drive==0 && AutoInsert2){
       Err=1;
-
+#if !defined(SSE_GUI_DISK_MANAGER_INSERT_DISKB)
       Str NewName=Name+" (2)";
+#endif
       Str NewPath=Path;
       Str NewDiskInZip=DiskInZip;
+#if !defined(SSE_GUI_DISK_MANAGER_INSERT_DISKB)
       if (NewDiskInZip.NotEmpty()){
         char *dot=strrchr(NewDiskInZip,'.');
         if (dot){
@@ -3077,17 +3161,29 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
         }
         if (Err) NewDiskInZip="";
       }
-      if (NewDiskInZip.Empty()){
+#endif
+#if !defined(SSE_GUI_DISK_MANAGER_INSERT_DISKB)//+TODO save option
+      if (NewDiskInZip.Empty())
+#endif
+      {
         Err=1;
         char *dot=strrchr(NewPath,'.');
         if (dot){
-          dot--;
+          // The last symbol before the . must be A and B, it will not 
+          //work with (A) and (B)
+          dot--; 
           if (*dot=='1') *dot='2', Err=0;
           if (*dot=='a') *dot='b', Err=0;
           if (*dot=='A') *dot='B', Err=0;
+#if defined(SSE_GUI_DISK_MANAGER_INSERT_DISKB)
+          Str NewName=GetFileNameFromPath(NewPath);
+          dot=strrchr(NewName,'.');
+          NewName=NewName.Lefts(dot-NewName.Text);
+#endif
           if (Err==0) InsertDisk(1,NewName,NewPath,0,0,NewDiskInZip,true,0);
         }
       }
+
     }
   }
 
@@ -3275,7 +3371,7 @@ void TDiskManager::EjectDisk(int Drive)
     SendMessage(GetDlgItem(Handle,100+Drive),LVM_DELETEITEM,0,0);
     EnableWindow(GetDlgItem(GetDlgItem(Handle,98+Drive),100),AreNewDisksInHistory(Drive));
   }   
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_STATUS_STRING_DISK_NAME)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_STATUS_STRING_DISK_NAME)
   GUIRefreshStatusBar();
 #endif
 #elif defined(UNIX)
@@ -3542,7 +3638,7 @@ Str TDiskManager::GetContentsGetAppendName(Str TOSECName)
 }
 //---------------------------------------------------------------------------
 #if defined(STEVEN_SEAGAL) && defined(WIN32)
-#if defined(SSE_VAR_OPTION_SLOW_DISK) 
+#if defined(SSE_GUI_OPTION_SLOW_DISK_SSE) 
 
 // mini-function to avoid code duplication
 void TDiskManager::RefreshSnails() {
