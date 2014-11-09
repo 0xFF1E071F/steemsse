@@ -301,6 +301,10 @@ bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDi
     UPDATE;
   }
 
+#if defined(SSE_GUI_DISK_MANAGER_INSERT_DISKB_LS)
+  AutoInsert2=pCSF->GetInt("Disks","AutoInsert2",AutoInsert2);
+#endif
+
   HardDiskMan.LoadData(FirstLoad,pCSF,SecDisabled);
 
   return true;
@@ -412,6 +416,10 @@ bool TDiskManager::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetInt("Disks","QuickDiskAccess",floppy_instant_sector_access);
 
   pCSF->SetInt("Disks","FloppyArchiveIsReadWrite",FloppyArchiveIsReadWrite);
+
+#if defined(SSE_GUI_DISK_MANAGER_INSERT_DISKB_LS)
+  pCSF->SetInt("Disks","AutoInsert2",AutoInsert2);
+#endif
 
   HardDiskMan.SaveData(FinalSave,pCSF);
 
@@ -640,7 +648,7 @@ bool TJoystickConfig::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisabled)
 {
   SEC(PSEC_MACHINETOS){
-#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_RATIO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO)
     n_cpu_cycles_per_second=max(min(pCSF->GetInt("Options","CPUBoost",n_cpu_cycles_per_second),128000000),(int)CpuNormalHz);
 #else
     n_cpu_cycles_per_second=max(min(pCSF->GetInt("Options","CPUBoost",n_cpu_cycles_per_second),128000000),8000000);
@@ -719,13 +727,17 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_HACKS)
     SSE_HACKS_ON=pCSF->GetInt("Options","SpecificHacks",SSE_HACKS_ON);
 #endif
-#if defined(SSE_VAR_MOUSE_CAPTURE)
+#if defined(SSE_GUI_MOUSE_CAPTURE)
     CAPTURE_MOUSE=pCSF->GetInt("Options","CaptureMouse",CAPTURE_MOUSE);
 #endif
 #if defined(SSE_IKBD_6301)
     HD6301EMU_ON=pCSF->GetInt("Options","HD6301Emu",HD6301EMU_ON);
     if(!HD6301_OK)
       HD6301EMU_ON=0;
+#if defined(SSE_IKBD_6301_NOT_OPTIONAL)
+    else
+      HD6301EMU_ON=1;
+#endif
 #endif
 #if defined(SSE_VAR_STEALTH) 
     STEALTH_MODE=pCSF->GetInt("Options","StealthMode",STEALTH_MODE);
@@ -739,16 +751,27 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_MMU_WAKE_UP)
 //    WAKE_UP_STATE=pCSF->GetInt("Options","WakeUpState",WAKE_UP_STATE);
 #endif
-#if defined(SSE_VID_BORDERS)
+#if defined(SSE_VID_BORDERS) && !defined(SSE_VID_BORDERS_NO_LOAD_SETTING)
+    //v3.7.0, we wouldn't keep this setting through sessions
     DISPLAY_SIZE=pCSF->GetInt("Display","BorderSize",DISPLAY_SIZE);
     if(DISPLAY_SIZE<0||DISPLAY_SIZE>BIGGEST_DISPLAY)
       DISPLAY_SIZE=0;
     ChangeBorderSize(DISPLAY_SIZE);
 #endif
 #if defined(SSE_YM2149_FIX_TABLES)
+#if SSE_VERSION>=370
+    SSEOption.PSGMod=pCSF->GetInt("Sound","PsgMod",SSEOption.PSGMod);
+#else
     PSG_FILTER_FIX=SSEOption.PSGMod=pCSF->GetInt("Sound","PsgMod",SSEOption.PSGMod);
 #endif
-#if defined(SSE_YM2149_FIXED_VOL_FIX2)
+#if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
+    if(SSEOption.PSGMod)
+      YM2149.LoadFixedVolTable();
+    else
+      YM2149.FreeFixedVolTable();
+#endif
+#endif
+#if defined(SSE_YM2149_FIXED_VOL_TABLE) && !defined(SSE_YM2149_NO_SAMPLES_OPTION)
     SSEOption.PSGFixedVolume=pCSF->GetInt("Sound","PsgFixedVolume",SSEOption.PSGFixedVolume);
 #endif
 #if defined(SSE_SOUND_FILTER_STF)
@@ -776,10 +799,10 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
     SSE_INTERPOLATE=pCSF->GetInt("Options","InterpolatedScanlines",SSE_INTERPOLATE);
 #endif
-#if defined(SSE_VAR_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_STRING)
     SSE_STATUS_BAR=pCSF->GetInt("Options","StatusBar",SSE_STATUS_BAR);
 #endif
-#if defined(SSE_VAR_STATUS_STRING_DISK_NAME_OPTION)
+#if defined(SSE_GUI_STATUS_STRING_DISK_NAME_OPTION)
     SSE_STATUS_BAR_GAME_NAME=pCSF->GetInt("Options","StatusBarGameName",SSE_STATUS_BAR_GAME_NAME);
 #endif
 #if defined(SSE_VID_VSYNC_WINDOW)
@@ -803,42 +826,75 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_DISK_GHOST)
     SSE_GHOST_DISK=pCSF->GetInt("Options","GhostDisk",SSE_GHOST_DISK);
 #endif
+#if defined(SSE_VID_D3D_OPTION)
+    SSE_OPTION_D3D=pCSF->GetInt("Options","Direct3D",SSE_OPTION_D3D);
+#endif
+#if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION)
+    OPTION_ST_ASPECT_RATIO=pCSF->GetInt("Options","STAspectRatio",OPTION_ST_ASPECT_RATIO);
+#endif
+#if defined(SSE_DRIVE_SOUND_SEEK5)
+    DRIVE_SOUND_SEEK_SAMPLE=pCSF->GetInt("Options","DriveSoundSeekSample",DRIVE_SOUND_SEEK_SAMPLE);
+#endif
+#if defined(SSE_GUI_CUSTOM_WINDOW_TITLE)
+/*  Request
+    For instance, in the [Options] part of steem.ini you add the line
+    WindowTitle=Steem SSE teh beST
+    and this will be the title of the window
+    //limitation: mustn't be longer than original title (Steem SSE 3.7.0)
+    limited to WINDOW_TITLE_MAX_CHARS (20)
+*/
+    {
+      EasyStr tmp=pCSF->GetStr("Main","WindowTitle",WINDOW_TITLE);
+//      strncpy(stem_window_title,tmp.Text,strlen(WINDOW_TITLE));
+      strncpy(stem_window_title,tmp.Text,WINDOW_TITLE_MAX_CHARS);
+      //TRACE("WindowTitle %s\n",stem_window_title);
+      SetWindowText(StemWin,stem_window_title);
+    }
+#endif
+
 #endif//steven_seagal
 
 
-#if defined(SSE_DEBUG_SSE_PERSISTENT)
+#if defined(SSE_BOILER_SSE_PERSISTENT)
     USE_TRACE_FILE=pCSF->GetInt("Debug","UseTraceFile",USE_TRACE_FILE);
     CheckMenuItem(sse_menu,1517,MF_BYCOMMAND|
       ((USE_TRACE_FILE)?MF_CHECKED:MF_UNCHECKED));
     TRACE_FILE_REWIND=pCSF->GetInt("Debug","TraceFileRewind",TRACE_FILE_REWIND);
     CheckMenuItem(sse_menu,1518,MF_BYCOMMAND|
       ((TRACE_FILE_REWIND)?MF_CHECKED:MF_UNCHECKED));
-#if defined(SSE_DEBUG_MONITOR_VALUE)
+#if defined(SSE_BOILER_MONITOR_VALUE)
     Debug.MonitorValueSpecified=pCSF->GetInt("Debug","MonitorValueSpecified",Debug.MonitorValueSpecified);
     CheckMenuItem(sse_menu,1522,MF_BYCOMMAND|
       ((Debug.MonitorValueSpecified)?MF_CHECKED:MF_UNCHECKED));
 #endif
-#if defined(SSE_DEBUG_MONITOR_RANGE)
+#if defined(SSE_BOILER_MONITOR_RANGE)
     Debug.MonitorRange=pCSF->GetInt("Debug","MonitorRange",Debug.MonitorRange); 
     CheckMenuItem(sse_menu,1523,MF_BYCOMMAND|
       ((Debug.MonitorRange)?MF_CHECKED:MF_UNCHECKED));
 #endif
-#if defined(SSE_DEBUG_STACK_68030_FRAME)
+#if defined(SSE_BOILER_STACK_68030_FRAME)
     Debug.M68030StackFrame=pCSF->GetInt("Debug","M68030StackFrame",Debug.M68030StackFrame); 
     CheckMenuItem(sse_menu,1525,MF_BYCOMMAND|
       ((Debug.M68030StackFrame)?MF_CHECKED:MF_UNCHECKED));
 #endif
-#if defined(SSE_DEBUG_STACK_CHOICE)
+#if defined(SSE_BOILER_STACK_CHOICE)
     Debug.StackDisplayUseOtherSp=pCSF->GetInt("Debug","StackDisplayUseOtherSp",Debug.StackDisplayUseOtherSp); 
     CheckMenuItem(sse_menu,1528,MF_BYCOMMAND|
       ((Debug.StackDisplayUseOtherSp)?MF_CHECKED:MF_UNCHECKED));
 #endif
-#if defined(SSE_DEBUG_FAKE_IO)
+#if defined(SSE_BOILER_FAKE_IO)
     for(int i=0;i<FAKE_IO_LENGTH/2;i++)
     {
       char buffer[15];
       sprintf(buffer,"ControlMask%d",i);
       Debug.ControlMask[i]=(WORD)pCSF->GetInt("Debug",buffer,Debug.ControlMask[i]);
+#if defined(SSE_BOILER_NEXT_PRG_RUN)
+      if((BOILER_CONTROL_MASK1&BOILER_CONTROL_NEXT_PRG_RUN))
+      {
+        stop_on_next_program_run=2;
+        CheckMenuItem(boiler_op_menu,1513,MF_BYCOMMAND | MF_CHECKED);//update
+      }
+#endif
     }
 #endif
 
@@ -936,6 +992,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 
   SEC(PSEC_SOUND){
     MaxVolume=pCSF->GetInt("Options","Volume",MaxVolume);
+    //TRACE("get MaxVolume %d",MaxVolume);
     sound_mode=pCSF->GetInt("Options","SoundMode",sound_mode);
     sound_last_mode=pCSF->GetInt("Options","LastSoundMode",sound_last_mode);
     int slq=pCSF->GetInt("Options","SoundLowQuality",999);
@@ -1113,7 +1170,11 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #endif
 
 #ifdef WIN32
-	CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min(border,2),MF_BYCOMMAND);
+#if defined(SSE_VAR_RESIZE_370)
+  CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min((int)border,2),MF_BYCOMMAND);
+#else
+  CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min(border,2),MF_BYCOMMAND);
+#endif
   CheckMenuItem(StemWin_SysMenu,113,MF_BYCOMMAND | int(osd_disable ? MF_CHECKED:MF_UNCHECKED));
 #endif
 
@@ -1160,7 +1221,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_HACKS)
   pCSF->SetStr("Options","SpecificHacks",EasyStr(SSE_HACKS_ON));
 #endif
-#if defined(SSE_VAR_MOUSE_CAPTURE)
+#if defined(SSE_GUI_MOUSE_CAPTURE)
   pCSF->SetStr("Options","CaptureMouse",EasyStr(CAPTURE_MOUSE));
 #endif
 #if defined(SSE_IKBD_6301)
@@ -1178,13 +1239,13 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_MMU_WAKE_UP)
 //  pCSF->SetStr("Options","WakeUpState",EasyStr(WAKE_UP_STATE));  
 #endif
-#if defined(SSE_VID_BORDERS)
+#if defined(SSE_VID_BORDERS) && !defined(SSE_VID_BORDERS_NO_LOAD_SETTING)
   pCSF->SetStr("Display","BorderSize",EasyStr(DISPLAY_SIZE));  
 #endif
 #if defined(SSE_YM2149_FIX_TABLES)
   pCSF->SetStr("Sound","PsgMod",EasyStr(SSEOption.PSGMod));  
 #endif
-#if defined(SSE_YM2149_FIXED_VOL_FIX2)
+#if defined(SSE_YM2149_FIXED_VOL_TABLE) && !defined(SSE_YM2149_NO_SAMPLES_OPTION)
   pCSF->SetStr("Sound","PsgFixedVolume",EasyStr(SSEOption.PSGFixedVolume));  
 #endif
 #if defined(SSE_SOUND_FILTER_STF)
@@ -1208,10 +1269,10 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
   pCSF->SetStr("Options","InterpolatedScanlines",EasyStr(SSE_INTERPOLATE));  
 #endif
-#if defined(SSE_VAR_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_STRING)
   pCSF->SetStr("Options","StatusBar",EasyStr(SSE_STATUS_BAR));
 #endif
-#if defined(SSE_VAR_STATUS_STRING_DISK_NAME_OPTION)
+#if defined(SSE_GUI_STATUS_STRING_DISK_NAME_OPTION)
   pCSF->SetStr("Options","StatusBarGameName",EasyStr(SSE_STATUS_BAR_GAME_NAME));
 #endif
 #if defined(SSE_VID_VSYNC_WINDOW)
@@ -1229,23 +1290,33 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_DISK_GHOST)
   pCSF->SetStr("Options","GhostDisk",EasyStr(SSE_GHOST_DISK)); 
 #endif
+#if defined(SSE_VID_D3D_OPTION)
+  pCSF->SetStr("Options","Direct3D",EasyStr(SSE_OPTION_D3D)); 
+#endif
+#if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION)
+  pCSF->SetStr("Options","STAspectRatio",EasyStr(OPTION_ST_ASPECT_RATIO));
+#endif
+#if defined(SSE_DRIVE_SOUND_SEEK5)
+  pCSF->SetStr("Options","DriveSoundSeekSample",EasyStr(DRIVE_SOUND_SEEK_SAMPLE));
+#endif
 
-#if defined(SSE_DEBUG_SSE_PERSISTENT)
+
+#if defined(SSE_BOILER_SSE_PERSISTENT)
   pCSF->SetStr("Debug","UseTraceFile",EasyStr(USE_TRACE_FILE)); 
   pCSF->SetStr("Debug","TraceFileRewind",EasyStr(TRACE_FILE_REWIND)); 
-#if defined(SSE_DEBUG_MONITOR_VALUE)
+#if defined(SSE_BOILER_MONITOR_VALUE)
   pCSF->SetStr("Debug","MonitorValueSpecified",EasyStr(Debug.MonitorValueSpecified)); 
 #endif
-#if defined(SSE_DEBUG_MONITOR_RANGE)
+#if defined(SSE_BOILER_MONITOR_RANGE)
   pCSF->SetStr("Debug","MonitorRange",EasyStr(Debug.MonitorRange)); 
 #endif
-#if defined(SSE_DEBUG_STACK_68030_FRAME)
+#if defined(SSE_BOILER_STACK_68030_FRAME)
   pCSF->SetStr("Debug","M68030StackFrame",EasyStr(Debug.M68030StackFrame)); 
 #endif
-#if defined(SSE_DEBUG_STACK_CHOICE)
+#if defined(SSE_BOILER_STACK_CHOICE)
   pCSF->SetStr("Debug","StackDisplayUseOtherSp",EasyStr(Debug.StackDisplayUseOtherSp)); 
 #endif
-#if defined(SSE_DEBUG_FAKE_IO)
+#if defined(SSE_BOILER_FAKE_IO)
     for(int i=0;i<FAKE_IO_LENGTH/2;i++)
     {
       char buffer[15];
@@ -1253,7 +1324,6 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
       pCSF->SetStr("Debug",buffer,EasyStr(Debug.ControlMask[i]));
     }
 #endif
-
 #endif//debug
 
 
@@ -1291,6 +1361,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetInt("Options","DoAsyncBlit",Disp.DoAsyncBlit);
 
   pCSF->SetStr("Options","Volume",EasyStr(MaxVolume));
+  //TRACE("write MaxVolume %d",MaxVolume);
   pCSF->SetStr("Options","SoundMode",EasyStr(sound_mode));
   pCSF->SetStr("Options","LastSoundMode",EasyStr(sound_last_mode));
   pCSF->SetStr("Options","SoundLowQuality","999");
