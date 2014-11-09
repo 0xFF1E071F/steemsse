@@ -296,7 +296,6 @@ EXT const int psg_flat_volume_level[16];
 
 EXT const int psg_envelope_level[8][64];
 
-
 DWORD psg_quantize_time(int,DWORD);
 void psg_set_reg(int,BYTE,BYTE&);
 
