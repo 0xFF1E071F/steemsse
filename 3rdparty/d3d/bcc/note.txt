@@ -1,0 +1,6 @@
+[path to BCC bin]>implib -c name "path to DLL"
+
+for:
+
+d3d9
+d3dx9_43
