@@ -324,7 +324,11 @@ void TPatchesBox::Show()
   CreateWindow("Static",T("Available Patches"),WS_VISIBLE | WS_CHILD,
                   10,10,200,20,Handle,(HMENU)99,HInstance,NULL);
 
-  CreateWindowEx(512,"Listbox","",WS_VISIBLE | WS_CHILD | LBS_NOINTEGRALHEIGHT | LBS_NOTIFY,
+  CreateWindowEx(512,"Listbox","",
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_PATCH_SCROLLBAR)
+    WS_VSCROLL| // easy fix, list can get longer
+#endif
+    WS_VISIBLE | WS_CHILD | LBS_NOINTEGRALHEIGHT | LBS_NOTIFY,
                   10,30,180,323,Handle,(HMENU)100,HInstance,NULL);
 
   CreateWindow("Static",T("Description"),WS_VISIBLE | WS_CHILD,
