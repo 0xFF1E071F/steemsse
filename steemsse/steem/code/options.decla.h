@@ -194,7 +194,7 @@ public:
   hxc_dropdown border_size_dd;
 #endif
 
-#if defined(SSE_VAR_MOUSE_CAPTURE)
+#if defined(SSE_GUI_MOUSE_CAPTURE)
   hxc_button capture_mouse_but;
 #endif
 
@@ -228,7 +228,7 @@ public:
   hxc_button psg_fixtables_but;
 #endif
 
-#if defined(SSE_YM2149_FIXED_VOL_FIX2)
+#if defined(SSE_YM2149_FIXED_VOL_TABLE)
   hxc_button psg_samples_but;
 #endif
 
@@ -244,7 +244,7 @@ public:
   hxc_button enable_dsp_but;
 #endif
 
-#if defined(SSE_VAR_OPTION_SLOW_DISK)
+#if defined(SSE_GUI_OPTION_SLOW_DISK_SSE)
   hxc_button slow_disk_but;  
 #endif
 
@@ -255,7 +255,7 @@ public:
 #endif
 
   void MachineUpdateIfVisible();
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_OPTIONS_REFRESH)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_OPTIONS_REFRESH)
   void SSEUpdateIfVisible();
 #endif
 
@@ -281,7 +281,15 @@ public:
 EXT EasyStr WAVOutputFile;
 EXT EasyStringList DSDriverModuleList;
 
+#if defined(SSE_VID_EXT_MON_1280X1024)
+#if defined(SSE_VID_EXT_MON_1024X720)
+#define EXTMON_RESOLUTIONS (7+2+2) //TODO enum
+#else
+#define EXTMON_RESOLUTIONS (7+2)
+#endif
+#else
 #define EXTMON_RESOLUTIONS 7
+#endif
 
 EXT const int extmon_res[EXTMON_RESOLUTIONS][3];
 

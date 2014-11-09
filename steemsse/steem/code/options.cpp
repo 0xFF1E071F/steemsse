@@ -15,18 +15,35 @@ bool TOptionBox::USDateFormat=0;
 WIN_ONLY( DirectoryTree TOptionBox::DTree; )
 UNIX_ONLY( hxc_dir_lv TOptionBox::dir_lv; )
 
+#if defined(SSE_YM2149_DYNAMIC_TABLE0)
+//extern  WORD* fixed_vol_3voices; // temp to produce bin file
+extern WORD fixed_vol_3voices[16][16][16];
+#endif
 
 EasyStr WAVOutputFile;
 EasyStringList DSDriverModuleList;
 
 const int extmon_res[EXTMON_RESOLUTIONS][3]={
 {800,600,1},
+#if defined(SSE_VID_EXT_MON_1024X720)
+{1024,720,1},
+#endif
 {1024,768,1},
 {1280,960,1},
+#if defined(SSE_VID_EXT_MON_1280X1024)
+{1280,1024,1},
+#endif
 {640,400,4},
 {800,600,4},
+#if defined(SSE_VID_EXT_MON_1024X720)
+{1024,720,4},
+#endif
 {1024,768,4},
-{1280,960,4}};
+{1280,960,4}
+#if defined(SSE_VID_EXT_MON_1280X1024)
+,{1280,1024,4}
+#endif
+};
 
 #endif
 
@@ -64,7 +81,11 @@ bool TOptionBox::ChangeBorderModeRequest(int newborder)
   int newval=newborder;
   if (Disp.BorderPossible()==0 && (FullScreen==0)) newval=0;
   bool proceed=true;
+#if defined(SSE_VAR_RESIZE_370)
+  if (min((int)border,2)==min(newval,2)){
+#else
   if (min(border,2)==min(newval,2)){
+#endif
     proceed=false;
   }else if ((border^newval) & 1){
     if (FullScreen && draw_fs_blit_mode!=DFSM_LAPTOP){
@@ -776,11 +797,19 @@ void TOptionBox::EnableBorderOptions(bool enable)
   }else{
     border=border_last_chosen | (border & 1);
   }
+#if defined(SSE_VAR_RESIZE_370)
+  CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min((int)border,2),MF_BYCOMMAND);
+#else
   CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min(border,2),MF_BYCOMMAND);
+#endif
   if (Handle==NULL || BorderOption==NULL) return;
 
   EnableWindow(BorderOption,enable);
+#if defined(SSE_VAR_RESIZE_370)
+  SendMessage(BorderOption,CB_SETCURSEL,min((int)border,2),0);
+#else
   SendMessage(BorderOption,CB_SETCURSEL,min(border,2),0);
+#endif
 }
 //---------------------------------------------------------------------------
 void TOptionBox::DestroyCurrentPage()
@@ -841,8 +870,17 @@ void TOptionBox::SetBorder(int newborder)
     if (Handle) if (GetDlgItem(Handle,207)) SendDlgItemMessage(Handle,207,CB_SETCURSEL,oldborder,0);
     border=oldborder;
   }
+#if defined(SSE_VAR_RESIZE_370)
+  CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min((int)border,2),MF_BYCOMMAND);
+#else
   CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min(border,2),MF_BYCOMMAND);
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_STATUS_STRING)
+#endif
+ 
+#if defined(SSE_VID_BORDERS) && defined(SSE_GUI_OPTIONS_DISPLAY_SIZE_IN_DISPLAY)
+  EnableWindow(GetDlgItem(Handle,1026),(BOOL)border); 
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_STATUS_STRING)
   GUIRefreshStatusBar();
 #endif
 }
@@ -999,10 +1037,10 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             ST_TYPE=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
             TRACE_LOG("Option ST type = %d\n",ST_TYPE);
             SwitchSTType(ST_TYPE);
-#if defined(SSE_MMU_WAKE_UP_RESET_ON_SWITCH_ST)
+#if defined(SSE_MMU_WU_RESET_ON_SWITCH_ST)
             WAKE_UP_STATE=0;
 #endif
-#if defined(SSE_VAR_OPTIONS_REFRESH)
+#if defined(SSE_GUI_OPTIONS_REFRESH)
             OptionBox.SSEUpdateIfVisible(); 
 #endif
 #if defined(SSE_STF_MATCH_TOS)
@@ -1216,7 +1254,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 #endif
-#if defined(SSE_VAR_MOUSE_CAPTURE) // Option Capture mouse
+#if defined(SSE_GUI_MOUSE_CAPTURE) // Option Capture mouse
         case 1028:
           if(HIWORD(wPar)==BN_CLICKED)
           {
@@ -1236,7 +1274,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SendMessage(HWND(lPar),BM_SETCHECK,HD6301EMU_ON,0);
             TRACE_LOG("Option HD6301 emu: %d\n",HD6301EMU_ON);
 //            printf("HD6301 emu: %d\n",HD6301EMU_ON);
-#if defined(SSE_VAR_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_STRING)
 //            GUIRefreshStatusBar();//overkill
 #endif
           }
@@ -1260,7 +1298,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SSE_INTERPOLATE=!SSE_INTERPOLATE;
             TRACE_LOG("Interpolate scanlines: %d\n",SSE_INTERPOLATE);
             SendMessage(HWND(lPar),BM_SETCHECK,SSE_INTERPOLATE,0);
-            draw_fs_blit_mode=(SSE_INTERPOLATE)?DFSM_STRETCHBLIT:DFSM_STRAIGHTBLIT;
+            draw_fs_blit_mode=(SSE_INTERPOLATE)?DFSM_STRETCHBLIT:
+#if defined(SSE_VID_D3D2)
+              (D3D9_OK && SSE_OPTION_D3D) ? DFSM_STRETCHBLIT :
+#endif
+              DFSM_STRAIGHTBLIT;
           }
           break;
 #endif
@@ -1276,7 +1318,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               SSE_3BUFFER=false;
 #endif
 //            SendMessage(HWND(lPar),BM_SETCHECK,SSE_WIN_VSYNC,0);
-#if defined(SSE_VAR_OPTIONS_REFRESH)
+#if defined(SSE_GUI_OPTIONS_REFRESH)
             OptionBox.SSEUpdateIfVisible();
 #endif
             Disp.ScreenChange();
@@ -1295,7 +1337,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #endif
             TRACE_LOG("Option Triple Buffer: %d\n",SSE_3BUFFER);
 //            SendMessage(HWND(lPar),BM_SETCHECK,SSE_3BUFFER,0);
-#if defined(SSE_VAR_OPTIONS_REFRESH)
+#if defined(SSE_GUI_OPTIONS_REFRESH)
             OptionBox.SSEUpdateIfVisible();
 #endif
             Disp.ScreenChange();
@@ -1423,12 +1465,12 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 
 
         case 5100:case 5101:case 5102:case 5103:case 5104:case 5105:case 5106:
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ASSOCIATE)
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_NO_ASSOCIATE_STC)) //haha
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE)
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_GUI_NO_ASSOCIATE_STC)) //haha
         case 5107: //bugfix 3.5.3//hmm...
 #endif
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_IPF_ASSOCIATE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_IPF)
         //case 5108: //bugfix 3.5.3//hmm...
         case 5107://???
 #endif
@@ -1451,10 +1493,10 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               case 5104: Ext=".DIM";AssociateSteem(Ext,"st_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
               case 5105: Ext=".STZ";AssociateSteem(Ext,"st_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
               case 5106: Ext=".STS";AssociateSteem(Ext,"steem_memory_snapshot",true,T("Steem Memory Snapshot"),SNAP_ICON_NUM,0); break;
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_NO_ASSOCIATE_STC))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_GUI_NO_ASSOCIATE_STC))
               case 5107: Ext=".STC";AssociateSteem(Ext,"st_cartridge",true,T("ST ROM Cartridge"),CART_ICON_NUM,0); break;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_IPF_ASSOCIATE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_IPF)
               case 5107: Ext=".IPF";AssociateSteem(Ext,"st_ipf_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_TOS_PRG_AUTORUN)
@@ -1468,16 +1510,16 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             HWND But=HWND(lPar);
             if (IsSteemAssociated(Ext)){
               SendMessage(But,WM_SETTEXT,0,LPARAM(T("Associated").Text));
-#if !defined(SSE_VAR_MAY_REMOVE_ASSOCIATION)
+#if !defined(SSE_GUI_MAY_REMOVE_ASSOCIATION)
               EnableWindow(But,0);
 #endif
             }else{
               SendMessage(But,WM_SETTEXT,0,LPARAM(T("Associate").Text));
-#if !defined(SSE_VAR_MAY_REMOVE_ASSOCIATION)
+#if !defined(SSE_GUI_MAY_REMOVE_ASSOCIATION)
               EnableWindow(But,true);
 #endif
             }
-#if defined(SSE_VAR_MAY_REMOVE_ASSOCIATION)
+#if defined(SSE_GUI_MAY_REMOVE_ASSOCIATION)
             EnableWindow(But,true);
 #endif
           }
@@ -1667,12 +1709,38 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if (HIWORD(wPar)==BN_CLICKED){
             SSEOption.PSGMod=!SSEOption.PSGMod;
             TRACE_LOG("Option PSG mods %d\n",SSEOption.PSGMod);
+
+#if defined(SSE_YM2149_DYNAMIC_TABLE0) // temp to produce 8k bin file
+            {
+              EasyStr filename=GetEXEDir();
+              filename+="\\ym2149_fixed_vol.bin";
+              FILE *fp=fopen(filename.Text,"w+b");
+              if(fp)
+              {
+                int nw=fwrite(fixed_vol_3voices,sizeof(WORD),16*16*16,fp);
+                fclose(fp);
+                int check=0;
+                for(int i=0;i<16*16*16;i++)
+                  check+=*((WORD*)fixed_vol_3voices+i);
+                TRACE("writing %d words in file %s, total %d\n",nw,filename.Text,check);
+                
+              }
+              return (int)SSE_OPTION_PSG;
+            }
+#endif
+#if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
+            if(SSEOption.PSGMod)
+              YM2149.LoadFixedVolTable();
+            else
+              YM2149.FreeFixedVolTable();
+#endif
             SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.PSGMod,0);
           }
           break; 
+         // SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.PSGMod,0);
 #endif
-
-#if defined(SSE_YM2149_FIXED_VOL_FIX2)
+//SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.PSGMod,0);
+#if defined(SSE_YM2149_FIXED_VOL_TABLE) && !defined(SSE_YM2149_NO_SAMPLES_OPTION)
         case 7312: // PSG samples ljbk
           if (HIWORD(wPar)==BN_CLICKED){
             SSEOption.PSGFixedVolume=!SSEOption.PSGFixedVolume;
@@ -1694,6 +1762,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
+#if defined(SSE_PASTI_ONLY_STX)
 #if !defined(SSE_PASTI_ONLY_STX_OPTION1)
         case 7305: // Pasti only STX
           if (HIWORD(wPar)==BN_CLICKED){
@@ -1713,8 +1782,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break; 
 #endif
-
-#if defined(SSE_VAR_OPTION_SLOW_DISK)
+#endif
+#if defined(SSE_GUI_OPTION_SLOW_DISK_SSE)
         case 7306: // replicate ADAT option
           if (HIWORD(wPar)==BN_CLICKED){
             floppy_instant_sector_access=!floppy_instant_sector_access;
@@ -1726,7 +1795,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
-#if defined(SSE_VAR_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_STRING)
         case 7307: // status bar
           if (HIWORD(wPar)==BN_CLICKED){
             SSE_STATUS_BAR=!SSE_STATUS_BAR;
@@ -1746,7 +1815,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 
-#if defined(SSE_VAR_STATUS_STRING_DISK_NAME_OPTION)
+#if defined(SSE_GUI_STATUS_STRING_DISK_NAME_OPTION)
         case 7309: //  status bar game name
           if (HIWORD(wPar)==BN_CLICKED){
             SSE_STATUS_BAR_GAME_NAME=!SSE_STATUS_BAR_GAME_NAME;
@@ -1777,6 +1846,34 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             TRACE_LOG("Option Ghost disk %d\n",SSE_GHOST_DISK);
           }
           break;
+#endif
+
+#if defined(SSE_VID_D3D_OPTION)
+        case 7314: // option D3D
+          if (HIWORD(wPar)==BN_CLICKED){
+            SSE_OPTION_D3D=!SSE_OPTION_D3D;
+            SendMessage(HWND(lPar),BM_SETCHECK,SSE_OPTION_D3D,0);
+#if defined(SSE_VID_D3D_OPTION5)
+//            WORD items[]={7315,280,208,210,220,221,222,223,224,225,226,0xFFFF};
+            WORD items[]={7315,280,208,0xFFFF};
+            for(int i=0;items[i]!=0xFFFF;i++) //^ just a trick
+              EnableWindow(GetDlgItem(Win,items[i]),!SSE_OPTION_D3D^!i);
+#endif
+            TRACE_LOG("Option D3D %d\n",SSE_OPTION_D3D);
+            //Disp.Init();//big mistake!
+          }
+          break;
+#endif
+
+#if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION)
+        case 7315: // Option Aspect Ratio
+          if (HIWORD(wPar)==BN_CLICKED){
+            OPTION_ST_ASPECT_RATIO=!OPTION_ST_ASPECT_RATIO;
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_ST_ASPECT_RATIO,0);
+            TRACE_LOG("Option Aspect Ratio %d\n",SSE_OPTION_D3D);
+          }
+          break;
+
 #endif
 
 #endif//SS
@@ -2188,7 +2285,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
       }
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_STATUS_STRING)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_STATUS_STRING)
       GUIRefreshStatusBar();
 #endif
 
@@ -2457,6 +2554,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             int db =-( 10000 - 10000 * log10(position+1) / log10(101));
 #endif
             MaxVolume=db;
+            //TRACE("set MaxVolume %d db %d position %d\n",MaxVolume,db,position);
           }
 #else
           MaxVolume=SendMessage(HWND(lPar),TBM_GETPOS,0,0)-9000;
