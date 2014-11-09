@@ -197,8 +197,15 @@ const int psg_flat_volume_level2[16]=
     v3.7.0: table used all the time, eg also for Goldrunner
 */
 
-const WORD fixed_vol_3voices[16][16][16]= 
+
+#if !defined(SSE_YM2149_DYNAMIC_TABLE) || defined(SSE_YM2149_DYNAMIC_TABLE0)
+#if !defined(SSE_YM2149_DYNAMIC_TABLE0)
+const //const must be removed for linker 
+#endif
+ WORD fixed_vol_3voices[16][16][16]= 
 #include "../../3rdparty/various/ym2149_fixed_vol.h" //more bloat...
+#endif
+
 
 //TODO load only when check option
 
@@ -228,10 +235,12 @@ inline bool playing_samples() {
 #endif
 }
 
+#if !defined(SSE_YM2149_DELAY_RENDERING1)
 inline WORD get_fixed_volume() {
   ASSERT( playing_samples() );
   return fixed_vol_3voices[psg_reg[10]&15][psg_reg[9]&15][psg_reg[8]&15];
 }
+#endif
 
 #endif
 
@@ -576,7 +585,11 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
     eg Ace 2 on BIG demo
 */
 
-  if(SSE_OPTION_PSG)
+  if(SSE_OPTION_PSG
+#if defined(SSE_YM2149_DYNAMIC_TABLE)
+    && YM2149.p_fixed_vol_3voices
+#endif
+    )
   {
 
     BYTE index[3],interpolate[3];
@@ -591,9 +604,11 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
       ASSERT( interpolate[abc]<=1 );
       ASSERT( index[abc]<=15 );
     }
-
+#if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
+    int vol=YM2149.p_fixed_vol_3voices[(16*16)*index[2]+16*index[1]+index[0]];
+#else
     int vol=fixed_vol_3voices[index[2]] [index[1]] [index[0]];
-
+#endif
     if(*(int*)(&interpolate[0]))
     {
       /*//not when -1
@@ -601,11 +616,17 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
       ASSERT( index[1]+interpolate[1]<=15 );
       ASSERT( index[2]+interpolate[2]<=15 );
       */
-      ASSERT( !((index[0]-interpolate[0]<=15)&0x80) );
-      ASSERT( !((index[1]-interpolate[1]<=15)&0x80) );
-      ASSERT( !((index[2]-interpolate[2]<=15)&0x80) );
+      
+      ASSERT( !((index[0]-interpolate[0])&0x80) );
+      ASSERT( !((index[1]-interpolate[1])&0x80) );
+      ASSERT( !((index[2]-interpolate[2])&0x80) );
+#if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
+      int vol2=YM2149.p_fixed_vol_3voices[ (16*16)*(index[2]-interpolate[2])
+        +16*(index[1]-interpolate[1])+(index[0]-interpolate[0])];
+#else
       int vol2=fixed_vol_3voices[index[2]-interpolate[2]] 
         [index[1]-interpolate[1]] [index[0]-interpolate[0]];
+#endif
       vol= (int) sqrt( (float) vol * (float) vol2); 
     }
 
