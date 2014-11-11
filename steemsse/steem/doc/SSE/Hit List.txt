@@ -1,0 +1,149 @@
+This is Steven Seagal's hit list!
+Also check file 'Hints'.
+The number between parentheses is the version of Steem when the program 
+started working, but there may have been regressions or improvements since.
+You're advised to keep the different Steem versions in the same folder.
+
+
+Games
+--------
+
+- 4 Wheel Drive/Combo Racer STX (3.7)
+- Blood Money STX+IPF (CPU) (3.5.1)
+- Crazy Cars 2 STX (3.3, broken 3.5.1, fixed 3.6.0)
+- Demoniak cr. Elite (3.6.4)
+- Dragonflight (3.7)
+- Enchanted Land (3.3)
+- Espana 92 -ICS (from Hatari) (3.7)
+- F-29 STE 4MB (3.6)
+- The Final Conflict (3.3)
+- Hyper Force (3.3)
+- International 3D Tennis (3.3)
+- Jumping Jackson on Automation 239 (3.6)
+- Leavin' Terramis 60hz overscan (3.4)
+- Lethal Xcess Beta STX (3.5.1)
+- Live & Let Die (3.3)
+- Manchester United (3.4)
+- Microprose Golf (thx Petari) (3.5.1)
+- Nightdawn (3.3)
+- No Buddies Land (3.3)
+- Rainbow Island on Automation 231 (3.3)
+- Realm of the Trolls (3.7)
+- The Sentinel (3.4), Automation 001 (3.5.1)
+- Seven Gates Of Jambala (from Hatari) (3.3)
+- Trex Warriors (from Hatari) (3.4)
+- Titan STE (3.3), STF (3.5)
+- Utopia cr. Elite (3.6.4)
+- Warp STX (3.5.1)
+- Wipe-Out -RPL (3.7)
+- X-Out mouse (3.4), HD version (3.5.1)
+
+- Demos
+---------
+
+We fix more demos than games just because demo programming generally 
+was edgier.
+
+- 36.15 Gen4 by Cakeman (3.3) 
+- 3615GEN4 HMD Giga (3.5.1, broken 3.5.3, fixed 3.6.0)
+- 36.15 Gen4 by ULM (3.4, 3.5.3 100%)
+- 4pixel Rasters (3.3)
+- Audio Artistic Demo (3.5.2)
+- Beat Demo (3.4) /note 3.6.1 treble control doesn't work
+- Beeshift, Beescroll (3.5.3)
+- Beyond/Loader (3.3)
+- Beyond/Pax Plax Parallax STF (from Hatari) (3.4) 
+- Big Wobble (3.4)
+- Black and White (3.3)
+- Bits055 STF (3.5.1)
+- Blood by Holocaust (3.5)
+- Cernit Trandafir #2 (3.5)
+- Circus back²STage #2 (3.5.2)
+- Cool STE (3.4)
+- Corporation Megademo (3.4)
+- Dangerous Fantaisy credit (3.4)
+- Death of the Left Border (3.3)
+- Delirious 4/Loader (3.4)
+- Delirious 4/NGC (3.3)
+- Delirious 4/Nightmare (3.3)
+- Delirious 4/Tekila (3.3)
+- Deep Lair on Fuzion 80 (3.3)
+- Dragonnels/Loader (3.3)
+- Dragonnels/Menu (3.3)
+- Dragonnels/Unlimited Bobs (3.3)
+- E605/Planet (3.4)
+- European Demos/Loader (3.3)
+- Extreme Rage guest screen (3.4)
+- Forest aka shforstv.exe STF2 (3.3), STF1 (3.4), STE (3.4)
+- Froggies Over The Fence/Menu  (3.3)
+- Golden Soundtracker (3.4)
+- Hackabounds Demo (3.6)
+- Hier sind noch zwei Plätze frei/plasma (3.4.1)
+- Imagination/Roller Coaster (STF) (3.3)
+- Japtro STF (3.3); STE (3.5.1), 100% (3.6)
+- The LoSTE screens by Sync (3.5.3)
+- More or less Zero (3.3)
+- The Musical Wonder 90 intro (3.5.3)
+- The Musical Wonder 91 (3.4)
+- My Dog is Enjoying Fuzion skull (3.7)
+- My Socks are Weapons by Legacy (3.7)
+- No Cooper/Greetings (3.3)
+- Nostalgia/Lemmings (STF, STE) (3.3)
+- Omega Full Overscan Screen (STF2) (3.3)
+- Overdrive/Loader (3.5)
+- Overdrive/Dragon by Ghost (3.4)
+- Pacemaker credits (3.4)
+- Pandemonium Demos/Loader (3.3)
+- Panic (3.6)
+- Phaleon/Loader (3.3)
+- Punish Your Machine/ST-CNX (3.3)
+- Reality is a Lie/Schnusdie (3.4.0)
+- Relapse Grafix Sound II plasma (3.7)
+- RGBeast aka RGB Ruler (3.4)
+- Riverside by DHS (3.5.2)
+- Sadeness (3.6.1)
+- SoWatt/Menu (3.3)
+- SoWatt/Sync (3.3)
+- Spectrum Analyzer (3.6.1)
+- Sphere by Sunny (3.4)
+- ST-NICCC 2000 Final by Oxygene STF (3.5.1)
+- Summer Delights #1, #11, #14 (3.3), #5, #7 (3.5)
+- Super Neo Demo Show 1MB (3.3)
+- Swedish New Year Demo/TCB (3.3,3.6)
+- Swedish New Year Demo 2/Sync (3.4)
+- Transbeauce 2/Loader (3.3)
+- Transbeauce 2/Menu (3.3)
+- Ultimate GFA Demo boot screen STF (3.4)
+- UMD 8730 STF (3.6.0)
+- Union Demo/Menu (3.3)
+- Union Demo/L16 (3.3)
+- Union Demo/TEX copier (3.7)
+- V8 Music System (3.3)
+- Ventura/Board and Sphere STF (3.6)
+- The World is my Oyster #2 STF (3.6)
+- XMas 2004 (3.6)
+
+- Menu intros
+---------------
+
+- Automation 168 (3.3)
+- Awesome 04 STF (3.7)
+- BBC 52 (3.3)
+- Lemmings 40 STF (3.3)
+Many intros also benefit from larger display.
+
+- Applications
+----------------
+
+- Aladin (3.5.0; broken 3.5.1, fixed 3.5.2, broken 3.6.0, fixed 3.6.1)
+- Atari Diagnostic Cartridge (3.5.2)
+- Megamax C (scripts on HD) (3.6.1)
+- NEOchrome: mouse speed? (3.4)
+- Notator (3.5.1) -still not 100%
+- Panzer (3.5.3)
+- ProCopy Analyze (3.5.1) - What da ya say, useless?
+- Spectrum 512 (3.4)
+
+
+And countless other programs!
+

@@ -1,0 +1,356 @@
+Steem SSE FAQ
+---------------
+updated v3.7.0
+
+Q:
+What is Steem?
+A:
+Steem stands for STE Emulation Engine.
+It's an excellent Atari STE emulator coded by Anthony and Russel Hayward.
+
+
+Q:
+Where are Steem authors?
+A:
+They disappeared in the lower border never to be seen again...
+Before that they released the source of their great emulator, mercifully.
+
+
+Q:
+What is 'SSE'?
+A:
+SSE stands for 'Steven Seagal Edition', a branch of Steem, and the only one
+with active development and exciting new features.
+
+
+Q:
+How much does it cost?
+A:
+Steem is free software.
+
+
+Q:
+Is Steem really being improved by Steven Seagal?
+A:
+How unlikely does it sound to you? Don't you think it's more fun than
+churning out crappy DTV movies just for the money?
+
+
+Q:
+Why use Steem and not X or Y?
+A:
+For the nice GUI, for very high compatibility, for some unique features.
+If you're in Linux or want to emulate the Falcon, that's another story.
+
+
+Q:
+How does it work?
+A:
+To use Steem, you need a copy of the Atari ROM, called "TOS", and some 
+image disk files. 
+When you first launch Steem, you may indicate where they are, which you can
+change later.
+To get started you will find some TOS on the Steem SSE site:
+http://ataristeven.t15.org/Other_downloads.htm
+Disk images are easy to find. Some are also available on the site.
+Legally this is still copyrighted material, and if they really wanted,
+companies who own it could call a halt on emulation, but they don't.
+In my opinion, Steem is more convivial than other emulators like
+WinUAE for example.
+
+
+Q:
+What is TOS?
+A:
+This stands for 'The Operating System', also called 'Tramiel Operating System'.
+Including the BIOS, the GEM graphic environment and other layers, the full OS,
+except on very early models (also emulated), was printed on a ROM chip. You need
+an image of one of those roms to use Steem.
+
+To get started you will find some TOS on the Steem SSE site:
+
+http://ataristeven.t15.org/Other_downloads.htm
+or here:
+http://www.avtandil.narod.ru/tose.html
+
+
+Q:
+What do STE and STF stand for?
+A:
+STE is ST Extraordinary and STF is ST Fantastic.
+Seriously: 
+ST=Sixteen Thirty-two, a reference to the 16/32 architecture.
+STF= ST Floppy, because the floppy drive is integrated in the console.
+STE= ST Enhanced, because it has more features, like hardware scrolling,
+stereo sound, etc.
+The STF came before the STE. The STE is better but most programs targeted
+the STF for commercial reasons.
+
+
+Q:
+Which ST model should I select?
+A:
+It depends on the program you need to run. Some programs are STF-only,
+others are STE-only. If you don't know, a good bet is to start with STE
+since this computer had more features. 
+But then again, many programs wouldn't run on a STE (so this is not always
+an emulation bug if something works in STF mode but not STE).
+Please check the Hints textfile where some exclusive STF or STE
+programs are listed.
+
+
+Q:
+Aren't programs better on the Amiga anyway?
+A:
+Some yes, others not. Generally games were better, though some of the 
+important games of the era were actually better on the ST or not even
+released on the Amiga.
+Generally, serious applications were better on the ST.
+Demos, as strange as it may sound, were often more interesting and 
+impressive on the ST.
+The Atari ST is one of the contenders for best chip music. The
+sound of the Amiga was impressive back then but is nothing more
+than bad 8bit samples today, it was outclassed by the Soundblaster.
+Notice that there's no Amiga Teenage Riot.
+
+
+Q:
+Which TOS should I use?
+A:
+Generally, TOS 1.02 is the most compatible for STF mode, and TOS 1.06 for STE
+mode. Steem will try to match those TOS when you switch ST model.
+Some rare programs prefer another version, like TOS 1.00 for very old games.
+TOS1.00 STF
+TOS1.02 STF
+TOS1.04 STF
+TOS1.06 STE
+TOS1.61 STE
+TOS2.05 Mega STE
+TOS2.06 Mega STF/STE
+TOS3.0X TT
+TOS4.0X Falcon
+
+
+Q:
+Shouldn't all programs work with all TOS? I prefer TOS X.YZ.
+A:
+No, mostly due to bad coding practices, some programs will only work with
+such or such TOS. Memory option may also be important, and of course the ST
+model.
+I won't check reported "bugs" under an unusual TOS without knowing for sure
+that it should work.
+
+
+Q:
+Hey my shortcut for F12 doesn't work anymore!
+A:
+This is by design. F12 will start/stop emulation in Steem like in other
+emulators. I ignore requests to the contrary or to make it optional.
+Because in case your boss barges in, such an easy key is handy.
+You may also define a definitive boss key by assigning the 'Exit Steem'
+function to a shortcut, but you have the guarantee that F12 will always
+work.
+
+
+Q:
+Help! Something went wrong and now even quitting and restarting Steem 
+doesn't help.
+A:
+Try deleting the file 'auto.sts' in Steem's directory. It can get corrupted.
+
+
+Q:
+Help! I reset the ST, stop and start Steem, delete auto.sts and I just get
+a blank screen.
+A:
+Check options ST model and TOS. With STF and TOS1.06, you'll have a blank
+screen.
+
+
+Q:
+I have problems with sound (in Windows)!
+A:
+Me too!
+It isn't easy to fix.
+There have always been sound issues on the PC. Steem authors provided some
+options to help, just in case.
+The options that should make the most sense are:
+- Default sound driver
+- Don't check 'write to primary buffer', it's a hack!
+- Timing method: 'write cursor'
+- Delay 20ms if your computer can handle it
+- Frequency: depends on your hardware (44.1k is generally fine) and the
+program (50066 may sound better for some STE programs).
+- Format: 16bit stereo is generally fine.
+- Volume: if you're not satisfied, it could help to set it to max and use
+your Windows control panel to adjust. Though in recent versions of Steem SSE,
+the volume slider has been fixed.
+
+
+Q:
+I have problems with sound (in Linux)!
+A:
+Can't help! Please join the call for some Linux maintainers.
+
+
+Q:
+I have some crashes that could be related to sound.
+A:
+Some DSP code has been added to Steem to handle Microwire emulation.
+This code is primitive and its use of the math coprocessor can cause bugs
+that we can't easily handle. You may try disabling option 'Microwire'. 
+
+
+Q:
+When I check 'Drive Sound' option, sometimes it doesn't work.
+A:
+You may change this option while emulation is running, but to avoid code
+bloat and memory waste, the samples are loaded when Steem builds its sound
+buffers, that is, when you start emulation.
+So simply stopping and resuming emulation should solve the issue.
+
+
+Q:
+Emulation is crawling!
+A:
+It's a fact that Steem SSE is more CPU-intensive than Steem 3.2.
+Partly it has to do with the large extension of "shifter tricks" emulation,
+more tests are required by scanline.
+Partly it has to do with parallel emulations running together, for the 
+HD6301, for CAPS...
+Some options may make a difference, like VSync.
+
+
+Q:
+Sometimes I lose keyboard control.
+A:
+Me too. Don't know the cause. It's not an emulation issue if quitting and 
+restarting Steem gives you control back.
+
+
+Q:
+When Pasti is on, the red led for writing doesn't seem to work.
+A:
+It's because Pasti (v0.2h) doesn't attempt to emulate correct timings for
+writes. The operation is instantaneous, so you have no time to catch the 
+red led.
+Remedying this with some hack doesn't seem worth it.
+Notice that without Pasti as well, write operations are followed by seek and 
+read operations, so that the led doesn't remain red all the time. In fast
+disk mode, you won't see red for short operations.
+
+
+Q:
+Are state snapshots (.STS) compatible between versions?
+A:
+While there's no 100% guarantee, we try to maintain compatibility.
+It's useful for me too, to compare versions in case of bugs.
+You could have trouble because of 'HD6301' emu in some Steem versions
+(not the latest normally).
+
+
+Q:
+What is "wake-up state"?
+A:
+It is the state in which your ST booted, due to synchronisation between 
+various chips. It has an influence on shifter trick timings.
+You may generally ignore this option, it is useful only to check the
+display of some demos. They're mentioned in 'Hints'.
+
+
+Q:
+A program that used to work has a wrong picture and crashes...
+A:
+One reason could be option "wake-up state", try with setting to 'ignore'.
+
+
+Q:
+Hey you claim to have fixed this or that issue with drive emulation but when
+I try it doesn't work.
+A:
+All drive emulation improvements operate only in slow disk mode. The option is
+in the drive manager AND in the SSE option page, you can't miss it anymore.
+
+
+Q:
+Hey, you claim you fixed file associations, but it doesn't work on my computer.
+A:
+For it to work you first need to manually remove the associations in the
+HKEY_CLASSES_ROOT part of the registry, that were put by previous versions of
+Steem.
+
+
+Q:
+Will there be a port of Steem on [fill in]?
+A:
+For the moment two OS are supported: Windows 32 and Linux 32.
+Before considering other ports, it could be a good idea to use a portable
+multimedia library working with both those systems, such as SDL or OpenGL.
+
+
+Q:
+What is XSteem?
+A:
+The Linux build of Steem. It's a reference to the Windows-like X system.
+
+
+Q:
+Why are there fewer features in the Linux build?
+A:
+It's very rare when I use Linux myself. I'm not really willing to delve deep
+into all Linux particularities. In fact it's a shame for the Linux community
+that nobody else did anything yet with Steem in Linux.
+
+
+Q:
+Is support for Falcon planned?
+A:
+No. To me those machines, like the TT,  have no interest.
+Atari supported Falcon only for a few months, and little software was
+developed. Software was so specialised in audio it is very hard to emulate,
+not to mention protections.
+Now nothing keeps dedicated people from starting a Falcon branch of Steem.
+
+
+Q:
+Hmm I think this feature is incorrect in Steem SSE, my code proves it.
+A:
+Oh yeah? 
+I can't fix bugs without first asserting them. Please send some examples that
+prove that there's a problem.
+It's also better if the same program has been proved to run on a real ST.
+
+
+Q:
+What is the 'Boiler'?
+A:
+The Boiler is the amazing debugger coded by Steem authors. It is Steem with a 
+parallel window where you can check code, memory, etc., just using a powerful
+IDE. The name is a probable reference to 'Steam' and 'Engine'.
+Of course the SSE version contains many improvements. It is Windows-only.
+
+
+Q:
+Doesn't the boiler icon look like a garbage bin?
+A:
+The icon's name is 'debug_trash.ico', so it seems it's on purpose!
+Why exactly only Steem authors know.
+
+
+Q:
+I want to contribute some code!
+A:
+Please do. I like to brag about all I do myself but any help is appreciated.
+Especially help with ports would be useful.
+All you have to do is use subversion, and send me a message at:
+http://sourceforge.net/projects/steemsse/
+If you don't like this versioning software, just submit your ideas at
+atari-forum:
+http://www.atari-forum.com/viewforum.php?f=94
+
+
+Q:
+I'd like to help but can't code.
+A:
+You can help by testing stuff and reporting bugs.
+
