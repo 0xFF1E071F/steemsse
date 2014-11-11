@@ -172,10 +172,13 @@ LRESULT __stdcall PicButton_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
     }
     case WM_KEYDOWN:
       if (wPar!=VK_SPACE) break;
+
     case WM_RBUTTONDOWN:
     case WM_RBUTTONDBLCLK:
       if ((Mess==WM_RBUTTONDOWN || Mess==WM_RBUTTONDBLCLK) &&
-            (GetWindowLong(Win,GWL_STYLE) & PBS_RIGHTCLICK)==0) break;
+            (GetWindowLong(Win,GWL_STYLE) & PBS_RIGHTCLICK)==0) 
+        break;
+
     case WM_LBUTTONDOWN:
     case WM_LBUTTONDBLCLK:
       SetPropI(Win,"ClickedIn",1);
@@ -184,7 +187,7 @@ LRESULT __stdcall PicButton_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
         SetPropI(Win,"State",1);
         DoPaint=true;
       }
-      switch (Mess){
+      switch (Mess){//SS was bug?
         case WM_LBUTTONDOWN:case WM_LBUTTONDBLCLK: SetPropI(Win,"ClickButton",1); break;
         case WM_RBUTTONDOWN:case WM_RBUTTONDBLCLK: SetPropI(Win,"ClickButton",2); break;
         case WM_MBUTTONDOWN: SetPropI(Win,"ClickButton",3); break;
@@ -199,6 +202,7 @@ LRESULT __stdcall PicButton_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 
     case WM_KEYUP:
       if (wPar!=VK_SPACE) break;
+
     case WM_RBUTTONUP:
     case WM_LBUTTONUP:
       if (GetPropI(Win,"ClickedIn")){

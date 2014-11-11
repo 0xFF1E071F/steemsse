@@ -78,7 +78,11 @@ struct TSF314 {
   void Sound_CheckIrq();
   void Sound_CheckMotor();
 #if defined(SSE_DRIVE_SOUND_VOLUME)
+#if defined(SSE_DRIVE_SOUND_VOLUME_2)
+  int Sound_Volume;
+#else
   DWORD Sound_Volume;
+#endif
   void Sound_ChangeVolume();
 #endif
 

@@ -108,6 +108,8 @@ void TMIDIOut::SendByte(BYTE Val)
 {
   if (Handle==NULL) return;
 
+  TRACE_OSD("->MIDI %X",Val);
+
   bool SendBuffer=0,AddToBuffer=true;
 
   if ((Val & BIT_7)==0){ // Not status byte
@@ -125,7 +127,11 @@ void TMIDIOut::SendByte(BYTE Val)
     }
   }else if (Val & BIT_7){ // Status byte
     if ( (Val & b11111000)==b11111000 ){  // Real time message
+#if defined(STEVEN_SEAGAL) && defined(SSE_MIDI_CHECK1)
+      VERIFY( midiOutShortMsg(Handle,Val)==MMSYSERR_NOERROR );
+#else
       midiOutShortMsg(Handle,Val);
+#endif
       AddToBuffer=0;
     }else{
       if (pCurSysEx){
@@ -183,7 +189,11 @@ void TMIDIOut::SendByte(BYTE Val)
             nStatusParams=NumParams;
             ParamCount=NumParams;
           }else{
+#if defined(STEVEN_SEAGAL) && defined(SSE_MIDI_CHECK1)
+            VERIFY( midiOutShortMsg(Handle,Val)==MMSYSERR_NOERROR );
+#else
             midiOutShortMsg(Handle,Val);
+#endif
             AddToBuffer=0;
           }
         }
@@ -210,13 +220,25 @@ void TMIDIOut::SendByte(BYTE Val)
   if (SendBuffer){
     switch (MessBufLen){
       case 1:
+#if defined(STEVEN_SEAGAL) && defined(SSE_MIDI_CHECK1)
+        VERIFY( midiOutShortMsg(Handle,MessBuf[0])==MMSYSERR_NOERROR );
+#else
         midiOutShortMsg(Handle,MessBuf[0]);
+#endif
         break;
       case 2:
+#if defined(STEVEN_SEAGAL) && defined(SSE_MIDI_CHECK1)
+        VERIFY( midiOutShortMsg(Handle,MessBuf[0] | (MessBuf[1] << 8))==MMSYSERR_NOERROR );
+#else
         midiOutShortMsg(Handle,MessBuf[0] | (MessBuf[1] << 8));
+#endif
         break;
       default:
+#if defined(STEVEN_SEAGAL) && defined(SSE_MIDI_CHECK1)
+        VERIFY( midiOutShortMsg(Handle,(MessBuf[1] << 8) | (MessBuf[2] << 16))==MMSYSERR_NOERROR );
+#else
         midiOutShortMsg(Handle,MessBuf[0] | (MessBuf[1] << 8) | (MessBuf[2] << 16));
+#endif
         break;
     }
     MessBufLen=MIDI_out_running_status_flag;
@@ -274,7 +296,11 @@ void TMIDIOut::ReInitSysEx()
   if (Handle==NULL) return;
 
   midiOutReset(Handle);
+#if defined(STEVEN_SEAGAL) && defined(SSE_MIDI_CHECK1)
+  VERIFY(midiOutShortMsg(Handle,b11110111)==MMSYSERR_NOERROR );
+#else
   midiOutShortMsg(Handle,b11110111); // Send an EOX, just in case (shouldn't do any harm)
+#endif
   for (int n=0;n<MAX_SYSEX_BUFS;n++) FreeHeader(&(SysExHeader[n]));
   for (int n=0;n<nSysExBufs;n++) if (SysEx[n].pData) delete[] SysEx[n].pData;
 
@@ -288,7 +314,11 @@ TMIDIOut::~TMIDIOut()
   if (Handle==NULL) return;
 
   midiOutReset(Handle);
+#if defined(STEVEN_SEAGAL) && defined(SSE_MIDI_CHECK1)
+  VERIFY(midiOutShortMsg(Handle,b11110111)==MMSYSERR_NOERROR );
+#else
   midiOutShortMsg(Handle,b11110111); // Send an EOX, just in case (shouldn't do any harm)
+#endif
   for (int n=0;n<MAX_SYSEX_BUFS;n++) FreeHeader(&(SysExHeader[n]));
   SetVolume(WORD(OldVolume));
   midiOutClose(Handle);

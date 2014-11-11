@@ -159,7 +159,7 @@ bool MakeGUI()
 
   DispGC=XCreateGC(XD,StemWin,0,NULL);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_UNIX) && defined(SSE_VAR_WINDOW_TITLE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_UNIX) && defined(SSE_GUI_WINDOW_TITLE)
   XSetStandardProperties(XD,StemWin,WINDOW_TITLE,"Steem",None,_argv,_argc,NULL);
 #else
   XSetStandardProperties(XD,StemWin,"Steem Engine","Steem",None,_argv,_argc,NULL);
@@ -193,7 +193,7 @@ bool MakeGUI()
                     BT_ICON,"",102,BkCol);
   ResetBut.set_icon(&Ico16,ICO16_RESET);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESET_BUTTON)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_RESET_BUTTON)
   hints.add(ResetBut.handle,T("Reset (Left Click) - Switch off (Right Click)"),StemWin);
 #else
   hints.add(ResetBut.handle,T("Reset (Left Click = Cold, Right Click = Warm)"),StemWin);

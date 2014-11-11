@@ -2,12 +2,24 @@
 #ifndef SSEDECLA_H
 #define SSEDECLA_H
 
+
 /////////////////
 // PORTABILITY //
 /////////////////
 
+//dinput8.lib dxguid.lib winmm.lib ComCtl32.Lib odbc32.lib odbccp32.lib d3d9.lib
+
+/*
+ DEFINE_GUID( IID_IDirectDraw,		0x6C14DB80,0xA733,0x11CE,0xA5,0x21,0x00,0x20,0xAF,0x0B,0xE5,0x60 );
+ DEFINE_GUID( IID_IDirectDraw2,		0xB3A6F3E0,0x2B43,0x11CF,0xA2,0xDE,0x00,0xAA,0x00,0xB9,0x33,0x56 );
+*/
+
+
+
+
 #if defined(BCC_BUILD) // after x warnings, BCC stops compiling!
 #pragma warn- 8004 
+#pragma warn- 8010 // continuation character
 #pragma warn- 8012
 #pragma warn- 8019
 #pragma warn- 8027
@@ -43,12 +55,26 @@ typedef unsigned char BYTE;
 #pragma warning (disable : 4244) //conversion from 'int' to 'short', possible loss of data
 #endif
 
+
+/////////
+// CPU //
+/////////
+
+#define ACT ABSOLUTE_CPU_TIME
+
+#if !defined(SSE_CPU)
+#define IRC   prefetch_buf[1] // Instruction Register Capture
+#define IR    prefetch_buf[0] // Instruction Register
+#define IRD   ir              // Instruction Register Decoder
+#endif
+
 /////////
 // FDC //
 /////////
 
-
-
+#if SSE_VERSION<=341
+#define DRIVE floppy_current_drive()
+#endif
 
 ///////////
 // Hacks //
@@ -87,7 +113,7 @@ int SS_signal; // "handy" global mask (future coding horror case)
 // INTERRUPT //
 ///////////////
 
-#if defined(SSE_MFP_RATIO) 
+#if defined(SSE_INT_MFP_RATIO) 
 #define CPU_CYCLES_PER_MFP_CLK CpuMfpRatio
 #endif
 
@@ -102,7 +128,7 @@ int SS_signal; // "handy" global mask (future coding horror case)
 
 #ifdef _MSC_VER
 #pragma comment(lib, "../../3rdparty/caps/CAPSImg.lib")
-#ifndef SSE_VS2012_DELAYDLL
+#ifndef SSE_VS2003_DELAYDLL
 #pragma comment(linker, "/delayload:CAPSImg.dll")
 #endif
 #endif
@@ -114,6 +140,20 @@ int SS_signal; // "handy" global mask (future coding horror case)
 ///#pragma comment(linker, "/delayload:CAPSImg.dll")
 #endif
 
+#endif
+
+#endif
+
+
+/////////////
+// SHIFTER //
+/////////////
+
+#if defined(SSE_SHIFTER)
+
+#if !defined(SSE_DEBUG) 
+#define draw_check_border_removal Shifter.CheckSideOverscan
+#define draw_scanline_to(cycles_since_hbl) Shifter.Render(cycles_since_hbl)
 #endif
 
 #endif
@@ -137,11 +177,18 @@ int SS_signal; // "handy" global mask (future coding horror case)
 // No switch because code depends on it and it's desireable,
 // and we can't make a switch for Borland (option directly in makefile)
 
+
+// CAPSImg.dll FreeImage.dll unrar.dll
+// SDL.dll
+
+
+#if defined(_MSC_VER) || defined(BCC_BUILD)
 #include "delayimp.h"
+#endif
 
 #ifdef _MSC_VER
 #pragma comment(lib, "Delayimp.lib")
-#ifndef SSE_VS2012_DELAYDLL
+#ifndef SSE_VS2003_DELAYDLL
 #pragma comment(linker, "/ignore:4199")
 #endif
 #endif
@@ -211,7 +258,7 @@ int ChangeBorderSize(int size); // gui.cpp
 #if defined(SSE_VID_FREEIMAGE4)
 #ifdef _MSC_VER
 #pragma comment(lib,"../../3rdparty/FreeImage/FreeImage.lib")
-#ifndef SSE_VS2012_DELAYDLL
+#ifndef SSE_VS2003_DELAYDLL
 #pragma comment(linker, "/delayload:FreeImage.dll")
 #endif
 #endif

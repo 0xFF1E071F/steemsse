@@ -1,6 +1,6 @@
 #define INFOPAGE_LINK_ID_BASE 200
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX0)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX0)
 
 enum {
  INFOPAGE_ABOUT,
@@ -11,9 +11,19 @@ enum {
  INFOPAGE_HOWTO_DISK,
  INFOPAGE_HOWTO_CART,
  INFOPAGE_FAQ,
+#if defined(SSE_GUI_INFOBOX9)
+// INFOPAGE_MANUAL,
+ INFOPAGE_MANUAL_SSE,
+#endif
+#if defined(SSE_GUI_INFOBOX2)
  INFOPAGE_README_SSE,
  INFOPAGE_FAQ_SSE,
+#endif
+#if defined(SSE_GUI_INFOBOX15)
+ INFOPAGE_README_SSE,
+#endif
  INFOPAGE_HINTS,
+
  NUM_INFOPAGE
 };
 
@@ -27,16 +37,9 @@ enum {
 #define INFOPAGE_HOWTO_DISK 5
 #define INFOPAGE_HOWTO_CART 6
 #define INFOPAGE_FAQ 7
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX2)
-#define INFOPAGE_README_SSE 8
-#define INFOPAGE_FAQ_SSE 9
-#define NUM_INFOPAGE 10
-#else
 #define NUM_INFOPAGE 8
-#endif
 
-#endif//defined(SSE_VAR_INFOBOX0)
+#endif//defined(SSE_GUI_INFOBOX0)
 
 
 
@@ -62,7 +65,7 @@ private:
   HIMAGELIST il;
   int MaxLinkID;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX3)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX3)
   HFONT hFontCourier;
 #endif
 

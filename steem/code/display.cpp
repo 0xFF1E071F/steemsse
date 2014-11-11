@@ -520,7 +520,7 @@ HRESULT SteemDisplay::DDCreateSurfaces()
             TRACE_LOG("Failed create DDBackSur2 DDERR %d\n",Ret);
             DDBackSur2=NULL; // prevents system to be used
             SSE_3BUFFER=false; // reset option
-#if defined(SSE_VAR_OPTIONS_REFRESH)
+#if defined(SSE_GUI_OPTIONS_REFRESH)
             OptionBox.SSEUpdateIfVisible(); 
 #endif
           }
@@ -2533,12 +2533,11 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
   d3derr=pD3D->CreateDevice(D3DADAPTER_DEFAULT,DeviceType,StemWin,vtx_proc,&d3dpp,&pD3DDevice);
   TRACE_LOG("D3D CreateDevice %dx%d %dhz vertex %X flags %X err %d\n",
     d3dpp.BackBufferWidth,d3dpp.BackBufferHeight,d3dpp.FullScreen_RefreshRateInHz,vtx_proc,d3dpp.Flags,d3derr);
-
   if(!pD3DDevice)
-    return d3derr;
-
+    return d3derr; // lost cause
+#if !defined(SSE_VID_D3D_NO_GUI)
   d3derr=pD3DDevice->SetDialogBoxMode(TRUE); //changes nothing?
-
+#endif
   // Create texture
   UINT Levels=1;
   DWORD Usage= D3DUSAGE_DYNAMIC;

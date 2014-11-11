@@ -248,9 +248,10 @@ EXT char m68k_src_b;
 ///void set_pc(MEM_ADDRESS ad); // forward // still necessary?
 #include "SSE/SSE6301.h"
 #include "SSE/SSECpu.h"
+
 //#include "SSE/SSEInterrupt.h"
 #include "SSE/SSESTF.h"
-
+#include "SSE/SSEMMU.h"
 #if defined(SSE_DEBUG_FRAME_REPORT) //temp, same place
 #include "SSE/SSEFrameReport.h"
 #endif

@@ -709,6 +709,7 @@ always audible."
 
     Variable dma_sound_mixer was updated in iow.cpp, but not used.
     Must be =1 to mix YM and DMA, -12db doesn't work.
+    SS: but Pacemaker writes 0 then plays a PSG tune!
 */
     if(MICROWIRE_ON 
 #if defined(SSE_STF)
@@ -717,8 +718,16 @@ always audible."
       )
     {
       if(dma_sound_mixer!=1)
-        v=0; // dma-only
-#if defined(SSE_SOUND_VOL)
+      {
+#if defined(SSE_SOUND_VOL2)
+        //TRACE("dma_sound_mixer %d\n",dma_sound_mixer);
+        if(!dma_sound_mixer)
+          v=PsgGain.FilterAudio(v,-12); // Pacemaker?
+        else
+#endif
+          v=0; // dma-only
+      }
+#if defined(SSE_SOUND_VOL) && !defined(SSE_SOUND_VOL2)
       else if(dma_sound_on_this_screen)
         v=PsgGain.FilterAudio(v,-6); 
 #endif
@@ -740,6 +749,16 @@ always audible."
         val+= (**lp_dma_sound_channel);                           
 
 #if defined(SSE_SOUND_MICROWIRE)
+/*
+? I successfully wrote to the LMC1992, but now YM2149 sound output is pure 
+torture. What happened ?
+
+! Well, the LMC1992 is not a chip that controls the DMA-sound in its digital 
+form but manipulates the analogue sound that comes out of the DMA chip. If you 
+now put the mixer to mix YM2149 and DMA sound, the LMC1992 will also manipulate 
+the YM sound output. However, the YM2149 as a soundchip is not really meant to 
+have Bass and Trebble enhanced. This might result in a very ugly sound.
+*/
     Microwire(0,val);
 #endif
     }
@@ -1837,6 +1856,11 @@ void dma_sound_fetch()
 
       }
     }
+#ifdef TEST01
+    if(SSE_TEST_ON)
+      dma_sound_samples_countdown-=STE_DMA_CLOCK;
+    else
+#endif
     dma_sound_samples_countdown-=n_cpu_cycles_per_second; 
                             //SS putting back 8000000 sounds worse
 

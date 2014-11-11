@@ -52,8 +52,12 @@ struct ACIA_STRUCT{ // removed _ ..
     another byte may already be transmitted in the data register, it will wait
     there until the first transmission is over.
 */
+#if SSE_VERSION<=350
+  BYTE data_tdr;
+#else
   BYTE ByteWaitingTx;
   BYTE LineTxBusy; // transmitting to 6301 or MIDI
+#endif//ver
 #endif
 
 #if defined(SSE_ACIA_REGISTERS)

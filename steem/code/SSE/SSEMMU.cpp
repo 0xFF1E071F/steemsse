@@ -4,7 +4,7 @@
 
 #if defined(SSE_MMU)
 
-#if defined(SSE_MMU_WAKE_UP_DL)
+#if defined(SSE_MMU_WU_DL)
 /*
 +------------------------------------------------------------+---------------+
 | Steem  option    |              Wake-up concepts           |    Cycle      |

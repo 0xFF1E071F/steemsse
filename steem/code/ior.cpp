@@ -121,7 +121,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
 
   BYTE ior_byte=0xff; // default value
 
-#if defined(SSE_MMU_WAKE_UP_IO_BYTES_R)
+#if defined(SSE_MMU_WU_IO_BYTES_R)
   bool adjust_cycles=!io_word_access && MMU.OnMmuCycles(LINECYCLES);
   if(adjust_cycles)
     cpu_cycles+=-2; // = +2 cycles
@@ -139,6 +139,162 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
 
 #undef LOGSECTION 
 #define LOGSECTION LOGSECTION_IKBD
+
+
+#if SSE_VERSION<=350
+
+    case 0xfffc00:      //----------------------------------- ACIAs
+    {
+      // Only cause bus jam once per word
+      DEBUG_ONLY( if (mode==STEM_MODE_CPU) )
+      {
+        if (io_word_access==0 || (addr & 1)==0){
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_BUS_JAM_NO_WOBBLE)
+          const int rel_cycle=0; // hoping it will be trashed by compiler
+#else // Steem 3.2, 3.3
+
+//          if (passed VBL or HBL point){ //SS: those // are not mine
+//            BUS_JAM_TIME(4);
+//          }else{
+          // Jorge Cwik:
+          // Access to the ACIA is synchronized to the E signal. Which is a clock with
+          // one tenth the frequency of the main CPU clock (800 Khz). So the timing
+          // should depend on the phase relationship between both clocks.
+
+          int rel_cycle=ABSOLUTE_CPU_TIME-shifter_cycle_base;
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO)
+          rel_cycle=CpuNormalHz-rel_cycle;
+#else
+          rel_cycle=8000000-rel_cycle;
+#endif
+          rel_cycle%=10;
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER_EVENTS)
+          VideoEvents.Add(scan_y,LINECYCLES,'j',rel_cycle+6);
+#endif
+          BUS_JAM_TIME(rel_cycle+6); // just 6 - fixes jitter in Spectrum 512
+        }
+      }
+      switch (addr){
+/******************** Keyboard ACIA ************************/
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD)
+      case 0xfffc00:  //status
+      {
+#if defined(SSE_ACIA_IRQ_DELAY)//dbg info
+        int elapsed_cycles=ABSOLUTE_CPU_TIME-ikbd.timer_when_keyboard_info;
+#endif
+        // Build the byte x to be returned based on our ACIA var
+        // Note ACIA_IKBD = acia[0].
+        BYTE x=0;
+        // bit 0
+        if(ACIA_IKBD.overrun)
+          x|=BIT_0;
+        if(ACIA_IKBD.rx_not_read)
+          x|=BIT_0; 
+        // bit 1: can we send a byte to the 6301 now?
+        if(ACIA_IKBD.tx_flag==0 
+#if defined(SSE_IKBD_6301) 
+          &&(!hd6301_receiving_from_MC6850 ||!HD6301EMU_ON)  
+#endif
+          )
+          x|=BIT_1; //empty bit
+        // bit 7 (high bit)
+        if(ACIA_IKBD.irq) 
+        {
+          ASSERT( ACIA_IKBD.rx_irq_enabled );
+          x|=BIT_7; //irq bit
+#if defined(SSE_ACIA_IRQ_DELAY)
+          TRACE_LOG("PC %X $FC00 check irq at %d (%d)\n",pc-2,elapsed_cycles,ABSOLUTE_CPU_TIME);
+#endif
+        }
+        // bit 5
+        if (ACIA_IKBD.overrun==ACIA_OVERRUN_YES) 
+          x|=BIT_5; //overrun
+
+#if defined(SSE_ACIA_IRQ_DELAY)
+        if(ACIA_IKBD.rx_stage)
+          TRACE_LOG("PC %X, read 0xfffc00: %x after %d cycles, ACIA rx stage %d\n",pc-2,x,elapsed_cycles,ACIA_IKBD.rx_stage); 
+        else if(keyboard_buffer_length)
+          TRACE_LOG("PC %X, read 0xfffc00: %x\n",pc-2,x); 
+#endif
+#if defined(SSE_DEBUG)
+        if(x&BIT_1) TRACE_LOG("read 0xfffc00 %x ACT %d PX %X\n",x,ABSOLUTE_CPU_TIME,pc);
+#endif
+
+          return x;
+        }//scope
+
+#else // Steem 3.2
+      case 0xfffc00:  //status
+      {
+        BYTE x=0;
+        if (ACIA_IKBD.rx_not_read || ACIA_IKBD.overrun==ACIA_OVERRUN_YES) x|=BIT_0; //full bit
+        if (ACIA_IKBD.tx_flag==0) x|=BIT_1; //empty bit
+//        if (acia[ACIA_IKBD].rx_not_read && acia[ACIA_IKBD].rx_irq_enabled) x|=BIT_7; //irq bit
+        if (ACIA_IKBD.irq) x|=BIT_7; //irq bit
+        if (ACIA_IKBD.overrun==ACIA_OVERRUN_YES) x|=BIT_5; //overrun
+        return x;
+      }
+#endif
+
+      case 0xfffc02:  //data
+      {
+        DEBUG_ONLY( if (mode!=STEM_MODE_CPU) return ACIA_IKBD.data; )
+        ACIA_IKBD.rx_not_read=0; // SS: reading the data register changes the status register
+        LOG_ONLY( bool old_irq=ACIA_IKBD.irq; )
+        if (ACIA_IKBD.overrun==ACIA_OVERRUN_COMING){
+          ACIA_IKBD.overrun=ACIA_OVERRUN_YES;
+          if (ACIA_IKBD.rx_irq_enabled) ACIA_IKBD.irq=true;
+          LOG_ONLY( log_to_section(LOGSECTION_IKBD,EasyStr("IKBD: ")+HEXSl(old_pc,6)+
+                              " - OVERRUN! Read data ($"+HEXSl(ACIA_IKBD.data,2)+
+                              "), changing ACIA IRQ bit from "+old_irq+" to "+ACIA_IKBD.irq); )
+        }else{
+          ACIA_IKBD.overrun=ACIA_OVERRUN_NO;
+          // IRQ should be off for receive, but could be set for tx empty interrupt
+          ACIA_IKBD.irq=(ACIA_IKBD.tx_irq_enabled && ACIA_IKBD.tx_flag==0);
+          LOG_ONLY( if (ACIA_IKBD.irq!=old_irq) log_to_section(LOGSECTION_IKBD,Str("IKBD: ")+
+            HEXSl(old_pc,6)+" - Read data ($"+HEXSl(ACIA_IKBD.data,2)+
+            "), changing ACIA IRQ bit from "+old_irq+" to "+ACIA_IKBD.irq); )
+          }
+          mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
+//          TRACE_LOG("PC %X Read 0xfffc02: %x (%d) at ACT %d\n",pc,ACIA_IKBD.data,hd6301_transmitting_to_MC6850,ABSOLUTE_CPU_TIME);
+          return ACIA_IKBD.data;
+      }
+
+  /******************** MIDI ACIA ************************/
+
+      case 0xfffc04:  // status
+      {
+        BYTE x=0;
+        if (ACIA_MIDI.rx_not_read || ACIA_MIDI.overrun==ACIA_OVERRUN_YES) x|=BIT_0; //full bit
+        if (ACIA_MIDI.tx_flag==0) x|=BIT_1; //empty bit
+        if (ACIA_MIDI.irq) x|=BIT_7; //irq bit
+        if (ACIA_MIDI.overrun==ACIA_OVERRUN_YES) x|=BIT_5; //overrun
+        return x;
+      }
+      case 0xfffc06:  // data
+        DEBUG_ONLY(if (mode!=STEM_MODE_CPU) return ACIA_MIDI.data);
+        ACIA_MIDI.rx_not_read=0;
+        if (ACIA_MIDI.overrun==ACIA_OVERRUN_COMING){
+          ACIA_MIDI.overrun=ACIA_OVERRUN_YES;
+          if (ACIA_MIDI.rx_irq_enabled) ACIA_MIDI.irq=true;
+        }else{
+          ACIA_MIDI.overrun=ACIA_OVERRUN_NO;
+          // IRQ should be off for receive, but could be set for tx empty interrupt
+          ACIA_MIDI.irq=(ACIA_MIDI.tx_irq_enabled && ACIA_MIDI.tx_flag==0);
+        }
+        mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
+        log_to(LOGSECTION_MIDI,Str("MIDI: ")+HEXSl(old_pc,6)+" - Read $"+
+                HEXSl(ACIA_MIDI.data,6)+" from MIDI ACIA data register");
+        return ACIA_MIDI.data;
+      }
+
+      break;
+    }
+#else//!ver
 
     case 0xfffc00:      
 /*  
@@ -291,7 +447,7 @@ when it does).
               /*
               "The nondestructive read cycle (...) although the data in the
               Receiver Data Register is retained.
-            */        
+            */
             ior_byte=ACIA_IKBD.RDR;
             break;
           }
@@ -329,15 +485,38 @@ when it does).
 
 #if defined(SSE_IKBD_6301)
 
-        if(HD6301EMU_ON)
+        if(HD6301EMU_ON) // ACIA mods for MIDI also depend on option 6301/ACIA
         {
           ior_byte=ACIA_MIDI.SR; 
-#if defined(SSE_ACIA_TDR_COPY_DELAY)
+          // bit1=Tx data register empty, set when TDR is free (ready)
+#if defined(SSE_ACIA_TDR_COPY_DELAY) //???? - not for MIDI?
           if(abs(ACT-ACIA_MIDI.last_tx_write_time)<ACIA_TDR_COPY_DELAY)
           {
             TRACE_LOG("ACIA SR TDRE not set yet (%d)\n",ACT-ACIA_MIDI.last_tx_write_time);
-            ior_byte&=~BIT_1;
+            ior_byte&=~BIT_1; //busy
           }
+#endif
+#if defined(SSE_ACIA_MIDI_SR02_CYCLES)
+/*  v3.7.0 
+    More precise MIDI out timing, fixes overflow with some files in Notator
+*/
+#if defined(SSE_ACIA_TDR_COPY_DELAY)
+          else 
+#endif
+          if(abs(ACT-ACIA_MIDI.last_tx_write_time)<ACIA_MIDI_OUT_CYCLES)
+          {
+            TRACE_LOG("ACIA SR TDRE busy (%d)\n",ACT-ACIA_MIDI.last_tx_write_time);
+            ior_byte&=~BIT_1;  // busy
+          }
+          else
+#endif
+          {
+            ior_byte|=BIT_1; // free
+            ACIA_MIDI.SR=ior_byte;
+          }
+
+#if defined(SSE_MIDI_TRACE_READ_STATUS)
+          TRACE_LOG("CPU $%X reads ACIA MIDI SR=%X %d (%dms) after write\n",old_pc,ior_byte,ACT-ACIA_MIDI.last_tx_write_time,(ACT-ACIA_MIDI.last_tx_write_time)/8000);
 #endif
           break;
         }
@@ -358,7 +537,7 @@ when it does).
       // ACIA MIDI read data
       case 0xfffc06:
         DEBUG_ONLY(if (mode!=STEM_MODE_CPU) return ACIA_MIDI.data);
-
+       
 #if defined(SSE_IKBD_6301)
 
         if(HD6301EMU_ON)
@@ -408,6 +587,7 @@ when it does).
         break;
       }
       break;
+#endif//ver?
 
 #undef LOGSECTION //SS
 #define LOGSECTION LOGSECTION_IO //SS
@@ -631,6 +811,17 @@ when it does).
             int nShifts=DWORD(ABSOLUTE_CPU_TIME-MicroWire_StartTime)/CPU_CYCLES_PER_MW_SHIFT;
             if (nShifts>15){
               MicroWire_StartTime=0;
+#ifdef TEST02
+/*
+? How can i find out wether the Microwire interface is done ?
+
+! Simply check the value in the address+data register after you wrote your 
+value into it. If the value at $FFFF8922 is identical with the value you wrote 
+into it, the Microwire is done shifting and can once again be written to. In 
+all other cases, the Microwire is still shifting and cannot be written to.
+*/
+              dat=MicroWire_Data;
+#endif
             }else{
               dat=WORD(MicroWire_Data << nShifts);
               while (nShifts--){
@@ -1018,7 +1209,7 @@ FF8240 - FF827F   palette, res
     TRACE_LOG("PC %X IOR.B %X = %X\n",pc-2,addr,ior_byte);
 #endif
 
-#if defined(SSE_MMU_WAKE_UP_IO_BYTES_R)
+#if defined(SSE_MMU_WU_IO_BYTES_R)
   if(adjust_cycles)
     cpu_cycles+=2; 
 #endif
@@ -1574,7 +1765,7 @@ FF8240 - FF827F   palette, res
 WORD ASMCALL io_read_w(MEM_ADDRESS addr)
 {
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_WAKE_UP_IOR_HACK)//no
+#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_WU_IOR_HACK)//no
 
   WORD return_value;
   int CyclesIn=LINECYCLES;
@@ -1743,7 +1934,7 @@ Done one cycle of all palettes
 
    v3.7
    We can't emulate this correctly yet, so we will hack it instead:
-   - Do the random thing only for UMDUMD8730
+   - Do the random thing only for UMD8730
    - Try to update "data bus" for Awesome 04
    It's not bad to target ir, as data bus would depend on those. 
    

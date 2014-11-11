@@ -1870,11 +1870,22 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if (HIWORD(wPar)==BN_CLICKED){
             OPTION_ST_ASPECT_RATIO=!OPTION_ST_ASPECT_RATIO;
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_ST_ASPECT_RATIO,0);
-            TRACE_LOG("Option Aspect Ratio %d\n",SSE_OPTION_D3D);
+            TRACE_LOG("Option Aspect Ratio %d\n",OPTION_ST_ASPECT_RATIO);
           }
           break;
 
 #endif
+
+#if defined(SSE_GUI_OPTION_FOR_TESTS)
+        case 7316: // Option Beta Tests
+          if (HIWORD(wPar)==BN_CLICKED){
+            SSE_TEST_ON=!SSE_TEST_ON;
+            SendMessage(HWND(lPar),BM_SETCHECK,SSE_TEST_ON,0);
+            TRACE_LOG("Option Beta Tests %d\n",SSE_TEST_ON);
+          }
+          break;
+#endif
+
 
 #endif//SS
 

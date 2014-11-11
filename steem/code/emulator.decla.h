@@ -28,7 +28,7 @@ EXT WORD tos_version;
 #define ON_RTE_EMHACK 3
 #define ON_RTE_DONE_MALLOC_FOR_EM 4
 #define ON_RTE_STOP 400
-#if defined(SSE_DEBUG_RUN_TO_RTS)
+#if defined(SSE_BOILER_RUN_TO_RTS)
 #define ON_RTS_STOP 401
 #endif
 
@@ -57,10 +57,16 @@ EXT int shifter_hscroll,shifter_skip_raster_for_hscroll;
 
 EXT MEM_ADDRESS xbios2,shifter_draw_pointer_at_start_of_line;
 EXT int shifter_pixel;
+
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
-extern "C" 
+#ifdef MINGW_BUILD
+extern "C"{ EXT int shifter_freq INIT(60); }
+#else
+extern "C" EXT int shifter_freq INIT(60);
 #endif
+#else
 EXT int shifter_freq INIT(60);
+#endif
 EXT int shifter_freq_idx INIT(1);
 EXT int shifter_x,shifter_y;
 EXT int shifter_first_draw_line;

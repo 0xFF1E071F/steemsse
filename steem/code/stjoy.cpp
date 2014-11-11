@@ -36,7 +36,7 @@ EXT BYTE stick[8];
 
 //#ifdef IN_MAIN
 
-#ifdef SSE_UNIX
+#if defined(SSE_UNIX) || defined(MINGW_BUILD)
 char AxisToName[7]={'X','Y','Z','R','U','V','P'};
 #else
 static char AxisToName[7]={'X','Y','Z','R','U','V','P'};
@@ -921,18 +921,18 @@ void TJoystickConfig::CheckJoyType()
     for (int n=0;n<2;n++){
       if (DoJag){
         for (int n=180;n<200;n++) if (GetDlgItem(Handle,n)) ShowWindow(GetDlgItem(Handle,n),JagShowType);
-        for ( n=160;n<180;n++) if (GetDlgItem(Handle,n)) ShowWindow(GetDlgItem(Handle,n),JagShowType);
+        for (int n=160;n<180;n++) if (GetDlgItem(Handle,n)) ShowWindow(GetDlgItem(Handle,n),JagShowType);
       }else{
         for (int n=114;n<=118;n++) ShowWindow(GetDlgItem(Handle,n),NormShowType);
 
-        for ( n=150;n<=151;n++) ShowWindow(GetDlgItem(Handle,n),NormShowType);
+        for (int n=150;n<=151;n++) ShowWindow(GetDlgItem(Handle,n),NormShowType);
 
-        for ( n=201;n<=202;n++) ShowWindow(GetDlgItem(Handle,n),NormShowType);
+        for (int n=201;n<=202;n++) ShowWindow(GetDlgItem(Handle,n),NormShowType);
 
-        for ( n=210;n<=218;n++) ShowWindow(GetDlgItem(Handle,n),NormShowType);
+        for (int n=210;n<=218;n++) ShowWindow(GetDlgItem(Handle,n),NormShowType);
         ShowWindow(GetDlgItem(Handle,220),NormShowType);
 
-        for ( n=250;n<=251;n++) ShowWindow(GetDlgItem(Handle,n),NormShowType);
+        for (int n=250;n<=251;n++) ShowWindow(GetDlgItem(Handle,n),NormShowType);
       }
 
       DoJag=!DoJag;

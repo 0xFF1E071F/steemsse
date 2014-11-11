@@ -33,28 +33,32 @@ other files that make up the Steem module.
 
 #include "conditions.h"
 
-#include "SSE/SSE.h" // SS
-//#pragma message("yoho_main")
-
-
+#if defined(STEVEN_SEAGAL)
+#include "SSE/SSE.h" // get switches
+#include "SSE/SSEOption.h"
 #if defined(SSE_STRUCTURE_SSECPU_OBJ) && defined(BCC_BUILD)//temp
 #include "SSE/SSECpu.h"
 #endif
-
-#include "SSE/SSEDebug.h" //SS
-
+#include "SSE/SSEDebug.h" 
 #if defined(SSE_STF)
 #include "SSE/SSESTF.h"//unix
 #endif
 #if defined(SSE_SDL)
 #include "SSE/SSESDL.h"
 #endif
+#endif//SS
+
+
 
 const char *stem_version_date_text=__DATE__ " - " __TIME__;
 
 #ifndef ONEGAME
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_WINDOW_TITLE)
-const char *stem_window_title=WINDOW_TITLE; // in SSE.h
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_WINDOW_TITLE)
+#if !defined(SSE_GUI_CUSTOM_WINDOW_TITLE)
+const 
+#endif
+//char stem_window_title[]=WINDOW_TITLE; // in SSE.h //the [] for VS2008
+char stem_window_title[WINDOW_TITLE_MAX_CHARS]=WINDOW_TITLE;
 #else
 const char *stem_window_title="Steem Engine";
 #endif
@@ -249,7 +253,7 @@ int main(int argc,char *argv[])
           int RevertFlag;
           XGetInputFocus(XD,&FocusWin,&RevertFlag);
           if (FocusWin==StemWin && fast_forward!=RUNSTATE_STOPPED+1 && slow_motion!=RUNSTATE_STOPPED+1){
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_MOUSE_CAPTURE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_MOUSE_CAPTURE)
             if(CAPTURE_MOUSE)
 #endif
               SetStemMouseMode(STEM_MOUSEMODE_WINDOW);
@@ -341,6 +345,7 @@ void FindWriteDir()
     // Must find a location that is r/w
     WriteDir=RunDir;
 #endif
+    ///ASSERT(IsSameStr_I(WriteDir,RunDir));
   }
 }
 //---------------------------------------------------------------------------
@@ -609,6 +614,7 @@ bool Initialise()
 #ifndef ONEGAME
   {
     int IntroResult=2;
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_NO_INTRO))
     if (NoINI){
       WIN_ONLY( ShowWindow(NotifyWin,SW_HIDE); )
       IntroResult=SteemIntro();
@@ -622,7 +628,8 @@ bool Initialise()
         UpdateWindow(NotifyWin);
       }
 #endif
-    }
+    }//noini
+#endif
 
     SetNotifyInitText(T("ST Operating System"));
     if (IntroResult==2){
@@ -688,37 +695,37 @@ bool Initialise()
 __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #endif
 
-#ifndef SSE_VAR_NOTIFY
+#ifndef SSE_GUI_NOTIFY1
   WIN_ONLY( LoadUnzipDLL(); )
 #endif
   log("STARTUP: cpu_routines_init Called");
   cpu_routines_init();
 
 #if defined(STEVEN_SEAGAL)
-#if defined(SSE_VAR_NOTIFY)
+#if defined(SSE_GUI_NOTIFY1)
   SetNotifyInitText("unzipd32.dll");
   WIN_ONLY( LoadUnzipDLL(); )
 #endif
 #if defined(SSE_VAR_UNRAR)
-#if defined(SSE_VAR_NOTIFY)
+#if defined(SSE_GUI_NOTIFY1)
   SetNotifyInitText("unrar.dll");
 #endif
   WIN_ONLY( LoadUnrarDLL(); )
 #endif
 #if defined(SSE_IPF)
-#if defined(SSE_VAR_NOTIFY)
+#if defined(SSE_GUI_NOTIFY1)
   SetNotifyInitText(T("CAPS library"));
 #endif
   Caps.Init();
 #endif
 #if defined(SSE_IKBD_6301) 
-#if defined(SSE_VAR_NOTIFY)
+#if defined(SSE_GUI_NOTIFY1)
   SetNotifyInitText(T("6301 emu"));
 #endif
   HD6301.Init();
 #endif
 #if defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
-#if defined(SSE_VAR_NOTIFY)
+#if defined(SSE_GUI_NOTIFY1)
   SetNotifyInitText(T("SDL"));
 #endif
   SDL_OK=SDL.Init();
@@ -867,7 +874,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #ifdef WIN32 
 #ifndef ONEGAME
   // SS we associate nothing
-#if !defined(SSE_VAR_NO_AUTO_ASSOCIATE_DISK_STS_STC)
+#if !defined(SSE_GUI_NO_AUTO_ASSOCIATE_DISK_STS_STC)
   AssociateSteem(".ST","st_disk_image",0,T("ST Disk Image"),DISK_ICON_NUM,0);
   AssociateSteem(".STT","st_disk_image",0,T("ST Disk Image"),DISK_ICON_NUM,0);
   AssociateSteem(".MSA","st_disk_image",0,T("ST Disk Image"),DISK_ICON_NUM,0);
@@ -878,18 +885,18 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #endif
   AssociateSteem(".STS","steem_memory_snapshot",0,T("Steem Memory Snapshot"),SNAP_ICON_NUM,0);
   AssociateSteem(".STC","st_cartridge",0,T("ST ROM Cartridge"),CART_ICON_NUM,0);
-#if defined(STEVEN_SEAGAL) && defined(SSE_IPF_ASSOCIATE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_IPF)
   AssociateSteem(".IPF","st_disk_image",0,T("ST Disk Image"),DISK_ICON_NUM,0);
 #endif
-#endif//#if !defined(SSE_VAR_NO_AUTO_ASSOCIATE_DISK_STS_STC)
+#endif//#if !defined(SSE_GUI_NO_AUTO_ASSOCIATE_DISK_STS_STC)
 
-#if !defined(SSE_VAR_NO_AUTO_ASSOCIATE_MISC)
+#if !defined(SSE_GUI_NO_AUTO_ASSOCIATE_MISC)
   AssociateSteem(".PRG","st_program",0,T("ST Program"),PRG_ICON_NUM,true);
   AssociateSteem(".TOS","st_program",0,T("ST Program"),PRG_ICON_NUM,true);
   AssociateSteem(".APP","st_program",0,T("ST Program"),PRG_ICON_NUM,true);
   AssociateSteem(".GTP","st_program",0,T("ST Program"),PRG_ICON_NUM,true);
   AssociateSteem(".TTP","st_program",0,T("ST Program"),PRG_ICON_NUM,true);
-#endif// !defined(SSE_VAR_NO_AUTO_ASSOCIATE_MISC)
+#endif// !defined(SSE_GUI_NO_AUTO_ASSOCIATE_MISC)
 
 #endif//!ONEGAME
 #endif//WIN32
@@ -1062,12 +1069,7 @@ void make_Mem(BYTE conf0,BYTE conf1)
 
   for (int y=0;y<64+PAL_EXTRA_BYTES;y++) palette_exec_mem[y]=0;
 
-
   himem=mem_len;
-
-#if defined(SSE_CPU_HIMEM_BONUS_BYTES) // undefined
-  himem+=MEM_FIRST_WRITEABLE; // #bytes of ROM in RAM zone
-#endif
 
 #if !defined(SSE_MMU_NO_CONFUSION)
   mmu_confused=false;

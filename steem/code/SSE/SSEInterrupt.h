@@ -4,7 +4,7 @@
 
 #include "SSESTF.h"
 
-#if defined(SSE_MFP_RATIO) 
+#if defined(SSE_INT_MFP_RATIO) 
 extern double CpuMfpRatio;
 extern DWORD CpuNormalHz;
 #endif
@@ -40,8 +40,9 @@ inline void HBLInterrupt() {
 
   log_to_section(LOGSECTION_INTERRUPTS,Str("INTERRUPT: HBL at PC=")+HEXSl(pc,6)+" "+scanline_cycle_log());
   
-  if (cpu_stopped)
-    M68K_UNSTOP;
+#if !defined(SSE_CPU_UNSTOP2)
+  M68K_UNSTOP;
+#endif
 
   // wobble?
 #if !defined(SSE_INT_JITTER_HBL)
@@ -104,8 +105,9 @@ inline void VBLInterrupt() {
 
   log_to_section(LOGSECTION_INTERRUPTS,EasyStr("INTERRUPT: VBL at PC=")+HEXSl(pc,6)+" time is "+ABSOLUTE_CPU_TIME+" ("+(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl)+" cycles into screen)");
 
-  if (cpu_stopped)
-    M68K_UNSTOP;
+#if !defined(SSE_CPU_UNSTOP2)
+  M68K_UNSTOP;
+#endif
 
   // wobble?
 #if defined(SSE_INT_JITTER_VBL_STE)

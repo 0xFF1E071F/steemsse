@@ -16,7 +16,8 @@
     WD1772 is also Steem's, written to run STW disk images.
 */
 enum { MNGR_STEEM=1,MNGR_PASTI,MNGR_CAPS,MNGR_WD1772};
-enum { EXT_ST=1,EXT_MSA,EXT_DIM,EXT_STT,EXT_STX,EXT_IPF,EXT_CTR,EXT_STW};
+enum { EXT_ST=1,EXT_MSA,EXT_DIM,EXT_STT,EXT_STX,EXT_IPF,EXT_CTR,EXT_STW,
+EXT_PRG,EXT_TOS};
 
   struct TImageType {
     BYTE Manager;

@@ -194,7 +194,7 @@ public:
   hxc_dropdown border_size_dd;
 #endif
 
-#if defined(SSE_VAR_MOUSE_CAPTURE)
+#if defined(SSE_GUI_MOUSE_CAPTURE)
   hxc_button capture_mouse_but;
 #endif
 
@@ -233,14 +233,14 @@ public:
   hxc_button enable_dsp_but;
 #endif
 
-#if defined(SSE_VAR_OPTION_SLOW_DISK)
+#if defined(SSE_GUI_OPTION_SLOW_DISK_SSE)
   hxc_button slow_disk_but;  
 #endif
 
 #endif
 
   void MachineUpdateIfVisible();
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_OPTIONS_REFRESH)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_OPTIONS_REFRESH)
   void SSEUpdateIfVisible();
 #endif
 

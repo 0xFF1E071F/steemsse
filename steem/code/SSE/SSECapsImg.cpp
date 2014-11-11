@@ -7,6 +7,9 @@
 #include <cpu.decla.h>
 #include <fdc.decla.h>
 #include <floppy_drive.decla.h>
+#if !defined(SSE_OSD) || SSE_VERSION<351
+#include <gui.decla.h> //DisableDiskLightAfter
+#endif
 #include <iorw.decla.h>
 #include <psg.decla.h>
 #include <run.decla.h>
@@ -77,11 +80,15 @@ int TCaps::Init() {
 #if defined(SSE_IPF_RUN_PRE_IO) || defined(SSE_IPF_RUN_POST_IO)
   CyclesRun=0;
 #endif
-#if defined(SSE_VAR_NOTIFY)
+#if defined(SSE_GUI_NOTIFY1)
   SetNotifyInitText(SSE_IPF_PLUGIN_FILE);
 #endif
 
   CapsVersionInfo versioninfo;
+  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+  // this is supposed to catch "SEH" (cpu/system) exceptions
+  // Default in VC6, option /EHa in VC2008
+  // If not, the DLL must be present
   try {
     CAPSInit();
   }
@@ -422,7 +429,7 @@ void TCaps::CallbackIRQ(PCAPSFDC pc, UDWORD lineout) {
 #endif
 }
 
-#if !defined(SSE_DEBUG_TRACE_CONTROL)
+#if !defined(SSE_BOILER_TRACE_CONTROL)
 #undef LOGSECTION
 //#define LOGSECTION LOGSECTION_IPF_LOCK_INFO
 #define LOGSECTION LOGSECTION_IMAGE_INFO
@@ -464,7 +471,7 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
 
     VERIFY( !CAPSUnlockTrack(Caps.ContainerID[drive],Caps.LockedTrack[drive],
       Caps.LockedSide[drive]) );
-#if defined(SSE_DEBUG_TRACE_CONTROL)
+#if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK3 & TRACE_CONTROL_FDCIPF1)
 #endif
     TRACE_LOG("CAPS Unlock %c:S%dT%d\n",drive+'A',Caps.LockedSide[drive],Caps.LockedTrack[drive]);
@@ -525,7 +532,7 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
 #if defined(SSE_IPF_TRACE_SECTORS) &&defined(SSE_DISK_IMAGETYPE) // debug info
   if(::SF314[drive].ImageType.Extension==EXT_IPF)
   {
-#if defined(SSE_DEBUG_TRACE_CONTROL) // controlled by boiler now (3.6.1)
+#if defined(SSE_BOILER_TRACE_CONTROL) // controlled by boiler now (3.6.1)
     if(TRACE_MASK3&TRACE_CONTROL_FDCIPF2) 
 #endif
     {

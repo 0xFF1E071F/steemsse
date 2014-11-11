@@ -3858,8 +3858,8 @@ and all his silly mods are gone!
 
 
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
-//#define TEST01
-//#define TEST02
+#define TEST01
+#define TEST02
 //#define TEST03
 //#define TEST04
 //#define TEST05
@@ -3875,6 +3875,14 @@ and all his silly mods are gone!
 //#define SSE_GUI_FULLSCREEN_NO_VSYNC_OPTION //but all the rest?
 //#define SSE_SCP
 //#define SSE_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
+
+
+
+#define SSE_GUI_OPTION_FOR_TESTS
+
+#define SSE_SOUND_VOL
+#define SSE_SOUND_VOL2
+
 
 #endif//beta
 

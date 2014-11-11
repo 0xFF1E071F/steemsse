@@ -2,11 +2,6 @@
 #ifndef SSEFRAMEREPORT_H
 #define SSEFRAMEREPORT_H
 
-/*  This is a copy of SSEShifterEvents with 'Frame' instead of
-    'Shifter' because a frame report may contain other
-    interesting events. Later SSEShifterEvents will be 
-    removed.
-*/
 #if defined(SSE_DEBUG_FRAME_REPORT)
 
 #if defined(SSE_STRUCTURE_SSEFRAMEREPORT_OBJ)
@@ -109,3 +104,4 @@ inline void TFrameEvents::Add(int scanline, int cycle, char type, int value) {
 #endif
 
 #endif//#ifndef SSEFRAMEREPORT_H
+

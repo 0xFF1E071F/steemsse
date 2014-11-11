@@ -111,6 +111,7 @@ extern HWND  StemWin;
 //---------------------------------------------------------------------------
 void exception(int exn,exception_action ea,MEM_ADDRESS a)
 {
+  ASSERT(!Blit.HasBus); // cases?
   io_word_access=0;
   ioaccess=0;
   ExceptionObject.init(exn,ea,a);
@@ -433,7 +434,7 @@ void inline prepare_next_event() //SS check this "inline" thing
 #define LOGSECTION LOGSECTION_MFP_TIMERS
 
 
-#if defined(SSE_MFP_RATIO_PRECISION)
+#if defined(SSE_INT_MFP_RATIO_PRECISION)
 
 #define HANDLE_TIMEOUT(tn) \
   log(Str("MFP: Timer ")+char('A'+tn)+" timeout at "+ABSOLUTE_CPU_TIME+" timeout was "+mfp_timer_timeout[tn]+ \
@@ -687,7 +688,7 @@ void event_scanline()
 #endif
     time_of_next_timer_b=time_of_next_event
       +cpu_cycles_from_hbl_to_timer_b+TB_TIME_WOBBLE;
-#if defined(SSE_MFP_TIMER_B_AER)
+#if defined(SSE_INT_MFP_TIMER_B_AER)
 //  from Hatari, fixes Seven Gates of Jambala; Trex Warrior
     if(mfp_reg[1]&8)
       time_of_next_timer_b-=320; //gross?
@@ -725,7 +726,7 @@ void event_scanline()
   log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: Event Scanline at end of line ")+scan_y+" sdp is $"+HEXSl(shifter_draw_pointer,6));
   
 #if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER) &&!defined(SSE_SHIFTER_DRAW_DBG)
-  Shifter.EndHBL(); // check for +2 -2 errors + unstable shifter
+  Shifter.EndHBL(); // check for +2 -2 errors + unstable Shifter
   Shifter.CheckVerticalOverscan(); // top & bottom borders
 #else // Steem 3.2's vertical overscan check
   if (shifter_freq_at_start_of_vbl==50){
@@ -803,6 +804,14 @@ void event_scanline()
   }
   right_border_changed=0;
   scanline_drawn_so_far=0;
+
+#if defined(SSE_MMU_SDP1)
+/*  Enforce register limitations, so that "report SDP" isn't messed up
+    in the debug build.
+*/
+  shifter_draw_pointer&=0x3FFFFE;
+#endif
+
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
   /////// SS as defined in draw.cpp,
   /////// and relative to cpu_time_of_last_vbl:
@@ -1030,7 +1039,11 @@ void event_vbl_interrupt() //SS misleading name?
           }
         }else if (FullScreen){ //finish fudging
           WIN_ONLY( draw_fs_topgap=40; )
+#if defined(SSE_VAR_RESIZE_370)
+          draw_grille_black=max((int)draw_grille_black,4);
+#else
           draw_grille_black=max(draw_grille_black,4);
+#endif
         }
       }
     }
@@ -1373,6 +1386,7 @@ void event_vbl_interrupt() //SS misleading name?
   else if(screen_res==2 && !(Shifter.m_ShiftMode&2) && COLOUR_MONITOR) 
   {
     screen_res=Shifter.m_ShiftMode&2;//0;//back to LORES
+//    BRK(yoho);
     shifter_freq=50;
     shifter_freq_idx=0;
     init_screen();
@@ -1392,7 +1406,7 @@ void event_vbl_interrupt() //SS misleading name?
   screen_event_pointer++;
   if (screen_event_pointer->event==NULL){
     cpu_time_of_start_of_event_plan=cpu_time_of_last_vbl;
-#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_RATIO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO)
     if (n_cpu_cycles_per_second>CpuNormalHz){
 #else
     if (n_cpu_cycles_per_second>8000000){
@@ -1428,19 +1442,23 @@ void event_vbl_interrupt() //SS misleading name?
 #if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER)
   Shifter.Vbl();
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_FRAME_REPORT_SHIFTMODE)
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER) && defined(SSE_DEBUG)
+#if defined(SSE_DEBUG_FRAME_REPORT_SHIFTMODE)
   FrameEvents.Add(scan_y,0,'R',Shifter.m_ShiftMode); 
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_FRAME_REPORT_SYNCMODE)
+#if defined(SSE_DEBUG_FRAME_REPORT_SYNCMODE)
   FrameEvents.Add(scan_y,0,'S',Shifter.m_SyncMode); 
 #endif
-
 #if defined(SSE_DEBUG_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SHIFTMODE) 
     FrameEvents.Add(scan_y,0,'R',Shifter.m_ShiftMode); 
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SYNCMODE)
     FrameEvents.Add(scan_y,0,'S',Shifter.m_SyncMode); 
 #endif
+#endif
+
+
 
 #if defined(SSE_TIMINGS_FRAME_ADJUSTMENT)
   if(shifter_freq_at_start_of_vbl==50)
@@ -1473,8 +1491,17 @@ void prepare_cpu_boosted_event_plans()
     }
     scanline_time_in_cpu_cycles[idx]=(scanline_time_in_cpu_cycles_8mhz[idx]*factor)/8;
   }
+  //TRACE("factor %d\n",factor);
   for (int n=0;n<16;n++){
+#if defined(SSE_INT_MFP_TIMERS_NO_BOOST_LIMIT)
+/*  We leave the prescale unlimited, it won't mess timings if the value is small 
+    enough... but what if it's big?
+*/
+    mfp_timer_prescale[n]=(mfp_timer_8mhz_prescale[n]*factor)/8;
+#else
     mfp_timer_prescale[n]=min((mfp_timer_8mhz_prescale[n]*factor)/8,1000);
+#endif
+    //TRACE("mfp_timer_prescale[%d]=%d (%d) (%d)\n",n,mfp_timer_prescale[n],(mfp_timer_8mhz_prescale[n]*factor)/8,mfp_timer_8mhz_prescale[n]);
   }
 //  init_timings();
   mfp_init_timers();
@@ -1494,12 +1521,12 @@ void event_pasti_update()
     SF314[floppy_current_drive()].ImageType!=3
 #endif
 #if defined(SSE_PASTI_ONLY_STX_HD) && defined(SSE_DMA)
-    //&& ! ( pasti_active && (Dma.MCR&BIT_3)) // hard disk handling by pasti
+//    && ! ( pasti_active && (Dma.MCR&BIT_3)) // hard disk handling by pasti
     && ! ( pasti_active && (Dma.MCR&TDma::CR_HDC_OR_FDC)) // hard disk handling by pasti
 #endif
 #endif
     ){
-#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_RATIO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO)
     pasti_update_time=ABSOLUTE_CPU_TIME+CpuNormalHz;
 #else
     pasti_update_time=ABSOLUTE_CPU_TIME+8000000;
@@ -1521,6 +1548,165 @@ void event_pasti_update()
 #endif
 //---------------------------------------------------------------------------
 #if defined(STEVEN_SEAGAL) // added events
+
+#if defined(SSE_ACIA_IRQ_DELAY) // <v3.5.2
+/*  Imitating a Hatari feature, we implement a short delay between the time
+    a byte has been transferred from the ACIA's shift register to its RDR,
+    and the time IRQ is set in the SR.
+    We add on the "event" system of Steem, which gives cycle accuracy.
+    This feature doesn't depend on HD6301 true emu.
+    It fixes V8 Music System.
+    This has been removed in v3.5.2 and replaced with an MFP fix, also copied
+    from Hatari, that seems more correct (SSE_ACIA_IRQ_DELAY not defined).
+*/
+
+#define LOGSECTION LOGSECTION_IKBD
+
+void event_acia_rx_irq() { 
+  int lcycles=ABSOLUTE_CPU_TIME-ikbd.timer_when_keyboard_info;
+  ASSERT( ACIA_IKBD.rx_stage );
+
+  // RDRS->RDR
+  if(ACIA_IKBD.rx_stage==1) 
+  { 
+    ASSERT(lcycles>=HD6301_TO_ACIA_IN_CYCLES);
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_DOUBLE_BUFFER_RX)//TX?!
+    // here we should take care of next byte but we have another
+    // problem anyway (txinterrupts)
+    ASSERT(ACIA_IKBD.LineRxBusy)
+    if(ACIA_IKBD.LineRxBusy)
+    {
+      ACIA_IKBD.LineRxBusy=false;
+#if defined(SSE_IKBD_6301) 
+      if(HD6301EMU_ON)
+        hd6301_completed_transmission_to_MC6850=true;
+#endif
+    }
+#endif
+
+    ASSERT( !ikbd.send_nothing );
+    ASSERT( keyboard_buffer_length );
+
+    // run-time safety
+    if(ikbd.send_nothing || !keyboard_buffer_length) 
+    {
+      ACIA_IKBD.rx_stage=0; // avoid infinite loop (hanging)
+      return; 
+    }
+    else
+    {
+      keyboard_buffer_length--;
+      ASSERT( keyboard_buffer_length>=0 );
+      if(!HD6301EMU_ON)
+      {
+        if(ikbd.joy_packet_pos>=keyboard_buffer_length) 
+          ikbd.joy_packet_pos=-1;
+        if(ikbd.mouse_packet_pos>=keyboard_buffer_length) 
+          ikbd.mouse_packet_pos=-1;
+      }
+
+#if defined(SSE_ACIA_TEST_REGISTERS)
+      ASSERT( !(!(ACIA_IKBD.SR&BIT_0)^!(ACIA_IKBD.rx_not_read)) );
+#endif
+
+#if defined(SSE_ACIA_REGISTERS)
+      ACIA_IKBD.RDR=ACIA_IKBD.RDRS;
+#endif
+#if !defined(SSE_ACIA_USE_REGISTERS) || defined(SSE_ACIA_TEST_REGISTERS)
+      ACIA_IKBD.data=keyboard_buffer[keyboard_buffer_length];
+#endif
+#if defined(SSE_ACIA_TEST_REGISTERS)
+      ASSERT( ACIA_IKBD.RDR==ACIA_IKBD.data );
+#endif
+      TRACE_LOG("ACIA RDRS->RDR %X (%d cycles)\n",keyboard_buffer[keyboard_buffer_length],lcycles);
+
+/*  Check overrun.
+    The overrun isn't set before the data is read, Steem was right on this.
+    But it seems previous byte is lost, not new one (TESTING), see above,
+    it was already copied.
+*/
+#if defined(SSE_ACIA_USE_REGISTERS)
+      if(ACIA_IKBD.SR&BIT_0) // RDR full
+#else
+      if(ACIA_IKBD.rx_not_read)
+#endif
+      {
+        if(ACIA_IKBD.overrun!=ACIA_OVERRUN_YES) 
+        {
+          TRACE_LOG("ACIA IKBD OVR\n");
+          ACIA_IKBD.overrun=ACIA_OVERRUN_COMING;
+#if defined(SSE_ACIA_REGISTERS)
+          ACIA_IKBD.SR|=BIT_5;
+#endif
+        }
+      }
+      else // not overrun, OK
+      {
+#if !defined(SSE_ACIA_USE_REGISTERS) || defined(SSE_ACIA_TEST_REGISTERS)
+        ACIA_IKBD.rx_not_read=true;
+#endif
+#if defined(SSE_ACIA_REGISTERS)
+        ACIA_IKBD.SR|=BIT_0; // RDR full
+        ACIA_IKBD.SR&=~BIT_5; // no overrun
+#endif
+      }
+
+
+/*  Check IRQ
+*/
+#if defined(SSE_ACIA_TEST_REGISTERS)
+//      ASSERT( !(!(ACIA_IKBD.CR&BIT_7)^!(ACIA_IKBD.rx_irq_enabled)) );
+      if(!(ACIA_IKBD.CR&BIT_7)^!(ACIA_IKBD.rx_irq_enabled))
+        TRACE_LOG("ACIA IKBD IRQ RX enabled difference: CR %X rx_irq_enabled %d\n",ACIA_IKBD.CR,ACIA_IKBD.rx_irq_enabled);
+#endif
+#if defined(SSE_ACIA_USE_REGISTERS)
+      if(ACIA_IKBD.CR&BIT_7)
+#else
+      if(ACIA_IKBD.rx_irq_enabled)
+#endif
+        ACIA_IKBD.rx_stage++; // 2: irq can trigger
+      else
+        ACIA_IKBD.rx_stage=0; // we're done
+      
+      // More to process?
+      if(keyboard_buffer_length) 
+      {
+        agenda_add(agenda_keyboard_replace,HD6301_TO_ACIA_IN_HBL,0);
+#if defined(SSE_ACIA_USE_REGISTERS)
+        ACIA_IKBD.RDRS=keyboard_buffer[keyboard_buffer_length-1];
+#endif
+      }
+      if(macro_start_after_ikbd_read_count) 
+        macro_start_after_ikbd_read_count--;
+    }
+  }
+  // set IRQ
+  if(ACIA_IKBD.rx_stage==2 && lcycles
+    >=HD6301_TO_ACIA_IN_CYCLES+SSE_ACIA_IRQ_DELAY_CYCLES
+   ) 
+  {
+#if defined(SSE_ACIA_TEST_REGISTERS)
+    ASSERT( ACIA_IKBD.CR&BIT_7 );
+    ASSERT( ACIA_IKBD.rx_irq_enabled );
+#endif
+#if defined(SSE_ACIA_REGISTERS)
+    if(ACIA_IKBD.CR&BIT_7)
+      ACIA_IKBD.SR|=BIT_7;
+#endif
+#if !defined(SSE_ACIA_USE_REGISTERS) || defined(SSE_ACIA_TEST_REGISTERS)
+    ACIA_IKBD.irq=true;
+#endif
+    TRACE_LOG("ACIA IRQ (RDR) (%d cycles)\n",lcycles);
+    mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0);
+    ACIA_IKBD.rx_stage=0;
+  }
+}
+#undef LOGSECTION
+#endif
+
+
+
 
 #if defined(SSE_INT_VBI_START)
 void event_trigger_vbi() { //6X cycles into frame (reference end of HSYNC)

@@ -113,7 +113,7 @@ is issued, and that the reset was active for at least 132 clock cycles [27].
 void power_on()
 {
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_STATUS_STRING)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_STATUS_STRING)
   GUIRefreshStatusBar();//overkill
 #endif
 
@@ -210,7 +210,7 @@ void power_on()
   SwitchSTType(ST_TYPE);
 #endif
 
-#if defined(SSE_MFP_TxDR_RESET)
+#if defined(SSE_INT_MFP_TxDR_RESET)
   ZeroMemory(&mfp_reg[MFPR_TADR],4);
 #endif
 
@@ -248,7 +248,7 @@ void reset_peripherals(bool Cold)
     TRACE_LOG("Reset peripherals (warm)\n");
 
 #if defined(SSE_OSD_CONTROL)
-  if( !Cold && (OSD_MASK1&OSD_CONTROL_RESET)) 
+  if( !Cold && (OSD_MASK_CPU&OSD_CONTROL_CPURESET)) 
     TRACE_OSD("RESET");
 #endif
 
@@ -265,9 +265,16 @@ void reset_peripherals(bool Cold)
 #endif
 
   if (COLOUR_MONITOR){
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY4)
+    BYTE old_screen_res=screen_res;
+#endif
     screen_res=0;
     shifter_freq=60; // SS notice reset freq=60hz
     shifter_freq_idx=1;
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY4)
+    if(old_screen_res==2)
+      init_screen(); // or some bad crashes
+#endif
   }else{
     screen_res=2;
     shifter_freq=MONO_HZ;
@@ -336,12 +343,12 @@ void reset_peripherals(bool Cold)
     Caps.Reset();
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_TxDR_RESET)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_TxDR_RESET)
   DWORD tmp;
   memcpy(&tmp,&mfp_reg[MFPR_TADR],4);
 #endif
   ZeroMemory(mfp_reg,sizeof(mfp_reg));
-#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_TxDR_RESET)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_TxDR_RESET)
   if(!Cold)
     memcpy(&mfp_reg[MFPR_TADR],&tmp,4);
 #endif
@@ -381,7 +388,9 @@ void reset_peripherals(bool Cold)
   ikbd_reset(true); // Always cold reset, soft reset is different
 
 #if defined(SSE_IKBD_6301)
+#if SSE_VERSION>=351
   HD6301.ResetChip(Cold);
+#endif
   if(Cold) // only cold
     keyboard_buffer_length=0; // cold reset & run, Transbeauce 2
 #endif

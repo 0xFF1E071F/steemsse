@@ -8,6 +8,7 @@ Just tested the STOP jitter behaviour.
 It is identical with GLUE wake up state 1 and 2: it is cyclic with
  5 positions [8,0,4,0,4],8,0,4,0,4,8, ...
  "
+ Since v3.6.4, we prefer the E-clock approach (when 6301/ACIA selected)
 */
   int HblJitter[] = {8,4,4,0,0}; 
   int HblJitterIndex;  // 3.6.1 reset at cold reset
@@ -21,8 +22,8 @@ It is identical with GLUE wake up state 1 and 2: it is cyclic with
 
 #endif
 
-#if defined(SSE_MFP_RATIO) // need no SSE_STF
-#if defined(SSE_MFP_RATIO_STE)
+#if defined(SSE_INT_MFP_RATIO) // need no SSE_STF
+#if defined(SSE_INT_MFP_RATIO_STE)
 double CpuMfpRatio=(double)CPU_STE_TH/(double)MFP_CLK_STE_EXACT;
 #else
 double CpuMfpRatio=(double)CPU_STE_TH/(double)MFP_CLK_LE_EXACT;

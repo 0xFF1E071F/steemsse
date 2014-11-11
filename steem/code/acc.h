@@ -101,7 +101,7 @@ WORD change_endian(WORD x); // double of something?
                                     {"IO",LOGSECTION_IO},
                                     {"Crash",LOGSECTION_CRASH},
                                     {"CPU",LOGSECTION_CPU},
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_NODIV))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_BOILER_NODIV))
                                     {"Div Instructions",LOGSECTION_DIV},
 #endif
                                     {"Trace",LOGSECTION_TRACE},

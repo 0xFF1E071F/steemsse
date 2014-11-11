@@ -875,21 +875,7 @@ signed int compare_buffer;
 
 #ifndef DETECT_TRACE_BIT
 
-
-#if defined(SSE_CPU_TRACE2___)
-#define DETECT_TRACE_BIT  {\
-  if (sr & SR_TRACE)\
-  {\
-    ioaccess=TRACE_BIT_JUST_SET | (ioaccess & IOACCESS_FLAGS_MASK);\
-    M68000.TraceStatus=TM68000::TRACE_NEXT;\
-  }\
-  else\
-    M68000.TraceStatus=TM68000::NO_TRACE;\
-  }
-  
-#else
 #define DETECT_TRACE_BIT {if (sr & SR_TRACE) ioaccess=TRACE_BIT_JUST_SET | (ioaccess & IOACCESS_FLAGS_MASK);}
-#endif
 
 #endif
 

@@ -367,6 +367,7 @@ LRESULT __stdcall THardDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARA
           }
         }
       }else if (ID==90){
+///        BRK(yoho);
         This->DisableHardDrives=SendMessage(HWND(lPar),BM_GETCHECK,0,0)==BST_CHECKED;
       }else if (ID==IDOK || ID==IDCANCEL){
         if (HIWORD(wPar)==BN_CLICKED){

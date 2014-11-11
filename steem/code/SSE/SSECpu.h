@@ -4,7 +4,6 @@
 
 #if defined(SSE_CPU)
 
-
 #if defined(SSE_STRUCTURE_CPU_H)
 
 #include <cpu.decla.h>
@@ -63,18 +62,265 @@ extern void (*m68k_jump_get_source_l_not_a[8])();
 
 #endif//!defined(SSE_STRUCTURE_CPU_H)
 
+#if !defined(SSE_SHIFTER)
+#include "SSEFrameReport.h" //for some trace
+#endif
 
 #if defined(SSE_CPU_INLINE_READ_BWL)
 #define m68k_READ_B(addr) M68000.ReadB(addr);
 #define m68k_READ_W(addr) M68000.ReadW(addr);
 #define m68k_READ_L(addr) M68000.ReadL(addr);
+#else //for versions <360
+
+#define m68k_READ_B(addr)                              \
+  m68k_src_b=m68k_peek(addr);                           \
+
+#define m68k_READ_W(addr)                              \
+  m68k_src_w=m68k_dpeek(addr);                           \
+
+#define m68k_READ_L(addr)                              \
+  m68k_src_l=m68k_lpeek(addr);                           \
+
 #endif
 
 #if defined(SSE_CPU_INLINE_READ_FROM_ADDR)
 #define m68k_READ_B_FROM_ADDR M68000.m68kReadBFromAddr();
 #define m68k_READ_W_FROM_ADDR M68000.m68kReadWFromAddr();
 #define m68k_READ_L_FROM_ADDR M68000.m68kReadLFromAddr();
+#else //for versions <360 (big block)
+
+#if !defined(SSE_CPU_INLINE_READ_FROM_ADDR)
+
+#if defined(SSE_MMU_NO_CONFUSION) //<352
+
+#define m68k_READ_B_FROM_ADDR                         \
+  abus&=0xffffff;                                   \
+  if(abus>=himem){                                  \
+    if(abus>=MEM_IO_BASE){            \
+      if(SUPERFLAG)m68k_src_b=io_read_b(abus);           \
+      else exception(BOMBS_BUS_ERROR,EA_READ,abus);         \
+    }else if(abus>=0xfc0000){                             \
+      if(tos_high && abus<(0xfc0000+192*1024))m68k_src_b=ROM_PEEK(abus-rom_addr);   \
+      else if (abus<0xfe0000 || abus>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,abus);  \
+    }else if(abus>=MEM_EXPANSION_CARTRIDGE){           \
+      if(cart){                                             \
+        m68k_src_b=CART_PEEK(abus-MEM_EXPANSION_CARTRIDGE);  \
+      }else{                                                 \
+        m68k_src_b=0xff;                                    \
+      }                                                     \
+    }else if (abus>=rom_addr){                         \
+      if(abus<(0xe00000+256*1024))m68k_src_b=ROM_PEEK(abus-rom_addr);                           \
+      else if (abus>=0xec0000) exception(BOMBS_BUS_ERROR,EA_READ,abus);          \
+      else m68k_src_b=0xff;                                          \
+    }else if (abus>=0xd00000 && abus<0xd80000){ \
+      m68k_src_b=0xff;                                          \
+    }else if(abus>=FOUR_MEGS){                   \
+      exception(BOMBS_BUS_ERROR,EA_READ,abus);                          \
+    }else{                                                     \
+      m68k_src_b=0xff;                                          \
+    }                                                             \
+  }else if(abus>=MEM_START_OF_USER_AREA){                                              \
+    DEBUG_CHECK_READ_B(abus);  \
+    m68k_src_b=(BYTE)(PEEK(abus));                  \
+  }else if(SUPERFLAG){     \
+    DEBUG_CHECK_READ_B(abus);  \
+    m68k_src_b=(BYTE)(PEEK(abus));                  \
+  }else exception(BOMBS_BUS_ERROR,EA_READ,abus);
+
+
+#define m68k_READ_W_FROM_ADDR           \
+  abus&=0xffffff;                                   \
+  if(abus&1){                                      \
+    exception(BOMBS_ADDRESS_ERROR,EA_READ,abus);    \
+  }else if(abus>=himem){                                  \
+    if(abus>=MEM_IO_BASE){            \
+      if(SUPERFLAG)m68k_src_w=io_read_w(abus);           \
+      else exception(BOMBS_BUS_ERROR,EA_READ,abus);         \
+    }else if(abus>=0xfc0000){                             \
+      if (tos_high && abus<(0xfc0000+192*1024)) m68k_src_w=ROM_DPEEK(abus-rom_addr);   \
+      else if (abus<0xfe0000 || abus>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,abus);  \
+    }else if(abus>=MEM_EXPANSION_CARTRIDGE){           \
+      if(cart){                                             \
+        m68k_src_w=CART_DPEEK(abus-MEM_EXPANSION_CARTRIDGE);  \
+      }else{                                                 \
+        m68k_src_w=0xffff;                                    \
+      }                                                     \
+    }else if(abus>=rom_addr){                         \
+      if(abus<(0xe00000+256*1024)) m68k_src_w=ROM_DPEEK(abus-rom_addr);                           \
+      else if (abus>=0xec0000) exception(BOMBS_BUS_ERROR,EA_READ,abus);          \
+      else m68k_src_w=0xffff;                                          \
+    }else if (abus>=0xd00000 && abus<0xd80000){ \
+      m68k_src_w=0xffff;                                          \
+    }else if(abus>=FOUR_MEGS){                   \
+      exception(BOMBS_BUS_ERROR,EA_READ,abus);                          \
+    }else{                                                     \
+      m68k_src_w=0xffff;                                          \
+    }                                                             \
+  }else if(abus>=MEM_START_OF_USER_AREA){                                              \
+    DEBUG_CHECK_READ_W(abus);  \
+    m68k_src_w=DPEEK(abus);                  \
+  }else if(SUPERFLAG){     \
+    DEBUG_CHECK_READ_W(abus);  \
+    m68k_src_w=DPEEK(abus);                  \
+  }else exception(BOMBS_BUS_ERROR,EA_READ,abus);
+
+#define m68k_READ_L_FROM_ADDR                        \
+  abus&=0xffffff;                                   \
+  if(abus&1){                                      \
+    exception(BOMBS_ADDRESS_ERROR,EA_READ,abus);    \
+  }else if(abus>=himem){                                  \
+    if(abus>=MEM_IO_BASE){           \
+      if(SUPERFLAG)m68k_src_l=io_read_l(abus);          \
+      else exception(BOMBS_BUS_ERROR,EA_READ,abus);         \
+    }else if(abus>=0xfc0000){                             \
+      if(tos_high && abus<(0xfc0000+192*1024-2)) m68k_src_l=ROM_LPEEK(abus-rom_addr);   \
+      else if (abus<0xfe0000 || abus>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,abus);  \
+    }else if(abus>=MEM_EXPANSION_CARTRIDGE){           \
+      if(cart){                                             \
+        m68k_src_l=CART_LPEEK(abus-MEM_EXPANSION_CARTRIDGE);  \
+      }else{                                                 \
+        m68k_src_l=0xffffffff;                                    \
+      }                                                     \
+    }else if(abus>=rom_addr){                         \
+      if(abus<(0xe00000+256*1024-2)) m68k_src_l=ROM_LPEEK(abus-rom_addr);   \
+      else if (abus>=0xec0000) exception(BOMBS_BUS_ERROR,EA_READ,abus);          \
+      else m68k_src_l=0xffffffff;                                          \
+    }else if (abus>=0xd00000 && abus<0xd80000-2){ \
+      m68k_src_l=0xffffffff;                                          \
+    }else if (abus>=FOUR_MEGS){                   \
+      exception(BOMBS_BUS_ERROR,EA_READ,abus);                          \
+    }else{                                                     \
+      m68k_src_l=0xffffffff;                                          \
+    }                                                             \
+  }else if(abus>=MEM_START_OF_USER_AREA){                                              \
+    DEBUG_CHECK_READ_L(abus);  \
+    m68k_src_l=LPEEK(abus);                  \
+  }else if(SUPERFLAG){     \
+    DEBUG_CHECK_READ_L(abus);  \
+    m68k_src_l=LPEEK(abus);                  \
+  }else exception(BOMBS_BUS_ERROR,EA_READ,abus);
+
+
+
+#else //352+
+
+#define m68k_READ_B_FROM_ADDR                         \
+  abus&=0xffffff;                                   \
+  if(abus>=himem){                                  \
+    if(abus>=MEM_IO_BASE){            \
+      if(SUPERFLAG)m68k_src_b=io_read_b(abus);           \
+      else exception(BOMBS_BUS_ERROR,EA_READ,abus);         \
+    }else if(abus>=0xfc0000){                             \
+      if(tos_high && abus<(0xfc0000+192*1024))m68k_src_b=ROM_PEEK(abus-rom_addr);   \
+      else if (abus<0xfe0000 || abus>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,abus);  \
+    }else if(abus>=MEM_EXPANSION_CARTRIDGE){           \
+      if(cart){                                             \
+        m68k_src_b=CART_PEEK(abus-MEM_EXPANSION_CARTRIDGE);  \
+      }else{                                                 \
+        m68k_src_b=0xff;                                    \
+      }                                                     \
+    }else if (abus>=rom_addr){                         \
+      if(abus<(0xe00000+256*1024))m68k_src_b=ROM_PEEK(abus-rom_addr);                           \
+      else if (abus>=0xec0000) exception(BOMBS_BUS_ERROR,EA_READ,abus);          \
+      else m68k_src_b=0xff;                                          \
+    }else if (abus>=0xd00000 && abus<0xd80000){ \
+      m68k_src_b=0xff;                                          \
+    }else if(mmu_confused){                            \
+      m68k_src_b=mmu_confused_peek(abus,true);                                         \
+    }else if(abus>=FOUR_MEGS){                   \
+      exception(BOMBS_BUS_ERROR,EA_READ,abus);                          \
+    }else{                                                     \
+      m68k_src_b=0xff;                                          \
+    }                                                             \
+  }else if(abus>=MEM_START_OF_USER_AREA){                                              \
+    DEBUG_CHECK_READ_B(abus);  \
+    m68k_src_b=(BYTE)(PEEK(abus));                  \
+  }else if(SUPERFLAG){     \
+    DEBUG_CHECK_READ_B(abus);  \
+    m68k_src_b=(BYTE)(PEEK(abus));                  \
+  }else exception(BOMBS_BUS_ERROR,EA_READ,abus);
+
+
+#define m68k_READ_W_FROM_ADDR           \
+  abus&=0xffffff;                                   \
+  if(abus&1){                                      \
+    exception(BOMBS_ADDRESS_ERROR,EA_READ,abus);    \
+  }else if(abus>=himem){                                  \
+    if(abus>=MEM_IO_BASE){            \
+      if(SUPERFLAG)m68k_src_w=io_read_w(abus);           \
+      else exception(BOMBS_BUS_ERROR,EA_READ,abus);         \
+    }else if(abus>=0xfc0000){                             \
+      if (tos_high && abus<(0xfc0000+192*1024)) m68k_src_w=ROM_DPEEK(abus-rom_addr);   \
+      else if (abus<0xfe0000 || abus>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,abus);  \
+    }else if(abus>=MEM_EXPANSION_CARTRIDGE){           \
+      if(cart){                                             \
+        m68k_src_w=CART_DPEEK(abus-MEM_EXPANSION_CARTRIDGE);  \
+      }else{                                                 \
+        m68k_src_w=0xffff;                                    \
+      }                                                     \
+    }else if(abus>=rom_addr){                         \
+      if(abus<(0xe00000+256*1024)) m68k_src_w=ROM_DPEEK(abus-rom_addr);                           \
+      else if (abus>=0xec0000) exception(BOMBS_BUS_ERROR,EA_READ,abus);          \
+      else m68k_src_w=0xffff;                                          \
+    }else if (abus>=0xd00000 && abus<0xd80000){ \
+      m68k_src_w=0xffff;                                          \
+    }else if(mmu_confused){                            \
+      m68k_src_w=mmu_confused_dpeek(abus,true);                                         \
+    }else if(abus>=FOUR_MEGS){                   \
+      exception(BOMBS_BUS_ERROR,EA_READ,abus);                          \
+    }else{                                                     \
+      m68k_src_w=0xffff;                                          \
+    }                                                             \
+  }else if(abus>=MEM_START_OF_USER_AREA){                                              \
+    DEBUG_CHECK_READ_W(abus);  \
+    m68k_src_w=DPEEK(abus);                  \
+  }else if(SUPERFLAG){     \
+    DEBUG_CHECK_READ_W(abus);  \
+    m68k_src_w=DPEEK(abus);                  \
+  }else exception(BOMBS_BUS_ERROR,EA_READ,abus);
+
+#define m68k_READ_L_FROM_ADDR                        \
+  abus&=0xffffff;                                   \
+  if(abus&1){                                      \
+    exception(BOMBS_ADDRESS_ERROR,EA_READ,abus);    \
+  }else if(abus>=himem){                                  \
+    if(abus>=MEM_IO_BASE){           \
+      if(SUPERFLAG)m68k_src_l=io_read_l(abus);          \
+      else exception(BOMBS_BUS_ERROR,EA_READ,abus);         \
+    }else if(abus>=0xfc0000){                             \
+      if(tos_high && abus<(0xfc0000+192*1024-2)) m68k_src_l=ROM_LPEEK(abus-rom_addr);   \
+      else if (abus<0xfe0000 || abus>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,abus);  \
+    }else if(abus>=MEM_EXPANSION_CARTRIDGE){           \
+      if(cart){                                             \
+        m68k_src_l=CART_LPEEK(abus-MEM_EXPANSION_CARTRIDGE);  \
+      }else{                                                 \
+        m68k_src_l=0xffffffff;                                    \
+      }                                                     \
+    }else if(abus>=rom_addr){                         \
+      if(abus<(0xe00000+256*1024-2)) m68k_src_l=ROM_LPEEK(abus-rom_addr);   \
+      else if (abus>=0xec0000) exception(BOMBS_BUS_ERROR,EA_READ,abus);          \
+      else m68k_src_l=0xffffffff;                                          \
+    }else if (abus>=0xd00000 && abus<0xd80000-2){ \
+      m68k_src_l=0xffffffff;                                          \
+    }else if (mmu_confused){                            \
+      m68k_src_l=mmu_confused_lpeek(abus,true);                                         \
+    }else if (abus>=FOUR_MEGS){                   \
+      exception(BOMBS_BUS_ERROR,EA_READ,abus);                          \
+    }else{                                                     \
+      m68k_src_l=0xffffffff;                                          \
+    }                                                             \
+  }else if(abus>=MEM_START_OF_USER_AREA){                                              \
+    DEBUG_CHECK_READ_L(abus);  \
+    m68k_src_l=LPEEK(abus);                  \
+  }else if(SUPERFLAG){     \
+    DEBUG_CHECK_READ_L(abus);  \
+    m68k_src_l=LPEEK(abus);                  \
+  }else exception(BOMBS_BUS_ERROR,EA_READ,abus);
+
+
 #endif
+#endif
+#endif//?SSE_CPU_INLINE_READ_FROM_ADDR
 
 
 #ifdef DEBUG_BUILD
@@ -136,6 +382,7 @@ void m68k_lpoke_abus2(LONG);
 struct TM68000 {
   TM68000();
 #if defined(SSE_CPU_PREFETCH_TIMING) && !defined(SSE_CPU_PREFETCH_TIMING_EXCEPT)
+#else//for v341-
   inline void FetchTiming();
   inline void FetchTimingNoRound();
 #endif
@@ -627,12 +874,12 @@ inline void TM68000::PerformRte() {
   DETECT_CHANGE_TO_USER_MODE;         
   DETECT_TRACE_BIT;     
 
-#if defined(SSE_MFP_IRQ_DELAY2)
-/*  v3.5.3: hack for Audio Artistic Demo removed (SSE_MFP_IRQ_DELAY2 not 
+#if defined(SSE_INT_MFP_IRQ_DELAY2)
+/*  v3.5.3: hack for Audio Artistic Demo removed (SSE_INT_MFP_IRQ_DELAY2 not 
     defined)
     Doesn't make sense and breaks ST Magazine STE Demo (Stax 65)!
-    See more robust hacks in mfp.cpp, SSE_MFP_PATCH_TIMER_D and 
-    SSE_MFP_WRITE_DELAY1.
+    See more robust hacks in mfp.cpp, SSE_INT_MFP_PATCH_TIMER_D and 
+    SSE_INT_MFP_WRITE_DELAY1.
 */
   if(SSE_HACKS_ON && (ioaccess&IOACCESS_FLAG_DELAY_MFP))
   {

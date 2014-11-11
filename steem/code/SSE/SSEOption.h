@@ -44,6 +44,10 @@ struct TOption {
   unsigned int PSGMod:1;
   unsigned int PSGFixedVolume:1;
   unsigned int GhostDisk:1;
+  unsigned int Direct3D:1;
+  unsigned int STAspectRatio:1;
+  unsigned int DriveSoundSeekSample:1;
+  unsigned int TestingNewFeatures:1;
 #ifdef __cplusplus // visible only to C++ objects
   TOption();
   void Init();
@@ -84,6 +88,13 @@ extern struct TOption SSEOption;
 #define SSE_3BUFFER (SSEOption.TripleBuffer)
 //#define SSE_DRIVE_SOUND (SSEOption.DriveSound)
 #define SSE_GHOST_DISK (SSEOption.GhostDisk)
+#define SSE_OPTION_D3D (SSEOption.Direct3D)
+#define SSE_OPTION_PSG (SSEOption.PSGMod)
+#define SSE_OPTION_PSG_FIXED (SSEOption.PSGFixedVolume)
+#define OPTION_ST_ASPECT_RATIO (SSEOption.STAspectRatio)
+#define DRIVE_SOUND_SEEK_SAMPLE (SSEOption.DriveSoundSeekSample)
+#define SSE_TEST_ON (SSEOption.TestingNewFeatures)
+
 #else//!defined(SSE_SSE_OPTION_STRUCT)
 
 #endif//#if defined(SSE_SSE_OPTION_STRUCT)
@@ -93,7 +104,7 @@ extern struct TOption SSEOption;
 
 struct TConfig {
 
-  int DDFullscreenMask; // mask?
+  int FullscreenMask; // mask?
 
   // files to load at start, were they found?
   unsigned int UnrarDll:1;
@@ -102,6 +113,7 @@ struct TConfig {
   unsigned int Unzip32Dll:1;
   unsigned int CapsImgDll:1;
   unsigned int PastiDll:1;
+  unsigned int Direct3d9:1;
 
 #ifdef __cplusplus // visible only to C++ objects
   TConfig();
@@ -116,12 +128,11 @@ extern struct TConfig SSEConfig;
 #endif
 
 #define CAPSIMG_OK (SSEConfig.CapsImgDll)
-#define DD_FULLSCREEN (SSEConfig.DDFullscreenMask)
+#define DX_FULLSCREEN (SSEConfig.FullscreenMask)
 #define HD6301_OK (SSEConfig.Hd6301v1Img)
 #define SDL_OK (SSEConfig.SdlDll)
 #define UNRAR_OK (SSEConfig.UnrarDll)
-
-
+#define D3D9_OK (SSEConfig.Direct3d9)
 
 #else//#if ! defined(SSE_SSE_CONFIG_STRUCT)
 
@@ -130,6 +141,7 @@ extern struct TConfig SSEConfig;
 #define HD6301_OK (HD6301.Initialised)
 #define SDL_OK (iDummy)
 #define UNRAR_OK (iDummy)
+#define D3D9_OK (iDummy)
 
 #endif//#if defined(SSE_SSE_CONFIG_STRUCT)
 

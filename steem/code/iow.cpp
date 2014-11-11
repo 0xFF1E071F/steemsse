@@ -47,14 +47,14 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
     TRACE_LOG("PC %X write byte %X to %X\n",pc-2,io_src_b,addr);
 #endif
 
-#if defined(SSE_MMU_WAKE_UP_IO_BYTES_W) //no, too radical
-   bool adjust_cycles=!io_word_access && MMU.OnMmuCycles(LINECYCLES));
+#if defined(SSE_MMU_WU_IO_BYTES_W) //no, too radical
+   bool adjust_cycles=!io_word_access && MMU.OnMmuCycles(LINECYCLES);
    if(adjust_cycles)
      cpu_cycles+=-2; // = +2 cycles!
 #endif
 
 #ifdef DEBUG_BUILD
-#if defined(SSE_DEBUG_MONITOR_IO_FIX1)
+#if defined(SSE_BOILER_MONITOR_IO_FIX1)
   if(!io_word_access)
 #endif
   DEBUG_CHECK_WRITE_IO_B(addr,io_src_b);
@@ -181,7 +181,7 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 
       case 0xfffc00:  //control //SS writing ACIA IKBD control register
 
-#if defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301) && defined(SSE_ACIA_REGISTERS)
         if(HD6301EMU_ON)
           ACIA_IKBD.CR=io_src_b; // assign before we send to other functions
 #endif //... and we run the same functions in 6301 mode too:
@@ -196,7 +196,97 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 
       case 0xfffc02:  // data //SS sending data to HD6301
 
+#if SSE_VERSION<=350 // big block before refactoring...
+
+        TRACE_LOG("Write %X to IKBD's ACIA DR\n",io_src_b);
+        // no TX in the agenda?
+        if(agenda_get_queue_pos(agenda_acia_tx_delay_IKBD)<0)
+        {
+          if(ACIA_IKBD.tx_irq_enabled) // rare
+          {
+            ACIA_IKBD.irq=false;
+            mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,
+              !(ACIA_IKBD.irq || ACIA_MIDI.irq));
+          }
+
+#if defined(SSE_IKBD_6301) && defined(SSE_ACIA_DOUBLE_BUFFER_TX)
+          if(!HD6301EMU_ON) // see agenda_ikbd_process()
+#endif
+            agenda_add(agenda_acia_tx_delay_IKBD,
+              IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESSE_ALT,0);
+        }
+
+#if defined(SSE_IKBD_6301)&& defined(SSE_ACIA_DOUBLE_BUFFER_TX)
+        // If the line is free, the byte in register will be sent very soon 
+        // and the TX bit cleared very soon (double buffer)
+        if(hd6301_receiving_from_MC6850||!HD6301EMU_ON)  
+#endif
+          ACIA_IKBD.tx_flag=true;
+
 #if defined(SSE_IKBD_6301)
+        if(0);
+#else
+/*  "If send new byte before last one has finished being sent"
+    We keep this part for now, maybe Steem authors had info.
+    It's like ACIA wouldn't start shifting at once.
+    In the MC6850 doc, they mention "within one bit time".
+    7250 bit/s, 8000000 cycles/s
+    1bit = 1100 cycles, the ACIA_CYCLES_NEEDED_TO_START_TX (=512)
+    would be an average.
+    v3.5: disabled for true 6301 emu (Delirious 4 fake GEM)
+*/ 
+        if(abs(ABSOLUTE_CPU_TIME-ACIA_IKBD.last_tx_write_time)
+          <ACIA_CYCLES_NEEDED_TO_START_TX)//512
+        {
+          // replace old byte with new one
+          int n=agenda_get_queue_pos(agenda_ikbd_process);
+          if(n>=0)
+          {
+            log_to(LOGSECTION_IKBD,Str("IKBD: ")+HEXSl(old_pc,6)+" - Received new command before old one was sent, replacing "+
+              HEXSl(agenda[n].param,2)+" with "+HEXSl(io_src_b,2));
+            TRACE_LOG("IKBD replace byte %X with %X\n",agenda[n].param,io_src_b);
+            agenda[n].param=io_src_b;
+          }
+        }
+#endif
+
+#if defined(SSE_IKBD_6301) && defined(SSE_ACIA_DOUBLE_BUFFER_TX)
+        // ACIA to 6301 line busy: we'll place in agenda when the current byte
+        // is handled
+        else if(hd6301_receiving_from_MC6850) 
+        {
+#if defined(SSE_IKBD_TRACE_6301)
+          TRACE_LOG("%d PC %X IKBD write (shift delayed) %X\n",ACIA_IKBD.last_tx_write_time,pc,io_src_b);
+#endif
+          ACIA_IKBD.data_tdr=io_src_b;
+        }
+#endif
+        // line is free, or we don't care (6301+"fake")
+        else
+        {
+          ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
+#if defined(SSE_IKBD_TRACE_6301)
+          if(HD6301EMU_ON)
+            TRACE_LOG("iow IKBD write %X (act %d PC %X tx%d)\n",io_src_b,ABSOLUTE_CPU_TIME,pc,ACIA_IKBD.tx_flag);
+#endif
+          // agenda the byte to process
+          agenda_add(agenda_ikbd_process,
+#if defined(SSE_IKBD_6301)
+            HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL,
+#else
+           IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESSE_ALT,
+#endif
+           io_src_b);
+        }
+
+#if defined(SSE_IKBD_6301)
+        if(HD6301EMU_ON)
+          hd6301_receiving_from_MC6850=1; // line is busy
+#endif
+
+        break;
+
+#elif defined(SSE_IKBD_6301) //current version
 
         if(HD6301EMU_ON)
         {
@@ -389,6 +479,32 @@ system exclusive start and end messages (F0 and F7).
 #define LOGSECTION LOGSECTION_MIDI//SS
 
 
+#if SSE_VERSION<=350 // Steem 3.2 was untouched
+
+      case 0xfffc04:  //control
+        if ((io_src_b & 3)==3){ // Reset
+          log_to(LOGSECTION_IKBD,Str("MIDI: ")+HEXSl(old_pc,6)+" - ACIA reset");
+          ACIA_Reset(NUM_ACIA_MIDI,0);
+        }else{
+          ACIA_SetControl(NUM_ACIA_MIDI,io_src_b);
+        }
+        break;
+      case 0xfffc06:  //data
+      {
+        bool TXEmptyAgenda=(agenda_get_queue_pos(agenda_acia_tx_delay_MIDI)>=0);
+        if (TXEmptyAgenda==0){
+          if (ACIA_MIDI.tx_irq_enabled){
+            ACIA_MIDI.irq=false;
+            mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
+          }
+          agenda_add(agenda_acia_tx_delay_MIDI,2 /*ACIAClockToHBLS(ACIA_MIDI.clock_divide)*/,0);
+        }
+        ACIA_MIDI.tx_flag=true;  //flag for transmitting
+        MIDIPort.OutputByte(io_src_b);
+        break;
+      }
+
+#else
       case 0xfffc04:  //control
 
 #if defined(SSE_ACIA_REGISTERS)
@@ -406,11 +522,12 @@ system exclusive start and end messages (F0 and F7).
 
       case 0xfffc06:  //data
       {
-#if defined(SSE_IKBD_6301)
+#if defined(SSE_ACIA_REGISTERS) && defined(SSE_IKBD_6301)
         if(HD6301EMU_ON)
         {
           if( (ACIA_MIDI.CR&BIT_5)&&!(ACIA_MIDI.CR&BIT_6) )// IRQ transmit enabled
             ACIA_MIDI.SR&=~BIT_7; // clear IRQ bit
+          ASSERT( ACIA_MIDI.SR&2 ); //asserts?
           ACIA_MIDI.SR&=~BIT_1; // clear TDRE bit
 
         //update in MFP (if needs be)
@@ -419,18 +536,32 @@ system exclusive start and end messages (F0 and F7).
         }
 #endif
         bool TXEmptyAgenda=(agenda_get_queue_pos(agenda_acia_tx_delay_MIDI)
-#if defined(SSE_MIDI)   //TODO
+#if defined(SSE_MIDI)   //TODO (argh)
           <0
 #else
           >=0
 #endif
           );
 
-#if defined(SSE_MIDI_TRACE_BYTES_OUT)
+#if defined(SSE_ACIA_MIDI_SR02_CYCLES)
+        if(HD6301EMU_ON)
+        TXEmptyAgenda=(abs(ACT-ACIA_MIDI.last_tx_write_time)
+          >=ACIA_MIDI_OUT_CYCLES);
+#endif
+
+#if defined(SSE_DEBUG)
         if(TXEmptyAgenda)
+        {
+#if defined(SSE_MIDI_TRACE_BYTES_OUT)
           TRACE_LOG("%X -> ACIA MIDI TDR\n",io_src_b);
+#endif
+        }
         else
-          TRACE_LOG("ACIA MIDI TX overrun, can't send %X?\n",io_src_b);
+        {
+#if defined(SSE_MIDI_TRACE_BYTES_OUT_OVR)
+          TRACE_LOG("ACIA MIDI TX OVR, can't send %X?\n",io_src_b);
+#endif
+        }
 #endif
 
         if (TXEmptyAgenda
@@ -438,7 +569,7 @@ system exclusive start and end messages (F0 and F7).
           ==0
 #endif
           ){
-#if defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301) //what was it?
           if(!HD6301EMU_ON)
 #endif
           if (ACIA_MIDI.tx_irq_enabled){
@@ -447,6 +578,10 @@ system exclusive start and end messages (F0 and F7).
           }
 
 #if defined(SSE_MIDI)
+#if defined(SSE_ACIA_MIDI_SR02_CYCLES)
+          ACIA_MIDI.last_tx_write_time=ACT; // record timing
+          if(HD6301EMU_ON)
+#endif
           agenda_add(agenda_acia_tx_delay_MIDI,ACIAClockToHBLS(ACIA_MIDI.clock_divide),0);
           MIDIPort.OutputByte(io_src_b); //SS timing?
 #else
@@ -461,6 +596,7 @@ system exclusive start and end messages (F0 and F7).
 #endif
         break;
       }
+#endif
     //-------------------------- unrecognised -------------------------------------------------
       default:
         break;  //all writes allowed
@@ -622,7 +758,7 @@ system exclusive start and end messages (F0 and F7).
             // The MFP doesn't update for about 8 cycles, so we should execute the next
             // instruction before causing any interrupts
             ioaccess=old_ioaccess;
-#if defined(SSE_MFP_WRITE_DELAY1)
+#if defined(SSE_INT_MFP_WRITE_DELAY1)
             time_of_last_write_to_mfp_reg=ACT;
 #endif
             if ((ioaccess & (IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE | IOACCESS_FLAG_FOR_CHECK_INTRS |
@@ -804,19 +940,38 @@ This address is being used to feed the National LMC both address and data
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY)
 /*
 
- The mask register must be written before the data register. Sending commences 
+ "The mask register must be written before the data register. Sending commences 
  when the data register is written and takes approximately 16 psec. Subsequent 
- writes to the data and mask registers are blocked until sending is complete. 
+ writes to the data and mask registers are blocked until sending is complete. "
+ Just a hack for now.
+ Bugfix v3.7, negative values if some minutes into emulation. eg Antiques.
 */
+#if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY_B)
+            if(SSE_HACKS_ON 
+              && abs(ACT-MicroWire_StartTime) <MICROWIRE_LATENCY_CYCLES) 
+#else
             if(ACT-MicroWire_StartTime<MICROWIRE_LATENCY_CYCLES) 
+#endif
+
+            {
+              TRACE("Microwire write %X at %X denied, %d cycles after write\n",io_src_b,addr,ACT-MicroWire_StartTime);
               break; // fixes XMas 2004 scroller
+            }
 #endif
             MicroWire_Data=MAKEWORD(LOBYTE(MicroWire_Data),io_src_b);
             break;
           case 0xff8923: // Set low byte of MicroWire_Data
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY)
+#if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY_B)
+            if(SSE_HACKS_ON 
+              && abs(ACT-MicroWire_StartTime) <MICROWIRE_LATENCY_CYCLES) 
+#else
             if(ACT-MicroWire_StartTime<MICROWIRE_LATENCY_CYCLES) 
+#endif
+            {
+              TRACE("Microwire write %X at %X denied, %d cycles after write\n",io_src_b,addr,ACT-MicroWire_StartTime);
               break;
+            }
 #endif
           {
 
@@ -966,7 +1121,7 @@ Set at D by TOS1.06.
  but the YM2149 sound is being downsized by 12 db. "01" mixes DMA and YM2149
  linearly, "10" means DMA sound output only.
 */
-                      TRACE_LOG("STE SND mixer %X\n",dat);
+                      TRACE("STE SND mixer %X\n",dat);
 //                      ASSERT(dat&3); // Again, Pacemaker
                       dma_sound_mixer=dat & b00000011; // 1=PSG too, anything else only DMA
                       log_to_section(LOGSECTION_SOUND,EasyStr("SOUND: ")+HEXSl(old_pc,6)+" - DMA sound mixer is set to "+dma_sound_mixer);
@@ -992,22 +1147,38 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 */
           case 0xff8924:  // Set high byte of MicroWire_Mask
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY)
+#if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY_B)
+            if(SSE_HACKS_ON 
+              && abs(ACT-MicroWire_StartTime) <MICROWIRE_LATENCY_CYCLES) 
+#else
             if(ACT-MicroWire_StartTime<MICROWIRE_LATENCY_CYCLES) 
+#endif
+            {
+              TRACE("Microwire write %X at %X denied, %d cycles after write\n",io_src_b,addr,ACT-MicroWire_StartTime);
               break;
+            }
 #endif
             MicroWire_Mask=MAKEWORD(LOBYTE(MicroWire_Mask),io_src_b);
             break;
           case 0xff8925:  // Set low byte of MicroWire_Mask
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY)
+#if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY_B)
+            if(SSE_HACKS_ON 
+              && abs(ACT-MicroWire_StartTime) <MICROWIRE_LATENCY_CYCLES) 
+#else
             if(ACT-MicroWire_StartTime<MICROWIRE_LATENCY_CYCLES) 
-              break; // fixes XMas 2004 scroller
+#endif
+            {
+              TRACE("Microwire write %X at %X denied, %d cycles after write\n",io_src_b,addr,ACT-MicroWire_StartTime);
+              break;// fixes XMas 2004 scroller
+            }
 #endif
             MicroWire_Mask=MAKEWORD(io_src_b,HIBYTE(MicroWire_Mask));
             break;
           case 0xFF8902:
           case 0xFF890E:
           case 0xFF8920:
-            ASSERT(!io_src_b);
+            //ASSERT(!io_src_b);//Antiques
             break;
           default:
             TRACE_LOG("STE SND %X %X\n",addr,io_src_b);
@@ -1181,7 +1352,6 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
   }
 */
 #if defined(SSE_DRIVE_SINGLE_SIDE_PASTI)
-          ghghghg
           if(SSE_HACKS_ON 
            // && (SSEOption.SingleSideDriveMap&(floppy_current_drive()+1) ))
             && (SSEOption.SingleSideDriveMap&(
@@ -1196,7 +1366,8 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
           if (hPasti && pasti_active) 
             pasti->WritePorta(io_src_b,ABSOLUTE_CPU_TIME);
 #endif//pasti
-#if defined(SSE_FDC_INDEX_PULSE_COUNTER) && defined(SSE_DRIVE) && defined(SSE_DEBUG)
+#if defined(SSE_FDC_INDEX_PULSE_COUNTER) && defined(SSE_DRIVE) \
+  && defined(SSE_DEBUG) && defined(SSE_YM2149)
 /* Symic Demo TODO right or wrong?
 */
           if(WD1772.IndexCounter && YM2149.Drive()==TYM2149::NO_VALID_DRIVE)
@@ -1224,8 +1395,8 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 #endif
 
 #if !defined(SSE_DEBUG_TRACE_IDE) && defined(SSE_YM2149A)
-#if defined(SSE_YM2149_REPORT_DRIVE_CHANGE)||defined(SSE_DEBUG_TRACE_CONTROL)
-#if defined(SSE_DEBUG_TRACE_CONTROL) // controlled by boiler now (3.6.1)
+#if defined(SSE_YM2149_REPORT_DRIVE_CHANGE)||defined(SSE_BOILER_TRACE_CONTROL)
+#if defined(SSE_BOILER_TRACE_CONTROL) // controlled by boiler now (3.6.1)
             if(TRACE_MASK3 & TRACE_CONTROL_FDCPSG)
 #endif
               TRACE_FDC("PSG-A %X %c%d:\n",io_src_b,'A'+YM2149.SelectedDrive,YM2149.SelectedSide);
@@ -1419,7 +1590,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 
     case 0xff8200: {
 
-#if defined(SSE_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
+#if defined(SSE_MMU_WU_IO_BYTES_W_SHIFTER_ONLY)
       bool adjust_cycles=!io_word_access && MMU.OnMmuCycles(LINECYCLES);
       if(adjust_cycles)
         cpu_cycles+=-2; // = +2 cycles!
@@ -1427,7 +1598,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 
       Shifter.IOWrite(addr,io_src_b);
 
-#if defined(SSE_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
+#if defined(SSE_MMU_WU_IO_BYTES_W_SHIFTER_ONLY)
       if(adjust_cycles)
         cpu_cycles+=2;
 #endif
@@ -1674,7 +1845,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_IO
-#endif//SS-shifter
+#endif//SS-Shifter
     }
     case 0xff8000:  //--------------------------------------- memory
     {
@@ -1788,12 +1959,6 @@ MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
           }
 #endif
           himem=(MEM_ADDRESS)(mmu_confused ? 0:mem_len);
-
-#if defined(SSE_CPU_HIMEM_BONUS_BYTES) 
-// for F-29, but doesn't work as Peek shouldn't return written value (?)
-          himem+=MEM_FIRST_WRITEABLE;
-#endif
-
 #else
           himem=(MEM_ADDRESS)mem_len;
           int mmu_confused=0;//dbg
@@ -1880,7 +2045,7 @@ MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
     }
   }
 
-#if defined(SSE_MMU_WAKE_UP_IO_BYTES_W)
+#if defined(SSE_MMU_WU_IO_BYTES_W)
   if(adjust_cycles)
     cpu_cycles+=2;
 #endif
@@ -1893,7 +2058,11 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
   TRACE_LOG("PC %X write word %X to %X\n",pc-2,io_src_w,addr);
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_WAKE_UP_IOW_HACK)//no
+#if defined(SSE_CPU_DATABUS)
+  M68000.dbus=io_src_w;
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_WU_IOW_HACK)//no
   int CyclesIn=LINECYCLES;
   if(MMU.OnMmuCycles(CyclesIn))
       cpu_cycles-=2; // - = + !!!!
@@ -1902,6 +2071,8 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
   if (addr>=0xff8240 && addr<0xff8260){  //palette
     DEBUG_CHECK_WRITE_IO_W(addr,io_src_w);
     int n=(addr-0xff8240) >> 1;
+
+//    TRACE("PC %X W PAL %X %X\n",old_pc,n,io_src_w);
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER)
   
@@ -1941,14 +2112,14 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
 //SS this is the way chosen by Steem authors, word accesses are treated byte 
 //by byte
     io_word_access=true;
-#if defined(DEBUG_BUILD) && defined(SSE_DEBUG_MONITOR_IO_FIX1)
+#if defined(DEBUG_BUILD) && defined(SSE_BOILER_MONITOR_IO_FIX1)
     DEBUG_CHECK_WRITE_IO_W(addr,io_src_w);
 #endif
     io_write_b(addr,HIBYTE(io_src_w));
     io_write_b(addr+1,LOBYTE(io_src_w));
     io_word_access=0;
   }
-#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_WAKE_UP_IOW_HACK)
+#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_WU_IOW_HACK)
   if(MMU.OnMmuCycles(CyclesIn))
     cpu_cycles+=2;
 #endif

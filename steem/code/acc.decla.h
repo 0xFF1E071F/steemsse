@@ -20,7 +20,8 @@ typedef EasyStr Str;//?!
 
 
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SAVE_NEO)
+#if defined(STEVEN_SEAGAL) \
+  && (defined(SSE_VID_SAVE_NEO) || defined(SSE_DISK_STW))
 WORD change_endian(WORD x); // double of something?
 #endif
 
@@ -61,7 +62,7 @@ WORD change_endian(WORD x); // double of something?
   EXT void stop_cpu_log();
 
 #ifdef DEBUG_BUILD
-#if defined (SSE_DEBUG_CPU_TRACE_NO_STOP)
+#if defined (SSE_BOILER_CPU_TRACE_NO_STOP)
 /*, The limit would uncheck the option at once. 
     Since we use the same option for the far more
     limited TRACE output, the limit is removed when logging is
@@ -73,7 +74,7 @@ WORD change_endian(WORD x); // double of something?
       if (!logging_suspended &&(--log_cpu_count)==0) stop_cpu_log(); \
     }
 
-#elif defined(SSE_DEBUG_CPU_LOG_NO_STOP)
+#elif defined(SSE_BOILER_CPU_LOG_NO_STOP)
 /*  A limited #instructions (10000) as defined would spare file IO,
     but sometimes you want more.
 */

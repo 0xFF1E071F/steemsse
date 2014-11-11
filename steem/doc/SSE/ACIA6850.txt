@@ -194,6 +194,9 @@ Timings
 ACIA <--> IKBD timings
 
 Data is transmitted at 7812.5 bauds between the ACIA and the HD6301.
+
+1MHz / 128 = 7812.5
+
 7812.5 bit/s, 10bits should translate into 1280 ACIA cycles/byte
 (Even less if we should count 8 bits: 1024).
 

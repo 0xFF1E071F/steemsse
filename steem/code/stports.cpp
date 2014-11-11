@@ -19,7 +19,7 @@ TSTPort STPort[3];
 //---------------------------------------------------------------------------
 void agenda_midi_replace(int)
 {
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301) && defined(SSE_ACIA_REGISTERS)
 #define LOGSECTION LOGSECTION_MIDI
   if(HD6301EMU_ON)
   {

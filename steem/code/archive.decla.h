@@ -48,6 +48,8 @@ int (_stdcall *UnzipFile)(char*,char*,WORD,long,void*,long);        //unzipping
 
 extern HINSTANCE hUnzip;
 
+extern void LoadUnzipDLL();
+
 #endif//win32
 
 #ifndef NO_RAR_SUPPORT

@@ -82,14 +82,19 @@ bool TShortcutBox::Picking=0;
 #if defined(STEVEN_SEAGAL) && defined(SSE_VARIOUS)
 
 enum {
+
+  CUT_LAST_OLD_ITEM_SS=230,//lol, TODO
+
+#if !defined(SSE_GUI_DISK_MANAGER_RGT_CLK_HD)
   CUT_TOGGLEHARDDRIVES=231,
+#endif
 #if defined(SSE_VID_RECORD_AVI)
   CUT_RECORD_VIDEO,
 #endif
   CUT_LAST_ITEM_SS
 };
 
-#define NUM_SHORTCUTS (54+1+1 DEBUG_ONLY(+5)   +CUT_LAST_ITEM_SS-230)
+#define NUM_SHORTCUTS (54+1+1 DEBUG_ONLY(+5+2)   +CUT_LAST_ITEM_SS-230)
 
 #else
 #define NUM_SHORTCUTS (54+1+1 DEBUG_ONLY(+5))
@@ -100,10 +105,10 @@ const char *ShortcutNames[NUM_SHORTCUTS*2]=
 #ifdef DEBUG_BUILD
   "Trace Into",(char*)200,"Step Over",(char*)203,"Run to/for",(char*)204,
   "Run to RTE",(char*)201,"Toggle Suspend Logging",(char*)202,
-#if defined(SSE_DEBUG_RUN_TO_RTS)
+#if defined(SSE_BOILER_RUN_TO_RTS)
   "Run to RTS",(char*)205,
 #endif
-#if defined(SSE_DEBUG_BLAZING_STEP_OVER)
+#if defined(SSE_BOILER_BLAZING_STEP_OVER)
   "Quick Step Over",(char*)206,
 #endif
 #endif
@@ -121,7 +126,9 @@ const char *ShortcutNames[NUM_SHORTCUTS*2]=
   "Save Over Last Memory Snapshot",(char*)53,"Load Last Memory Snapshot",(char*)54,
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_VARIOUS)
+#if !defined(SSE_GUI_DISK_MANAGER_RGT_CLK_HD)
 	"Toggle Hard Drives On/Off",(char*)CUT_TOGGLEHARDDRIVES,
+#endif
 #if defined(SSE_VID_RECORD_AVI)
    "Record Video",(char*)CUT_RECORD_VIDEO,
 #endif
@@ -305,7 +312,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
 #endif
   if (ShortcutBox.Picking) return;
   if (bAppActive==0) return;
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_F12)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_F12)
   if(Inf.Id[0]==VK_F12)
     return; // ignore this shortcut (v3.5)
 #endif
@@ -317,7 +324,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
   }
   switch (Inf.Action){
     case 20:case 21:case 34:case 35:case 36:case 37:case 43:
-#if defined(SSE_DEBUG_BLAZING_STEP_OVER)
+#if defined(SSE_BOILER_BLAZING_STEP_OVER)
     case 206: // don't press key for each NOP: key repeat
 #endif
       break;
@@ -489,7 +496,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       }
       break;
     case 21:
-#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_RATIO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO)
       if (n_cpu_cycles_per_second>CpuNormalHz){
 #else
       if (n_cpu_cycles_per_second>8000000){
@@ -500,7 +507,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       }
       break;
     case 22:
-#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_RATIO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO)
       n_cpu_cycles_per_second=CpuNormalHz;
 #else
       n_cpu_cycles_per_second=8000000;
@@ -639,10 +646,13 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       break;
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_VARIOUS)
+#if !defined(SSE_GUI_DISK_MANAGER_RGT_CLK_HD)
     case CUT_TOGGLEHARDDRIVES:	// toggle hard drives on/off
       HardDiskMan.DisableHardDrives=!HardDiskMan.DisableHardDrives;	// toggle
+//      TRACE("hd off %d\n",HardDiskMan.DisableHardDrives);
       HardDiskMan.update_mount();
       break;
+#endif
 #if defined(SSE_VID_RECORD_AVI)
 #define LOGSECTION LOGSECTION_VIDEO
     case CUT_RECORD_VIDEO:
@@ -665,7 +675,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       }
       break;
     case 203: // Step Over
-#if defined(SSE_DEBUG_BLAZING_STEP_OVER)
+#if defined(SSE_BOILER_BLAZING_STEP_OVER)
     case 206: // Quick Step Over
 #endif
       if (runstate!=RUNSTATE_RUNNING || GetForegroundWindow()!=StemWin){
@@ -687,7 +697,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
         PostMessage(DWin,WM_COMMAND,MAKEWPARAM(1022,BN_CLICKED),0);
       }
       break;
-#if defined(SSE_DEBUG_RUN_TO_RTS)
+#if defined(SSE_BOILER_RUN_TO_RTS)
     case 205: // Run to RTS
       if (runstate!=RUNSTATE_RUNNING || GetForegroundWindow()!=StemWin){
         PostMessage(DWin,WM_COMMAND,MAKEWPARAM(1015,BN_CLICKED),0);

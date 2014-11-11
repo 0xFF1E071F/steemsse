@@ -12,10 +12,6 @@ of the various unarchiving libraries it can use.
 #if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_ARCHIVE_H)
 zipclass zippy; 
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
-
-#define LOGSECTION LOGSECTION_INIT
-
 HINSTANCE hUnzip=NULL;
 
 void LoadUnzipDLL()
@@ -37,6 +33,10 @@ void LoadUnzipDLL()
   }//hunzip
 }
 
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
+
+#define LOGSECTION LOGSECTION_INIT
 
 #ifdef _MSC_VER
 #pragma comment(lib,"../../3rdparty/UnRARDLL/unrar.lib")

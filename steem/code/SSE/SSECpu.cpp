@@ -900,7 +900,7 @@ void m68k_get_dest_111_l_faster(){
 }
 
 
-// Read from address
+// Read from address (v3.5.3)
 
 #if defined(SSE_CPU_INLINE_READ_FROM_ADDR)
 // They're not much called, VC6 wouldn't inline them
@@ -1313,7 +1313,7 @@ FC2 FC1 FC0 Address Space
   }
   else
   {
-#if defined(SSE_CPU_HALT)
+#if defined(SSE_CPU_HALT) && defined(SSE_GUI_STATUS_STRING_HALT)
     M68000.ProcessingState=TM68000::EXCEPTION;
 #endif
 
@@ -1798,7 +1798,7 @@ CPU-Clock  E-clock Keyboard read
  1442304  144230.4     24
 
 
-  Compare with jitter tables:
+  Compare with jitter tables in Hatari:
  
   int HblJitter[] = {8,4,4,0,0}; 
   int VblJitter[] = {8,0,4,0,4}; 
@@ -1835,7 +1835,7 @@ void TM68000::SyncEClock() {
  
   int act=ACT;
 
-#if defined(SSE_SHIFTER)
+#if defined(SSE_SHIFTER) && defined(SSE_TIMINGS_FRAME_ADJUSTMENT)
   act-=4*Shifter.n508lines; //legit hack: NOJITTER.PRG
 #endif
 
@@ -1846,6 +1846,7 @@ void TM68000::SyncEClock() {
 #if defined(SSE_INT_HBL_E_CLOCK_HACK)
     // pathetic hack for 3615GEN4 HMD #1, make it 4 cycles instead on HBI
     // (suspect wrong timing in an instruction?)
+    // it still crashes in the end?
     if(!(dispatcher==TM68000::ECLOCK_HBL&&SSE_HACKS_ON))
 #endif
     break;
@@ -1869,7 +1870,11 @@ void TM68000::SyncEClock() {
     FrameEvents.Add(scan_y,LINECYCLES,'E',wait_states);
 #endif
   if(wait_states) 
+#if defined(SSE_CPU_E_CLOCK_DISPATCHER)
     TRACE_LOG("F%d y%d c%d %s E-Clock +%d\n",TIMING_INFO,sdispatcher[dispatcher],wait_states);
+#else
+    TRACE_LOG("F%d y%d c%d E-Clock +%d\n",TIMING_INFO,wait_states);
+#endif
 #endif
   
 }
@@ -2554,9 +2559,13 @@ void m68k_0011() //move.w
       INSTRUCTION_TIME(4);
 #endif
 #if defined(SSE_CPU_PREFETCH_CLASS)
-#if defined(SSE_CPU_PREFETCH_4PIXEL_RASTERS)
       M68000.PrefetchClass=0; 
-      PREFETCH_IRC; // the timing here fixes 4pixel Rasters demo
+#if defined(SSE_CPU_PREFETCH_4PIXEL_RASTERS)
+/*  This mod was already present in v3.3, when switch SSE_CPU_PREFETCH_TIMING
+    wasn't defined yet, but this is a timing fix.
+    Fixes 4pixel Rasters demo
+*/
+      PREFETCH_IRC; 
       FETCH_TIMING;
 #endif
 #endif  

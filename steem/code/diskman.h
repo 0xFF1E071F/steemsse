@@ -135,7 +135,7 @@ public:
   void ShowDatabaseDiag(),ShowContentDiag();
 
 #ifdef WIN32
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_OPTION_SLOW_DISK)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_OPTION_SLOW_DISK_SSE)
   void RefreshSnails();
 #endif
   bool HasHandledMessage(MSG*);

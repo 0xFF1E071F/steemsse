@@ -11,7 +11,7 @@ of Steem and displaying information on what happened.
 #endif
 
 #if defined(SSE_STRUCTURE_SSECPU_OBJ)
-void m68k_process();
+//void m68k_process();
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_TRACE_H)

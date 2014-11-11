@@ -89,7 +89,7 @@ struct TDebug {
   unsigned long OsdTimer;
 #endif
 
-#if defined(SSE_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
   enum {MAX_INTERRUPTS=256,DESCRIPTION_LENGTH=8};//
   struct SInterruptTable {
     char description[DESCRIPTION_LENGTH]; // eg MFP VBI TRACE...
@@ -104,29 +104,29 @@ struct TDebug {
   void Rte();
 #endif
 
-#if defined(SSE_DEBUG_TIMERS_ACTIVE)
+#if defined(SSE_BOILER_TIMERS_ACTIVE)
   HWND boiler_timer_hwnd[4];//to record WIN handles
 #endif
 
-#if defined(SSE_DEBUG_MONITOR_VALUE)
+#if defined(SSE_BOILER_MONITOR_VALUE)
   BYTE MonitorValueSpecified; // boiler SSE option
   BYTE MonitorComparison; // as is, none found = 0 means no value to look for
   WORD MonitorValue;
 #endif
 
-#if defined(SSE_DEBUG_MONITOR_RANGE)
+#if defined(SSE_BOILER_MONITOR_RANGE)
   BYTE MonitorRange; //check from ad1 to ad2
 #endif
 
-#if defined(SSE_DEBUG_STACK_68030_FRAME)
+#if defined(SSE_BOILER_STACK_68030_FRAME)
   BYTE M68030StackFrame;//flag
 #endif
 
-#if defined(SSE_DEBUG_BROWSER_6301)
+#if defined(SSE_BOILER_BROWSER_6301)
   BYTE HD6301RamBuffer[256+8];
 #endif
 
-#if defined(SSE_DEBUG_STACK_CHOICE)
+#if defined(SSE_BOILER_STACK_CHOICE)
   BYTE StackDisplayUseOtherSp;//flag
 #endif
 
@@ -134,7 +134,7 @@ struct TDebug {
 
 #endif//c++
 
-#if defined(SSE_DEBUG_FAKE_IO)
+#if defined(SSE_BOILER_FAKE_IO)
 /*  Hack. A free zone in IO is mapped to an array of masks to control 
     a lot of debug options using the Boiler's built-in features.
     Memory browsers display words so we use words even if bytes are
@@ -143,7 +143,7 @@ struct TDebug {
   WORD ControlMask[FAKE_IO_LENGTH];
 #endif
 
-#if defined(SSE_DEBUG_FRAME_INTERRUPTS)
+#if defined(SSE_BOILER_FRAME_INTERRUPTS)
   BYTE FrameInterrupts; //bit0 VBI 1 HBI 2 MFP
   WORD FrameMfpIrqs; // for OSD report
 #endif
@@ -180,7 +180,7 @@ extern void debug_set_bk(unsigned long ad,bool set); //bool set
    It came to be because:
    - unfamiliar with the log system
    - familiar with a TRACE system (like in MFC) that outputs in the IDE
-   - the log system would choke the computer (each shifter trick written down!)
+   - the log system would choke the computer (each Shifter trick written down!)
    This is unfinished business.
 */
 
@@ -209,7 +209,10 @@ enum logsection_enum_tag {
  LOGSECTION_CPU ,
  LOGSECTION_INIFILE ,
  LOGSECTION_GUI ,
-#if !defined(SSE_DEBUG_TRACE_CONTROL)
+#if !defined(SSE_BOILER_NODIV)
+ LOGSECTION_DIV,
+#endif
+#if !defined(SSE_BOILER_TRACE_CONTROL)
  LOGSECTION_FDC_BYTES, // was DIV
 // LOGSECTION_IPF_LOCK_INFO,
 #endif
@@ -219,49 +222,53 @@ enum logsection_enum_tag {
  };
 #endif
 
-#if defined(SSE_DEBUG_FAKE_IO)
+#if defined(SSE_BOILER_FAKE_IO)
 
 #if defined(SSE_OSD_CONTROL)
 
 #define OSD_MASK1 (Debug.ControlMask[2])
-#define OSD_CONTROL_CPUTRACE           (1<<15)
-#define OSD_CONTROL_CPUPREFETCH                (1<<14)
-#define OSD_CONTROL_INTERRUPT               (1<<13)
-#define OSD_CONTROL_IKBD                  (1<<12)
-#define OSD_CONTROL_60HZ              (1<<11)
-#define OSD_CONTROL_RESET            (1<<10)
+#define OSD_CONTROL_INTERRUPT               (1<<15)
+#define OSD_CONTROL_IKBD                  (1<<14)
+#define OSD_CONTROL_60HZ              (1<<13)
 
-#define OSD_MASK2 (Debug.ControlMask[3])
+#define OSD_MASK_CPU (Debug.ControlMask[3])
+#define OSD_CONTROL_CPUTRACE           (1<<15)
+#define OSD_CONTROL_CPUBOMBS  (1<<14)
+#define OSD_CONTROL_CPUIO  (1<<13)
+#define OSD_CONTROL_CPURESET            (1<<12)
+#define OSD_CONTROL_CPUPREFETCH   (1<<11)    
+
+#define OSD_MASK2 (Debug.ControlMask[4])
 #define OSD_CONTROL_SHIFTERTRICKS           (1<<15)
 #define OSD_CONTROL_PRELOAD (1<<14)
 
-#define OSD_MASK3 (Debug.ControlMask[4])
+#define OSD_MASK3 (Debug.ControlMask[5])
 #define OSD_CONTROL_DMASND                  (1<<15)
 #define OSD_CONTROL_STEBLT                  (1<<14)
 #define OSD_CONTROL_WRITESDP                (1<<13)
 
 #endif//osdcontrol
 
-#if defined(SSE_DEBUG_TRACE_CONTROL)
+#if defined(SSE_BOILER_TRACE_CONTROL)
 /*  We use this to better control trace output, log section is still
     used.
-    For example, log Video for shifter events, and trace control Vert
+    For example, log Video for Shifter events, and trace control Vert
     for vertical overscan.
 */
 
-#define TRACE_MASK1 (Debug.ControlMask[5]) //shifter
+#define TRACE_MASK1 (Debug.ControlMask[6]) //Shifter
 #define TRACE_CONTROL_VERTOVSC (1<<15)
 #define TRACE_CONTROL_1LINE (1<<14) // report line of 'go'
 #define TRACE_CONTROL_SUMMARY (1<<13) //all tricks of the frame orred
 #define TRACE_CONTROL_LINEOFF (1<<12) //don't draw
 #define TRACE_CONTROL_ADJUSTMENT (1<<11) //-2, +2 corrections
 
-#define TRACE_MASK2 (Debug.ControlMask[6])
+#define TRACE_MASK2 (Debug.ControlMask[7])
 #define TRACE_CONTROL_MFP (1<<15)
 #define TRACE_CONTROL_VBI (1<<14)
 #define TRACE_CONTROL_HBI   (1<<13)
 
-#define TRACE_MASK3 (Debug.ControlMask[7])
+#define TRACE_MASK3 (Debug.ControlMask[8])
 #define TRACE_CONTROL_FDCSTR (1<<15)
 #define TRACE_CONTROL_FDCBYTES (1<<14)//no logsection needed
 #define TRACE_CONTROL_FDCPSG (1<<13)//drive/side
@@ -272,13 +279,22 @@ enum logsection_enum_tag {
 
 #endif
 
-#if defined(SSE_DEBUG_VIDEO_CONTROL)
+#if defined(SSE_BOILER_VIDEO_CONTROL)
 #define VIDEO_CONTROL_MASK (Debug.ControlMask[9])
 #define VIDEO_CONTROL_LINEOFF (1<<15)
-
 #endif
 
-#endif//#if defined(SSE_DEBUG_FAKE_IO)
+#if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
+#define SOUND_CONTROL_MASK (Debug.ControlMask[10])
+#define SOUND_CONTROL_OSD (1<<10)//first entries other variables
+#endif
+
+#if defined(SSE_BOILER_NEXT_PRG_RUN)
+#define BOILER_CONTROL_MASK1 (Debug.ControlMask[11])
+#define BOILER_CONTROL_NEXT_PRG_RUN (1<<15)
+#endif
+
+#endif//#if defined(SSE_BOILER_FAKE_IO)
 
 // debug macros
 
@@ -415,10 +431,23 @@ enum logsection_enum_tag {
 #endif
 #endif
 
+// TRACE_INIT 3.7.0
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#ifdef __cplusplus // visible only to C++ objects
+#define TRACE_INIT Debug.LogSection=LOGSECTION_INIT, Debug.TraceLog //!
+#endif//C++
+#else
+#if defined(VC_BUILD) // OK for Unix?
+#define TRACE_INIT(x) // no code left?
+#else
+#define TRACE_INIT // some code left to the compiler
+#endif
+#endif
+
 
 
 // TRACE_OSD
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DEBUG_MESSAGE)
 #ifdef __cplusplus // visible only to C++ objects
 #define TRACE_OSD Debug.TraceOsd
 #endif//C++

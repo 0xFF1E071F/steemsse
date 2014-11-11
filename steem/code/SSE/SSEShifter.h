@@ -16,11 +16,11 @@
 
 #if defined(SSE_SHIFTER)
 /*  The ST was a barebone machine made up of cheap components hastily patched
-    together, including the video shifter.
-    A shifter was needed to translate the video RAM into the picture.
+    together, including the video Shifter.
+    A Shifter was needed to translate the video RAM into the picture.
     Such a system was chosen because RAM space was precious. Chunk modes are
     only possible with byte or more sizes.
-    All the strange things you can do with the shifter were found by hackers,
+    All the strange things you can do with the Shifter were found by hackers,
     they weren't devised by Atari. 
     This is both difficult and very interesting to emulate.
     I inserted some good documentation on all those tricks.
@@ -31,7 +31,7 @@
 */
 
 
-/*  The shifter trick mask is an imitation of Hatari's BorderMask.
+/*  The Shifter trick mask is an imitation of Hatari's BorderMask.
     Each trick has a dedicated bit, to set it we '|' it, to check it
     we '&' it. Each value is the previous one x2.
     Note max 32 bit = $80 000 000
@@ -74,7 +74,7 @@ enum {DISPATCHER_NONE, DISPATCHER_CPU, DISPATCHER_LINEWIDTH,
 enum {BORDERS_NONE, BORDERS_ON, BORDERS_AUTO_OFF, BORDERS_AUTO_ON};
 
 
-/*  The shifter latency could be the time needed by the shifter to treat
+/*  The Shifter latency could be the time needed by the Shifter to treat
     data it's fed. 
     It is observed that palette changes occuring at some cycle apply at once,
     but on pixels that would be behind those that are currently being fetched
@@ -107,8 +107,8 @@ struct TScanline {
 
 struct TShifter {
 /*  As explained by ST-CNX and others, the video picture is produced by the
-    MMU, the GLUE and the shifter. 
-    In our emulation, we pretend that the shifter does most of it by itself:
+    MMU, the GLUE and the Shifter. 
+    In our emulation, we pretend that the Shifter does most of it by itself:
     fetching memory, generating signals... It's a simplification. Otherwise
     we could imagine new objects: TMMU, TGlue...
 */
@@ -211,7 +211,7 @@ struct TShifter {
   int nVbl;
 #endif
 #if defined(SSE_SHIFTER_UNSTABLE)
-  BYTE Preload; // #words into shifter's RR (shifts display)
+  BYTE Preload; // #words into Shifter's RR (shifts display)
 #endif
 #if defined(SSE_SHIFTER_PANIC) || defined(SSE_SHIFTER_STE_HI_HSCROLL)
   DWORD Scanline[230/4+2]; // the price of fun
@@ -246,9 +246,9 @@ inline void TShifter::AddExtraToShifterDrawPointerAtEndOfLine(unsigned long &ext
   extra+=(LINEWID)*2;     
 /*
 Left border off + STE scrolling
-For STE scrolling, the shifter must load the extra raster that will be used
+For STE scrolling, the Shifter must load the extra raster that will be used
 to skip h pixels. But when the left border has been removed in the STF way (+
-26 bytes), the shifter already has 6 bytes inside and will load only 2 more.
+26 bytes), the Shifter already has 6 bytes inside and will load only 2 more.
 This doesn't happen with the STE-only left off (+20 bytes), hence we undo then
 what we do here. Maybe.
 Also, when must this be applied? Should be moved?
@@ -320,7 +320,7 @@ inline void TShifter::DrawBufferedScanlineToVideo() {
 inline 
 #endif
 int TShifter::FetchingLine() {
-  // does the current scan_y involve fetching by the shifter?
+  // does the current scan_y involve fetching by the Shifter?
   // notice < shifter_last_draw_line, not <=
   return (scan_y>=shifter_first_draw_line && scan_y<shifter_last_draw_line
 
@@ -802,7 +802,7 @@ inline int TShifter::CycleOfLastChangeToShiftMode(int value) {
     (or during blanking) to provide reliable results. 
     [LOL!]
 
-    According to ST-CNX, those registers are in the MMU, not in the shifter.
+    According to ST-CNX, those registers are in the MMU, not in the Shifter.
 
 */
 
@@ -813,6 +813,7 @@ inline int TShifter::CycleOfLastChangeToShiftMode(int value) {
 #endif
 
 inline MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
+  ff
   if (bad_drawing){
     // Fake SDP
 #if defined(SSE_SHIFTER_SDP_TRACE_LOG)
@@ -832,6 +833,7 @@ inline MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
   if(FetchingLine())
   {
     int bytes_to_count=CurrentScanline.Bytes; // implicit fixes (Forest)
+    //ASSERT(bytes_to_count);
     if(shifter_skip_raster_for_hscroll)
       bytes_to_count+=SHIFTER_RASTER_PREFETCH_TIMING/2;
     int bytes_ahead=(shifter_hscroll_extra_fetch) 
@@ -1003,7 +1005,7 @@ Cases to consider: TCB, Mindbomb/No Shit, Omega
 void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 /*
     This is a difficult side of STE emulation, made difficult too by
-    Steem's rendering system, that uses the shifter draw pointer as 
+    Steem's rendering system, that uses the Shifter draw pointer as 
     video pointer as well as ST IO registers. Other emulators may do 
     otherwise, but there are difficulties and imprecisions anyway.
     So this is mainly a collection of hacks for now, that handle pratical
@@ -1114,7 +1116,7 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 
 */
 
-  int cycles=LINECYCLES; // cycle in shifter reckoning
+  int cycles=LINECYCLES; // cycle in Shifter reckoning
 
 #if defined(SSE_SHIFTER_SDP_TRACE_LOG2)
   TRACE_LOG("F%d y%d c%d Write %X to %X\n",FRAME,scan_y,cycles,io_src_b,addr);
@@ -1182,7 +1184,7 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
   MEM_ADDRESS nsdp=shifter_draw_pointer; //sdp_real (should be!)
   DWORD_B(&nsdp,(0xff8209-addr)/2)=io_src_b;
 
-  // Writing low byte while the shifter supposedly is fetching
+  // Writing low byte while the Shifter supposedly is fetching
   if(addr==0xFF8209 && de)
   {
 

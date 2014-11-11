@@ -207,7 +207,7 @@ WORD d2_dpeek(MEM_ADDRESS ad)
   d2_peekvalid=0; //all valid
 
 
-#if defined(SSE_DEBUG_FAKE_IO)
+#if defined(SSE_BOILER_FAKE_IO)
 /*  Intercept reads of fake IO zone to return control mask
     variables.
 */
@@ -330,7 +330,7 @@ bool d2_dpoke(MEM_ADDRESS ad,WORD val){
   ad&=0xffffff;
   if(ad&1)return false;
 
-#if defined(SSE_DEBUG_FAKE_IO)
+#if defined(SSE_BOILER_FAKE_IO)
 /*  Intercept writes to fake IO zone to change control mask
     variables.
     Enforce low byte = 0 (for the GUI)

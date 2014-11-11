@@ -15,7 +15,7 @@
 #define INFOPAGE_HOWTO_CART 6
 #define INFOPAGE_FAQ 7
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX2)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX2)
 #define INFOPAGE_README_SSE 8
 #define INFOPAGE_FAQ_SSE 9
 #define NUM_INFOPAGE 10
@@ -45,7 +45,7 @@ private:
   HIMAGELIST il;
   int MaxLinkID;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_INFOBOX3)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX3)
   HFONT hFontCourier;
 #endif
 

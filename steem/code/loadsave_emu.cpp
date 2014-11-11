@@ -299,12 +299,12 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     ACIA_MIDI.CR=0x95; // usually
     ACIA_MIDI.SR=2; // usually
   }
-#endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_DOUBLE_BUFFER_RX)
   ACIA_IKBD.LineRxBusy=0;
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_DOUBLE_BUFFER_TX)
   ACIA_IKBD.LineTxBusy=0;
+#endif
 #endif
 
   if (Version>=9){
@@ -833,9 +833,13 @@ Steem SSE will reset auto.sts and quit\nSorry!",
       // same problem as for Pasti, we should find a shorter way to do that
       TImageType image_type=SF314[drive].ImageType;
       ReadWriteStruct(SF314[drive]);
+      //ASSERT( SF314[drive].Id==drive );
+      if(SF314[drive].Id!=drive) // and not ==... 
+      {
+        SF314[drive].Init();
+        SF314[drive].Id=drive;
+      }
       SF314[drive].ImageType=image_type;
-      ASSERT( SF314[drive].Id==drive );
-
       //SF314[drive].State.motor=0;//temp!
       //ASSERT(SF314[drive].rpm==300);
       //SF314[drive].rpm=300;//temp!
@@ -866,7 +870,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 //    TRACE_LOG("WU option L/S %d\n",WAKE_UP_STATE);
     if(WAKE_UP_STATE>WU_SHIFTER_PANIC)
       WAKE_UP_STATE=0;
-#if defined(SSE_VAR_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_STRING)
     GUIRefreshStatusBar();//overkill
 #endif
     
@@ -926,7 +930,15 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #endif
 
 #if defined(SSE_YM2149A)
+    {
+#if defined(SSE_YM2149_DYNAMIC_TABLE)
+    WORD *tmp=YM2149.p_fixed_vol_3voices; //always the same problem
+#endif
     ReadWriteStruct(YM2149);
+#if defined(SSE_YM2149_DYNAMIC_TABLE)
+    YM2149.p_fixed_vol_3voices=tmp;
+#endif
+    }
 #endif
   }
 

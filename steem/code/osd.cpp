@@ -212,7 +212,11 @@ void osd_draw_full_stop()
   if (osd_no_draw || osd_disable) return;
 #ifndef ONEGAME
   int seconds=max(min((timer-osd_start_time)/1000,DWORD(30)),DWORD(0));
-  if ((seconds<osd_show_icons || pc==rom_addr) && runstate!=RUNSTATE_RUNNING){
+  if (
+#if !defined(SSE_OSD_FORCE_REDRAW_AT_STOP)
+    (seconds<osd_show_icons || pc==rom_addr) && 
+#endif
+    runstate!=RUNSTATE_RUNNING){
     int x1,y1;
     osd_no_draw=true;
     draw_begin();
@@ -375,7 +379,11 @@ void osd_draw()
 #define BUFFER_LENGTH sizeof("STEEM SSE")
       char tmp_buffer[BUFFER_LENGTH];
 #if defined(SSE_VARIOUS) // it's silly but saves bytes TODO
+#if SSE_VERSION>=370
+      strncpy(tmp_buffer,STEEM_SSE_FAQ,BUFFER_LENGTH-1); // not upper
+#else
       strncpy(tmp_buffer,STEEM_SSE_FAQ_TXT,BUFFER_LENGTH-1); // not upper
+#endif
 #else
       strcpy(tmp_buffer,"STEEM SSE");	
 #endif
@@ -432,7 +440,7 @@ void osd_draw()
   }
 
   if (seconds<osd_show_cpu){
-#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_RATIO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO)
     if (n_cpu_cycles_per_second>CpuNormalHz){
 #else
     if (n_cpu_cycles_per_second>8000000){
@@ -440,7 +448,7 @@ void osd_draw()
       can_have_scroller=0;
       int bar_w=120, bar_x=5, cpu_y=y1-5-12+6-15;
       if (osd_old_pos) bar_w=100, bar_x=20, cpu_y=y1-18-32;
-#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_RATIO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO)
       int x=n_cpu_cycles_per_second/CpuNormalHz;
 #else
       int x=n_cpu_cycles_per_second/8000000;
@@ -489,7 +497,9 @@ void osd_draw()
   }
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DEBUG_MESSAGE)
-  if(Debug.OsdTimer>timer)
+  if(Debug.OsdTimer>timer
+    ////|| runstate!=RUNSTATE_RUNNING//TODO
+    )
   {
 //    TRACE("osd %s %d %d\n",Debug.m_OsdMessage,Debug.OsdTimer,timer);
     DWORD col=col_yellow[0];
@@ -526,7 +536,7 @@ void osd_draw()
 #if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DRIVE_LED)
   // Green led for floppy disk read; red for write.
   {
-#if defined(SSE_OSD_DRIVE_LED2)    
+#if defined(SSE_OSD_DRIVE_LED2) 
     {
       Dma.UpdateRegs();
       bool FDCWriting=WD1772.WritingToDisk();
@@ -537,8 +547,9 @@ void osd_draw()
 #if defined(SSE_TOS_TOS_AUTORUN)
           && SF314[0].ImageType.Extension!=EXT_TOS
 #endif
-          && FloppyDrive[DRIVE].DiskInDrive() 
 #endif
+          && FloppyDrive[DRIVE].DiskInDrive() 
+
           )
 #else
     if(  (psg_reg[PSGR_PORT_A]&6) != 6
@@ -612,11 +623,11 @@ void osd_draw()
 #ifdef SSE_DEBUG // add current command (CR)
           sprintf(tmp_buffer,"%2X-%C:%d-%02d-%02d",fdc_cr,'A'+DRIVE,
             CURRENT_SIDE,floppy_head_track[DRIVE],
-            (WD1772.CommandType()==2||WD1772.CR&0xF0==0xC0)?fdc_sr:0);
+            (WD1772.CommandType()==2||(WD1772.CR&0xF0)==0xC0)?fdc_sr:0);
 #else
           sprintf(tmp_buffer,"%C:%d-%02d-%02d",'A'+DRIVE,
             CURRENT_SIDE,floppy_head_track[DRIVE],
-            (WD1772.CommandType()==2||WD1772.CR&0xF0==0xC0)?fdc_sr:0);
+            (WD1772.CommandType()==2||(WD1772.CR&0xF0)==0xC0)?fdc_sr:0);
 #endif
           ASSERT( strlen(tmp_buffer) < BUFFER_LENGTH );
           size_t drive_info_length=strlen(tmp_buffer);

@@ -18,6 +18,7 @@
 #include <cpu.decla.h>
 #include <fdc.decla.h>
 #include <floppy_drive.decla.h>
+#include <run.decla.h> // for ACT
 #include "SSECpu.h"
 #if defined(WIN32)
 #include <pasti/pasti.h>
@@ -33,6 +34,22 @@
 #include "SSEOption.h"
 #if defined(SSE_DISK_GHOST)
 #include "SSEGhostDisk.h"
+#endif
+
+
+
+#if SSE_VERSION<351
+#define DMA_INC_ADDRESS                                    \
+  if (dma_sector_count){                                   \
+    dma_address++;                                         \
+    dma_bytes_written_for_sector_count++;                  \
+    if (dma_bytes_written_for_sector_count>=512){        \
+      dma_bytes_written_for_sector_count=0;              \
+      dma_sector_count--;                                  \
+      dma_status|=BIT_1;  /* DMA sector count not 0 */   \
+      if (dma_sector_count==0) dma_status&=~BIT_1;     \
+    }                                                      \
+  }
 #endif
 
 
@@ -119,7 +136,7 @@ bool TDma::Drq() {
 // this is a Steem 'event' (static member function)
 
 void TDma::Event() {
-#if defined(SSE_MFP_RATIO)
+#if defined(SSE_INT_MFP_RATIO)
   Dma.TransferTime=ABSOLUTE_CPU_TIME+CpuNormalHz;
 #else
   Dma.TransferTime=ABSOLUTE_CPU_TIME+8000000;
@@ -235,8 +252,10 @@ BYTE TDma::IORead(MEM_ADDRESS addr) {
     // HD access
     else if(MCR&CR_HDC_OR_FDC) 
     {
+#ifdef SSE_CPU
       LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
         " - Reading high byte of HDC register #"+((MCR & BIT_1) ? 1:0)); )
+#endif
     }
     // high byte of FDC
     else

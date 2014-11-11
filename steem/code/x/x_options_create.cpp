@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------
-
+#ifdef UNIX//SS
 #define NO_PORTAUDIO//SS tmp
 
 void TOptionBox::CreatePage(int n)
@@ -1196,7 +1196,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SSE_VAR_MOUSE_CAPTURE)
+#if defined(SSE_GUI_MOUSE_CAPTURE)
   capture_mouse_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Capture mouse"),4002,BkCol);
   capture_mouse_but.set_check(CAPTURE_MOUSE);
@@ -1253,7 +1253,7 @@ void TOptionBox::CreateSSEPage() {
   wake_up_dd.id=4006;
   wake_up_dd.make_empty();
   wake_up_dd.additem("Ignore wake-up state",0);
-#if defined(SSE_MMU_WAKE_UP_DL)
+#if defined(SSE_MMU_WU_DL)
   wake_up_dd.additem("DL3 WU2 WS2",1);
   wake_up_dd.additem("DL4 WU2 WS4",2);
   wake_up_dd.additem("DL5 WU1 WS3",3);
@@ -1304,7 +1304,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SSE_YM2149_FIXED_VOL_FIX2)
+#if defined(SSE_YM2149_FIXED_VOL_TABLE)
   psg_samples_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Samples"),4013,BkCol);
   psg_samples_but.set_check(SSEOption.PSGFixedVolume);
@@ -1334,7 +1334,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SSE_VAR_OPTION_SLOW_DISK) // because many people miss it in disk manager
+#if defined(SSE_GUI_OPTION_SLOW_DISK_SSE) // because many people miss it in disk manager
   slow_disk_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Slow drive"),4010,BkCol);
   slow_disk_but.set_check(!floppy_instant_sector_access);
@@ -1356,7 +1356,7 @@ void TOptionBox::CreateSSEPage() {
   XFlush(XD);
 }
 #endif
-
+#endif//#ifdef UNIX
 
 
 
