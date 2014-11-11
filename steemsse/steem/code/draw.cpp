@@ -21,11 +21,27 @@ to the PC display.
 EXT int stfm_b_timer INIT(0);//tmp
 #endif
 
+
+#if defined(SSE_VAR_RESIZE_370)
+EXT BYTE bad_drawing INIT(0);
+EXT BYTE draw_fs_blit_mode INIT( UNIX_ONLY(DFSM_STRAIGHTBLIT) WIN_ONLY(DFSM_STRETCHBLIT) );
+EXT BYTE draw_fs_fx INIT(DFSFX_NONE),draw_grille_black INIT(6);
+EXT BYTE border INIT(2),border_last_chosen INIT(2);
+EXT BYTE draw_fs_topgap INIT(0);
+BYTE prefer_pc_hz[2][3]={{0,0,0},{0,0,0}};
+BYTE tested_pc_hz[2][3]={{0,0,0},{0,0,0}};
+#else
 EXT int bad_drawing INIT(0);
 EXT int draw_fs_blit_mode INIT( UNIX_ONLY(DFSM_STRAIGHTBLIT) WIN_ONLY(DFSM_STRETCHBLIT) );
 EXT int draw_fs_fx INIT(DFSFX_NONE),draw_grille_black INIT(6);
-EXT RECT draw_blit_source_rect;
+EXT int border INIT(2),border_last_chosen INIT(2);
 EXT int draw_fs_topgap INIT(0);
+int prefer_pc_hz[2][3]={{0,0,0},{0,0,0}};
+WORD tested_pc_hz[2][3]={{0,0,0},{0,0,0}};
+#endif
+
+EXT RECT draw_blit_source_rect;
+
 
 WIN_ONLY( EXT int draw_win_mode[2]; ) // Inited by draw_fs_blit_mode
 
@@ -42,12 +58,11 @@ EXT int draw_line_length;
 EXT long *PCpal;
 EXT WORD STpal[16];
 EXT BYTE *draw_dest_ad,*draw_dest_next_scanline;
-EXT int border INIT(2),border_last_chosen INIT(2);
+
 
 EXT bool display_option_8_bit_fs INIT(false);
 EXT bool prefer_res_640_400 INIT(0),using_res_640_400 INIT(0);
-extern int prefer_pc_hz[2][3];
-extern WORD tested_pc_hz[2][3];
+
 EXT int overscan INIT(0)
 #if !defined(SSE_SHIFTER_REMOVE_USELESS_VAR) || defined(SSE_SHIFTER_DRAW_DBG)
 ,stfm_borders INIT(0)
@@ -57,8 +72,7 @@ UNIX_ONLY( EXT int x_draw_surround_count INIT(4); )
 
 WIN_ONLY( EXT HWND ClipWin; )
 
-int prefer_pc_hz[2][3]={{0,0,0},{0,0,0}};
-WORD tested_pc_hz[2][3]={{0,0,0},{0,0,0}};
+
 
 
 int cpu_cycles_from_hbl_to_timer_b;
@@ -321,7 +335,11 @@ void draw_set_jumps_and_source()
         && !(SCANLINES_INTERPOLATED&&SSE_3BUFFER)
 #endif
     ){
-    if (draw_fs_blit_mode==DFSM_STRETCHBLIT || draw_fs_blit_mode==DFSM_LAPTOP) big_draw=0;
+    if (draw_fs_blit_mode==DFSM_STRETCHBLIT || draw_fs_blit_mode==DFSM_LAPTOP
+#if defined(SSE_VID_D3D_STRETCH_FORCE)      
+      || D3D9_OK && SSE_OPTION_D3D
+#endif
+      ) big_draw=0;
   }else if (big_draw){
     if (ResChangeResize==0){
       big_draw=0; // always stretch
@@ -441,6 +459,9 @@ void draw_set_jumps_and_source()
 #if defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_3BUFFER)
         && !(SCANLINES_INTERPOLATED&&SSE_3BUFFER)
 #endif
+#if defined(SSE_VID_D3D_STRETCH)
+        && !(D3D9_OK && SSE_OPTION_D3D)//TODO specify the switches
+#endif
         ){
         ox=(800-ow)/2;oy=(600-oh)/2;
       }
@@ -450,6 +471,9 @@ void draw_set_jumps_and_source()
         && !(SCANLINES_INTERPOLATED&&SSE_3BUFFER)
 #endif
       ){
+#if defined(SSE_VID_D3D_STRETCH)
+//      if(!(D3D9_OK && SSE_OPTION_D3D))
+#endif
       WIN_ONLY( oy=int(using_res_640_400 ? 0:40); )
       if (overscan && (border==2)){ //hack overscan
         oy=0;oh=480;
@@ -482,6 +506,8 @@ void draw_set_jumps_and_source()
     }else{
       draw_dest_increase_y=2*draw_line_length;
     }
+//    TRACE("big source rect %d %d %d %d\n",draw_blit_source_rect.left,draw_blit_source_rect.top,draw_blit_source_rect.right,draw_blit_source_rect.bottom);
+    //// 16,30,784,570 for interpolated
   }else{
     draw_scanline=jump_draw_scanline[0][BytesPerPixel-1][screen_res];
     draw_scanline_lowres=jump_draw_scanline[0][BytesPerPixel-1][0];
@@ -514,7 +540,11 @@ void draw_set_jumps_and_source()
 #endif
       
       ){
+#if defined(SSE_VID_D3D_STRETCH)
+      if(!(D3D9_OK && SSE_OPTION_D3D))
+#endif
       WIN_ONLY( oy=int(using_res_640_400 ? 0:40); )
+
       if (overscan && (border==2)){ //hack overscan
         oy=0;
         oh=240;
@@ -527,10 +557,11 @@ void draw_set_jumps_and_source()
     draw_blit_source_rect.bottom=oy+oh;
 //    if(overscan)draw_blit_source_rect_bottom+=OVERSCAN_HEIGHT; should this be put in???
     draw_dest_increase_y=draw_line_length;
+    //TRACE("no big source rect %d %d %d %d\n",draw_blit_source_rect.left,draw_blit_source_rect.top,draw_blit_source_rect.right,draw_blit_source_rect.bottom);
+    //-> y = +40 in all modes
   }
   WIN_ONLY( draw_buffer_complex_scanlines=(Disp.Method==DISPMETHOD_DD &&
                   Disp.DrawToVidMem && draw_med_low_double_height); )
-
 //  ASSERT(draw_buffer_complex_scanlines);
 //  WIN_ONLY( draw_buffer_complex_scanlines=0; )
 }
@@ -578,7 +609,7 @@ void draw_end()
   || defined(SSE_SHIFTER_DRAW_DBG) || !defined(SSE_STRUCTURE)
 
 //---------------------------------------------------------------------------
-/* SS this was the core of shifter trick analysis in Steem 3.2.
+/* SS this was the core of Shifter trick analysis in Steem 3.2.
    There's not so much code but it ran many cases eg Darkside of the Spoon,
    it was missing the 0byte line, 4bit scrolling.
    It has been much expanded and commented in SSEShifter.cpp.

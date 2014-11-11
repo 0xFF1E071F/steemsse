@@ -16,8 +16,10 @@
 #include <emulator.decla.h>
 #include <fdc.decla.h>
 #include <floppy_drive.decla.h>
+#include <gui.decla.h>//WriteDir//alert
 #include <harddiskman.decla.h>
 #include <mfp.decla.h>
+#include <mymisc.h>//getexe
 #include <run.decla.h>
 #include <steemh.decla.h>
 #include "SSEFloppy.h"
@@ -47,10 +49,10 @@ TDebug::TDebug() {
   ZeroMemory(logsection_enabled,100*sizeof(bool)); // 100> our need
   logsection_enabled[ LOGSECTION_ALWAYS ] = 1;
 #if defined(_DEBUG) && !defined(DEBUG_BUILD) // VC6 IDE debug no boiler
-  logsection_enabled[ LOGSECTION_FDC ] = 1;
+  logsection_enabled[ LOGSECTION_FDC ] = 0;
   logsection_enabled[ LOGSECTION_IO ] = 0;
   logsection_enabled[ LOGSECTION_MFP_TIMERS ] = 0;
-  logsection_enabled[ LOGSECTION_INIT ] =0;
+  logsection_enabled[ LOGSECTION_INIT ] =1;
   logsection_enabled[ LOGSECTION_CRASH ] = 0;
   logsection_enabled[ LOGSECTION_STEMDOS ] = 0;
   logsection_enabled[ LOGSECTION_IKBD ] = 0;
@@ -69,11 +71,11 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_GUI ] = 0;
   // no PASTI, no DIV
 // additions
-#if !defined(SSE_DEBUG_TRACE_CONTROL)
+#if !defined(SSE_BOILER_TRACE_CONTROL)
   logsection_enabled[ LOGSECTION_FDC_BYTES ] = 0;
   //logsection_enabled[ LOGSECTION_IPF_LOCK_INFO ] = 0; //remove option
 #endif
-  logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 0;
+  logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 1;
 #endif
   logsection_enabled[ LOGSECTION_OPTIONS ] = 1; // no boiler control
 #endif
@@ -81,15 +83,33 @@ TDebug::TDebug() {
 #if defined(SSE_DEBUG_TRACE_FILE)
   IgnoreErrors=0; 
   nTrace=0; // trace counter
-  trace_file_pointer=freopen(SS_TRACE_FILE_NAME, "w", stdout );
-  ASSERT(trace_file_pointer);
-#ifdef WIN32
+  ////////EasyStr filename=WriteDir + SLASH  + SSE_TRACE_FILE_NAME;
+
+
+  SetCurrentDirectory(GetEXEDir().Text);
+
+  trace_file_pointer=freopen(SSE_TRACE_FILE_NAME, "w", stdout );
+  //trace_file_pointer=fopen(SSE_TRACE_FILE_NAME, "w");
+  //trace_file_pointer=freopen(filename.Text, "w", stdout );
+  //ASSERT(trace_file_pointer);
+
+
+  //SetCurrentPath
+
+
+
+  if(!trace_file_pointer)
+    Alert("Couldn't open TRACE file",GetEXEDir().Text,0);
+  //if(!trace_file_pointer) TRACE_IDE("%s\n",WriteDir.Text);
+#if !defined(SSE_BOILER_WIPE_TRACE2)
+#ifdef WIN32 // at each start now because of wiping
   // http://www.ehow.com/how_2190605_use-date-time-c-program.html
   char sdate[9];
   char stime[9];
   _strdate( sdate );
   _strtime( stime );
-  printf("Steem SSE TRACE - %s -%s\n",sdate,stime);
+  if(trace_file_pointer)printf("Steem SSE TRACE - %s - %s\n",sdate,stime);
+#endif
 #endif
 #endif
 
@@ -101,14 +121,14 @@ TDebug::TDebug() {
   TraceOsd("Debug Build"); // implies clean init
 #endif
 
-#if defined(SSE_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
   ZeroMemory(&InterruptTable,sizeof(SInterruptTable));
 #endif
 
-#if defined(SSE_DEBUG_STACK_68030_FRAME)
+#if defined(SSE_BOILER_STACK_68030_FRAME)
   M68030StackFrame=0;
 #endif
-#if defined(SSE_DEBUG_STACK_CHOICE)
+#if defined(SSE_BOILER_STACK_CHOICE)
   StackDisplayUseOtherSp=0;
 #endif
 }
@@ -126,7 +146,7 @@ TDebug::~TDebug() {
 
 
 void TDebug::Vbl(){ 
-#if defined(SSE_DEBUG_FRAME_INTERRUPTS)
+#if defined(SSE_BOILER_FRAME_INTERRUPTS)
 /*  This system so that we only report these once per frame, giving
     convenient info about VBI, HBI, and MFP IRQ.
 */
@@ -171,7 +191,8 @@ void TDebug::Vbl(){
 void TDebug::Trace(char *fmt, ...){ 
   // Our TRACE facility has no MFC dependency.
   va_list body;	
-  va_start(body, fmt);	
+  va_start(body, fmt);
+  ASSERT(trace_buffer);
 #if defined(SSE_UNIX)
   int nchars=vsnprintf(trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
 #else
@@ -192,10 +213,10 @@ void TDebug::Trace(char *fmt, ...){
   
 #if defined(SSE_DEBUG_TRACE_FILE)
 #if defined(DEBUG_BUILD) || defined(SSE_UNIX)
-  if(USE_TRACE_FILE)
+  if(USE_TRACE_FILE && trace_file_pointer && trace_buffer)
 #endif      
     printf(trace_buffer),nTrace++; 
-  if(TRACE_FILE_REWIND && nTrace>=TRACE_MAX_WRITES)
+  if(TRACE_FILE_REWIND && nTrace>=TRACE_MAX_WRITES && trace_file_pointer)
   {
     nTrace=0;
     rewind(trace_file_pointer); // it doesn't erase
@@ -220,6 +241,18 @@ void TDebug::TraceGeneralInfos(int when) {
   
   if(when==START)
   {
+
+#if defined(SSE_BOILER_WIPE_TRACE2) && defined(SSE_DEBUG_TRACE_FILE)
+#ifdef WIN32 // at each start now because of wiping
+    // http://www.ehow.com/how_2190605_use-date-time-c-program.html
+    char sdate[9];
+    char stime[9];
+    _strdate( sdate );
+    _strtime( stime );
+    TRACE("Steem SSE TRACE - %s -%s\n",sdate,stime);
+#endif
+#endif
+
     TRACE(">>> Start Emulation <<<\n");
 #if defined(SSE_STF)
     TRACE("%s; ",st_model_name[ST_TYPE]);
@@ -263,7 +296,7 @@ void TDebug::TraceGeneralInfos(int when) {
       TRACE("; HD6301");
 #endif
 
-#if defined(SSE_MMU_WAKE_UP_DL)
+#if defined(SSE_MMU_WU_DL)
     if(WAKE_UP_STATE)
       TRACE("; WS%d",MMU.WS[WAKE_UP_STATE]);
 #elif defined(SSE_MMU_WAKE_UP)
@@ -312,6 +345,7 @@ void TDebug::TraceIde(char *fmt, ...){
 
 
 void TDebug::TraceLog(char *fmt, ...) { // static
+  
   ASSERT(Debug.LogSection>=0 && Debug.LogSection<100);
   if(Debug.LogSection<NUM_LOGSECTIONS && Debug.logsection_enabled[Debug.LogSection]
 #if defined(DEBUG_BUILD)
@@ -323,6 +357,7 @@ void TDebug::TraceLog(char *fmt, ...) { // static
     // trivial (TODO)
     va_list body;	
     va_start(body, fmt);
+    ASSERT(Debug.trace_buffer);
 #if defined(SSE_UNIX)
     int nchars=vsnprintf(Debug.trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
 #else
@@ -345,10 +380,10 @@ void TDebug::TraceLog(char *fmt, ...) { // static
     
 #if defined(SSE_DEBUG_TRACE_FILE)
 #if defined(DEBUG_BUILD) || defined(SSE_UNIX)
-    if(USE_TRACE_FILE)
+    if(USE_TRACE_FILE && Debug.trace_file_pointer && Debug.trace_buffer)
 #endif      
       printf(Debug.trace_buffer),Debug.nTrace++; 
-    if(TRACE_FILE_REWIND && Debug.nTrace>=TRACE_MAX_WRITES)
+    if(TRACE_FILE_REWIND && Debug.nTrace>=TRACE_MAX_WRITES && Debug.trace_file_pointer)
     {
       Debug.nTrace=0;
       rewind(Debug.trace_file_pointer); // it doesn't erase
@@ -366,6 +401,9 @@ void TDebug::TraceLog(char *fmt, ...) { // static
     Current systems are powerful enough to accomodate a lot of those
     messages, eg when the CPU is in trace mode (Transbeauce 2).
 */  
+
+//void osd_draw_full_stop();
+
 void TDebug::TraceOsd(char *fmt, ...) {
 
   va_list body;	
@@ -379,10 +417,13 @@ void TDebug::TraceOsd(char *fmt, ...) {
   strupr(m_OsdMessage); // OSD font is upper-only
 //  TRACE("osdinfo %s %d %d\n",Debug.m_OsdMessage,Debug.OsdTimer,timer);
   OsdTimer=timer+OSD_DEBUG_MESSAGE_TIME*1000;
+//  if(runstate!=RUNSTATE_RUNNING) //TODO
+//    osd_draw_full_stop();
+
 }
 #endif
 
-#if defined(SSE_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
 /*  
     It tries to figure out which interrupt if any is being
     executed when the Boiler is stopped.

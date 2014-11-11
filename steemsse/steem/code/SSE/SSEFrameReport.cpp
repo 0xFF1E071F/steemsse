@@ -20,8 +20,6 @@
 
 #if defined(SSE_DEBUG_FRAME_REPORT)
 
-// based on a copy of SSEShifterEvents, with 'Frame' instead of
-// 'Shifter'
 
 TFrameEvents FrameEvents;  // singleton
 
@@ -43,7 +41,7 @@ MEM_ADDRESS TFrameEvents::GetSDP(int x,int guessed_scan_y) {
     if(m_FrameEvent[i].Scanline==guessed_scan_y)
     {
       if(m_FrameEvent[i].Type=='@' && !sdp)
-        sdp=m_FrameEvent[i].Value<<16;
+        sdp=m_FrameEvent[i].Value<<16; // fails if 1st word=0 (Leavin' Terramis)
       else if(m_FrameEvent[i].Type=='@' && sdp)
       {
         sdp|=m_FrameEvent[i].Value; // at start of line
@@ -54,6 +52,7 @@ MEM_ADDRESS TFrameEvents::GetSDP(int x,int guessed_scan_y) {
           i++;
         if(m_FrameEvent[i].Type=='T')
           trick=m_FrameEvent[i].Value;
+#if defined(SSE_SHIFTER)
         // this could already help the precision but
         // it isn't meant to be complete nor accurate!
         if(trick&TRICK_LINE_PLUS_26)
@@ -64,6 +63,7 @@ MEM_ADDRESS TFrameEvents::GetSDP(int x,int guessed_scan_y) {
           x=-1;
         if(x>0)
           sdp+=x/2;
+#endif
         sdp&=~1; // looks more serious...
         break;
       }
@@ -83,7 +83,7 @@ int TFrameEvents::Report() {
   TRACE("Saving frame events...\n");
   FILE* fp;
   fp=fopen(FRAME_REPORT_FILENAME,"w"); // unique file name
-  ASSERT(fp);
+  //ASSERT(fp);
   if(fp)
   {
 #if defined(WIN32)
@@ -97,10 +97,10 @@ int TFrameEvents::Report() {
 #else
       "STE"
 #endif
-#if defined(SSE_MMU_WAKE_UP_DL)
+#if defined(SSE_MMU_WU_DL)
       ,MMU.WS[WAKE_UP_STATE]);
 #else
-    ,0;
+    ,0);
 #endif
 #else
     fprintf(fp,"Steem frame report - %s WS%d\n",
@@ -123,8 +123,9 @@ int TFrameEvents::Report() {
         fprintf(fp," %03d:%c%04X",m_FrameEvent[i].Cycle,m_FrameEvent[i].Type,m_FrameEvent[i].Value);
     }//nxt
     fclose(fp);
+    fprintf(fp,"\n--"); // so we know it was OK
   }
-  fprintf(fp,"\n--"); // so we know it was OK
+  
   m_nReports++;
   return m_nReports;
 }
@@ -157,11 +158,11 @@ int TFrameEvents::Vbl() {
   {
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_VIDEO
-#if defined(SSE_DEBUG_TRACE_CONTROL)
+#if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK1 & TRACE_CONTROL_SUMMARY)
 #endif
-      TRACE_LOG("VBL %d shifter tricks %X\n",nVbl,Debug.ShifterTricks);
-#undef LOGSECTION
+      TRACE_LOG("VBL %d Shifter tricks %X\n",nVbl,Debug.ShifterTricks);
+//#undef LOGSECTION
 
 #if defined(SSE_OSD_CONTROL)
     if(OSD_MASK2 & OSD_CONTROL_SHIFTERTRICKS)
@@ -169,7 +170,7 @@ int TFrameEvents::Vbl() {
     if(TRACE_ENABLED) 
 #endif
       TRACE_OSD("T%X",Debug.ShifterTricks);
-
+#undef LOGSECTION//???
     Debug.ShifterTricks=0;
   }
 #endif  

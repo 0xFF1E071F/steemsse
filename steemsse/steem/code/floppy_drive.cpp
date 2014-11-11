@@ -30,9 +30,8 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   int drive=-1;
   if (this==&FloppyDrive[0]) drive=0; // and not according to PSG
   if (this==&FloppyDrive[1]) drive=1; // it's different here!
-#endif
-
   TRACE_LOG("%c: SetDisk %s\n",'A'+drive,File.c_str());
+#endif
 
 #if defined(SSE_DISK1)
 //  Disk[drive].Init(); //seriously bugged
@@ -163,7 +162,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && SSE_VERSION>=370
+#if defined(STEVEN_SEAGAL) && defined(SSE_FLOPPY) && SSE_VERSION>=370
               if(PASTI_JUST_STX&& drive!=-1 && SF314[1-drive].ImageType.Extension!=EXT_STX)
                 pasti_active=false;
               //TRACE_LOG("pasti_active %d\n",pasti_active);
@@ -409,13 +408,15 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     if(!strncmp(PrgPath.Rights(3),"PRG",3)) //our dedicated folder
     {
       RemoveDisk();
+#if defined(SSE_DISK_IMAGETYPE)
       SF314[drive].ImageType.Manager=MNGR_STEEM;
-#if defined(SSE_TOS_TOS_AUTORUN)
+#if defined(SSE_TOS_TOS_AUTORUN) 
       if(TOS)
         SF314[drive].ImageType.Extension=EXT_TOS;
       else
 #endif
         SF314[drive].ImageType.Extension=EXT_PRG;
+#endif
       Str NewPath,AutoPath;
       AutoPath=PrgPath+SLASH+"AUTO"+SLASH+"AUTORUN.PRG";
       DeleteFile(AutoPath.Text); // anyway

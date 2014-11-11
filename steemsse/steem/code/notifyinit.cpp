@@ -36,6 +36,7 @@ ONEGAME_ONLY( EXT HWND NotifyWinParent; )
 //---------------------------------------------------------------------------
 void CreateNotifyInitWin()
 {
+#if !defined(_DEBUG)
   WNDCLASS wc;
   wc.style=CS_NOCLOSE;
   wc.lpfnWndProc=NotifyInitWndProc;
@@ -70,15 +71,18 @@ void CreateNotifyInitWin()
   UpdateWindow(NotifyWin);
   SetCursor(NULL);
 #endif
+#endif//#if !defined(_DEBUG)
 }
 //---------------------------------------------------------------------------
 #ifndef ONEGAME
 void SetNotifyInitText(char *NewText)
 {
+#if !defined(_DEBUG)
   if (NotifyWin==NULL) return;
   
   SendMessage(NotifyWin,WM_USER,12345,(LPARAM)NewText);
   UpdateWindow(NotifyWin);
+#endif
 }
 #else
 void SetNotifyInitText(char *){}
@@ -91,7 +95,7 @@ LRESULT __stdcall NotifyInitWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
   switch (Mess){
 
 #ifndef ONEGAME
-
+#if !defined(_DEBUG)
     case WM_CREATE:
 
     {
@@ -153,6 +157,7 @@ LRESULT __stdcall NotifyInitWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       delete[] (char*)GetProp(Win,"NotifyText");
       RemoveProp(Win,"NotifyText");
       break;
+#endif//#if !defined(_DEBUG)
 #else
     case WM_PAINT:
     {

@@ -2,6 +2,10 @@
 #ifndef FDC_DECLA_H
 #define FDC_DECLA_H
 
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_DMA))
+#include <conditions.h> // MEM_ADDRESS
+#endif
+
 #define EXT extern
 #define INIT(s)
 
@@ -123,7 +127,7 @@ EXT WORD dma_bytes_written_for_sector_count;
 #endif
 #else
 #define FLOPPY_FF_VBL_COUNT 20
-int floppy_access_ff_counter;
+EXT int floppy_access_ff_counter;
 #define FLOPPY_IRQ_YES 9
 #define FLOPPY_IRQ_ONESEC 10
 #define FLOPPY_IRQ_NOW 417

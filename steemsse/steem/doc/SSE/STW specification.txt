@@ -49,7 +49,7 @@ All words are, of course, in big endian format (Motorola), as opposed to
 Intel's little endian.
 
 Header 
-------
+======
 
 4 bytes: "STW", case-sensitive, null-terminated C string
 1 word: version in hex ($0100 to begin with, meaning 1.00)
@@ -67,7 +67,7 @@ The number of tracks and of bytes is open for discussion.
 There's no option for those in Steem.
 
 Tracks
-------
+======
 
 There are normally 84 tracks per side, 2 sides.
 
@@ -97,11 +97,13 @@ So the $A1 address marks are encoded $4489.
 MFM encoding is overkill, but it's funnier that way. 
 We could as well have written clock and data byte separately, and spare
 some code.
-
+Clock byte is useful only for address marks, and so most of that data is
+useless, but it makes the format simple and coherent, and more like a dump
+of the diskette.
 
 
 Tested cases
-------------
+============
 They were chosen because they may cause drive and controller emulation 
 issues, and they helped debugging the WD1772 emulator.
 
@@ -116,7 +118,7 @@ BIG Demo
 Blood
 Braindamage
 Darkside of the Spoon
-Delirious 3 (speed issue?)
+Delirious 3 (issues but loads)
 Delirious 4
 Dragonflight original (the main reason for "STW")
 English for Business - Alpha Flight
@@ -124,13 +126,15 @@ European Demos
 FDCTNF
 GEM format
 Mps Golf original
+My Socks are Weapons
 Overdrive Demo
-Overscan Demos
+Overscan Demos (11 sec, interleave 6)
 Realm of the Trolls -DBG
 ST-NICCC 2000 v2
 Super Monaco Grand Prix -HTL
 Symic
 Treasure Trap -SUP
+Ultimate 3D Dots
 Union Demo
 War Heli -MB
 Wipe Out -RPL

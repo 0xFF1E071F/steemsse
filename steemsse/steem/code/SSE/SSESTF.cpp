@@ -17,7 +17,7 @@
 
 // note this is global here, not in classes. TODO?
 
-char* st_model_name[]={"STE","STF","Mega ST4","STF 8.0 MHZ"};
+char* st_model_name[]={"STE","STF","Mega ST4","STF 8.00 MHZ"};
 
 #if defined(SSE_TOS_WARNING1)
 void CheckSTTypeAndTos() {
@@ -36,8 +36,8 @@ int SwitchSTType(int new_type) {
 #if defined(SSE_INT_VBL_STF) // instead of SSE_INT_VBI_START
     HblTiming=HBL_FOR_STF; 
 #endif
-#if defined(SSE_MFP_RATIO)
-#if defined(SSE_MFP_RATIO_STF)
+#if defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_INT_MFP_RATIO_STF)
 
 #if defined(SSE_STF_8MHZ)
     if(ST_TYPE==STF8MHZ) // this removes artefacts in panic.tos, is it normal?
@@ -65,11 +65,11 @@ int SwitchSTType(int new_type) {
     HblTiming=HBL_FOR_STE;
 #endif
 
-#if defined(SSE_MFP_RATIO)
-#if defined(SSE_MFP_RATIO_STE_AS_STF)
+#if defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_INT_MFP_RATIO_STE_AS_STF)
     CpuMfpRatio=(double)CPU_STF_PAL/(double)MFP_CLK_TH_EXACT;
     CpuNormalHz=CPU_STE_PAL;
-#elif defined(SSE_MFP_RATIO_STE)
+#elif defined(SSE_INT_MFP_RATIO_STE)
     CpuMfpRatio=(double)CPU_STE_TH/(double)MFP_CLK_STE_EXACT;
     CpuNormalHz=CPU_STE_TH;
 #else
@@ -80,8 +80,8 @@ int SwitchSTType(int new_type) {
 
   }
 
-#if defined(SSE_MFP_RATIO)
-#if defined(SSE_MFP_RATIO_HIGH_SPEED) //fix v3.6.1 (broken v3.5.1)
+#if defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_INT_MFP_RATIO_HIGH_SPEED) //fix v3.6.1 (broken v3.5.1)
   if(n_cpu_cycles_per_second<10000000) // avoid interference with ST CPU Speed option
 #endif
     n_cpu_cycles_per_second=CpuNormalHz; // no wrong CPU speed icon in OSD (3.5.1)

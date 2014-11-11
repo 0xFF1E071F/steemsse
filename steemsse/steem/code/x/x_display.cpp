@@ -5,6 +5,7 @@
 */
 
 //---------------------------------------------------------------------------
+#ifdef UNIX//SS
 bool SteemDisplay::CheckDisplayMode(DWORD red_mask,DWORD green_mask,DWORD blue_mask)
 {
   bool Valid=0;
@@ -818,3 +819,4 @@ void SteemDisplay::DrawWaveform()
 }
 #endif
 //---------------------------------------------------------------------------
+#endif//#ifdef UNIX

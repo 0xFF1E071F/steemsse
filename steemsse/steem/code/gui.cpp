@@ -222,6 +222,73 @@ const POINT WinSize[4][5]={ {{320,200},{640,400},{960, 600},{1280,800},{-1,-1}},
 {-1,-1}}
 };
 
+
+
+
+#if SSE_VERSION<354
+ POINT WinSizeBorderLarge2[4][5]={ {{320+LARGE_BORDER_SIDE_WIN*2,200+(BORDER_TOP+LARGE_BORDER_BOTTOM+3)},
+{640+(LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BORDER_TOP+LARGE_BORDER_BOTTOM+3)}, 
+{960+(LARGE_BORDER_SIDE_WIN*3)*2, 600+3*(BORDER_TOP+LARGE_BORDER_BOTTOM+3)},
+{1280+(LARGE_BORDER_SIDE_WIN*4)*2,800+4*(BORDER_TOP+LARGE_BORDER_BOTTOM+3)},
+{-1,-1}},
+{{640+(LARGE_BORDER_SIDE_WIN*2)*2,200+(BORDER_TOP+LARGE_BORDER_BOTTOM+3)},
+{640+(LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BORDER_TOP+LARGE_BORDER_BOTTOM+3)},
+{1280+(LARGE_BORDER_SIDE_WIN*4)*2,400+2*(BORDER_TOP+LARGE_BORDER_BOTTOM+3)},
+{1280+(LARGE_BORDER_SIDE_WIN*4)*2,800+4*(BORDER_TOP+LARGE_BORDER_BOTTOM+3)},
+{-1,-1}},
+{{640+(LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BORDER_TOP+LARGE_BORDER_BOTTOM+3)},
+{1280+(LARGE_BORDER_SIDE_WIN*4)*2,800+4*(BORDER_TOP+LARGE_BORDER_BOTTOM+3)},
+{-1,-1}},
+{{800,600},
+{-1,-1}}
+};
+
+
+#if SSE_VERSION<353
+ POINT WinSizeBorderVeryLarge[4][5]={ {{320+VERY_LARGE_BORDER_SIDE_WIN*2,200+(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{640+(VERY_LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)}, 
+{960+(VERY_LARGE_BORDER_SIDE_WIN*3)*2, 600+3*(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{1280+(VERY_LARGE_BORDER_SIDE_WIN*4)*2,800+4*(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{-1,-1}},
+{{640+(VERY_LARGE_BORDER_SIDE_WIN*2)*2,200+(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{640+(VERY_LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{1280+(VERY_LARGE_BORDER_SIDE_WIN*4)*2,400+2*(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{1280+(VERY_LARGE_BORDER_SIDE_WIN*4)*2,800+4*(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{-1,-1}},
+{{640+(VERY_LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{1280+(VERY_LARGE_BORDER_SIDE_WIN*4)*2,800+4*(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{-1,-1}},
+{{800,600},
+{-1,-1}}
+};
+#endif
+
+
+#if defined(SSE_VID_BORDERS_BIGTOP)
+#define NEW_BORDER_TOP (35)
+POINT WinSizeBorderVeryLarge[4][5]={ {{320+VERY_LARGE_BORDER_SIDE_WIN*2,200+(NEW_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{640+(VERY_LARGE_BORDER_SIDE_WIN*2)*2,400+2*(NEW_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)}, 
+{960+(VERY_LARGE_BORDER_SIDE_WIN*3)*2, 600+3*(NEW_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{1280+(VERY_LARGE_BORDER_SIDE_WIN*4)*2,800+4*(NEW_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{-1,-1}},
+{{640+(VERY_LARGE_BORDER_SIDE_WIN*2)*2,200+(NEW_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{640+(VERY_LARGE_BORDER_SIDE_WIN*2)*2,400+2*(NEW_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{1280+(VERY_LARGE_BORDER_SIDE_WIN*4)*2,400+2*(NEW_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{1280+(VERY_LARGE_BORDER_SIDE_WIN*4)*2,800+4*(NEW_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{-1,-1}},
+{{640+(VERY_LARGE_BORDER_SIDE_WIN*2)*2,400+2*(NEW_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{1280+(VERY_LARGE_BORDER_SIDE_WIN*4)*2,800+4*(NEW_BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{-1,-1}},
+{{800,600},
+{-1,-1}}
+};
+#undef NEW_BORDER_TOP
+#endif
+
+#endif//ver
+
+
+
 #if defined(SSE_VID_BORDERS_412)
 
 #if defined(SSE_VID_BORDERS_413)
@@ -458,6 +525,17 @@ int ChangeBorderSize(int size_in) {
       SideBorderSizeWin=LARGE_BORDER_SIDE_WIN; // show 400
       BottomBorderSize=LARGE_BORDER_BOTTOM;
       break;
+#if SSE_VERSION<354
+    case 2:
+      SideBorderSize=LARGE_BORDER_SIDE;
+      SideBorderSizeWin=LARGE_BORDER_SIDE_WIN;
+      BottomBorderSize=LARGE_BORDER_BOTTOM+3;
+      break;
+    case 3:
+      SideBorderSize=VERY_LARGE_BORDER_SIDE;
+      SideBorderSizeWin=VERY_LARGE_BORDER_SIDE_WIN;
+      BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
+#else
     case 2:
 #if defined(SSE_VID_BORDERS_412)
       SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
@@ -469,7 +547,6 @@ int ChangeBorderSize(int size_in) {
       BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
 #endif
       break;
-
 #if defined(SSE_VID_BORDERS_416) && defined(SSE_VID_BORDERS_412)
     case 3:
       SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
@@ -477,6 +554,8 @@ int ChangeBorderSize(int size_in) {
       BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
       break;
 #endif
+#endif//ver
+
     }//sw
     int i,j;
     for(i=0;i<4;i++) 
@@ -491,6 +570,13 @@ int ChangeBorderSize(int size_in) {
         case 1:
           WinSizeBorder[i][j]=WinSizeBorderLarge[i][j];
           break;
+#if SSE_VERSION<354
+        case 2:
+          WinSizeBorder[i][j]=WinSizeBorderLarge2[i][j];
+          break;
+        case 3:
+          WinSizeBorder[i][j]=WinSizeBorderVeryLarge[i][j];
+#else
         case 2:
 #if defined(SSE_VID_BORDERS_412)
           WinSizeBorder[i][j]=WinSizeBorderVeryLarge[i][j];
@@ -503,12 +589,15 @@ int ChangeBorderSize(int size_in) {
           WinSizeBorder[i][j]=WinSizeBorderVeryLarge2[i][j];
           break;
 #endif
+#endif//ver
         }//sw
       }
     }
     draw_last_scanline_for_border=shifter_y+res_vertical_scale*(BORDER_BOTTOM);
     StemWinResize();
+//#if !defined(SSE_VID_D3D1) // done in StemWinResize()
     Disp.ScreenChange();
+//#endif
     return TRUE;
   }
   return FALSE;
@@ -516,9 +605,10 @@ int ChangeBorderSize(int size_in) {
 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_STATUS_STRING)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_STATUS_STRING)
 /*  Cool feature introduced with v3.5.4, a kind of status bar consisting
-    in a formatted text string placed on the icon bar of Steem.
+    in a formatted text string placed on the icon bar of Steem, when there
+    is sufficient room between left and right icons.
 */
 
 #include "SSE/SSEMMU.h"
@@ -533,30 +623,31 @@ void GUIRefreshStatusBar() {
   // build text of "status bar", only if we're to show it
   if(should_we_show)
   {
-    char status_bar[120+10]="\0";
+    char status_bar[120+10]="\0"; //TODO: size
 
     if(SSE_STATUS_BAR)
     {
       // basic ST/TOS/RAM
       char 
-#if !defined(SSE_VAR_STATUS_STRING_FULL_ST_MODEL)
+#if !defined(SSE_GUI_STATUS_STRING_FULL_ST_MODEL)
         sb_st_model[5],
 #endif
         sb_tos[5],sb_ram[7];
-#if defined(SSE_MMU_WAKE_UP_DL)
-#if !defined(SSE_VAR_STATUS_STRING_FULL_ST_MODEL)
+#if !defined(SSE_GUI_STATUS_STRING_FULL_ST_MODEL)
+#if defined(SSE_MMU_WU_DL)
+
       sprintf(sb_st_model,"%s%d",(ST_TYPE)? "STF":"STE",MMU.WS[WAKE_UP_STATE]);
       if(!WAKE_UP_STATE)
         sb_st_model[3]=0;
-#endif
 #else
       sprintf(sb_st_model,"%s",(ST_TYPE)? "STF":"STE");
 #endif
+#endif
       sprintf(sb_tos,"T%x",tos_version);
       sprintf(sb_ram,"%dK",mem_len/1024);
-#if defined(SSE_VAR_STATUS_STRING_FULL_ST_MODEL)
+#if defined(SSE_GUI_STATUS_STRING_FULL_ST_MODEL)
       sprintf(status_bar,"%s %s %s",st_model_name[ST_TYPE],sb_tos,sb_ram);
-#if defined(SSE_MMU_WAKE_UP_DL)
+#if defined(SSE_MMU_WU_DL)
       if(WAKE_UP_STATE)
       {
         char sb_wu[6];
@@ -568,12 +659,14 @@ void GUIRefreshStatusBar() {
       sprintf(status_bar,"%s %s %s",sb_st_model,sb_tos,sb_ram);
 #endif 
       // some options (6301, Pasti...)
-#if defined(SSE_IKBD_6301) && defined(SSE_VAR_STATUS_STRING_6301)
+#if defined(SSE_IKBD_6301) && defined(SSE_GUI_STATUS_STRING_6301)
+//#if !defined(SSE_IKBD_6301_NOT_OPTIONAL) //no, rom may be missing
       if(HD6301EMU_ON)
         strcat(status_bar," 6301");
+//#endif
 #endif
       
-#if USE_PASTI && defined(SSE_VAR_STATUS_STRING_PASTI)
+#if USE_PASTI && defined(SSE_GUI_STATUS_STRING_PASTI)//no
       if(hPasti && pasti_active
 #if defined(SSE_DRIVE)&&defined(SSE_PASTI_ONLY_STX)
 #if defined(SSE_DISK_IMAGETYPE)
@@ -588,21 +681,25 @@ void GUIRefreshStatusBar() {
       //if(0);
 #endif
       
-#if defined(SSE_VAR_STATUS_STRING_IPF) && defined(SSE_IPF)
+#if defined(SSE_GUI_STATUS_STRING_IPF) && defined(SSE_IPF)//no
       else if(Caps.Active)
         strcat(status_bar," Caps");
 #endif
       
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_STATUS_STRING_STW)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_STATUS_STRING_STW)//no
       else if(IMAGE_STW)
-        strcat(status_bar," STW");//temp?
+        strcat(status_bar," STW");
 #endif      
 
-#if defined(SSE_VAR_STATUS_STRING_ADAT)
-#if defined(SSE_VAR_STATUS_STRING_PASTI)
+#if defined(SSE_GUI_STATUS_STRING_ADAT)
+#if defined(SSE_GUI_STATUS_STRING_PASTI)
       else if(ADAT)
         strcat(status_bar," ADAT");
 #else
+#if defined(SSE_GUI_STATUS_STRING_HD)
+      if(!HardDiskMan.DisableHardDrives) //v3.7.0
+        strcat(status_bar," HD");
+#endif
       if(!floppy_instant_sector_access) // the option only //3.7.0
         strcat(status_bar," ADAT");
 #endif
@@ -610,19 +707,18 @@ void GUIRefreshStatusBar() {
 
 
 
-#if defined(SSE_VAR_STATUS_STRING_HACKS)
+#if defined(SSE_GUI_STATUS_STRING_HACKS)
       if(SSE_HACKS_ON)
         strcat(status_bar," #"); // which symbol?
 #endif
 
-#if defined(SSE_VAR_STATUS_STRING_VSYNC)
+#if defined(SSE_GUI_STATUS_STRING_VSYNC)
       if(SSE_WIN_VSYNC)
         strcat(status_bar," V"); // V for VSync!
 #endif
-
     }
 
-#if defined(SSE_VAR_STATUS_STRING_DISK_NAME)
+#if defined(SSE_GUI_STATUS_STRING_DISK_NAME)
 /*  We try to take advantage of all space.
     Font is proportional so we need a margin.
     TODO: precise computing
@@ -643,10 +739,12 @@ void GUIRefreshStatusBar() {
       int max_text_length=(border&1)?MAX_TEXT_LENGTH_BORDER_ON:MAX_TEXT_LENGTH_BORDER_OFF;
       if(SSE_STATUS_BAR)
         max_text_length-=30;
+#if defined(SS_VID_BORDERS)
       if(SideBorderSizeWin<VERY_LARGE_BORDER_SIDE)
         max_text_length-=5;
       if(SideBorderSizeWin==ORIGINAL_BORDER_SIDE)
         max_text_length-=5;
+#endif
       char tmp[MAX_TEXT_LENGTH_BORDER_ON+2+1]=" \"";
       if( strlen(FloppyDrive[floppy_current_drive()].DiskName.Text)<=max_text_length)
       {
@@ -674,8 +772,7 @@ void GUIRefreshStatusBar() {
 
 #endif
 
-
-#if defined(SSE_VAR_STATUS_STRING_HALT) && defined(SSE_CPU_HALT)
+#if defined(SSE_GUI_STATUS_STRING_HALT)
     if(M68000.ProcessingState==TM68000::HALTED)
       strcpy(status_bar,T("HALT (ST crashed)"));
 #endif
@@ -696,7 +793,7 @@ void GUIRefreshStatusBar() {
     GetWindowRect(status_bar_win,&window_rect3);
     int w=window_rect2.left-window_rect1.right-10;
 
-#if defined(SSE_VAR_STATUS_STRING_THRESHOLD)
+#if defined(SSE_GUI_STATUS_STRING_THRESHOLD)
     if(w<200)
       should_we_show=false;
     else
@@ -820,6 +917,10 @@ void GUIColdResetChangeSettings()
 #endif
     if (OptionBox.NewMonitorSel==1){
       mfp_gpip_no_interrupt &= MFP_GPIP_NOT_COLOUR;
+#if defined(SSE_VID_BORDERS_GUARD_R2)
+      if(DISPLAY_SIZE)
+        ChangeBorderSize(0);
+#endif
     }else if (OptionBox.NewMonitorSel==0){
       mfp_gpip_no_interrupt |= MFP_GPIP_COLOUR;
     }else{ //crazy monitor
@@ -834,6 +935,9 @@ void GUIColdResetChangeSettings()
       }
       extended_monitor=1;
       em_width=extmon_res[m][0];em_height=extmon_res[m][1];em_planes=extmon_res[m][2];
+#if defined(SSE_VID_BORDERS_GUARD_EM)
+      DISPLAY_SIZE=0;
+#endif
 #endif
     }
 #ifndef NO_CRAZY_MONITOR
@@ -1048,7 +1152,7 @@ bool MakeGUI()
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_RESET),WS_CHILDWINDOW | WS_VISIBLE |
                           PBS_RIGHTCLICK,x,0,20,20,StemWin,(HMENU)102,Inst,NULL);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESET_BUTTON)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_RESET_BUTTON)
   ToolAddWindow(ToolTip,Win,T("Reset (Left Click) - Switch off (Right Click)"));
 #else
   ToolAddWindow(ToolTip,Win,T("Reset (Left Click = Cold, Right Click = Warm)"));
@@ -1083,7 +1187,7 @@ bool MakeGUI()
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_STATUS_STRING)  
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_STATUS_STRING)  
 /*  Create a static control as text status bar. We take the undef update icon's
     number.
     WINDOW_TITLE is dummy, the field will be updated later, its size too.
@@ -1116,8 +1220,14 @@ bool MakeGUI()
                           100,0,20,20,StemWin,(HMENU)103,Inst,NULL);
   ToolAddWindow(ToolTip,Win,T("Joystick Configuration"));
 
-  Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_DISKMAN),WS_CHILDWINDOW | WS_VISIBLE,
-                          100,0,20,20,StemWin,(HMENU)100,Inst,NULL);
+#if defined(SSE_GUI_DISK_MANAGER_RGT_CLK_HD)
+  // introducing right click to toggle HD
+  Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_DISKMAN),WS_CHILDWINDOW | WS_VISIBLE 
+    | PBS_RIGHTCLICK ,100,0,20,20,StemWin,(HMENU)100,Inst,NULL);
+#else
+  Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_DISKMAN),WS_CHILDWINDOW | WS_VISIBLE
+    ,100,0,20,20,StemWin,(HMENU)100,Inst,NULL);
+#endif
   ToolAddWindow(ToolTip,Win,T("Disk Manager"));
 
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_TOWINDOW),WS_CHILD,
@@ -1395,6 +1505,7 @@ int GetComLineArgType(char *Arg,EasyStr &Path)
     char *dot=strrchr(GetFileNameFromPath(Path),'.');
     if (dot){
       if (ExtensionIsDisk(dot,false)){
+        //BRK(yoho);
         return ARG_DISKIMAGEFILE;
       }else if (ExtensionIsPastiDisk(dot)){
         return ARG_PASTIDISKIMAGEFILE;
@@ -1825,6 +1936,7 @@ void EnableAllWindows(bool Enable,HWND NoDisable)
 //---------------------------------------------------------------------------
 void ShowAllDialogs(bool Show)
 {
+  //TRACE("ShowAllDialogs(%d)\n",Show);
   if (FullScreen==0) return;
 
   static bool DiskManWasMaximized=0;
@@ -1879,7 +1991,7 @@ void HandleKeyPress(UINT VKCode,bool Up,int Extended)
   
   if (STCode==0) STCode=key_table[BYTE(VKCode)]; //SS: +- ASCII -> ST scancode
   if (STCode
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_F12)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_F12)
     && VKCode!=VK_F12
 #endif
     ){

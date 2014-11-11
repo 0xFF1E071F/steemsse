@@ -26,7 +26,7 @@ for pre-compiled headers (to reduce build time on slower development PCs).
 #define WINVER 0x0400
 #define _WIN32_WINNT 0x0300
 #if defined(SSE_VID_DD7)
-#if defined(BCC_BUILD) || _MSC_VER == 1200
+#if defined(BCC_BUILD) || _MSC_VER == 1200 
 #define DIRECT3D_VERSION 0x0900
 #define DIRECTDRAW_VERSION 0x0700
 #else
@@ -60,15 +60,23 @@ for pre-compiled headers (to reduce build time on slower development PCs).
 #include "d3d/ddraw.h"
 #include "d3d/dinput.h"
 #include "d3d/dsound.h"
-#elif _MSC_VER == 1200
+#elif _MSC_VER == 1200 && defined(SSE_VID_DD7)
 #include "d3d/ddraw.h"
 #include "d3d/dinput.h"
 #include "d3d/dsound.h" 
-#endif
-#else
+//#endif
+#else//VS2008
 #include <ddraw.h>
 #include <dsound.h>
 #include <dinput.h>
+#endif
+#else//no d3d
+#include <ddraw.h>
+#include <dsound.h>
+#include <dinput.h>
+
+
+
 #endif
 
 #if defined(_BCB_BUILD) || defined(BCC_BUILD)

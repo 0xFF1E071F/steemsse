@@ -84,7 +84,7 @@ BYTE floppy_type1_command_active=2;  // Default to type 1 status
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_DMA))
 WORD dma_bytes_written_for_sector_count=0;
 #endif
-#else
+#else //var_resize
 int floppy_access_ff_counter=0;
 int floppy_irq_flag=0;
 int fdc_step_time_to_hbls[4]={94,188,32,47};
@@ -94,7 +94,9 @@ int dma_sector_count;
 #endif
 int floppy_write_track_bytes_done;
 int fdc_spinning_up=0;
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_WD1772_REG2_B))
 int floppy_type1_command_active=2;  // Default to type 1 status
+#endif
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_DMA))
 int dma_bytes_written_for_sector_count=0;
 #endif
@@ -322,7 +324,7 @@ void floppy_fdc_command(BYTE cm)
 {
   log(Str("FDC: ")+HEXSl(old_pc,6)+" - executing command $"+HEXSl(cm,2));
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_FDC_IGNORE_WHEN_NO_DRIVE_SELETED)
+#if defined(STEVEN_SEAGAL) && defined(SSE_FDC_IGNORE_WHEN_NO_DRIVE_SELECTED)
 /*  This was missing in Steem up to now but was in Hatari.
     Commands are ignored if no drive is currently selected, except
     for command Interrupt, which shouldn't need any drive.
@@ -382,14 +384,12 @@ void floppy_fdc_command(BYTE cm)
 #endif
     mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
 
-#if !defined(SSE_FDC_FORCE_INTERRUPT_D4A)
 #if defined(SSE_FDC_FORCE_INTERRUPT_D4)
 /* It is not specified but we guess that any new command will
    clear the index pulse interrupt?
 */
   if(ADAT && WD1772.InterruptCondition==4)
     WD1772.InterruptCondition=0; 
-#endif
 #endif
 
 #endif//force
@@ -771,7 +771,11 @@ cycles before the first stepping pulse.
 #endif
 
 #if defined(SSE_DRIVE_SOUND_SEEK2)
-      if(SSEOption.DriveSound && SF314[DRIVE].Sound_Buffer[TSF314::STEP])
+      if(SSEOption.DriveSound 
+#if defined(SSE_DRIVE_SOUND_SEEK5)
+        && !DRIVE_SOUND_SEEK_SAMPLE
+#endif
+        && SF314[DRIVE].Sound_Buffer[TSF314::STEP])
         SF314[DRIVE].Sound_Step();
 #endif
 
@@ -1511,17 +1515,20 @@ void agenda_fdc_finished(int)
 
 #if defined(SSE_DRIVE_SOUND) 
   if(SSEOption.DriveSound)
-
 #if defined(SSE_DRIVE_SOUND_SEEK2) && !defined(SSE_DRIVE_SOUND_SEEK3)
-    if(!ADAT)
+    if(!ADAT
+#if defined(SSE_DRIVE_SOUND_SEEK5)
+      || DRIVE_SOUND_SEEK_SAMPLE
 #endif
-
+      )
+#endif
 #if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
     SF314[DRIVE].Sound_CheckIrq();
 #else
     SF314[0].Sound_CheckIrq();
 #endif
-#endif
+#endif//snd
+
   log("FDC: Finished command, GPIP bit low.");
   floppy_irq_flag=FLOPPY_IRQ_NOW;
 
@@ -1618,7 +1625,11 @@ issued."
     else 
     {
 #if defined(SSE_DRIVE_SOUND_SEEK2)
-      if(SSEOption.DriveSound)
+      if(SSEOption.DriveSound
+#if defined(SSE_DRIVE_SOUND_SEEK5)
+        && !DRIVE_SOUND_SEEK_SAMPLE
+#endif
+        )
         SF314[DRIVE].Sound_Step();
 #endif
       if(fdc_tr>fdc_dr)

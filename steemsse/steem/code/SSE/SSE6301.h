@@ -48,7 +48,7 @@ struct THD6301 {
 #endif//c++?
 
   BYTE Initialised; // we do need a rom
-#if defined(SSE_IKBD_6301_RUN_CYCLES_AT_IO)
+#if defined(SSE_IKBD_6301_RUN_CYCLES_AT_IO) || SSE_VERSION<=350
   BYTE RunThisHbl; 
 #endif
   BYTE Crashed; // oops

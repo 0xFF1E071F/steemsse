@@ -44,11 +44,26 @@ EXT void res_change();
 EXT int stfm_b_timer INIT(0);//tmp
 #endif
 
+
+#if defined(SSE_VAR_RESIZE_370)
+EXT BYTE bad_drawing INIT(0);
+EXT BYTE draw_fs_blit_mode INIT( UNIX_ONLY(DFSM_STRAIGHTBLIT) WIN_ONLY(DFSM_STRETCHBLIT) );
+EXT BYTE draw_fs_fx INIT(DFSFX_NONE),draw_grille_black INIT(6);
+EXT BYTE border INIT(2),border_last_chosen INIT(2);
+EXT BYTE draw_fs_topgap INIT(0);
+extern BYTE prefer_pc_hz[2][3];
+extern BYTE tested_pc_hz[2][3];
+#else
 EXT int bad_drawing INIT(0);
 EXT int draw_fs_blit_mode INIT( UNIX_ONLY(DFSM_STRAIGHTBLIT) WIN_ONLY(DFSM_STRETCHBLIT) );
 EXT int draw_fs_fx INIT(DFSFX_NONE),draw_grille_black INIT(6);
-EXT RECT draw_blit_source_rect;
+EXT int border INIT(2),border_last_chosen INIT(2);
 EXT int draw_fs_topgap INIT(0);
+extern int prefer_pc_hz[2][3];
+extern WORD tested_pc_hz[2][3];
+#endif
+
+EXT RECT draw_blit_source_rect;
 
 #define DWM_STRETCH 0
 #define DWM_NOSTRETCH 1
@@ -81,12 +96,9 @@ EXT BYTE *draw_dest_ad,*draw_dest_next_scanline;
 
 #define OVERSCAN_MAX_COUNTDOWN 25
 
-EXT int border INIT(2),border_last_chosen INIT(2);
-
 EXT bool display_option_8_bit_fs INIT(false);
 EXT bool prefer_res_640_400 INIT(0),using_res_640_400 INIT(0);
-extern int prefer_pc_hz[2][3];
-extern WORD tested_pc_hz[2][3];
+
 
 EXT void get_fullscreen_rect(RECT *);
 EXT int overscan INIT(0)
@@ -103,8 +115,7 @@ WIN_ONLY( EXT HWND ClipWin; )
 
 //#ifdef IN_EMU
 
-EXT int prefer_pc_hz[2][3];
-EXT WORD tested_pc_hz[2][3];
+
 
 
 EXT int cpu_cycles_from_hbl_to_timer_b;

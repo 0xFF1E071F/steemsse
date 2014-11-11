@@ -16,6 +16,9 @@ class mem_browser
   static LRESULT __stdcall FindEditWndProc(HWND,UINT,UINT,long);
   static WNDPROC OldEditWndProc;
   void listbox_add_line(HWND,int,char**,int);
+#ifdef MINGW_BUILD
+const
+#endif
   char* get_mem_mon_string(void*);
   Str get_hex_map(MEM_ADDRESS);
 public:

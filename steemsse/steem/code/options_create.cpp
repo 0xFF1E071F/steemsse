@@ -2307,6 +2307,14 @@ void TOptionBox::CreateSSEPage() {
   CreateWindow("Static","Steem SSE Options\n================",WS_CHILD,
     page_l,y,Wid,21,Handle,(HMENU)209,HInstance,NULL);
 
+#if defined(SSE_GUI_OPTION_FOR_TESTS)
+  Offset=Wid+HorizontalSeparation;
+  Wid=GetCheckBoxSize(Font,T("Beta tests")).Width;
+  Win=CreateWindow("Button",T("Beta tests"),WS_CHILD | WS_TABSTOP |
+    BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)7316,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,SSE_TEST_ON,0);
+#endif
+
   y+=LineHeight+10;
   Wid=0;
 

@@ -63,6 +63,10 @@ void TOption::Init() {
   DriveSound=0;
   SingleSideDriveMap=0;
   GhostDisk=0;
+  Direct3D=1;
+  STAspectRatio=0;
+  DriveSoundSeekSample=0;
+  TestingNewFeatures=0; // no L/S for this one
 }
 
 #endif//#if defined(SSE_SSE_OPTION_STRUCT)

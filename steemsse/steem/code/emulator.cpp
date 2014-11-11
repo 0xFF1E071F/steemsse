@@ -167,7 +167,7 @@ void init_timings()
   hbl_pending=true;
 
   cpu_time_of_start_of_event_plan=0; //0x7f000000; // test overflow
-#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_RATIO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO)
   if (n_cpu_cycles_per_second>CpuNormalHz){
 #else
   if (n_cpu_cycles_per_second>8000000){
@@ -239,7 +239,7 @@ void init_timings()
   dma_sound_channel_buf_last_write_t=0;
 
 #if USE_PASTI
-#if defined(STEVEN_SEAGAL) && defined(SSE_MFP_RATIO)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO)
   pasti_update_time=ABSOLUTE_CPU_TIME+CpuNormalHz;
 #else
   pasti_update_time=ABSOLUTE_CPU_TIME+8000000;
@@ -247,7 +247,7 @@ void init_timings()
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_DMA_DELAY)
-#if defined(SSE_MFP_RATIO)
+#if defined(SSE_INT_MFP_RATIO)
     Dma.TransferTime=ABSOLUTE_CPU_TIME+CpuNormalHz;
 #else
     Dma.TransferTime=ABSOLUTE_CPU_TIME+8000000;
@@ -445,7 +445,7 @@ void ACIA_Reset(int nACIA,bool Cold)
   LOG_ONLY( if (nACIA==0 && acia[nACIA].irq) log_to_section(LOGSECTION_IKBD,EasyStr("IKBD: ACIA reset - Changing ACIA IRQ bit from ")+ACIA_IKBD.irq+" to 0"); )
   acia[nACIA].irq=false;
 
-#if defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301)  && defined(SSE_ACIA_REGISTERS)
   if(HD6301EMU_ON)
   {
     if(Cold) 
@@ -477,7 +477,7 @@ void ACIA_Reset(int nACIA,bool Cold)
     }
   }
   else
-#endif
+#endif//6301
   if (Cold==0) mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
 }
 //---------------------------------------------------------------------------
@@ -488,7 +488,7 @@ void ACIA_SetControl(int nACIA,BYTE Val)
   acia[nACIA].rx_irq_enabled=bool(Val & b10000000);
   LOG_ONLY( if (nACIA==0) log_to(LOGSECTION_IKBD,EasyStr("IKBD: ACIA control set to ")+itoa(Val,d2_t_buf,2)); )
 
-#if defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301) && defined(SSE_ACIA_REGISTERS)
   if(HD6301EMU_ON)
   {
     if((ACIA_IKBD.CR&BIT_5)&&!(ACIA_IKBD.CR&BIT_6) 
@@ -605,7 +605,7 @@ void agenda_acia_tx_delay_IKBD(int)
 void agenda_acia_tx_delay_MIDI(int)
 {
   ACIA_MIDI.tx_flag=0; //finished transmitting
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301) && defined(SSE_ACIA_REGISTERS)
   if(HD6301EMU_ON)
   {
     ACIA_MIDI.SR|=BIT_1; // TDRE
@@ -862,7 +862,7 @@ void extended_monitor_hack()
       m68k_PUSH_W(0x48); //malloc
 
 //      log_write(HEXSl(pc,6)+EasyStr("Calling Malloc(")+HEXSl((bytes_required+255)&-256,6));
-#if defined(SSE_DEBUG_SHOW_INTERRUPT)
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
       Debug.RecordInterrupt("TRP",1);
 #endif
       m68k_interrupt(os_gemdos_vector);

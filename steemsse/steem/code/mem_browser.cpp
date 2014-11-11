@@ -54,11 +54,11 @@ void mem_browser::new_window(MEM_ADDRESS address,type_disp_type new_disp_type)
                   MB_ICONEXCLAMATION | MB_SETFOREGROUND | MB_TASKMODAL | MB_TOPMOST);
   }else{
     Str Title="Memory";
-#if defined(SSE_DEBUG_BROWSER_INSTRUCTIONS)
+#if defined(SSE_BOILER_BROWSER_INSTRUCTIONS)
     if(!new_disp_type)
       Title="Instructions"; //at last!
 #endif
-#if defined(SSE_DEBUG_FAKE_IO)
+#if defined(SSE_BOILER_FAKE_IO)
     if(address==FAKE_IO_START)
       Title=STR_FAKE_IO_CONTROL;
 #endif
@@ -77,12 +77,15 @@ void mem_browser::new_window(MEM_ADDRESS address,type_disp_type new_disp_type)
           Title="IKBD";
 #endif
           break;
-#if defined(SSE_DEBUG_BROWSER_6301)
+#if defined(SSE_BOILER_BROWSER_6301)
         case IOLIST_PSEUDO_AD_6301:
           Title="IKBD 6301 true emu";
           break;
 #endif
       }
+#if defined(SSE_BOILER_MENTION_READONLY_BROWSERS)
+      Title+=" (RO)"; // adding RO for 'read-only', I'll understand!
+#endif
     }else if (new_disp_type==DT_REGISTERS){
       Title="Registers";
     }
@@ -239,7 +242,7 @@ void mem_browser::init()
     bool PSG=(ad & 0xfffff000)==IOLIST_PSEUDO_AD_PSG;
     bool FDC=(ad & 0xfffff000)==IOLIST_PSEUDO_AD_FDC;
     bool IKBD=(ad & 0xfffff000)==IOLIST_PSEUDO_AD_IKBD;
-#if defined(SSE_DEBUG_BROWSER_6301)
+#if defined(SSE_BOILER_BROWSER_6301)
     if((ad & 0xfffff000)==IOLIST_PSEUDO_AD_6301)
       IKBD=true;
 #endif
@@ -332,6 +335,9 @@ int mem_browser::calculate_wpl()
   return max(1,(int)(cwid/how_big_is_0000)); //words per line
 }
 //---------------------------------------------------------------------------
+#ifdef MINGW_BUILD
+const
+#endif
 char* mem_browser::get_mem_mon_string(void *p)
 {
   DEBUG_ADDRESS *pda=(DEBUG_ADDRESS*)p;
@@ -923,7 +929,7 @@ LRESULT __stdcall mem_browser_window_WndProc(HWND Win,UINT Mess,UINT wPar,long l
   mem_browser *mb;
   switch (Mess){
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_CLIPBOARD)
+#if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_CLIPBOARD)
     // right click on 'Dump' button -> put assembly in clipboard
     case WM_CONTEXTMENU:
     {
@@ -1133,7 +1139,7 @@ void mem_browser::vscroll(int of)
     MEM_ADDRESS ad_high=ad & 0xff000000;
     if (disp_type==DT_INSTRUCTION){
       ad=oi(ad & 0xffffff,of);  //offset instruction
-#if defined(SSE_DEBUG_BROWSER_PSEUDO_IO_SCROLL)
+#if defined(SSE_BOILER_BROWSER_PSEUDO_IO_SCROLL)
     }else if (disp_type==DT_MEMORY){// 6301 true emu browser is bigger
 #else
     }else if (disp_type==DT_MEMORY && IS_IOLIST_PSEUDO_ADDRESS(ad)==0){
@@ -1318,7 +1324,7 @@ LRESULT __stdcall mem_browser_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
                 if (pda) bk=(pda->bwr & BIT_0);
                 debug_set_bk(ad,!bk);
               }else{
-#if defined(SSE_DEBUG_MONITOR_VALUE)
+#if defined(SSE_BOILER_MONITOR_VALUE)
 /*  Capture the string in the 'find' box and interpret it.
     Value must be a WORD in hexadecimal, without $, eg FE20.
     One comparison character (=,!,<,>) is required.
@@ -1465,7 +1471,7 @@ LRESULT __stdcall mem_browser_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
       }
       return 0;
 
-#if defined(SSE_DEBUG_MOUSE_WHEEL)
+#if defined(SSE_BOILER_MOUSE_WHEEL)
 /*
 Long requested I think, the mouse wheel will now scroll the memory and
 instruction browsers. Shift or left button command 'scroll page'.

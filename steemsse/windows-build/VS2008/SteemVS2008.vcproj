@@ -73,7 +73,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="dinput8.lib dxguid.lib winmm.lib ComCtl32.Lib odbc32.lib odbccp32.lib d3d9.lib"
+				AdditionalDependencies="dinput8.lib dxguid.lib winmm.lib ComCtl32.Lib odbc32.lib odbccp32.lib d3d9.lib d3dx9.lib"
 				OutputFile="Debug\Steem.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -169,7 +169,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="dinput8.lib dxguid.lib winmm.lib ComCtl32.Lib odbc32.lib odbccp32.lib d3d9.lib"
+				AdditionalDependencies="dinput8.lib dxguid.lib winmm.lib ComCtl32.Lib odbc32.lib odbccp32.lib d3d9.lib d3dx9.lib"
 				OutputFile="Release\BoilerBeta.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -265,7 +265,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="dinput8.lib dxguid.lib winmm.lib ComCtl32.Lib odbc32.lib odbccp32.lib d3d9.lib"
+				AdditionalDependencies="dinput8.lib dxguid.lib winmm.lib ComCtl32.Lib odbc32.lib odbccp32.lib d3d9.lib d3dx9.lib"
 				OutputFile="Debug\Steem.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -361,7 +361,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="dinput8.lib dxguid.lib winmm.lib ComCtl32.Lib odbc32.lib odbccp32.lib d3d9.lib"
+				AdditionalDependencies="dinput8.lib dxguid.lib winmm.lib ComCtl32.Lib odbc32.lib odbccp32.lib d3d9.lib d3dx9.lib"
 				OutputFile="Release\BoilerBeta.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -457,7 +457,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="dinput8.lib dxguid.lib winmm.lib ComCtl32.Lib odbc32.lib odbccp32.lib d3d9.lib"
+				AdditionalDependencies="dinput8.lib dxguid.lib winmm.lib ComCtl32.Lib odbc32.lib odbccp32.lib d3d9.lib d3dx9.lib"
 				OutputFile="Debug\Steem.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -535,7 +535,9 @@
 				StringPooling="true"
 				ExceptionHandling="2"
 				RuntimeLibrary="0"
+				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
+				EnableEnhancedInstructionSet="1"
 				PrecompiledHeaderFile=".\Release/SteemVS2008.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
@@ -556,7 +558,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="dinput8.lib dxguid.lib winmm.lib ComCtl32.Lib odbc32.lib odbccp32.lib d3d9.lib"
+				AdditionalDependencies="dinput8.lib dxguid.lib winmm.lib ComCtl32.Lib odbc32.lib odbccp32.lib d3d9.lib d3dx9.lib"
 				OutputFile="Release\SteemBeta.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -655,7 +657,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="dinput8.lib dxguid.lib winmm.lib ComCtl32.Lib odbc32.lib odbccp32.lib d3d9.lib"
+				AdditionalDependencies="dinput8.lib dxguid.lib winmm.lib ComCtl32.Lib odbc32.lib odbccp32.lib d3d9.lib d3dx9.lib"
 				OutputFile="Release\SteemBeta.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -751,7 +753,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="dinput8.lib dxguid.lib winmm.lib ComCtl32.Lib odbc32.lib odbccp32.lib d3d9.lib"
+				AdditionalDependencies="dinput8.lib dxguid.lib winmm.lib ComCtl32.Lib odbc32.lib odbccp32.lib d3d9.lib d3dx9d.lib"
 				OutputFile="Debug\Steem.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"

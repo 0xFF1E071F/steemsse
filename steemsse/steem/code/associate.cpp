@@ -11,7 +11,7 @@ Steem with required file types.
 
 #ifdef WIN32
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ASSOCIATE_CU)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_CU)
 /*  v3.5.3
     The proper way to associate in Win32 is to use current user, not root.
     HKEY_CURRENT_USER instead of HKEY_CLASSES_ROOT, so you
@@ -156,7 +156,7 @@ BOOL RegDelnode (HKEY hKeyRoot, LPTSTR lpSubKey)
 
 }
 
-#else // defined(STEVEN_SEAGAL) && defined(SSE_VAR_ASSOCIATE_CU)
+#else // defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_CU)
 
 LONG RegCopyKey(HKEY FromKeyParent,char *FromKeyName,HKEY ToKeyParent,char *ToKeyName)
 {
@@ -200,7 +200,7 @@ LONG RegCopyKey(HKEY FromKeyParent,char *FromKeyName,HKEY ToKeyParent,char *ToKe
 
   return Ret;
 }
-#endif//else of defined(STEVEN_SEAGAL) && defined(SSE_VAR_ASSOCIATE_CU)
+#endif//else of defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_CU)
 
 #endif//WIN32
 //---------------------------------------------------------------------------
@@ -208,7 +208,7 @@ bool IsSteemAssociated(EasyStr Exts)
 {
 #ifdef WIN32
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ASSOCIATE_CU)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_CU)
 
   LONG ErrorCode;
   HKEY Key;
@@ -241,6 +241,7 @@ bool IsSteemAssociated(EasyStr Exts)
     if(!ErrorCode)
     {
       ErrorCode=RegOpenKeyEx(HKEY_CURRENT_USER,KeyName+"\\Shell\\OpenSteem\\Command",
+      //ErrorCode=RegOpenKeyEx(HKEY_CURRENT_USER,KeyName+"\\Shell\\Open\\Command",
         0,KEY_READ,&Key); 
       //TRACE_LOG("RegOpenKeyEx %s\\Shell\\OpenSteem\\Command ErrorCode %d\n",KeyName.Text,ErrorCode);
 
@@ -266,7 +267,7 @@ bool IsSteemAssociated(EasyStr Exts)
 
   return 0; // no, our EXE is not associated
 
-#else//#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ASSOCIATE_CU)
+#else//#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_CU)
 
   if (Exts[0]!='.') Exts.Insert(".",0);
 
@@ -307,7 +308,7 @@ bool IsSteemAssociated(EasyStr Exts)
       }
     }
   }
-#endif //else of defined(STEVEN_SEAGAL) && defined(SSE_VAR_ASSOCIATE_CU)
+#endif //else of defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_CU)
 #elif defined(UNIX)
 #endif
   return 0;
@@ -317,7 +318,7 @@ void AssociateSteem(EasyStr Exts,EasyStr FileClass,bool Force,char *TypeDisplayN
 {
 #ifdef WIN32
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ASSOCIATE_CU)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_CU)
 
   LONG ErrorCode;
   HKEY Key;
@@ -331,7 +332,7 @@ void AssociateSteem(EasyStr Exts,EasyStr FileClass,bool Force,char *TypeDisplayN
     Exts.Insert(".",0);
   Exts.Insert(key_location,0);
 
-#if defined(SSE_VAR_MAY_REMOVE_ASSOCIATION)
+#if defined(SSE_GUI_MAY_REMOVE_ASSOCIATION)
 /*  If this version of Steem is already associated, we come here to
     remove the association. We didn't create a separate function to spare
     some code.
@@ -343,19 +344,20 @@ void AssociateSteem(EasyStr Exts,EasyStr FileClass,bool Force,char *TypeDisplayN
   {
     // create key
     Exts+="\\Shell\\OpenSteem\\Command";
+    //Exts+="\\Shell\\Open\\Command";
     ErrorCode=RegCreateKeyEx(HKEY_CURRENT_USER,Exts.Text,0,NULL,REG_OPTION_NON_VOLATILE,
       KEY_ALL_ACCESS,NULL,&Key,NULL);
-    //TRACE_LOG("RegCreateKeyEx %s ErrorCode %d\n",Exts.Text,ErrorCode);
+    TRACE_LOG("RegCreateKeyEx %s ErrorCode %d\n",Exts.Text,ErrorCode);
 
     // set value
     EasyStr ThisExeName=GetEXEFileName();
     EasyStr Command=EasyStr("\"")+ThisExeName+"\" \"%1\"";
     ErrorCode=RegSetValueEx(Key,NULL,0,REG_SZ,(BYTE*)Command.Text,Command.Length()+1);
-    //TRACE_LOG("RegSetValueEx %s ErrorCode %d\n",(BYTE*)Command.Text,ErrorCode);
+    TRACE_LOG("RegSetValueEx %s ErrorCode %d\n",(BYTE*)Command.Text,ErrorCode);
     RegCloseKey(Key);
   }
 #undef LOGSECTION
-#else// defined(STEVEN_SEAGAL) && defined(SSE_VAR_ASSOCIATE_CU)
+#else// defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_CU)
 
   if (Exts[0]!='.') Exts.Insert(".",0);
 
@@ -513,7 +515,7 @@ void AssociateSteem(EasyStr Exts,EasyStr FileClass,bool Force,char *TypeDisplayN
   }
   RegCloseKey(Key);
 
-#endif// defined(STEVEN_SEAGAL) && defined(SSE_VAR_ASSOCIATE_CU)
+#endif// defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_CU)
 
 #elif defined(UNIX)
 #endif

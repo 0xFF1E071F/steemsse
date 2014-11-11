@@ -47,7 +47,7 @@ void StemWinResize(int xo,int yo)
     //Disp.ScreenChange(); //radical
 #endif
 
-#if defined(SSE_VAR_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_STRING)
   GUIRefreshStatusBar();//of course (v3.5.5)
 #endif
 
@@ -597,7 +597,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       }
 #endif
       
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_F12)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_F12)
       // Adding F12 as emulator start/stop.
       if(wPar==VK_F12)
       {
@@ -712,7 +712,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 #else
             int guessed_x=LOWORD(lPar)/2;
 #endif
-#if defined(SSE_VAR_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_STRING)
             HWND status_bar_win=GetDlgItem(StemWin,120); // get handle
 #if defined(SSE_DEBUG_REPORT_SDP_ON_CLICK) && defined(SSE_SHIFTER)
             char tmp[12+1+6];
@@ -904,7 +904,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       if(!bAppActive)
       {
         SSE_WIN_VSYNC=SSE_3BUFFER=false; // avoid crash going in or out
-#if defined(SSE_VAR_OPTIONS_REFRESH)
+#if defined(SSE_GUI_OPTIONS_REFRESH)
         OptionBox.SSEUpdateIfVisible();
 #endif
       }
@@ -997,6 +997,17 @@ void HandleButtonMessage(UINT Id,HWND hBut)
 {
   switch (Id){
     case 100:
+#if defined(SSE_GUI_DISK_MANAGER_RGT_CLK_HD)
+      if (SendMessage(hBut,BM_GETCLICKBUTTON,0,0)==2)
+      {
+        HardDiskMan.DisableHardDrives=!HardDiskMan.DisableHardDrives;
+#if defined(SSE_GUI_STATUS_STRING)
+        GUIRefreshStatusBar();
+#endif
+        //TRACE_OSD("HD %d",!HardDiskMan.DisableHardDrives);
+        break;
+      }
+#endif
       DiskMan.ToggleVisible();
       SendMessage(hBut,BM_SETCHECK,DiskMan.IsVisible(),0);
       break;
@@ -1030,7 +1041,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
 
         if (GetForegroundWindow()==StemWin && GetCapture()==NULL && IsIconic(StemWin)==0 &&
             fast_forward!=RUNSTATE_STOPPED+1 && slow_motion!=RUNSTATE_STOPPED+1){
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_MOUSE_CAPTURE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_MOUSE_CAPTURE)
           if(CAPTURE_MOUSE)
 #endif
           SetStemMouseMode(STEM_MOUSEMODE_WINDOW);
@@ -1052,7 +1063,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
       break;
     case 102:
     {
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESET_BUTTON)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_RESET_BUTTON)
       bool Warm=(SendMessage(hBut,BM_GETCLICKBUTTON,0,0)==1);
 #else
       bool Warm=(SendMessage(hBut,BM_GETCLICKBUTTON,0,0)==2);

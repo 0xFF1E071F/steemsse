@@ -15,6 +15,7 @@
 #include <run.decla.h>
 #include "SSECpu.h"
 #include "SSEInterrupt.h"
+#include "SSEOption.h"
 #include "SSEShifter.h"
 #if defined(WIN32)
 #include <pasti/pasti.h>
@@ -409,7 +410,14 @@ WORD TSF314::TrackGap() {
 #ifdef SSE_DISK_STW
 
 int TSF314::CyclesPerByte() {
+//? TODO
+#if defined(SSE_INT_MFP_RATIO) 
   int cycles=CpuNormalHz; // per second  
+#else
+  int cycles=8000000; // per second  
+#endif
+
+
   cycles/=rpm/60; // per rotation (300/60 = 5)
   cycles/=Disk[Id].TrackBytes; // per byte
   cycles_per_byte=cycles; // save
@@ -495,7 +503,11 @@ void TSF314::Motor(bool state) {
 void TSF314::Step(int direction) {
   
 #if defined(SSE_DRIVE_SOUND_SEEK2)
-  if(SSEOption.DriveSound)
+  if(SSEOption.DriveSound
+#if defined(SSE_DRIVE_SOUND_SEEK5)
+    && !DRIVE_SOUND_SEEK_SAMPLE
+#endif
+    )
     Sound_Step();
 #endif
 
@@ -666,7 +678,11 @@ void TSF314::Sound_CheckCommand(BYTE cr) {
 /*  Because we have no 'Step' callback, we use a loop to emulate
     the Seek noise with Pasti or Caps in charge.
 */
-    (ImageType.Manager==MNGR_PASTI||ImageType.Manager==MNGR_CAPS)&&
+    (ImageType.Manager==MNGR_PASTI||ImageType.Manager==MNGR_CAPS
+#if defined(SSE_DRIVE_SOUND_SEEK5)
+      || DRIVE_SOUND_SEEK_SAMPLE
+#endif
+    )&&
 #endif
 
     ( (cr&(BIT_7+BIT_6+BIT_5+BIT_4))==0x00 

@@ -1,4 +1,3 @@
-
 #include "SSE.h"
 #if defined(SSE_STRUCTURE_SSE6301_OBJ)
 
@@ -7,6 +6,7 @@
 #include "SSE6301.h"
 #include "SSEDebug.h"
 #include <mymisc.h>
+extern EasyStr GetEXEDir();//when no SSE_OSD...
 #include <acia.h>
 #include <emulator.decla.h>
 #include <ikbd.decla.h>
@@ -15,7 +15,10 @@
 #if defined(SSE_IKBD_6301)
 
 #include "SSEOption.h"
-#include "SSEShifter.h" //frame
+#include "SSEShifter.h" //frame //TODO
+#if !defined(SSE_SHIFTER)
+#include "SSEFrameReport.h" //for some trace
+#endif
 
 // note most useful emulation code is in 3rdparty folder '6301'
 
@@ -36,6 +39,35 @@ THD6301::~THD6301() {
 #ifdef UNIX
 extern EasyStr GetEXEDir();
 #endif
+
+#if SSE_VERSION<=350
+
+void THD6301::Init() { // called in 'main'
+  Initialised=Crashed=0;
+  if(hd6301_init()) // calling the 6301 function
+  {
+    HD6301_OK=Initialised=1;
+    TRACE_LOG("HD6301 emu initialised\n");
+  }
+  else
+  {
+    TRACE_LOG("HD6301 emu NOT initialised\n");
+    HD6301EMU_ON=0;
+  }
+/*
+  int a=0;
+  int b=7;
+  try {
+  int c=b/a;
+  }
+  catch(...)
+  {
+    TRACE("ho ho\n");
+  }
+  */
+}
+
+#else//!ver
 
 void THD6301::Init() { // called in 'main'
   Initialised=Crashed=0;
@@ -63,7 +95,7 @@ void THD6301::Init() { // called in 'main'
     }
     else 
     {
-      printf("6301 rom error %s %d %d %d\n",romfile.Text,HD6301_OK,Initialised,ram);
+//      printf("6301 rom error %s %d %d %d\n",romfile.Text,HD6301_OK,Initialised,ram);
       HD6301_OK=Initialised=0;
    //   if(ram)
        // free(ram);//linux: no direct access
@@ -272,7 +304,9 @@ void THD6301::ReceiveByte(BYTE data) {
 void THD6301::ResetChip(int Cold) {
   TRACE_LOG("6301 Reset chip %d\n",Cold);
   CustomProgram=CUSTOM_PROGRAM_NONE;
+#if SSE_VERSION>=351
   ResetProgram();
+#endif
 #if defined(SSE_IKBD_6301)
   if(HD6301_OK && HD6301EMU_ON)
   {
@@ -338,5 +372,7 @@ void THD6301::Vbl() {
 #endif
 
 #undef LOGSECTION
+
+#endif//ver?
 
 #endif

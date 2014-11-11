@@ -310,7 +310,8 @@ BYTE keyboard_buffer_read();
 
 #if (defined(STEVEN_SEAGAL) && defined(SSE_ACIA)) 
 //temp moved from emulator.h to have it compile
-#include "acia.h"
+//#include "acia.h"
+#include "acia.decla.h" //should choose one...
 EXT ACIA_STRUCT acia[2];
 #endif
 

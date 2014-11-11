@@ -24,21 +24,21 @@
 
 #if defined(STEVEN_SEAGAL)
 
-#define ACT ABSOLUTE_CPU_TIME
+//#define ACT ABSOLUTE_CPU_TIME
 
-#if defined(SSE_SHIFTER_TRICKS) && defined(SSE_MFP_RATIO)
+#if defined(SSE_SHIFTER_TRICKS) && defined(SSE_INT_MFP_RATIO)
 
-#if defined(SSE_DRIVE_REM_HACKS)
-/* The higher clock would increase #HBL and so make the drive slower!
+#if defined(SSE_DRIVE_SPEED_HACK)
+/* Still a hack in there... what's the right speed?
+   Value 8003000 is OK for:
+   MPS Golf, Ultimate 3d dots, hack or not (timing_4)
+   Delirious 3 trouble, but it also is as STW.
+   Antiques greets, same problem as STW, should be tested on STE
 */
-#define HBL_PER_SECOND (8000000/Shifter.CurrentScanline.Cycles)
-//#define HBL_PER_SECOND (8007680/Shifter.CurrentScanline.Cycles)
+#define HBL_PER_SECOND (8003000/Shifter.CurrentScanline.Cycles)
 #else
 #define HBL_PER_SECOND (CpuNormalHz/Shifter.CurrentScanline.Cycles)
 #endif
-
-
-
 
 //Frequency   50          60            72
 //#HBL/sec    15666.5 15789.85827 35809.14286
@@ -108,9 +108,25 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define ACIA_RDRF_DELAY (20)
 #endif
 
+#if defined(SSE_ACIA_MIDI_SR02_CYCLES)
+/*  
+
+SS1 SS0                  Speed (bit/s)
+ 0   0    Normal            500000
+ 0   1    Div by 16          31250 (ST: MIDI)
+ 1   0    Div by 64         7812.5 (ST: IKBD)
+MIDI is 4 times faster than IKBD
+*/
+#define ACIA_MIDI_OUT_CYCLES (HD6301_TO_ACIA_IN_CYCLES/4) //temp
+#endif
+
+#if SSE_VERSION<=350
+#define IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESSE_ALT (HD6301EMU_ON?45:2)
+#endif
+
 #else //!ACIA
 #define HD6301_TO_ACIA_IN_HBL (screen_res==2?24:12) // to be <7200
-#endif
+#endif//ACIA
 
 
 /////////////
@@ -124,12 +140,13 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
     It could be deduced from the example program and the mention restarting 
     the blitter takes "7 cycles". The timing table is also in NOP.
     We could choose 65 instead of 64 for some latency? But then are cycles
-    lost? TESTING
+    lost? 
+    TESTING
     Since we prolong the access times, we make sure to check for interrupts
     more often. The smaller the value, the higher the emulation load!
 */
 #undef SSE_BLT_BLIT_MODE_CYCLES
-#define SSE_BLT_BLIT_MODE_CYCLES (65*4) // 'NOP' x 4 = cycles
+#define SSE_BLT_BLIT_MODE_CYCLES ((65-1)*4) // 'NOP' x 4 = cycles
 #define SSE_BLT_BLIT_MODE_IRQ_CHK (64) // when we check for IRQ, in cycles
 #endif
 #endif
@@ -151,9 +168,9 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 #if defined(SSE_DEBUG) 
 #if defined(SSE_UNIX)
-#define SS_TRACE_FILE_NAME "./TRACE.txt"
+#define SSE_TRACE_FILE_NAME "./TRACE.txt"
 #else
-#define SS_TRACE_FILE_NAME "TRACE.txt"
+#define SSE_TRACE_FILE_NAME "TRACE.txt"
 #endif
 #define TRACE_MAX_WRITES 200000 // to avoid too big file
 #endif
@@ -163,7 +180,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define OSD_DEBUG_MESSAGE_TIME 2 // in seconds
 #endif
 
-#if defined(SSE_DEBUG_FAKE_IO)
+#if defined(SSE_BOILER_FAKE_IO)
 #define FAKE_IO_START 0xfffb00
 #define FAKE_IO_LENGTH 64*2 // in bytes
 #define FAKE_IO_END (FAKE_IO_START+FAKE_IO_LENGTH-2) // starting address of last one
@@ -251,6 +268,33 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #endif//#if defined(SSE_FDC)
 
 
+////////
+//GUI //
+////////
+
+#if defined(SSE_GUI)
+
+#define WINDOW_TITLE_MAX_CHARS 20
+
+#define README_FONT_NAME "Courier New"
+#define README_FONT_HEIGHT 16
+
+#if SSE_VERSION>=370
+#define EXT_TXT ".txt" //save bytes?
+#define STEEM_SSE_FAQ "Steem SSE FAQ"
+#define STEEM_HINTS "Hints"
+#else
+#define STEEM_SSE_FAQ_TXT "Steem SSE FAQ.txt"
+#define STEEM_HINTS_TXT "Hints.txt"
+#endif
+#if defined(SSE_GUI_INFOBOX9) || defined(SSE_GUI_INFOBOX12)
+#define STEEM_MANUAL "Steem manual"
+#define STEEM_MANUAL_SSE "Steem SSE manual"
+#endif
+
+#endif
+
+
 ///////////
 // Hacks //
 ///////////
@@ -298,9 +342,9 @@ SS_SIGNAL_ENUM_EnumDisplayModes, // wait until finished (?)
 #define HD6301_CYCLES_PER_SCANLINE 64 // used if SSE_SHIFTER not defined
 #define HD6301_CYCLE_DIVISOR 8 // the 6301 runs at 1MHz (verified by Stefan jL)
 
-#if defined(SSE_MFP_RATIO)
+//#if defined(SSE_INT_MFP_RATIO)//why was that?
 #define HD6301_CLOCK (1000000) //used in 6301/ireg.c
-#endif
+//#endif
 
 
 // in HBL, for Steem, -1 for precise timing (RX/IRQ delay)
@@ -413,15 +457,15 @@ are assumed to take four clock periods.
 // MFP //
 /////////
 
-#if defined(SSE_MFP)
+#if defined(SSE_INT_MFP)
 
-#if defined(SSE_MFP_RATIO) 
+#if defined(SSE_INT_MFP_RATIO) 
 /*  There was a hack in Steem up to v3.3, where the CPU/MFP frequency ratio
     was set different from what was measured on an STE by Steem authors, that
     allowed Lethal Xcess to run. This hack was hiding a blitter timing problem,
     however (the 64 NOP issue), which explains why the game wasn't sensitive
     to the ratio in STF mode. Now that the blitter bug has been corrected,
-    we use the measured value (when SSE_MFP_RATIO_STE is defined).
+    we use the measured value (when SSE_INT_MFP_RATIO_STE is defined).
     For STF we use the precise value of the MFP quarts and the real value of
     a typical "PAL" STF, as read on atari-forum (ijor?)
     3.5.1: same ratio for STE, it could make DMA sound emu more precise
@@ -441,7 +485,7 @@ are assumed to take four clock periods.
 #define  MFP_CLK_TH_EXACT 2457600 // ( 2^15 * 3 * 5^2 )
 #endif
 
-#if defined(SSE_MFP_WRITE_DELAY1)
+#if defined(SSE_INT_MFP_WRITE_DELAY1)
 #define MFP_WRITE_LATENCY 8 // 8 = the smallest for Audio Artistic
 #endif
 
@@ -454,7 +498,7 @@ are assumed to take four clock periods.
 
 #if defined(SSE_MMU)
 
-#if defined(SSE_MMU_WAKE_UP_DL)
+#if defined(SSE_MMU_WU_DL)
 #define WU_SHIFTER_PANIC 5
 #else
 #define WU_SHIFTER_PANIC 3
@@ -480,7 +524,7 @@ are assumed to take four clock periods.
 #define VERT_OVSCN_LIMIT (502) //502
 
 
-#if defined(SSE_MMU_WAKE_UP_IO_BYTES_W_SHIFTER_ONLY)
+#if defined(SSE_MMU_WU_IO_BYTES_W_SHIFTER_ONLY)
 #define WU2_PLUS_CYCLES 4 // we make cycles +2
 #else
 #define WU2_PLUS_CYCLES 2 // we don't
@@ -526,25 +570,20 @@ are assumed to take four clock periods.
 #endif
 
 
+/////////////
+// TIMINGS //
+/////////////
+
+#define STE_DMA_CLOCK 8010613 // 8.010613 MHz (from Nicolas?)
+
+
+
 /////////
 // TOS //
 /////////
 
 #if defined(SSE_TOS_PRG_AUTORUN)
 #define AUTORUN_HD (2+'Z'-'C')//2=C, Z: is used for PRG support
-#endif
-
-/////////////
-// VARIOUS //
-/////////////
-
-#if defined(SSE_VARIOUS)
-
-#define README_FONT_NAME "Courier New"
-#define README_FONT_HEIGHT 16
-#define STEEM_SSE_FAQ_TXT "Steem SSE FAQ.txt"
-#define STEEM_HINTS_TXT "Hints.txt"
-
 #endif
 
 
@@ -589,6 +628,16 @@ are assumed to take four clock periods.
 #define SSE_VID_RECORD_AVI_CODEC "MPG4"
 #endif
 
+#endif//vid
+
+
+//YM2149
+#if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
+#if defined(SSE_UNIX)
+#define YM2149_FIXED_VOL_FILENAME "/ym2149_fixed_vol.bin" 
+#else
+#define YM2149_FIXED_VOL_FILENAME "\\ym2149_fixed_vol.bin"
+#endif
 #endif
 
 

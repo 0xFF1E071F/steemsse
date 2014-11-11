@@ -18,7 +18,7 @@ addresses and how they should be displayed in the debugger.
 int iolist_length=0;
 
 iolist_entry iolist[300
-#if defined(SSE_DEBUG_BROWSER_6301)
+#if defined(SSE_BOILER_BROWSER_6301)
 +256+16 // in fact 300 was too much without 6301, but with it it would crash
 #endif
 ];
@@ -196,7 +196,7 @@ void iolist_init()
   iolist_add_entry(0xfffa2d,"MFP TSR (23)",1,"empty|underrun|auto turnaround|end|break|H|L|enable");
   iolist_add_entry(0xfffa2f,"MFP UDR (24)",1);
 
-#if defined(SSE_DEBUG_FAKE_IO)
+#if defined(SSE_BOILER_FAKE_IO)
 /*  We may name those variables how we wish. 
     Each is 1 word but we use only higher byte at most for readability.
     It seems the GUI is more confused when there are . before real fields.
@@ -212,36 +212,42 @@ void iolist_init()
 
 #if defined(SSE_OSD_CONTROL)
   iolist_add_entry(FAKE_IO_START+4,"OSD1",2,
-    "Trace|Prefetch|Interrupt|IKBD|60hz|reset|.|.|.|.|.|.|.|.|.|.");
-  iolist_add_entry(FAKE_IO_START+6,"OSD2 Shifter",2,
+    "Interrupt|IKBD|60hz|.|.|.|.|.|.|.|.|.|.|.|.|.");
+  iolist_add_entry(FAKE_IO_START+6,"OSD2 CPU",2,
+    "trace|bombs|io|reset|prefetch|.|.|.|.|.|.|.|.|.|.|.");
+  iolist_add_entry(FAKE_IO_START+8,"OSD2 Shifter",2,
     "Tricks|Load|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
-  iolist_add_entry(FAKE_IO_START+8,"OSD3 STE",2,
+  iolist_add_entry(FAKE_IO_START+10,"OSD3 STE",2,
     "Dma|Blt|Sdp|.|.|.|.|.|.|.|.|.|.|.|.|.");
 #endif
 
 
-#if defined(SSE_DEBUG_TRACE_CONTROL)
-  iolist_add_entry(FAKE_IO_START+10,"TRACE Shifter",2,
+#if defined(SSE_BOILER_TRACE_CONTROL)
+  iolist_add_entry(FAKE_IO_START+12,"TRACE Shifter",2,
     "vert|1line|vbl|adj|.|.|.|.|.|.|.|.|.|.|.|.");
-  iolist_add_entry(FAKE_IO_START+12,"TRACE exc",2,
+  iolist_add_entry(FAKE_IO_START+14,"TRACE exc",2,
     "mfp|vbi|hbi|.|.|.|.|.|.|.|.|.|.|.|.|.");
-  iolist_add_entry(FAKE_IO_START+14,"TRACE floppy",2,
+  iolist_add_entry(FAKE_IO_START+16,"TRACE floppy",2,
     "str|bytes|psg|reg|ipf1|ipf2|.|.|.|.|.|.|.|.|.|.");
 
 #endif
 
-#if defined(SSE_DEBUG_VIDEO_CONTROL)
+#if defined(SSE_BOILER_VIDEO_CONTROL)
   iolist_add_entry(FAKE_IO_START+18,"Video",2,
     "lineoff|.|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
 #endif
 
-#if defined(SSE_DEBUG_MUTE_SOUNDCHANNELS)
-  iolist_add_entry(FAKE_IO_START+20,"Snd mute",2,
-    "dma|psg1|psg2|psg3|.|.|.|.|.|.|.|.|.|.|.|."); //order?
+#if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
+  iolist_add_entry(FAKE_IO_START+20,"Sound",2,
+    "dma|psg1|psg2|psg3|WN|osd|.|.|.|.|.|.|.|.|.|."); //order?
 #endif
 
-
+#if defined(SSE_BOILER_NEXT_PRG_RUN)
+  iolist_add_entry(FAKE_IO_START+22,"Boiler",2,
+    "PrgRun|.|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
 #endif
+
+#endif//fake io
 
   iolist_add_entry(0xfffc00,"Keyboard ACIA Control",1,"IRQ|Parity Err|Rx Overrun|Framing Err|CTS|DCD|Tx Data Empty|Rx Data Full");
   iolist_add_entry(0xfffc02,"Keyboard ACIA Data",1);

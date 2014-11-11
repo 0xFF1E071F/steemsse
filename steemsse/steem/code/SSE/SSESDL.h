@@ -12,7 +12,7 @@
 #ifdef _MSC_VER
 #pragma comment(lib, "../../3rdparty/SDL-WIN/lib/x86/SDL.lib")
 #pragma comment(lib, "../../3rdparty/SDL-WIN/lib/x86/SDLmain.lib")
-#ifndef SSE_VS2012_DELAYDLL
+#ifndef SSE_VS2003_DELAYDLL
 #pragma comment(linker, "/delayload:SDL.dll")
 #endif
 #endif

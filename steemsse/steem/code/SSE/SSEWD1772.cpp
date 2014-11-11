@@ -479,8 +479,9 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
   switch(Line)
   {
   case 0: // CR - could be blocked, can't record here :(
-  //{
-#if defined(SSE_DEBUG) && defined(SSE_DRIVE)
+  {
+
+#if defined(SSE_DEBUG) && defined(SSE_DRIVE) && SSE_VERSION>=364
 #if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
 #endif
@@ -509,101 +510,19 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #define LOGSECTION LOGSECTION_FDC
 #endif//checksum
 
-
-
-//old block "can_send" MFD
-#ifdef SSE_DEBUG__
-      bool can_send=true; // are we in Steem's native emu?
+#if !defined(SSE_DISK_IMAGETYPE) //old block "can_send"
+    bool can_send=true; // are we in Steem's native emu?
 #if defined(SSE_IPF)
-      can_send=can_send&&!Caps.IsIpf(drive);
+    can_send=can_send&&!Caps.IsIpf(drive);
 #endif
-
 #if USE_PASTI 
-      can_send=can_send&&!(hPasti && pasti_active
-#if defined(SSE_DRIVE)&&defined(SSE_PASTI_ONLY_STX)
-        && (!PASTI_JUST_STX || 
-#if defined(SSE_DISK_IMAGETYPE)
-// in fact we should refactor this
-        SF314[drive].ImageType.Extension==EXT_STX)
-#else
-        SF314[floppy_current_drive()].ImageType==3)
-#endif
+    can_send=can_send&&!(hPasti && pasti_active
+#if defined(SSE_DRIVE) && defined(SSE_PASTI_ONLY_STX)
+      && (!PASTI_JUST_STX || SF314[drive].ImageType==3)
 #endif            
         );
 #endif//pasti
-
-#if defined(SSE_DISK_STW)
-      can_send=can_send && SF314[drive].ImageType.Extension!=EXT_STW;
-#endif
-
-#ifdef SSE_DEBUG
-
-#endif
-
-#ifdef SSE_DEBUG
-      if(can_send)
-      {
-#ifdef SSE_DISK_STW
-        ASSERT(!IMAGE_STW);
-#endif
-//        TRACE_LOG("Can send, drive %d extension %d\n",drive,SF314[drive].ImageType.Extension);
-      }
-#endif
-
-#endif
-
-
-//#ifdef SSE_DEBUG
-#if defined(SSE_DISK_IMAGETYPE__)
-    BYTE manager=SF314[drive].ImageType.Manager;
-    BYTE extension=SF314[drive].ImageType.Extension;
-//#endif
-//MFD
-
-#ifdef SSE_DEBUG___
-    if(manager==MNGR_CAPS)
-    {
-      ASSERT(!can_send);
-      ASSERT(Caps.IsIpf(drive));
-    }
-    if(manager==MNGR_PASTI)
-    {
-      ASSERT(!can_send);
-      ASSERT(hPasti && pasti_active);
-      ASSERT(!PASTI_JUST_STX || extension==EXT_STX);
-    }
-    if(manager==MNGR_STEEM)
-    {
-      ASSERT(can_send || SSE_GHOST_DISK);//temp
-    }
-    if(manager==MNGR_WD1772)
-    {
-      ASSERT(!can_send);
-      ASSERT(IMAGE_STW);//to begin with
-    }
-    if(can_send)
-    {
-     // TRACE_LOG("drv %d mngr %d ext %d\n",drive, manager , extension);
-      ASSERT(manager==MNGR_STEEM);
-    }
-    else
-    {
-      if(manager==MNGR_STEEM)
-      {
-        ASSERT(SSE_GHOST_DISK);
-      }
-      else
-      {
-        ASSERT(manager==MNGR_CAPS || manager==MNGR_PASTI || manager==MNGR_WD1772);
-      }
-    }
-#endif
-
-
-#endif
-
-
-////ASSERT(!Lines.CommandWasIntercepted);
+#endif//SSE_DISK_IMAGETYPE
 
 #if defined(SSE_DISK_GHOST)
 /*  For STX, IPF, CTR, we check if we should intercept FDC command
@@ -640,15 +559,18 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 	////ASSERT(SF314[drive].ImageType.Manager==MNGR_STEEM);
       // Steem's native and WD1772 managers
           ////if(manager==MNGR_STEEM)
-
+#if defined(SSE_DISK_IMAGETYPE)
     if(SF314[drive].ImageType.Manager==MNGR_STEEM)
+#else
+#endif
       floppy_fdc_command(io_src_b); // in fdc.cpp for ST, MSA, DIM, STT
 #if defined(SSE_DISK_STW)
     else if(SF314[drive].ImageType.Manager==MNGR_WD1772)
       WriteCR(io_src_b); // for STW
 #endif
-  //}
     break;
+  }
+
 
   case 1: // TR
 #if defined(SSE_BOILER_TRACE_CONTROL)
@@ -1036,8 +958,13 @@ void TWD1772::Irq(bool state) {
     if(CommandType()==2 || CommandType()==3)
       STR&=~STR_DRQ;
 
-#if defined(SSE_DRIVE_SOUND) && !defined(SSE_DRIVE_SOUND_SEEK2)
-    if(SSEOption.DriveSound)
+#if defined(SSE_DRIVE_SOUND) && (!defined(SSE_DRIVE_SOUND_SEEK2)\
+  ||defined(SSE_DRIVE_SOUND_SEEK5))
+    if(SSEOption.DriveSound
+#if defined(SSE_DRIVE_SOUND_SEEK5)
+      && DRIVE_SOUND_SEEK_SAMPLE
+#endif
+      )
 #if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
       SF314[DRIVE].Sound_CheckIrq();
 #else
@@ -1070,7 +997,11 @@ void TWD1772::Motor(bool state) {
 
 
 int TWD1772::MsToCycles(int ms) {
+#if defined(SSE_INT_MFP_RATIO) 
   return ms*CpuNormalHz/1000; // *8000
+#else
+  return ms*8000;
+#endif
 }
 
 

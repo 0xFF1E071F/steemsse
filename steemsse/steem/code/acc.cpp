@@ -45,7 +45,7 @@ void m68k_poke(MEM_ADDRESS ad,BYTE x);
                                     {"IO",LOGSECTION_IO},
                                     {"Crash",LOGSECTION_CRASH},
                                     {"CPU",LOGSECTION_CPU},
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_NODIV))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_BOILER_NODIV))
                                     {"Div Instructions",LOGSECTION_DIV},
 #endif
                                     {"Trace",LOGSECTION_TRACE},
@@ -53,7 +53,7 @@ void m68k_poke(MEM_ADDRESS ad,BYTE x);
                                     {"FDC",LOGSECTION_FDC},
                                      
 #if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_LOG_OPTIONS)
-#if !defined(SSE_DEBUG_TRACE_CONTROL)
+#if !defined(SSE_BOILER_TRACE_CONTROL)
                                     {"Floppy data",LOGSECTION_FDC_BYTES},
 //                                    {"IPF sector info",LOGSECTION_IPF_LOCK_INFO},
 #endif
@@ -168,7 +168,7 @@ MEM_ADDRESS get_sp_before_trap(bool *pInvalid)
 {
   MEM_ADDRESS sp=(areg[7] & 0xffffff)+6;
 
-#if defined(SSE_DEBUG_STACK_68030_FRAME)
+#if defined(SSE_BOILER_STACK_68030_FRAME)
   if(Debug.M68030StackFrame)
     sp+=2;
 #endif
@@ -363,7 +363,7 @@ void log_io_write(MEM_ADDRESS addr,BYTE io_src_b)
   }
 }
 //---------------------------------------------------------------------------
-#if !defined(SSE_DEBUG_CPU_LOG_NO_STOP)
+#if !defined(SSE_BOILER_CPU_LOG_NO_STOP)
 void stop_cpu_log()
 {
   logsection_enabled[LOGSECTION_CPU]=0;
@@ -463,7 +463,7 @@ EasyStr HEXSl(long n,int ln){
 
 #ifdef DEBUG_BUILD // SS removed _
 char *reg_name(int n){
-#if defined(SSE_DEBUG_MOD_REGS)//interesting technique by the way
+#if defined(SSE_BOILER_MOD_REGS)//interesting technique by the way
   reg_name_buf[0]="DA"[int((n & 8) ? 1:0)]; 
 #else
   reg_name_buf[0]="da"[int((n & 8) ? 1:0)]; 

@@ -608,7 +608,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE) && defined(SSE_UNIX)
 
-#if defined(SSE_VAR_MOUSE_CAPTURE)
+#if defined(SSE_GUI_MOUSE_CAPTURE)
     else if(b->id==4002)
       CAPTURE_MOUSE=b->checked;
 #endif
@@ -637,7 +637,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
     else if(b->id==4012)
       SSEOption.PSGMod=b->checked;
 #endif
-#if defined(SSE_YM2149_FIXED_VOL_FIX2)
+#if defined(SSE_YM2149_FIXED_VOL_TABLE)
     else if(b->id==4013)
       SSEOption.PSGFixedVolume=b->checked;
 #endif
@@ -649,7 +649,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
     else if(b->id==4009)
       MICROWIRE_ON=b->checked;
 #endif   
-#if defined(SSE_VAR_OPTION_SLOW_DISK)
+#if defined(SSE_GUI_OPTION_SLOW_DISK_SSE)
     else if(b->id==4010)
       floppy_instant_sector_access=!b->checked;
 #endif   
