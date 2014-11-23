@@ -473,7 +473,8 @@ inline void CalcVChip(int &v,int &dv,int *source_p) {
     dv-=(v-(*source_p))>> 3;        
     dv*=13;           
     dv>>=4;   
-#elif ENABLE_VARIABLE_SOUND_DAMPING    // Boiler control, useless now (undef)
+#elif defined(ENABLE_VARIABLE_SOUND_DAMPING)   // defined() for mingw
+ // Boiler control, useless now (undef)
     v+=dv;             
     dv-=(v-(*source_p))*sound_variable_a >> 8;        
     dv*=sound_variable_d;           
@@ -709,7 +710,7 @@ always audible."
 
     Variable dma_sound_mixer was updated in iow.cpp, but not used.
     Must be =1 to mix YM and DMA, -12db doesn't work.
-    SS: but Pacemaker writes 0 then plays a PSG tune!
+    SS: Pacemaker writes 0 then plays a PSG tune! -> 2 compensating bugs
 */
     if(MICROWIRE_ON 
 #if defined(SSE_STF)
@@ -719,7 +720,7 @@ always audible."
     {
       if(dma_sound_mixer!=1)
       {
-#if defined(SSE_SOUND_VOL2)
+#if defined(SSE_SOUND_VOL2)//no
         //TRACE("dma_sound_mixer %d\n",dma_sound_mixer);
         if(!dma_sound_mixer)
           v=PsgGain.FilterAudio(v,-12); // Pacemaker?
@@ -744,7 +745,7 @@ always audible."
 #endif
       
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
-      if(! (d2_dpeek(FAKE_IO_START+20)>>15) ) 
+      if(! (d2_dpeek(FAKE_IO_START+20)>>15) ) //dma
 #endif
         val+= (**lp_dma_sound_channel);                           
 
@@ -2491,7 +2492,11 @@ void psg_write_buffer(int abc,DWORD to_t)
     }
     psg_buf_pointer[abc]=to_t-psg_time_of_last_vbl_for_writing;
     return;
-  }else{  
+  }else
+#if defined(SSE_BOILER_MUTE_SOUNDCHANNELS_ENV)
+    if(!((1<<10)&d2_dpeek(FAKE_IO_START+20))) //'mute env'
+#endif
+  {  
  
    // Enveloped
 
@@ -2653,6 +2658,8 @@ DWORD psg_adjust_envelope_start_time(DWORD t,DWORD new_envperiod)
     registers.
     It takes care of writing the appropriate part of the VBL sound buffer
     before the register change.
+    If option PSG is checked, it will write the digital volume values, 
+    rendering is delayed until VBL to take advantage of the 3 ways volume table.
     old_val has just been read in the PSG register by iow.cpp
     new_val will be put into the register after this function has executed
 */

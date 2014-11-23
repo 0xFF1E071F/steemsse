@@ -10,7 +10,8 @@ public:
   DynamicArray(int n) { Size=n;SizeInc=16;Data=new Type[n];NumItems=0; }
   ~DynamicArray()     { if (Data) delete[] Data; }
 
-#if !defined(VC_BUILD) && !defined(UNIX)
+//#if !defined(VC_BUILD) && !defined(UNIX)//SS
+#if defined(BCC_BUILD)//SS
   Type& DynamicArray::operator[](int i) { return Data[i]; }
 #endif
   operator Type*()        { return Data; }

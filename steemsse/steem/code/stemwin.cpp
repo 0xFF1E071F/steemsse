@@ -463,8 +463,8 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           PostMessage(StemWin,WM_USER,13,0);
           break;
         }
-
         SetWindowLong(StemWin,GWL_STYLE,WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_SIZEBOX | WS_MAXIMIZEBOX | WS_VISIBLE);
+
         SetForegroundWindow(StemWin);
         CheckResetDisplay();
 
@@ -477,6 +477,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         }
       }
 
+/*
 //tmp
       else if (wPar==14)
       {
@@ -485,7 +486,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         else
           InvalidateRect(StemWin,NULL,true);
       }
-
+*/
 
       break;
     case WM_NCLBUTTONDBLCLK:
@@ -807,6 +808,50 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       ((MINMAXINFO*)lPar)->ptMinTrackSize.x=320+GetSystemMetrics(SM_CXFRAME)*2+4;
       ((MINMAXINFO*)lPar)->ptMinTrackSize.y=200+GetSystemMetrics(SM_CYFRAME)*2+GetSystemMetrics(SM_CYCAPTION)+MENUHEIGHT+4;
       break;
+#if defined(SSE_VID_BLOCK_WINDOW_SIZE)
+/*  v3.7 
+    Prevent player from resizing the window by dragging the border.
+    Optional because stretching is cool and handy too.
+    We pretend the mouse is on the client area, so the resizing cursor 
+    won't even appear.
+    All border values are between HTLEFT and HTBOTTOMRIGHT.
+    Returning HTCLIENT all the time would work with Windows 7 but not Vista 
+    (can't move or close window).
+*/
+    case WM_NCHITTEST:
+    {
+      DWORD val=DefWindowProc(Win,Mess,wPar,lPar); // real area
+      if(OPTION_BLOCK_RESIZE && val>=HTLEFT && val <=HTBOTTOMRIGHT)
+        val=HTCLIENT;
+      return val;
+    }
+#endif
+
+#if defined(SSE_VID_LOCK_ASPET_RATIO)
+/*  v3.7
+    if option above isn't checked, this one enforces a +- correct aspect ratio
+    lPar points to the absolute resizing rectangle, its values may be changed
+    GetWindowRect() gives the current rectangle of the window, hopfully the
+    same concept.
+    TODO: keep AR really constant (computing may produce deviation)
+*/
+    case WM_SIZING:
+      if(OPTION_LOCK_ASPECT_RATIO)
+      {
+        RECT current_coord;
+        GetWindowRect(StemWin,&current_coord);
+        float a_r=(float)(current_coord.right-current_coord.left)/(float)(current_coord.bottom-current_coord.top);
+        if(a_r)
+        {
+          if(((RECT*)lPar)->right>current_coord.right)
+            ((RECT*)lPar)->bottom= (float)(((RECT*)lPar)->right-((RECT*)lPar)->left)/a_r + ((RECT*)lPar)->top;
+          else
+            ((RECT*)lPar)->right= (float)(((RECT*)lPar)->bottom-((RECT*)lPar)->top)*a_r + ((RECT*)lPar)->left;
+        }
+      }
+      break;
+#endif
+
     case WM_SIZE:
     {
       int cw=LOWORD(lPar),ch=HIWORD(lPar);
@@ -870,6 +915,9 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           }
           break;
       }
+#if defined(SSE_GUI_STATUS_STRING)
+      GUIRefreshStatusBar();//of course (v3.7.0) - there must be other places
+#endif
       break;
     }
     case WM_DISPLAYCHANGE:

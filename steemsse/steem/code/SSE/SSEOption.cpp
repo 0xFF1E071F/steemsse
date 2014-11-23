@@ -66,7 +66,9 @@ void TOption::Init() {
   Direct3D=1;
   STAspectRatio=0;
   DriveSoundSeekSample=0;
-  TestingNewFeatures=0; // no L/S for this one
+  TestingNewFeatures=0;
+  BlockResize=1;
+  LockAspectRatio=0;
 }
 
 #endif//#if defined(SSE_SSE_OPTION_STRUCT)

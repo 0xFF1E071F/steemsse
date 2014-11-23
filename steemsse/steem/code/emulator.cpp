@@ -718,7 +718,10 @@ MEM_ADDRESS mmu_confused_address(MEM_ADDRESS ad)
   }
   if (bank==1 && ad<FOUR_MEGS) ad+=bank_length[0];
 #if defined(SSE_DEBUG)
-  TRACE_LOG("MMU confused ad %X -> %X\n",ad1,ad);
+#if defined(SSE_BOILER_TRACE_CONTROL)
+  if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
+#endif
+    TRACE_LOG("MMU confused ad %X -> %X\n",ad1,ad);
 #endif
   return ad;
 }
@@ -728,16 +731,28 @@ BYTE ASMCALL mmu_confused_peek(MEM_ADDRESS ad,bool cause_exception)
   MEM_ADDRESS c_ad=mmu_confused_address(ad);
   if (c_ad==0xffffff){   //bus error
     if (cause_exception) exception(BOMBS_BUS_ERROR,EA_READ,ad);
-    TRACE_LOG("MMU confused peek %X 0\n",ad);
+#if defined(SSE_BOILER_TRACE_CONTROL)
+    if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
+#endif
+      TRACE_LOG("MMU confused peek %X 0\n",ad);
     return 0;
   }else if (c_ad==0xfffffe){  //gap in memory
-    TRACE_LOG("MMU confused peek %X FF\n",ad);
+#if defined(SSE_BOILER_TRACE_CONTROL)
+    if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
+#endif
+      TRACE_LOG("MMU confused peek %X FF\n",ad);
     return 0xff;
   }else if (c_ad<mem_len){
-    TRACE_LOG("MMU confused peek %X %X\n",ad,PEEK(c_ad));
+#if defined(SSE_BOILER_TRACE_CONTROL)
+    if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
+#endif
+      TRACE_LOG("MMU confused peek %X %X\n",ad,PEEK(c_ad));
     return PEEK(c_ad);
   }else{
-    TRACE_LOG("MMU confused peek %X FF\n",ad);
+#if defined(SSE_BOILER_TRACE_CONTROL)
+    if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
+#endif
+      TRACE_LOG("MMU confused peek %X FF\n",ad);
     return 0xff;
   }
 }
@@ -747,16 +762,28 @@ WORD ASMCALL mmu_confused_dpeek(MEM_ADDRESS ad,bool cause_exception)
   MEM_ADDRESS c_ad=mmu_confused_address(ad);
   if (c_ad==0xffffff){   //bus error
     if (cause_exception) exception(BOMBS_BUS_ERROR,EA_READ,ad);
-    TRACE_LOG("MMU confused dpeek %X 0\n",ad);
+#if defined(SSE_BOILER_TRACE_CONTROL)
+    if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
+#endif
+      TRACE_LOG("MMU confused dpeek %X 0\n",ad);
     return 0;
   }else if (c_ad==0xfffffe){  //gap in memory
-    TRACE_LOG("MMU confused dpeek %X FFFF\n",ad);
+#if defined(SSE_BOILER_TRACE_CONTROL)
+    if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
+#endif
+      TRACE_LOG("MMU confused dpeek %X FFFF\n",ad);
     return 0xffff;
   }else if (c_ad<mem_len){
-    TRACE_LOG("MMU confused dpeek %X %X\n",ad,DPEEK(c_ad));
+#if defined(SSE_BOILER_TRACE_CONTROL)
+    if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
+#endif
+      TRACE_LOG("MMU confused dpeek %X %X\n",ad,DPEEK(c_ad));
     return DPEEK(c_ad);
   }else{
-    TRACE_LOG("MMU confused dpeek %X FFFF\n",ad);
+#if defined(SSE_BOILER_TRACE_CONTROL)
+    if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
+#endif
+      TRACE_LOG("MMU confused dpeek %X FFFF\n",ad);
     return 0xffff;
   }
 }
@@ -765,7 +792,10 @@ LONG ASMCALL mmu_confused_lpeek(MEM_ADDRESS ad,bool cause_exception)
 {
   WORD a=mmu_confused_dpeek(ad,cause_exception);
   WORD b=mmu_confused_dpeek(ad+2,cause_exception);
-  TRACE_LOG("MMU confused lpeek %X %X\n",ad,MAKELONG(b,a));
+#if defined(SSE_BOILER_TRACE_CONTROL)
+  if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
+#endif
+    TRACE_LOG("MMU confused lpeek %X %X\n",ad,MAKELONG(b,a));
   return MAKELONG(b,a);
 }
 
@@ -781,7 +811,10 @@ void ASMCALL mmu_confused_set_dest_to_addr(int bytes,bool cause_exception)
   }else{
     m68k_dest=&iobuffer;  //throw away result
   }
-  TRACE_LOG("MMU confused set dest %X\n",m68k_dest);
+#if defined(SSE_BOILER_TRACE_CONTROL)
+  if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
+#endif
+    TRACE_LOG("MMU confused set dest %X\n",m68k_dest);
 }
 #undef LOGSECTION
 #endif//#if !defined(SSE_MMU_NO_CONFUSION)

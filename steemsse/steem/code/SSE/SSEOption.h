@@ -48,6 +48,8 @@ struct TOption {
   unsigned int STAspectRatio:1;
   unsigned int DriveSoundSeekSample:1;
   unsigned int TestingNewFeatures:1;
+  unsigned int BlockResize:1;
+  unsigned int LockAspectRatio:1;
 #ifdef __cplusplus // visible only to C++ objects
   TOption();
   void Init();
@@ -94,6 +96,8 @@ extern struct TOption SSEOption;
 #define OPTION_ST_ASPECT_RATIO (SSEOption.STAspectRatio)
 #define DRIVE_SOUND_SEEK_SAMPLE (SSEOption.DriveSoundSeekSample)
 #define SSE_TEST_ON (SSEOption.TestingNewFeatures)
+#define OPTION_BLOCK_RESIZE (SSEOption.BlockResize)
+#define OPTION_LOCK_ASPECT_RATIO (SSEOption.LockAspectRatio)
 
 #else//!defined(SSE_SSE_OPTION_STRUCT)
 

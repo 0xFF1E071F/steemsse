@@ -1203,10 +1203,27 @@ FF8240 - FF827F   palette, res
 
 #if defined(SSE_DEBUG_TRACE_IO)
   if(!io_word_access
+#if defined(SSE_BOILER_TRACE_CONTROL)
+    && (((1<<14)&d2_dpeek(FAKE_IO_START+24))
+// we add conditions address range - logsection enabled
+
+
+      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_INTERRUPTS] ) //mfp
+      && ( (addr&0xffff00)!=0xfffc00 || logsection_enabled[LOGSECTION_IKBD] ) //acia
+      && ( (addr&0xffff00)!=0xff8600 || logsection_enabled[LOGSECTION_FDC] ) //dma
+      && ( (addr&0xffff00)!=0xff8800 || logsection_enabled[LOGSECTION_SOUND] )//psg
+      && ( (addr&0xffff00)!=0xff8900 || logsection_enabled[LOGSECTION_SOUND] )//dma
+      && ( (addr&0xffff00)!=0xff8a00 || logsection_enabled[LOGSECTION_BLITTER] )
+      && ( (addr&0xffff00)!=0xff8200 || logsection_enabled[LOGSECTION_VIDEO] )//shifter
+      && ( (addr&0xffff00)!=0xff8000 || (((1<<13)&d2_dpeek(FAKE_IO_START+24)) ))//MMU
+
+      ) 
+#else
     && (addr&0xFFFF00)!=0xFFFA00 // many MFP reads
     && addr!=0xFFFC02  // if IKBD data polling...
+#endif
     ) 
-    TRACE_LOG("PC %X IOR.B %X = %X\n",pc-2,addr,ior_byte);
+    TRACE_LOG("PC %X IOR.B %X : %X\n",pc-2,addr,ior_byte);
 #endif
 
 #if defined(SSE_MMU_WU_IO_BYTES_R)
@@ -1964,7 +1981,13 @@ Done one cycle of all palettes
 #endif
     }
 #endif//STF
-
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_TRACE_IO)
+#if defined(SSE_BOILER_TRACE_CONTROL) // double condition, IO + Video
+    if ( ((1<<14)&d2_dpeek(FAKE_IO_START+24))
+      && (logsection_enabled[LOGSECTION_VIDEO]) )
+#endif
+    TRACE_LOG("PC %X read PAL %X %X\n",old_pc,n,palette);
+#endif
 //    TRACE("PC %X R PAL %X %X\n",old_pc,n,palette);
 
     return palette;
@@ -1977,6 +2000,21 @@ Done one cycle of all palettes
     x|=io_read_b(addr+1);
     io_word_access=0;
 #if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_TRACE_IO)
+#if defined(SSE_BOILER_TRACE_CONTROL)
+    if (((1<<14)&d2_dpeek(FAKE_IO_START+24))
+    // we add conditions address range - logsection enabled
+
+      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_INTERRUPTS] ) //mfp
+      && ( (addr&0xffff00)!=0xfffc00 || logsection_enabled[LOGSECTION_IKBD] ) //acia
+      && ( (addr&0xffff00)!=0xff8600 || logsection_enabled[LOGSECTION_FDC] ) //dma
+      && ( (addr&0xffff00)!=0xff8800 || logsection_enabled[LOGSECTION_SOUND] )//psg
+      && ( (addr&0xffff00)!=0xff8900 || logsection_enabled[LOGSECTION_SOUND] )//dma
+      && ( (addr&0xffff00)!=0xff8a00 || logsection_enabled[LOGSECTION_BLITTER] )
+      && ( (addr&0xffff00)!=0xff8200 || logsection_enabled[LOGSECTION_VIDEO] )//shifter
+      && ( (addr&0xffff00)!=0xff8000 || ( ((1<<13)&d2_dpeek(FAKE_IO_START+24)) ))//MMU
+
+      ) 
+#endif
     TRACE_LOG("PC %X read word %X at %X\n",old_pc,x,addr);
 #endif
     return x;

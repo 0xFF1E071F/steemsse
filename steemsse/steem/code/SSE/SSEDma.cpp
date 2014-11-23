@@ -224,7 +224,7 @@ BYTE TDma::IORead(MEM_ADDRESS addr) {
   BYTE ior_byte=0xFF;
   BYTE drive=DRIVE;//YM2149.SelectedDrive;
 
-  TRACE_LOG("DMA R %X ",addr);
+//  TRACE_LOG("DMA R %X ",addr);
 
   // test for bus error
   if(addr>0xff860f || addr<0xff8604 || addr<0xff8608 && !io_word_access) 
@@ -275,7 +275,7 @@ is ignored and when reading the 8 upper bits consistently reads 1."
     // sector counter
     if(MCR&CR_COUNT_OR_REGS) 
     {
-      TRACE_LOG("Counter");
+     // TRACE_LOG("Counter");
 #if defined(SSE_DMA_SECTOR_COUNT)
       ior_byte=(rand()&0xFF);
 #else
@@ -286,7 +286,7 @@ is ignored and when reading the 8 upper bits consistently reads 1."
     // HD access
     else if(MCR&CR_HDC_OR_FDC) 
     {
-      TRACE_LOG("HD");
+//      TRACE_LOG("HD");
       LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
                   " - Reading low byte of HDC register #"+((dma_mode & BIT_1) ? 1:0)); )
     }
@@ -301,7 +301,7 @@ note: this isn't clear, see Drq()
 */
     else if(!(MCR&CR_DRQ_FDC_OR_HDC)) // we can't
     {
-      TRACE_LOG("No FDC access DMA MCR %x",MCR);
+      TRACE_LOG("No FDC access DMA MCR %x\n",MCR);
     }
 #endif
     else
@@ -379,7 +379,7 @@ note: this isn't clear, see Drq()
     break;
 
   case 0xff8607:  //low byte of DMA status
-    TRACE_LOG("SR");
+//    TRACE_LOG("SR");
 #if defined(SSE_DMA_READ_STATUS)
 /*
 "If the DMA status word is polled during a DMA operation the transfer might
@@ -397,17 +397,17 @@ Not emulated
 TODO?
 */
   case 0xff8609:  // DMA Base and Counter High
-    TRACE_LOG("BaseAddress");
+//    TRACE_LOG("BaseAddress");
     ior_byte=(BYTE)((BaseAddress&0xff0000)>>16);
     break;
 
   case 0xff860b:  // DMA Base and Counter Mid
-    TRACE_LOG("BaseAddress");
+//    TRACE_LOG("BaseAddress");
     ior_byte=(BYTE)((BaseAddress&0xff00)>>8);
     break;
 
   case 0xff860d:  // DMA Base and Counter Low
-    TRACE_LOG("BaseAddress");
+//    TRACE_LOG("BaseAddress");
     ior_byte=(BYTE)((BaseAddress&0xff));
 //   TRACE("read %x as %x\n",addr,ior_byte);
 //    if(addr==0xff860d) TRACE("base %x ",BaseAddress);
@@ -415,7 +415,7 @@ TODO?
 
   case 0xff860e: //frequency/density control
   {
-    TRACE_LOG("Density");
+//    TRACE_LOG("Density");
     if(FloppyDrive[drive].STT_File) 
       ior_byte=0;
     else
@@ -458,7 +458,7 @@ TODO?
 #endif
     )
   {
-    TRACE_LOG(" Pasti");
+//    TRACE_LOG(" Pasti");
 //    TRACE("pasti reading ");
     if(addr<0xff8608 && (addr & 1))
     {
@@ -486,7 +486,7 @@ TODO?
   }
 #endif
 
-  TRACE_LOG(" .B=%X\n",ior_byte);
+//  TRACE_LOG(" .B=%X\n",ior_byte);
 //  if(addr==0xff860d) TRACE("base %x ",BaseAddress);
   //if(addr==0xff860b) TRACE("read %x as %x\n",addr,ior_byte);
   //TRACE("post pasti read %x as %x\n",addr,ior_byte);
@@ -520,7 +520,7 @@ void TDma::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
 
   ASSERT( (addr&0xFFFF00)==0xFF8600 );
 
-  TRACE_LOG("DMA W %X ",addr);
+//  TRACE_LOG("DMA W %X ",addr);
 
   // test for bus error
   if(addr>0xff860f || addr<0xff8604 || addr<0xff8608 && !io_word_access) 
@@ -557,7 +557,7 @@ is ignored and when reading the 8 upper bits consistently reads 1."
     //write FDC sector counter, 0x190
     if (MCR&CR_COUNT_OR_REGS)
     { 
-      TRACE_LOG("Counter");
+//      TRACE_LOG("Counter");
       Counter&=0xff00;
       Counter|=io_src_b;
       // We need do that only once (word access):
@@ -578,7 +578,7 @@ is ignored and when reading the 8 upper bits consistently reads 1."
     }
     // HD access
     if (MCR&CR_HDC_OR_FDC){ 
-      TRACE_LOG("HD");
+//      TRACE_LOG("HD");
       log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Writing $xx"+HEXSl(io_src_b,2)+" to HDC register #"+((dma_mode & BIT_1) ? 1:0));
       break;
     }
@@ -643,7 +643,7 @@ What was in the buffers will go nowhere, the internal counter is reset.
     // detect toggling of bit 8 (boolean !x ^ !y = logical x ^^ y)
     if( !(MCR&CR_WRITE) ^ !(io_src_b) ) // fixes Archipelagos IPF
     {
-      TRACE_LOG("Reset");
+//      TRACE_LOG("Reset");
 #if !defined(SSE_DMA_FIFO_READ_ADDRESS2)
       fdc_read_address_buffer_len=0;// this is only for command III read address
 #endif
@@ -669,7 +669,7 @@ What was in the buffers will go nowhere, the internal counter is reset.
     break;
     
   case 0xff8607:  //low byte of DMA mode
-    TRACE_LOG("CR");
+//    TRACE_LOG("CR");
     MCR&=0xff00;
     MCR|=io_src_b;
 #if !defined(SSE_DMA_WRITE_CONTROL) // see above
@@ -681,14 +681,14 @@ What was in the buffers will go nowhere, the internal counter is reset.
     break;
     
   case 0xff8609:  // DMA Base and Counter High
-    TRACE_LOG("BaseAddress");
+//    TRACE_LOG("BaseAddress");
     BaseAddress&=0x00ffff;
     BaseAddress|=((MEM_ADDRESS)io_src_b) << 16;
     log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Set DMA address to "+HEXSl(BaseAddress,6));
     break;
     
   case 0xff860b:  // DMA Base and Counter Mid
-    TRACE_LOG("BaseAddress");
+//    TRACE_LOG("BaseAddress");
 #if defined(SSE_DMA_ADDRESS)
 /* 
 "The DMA Address Counter register must be loaded (written) in a Low, Mid, 
@@ -704,7 +704,7 @@ What was in the buffers will go nowhere, the internal counter is reset.
     break;
     
   case 0xff860d:  // DMA Base and Counter Low
-    TRACE_LOG("BaseAddress L");
+//    TRACE_LOG("BaseAddress L");
     ASSERT( !(io_src_b&1) ); // shouldn't the address be even?
 #if defined(SSE_DMA_ADDRESS)
     //BaseAddress=0xffff00,BaseAddress|=io_src_b;
@@ -751,7 +751,7 @@ What was in the buffers will go nowhere, the internal counter is reset.
     )
   {
     //ASSERT( io_src_b!=0xF0 );
-    TRACE_LOG(" Pasti");
+//    TRACE_LOG(" Pasti");
     WORD data=io_src_b;
 
     if(addr<0xff8608 && !(addr&1))
@@ -790,7 +790,7 @@ What was in the buffers will go nowhere, the internal counter is reset.
   }
 #endif
 
-  TRACE_LOG(" =.B %X\n",io_src_b);
+//  TRACE_LOG(" =.B %X\n",io_src_b);
 
 }
 

@@ -851,6 +851,15 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
       SetWindowText(StemWin,stem_window_title);
     }
 #endif
+#if defined(SSE_GUI_OPTION_FOR_TESTS)
+    SSE_TEST_ON=pCSF->GetInt("Options","TestingNewFeatures",SSE_TEST_ON);
+#endif
+#if defined(SSE_VID_BLOCK_WINDOW_SIZE)
+    OPTION_BLOCK_RESIZE=pCSF->GetInt("Options","BlockResize",OPTION_BLOCK_RESIZE);
+#endif
+#if defined(SSE_VID_LOCK_ASPET_RATIO)
+    OPTION_LOCK_ASPECT_RATIO=pCSF->GetInt("Options","LockAspectRatio",OPTION_LOCK_ASPECT_RATIO);
+#endif
 
 #endif//steven_seagal
 
@@ -1299,8 +1308,18 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_DRIVE_SOUND_SEEK5)
   pCSF->SetStr("Options","DriveSoundSeekSample",EasyStr(DRIVE_SOUND_SEEK_SAMPLE));
 #endif
+#if defined(SSE_GUI_OPTION_FOR_TESTS)
+  pCSF->SetStr("Options","TestingNewFeatures",EasyStr(SSE_TEST_ON));
+#endif
+#if defined(SSE_VID_BLOCK_WINDOW_SIZE)
+  pCSF->SetStr("Options","BlockResize",EasyStr(OPTION_BLOCK_RESIZE));
+#endif
+#if defined(SSE_VID_LOCK_ASPET_RATIO)
+  pCSF->SetStr("Options","LockAspectRatio",EasyStr(OPTION_LOCK_ASPECT_RATIO));
+#endif
 
 
+//boiler
 #if defined(SSE_BOILER_SSE_PERSISTENT)
   pCSF->SetStr("Debug","UseTraceFile",EasyStr(USE_TRACE_FILE)); 
   pCSF->SetStr("Debug","TraceFileRewind",EasyStr(TRACE_FILE_REWIND)); 
