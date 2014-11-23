@@ -95,6 +95,9 @@ void (*hd6301_trace)(char *fmt, ...);
 #ifdef MINGW_BUILD
 //#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wreturn-type"
+#define __max(a,b) (a>b ? a:b)
+#define __min(a,b) (a>b ? b:a)
+
 #endif
 
 #define error printf // saves headache

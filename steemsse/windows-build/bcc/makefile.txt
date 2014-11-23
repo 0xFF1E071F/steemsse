@@ -1,36 +1,36 @@
-# you need to edit the following lines to make them point to the right
+# you need to edit the following line to make them point to the right
 # directories in your system
-#BCCROOT = d:\Console\BCC
-#STEEMROOT = ..\..\steem
+
 STEEMROOT = $(ROOT)\steem
 
 # the following lines should apply to all systems
-ASMINCOBJDIR = obj
+ASMINCOBJDIR = $(OUT)
 INCDIR = $(ROOT)\include
-ASMOBJDIR = obj
+ASMOBJDIR = $(OUT)
 3RDPARTYROOT = $(ROOT)\3rdparty
 
 # Note that we don't use unrarlib anymore. Borland linker is smart enough to 
 # not include anything useless in the EXE, but we remove it from the project
 # to avoid useless compile time.
-#3RDPARTYOBJS = obj\unrarlib.obj obj\div68kCycleAccurate.obj obj\dsp.obj obj\6301.obj
-3RDPARTYOBJS = obj\div68kCycleAccurate.obj obj\dsp.obj obj\6301.obj obj\AviFile.obj
 
-INCLUDEPATHS = $(STEEMROOT)\code;$(BCCROOT)\Include;$(INCDIR);$(3RDPARTYROOT);$(3RDPARTYROOT)\unrarlib;$(3RDPARTYROOT)\pasti;$(3RDPARTYROOT)\6301
+#3RDPARTYOBJS = $(OUT)\div68kCycleAccurate.obj $(OUT)\dsp.obj $(OUT)\6301.obj $(OUT)\AviFile.obj
+3RDPARTYOBJS = $(OUT)\div68kCycleAccurate.obj $(OUT)\dsp.obj $(OUT)\6301.obj
 
-ALLOBJS = $(ASMOBJDIR)\asm_draw.obj obj\emu.obj c0w32.obj obj\Steem.obj $(ASMOBJS) obj\helper.obj
+INCLUDEPATHS = $(STEEMROOT)\code;$(BCCROOT)\Include;$(INCDIR);$(3RDPARTYROOT);$(3RDPARTYROOT)\unrarlib;$(3RDPARTYROOT)\pasti;$(3RDPARTYROOT)\6301;$(3RDPARTYROOT)\d3d 
+
+ALLOBJS = $(ASMOBJDIR)\asm_draw.obj $(OUT)\emu.obj c0w32.obj $(OUT)\Steem.obj $(ASMOBJS) $(OUT)\helper.obj
 ALLOBJS = $(ALLOBJS) $(ASMOBJDIR)\asm_osd_draw.obj $(ASMINCOBJDIR)\asm_portio.obj
-ALLOBJS = $(ALLOBJS) obj\SSE.obj obj\SSEOption.obj obj\SSEMMU.obj obj\SSE6301.obj obj\SSECpu.obj obj\SSEDebug.obj 
-ALLOBJS = $(ALLOBJS) obj\SSEFrameReport.obj obj\SSEShifter.obj obj\SSESTF.obj obj\SSEVideo.obj
-ALLOBJS = $(ALLOBJS) obj\SSEFloppy.obj obj\SSESTW.obj obj\SSEGhostDisk.obj 
-ALLOBJS = $(ALLOBJS) obj\SSEWD1772.obj obj\SSEDrive.obj obj\SSEDisk.obj 
-ALLOBJS = $(ALLOBJS) obj\SSEDma.obj obj\SSEYM2149.obj obj\SSEPsg.obj 
-ALLOBJS = $(ALLOBJS) obj\SSECapsImg.obj obj\SSESCP.obj
+ALLOBJS = $(ALLOBJS) $(OUT)\SSE.obj $(OUT)\SSEOption.obj $(OUT)\SSEMMU.obj $(OUT)\SSE6301.obj $(OUT)\SSECpu.obj $(OUT)\SSEDebug.obj 
+ALLOBJS = $(ALLOBJS) $(OUT)\SSEFrameReport.obj $(OUT)\SSEShifter.obj $(OUT)\SSESTF.obj $(OUT)\SSEVideo.obj
+ALLOBJS = $(ALLOBJS) $(OUT)\SSEFloppy.obj $(OUT)\SSESTW.obj $(OUT)\SSEGhostDisk.obj 
+ALLOBJS = $(ALLOBJS) $(OUT)\SSEWD1772.obj $(OUT)\SSEDrive.obj $(OUT)\SSEDisk.obj 
+ALLOBJS = $(ALLOBJS) $(OUT)\SSEDma.obj $(OUT)\SSEYM2149.obj 
+ALLOBJS = $(ALLOBJS) $(OUT)\SSECapsImg.obj $(OUT)\SSESCP.obj
 
 !ifndef ONEGAME
 
 ALLOBJS = $(ALLOBJS) $(3RDPARTYOBJS)
-NAME = Steem
+NAME =Steem
 RC_PATH = $(STEEMROOT)\rc\resource.rc
 
 !else
@@ -53,7 +53,10 @@ LINKOPTS = -L$(BCCROOT)\Lib;$(BCCROOT)\Lib\PSDK -aa -Tpe -t -x -w -v- -C -Gn
 LINKOPTS = -L$(3RDPARTYROOT)\UnRARDLL\bcclib;-dunrar.DLL $(LINKOPTS)
 LINKOPTS = -L$(3RDPARTYROOT)\caps\bcclib;-dCAPSImg.DLL $(LINKOPTS)
 LINKOPTS = -L$(3RDPARTYROOT)\FreeImage\bcclib;-dFreeImage.DLL $(LINKOPTS)
-LINKOPTS = -L$(3RDPARTYROOT)\SDL-WIN\bcclib $(LINKOPTS)
+#LINKOPTS = -L$(3RDPARTYROOT)\SDL-WIN\bcclib $(LINKOPTS)
+LINKOPTS = -L$(3RDPARTYROOT)\d3d\bcc $(LINKOPTS)
+#pragma comment(lib, "../../3rdparty/d3d/bcc/d3dx9_43.lib")
+#LINKOPTS = -L$(BCCROOT)\..\DX_SDK_2010\ $(LINKOPTS)
 #    Set the compiler options
 STEEMFLAGS = -DBCC_BUILD -DWIN32 -DSTEVEN_SEAGAL
 #STEEMFLAGS = -DBCC_BUILD -DWIN32
@@ -65,7 +68,7 @@ CCOPTS = -v- -x -xf -xp- -xd -xs- -H- -y- -X             $(CCOPTS)
 
 !ifndef ONEGAME
 
-OUTPUTDIR = obj
+OUTPUTDIR = $(OUT)
 
 !ifdef DONT_ALLOW_DEBUG
 CCOPTS = -DNO_DEBUG_BUILD                   $(CCOPTS)
@@ -102,9 +105,9 @@ OUTPUTDIR = $(ONEGAME_PATH)
 
 !endif
 
-!ifdef BCC_BUILD
+#!ifdef BCC_BUILD
 CCOPTS = -DBCC_BUILD                                     $(CCOPTS)
-!endif
+#!endif
 
 CPPFLAGS= -I$(INCLUDEPATHS) $(CCOPTS)
 
@@ -116,102 +119,101 @@ ALL: Steem.res Steem.obj helper.obj emu.obj SSE.obj SSEOption.obj \
   SSEMMU.obj SSE6301.obj SSECpu.obj SSEDebug.obj SSEFloppy.obj \
   SSEFrameReport.obj SSEShifter.obj SSESTF.obj SSEVideo.obj \
   SSESTW.obj SSEGhostDisk.obj SSEWD1772.obj SSEDrive.obj \
-  SSEDma.obj SSEDisk.obj SSEYM2149.obj SSEPsg.obj \
-  SSECapsImg.obj SSESCP.obj $(NAME).exe
+  SSEDma.obj SSEDisk.obj SSEYM2149.obj \
+  SSECapsImg.obj SSESCP.obj link
+
+link:
+           $(LINKER) $(LINKOPTS) $(ALLOBJS), "$(OUTPUTDIR)\$(NAME).exe", ,import32.lib cw32mt.lib, ,$(OUT)\Steem.res
+
 
 Steem.res:
-           $(RC) $(RC_PATH) -foobj\Steem.res
+           $(RC) $(RC_PATH) -fo$(OUT)\Steem.res
 
 Steem.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\Steem.obj $(STEEMROOT)\Steem.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\Steem.obj $(STEEMROOT)\Steem.cpp
 
 helper.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\helper.obj $(STEEMROOT)\helper.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\helper.obj $(STEEMROOT)\helper.cpp
 
 emu.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\emu.obj $(STEEMROOT)\emu.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\emu.obj $(STEEMROOT)\emu.cpp
 
 SSE.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSE.obj $(STEEMROOT)\code\SSE\SSE.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSE.obj $(STEEMROOT)\code\SSE\SSE.cpp
 
 SSEOption.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSEOption.obj $(STEEMROOT)\code\SSE\SSEOption.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSEOption.obj $(STEEMROOT)\code\SSE\SSEOption.cpp
 
 SSEMMU.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSEMMU.obj $(STEEMROOT)\code\SSE\SSEMMU.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSEMMU.obj $(STEEMROOT)\code\SSE\SSEMMU.cpp
 
 SSE6301.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSE6301.obj $(STEEMROOT)\code\SSE\SSE6301.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSE6301.obj $(STEEMROOT)\code\SSE\SSE6301.cpp
 
 SSECpu.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSECpu.obj $(STEEMROOT)\code\SSE\SSECpu.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSECpu.obj $(STEEMROOT)\code\SSE\SSECpu.cpp
 
 SSEDebug.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSEDebug.obj $(STEEMROOT)\code\SSE\SSEDebug.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSEDebug.obj $(STEEMROOT)\code\SSE\SSEDebug.cpp
 
 SSEFloppy.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSEFloppy.obj $(STEEMROOT)\code\SSE\SSEFloppy.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSEFloppy.obj $(STEEMROOT)\code\SSE\SSEFloppy.cpp
 
 SSESTF.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSESTF.obj $(STEEMROOT)\code\SSE\SSESTF.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSESTF.obj $(STEEMROOT)\code\SSE\SSESTF.cpp
 
 SSEVideo.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSEVideo.obj $(STEEMROOT)\code\SSE\SSEVideo.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSEVideo.obj $(STEEMROOT)\code\SSE\SSEVideo.cpp
 
 SSEFrameReport.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSEFrameReport.obj $(STEEMROOT)\code\SSE\SSEFrameReport.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSEFrameReport.obj $(STEEMROOT)\code\SSE\SSEFrameReport.cpp
 
 SSEShifter.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSEShifter.obj $(STEEMROOT)\code\SSE\SSEShifter.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSEShifter.obj $(STEEMROOT)\code\SSE\SSEShifter.cpp
 
 SSEGhostDisk.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSEGhostDisk.obj $(STEEMROOT)\code\SSE\SSEGhostDisk.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSEGhostDisk.obj $(STEEMROOT)\code\SSE\SSEGhostDisk.cpp
 
 SSESTW.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSESTW.obj $(STEEMROOT)\code\SSE\SSESTW.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSESTW.obj $(STEEMROOT)\code\SSE\SSESTW.cpp
 
 SSEWD1772.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSEWD1772.obj $(STEEMROOT)\code\SSE\SSEWD1772.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSEWD1772.obj $(STEEMROOT)\code\SSE\SSEWD1772.cpp
 
 SSEDma.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSEDma.obj $(STEEMROOT)\code\SSE\SSEDma.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSEDma.obj $(STEEMROOT)\code\SSE\SSEDma.cpp
 
 SSEDrive.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSEDrive.obj $(STEEMROOT)\code\SSE\SSEDrive.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSEDrive.obj $(STEEMROOT)\code\SSE\SSEDrive.cpp
 
 SSEDisk.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSEDisk.obj $(STEEMROOT)\code\SSE\SSEDisk.cpp
-
-SSEPsg.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSEPsg.obj $(STEEMROOT)\code\SSE\SSEPsg.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSEDisk.obj $(STEEMROOT)\code\SSE\SSEDisk.cpp
 
 SSEYM2149.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSEYM2149.obj $(STEEMROOT)\code\SSE\SSEYM2149.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSEYM2149.obj $(STEEMROOT)\code\SSE\SSEYM2149.cpp
 
 SSECapsImg.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSECapsImg.obj $(STEEMROOT)\code\SSE\SSECapsImg.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSECapsImg.obj $(STEEMROOT)\code\SSE\SSECapsImg.cpp
 
 SSESCP.obj:
-           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -oobj\SSESCP.obj $(STEEMROOT)\code\SSE\SSESCP.cpp
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSESCP.obj $(STEEMROOT)\code\SSE\SSESCP.cpp
 
-$(NAME).exe:
-           $(LINKER) $(LINKOPTS) $(ALLOBJS), "$(OUTPUTDIR)\$(NAME).exe", ,import32.lib cw32mt.lib, ,obj\Steem.res
 
 #3rdparty:	unrarlib div68kCycleAccurate dsp 6301
 
 3rdparty:	div68kCycleAccurate dsp 6301 AviFile
 
 #unrarlib:
-#	$(CPP) $(CPPFLAGS) -DWIN32 -c -oobj\unrarlib.obj $(3RDPARTYROOT)\unrarlib\unrarlib\unrarlib.c $(CFLAGS) 
+#	$(CPP) $(CPPFLAGS) -DWIN32 -c -o$(OUT)\unrarlib.obj $(3RDPARTYROOT)\unrarlib\unrarlib\unrarlib.c $(CFLAGS) 
 div68kCycleAccurate:
-        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -c -oobj\div68kCycleAccurate.obj $(3RDPARTYROOT)\pasti\div68kCycleAccurate.c $(CFLAGS) 
+        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -c -o$(OUT)\div68kCycleAccurate.obj $(3RDPARTYROOT)\pasti\div68kCycleAccurate.c $(CFLAGS) 
 dsp:
-        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -c -oobj\dsp.obj $(3RDPARTYROOT)\dsp\dsp.cpp
+        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -c -o$(OUT)\dsp.obj $(3RDPARTYROOT)\dsp\dsp.cpp
 6301:
-        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -c -oobj\6301.obj $(3RDPARTYROOT)\6301\6301.c $(CFLAGS) 
+        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -c -o$(OUT)\6301.obj $(3RDPARTYROOT)\6301\6301.c $(CFLAGS) 
 #CapsPlug:
-#        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -c -oobj\CapsPlug.obj $(3RDPARTYROOT)\caps\CapsPlug.cpp
+#        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -c -o$(OUT)\CapsPlug.obj $(3RDPARTYROOT)\caps\CapsPlug.cpp
 
 AviFile:
-        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -c -oobj\AviFile.obj $(3RDPARTYROOT)\avi\AviFile.cpp
+        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -c -o$(OUT)\AviFile.obj $(3RDPARTYROOT)\avi\AviFile.cpp
 
