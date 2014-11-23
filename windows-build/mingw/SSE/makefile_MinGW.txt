@@ -1,0 +1,292 @@
+###########################################
+#      Mingw Makefile for Steem SSE       #
+###########################################
+
+# path to MinGW\bin\ must be in PATH
+#
+#
+#
+
+STEEMROOT = $(ROOT)\steem
+INCDIR = $(ROOT)\include
+3RDPARTYROOT = $(ROOT)\3rdparty
+OBJECT=$(OUT)
+RCDIR=$(STEEMROOT)\rc
+
+# Compiler
+CCP:=mingw32-g++
+CC:=mingw32-gcc
+WINDRES:=windres
+
+# Parameters given to the compiler
+STEEMFLAGS=-DMINGW_BUILD -DWIN32 -DSTEVEN_SEAGAL 
+
+CFLAGS=-Wall 
+#CFLAGS+=-B$(MINGWDIR)/BIN/ -I/usr/i686-w64-mingw32/include -L/usr/i686-w64-mingw32/lib 
+
+#LIBS= -L$(ROOT)/3rdparty/UnRARDLL/MinGW/unrar -lunrar
+#-L$(ROOT)/3rdparty/UnRARDLL/MinGW/unrar
+#LIBS+=-L$(MINGWROOT)/lib -L$(MINGWROOT)/DX_SDK/lib
+
+LIBS= -L$(ROOT)/3rdparty/UnRARDLL/MinGW/
+LIBS+= -L$(ROOT)/3rdparty/caps/MinGW/
+LIBS+= -L$(ROOT)/3rdparty/FreeImage/MinGW/
+
+#CFLAGS+= -L$(MINGWROOT)/lib -L(MINGWROOT)/DX_SDK/lib
+#CFLAGS+=$(LIBS)
+
+CFLAGS+=-I$(INCDIR) -I$(3RDPARTYROOT) -I$(STEEMROOT) -I$(STEEMROOT)/code
+CFLAGS+=-I$(MINGWROOT)/DX_SDK/include
+
+#GCCFLAGS=-std=c99 -fdiagnostics-show-option 
+GCCFLAGS=-fdiagnostics-show-option 
+
+CPPFLAGS=$(CFLAGS)
+CPPFLAGS+= -fdiagnostics-show-option -Wno-write-strings -fpermissive
+
+# RELEASE_CFLAGS=-O 
+# RELEASE_CFLAGS=-Wall $(RELEASE_CFLAGS)
+
+ifeq ($(DEBUG),1)
+	STEEMFLAGS+=-DDEBUG_BUILD
+	STEEMFLAGS+=-DSSE_DEBUG
+endif
+
+ifeq ($(USER),1)
+	STEEMFLAGS+=-DNO_DEBUG_BUILD
+endif
+
+ifeq ($(RELEASE),1)
+	STEEMFLAGS+=$(RELEASE_CFLAGS)
+endif
+
+ifeq ($(GDB),1)
+	STEEMFLAGS+= -ggdb
+endif
+
+# Output filename
+# This will be changed by BAT scripts
+OUTPUT=$(OBJECT)/Steem.exe
+
+# Libraries
+#OBJS=-lwinmm -luuid -lcomctl32 -lole32 -lgdi32
+
+#OBJS+=lunrar lCAPSImg
+#OBJS+=$(LIBS)
+
+OBJS+=$(OBJECT)/Steem.o $(OBJECT)/emu.o $(OBJECT)/helper.o $(OBJECT)/resource.o 
+#ASM
+OBJS+=$(OBJECT)/asm_draw.o $(OBJECT)/asm_osd_draw.o $(OBJECT)/asm_int.o $(OBJECT)/asm_portio.o
+#SSE-3rd party
+OBJS+=$(OBJECT)/div68kCycleAccurate.o
+OBJS+=$(OBJECT)/6301.o
+OBJS+=$(OBJECT)/dsp.o
+#OBJS+=$(OBJECT)/AviFile.o
+
+#should be libray, linker
+#OBJS+=$(ROOT)/3rdparty/UnRARDLL/MinGW/unrar.a
+#OBJS+=$(ROOT)/3rdparty/caps/MinGW/CAPSImg.a
+
+
+#SSE-SSE
+OBJS+=$(OBJECT)/SSE.o
+OBJS+=$(OBJECT)/SSEOption.o
+OBJS+=$(OBJECT)/SSEMMU.o
+OBJS+=$(OBJECT)/SSE6301.o
+OBJS+=$(OBJECT)/SSECpu.o
+OBJS+=$(OBJECT)/SSEDebug.o
+OBJS+=$(OBJECT)/SSEFloppy.o
+OBJS+=$(OBJECT)/SSESTF.o
+OBJS+=$(OBJECT)/SSEVideo.o
+OBJS+=$(OBJECT)/SSEFrameReport.o
+OBJS+=$(OBJECT)/SSEShifter.o
+OBJS+=$(OBJECT)/SSEGhostDisk.o
+OBJS+=$(OBJECT)/SSESTW.o
+OBJS+=$(OBJECT)/SSEWD1772.o
+OBJS+=$(OBJECT)/SSEDma.o
+OBJS+=$(OBJECT)/SSEDrive.o
+OBJS+=$(OBJECT)/SSEDisk.o
+OBJS+=$(OBJECT)/SSEYM2149.o
+OBJS+=$(OBJECT)/SSECapsImg.o
+
+#OBJS+=$(ROOT)/3rdparty/caps/MinGW/CAPSImg.a
+
+OBJS+=$(OBJECT)/SSESCP.o
+#library objects specified at the end
+
+#is it in fact static???
+OBJS+=$(ROOT)/3rdparty/caps/MinGW/CAPSImg.a
+OBJS+=$(ROOT)/3rdparty/UnRARDLL/MinGW/unrar.a
+OBJS+=$(ROOT)/3rdparty/FreeImage/MinGW/FreeImage.a
+
+
+OBJS+=-luuid -lwinmm  -lcomctl32 -lole32 -lgdi32 -lddraw  -lComdlg32 -ldxguid
+#-luser32
+#-ld3d8
+#-ldxguid
+#-lddraw
+#-luuid
+
+# Targets
+
+all: 
+	$(MAKE) -f $(MAKEFILE_PATH) clean
+#	$(MAKE) -f $(MAKEFILE_PATH) 3rdparty
+	$(MAKE) -f $(MAKEFILE_PATH) rc
+	$(MAKE) -f $(MAKEFILE_PATH) helper
+	$(MAKE) -f $(MAKEFILE_PATH) emu
+	$(MAKE) -f $(MAKEFILE_PATH) main 
+	$(MAKE) -f $(MAKEFILE_PATH) SSE
+	$(MAKE) -f $(MAKEFILE_PATH) link
+
+release:
+	$(MAKE) -f $(MAKEFILE_PATH) clean
+#	$(MAKE) -f $(MAKEFILE_PATH) 3rdparty
+	$(MAKE) -f $(MAKEFILE_PATH) rc
+	$(MAKE) -f $(MAKEFILE_PATH) helper
+	$(MAKE) -f $(MAKEFILE_PATH) main
+	$(MAKE) -f $(MAKEFILE_PATH) emu
+	$(MAKE) -f $(MAKEFILE_PATH) SSE
+	$(MAKE) -f $(MAKEFILE_PATH) link
+	strip -s $(OUTPUT)
+
+user: 
+	$(MAKE) -f $(MAKEFILE_PATH) all
+
+debug: 
+	$(MAKE) -f $(MAKEFILE_PATH) all
+
+all_gdb:
+	$(MAKE) -f $(MAKEFILE_PATH) all
+
+user_release:
+	$(MAKE) -f $(MAKEFILE_PATH) release
+
+debug_release: 
+	$(MAKE) -f $(MAKEFILE_PATH) release
+
+
+helper:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/helper.o $(STEEMROOT)/helper.cpp $(CPPFLAGS) $(STEEMFLAGS)
+
+main:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/Steem.o $(STEEMROOT)/Steem.cpp $(CPPFLAGS) $(STEEMFLAGS)
+
+emu:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/emu.o $(STEEMROOT)/emu.cpp $(CPPFLAGS) $(STEEMFLAGS)
+
+link: 
+#	$(CCP) -o $(OUTPUT) $(OBJS)
+	$(CCP) -o$(OUTPUT) $(OBJS) $(LIBS)
+#	$(CCP) -o $(OUTPUT) $(OBJS) $(CPPFLAGS)
+#	LD $(LIBS) -o $(OUTPUT) $(OBJS)
+
+
+rc:
+	$(WINDRES) --include-dir=$(MINGWDIR)/INCLUDE/ --include-dir=$(STEEMROOT) --use-temp-file -O coff -i "$(RCDIR)/resource.rc" -o $(OBJECT)/resource.o
+
+#urarlib:
+#	$(CC) -c "$(3RDDIR)/urarlib/urarlib.c" $(CFLAGS) -ourarlib.o $(RELEASE_CFLAGS)
+
+#draw_c:
+#	$(CCP) -o $(OBJECT)/draw_c.o -c "$(STEEMDIR)/code/draw_c/draw_c.cpp" $(CFLAGS) $(STEEMFLAGS) $(RELEASE_CFLAGS)
+
+clean:
+	-rm $(OBJECT)/Steem.o
+	-rm $(OBJECT)/emu.o
+	-rm $(OBJECT)/helper.o
+	-rm $(OBJECT)/resource.o
+
+######## 3RD PARTY ########
+3rdparty:	div68kCycleAccurate dsp 6301 AviFile
+
+
+div68kCycleAccurate:
+	$(CC) -Wfatal-errors -o $(OBJECT)/div68kCycleAccurate.o -c $(3RDPARTYROOT)\pasti\div68kCycleAccurate.c $(CFLAGS) $(STEEMFLAGS)
+dsp:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/dsp.o -c $(3RDPARTYROOT)\dsp\dsp.cpp $(CFLAGS) $(STEEMFLAGS)
+6301:
+	$(CC) -Wfatal-errors -o $(OBJECT)/6301.o -c $(3RDPARTYROOT)\6301\6301.c $(CFLAGS) $(GCCFLAGS) $(STEEMFLAGS)
+AviFile:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/AviFile.o -c $(3RDPARTYROOT)\avi\AviFile.cpp $(CFLAGS) $(STEEMFLAGS)
+
+######## SSE ########
+SSE:
+	$(CCP) $(CPPFLAGS) $(STEEMFLAGS) -c -Wfatal-errors -o $(OBJECT)/SSE.o $(STEEMROOT)\code\SSE\SSE.cpp
+	$(MAKE) -f $(MAKEFILE_PATH) SSEOption
+	$(MAKE) -f $(MAKEFILE_PATH) SSEMMU
+	$(MAKE) -f $(MAKEFILE_PATH) SSE6301
+	$(MAKE) -f $(MAKEFILE_PATH) SSECpu
+	$(MAKE) -f $(MAKEFILE_PATH) SSEDebug
+	$(MAKE) -f $(MAKEFILE_PATH) SSEFloppy
+	$(MAKE) -f $(MAKEFILE_PATH) SSESTF
+	$(MAKE) -f $(MAKEFILE_PATH) SSEVideo
+	$(MAKE) -f $(MAKEFILE_PATH) SSEFrameReport
+	$(MAKE) -f $(MAKEFILE_PATH) SSEShifter
+	$(MAKE) -f $(MAKEFILE_PATH) SSEGhostDisk
+	$(MAKE) -f $(MAKEFILE_PATH) SSESTW
+	$(MAKE) -f $(MAKEFILE_PATH) SSEWD1772
+	$(MAKE) -f $(MAKEFILE_PATH) SSEDma
+	$(MAKE) -f $(MAKEFILE_PATH) SSEDrive
+	$(MAKE) -f $(MAKEFILE_PATH) SSEDisk
+	$(MAKE) -f $(MAKEFILE_PATH) SSEYM2149
+	$(MAKE) -f $(MAKEFILE_PATH) SSECapsImg
+	$(MAKE) -f $(MAKEFILE_PATH) SSESCP
+
+SSEOption:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/SSEOption.o $(STEEMROOT)\code\SSE\SSEOption.cpp $(CPPFLAGS) $(STEEMFLAGS)
+
+SSEMMU:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/SSEMMU.o $(STEEMROOT)\code\SSE\SSEMMU.cpp $(CPPFLAGS) $(STEEMFLAGS) 
+
+SSE6301:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/SSE6301.o $(STEEMROOT)\code\SSE\SSE6301.cpp $(CPPFLAGS) $(STEEMFLAGS)
+
+SSECpu:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/SSECpu.o $(STEEMROOT)\code\SSE\SSECpu.cpp $(CPPFLAGS) $(STEEMFLAGS)
+
+SSEDebug:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/SSEDebug.o $(STEEMROOT)\code\SSE\SSEDebug.cpp $(CPPFLAGS) $(STEEMFLAGS)
+
+SSEFloppy:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/SSEFloppy.o $(STEEMROOT)\code\SSE\SSEFloppy.cpp $(CPPFLAGS) $(STEEMFLAGS)
+
+SSESTF:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/SSESTF.o $(STEEMROOT)\code\SSE\SSESTF.cpp $(CPPFLAGS) $(STEEMFLAGS)
+
+SSEVideo:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/SSEVideo.o $(STEEMROOT)\code\SSE\SSEVideo.cpp $(CPPFLAGS) $(STEEMFLAGS)
+
+SSEFrameReport:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/SSEFrameReport.o $(STEEMROOT)\code\SSE\SSEFrameReport.cpp $(CPPFLAGS) $(STEEMFLAGS)
+
+SSEShifter:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/SSEShifter.o $(STEEMROOT)\code\SSE\SSEShifter.cpp $(CPPFLAGS) $(STEEMFLAGS)
+
+SSEGhostDisk:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/SSEGhostDisk.o $(STEEMROOT)\code\SSE\SSEGhostDisk.cpp $(CPPFLAGS) $(STEEMFLAGS)
+
+SSESTW:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/SSESTW.o $(STEEMROOT)\code\SSE\SSESTW.cpp $(CPPFLAGS) $(STEEMFLAGS)
+
+SSEWD1772:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/SSEWD1772.o $(STEEMROOT)\code\SSE\SSEWD1772.cpp $(CPPFLAGS) $(STEEMFLAGS)
+
+SSEDma:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/SSEDma.o $(STEEMROOT)\code\SSE\SSEDma.cpp $(CPPFLAGS) $(STEEMFLAGS)
+
+SSEDrive:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/SSEDrive.o $(STEEMROOT)\code\SSE\SSEDrive.cpp $(CPPFLAGS) $(STEEMFLAGS)
+
+SSEDisk:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/SSEDisk.o $(STEEMROOT)\code\SSE\SSEDisk.cpp $(CPPFLAGS) $(STEEMFLAGS)
+
+SSEYM2149:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/SSEYM2149.o $(STEEMROOT)\code\SSE\SSEYM2149.cpp $(CPPFLAGS) $(STEEMFLAGS)
+
+SSECapsImg:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/SSECapsImg.o $(STEEMROOT)\code\SSE\SSECapsImg.cpp $(CPPFLAGS) $(STEEMFLAGS)
+
+SSESCP:
+	$(CCP) -c -Wfatal-errors -o $(OBJECT)/SSESCP.o $(STEEMROOT)\code\SSE\SSESCP.cpp $(CPPFLAGS) $(STEEMFLAGS)
+

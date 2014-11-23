@@ -1,6 +1,16 @@
-makefile.txt is just a copy of makefile
-The extension (txt) is used for backup purposes (we use FBBackup)
-Hopefully the copy is always up to date
+Script files to compile Steem SSE with Borland C++ 5.5.
+This was Steem's original compiler and it's still used for 
+development builds.
 
-In v3.6, we endeavour to correct the structure of Steem.
-_modules files are the previous way.
+The SET variables need to be edited according to your system 
+(build_bcc_set.bat).
+
+build_bcc_asm.bat must be called first if asm files haven't been assembled 
+yet.
+
+build_debug.bat will build the boiler.
+
+build_user.bat will build regular Steem SSE.
+
+The _modules files are legacy. Normally they shouldn't be used.
+
