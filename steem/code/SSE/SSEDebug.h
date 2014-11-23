@@ -286,7 +286,7 @@ enum logsection_enum_tag {
 
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
 #define SOUND_CONTROL_MASK (Debug.ControlMask[10])
-#define SOUND_CONTROL_OSD (1<<10)//first entries other variables
+#define SOUND_CONTROL_OSD (1<<9)//first entries other variables
 #endif
 
 #if defined(SSE_BOILER_NEXT_PRG_RUN)

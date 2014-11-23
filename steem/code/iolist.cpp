@@ -206,7 +206,7 @@ void iolist_init()
 #if defined(SSE_DEBUG_FRAME_REPORT)
   iolist_add_entry(FAKE_IO_START,"Frame report1",2,
     "sync|mode|pal|rsdp|wsdp|sdp lines|hscroll|base|.|.|.|.|.|.|.|.");
-  iolist_add_entry(FAKE_IO_START+2,"Frame report2",2,
+  iolist_add_entry(FAKE_IO_START+2,"Frame report2",2, // problem +2 etc hardcoded
     "Acia|Blt|Tricks|Bytes|hbi|vbi|mfp|.|.|.|.|.|.|.|.|.");
 #endif
 
@@ -229,7 +229,6 @@ void iolist_init()
     "mfp|vbi|hbi|.|.|.|.|.|.|.|.|.|.|.|.|.");
   iolist_add_entry(FAKE_IO_START+16,"TRACE floppy",2,
     "str|bytes|psg|reg|ipf1|ipf2|.|.|.|.|.|.|.|.|.|.");
-
 #endif
 
 #if defined(SSE_BOILER_VIDEO_CONTROL)
@@ -238,14 +237,20 @@ void iolist_init()
 #endif
 
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
-  iolist_add_entry(FAKE_IO_START+20,"Sound",2,
-    "dma|psg1|psg2|psg3|WN|osd|.|.|.|.|.|.|.|.|.|."); //order?
+  iolist_add_entry(FAKE_IO_START+20,"Sound mute",2,
+    "dma|psg1|psg2|psg3|noise|env|.|.|.|.|.|.|.|.|.|.");
 #endif
 
 #if defined(SSE_BOILER_NEXT_PRG_RUN)
-  iolist_add_entry(FAKE_IO_START+22,"Boiler",2,
+  iolist_add_entry(FAKE_IO_START+22,"Boiler ctrl",2,
     "PrgRun|.|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
 #endif
+
+#if defined(SSE_BOILER_TRACE_CONTROL)
+  iolist_add_entry(FAKE_IO_START+24,"TRACE IO",2,
+    "W|R|mmu|.|.|.|.|.|.|.|.|.|.|.|.|.");
+#endif
+
 
 #endif//fake io
 

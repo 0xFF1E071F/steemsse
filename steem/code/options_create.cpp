@@ -968,8 +968,31 @@ void TOptionBox::CreateDisplayPage()
   y+=30;//LineHeight;
 #endif
 
+#if defined(SSE_VID_BLOCK_WINDOW_SIZE) // absolute placement TODO?
+  y-=40;
+  long Offset=220-5;
+  Wid=GetCheckBoxSize(Font,T("Lock window size")).Width;
+  ASSERT(Wid>0);
+  Win=CreateWindow("Button",T("Lock window size"),WS_CHILD  | WS_TABSTOP | BS_CHECKBOX,
+                          page_l+Offset,y,Wid,23,Handle,(HMENU)7317,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,OPTION_BLOCK_RESIZE,0);
+ // ToolAddWindow(ToolTip,Win,
+   // T("If you don't want to stretch the main window by accident"));
+  y+=40;
+#endif
 
-
+#if defined(SSE_VID_LOCK_ASPET_RATIO)
+  y-=16;
+  Wid=GetCheckBoxSize(Font,T("Lock aspect ratio")).Width;
+  ASSERT(Wid>0);
+  mask=WS_CHILD  | WS_TABSTOP | BS_CHECKBOX;
+  if(OPTION_BLOCK_RESIZE)
+    mask|=WS_DISABLED;
+  Win=CreateWindow("Button",T("Lock aspect ratio"),mask,
+                          page_l+Offset,y,Wid,23,Handle,(HMENU)7318,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,OPTION_LOCK_ASPECT_RATIO,0);
+  y+=16;
+#endif
 
   CreateWindow("Button",T("Window Size"),WS_CHILD | BS_GROUPBOX,
                   page_l,y,page_w,20+30+30+30+30+2,Handle,(HMENU)99,HInstance,NULL);
@@ -987,7 +1010,11 @@ void TOptionBox::CreateDisplayPage()
 
   Win=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
                           page_l+15+w,y,page_w-10-(15+w),200,Handle,(HMENU)302,HInstance,NULL);
+#if defined(SSE_GUI_OPTION_DISPLAY_CHANGE_TEXT)
+  CBAddString(Win,T("Normal Size (small)"),0);
+#else
   CBAddString(Win,T("Normal Size"),0);
+#endif
   CBAddString(Win,T("Double Size")+" - "+T("Stretch"),1);
   CBAddString(Win,T("Double Size")+" - "+T("No Stretch"),MAKELONG(1,DWM_NOSTRETCH));
 
@@ -997,7 +1024,11 @@ void TOptionBox::CreateDisplayPage()
   CBAddString(Win,T("Double Size")+" - "+T("Scanlines"),MAKELONG(1,DWM_GRILLE)); //2
   CBAddString(Win,T("Double Size")+" - "+T("Scanlines interpolated"),MAKELONG(1,DWM_STRETCH_SCANLINES)); //3
 #else
+#if defined(SSE_GUI_OPTION_DISPLAY_CHANGE_TEXT)
+  CBAddString(Win,T("Double Size")+" - "+T("Scanlines"),MAKELONG(1,DWM_GRILLE));
+#else
   CBAddString(Win,T("Double Size")+" - "+T("Grille"),MAKELONG(1,DWM_GRILLE));
+#endif
 #endif
 
   CBAddString(Win,T("Treble Size"),2);
@@ -1019,7 +1050,11 @@ void TOptionBox::CreateDisplayPage()
   CBAddString(Win,T("Double Height")+" - "+T("Scanlines"),MAKELONG(1,DWM_GRILLE)); //2
   CBAddString(Win,T("Double Height")+" - "+T("Scanlines interpolated"),MAKELONG(1,DWM_STRETCH_SCANLINES)); //3
 #else
+#if defined(SSE_GUI_OPTION_DISPLAY_CHANGE_TEXT)
+  CBAddString(Win,T("Double Height")+" - "+T("Scanlines"),MAKELONG(1,DWM_GRILLE));
+#else
   CBAddString(Win,T("Double Height")+" - "+T("Grille"),MAKELONG(1,DWM_GRILLE));
+#endif
 #endif
 
   CBAddString(Win,T("Double Size"),2);

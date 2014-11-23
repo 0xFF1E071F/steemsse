@@ -1,5 +1,9 @@
 %ifdef WIN32
+%ifndef MINGW ;SS
 segment .text public align=1 class=code use32
+%else
+segment .text
+%endif
 %else
 segment .text
 %endif

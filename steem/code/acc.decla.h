@@ -180,6 +180,11 @@ EXT long colour_convert(int,int,int);
 EXT Str scanline_cycle_log();
 #endif
 
+#if defined(SSE_VAR_CLIPBOARD_TEXT)
+BOOL SetClipboardText(LPCTSTR pszText);
+#endif
+
+
 #ifdef IN_MAIN
 void GetTOSKeyTableAddresses(MEM_ADDRESS *,MEM_ADDRESS *);
 EasyStr time_or_times(int n);

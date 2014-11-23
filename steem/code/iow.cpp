@@ -43,7 +43,22 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 
   log_io_write(addr,io_src_b);
 #if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_TRACE_IO)
-  if(!io_word_access) 
+  if(!io_word_access
+#if defined(SSE_BOILER_TRACE_CONTROL)
+    && (((1<<15)&d2_dpeek(FAKE_IO_START+24))) 
+    // we add conditions address range - logsection enabled
+
+      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_INTERRUPTS] ) //mfp
+      && ( (addr&0xffff00)!=0xfffc00 || logsection_enabled[LOGSECTION_IKBD] ) //acia
+      && ( (addr&0xffff00)!=0xff8600 || logsection_enabled[LOGSECTION_FDC] ) //dma
+      && ( (addr&0xffff00)!=0xff8800 || logsection_enabled[LOGSECTION_SOUND] )//psg
+      && ( (addr&0xffff00)!=0xff8900 || logsection_enabled[LOGSECTION_SOUND] )//dma
+      && ( (addr&0xffff00)!=0xff8a00 || logsection_enabled[LOGSECTION_BLITTER] )
+      && ( (addr&0xffff00)!=0xff8200 || logsection_enabled[LOGSECTION_VIDEO] )//shifter
+      && ( (addr&0xffff00)!=0xff8000 || (((1<<13)&d2_dpeek(FAKE_IO_START+24)) ))//MMU
+
+#endif
+    ) 
     TRACE_LOG("PC %X write byte %X to %X\n",pc-2,io_src_b,addr);
 #endif
 
@@ -978,11 +993,70 @@ This address is being used to feed the National LMC both address and data
             MicroWire_Data=MAKEWORD(io_src_b,HIBYTE(MicroWire_Data));
             MicroWire_StartTime=ABSOLUTE_CPU_TIME;
             int dat=MicroWire_Data & MicroWire_Mask;
+
+
+           
+
             int b;
             for (b=15;b>=10;b--){
-              if (MicroWire_Mask & (1 << b)){
-                if ((dat & (1 << b)) && (dat & (1 << (b-1)))==0){  //DMA Sound Address
+              if (MicroWire_Mask & (1 << b)
+#if defined(SSE_SOUND_MICROWIRE_MASK1)                 
+                && MicroWire_Mask & (1 << (b-1)) // both mask bits must be set
+#endif
+                ){
+                if ((dat & (1 << b)) && (dat & (1 << (b-1)))==0
+                  ){  //DMA Sound Address
                   int dat_b=b-2;
+
+#if defined(SSE_SOUND_MICROWIRE_MASK2)
+/*  Atari Doc says:
+ The MICROWIRE™ bus is a three wire serial connection and protocol designed
+ to allow multiple devices to be individually addressed by the controller. 
+ The length of the serial data stream depends on the destination device. 
+ In general, the stream consists of N bits of address, followed by zero or 
+ more don't care hits, followed by M bits of data. The hardware interface 
+ provided consists of two 16 bit read/write registers: one data register 
+ which contains the actual bit stream to be shifted out, and one mask register
+ which indicates which bits are valid. Let's consider a mythical device which 
+ requires two address bits and one data bit. For this device the total bit 
+ stream is three bits (minimum). Any three bits of the register pair may be 
+ used. However, since the most significant bit is shifted first, the command
+ will be received by the device soonest if the three most significant bits 
+ are used. Let's assume: 01 is the device's address, D is the data to be 
+ written, and X's are don't cares. Then all of the following register
+ combinations will provide the same information to the device. 
+1110 0000 0000 0000 Mask
+01DX XXXX XXXX XXXX Data
+
+0000 0000 0000 0111 Mask
+XXXX XXXX XXXX X01D Data
+
+0000 0001 1100 0000 Mask
+XXXX XXX0 1DXX XXXX Data
+
+0000 1100 0001 0000 Mask
+XXXX 01XX XXXD XXXX Data
+
+1100 0000 0000 0001 Mask
+01XX XXXX XXXX XXXD Data
+
+ As you can see, the address bits must be contiguous, and so must the 
+ data bits, but they don't have to be contiguous with each other. 
+
+->
+This description is conform to the LMC datasheet.
+But demo Pacemaker has some zeroes between 'address' and 'data',
+and apparently this makes the command invalid, so all bits must be
+contiguous.
+If option 'Microwire' isn't checked, the Steem 3.2 way of skipping
+don't cares to get to data is used.
+*/
+                  if(MICROWIRE_ON && (MicroWire_Mask & (1 << dat_b)) == 0)
+                  {
+                    TRACE("Microwire reject mask %X\n",MicroWire_Mask);
+                    return;
+                  } else
+#endif
                   for (;dat_b>=8;dat_b--){ // Find start of data
                     if (MicroWire_Mask & (1 << dat_b)) break;
                   }
@@ -1005,6 +1079,9 @@ necessary to have a multiple of 6 though since the Microwire is a 3-bit serial
 
 */
                   int nController=(dat >> 6) & b0111;
+
+                  //TRACE("ACT %d microwire mask %x data %x result %x controller %x\n",ACT,MicroWire_Mask,MicroWire_Data,dat,nController);
+
                   switch (nController){
                     case b0011: // Master Volume
                     case b0101: // Left Volume
@@ -1121,7 +1198,7 @@ Set at D by TOS1.06.
  but the YM2149 sound is being downsized by 12 db. "01" mixes DMA and YM2149
  linearly, "10" means DMA sound output only.
 */
-                      TRACE("STE SND mixer %X\n",dat);
+                      TRACE_LOG("STE SND mixer %X\n",dat);
 //                      ASSERT(dat&3); // Again, Pacemaker
                       dma_sound_mixer=dat & b00000011; // 1=PSG too, anything else only DMA
                       log_to_section(LOGSECTION_SOUND,EasyStr("SOUND: ")+HEXSl(old_pc,6)+" - DMA sound mixer is set to "+dma_sound_mixer);
@@ -1154,11 +1231,12 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
             if(ACT-MicroWire_StartTime<MICROWIRE_LATENCY_CYCLES) 
 #endif
             {
-              TRACE("Microwire write %X at %X denied, %d cycles after write\n",io_src_b,addr,ACT-MicroWire_StartTime);
+              TRACE_LOG("Microwire write %X at %X denied, %d cycles after write\n",io_src_b,addr,ACT-MicroWire_StartTime);
               break;
             }
 #endif
             MicroWire_Mask=MAKEWORD(LOBYTE(MicroWire_Mask),io_src_b);
+            TRACE_LOG("MicroWire Mask has become %x\n",MicroWire_Mask);
             break;
           case 0xff8925:  // Set low byte of MicroWire_Mask
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY)
@@ -1169,7 +1247,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
             if(ACT-MicroWire_StartTime<MICROWIRE_LATENCY_CYCLES) 
 #endif
             {
-              TRACE("Microwire write %X at %X denied, %d cycles after write\n",io_src_b,addr,ACT-MicroWire_StartTime);
+              TRACE_LOG("Microwire write %X at %X denied, %d cycles after write\n",io_src_b,addr,ACT-MicroWire_StartTime);
               break;// fixes XMas 2004 scroller
             }
 #endif
@@ -1860,10 +1938,11 @@ from WinSTon/Hatari:
   
   SS In Steem, this complicated emulation has been done (not by me, by 
   Steem authors)! It would be silly  to discard it. 
-  It's only useful  at TOS boot time, apparently, but it  doesn't come 
-  in the way of performance, from what we can see.
-  Except booting TOS 1.06 takes more time in Steem, probably as on a STE.
-  Booting a 4MB machine with TOS 1.00 fails, to check.
+  It's only useful  at TOS (or cartridge) boot time, apparently, but it  
+  doesn't come in the way of performance, from what we can see.
+  Except booting TOS 1.06 takes more time in Steem, as on a STE, because
+  of DMA boot check.
+  Booting a 4MB machine with TOS 1.00 fails, as noted by Steem authors.
 
   Atari doc:
 
@@ -1943,7 +2022,10 @@ MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
 #else
         if (old_pc>=FOURTEEN_MEGS && mem_len<=FOUR_MEGS){
 #endif
-          TRACE_LOG("PC %X write %X to MMU\n",pc,io_src_b);
+#if defined(SSE_BOILER_TRACE_CONTROL)
+          if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
+#endif
+            TRACE_LOG("PC %X write %X to MMU\n",pc,io_src_b);
           mmu_memory_configuration=io_src_b;
           mmu_bank_length[0]=mmu_bank_length_from_config[(mmu_memory_configuration & b1100) >> 2];
           mmu_bank_length[1]=mmu_bank_length_from_config[(mmu_memory_configuration & b0011)];
@@ -1954,7 +2036,10 @@ MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
 #if defined(STEVEN_SEAGAL) && defined(SSE_MMU_WRITE)
           if(old_pc<FOURTEEN_MEGS) // the write doesn't "confuse" the MMU
           {
-            TRACE_LOG("Cancel MMU testing\n");
+#if defined(SSE_BOILER_TRACE_CONTROL)
+            if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
+#endif
+              TRACE_LOG("Cancel MMU testing\n");
             mmu_confused=false; // fixes Super Neo Demo Show (1MB)
           }
 #endif
@@ -1963,7 +2048,10 @@ MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
           himem=(MEM_ADDRESS)mem_len;
           int mmu_confused=0;//dbg
 #endif
-          TRACE_LOG("MMU PC %X Byte %X RAM %dK Bank 0 %d Bank 1 %d testing %d\n",old_pc,io_src_b,mem_len/1024,bank_length[0]/1024,bank_length[1]/1024,mmu_confused);
+#if defined(SSE_BOILER_TRACE_CONTROL)
+          if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
+#endif
+            TRACE_LOG("MMU PC %X Byte %X RAM %dK Bank 0 %d Bank 1 %d testing %d\n",old_pc,io_src_b,mem_len/1024,bank_length[0]/1024,bank_length[1]/1024,mmu_confused);
         }
       }else if (addr>0xff800f){
         exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
@@ -2055,7 +2143,25 @@ MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
 void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
 {
 #if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_TRACE_IO)
-  TRACE_LOG("PC %X write word %X to %X\n",pc-2,io_src_w,addr);
+#if defined(SSE_BOILER_TRACE_CONTROL)
+  if (((1<<15)&d2_dpeek(FAKE_IO_START+24))
+  // we add conditions address range - logsection enabled
+
+      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_INTERRUPTS] ) //mfp
+      && ( (addr&0xffff00)!=0xfffc00 || logsection_enabled[LOGSECTION_IKBD] ) //acia
+      && ( (addr&0xffff00)!=0xff8600 || logsection_enabled[LOGSECTION_FDC] ) //dma
+      && ( (addr&0xffff00)!=0xff8800 || logsection_enabled[LOGSECTION_SOUND] )//psg
+      && ( (addr&0xffff00)!=0xff8900 || logsection_enabled[LOGSECTION_SOUND] )//dma
+      && ( (addr&0xffff00)!=0xff8a00 || logsection_enabled[LOGSECTION_BLITTER] )
+      && ( (addr&0xffff00)!=0xff8200 || logsection_enabled[LOGSECTION_VIDEO] )//shifter
+      && ( (addr&0xffff00)!=0xff8000 || (((1<<13)&d2_dpeek(FAKE_IO_START+24)) ))//MMU
+
+    ) 
+#endif
+  if (addr>=0xff8240 && addr<0xff8260)
+    TRACE_LOG("PC %X write PAL %X to %X\n",pc-2,io_src_w,addr);
+  else
+    TRACE_LOG("PC %X write word %X to %X\n",pc-2,io_src_w,addr);
 #endif
 
 #if defined(SSE_CPU_DATABUS)

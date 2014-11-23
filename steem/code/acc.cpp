@@ -680,6 +680,7 @@ Str scanline_cycle_log()
 #endif
 
 #if defined(STEVEN_SEAGAL) 
+
 #if defined(SSE_VID_SAVE_NEO) || defined(SSE_DISK_STW)
 WORD change_endian(WORD x) {
   // it mustn't be efficient for current use
@@ -688,4 +689,31 @@ WORD change_endian(WORD x) {
   return (low<<8) | high;
 }
 #endif
+
+#if defined(SSE_VAR_CLIPBOARD_TEXT)
+/*  Used for -copy 68000 code from browser (Boiler)
+             -copy disk name (excluding extension) from Disk manager
+*/
+#if defined(SSE_BOILER_CLIPBOARD) || defined(SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD)
+BOOL SetClipboardText(LPCTSTR pszText) // from the 'net
+{
+   BOOL ok = FALSE;
+   if(OpenClipboard(NULL)) {
+      EmptyClipboard(); // SS added this
+      // the text should be placed in "global" memory
+      HGLOBAL hMem = GlobalAlloc(GMEM_SHARE | GMEM_MOVEABLE, 
+         (lstrlen(pszText)+1)*sizeof(pszText[0]) );
+      LPTSTR ptxt = (LPTSTR)GlobalLock(hMem);
+      lstrcpy(ptxt, pszText);
+      GlobalUnlock(hMem);
+      // set data in clipboard; we are no longer responsible for hMem
+      ok = (BOOL)SetClipboardData(CF_TEXT, hMem);
+      CloseClipboard(); // relinquish it for other windows
+   }
+   return ok;
+}
+#endif
+#endif
+
+
 #endif

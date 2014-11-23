@@ -1433,6 +1433,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 }
 //---------------------------------------------------------------------------
 #if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_CLIPBOARD)
+#if !defined(SSE_VAR_CLIPBOARD_TEXT)
 BOOL SetClipboardText(LPCTSTR pszText) // from the 'net, for disa_to_file mod
 {
    BOOL ok = FALSE;
@@ -1450,6 +1451,7 @@ BOOL SetClipboardText(LPCTSTR pszText) // from the 'net, for disa_to_file mod
    }
    return ok;
 }
+#endif
 #endif
 //---------------------------------------------------------------------------
 void disa_to_file(FILE*f,MEM_ADDRESS dstart,int dlen,bool as_source)
@@ -1763,10 +1765,18 @@ void DWin_init()
 #endif
 #if defined(SSE_BOILER_STACK_68030_FRAME)
   AppendMenu(sse_menu,MF_STRING|MF_SEPARATOR,0,NULL);
+#if SSE_VERSION>=370
+  AppendMenu(sse_menu,MF_STRING,1525,"68030 stack frame (at your risk!)");
+#else
   AppendMenu(sse_menu,MF_STRING,1525,"68030 stack frame");
 #endif
+#endif
 #if defined(SSE_BOILER_STACK_CHOICE)
+#if SSE_VERSION>=370
+  AppendMenu(sse_menu,MF_STRING,1528,"Swap display USP/SSP");
+#else
   AppendMenu(sse_menu,MF_STRING,1528,"Display other stack");
+#endif
 #endif
 #if defined(SSE_BOILER_FAKE_IO)
   AppendMenu(sse_menu,MF_STRING|MF_SEPARATOR,0,NULL);
@@ -1870,7 +1880,12 @@ void DWin_init()
       /*mem_browser to update*/&m_b_mem_disa);
 #endif
 
+#if defined(SSE_BOILER_MOD_VBASE)
+  new mr_static("VBASE","screen address",240,1,DWin,(HMENU)294,(MEM_ADDRESS)&xbios2,3,MST_REGISTER,true,NULL);
+#else
   new mr_static("screen=","screen address",240,1,DWin,(HMENU)294,(MEM_ADDRESS)&xbios2,3,MST_REGISTER,true,NULL);
+#endif
+
 #if !defined(SSE_BOILER_MOVE_OTHER_SP)
   lpms_other_sp=new mr_static("other sp=","other sp",110,1,
       DWin,(HMENU)203,(MEM_ADDRESS)&other_sp,3,MST_REGISTER,

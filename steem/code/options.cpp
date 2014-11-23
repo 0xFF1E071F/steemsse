@@ -1886,6 +1886,26 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 
+#if defined(SSE_VID_BLOCK_WINDOW_SIZE)
+        case 7317: // Option No resize
+          if (HIWORD(wPar)==BN_CLICKED){
+            OPTION_BLOCK_RESIZE=!OPTION_BLOCK_RESIZE;
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_BLOCK_RESIZE,0);
+            EnableWindow(GetDlgItem(Win,7318),!OPTION_BLOCK_RESIZE);
+            TRACE_LOG("Option No resize %d\n",OPTION_BLOCK_RESIZE);
+          }
+          break;
+#endif
+
+#if defined(SSE_VID_LOCK_ASPET_RATIO)
+        case 7318: // Option Lock aspect ratio
+          if (HIWORD(wPar)==BN_CLICKED){
+            OPTION_LOCK_ASPECT_RATIO=!OPTION_LOCK_ASPECT_RATIO;
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_LOCK_ASPECT_RATIO,0);
+            TRACE_LOG("Option Lock aspect ratio %d\n",OPTION_LOCK_ASPECT_RATIO);
+          }
+          break;
+#endif
 
 #endif//SS
 

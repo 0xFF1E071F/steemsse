@@ -54,8 +54,8 @@ I removed nothing from the original source code or comments.
 Since v3.7, the main build is the VS2008 one (before, it was VC6).
 The BCC build is much used for development.
 The MinGW build is experimental.
-A Unix (gcc) version is also maintained, with fewer features than the
-Windows versions.
+A Unix (gcc) version is also more or less maintained, with fewer features
+than the Windows versions.
 
 The VC6 build should be linked with the C++ library, don't count on system
 DLL or it will crash in Windows Vista & 7. 
@@ -107,6 +107,11 @@ and all his silly mods are gone!
 #define NO_RAR_SUPPORT // I removed the library, so it's unconditional
 
 
+////////////////
+// SWITCHABLE //
+////////////////
+
+
 #if defined(STEVEN_SEAGAL)
 
 
@@ -115,10 +120,13 @@ and all his silly mods are gone!
 /////////////
 
 
-#define SSE_STRUCTURE  // necessary for the STEVEN_SEAGAL build anyway
+#define SSE_STRUCTURE  // now necessary for the STEVEN_SEAGAL build anyway
 
 #define SSE_BETA //title, OSD, plus some testing - new features
 //#define SSE_BETA_BUGFIX // beta for just bugfixes
+#if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
+//#define SSE_PRIVATE_BUILD // "beta" option
+#endif
 
 #define SSE_VERSION 370 // versions down to 340 still compile
 
@@ -153,8 +161,9 @@ and all his silly mods are gone!
 #endif
 
 /*  When STEVEN_SEAGAL is defined, you can choose one set of switches by 
-    enabling SSE_SWITCHES_FEATURES or SSE_SWITCHES_VERSIONS.
-    It changes the order of definition, by nature or historically.
+    enabling SSE_SWITCHES_FEATURES or not.
+    It changes the order of definition, by nature (if enabled) or 
+    historically.
 */
 
 //#define SSE_SWITCHES_FEATURES
@@ -190,7 +199,7 @@ and all his silly mods are gone!
 // other features
 
 #ifdef SSE_DEBUG
-#define SSE_BOILER     // note SSE_DEBUG is defined or not in environmen
+#define SSE_BOILER     // note SSE_DEBUG is defined or not in environment
 #endif
 #define SSE_COMPILER
 #define SSE_GUI        // Graphic User Interface
@@ -1572,7 +1581,7 @@ and all his silly mods are gone!
 #define SSE_SOUND_INLINE // macro->inline, easier for my tests, but hard to do
 #define SSE_SOUND_INLINE2 //3.7, to generalise ljbk's table
 #define SSE_SOUND_FILTER_STF // a very simple filter
-#define SSE_SOUND_MICROWIRE // volume, balance, bass & treble, primitive DSP
+#define SSE_SOUND_MICROWIRE // volume, balance, bass [& treble], primitive DSP
 #define SSE_SOUND_MICROWIRE_MIXMODE
 #define SSE_SOUND_MICROWIRE_WRITE_LATENCY // as documented
 #define SSE_SOUND_MICROWIRE_WRITE_LATENCY_B //bugfix Antiques 
@@ -3876,13 +3885,29 @@ and all his silly mods are gone!
 //#define SSE_SCP
 //#define SSE_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
 
+#if defined(SSE_PRIVATE_BUILD)
+#define SSE_GUI_OPTION_FOR_TESTS 
+#endif
 
+//#define SSE_SOUND_VOL
+//#define SSE_SOUND_VOL2
+#define SSE_SOUND_MICROWIRE_MASK1 //bugfix
+#define SSE_SOUND_MICROWIRE_MASK2 //incorrect doc (?)
+#ifdef SSE_BOILER //...
+#define SSE_BOILER_MUTE_SOUNDCHANNELS_ENV
+#define SSE_BOILER_MOD_VBASE
+#endif
+#if defined(SSE_BOILER_CLIPBOARD) && defined(SSE_GUI_DISK_MANAGER_LONG_NAMES1)
+//#define SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD
+#endif
+#define SSE_VAR_CLIPBOARD_TEXT
+#if defined(SSE_VAR_CLIPBOARD_TEXT) && defined(SSE_GUI_DISK_MANAGER_LONG_NAMES1)
+#define SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD
+#endif
 
-#define SSE_GUI_OPTION_FOR_TESTS
-
-#define SSE_SOUND_VOL
-#define SSE_SOUND_VOL2
-
+#define SSE_VID_BLOCK_WINDOW_SIZE // option can't change size of window
+#define SSE_GUI_OPTION_DISPLAY_CHANGE_TEXT // normal is small + scanlines
+#define SSE_VID_LOCK_ASPET_RATIO // 
 
 #endif//beta
 

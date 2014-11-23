@@ -10,6 +10,10 @@ as changing disk images and determining what files are disks.
 #pragma message("Included for compilation: diskman.cpp")
 #endif
 
+#if defined(SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD)
+#include <acc.decla.h>
+#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DISKMAN_H)
 
 #ifdef WIN32
@@ -1674,11 +1678,21 @@ That will toggle bit x.
           This->ExtractDisks(Inf->Path);
           break;
         }
+#if defined(SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD)
+/*  Put the name of the game in the clipboard when user clicks on it.
+*/
+        case 1082:
+        {
+          GET_THIS;
+          DiskManFileInfo *Inf=This->GetItemInf( 0, (HWND) GetDlgItem(Win,100+This->MenuTarget) );
+          SetClipboardText(Inf->Name.Text); // in acc.cpp
+          break;
+        }
+#endif
         case 1090:  // Go to disk
         case 1091:  // Go to disk in drive
         {
           GET_THIS;
-
           DiskManFileInfo *Inf=This->GetItemInf(int((LOWORD(wPar)==1090) ? This->MenuTarget:0),
                                 HWND((LOWORD(wPar)==1090) ? This->DiskView:GetDlgItem(Win,100+This->MenuTarget)));
           This->GoToDisk(Inf->Path,0);
@@ -2163,9 +2177,14 @@ That will toggle bit x.
 #if defined(SSE_GUI_DISK_MANAGER_LONG_NAMES1)
 /*  This is so the player can read the full name of the disk without
     checking at the place of storage.
-    If you click, you go there.
 */
+#if defined(SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD)
+          //If you click, name is copied into clipboard.
+          InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1082,Inf->Name.Text);
+#else
+          //If you click, you go there.
           InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1091,Inf->Name.Text);
+#endif
 #endif
           POINT pt;
           GetCursorPos(&pt);

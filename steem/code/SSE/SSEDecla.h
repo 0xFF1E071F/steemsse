@@ -27,7 +27,7 @@
 #pragma warn- 8071
 #endif
 
-#if !defined(WIN32)
+#if !defined(WIN32) //|| defined(MINGW_BUILD)
 //#define TRUE 1
 //#define FALSE 0
 //#define BOOL int
