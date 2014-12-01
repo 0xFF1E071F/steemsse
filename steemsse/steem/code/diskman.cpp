@@ -1380,8 +1380,9 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             SendMessage(HWND(lPar),BM_SETCHECK,1,0);
 
             HMENU Pop=CreatePopupMenu();
-
+#if !defined(SSE_GUI_DISK_MANAGER_NO_DISABLE_B_MENU) // click on icon
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(num_connected_floppies==1 ? MF_CHECKED:0),2012,T("Disconnect Drive B"));
+#endif
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(floppy_instant_sector_access==0 ? MF_CHECKED:0),2013,T("Accurate Disk Access Times (Slow)"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(FloppyArchiveIsReadWrite ? MF_CHECKED:0),2014,T("Read/Write Archives (Changes Lost On Eject)"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
@@ -1393,9 +1394,22 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
               InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,2024,T("Pasti Configuration"));
 //              InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(pasti_use_all_possible_disks ? MF_CHECKED:0),
 //                                    2024,T("Use Pasti For All Compatible Images"));
+
+#if defined(SSE_PASTI_ONLY_STX_OPTION3) //option moved from 'SSE' page
+              InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
+                (PASTI_JUST_STX?MF_CHECKED:0),2026,T("Pasti only for STX"));
+#endif
+
               InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
             }
 #endif
+
+#if defined(SSE_DISK_GHOST) && defined(SSE_GUI_DISK_MANAGER_GHOST)
+            InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
+              (SSE_GHOST_DISK?MF_CHECKED:0),2027,T("Enable ghost disks for CTR-IPF-STX"));
+            InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
+#endif
+
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(This->AutoInsert2 ? MF_CHECKED:0),2016,T("Automatically Insert &Second Disk"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(This->HideBroken ? MF_CHECKED:0),2002,T("Hide &Broken Shortcuts"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(This->EjectDisksWhenQuit ? MF_CHECKED:0),2011,T("E&ject Disks When Quit"));
@@ -1766,9 +1780,11 @@ That will toggle bit x.
         case 2011:
           This->EjectDisksWhenQuit=!This->EjectDisksWhenQuit;
           break;
+#if !defined(SSE_GUI_DISK_MANAGER_NO_DISABLE_B_MENU)
         case 2012:
           SendDlgItemMessage(Win,99,WM_LBUTTONDOWN,0,0);
           break;
+#endif
         case 2013: // SS menu ADAT
           floppy_instant_sector_access=!floppy_instant_sector_access;
 #if defined(STEVEN_SEAGAL) && defined(SSE_GUI_OPTION_SLOW_DISK_SSE)
@@ -1870,10 +1886,40 @@ That will toggle bit x.
           }//if (LOWORD(wPar)==2023
 #endif//!defined(SSE_PASTI_ONLY_STX_OPTION2)
           break;
+
+#if defined(SSE_PASTI_ONLY_STX_OPTION3)
+        case 2026:
+          PASTI_JUST_STX=!PASTI_JUST_STX;
+//TODO indent
+            TRACE_LOG("Option Pasti just STX %d\n",PASTI_JUST_STX);
+            for(int i=0;i<2;i++) // necessary, later refactor (structure) TODO
+            {
+              if(FloppyDrive[i].NotEmpty())
+              {
+                EasyStr name=FloppyDrive[i].DiskName;
+                EasyStr path=FloppyDrive[i].GetImageFile(); 
+                This->EjectDisk(i);
+                This->InsertDisk(i,name,path,0,0,"",true);
+                This->RefreshDiskView();
+              }
+            }            
+
+          break;
+
+#endif
 #endif//pasti
         case 2025:
           This->ShowDatabaseDiag();
           break;
+
+#if defined(SSE_DISK_GHOST) && defined(SSE_GUI_DISK_MANAGER_GHOST)
+        case 2027:
+          SSE_GHOST_DISK=!SSE_GHOST_DISK;
+          TRACE_LOG("Option Ghost disk %d\n",SSE_GHOST_DISK);
+          break;
+#endif
+
+
       }
       if (LOWORD(wPar)>=4000 && LOWORD(wPar)<5000){
         This->MenuTarget=LOWORD(wPar);

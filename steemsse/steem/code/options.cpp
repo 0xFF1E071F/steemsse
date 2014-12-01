@@ -15,8 +15,7 @@ bool TOptionBox::USDateFormat=0;
 WIN_ONLY( DirectoryTree TOptionBox::DTree; )
 UNIX_ONLY( hxc_dir_lv TOptionBox::dir_lv; )
 
-#if defined(SSE_YM2149_DYNAMIC_TABLE0)
-//extern  WORD* fixed_vol_3voices; // temp to produce bin file
+#if defined(SSE_YM2149_DYNAMIC_TABLE0)// temp to produce bin file
 extern WORD fixed_vol_3voices[16][16][16];
 #endif
 
@@ -1694,7 +1693,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
-#if defined(SSE_SOUND_FILTER_STF)
+#if defined(SSE_SOUND_FILTER_STF) && !defined(SSE_SOUND_FILTER_STF5)
         case 7303: // PSG Filter (more open)
           if (HIWORD(wPar)==BN_CLICKED){
             PSG_FILTER_FIX=!PSG_FILTER_FIX;
@@ -1763,7 +1762,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #endif
 
 #if defined(SSE_PASTI_ONLY_STX)
-#if !defined(SSE_PASTI_ONLY_STX_OPTION1)
+#if !defined(SSE_PASTI_ONLY_STX_OPTION1) && !defined(SSE_PASTI_ONLY_STX_OPTION3)
         case 7305: // Pasti only STX
           if (HIWORD(wPar)==BN_CLICKED){
             PASTI_JUST_STX=!PASTI_JUST_STX;
@@ -1838,7 +1837,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 
-#if defined(SSE_DISK_GHOST)
+#if defined(SSE_DISK_GHOST)  && !defined(SSE_GUI_DISK_MANAGER_GHOST)
         case 7313: // option Ghost disk 
           if (HIWORD(wPar)==BN_CLICKED){
             SSE_GHOST_DISK=!SSE_GHOST_DISK;

@@ -214,7 +214,7 @@ inline bool playing_samples() {
 /*  This test is more complicated but will work with
     eg My socks are weapons.
 */
-  ASSERT( PSG_FILTER_FIX );
+//  ASSERT( PSG_FILTER_FIX );
   int yes=((psg_reg[PSGR_MIXER]&b00111111)==b00111111);
   if(!yes)
   {
@@ -455,8 +455,14 @@ inline void CalcVChip(int &v,int &dv,int *source_p) {
 
 #define proportion 10
 
-#if defined(SSE_SOUND_FILTER_STF) //tests
+#if defined(SSE_SOUND_FILTER_STF) 
+
+#if defined(SSE_SOUND_FILTER_STF5)
+  if(sound_mode==SOUND_MODE_MONITOR
+#else
   if(PSG_FILTER_FIX // Option PSG Filter
+#endif
+
 #if defined(SSE_SOUND_FILTER_STF2) // v3.7.0, too noisy on samples
     && !playing_samples() 
 #endif
@@ -492,7 +498,11 @@ inline void CalcVChip(int &v,int &dv,int *source_p) {
 inline void CalcVChip25Khz(int &v,int &dv,int *source_p) {
   //CALC_V_CHIP_25KHZ = low quality
 #if defined(SSE_SOUND_FILTER_STF) 
+#if defined(SSE_SOUND_FILTER_STF5)
+  if(sound_mode==SOUND_MODE_MONITOR)
+#else
   if(PSG_FILTER_FIX) // Option PSG Filter
+#endif
   {
     v=SSE_SOUND_FILTER_STF_V;
     dv=SSE_SOUND_FILTER_STF_DV;
@@ -1507,6 +1517,8 @@ HRESULT Sound_VBL()
     if (sound_record){
       sound_record_to_wav(countdown_to_storing_values,write_time_1,chipmode,source_p);
     }
+
+//    TRACE_OSD("snd mode %d chip %d",sound_mode,chipmode);
 
 #ifdef WRITE_ONLY_SINE_WAVE
     DWORD t=write_time_1;

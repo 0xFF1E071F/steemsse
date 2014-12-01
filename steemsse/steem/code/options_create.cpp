@@ -1717,12 +1717,28 @@ void TOptionBox::CreateSoundPage()
                   page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)7099,HInstance,NULL),
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("None (Mute)"));
 #if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF)
+#if SSE_VERSION>=370
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("TV Speaker"));
+#else
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Monitor Speaker"));
+#endif
 #else
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Simulated ST Speaker"));
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF5)
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Monitor Speaker"));
+#endif
+#if SSE_VERSION>=370
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Direct (unfiltered)"));
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Unfiltered STF Samples"));
+#else
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Direct"));
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Sharp STFM Samples"));
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF5)
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Unfiltered chip sound"));
+//  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Monitor Speaker"));
+#endif
   SendMessage(Win,CB_SETCURSEL,sound_mode,0);
   y+=30;
 
@@ -2471,8 +2487,9 @@ void TOptionBox::CreateSSEPage() {
 #endif
 
 #if defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
-#if defined(SSE_VID_D3D_OPTION)
   Offset=0;
+#if defined(SSE_VID_D3D_OPTION)
+  //Offset=0;
 #else
 //  y-=LineHeight;
 #endif
@@ -2552,11 +2569,7 @@ Windows 2000	5.0
   Win=CreateWindow("Button",T("Triple buffering"), mask,
                page_l +Offset,y,Wid,25,Handle,(HMENU)1034,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,SSE_3BUFFER,0);
-#if SSE_VERSION>=370
-  tip_text=T("Works fine with XP, less so with Vista and up. Thanks for nothing Microsoft");
-#else
   tip_text=T("This may reduce tearing at the price of high CPU use.");
-#endif
 #if !defined(SSE_GUI_OPTIONS_DONT_MENTION_WINDOW_COMPOSITING)
   tip_text+=add_tip;
 #endif
@@ -2616,6 +2629,8 @@ Windows 2000	5.0
 
 #if defined(SSE_IKBD_6301) 
 #if SSE_VERSION>=370
+  Wid=GetCheckBoxSize(Font,T("ACIA/6301/MIDI")).Width;
+#elif SSE_VERSION>=364
   Wid=GetCheckBoxSize(Font,T("6301/ACIA")).Width;
 #else
   Wid=GetCheckBoxSize(Font,T("6301 true emu")).Width;
@@ -2633,7 +2648,11 @@ Windows 2000	5.0
     mask|=WS_DISABLED;
   }
 #endif
-#if SSE_VERSION>=364
+
+#if SSE_VERSION>=370
+  Win=CreateWindow("Button",T("ACIA/6301/MIDI"),mask,page_l,y,Wid,23,Handle,
+    (HMENU)1029,HInstance,NULL);
+#elif SSE_VERSION>=364
   Win=CreateWindow("Button",T("6301/ACIA"),mask,page_l,y,Wid,23,Handle,
     (HMENU)1029,HInstance,NULL);
 #else
@@ -2647,8 +2666,8 @@ Windows 2000	5.0
     SendMessage(Win,BM_SETCHECK,HD6301EMU_ON,0);
   ToolAddWindow(ToolTip,Win,
   T("This enables a low level emulation of the IKBD keyboard chip (using\
- the Sim6xxx code by Arne Riiber, thx dude!), as well as ACIA improvements\
- or bugs"));
+ the Sim6xxx code by Arne Riiber, thx dude!), as well as ACIA and MIDI \
+ improvements or bugs"));
   y+=LineHeight;
 #endif
 
@@ -2663,7 +2682,12 @@ Windows 2000	5.0
   BOOL keyboard_click=( PEEK(0x484)&1 ); // get current setting
   SendMessage(Win,BM_SETCHECK,keyboard_click,0);
   ToolAddWindow(ToolTip,Win,
+#if SSE_VERSION>=370
+    T("When you're annoyed by those clicks, uncheck this option\
+ (you must do it each time)"));
+#else
     T("This gives you direct access to bit1 of address $484, which enables or disables the annoying keyboard click (in TOS/GEM programs only)."));
+#endif
   y+=LineHeight;
 #endif  
 
@@ -2681,8 +2705,13 @@ Windows 2000	5.0
   y+=LineHeight;
 #endif
   
-#if defined(SSE_YM2149_FIX_TABLES) 
+#if defined(SSE_YM2149_FIX_TABLES)
+//there's no room on sound page so it's here
+#if SSE_VERSION>=370
+  Wid=GetCheckBoxSize(Font,T("YM2149")).Width;
+#else
   Wid=GetCheckBoxSize(Font,T("P.S.G.")).Width;
+#endif
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
 #if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
   bool ok=(YM2149.p_fixed_vol_3voices!=NULL);
@@ -2694,8 +2723,13 @@ Windows 2000	5.0
   if(!ok)
     mask|=WS_DISABLED;
 #endif
+#if SSE_VERSION>=370
+  Win=CreateWindow("Button",T("YM2149"),mask,
+    page_l,y,Wid,25,Handle,(HMENU)7311,HInstance,NULL);
+#else
   Win=CreateWindow("Button",T("P.S.G."),mask,
     page_l,y,Wid,25,Handle,(HMENU)7311,HInstance,NULL);
+#endif
   SendMessage(Win,BM_SETCHECK,SSEOption.PSGMod,0);
   ToolAddWindow(ToolTip,Win,
 #if defined(SSE_YM2149_NO_SAMPLES_OPTION)
@@ -2721,7 +2755,7 @@ Windows 2000	5.0
   Offset=0;
 #endif
 
-#if defined(SSE_SOUND_FILTER_STF)
+#if defined(SSE_SOUND_FILTER_STF) && !defined(SSE_SOUND_FILTER_STF5)
 #if defined(SSE_YM2149_FIX_TABLES) 
   Offset+=Wid+HorizontalSeparation;
   y-=LineHeight; // maybe it will be optimised away!
@@ -2799,7 +2833,8 @@ Windows 2000	5.0
 #endif
 #endif
 
-#if defined(SSE_PASTI_ONLY_STX) && !defined(SSE_PASTI_ONLY_STX_OPTION1) 
+#if defined(SSE_PASTI_ONLY_STX) && !defined(SSE_PASTI_ONLY_STX_OPTION1) \
+&& !defined(SSE_PASTI_ONLY_STX_OPTION3)
   Offset+=Wid+HorizontalSeparation;
   Wid=GetCheckBoxSize(Font,T("Pasti only for STX")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
@@ -2819,6 +2854,13 @@ Windows 2000	5.0
   y+=LineHeight;
 
 #if defined(SSE_DRIVE_SOUND)
+//there's a volume control so it's here
+
+#if SSE_VERSION>=370
+  y-=LineHeight;//tmp
+#endif
+
+
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
   EasyStr path=GetEXEDir();
   path+=DRIVE_SOUND_DIRECTORY; // we suppose the sounds are in it!
@@ -2855,7 +2897,7 @@ Windows 2000	5.0
   y+=LineHeight;
 #endif
 
-#if defined(SSE_DISK_GHOST)
+#if defined(SSE_DISK_GHOST) && !defined(SSE_GUI_DISK_MANAGER_GHOST)
   y-=LineHeight;
 #if !defined(SSE_OSD_DRIVE_INFO_SSE_PAGE) 
   y-=LineHeight; //put it after 'pasti'
