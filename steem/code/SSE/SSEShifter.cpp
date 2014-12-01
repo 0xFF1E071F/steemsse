@@ -3347,10 +3347,23 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
       border2=pixels_in-scanline_drawn_so_far-border1-picture;
       if(border2<0) 
         border2=0;
+
       int old_shifter_pixel=shifter_pixel;
       shifter_pixel+=picture;
       MEM_ADDRESS nsdp=shifter_draw_pointer;
 
+#if defined(SSE_SHIFTER_LINE_MINUS_2_DONT_FETCH)
+/*  On lines -2, don't fetch the last 2 bytes as if it was a 160byte line.
+    Fixes screen #2 of the venerable B.I.G. Demo.
+*/
+      if(SSE_HACKS_ON && (CurrentScanline.Tricks&TRICK_LINE_MINUS_2)
+        && picture>=16)
+      {
+        picture-=16,border2+=16; // cancel last raster
+        TRACE_LOG("Line -2 reduce pic to %d\n",picture);
+        //overscan_add_extra=0; // no, because shifter_pixel was updated
+      }
+#endif
 
 
 
@@ -4069,7 +4082,7 @@ FF825E
 
 */
 
-#if defined(SSE_SHIFTER_PALETTE_STF)
+#if defined(SSE_SHIFTER_PALETTE_STF) //no
   PAL_DPEEK(n*2)=NewPal; // record as is
 #endif
 
@@ -4079,8 +4092,8 @@ FF825E
   else
 #endif
     NewPal &= 0x0FFF;
-#if defined(SSE_VID_AUTOOFF_DECRUNCHING)
-  if(!n && NewPal && NewPal!=0x777) // basic test, but who uses autoborder?
+#if defined(SSE_VID_AUTOOFF_DECRUNCHING)//no
+  if(!n && NewPal && NewPal!=0x777) // basic test
     overscan=OVERSCAN_MAX_COUNTDOWN;
 #endif
     if(STpal[n]!=NewPal)
