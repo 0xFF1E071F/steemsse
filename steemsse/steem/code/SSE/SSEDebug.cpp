@@ -25,7 +25,7 @@
 #include "SSEFloppy.h"
 #endif
 
-int debug0,debug1,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9;
+int debug0,debug1=0,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9;
 
 #if defined(SSE_IKBD_6301)
 #if defined(SSE_UNIX)
@@ -52,7 +52,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_FDC ] = 0;
   logsection_enabled[ LOGSECTION_IO ] = 0;
   logsection_enabled[ LOGSECTION_MFP_TIMERS ] = 0;
-  logsection_enabled[ LOGSECTION_INIT ] =1;
+  logsection_enabled[ LOGSECTION_INIT ] =0;
   logsection_enabled[ LOGSECTION_CRASH ] = 0;
   logsection_enabled[ LOGSECTION_STEMDOS ] = 0;
   logsection_enabled[ LOGSECTION_IKBD ] = 0;

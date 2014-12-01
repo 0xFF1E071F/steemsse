@@ -166,7 +166,7 @@ and all his silly mods are gone!
     historically.
 */
 
-//#define SSE_SWITCHES_FEATURES
+#define SSE_SWITCHES_FEATURES
 
 
 #if defined(SSE_SWITCHES_FEATURES)
@@ -198,7 +198,7 @@ and all his silly mods are gone!
 
 // other features
 
-#ifdef SSE_DEBUG
+#if defined(SSE_DEBUG) && defined(DEBUG_BUILD)
 #define SSE_BOILER     // note SSE_DEBUG is defined or not in environment
 #endif
 #define SSE_COMPILER
@@ -521,11 +521,15 @@ and all his silly mods are gone!
 
 
 
-#define SSE_DEBUG_FRAME_REPORT_MASK // for interactive control in boiler
+/////#define SSE_DEBUG_FRAME_REPORT_MASK // for interactive control in boiler
+
 
 // BOILER //
 
 #if defined(SSE_BOILER)
+
+#define SSE_DEBUG_FRAME_REPORT_MASK // for interactive control in boiler
+
 #define SSE_BOILER_BLAZING_STEP_OVER 
 #define SSE_BOILER_BROWSER_6301
 #define SSE_BOILER_BROWSER_ACIA
@@ -1464,7 +1468,7 @@ and all his silly mods are gone!
 #define SSE_SHIFTER_HIRES_COLOUR_DISPLAY//My Socks are Weapons
 #define SSE_SHIFTER_IO // move blocks from ior, iow, necessary
 #define SSE_SHIFTER_SDP // SDP=Shifter draw pointer
-///#define SSE_SHIFTER_RENDER_SYNC_CHANGES//don't until debug
+//#define SSE_SHIFTER_RENDER_SYNC_CHANGES//don't until debug //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #define SSE_SHIFTER_TRICKS  // based on Steem system, extended
 
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
@@ -2074,7 +2078,8 @@ and all his silly mods are gone!
 // v3.3 //
 //////////
 /*  v3.3 can't really be built as it was because Hatari code for keyboard and
-    video, used in v3.3, was removed in v3.4.
+    video, used in v3.3, was removed in v3.4 (so that comments don't appear
+    in search engines)
     Full source of v3.3 is at http://code.google.com/p/steem-engine/ 
 */
 
@@ -2085,6 +2090,7 @@ and all his silly mods are gone!
 #define SSE_GUI        //
 #define SSE_IKBD       // keyboard, mouse, joystick
 #define SSE_INTERRUPT  // HBL, VBL, MFP
+#define SSE_MMU        // Memory Manager Unit (of the ST, no paging)
 #define SSE_OSD        // On Screen Display (drive leds, track info, logo)
 #define SSE_SHIFTER    // The legendary custom Shifter and all its tricks
 #define SSE_STF        // switch STF/STE
@@ -2172,7 +2178,6 @@ and all his silly mods are gone!
 #define SSE_FDC        // WD1772 floppy disk controller
 #define SSE_FLOPPY     // DMA, FDC, Pasti, etc
 #define SSE_HACKS      // an option for dubious fixes
-#define SSE_MMU        // Memory Manager Unit (of the ST, no paging)
 #define SSE_SOUND      // YM2149, STE DMA sound, Microwire
 #define SSE_TOS        // The Operating System
 #ifdef UNIX
@@ -3870,7 +3875,7 @@ and all his silly mods are gone!
 #define TEST01
 #define TEST02
 //#define TEST03
-//#define TEST04
+#define TEST04
 //#define TEST05
 //#define TEST06
 //#define TEST07
@@ -3889,6 +3894,8 @@ and all his silly mods are gone!
 #define SSE_GUI_OPTION_FOR_TESTS 
 #endif
 
+#define SSE_SHIFTER_LINE_MINUS_2_DONT_FETCH //BIG Demo
+
 //#define SSE_SOUND_VOL
 //#define SSE_SOUND_VOL2
 #define SSE_SOUND_MICROWIRE_MASK1 //bugfix
@@ -3901,6 +3908,7 @@ and all his silly mods are gone!
 //#define SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD
 #endif
 #define SSE_VAR_CLIPBOARD_TEXT
+///#define SSE_VAR_TYPE_KEY_DELAY
 #if defined(SSE_VAR_CLIPBOARD_TEXT) && defined(SSE_GUI_DISK_MANAGER_LONG_NAMES1)
 #define SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD
 #endif
@@ -3908,6 +3916,16 @@ and all his silly mods are gone!
 #define SSE_VID_BLOCK_WINDOW_SIZE // option can't change size of window
 #define SSE_GUI_OPTION_DISPLAY_CHANGE_TEXT // normal is small + scanlines
 #define SSE_VID_LOCK_ASPET_RATIO // 
+
+#define SSE_SOUND_FILTER_STF5 // option in sound
+
+
+#define SSE_PASTI_ONLY_STX_OPTION3 // move that option SSE -> disk manager
+#define SSE_GUI_DISK_MANAGER_GHOST
+#undef SSE_GUI_OPTION_SLOW_DISK_SSE
+#define SSE_GUI_DISK_MANAGER_NO_DISABLE_B_MENU // click on icon
+
+#define SSE_VAR_SNAPSHOT_INI
 
 #endif//beta
 

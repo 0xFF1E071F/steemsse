@@ -1226,8 +1226,11 @@ FC2 FC1 FC0 Address Space
     case 0x4e75://rts - Fixes Blood Money -SUP 1MB
       action=EA_FETCH;
     }
-    if((_ir&0xF000)==0x6000) //bra etc
+    if((_ir&0xF000)==0x6000 //bra etc
+      || (_ir&0xFFC0)==0x4EC0) // jmp (?)
+    {
       action=EA_FETCH;
+    }
   }
 #endif
 

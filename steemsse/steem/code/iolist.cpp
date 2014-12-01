@@ -251,6 +251,11 @@ void iolist_init()
     "W|R|mmu|.|.|.|.|.|.|.|.|.|.|.|.|.");
 #endif
 
+#if defined(SSE_BOILER_TRACE_CONTROL)
+  iolist_add_entry(FAKE_IO_START+26,"TRACE CPU",2,
+    "reg|.|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
+
+#endif
 
 #endif//fake io
 

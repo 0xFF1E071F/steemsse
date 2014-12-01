@@ -1013,6 +1013,28 @@ inline void TM68000::PrefetchIrcNoRound() { // the same except no rounding
 inline void TM68000::Process() {
 
   LOG_CPU  
+
+#if defined(SSE_BOILER)
+  if(TRACE_ENABLED)
+  {
+#if defined(SSE_DEBUG_TRACE_IO) 
+    if(TRACE_MASK4 & TRACE_CONTROL_CPU_REGISTERS)
+    {
+      TRACE_LOG("\nSR=%X ",sr);
+      for(int i=0;i<8;i++) // D0-D7
+        TRACE_LOG("D%d=%X ",i,r[i]);
+      for(int i=0;i<8;i++) // A0-A7 (A7 when the exception occurred)
+        TRACE_LOG("A%d=%X ",i,areg[i]);
+      TRACE_LOG("\n");
+    }
+#endif
+    if(sr&SR_TRACE)
+      TRACE_LOG("(T) %X %X %s\n",pc,ir,disa_d2(pc).Text);
+    else
+      TRACE_LOG("%X %X %s\n",pc,ir,disa_d2(pc).Text);
+  }
+#endif
+
 #if defined(SSE_DEBUG)
   IrAddress=pc;
   PreviousIr=IRD;
@@ -1049,7 +1071,7 @@ inline void TM68000::Process() {
   {
     ProcessingState=NORMAL;
   }
-  else if(sr&SR_TRACE)
+  else if((r&SR_TRACE)
   {
     ProcessingState=TRACE_MODE; //internal flag: trace after this instruction
 #if defined(SSE_CPU_TRACE_DETECT) && !defined(DEBUG_BUILD)
@@ -1076,6 +1098,7 @@ inline void TM68000::Process() {
 //if(pc==0x01255E) TRACE("%d %d %d pc %X reached\n",TIMING_INFO,pc);
 //if(pc==0x01290A) TRACE("%d %d %d pc %X reached\n",TIMING_INFO,pc);
 //if(pc==0x28) TRACE("$14 %X D5 %X D6 %X D7 %X\n",LPEEK(0x14),r[5],r[6],r[7]);
+ 
 
 #if defined(SSE_CPU_PREFETCH)
 /*  basic prefetch rule:
@@ -1138,17 +1161,14 @@ already fetched. One word will be in IRD and another one in IRC.
 */
   if(ProcessingState==TRACE_MODE)
   {
+    if(!Debug.logsection_enabled[LOGSECTION_CPU] && !logsection_enabled[LOGSECTION_CPU])
 #ifdef DEBUG_BUILD
-    TRACE_LOG("TRACE PC %X SR %X VEC %X ",old_pc,sr,LPEEK(0x24));
-    EasyStr instr=disa_d2(old_pc); // take advantage of the disassembler
-    //TRACE_LOG("\n");
-    TRACE_LOG("IR %X: %s\n",ir,instr.Text);
-    //TRACE_LOG("TRACE PC %X VEC %X\n",pc,LPEEK(0x24));
+      TRACE_LOG("(T) PC %X SR %X VEC %X IR %X: %s\n",old_pc,sr,LPEEK(0x24),ir,disa_d2(old_pc).Text);
 #else
-    TRACE_LOG("TRACE PC %X IR %X SR %X $24 %X\n",pc,ir,sr,LPEEK(0x24));
+      TRACE_LOG("TRACE PC %X IR %X SR %X $24 %X\n",pc,ir,sr,LPEEK(0x24));
 #endif
     INSTRUCTION_TIME_ROUND(0); // Round first for interrupts
-    INSTRUCTION_TIME_ROUND(34);
+    INSTRUCTION_TIME_ROUND(34); // note: tested timing (Legacy.msa)
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
     Debug.RecordInterrupt("TRACE");
 #endif

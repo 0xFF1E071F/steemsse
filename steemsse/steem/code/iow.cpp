@@ -2018,7 +2018,7 @@ MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
 
 */
 #if defined(STEVEN_SEAGAL) && defined(SSE_MMU_WRITE) 
-        if(mem_len<=FOUR_MEGS){ // programs actually may write here?
+        if(mem_len<=FOUR_MEGS){ // programs actually may write here
 #else
         if (old_pc>=FOURTEEN_MEGS && mem_len<=FOUR_MEGS){
 #endif
