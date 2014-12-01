@@ -91,6 +91,10 @@ enum {
 #if defined(SSE_VID_RECORD_AVI)
   CUT_RECORD_VIDEO,
 #endif
+#if defined(SSE_VAR_SNAPSHOT_INI)
+  CUT_DEFAULT_SNAPSHOT,
+#endif
+
   CUT_LAST_ITEM_SS
 };
 
@@ -131,6 +135,9 @@ const char *ShortcutNames[NUM_SHORTCUTS*2]=
 #endif
 #if defined(SSE_VID_RECORD_AVI)
    "Record Video",(char*)CUT_RECORD_VIDEO,
+#endif
+#if defined(SSE_VAR_SNAPSHOT_INI)
+    "Load Default Memory Snapshot",(char*)CUT_DEFAULT_SNAPSHOT,
 #endif
 #endif
 
@@ -421,6 +428,9 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       break;
 
     case 10:case 11:case 53:case 54:
+#if defined(SSE_VAR_SNAPSHOT_INI)
+      case CUT_DEFAULT_SNAPSHOT: //should be 55
+#endif
     {
       int i=190+Inf.Action; // 200=Load, 201=Save
       if (Inf.Action==53) i=205; // 205=Save Over Last
@@ -428,6 +438,10 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
         if (StateHist[0].Empty()) break;
         i=210; // 210=Load StateHist[0]
       }
+#if defined(SSE_VAR_SNAPSHOT_INI)
+      if(Inf.Action==CUT_DEFAULT_SNAPSHOT)
+        i=209;
+#endif
 #ifdef WIN32
       PostMessage(StemWin,WM_COMMAND,i,0);
 #elif defined(UNIX)
@@ -578,7 +592,11 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
     case 38:
       CutPauseUntilSysEx_Time=timeGetTime()+5000;
       break;
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_REWRITE) && SSE_VERSION>=370
+    case CUT_PRESSCHAR:
+#else
     case 39:
+#endif
     {
       if (Inf.PressChar==0 || runstate!=RUNSTATE_RUNNING) break;
 
@@ -587,6 +605,9 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       BYTE Modifiers=HIBYTE(LOWORD(Inf.PressChar));
       ShiftSwitchChangeModifiers(Modifiers & BIT_0,Modifiers & BIT_1,ModifierRestoreArray);
       keyboard_buffer_write_n_record(STCode);
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_TYPE_KEY_DELAY)
+     // INSTRUCTION_TIME(20000);
+#endif
       keyboard_buffer_write_n_record(BYTE(STCode | BIT_7));
       ShiftSwitchRestoreModifiers(ModifierRestoreArray);
       break;
