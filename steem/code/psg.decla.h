@@ -64,9 +64,20 @@ EXT int sound_variable_d INIT(208);
 
 #define SOUND_MODE_MUTE         0
 #define SOUND_MODE_CHIP         1
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF5)
+#define SOUND_MODE_MONITOR      2
+#define SOUND_MODE_EMULATED     3
+#define SOUND_MODE_SHARPSAMPLES 4
+#define SOUND_MODE_SHARPCHIP    5
+
+#else
 #define SOUND_MODE_EMULATED     2
 #define SOUND_MODE_SHARPSAMPLES 3
 #define SOUND_MODE_SHARPCHIP    4
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF5)
+//#define SOUND_MODE_MONITOR      5
+#endif
+#endif
 
 EXT bool sound_internal_speaker INIT(false);
 EXT int sound_freq INIT(50066),sound_comline_freq INIT(0),sound_chosen_freq INIT(50066);
