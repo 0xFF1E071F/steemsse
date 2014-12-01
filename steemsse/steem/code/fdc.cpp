@@ -2571,12 +2571,6 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
   }
 
   //SS pasti manages DMA itself, then calls Steem to transfer what it gathered
-#undef LOGSECTION
-#if defined(SSE_BOILER_TRACE_CONTROL)
-#define LOGSECTION LOGSECTION_ALWAYS // for just the bytes 
-#else
-#define LOGSECTION LOGSECTION_FDC_BYTES 
-#endif
 
   if (pPIOI->haveXfer){
     dma_address=pPIOI->xferInfo.xferSTaddr; //SS not the regs
@@ -2591,41 +2585,13 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
 #else
           LPBYTE(pPIOI->xferInfo.xferBuf)[i]=PEEK(dma_address);
 #endif
-
-#if defined(SSE_BOILER_TRACE_CONTROL)
-          if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
-          {
-#if defined(SSE_DMA_TRACK_TRANSFER)
-            if( ! (i%16) )
-            {//TODO we know the direction
-              Dma.Datachunk++; 
-              if(!(Dma.MCR&0x100)) // disk -> RAM
-                TRACE("\n#%03d (%d-%02d-%02d) to %06X: ",Dma.Datachunk,floppy_current_side(),floppy_head_track[DRIVE],fdc_sr,Dma.BaseAddress);
-              else  // RAM -> disk
-                TRACE("\n#%03d (%d-%02d-%02d) from %06X: ",Dma.Datachunk,floppy_current_side(),floppy_head_track[DRIVE],fdc_sr,Dma.BaseAddress);
-            }
-            TRACE("%02x ",LPBYTE(pPIOI->xferInfo.xferBuf)[i]);
-#endif
-          }
-#endif
-
         }
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_DMA_FIFO_PASTI))
         dma_address++;
 #endif
       }
-
-#if defined(SSE_BOILER_TRACE_CONTROL)
-      if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
-        TRACE("\n");
-#endif
-      
     }else{
       //      log_to(LOGSECTION_PASTI,Str("PASTI: DMA transfer ")+pPIOI->xferInfo.xferLen+" bytes from pasti buffer to address=$"+HEXSl(dma_address,6));
-#if defined(SSE_BOILER_TRACE_CONTROL)
-      if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
-#endif
-        TRACE_LOG("%2d/%2d to %X: ",fdc_tr,fdc_sr,dma_address);
       for (DWORD i=0;i<pPIOI->xferInfo.xferLen;i++){ 
         if (DMA_ADDRESS_IS_VALID_W){
 #if !defined(SSE_BOILER_MONITOR_VALUE2)
@@ -2639,25 +2605,17 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
 #if defined(SSE_BOILER_MONITOR_VALUE2)
           DEBUG_CHECK_WRITE_B(dma_address);
 #endif
-#if defined(SSE_BOILER_TRACE_CONTROL)
-          if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
-#endif
-            TRACE_LOG("%02X ",LPBYTE(pPIOI->xferInfo.xferBuf)[i]);
         }
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_DMA_FIFO_PASTI))
         dma_address++;
 #endif
       }
-#if defined(SSE_BOILER_TRACE_CONTROL)
-      if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
-#endif
-        TRACE_LOG("\n");
     }
   }
-#if !defined(SSE_BOILER_TRACE_CONTROL)
+//#if !defined(SSE_BOILER_TRACE_CONTROL)
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_FDC//SS
-#endif
+//#endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_DMA) && defined(SSE_DEBUG)
   if(TRACE_ENABLED&&!old_irq&&old_irq!=(bool)pPIOI->intrqState) 
