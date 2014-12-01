@@ -142,6 +142,11 @@ void slow_motion_change(bool Down)
 void GetRealVKCodeForKeypad(WPARAM &wPar,LPARAM &lPar)
 {
   UINT Scancode=BYTE(HIWORD(lPar));
+/*
+24 Indicates whether the key is an extended key, such as the right-hand ALT 
+and CTRL keys that appear on an enhanced 101- or 102-key keyboard. The
+ value is 1 if it is an extended key; otherwise, it is zero. 
+*/
   bool Extend=(lPar & BIT_24)!=0;
   if (Scancode==MapVirtualKey(VK_INSERT,0)) wPar=Extend ? VK_INSERT:VK_NUMPAD0;
   if (Scancode==MapVirtualKey(VK_DELETE,0)) wPar=Extend ? VK_DELETE:VK_DECIMAL;
@@ -280,13 +285,22 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             }
           }
         }
-      }else if ((LOWORD(wPar)>=210 && LOWORD(wPar)<220) || LOWORD(wPar)==203 || LOWORD(wPar)==207 || LOWORD(wPar)==208){
+      }else if ((LOWORD(wPar)>=210 && LOWORD(wPar)<220) || LOWORD(wPar)==203 || LOWORD(wPar)==207 || LOWORD(wPar)==208
+#if defined(SSE_VAR_SNAPSHOT_INI)
+        || LOWORD(wPar)==209
+#endif
+        ){
         if (runstate==RUNSTATE_STOPPED){
           bool AddToHistory=true;
           if (LOWORD(wPar)>=210) LastSnapShot=StateHist[LOWORD(wPar)-210];
           EasyStr fn=LastSnapShot;
           if (LOWORD(wPar)==207) fn=WriteDir+SLASH+"auto_reset_backup.sts", AddToHistory=0;
           if (LOWORD(wPar)==208) fn=WriteDir+SLASH+"auto_loadsnapshot_backup.sts", AddToHistory=0;
+#if defined(SSE_VAR_SNAPSHOT_INI)
+          TRACE("BootStateFile = %s\n",BootStateFile.Text);
+          if(LOWORD(wPar)==209)
+            fn=BootStateFile;
+#endif
           LoadSnapShot(fn,AddToHistory);
           if (LOWORD(wPar)==207 || LOWORD(wPar)==208) DeleteFile(fn);
         }else{
@@ -831,7 +845,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 /*  v3.7
     if option above isn't checked, this one enforces a +- correct aspect ratio
     lPar points to the absolute resizing rectangle, its values may be changed
-    GetWindowRect() gives the current rectangle of the window, hopfully the
+    GetWindowRect() gives the current rectangle of the window, hopefully the
     same concept.
     TODO: keep AR really constant (computing may produce deviation)
 */

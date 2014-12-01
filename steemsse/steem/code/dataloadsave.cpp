@@ -840,16 +840,21 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     For instance, in the [Options] part of steem.ini you add the line
     WindowTitle=Steem SSE teh beST
     and this will be the title of the window
-    //limitation: mustn't be longer than original title (Steem SSE 3.7.0)
     limited to WINDOW_TITLE_MAX_CHARS (20)
 */
     {
       EasyStr tmp=pCSF->GetStr("Main","WindowTitle",WINDOW_TITLE);
-//      strncpy(stem_window_title,tmp.Text,strlen(WINDOW_TITLE));
       strncpy(stem_window_title,tmp.Text,WINDOW_TITLE_MAX_CHARS);
-      //TRACE("WindowTitle %s\n",stem_window_title);
       SetWindowText(StemWin,stem_window_title);
     }
+#endif
+#if defined(SSE_VAR_SNAPSHOT_INI)
+/*  Request, be able to load a specified snapshot using a shortcut.
+    We also don't want to bloat Steem, so we use BootStateFile.
+    This variable is overwritten if Steem is launched with a state
+    file. This seems appropriate behaviour.
+*/
+    BootStateFile=pCSF->GetStr("Main","DefaultSnapshot","");
 #endif
 #if defined(SSE_GUI_OPTION_FOR_TESTS)
     SSE_TEST_ON=pCSF->GetInt("Options","TestingNewFeatures",SSE_TEST_ON);
