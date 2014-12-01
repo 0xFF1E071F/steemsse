@@ -1222,8 +1222,8 @@ FF8240 - FF827F   palette, res
     && (addr&0xFFFF00)!=0xFFFA00 // many MFP reads
     && addr!=0xFFFC02  // if IKBD data polling...
 #endif
-    ) 
-    TRACE_LOG("PC %X IOR.B %X : %X\n",pc-2,addr,ior_byte);
+    )
+    TRACE_LOG("%d-%d-%d PC %X IOR.B %X : %X\n",TIMING_INFO,pc-2,addr,ior_byte);
 #endif
 
 #if defined(SSE_MMU_WU_IO_BYTES_R)

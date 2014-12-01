@@ -276,6 +276,8 @@ enum logsection_enum_tag {
 #define TRACE_CONTROL_FDCIPF1 (1<<11)//lock info
 #define TRACE_CONTROL_FDCIPF2 (1<<10)//sectors
 
+#define TRACE_MASK4 (Debug.ControlMask[13]) //cpu
+#define TRACE_CONTROL_CPU_REGISTERS (1<<15) 
 
 #endif
 
