@@ -5,7 +5,7 @@ DESCRIPTION: System specific includes, declarations and macros. PCH stands
 for pre-compiled headers (to reduce build time on slower development PCs).
 ---------------------------------------------------------------------------*/
 #pragma once//SS
-#include "SSE/SSE.h"//SS
+#include "code/SSE/SSE.h"//SS
 #ifndef __PCH_H
 #define __PCH_H
 

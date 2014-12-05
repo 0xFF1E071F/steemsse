@@ -125,7 +125,7 @@ and all his silly mods are gone!
 #define SSE_BETA //title, OSD, plus some testing - new features
 //#define SSE_BETA_BUGFIX // beta for just bugfixes
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
-//#define SSE_PRIVATE_BUILD // "beta" option
+#define SSE_PRIVATE_BUILD // "beta" option
 #endif
 
 #define SSE_VERSION 370 // versions down to 340 still compile
@@ -403,12 +403,15 @@ and all his silly mods are gone!
 
 #if defined(SSE_CPU_PREFETCH)
 
+
 #define SSE_CPU_FETCH_80000A//setpc
 #define SSE_CPU_FETCH_80000B//fetchword
 #define SSE_CPU_FETCH_80000C//prefetch IRC
 #define SSE_CPU_FETCH_IO     // fetch like a dog in outer space
 #define SSE_CPU_FETCH_IO2
 #define SSE_CPU_FETCH_IO3//clarify
+
+
 #define SSE_CPU_PREFETCH_4PIXEL_RASTERS //see SSECpu.cpp
 #define SSE_CPU_PREFETCH_ASSERT
 #define SSE_CPU_PREFETCH_CALL
@@ -428,17 +431,17 @@ and all his silly mods are gone!
 
 // Change no timing, just the macro used, so that we can identify what timings
 // are for prefetch:
-#define SSE_CPU_FETCH_TIMING  // TODO can't isolate
+#define SSE_CPU_FETCH_TIMING  
 // Move the timing counting from FETCH_TIMING to PREFETCH_IRC:
 #define SSE_CPU_PREFETCH_TIMING //big, big change
 //#define SSE_CPU_PREFETCH_TIMING_EXCEPT // to mix unique switch + lines
 
 #if !defined(SSE_CPU_PREFETCH_TIMING) || defined(SSE_CPU_PREFETCH_TIMING_EXCEPT)
-#define CORRECTING_PREFETCH_TIMING 
+//#define CORRECTING_PREFETCH_TIMING 
 #endif
 
 #if defined(SSE_CPU_PREFETCH_TIMING)
-//#define SSE_CPU_PREFETCH_TIMING_MOVEM_HACK // undef v3.7.0
+#define SSE_CPU_PREFETCH_TIMING_MOVEM_HACK // undef v3.7.0
 #define SSE_CPU_PREFETCH_TIMING_SET_PC // necessary for some SET PC cases
 #endif
 
@@ -1211,7 +1214,9 @@ and all his silly mods are gone!
 #if defined(SSE_ACIA)
 
 //#define SSE_ACIA_BUS_JAM_NO_WOBBLE // simple "fix" //undef 3.6.4
+#ifdef SSE_CPU_E_CLOCK
 #define SSE_ACIA_BUS_JAM_PRECISE_WOBBLE // option 6301 on
+#endif
 // #define SSE_ACIA_DONT_CLEAR_DR //?
 #define SSE_ACIA_DOUBLE_BUFFER_RX // only from 6301 (not MIDI) 
 #define SSE_ACIA_DOUBLE_BUFFER_TX // only to 6301 (not MIDI)
@@ -1809,6 +1814,10 @@ and all his silly mods are gone!
 //#define SSE_VID_DD7
 //#define SSE_VID_DIRECT3D
 #endif
+#ifdef MINGW_BUILD //not yet because we don't have the libs here
+//#define SSE_VID_DD7
+//#define SSE_VID_DIRECT3D
+#endif
 #endif
 
 #if defined(SSE_VID_3BUFFER)
@@ -1894,6 +1903,8 @@ and all his silly mods are gone!
 
 
 #else//!SSE_SWITCHES_FEATURES
+
+/******************************************************************************/
 
 
 //////////////
@@ -3900,17 +3911,27 @@ and all his silly mods are gone!
 //#define SSE_SOUND_VOL2
 #define SSE_SOUND_MICROWIRE_MASK1 //bugfix
 #define SSE_SOUND_MICROWIRE_MASK2 //incorrect doc (?)
+
 #ifdef SSE_BOILER //...
 #define SSE_BOILER_MUTE_SOUNDCHANNELS_ENV
 #define SSE_BOILER_MOD_VBASE
+#define SSE_BOILER_PSEUDO_STACK
+#define SSE_BOILER_EXTRA_IOLIST
+#define SSE_BOILER_BROWSERS_VECS // in 'reg' columns, eg TB for timer B
 #endif
+
 #if defined(SSE_BOILER_CLIPBOARD) && defined(SSE_GUI_DISK_MANAGER_LONG_NAMES1)
 //#define SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD
 #endif
 #define SSE_VAR_CLIPBOARD_TEXT
 ///#define SSE_VAR_TYPE_KEY_DELAY
+
+#if defined(SSE_FLOPPY)
 #if defined(SSE_VAR_CLIPBOARD_TEXT) && defined(SSE_GUI_DISK_MANAGER_LONG_NAMES1)
 #define SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD
+#endif
+#define SSE_PASTI_ONLY_STX_OPTION3 // move that option SSE -> disk manager
+#define SSE_GUI_DISK_MANAGER_GHOST
 #endif
 
 #define SSE_VID_BLOCK_WINDOW_SIZE // option can't change size of window
@@ -3920,12 +3941,20 @@ and all his silly mods are gone!
 #define SSE_SOUND_FILTER_STF5 // option in sound
 
 
-#define SSE_PASTI_ONLY_STX_OPTION3 // move that option SSE -> disk manager
-#define SSE_GUI_DISK_MANAGER_GHOST
 #undef SSE_GUI_OPTION_SLOW_DISK_SSE
 #define SSE_GUI_DISK_MANAGER_NO_DISABLE_B_MENU // click on icon
 
 #define SSE_VAR_SNAPSHOT_INI
+
+#define SSE_SHIFTER_LINE_PLUS_2_POST_TOP_OFF3
+#define SSE_SHIFTER_LINE_PLUS_2_POST_NO_TOP_OFF
+
+#if defined(SSE_CPU_PREFETCH_TIMING)
+//#define SSE_CPU_PREFETCH_TIMING_STOP
+#endif
+
+#define SSE_CPU_TRUE_PC2 // JMP, JSR
+
 
 #endif//beta
 

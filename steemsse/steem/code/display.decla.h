@@ -24,13 +24,13 @@
 #pragma comment(lib, "../../3rdparty/d3d/d3dx9.lib")
 #endif
 
-#if _MSC_VER == 1200
+#if _MSC_VER == 1200 || defined(MINGW_BUILD)//mingw TODO?
 #include "d3d\sal.h"
 #include "d3d\d3d9.h"
 #include "d3d\d3dx9core.h"
 #include "d3d\D3d9types.h"
 #include "d3d\D3dx9math.h"
-#else
+#else //bcc too?
 #include "d3d9.h"
 #include "d3dx9core.h"
 #include "D3d9types.h"

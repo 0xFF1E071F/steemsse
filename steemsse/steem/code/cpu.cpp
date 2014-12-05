@@ -4319,6 +4319,9 @@ void                              m68k_jsr()
   FETCH_TIMING; // Fetch from new address before setting PC
   m68k_READ_W(effective_address); // Check for bus/address errors
 #endif
+#if defined(SSE_BOILER_PSEUDO_STACK)
+  Debug.PseudoStackPush(PC32);
+#endif
   SET_PC(effective_address);
   intercept_os();
 }
@@ -4561,7 +4564,7 @@ void                              m68k_nop(){
 void                              m68k_stop(){
   if (SUPERFLAG){
     if (cpu_stopped==0){
-#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
+#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING__) //36.15 OVR
 //STOP	4(0/0)	
 //stop reads the immediate and doesn't prefetch
 #else
@@ -4570,6 +4573,13 @@ void                              m68k_stop(){
       m68k_GET_IMMEDIATE_W;
 
       INSTRUCTION_TIME_ROUND(4); // time for immediate fetch
+
+#if defined(SSE_CPU_PREFETCH_TIMING_STOP__)
+    //  if(SSE_HACKS_ON)
+      //  INSTRUCTION_TIME_ROUND(4); //why? - 36.15OVR
+// -> it( compensates another bug protected by hacks
+//in mfp SSE_INT_MFP_WRITE_DELAY1
+#endif
 
       DEBUG_ONLY( int debug_old_sr=sr; )
 
@@ -4751,6 +4761,9 @@ void                              m68k_rts(){
   INSTRUCTION_TIME_ROUND(16);
 #endif
   effective_address=m68k_lpeek(r[15]);
+#if defined(SSE_BOILER_PSEUDO_STACK)
+  Debug.PseudoStackPop();
+#endif
   r[15]+=4;
   m68k_READ_W(effective_address); // Check for bus/address errors
   SET_PC(effective_address);
@@ -8165,6 +8178,9 @@ extern "C" void m68k_0110(){  //bCC //SS + BSR
       M68000.PrefetchClass=2;
 #endif
       m68k_PUSH_L(PC32);
+#if defined(SSE_BOILER_PSEUDO_STACK)
+      Debug.PseudoStackPush(PC32);
+#endif
       m68k_READ_W(new_pc); // Check for bus/address errors
 #if (defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING))
       INSTRUCTION_TIME(18-4);
@@ -8211,6 +8227,9 @@ extern "C" void m68k_0110(){  //bCC //SS + BSR
       M68000.PrefetchClass=2;
 #endif
       m68k_PUSH_L(PC32+2);
+#if defined(SSE_BOILER_PSEUDO_STACK)
+      Debug.PseudoStackPush(PC32+2);
+#endif
       MEM_ADDRESS new_pc=(pc+(signed long)((signed short)m68k_fetchW())) | pc_high_byte;
       // stacked pc is always instruction pc+2 due to prefetch (pc doesn't increase before new_pc is read)
       m68k_READ_W(new_pc); // Check for bus/address errors

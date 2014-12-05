@@ -39,7 +39,7 @@ TYM2149::~TYM2149() { //v3.7.0
 void TYM2149::FreeFixedVolTable() {
   if(p_fixed_vol_3voices)
   {
-    TRACE("free memory of PSG table %p\n",p_fixed_vol_3voices);
+    TRACE_INIT("free memory of PSG table %p\n",p_fixed_vol_3voices);
     delete [] p_fixed_vol_3voices;
     p_fixed_vol_3voices=NULL;
   }

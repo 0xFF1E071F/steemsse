@@ -1294,6 +1294,16 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               break;
 #endif
 
+#if defined(SSE_BOILER_PSEUDO_STACK)
+            case 917:
+              new mem_browser(IOLIST_PSEUDO_AD_STACK,DT_MEMORY);
+              {
+
+              }
+              break;
+#endif
+
+
             case 1022://SS this is when you click on 'Go'
             {
               DWORD dat=CBGetSelectedItemData(GetDlgItem(Win,1020));
@@ -1383,6 +1393,10 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 #if defined(SSE_BOILER_BROWSER_BLITTER)
         items++;
 #endif
+#if defined(SSE_BOILER_PSEUDO_STACK)
+        items++;
+#endif
+
         for (int i=0;i<n-items;i++){
           DeleteMenu(mem_browser_menu,items,MF_BYPOSITION);
         }
@@ -1670,6 +1684,10 @@ void DWin_init()
   AppendMenu(mem_browser_menu,MF_STRING,914,"New IKBD 6301 true emu Browser");
 #else
   AppendMenu(mem_browser_menu,MF_STRING,909,"New I&KBD Browser");
+#endif
+
+#if defined(SSE_BOILER_PSEUDO_STACK)
+  AppendMenu(mem_browser_menu,MF_STRING,917,"Pseudo Stack");
 #endif
 
 #if USE_PASTI

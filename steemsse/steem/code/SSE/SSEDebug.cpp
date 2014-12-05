@@ -131,6 +131,7 @@ TDebug::TDebug() {
 #if defined(SSE_BOILER_STACK_CHOICE)
   StackDisplayUseOtherSp=0;
 #endif
+
 }
 
 
@@ -319,7 +320,10 @@ void TDebug::TraceGeneralInfos(int when) {
     if(dma_sound_bass!=6||dma_sound_treble!=6)
       TRACE("Microwire %d dma bass %X treble %X\n",MICROWIRE_ON,dma_sound_bass,dma_sound_treble);
 #endif
-
+#if defined(SSE_BOILER_PSEUDO_STACK___)
+    for(int i=0;i<PSEUDO_STACK_ELEMENTS;i++)
+      TRACE("%X\n",PseudoStack[i]);
+#endif
   }
 }
 #endif
@@ -503,6 +507,40 @@ void TDebug::ReportInterrupt() {
 void TDebug::Rte() {
   if(InterruptIdx>0)
     InterruptIdx--;
+}
+
+#endif
+
+#if defined(SSE_BOILER_PSEUDO_STACK)
+
+void TDebug::PseudoStackCheck(DWORD return_address) {
+  for(int i=0;i<PSEUDO_STACK_ELEMENTS;i++)
+    if(PseudoStack[i]==return_address)
+      for(int j=i;j<PSEUDO_STACK_ELEMENTS-1;j++)
+        PseudoStack[j]=PseudoStack[j+1];
+}
+
+
+DWORD TDebug::PseudoStackPop() {
+  DWORD return_address=PseudoStack[0];
+  for(int i=0;i<PSEUDO_STACK_ELEMENTS-1;i++)
+    PseudoStack[i]=PseudoStack[i+1];
+#if defined(SSE_DEBUG_TRACE_IO__) 
+    if(TRACE_MASK4 & TRACE_CONTROL_CPU_SP)
+      TRACE("pop %X\n",return_address);
+#endif
+  return return_address;
+}
+
+
+void TDebug::PseudoStackPush(DWORD return_address) {
+  for(int i=PSEUDO_STACK_ELEMENTS-1;i>0;i--)
+    PseudoStack[i]=PseudoStack[i-1];
+  PseudoStack[0]=return_address;
+#if defined(SSE_DEBUG_TRACE_IO__) 
+    if(TRACE_MASK4 & TRACE_CONTROL_CPU_SP)
+      TRACE("push %X\n",return_address);
+#endif
 }
 
 #endif
