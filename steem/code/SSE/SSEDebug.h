@@ -150,6 +150,16 @@ struct TDebug {
 
   WORD nHbis; // counter for each frame
 
+#if defined(SSE_BOILER_PSEUDO_STACK)
+#define PSEUDO_STACK_ELEMENTS 64
+  DWORD PseudoStack[PSEUDO_STACK_ELEMENTS]; // rotating stack
+#ifdef __cplusplus
+  void PseudoStackCheck(DWORD return_address);
+  DWORD PseudoStackPop();
+  void PseudoStackPush(DWORD return_address);
+#endif
+#endif
+
 };
 
 
@@ -278,6 +288,7 @@ enum logsection_enum_tag {
 
 #define TRACE_MASK4 (Debug.ControlMask[13]) //cpu
 #define TRACE_CONTROL_CPU_REGISTERS (1<<15) 
+#define TRACE_CONTROL_CPU_SP (1<<14) 
 
 #endif
 

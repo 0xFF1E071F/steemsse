@@ -862,6 +862,9 @@ inline void TM68000::InstructionTimeRound(int t) {
 inline void TM68000::PerformRte() {
   // replacing macro M68K_PERFORM_RTE(checkints)
   MEM_ADDRESS pushed_return_address=m68k_lpeek(r[15]+2);
+#if defined(SSE_BOILER_PSEUDO_STACK)
+  Debug.PseudoStackPop();
+#endif
   // An Illegal routine could manipulate this value.
   SetPC(pushed_return_address);
   sr=m68k_dpeek(r[15]);r[15]+=6;    
@@ -1020,12 +1023,19 @@ inline void TM68000::Process() {
 #if defined(SSE_DEBUG_TRACE_IO) 
     if(TRACE_MASK4 & TRACE_CONTROL_CPU_REGISTERS)
     {
-      TRACE_LOG("\nSR=%X ",sr);
+      TRACE_LOG("\n");
       for(int i=0;i<8;i++) // D0-D7
         TRACE_LOG("D%d=%X ",i,r[i]);
-      for(int i=0;i<8;i++) // A0-A7 (A7 when the exception occurred)
-        TRACE_LOG("A%d=%X ",i,areg[i]);
       TRACE_LOG("\n");
+      for(int i=0;i<8;i++) // A0-A7 
+        TRACE_LOG("A%d=%X ",i,areg[i]);
+      TRACE_LOG("SR=%X\n",sr);
+    }
+    if(TRACE_MASK4 & TRACE_CONTROL_CPU_SP)
+    {
+      for(int i=0;i<8;i++) // D0-D7
+        TRACE_LOG("%X=%X ",areg[7]+i*2,DPEEK(areg[7]+i*2));
+      TRACE_LOG("\n");      
     }
 #endif
     if(sr&SR_TRACE)
@@ -1071,7 +1081,7 @@ inline void TM68000::Process() {
   {
     ProcessingState=NORMAL;
   }
-  else if((r&SR_TRACE)
+  else if(sr&SR_TRACE)
   {
     ProcessingState=TRACE_MODE; //internal flag: trace after this instruction
 #if defined(SSE_CPU_TRACE_DETECT) && !defined(DEBUG_BUILD)
@@ -1099,6 +1109,12 @@ inline void TM68000::Process() {
 //if(pc==0x01290A) TRACE("%d %d %d pc %X reached\n",TIMING_INFO,pc);
 //if(pc==0x28) TRACE("$14 %X D5 %X D6 %X D7 %X\n",LPEEK(0x14),r[5],r[6],r[7]);
  
+
+//tmp
+//if(areg[6]!=0xffFF8209 && pc==0x01BF22) { BREAK(0x01BF22); }
+
+//if(areg[6]==0x79e0c) { BREAK(pc+26); }
+
 
 #if defined(SSE_CPU_PREFETCH)
 /*  basic prefetch rule:
@@ -1141,10 +1157,12 @@ already fetched. One word will be in IRD and another one in IRC.
 #if defined(SSE_IPF_CPU) //|| defined(SSE_DEBUG)
   int cycles=cpu_cycles;
 #endif
+//  ASSERT(pc>0xFC000); 
 
   //ASSERT(ir!=0x91AE); // dbg: break on opcode
   //ASSERT(ir!=0x3dc0);
   //ASSERT(ir!=0xe8d0);
+//  ASSERT(ir!=0x4afc);
   /////////// JUMP TO CPU EMU: ///////////////
   m68k_high_nibble_jump_table[ir>>12](); // go to instruction...
 
@@ -1161,11 +1179,11 @@ already fetched. One word will be in IRD and another one in IRC.
 */
   if(ProcessingState==TRACE_MODE)
   {
-    if(!Debug.logsection_enabled[LOGSECTION_CPU] && !logsection_enabled[LOGSECTION_CPU])
 #ifdef DEBUG_BUILD
+    if(!Debug.logsection_enabled[LOGSECTION_CPU] && !logsection_enabled[LOGSECTION_CPU])
       TRACE_LOG("(T) PC %X SR %X VEC %X IR %X: %s\n",old_pc,sr,LPEEK(0x24),ir,disa_d2(old_pc).Text);
 #else
-      TRACE_LOG("TRACE PC %X IR %X SR %X $24 %X\n",pc,ir,sr,LPEEK(0x24));
+    TRACE_LOG("TRACE PC %X IR %X SR %X $24 %X\n",pc,ir,sr,LPEEK(0x24));
 #endif
     INSTRUCTION_TIME_ROUND(0); // Round first for interrupts
     INSTRUCTION_TIME_ROUND(34); // note: tested timing (Legacy.msa)

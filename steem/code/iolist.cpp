@@ -21,6 +21,12 @@ iolist_entry iolist[300
 #if defined(SSE_BOILER_BROWSER_6301)
 +256+16 // in fact 300 was too much without 6301, but with it it would crash
 #endif
+#if defined(SSE_BOILER_PSEUDO_STACK)
++PSEUDO_STACK_ELEMENTS
+#endif
+#if defined(SSE_BOILER_EXTRA_IOLIST)
++100 //TODO
+#endif
 ];
 
 #undef EXT
@@ -111,6 +117,91 @@ void iolist_init()
   iolist_add_entry(0x134,"MFP 13 - Timer A",4);
   iolist_add_entry(0x138,"MFP 14 - RS232 Ring Detect",4);
   iolist_add_entry(0x13c,"MFP 15 - Monochrome Detect",4);
+
+#if defined(SSE_BOILER_EXTRA_IOLIST) // yeah! it's quite cheap
+  iolist_add_entry(0x380,"proc_lives",4);
+  iolist_add_entry(0x384,"proc_dregs",4); 
+  iolist_add_entry(0x3A4,"proc_aregs",4); 
+  iolist_add_entry(0x384,"proc_enum",4); 
+  iolist_add_entry(0x3C8,"proc_usp",4); 
+  iolist_add_entry(0x384,"proc_stk",2); 
+  iolist_add_entry(0x400,"etv_timer",4); 
+  iolist_add_entry(0x404,"etv_critic",4); 
+  iolist_add_entry(0x408,"etv_term",4); 
+  iolist_add_entry(0x40C,"etv_xtra",4*5); 
+  iolist_add_entry(0x420,"memvalid",4); 
+  iolist_add_entry(0x424,"memctrl",2); 
+  iolist_add_entry(0x426,"resvalid",4); 
+  iolist_add_entry(0x42A,"resvector",4); 
+  iolist_add_entry(0x42E,"phystop",4); 
+  iolist_add_entry(0x432,"_membot",4); 
+  iolist_add_entry(0x436,"_memtop",4); 
+  iolist_add_entry(0x43A,"memval2",4); 
+  iolist_add_entry(0x43E,"flock",2); 
+  iolist_add_entry(0x440,"seekrate",2); 
+  iolist_add_entry(0x442,"_timer_ms",2); 
+  iolist_add_entry(0x444,"_fverify",2); 
+  iolist_add_entry(0x446,"_bootdev",2); 
+  iolist_add_entry(0x448,"palmode",2); 
+  iolist_add_entry(0x44A,"defshiftmod",2); 
+  iolist_add_entry(0x44C,"sshiftmod",2); 
+  iolist_add_entry(0x44E,"_v_bas_ad",4); 
+  iolist_add_entry(0x452,"vblsem",2); 
+  iolist_add_entry(0x454,"nvbls",2); 
+  iolist_add_entry(0x456,"_vblqueue",4); 
+  iolist_add_entry(0x45A,"colorptr",4); 
+  iolist_add_entry(0x45E,"screenpt",4); 
+  iolist_add_entry(0x462,"_vbclock",4); 
+  iolist_add_entry(0x466,"_frclock",4); 
+  iolist_add_entry(0x46A,"hdv_init",4);
+  iolist_add_entry(0x46E,"swv_vec",4); 
+  iolist_add_entry(0x472,"hdv_bpb",4); 
+  iolist_add_entry(0x476,"hdv_rw",4);
+  iolist_add_entry(0x47A,"hdv_boot",4); 
+  iolist_add_entry(0x47E,"hdv_mediach",4); 
+  iolist_add_entry(0x482,"_comload",2); 
+  iolist_add_entry(0x484,"conterm",1); 
+  iolist_add_entry(0x486,"trp14ret",4);
+iolist_add_entry(0x48A,"criticret",4);
+iolist_add_entry(0x48E,"themd",4);
+iolist_add_entry(0x49E,"themdmd",4);
+iolist_add_entry(0x4A2,"savptr",4);
+iolist_add_entry(0x4A6,"_nflops",2);
+iolist_add_entry(0x4A8,"con_state",4);
+iolist_add_entry(0x4AC,"save_row",2);
+iolist_add_entry(0x4AE,"sav_context",4);
+iolist_add_entry(0x4B2,"_bufl",4);
+iolist_add_entry(0x4B6,"_bufl",4);
+iolist_add_entry(0x4BA,"_hz_200",4);
+iolist_add_entry(0x4BC,"the_env",4);
+iolist_add_entry(0x4C2,"_drvbits",4);
+iolist_add_entry(0x4C6,"_dskbufp",4);
+iolist_add_entry(0x4CA,"_autopath",4);
+iolist_add_entry(0x4CE,"_vbl_lis",4);
+iolist_add_entry(0x4EE,"_dumpflg",4);
+iolist_add_entry(0x4F0,"_prtabt",2);
+iolist_add_entry(0x4F2,"_sysbase",4);
+iolist_add_entry(0x4F6,"_shell_p",4);
+iolist_add_entry(0x4FA,"end_os",4);
+iolist_add_entry(0x4FE,"exec_os",4);
+iolist_add_entry(0x502,"scr_dump",4);
+iolist_add_entry(0x506,"prv_lsto",4);
+iolist_add_entry(0x50A,"prv_lst",4);
+iolist_add_entry(0x50E,"prv_auxo",4);
+iolist_add_entry(0x512,"prv_aux",4);
+iolist_add_entry(0x516,"pun_ptr",4);
+iolist_add_entry(0x51A,"memval3",4);
+iolist_add_entry(0x51E,"xconstat",4);
+iolist_add_entry(0x53E,"xconin",4);
+iolist_add_entry(0x55E,"xcostat",4);
+iolist_add_entry(0x57E,"xconout",4);
+iolist_add_entry(0x59E,"_longframe",2);
+iolist_add_entry(0x5A0,"_p_cookies",4);
+iolist_add_entry(0x5A4,"ramtop",4);
+iolist_add_entry(0x5A8,"ramvalid",4);
+iolist_add_entry(0x5AC,"bell_hook",4);
+iolist_add_entry(0x5B0,"kcl_hook",4);
+#endif
 
   iolist_add_entry(0xff8001,"MMU mem config",1,"Bank0h|Bank0l|Bank1h|Bank1l");
 
@@ -253,7 +344,7 @@ void iolist_init()
 
 #if defined(SSE_BOILER_TRACE_CONTROL)
   iolist_add_entry(FAKE_IO_START+26,"TRACE CPU",2,
-    "reg|.|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
+    "reg|sp|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
 
 #endif
 

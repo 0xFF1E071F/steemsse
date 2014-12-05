@@ -423,7 +423,6 @@ void reset_peripherals(bool Cold)
   if(Cold)
     SF314[0].Sound_StopBuffers();
 #endif
-
 }
 #undef LOGSECTION
 //---------------------------------------------------------------------------
@@ -479,6 +478,11 @@ void reset_st(DWORD flags)
   aes_calls_since_reset=0;
   if (extended_monitor) extended_monitor=1; //first stage of extmon init
 #endif
+
+#if defined(SSE_BOILER_PSEUDO_STACK)
+  for(int i=0;i<PSEUDO_STACK_ELEMENTS;Debug.PseudoStack[i++]=0);
+#endif
+
 }
 
 

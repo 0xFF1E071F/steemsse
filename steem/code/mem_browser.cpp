@@ -82,6 +82,11 @@ void mem_browser::new_window(MEM_ADDRESS address,type_disp_type new_disp_type)
           Title="IKBD 6301 true emu";
           break;
 #endif
+#if defined(SSE_BOILER_PSEUDO_STACK)
+        case IOLIST_PSEUDO_AD_STACK:
+          Title="Pseudo stack";
+          break;
+#endif
       }
 #if defined(SSE_BOILER_MENTION_READONLY_BROWSERS)
       Title+=" (RO)"; // adding RO for 'read-only', I'll understand!
@@ -215,8 +220,14 @@ void mem_browser::init()
   hex_column=-1;
 
   if (disp_type==DT_INSTRUCTION){
+
+#if defined(SSE_BOILER_BROWSERS_VECS)
+    lc.cx=50;
+    lc.pszText="reg/vec";
+#else
     lc.cx=30;
     lc.pszText="Reg";
+#endif
     SendMessage(handle,LVM_INSERTCOLUMN,columns++,(long)&lc);
     lc.cx=20;
     lc.pszText="Bk";
@@ -246,7 +257,14 @@ void mem_browser::init()
     if((ad & 0xfffff000)==IOLIST_PSEUDO_AD_6301)
       IKBD=true;
 #endif
-    bool Pseudo=(PSG || FDC || IKBD);
+#if defined(SSE_BOILER_PSEUDO_STACK)
+    bool Stack=(ad & 0xfffff000)==IOLIST_PSEUDO_AD_STACK;
+#endif
+    bool Pseudo=(PSG || FDC || IKBD
+#if defined(SSE_BOILER_PSEUDO_STACK)
+      || Stack
+#endif
+      );
 
     lc.cx=30;
     if (Pseudo) lc.cx=0;
@@ -379,19 +397,92 @@ void mem_browser::get_breakpoint_labels(MEM_ADDRESS ad,int bpl,char *t[3])
 
   char regname[20];strcpy(regname,"(pc)");
   MEM_ADDRESS rv=pc,ad2=(ad+bpl) & 0xffffff;
-  int n=-1;
+  int n=-1;//SS so it records (pc) if it's on this address
 
   t[0][0]=0; // registers
   while (n<8){
     if (rv>=ad && rv<ad2){
       if (strlen(t[0])) strcat(t[0]," ");
       if (rv>ad) strcat(t[0],STRS( (int)ad-(int)rv ));
-      strcat(t[0],regname);
+      strcat(t[0],regname); //SS it may add regs
     }
 
     n++;
     regname[1]='a';regname[2]=char('0'+n);rv=r[n+8];
   }
+
+
+
+#if defined(SSE_BOILER_BROWSERS_VECS)
+//this is totally a hack, and rather manual (we don't use iolist)
+
+  rv=LPEEK(0x120);
+  if (rv>=ad && rv<ad2)
+    strcat(t[0],"TB");    
+
+  rv=LPEEK(0x68);
+  if (rv>=ad && rv<ad2)
+    strcat(t[0],"HBi");    
+
+  rv=LPEEK(0x70);
+  if (rv>=ad && rv<ad2)
+    strcat(t[0],"VBi");    
+
+  rv=LPEEK(0x8);
+  if (rv>=ad && rv<ad2)
+    strcat(t[0],"BusE");    
+
+  rv=LPEEK(0xC);
+  if (rv>=ad && rv<ad2)
+    strcat(t[0],"AddE");    
+
+  rv=LPEEK(0x10);
+  if (rv>=ad && rv<ad2)
+    strcat(t[0],"Ill");    
+
+  rv=LPEEK(0x18);
+  if (rv>=ad && rv<ad2)
+    strcat(t[0],"chk");    
+
+  rv=LPEEK(0x24);
+  if (rv>=ad && rv<ad2)
+    strcat(t[0],"trc");    
+
+  rv=LPEEK(0x28);
+  if (rv>=ad && rv<ad2)
+    strcat(t[0],"lA");    
+
+  rv=LPEEK(0x2C);
+  if (rv>=ad && rv<ad2)
+    strcat(t[0],"lF");    
+
+  rv=LPEEK(0x114);
+  if (rv>=ad && rv<ad2)
+    strcat(t[0],"TC");    
+
+  rv=LPEEK(0x134);
+  if (rv>=ad && rv<ad2)
+    strcat(t[0],"TA");  
+  
+  rv=LPEEK(0x110);
+  if (rv>=ad && rv<ad2)
+    strcat(t[0],"TD");    
+
+  rv=LPEEK(0x118);
+  if (rv>=ad && rv<ad2)
+    strcat(t[0],"Acia");    
+
+  rv=LPEEK(0x11c);
+  if (rv>=ad && rv<ad2)
+    strcat(t[0],"fdc");    
+
+#endif
+
+
+
+
+
+
 
   t[1][0]=0; // breakpoints
   t[2][0]=0; // monitors
@@ -648,6 +739,10 @@ void mem_browser::update()
         wpl=calculate_wpl();
       }else if(mode==MB_MODE_IOLIST){
         wpl=1;
+#if defined(SSE_BOILER_PSEUDO_STACK)
+        if(ad==IOLIST_PSEUDO_AD_STACK)
+          wpl=4;
+#endif
       }
       int min_wpl=min(wpl,8);
       if (!reg) dpc=ad;
@@ -782,10 +877,24 @@ void mem_browser::update()
           if (iol[0]){
             if (iol[0]->ptr){
               strcpy(txt[x3+1],"$");
+#if defined(SSE_BOILER_PSEUDO_STACK)
+              if(ad==IOLIST_PSEUDO_AD_STACK)
+              {
+                strcat(txt[x3+1],HEXSl(*((DWORD*)(iol[0]->ptr)),8));
+              }
+              else
+              {
+                strcat(txt[x3+1],HEXSl(*((BYTE*)(iol[0]->ptr)),2));
+                strcat(txt[x3+1]," (");
+                strcat(txt[x3+1],STRS( *((BYTE*)(iol[0]->ptr)) ));
+                strcat(txt[x3+1],")");
+              }
+#else
               strcat(txt[x3+1],HEXSl(*((BYTE*)(iol[0]->ptr)),2));
               strcat(txt[x3+1]," (");
               strcat(txt[x3+1],STRS( *((BYTE*)(iol[0]->ptr)) ));
               strcat(txt[x3+1],")");
+#endif
             }
           }else{
             txt[x3+1][0]=0;

@@ -1147,6 +1147,9 @@ void TM68000::SetPC(MEM_ADDRESS ad) {
 #if defined(SSE_CPU_CHECK_PC)
     PC=ad;
 #endif    
+#if defined(SSE_BOILER_PSEUDO_STACK)
+    Debug.PseudoStackCheck(ad) ;
+#endif
     PrefetchSetPC();//PREFETCH_SET_PC
 }
 
@@ -1174,6 +1177,9 @@ void TM68000::Interrupt(MEM_ADDRESS ad) {
 #endif
 
   m68k_PUSH_L(PC32);
+#if defined(SSE_BOILER_PSEUDO_STACK)
+  Debug.PseudoStackPush(PC32);
+#endif
   m68k_PUSH_W(_sr);
   SetPC(ad);
   SR_CLEAR(SR_TRACE);
@@ -1327,7 +1333,7 @@ FC2 FC1 FC0 Address Space
       if(!SUPERFLAG) 
         change_to_supervisor_mode();
       TRACE_LOG("Push crash address %X->%X on %X\n",crash_address,(crash_address & 0x00ffffff) | pc_high_byte,r[15]-4);
-      m68k_PUSH_L((crash_address & 0x00ffffff) | pc_high_byte); 
+      m68k_PUSH_L(( (crash_address) & 0x00ffffff) | pc_high_byte);  // crash address = old_pc
       INSTRUCTION_TIME_ROUND(8);
       TRACE_LOG("Push SR %X on %X\n",_sr,r[15]-2);
       m68k_PUSH_W(_sr); // Status register 
@@ -1367,7 +1373,7 @@ FC2 FC1 FC0 Address Space
         if(_pc!=M68000.Pc)
         {
           TRACE_LOG("pc %X true PC %X\n",_pc,M68000.Pc);
-          _pc=M68000.Pc;
+          _pc=M68000.Pc; // guaranteed exact...
         }
 #endif
 #if defined(SSE_CPU_BUS_ERROR_ADDRESS2)

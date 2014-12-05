@@ -538,6 +538,12 @@ void iolist_debug_add_pseudo_addresses()
 
 #endif
 
+#if defined(SSE_BOILER_PSEUDO_STACK)
+  for(int i=0;i<PSEUDO_STACK_ELEMENTS;i++)
+    iolist_add_entry(IOLIST_PSEUDO_AD_STACK+i*8,"stack",8,NULL,(BYTE*)(&Debug.PseudoStack[i]) );
+#endif
+
+
 }
 //---------------------------------------------------------------------------
 int __stdcall debug_plugin_read_mem(DWORD ad,BYTE *buf,int len)
