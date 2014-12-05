@@ -403,7 +403,7 @@ void m68k_exception::init(int a,exception_action ea,MEM_ADDRESS _abus)
 {
   bombs=a;
   _pc=PC32; //old_pc;
-  crash_address=old_pc;
+  crash_address=old_pc; //SS this is for group 1+2
   address=_abus;
   _sr=::sr;_ir=::ir;
   action=ea;
@@ -1168,7 +1168,15 @@ void m68k_get_effective_address()
         effective_address=(signed long)(signed short)m68k_fetchW();
         pc+=2; 
 #if defined(SSE_CPU_TRUE_PC)
-        TRUE_PC+=2;
+#if defined(SSE_CPU_TRUE_PC2)
+/*  For JMP and JSR, different microcodes are used and PC isn't changed before
+    it is set, even for fetching operands (AU is used as usual).
+    Fixes The Teller (jmp $201.w)
+    LEA, PEA: TODO
+*/ 
+        if(ir&0xFF80!=0x4E80)
+#endif
+          TRUE_PC+=2;
 #endif
         break;
       case 1:
@@ -1176,6 +1184,9 @@ void m68k_get_effective_address()
         effective_address=m68k_fetchL();
         pc+=4;  
 #if defined(SSE_CPU_TRUE_PC)
+#if defined(SSE_CPU_TRUE_PC2)
+        if(ir&0xFF80!=0x4E80) // also for .L according to microcodes
+#endif
         TRUE_PC+=4;
 #endif
         break;
@@ -3291,6 +3302,7 @@ We also move the prefetch timing: it is class 1, not 0.
 
 void                              m68k_tas(){
   if((ir&B6_111111)==B6_111100){
+    ASSERT(ir==0x4afc); // it is tas_or_illegal()
     ILLEGAL;
   }else{
 
@@ -4539,6 +4551,9 @@ void                              m68k_nop(){
 #else
   prefetched_2=false;
   prefetch_buf[0]=*(lpfetch-MEM_DIR);  //flush prefetch queue
+#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
+  FETCH_TIMING;
+#endif
 #endif
 }
 
@@ -5214,7 +5229,7 @@ void                              m68k_or_b_from_dN_or_sbcd(){
     SR_SET(SR_X+SR_C+SR_N);
   }
   m68k_DEST_B=(hi_nibble&0xF0)+(lo_nibble&0xF);
-  ASSERT( m68k_DEST_B==n );
+  ASSERT( m68k_DEST_B==n ); // The Teller but it would load anyway
   if(!m68k_DEST_B)
     SR_SET(SR_Z)
 

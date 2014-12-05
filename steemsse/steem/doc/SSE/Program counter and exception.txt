@@ -36,19 +36,34 @@ If the value is wrong, the instruction is garbage and the program crashes.
 Cases (some programs sensitive to stacked PC):
 Method to detect them: just push garbage as PC and see what crashes!
 
-Amiga Demo                             tst.l (a1)+            read
-BIG Demo                               tst.l (a1)+            read
-Blood Money                            movem.l a0-5,(a6)      write
-Darkside of the Spoon                  move.b d1,+$2476(a4)   write
-European Demos                         move.l $0.W,$24.w      read
-Phaleon                                move.l $0.W,$24.w      read
-Phaleon etc                            clr.w $70fff           read!
-Punish Your Machine                    move.b d1,+$2476(a4)   write
-Transbeauce 2                          move.l $0.W,$24.w      read
-War Heli                               move.l d5,(a1)         write
+Amiga Demo                                   tst.l (a1)+            read
+BIG Demo                                     tst.l (a1)+            read
+Blood Money                                  movem.l a0-5,(a6)      write
+Darkside of the Spoon                        move.b d1,+$2476(a4)   write
+European Demos, Phaleon, Transbeauce 2       move.l $0.W,$24.w      read
+European Demos, Phaleon, Transbeauce 2       clr.w $70fff           read!
+Punish Your Machine                          move.b d1,+$2476(a4)   write
+The Teller                                   jmp $201.w             fetch
+War Heli                                     move.l d5,(a1)         write
 
-Note that the 24960 exceptions of the BIG Demo are part of the normal loading
-procedure.
+Note that the 24,960 exceptions of the BIG Demo are part of the normal loading
+procedure. New record 876,079 for The Teller.
+
+
+User Manual
+=============
+
+The M68000 User's Manual states:
+"Value saved for the program counter is advanced 2–10 bytes beyond the address 
+of the first word of the instruction that made the reference causing the bus 
+error. 
+If the bus error occurred during the fetch of the next instruction, the saved 
+program counter has a value in the vicinity of the current instruction, even 
+if the current instruction is a branch, a jump, or a return instruction."
+
+Motorola doesn't give any precise information.
+Based on just that, the programmer who would actually use the pushed PC 
+couldn't compute it. He had to be lucky or to test on real hardware.
 
 Tables
 ========
@@ -62,20 +77,6 @@ at time of crash).
 Up to now those tables have been confirmed by known cases and microcode
 analysis, so we take them to be solid.
 
-User Manual
-=============
-
-The M68000 User's Manual states:
-"Value saved for the program counter is advanced 2–10 bytes beyond the address 
-of the first word of the instruction that made the reference causing the bus 
-error. 
-If the bus error occurred during the fetch of the next instruction, the saved 
-program counter has a value in the vicinity of the current instruction, even 
-if the current instruction is a branch, a jump, or a return instruction."
-
-Based on just that, the programmer who would actually use the pushed PC 
-couldn't compute it. He had to be lucky or to test on real hardware.
-
 Fetching
 ==========
 
@@ -85,6 +86,7 @@ register in the CPU (IRC). Those values are the program, made of macro-
 instructions, that is instructions and their operands. 
 Both the instructions and the operands are fetched but only the instructions 
 are decoded (going from register IRC to register IRD where decoding is done).
+Because fetching often occurs in advance, it is generally called prefetch.
 
 Increment time
 ================
@@ -216,10 +218,21 @@ this is a <EA> crash, not a 'write' crash.
 Branches
 ==========
 
-Apparently, for JSR, JMP, the new PC is computed on AU, then requested on the
-bus before it is set in PC register. In case of crash, the value would still be
-the PC after <EA>.
-For BCC, BSR there's no update of PC either (AU is updated instead).
+Bcc, BRA... use a relative displacement.
+
+JMP and JSR don't call any <EA> microcodes, but use their own microcodes.
+Since the microcodes are specific, there's no reason to think that PC would
+be incremented prior to being absolutely set, as this would waste CPU 
+resources.
+We verified this for jmp (xxx).w (The Teller) and jmp (xxx).l.
+
+
+PEA
+=====
+
+From a quick look at microcodes, which are specific, PC seems to follow the
+<EA> rules.
+
 
 Steem SSE
 ===========
@@ -231,11 +244,15 @@ table above) instead.
 - At 'get destination' stage, it is set at address of next instruction + 2,
  except if it's a 'read before write' case. 
 If it's a 'read before write' case, we follow the <EA> rules instead.
-- We use a flag to detect 'read before write' cases. This flag is set by another
- macro in the body of specific instruction functions (such as CLR).
+- We use a flag to detect 'read before write' cases. This flag is set by 
+another  macro in the body of specific instruction functions (such as CLR).
+- For branches, PC is unchanged before it's set.
 All in all, there's some more code running in the core CPU emulation but that's
 the price we pay for a more satisfying (hopefully) emulation.
-Cost: 4KB
-- For branches, it was already correct in Steem: testing for bus/address error 
-before changing the PC; only the <EA> part had to be corrected, like above.
+We try to infer and follow rules in Steem based on microcodes, but it's
+perfectly legit to use tables based on opcode and addressing mode. In that
+case the tables are only used for building the exception stack, and performance
+may be better.
+
+
 
