@@ -166,7 +166,7 @@ and all his silly mods are gone!
     historically.
 */
 
-#define SSE_SWITCHES_FEATURES
+//#define SSE_SWITCHES_FEATURES
 
 
 #if defined(SSE_SWITCHES_FEATURES)
@@ -325,8 +325,8 @@ and all his silly mods are gone!
 #if defined(SSE_CPU_E_CLOCK)
 
 #if defined(SSE_DEBUG) || defined(SSE_HACKS)
-//#define SSE_CPU_E_CLOCK_DISPATCHER // "who" wants to sync?
-//#define SSE_INT_HBL_E_CLOCK_HACK //3615GEN4 HMD #1 -useless
+#define SSE_CPU_E_CLOCK_DISPATCHER // "who" wants to sync?
+#define SSE_INT_HBL_E_CLOCK_HACK //3615GEN4 HMD #1
 #endif
 
 #endif
@@ -1132,6 +1132,10 @@ and all his silly mods are gone!
 
 
 #if defined(SSE_INTERRUPT)
+
+#ifdef  SSE_CPU_E_CLOCK
+#define SSE_INT_E_CLOCK //was lost (beta bug)
+#endif
 
 #define SSE_INT_HBL
 #define SSE_INT_JITTER // from Hatari (option 6301/Acia unchecked)
@@ -3399,9 +3403,12 @@ and all his silly mods are gone!
 #endif
 #endif
 #if defined(SSE_INTERRUPT)
+#ifdef  SSE_CPU_E_CLOCK
+#define SSE_INT_E_CLOCK //was lost (beta bug)
+#endif
 #if defined(SSE_INT_HBL)
 #if defined(SSE_HACKS)
-#define SSE_INT_HBL_E_CLOCK_HACK //3615GEN4 HMD #1 -useless?
+#define SSE_INT_HBL_E_CLOCK_HACK //3615GEN4 HMD #1
 #endif
 #define SSE_INT_HBL_INLINE
 #endif//hbl
@@ -3454,8 +3461,8 @@ and all his silly mods are gone!
 //#define SSE_CPU_TRACE_TIMING//tests
 ////#define SSE_CPU_TRUE_PC2
 #define SSE_CPU_UNSTOP2//not twice
-#undef SSE_CPU_E_CLOCK_DISPATCHER //check those names...
-#undef SSE_INT_HBL_E_CLOCK_HACK //useless hack
+//#undef SSE_CPU_E_CLOCK_DISPATCHER
+//#undef SSE_INT_HBL_E_CLOCK_HACK //useless hack//no there was a define bug
 #if defined(SSE_CPU_EXCEPTION)
 #define SSE_CPU_ASSERT_ILLEGAL2 // move.b EA=an
 #define SSE_CPU_ASSERT_ILLEGAL3 // cmp.b EA=an
@@ -3894,7 +3901,7 @@ and all his silly mods are gone!
 //#define TEST09
 #endif
 
-#if defined(SSE_BETA)
+#if defined(SSE_BETA) && SSE_VERSION>=370
 // those switches are later copied to both features and version zones!
 //#define SSE_DRIVE_WRITE_TRACK_11
 //#define SSE_GUI_FULLSCREEN_NO_VSYNC_OPTION //but all the rest?
@@ -3955,7 +3962,13 @@ and all his silly mods are gone!
 
 #define SSE_CPU_TRUE_PC2 // JMP, JSR
 
+// it's E-Clock ('6301' on) or 'Wobble', no need to add variables
+#undef SSE_INT_JITTER 
+#undef SSE_INT_JITTER_HBL
+#undef SSE_INT_JITTER_VBL
+#undef SSE_INT_JITTER_RESET
 
+//#undef SSE_INT_MFP_PATCH_TIMER_D // for test
 #endif//beta
 
 

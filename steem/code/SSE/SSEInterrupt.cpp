@@ -9,6 +9,7 @@ It is identical with GLUE wake up state 1 and 2: it is cyclic with
  5 positions [8,0,4,0,4],8,0,4,0,4,8, ...
  "
  Since v3.6.4, we prefer the E-clock approach (when 6301/ACIA selected)
+ v3.7: undef because we fall back on Steem 3.2's wobble without the option
 */
   int HblJitter[] = {8,4,4,0,0}; 
   int HblJitterIndex;  // 3.6.1 reset at cold reset

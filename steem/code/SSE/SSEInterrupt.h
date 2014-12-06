@@ -41,6 +41,7 @@ inline void HBLInterrupt() {
   log_to_section(LOGSECTION_INTERRUPTS,Str("INTERRUPT: HBL at PC=")+HEXSl(pc,6)+" "+scanline_cycle_log());
   
 #if !defined(SSE_CPU_UNSTOP2)
+  if (cpu_stopped)
   M68K_UNSTOP;
 #endif
 
@@ -106,6 +107,7 @@ inline void VBLInterrupt() {
   log_to_section(LOGSECTION_INTERRUPTS,EasyStr("INTERRUPT: VBL at PC=")+HEXSl(pc,6)+" time is "+ABSOLUTE_CPU_TIME+" ("+(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl)+" cycles into screen)");
 
 #if !defined(SSE_CPU_UNSTOP2)
+  if (cpu_stopped)
   M68K_UNSTOP;
 #endif
 

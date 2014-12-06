@@ -486,7 +486,11 @@ are assumed to take four clock periods.
 #endif
 
 #if defined(SSE_INT_MFP_WRITE_DELAY1)
+#if SSE_VERSION>=370
+#define MFP_WRITE_LATENCY 4 // 4 = OK for Audio Artistic, 3615OVR
+#else
 #define MFP_WRITE_LATENCY 8 // 8 = the smallest for Audio Artistic
+#endif
 #endif
 
 #endif//mfp

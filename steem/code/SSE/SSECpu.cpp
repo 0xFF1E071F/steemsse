@@ -1855,7 +1855,6 @@ void TM68000::SyncEClock() {
 #if defined(SSE_INT_HBL_E_CLOCK_HACK)
     // pathetic hack for 3615GEN4 HMD #1, make it 4 cycles instead on HBI
     // (suspect wrong timing in an instruction?)
-    // it still crashes in the end?
     if(!(dispatcher==TM68000::ECLOCK_HBL&&SSE_HACKS_ON))
 #endif
     break;
