@@ -320,7 +320,7 @@ void TGeneralInfo::Show()
 #if SSE_VERSION>=370
   if (Exists(RunDir+"\\"+STEEM_HINTS+EXT_TXT)) AddPageLabel(STEEM_HINTS,INFOPAGE_HINTS);
 #else
-  if (Exists(RunDir+"\\"+STEEM_SSE_HINTS_TXT)) AddPageLabel("Hints",INFOPAGE_FAQ_SSE);
+  if (Exists(RunDir+"\\"+STEEM_HINTS_TXT)) AddPageLabel("Hints",INFOPAGE_FAQ_SSE);
 #endif
 #endif
 

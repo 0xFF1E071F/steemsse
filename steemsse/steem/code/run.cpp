@@ -888,7 +888,6 @@ void event_scanline()
     TODO change constant when structure is fixed
 */
     -12 // fixes BBC52
-+12+12
 #endif
     ){ 
     hbl_pending=true;

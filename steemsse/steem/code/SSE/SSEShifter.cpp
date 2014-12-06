@@ -411,7 +411,7 @@ Sync is set back to 2 between R2 and R0, this is isn't a line +24
         )
           HblPixelShift+=4;
 #endif
-#if defined(SS_VID_BORDERS)
+#if defined(SSE_VID_BORDERS)//?
         if(SideBorderSize!=ORIGINAL_BORDER_SIDE)
           ShiftSDP(-8);
 #endif
@@ -1160,6 +1160,16 @@ that version:
 will never hit at 56 (but it's 32, not 28 cycles)
 
 
+3615 OVR
+---------
+-30 - 056:I007D 060:I0040 412:S0000 512:T0100 512:#0000
+-29 - 056:S0002 200:c0944 444:R0002 456:R0000 476:P0700 480:P1700 492:P2700 496:P3700 512:T2002 512:#0162
+
++2 is wrong
+
+
+
+
     Note: this part is an absolute mess. There are few cases and we just
     take care to have those working, without pretention.
     TODO: sort it out, reduce comment
@@ -1188,6 +1198,7 @@ will never hit at 56 (but it's 32, not 28 cycles)
     whether Panic should work on a STE.
     3.7 redef as test//no...
 */
+
     if(scan_y==-29) // 1st line after top border removed
       t+=2+8;  // panic & forest OK; still just a hack
 #endif
@@ -1204,6 +1215,9 @@ will never hit at 56 (but it's 32, not 28 cycles)
 #endif
 #endif
 #endif
+
+
+
 
 ///TRACE("t %d freq %d\n",t,FreqAtCycle(t));
 
@@ -1252,6 +1266,7 @@ will never hit at 56 (but it's 32, not 28 cycles)
   }
 
 #else
+
   // Steem test
   if(shifter_freq_at_start_of_vbl==50 
     && (left_border==BORDER_SIDE
@@ -1263,6 +1278,16 @@ will never hit at 56 (but it's 32, not 28 cycles)
   {   
 #if defined(SSE_SHIFTER_LINE_PLUS_2_THRESHOLD)
     t=LINECYCLE0+52; // fixes Forest
+#if defined(SSE_SHIFTER_LINE_PLUS_2_POST_TOP_OFF3)
+    //if(SSE_TEST_ON && scan_y==-29)
+    if(SSE_HACKS_ON 
+      && scan_y==-29
+#if defined(SSE_SHIFTER_LINE_PLUS_2_POST_NO_TOP_OFF)
+      ||(!scan_y&& !PreviousScanline.Bytes)
+#endif
+      )
+      t+=8; //radical!
+#endif
 #if defined(SSE_MMU_WU_SHIFTER_TRICKS___)//TODO
     if(MMU.WakeUpState2())
       t+=WU2_PLUS_CYCLES;

@@ -1089,6 +1089,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
                 This->NewMemConf0=-1;
               }
               CheckResetIcon();
+#if defined(SSE_GUI_OPTIONS_STF_IN_MACHINE)
+              This->MachineUpdateIfVisible();//it's on same page now, better so
+#endif
             }
 #endif
 #if defined(SSE_STF_MEGASTF)

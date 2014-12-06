@@ -4564,7 +4564,7 @@ void                              m68k_nop(){
 void                              m68k_stop(){
   if (SUPERFLAG){
     if (cpu_stopped==0){
-#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING__) //36.15 OVR
+#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING) //36.15 OVR
 //STOP	4(0/0)	
 //stop reads the immediate and doesn't prefetch
 #else

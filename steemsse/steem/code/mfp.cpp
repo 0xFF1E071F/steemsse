@@ -689,9 +689,11 @@ void mfp_interrupt(int irq,int when_fired)
     it's based on an old Steem insight.
     Steem should already be doing that with its ioaccess mask, 
     maybe there's some bug in the way?
+    v3.7: delay changed, 8->4, more probable, Audio Artistic still OK,
+    and bugfix 3615 GEN4-OVR
 */
   if(SSE_HACKS_ON &&
-    abs(when_fired-time_of_last_write_to_mfp_reg)<MFP_WRITE_LATENCY) //8
+    abs(when_fired-time_of_last_write_to_mfp_reg)<MFP_WRITE_LATENCY) //4
     return;
 #endif
   log_to_section(LOGSECTION_INTERRUPTS,EasyStr("INTERRUPT: MFP IRQ #")+irq+" ("+(char*)name_of_mfp_interrupt[irq]+
@@ -739,6 +741,7 @@ void mfp_interrupt(int irq,int when_fired)
             vector*=4;
             mfp_time_of_start_of_last_interrupt[irq]=ABSOLUTE_CPU_TIME;
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP) //confusing  #if? yes!
+
 #if defined(SSE_CPU_FETCH_TIMING)
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
             INSTRUCTION_TIME_ROUND(SSE_INT_MFP_TIMING-4);
@@ -751,7 +754,7 @@ void mfp_interrupt(int irq,int when_fired)
 #endif
 #else
             INSTRUCTION_TIME_ROUND(SSE_INT_MFP_TIMING); // same
-#endif
+#endif//SSE_CPU_FETCH_TIMING
 #else
             INSTRUCTION_TIME_ROUND(56);
 #endif
@@ -805,6 +808,9 @@ void mfp_interrupt(int irq,int when_fired)
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
             Debug.RecordInterrupt("MFP",irq);
 #endif
+
+
+
             m68k_interrupt(LPEEK(vector));
             sr=WORD((sr & (~SR_IPL)) | SR_IPL_6);
             log_to_section(LOGSECTION_INTERRUPTS,EasyStr("  IRQ fired - vector=")+HEXSl(LPEEK(vector),6));
