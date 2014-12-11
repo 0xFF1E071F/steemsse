@@ -452,9 +452,72 @@ inline void CalcVChip(int &v,int &dv,int *source_p) {
   //CALC_V_CHIP
 
 #define NBITS 5
-
 #define proportion 10
 
+#if defined(SSE_SOUND_FILTER_HATARI)
+/*  We add a filter based on Hatari code:
+*/
+/*
+http://www.atari-forum.com/viewtopic.php?f=94&t=27076&start=25#p263207
+Here are my specifically designed YM2149 and LMC1992 filters I applied to Hatari.
+These filters were derived from first principles with circuit analysis, and represent
+the signal at the Atari ST audio output.
+*/
+
+/*
+This YM2149 filter provides the characteristic Atari ST sound at
+44.1 KHz and 48KHz sample rates:
+*/
+/*--------------------------------------------------------------*/
+/* Low Pass Filter routines.                                    */
+/*--------------------------------------------------------------*/
+
+/**
+ * Get coefficients for different Fs (C10 is in ST only):
+ * Wc = 2*M_PI*4895.1;
+ * Fs = 44100;
+ * warp = Wc/tanf((Wc/2)/Fs);
+ * b = Wc/(warp+Wc);
+ * a = (Wc-warp)/(warp+Wc);
+ *
+ * #define B_z (yms32)( 0.2667*(1<<15))
+ * #define A_z (yms32)(-0.4667*(1<<15))
+ *
+ * y0 = (B_z*(x0 + x1) - A_z*y0) >> 15;
+ * x1 = x0;
+ *
+ * The Lowpass Filter formed by C10 = 0.1 uF
+ * and
+ * R8=1k // 1k*(65119-46602)/65119 // R9=10k // R10=5.1k //
+ * (R12=470)*(100=Q1_HFE) = 206.865 ohms when YM2149 is High
+ * and
+ * R8=1k // R9=10k // R10=5.1k // (R12=470)*(100=Q1_HFE)
+ *                        = 759.1   ohms when YM2149 is Low
+ * High corner is 1/(2*pi*(0.1*10e-6)*206.865) fc = 7693.7 Hz
+ * Low  corner is 1/(2*pi*(0.1*10e-6)*795.1)   fc = 2096.6 Hz
+ * Notes:
+ * - using STF reference designators R8 R9 R10 C10 (from dec 1986 schematics)
+ * - using corresponding numbers from psgstrep and psgquart
+ * - 65119 is the largest value in Paulo's psgstrep table
+ * - 46602 is the largest value in Paulo's psgquart table
+ * - this low pass filter uses the highest cutoff frequency
+ *   on the STf (a slightly lower frequency is reasonable).
+ *
+ * A first order lowpass filter with a high cutoff frequency
+ * is used when the YM2149 pulls high, and a lowpass filter
+ * with a low cutoff frequency is used when R8 pulls low.
+ */
+
+  if(sound_mode==SOUND_MODE_HATARI)
+  {
+    if(*source_p>v)
+      v=(3*(*source_p + dv) + (v<<1)) >> 3;
+    else
+      v = ((*source_p + dv) + (6*v)) >> 3;
+    dv=v;
+  }
+  else
+#endif
 #if defined(SSE_SOUND_FILTER_STF) 
 
 #if defined(SSE_SOUND_FILTER_STF5)
@@ -639,6 +702,7 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
         [index[1]-interpolate[1]] [index[0]-interpolate[0]];
 #endif
       vol= (int) sqrt( (float) vol * (float) vol2); 
+      ASSERT(vol>=0 && vol<=65535);
     }
 
     *source_p=vol;
@@ -665,11 +729,12 @@ inline void Microwire(int channel,int &val) {
 #endif
     MICROWIRE_ON)
   {
-    double d_dsp_v=val;
+//    double d_dsp_v=val;
 #if defined(SSE_STF)
     if(ST_TYPE==STE)
     {
 #endif
+      double d_dsp_v=val;//v3.7
       if(dma_sound_bass!=6)
         d_dsp_v=MicrowireBass[channel].FilterAudio(d_dsp_v,LOW_SHELF_FREQ,
           dma_sound_bass-6);
@@ -681,10 +746,11 @@ inline void Microwire(int channel,int &val) {
         ||dma_sound_r_volume<0x14 &&channel)//3.6.1: 2 channels
         d_dsp_v=MicrowireVolume[channel].FilterAudio(d_dsp_v,
           dma_sound_volume-0x28+dma_sound_l_volume-0x14);
+      val=d_dsp_v;//v3.7
 #if defined(SSE_STF)
     }
 #endif
-    val=d_dsp_v;
+    //val=d_dsp_v;
   }
 }
 
@@ -705,7 +771,6 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
   while(c>0)
   {       
     AlterV(Alter_V,v,dv,*source_p);
-
 
 #if defined(SSE_SOUND_MICROWIRE_MIXMODE)//3.6.3
 /*
@@ -773,7 +838,7 @@ have Bass and Trebble enhanced. This might result in a very ugly sound.
     Microwire(0,val);
 #endif
     }
-
+    //if(SSE_OPTION_PSG); else //v3.7 //no!
     if (val<VOLTAGE_FP(0))
       val=VOLTAGE_FP(0); 
     else if (val>VOLTAGE_FP(255))
@@ -788,6 +853,7 @@ have Bass and Trebble enhanced. This might result in a very ugly sound.
     else // WORD
     {
       *(WORD*)*(WORD**)Out_P=((WORD)val) ^ MSB_W;
+      //*(WORD*)*(WORD**)Out_P=((WORD)val);// + 32767;
       (*(WORD**)Out_P)++;
     }  
 
@@ -807,6 +873,7 @@ have Bass and Trebble enhanced. This might result in a very ugly sound.
 #endif
       }
 
+      //if(SSE_OPTION_PSG);else //v3.7
       if(val<VOLTAGE_FP(0))
         val=VOLTAGE_FP(0); 
       else if (val>VOLTAGE_FP(255))
@@ -820,6 +887,7 @@ have Bass and Trebble enhanced. This might result in a very ugly sound.
       else
       {
         *(WORD*)*(WORD**)Out_P=((WORD)val) ^ MSB_W;
+        //*(WORD*)*(WORD**)Out_P=((WORD)val);// + 32767;
         (*(WORD**)Out_P)++;
       }    
     }//right channel 
@@ -909,7 +977,6 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
       }
 
     }//right
-
     (*source_p)++;// don't zero! (or mute when recording)
 
     SINE_ONLY( t++ );
