@@ -1703,22 +1703,36 @@ void TOptionBox::CreateSoundPage()
 {
   HWND Win;
   long Wid;
+#if defined(SSE_GUI_OPTIONS_SOUND1) 
+  long Offset=0;
+  const int LineHeight=30;
+  const int HorizontalSeparation=10;
+  DWORD mask;
+#endif
   int y=10;
+
   DWORD DisableIfMute=DWORD(((sound_mode==SOUND_MODE_MUTE) || UseSound==0) ? WS_DISABLED:0);
   DWORD DisableIfNoSound=DWORD((UseSound==0) ? WS_DISABLED:0);
   DWORD DisableIfNT=DWORD(WinNT ? WS_DISABLED:0);
-
+#if defined(STEVEN_SEAGAL______) && defined(SSE_SOUND_FILTER_STF) && SSE_VERSION>=370
+  Wid=GetTextSize(Font,T("Output type (filter)")).Width;
+  CreateWindow("Static",T("Output type (filter)"),WS_CHILD | DisableIfNoSound,
+                  page_l,y+4,Wid,23,Handle,(HMENU)7049,HInstance,NULL);
+#else
   Wid=GetTextSize(Font,T("Output type")).Width;
   CreateWindow("Static",T("Output type"),WS_CHILD | DisableIfNoSound,
                   page_l,y+4,Wid,23,Handle,(HMENU)7049,HInstance,NULL);
-
+#endif
   Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP |
                   DisableIfNoSound | CBS_DROPDOWNLIST,
                   page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)7099,HInstance,NULL),
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("None (Mute)"));
 #if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF)
 #if SSE_VERSION>=370
-  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("TV Speaker"));
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("No filter"));
+#endif
+#if SSE_VERSION>=370
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Filter 'coaxial' (Steem original)"));
 #else
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Monitor Speaker"));
 #endif
@@ -1726,34 +1740,123 @@ void TOptionBox::CreateSoundPage()
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Simulated ST Speaker"));
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF5)
-  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Monitor Speaker"));
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Filter 'SCART'"));
 #endif
 #if SSE_VERSION>=370
-  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Direct (unfiltered)"));
-  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Unfiltered STF Samples"));
+//  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("No filter"));
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Filter 'coaxial' tunes only"));
 #else
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Direct"));
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Sharp STFM Samples"));
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF5)
-  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Unfiltered chip sound"));
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Filter 'coaxial' samples only"));
+//  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Monitor Speaker"));
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_HATARI)
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Filter 'Hatari'"));
 //  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Monitor Speaker"));
 #endif
   SendMessage(Win,CB_SETCURSEL,sound_mode,0);
-  y+=30;
 
+
+#if defined(SSE_YM2149_FIX_TABLES) && defined(SSE_GUI_OPTIONS_SOUND3)
+  y+=LineHeight;
+#if SSE_VERSION>=370
+  Wid=GetCheckBoxSize(Font,T("Sampled YM-2149")).Width;
+#else
+  Wid=GetCheckBoxSize(Font,T("P.S.G.")).Width;
+#endif
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+#if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
+  bool ok=(YM2149.p_fixed_vol_3voices!=NULL);
+  if(!ok)
+  {
+    ok=YM2149.LoadFixedVolTable();
+    YM2149.FreeFixedVolTable();
+  }
+  if(!ok)
+    mask|=WS_DISABLED;
+#endif
+#if SSE_VERSION>=370
+  Win=CreateWindow("Button",T("Sampled YM-2149"),mask,
+    page_l+HorizontalSeparation,y,Wid,25,Handle,(HMENU)7311,HInstance,NULL);
+#else
+  Win=CreateWindow("Button",T("P.S.G."),mask,
+    page_l,y,Wid,25,Handle,(HMENU)7311,HInstance,NULL);
+#endif
+  SendMessage(Win,BM_SETCHECK,SSEOption.PSGMod,0);
+  ToolAddWindow(ToolTip,Win,
+#if defined(SSE_YM2149_NO_SAMPLES_OPTION)
+    T("Punchier P.S.G. (YM-2149) sound using a table by ljbk, thx dude!"));
+#else
+    T("This uses values from Yamaha doc to render P.S.G. (YM-2149) sound."));
+#endif
+  y+=LineHeight;
+#endif
+
+#if defined(SSE_SOUND_MICROWIRE) && defined(SSE_GUI_OPTIONS_SOUND3)
+  Offset+=Wid+HorizontalSeparation*2;
+  y-=LineHeight; // maybe it will be optimised away!
+  Wid=GetCheckBoxSize(Font,T("Microwire")).Width;
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_OPTION_DISABLE_DSP)
+  if(!DSP_ENABLED)
+    mask|=WS_DISABLED;
+#endif
+  Win=CreateWindow("Button",T("Microwire"),mask,
+    page_l+Offset,y,Wid,25,Handle,(HMENU)7302,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,MICROWIRE_ON,0);
+  ToolAddWindow(ToolTip,Win,
+    //T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature."));
+    T("Microwire (STE sound), incomplete emulation"));
+  y+=LineHeight;
+#endif
+
+#if defined(SSE_VAR_KEYBOARD_CLICK) && defined(SSE_GUI_OPTIONS_SOUND4)
+#if defined(SSE_IKBD_6301) 
+  y-=LineHeight; // maybe it will be optimised away!
+#endif
+  Offset+=Wid+HorizontalSeparation;
+  Wid=GetCheckBoxSize(Font,T("Keyboard click")).Width;
+  Win=CreateWindow("Button",T("Keyboard click"),WS_CHILD | WS_TABSTOP |
+    BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)7301,HInstance,NULL);
+  BOOL keyboard_click=( PEEK(0x484)&1 ); // get current setting
+  SendMessage(Win,BM_SETCHECK,keyboard_click,0);
+  ToolAddWindow(ToolTip,Win,
+#if SSE_VERSION>=370
+    T("When you're annoyed by those clicks, uncheck this option\
+ (you must do it each time)"));
+#else
+    T("This gives you direct access to bit1 of address $484, which enables or disables the annoying keyboard click (in TOS/GEM programs only)."));
+#endif
+  y+=LineHeight;
+#endif  
+
+
+
+
+#if defined(SSE_GUI_OPTIONS_SOUND1)
+  Str DrivStr=T("Device ");
+  EasyStr DSDriverModName=GetCSFStr("Options","DSDriverName","",INIFile);
+  if (DSDriverModName.Empty()) DSDriverModName=T("Default");
+  DrivStr+=DSDriverModName;
+  CreateWindow("Button",DrivStr.Text,WS_CHILD | BS_GROUPBOX | DisableIfMute,
+                  page_l,y,page_w,230-30-30,Handle,(HMENU)7105,HInstance,NULL);
+  y+=20;
+#else
+  y+=30;
   CreateWindow("Button",T("Configuration"),WS_CHILD | BS_GROUPBOX | DisableIfMute,
                   page_l,y,page_w,230,Handle,(HMENU)7105,HInstance,NULL);
   y+=20;
-
   Str DrivStr=T("Current driver")+": ";
   EasyStr DSDriverModName=GetCSFStr("Options","DSDriverName","",INIFile);
   if (DSDriverModName.Empty()) DSDriverModName=T("Default");
   DrivStr+=DSDriverModName;
-
   CreateWindow("Static",DrivStr,WS_CHILD,
                   page_l+10,y,page_w-20,23,Handle,(HMENU)7010,HInstance,NULL);
   y+=25;
+#endif
 
   Wid=GetTextSize(Font,T("Volume")+": "+T("Min")).Width;
   CreateWindow("Static",T("Volume")+": "+T("Min"),WS_CHILD | DisableIfMute,
@@ -1762,10 +1865,15 @@ void TOptionBox::CreateSoundPage()
   int Wid2=GetTextSize(Font,T("Max")).Width;
   CreateWindow("Static",T("Max"),WS_CHILD | DisableIfMute,
                   page_l+page_w-10-Wid2,y+4,Wid2,23,Handle,(HMENU)7051,HInstance,NULL);
-
+#if defined(SSE_GUI_OPTIONS_SOUND1)
+  Win=CreateWindow(TRACKBAR_CLASS,"",WS_CHILD | WS_TABSTOP |
+                    DisableIfMute | TBS_HORZ,
+                    page_l+15+Wid,y,(page_w-10-(Wid2+5))-(Wid+15),20,Handle,(HMENU)7100,HInstance,NULL);
+#else
   Win=CreateWindow(TRACKBAR_CLASS,"",WS_CHILD | WS_TABSTOP |
                     DisableIfMute | TBS_HORZ,
                     page_l+15+Wid,y,(page_w-10-(Wid2+5))-(Wid+15),27,Handle,(HMENU)7100,HInstance,NULL);
+#endif
 #if defined(SSE_SOUND_VOL_LOGARITHMIC) // more intuitive setting
   SendMessage(Win,TBM_SETRANGE,0,MAKELPARAM(0,100));
   int db=MaxVolume;
@@ -1784,15 +1892,27 @@ void TOptionBox::CreateSoundPage()
   SendMessage(Win,TBM_SETLINESIZE,0,100);
   SendMessage(Win,TBM_SETPAGESIZE,0,1000);
 #endif
+
+#if defined(SSE_GUI_OPTIONS_SOUND1)
+  y+=LineHeight;
+#else
   y+=35;
+#endif
 
   Wid=GetTextSize(Font,T("Frequency")).Width;
   CreateWindow("Static",T("Frequency"),WS_CHILD | DisableIfMute,
                   page_l+10,y+4,Wid,23,Handle,(HMENU)7052,HInstance,NULL);
-
+#if defined(SSE_GUI_OPTIONS_SOUND1)
+  Offset=70;
+  Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP |
+                    DisableIfMute | CBS_DROPDOWNLIST,
+                    page_l+15+Wid,y,Offset,200,Handle,(HMENU)7101,HInstance,NULL);
+  Offset+=Wid;
+#else
   Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP |
                     DisableIfMute | CBS_DROPDOWNLIST,
                     page_l+15+Wid,y,page_w-10-(15+Wid),200,Handle,(HMENU)7101,HInstance,NULL);
+#endif
   if (sound_comline_freq){
     CBAddString(Win,Str(sound_comline_freq)+"Hz",sound_comline_freq);
   }
@@ -1803,15 +1923,26 @@ void TOptionBox::CreateSoundPage()
   if (CBSelectItemWithData(Win,sound_chosen_freq)==-1){
     SendMessage(Win,CB_SETCURSEL,CBAddString(Win,Str(sound_chosen_freq)+"Hz",sound_chosen_freq),0);
   }
+#if !defined(SSE_GUI_OPTIONS_SOUND1) 
   y+=30;
+#endif
 
   Wid=GetTextSize(Font,T("Format")).Width;
+#if defined(SSE_GUI_OPTIONS_SOUND1) 
+  Offset+=25;
+  CreateWindow("Static",T("Format"),WS_CHILD | DisableIfMute,
+                  page_l+Offset,y+4,Wid,23,Handle,(HMENU)7060,HInstance,NULL);
+  Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP |
+                    DisableIfMute | CBS_DROPDOWNLIST,
+                    page_l+Offset+Wid,y,95,200,Handle,(HMENU)7061,HInstance,NULL);
+#else
   CreateWindow("Static",T("Format"),WS_CHILD | DisableIfMute,
                   page_l+10,y+4,Wid,23,Handle,(HMENU)7060,HInstance,NULL);
-
   Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP |
                     DisableIfMute | CBS_DROPDOWNLIST,
                     page_l+15+Wid,y,page_w-10-(15+Wid),200,Handle,(HMENU)7061,HInstance,NULL);
+#endif
+
   CBAddString(Win,T("8-Bit Mono"),MAKEWORD(8,1));
   CBAddString(Win,T("8-Bit Stereo"),MAKEWORD(8,2));
   CBAddString(Win,T("16-Bit Mono"),MAKEWORD(16,1));
@@ -1867,6 +1998,46 @@ void TOptionBox::CreateSoundPage()
   SendMessage(Win,CB_SETCURSEL,psg_write_n_screens_ahead,0);
   y+=30;
   y+=5;
+
+
+#if defined(SSE_DRIVE_SOUND) && defined(SSE_GUI_OPTIONS_SOUND2)
+
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX  ;
+  EasyStr path=GetEXEDir();
+  path+=DRIVE_SOUND_DIRECTORY; // we suppose the sounds are in it!
+  if(!Exists(path.Text))
+  {
+    SSEOption.DriveSound=0;
+    mask|=WS_DISABLED;
+  }
+  Wid=GetCheckBoxSize(Font,T("Drive sound")).Width;
+  Win=CreateWindow("Button",T("Drive sound"),mask,
+    page_l+HorizontalSeparation,y,Wid,25,Handle,(HMENU)7310,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,SSEOption.DriveSound,0);
+  ToolAddWindow(ToolTip,Win,
+    T("Epson SMD-480L sound sampled by Stefan jL, thx dude!"));
+  mask&=~BS_CHECKBOX;
+#if defined(SSE_DISK_GHOST)//ridiculous, due to all the switches
+  Win=CreateWindow(TRACKBAR_CLASS,"",mask | TBS_HORZ,
+     page_l+15+Wid,y,150-50,20,Handle,(HMENU)7311,HInstance,NULL);
+#else
+  Win=CreateWindow(TRACKBAR_CLASS,"",mask | TBS_HORZ,
+     page_l+15+Wid,y,150,20,Handle,(HMENU)7311,HInstance,NULL);
+#endif
+  SendMessage(Win,TBM_SETRANGE,0,MAKELPARAM(0,100));
+#
+  db=SF314[0].Sound_Volume;
+#if defined(SSE_VS2008)
+  position= pow(10, log10((float)101)*(db + 10000)/10000 )-1 ;
+#else
+  position= pow(10, log10(101)*(db + 10000)/10000 )-1 ;
+#endif
+  SendMessage(Win,TBM_SETPOS,1,position);
+  SendMessage(Win,TBM_SETLINESIZE,0,1);
+  SendMessage(Win,TBM_SETPAGESIZE,0,10);
+  y+=LineHeight;
+#endif
+
 
   CreateWindow("Button",T("Record"),WS_CHILD | BS_GROUPBOX | DisableIfMute,
                   page_l,y,page_w,80,Handle,(HMENU)7200,HInstance,NULL);
@@ -2354,10 +2525,16 @@ void TOptionBox::CreateSSEPage() {
   EasyStr tip_text;
 
   // Title
+#if SSE_VERSION>=370
+  Wid=get_text_width("Steem SSE Extra Options\n==============================")/2;
+  CreateWindow("Static","Steem SSE Extra Options\n==============================",WS_CHILD,
+    page_l,y,Wid,21,Handle,(HMENU)209,HInstance,NULL);
+
+#else
   Wid=get_text_width("Steem SSE Options\n=================")/2;
   CreateWindow("Static","Steem SSE Options\n================",WS_CHILD,
     page_l,y,Wid,21,Handle,(HMENU)209,HInstance,NULL);
-
+#endif
 #if defined(SSE_GUI_OPTION_FOR_TESTS)
   Offset=Wid+HorizontalSeparation;
   Wid=GetCheckBoxSize(Font,T("Beta tests")).Width;
@@ -2671,7 +2848,7 @@ Windows 2000	5.0
   y+=LineHeight;
 #endif
 
-#if defined(SSE_VAR_KEYBOARD_CLICK) 
+#if defined(SSE_VAR_KEYBOARD_CLICK) && !defined(SSE_GUI_OPTIONS_SOUND4)
 #if defined(SSE_IKBD_6301) 
   y-=LineHeight; // maybe it will be optimised away!
 #endif
@@ -2689,6 +2866,9 @@ Windows 2000	5.0
     T("This gives you direct access to bit1 of address $484, which enables or disables the annoying keyboard click (in TOS/GEM programs only)."));
 #endif
   y+=LineHeight;
+#else
+  //y+=LineHeight;
+  Offset=0;
 #endif  
 
 #if defined(SSE_GUI_MOUSE_CAPTURE)  
@@ -2705,7 +2885,7 @@ Windows 2000	5.0
   y+=LineHeight;
 #endif
   
-#if defined(SSE_YM2149_FIX_TABLES)
+#if defined(SSE_YM2149_FIX_TABLES) && !defined(SSE_GUI_OPTIONS_SOUND3)
 //there's no room on sound page so it's here
 #if SSE_VERSION>=370
   Wid=GetCheckBoxSize(Font,T("YM2149")).Width;
@@ -2778,7 +2958,7 @@ Windows 2000	5.0
   y+=LineHeight;
 #endif
 
-#if defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE) && !defined(SSE_GUI_OPTIONS_SOUND3)
   Offset+=Wid+HorizontalSeparation;
   y-=LineHeight; // maybe it will be optimised away!
   Wid=GetCheckBoxSize(Font,T("Microwire")).Width;
@@ -2853,13 +3033,12 @@ Windows 2000	5.0
 
   y+=LineHeight;
 
-#if defined(SSE_DRIVE_SOUND)
+#if defined(SSE_DRIVE_SOUND) && ! defined(SSE_GUI_OPTIONS_SOUND2)
 //there's a volume control so it's here
 
 #if SSE_VERSION>=370
   y-=LineHeight;//tmp
 #endif
-
 
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
   EasyStr path=GetEXEDir();
@@ -2929,8 +3108,14 @@ Windows 2000	5.0
   y+=LineHeight;
 #endif
   
+#if SSE_VERSION>=370
+  if(y<300)
+    y=300;
+#endif
+#if SSE_VERSION<370//all's been moved
   CreateWindow("Button",T("Perform cold reset now"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
                   page_l,y,page_w,23,Handle,(HMENU)8601,HInstance,NULL);
+#endif
 
 #if defined(SSE_GUI_OPTIONS_SSE_ICON_VERSION) // fancy
   y+=LineHeight+LineHeight;

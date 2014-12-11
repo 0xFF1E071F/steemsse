@@ -62,15 +62,18 @@ EXT int sound_variable_a INIT(32);
 EXT int sound_variable_d INIT(208);
 #endif
 
-#define SOUND_MODE_MUTE         0
-#define SOUND_MODE_CHIP         1
 #if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF5)
-#define SOUND_MODE_MONITOR      2
-#define SOUND_MODE_EMULATED     3
+#define SOUND_MODE_MUTE         0
+#define SOUND_MODE_EMULATED     1
+#define SOUND_MODE_CHIP         2
+#define SOUND_MODE_MONITOR      3
 #define SOUND_MODE_SHARPSAMPLES 4
 #define SOUND_MODE_SHARPCHIP    5
+#define SOUND_MODE_HATARI    6
 
 #else
+#define SOUND_MODE_MUTE         0
+#define SOUND_MODE_CHIP         1
 #define SOUND_MODE_EMULATED     2
 #define SOUND_MODE_SHARPSAMPLES 3
 #define SOUND_MODE_SHARPCHIP    4
