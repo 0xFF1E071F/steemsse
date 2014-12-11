@@ -24,7 +24,7 @@
 #pragma comment(lib, "../../3rdparty/d3d/d3dx9.lib")
 #endif
 
-#if _MSC_VER == 1200 || defined(MINGW_BUILD)//mingw TODO?
+#if _MSC_VER == 1200 || defined(MINGW_BUILD) //mingw TODO?
 #include "d3d\sal.h"
 #include "d3d\d3d9.h"
 #include "d3d\d3dx9core.h"
@@ -36,8 +36,6 @@
 #include "D3d9types.h"
 #include "D3dx9math.h"
 #endif
-
-
 
 #endif//d3d
 
@@ -114,11 +112,10 @@ private:
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D)
+public:
   HRESULT D3DInit(); 
   HRESULT D3DCreateSurfaces();
-public:
   HRESULT D3DSpriteInit();
-private:
   void D3DDestroySurfaces();
   VOID D3DRelease();
   HRESULT D3DLock();
@@ -129,6 +126,10 @@ private:
   LPDIRECT3DDEVICE9  pD3DDevice;
   IDirect3DTexture9* pD3DTexture;
   ID3DXSprite* pD3DSprite;
+#if defined(SSE_VID_D3D_LIST_MODES)
+  UINT D3DMode; // depends on video card and format
+#endif
+private:
 #endif//d3d
 
   // GDI Only

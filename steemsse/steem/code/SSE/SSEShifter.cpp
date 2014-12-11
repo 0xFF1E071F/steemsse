@@ -533,6 +533,7 @@ DOLB:
 007 - 000:A0007 000:a5204 016:R0000 376:S0000 388:S0002 500:P1000 512:R0002 512:T10011 512:#0230
 Omega:
 -22 - 000:A0007 000:a0604 008:R00FE 020:R0000 376:S0000 384:S00FE 512:P0707 512:T10011 512:#0230
+TODO!
 */
 
 #if defined(SSE_SHIFTER_UNSTABLE_DOLB) && defined(SSE_STF)
@@ -974,7 +975,7 @@ STF2:
           CurrentScanline.Tricks|=TRICK_4BIT_SCROLL;
         TrickExecuted|=TRICK_4BIT_SCROLL;
 
-#if defined(SSE_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK)
+#if defined(SSE_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK____) //?
 /*  Strange corrections suddenly necessary at some point, quick patch. 
     when it's necessary or not is a great mystery (undef v3.5.4)
     TODO
@@ -1283,6 +1284,7 @@ will never hit at 56 (but it's 32, not 28 cycles)
     if(SSE_HACKS_ON 
       && scan_y==-29
 #if defined(SSE_SHIFTER_LINE_PLUS_2_POST_NO_TOP_OFF)
+// if overscan lost in Panic, but breaks nosync.tos also by ljbk
       ||(!scan_y&& !PreviousScanline.Bytes)
 #endif
       )
@@ -1547,8 +1549,20 @@ detect unstable: switch MED/LOW - Beeshift
 #if defined(SSE_SHIFTER_PANIC) //fun, bad scanlines (unoptimised code!)
     if(WAKE_UP_STATE==WU_SHIFTER_PANIC)
     {
+
+#if defined(SSE_SHIFTER_UNSTABLE_DOLB) && defined(SSE_STF)
+//those hacks are looping...
+        if(Preload && SSE_HACKS_ON ) 
+          shift_sdp-=2;
+
+#endif
+
       shift_sdp+=shifter_draw_pointer_at_start_of_line;
+#if defined(SSE_SHIFTER_PANIC2) //switch border bands
+      for(int i=0+8-8;i<=224-8-8;i+=16)
+#else
       for(int i=0+8;i<=224-8;i+=16)
+#endif
       {
         Scanline[i/4]=LPEEK(i+shift_sdp); // save 
         Scanline[i/4+1]=LPEEK(i+shift_sdp+4);
@@ -1571,7 +1585,12 @@ detect unstable: switch MED/LOW - Beeshift
 #if defined(SSE_SHIFTER_DOLB_SHIFT1) 
     else  //  hack for DOLB, Omega, centering the pic
     {
+#if defined(SSE_SHIFTER_DOLB1)
       if(SSE_HACKS_ON
+        )
+        ShiftSDP(8); // again...
+#endif
+      if(SSE_HACKS_ON 
 #if defined(SSE_VID_BORDERS_416_NO_SHIFT)
 /*  The fact that the screen of DOLB is good without a special
     adjustment supports our theory of "no shift, 52 pixels".
@@ -2573,7 +2592,11 @@ dragon, right
     {
       // restore ST memory
       int shift_sdp=Scanline[230/4+1]; //as stored
+#if defined(SSE_SHIFTER_PANIC2)
+      for(int i=0+8-8;i<=224-8-8;i+=16)
+#else
       for(int i=0+8;i<=224-8;i+=16)
+#endif
       {
         LPEEK(i+shift_sdp)=Scanline[i/4];
         LPEEK(i+shift_sdp+4)=Scanline[i/4+1];

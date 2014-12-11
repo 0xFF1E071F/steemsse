@@ -20,6 +20,11 @@ DESCRIPTION: Functions to create the pages of the options dialog box.
 #include "SSE\SSEOption.h"
 #endif
 
+
+#if defined(SSE_VID_D3D_LIST_MODES)
+#include "display.decla.h"
+#endif
+
 //---------------------------------------------------------------------------
 void TOptionBox::CreatePage(int n)
 {
@@ -1284,32 +1289,74 @@ void TOptionBox::CreateFullscreenPage()
   long w;
   int y=10;
 
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D_OPTION4)
   const int LineHeight=30;
-  const int HorizontalSeparation=10;
+  const int HorizontalSeparation=15;
   int mask;
-  long Offset;
+  long Offset=0;
 #if defined(SSE_VID_D3D_OPTION)
-  long Wid=GetCheckBoxSize(Font,T("Direct3D")).Width; 
+
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX; 
-// test to disable?
+#if defined(SSE_VID_D3D_LIST_MODES)
+  CreateWindow("Button",T("Direct3D"),
+    WS_CHILD | BS_GROUPBOX,
+    page_l,y,page_w,45,Handle,(HMENU)99,HInstance,NULL);
+  y+=15;
+  Offset=10;
+  long Wid=GetCheckBoxSize(Font,T("On")).Width; 
+  Win=CreateWindow("Button",T("On"),mask,
+    page_l+Offset,y-1,Wid,25,Handle,(HMENU)7314,HInstance,NULL);
+#else
+  long Wid=GetCheckBoxSize(Font,T("Direct3D")).Width; 
   Win=CreateWindow("Button",T("Direct3D"),mask,
     page_l,y,Wid,25,Handle,(HMENU)7314,HInstance,NULL);
+#endif
   SendMessage(Win,BM_SETCHECK,SSE_OPTION_D3D,0);
-  ToolAddWindow(ToolTip,Win,T("Use Direct3D instead of DirectDraw for fullscreen. It should be more compatible."));
+  ToolAddWindow(ToolTip,Win,T("You can use Direct3D instead of DirectDraw for fullscreen. It should be more compatible."));
   y+=LineHeight;
+#endif
+
+#if defined(SSE_VID_D3D_LIST_MODES)
+/*  We do some D3D here, listing all modes only when necessary to save memory.
+    Or we could have another function in display, but then code bloat...
+*/
+  y-=LineHeight;
+  Offset+=Wid+HorizontalSeparation;
+  UINT Adapter=D3DADAPTER_DEFAULT;
+  D3DFORMAT DisplayFormat=D3DFMT_X8R8G8B8; //32bit; D3DFMT_R5G6B5=16bit
+  UINT nD3Dmodes=Disp.pD3D->GetAdapterModeCount(Adapter,DisplayFormat);
+  w=get_text_width(T("Mode"));
+  CreateWindow("Static",T("Mode"),WS_CHILD ,
+                          page_l+Offset,y+4,w,23,Handle,(HMENU)205,HInstance,NULL);
+  Wid=110; // manual...
+  Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST | WS_VSCROLL,
+                          page_l+5+w+Offset,y,Wid,200,Handle,(HMENU)7319,HInstance,NULL);
+  ToolAddWindow(ToolTip,Win,T("With Direct3D option you have the choice between all the 32bit modes your video card can handle."));
+  D3DDISPLAYMODE Mode;
+  for(int i=0;i<nD3Dmodes;i++)
+  {
+    Disp.pD3D->EnumAdapterModes(Adapter,DisplayFormat,i,&Mode);
+    char tmp[20];
+    sprintf(tmp,"%dx%d %dhz",Mode.Width,Mode.Height,Mode.RefreshRate);
+    SendMessage(Win,CB_ADDSTRING,0,(long)tmp);
+  }
+  SendMessage(Win,CB_SETCURSEL,Disp.D3DMode,0);
+  y+=LineHeight;
+  Wid+=w;
 #endif
 
 #if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION)
   y-=LineHeight;
-  Offset=Wid+HorizontalSeparation;
+  Offset+=Wid+HorizontalSeparation;
+//  Offset=0;
   Wid=GetCheckBoxSize(Font,T("ST aspect ratio")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
   Win=CreateWindow("Button",T("ST aspect ratio"),mask,
-    page_l +Offset,y,Wid,25,Handle,(HMENU)7315,HInstance,NULL);
+    page_l +Offset,y-1,Wid,25,Handle,(HMENU)7315,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_ST_ASPECT_RATIO,0);
-  ToolAddWindow(ToolTip,Win,T("Just like it was!"));
-  y+=LineHeight;
+  ToolAddWindow(ToolTip,Win,T("As is visible on many screenshots, the ST aspect ratio was distorted, with too high pixels. D3D fullscreen."));
+  y+=LineHeight+5;
 #endif
 #endif
 
@@ -1331,8 +1378,13 @@ void TOptionBox::CreateFullscreenPage()
   else
 #endif
 #if SSE_VERSION>=370
+#if defined(SSE_VID_D3D_STRETCH_FORCE)
+    ToolAddWindow(ToolTip,Win,T("(DirectDraw) Screen Flip only works with 384 x 270. Straight blit OK with 400 x 278. For higher than 400 first switch to laptop mode."));
+
+#else
     ToolAddWindow(ToolTip,Win,T("DirectDraw: Screen Flip only works with 384 x 270. Straight blit OK with 400 x 278. For higher than 400 first switch to laptop mode.\
                                  \rDirect3D: Screen Flip or Straight Blit for small crisp screen. Stretch Blit or Laptop for big screen."));
+#endif
 #else
     ToolAddWindow(ToolTip,Win,T("SSE note: Screen Flip only works with 384 x 270. Straight blit OK with 400 x 278. For higher than 400 first switch to laptop mode."));
 #endif
@@ -1395,9 +1447,15 @@ void TOptionBox::CreateFullscreenPage()
     WS_CHILD | BS_GROUPBOX | disabledflag,
     page_l,y,page_w,170,Handle,(HMENU)99,HInstance,NULL);
 #else
+#if defined(SSE_VID_D3D__)
+  CreateWindow("Button",T("Synchronisation (DirectDraw)"),
+    WS_CHILD | BS_GROUPBOX,
+    page_l,y,page_w,170,Handle,(HMENU)99,HInstance,NULL);
+#else
   CreateWindow("Button",T("Synchronisation"),
     WS_CHILD | BS_GROUPBOX,
     page_l,y,page_w,170,Handle,(HMENU)99,HInstance,NULL);
+#endif
 #endif
     y+=20;
 
@@ -1525,10 +1583,16 @@ void TOptionBox::CreateFullscreenPage()
   SendMessage(Win,BM_SETCHECK,FSQuitAskFirst,0);
 
 #if defined(SSE_VID_D3D_OPTION5) //duplicate! TODO
-//  WORD items[]={7315,280,208,210,220,221,222,223,224,225,226,0xFFFF};
+#if defined(SSE_VID_D3D_LIST_MODES)
+  WORD items[]={7315,7319,205,280,208,204,210,220,221,222,223,224,225,226,0xFFFF};
+  for(int i=0;items[i]!=0xFFFF;i++)
+    EnableWindow(GetDlgItem(Handle,items[i]),!SSE_OPTION_D3D^ (i<3) ); 
+#else
   WORD items[]={7315,280,208,0xFFFF};
   for(int i=0;items[i]!=0xFFFF;i++)
     EnableWindow(GetDlgItem(Handle,items[i]),!SSE_OPTION_D3D^!i); 
+#endif
+
 #endif
 
   UpdateHzDisplay();
