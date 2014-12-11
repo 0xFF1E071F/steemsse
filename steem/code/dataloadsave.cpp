@@ -865,7 +865,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_VID_LOCK_ASPET_RATIO)
     OPTION_LOCK_ASPECT_RATIO=pCSF->GetInt("Options","LockAspectRatio",OPTION_LOCK_ASPECT_RATIO);
 #endif
-
+#if defined(SSE_VID_D3D_LIST_MODES)
+    Disp.D3DMode=pCSF->GetInt("Display","D3DMode",Disp.D3DMode);
+#endif
 #endif//steven_seagal
 
 
@@ -1321,6 +1323,9 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 #if defined(SSE_VID_LOCK_ASPET_RATIO)
   pCSF->SetStr("Options","LockAspectRatio",EasyStr(OPTION_LOCK_ASPECT_RATIO));
+#endif
+#if defined(SSE_VID_D3D_LIST_MODES)
+  pCSF->SetStr("Display","D3DMode",EasyStr(Disp.D3DMode));
 #endif
 
 

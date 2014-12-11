@@ -1857,15 +1857,26 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SendMessage(HWND(lPar),BM_SETCHECK,SSE_OPTION_D3D,0);
 #if defined(SSE_VID_D3D_OPTION5)
 //            WORD items[]={7315,280,208,210,220,221,222,223,224,225,226,0xFFFF};
-            WORD items[]={7315,280,208,0xFFFF};
-            for(int i=0;items[i]!=0xFFFF;i++) //^ just a trick
-              EnableWindow(GetDlgItem(Win,items[i]),!SSE_OPTION_D3D^!i);
+
+
+#if defined(SSE_VID_D3D_OPTION5) //duplicate! TODO
+#if defined(SSE_VID_D3D_LIST_MODES)
+  WORD items[]={7315,7319,205,280,208,204,210,220,221,222,223,224,225,226,0xFFFF};
+  for(int i=0;items[i]!=0xFFFF;i++) //^ just a trick
+    EnableWindow(GetDlgItem(Win,items[i]),!SSE_OPTION_D3D^ (i<3) ); 
+#else
+  WORD items[]={7315,280,208,0xFFFF};
+  for(int i=0;items[i]!=0xFFFF;i++)
+    EnableWindow(GetDlgItem(Win,items[i]),!SSE_OPTION_D3D^!i); 
 #endif
             TRACE_LOG("Option D3D %d\n",SSE_OPTION_D3D);
             //Disp.Init();//big mistake!
           }
           break;
 #endif
+#endif
+#endif
+
 
 #if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION)
         case 7315: // Option Aspect Ratio
@@ -1905,6 +1916,16 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             OPTION_LOCK_ASPECT_RATIO=!OPTION_LOCK_ASPECT_RATIO;
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_LOCK_ASPECT_RATIO,0);
             TRACE_LOG("Option Lock aspect ratio %d\n",OPTION_LOCK_ASPECT_RATIO);
+          }
+          break;
+#endif
+
+#if defined(SSE_VID_D3D_LIST_MODES)
+        case 7319: // Option D3D mode
+          if (HIWORD(wPar)==CBN_SELENDOK)
+          {
+            Disp.D3DMode=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
+            TRACE_LOG("Option D3D mode = %d\n",Disp.D3DMode);
           }
           break;
 #endif

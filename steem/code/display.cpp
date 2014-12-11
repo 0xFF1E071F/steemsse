@@ -1591,6 +1591,9 @@ void SteemDisplay::ChangeToFullScreen()
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_FULLSCREEN_DONT_START))
       PostRunMessage();
 #endif
+
+
+
     }else{ //back to windowed mode
       TRACE_LOG("Can't go fullscreen 2\n");
       ChangeToWindowedMode(true);
@@ -2473,10 +2476,11 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
   HRESULT d3derr=E_FAIL;
   if(!pD3D)
     return d3derr;
+  UINT Adapter=D3DADAPTER_DEFAULT;
 
   // Get the current desktop display info
   D3DDISPLAYMODE d3ddm;
-  d3derr=pD3D->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &d3ddm);
+  d3derr=pD3D->GetAdapterDisplayMode(Adapter, &d3ddm);
   HDC hdc = GetDC(StemWin);
   WORD bitsperpixel= GetDeviceCaps(hdc, BITSPIXEL); // another D3D shortcoming
   ReleaseDC(StemWin, hdc);
@@ -2504,7 +2508,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
     return d3derr; //forget it
 
   D3DCAPS9 caps;
-  d3derr=pD3D->GetDeviceCaps(D3DADAPTER_DEFAULT,DeviceType,&caps);
+  d3derr=pD3D->GetDeviceCaps(Adapter,DeviceType,&caps);
   TRACE_LOG("DevCaps $%X HW quality %X err %d\n",caps.DevCaps,caps.DevCaps&(D3DDEVCAPS_HWTRANSFORMANDLIGHT|D3DDEVCAPS_PUREDEVICE),d3derr);
 
   DWORD vtx_proc;
@@ -2521,15 +2525,27 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
   ZeroMemory(&d3dpp, sizeof(d3dpp));
   d3dpp.Windowed=!FullScreen; // we're in fullscreen mode
   d3dpp.SwapEffect=D3DSWAPEFFECT_COPY;
-  d3dpp.BackBufferFormat=DisplayFormat; 
   d3dpp.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER|D3DPRESENTFLAG_DEVICECLIP;
   d3dpp.hDeviceWindow=StemWin;
-  UINT Width=monitor_width;
+  UINT Width=monitor_width; // default
   UINT Height=monitor_height;
   d3dpp.BackBufferCount=1;
+
+#if defined(SSE_VID_D3D_LIST_MODES)
+  D3DDISPLAYMODE Mode; 
+  pD3D->EnumAdapterModes(Adapter,DisplayFormat,D3DMode,&Mode);
+  TRACE_LOG("D3D mode %d %dx%d %dhz format %d\n",D3DMode,Mode.Width,Mode.Height,Mode.RefreshRate,Mode.Format);
+  Width=Mode.Width;
+  Height=Mode.Height;
+  d3dpp.FullScreen_RefreshRateInHz=Mode.RefreshRate;
+  d3dpp.BackBufferFormat=Mode.Format;
+#else
+  d3dpp.BackBufferFormat=DisplayFormat; 
+  d3dpp.FullScreen_RefreshRateInHz=d3ddm.RefreshRate;
+#endif
   d3dpp.BackBufferWidth=Width;
   d3dpp.BackBufferHeight=Height;
-  d3dpp.FullScreen_RefreshRateInHz=d3ddm.RefreshRate;
+
   d3derr=pD3D->CreateDevice(D3DADAPTER_DEFAULT,DeviceType,StemWin,vtx_proc,&d3dpp,&pD3DDevice);
   TRACE_LOG("D3D CreateDevice %dx%d %dhz vertex %X flags %X err %d\n",
     d3dpp.BackBufferWidth,d3dpp.BackBufferHeight,d3dpp.FullScreen_RefreshRateInHz,vtx_proc,d3dpp.Flags,d3derr);
@@ -2645,7 +2661,7 @@ void SteemDisplay::D3DUnlock() {
 
 HRESULT SteemDisplay::D3DSpriteInit() {
 
-  // called by D3DCreateSurfaces()
+  // called by D3DCreateSurfaces() and by ...
   // ScreenChange() calls DDCreateSurfaces()
 
   HRESULT hr=E_FAIL;

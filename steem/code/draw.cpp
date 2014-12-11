@@ -472,7 +472,7 @@ void draw_set_jumps_and_source()
 #endif
       ){
 #if defined(SSE_VID_D3D_STRETCH)
-//      if(!(D3D9_OK && SSE_OPTION_D3D))
+//      if(!(D3D9_OK && SSE_OPTION_D3D)) //?
 #endif
       WIN_ONLY( oy=int(using_res_640_400 ? 0:40); )
       if (overscan && (border==2)){ //hack overscan

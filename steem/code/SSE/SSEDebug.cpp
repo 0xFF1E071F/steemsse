@@ -4,9 +4,12 @@
 
 #if defined(SSE_DEBUG) 
 
-#ifdef UNIX
+#if defined(UNIX) || defined(BCC_BUILD)
 #include "../pch.h" 
 #pragma hdrstop 
+#else
+//#include <windows.h>
+#include <ddraw.h>
 #endif
 
 #if defined(SSE_STRUCTURE_SSEDEBUG_OBJ)
@@ -23,6 +26,12 @@
 #include <run.decla.h>
 #include <steemh.decla.h>
 #include "SSEFloppy.h"
+
+
+//#ifdef __cplusplus
+#include <display.decla.h>
+//#endif
+
 #endif
 
 int debug0,debug1=0,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9;
@@ -172,6 +181,15 @@ void TDebug::Vbl(){
     } 
     TRACE_OSD(buf1);
   }
+
+#if defined(SSE_BOILER_VIDEO_CONTROL)
+  if(VIDEO_CONTROL_MASK & VIDEO_CONTROL_RES)
+  {  // no more room on stretched modes
+    TRACE_OSD("%dx%d %db",Disp.SurfaceWidth,Disp.SurfaceHeight,BytesPerPixel*8);
+  }
+#endif
+
+
   FrameInterrupts=0;
   FrameMfpIrqs=0;
 #endif  

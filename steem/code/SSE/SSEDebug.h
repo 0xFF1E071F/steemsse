@@ -295,6 +295,7 @@ enum logsection_enum_tag {
 #if defined(SSE_BOILER_VIDEO_CONTROL)
 #define VIDEO_CONTROL_MASK (Debug.ControlMask[9])
 #define VIDEO_CONTROL_LINEOFF (1<<15)
+#define VIDEO_CONTROL_RES (1<<14)
 #endif
 
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)

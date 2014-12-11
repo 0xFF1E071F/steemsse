@@ -166,7 +166,7 @@ and all his silly mods are gone!
     historically.
 */
 
-//#define SSE_SWITCHES_FEATURES
+#define SSE_SWITCHES_FEATURES
 
 
 #if defined(SSE_SWITCHES_FEATURES)
@@ -1837,7 +1837,7 @@ and all his silly mods are gone!
 #define SSE_VID_BORDERS_416_NO_SHIFT
 #define SSE_VID_BORDERS_GUARD_EM // don't mix large borders & extended res
 #define SSE_VID_BORDERS_GUARD_R2 // don't mix large borders & hi res
-#define SSE_VID_BORDERS_NO_LOAD_SETTING // start at 384 x 270
+//#define SSE_VID_BORDERS_NO_LOAD_SETTING // start at 384 x 270
 #ifdef WIN32
 #define SSE_VID_BORDERS_BIGTOP // more lines for palette effects
 #define SSE_VID_BORDERS_LB_DX // rendering-stage trick rather than painful hacks
@@ -3725,7 +3725,7 @@ and all his silly mods are gone!
 //#define SSE_VID_RECORD_MODES // TODO eg record 800 x 600 16bit 60hz... waste?
 #define SSE_VID_BORDERS_GUARD_EM // don't mix large borders & extended res
 #define SSE_VID_BORDERS_GUARD_R2 // don't mix large borders & hi res
-#define SSE_VID_BORDERS_NO_LOAD_SETTING // start at 384 x 270
+//#define SSE_VID_BORDERS_NO_LOAD_SETTING // start at 384 x 270
 #define SSE_VID_CHECK_POINTERS
 #if defined(WIN32) 
 #if defined(_MSC_VER) && (_MSC_VER >= 1500) //VS2008
@@ -3890,11 +3890,11 @@ and all his silly mods are gone!
 
 
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
-#define TEST01
-#define TEST02
+#define TEST01//snd
+#define TEST02//MicroWire
 //#define TEST03
-#define TEST04
-//#define TEST05
+#define TEST04//mfp
+//#define TEST05//d3d
 //#define TEST06
 //#define TEST07
 //#define TEST08
@@ -3925,6 +3925,7 @@ and all his silly mods are gone!
 #define SSE_BOILER_PSEUDO_STACK
 #define SSE_BOILER_EXTRA_IOLIST
 #define SSE_BOILER_BROWSERS_VECS // in 'reg' columns, eg TB for timer B
+#define SSE_BOILER_TRACE_MFP1 // one log option for MFP, one for interrupt
 #endif
 
 #if defined(SSE_BOILER_CLIPBOARD) && defined(SSE_GUI_DISK_MANAGER_LONG_NAMES1)
@@ -3953,8 +3954,9 @@ and all his silly mods are gone!
 
 #define SSE_VAR_SNAPSHOT_INI
 
+#undef SSE_SHIFTER_LINE_PLUS_2_TEST //3.5.3-3.7.0
 #define SSE_SHIFTER_LINE_PLUS_2_POST_TOP_OFF3
-#define SSE_SHIFTER_LINE_PLUS_2_POST_NO_TOP_OFF
+//#define SSE_SHIFTER_LINE_PLUS_2_POST_NO_TOP_OFF
 
 #if defined(SSE_CPU_PREFETCH_TIMING)
 //#define SSE_CPU_PREFETCH_TIMING_STOP
@@ -3968,9 +3970,32 @@ and all his silly mods are gone!
 #undef SSE_INT_JITTER_VBL
 #undef SSE_INT_JITTER_RESET
 
-//#undef SSE_INT_MFP_PATCH_TIMER_D // for test
-#endif//beta
+//#undef SSE_INT_MFP_PATCH_TIMER_D // for testing Audio Artistic
 
+
+#define SSE_GUI_OPTIONS_SOUND1 // make some room free
+#define SSE_GUI_OPTIONS_SOUND2 // drive sound on sound page
+#define SSE_GUI_OPTIONS_SOUND3 // options for PSG and Microwire on sound page
+#define SSE_GUI_OPTIONS_SOUND4 // option keyboard click on sound page
+
+#define SSE_SOUND_FILTER_HATARI
+#undef SSE_SOUND_FILTER_STF2 // "monitor" also for samples
+
+
+#define SSE_INT_MFP_NO_12_CYCLES_DELAY//test
+#ifdef SSE_DEBUG
+//#define SSE_INT_MFP_TEST_TIMERS_BEFORE_BLI // before blank interrupt
+#endif
+
+#if defined(SSE_VID_D3D)
+#define SSE_VID_D3D_LIST_MODES // player can choose
+#define SSE_VID_D3D_STRETCH_FORCE // only stretch: better for list modes
+#endif
+
+#define SSE_SHIFTER_DOLB1 //again a hack... TODO
+#define SSE_SHIFTER_PANIC2
+
+#endif//beta
 
 
 #else//!SS
