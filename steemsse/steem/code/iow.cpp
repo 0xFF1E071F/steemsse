@@ -595,7 +595,7 @@ system exclusive start and end messages (F0 and F7).
 #if defined(SSE_MIDI)
 #if defined(SSE_ACIA_MIDI_SR02_CYCLES)
           ACIA_MIDI.last_tx_write_time=ACT; // record timing
-          if(HD6301EMU_ON)
+          if(!HD6301EMU_ON) //beta bugfix, was if(HD6301EMU_ON)...
 #endif
           agenda_add(agenda_acia_tx_delay_MIDI,ACIAClockToHBLS(ACIA_MIDI.clock_divide),0);
           MIDIPort.OutputByte(io_src_b); //SS timing?
