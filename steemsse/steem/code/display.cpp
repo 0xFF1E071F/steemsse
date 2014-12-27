@@ -1942,11 +1942,13 @@ HRESULT SteemDisplay::SaveScreenShot()
     HRESULT hRet;
 #if defined(SSE_VID_DD7)
     DDSURFACEDESC2 SaveSurDesc;
+    ZeroMemory(&SaveSurDesc,sizeof(DDSURFACEDESC2));//and no betatester saw this
+    SaveSurDesc.dwSize=sizeof(DDSURFACEDESC2);
 #else
     DDSURFACEDESC SaveSurDesc;
-#endif
     ZeroMemory(&SaveSurDesc,sizeof(DDSURFACEDESC));
     SaveSurDesc.dwSize=sizeof(DDSURFACEDESC);
+#endif
     SaveSurDesc.dwFlags=DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
     SaveSurDesc.ddsCaps.dwCaps=DDSCAPS_OFFSCREENPLAIN | DDSCAPS_SYSTEMMEMORY;
     SaveSurDesc.dwWidth=w;
@@ -2559,6 +2561,9 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
   DWORD Usage= D3DUSAGE_DYNAMIC;
   D3DFORMAT Format=d3dpp.BackBufferFormat;
   D3DPOOL Pool=D3DPOOL_DEFAULT;
+
+  d3derr=pD3DDevice->Clear(0,0,D3DCLEAR_TARGET,0,0,0);//XP-intel
+
   HANDLE *pSharedHandle=NULL; //always
   d3derr=pD3DDevice->CreateTexture(Width,Height,Levels,Usage,Format,
     Pool,&pD3DTexture,pSharedHandle);
