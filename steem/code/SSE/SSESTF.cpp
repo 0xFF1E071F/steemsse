@@ -11,6 +11,8 @@
 #include "SSEInterrupt.h"
 #include "SSESTF.h"
 #include "SSEOption.h"
+#include "SSEGlue.h"
+
 #endif//SSE_STRUCTURE_SSESTF_OBJ
 
 #if defined(SSE_STF)
@@ -37,7 +39,8 @@ int SwitchSTType(int new_type) {
     HblTiming=HBL_FOR_STF; 
 #endif
 #if defined(SSE_INT_MFP_RATIO)
-#if defined(SSE_INT_MFP_RATIO_STF)
+
+#if defined(SSE_INT_MFP_RATIO_STF) 
 
 #if defined(SSE_STF_8MHZ)
     if(ST_TYPE==STF8MHZ) // this removes artefacts in panic.tos, is it normal?
@@ -45,6 +48,10 @@ int SwitchSTType(int new_type) {
       CpuMfpRatio=(double)CPU_STF_ALT/(double)MFP_CLK_TH_EXACT;
       CpuNormalHz=CPU_STF_ALT;
     }
+    else
+#elif defined(SSE_INT_MFP_RATIO_OPTION)
+    if(OPTION_CPU_CLOCK)
+      CpuMfpRatio=(double)CpuCustomHz/(double)MFP_CLK_TH_EXACT;
     else
 #endif
     {
@@ -57,6 +64,7 @@ int SwitchSTType(int new_type) {
     CpuNormalHz=CPU_STE_TH;
 #endif
 #endif
+
   }
   else //STE
   {
@@ -66,9 +74,19 @@ int SwitchSTType(int new_type) {
 #endif
 
 #if defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_INT_MFP_RATIO_OPTION)
+    if(OPTION_CPU_CLOCK)
+      CpuMfpRatio=(double)CpuCustomHz/(double)MFP_CLK_TH_EXACT;
+    else
+#endif
+    {
 #if defined(SSE_INT_MFP_RATIO_STE_AS_STF)
+#if defined(SSE_INT_MFP_RATIO_STE2)
+    CpuMfpRatio=(double)CPU_STE_PAL/(double)MFP_CLK_TH_EXACT;
+#else
     CpuMfpRatio=(double)CPU_STF_PAL/(double)MFP_CLK_TH_EXACT;
-    CpuNormalHz=CPU_STE_PAL;
+#endif
+    CpuNormalHz=CPU_STE_PAL; 
 #elif defined(SSE_INT_MFP_RATIO_STE)
     CpuMfpRatio=(double)CPU_STE_TH/(double)MFP_CLK_STE_EXACT;
     CpuNormalHz=CPU_STE_TH;
@@ -76,10 +94,12 @@ int SwitchSTType(int new_type) {
     CpuMfpRatio=(double)CPU_STE_TH/(double)MFP_CLK_LE_EXACT;
     CpuNormalHz=CPU_STE_TH;
 #endif
+    }
+    TRACE_INIT("CPU~%d hz\n",CpuNormalHz);
 #endif
 
   }
-
+  
 #if defined(SSE_INT_MFP_RATIO)
 #if defined(SSE_INT_MFP_RATIO_HIGH_SPEED) //fix v3.6.1 (broken v3.5.1)
   if(n_cpu_cycles_per_second<10000000) // avoid interference with ST CPU Speed option
@@ -90,6 +110,11 @@ int SwitchSTType(int new_type) {
 #if defined(SSE_INT_VBI_START) || defined(SSE_INT_VBL_STF)
   draw_routines_init(); // to adapt event plans (overkill?)
 #endif
+
+#if defined(SSE_GLUE)
+  Glue.Update();
+#endif
+
   return ST_TYPE;
 }
 

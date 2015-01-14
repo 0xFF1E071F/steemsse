@@ -1874,7 +1874,11 @@ void TM68000::SyncEClock() {
   FrameEvents.Add(scan_y,LINECYCLES,'E',wait_states);
 #endif
 #if defined(SSE_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_DEBUG_FRAME_REPORT_MASK2)
+  if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_INT)
+#else
   if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_ACIA)
+#endif
     FrameEvents.Add(scan_y,LINECYCLES,'E',wait_states);
 #endif
   if(wait_states) 

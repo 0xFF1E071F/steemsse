@@ -387,13 +387,15 @@ Interrupt* 46(5/4)
 
 * The interrupt acknowledge and breakpoint cycles
 are assumed to take four clock periods.
+Far more on the ST.
 
--> that's quite a lot of cycles and you still must add jitter
+-> that's quite a lot of cycles and you still must add E-Clock jitter
    for HBL, VBL
 
   cases to check those timings:
   Reality is a Lie Schnusdie STE (VBI)
-  TCB (HBI)
+  Forest, TCB (HBI)
+  TIMERB01.TOS; TIMERB03.TOS (MFP)
 */
 
 #if defined(SSE_INT_MFP)
@@ -413,7 +415,6 @@ are assumed to take four clock periods.
 #endif
 
 #if defined(SSE_INT_VBL_STF) // modest hack still works
-#define HBL_FOR_STE 444
 
 #if SSE_VERSION<364//70
 //this particular hack doesn't look useful for anything now
@@ -469,6 +470,11 @@ are assumed to take four clock periods.
     For STF we use the precise value of the MFP quarts and the real value of
     a typical "PAL" STF, as read on atari-forum (ijor?)
     3.5.1: same ratio for STE, it could make DMA sound emu more precise
+    3.7.0:  DMA sound uses another clock, we now have a slightly different
+    CPU clock and MFP ratio in STE mode.
+
+    MFP (no variation) ~ 2457600 hz
+
 */
 
 #define  MFP_CLK_LE 2451 // Steem 3.2
@@ -478,20 +484,40 @@ are assumed to take four clock periods.
 
 #define  CPU_STE_TH 8000000 // Steem 3.2
 #define  MFP_CLK_STE_EXACT 2451182 // not if 'STE as STF' is defined
+
+#if defined(SSE_INT_MFP_RATIO_STF2)
+#define  CPU_STF_PAL 8021247//(8020736+512+512)// should be 8021247
+#else
 #define  CPU_STF_PAL (8021248) // ( 2^8 * 31333 )
-#define  CPU_STF_ALT (8007100) //ljbk's?
+#endif
+
+#define  CPU_STF_ALT (8007100) //ljbk's? for Panic study!
+
+#if defined(SSE_INT_MFP_RATIO_STE2)
+#define  CPU_STE_PAL 8020736//CPU_STF_PAL
+#else
 #define  CPU_STE_PAL (CPU_STF_PAL+64) //64 for DMA sound!
+#endif
 #define  MFP_CLK_TH 2457
 #define  MFP_CLK_TH_EXACT 2457600 // ( 2^15 * 3 * 5^2 )
 #endif
 
 #if defined(SSE_INT_MFP_WRITE_DELAY1)
-#if SSE_VERSION>=370
-#define MFP_WRITE_LATENCY 4 // 4 = OK for Audio Artistic, 3615OVR
-#else
 #define MFP_WRITE_LATENCY 8 // 8 = the smallest for Audio Artistic
 #endif
+
+#if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY)
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE)
+#define MFP_TIMER_SET_DELAY 12//(10) // TODO
+#else
+#define MFP_TIMER_SET_DELAY (12) //12 = Steem 3.2
 #endif
+#endif
+
+#if defined(SSE_INT_MFP_IACK_LATENCY2) || defined(SSE_INT_MFP_IACK_LATENCY3)
+#define MFP_IACK_LATENCY (20)
+#endif
+
 
 #endif//mfp
 
@@ -578,8 +604,21 @@ are assumed to take four clock periods.
 // TIMINGS //
 /////////////
 
-#define STE_DMA_CLOCK 8010613 // 8.010613 MHz (from Nicolas?)
+// DMA sound has its own clock, it's not CPU's
+// We adjust this so that we have 50065 in ljbk's test
 
+#if defined(SSE_INT_MFP_RATIO_STE2)
+
+#if CPU_STE_PAL==(8020736)
+#define STE_DMA_CLOCK 8020765//8020750
+#elif CPU_STE_PAL==(8020736+512+512)
+#define STE_DMA_CLOCK 8021350
+#else
+#define STE_DMA_CLOCK 8021118 //(8021502-256-128)
+#endif
+#else
+#define STE_DMA_CLOCK 8021502
+#endif
 
 
 /////////
@@ -588,6 +627,11 @@ are assumed to take four clock periods.
 
 #if defined(SSE_TOS_PRG_AUTORUN)
 #define AUTORUN_HD (2+'Z'-'C')//2=C, Z: is used for PRG support
+#endif
+
+#if defined(SSE_STF_MATCH_TOS2)
+#define DEFAULT_TOS_STF 0x102
+#define DEFAULT_TOS_STE 0x162
 #endif
 
 

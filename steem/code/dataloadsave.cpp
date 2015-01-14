@@ -701,6 +701,10 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     ST_TYPE=pCSF->GetInt("Machine","STType",ST_TYPE);
     SwitchSTType(ST_TYPE); // settings for STF or STE
 #endif
+#if defined(SSE_INT_MFP_RATIO_OPTION2)
+    OPTION_CPU_CLOCK=pCSF->GetInt("Option","FinetuneCPUclock",OPTION_CPU_CLOCK);
+    CpuCustomHz=pCSF->GetInt("Machine","CpuCustomHz",CpuCustomHz);
+#endif
 
   }
 
@@ -745,7 +749,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
     USE_SDL=pCSF->GetInt("Options","UseSDL",USE_SDL);
 #endif
-#if defined(SSE_STF) 
+#if defined(SSE_STF) && SSE_VERSION<370 //double, also in machine
     ST_TYPE=pCSF->GetInt("Options","StType",ST_TYPE);
 #endif
 #if defined(SSE_MMU_WAKE_UP)
@@ -868,6 +872,10 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_VID_D3D_LIST_MODES)
     Disp.D3DMode=pCSF->GetInt("Display","D3DMode",Disp.D3DMode);
 #endif
+#if defined(SSE_INT_MFP_OPTION)
+  OPTION_PRECISE_MFP=pCSF->GetInt("Option","MC68901",OPTION_PRECISE_MFP);
+#endif
+
 #endif//steven_seagal
 
 
@@ -1249,7 +1257,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
   pCSF->SetStr("Options","UseSDL",EasyStr(USE_SDL));  
 #endif
-#if defined(SSE_STF) 
+#if defined(SSE_STF) && SSE_VERSION<370
   pCSF->SetStr("Options","StType",EasyStr(ST_TYPE));  
 #endif
 #if defined(SSE_MMU_WAKE_UP)
@@ -1326,6 +1334,9 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 #if defined(SSE_VID_D3D_LIST_MODES)
   pCSF->SetStr("Display","D3DMode",EasyStr(Disp.D3DMode));
+#endif
+#if defined(SSE_INT_MFP_OPTION)
+  pCSF->SetStr("Option","MC68901",EasyStr(OPTION_PRECISE_MFP));
 #endif
 
 
@@ -1472,6 +1483,10 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_STF)
   pCSF->SetStr("Machine","STType",EasyStr(ST_TYPE));
+#endif
+#if defined(SSE_INT_MFP_RATIO_OPTION2)
+  pCSF->SetStr("Option","FinetuneCPUclock",EasyStr(OPTION_CPU_CLOCK));
+  pCSF->SetStr("Machine","CpuCustomHz",EasyStr(CpuCustomHz));
 #endif
 
   pCSF->SetStr("Machine","ROM_File",ROMFile);

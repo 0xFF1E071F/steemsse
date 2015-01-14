@@ -7,6 +7,9 @@
 #if defined(SSE_INT_MFP_RATIO) 
 extern double CpuMfpRatio;
 extern DWORD CpuNormalHz;
+#if defined(SSE_INT_MFP_RATIO_OPTION)
+extern DWORD CpuCustomHz;
+#endif
 #endif
 
 #if defined(SSE_INTERRUPT)
@@ -21,7 +24,7 @@ extern int HblTiming;
 void m68k_interrupt(MEM_ADDRESS ad);
 #endif
 
-#if defined(SSE_INT_JITTER) 
+#if defined(SSE_INT_JITTER) //no
 extern int HblJitter[],VblJitter[];
 extern int HblJitterIndex,VblJitterIndex;
 #endif
@@ -33,13 +36,31 @@ extern int HblJitterIndex,VblJitterIndex;
 #if defined(SSE_INT_HBL_INLINE)
 
 // no more multiple defines, all switches in inline function
+// not sure it's inlined, nor that it should be
 
 inline void HBLInterrupt() {
   ASSERT(hbl_pending);
   hbl_pending=false;
-
   log_to_section(LOGSECTION_INTERRUPTS,Str("INTERRUPT: HBL at PC=")+HEXSl(pc,6)+" "+scanline_cycle_log());
-  
+#ifdef SSE_DEBUG
+  Debug.nHbis++; // knowing how many in the frame is interesting
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
+  Debug.RecordInterrupt("HBI");
+#endif
+#if defined(SSE_BOILER_FRAME_INTERRUPTS)
+  Debug.FrameInterrupts|=2;
+#endif
+#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_DEBUG_FRAME_REPORT_MASK2)
+  if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_INT)
+#else
+  if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_HBI)
+#endif
+    FrameEvents.Add(scan_y,LINECYCLES,'I',0x20);
+#endif
+  TRACE_LOG("%d %d %d (%d) HBI #%d Vec %X\n",TIMING_INFO,ACT,Debug.nHbis,LPEEK(0x0068));
+#endif//dbg
+
 #if !defined(SSE_CPU_UNSTOP2)
   if (cpu_stopped)
   M68K_UNSTOP;
@@ -77,17 +98,10 @@ inline void HBLInterrupt() {
     INSTRUCTION_TIME(HblJitter[HblJitterIndex]); //Hatari
 #endif
 
-#ifdef SSE_DEBUG
-  Debug.nHbis++;
-  TRACE_LOG("%d %d %d HBI #%d PC %X\n",TIMING_INFO,Debug.nHbis,LPEEK(0x0068));
-#endif
-
-
   // set CPU registers
   m68k_interrupt(LPEEK(0x0068));       
   sr=(sr & (WORD)(~SR_IPL)) | (WORD)(SR_IPL_2);
   debug_check_break_on_irq(BREAK_IRQ_HBL_IDX); 
-
 }
 #define HBL_INTERRUPT HBLInterrupt(); // called in mpf.cpp
 #endif//inline
@@ -103,8 +117,24 @@ inline void VBLInterrupt() {
 
   ASSERT( vbl_pending );
   vbl_pending=false; 
-
+#ifdef SSE_DEBUG
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
+  Debug.RecordInterrupt("VBI");
+#endif
+#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_DEBUG_FRAME_REPORT_MASK2)
+  if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_INT)
+#else
+  if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_VBI)
+#endif
+    FrameEvents.Add(scan_y,LINECYCLES,'I',0x40);
+#endif
+#if defined(SSE_BOILER_FRAME_INTERRUPTS)
+  Debug.FrameInterrupts|=1;
+#endif
   log_to_section(LOGSECTION_INTERRUPTS,EasyStr("INTERRUPT: VBL at PC=")+HEXSl(pc,6)+" time is "+ABSOLUTE_CPU_TIME+" ("+(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl)+" cycles into screen)");
+  TRACE_LOG("%d %d %d (%d) VBI Vec %X\n",TIMING_INFO,ACT,LPEEK(0x0070));
+#endif//dbg
 
 #if !defined(SSE_CPU_UNSTOP2)
   if (cpu_stopped)
@@ -147,6 +177,8 @@ inline void VBLInterrupt() {
   // jitter?
 #if defined(SSE_INT_JITTER_VBL)
 #if !defined(SSE_INT_JITTER_VBL_STE)
+// see Japtro, it would be fixed on STE, but I don't think it should work
+// Steem 3.5.1-3.5.4 used this
   if(ST_TYPE!=STE) 
 #endif
 #if defined(SSE_INT_E_CLOCK)
@@ -154,8 +186,6 @@ inline void VBLInterrupt() {
 #endif
       INSTRUCTION_TIME(VblJitter[VblJitterIndex]);
 #endif
-
-  TRACE_LOG("%d %d %d VBI PC %X\n",TIMING_INFO,LPEEK(0x0070));
 
   sr=(sr& (WORD)(~SR_IPL))|(WORD)(SR_IPL_4);
 

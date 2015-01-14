@@ -3981,19 +3981,65 @@ and all his silly mods are gone!
 #define SSE_SOUND_FILTER_HATARI
 #undef SSE_SOUND_FILTER_STF2 // "monitor" also for samples
 
+#define SSE_SOUND_DMA_CLOCK //not CPU, apart
 
-#define SSE_INT_MFP_NO_12_CYCLES_DELAY//test
-#ifdef SSE_DEBUG
-//#define SSE_INT_MFP_TEST_TIMERS_BEFORE_BLI // before blank interrupt
+
+#ifdef SSE_INT_MFP // tests, refactor
+#define SSE_INT_MFP_AUTO_NO_IS_CLEAR//test
+#define SSE_INT_MFP_CHECKTIMEOUT_ON_STOP//test
+#define SSE_INT_MFP_NO_WRITE_LATENCY1//unimportant
+#define SSE_INT_MFP_OBJECT // new MC68901 chip in out ST!
+#if defined(SSE_INT_MFP_OBJECT)
+#define SSE_INT_MFP_IRQ_TIMING //tracking it more precisely
+#define SSE_INT_MFP_GPIP_TO_IRQ_DELAY // only for GPIP interrupts
+#undef SSE_ACIA_IRQ_DELAY2
+#undef SSE_INT_MFP_IACK_LATENCY //same irq
+#define SSE_INT_MFP_IACK_LATENCY2 //delay timers
+#define SSE_INT_MFP_IACK_LATENCY3 //timer B
+#define SSE_INT_MFP_OPTION //performance/precision
+#undef SSE_INT_MFP_PATCH_TIMER_D//Audio Artistic
+#undef SSE_INT_MFP_WRITE_DELAY1 //Audio Artistic
+#define SSE_INT_MFP_UTIL
+#define SSE_INT_MFP_SPURIOUS//cool crashes
 #endif
+#define SSE_INT_MFP_RATIO_OPTION // user can fine tune CPU clock
+#define SSE_INT_MFP_RATIO_OPTION2 // L/S
+#define SSE_INT_MFP_RATIO_PRECISION_2 // 1 cycle precision
+#define SSE_INT_MFP_RATIO_PRECISION3 // 100%
+#undef SSE_STF_8MHZ // we have better option now
+#define SSE_INT_MFP_RATIO_STE2
+#define SSE_INT_MFP_RATIO_STF2
+#define SSE_INT_MFP_REFACTOR1
+#define SSE_INT_MFP_TIMER_B_WOBBLE2
+#define SSE_INT_MFP_TIMER_B_WOBBLE2_HACK //for Sunny
+#undef SSE_INT_MFP_TIMER_B_NO_WOBBLE
+#define SSE_INT_MFP_TIMER_RATIO1 //unimportant
+#define SSE_INT_MFP_TIMERS_INLINE
+//#define SSE_INT_MFP_TIMERS_RUN_IF_DISABLED //load!
+#define SSE_INT_MFP_TIMERS_STARTING_DELAY //12->?
+#define SSE_INT_MFP_TIMERS_WOBBLE
+#endif//SSE_INT_MFP
+
+//#define SSE_TIMINGS_STE_NOPS_TO_FIRST_LINE
+//#undef SSE_CPU_UNSTOP2//
 
 #if defined(SSE_VID_D3D)
 #define SSE_VID_D3D_LIST_MODES // player can choose
 #define SSE_VID_D3D_STRETCH_FORCE // only stretch: better for list modes
 #endif
 
-#define SSE_SHIFTER_DOLB1 //again a hack... TODO
-#define SSE_SHIFTER_PANIC2
+//#define SSE_DRIVE_COMPUTE_BOOT_CHECKSUM //
+
+#undef SSE_CPU_IGNORE_RW_4MB // F-29 hangs on 4MB machines, nothing to fix
+#define SSE_STF_MATCH_TOS2 // default = 1.62 instead of 1.06
+
+
+#define SSE_YM2149_FIX_JAM
+
+#define SSE_BOILER_SHOW_FRAME //yes it was useful
+#define SSE_BOILER_SHOW_TRICKS //TODO
+
+
 
 #endif//beta
 

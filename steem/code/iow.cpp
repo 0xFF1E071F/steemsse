@@ -48,7 +48,8 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
     && (((1<<15)&d2_dpeek(FAKE_IO_START+24))) 
     // we add conditions address range - logsection enabled
 
-      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_INTERRUPTS] ) //mfp
+//      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_INTERRUPTS] ) //mfp
+      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_MFP] ) //mfp
       && ( (addr&0xffff00)!=0xfffc00 || logsection_enabled[LOGSECTION_IKBD] ) //acia
       && ( (addr&0xffff00)!=0xff8600 || logsection_enabled[LOGSECTION_FDC] ) //dma
       && ( (addr&0xffff00)!=0xff8800 || logsection_enabled[LOGSECTION_SOUND] )//psg
@@ -661,6 +662,11 @@ system exclusive start and end messages (F0 and F7).
           if (addr<0xfffa30){
             int old_ioaccess=ioaccess;
             int n=(addr-0xfffa01) >> 1;
+
+#if defined(SSE_INT_MFP_IRQ_TIMING)
+            MC68901.LastRegisterFormerValue=mfp_reg[n]; // save for our hacks
+#endif
+
             if (n==MFPR_GPIP || n==MFPR_AER || n==MFPR_DDR){
               // The output from the AER is eored with the GPIP/input buffer state
               // and that input goes into a 1-0 transition detector. So if the result
@@ -697,6 +703,10 @@ system exclusive start and end messages (F0 and F7).
                 }
               }
             }else if (n>=MFPR_IERA && n<=MFPR_IERB){ //enable
+
+              
+              TRACE_MFP("F%d y%d c%d PC %X MFP IER%c %X\n",TIMING_INFO,old_pc,'A'+n-MFPR_IERA,io_src_b);
+
               // See if timers have timed out before write to enabled. This is needed
               // because MFP_CALC_INTERRUPTS_ENABLED religns the timers (so they would
               // not cause a timeout if they are overdue at this point)
@@ -708,20 +718,22 @@ system exclusive start and end messages (F0 and F7).
               //  It has been removed, so don't need this for anything
 
               mfp_reg[n]=io_src_b;
+
               MFP_CALC_INTERRUPTS_ENABLED;
               for (n=0;n<4;n++){
                 bool new_enabled=(mfp_interrupt_enabled[mfp_timer_irq[n]] && (mfp_get_timer_control_register(n) & 7));
                 if (new_enabled && mfp_timer_enabled[n]==0){
                   // Timer should have been running but isn't, must put into future
                   int stage=(mfp_timer_timeout[n]-ABSOLUTE_CPU_TIME);
+                  TRACE_MFP("F%d y%d c%d PC %X enable Timer %C stage %d",TIMING_INFO,old_pc,'A'+n,stage);
                   if (stage<=0){
                     stage+=((-stage/mfp_timer_period[n])+1)*mfp_timer_period[n];
                   }else{
                     stage%=mfp_timer_period[n];
                   }
                   mfp_timer_timeout[n]=ABSOLUTE_CPU_TIME+stage;
+                  TRACE_MFP(":%d\n",stage);
                 }
-
                 LOG_ONLY( if (new_enabled!=mfp_timer_enabled[n]) log_to(LOGSECTION_MFP_TIMERS,Str("MFP: ")+HEXSl(old_pc,6)+
                                                   " - Timer "+char('A'+n)+" enabled="+new_enabled); )
                 mfp_timer_enabled[n]=new_enabled;
@@ -748,19 +760,22 @@ system exclusive start and end messages (F0 and F7).
             }else if (n>=MFPR_IPRA && n<=MFPR_ISRB){ //can only clear bits in IPR, ISR
               mfp_reg[n]&=io_src_b;
             }else if (n>=MFPR_TADR && n<=MFPR_TDDR){ //have to set counter as well as data register
+              TRACE_MFP("F%d y%d c%d PC %X MFP T%cDR %X\n",TIMING_INFO,old_pc,'A'+n-MFPR_TADR,io_src_b);
               mfp_set_timer_reg(n,mfp_reg[n],io_src_b);
               mfp_reg[n]=io_src_b;
             }else if (n==MFPR_TACR || n==MFPR_TBCR){ //wipe low-bit on set
+              TRACE_MFP("F%d y%d c%d PC %X MFP T%cCR %X\n",TIMING_INFO,old_pc,'A'+n-MFPR_TACR,io_src_b);
               io_src_b &= BYTE(0xf);
               mfp_set_timer_reg(n,mfp_reg[n],io_src_b);
               mfp_reg[n]=io_src_b;
             }else if (n==MFPR_TCDCR){
+              TRACE_MFP("F%d y%d c%d PC %X MFP TCDCR %X\n",TIMING_INFO,old_pc,io_src_b);
               io_src_b&=BYTE(b01110111);
               mfp_set_timer_reg(n,mfp_reg[n],io_src_b);
               mfp_reg[n]=io_src_b;
             }else if (n==MFPR_VR){
               mfp_reg[MFPR_VR]=io_src_b;
-              if (!MFP_S_BIT){
+              if (!MFP_S_BIT){ //SS clearing this bit clears In Service registers
                 mfp_reg[MFPR_ISRA]=0;
                 mfp_reg[MFPR_ISRB]=0;
               }
@@ -768,18 +783,35 @@ system exclusive start and end messages (F0 and F7).
               RS232_WriteReg(n,io_src_b);
             }else{
               ASSERT(n!=16);
+#ifdef SSE_DEBUG
+              if (n>=MFPR_IMRA && n<=MFPR_IMRB)
+                TRACE_MFP("%d PC %X MFP IMR%c %X (IER%c %X)\n",ACT,old_pc,'A'+n-MFPR_IMRA,io_src_b,'A'+n-MFPR_IMRA,mfp_reg[MFPR_IERA+n-MFPR_IMRA]);
+#endif
               mfp_reg[n]=io_src_b;
             }
+
+#if defined(SSE_INT_MFP_IRQ_TIMING)
+            MC68901.UpdateNextIrq();
+            MC68901.WriteTiming=ACT;
+            MC68901.LastRegisterWritten=n;
+#endif
+
+#if defined(SSE_INT_MFP_NO_WRITE_LATENCY1)
+            //think there was a bug because it changes nothing
+            ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
+#else
             // The MFP doesn't update for about 8 cycles, so we should execute the next
             // instruction before causing any interrupts
             ioaccess=old_ioaccess;
-#if defined(SSE_INT_MFP_WRITE_DELAY1)
-            time_of_last_write_to_mfp_reg=ACT;
-#endif
             if ((ioaccess & (IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE | IOACCESS_FLAG_FOR_CHECK_INTRS |
                                 IOACCESS_FLAG_DELAY_MFP))==0){
               ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE;
             }
+#endif
+
+#if defined(SSE_INT_MFP_WRITE_DELAY1) 
+            time_of_last_write_to_mfp_reg=ACT;
+#endif
           }
         }else{ // even
           // Byte access causes bus error
@@ -969,7 +1001,7 @@ This address is being used to feed the National LMC both address and data
 #endif
 
             {
-              TRACE("Microwire write %X at %X denied, %d cycles after write\n",io_src_b,addr,ACT-MicroWire_StartTime);
+              TRACE_LOG("Microwire write %X at %X denied, %d cycles after write\n",io_src_b,addr,ACT-MicroWire_StartTime);
               break; // fixes XMas 2004 scroller
             }
 #endif
@@ -984,7 +1016,7 @@ This address is being used to feed the National LMC both address and data
             if(ACT-MicroWire_StartTime<MICROWIRE_LATENCY_CYCLES) 
 #endif
             {
-              TRACE("Microwire write %X at %X denied, %d cycles after write\n",io_src_b,addr,ACT-MicroWire_StartTime);
+              TRACE_LOG("Microwire write %X at %X denied, %d cycles after write\n",io_src_b,addr,ACT-MicroWire_StartTime);
               break;
             }
 #endif
@@ -2147,7 +2179,8 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
   if (((1<<15)&d2_dpeek(FAKE_IO_START+24))
   // we add conditions address range - logsection enabled
 
-      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_INTERRUPTS] ) //mfp
+//      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_INTERRUPTS] ) //mfp
+      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_MFP] ) //mfp
       && ( (addr&0xffff00)!=0xfffc00 || logsection_enabled[LOGSECTION_IKBD] ) //acia
       && ( (addr&0xffff00)!=0xff8600 || logsection_enabled[LOGSECTION_FDC] ) //dma
       && ( (addr&0xffff00)!=0xff8800 || logsection_enabled[LOGSECTION_SOUND] )//psg

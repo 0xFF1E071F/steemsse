@@ -57,6 +57,16 @@ screen_event_struct event_plan_50hz[313*2+2+1],event_plan_60hz[263*2+2+1],event_
 
 void event_trigger_vbi();
 
+#elif defined(SSE_INT_HBL_EVENT)
+
+screen_event_struct event_plan_50hz[313*2+4],event_plan_60hz[263*2+4],event_plan_70hz[600*2+4],
+                    event_plan_boosted_50hz[313*2+4],event_plan_boosted_60hz[263*2+4],event_plan_boosted_70hz[600*2+4];
+
+#elif defined(SSE_VAR_RESIZE_370)
+EXT screen_event_struct event_plan_50hz[313*2+4],event_plan_60hz[263*2+4],event_plan_70hz[600*2+4],
+                    event_plan_boosted_50hz[313*2+4],event_plan_boosted_60hz[263*2+4],event_plan_boosted_70hz[600*2+4];
+
+
 #else
 
 screen_event_struct event_plan_50hz[313*2+2],event_plan_60hz[263*2+2],event_plan_70hz[600*2+2],
@@ -103,6 +113,7 @@ void event_pasti_update();
 #include "SSE/SSEFloppy.h"
 #endif
 
+#include "SSE/SSEGlue.h"
 
 #ifdef SHOW_DRAW_SPEED
 extern HWND  StemWin;
@@ -220,12 +231,6 @@ void run()
         }//while (cpu_cycles>0 && runstate==RUNSTATE_RUNNING)
         DEBUG_ONLY( if (runstate!=RUNSTATE_RUNNING) break; )
         DEBUG_ONLY( mode=STEM_MODE_INSPECT; )
-       
-/*  SS Events (such as interrupts) are arranged in a chronological way.
-    If an interrupt of lower priority triggers 2 cycles before one of
-    higher priority and it's not blocked, it will be executed by Steem.
-    From the comments in Hatari v1.7.0 it seems correct (Fuzion 77, 78, 84).
-*/
         while (cpu_cycles<=0){
           screen_event_vector(); 
           prepare_next_event();
@@ -433,8 +438,66 @@ void inline prepare_next_event() //SS check this "inline" thing
 //---------------------------------------------------------------------------
 #define LOGSECTION LOGSECTION_MFP_TIMERS
 
+#if defined(SSE_INT_MFP_TIMERS_INLINE)
+/*  About time we did this. Easier for mods and debugging.
+    It doesn't matter if it's really inlined or not.
+*/
+inline void handle_timeout(int tn) {
 
+  log(Str("MFP: Timer ")+char('A'+tn)+" timeout at "+ABSOLUTE_CPU_TIME+" timeout was "+mfp_timer_timeout[tn]+
+    " period was "+mfp_timer_period[tn]);
+
+  if (mfp_timer_period_change[tn]){    
+    MFP_CALC_TIMER_PERIOD(tn);          
+    mfp_timer_period_change[tn]=0;       
+  }
+  int stage=(mfp_timer_timeout[tn]-ABSOLUTE_CPU_TIME); 
+
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE)
+  if(OPTION_PRECISE_MFP)
+    stage-=MC68901.Wobble[tn]; //get the correct timing (no drift)
+#endif
+
+  if (stage<=0){                                       
+    stage+=((-stage/mfp_timer_period[tn])+1)*mfp_timer_period[tn]; 
+  }else{ 
+    stage%=mfp_timer_period[tn]; 
+  }
+
+  int new_timeout=ABSOLUTE_CPU_TIME+stage; 
+
+  if(OPTION_PRECISE_MFP)
+  {
 #if defined(SSE_INT_MFP_RATIO_PRECISION)
+  mfp_timer_period_current_fraction[tn]+=mfp_timer_period_fraction[tn]; 
+#if defined(SSE_INT_MFP_RATIO_PRECISION_2) // 1 cycle precision
+  // this guarantees that we're always at the right cycle, despite
+  // the inconvenience of a ratio
+  if(mfp_timer_period_current_fraction[tn]>=1000) {
+    mfp_timer_period_current_fraction[tn]-=1000;
+    new_timeout+=1; 
+  }
+#elif defined(SSE_INT_MFP_RATIO_PRECISION) // 4 cycle precision
+  if(mfp_timer_period_current_fraction[tn]>=4000) {\
+    mfp_timer_period_current_fraction[tn]-=4000;\
+    new_timeout+=4; \
+  }
+#endif
+#endif
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE)
+  MC68901.Wobble[tn]=rand()&2;
+  new_timeout+=MC68901.Wobble[tn];
+#endif
+  }
+
+  mfp_interrupt_pend(mfp_timer_irq[tn],mfp_timer_timeout[tn]);
+  mfp_timer_timeout[tn]=new_timeout;
+}
+
+#define HANDLE_TIMEOUT(tn) handle_timeout(tn)
+
+#elif defined(SSE_INT_MFP_RATIO_PRECISION)
+// adding the fractional part every 4 cycles
 
 #define HANDLE_TIMEOUT(tn) \
   log(Str("MFP: Timer ")+char('A'+tn)+" timeout at "+ABSOLUTE_CPU_TIME+" timeout was "+mfp_timer_timeout[tn]+ \
@@ -472,40 +535,46 @@ void inline prepare_next_event() //SS check this "inline" thing
     stage%=mfp_timer_period[tn]; \
   }   \
   int new_timeout=ABSOLUTE_CPU_TIME+stage;
-#endif
+
+#endif//?inline
 
 void event_timer_a_timeout()
 {
   HANDLE_TIMEOUT(0);
+#if !defined(SSE_INT_MFP_TIMERS_INLINE)
   mfp_interrupt_pend(MFP_INT_TIMER_A,mfp_timer_timeout[0]);
   mfp_timer_timeout[0]=new_timeout;
+#endif
 }
 void event_timer_b_timeout()
 {
   HANDLE_TIMEOUT(1);
-//BRK(yoho);
+#if !defined(SSE_INT_MFP_TIMERS_INLINE)
   mfp_interrupt_pend(MFP_INT_TIMER_B,mfp_timer_timeout[1]);
   mfp_timer_timeout[1]=new_timeout;
+#endif
 }
 void event_timer_c_timeout()
 {
   HANDLE_TIMEOUT(2);
+#if !defined(SSE_INT_MFP_TIMERS_INLINE)
   mfp_interrupt_pend(MFP_INT_TIMER_C,mfp_timer_timeout[2]);
   mfp_timer_timeout[2]=new_timeout;
+#endif
 }
 void event_timer_d_timeout()
 {
   HANDLE_TIMEOUT(3);
+#if !defined(SSE_INT_MFP_TIMERS_INLINE)
   mfp_interrupt_pend(MFP_INT_TIMER_D,mfp_timer_timeout[3]);
   mfp_timer_timeout[3]=new_timeout;
+#endif
 }
 #undef LOGSECTION
 //---------------------------------------------------------------------------
 #define LOGSECTION LOGSECTION_INTERRUPTS
 void event_timer_b() 
 {
-//BRK(yoho);//??? not used in panic...
-  //TRACE("F%d y%d c%d TB\n",FRAME,scan_y,LINECYCLES);
   if (scan_y<shifter_first_draw_line){
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;
   }else if (scan_y<shifter_last_draw_line){
@@ -517,16 +586,17 @@ void event_timer_b()
       log_to(LOGSECTION_MFP_TIMERS,EasyStr("MFP: Timer B counter decreased to ")+(mfp_timer_counter[1]/64)+" at "+scanline_cycle_log());
       if (mfp_timer_counter[1]<64){
         log(EasyStr("MFP: Timer B timeout at ")+scanline_cycle_log());
-        TRACE_LOG("F%d y%d c%d Timer B pending\n",FRAME,scan_y,LINECYCLES);
-        //TRACE("F%d y%d c%d TB\n",FRAME,scan_y,LINECYCLES);
+        TRACE_LOG("F%d y%d c%d Timer B pending\n",TIMING_INFO);
         mfp_timer_counter[1]=BYTE_00_TO_256(mfp_reg[MFPR_TBDR])*64;
-//BRK(yoho);
-//FrameEvents.Add(scan_y,LINECYCLES,'B',0);
         mfp_interrupt_pend(MFP_INT_TIMER_B,time_of_next_timer_b);
       }
     }
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+cpu_cycles_from_hbl_to_timer_b+
         scanline_time_in_cpu_cycles_at_start_of_vbl + TB_TIME_WOBBLE;
+#if defined(SSE_GLUE) && defined(SSE_INT_MFP_TIMER_B_AER)
+    if(mfp_reg[1]&8)
+      time_of_next_timer_b-=Glue.DE_cycles[shifter_freq_idx];
+#endif
   }else{
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;
   }
@@ -534,7 +604,21 @@ void event_timer_b()
 #undef LOGSECTION
 //---------------------------------------------------------------------------
 
-#if defined(SSE_INT_VBI_START) || defined(SSE_INT_HBL_ONE_FUNCTION)
+
+#if defined(SSE_INT_HBL_EVENT)
+
+void event_hbl()   //just HBL, don't draw yet
+{
+ // if (abs_quick(screen_event_pointer->time-time_of_last_hbl_interrupt)>CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED)
+    hbl_pending=true;
+  screen_event_pointer++;  
+//  prepare_next_event();
+  ASSERT( screen_event_pointer->event==event_scanline );
+}
+
+#elif defined(SSE_INT_VBI_START) || defined(SSE_INT_HBL_ONE_FUNCTION)
+
+
 #else
 void event_hbl()   //just HBL, don't draw yet
 {
@@ -679,6 +763,10 @@ void event_scanline()
 #endif
     time_of_next_timer_b=time_of_next_event
       +cpu_cycles_from_hbl_to_timer_b+TB_TIME_WOBBLE;
+#if defined(SSE_GLUE) && defined(SSE_INT_MFP_TIMER_B_AER) //v3.7 also 1st line
+    if(mfp_reg[1]&8)
+      time_of_next_timer_b-=Glue.DE_cycles[shifter_freq_idx];
+#endif
   }else if (scan_y<shifter_last_draw_line-1){
     if (bad_drawing==0) 
 #if defined(SSE_SHIFTER) &&!defined(SSE_SHIFTER_DRAW_DBG)
@@ -691,7 +779,11 @@ void event_scanline()
 #if defined(SSE_INT_MFP_TIMER_B_AER)
 //  from Hatari, fixes Seven Gates of Jambala; Trex Warrior
     if(mfp_reg[1]&8)
+#if defined(SSE_GLUE)
+      time_of_next_timer_b-=Glue.DE_cycles[shifter_freq_idx];
+#else
       time_of_next_timer_b-=320; //gross?
+#endif
 #endif
   }else if (scan_y<draw_last_scanline_for_border){
     if (bad_drawing==0) 
@@ -848,7 +940,7 @@ void event_scanline()
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_POLL_IN_FRAME)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_POLL_IN_FRAME) //MFD, def doesn't exist anymore
   // We peek Windows message once during the frame and not just at VBL
   // note: undefined for now
   if(scan_y==ikbd.scanline_to_poll
@@ -874,25 +966,31 @@ void event_scanline()
   }
 #endif
 
-  if (abs_quick(cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt)>CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED
+#if !defined(SSE_INT_HBL_EVENT)
+
+#if defined(SSE_INT_HBL_IACK_FIX2)
+    if (cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt>CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED
+#else
+    if (abs_quick(cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt)>CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_HBL_IACK_FIX)
-/*  CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED was defined as 28
-    It's a way to have 2 HBL interrupts cleared when the second is set pending
-    during the IACK cycles.
-    So the idea, more formally developped in Hatari 1.7, was already in Steem
-    for HBL and for MFP, but in both cases the values had to be corrected.
-    Here, the too high value would deny the HBL all the time in BBC52
-    (should have seen this before!)
-    28-12 = 16 = IACK cycles, . Or 12?
-    With this fix we can do without the "jitter", using the "wobble".
-    TODO change constant when structure is fixed
-*/
-    -12 // fixes BBC52
+#if defined(SSE_INT_HBL_IACK_FIX2)
+    -8
+#else
+    -12 
+#endif
 #endif
     ){ 
     hbl_pending=true;
   }
-
+#ifdef SSE_DEBUG
+  else
+  {
+    TRACE_INT("%d %d %d (%d) no HBI, %d cycles into HBI IACK\n",TIMING_INFO,ACT,abs_quick(cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt));
+    TRACE_OSD("HBI %d IACK %d",scan_y,cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt);
+  }
+#endif
+#endif
   if (dma_sound_on_this_screen) dma_sound_fetch(); 
   screen_event_pointer++;
 
@@ -995,11 +1093,14 @@ void event_vbl_interrupt() //SS misleading name?
     But it's in Hatari too.
     TESTING
 */
+#if SSE_VERSION>=370
+  if(SSE_HACKS_ON && time_of_last_vbl_interrupt+28-ACT>0)//coherence
+#else
   if(SSE_HACKS_ON && time_of_last_vbl_interrupt+56+16-ACT>0)
+#endif
   {
 #if defined(SSE_DEBUG)
-    if((sr & SR_IPL)<SR_IPL_4)
-      TRACE_OSD("VBI %d\n",time_of_last_vbl_interrupt+56+16-ACT);
+    TRACE_INT("no VBI %d\n",time_of_last_vbl_interrupt+28-ACT);
 #endif
   }
   else
@@ -1329,13 +1430,14 @@ void event_vbl_interrupt() //SS misleading name?
     speed_limit_wait_till=timer+(fast_forward_max_speed/shifter_freq);
   }
   log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: speed_limit_wait_till is ")+(speed_limit_wait_till-run_start_time));
-
+#if !defined(SSE_INT_MFP_TIMERS_BASETIME)
   // The MFP clock aligns with the CPU clock every 8000 CPU cycles
   while (abs(ABSOLUTE_CPU_TIME-cpu_time_of_first_mfp_tick)>160000){
-    cpu_time_of_first_mfp_tick+=160000;
+    cpu_time_of_first_mfp_tick+=160000; //SS useful to make more precise?
   }
+#endif
   while (abs(ABSOLUTE_CPU_TIME-shifter_cycle_base)>160000){
-    shifter_cycle_base+=60000;
+    shifter_cycle_base+=60000; //SS 60000?
   }
 
   shifter_pixel=shifter_hscroll;
@@ -1386,7 +1488,6 @@ void event_vbl_interrupt() //SS misleading name?
   else if(screen_res==2 && !(Shifter.m_ShiftMode&2) && COLOUR_MONITOR) 
   {
     screen_res=Shifter.m_ShiftMode&2;//0;//back to LORES
-//    BRK(yoho);
     shifter_freq=50;
     shifter_freq_idx=0;
     init_screen();
@@ -1460,14 +1561,23 @@ void event_vbl_interrupt() //SS misleading name?
 
 
 
-#if defined(SSE_TIMINGS_FRAME_ADJUSTMENT)
+#if defined(STEVEN_SEAGAL) && defined(SSE_TIMINGS_FRAME_ADJUSTMENT)
   if(shifter_freq_at_start_of_vbl==50)
   {
+  
+#if defined(SSE_INT_HBL_EVENT)
+    ASSERT(event_plan_50hz[627].event==event_vbl_interrupt);
+#endif
+
 
     event_plan_50hz[314
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START)
+#if defined(SSE_INT_VBI_START)
       +1 //TODO check if correct...
 #endif
+#if defined(SSE_INT_HBL_EVENT)
+      *2-1
+#endif
+
       ].time=160256;//restore!!!
 
   }
