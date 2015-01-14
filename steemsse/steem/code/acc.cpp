@@ -40,7 +40,11 @@ void m68k_poke(MEM_ADDRESS ad,BYTE x);
   //}
   struct_logsection logsections[NUM_LOGSECTIONS+8]={{"Always",LOGSECTION_ALWAYS},
                                     {"Video",LOGSECTION_VIDEO},
+#if defined(SSE_BOILER_TRACE_MFP1)
+                                    {"MFP",LOGSECTION_MFP_TIMERS},
+#else
                                     {"MFP Timers",LOGSECTION_MFP_TIMERS},
+#endif
                                     {"Interrupts",LOGSECTION_INTERRUPTS},
                                     {"IO",LOGSECTION_IO},
                                     {"Crash",LOGSECTION_CRASH},

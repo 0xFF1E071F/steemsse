@@ -392,7 +392,9 @@ when it does).
 
 #if defined(SSE_ACIA_IRQ_DELAY2)
 /*  Not necessary for V8MS but it's logical
+ -> very bad if we define SSE_INT_MFP_GPIP_TO_IRQ_DELAY
 */
+
           if(SSE_HACKS_ON && 
             abs(ACT-ACIA_IKBD.last_rx_read_time)<ACIA_RDRF_DELAY)
           {
@@ -1208,7 +1210,8 @@ FF8240 - FF827F   palette, res
 // we add conditions address range - logsection enabled
 
 
-      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_INTERRUPTS] ) //mfp
+//      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_INTERRUPTS] ) //mfp
+      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_MFP] ) //mfp
       && ( (addr&0xffff00)!=0xfffc00 || logsection_enabled[LOGSECTION_IKBD] ) //acia
       && ( (addr&0xffff00)!=0xff8600 || logsection_enabled[LOGSECTION_FDC] ) //dma
       && ( (addr&0xffff00)!=0xff8800 || logsection_enabled[LOGSECTION_SOUND] )//psg
@@ -2004,7 +2007,8 @@ Done one cycle of all palettes
     if (((1<<14)&d2_dpeek(FAKE_IO_START+24))
     // we add conditions address range - logsection enabled
 
-      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_INTERRUPTS] ) //mfp
+//      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_INTERRUPTS] ) //mfp
+      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_MFP] ) //mfp
       && ( (addr&0xffff00)!=0xfffc00 || logsection_enabled[LOGSECTION_IKBD] ) //acia
       && ( (addr&0xffff00)!=0xff8600 || logsection_enabled[LOGSECTION_FDC] ) //dma
       && ( (addr&0xffff00)!=0xff8800 || logsection_enabled[LOGSECTION_SOUND] )//psg

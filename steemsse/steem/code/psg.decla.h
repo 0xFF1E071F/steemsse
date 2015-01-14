@@ -69,7 +69,9 @@ EXT int sound_variable_d INIT(208);
 #define SOUND_MODE_MONITOR      3
 #define SOUND_MODE_SHARPSAMPLES 4
 #define SOUND_MODE_SHARPCHIP    5
+#if defined(SSE_SOUND_FILTER_HATARI)
 #define SOUND_MODE_HATARI    6
+#endif
 
 #else
 #define SOUND_MODE_MUTE         0

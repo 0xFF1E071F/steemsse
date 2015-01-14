@@ -20,8 +20,11 @@ DESCRIPTION: Functions to create the pages of the options dialog box.
 #include "SSE\SSEOption.h"
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO_OPTION)
+#include "SSE\SSEInterrupt.h"
+#endif
 
-#if defined(SSE_VID_D3D_LIST_MODES)
+#if defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D_LIST_MODES)
 #include "display.decla.h"
 #endif
 
@@ -142,6 +145,12 @@ void TOptionBox::CreateMachinePage()
     SendMessage(Win,CB_SETCURSEL,CBAddString(Win,Cycles+" "+T("Megahertz"),n_cpu_cycles_per_second),0);
   }
   y+=30;
+
+
+
+
+
+
 
   Wid=GetTextSize(Font,T("Memory size")).Width;
   CreateWindow("Static",T("Memory size"),WS_CHILD,page_l,y+4,Wid,20,Handle,HMENU(8090),HInstance,NULL);
@@ -1313,7 +1322,7 @@ void TOptionBox::CreateFullscreenPage()
     page_l,y,Wid,25,Handle,(HMENU)7314,HInstance,NULL);
 #endif
   SendMessage(Win,BM_SETCHECK,SSE_OPTION_D3D,0);
-  ToolAddWindow(ToolTip,Win,T("You can use Direct3D instead of DirectDraw for fullscreen. It should be more compatible."));
+  ToolAddWindow(ToolTip,Win,T("You can use Direct3D instead of DirectDraw for fullscreen. It should be more compatible with Windows 7 or 8."));
   y+=LineHeight;
 #endif
 
@@ -2870,7 +2879,7 @@ Windows 2000	5.0
 
 #if defined(SSE_IKBD_6301) 
 #if SSE_VERSION>=370
-  Wid=GetCheckBoxSize(Font,T("ACIA/6301/MIDI")).Width;
+  Wid=GetCheckBoxSize(Font,T("6850/6301")).Width;
 #elif SSE_VERSION>=364
   Wid=GetCheckBoxSize(Font,T("6301/ACIA")).Width;
 #else
@@ -2891,7 +2900,7 @@ Windows 2000	5.0
 #endif
 
 #if SSE_VERSION>=370
-  Win=CreateWindow("Button",T("ACIA/6301/MIDI"),mask,page_l,y,Wid,23,Handle,
+  Win=CreateWindow("Button",T("6850/6301"),mask,page_l,y,Wid,23,Handle,
     (HMENU)1029,HInstance,NULL);
 #elif SSE_VERSION>=364
   Win=CreateWindow("Button",T("6301/ACIA"),mask,page_l,y,Wid,23,Handle,
@@ -2911,6 +2920,22 @@ Windows 2000	5.0
  improvements or bugs"));
   y+=LineHeight;
 #endif
+
+
+#if defined(SSE_INT_MFP_OPTION)
+#if defined(SSE_IKBD_6301) 
+  y-=LineHeight; // maybe it will be optimised away!
+#endif
+  Offset=Wid+HorizontalSeparation;
+  Wid=GetCheckBoxSize(Font,T("68901")).Width;
+  Win=CreateWindow("Button",T("68901"),WS_CHILD | WS_TABSTOP |
+    BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)7323,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,OPTION_PRECISE_MFP,0);
+  ToolAddWindow(ToolTip,Win,
+  T("Check for a more precise emulation of the MFP"));
+  y+=LineHeight;
+#endif
+
 
 #if defined(SSE_VAR_KEYBOARD_CLICK) && !defined(SSE_GUI_OPTIONS_SOUND4)
 #if defined(SSE_IKBD_6301) 
@@ -2937,9 +2962,9 @@ Windows 2000	5.0
 
 #if defined(SSE_GUI_MOUSE_CAPTURE)  
 #if defined(SSE_VAR_KEYBOARD_CLICK) 
-  y-=LineHeight;
+//  y-=LineHeight;
 #endif
-  Offset+=Wid+HorizontalSeparation;
+//  Offset+=Wid+HorizontalSeparation;
   Wid=GetCheckBoxSize(Font,T("Capture mouse")).Width;
   Win=CreateWindow("Button",T("Capture mouse"),
                           WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
@@ -3172,10 +3197,44 @@ Windows 2000	5.0
   y+=LineHeight;
 #endif
   
+
+
+
+
+#if defined(SSE_INT_MFP_RATIO_OPTION) // user can fine tune CPU clock
+  Wid=GetCheckBoxSize(Font,T("Fine tune CPU clock")).Width;
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+  if(!hPasti)
+    mask|=WS_DISABLED;
+  Win=CreateWindow("Button",T("Fine tune CPU clock"),mask,
+    page_l+Offset,y,Wid,25,Handle,(HMENU)7322,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,OPTION_CPU_CLOCK,0);
+  ToolAddWindow(ToolTip,Win,
+    T("Advanced. Changing this parameter changes the CPU/MFP clock ratio"));
+
+  CreateWindow("Static","",WS_CHILD | SS_CENTER,page_l+115,y+5,100,20,Handle,(HMENU)7321,HInstance,NULL);
+  y+=20;
+#define ST_CYCLES_TO_CONTROL(c) ((c-8000000)/10)
+  Win=CreateWindow(TRACKBAR_CLASS,"",WS_CHILD | WS_TABSTOP | TBS_HORZ,
+                    page_l,y,page_w,18,Handle,(HMENU)7320,HInstance,NULL);
+  SendMessage(Win,TBM_SETRANGE,0,MAKELPARAM(ST_CYCLES_TO_CONTROL(8000000),ST_CYCLES_TO_CONTROL(8030000)));
+  SendMessage(Win,TBM_SETLINESIZE,0,1);
+  SendMessage(Win,TBM_SETTIC,0,ST_CYCLES_TO_CONTROL(CPU_STF_ALT));
+  SendMessage(Win,TBM_SETTIC,0,ST_CYCLES_TO_CONTROL(CPU_STE_PAL));
+  SendMessage(Win,TBM_SETTIC,0,ST_CYCLES_TO_CONTROL(CPU_STF_PAL));
+  SendMessage(Win,TBM_SETPOS,1,ST_CYCLES_TO_CONTROL(CpuCustomHz));
+  SendMessage(Win,TBM_SETPAGESIZE,0,1);
+  SendMessage(Handle,WM_HSCROLL,0,LPARAM(Win));
+  y+=30;
+
+#endif
+
 #if SSE_VERSION>=370
   if(y<300)
     y=300;
 #endif
+
+
 #if SSE_VERSION<370//all's been moved
   CreateWindow("Button",T("Perform cold reset now"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
                   page_l,y,page_w,23,Handle,(HMENU)8601,HInstance,NULL);

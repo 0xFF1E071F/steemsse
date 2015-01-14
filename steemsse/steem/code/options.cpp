@@ -71,6 +71,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 #include "SSE/SSEShifter.h"
 #endif
 
+#include "SSE/SSEGlue.h"
 
 #define LOGSECTION LOGSECTION_OPTIONS//SS
 
@@ -385,6 +386,21 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
 #endif//SSE_TOS_SNAPSHOT_AUTOSELECT3
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_STF_MATCH_TOS)
+
+#if defined(SSE_STF_MATCH_TOS2) // 1.62 instead of 1.06
+          // remember paths of default TOS for STF and STE
+          if(Ver==DEFAULT_TOS_STF && KnownSTFTosPath.Empty())
+          {
+            //TRACE_LOG("Memorising %s for TOS%X\n",Path.c_str(),Ver);
+            KnownSTFTosPath=Path;
+          }
+          else if(Ver==DEFAULT_TOS_STE && KnownSTETosPath.Empty())
+          {
+            //TRACE_LOG("Memorising %s for TOS%X\n",Path.c_str(),Ver);
+            KnownSTETosPath=Path;
+          }
+
+#else
           // remember paths of TOS102 (STF) & TOS106 (STE)
           if(Ver==0x102 && KnownSTFTosPath.Empty())
           {
@@ -396,6 +412,7 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
             //TRACE_LOG("Memorising %s for TOS%X\n",Path.c_str(),Ver);
             KnownSTETosPath=Path;
           }
+#endif
 #endif
           
 #if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
@@ -1133,6 +1150,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             TRACE_LOG("Option WU = %d\n",WAKE_UP_STATE);
 #if defined(SSE_SHIFTER_UNSTABLE)
             Shifter.Preload=0; // reset the thing!
+#endif
+#if defined(SSE_GLUE)
+            Glue.Update();
 #endif
           }
           break;
@@ -1930,6 +1950,28 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 
+#if defined(SSE_INT_MFP_RATIO_OPTION) // user can fine tune clock
+        case 7322:
+          if (HIWORD(wPar)==BN_CLICKED){
+            OPTION_CPU_CLOCK=!OPTION_CPU_CLOCK;
+            TRACE_LOG("Option CPU clock = %d\n",OPTION_CPU_CLOCK);
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_CPU_CLOCK,0);
+            CpuMfpRatio=(OPTION_CPU_CLOCK?CpuCustomHz:CpuNormalHz)
+              /(double)MFP_CLK_TH_EXACT;
+          }
+          break;
+#endif
+
+#if defined(SSE_INT_MFP_OPTION) // Option MC68901
+        case 7323:
+          if (HIWORD(wPar)==BN_CLICKED){
+            OPTION_PRECISE_MFP=!OPTION_PRECISE_MFP;
+            TRACE_LOG("Option MC68901 = %d\n",OPTION_PRECISE_MFP);
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_PRECISE_MFP,0);
+          }
+          break;
+#endif
+
 #endif//SS
 
         case 8100: // Memory size
@@ -2631,6 +2673,23 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 #endif
+
+
+#if defined(SSE_INT_MFP_RATIO_OPTION) // user can fine tune clock
+        case 7320:
+        {
+          CpuCustomHz=SendDlgItemMessage(Win,7320,TBM_GETPOS,0,0)*10+8000000;
+          char tmp[8];
+          itoa(CpuCustomHz,tmp,10);
+          SendDlgItemMessage(Win,7321,WM_SETTEXT,0,LPARAM(tmp));
+          if(OPTION_CPU_CLOCK)
+            CpuMfpRatio=(double)CpuCustomHz/(double)MFP_CLK_TH_EXACT;
+          break;
+        }
+#endif
+
+
+
 
         case 6001:
           MIDI_out_volume=(WORD)SendMessage(HWND(lPar),TBM_GETPOS,0,0);

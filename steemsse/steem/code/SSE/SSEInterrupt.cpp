@@ -1,6 +1,6 @@
 #if defined(SSE_INTERRUPT)
 
-#if defined(SSE_INT_JITTER) 
+#if defined(SSE_INT_JITTER) //no
 /*  This comes from Hatari but was also discussed on AF.
 http://www.atari-forum.com/viewtopic.php?f=68&t=9527&p=188067#p188067
 "
@@ -24,11 +24,19 @@ It is identical with GLUE wake up state 1 and 2: it is cyclic with
 #endif
 
 #if defined(SSE_INT_MFP_RATIO) // need no SSE_STF
+#if SSE_VERSION>=370
+DWORD CpuNormalHz=CPU_STF_PAL;
+#if defined(SSE_INT_MFP_RATIO_OPTION)
+DWORD CpuCustomHz=CPU_STF_PAL;
+#endif
+double CpuMfpRatio=(double)CpuNormalHz/(double)MFP_CLK_TH_EXACT;
+#else
 #if defined(SSE_INT_MFP_RATIO_STE)
 double CpuMfpRatio=(double)CPU_STE_TH/(double)MFP_CLK_STE_EXACT;
 #else
-double CpuMfpRatio=(double)CPU_STE_TH/(double)MFP_CLK_LE_EXACT;
+double CpuMfpRatio=(double)CPU_STE_TH/(double)MFP_CLK_LE_EXACT;//wrong...
 #endif
 DWORD CpuNormalHz=CPU_STE_TH; // STE
+#endif
 #endif
 

@@ -3,6 +3,8 @@
 #define MFP_DECLA_H
 
 #include "SSE/SSEOption.h"
+#include "SSE/SSEDebug.h"
+
 #define EXT extern
 #define INIT(s)
 
@@ -10,15 +12,19 @@
 #include <binary.h>
 #endif
 
-//#ifdef SSE_UNIX //? to check...
 inline int abs_quick(int i) //was in emu.cpp (!)
 {
   if (i>=0) return i;
   return -i;
 }
-//#endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_TIMER_B_NO_WOBBLE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_TIMER_B_WOBBLE2)
+/*  TIMERB01.TOS; TIMERB03.TOS
+    There's definitely timer B wobble, but the range is 2 cycles, not 4.
+    This breaks Sunny scroller.
+*/
+#define TB_TIME_WOBBLE ( rand()&2 )
+#elif defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_TIMER_B_NO_WOBBLE)
 #define TB_TIME_WOBBLE (0) // no wobble for Timer B
 #else
 #define TB_TIME_WOBBLE (rand() & 4)
@@ -95,7 +101,7 @@ EXT BYTE mfp_gpip_no_interrupt INIT(0xf7);
 EXT int mfp_time_of_set_pending[16];
 #endif
 
-#if defined(SSE_INT_MFP_WRITE_DELAY1)
+#if defined(SSE_INT_MFP_WRITE_DELAY1)//&& !defined(SSE_INT_MFP_OBJECT)
 EXT int time_of_last_write_to_mfp_reg;
 #endif
 
@@ -115,24 +121,95 @@ EXT BYTE mfp_gpip_input_buffer;
 //#define MFP_CLK_EXACT 2450780  old version, checked inaccurately
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO)
-// it's a variable now! See SSE.h !!!!!!!!!!!!
+// it's a variable now! See SSEDecla.h !!!!!!!!!!!!
 #else
 #define CPU_CYCLES_PER_MFP_CLK (8000000.0/double(MFP_CLK_EXACT))
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_IACK_LATENCY)
+/*
+Final Conflict
+
+http://www.atari-forum.com/viewtopic.php?f=51&t=15885#p195733 (ijor):
+
+If a timer counts through again during the IACK cycles, the current
+interrupt will clear the new one too, which will give other code
+some air.
+
+v3.7 undef, see SSE_INT_MFP_IACK_LATENCY2 and SSE_INT_MFP_IACK_LATENCY3
+*/
+#define CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED (SSE_HACKS_ON?32:28)
+#else
 #define CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED 20
-//#define CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED 20
+#endif
+
 #define MFP_S_BIT (mfp_reg[MFPR_VR] & BIT_3)
 
 //const int mfp_io_port_bit[16]={BIT_0,BIT_1,BIT_2,BIT_3,-1,-1,BIT_4,BIT_5,-1,-1,-1,-1,-1,-1,BIT_6,BIT_7};
 
 
 
+#if defined(SSE_INT_MFP_OBJECT) //created v3.7
+/*  We create this object for some additions, we don't transfer
+    all MFP emu into it. We don't create a SSE file yet.
+*/
+
+#if defined(SSE_INT_MFP_UTIL)
+
+struct TMC68901IrqInfo {
+  unsigned int IsGpip:1;
+  unsigned int IsTimer:1;
+  unsigned int Timer:4;
+};
+
+#endif
+
+struct TMC68901 {
+
+#if defined(SSE_INT_MFP_IRQ_TIMING) // helps me debugging
+
+  TMC68901();
+
+  char NextIrq; //-1 reset
+  char LastIrq;
+  BYTE LastRegisterWritten;
+  BYTE LastRegisterFormerValue;
+  int IrqTiming;
+  int IackTiming;
+  int UpdateNextIrq();
+  int WriteTiming;
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE)
+  BYTE Wobble[4];
+#endif
+#if defined(SSE_INT_MFP_UTIL)
+  TMC68901IrqInfo IrqInfo[16];
+  bool Enabled(int irq);
+  bool InService(int irq);
+  bool MaskOK(int irq);
+  bool TimerBActive();
+#endif
+#if defined(SSE_INT_MFP_SPURIOUS)
+  bool CheckSpurious(int irq);
+#endif
+#endif
+};
+
+extern TMC68901 MC68901; // declaring the singleton
+
+#endif//SSE_INT_MFP_OBJECT
+
 
 inline BYTE mfp_get_timer_control_register(int);
-EXT const int mfp_timer_8mhz_prescale[16];
 
+#if defined(SSE_VAR_RESIZE_370)
+EXT const WORD mfp_timer_8mhz_prescale[16];
+EXT const BYTE mfp_timer_irq[4];
+EXT const BYTE mfp_gpip_irq[8];
+#else
+EXT const int mfp_timer_8mhz_prescale[16];
 EXT const int mfp_timer_irq[4];
+EXT const int mfp_gpip_irq[8];
+#endif
 
 void calc_time_of_next_timer_b();
 
@@ -152,19 +229,20 @@ EXT bool mfp_timer_period_change[4];
 void mfp_set_timer_reg(int,BYTE,BYTE);
 int mfp_calc_timer_counter(int);
 void mfp_init_timers();
+#if defined(SSE_INT_MFP_REFACTOR1)
+bool mfp_set_pending(int,int);
+#else
 inline bool mfp_set_pending(int,int);
-
+#endif
 void mfp_gpip_set_bit(int,bool);
-
-EXT const int mfp_gpip_irq[8];
 
 //int mfp_gpip_timeout;
 
 EXT bool mfp_interrupt_enabled[16];
 EXT int mfp_time_of_start_of_last_interrupt[16];
-
+#if !defined(SSE_INT_MFP_TIMERS_BASETIME)
 EXT int cpu_time_of_first_mfp_tick;
-
+#endif
 
 #define MFP_CALC_INTERRUPTS_ENABLED	\
 {	\
@@ -197,7 +275,7 @@ void mfp_check_for_timer_timeouts(); // SS not implemented
           double(mfp_timer_prescale[mfp_get_timer_control_register(t)]* \
             int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+t])))*CPU_CYCLES_PER_MFP_CLK);\
           mfp_timer_period_fraction[t]=int(  1000*((double(mfp_timer_prescale[mfp_get_timer_control_register(t)]*int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+t]))) * CPU_CYCLES_PER_MFP_CLK)-(double)mfp_timer_period[t])  );\
-         ;// TRACE("MFP_CALC_TIMER_PERIOD %d\n",t);
+         mfp_timer_period_current_fraction[t]=0;// TRACE("MFP_CALC_TIMER_PERIOD %d\n",t);
          
 #else
 
@@ -235,49 +313,12 @@ inline BYTE mfp_get_timer_control_register(int n) //was in mfp.cpp
   }
 }
 
+#if !defined(SSE_INT_MFP_REFACTOR1) // back to mfp.cpp!
+
 inline bool mfp_set_pending(int irq,int when_set) //was in mfp.cpp
 {
+  ASSERT(mfp_interrupt_enabled[irq]);
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_IACK_LATENCY)
-/*
-Final Conflict
-
-http://www.atari-forum.com/viewtopic.php?f=51&t=15885#p195733 (ijor):
-
-The CPU takes several cycles between the moment it decides to take an interrupt
- (and which one), until it actually acks the interrupt to the MFP. 
-And only at the latter time the MFP clears its pending bit (and interrupt 
-state). The former happens (in this case) during execution of the RTE 
-instruction. 
-The latter on the Interrupt ACK bus cycle, part of the interrupt exception 
-sequence. Let's call those two critical moments, "t1" and "t2".
-
-Let's consider a timer interrupt happening just before "t2", the Int ACK 
-cycle (interrupt is being processed as a consequence of the previous timer
- interrupt). The MFP would clear this new interrupt, even when the CPU
- meant to ack the previous one. In other words, MFP doesn't signal any
- interrupt any more, at least not until the next timer period. But if the
- timing is right, the next timer interrupt would happen just after "t1".
- So by the time the next interrupt happens, the CPU already dediced to 
-either run the VBL interrupt, or the main code.
-  =>
-  Timer A is pending...      check interrupts... start IACK (12 cycles)
-  During those 12 cycles, Timer A triggers again! On a real ST, the MFP
-  clears the interrupt for both occurrences.
-  In Steem:
-  Without the fix, 56 cycles will be counted for first interrupt, then
-  timers will be checked and Timer A will be set pending again.
-  With the fix, being too close to former one, Timer A will be ignored.
-  So we don't need to split the interrupt timings.
-  Because of the way we implement it, the fix is considered a hack, but
-  I've seen nothing broken by it yet (since v3.3).
-  CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED = 20
-  But the same concept for HBL = 28
-  We change those values to 12? 16?
-
-  TODO: This only takes care of 'double pending' case, but there's also
-  the 'higher int during IACK' possibility (cases?)
-
-*/
   if(abs_quick(when_set-mfp_time_of_start_of_last_interrupt[irq])
     >= (SSE_HACKS_ON
     ?56-8+CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED
@@ -294,10 +335,11 @@ either run the VBL interrupt, or the main code.
   return (mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)] & mfp_interrupt_i_bit(irq))!=0;
 }
 
+#endif
 
 //#endif//in_emu
 
 #undef EXT
 #undef INIT
-
+#undef LOGSECTION //SS
 #endif//MFP_DECLA_H
