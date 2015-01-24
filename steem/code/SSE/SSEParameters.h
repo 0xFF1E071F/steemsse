@@ -416,7 +416,15 @@ Far more on the ST.
 
 #if defined(SSE_INT_VBL_STF) // modest hack still works
 
-#if SSE_VERSION<364//70
+#if defined(SSE_TIMINGS_STE_NOPS_TO_FIRST_LINE)
+#define HBL_FOR_STE (444 - 4)
+#else
+#define HBL_FOR_STE (444)
+#endif
+
+#if defined(SSE_TIMINGS_STE_NOPS_TO_FIRST_LINE_)
+#define HBL_FOR_STF (444+4)
+#elif SSE_VERSION<364//70
 //this particular hack doesn't look useful for anything now
 #define HBL_FOR_STF (HBL_FOR_STE+4+(SSE_HACKS_ON?4:0)) //TODO
 #else
@@ -502,20 +510,27 @@ Far more on the ST.
 #define  MFP_CLK_TH_EXACT 2457600 // ( 2^15 * 3 * 5^2 )
 #endif
 
-#if defined(SSE_INT_MFP_WRITE_DELAY1)
-#define MFP_WRITE_LATENCY 8 // 8 = the smallest for Audio Artistic
+#if defined(SSE_INT_MFP_WRITE_DELAY1) || defined(SSE_INT_MFP_WRITE_DELAY2)\
+  || defined(SSE_INT_MFP_WRITE_DELAY3)
+
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE)
+#define MFP_WRITE_LATENCY 10
+#else
+#define MFP_WRITE_LATENCY 4//8
+#endif
 #endif
 
 #if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY)
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
-#define MFP_TIMER_SET_DELAY 12//(10) // TODO
+#define MFP_TIMER_SET_DELAY 8//10
 #else
-#define MFP_TIMER_SET_DELAY (12) //12 = Steem 3.2
+#define MFP_TIMER_SET_DELAY 10 //12 = Steem 3.2
 #endif
 #endif
 
 #if defined(SSE_INT_MFP_IACK_LATENCY2) || defined(SSE_INT_MFP_IACK_LATENCY3)
-#define MFP_IACK_LATENCY (20)
+#define MFP_IACK_LATENCY (28)
+#define MFP_SPURIOUS_LATENCY (MFP_IACK_LATENCY-8+8) //?
 #endif
 
 

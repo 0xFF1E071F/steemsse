@@ -174,6 +174,7 @@ struct TMC68901 {
   char LastIrq;
   BYTE LastRegisterWritten;
   BYTE LastRegisterFormerValue;
+  BYTE LastRegisterWrittenValue;
   int IrqTiming;
   int IackTiming;
   int UpdateNextIrq();
@@ -181,11 +182,15 @@ struct TMC68901 {
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
   BYTE Wobble[4];
 #endif
+#if defined(SSE_INT_MFP_IACK_LATENCY4)
+  BYTE SkipTimer[4];
+#endif
 #if defined(SSE_INT_MFP_UTIL)
   TMC68901IrqInfo IrqInfo[16];
   bool Enabled(int irq);
   bool InService(int irq);
   bool MaskOK(int irq);
+  bool Pending(int irq);
   bool TimerBActive();
 #endif
 #if defined(SSE_INT_MFP_SPURIOUS)

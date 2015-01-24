@@ -352,6 +352,10 @@ void reset_peripherals(bool Cold)
   if(!Cold)
     memcpy(&mfp_reg[MFPR_TADR],&tmp,4);
 #endif
+#if defined(SSE_INT_MFP_IACK_LATENCY4)
+  for(int i=0;i<4;i++)
+    MC68901.SkipTimer[i]=0;
+#endif
   mfp_reg[MFPR_GPIP]=mfp_gpip_no_interrupt;
   mfp_reg[MFPR_AER]=0x4;   // CTS goes the other way
   mfp_reg[MFPR_TSR]=BIT_7 | BIT_4;  //buffer empty | END
