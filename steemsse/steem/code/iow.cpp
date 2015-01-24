@@ -47,7 +47,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 #if defined(SSE_BOILER_TRACE_CONTROL)
     && (((1<<15)&d2_dpeek(FAKE_IO_START+24))) 
     // we add conditions address range - logsection enabled
-
+      && (old_pc<rom_addr)
 //      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_INTERRUPTS] ) //mfp
       && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_MFP] ) //mfp
       && ( (addr&0xffff00)!=0xfffc00 || logsection_enabled[LOGSECTION_IKBD] ) //acia
@@ -60,7 +60,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 
 #endif
     ) 
-    TRACE_LOG("PC %X write byte %X to %X\n",pc-2,io_src_b,addr);
+    TRACE_LOG("%d PC %X write byte %X to %X\n",ACT,old_pc,io_src_b,addr);
 #endif
 
 #if defined(SSE_MMU_WU_IO_BYTES_W) //no, too radical
@@ -665,6 +665,7 @@ system exclusive start and end messages (F0 and F7).
 
 #if defined(SSE_INT_MFP_IRQ_TIMING)
             MC68901.LastRegisterFormerValue=mfp_reg[n]; // save for our hacks
+            MC68901.LastRegisterWrittenValue=io_src_b;
 #endif
 
             if (n==MFPR_GPIP || n==MFPR_AER || n==MFPR_DDR){

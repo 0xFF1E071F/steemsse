@@ -62,7 +62,7 @@ void event_trigger_vbi();
 screen_event_struct event_plan_50hz[313*2+4],event_plan_60hz[263*2+4],event_plan_70hz[600*2+4],
                     event_plan_boosted_50hz[313*2+4],event_plan_boosted_60hz[263*2+4],event_plan_boosted_70hz[600*2+4];
 
-#elif defined(SSE_VAR_RESIZE_370)
+#elif defined(SSE_VAR_RESIZE_370) // Room for hbi, hbl but only hbl was used
 EXT screen_event_struct event_plan_50hz[313*2+4],event_plan_60hz[263*2+4],event_plan_70hz[600*2+4],
                     event_plan_boosted_50hz[313*2+4],event_plan_boosted_60hz[263*2+4],event_plan_boosted_70hz[600*2+4];
 
@@ -485,11 +485,15 @@ inline void handle_timeout(int tn) {
 #endif
 #endif
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
-  MC68901.Wobble[tn]=rand()&2;
+  MC68901.Wobble[tn]=rand()&1;
   new_timeout+=MC68901.Wobble[tn];
 #endif
   }
-
+#if defined(SSE_INT_MFP_IACK_LATENCY4)
+  if(MC68901.SkipTimer[tn])
+    MC68901.SkipTimer[tn]--;//=false;
+  else
+#endif
   mfp_interrupt_pend(mfp_timer_irq[tn],mfp_timer_timeout[tn]);
   mfp_timer_timeout[tn]=new_timeout;
 }
@@ -588,7 +592,12 @@ void event_timer_b()
         log(EasyStr("MFP: Timer B timeout at ")+scanline_cycle_log());
         TRACE_LOG("F%d y%d c%d Timer B pending\n",TIMING_INFO);
         mfp_timer_counter[1]=BYTE_00_TO_256(mfp_reg[MFPR_TBDR])*64;
-        mfp_interrupt_pend(MFP_INT_TIMER_B,time_of_next_timer_b);
+#if defined(SSE_INT_MFP_IACK_LATENCY4) && defined(SSE_INT_MFP_IACK_LATENCY5)
+        if(MC68901.SkipTimer[1])
+          MC68901.SkipTimer[1]--; 
+        else
+#endif
+          mfp_interrupt_pend(MFP_INT_TIMER_B,time_of_next_timer_b);
       }
     }
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+cpu_cycles_from_hbl_to_timer_b+
@@ -614,6 +623,9 @@ void event_hbl()   //just HBL, don't draw yet
   screen_event_pointer++;  
 //  prepare_next_event();
   ASSERT( screen_event_pointer->event==event_scanline );
+
+ ////! cpu_timer_at_start_of_hbl=time_of_next_event; //linecycle0 stays the same
+
 }
 
 #elif defined(SSE_INT_VBI_START) || defined(SSE_INT_HBL_ONE_FUNCTION)
@@ -907,8 +919,9 @@ void event_scanline()
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
   /////// SS as defined in draw.cpp,
   /////// and relative to cpu_time_of_last_vbl:
+////#if !defined(SSE_INT_HBL_EVENT)//!!!!!
   cpu_timer_at_start_of_hbl=time_of_next_event; //linecycle0 stays the same
-
+/////////////#endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_IPF) && !defined(SSE_IPF_CPU)
   if(Caps.Active==1)
     Caps.Hbl();
@@ -968,7 +981,7 @@ void event_scanline()
 
 #if !defined(SSE_INT_HBL_EVENT)
 
-#if defined(SSE_INT_HBL_IACK_FIX2)
+#if defined(SSE_INT_HBL_IACK_FIX2___)
     if (cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt>CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED
 #else
     if (abs_quick(cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt)>CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED
@@ -987,7 +1000,10 @@ void event_scanline()
   else
   {
     TRACE_INT("%d %d %d (%d) no HBI, %d cycles into HBI IACK\n",TIMING_INFO,ACT,abs_quick(cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt));
-    TRACE_OSD("HBI %d IACK %d",scan_y,cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt);
+#if defined(SSE_OSD_CONTROL)
+    if(OSD_MASK1 & OSD_CONTROL_IACK)
+      TRACE_OSD("HBI %d IACK %d",scan_y,cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt);
+#endif
   }
 #endif
 #endif

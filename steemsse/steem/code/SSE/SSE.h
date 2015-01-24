@@ -3996,9 +3996,9 @@ and all his silly mods are gone!
 #undef SSE_INT_MFP_IACK_LATENCY //same irq
 #define SSE_INT_MFP_IACK_LATENCY2 //delay timers
 #define SSE_INT_MFP_IACK_LATENCY3 //timer B
+#define SSE_INT_MFP_IACK_LATENCY4 //delay timers 
+//#define SSE_INT_MFP_IACK_LATENCY5 //timer B - why?
 #define SSE_INT_MFP_OPTION //performance/precision
-#undef SSE_INT_MFP_PATCH_TIMER_D//Audio Artistic
-#undef SSE_INT_MFP_WRITE_DELAY1 //Audio Artistic
 #define SSE_INT_MFP_UTIL
 #define SSE_INT_MFP_SPURIOUS//cool crashes
 #endif
@@ -4017,7 +4017,11 @@ and all his silly mods are gone!
 #define SSE_INT_MFP_TIMERS_INLINE
 //#define SSE_INT_MFP_TIMERS_RUN_IF_DISABLED //load!
 #define SSE_INT_MFP_TIMERS_STARTING_DELAY //12->?
-#define SSE_INT_MFP_TIMERS_WOBBLE
+//#define SSE_INT_MFP_TIMERS_WOBBLE 
+#undef SSE_INT_MFP_PATCH_TIMER_D//Audio Artistic
+#undef SSE_INT_MFP_WRITE_DELAY1 //Audio Artistic
+//#define SSE_INT_MFP_WRITE_DELAY2
+#define SSE_INT_MFP_WRITE_DELAY3
 #endif//SSE_INT_MFP
 
 //#define SSE_TIMINGS_STE_NOPS_TO_FIRST_LINE
