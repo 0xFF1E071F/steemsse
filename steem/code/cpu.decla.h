@@ -43,9 +43,11 @@ extern void (*m68k_jump_get_dest_l_not_a[8])();
 extern void (*m68k_jump_get_dest_b_not_a_or_d[8])();
 extern void (*m68k_jump_get_dest_w_not_a_or_d[8])();
 extern void (*m68k_jump_get_dest_l_not_a_or_d[8])();
+#if !defined(SSE_CPU_ROUNDING_NO_FASTER_FOR_D)
 extern void (*m68k_jump_get_dest_b_not_a_faster_for_d[8])();
 extern void (*m68k_jump_get_dest_w_not_a_faster_for_d[8])();
 extern void (*m68k_jump_get_dest_l_not_a_faster_for_d[8])();
+#endif
 extern bool (*m68k_jump_condition_test[16])();
 
 void m68k_get_source_000_b();
@@ -286,6 +288,12 @@ extern MEM_ADDRESS pc_rel_stop_on_ref;
 
 
 #define DEST_IS_REGISTER ((ir&BITS_543)<=BITS_543_001)
+
+#ifdef SSE_CPU_DEST_IS_REGISTER
+#define DEST_IS_DATA_REGISTER ((ir&BITS_543)==BITS_543_000)//3.7
+#define DEST_IS_ADDRESS_REGISTER ((ir&BITS_543)==BITS_543_001)//3.7
+#endif
+
 #define DEST_IS_MEMORY ((ir&BITS_543)>BITS_543_001)
 #define SOURCE_IS_REGISTER_OR_IMMEDIATE ((ir & BITS_543)<=BITS_543_001 || ((ir&b00111111)==b00111100) )
 
