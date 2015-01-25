@@ -3954,23 +3954,93 @@ and all his silly mods are gone!
 
 #define SSE_VAR_SNAPSHOT_INI
 
-#undef SSE_SHIFTER_LINE_PLUS_2_TEST //3.5.3-3.7.0
-#define SSE_SHIFTER_LINE_PLUS_2_POST_TOP_OFF3
-//#define SSE_SHIFTER_LINE_PLUS_2_POST_NO_TOP_OFF
+#ifdef SSE_SHIFTER
+#define SSE_SHIFTER_STE_DE_MED_RES
+#define SSE_SHIFTER_STE_READ_SDP_HSCROLL1 // bugfix 
+#define SSE_SHIFTER_STE_READ_SDP_SKIP // bugfix
+#define SSE_SHIFTER_LINE_MINUS_2_DONT_FETCH //BIG Demo #2, finally!
+#undef SSE_SHIFTER_LINE_PLUS_2_STE
+#define SSE_SHIFTER_LINE_PLUS_2_STE2
+#define SSE_SHIFTER_DOLB_STE
+#define SSE_SHIFTER_DOLB1 //again a hack... TODO
+#define SSE_SHIFTER_PANIC2 //band order
+#endif//shifter
 
-#if defined(SSE_CPU_PREFETCH_TIMING)
-//#define SSE_CPU_PREFETCH_TIMING_STOP
+#ifdef SSE_CPU
+#undef SSE_CPU_IGNORE_RW_4MB // F-29 hangs on 4MB machines, nothing to fix
+#define SSE_CPU_DEST_IS_REGISTER //just new macro
+#define SSE_CPU_TRUE_PC2 // JMP, JSR
+#define SSE_CPU_DIV_CC //carry clear: always
+// quite risky series of mods, must test:
+#define SSE_CPU_ROUNDING_ABCD
+#undef SSE_CPU_ROUNDING_ADD_BW_DN //simplify
+#define SSE_CPU_ROUNDING_ADD
+#undef SSE_CPU_ROUNDING_ADDA_L_DN2 //correct
+#define SSE_CPU_ROUNDING_ADDA
+#define SSE_CPU_ROUNDING_ADDQ
+#define SSE_CPU_ROUNDING_ADDX
+#define SSE_CPU_ROUNDING_ADDI
+#define SSE_CPU_ROUDING_AND
+#define SSE_CPU_ROUNDING_ANDI
+#define SSE_CPU_ROUNDING_BCC
+#define SSE_CPU_ROUNDING_BCHG
+#define SSE_CPU_ROUNDING_BCLR
+#define SSE_CPU_ROUNDING_BSET
+#define SSE_CPU_ROUNDING_BTST
+#define SSE_CPU_ROUNDING_CLR
+#define SSE_CPU_ROUDING_CMP
+#define SSE_CPU_ROUNDING_CMPI
+#define SSE_CPU_ROUNDING_DBCC
+#define SSE_CPU_ROUDING_EA // no more m68k_get_effective_address(), more code
+#define SSE_CPU_ROUDING_EOR
+#define SSE_CPU_ROUNDING_EORI
+#define SSE_CPU_ROUNDING_JSR
+#define SSE_CPU_ROUNDING_MOVE_FROM_SR
+#define SSE_CPU_ROUNDING_MOVE_TO_SR
+#define SSE_CPU_ROUNDING_NBCD
+#define SSE_CPU_ROUNDING_NEG
+#define SSE_CPU_ROUNDING_NEGX
+#define SSE_CPU_ROUNDING_NO_FASTER_FOR_D // eliminate confusing hack, less code
+#define SSE_CPU_ROUNDING_NOT
+#define SSE_CPU_ROUNDING_OR
+#define SSE_CPU_ROUNDING_ORI
+#define SSE_CPU_ROUNDING_PEA
+#define SSE_CPU_ROUNDING_SCC
+#define SSE_CPU_ROUNDING_SHIFT_MEM
+#define SSE_CPU_ROUNDING_SUB
+#define SSE_CPU_ROUNDING_SUBI
+#define SSE_CPU_ROUNDING_SUBQ
+#define SSE_CPU_ROUNDING_SUBX
+
+#define SSE_CPU_PREFETCH_TIMING_ADD
+#define SSE_CPU_PREFETCH_TIMING_ADDA
+#define SSE_CPU_PREFETCH_TIMING_ADDX
+#define SSE_CPU_PREFETCH_TIMING_AND
+#define SSE_CPU_PREFETCH_TIMING_CHK
+#define SSE_CPU_PREFETCH_TIMING_CMP
+#define SSE_CPU_PREFETCH_TIMING_EXT
+#define SSE_CPU_PREFETCH_TIMING_JMP
+#define SSE_CPU_PREFETCH_TIMING_JSR
+#define SSE_CPU_PREFETCH_TIMING_LEA
+#define SSE_CPU_PREFETCH_TIMING_OR
+#define SSE_CPU_PREFETCH_TIMING_STOP
+#define SSE_CPU_PREFETCH_TIMING_SUBX
+#define SSE_CPU_PREFETCH_TIMING_SWAP
 #endif
 
-#define SSE_CPU_TRUE_PC2 // JMP, JSR
+//#undef SSE_INT_HBL_IACK_FIX//bbc52
+#define SSE_INT_HBL_IACK_FIX2 
+//#undef SSE_INT_HBL_ONE_FUNCTION//for tests only
+//#undef SSE_INT_HBL_E_CLOCK_HACK
+//#undef SSE_INT_HBL_INLINE//
+//#define SSE_INT_HBL_EVENT//for tests only
+//#define SSE_INT_VBI_START//test
 
-// it's E-Clock ('6301' on) or 'Wobble', no need to add variables
+// it's E-Clock ('6301' on) or 'Wobble' now, no need to add variables
 #undef SSE_INT_JITTER 
 #undef SSE_INT_JITTER_HBL
 #undef SSE_INT_JITTER_VBL
 #undef SSE_INT_JITTER_RESET
-
-//#undef SSE_INT_MFP_PATCH_TIMER_D // for testing Audio Artistic
 
 
 #define SSE_GUI_OPTIONS_SOUND1 // make some room free
@@ -4034,7 +4104,7 @@ and all his silly mods are gone!
 
 //#define SSE_DRIVE_COMPUTE_BOOT_CHECKSUM //
 
-#undef SSE_CPU_IGNORE_RW_4MB // F-29 hangs on 4MB machines, nothing to fix
+
 #define SSE_STF_MATCH_TOS2 // default = 1.62 instead of 1.06
 
 

@@ -500,6 +500,16 @@ extern TM68000 M68000;
 void TM68000::PrefetchSetPC() { 
   // called by SetPC; we don't count timing here
 
+#ifdef TEST03__________
+  if(pc&1)
+  {
+    TRACE("prefetch: odd address %X\n",pc);
+    exception(BOMBS_ADDRESS_ERROR,EA_FETCH,pc);         \
+    return;
+  }
+#endif
+
+
 #if defined(SSE_CPU_FETCH_IO)
   // don't use lpfetch for fetching in IO zone, use io_read: fixes Warp 
   // original STX + Lethal Xcess Beta STX
@@ -779,7 +789,7 @@ inline void TM68000::GetDestLongNotAOrD() {
   m68k_jump_get_dest_l_not_a_or_d[(ir&BITS_543)>>3]();
 }
 
-
+#if !defined(SSE_CPU_ROUNDING_NO_FASTER_FOR_D)
 inline void TM68000::GetDestByteNotAFasterForD() {
 #if defined(SSE_CPU_TRUE_PC)
   if(!CheckRead)
@@ -805,7 +815,7 @@ inline void TM68000::GetDestLongNotAFasterForD() {
 #endif
   m68k_jump_get_dest_l_not_a_faster_for_d[(ir&BITS_543)>>3]();
 }
-
+#endif
 
 inline void TM68000::GetSourceByte() {
   m68k_jump_get_source_b[(ir&BITS_543)>>3]();
@@ -877,13 +887,14 @@ inline void TM68000::PerformRte() {
   DETECT_CHANGE_TO_USER_MODE;         
   DETECT_TRACE_BIT;     
 
-#if defined(SSE_INT_MFP_IRQ_DELAY2)
+#if defined(SSE_INT_MFP_IRQ_DELAY2) //no
 /*  v3.5.3: hack for Audio Artistic Demo removed (SSE_INT_MFP_IRQ_DELAY2 not 
     defined)
     Doesn't make sense and breaks ST Magazine STE Demo (Stax 65)!
     See more robust hacks in mfp.cpp, SSE_INT_MFP_PATCH_TIMER_D and 
     SSE_INT_MFP_WRITE_DELAY1.
 */
+1234
   if(SSE_HACKS_ON && (ioaccess&IOACCESS_FLAG_DELAY_MFP))
   {
     ioaccess&=~IOACCESS_FLAG_DELAY_MFP;
@@ -891,11 +902,10 @@ inline void TM68000::PerformRte() {
   }
 #endif
 
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_INTERRUPTS 
-  TRACE_LOG("%d %d %d pc %X RTE to %X\n",TIMING_INFO,old_pc,pushed_return_address);
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_CPU 
+#if defined(SSE_BOILER_TRACE_CONTROL)
+  if(TRACE_MASK2&TRACE_CONTROL_RTE)
+    TRACE_INT("%d %d %d pc %X RTE to %X\n",TIMING_INFO,old_pc,pushed_return_address);
+#endif
 
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
   Debug.Rte();
@@ -1015,9 +1025,8 @@ inline void TM68000::PrefetchIrcNoRound() { // the same except no rounding
 
 inline void TM68000::Process() {
 
-  LOG_CPU  
-
 #if defined(SSE_BOILER)
+  LOG_CPU  
   if(TRACE_ENABLED)
   {
 #if defined(SSE_DEBUG_TRACE_IO) 
@@ -1049,19 +1058,6 @@ inline void TM68000::Process() {
   IrAddress=pc;
   PreviousIr=IRD;
   nInstr++;
-#if defined(SSE_CPU_FETCH_TIMING)
-  // 4e72 = STOP, where no fetching occurs
-  // 4afc = ILLEGAL
- // ASSERT( NextIrFetched || ir==0x4e72 || ir==0x4afc); // too strong
-#if defined(DEBUG_BUILD) && defined(SSE_DEBUG_TRACE_PREFETCH)
-  if(!NextIrFetched && ir!=0x4e72)
-  {
-    EasyStr instr=disa_d2(old_pc);
-    TRACE_LOG("%x %x %s no FETCH_TIMING\n",old_pc,PreviousIr,instr.c_str());
-  }
-#endif
-#endif
-//  NextIrFetched=false; // in FETCH_TIMING or...
 #endif//debug
 
 #if defined(SSE_CPU_CHECK_PC) 
@@ -1103,29 +1099,18 @@ inline void TM68000::Process() {
       TRACE_OSD("PC %X",pc);
 #endif
 
-//ASSERT(old_pc!=0x006164);
-//if(pc==0x00FB1A) TRACE("%d %d %d pc %X reached\n",TIMING_INFO,pc);
-//if(pc==0x01255E) TRACE("%d %d %d pc %X reached\n",TIMING_INFO,pc);
-//if(pc==0x01290A) TRACE("%d %d %d pc %X reached\n",TIMING_INFO,pc);
-//if(pc==0x28) TRACE("$14 %X D5 %X D6 %X D7 %X\n",LPEEK(0x14),r[5],r[6],r[7]);
- 
-
-//tmp
-//if(areg[6]!=0xffFF8209 && pc==0x01BF22) { BREAK(0x01BF22); }
-
-//if(areg[6]==0x79e0c) { BREAK(pc+26); }
-
-
 #if defined(SSE_CPU_PREFETCH)
 /*  basic prefetch rule:
 Just before the start of any instruction two words (no more and no less) are 
 already fetched. One word will be in IRD and another one in IRC.
 */
 #if defined(SSE_CPU_PREFETCH_ASSERT)
-
+/*  This is a strong assert that verifies that prefetch has been totally
+    redesigned in Steem SSE. Of course, our mods must be defined.
+*/
 #if defined(SSE_CPU_MOVE_B) && defined(SSE_CPU_MOVE_W) && defined(SSE_CPU_MOVE_L)\
   && defined(SSE_CPU_DIV)
-  ASSERT(prefetched_2); // strong
+  ASSERT(prefetched_2 || ProcessingState==HALTED || ProcessingState==STOPPED); 
 #endif
 #endif
 #if defined(SSE_CPU_PREFETCH_CLASS)
@@ -1157,12 +1142,7 @@ already fetched. One word will be in IRD and another one in IRC.
 #if defined(SSE_IPF_CPU) //|| defined(SSE_DEBUG)
   int cycles=cpu_cycles;
 #endif
-//  ASSERT(pc>0xFC000); 
 
-  //ASSERT(ir!=0x91AE); // dbg: break on opcode
-  //ASSERT(ir!=0x3dc0);
-  //ASSERT(ir!=0xe8d0);
-//  ASSERT(ir!=0x4afc);
   /////////// JUMP TO CPU EMU: ///////////////
   m68k_high_nibble_jump_table[ir>>12](); // go to instruction...
 
@@ -1176,12 +1156,46 @@ already fetched. One word will be in IRD and another one in IRC.
     Because it seems more natural, formalising a flag that must
     be in the CPU.
     Issue: more tests in Process
+
+
+Tracing
+To aid in program development, the M68000 Family includes a facility to allow tracing
+following each instruction. When tracing is enabled, an exception is forced after each
+instruction is executed. Thus, a debugging program can monitor the execution of the
+program under test.
+The trace facility is controlled by the T bit in the supervisor portion of the status register. If
+the T bit is cleared (off), tracing is disabled and instruction execution proceeds from
+instruction to instruction as normal. If the T bit is set (on) at the beginning of the execution
+of an instruction, a trace exception is generated after the instruction is completed. If the
+instruction is not executed because an interrupt is taken or because the instruction is
+illegal or privileged, the trace exception does not occur. The trace exception also does not
+occur if the instruction is aborted by a reset, bus error, or address error exception. If the
+instruction is executed and an interrupt is pending on completion, the trace exception is
+processed before the interrupt exception. During the execution of the instruction, if an
+exception is forced by that instruction, the exception processing for the instruction
+exception occurs before that of the trace exception.
+As an extreme illustration of these rules, consider the arrival of an interrupt during the
+execution of a TRAP instruction while tracing is enabled. First, the trap exception is
+processed, then the trace exception, and finally the interrupt exception. Instruction
+execution resumes in the interrupt handler routine.
+After the execution of the instruction is complete and before the start of the next
+instruction, exception processing for a trace begins. A copy is made of the status register.
+The transition to supervisor mode is made, and the T bit of the status register is turned off,
+disabling further tracing. The vector number is generated to reference the trace exception
+vector, and the current program counter and the copy of the status register are saved on
+the supervisor stack. On the MC68010, the format/offset word is also saved on the
+supervisor stack. The saved value of the program counter is the address of the next
+instruction. Instruction execution commences at the address contained in the trace
+exception vector.
+
+-> no trace after bus/address/illegal error
+
 */
   if(ProcessingState==TRACE_MODE)
   {
 #ifdef DEBUG_BUILD
     if(!Debug.logsection_enabled[LOGSECTION_CPU] && !logsection_enabled[LOGSECTION_CPU])
-      TRACE_LOG("(T) PC %X SR %X VEC %X IR %X: %s\n",old_pc,sr,LPEEK(0x24),ir,disa_d2(old_pc).Text);
+      TRACE_LOG("(T) PC %X SR %X VEC %X IR %04X: %s\n",old_pc,sr,LPEEK(0x24),ir,disa_d2(old_pc).Text);
 #else
     TRACE_LOG("TRACE PC %X IR %X SR %X $24 %X\n",pc,ir,sr,LPEEK(0x24));
 #endif
@@ -1443,7 +1457,6 @@ void m68k_lpoke(MEM_ADDRESS ad,LONG x){
   else
     m68k_lpoke_abus2(x);
 }
-
 
 #endif//poke
 

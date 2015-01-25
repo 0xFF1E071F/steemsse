@@ -107,14 +107,16 @@ void cpu_routines_init()
     m68k_jump_get_dest_b_not_a_or_d[n]=m68k_jump_get_dest_b_not_a[n];
     m68k_jump_get_dest_w_not_a_or_d[n]=m68k_jump_get_dest_w_not_a[n];
     m68k_jump_get_dest_l_not_a_or_d[n]=m68k_jump_get_dest_l_not_a[n];
+#if !defined(SSE_CPU_ROUNDING_NO_FASTER_FOR_D)
     m68k_jump_get_dest_b_not_a_faster_for_d[n]=m68k_jump_get_dest_b_not_a[n];
     m68k_jump_get_dest_w_not_a_faster_for_d[n]=m68k_jump_get_dest_w_not_a[n];
     m68k_jump_get_dest_l_not_a_faster_for_d[n]=m68k_jump_get_dest_l_not_a[n];
+#endif
   }
   m68k_jump_get_dest_b_not_a_or_d[0]=m68k_unrecognised;
   m68k_jump_get_dest_w_not_a_or_d[0]=m68k_unrecognised;
   m68k_jump_get_dest_l_not_a_or_d[0]=m68k_unrecognised;
-
+#if !defined(SSE_CPU_ROUNDING_NO_FASTER_FOR_D)
   m68k_jump_get_dest_b_not_a_faster_for_d[0]=m68k_get_dest_000_b_faster;
   m68k_jump_get_dest_w_not_a_faster_for_d[0]=m68k_get_dest_000_w_faster;
   m68k_jump_get_dest_l_not_a_faster_for_d[0]=m68k_get_dest_000_l_faster;
@@ -139,7 +141,7 @@ void cpu_routines_init()
   m68k_jump_get_dest_b_not_a_faster_for_d[7]=m68k_get_dest_111_b_faster;
   m68k_jump_get_dest_w_not_a_faster_for_d[7]=m68k_get_dest_111_w_faster;
   m68k_jump_get_dest_l_not_a_faster_for_d[7]=m68k_get_dest_111_l_faster;
-
+#endif
 /*
   for(int n=0;n<8;n++){
     m68k_jump_get_dest_b_not_a_faster_for_d[n]=m68k_jump_get_dest_b_not_a[n];

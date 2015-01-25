@@ -19,6 +19,7 @@ extern const char*exception_action_name[4];//={"read from","write to","fetch fro
 #endif
 #endif//#if defined(SSE_STRUCTURE_SSECPU_OBJ)
 
+
 #if defined(SSE_CPU)
 
 TM68000 M68000; // singleton
@@ -743,7 +744,7 @@ void m68k_get_dest_111_l(){
     ILLEGAL;
   }
 }
-
+#if !defined(SSE_CPU_ROUNDING_NO_FASTER_FOR_D)
 /*  EXTRA_PREFETCH has been deactivated, it's being taken care of for
     all instructions now, by PREFETCH_IRC
     The negative timings correct extra timing added in instructions like ORI,
@@ -898,7 +899,7 @@ void m68k_get_dest_111_l_faster(){
     ILLEGAL;
   }
 }
-
+#endif
 
 // Read from address (v3.5.3)
 
@@ -1127,7 +1128,11 @@ void TM68000::SetPC(MEM_ADDRESS ad) {
           }              
         }  
 #if defined(SSE_CPU_FETCH_80000A)
-        if(pc>=0x80000 && pc<0x3FFFFF)
+        if(pc>=0x80000 && pc<0x3FFFFF
+#ifdef TEST03
+    //      && !(pc&1)
+#endif
+          )
         {
           TRACE("fake fetching address for %x\n",pc);
           lpfetch=lpDPEEK(xbios2); 
@@ -1418,6 +1423,11 @@ FC2 FC1 FC0 Address Space
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
       Debug.RecordInterrupt("BOMBS",bombs);
 #endif
+
+#ifdef TEST03
+     // if(LPEEK(bombs*4)&1) bombs--;
+#endif
+
       SET_PC(LPEEK(bombs*4)); // includes final prefetch
 
       SR_CLEAR(SR_TRACE);
@@ -1699,7 +1709,7 @@ void m68k_dpoke_abus2(WORD x){
 #endif
     }else 
 #endif
-#if defined(SSE_CPU_IGNORE_RW_4MB)
+#if defined(SSE_CPU_IGNORE_RW_4MB)//undef 3.7
       // safe mod for RAM<4MB, fixes F-29 4MB, along with peek
     if(abus>FOUR_MEGS || abus==FOUR_MEGS&&mem_len<FOUR_MEGS){
 #else
@@ -1816,6 +1826,7 @@ CPU-Clock  E-clock Keyboard read
 
   Cases:
   3615GEN4 HMD #1
+  Anomaly
   Demoniak
   Krig
   NOJITTER.PRG
@@ -1837,38 +1848,45 @@ void TM68000::SyncEClock(int dispatcher) {
 void TM68000::SyncEClock() {
 #endif
 
-  // sync with E max once per instruction: Demoniak (?)
+  // sync with E max once per instruction
   if(EClock_synced) 
     return;
   EClock_synced=true; 
  
   int act=ACT;
 
+  /* //whatever 
+  if(dispatcher==TM68000::ECLOCK_HBL)
+    act+=8;
+*/
+
 #if defined(SSE_SHIFTER) && defined(SSE_TIMINGS_FRAME_ADJUSTMENT)
   act-=4*Shifter.n508lines; //legit hack: NOJITTER.PRG
 #endif
 
   BYTE wait_states;
+
   switch(abs(act%10)) {
   case 0:
     wait_states=8;
 #if defined(SSE_INT_HBL_E_CLOCK_HACK)
     // pathetic hack for 3615GEN4 HMD #1, make it 4 cycles instead on HBI
-    // (suspect wrong timing in an instruction?)
-    if(!(dispatcher==TM68000::ECLOCK_HBL&&SSE_HACKS_ON))
+    if(dispatcher==TM68000::ECLOCK_HBL&&SSE_HACKS_ON)
+      TRACE_LOG("ECLK 8->4\n");
+    else
 #endif
     break;
   case 2:
   case 4: 
     wait_states=4;
     break;
-  default:
+  default: //6,8
     wait_states=0;
   }//sw
 
   InstructionTime(wait_states); 
 
-#if defined(SSE_DEBUG)
+#if defined(SSE_DEBUG) 
   char* sdispatcher[]={"ACIA","HBL","VBL"};
 #if defined(SSE_DEBUG_FRAME_REPORT_ACIA)
   FrameEvents.Add(scan_y,LINECYCLES,'E',wait_states);
@@ -1881,14 +1899,15 @@ void TM68000::SyncEClock() {
 #endif
     FrameEvents.Add(scan_y,LINECYCLES,'E',wait_states);
 #endif
-  if(wait_states) 
+#if defined(SSE_BOILER_TRACE_CONTROL)
+  if(wait_states && (TRACE_MASK2&TRACE_CONTROL_ECLOCK)) 
 #if defined(SSE_CPU_E_CLOCK_DISPATCHER)
     TRACE_LOG("F%d y%d c%d %s E-Clock +%d\n",TIMING_INFO,sdispatcher[dispatcher],wait_states);
 #else
     TRACE_LOG("F%d y%d c%d E-Clock +%d\n",TIMING_INFO,wait_states);
 #endif
 #endif
-  
+#endif//dbg
 }
 
 #undef LOGSECTION
@@ -1916,6 +1935,9 @@ void                              m68k_divu(){
   if (m68k_src_w==0){ // div by 0
     // Clear V flag when dividing by zero. 
     SR_CLEAR(SR_V);
+#if defined(SSE_CPU_DIV_CC)
+    SR_CLEAR(SR_C);
+#endif
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
     Debug.RecordInterrupt("DIV");
 #endif
@@ -1940,10 +1962,17 @@ void                              m68k_divu(){
 "N : Set if the quotient is negative; cleared otherwise; undefined if overflow 
   or divide by zero occurs."
     Setting it if overflow fixes Sadeness and Spectrum Analyzer by Axxept.
+    (hex) 55667788/55=349B+101 strange, neither the dividend nor the quotient
+    are negative.
     The value of SR is used by the trace protection decoder of those demos.
     But Z must be cleared.
+    v3.7: 
+    C — Always cleared, official doc, this was forgotten in case of overflow,
 */
       SR_SET(SR_N);
+#endif
+#if defined(SSE_CPU_DIV_CC)
+      SR_CLEAR(SR_C);// fixes Spacker II
 #endif
     }else{
       SR_CLEAR(SR_Z+SR_N+SR_C+SR_V);
@@ -1967,6 +1996,9 @@ void                              m68k_divs(){
     SS: it's an Amiga demo. 
     */
     SR_CLEAR(SR_V);
+#if defined(SSE_CPU_DIV_CC)
+    SR_CLEAR(SR_C);
+#endif
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
     Debug.RecordInterrupt("DIV");
 #endif
@@ -1985,10 +2017,16 @@ void                              m68k_divs(){
     INSTRUCTION_TIME(cycles_for_instr);   // fixes Dragonnels loader
     q=(signed long)((signed long)dividend)/(signed long)((signed short)divisor);
     if(q<-32768 || q>32767){
+
+   //   r[PARAM_N]=((((unsigned long)r[PARAM_N])%((unsigned short)m68k_src_w))<<16)+q;
+//      r[PARAM_N]=((((signed long)r[PARAM_N])%((signed short)m68k_src_w))<<16)|((long)LOWORD(q));
       SR_SET(SR_V);
 #if defined(SSE_CPU_DIVS_OVERFLOW)
       SR_SET(SR_N); // maybe, see SSE_CPU_DIVU_OVERFLOW
 #endif
+#if defined(SSE_CPU_DIV_CC)
+      SR_CLEAR(SR_C);
+#endif  
     }else{
       SR_CLEAR(SR_Z+SR_N+SR_C+SR_V);
       if(q&MSB_W)SR_SET(SR_N);
@@ -2067,6 +2105,8 @@ behavior is the same as other MOVE variants (class 1 instruction).
 #if defined(SSE_CPU_MOVE_B)
 
 void m68k_0001() {  // move.b
+
+//ASSERT(old_pc!=0x4532e);
 
 #if (!defined(SSE_CPU_LINE_3_TIMINGS) && !defined(SSE_CPU_PREFETCH_TIMING)) \
   || !defined(SSE_CPU_PREFETCH_MOVE_MEM)
