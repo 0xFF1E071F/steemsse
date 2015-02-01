@@ -965,10 +965,10 @@ void event_scanline()
     PeekEvent();  // fixes Corporation STE, but messes HighResMode
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_JITTER)
-    HblJitterIndex++; // exactly like in Hatari
-    if(HblJitterIndex==5)
-      HblJitterIndex=0;
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_JITTER)//no
+  HblJitterIndex++; 
+  if(HblJitterIndex==5)
+    HblJitterIndex=0;
 #endif
 
 #ifdef DEBUG_BUILD
@@ -981,16 +981,19 @@ void event_scanline()
 
 #if !defined(SSE_INT_HBL_EVENT)
 
-#if defined(SSE_INT_HBL_IACK_FIX2___)
-    if (cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt>CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED
-#else
-    if (abs_quick(cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt)>CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED
+#if defined(SSE_INT_HBL_IACK2) && defined(SSE_CPU_E_CLOCK2)
+  BYTE iack_latency=(HD6301EMU_ON)
+    ? HBL_IACK_LATENCY + M68000.LastEClockCycles[TM68000::ECLOCK_HBL]
+    : CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_HBL_IACK_FIX)
-#if defined(SSE_INT_HBL_IACK_FIX2)
-    -8
+
+  if (abs_quick(cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt)
+#if defined(SSE_INT_HBL_IACK2) && defined(SSE_CPU_E_CLOCK2)
+    >iack_latency
 #else
-    -12 
+    >CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_HBL_IACK_FIX)
+    -12 //this was for BBC52, useless with E-Clock emulation (option 6250/6301)
 #endif
 #endif
     ){ 
@@ -999,6 +1002,7 @@ void event_scanline()
 #ifdef SSE_DEBUG
   else
   {
+    ASSERT(!hbl_pending);
     TRACE_INT("%d %d %d (%d) no HBI, %d cycles into HBI IACK\n",TIMING_INFO,ACT,abs_quick(cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt));
 #if defined(SSE_OSD_CONTROL)
     if(OSD_MASK1 & OSD_CONTROL_IACK)
@@ -1102,15 +1106,12 @@ void event_vbl_interrupt() //SS misleading name?
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBL_IACK)
 /*  This is for the case when the VBI just started (second VBI pending during
     IACK is cleared), 
-    Implemented the same way as for MFP, for the same reason it's protected by
-    option 'Hacks'.
     Cases? Must be pretty rare, usually the problem is not too many VBI but
     missed VBI
-    But it's in Hatari too.
-    TESTING
 */
-#if SSE_VERSION>=370
-  if(SSE_HACKS_ON && time_of_last_vbl_interrupt+28-ACT>0)//coherence
+#if defined(SSE_INT_VBL_IACK2) && defined(SSE_CPU_E_CLOCK2) //as for HBL
+  if(time_of_last_vbl_interrupt+VBL_IACK_LATENCY
+    +M68000.LastEClockCycles[TM68000::ECLOCK_VBL]-ACT>0)
 #else
   if(SSE_HACKS_ON && time_of_last_vbl_interrupt+56+16-ACT>0)
 #endif
@@ -1534,7 +1535,7 @@ void event_vbl_interrupt() //SS misleading name?
     }
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_JITTER)
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_JITTER)//no
     VblJitterIndex++; // like Hatari  
     if(VblJitterIndex==5)
       VblJitterIndex=0;

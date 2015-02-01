@@ -66,6 +66,10 @@ inline void HBLInterrupt() {
   M68K_UNSTOP;
 #endif
 
+#if defined(SSE_INT_HBL_IACK2) 
+  time_of_last_hbl_interrupt=ABSOLUTE_CPU_TIME;
+#endif
+
   // wobble?
 #if !defined(SSE_INT_JITTER_HBL)
 #if defined(SSE_INT_E_CLOCK)
@@ -77,16 +81,31 @@ inline void HBLInterrupt() {
 #endif
 
   // E-clock?
+
 #if defined(SSE_INT_E_CLOCK)
   if(HD6301EMU_ON)
+#if defined(SSE_CPU_E_CLOCK2)
+  { 
+    int current_cycles=ACT;
+    INSTRUCTION_TIME_ROUND(ECLOCK_AUTOVECTOR_CYCLE);
+    BYTE e_clock_wait_states=
+#endif
 #ifdef SSE_CPU_E_CLOCK_DISPATCHER
     M68000.SyncEClock(TM68000::ECLOCK_HBL);
 #else
     M68000.SyncEClock();
 #endif
+#if defined(SSE_CPU_E_CLOCK2)
+    INSTRUCTION_TIME(current_cycles-ACT);
+    INSTRUCTION_TIME(e_clock_wait_states);
+  }
+#endif
 #endif
 
+
+#if !defined(SSE_INT_HBL_IACK2) 
   time_of_last_hbl_interrupt=ABSOLUTE_CPU_TIME;
+#endif
 
   INSTRUCTION_TIME_ROUND(SSE_INT_HBL_TIMING); 
 
@@ -141,6 +160,10 @@ inline void VBLInterrupt() {
   M68K_UNSTOP;
 #endif
 
+#if defined(SSE_INT_VBL_IACK2) 
+  time_of_last_vbl_interrupt=ABSOLUTE_CPU_TIME;
+#endif
+
   // wobble?
 #if defined(SSE_INT_JITTER_VBL_STE)
  // no wobble for STE nor STF, but jitter
@@ -156,18 +179,35 @@ inline void VBLInterrupt() {
     }
 #endif
 
+
+#if defined(DEBUG_BUILD)
+  if(mode==STEM_MODE_CPU) // no cycles when boiler is reading
+#endif
     // E-Clock?
-#if defined(SSE_INT_E_CLOCK)
+#if defined(SSE_CPU_E_CLOCK)
   if(HD6301EMU_ON)
+#if defined(SSE_CPU_E_CLOCK2)
+  { 
+    int current_cycles=ACT;
+    INSTRUCTION_TIME_ROUND(ECLOCK_AUTOVECTOR_CYCLE);
+    BYTE e_clock_wait_states=
+#endif
 #ifdef SSE_CPU_E_CLOCK_DISPATCHER
     M68000.SyncEClock(TM68000::ECLOCK_VBL);
 #else
     M68000.SyncEClock();
 #endif
+#if defined(SSE_CPU_E_CLOCK2)
+    INSTRUCTION_TIME(current_cycles-ACT);
+    INSTRUCTION_TIME(e_clock_wait_states);
+  }
+#endif
 #endif
 
+#if !defined(SSE_INT_VBL_IACK2) 
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBL_IACK)
   time_of_last_vbl_interrupt=ACT;
+#endif
 #endif
 
   INSTRUCTION_TIME_ROUND(SSE_INT_VBL_TIMING);

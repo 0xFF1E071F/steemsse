@@ -408,6 +408,9 @@ Far more on the ST.
 #define SSE_INT_VBL_TIMING (56)
 #endif
 
+#define HBL_IACK_LATENCY 28
+#define VBL_IACK_LATENCY 28
+#define ECLOCK_AUTOVECTOR_CYCLE 0
 
 #if defined(SSE_INT_VBI_START)
 #undef SSE_INT_VBI_START
