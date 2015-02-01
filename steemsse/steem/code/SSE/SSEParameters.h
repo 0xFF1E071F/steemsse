@@ -503,8 +503,9 @@ Far more on the ST.
 #endif
 
 #define  CPU_STF_ALT (8007100) //ljbk's? for Panic study!
-
-#if defined(SSE_INT_MFP_RATIO_STE2)
+#if defined(SSE_INT_MFP_RATIO_STE3)
+#define  CPU_STE_PAL (CPU_STF_PAL)
+#elif defined(SSE_INT_MFP_RATIO_STE2)
 #define  CPU_STE_PAL 8020736//CPU_STF_PAL
 #else
 #define  CPU_STE_PAL (CPU_STF_PAL+64) //64 for DMA sound!
@@ -513,28 +514,24 @@ Far more on the ST.
 #define  MFP_CLK_TH_EXACT 2457600 // ( 2^15 * 3 * 5^2 )
 #endif
 
-#if defined(SSE_INT_MFP_WRITE_DELAY1) || defined(SSE_INT_MFP_WRITE_DELAY2)\
-  || defined(SSE_INT_MFP_WRITE_DELAY3)
 
-#if defined(SSE_INT_MFP_TIMERS_WOBBLE)
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE)//no
 #define MFP_WRITE_LATENCY 10
 #else
-#define MFP_WRITE_LATENCY 4//8
-#endif
+#define MFP_WRITE_LATENCY 4
 #endif
 
 #if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY)
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
 #define MFP_TIMER_SET_DELAY 8//10
 #else
-#define MFP_TIMER_SET_DELAY 10 //12 = Steem 3.2
+#define MFP_TIMER_SET_DELAY 10 //12 = Steem 3.2 
 #endif
 #endif
 
-#if defined(SSE_INT_MFP_IACK_LATENCY2) || defined(SSE_INT_MFP_IACK_LATENCY3)
-#define MFP_IACK_LATENCY (28)
-#define MFP_SPURIOUS_LATENCY (MFP_IACK_LATENCY-8+8) //?
-#endif
+#define MFP_IACK_LATENCY 28
+#define MFP_SPURIOUS_LATENCY (MFP_IACK_LATENCY) //?
+
 
 
 #endif//mfp
@@ -635,7 +632,7 @@ Far more on the ST.
 #define STE_DMA_CLOCK 8021118 //(8021502-256-128)
 #endif
 #else
-#define STE_DMA_CLOCK 8021502
+#define STE_DMA_CLOCK 8021502 //OK with STE clock=STF?
 #endif
 
 

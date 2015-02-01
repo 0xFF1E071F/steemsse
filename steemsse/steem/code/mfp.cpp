@@ -46,7 +46,7 @@ int mfp_time_of_start_of_last_interrupt[16];
 #if defined(SSE_INT_MFP_IRQ_DELAY3)
 int mfp_time_of_set_pending[16];
 #endif
-#if defined(SSE_INT_MFP_WRITE_DELAY1)
+#if defined(SSE_INT_MFP_WRITE_DELAY1)//no
 int time_of_last_write_to_mfp_reg=0;
 #endif
 #if !defined(SSE_INT_MFP_TIMERS_BASETIME)
@@ -136,14 +136,16 @@ void calc_time_of_next_timer_b()
       else
 #endif
       time_of_next_timer_b=cpu_timer_at_start_of_hbl+cpu_cycles_from_hbl_to_timer_b
-#if !defined(SSE_INT_MFP_TIMER_B_WOBBLE2_HACK)
-/*  No wobble when program sets timer B same line.
-    Case Sunny STE scroller
-    This is a hack because I see no reason for that.
+#if defined(SSE_INT_MFP_TIMER_B_WOBBLE_HACK)
+/*  We need the hack when emulation is more precise??
+    Possible explanation: writing now forces some sync with MFP?
+    TODO
 */
-      +TB_TIME_WOBBLE
+      + (OPTION_PRECISE_MFP?0:TB_TIME_WOBBLE);
+#else
+      +TB_TIME_WOBBLE;
 #endif
-      ;
+
     }else{
       time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;  //put into future
     }
@@ -205,7 +207,7 @@ bool mfp_set_pending(int irq,int when_set) { //SS this function travels...
 #if defined(SSE_INT_MFP_IACK_LATENCY2) || defined(SSE_INT_MFP_IACK_LATENCY4)
     //v3.7 - we check before
 #if defined(SSE_INT_MFP_OPTION)
-  if(OPTION_PRECISE_MFP 
+  if(OPTION_PRECISE_MFP
     || (abs_quick(when_set-mfp_time_of_start_of_last_interrupt[irq])
     >=CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED))
 #endif
@@ -386,6 +388,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
           mfp_timer_timeout[timer]*=MFP_CLK; //SS =2451
 #if defined(SSE_INT_MFP_TIMER_RATIO1)
           mfp_timer_timeout[timer]/=8021;
+          //mfp_timer_timeout[timer]/=CpuMfpRatio;
 #else
           mfp_timer_timeout[timer]/=8000;
 #endif
@@ -399,6 +402,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
           mfp_timer_timeout[timer]*=8000;
 #endif
           mfp_timer_timeout[timer]/=MFP_CLK;
+          //mfp_timer_timeout[timer]*=CpuMfpRatio;
 
           // Make absolute time again
 #if defined(SSE_INT_MFP_TIMERS_BASETIME)
@@ -449,14 +453,16 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 #if defined(SSE_INT_MFP_CHECKTIMEOUT_ON_STOP)
 /*  Idea, see just above, this version OK with LXS
 */
-          if(OPTION_PRECISE_MFP && !new_val && ACT-mfp_timer_timeout[timer]>=0
-            && mfp_time_of_start_of_last_interrupt[mfp_timer_irq[timer]]
-            -mfp_timer_timeout[timer]<0
+          if(OPTION_PRECISE_MFP && !new_val 
+            && mfp_timer_enabled[timer] // hem... Platoon STX
+            && ACT-mfp_timer_timeout[timer]>=0
             && ! MC68901.InService(mfp_timer_irq[timer]) 
             && MC68901.Enabled(mfp_timer_irq[timer]) 
             && MC68901.MaskOK(mfp_timer_irq[timer]) )
           {
-            TRACE_LOG("MFP timer %c pending on stop\n",'A'+timer);
+            TRACE_LOG("MFP timer %c enabled %d pending on stop; timed out %d cycles ago last serviced %d before\n",
+             'A'+timer, mfp_timer_enabled[timer],ACT-mfp_timer_timeout[timer],-(mfp_time_of_start_of_last_interrupt[mfp_timer_irq[timer]]-mfp_timer_timeout[timer]));
+
             mfp_interrupt_pend(mfp_timer_irq[timer],mfp_timer_timeout[timer]);
           }
 #endif
@@ -649,17 +655,17 @@ void ASMCALL check_for_interrupts_pending()
         if (mfp_reg[MFPR_IPRA+i_ab] & i_bit){ //is this interrupt pending?
 
 
-#if defined(SSE_INT_MFP_WRITE_DELAY3)
+#if defined(SSE_INT_MFP_WRITE_DELAY2)
 /*  The MFP doesn't update its registers at once after a write.
     There's a delay of estimated 4 CPU cycles
-    Audio Artistic Demo
-    TEST10
+    -Audio Artistic Demo (so fix in v3.6 was legit)
+    -TEST10
 */
           BYTE relevant_mask_register=mfp_reg[MFPR_IMRA+i_ab] & i_bit;
           if(OPTION_PRECISE_MFP && ACT-MC68901.WriteTiming<=MFP_WRITE_LATENCY
             && MC68901.LastRegisterWritten==MFPR_IMRA+i_ab )
           {
-            TRACE_LOG("%d MFP delay write IMR-irq %d %d\n",ACT,irq,ACT-MC68901.WriteTiming);
+            TRACE_LOG("%d MFP delay write IMR%c irq %d %d\n",ACT,'A'+i_ab,irq,ACT-MC68901.WriteTiming);
             relevant_mask_register=MC68901.LastRegisterFormerValue;
             ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;//always? but it can't hurt
           }
@@ -667,21 +673,36 @@ void ASMCALL check_for_interrupts_pending()
 #else
           if (mfp_reg[MFPR_IMRA+i_ab] & i_bit){ //is it not masked out?
 #endif
+#if defined(SSE_INT_MFP_WRITE_DELAY2)
+/*  Same for pending, to test
+*/
+            BYTE relevant_pending_register=mfp_reg[MFPR_IPRA+i_ab] & i_bit;
+            if(OPTION_PRECISE_MFP && ACT-MC68901.WriteTiming<=MFP_WRITE_LATENCY
+              && MC68901.LastRegisterWritten==MFPR_IPRA+i_ab )
+            {
+              TRACE_LOG("%d MFP delay write IPR%c irq %d %d\n",ACT,'A'+i_ab,irq,ACT-MC68901.WriteTiming);
+              relevant_pending_register=MC68901.LastRegisterFormerValue;
+              ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
+            }
+            if(relevant_pending_register&i_bit) {
+#else
             if (mfp_interrupt_enabled[irq]){ // is it enabled
+#endif
               ASSERT(mfp_reg[MFPR_IERA+i_ab] & i_bit);
 #if defined(SSE_INT_MFP_OPTION)
               if(OPTION_PRECISE_MFP)
 #endif
               {
 #if defined(SSE_INT_MFP_IACK_LATENCY2)
-/*  Check it some higher priority delay timer is going to trigger 
+/*  Check it some same or higher priority delay timer is going to trigger 
     during IACK cycles.
-    If yes, just ignore the current irq.
+    If yes, clear and execute this irq.
     Cases:
     Final Conflict, timer A (this worked with previous Steem hack), IACK
-    delay = 28 or it won't work. TODO
+    As originally explained by ijor:
+    http://www.atari-forum.com/viewtopic.php?f=51&t=15885#p195733 
     Froggies/OVR, timer A  (this worked with previous Steem trick), negative
-    values must be accepted or it won't work. TODO
+    values must be accepted because instructions are long: MUL, DIV.
 */
                 int tn;
                 for(tn=0;tn<4;tn++) // browse timers
@@ -695,55 +716,53 @@ void ASMCALL check_for_interrupts_pending()
                       TRACE_OSD("IACK %d->%d %d",irq,mfp_timer_irq[tn],mfp_timer_timeout[tn]-ACT);
 #endif
                     TRACE_LOG("%d IACK %d->%d %d\n",ACT,irq,mfp_timer_irq[tn],mfp_timer_timeout[tn]-ACT);                  
-#if !defined(SSE_INT_MFP_IACK_LATENCY4)
-                    break; 
-#endif
 #if defined(SSE_INT_MFP_IACK_LATENCY4)
-                    // Final conflict: latency = 28 this way
                     //if(mfp_timer_timeout[tn]-ACT>=0)
                     {
-                      MC68901.SkipTimer[tn]++; // see run.cpp
-                      MC68901.NextIrq=irq=mfp_timer_irq[tn];
+                      MC68901.NextIrq=irq=mfp_timer_irq[tn]; // execute now
+                      MC68901.SkipTimer[tn]++; // skip next 'pending' (run.cpp)
                     }
-
 #endif
+                    break;
                   }
                 }
 #if !defined(SSE_INT_MFP_IACK_LATENCY4)
-                // Final conflict: latency = 16 this way
                 if(tn<4)
-                  break;
+                  break;//ignore irq: can work but timing trouble
 #endif
 #endif
+
 #if defined(SSE_INT_MFP_IACK_LATENCY3)
-/*  Check it timer B is going to trigger during IACK cycles.
-    If yes, just ignore the current irq (if it's lower than 8).
-    Anomaly menu. Also "requires" 28 IACK cycles.
-    And we must ignore, not trigger and ignore next one, or it
-    won't work. TODO
+/*  Check if timer B is going to trigger during IACK cycles.
+    If yes, clear and execute this irq.
+    Cases: 
+    Anomaly menu irq 5 "IACKed" by 8. This fixes the flicker, but
+    if timers are less precise (option '68901' off), there's no
+    flicker anyway.
+    That's no bug but 2 previous bugs compensating in Steem 3.2.
+    In previous versions of Steem SSE only one side was done (fractional part
+    of timers) and this screen was broken.
+    Extreme Rage guest screen, 8 IACKing itself (I found a new word).
+    Fuzion 77 (STF) 5->8
 */
-                if(irq<8 
+                if(irq<=8 // <= not <
                   &&  MC68901.TimerBActive() // hem! not Audio Artistic then
+                  &&  mfp_timer_counter[1]<64+64 // must trigger
                   && time_of_next_timer_b-ACT<=iack_latency
-                  && time_of_next_timer_b-ACT>=0
+                  && time_of_next_timer_b-ACT>=0 //?
                   )
                 {
 #if defined(SSE_OSD_CONTROL)
                   if(OSD_MASK1 & OSD_CONTROL_IACK)
-                    TRACE_OSD("IACK %d->TB %d",irq,time_of_next_timer_b-ACT);
+                    TRACE_OSD("IACK %d->TB %d y%d %d",irq,time_of_next_timer_b-ACT,scan_y,LINECYCLES);
 #endif
-                  TRACE_LOG("%d IACK %d->TB %d",ACT,irq,time_of_next_timer_b-ACT);                
+                  TRACE_LOG("IACK %d->TB %d y%d %d\n",irq,time_of_next_timer_b-ACT,scan_y,LINECYCLES);                
 #if !defined(SSE_INT_MFP_IACK_LATENCY5)
-                  // latency 28 for no flicker
-                  break;
+                  break; //ignore irq: can work but timing trouble
 #endif
-#if defined(SSE_INT_MFP_IACK_LATENCY4) && defined(SSE_INT_MFP_IACK_LATENCY5)//no
-                  // doesn't work at all...
-                  //INSTRUCTION_TIME( time_of_next_timer_b-ACT );
-                  event_timer_b();
-                  //INSTRUCTION_TIME(-(time_of_next_timer_b-ACT) );
-                  irq=MC68901.NextIrq=8;
-                  MC68901.SkipTimer[1]++; 
+#if defined(SSE_INT_MFP_IACK_LATENCY4) && defined(SSE_INT_MFP_IACK_LATENCY5)
+                  irq=MC68901.NextIrq=8; // execute now
+                  MC68901.SkipTimer[1]++; // skip next 'pending'
 #endif
                 }
 #endif
@@ -756,21 +775,10 @@ void ASMCALL check_for_interrupts_pending()
                   && ACT-MC68901.IrqTiming>=-4)
                 {
                   TRACE_LOG("MFP delay GPIP-irq %d %d\n",irq,ACT-MC68901.IrqTiming);
+                  ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;//come back later
                   break;
                 }
 #endif    
-#if defined(SSE_INT_MFP_WRITE_DELAY2)//no, done generally above
-// just another hack for Audio Artistic (better than changing TCDCR?)
-                if(SSE_HACKS_ON && ACT-MC68901.WriteTiming<=4//MFP_TIMER_SET_DELAY
-                  && MC68901.LastRegisterWritten==MFPR_IMRA+i_ab
-                  && !(MC68901.LastRegisterFormerValue&i_bit) 
-                  )
-                {
-                  TRACE_LOG("%d MFP delay write IMR-irq %d %d\n",ACT,irq,ACT-MC68901.WriteTiming);
-                  ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS; // come back after next instr (works?)
-                  break;
-                }
-#endif
               }//OPTION_PRECISE_MFP
               mfp_interrupt(irq,ABSOLUTE_CPU_TIME); //then cause interrupt
               break;        //lower priority interrupts not allowed now.
@@ -834,6 +842,10 @@ void ASMCALL check_for_interrupts_pending()
         // but the event hasn't fired yet.
         //SS scanline_time_in_cpu_cycles_at_start_of_vbl is 512, 508 or 224
         if (int(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl)<scanline_time_in_cpu_cycles_at_start_of_vbl){
+
+#if defined(SSE_INT_HBL_GLUE_LATENCY)
+
+#endif
           HBL_INTERRUPT;
         }
 #if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG) 
@@ -1272,6 +1284,7 @@ bool TMC68901::CheckSpurious(int irq) {
 
     if(spurious_triggered) // expect reports of bad spurious now!
     {
+      TRACE_OSD("Spurious!");
       TRACE_LOG("%d SPURIOUS irq %d timer %d timeout %d last reg %d former value %X\n",
         ACT,irq,IrqInfo[irq].Timer,pertinent_timeout,MC68901.LastRegisterWritten,MC68901.LastRegisterFormerValue);
       INSTRUCTION_TIME(50); //?

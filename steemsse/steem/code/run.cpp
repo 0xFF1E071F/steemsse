@@ -62,9 +62,14 @@ void event_trigger_vbi();
 screen_event_struct event_plan_50hz[313*2+4],event_plan_60hz[263*2+4],event_plan_70hz[600*2+4],
                     event_plan_boosted_50hz[313*2+4],event_plan_boosted_60hz[263*2+4],event_plan_boosted_70hz[600*2+4];
 
-#elif defined(SSE_VAR_RESIZE_370) // Room for hbi, hbl but only hbl was used
-EXT screen_event_struct event_plan_50hz[313*2+4],event_plan_60hz[263*2+4],event_plan_70hz[600*2+4],
-                    event_plan_boosted_50hz[313*2+4],event_plan_boosted_60hz[263*2+4],event_plan_boosted_70hz[600*2+4];
+#elif defined(SSE_VAR_RESIZE_370) 
+/*  There was room for hbi, hbl but only hbl was used for some reason.
+    Since we can't fix anything with apart hbl and hbi events, we may as well
+    reduce memory footprint by: 
+    (313*2+263*2+600*2)*(4+4)=18816 bytes!
+*/
+EXT screen_event_struct event_plan_50hz[313+4],event_plan_60hz[263+4],event_plan_70hz[600+4],
+                    event_plan_boosted_50hz[313+4],event_plan_boosted_60hz[263+4],event_plan_boosted_70hz[600+4];
 
 
 #else
@@ -453,7 +458,7 @@ inline void handle_timeout(int tn) {
   }
   int stage=(mfp_timer_timeout[tn]-ABSOLUTE_CPU_TIME); 
 
-#if defined(SSE_INT_MFP_TIMERS_WOBBLE)
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE)//no
   if(OPTION_PRECISE_MFP)
     stage-=MC68901.Wobble[tn]; //get the correct timing (no drift)
 #endif
@@ -491,10 +496,10 @@ inline void handle_timeout(int tn) {
   }
 #if defined(SSE_INT_MFP_IACK_LATENCY4)
   if(MC68901.SkipTimer[tn])
-    MC68901.SkipTimer[tn]--;//=false;
+    MC68901.SkipTimer[tn]=0;// should be -- but we reduce risks
   else
 #endif
-  mfp_interrupt_pend(mfp_timer_irq[tn],mfp_timer_timeout[tn]);
+    mfp_interrupt_pend(mfp_timer_irq[tn],mfp_timer_timeout[tn]);
   mfp_timer_timeout[tn]=new_timeout;
 }
 
@@ -592,9 +597,10 @@ void event_timer_b()
         log(EasyStr("MFP: Timer B timeout at ")+scanline_cycle_log());
         TRACE_LOG("F%d y%d c%d Timer B pending\n",TIMING_INFO);
         mfp_timer_counter[1]=BYTE_00_TO_256(mfp_reg[MFPR_TBDR])*64;
+        
 #if defined(SSE_INT_MFP_IACK_LATENCY4) && defined(SSE_INT_MFP_IACK_LATENCY5)
         if(MC68901.SkipTimer[1])
-          MC68901.SkipTimer[1]--; 
+          MC68901.SkipTimer[1]=0;
         else
 #endif
           mfp_interrupt_pend(MFP_INT_TIMER_B,time_of_next_timer_b);
@@ -614,7 +620,7 @@ void event_timer_b()
 //---------------------------------------------------------------------------
 
 
-#if defined(SSE_INT_HBL_EVENT)
+#if defined(SSE_INT_HBL_EVENT)//no
 
 void event_hbl()   //just HBL, don't draw yet
 {
@@ -629,9 +635,12 @@ void event_hbl()   //just HBL, don't draw yet
 }
 
 #elif defined(SSE_INT_VBI_START) || defined(SSE_INT_HBL_ONE_FUNCTION)
-
+/*  Still to spare memory, we do without this function, that is
+    duplicated in event_scanline().
+*/
 
 #else
+
 void event_hbl()   //just HBL, don't draw yet
 {
 /* 
@@ -648,7 +657,7 @@ void event_hbl()   //just HBL, don't draw yet
 #undef LOGSECTION
 
   log_to_section(LOGSECTION_VIDEO,EasyStr("VIDEO: Event HBL at end of line ")+scan_y+", cycle "+(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl));
-  right_border_changed=0;//SS useful in SSE?
+  right_border_changed=0;
   scanline_drawn_so_far=0;
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
   cpu_timer_at_start_of_hbl=time_of_next_event; // SS as defined in draw.cpp
@@ -906,7 +915,9 @@ void event_scanline()
       draw_line_off=0;
     }
   }
+#if !defined(SSE_VAR_RESIZE_370) 
   right_border_changed=0;
+#endif
   scanline_drawn_so_far=0;
 
 #if defined(SSE_MMU_SDP1)
@@ -919,9 +930,7 @@ void event_scanline()
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
   /////// SS as defined in draw.cpp,
   /////// and relative to cpu_time_of_last_vbl:
-////#if !defined(SSE_INT_HBL_EVENT)//!!!!!
-  cpu_timer_at_start_of_hbl=time_of_next_event; //linecycle0 stays the same
-/////////////#endif
+  cpu_timer_at_start_of_hbl=time_of_next_event; 
 #if defined(STEVEN_SEAGAL) && defined(SSE_IPF) && !defined(SSE_IPF_CPU)
   if(Caps.Active==1)
     Caps.Hbl();
@@ -1447,10 +1456,10 @@ void event_vbl_interrupt() //SS misleading name?
     speed_limit_wait_till=timer+(fast_forward_max_speed/shifter_freq);
   }
   log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: speed_limit_wait_till is ")+(speed_limit_wait_till-run_start_time));
-#if !defined(SSE_INT_MFP_TIMERS_BASETIME)
+#if !defined(SSE_INT_MFP_TIMERS_BASETIME) //let's eliminate that junk...
   // The MFP clock aligns with the CPU clock every 8000 CPU cycles
   while (abs(ABSOLUTE_CPU_TIME-cpu_time_of_first_mfp_tick)>160000){
-    cpu_time_of_first_mfp_tick+=160000; //SS useful to make more precise?
+    cpu_time_of_first_mfp_tick+=160000; 
   }
 #endif
   while (abs(ABSOLUTE_CPU_TIME-shifter_cycle_base)>160000){
@@ -1676,15 +1685,8 @@ void event_pasti_update()
 //---------------------------------------------------------------------------
 #if defined(STEVEN_SEAGAL) // added events
 
-#if defined(SSE_ACIA_IRQ_DELAY) // <v3.5.2
-/*  Imitating a Hatari feature, we implement a short delay between the time
-    a byte has been transferred from the ACIA's shift register to its RDR,
-    and the time IRQ is set in the SR.
-    We add on the "event" system of Steem, which gives cycle accuracy.
-    This feature doesn't depend on HD6301 true emu.
-    It fixes V8 Music System.
-    This has been removed in v3.5.2 and replaced with an MFP fix, also copied
-    from Hatari, that seems more correct (SSE_ACIA_IRQ_DELAY not defined).
+#if defined(SSE_ACIA_IRQ_DELAY) 
+/*  <v3.5.2 -dead code unless we compile old versions
 */
 
 #define LOGSECTION LOGSECTION_IKBD
@@ -1853,6 +1855,7 @@ void event_trigger_vbi() { //6X cycles into frame (reference end of HSYNC)
     One HBL = 512 cycles at 50hz.
 
     Caps works with HBL because it hold its own cycle count.
+    (which is maybe the way we should handle STW too. TODO)
     
     Here we should transfer control, or dispatch to handlers
 */

@@ -4075,34 +4075,34 @@ and all his silly mods are gone!
 #define SSE_INT_MFP_IACK_LATENCY2 //delay timers
 #define SSE_INT_MFP_IACK_LATENCY3 //timer B
 #define SSE_INT_MFP_IACK_LATENCY4 //delay timers 
-//#define SSE_INT_MFP_IACK_LATENCY5 //timer B - why?
+#define SSE_INT_MFP_IACK_LATENCY5 //timer B - why?
 #define SSE_INT_MFP_OPTION //performance/precision
 #define SSE_INT_MFP_UTIL
 #define SSE_INT_MFP_SPURIOUS//cool crashes
+#define SSE_INT_MFP_CHECKTIMEOUT_ON_STOP
+///#define SSE_INT_MFP_TIMERS_WOBBLE 
+#undef SSE_INT_MFP_PATCH_TIMER_D//Audio Artistic
+#undef SSE_INT_MFP_WRITE_DELAY1 //Audio Artistic
+#define SSE_INT_MFP_WRITE_DELAY2
 #endif
+#if defined(SSE_INT_MFP_RATIO)
 #define SSE_INT_MFP_RATIO_OPTION // user can fine tune CPU clock
 #define SSE_INT_MFP_RATIO_OPTION2 // L/S
 #define SSE_INT_MFP_RATIO_PRECISION_2 // 1 cycle precision
 #define SSE_INT_MFP_RATIO_PRECISION3 // 100%
+#endif
 #undef SSE_STF_8MHZ // we have better option now
-#define SSE_INT_MFP_RATIO_STE2
+//#define SSE_INT_MFP_RATIO_STE2
 #define SSE_INT_MFP_RATIO_STF2
 #define SSE_INT_MFP_REFACTOR1
-#define SSE_INT_MFP_TIMER_B_WOBBLE2
-#define SSE_INT_MFP_TIMER_B_WOBBLE2_HACK //for Sunny
-#undef SSE_INT_MFP_TIMER_B_NO_WOBBLE
+#undef SSE_INT_MFP_TIMER_B_NO_WOBBLE //there is wobble
+#define SSE_INT_MFP_TIMER_B_WOBBLE_HACK //for Sunny
 #define SSE_INT_MFP_TIMER_RATIO1 //unimportant
 #define SSE_INT_MFP_TIMERS_INLINE
 //#define SSE_INT_MFP_TIMERS_RUN_IF_DISABLED //load!
 #define SSE_INT_MFP_TIMERS_STARTING_DELAY //12->?
-//#define SSE_INT_MFP_TIMERS_WOBBLE 
-#undef SSE_INT_MFP_PATCH_TIMER_D//Audio Artistic
-#undef SSE_INT_MFP_WRITE_DELAY1 //Audio Artistic
-//#define SSE_INT_MFP_WRITE_DELAY2
-#define SSE_INT_MFP_WRITE_DELAY3
 #endif//SSE_INT_MFP
 
-//#define SSE_TIMINGS_STE_NOPS_TO_FIRST_LINE
 //#undef SSE_CPU_UNSTOP2//
 
 #if defined(SSE_VID_D3D)

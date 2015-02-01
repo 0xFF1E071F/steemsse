@@ -56,7 +56,6 @@ EXT int cpu_timer_at_start_of_hbl;
 
 #define CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED 28
 
-
 //          INSTRUCTION_TIME(8-((ABSOLUTE_CPU_TIME-shifter_cycle_base) % 12));
 
 
@@ -127,6 +126,18 @@ EXT int cpu_timer_at_start_of_hbl;
               default:      shifter_freq_idx=2;   \
             }
 
+#if defined(SSE_INT_MFP_TIMERS_RUN_IF_DISABLED)
+//no enabled check
+#define PREPARE_EVENT_CHECK_FOR_TIMER_TIMEOUTS(tn)      \
+    {                           \
+      if ((time_of_next_event-mfp_timer_timeout[tn]) >= 0){  \
+        time_of_next_event=mfp_timer_timeout[tn];          \
+        screen_event_vector=event_mfp_timer_timeout[tn];    \
+      }                                                     \
+    }
+
+
+#else
 
 #define PREPARE_EVENT_CHECK_FOR_TIMER_TIMEOUTS(tn)      \
     if (mfp_timer_enabled[tn] || mfp_timer_period_change[tn]){                           \
@@ -135,6 +146,8 @@ EXT int cpu_timer_at_start_of_hbl;
         screen_event_vector=event_mfp_timer_timeout[tn];    \
       }                                                     \
     }
+
+#endif
 
 /*#define PREPARE_EVENT_CHECK_FOR_DMA_SOUND_END  \
     if ((time_of_next_event-dma_sound_end_cpu_time) >= 0){                 \
@@ -252,8 +265,18 @@ EXT screen_event_struct event_plan_50hz[313*2+2+1],event_plan_60hz[263*2+2+1],ev
 
 void event_trigger_vbi();
 
-#else
+#elif defined(SSE_INT_HBL_EVENT)
 
+EXT screen_event_struct event_plan_50hz[313*2+4],event_plan_60hz[263*2+4],event_plan_70hz[600*2+4],
+                    event_plan_boosted_50hz[313*2+4],event_plan_boosted_60hz[263*2+4],event_plan_boosted_70hz[600*2+4];
+
+#elif defined(SSE_VAR_RESIZE_370)
+//EXT screen_event_struct event_plan_50hz[313*2+4],event_plan_60hz[263*2+4],event_plan_70hz[600*2+4],
+  //                  event_plan_boosted_50hz[313*2+4],event_plan_boosted_60hz[263*2+4],event_plan_boosted_70hz[600*2+4];
+EXT screen_event_struct event_plan_50hz[313+4],event_plan_60hz[263+4],event_plan_70hz[600+4],
+                    event_plan_boosted_50hz[313+4],event_plan_boosted_60hz[263+4],event_plan_boosted_70hz[600+4];
+
+#else
 EXT screen_event_struct event_plan_50hz[313*2+2],event_plan_60hz[263*2+2],event_plan_70hz[600*2+2],
                     event_plan_boosted_50hz[313*2+2],event_plan_boosted_60hz[263*2+2],event_plan_boosted_70hz[600*2+2];
 #endif
@@ -328,8 +351,6 @@ void event_wd1772();
 void event_driveA_ip();
 void event_driveB_ip();
 
-//void event_floppy();
-//extern int floppy_update_time;
 #endif
 
 #undef EXT
