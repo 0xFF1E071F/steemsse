@@ -803,7 +803,7 @@ LONG m68k_fetchL()
   return ret;
 }
 
-void m68k_unrecognised() //SS trap1 in motoroal doc
+void m68k_unrecognised() //SS trap1 in Motorola doc
 {
   exception(BOMBS_ILLEGAL_INSTRUCTION,EA_INST,0);
 }
@@ -6135,29 +6135,16 @@ void                             m68k_addq_l(){
   FETCH_TIMING;
 #endif
   m68k_src_l=(LONG)PARAM_N;if(m68k_src_l==0)m68k_src_l=8;
-#if defined(SSE_CPU_ROUNDING_ADDQ)
-  if(DEST_IS_REGISTER) { // to Dn, An
-#else
   if((ir&BITS_543)==BITS_543_001){ //addq.l to address register
-#endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_5_TIMINGS)
     FETCH_TIMING;
 #endif
 #if defined(SSE_CPU_ROUNDING_ADDQ)
-/*
-    Dn            |  8(1/0)  0(0/0) |               |               np       nn 
-    An            |  8(1/0)  0(0/0) |               |               np       nn 
-*/
+//  An            |  8(1/0)  0(0/0) |               |               np       nn 
+
     PREFETCH_IRC;
     INSTRUCTION_TIME(4);
-    if(DEST_IS_DATA_REGISTER)
-    {
-      m68k_dest=r+PARAM_M; 
-      r[PARAM_M]+=m68k_src_l;
-      SR_ADD_L;
-    }
-    else
-      areg[PARAM_M]+=m68k_src_l;
+    areg[PARAM_M]+=m68k_src_l;
 #else
     INSTRUCTION_TIME(4);
     PREFETCH_IRC;
@@ -6166,6 +6153,8 @@ void                             m68k_addq_l(){
 
   }else{
 /*
+    Dn            |  8(1/0)  0(0/0) |               |               np       nn 
+
     (An)          | 12(1/2)  8(2/0) |         nR nr |               np nw nW    
     (An)+         | 12(1/2)  8(2/0) |         nR nr |               np nw nW    
     -(An)         | 12(1/2) 10(2/0) | n       nR nr |               np nw nW    
@@ -6193,8 +6182,13 @@ void                             m68k_addq_l(){
     FETCH_TIMING;
 #endif
 #if defined(SSE_CPU_ROUNDING_ADDQ)
-    CPU_ABUS_ACCESS_WRITE;
-    CPU_ABUS_ACCESS_WRITE;
+    if(DEST_IS_DATA_REGISTER)
+      INSTRUCTION_TIME(4);
+    else
+    {
+      CPU_ABUS_ACCESS_WRITE;
+      CPU_ABUS_ACCESS_WRITE;
+    }
 #endif
     m68k_DEST_L+=m68k_src_l;
     SR_ADD_L;
@@ -6310,30 +6304,13 @@ void                             m68k_subq_l(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_5_TIMINGS))
   FETCH_TIMING;
 #endif
-
   m68k_src_l=(LONG)PARAM_N;if(m68k_src_l==0)m68k_src_l=8;
-
-
-#if defined(SSE_CPU_ROUNDING_SUBQ)
-/*
-    Dn            |  8(1/0)  0(0/0) |               |               np       nn 
-    An            |  8(1/0)  0(0/0) |               |               np       nn 
-*/
-  if(DEST_IS_REGISTER) { // to Dn, An
-#else
   if((ir&BITS_543)==BITS_543_001){ //subq.l to address register
-#endif
+
 #if defined(SSE_CPU_ROUNDING_SUBQ)
     PREFETCH_IRC;
     INSTRUCTION_TIME(4);
-    if(DEST_IS_DATA_REGISTER)
-    {
-      m68k_dest=r+PARAM_M; 
-      r[PARAM_M]-=m68k_src_l;
-      SR_SUB_L(SR_X);
-    }
-    else
-      areg[PARAM_M]-=m68k_src_l;
+    areg[PARAM_M]-=m68k_src_l;
 #else
     areg[PARAM_M]-=m68k_src_l;
     INSTRUCTION_TIME(4);
@@ -6362,8 +6339,13 @@ void                             m68k_subq_l(){
     FETCH_TIMING;
 #endif
 #if defined(SSE_CPU_ROUNDING_SUBQ)
-    CPU_ABUS_ACCESS_WRITE;
-    CPU_ABUS_ACCESS_WRITE;
+    if(DEST_IS_DATA_REGISTER)
+      INSTRUCTION_TIME(4);
+    else
+    {
+      CPU_ABUS_ACCESS_WRITE;
+      CPU_ABUS_ACCESS_WRITE;
+    }
 #endif
     m68k_DEST_L-=m68k_src_l;
     SR_SUB_L(SR_X);
