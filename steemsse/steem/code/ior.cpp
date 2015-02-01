@@ -1140,11 +1140,14 @@ FF8240 - FF827F   palette, res
       if(addr==0xffc123) return (BYTE)runstate;
 #endif
       if(emudetect_called){
-        if (addr<0xffc120) 
+#if !defined(SSE_VAR_STEALTH2) 
+        if (addr<0xffc120) // extremely stupid bug
           ior_byte= 0;
-        else switch (addr){
-          case 0xffc100: ior_byte=BYTE(stem_version_text[0]-'0'); break;
-          case 0xffc101:
+        else 
+#endif
+        switch (addr){
+        case 0xffc100: ior_byte=BYTE(stem_version_text[0]-'0'); break;
+        case 0xffc101:
           {
             Str minor_ver=stem_version_text+2;
             for (int i=0;i<minor_ver.Length();i++){
@@ -1157,45 +1160,48 @@ FF8240 - FF827F   palette, res
             ior_byte=BYTE(((ver/10) << 4) | (ver % 10));
             break;
           }
-          case 0xffc102: ior_byte=BYTE(slow_motion); break;
-          case 0xffc103: ior_byte=BYTE(slow_motion_speed/10); break;
-          case 0xffc104: ior_byte= BYTE(fast_forward); break;
-          case 0xffc105: ior_byte= BYTE(n_cpu_cycles_per_second/1000000); break;
-          case 0xffc106: ior_byte= BYTE(0 DEBUG_ONLY(+1)); break;
-          case 0xffc107: ior_byte= snapshot_loaded; break;
-          case 0xffc108: ior_byte= BYTE((100000/run_speed_ticks_per_second) >> 8); break;
-          case 0xffc109: ior_byte= BYTE((100000/run_speed_ticks_per_second) & 0xff); break;
-          case 0xffc10a:
-            if(avg_frame_time) 
-              ior_byte= BYTE((((12000/avg_frame_time)*100)/shifter_freq) >> 8);
-            ior_byte= 0;
-            break;
-          case 0xffc10b:
-            if(avg_frame_time)
-              ior_byte= BYTE((((12000/avg_frame_time)*100)/shifter_freq) & 0xff);
-            ior_byte= 0;
-            break;
-          case 0xffc10c: ior_byte= HIBYTE(HIWORD(ABSOLUTE_CPU_TIME)); break;
-          case 0xffc10d: ior_byte= LOBYTE(HIWORD(ABSOLUTE_CPU_TIME)); break;
-          case 0xffc10e: ior_byte= HIBYTE(LOWORD(ABSOLUTE_CPU_TIME)); break;
-          case 0xffc10f: ior_byte= LOBYTE(LOWORD(ABSOLUTE_CPU_TIME)); break;
+        case 0xffc102: ior_byte=BYTE(slow_motion); break;
+        case 0xffc103: ior_byte=BYTE(slow_motion_speed/10); break;
+        case 0xffc104: ior_byte= BYTE(fast_forward); break;
+        case 0xffc105: ior_byte= BYTE(n_cpu_cycles_per_second/1000000); break;
+        case 0xffc106: ior_byte= BYTE(0 DEBUG_ONLY(+1)); break;
+        case 0xffc107: ior_byte= snapshot_loaded; break;
+        case 0xffc108: ior_byte= BYTE((100000/run_speed_ticks_per_second) >> 8); break;
+        case 0xffc109: ior_byte= BYTE((100000/run_speed_ticks_per_second) & 0xff); break;
+        case 0xffc10a:
+          if(avg_frame_time) 
+            ior_byte= BYTE((((12000/avg_frame_time)*100)/shifter_freq) >> 8);
+          ior_byte= 0;
+          break;
+        case 0xffc10b:
+          if(avg_frame_time)
+            ior_byte= BYTE((((12000/avg_frame_time)*100)/shifter_freq) & 0xff);
+          ior_byte= 0;
+          break;
+        case 0xffc10c: ior_byte= HIBYTE(HIWORD(ABSOLUTE_CPU_TIME)); break;
+        case 0xffc10d: ior_byte= LOBYTE(HIWORD(ABSOLUTE_CPU_TIME)); break;
+        case 0xffc10e: ior_byte= HIBYTE(LOWORD(ABSOLUTE_CPU_TIME)); break;
+        case 0xffc10f: ior_byte= LOBYTE(LOWORD(ABSOLUTE_CPU_TIME)); break;
 
-          case 0xffc110: ior_byte= HIBYTE(HIWORD(cpu_time_of_last_vbl)); break;
-          case 0xffc111: ior_byte= LOBYTE(HIWORD(cpu_time_of_last_vbl)); break;
-          case 0xffc112: ior_byte= HIBYTE(LOWORD(cpu_time_of_last_vbl)); break;
-          case 0xffc113: ior_byte= LOBYTE(LOWORD(cpu_time_of_last_vbl)); break;
+        case 0xffc110: ior_byte= HIBYTE(HIWORD(cpu_time_of_last_vbl)); break;
+        case 0xffc111: ior_byte= LOBYTE(HIWORD(cpu_time_of_last_vbl)); break;
+        case 0xffc112: ior_byte= HIBYTE(LOWORD(cpu_time_of_last_vbl)); break;
+        case 0xffc113: ior_byte= LOBYTE(LOWORD(cpu_time_of_last_vbl)); break;
 
-          case 0xffc114: ior_byte= HIBYTE(HIWORD(cpu_timer_at_start_of_hbl)); break;
-          case 0xffc115: ior_byte= LOBYTE(HIWORD(cpu_timer_at_start_of_hbl)); break;
-          case 0xffc116: ior_byte= HIBYTE(LOWORD(cpu_timer_at_start_of_hbl)); break;
-          case 0xffc117: ior_byte= LOBYTE(LOWORD(cpu_timer_at_start_of_hbl)); break;
+        case 0xffc114: ior_byte= HIBYTE(HIWORD(cpu_timer_at_start_of_hbl)); break;
+        case 0xffc115: ior_byte= LOBYTE(HIWORD(cpu_timer_at_start_of_hbl)); break;
+        case 0xffc116: ior_byte= HIBYTE(LOWORD(cpu_timer_at_start_of_hbl)); break;
+        case 0xffc117: ior_byte= LOBYTE(LOWORD(cpu_timer_at_start_of_hbl)); break;
 
-          case 0xffc118: ior_byte= HIBYTE( (short) (scan_y)); break;
-          case 0xffc119: ior_byte= LOBYTE( (short) (scan_y)); break;
-          case 0xffc11a: ior_byte= emudetect_write_logs_to_printer; break;
-          case 0xffc11b: ior_byte= emudetect_falcon_mode; break;
-          case 0xffc11c: ior_byte= BYTE((emudetect_falcon_mode_size-1) + (emudetect_falcon_extra_height ? 2:0)); break;
-          case 0xffc11d: ior_byte= emudetect_overscans_fixed; break;
+        case 0xffc118: ior_byte= HIBYTE( (short) (scan_y)); break;
+        case 0xffc119: ior_byte= LOBYTE( (short) (scan_y)); break;
+        case 0xffc11a: ior_byte= emudetect_write_logs_to_printer; break;
+        case 0xffc11b: ior_byte= emudetect_falcon_mode; break;
+        case 0xffc11c: ior_byte= BYTE((emudetect_falcon_mode_size-1) + (emudetect_falcon_extra_height ? 2:0)); break;
+        case 0xffc11d: ior_byte= emudetect_overscans_fixed; break;
+#if defined(SSE_VAR_STEALTH2) 
+        default: ior_byte= 0;
+#endif
         }//sw
         break;
     }
@@ -1209,7 +1215,7 @@ FF8240 - FF827F   palette, res
     && (((1<<14)&d2_dpeek(FAKE_IO_START+24))
 // we add conditions address range - logsection enabled
 
-
+      && (old_pc<rom_addr)
 //      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_INTERRUPTS] ) //mfp
       && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_MFP] ) //mfp
       && ( (addr&0xffff00)!=0xfffc00 || logsection_enabled[LOGSECTION_IKBD] ) //acia
@@ -1226,7 +1232,7 @@ FF8240 - FF827F   palette, res
     && addr!=0xFFFC02  // if IKBD data polling...
 #endif
     )
-    TRACE_LOG("%d-%d-%d PC %X IOR.B %X : %X\n",TIMING_INFO,pc-2,addr,ior_byte);
+    TRACE_LOG("%d PC %X IOR.B %X : %X\n",ACT,old_pc,addr,ior_byte);
 #endif
 
 #if defined(SSE_MMU_WU_IO_BYTES_R)
