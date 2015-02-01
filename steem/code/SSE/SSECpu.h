@@ -463,11 +463,22 @@ struct TM68000 {
 
 #if defined(SSE_CPU_E_CLOCK)
   bool EClock_synced;
+
 #ifdef SSE_CPU_E_CLOCK_DISPATCHER
-enum {ECLOCK_ACIA,ECLOCK_HBL,ECLOCK_VBL}; //debug/hacks
-void SyncEClock(int dispatcher);
+  enum {ECLOCK_ACIA,ECLOCK_HBL,ECLOCK_VBL}; //debug/hacks
+#endif
+#if defined(SSE_CPU_E_CLOCK2)
+  int
 #else
-void SyncEClock();
+  void
+#endif
+  SyncEClock(
+#ifdef SSE_CPU_E_CLOCK_DISPATCHER
+  int dispatcher
+#endif
+  );
+#if defined(SSE_CPU_E_CLOCK2) && defined(SSE_CPU_E_CLOCK_DISPATCHER)
+  BYTE LastEClockCycles[3];
 #endif
 #endif
 

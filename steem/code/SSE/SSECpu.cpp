@@ -1833,45 +1833,78 @@ CPU-Clock  E-clock Keyboard read
   Reality is a Lie/Schnusdie
   TCB
 
-  There are still emulation issues, this isn't finished.
   It depends on option 6301/Acia, for ACIA as well as HBI & VBI.
-  If the option isn't checked, we fall back on Steem's (modified) ACIA 
-  jitter and Hatari's HBI/VBI jitter (depending on defines in SSE.h)
+  If the option isn't checked, we fall back on Steem's wobble.
 */
 
 
 #define LOGSECTION LOGSECTION_INTERRUPTS
 
-#ifdef SSE_CPU_E_CLOCK_DISPATCHER
-void TM68000::SyncEClock(int dispatcher) {
+#if defined(SSE_CPU_E_CLOCK2)
+/*  Now the function returns # E-clock cycles, without changing CPU
+    cycles itself.
+*/
+int 
 #else
-void TM68000::SyncEClock() {
+void
+#endif
+TM68000::SyncEClock(
+#if defined(SSE_CPU_E_CLOCK_DISPATCHER)
+                    int dispatcher
+#endif
+                    ) {
+                      
+#if defined(SSE_CPU_E_CLOCK2)
+  BYTE wait_states=0;
 #endif
 
   // sync with E max once per instruction
   if(EClock_synced) 
+#if defined(SSE_CPU_E_CLOCK2)
+    return wait_states;
+#else
     return;
+#endif
   EClock_synced=true; 
- 
-  int act=ACT;
 
-  /* //whatever 
-  if(dispatcher==TM68000::ECLOCK_HBL)
-    act+=8;
-*/
+  int act=ACT;
 
 #if defined(SSE_SHIFTER) && defined(SSE_TIMINGS_FRAME_ADJUSTMENT)
   act-=4*Shifter.n508lines; //legit hack: NOJITTER.PRG
 #endif
 
-  BYTE wait_states;
+#if defined(SSE_CPU_E_CLOCK3)
+/*
+  int a=2147483644;
+  a+=8; //4 2
+  a+=2; //2 4
+  a+=2; //0 6
+  a+=2; //8 8
+  a+=2; //6 0
+  a+=2; //4 2
+*/
+  BYTE cycles=abs(act%10);
+  if(act<0 && cycles!=8)
+    cycles=6-cycles;
+#endif
 
+#if !defined(SSE_CPU_E_CLOCK2)
+  BYTE wait_states;
+#endif
+
+
+#if defined(SSE_CPU_E_CLOCK3)
+  switch(cycles) {
+#else
   switch(abs(act%10)) {
+#endif
+
   case 0:
     wait_states=8;
 #if defined(SSE_INT_HBL_E_CLOCK_HACK)
     // pathetic hack for 3615GEN4 HMD #1, make it 4 cycles instead on HBI
-    if(dispatcher==TM68000::ECLOCK_HBL&&SSE_HACKS_ON)
+    // TEST16: jitter is 0, 4, 8 -> undef
+    if(dispatcher==ECLOCK_HBL&&SSE_HACKS_ON)
       TRACE_LOG("ECLK 8->4\n");
     else
 #endif
@@ -1884,8 +1917,9 @@ void TM68000::SyncEClock() {
     wait_states=0;
   }//sw
 
+#if !defined(SSE_CPU_E_CLOCK2)
   InstructionTime(wait_states); 
-
+#endif
 #if defined(SSE_DEBUG) 
   char* sdispatcher[]={"ACIA","HBL","VBL"};
 #if defined(SSE_DEBUG_FRAME_REPORT_ACIA)
@@ -1908,6 +1942,12 @@ void TM68000::SyncEClock() {
 #endif
 #endif
 #endif//dbg
+#if defined(SSE_CPU_E_CLOCK2)
+#if defined(SSE_CPU_E_CLOCK_DISPATCHER)
+  LastEClockCycles[dispatcher]=wait_states;
+#endif
+  return wait_states;
+#endif
 }
 
 #undef LOGSECTION

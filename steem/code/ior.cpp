@@ -328,10 +328,17 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
         if(HD6301EMU_ON)
         {
           INSTRUCTION_TIME(wait_states); 
-#ifdef SSE_CPU_E_CLOCK_DISPATCHER
-          M68000.SyncEClock(TM68000::ECLOCK_ACIA);
+
+#if defined(SSE_CPU_E_CLOCK2)
+          wait_states=
+#endif              
+#if defined(SSE_CPU_E_CLOCK_DISPATCHER)
+            M68000.SyncEClock(TM68000::ECLOCK_ACIA);
 #else
-          M68000.SyncEClock();
+            M68000.SyncEClock();
+#endif
+#if defined(SSE_CPU_E_CLOCK2)              
+          INSTRUCTION_TIME(wait_states);
 #endif
         }
         else

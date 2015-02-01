@@ -4026,21 +4026,10 @@ and all his silly mods are gone!
 #define SSE_CPU_PREFETCH_TIMING_STOP
 #define SSE_CPU_PREFETCH_TIMING_SUBX
 #define SSE_CPU_PREFETCH_TIMING_SWAP
+
 #endif
 
-//#undef SSE_INT_HBL_IACK_FIX//bbc52
-#define SSE_INT_HBL_IACK_FIX2 
-//#undef SSE_INT_HBL_ONE_FUNCTION//for tests only
-//#undef SSE_INT_HBL_E_CLOCK_HACK
-//#undef SSE_INT_HBL_INLINE//
-//#define SSE_INT_HBL_EVENT//for tests only
-//#define SSE_INT_VBI_START//test
 
-// it's E-Clock ('6301' on) or 'Wobble' now, no need to add variables
-#undef SSE_INT_JITTER 
-#undef SSE_INT_JITTER_HBL
-#undef SSE_INT_JITTER_VBL
-#undef SSE_INT_JITTER_RESET
 
 
 #define SSE_GUI_OPTIONS_SOUND1 // make some room free
@@ -4051,12 +4040,31 @@ and all his silly mods are gone!
 #define SSE_SOUND_FILTER_HATARI
 #undef SSE_SOUND_FILTER_STF2 // "monitor" also for samples
 
-#define SSE_SOUND_DMA_CLOCK //not CPU, apart
+#define SSE_SOUND_DMA_CLOCK //not CPU, apart clock
 
+
+
+//#undef SSE_INT_HBL_ONE_FUNCTION//for tests only
+//#define SSE_INT_HBL_EVENT//for tests only
+//#define SSE_INT_VBI_START//for tests only
+
+// it's E-Clock ('6301' on) or 'Wobble' now, no need to add variables
+
+#undef SSE_INT_JITTER 
+#undef SSE_INT_JITTER_HBL
+#undef SSE_INT_JITTER_VBL
+#undef SSE_INT_JITTER_RESET
+#undef SSE_INT_HBL_IACK_FIX
+#undef SSE_INT_HBL_E_CLOCK_HACK
+#define SSE_CPU_E_CLOCK2
+#define SSE_CPU_E_CLOCK3
+#define SSE_INT_HBL_GLUE_LATENCY
+#define SSE_INT_HBL_IACK2
+#define SSE_INT_VBL_IACK2
 
 #ifdef SSE_INT_MFP // tests, refactor
+
 #define SSE_INT_MFP_AUTO_NO_IS_CLEAR//test
-#define SSE_INT_MFP_CHECKTIMEOUT_ON_STOP//test
 #define SSE_INT_MFP_NO_WRITE_LATENCY1//unimportant
 #define SSE_INT_MFP_OBJECT // new MC68901 chip in out ST!
 #if defined(SSE_INT_MFP_OBJECT)
