@@ -815,8 +815,7 @@ system exclusive start and end messages (F0 and F7).
               ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE;
             }
 #endif
-
-#if defined(SSE_INT_MFP_WRITE_DELAY1) 
+#if defined(SSE_INT_MFP_WRITE_DELAY1) //no
             time_of_last_write_to_mfp_reg=ACT;
 #endif
           }

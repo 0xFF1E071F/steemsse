@@ -18,15 +18,10 @@ inline int abs_quick(int i) //was in emu.cpp (!)
   return -i;
 }
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_TIMER_B_WOBBLE2)
-/*  TIMERB01.TOS; TIMERB03.TOS
-    There's definitely timer B wobble, but the range is 2 cycles, not 4.
-    This breaks Sunny scroller.
-*/
-#define TB_TIME_WOBBLE ( rand()&2 )
-#elif defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_TIMER_B_NO_WOBBLE)
-#define TB_TIME_WOBBLE (0) // no wobble for Timer B
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_TIMER_B_NO_WOBBLE)
+#define TB_TIME_WOBBLE (0) // no wobble for Timer B 
 #else
+// there's wobble, confirmed by TIMERB01.TOS; TIMERB03.TOS; could be 2?
 #define TB_TIME_WOBBLE (rand() & 4)
 #endif
 
@@ -101,7 +96,7 @@ EXT BYTE mfp_gpip_no_interrupt INIT(0xf7);
 EXT int mfp_time_of_set_pending[16];
 #endif
 
-#if defined(SSE_INT_MFP_WRITE_DELAY1)//&& !defined(SSE_INT_MFP_OBJECT)
+#if defined(SSE_INT_MFP_WRITE_DELAY1)//no
 EXT int time_of_last_write_to_mfp_reg;
 #endif
 
@@ -126,18 +121,7 @@ EXT BYTE mfp_gpip_input_buffer;
 #define CPU_CYCLES_PER_MFP_CLK (8000000.0/double(MFP_CLK_EXACT))
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_IACK_LATENCY)
-/*
-Final Conflict
-
-http://www.atari-forum.com/viewtopic.php?f=51&t=15885#p195733 (ijor):
-
-If a timer counts through again during the IACK cycles, the current
-interrupt will clear the new one too, which will give other code
-some air.
-
-v3.7 undef, see SSE_INT_MFP_IACK_LATENCY2 and SSE_INT_MFP_IACK_LATENCY3
-*/
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_IACK_LATENCY)//no
 #define CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED (SSE_HACKS_ON?32:28)
 #else
 #define CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED 20
