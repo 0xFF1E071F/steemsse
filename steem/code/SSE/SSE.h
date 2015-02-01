@@ -3955,23 +3955,27 @@ and all his silly mods are gone!
 #define SSE_VAR_SNAPSHOT_INI
 
 #ifdef SSE_SHIFTER
-#define SSE_SHIFTER_STE_DE_MED_RES
+#define SSE_SHIFTER_STE_DE_MED_RES // bugfix
 #define SSE_SHIFTER_STE_READ_SDP_HSCROLL1 // bugfix 
 #define SSE_SHIFTER_STE_READ_SDP_SKIP // bugfix
-#define SSE_SHIFTER_LINE_MINUS_2_DONT_FETCH //BIG Demo #2, finally!
+#define SSE_SHIFTER_LINE_MINUS_2_DONT_FETCH //BIG Demo #2 bad raster finally!
 #undef SSE_SHIFTER_LINE_PLUS_2_STE
-#define SSE_SHIFTER_LINE_PLUS_2_STE2
+#define SSE_SHIFTER_LINE_PLUS_2_STE2 //tested on hardware
+#define SSE_TIMINGS_STE_NOPS_TO_FIRST_LINE
 #define SSE_SHIFTER_DOLB_STE
 #define SSE_SHIFTER_DOLB1 //again a hack... TODO
 #define SSE_SHIFTER_PANIC2 //band order
 #endif//shifter
 
 #ifdef SSE_CPU
+
 #undef SSE_CPU_IGNORE_RW_4MB // F-29 hangs on 4MB machines, nothing to fix
-#define SSE_CPU_DEST_IS_REGISTER //just new macro
 #define SSE_CPU_TRUE_PC2 // JMP, JSR
 #define SSE_CPU_DIV_CC //carry clear: always
+
+#define SSE_CPU_DEST_IS_REGISTER //just new macro
 // quite risky series of mods, must test:
+
 #define SSE_CPU_ROUNDING_ABCD
 #undef SSE_CPU_ROUNDING_ADD_BW_DN //simplify
 #define SSE_CPU_ROUNDING_ADD
