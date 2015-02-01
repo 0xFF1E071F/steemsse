@@ -417,23 +417,25 @@ Far more on the ST.
 #define SSE_INT_VBI_START (68) // default = STE
 #endif
 
+#define THRESHOLD_LINE_PLUS_2_STF (54)
 #if defined(SSE_INT_VBL_STF) // modest hack still works
-
 #if defined(SSE_TIMINGS_STE_NOPS_TO_FIRST_LINE)
 #define HBL_FOR_STE (444 - 4)
+#define THRESHOLD_LINE_PLUS_2_STE 40 // as on a real STE
 #else
 #define HBL_FOR_STE (444)
+#define THRESHOLD_LINE_PLUS_2_STE (40+2)
 #endif
-
-#if defined(SSE_TIMINGS_STE_NOPS_TO_FIRST_LINE_)
-#define HBL_FOR_STF (444+4)
-#elif SSE_VERSION<364//70
+#if SSE_VERSION<364
 //this particular hack doesn't look useful for anything now
-#define HBL_FOR_STF (HBL_FOR_STE+4+(SSE_HACKS_ON?4:0)) //TODO
+#define HBL_FOR_STF (HBL_FOR_STE+4+(SSE_HACKS_ON?4:0))
+#else
+#if defined(SSE_TIMINGS_STE_NOPS_TO_FIRST_LINE)
+#define HBL_FOR_STF (HBL_FOR_STE+8) // so we change nothing on STF (3615cakeman)
 #else
 #define HBL_FOR_STF (HBL_FOR_STE+4)
 #endif
-
+#endif
 #endif
 
 #endif
