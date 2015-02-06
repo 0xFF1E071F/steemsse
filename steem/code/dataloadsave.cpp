@@ -560,8 +560,11 @@ bool TJoystickConfig::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *Se
         JoySetup[Setup][n].AnyFireOnJoy=pCSF->GetInt(Sect,Prefix+"AnyFireOnJoy",JoySetup[Setup][n].AnyFireOnJoy);
         JoySetup[Setup][n].DeadZone=pCSF->GetInt(Sect,Prefix+"DeadZone",JoySetup[Setup][n].DeadZone);
         JoySetup[Setup][n].AutoFireSpeed=pCSF->GetInt(Sect,Prefix+"AutoFireSpeed",JoySetup[Setup][n].AutoFireSpeed);
-
+#if defined(SSE_JOYSTICK_JUMP_BUTTON)
+        for (int i=0;i<7;i++){
+#else
         for (int i=0;i<6;i++){
+#endif
           JoySetup[Setup][n].DirID[i]=pCSF->GetInt(Sect,Prefix+"DirID"+i,JoySetup[Setup][n].DirID[i]);
         }
         if (n==2 || n==4){
@@ -625,7 +628,11 @@ bool TJoystickConfig::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
       pCSF->SetStr(Sect,Prefix+"DeadZone",EasyStr(JoySetup[Setup][n].DeadZone));
       pCSF->SetStr(Sect,Prefix+"AutoFireSpeed",EasyStr(JoySetup[Setup][n].AutoFireSpeed));
       pCSF->SetStr(Sect,Prefix+"Type",EasyStr(JoySetup[Setup][n].Type));
+#if defined(SSE_JOYSTICK_JUMP_BUTTON)
+      for (int i=0;i<7;i++){
+#else
       for (int i=0;i<6;i++){
+#endif
         pCSF->SetStr(Sect,Prefix+"DirID"+i,EasyStr(JoySetup[Setup][n].DirID[i]));
       }
       if (n==2 || n==4){
