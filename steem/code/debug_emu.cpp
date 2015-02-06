@@ -31,6 +31,15 @@ EXT DWORD debug_USP,debug_SSP;
 #endif
 EXT MEM_ADDRESS debug_VAP;
 EXT int debug_time_to_timer_timeout[4];
+#if defined(SSE_BOILER_DECRYPT_TIMERS)
+EXT int debug_time_to_timer_prescale[4];
+EXT int debug_time_to_timer_data[4];
+EXT int debug_time_to_timer_count[4];
+EXT int debug_time_to_timer_ticks[4];
+#endif
+#if defined(SSE_BOILER_FRAME_INTERRUPTS)
+EXT int debug_frame_interrupts;
+#endif
 EXT int debug_cycle_colours INIT(0);
 EXT int debug_screen_shift INIT(0);
 EXT int debug_num_bk INIT(0),debug_num_mon_reads INIT(0),debug_num_mon_writes INIT(0);
@@ -211,6 +220,16 @@ void debug_update_cycle_counts()
   for (int t=0;t<4;t++){
     if (mfp_timer_enabled[t]){
       debug_time_to_timer_timeout[t]=mfp_timer_timeout[t]-ABSOLUTE_CPU_TIME;
+
+#if defined(SSE_BOILER_DECRYPT_TIMERS)
+        ASSERT(mfp_get_timer_control_register(t)>0);
+        ASSERT(mfp_get_timer_control_register(t)<16);
+        debug_time_to_timer_prescale[t]=mfp_timer_8mhz_prescale[mfp_get_timer_control_register(t)];
+        debug_time_to_timer_data[t]=mfp_reg[MFPR_TADR+t]; //could directly point to it?
+        debug_time_to_timer_ticks[t]=mfp_calc_timer_counter(t);
+        debug_time_to_timer_count[t]=mfp_timer_counter[t]/64;
+#endif
+
     }else{
 #if defined(SSE_BOILER_TIMER_B)
       if(t==1) 
@@ -218,6 +237,17 @@ void debug_update_cycle_counts()
       else
 #endif
         debug_time_to_timer_timeout[t]=0;
+
+#if defined(SSE_BOILER_DECRYPT_TIMERS)
+        debug_time_to_timer_prescale[t]=0;
+        debug_time_to_timer_data[t]=0;
+        debug_time_to_timer_count[t]=0;
+        debug_time_to_timer_ticks[t]=0;
+#endif
+#if defined(SSE_BOILER_FRAME_INTERRUPTS2)
+        debug_frame_interrupts=(Debug.FrameInterrupts<<16)+Debug.FrameMfpIrqs;
+#endif
+
     }
   }
 

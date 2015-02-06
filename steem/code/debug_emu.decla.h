@@ -49,6 +49,15 @@ EXT DWORD debug_USP,debug_SSP;
 #endif
 EXT MEM_ADDRESS debug_VAP;
 EXT int debug_time_to_timer_timeout[4];
+#if defined(SSE_BOILER_DECRYPT_TIMERS)
+EXT int debug_time_to_timer_prescale[4];
+EXT int debug_time_to_timer_data[4];
+EXT int debug_time_to_timer_count[4];
+EXT int debug_time_to_timer_ticks[4];
+#endif
+#if defined(SSE_BOILER_FRAME_INTERRUPTS2)
+EXT int debug_frame_interrupts;
+#endif
 EXT void debug_check_for_events();
 EXT void debug_trace_event_plan_init();
 

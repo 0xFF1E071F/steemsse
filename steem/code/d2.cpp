@@ -500,7 +500,11 @@ EasyStr d2_effective_address(){
       dpc+=4;
       return ret;
     case 2:
+#if defined(SSE_BOILER_DISPLACEMENT_DECIMAL)
+      ret=EasyStr("")+itoa((short)d2_fetchW(),d2_t_buf,10)+"(pc)";
+#else
       ret=EasyStr("+$")+itoa(d2_fetchW(),d2_t_buf,16)+"(pc)";
+#endif
       d2_pc_rel_ex+=EasyStr(" {$")+HEXSl(dpc+(signed short)d2_fetchW(),6)+"}";
       trace_add_entry("immediate offset: ","",TDE_BEFORE,false,2,dpc);
       trace_add_entry("predecrement stack pointer: ","sp=a7",TDE_BEFORE|TDE_AFTER,true,4,(MEM_ADDRESS)&r[15]);
@@ -636,7 +640,11 @@ void d2_get_source_111_b(){
     dpc+=4;
     break;
   case 2:
+#if defined(SSE_BOILER_DISPLACEMENT_DECIMAL)
+    d2_src_b=EasyStr("")+itoa((short)d2_fetchW(),d2_t_buf,10)+"(pc)";
+#else
     d2_src_b=EasyStr("$")+itoa(d2_fetchW(),d2_t_buf,16)+"(pc)";
+#endif
     d2_pc_rel_ex+=EasyStr(" {$")+HEXSl(dpc+(signed short)d2_fetchW(),6)+"}";
     trace_add_entry("source memory: ",d2_src_b.c_str(),TDE_BEFORE,false,1,D2_PC_RELATIVE_PC+(signed short)d2_fetchW());
     dpc+=2;
@@ -677,7 +685,11 @@ void d2_get_source_111_w(){
     dpc+=4;
     break;
   case 2:
+#if defined(SSE_BOILER_DISPLACEMENT_DECIMAL)
+    d2_src_w=EasyStr("")+itoa((short)d2_fetchW(),d2_t_buf,10)+"(pc)";
+#else
     d2_src_w=EasyStr("$")+itoa(d2_fetchW(),d2_t_buf,16)+"(pc)";
+#endif
     d2_pc_rel_ex+=EasyStr(" {$")+HEXSl(dpc+(signed short)d2_fetchW(),6)+"}";
     trace_add_entry("source memory: ",d2_src_w.c_str(),TDE_BEFORE,false,2,D2_PC_RELATIVE_PC+(signed short)d2_fetchW());
     dpc+=2;
@@ -716,7 +728,11 @@ void d2_get_source_111_l(){
     dpc+=4;
     break;
   case 2:
+#if defined(SSE_BOILER_DISPLACEMENT_DECIMAL)
+    d2_src_l=EasyStr("$")+itoa((short)d2_fetchW(),d2_t_buf,10)+"(pc)";
+#else
     d2_src_l=EasyStr("$")+itoa(d2_fetchW(),d2_t_buf,16)+"(pc)";
+#endif
     d2_pc_rel_ex+=EasyStr(" {$")+HEXSl(dpc+(signed short)d2_fetchW(),6)+"}";
     trace_add_entry("source memory: ",d2_src_w.c_str(),TDE_BEFORE,false,4,D2_PC_RELATIVE_PC+(signed short)d2_fetchW());
     dpc+=2;
@@ -1366,7 +1382,11 @@ void                              d2_movem_l_to_regs(){
       dpc+=4;
       break;
     case 2:
+#if defined(SSE_BOILER_DISPLACEMENT_DECIMAL)
+      d2_src_l=EasyStr("$")+itoa((short)d2_fetchW(),d2_t_buf,10)+"(pc)";
+#else
       d2_src_l=EasyStr("+$")+itoa(d2_fetchW(),d2_t_buf,16)+"(pc)";
+#endif
       d2_pc_rel_ex+=EasyStr(" {$")+HEXSl(dpc+(signed short)d2_fetchW(),6)+"}";
 //////////********************************** where is the pc-relative from????? ***************
       trace_add_movem_block("source memory : ",-1,TDE_BEFORE,4,D2_PC_RELATIVE_PC+(signed short)d2_fetchW(),d2_n_movem_regs);
@@ -1429,12 +1449,20 @@ void                              d2_movem_w_to_regs(){
       dpc+=2;
       break;
     case 1:
+#if defined(SSE_BOILER_DISPLACEMENT_DECIMAL)
+      d2_src_w=EasyStr("")+itoa((short)d2_fetchL(),d2_t_buf,10)+"(pc)";
+#else
       d2_src_w=EasyStr("$")+itoa(d2_fetchL(),d2_t_buf,16);
+#endif
       trace_add_movem_block("source memory: ",-1,TDE_BEFORE,2,0xffffff&d2_fetchL(),d2_n_movem_regs);
       dpc+=4;
       break;
     case 2:
+#if defined(SSE_BOILER_DISPLACEMENT_DECIMAL)
+      d2_src_w=EasyStr("")+itoa((short)d2_fetchW(),d2_t_buf,10)+"(pc)";
+#else
       d2_src_w=EasyStr("+$")+itoa(d2_fetchW(),d2_t_buf,16)+"(pc)";
+#endif
       d2_pc_rel_ex+=EasyStr(" {$")+HEXSl(dpc+(signed short)d2_fetchW(),6)+"}";
       trace_add_movem_block("source memory : ",-1,TDE_BEFORE,2,D2_PC_RELATIVE_PC+(signed short)d2_fetchW(),d2_n_movem_regs);
       dpc+=2;
@@ -2393,7 +2421,11 @@ void d2_0000(){ //immediate stuff
   case BITS_876_100:
     if((ir&BITS_543)==BITS_543_001){
       d2_command="movep.w";
+#if defined(SSE_BOILER_DISPLACEMENT_DECIMAL)
+      d2_src_w=EasyStr("")+itoa((short)d2_fetchW(),d2_t_buf,10)+D2_BRACKETS_aM;
+#else
       d2_src_w=EasyStr("$")+itoa(d2_fetchW(),d2_t_buf,16)+D2_BRACKETS_aM;
+#endif
       trace_add_entry("source memory: ",d2_src_w.c_str(),TDE_BEFORE,false,1,areg[PARAM_M]+(signed short)d2_fetchW());
       trace_add_entry("source memory: 2+",d2_src_w.c_str(),TDE_BEFORE,false,1,areg[PARAM_M]+(signed short)d2_fetchW()+2);
       dpc+=2;
@@ -2412,7 +2444,11 @@ void d2_0000(){ //immediate stuff
   case BITS_876_101:
     if((ir&BITS_543)==BITS_543_001){
       d2_command="movep.l";
+#if defined(SSE_BOILER_DISPLACEMENT_DECIMAL)
+      d2_src_l=EasyStr("")+itoa((short)d2_fetchW(),d2_t_buf,10)+D2_BRACKETS_aM;
+#else
       d2_src_l=EasyStr("$")+itoa(d2_fetchW(),d2_t_buf,16)+D2_BRACKETS_aM;
+#endif
       trace_add_entry("source memory: ",d2_src_w.c_str(),TDE_BEFORE,false,1,areg[PARAM_M]+(signed short)d2_fetchW());
       trace_add_entry("source memory: 2+",d2_src_w.c_str(),TDE_BEFORE,false,1,areg[PARAM_M]+(signed short)d2_fetchW()+2);
       trace_add_entry("source memory: 4+",d2_src_w.c_str(),TDE_BEFORE,false,1,areg[PARAM_M]+(signed short)d2_fetchW()+4);
@@ -2432,7 +2468,11 @@ void d2_0000(){ //immediate stuff
       d2_command="movep.w";
       d2_src_w=D2_dN;
       trace_add_entry("source register: ",reg_name(PARAM_N),TDE_BEFORE,true,2,(MEM_ADDRESS)&r[PARAM_N]);
+#if defined(SSE_BOILER_DISPLACEMENT_DECIMAL)
+      d2_dest=EasyStr("")+itoa((short)d2_fetchW(),d2_t_buf,10)+D2_BRACKETS_aM;
+#else
       d2_dest=EasyStr("$")+itoa(d2_fetchW(),d2_t_buf,16)+D2_BRACKETS_aM;
+#endif
       trace_add_entry("dest memory: ",d2_dest.c_str(),TDE_BEFORE|TDE_AFTER,false,1,areg[PARAM_M]+(signed short)d2_fetchW());
       trace_add_entry("dest memory: 2+",d2_dest.c_str(),TDE_BEFORE|TDE_AFTER,false,1,areg[PARAM_M]+(signed short)d2_fetchW()+2);
       dpc+=2;
@@ -2448,7 +2488,11 @@ void d2_0000(){ //immediate stuff
       d2_command="movep.l";
       d2_src_l=D2_dN;
       trace_add_entry("source register: ",reg_name(PARAM_N),TDE_BEFORE,true,4,(MEM_ADDRESS)&r[PARAM_N]);
+#if defined(SSE_BOILER_DISPLACEMENT_DECIMAL)
+      d2_dest=EasyStr("")+itoa((short)d2_fetchW(),d2_t_buf,10)+D2_BRACKETS_aM;
+#else
       d2_dest=EasyStr("$")+itoa(d2_fetchW(),d2_t_buf,16)+D2_BRACKETS_aM;
+#endif
       trace_add_entry("dest memory: ",d2_dest.c_str(),TDE_BEFORE|TDE_AFTER,false,1,areg[PARAM_M]+(signed short)d2_fetchW());
       trace_add_entry("dest memory: 2+",d2_dest.c_str(),TDE_BEFORE|TDE_AFTER,false,1,areg[PARAM_M]+(signed short)d2_fetchW()+2);
       trace_add_entry("dest memory: 4+",d2_dest.c_str(),TDE_BEFORE|TDE_AFTER,false,1,areg[PARAM_M]+(signed short)d2_fetchW()+4);
@@ -2508,12 +2552,20 @@ void d2_0001(){  //move.b
   case BITS_876_111:
     switch(ir&BITS_ba9){
     case BITS_ba9_000:
+#if defined(SSE_BOILER_DISPLACEMENT_DECIMAL_)
+      d2_dest=EasyStr("")+itoa((short)d2_fetchW(),d2_t_buf,10)+".w";
+#else
       d2_dest=EasyStr("$")+itoa(d2_fetchW(),d2_t_buf,16)+".w";
+#endif
       trace_add_entry("dest memory: ",d2_dest.c_str(),TDE_BEFORE|TDE_AFTER,false,1,(MEM_ADDRESS)0xffffff&((signed long)((signed short)d2_fetchW())));
       dpc+=2;
       break;
     case BITS_ba9_001:
+#if defined(SSE_BOILER_DISPLACEMENT_DECIMAL_)
+      d2_dest=EasyStr("")+itoa((short)d2_fetchL(),d2_t_buf,10);
+#else
       d2_dest=EasyStr("$")+itoa(d2_fetchL(),d2_t_buf,16);
+#endif
       trace_add_entry("dest memory: ",d2_dest.c_str(),TDE_BEFORE|TDE_AFTER,false,1,(MEM_ADDRESS)0xffffff&d2_fetchL());
       dpc+=4;
       break;
@@ -2566,12 +2618,21 @@ void d2_0010(){
   case BITS_876_111:
     switch(ir&BITS_ba9){
     case BITS_ba9_000:
+#if defined(SSE_BOILER_DISPLACEMENT_DECIMAL_)
+      d2_dest=EasyStr("")+itoa((short)d2_fetchW(),d2_t_buf,10)+".w";
+#else
       d2_dest=EasyStr("$")+itoa(d2_fetchW(),d2_t_buf,16)+".w";
+#endif
       trace_add_entry("dest memory: ",d2_dest.c_str(),TDE_BEFORE|TDE_AFTER,false,4,(MEM_ADDRESS)0xffffff&((signed long)((signed short)d2_fetchW())));
       dpc+=2;
       break;
     case BITS_ba9_001:
+#if defined(SSE_BOILER_DISPLACEMENT_DECIMAL_)
+      d2_dest=EasyStr("")+itoa((short)d2_fetchL(),d2_t_buf,10);
+#else
       d2_dest=EasyStr("$")+itoa(d2_fetchL(),d2_t_buf,16);
+#endif
+
       trace_add_entry("dest memory: ",d2_dest.c_str(),TDE_BEFORE|TDE_AFTER,false,4,(MEM_ADDRESS)0xffffff&d2_fetchL());
       dpc+=4;
       break;
@@ -2624,12 +2685,20 @@ void d2_0011(){
   case BITS_876_111:
     switch(ir&BITS_ba9){
     case BITS_ba9_000:
+#if defined(SSE_BOILER_DISPLACEMENT_DECIMAL_)
+      d2_dest=EasyStr("")+itoa((short)d2_fetchW(),d2_t_buf,10)+".w";
+#else
       d2_dest=EasyStr("$")+itoa(d2_fetchW(),d2_t_buf,16)+".w";
+#endif
       trace_add_entry("dest memory: ",d2_dest.c_str(),TDE_BEFORE|TDE_AFTER,false,2,(MEM_ADDRESS)0xffffff&((signed long)((signed short)d2_fetchW())));
       dpc+=2;
       break;
     case BITS_ba9_001:
+#if defined(SSE_BOILER_DISPLACEMENT_DECIMAL_)
+      d2_dest=EasyStr("")+itoa((short)d2_fetchL(),d2_t_buf,10);
+#else
       d2_dest=EasyStr("$")+itoa(d2_fetchL(),d2_t_buf,16);
+#endif
       trace_add_entry("dest memory: ",d2_dest.c_str(),TDE_BEFORE|TDE_AFTER,false,2,(MEM_ADDRESS)0xffffff&d2_fetchL());
       dpc+=4;
       break;
