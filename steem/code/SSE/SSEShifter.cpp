@@ -189,11 +189,10 @@ void TShifter::CheckSideOverscan() {
     The shift mode switches for left border removal produce a 20 bytes bonus
     instead of 26, and the total overscan line is 224 bytes instead of 230. 
     224/8=28,no rest->no Shifter confusion.
-    Why this is so is not yet known. 
-    Known switches: 504/4 (More or Less Zero); 508/4 (Greets)
-    E605 planet 504/8, with stabiliser & STE scrolling: confusing, apparently
-    it's not +20, it's +26, but don't we have a -6 shift somewhere instead?
-    More cases needed...
+
+    4  IF(RES == LO) PRELOAD will run until cycle 16  (56-16)/2 = +20 
+
+    All the while no video memory is fetched if HSCROLL=0.
 */
 
 #if defined(SSE_SHIFTER_TRICKS) && defined(SSE_SHIFTER_LINE_PLUS_20)
@@ -206,10 +205,16 @@ void TShifter::CheckSideOverscan() {
       ASSERT( !(CurrentScanline.Tricks&TRICK_LINE_PLUS_24) );
       ASSERT( !(CurrentScanline.Tricks&TRICK_LINE_PLUS_26) );
 
+#if defined(SSE_SHIFTER_STATE_MACHINE) && defined(SSE_SHIFTER_LINE_PLUS_20B)
+/*  The timing of R0 is important, not of R2
+*/
+      if(!ShiftModeChangeAtCycle(4) && (ShiftModeAtCycle(2)&2))
+        CurrentScanline.Tricks|=TRICK_LINE_PLUS_20;
+#else
       if(!ShiftModeChangeAtCycle(4) && (ShiftModeChangeAtCycle(-8)==2
         || ShiftModeChangeAtCycle(-4)==2))
         CurrentScanline.Tricks|=TRICK_LINE_PLUS_20;
-
+#endif
     }
 #endif
 
@@ -993,6 +998,61 @@ STF2:
   }
 #endif
 
+
+
+  /////////////////
+  // LINE +4, +6 //
+  /////////////////
+#ifdef SSE_BETA
+/*
+    (60hz)
+    40  IF(RES == HI) PRELOAD will exit after 4 cycles  (372-40)/2 = +6  
+    44  IF(RES == HI) PRELOAD will exit after 8 cycles  (372-44)/2 = +4 
+
+    (50hz)
+    44  IF(RES == HI) PRELOAD will exit after 4 cycles  (376-44)/2 = +6  
+    48  IF(RES == HI) PRELOAD will exit after 8 cycles  (376-48)/2 = +4 
+
+    We need test cases
+*/
+
+#if defined(SSE_SHIFTER_LINE_PLUS_4) || defined(SSE_SHIFTER_LINE_PLUS_6)
+  // this compiles to compact code
+  if(ST_TYPE==STE && !shifter_hscroll_extra_fetch && CyclesIn>36 
+    && !(TrickExecuted&(TRICK_0BYTE_LINE | TRICK_LINE_PLUS_26
+    | TRICK_LINE_PLUS_20 | TRICK_4BIT_SCROLL | TRICK_OVERSCAN_MED_RES
+    | TRICK_LINE_PLUS_4 | TRICK_LINE_PLUS_6)))
+  {
+    t=FreqAtCycle(DEcycle60)==50 ? 44 : 40; 
+    if(ShiftModeChangeAtCycle(t)==2)
+    {
+      CurrentScanline.Tricks|=TRICK_LINE_PLUS_6;
+#if defined(SSE_SHIFTER_LINE_PLUS_6) 
+      left_border-=2*6; 
+      overscan_add_extra+=6;
+      CurrentScanline.Bytes+=6;
+      overscan=OVERSCAN_MAX_COUNTDOWN;
+      TrickExecuted|=TRICK_LINE_PLUS_6;
+      TRACE_OSD("+6 y%d",scan_y);
+#endif
+    }
+    else if(ShiftModeChangeAtCycle(t+4)==2)
+    {
+      CurrentScanline.Tricks|=TRICK_LINE_PLUS_4;
+#if defined(SSE_SHIFTER_LINE_PLUS_4)
+      left_border-=2*4; 
+      overscan_add_extra+=4;
+      CurrentScanline.Bytes+=4;
+      overscan=OVERSCAN_MAX_COUNTDOWN;
+      TrickExecuted|=TRICK_LINE_PLUS_4;
+      TRACE_OSD("+4 y%d",scan_y);
+#endif
+    }
+  }
+
+#endif
+
+#endif
   /////////////
   // LINE +2 //
   /////////////
@@ -1004,10 +1064,11 @@ STF2:
     on the STE.
     On the STE, the GLUE checks frequency earlier because of possible horizontal
     scrolling.
-	  Notice that the check happens at the same cycle whether HSCROLL is active
-	  or not, but display will start early only if it is active.
-	  This points to the GLUE holding the result of its decision in some internal
-	  register.
+    Notice that the check happens at the same cycle whether HSCROLL is activ
+    or not, but display will start early only if it is active.
+    This points to the GLUE holding the result of its decision in some internal
+    register, or to it feeding the Shifter some 0 instead of video memory if
+    HSCROLL=0.
 	
     cases: Mindbomb, Forest, LoSTE screens
     spurious to avoid as STE (emulation problem): DSoTS, Overscan, Panic...
@@ -1088,10 +1149,7 @@ STF2:
       && ((CyclesIn<372+WU_sync_modifier+2 && shifter_freq==50) 
       || FreqAtCycle(372+WU_sync_modifier+2)==50))
 #endif
-    {
-      //TRACE_OSD("+2");
       CurrentScanline.Tricks|=TRICK_LINE_PLUS_2;
-    }
   }
 
 #else  // Steem test
@@ -1127,6 +1185,7 @@ STF2:
     CurrentScanline.Bytes+=2;
     overscan=OVERSCAN_MAX_COUNTDOWN;
     TrickExecuted|=TRICK_LINE_PLUS_2;
+    //TRACE_OSD("+2 y%d",scan_y);
   //  TRACE_LOG("+2 y %d c %d +2 60 %d 50 %d\n",scan_y,LINECYCLES,FreqChangeCycle(i),FreqChangeCycle(i+1));
   //  REPORT_LINE;
 #if defined(SSE_VID_TRACE_LOG_SUSPICIOUS2)
@@ -1134,6 +1193,7 @@ STF2:
       TRACE_LOG("F%d Suspicious +2 y %d tmg sw %d tmg hbl %d diff %d\n",FRAME,scan_y,shifter_freq_change_time[i],cpu_timer_at_start_of_hbl,shifter_freq_change_time[i]-cpu_timer_at_start_of_hbl);
 #endif
   }
+
 
   ///////////////
   // LINE -106 //
