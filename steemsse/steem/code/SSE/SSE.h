@@ -99,18 +99,18 @@ and all his silly mods are gone!
 */
 
 
-////////////////////
-// NOT SWITCHABLE //
-////////////////////
+/*
+
+Important (note to self)
+
+Release: not SSE_BETA
+All SSE_TEST_ON must go
+Version for snapshot + Windows properties
+
+Beta: not SSE_PRIVATE_BUILD
 
 
-#define NO_RAR_SUPPORT // I removed the library, so it's unconditional
-
-
-////////////////
-// SWITCHABLE //
-////////////////
-
+*/
 
 #if defined(STEVEN_SEAGAL)
 
@@ -119,16 +119,21 @@ and all his silly mods are gone!
 // VERSION //
 /////////////
 
+#define SSE_VERSION 370 // versions down to 340 still compile
 
-#define SSE_STRUCTURE  // now necessary for the STEVEN_SEAGAL build anyway
-
+#if SSE_VERSION>364 //last release
 #define SSE_BETA //title, OSD, plus some testing - new features
 //#define SSE_BETA_BUGFIX // beta for just bugfixes
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
-#define SSE_PRIVATE_BUILD // "beta" option
+//#define SSE_PRIVATE_BUILD // my "beta" option
+#endif
 #endif
 
-#define SSE_VERSION 370 // versions down to 340 still compile
+// switches that don't depend on version:
+#define SSE_COMPILER  //  warnings, errors... 
+#define SSE_STRUCTURE //  now necessary for the STEVEN_SEAGAL build anyway TODO
+#define NO_RAR_SUPPORT
+
 
 #if defined(SSE_BETA) //TODO check before release what will stay beta...
 
@@ -166,80 +171,7 @@ and all his silly mods are gone!
     historically.
 */
 
-#define SSE_SWITCHES_FEATURES
-
-
-#if defined(SSE_SWITCHES_FEATURES)
-
-
-//////////////////
-// BIG SWITCHES //
-//////////////////
-
-
-// It must always be possible to disable one of those main
-// switches and Steem still build
-
-// emulation components
-
-#define SSE_BLITTER    // spelled BLiTTER by those in the known!
-#define SSE_CPU        // MC68000 microprocessor
-#define SSE_GLUE       // TODO
-#define SSE_INTERRUPT  // HBL, VBL, MFP
-#define SSE_FLOPPY     // DMA, FDC, Pasti, etc
-#define SSE_KEYBOARD   // ACIA, IKBD
-#define SSE_MIDI       // Musical Instrument Digital Interface
-#define SSE_MMU        // Memory Manager Unit (of the ST, no paging)
-#define SSE_ROM        // Cartridge, TOS
-#define SSE_SHIFTER    // The legendary custom Shifter and all its tricks
-#define SSE_SOUND      // YM2149, STE DMA sound, Microwire
-#define SSE_STF        // switch STF/STE
-#define SSE_TIMINGS    // misc. timings
-
-// other features
-
-#if defined(SSE_DEBUG) && defined(DEBUG_BUILD)
-#define SSE_BOILER     // note SSE_DEBUG is defined or not in environment
-#endif
-#define SSE_COMPILER
-#define SSE_GUI        // Graphic User Interface
-#define SSE_HACKS      // an option for dubious fixes
-// #define SSE_LEAN_AND_MEAN //TODO
-#define SSE_OSD        // On Screen Display (drive leds, track info, logo)
-//#define SSE_SDL        // Simple DirectMedia Layer (TODO)
-#ifdef UNIX
-#define SSE_UNIX       // Unix build of Steem SSE
-#endif
-#define SSE_VARIOUS    // Mouse capture, keyboard click, unrar...
-#define SSE_VIDEO      // large borders, screenshot, recording
-
-
-
-///////////////////////
-// DETAILED SWITCHES //
-///////////////////////
-
-
-
-
-/////////////
-// BLiTTER //
-/////////////
-
-
-#if defined(SSE_BLITTER)
-
-#define SSE_BLT_BLIT_MODE_CYCLES // #cycles in BLIT Mode in NOPs, not M68K cycles
-#define SSE_BLT_BLIT_MODE_INTERRUPT // trigger at once (not after blit phase)
-#define SSE_BLT_HOG_MODE_INTERRUPT // no interrupt in hog mode
-//#define SSE_BLT_OVERLAP // TODO ?
-//#define SSE_BLT_TIMING // based on a table, but Steem does it better
-#define SSE_BLT_YCOUNT // 0=65536
-#if defined(SSE_HACKS)
-#define SSE_BLITTER_RELAPSE//hack
-#endif
-
-#endif//SSE_BLITTER
+//#define SSE_SWITCHES_FEATURES
 
 
 
@@ -297,6 +229,79 @@ and all his silly mods are gone!
 #endif//SSE_COMPILER
 
 
+
+#if defined(SSE_SWITCHES_FEATURES)
+
+
+//////////////////
+// BIG SWITCHES //
+//////////////////
+
+
+// It must always be possible to disable one of those main
+// switches and Steem still build
+
+// emulation components
+
+#define SSE_BLITTER    // spelled BLiTTER by those in the known!
+#define SSE_CPU        // MC68000 microprocessor
+#define SSE_GLUE       // TODO
+#define SSE_INTERRUPT  // HBL, VBL, MFP
+#define SSE_FLOPPY     // DMA, FDC, Pasti, etc
+#define SSE_KEYBOARD   // ACIA, IKBD
+#define SSE_MIDI       // Musical Instrument Digital Interface
+#define SSE_MMU        // Memory Manager Unit (of the ST, no paging)
+#define SSE_ROM        // Cartridge, TOS
+#define SSE_SHIFTER    // The legendary custom Shifter and all its tricks
+#define SSE_SOUND      // YM2149, STE DMA sound, Microwire
+#define SSE_STF        // switch STF/STE
+#define SSE_TIMINGS    // misc. timings
+
+// other features
+
+#if defined(SSE_DEBUG) && defined(DEBUG_BUILD)
+#define SSE_BOILER     // note SSE_DEBUG is defined or not in environment
+#endif
+#define SSE_GUI        // Graphic User Interface
+#define SSE_HACKS      // an option for dubious fixes
+// #define SSE_LEAN_AND_MEAN //TODO
+#define SSE_OSD        // On Screen Display (drive leds, track info, logo)
+//#define SSE_SDL        // Simple DirectMedia Layer (TODO)
+#ifdef UNIX
+#define SSE_UNIX       // Unix build of Steem SSE
+#endif
+#define SSE_VARIOUS    // Mouse capture, keyboard click, unrar...
+#define SSE_VIDEO      // large borders, screenshot, recording
+
+
+
+///////////////////////
+// DETAILED SWITCHES //
+///////////////////////
+
+
+
+
+/////////////
+// BLiTTER //
+/////////////
+
+
+#if defined(SSE_BLITTER)
+
+#define SSE_BLT_BLIT_MODE_CYCLES // #cycles in BLIT Mode in NOPs, not M68K cycles
+#define SSE_BLT_BLIT_MODE_INTERRUPT // trigger at once (not after blit phase)
+#define SSE_BLT_HOG_MODE_INTERRUPT // no interrupt in hog mode
+//#define SSE_BLT_OVERLAP // TODO ?
+//#define SSE_BLT_TIMING // based on a table, but Steem does it better
+#define SSE_BLT_YCOUNT // 0=65536
+#if defined(SSE_HACKS)
+#define SSE_BLITTER_RELAPSE//hack
+#endif
+
+#endif//SSE_BLITTER
+
+
 /////////
 // CPU //
 /////////
@@ -306,6 +311,7 @@ and all his silly mods are gone!
 
 #define SSE_CPU_ALT_REG_NAMES// convenience
 #define SSE_CPU_DATABUS
+#define SSE_CPU_DEST_IS_REGISTER //just new macro
 #define SSE_CPU_E_CLOCK      // even a slow clock...
 #define SSE_CPU_EXCEPTION    // crash like Windows 98
 #define SSE_CPU_INLINE       // supposes TM68000 exists!
@@ -324,6 +330,8 @@ and all his silly mods are gone!
 
 #if defined(SSE_CPU_E_CLOCK)
 
+#define SSE_CPU_E_CLOCK2
+#define SSE_CPU_E_CLOCK3
 #if defined(SSE_DEBUG) || defined(SSE_HACKS)
 #define SSE_CPU_E_CLOCK_DISPATCHER // "who" wants to sync?
 #define SSE_INT_HBL_E_CLOCK_HACK //3615GEN4 HMD #1
@@ -346,13 +354,13 @@ and all his silly mods are gone!
 #define SSE_CPU_BUS_ERROR_ADDRESS //high byte
 #define SSE_CPU_BUS_ERROR_ADDRESS2 //high byte
 #define SSE_CPU_EXCEPTION_FCO
-#define SSE_CPU_IGNORE_RW_4MB // for F-29, works but... 
+//#define SSE_CPU_IGNORE_RW_4MB // for F-29, works but shouldn't
 #define SSE_CPU_IGNORE_WRITE_B_0 // for Aladin, may write on 1st byte
 #define SSE_CPU_POST_INC // no post increment if exception (Beyond)
 #define SSE_CPU_PRE_DEC // no "pre" decrement if exception
 #define SSE_CPU_SET_DEST_W_TO_0 // for Aladin
 #define SSE_CPU_TRUE_PC // based on Motorola microcodes!
-////#define SSE_CPU_TRUE_PC2
+#define SSE_CPU_TRUE_PC2 // JMP, JSR
 
 #endif//exc
 
@@ -373,6 +381,7 @@ and all his silly mods are gone!
 
 #define SSE_CPU_ABCD
 #define SSE_CPU_DIV          // divide like Caesar
+#define SSE_CPU_DIV_CC //carry clear: always
 #define SSE_CPU_MOVE_B       // move like a superstar
 #define SSE_CPU_MOVE_W       
 #define SSE_CPU_MOVE_L
@@ -468,6 +477,20 @@ and all his silly mods are gone!
 #if defined(SSE_CPU_PREFETCH_TIMING) || defined(CORRECTING_PREFETCH_TIMING)
 #define SSE_CPU_PREFETCH_MOVE_MEM 
 #define SSE_CPU_PREFETCH_TAS 
+#define SSE_CPU_PREFETCH_TIMING_ADD
+#define SSE_CPU_PREFETCH_TIMING_ADDA
+#define SSE_CPU_PREFETCH_TIMING_ADDX
+#define SSE_CPU_PREFETCH_TIMING_AND
+#define SSE_CPU_PREFETCH_TIMING_CHK
+#define SSE_CPU_PREFETCH_TIMING_CMP
+#define SSE_CPU_PREFETCH_TIMING_EXT
+#define SSE_CPU_PREFETCH_TIMING_JMP
+#define SSE_CPU_PREFETCH_TIMING_JSR
+#define SSE_CPU_PREFETCH_TIMING_LEA
+#define SSE_CPU_PREFETCH_TIMING_OR
+#define SSE_CPU_PREFETCH_TIMING_STOP
+#define SSE_CPU_PREFETCH_TIMING_SUBX
+#define SSE_CPU_PREFETCH_TIMING_SWAP
 #endif
 
 #endif
@@ -476,19 +499,41 @@ and all his silly mods are gone!
 
 #if defined(SSE_CPU_ROUNDING)
 
-//#define SSE_CPU_ROUNDING2 // no more "NO_ROUND" //when debugged!
-#define SSE_CPU_ROUNDING_ADD_BW_DN // to DN
-#define SSE_CPU_ROUNDING_ADD_BW_DN2 // from DN
+#define SSE_CPU_ROUNDING2 // no more "NO_ROUND" //when debugged!
+#define SSE_CPU_ROUNDING_ABCD
+#define SSE_CPU_ROUNDING_ADD
+//#define SSE_CPU_ROUNDING_ADD_BW_DN // to DN
+//#define SSE_CPU_ROUNDING_ADD_BW_DN2 // from DN
 #define SSE_CPU_ROUNDING_ADD_L_DN
 #define SSE_CPU_ROUNDING_ADD_L_DN2
+#define SSE_CPU_ROUNDING_ADDA
 #define SSE_CPU_ROUNDING_ADDA_L_DN
-#define SSE_CPU_ROUNDING_ADDA_L_DN2
+//#define SSE_CPU_ROUNDING_ADDA_L_DN2
 #define SSE_CPU_ROUNDING_ADDA_W_DN
-#define SSE_CPU_ROUNDING_CMPI_B //?
+#define SSE_CPU_ROUNDING_ADDI
+#define SSE_CPU_ROUDING_AND
+#define SSE_CPU_ROUNDING_ANDI
+#define SSE_CPU_ROUNDING_ADDQ
+#define SSE_CPU_ROUNDING_ADDX
+#define SSE_CPU_ROUNDING_BCC
+#define SSE_CPU_ROUNDING_BCHG
+#define SSE_CPU_ROUNDING_BCLR
+#define SSE_CPU_ROUNDING_BSET
+#define SSE_CPU_ROUNDING_BTST
+#define SSE_CPU_ROUNDING_CLR
+#define SSE_CPU_ROUDING_CMP
+#define SSE_CPU_ROUNDING_CMPI
 //#define SSE_CPU_ROUNDING_CMPI_BW //?
 #define SSE_CPU_ROUNDING_CMPI_L
 #define SSE_CPU_ROUNDING_CMPI_L2
+#define SSE_CPU_ROUNDING_DBCC
+#define SSE_CPU_ROUDING_EA // no more m68k_get_effective_address(), more code
+#define SSE_CPU_ROUDING_EOR
+#define SSE_CPU_ROUNDING_EORI
+#define SSE_CPU_ROUNDING_JSR
 #define SSE_CPU_ROUNDING_MOVE
+#define SSE_CPU_ROUNDING_MOVE_FROM_SR
+#define SSE_CPU_ROUNDING_MOVE_TO_SR
 #define SSE_CPU_ROUNDING_MOVEM
 #define SSE_CPU_ROUNDING_MOVEM6
 #define SSE_CPU_ROUNDING_MOVEM_MR_L //Hackabonds instructions scroller (renamed)
@@ -496,13 +541,26 @@ and all his silly mods are gone!
 #define SSE_CPU_ROUNDING_MOVEP_MR_W
 #define SSE_CPU_ROUNDING_MOVEP_RM_L
 #define SSE_CPU_ROUNDING_MOVEP_RM_W
+#define SSE_CPU_ROUNDING_NBCD
+#define SSE_CPU_ROUNDING_NEG
+#define SSE_CPU_ROUNDING_NEGX
+#define SSE_CPU_ROUNDING_NO_FASTER_FOR_D // eliminate confusing hack, less code
+#define SSE_CPU_ROUNDING_NOT
+#define SSE_CPU_ROUNDING_OR
+#define SSE_CPU_ROUNDING_ORI
+#define SSE_CPU_ROUNDING_PEA
+#define SSE_CPU_ROUNDING_SCC
+#define SSE_CPU_ROUNDING_SHIFT_MEM
+#define SSE_CPU_ROUNDING_SUB
 #define SSE_CPU_ROUNDING_SUB_BW_DN
 #define SSE_CPU_ROUNDING_SUB_BW_DN2
 #define SSE_CPU_ROUNDING_SUB_L_DN
 #define SSE_CPU_ROUNDING_SUB_L_DN2
 #define SSE_CPU_ROUNDING_SUBA_W_DN
 #define SSE_CPU_ROUNDING_SUBA_L_DN
-
+#define SSE_CPU_ROUNDING_SUBI
+#define SSE_CPU_ROUNDING_SUBQ
+#define SSE_CPU_ROUNDING_SUBX
 #endif
 
 #endif//SSE_CPU
@@ -542,12 +600,20 @@ and all his silly mods are gone!
 #define SSE_BOILER_BROWSER_PSEUDO_IO_SCROLL // for the bigger 6301 browser
 #define SSE_BOILER_BROWSER_SHIFTER
 #define SSE_BOILER_BROWSER_VECTORS
+#define SSE_BOILER_BROWSERS_VECS // in 'reg' columns, eg TB for timer B
 //#define SSE_BOILER_CPU_LOG_NO_STOP // never stop
 #define SSE_BOILER_CPU_TRACE_NO_STOP // depends on 'suspend logging'
+#define SSE_BOILER_DECRYPT_TIMERS
+#define SSE_BOILER_DISPLACEMENT_DECIMAL
 #define SSE_BOILER_DUMP_6301_RAM
+#define SSE_BOILER_EXTRA_IOLIST
 #define SSE_BOILER_FAKE_IO //to control some debug options
+#define SSE_BOILER_FRAME_INTERRUPTS2
+
 #define SSE_BOILER_MENTION_READONLY_BROWSERS
 #define SSE_BOILER_MOD_REGS // big letters, no =
+#define SSE_BOILER_MOD_VBASE
+#define SSE_BOILER_MOD_VBASE2 //move it
 #define SSE_BOILER_MONITOR_IO_FIX1 // ? word check, not 2x byte on word access
 #define SSE_BOILER_MONITOR_RANGE // will stop for every address between 2 stops
 #define SSE_BOILER_MONITOR_VALUE // specify value (RW) that triggers stop
@@ -557,24 +623,29 @@ and all his silly mods are gone!
 #define SSE_BOILER_MOUSE_WHEEL // yeah!
 #define SSE_BOILER_MOVE_OTHER_SP
 #define SSE_BOILER_MOVE_OTHER_SP2//SSP+USP
+#define SSE_BOILER_MUTE_SOUNDCHANNELS_ENV
 #define SSE_BOILER_MUTE_SOUNDCHANNELS_NOISE
 #define SSE_BOILER_NEXT_PRG_RUN//request
 #define SSE_BOILER_NODIV // no DIV log necessary anymore
 #define SSE_BOILER_NO_SET_BRK_PC_MENU
 #define SSE_BOILER_NO_SOUND_DAMPING //PSG filter control 'd' and 'a'
+#define SSE_BOILER_PSEUDO_STACK
 #define SSE_BOILER_RUN_TO_RTS
-//#define SSE_BOILER_SHOW_ACT //useful?
-//#define SSE_BOILER_SHOW_FRAME //useful?
+#define SSE_BOILER_SHOW_ACT
+#define SSE_BOILER_SHOW_FRAME
 #define SSE_BOILER_SHOW_FREQ // sync mode
 #define SSE_BOILER_SHOW_INTERRUPT // yeah!
 #define SSE_BOILER_SHOW_RES // shift mode
 #define SSE_BOILER_SHOW_SDP // the draw pointer
 #define SSE_BOILER_SHOW_SR // in HEX on the left of bit flags
+#define SSE_BOILER_SHOW_TRICKS //line
+#define SSE_BOILER_SHOW_TRICKS2 //frame
 #define SSE_BOILER_SSE_PERSISTENT // L/S options 
 #define SSE_BOILER_STACK_68030_FRAME //request, to check compatibility
 #define SSE_BOILER_STACK_CHOICE
 #define SSE_BOILER_TIMER_B // instead of 0
 #define SSE_BOILER_TIMERS_ACTIVE // (in reverse video) yeah!
+#define SSE_BOILER_TRACE_MFP1 // one log option for MFP, one for interrupt
 #define SSE_BOILER_WIPE_TRACE // as logfile
 #define SSE_BOILER_WIPE_TRACE2//need date
 #if defined(SSE_BOILER_FAKE_IO)
@@ -587,10 +658,6 @@ and all his silly mods are gone!
 #endif
 
 #endif//boiler
-
-
-
-
 
 #define SSE_DEBUG_TRACE
 
@@ -624,6 +691,7 @@ and all his silly mods are gone!
 
 #if defined(SSE_DEBUG_FRAME_REPORT)
 #define SSE_DEBUG_FRAME_REPORT_ON_STOP // each time we stop emulation
+#define SSE_DEBUG_FRAME_REPORT_MASK2
 
 // Normally those are controlled with the Control mask browser
 //#define SSE_DEBUG_FRAME_REPORT_ACIA
@@ -721,8 +789,6 @@ and all his silly mods are gone!
 #define SSE_FDC_TRACE_STATUS //spell out status register
 //#define SSE_FDC_TRACE_STR // trace read STR (careful)
 
-//#define SSE_INT_OSD_REPORT_HBI
-
 //#define SSE_SHIFTER_DRAW_DBG  // totally bypass CheckSideOverscan() & Render()
 
 //#define SSE_SHIFTER_IOR_TRACE // specific, not "log"
@@ -773,6 +839,7 @@ and all his silly mods are gone!
 #define SSE_DRIVE      // SF314 floppy disk drive
 #define SSE_FDC        // WD1772 floppy disk controller
 #define SSE_FLOPPY_EVENT
+#define SSE_FLOPPY_EVENT2
 #define SSE_WD1772
 #define SSE_YM2149     // YM2149, needed for floppy and for sound
 
@@ -876,7 +943,6 @@ and all his silly mods are gone!
 #undef SSE_DRIVE_RW_SECTOR_TIMING2
 #define SSE_DRIVE_RW_SECTOR_TIMING3 //test v3.7.0 use ID
 #define SSE_DRIVE_RW_SECTOR_TIMING4 //remove more hacks
-#define SSE_DRIVE_SPEED_HACK //hehe
 #endif
 
 #if defined(SSE_DRIVE_SINGLE_SIDE)
@@ -993,6 +1059,7 @@ and all his silly mods are gone!
 #define SSE_PASTI_ONLY_STX_HD
 //#define SSE_PASTI_ONLY_STX_OPTION1 //remove SSE option
 //#define SSE_PASTI_ONLY_STX_OPTION2 //remove disk manager option
+#define SSE_PASTI_ONLY_STX_OPTION3 // move that option SSE -> disk manager
 #endif
 
 #endif//stx
@@ -1001,6 +1068,7 @@ and all his silly mods are gone!
 
 #if defined(SSE_WD1772)
 
+#define SSE_WD1772_F7_ESCAPE
 #define SSE_WD1772_PHASE
 #define SSE_WD1772_REG2 // DSR, ByteCount
 #define SSE_WD1772_REG2_B // StatusType
@@ -1017,6 +1085,8 @@ and all his silly mods are gone!
 #endif
 
 #endif//SSE_FLOPPY
+
+
 
 
 /////////
@@ -1044,6 +1114,9 @@ and all his silly mods are gone!
 #ifdef WIN32
 #define SSE_GUI_ASSOCIATE
 #define SSE_GUI_STATUS_STRING // "status bar" in the icon bar
+#if defined(SSE_PRIVATE_BUILD)
+#define SSE_GUI_OPTION_FOR_TESTS 
+#endif
 #endif
 
 #ifdef SSE_GUI_ASSOCIATE
@@ -1053,14 +1126,17 @@ and all his silly mods are gone!
 #define SSE_GUI_NO_ASSOCIATE_STC // cartridge, who uses that?
 #define SSE_GUI_NO_AUTO_ASSOCIATE_DISK_STS_STC // disk images + STS STC
 #define SSE_GUI_NO_AUTO_ASSOCIATE_MISC // other .PRG, .TOS...
-#define SSE_GUI_OPTION_SLOW_DISK_SSE // because many people miss it in disk manager
+//#define SSE_GUI_OPTION_SLOW_DISK_SSE
 #endif
 
 #if defined(SSE_GUI_DISK_MANAGER)
 #define SSE_GUI_DISK_MANAGER_DOUBLE_CLK_GO_UP //habit with some file managers
+#define SSE_GUI_DISK_MANAGER_GHOST
 #define SSE_GUI_DISK_MANAGER_INSERT_DISKB
 #define SSE_GUI_DISK_MANAGER_INSERT_DISKB_LS//load/save option
 #define SSE_GUI_DISK_MANAGER_LONG_NAMES1
+#define SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD
+#define SSE_GUI_DISK_MANAGER_NO_DISABLE_B_MENU // click on icon
 //#define SSE_GUI_DISK_MANAGER_RGT_CLK_HD//on DM icon 
 #define SSE_GUI_DISK_MANAGER_RGT_CLK_HD2//on HD icon
 #endif
@@ -1081,12 +1157,14 @@ and all his silly mods are gone!
 #define SSE_GUI_INFOBOX13 // Steem SSE faq replaces faq
 #define SSE_GUI_INFOBOX14 // order 'about' 'hints'
 #define SSE_GUI_INFOBOX15 // release notes (not sse faq)
+#define SSE_GUI_INFOBOX16 // no crash on big files
 #define SSE_GUI_INFOBOX_LINKS
 #endif//info
 
 #if defined(SSE_GUI_OPTIONS)
 #define SSE_GUI_OPTIONS_DISABLE_DISPLAY_SIZE_IF_NO_BORDER
 #define SSE_GUI_OPTIONS_DONT_MENTION_WINDOW_COMPOSITING
+#define SSE_GUI_OPTION_DISPLAY_CHANGE_TEXT // normal is small + scanlines
 #define SSE_GUI_OPTIONS_DISPLAY_SIZE_IN_DISPLAY
 #define SSE_GUI_OPTIONS_SSE_ICON_VERSION
 #define SSE_GUI_OPTIONS_STF_IN_MACHINE
@@ -1094,6 +1172,10 @@ and all his silly mods are gone!
 #ifdef WIN32
 #define SSE_GUI_OPTIONS_REFRESH // 6301, STF... up-to-date with snapshot
 #endif
+#define SSE_GUI_OPTIONS_SOUND1 // make some room free
+#define SSE_GUI_OPTIONS_SOUND2 // drive sound on sound page
+#define SSE_GUI_OPTIONS_SOUND3 // options for PSG and Microwire on sound page
+#define SSE_GUI_OPTIONS_SOUND4 // option keyboard click on sound page
 #endif//options
 
 #if defined(SSE_GUI_STATUS_STRING)
@@ -1138,18 +1220,25 @@ and all his silly mods are gone!
 #endif
 
 #define SSE_INT_HBL
-#define SSE_INT_JITTER // from Hatari (option 6301/Acia unchecked)
+//#define SSE_INT_JITTER // from Hatari (option 6301/Acia unchecked)
 #define SSE_INT_MFP        // MC68901 Multi-Function Peripheral Chip
 #define SSE_INT_VBL  
 
 #if defined(SSE_INT_HBL)
-#define SSE_INT_HBL_IACK_FIX // from Hatari - BBC52 (works without?)
+//#define SSE_INT_HBL_EVENT//for tests only
+//#define SSE_INT_HBL_IACK_FIX // from Hatari - BBC52 (works without?)
+#define SSE_INT_HBL_IACK2
+#define SSE_INT_VBL_IACK2
 #define SSE_INT_HBL_INLINE
 #define SSE_INT_HBL_ONE_FUNCTION // remove event_hbl()
 #endif
 
 #if defined(SSE_INT_HBL) && defined(SSE_INT_JITTER)
-#define SSE_INT_JITTER_HBL//360
+#define SSE_INT_JITTER_HBL
+#endif
+
+#if defined(SSE_INT_VBL) && defined(SSE_INT_JITTER)
+#define SSE_INT_JITTER_VBL_STE//3.5.1,undef 3.6.0
 #endif
 
 #if defined(SSE_INT_VBL)
@@ -1173,32 +1262,70 @@ and all his silly mods are gone!
 // MFP //
 
 #if defined(SSE_INT_MFP)
+#define SSE_INT_MFP_AUTO_NO_IS_CLEAR//test
 #define SSE_INT_MFP_IACK_LATENCY //was SS_MFP_PENDING in v3.3
 //#define SSE_INT_MFP_IRQ_DELAY // undef v3.6.0
 //#define SSE_INT_MFP_IRQ_DELAY2 // undef v3.5.3
 //#define SSE_INT_MFP_IRQ_DELAY3 // undef v3.6.1
-#define SSE_INT_MFP_PATCH_TIMER_D // from Hatari, we keep it for performance
+#define SSE_INT_MFP_OBJECT // new MC68901 chip in out ST!
+#define SSE_INT_MFP_PATCH_TIMER_D // from Hatari
 #define SSE_INT_MFP_POST_INT_LATENCY // hardware quirk? //code?
 #define SSE_INT_MFP_RATIO // change the values of CPU & MFP freq!
+#define SSE_INT_MFP_REFACTOR1
+//#define SSE_INT_MFP_REFACTOR2 //doesn't work at all yet
 #define SSE_INT_MFP_RS232 //one little anti-hang bugfix
 #define SSE_INT_MFP_TIMER_B 
-//#define SSE_INT_MFP_TIMERS_BASETIME //undef 3.7.0
+//#define SSE_INT_MFP_TIMER_RATIO1 //unimportant
+#define SSE_INT_MFP_TIMERS_BASETIME 
+#define SSE_INT_MFP_TIMERS_INLINE
 #define SSE_INT_MFP_TIMERS_NO_BOOST_LIMIT
+//#define SSE_INT_MFP_TIMERS_RUN_IF_DISABLED //load!
+#define SSE_INT_MFP_TIMERS_STARTING_DELAY //12->?
+//#define SSE_INT_MFP_TIMERS_WOBBLE //as for timer B
 #define SSE_INT_MFP_TxDR_RESET // they're not reset according to doc
-#define SSE_INT_MFP_WRITE_DELAY1//Audio Artistic
-#endif//mfp
+//#define SSE_INT_MFP_WRITE_DELAY1//Audio Artistic //undef 3.7.0
+#define SSE_INT_MFP_WRITE_DELAY2
+#endif//SSE_INT_MFP
+
+#if defined(SSE_INT_MFP_OBJECT)
+#define SSE_INT_MFP_IRQ_TIMING //tracking it more precisely
+#define SSE_INT_MFP_GPIP_TO_IRQ_DELAY // only for GPIP interrupts
+#undef SSE_ACIA_IRQ_DELAY2
+#undef SSE_INT_MFP_IACK_LATENCY //same irq
+#define SSE_INT_MFP_IACK_LATENCY2 //delay timers
+#define SSE_INT_MFP_IACK_LATENCY3 //timer B
+#define SSE_INT_MFP_IACK_LATENCY4 //delay timers 
+#define SSE_INT_MFP_IACK_LATENCY5 //timer B 
+#define SSE_INT_MFP_OPTION //performance/precision
+#define SSE_INT_MFP_UTIL
+#ifdef SSE_BETA
+#define SSE_INT_MFP_RECORD_PENDING_TIMING
+#endif
+#define SSE_INT_MFP_SPURIOUS//cool crashes
+#define SSE_INT_MFP_CHECKTIMEOUT_ON_STOP
+#undef SSE_INT_MFP_PATCH_TIMER_D//Audio Artistic
+#endif
 
 #if defined(SSE_INT_MFP_RATIO) 
 #define SSE_INT_MFP_RATIO_HIGH_SPEED
+#define SSE_INT_MFP_RATIO_OPTION // user can fine tune CPU clock
+#define SSE_INT_MFP_RATIO_OPTION2 // L/S
 #define SSE_INT_MFP_RATIO_PRECISION // for short timers
-//#define SSE_INT_MFP_RATIO_STE // measured (by Steem Authors) for STE?
+#define SSE_INT_MFP_RATIO_PRECISION_2 // 1 cycle precision
+#define SSE_INT_MFP_RATIO_PRECISION3 // 100%
+#define SSE_INT_MFP_RATIO_STE // measured (by Steem Authors) for STE?
+#define SSE_INT_MFP_RATIO_STE2 //tad slower
+//#define SSE_INT_MFP_RATIO_STE3 // = STF
 #define SSE_INT_MFP_RATIO_STE_AS_STF // change STF + STE (same for both)
 #define SSE_INT_MFP_RATIO_STF // theoretical for STF
+#define SSE_INT_MFP_RATIO_STF2 
 #endif
 
 #if defined(SSE_INT_MFP_TIMER_B)
 #define SSE_INT_MFP_TIMER_B_AER // earlier trigger (from Hatari)
-#define SSE_INT_MFP_TIMER_B_NO_WOBBLE // BIG Demo Psych-O screen 2
+//#define SSE_INT_MFP_TIMER_B_NO_WOBBLE // BIG Demo Psych-O screen 2
+#define SSE_INT_MFP_TIMER_B_WOBBLE2 // 2 instead of 4
+#define SSE_INT_MFP_TIMER_B_WOBBLE_HACK //for Sunny
 #endif
 
 #endif//SSE_INTERRUPT
@@ -1212,6 +1339,7 @@ and all his silly mods are gone!
 #ifdef SSE_KEYBOARD
 #define SSE_ACIA       // MC6850 Asynchronous Communications Interface Adapter
 #define SSE_IKBD       // HD6301V1 IKBD (keyboard, mouse, joystick controller)
+#define SSE_JOYSTICK_JUMP_BUTTON//3.7.0
 
 // ACIA //
 
@@ -1253,6 +1381,7 @@ and all his silly mods are gone!
 //#define SSE_IKBD_6301_MOUSE_ADJUST_SPEED // undef 3.7.0
 #define SSE_IKBD_6301_MOUSE_ADJUST_SPEED2 //better
 #define SSE_IKBD_6301_MOUSE_MASK // Jumping Jackson auto
+//#define SSE_IKBD_6301_MOUSE_MASK2//hack but game is bugged
 #define SSE_IKBD_6301_ROM_KEYTABLE //spare an array
 //#define SSE_IKBD_6301_RUN_CYCLES_AT_IO // overkill
 #define SSE_IKBD_6301_RUN_IRQ_TO_END // hack around Sim6xxx's working
@@ -1435,7 +1564,7 @@ and all his silly mods are gone!
 #endif
 
 #ifdef SSE_HACKS
-#define SSE_TOS_PATCH106 // a silly bug, a silly hack
+//#define SSE_TOS_PATCH106 // undef v3.7
 #define SSE_TOS_STE_FAST_BOOT //from hatari
 #endif
 
@@ -1488,6 +1617,9 @@ and all his silly mods are gone!
 
 #if defined(SSE_SHIFTER_SDP)
 #define SSE_SHIFTER_SDP_READ
+#define SSE_SHIFTER_STE_DE_MED_RES // bugfix
+#define SSE_SHIFTER_STE_READ_SDP_HSCROLL1 // bugfix 
+#define SSE_SHIFTER_STE_READ_SDP_SKIP // bugfix
 #define SSE_SHIFTER_SDP_WRITE
 #define SSE_SHIFTER_SDP_WRITE_ADD_EXTRA
 #define SSE_SHIFTER_SDP_WRITE_LOWER_BYTE
@@ -1515,15 +1647,18 @@ and all his silly mods are gone!
 #define SSE_SHIFTER_LEFT_OFF_60HZ //24 bytes!
 #define SSE_SHIFTER_LEFT_OFF_TEST_BEFORE_HBL // for Riverside
 //#define SSE_SHIFTER_LEFT_OFF_THRESHOLD//Hackabonds Demo not WS1
+#define SSE_SHIFTER_LINE_MINUS_2_DONT_FETCH //BIG Demo #2 bad raster finally!
 #define SSE_SHIFTER_LINE_MINUS_106_BLACK // loSTE screens
-//#define SSE_SHIFTER_LINE_PLUS_2_POST_TOP_OFF // Panic
-//#define SSE_SHIFTER_LINE_PLUS_2_POST_TOP_OFF2 //but mindbomb...
-//#define SSE_SHIFTER_LINE_PLUS_2_STE // hack?
+//#define SSE_SHIFTER_LINE_PLUS_2_STE // undef 3.7
+#define SSE_SHIFTER_LINE_PLUS_2_STE2 //tested on hardware
 //#define SSE_SHIFTER_LINE_PLUS_2_STE_DSOS // limit 42 instead of 38? //undef 3.5.4
-//#define SSE_SHIFTER_LINE_PLUS_2_TEST // loSTE screens
+#define SSE_SHIFTER_LINE_PLUS_2_TEST // loSTE screens
 #define SSE_SHIFTER_LINE_PLUS_2_THRESHOLD //Forest
+#define SSE_SHIFTER_LINE_PLUS_4
+#define SSE_SHIFTER_LINE_PLUS_6
 #define SSE_SHIFTER_LINE_PLUS_20 // 224 byte scanline STE only
 #define SSE_SHIFTER_LINE_PLUS_20_SHIFT // for Riverside
+#define SSE_SHIFTER_LINE_PLUS_20B // general
 #define SSE_SHIFTER_MED_OVERSCAN // BPOC
 #define SSE_SHIFTER_NON_STOPPING_LINE // Enchanted Land
 //#define SSE_SHIFTER_PALETTE_BYTE_CHANGE //undef v3.6.3
@@ -1571,13 +1706,15 @@ and all his silly mods are gone!
 #define SSE_SHIFTER_UNSTABLE_DOLB
 #define SSE_SHIFTER_UNSTABLE_OMEGA
 #define SSE_SHIFTER_HI_RES_SCROLLING // Beeshift2
-//#define SSE_SHIFTER_LINE_PLUS_2_ON_PRELOAD3 // DSOS STE
 #define SSE_SHIFTER_MED_RES_SCROLLING // Beeshift
 #define SSE_SHIFTER_PANIC // funny effect, interleaved border bands
+#define SSE_SHIFTER_PANIC2 //band order
 #if defined(SSE_HACKS)
 #define SSE_SHIFTER_DOLB_SHIFT1 // based on "unstable overscan"
 //#define SSE_SHIFTER_DOLB_SHIFT2 // based on cycle of R0
 #endif
+#define SSE_SHIFTER_DOLB_STE
+#define SSE_SHIFTER_DOLB1 //again a hack... TODO
 #endif//unstable
 
 #endif//SSE_SHIFTER
@@ -1591,11 +1728,15 @@ and all his silly mods are gone!
 #if defined(SSE_SOUND)
 
 #define SSE_SOUND_CHANGE_TIME_METHOD_DELAY //detail
+#define SSE_SOUND_DMA_CLOCK //3.7 not CPU, apart clock
 #define SSE_SOUND_INLINE // macro->inline, easier for my tests, but hard to do
 #define SSE_SOUND_INLINE2 //3.7, to generalise ljbk's table
 #define SSE_SOUND_FILTER_STF // a very simple filter
 #define SSE_SOUND_MICROWIRE // volume, balance, bass [& treble], primitive DSP
 #define SSE_SOUND_MICROWIRE_MIXMODE
+#define SSE_SOUND_MICROWIRE_MASK1 //bugfix
+#define SSE_SOUND_MICROWIRE_MASK2 //incorrect doc (?)
+#define SSE_SOUND_MICROWIRE_READ1
 #define SSE_SOUND_MICROWIRE_WRITE_LATENCY // as documented
 #define SSE_SOUND_MICROWIRE_WRITE_LATENCY_B //bugfix Antiques 
 #define SSE_SOUND_NO_EXTRA_PER_VBL //compensating hack? changes what?
@@ -1620,9 +1761,11 @@ and all his silly mods are gone!
 #endif
 
 #if defined(SSE_SOUND_FILTER_STF)
-#define SSE_SOUND_FILTER_STF2 // for samples, original is better
+#define SSE_SOUND_FILTER_HATARI
+//#define SSE_SOUND_FILTER_STF2 // for samples, original is better
 #define SSE_SOUND_FILTER_STF3 // better detect samples
 #define SSE_SOUND_FILTER_STF4 // disable option if no chip sound
+#define SSE_SOUND_FILTER_STF5 // option in sound
 #endif
 
 #if defined(SSE_SOUND_INLINE2) //there was a bug to find...
@@ -1671,7 +1814,7 @@ and all his silly mods are gone!
 #define SSE_STE_2MB // auto make RAM 2MB, more compatible
 #define SSE_STF_0BYTE
 #define SSE_STF_1MB // auto make RAM 1MB, more compatible
-#define SSE_STF_8MHZ // for Panic study!
+//#define SSE_STF_8MHZ // for Panic study!
 #define SSE_STF_BLITTER
 #define SSE_STF_DMA
 #define SSE_STF_HSCROLL
@@ -1688,6 +1831,7 @@ and all his silly mods are gone!
 #define SSE_STF_VERTICAL_OVERSCAN//!!
 #ifdef WIN32
 #define SSE_STF_MATCH_TOS // select a compatible TOS for next reset
+#define SSE_STF_MATCH_TOS2 // default = 1.62 instead of 1.06
 #endif
 #endif//SSE_STF
 
@@ -1725,6 +1869,7 @@ and all his silly mods are gone!
 
 #define SSE_TIMINGS_FRAME_ADJUSTMENT // due to shifter tricks 3.6.4
 #define SSE_TIMINGS_MS_TO_HBL
+#define SSE_TIMINGS_STE_NOPS_TO_FIRST_LINE
 
 #endif
 
@@ -1746,6 +1891,7 @@ and all his silly mods are gone!
 
 
 #if defined(SSE_VARIOUS)
+#define SSE_VAR_CLIPBOARD_TEXT//3.7
 #define SSE_VAR_DONT_INSERT_NON_EXISTENT_IMAGES // at startup
 #define SSE_VAR_DONT_REMOVE_NON_EXISTENT_IMAGES // at final save
 //#define SSE_VAR_FULLSCREEN_DONT_START // disable run when going fullscreen - option?
@@ -1761,7 +1907,9 @@ and all his silly mods are gone!
 #define SSE_VAR_RESIZE // reduce memory set (int->BYTE etc.)
 #define SSE_VAR_RESIZE_370
 #define SSE_VAR_REWRITE // to conform to what compilers expect (warnings...)
+#define SSE_VAR_SNAPSHOT_INI//3.7
 #define SSE_VAR_STEALTH // don't tell we're an emulator (option)
+#define SSE_VAR_STEALTH2 //bugfix 3.7
 #define SSE_VAR_WRONG_IMAGE_ALERT1
 
 #ifdef WIN32
@@ -1797,7 +1945,9 @@ and all his silly mods are gone!
 
 #ifdef WIN32
 #define SSE_VID_3BUFFER // Triple Buffer to remove tearing
+#define SSE_VID_BLOCK_WINDOW_SIZE // option can't change size of window
 #define SSE_VID_FREEIMAGE
+#define SSE_VID_LOCK_ASPET_RATIO // 
 #define SSE_VID_MEMORY_LOST // no message box
 //#define SSE_VID_RECORD_AVI //avifile
 #define SSE_VID_SAVE_NEO // screenshots in ST Neochrome format
@@ -1858,6 +2008,7 @@ and all his silly mods are gone!
 #define SSE_VID_D3D //main
 #define SSE_VID_D3D1 //adaptation
 #define SSE_VID_D3D2 //adaptation
+#define SSE_VID_D3D_LIST_MODES // player can choose
 #define SSE_VID_D3D_NO_GUI
 #define SSE_VID_D3D_OPTION
 //#define SSE_VID_D3D_OPTION2//change tip on fullscreen page
@@ -1869,7 +2020,7 @@ and all his silly mods are gone!
 #if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO)
 #define SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION // like SainT, higher pixels
 #endif
-//#define SSE_VID_D3D_STRETCH_FORCE // only stretch
+#define SSE_VID_D3D_STRETCH_FORCE // only stretch: better for list modes
 #endif//d3d
 
 #if defined(SSE_VID_EXT_MON)
@@ -2052,11 +2203,9 @@ and all his silly mods are gone!
 #endif
 
 //#define SSE_CPU_TRACE_DETECT
-//#define SSE_FDC_TRACE_IRQ
+#define SSE_FDC_TRACE_IRQ
 #define SSE_FDC_TRACE_STATUS //spell out status register
 //#define SSE_FDC_TRACE_STR // trace read STR (careful)
-
-//#define SSE_INT_OSD_REPORT_HBI
 
 //#define SSE_SHIFTER_DRAW_DBG  // totally bypass CheckSideOverscan() & Render()
 
@@ -2084,6 +2233,26 @@ and all his silly mods are gone!
 #define SSE_TOS_DONT_TRACE_40//write file
 #define SSE_TOS_DONT_TRACE_42//seek file
 #define SSE_TOS_TRACE_CONOUT
+
+#ifdef SSE_BOILER
+#define SSE_BOILER_MUTE_SOUNDCHANNELS_ENV
+#define SSE_BOILER_MOD_VBASE
+#define SSE_BOILER_PSEUDO_STACK
+#define SSE_BOILER_EXTRA_IOLIST
+#define SSE_BOILER_BROWSERS_VECS // in 'reg' columns, eg TB for timer B
+#define SSE_BOILER_TRACE_MFP1 // one log option for MFP, one for interrupt
+#define SSE_DEBUG_FRAME_REPORT_MASK2
+#define SSE_BOILER_DISPLACEMENT_DECIMAL
+
+#define SSE_BOILER_SHOW_ACT //yes it was useful
+#define SSE_BOILER_SHOW_FRAME //yes it was useful
+#define SSE_BOILER_SHOW_TRICKS //line
+#define SSE_BOILER_SHOW_TRICKS2 //frame
+#define SSE_BOILER_MOD_VBASE2 //move it
+#define SSE_BOILER_DECRYPT_TIMERS
+#define SSE_BOILER_FRAME_INTERRUPTS2
+#endif
+//#define SSE_DRIVE_COMPUTE_BOOT_CHECKSUM //TODO boiler control
 
 
 #endif//dbg
@@ -2647,6 +2816,9 @@ and all his silly mods are gone!
 #endif
 #if defined(SSE_INT_VBL)
 #define SSE_INT_VBL_INLINE 
+#if defined(SSE_INT_VBL) && defined(SSE_INT_JITTER)
+#define SSE_INT_JITTER_VBL_STE//3.5.1,undef 3.6.0
+#endif
 #endif
 #if defined(SSE_INT_MFP)
 #define SSE_INT_MFP_RATIO_PRECISION // for short timers
@@ -2976,9 +3148,6 @@ and all his silly mods are gone!
 //#define SSE_SHIFTER_DOLB_SHIFT2 // based on cycle of R0
 #endif//hacks
 #endif//tricks
-#if defined(SSE_SHIFTER_UNSTABLE)
-//#define SSE_SHIFTER_LINE_PLUS_2_ON_PRELOAD3 // DSOS STE
-#endif
 #endif//sft
 #if defined(SSE_VARIOUS)
 #define SSE_GUI_OPTIONS_SSE_ICON_VERSION
@@ -2987,6 +3156,7 @@ and all his silly mods are gone!
 #endif
 #if defined(SSE_GUI_STATUS_STRING)
 #define SSE_GUI_STATUS_STRING_6301
+#define SSE_GUI_STATUS_STRING_68901
 #define SSE_GUI_STATUS_STRING_ADAT
 #define SSE_GUI_STATUS_STRING_DISK_NAME
 #define SSE_GUI_STATUS_STRING_DISK_NAME_OPTION
@@ -3130,8 +3300,6 @@ and all his silly mods are gone!
 #endif
 #if defined(SSE_SHIFTER)
 #if defined(SSE_SHIFTER_TRICKS)
-//#define SSE_SHIFTER_LEFT_OFF_THRESHOLD//Hackabonds Demo not WS1
-//#define SSE_SHIFTER_LINE_PLUS_2_POST_TOP_OFF // Panic
 #define SSE_SHIFTER_PALETTE_NOISE //UMD8730 STF
 #if defined(SSE_HACKS)
 #define SSE_SHIFTER_XMAS2004 // XMas 2004 by Paradox shift
@@ -3352,19 +3520,20 @@ and all his silly mods are gone!
 #endif//363
 
 
-#if SSE_VERSION>=364
+#if SSE_VERSION>=364 //&& defined(STUPID)
 
-#if defined(SSE_ACIA)
-#if defined(SSE_CPU)
-#undef SSE_ACIA_BUS_JAM_NO_WOBBLE // def 3.4.0
-#define SSE_ACIA_BUS_JAM_PRECISE_WOBBLE // option 6301 on
-#endif
-#endif
+
+#define SSE_TIMINGS
+
 #if defined(SSE_CPU)
 #define SSE_CPU_E_CLOCK // other place?
 #if defined(SSE_CPU_E_CLOCK)
 #if defined(SSE_DEBUG) || defined(SSE_HACKS)
 #define SSE_CPU_E_CLOCK_DISPATCHER // "who" wants to sync?
+#endif
+#if defined(SSE_ACIA)
+#undef SSE_ACIA_BUS_JAM_NO_WOBBLE // def 3.4.0
+#define SSE_ACIA_BUS_JAM_PRECISE_WOBBLE // option 6301 on
 #endif
 #endif
 #if defined(SSE_CPU_ROUNDING)
@@ -3411,6 +3580,8 @@ and all his silly mods are gone!
 #define SSE_INT_HBL_E_CLOCK_HACK //3615GEN4 HMD #1
 #endif
 #define SSE_INT_HBL_INLINE
+///#undef SSE_INT_JITTER_HBL//SSE_INT_JITTER_HBL defined in 3.6.4
+
 #endif//hbl
 #endif//int
 #if defined(SSE_INT_MFP)
@@ -3451,6 +3622,9 @@ and all his silly mods are gone!
 #endif
 #if defined(SSE_CPU)
 #define SSE_CPU_DATABUS
+#define SSE_CPU_DEST_IS_REGISTER //just new macro
+#define SSE_CPU_E_CLOCK2
+#define SSE_CPU_E_CLOCK3
 #define SSE_CPU_FETCH_80000A//setpc
 #define SSE_CPU_FETCH_80000B//fetchword
 #define SSE_CPU_FETCH_80000C//prefetch IRC
@@ -3462,8 +3636,8 @@ and all his silly mods are gone!
 ////#define SSE_CPU_TRUE_PC2
 #define SSE_CPU_UNSTOP2//not twice
 //#undef SSE_CPU_E_CLOCK_DISPATCHER
-//#undef SSE_INT_HBL_E_CLOCK_HACK //useless hack//no there was a define bug
 #if defined(SSE_CPU_EXCEPTION)
+#undef SSE_CPU_IGNORE_RW_4MB // F-29 hangs on 4MB machines, nothing to fix
 #define SSE_CPU_ASSERT_ILLEGAL2 // move.b EA=an
 #define SSE_CPU_ASSERT_ILLEGAL3 // cmp.b EA=an
 #define SSE_CPU_ASSERT_ILLEGAL4 // movem .w R to M
@@ -3475,9 +3649,11 @@ and all his silly mods are gone!
 #define SSE_CPU_BUS_ERROR_ADDRESS2 //high byte
 //#define SSE_CPU_BUS_ERROR_FFE1XX//hack
 #define SSE_CPU_EXCEPTION_FCO
+#define SSE_CPU_TRUE_PC2 // JMP, JSR
 #endif//exc
 #if defined(SSE_CPU_INSTR)
 #define SSE_CPU_ABCD
+#define SSE_CPU_DIV_CC //carry clear: always
 #define SSE_CPU_MOVEM_BUS_ACCESS_TIMING
 #define SSE_CPU_NBCD //TODO?
 #define SSE_CPU_SBCD //to test
@@ -3487,15 +3663,28 @@ and all his silly mods are gone!
 #endif
 #if defined(SSE_CPU_PREFETCH_TIMING)
 #undef SSE_CPU_PREFETCH_TIMING_MOVEM_HACK
+#define SSE_CPU_PREFETCH_TIMING_ADD
+#define SSE_CPU_PREFETCH_TIMING_ADDA
+#define SSE_CPU_PREFETCH_TIMING_ADDX
+#define SSE_CPU_PREFETCH_TIMING_AND
+#define SSE_CPU_PREFETCH_TIMING_CHK
+#define SSE_CPU_PREFETCH_TIMING_CMP
+#define SSE_CPU_PREFETCH_TIMING_EXT
+#define SSE_CPU_PREFETCH_TIMING_JMP
+#define SSE_CPU_PREFETCH_TIMING_JSR
+#define SSE_CPU_PREFETCH_TIMING_LEA
+#define SSE_CPU_PREFETCH_TIMING_OR
+#define SSE_CPU_PREFETCH_TIMING_STOP
+#define SSE_CPU_PREFETCH_TIMING_SUBX
+#define SSE_CPU_PREFETCH_TIMING_SWAP
 #endif
 #if defined(SSE_CPU_ROUNDING)
-//#define SSE_CPU_ROUNDING2 // no more "NO_ROUND" //when debugged!
+#define SSE_CPU_ROUNDING2 // no more "NO_ROUND" //when debugged!
 #define SSE_CPU_ROUNDING_ADD_BW_DN // to DN
 #define SSE_CPU_ROUNDING_ADD_BW_DN2 // from DN
 #define SSE_CPU_ROUNDING_ADD_L_DN2
 #define SSE_CPU_ROUNDING_ADDA_W_DN
 #define SSE_CPU_ROUNDING_ADDA_L_DN2
-#define SSE_CPU_ROUNDING_CMPI_B
 #define SSE_CPU_ROUNDING_CMPI_L2
 #define SSE_CPU_ROUNDING_MOVE
 #define SSE_CPU_ROUNDING_MOVEM
@@ -3511,10 +3700,52 @@ and all his silly mods are gone!
 #define SSE_CPU_ROUNDING_SUB_L_DN2
 #define SSE_CPU_ROUNDING_SUBA_W_DN
 #define SSE_CPU_ROUNDING_SUBA_L_DN
+#define SSE_CPU_ROUNDING_ABCD
+#undef SSE_CPU_ROUNDING_ADD_BW_DN //simplify
+#undef SSE_CPU_ROUNDING_ADD_BW_DN2 //simplify
+#define SSE_CPU_ROUNDING_ADD
+#undef SSE_CPU_ROUNDING_ADDA_L_DN2 //correct
+#define SSE_CPU_ROUNDING_ADDA
+#define SSE_CPU_ROUNDING_ADDQ
+#define SSE_CPU_ROUNDING_ADDX
+#define SSE_CPU_ROUNDING_ADDI
+#define SSE_CPU_ROUDING_AND
+#define SSE_CPU_ROUNDING_ANDI
+#define SSE_CPU_ROUNDING_BCC
+#define SSE_CPU_ROUNDING_BCHG
+#define SSE_CPU_ROUNDING_BCLR
+#define SSE_CPU_ROUNDING_BSET
+#define SSE_CPU_ROUNDING_BTST
+#define SSE_CPU_ROUNDING_CLR
+#define SSE_CPU_ROUDING_CMP
+#define SSE_CPU_ROUNDING_CMPI
+#define SSE_CPU_ROUNDING_DBCC
+#define SSE_CPU_ROUDING_EA // no more m68k_get_effective_address(), more code
+#define SSE_CPU_ROUDING_EOR
+#define SSE_CPU_ROUNDING_EORI
+#define SSE_CPU_ROUNDING_JSR
+#define SSE_CPU_ROUNDING_MOVE_FROM_SR
+#define SSE_CPU_ROUNDING_MOVE_TO_SR
+#define SSE_CPU_ROUNDING_NBCD
+#define SSE_CPU_ROUNDING_NEG
+#define SSE_CPU_ROUNDING_NEGX
+#define SSE_CPU_ROUNDING_NO_FASTER_FOR_D // eliminate confusing hack, less code
+#define SSE_CPU_ROUNDING_NOT
+#define SSE_CPU_ROUNDING_OR
+#define SSE_CPU_ROUNDING_ORI
+#define SSE_CPU_ROUNDING_PEA
+#define SSE_CPU_ROUNDING_SCC
+#define SSE_CPU_ROUNDING_SHIFT_MEM
+#define SSE_CPU_ROUNDING_SUB
+#define SSE_CPU_ROUNDING_SUBI
+#define SSE_CPU_ROUNDING_SUBQ
+#define SSE_CPU_ROUNDING_SUBX
 #endif
 #endif//cpu
 #if defined(SSE_FLOPPY)
+#define SSE_PASTI_ONLY_STX_OPTION3 // move that option SSE -> disk manager
 #define SSE_FLOPPY_EVENT
+#define SSE_FLOPPY_EVENT2
 #if defined(SSE_DISK)
 #define SSE_DISK1//struct
 #if defined(SSE_DISK_IMAGETYPE)//3.6.4
@@ -3541,7 +3772,7 @@ and all his silly mods are gone!
 #define SSE_DRIVE_INDEX_PULSE
 #define SSE_DRIVE_INDEX_STEP
 #define SSE_DRIVE_MEDIACHANGE // for CAPSImg, Pasti
-#define SSE_DRIVE_REM_HACKS
+#define SSE_DRIVE_REM_HACKS 
 #if defined(SSE_DRIVE_REM_HACKS)
 #define SSE_DRIVE_REM_HACKS2//gaps
 #undef SSE_DRIVE_RW_SECTOR_TIMING2
@@ -3564,7 +3795,6 @@ and all his silly mods are gone!
 #define SSE_DRIVE_SOUND_STW
 #define SSE_DRIVE_SOUND_VOLUME_2 //bugfix on resume
 #endif//snd
-#define SSE_DRIVE_SPEED_HACK //hehe
 #define SSE_DRIVE_STATE //mask
 #endif//drive
 #if defined(SSE_DMA)
@@ -3589,6 +3819,7 @@ and all his silly mods are gone!
 #endif
 #define SSE_WD1772
 #if defined(SSE_WD1772)
+#define SSE_WD1772_F7_ESCAPE
 #define SSE_WD1772_PHASE
 #define SSE_WD1772_REG2 // DSR, ByteCount
 #define SSE_WD1772_REG2_B // StatusType
@@ -3597,11 +3828,17 @@ and all his silly mods are gone!
 #if defined(SSE_GUI)
 #define SSE_GUI_CUSTOM_WINDOW_TITLE
 #define SSE_GUI_DISK_MANAGER_DOUBLE_CLK_GO_UP //habit with some file managers
+#define SSE_GUI_DISK_MANAGER_GHOST
 #define SSE_GUI_DISK_MANAGER_INSERT_DISKB
 #define SSE_GUI_DISK_MANAGER_INSERT_DISKB_LS//load/save option
 #define SSE_GUI_DISK_MANAGER_LONG_NAMES1
+#define SSE_GUI_DISK_MANAGER_NO_DISABLE_B_MENU // click on icon
+#if defined(SSE_VAR_CLIPBOARD_TEXT) && defined(SSE_GUI_DISK_MANAGER_LONG_NAMES1)
+#define SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD
+#endif
 //#define SSE_GUI_DISK_MANAGER_RGT_CLK_HD//on DM icon 
 #define SSE_GUI_DISK_MANAGER_RGT_CLK_HD2//on HD icon
+#undef SSE_GUI_OPTION_SLOW_DISK_SSE
 #if defined(SSE_GUI_INFOBOX)//need that for ver??
 #undef SSE_GUI_INFOBOX2
 //#define SSE_GUI_INFOBOX9 // +2 manuals
@@ -3611,29 +3848,101 @@ and all his silly mods are gone!
 #define SSE_GUI_INFOBOX13 // Steem SSE faq replaces faq
 #define SSE_GUI_INFOBOX14 // order 'about' 'hints'
 #define SSE_GUI_INFOBOX15 // release notes (not sse faq)
+#define SSE_GUI_INFOBOX16 // no crash on big files
 #define SSE_GUI_INFOBOX_LINKS
+#if defined(SSE_PRIVATE_BUILD)
+#define SSE_GUI_OPTION_FOR_TESTS 
 #endif
+#endif
+#if defined(SSE_GUI_STATUS_STRING)
+#undef SSE_GUI_STATUS_STRING_IPF // what if mixed?
+#undef SSE_GUI_STATUS_STRING_PASTI // what if mixed?
+#define SSE_GUI_STATUS_STRING_68901
+#define SSE_GUI_STATUS_STRING_HD
+#define SSE_GUI_STATUS_STRING_HALT
+#define SSE_GUI_STATUS_STRING_THRESHOLD //not if window too small
+#if defined(SSE_DISK_STW)
+//#define SSE_GUI_STATUS_STRING_STW // what if mixed? (not def)
+#endif
+#endif//string
 #define SSE_GUI_OPTIONS_DISABLE_DISPLAY_SIZE_IF_NO_BORDER
 #define SSE_GUI_OPTIONS_DONT_MENTION_WINDOW_COMPOSITING
+#define SSE_GUI_OPTION_DISPLAY_CHANGE_TEXT // normal is small + scanlines
 #define SSE_GUI_OPTIONS_DISPLAY_SIZE_IN_DISPLAY
 #define SSE_GUI_OPTIONS_STF_IN_MACHINE
 #define SSE_GUI_OPTIONS_WU_IN_MACHINE
+#define SSE_GUI_OPTIONS_SOUND1 // make some room free
+#define SSE_GUI_OPTIONS_SOUND2 // drive sound on sound page
+#define SSE_GUI_OPTIONS_SOUND3 // options for PSG and Microwire on sound page
+#define SSE_GUI_OPTIONS_SOUND4 // option keyboard click on sound page
 #endif
 #if defined(SSE_IKBD)
 #if defined(SSE_IKBD_6301)
-#undef IKBD_6301_MOUSE_ADJUST_SPEED //def 3.5.1
+#undef SSE_IKBD_6301_MOUSE_ADJUST_SPEED //def 3.5.1
 #define SSE_IKBD_6301_MOUSE_ADJUST_SPEED2 //better
+//#define SSE_IKBD_6301_MOUSE_MASK2//hack but game is bugged
 #ifdef SSE_BETA
 //#define SSE_IKBD_6301_NOT_OPTIONAL
 #endif
 #define SSE_IKBD_6301_ROM_KEYTABLE //spare an array
 #endif//6301
 #endif//ikbd
+#define SSE_JOYSTICK_JUMP_BUTTON
 #if defined(SSE_INTERRUPT)
+#undef SSE_INT_HBL_IACK_FIX
+#define SSE_INT_HBL_IACK2
+#define SSE_INT_VBL_IACK2
+#undef SSE_INT_JITTER 
+#undef SSE_INT_JITTER_HBL
+#undef SSE_INT_JITTER_VBL
+#undef SSE_INT_JITTER_RESET
 #endif
 #if defined(SSE_INT_MFP)
-#undef SSE_INT_MFP_TIMERS_BASETIME
+///#undef SSE_INT_MFP_TIMERS_BASETIME
 #define SSE_INT_MFP_TIMERS_NO_BOOST_LIMIT
+#ifdef SSE_INT_MFP // tests, refactor
+#define SSE_INT_MFP_AUTO_NO_IS_CLEAR//test
+#define SSE_INT_MFP_OBJECT // new MC68901 chip in out ST!
+#if defined(SSE_INT_MFP_OBJECT)
+#define SSE_INT_MFP_IRQ_TIMING //tracking it more precisely
+#define SSE_INT_MFP_GPIP_TO_IRQ_DELAY // only for GPIP interrupts
+#undef SSE_ACIA_IRQ_DELAY2
+#undef SSE_INT_MFP_IACK_LATENCY //same irq
+#define SSE_INT_MFP_IACK_LATENCY2 //delay timers
+#define SSE_INT_MFP_IACK_LATENCY3 //timer B
+#define SSE_INT_MFP_IACK_LATENCY4 //delay timers 
+#define SSE_INT_MFP_IACK_LATENCY5 //timer B 
+#define SSE_INT_MFP_OPTION //performance/precision
+#define SSE_INT_MFP_UTIL
+#ifdef SSE_BETA
+#define SSE_INT_MFP_RECORD_PENDING_TIMING
+#endif
+#define SSE_INT_MFP_SPURIOUS//cool crashes
+#define SSE_INT_MFP_CHECKTIMEOUT_ON_STOP
+#undef SSE_INT_MFP_PATCH_TIMER_D//Audio Artistic
+#undef SSE_INT_MFP_WRITE_DELAY1 //Audio Artistic
+#define SSE_INT_MFP_WRITE_DELAY2
+#endif
+#if defined(SSE_INT_MFP_RATIO)
+#define SSE_INT_MFP_RATIO_OPTION // user can fine tune CPU clock
+#define SSE_INT_MFP_RATIO_OPTION2 // L/S
+#define SSE_INT_MFP_RATIO_PRECISION_2 // 1 cycle precision
+#define SSE_INT_MFP_RATIO_PRECISION3 // 100%
+#endif
+#define SSE_INT_MFP_RATIO_STE2 //LoSTE?
+//#define SSE_INT_MFP_RATIO_STE3 // = STF
+#define SSE_INT_MFP_RATIO_STF2 
+#define SSE_INT_MFP_REFACTOR1
+//#define SSE_INT_MFP_REFACTOR2 //doesn't work at all yet
+#undef SSE_INT_MFP_TIMER_B_NO_WOBBLE //there is wobble
+#define SSE_INT_MFP_TIMER_B_WOBBLE2 // 2 instead of 4
+#define SSE_INT_MFP_TIMER_B_WOBBLE_HACK //for Sunny
+//#define SSE_INT_MFP_TIMER_RATIO1 //unimportant
+#define SSE_INT_MFP_TIMERS_INLINE
+//#define SSE_INT_MFP_TIMERS_WOBBLE //as for timer B
+//#define SSE_INT_MFP_TIMERS_RUN_IF_DISABLED //load!
+#define SSE_INT_MFP_TIMERS_STARTING_DELAY //12->?
+#endif//SSE_INT_MFP
 #endif
 #if defined(SSE_MIDI) 
 //#define SSE_MIDI_CHECK1//VERIFY is broken?!
@@ -3659,16 +3968,29 @@ and all his silly mods are gone!
 #define SSE_SHIFTER_HIRES_COLOUR_DISPLAY3//don't crash 1
 #define SSE_SHIFTER_HIRES_COLOUR_DISPLAY4//don't crash 2
 #define SSE_SHIFTER_HIRES_OVERSCAN//3.7.0
-//#define SSE_SHIFTER_LINE_PLUS_2_POST_TOP_OFF //but there's fixed version?
-//#define SSE_SHIFTER_LINE_PLUS_2_POST_TOP_OFF2 //but mindbomb...
 //#define UNDEF_SSE_SHIFTER_PALETTE_NOISE
 #define SSE_SHIFTER_PALETTE_NOISE2
 //#define SSE_SHIFTER_PALETTE_STF
-#endif
+#define SSE_SHIFTER_STE_DE_MED_RES // bugfix
+#define SSE_SHIFTER_STE_READ_SDP_HSCROLL1 // bugfix 
+#define SSE_SHIFTER_STE_READ_SDP_SKIP // bugfix
+#define SSE_SHIFTER_LINE_MINUS_2_DONT_FETCH //BIG Demo #2 bad raster finally!
+#undef SSE_SHIFTER_LINE_PLUS_2_STE
+#define SSE_SHIFTER_LINE_PLUS_2_STE2 //tested on hardware
+#define SSE_SHIFTER_LINE_PLUS_20B // general
+#define SSE_SHIFTER_LINE_PLUS_4
+#define SSE_SHIFTER_LINE_PLUS_6
+#define SSE_SHIFTER_DOLB_STE
+#define SSE_SHIFTER_DOLB1 //again a hack... TODO
+#define SSE_SHIFTER_PANIC2 //band order
+#endif//shifter
+#define SSE_SOUND_DMA_CLOCK //not CPU, apart clock
 #if defined(SSE_SOUND_FILTER_STF)
-#define SSE_SOUND_FILTER_STF2 // for samples, original is better
+#define SSE_SOUND_FILTER_HATARI
+//#define SSE_SOUND_FILTER_STF2 // for samples, original is better
 #define SSE_SOUND_FILTER_STF3 // better detect samples
 #define SSE_SOUND_FILTER_STF4 // disable option if no chip sound
+#define SSE_SOUND_FILTER_STF5 // option in sound
 #define SSE_SOUND_INLINE2 
 #if defined(SSE_SOUND_INLINE2) //there was a bug to find...
 #define SSE_SOUND_INLINE2A
@@ -3678,17 +4000,24 @@ and all his silly mods are gone!
 #define SSE_SOUND_INLINE2E
 #define SSE_SOUND_INLINE2F
 #endif
+#define SSE_SOUND_MICROWIRE_MASK1 //bugfix
+#define SSE_SOUND_MICROWIRE_MASK2 //incorrect doc (?)
+#define SSE_SOUND_MICROWIRE_READ1
 #define SSE_SOUND_MICROWIRE_WRITE_LATENCY_B //Antiques 
 #undef  SSE_SOUND_VOL //Antiques sounds better without this precaution
 #define SSE_SOUND_VOL_LOGARITHMIC_2 // bugfix on resume
 #endif
 #if defined(SSE_STF)
+#undef SSE_STF_8MHZ // we have better option now
+#define SSE_STF_MATCH_TOS2 // default = 1.62 instead of 1.06
 #endif
 #if defined(SSE_STRUCTURE)
 #endif
 #if defined(SSE_TIMINGS)
+#define SSE_TIMINGS_STE_NOPS_TO_FIRST_LINE
 #endif
 #if defined(SSE_TOS)
+#undef SSE_TOS_PATCH106 // TOS 1.62 recommended
 #define SSE_TOS_BOOTER1//accept TOS boot of the 260ST
 #if defined(SSE_DISK_IMAGETYPE)
 #define SSE_TOS_PRG_AUTORUN// Atari PRG file direct support
@@ -3699,28 +4028,23 @@ and all his silly mods are gone!
 #endif
 #if defined(SSE_VARIOUS)
 #undef SSE_VAR_FULLSCREEN_DONT_START
+#define SSE_VAR_CLIPBOARD_TEXT
 #ifdef SSE_DEBUG
 #define SSE_VAR_NO_INTRO
 #endif
 #define SSE_GUI_PATCH_SCROLLBAR
 #define SSE_VAR_RESET_SAME_DISK//test (with .PRG support)
 #define SSE_VAR_RESIZE_370
-#if defined(SSE_GUI_STATUS_STRING)
-#undef SSE_GUI_STATUS_STRING_IPF // what if mixed?
-#undef SSE_GUI_STATUS_STRING_PASTI // what if mixed?
-#define SSE_GUI_STATUS_STRING_HD
-#define SSE_GUI_STATUS_STRING_HALT
-#define SSE_GUI_STATUS_STRING_THRESHOLD //not if window too small
-#if defined(SSE_DISK_STW)
-//#define SSE_GUI_STATUS_STRING_STW // what if mixed? (not def)
-#endif
-#endif//string
+#define SSE_VAR_SNAPSHOT_INI
+#define SSE_VAR_STEALTH2 //bugfix 3.7
 #endif//various
 #if defined(SSE_VIDEO)
 #define SSE_VID_EXT_MON
 #if defined(WIN32) 
 #undef SSE_VID_RECORD_AVI
 #endif
+#define SSE_VID_BLOCK_WINDOW_SIZE // option can't change size of window
+#define SSE_VID_LOCK_ASPET_RATIO // 
 #define SSE_VID_UTIL // miscellaneous functions
 //#define SSE_VID_RECORD_MODES // TODO eg record 800 x 600 16bit 60hz... waste?
 #define SSE_VID_BORDERS_GUARD_EM // don't mix large borders & extended res
@@ -3750,6 +4074,7 @@ and all his silly mods are gone!
 #define SSE_VID_D3D //main
 #define SSE_VID_D3D1 //adaptation
 #define SSE_VID_D3D2 //adaptation
+#define SSE_VID_D3D_LIST_MODES // player can choose
 #define SSE_VID_D3D_NO_GUI
 #define SSE_VID_D3D_OPTION
 //#define SSE_VID_D3D_OPTION2//change tip on fullscreen page
@@ -3761,7 +4086,7 @@ and all his silly mods are gone!
 #if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO)
 #define SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION // like SainT, higher pixels
 #endif
-//#define SSE_VID_D3D_STRETCH_FORCE // only stretch
+#define SSE_VID_D3D_STRETCH_FORCE // only stretch: better for list modes
 #endif//d3d
 #endif//vid
 #ifdef SSE_YM2149 
@@ -3781,6 +4106,10 @@ and all his silly mods are gone!
 #endif//v3.7.0
 
 #endif//?SSE_SWITCHES_FEATURES
+
+
+
+
 
 ///////////////
 // STRUCTURE //
@@ -3886,15 +4215,12 @@ and all his silly mods are gone!
 // DEV BUILD //
 ///////////////
 
-
-
-
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
-#define TEST01//snd
-#define TEST02//MicroWire
+//#define TEST01
+//#define TEST02
 //#define TEST03
-#define TEST04//mfp
-//#define TEST05//d3d
+//#define TEST04
+//#define TEST05
 //#define TEST06
 //#define TEST07
 //#define TEST08
@@ -3903,232 +4229,15 @@ and all his silly mods are gone!
 
 #if defined(SSE_BETA) && SSE_VERSION>=370
 // those switches are later copied to both features and version zones!
+
 //#define SSE_DRIVE_WRITE_TRACK_11
 //#define SSE_GUI_FULLSCREEN_NO_VSYNC_OPTION //but all the rest?
-//#define SSE_SCP
+//#define SSE_SCP //TODO
 //#define SSE_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
 
-#if defined(SSE_PRIVATE_BUILD)
-#define SSE_GUI_OPTION_FOR_TESTS 
-#endif
-
-#define SSE_SHIFTER_LINE_MINUS_2_DONT_FETCH //BIG Demo
-
-//#define SSE_SOUND_VOL
-//#define SSE_SOUND_VOL2
-#define SSE_SOUND_MICROWIRE_MASK1 //bugfix
-#define SSE_SOUND_MICROWIRE_MASK2 //incorrect doc (?)
-
-#ifdef SSE_BOILER //...
-#define SSE_BOILER_MUTE_SOUNDCHANNELS_ENV
-#define SSE_BOILER_MOD_VBASE
-#define SSE_BOILER_PSEUDO_STACK
-#define SSE_BOILER_EXTRA_IOLIST
-#define SSE_BOILER_BROWSERS_VECS // in 'reg' columns, eg TB for timer B
-#define SSE_BOILER_TRACE_MFP1 // one log option for MFP, one for interrupt
-#endif
-
-#if defined(SSE_BOILER_CLIPBOARD) && defined(SSE_GUI_DISK_MANAGER_LONG_NAMES1)
-//#define SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD
-#endif
-#define SSE_VAR_CLIPBOARD_TEXT
-///#define SSE_VAR_TYPE_KEY_DELAY
-
-#if defined(SSE_FLOPPY)
-#if defined(SSE_VAR_CLIPBOARD_TEXT) && defined(SSE_GUI_DISK_MANAGER_LONG_NAMES1)
-#define SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD
-#endif
-#define SSE_PASTI_ONLY_STX_OPTION3 // move that option SSE -> disk manager
-#define SSE_GUI_DISK_MANAGER_GHOST
-#endif
-
-#define SSE_VID_BLOCK_WINDOW_SIZE // option can't change size of window
-#define SSE_GUI_OPTION_DISPLAY_CHANGE_TEXT // normal is small + scanlines
-#define SSE_VID_LOCK_ASPET_RATIO // 
-
-#define SSE_SOUND_FILTER_STF5 // option in sound
-
-
-#undef SSE_GUI_OPTION_SLOW_DISK_SSE
-#define SSE_GUI_DISK_MANAGER_NO_DISABLE_B_MENU // click on icon
-
-#define SSE_VAR_SNAPSHOT_INI
-
-#ifdef SSE_SHIFTER
-#define SSE_SHIFTER_STE_DE_MED_RES // bugfix
-#define SSE_SHIFTER_STE_READ_SDP_HSCROLL1 // bugfix 
-#define SSE_SHIFTER_STE_READ_SDP_SKIP // bugfix
-#define SSE_SHIFTER_LINE_MINUS_2_DONT_FETCH //BIG Demo #2 bad raster finally!
-#undef SSE_SHIFTER_LINE_PLUS_2_STE
-#define SSE_SHIFTER_LINE_PLUS_2_STE2 //tested on hardware
-#define SSE_TIMINGS_STE_NOPS_TO_FIRST_LINE
-#define SSE_SHIFTER_DOLB_STE
-#define SSE_SHIFTER_DOLB1 //again a hack... TODO
-#define SSE_SHIFTER_PANIC2 //band order
-#endif//shifter
-
-#ifdef SSE_CPU
-
-#undef SSE_CPU_IGNORE_RW_4MB // F-29 hangs on 4MB machines, nothing to fix
-#define SSE_CPU_TRUE_PC2 // JMP, JSR
-#define SSE_CPU_DIV_CC //carry clear: always
-
-#define SSE_CPU_DEST_IS_REGISTER //just new macro
-// quite risky series of mods, must test:
-
-#define SSE_CPU_ROUNDING_ABCD
-#undef SSE_CPU_ROUNDING_ADD_BW_DN //simplify
-#define SSE_CPU_ROUNDING_ADD
-#undef SSE_CPU_ROUNDING_ADDA_L_DN2 //correct
-#define SSE_CPU_ROUNDING_ADDA
-#define SSE_CPU_ROUNDING_ADDQ
-#define SSE_CPU_ROUNDING_ADDX
-#define SSE_CPU_ROUNDING_ADDI
-#define SSE_CPU_ROUDING_AND
-#define SSE_CPU_ROUNDING_ANDI
-#define SSE_CPU_ROUNDING_BCC
-#define SSE_CPU_ROUNDING_BCHG
-#define SSE_CPU_ROUNDING_BCLR
-#define SSE_CPU_ROUNDING_BSET
-#define SSE_CPU_ROUNDING_BTST
-#define SSE_CPU_ROUNDING_CLR
-#define SSE_CPU_ROUDING_CMP
-#define SSE_CPU_ROUNDING_CMPI
-#define SSE_CPU_ROUNDING_DBCC
-#define SSE_CPU_ROUDING_EA // no more m68k_get_effective_address(), more code
-#define SSE_CPU_ROUDING_EOR
-#define SSE_CPU_ROUNDING_EORI
-#define SSE_CPU_ROUNDING_JSR
-#define SSE_CPU_ROUNDING_MOVE_FROM_SR
-#define SSE_CPU_ROUNDING_MOVE_TO_SR
-#define SSE_CPU_ROUNDING_NBCD
-#define SSE_CPU_ROUNDING_NEG
-#define SSE_CPU_ROUNDING_NEGX
-#define SSE_CPU_ROUNDING_NO_FASTER_FOR_D // eliminate confusing hack, less code
-#define SSE_CPU_ROUNDING_NOT
-#define SSE_CPU_ROUNDING_OR
-#define SSE_CPU_ROUNDING_ORI
-#define SSE_CPU_ROUNDING_PEA
-#define SSE_CPU_ROUNDING_SCC
-#define SSE_CPU_ROUNDING_SHIFT_MEM
-#define SSE_CPU_ROUNDING_SUB
-#define SSE_CPU_ROUNDING_SUBI
-#define SSE_CPU_ROUNDING_SUBQ
-#define SSE_CPU_ROUNDING_SUBX
-
-#define SSE_CPU_PREFETCH_TIMING_ADD
-#define SSE_CPU_PREFETCH_TIMING_ADDA
-#define SSE_CPU_PREFETCH_TIMING_ADDX
-#define SSE_CPU_PREFETCH_TIMING_AND
-#define SSE_CPU_PREFETCH_TIMING_CHK
-#define SSE_CPU_PREFETCH_TIMING_CMP
-#define SSE_CPU_PREFETCH_TIMING_EXT
-#define SSE_CPU_PREFETCH_TIMING_JMP
-#define SSE_CPU_PREFETCH_TIMING_JSR
-#define SSE_CPU_PREFETCH_TIMING_LEA
-#define SSE_CPU_PREFETCH_TIMING_OR
-#define SSE_CPU_PREFETCH_TIMING_STOP
-#define SSE_CPU_PREFETCH_TIMING_SUBX
-#define SSE_CPU_PREFETCH_TIMING_SWAP
-
-#endif
-
-
-
-
-#define SSE_GUI_OPTIONS_SOUND1 // make some room free
-#define SSE_GUI_OPTIONS_SOUND2 // drive sound on sound page
-#define SSE_GUI_OPTIONS_SOUND3 // options for PSG and Microwire on sound page
-#define SSE_GUI_OPTIONS_SOUND4 // option keyboard click on sound page
-
-#define SSE_SOUND_FILTER_HATARI
-#undef SSE_SOUND_FILTER_STF2 // "monitor" also for samples
-
-#define SSE_SOUND_DMA_CLOCK //not CPU, apart clock
-
-
-
-//#undef SSE_INT_HBL_ONE_FUNCTION//for tests only
-//#define SSE_INT_HBL_EVENT//for tests only
-//#define SSE_INT_VBI_START//for tests only
-
-// it's E-Clock ('6301' on) or 'Wobble' now, no need to add variables
-
-#undef SSE_INT_JITTER 
-#undef SSE_INT_JITTER_HBL
-#undef SSE_INT_JITTER_VBL
-#undef SSE_INT_JITTER_RESET
-#undef SSE_INT_HBL_IACK_FIX
-#undef SSE_INT_HBL_E_CLOCK_HACK
-#define SSE_CPU_E_CLOCK2
-#define SSE_CPU_E_CLOCK3
-#define SSE_INT_HBL_GLUE_LATENCY
-#define SSE_INT_HBL_IACK2
-#define SSE_INT_VBL_IACK2
-
-#ifdef SSE_INT_MFP // tests, refactor
-
-#define SSE_INT_MFP_AUTO_NO_IS_CLEAR//test
-#define SSE_INT_MFP_NO_WRITE_LATENCY1//unimportant
-#define SSE_INT_MFP_OBJECT // new MC68901 chip in out ST!
-#if defined(SSE_INT_MFP_OBJECT)
-#define SSE_INT_MFP_IRQ_TIMING //tracking it more precisely
-#define SSE_INT_MFP_GPIP_TO_IRQ_DELAY // only for GPIP interrupts
-#undef SSE_ACIA_IRQ_DELAY2
-#undef SSE_INT_MFP_IACK_LATENCY //same irq
-#define SSE_INT_MFP_IACK_LATENCY2 //delay timers
-#define SSE_INT_MFP_IACK_LATENCY3 //timer B
-#define SSE_INT_MFP_IACK_LATENCY4 //delay timers 
-#define SSE_INT_MFP_IACK_LATENCY5 //timer B - why?
-#define SSE_INT_MFP_OPTION //performance/precision
-#define SSE_INT_MFP_UTIL
-#define SSE_INT_MFP_SPURIOUS//cool crashes
-#define SSE_INT_MFP_CHECKTIMEOUT_ON_STOP
-///#define SSE_INT_MFP_TIMERS_WOBBLE 
-#undef SSE_INT_MFP_PATCH_TIMER_D//Audio Artistic
-#undef SSE_INT_MFP_WRITE_DELAY1 //Audio Artistic
-#define SSE_INT_MFP_WRITE_DELAY2
-#endif
-#if defined(SSE_INT_MFP_RATIO)
-#define SSE_INT_MFP_RATIO_OPTION // user can fine tune CPU clock
-#define SSE_INT_MFP_RATIO_OPTION2 // L/S
-#define SSE_INT_MFP_RATIO_PRECISION_2 // 1 cycle precision
-#define SSE_INT_MFP_RATIO_PRECISION3 // 100%
-#endif
-#undef SSE_STF_8MHZ // we have better option now
-//#define SSE_INT_MFP_RATIO_STE2
-#define SSE_INT_MFP_RATIO_STF2
-#define SSE_INT_MFP_REFACTOR1
-#undef SSE_INT_MFP_TIMER_B_NO_WOBBLE //there is wobble
-#define SSE_INT_MFP_TIMER_B_WOBBLE_HACK //for Sunny
-#define SSE_INT_MFP_TIMER_RATIO1 //unimportant
-#define SSE_INT_MFP_TIMERS_INLINE
-//#define SSE_INT_MFP_TIMERS_RUN_IF_DISABLED //load!
-#define SSE_INT_MFP_TIMERS_STARTING_DELAY //12->?
-#endif//SSE_INT_MFP
-
-//#undef SSE_CPU_UNSTOP2//
-
-#if defined(SSE_VID_D3D)
-#define SSE_VID_D3D_LIST_MODES // player can choose
-#define SSE_VID_D3D_STRETCH_FORCE // only stretch: better for list modes
-#endif
-
-//#define SSE_DRIVE_COMPUTE_BOOT_CHECKSUM //
-
-
-#define SSE_STF_MATCH_TOS2 // default = 1.62 instead of 1.06
-
-
-#define SSE_YM2149_FIX_JAM
-
-#define SSE_BOILER_SHOW_FRAME //yes it was useful
-#define SSE_BOILER_SHOW_TRICKS //TODO
-
-
+//#undef SSE_WD1772_F7_ESCAPE
 
 #endif//beta
-
 
 #else//!SS
 /////////////////////////////////////
