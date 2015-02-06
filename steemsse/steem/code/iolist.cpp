@@ -308,21 +308,20 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
 
 #if defined(SSE_OSD_CONTROL)
   iolist_add_entry(FAKE_IO_START+4,"OSD1",2,
-    "Interrupt|IKBD|60hz|.|.|.|.|.|.|.|.|.|.|.|.|.");
+    "irq|ikbd|iack|.|.|.|.|.|.|.|.|.|.|.|.|.");
   iolist_add_entry(FAKE_IO_START+6,"OSD2 CPU",2,
     "trace|bombs|io|reset|prefetch|.|.|.|.|.|.|.|.|.|.|.");
   iolist_add_entry(FAKE_IO_START+8,"OSD2 Shifter",2,
-    "Tricks|Load|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
+    "tricks|load|RS|.|.|.|.|.|.|.|.|.|.|.|.|.");
   iolist_add_entry(FAKE_IO_START+10,"OSD3 STE",2,
-    "Dma|Blt|Sdp|.|.|.|.|.|.|.|.|.|.|.|.|.");
+    "dma|blt|sdp|.|.|.|.|.|.|.|.|.|.|.|.|.");
 #endif
-
 
 #if defined(SSE_BOILER_TRACE_CONTROL)
   iolist_add_entry(FAKE_IO_START+12,"TRACE Shifter",2,
     "vert|1line|vbl|adj|.|.|.|.|.|.|.|.|.|.|.|.");
-  iolist_add_entry(FAKE_IO_START+14,"TRACE exc",2,
-    "mfp|vbi|hbi|.|.|.|.|.|.|.|.|.|.|.|.|.");
+  iolist_add_entry(FAKE_IO_START+14,"TRACE irq",2,
+    "E|rte|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
   iolist_add_entry(FAKE_IO_START+16,"TRACE floppy",2,
     "str|bytes|psg|reg|ipf1|ipf2|.|.|.|.|.|.|.|.|.|.");
 #endif

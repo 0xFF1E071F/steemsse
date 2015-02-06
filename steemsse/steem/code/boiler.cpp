@@ -1898,10 +1898,12 @@ void DWin_init()
       /*mem_browser to update*/&m_b_mem_disa);
 #endif
 
+#if !defined(SSE_BOILER_MOD_VBASE2)
 #if defined(SSE_BOILER_MOD_VBASE)
   new mr_static("VBASE","screen address",240,1,DWin,(HMENU)294,(MEM_ADDRESS)&xbios2,3,MST_REGISTER,true,NULL);
 #else
   new mr_static("screen=","screen address",240,1,DWin,(HMENU)294,(MEM_ADDRESS)&xbios2,3,MST_REGISTER,true,NULL);
+#endif
 #endif
 
 #if !defined(SSE_BOILER_MOVE_OTHER_SP)
@@ -2059,27 +2061,52 @@ void DWin_init()
     int y=5;
     mr_static *ms;
 
+
+
 #if defined(SSE_BOILER_SHOW_FRAME)
     ms=new mr_static("Frame ","",5,y,Par,
-        NULL,(MEM_ADDRESS)&FRAME,3,MST_DECIMAL,0,NULL);
-    GetWindowRectRelativeToParent(ms->handle,&rc);
-    ms=new mr_static("Cycles Since VBL ","",rc.right+5,y,Par,
-        NULL,(MEM_ADDRESS)&debug_cycles_since_VBL,3,MST_DECIMAL,0,NULL);
+        NULL,(MEM_ADDRESS)&FRAME,3,MST_DECIMAL,true,NULL);
 
+#if defined(SSE_BOILER_SHOW_TRICKS2) && defined(SSE_SHIFTER)
+    GetWindowRectRelativeToParent(ms->handle,&rc);
+    ms=new mr_static("Tricks ","",rc.right+5,y,Par,
+      NULL,(MEM_ADDRESS)&Debug.ShifterTricks,3,MST_REGISTER,0,NULL);
+    GetWindowRectRelativeToParent(ms->handle,&rc);
+    ms=new mr_static("#HBI ","",rc.right+5,y,Par,
+      NULL,(MEM_ADDRESS)&Debug.nHbis,2,MST_DECIMAL,0,NULL);
+#endif
+
+#if defined(SSE_BOILER_FRAME_INTERRUPTS2)
+    // correct but hard to interpret
+    GetWindowRectRelativeToParent(ms->handle,&rc);
+    ms=new mr_static("IRQ ","",rc.right+5,y,Par,
+      NULL,(MEM_ADDRESS)&debug_frame_interrupts,3,MST_REGISTER,0,NULL);
+#endif
+
+    y+=30;
+#if defined(SSE_BOILER_SHOW_ACT)
+    ms=new mr_static("Cycles CPU ","",5,y,Par,
+        NULL,(MEM_ADDRESS)&debug_ACT,4,MST_DECIMAL,0,NULL);
+    GetWindowRectRelativeToParent(ms->handle,&rc);
+#endif
+    ms=new mr_static("Frame","",rc.right+5,y,Par,
+        NULL,(MEM_ADDRESS)&debug_cycles_since_VBL,3,MST_DECIMAL,0,NULL);
 #else
     ms=new mr_static("Cycles Since VBL ","",5,y,Par,
         NULL,(MEM_ADDRESS)&debug_cycles_since_VBL,3,MST_DECIMAL,0,NULL);
 #endif
     GetWindowRectRelativeToParent(ms->handle,&rc);
-
 #if defined(SSE_BOILER_SHOW_ACT)
     ms=
 #endif
-
+#if SSE_VERSION>=370
+    new mr_static("Line ","",rc.right+5,y,Par,
+        NULL,(MEM_ADDRESS)&debug_cycles_since_HBL,2,MST_DECIMAL,0,NULL);
+#else
     new mr_static("Since HBL ","",rc.right+5,y,Par,
         NULL,(MEM_ADDRESS)&debug_cycles_since_HBL,2,MST_DECIMAL,0,NULL);
-
-#if defined(SSE_BOILER_SHOW_ACT)
+#endif
+#if defined(SSE_BOILER_SHOW_ACT__)
     GetWindowRectRelativeToParent(ms->handle,&rc);
     new mr_static("Absolute ","",rc.right+5,y,Par,
         NULL,(MEM_ADDRESS)&debug_ACT,4,MST_DECIMAL,0,NULL);
@@ -2087,18 +2114,44 @@ void DWin_init()
 
     y+=30;
 
+#if defined(SSE_BOILER_SHOW_FRAME__)
+    ms=new mr_static("Frame #","",5,y,Par,
+        NULL,(MEM_ADDRESS)&FRAME,3,MST_DECIMAL,0,NULL);
+    GetWindowRectRelativeToParent(ms->handle,&rc);
+#endif
 
+
+#if defined(SSE_BOILER_MOD_VBASE2)
+    ms=new mr_static("VBASE","screen address",5,y,Par,
+      (HMENU)294,(MEM_ADDRESS)&xbios2,3,MST_REGISTER,true,NULL);
+    GetWindowRectRelativeToParent(ms->handle,&rc);
+#endif
+
+
+#if SSE_VERSION>=370 //in Steem that's the true one!
+    ms=new mr_static("VCOUNT ","",rc.right+5,y,Par,
+        NULL,(MEM_ADDRESS)&debug_VAP,3,MST_REGISTER,0,NULL);
+#else
     ms=new mr_static("Current Video Address ","",5,y,Par,
         NULL,(MEM_ADDRESS)&debug_VAP,3,MST_REGISTER,0,NULL);
+#endif
     GetWindowRectRelativeToParent(ms->handle,&rc);
 
 #if defined(SSE_BOILER_SHOW_SDP) // the draw pointer
 
+#if SSE_VERSION>=370 //clearer for me
+    new mr_static("SDP ","",rc.right+5,y,Par,
+        NULL,(MEM_ADDRESS)&shifter_draw_pointer,3,MST_REGISTER,true,NULL);
+    y+=30;
+    ms=new mr_static("scan_y ","",5,y,Par,
+        NULL,(MEM_ADDRESS)&scan_y,2,MST_DECIMAL,0,NULL);
+#else
     new mr_static("Current Draw Pointer ","",rc.right+5,y,Par,
         NULL,(MEM_ADDRESS)&shifter_draw_pointer,3,MST_REGISTER,0,NULL);
     y+=30;
     new mr_static("Current Scanline ","",5,y,Par,
         NULL,(MEM_ADDRESS)&scan_y,2,MST_DECIMAL,0,NULL);
+#endif
 
 #if defined(SSE_BOILER_SHOW_RES) && defined(SSE_SHIFTER)
     GetWindowRectRelativeToParent(ms->handle,&rc);
@@ -2108,9 +2161,21 @@ void DWin_init()
 
 #if defined(SSE_BOILER_SHOW_FREQ) && defined(SSE_SHIFTER)
     GetWindowRectRelativeToParent(ms->handle,&rc);
-    new mr_static("Sync ","",rc.right+5,y,Par,
+    ms=new mr_static("Sync ","",rc.right+5,y,Par,
         NULL,(MEM_ADDRESS)&Shifter.m_SyncMode,1,MST_REGISTER,0,NULL);
 #endif
+
+#if defined(SSE_BOILER_SHOW_TRICKS) && defined(SSE_SHIFTER)
+// Shifter tricks of the line!
+    GetWindowRectRelativeToParent(ms->handle,&rc);
+    ms=new mr_static("Tricks ","",rc.right+5,y,Par,
+      NULL,(MEM_ADDRESS)&Shifter.CurrentScanline.Tricks,3,MST_REGISTER,0,NULL);
+// and since we still have room:
+    GetWindowRectRelativeToParent(ms->handle,&rc);
+    new mr_static("bytes ","",rc.right+5,y,Par,
+      NULL,(MEM_ADDRESS)&Shifter.CurrentScanline.Bytes,2,MST_DECIMAL,0,NULL);
+#endif
+
 
 #else    
     new mr_static("Current Scanline ","",rc.right+5,y,Par,
@@ -2134,6 +2199,27 @@ void DWin_init()
         x=rc.right+5;
       }
     }
+
+#if defined(SSE_BOILER_DECRYPT_TIMERS)
+
+    for (int t=0;t<4;t++){
+      ms=new mr_static(Str("Timer ")+char('A'+t)+" prescale ","",5,y,Par,
+            NULL,(MEM_ADDRESS)&debug_time_to_timer_prescale[t],2,MST_DECIMAL,0,NULL);
+      GetWindowRectRelativeToParent(ms->handle,&rc);
+      ms=new mr_static(Str("data "),"",rc.right+5,y,Par,
+            NULL,(MEM_ADDRESS)&debug_time_to_timer_data[t],2,MST_DECIMAL,0,NULL);
+      GetWindowRectRelativeToParent(ms->handle,&rc);
+      ms=new mr_static(Str("count "),"",rc.right+5,y,Par,
+            NULL,(MEM_ADDRESS)&debug_time_to_timer_count[t],2,MST_DECIMAL,0,NULL);
+      GetWindowRectRelativeToParent(ms->handle,&rc);
+      ms=new mr_static(Str("ticks "),"",rc.right+5,y,Par,
+            NULL,(MEM_ADDRESS)&debug_time_to_timer_ticks[t],2,MST_DECIMAL,0,NULL);
+      y+=30;
+    }
+
+#endif
+
+
     DWin_timings_scroller.AutoSize();
   }
   boiler_show_stack_display(0);
