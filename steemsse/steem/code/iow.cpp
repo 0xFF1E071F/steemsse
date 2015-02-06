@@ -670,8 +670,11 @@ system exclusive start and end messages (F0 and F7).
             int n=(addr-0xfffa01) >> 1;
 
 #if defined(SSE_INT_MFP_IRQ_TIMING)
-            MC68901.LastRegisterFormerValue=mfp_reg[n]; // save for our hacks
-            MC68901.LastRegisterWrittenValue=io_src_b;
+            if(OPTION_PRECISE_MFP)
+            {
+              MC68901.LastRegisterFormerValue=mfp_reg[n]; // save for our hacks
+              MC68901.LastRegisterWrittenValue=io_src_b;
+            }
 #endif
 
             if (n==MFPR_GPIP || n==MFPR_AER || n==MFPR_DDR){
@@ -798,23 +801,24 @@ system exclusive start and end messages (F0 and F7).
             }
 
 #if defined(SSE_INT_MFP_IRQ_TIMING)
-            MC68901.UpdateNextIrq();
-            MC68901.WriteTiming=ACT;
-            MC68901.LastRegisterWritten=n;
+            if(OPTION_PRECISE_MFP)
+            {
+              MC68901.UpdateNextIrq();
+              //if((sr & SR_IPL)<SR_IPL_6) //temp hack to avoid bad spurious (Rainbow Island)
+              {
+                MC68901.WriteTiming=ACT;
+                MC68901.LastRegisterWritten=n;
+              }
+            }
 #endif
-
-#if defined(SSE_INT_MFP_NO_WRITE_LATENCY1)
-            //think there was a bug because it changes nothing
-            ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
-#else
             // The MFP doesn't update for about 8 cycles, so we should execute the next
             // instruction before causing any interrupts
+            //SS this seems suspicious but it is actually needed: Super Hang-On
             ioaccess=old_ioaccess;
             if ((ioaccess & (IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE | IOACCESS_FLAG_FOR_CHECK_INTRS |
                                 IOACCESS_FLAG_DELAY_MFP))==0){
               ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE;
             }
-#endif
 #if defined(SSE_INT_MFP_WRITE_DELAY1) //no
             time_of_last_write_to_mfp_reg=ACT;
 #endif

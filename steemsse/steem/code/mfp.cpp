@@ -141,7 +141,7 @@ void calc_time_of_next_timer_b()
     Possible explanation: writing now forces some sync with MFP?
     TODO
 */
-      + (OPTION_PRECISE_MFP?0:TB_TIME_WOBBLE);
+      + (OPTION_PRECISE_MFP&&SSE_HACKS_ON?0:TB_TIME_WOBBLE);
 #else
       +TB_TIME_WOBBLE;
 #endif
@@ -185,23 +185,17 @@ inline bool mfp_set_pending(int irq,int when_set)
 bool mfp_set_pending(int irq,int when_set) { //SS this function travels...
 
 #if defined(SSE_INT_MFP_IRQ_TIMING)
+  if(OPTION_PRECISE_MFP)
+  {
 #if defined(SSE_INT_MFP_GPIP_TO_IRQ_DELAY)     
-    bool irq_is_gpip=(irq<4||irq==6||irq==7||irq>13);
-    if(irq_is_gpip)
-      when_set+=4; // documtented delay between input transition and IRQ
+    if(MC68901.IrqInfo[irq].IsGpip)
+      when_set+=4; // documented delay between input transition and IRQ
 #endif
-
-    // The highest unmasked pending interrupt will trigger next
-    if(irq>MC68901.NextIrq && 
-      (mfp_reg[MFPR_IMRA+mfp_interrupt_i_ab(irq)] & mfp_interrupt_i_bit(irq))
-#if defined(SSE_INT_MFP_GPIP_TO_IRQ_DELAY) 
-      && when_set-MC68901.IrqTiming>=0 //dangerous condition?
+#if defined(SSE_INT_MFP_RECORD_PENDING_TIMING)
+    MC68901.PendingTiming[irq]=when_set; // record timing
 #endif
-      )
-    {
-      MC68901.NextIrq=irq;
-      MC68901.IrqTiming=when_set; 
-    }
+    MC68901.UpdateNextIrq(irq,when_set);
+  }
 #endif
 
 #if defined(SSE_INT_MFP_IACK_LATENCY2) || defined(SSE_INT_MFP_IACK_LATENCY4)
@@ -351,9 +345,10 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
           mfp_timer_period_current_fraction[timer]=0;//added later?
 #endif//#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO_PRECISION_2)
 
-#if defined(SSE_DEBUG)
+#if defined(SSE_DEBUG) && defined(SSE_INT_MFP_TIMERS_STARTING_DELAY)
           //TRACE_LOG("F%d y%d c%d PC %X set timer %c control $%x, data $%x",TIMING_INFO,old_pc,'A'+timer,new_control,mfp_reg[MFPR_TADR+timer]);
-          TRACE_LOG("%d PC %X set timer %c control $%x, data $%x",ACT,old_pc,'A'+timer,new_control,mfp_reg[MFPR_TADR+timer]);
+          TRACE_LOG("%d PC %X set timer %c control $%x, data $%x",
+            ACT-MFP_TIMER_SET_DELAY,old_pc,'A'+timer,new_control,mfp_reg[MFPR_TADR+timer]);
           if(reg==MFPR_TBCR && new_val==8)
             TRACE_LOG(" (%d)\n",mfp_reg[MFPR_TADR+timer]);
           else
@@ -416,9 +411,8 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 #endif
           {
 
-
 #if defined(SSE_INT_MFP_IACK_LATENCY4)
-            MC68901.SkipTimer[timer]=0;
+            //MC68901.SkipTimer[timer]=0;
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO_PRECISION3)
@@ -436,7 +430,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
     next timer.
     update: TEST10B doesn't confirm, but unconlusive, undef
 */
-            MC68901.Wobble[timer]=(rand()&1);
+            MC68901.Wobble[timer]=(rand()&MFP_TIMERS_WOBBLE);
             mfp_timer_timeout[timer]+=MC68901.Wobble[timer];
 #endif
           }
@@ -466,6 +460,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
             mfp_interrupt_pend(mfp_timer_irq[timer],mfp_timer_timeout[timer]);
           }
 #endif
+
 
 #ifdef SSE_DEBUG
           if(new_val & BIT_3)
@@ -626,7 +621,114 @@ void ASMCALL check_for_interrupts_pending()
 {
 //SS  check_for_interrupts_pending() concerns not just the MFP,
 // but also HBL and VBL interrupts
-#if defined(SSE_INT_MFP_REFACTOR1)
+
+#if defined(SSE_INT_MFP_REFACTOR2)
+  //this part isn't working at all, for future (?)
+  if(OPTION_PRECISE_MFP)
+  {
+    if( !STOP_INTS_BECAUSE_INTERCEPT_OS
+      && ! (ioaccess & (IOACCESS_INTERCEPT_OS | IOACCESS_INTERCEPT_OS2)) 
+      && ((sr & SR_IPL)<SR_IPL_6))
+    {
+
+      for (int irq=15;irq>=0;irq--)
+      {
+        BYTE i_bit=BYTE(1 << (irq & 7));
+        int i_ab=1-((irq & 8) >> 3);
+        if (mfp_reg[MFPR_ISRA+i_ab] & i_bit){ //interrupt in service
+          break;  //time to stop looking for pending interrupts
+        }
+        if (mfp_reg[MFPR_IPRA+i_ab] & i_bit){ //is this interrupt pending?
+          if (mfp_reg[MFPR_IMRA+i_ab] & i_bit){ //is it not masked out?
+            
+
+            M68000.Iack=true;
+            INSTRUCTION_TIME(MFP_IACK_LATENCY);
+            //prepare_next_event();
+            //prepare_event_again(); // the dubious/dangerous part...
+
+    PREPARE_EVENT_CHECK_FOR_TIMER_TIMEOUTS(0);
+    PREPARE_EVENT_CHECK_FOR_TIMER_TIMEOUTS(1);
+    PREPARE_EVENT_CHECK_FOR_TIMER_TIMEOUTS(2);
+    PREPARE_EVENT_CHECK_FOR_TIMER_TIMEOUTS(3);
+    
+    PREPARE_EVENT_CHECK_FOR_TIMER_B;
+
+
+
+
+            M68000.Iack=false;
+
+            for (int irq=15;irq>=0;irq--)
+            {
+              BYTE i_bit=BYTE(1 << (irq & 7));
+              int i_ab=1-((irq & 8) >> 3);
+              ASSERT(! (mfp_reg[MFPR_ISRA+i_ab] & i_bit) );
+              if(mfp_reg[MFPR_IPRA+i_ab] & i_bit)
+              {
+                if (mfp_reg[MFPR_IMRA+i_ab] & i_bit)
+                  mfp_interrupt(irq,ABSOLUTE_CPU_TIME);
+                break;
+              }
+            }//nxt
+            ASSERT( irq>=0 ); // no spurious
+
+
+            break;        //lower priority interrupts not allowed now.
+          }
+        }
+      }//nxt irq
+
+
+
+/*
+      if(MC68901.Irq)
+      {
+        M68000.Iack=true;
+        INSTRUCTION_TIME(MFP_IACK_LATENCY);
+        prepare_event_again(); // the dubious/dangerous part...
+        //prepare_next_event();
+        MC68901.UpdateNextIrq();
+        M68000.Iack=false;
+        if(!MC68901.Irq) // spurious
+        {
+          TRACE_OSD("Spurious!");
+          INSTRUCTION_TIME(50-MFP_IACK_LATENCY);
+          m68k_interrupt(LPEEK(0x60)); // vector for Spurious, NOT Bus Error
+          sr=WORD((sr & (~SR_IPL)) | SR_IPL_6); // the CPU does that anyway
+        }
+        else
+        {
+          TRACE_OSD("irq %d",MC68901.NextIrq);
+          mfp_interrupt(MC68901.NextIrq,ABSOLUTE_CPU_TIME); //then cause interrupt
+        }
+*/
+     // }
+    }
+  }
+  else // Steem 3.2
+  {
+
+    if (STOP_INTS_BECAUSE_INTERCEPT_OS==0){
+      if ((ioaccess & IOACCESS_FLAG_DELAY_MFP)==0){ 
+        for (int irq=15;irq>=0;irq--)
+        {
+          BYTE i_bit=BYTE(1 << (irq & 7));
+          int i_ab=1-((irq & 8) >> 3);
+          if (mfp_reg[MFPR_ISRA+i_ab] & i_bit){ //interrupt in service
+            break;  //time to stop looking for pending interrupts
+          }
+          if (mfp_reg[MFPR_IPRA+i_ab] & i_bit){ //is this interrupt pending?
+            if (mfp_reg[MFPR_IMRA+i_ab] & i_bit){ //is it not masked out?
+              mfp_interrupt(irq,ABSOLUTE_CPU_TIME); //then cause interrupt
+              break;        //lower priority interrupts not allowed now.
+            }
+          }
+        }//nxt irq
+      }
+  }
+
+#elif defined(SSE_INT_MFP_REFACTOR1)//v3.7.0
 /*  For MFP interrupts, there are all sorts of tests before triggering the
     interrupt, the problem was that some of those tests were in mfp_interrupt().
     Here we place all the tests in check_for_interrupts_pending() and when
@@ -654,7 +756,6 @@ void ASMCALL check_for_interrupts_pending()
 #endif
         if (mfp_reg[MFPR_IPRA+i_ab] & i_bit){ //is this interrupt pending?
 
-
 #if defined(SSE_INT_MFP_WRITE_DELAY2)
 /*  The MFP doesn't update its registers at once after a write.
     There's a delay of estimated 4 CPU cycles
@@ -662,28 +763,29 @@ void ASMCALL check_for_interrupts_pending()
     -TEST10
 */
           BYTE relevant_mask_register=mfp_reg[MFPR_IMRA+i_ab] & i_bit;
+          BYTE relevant_pending_register=mfp_reg[MFPR_IPRA+i_ab] & i_bit;
           if(OPTION_PRECISE_MFP && ACT-MC68901.WriteTiming<=MFP_WRITE_LATENCY
-            && MC68901.LastRegisterWritten==MFPR_IMRA+i_ab )
+            && ACT-MC68901.WriteTiming>=0)
           {
-            TRACE_LOG("%d MFP delay write IMR%c irq %d %d\n",ACT,'A'+i_ab,irq,ACT-MC68901.WriteTiming);
-            relevant_mask_register=MC68901.LastRegisterFormerValue;
-            ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;//always? but it can't hurt
-          }
-          if(relevant_mask_register&i_bit) {
-#else
-          if (mfp_reg[MFPR_IMRA+i_ab] & i_bit){ //is it not masked out?
-#endif
-#if defined(SSE_INT_MFP_WRITE_DELAY2)
-/*  Same for pending, to test
-*/
-            BYTE relevant_pending_register=mfp_reg[MFPR_IPRA+i_ab] & i_bit;
-            if(OPTION_PRECISE_MFP && ACT-MC68901.WriteTiming<=MFP_WRITE_LATENCY
-              && MC68901.LastRegisterWritten==MFPR_IPRA+i_ab )
+            if(MC68901.LastRegisterWritten==MFPR_IMRA+i_ab)
+            {
+              TRACE_LOG("%d MFP delay write IMR%c irq %d %d\n",ACT,'A'+i_ab,irq,ACT-MC68901.WriteTiming);
+              relevant_mask_register=MC68901.LastRegisterFormerValue;
+              ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;//always? but it can't hurt
+            }
+            else if(MC68901.LastRegisterWritten==MFPR_IPRA+i_ab )
             {
               TRACE_LOG("%d MFP delay write IPR%c irq %d %d\n",ACT,'A'+i_ab,irq,ACT-MC68901.WriteTiming);
               relevant_pending_register=MC68901.LastRegisterFormerValue;
               ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
             }
+          }
+            
+          if(relevant_mask_register&i_bit) {
+#else
+          if (mfp_reg[MFPR_IMRA+i_ab] & i_bit){ //is it not masked out?
+#endif
+#if defined(SSE_INT_MFP_WRITE_DELAY2)
             if(relevant_pending_register&i_bit) {
 #else
             if (mfp_interrupt_enabled[irq]){ // is it enabled
@@ -697,6 +799,7 @@ void ASMCALL check_for_interrupts_pending()
 /*  Check it some same or higher priority delay timer is going to trigger 
     during IACK cycles.
     If yes, clear and execute this irq.
+    Our way is a bit heavy now but operational, refactoring due post v3.7.0.
     Cases:
     Final Conflict, timer A (this worked with previous Steem hack), IACK
     As originally explained by ijor:
@@ -742,7 +845,8 @@ void ASMCALL check_for_interrupts_pending()
     That's no bug but 2 previous bugs compensating in Steem 3.2.
     In previous versions of Steem SSE only one side was done (fractional part
     of timers) and this screen was broken.
-    Extreme Rage guest screen, 8 IACKing itself (I found a new word).
+    Extreme Rage guest screen, 8 IACKing itself (I found a new word)
+    This worked with previous Steem hack.
     Fuzion 77 (STF) 5->8
 */
                 if(irq<=8 // <= not <
@@ -770,10 +874,10 @@ void ASMCALL check_for_interrupts_pending()
 /*  If the GPIP input has just transitioned, IRQ hasn't fired 
     yet. Fixes V8 Music System.
 */
-                if((irq<4||irq==6||irq==7||irq>13) 
-                  && ACT-MC68901.IrqTiming<0
-                  && ACT-MC68901.IrqTiming>=-4)
+                if( MC68901.IrqInfo[irq].IsGpip 
+                  && ACT-MC68901.IrqTiming<0 && ACT-MC68901.IrqTiming>=-4)
                 {
+                  ASSERT(irq<4||irq==6||irq==7||irq>13);
                   TRACE_LOG("MFP delay GPIP-irq %d %d\n",irq,ACT-MC68901.IrqTiming);
                   ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;//come back later
                   break;
@@ -842,10 +946,6 @@ void ASMCALL check_for_interrupts_pending()
         // but the event hasn't fired yet.
         //SS scanline_time_in_cpu_cycles_at_start_of_vbl is 512, 508 or 224
         if (int(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl)<scanline_time_in_cpu_cycles_at_start_of_vbl){
-
-#if defined(SSE_INT_HBL_GLUE_LATENCY)
-
-#endif
           HBL_INTERRUPT;
         }
 #if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG) 
@@ -979,14 +1079,22 @@ void mfp_interrupt(int irq,int when_fired) {
 #endif//dbg
 
 #if defined(SSE_INT_MFP_IRQ_TIMING)
-  MC68901.IackTiming=ACT;
-  MC68901.LastIrq=irq;
-  MC68901.UpdateNextIrq();
+  if(OPTION_PRECISE_MFP)
+  {
+    MC68901.IackTiming=ACT;//?
+    MC68901.LastIrq=irq;
+    MC68901.UpdateNextIrq();
+  }
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP) 
 #if defined(SSE_CPU_FETCH_TIMING)
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
+#if defined(SSE_INT_MFP_REFACTOR2)
+  if(OPTION_PRECISE_MFP)
+    INSTRUCTION_TIME(SSE_INT_MFP_TIMING-4-MFP_IACK_LATENCY);
+  else
+#endif
   INSTRUCTION_TIME_ROUND(SSE_INT_MFP_TIMING-4);
   FETCH_TIMING;
 #if defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
@@ -1142,8 +1250,16 @@ void mfp_interrupt(int irq,int when_fired)
 TMC68901::TMC68901() {
 
 #if defined(SSE_INT_MFP_UTIL)
+  Init();
+#endif
+}
+
+void TMC68901::Init() {
+  // this must be called after L/S!!
+  //TRACE("Init\n");
+#if defined(SSE_INT_MFP_UTIL)
   // init IrqInfo structure
-  ZeroMemory(&IrqInfo,sizeof(TMC68901IrqInfo));
+  ZeroMemory(&IrqInfo,sizeof(TMC68901IrqInfo)*16);
   IrqInfo[0].IsGpip=IrqInfo[1].IsGpip=IrqInfo[2].IsGpip=IrqInfo[3].IsGpip
     =IrqInfo[6].IsGpip=IrqInfo[7].IsGpip=IrqInfo[14].IsGpip=IrqInfo[15].IsGpip
     =true;
@@ -1153,6 +1269,7 @@ TMC68901::TMC68901() {
   IrqInfo[5].Timer=2;  // timer C
   IrqInfo[8].Timer=1;  // timer B
   IrqInfo[13].Timer=0;  // timer A
+  ASSERT( IrqInfo[5].IsGpip==0 );
 #endif
 
 }
@@ -1169,38 +1286,59 @@ we add functions, some are not used yet...
 */
 
 
-bool TMC68901::Enabled(int irq) {
-//  bool is_enabled=(mfp_reg[MFPR_IERA+mfp_interrupt_i_ab(irq)]
-//  & mfp_interrupt_i_bit(irq)); 
-//  return is_enabled;
-  return mfp_interrupt_enabled[irq];
+BYTE TMC68901::GetReg(int reg_num,int at_time) {
+  if(at_time==-1)
+    at_time=ACT;
+  BYTE reg= (reg_num==LastRegisterWritten 
+    && at_time-WriteTiming>=0 && at_time-WriteTiming<=MFP_SPURIOUS_LATENCY)
+    ? LastRegisterFormerValue : mfp_reg[reg_num];
+  //and update if necessary in setpending
+  return reg;
 }
 
 
-bool TMC68901::InService(int irq){
-  bool in_service=(mfp_reg[MFPR_ISRA+mfp_interrupt_i_ab(irq)]
-  & mfp_interrupt_i_bit(irq)); 
+bool TMC68901::Enabled(int irq,int at_time) {
+  int reg_num=MFPR_IERA+mfp_interrupt_i_ab(irq);
+  BYTE reg=GetReg(reg_num);
+  bool is_enabled=(bool)(reg & mfp_interrupt_i_bit(irq));
+  return is_enabled;
+  //return mfp_interrupt_enabled[irq];
+}
+
+
+bool TMC68901::InService(int irq,int at_time){
+  int reg_num=MFPR_ISRA+mfp_interrupt_i_ab(irq);
+  BYTE reg=GetReg(reg_num);
+  bool in_service=(reg & mfp_interrupt_i_bit(irq)); 
   return in_service;
 }
 
 
-bool TMC68901::MaskOK(int irq) { //used
-  bool mask_ok=(mfp_reg[MFPR_IMRA+mfp_interrupt_i_ab(irq)]
-  & mfp_interrupt_i_bit(irq)); 
+bool TMC68901::MaskOK(int irq,int at_time) { //used
+  int reg_num=MFPR_IMRA+mfp_interrupt_i_ab(irq);
+  BYTE reg=GetReg(reg_num);
+  bool mask_ok=(reg & mfp_interrupt_i_bit(irq)); 
   return mask_ok;
 }
 
 
-bool TMC68901::Pending(int irq) {
-  bool is_pending=(mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)]
-  & mfp_interrupt_i_bit(irq)); 
+bool TMC68901::Pending(int irq,int at_time) {
+  int reg_num=MFPR_IMRA+mfp_interrupt_i_ab(irq);
+  BYTE reg=GetReg(reg_num);
+  // if it times out just before the effective write to reg
+  // we're checking later anyway and it's rightfully cleared
+  bool is_pending= 
+#ifdef SSE_INT_MFP_RECORD_PENDING_TIMING
+    (at_time-PendingTiming[irq]>=0) && 
+#endif
+    ((reg & mfp_interrupt_i_bit(irq)));
   return is_pending;
 }
 
 
 bool TMC68901::TimerBActive() { //used
   bool timer_b_active=mfp_reg[MFPR_TBCR]==8 && mfp_interrupt_enabled[8] 
-    && MC68901.MaskOK(8);
+    && MaskOK(8);
   return timer_b_active;
 }
 
@@ -1222,8 +1360,8 @@ bool TMC68901::CheckSpurious(int irq) {
   ASSERT((sr&SR_IPL_6)<SR_IPL_6);
   ASSERT( OPTION_PRECISE_MFP ); // you need more CPU power
   bool spurious_triggered=false;
-  if(MC68901.IrqInfo[irq].IsTimer && ACT-MC68901.WriteTiming>=0 
-    && ACT-MC68901.WriteTiming<=MFP_SPURIOUS_LATENCY)
+  if(IrqInfo[irq].IsTimer && ACT-WriteTiming>=0 
+    && ACT-WriteTiming<=MFP_SPURIOUS_LATENCY)
   {
 
     BYTE i_ab=mfp_interrupt_i_ab(irq);
@@ -1233,47 +1371,55 @@ bool TMC68901::CheckSpurious(int irq) {
     int pertinent_timeout=(irq==8 && mfp_reg[MFPR_TBCR]==8)
       ? time_of_next_timer_b : mfp_timer_timeout[IrqInfo[irq].Timer];
 
-    BYTE reg_enabled_before=(MC68901.LastRegisterWritten==MFPR_IERA+i_ab)
-      ? MC68901.LastRegisterFormerValue : mfp_reg[MFPR_IERA+i_ab];
+    BYTE reg_enabled_before=(LastRegisterWritten==MFPR_IERA+i_ab)
+      ? LastRegisterFormerValue : mfp_reg[MFPR_IERA+i_ab];
 
-    BYTE reg_pending_before=(MC68901.LastRegisterWritten==MFPR_IPRA+i_ab)
-      ? MC68901.LastRegisterFormerValue : mfp_reg[MFPR_IPRA+i_ab];
+    BYTE reg_pending_before=(LastRegisterWritten==MFPR_IPRA+i_ab)
+      ? LastRegisterFormerValue : mfp_reg[MFPR_IPRA+i_ab];
 
     BYTE reg_pending_after=mfp_reg[MFPR_IPRA+i_ab];
 
     // Value of register is set only after 4 cycles, possibly
     // voiding an interrupt.
-    if(MC68901.IrqTiming-MC68901.WriteTiming<=MFP_WRITE_LATENCY)
+    if(IrqTiming-WriteTiming<=MFP_WRITE_LATENCY)
     {
-      if(MC68901.LastRegisterWritten==MFPR_IPRA+i_ab)
+      if(LastRegisterWritten==MFPR_IPRA+i_ab)
       {
-        reg_pending_after=MC68901.LastRegisterWrittenValue;     
+        reg_pending_after=LastRegisterWrittenValue;     
         reg_pending_before=mfp_reg[MFPR_IPRA+i_ab];
 
-      //  TRACE_LOG("%d IPR%c before %X after %X next timeout %d last write %d\n",
-      //    ACT,'A'+i_ab,reg_pending_before,reg_pending_after,pertinent_timeout,MC68901.WriteTiming);
-
+  //      TRACE_LOG("%d IPR%c before %X after %X next timeout %d last write %d\n",
+    //      ACT,'A'+i_ab,reg_pending_before,reg_pending_after,pertinent_timeout,MC68901.WriteTiming);
 
         // maybe an irq was voided but it will timeout again during IACK!
-        if(pertinent_timeout-MC68901.WriteTiming>MFP_WRITE_LATENCY 
-          && pertinent_timeout-ACT<=(MFP_IACK_LATENCY-4) // especially TEST10.TOS
+        if(!(irq==8 && mfp_reg[MFPR_TBCR]==8)
+          && (pertinent_timeout-WriteTiming<=MFP_WRITE_LATENCY
+          && pertinent_timeout+mfp_timer_period[IrqInfo[irq].Timer]-ACT
+          <=MFP_IACK_LATENCY-4
+          || pertinent_timeout-ACT>0 && pertinent_timeout-ACT
+          <=MFP_IACK_LATENCY-4
+              )
           )
         {
+//          TRACE_OSD("save spurious");
           reg_pending_after|=i_bit;
         }
       }
     }
 
-    BYTE reg_masked_before=(MC68901.LastRegisterWritten==MFPR_IMRA+i_ab)
-      ? MC68901.LastRegisterFormerValue : mfp_reg[MFPR_IMRA+i_ab];
+    BYTE reg_masked_before=(LastRegisterWritten==MFPR_IMRA+i_ab)
+      ? LastRegisterFormerValue : mfp_reg[MFPR_IMRA+i_ab];
 
- //     TRACE_LOG("%d ?Spurious irq %d timer %d skip %d reg_enabled_before %X  reg_pending_before %X reg_masked_before %X timeout %d last reg %d former value %X\n",
- //  ACT,irq,IrqInfo[irq].Timer,MC68901.SkipTimer[IrqInfo[irq].Timer],reg_enabled_before,reg_pending_before,reg_masked_before,pertinent_timeout,MC68901.LastRegisterWritten,MC68901.LastRegisterFormerValue);
+    //  TRACE_LOG("%d ?Spurious irq %d timer %d skip %d reg_enabled_before %X  reg_pending_before %X reg_masked_before %X timeout %d last reg %d former value %X\n",
+  // ACT,irq,IrqInfo[irq].Timer,MC68901.SkipTimer[IrqInfo[irq].Timer],reg_enabled_before,reg_pending_before,reg_masked_before,pertinent_timeout,MC68901.LastRegisterWritten,MC68901.LastRegisterFormerValue);
 
     if( (reg_enabled_before&i_bit) && (reg_masked_before&i_bit)
-      && ( (reg_pending_before&i_bit) || 0&&// or...
-      MC68901.LastRegisterWritten==MFPR_IPRA+i_ab // no spurious spurious!
-      && (ACT-pertinent_timeout>=0 && ACT-pertinent_timeout<=MFP_SPURIOUS_LATENCY)) // delay could be different //was 4 but...
+      // was pending or will pend very soon
+      && ( (reg_pending_before&i_bit) || 
+      LastRegisterWritten==MFPR_IPRA+i_ab 
+      //&& pertinent_timeout-MC68901.WriteTiming<0
+      && pertinent_timeout-WriteTiming<=MFP_WRITE_LATENCY)
+      //&& (ACT-pertinent_timeout>=0 && ACT-pertinent_timeout<=MFP_SPURIOUS_LATENCY)) // delay could be different //was 4 but...
       && ( !(mfp_reg[MFPR_IERA+i_ab] & i_bit)
       ||!(reg_pending_after & i_bit)
       ||!(mfp_reg[MFPR_IMRA+i_ab] & i_bit)))
@@ -1285,8 +1431,11 @@ bool TMC68901::CheckSpurious(int irq) {
     if(spurious_triggered) // expect reports of bad spurious now!
     {
       TRACE_OSD("Spurious!");
-      TRACE_LOG("%d SPURIOUS irq %d timer %d timeout %d last reg %d former value %X\n",
-        ACT,irq,IrqInfo[irq].Timer,pertinent_timeout,MC68901.LastRegisterWritten,MC68901.LastRegisterFormerValue);
+      TRACE_LOG("%d SPURIOUS irq %d timer %d timeout %d before IE%d IM%d IP%d now IE%d IM%d IP%d last reg %d former value %X at %d diff %d\n",
+        ACT,irq,IrqInfo[irq].Timer,pertinent_timeout,
+        !!(reg_enabled_before&i_bit),!!(reg_masked_before&i_bit),!!(reg_pending_before&i_bit),
+        !!(mfp_reg[MFPR_IERA+i_ab] & i_bit),!!(mfp_reg[MFPR_IMRA+i_ab] & i_bit),!!(reg_pending_after & i_bit),
+        LastRegisterWritten,LastRegisterFormerValue,WriteTiming,pertinent_timeout-WriteTiming);
       INSTRUCTION_TIME(50); //?
       m68k_interrupt(LPEEK(0x60)); // vector for Spurious, NOT Bus Error
       sr=WORD((sr & (~SR_IPL)) | SR_IPL_6); // the CPU does that anyway
@@ -1302,26 +1451,60 @@ bool TMC68901::CheckSpurious(int irq) {
 
 #if defined(SSE_INT_MFP_IRQ_TIMING)
 /*  This logic is instant on the MFP.
+    The IRQ line depends only on MFP registers, not on IPL in the CPU.
+    It may be asserted then later negated without the CPU handling it.
 */
 
-int TMC68901::UpdateNextIrq() {
+#ifdef SSE_BETA
+//This isn't used yet and probably not working
+void TMC68901::Update() {
+  // make 16bit registers
+  WORD IER=(GetReg(MFPR_IERA)<<8) + GetReg(MFPR_IERB);
+  WORD IMR=(GetReg(MFPR_IERA)<<8) + GetReg(MFPR_IERB);
+  WORD ISR=(GetReg(MFPR_IERA)<<8) + GetReg(MFPR_IERB);
+  IPR=(GetReg(MFPR_IERA)<<8) + GetReg(MFPR_IERB);
+  // combine masks
+  WORD interrupt_required=(IER&IMR)&IPR;
+  // determine which if any interrupt is in service (highest)
+  IrqInService=-1;
+  for(int irq=15;irq>=0;irq--,ISR<<=1)
+    if(ISR&0x80)
+    {
+      IrqInService=irq;
+      break;
+    }
+  // assert Irq if necessary and compute vector
+  Irq=false, Vector=0;
+  for(int irq=15;irq>=0;irq--,interrupt_required<<=1)
+    if(interrupt_required&0x80)
+    {
+      Irq=true;
+      Vector=(mfp_reg[MFPR_VR] & 0xf0)+(irq);
+      break;
+    }
+}
+#endif
 
+// this is used for the GPIP delay and CheckSpurious
+int TMC68901::UpdateNextIrq(int start_from_irq,int at_time) {
+  ASSERT(OPTION_PRECISE_MFP);
   NextIrq=-1; //default: none in sight
-
-  for (int irq=15;irq>=0;irq--) {
+  Irq=false;
+  if(at_time==-1)
+    at_time=ACT;
+  for (int irq=start_from_irq;irq>=0;irq--) {
     BYTE i_ab=mfp_interrupt_i_ab(irq);
     BYTE i_bit=mfp_interrupt_i_bit(irq);
 
-    if( (mfp_reg[MFPR_IERA+i_ab] & i_bit) )  // enabled
+    if(InService(irq,at_time))
+      break;
+
+    if(Enabled(irq,at_time) && Pending(irq,at_time) && MaskOK(irq,at_time))
     {
-      if( (mfp_reg[MFPR_ISRA+i_ab] & i_bit) ) // in service
-        break; //no IRQ now
-      else if( (mfp_reg[MFPR_IPRA+i_ab] & i_bit)  // pending
-      && (mfp_reg[MFPR_IMRA+i_ab] & i_bit) ) // unmasked
-      {
-        MC68901.NextIrq=irq;
-        MC68901.IrqTiming=ACT;
-      }
+      Irq=true; // line is asserted
+      NextIrq=irq;
+      IrqTiming=at_time;
+      break;
     }
   }//nxt irq
   return NextIrq;

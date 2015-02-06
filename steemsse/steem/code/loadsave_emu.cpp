@@ -15,7 +15,13 @@ extern EasyStr LastSnapShot,BootStateFile,StateHist[10],AutoSnapShotName;
 
 #define LOGSECTION LOGSECTION_INIT
 
+#if defined(SSE_VS2008)
+#pragma warning(disable : 4258)
 #endif
+
+#endif
+
+
 
 //---------------------------------------------------------------------------
 void ReadWriteVar(void *lpVar,DWORD szVar,NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &pMem ),
@@ -940,6 +946,13 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #endif
     }
 #endif
+
+#if defined(SSE_INT_MFP_OBJECT)
+    //TRACE("L/S MFP\n");
+    ReadWriteStruct(MC68901);
+    MC68901.Init(); // in case of bad snapshot
+#endif
+
   }
 
 
