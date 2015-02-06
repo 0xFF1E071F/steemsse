@@ -236,8 +236,11 @@ public:
   ~TJoystick(){};
 
   int ToggleKey; //,KeyAutoFire;
-
+#if defined(SSE_JOYSTICK_JUMP_BUTTON)
+  int DirID[7];  // Up Down Left Right Fire AutoFire Jump
+#else
   int DirID[6];  // Up Down Left Right Fire AutoFire
+#endif
   int AnyFireOnJoy,AutoFireSpeed;
   int DeadZone;
   int JagDirID[17];

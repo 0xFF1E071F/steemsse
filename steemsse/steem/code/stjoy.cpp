@@ -154,6 +154,9 @@ BYTE joy_get_pos(int Port)
   for (int n=0;n<4;n++){
     if (IsDirIDPressed(Joy[Port].DirID[n],Joy[Port].DeadZone,true,true /*Diag POV*/)) Ret|=(1 << n);
   }
+#if defined(SSE_JOYSTICK_JUMP_BUTTON)
+  if (IsDirIDPressed(Joy[Port].DirID[6],Joy[Port].DeadZone,true,true /*Diag POV*/)) Ret|=(1 << 0);
+#endif
   // Don't allow both up and down or left and right to be pressed at the same time
   if ((Ret & (1 | 2))==(1 | 2)) Ret&=~(1 | 2);
   if ((Ret & (4 | 8))==(4 | 8)) Ret&=~(4 | 8);
@@ -737,10 +740,19 @@ void TJoystickConfig::Show()
     y+=30;
 
     // Left Right Up Down
+    //SS up
     Win=CreateWindowEx(512,"Steem Button Picker","",
                       WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | WS_DISABLED,
                       x+90,y,65,23,Handle,(HMENU)(110+p*100),HInstance,NULL);
     SetWindowWord(Win,0,(WORD)Joy[BasePort+p].DirID[0]);
+
+#if defined(SSE_JOYSTICK_JUMP_BUTTON)
+    Win=CreateWindowEx(512,"Steem Button Picker","",
+                      WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | WS_DISABLED,
+                      x+90+70,y,65,23,Handle,(HMENU)(116+p*100),HInstance,NULL);
+    SetWindowWord(Win,0,(WORD)Joy[BasePort+p].DirID[6]);
+#endif
+
     y+=28;
 
     // DeadZone
@@ -750,17 +762,20 @@ void TJoystickConfig::Show()
     SetWindowLong(Win,GWL_USERDATA,(long)this);
     y+=24;
 
+    //SS left
     Win=CreateWindowEx(512,"Steem Button Picker","",
                       WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED,
                       x+10,y,65,23,Handle,(HMENU)(112+p*100),HInstance,NULL);
     SetWindowWord(Win,0,(WORD)Joy[BasePort+p].DirID[2]);
 
+    //SS right
     Win=CreateWindowEx(512,"Steem Button Picker","",
                       WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | WS_DISABLED,
                       x+170,y,65,23,Handle,(HMENU)(113+p*100),HInstance,NULL);
     SetWindowWord(Win,0,(WORD)Joy[BasePort+p].DirID[3]);
     y+=23+23+5;
 
+    //SS down
     Win=CreateWindowEx(512,"Steem Button Picker","",
                       WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | WS_DISABLED,
                       x+90,y,65,23,Handle,(HMENU)(111+p*100),HInstance,NULL);
@@ -983,8 +998,11 @@ void TJoystickConfig::JoyModeChange(int Port,int base)
       SendDlgItemMessage(Handle,base+2,CB_SETCURSEL,3,0);
       break;
   }
-
+#if defined(SSE_JOYSTICK_JUMP_BUTTON)
+  for (int n=base+10;n<=base+16;n++){
+#else
   for (int n=base+10;n<=base+15;n++){
+#endif
     EnableWindow(GetDlgItem(Handle,n),NewMode);
     InvalidateRect(GetDlgItem(Handle,n),NULL,0);
     SetWindowWord(GetDlgItem(Handle,n),0,(WORD)(NewMode ? Joy[Port].DirID[n-(base+10)]:0));
@@ -1080,6 +1098,9 @@ LRESULT __stdcall TJoystickConfig::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM
         }
         case 110:case 111:case 112:case 113:case 114:case 115:
         case 210:case 211:case 212:case 213:case 214:case 215:
+#if defined(SSE_JOYSTICK_JUMP_BUTTON)
+        case 116:case 216:
+#endif
         {
           int Port=BasePort+(LOWORD(wPar)/100 - 1);
           Joy[Port].DirID[(LOWORD(wPar) % 100)-10]=GetWindowWord(HWND(lPar),0);
