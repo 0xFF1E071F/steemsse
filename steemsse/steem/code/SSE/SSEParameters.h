@@ -220,20 +220,20 @@ MIDI is 4 times faster than IKBD
     The value generally seen is 6250.
     The value for 11 sectors is 6256. It's possible if the clock is higher than
     8mhz, which is the case on the ST.
+    6256+14 is too much, but this is the value that has some delicate cases
+    running, so we just keep it for now, couldn't improve.
+    In Steem native emulation precision is HBL, so there are trade-offs.
+    For STW images the value is 6256 for same cases.
 */
 
-#if defined(SSE_DRIVE_REM_HACKS)
-#define DRIVE_BYTES_ROTATION (6256)
-#else
-#define DRIVE_BYTES_ROTATION (6256+14)
-#endif
-
+#define DRIVE_BYTES_ROTATION (6256+14) 
 #define DRIVE_BYTES_ROTATION_STW (6256)
 #else
-#define DRIVE_BYTES_ROTATION (8000) // Steem 3.2
+#define DRIVE_BYTES_ROTATION (8000) // 3.2 (!)
 #endif
 
-#if defined(SSE_DRIVE_RW_SECTOR_TIMING2)
+
+#if defined(SSE_DRIVE_RW_SECTOR_TIMING2)//no?
 #define FDC_SECTOR_GAP_BEFORE_IRQ_9_10 (3+(SSE_HACKS_ON?28:0)) //CRC + hack (FDCTNF by Petari)
 #define FDC_SECTOR_GAP_BEFORE_IRQ_11 (3)
 #endif

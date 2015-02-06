@@ -124,6 +124,9 @@ struct TWD1772 {
   };
   void NewCommand(BYTE command);
   int prg_phase;
+#if defined(SSE_WD1772_F7_ESCAPE)
+  bool F7_escaping;
+#endif
 
 #endif
 
