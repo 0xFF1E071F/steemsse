@@ -381,7 +381,7 @@ void TGeneralInfo::CreateAboutPage()
 #endif
   Text+="Written by Anthony && Russell Hayward\n";
 #if defined(SSE_GUI_INFOBOX11)
-  Text+="Copyright 2000-2014\n"; // if that means anything
+  Text+="Copyright 2000-2015\n"; // if that means anything
   /*
    MSVC++ 11.0 _MSC_VER = 1700 (Visual Studio 2012)
   MSVC++ 10.0 _MSC_VER = 1600 (Visual Studio 2010)
@@ -624,9 +624,17 @@ void TGeneralInfo::CreateReadmePage(int p)
 #endif
 #endif
   }
+  
   FILE *f=fopen(TextFile,"rb");
   if (f){
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX5)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX16)
+/*  Steem SSE manual >64000 bytes! 
+    Now this will take all it can or reject.
+*/
+    long nbytes=GetFileLength(f);
+    char *text=(char*)malloc(nbytes);
+    if(text)
+#elif defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX5)
     char *text=(char*)malloc(64000);
 #else
     char text[64000];
