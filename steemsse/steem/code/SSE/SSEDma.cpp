@@ -520,7 +520,7 @@ void TDma::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
 
   ASSERT( (addr&0xFFFF00)==0xFF8600 );
 
-//  TRACE_LOG("DMA W %X ",addr);
+  TRACE_FDC("PC %X DMA W %X %X\n",old_pc,addr,io_src_b);
 
   // test for bus error
   if(addr>0xff860f || addr<0xff8604 || addr<0xff8608 && !io_word_access) 
@@ -534,7 +534,7 @@ void TDma::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
     if(MCR&CR_COUNT_OR_REGS)
     { 
       //write DMA sector counter, 0x190
-      ASSERT(!io_src_b); // it's an 8bit reg 
+      //ASSERT(!io_src_b); // it's an 8bit reg  //int. tennis
       //Counter&=0xff;
       //Counter|=int(io_src_b) << 8;
       log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Set DMA sector count to "+dma_sector_count);
@@ -883,7 +883,7 @@ void TDma::UpdateRegs(bool trace_them) {
       TRACE_LOG("HDC IRQ ");
     else
     {
-      TRACE_LOG("FDC(%d) IRQ CR %X STR %X ",SF314[DRIVE].ImageType.Manager,fdc_cr,fdc_str);
+      TRACE_LOG("%d FDC(%d) IRQ CR %X STR %X ",ACT,SF314[DRIVE].ImageType.Manager,fdc_cr,fdc_str);
 #if defined(SSE_FDC_TRACE_STATUS)
       WD1772.TraceStatus();
 #endif
@@ -892,8 +892,8 @@ void TDma::UpdateRegs(bool trace_them) {
 #if defined(SSE_YM2149A)//
     TRACE_LOG(" %c%d:",'A'+YM2149.SelectedDrive,YM2149.SelectedSide);
 #endif
-    TRACE_LOG(" CYL %d byte %d DMA CR %X $%X #%d %d\n",
-      floppy_head_track[DRIVE],SF314[DRIVE].BytePosition(),MCR,BaseAddress,Counter,ACT);
+    TRACE_LOG(" CYL %d byte %d DMA CR %X $%X #%d\n",
+      floppy_head_track[DRIVE],SF314[DRIVE].BytePosition(),MCR,BaseAddress,Counter);
   }
 #endif
 

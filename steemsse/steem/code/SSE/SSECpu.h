@@ -503,6 +503,10 @@ this state, no further memory references are made."
   WORD dbus; // TODO; we have global abus, which isn't always up-to-date
 #endif
 
+#if defined(SSE_INT_MFP_REFACTOR2)
+  bool Iack;
+#endif
+
 };
 
 extern TM68000 M68000;
@@ -510,16 +514,6 @@ extern TM68000 M68000;
 
 void TM68000::PrefetchSetPC() { 
   // called by SetPC; we don't count timing here
-
-#ifdef TEST03__________
-  if(pc&1)
-  {
-    TRACE("prefetch: odd address %X\n",pc);
-    exception(BOMBS_ADDRESS_ERROR,EA_FETCH,pc);         \
-    return;
-  }
-#endif
-
 
 #if defined(SSE_CPU_FETCH_IO)
   // don't use lpfetch for fetching in IO zone, use io_read: fixes Warp 
@@ -903,9 +897,8 @@ inline void TM68000::PerformRte() {
     defined)
     Doesn't make sense and breaks ST Magazine STE Demo (Stax 65)!
     See more robust hacks in mfp.cpp, SSE_INT_MFP_PATCH_TIMER_D and 
-    SSE_INT_MFP_WRITE_DELAY1.
+    SSE_INT_MFP_WRITE_DELAY2.
 */
-1234
   if(SSE_HACKS_ON && (ioaccess&IOACCESS_FLAG_DELAY_MFP))
   {
     ioaccess&=~IOACCESS_FLAG_DELAY_MFP;
@@ -1121,7 +1114,7 @@ already fetched. One word will be in IRD and another one in IRC.
 */
 #if defined(SSE_CPU_MOVE_B) && defined(SSE_CPU_MOVE_W) && defined(SSE_CPU_MOVE_L)\
   && defined(SSE_CPU_DIV)
-  ASSERT(prefetched_2 || ProcessingState==HALTED || ProcessingState==STOPPED); 
+  ASSERT(prefetched_2); 
 #endif
 #endif
 #if defined(SSE_CPU_PREFETCH_CLASS)
@@ -1212,6 +1205,7 @@ exception vector.
 #endif
     INSTRUCTION_TIME_ROUND(0); // Round first for interrupts
     INSTRUCTION_TIME_ROUND(34); // note: tested timing (Legacy.msa)
+    //INSTRUCTION_TIME(36);
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
     Debug.RecordInterrupt("TRACE");
 #endif

@@ -106,7 +106,7 @@ void TOptionBox::CreateMachinePage()
 #endif
   SendMessage(MMUWakeUpOption,CB_SETCURSEL,WAKE_UP_STATE,0);
   ToolAddWindow(ToolTip,Win,
-    T("Very technical - Some demos will display correctly only in one of those states."));
+    T("Advanced - Some rare demos will display correctly only in one of those states."));
   y+=30;
 #endif
 #endif
@@ -2879,7 +2879,7 @@ Windows 2000	5.0
 
 #if defined(SSE_IKBD_6301) 
 #if SSE_VERSION>=370
-  Wid=GetCheckBoxSize(Font,T("6850/6301")).Width;
+  Wid=GetCheckBoxSize(Font,T("C1: 6850/6301/E-clock")).Width;
 #elif SSE_VERSION>=364
   Wid=GetCheckBoxSize(Font,T("6301/ACIA")).Width;
 #else
@@ -2900,7 +2900,7 @@ Windows 2000	5.0
 #endif
 
 #if SSE_VERSION>=370
-  Win=CreateWindow("Button",T("6850/6301"),mask,page_l,y,Wid,23,Handle,
+  Win=CreateWindow("Button",T("C1: 6850/6301/E-clock"),mask,page_l,y,Wid,23,Handle,
     (HMENU)1029,HInstance,NULL);
 #elif SSE_VERSION>=364
   Win=CreateWindow("Button",T("6301/ACIA"),mask,page_l,y,Wid,23,Handle,
@@ -2915,9 +2915,15 @@ Windows 2000	5.0
   else
     SendMessage(Win,BM_SETCHECK,HD6301EMU_ON,0);
   ToolAddWindow(ToolTip,Win,
-  T("This enables a low level emulation of the IKBD keyboard chip (using\
- the Sim6xxx code by Arne Riiber, thx dude!), as well as ACIA and MIDI \
+#if SSE_VERSION>=370
+  T("Chipset 1 - This enables a low level emulation of the IKBD keyboard chip (using\
+ the Sim6xxx code by Arne Riiber, thx dude!), precise E-Clock, as well as ACIA and MIDI \
  improvements or bugs"));
+#else
+  T("This enables a low level emulation of the IKBD keyboard chip (using\
+ the Sim6xxx code by Arne Riiber, thx dude!) as well as ACIA and MIDI \
+ improvements or bugs"));
+#endif
   y+=LineHeight;
 #endif
 
@@ -2927,12 +2933,12 @@ Windows 2000	5.0
   y-=LineHeight; // maybe it will be optimised away!
 #endif
   Offset=Wid+HorizontalSeparation;
-  Wid=GetCheckBoxSize(Font,T("68901")).Width;
-  Win=CreateWindow("Button",T("68901"),WS_CHILD | WS_TABSTOP |
+  Wid=GetCheckBoxSize(Font,T("C2: 68901")).Width;
+  Win=CreateWindow("Button",T("C2: 68901"),WS_CHILD | WS_TABSTOP |
     BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)7323,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_PRECISE_MFP,0);
   ToolAddWindow(ToolTip,Win,
-  T("Check for a more precise emulation of the MFP"));
+  T("Chipset 1 - Check for a more precise emulation of the MFP."));
   y+=LineHeight;
 #endif
 

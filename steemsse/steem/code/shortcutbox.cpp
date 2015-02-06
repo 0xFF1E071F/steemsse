@@ -605,9 +605,6 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       BYTE Modifiers=HIBYTE(LOWORD(Inf.PressChar));
       ShiftSwitchChangeModifiers(Modifiers & BIT_0,Modifiers & BIT_1,ModifierRestoreArray);
       keyboard_buffer_write_n_record(STCode);
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_TYPE_KEY_DELAY)
-     // INSTRUCTION_TIME(20000);
-#endif
       keyboard_buffer_write_n_record(BYTE(STCode | BIT_7));
       ShiftSwitchRestoreModifiers(ModifierRestoreArray);
       break;

@@ -1309,6 +1309,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             STEALTH_MODE=!STEALTH_MODE;
             TRACE_LOG("Option Stealth: %d\n",STEALTH_MODE);
             SendMessage(HWND(lPar),BM_SETCHECK,!STEALTH_MODE,0);
+#if defined(SSE_VAR_STEALTH2)
+            emudetect_reset();
+#endif
           }
           break;
 #endif

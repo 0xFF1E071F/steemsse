@@ -144,25 +144,28 @@ void TFrameEvents::ReportLine() {
   {
     if(m_FrameEvent[i].Type=='L' //|| m_FrameEvent[i].Type=='C' 
         || m_FrameEvent[i].Type=='#') // decimal
-        TRACE(" %03d:%c%04d",m_FrameEvent[i].Cycle,m_FrameEvent[i].Type,m_FrameEvent[i].Value);
+        TRACE(" %d %03d:%c%04d",m_FrameEvent[i].Scanline,m_FrameEvent[i].Cycle,m_FrameEvent[i].Type,m_FrameEvent[i].Value);
       else  // hexa
-        TRACE(" %03d:%c%04X",m_FrameEvent[i].Cycle,m_FrameEvent[i].Type,m_FrameEvent[i].Value);
+        TRACE(" %d %03d:%c%04X",m_FrameEvent[i].Scanline,m_FrameEvent[i].Cycle,m_FrameEvent[i].Type,m_FrameEvent[i].Value);
   }
   TRACE("\n");
 }
 
 
 int TFrameEvents::Vbl() {
-#if defined(SSE_SHIFTER_REPORT_VBL_TRICKS)
+
   if(Debug.ShifterTricks)
   {
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_VIDEO
+
+#if defined(SSE_SHIFTER_REPORT_VBL_TRICKS)
 #if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK1 & TRACE_CONTROL_SUMMARY)
 #endif
       TRACE_LOG("VBL %d Shifter tricks %X\n",nVbl,Debug.ShifterTricks);
-//#undef LOGSECTION
+#undef LOGSECTION
+#endif  
 
 #if defined(SSE_OSD_CONTROL)
     if(OSD_MASK2 & OSD_CONTROL_SHIFTERTRICKS)
@@ -173,7 +176,7 @@ int TFrameEvents::Vbl() {
 #undef LOGSECTION//???
     Debug.ShifterTricks=0;
   }
-#endif  
+
   int rv= TriggerReport;
   if(TriggerReport==2 && m_nEvents)
     TriggerReport--;

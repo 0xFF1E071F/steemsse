@@ -149,6 +149,7 @@ EXT int cpu_cycles_from_hbl_to_timer_b;
 
 #define CYCLES_FROM_HBL_TO_RIGHT_BORDER_CLOSE (CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320)
 
+
 #define CALC_CYCLES_FROM_HBL_TO_TIMER_B(freq) \
   switch (freq){ \
     case MONO_HZ: cpu_cycles_from_hbl_to_timer_b=192;break; \
@@ -183,7 +184,9 @@ EXT int scanline_drawn_so_far;
 EXT int cpu_cycles_when_shifter_draw_pointer_updated;
 
 EXT int left_border,right_border;
+#if !defined(SSE_VAR_RESIZE_370) 
 EXT bool right_border_changed;
+#endif
 EXT int overscan_add_extra;
 
 //LPSCANPROC draw_scanline;

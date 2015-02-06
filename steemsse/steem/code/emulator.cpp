@@ -195,8 +195,9 @@ void init_timings()
   time_of_last_vbl_interrupt=ACT;
 #endif
 
-
+#if !defined(SSE_INT_MFP_TIMERS_BASETIME)
   cpu_time_of_first_mfp_tick=ABSOLUTE_CPU_TIME;
+#endif
   shifter_cycle_base=ABSOLUTE_CPU_TIME;
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START___) //test...
   // We lose the vertical overscan at restart pretty often with this mod.

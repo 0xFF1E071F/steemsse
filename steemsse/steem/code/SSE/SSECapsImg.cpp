@@ -445,7 +445,7 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   ASSERT( drive==floppy_current_drive() );
 
   int side=Caps.SF314[drive].side;
-  ASSERT( side==!(psg_reg[PSGR_PORT_A]& BIT_0) );
+//  ASSERT( side==!(psg_reg[PSGR_PORT_A]& BIT_0) ); //elvira
   int track=Caps.SF314[drive].track;
   CapsTrackInfoT2 track_info; // apparently we must use type 2...
   track_info.type=1;

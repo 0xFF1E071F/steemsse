@@ -193,6 +193,7 @@ void TDebug::Vbl(){
   FrameInterrupts=0;
   FrameMfpIrqs=0;
 #endif  
+  //TRACE_OSD("hbi %d",nHbis);
   nHbis=0;
 }
 

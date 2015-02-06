@@ -458,7 +458,7 @@ inline void handle_timeout(int tn) {
   }
   int stage=(mfp_timer_timeout[tn]-ABSOLUTE_CPU_TIME); 
 
-#if defined(SSE_INT_MFP_TIMERS_WOBBLE)//no
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE)
   if(OPTION_PRECISE_MFP)
     stage-=MC68901.Wobble[tn]; //get the correct timing (no drift)
 #endif
@@ -490,7 +490,7 @@ inline void handle_timeout(int tn) {
 #endif
 #endif
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
-  MC68901.Wobble[tn]=rand()&1;
+  MC68901.Wobble[tn]=rand()&MFP_TIMERS_WOBBLE;
   new_timeout+=MC68901.Wobble[tn];
 #endif
   }
@@ -1002,7 +1002,7 @@ void event_scanline()
 #else
     >CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_HBL_IACK_FIX)
-    -12 //this was for BBC52, useless with E-Clock emulation (option 6250/6301)
+    -12 //this was for BBC52, useless now
 #endif
 #endif
     ){ 

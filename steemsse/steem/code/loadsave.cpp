@@ -202,6 +202,7 @@ int LoadSnapShotChangeTOS(Str NewROM,int NewROMVer)
             if(Ver==NewROMVer)
             {
               ROMFile=Path;
+              TRACE_INIT("preselect TOS %s\n",ROMFile.Text);
               return load_TOS(ROMFile); // 0 = OK
             }
           }
@@ -512,7 +513,10 @@ bool load_TOS(char *File)
     && !pasti_active
 #endif
     )
-      ROM_LPEEK(0x576)=0x4E714E71; // bsr +$e4 -> nop, "dma boot"
+  {
+    TRACE_INIT("STE tos boot patch\n");
+    ROM_LPEEK(0x576)=0x4E714E71; // bsr +$e4 -> nop, "dma boot"
+  }
 #endif
   return 0;
 }
