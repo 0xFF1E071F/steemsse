@@ -60,7 +60,9 @@
 #define TRICK_UNSTABLE 0x10000 // less specific
 #endif
 #define TRICK_LINE_PLUS_24 0x20000
-#define TRICK_NEO 0x40000//tests
+#define TRICK_LINE_PLUS_4 0x40000
+#define TRICK_LINE_PLUS_6 0x80000
+#define TRICK_NEO 0x100000//tests
 
 // register names in Atari doc / Steem variable
 #define HSCROLL shifter_hscroll
