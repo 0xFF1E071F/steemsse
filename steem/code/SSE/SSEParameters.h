@@ -28,17 +28,7 @@
 
 #if defined(SSE_SHIFTER_TRICKS) && defined(SSE_INT_MFP_RATIO)
 
-#if defined(SSE_DRIVE_SPEED_HACK)
-/* Still a hack in there... what's the right speed?
-   Value 8003000 is OK for:
-   MPS Golf, Ultimate 3d dots, hack or not (timing_4)
-   Delirious 3 trouble, but it also is as STW.
-   Antiques greets, same problem as STW, should be tested on STE
-*/
-#define HBL_PER_SECOND (8003000/Shifter.CurrentScanline.Cycles)
-#else
 #define HBL_PER_SECOND (CpuNormalHz/Shifter.CurrentScanline.Cycles)
-#endif
 
 //Frequency   50          60            72
 //#HBL/sec    15666.5 15789.85827 35809.14286
@@ -158,7 +148,7 @@ MIDI is 4 times faster than IKBD
 
 #if defined(SSE_CPU)
 
-//todo move clock here
+//todo move clock here?
 #endif
 
 
@@ -392,10 +382,11 @@ Far more on the ST.
 -> that's quite a lot of cycles and you still must add E-Clock jitter
    for HBL, VBL
 
-  cases to check those timings:
-  Reality is a Lie Schnusdie STE (VBI)
-  Forest, TCB (HBI)
-  TIMERB01.TOS; TIMERB03.TOS (MFP)
+   verified for MFP's timer B: TIMERB01.TOS; TIMERB03.TOS
+
+   Forest, TCB "need" 56 cycles for HBI
+   No reason to think it's less for VBI
+
 */
 
 #if defined(SSE_INT_MFP)
@@ -508,7 +499,7 @@ Far more on the ST.
 #if defined(SSE_INT_MFP_RATIO_STE3)
 #define  CPU_STE_PAL (CPU_STF_PAL)
 #elif defined(SSE_INT_MFP_RATIO_STE2)
-#define  CPU_STE_PAL 8020736//CPU_STF_PAL
+#define  CPU_STE_PAL 8020736
 #else
 #define  CPU_STE_PAL (CPU_STF_PAL+64) //64 for DMA sound!
 #endif
@@ -516,23 +507,35 @@ Far more on the ST.
 #define  MFP_CLK_TH_EXACT 2457600 // ( 2^15 * 3 * 5^2 )
 #endif
 
+// parameters are a compromise...
 
-#if defined(SSE_INT_MFP_TIMERS_WOBBLE)//no
-#define MFP_WRITE_LATENCY 10
-#else
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE)
 #define MFP_WRITE_LATENCY 4
+#else
+#define MFP_WRITE_LATENCY (4) // TEST10 
 #endif
+
+#define MFP_TIMERS_WOBBLE 1 //2
 
 #if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY)
+
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
-#define MFP_TIMER_SET_DELAY 8//10
+// it just breaks things in current build, maybe it doesn't exist
+
+#if defined(SSE_INT_MFP_RATIO_STE2)
+#define MFP_TIMER_SET_DELAY 8//10 // overscan/schnusdie...
 #else
-#define MFP_TIMER_SET_DELAY 10 //12 = Steem 3.2 
+#define MFP_TIMER_SET_DELAY 7 //  Schnusdie vs DSOTS (depends on clock?!)
 #endif
+
+#else
+#define MFP_TIMER_SET_DELAY 10 //12 = Steem 3.2 //Overscan demos STE vs TEST10
+#endif
+
 #endif
 
 #define MFP_IACK_LATENCY 28
-#define MFP_SPURIOUS_LATENCY (MFP_IACK_LATENCY) //?
+#define MFP_SPURIOUS_LATENCY MFP_WRITE_LATENCY//?? (MFP_IACK_LATENCY) //?
 
 
 
@@ -627,7 +630,7 @@ Far more on the ST.
 #if defined(SSE_INT_MFP_RATIO_STE2)
 
 #if CPU_STE_PAL==(8020736)
-#define STE_DMA_CLOCK 8020765//8020750
+#define STE_DMA_CLOCK 8021000 // 50065; MOLZ OK
 #elif CPU_STE_PAL==(8020736+512+512)
 #define STE_DMA_CLOCK 8021350
 #else

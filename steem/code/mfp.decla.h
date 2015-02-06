@@ -20,8 +20,10 @@ inline int abs_quick(int i) //was in emu.cpp (!)
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_TIMER_B_NO_WOBBLE)
 #define TB_TIME_WOBBLE (0) // no wobble for Timer B 
-#else
 // there's wobble, confirmed by TIMERB01.TOS; TIMERB03.TOS; could be 2?
+#elif defined(SSE_INT_MFP_TIMER_B_WOBBLE2)
+#define TB_TIME_WOBBLE (rand() & 2)
+#else
 #define TB_TIME_WOBBLE (rand() & 4)
 #endif
 
@@ -150,18 +152,30 @@ struct TMC68901IrqInfo {
 
 struct TMC68901 {
 
-#if defined(SSE_INT_MFP_IRQ_TIMING) // helps me debugging
+#if defined(SSE_INT_MFP_IRQ_TIMING)
 
   TMC68901();
-
+  void Init();
+  bool Irq;  
   char NextIrq; //-1 reset
   char LastIrq;
+  char IrqInService;
   BYTE LastRegisterWritten;
   BYTE LastRegisterFormerValue;
   BYTE LastRegisterWrittenValue;
+  /*
+  WORD IER;
+  WORD IMR;
+  WORD ISR;
+  */
+  BYTE Vector;
+  WORD IPR;
   int IrqTiming;
   int IackTiming;
-  int UpdateNextIrq();
+#ifdef SSE_BETA
+  void Update();
+#endif
+  int UpdateNextIrq(int start_from_irq=15,int at_time=-1);
   int WriteTiming;
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
   BYTE Wobble[4];
@@ -171,11 +185,15 @@ struct TMC68901 {
 #endif
 #if defined(SSE_INT_MFP_UTIL)
   TMC68901IrqInfo IrqInfo[16];
-  bool Enabled(int irq);
-  bool InService(int irq);
-  bool MaskOK(int irq);
-  bool Pending(int irq);
+  BYTE GetReg(int reg_num,int at_time=-1);
+  bool Enabled(int irq, int at_time=-1);
+  bool InService(int irq, int at_time=-1);
+  bool MaskOK(int irq, int at_time=-1);
+  bool Pending(int irq, int at_time=-1);
   bool TimerBActive();
+#endif
+#if defined(SSE_INT_MFP_RECORD_PENDING_TIMING)
+  int PendingTiming[16];
 #endif
 #if defined(SSE_INT_MFP_SPURIOUS)
   bool CheckSpurious(int irq);
