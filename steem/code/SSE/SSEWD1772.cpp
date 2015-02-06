@@ -262,24 +262,10 @@ BYTE TWD1772::IORead(BYTE Line) {
 #endif
     {
       // IP
-      if(floppy_track_index_pulse_active()
-        //&& CommandType()==1
-        )
+      if(floppy_track_index_pulse_active())
         STR|=FDC_STR_T1_INDEX_PULSE;
       else
         STR&=BYTE(~FDC_STR_T1_INDEX_PULSE);
-      
-
-
-      /////ASSERT(!(STR&2)||CommandType()==1&&CR!=0xD0&&CR!=0x90);
-#if defined(SSE_DISK_STW)
- //     if(SF314[drive].ImageType.Extension==EXT_STW)
- //       floppy_type1_command_active= CommandType()==1 ; // TODO
-#endif
-      
-
-
-
       // WP, SU
 #if defined(SSE_WD1772_REG2_B)
       if(StatusType)
@@ -481,7 +467,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
   case 0: // CR - could be blocked, can't record here :(
   {
 
-#if defined(SSE_DEBUG) && defined(SSE_DRIVE) && SSE_VERSION>=364
+#if defined(SSE_DEBUG) && defined(SSE_DRIVE) && defined(SSE_DISK_IMAGETYPE)//&& SSE_VERSION>=364
 #if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
 #endif
@@ -491,8 +477,8 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
         TRACE_LOG("\n");
 
       BYTE drive_char= (psg_reg[PSGR_PORT_A]&6)==6? '?' : 'A'+drive;
-      TRACE_LOG("FDC(%d) CR $%02X %c:%d STR %X TR %d CYL %d SR %d DR %d dma $%X #%d PC $%X\n",
-        SF314[drive].ImageType.Manager,io_src_b,drive_char,CURRENT_SIDE,STR,TR,SF314[drive].Track(),SR,DR,Dma.BaseAddress,Dma.Counter,old_pc);
+      TRACE_LOG("%d FDC(%d) CR $%02X %c:%d STR %X TR %d CYL %d SR %d DR %d dma $%X #%d PC $%X\n",
+        ACT,SF314[drive].ImageType.Manager,io_src_b,drive_char,CURRENT_SIDE,STR,TR,SF314[drive].Track(),SR,DR,Dma.BaseAddress,Dma.Counter,old_pc);
     }
 #endif
 
@@ -1206,6 +1192,9 @@ void TWD1772::OnIndexPulse(int id) {
       {
         TRACE_LOG("Format %c:%d-%d ",'A'+DRIVE,CURRENT_SIDE,CURRENT_TRACK);
         prg_phase=WD_TYPEIII_WRITE_DATA;
+#if defined(SSE_WD1772_F7_ESCAPE)
+        F7_escaping=false;
+#endif
         OnUpdate(); // hop
       }
       else
@@ -1265,14 +1254,19 @@ void TWD1772::OnIndexPulse(int id) {
 
 void TWD1772::OnUpdate() {
 
+#if defined(SSE_FLOPPY_EVENT2)
+  update_time=time_of_next_event+n_cpu_cycles_per_second; // we come here anyway
+#else
   //TRACE_LOG("wd1772 event cpu %d\n",ACT);
   update_time=ACT+n_cpu_cycles_per_second; // we come here anyway
+#endif
 
   if(!IMAGE_STW) // only for those images for now
   {
     //TRACE_LOG("bye!\n");
     return; 
   }
+
   switch(prg_phase)
   {
     
@@ -1301,7 +1295,11 @@ void TWD1772::OnUpdate() {
         DR=0;
         // imitate Steem native, eg My Socks are Weapons
         // not documented; only restore?
+#if defined(SSE_FLOPPY_EVENT2)
+        update_time=time_of_next_event+1024;
+#else
         update_time=ACT+1024; 
+#endif
       }    
       else
        OnUpdate(); // some recursion is always cool   
@@ -1377,7 +1375,11 @@ r1       r0            1772
         update_time=MsToCycles(3);
         break;
       }//sw
-      update_time+=ACT;
+#if defined(SSE_FLOPPY_EVENT2)
+      update_time+=time_of_next_event;
+#else
+      update_time+=ACT;; 
+#endif
       prg_phase=WD_TYPEI_STEP_PULSE;
     }
     break;
@@ -1396,7 +1398,11 @@ r1       r0            1772
         ImageSTW[DRIVE].LoadTrack(CURRENT_SIDE,SF314[DRIVE].Track());
       }
       prg_phase=WD_TYPEI_HEAD_SETTLE; 
+#if defined(SSE_FLOPPY_EVENT2)
+      update_time=time_of_next_event+ MsToCycles(15);
+#else
       update_time=ACT+ MsToCycles(15);
+#endif
       //OnUpdate();
     }
     else
@@ -1514,7 +1520,11 @@ r1       r0            1772
   case WD_TYPEIII_SPUNUP:
     prg_phase++;
     if(CR&CR_E) // head settle delay programmed
-      update_time=ACT+MsToCycles(15);
+#if defined(SSE_FLOPPY_EVENT2)
+      update_time=time_of_next_event+ MsToCycles(15);
+#else
+      update_time=ACT+ MsToCycles(15);
+#endif
     else
       OnUpdate(); // some recursion is always cool
     break;
@@ -1774,7 +1784,11 @@ r1       r0            1772
       n_format_bytes=4;
 #endif
     // analyse byte in for MFM markers
+#if defined(SSE_WD1772_F7_ESCAPE)
+    if(DR==0xF5 && !F7_escaping)
+#else
     if(DR==0xF5) //Write A1 in MFM with missing clock Init CRC
+#endif
     {
       Mfm.data=DSR=0xA1;
       Mfm.Encode(TWD1772MFM::FORMAT_CLOCK);
@@ -1788,7 +1802,11 @@ r1       r0            1772
       }
 #endif
     }
+#if defined(SSE_WD1772_F7_ESCAPE)
+    else if(DR==0xF6 && !F7_escaping)
+#else
     else if(DR==0xF6) //Write C2 in MFM with missing clock
+#endif
     {
       Mfm.data=DSR=0xC2;
       Mfm.Encode(TWD1772MFM::FORMAT_CLOCK);
@@ -1814,14 +1832,24 @@ r1       r0            1772
     $F7 -> $CD, $B4, CRC = 0
     $F7 -> $F7
     So the 2nd $F7 is really written $F7 on the disk.
+    Update:
+    In fact, a byte following F7 isn't interpreted as a format byte, that's why
+    the 2nd F7 is written F7, you can write F5, F6 the same way.
 */
+#if defined(SSE_WD1772_F7_ESCAPE)
+    else if(DR==0xF7 && !F7_escaping)
+#else
     else if(DR==0xF7 && CrcChecker.crc) //Write 2 CRC Bytes
+#endif
     {
 //      TRACE("write CRC %X %d %d\n",CrcChecker.crc,HIBYTE(CrcChecker.crc),LOBYTE(CrcChecker.crc));
       Mfm.data=DSR=CrcChecker.crc>>8; // write 1st byte
       DR=CrcChecker.crc&0xFF; // save 2nd byte
       CrcChecker.Add(Mfm.data);
       Mfm.Encode(TWD1772MFM::FORMAT_CLOCK);
+#if defined(SSE_WD1772_F7_ESCAPE)
+      F7_escaping=true;
+#endif
       Write();
 #ifdef SSE_DEBUG
       if(n_format_bytes)
@@ -1838,6 +1866,9 @@ r1       r0            1772
       Mfm.data=DSR=DR;
       Mfm.Encode(TWD1772MFM::FORMAT_CLOCK);
       CrcChecker.Add(DSR);
+#if defined(SSE_WD1772_F7_ESCAPE)
+      F7_escaping=false;
+#endif
       Write();
 #ifdef SSE_DEBUG
       if(n_format_bytes&&DR!=0xFE)
@@ -1865,7 +1896,6 @@ r1       r0            1772
 #endif
     prg_phase=WD_TYPEIII_WRITE_DATA; // go back
     break;
-
   }//sw
 }
 

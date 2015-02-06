@@ -28,6 +28,9 @@ EasyStr GetEXEDir();//#include <mymisc.h>//missing...
 
 #define LOGSECTION LOGSECTION_FDC
 
+#if defined(STEVEN_SEAGAL) && defined(SSE_VS2008)
+#pragma warning(disable : 4710)
+#endif
 
 TSF314::TSF314() {
   Init();
@@ -449,9 +452,11 @@ void TSF314::IndexPulse() {
     time_of_next_ip=ACT+n_cpu_cycles_per_second; // put into future
     return; 
   }
-
+#if defined(SSE_FLOPPY_EVENT2)
+  time_of_last_ip=time_of_next_event; // record timing
+#else
   time_of_last_ip=ACT; // record timing
-
+#endif
   // Make sure that we always end track at the same byte when R/W
   // Important for Realm of the Trolls
   if(!State.reading && !State.writing 
