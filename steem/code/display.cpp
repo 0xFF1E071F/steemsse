@@ -2692,7 +2692,8 @@ HRESULT SteemDisplay::D3DSpriteInit() {
 #if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO) 
 /*  Imitating a feature first seen in SainT, the screen is higher than it
     should, so that circles aren't perfect, squares are rectangles, etc.
-    Note: you could use some settings on your monitor to cancel this effect.
+    Note: you could use some settings on your monitor to cancel this effect,
+    but many magazine screenshots show it.
 */
 #if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION)
     if(OPTION_ST_ASPECT_RATIO)

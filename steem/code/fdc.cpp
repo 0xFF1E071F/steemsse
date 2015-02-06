@@ -2523,7 +2523,6 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
 #if defined(STEVEN_SEAGAL) && defined(SSE_DMA)// osd, fdcdebug
   Dma.UpdateRegs(); // for pasti, registers AFTER operation
 #endif
-
   pasti_update_time=ABSOLUTE_CPU_TIME+pPIOI->updateCycles; //SS smart...
   
   bool old_irq=(mfp_reg[MFPR_GPIP] & BIT_5)==0; // 0=irq on

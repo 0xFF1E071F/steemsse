@@ -820,7 +820,7 @@ when it does).
             int nShifts=DWORD(ABSOLUTE_CPU_TIME-MicroWire_StartTime)/CPU_CYCLES_PER_MW_SHIFT;
             if (nShifts>15){
               MicroWire_StartTime=0;
-#ifdef TEST02
+#ifdef SSE_SOUND_MICROWIRE_READ1
 /*
 ? How can i find out wether the Microwire interface is done ?
 

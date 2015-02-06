@@ -658,13 +658,27 @@ void GUIRefreshStatusBar() {
 #else
       sprintf(status_bar,"%s %s %s",sb_st_model,sb_tos,sb_ram);
 #endif 
-      // some options (6301, Pasti...)
+      // some options
+
 #if defined(SSE_IKBD_6301) && defined(SSE_GUI_STATUS_STRING_6301)
-//#if !defined(SSE_IKBD_6301_NOT_OPTIONAL) //no, rom may be missing
       if(HD6301EMU_ON)
-        strcat(status_bar," 6301");
-//#endif
+        strcat(status_bar," C1"); //saves som space
+#if defined(SSE_GUI_STATUS_STRING_68901)
+      else
+        strcat(status_bar," X");
 #endif
+#endif
+
+#if defined(SSE_GUI_STATUS_STRING_68901)
+      if(OPTION_PRECISE_MFP)
+        strcat(status_bar," C2");
+      else
+        strcat(status_bar," X");
+      if(OPTION_CPU_CLOCK)
+        strcat(status_bar,"!");
+#endif
+
+
       
 #if USE_PASTI && defined(SSE_GUI_STATUS_STRING_PASTI)//no
       if(hPasti && pasti_active
@@ -710,6 +724,11 @@ void GUIRefreshStatusBar() {
 #if defined(SSE_GUI_STATUS_STRING_HACKS)
       if(SSE_HACKS_ON)
         strcat(status_bar," #"); // which symbol?
+#endif
+
+#if defined(SSE_PRIVATE_BUILD)
+      if(SSE_TEST_ON)
+        strcat(status_bar," ##");
 #endif
 
 #if defined(SSE_GUI_STATUS_STRING_VSYNC)

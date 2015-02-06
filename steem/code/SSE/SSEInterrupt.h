@@ -87,7 +87,7 @@ inline void HBLInterrupt() {
 #if defined(SSE_CPU_E_CLOCK2)
   { 
     int current_cycles=ACT;
-    INSTRUCTION_TIME_ROUND(ECLOCK_AUTOVECTOR_CYCLE);
+    INSTRUCTION_TIME/*_ROUND*/(ECLOCK_AUTOVECTOR_CYCLE);
     BYTE e_clock_wait_states=
 #endif
 #ifdef SSE_CPU_E_CLOCK_DISPATCHER

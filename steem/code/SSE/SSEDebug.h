@@ -242,7 +242,7 @@ enum logsection_enum_tag {
 #define OSD_MASK1 (Debug.ControlMask[2])
 #define OSD_CONTROL_INTERRUPT               (1<<15)
 #define OSD_CONTROL_IKBD                  (1<<14)
-#define OSD_CONTROL_60HZ              (1<<13)
+#define OSD_CONTROL_IACK              (1<<13)
 
 #define OSD_MASK_CPU (Debug.ControlMask[3])
 #define OSD_CONTROL_CPUTRACE           (1<<15)
@@ -254,6 +254,7 @@ enum logsection_enum_tag {
 #define OSD_MASK2 (Debug.ControlMask[4])
 #define OSD_CONTROL_SHIFTERTRICKS           (1<<15)
 #define OSD_CONTROL_PRELOAD (1<<14)
+#define OSD_CONTROL_60HZ              (1<<13)
 
 #define OSD_MASK3 (Debug.ControlMask[5])
 #define OSD_CONTROL_DMASND                  (1<<15)
@@ -276,10 +277,12 @@ enum logsection_enum_tag {
 #define TRACE_CONTROL_LINEOFF (1<<12) //don't draw
 #define TRACE_CONTROL_ADJUSTMENT (1<<11) //-2, +2 corrections
 
+
 #define TRACE_MASK2 (Debug.ControlMask[7])
-#define TRACE_CONTROL_MFP (1<<15)
-#define TRACE_CONTROL_VBI (1<<14)
-#define TRACE_CONTROL_HBI   (1<<13)
+#define TRACE_CONTROL_ECLOCK (1<<15)
+#define TRACE_CONTROL_RTE (1<<14)
+//#define TRACE_CONTROL_HBI   (1<<13)
+
 
 #define TRACE_MASK3 (Debug.ControlMask[8])
 #define TRACE_CONTROL_FDCSTR (1<<15)
@@ -461,7 +464,31 @@ enum logsection_enum_tag {
 #endif
 #endif
 
+// TRACE_INT 3.7.0
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#ifdef __cplusplus // visible only to C++ objects
+#define TRACE_INT Debug.LogSection=LOGSECTION_INTERRUPTS, Debug.TraceLog //!
+#endif//C++
+#else
+#if defined(VC_BUILD) // OK for Unix?
+#define TRACE_INT(x) // no code left?
+#else
+#define TRACE_INT // some code left to the compiler
+#endif
+#endif
 
+// TRACE_MFP 3.7.0
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#ifdef __cplusplus // visible only to C++ objects
+#define TRACE_MFP Debug.LogSection=LOGSECTION_MFP, Debug.TraceLog //!
+#endif//C++
+#else
+#if defined(VC_BUILD) // OK for Unix?
+#define TRACE_MFP(x) // no code left?
+#else
+#define TRACE_MFP // some code left to the compiler
+#endif
+#endif
 
 // TRACE_OSD
 #if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DEBUG_MESSAGE)

@@ -794,16 +794,8 @@ always audible."
       )
     {
       if(dma_sound_mixer!=1)
-      {
-#if defined(SSE_SOUND_VOL2)//no
-        //TRACE("dma_sound_mixer %d\n",dma_sound_mixer);
-        if(!dma_sound_mixer)
-          v=PsgGain.FilterAudio(v,-12); // Pacemaker?
-        else
-#endif
-          v=0; // dma-only
-      }
-#if defined(SSE_SOUND_VOL) && !defined(SSE_SOUND_VOL2)
+        v=0; // dma-only
+#if defined(SSE_SOUND_VOL)
       else if(dma_sound_on_this_screen)
         v=PsgGain.FilterAudio(v,-6); 
 #endif
@@ -1734,7 +1726,13 @@ Bit 0 controls Replay off/on, Bit 1 controls Loop off/on (0=off, 1=on).
               dma_sound_output_countdown-=dma_sound_freq;
             }
           }
+          
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_DMA_CLOCK)
+          dma_sound_samples_countdown-=STE_DMA_CLOCK;
+#else
           dma_sound_samples_countdown-=n_cpu_cycles_per_second;
+#endif
+            
         }
       }
       dma_sound_on_this_screen=1;
@@ -1936,13 +1934,12 @@ void dma_sound_fetch()
 
       }
     }
-#ifdef TEST01
-    if(SSE_TEST_ON)
-      dma_sound_samples_countdown-=STE_DMA_CLOCK;
-    else
-#endif
+
+#ifdef SSE_SOUND_DMA_CLOCK
+    dma_sound_samples_countdown-=STE_DMA_CLOCK;
+#else
     dma_sound_samples_countdown-=n_cpu_cycles_per_second; 
-                            //SS putting back 8000000 sounds worse
+#endif
 
   }//while (dma_sound_samples_countdown>=0)
 
@@ -2398,23 +2395,12 @@ void psg_write_buffer(int abc,DWORD to_t)
   //buffer starts at time time_of_last_vbl
   //we've written up to psg_buf_pointer[abc]
   //so start at pointer and write to to_t,
-#ifdef TEST01
-  int psg_tonemodulo_2=0,psg_noisemodulo=0;
-  int psg_tonecountdown=0,psg_noisecountdown=0;
-  int psg_noisecounter=0;
-  double af=0,bf=0;
 
-#else
   int psg_tonemodulo_2,psg_noisemodulo;
   int psg_tonecountdown,psg_noisecountdown;
   int psg_noisecounter;
   double af,bf;
-#endif
-  bool psg_tonetoggle=true,psg_noisetoggle
-#ifdef TEST01
-  //  =true
-#endif
-    ;
+  bool psg_tonetoggle=true,psg_noisetoggle;
   int *p=psg_channels_buf+psg_buf_pointer[abc];
   DWORD t=(psg_time_of_last_vbl_for_writing+psg_buf_pointer[abc]);//SS where we are now
   to_t=max(to_t,t);//SS can't go backwards
@@ -2580,13 +2566,8 @@ void psg_write_buffer(int abc,DWORD to_t)
    // Enveloped
 
 //    DWORD est64=psg_envelope_start_time*64;
-#ifdef TEST01
-    int envdeath=0,psg_envstage=0,envshape=0;
-    int psg_envmodulo=0,envvol=0,psg_envcountdown=0;
-#else
     int envdeath,psg_envstage,envshape;
     int psg_envmodulo,envvol,psg_envcountdown;
-#endif
     PSG_PREPARE_ENVELOPE;
 // double &af,double &bf,int &psg_envmodulo,DWORD t,
 //  int &psg_envstage,int &psg_envcountdown,int &envdeath,int &envshape,int &envvol
@@ -2784,11 +2765,10 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
 #else
   DWORDLONG a64=(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl);
 #endif
-#ifndef TEST01__
+
   a64*=psg_n_samples_this_vbl; 
   a64/=cpu_cycles_per_vbl;
-#endif
-  //////ASSERT(psg_time_of_last_vbl_for_writing==cpu_time_of_last_vbl);//different scales
+
   DWORD t=psg_time_of_last_vbl_for_writing+(DWORD)a64;
   log(EasyStr("SOUND: PSG reg ")+reg+" changed to "+new_val+" at "+scanline_cycle_log()+"; samples "+t+"; vbl was at "+psg_time_of_last_vbl_for_writing);
   switch (reg){

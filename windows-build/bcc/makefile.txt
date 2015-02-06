@@ -14,14 +14,14 @@ ASMOBJDIR = $(OUT)
 # to avoid useless compile time.
 
 #3RDPARTYOBJS = $(OUT)\div68kCycleAccurate.obj $(OUT)\dsp.obj $(OUT)\6301.obj $(OUT)\AviFile.obj
-3RDPARTYOBJS = $(OUT)\div68kCycleAccurate.obj $(OUT)\dsp.obj $(OUT)\6301.obj
+3RDPARTYOBJS = $(OUT)\div68kCycleAccurate.obj $(OUT)\dsp.obj $(OUT)\6301.obj $(OUT)\AviFile.obj
 
 INCLUDEPATHS = $(STEEMROOT)\code;$(BCCROOT)\Include;$(INCDIR);$(3RDPARTYROOT);$(3RDPARTYROOT)\unrarlib;$(3RDPARTYROOT)\pasti;$(3RDPARTYROOT)\6301;$(3RDPARTYROOT)\d3d 
 
 ALLOBJS = $(ASMOBJDIR)\asm_draw.obj $(OUT)\emu.obj c0w32.obj $(OUT)\Steem.obj $(ASMOBJS) $(OUT)\helper.obj
 ALLOBJS = $(ALLOBJS) $(ASMOBJDIR)\asm_osd_draw.obj $(ASMINCOBJDIR)\asm_portio.obj
 ALLOBJS = $(ALLOBJS) $(OUT)\SSE.obj $(OUT)\SSEOption.obj $(OUT)\SSEMMU.obj $(OUT)\SSE6301.obj $(OUT)\SSECpu.obj $(OUT)\SSEDebug.obj 
-ALLOBJS = $(ALLOBJS) $(OUT)\SSEFrameReport.obj $(OUT)\SSEShifter.obj $(OUT)\SSESTF.obj $(OUT)\SSEVideo.obj
+ALLOBJS = $(ALLOBJS) $(OUT)\SSEFrameReport.obj $(OUT)\SSEShifter.obj $(OUT)\SSESTF.obj $(OUT)\SSEVideo.obj $(OUT)\SSEGlue.obj
 ALLOBJS = $(ALLOBJS) $(OUT)\SSEFloppy.obj $(OUT)\SSESTW.obj $(OUT)\SSEGhostDisk.obj 
 ALLOBJS = $(ALLOBJS) $(OUT)\SSEWD1772.obj $(OUT)\SSEDrive.obj $(OUT)\SSEDisk.obj 
 ALLOBJS = $(ALLOBJS) $(OUT)\SSEDma.obj $(OUT)\SSEYM2149.obj 
@@ -119,7 +119,7 @@ ALL: Steem.res Steem.obj helper.obj emu.obj SSE.obj SSEOption.obj \
   SSEMMU.obj SSE6301.obj SSECpu.obj SSEDebug.obj SSEFloppy.obj \
   SSEFrameReport.obj SSEShifter.obj SSESTF.obj SSEVideo.obj \
   SSESTW.obj SSEGhostDisk.obj SSEWD1772.obj SSEDrive.obj \
-  SSEDma.obj SSEDisk.obj SSEYM2149.obj \
+  SSEDma.obj SSEDisk.obj SSEYM2149.obj SSEGlue.obj \
   SSECapsImg.obj SSESCP.obj link
 
 link:
@@ -194,6 +194,9 @@ SSEYM2149.obj:
 
 SSECapsImg.obj:
            $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSECapsImg.obj $(STEEMROOT)\code\SSE\SSECapsImg.cpp
+
+SSEGlue.obj:
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSEGlue.obj $(STEEMROOT)\code\SSE\SSEGlue.cpp
 
 SSESCP.obj:
            $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSESCP.obj $(STEEMROOT)\code\SSE\SSESCP.cpp

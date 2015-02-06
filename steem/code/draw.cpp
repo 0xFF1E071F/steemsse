@@ -103,7 +103,9 @@ int scanline_drawn_so_far;
 int cpu_cycles_when_shifter_draw_pointer_updated;
 
 int left_border=BORDER_SIDE,right_border=BORDER_SIDE;
+#if !defined(SSE_VAR_RESIZE_370) //we use the border mask instead
 bool right_border_changed=0;
+#endif
 int overscan_add_extra;
 
 LPPIXELWISESCANPROC jump_draw_scanline[3][4][3],draw_scanline,draw_scanline_lowres,draw_scanline_medres;
@@ -1335,22 +1337,26 @@ bool draw_routines_init()
 /*
     Setting VBI at 0 then having one 444 cycles line is a hack
     but removing it isn't trivial.
-    Not working with this:
-    Panic.tos + bad auto.sts??? corruption somewhere
-    Maybe other timings are synced with "framecycle 0=VBI pending"
+    Now it mostly works, but it's troubling session resuming
+    and it fixes nothing AFAIK. Normally not defined.
 */
     ASSERT( SSE_INT_VBI_START==68 );
     evp->time=SSE_INT_VBI_START; // 68
 #if defined(SSE_STF) 
     if(ST_TYPE!=STE)
-      evp->time-=4; // fixes 36.15 Gen4 demo by Cakeman (no...)
+      evp->time-=4; 
 #endif
     evp->event=event_trigger_vbi;
     evp++;
-#endif  
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START)
     evp->time=512; 
+    evp->event=event_scanline;
+#elif defined(SSE_INT_HBL_EVENT) //problem, both can't be defined?
+    evp->event=event_hbl;
+    evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_50HZ;
+    //if(ST_TYPE==STE)
+    ///evp->time-=4;
+    evp++;
+    evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_50HZ;
     evp->event=event_scanline;
 #elif defined(SSE_INT_HBL_ONE_FUNCTION)
     evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_50HZ; 
@@ -1363,6 +1369,13 @@ bool draw_routines_init()
 #endif
     evp++;
     for (int y=1;y<313;y++){
+#if defined(SSE_INT_HBL_EVENT)
+      evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_50HZ + y*512;
+      //if(ST_TYPE==STE) evp->time-=8; 
+      evp->time-=4; 
+      evp->event=event_hbl;
+      evp++;
+#endif
       evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_50HZ + y*512;
       evp->event=event_scanline;
       evp++;
@@ -1377,7 +1390,7 @@ bool draw_routines_init()
         evp++;
       }
     }
-    evp->time=160256;
+    evp->time=160256; //SS check SSE_TIMINGS_FRAME_ADJUSTMENT
     evp->event=event_vbl_interrupt;
     evp++;
     evp->event=NULL;
@@ -1398,10 +1411,14 @@ bool draw_routines_init()
 #endif
     evp->event=event_trigger_vbi;
     evp++;
-#endif  
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START)
     evp->time=508;
+    evp->event=event_scanline;
+#elif defined(SSE_INT_HBL_EVENT)
+    evp->event=event_hbl;
+    evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_60HZ;
+    //if(ST_TYPE==STE)evp->time-=8;
+    evp++;
+    evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_60HZ;
     evp->event=event_scanline;
 #elif defined(SSE_INT_HBL_ONE_FUNCTION)
     evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_60HZ; 
@@ -1412,6 +1429,12 @@ bool draw_routines_init()
 #endif
     evp++;
     for(int y=1;y<263;y++){
+#if defined(SSE_INT_HBL_EVENT)
+      evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_60HZ + y*508;
+      //if(ST_TYPE==STE) evp->time-=8; 
+      evp->event=event_hbl;
+      evp++;
+#endif
       evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_60HZ + y*508;
       evp->event=event_scanline;
       evp++;
@@ -1448,7 +1471,14 @@ bool draw_routines_init()
     evp->event=event_trigger_vbi;
     evp++;
 #endif  
+
     for (int y=0;y < (SCANLINES_ABOVE_SCREEN_70HZ+400+SCANLINES_BELOW_SCREEN_70HZ);y++){
+#if defined(SSE_INT_HBL_EVENT)
+      evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_70HZ + y*SCANLINE_TIME_IN_CPU_CYCLES_70HZ;
+      //if(ST_TYPE==STE) evp->time-=8; 
+      evp->event=event_hbl;
+      evp++;
+#endif
       evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_70HZ + y*SCANLINE_TIME_IN_CPU_CYCLES_70HZ;
       evp->event=event_scanline;
       evp++;

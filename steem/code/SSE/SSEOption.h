@@ -50,6 +50,9 @@ struct TOption {
   unsigned int TestingNewFeatures:1;
   unsigned int BlockResize:1;
   unsigned int LockAspectRatio:1;
+  unsigned int FinetuneCPUclock:1;
+  unsigned int MC68901:1;
+
 #ifdef __cplusplus // visible only to C++ objects
   TOption();
   void Init();
@@ -98,6 +101,8 @@ extern struct TOption SSEOption;
 #define SSE_TEST_ON (SSEOption.TestingNewFeatures)
 #define OPTION_BLOCK_RESIZE (SSEOption.BlockResize)
 #define OPTION_LOCK_ASPECT_RATIO (SSEOption.LockAspectRatio)
+#define OPTION_CPU_CLOCK (SSEOption.FinetuneCPUclock)
+#define OPTION_PRECISE_MFP (SSEOption.MC68901)
 
 #else//!defined(SSE_SSE_OPTION_STRUCT)
 

@@ -277,7 +277,7 @@ static dr2_getb (offs)
 */
 
 #if defined(SSE_IKBD_6301_MOUSE_MASK)
-#define MOUSE_MASK 0xCCCCCCCC // fixes Jumping Jackson auto
+#define MOUSE_MASK 0xCCCCCCCC // fixes Jumping Jackson auto but breaks International Tennis
 #else
 #define MOUSE_MASK 0x33333333 // series of 11001100... for rotation
 #endif
@@ -330,12 +330,7 @@ static dr4_getb (offs)
     && (HD6301.MouseVblDeltaX || HD6301.MouseVblDeltaY) )
   {
 
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
-// if both are defined, Hacks makes the difference, for comparison (beta)
-    if(SSE_HACKS_ON)
-#endif
-    {
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)//yes: better than SainT now!
 
     int cycles_per_frame=HD6301_CLOCK/shifter_freq;   
 
@@ -354,7 +349,7 @@ static dr4_getb (offs)
         HD6301.click_x++;
       }
     }
-    
+
     if(HD6301.MouseVblDeltaY) // vertical
     {
       int clicks=abs(HD6301.MouseVblDeltaY);
@@ -369,53 +364,52 @@ static dr4_getb (offs)
         HD6301.click_y++;
       }
     }   
-    TRACE("Read mouse %d/%d,%d/%d\n",HD6301.click_x,HD6301.MouseVblDeltaX,HD6301.click_y,HD6301.MouseVblDeltaY);
-    }
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
-    else//don't forget this or the movement gets pretty erratic ;)
+
+
+    //TRACE("Read mouse %d/%d,%d/%d\n",HD6301.click_x,HD6301.MouseVblDeltaX,HD6301.click_y,HD6301.MouseVblDeltaY);
+
 #endif
-#endif
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED) || \
-      !defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
-    {
+
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED) //no
       
-      int n_chunk=HD6301_MOUSE_SPEED_CHUNKS; // 20 // 15
-      int cycles_per_chunk=HD6301_MOUSE_SPEED_CYCLES_PER_CHUNK;// 1250;// 500 
-      int movement,cycles_for_a_click;
-      
-      if(HD6301.MouseVblDeltaX) // horizontal
-      { 
-        int amx=abs(HD6301.MouseVblDeltaX);
-        movement=__min((int)amx,n_chunk-1);
-        cycles_for_a_click=cycles_per_chunk*(n_chunk-movement);
-        
-        if(cpu.ncycles-mouse_click_x_time>cycles_for_a_click)
-        {
-          if(HD6301.MouseVblDeltaX<0) // left
-            mouse_x_counter=_rotl(mouse_x_counter,1);
-          else  // right
-            mouse_x_counter=_rotr(mouse_x_counter,1);
-          mouse_click_x_time=cpu.ncycles;
-        }
-      }
-      
-      if(HD6301.MouseVblDeltaY) // vertical
+    int n_chunk=HD6301_MOUSE_SPEED_CHUNKS; // 20 // 15
+    int cycles_per_chunk=HD6301_MOUSE_SPEED_CYCLES_PER_CHUNK;// 1250;// 500 
+    int movement,cycles_for_a_click;
+
+    if(HD6301.MouseVblDeltaX) // horizontal
+    { 
+      int amx=abs(HD6301.MouseVblDeltaX);
+      movement=__min((int)amx,n_chunk-1);
+      cycles_for_a_click=cycles_per_chunk*(n_chunk-movement);
+
+      if(cpu.ncycles-mouse_click_x_time>cycles_for_a_click)
       {
-        int amy=abs(HD6301.MouseVblDeltaY);
-        movement=__min(amy,n_chunk-1);
-        cycles_for_a_click=cycles_per_chunk*(n_chunk-movement);
-        
-        if(cpu.ncycles-mouse_click_y_time>cycles_for_a_click)
-        {
-          if(HD6301.MouseVblDeltaY<0) // up
-            mouse_y_counter=_rotl(mouse_y_counter,1);
-          else  // down
-            mouse_y_counter=_rotr(mouse_y_counter,1);
-          mouse_click_y_time=cpu.ncycles;
-        }
-      }   
+        if(HD6301.MouseVblDeltaX<0) // left
+          mouse_x_counter=_rotl(mouse_x_counter,1);
+        else  // right
+          mouse_x_counter=_rotr(mouse_x_counter,1);
+        mouse_click_x_time=cpu.ncycles;
+      }
     }
+
+    if(HD6301.MouseVblDeltaY) // vertical
+    {
+      int amy=abs(HD6301.MouseVblDeltaY);
+      movement=__min(amy,n_chunk-1);
+      cycles_for_a_click=cycles_per_chunk*(n_chunk-movement);
+
+      if(cpu.ncycles-mouse_click_y_time>cycles_for_a_click)
+      {
+        if(HD6301.MouseVblDeltaY<0) // up
+          mouse_y_counter=_rotl(mouse_y_counter,1);
+        else  // down
+          mouse_y_counter=_rotr(mouse_y_counter,1);
+        mouse_click_y_time=cpu.ncycles;
+      }
+    }   
+
 #endif
+
   }
 
 /*  Joystick movements
@@ -433,6 +427,21 @@ static dr4_getb (offs)
       value|= joy0mvt | ( joy1mvt<<4);
       value=~value;
       //TRACE("stick %X\n",value);
+
+#if defined(SSE_IKBD_6301_MOUSE_MASK2)
+/*  Hack to have both Jumping Jackson-WNW and International Tennis working
+    It is unnecessary though as International Tennis (auto 373) is buggy and 
+    doesn't work right on real STE either. In Steem it will work when '6301'
+    isn't checked so there's the real hack.
+*/
+      if(SSE_HACKS_ON&&!(HD6301.MouseVblDeltaX||HD6301.MouseVblDeltaY))
+      {
+        mouse_x_counter=~MOUSE_MASK;
+        mouse_y_counter=~MOUSE_MASK;
+      }
+#endif
+
+
     }
   }  
 
@@ -446,7 +455,11 @@ static dr4_getb (offs)
 #endif
     )
 #endif
-    value = (value&(~0xF))  | (mouse_x_counter&3) | ((mouse_y_counter&3)<<2);
+
+  value = (value&(~0xF))  | (mouse_x_counter&3) | ((mouse_y_counter&3)<<2);
+
+
+
 
   iram[offs]=value;
   return value;

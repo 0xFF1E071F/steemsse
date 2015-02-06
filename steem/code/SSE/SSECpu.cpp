@@ -19,6 +19,7 @@ extern const char*exception_action_name[4];//={"read from","write to","fetch fro
 #endif
 #endif//#if defined(SSE_STRUCTURE_SSECPU_OBJ)
 
+#include "SSESTF.h"
 
 #if defined(SSE_CPU)
 
@@ -1128,11 +1129,7 @@ void TM68000::SetPC(MEM_ADDRESS ad) {
           }              
         }  
 #if defined(SSE_CPU_FETCH_80000A)
-        if(pc>=0x80000 && pc<0x3FFFFF
-#ifdef TEST03
-    //      && !(pc&1)
-#endif
-          )
+        if(pc>=0x80000 && pc<0x3FFFFF)
         {
           TRACE("fake fetching address for %x\n",pc);
           lpfetch=lpDPEEK(xbios2); 
@@ -1422,10 +1419,6 @@ FC2 FC1 FC0 Address Space
       TRACE_LOG("PC = %X\n\n",LPEEK(bombs*4));
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
       Debug.RecordInterrupt("BOMBS",bombs);
-#endif
-
-#ifdef TEST03
-     // if(LPEEK(bombs*4)&1) bombs--;
 #endif
 
       SET_PC(LPEEK(bombs*4)); // includes final prefetch
@@ -1892,7 +1885,6 @@ TM68000::SyncEClock(
   BYTE wait_states;
 #endif
 
-
 #if defined(SSE_CPU_E_CLOCK3)
   switch(cycles) {
 #else
@@ -1903,8 +1895,8 @@ TM68000::SyncEClock(
     wait_states=8;
 #if defined(SSE_INT_HBL_E_CLOCK_HACK)
     // pathetic hack for 3615GEN4 HMD #1, make it 4 cycles instead on HBI
-    // TEST16: jitter is 0, 4, 8 -> undef
-    if(dispatcher==ECLOCK_HBL&&SSE_HACKS_ON)
+    // TEST16: jitter is 0, 4, 8 -> we know it's not correct...
+    if(dispatcher==ECLOCK_HBL&&SSE_HACKS_ON&&ST_TYPE==STF)
       TRACE_LOG("ECLK 8->4\n");
     else
 #endif
@@ -1913,6 +1905,7 @@ TM68000::SyncEClock(
   case 4: 
     wait_states=4;
     break;
+  case 6:
   default: //6,8
     wait_states=0;
   }//sw
