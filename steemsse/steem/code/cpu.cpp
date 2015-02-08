@@ -2694,7 +2694,7 @@ void                              m68k_eori_b(){
     SR_CHECK_Z_AND_N_B
   }
 }
-
+//#undef SSE_CPU_ROUNDING_EORI
 void                              m68k_eori_w(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
@@ -2725,9 +2725,14 @@ void                              m68k_eori_w(){
 
       CHECK_STOP_ON_USER_CHANGE;
     }else exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
-  }else{
+  }
+//#undef SSE_CPU_ROUNDING_EORI
+  else{
 #if !defined(SSE_CPU_ROUNDING_EORI)
     INSTRUCTION_TIME(8);
+#endif
+#if defined(SSE_CPU_ROUNDING_EORI)
+    CPU_ABUS_ACCESS_READ; //oops, bug seen thanks to lowlife60
 #endif
     m68k_GET_IMMEDIATE_W;
 #if !defined(SSE_CPU_ROUNDING_EORI)
@@ -2750,8 +2755,19 @@ void                              m68k_eori_w(){
   }
 }
 //#undef SSE_CPU_LINE_0_TIMINGS
-
+//#undef SSE_CPU_ROUNDING_EORI
 void                              m68k_eori_l(){
+/*
+  .L :                              |             |               |
+    Dn            | 16(3/0)  0(0/0) |       np np |               | np       nn	
+    (An)          | 20(3/2)  8(2/0) |       np np |         nR nr | np nw nW    
+    (An)+         | 20(3/2)  8(2/0) |       np np |         nR nr | np nw nW    
+    -(An)         | 20(3/2) 10(2/0) |       np np | n       nR nr | np nw nW    
+    (d16,An)      | 20(3/2) 12(3/0) |       np np |      np nR nr | np nw nW    
+    (d8,An,Xn)    | 20(3/2) 14(3/0) |       np np | n    np nR nr | np nw nW    
+    (xxx).W       | 20(3/2) 12(3/0) |       np np |      np nR nr | np nw nW    
+    (xxx).L       | 20(3/2) 16(4/0) |       np np |   np np nR nr | np nw nW    
+*/
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
 #endif
@@ -6699,7 +6715,6 @@ void                              m68k_or_b_from_dN_or_sbcd(){
 
     this must be tested
 */
- // BRK(SBCD); //Hades Nebula, LoSTE screens STF, Super Off-Road Racer
 
 
 #ifdef SSE_DEBUG
@@ -6729,7 +6744,7 @@ void                              m68k_or_b_from_dN_or_sbcd(){
     SR_SET(SR_X+SR_C+SR_N);
   }
   m68k_DEST_B=(hi_nibble&0xF0)+(lo_nibble&0xF);
-  ASSERT( m68k_DEST_B==n ); // The Teller but it would load anyway
+  ASSERT( m68k_DEST_B==n ); // The Teller, Dark Castle
   if(!m68k_DEST_B)
     SR_SET(SR_Z)
 
