@@ -763,7 +763,6 @@ inline void Microwire(int channel,int &val) {
     It shouldn't be important that it be inline.
 */
 
-
 inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
   int &v,int &dv,int **source_p,WORD**lp_dma_sound_channel,
   WORD**lp_max_dma_sound_channel) {
@@ -2355,24 +2354,6 @@ void psg_noise_advance(int psg_noisemodulo,int &psg_noisecountdown,int &psg_nois
 
 #endif//f
 
-
-//#else//!inline2
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endif//inline2?
-
-
 /*  SS:This function renders one PSG channel until timing to_t.
     v3.7.0, when option 'P.S.G.' is checked, rendering is delayed
     until VBL time so that the unique table for all channels may be
@@ -2451,12 +2432,6 @@ void psg_write_buffer(int abc,DWORD to_t)
 /*  We don't render (compute volume) here, we record digital volume
     instead if option 'P.S.G.' is checked
     Volume is coded on 5 bit (fixed volume is shifted)
-
-
-      if( ! ((*source_p)&BIT_5) )
-        interpolate[abc]=index[abc]=0;
-
-
 */
           if(SSE_OPTION_PSG)
           {
@@ -2687,6 +2662,7 @@ DWORD psg_quantize_time(int abc,DWORD t)
 //		b=a-fmod(b,a);
   a=fmod(b,a);
   b-=a;
+  ASSERT(t>=psg_tone_start_time[abc]+DWORD(b)); //should be at least t??
   t=psg_tone_start_time[abc]+DWORD(b);
   return t;
 }
@@ -2780,9 +2756,14 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
       // Freq is double bufferred, it cannot change until the PSG reaches the end of the current square wave.
       // psg_tone_start_time[abc] is set to the last end of wave, so if it is in future don't do anything.
       // Overflow will be a problem, however at 50Khz that will take a day of non-stop output.
-      if (t>psg_tone_start_time[abc]){
-        t=psg_quantize_time(abc,t);
+#if defined(SSE_YM2149_QUANTIZE1) // fixes high pitch noise in YMT-Player 
         psg_write_buffer(abc,t);
+#endif
+      if (t>psg_tone_start_time[abc]){
+        t=psg_quantize_time(abc,t); //SS look at the assert there
+#if !defined(SSE_YM2149_QUANTIZE1)
+        psg_write_buffer(abc,t);
+#endif
         psg_tone_start_time[abc]=t;
       }
       break;
@@ -2848,6 +2829,7 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
     }
     case 13: //envelope shape
     {
+      //SS commented-out code was that way in released source
 /*
       DWORD abc_t[3]={t,t,t};
       for (int abc=0;abc<3;abc++){
