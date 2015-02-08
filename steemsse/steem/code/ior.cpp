@@ -477,10 +477,16 @@ when it does).
               ACIA_IKBD.overrun=ACIA_OVERRUN_NO;
               // IRQ should be off for receive, but could be set for tx empty interrupt
               ACIA_IKBD.irq=(ACIA_IKBD.tx_irq_enabled && ACIA_IKBD.tx_flag==0);
+#ifdef SSE_VS2008_WARNING_370
+#pragma warning(disable : 4805) 
+#endif
               LOG_ONLY( if (ACIA_IKBD.irq!=old_irq) log_to_section(LOGSECTION_IKBD,Str("IKBD: ")+
                 HEXSl(old_pc,6)+" - Read data ($"+HEXSl(ACIA_IKBD.data,2)+
                 "), changing ACIA IRQ bit from "+old_irq+" to "+ACIA_IKBD.irq); )
-              }
+#ifdef SSE_VS2008_WARNING_370
+#pragma warning(default : 4805) 
+#endif
+            }
               mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
               ior_byte=ACIA_IKBD.data;
           break;

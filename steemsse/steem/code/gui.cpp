@@ -1750,11 +1750,8 @@ EasyStr Translation(char *s)
   EasyStr UpperS=s;
   strupr(UpperS);
 
-#ifdef SSE_VS2012_INIT
-  char *EStart=TranslateUpperBuf-1,*EEnd = 0,*TStart,*TEnd;	// JLG VS2012 uninitialized
-#else
   char *EStart=TranslateUpperBuf-1,*EEnd,*TStart,*TEnd;
-#endif
+
   bool Match;
   do{
     EStart=strstr(EStart+1,UpperS);

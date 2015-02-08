@@ -741,15 +741,21 @@ void TJoystickConfig::Show()
 
     // Left Right Up Down
     //SS up
+#if defined(SSE_JOYSTICK_JUMP_BUTTON)
+    Win=CreateWindowEx(512,"Steem Button Picker","",
+                      WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | WS_DISABLED,
+                      x+90-35,y,65,23,Handle,(HMENU)(110+p*100),HInstance,NULL);
+#else
     Win=CreateWindowEx(512,"Steem Button Picker","",
                       WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | WS_DISABLED,
                       x+90,y,65,23,Handle,(HMENU)(110+p*100),HInstance,NULL);
+#endif
     SetWindowWord(Win,0,(WORD)Joy[BasePort+p].DirID[0]);
 
 #if defined(SSE_JOYSTICK_JUMP_BUTTON)
     Win=CreateWindowEx(512,"Steem Button Picker","",
                       WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | WS_DISABLED,
-                      x+90+70,y,65,23,Handle,(HMENU)(116+p*100),HInstance,NULL);
+                      x+90+70-35,y,65,23,Handle,(HMENU)(116+p*100),HInstance,NULL);
     SetWindowWord(Win,0,(WORD)Joy[BasePort+p].DirID[6]);
 #endif
 

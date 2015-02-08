@@ -28,6 +28,15 @@ TFrameEvents::TFrameEvents() {
   Init();
 } 
 
+#if defined(SSE_VS2008_INLINE_370)
+void TFrameEvents::Add(int scanline, int cycle, char type, int value) {
+  m_nEvents++;  // starting from 0 each VBL, event 0 is dummy 
+  if(m_nEvents<=0||m_nEvents>MAX_EVENTS) {BRK(bad m_nEvents); return;}
+  int total_cycles= (shifter_freq_at_start_of_vbl==50) ?512:508;// Shifter.CurrentScanline.Cycles;//512;
+  m_FrameEvent[m_nEvents].Add(scanline, cycle, type, value);
+}
+#endif
+
 
 #if defined(SSE_DEBUG_REPORT_SDP_ON_CLICK)
 MEM_ADDRESS TFrameEvents::GetSDP(int x,int guessed_scan_y) {

@@ -2614,6 +2614,8 @@ void TOptionBox::CreateSSEPage() {
   Win=CreateWindow("Button",T("Beta tests"),WS_CHILD | WS_TABSTOP |
     BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)7316,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,SSE_TEST_ON,0);
+#else
+  ASSERT(!SSE_TEST_ON);
 #endif
 
   y+=LineHeight+10;
@@ -2938,7 +2940,7 @@ Windows 2000	5.0
     BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)7323,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_PRECISE_MFP,0);
   ToolAddWindow(ToolTip,Win,
-  T("Chipset 1 - Check for a more precise emulation of the MFP."));
+  T("Chipset 2 - Check for a more precise emulation of the MFP."));
   y+=LineHeight;
 #endif
 

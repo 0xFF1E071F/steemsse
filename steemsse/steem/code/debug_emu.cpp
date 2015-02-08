@@ -605,4 +605,28 @@ int __stdcall debug_plugin_write_mem(DWORD ad,BYTE *buf,int len)
 }
 //---------------------------------------------------------------------------
 
+#if defined(SSE_BOILER_MONITOR_RANGE) && defined(SSE_VS2008_INLINE_370)
+/*  Adding range check: is ad between ad1 and ad2
+    We use the first 2 watches
+*/
+  bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adarr,bool wr) {
+  MEM_ADDRESS ad1=0,ad2=0;
+  for(int i=0;i<num;i++)
+  {
+    if(!ad1)
+      ad1=adarr[i];
+    else if(!ad2)
+    {
+      ad2=adarr[i];
+      break;
+    }
+  }
+  if(ad1&&ad2&& (ad1<ad2 && ad1<=ad && ad<=ad2
+    || ad1>ad2 && ad2<=ad && ad<=ad1))
+  {
+    return true;
+  }
+  return false;
+}
+#endif
 
