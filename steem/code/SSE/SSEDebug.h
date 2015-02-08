@@ -32,10 +32,6 @@
 #include <stdio.h>
 #endif
 
-#ifdef SSE_VS2012_WARNINGS
-#pragma warning(disable : 4002)		// too many parameter in macro TRACE
-#endif
-
 #if defined(SSE_DEBUG) // boiler build or ide debug build
 // general use debug variables;
 extern 
@@ -432,6 +428,7 @@ enum logsection_enum_tag {
 #else
 #if defined(VC_BUILD) // OK for Unix?
 #define TRACE_LOG(x) // no code left?
+#pragma warning(disable : 4002)
 #else
 #define TRACE_LOG // some code left to the compiler
 #endif
@@ -521,6 +518,7 @@ enum logsection_enum_tag {
 #endif
 #else //!SSE_DEBUG
 #define VERIFY(x) x
+#pragma warning(disable : 4552)
 #endif
 
 #if !defined(STEVEN_SEAGAL) || !defined(SSE_DEBUG) 

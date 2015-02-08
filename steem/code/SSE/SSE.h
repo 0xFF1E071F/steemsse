@@ -125,7 +125,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BETA //title, OSD, plus some testing - new features
 //#define SSE_BETA_BUGFIX // beta for just bugfixes
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
-//#define SSE_PRIVATE_BUILD // my "beta" option
+#define SSE_PRIVATE_BUILD // my "beta" option
 #endif
 #endif
 
@@ -165,16 +165,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #endif
 
-/*  When STEVEN_SEAGAL is defined, you can choose one set of switches by 
-    enabling SSE_SWITCHES_FEATURES or not.
-    It changes the order of definition, by nature (if enabled) or 
-    historically.
-*/
-
-//#define SSE_SWITCHES_FEATURES
-
-
-
 //////////////
 // COMPILER //
 //////////////
@@ -190,45 +180,26 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if _MSC_VER >= 1500 
 #define SSE_VS2008 // so that the VS2008 build compiles
+#define SSE_VS2008_INLINE_370
+#define SSE_VS2008_WARNING_370
 #endif
 
 #define SSE_DELAY_LOAD_DLL // can run without DLL//never worked with bcc???
-
-// DrCoolZic Conditional Flags //
-//
-// These flags protects all modifications done by DrCoolZic
-// DrCoolZic is only defined in STEVEN_SEAGAL 
-// This implies that you should define STEVEN_SEAGAL to het my modif
-//
-#define DR_COOL_ZIC
-#ifdef DR_COOL_ZIC
-
-// Following are flags for generic code modifications that should work 
-// regardless of the compiler
-#define SSE_VS2012_INIT		// correct uninitialized variables
-#define SSE_VS2012_POW		// First arg of pow function should be a real
-
-// Following flags are for successfull compilation with VS 2012
-// They only make sense if you are using VS2012 or above
-#if _MSC_VER > 1600
-#ifndef SSE_VS2012_INIT		// required
-#define SSE_VS2012_INIT
-#endif
-#ifndef SSE_VS2012_POW		// required
-#define SSE_VS2012_POW
-#endif
-#define SSE_VS2012_WARNINGS	// remove many VS2012 warnings
-#define SSE_VS2012_DELAYDLL	// remove some directives associated with delayed 
-                            //DLL not supported by VS2012
-#endif	// we are compiling for MS VS2012 or above
-
-#endif	// DR_COOL_ZIC
 
 #endif//w32
 
 #endif//SSE_COMPILER
 
 
+/*  When STEVEN_SEAGAL is defined, you can choose one set of switches by 
+    enabling SSE_SWITCHES_FEATURES or not.
+    It changes the order of definition, by nature (if enabled) or 
+    historically.
+    So it's double work (everything is defined twice) but well worth
+    it to track down bugs.
+*/
+
+#define SSE_SWITCHES_FEATURES
 
 #if defined(SSE_SWITCHES_FEATURES)
 
@@ -1180,6 +1151,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_GUI_STATUS_STRING)
 #define SSE_GUI_STATUS_STRING_6301
+#define SSE_GUI_STATUS_STRING_68901
 #define SSE_GUI_STATUS_STRING_ADAT
 #define SSE_GUI_STATUS_STRING_DISK_NAME
 #define SSE_GUI_STATUS_STRING_DISK_NAME_OPTION
@@ -1785,6 +1757,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_YM2149_FIX_TABLES // option P.S.G.
 #define SSE_YM2149_FIXED_VOL_TABLE // was SSE_YM2149_FIXED_VOL_FIX2 in v3.6.4
 #define SSE_YM2149_OPT1
+#define SSE_YM2149_QUANTIZE1
 #if defined(SSE_YM2149_FIX_TABLES)
 //#define SSE_YM2149_ENV_FIX1 //undef v3.7.0
 //#define SSE_YM2149_FIXED_VOL_FIX1 //undef v3.7.0
@@ -2363,6 +2336,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_FLOPPY     // DMA, FDC, Pasti, etc
 #define SSE_HACKS      // an option for dubious fixes
 #define SSE_SOUND      // YM2149, STE DMA sound, Microwire
+#define SSE_ROM        // Cartridge, TOS
 #define SSE_TOS        // The Operating System
 #ifdef UNIX
 #define SSE_UNIX       // Unix build of Steem SSE
@@ -2919,6 +2893,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_BLITTER)
 #define SSE_BLT_YCOUNT // 0=65536
 #endif
+
 #ifdef SSE_ROM
 #define SSE_CARTRIDGE  // ROM Cartridge slot
 #endif
@@ -3071,37 +3046,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif
 #endif//vid
-/////////////////////////////////
-// DrCoolZic Conditional Flags //
-/////////////////////////////////
-//
-// These flags protects all modifications done by DrCoolZic
-// DrCoolZic is only defined in STEVEN_SEAGAL 
-// This implies that you should define STEVEN_SEAGAL to het my modif
-//
-#define DR_COOL_ZIC
-#ifdef DR_COOL_ZIC
-
-// Following are flags for generic code modifications that should work 
-// regardless of the compiler
-#define SSE_VS2012_INIT		// correct uninitialized variables
-#define SSE_VS2012_POW		// First arg of pow function should be a real
-
-// Following flags are for successfull compilation with VS 2012
-// They only make sense if you are using VS2012 or above
-#if _MSC_VER > 1600
-#ifndef SSE_VS2012_INIT		// required
-#define SSE_VS2012_INIT
-#endif
-#ifndef SSE_VS2012_POW		// required
-#define SSE_VS2012_POW
-#endif
-#define SSE_VS2012_WARNINGS	// remove many VS2012 warnings
-#define SSE_VS2012_DELAYDLL	// remove some directives associated with delayed 
-                            //DLL not supported by VS2012
-#endif	// we are compiling for MS VS2012 or above
-
-#endif	// DR_COOL_ZIC
 
 #endif//353
 
@@ -3156,7 +3100,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #if defined(SSE_GUI_STATUS_STRING)
 #define SSE_GUI_STATUS_STRING_6301
-#define SSE_GUI_STATUS_STRING_68901
 #define SSE_GUI_STATUS_STRING_ADAT
 #define SSE_GUI_STATUS_STRING_DISK_NAME
 #define SSE_GUI_STATUS_STRING_DISK_NAME_OPTION
@@ -3722,7 +3665,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_ROUNDING_DBCC
 #define SSE_CPU_ROUDING_EA // no more m68k_get_effective_address(), more code
 #define SSE_CPU_ROUDING_EOR
-#define SSE_CPU_ROUNDING_EORI
+#define SSE_CPU_ROUNDING_EORI//
 #define SSE_CPU_ROUNDING_JSR
 #define SSE_CPU_ROUNDING_MOVE_FROM_SR
 #define SSE_CPU_ROUNDING_MOVE_TO_SR
@@ -4092,6 +4035,7 @@ Beta: not SSE_PRIVATE_BUILD
 #ifdef SSE_YM2149 
 #undef SSE_YM2149_ENV_FIX1 //my mistake
 #define SSE_YM2149_DELAY_RENDERING // so that we use table also for envelope
+#define SSE_YM2149_QUANTIZE1
 #if defined(SSE_YM2149_DELAY_RENDERING)  
 #undef SSE_YM2149_FIXED_VOL_FIX1 // former 'P.S.G.' option replaced with that
 #define SSE_YM2149_DELAY_RENDERING1 // use that table, interpolate...
@@ -4235,7 +4179,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_SCP //TODO
 //#define SSE_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
 
-//#undef SSE_WD1772_F7_ESCAPE
+
 
 #endif//beta
 

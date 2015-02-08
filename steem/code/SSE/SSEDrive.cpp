@@ -154,52 +154,6 @@ BYTE TSF314::Track() {
 
 ////////////////////////////////////// ADAT ///////////////////////////////////
 
-/*
-    Improvements in Steem's native emulation of .ST, .MSA, .DIM in "slow drive"
-    mode.
-    First a pack of hacks, now almost all legit fixes.
-
-
-from JLG, floppy disk gaps
-
-# bytes 
-Name                       9 Sectors  10 Sectors  11 Sectors     Byte
-Gap 1 Post Index                  60          60          10      4E
-
-Gap 2 Pre ID                    12+3        12+3         3+3     00+A1
-ID Address Mark                    1           1           1      FE
-ID                                 6           6           6
-Gap 3a Post ID                    22          22          22      4E 
-Gap 3b Pre Data                 12+3        12+3        12+3     00+A1
-Data Address Mark                  1           1           1      FB
-Data                             512         512         512
-CRC                                2           2           2
-Gap 4 Post Data                   40          40           1      4E
-
-Record bytes                     614         614         566
-
-Gap 5 Pre Index                  664          50          20      4E
-
-Total track                     6250        6250        6256
-
-
-1)  Note that the index position can be anywhere when the disk begins
-    to spin.
-    In Steem native, both the random starting position when the disk starts
-    spinning and the determined position when it's spun up are emulated by 
-    setting IP spots absolutely (hbl_couunt%FDC_HBLS_PER_ROTATION=0).
-
-2)  We do our computing using bytes, then convert the result into HBL, the
-    timing unit for drive operations in Steem. Some computation is done in 
-    HBL directly.
-
-    HBL precision is fine for most cases, but notice that it's roughly 
-    equivalent to 2byte precision at 50HZ.
-
-    The only known case where it makes a difference is MPS Golf.
-*/
-
-
 WORD TSF314::BytePositionOfFirstId() { // with +7 for reading ID //no!
   return ( PostIndexGap() + ( (nSectors()<11)?12+3+1:3+3+1) );
 }

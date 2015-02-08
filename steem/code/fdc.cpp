@@ -1350,17 +1350,6 @@ condition for interrupt is met the INTRQ line goes high signifying
 }
 //---------------------------------------------------------------------------
 #if defined(STEVEN_SEAGAL) && defined(SSE_FDC_MOTOR_OFF_COUNT_IP)
-/*
-JLG
-You should be careful before deselecting a drive. 
-The FDC will automatically turn off the motor after the 10 index pulse 
-(10 * 200ms) if no command has been received during this period.
- However the drive needs to be selected in order to the index pulse to 
- be conveyed to the FDC. This implies that you must wait for the motor
- to stop before deselecting the drive.
--> We try to emulate this here, assuming one drive in operation
-(we don't look at  the complication, juggling with drives!)
-*/
 
 void agenda_fdc_motor_flag_off(int revs_to_wait)
 {
@@ -1912,20 +1901,7 @@ instant_sector_access_loop:
     :16),MAKELONG(Part,Command)); 
 #else
 #if defined(STEVEN_SEAGAL) && defined(SSE_DRIVE_BYTES_PER_ROTATION)
-/*
-JLG: Note that the 3 1/2 FD are spinning at 300 RPM which implies a 200 ms total
- track time. As the MFM cells have a length of 4 µsec this gives a total of
- 50000 cells and therefore about 6250 bytes per track.
-
-300 RPM
-
-1 Rev = 1/300 min = 60/300 sec = 1/5 sec = 200 ms
-
-The speed affects the agenda frequency for each block of 16 bytes (DMA
-transfer).
-*/
     int bytes_per_second=TSF314::TRACK_BYTES*5;
-
 #else
     // 8000 bytes per revolution * 5 revolutions per second
     int bytes_per_second=8000*5;

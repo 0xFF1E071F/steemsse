@@ -368,7 +368,7 @@ extern void (*m68k_jump_get_source_l_not_a[8])();
     ioaccess=ioaccess & (IOACCESS_FLAG_DELAY_MFP | IOACCESS_INTERCEPT_OS2);                                   \
   }
 
-#if defined(SSE_CPU_POKE)
+#if defined(SSE_CPU_POKE)  && !defined(SSE_VS2008_INLINE_370)
 void m68k_poke_abus2(BYTE);
 void m68k_dpoke_abus2(WORD);
 void m68k_lpoke_abus2(LONG);
@@ -391,7 +391,10 @@ struct TM68000 {
   inline void InstructionTimeRound(int n);
   void Interrupt(MEM_ADDRESS ad);
   inline void PerformRte();
-  inline void PrefetchSetPC();
+#if SSE_VERSION<370
+  inline //not inlined anyway
+#endif
+    void PrefetchSetPC();
   inline void Process();
 #if defined(SSE_CPU_INLINE_READ_BWL)
   static inline void ReadB(MEM_ADDRESS addr);
@@ -452,8 +455,10 @@ struct TM68000 {
   WORD *PrefetchAddress; 
   WORD PrefetchedOpcode;
 #endif
-
-  inline void PrefetchIrc();
+#if !defined(SSE_VS2008_INLINE_370)
+  inline 
+#endif
+    void PrefetchIrc();
 #if !defined(SSE_CPU_ROUNDING2)
   inline void PrefetchIrcNoRound();
 #endif
@@ -511,6 +516,7 @@ this state, no further memory references are made."
 
 extern TM68000 M68000;
 
+#if !defined(SSE_VS2008_INLINE_370)
 
 void TM68000::PrefetchSetPC() { 
   // called by SetPC; we don't count timing here
@@ -552,6 +558,7 @@ void TM68000::PrefetchSetPC() {
 
 }
 
+#endif
 
 #define SET_PC(ad) M68000.SetPC(ad);
 
@@ -921,6 +928,8 @@ inline void TM68000::PerformRte() {
 
 #if defined(SSE_CPU_PREFETCH)
 
+#if !defined(SSE_VS2008_INLINE_370)
+// InstructionTimeRound(4); ended up not being inlined
 inline void TM68000::PrefetchIrc() {
 
 #if defined(SSE_DEBUG) && defined(SSE_CPU_PREFETCH_ASSERT)
@@ -969,7 +978,9 @@ inline void TM68000::PrefetchIrc() {
 
 }
 
-#if !defined(SSE_CPU_ROUNDING2)
+#endif
+
+#if !defined(SSE_CPU_ROUNDING2) //no more needed
 
 inline void TM68000::PrefetchIrcNoRound() { // the same except no rounding
 
@@ -1240,17 +1251,21 @@ exception vector.
 
 
 #if defined(SSE_CPU_PREFETCH)
-
+#ifdef SSE_DEBUG
+#pragma warning(disable : 4710) //inlining
+#endif
 inline void TM68000::RefetchIr() {
 //this is no fix, it was already in Steem 3.2
   ASSERT( IR==*(lpfetch+1) ); // detect cases Synth Dream Sound Demo II
-//  ASSERT( MEM_DIR==-1 );
+  ASSERT( MEM_DIR==-1 );
   IR=*(lpfetch-MEM_DIR); //needed for Synth Dream Sound Demo II!
 }
 #define REFETCH_IR  M68000.RefetchIr();
 #else
 #define REFETCH_IR
-
+#ifdef SSE_DEBUG
+#pragma warning(default : 4710)
+#endif
 #endif
 
 
@@ -1294,7 +1309,7 @@ inline void TM68000::Unstop() {
 
 #if defined(SSE_CPU_POKE)
 
-#if defined(DEBUG_BUILD)
+#if defined(SSE_VS2008_INLINE_370) || defined(DEBUG_BUILD)
 
 void m68k_poke_abus(BYTE x);
 void m68k_dpoke_abus(WORD x);
@@ -1411,7 +1426,11 @@ void m68k_poke(MEM_ADDRESS ad,BYTE x){
 #endif
   }
   else 
+#if defined(SSE_VS2008_INLINE_370) 
+    m68k_poke_abus(x);
+#else
     m68k_poke_abus2(x);
+#endif
 }
 
 
@@ -1435,7 +1454,11 @@ void m68k_dpoke(MEM_ADDRESS ad,WORD x){
 #endif
   }
   else
+#if defined(SSE_VS2008_INLINE_370) 
+    m68k_dpoke_abus(x);
+#else
     m68k_dpoke_abus2(x);
+#endif
 }
 
 
@@ -1460,7 +1483,11 @@ void m68k_lpoke(MEM_ADDRESS ad,LONG x){
 #endif
   }
   else
+#if defined(SSE_VS2008_INLINE_370)
+    m68k_lpoke_abus(x);
+#else
     m68k_lpoke_abus2(x);
+#endif
 }
 
 #endif//poke

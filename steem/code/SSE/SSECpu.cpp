@@ -1152,9 +1152,104 @@ void TM68000::SetPC(MEM_ADDRESS ad) {
 #if defined(SSE_BOILER_PSEUDO_STACK)
     Debug.PseudoStackCheck(ad) ;
 #endif
-    PrefetchSetPC();//PREFETCH_SET_PC
+    PrefetchSetPC();
 }
 
+#if defined(SSE_VS2008_INLINE_370)
+
+void TM68000::PrefetchSetPC() { 
+  // called by SetPC; we don't count timing here
+
+#if defined(SSE_CPU_FETCH_IO)
+  // don't use lpfetch for fetching in IO zone, use io_read: fixes Warp 
+  // original STX + Lethal Xcess Beta STX
+  if(pc>=MEM_IO_BASE && !(pc>=0xff8240 && pc<0xff8260))
+  {
+    prefetch_buf[0]=io_read_w(pc);
+    prefetch_buf[1]=io_read_w(pc+2);
+    TRACE("Set PC in IO zone %X\n",pc);
+    prefetched_2=true;
+    return;
+  }
+#endif
+#if defined(SSE_CPU_FETCH_80000A)
+  // don't crash, but the correct value would be 'dbus'
+  if(pc>himem && pc>=0x80000 && pc<0x3FFFFF)
+  {
+    prefetch_buf[0]=prefetch_buf[1]=0xFFFF; // default, incorrect?
+    prefetched_2=true;
+    TRACE("Set PC in empty zone %X\n",pc);
+    return;
+  }
+#endif
+  prefetch_buf[0]=*lpfetch;
+  prefetch_buf[1]=*(lpfetch+MEM_DIR); 
+  prefetched_2=true; // was false in Steem 3.2
+#if defined(SSE_CPU_PREFETCH_CALL)
+  if(CallPrefetch) 
+  {
+    ASSERT(PrefetchedOpcode==prefetch_buf[0]);
+    prefetch_buf[0]=PrefetchedOpcode;
+    CallPrefetch=FALSE;
+  }
+#endif
+  lpfetch+=MEM_DIR;
+
+}
+
+#endif
+
+#if defined(SSE_VS2008_INLINE_370)
+#define LOGSECTION LOGSECTION_CRASH
+void TM68000::PrefetchIrc() {
+
+#if defined(SSE_DEBUG) && defined(SSE_CPU_PREFETCH_ASSERT)
+  ASSERT(!prefetched_2); // strong, only once per instruction 
+#endif
+
+#if !defined(SSE_CPU_FETCH_IO2)
+  ASSERT( !(pc>=MEM_IO_BASE && !(pc>=0xff8240 && pc<0xff8260)) );
+#else 
+  if(pc>=MEM_IO_BASE && !(pc>=0xff8240 && pc<0xff8260))
+  {
+    IRC=io_read_w(pc); 
+    TRACE_LOG("IRC %X in IO zone %X\n",IRC,pc);
+  }
+  else
+#endif
+#if defined(SSE_CPU_FETCH_80000C)
+  if(pc>himem && pc>=0x80000 && pc<0x3FFFFF)
+  {
+    IRC=0xFFFF;
+    TRACE("Fetch IRC %X in empty zone %X\n",IRC,pc);
+  }
+  else
+#endif
+    IRC=*lpfetch;
+  prefetched_2=true;
+#if defined(SSE_CPU_PREFETCH_TIMING) // we count fetch timing here
+#if defined(SSE_DEBUG) && !(defined(_DEBUG) && defined(DEBUG_BUILD))
+  //ASSERT(!NextIrFetched); //strong
+  if(NextIrFetched)
+  {
+    TRACE_LOG("PC %X IR %X double prefetch?\n",pc,ir);
+#if defined(SSE_OSD_CONTROL)
+    if(OSD_MASK_CPU & OSD_CONTROL_CPUPREFETCH) 
+#endif
+      TRACE_OSD("IRC 2X FETCH"); // generally false alert at start-up
+  }
+  NextIrFetched=true;
+#endif
+#if defined(SSE_CPU_PREFETCH_TIMING_EXCEPT)
+  if(debug_prefetch_timing(IRD))
+    ; else
+#endif
+    InstructionTimeRound(4);
+#endif//SSE_CPU_PREFETCH_TIMING
+
+}
+
+#endif
 
 // VC6 won't inline this function
 
@@ -1513,10 +1608,9 @@ WORD TM68000::FetchForCall(MEM_ADDRESS ad) {
 
 #if defined(SSE_CPU_POKE)
 
+#if defined(SSE_VS2008_INLINE_370) 
 
-// TODO: only parts not treated already, but it's dangerous
-
-#if defined(DEBUG_BUILD)
+#elif defined(DEBUG_BUILD)
 
 NOT_DEBUG(inline) void m68k_poke_abus(BYTE x){
   abus&=0xffffff; // annoying that we must do this
@@ -1606,8 +1700,11 @@ NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x){
 #endif
 
 
-
+#if defined(SSE_VS2008_INLINE_370) 
+void m68k_poke_abus(BYTE x){
+#else
 void m68k_poke_abus2(BYTE x){
+#endif
   abus&=0xffffff;
   if(abus>=MEM_IO_BASE){
     if(SUPERFLAG)
@@ -1683,8 +1780,11 @@ void m68k_poke_abus2(BYTE x){
   }
 }
 
-
+#if defined(SSE_VS2008_INLINE_370) 
+void m68k_dpoke_abus(WORD x){
+#else
 void m68k_dpoke_abus2(WORD x){
+#endif
   abus&=0xffffff;
   if(abus&1) exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
   else if(abus>=MEM_IO_BASE){
@@ -1734,8 +1834,11 @@ void m68k_dpoke_abus2(WORD x){
   }
 }
 
-
+#if defined(SSE_VS2008_INLINE_370) 
+void m68k_lpoke_abus(LONG x){
+#else
 void m68k_lpoke_abus2(LONG x){
+#endif
   abus&=0xffffff;
   if(abus&1)exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
   else if(abus>=MEM_IO_BASE){
@@ -1905,7 +2008,6 @@ TM68000::SyncEClock(
   case 4: 
     wait_states=4;
     break;
-  case 6:
   default: //6,8
     wait_states=0;
   }//sw
