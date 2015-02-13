@@ -22,10 +22,7 @@ V3.6.0: all non 6301 true emu mods removed (ACIA + IKBD)
 #define EXT
 #define INIT(s) =s
 
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
-//extern "C" int ST_Key_Down[128];
-#else
+#if !defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
 EXT bool ST_Key_Down[128];
 #endif
 EXT int disable_input_vbl_count INIT(0);
@@ -1446,7 +1443,10 @@ void agenda_keyboard_replace(int) {
   if(HD6301EMU_ON) 
   {
     if (keyboard_buffer_length){ //temp still use those var?
-      if (!ikbd.send_nothing){
+#if !defined(SSE_IKBD_6301_SEND1) // bugfix v3.7
+      if (!ikbd.send_nothing) //no, not this one, could freeze true emu
+#endif
+      {
         keyboard_buffer_length--;
         ASSERT( keyboard_buffer_length>=0 );
 
@@ -1818,7 +1818,6 @@ void ikbd_reset(bool Cold)
   ASSERT( Cold || !HD6301EMU_ON );// !!! always //check this
 #endif
   agenda_delete(agenda_keyboard_reset);
-
 #if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_IRQ_DELAY)
   ikbd.timer_when_keyboard_info=0;
 #endif

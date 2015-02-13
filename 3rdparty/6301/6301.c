@@ -62,6 +62,12 @@ int CurrentParameter=0;
 int TotalParameters=0; // #parameters
 #endif
 
+#if defined(SSE_IKBD_6301_MOUSE_MASK3)
+unsigned int mouse_x_counter;
+unsigned int mouse_y_counter;
+#endif
+
+
 #if defined(SSE_IKBD_6301_VBL)
 int hd6301_vbl_cycles;
 #endif
@@ -156,6 +162,10 @@ hd6301_reset(int Cold) {
 #if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
   ExecutingInt=NOT_EXECUTING_INT;
 #endif
+
+  mouse_x_counter=MOUSE_MASK;
+  mouse_y_counter=MOUSE_MASK;
+
   cpu_start(); // since we don't use the command.c file
 }
 
