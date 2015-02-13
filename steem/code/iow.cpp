@@ -1471,7 +1471,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
     return 1;
   }
 */
-#if defined(SSE_DRIVE_SINGLE_SIDE_PASTI)
+#if defined(SSE_DRIVE_SINGLE_SIDE_PASTI)//no
           if(SSE_HACKS_ON 
            // && (SSEOption.SingleSideDriveMap&(floppy_current_drive()+1) ))
             && (SSEOption.SingleSideDriveMap&(
@@ -1502,10 +1502,19 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
           if ((old_val & (BIT_1+BIT_2))!=(io_src_b & (BIT_1+BIT_2))){
 
 #if defined(SSE_YM2149A)
+            // TODO not reliable
             YM2149.SelectedDrive=floppy_current_drive();
             YM2149.SelectedSide=floppy_current_side();
 #endif
-#if defined(SSE_YM2149B)
+
+
+#if defined(SSE_YM2149C)
+/*  turn on/off motor in drives
+    Fixes Delirious 3 STW and Realm of the Trolls STX init STW disc.
+*/
+            SF314[0].Motor( YM2149.SelectedDrive==0 && (fdc_str&0x80));
+            SF314[1].Motor( YM2149.SelectedDrive==1 && (fdc_str&0x80));
+#elif defined(SSE_YM2149B)
             if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE)
 #if defined(SSE_DRIVE_STATE)
               SF314[YM2149.SelectedDrive].State.motor=!!(fdc_str&0x80);
@@ -1513,6 +1522,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
               SF314[YM2149.SelectedDrive].motor_on=!!(fdc_str&0x80);
 #endif
 #endif
+
 
 #if !defined(SSE_DEBUG_TRACE_IDE) && defined(SSE_YM2149A)
 #if defined(SSE_YM2149_REPORT_DRIVE_CHANGE)||defined(SSE_BOILER_TRACE_CONTROL)

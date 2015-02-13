@@ -885,6 +885,7 @@ void TWD1772MFM::Encode(int mode) {
 /*  CRC logic.
     Some insights were gained thanks to the game Dragonflight, that 
     uses CRC tricks.
+    TODO: test on hardware
 */
 
 #if defined(SSE_DISK_STW)
@@ -977,7 +978,8 @@ void TWD1772::Motor(bool state) {
     STR&=~STR_MO;
   // only on currently selected drive, if any:
   if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE)
-    SF314[YM2149.SelectedDrive].Motor(state); 
+//    SF314[YM2149.SelectedDrive].Motor(state); 
+    SF314[DRIVE].Motor(state); 
   else TRACE_LOG("WD motor %d: no drive\n",state);
 }
 
@@ -1137,6 +1139,10 @@ void TWD1772::NewCommand(BYTE command) {
     else // D0, just stop motor in 9 rev
     {
       // no IRQ!
+#if defined(SSE_FDC_FORCE_INTERRUPT) 
+      if(InterruptCondition!=8)
+        Irq(false); // but could have to clear it (Wipe-Out)
+#endif
       prg_phase=WD_MOTOR_OFF;
       IndexCounter=10;
       InterruptCondition=0;
@@ -1749,6 +1755,7 @@ r1       r0            1772
       IndexCounter=1;
   //    TRACE_LOG("%d IP for read or write track\n",IndexCounter);
       prg_phase=WD_TYPEIII_IP_START;
+      ASSERT( SF314[DRIVE].State.motor );
     }
     break;
 
@@ -1775,11 +1782,11 @@ r1       r0            1772
     Drq(true);
     Read();
     break;
-    
+//#undef SSE_WD1772_F7_ESCAPE    
   case WD_TYPEIII_WRITE_DATA:  
     // The most interesting part, and novelty in ST emulation!
     Drq(true);
-#ifdef SSE_DEBUG // so we'll trace all written IDs
+#ifdef SSE_DEBUG_WRITE_TRACK_TRACE_IDS // so we'll trace all written IDs
     if((DR&0xFE)==0xFE)
       n_format_bytes=4;
 #endif
@@ -1794,7 +1801,7 @@ r1       r0            1772
       Mfm.Encode(TWD1772MFM::FORMAT_CLOCK);
       CrcChecker.Reset();
       Write();
-#ifdef SSE_DEBUG
+#ifdef SSE_DEBUG_WRITE_TRACK_TRACE_IDS
       if(n_format_bytes)
       {
         TRACE_LOG("$%x-",DSR);
@@ -1812,7 +1819,7 @@ r1       r0            1772
       Mfm.Encode(TWD1772MFM::FORMAT_CLOCK);
       CrcChecker.Add(Mfm.data);
       Write();
-#ifdef SSE_DEBUG
+#ifdef SSE_DEBUG_WRITE_TRACK_TRACE_IDS
       if(n_format_bytes)
       {
         TRACE_LOG("$%x-",DSR);
@@ -1851,7 +1858,7 @@ r1       r0            1772
       F7_escaping=true;
 #endif
       Write();
-#ifdef SSE_DEBUG
+#ifdef SSE_DEBUG_WRITE_TRACK_TRACE_IDS
       if(n_format_bytes)
       {
         TRACE_LOG("%d-",DSR);
@@ -1870,10 +1877,12 @@ r1       r0            1772
       F7_escaping=false;
 #endif
       Write();
-#ifdef SSE_DEBUG
+#ifdef SSE_DEBUG_WRITE_TRACK_TRACE_IDS
       if(n_format_bytes&&DR!=0xFE)
       {
         TRACE_LOG("%d-",DSR);
+        if(n_format_bytes==1)
+          TRACE_LOG("\n");
         n_format_bytes--;
       }
 #endif
@@ -1887,7 +1896,7 @@ r1       r0            1772
     CrcChecker.Add(Mfm.data);
     Mfm.Encode(TWD1772MFM::FORMAT_CLOCK);
     Write(); 
-#ifdef SSE_DEBUG
+#ifdef SSE_DEBUG_WRITE_TRACK_TRACE_IDS
     if(n_format_bytes)
     {
       TRACE_LOG("%d-",DSR);

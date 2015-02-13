@@ -118,7 +118,7 @@ bool TSF314::CheckGhostDisk(bool write) {
 
 
 void TSF314::Init() {
-
+//  TRACE("drive init\n");
 #if defined(SSE_DRIVE_SOUND)
   //TRACE("null %d sound buffer pointers\n",NSOUNDS);
   for(int i=0;i<NSOUNDS;i++)
@@ -132,11 +132,20 @@ void TSF314::Init() {
   SectorChecksum=0;
 #endif
 
+#if defined(SSE_DRIVE_INIT)
+
+#if defined(SSE_DRIVE_STATE)
+    State.motor=false;
+#else
+    motor_on=false;
+#endif
+    WD1772.Lines.motor=false;//MOVE
+
 #if defined(SSE_DRIVE_INDEX_PULSE)
   rpm=300; // could be changed in other version
-
   time_of_next_ip=0;//useful?
   time_of_last_ip=0;//useful?
+#endif
 #endif
 
 #if defined(SSE_DISK_IMAGETYPE) 
@@ -364,8 +373,6 @@ WORD TSF314::TrackGap() {
 #if defined(SSE_DISK_STW)
 
 
-#ifdef SSE_DISK_STW
-
 int TSF314::CyclesPerByte() {
 //? TODO
 #if defined(SSE_INT_MFP_RATIO) 
@@ -373,16 +380,11 @@ int TSF314::CyclesPerByte() {
 #else
   int cycles=8000000; // per second  
 #endif
-
-
   cycles/=rpm/60; // per rotation (300/60 = 5)
   cycles/=Disk[Id].TrackBytes; // per byte
   cycles_per_byte=cycles; // save
-  ASSERT( cycles==256 || shifter_freq!=50 );
   return cycles;
 }
-
-#endif
 
 
 #if defined(SSE_DRIVE_INDEX_PULSE)
@@ -397,20 +399,21 @@ int TSF314::CyclesPerByte() {
 
 void TSF314::IndexPulse() {
 
-  //TRACE("Drive IP mngr %d drive %d empty: %d motor %d\n",ImageType.Manager,Id,FloppyDrive[Id].Empty(),State.motor);
-
   ASSERT(Id==0||Id==1);
   
   if(ImageType.Manager!=MNGR_WD1772||FloppyDrive[Id].Empty()||!State.motor)
   {
+    TRACE_LOG("Manager %d Empty %d motor %d\n",ImageType.Manager,FloppyDrive[Id].Empty(),State.motor);
     time_of_next_ip=ACT+n_cpu_cycles_per_second; // put into future
     return; 
   }
+
 #if defined(SSE_FLOPPY_EVENT2)
   time_of_last_ip=time_of_next_event; // record timing
 #else
   time_of_last_ip=ACT; // record timing
 #endif
+
   // Make sure that we always end track at the same byte when R/W
   // Important for Realm of the Trolls
   if(!State.reading && !State.writing 
@@ -419,12 +422,11 @@ void TSF314::IndexPulse() {
 
   // Program next event, at next IP or in 1 sec (more?)
   if(State.motor)
-    // try to maintain speed constant (ACT may be off by some cycles)
-    //time_of_next_ip=time_of_next_ip + CyclesPerByte() * Disk[Id].TrackBytes;
-    // accept some cycles off
     time_of_next_ip=time_of_last_ip + CyclesPerByte() * Disk[Id].TrackBytes;
   else //as a safety, or it could hang //TODO
     time_of_next_ip=ACT+n_cpu_cycles_per_second; // put into future
+
+  TRACE_LOG("%c: IP at %d next at %d (%d cycles, %d ms)\n",Id,time_of_last_ip,time_of_next_ip,time_of_next_ip-time_of_last_ip,(time_of_next_ip-time_of_last_ip)/(n_cpu_cycles_per_second/1000));
 
   // send pulse to WD1772
   if(DRIVE==Id)
@@ -435,9 +437,7 @@ void TSF314::IndexPulse() {
 
 void TSF314::Motor(bool state) {
 /*  If we're starting the motor, we must program time of next IP.
-    For the moment, we use a random starting position.
-    If we're stopping the motor, just having the variable cleared
-    will stop Index Pulse being processed.
+    We start from last position or from a new random one.
 */
  
 #ifdef SSE_DEBUG
@@ -446,9 +446,34 @@ void TSF314::Motor(bool state) {
     TRACE_LOG("Drive %c: motor %s\n",'A'+Id,state?"on":"off");
   }
 #endif
-  if(!State.motor && state)
-    //time_of_next_ip=ACT + (rand()%Disk[Id].TrackBytes) * CyclesPerByte();
-    time_of_next_ip=ACT + (Disk[Id].TrackBytes-(Disk[Id].current_byte%Disk[Id].TrackBytes)) * CyclesPerByte();
+
+  if(ImageType.Manager!=MNGR_WD1772)
+    ;//TODO
+  else if(State.motor && !state) //stopping - record position
+    Disk[Id].current_byte=(BytePosition())%Disk[Id].TrackBytes; 
+  else if(!State.motor && state) // starting
+  {
+    WORD bytes_to_next_ip= (Disk[Id].current_byte<Disk[Id].TrackBytes) 
+      ? Disk[Id].TrackBytes-Disk[Id].current_byte : rand()%Disk[Id].TrackBytes;
+    time_of_next_ip=ACT + bytes_to_next_ip * CyclesPerByte();
+  }
+
+#if defined(SSE_DRIVE_IP_HACK)
+/*
+  Check time_of_next_ip, if there's none happening soon, stage one (hack)
+  coded for Realm of the Trolls STX but I think SSE_YM2149C is the real
+  fix; we keep it just in case there's another bug.
+*/
+  if(SSE_HACKS_ON && state && State.motor && ImageType.Manager==MNGR_WD1772
+    && (time_of_next_ip-ACT<0 || time_of_next_ip-ACT> Disk[Id].TrackBytes*CyclesPerByte()))
+  {
+    int new_time_of_next_ip=ACT+(rand()%Disk[Id].TrackBytes) * CyclesPerByte();
+    TRACE_LOG("ACT %d next IP %d diff %d %dms hack next IP %d\n",ACT,time_of_next_ip,time_of_next_ip-ACT,(time_of_next_ip-ACT)/8000,new_time_of_next_ip);
+    TRACE_OSD("IP BUG"); 
+    time_of_next_ip=new_time_of_next_ip;
+  }
+#endif
+
   State.motor=state;
 
 }
