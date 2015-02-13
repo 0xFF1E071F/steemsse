@@ -6,6 +6,7 @@
 #include "SSE6301.h"
 #include "SSEDebug.h"
 #include <mymisc.h>
+#include <easystr.h>
 extern EasyStr GetEXEDir();//when no SSE_OSD...
 #include <acia.h>
 #include <emulator.decla.h>
@@ -314,7 +315,10 @@ void THD6301::ResetChip(int Cold) {
     hd6301_reset(Cold);
   }
 #endif
-#if defined(SSE_IKBD_TRACE_CPU_READ)
+
+
+
+#if defined(SSE_IKBD_TRACE_CPU_READ________) // bad name!
 /*  It's not clear at all what should be done, so 'Hacks' serves as an
     option here. It made a difference for Overdrive Demo: going back to
     menu at some point, then not anymore (? v3.5.2)
@@ -326,6 +330,12 @@ void THD6301::ResetChip(int Cold) {
   if(SSE_HACKS_ON)
     ZeroMemory(ST_Key_Down,sizeof(ST_Key_Down));
 #endif  
+
+
+#if defined(SSE_IKBD_6301_STUCK_KEYS)
+  if(Cold)  // real cold
+    ZeroMemory(ST_Key_Down,sizeof(ST_Key_Down));
+#endif
 }
 
 

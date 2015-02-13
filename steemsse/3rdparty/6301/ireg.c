@@ -276,6 +276,7 @@ static dr2_getb (offs)
     Y# vertical movement
 */
 
+#if !defined(SSE_IKBD_6301_MOUSE_MASK3)
 #if defined(SSE_IKBD_6301_MOUSE_MASK)
 #define MOUSE_MASK 0xCCCCCCCC // fixes Jumping Jackson auto but breaks International Tennis
 #else
@@ -284,6 +285,7 @@ static dr2_getb (offs)
 
 static unsigned int mouse_x_counter=MOUSE_MASK;
 static unsigned int mouse_y_counter=MOUSE_MASK;
+#endif
 
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED) \
   || !defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
@@ -364,7 +366,6 @@ static dr4_getb (offs)
         HD6301.click_y++;
       }
     }   
-
 
     //TRACE("Read mouse %d/%d,%d/%d\n",HD6301.click_x,HD6301.MouseVblDeltaX,HD6301.click_y,HD6301.MouseVblDeltaY);
 

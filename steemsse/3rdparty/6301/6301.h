@@ -69,6 +69,17 @@ int hd6301_run_cycles(u_int cycles); // emulate
 int hd6301_load_save(int one_if_save, unsigned char *buffer); // for snaphot
 int hd6301_transmit_byte(u_char byte_in); // just passing through
 
+#if defined(SSE_IKBD_6301_MOUSE_MASK3)
+#if defined(SSE_IKBD_6301_MOUSE_MASK)
+#define MOUSE_MASK 0xCCCCCCCC // fixes Jumping Jackson auto but breaks International Tennis
+#else
+#define MOUSE_MASK 0x33333333 // series of 11001100... for rotation
+#endif
+extern unsigned int mouse_x_counter;
+extern unsigned int mouse_y_counter;
+#endif
+
+
 #if defined(SSE_IKBD_6301_VBL)
 extern int hd6301_vbl_cycles;
 #endif
