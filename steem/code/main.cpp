@@ -58,7 +58,8 @@ const char *stem_version_date_text=__DATE__ " - " __TIME__;
 const 
 #endif
 //char stem_window_title[]=WINDOW_TITLE; // in SSE.h //the [] for VS2008
-char stem_window_title[WINDOW_TITLE_MAX_CHARS]=WINDOW_TITLE;
+char stem_window_title[WINDOW_TITLE_MAX_CHARS];//=WINDOW_TITLE;
+
 #else
 const char *stem_window_title="Steem Engine";
 #endif
@@ -352,7 +353,43 @@ void FindWriteDir()
 bool Initialise()
 {
   FindWriteDir();
-
+#if defined(SSE_VERSION)
+  {
+    // build stem_version_text eg "3.7.0" - quite complicated for what it does!
+    char *pchar=(char*)stem_version_text + SSE_VERSION_TXT_LEN;
+    *pchar='\0'; //end of string
+    for(int version=SSE_VERSION;version;version/=10)
+    {
+      char digit[2]; // digit + null
+      itoa(version%10,(char*)&digit,10);
+      *(--pchar)=digit[0];
+      *(--pchar)='.';
+    }
+    pchar++;
+    memmove(stem_version_text,pchar,strlen(pchar)+1);
+    //TRACE("%s %d\n",stem_version_text,strlen((char*)stem_version_text));
+    
+    // build stem_window_title
+#if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
+#ifdef DEBUG_BUILD
+    strcpy((char*)stem_window_title,"Steem Debug ");
+    strcat((char*)stem_window_title,(char*)stem_version_text);
+    strcat((char*)stem_window_title,"B");
+#else
+    strcpy((char*)stem_window_title,"Steem Beta ");
+    strcat((char*)stem_window_title,(char*)stem_version_text);
+#endif
+#else // release
+#ifdef DEBUG_BUILD
+    strcpy((char*)stem_window_title,"Steem Debug ");
+    strcat((char*)stem_window_title,(char*)stem_version_text);
+#else
+    strcpy((char*)stem_window_title,"Steem SSE ");
+    strcat((char*)stem_window_title,(char*)stem_version_text);
+#endif
+#endif
+  }
+#endif
   runstate=RUNSTATE_STOPPED;
   DEBUG_ONLY( mode=STEM_MODE_INSPECT; )
 

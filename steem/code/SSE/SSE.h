@@ -109,6 +109,7 @@ Version for snapshot + Windows properties
 
 Beta: not SSE_PRIVATE_BUILD
 
+check snapshot Version (in LoadSave.h); rc\resource.rc
 
 */
 
@@ -125,7 +126,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BETA //title, OSD, plus some testing - new features
 //#define SSE_BETA_BUGFIX // beta for just bugfixes
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
-#define SSE_PRIVATE_BUILD // my "beta" option
+///#define SSE_PRIVATE_BUILD // my "beta" option
 #endif
 #endif
 
@@ -135,35 +136,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define NO_RAR_SUPPORT
 
 
-#if defined(SSE_BETA) //TODO check before release what will stay beta...
-
-#define SSE_VERSION_TXT "3.7.0" 
-#ifdef DEBUG_BUILD
-#define WINDOW_TITLE "Steem Debug 3.7.0B"
-#else
-#define WINDOW_TITLE "Steem Beta 3.7.0"
-#endif
-
-#elif defined(SSE_BETA_BUGFIX) // bugfixes (point release)
-
-#define SSE_VERSION_TXT "3.7.0" 
-#ifdef DEBUG_BUILD
-#define WINDOW_TITLE "Steem Debug 3.7.0B"
-#else
-#define WINDOW_TITLE "Steem Beta 3.7.0"
-#endif
-
-#else // release
-
-// check snapshot Version (in LoadSave.h); rc\resource.rc
-#define SSE_VERSION_TXT "3.7.0" 
-#ifdef DEBUG_BUILD
-#define WINDOW_TITLE "Steem Debug 3.7.0"
-#else
-#define WINDOW_TITLE "Steem SSE 3.7.0"
-#endif
-
-#endif
 
 //////////////
 // COMPILER //
