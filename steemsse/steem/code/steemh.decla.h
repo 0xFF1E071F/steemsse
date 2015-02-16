@@ -47,7 +47,7 @@ EXT BYTE stick[8];
 
 // Don't forget to update this in the resource file too!
 #if defined(STEVEN_SEAGAL)
-EXT const char *stem_version_text INIT(SSE_VERSION_TXT); // OSD + info box
+//EXT const char *stem_version_text INIT(SSE_VERSION_TXT); // OSD + info box
 #else
 EXT const char *stem_version_text INIT("3.2");
 #endif

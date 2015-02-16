@@ -205,6 +205,16 @@ FARPROC WINAPI MyLoadFailureHook(dliNotification dliNotify, DelayLoadInfo * pdli
 #define TIMING_INFO FRAME,scan_y,LINECYCLES
 
 
+/////////////
+// VERSION //
+/////////////
+
+#if defined(SSE_VERSION)
+
+#define SSE_VERSION_TXT_LEN 8// "3.7.0" +...
+extern char *stem_version_text[SSE_VERSION_TXT_LEN];
+#define WINDOW_TITLE stem_window_title
+#endif
 
 ///////////
 // VIDEO //
