@@ -129,7 +129,11 @@ EXT BYTE fdc_read_address_buffer[20];
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_DRIVE)
+#if SSE_VERSION>=370
+#define FDC_HBLS_PER_ROTATION  (ADAT?SF314[DRIVE].HblsPerRotation():(313*50/5))
+#else
 #define FDC_HBLS_PER_ROTATION  (SF314[DRIVE].HblsPerRotation()) 
+#endif
 #else
 // 5 revolutions per second, 313*50 HBLs per second
 #define FDC_HBLS_PER_ROTATION (313*50/5) 
@@ -324,7 +328,8 @@ void floppy_fdc_command(BYTE cm)
 {
   log(Str("FDC: ")+HEXSl(old_pc,6)+" - executing command $"+HEXSl(cm,2));
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_FDC_IGNORE_WHEN_NO_DRIVE_SELECTED)
+#if defined(STEVEN_SEAGAL) && defined(SSE_FDC_IGNORE_WHEN_NO_DRIVE_SELECTED)\
+  && defined(SSE_YM2149)
 /*  This was missing in Steem up to now but was in Hatari.
     Commands are ignored if no drive is currently selected, except
     for command Interrupt, which shouldn't need any drive.
@@ -343,7 +348,7 @@ void floppy_fdc_command(BYTE cm)
 
   if (fdc_str & FDC_STR_BUSY){
     
-    TRACE_LOG("Command while FDC busy\n");
+    //TRACE_LOG("Command while FDC busy\n");
 #if defined(STEVEN_SEAGAL) && defined(SSE_FDC_CHANGE_COMMAND_DURING_SPINUP)
 /*
   The doc states:
@@ -427,12 +432,6 @@ void floppy_fdc_command(BYTE cm)
         delay_exec=true; // Delay command until after spinup
       }
     }
-
-#if defined(SSE_FDC_FORCE_INTERRUPT_D4B)
-    if(ADAT&&cm==0xD4)
-      delay_exec=true;
-#endif
-
     fdc_str=FDC_STR_BUSY | FDC_STR_MOTOR_ON;
     fdc_spinning_up=int(delay_exec ? 2:1);
 #if defined(STEVEN_SEAGAL) && defined(SSE_DRIVE_MOTOR_ON)
@@ -519,11 +518,7 @@ On the WD1772 all commands, except the Force Interrupt Command,
 #endif
       WD1772.IndexCounter++;
 /////TRACE_LOG("agenda_fdc_spun_up %d \n",WD1772.IndexCounter);
-    if(WD1772.IndexCounter<6
-#if defined(SSE_FDC_FORCE_INTERRUPT_D4C)
-      && WD1772.CR!=0xD4
-#endif
-      )
+    if(WD1772.IndexCounter<6)
     {
       agenda_add(agenda_fdc_spun_up,FDC_HBLS_PER_ROTATION,do_exec);
       return;
@@ -1012,7 +1007,7 @@ CRC.
             fdc_str=FDC_STR_MOTOR_ON | FDC_STR_BUSY;
 
           }else{
-//            TRACE_LOG("SectorIdx %d nSects %d\n",SectorIdx,nSects);
+            TRACE_LOG("SectorIdx %d nSects %d\n",SectorIdx,nSects);
             floppy_irq_flag=FLOPPY_IRQ_ONESEC;
             fdc_str=FDC_STR_MOTOR_ON | FDC_STR_SEEK_ERROR | FDC_STR_BUSY;  //sector not found
           }
@@ -1246,7 +1241,8 @@ acknowledge Force Interrupt commands only between micro- instructions.
         agenda_delete(agenda_fdc_verify);
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_FDC_SPIN_UP_AGENDA)
-        agenda_delete(agenda_fdc_spun_up); // Holocaust/Blood real start
+        if(ADAT)//v3.7.0
+          agenda_delete(agenda_fdc_spun_up); // Holocaust/Blood real start
 #endif
         agenda_delete(agenda_fdc_finished);
         fdc_str=BYTE(fdc_str & FDC_STR_MOTOR_ON);
@@ -1409,7 +1405,9 @@ void agenda_fdc_motor_flag_off(int revs_to_wait)
 #else
   if(ADAT && revs_to_wait>0)
   {
+#if defined(SSE_YM2149)
     if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE) // one drive selected?
+#endif
       revs_to_wait--;
     agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION,revs_to_wait);
   }
@@ -1521,9 +1519,6 @@ void agenda_fdc_finished(int)
   log("FDC: Finished command, GPIP bit low.");
   floppy_irq_flag=FLOPPY_IRQ_NOW;
 
-#if defined(SSE_FDC_FORCE_INTERRUPT_D4D)
-  if(WD1772.InterruptCondition!=4 || WD1772.CR==0xD4)
-#endif
   mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,0); // Sets bit in GPIP low (and it stays low)
 
   fdc_str&=BYTE(~FDC_STR_BUSY); // Turn off busy bit
@@ -1731,7 +1726,7 @@ instant_sector_access_loop:
   if (SectorStage==0){
     if (floppy->SeekSector(floppy_current_side(),floppy_head_track[floppyno],fdc_sr,FromFormat)){
       // Error seeking sector, it doesn't exist
-      //TRACE_LOG("H%d T%d RNF %d\n",floppy_current_side(),floppy_head_track[floppyno],fdc_sr);
+      TRACE_LOG("H%d T%d RNF %d\n",floppy_current_side(),floppy_head_track[floppyno],fdc_sr);
       floppy_irq_flag=FLOPPY_IRQ_ONESEC;  //end command after 1 second
     }
 #ifdef ONEGAME
@@ -1772,6 +1767,7 @@ instant_sector_access_loop:
 
           if (fwrite(&Temp,1,1,f)==0){
             if (floppy_handle_file_error(floppyno,true,fdc_sr,PosInSector,FromFormat)){
+              TRACE_LOG("fwrite error\n");
               floppy_irq_flag=FLOPPY_IRQ_ONESEC;  //end command after 1 second
               break;
             }
@@ -1798,11 +1794,21 @@ instant_sector_access_loop:
 #if defined(STEVEN_SEAGAL) && defined(SSE_DMA_FIFO_NATIVE)
         if (fread(&Temp,1,1,f)==0){
           if (floppy_handle_file_error(floppyno,0,fdc_sr,PosInSector,FromFormat)){
+            TRACE_LOG("fread error\n");
             floppy_irq_flag=FLOPPY_IRQ_ONESEC;  //end command after 1 second
             break;
           }
         }
-        Dma.AddToFifo(Temp); // hey this works already, breaks nothing
+#if defined(SSE_DMA_FIFO_NATIVE2)
+/*  This was in Steem 3.2 and I forgot it when doing DMA FIFO.
+    bugfix International Sports Challenge-ICS fast drive mode 3.7.0
+    It must be placed here (and for "STW"), not in DMA object,
+    because pasti.dll clears dma_sector_count in advance.
+*/
+        if(DMA_ADDRESS_IS_VALID_W && dma_sector_count)
+#endif
+
+        Dma.AddToFifo(Temp); 
 #else
         if (DMA_ADDRESS_IS_VALID_W && dma_sector_count){
           lpDest=lpPEEK(dma_address);

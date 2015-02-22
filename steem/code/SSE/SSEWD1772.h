@@ -161,10 +161,10 @@ struct TWD1772 {
 #endif
 
 
-#if defined(SSE_FDC_FORCE_INTERRUPT)
+#if defined(SSE_FDC_FORCE_INTERRUPT) || defined(SSE_WD1772)
   BYTE InterruptCondition; // guessed
 #endif
-#if defined(SSE_FDC_INDEX_PULSE_COUNTER)
+#if defined(SSE_FDC_INDEX_PULSE_COUNTER) || defined(SSE_WD1772)
   BYTE IndexCounter; // guessed
 #endif
 

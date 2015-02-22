@@ -74,15 +74,22 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
     "STW",
 #endif  
-#if defined(SSE_TOS_PRG_AUTORUN)
+#if defined(SSE_TOS_PRG_AUTORUN__)
     "PRG",//not a disk, must be handled differently
 #endif
-#if defined(SSE_TOS_TOS_AUTORUN)
+#if defined(SSE_TOS_TOS_AUTORUN__)
     "TOS",//not a disk, must be handled differently
 #endif
-
     NULL)){
     ret=DISK_UNCOMPRESSED;
+#if defined(SSE_TOS_PRG_AUTORUN)
+  }else if (OPTION_PRG_SUPPORT && MatchesAnyString_I(Ext,"PRG",
+#if defined(SSE_TOS_TOS_AUTORUN)
+    "TOS",
+#endif
+    NULL)){
+    ret=DISK_UNCOMPRESSED;
+#endif
   }else if (MatchesAnyString_I(Ext,"STZ","ZIP",NULL)){
     ret=DISK_COMPRESSED;
 
@@ -1409,7 +1416,11 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
               (SSE_GHOST_DISK?MF_CHECKED:0),2027,T("Enable ghost disks for CTR-IPF-STX"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #endif
-
+#if defined(STEVEN_SEAGAL) && defined(SSE_TOS_PRG_AUTORUN) 
+            InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
+              (OPTION_PRG_SUPPORT?MF_CHECKED:0),2028,T("Run PRG and TOS files"));
+            InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
+#endif
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(This->AutoInsert2 ? MF_CHECKED:0),2016,T("Automatically Insert &Second Disk"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(This->HideBroken ? MF_CHECKED:0),2002,T("Hide &Broken Shortcuts"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(This->EjectDisksWhenQuit ? MF_CHECKED:0),2011,T("E&ject Disks When Quit"));
@@ -1918,8 +1929,12 @@ That will toggle bit x.
           TRACE_LOG("Option Ghost disk %d\n",SSE_GHOST_DISK);
           break;
 #endif
-
-
+#if defined(STEVEN_SEAGAL) && defined(SSE_TOS_PRG_AUTORUN) 
+        case 2028:
+          OPTION_PRG_SUPPORT=!OPTION_PRG_SUPPORT;
+          TRACE_LOG("Option PRG support %d\n",SSE_GHOST_DISK);
+          break;
+#endif
       }
       if (LOWORD(wPar)>=4000 && LOWORD(wPar)<5000){
         This->MenuTarget=LOWORD(wPar);

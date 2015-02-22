@@ -84,7 +84,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_FDC_BYTES ] = 0;
   //logsection_enabled[ LOGSECTION_IPF_LOCK_INFO ] = 0; //remove option
 #endif
-  logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 1;
+  logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 0;
 #endif
   logsection_enabled[ LOGSECTION_OPTIONS ] = 1; // no boiler control
 #endif
@@ -250,8 +250,9 @@ void TDebug::Trace(char *fmt, ...){
 #if defined(SSE_DEBUG_START_STOP_INFO)
 // A series of TRACE giving precious info at the start & end of emulation
 // forward
-
+#ifndef DISABLE_STEMDOS
 extern int stemdos_current_drive;
+#endif
 #if defined(SSE_SOUND_MICROWIRE)
 extern int dma_sound_bass,dma_sound_treble;
 #endif
@@ -291,8 +292,10 @@ void TDebug::TraceGeneralInfos(int when) {
       TRACE("; Disk A: %s",FloppyDrive[0].DiskName.c_str()); 
     if(num_connected_floppies==2 && FloppyDrive[1].DiskInDrive())
       TRACE("; Disk B: %s",FloppyDrive[1].DiskName.c_str()); 
+#ifndef DISABLE_STEMDOS
     if(!HardDiskMan.DisableHardDrives && stemdos_current_drive) // check
       TRACE("; HD ON");
+#endif
 #if defined(SSE_FDC)
     if(ADAT)
       TRACE("; ADAT");

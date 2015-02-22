@@ -451,8 +451,8 @@ void SoundStopInternalSpeaker()
 inline void CalcVChip(int &v,int &dv,int *source_p) {
   //CALC_V_CHIP
 
-#define NBITS 5
-#define proportion 10
+//#define NBITS 5
+//#define proportion 10
 
 #if defined(SSE_SOUND_FILTER_HATARI)
 /*  We add a filter based on Hatari code:
@@ -537,12 +537,7 @@ This YM2149 filter provides the characteristic Atari ST sound at
   else 
 #endif
   if (v!=*source_p || dv){                            
-#if 1 //for tests
-    v+=dv;             
-    dv-=(v-(*source_p))>> 3;        
-    dv*=13;           
-    dv>>=4;   
-#elif defined(ENABLE_VARIABLE_SOUND_DAMPING)   // defined() for mingw
+#if defined (DEBUG_BUILD) && defined(ENABLE_VARIABLE_SOUND_DAMPING)   // defined() for mingw
  // Boiler control, useless now (undef)
     v+=dv;             
     dv-=(v-(*source_p))*sound_variable_a >> 8;        
@@ -560,6 +555,17 @@ This YM2149 filter provides the characteristic Atari ST sound at
 
 inline void CalcVChip25Khz(int &v,int &dv,int *source_p) {
   //CALC_V_CHIP_25KHZ = low quality
+#if defined(SSE_SOUND_FILTER_HATARI)
+  if(sound_mode==SOUND_MODE_HATARI)
+  {
+    if(*source_p>v)
+      v=(3*(*source_p + dv) + (v<<1)) >> 3;
+    else
+      v = ((*source_p + dv) + (6*v)) >> 3;
+    dv=v;
+  }
+  else
+#endif
 #if defined(SSE_SOUND_FILTER_STF) 
 #if defined(SSE_SOUND_FILTER_STF5)
   if(sound_mode==SOUND_MODE_MONITOR)

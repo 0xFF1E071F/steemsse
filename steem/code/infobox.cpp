@@ -588,7 +588,8 @@ void TGeneralInfo::CreateReadmePage(int p)
     case INFOPAGE_HOWTO_CART: TextFile+="cart image howto.txt"; break;
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX13)
-    case INFOPAGE_FAQ: TextFile+=STEEM_SSE_FAQ; TextFile+=EXT_TXT; break;
+    case INFOPAGE_FAQ: 
+      TextFile+=STEEM_SSE_FAQ; TextFile+=EXT_TXT; break;
 #else
     case INFOPAGE_FAQ: TextFile+="faq.txt"; break;
 #endif
@@ -634,16 +635,22 @@ void TGeneralInfo::CreateReadmePage(int p)
     long nbytes=GetFileLength(f);
     char *text=(char*)malloc(nbytes);
     if(text)
+    {
 #elif defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX5)
-    char *text=(char*)malloc(64000);
+      char *text=(char*)malloc(64000);
 #else
-    char text[64000];
+      char text[64000];
 #endif
-    text[fread(text,1,64000,f)]=0;
-    fclose(f);
-    SendMessage(GetDlgItem(Handle,500),WM_SETTEXT,0,(LPARAM)text);
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX16)
+      text[fread(text,1,nbytes-1,f)]=0; //oops
+#else
+      text[fread(text,1,64000,f)]=0;
+#endif
+      fclose(f);
+      SendMessage(GetDlgItem(Handle,500),WM_SETTEXT,0,(LPARAM)text);
 #if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX5)
-    free(text);
+      free(text);
+  }
 #endif
   }
 

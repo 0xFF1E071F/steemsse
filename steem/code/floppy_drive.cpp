@@ -86,10 +86,10 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   bool STW=IsSameStr_I(Ext,DISK_EXT_STW);
 #endif
 #if defined(SSE_TOS_PRG_AUTORUN)
-  bool PRG=IsSameStr_I(Ext,"PRG");
+  bool PRG=OPTION_PRG_SUPPORT && IsSameStr_I(Ext,"PRG");
 #endif
 #if defined(SSE_TOS_TOS_AUTORUN)
-  bool TOS=IsSameStr_I(Ext,"TOS");
+  bool TOS=OPTION_PRG_SUPPORT && IsSameStr_I(Ext,"TOS");
 #endif
   
 
@@ -155,10 +155,10 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
               STW=has_extension(fn,DISK_EXT_STW); // in archive, makes less sense
 #endif
 #if defined(SSE_TOS_PRG_AUTORUN)
-              PRG=has_extension(fn,"PRG");
+              PRG=OPTION_PRG_SUPPORT && has_extension(fn,"PRG");
 #endif
 #if defined(SSE_TOS_TOS_AUTORUN)
-              TOS=has_extension(fn,"TOS");
+              TOS=OPTION_PRG_SUPPORT && has_extension(fn,"TOS");
 #endif
 
 

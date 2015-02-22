@@ -743,7 +743,13 @@ void LoadState(GoodConfigStoreFile *pCSF)
 
   log_to(LOGSECTION_INIT,"STARTUP: Updating debug GUI");
   debug_update_bkmon();
-  CheckMenuRadioItem(boiler_op_menu,1501,1503,1501+crash_notification,MF_BYCOMMAND);
+  CheckMenuRadioItem(boiler_op_menu,1501,
+#if defined(SSE_BOILER_EXCEPTION_NOT_TOS)
+    1504,
+#else
+    1503,
+#endif
+    1501+crash_notification,MF_BYCOMMAND);
   CheckMenuItem(boiler_op_menu,1514,MF_BYCOMMAND | int(trace_show_window ? MF_CHECKED:MF_UNCHECKED));
   CheckMenuItem(boiler_op_menu,1515,MF_BYCOMMAND | int(debug_monospace_disa ? MF_CHECKED:MF_UNCHECKED));
   CheckMenuItem(boiler_op_menu,1516,MF_BYCOMMAND | int(debug_uppercase_disa ? MF_CHECKED:MF_UNCHECKED));

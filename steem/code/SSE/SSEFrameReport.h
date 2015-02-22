@@ -8,7 +8,7 @@
 #include "SSEDebug.h"
 #endif
 
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK)
 /*  We use the new general fake io control masks, they are 16bit, but 
     only 8 bits should be used for the GUI.
     Higher bits also for the GUI.
@@ -27,7 +27,7 @@
 
 //mask 2
 #define FRAME_REPORT_MASK2 (Debug.ControlMask[1])
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK2)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK2)
 #define FRAME_REPORT_MASK_INT                      (1<<15) // for hbi, vbi, mfp
 #define FRAME_REPORT_MASK_BLITTER                  (1<<14)
 #define FRAME_REPORT_MASK_SHIFTER_TRICKS           (1<<13)
@@ -60,7 +60,7 @@ public:
   enum {MAX_EVENTS=210*32*2*2}; // too high?
   int TriggerReport; // set 2 to ask a full report, then it's set FALSE again
   TFrameEvents();
-#if !defined(SSE_VS2008_INLINE_370)
+#if !defined(SSE_INLINE_370)
   inline
 #endif
     void Add(int scanline, int cycle, char type, int value);
@@ -101,7 +101,7 @@ inline void SFrameEvent::Add(int scanline,int cycle, char type, int value) {
 
 extern int shifter_freq_at_start_of_vbl; // forward
 
-#if !defined(SSE_VS2008_INLINE_370)
+#if !defined(SSE_INLINE_370)
 inline void TFrameEvents::Add(int scanline, int cycle, char type, int value) {
   m_nEvents++;  // starting from 0 each VBL, event 0 is dummy 
   if(m_nEvents<=0||m_nEvents>MAX_EVENTS) {BRK(bad m_nEvents); return;}

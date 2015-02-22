@@ -71,6 +71,7 @@ void TOption::Init() {
   LockAspectRatio=0;
   FinetuneCPUclock=0;
   MC68901=1;
+  PRG_support=1;
 }
 
 #endif//#if defined(SSE_SSE_OPTION_STRUCT)

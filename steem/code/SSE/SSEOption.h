@@ -52,6 +52,7 @@ struct TOption {
   unsigned int LockAspectRatio:1;
   unsigned int FinetuneCPUclock:1;
   unsigned int MC68901:1;
+  unsigned int PRG_support:1;
 
 #ifdef __cplusplus // visible only to C++ objects
   TOption();
@@ -103,6 +104,7 @@ extern struct TOption SSEOption;
 #define OPTION_LOCK_ASPECT_RATIO (SSEOption.LockAspectRatio)
 #define OPTION_CPU_CLOCK (SSEOption.FinetuneCPUclock)
 #define OPTION_PRECISE_MFP (SSEOption.MC68901)
+#define OPTION_PRG_SUPPORT (SSEOption.PRG_support)
 
 #else//!defined(SSE_SSE_OPTION_STRUCT)
 

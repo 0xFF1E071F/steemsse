@@ -378,7 +378,8 @@ void intercept_xbios()
     emudetect_called=true;
     emudetect_init();
     M68K_PERFORM_RTE(;);  //don't need to check interrupts because sr won't actually have changed
-  }else if (m68k_dpeek(sp)==23 && stemdos_intercept_datetime){ // Get clock time
+  }
+  else if (m68k_dpeek(sp)==23 && stemdos_intercept_datetime){ // Get clock time
     time_t timer=time(NULL);
     struct tm *lpTime=localtime(&timer);
     r[0]=TMToDOSDateTime(lpTime);
@@ -395,6 +396,16 @@ void intercept_xbios()
     }
 */
   }
+#define SSE_TOS_RANDOM //?
+#if defined(STEVEN_SEAGAL) && defined(SSE_TOS_RANDOM)
+  //Random() returns a 24 bit random number
+  else if (m68k_dpeek(sp)==17)// && SSE_HACKS_ON) 
+  {
+    TRACE_OSD("RND");
+//    r[0]=rand();
+  //  M68K_PERFORM_RTE(;);  //don't need to check interrupts because sr won't actually have changed
+  }
+#endif
 }
 
 #undef LOGSECTION
@@ -477,7 +488,7 @@ void ACIA_Reset(int nACIA,bool Cold)
 #endif
     }
   }
-  else
+//////  else//3.7
 #endif//6301
   if (Cold==0) mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
 }

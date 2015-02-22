@@ -542,7 +542,6 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
       }
 #endif//sound
 
-	////ASSERT(SF314[drive].ImageType.Manager==MNGR_STEEM);
       // Steem's native and WD1772 managers
           ////if(manager==MNGR_STEEM)
 #if defined(SSE_DISK_IMAGETYPE)
@@ -556,7 +555,6 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #endif
     break;
   }
-
 
   case 1: // TR
 #if defined(SSE_BOILER_TRACE_CONTROL)

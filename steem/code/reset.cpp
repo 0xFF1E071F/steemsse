@@ -172,6 +172,9 @@ void power_on()
     floppy_head_track[floppyno]=0;
 #if defined(STEVEN_SEAGAL) && defined(SSE_DRIVE)
     SF314[floppyno].Id=floppyno;
+#if defined(SSE_DRIVE_INIT)
+    SF314[floppyno].Init();
+#else
 #if defined(SSE_DRIVE_MOTOR_ON)
 #if defined(SSE_DRIVE_STATE)
     SF314[floppyno].State.motor=false;
@@ -182,7 +185,7 @@ void power_on()
     SF314[floppyno].rpm=300; // temp
     WD1772.Lines.motor=false;
 #endif
-
+#endif
 #endif
 #endif
 

@@ -14,9 +14,14 @@ intercepting ST OS calls and translating them to PC OS calls.
 #define EXT
 #define INIT(s) =s
 
+
+
 EXT bool mount_flag[26];
 EXT EasyStr mount_path[26];
 EXT bool stemdos_comline_read_is_rb INIT(0);
+
+#ifndef DISABLE_STEMDOS
+
 EXT int stemdos_boot_drive INIT(2);
 EXT bool stemdos_intercept_datetime INIT(0);
 
@@ -54,6 +59,7 @@ short stemdos_save_sr;
 
 int stemdos_current_drive;
 
+#endif
 
 #undef EXT
 #undef INIT
@@ -115,6 +121,7 @@ int stemdos_get_boot_drive()
   bool NoControl=true;
   if (CutDisableKey[VK_CONTROL]==0) NoControl=(GetKeyState(VK_CONTROL)<0)==0;
   if (FloppyDrive[0].DiskInDrive() && NoControl) return 0;
+
 #if defined(SSE_TOS_PRG_AUTORUN)
   if(SF314[0].ImageType.Extension!=EXT_PRG 
 #if defined(SSE_TOS_TOS_AUTORUN)
@@ -126,11 +133,11 @@ int stemdos_get_boot_drive()
 #endif
 
 #if defined(SSE_TOS_PRG_AUTORUN)
-  if(SF314[0].ImageType.Extension==EXT_PRG
+  if((SF314[0].ImageType.Extension==EXT_PRG
 #if defined(SSE_TOS_TOS_AUTORUN)
     || SF314[0].ImageType.Extension==EXT_TOS 
 #endif
-    )
+    )&& OPTION_PRG_SUPPORT)
     return AUTORUN_HD;
 #endif
 
@@ -1805,6 +1812,7 @@ void stemdos_intercept_trap_1()
       log(EasyStr("STEMDOS: Mfree($")+HEXSl(m68k_lpeek(sp+2),6)+") called at address $"+HEXSl(old_pc,6));
       return;
     }case 0x4A:{
+//SS Mshrink()
       log(EasyStr("STEMDOS: SetBlock(0, $")+HEXSl(m68k_lpeek(sp+4),6)+", "+m68k_lpeek(sp+8)+") called at address $"+HEXSl(old_pc,6));
       return;
     }case 0x20:{ //Super

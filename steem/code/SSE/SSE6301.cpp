@@ -96,7 +96,7 @@ void THD6301::Init() { // called in 'main'
     }
     else 
     {
-//      printf("6301 rom error %s %d %d %d\n",romfile.Text,HD6301_OK,Initialised,ram);
+     // printf("6301 rom error %s %d %d %d\n",romfile.Text,HD6301_OK,Initialised,ram);
       HD6301_OK=Initialised=0;
    //   if(ram)
        // free(ram);//linux: no direct access
@@ -315,22 +315,6 @@ void THD6301::ResetChip(int Cold) {
     hd6301_reset(Cold);
   }
 #endif
-
-
-
-#if defined(SSE_IKBD_TRACE_CPU_READ________) // bad name!
-/*  It's not clear at all what should be done, so 'Hacks' serves as an
-    option here. It made a difference for Overdrive Demo: going back to
-    menu at some point, then not anymore (? v3.5.2)
-    It's also unclear whether we should do it for 'true' or 'fake' emu.
-    Overdrive Demo: when you exit a demo screen, eg 'Oh No', by pressing the
-    spacebar, the IKBD is reset. If the program receives the break code for
-    spacebar ($B9) before the $F1, it will stop responding to IKBD input.
-*/
-  if(SSE_HACKS_ON)
-    ZeroMemory(ST_Key_Down,sizeof(ST_Key_Down));
-#endif  
-
 
 #if defined(SSE_IKBD_6301_STUCK_KEYS)
   if(Cold)  // real cold

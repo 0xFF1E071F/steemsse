@@ -368,7 +368,7 @@ extern void (*m68k_jump_get_source_l_not_a[8])();
     ioaccess=ioaccess & (IOACCESS_FLAG_DELAY_MFP | IOACCESS_INTERCEPT_OS2);                                   \
   }
 
-#if defined(SSE_CPU_POKE)  && !defined(SSE_VS2008_INLINE_370)
+#if defined(SSE_CPU_POKE)  && !defined(SSE_INLINE_370)
 void m68k_poke_abus2(BYTE);
 void m68k_dpoke_abus2(WORD);
 void m68k_lpoke_abus2(LONG);
@@ -455,7 +455,7 @@ struct TM68000 {
   WORD *PrefetchAddress; 
   WORD PrefetchedOpcode;
 #endif
-#if !defined(SSE_VS2008_INLINE_370)
+#if !defined(SSE_INLINE_370)
   inline 
 #endif
     void PrefetchIrc();
@@ -516,7 +516,7 @@ this state, no further memory references are made."
 
 extern TM68000 M68000;
 
-#if !defined(SSE_VS2008_INLINE_370)
+#if !defined(SSE_INLINE_370)
 
 void TM68000::PrefetchSetPC() { 
   // called by SetPC; we don't count timing here
@@ -928,7 +928,7 @@ inline void TM68000::PerformRte() {
 
 #if defined(SSE_CPU_PREFETCH)
 
-#if !defined(SSE_VS2008_INLINE_370)
+#if !defined(SSE_INLINE_370)
 // InstructionTimeRound(4); ended up not being inlined
 inline void TM68000::PrefetchIrc() {
 
@@ -1309,7 +1309,7 @@ inline void TM68000::Unstop() {
 
 #if defined(SSE_CPU_POKE)
 
-#if defined(SSE_VS2008_INLINE_370) || defined(DEBUG_BUILD)
+#if defined(SSE_INLINE_370) || defined(DEBUG_BUILD)
 
 void m68k_poke_abus(BYTE x);
 void m68k_dpoke_abus(WORD x);
@@ -1426,7 +1426,7 @@ void m68k_poke(MEM_ADDRESS ad,BYTE x){
 #endif
   }
   else 
-#if defined(SSE_VS2008_INLINE_370) 
+#if defined(SSE_INLINE_370) 
     m68k_poke_abus(x);
 #else
     m68k_poke_abus2(x);
@@ -1454,7 +1454,7 @@ void m68k_dpoke(MEM_ADDRESS ad,WORD x){
 #endif
   }
   else
-#if defined(SSE_VS2008_INLINE_370) 
+#if defined(SSE_INLINE_370) 
     m68k_dpoke_abus(x);
 #else
     m68k_dpoke_abus2(x);
@@ -1483,7 +1483,7 @@ void m68k_lpoke(MEM_ADDRESS ad,LONG x){
 #endif
   }
   else
-#if defined(SSE_VS2008_INLINE_370)
+#if defined(SSE_INLINE_370)
     m68k_lpoke_abus(x);
 #else
     m68k_lpoke_abus2(x);

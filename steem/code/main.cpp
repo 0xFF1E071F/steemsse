@@ -54,12 +54,13 @@ const char *stem_version_date_text=__DATE__ " - " __TIME__;
 
 #ifndef ONEGAME
 #if defined(STEVEN_SEAGAL) && defined(SSE_GUI_WINDOW_TITLE)
-#if !defined(SSE_GUI_CUSTOM_WINDOW_TITLE)
+#if !defined(SSE_GUI_CUSTOM_WINDOW_TITLE) && !defined(SSE_VERSION)
 const 
 #endif
 //char stem_window_title[]=WINDOW_TITLE; // in SSE.h //the [] for VS2008
 char stem_window_title[WINDOW_TITLE_MAX_CHARS];//=WINDOW_TITLE;
-
+#elif SSE_VERSION<370
+char stem_window_title[WINDOW_TITLE_MAX_CHARS]="Steem Engine";
 #else
 const char *stem_window_title="Steem Engine";
 #endif
@@ -381,7 +382,7 @@ bool Initialise()
 #endif
 #else // release
 #ifdef DEBUG_BUILD
-    strcpy((char*)stem_window_title,"Steem Debug ");
+    strcpy((char*)stem_window_title,"Steem Boiler ");
     strcat((char*)stem_window_title,(char*)stem_version_text);
 #else
     strcpy((char*)stem_window_title,"Steem SSE ");

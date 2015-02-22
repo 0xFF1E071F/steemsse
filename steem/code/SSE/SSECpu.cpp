@@ -1155,7 +1155,7 @@ void TM68000::SetPC(MEM_ADDRESS ad) {
     PrefetchSetPC();
 }
 
-#if defined(SSE_VS2008_INLINE_370)
+#if defined(SSE_INLINE_370)
 
 void TM68000::PrefetchSetPC() { 
   // called by SetPC; we don't count timing here
@@ -1199,7 +1199,7 @@ void TM68000::PrefetchSetPC() {
 
 #endif
 
-#if defined(SSE_VS2008_INLINE_370)
+#if defined(SSE_INLINE_370)
 #define LOGSECTION LOGSECTION_CRASH
 void TM68000::PrefetchIrc() {
 
@@ -1608,7 +1608,7 @@ WORD TM68000::FetchForCall(MEM_ADDRESS ad) {
 
 #if defined(SSE_CPU_POKE)
 
-#if defined(SSE_VS2008_INLINE_370) 
+#if defined(SSE_INLINE_370) 
 
 #elif defined(DEBUG_BUILD)
 
@@ -1700,7 +1700,7 @@ NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x){
 #endif
 
 
-#if defined(SSE_VS2008_INLINE_370) 
+#if defined(SSE_INLINE_370) 
 void m68k_poke_abus(BYTE x){
 #else
 void m68k_poke_abus2(BYTE x){
@@ -1780,7 +1780,7 @@ void m68k_poke_abus2(BYTE x){
   }
 }
 
-#if defined(SSE_VS2008_INLINE_370) 
+#if defined(SSE_INLINE_370) 
 void m68k_dpoke_abus(WORD x){
 #else
 void m68k_dpoke_abus2(WORD x){
@@ -1834,7 +1834,7 @@ void m68k_dpoke_abus2(WORD x){
   }
 }
 
-#if defined(SSE_VS2008_INLINE_370) 
+#if defined(SSE_INLINE_370) 
 void m68k_lpoke_abus(LONG x){
 #else
 void m68k_lpoke_abus2(LONG x){
@@ -2020,8 +2020,8 @@ TM68000::SyncEClock(
 #if defined(SSE_DEBUG_FRAME_REPORT_ACIA)
   FrameEvents.Add(scan_y,LINECYCLES,'E',wait_states);
 #endif
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK2)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK2)
   if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_INT)
 #else
   if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_ACIA)

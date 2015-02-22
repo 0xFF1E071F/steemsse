@@ -265,6 +265,11 @@ void run()
           WORD a=m68k_dpeek(LPEEK(e.bombs*4));
           if (e.bombs>8){
             alertflag=false;
+#if defined(SSE_BOILER_EXCEPTION_NOT_TOS)
+          }else if (crash_notification==CRASH_NOTIFICATION_NOT_TOS 
+            && e._pc>=rom_addr && e._pc<rom_addr+tos_len){
+            alertflag=false;
+#endif
           }else if (crash_notification==CRASH_NOTIFICATION_BOMBS_DISPLAYED &&
                    a!=0x6102 && a!=0x4eb9 ){ //not bombs routine
             alertflag=false;
@@ -657,7 +662,9 @@ void event_hbl()   //just HBL, don't draw yet
 #undef LOGSECTION
 
   log_to_section(LOGSECTION_VIDEO,EasyStr("VIDEO: Event HBL at end of line ")+scan_y+", cycle "+(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl));
+#if !defined(SSE_VAR_RESIZE_370) 
   right_border_changed=0;
+#endif
   scanline_drawn_so_far=0;
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
   cpu_timer_at_start_of_hbl=time_of_next_event; // SS as defined in draw.cpp
@@ -950,7 +957,7 @@ void event_scanline()
     FrameEvents.Add(scan_y,0,'@',(shifter_draw_pointer&0xFFFF) ); 
 #endif
 
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SDP_LINES) 
   {
     FrameEvents.Add(scan_y,0,'@',(shifter_draw_pointer&0x00FF0000)>>16 ); 
@@ -1577,7 +1584,7 @@ void event_vbl_interrupt() //SS misleading name?
 #if defined(SSE_DEBUG_FRAME_REPORT_SYNCMODE)
   FrameEvents.Add(scan_y,0,'S',Shifter.m_SyncMode); 
 #endif
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SHIFTMODE) 
     FrameEvents.Add(scan_y,0,'R',Shifter.m_ShiftMode); 
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SYNCMODE)
