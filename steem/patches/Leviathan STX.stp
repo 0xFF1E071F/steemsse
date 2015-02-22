@@ -1,0 +1,8 @@
+[Text]
+Description=Patch for the wrong pasti image (fails protection at track 79)
+ApplyWhen=Before pressing F2
+Version=Works on Steem v3.2
+PatchAuthor=Seagal
+
+[Patch]
+114F4=$103C $0000
