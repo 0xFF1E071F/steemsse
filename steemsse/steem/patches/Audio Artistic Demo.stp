@@ -1,0 +1,10 @@
+[Text]
+
+Description=Fix speed + keyboard control
+ApplyWhen=After loading
+Version=Steem "no hacks"
+PatchAuthor=Seagal
+
+[Patch]
+
+fffffa25 = $3a
