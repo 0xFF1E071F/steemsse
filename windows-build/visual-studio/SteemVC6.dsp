@@ -88,11 +88,11 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib dinput.lib dxguid.lib winmm.lib ComCtl32.Lib /nologo /subsystem:windows /machine:IX86 /out:"Release\Steem.exe" /pdbtype:sept /opt:ref /opt:icf
-# ADD LINK32 dinput.lib dxguid.lib winmm.lib ComCtl32.Lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:IX86 /out:"Release\SteemBeta.exe" /pdbtype:sept /libpath:"d3d/" /opt:ref /opt:icf
+# ADD LINK32 dinput.lib dxguid.lib winmm.lib ComCtl32.Lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:IX86 /pdbtype:sept /libpath:"d3d/" /opt:ref /opt:icf
 # SUBTRACT LINK32 /nodefaultlib
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
-PostBuild_Cmds=copy "Release\SteemBeta.exe" "d:\emu\ST\bin\steem"
+PostBuild_Cmds=copy "Release\SteemVC6.exe" "d:\emu\ST\bin\steem"
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler"
@@ -121,11 +121,11 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 dinput.lib dxguid.lib winmm.lib ComCtl32.Lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:IX86 /out:"Release\SteemBeta.exe" /pdbtype:sept /opt:ref /opt:icf
 # SUBTRACT BASE LINK32 /nodefaultlib
-# ADD LINK32 dinput.lib dxguid.lib winmm.lib ComCtl32.Lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:IX86 /out:"Release\BoilerBeta.exe" /pdbtype:sept /libpath:"d3d/" /opt:ref /opt:icf
+# ADD LINK32 dinput.lib dxguid.lib winmm.lib ComCtl32.Lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:IX86 /out:"Release\BoilerVC6.exe" /pdbtype:sept /libpath:"d3d/" /opt:ref /opt:icf
 # SUBTRACT LINK32 /nodefaultlib
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
-PostBuild_Cmds=copy "Release\BoilerBeta.exe" "d:\emu\ST\bin\steem"
+PostBuild_Cmds=copy "Release\BoilerVC6.exe" "d:\emu\ST\bin\steem"
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "Steem - Win32 Boiler Debug"
@@ -478,6 +478,7 @@ DEP_CPP_EMU_C=\
 	"..\..\steem\code\SSE\SSEFrameReport.cpp"\
 	"..\..\steem\code\SSE\SSEFrameReport.h"\
 	"..\..\steem\code\SSE\SSEGhostDisk.h"\
+	"..\..\Steem\code\SSE\SSEGlue.h"\
 	"..\..\steem\code\SSE\SSEInline.h"\
 	"..\..\steem\code\SSE\SSEInterrupt.cpp"\
 	"..\..\steem\code\SSE\SSEInterrupt.h"\
@@ -839,6 +840,7 @@ DEP_CPP_MAIN_=\
 	"..\..\Steem\code\SSE\SSEFloppy.h"\
 	"..\..\steem\code\SSE\SSEFrameReport.h"\
 	"..\..\steem\code\SSE\SSEGhostDisk.h"\
+	"..\..\Steem\code\SSE\SSEGlue.h"\
 	"..\..\steem\code\SSE\SSEInterrupt.h"\
 	"..\..\steem\code\SSE\SSEMMU.h"\
 	"..\..\steem\code\SSE\SSEOption.h"\
@@ -7925,6 +7927,7 @@ DEP_CPP_SSECP=\
 	"..\..\steem\code\SSE\SSEOption.h"\
 	"..\..\steem\code\SSE\SSEParameters.h"\
 	"..\..\steem\code\SSE\SSEShifter.h"\
+	"..\..\steem\code\SSE\SSESTF.h"\
 	"..\..\steem\code\steemh.decla.h"\
 	"..\..\steem\pch.h"\
 	
@@ -7977,11 +7980,27 @@ DEP_CPP_SSEDE=\
 	"..\..\3rdparty\caps\CapsLib.h"\
 	"..\..\3rdparty\caps\comlib.h"\
 	"..\..\3rdparty\caps\CommonTypes.h"\
+	"..\..\3rdparty\d3d\d3d9.h"\
+	"..\..\3rdparty\d3d\d3d9caps.h"\
+	"..\..\3rdparty\d3d\D3d9types.h"\
+	"..\..\3rdparty\d3d\d3dx9.h"\
+	"..\..\3rdparty\d3d\d3dx9anim.h"\
+	"..\..\3rdparty\d3d\d3dx9core.h"\
+	"..\..\3rdparty\d3d\d3dx9effect.h"\
+	"..\..\3rdparty\d3d\D3dx9math.h"\
+	"..\..\3rdparty\d3d\d3dx9math.inl"\
+	"..\..\3rdparty\d3d\d3dx9mesh.h"\
+	"..\..\3rdparty\d3d\d3dx9shader.h"\
+	"..\..\3rdparty\d3d\d3dx9shape.h"\
+	"..\..\3rdparty\d3d\d3dx9tex.h"\
+	"..\..\3rdparty\d3d\d3dx9xof.h"\
 	"..\..\3rdparty\d3d\ddraw.h"\
 	"..\..\3rdparty\d3d\dinput.h"\
 	"..\..\3rdparty\d3d\dsound.h"\
 	"..\..\3rdparty\d3d\sal.h"\
+	"..\..\3rdparty\FreeImage\FreeImage.h"\
 	"..\..\3rdparty\pasti\pasti.h"\
+	"..\..\3rdparty\various\neochrome.h"\
 	"..\..\include\binary.h"\
 	"..\..\include\circularbuffer.h"\
 	"..\..\include\clarity.h"\
@@ -8003,6 +8022,7 @@ DEP_CPP_SSEDE=\
 	"..\..\include\x\icongroup.h"\
 	"..\..\include\x\x_mymisc.h"\
 	"..\..\steem\code\conditions.h"\
+	"..\..\steem\code\display.decla.h"\
 	"..\..\steem\code\draw.decla.h"\
 	"..\..\steem\code\emulator.decla.h"\
 	"..\..\steem\code\fdc.decla.h"\
@@ -8037,6 +8057,10 @@ DEP_CPP_SSEDE=\
 NODEP_CPP_SSEDE=\
 	"..\..\3rdparty\d3d\codeanalysis\sourceannotations.h"\
 	"..\..\include\beos\be_mymisc.h"\
+	"..\..\steem\code\d3d9.h"\
+	"..\..\steem\code\D3d9types.h"\
+	"..\..\steem\code\d3dx9core.h"\
+	"..\..\steem\code\D3dx9math.h"\
 	
 
 !IF  "$(CFG)" == "Steem - Win32 Debug"
@@ -8465,6 +8489,38 @@ SOURCE=..\..\steem\code\SSE\SSEGhostDisk.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\Steem\code\SSE\SSEGlue.cpp
+DEP_CPP_SSEGL=\
+	"..\..\3rdparty\avi\AviFile.h"\
+	"..\..\3rdparty\d3d\ddraw.h"\
+	"..\..\3rdparty\d3d\dinput.h"\
+	"..\..\3rdparty\d3d\dsound.h"\
+	"..\..\3rdparty\d3d\sal.h"\
+	"..\..\include\binary.h"\
+	"..\..\include\clarity.h"\
+	"..\..\include\easystr.h"\
+	"..\..\steem\code\conditions.h"\
+	"..\..\steem\code\draw.decla.h"\
+	"..\..\steem\code\notwindows.h"\
+	"..\..\steem\code\SSE\SSE.h"\
+	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\Steem\code\SSE\SSEGlue.h"\
+	"..\..\steem\code\SSE\SSEMMU.h"\
+	"..\..\steem\code\SSE\SSEOption.h"\
+	"..\..\steem\code\SSE\SSEParameters.h"\
+	"..\..\steem\code\SSE\SSESTF.h"\
+	"..\..\steem\pch.h"\
+	
+NODEP_CPP_SSEGL=\
+	"..\..\3rdparty\d3d\codeanalysis\sourceannotations.h"\
+	
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\Steem\code\SSE\SSEGlue.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\steem\code\SSE\SSEInline.h
 # End Source File
 # Begin Source File
@@ -8789,6 +8845,7 @@ DEP_CPP_SSESH=\
 	"..\..\steem\code\SSE\SSEDecla.h"\
 	"..\..\steem\code\SSE\SSEFrameReport.cpp"\
 	"..\..\steem\code\SSE\SSEFrameReport.h"\
+	"..\..\Steem\code\SSE\SSEGlue.h"\
 	"..\..\steem\code\SSE\SSEMMU.h"\
 	"..\..\steem\code\SSE\SSEOption.h"\
 	"..\..\steem\code\SSE\SSEParameters.h"\
@@ -8928,6 +8985,7 @@ DEP_CPP_SSEST=\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\Steem\code\SSE\SSEGlue.h"\
 	"..\..\steem\code\SSE\SSEInterrupt.h"\
 	"..\..\steem\code\SSE\SSEOption.h"\
 	"..\..\steem\code\SSE\SSEParameters.h"\
@@ -9159,6 +9217,7 @@ DEP_CPP_SSEYM=\
 	"..\..\steem\code\SSE\SSE.h"\
 	"..\..\Steem\code\SSE\SSEDebug.h"\
 	"..\..\steem\code\SSE\SSEDecla.h"\
+	"..\..\steem\code\SSE\SSEOption.h"\
 	"..\..\steem\code\SSE\SSEParameters.h"\
 	"..\..\steem\code\SSE\SSEYM2149.h"\
 	"..\..\steem\code\steemh.decla.h"\
