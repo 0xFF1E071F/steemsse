@@ -23,6 +23,9 @@ EXT void update_display_after_trace();
 #define CRASH_NOTIFICATION_ALWAYS 0
 #define CRASH_NOTIFICATION_BOMBS_DISPLAYED 1
 #define CRASH_NOTIFICATION_NEVER 2
+#if defined(SSE_BOILER_EXCEPTION_NOT_TOS)
+#define CRASH_NOTIFICATION_NOT_TOS 3
+#endif
 
 EXT void stop_new_program_exec();
 EXT void debug_check_break_on_irq(int);
@@ -75,7 +78,7 @@ EXT void debug_hit_io_mon_write(MEM_ADDRESS,int);
 /*  Adding range check: is ad between ad1 and ad2
     We use the first 2 watches
 */
-#if defined(SSE_VS2008_INLINE_370)
+#if defined(SSE_INLINE_370)
   bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adarr,bool wr);
 #else
 inline  bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adarr,bool wr) {

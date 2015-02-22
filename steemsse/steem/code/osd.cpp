@@ -350,8 +350,8 @@ void osd_draw()
       strcpy(tmp_buffer,"STEEM SSE "); // must be CAPS for the scroller font
       // note it's STEem Engine anyway, not STeem Engine
       size_t buffer_length = strlen(tmp_buffer);
-      size_t version_length = strlen(stem_version_text);
-      strncat(tmp_buffer,stem_version_text,BUFFER_LENGTH-buffer_length);
+      size_t version_length = strlen((char*)stem_version_text);
+      strncat(tmp_buffer,(char*)stem_version_text,BUFFER_LENGTH-buffer_length);
       size_t logo_length=strlen(tmp_buffer);
       x=x1/2 - logo_length*16/2;
       for(unsigned int i=0;i<logo_length;i++)

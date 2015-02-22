@@ -260,7 +260,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
     }
 #if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY) //no
 /*  Steem authors shift 1st timeout 12 cycles later, we use a parameter
-    to test that. In current build 3.7.0, this is the still the best
+    to test that. In current build 3.7.0, this is still the best
     value.
     This is explained by internal MFP delays, but it also covers a pre-IRQ
     delay (see MFP_TIMER_DATA_REGISTER_ADVANCE).

@@ -28,7 +28,7 @@ TFrameEvents::TFrameEvents() {
   Init();
 } 
 
-#if defined(SSE_VS2008_INLINE_370)
+#if defined(SSE_INLINE_370)
 void TFrameEvents::Add(int scanline, int cycle, char type, int value) {
   m_nEvents++;  // starting from 0 each VBL, event 0 is dummy 
   if(m_nEvents<=0||m_nEvents>MAX_EVENTS) {BRK(bad m_nEvents); return;}
@@ -42,7 +42,7 @@ void TFrameEvents::Add(int scanline, int cycle, char type, int value) {
 MEM_ADDRESS TFrameEvents::GetSDP(int x,int guessed_scan_y) {
   MEM_ADDRESS sdp=NULL;
   int i,j;
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK) //skip if not recorded
+#if defined(SSE_BOILER_FRAME_REPORT_MASK) //skip if not recorded
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SDP_LINES) 
 #endif
   for(i=1; i<=MAX_EVENTS ;i++)

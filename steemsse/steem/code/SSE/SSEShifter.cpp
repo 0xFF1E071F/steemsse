@@ -11,6 +11,7 @@
 #include <run.decla.h>
 #include "SSEFrameReport.h"
 #include "SSEShifter.h"
+#include "SSEParameters.h"
 #elif defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: SSEShifter.cpp")
 #endif//SSE_STRUCTURE_SSESHIFTER_OBJ
@@ -1077,7 +1078,7 @@ STF2:
 */
 
 #if defined(SSE_SHIFTER_LINE_PLUS_2_TEST)
-  if(!(TrickExecuted&TRICK_LINE_PLUS_2) 
+  if(!(TrickExecuted&TRICK_LINE_PLUS_2) && screen_res<2
     && left_border && !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) ) 
   {
 #if defined(SSE_SHIFTER_LINE_PLUS_2_STE2)
@@ -2067,7 +2068,7 @@ Problem: too many cases of WU1, that should be the rarer one
 #endif
 
 /* no!
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK)
     if(on_overscan_limit
       && Debug.FrameReportMask&FRAME_REPORT_MASK_VERTICAL_OVERSCAN)
   {
@@ -2474,7 +2475,7 @@ void TShifter::IncScanline() { // a big extension of 'scan_y++'!
     FrameEvents.Add(scan_y,CurrentScanline.Cycles,'#',CurrentScanline.Bytes);
 #endif
 
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK)
   if((FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_SHIFTER_TRICKS) 
     && CurrentScanline.Tricks)
     FrameEvents.Add(scan_y,CurrentScanline.Cycles,'T',CurrentScanline.Tricks);
@@ -2656,7 +2657,7 @@ BYTE TShifter::IORead(MEM_ADDRESS addr) {
 #if defined(SSE_DEBUG_FRAME_REPORT_READ_SDP) // c for counter now
       FrameEvents.Add(scan_y,LINECYCLES,'c',((addr&0xF)<<8)|ior_byte); 
 #endif
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK)
       if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SDP_READ)
         FrameEvents.Add(scan_y,LINECYCLES,'c',((addr&0xF)<<8)|ior_byte);
 #endif
@@ -2733,7 +2734,7 @@ void TShifter::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
 #if defined(SSE_DEBUG_FRAME_REPORT_PAL)
       FrameEvents.Add(scan_y,LINECYCLES,'p', (n<<12)|io_src_b);  // little p
 #endif
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK)
       if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_PAL)
         FrameEvents.Add(scan_y,LINECYCLES,'p', (n<<12)|io_src_b);  // little p
 #endif
@@ -2781,7 +2782,7 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
 #if defined(SSE_DEBUG_FRAME_REPORT_VIDEOBASE)
       FrameEvents.Add(scan_y,LINECYCLES,'V',io_src_b); 
 #endif
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK)
       if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_VIDEOBASE)
         FrameEvents.Add(scan_y,LINECYCLES,'V',io_src_b); 
 #endif
@@ -2803,7 +2804,7 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
 #if defined(SSE_DEBUG_FRAME_REPORT_VIDEOBASE)
       FrameEvents.Add(scan_y,LINECYCLES,'M',io_src_b); 
 #endif
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK)
       if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_VIDEOBASE)
         FrameEvents.Add(scan_y,LINECYCLES,'M',io_src_b); 
 #endif
@@ -2887,7 +2888,7 @@ Last bit always cleared (we must do it).
 #if defined(SSE_DEBUG_FRAME_REPORT_VIDEOBASE)
       FrameEvents.Add(scan_y,LINECYCLES,'v',io_src_b); 
 #endif
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK)
       if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_VIDEOBASE)
         FrameEvents.Add(scan_y,LINECYCLES,'v',io_src_b); 
 #endif
@@ -2941,7 +2942,7 @@ must NOT be skipped using the Line Offset Register.
 #if defined(SSE_DEBUG_FRAME_REPORT_HSCROLL)
       FrameEvents.Add(scan_y,LINECYCLES,'L',io_src_b); //we choose L now
 #endif
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK)
       if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_HSCROLL)
         FrameEvents.Add(scan_y,LINECYCLES,'L',io_src_b); 
 #endif
@@ -3008,7 +3009,7 @@ rasterline to allow horizontal fine-scrolling.
 #if defined(SSE_DEBUG_FRAME_REPORT_HSCROLL)
       FrameEvents.Add(scan_y,LINECYCLES,(addr==0xff8264)?'h':'H',io_src_b); 
 #endif
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK)
       if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_HSCROLL)
         FrameEvents.Add(scan_y,LINECYCLES,(addr==0xff8264)?'h':'H',io_src_b); 
 #endif
@@ -3499,7 +3500,7 @@ void TShifter::SetShiftMode(BYTE NewMode) {
 #if defined(SSE_DEBUG_FRAME_REPORT_SHIFTMODE)
   FrameEvents.Add(scan_y,CyclesIn,'R',NewMode); 
 #endif
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SHIFTMODE)
     FrameEvents.Add(scan_y,CyclesIn,'R',NewMode); 
 #endif
@@ -3614,7 +3615,7 @@ void TShifter::SetSyncMode(BYTE NewSync) {
 #if defined(SSE_DEBUG_FRAME_REPORT_SYNCMODE)
   FrameEvents.Add(scan_y,CyclesIn,'S',NewSync); 
 #endif
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SYNCMODE)
     FrameEvents.Add(scan_y,CyclesIn,'S',NewSync); 
 #endif

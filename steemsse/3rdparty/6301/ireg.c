@@ -34,7 +34,6 @@ u_char  iram[NIREGS];
     Much of this is based on doc translated by Tobe (AF) from French ST Mag 
     articles by Stephane  Catala. 
     I also had a look at a scan of the original articles.
-    Emulation still far from perfect.
 */
 
 static dr1_getb P_((u_int offs));
@@ -51,7 +50,7 @@ static dr4_getb P_((u_int offs));
     bit in DR3 or DR4 is set [apparently], the bit in DR1 is cleared.
     It's rather complicated, but not hard to emulate. 
     To do that we use a look-up table based on doc. 
-    Note that the first row had to be shifted on the right compared with the 
+    Note that the first row had to be shifted to the right compared with the 
     existing doc.
     We also use a table with key states (already used in Steem), and a function 
     that builds DR1 bit by bit. 
@@ -79,7 +78,9 @@ int dr_table[8][15] = {
   {0x00,0x00,0x00,0x36,0x2C,0x2D,0x2F,0x31,0x32,0x39,0x3A,0x35,0x70,0x71,0x72} // 7
   };
 #endif
-/*
+
+#if defined(SSE_IKBD_6301_ROM_KEYTABLE)
+/*  go fetch the value in 6301 rom instead of in a fat table!
 f206	1d 2a 38 36: shift etc.
 ...  
 f2f3	80 01 00 02 ce f3 11 d6 8a c1 05 25 0d c0  ...........%..
@@ -91,12 +92,9 @@ f339	42 09 0a 16 17 24 25 32 43 0b 0c 18 19 26  B....$%2C....&
 f347	33 39 44 0d 29 1a 1b 27 34 3a 62 0e 53 52  39D.)..'4:b.SR
 f355	2b 1c 28 35 61 48 47 4b 50 4d 6d 70 63 64  +.(5aHGKPMmpcd
 f363	67 68 6a 6b 6e 71 65 66 69 4a 6c 4e 6f 72  ghjknqefiJlNor
-
 */
-#if defined(SSE_IKBD_6301_ROM_KEYTABLE)
 
 BYTE get_scancode(int dr1bit,int column) {
-  // go fetch the value in 6301 rom instead of in a fat table!
   BYTE val=0;
   ASSERT(dr1bit<8);
   ASSERT(column<15);
@@ -429,7 +427,7 @@ static dr4_getb (offs)
       value=~value;
       //TRACE("stick %X\n",value);
 
-#if defined(SSE_IKBD_6301_MOUSE_MASK2)
+#if defined(SSE_IKBD_6301_MOUSE_MASK2)//no
 /*  Hack to have both Jumping Jackson-WNW and International Tennis working
     It is unnecessary though as International Tennis (auto 373) is buggy and 
     doesn't work right on real STE either. In Steem it will work when '6301'
@@ -458,10 +456,6 @@ static dr4_getb (offs)
 #endif
 
   value = (value&(~0xF))  | (mouse_x_counter&3) | ((mouse_y_counter&3)<<2);
-
-
-
-
   iram[offs]=value;
   return value;
 }

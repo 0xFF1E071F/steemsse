@@ -297,7 +297,7 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
 #if defined(SSE_DEBUG_FRAME_REPORT)
   iolist_add_entry(FAKE_IO_START,"Frame report1",2,
     "sync|mode|pal|rsdp|wsdp|sdp lines|hscroll|base|.|.|.|.|.|.|.|.");
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK2)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK2)
   iolist_add_entry(FAKE_IO_START+2,"Frame report2",2, // problem +2 etc hardcoded
     "int|blt|tricks|bytes|.|.|.|.|.|.|.|.|.|.|.|.");
 #else

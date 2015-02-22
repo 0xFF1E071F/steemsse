@@ -105,11 +105,9 @@ Important (note to self)
 
 Release: not SSE_BETA
 All SSE_TEST_ON must go
-Version for snapshot + Windows properties
+Version for snapshot (in LoadSave.h) + Windows properties (rc\resource.rc)
 
 Beta: not SSE_PRIVATE_BUILD
-
-check snapshot Version (in LoadSave.h); rc\resource.rc
 
 */
 
@@ -123,7 +121,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_VERSION 370 // versions down to 340 still compile
 
 #if SSE_VERSION>364 //last release
-#define SSE_BETA //title, OSD, plus some testing - new features
+//#define SSE_BETA //title, OSD, plus some testing - new features
 //#define SSE_BETA_BUGFIX // beta for just bugfixes
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
 ///#define SSE_PRIVATE_BUILD // my "beta" option
@@ -152,7 +150,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 
 #if _MSC_VER >= 1500 
 #define SSE_VS2008 // so that the VS2008 build compiles
-#define SSE_VS2008_INLINE_370
+//#define SSE_INLINE_370
 #define SSE_VS2008_WARNING_370
 #endif
 
@@ -170,10 +168,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
     So it's double work (everything is defined twice) but well worth
     it to track down bugs.
 */
-
-#define SSE_SWITCHES_FEATURES
-
-#if defined(SSE_SWITCHES_FEATURES)
+//#define SSE_SWITCHES_FEATURES
 
 
 //////////////////
@@ -182,7 +177,9 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 
 
 // It must always be possible to disable one of those main
-// switches and Steem still build
+// switches and Steem still build.
+// Big switches work with the 'features' and the 'version'
+// approaches.
 
 // emulation components
 
@@ -218,6 +215,11 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 
 
 
+#if defined(SSE_SWITCHES_FEATURES)
+
+
+
+
 ///////////////////////
 // DETAILED SWITCHES //
 ///////////////////////
@@ -239,7 +241,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 //#define SSE_BLT_TIMING // based on a table, but Steem does it better
 #define SSE_BLT_YCOUNT // 0=65536
 #if defined(SSE_HACKS)
-#define SSE_BLITTER_RELAPSE//hack
+#define SSE_BLITTER_RELAPSE//hack 3.7
 #endif
 
 #endif//SSE_BLITTER
@@ -252,8 +254,8 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 
 #if defined(SSE_CPU)
 
-#define SSE_CPU_ALT_REG_NAMES// convenience
-#define SSE_CPU_DATABUS
+#define SSE_CPU_ALT_REG_NAMES// 3.7 convenience
+#define SSE_CPU_DATABUS //3.7
 #define SSE_CPU_DEST_IS_REGISTER //just new macro
 #define SSE_CPU_E_CLOCK      // even a slow clock...
 #define SSE_CPU_EXCEPTION    // crash like Windows 98
@@ -525,14 +527,14 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 
 
 
-/////#define SSE_DEBUG_FRAME_REPORT_MASK // for interactive control in boiler
+/////#define SSE_BOILER_FRAME_REPORT_MASK // for interactive control in boiler
 
 
 // BOILER //
 
 #if defined(SSE_BOILER)
 
-#define SSE_DEBUG_FRAME_REPORT_MASK // for interactive control in boiler
+#define SSE_BOILER_FRAME_REPORT_MASK // for interactive control in boiler
 
 #define SSE_BOILER_BLAZING_STEP_OVER 
 #define SSE_BOILER_BROWSER_6301
@@ -549,10 +551,10 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_BOILER_DECRYPT_TIMERS
 #define SSE_BOILER_DISPLACEMENT_DECIMAL
 #define SSE_BOILER_DUMP_6301_RAM
+#define SSE_BOILER_EXCEPTION_NOT_TOS
 #define SSE_BOILER_EXTRA_IOLIST
 #define SSE_BOILER_FAKE_IO //to control some debug options
 #define SSE_BOILER_FRAME_INTERRUPTS2
-
 #define SSE_BOILER_MENTION_READONLY_BROWSERS
 #define SSE_BOILER_MOD_REGS // big letters, no =
 #define SSE_BOILER_MOD_VBASE
@@ -594,6 +596,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #if defined(SSE_BOILER_FAKE_IO)
 #ifdef SSE_OSD
 #define SSE_BOILER_FRAME_INTERRUPTS//OSD, handy
+#define SSE_BOILER_FRAME_INTERRUPTS2
 #endif
 #define SSE_BOILER_MUTE_SOUNDCHANNELS //fake io
 #define SSE_BOILER_TRACE_CONTROL //beyond log options
@@ -634,7 +637,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 
 #if defined(SSE_DEBUG_FRAME_REPORT)
 #define SSE_DEBUG_FRAME_REPORT_ON_STOP // each time we stop emulation
-#define SSE_DEBUG_FRAME_REPORT_MASK2
+#define SSE_BOILER_FRAME_REPORT_MASK2
 
 // Normally those are controlled with the Control mask browser
 //#define SSE_DEBUG_FRAME_REPORT_ACIA
@@ -682,8 +685,6 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_DEBUG_START_STOP_INFO
 #define SSE_DEBUG_TRACE_IO
 
-//#define SSE_IKBD_TRACE_CPU_READ
-//#define SSE_IKBD_TRACE_CPU_READ2 //beware polling
 
 #define SSE_IKBD_6301_TRACE 
 
@@ -759,13 +760,11 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_TOS_DONT_TRACE_42//seek file
 #define SSE_TOS_TRACE_CONOUT
 
-
-#if defined(SSE_DEBUG) 
 //#define SHOW_DRAW_SPEED //was already in Steem
 //#define SSE_VID_VERT_OVSCN_OLD_STEEM_WAY // only for vertical overscan
-#endif
-
 // #define SSE_ACIA_TEST_REGISTERS//????
+
+#define SSE_DEBUG_WRITE_TRACK_TRACE_IDS
 
 #endif//SSE_DEBUG
 
@@ -783,7 +782,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_FDC        // WD1772 floppy disk controller
 #define SSE_FLOPPY_EVENT
 #define SSE_FLOPPY_EVENT2
-#define SSE_WD1772
+#define SSE_WD1772     // WD1772 floppy disk controller (IO, STW...)
 #define SSE_YM2149     // YM2149, needed for floppy and for sound
 
 #ifdef WIN32
@@ -834,6 +833,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 //#define SSE_DMA_DRQ_RND 
 #define SSE_DMA_FIFO // first made for CAPS 
 #define SSE_DMA_FIFO_NATIVE
+#define SSE_DMA_FIFO_NATIVE2 //bugfix International Sports Challenge-ICS fast
 #define SSE_DMA_FIFO_PASTI
 #define SSE_DMA_FIFO_READ_ADDRESS // save some bytes...
 #define SSE_DMA_FIFO_READ_ADDRESS2 // save 4 bytes more...
@@ -841,6 +841,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_DMA_IO //necessary
 #define SSE_DMA_READ_STATUS 
 #define SSE_DMA_SECTOR_COUNT
+#define SSE_DMA_SECTOR_COUNT2
 #define SSE_DMA_TRACK_TRANSFER // debug + possible later use
 #define SSE_DMA_WRITE_CONTROL
 
@@ -852,7 +853,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 
 #define SSE_DRIVE_11_SECTORS
 #define SSE_DRIVE_BYTES_PER_ROTATION
-//#define SSE_DRIVE_COMPUTE_BOOT_CHECKSUM //TODO boiler control
+#define SSE_DRIVE_COMPUTE_BOOT_CHECKSUM //TODO boiler control
 #define SSE_DRIVE_CREATE_ST_DISK_FIX // from Petari
 //#define SSE_DRIVE_EMPTY_VERIFY_LONG // undef 3.5.4
 #define SSE_DRIVE_EMPTY_VERIFY_TIME_OUT //GEM
@@ -860,6 +861,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_DRIVE_INDEX_PULSE
 #define SSE_DRIVE_INDEX_STEP
 #define SSE_DRIVE_IPF1 // know image type (not used yet)
+#define SSE_DRIVE_IP_HACK
 #define SSE_DRIVE_MEDIACHANGE // for CAPSImg, Pasti
 #define SSE_DRIVE_MOTOR_ON
 #define SSE_DRIVE_MOTOR_ON_IPF//TODO
@@ -1024,6 +1026,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 
 #define SSE_YM2149A // selected drive, side as variables
 #define SSE_YM2149B // adapt drive motor status to FDC STR at each change
+#define SSE_YM2149C // turn on/off motor in drives (better than B)
 
 #endif
 
@@ -1057,9 +1060,6 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #ifdef WIN32
 #define SSE_GUI_ASSOCIATE
 #define SSE_GUI_STATUS_STRING // "status bar" in the icon bar
-#if defined(SSE_PRIVATE_BUILD)
-#define SSE_GUI_OPTION_FOR_TESTS 
-#endif
 #endif
 
 #ifdef SSE_GUI_ASSOCIATE
@@ -1144,11 +1144,11 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #endif
 #endif//status
 
-//todo _GUI_
+/*
 #define SSE_SSE_OPTION_PAGE // a new page for all our options
 #define SSE_SSE_OPTION_STRUCT // structure SSEOption 
 #define SSE_SSE_CONFIG_STRUCT // structure SSEConfig 
-
+*/
 #endif//SSE_GUI
 
 
@@ -1170,72 +1170,64 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 
 #if defined(SSE_INT_HBL)
 //#define SSE_INT_HBL_EVENT//for tests only
-//#define SSE_INT_HBL_IACK_FIX // from Hatari - BBC52 (works without?)
+//#define SSE_INT_HBL_IACK_FIX // from Hatari - BBC52 (works without?) undef 3.7.0
 #define SSE_INT_HBL_IACK2
-#define SSE_INT_VBL_IACK2
 #define SSE_INT_HBL_INLINE
 #define SSE_INT_HBL_ONE_FUNCTION // remove event_hbl()
-#endif
-
-#if defined(SSE_INT_HBL) && defined(SSE_INT_JITTER)
+#if defined(SSE_INT_JITTER)
 #define SSE_INT_JITTER_HBL
 #endif
-
-#if defined(SSE_INT_VBL) && defined(SSE_INT_JITTER)
-#define SSE_INT_JITTER_VBL_STE//3.5.1,undef 3.6.0
 #endif
 
 #if defined(SSE_INT_VBL)
-#define SSE_INT_VBL_IACK
-#endif
-
-#if defined(SSE_INT_VBL) && defined(SSE_STF) && defined(SSE_INT_JITTER)
-#define SSE_INT_JITTER_VBL
-#if defined(SSE_INT_VBL)
+//#define SSE_INT_VBI_START
 #define SSE_INT_VBL_INLINE 
-#define SSE_INT_JITTER_RESET
-//#define SSE_INT_VBI_START 
-#define SSE_INT_JITTER_VBL2 //hack Demoniak
+#define SSE_INT_VBL_IACK
+#define SSE_INT_VBL_IACK2
+#if defined(SSE_INT_JITTER)
+//#define SSE_INT_JITTER_VBL_STE//3.5.1,undef 3.6.0
+#if defined(SSE_STF) 
+#define SSE_INT_JITTER_VBL
 #endif
 #endif
-
-#if defined(SSE_STF) && defined(SSE_INT_VBL) && !defined(SSE_INT_VBI_START)
+#if defined(SSE_STF) && !defined(SSE_INT_VBI_START)
 #define SSE_INT_VBL_STF // more a hack but works
 #endif
+#endif
 
+#if defined(SSE_INT_JITTER)
+#define SSE_INT_JITTER_RESET
+#endif
 // MFP //
 
 #if defined(SSE_INT_MFP)
 #define SSE_INT_MFP_AUTO_NO_IS_CLEAR//test
-#define SSE_INT_MFP_IACK_LATENCY //was SS_MFP_PENDING in v3.3
+//#define SSE_INT_MFP_IACK_LATENCY //was SS_MFP_PENDING in v3.3 undef 3.7.0
 //#define SSE_INT_MFP_IRQ_DELAY // undef v3.6.0
 //#define SSE_INT_MFP_IRQ_DELAY2 // undef v3.5.3
 //#define SSE_INT_MFP_IRQ_DELAY3 // undef v3.6.1
 #define SSE_INT_MFP_OBJECT // new MC68901 chip in out ST!
-#define SSE_INT_MFP_PATCH_TIMER_D // from Hatari
-#define SSE_INT_MFP_POST_INT_LATENCY // hardware quirk? //code?
+//#define SSE_INT_MFP_PATCH_TIMER_D // from Hatari undef 3.7.0
 #define SSE_INT_MFP_RATIO // change the values of CPU & MFP freq!
+#define SSE_INT_MFP_READ_DELAY1 
 #define SSE_INT_MFP_REFACTOR1
 //#define SSE_INT_MFP_REFACTOR2 //doesn't work at all yet
 #define SSE_INT_MFP_RS232 //one little anti-hang bugfix
 #define SSE_INT_MFP_TIMER_B 
-//#define SSE_INT_MFP_TIMER_RATIO1 //unimportant
-#define SSE_INT_MFP_TIMERS_BASETIME 
+#define SSE_INT_MFP_TIMERS_RATIO1 //unimportant
+#define SSE_INT_MFP_TIMERS_BASETIME
 #define SSE_INT_MFP_TIMERS_INLINE
 #define SSE_INT_MFP_TIMERS_NO_BOOST_LIMIT
 //#define SSE_INT_MFP_TIMERS_RUN_IF_DISABLED //load!
-#define SSE_INT_MFP_TIMERS_STARTING_DELAY //12->?
+//#define SSE_INT_MFP_TIMERS_STARTING_DELAY //12->?
 //#define SSE_INT_MFP_TIMERS_WOBBLE //as for timer B
 #define SSE_INT_MFP_TxDR_RESET // they're not reset according to doc
 //#define SSE_INT_MFP_WRITE_DELAY1//Audio Artistic //undef 3.7.0
-#define SSE_INT_MFP_WRITE_DELAY2
 #endif//SSE_INT_MFP
 
 #if defined(SSE_INT_MFP_OBJECT)
 #define SSE_INT_MFP_IRQ_TIMING //tracking it more precisely
 #define SSE_INT_MFP_GPIP_TO_IRQ_DELAY // only for GPIP interrupts
-#undef SSE_ACIA_IRQ_DELAY2
-#undef SSE_INT_MFP_IACK_LATENCY //same irq
 #define SSE_INT_MFP_IACK_LATENCY2 //delay timers
 #define SSE_INT_MFP_IACK_LATENCY3 //timer B
 #define SSE_INT_MFP_IACK_LATENCY4 //delay timers 
@@ -1247,7 +1239,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #endif
 #define SSE_INT_MFP_SPURIOUS//cool crashes
 #define SSE_INT_MFP_CHECKTIMEOUT_ON_STOP
-#undef SSE_INT_MFP_PATCH_TIMER_D//Audio Artistic
+#define SSE_INT_MFP_WRITE_DELAY2
 #endif
 
 #if defined(SSE_INT_MFP_RATIO) 
@@ -1281,6 +1273,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 
 
 #ifdef SSE_KEYBOARD
+
 #define SSE_ACIA       // MC6850 Asynchronous Communications Interface Adapter
 #define SSE_IKBD       // HD6301V1 IKBD (keyboard, mouse, joystick controller)
 #define SSE_JOYSTICK_JUMP_BUTTON//3.7.0
@@ -1298,15 +1291,15 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_ACIA_DOUBLE_BUFFER_TX // only to 6301 (not MIDI)
 // #define SS_ACIA_IRQ_ASSERT_READ_SR //TODO
 //#define SSE_ACIA_IRQ_DELAY // only from 6301 (not MIDI) 
-#define SSE_ACIA_IRQ_DELAY2// back to this approach (hack)
-#define SSE_ACIA_MIDI_TIMING1 //check
+//#define SSE_ACIA_IRQ_DELAY2// back to this approach (hack)
+#define SSE_ACIA_MIDI_TIMING1 //check 3.6.0
 #define SSE_ACIA_NO_RESET_PIN // don't reset on warm reset
 // #define SS_ACIA_OVERRUN // only 6301
 // #define SS_ACIA_OVERRUN_REPLACE_BYTE // normally no
 #define SSE_ACIA_REGISTERS // formalising the registers
 // #define SS_ACIA_REMOVE_OLD_VARIABLES
-#define SSE_ACIA_TDR_COPY_DELAY // effect on SR
-#define SSE_ACIA_TDR_COPY_DELAY2 // effect on byte flow
+#define SSE_ACIA_TDR_COPY_DELAY // effect on SR 3.5.3
+#define SSE_ACIA_TDR_COPY_DELAY2 // effect on byte flow 3.6.0
 
 #endif
 
@@ -1320,12 +1313,15 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_IKBD_6301_ADJUST_CYCLES // stay in sync (check with clock)
 #define SSE_IKBD_6301_CHECK_IREG_RO // some registers are read-only
 #define SSE_IKBD_6301_CHECK_IREG_WO // some registers are write-only
-#define SSE_IKBD_6301_DISABLE_BREAKS // to save 64k RAM (we still consume 64k)
+#define SSE_IKBD_6301_DISABLE_BREAKS // to save 64k RAM (we still consume 64k) TODO
 #define SSE_IKBD_6301_DISABLE_CALLSTACK // to save 3k on the PC stack
 //#define SSE_IKBD_6301_MOUSE_ADJUST_SPEED // undef 3.7.0
 #define SSE_IKBD_6301_MOUSE_ADJUST_SPEED2 //better
 #define SSE_IKBD_6301_MOUSE_MASK // Jumping Jackson auto
 //#define SSE_IKBD_6301_MOUSE_MASK2//hack but game is bugged
+#define SSE_IKBD_6301_MOUSE_MASK3 // reset
+#define SSE_IKBD_6301_SEND1 // bugfix
+#define SSE_IKBD_6301_STUCK_KEYS // reset
 #define SSE_IKBD_6301_ROM_KEYTABLE //spare an array
 //#define SSE_IKBD_6301_RUN_CYCLES_AT_IO // overkill
 #define SSE_IKBD_6301_RUN_IRQ_TO_END // hack around Sim6xxx's working
@@ -1610,7 +1606,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_SHIFTER_PALETTE_NOISE2
 //#define SSE_SHIFTER_PALETTE_STF
 #define SSE_SHIFTER_PALETTE_TIMING //Overscan Demos #6
-#define SSE_SHIFTER_REMOVE_USELESS_VAR //6.3.1
+#define SSE_SHIFTER_REMOVE_USELESS_VAR //3.6.1
 #define SSE_SHIFTER_RIGHT_OFF_BY_SHIFT_MODE //beeshift0
 #define SSE_SHIFTER_STATE_MACHINE //simpler approach and WS-aware
 #define SSE_SHIFTER_STE_HI_HSCROLL
@@ -1681,15 +1677,15 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_SOUND_MICROWIRE_MASK1 //bugfix
 #define SSE_SOUND_MICROWIRE_MASK2 //incorrect doc (?)
 #define SSE_SOUND_MICROWIRE_READ1
-#define SSE_SOUND_MICROWIRE_WRITE_LATENCY // as documented
-#define SSE_SOUND_MICROWIRE_WRITE_LATENCY_B //bugfix Antiques 
-#define SSE_SOUND_NO_EXTRA_PER_VBL //compensating hack? changes what?
+#define SSE_SOUND_MICROWIRE_WRITE_LATENCY // as documented 3.6.0
+#define SSE_SOUND_MICROWIRE_WRITE_LATENCY_B //bugfix Antiques 3.7.0
+#define SSE_SOUND_NO_EXTRA_PER_VBL //compensating hack? changes what? 3.5.1
 #define SSE_SOUND_OPTIMISE //big word for what it is
 //#define SSE_SOUND_OPTION_DISABLE_DSP //undef v3.5.3
 #define SSE_SOUND_RECOMMEND_OPTIONS
 //#define SSE_SOUND_VOL // -6db for PSG chipsound (using DSP) //undef v3.7.0
-#define SSE_SOUND_VOL_LOGARITHMIC // more intuitive setting
-#define SSE_SOUND_VOL_LOGARITHMIC_2 // bugfix on resume
+#define SSE_SOUND_VOL_LOGARITHMIC // more intuitive setting 3.6.0
+#define SSE_SOUND_VOL_LOGARITHMIC_2 // bugfix on resume 3.7.0
 #define SSE_SOUND_FILTER_STE // same very simple filter as for STF
 
 #if! defined(SSE_YM2149) // defined for floppy
@@ -1726,7 +1722,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #ifdef SSE_YM2149 
 
 #define SSE_YM2149_DELAY_RENDERING // so that we use table also for envelope
-#define SSE_YM2149_FIX_TABLES // option P.S.G.
+#define SSE_YM2149_FIX_TABLES // option P.S.G. 3.6.0
 #define SSE_YM2149_FIXED_VOL_TABLE // was SSE_YM2149_FIXED_VOL_FIX2 in v3.6.4
 #define SSE_YM2149_OPT1
 #define SSE_YM2149_QUANTIZE1
@@ -1741,8 +1737,8 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #endif
 
 #if defined(SSE_YM2149_FIXED_VOL_TABLE)
-//#define SSE_YM2149_DYNAMIC_TABLE0 //temp, to build file
-#define SSE_YM2149_DYNAMIC_TABLE //using file
+//#define SSE_YM2149_DYNAMIC_TABLE0 //temp, to build file 
+#define SSE_YM2149_DYNAMIC_TABLE //using file 3.7.0
 #endif
 
 #endif//ym2149
@@ -1790,12 +1786,9 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 
 //#define SSE_STRUCTURE_IOR
 
-#ifdef SSE_CPU
-#define SSE_STRUCTURE_CPU_POKE_NOINLINE //little detail
-#endif
 
 #ifdef SSE_DMA
-#define SSE_STRUCTURE_DMA_INC_ADDRESS
+#define SSE_STRUCTURE_DMA_INC_ADDRESS//3.5.1
 #endif
 
 #if defined(LEGACY_BUILD)
@@ -1852,6 +1845,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_VAR_RESIZE // reduce memory set (int->BYTE etc.)
 #define SSE_VAR_RESIZE_370
 #define SSE_VAR_REWRITE // to conform to what compilers expect (warnings...)
+#define SSE_INLINE_370
 #define SSE_VAR_SNAPSHOT_INI//3.7
 #define SSE_VAR_STEALTH // don't tell we're an emulator (option)
 #define SSE_VAR_STEALTH2 //bugfix 3.7
@@ -1995,7 +1989,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #endif
 
 #if !defined(SSE_LEAN_AND_MEAN)
-#define SSE_VID_CHECK_POINTERS
+#define SSE_VID_CHECK_POINTERS//3.7.0
 #endif
 
 #endif//SSE_VIDEO
@@ -2014,194 +2008,6 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 
 #define SSE_SWITCHES_VERSIONS
 
-#if _MSC_VER >= 1500 
-#define SSE_VS2008 // so that the VS2008 build compiles
-#endif
-
-
-
-
-// DEBUG //
-
-//TODO also for debug, history only
-
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG) 
-
-// SSE_DEBUG is defined or not by the environment, just like STEVEN_SEAGAL
-
-#if defined(DEBUG_BUILD) && defined(WIN32)
-#define SSE_BOILER // = DEBUG_BUILD mods
-#endif
-
-#define SSE_DEBUG_TRACE
-
-#ifdef SSE_DEBUG_TRACE
-#ifdef _DEBUG // VC
-#define SSE_DEBUG_TRACE_IDE
-#endif
-#if defined(DEBUG_BUILD) 
-#define SSE_DEBUG_TRACE_FILE
-#elif defined(UNIX)
-#define SSE_DEBUG_TRACE_FILE
-#else//VC
-//#define SSE_DEBUG_TRACE_FILE
-#endif
-#endif
-
-// boiler + IDE
-
-#define SSE_DEBUG_FRAME_REPORT
-
-#if defined(SSE_DEBUG_FRAME_REPORT)
-#define SSE_DEBUG_FRAME_REPORT_ON_STOP // each time we stop emulation
-
-// Normally those are controlled with the Control mask browser
-//#define SSE_DEBUG_FRAME_REPORT_ACIA
-//#define SSE_DEBUG_FRAME_REPORT_BLITTER
-//#define SSE_DEBUG_FRAME_REPORT_PAL
-//#define SSE_DEBUG_FRAME_REPORT_HSCROLL // & linewid
-//#define SSE_DEBUG_FRAME_REPORT_SDP_LINES
-//#define SSE_DEBUG_FRAME_REPORT_SDP_READ//?
-//#define SSE_DEBUG_FRAME_REPORT_SDP_WRITE//?
-//#define SSE_DEBUG_FRAME_REPORT_SHIFTER_TRICKS
-//#define SSE_DEBUG_FRAME_REPORT_SHIFTER_TRICKS_BYTES
-//#define SSE_DEBUG_FRAME_REPORT_SHIFTMODE
-//#define SSE_DEBUG_FRAME_REPORT_SYNCMODE
-//#define SSE_DEBUG_FRAME_REPORT_VIDEOBASE
-///#define SSE_DEBUG_FRAME_REPORT_VERTICAL_OVERSCAN//no, sthg else!
-
-#endif//frame report
-
-#define SSE_DEBUG_REPORT_SCAN_Y_ON_CLICK
-#define SSE_DEBUG_REPORT_SDP // tracking sdp at start of each scanline
-#define SSE_DEBUG_REPORT_SDP_ON_CLICK // yeah!
-
-#define SSE_DEBUG_LOG_OPTIONS // mine, boiler or _DEBUG
-
-#if !defined(BCC_BUILD) && !defined(_DEBUG) && defined(SSE_BOILER)
-// supposedly we're building the release boiler, make sure features are in
-
-#define SSE_DEBUG_TRACE_IO
-
-#if !defined(SSE_UNIX)
-//#define SSE_SHIFTER_REPORT_VBL_TRICKS // a line each VBL
-#endif
-
-#define SSE_DEBUG_START_STOP_INFO
-
-#define SSE_IPF_TRACE_SECTORS // show sector info (IPF)
-
-#define SSE_IKBD_6301_TRACE 
-#define SSE_IKBD_6301_TRACE_SCI_RX
-#define SSE_IKBD_6301_TRACE_SCI_TX
-#define SSE_IKBD_6301_TRACE_KEYS
-
-#else // for custom debugging
-
-#define SSE_DEBUG_START_STOP_INFO
-#define SSE_DEBUG_TRACE_IO
-
-//#define SSE_IKBD_TRACE_CPU_READ
-//#define SSE_IKBD_TRACE_CPU_READ2 //beware polling
-
-#define SSE_IKBD_6301_TRACE 
-
-#if defined(SSE_IKBD_6301_TRACE)
-#define SSE_IKBD_6301_TRACE_SCI_RX
-#define SSE_IKBD_6301_TRACE_SCI_TX
-#define SSE_IKBD_6301_TRACE_KEYS
-//#define SSE_IKBD_6301_TRACE_INT_TIMER
-//#define SSE_IKBD_6301_TRACE_INT_SCI
-//#define SSE_IKBD_6301_TRACE_STATUS
-//#define SSE_IKBD_6301_TRACE_WRITES
-#endif
-
-//#define SSE_IKBD_6301_DISASSEMBLE_ROM 
-
-
-#if defined(SSE_MIDI)
-#define SSE_MIDI_TRACE_BYTES_IN
-#define SSE_MIDI_TRACE_BYTES_OUT
-#define SSE_MIDI_TRACE_BYTES_OUT_OVR
-#define SSE_MIDI_TRACE_READ_STATUS
-#endif
-
-
-
-//#define SSE_DEBUG_TRACE_CPU_ROUNDING
-//#define SSE_DEBUG_TRACE_PREFETCH
-#define SSE_DEBUG_TRACE_SDP_READ_IR
-
-//#define SSE_YM2149_REPORT_DRIVE_CHANGE // as FDC trace
-
-#endif
-
-#if defined(SSE_UNIX)
-#define SSE_UNIX_TRACE // TRACE into the terminal (if it's open?)
-#endif
-
-//#define SSE_CPU_EXCEPTION_TRACE_PC // reporting all PC (!)
-
-#if defined(SSE_BETA)
-//#define SSE_CPU_DETECT_STACK_PC_USE // push garbage!!
-#endif
-
-//#define SSE_CPU_TRACE_DETECT
-#define SSE_FDC_TRACE_IRQ
-#define SSE_FDC_TRACE_STATUS //spell out status register
-//#define SSE_FDC_TRACE_STR // trace read STR (careful)
-
-//#define SSE_SHIFTER_DRAW_DBG  // totally bypass CheckSideOverscan() & Render()
-
-//#define SSE_SHIFTER_IOR_TRACE // specific, not "log"
-//#define SSE_SHIFTER_IOW_TRACE // specific, not "log"
-#if !defined(SSE_DEBUG_TRACE_IDE)
-#define SSE_SHIFTER_REPORT_VBL_TRICKS // a line each VBL
-#endif
-
-#if !defined(SSE_BOILER_TRACE_CONTROL)
-//#define SSE_DEBUG_FRAME_REPORT_VERTICAL_OVERSCAN
-//#define SSE_SHIFTER_VERTICAL_OVERSCAN_TRACE
-#endif
-
-//#define SSE_SHIFTER_STEEM_ORIGINAL // only for debugging/separate blocks
-
-
-#if defined(SSE_SHIFTER_SDP)
-//#define SSE_SHIFTER_SDP_TRACE 
-//#define SSE_SHIFTER_SDP_TRACE2//todo control mask?
-//#define SSE_SHIFTER_SDP_TRACE3 // report differences with Steem v3.2 
-#endif
-
-#define SSE_TOS_DONT_TRACE_3F//read file
-#define SSE_TOS_DONT_TRACE_40//write file
-#define SSE_TOS_DONT_TRACE_42//seek file
-#define SSE_TOS_TRACE_CONOUT
-
-#ifdef SSE_BOILER
-#define SSE_BOILER_MUTE_SOUNDCHANNELS_ENV
-#define SSE_BOILER_MOD_VBASE
-#define SSE_BOILER_PSEUDO_STACK
-#define SSE_BOILER_EXTRA_IOLIST
-#define SSE_BOILER_BROWSERS_VECS // in 'reg' columns, eg TB for timer B
-#define SSE_BOILER_TRACE_MFP1 // one log option for MFP, one for interrupt
-#define SSE_DEBUG_FRAME_REPORT_MASK2
-#define SSE_BOILER_DISPLACEMENT_DECIMAL
-
-#define SSE_BOILER_SHOW_ACT //yes it was useful
-#define SSE_BOILER_SHOW_FRAME //yes it was useful
-#define SSE_BOILER_SHOW_TRICKS //line
-#define SSE_BOILER_SHOW_TRICKS2 //frame
-#define SSE_BOILER_MOD_VBASE2 //move it
-#define SSE_BOILER_DECRYPT_TIMERS
-#define SSE_BOILER_FRAME_INTERRUPTS2
-#endif
-//#define SSE_DRIVE_COMPUTE_BOOT_CHECKSUM //TODO boiler control
-
-
-#endif//dbg
-
 
 //////////
 // v3.3 //
@@ -2214,18 +2020,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 
 #if SSE_VERSION>=330
 
-#define SSE_CPU        // MC68000 microprocessor
-#define SS_HATARI     // using some Hatari code
-#define SSE_GUI        //
-#define SSE_IKBD       // keyboard, mouse, joystick
-#define SSE_INTERRUPT  // HBL, VBL, MFP
-#define SSE_MMU        // Memory Manager Unit (of the ST, no paging)
-#define SSE_OSD        // On Screen Display (drive leds, track info, logo)
-#define SSE_SHIFTER    // The legendary custom Shifter and all its tricks
-#define SSE_STF        // switch STF/STE
-#define SSE_VARIOUS    // Mouse capture, keyboard click, unrar...
-#define SSE_VIDEO      // large borders, screenshot, recording
-
+#define SS_HATARI     // using some Hatari code (see old repository)
 
 #if defined(SSE_CPU)
 #define SSE_CPU_EXCEPTION    // crash like Windows 98
@@ -2241,11 +2036,44 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_CPU_MOVE_L
 #endif//instr
 #endif//cpu
+#if defined(SSE_DEBUG) 
+#define SSE_DEBUG_TRACE
+#ifdef SSE_DEBUG_TRACE
+#ifdef _DEBUG // VC
+#define SSE_DEBUG_TRACE_IDE
+#endif
+#if defined(DEBUG_BUILD) 
+#define SSE_DEBUG_TRACE_FILE
+#elif defined(UNIX)
+#define SSE_DEBUG_TRACE_FILE
+#else//VC
+//#define SSE_DEBUG_TRACE_FILE
+#endif
+#endif
+#define SSE_DEBUG_FRAME_REPORT //it was already there in v3.3!
+#if defined(SSE_DEBUG_FRAME_REPORT)
+#define SSE_DEBUG_FRAME_REPORT_ON_STOP // each time we stop emulation
+// Normally those are controlled with the Control mask browser
+//#define SSE_DEBUG_FRAME_REPORT_ACIA
+//#define SSE_DEBUG_FRAME_REPORT_BLITTER
+//#define SSE_DEBUG_FRAME_REPORT_PAL
+//#define SSE_DEBUG_FRAME_REPORT_HSCROLL // & linewid
+//#define SSE_DEBUG_FRAME_REPORT_SDP_LINES
+//#define SSE_DEBUG_FRAME_REPORT_SDP_READ//?
+//#define SSE_DEBUG_FRAME_REPORT_SDP_WRITE//?
+//#define SSE_DEBUG_FRAME_REPORT_SHIFTER_TRICKS
+//#define SSE_DEBUG_FRAME_REPORT_SHIFTER_TRICKS_BYTES
+//#define SSE_DEBUG_FRAME_REPORT_SHIFTMODE
+//#define SSE_DEBUG_FRAME_REPORT_SYNCMODE
+//#define SSE_DEBUG_FRAME_REPORT_VIDEOBASE
+///#define SSE_DEBUG_FRAME_REPORT_VERTICAL_OVERSCAN//no, sthg else!
+#endif//frame report
+#endif//dbg
 #if defined(SSE_INTERRUPT)
 #define SSE_INT_MFP        // MC68901 Multi-Function Peripheral Chip
 #endif
 #if defined(SSE_INT_MFP)
-#define SSE_INT_MFP_IACK_LATENCY //was SS_MFP_PENDING in v3.3
+#define SSE_INT_MFP_IACK_LATENCY //was SS_MFP_PENDING in v3.3 undef 3.7.0
 #define SSE_INT_MFP_RATIO // change the values of CPU & MFP freq!
 #define SSE_INT_MFP_TIMER_B 
 #if defined(SSE_INT_MFP_RATIO) 
@@ -2302,16 +2130,15 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 
 #if SSE_VERSION>=340
 
+#if defined(SSE_KEYBOARD)
 #define SSE_ACIA       // MC6850 Asynchronous Communications Interface Adapter
-#define SSE_BLITTER    // spelled BLiTTER by those in the known!
-#define SSE_FDC        // WD1772 floppy disk controller
-#define SSE_FLOPPY     // DMA, FDC, Pasti, etc
-#define SSE_HACKS      // an option for dubious fixes
-#define SSE_SOUND      // YM2149, STE DMA sound, Microwire
-#define SSE_ROM        // Cartridge, TOS
+#define SSE_IKBD       // HD6301V1 IKBD (keyboard, mouse, joystick controller)
+#endif
+#if defined(SSE_ROM)
 #define SSE_TOS        // The Operating System
-#ifdef UNIX
-#define SSE_UNIX       // Unix build of Steem SSE
+#endif
+#if defined(SSE_FLOPPY)
+#define SSE_FDC        // WD1772 floppy disk controller
 #endif
 #if defined(SSE_ACIA)
 #define SSE_ACIA_BUS_JAM_NO_WOBBLE // simple "fix" //undef 3.6.4
@@ -2343,6 +2170,12 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_CPU_PREFETCH_TRACE 
 #endif
 #endif//cpu
+#if defined(SSE_DEBUG)
+#define SSE_DEBUG_START_STOP_INFO
+#if defined(SSE_UNIX)
+#define SSE_UNIX_TRACE // TRACE into the terminal (if it's open?)
+#endif
+#endif
 #if defined(SSE_FDC) 
 #define SSE_FDC_ACCURATE
 #endif
@@ -2370,6 +2203,19 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_IKBD_6301_RUN_IRQ_TO_END // hack around Sim6xxx's working
 #define SSE_IKBD_6301_SET_TDRE
 #define SSE_IKBD_6301_TIMER_FIX // not sure there was a problem
+#ifdef SSE_DEBUG
+//#define SSE_IKBD_6301_DISASSEMBLE_ROM 
+#define SSE_IKBD_6301_TRACE
+#if defined(SSE_IKBD_6301_TRACE)
+#define SSE_IKBD_6301_TRACE_SCI_RX
+#define SSE_IKBD_6301_TRACE_SCI_TX
+#define SSE_IKBD_6301_TRACE_KEYS
+//#define SSE_IKBD_6301_TRACE_INT_TIMER
+//#define SSE_IKBD_6301_TRACE_INT_SCI
+//#define SSE_IKBD_6301_TRACE_STATUS
+//#define SSE_IKBD_6301_TRACE_WRITES
+#endif
+#endif
 #endif//6301
 #endif//ikbd
 #if defined(SSE_INTERRUPT)
@@ -2394,7 +2240,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #endif
 #if defined(SSE_INT_MFP_TIMER_B)
 #define SSE_INT_MFP_TIMER_B_AER // earlier trigger (from Hatari)
-// #define SSE_INT_MFP_TIMER_B_NO_WOBBLE
+///#define SSE_INT_MFP_TIMER_B_NO_WOBBLE
 #endif
 #endif//mfp
 #if defined(SSE_SDL)
@@ -2478,6 +2324,9 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 
 #if SSE_VERSION>=341
 
+#ifdef SSE_DEBUG
+#define SSE_FDC_TRACE_IRQ
+#endif
 #if defined(SSE_INTERRUPT)
 #if defined(SSE_INT_VBL)
 //#define SSE_INT_VBI_START // ideal but many problems, eg Calimero
@@ -2500,14 +2349,14 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 
 #if SSE_VERSION>=350
 
+#if defined(SSE_FLOPPY)
 #define SSE_DMA        // Custom Direct Memory Access chip (disk)
 #define SSE_DRIVE      // SF314 floppy disk drive
 #ifdef WIN32
 #define SSE_IPF        // CAPS support (IPF, CTR disk images) 
 #endif
-#define SSE_MIDI       // Musical Instrument Digital Interface
+#endif
 //#define SSE_SDL        // Simple DirectMedia Layer (TODO)
-
 /*
 #define SSE_SSE_OPTION_PAGE // a new page for all our options
 #define SSE_SSE_OPTION_STRUCT // structure SSEOption 
@@ -2561,6 +2410,29 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #endif//CORRECTING_PREFETCH_TIMING
 #endif//prefetch
 #endif//cpu
+#if defined(SSE_DEBUG)
+//#define SSE_CPU_EXCEPTION_TRACE_PC // reporting all PC (!)
+#define SSE_FDC_TRACE_STATUS //spell out status register
+#define SSE_IPF_TRACE_SECTORS // show sector info (IPF)
+#define SSE_DEBUG_LOG_OPTIONS // mine, boiler or _DEBUG
+#define SSE_DEBUG_TRACE_IO
+//#define SSE_DEBUG_TRACE_PREFETCH
+//#define SSE_DEBUG_TRACE_CPU_ROUNDING
+//#define SSE_DEBUG_TRACE_SDP_READ_IR
+//#define SSE_SHIFTER_DRAW_DBG  // totally bypass CheckSideOverscan() & Render()
+#if !defined(SSE_DEBUG_TRACE_IDE) && !defined(SSE_UNIX)
+#define SSE_SHIFTER_REPORT_VBL_TRICKS // a line each VBL
+#endif
+//#define SSE_SHIFTER_STEEM_ORIGINAL // only for debugging/separate blocks
+#if !defined(SSE_BOILER_TRACE_CONTROL)
+//#define SSE_SHIFTER_VERTICAL_OVERSCAN_TRACE
+#endif
+#if defined(SSE_SHIFTER_SDP)
+//#define SSE_SHIFTER_SDP_TRACE 
+//#define SSE_SHIFTER_SDP_TRACE2//todo control mask?
+//#define SSE_SHIFTER_SDP_TRACE3 // report differences with Steem v3.2 
+#endif
+#endif//dbg
 #if defined(SSE_DMA)
 //#define SSE_DMA_ADDRESS // enforcing order for write (no use?)
 #define SSE_DMA_COUNT_CYCLES
@@ -2571,6 +2443,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_DMA_IO //necessary
 #define SSE_DMA_READ_STATUS 
 #define SSE_DMA_SECTOR_COUNT
+#define SSE_DMA_SECTOR_COUNT2
 #define SSE_DMA_WRITE_CONTROL
 #endif//dma
 #if defined(SSE_FDC_ACCURATE) 
@@ -2678,7 +2551,19 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 // #define SS_ACIA_REMOVE_OLD_VARIABLES
 #if defined(SSE_DEBUG)
 // #define SSE_ACIA_TEST_REGISTERS//????
+#if defined(SSE_BETA)
+//#define SSE_CPU_DETECT_STACK_PC_USE // push garbage!!
+//#define SSE_CPU_TRACE_DETECT
 #endif
+#if defined(SSE_MIDI)
+//#define SSE_MIDI_TRACE_BYTES_IN
+//#define SSE_MIDI_TRACE_BYTES_OUT
+#define SSE_MIDI_TRACE_BYTES_OUT_OVR
+//#define SSE_MIDI_TRACE_READ_STATUS
+#endif
+//#define SSE_SHIFTER_IOR_TRACE // specific, not "log"
+//#define SSE_SHIFTER_IOW_TRACE // specific, not "log"
+#endif//dbg
 #define SSE_ACIA_USE_REGISTERS
 #endif
 #if defined(SSE_BLITTER)
@@ -2689,7 +2574,6 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #endif
 #if defined(SSE_CPU)
 #if defined(SSE_CPU_EXCEPTION)
-
 #define SSE_CPU_PRE_DEC // no "pre" decrement if exception
 #define SSE_CPU_TRUE_PC // based on Motorola microcodes!
 #endif
@@ -2828,6 +2712,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #endif
 //#define SSE_STRUCTURE_IOR
 #endif
+#define SSE_TIMINGS
 #if defined(SSE_TIMINGS)
 #define SSE_TIMINGS_MS_TO_HBL
 #endif
@@ -2916,7 +2801,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_SHIFTER_PANIC // funny effect, interleaved border bands
 #endif
 #endif//unstable
-#define SSE_SHIFTER_REMOVE_USELESS_VAR //6.3.1
+#define SSE_SHIFTER_REMOVE_USELESS_VAR //3.6.1
 #define SSE_SHIFTER_VERTICAL_OPTIM1 //avoid useless tests
 #endif//sft
 #if defined(SSE_SOUND)
@@ -3162,12 +3047,17 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #endif
 #define SSE_CPU_UNSTOP
 #endif//cpu
+#if defined(SSE_DEBUG)
+#define SSE_DRIVE_COMPUTE_BOOT_CHECKSUM //TODO boiler control
+#define SSE_DEBUG_REPORT_SCAN_Y_ON_CLICK
+#define SSE_DEBUG_REPORT_SDP // tracking sdp at start of each scanline
+#define SSE_DEBUG_REPORT_SDP_ON_CLICK // yeah!
+#endif
 #if defined(SSE_FLOPPY)
 #if defined(SSE_DMA)
 #define SSE_DMA_ADDRESS_EVEN
 #endif
 #if defined(SSE_DRIVE)
-#define SSE_DRIVE_COMPUTE_BOOT_CHECKSUM // to mod a boot sector
 #define SSE_DRIVE_CREATE_ST_DISK_FIX // from Petari
 #define SSE_DRIVE_SINGLE_SIDE
 #if defined(SSE_DRIVE_SINGLE_SIDE)
@@ -3198,11 +3088,14 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #if defined(SSE_INT_JITTER) && defined(SSE_INT_HBL)
 #define SSE_INT_JITTER_HBL //defined again for 3615HMD
 #endif
+#if defined(SSE_INT_JITTER) && defined(SSE_INT_VBL)
+#undef SSE_INT_JITTER_VBL_STE//3.5.1,undef 3.6.0
+#endif
 #endif
 #if defined(SSE_INT_MFP)
 #undef SSE_INT_MFP_IRQ_DELAY
 #define SSE_INT_MFP_IRQ_DELAY3 // undef v3.6.1
-#define SSE_INT_MFP_TIMERS_BASETIME //undef 3.7.0
+#define SSE_INT_MFP_TIMERS_BASETIME //
 #endif
 #if defined(SSE_MMU)
 #if defined(WIN32) //TODO Unix
@@ -3270,9 +3163,13 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #if defined(SSE_BOILER)
 #define SSE_BOILER_BROWSER_INSTRUCTIONS //window name
 #define SSE_BOILER_FAKE_IO //to control some debug options
+#define SSE_BOILER_FRAME_REPORT_MASK // for interactive control in boiler
 #if defined(SSE_BOILER_FAKE_IO)
+#define SSE_DEBUG_TRACE_IO//
+#define SSE_BOILER_MUTE_SOUNDCHANNELS_ENV//
 #ifdef SSE_OSD
 #define SSE_BOILER_FRAME_INTERRUPTS//OSD, handy
+#define SSE_BOILER_FRAME_INTERRUPTS2
 #endif
 #define SSE_BOILER_MUTE_SOUNDCHANNELS //fake io
 #define SSE_BOILER_TRACE_CONTROL //beyond log options
@@ -3282,7 +3179,6 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_BOILER_MOVE_OTHER_SP2//SSP+USP
 #define SSE_BOILER_STACK_68030_FRAME //request, to check compatibility
 #define SSE_BOILER_STACK_CHOICE
-#define SSE_DEBUG_FRAME_REPORT_MASK // for interactive control in boiler
 #endif//boiler
 #if defined(SSE_CPU)
 #define SSE_CPU_ALT_REG_NAMES  // convenience
@@ -3291,6 +3187,16 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_CPU_DIVU_OVERFLOW
 #endif
 #endif//cpu
+#ifdef SSE_DEBUG
+#if !defined(SSE_BOILER_TRACE_CONTROL)
+//#define SSE_DEBUG_FRAME_REPORT_VERTICAL_OVERSCAN
+//#define SSE_SHIFTER_VERTICAL_OVERSCAN_TRACE
+#endif
+#define SSE_TOS_DONT_TRACE_3F//read file
+#define SSE_TOS_DONT_TRACE_40//write file
+#define SSE_TOS_DONT_TRACE_42//seek file
+//#define SSE_TOS_TRACE_CONOUT
+#endif
 #if defined(SSE_FLOPPY)
 #if defined(SSE_DMA)
 #define SSE_DMA_TRACK_TRANSFER // debug + possible later use
@@ -3323,7 +3229,6 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #endif
 #if defined(SSE_INT_JITTER) && defined(SSE_INT_VBL) && defined(SSE_STF)
 #define SSE_INT_JITTER_RESET
-#define SSE_INT_JITTER_VBL2 //hack Demoniak
 #endif
 #endif//int
 #if defined(SSE_INT_MFP)
@@ -3349,7 +3254,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #if defined(SSE_TOS)
 #undef SSE_TOS_NO_INTERCEPT_ON_RTE1
 #define SSE_TOS_GEMDOS_NOINLINE
-#define SSE_TOS_GEMDOS_PEXEC6 ReDMCSB 100% in TOS104
+#define SSE_TOS_GEMDOS_PEXEC6 //ReDMCSB 100% in TOS104
 #define SSE_TOS_STRUCT
 #define SSE_TOS_GEMDOS_VAR1 //various unimportant fixes 
 #if defined(SSE_TOS_STRUCT)
@@ -3435,10 +3340,8 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #endif//363
 
 
-#if SSE_VERSION>=364 //&& defined(STUPID)
+#if SSE_VERSION>=364
 
-
-#define SSE_TIMINGS
 
 #if defined(SSE_CPU)
 #define SSE_CPU_E_CLOCK // other place?
@@ -3458,6 +3361,9 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_CPU_ROUNDING_CMPI_L
 #endif//rounding
 #endif//cpu
+#ifdef SSE_DEBUG
+//#define SSE_YM2149_REPORT_DRIVE_CHANGE // as FDC trace
+#endif
 #if defined(SSE_FLOPPY)
 #if defined(SSE_DMA)
 #undef SSE_DMA_COUNT_CYCLES
@@ -3496,7 +3402,6 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #endif
 #define SSE_INT_HBL_INLINE
 ///#undef SSE_INT_JITTER_HBL//SSE_INT_JITTER_HBL defined in 3.6.4
-
 #endif//hbl
 #endif//int
 #if defined(SSE_INT_MFP)
@@ -3529,12 +3434,26 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_BLITTER_RELAPSE//hack
 #endif
 #if defined(SSE_BOILER)
+#define SSE_BOILER_EXCEPTION_NOT_TOS
 #define SSE_BOILER_MENTION_READONLY_BROWSERS
 #define SSE_BOILER_MUTE_SOUNDCHANNELS_NOISE
 #define SSE_BOILER_NEXT_PRG_RUN//request
 #define SSE_BOILER_WIPE_TRACE2//need date
 #define SSE_BOILER_NO_SET_BRK_PC_MENU
-#endif
+#define SSE_BOILER_MOD_VBASE
+#define SSE_BOILER_PSEUDO_STACK
+#define SSE_BOILER_EXTRA_IOLIST
+#define SSE_BOILER_BROWSERS_VECS // in 'reg' columns, eg TB for timer B
+#define SSE_BOILER_TRACE_MFP1 // one log option for MFP, one for interrupt
+#define SSE_BOILER_FRAME_REPORT_MASK2
+#define SSE_BOILER_DISPLACEMENT_DECIMAL
+#define SSE_BOILER_SHOW_ACT //yes it was useful
+#define SSE_BOILER_SHOW_FRAME //yes it was useful
+#define SSE_BOILER_SHOW_TRICKS //line
+#define SSE_BOILER_SHOW_TRICKS2 //frame
+#define SSE_BOILER_MOD_VBASE2 //move it
+#define SSE_BOILER_DECRYPT_TIMERS
+#endif//boiler
 #if defined(SSE_CPU)
 #define SSE_CPU_DATABUS
 #define SSE_CPU_DEST_IS_REGISTER //just new macro
@@ -3548,9 +3467,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #endif
 #define SSE_CPU_TRACE_REFACTOR//debug-only?
 //#define SSE_CPU_TRACE_TIMING//tests
-////#define SSE_CPU_TRUE_PC2
 #define SSE_CPU_UNSTOP2//not twice
-//#undef SSE_CPU_E_CLOCK_DISPATCHER
 #if defined(SSE_CPU_EXCEPTION)
 #undef SSE_CPU_IGNORE_RW_4MB // F-29 hangs on 4MB machines, nothing to fix
 #define SSE_CPU_ASSERT_ILLEGAL2 // move.b EA=an
@@ -3657,6 +3574,11 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_CPU_ROUNDING_SUBX
 #endif
 #endif//cpu
+#ifdef SSE_DEBUG
+#define SSE_DRIVE_COMPUTE_BOOT_CHECKSUM //TODO boiler control
+//#define SSE_FDC_TRACE_STR // trace read STR (careful)
+#define SSE_DEBUG_WRITE_TRACK_TRACE_IDS
+#endif
 #if defined(SSE_FLOPPY)
 #define SSE_PASTI_ONLY_STX_OPTION3 // move that option SSE -> disk manager
 #define SSE_FLOPPY_EVENT
@@ -3686,6 +3608,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #if defined(SSE_DRIVE)
 #define SSE_DRIVE_INDEX_PULSE
 #define SSE_DRIVE_INDEX_STEP
+#define SSE_DRIVE_IP_HACK
 #define SSE_DRIVE_MEDIACHANGE // for CAPSImg, Pasti
 #define SSE_DRIVE_REM_HACKS 
 #if defined(SSE_DRIVE_REM_HACKS)
@@ -3716,6 +3639,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_DMA_DOUBLE_FIFO
 #define SSE_DMA_DRQ
 //#define SSE_DMA_DRQ_RND 
+#define SSE_DMA_FIFO_NATIVE2 //bugfix International Sports Challenge-ICS fast
 #define SSE_DMA_FIFO_READ_TRACK //TODO
 #endif
 #if defined(SSE_FDC_ACCURATE) 
@@ -3739,6 +3663,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_WD1772_REG2 // DSR, ByteCount
 #define SSE_WD1772_REG2_B // StatusType
 #endif
+#define SSE_YM2149C // turn on/off motor in drives
 #endif//floppy
 #if defined(SSE_GUI)
 #define SSE_GUI_CUSTOM_WINDOW_TITLE
@@ -3748,6 +3673,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_GUI_DISK_MANAGER_INSERT_DISKB_LS//load/save option
 #define SSE_GUI_DISK_MANAGER_LONG_NAMES1
 #define SSE_GUI_DISK_MANAGER_NO_DISABLE_B_MENU // click on icon
+#define SSE_VAR_CLIPBOARD_TEXT
 #if defined(SSE_VAR_CLIPBOARD_TEXT) && defined(SSE_GUI_DISK_MANAGER_LONG_NAMES1)
 #define SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD
 #endif
@@ -3765,9 +3691,6 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_GUI_INFOBOX15 // release notes (not sse faq)
 #define SSE_GUI_INFOBOX16 // no crash on big files
 #define SSE_GUI_INFOBOX_LINKS
-#if defined(SSE_PRIVATE_BUILD)
-#define SSE_GUI_OPTION_FOR_TESTS 
-#endif
 #endif
 #if defined(SSE_GUI_STATUS_STRING)
 #undef SSE_GUI_STATUS_STRING_IPF // what if mixed?
@@ -3796,13 +3719,16 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #undef SSE_IKBD_6301_MOUSE_ADJUST_SPEED //def 3.5.1
 #define SSE_IKBD_6301_MOUSE_ADJUST_SPEED2 //better
 //#define SSE_IKBD_6301_MOUSE_MASK2//hack but game is bugged
+#define SSE_IKBD_6301_MOUSE_MASK3 // reset
+#define SSE_IKBD_6301_SEND1 // bugfix
+#define SSE_IKBD_6301_STUCK_KEYS // reset
 #ifdef SSE_BETA
 //#define SSE_IKBD_6301_NOT_OPTIONAL
 #endif
 #define SSE_IKBD_6301_ROM_KEYTABLE //spare an array
 #endif//6301
-#endif//ikbd
 #define SSE_JOYSTICK_JUMP_BUTTON
+#endif//ikbd
 #if defined(SSE_INTERRUPT)
 #undef SSE_INT_HBL_IACK_FIX
 #define SSE_INT_HBL_IACK2
@@ -3813,9 +3739,6 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #undef SSE_INT_JITTER_RESET
 #endif
 #if defined(SSE_INT_MFP)
-///#undef SSE_INT_MFP_TIMERS_BASETIME
-#define SSE_INT_MFP_TIMERS_NO_BOOST_LIMIT
-#ifdef SSE_INT_MFP // tests, refactor
 #define SSE_INT_MFP_AUTO_NO_IS_CLEAR//test
 #define SSE_INT_MFP_OBJECT // new MC68901 chip in out ST!
 #if defined(SSE_INT_MFP_OBJECT)
@@ -3827,6 +3750,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_INT_MFP_IACK_LATENCY3 //timer B
 #define SSE_INT_MFP_IACK_LATENCY4 //delay timers 
 #define SSE_INT_MFP_IACK_LATENCY5 //timer B 
+#define SSE_INT_MFP_TIMERS_NO_BOOST_LIMIT
 #define SSE_INT_MFP_OPTION //performance/precision
 #define SSE_INT_MFP_UTIL
 #ifdef SSE_BETA
@@ -3835,9 +3759,9 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_INT_MFP_SPURIOUS//cool crashes
 #define SSE_INT_MFP_CHECKTIMEOUT_ON_STOP
 #undef SSE_INT_MFP_PATCH_TIMER_D//Audio Artistic
+#define SSE_INT_MFP_READ_DELAY1 
 #undef SSE_INT_MFP_WRITE_DELAY1 //Audio Artistic
 #define SSE_INT_MFP_WRITE_DELAY2
-#endif
 #if defined(SSE_INT_MFP_RATIO)
 #define SSE_INT_MFP_RATIO_OPTION // user can fine tune CPU clock
 #define SSE_INT_MFP_RATIO_OPTION2 // L/S
@@ -3845,18 +3769,18 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #define SSE_INT_MFP_RATIO_PRECISION3 // 100%
 #endif
 #define SSE_INT_MFP_RATIO_STE2 //LoSTE?
-//#define SSE_INT_MFP_RATIO_STE3 // = STF
+//#define SSE_INT_MFP_RATIO_STE3 // = STF ////////////////////////// <--
 #define SSE_INT_MFP_RATIO_STF2 
 #define SSE_INT_MFP_REFACTOR1
 //#define SSE_INT_MFP_REFACTOR2 //doesn't work at all yet
 #undef SSE_INT_MFP_TIMER_B_NO_WOBBLE //there is wobble
 #define SSE_INT_MFP_TIMER_B_WOBBLE2 // 2 instead of 4
 #define SSE_INT_MFP_TIMER_B_WOBBLE_HACK //for Sunny
-//#define SSE_INT_MFP_TIMER_RATIO1 //unimportant
+#define SSE_INT_MFP_TIMERS_RATIO1 //unimportant
 #define SSE_INT_MFP_TIMERS_INLINE
-//#define SSE_INT_MFP_TIMERS_WOBBLE //as for timer B
 //#define SSE_INT_MFP_TIMERS_RUN_IF_DISABLED //load!
-#define SSE_INT_MFP_TIMERS_STARTING_DELAY //12->?
+//#define SSE_INT_MFP_TIMERS_STARTING_DELAY //12->?
+//#define SSE_INT_MFP_TIMERS_WOBBLE //as for timer B
 #endif//SSE_INT_MFP
 #endif
 #if defined(SSE_MIDI) 
@@ -3943,13 +3867,13 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #endif
 #if defined(SSE_VARIOUS)
 #undef SSE_VAR_FULLSCREEN_DONT_START
-#define SSE_VAR_CLIPBOARD_TEXT
 #ifdef SSE_DEBUG
 #define SSE_VAR_NO_INTRO
 #endif
 #define SSE_GUI_PATCH_SCROLLBAR
 #define SSE_VAR_RESET_SAME_DISK//test (with .PRG support)
 #define SSE_VAR_RESIZE_370
+#define SSE_INLINE_370
 #define SSE_VAR_SNAPSHOT_INI
 #define SSE_VAR_STEALTH2 //bugfix 3.7
 #endif//various
@@ -3986,6 +3910,7 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 #endif
 #if defined(SSE_VID_DIRECT3D)
 #undef SSE_VID_CHECK_DDFS
+#undef SSE_VID_CHECK_DDFS2
 #define SSE_VID_D3D //main
 #define SSE_VID_D3D1 //adaptation
 #define SSE_VID_D3D2 //adaptation
@@ -4143,15 +4068,19 @@ check snapshot Version (in LoadSave.h); rc\resource.rc
 //#define TEST09
 #endif
 
-#if defined(SSE_BETA) && SSE_VERSION>=370
-// those switches are later copied to both features and version zones!
+#if defined(SSE_PRIVATE_BUILD)
+//#define ENABLE_VARIABLE_SOUND_DAMPING
+//#define ENABLE_VARIABLE_SOUND_DAMPING2
+#define SSE_GUI_OPTION_FOR_TESTS 
+#endif
+
+#if defined(SSE_BETA) && SSE_VERSION>370
+// those switches are later moved to both features and version zones!
 
 //#define SSE_DRIVE_WRITE_TRACK_11
 //#define SSE_GUI_FULLSCREEN_NO_VSYNC_OPTION //but all the rest?
 //#define SSE_SCP //TODO
 //#define SSE_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
-
-
 
 #endif//beta
 

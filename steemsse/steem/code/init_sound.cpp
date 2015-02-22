@@ -19,7 +19,6 @@ for output.
 EXT bool DSOpen INIT(0);
 EXT int UseSound INIT(0);
 
-
 #ifdef UNIX
 
 EXT EasyStr sound_device_name; // INIT("/dev/dsp");

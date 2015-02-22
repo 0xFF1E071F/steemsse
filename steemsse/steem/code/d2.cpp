@@ -2734,10 +2734,18 @@ void d2_0110(){  //bCC
   }else{
     d2_ap=d2_fetchW();
     if (d2_ap & 0x8000){
+#if defined(SSE_BOILER_DISPLACEMENT_DECIMAL)
+      d2_dest=EasyStr(".l -")+STRS(0x10000-d2_ap);
+#else
       d2_dest=EasyStr(".l -$")+HEXS(0x10000-d2_ap);
+#endif
       d2_ap=WORD(-(0x10000-d2_ap));
     }else{
+#if defined(SSE_BOILER_DISPLACEMENT_DECIMAL)
+      d2_dest=EasyStr(".l +")+STRS(d2_ap);
+#else
       d2_dest=EasyStr(".l +$")+HEXS(d2_ap);
+#endif
     }
     trace_add_entry("branch offset: ","",TDE_BEFORE,false,2,dpc);
     d2_dest+=Str(" {$")+HEXSl(dpc+(signed short)d2_ap,6)+"}";

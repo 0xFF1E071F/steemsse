@@ -882,7 +882,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_INT_MFP_OPTION)
   OPTION_PRECISE_MFP=pCSF->GetInt("Option","MC68901",OPTION_PRECISE_MFP);
 #endif
-
+#if defined(SSE_TOS_PRG_AUTORUN)
+  OPTION_PRG_SUPPORT=pCSF->GetInt("Option","PRG_support",OPTION_PRG_SUPPORT);
+#endif
 #endif//steven_seagal
 
 
@@ -1345,7 +1347,9 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_INT_MFP_OPTION)
   pCSF->SetStr("Option","MC68901",EasyStr(OPTION_PRECISE_MFP));
 #endif
-
+#if defined(SSE_TOS_PRG_AUTORUN)
+  pCSF->SetStr("Option","PRG_support",EasyStr(OPTION_PRG_SUPPORT));
+#endif
 
 //boiler
 #if defined(SSE_BOILER_SSE_PERSISTENT)

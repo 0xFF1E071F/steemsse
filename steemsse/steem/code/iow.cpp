@@ -852,7 +852,7 @@ system exclusive start and end messages (F0 and F7).
 #if defined(SSE_DEBUG_FRAME_REPORT_BLITTER)
       FrameEvents.Add(scan_y,LINECYCLES,'B',((addr-0xff8a00)<<8)|io_src_b);
 #endif
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK)
       if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_BLITTER)
         FrameEvents.Add(scan_y,LINECYCLES,'B',((addr-0xff8a00)<<8)|io_src_b);
 #endif
@@ -2241,7 +2241,7 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
     else
       FrameEvents.Add(scan_y,LINECYCLES,'P',(n<<12)|io_src_w); 
 #endif
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK1&FRAME_REPORT_MASK_PAL) 
   {
     if(Blit.HasBus)

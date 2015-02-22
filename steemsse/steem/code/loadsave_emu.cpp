@@ -587,6 +587,9 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   }
 
   if (Version>=37){
+#if defined(STEVEN_SEAGAL) && defined(DISABLE_STEMDOS)
+    int stemdos_intercept_datetime=0;
+#endif
     ReadWrite(stemdos_intercept_datetime);
   }
 

@@ -5610,6 +5610,10 @@ void                              m68k_trap(){
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
   Debug.RecordInterrupt("TRAP",(ir&0xF));
 #endif
+#ifdef SSE_DEBUG
+  if((ir&0xf)!=1)
+    TRACE_LOG("PC %X TRAP #%d, %X\n",old_pc,(ir&0xf),DPEEK(areg[7]));
+#endif
   m68k_interrupt(Vector);
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
   INSTRUCTION_TIME(26-4);

@@ -108,7 +108,7 @@ void TMIDIOut::SendByte(BYTE Val)
 {
   if (Handle==NULL) return;
 
-  TRACE_OSD("->MIDI %X",Val);
+  TRACE_OSD("->MIDI %X",Val);//we  keep it, it's a good indication
 
   bool SendBuffer=0,AddToBuffer=true;
 

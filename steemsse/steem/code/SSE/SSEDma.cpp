@@ -77,7 +77,6 @@ void TDma::AddToFifo(BYTE data) {
 
   ASSERT( !(MCR&CR_WRITE) ); // disk->RAM (Read media)
   ASSERT( Fifo_idx<16 );
-
   Fifo
 #if defined(SSE_DMA_DOUBLE_FIFO)
     [BufferInUse]
@@ -118,6 +117,11 @@ bool TDma::Drq() {
   }
   else // disk->RAM (reading disk)
   {
+#if defined(SSE_DMA_FIFO_NATIVE2)
+   if(!Counter)
+     ; // ignore
+   else
+#endif
     if(!(MCR&CR_HDC_OR_FDC))
       AddToFifo(WD1772.DR);
 #if defined(SSE_DMA_DRQ_RND)
@@ -235,7 +239,8 @@ BYTE TDma::IORead(MEM_ADDRESS addr) {
 
   case 0xff8604:
     // sector counter
-    ASSERT( !(MCR&CR_COUNT_OR_REGS) ); 
+
+    //ASSERT( !(MCR&CR_COUNT_OR_REGS) ); 
     if(MCR&CR_COUNT_OR_REGS) 
     {
 #if defined(SSE_DMA_SECTOR_COUNT)
@@ -243,7 +248,12 @@ BYTE TDma::IORead(MEM_ADDRESS addr) {
 "The sector count register is write only. Reading this register return
  unpredictable values."
 */
+#if defined(SSE_DMA_SECTOR_COUNT2)
+      TRACE_FDC("Read DMA sector counter\n");
+      ior_byte=0xFF;
+#else
       ior_byte=(rand()&0xFF); // or FF?
+#endif
 #else
       ior_byte=HIBYTE(Counter); 
 #endif
@@ -275,9 +285,13 @@ is ignored and when reading the 8 upper bits consistently reads 1."
     // sector counter
     if(MCR&CR_COUNT_OR_REGS) 
     {
-     // TRACE_LOG("Counter");
+      TRACE_FDC("Read DMA sector counter\n");
 #if defined(SSE_DMA_SECTOR_COUNT)
+#if defined(SSE_DMA_SECTOR_COUNT2)
+      ior_byte=0xFF;
+#else
       ior_byte=(rand()&0xFF);
+#endif
 #else
       ior_byte=LOBYTE(Counter); 
 #endif
@@ -883,7 +897,11 @@ void TDma::UpdateRegs(bool trace_them) {
       TRACE_LOG("HDC IRQ ");
     else
     {
+#if defined(SSE_DISK_IMAGETYPE) 
       TRACE_LOG("%d FDC(%d) IRQ CR %X STR %X ",ACT,SF314[DRIVE].ImageType.Manager,fdc_cr,fdc_str);
+#else
+      TRACE_LOG("%d FDC IRQ CR %X STR %X ",ACT,fdc_cr,fdc_str);
+#endif
 #if defined(SSE_FDC_TRACE_STATUS)
       WD1772.TraceStatus();
 #endif

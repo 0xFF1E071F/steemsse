@@ -50,8 +50,8 @@ inline void HBLInterrupt() {
 #if defined(SSE_BOILER_FRAME_INTERRUPTS)
   Debug.FrameInterrupts|=2;
 #endif
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK2)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK2)
   if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_INT)
 #else
   if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_HBI)
@@ -140,8 +140,8 @@ inline void VBLInterrupt() {
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
   Debug.RecordInterrupt("VBI");
 #endif
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK2)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK2)
   if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_INT)
 #else
   if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_VBI)

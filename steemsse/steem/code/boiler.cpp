@@ -959,8 +959,17 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               break;
             }
             case 1501:case 1502:case 1503:  //crash notification
+#if defined(SSE_BOILER_EXCEPTION_NOT_TOS)
+            case 1504:
+#endif
               crash_notification=LOWORD(wPar)-1501;
-              CheckMenuRadioItem(boiler_op_menu,1501,1503,1501+crash_notification,MF_BYCOMMAND);
+              CheckMenuRadioItem(boiler_op_menu,1501,
+#if defined(SSE_BOILER_EXCEPTION_NOT_TOS)
+                1504,
+#else
+                1503,
+#endif
+                1501+crash_notification,MF_BYCOMMAND);
               break;
             case 1510:
               stop_on_blitter_flag=!stop_on_blitter_flag;
@@ -1735,6 +1744,9 @@ void DWin_init()
   AppendMenu(boiler_op_menu,MF_STRING,1501,"Notify on &all m68k exceptions 2-8");
   AppendMenu(boiler_op_menu,MF_STRING,1502,"Notify only on crash with &bombs");
   AppendMenu(boiler_op_menu,MF_STRING,1503,"&Don't notify on exceptions");
+#if defined(SSE_BOILER_EXCEPTION_NOT_TOS)
+  AppendMenu(boiler_op_menu,MF_STRING,1504,"&Don't notify on TOS exceptions");
+#endif
   AppendMenu(boiler_op_menu,MF_STRING|MF_SEPARATOR,0,NULL);
   AppendMenu(boiler_op_menu,MF_STRING|MF_POPUP,(int)shift_screen_menu,"Shift display");
   AppendMenu(boiler_op_menu,MF_STRING,1025,"Redraw on stop");
@@ -2239,7 +2251,18 @@ void DWin_init()
   insp_menu=CreatePopupMenu();
   log("STARTUP: insp_menu Created");
 
-#ifdef ENABLE_VARIABLE_SOUND_DAMPING
+#if defined(ENABLE_VARIABLE_SOUND_DAMPING2)
+  int xx=240+30-30,yy=30-30;
+  new mr_static(/*label*/"a ",/*name*/"Sound A /256",/*x*/xx,/*y*/yy,
+      /*owner*/DWin,/*id*/(HMENU)50066,/*pointer*/(MEM_ADDRESS)&sound_variable_a,
+      /*bytes*/ 1,/*regflag*/ MST_REGISTER, /*editflag*/true,
+      /*mem_browser to update*/NULL);
+  new mr_static(/*label*/"d ",/*name*/"Sound D /256",/*x*/xx+50-20,/*y*/yy,
+      /*owner*/DWin,/*id*/(HMENU)50067,/*pointer*/(MEM_ADDRESS)&sound_variable_d,
+      /*bytes*/ 1,/*regflag*/ MST_REGISTER, /*editflag*/true,
+      /*mem_browser to update*/NULL);
+
+#elif defined(ENABLE_VARIABLE_SOUND_DAMPING)
 //SS this was to tune the PSG filter, we don't use it now - undef
 //so much screen real estate saved, and a mystery solved, what were
 // those d & a in the boiler!
