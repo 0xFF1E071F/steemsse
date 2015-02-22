@@ -645,7 +645,31 @@ when it does).
           {
             int n=(addr-0xfffa01) >> 1;
             if (n>=MFPR_TADR && n<=MFPR_TDDR){ //timer data registers
+#if defined(SSE_INT_MFP_READ_DELAY1)
+/*  v3.7.0 
+    MC68901 doc:
+    "
+    Start Timer to Read Timer Error + 0 to – (tpsc + 6tCLK + 400ns)
+    Start Timer to Interrupt Request Error (note 3) - 2tCLK to – (4tCLK + 800ns)
+    "
+    Compare 400ns with 800ns. We interpret this as a short delay between 
+    timeout and IRQ (+-4 cycles). 
+    Steem computes timer timeout on the IRQ basis, so we correct here.
+    We do it for Overscan Demos, that read timer data register.
+    Without this fix, with new (correct) STE "line +2" threshold they would 
+    flicker.
+    But:
+    - they also sometimes flicker on a real STE
+    - it depends on MFP parameter MFP_TIMER_SET_DELAY
+*/
+              if(OPTION_PRECISE_MFP)
+                INSTRUCTION_TIME(MFP_TIMER_DATA_REGISTER_ADVANCE);
+#endif
               mfp_calc_timer_counter(n-MFPR_TADR);
+#if defined(SSE_INT_MFP_READ_DELAY1)
+              if(OPTION_PRECISE_MFP)
+                INSTRUCTION_TIME(-MFP_TIMER_DATA_REGISTER_ADVANCE);
+#endif
               ior_byte=BYTE(mfp_timer_counter[n-MFPR_TADR]/64);
               if (n==MFPR_TBDR){
                 if (mfp_get_timer_control_register(1)==8){
@@ -737,7 +761,7 @@ when it does).
 #if defined(SSE_DEBUG_FRAME_REPORT_BLITTER)
       FrameEvents.Add(scan_y,LINECYCLES,'b',((addr-0xff8a00)<<8)|ior_byte);
 #endif
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK)
       if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_BLITTER)
         FrameEvents.Add(scan_y,LINECYCLES,'b',((addr-0xff8a00)<<8)|ior_byte);
 #endif
