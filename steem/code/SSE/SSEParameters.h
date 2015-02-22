@@ -366,7 +366,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 // INTERRUPT //
 ///////////////
 
-#if defined(SSE_INTERRUPT)
+//#if defined(SSE_INTERRUPT)
 /*  
     IACK (interrupt acknowledge)  16
     Exception processing          40
@@ -401,7 +401,7 @@ Far more on the ST.
 
 #define HBL_IACK_LATENCY 28
 #define VBL_IACK_LATENCY 28
-#define ECLOCK_AUTOVECTOR_CYCLE 0
+#define ECLOCK_AUTOVECTOR_CYCLE 28 //whatever!
 
 #if defined(SSE_INT_VBI_START)
 #undef SSE_INT_VBI_START
@@ -409,6 +409,7 @@ Far more on the ST.
 #endif
 
 #define THRESHOLD_LINE_PLUS_2_STF (54)
+
 #if defined(SSE_INT_VBL_STF) // modest hack still works
 #if defined(SSE_TIMINGS_STE_NOPS_TO_FIRST_LINE)
 #define HBL_FOR_STE (444 - 4)
@@ -422,14 +423,16 @@ Far more on the ST.
 #define HBL_FOR_STF (HBL_FOR_STE+4+(SSE_HACKS_ON?4:0))
 #else
 #if defined(SSE_TIMINGS_STE_NOPS_TO_FIRST_LINE)
-#define HBL_FOR_STF (HBL_FOR_STE+8) // so we change nothing on STF (3615cakeman)
+#define HBL_FOR_STF 448//(HBL_FOR_STE+8) // so we change nothing on STF (3615cakeman)
 #else
 #define HBL_FOR_STF (HBL_FOR_STE+4)
 #endif
 #endif
+#else
+#define THRESHOLD_LINE_PLUS_2_STE (THRESHOLD_LINE_PLUS_2_STF-2)
 #endif
 
-#endif
+//#endif
 
 
 /////////
@@ -475,9 +478,12 @@ Far more on the ST.
     a typical "PAL" STF, as read on atari-forum (ijor?)
     3.5.1: same ratio for STE, it could make DMA sound emu more precise
     3.7.0:  DMA sound uses another clock, we now have a slightly different
-    CPU clock and MFP ratio in STE mode.
+    CPU clock and MFP ratio in STE mode. It also "helps" some cases, along
+    with other parameters, it's not exact science.
 
     MFP (no variation) ~ 2457600 hz
+    CPU STF ~ 8021247
+    CPU STE ~ 8020736
 
 */
 
@@ -507,37 +513,35 @@ Far more on the ST.
 #define  MFP_CLK_TH_EXACT 2457600 // ( 2^15 * 3 * 5^2 )
 #endif
 
-// parameters are a compromise...
+/*  Parameters are a compromise, those give the best results for TEST10.TOS
+    and TEST10D.TOS (spurious interrupt detector) in current build.
+*/
 
-#if defined(SSE_INT_MFP_TIMERS_WOBBLE)
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE)//no
 #define MFP_WRITE_LATENCY 4
+#define MFP_TIMERS_WOBBLE 1 //2
 #else
-#define MFP_WRITE_LATENCY (4) // TEST10 
+#define MFP_WRITE_LATENCY (4)
 #endif
 
-#define MFP_TIMERS_WOBBLE 1 //2
+#define MFP_TIMER_DATA_REGISTER_ADVANCE (4)
 
 #if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY)
-
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
 // it just breaks things in current build, maybe it doesn't exist
-
 #if defined(SSE_INT_MFP_RATIO_STE2)
 #define MFP_TIMER_SET_DELAY 8//10 // overscan/schnusdie...
 #else
 #define MFP_TIMER_SET_DELAY 7 //  Schnusdie vs DSOTS (depends on clock?!)
 #endif
-
 #else
-#define MFP_TIMER_SET_DELAY 10 //12 = Steem 3.2 //Overscan demos STE vs TEST10
+// if = 12, better not define, it reduces code
+#define MFP_TIMER_SET_DELAY 12 // (12=Steem 3.2)
 #endif
-
-#endif
+#endif//starting_delay
 
 #define MFP_IACK_LATENCY 28
 #define MFP_SPURIOUS_LATENCY MFP_WRITE_LATENCY//?? (MFP_IACK_LATENCY) //?
-
-
 
 #endif//mfp
 
