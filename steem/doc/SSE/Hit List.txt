@@ -32,6 +32,7 @@ Games
 - The Sentinel (3.4), Automation 001 (3.5.1)
 - Seven Gates Of Jambala (from Hatari) (3.3)
 - Trex Warriors (from Hatari) (3.4)
+- The Teller STX (3.7)
 - Titan STE (3.3), STF (3.5)
 - Utopia cr. Elite (3.6.4)
 - Warp STX (3.5.1)
@@ -45,7 +46,7 @@ We fix more demos than games just because demo programming generally
 was edgier.
 
 - 36.15 Gen4 by Cakeman (3.3) 
-- 3615GEN4 HMD Giga (3.5.1, broken 3.5.3, fixed 3.6.0)
+- 36.15 Gen4 by HMD/Giga (3.5.1, broken 3.5.3, fixed 3.6.0)
 - 36.15 Gen4 by ULM (3.4, 3.5.3 100%)
 - 4pixel Rasters (3.3)
 - Audio Artistic Demo (3.5.2)
@@ -85,7 +86,6 @@ was edgier.
 - More or less Zero (3.3)
 - The Musical Wonder 90 intro (3.5.3)
 - The Musical Wonder 91 (3.4)
-- My Dog is Enjoying Fuzion skull (3.7)
 - My Socks are Weapons by Legacy (3.7)
 - No Cooper/Greetings (3.3)
 - Nostalgia/Lemmings (STF, STE) (3.3)
@@ -130,7 +130,10 @@ was edgier.
 - Awesome 04 STF (3.7)
 - BBC 52 (3.3)
 - Lemmings 40 STF (3.3)
-Many intros also benefit from larger display.
+Many intros display fine in STF mode but flicker in STE mode, for
+example all those Automation menus that were later redone for the
+STE.
+Some intros also benefit from larger display.
 
 - Applications
 ----------------
@@ -139,9 +142,10 @@ Many intros also benefit from larger display.
 - Atari Diagnostic Cartridge (3.5.2)
 - Megamax C (scripts on HD) (3.6.1)
 - NEOchrome: mouse speed? (3.4)
-- Notator (3.5.1) -still not 100%
+- Notator (3.5.1)
 - Panzer (3.5.3)
 - ProCopy Analyze (3.5.1) - What da ya say, useless?
+- Spacker II (3.7.0)
 - Spectrum 512 (3.4)
 
 

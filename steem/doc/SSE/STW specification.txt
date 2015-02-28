@@ -105,12 +105,12 @@ of the diskette.
 Tested cases
 ============
 They were chosen because they may cause drive and controller emulation 
-issues, and they helped debugging the WD1772 emulator.
+issues, and they helped debug the WD1772 emulator.
+
+ProCopy2 records all sectors as "deleted" (command $A1)! Yet it can
+copy some programs that ACopy can't, at least in Steem.
 
 To copy to STW, we mostly used ACopy1.2Pv2, Prot mode, 2 sides
-
-ProCopy2 records all sectors as "deleted" (command $A1)!
-
 
 Amiga Demo
 Automation 001 (The Sentinel)
@@ -120,15 +120,17 @@ Braindamage
 Darkside of the Spoon
 Delirious 3 (issues but loads)
 Delirious 4
+Demoniak -ELT (unprotected mode)
 Dragonflight original (the main reason for "STW")
 English for Business - Alpha Flight
 European Demos
 FDCTNF
+Fuzion 29v1 (11sec)
 GEM format
-Mps Golf original
+Mps Golf original (ProCopy2.02 F D P 1-80)
 My Socks are Weapons
 Overdrive Demo
-Overscan Demos (11 sec, interleave 6)
+Overscan Demos (11 sec)
 Realm of the Trolls -DBG
 ST-NICCC 2000 v2
 Super Monaco Grand Prix -HTL
