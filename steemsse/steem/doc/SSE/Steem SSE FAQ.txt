@@ -1,6 +1,7 @@
 Steem SSE FAQ
 ---------------
-updated v3.7.0
+
+v3.7.0
 
 Q:
 What is Steem?
@@ -12,7 +13,7 @@ It's an excellent Atari STE emulator coded by Anthony and Russel Hayward.
 Q:
 Where are Steem authors?
 A:
-They disappeared in the lower border never to be seen again...
+They tragically disappeared in the lower border never to be seen again...
 Before that they released the source of their great emulator, mercifully.
 
 
@@ -55,8 +56,6 @@ http://ataristeven.t15.org/Other_downloads.htm
 Disk images are easy to find. Some are also available on the site.
 Legally this is still copyrighted material, and if they really wanted,
 companies who own it could call a halt on emulation, but they don't.
-In my opinion, Steem is more convivial than other emulators like
-WinUAE for example.
 
 
 Q:
@@ -105,19 +104,20 @@ A:
 Some yes, others not. Generally games were better, though some of the 
 important games of the era were actually better on the ST or not even
 released on the Amiga.
-Generally, serious applications were better on the ST.
+Generally, serious applications were better on the ST. The multitask
+Amiga OS was a joke.
 Demos, as strange as it may sound, were often more interesting and 
 impressive on the ST.
 The Atari ST is one of the contenders for best chip music. The
 sound of the Amiga was impressive back then but is nothing more
-than bad 8bit samples today, it was outclassed by the Soundblaster.
+than bad 8bit samples today, it was quickly outclassed by the Soundblaster.
 Notice that there's no Amiga Teenage Riot.
 
 
 Q:
 Which TOS should I use?
 A:
-Generally, TOS 1.02 is the most compatible for STF mode, and TOS 1.06 for STE
+Generally, TOS 1.02 is the most compatible for STF mode, and TOS 1.62 for STE
 mode. Steem will try to match those TOS when you switch ST model.
 Some rare programs prefer another version, like TOS 1.00 for very old games.
 TOS1.00 STF
@@ -202,15 +202,6 @@ that we can't easily handle. You may try disabling option 'Microwire'.
 
 
 Q:
-When I check 'Drive Sound' option, sometimes it doesn't work.
-A:
-You may change this option while emulation is running, but to avoid code
-bloat and memory waste, the samples are loaded when Steem builds its sound
-buffers, that is, when you start emulation.
-So simply stopping and resuming emulation should solve the issue.
-
-
-Q:
 Emulation is crawling!
 A:
 It's a fact that Steem SSE is more CPU-intensive than Steem 3.2.
@@ -241,10 +232,23 @@ disk mode, you won't see red for short operations.
 
 
 Q:
+Some Pasti images (STX) of games work in Hatari but not in Steem. Can you fix
+that?
+A:
+Hatari directly handles those images, with up-to-date knowledge of drive
+emulation. Steem uses a plugin, pasti.dll, that is much older and is in need
+of an update.
+Fortunately, those cases are rare, and we have alternatives now, like CTR
+and IPF, that also use a plugin, capsimg.dll, which is up-to-date.
+Who knows? Maybe one day pasti.dll will be improved.
+For those reasons directly handling STX images in Steem is not planned.
+
+
+Q:
 Are state snapshots (.STS) compatible between versions?
 A:
 While there's no 100% guarantee, we try to maintain compatibility.
-It's useful for me too, to compare versions in case of bugs.
+It's useful for me too, to quickly compare versions in case of bugs.
 You could have trouble because of 'HD6301' emu in some Steem versions
 (not the latest normally).
 
@@ -268,8 +272,10 @@ Q:
 Hey you claim to have fixed this or that issue with drive emulation but when
 I try it doesn't work.
 A:
-All drive emulation improvements operate only in slow disk mode. The option is
-in the drive manager AND in the SSE option page, you can't miss it anymore.
+All drive emulation improvements operate only in if the option 'Accurate Disk
+Access Times (Slow)' is checked in the Disk manager, for ST, MSA, DIM disk
+images.
+For STW disk images, the option isn't necessary as emulation is slow anyway!
 
 
 Q:
@@ -305,7 +311,8 @@ that nobody else did anything yet with Steem in Linux.
 Q:
 Is support for Falcon planned?
 A:
-No. To me those machines, like the TT,  have no interest.
+No. To me those machines, like the TT, have no interest.
+Steem SSE is strictly STF/STE.
 Atari supported Falcon only for a few months, and little software was
 developed. Software was so specialised in audio it is very hard to emulate,
 not to mention protections.

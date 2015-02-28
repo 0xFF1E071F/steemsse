@@ -4,29 +4,35 @@ Steem SSE Hints
 If a program doesn't work in Steem SSE, please check the lists below,
 maybe the solution is there. 
 In some cases it will only work in such setup because of emulation
-limitations.
+limitations (eg WS1).
 
 
 Explanation of symbols
 =========================
 
-6301: SSE option '6301/ACIA'
-
 #: SSE option 'Hacks'
 
-STF or STE: select in SSE option 'ST model'
+C1: SSE option 'C1: 6850/6301/E-clock'
+C2: SSE option 'C2: 68901'
+
+DI: there are bad disk images around, you may want to check at
+ataristeven.t15.org for a good version!!
+
+STF or STE: select in Machine option 'ST model'
 
 T1XX where X are digits: TOS version
 
-WU or WS and a digit: select in SSE option 'Wake-up state'
+WU or WS and a digit: select in Machine option 'Wake-up state'
 
-ADAT: SSE option 'Slow drive' or Disk Manager option 'Accurate Disk Access
-times'
+WP: write-protect the disk
+There are 2 different ways in Steem, depending on whether the disk
+is in a ZIP or RAR archive or not.
+If it is the case, uncheck Read/Write Archives in the disk manager options.
+If not, right click and check Read Only.
+
+ADAT: Disk Manager option 'Accurate Disk Access times'
 
 No B: disconnect drive B: in Disk Manager (just click on drive icon)
-
-Version: there are bad disk images around, you may want to check at
- ataristeven.t15.org for a good version!!
 
 digits x digits: select in SSE option 'Display size'
 
@@ -36,10 +42,10 @@ patch: click on the patch icon, select patch, read instructions, apply
 Apps
 =========
 
-- Aladin: no write protect
+- Aladin: no WP
 - Copy and Utility Disk Volume 1: STF
-- Neochrome: 6301
-- Notator: 6301
+- Neochrome: C1
+- Notator: C1
 - ReDMCSB building: T104, #
 - Spectrum 512: use correct TOS for 50/60hz
 
@@ -47,114 +53,142 @@ Apps
 Games
 =========
 
-- 4 Wheel Drive/Combo Racer STX: Pasti version
+- 4 Wheel Drive/Combo Racer STX: Pasti.dll version
 - Altaïr: to use the missile, press any SHIFT key
-- Amberstar: write-protect the disks
-- Blood Money  -SUP: T102 (no guarantee, bloody packing work)
+- Amberstar STX: WP
+- Antago STX: WP
 - Crazy Cars 2: F7 for joystick control
-- Dragonflight: create STW disk
-- Dynabusters+: STE, patch (only works in T106UK), F1: music F2: volume
-- Enchanted Land: not WS1
+- Darius auto166: DI
+- Demoniak -ELT: STF, WU2, ADAT, C1, C2, or a selection of those
+- Dragonflight: create STW disk, disable B:
+- Dynabusters+: STE; F1: music F2: volume
 - ESWAT: ADAT
-- The Final Conflict: 6301, #
-- Foundation's Waste, some versions: No B; IPF OK
+- Exile: ADAT
+- Eye of Horus -MCA: T100
+- The Final Conflict: C1, C2
+- Flying Shark STX: STF
+- Foundation's Waste, some versions: No B
 - Future Wars: No B
+- Gunship: No B
 - Hyper Force: STF
-- Jumping Jackson on Automation 239: 6301, Version
-- Jupiter Masterdrive STX: Pasti version
+- International Tennis: not C1
+- Jupiter Masterdrive STX: Pasti.dll version
 - Live & Let Die: STF
 - Lethal Xcess: put disk B in drive B before boot
+- Logical-ELT: C2
 - The Lost Patrol: ADAT
-- Manchester United: 6301
-- Microprose Golf ST: ADAT, patch
+- Manchester United: C1
+- Microprose Golf ST: ADAT
 - Nightdawn: STF
 - Platoon STX: STF T100US
-- Rainbow Island (auto 231): STF
 - Realm of the Trolls: create STW disk
 - Star Trek STX: not T102
 - Sundog IPF: Ghost disk
-- The Sentinel: 6301, ADAT (auto001)
+- The Sentinel (aka The Sentry): C1
+- Test Drive: STF
+- Trauma STX: French TOS
 - Ultimate Arena: STE
 - Ultimate Ride: No B
-- Warp STX: 6301, Version
-- X-Out: 6301
+- Vroom -RPL: ADAT
+- Warp STX: C1, DI, retry!
+- X-Out: C1
 
 
 Demos
 =========
 
 - 36.15 Gen4 by Cakeman: STF
-- 36.15 HMD #1: STF, #
-- Audio Artistic Demo: #
-- Awakening of the Gods: STE or WU1;
-  wonder if the flicker in the TV intro is by design;
-  press space twice for menu
-- B.I.G. Demo: Version or patch
+- 36.15 HMD #1: STF, C1, #
+- 36.15 OVR: STF, C2
+- Audio Artistic Demo: C2
+- Awakening of the Gods: press space twice for menu
+- B.I.G. Demo: DI or patch
 - Beat Demo: Microwire (not 100%)
 - Big Wobble: STE, #; use arrow keys
 - Cernit Trandafir: STE, 4MB
 - Choice of Gods/Attack of the Indigestion: STF WU1
 - Circus back²STage: STE, 4MB
-- Corporation Megademo: STE, 6301
+- Cool STE: STE, patch
+- Corporation Megademo: STE, C1
+- Cuddly Demos: DI
 - Dangerous Fantaisy: STE, #
 - Death of the Clock Cycles: 1MB
 - Death of the Left Border STF, WU2
 - Delirious 3: STE, ADAT, numpad
 - Delirious 4: STE, ADAT; Tekila: #
 - Deep Lair on Fuzion 80: STE
-- Dragonnels: 6301
+- Dragonnels: C1
 - E605: planet STE, #
-- European Demos: No B or insert 2 disks before starting
+- European Demos: No B or insert both disks before starting (option auto)
 - Extreme Rage: STE
-- Fantasia: STE T106
-- Froggies Over The Fence: 6301
+- Fantasia: STE T106 or DI
+- Froggies Over The Fence: C1
 - Hackabounds Demo: STF WS1
-- Hier sind noch zwei Plätze frei/plasma: 6301
+- Hier sind noch zwei Plätze frei/plasma: C1
 - Imagination/Roller Coaster: STF
+- Japtro: STF, DI
 - Knocking at Krystals Doors: press return
 - More or less Zero: STE, 2MB, 400x278
 - Muscical Wonder 1990: 416x286, WU1
-- My Dog is Enjoying Fuzion skull screen: demo is bugged
 - Noughts and Mad Crosses: STE, ADAT
 - Omega Full Overscan Screen: STF, WS2
-- Overdrive: 6301, ADAT
+- Overdrive: C1, ADAT
 - Overdrive/Dragon: WU2
+- Overscan Demos STE: C2
 - Pacemaker: STE; credits: # Space: credits at once
-- Panic.tos: Version or STF 8.00 MHZ
-- Phalanx #1: STF T102
+- Panic.tos: Version 2 or STF 8.00 MHZ
+- Phalanx: STF T102
 - Punish Your Machine/Best Part of the Creation: 400x278 or higher
-- Reality is a Lie STE; Schnusdie: #
+- Punish Your Machine/Let's Do The Twist Again: STF
+- Q-Lize: STE T162
+- Reality is a Lie STE; Schnusdie: #, C2
 - Relapse: STE, 'Help'; plasma: #
 - Riverside: STE
-- Sinfull Sinuses: STE T162 French (not UK, US, etc.)
+- Sinfull Sinuses: STE T162 French 
 - SoWatt: STF
 - Spectrum Analyzer: STE
 - Sphere by Sunny: STE
-- ST-NICCC 2000 Final by Oxygene: ADAT; Samples
+- ST-NICCC 2000 Final by Oxygene: ADAT
 - Summer Delights: STE, 4MB
+- Sunny: STE, C2
 - Swedish New Year Demo: STF; TCB: #, WS2
 - SNYD2/Sync fullscreen: STF
 - Symic Demo: ADAT
-- Tragedy For You: STE, ADAT, No B
-- Transbeauce 2: 6301
-- Transbeauce 2/Naos: STE or STF WU1
+- Tragedy For U: STE, ADAT, No B
+- Transbeauce 2: C1; Naos: STE or STF WU1
 - Tyranny: STE
 - Ultimate 3D Dots: STE; no disk in B:
 - Ultimate GFA Demo boot screen: STF
 - UMD8730 STF: #
-- Union Demo: Menu, Fullscreen: STF
+- Union Demo: STF
 - The World is my Oyster screen #2: STF
-- V8 Music System: #
 - Ventura: mouse to rotate menu
 - Ventura/Board and Spheres: STF, WU2
 - XMas 2004: #
 
 
-- Menu intros
-===============
+- Menu disks
+==============
 
-- Automation 168: STF, WU2
+- A-Ha/Mig 29: press space & wait
+- Automation 001/The Sentinel: C1, ADAT
+- Automation 168: STF
+- Automation 231/Rainbow Island: STF
+- Automation 239: DI, C1
+Many Automation CDs were redone for the STE.
 - Awesome 04 STF: #
+- Awesome 17: DI
+- Deadly FX 02/Line of Fire: STE, ADAT
+- Dodgysoft 94: STF WU2
+- Fuzion 030/Speedball II: STE
+- Fuzion 042: STF
+- Fuzion 045: DI
+- Fuzion 048/Spellfire the Sorcerer: STF
+- Fuzion 150: No B
+- Fuzion 155: DI
+- Medway 001, ...: STF because of the stupid antivirus by you guess who!
 - Lemmings 40: STF
-
+- Pyromaniacs 08: STF WU2
+- Ripped Off 14, 56, 60, etc.: STF because of the stupid antivirus
+- Superior 065/Blood Money: T102 (no guarantee, bloody packing work)
 

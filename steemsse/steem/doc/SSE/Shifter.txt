@@ -70,7 +70,10 @@ DE              in
 The Shifter receives DE but it's not clear what it does with it.
 We don't think it is used to switch border/picture, because the timings
 would be off. DE comands fetching by the MMU, which introduces a delay
-before rendering is done.
+before rendering is done. During this time the Shifter displays the 
+border.
+DE stops before the Shifter is finished LOADing, so the Shifter must still
+display some real picture, not border.
 
 
 
@@ -150,7 +153,9 @@ Video RAM is fetched by the MMU word by word and the IR registers are filled one
 by one.
 Each register is 16bit.
 This process is the same for all shift modes.
-When DE is set by the GLUE, prefetch starts and takes 16 cycles in all modes.
+When DE is set by the GLUE, prefetch starts and takes 16 cycles in all shift 
+modes.
+
 
 SS:
 
@@ -221,22 +226,8 @@ When the 4 IR are filled, they're copied at once on SR1-4.
 Shift begins. In higher modes, shift is faster and the register
 feeding the video out are fed by other shift registers.
 
-SS:
-The transfer from SR3 to SR1, etc., may be progressive, both
-registers shifting, or immediate as Alien states.
-But is it electronically possible to have, for example, 4 registers shifting
-at 32Mhz for shift mode 2?
 
 
-Toggling?
----------
-SS:
-Question: doesn't this operation of copying IR->SR take time?
-There's no way that it takes less than 1 CPU cycle.
-Is it possible that instead of IR and SR, we would have two sets of SR,
-and while one is being filled the other is shifting?
-Or, to explain the latency, is it possible that 12 cycles are needed to
-copy from IR to SR, and that we have IR and two sets of SR?
 
 
 
@@ -282,40 +273,27 @@ to 0 confuses the Shifter and causes it to shrink the left border by 16 pixels.
 
 $FFFF8265 HSCROLL STE-only
 
+Both the Shifter and the Glue must know about this register, the
+Shifter for the amount to scroll, the Glue for the timing.
 
-This is a theory built on ggn's text.
-Scrolling is implemented without extra shift registers.
+On the STE, the possibility of horizontal scrolling has an influence
+on timings.
 
-DE and prefetch start earlier on STE:
-16 cycles earlier in mode 0
-8 cycles earlier in mode 1
-4 cycles earlier in mode 2
-
-Let's call this amount of cycles 'PreStart'.
-
-The usual prefetch by the MMU happens so that IR1-4 are filled and copied
-to SR1-4.
-
-During PreStart cycles after prefetch, the Shifter will delay 16-HSCROLL times 
-and shift SRi HSCROLL times. The delay is necessary for the display to be
-correctly aligned. During those PreStart cycles, border colour is
-displayed. The MMU starts fetching for other rasters during those
-PreStart cycles, that is, it didn't stop. It fetches as many words as
-necessary for the shift mode (4 in mode 0, 2 in mode 1, 1, in mode 2).
-
-After PreStart+Prefetch+Latency cycles (84 in low res), at the usual location,
- pixels start to be displayed. This is an incomplete raster (16-HSCROLL).
-Other rasters are prefetched, shifted and displayed as usual.
-
-For the last raster, that is the extra raster on the right of the screen, it
-is fetched but only HSCROLL pixels are displayed. After those pixels, the
-Shifter shifts the rest (to empty the registers) but displays border colour.
+The frequency check happens at cycles 36 for 60hz and 40 for 50hz instead
+of 52 and 56, whatever the value of HSCROLL.
+But prefetch starts 16 cycles earlier only if HSCROLL non null.
+Hence the use of those pseudo-variables H50, H60.
+This value of 16 cycles is the same in medium resolution.
+Prefetch ends as on a STF (cycle 376 at 50hz) because when HSCROLL 
+is non null, an extra raster is fetched to complete the line.
 
 
+Latency
+=========
 
-
-
-
+There's a shifter latency of 4 cycles between the time of last raster prefetch
+and shifting or raster through the palette.
+This may be the time needed to transfer data between IR and SR.
 
 
 

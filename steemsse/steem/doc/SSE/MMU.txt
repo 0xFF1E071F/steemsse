@@ -3,6 +3,7 @@ MMU
 
 Sources:
 
+Wikipedia
 Overscan Techniques by Alien/ST-Connexion translated by Frost/Sector One
 Various discussions at www.atari-forum.com, especially contributions by
 Dio, ijor (Jorge Cwik), ljbk (Paolo), Troed/Sync.
@@ -11,6 +12,17 @@ Various doc
 Development of Steem
 Hatari source
 
+
+Introduction
+==============
+
+In the STE, the GLUE and the MMU are one single chip, the GST MCU
+
+Name
+======
+
+MMU stands for Memory Manager Unit. 
+It is a very simple chip. There's no paging, cache management, etc.
 
 Registers
 ===========
@@ -42,6 +54,13 @@ Used for horizontal scrolling, #words to add the the SDP at the end of the
 scanline.
 
 
+Sharing
+=========
+
+Even memory accesses are given to CPU/Blitter/DMA while odd cycles are reserved
+for DRAM refresh or used by Shifter for displaying contents of the frame buffer.
+
+Note: if that's always true then wake-up state doesn't depend on this.
 
 DE
 ====
