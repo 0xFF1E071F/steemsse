@@ -39,7 +39,6 @@ for pre-compiled headers (to reduce build time on slower development PCs).
 #define DIRECTSOUND_VERSION 0x0200
 #define OEMRESOURCE 1
 #define STRICT 1
-//#if _MSC_VER == 1200	// VC6: 1200 - JLG VS2012: modif VC6 only
 #ifdef BCC_BUILD // SS it's in fact a Borland pragma
 #pragma anon_structs on
 #endif
@@ -64,7 +63,6 @@ for pre-compiled headers (to reduce build time on slower development PCs).
 #include "d3d/ddraw.h"
 #include "d3d/dinput.h"
 #include "d3d/dsound.h" 
-//#endif
 #else//VS2008
 #include <ddraw.h>
 #include <dsound.h>

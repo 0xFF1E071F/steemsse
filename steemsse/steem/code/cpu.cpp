@@ -1029,14 +1029,10 @@ LONG m68k_read_dest_l(){
 // See TM68000:Process in SSECpu.h
 #else
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_REWRITE)//compiler warning
-
+#if defined(STEVEN_SEAGAL) && (defined(SSE_VAR_REWRITE) || defined(SSE_VS2008))
 extern "C" void ASMCALL m68k_trace() //execute instruction with trace bit set
-
 #else
-
 extern "C" ASMCALL void m68k_trace() //execute instruction with trace bit set
-
 #endif
 {
 

@@ -455,7 +455,11 @@ bool Initialise()
   NoINI=(CSF.GetStr("Machine","ROM_File","")=="");
 
   CSF.SetInt("Main","DebugBuild",0 DEBUG_ONLY( +1 ) );
+#if defined(STEVEN_SEAGAL) && defined(SSE_VERSION)  //BCC
+  CSF.SetStr("Update","CurrentVersion",Str((char*)stem_version_text));
+#else
   CSF.SetStr("Update","CurrentVersion",Str(stem_version_text));
+#endif
 
   if (QuitNow){
     MainRetVal=EXIT_SUCCESS;

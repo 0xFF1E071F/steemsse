@@ -176,12 +176,14 @@ int TFrameEvents::Vbl() {
 #undef LOGSECTION
 #endif  
 
+#ifdef SSE_BOILER
 #if defined(SSE_OSD_CONTROL)
     if(OSD_MASK2 & OSD_CONTROL_SHIFTERTRICKS)
 #else
     if(TRACE_ENABLED) 
 #endif
       TRACE_OSD("T%X",Debug.ShifterTricks);
+#endif
 #undef LOGSECTION//???
     Debug.ShifterTricks=0;
   }
