@@ -637,6 +637,7 @@ void TGeneralInfo::CreateReadmePage(int p)
     if(text)
     {
 #elif defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX5)
+    {
       char *text=(char*)malloc(64000);
 #else
       char text[64000];

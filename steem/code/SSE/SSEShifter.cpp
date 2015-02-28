@@ -191,9 +191,28 @@ void TShifter::CheckSideOverscan() {
     instead of 26, and the total overscan line is 224 bytes instead of 230. 
     224/8=28,no rest->no Shifter confusion.
 
+    Current explanation:
+
     4  IF(RES == LO) PRELOAD will run until cycle 16  (56-16)/2 = +20 
 
-    All the while no video memory is fetched if HSCROLL=0.
+    WORDS_READ=0
+    WHILE(PRELOAD == TRUE) {
+      LOAD
+      WORDS_READ++
+      IF(RES == HIGH AND WORDS_READ=>1) PRELOAD = FALSE
+      IF(RES == LO AND WORDS_READ=>4) PRELOAD = FALSE
+    }
+    H = TRUE
+
+    During preload, no video memory is fetched if HSCROLL=0.
+    Instead the MMU feeds the Shifter with 0.
+
+cycle       0               4               8               12               12
+
++26        00              VV              VV               VV               VV
+                           Preload stops, real fetching begins
++20        00              00              00               00               VV
+                           Preload goes on until cycle 16
 */
 
 #if defined(SSE_SHIFTER_TRICKS) && defined(SSE_SHIFTER_LINE_PLUS_20)
@@ -562,7 +581,9 @@ TODO!
 #endif
       }
       left_border=0;
+#if defined(SSE_SHIFTER_TRICKS)
       CurrentScanline.StartCycle=lim_r2;//0; //not really used
+#endif
       overscan=OVERSCAN_MAX_COUNTDOWN;
     }
   }
@@ -645,6 +666,7 @@ STF2:
     {
 
       r2cycle=28; // we start with 60hz lines (no case though)
+
 
   //   TRACE("F%d y%d in %d f%d %d f%d %d f%d %d f%d %d f%d %d\n",
     //   FRAME,scan_y,CyclesIn,DEcycle60-2,FreqAtCycle(DEcycle60-2),DEcycle60,FreqAtCycle(DEcycle60),DEcycle60+2,FreqAtCycle(DEcycle60+2),DEcycle60+4,FreqAtCycle(DEcycle60+4),DEcycle60+6,FreqAtCycle(DEcycle60+6));
@@ -815,14 +837,12 @@ STF2:
   // BLACK LINE //
   ////////////////
 
-/*  A sync switch at cycle 28 makes the GLUE raise DE, so that the MMU fetches 
-    the line, and not clear HBLANK, so that the pixels aren't shown, showing 
-    black pixels instead. 
-    Overscan #5,#6, Forest (top line)
-    The precise way isn't totally understood yet.
-    This, contrary to 0 byte lines, was already in Steem 3.2.
-    028:S0000 036:S0002
-    loSTE screens: 028:S0002 112:S0000
+/*  
+    A sync switch at cycle 28 keeps HBLANK asserted for this line.
+    Video memory is fetched, but black pixels are displayed.
+    This is handy to hide ugly effects of tricks in "sync lines".
+
+    HBLANK OFF 60hz 28 50hz 32
 
     Paolo table
     switch to 60: 26-28 [WU1,3] 28-30 [WU2,4]
@@ -833,16 +853,19 @@ STF2:
   {
 
     ///t=LINECYCLE0+28; //trigger point (works with 26?)
-#if defined(SSE_SHIFTER_STATE_MACHINE) // more or less
+#if defined(SSE_SHIFTER_STATE_MACHINE)
 
 //    ASSERT( !WU_sync_modifier || ST_TYPE!=STE );
+//
 
+#if defined(SSE_SHIFTER_STATE_MACHINE2) // really
+    t=28+WU_sync_modifier;
+    if(FreqAtCycle(t)==50 && FreqAtCycle(t+4)==60)
+#else  // more or less
     t=26+WU_sync_modifier;
-
     if(FreqChangeAtCycle(t)==60 || FreqChangeAtCycle(t+2)==60)
+#endif
       CurrentScanline.Tricks|=TRICK_BLACK_LINE;
-
-
 #else
     t=LINECYCLE0+28; //trigger point (works with 26?)
 #if defined(SSE_MMU_WU_SHIFTER_TRICKS)
@@ -878,7 +901,6 @@ STF2:
     shift the display according to R1 cycle (No Cooper Greetings),
     We haven't analysed it at low level, the formula below is pragmatic, just
     like for 4bit scrolling.
-    . 
     20 for NCG   512R2 12R0 20R1        shift=2
     28 for PYM/BPOC  512R2 12R0 28R1    shift=0
     36 for NCG off lines 183, 200 512R2 12R0 36R1 (strange!) shift=2
@@ -1087,6 +1109,7 @@ STF2:
     if(ST_TYPE==STE)
     {
       t=THRESHOLD_LINE_PLUS_2_STE;
+/*
 #if defined(SSE_MMU_WU_DL)
       switch(MMU.WU[WAKE_UP_STATE]) 
       {
@@ -1098,6 +1121,7 @@ STF2:
         break;
       }//sw
 #endif
+*/
     }
 #if defined(SSE_STF)
     else
@@ -4362,6 +4386,7 @@ int TShifter::CycleOfLastChangeToShiftMode(int value) {
 #define max(a,b) (a>b ? a:b)
 #endif
 
+#if defined(SSE_SHIFTER_SDP_READ)
 MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
 
 //ASSERT(old_pc!=0x45336);
@@ -4577,7 +4602,7 @@ Cases to consider: TCB, Mindbomb/No Shit, Omega
 #endif
   return sdp;
 }
-
+#endif
 //#endif
 
 //#ifdef IN_EMU//temp

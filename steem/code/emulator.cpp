@@ -401,9 +401,11 @@ void intercept_xbios()
   //Random() returns a 24 bit random number
   else if (m68k_dpeek(sp)==17)// && SSE_HACKS_ON) 
   {
+#ifdef SSE_BETA
     TRACE_OSD("RND");
 //    r[0]=rand();
   //  M68K_PERFORM_RTE(;);  //don't need to check interrupts because sr won't actually have changed
+#endif
   }
 #endif
 }

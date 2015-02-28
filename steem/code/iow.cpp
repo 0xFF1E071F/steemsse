@@ -218,7 +218,7 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 
       case 0xfffc02:  // data //SS sending data to HD6301
 
-#if SSE_VERSION<=350 // big block before refactoring...
+#if defined(SSE_ACIA) && SSE_VERSION<=350 // big block before refactoring...
 
         TRACE_LOG("Write %X to IKBD's ACIA DR\n",io_src_b);
         // no TX in the agenda?
@@ -794,8 +794,8 @@ system exclusive start and end messages (F0 and F7).
             }else{
               ASSERT(n!=16);
 #ifdef SSE_DEBUG
-              if (n>=MFPR_IMRA && n<=MFPR_IMRB)
-                TRACE_MFP("%d PC %X MFP IMR%c %X (IER%c %X)\n",ACT,old_pc,'A'+n-MFPR_IMRA,io_src_b,'A'+n-MFPR_IMRA,mfp_reg[MFPR_IERA+n-MFPR_IMRA]);
+//              if (n>=MFPR_IMRA && n<=MFPR_IMRB)
+//                TRACE_MFP("%d PC %X MFP IMR%c %X (IER%c %X)\n",ACT,old_pc,'A'+n-MFPR_IMRA,io_src_b,'A'+n-MFPR_IMRA,mfp_reg[MFPR_IERA+n-MFPR_IMRA]);
 #endif
               mfp_reg[n]=io_src_b;
             }
@@ -2325,8 +2325,8 @@ void ASMCALL io_write_l(MEM_ADDRESS addr,LONG io_src_l)
     }
 #endif
   }
-/*  SS same way for long accesses, so that a .L read will resolve in 4 .B reads.
-    Notice the timing trick. At CPU emu level, the read is counted for eg 8 
+/*  SS same way for long accesses, so that a .L write will resolve in 4 .B writes.
+    Notice the timing trick. At CPU emu level, the write is counted for eg 8 
     cycles, the adjustment is here where it counts.
 */
   INSTRUCTION_TIME(-4);

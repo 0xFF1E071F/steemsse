@@ -411,22 +411,13 @@ Far more on the ST.
 #define THRESHOLD_LINE_PLUS_2_STF (54)
 
 #if defined(SSE_INT_VBL_STF) // modest hack still works
-#if defined(SSE_TIMINGS_STE_NOPS_TO_FIRST_LINE)
-#define HBL_FOR_STE (444 - 4)
-#define THRESHOLD_LINE_PLUS_2_STE 40 // as on a real STE
-#else
 #define HBL_FOR_STE (444)
-#define THRESHOLD_LINE_PLUS_2_STE (40+2)
-#endif
+#define THRESHOLD_LINE_PLUS_2_STE (40) //3.7.0
 #if SSE_VERSION<364
 //this particular hack doesn't look useful for anything now
 #define HBL_FOR_STF (HBL_FOR_STE+4+(SSE_HACKS_ON?4:0))
 #else
-#if defined(SSE_TIMINGS_STE_NOPS_TO_FIRST_LINE)
-#define HBL_FOR_STF 448//(HBL_FOR_STE+8) // so we change nothing on STF (3615cakeman)
-#else
 #define HBL_FOR_STF (HBL_FOR_STE+4)
-#endif
 #endif
 #else
 #define THRESHOLD_LINE_PLUS_2_STE (THRESHOLD_LINE_PLUS_2_STF-2)
@@ -483,8 +474,8 @@ Far more on the ST.
 
     MFP (no variation) ~ 2457600 hz
     CPU STF ~ 8021247
-    CPU STE ~ 8020736
-
+    CPU STE ~ 8021030, being pragmatic (programs must run)
+  
 */
 
 #define  MFP_CLK_LE 2451 // Steem 3.2
@@ -505,7 +496,7 @@ Far more on the ST.
 #if defined(SSE_INT_MFP_RATIO_STE3)
 #define  CPU_STE_PAL (CPU_STF_PAL)
 #elif defined(SSE_INT_MFP_RATIO_STE2)
-#define  CPU_STE_PAL 8020736
+#define  CPU_STE_PAL 8021030//8020992//(8021030)//8020736
 #else
 #define  CPU_STE_PAL (CPU_STF_PAL+64) //64 for DMA sound!
 #endif
@@ -537,10 +528,13 @@ Far more on the ST.
 #else
 // if = 12, better not define, it reduces code
 #define MFP_TIMER_SET_DELAY 12 // (12=Steem 3.2)
+#if (MFP_TIMER_SET_DELAY==12)
+#undef SSE_INT_MFP_TIMERS_STARTING_DELAY
+#endif
 #endif
 #endif//starting_delay
 
-#define MFP_IACK_LATENCY 28
+#define MFP_IACK_LATENCY 28 // it may seem high but it's not #IACK cycles
 #define MFP_SPURIOUS_LATENCY MFP_WRITE_LATENCY//?? (MFP_IACK_LATENCY) //?
 
 #endif//mfp
@@ -633,10 +627,12 @@ Far more on the ST.
 
 #if defined(SSE_INT_MFP_RATIO_STE2)
 
-#if CPU_STE_PAL==(8020736)
+#if CPU_STE_PAL==(8020736) // too slow for Overscan Demos STE...
 #define STE_DMA_CLOCK 8021000 // 50065; MOLZ OK
 #elif CPU_STE_PAL==(8020736+512+512)
 #define STE_DMA_CLOCK 8021350
+#elif CPU_STE_PAL==(8021030)
+#define STE_DMA_CLOCK 8021500 //50065; MOLZ OK
 #else
 #define STE_DMA_CLOCK 8021118 //(8021502-256-128)
 #endif

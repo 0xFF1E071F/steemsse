@@ -1607,6 +1607,8 @@ That will toggle bit x.
           break;
 #endif
 
+          //SS TODO: write-protect that doesn't change file properties
+
         case 1050:  // Disk in Drive 1
         case 1051:  // Disk in Drive 2
           This->DragLV=GetDlgItem(Win,int(LOWORD(wPar)==1050 ? 100:101));
@@ -1617,7 +1619,6 @@ That will toggle bit x.
             This->DragLV=This->DiskView;
             FromDV=true;
           }
-
           LV_ITEM lvi;
           lvi.iItem=int(FromDV ? This->MenuTarget:0);
           lvi.iSubItem=0;
@@ -2240,11 +2241,13 @@ That will toggle bit x.
     checking at the place of storage.
 */
 #if defined(SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD)
-          //If you click, name is copied into clipboard.
-          InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1082,Inf->Name.Text);
+          InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1082,
+            Inf->Name.Text);
+          //  Inf->Name +" (Copy Name)"); //no mention
 #else
           //If you click, you go there.
-          InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1091,Inf->Name.Text);
+          InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1091,
+            Inf->Name.Text);
 #endif
 #endif
           POINT pt;

@@ -645,6 +645,7 @@ when it does).
           {
             int n=(addr-0xfffa01) >> 1;
             if (n>=MFPR_TADR && n<=MFPR_TDDR){ //timer data registers
+//#undef SSE_INT_MFP_READ_DELAY1
 #if defined(SSE_INT_MFP_READ_DELAY1)
 /*  v3.7.0 
     MC68901 doc:
@@ -664,6 +665,7 @@ when it does).
 */
               if(OPTION_PRECISE_MFP)
                 INSTRUCTION_TIME(MFP_TIMER_DATA_REGISTER_ADVANCE);
+              //if(OPTION_PRECISE_MFP) TRACE_OSD("read mfp %d",MFP_TIMER_DATA_REGISTER_ADVANCE);
 #endif
               mfp_calc_timer_counter(n-MFPR_TADR);
 #if defined(SSE_INT_MFP_READ_DELAY1)
@@ -1186,7 +1188,11 @@ FF8240 - FF827F   palette, res
         case 0xffc100: ior_byte=BYTE(stem_version_text[0]-'0'); break;
         case 0xffc101:
           {
+#if defined(STEVEN_SEAGAL) && defined(SSE_VERSION)  //BCC
+            Str minor_ver=(char*)stem_version_text+2;
+#else
             Str minor_ver=stem_version_text+2;
+#endif
             for (int i=0;i<minor_ver.Length();i++){
               if (minor_ver[i]<'0' || minor_ver[i]>'9'){
                 minor_ver.SetLength(i);
@@ -2071,6 +2077,10 @@ Done one cycle of all palettes
 //---------------------------------------------------------------------------
 DWORD ASMCALL io_read_l(MEM_ADDRESS addr)
 {
+/*  SS same way for long accesses, so that a .L read will resolve in 4 .B reads.
+    Notice the timing trick. At CPU emu level, the read is counted for eg 8 
+    cycles, the adjustment is here where it counts.
+*/
   INSTRUCTION_TIME(-4);
   DWORD x=io_read_w(addr) << 16;
   INSTRUCTION_TIME(4);

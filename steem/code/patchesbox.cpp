@@ -14,8 +14,11 @@ Steem.
 void TPatchesBox::RefreshPatchList()
 {
   if (Handle==WINDOWTYPE(0)) return;
-
+#if defined(STEVEN_SEAGAL) && defined(SSE_VERSION)  //BCC
+  EasyStr ThisVerText=(char*)stem_version_text;
+#else
   EasyStr ThisVerText=stem_version_text;
+#endif
   for (int n=0;n<ThisVerText.Length();n++){ // Cut off beta number
     if (ThisVerText[n]<'0' || ThisVerText[n]>'9'){
       if (ThisVerText[n]!='.'){

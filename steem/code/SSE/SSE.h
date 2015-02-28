@@ -23,8 +23,9 @@ this one.
 only by composing other docs)
 -A folder '6301' in '3rdparty' for true emulation of the IKBD
 -A folder 'avi' in '3rdparty' for recording video to AVI support
--A folder 'caps' in '3rdparty' for IPF disk image format support
--A folder 'caps_linux' in '3rdparty' for future IPF disk image format support
+-A folder 'caps' in '3rdparty' for IPF/CTR disk image format support
+-A folder 'caps_linux' in '3rdparty' for future (?) IPF disk image format 
+support
 -A folder 'd3d' in '3rdparty' to compile the D3D9 parts with BCC
 -A folder 'doc' in '3rdparty' for some doc files (done by others)
 -A folder 'dsp' in '3rdparty' for Microwire emulation
@@ -45,6 +46,7 @@ by version. This again makes debugging easier.
 To enjoy the new features, you must define STEVEN_SEAGAL!
 If not, you should get the last 3.2 build that compiles in VC6 (only
 thing changed is no update attempt).
+TODO: make a 320/1 version instead
 
 My inane comments outside of defined blocks generally are marked by 'SS:'
 They don't mean that I did something cool, only that I comment the source.
@@ -52,7 +54,8 @@ They don't mean that I did something cool, only that I comment the source.
 I removed nothing from the original source code or comments.
 
 Since v3.7, the main build is the VS2008 one (before, it was VC6).
-The BCC build is much used for development.
+The BCC build is much used for development. Borland compiler is much faster
+than the Microsoft ones.
 The MinGW build is experimental.
 A Unix (gcc) version is also more or less maintained, with fewer features
 than the Windows versions.
@@ -118,9 +121,9 @@ Beta: not SSE_PRIVATE_BUILD
 // VERSION //
 /////////////
 
-#define SSE_VERSION 370 // versions down to 340 still compile
+#define SSE_VERSION 370 // versions down to 340 still compile //TODO->320
 
-#if SSE_VERSION>364 //last release
+#if SSE_VERSION>370 //last release
 //#define SSE_BETA //title, OSD, plus some testing - new features
 //#define SSE_BETA_BUGFIX // beta for just bugfixes
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
@@ -165,10 +168,13 @@ Beta: not SSE_PRIVATE_BUILD
     enabling SSE_SWITCHES_FEATURES or not.
     It changes the order of definition, by nature (if enabled) or 
     historically.
-    So it's double work (everything is defined twice) but well worth
-    it to track down bugs.
+    So it's double work (everything is defined twice) but well worth it to 
+    track bugs.
+    Normally, SSE_SWITCHES_FEATURES is defined. You undef it if you need
+    to compile an older version.
 */
-//#define SSE_SWITCHES_FEATURES
+
+#define SSE_SWITCHES_FEATURES
 
 
 //////////////////
@@ -1231,7 +1237,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_INT_MFP_IACK_LATENCY2 //delay timers
 #define SSE_INT_MFP_IACK_LATENCY3 //timer B
 #define SSE_INT_MFP_IACK_LATENCY4 //delay timers 
-#define SSE_INT_MFP_IACK_LATENCY5 //timer B 
+//#define SSE_INT_MFP_IACK_LATENCY5 //timer B 
 #define SSE_INT_MFP_OPTION //performance/precision
 #define SSE_INT_MFP_UTIL
 #ifdef SSE_BETA
@@ -1609,6 +1615,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SHIFTER_REMOVE_USELESS_VAR //3.6.1
 #define SSE_SHIFTER_RIGHT_OFF_BY_SHIFT_MODE //beeshift0
 #define SSE_SHIFTER_STATE_MACHINE //simpler approach and WS-aware
+#define SSE_SHIFTER_STATE_MACHINE2
 #define SSE_SHIFTER_STE_HI_HSCROLL
 #define SSE_SHIFTER_STE_HSCROLL_LEFT_OFF //MOLZ/Spiral
 #define SSE_SHIFTER_STE_MED_HSCROLL // Cool STE
@@ -1807,7 +1814,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_TIMINGS_FRAME_ADJUSTMENT // due to shifter tricks 3.6.4
 #define SSE_TIMINGS_MS_TO_HBL
-#define SSE_TIMINGS_STE_NOPS_TO_FIRST_LINE
 
 #endif
 
@@ -2008,6 +2014,10 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_SWITCHES_VERSIONS
 
+//all versions, or many errors to fix...
+#ifdef SSE_DEBUG
+#define SSE_DEBUG_LOG_OPTIONS // mine, boiler or _DEBUG
+#endif
 
 //////////
 // v3.3 //
@@ -2414,7 +2424,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_CPU_EXCEPTION_TRACE_PC // reporting all PC (!)
 #define SSE_FDC_TRACE_STATUS //spell out status register
 #define SSE_IPF_TRACE_SECTORS // show sector info (IPF)
-#define SSE_DEBUG_LOG_OPTIONS // mine, boiler or _DEBUG
+///#define SSE_DEBUG_LOG_OPTIONS // mine, boiler or _DEBUG
 #define SSE_DEBUG_TRACE_IO
 //#define SSE_DEBUG_TRACE_PREFETCH
 //#define SSE_DEBUG_TRACE_CPU_ROUNDING
@@ -3749,7 +3759,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_INT_MFP_IACK_LATENCY2 //delay timers
 #define SSE_INT_MFP_IACK_LATENCY3 //timer B
 #define SSE_INT_MFP_IACK_LATENCY4 //delay timers 
-#define SSE_INT_MFP_IACK_LATENCY5 //timer B 
+//#define SSE_INT_MFP_IACK_LATENCY5 //timer B 
 #define SSE_INT_MFP_TIMERS_NO_BOOST_LIMIT
 #define SSE_INT_MFP_OPTION //performance/precision
 #define SSE_INT_MFP_UTIL
@@ -3768,8 +3778,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_INT_MFP_RATIO_PRECISION_2 // 1 cycle precision
 #define SSE_INT_MFP_RATIO_PRECISION3 // 100%
 #endif
-#define SSE_INT_MFP_RATIO_STE2 //LoSTE?
-//#define SSE_INT_MFP_RATIO_STE3 // = STF ////////////////////////// <--
+#define SSE_INT_MFP_RATIO_STE2
+//#define SSE_INT_MFP_RATIO_STE3 // = STF
 #define SSE_INT_MFP_RATIO_STF2 
 #define SSE_INT_MFP_REFACTOR1
 //#define SSE_INT_MFP_REFACTOR2 //doesn't work at all yet
@@ -3799,8 +3809,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_OSD_FORCE_REDRAW_AT_STOP // works or not...
 //#define SSE_OSD_TRACE_ALL_BUILDS -> no, depends on TDebug
 #endif
-#if defined(SSE_SDL)
-#endif
 #if defined(SSE_SHIFTER)
 #define SSE_SHIFTER_HIRES_COLOUR_DISPLAY//My Socks are Weapons
 #define SSE_SHIFTER_HIRES_COLOUR_DISPLAY2//black display
@@ -3822,6 +3830,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SHIFTER_DOLB_STE
 #define SSE_SHIFTER_DOLB1 //again a hack... TODO
 #define SSE_SHIFTER_PANIC2 //band order
+#define SSE_SHIFTER_STATE_MACHINE2
 #endif//shifter
 #define SSE_SOUND_DMA_CLOCK //not CPU, apart clock
 #if defined(SSE_SOUND_FILTER_STF)
@@ -3849,11 +3858,6 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_STF)
 #undef SSE_STF_8MHZ // we have better option now
 #define SSE_STF_MATCH_TOS2 // default = 1.62 instead of 1.06
-#endif
-#if defined(SSE_STRUCTURE)
-#endif
-#if defined(SSE_TIMINGS)
-#define SSE_TIMINGS_STE_NOPS_TO_FIRST_LINE
 #endif
 #if defined(SSE_TOS)
 #undef SSE_TOS_PATCH106 // TOS 1.62 recommended

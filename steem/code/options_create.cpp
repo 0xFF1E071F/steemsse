@@ -2881,7 +2881,7 @@ Windows 2000	5.0
 
 #if defined(SSE_IKBD_6301) 
 #if SSE_VERSION>=370
-  Wid=GetCheckBoxSize(Font,T("C1: 6850/6301/E-clock")).Width;
+  Wid=GetCheckBoxSize(Font,T("C1: 6850/6301/MIDI/E-Clock")).Width;
 #elif SSE_VERSION>=364
   Wid=GetCheckBoxSize(Font,T("6301/ACIA")).Width;
 #else
@@ -2902,7 +2902,7 @@ Windows 2000	5.0
 #endif
 
 #if SSE_VERSION>=370
-  Win=CreateWindow("Button",T("C1: 6850/6301/E-clock"),mask,page_l,y,Wid,23,Handle,
+  Win=CreateWindow("Button",T("C1: 6850/6301/MIDI/E-Clock"),mask,page_l,y,Wid,23,Handle,
     (HMENU)1029,HInstance,NULL);
 #elif SSE_VERSION>=364
   Win=CreateWindow("Button",T("6301/ACIA"),mask,page_l,y,Wid,23,Handle,

@@ -81,7 +81,7 @@ LONG m68k_fetchL();
 void ASMCALL perform_crash_and_burn();
 void m68k_unrecognised();
 
-#if defined(SSE_VAR_REWRITE)//compiler warning
+#if defined(SSE_VAR_REWRITE) || defined(SSE_VS2008)//compiler warning
 extern "C" void ASMCALL m68k_trace(); //execute instruction with trace bit set
 #else
 extern "C" ASMCALL void m68k_trace(); //execute instruction with trace bit set

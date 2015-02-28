@@ -127,7 +127,7 @@ void calc_time_of_next_timer_b()
     if (scan_y>=shifter_first_draw_line && scan_y<shifter_last_draw_line){
 #if defined(SSE_INT_MFP_TIMER_B_AER)
       if(mfp_reg[1]&8)
-#if defined(SSE_GLUE)
+#if defined(SSE_GLUE__) //NO it was right to put into future (Trex Warrior)
         time_of_next_timer_b=cpu_timer_at_start_of_hbl+TB_TIME_WOBBLE
         +cpu_cycles_from_hbl_to_timer_b-Glue.DE_cycles[shifter_freq_idx];
 #else
@@ -346,7 +346,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 
 #endif//#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO_PRECISION_2)
 
-#if defined(SSE_DEBUG)
+#if defined(SSE_DEBUG) && defined(SSE_INT_MFP_RATIO_PRECISION)
 #if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY)
           TRACE_LOG("%d PC %X set timer %c control $%x, data $%x",
             ACT-MFP_TIMER_SET_DELAY,old_pc,'A'+timer,new_control,mfp_reg[MFPR_TADR+timer]);
@@ -859,8 +859,7 @@ void ASMCALL check_for_interrupts_pending()
                   &&  MC68901.TimerBActive() // hem! not Audio Artistic then
                   &&  mfp_timer_counter[1]<64+64 // must trigger
                   && time_of_next_timer_b-ACT<=iack_latency
-                  && time_of_next_timer_b-ACT>=0 //?
-                  )
+                  && time_of_next_timer_b-ACT>=0)
                 {
 #if defined(SSE_OSD_CONTROL)
                   if(OSD_MASK1 & OSD_CONTROL_IACK)
@@ -868,9 +867,16 @@ void ASMCALL check_for_interrupts_pending()
 #endif
                   TRACE_LOG("IACK %d->TB %d y%d %d\n",irq,time_of_next_timer_b-ACT,scan_y,LINECYCLES);                
 #if !defined(SSE_INT_MFP_IACK_LATENCY5)
-                  break; //ignore irq: can work but timing trouble
+/*  We ignore this irq so timer B will trigger as usual.
+    Normally it should trigger some cycles before, since IACK already
+    started, and that's what happens when SSE_INT_MFP_IACK_LATENCY5 is
+    defined.
+    But Fuzion 176 works better if it's not defined. I think it's some
+    internal Steem trouble. Should be checked on real STF. TODO
+*/
+                  break; //ignore irq
 #endif
-#if defined(SSE_INT_MFP_IACK_LATENCY4) && defined(SSE_INT_MFP_IACK_LATENCY5)
+#if defined(SSE_INT_MFP_IACK_LATENCY4) && defined(SSE_INT_MFP_IACK_LATENCY5)//no
                   irq=MC68901.NextIrq=8; // execute now
                   MC68901.SkipTimer[1]++; // skip next 'pending'
 #endif
@@ -1419,6 +1425,7 @@ bool TMC68901::CheckSpurious(int irq) {
       // was pending or will pend very soon
       && ( (reg_pending_before&i_bit) || 
       LastRegisterWritten==MFPR_IPRA+i_ab 
+      && next_timeout-ACT>=0 //fuz105, LTC2
       && next_timeout-WriteTiming<=MFP_WRITE_LATENCY)
       && ( !(mfp_reg[MFPR_IERA+i_ab] & i_bit) ||!(reg_pending_after & i_bit)
       ||!(mfp_reg[MFPR_IMRA+i_ab] & i_bit)))

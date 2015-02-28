@@ -1959,8 +1959,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             OPTION_CPU_CLOCK=!OPTION_CPU_CLOCK;
             TRACE_LOG("Option CPU clock = %d\n",OPTION_CPU_CLOCK);
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_CPU_CLOCK,0);
-            CpuMfpRatio=(OPTION_CPU_CLOCK?CpuCustomHz:CpuNormalHz)
-              /(double)MFP_CLK_TH_EXACT;
+            CpuMfpRatio=(OPTION_CPU_CLOCK?(double)CpuCustomHz
+              :(double)CpuNormalHz)  /(double)MFP_CLK_TH_EXACT;
           }
           break;
 #endif

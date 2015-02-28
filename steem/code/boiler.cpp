@@ -1831,11 +1831,17 @@ void DWin_init()
   RegisterClass(&wnd);
 
 //  HiddenParent=CreateWindow("Steem Debug Window","Steem Hidden Window",0,0,0,0,0,NULL,NULL,Inst,NULL);
-
+#if defined(STEVEN_SEAGAL) && defined(SSE_VERSION)  //BCC
+  DWin=CreateWindowEx(WS_EX_APPWINDOW,"Steem Debug Window",EasyStr("The Boiler Room: Steem v")+(char*)stem_version_text
+      ,WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX
+       | WS_SIZEBOX
+      ,60,60,640,400,ParentWin,menu,Inst,0);
+#else
   DWin=CreateWindowEx(WS_EX_APPWINDOW,"Steem Debug Window",EasyStr("The Boiler Room: Steem v")+stem_version_text
       ,WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX
        | WS_SIZEBOX
       ,60,60,640,400,ParentWin,menu,Inst,0);
+#endif
   log("STARTUP: Boiler Room Window Done");
 
   {

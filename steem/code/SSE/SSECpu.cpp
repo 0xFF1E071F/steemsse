@@ -1238,6 +1238,7 @@ void TM68000::PrefetchIrc() {
 #endif
       TRACE_OSD("IRC 2X FETCH"); // generally false alert at start-up
   }
+//#endif
   NextIrFetched=true;
 #endif
 #if defined(SSE_CPU_PREFETCH_TIMING_EXCEPT)
