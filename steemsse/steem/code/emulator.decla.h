@@ -59,7 +59,7 @@ EXT MEM_ADDRESS xbios2,shifter_draw_pointer_at_start_of_line;
 EXT int shifter_pixel;
 
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
-#ifdef MINGW_BUILD
+#if defined(MINGW_BUILD) || defined(SSE_UNIX)
 extern "C"{ EXT int shifter_freq INIT(60); }
 #else
 extern "C" EXT int shifter_freq INIT(60);

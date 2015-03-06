@@ -729,7 +729,6 @@ void TSF314::Sound_CheckMotor() {
 */
   if(!Sound_Buffer[MOTOR])
     return;
-
   DWORD dwStatus ;
   Sound_Buffer[MOTOR]->GetStatus(&dwStatus);
 #if defined(SSE_DMA)
@@ -745,7 +744,6 @@ void TSF314::Sound_CheckMotor() {
     Sound_Buffer[MOTOR]->Play(0,0,DSBPLAY_LOOPING); // start motor loop
   else if((!SSEOption.DriveSound||!motor_on) && (dwStatus&DSBSTATUS_PLAYING))
     Sound_Buffer[MOTOR]->Stop();
-
 #if defined(SSE_DRIVE_SOUND_CHECK_SEEK_VBL)//no, MFD
   // because of some buggy programs? (normally not defined)
   if(Sound_Buffer[SEEK] && !(FRAME%10) && WD1772.CommandType()!=1)
@@ -766,13 +764,16 @@ void TSF314::Sound_LoadSamples(IDirectSound *DSObj,DSBUFFERDESC *dsbd,WAVEFORMAT
 */
 
   //TRACE("TSF314::Sound_LoadSamples\n");
+
   HRESULT Ret;
   TWavFileFormat WavFileFormat;
   
   FILE *fp;
   EasyStr path=GetEXEDir();
   path+=DRIVE_SOUND_DIRECTORY;
+
   path+="\\";
+
   EasyStr pathplusfile;
   for(int i=0;i<NSOUNDS;i++)
   {
@@ -811,6 +812,7 @@ void TSF314::Sound_LoadSamples(IDirectSound *DSObj,DSBUFFERDESC *dsbd,WAVEFORMAT
     else TRACE("DriveSound. Can't load sample file %s\n",pathplusfile.Text);
 #endif
   }//nxt
+
 #if defined(SSE_DRIVE_SOUND_VOLUME)
   Sound_ChangeVolume();
 #endif
@@ -855,7 +857,6 @@ void TSF314::Sound_Step() {
   if( (dwStatus&DSBSTATUS_PLAYING) )
     Sound_Buffer[STEP]->Stop();
 #endif
-
   Sound_Buffer[STEP]->SetCurrentPosition(0);
   Sound_Buffer[STEP]->Play(0,0,0);
 }

@@ -936,7 +936,7 @@ void GUIColdResetChangeSettings()
 #endif
     if (OptionBox.NewMonitorSel==1){
       mfp_gpip_no_interrupt &= MFP_GPIP_NOT_COLOUR;
-#if defined(SSE_VID_BORDERS_GUARD_R2)
+#if defined(SSE_VID_BORDERS) && defined(SSE_VID_BORDERS_GUARD_R2)
       if(DISPLAY_SIZE)
         ChangeBorderSize(0);
 #endif

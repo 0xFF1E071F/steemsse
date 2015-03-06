@@ -25,7 +25,7 @@ extern "C" int SS_signal=0;
 #endif
 
 #if defined(SSE_VERSION)
-char *stem_version_text[SSE_VERSION_TXT_LEN];
+BYTE *stem_version_text[SSE_VERSION_TXT_LEN];
 #endif
 
 #if defined(SSE_VID_RECORD_AVI) 

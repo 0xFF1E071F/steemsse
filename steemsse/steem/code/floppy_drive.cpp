@@ -162,7 +162,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_FLOPPY) && SSE_VERSION>=370
+#if defined(STEVEN_SEAGAL) && defined(SSE_FLOPPY)  && SSE_VERSION>=370 && defined(WIN32)
               if(PASTI_JUST_STX&& drive!=-1 && SF314[1-drive].ImageType.Extension!=EXT_STX)
                 pasti_active=false;
               //TRACE_LOG("pasti_active %d\n",pasti_active);
@@ -371,9 +371,10 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       return FIMAGE_WRONGFORMAT;
 
 #if defined(SSE_DISK_IMAGETYPE)
+#ifdef WIN32//replace with...
     if(SF314[1-drive].ImageType.Extension!=EXT_STX)
       pasti_active=false;
-
+#endif
     SF314[drive].ImageType.Manager=MNGR_WD1772;
     SF314[drive].ImageType.Extension=EXT_STW;
 #endif
@@ -432,7 +433,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
         DeleteFile(NewPath.Text);
       }
       //TRACE_LOG("copy %s to %s\n",File.Text,NewPath.Text);
-      CopyFile(File.Text,NewPath.Text,FALSE);
+      CopyFile(File.Text,NewPath.Text,FALSE); // there's no CopyFile in Unix
       
     }//if
     else
@@ -1147,7 +1148,8 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   if (Removing) return;
   Removing=true;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
+#if defined(STEVEN_SEAGAL) && defined(SSE_IPF) \
+|| defined(SSE_UNIX)
   int drive=-1;
   if (this==&FloppyDrive[0]) drive=0;
   if (this==&FloppyDrive[1]) drive=1;

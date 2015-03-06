@@ -21,6 +21,10 @@
 
 #define FileIsDisk(s) ExtensionIsDisk(strrchr(s,'.'))
 
+#ifdef SSE_UNIX
+#include <x/hxc_dir_lv.h>
+#endif
+
 int ExtensionIsDisk(char*,bool returnPastiDisksOnlyWhenPastiOn=true);
 
 typedef struct{

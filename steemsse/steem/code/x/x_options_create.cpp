@@ -28,9 +28,65 @@ void TOptionBox::CreateMachinePage()
 {
   int y=10;
 
+#if defined(STEVEN_SEAGAL) && defined(SSE_STF) \
+  && defined(SSE_GUI_OPTIONS_STF_IN_MACHINE)
+  const int LineHeight=30;
+  const int HorizontalSeparation=10;
 
+  int Wid;
 
-  int Wid=hxc::get_text_width(XD,T("ST CPU speed"));
+  Wid=hxc::get_text_width(XD,T("ST model"));
+  st_type_label.create(XD,page_p,page_l,y,Wid,25,NULL,this,BT_STATIC 
+    | BT_TEXT,T("ST Model"),0,BkCol);
+  st_type_dd.id=4005;
+  st_type_dd.make_empty();
+  st_type_dd.additem("STE",0);
+  st_type_dd.additem("STF",1);
+#if defined(SSE_STF_MEGASTF)
+  st_type_dd.additem("Mega ST4",2);
+#endif
+  st_type_dd.select_item_by_data(ST_TYPE);
+
+  hints.add(st_type_dd.handle, // works?
+    "Some programs will run only with STF or STE."
+    ,page_p);
+
+  st_type_dd.create(XD,page_p,page_l+5+Wid,y,180-(15+Wid+10),350,
+    dd_notify_proc,this);
+
+#if defined(SSE_MMU_WAKE_UP) && defined(SSE_GUI_OPTIONS_WU_IN_MACHINE)
+  Wid=hxc::get_text_width(XD,T("Wake-up state"));
+  wake_up_label.create(XD,page_p,page_l+160,y,Wid,25,NULL,this,BT_STATIC 
+    | BT_TEXT,T("Wake-up state"),0,BkCol);
+  wake_up_dd.id=4006;
+  wake_up_dd.make_empty();
+  wake_up_dd.additem("Ignore",0);
+#if defined(SSE_MMU_WU_DL)
+  wake_up_dd.additem("DL3 WU2 WS2",1);
+  wake_up_dd.additem("DL4 WU2 WS4",2);
+  wake_up_dd.additem("DL5 WU1 WS3",3);
+  wake_up_dd.additem("DL6 WU1 WS1",4);
+#else
+  wake_up_dd.additem("Wake-up state 1",1);
+  wake_up_dd.additem("Wake-up state 2",2);
+#endif
+  wake_up_dd.select_item_by_data(WAKE_UP_STATE);
+
+  hints.add(wake_up_dd.handle, // works?
+    "Very technical - Some demos will display correctly only in one of those states."
+    ,page_p);
+
+  wake_up_dd.create(XD,page_p,page_l+160+Wid,y,250-(15+Wid+10),350,
+    dd_notify_proc,this);
+#endif
+
+//#endif
+  y+=LineHeight;
+#else
+  int 
+#endif
+
+  Wid=hxc::get_text_width(XD,T("ST CPU speed"));
 	cpu_boost_label.create(XD,page_p,page_l,y,Wid,25,NULL,this,BT_STATIC | BT_TEXT,T("ST CPU speed"),0,BkCol);
   cpu_boost_dd.id=8;
 
@@ -546,13 +602,36 @@ void TOptionBox::CreateSoundPage()
   sound_mode_dd.id=5001;
   sound_mode_dd.make_empty();
   sound_mode_dd.additem(T("None (Mute)"));
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF)
+#if SSE_VERSION>=370
+  sound_mode_dd.additem(T("No filter"));
+
+  const int LineHeight=30;
+  const int HorizontalSeparation=10;
+
+
+#endif
+#if SSE_VERSION>=370
+  sound_mode_dd.additem(T("Filter 'coaxial' (Steem original)"));
+#elif defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF)
   sound_mode_dd.additem(T("Simulated Monitor Speaker"));
 #else
   sound_mode_dd.additem(T("Simulated ST Speaker"));
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF5)
+  sound_mode_dd.additem(T("Filter 'SCART'"));
+#endif
+#if SSE_VERSION>=370
+  sound_mode_dd.additem(T("Filter 'coaxial' tunes only"));
+#else
   sound_mode_dd.additem(T("Direct"));
   sound_mode_dd.additem(T("Sharp STFM Samples"));
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF5)
+  sound_mode_dd.additem(T("Filter 'coaxial' samples only"));
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_HATARI)
+  sound_mode_dd.additem(T("Filter 'Hatari'"));
+#endif
   sound_mode_dd.changesel(sound_mode);
   y+=35;
 
@@ -630,7 +709,49 @@ void TOptionBox::CreateSoundPage()
 
   FillSoundDevicesDD();
 
+#if !(defined(SSE_SOUND_MICROWIRE) && defined(SSE_GUI_OPTIONS_SOUND3))
   y+=220;
+#else
+  y+=180;
+#endif
+
+#if defined(SSE_YM2149_FIX_TABLES) && defined(SSE_GUI_OPTIONS_SOUND3)
+  y+=LineHeight;
+  psg_fixtables_but.create(XD,page_p,page_l,y,0,25,
+    button_notify_proc,this,BT_CHECKBOX,T("Sampled YM-2149"),4012,BkCol);
+  psg_fixtables_but.set_check(SSEOption.PSGMod);
+  hints.add(psg_fixtables_but.handle,
+#if defined(SSE_YM2149_NO_SAMPLES_OPTION)
+    T("Punchier P.S.G. (YM-2149) sound using a table by ljbk, thx dude!"),
+#else
+    T("This uses values from Yamaha doc to render P.S.G. (YM-2149) sound."),
+#endif
+    page_p);
+////  y+=LineHeight;
+#endif
+
+#if defined(SSE_SOUND_MICROWIRE) && defined(SSE_GUI_OPTIONS_SOUND3)
+///  y+=LineHeight;
+  ste_microwire_but.create(XD,page_p,page_l+148,y,0,25,
+    button_notify_proc,this,BT_CHECKBOX,T("Microwire"),4009,BkCol);
+  ste_microwire_but.set_check(MICROWIRE_ON);
+  hints.add(ste_microwire_but.handle,
+//  T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature."),
+  T("Microwire (STE sound), incomplete emulation"),
+    page_p);
+//  y+=LineHeight;
+#endif
+
+#if defined(SSE_VAR_KEYBOARD_CLICK) && defined(SSE_GUI_OPTIONS_SOUND4)
+  keyboard_click_but.create(XD,page_p,page_l+240,y,0,25,
+    button_notify_proc,this,BT_CHECKBOX,T("Keyboard click"),4007,BkCol);
+  int keyboard_click=( PEEK(0x484)&1 ); // get current setting
+  keyboard_click_but.set_check(keyboard_click);
+  hints.add(keyboard_click_but.handle,
+  T("This gives you direct access to bit1 of address $484, which enables or disables the annoying keyboard click (in TOS/GEM programs only)."),
+    page_p);
+  y+=LineHeight-10+2;
+#endif
 
   record_group.create(XD,page_p,page_l,y,page_w,90,NULL,this,
     BT_GROUPBOX,T("Record"),0,BkCol);
@@ -749,8 +870,11 @@ void TOptionBox::CreateDisplayPage()
   border_dd.additem(T("Never Show Borders"));
   border_dd.additem(T("Always Show Borders"));
   border_dd.additem(T("Auto Borders"));
+#if SSE_VERSION>=370
+  border_dd.changesel(min((int)border,2));
+#else
   border_dd.changesel(min(border,2));
-
+#endif
   border_dd.create(XD,page_p,page_l+5+bo_label.w,y,
     page_w-(5+bo_label.w),210,dd_notify_proc,this);
   y+=35;
@@ -1224,7 +1348,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SSE_STF)
+#if defined(SSE_STF) && !defined(SSE_GUI_OPTIONS_STF_IN_MACHINE)
   Wid=hxc::get_text_width(XD,T("ST model"));
   st_type_label.create(XD,page_p,page_l,y,Wid,25,NULL,this,BT_STATIC 
     | BT_TEXT,T("ST Model"),0,BkCol);
@@ -1246,7 +1370,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SSE_MMU_WAKE_UP)
+#if defined(SSE_MMU_WAKE_UP) && !defined(SSE_GUI_OPTIONS_WU_IN_MACHINE)
   Wid=hxc::get_text_width(XD,T("Wake-up state"));
   wake_up_label.create(XD,page_p,page_l,y,Wid,25,NULL,this,BT_STATIC 
     | BT_TEXT,T("Wake-up state"),0,BkCol);
@@ -1274,16 +1398,41 @@ void TOptionBox::CreateSSEPage() {
 #endif
 
 #if defined(SSE_IKBD_6301) 
+
+#if SSE_VERSION>=370
+  hd6301emu_but.create(XD,page_p,page_l,y,0,25,
+    button_notify_proc,this,BT_CHECKBOX,T("C1: 6850/6301/MIDI/E-Clock"),4006,BkCol);
+  hd6301emu_but.set_check(HD6301EMU_ON);
+  hints.add(hd6301emu_but.handle,
+  T("Chipset 1 - This enables a low level emulation of the IKBD keyboard chip (using\
+ the Sim6xxx code by Arne Riiber, thx dude!), precise E-Clock, as well as ACIA and MIDI \
+ improvements or bugs"),
+    page_p);
+
+#else
   hd6301emu_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("6301 true emu"),4006,BkCol);
   hd6301emu_but.set_check(HD6301EMU_ON);
   hints.add(hd6301emu_but.handle,
   T("This enables a real emulation of the IKBD keyboard chip (using the Sim6xxx code by Arne Riiber, thx dude!)"),
     page_p);
+#endif
   y+=LineHeight;
 #endif
 
-#if defined(SSE_VAR_KEYBOARD_CLICK)
+#if defined(SSE_INT_MFP_OPTION)
+#if defined(SSE_IKBD_6301) 
+  y-=LineHeight;
+#endif
+  mc68901_but.create(XD,page_p,page_l+220,y,0,25,
+    button_notify_proc,this,BT_CHECKBOX,T("C2: 68901"),4014,BkCol);
+  mc68901_but.set_check(OPTION_PRECISE_MFP);
+  hints.add(mc68901_but.handle,
+  T("Chipset 2 - Check for a more precise emulation of the MFP."),page_p);
+  y+=LineHeight;
+#endif
+
+#if defined(SSE_VAR_KEYBOARD_CLICK) && !defined(SSE_GUI_OPTIONS_SOUND4)
   keyboard_click_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Keyboard click"),4007,BkCol);
   int keyboard_click=( PEEK(0x484)&1 ); // get current setting
@@ -1294,17 +1443,21 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SSE_YM2149_FIX_TABLES) 
+#if defined(SSE_YM2149_FIX_TABLES) && !defined(SSE_GUI_OPTIONS_SOUND3)
   psg_fixtables_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("P.S.G."),4012,BkCol);
   psg_fixtables_but.set_check(SSEOption.PSGMod);
   hints.add(psg_fixtables_but.handle,
+#if defined(SSE_YM2149_NO_SAMPLES_OPTION)
+    T("Punchier P.S.G. (YM-2149) sound using a table by ljbk, thx dude!"),
+#else
     T("This uses values from Yamaha doc to render P.S.G. (YM-2149) sound."),
+#endif
     page_p);
   y+=LineHeight;
 #endif
 
-#if defined(SSE_YM2149_FIXED_VOL_TABLE)
+#if defined(SSE_YM2149_FIXED_VOL_TABLE) && !defined(SSE_YM2149_NO_SAMPLES_OPTION)
   psg_samples_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Samples"),4013,BkCol);
   psg_samples_but.set_check(SSEOption.PSGFixedVolume);
@@ -1314,7 +1467,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SSE_SOUND_FILTER_STF)
+#if defined(SSE_SOUND_FILTER_STF) && !defined(SSE_SOUND_FILTER_STF5)
   psg_filter_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Filter"),4008,BkCol);
   psg_filter_but.set_check(PSG_FILTER_FIX);
@@ -1324,7 +1477,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE) && !defined(SSE_GUI_OPTIONS_SOUND3)
   ste_microwire_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Microwire"),4009,BkCol);
   ste_microwire_but.set_check(MICROWIRE_ON);

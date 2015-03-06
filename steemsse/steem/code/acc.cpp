@@ -694,7 +694,7 @@ WORD change_endian(WORD x) {
 }
 #endif
 
-#if defined(SSE_VAR_CLIPBOARD_TEXT)
+#if defined(SSE_GUI_CLIPBOARD_TEXT)
 /*  Used for -copy 68000 code from browser (Boiler)
              -copy disk name (excluding extension) from Disk manager
 */

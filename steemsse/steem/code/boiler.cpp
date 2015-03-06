@@ -1456,7 +1456,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 }
 //---------------------------------------------------------------------------
 #if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_CLIPBOARD)
-#if !defined(SSE_VAR_CLIPBOARD_TEXT)
+#if !defined(SSE_GUI_CLIPBOARD_TEXT)
 BOOL SetClipboardText(LPCTSTR pszText) // from the 'net, for disa_to_file mod
 {
    BOOL ok = FALSE;

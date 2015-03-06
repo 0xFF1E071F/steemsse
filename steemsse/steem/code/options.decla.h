@@ -220,6 +220,10 @@ public:
   hxc_button hd6301emu_but;
 #endif
 
+#if defined(SSE_INT_MFP_OPTION)
+  hxc_button mc68901_but;
+#endif
+
 #if defined(SSE_VAR_KEYBOARD_CLICK)
   hxc_button keyboard_click_but; 
 #endif

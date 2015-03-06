@@ -239,7 +239,11 @@ MIDI is 4 times faster than IKBD
 #endif
 
 #if defined(SSE_DRIVE_SOUND)
+#ifdef SSE_UNIX
+#define DRIVE_SOUND_DIRECTORY "/DriveSound"
+#else
 #define DRIVE_SOUND_DIRECTORY "\\DriveSound"
+#endif
 #define DRIVE_SOUND_BUZZ_THRESHOLD 7 // distance between tracks
 #endif
 

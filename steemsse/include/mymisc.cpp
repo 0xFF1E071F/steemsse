@@ -14,7 +14,6 @@ just refuse to be categorized.
 #include <binary.h>
 #include <clarity.h>
 #include <string.h>
-#include "../steem/code/SSE/SSE.h"	// added for SSE_VS2012_POW
 
 #ifndef WIN_ONLY
 #ifdef WIN32
@@ -61,14 +60,8 @@ unsigned long HexToVal(char *HexStr)
       val+=10;
     }else
       break;
-/*
-DrCoolZic » Sat Jun 15, 2013 8:36 am 
-Visual Studio C++ 2012
-In mymisc.cpp line 64: Can you change pow(16,n) to pow(16.0,n)
-The first argument has to be a double and the compiler chuck on this one
-*/
-#ifdef SSE_VS2012_POW
-    if (n>0) val*=(unsigned long)pow(16.0,n);
+#if defined(SSE_VS2008)
+    if (n>0) val*=(unsigned long)pow((float)16,n);
 #else
     if (n>0) val*=(unsigned long)pow(16,n);
 #endif

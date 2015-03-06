@@ -96,7 +96,7 @@ HRESULT Rt_StartBuffer(int flatlevel1,int flatlevel2)
     return DSERR_GENERIC;
 
 
-  Rt_FreeBuffer(true);
+  Rt_FreeBuffer(true); //Steem's, defined in this file
 //note EXT int rt_buffer_size INIT(256),rt_buffer_num INIT(4);
   unsigned int bufferSize=rt_buffer_size;  // 256 sample frames
   unsigned int device=0;        // 0 indicates the default or first available device
@@ -175,7 +175,6 @@ BYTE x_sound_buf[X_SOUND_BUF_LEN_BYTES+16];
     error.printMessage();
     return DSERR_GENERIC;
   }
-
   rt_started=true;
   SoundBufStartTime=timeGetTime();
   sound_low_quality=(sound_freq<35000);
@@ -214,6 +213,21 @@ HRESULT Rt_Stop(bool Immediate)
   return DSERR_GENERIC;
 }
 //---------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #else // Steem 3.2

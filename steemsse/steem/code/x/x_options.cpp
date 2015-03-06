@@ -635,11 +635,27 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
 #endif         
 #if defined(SSE_YM2149_FIX_TABLES) 
     else if(b->id==4012)
+    {
       SSEOption.PSGMod=b->checked;
+#if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
+      if(SSEOption.PSGMod)
+        YM2149.LoadFixedVolTable();
+      else
+        YM2149.FreeFixedVolTable();
+#endif
+    }
 #endif
 #if defined(SSE_YM2149_FIXED_VOL_TABLE)
     else if(b->id==4013)
+    {
       SSEOption.PSGFixedVolume=b->checked;
+#if defined(SSE_YM2149_DYNAMIC_TABLE____)//v3.7.0
+      if(SSEOption.PSGMod)
+        YM2149.LoadFixedVolTable();
+      else
+        YM2149.FreeFixedVolTable();
+#endif
+    }
 #endif
 #if defined(SSE_SOUND_FILTER_STF)
     else if(b->id==4008)
@@ -657,6 +673,10 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
     else if(b->id==4011)
       USE_SDL=b->checked;
 #endif   
+#if defined(SSE_INT_MFP_OPTION)
+    else if(b->id==4014)
+      OPTION_PRECISE_MFP=b->checked;
+#endif
 #endif
   }
   return 0;
