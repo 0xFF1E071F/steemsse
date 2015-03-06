@@ -167,6 +167,15 @@ int SS_signal; // "handy" global mask (future coding horror case)
 
 
 
+//////////
+// UNIX //
+//////////
+
+#ifdef SSE_UNIX
+///////#define ZeroMemory(p,sz) memset((p),0,(sz))
+#endif
+
+
 
 /////////////
 // VARIOUS //
@@ -212,7 +221,7 @@ FARPROC WINAPI MyLoadFailureHook(dliNotification dliNotify, DelayLoadInfo * pdli
 #if defined(SSE_VERSION)
 
 #define SSE_VERSION_TXT_LEN 8// "3.7.0" +...
-extern char *stem_version_text[SSE_VERSION_TXT_LEN];
+extern BYTE *stem_version_text[SSE_VERSION_TXT_LEN];
 #define WINDOW_TITLE stem_window_title
 #endif
 

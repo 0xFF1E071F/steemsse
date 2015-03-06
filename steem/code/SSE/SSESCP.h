@@ -14,7 +14,7 @@
 
 #include "SSEDma.h"
 #include "SSEDrive.h"
-#include "SSEYM2149.h"
+#include "SSEPsg.h"
 #include "SSEWD1772.h"
 
 #if defined(SSE_DISK_GHOST)

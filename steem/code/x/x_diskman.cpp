@@ -96,6 +96,9 @@ int TDiskManager::dir_lv_notify_handler(hxc_dir_lv *dlv,int mess,int i)
     dlv->pop.menu.InsertAt(pos++,2,"-",-1,0);  
     dlv->pop.menu.Add(StripAndT("New Standard &Disk Image"),ICO16_DISK,1001);
     dlv->pop.menu.Add(StripAndT("New Custom Disk &Image"),ICO16_DISK,1002);
+#if defined(SSE_DISK_STW_DISK_MANAGER) //new context option
+    dlv->pop.menu.Add(StripAndT("New ST&W Disk Image"),ICO16_DISK,1003);
+#endif
   }else if (mess==DLVN_POPCHOOSE){
     if (dlv->pop.menu[i].NumData<2) return 0;
 
@@ -162,6 +165,23 @@ int TDiskManager::dir_lv_notify_handler(hxc_dir_lv *dlv,int mess,int i)
         }
         return 0;
       }
+#if defined(SSE_DISK_STW_DISK_MANAGER)
+      case 1003:  // STW
+      {
+        hxc_prompt prompt;
+        EasyStr STName=prompt.ask(XD,T("STW Disk"),T("Enter Name"));
+        if (STName.NotEmpty()){
+          STName=GetUniquePath(This->DisksFol,STName+".stw");
+          if(ImageSTW[0].Create(STName)) {
+            This->RefreshDiskView(STName);
+          }else{
+            Alert(Str(T("Could not create the disk image "))+STName,
+                      T("Error"),MB_ICONEXCLAMATION);
+          }
+        }
+        return 0;
+      }
+#endif
       case 2003:
         shell_execute(Comlines[COMLINE_FM],Str("[PATH]\n")+This->DisksFol);
         return 0;
@@ -637,6 +657,9 @@ void TDiskManager::Show()
   dir_lv.ext_sl.Add(4,"stt",ICO16_DISK,ICO16_DISKLINK,ICO16_DISKLINKBROKEN,ICO16_DISK_RO);
   dir_lv.ext_sl.Add(4,"dim",ICO16_DISK,ICO16_DISKLINK,ICO16_DISKLINKBROKEN,ICO16_DISK_RO);
   dir_lv.ext_sl.Add(4,"msa",ICO16_DISK,ICO16_DISKLINK,ICO16_DISKLINKBROKEN,ICO16_DISK_RO);
+#if defined(SSE_DISK_STW_DISK_MANAGER)
+  dir_lv.ext_sl.Add(4,"stw",ICO16_DISK,ICO16_DISKLINK,ICO16_DISKLINKBROKEN,ICO16_DISK_RO);
+#endif
 
   ArchiveTypeIdx=dir_lv.ext_sl.NumStrings;
   int zipicon=ICO16_ZIP_RO;
@@ -646,7 +669,6 @@ void TDiskManager::Show()
 #ifdef RAR_SUPPORT
   dir_lv.ext_sl.Add(3,"rar",zipicon,ICO16_DISKLINK,ICO16_DISKLINKBROKEN);
 #endif
-
   dir_lv.lpig=&Ico16;
   dir_lv.base_fol="";
   dir_lv.fol=DisksFol;

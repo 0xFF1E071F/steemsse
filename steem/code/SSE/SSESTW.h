@@ -2,6 +2,10 @@
 #ifndef SSE_STW_H
 #define SSE_STW_H
 
+#ifdef SSE_UNIX
+#include <conditions.h>
+#endif
+
 struct TImageSTW {
   // interface
   bool Open(char *path);

@@ -5,7 +5,9 @@
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_DMA))
 #include <conditions.h> // MEM_ADDRESS
 #endif
-
+#ifdef SSE_UNIX
+#include <conditions.h>
+#endif
 #define EXT extern
 #define INIT(s)
 
@@ -20,7 +22,9 @@ EXT BYTE num_connected_floppies INIT(2);
 EXT int floppy_mediach[2];
 EXT int num_connected_floppies INIT(2);
 #endif
-
+#ifdef SSE_UNIX
+#include <conditions.h>
+#endif
 EXT int floppy_current_drive();
 
 EXT BYTE floppy_current_side();

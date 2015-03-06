@@ -775,7 +775,11 @@ void TWD1772::TraceStatus() {
 #if defined(SSE_DISK_STW) || defined(SSE_DISK_GHOST)
 
 TWD1772IDField::TWD1772IDField() {
+#ifdef SSE_UNIX
+  memset(this,0,sizeof(TWD1772IDField));
+#else
   ZeroMemory(this,sizeof(TWD1772IDField));
+#endif
 }
 
 

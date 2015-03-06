@@ -801,7 +801,9 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_DISK)
 
 #define SSE_DISK1//struct
+#ifdef WIN32
 #define SSE_DISK_GHOST
+#endif
 #define SSE_DISK_IMAGETYPE
 #define SSE_DISK_STW
 
@@ -1065,6 +1067,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #ifdef WIN32
 #define SSE_GUI_ASSOCIATE
+#define SSE_GUI_CLIPBOARD_TEXT//3.7
 #define SSE_GUI_STATUS_STRING // "status bar" in the icon bar
 #endif
 
@@ -1522,7 +1525,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_TOS_NO_INTERCEPT_ON_RTE2 // ReDMCSB 50% in TOS102
 #endif
 
-#if defined(SSE_DISK_IMAGETYPE)
+#if defined(SSE_DISK_IMAGETYPE) && defined(WIN32) //see note in floppy_drive.cpp
 #define SSE_TOS_PRG_AUTORUN// Atari PRG file direct support
 #define SSE_TOS_TOS_AUTORUN// Atari TOS file direct support
 #endif
@@ -1835,7 +1838,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 
 #if defined(SSE_VARIOUS)
-#define SSE_VAR_CLIPBOARD_TEXT//3.7
 #define SSE_VAR_DONT_INSERT_NON_EXISTENT_IMAGES // at startup
 #define SSE_VAR_DONT_REMOVE_NON_EXISTENT_IMAGES // at final save
 //#define SSE_VAR_FULLSCREEN_DONT_START // disable run when going fullscreen - option?
@@ -1880,7 +1882,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_ADJUST_DRAWING_ZONE2
 //#define SSE_VID_AUTOOFF_DECRUNCHING
 #define SSE_VID_BLIT_TRY_BLOCK //useless?
+#ifdef WIN32 //v3.7
 #define SSE_VID_BORDERS // option display size
+#endif
 //#define SSE_VID_CHECK_DDFS // is video card/display capable?
 //#define SSE_VID_CHECK_DDFS2 //list all modes
 #define SSE_VID_EXT_MON //adding some modes
@@ -2124,7 +2128,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_MOUSE_CAPTURE 
 #define SS_VAR_PROG_ID //X Program ID
 #endif//var
-#if defined(SSE_VIDEO)
+#if defined(SSE_VIDEO) && defined(WIN32)
 #define SSE_VID_BORDERS // option display size
 #define SSE_VID_BPOC // Best Part of the Creation fit display 800 hack
 #endif//vid
@@ -2323,9 +2327,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_VIDEO)
 #define SSE_VID_AUTOOFF_DECRUNCHING //undef v3.5.0
 #if defined(SSE_VID_BORDERS)
-#ifdef WIN32 // Unix?
 #define SSE_VID_BORDERS_LB_DX // rendering-stage trick rather than painful hacks
-#endif
 #endif
 #endif//video
 
@@ -2908,9 +2910,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_SCANLINES_INTERPOLATED_SSE // put option in SSE page
 #endif
 #if defined(SSE_VID_BORDERS)
-#ifdef WIN32 // Unix?
 #define SSE_VID_BORDERS_BIGTOP // more lines for palette effects
-#endif
 #endif
 #endif//vid
 
@@ -3293,7 +3293,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_STATUS_STRING_FULL_ST_MODEL
 #endif
 #endif//var
-#if defined(SSE_VIDEO)
+#if defined(SSE_VID_BORDERS)
 #define SSE_VID_BORDERS_416_NO_SHIFT0
 #define SSE_VID_BORDERS_416_NO_SHIFT1 / check border on/off
 #define SSE_VID_BORDERS_LB_DX1 // check border on/off
@@ -3489,7 +3489,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_ASSERT_ILLEGAL6 // shl, shr
 #define SSE_CPU_BUS_ERROR_ADDRESS //high byte
 #define SSE_CPU_BUS_ERROR_ADDRESS2 //high byte
-//#define SSE_CPU_BUS_ERROR_FFE1XX//hack
 #define SSE_CPU_EXCEPTION_FCO
 #define SSE_CPU_TRUE_PC2 // JMP, JSR
 #endif//exc
@@ -3604,7 +3603,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DISK_STW_DISK_MANAGER //new context option
 #define SSE_DISK_STW_MFM // bytes are MFM encoded on the disk
 #endif
+#ifdef WIN32
 #define SSE_DISK_GHOST
+#endif
 #if defined(SSE_DISK_GHOST)
 #define SSE_DISK_GHOST_FAKE_FORMAT
 #define SSE_DISK_GHOST_SECTOR // commands $A#/$8#
@@ -3683,8 +3684,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_DISK_MANAGER_INSERT_DISKB_LS//load/save option
 #define SSE_GUI_DISK_MANAGER_LONG_NAMES1
 #define SSE_GUI_DISK_MANAGER_NO_DISABLE_B_MENU // click on icon
-#define SSE_VAR_CLIPBOARD_TEXT
-#if defined(SSE_VAR_CLIPBOARD_TEXT) && defined(SSE_GUI_DISK_MANAGER_LONG_NAMES1)
+#ifdef WIN32
+#define SSE_GUI_CLIPBOARD_TEXT
+#endif
+#if defined(SSE_GUI_CLIPBOARD_TEXT) && defined(SSE_GUI_DISK_MANAGER_LONG_NAMES1)
 #define SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD
 #endif
 //#define SSE_GUI_DISK_MANAGER_RGT_CLK_HD//on DM icon 
@@ -3862,7 +3865,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_TOS)
 #undef SSE_TOS_PATCH106 // TOS 1.62 recommended
 #define SSE_TOS_BOOTER1//accept TOS boot of the 260ST
-#if defined(SSE_DISK_IMAGETYPE)
+#if defined(SSE_DISK_IMAGETYPE) && defined(WIN32) //see note in floppy_drive.cpp
 #define SSE_TOS_PRG_AUTORUN// Atari PRG file direct support
 #define SSE_TOS_TOS_AUTORUN// Atari TOS file direct support
 #endif
@@ -3890,9 +3893,11 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_LOCK_ASPET_RATIO // 
 #define SSE_VID_UTIL // miscellaneous functions
 //#define SSE_VID_RECORD_MODES // TODO eg record 800 x 600 16bit 60hz... waste?
+#if defined(SSE_VID_BORDERS)
 #define SSE_VID_BORDERS_GUARD_EM // don't mix large borders & extended res
 #define SSE_VID_BORDERS_GUARD_R2 // don't mix large borders & hi res
 //#define SSE_VID_BORDERS_NO_LOAD_SETTING // start at 384 x 270
+#endif
 #define SSE_VID_CHECK_POINTERS
 #if defined(WIN32) 
 #if defined(_MSC_VER) && (_MSC_VER >= 1500) //VS2008
@@ -4078,7 +4083,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_OPTION_FOR_TESTS 
 #endif
 
-#if defined(SSE_BETA) && SSE_VERSION>370
+#if defined(SSE_BETA)
 // those switches are later moved to both features and version zones!
 
 //#define SSE_DRIVE_WRITE_TRACK_11

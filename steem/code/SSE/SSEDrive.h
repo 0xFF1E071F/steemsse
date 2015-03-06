@@ -70,8 +70,10 @@ struct TSF314 {
 #if defined(SSE_DRIVE_SOUND)
   enum {START,MOTOR,STEP,SEEK,NSOUNDS} ;
   BYTE TrackAtCommand;
+#ifdef WIN32
   IDirectSoundBuffer *Sound_Buffer[NSOUNDS]; // fixed array
   void Sound_LoadSamples(IDirectSound *DSObj,DSBUFFERDESC *dsbd,WAVEFORMATEX *wfx);
+#endif
   void Sound_ReleaseBuffers();
   void Sound_StopBuffers();
   void Sound_CheckCommand(BYTE cr);

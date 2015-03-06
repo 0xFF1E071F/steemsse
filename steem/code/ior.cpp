@@ -1185,7 +1185,11 @@ FF8240 - FF827F   palette, res
         else 
 #endif
         switch (addr){
+#ifdef SSE_UNIX
+        case 0xffc100: ior_byte=(BYTE)(stem_version_text[0]-'0'); break;
+#else
         case 0xffc100: ior_byte=BYTE(stem_version_text[0]-'0'); break;
+#endif
         case 0xffc101:
           {
 #if defined(STEVEN_SEAGAL) && defined(SSE_VERSION)  //BCC

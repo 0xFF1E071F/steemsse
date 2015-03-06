@@ -661,8 +661,11 @@ void SteemDisplay::ChangeToFullScreen()
     // SS location of the upper left corner of the viewport into the virtual screen
     XF86VidModeSetViewPort(XD,Screen,x,y);
     //XF86VidModeSetViewPort(XD,Screen,0,0);
+#if SSE_VERSION>=370
+    draw_grille_black=max((int)draw_grille_black,50);
+#else
     draw_grille_black=max(draw_grille_black,50);
-
+#endif
 
     XGrabPointer(XD,XVM_FullWin,False,ButtonPressMask | ButtonReleaseMask,
                   GrabModeAsync,GrabModeAsync,XVM_FullWin,EmptyCursor,CurrentTime);
@@ -698,7 +701,11 @@ int SteemDisplay::XVM_WinProc(void*,Window Win,XEvent *Ev)
 #endif
   switch (Ev->type){
     case Expose:
+#if SSE_VERSION>=370
+      draw_grille_black=max((int)draw_grille_black,50);
+#else
       draw_grille_black=max(draw_grille_black,50);
+#endif
       break;
     case ButtonPress: // For MMB
     case ButtonRelease:

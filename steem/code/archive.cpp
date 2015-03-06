@@ -9,8 +9,15 @@ of the various unarchiving libraries it can use.
 #pragma message("Included for compilation: archive.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_ARCHIVE_H)
+#ifdef SSE_UNIX
+#include <conditions.h>
+#endif
+
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_ARCHIVE_H) 
 zipclass zippy; 
+
+#if defined(WIN32)
 
 HINSTANCE hUnzip=NULL;
 
@@ -32,7 +39,7 @@ void LoadUnzipDLL()
     }
   }//hunzip
 }
-
+#endif //defined(WIN32)
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
 

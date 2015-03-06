@@ -2399,6 +2399,7 @@ void draw_init_resdependent()
 //---------------------------------------------------------------------------
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_UTIL)
+#ifdef WIN32
 // miscellaneous functions
 
 int SteemDisplay::STXPixels() {
@@ -2413,7 +2414,7 @@ int SteemDisplay::STYPixels() {
   //st_y_pixels=200+(BORDER_TOP+BORDER_BOTTOM); //test
   return st_y_pixels;
 }
-
+#endif
 #endif
 
 
