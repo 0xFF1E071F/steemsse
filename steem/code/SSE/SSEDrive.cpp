@@ -124,7 +124,11 @@ void TSF314::Init() {
   for(int i=0;i<NSOUNDS;i++)
     Sound_Buffer[i]=NULL;
 #if defined(SSE_DRIVE_SOUND_VOLUME)
+#if defined(SSE_DRIVE_SOUND_VOLUME_3)
+  Sound_Volume=5000; 
+#else
   Sound_Volume=0; //changed by option
+#endif
 #endif
 #endif//sound
 
@@ -456,6 +460,9 @@ void TSF314::Motor(bool state) {
     WORD bytes_to_next_ip= (Disk[Id].current_byte<Disk[Id].TrackBytes) 
       ? Disk[Id].TrackBytes-Disk[Id].current_byte : rand()%Disk[Id].TrackBytes;
     time_of_next_ip=ACT + bytes_to_next_ip * CyclesPerByte();
+#if defined(SSE_DRIVE_INDEX_PULSE2)
+    nRevs=0; //reset
+#endif
   }
 
 #if defined(SSE_DRIVE_IP_HACK)
@@ -523,7 +530,11 @@ void TSF314::Read() {
 
 */
   ASSERT(!State.writing);
-  ASSERT(IMAGE_STW); // only for those now
+  ASSERT(IMAGE_STW || IMAGE_SCP); // only for those now
+
+#if defined(SSE_DISK_SCP)
+  bool new_position=!State.reading;
+#endif
 
   if(!State.reading || Disk[Id].current_byte>=Disk[Id].TrackBytes-1)
   {
@@ -536,6 +547,11 @@ void TSF314::Read() {
 
   if(IMAGE_STW)
     WD1772.Mfm.encoded=ImageSTW[Id].GetMfmData(Disk[Id].current_byte);
+#if defined(SSE_DISK_SCP)
+  else if(IMAGE_SCP)//position kept in SCP manager?
+    WD1772.Mfm.encoded=ImageSCP[Id].GetMfmData(
+      new_position?Disk[Id].current_byte:0xffff);
+#endif
 
 #if defined(SSE_DRIVE_SINGLE_SIDE_RND)
   if(SSEOption.SingleSideDriveMap&(Id+1) && CURRENT_SIDE==1)
@@ -543,6 +559,11 @@ void TSF314::Read() {
 #endif
 
   // set up next byte event
+#if defined(SSE_DISK_SCP)
+  if(IMAGE_SCP)
+    ; // it is done by SCP
+  else
+#endif
   if(Disk[Id].current_byte<=Disk[Id].TrackBytes)
   {
     WD1772.update_time=time_of_last_ip+cycles_per_byte*(Disk[Id].current_byte+1);
@@ -554,7 +575,12 @@ void TSF314::Read() {
 
 
 void TSF314::Write() {
-  ASSERT(IMAGE_STW); // only for those now
+  ASSERT(IMAGE_STW||IMAGE_SCP); // only for those now
+
+#if defined(SSE_DISK_SCP)
+  bool new_position=!State.writing;
+#endif
+
   if(!State.writing || Disk[Id].current_byte>=Disk[Id].TrackBytes-1)
   {
     if(State.reading && Disk[Id].current_byte<Disk[Id].TrackBytes-1)
@@ -576,6 +602,11 @@ void TSF314::Write() {
 
   if(IMAGE_STW)
     ImageSTW[Id].SetMfmData(Disk[Id].current_byte,WD1772.Mfm.encoded);
+#if defined(SSE_DISK_SCP)
+  else if(IMAGE_SCP)
+    ImageSCP[Id].SetMfmData(new_position?Disk[Id].current_byte:0xffff,
+      WD1772.Mfm.encoded);
+#endif
 
   // set up next byte event
   if(Disk[Id].current_byte<=Disk[Id].TrackBytes)
@@ -631,6 +662,9 @@ char* drive_sound_wav_files[]={ "drive_startup.wav","drive_spin.wav",
 void TSF314::Sound_ChangeVolume() {
 /*  Same volume for each buffer
 */
+#if defined(SSE_DRIVE_SOUND_VOLUME_3)
+  Sound_Volume=min(Sound_Volume,10000);
+#endif
    for(int i=0;i<NSOUNDS;i++)
    {
      if(Sound_Buffer[i])

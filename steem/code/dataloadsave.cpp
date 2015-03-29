@@ -1026,6 +1026,10 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
   SEC(PSEC_SOUND){
     MaxVolume=pCSF->GetInt("Options","Volume",MaxVolume);
     //TRACE("get MaxVolume %d",MaxVolume);
+
+#if defined(SSE_SOUND_VOL_LOGARITHMIC_3)//v3.7.1
+    MaxVolume=min(MaxVolume,10000);
+#endif
     sound_mode=pCSF->GetInt("Options","SoundMode",sound_mode);
     sound_last_mode=pCSF->GetInt("Options","LastSoundMode",sound_last_mode);
     int slq=pCSF->GetInt("Options","SoundLowQuality",999);

@@ -121,11 +121,13 @@ Beta: not SSE_PRIVATE_BUILD
 // VERSION //
 /////////////
 
-#define SSE_VERSION 370 // versions down to 340 still compile //TODO->320
+#define SSE_VERSION 371 // versions down to 340 still compile //TODO->320
+
+
 
 #if SSE_VERSION>370 //last release
-//#define SSE_BETA //title, OSD, plus some testing - new features
-//#define SSE_BETA_BUGFIX // beta for just bugfixes
+#define SSE_BETA //title, OSD, plus some testing - new features
+#define SSE_BETA_BUGFIX // beta for just bugfixes
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
 ///#define SSE_PRIVATE_BUILD // my "beta" option
 #endif
@@ -136,6 +138,17 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_STRUCTURE //  now necessary for the STEVEN_SEAGAL build anyway TODO
 #define NO_RAR_SUPPORT
 
+/*  When STEVEN_SEAGAL is defined, you can choose one set of switches by 
+    enabling SSE_SWITCHES_FEATURES or not.
+    It changes the order of definition, by nature (if enabled) or 
+    historically.
+    So it's double work (everything is defined twice) but well worth it to 
+    track bugs.
+    Normally, SSE_SWITCHES_FEATURES is defined. You undef it if you need
+    to compile an older version.
+*/
+
+//#define SSE_SWITCHES_FEATURES
 
 
 //////////////
@@ -162,20 +175,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//w32
 
 #endif//SSE_COMPILER
-
-
-/*  When STEVEN_SEAGAL is defined, you can choose one set of switches by 
-    enabling SSE_SWITCHES_FEATURES or not.
-    It changes the order of definition, by nature (if enabled) or 
-    historically.
-    So it's double work (everything is defined twice) but well worth it to 
-    track bugs.
-    Normally, SSE_SWITCHES_FEATURES is defined. You undef it if you need
-    to compile an older version.
-*/
-
-#define SSE_SWITCHES_FEATURES
-
 
 //////////////////
 // BIG SWITCHES //
@@ -4088,8 +4087,18 @@ Beta: not SSE_PRIVATE_BUILD
 
 //#define SSE_DRIVE_WRITE_TRACK_11
 //#define SSE_GUI_FULLSCREEN_NO_VSYNC_OPTION //but all the rest?
-//#define SSE_SCP //TODO
 //#define SSE_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
+
+
+
+#endif
+
+#if defined(SSE_BETA_BUGFIX)
+
+#define SSE_MMU_SDP1B
+#define SSE_SOUND_VOL_LOGARITHMIC_3
+#define SSE_DRIVE_SOUND_VOLUME_3
+#define SSE_YM2149_DELAY_RENDERING2
 
 #endif//beta
 
