@@ -79,8 +79,8 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   bool RAW=IsSameStr_I(Ext,SSE_IPF_KFSTREAM);
 #endif
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
-  bool SCP=IsSameStr_I(Ext,"SCP");
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
+  bool SCP=IsSameStr_I(Ext,DISK_EXT_SCP);
 #endif
 #if defined(SSE_DISK_STW)
   bool STW=IsSameStr_I(Ext,DISK_EXT_STW);
@@ -148,8 +148,8 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
               RAW=has_extension(fn,SSE_IPF_KFSTREAM);
 #endif
 #endif//ipf
-#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
-              SCP=has_extension(fn,"SCP");
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
+              SCP=has_extension(fn,DISK_EXT_SCP);
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
               STW=has_extension(fn,DISK_EXT_STW); // in archive, makes less sense
@@ -356,13 +356,25 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     Sides=img_info.maxhead+1;
     TracksPerSide=img_info.maxcylinder;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
   }else if(SCP) { 
-//    ScpImageInfo...
-    int Ret=Scp.InsertDisk(drive,File);
-    if(Ret==FIMAGE_WRONGFORMAT)
-        return Ret;
-//...
+
+    if(drive==-1  || !ImageSCP[drive].Open(File))
+      return FIMAGE_WRONGFORMAT;
+
+#if defined(SSE_DISK_IMAGETYPE)
+#if USE_PASTI
+    if(SF314[1-drive].ImageType.Extension!=EXT_STX)
+      pasti_active=false;
+#endif
+    SF314[drive].ImageType.Manager=MNGR_WD1772;
+    SF314[drive].ImageType.Extension=EXT_SCP;
+#endif
+#if defined(SSE_DISK1)
+    Disk[drive].TrackBytes=ImageSCP[drive].nBytes;
+#endif
+    SF314[drive].State.reading=SF314[drive].State.writing=0;
+
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
@@ -371,7 +383,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       return FIMAGE_WRONGFORMAT;
 
 #if defined(SSE_DISK_IMAGETYPE)
-#ifdef WIN32//replace with...
+#if USE_PASTI//#ifdef WIN32//replace with...
     if(SF314[1-drive].ImageType.Extension!=EXT_STX)
       pasti_active=false;
 #endif
@@ -777,7 +789,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   CTRDisk=CTR;
 #endif
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
   SCPDisk=SCP;
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
@@ -818,7 +830,7 @@ bool TFloppyImage::ReinsertDisk()
 #endif
 
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
     || SCPDisk //not right, but we're starting...
 #endif
     ) return 0;
@@ -848,7 +860,7 @@ bool TFloppyImage::OpenFormatFile()
     || CTRDisk
 #endif
 #endif 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
     || SCPDisk
 #endif   
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
@@ -894,7 +906,7 @@ bool TFloppyImage::ReopenFormatFile()
     || CTRDisk
 #endif
 #endif    
-#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
     || SCPDisk
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
@@ -1157,10 +1169,6 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   if((drive==0 || drive==1) && !Empty())
     TRACE_LOG("Remove disk %s from drive %c\n",DiskName.Text,'A'+drive );
 #endif
-#endif
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
-//TODO
 #endif
 
   if (f && ReadOnly==0 && LoseChanges==0 && WrittenTo && ZipTempFile.Empty()){
@@ -1444,16 +1452,17 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
     0;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
-  SCPDisk=0;
-#endif
-
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
-  //if(IMAGE_STW)
   if(SF314[drive].ImageType.Extension==EXT_STW)
     ImageSTW[drive].Close();
-  //ASSERT( ! ImageSTW[drive].fCurrentImage );
   STWDisk=0;
+  SF314[drive].State.reading=SF314[drive].State.writing=0;
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
+  if(SF314[drive].ImageType.Extension==EXT_SCP)
+    ImageSCP[drive].Close();
+  SCPDisk=0;
   SF314[drive].State.reading=SF314[drive].State.writing=0;
 #endif
 

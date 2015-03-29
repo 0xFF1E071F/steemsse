@@ -52,6 +52,10 @@ EasyStr GetEXEDir();//#include <mymisc.h>//missing...
 TImageSTW ImageSTW[2];
 #endif
 
+#if defined(SSE_DISK_SCP)
+TImageSCP ImageSCP[2];
+#endif
+
 #if defined(SSE_DMA)
 TDma Dma;
 #endif
@@ -76,8 +80,6 @@ TYM2149 YM2149;
 TCaps Caps;
 #endif
 
-#if defined(SSE_SCP)
-TScp Scp;
-#endif
+
 
 #endif//#if defined(STEVEN_SEAGAL)

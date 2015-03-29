@@ -51,7 +51,7 @@ public:
     CTRDisk=
 #endif
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
     SCPDisk=
 #endif 
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
@@ -77,7 +77,7 @@ public:
     || CTRDisk
 #endif
 #endif    
-#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
     || SCPDisk
 #endif   
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
@@ -113,7 +113,7 @@ public:
   bool CTRDisk;
 #endif
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
   bool SCPDisk;
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)

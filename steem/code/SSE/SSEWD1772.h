@@ -41,6 +41,11 @@ struct TWD1772MFM {
   BYTE clock; 
   WORD encoded;
   unsigned int data_last_bit:1;
+#if defined(SSE_WD1772_MFM2) //for lower level emu (SCP)
+  bool AMDetect;
+  WORD AMFound; 
+  WORD AMWindow;
+#endif
 };
 
 
@@ -156,7 +161,7 @@ struct TWD1772 {
 #endif
   // definition is outside the class but objects belong to the class
   TWD1772IDField IDField; // to R/W those fields
-  TWD1772Crc CrcChecker;
+  TWD1772Crc CrcLogic;
   TWD1772MFM Mfm;
 #endif
 

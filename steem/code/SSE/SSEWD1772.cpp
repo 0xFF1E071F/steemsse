@@ -238,7 +238,7 @@ BYTE TWD1772::CommandType(int command) {
 BYTE TWD1772::IORead(BYTE Line) {
   
 #ifdef SSE_DEBUG
-  ASSERT( Line>=0 && Line<=3 );
+  ASSERT( Line<=3 );
   BYTE drive=DRIVE;
   //drive=floppy_current_drive();
 #else
@@ -454,7 +454,7 @@ WD doc:
 
 void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 
-  ASSERT( Line>=0 && Line<=3 );
+  ASSERT( Line<=3 );
 
 #ifdef SSE_DEBUG
   BYTE drive=DRIVE;
@@ -808,6 +808,8 @@ void TWD1772IDField::Trace() {
     for bytes $A1 and $C2.
     MFM encoding is partly for fun, we could just store the clock
     and data bytes separately, it would be more efficient.
+    Update 3.7.1: It was for fun for STW support, but it's necessary for 
+    SCP support.
 */
 
 #if defined(SSE_DISK_STW)
@@ -854,9 +856,9 @@ void TWD1772MFM::Encode(int mode) {
     previous=current;
   }
   if(mode==FORMAT_CLOCK)
-    if(data==0xA1)
+    if(data==0xA1) // -> $4489
       clock&=~4; // missing bit 2 of clock -> bit 5 of encoded word
-    else if(data==0xC2)
+    else if(data==0xC2) // -> $5224
       clock&=~2; // missing bit 1 of clock -> bit 4 of encoded word //?
 
 
@@ -938,6 +940,10 @@ bool TWD1772::Drq(bool state) {
 
 
 void TWD1772::Irq(bool state) {
+#if defined(SSE_WD1772_MFM2)
+  Mfm.AMDetect=false;
+  Mfm.AMWindow=0;
+#endif
   if(state && !Lines.irq)// && (STR&STR_BUSY) ) // so not on "force interrupt"
   {
     IndexCounter=10;
@@ -1003,7 +1009,7 @@ int TWD1772::MsToCycles(int ms) {
 */
 
 void TWD1772::NewCommand(BYTE command) {
-  ASSERT( IMAGE_STW );//for now
+  ASSERT( IMAGE_STW || IMAGE_SCP);
   //TRACE_LOG("STW new command %X\n",command);
   CR=command;
 
@@ -1210,6 +1216,9 @@ void TWD1772::OnIndexPulse(int id) {
         //TRACE_LOG("Start reading track\n");
         TRACE_LOG("Read track %c:%d-%d ",'A'+DRIVE,CURRENT_SIDE,CURRENT_TRACK);
         prg_phase=WD_TYPEIII_READ_DATA;
+#if defined(SSE_WD1772_MFM2)
+        Mfm.AMDetect=true;
+#endif
         Read();
       }
       break;
@@ -1269,7 +1278,7 @@ void TWD1772::OnUpdate() {
   update_time=ACT+n_cpu_cycles_per_second; // we come here anyway
 #endif
 
-  if(!IMAGE_STW) // only for those images for now
+  if(!(IMAGE_STW)&&!(IMAGE_SCP)) // only for those images
   {
     //TRACE_LOG("bye!\n");
     return; 
@@ -1405,6 +1414,12 @@ r1       r0            1772
       {
         ImageSTW[DRIVE].LoadTrack(CURRENT_SIDE,SF314[DRIVE].Track());
       }
+#if defined(SSE_DISK_SCP)
+      if(IMAGE_SCP)
+      {
+        ImageSCP[DRIVE].LoadTrack(CURRENT_SIDE,SF314[DRIVE].Track());
+      }
+#endif
       prg_phase=WD_TYPEI_HEAD_SETTLE; 
 #if defined(SSE_FLOPPY_EVENT2)
       update_time=time_of_next_event+ MsToCycles(15);
@@ -1422,6 +1437,9 @@ r1       r0            1772
   case WD_TYPEI_HEAD_SETTLE:
     // flow chart is missing head settling
     prg_phase=WD_TYPEI_FIND_ID;
+#if defined(SSE_WD1772_MFM2)
+    Mfm.AMDetect=true;
+#endif
     n_format_bytes= n00=nFF=0;
     Read(); // drive will send word (clock, byte) and set event
     IndexCounter=6; 
@@ -1439,13 +1457,21 @@ r1       r0            1772
     When looking for ID, the WD1772 ignores the last bit, so $FE is
     equivalent to $FF.
 */
-    CrcChecker.Add(DSR);
-
-    if(DSR==0xA1 && !(Mfm.clock&BIT_5) || DSR==0xC2 && !(Mfm.clock&BIT_4) )
+    CrcLogic.Add(DSR);
+//  TRACE("dsr=%x fmt=%d\n",DSR,n_format_bytes);
+    if(DSR==0xA1 && !(Mfm.clock&BIT_5) || DSR==0xC2 && !(Mfm.clock&BIT_4) 
+#if defined(SSE_WD1772_MFM2)
+      || Mfm.AMFound
+#endif
+      )
     {
       n_format_bytes++;
-      if(DSR==0xA1)
-        CrcChecker.Reset(); // only special $A1 resets the CRC logic
+      if(DSR==0xA1
+#if defined(SSE_WD1772_MFM2)
+      || Mfm.AMFound==0x4489
+#endif
+        )
+        CrcLogic.Reset(); // only special $A1 resets the CRC logic
     }
     else if(!n_format_bytes) // count zeroes (or ones)
     {
@@ -1464,8 +1490,11 @@ r1       r0            1772
         n00=nFF=0;
       }
     }
-    
+#if defined(SSE_WD1772_MFM2)
+    else if( (DSR&0xFF)>=0xFC && n_format_bytes>=3) // 5224 + 4489 x 3
+#else    
     else if( (DSR&0xFF)>=0xFC && n_format_bytes==3) // CAPS: $FC->$FF
+#endif
     //else if( (DSR&0xFE)==0xFE) && n_format_bytes==3) // doc: $FE(+$FF)
     {
 //      TRACE_LOG("%X at %d\n",DSR,SF314[DRIVE].BytePosition());
@@ -1485,7 +1514,7 @@ r1       r0            1772
     // fill in ID field
     *(((BYTE*)&IDField)+n_format_bytes)=DSR; //no padding!!!!!!
     if(n_format_bytes<4)
-      CrcChecker.Add(DSR);
+      CrcLogic.Add(DSR);
     if(prg_phase==WD_TYPEIII_READ_ID)
     {
       DR=DSR;
@@ -1507,9 +1536,9 @@ r1       r0            1772
     IDField.Trace();
 #endif
     //test track and CRC
-    if(IDField.track==TR && CrcChecker.Check(&IDField))
+    if(IDField.track==TR && CrcLogic.Check(&IDField))
     {
-      CrcChecker.Reset();
+      CrcLogic.Reset();
       Irq(true); // verify OK
     }
     else // they should all have correct track, will probably time out
@@ -1519,7 +1548,7 @@ r1       r0            1772
       {
         STR|=STR_CRC; // set CRC error if track field was OK
       }
-      CrcChecker.Add(DSR); //unimportant
+      CrcLogic.Add(DSR); //unimportant
       Read(); // this sets up next event
     }
     break;
@@ -1551,6 +1580,9 @@ r1       r0            1772
       IndexCounter=5; 
       //TRACE_LOG("%d IP to find ID %d\n",IndexCounter,SR);
       prg_phase=WD_TYPEII_FIND_ID; // goto '1'
+#if defined(SSE_WD1772_MFM2)
+      Mfm.AMDetect=true;
+#endif
       n_format_bytes=n00=nFF=0;
       Read();
     }
@@ -1560,23 +1592,24 @@ r1       r0            1772
 
 #ifdef SSE_DEBUG
     ASSERT(!n_format_bytes);
+    TRACE_LOG("at %d ",Disk[DRIVE].current_byte); // position
     IDField.Trace();
 #endif
     if(IDField.track==TR && IDField.num==SR)
     {
       //IDField.Trace();
       ByteCount=IDField.nBytes();
-      if(CrcChecker.Check(&IDField))
+      if(CrcLogic.Check(&IDField))
       {
-        CrcChecker.Reset();
+        CrcLogic.Reset();
         prg_phase=(CR&CR_TYPEII_WRITE) ? WD_TYPEII_WRITE_DAM :
           WD_TYPEII_FIND_DAM;
       }
       else
       {
-        //TRACE("CRC ID error read: %X computed: %X #bytes %d\n",(WORD)(*(WORD*)IDField.CRC),CrcChecker.crc,debug2);
+        //TRACE("CRC ID error read: %X computed: %X #bytes %d\n",(WORD)(*(WORD*)IDField.CRC),CrcLogic.crc,debug2);
         STR|=STR_CRC;
-        CrcChecker.Add(DSR);
+        CrcLogic.Add(DSR);
         prg_phase=WD_TYPEII_FIND_ID; 
       }
     }
@@ -1586,26 +1619,38 @@ r1       r0            1772
     break;
 
   case WD_TYPEII_FIND_DAM:
-    CrcChecker.Add(DSR);//before eventual reset
+    CrcLogic.Add(DSR);//before eventual reset
     n_format_bytes++;
     if(n_format_bytes<28)
       ; // CAPS: first bytes aren't even read
+#if defined(SSE_WD1772_MFM2)
+    else if(n_format_bytes==40) // fixes Leavin' Teramis SCP
+#else
     else if(n_format_bytes==43) //timed out
+#endif
     {
       TRACE_LOG("No DAM, time out!\n");
       n_format_bytes=0;
       prg_phase=WD_TYPEII_FIND_ID;
     }
-    else if(DSR==0xA1 && !(Mfm.clock&BIT_5)) 
+    else if(DSR==0xA1 && !(Mfm.clock&BIT_5)
+#if defined(SSE_WD1772_MFM2)
+      || Mfm.AMFound==0x4489
+#endif
+      ) 
     {
-      //TRACE("%X found at position %d, reset CRC\n",DSR,Disk[DRIVE].current_byte);
-      CrcChecker.Reset();
+      TRACE_LOG("%X found at position %d, reset CRC\n",DSR,Disk[DRIVE].current_byte);
+      CrcLogic.Reset();
     }
     // we don't count #address marks, but should we? (CAPS neither?)
+   // else if(SR==247); // Leavin'
     else if( (DSR&0xFE)==0xF8 ||  (DSR&0xFE)==0xFA ) // DAM found
     {
-      //TRACE_LOG("TR%d SR%d %X found at position %d\n",TR,SR,DSR,Disk[DRIVE].current_byte);
+      TRACE_LOG("TR%d SR%d %X found at position %d\n",TR,SR,DSR,Disk[DRIVE].current_byte);
       n_format_bytes=0; // for CRC later
+#if defined(SSE_WD1772_MFM2)
+      Mfm.AMDetect=false;
+#endif
       prg_phase=WD_TYPEII_READ_DATA;
       if((DSR&0xFE)==0xF8)
         STR|=STR_RT; // "record type" set when "deleted data" DAM
@@ -1614,7 +1659,7 @@ r1       r0            1772
     break;
 
   case WD_TYPEII_READ_DATA:
-    CrcChecker.Add(DSR);
+    CrcLogic.Add(DSR);
     DR=DSR;
     Drq(true); // DMA never fails to take the byte
     ByteCount--;
@@ -1628,7 +1673,7 @@ r1       r0            1772
     IDField.CRC[n_format_bytes]=DSR; // and we don't add to CRC
     if(n_format_bytes) //1
     {
-      if(!CrcChecker.Check(&IDField))
+      if(!CrcLogic.Check(&IDField))
       {
 //        TRACE_LOG("Read sector CRC error\n");
         STR|=STR_CRC; // caught by Dma.UpdateRegs() for OSD
@@ -1672,7 +1717,7 @@ r1       r0            1772
       Lines.write=1;
       Mfm.data=0;
       Mfm.Encode(); 
-      CrcChecker.Add(Mfm.data); // shouldn't matter
+      CrcLogic.Add(Mfm.data); // shouldn't matter
       Write();
     }
     else if(n_format_bytes<23-1+12+3) // write 3x $A1 (missing in flow chart)
@@ -1681,17 +1726,17 @@ r1       r0            1772
       Mfm.data=0xA1;
       Mfm.Encode(TWD1772MFM::FORMAT_CLOCK); 
       //TRACE("write %X at position %d, reset CRC\n",Mfm.data,Disk[DRIVE].current_byte);
-      CrcChecker.Add(Mfm.data); // before reset   
-      CrcChecker.Reset();
+      CrcLogic.Add(Mfm.data); // before reset   
+      CrcLogic.Reset();
       Write();
     }
     else if(n_format_bytes==23-1+12+3) // write DAM acording to A0 field
     {
-      ASSERT(!(CR&CR_A0)); //ProCopy uses $A1 to copy, strangely
+      ASSERT(!(CR&CR_A0)); //ProCopy uses $A1 to copy, strangely TODO check version
       Mfm.data= (CR&CR_A0)? 0xF9 : 0xFB;
       Mfm.Encode(); 
       //TRACE_LOG("TR %d SR %d write %X at position %d\n",TR,SR,Mfm.data,Disk[DRIVE].current_byte);
-      CrcChecker.Add(Mfm.data); // after eventual reset (TODO)        
+      CrcLogic.Add(Mfm.data); // after eventual reset (TODO)        
       Write();     
     }
     else
@@ -1707,7 +1752,7 @@ r1       r0            1772
     ASSERT(prg_phase==23);
     Drq(true); // normally first DRQ happened much earlier, we simplify
     DSR=DR;
-    CrcChecker.Add(DSR);
+    CrcLogic.Add(DSR);
     Mfm.data=DSR;
     Mfm.Encode();
     ByteCount--;
@@ -1720,9 +1765,9 @@ r1       r0            1772
   case WD_TYPEII_WRITE_CRC: // CRC + final $FF (?)
     n_format_bytes++;
     if(n_format_bytes==1)
-      Mfm.data=CrcChecker.crc>>8;
+      Mfm.data=CrcLogic.crc>>8;
     else if(n_format_bytes==2)
-      Mfm.data=CrcChecker.crc&0xFF;
+      Mfm.data=CrcLogic.crc&0xFF;
     else
     {
       n_format_bytes=0;
@@ -1741,6 +1786,9 @@ r1       r0            1772
       IndexCounter=5; //not documented, see OnIndexPulse()
 //      TRACE_LOG("%d IP for read address\n",IndexCounter);
       prg_phase=WD_TYPEIII_FIND_ID;
+#if defined(SSE_WD1772_MFM2)
+      Mfm.AMDetect=true;
+#endif
       n_format_bytes=n00=nFF=0;
       Read();
     }
@@ -1762,7 +1810,7 @@ r1       r0            1772
     break;
 
   case WD_TYPEIII_TEST_ID:
-    if(!CrcChecker.Check(&IDField))
+    if(!CrcLogic.Check(&IDField))
       STR|=STR_CRC;
     SR=IDField.track;
     Irq(true);
@@ -1771,14 +1819,21 @@ r1       r0            1772
   case WD_TYPEIII_READ_DATA: 
 
     // "the Address Mark Detector is on for the duration of the command"
-    if(DSR==0xA1 && !(Mfm.clock&BIT_5)) //Mfm.clock==0x0A) 
+    if(DSR==0xA1 && !(Mfm.clock&BIT_5)
+#if defined(SSE_WD1772_MFM2)
+      || Mfm.AMFound==0x4489
+#endif
+      )
     {
-      if(CrcChecker.crc!=0xCDB4)
+#if defined(SSE_DISK_SCP) // don't need this hack with the SCP version
+      if(IMAGE_STW)    
+#endif
+      if(CrcLogic.crc!=0xCDB4)
         DSR=0x14; // 1st AM doesn't read as $A1: Union Demo
-      CrcChecker.Reset();
+      CrcLogic.Reset();
     }
     else
-      CrcChecker.Add(DSR); 
+      CrcLogic.Add(DSR); 
    
     DR=DSR;
     Drq(true);
@@ -1801,7 +1856,7 @@ r1       r0            1772
     {
       Mfm.data=DSR=0xA1;
       Mfm.Encode(TWD1772MFM::FORMAT_CLOCK);
-      CrcChecker.Reset();
+      CrcLogic.Reset();
       Write();
 #ifdef SSE_DEBUG_WRITE_TRACK_TRACE_IDS
       if(n_format_bytes)
@@ -1819,7 +1874,7 @@ r1       r0            1772
     {
       Mfm.data=DSR=0xC2;
       Mfm.Encode(TWD1772MFM::FORMAT_CLOCK);
-      CrcChecker.Add(Mfm.data);
+      CrcLogic.Add(Mfm.data);
       Write();
 #ifdef SSE_DEBUG_WRITE_TRACK_TRACE_IDS
       if(n_format_bytes)
@@ -1848,13 +1903,13 @@ r1       r0            1772
 #if defined(SSE_WD1772_F7_ESCAPE)
     else if(DR==0xF7 && !F7_escaping)
 #else
-    else if(DR==0xF7 && CrcChecker.crc) //Write 2 CRC Bytes
+    else if(DR==0xF7 && CrcLogic.crc) //Write 2 CRC Bytes
 #endif
     {
-//      TRACE("write CRC %X %d %d\n",CrcChecker.crc,HIBYTE(CrcChecker.crc),LOBYTE(CrcChecker.crc));
-      Mfm.data=DSR=CrcChecker.crc>>8; // write 1st byte
-      DR=CrcChecker.crc&0xFF; // save 2nd byte
-      CrcChecker.Add(Mfm.data);
+//      TRACE("write CRC %X %d %d\n",CrcLogic.crc,HIBYTE(CrcLogic.crc),LOBYTE(CrcLogic.crc));
+      Mfm.data=DSR=CrcLogic.crc>>8; // write 1st byte
+      DR=CrcLogic.crc&0xFF; // save 2nd byte
+      CrcLogic.Add(Mfm.data);
       Mfm.Encode(TWD1772MFM::FORMAT_CLOCK);
 #if defined(SSE_WD1772_F7_ESCAPE)
       F7_escaping=true;
@@ -1874,7 +1929,7 @@ r1       r0            1772
     {
       Mfm.data=DSR=DR;
       Mfm.Encode(TWD1772MFM::FORMAT_CLOCK);
-      CrcChecker.Add(DSR);
+      CrcLogic.Add(DSR);
 #if defined(SSE_WD1772_F7_ESCAPE)
       F7_escaping=false;
 #endif
@@ -1895,7 +1950,7 @@ r1       r0            1772
   case WD_TYPEIII_WRITE_DATA2:
     // write 2nd byte of CRC
     Mfm.data=DSR=DR;// as saved
-    CrcChecker.Add(Mfm.data);
+    CrcLogic.Add(Mfm.data);
     Mfm.Encode(TWD1772MFM::FORMAT_CLOCK);
     Write(); 
 #ifdef SSE_DEBUG_WRITE_TRACK_TRACE_IDS
@@ -1954,11 +2009,16 @@ void  TWD1772::WriteCR(BYTE io_src_b) {
 
 //  TRACE_LOG("PC %X STW new command %X\n",old_pc,io_src_b);
 
-  if(IMAGE_STW)
+  if(CommandType(io_src_b)==2 || CommandType(io_src_b)==3) //or no condition?
   {
-    if(CommandType(io_src_b)==2 || CommandType(io_src_b)==3) //or no condition?
+    if(IMAGE_STW)
       ImageSTW[DRIVE].LoadTrack(floppy_current_side(),floppy_head_track[DRIVE]);
+#if defined(SSE_DISK_SCP)
+    else if(IMAGE_SCP)
+      ImageSCP[DRIVE].LoadTrack(floppy_current_side(),floppy_head_track[DRIVE]);
+#endif
   }
+
 
 /*  CR will accept a new command when busy bit is clear or when command
     is 'Force Interrupt'.
@@ -1981,16 +2041,7 @@ void  TWD1772::WriteCR(BYTE io_src_b) {
   {
     TRACE_LOG("FDC command %X ignored\n",io_src_b);
   }
-
-
-#ifdef SSE_DEBUG
-//  else
-  //  TRACE_LOG("FDC command %X ignored\n",io_src_b);
-#endif
 }
-
-
-
 
 
 #endif//stw

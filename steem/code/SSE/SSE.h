@@ -4090,6 +4090,11 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
 
 #define SSE_TOS_GEMDOS_FDUP // for EmuTOS
+#define SSE_DISK_SCP // Supercard Pro disk image format support
+#define SSE_DISK_SCP_FUZZY_DM //tailored for Dungeon Master
+#define SSE_DISK_SCP_WRITE //not tested
+#define SSE_DRIVE_INDEX_PULSE2 // count revs
+#define SSE_WD1772_MFM2 // improvements for SCP 
 
 #ifdef DEBUG_BUILD
 #define SSE_BOILER_BLIT_IN_HISTORY

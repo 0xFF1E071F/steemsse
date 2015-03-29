@@ -134,7 +134,9 @@ struct TSF314 {
   void Step(int direction);
 #endif
 
-
+#if defined(SSE_DRIVE_INDEX_PULSE2)
+  DWORD nRevs;
+#endif
 
 
 };
