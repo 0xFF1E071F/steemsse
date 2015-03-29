@@ -165,6 +165,11 @@ void stemdos_rte()
 {
   if ((stemdos_rte_action & STEMDOS_RTE_SUBACTION)==STEMDOS_RTE_DUP){ //get file handle
     areg[7]+=4; //correct stack
+#if defined(STEVEN_SEAGAL) && defined(SSE_TOS_GEMDOS_FDUP)
+    if(SSE_HACKS_ON)
+      areg[7]+=2; //we pushed long
+#endif
+
     if (r[0]>=6 && r[0]<=45){ //valid file handle
       log(EasyStr("STEMDOS: Dup returned file handle #")+r[0]);
       if (stemdos_file[r[0]].open){
@@ -181,13 +186,15 @@ void stemdos_rte()
       }
     }else{
       log(EasyStr("STEMDOS: Dup failed and returned ")+r[0]);
+      TRACE_LOG("fdup error %d\n",r[0]);
       stemdos_close_file(&stemdos_new_file);
       if (r[0]>=0) r[0]=-65;  //internal GEMDOS error if we got crazy error
       stemdos_finished(); //error code in d0
       stemdos_final_rte();  //kill the original GEMDOS call.
     }
-    TRACE_LOG("file handle = %d, process %d\n",r[0],stemdos_file[r[0]].owner_program);
-    ASSERT( stemdos_file[r[0]].open) ;
+    //dangerous:
+    //TRACE_LOG("file handle = %d, process %d\n",r[0],stemdos_file[r[0]].owner_program);
+    //ASSERT( stemdos_file[r[0]].open) ;
   }else if (stemdos_rte_action==STEMDOS_RTE_GET_DTA_FOR_FSFIRST){
     areg[7]+=2; //correct stack
     stemdos_dta=(r[0] & 0xffffff); //get DTA
@@ -1968,10 +1975,22 @@ void stemdos_check_paths()
 NOT_DEBUG(inline) 
 #endif
 void stemdos_trap_1_Fdup(){
-  TRACE_LOG("Call TOS $45 Fdup\n");
-  m68k_PUSH_W(3);
-  m68k_PUSH_W(0x45);
+#if defined(STEVEN_SEAGAL) && defined(SSE_TOS_GEMDOS_FDUP)
+/*  According to Atari doc and Atari TOS behaviour, Gemdos function
+    Fdup() takes a word parameter, however EmuTOS (0.8.7) takes a long 
+    parameter, which may cause some crashes.
+    Hence this hack.
+*/
+  TRACE_LOG("Call TOS $45 (3) Fdup\n");
+  if(SSE_HACKS_ON)
+  {//this is macro
+    m68k_PUSH_L(3); 
+  }
+  else
+#endif
+    m68k_PUSH_W(3);
 
+  m68k_PUSH_W(0x45);
   STEMDOS_TRAP_1;
 }
 

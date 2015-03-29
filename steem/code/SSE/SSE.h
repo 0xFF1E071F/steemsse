@@ -4089,6 +4089,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_GUI_FULLSCREEN_NO_VSYNC_OPTION //but all the rest?
 //#define SSE_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
 
+#define SSE_TOS_GEMDOS_FDUP // for EmuTOS
 
 #ifdef DEBUG_BUILD
 #define SSE_BOILER_BLIT_IN_HISTORY
