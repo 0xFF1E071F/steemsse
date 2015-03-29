@@ -28,7 +28,9 @@ EXT int sound_freq INIT(50066),sound_comline_freq INIT(0),sound_chosen_freq INIT
 EXT int sound_mode INIT(SOUND_MODE_CHIP),sound_last_mode INIT(SOUND_MODE_CHIP);
 EXT BYTE sound_num_channels INIT(1),sound_num_bits INIT(8);
 EXT int sound_bytes_per_sample INIT(1);
-#if defined(SSE_SOUND_VOL_LOGARITHMIC_2)
+#if defined(SSE_SOUND_VOL_LOGARITHMIC_3)//v3.7.1
+EXT int MaxVolume INIT(10000);
+#elif defined(SSE_SOUND_VOL_LOGARITHMIC_2)
 EXT int MaxVolume INIT(0xffff);
 #else
 EXT DWORD MaxVolume INIT(0xffff);
@@ -235,11 +237,13 @@ inline bool playing_samples() {
 #endif
 }
 
+#if defined(SSE_YM2149_DELAY_RENDERING)  
 #if !defined(SSE_YM2149_DELAY_RENDERING1)
 inline WORD get_fixed_volume() {
   ASSERT( playing_samples() );
   return fixed_vol_3voices[psg_reg[10]&15][psg_reg[9]&15][psg_reg[8]&15];
 }
+#endif
 #endif
 
 #endif
@@ -368,17 +372,21 @@ HRESULT Sound_Start() // SS called by
   // Work out startup voltage
   int envshape=psg_reg[13] & 15;
   int flatlevel=0;
-#if defined(SSE_YM2149_FIXED_VOL_TABLE) && !defined(SSE_YM2149_NO_SAMPLES_OPTION)
+#if defined(SSE_YM2149_FIXED_VOL_TABLE) && !defined(SSE_YM2149_NO_SAMPLES_OPTION) \
+ && defined(SSE_YM2149_DELAY_RENDERING)  
   if(SSEOption.PSGFixedVolume&& playing_samples())
     flatlevel=get_fixed_volume();
   else
 #endif
   for (int abc=0;abc<3;abc++){
     if ((psg_reg[8+abc] & BIT_4)==0){
+//#if defined(SSE_YM2149_FIXED_VOL_FIX1) //TODO 3.7.1??
+      flatlevel+=
 #if defined(SSE_YM2149_FIXED_VOL_FIX1)
-      flatlevel+=SSEOption.PSGMod?psg_flat_volume_level2[psg_reg[8+abc] & 15]:
-        psg_flat_volume_level[psg_reg[8+abc] & 15];
+        SSEOption.PSGMod?psg_flat_volume_level2[psg_reg[8+abc] & 15]:
 #endif
+        psg_flat_volume_level[psg_reg[8+abc] & 15];
+//#endif
     }else if (envshape==b1011 || envshape==b1101){
       flatlevel+=psg_flat_volume_level[15]; //SS 15 = 1 anyway
     }
@@ -2054,13 +2062,16 @@ void psg_prepare_envelope(double &af,double &bf,int &psg_envmodulo,DWORD t,
       if ((psg_reg[PSGR_ENVELOPE_SHAPE] & PSG_ENV_SHAPE_CONT)==0 ||                  
            (psg_reg[PSGR_ENVELOPE_SHAPE] & PSG_ENV_SHAPE_HOLD)){                     
         if(psg_reg[PSGR_ENVELOPE_SHAPE]==11 || psg_reg[PSGR_ENVELOPE_SHAPE]==13){      
-#if defined(SSE_YM2149_DELAY_RENDERING)  
+#if defined(SSE_YM2149_DELAY_RENDERING2)
+          // bugfix v3.7.1 eg FTL logo in Dungeon Master
+          envdeath=(SSE_OPTION_PSG)?31:psg_flat_volume_level[15];                                           
+#elif defined(SSE_YM2149_DELAY_RENDERING)
           envdeath=(SSE_OPTION_PSG)?15:psg_flat_volume_level[15];                                           
 #else
           envdeath=psg_flat_volume_level[15];                                           
 #endif
         }else{       
-#if defined(SSE_YM2149_DELAY_RENDERING)  
+#if defined(SSE_YM2149_DELAY_RENDERING) 
           envdeath=(SSE_OPTION_PSG)?0:psg_flat_volume_level[0];                                       
 #else                                                                    
           envdeath=psg_flat_volume_level[0];     
@@ -2159,8 +2170,11 @@ void psg_prepare_envelope(double &af,double &bf,int &psg_envmodulo,DWORD t,
 
 void psg_prepare_noise(double &af,double &bf,int &psg_noisemodulo,DWORD t,
     int &psg_noisecountdown, int &psg_noisecounter,bool &psg_noisetoggle) {
-
+#if defined(SSE_YM2149_DELAY_RENDERING2) // ? it was probably wrong...
+      int noiseperiod=(1+(psg_reg[PSGR_NOISE_PERIOD]&0x1f));
+#else
       int noiseperiod=(psg_reg[PSGR_NOISE_PERIOD]&0x1f)|1;      
+#endif 
       af=((int)noiseperiod*sound_freq);                              
       af*=((double)(1<<17))/15625; 
       psg_noisemodulo=(int)af; 

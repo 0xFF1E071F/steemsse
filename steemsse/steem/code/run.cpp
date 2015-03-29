@@ -928,10 +928,15 @@ void event_scanline()
   scanline_drawn_so_far=0;
 
 #if defined(SSE_MMU_SDP1)
+#if defined(DEBUG_BUILD) || !defined(SSE_MMU_SDP1B) //boiler-only
 /*  Enforce register limitations, so that "report SDP" isn't messed up
     in the debug build.
 */
-  shifter_draw_pointer&=0x3FFFFE;
+#if defined(SSE_MMU_SDP1B) //bugfix 3.7.1 not for 14MB
+  if(mem_len<=4*1024*1024)
+#endif
+    shifter_draw_pointer&=0x3FFFFE;
+#endif
 #endif
 
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
