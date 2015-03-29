@@ -61,6 +61,11 @@ extern TImageSTW ImageSTW[2];
 #define IMAGE_STW (SF314[DRIVE].ImageType.Extension==EXT_STW)
 #endif
 
+#if defined(SSE_DISK_SCP)
+extern TImageSCP ImageSCP[2];
+#define IMAGE_SCP (SF314[DRIVE].ImageType.Extension==EXT_SCP)
+#endif
+
 #if defined(SSE_DMA)
 extern TDma Dma;
 #define dma_sector_count Dma.Counter
@@ -101,10 +106,6 @@ extern TYM2149 YM2149;
 
 #if defined(SSE_IPF)
 extern TCaps Caps;
-#endif
-
-#if defined(SSE_SCP)
-extern TScp Scp;
 #endif
 
 #endif//SSEFLOPPY_H

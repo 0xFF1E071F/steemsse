@@ -68,7 +68,7 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
     SSE_IPF_KFSTREAM, //RAW
 #endif
 #endif    
-#if defined(STEVEN_SEAGAL) && defined(SSE_SCP)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
     "SCP",
 #endif    
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)

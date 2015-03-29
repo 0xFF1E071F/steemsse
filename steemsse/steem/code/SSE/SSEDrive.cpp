@@ -379,6 +379,7 @@ WORD TSF314::TrackGap() {
 
 int TSF314::CyclesPerByte() {
 //? TODO
+// + todo: when >8mhz?
 #if defined(SSE_INT_MFP_RATIO) 
   int cycles=CpuNormalHz; // per second  
 #else
@@ -407,7 +408,10 @@ void TSF314::IndexPulse() {
   
   if(ImageType.Manager!=MNGR_WD1772||FloppyDrive[Id].Empty()||!State.motor)
   {
-    TRACE_LOG("Manager %d Empty %d motor %d\n",ImageType.Manager,FloppyDrive[Id].Empty(),State.motor);
+#ifdef SSE_DEBUG
+    if(YM2149.SelectedDrive==Id)
+      TRACE_LOG("%c: Manager %d Empty %d motor %d\n",'A'+Id,ImageType.Manager,FloppyDrive[Id].Empty(),State.motor);
+#endif
     time_of_next_ip=ACT+n_cpu_cycles_per_second; // put into future
     return; 
   }
@@ -425,16 +429,35 @@ void TSF314::IndexPulse() {
     Disk[Id].current_byte=0;
 
   // Program next event, at next IP or in 1 sec (more?)
+  ASSERT(State.motor);//note...
   if(State.motor)
+  {
+#if defined(SSE_DISK_SCP_________)
+    if(IMAGE_SCP)
+     ; // IP will be triggered by SCP emu IF reading/writing...
+    //time_of_next_ip=time_of_last_ip 
+      //+ ImageSCP[DRIVE].track_header.TDH_TABLESTART[ImageSCP[DRIVE].rev].TDH_DURATION/5;
+    else
+#endif
     time_of_next_ip=time_of_last_ip + CyclesPerByte() * Disk[Id].TrackBytes;
+  }
   else //as a safety, or it could hang //TODO
     time_of_next_ip=ACT+n_cpu_cycles_per_second; // put into future
 
   TRACE_LOG("%c: IP at %d next at %d (%d cycles, %d ms)\n",Id,time_of_last_ip,time_of_next_ip,time_of_next_ip-time_of_last_ip,(time_of_next_ip-time_of_last_ip)/(n_cpu_cycles_per_second/1000));
 
+#if defined(SSE_DRIVE_INDEX_PULSE2)
+  nRevs++;
+#endif
+
+#if defined(SSE_DISK_SCP)
+  //ImageSCP[Id].Position=0;
+  //ImageSCP[Id].
+#endif
+
   // send pulse to WD1772
   if(DRIVE==Id)
-    WD1772.OnIndexPulse(Id);
+    WD1772.OnIndexPulse(Id); 
 
 }
 

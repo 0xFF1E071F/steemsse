@@ -12,7 +12,7 @@
 #if defined(SSE_IPF_CTRAW)
 #define DISK_CTR 5
 #endif
-#if defined(SSE_SCP)
+#if defined(SSE_DISK_SCP)
 #define DISK_SCP 7
 #endif
 #if defined(SSE_DISK_STW)
