@@ -998,6 +998,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               mem_browser_update_all();
               break;
 #if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#if defined(SSE_DEBUG_TRACE_FILE)
             case 1517: // Output TRACE to file
               USE_TRACE_FILE=!USE_TRACE_FILE;
               CheckMenuItem(sse_menu,1517,
@@ -1010,6 +1011,11 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
                 MF_BYCOMMAND|((int)(TRACE_FILE_REWIND)
                 ? MF_CHECKED : MF_UNCHECKED));
               break;
+            case 1519: // flush TRACE.txt, v3.7.1, at last
+              if(Debug.trace_file_pointer)
+                fflush(Debug.trace_file_pointer);
+              break;
+#endif
 #if defined(SSE_BOILER_MONITOR_VALUE)
             case 1522: 
               Debug.MonitorValueSpecified=!Debug.MonitorValueSpecified;
@@ -1432,8 +1438,16 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
           n--;
           if (n<0) n=HISTORY_SIZE-1;
           if (pc_history[n]==0xffffff71) break;
+#if defined(SSE_BOILER_BLIT_IN_HISTORY)
+          if(pc_history[n]==0x98764321)
+            Dissasembly="BLiT";
+          else
+            Dissasembly=HEXSl(pc_history[n],6)+" - "+disa_d2(pc_history[n]);
+          InsertMenu(history_menu,0,MF_BYPOSITION | MF_STRING,17000+n,Dissasembly);
+#else
           Dissasembly=disa_d2(pc_history[n]);
           InsertMenu(history_menu,0,MF_BYPOSITION | MF_STRING,17000+n,EasyStr(HEXSl(pc_history[n],6))+" - "+Dissasembly);
+#endif
         }while (n!=pc_history_idx && (c++)<HIST_MENU_SIZE);
         InsertMenu(history_menu,0,MF_BYPOSITION | MF_STRING | MF_SEPARATOR,99,"-");
         InsertMenu(history_menu,0,MF_BYPOSITION | MF_STRING,2200,"History List");
@@ -1775,13 +1789,14 @@ void DWin_init()
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
  // AppendMenu(boiler_op_menu,MF_STRING|MF_SEPARATOR,0,NULL);
+#if defined(SSE_DEBUG_TRACE_FILE)
   AppendMenu(sse_menu,MF_STRING,1517,"Output TRACE to file");
-  AppendMenu(sse_menu,MF_STRING,1518,"Limit TRACE file size");
+  AppendMenu(sse_menu,MF_STRING,1518,"Limit TRACE file size");//remove this?
+  AppendMenu(sse_menu,MF_STRING,1519,"flush TRACE.txt"); // v3.7.1
+#endif
 #if defined(SSE_BOILER_DUMP_6301_RAM)
   AppendMenu(sse_menu,MF_STRING,1524,"Dump 6301 RAM");
 #endif
-
-
 #if defined(SSE_BOILER_MONITOR_VALUE)
   AppendMenu(sse_menu,MF_STRING|MF_SEPARATOR,0,NULL);
   AppendMenu(sse_menu,MF_STRING,1522,"Monitor: specific value");

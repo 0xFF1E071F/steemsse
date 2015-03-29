@@ -176,10 +176,15 @@ void ASMCALL Blitter_Start_Now()
           bool(mfp_reg[MFPR_GPIP] & MFP_GPIP_BLITTER_BIT)+" to 1");
   mfp_gpip_set_bit(MFP_GPIP_BLITTER_BIT,true);
   Blit.YCounter=Blit.YCount;
-//  ASSERT( Blit.YCount!=65536 );
+
   /*Only want to start the line if not in the middle of one.*/
   if (WORD(Blit.XCounter-Blit.XCount)==0) Blitter_Start_Line();
-///////////////////:else INSTRUCTION_TIME(4);
+
+#if defined(SSE_BOILER_BLIT_IN_HISTORY)
+  DEBUG_ONLY( pc_history[pc_history_idx++]=0x98764321; )
+  DEBUG_ONLY( if (pc_history_idx>=HISTORY_SIZE) pc_history_idx=0; )
+#endif
+
   Blitter_Draw();
   check_for_interrupts_pending();
 }
@@ -465,8 +470,13 @@ void Blitter_Draw()
 //    Blitter_Blit_Word();
 //  }
   // SS the blitter's own process loop!
+#if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_BLIT_WHEN_STOPPED)
+  while (1 ){
+    while (cpu_cycles>0 && 1){
+#else
   while (runstate==RUNSTATE_RUNNING){
     while (cpu_cycles>0 && runstate==RUNSTATE_RUNNING){
+#endif
       if (Blit.HasBus){
         Blitter_Blit_Word();
       }else{

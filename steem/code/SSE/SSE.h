@@ -4090,6 +4090,10 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
 
 
+#ifdef DEBUG_BUILD
+#define SSE_BOILER_BLIT_IN_HISTORY
+#define SSE_BOILER_BLIT_WHEN_STOPPED // dangerous?
+#endif
 
 #endif
 
