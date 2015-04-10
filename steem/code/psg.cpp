@@ -2776,13 +2776,22 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
       // Freq is double bufferred, it cannot change until the PSG reaches the end of the current square wave.
       // psg_tone_start_time[abc] is set to the last end of wave, so if it is in future don't do anything.
       // Overflow will be a problem, however at 50Khz that will take a day of non-stop output.
+
+//#undef SSE_YM2149_QUANTIZE1
+
 #if defined(SSE_YM2149_QUANTIZE1) // fixes high pitch noise in YMT-Player 
+#if defined(SSE_YM2149_QUANTIZE2)
+      if(SSE_HACKS_ON && new_val>15) //pathetic hack: Union Demo text screens
+#endif
         psg_write_buffer(abc,t);
 #endif
       if (t>psg_tone_start_time[abc]){
         t=psg_quantize_time(abc,t); //SS look at the assert there
-#if !defined(SSE_YM2149_QUANTIZE1)
-        psg_write_buffer(abc,t);
+#if !defined(SSE_YM2149_QUANTIZE1)  || defined(SSE_YM2149_QUANTIZE2)
+#if defined(SSE_YM2149_QUANTIZE2)
+        if(new_val<=15 || !SSE_HACKS_ON) // :roll:
+#endif
+          psg_write_buffer(abc,t);
 #endif
         psg_tone_start_time[abc]=t;
       }

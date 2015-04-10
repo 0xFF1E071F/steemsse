@@ -90,7 +90,7 @@ EXT int sound_mode INIT(SOUND_MODE_CHIP),sound_last_mode INIT(SOUND_MODE_CHIP);
 EXT BYTE sound_num_channels INIT(1),sound_num_bits INIT(8);
 EXT int sound_bytes_per_sample INIT(1);
 #if defined(SSE_SOUND_VOL_LOGARITHMIC_2)
-EXT int MaxVolume INIT(0xffff);
+EXT int MaxVolume;// INIT(0xffff);
 #else
 EXT DWORD MaxVolume INIT(0xffff);
 #endif

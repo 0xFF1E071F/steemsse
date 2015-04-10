@@ -65,7 +65,11 @@ void LoadUnrarDLL() {
 /*  This function is missing in very old versions of UnRAR.dll, so it is safer 
     to use LoadLibrary and GetProcAddress to access it.
 */
+#if defined(SSE_VAR_UNRAR2)
+    UNRAR_OK=(RARGetDllVersion()>0); //bugfix v3.7.1, works with v6 too :)
+#else
     UNRAR_OK=RARGetDllVersion(); // 5 with our unrar.dll
+#endif
   }
   catch(...) {
     UNRAR_OK=0;
