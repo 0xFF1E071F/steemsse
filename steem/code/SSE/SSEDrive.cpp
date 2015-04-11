@@ -432,27 +432,29 @@ void TSF314::IndexPulse() {
   ASSERT(State.motor);//note...
   if(State.motor)
   {
-#if defined(SSE_DISK_SCP_________)
+#if defined(SSE_DRIVE_INDEX_PULSE_SCP)
+/*  We set up a timing for next IP, but if the drive is reading there are 
+    chances the SCP object will trigger IP itself at the end of the track.
+    This is a place where we could have bug reports.
+*/
     if(IMAGE_SCP)
-     ; // IP will be triggered by SCP emu IF reading/writing...
-    //time_of_next_ip=time_of_last_ip 
-      //+ ImageSCP[DRIVE].track_header.TDH_TABLESTART[ImageSCP[DRIVE].rev].TDH_DURATION/5;
+    {
+      time_of_next_ip=time_of_last_ip 
+        + ImageSCP[DRIVE].track_header.TDH_TABLESTART[ImageSCP[DRIVE].rev].\
+          TDH_DURATION/5;
+      //TRACE_LOG("SCP pos %d/%d next IP in %d cycles\n",ImageSCP[DRIVE].Position,ImageSCP[DRIVE].nBits-1,ImageSCP[DRIVE].track_header.TDH_TABLESTART[ImageSCP[DRIVE].rev].TDH_DURATION/5);
+    }
     else
 #endif
-    time_of_next_ip=time_of_last_ip + CyclesPerByte() * Disk[Id].TrackBytes;
+      time_of_next_ip=time_of_last_ip + CyclesPerByte() * Disk[Id].TrackBytes;
   }
   else //as a safety, or it could hang //TODO
     time_of_next_ip=ACT+n_cpu_cycles_per_second; // put into future
 
-  TRACE_LOG("%c: IP at %d next at %d (%d cycles, %d ms)\n",Id,time_of_last_ip,time_of_next_ip,time_of_next_ip-time_of_last_ip,(time_of_next_ip-time_of_last_ip)/(n_cpu_cycles_per_second/1000));
+  //TRACE_LOG("%c: IP at %d next at %d (%d cycles, %d ms)\n",Id,time_of_last_ip,time_of_next_ip,time_of_next_ip-time_of_last_ip,(time_of_next_ip-time_of_last_ip)/(n_cpu_cycles_per_second/1000));
 
 #if defined(SSE_DRIVE_INDEX_PULSE2)
   nRevs++;
-#endif
-
-#if defined(SSE_DISK_SCP)
-  //ImageSCP[Id].Position=0;
-  //ImageSCP[Id].
 #endif
 
   // send pulse to WD1772

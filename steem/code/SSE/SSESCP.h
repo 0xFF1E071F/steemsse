@@ -26,7 +26,7 @@
 ; i.e. 0x00DA = 218, 218*25 = 5450ns = 5.450us
 */
 
-#define SCP_DATA_WINDOW_TOLERANCY 35//(20) //? 
+#define SCP_DATA_WINDOW_TOLERANCY 20 
 
 struct TSCP_file_header {
   char IFF_ID[3]; //"SCP" (ASCII CHARS)
@@ -63,14 +63,25 @@ struct  TImageSCP {
   // interface (the same as for STW disk images)
   bool Open(char *path);
   void Close();
+#if defined(SSE_DISK_SCP_START_REV1)
+  bool LoadTrack(BYTE side,BYTE track,bool reload=false);
+#else
   bool LoadTrack(BYTE side,BYTE track);
+#endif
   WORD GetMfmData(WORD position); 
   void SetMfmData(WORD position, WORD mfm_data);
+#if defined(SSE_WD1772_DPLL)
+  int GetNextTransition();
+#endif
   // other functions
   TImageSCP();
   ~TImageSCP();
   void ComputePosition(WORD position);
+  int GetDelayInUnits(int position);
+  int GetDelayInUs(int delay_in_units);
+#if !defined(SSE_WD1772_PRECISE_SYNC)
   BYTE GetDelay(int position);
+#endif
   void IncPosition();
   void Init();
 #if defined(SSE_DISK_SCP_WRITE)
@@ -89,17 +100,17 @@ struct  TImageSCP {
 private: 
   FILE *fCurrentImage;
   DWORD *absolute_delay; // from IP
+#if !defined(SSE_WD1772_DPLL) || defined(SSE_DISK_SCP_WRITE)
   BYTE ShiftsToNextOne;
-  
+#endif
 #if defined(SSE_DISK_SCP_WRITE)
   bool is_dirty;
 #endif
-#if defined(SSE_DISK_SCP_FUZZY_DM)
+#if defined(SSE_WD1772_FUZZY_BITS) && !defined(SSE_WD1772_DPLL)
   char weak_bit_shift;
 #endif
-
-#ifdef SSE_DEBUG
-  void InterpretFlux();
+#if defined(SSE_BOILER) && defined(SSE_DISK_SCP_TO_MFM_PREVIEW)
+  void InterpretFlux(); // was a dev step
 #endif
 
 };

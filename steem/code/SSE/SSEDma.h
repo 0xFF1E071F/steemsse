@@ -142,7 +142,8 @@ heavy. It was a test.
 #endif
 
 #if defined(SSE_DMA_TRACK_TRANSFER)
-  WORD Datachunk; // to check # 16byte parts
+  // to check # 16byte parts, it should be debug-only but isn't
+  WORD Datachunk; 
 #endif
 
 };

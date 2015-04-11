@@ -26,6 +26,34 @@ TGlue::TGlue() {
 
 void TGlue::Update() {
 
+  char STE_modifier=-16; // not correct!
+#if defined(SSE_MMU_WU_DL)
+  char WU_res_modifier=MMU.ResMod[WAKE_UP_STATE]; //-2, 0, 2
+  char WU_sync_modifier=MMU.FreqMod[WAKE_UP_STATE]; // 0 or 2
+#endif
+/*
+  ScanlineTiming[NEGATE_HSYNC][FREQ_50]=
+  ScanlineTiming[NEGATE_HBLANK][FREQ_50]=
+*/
+  ScanlineTiming[START_PREFETCH][FREQ_50]=56;
+  ScanlineTiming[STOP_PREFETCH][FREQ_50]=56+320;
+/*
+  ScanlineTiming[ASSERT_HBL][FREQ_50]=
+  ScanlineTiming[ASSERT_HSYNC][FREQ_50]=
+*/
+
+
+  for(int f=0;f<NFREQS;f++)
+  {
+    ScanlineTiming[STOP_PREFETCH][f]
+      =ScanlineTiming[START_PREFETCH][f]+DE_cycles[f];
+    for(int t=0;t<NTIMINGS;t++)
+    {
+      ScanlineTiming[t][f]+=STE_modifier; // all timings!
+      if(f==FREQ_60)
+        ScanlineTiming[t][f]-=4;
+    }
+  }
 
 }
 
