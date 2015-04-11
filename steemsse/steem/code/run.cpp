@@ -334,6 +334,10 @@ void run()
 #if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_START_STOP_INFO)
   Debug.TraceGeneralInfos(TDebug::STOP);
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_AUTO_FLUSH_TRACE)
+  if(Debug.trace_file_pointer)
+    fflush(Debug.trace_file_pointer);
+#endif
 
 #ifdef WIN32
   timeEndPeriod(tc.wPeriodMin); // Finished with accurate timing

@@ -1011,10 +1011,12 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
                 MF_BYCOMMAND|((int)(TRACE_FILE_REWIND)
                 ? MF_CHECKED : MF_UNCHECKED));
               break;
-            case 1519: // flush TRACE.txt, v3.7.1, at last
+#ifdef SSE_BOILER_FLUSH_TRACE // not if we do it at each stop
+            case 1519: 
               if(Debug.trace_file_pointer)
                 fflush(Debug.trace_file_pointer);
               break;
+#endif
 #endif
 #if defined(SSE_BOILER_MONITOR_VALUE)
             case 1522: 
@@ -1737,6 +1739,9 @@ void DWin_init()
 #else
   AppendMenu(logsection_menu,MF_STRING,1007,"Wipe Logfile");
 #endif
+#if defined(SSE_BOILER_FLUSH_TRACE)
+  AppendMenu(logsection_menu,MF_STRING,1519,"Flush TRACE.txt");
+#endif
   AppendMenu(logsection_menu,MF_STRING|
         int(debug_wipe_log_on_reset ? MF_CHECKED:MF_UNCHECKED),1013,"Wipe On Reset");
   AppendMenu(logsection_menu,MF_SEPARATOR,0,NULL);
@@ -1792,7 +1797,7 @@ void DWin_init()
 #if defined(SSE_DEBUG_TRACE_FILE)
   AppendMenu(sse_menu,MF_STRING,1517,"Output TRACE to file");
   AppendMenu(sse_menu,MF_STRING,1518,"Limit TRACE file size");//remove this?
-  AppendMenu(sse_menu,MF_STRING,1519,"flush TRACE.txt"); // v3.7.1
+  //AppendMenu(sse_menu,MF_STRING,1519,"flush TRACE.txt"); // v3.7.1
 #endif
 #if defined(SSE_BOILER_DUMP_6301_RAM)
   AppendMenu(sse_menu,MF_STRING,1524,"Dump 6301 RAM");
