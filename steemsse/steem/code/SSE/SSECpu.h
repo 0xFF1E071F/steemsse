@@ -7,6 +7,7 @@
 #if defined(SSE_STRUCTURE_CPU_H)
 
 #include <cpu.decla.h>
+#include <d2.decla.h> //V3.7.1
 
 #ifdef SSE_UNIX
 void exception(int,exception_action,MEM_ADDRESS);
@@ -1042,17 +1043,33 @@ inline void TM68000::Process() {
 
 #if defined(SSE_BOILER)
   LOG_CPU  
+/*  Very powerful but demanding traces.
+    In SSE boiler, it won't stop if 'suspend log' is checked.
+    You may have, beside the disassembly, cycles (absolute, frame, line),
+    registers, and values pointed to by address registers as well
+    as the stack.
+*/
   if(TRACE_ENABLED)
   {
+    if(TRACE_MASK4 & TRACE_CONTROL_CPU_CYCLES)
+    {
+      TRACE_LOG("\nCycles %d %d %d (%d)\n",ACT,FRAMECYCLES,LINECYCLES,scan_y);
+    }
+
 #if defined(SSE_DEBUG_TRACE_IO) 
     if(TRACE_MASK4 & TRACE_CONTROL_CPU_REGISTERS)
     {
-      TRACE_LOG("\n");
+      if(!(TRACE_MASK4 & TRACE_CONTROL_CPU_CYCLES))
+        TRACE_LOG("\n");
       for(int i=0;i<8;i++) // D0-D7
         TRACE_LOG("D%d=%X ",i,r[i]);
       TRACE_LOG("\n");
       for(int i=0;i<8;i++) // A0-A7 
+      {
         TRACE_LOG("A%d=%X ",i,areg[i]);
+        if(TRACE_MASK4 & TRACE_CONTROL_CPU_REGISTERS_VAL) //v3.7.1
+          TRACE_LOG("(%X) ",(areg[i]&1)?d2_peek(areg[i]):d2_dpeek(areg[i]));
+      }
       TRACE_LOG("SR=%X\n",sr);
     }
     if(TRACE_MASK4 & TRACE_CONTROL_CPU_SP)
