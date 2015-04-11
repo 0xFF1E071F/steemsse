@@ -526,6 +526,12 @@ TODO?
   }
 #endif
 
+
+#if defined(SSE_BOILER_TRACE_CONTROL)
+  if(TRACE_MASK3 & TRACE_CONTROL_FDCDMA)
+    TRACE_FDC("PC %X DMA R %X %X\n",old_pc,addr,ior_byte);
+#endif
+
   return ior_byte;
 }
 
@@ -534,7 +540,10 @@ void TDma::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
 
   ASSERT( (addr&0xFFFF00)==0xFF8600 );
 
-  TRACE_FDC("PC %X DMA W %X %X\n",old_pc,addr,io_src_b);
+#if defined(SSE_BOILER_TRACE_CONTROL)
+  if(TRACE_MASK3 & TRACE_CONTROL_FDCDMA)
+    TRACE_FDC("PC %X DMA W %X %X\n",old_pc,addr,io_src_b);
+#endif
 
   // test for bus error
   if(addr>0xff860f || addr<0xff8604 || addr<0xff8608 && !io_word_access) 
@@ -557,6 +566,7 @@ void TDma::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
     // HD access
     if(MCR&CR_HDC_OR_FDC)
     { 
+    //  if(io_src_b) TRACE("HDC %x high: W %x\n",(dma_mode & BIT_1) ? 1:0,io_src_b);
       log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Writing $"+HEXSl(io_src_b,2)+"xx to HDC register #"+((dma_mode & BIT_1) ? 1:0));
       break;
     }
@@ -593,6 +603,7 @@ is ignored and when reading the 8 upper bits consistently reads 1."
     // HD access
     if (MCR&CR_HDC_OR_FDC){ 
 //      TRACE_LOG("HD");
+ //     TRACE("HDC %x: W %x\n",(dma_mode & BIT_1) ? 1:0,io_src_b);
       log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Writing $xx"+HEXSl(io_src_b,2)+" to HDC register #"+((dma_mode & BIT_1) ? 1:0));
       break;
     }
@@ -1031,7 +1042,7 @@ void TDma::TransferBytes() {
   {
 #if defined(SSE_DMA_TRACK_TRANSFER)
     Datachunk++; 
-    TRACE_LOG("#%03d (%d-%02d-%02d) %s %06X: ",Datachunk,floppy_current_side(),floppy_head_track[DRIVE],WD1772.CommandType()==2?fdc_sr:0,(MCR&0x100)?"from":"to",BaseAddress);
+    TRACE_FDC("#%03d (%d-%02d-%02d) %s %06X: ",Datachunk,floppy_current_side(),floppy_head_track[DRIVE],WD1772.CommandType()==2?fdc_sr:0,(MCR&0x100)?"from":"to",BaseAddress);
 #else
 #endif
   }
@@ -1056,11 +1067,11 @@ void TDma::TransferBytes() {
 #if defined(SSE_BOILER_TRACE_CONTROL)
       if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
 #endif
-          TRACE_LOG("!!!");
+          TRACE_FDC("!!!");
 #if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
 #endif
-      TRACE_LOG("%02X ",Fifo
+      TRACE_FDC("%02X ",Fifo
 #if defined(SSE_DMA_DOUBLE_FIFO)
       [!BufferInUse]
 #endif
@@ -1093,7 +1104,7 @@ void TDma::TransferBytes() {
 #if defined(SSE_BOILER_TRACE_CONTROL)
   if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
 #endif
-    TRACE_LOG("\n");
+    TRACE_FDC("\n");
   Request=FALSE;
 }
 

@@ -555,7 +555,7 @@ void fdc_execute()
   }
 #endif
 
-#if defined(SSE_DMA_TRACK_TRANSFER)
+#if defined(SSE_DMA_TRACK_TRANSFER) && !defined(SSE_DMA_TRACK_TRANSFER2)
   Dma.Datachunk=0; // reset at new command
 #endif
 

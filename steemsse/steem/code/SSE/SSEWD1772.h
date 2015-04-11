@@ -41,11 +41,6 @@ struct TWD1772MFM {
   BYTE clock; 
   WORD encoded;
   unsigned int data_last_bit:1;
-#if defined(SSE_WD1772_MFM2) //for lower level emu (SCP)
-  bool AMDetect;
-  WORD AMFound; 
-  WORD AMWindow;
-#endif
 };
 
 
@@ -54,9 +49,60 @@ struct TWD1772Crc {
   void Reset();
   void Add(BYTE data);
   bool Check(TWD1772IDField *IDField);
+#if defined(SSE_WD1772_PRECISE_SYNC)
+  DWORD crccnt;
+#endif
 };
 
 
+#if defined(SSE_WD1772_DPLL)
+
+struct TWD1772Dpll {
+
+  int GetNextBit(int &tm, BYTE drive);
+  void Reset(int when);
+  void SetClock(const int &period);
+  int latest_transition;
+
+  WORD counter;
+  WORD increment;
+  WORD transition_time;
+  BYTE history;
+  BYTE slot;
+  BYTE phase_add, phase_sub, freq_add, freq_sub;
+  int ctime;
+  int delays[42];
+  int write_start_time;
+  int write_buffer[32];
+  int write_position;
+#if defined(SSE_WD1772_FUZZY_BITS) && defined(SSE_WD1772_DPLL)
+  char weak_bit_pairing;
+#endif
+
+};
+
+#endif
+
+#if defined(SSE_WD1772_AM_LOGIC)
+
+struct TWD1772AmDetector {
+
+  void Enable();
+  bool Enabled;
+#if defined(SSE_WD1772_PRECISE_SYNC)
+  void Reset();
+  BYTE amdatadelay,ammarkdist,ammarktype,amdataskip;
+  DWORD amdecode,aminfo,amisigmask;
+  // we keep those here because it's 32bit and integrated in the logic:
+  int dsr,dsrcnt; 
+#else
+  WORD AMFound; 
+  WORD AMWindow;
+#endif
+
+};
+
+#endif
 
 struct TWD1772 {
 
@@ -125,7 +171,10 @@ struct TWD1772 {
     WD_TYPEIII_WRITE_DATA2, // CRC is 1 byte in RAM -> 2 bytes on disk
     WD_TYPEIV_4, // $D4
     WD_TYPEIV_8, // $D8
-    WD_MOTOR_OFF
+    WD_MOTOR_OFF,
+#if defined(SSE_DRIVE_INDEX_PULSE3)
+    WD_NONE
+#endif
   };
   void NewCommand(BYTE command);
   int prg_phase;
@@ -165,6 +214,13 @@ struct TWD1772 {
   TWD1772MFM Mfm;
 #endif
 
+#if defined(SSE_WD1772_DPLL)
+  TWD1772Dpll Dpll;
+#endif
+
+#if defined(SSE_WD1772_AM_LOGIC)
+  TWD1772AmDetector Amd; // not the processor
+#endif
 
 #if defined(SSE_FDC_FORCE_INTERRUPT) || defined(SSE_WD1772)
   BYTE InterruptCondition; // guessed
@@ -203,7 +259,6 @@ struct TWD1772 {
 #if defined(STEVEN_SEAGAL) && defined(SSE_FLOPPY_EVENT)
   int update_time; // when do we need to come back?
 #endif
-
 
 /*  functions
 */
@@ -247,6 +302,9 @@ struct TWD1772 {
   bool CheckGhostDisk(BYTE drive,BYTE io_src_b);
 #endif
 
+#if defined(SSE_WD1772_PRECISE_SYNC)
+  bool ShiftBit(int bit);
+#endif
 
 #if defined(SSE_DEBUG)
   void TraceStatus();

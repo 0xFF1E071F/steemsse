@@ -2024,7 +2024,7 @@ Problem: too many cases of WU1, that should be the rarer one
   }
 #if defined(SSE_SHIFTER_60HZ_OVERSCAN) 
 /*  Removing lower border at 60hz. Simpler test, not many cases.
-    Fixes Leavin' Terramis in monitor mode.
+    Fixes Leavin' Teramis in monitor mode.
 */
   else if(on_overscan_limit==LIMIT_BOTTOM && shifter_freq_at_start_of_vbl==60 
     && FreqAtCycle(502-4)==50) 
@@ -2798,7 +2798,7 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
  STE doc by Paranoid: for compatibility reasons, the low-byte
  of the Video Base Address is ALWAYS set to 0 when the mid- or high-byte of
  the Video Base Address are set. 
- E.g.: Leavin' Terramis
+ E.g.: Leavin' Teramis
 
 */
      
@@ -2811,7 +2811,7 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
         FrameEvents.Add(scan_y,LINECYCLES,'V',io_src_b); 
 #endif
 
-      // asserts on SoWatt, Leavin' Terramis, High Fidelity Dreams
+      // asserts on SoWatt, Leavin' Teramis, High Fidelity Dreams
       // ...
       //ASSERT( mem_len>FOUR_MEGS || !(io_src_b&(~b00111111)) ); 
       if (mem_len<=FOUR_MEGS) 
@@ -3453,7 +3453,7 @@ void TShifter::Reset(bool Cold) {
 #if defined(SSE_SHIFTER_TRICKS)
   for(int i=0;i<32;i++)
   {
-    shifter_freq_change[i]=0; // interference Leavin' Terramis/Flood on PP43
+    shifter_freq_change[i]=0; // interference Leavin' Teramis/Flood on PP43
     shifter_shift_mode_change_time[i]=-1;
   }
 #endif

@@ -50,7 +50,7 @@ MEM_ADDRESS TFrameEvents::GetSDP(int x,int guessed_scan_y) {
     if(m_FrameEvent[i].Scanline==guessed_scan_y)
     {
       if(m_FrameEvent[i].Type=='@' && !sdp)
-        sdp=m_FrameEvent[i].Value<<16; // fails if 1st word=0 (Leavin' Terramis)
+        sdp=m_FrameEvent[i].Value<<16; // fails if 1st word=0 (Leavin' Teramis)
       else if(m_FrameEvent[i].Type=='@' && sdp)
       {
         sdp|=m_FrameEvent[i].Value; // at start of line

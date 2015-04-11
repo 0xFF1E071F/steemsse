@@ -611,9 +611,9 @@ Far more on the ST.
 
 
 
-/////////
-// STW //
-/////////
+///////////////
+// STW + SCP //
+///////////////
 
 #if defined(SSE_DISK_STW)
 
@@ -621,6 +621,7 @@ Far more on the ST.
 
 #endif
 
+#define DISK_EXT_SCP "SCP"
 
 /////////////
 // TIMINGS //

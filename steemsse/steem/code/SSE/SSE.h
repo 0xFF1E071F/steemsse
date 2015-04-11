@@ -1588,7 +1588,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SHIFTER_0BYTE_LINE
 #define SSE_SHIFTER_4BIT_SCROLL //Let's do the Twist again
 //#define SSE_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK
-#define SSE_SHIFTER_60HZ_OVERSCAN //Leavin' Terramis
+#define SSE_SHIFTER_60HZ_OVERSCAN //Leavin' Teramis
 #define SSE_SHIFTER_END_OF_LINE_CORRECTION // correct +2, -2 lines 
 #define SSE_SHIFTER_FIX_LINE508_CONFUSION // hack at recording Shifter event
 #define SSE_SHIFTER_HIRES_OVERSCAN//3.7.0
@@ -2270,7 +2270,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_SHIFTER_0BYTE_LINE_SYNC //Forest
 #endif
 #define SSE_SHIFTER_4BIT_SCROLL //Let's do the Twist again
-#define SSE_SHIFTER_60HZ_OVERSCAN //Leavin' Terramis
+#define SSE_SHIFTER_60HZ_OVERSCAN //Leavin' Teramis
 #define SSE_SHIFTER_LINE_PLUS_2_THRESHOLD //Forest
 #define SSE_SHIFTER_MED_OVERSCAN // BPOC
 #define SSE_SHIFTER_NON_STOPPING_LINE // Enchanted Land
@@ -3937,7 +3937,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_D3D_STRETCH_FORCE // only stretch: better for list modes
 #endif//d3d
 #endif//vid
-#ifdef SSE_YM2149 
+#ifdef SSE_YM2149
 #undef SSE_YM2149_ENV_FIX1 //my mistake
 #define SSE_YM2149_DELAY_RENDERING // so that we use table also for envelope
 #define SSE_YM2149_QUANTIZE1
@@ -4070,7 +4070,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#define TEST03
 //#define TEST04
 //#define TEST05
-//#define TEST06
+//#define TEST06 
 //#define TEST07
 //#define TEST08
 //#define TEST09
@@ -4088,28 +4088,66 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_DRIVE_WRITE_TRACK_11
 //#define SSE_GUI_FULLSCREEN_NO_VSYNC_OPTION //but all the rest?
 //#define SSE_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
+//#define SSE_TOS_GEMDOS_FDUP // for EmuTOS - it's fixed already, undef
 
-#define SSE_TOS_GEMDOS_FDUP // for EmuTOS
 #define SSE_DISK_SCP // Supercard Pro disk image format support
-#define SSE_DISK_SCP_FUZZY_DM //tailored for Dungeon Master
+
+#define SSE_DISK_SCP_LS //TODO
+//#define SSE_DISK_SCP_TO_MFM_PREVIEW // old interpret flux function
+#define SSE_DISK_SCP_START_REV1 // Turrican
 #define SSE_DISK_SCP_WRITE //not tested
+
 #define SSE_DRIVE_INDEX_PULSE2 // count revs
-#define SSE_WD1772_MFM2 // improvements for SCP 
+#define SSE_DRIVE_INDEX_PULSE3 // continue reading data
+#define SSE_DRIVE_INDEX_PULSE_SCP
+
+
+#define SSE_WD1772_BYTES_BEFORE_DAM
+
+#define SSE_WD1772_AM_LOGIC // object
+
+#define SSE_WD1772_FUZZY_BITS
+
+#define SSE_WD1772_PRECISE_SYNC // some WD1772 code inspired by SPS 
+                            //  (CapsFDCEmulator.cpp)
+
+#define SSE_WD1772_DPLL // some WD1772 code inspired by MAME/MESS (wd_fdc.c)
+
+
+#define SSE_WD1772_AM_3A1 // not C2
+
+
+
+//#define SSE_WD1772_MFM_PRODUCE_TABLE // one-shot switch...
+#define SSE_WD1772_STR_TR00
+
+
+
+
 
 #ifdef DEBUG_BUILD
 #define SSE_BOILER_BLIT_IN_HISTORY
 #define SSE_BOILER_BLIT_WHEN_STOPPED // dangerous?
+//#define SSE_BOILER_FLUSH_TRACE
+#define SSE_BOILER_AUTO_FLUSH_TRACE//of course
+#else
+#undef SSE_INT_MFP_RATIO_OPTION 
+#undef SSE_INT_MFP_RATIO_OPTION2
 #endif
 
 #endif
 
 #if defined(SSE_BETA_BUGFIX)
 
+#define SSE_DMA_TRACK_TRANSFER2 // also for CAPS images
 #define SSE_MMU_SDP1B
+#if defined(SSE_SOUND_VOL_LOGARITHMIC_2)
 #define SSE_SOUND_VOL_LOGARITHMIC_3
+#endif
 #define SSE_DRIVE_SOUND_VOLUME_3
-#define SSE_YM2149_DELAY_RENDERING2
-
+#define SSE_YM2149_DELAY_RENDERING2 //bug in v3.7.0
+#define SSE_YM2149_QUANTIZE2 //bug in v3.7.0
+#define SSE_VAR_UNRAR2 //ok with RAR5
 #endif//beta
 
 #else//!SS

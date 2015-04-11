@@ -285,12 +285,20 @@ enum logsection_enum_tag {
 #define TRACE_CONTROL_FDCBYTES (1<<14)//no logsection needed
 #define TRACE_CONTROL_FDCPSG (1<<13)//drive/side
 #define TRACE_CONTROL_FDCREGS (1<<12)// writes to registers CR,TR,SR,DR
+
+#if SSE_VERSION>370
+#define TRACE_CONTROL_FDCMFM (1<<11)
+#define TRACE_CONTROL_FDCDMA (1<<10)
+#else
 #define TRACE_CONTROL_FDCIPF1 (1<<11)//lock info
 #define TRACE_CONTROL_FDCIPF2 (1<<10)//sectors
+#endif
 
 #define TRACE_MASK4 (Debug.ControlMask[13]) //cpu
 #define TRACE_CONTROL_CPU_REGISTERS (1<<15) 
-#define TRACE_CONTROL_CPU_SP (1<<14) 
+#define TRACE_CONTROL_CPU_REGISTERS_VAL (1<<14)  // values of (Ai)
+#define TRACE_CONTROL_CPU_SP (1<<13) 
+#define TRACE_CONTROL_CPU_CYCLES (1<<12) 
 
 #endif
 
@@ -486,6 +494,30 @@ enum logsection_enum_tag {
 #define TRACE_MFP // some code left to the compiler
 #endif
 #endif
+
+
+
+
+
+// TRACE_MFM 3.7.1
+#if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_TRACE_CONTROL)
+#ifdef __cplusplus // visible only to C++ objects
+#define TRACE_MFM if(TRACE_MASK3&TRACE_CONTROL_FDCMFM) Debug.LogSection=LOGSECTION_FDC, Debug.TraceLog //!
+#endif//C++
+#else
+#if defined(VC_BUILD) // OK for Unix?
+#define TRACE_MFM(x) // no code left?
+#else
+#define TRACE_MFM // some code left to the compiler
+#endif
+#endif
+
+
+
+
+
+
+
 
 // TRACE_OSD
 #if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DEBUG_MESSAGE)

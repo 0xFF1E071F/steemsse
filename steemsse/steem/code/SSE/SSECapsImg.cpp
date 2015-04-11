@@ -532,8 +532,10 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
 #if defined(SSE_IPF_TRACE_SECTORS) &&defined(SSE_DISK_IMAGETYPE) // debug info
   if(::SF314[drive].ImageType.Extension==EXT_IPF)
   {
+#if SSE_VERSION<=370 // included in image info
 #if defined(SSE_BOILER_TRACE_CONTROL) // controlled by boiler now (3.6.1)
     if(TRACE_MASK3&TRACE_CONTROL_FDCIPF2) 
+#endif
 #endif
     {
       CapsSectorInfo CSI;
