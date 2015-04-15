@@ -96,7 +96,7 @@ struct TWD1772AmDetector {
   // we keep those here because it's 32bit and integrated in the logic:
   int dsr,dsrcnt; 
 #else
-  WORD AMFound; 
+  WORD AMFound; // primitive system, remove before v3.7.1 release?
   WORD AMWindow;
 #endif
 

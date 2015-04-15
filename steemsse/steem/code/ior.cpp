@@ -852,15 +852,8 @@ when it does).
             int nShifts=DWORD(ABSOLUTE_CPU_TIME-MicroWire_StartTime)/CPU_CYCLES_PER_MW_SHIFT;
             if (nShifts>15){
               MicroWire_StartTime=0;
-#ifdef SSE_SOUND_MICROWIRE_READ1
-/*
-? How can i find out wether the Microwire interface is done ?
-
-! Simply check the value in the address+data register after you wrote your 
-value into it. If the value at $FFFF8922 is identical with the value you wrote 
-into it, the Microwire is done shifting and can once again be written to. In 
-all other cases, the Microwire is still shifting and cannot be written to.
-*/
+#ifdef SSE_SOUND_MICROWIRE_READ1 
+//v3.7.0, undef v3.7.1, fixes nothing, breaks Sleepwalker STE
               dat=MicroWire_Data;
 #endif
             }else{

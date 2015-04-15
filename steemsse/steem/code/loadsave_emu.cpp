@@ -956,7 +956,17 @@ Steem SSE will reset auto.sts and quit\nSorry!",
     MC68901.Init(); // in case of bad snapshot
 #endif
 
+  }//3.7.0
+
+  if(Version>=50) // 3.7.1
+  {
+#if defined(SSE_DISK_SCP_LS)
+    // nothing to do, it will be reinitiated when disk is inserted
+    // we don't save when disk is operating (TODO)
+#endif
   }
+
+
 
 
 #endif//#if defined(STEVEN_SEAGAL)

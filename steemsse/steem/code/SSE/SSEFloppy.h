@@ -64,6 +64,8 @@ extern TImageSTW ImageSTW[2];
 #if defined(SSE_DISK_SCP)
 extern TImageSCP ImageSCP[2];
 #define IMAGE_SCP (SF314[DRIVE].ImageType.Extension==EXT_SCP)
+#else
+#define IMAGE_SCP 0
 #endif
 
 #if defined(SSE_DMA)
