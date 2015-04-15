@@ -1342,6 +1342,11 @@ LRESULT __stdcall TJoystickConfig::GroupBoxWndProc(HWND Win,UINT Mess,WPARAM wPa
 #undef GET_THIS
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_STJOY_H)//v3.7.1
+#undef EXT
+#undef INIT
+#endif
+
 #ifdef UNIX
 #include "x/x_joy.cpp"
 #endif

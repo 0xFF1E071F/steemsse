@@ -3,7 +3,7 @@
 //Update "FileVersion" and "ProductVersion" too!
 #define STEEM_VER_MAJOR 3
 #define STEEM_VER_MINOR_1 7
-#define STEEM_VER_MINOR_2 0
+#define STEEM_VER_MINOR_2 1
 
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION STEEM_VER_MAJOR,STEEM_VER_MINOR_1,STEEM_VER_MINOR_2,0
@@ -21,12 +21,12 @@ BEGIN
             VALUE "Comments", "Atari ST Emulator for all Windows systems\000"
             VALUE "CompanyName", "Anthony and Russell Hayward\000"
             VALUE "FileDescription", "Steem Engine (Atari ST Emulator)\000"
-            VALUE "FileVersion", "3.7.0\000"
+            VALUE "FileVersion", "3.7.1\000"
             VALUE "InternalName", "Steem\000"
             VALUE "LegalCopyright", "Copyright Anthony and Russell Hayward\000"
-            VALUE "OriginalFilename", "Steem SSE 3.7.0.exe\000"
+            VALUE "OriginalFilename", "Steem SSE 3.7.1.exe\000"
             VALUE "ProductName", "The Steem Engine\000"
-            VALUE "ProductVersion", "3.7.0\000"
+            VALUE "ProductVersion", "3.7.1\000"
         END
     END
     BLOCK "VarFileInfo"

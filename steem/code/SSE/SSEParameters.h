@@ -360,8 +360,10 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define HD6301_CYCLES_TO_RECEIVE_BYTE (1350)
 
 // far from ideal, but maybe we must change method or timings instead //v3.7 done!
+#if !defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
 #define HD6301_MOUSE_SPEED_CHUNKS 15
 #define HD6301_MOUSE_SPEED_CYCLES_PER_CHUNK 1000
+#endif
 
 #endif
 

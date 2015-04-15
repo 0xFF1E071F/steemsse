@@ -3850,10 +3850,12 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SOUND_INLINE2E
 #define SSE_SOUND_INLINE2F
 #endif
+
 #define SSE_SOUND_MICROWIRE_MASK1 //bugfix
 #define SSE_SOUND_MICROWIRE_MASK2 //incorrect doc (?)
 #define SSE_SOUND_MICROWIRE_READ1
 #define SSE_SOUND_MICROWIRE_WRITE_LATENCY_B //Antiques 
+
 #undef  SSE_SOUND_VOL //Antiques sounds better without this precaution
 #define SSE_SOUND_VOL_LOGARITHMIC_2 // bugfix on resume
 #endif
@@ -4065,7 +4067,7 @@ Beta: not SSE_PRIVATE_BUILD
 ///////////////
 
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
-//#define TEST01
+#define TEST01
 //#define TEST02
 //#define TEST03
 //#define TEST04
@@ -4091,8 +4093,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_TOS_GEMDOS_FDUP // for EmuTOS - it's fixed already, undef
 
 #define SSE_DISK_SCP // Supercard Pro disk image format support
-
-#define SSE_DISK_SCP_LS //TODO
+#define SSE_DISK_SCP_LS // in fact nothing to do
 //#define SSE_DISK_SCP_TO_MFM_PREVIEW // old interpret flux function
 #define SSE_DISK_SCP_START_REV1 // Turrican
 #define SSE_DISK_SCP_WRITE //not tested
@@ -4101,27 +4102,15 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DRIVE_INDEX_PULSE3 // continue reading data
 #define SSE_DRIVE_INDEX_PULSE_SCP
 
-
 #define SSE_WD1772_BYTES_BEFORE_DAM
-
 #define SSE_WD1772_AM_LOGIC // object
-
 #define SSE_WD1772_FUZZY_BITS
-
 #define SSE_WD1772_PRECISE_SYNC // some WD1772 code inspired by SPS 
                             //  (CapsFDCEmulator.cpp)
-
 #define SSE_WD1772_DPLL // some WD1772 code inspired by MAME/MESS (wd_fdc.c)
-
-
 #define SSE_WD1772_AM_3A1 // not C2
-
-
-
 //#define SSE_WD1772_MFM_PRODUCE_TABLE // one-shot switch...
 #define SSE_WD1772_STR_TR00
-
-
 
 
 
@@ -4148,6 +4137,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_YM2149_DELAY_RENDERING2 //bug in v3.7.0
 #define SSE_YM2149_QUANTIZE2 //bug in v3.7.0
 #define SSE_VAR_UNRAR2 //ok with RAR5
+#undef SSE_SOUND_MICROWIRE_READ1 //Sleepwalker STE
 #endif//beta
 
 #else//!SS

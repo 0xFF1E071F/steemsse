@@ -180,8 +180,8 @@ WORD TImageSCP::GetMfmData(WORD position) {
 #endif
 
 #if defined(SSE_WD1772_PRECISE_SYNC)
-	// clear dsr signals
-	WD1772.Amd.aminfo&=~(CAPSFDC_AI_DSRREADY|CAPSFDC_AI_DSRAM|CAPSFDC_AI_DSRMA1);
+  // clear dsr signals
+  WD1772.Amd.aminfo&=~(CAPSFDC_AI_DSRREADY|CAPSFDC_AI_DSRAM|CAPSFDC_AI_DSRMA1);
   // loop until break
   for(int i=0; ;i++) 
 #else
@@ -498,7 +498,7 @@ bool TImageSCP::LoadTrack(BYTE side,BYTE track
     with a single rev.
 */
     if(reload)
-      rev=rev++;
+      rev++;
     else
       rev=0;
     rev=rev%file_header.IFF_NUMREVS;

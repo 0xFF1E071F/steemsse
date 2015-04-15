@@ -2098,7 +2098,6 @@ void TOptionBox::CreateSoundPage()
      page_l+15+Wid,y,150,20,Handle,(HMENU)7311,HInstance,NULL);
 #endif
   SendMessage(Win,TBM_SETRANGE,0,MAKELPARAM(0,100));
-#
   db=SF314[0].Sound_Volume;
 #if defined(SSE_VS2008)
   position= pow(10, log10((float)101)*(db + 10000)/10000 )-1 ;
@@ -3160,7 +3159,6 @@ Windows 2000	5.0
      page_l+15+Wid,y,150,20,Handle,(HMENU)7311,HInstance,NULL);
 #endif
   SendMessage(Win,TBM_SETRANGE,0,MAKELPARAM(0,100));
-#
   int db=SF314[0].Sound_Volume;
 #if defined(SSE_VS2008)
   int position= pow(10, log10((float)101)*(db + 10000)/10000 )-1 ;

@@ -1100,6 +1100,7 @@ void TDiskManager::AddFileOrFolderContextMenu(HMENU Pop,DiskManFileInfo *Inf)
 
         int FileZip=0;
         if (Inf->Zip){
+          //SS MSA Converter doesn't work with RAR files
           if (MenuESL.NumStrings==0 && has_extension(Inf->Path,"zip")) FileZip=true;
         }
         if (FileZip){

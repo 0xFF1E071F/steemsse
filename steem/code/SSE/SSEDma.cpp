@@ -527,7 +527,7 @@ TODO?
 #endif
 
 
-#if defined(SSE_BOILER_TRACE_CONTROL)
+#if defined(SSE_BOILER_TRACE_CONTROL) && SSE_VERSION>370
   if(TRACE_MASK3 & TRACE_CONTROL_FDCDMA)
     TRACE_FDC("PC %X DMA R %X %X\n",old_pc,addr,ior_byte);
 #endif
@@ -540,7 +540,7 @@ void TDma::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
 
   ASSERT( (addr&0xFFFF00)==0xFF8600 );
 
-#if defined(SSE_BOILER_TRACE_CONTROL)
+#if defined(SSE_BOILER_TRACE_CONTROL) && SSE_VERSION>370
   if(TRACE_MASK3 & TRACE_CONTROL_FDCDMA)
     TRACE_FDC("PC %X DMA W %X %X\n",old_pc,addr,io_src_b);
 #endif

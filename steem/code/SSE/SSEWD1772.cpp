@@ -771,7 +771,7 @@ void TWD1772::TraceStatus() {
     So it doesn't work with emulation cycles like CapsImg but with timed
     events like Pasti. Still not sure what's the best approach here.
     For a better support of SCP format, we integrated parts inspired by
-    competitor SPS/CAPS/Kryoflux.
+    their competitor SPS/CAPS/Kryoflux.
 */
 
 ///////////////////////////////// Debug ///////////////////////////////////////
@@ -980,7 +980,7 @@ void TWD1772Crc::Reset() {
 /*  This is the correct algorithm for the WD1772 DPLL (digital phase-locked 
     loop) system, as described in patent US 4808884 A.
     It allows us to read low-level (flux level) disk images such as SCP.
-    Thx to by Olivier Galibert for some inspiration, otherwise the code
+    Thx to Olivier Galibert for some inspiration, otherwise the code
     would be a real MESS, err, mess...
 */
 
@@ -1031,96 +1031,96 @@ int TWD1772Dpll::GetNextBit(int &tm, BYTE drive) {
   if(when==-1 || when-ctime<0)
     return -1;
 
-	for(;;) {
-		int etime = ctime+delays[slot];
+  for(;;) {
+    int etime = ctime+delays[slot];
 
-		if(transition_time == 0xffff && when!=-1 && etime-when >= 0)
-			transition_time = counter;
+    if(transition_time == 0xffff && when!=-1 && etime-when >= 0)
+      transition_time = counter;
 
-		if(slot < 8) {
-			BYTE mask = 1 << slot;
-			if(phase_add & mask)
-				counter += 226;
-			else if(phase_sub & mask)
-				counter += 30;
-			else
-				counter += increment;
+    if(slot < 8) {
+      BYTE mask = 1 << slot;
+      if(phase_add & mask)
+        counter += 226;
+      else if(phase_sub & mask)
+        counter += 30;
+      else
+        counter += increment;
 
-			if((freq_add & mask) && increment < 140)
-				increment++;
-			else if((freq_sub & mask) && increment > 117)
-				increment--;
-		} else
-			counter += increment;
+      if((freq_add & mask) && increment < 140)
+        increment++;
+      else if((freq_sub & mask) && increment > 117)
+        increment--;
+    } else
+      counter += increment;
 
-		slot++;
-		tm = etime;
-		if(counter & 0x800)
-			break;
-	}
+    slot++;
+    tm = etime;
+    if(counter & 0x800)
+      break;
+  }
 
   int bit = transition_time != 0xffff;
 
-	if(transition_time != 0xffff) {
-		static const BYTE pha[8] = { 0xf, 0x7, 0x3, 0x1, 0, 0, 0, 0 };
-		static const BYTE phs[8] = { 0, 0, 0, 0, 0x1, 0x3, 0x7, 0xf };
-		static const BYTE freqa[4][8] = {
-			{ 0xf, 0x7, 0x3, 0x1, 0, 0, 0, 0 },
-			{ 0x7, 0x3, 0x1, 0, 0, 0, 0, 0 },
-			{ 0x7, 0x3, 0x1, 0, 0, 0, 0, 0 },
-			{ 0, 0, 0, 0, 0, 0, 0, 0 }
-		};
-		static const BYTE freqs[4][8] = {
-			{ 0, 0, 0, 0, 0, 0, 0, 0 },
-			{ 0, 0, 0, 0, 0, 0x1, 0x3, 0x7 },
-			{ 0, 0, 0, 0, 0, 0x1, 0x3, 0x7 },
-			{ 0, 0, 0, 0, 0x1, 0x3, 0x7, 0xf },
-		};
+  if(transition_time != 0xffff) {
+    static const BYTE pha[8] = { 0xf, 0x7, 0x3, 0x1, 0, 0, 0, 0 };
+    static const BYTE phs[8] = { 0, 0, 0, 0, 0x1, 0x3, 0x7, 0xf };
+    static const BYTE freqa[4][8] = {
+      { 0xf, 0x7, 0x3, 0x1, 0, 0, 0, 0 },
+      { 0x7, 0x3, 0x1, 0, 0, 0, 0, 0 },
+      { 0x7, 0x3, 0x1, 0, 0, 0, 0, 0 },
+      { 0, 0, 0, 0, 0, 0, 0, 0 }
+    };
+    static const BYTE freqs[4][8] = {
+      { 0, 0, 0, 0, 0, 0, 0, 0 },
+      { 0, 0, 0, 0, 0, 0x1, 0x3, 0x7 },
+      { 0, 0, 0, 0, 0, 0x1, 0x3, 0x7 },
+      { 0, 0, 0, 0, 0x1, 0x3, 0x7, 0xf },
+    };
 
-		int cslot = transition_time >> 8;
-		phase_add = pha[cslot];
-		phase_sub = phs[cslot];
-		int way = transition_time & 0x400 ? 1 : 0;
-		if(history & 0x80)
-			history = way ? 0x80 : 0x83;
-		else if(history & 0x40)
-			history = way ? history & 2 : (history & 2) | 1;
-		freq_add = freqa[history & 3][cslot];
-		freq_sub = freqs[history & 3][cslot];
-		history = way ? (history >> 1) | 2 : history >> 1;
-	} else
-		phase_add = phase_sub = freq_add = freq_sub = 0;
+    int cslot = transition_time >> 8;
+    phase_add = pha[cslot];
+    phase_sub = phs[cslot];
+    int way = transition_time & 0x400 ? 1 : 0;
+    if(history & 0x80)
+      history = way ? 0x80 : 0x83;
+    else if(history & 0x40)
+      history = way ? history & 2 : (history & 2) | 1;
+    freq_add = freqa[history & 3][cslot];
+    freq_sub = freqs[history & 3][cslot];
+    history = way ? (history >> 1) | 2 : history >> 1;
+  } else
+    phase_add = phase_sub = freq_add = freq_sub = 0;
 
-	counter &= 0x7ff;
-	ctime = tm;
-	transition_time = 0xffff;
-	slot = 0;
+  counter &= 0x7ff;
+  ctime = tm;
+  transition_time = 0xffff;
+  slot = 0;
   ASSERT( bit==0 || bit==1 );
-	return bit;
+  return bit;
 }
 
 
 void TWD1772Dpll::Reset(int when) {
-	counter = 0;
-	increment = 128;
-	transition_time = 0xffff;
-	history = 0x80;
-	slot = 0;
-	latest_transition= ctime = when;
-	phase_add = 0x00;
-	phase_sub = 0x00;
-	freq_add  = 0x00;
-	freq_sub  = 0x00;
-	write_position = 0;
-	write_start_time = -1;//int::never;
+  counter = 0;
+  increment = 128;
+  transition_time = 0xffff;
+  history = 0x80;
+  slot = 0;
+  latest_transition= ctime = when;
+  phase_add = 0x00;
+  phase_sub = 0x00;
+  freq_add  = 0x00;
+  freq_sub  = 0x00;
+  write_position = 0;
+  write_start_time = -1;
   SetClock(1); // clock WD1772 = clock CPU, 16 cycles = 2 microseconds
 }
 
 
 void TWD1772Dpll::SetClock(const int &period)
 {
-	for(int i=0; i<42; i++)
-		delays[i] = period*(i+1);
+  for(int i=0; i<42; i++)
+    delays[i] = period*(i+1);
 }
 
 #endif
@@ -1133,9 +1133,9 @@ void TWD1772Dpll::SetClock(const int &period)
 void TWD1772AmDetector::Enable() {
   Enabled=true;
 #if defined(SSE_WD1772_PRECISE_SYNC)
-	aminfo|=CAPSFDC_AI_AMDETENABLE|CAPSFDC_AI_CRCENABLE;
-	aminfo&=~(CAPSFDC_AI_CRCACTIVE|CAPSFDC_AI_AMACTIVE);
-	amisigmask=CAPSFDC_AI_DSRAM;
+  aminfo|=CAPSFDC_AI_AMDETENABLE|CAPSFDC_AI_CRCENABLE;
+  aminfo&=~(CAPSFDC_AI_CRCACTIVE|CAPSFDC_AI_AMACTIVE);
+  amisigmask=CAPSFDC_AI_DSRAM;
 #endif
 }
 
@@ -1973,7 +1973,7 @@ r1       r0            1772
 
 
 #if defined(SSE_WD1772_AM_3A1) 
-    else if(n00>=3 && ((DSR&0xFE)==0xF8 ||  (DSR&0xFE)==0xFA )) // DAM found
+    else if(n00==3 && ((DSR&0xFE)==0xF8 ||  (DSR&0xFE)==0xFA )) // DAM found
 #else
     else if( (DSR&0xFE)==0xF8 ||  (DSR&0xFE)==0xFA ) // DAM found
 #endif
@@ -2388,12 +2388,15 @@ void  TWD1772::WriteCR(BYTE io_src_b) {
 #endif
 
 #if defined(SSE_WD1772_PRECISE_SYNC)
-/*  This is the correct algorithm for the WD1772 AM synchronisation
-    and data transfer.
+/*  This is the correct algorithm for the WD1772 data separator.
     It interprets the bit flow from disk images such as SCP.
-    Thx to István Fábián for some inspiration otherwise Steem would FAIL
+    
+    Fluxes -> DPLL -> data separator -> DSR
+
+    Thx to Istvan Fabian for some inspiration otherwise Steem would FAIL
     (err, why write in CAPS?) on some disk images that use the $C2 sync mark,
     like Albedo and Jupiter's Masterdrive.
+    Note: my comments in this function marked by SS
 */
 
 bool TWD1772::ShiftBit(int bit) {
@@ -2415,8 +2418,8 @@ bool TWD1772::ShiftBit(int bit) {
 
   // am detector if enabled
   if(Amd.Enabled) {
-    //if (aminfo & CAPSFDC_AI_AMDETENABLE) { // TODO
-    //ASSERT(aminfo & CAPSFDC_AI_AMDETENABLE); //asserts...
+    //if (aminfo & CAPSFDC_AI_AMDETENABLE) { //SS TODO
+    //ASSERT(aminfo & CAPSFDC_AI_AMDETENABLE); //SS asserts...
     // not a mark in shifter/decoder
     int amt=0;
 
@@ -2474,8 +2477,8 @@ bool TWD1772::ShiftBit(int bit) {
           // if CRC logic is not activate yet reset CRC value and counter, 16 cells already available as mark
           if (!(aminfo & CAPSFDC_AI_CRCACTIVE)) {
             aminfo|=CAPSFDC_AI_CRCACTIVE;
-            //pc->crc=~0; // keep ours
-            CrcLogic.crccnt=16; // TODO, better repartition of vars, there's a crc object... when it works!
+            //pc->crc=~0; //SS keep ours
+            CrcLogic.crccnt=16; 
           }
         }
 
@@ -2551,8 +2554,8 @@ bool TWD1772::ShiftBit(int bit) {
   Amd.aminfo=aminfo;
 
   // if a byte is complete, break and signal new byte
-  //  if (Amd.aminfo & Amd.amisigmask) { //hangs...
-  if (Amd.aminfo & CAPSFDC_AI_DSRREADY) { //?
+  //  if (Amd.aminfo & Amd.amisigmask) { //SS hangs...
+  if (Amd.aminfo & CAPSFDC_AI_DSRREADY) { //SS ?
     TRACE_MFM(" byte %d = %X ",Disk[DRIVE].current_byte,Amd.dsr);
 #if defined(SSE_WD1772_PRECISE_SYNC)
     byte_ready=true;

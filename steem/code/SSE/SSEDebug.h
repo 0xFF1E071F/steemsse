@@ -495,10 +495,6 @@ enum logsection_enum_tag {
 #endif
 #endif
 
-
-
-
-
 // TRACE_MFM 3.7.1
 #if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_TRACE_CONTROL)
 #ifdef __cplusplus // visible only to C++ objects
@@ -512,12 +508,18 @@ enum logsection_enum_tag {
 #endif
 #endif
 
-
-
-
-
-
-
+// TRACE_TOS 3.7.1
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#ifdef __cplusplus // visible only to C++ objects
+#define TRACE_TOS Debug.LogSection=LOGSECTION_STEMDOS, Debug.TraceLog //!
+#endif//C++
+#else
+#if defined(VC_BUILD) // OK for Unix?
+#define TRACE_TOS(x) // no code left?
+#else
+#define TRACE_TOS // some code left to the compiler
+#endif
+#endif
 
 // TRACE_OSD
 #if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DEBUG_MESSAGE)
