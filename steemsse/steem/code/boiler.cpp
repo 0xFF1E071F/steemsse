@@ -1311,7 +1311,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               break;
 #endif
 
-#if defined(SSE_BOILER_PSEUDO_STACK)
+#if defined(SSE_BOILER_PSEUDO_STACK)// && !defined(SSE_BOILER_PSEUDO_STACK2)
             case 917:
               new mem_browser(IOLIST_PSEUDO_AD_STACK,DT_MEMORY);
               {
@@ -1410,7 +1410,8 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 #if defined(SSE_BOILER_BROWSER_BLITTER)
         items++;
 #endif
-#if defined(SSE_BOILER_PSEUDO_STACK)
+
+#if defined(SSE_BOILER_PSEUDO_STACK) && !defined(SSE_BOILER_PSEUDO_STACK2)
         items++;
 #endif
 
@@ -1707,7 +1708,7 @@ void DWin_init()
   AppendMenu(mem_browser_menu,MF_STRING,909,"New I&KBD Browser");
 #endif
 
-#if defined(SSE_BOILER_PSEUDO_STACK)
+#if defined(SSE_BOILER_PSEUDO_STACK) && !defined(SSE_BOILER_PSEUDO_STACK2)
   AppendMenu(mem_browser_menu,MF_STRING,917,"Pseudo Stack");
 #endif
 
@@ -1828,6 +1829,10 @@ void DWin_init()
   AppendMenu(sse_menu,MF_STRING|MF_SEPARATOR,0,NULL);
   AppendMenu(sse_menu,MF_STRING,1527,STR_FAKE_IO_CONTROL);
 #endif
+#if defined(SSE_BOILER_PSEUDO_STACK) && defined(SSE_BOILER_PSEUDO_STACK2)
+  AppendMenu(sse_menu,MF_STRING,917,"Pseudo Stack");
+#endif
+
 #endif//ss_debug
 
   log("STARTUP: calling iolist_init");

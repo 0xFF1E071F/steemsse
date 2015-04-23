@@ -98,7 +98,11 @@ struct TSF314 {
 #endif
 
 #if defined(SSE_DRIVE_INDEX_PULSE)
+#if defined(SSE_DRIVE_INDEX_PULSE3)
+  void IndexPulse(bool image_triggered=false);
+#else
   void IndexPulse();
+#endif
   void Motor(bool state);
 #endif
 

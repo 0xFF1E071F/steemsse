@@ -1,4 +1,4 @@
-// for v3.7
+// for v3.7.1
 #pragma once // VC guard
 #ifndef STEVEN_SEAGAL_H // BCC guard
 #define STEVEN_SEAGAL_H
@@ -4067,7 +4067,7 @@ Beta: not SSE_PRIVATE_BUILD
 ///////////////
 
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
-#define TEST01
+//#define TEST01
 //#define TEST02
 //#define TEST03
 //#define TEST04
@@ -4093,18 +4093,28 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_TOS_GEMDOS_FDUP // for EmuTOS - it's fixed already, undef
 
 #define SSE_DISK_SCP // Supercard Pro disk image format support
+#define SSE_DISK_SCP2 // dev switch
+#define SSE_DISK_SCP3 //dev switch
+#define SSE_DISK_SCP4 //dev switch
 #define SSE_DISK_SCP_LS // in fact nothing to do
 //#define SSE_DISK_SCP_TO_MFM_PREVIEW // old interpret flux function
 #define SSE_DISK_SCP_START_REV1 // Turrican
 #define SSE_DISK_SCP_WRITE //not tested
-
 #define SSE_DRIVE_INDEX_PULSE2 // count revs
-#define SSE_DRIVE_INDEX_PULSE3 // continue reading data
+#define SSE_DRIVE_INDEX_PULSE3 // trigger by image object possible
+#define SSE_DRIVE_INDEX_PULSE4 // change safety
+
 #define SSE_DRIVE_INDEX_PULSE_SCP
+
 
 #define SSE_WD1772_BYTES_BEFORE_DAM
 #define SSE_WD1772_AM_LOGIC // object
-#define SSE_WD1772_FUZZY_BITS
+
+#define SSE_WD1772_WEAK_BITS
+#define SSE_WD1772_WEAK_BITS2 //using delays in us (hack)
+//#define SSE_WD1772_WEAK_BITS2A
+//#define SSE_WD1772_WEAK_BITS2B
+#define SSE_WD1772_WEAK_BITS2C
 #define SSE_WD1772_PRECISE_SYNC // some WD1772 code inspired by SPS 
                             //  (CapsFDCEmulator.cpp)
 #define SSE_WD1772_DPLL // some WD1772 code inspired by MAME/MESS (wd_fdc.c)
@@ -4114,11 +4124,19 @@ Beta: not SSE_PRIVATE_BUILD
 
 
 
-#ifdef DEBUG_BUILD
+#define SSE_VS2008_WARNING_371
+
+#if defined(SSE_DEBUG)
+#define SSE_OSD_DRIVE_INFO_EXT // STX, MSA... 
+#endif
+
+#if defined(DEBUG_BUILD)
 #define SSE_BOILER_BLIT_IN_HISTORY
 #define SSE_BOILER_BLIT_WHEN_STOPPED // dangerous?
 //#define SSE_BOILER_FLUSH_TRACE
 #define SSE_BOILER_AUTO_FLUSH_TRACE//of course
+#define SSE_BOILER_LOGSECTIONS1 // init: too heavy (CPU log)
+#define SSE_BOILER_PSEUDO_STACK2 //in SSE menu
 #else
 #undef SSE_INT_MFP_RATIO_OPTION 
 #undef SSE_INT_MFP_RATIO_OPTION2

@@ -1027,7 +1027,7 @@ void event_scanline()
 #ifdef SSE_DEBUG
   else
   {
-    ASSERT(!hbl_pending);
+    //ASSERT(!hbl_pending);
     TRACE_INT("%d %d %d (%d) no HBI, %d cycles into HBI IACK\n",TIMING_INFO,ACT,abs_quick(cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt));
 #if defined(SSE_OSD_CONTROL)
     if(OSD_MASK1 & OSD_CONTROL_IACK)

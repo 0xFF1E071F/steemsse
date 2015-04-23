@@ -415,10 +415,17 @@ void SaveSnapShot(char *,int=-1,bool=true) {}
 #ifdef ENABLE_LOGFILE
 void load_logsections()
 {
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_BOILER_LOGSECTIONS1))
+/*  CPU TRACE is extremely heavy - default = all disabled
+*/
   for (int n=0;n<100;n++) logsection_enabled[n]=true;
+#endif
 
   FILE *f=fopen(WriteDir+SLASH "logsection.dat","rb");
   if (f!=NULL){
+#if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_LOGSECTIONS1)
+    for (int n=0;n<100;n++) logsection_enabled[n]=true;
+#endif
     char tb[50];
     for(;;){
       if (fgets(tb,49,f)==0) break;
@@ -881,7 +888,7 @@ void SaveState(ConfigStoreFile *pCSF)
   pCSF->SetInt("Debug Options","Monospace Disa",debug_monospace_disa);
   pCSF->SetInt("Debug Options","Uppercase Disa",debug_uppercase_disa);
 
-  FILE *bf=fopen(WriteDir+SLASH "logsection.dat","wb");
+  FILE *bf=fopen(WriteDir+SLASH "logsection.dat","wb"); //SS another odd part!
   if (bf){
     for (int n=0;n<100;n++){
       if (logsection_enabled[n]==false) fprintf(bf,"%i\r\n",n);

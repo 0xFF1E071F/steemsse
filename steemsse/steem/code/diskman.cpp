@@ -2763,7 +2763,7 @@ LRESULT __stdcall TDiskManager::Drive_Icon_WndProc(HWND Win,UINT Mess,WPARAM wPa
     {
       GET_THIS;
       This->MenuTarget=disk;
-      ASSERT(disk==disk&1);
+      ASSERT(disk==(disk&1));
       HMENU Pop=CreatePopupMenu();
 #if defined(SSE_DRIVE_SINGLE_SIDE_NOPASTI)
       if(SF314[disk].ImageType.Manager!=MNGR_PASTI)

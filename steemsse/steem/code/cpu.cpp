@@ -6507,7 +6507,11 @@ TODO
 #if defined(SSE_CPU_ROUNDING_SCC)
       if(DEST_IS_REGISTER){INSTRUCTION_TIME(2);}else {CPU_ABUS_ACCESS_WRITE;}
 #endif
+#if defined(SSE_VS2008_WARNING_371)
+      m68k_DEST_B=(BYTE)0xff; //stupid warning
+#else
       m68k_DEST_B=0xff;
+#endif
 #if !defined(SSE_CPU_ROUNDING_SCC)
       if(DEST_IS_REGISTER){INSTRUCTION_TIME(2);}else {INSTRUCTION_TIME(4);}
 #endif

@@ -41,7 +41,7 @@ void TFrameEvents::Add(int scanline, int cycle, char type, int value) {
 #if defined(SSE_DEBUG_REPORT_SDP_ON_CLICK)
 MEM_ADDRESS TFrameEvents::GetSDP(int x,int guessed_scan_y) {
   MEM_ADDRESS sdp=NULL;
-  int i,j;
+  int i;
 #if defined(SSE_BOILER_FRAME_REPORT_MASK) //skip if not recorded
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SDP_LINES) 
 #endif
