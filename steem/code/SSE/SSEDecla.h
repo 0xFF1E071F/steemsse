@@ -48,6 +48,7 @@ typedef unsigned char BYTE;
 #if defined(VC_BUILD)
 #pragma warning (1 : 4710) // function '...' not inlined as warning L1
 #pragma warning (disable : 4800) // 'int' : forcing value to bool 'true' or 'false' (performance warning)
+#pragma warning(disable : 4996)// This function or variable may be unsafe.
 #if defined(_MSC_VER) && _MSC_VER <= 1200
 #pragma warning (disable : 4127) //conditional expression is constant (for scope trick)
 #endif

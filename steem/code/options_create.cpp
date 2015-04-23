@@ -1343,7 +1343,11 @@ void TOptionBox::CreateFullscreenPage()
                           page_l+5+w+Offset,y,Wid,200,Handle,(HMENU)7319,HInstance,NULL);
   ToolAddWindow(ToolTip,Win,T("With Direct3D option you have the choice between all the 32bit modes your video card can handle."));
   D3DDISPLAYMODE Mode;
+#if defined(SSE_VS2008_WARNING_371)
+  for(UINT i=0;i<nD3Dmodes;i++)
+#else
   for(int i=0;i<nD3Dmodes;i++)
+#endif
   {
     Disp.pD3D->EnumAdapterModes(Adapter,DisplayFormat,i,&Mode);
     char tmp[20];

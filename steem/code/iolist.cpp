@@ -308,7 +308,7 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
 
 #if defined(SSE_OSD_CONTROL)
   iolist_add_entry(FAKE_IO_START+4,"OSD1",2,
-    "irq|ikbd|iack|.|.|.|.|.|.|.|.|.|.|.|.|.");
+    "irq|ikbd|iack|fdc|.|.|.|.|.|.|.|.|.|.|.|.");
   iolist_add_entry(FAKE_IO_START+6,"OSD2 CPU",2,
     "trace|bombs|io|reset|prefetch|.|.|.|.|.|.|.|.|.|.|.");
   iolist_add_entry(FAKE_IO_START+8,"OSD2 Shifter",2,

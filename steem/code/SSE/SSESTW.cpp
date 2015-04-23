@@ -20,6 +20,8 @@
 #define SWAP_WORD(val)
 #endif
 
+#include <fdc.decla.h> //DRIVE
+
 #define HEADER_SIZE (4+2+1+1+2) //STW Version nSides nTracks nBytes
 
 #define NUM_SIDES nSides//2
@@ -111,7 +113,7 @@ WORD TImageSTW::GetMfmData(WORD position) {
 #ifdef SSE_DEBUG
   else 
   {
-    TRACE_LOG("GetMfmData(%d) error\n",position);
+    TRACE_LOG("GetMfmData(%c:%d) error\n",'A'+DRIVE,position);
     TRACE_OSD("STW ERR");
   }
 #endif
@@ -141,9 +143,14 @@ bool  TImageSTW::LoadTrack(BYTE side,BYTE track) {
     ASSERT( !strncmp("TRK",(char*)ImageData+position,3) );
     ASSERT( *(ImageData+position+3)==side );
     ASSERT( *(ImageData+position+4)==track );
+#ifdef SSE_DEBUG
+    if(TrackData!=(WORD*)(ImageData+position+TRACK_HEADER_SIZE)) //only once
+      TRACE_LOG("STW LoadTrack %c: side %d track %d\n",'A'+DRIVE,side,track);  
+#endif
     TrackData=(WORD*)(ImageData+position+TRACK_HEADER_SIZE);
     
-    TRACE_LOG("STW LoadTrack side %d track %d at %d\n",side,track,position);  
+    //TRACE_LOG("STW LoadTrack side %d track %d at %d\n",side,track,position);  
+    
     ok=true;
   }
 #ifdef SSE_DEBUG

@@ -497,11 +497,8 @@ void osd_draw()
   }
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DEBUG_MESSAGE)
-  if(Debug.OsdTimer>timer
-    ////|| runstate!=RUNSTATE_RUNNING//TODO
-    )
+  if(Debug.OsdTimer>timer)
   {
-//    TRACE("osd %s %d %d\n",Debug.m_OsdMessage,Debug.OsdTimer,timer);
     DWORD col=col_yellow[0];
 #define THE_LEFT 0//(x1/2)
 #define THE_RIGHT (x1/2)//((x1))
@@ -610,7 +607,7 @@ void osd_draw()
 #define THE_LEFT (x1/2)
 #define THE_RIGHT ((x1))
 #ifdef SSE_DEBUG
-#define BUFFER_LENGTH (10+2+3) //2bytes for command
+#define BUFFER_LENGTH (10+4+2+3) //4bytes for ext, 2bytes for command
 #else
 #define BUFFER_LENGTH (10+2) //"D:S-TR-SEC" drive-side-track-sector
 #endif
@@ -621,7 +618,21 @@ void osd_draw()
           char tmp_buffer[BUFFER_LENGTH];
 
 #ifdef SSE_DEBUG // add current command (CR)
+
+#ifdef SSE_OSD_DRIVE_INFO_EXT
+/*  Instead of the status bar, we put image info on debug OSD track info,
+    so it's valid for both drives, we see clearly what happens with
+    different types mixed.
+*/
+          static char *extension_list[]={ "ST","MSA","DIM","STT","STX","IPF",
+            "CTR","STW","PRG","TOS","SCP"};
+          ASSERT(SF314[DRIVE].ImageType.Extension-1>=0);
+          ASSERT(SF314[DRIVE].ImageType.Extension-1<EXT_SCP);
+          sprintf(tmp_buffer,"%C:%s-%02X-%d-%02d-%02d",'A'+DRIVE,
+            extension_list[SF314[DRIVE].ImageType.Extension-1],fdc_cr,
+#else
           sprintf(tmp_buffer,"%2X-%C:%d-%02d-%02d",fdc_cr,'A'+DRIVE,
+#endif
             CURRENT_SIDE,floppy_head_track[DRIVE],
             (WD1772.CommandType()==2||(WD1772.CR&0xF0)==0xC0)?fdc_sr:0);
 #else

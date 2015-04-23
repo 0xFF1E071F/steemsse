@@ -926,14 +926,14 @@ void TDma::UpdateRegs(bool trace_them) {
   }
 #endif
 
-#ifdef SSE_DEBUG//no mask yet but important info
-
+#if defined(SSE_OSD_CONTROL) //finally done this
+  if(OSD_MASK1 & OSD_CONTROL_FDC)
+  {
   if((fdc_str&0x10))
     TRACE_OSD("RNF"); 
-
-  if((fdc_str&0x08))
+  else if((fdc_str&0x08)) // one or the other, we don't combine those traces
     TRACE_OSD("CRC"); 
-
+  }
 #endif
 
 }

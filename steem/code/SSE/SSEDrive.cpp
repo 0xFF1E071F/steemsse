@@ -388,13 +388,15 @@ int TSF314::CyclesPerByte() {
   cycles/=rpm/60; // per rotation (300/60 = 5)
   cycles/=Disk[Id].TrackBytes; // per byte
   cycles_per_byte=cycles; // save
+  ASSERT(cycles);
   return cycles;
 }
 
 
 #if defined(SSE_DRIVE_INDEX_PULSE)
 
-/*  Function called by event manager in run.cpp
+/*  Function called by event manager in run.cpp based on preset timing
+    or by the image object when we're  going through the last byte.
     Motor must be on, a floppy disk must be inside.
     The drive must be selected for the pulse to go to the WD1772.
     If conditions are not met, we put timing of next check 1 second away,
@@ -402,17 +404,26 @@ int TSF314::CyclesPerByte() {
     though 1/sec is OK!
 */
 
+#if defined(SSE_DRIVE_INDEX_PULSE3)
+void TSF314::IndexPulse(bool image_triggered) {
+#else
 void TSF314::IndexPulse() {
-
+#endif
   ASSERT(Id==0||Id==1);
+
+#if defined(SSE_DRIVE_INDEX_PULSE4) // moving safety
+  time_of_next_ip=time_of_next_event+n_cpu_cycles_per_second; 
+#endif
   
   if(ImageType.Manager!=MNGR_WD1772||FloppyDrive[Id].Empty()||!State.motor)
   {
+#if !defined(SSE_DRIVE_INDEX_PULSE4)
 #ifdef SSE_DEBUG
     if(YM2149.SelectedDrive==Id)
       TRACE_LOG("%c: Manager %d Empty %d motor %d\n",'A'+Id,ImageType.Manager,FloppyDrive[Id].Empty(),State.motor);
 #endif
     time_of_next_ip=ACT+n_cpu_cycles_per_second; // put into future
+#endif
     return; 
   }
 
@@ -423,21 +434,28 @@ void TSF314::IndexPulse() {
 #endif
 
   // Make sure that we always end track at the same byte when R/W
-  // Important for Realm of the Trolls
+  // Important for Realm of the Trolls TODO: as for SCP
   if(!State.reading && !State.writing 
+#if defined(SSE_DISK_SCP2)
+    || IMAGE_SCP
+#endif
     || Disk[Id].current_byte>=Disk[Id].TrackBytes-1) // 0 - n-1
     Disk[Id].current_byte=0;
 
   // Program next event, at next IP or in 1 sec (more?)
-  ASSERT(State.motor);//note...
+  ASSERT(State.motor);
+#if !defined(SSE_DRIVE_INDEX_PULSE4)
   if(State.motor)
+#endif
   {
 #if defined(SSE_DRIVE_INDEX_PULSE_SCP)
 /*  We set up a timing for next IP, but if the drive is reading there are 
     chances the SCP object will trigger IP itself at the end of the track.
     This is a place where we could have bug reports.
 */
-    if(IMAGE_SCP)
+    if(IMAGE_SCP // an image is inside
+      && ImageSCP[DRIVE].track_header.TDH_TABLESTART[ImageSCP[DRIVE].rev].\
+        TDH_DURATION) // a track is loaded... (else it's 0 and it hangs)
     {
       time_of_next_ip=time_of_last_ip 
         + ImageSCP[DRIVE].track_header.TDH_TABLESTART[ImageSCP[DRIVE].rev].\
@@ -448,9 +466,11 @@ void TSF314::IndexPulse() {
 #endif
       time_of_next_ip=time_of_last_ip + CyclesPerByte() * Disk[Id].TrackBytes;
   }
+#if !defined(SSE_DRIVE_INDEX_PULSE4)
   else //as a safety, or it could hang //TODO
     time_of_next_ip=ACT+n_cpu_cycles_per_second; // put into future
-
+#endif
+  ASSERT(time_of_next_ip-time_of_last_ip>0);
   //TRACE_LOG("%c: IP at %d next at %d (%d cycles, %d ms)\n",Id,time_of_last_ip,time_of_next_ip,time_of_next_ip-time_of_last_ip,(time_of_next_ip-time_of_last_ip)/(n_cpu_cycles_per_second/1000));
 
 #if defined(SSE_DRIVE_INDEX_PULSE2)
@@ -459,8 +479,11 @@ void TSF314::IndexPulse() {
 
   // send pulse to WD1772
   if(DRIVE==Id)
+#if defined(SSE_DRIVE_INDEX_PULSE3)
+    WD1772.OnIndexPulse(Id,image_triggered);
+#else
     WD1772.OnIndexPulse(Id); 
-
+#endif
 }
 
 
@@ -537,7 +560,7 @@ void TSF314::Step(int direction) {
   }
   WD1772.Lines.track0=(floppy_head_track[Id]==0);
   if(WD1772.Lines.track0)
-    WD1772.STR|=TWD1772::STR_T0; // doing it here?
+    WD1772.STR|=TWD1772::STR_T00; // doing it here?
   CyclesPerByte();  // compute - should be the same every track but...
   //TRACE_LOG("Drive %d Step d%d new track: %d\n",Id,direction,floppy_head_track[Id]);
 }
@@ -563,8 +586,19 @@ void TSF314::Read() {
 
   if(!State.reading || Disk[Id].current_byte>=Disk[Id].TrackBytes-1)
   {
+#if defined(SSE_DISK_SCP2)
+/*  We should refactor this so that also STW images trigger IP, but my
+    first attempt didn't work at all so...
+*/
+    if(!State.reading || !(IMAGE_SCP) )
+      Disk[Id].current_byte=BytePosition();
+    else
+      Disk[Id].current_byte++;
+    State.reading=true; 
+#else
     State.reading=true; 
     Disk[Id].current_byte=BytePosition();
+#endif
 //    TRACE_LOG("Start reading at byte %d\n",Disk[Id].current_byte);
   }
   else // get next byte regardless of timing
@@ -639,7 +673,6 @@ void TSF314::Write() {
   if(WD1772.update_time-ACT<0)
     WD1772.update_time=ACT+cycles_per_byte;
 }
-
 
 #endif
 

@@ -239,6 +239,7 @@ enum logsection_enum_tag {
 #define OSD_CONTROL_INTERRUPT               (1<<15)
 #define OSD_CONTROL_IKBD                  (1<<14)
 #define OSD_CONTROL_IACK              (1<<13)
+#define OSD_CONTROL_FDC              (1<<12)
 
 #define OSD_MASK_CPU (Debug.ControlMask[3])
 #define OSD_CONTROL_CPUTRACE           (1<<15)

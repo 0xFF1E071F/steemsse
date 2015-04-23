@@ -71,15 +71,19 @@ struct  TImageSCP {
   WORD GetMfmData(WORD position); 
   void SetMfmData(WORD position, WORD mfm_data);
 #if defined(SSE_WD1772_DPLL)
+#ifdef SSE_WD1772_WEAK_BITS2
+  int GetNextTransition(BYTE& us_to_next_flux);
+#else
   int GetNextTransition();
+#endif
 #endif
   // other functions
   TImageSCP();
   ~TImageSCP();
   void ComputePosition(WORD position);
-  int GetDelayInUnits(int position);
-  int GetDelayInUs(int delay_in_units);
-#if !defined(SSE_WD1772_PRECISE_SYNC)
+  int UnitsToNextFlux(int position);
+  int UsToNextFlux(int units_to_next_flux);
+#if !defined(SSE_WD1772_PRECISE_SYNC)  || defined(SSE_DISK_SCP_TO_MFM_PREVIEW)
   BYTE GetDelay(int position);
 #endif
   void IncPosition();
@@ -96,17 +100,16 @@ struct  TImageSCP {
   TSCP_track_header track_header;
   DWORD Position;
   BYTE rev;
-
 private: 
   FILE *fCurrentImage;
-  DWORD *absolute_delay; // from IP
+  DWORD *TimeFromIndexPulse; // from IP
 #if !defined(SSE_WD1772_DPLL) || defined(SSE_DISK_SCP_WRITE)
   BYTE ShiftsToNextOne;
 #endif
 #if defined(SSE_DISK_SCP_WRITE)
   bool is_dirty;
 #endif
-#if defined(SSE_WD1772_FUZZY_BITS) && !defined(SSE_WD1772_DPLL)
+#if defined(SSE_WD1772_WEAK_BITS) && !defined(SSE_WD1772_DPLL)
   char weak_bit_shift;
 #endif
 #if defined(SSE_BOILER) && defined(SSE_DISK_SCP_TO_MFM_PREVIEW)

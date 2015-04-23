@@ -467,7 +467,16 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #endif
 
     SF314[drive].ImageType.Manager=MNGR_STEEM;
+#ifdef SSE_OSD_DRIVE_INFO_EXT //gotta be a smarter way...
+    if(MSA)
+      SF314[drive].ImageType.Extension=EXT_MSA;
+    else if (DIM)
+      SF314[drive].ImageType.Extension=EXT_DIM;
+    else
+      SF314[drive].ImageType.Extension=EXT_ST;
+#else
     SF314[drive].ImageType.Extension=MSA?EXT_MSA:EXT_ST; //DIM?
+#endif
 #endif
 
     // Open for read for an MSA (going to convert to ST and write to that)
@@ -761,9 +770,15 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       }
 
       fseek(nf,HeaderLen,SEEK_SET);
-
+#ifdef SSE_OSD_DRIVE_INFO_EXT
+      //this is pretty annoying, this RemoveDisk
+      TImageType save_type=SF314[drive].ImageType;
+#endif
       RemoveDisk();
-
+#ifdef SSE_OSD_DRIVE_INFO_EXT
+      //this is pretty annoying, this RemoveDisk
+      SF314[drive].ImageType=save_type;
+#endif
       f=nf;
       BytesPerSector=short(bpbi.BytesPerSector);
       SectorsPerTrack=short(bpbi.SectorsPerTrack);

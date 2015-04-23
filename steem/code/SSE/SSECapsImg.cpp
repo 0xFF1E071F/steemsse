@@ -539,7 +539,11 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
 #endif
     {
       CapsSectorInfo CSI;
+#if defined(SSE_VS2008_WARNING_371)
+      DWORD sec_num;
+#else
       int sec_num;
+#endif
       TRACE_LOG("sector info (encoder,cell type,data,gap info)\n");
       for(sec_num=1;sec_num<=track_info.sectorcnt;sec_num++)
       {

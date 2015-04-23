@@ -1529,7 +1529,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 #if defined(SSE_BOILER_TRACE_CONTROL) // controlled by boiler now (3.6.1)
             if(TRACE_MASK3 & TRACE_CONTROL_FDCPSG)
 #endif
-              TRACE_FDC("PSG-A %X %c%d:\n",io_src_b,'A'+YM2149.SelectedDrive,YM2149.SelectedSide);
+              TRACE_FDC("PC %X PSG %X -> %c%d:\n",old_pc,io_src_b,'A'+YM2149.SelectedDrive,YM2149.SelectedSide);
 #endif
 #endif//#ifndef SSE_DEBUG_TRACE_IDE
 #ifdef ENABLE_LOGFILE

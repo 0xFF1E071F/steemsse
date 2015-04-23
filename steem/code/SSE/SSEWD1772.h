@@ -75,7 +75,7 @@ struct TWD1772Dpll {
   int write_start_time;
   int write_buffer[32];
   int write_position;
-#if defined(SSE_WD1772_FUZZY_BITS) && defined(SSE_WD1772_DPLL)
+#if defined(SSE_WD1772_WEAK_BITS) && defined(SSE_WD1772_DPLL)
   char weak_bit_pairing;
 #endif
 
@@ -89,6 +89,7 @@ struct TWD1772AmDetector {
 
   void Enable();
   bool Enabled;
+  BYTE nA1; // counter
 #if defined(SSE_WD1772_PRECISE_SYNC)
   void Reset();
   BYTE amdatadelay,ammarkdist,ammarktype,amdataskip;
@@ -113,7 +114,7 @@ struct TWD1772 {
 */
   enum { STR_MO=BIT_7,STR_WP=BIT_6,STR_RT=BIT_5,STR_SU=BIT_5,
     STR_RNF=BIT_4,STR_SE=BIT_4,STR_CRC=BIT_3,STR_LD=BIT_2,
-    STR_T0=BIT_2,STR_DRQ=BIT_1,STR_IP=BIT_1,STR_BUSY=BIT_0
+    STR_T00=BIT_2,STR_DRQ=BIT_1,STR_IP=BIT_1,STR_BUSY=BIT_0
   };
 
   enum { CR_U=BIT_4,CR_M=BIT_4,CR_H=BIT_3,CR_V=BIT_2,CR_E=BIT_2,
@@ -172,9 +173,6 @@ struct TWD1772 {
     WD_TYPEIV_4, // $D4
     WD_TYPEIV_8, // $D8
     WD_MOTOR_OFF,
-#if defined(SSE_DRIVE_INDEX_PULSE3)
-    WD_NONE
-#endif
   };
   void NewCommand(BYTE command);
   int prg_phase;
@@ -214,14 +212,6 @@ struct TWD1772 {
   TWD1772MFM Mfm;
 #endif
 
-#if defined(SSE_WD1772_DPLL)
-  TWD1772Dpll Dpll;
-#endif
-
-#if defined(SSE_WD1772_AM_LOGIC)
-  TWD1772AmDetector Amd; // not the processor
-#endif
-
 #if defined(SSE_FDC_FORCE_INTERRUPT) || defined(SSE_WD1772)
   BYTE InterruptCondition; // guessed
 #endif
@@ -254,10 +244,17 @@ struct TWD1772 {
 
 #if defined(SSE_DISK_STW)
   BYTE n00,nFF,n_format_bytes; // to examine sequences before ID
-#endif
+#endif //n00, nFF aren't actually used and could be recycled
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_FLOPPY_EVENT)
   int update_time; // when do we need to come back?
+#endif
+  
+#if defined(SSE_WD1772_DPLL)
+  TWD1772Dpll Dpll;
+#endif
+#if defined(SSE_WD1772_AM_LOGIC)
+  TWD1772AmDetector Amd; // not the processor
 #endif
 
 /*  functions
@@ -295,7 +292,12 @@ struct TWD1772 {
 #endif
 
 #if defined(SSE_DRIVE_INDEX_PULSE)
+#if defined(SSE_DRIVE_INDEX_PULSE3)
+  // called by drive or by image
+  void OnIndexPulse(int id,bool image_triggered); 
+#else
   void OnIndexPulse(int id); // called by drives (activates ip line)
+#endif
 #endif
 
 #if defined(SSE_DISK_GHOST)
