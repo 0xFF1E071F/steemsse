@@ -956,7 +956,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_FDC_MULTIPLE_SECTORS
 #define SSE_FDC_PRECISE_HBL
 #define SSE_FDC_READ_ADDRESS_UPDATE_SR
-#define SSE_FDC_RESET
+#define SSE_WD1772_RESET
 #define SSE_FDC_RESTORE
 //#define SSE_FDC_RESTORE1//undef to remove bug //?
 #define SSE_FDC_SEEK
@@ -1020,6 +1020,9 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_WD1772)
 
+#define SSE_WD1772_CRC 
+#define SSE_WD1772_IDFIELD 
+#define SSE_WD1772_MFM 
 #define SSE_WD1772_F7_ESCAPE
 #define SSE_WD1772_PHASE
 #define SSE_WD1772_REG2 // DSR, ByteCount
@@ -2836,13 +2839,13 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DRIVE_11_SECTORS
 #define SSE_DRIVE_READ_TRACK_11
 #define SSE_DRIVE_READ_TRACK_11B //Gap 4: 1
-#define SSE_DRIVE_READ_TRACK_11C //Gap 5#endif
+#define SSE_DRIVE_READ_TRACK_11C //Gap 5
 #endif
 #if defined(SSE_FDC_ACCURATE) 
 #define SSE_FDC_FORCE_INTERRUPT // Panzer rotation using $D4
 #define SSE_FDC_FORCE_INTERRUPT_D4
 #define SSE_FDC_INDEX_PULSE2 // read STR
-#define SSE_FDC_RESET
+#define SSE_WD1772_RESET
 #define SSE_FDC_INDEX_PULSE_COUNTER
 #endif//fdc
 #endif//flp
@@ -3318,6 +3321,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if SSE_VERSION>=363
 
 #if defined(SSE_FLOPPY)
+#define SSE_WD1772     // WD1772 floppy disk controller (IO, STW...)
 #if defined(SSE_DMA)
 #undef SSE_DMA_FDC_READ_HIGH_BYTE //def 3.6.2
 #endif
@@ -3666,9 +3670,12 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_PASTI_ONLY_STX_OPTION2 //remove disk manager option
 #endif
 #endif
-#define SSE_WD1772
+//#define SSE_WD1772
 #if defined(SSE_WD1772)
+#define SSE_WD1772_CRC 
 #define SSE_WD1772_F7_ESCAPE
+#define SSE_WD1772_IDFIELD 
+#define SSE_WD1772_MFM 
 #define SSE_WD1772_PHASE
 #define SSE_WD1772_REG2 // DSR, ByteCount
 #define SSE_WD1772_REG2_B // StatusType
@@ -4110,6 +4117,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_WD1772_BYTES_BEFORE_DAM
 #define SSE_WD1772_AM_LOGIC // object
 
+
+
+#define SSE_WD1772_MOTOR1
+
 #define SSE_WD1772_WEAK_BITS
 #define SSE_WD1772_WEAK_BITS2 //using delays in us (hack)
 //#define SSE_WD1772_WEAK_BITS2A
@@ -4156,6 +4167,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_YM2149_QUANTIZE2 //bug in v3.7.0
 #define SSE_VAR_UNRAR2 //ok with RAR5
 #undef SSE_SOUND_MICROWIRE_READ1 //Sleepwalker STE
+#define SSE_DRIVE_READ_TRACK_11C2 //ProCopy 1.50 Analyze
+#undef SSE_DMA_COUNT_CYCLES //again... ;)
+#define SSE_WD1772_TYPE3_RNF
 #endif//beta
 
 #else//!SS

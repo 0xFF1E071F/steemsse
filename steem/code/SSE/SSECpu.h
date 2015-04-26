@@ -1051,12 +1051,14 @@ inline void TM68000::Process() {
 */
   if(TRACE_ENABLED)
   {
+#if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK4 & TRACE_CONTROL_CPU_CYCLES)
     {
       TRACE_LOG("\nCycles %d %d %d (%d)\n",ACT,FRAMECYCLES,LINECYCLES,scan_y);
     }
 
-#if defined(SSE_DEBUG_TRACE_IO) 
+//#if defined(SSE_DEBUG_TRACE_IO) 
+
     if(TRACE_MASK4 & TRACE_CONTROL_CPU_REGISTERS)
     {
       if(!(TRACE_MASK4 & TRACE_CONTROL_CPU_CYCLES))

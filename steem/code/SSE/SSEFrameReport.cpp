@@ -167,13 +167,12 @@ int TFrameEvents::Vbl() {
   {
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_VIDEO
-
 #if defined(SSE_SHIFTER_REPORT_VBL_TRICKS)
 #if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK1 & TRACE_CONTROL_SUMMARY)
 #endif
       TRACE_LOG("VBL %d Shifter tricks %X\n",nVbl,Debug.ShifterTricks);
-#undef LOGSECTION
+//#undef LOGSECTION
 #endif  
 
 #ifdef SSE_BOILER
