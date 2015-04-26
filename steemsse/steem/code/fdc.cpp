@@ -2091,6 +2091,7 @@ void agenda_floppy_read_track(int part)
         int i=0;
         for (int n=0;n<22;n++) pre_sect[i++]=0x4e;  // Gap 1 & 3 (22 bytes)
 #if defined(STEVEN_SEAGAL) && defined(SSE_DRIVE_READ_TRACK_11)
+        //ASSERT(nSects<11);
 /*
 Gap 2 Pre ID                    12+3        12+3         3+3     00+A1
 */
@@ -2207,6 +2208,7 @@ CRC                                2           2           2
 /*
 Gap 4 Post Data                   40          40           1      4E
 */
+        //ASSERT(nSects<11);
         BYTE gap4bytes=(nSects>=11?1:24);
         if (num_bytes_to_write>0 && byte_idx>=0 && byte_idx<gap4bytes){
           while (num_bytes_to_write>0){
@@ -2239,8 +2241,14 @@ Gap 4 Post Data                   40          40           1      4E
       }else{
         // End of track, read in 0x4e
 #if defined(SSE_DRIVE_READ_TRACK_11C)
+        //ASSERT(nSects<11);
+#if defined(SSE_DRIVE_READ_TRACK_11C2)
+        BYTE gap5bytes=(nSects>=11?20:16); //ProCopy 1.5 Analyze
+        // isn't it a bug anyway? More gap with 11 than 9-10 ???
+#else
         //BYTE gap5bytes=(nSects>=11?20:16); //tmp, break nothing
         BYTE gap5bytes=SF314[DRIVE].PreIndexGap();
+#endif
         write_to_dma(0x4e,gap5bytes);
         BytesRead+=gap5bytes;
         //TRACE("end of track %d bytes\n",gap5bytes);

@@ -19,6 +19,8 @@ The structure is used by SSEWD1772.cpp, but also by SSEGhostDisk.cpp.
 
 */
 
+#if defined(SSE_WD1772_IDFIELD)
+
 struct TWD1772IDField {
   BYTE track;
   BYTE side;
@@ -32,6 +34,9 @@ struct TWD1772IDField {
 //#endif  
 };
 
+#endif
+
+#if defined(SSE_WD1772_MFM)
 
 struct TWD1772MFM {
   enum {NORMAL_CLOCK,FORMAT_CLOCK};
@@ -43,6 +48,9 @@ struct TWD1772MFM {
   unsigned int data_last_bit:1;
 };
 
+#endif
+
+#if defined(SSE_WD1772_CRC)
 
 struct TWD1772Crc {
   WORD crc;
@@ -54,6 +62,7 @@ struct TWD1772Crc {
 #endif
 };
 
+#endif
 
 #if defined(SSE_WD1772_DPLL)
 
@@ -208,8 +217,12 @@ struct TWD1772 {
 #endif
   // definition is outside the class but objects belong to the class
   TWD1772IDField IDField; // to R/W those fields
+#if defined(SSE_WD1772_CRC)
   TWD1772Crc CrcLogic;
+#endif
+#if defined(SSE_WD1772_MFM)
   TWD1772MFM Mfm;
+#endif
 #endif
 
 #if defined(SSE_FDC_FORCE_INTERRUPT) || defined(SSE_WD1772)
@@ -264,7 +277,7 @@ struct TWD1772 {
   void IOWrite(BYTE Line,BYTE io_src_b);
   BYTE CommandType(int command=-1); // I->IV
 
-#if defined(SSE_FDC_RESET)
+#if defined(SSE_WD1772_RESET)
   void Reset(bool Cold);
 #endif
 

@@ -294,7 +294,7 @@ void reset_peripherals(bool Cold)
   Shifter.Reset(Cold);
 #endif
 
-#if defined(SSE_FDC_RESET)
+#if defined(SSE_WD1772_RESET)
   WD1772.Reset(Cold);
 #endif
 

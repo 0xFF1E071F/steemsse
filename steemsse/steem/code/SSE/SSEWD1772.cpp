@@ -29,17 +29,34 @@
 #include "SSEInterrupt.h"
 #include "SSEWD1772.h"
 
-
-#if defined(SSE_FDC) // other switch?
+#if defined(SSE_FDC)
+//#if defined(SSE_WD1772)
 
 #define LOGSECTION LOGSECTION_FDC
 
+#if defined(SSE_WD1772_RESET)
 
+void TWD1772::Reset(bool Cold) {
+  STR=2; // funny, like ACIA
+#ifdef SSE_FDC_FORCE_INTERRUPT
+  InterruptCondition=0;
+#endif
+#if defined(SSE_FDC_INDEX_PULSE_COUNTER)
+ // IndexCounter=0;
+#endif
 
+#ifdef SSE_WD1772_REG2_B
+  StatusType=1;
+#endif
 
-/////////////////////////////////// WD1772 ////////////////////////////////////
-/* Generic/dispatching functions of WD1772.
-*/
+#if defined(SSE_DISK_GHOST)
+  Lines.CommandWasIntercepted=0;
+#endif
+}
+
+#endif//reset
+
+/////////////////////////////////// GHOST /////////////////////////////////////
 
 #if defined(SSE_DISK_GHOST)
 /*  Ghost disks are described in doc/sse/stg.txt and implemented in
@@ -211,28 +228,12 @@ bool TWD1772::CheckGhostDisk(BYTE drive, BYTE io_src_b) {
   
 }
 
-#endif
+#endif//ghost
 
-
-
-BYTE TWD1772::CommandType(int command) {
-  // return type 1-4 of this FDC command
-  if(command==-1) //default: current command
-    command=CR;
-  BYTE type;
-  if(!(command&BIT_7))
-    type=1;
-  else if(!(command&BIT_6))
-    type=2;
-  else if((command&0xF0)==0xD0) //1101
-    type=4;
-  else
-    type=3;
-  return type;
-}
-
-
+////////////////////////////////////// IO /////////////////////////////////////
 /*  DmaIO -> WD1772IO
+    IO is complicated because there are various WD1772 emulations running,
+    we must call the correct one!
 */
 
 
@@ -634,29 +635,23 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
   
 }
 
+///////////////////////////////////// ACC /////////////////////////////////////
 
-#if defined(SSE_FDC_RESET)
-
-void TWD1772::Reset(bool Cold) {
-  STR=2;
-#ifdef SSE_FDC_FORCE_INTERRUPT
-  InterruptCondition=0;
-#endif
-#if defined(SSE_FDC_INDEX_PULSE_COUNTER)
- // IndexCounter=0;
-#endif
-
-#ifdef SSE_WD1772_REG2_B
-  StatusType=1;
-#endif
-
-#if defined(SSE_DISK_GHOST)
-  Lines.CommandWasIntercepted=0;
-#endif
-
+BYTE TWD1772::CommandType(int command) {
+  // return type 1-4 of this FDC command
+  if(command==-1) //default: current command
+    command=CR;
+  BYTE type;
+  if(!(command&BIT_7))
+    type=1;
+  else if(!(command&BIT_6))
+    type=2;
+  else if((command&0xF0)==0xD0) //1101
+    type=4;
+  else
+    type=3;
+  return type;
 }
-
-#endif
 
 
 #if defined(SSE_DEBUG) || defined(SSE_OSD_DRIVE_LED)
@@ -667,8 +662,53 @@ int TWD1772::WritingToDisk() { // could do this at DMA level?
 
 #endif
 
+/////////#endif//SSE_FDC
+
+
+///////////////////////////////// Debug ///////////////////////////////////////
 
 #if defined(SSE_DEBUG)
+
+char* wd_phase_name[]={  // Coooool! note change if change enum !!!!!
+    "WD_READY",
+    "WD_TYPEI_SPINUP",
+    "WD_TYPEI_SPUNUP", // spunup must be right after spinup
+    "WD_TYPEI_SEEK",
+    "WD_TYPEI_STEP_UPDATE",
+    "WD_TYPEI_STEP",
+    "WD_TYPEI_STEP_PULSE",
+    "WD_TYPEI_CHECK_VERIFY",
+    "WD_TYPEI_HEAD_SETTLE",
+    "WD_TYPEI_FIND_ID",
+    "WD_TYPEI_READ_ID", // read ID must be right after find ID
+    "WD_TYPEI_TEST_ID", // test ID must be right after read ID
+    "WD_TYPEII_SPINUP",
+    "WD_TYPEII_SPUNUP", // spunup must be right after spinup
+    "WD_TYPEII_HEAD_SETTLE", //head settle must be right after spunup
+    "WD_TYPEII_FIND_ID",
+    "WD_TYPEII_READ_ID", // read ID must be right after find ID
+    "WD_TYPEII_TEST_ID", // test ID must be right after read ID
+    "WD_TYPEII_FIND_DAM",
+    "WD_TYPEII_READ_DATA",
+    "WD_TYPEII_READ_CRC",
+    "WD_TYPEII_CHECK_MULTIPLE",
+    "WD_TYPEII_WRITE_DAM",
+    "WD_TYPEII_WRITE_DATA",
+    "WD_TYPEII_WRITE_CRC",
+    "WD_TYPEIII_SPINUP",
+    "WD_TYPEIII_SPUNUP", // spunup must be right after spinup
+    "WD_TYPEIII_HEAD_SETTLE", //head settle must be right after spunup
+    "WD_TYPEIII_IP_START", // start read/write
+    "WD_TYPEIII_FIND_ID",
+    "WD_TYPEIII_READ_ID", // read ID must be right after find ID
+    "WD_TYPEIII_TEST_ID",
+    "WD_TYPEIII_READ_DATA",
+    "WD_TYPEIII_WRITE_DATA",
+    "WD_TYPEIII_WRITE_DATA2", // CRC is 1 byte in RAM -> 2 bytes on disk
+    "WD_TYPEIV_4", // $D4
+    "WD_TYPEIV_8", // $D8
+    "WD_MOTOR_OFF",
+  };
 
 /*
 Bits:
@@ -750,81 +790,12 @@ void TWD1772::TraceStatus() {
     TRACE_LOG(") "); 
 }
 
-#endif//debug
-
-#endif//SSE_FDC
-
-
-///////////////////////////////// WD1772 emu //////////////////////////////////
-
-/*  This is yet another WD1772 emulation, specially written to handle
-    STW disk images. 
-    A goal from the start was to be able to use it for another format
-    like SCP as well, hence we work with a spinning drive and a flow (of
-    bytes).
-    We follow Western Digital flow charts, with some additions and (gasp!) 
-    corrections. 
-    Because we use Dma.Drq() for each byte, the agenda system is too gross.
-    Each time an operation takes time, we set up an event that sends here.
-    Otherwise we use recursion to hop to next phase, it's better than
-    goto.
-    So it doesn't work with emulation cycles like CapsImg but with timed
-    events like Pasti. Still not sure what's the best approach here.
-    For a better support of SCP format, we integrated parts inspired by
-    their competitor SPS/CAPS/Kryoflux.
-*/
-
-///////////////////////////////// Debug ///////////////////////////////////////
-
-#if defined(SSE_DEBUG)
-
-char* wd_phase_name[]={  // Coooool! note change if change enum !!!!!
-    "WD_READY",
-    "WD_TYPEI_SPINUP",
-    "WD_TYPEI_SPUNUP", // spunup must be right after spinup
-    "WD_TYPEI_SEEK",
-    "WD_TYPEI_STEP_UPDATE",
-    "WD_TYPEI_STEP",
-    "WD_TYPEI_STEP_PULSE",
-    "WD_TYPEI_CHECK_VERIFY",
-    "WD_TYPEI_HEAD_SETTLE",
-    "WD_TYPEI_FIND_ID",
-    "WD_TYPEI_READ_ID", // read ID must be right after find ID
-    "WD_TYPEI_TEST_ID", // test ID must be right after read ID
-    "WD_TYPEII_SPINUP",
-    "WD_TYPEII_SPUNUP", // spunup must be right after spinup
-    "WD_TYPEII_HEAD_SETTLE", //head settle must be right after spunup
-    "WD_TYPEII_FIND_ID",
-    "WD_TYPEII_READ_ID", // read ID must be right after find ID
-    "WD_TYPEII_TEST_ID", // test ID must be right after read ID
-    "WD_TYPEII_FIND_DAM",
-    "WD_TYPEII_READ_DATA",
-    "WD_TYPEII_READ_CRC",
-    "WD_TYPEII_CHECK_MULTIPLE",
-    "WD_TYPEII_WRITE_DAM",
-    "WD_TYPEII_WRITE_DATA",
-    "WD_TYPEII_WRITE_CRC",
-    "WD_TYPEIII_SPINUP",
-    "WD_TYPEIII_SPUNUP", // spunup must be right after spinup
-    "WD_TYPEIII_HEAD_SETTLE", //head settle must be right after spunup
-    "WD_TYPEIII_IP_START", // start read/write
-    "WD_TYPEIII_FIND_ID",
-    "WD_TYPEIII_READ_ID", // read ID must be right after find ID
-    "WD_TYPEIII_TEST_ID",
-    "WD_TYPEIII_READ_DATA",
-    "WD_TYPEIII_WRITE_DATA",
-    "WD_TYPEIII_WRITE_DATA2", // CRC is 1 byte in RAM -> 2 bytes on disk
-    "WD_TYPEIV_4", // $D4
-    "WD_TYPEIV_8", // $D8
-    "WD_MOTOR_OFF",
-  };
-
 #endif
-
 
 ///////////////////////////////// ID Field ////////////////////////////////////
 
-#if defined(SSE_DISK_STW) || defined(SSE_DISK_GHOST)
+#if defined(SSE_WD1772_IDFIELD)
+//#if defined(SSE_DISK_STW) || defined(SSE_DISK_GHOST)
 
 TWD1772IDField::TWD1772IDField() {
 #ifdef SSE_UNIX
@@ -857,13 +828,14 @@ void TWD1772IDField::Trace() {
     Correct field must be filled in before calling a function:
     data -> Encode() -> clock and encoded word available 
     encoded word -> Decode() -> data & clock available 
-    If mode is FORMAT_CLOCK, the clock BYTE will have a missing bit
+    If mode is FORMAT_CLOCK, the clock byte will have a missing bit
     for bytes $A1 and $C2.
     MFM encoding is partly for fun, we could just store the clock
     and data bytes separately, it would be more efficient.
 */
 
-#if defined(SSE_DISK_STW)
+//#if defined(SSE_DISK_STW)
+#if defined(SSE_WD1772_MFM)
 
 void TWD1772MFM::Decode() {
 
@@ -943,7 +915,8 @@ void TWD1772MFM::Encode(int mode) {
     TODO: test on hardware
 */
 
-#if defined(SSE_DISK_STW)
+//#if defined(SSE_DISK_STW)
+#if defined(SSE_WD1772_CRC)
 
 void TWD1772Crc::Add(BYTE data) {
   fdc_add_to_crc(crc,data); // we just call Steem's original function for now
@@ -1200,10 +1173,26 @@ void TWD1772AmDetector::Reset() {
 
 #endif
 
+///////////////////////////////// WD1772 emu //////////////////////////////////
 
-/////////////////////////////////// WD1772 ////////////////////////////////////
-/*  Functions of WD1772 that are used to handle STW and SCP disk images.
+/*  This is yet another WD1772 emulation, specially written to handle
+    STW disk images. 
+    A goal from the start was to be able to use it for another format
+    like SCP as well, hence we work with a spinning drive and a flow (of
+    bytes).
+    We follow Western Digital flow charts, with some additions and (gasp!) 
+    corrections. 
+    Because we use Dma.Drq() for each byte, the agenda system is too gross.
+    Each time an operation takes time, we set up an event that sends here.
+    Otherwise we use recursion to hop to next phase, it's better than
+    goto.
+    So it doesn't work with emulation cycles like CapsImg but with timed
+    events like Pasti. Still not sure what's the best approach here.
+    For a better support of SCP format, we integrated parts inspired by
+    their competitor SPS/CAPS/Kryoflux.
 */
+
+
 #if defined(SSE_DISK_STW) || defined(SSE_DISK_SCP)
 
 bool TWD1772::Drq(bool state) {
@@ -1460,9 +1449,17 @@ void TWD1772::OnIndexPulse(int id) {
 #endif
   IndexCounter--; // We set counter then decrement until 0
 
-  // Cool! Giving the name of prg phase
+#ifdef SSE_DEBUG
+  if(prg_phase!=WD_READY)
+#if defined(SSE_DRIVE_INDEX_PULSE3)
+  TRACE_LOG("%c: IP #%d (%s) (%s) CR %X TR %d SR %d DR %d STR %X\n",
+    'A'+id,IndexCounter,wd_phase_name[prg_phase],image_triggered?"triggered":"timeout",
+    CR,TR,SR,DR,STR);
+#else
   TRACE_LOG("%c: IP #%d (%s) CR %X TR %d SR %d DR %d\n",
-    'A'+id,IndexCounter,wd_phase_name[prg_phase],CR,TR,SR,DR);
+    'A'+id,IndexCounter,wd_phase_name[prg_phase], CR,TR,SR,DR);
+#endif
+#endif
 
   if(!IndexCounter)
   {
@@ -1480,6 +1477,9 @@ void TWD1772::OnIndexPulse(int id) {
     case WD_TYPEI_READ_ID:
     case WD_TYPEII_FIND_ID:
     case WD_TYPEII_READ_ID:
+#if defined(SSE_WD1772_TYPE3_RNF) // undocumented but I knew it, v3.7.1
+    case WD_TYPEIII_FIND_ID: // Antago SCP (note: disk must be read-only)
+#endif
     case WD_TYPEIII_READ_ID:
       TRACE_LOG("Find ID timeout\n");
       STR|=STR_SE; // RNF is same bit as SE, OSD will be set by Dma.UpdateRegs
@@ -1505,9 +1505,10 @@ void TWD1772::OnIndexPulse(int id) {
         TRACE_LOG("Read track %c:%d-%d ",'A'+DRIVE,CURRENT_SIDE,CURRENT_TRACK);
         prg_phase=WD_TYPEIII_READ_DATA;
 #if defined(SSE_WD1772_AM_LOGIC)
-        Amd.Enabled=true;
 #if defined(SSE_WD1772_PRECISE_SYNC)
         Amd.Reset();
+#else
+        Amd.Enable();
 #endif
 #endif
         Read();
@@ -1537,6 +1538,9 @@ void TWD1772::OnIndexPulse(int id) {
 #if defined(SSE_DISK_GHOST)
       Lines.CommandWasIntercepted=0;
 #endif
+#if defined(SSE_WD1772_MOTOR1)
+      prg_phase=WD_READY;
+#endif
       break;
 
     default: // drive is spinning, WD isn't counting
@@ -1550,7 +1554,6 @@ void TWD1772::OnIndexPulse(int id) {
   }//if
   else
   {
-    ////    ASSERT(!n_format_bytes)
     n_format_bytes=n00=nFF=0; //?
 #if defined(SSE_DRIVE_INDEX_PULSE3)
     if(!image_triggered)
@@ -1773,7 +1776,11 @@ r1       r0            1772
       ASSERT(IMAGE_SCP);
       // AM detected, read returns on dsr ready
       Amd.amisigmask=CAPSFDC_AI_DSRREADY;
+#if defined(SSE_WD1772_AM_LOGIC)
+      Amd.nA1=3;
+#else
       n_format_bytes=3;
+#endif
       CrcLogic.Reset(); 
     }
     else
@@ -1791,7 +1798,11 @@ r1       r0            1772
 #endif
       )
     {
+#if defined(SSE_WD1772_AM_LOGIC)
+      Amd.nA1++;
+#else
       n_format_bytes++;
+#endif
 #if ! defined(SSE_WD1772_AM_3A1) // always A1, always reset
       if(DSR==0xA1
 #if defined(SSE_WD1772_AM_LOGIC) && !defined(SSE_WD1772_PRECISE_SYNC)
@@ -1823,7 +1834,11 @@ r1       r0            1772
       }
     }
 #endif
+#if defined(SSE_WD1772_AM_LOGIC)
+    else if( (DSR&0xFF)>=0xFC && Amd.nA1==3) // CAPS: $FC->$FF
+#else
     else if( (DSR&0xFF)>=0xFC && n_format_bytes==3) // CAPS: $FC->$FF
+#endif
     //else if( (DSR&0xFE)==0xFE) && n_format_bytes==3) // doc: $FE(+$FF)
     {
       TRACE_LOG("%X found at %d\n",DSR,SF314[DRIVE].BytePosition());
@@ -1833,14 +1848,24 @@ r1       r0            1772
       Amd.Enabled=false; // read IDs OK
 #endif
     }
+#if defined(SSE_WD1772_AM_LOGIC)
+    else if(Amd.nA1)
+    {
+#if defined(SSE_WD1772_PRECISE_SYNC)
+      Amd.Reset();
+#else
+      Amd.Enable();
+#endif
+    }
+#else
     else if(n_format_bytes)
     {
       n_format_bytes=n00=nFF=0;
 #if defined(SSE_WD1772_AM_LOGIC) && defined(SSE_WD1772_PRECISE_SYNC)
       Amd.Reset();
 #endif
-
     }
+#endif
     Read(); // this sets up next event
     break;
 
@@ -1861,6 +1886,10 @@ r1       r0            1772
     {
       n_format_bytes=0; 
       prg_phase++; // in type I, II, III
+#ifdef SSE_DEBUG
+      TRACE_LOG("At %d:",Disk[DRIVE].current_byte); // position
+      IDField.Trace();
+#endif
       OnUpdate(); // some recursion is always cool
     }
     else
@@ -1868,8 +1897,8 @@ r1       r0            1772
     break;
 
   case WD_TYPEI_TEST_ID:
-#ifdef SSE_DEBUG
-    TRACE_LOG("At %d ",Disk[DRIVE].current_byte); // position
+#ifdef SSE_DEBUG____
+    TRACE_LOG("At %d:",Disk[DRIVE].current_byte); // position
     IDField.Trace();
 #endif
     //test track and CRC
@@ -1921,9 +1950,10 @@ r1       r0            1772
       //TRACE_LOG("%d IP to find ID %d\n",IndexCounter,SR);
       prg_phase=WD_TYPEII_FIND_ID; // goto '1'
 #if defined(SSE_WD1772_AM_LOGIC)
-      Amd.Enabled=true;
 #if defined(SSE_WD1772_PRECISE_SYNC)
       Amd.Reset();
+#else
+      Amd.Enable();
 #endif
 #endif
       n_format_bytes=n00=nFF=0;
@@ -1932,10 +1962,10 @@ r1       r0            1772
     break;
 
   case WD_TYPEII_TEST_ID:
-
-#ifdef SSE_DEBUG
     ASSERT(!n_format_bytes);
-    TRACE_LOG("At %d ",Disk[DRIVE].current_byte); // position
+#ifdef SSE_DEBUG___
+    ASSERT(!n_format_bytes);
+    TRACE_LOG("At %d:",Disk[DRIVE].current_byte); // position
     IDField.Trace();
 #endif
     if(IDField.track==TR && IDField.num==SR)
@@ -1957,9 +1987,10 @@ r1       r0            1772
     else // it's no error (yet), the WD1772 must browse the IDs
       prg_phase=WD_TYPEII_FIND_ID;
 #if defined(SSE_WD1772_AM_LOGIC)
-    Amd.Enabled=true;
 #if defined(SSE_WD1772_PRECISE_SYNC)
     Amd.Reset();
+#else
+    Amd.Enabled=true;
 #endif
 #endif
     Read();
@@ -2179,11 +2210,12 @@ r1       r0            1772
   case WD_TYPEIII_HEAD_SETTLE: // we come directly or after 15ms delay
 
 #if defined(SSE_WD1772_AM_LOGIC)
-    Amd.Enabled=true;
 #if defined(SSE_WD1772_PRECISE_SYNC)
     Amd.Reset();
     Amd.aminfo&=~CAPSFDC_AI_CRCENABLE;
     Amd.amisigmask=CAPSFDC_AI_DSRREADY;
+#else
+    Amd.Enabled=true;
 #endif
 #endif
 
@@ -2630,5 +2662,6 @@ bool TWD1772::ShiftBit(int bit) {
   return byte_ready;
 }
 
-#endif
+#endif//precise sync
 
+#endif//WD1772
