@@ -1468,8 +1468,25 @@ FC2 FC1 FC0 Address Space
 #if defined(SSE_CPU_DETECT_STACK_PC_USE)
         _pc=0x123456; // push garbage!
 #elif defined(SSE_CPU_TRUE_PC) 
+
+
+#if defined(SSE_CPU_TRUE_PC3)
+/*  v3.7.1
+    Legit fix for Aladin, replacing the 'write on 0' hack.
+    Hack confirmed invalid on real STE. Now that I think about it,
+    it was a nonsense and dangerous hack!
+    CLR.W crashes on 'read' but not in that zone where only
+    writing crashes, so it's a logic 'exception' in our 'true pc'
+    system for bus error stack frame.
+    Suspect other CPU fixes helped remove the hack.
+    We test here, not before, for performance.
+*/
+        if(M68000.CheckRead && abus<MEM_FIRST_WRITEABLE) 
+          M68000.Pc=pc+2;
+#endif
         if(_pc!=M68000.Pc)
         {
+
           TRACE_LOG("pc %X true PC %X\n",_pc,M68000.Pc);
           _pc=M68000.Pc; // guaranteed exact...
         }
@@ -1748,29 +1765,7 @@ void m68k_poke_abus2(BYTE x){
       PEEK(abus)=x;
     else if (abus>=MEM_START_OF_USER_AREA)
       PEEK(abus)=x;
-#if defined(SSE_CPU_IGNORE_WRITE_B_0)
-/*  Atari doc states:
-    A 4 word portion  of ROM  is  shadowed  at  the  start of RAM for 
-    the reset stack  pointer and program counter.  
-    Writing to this  area  or  any ROM location will also result in 
-    a bus error.
-
-    Yet for Aladin (Macintosh emulator), we mustn't crash when the bus
-    is set at 0, and we must ignore writes on 0 instead of crashing.
-
-    It must crash at 4 for Death of the Clock Cycles (bugfix 3.5.1)
-
-    No good explanation for that, we just have programs running.
-
-    Turns out only the one byte version is necessary/OK.
-
-    Not for long because it breaks Fuzion 77, 78, 84 (bugfix 3.5.2).
-
-    Not for word because it breaks Crazy Cars 2 (bugfix 3.6.0).
-
-    There's no real explanation. Maybe the bus error detector doesn't 
-    start until after the first byte... :)
-*/
+#if defined(SSE_CPU_IGNORE_WRITE_B_0) //undef v3.7.1
     else if(SUPERFLAG && abus==0 ) 
       ;
 #endif
@@ -1804,7 +1799,6 @@ void m68k_dpoke_abus2(WORD x){
     }else 
 #endif
 #if defined(SSE_CPU_IGNORE_RW_4MB)//undef 3.7
-      // safe mod for RAM<4MB, fixes F-29 4MB, along with peek
     if(abus>FOUR_MEGS || abus==FOUR_MEGS&&mem_len<FOUR_MEGS){
 #else
     if(abus>=FOUR_MEGS){

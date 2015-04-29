@@ -508,11 +508,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     DEBUG_CHECK_WRITE_B(abus); \
   }
 
-#if defined(SSE_CPU_SET_DEST_W_TO_0)
-
-// 3.6.1 disgusting targeted hack for Aladin, TODO = change
-// those macros into regular code, part inline part function
-// like for poke
+#if defined(SSE_CPU_SET_DEST_W_TO_0) //no
 
 #define m68k_SET_DEST_W_TO_ADDR        \
   abus&=0xffffff;                                   \
@@ -545,7 +541,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     DEBUG_CHECK_WRITE_W(abus);  \
   }
 
-#else//!SSE_CPU_SET_DEST_W_TO_0 //todo, it's defined
+#else
 #define m68k_SET_DEST_W_TO_ADDR        \
   abus&=0xffffff;                                   \
   if(abus&1){                                      \
@@ -643,12 +639,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     }                                           \
   }
 
-#if defined(SSE_CPU_SET_DEST_W_TO_0)
-
-// 3.6.1 disgusting targeted hack for Aladin, TODO = change
-// those macros into regular code, part inline part function
-// like for poke - release version - refactoring soon!
-
+#if defined(SSE_CPU_SET_DEST_W_TO_0) //no
 
 #define m68k_SET_DEST_W_TO_ADDR        \
   abus&=0xffffff;                                   \
@@ -672,16 +663,19 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     }                                       \
   }else{                               \
     DEBUG_CHECK_WRITE_W(abus);  \
-    if(SUPERFLAG && (abus>=MEM_FIRST_WRITEABLE|| ir==0x4251)){                       \
+    if(SUPERFLAG && (abus>=MEM_FIRST_WRITEABLE/*|| ir==0x4251*/)){                       \
       m68k_dest=lpDPEEK(abus);           \
     }else if(abus>=MEM_START_OF_USER_AREA){ \
       m68k_dest=lpDPEEK(abus);           \
     }else{                                      \
+    /*M68000.Pc=pc+2;*/\
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
     }                                           \
   }
 
 #else//!SSE_CPU_SET_DEST_W_TO_0
+
+// TODO = change those macros into regular code
 
 #define m68k_SET_DEST_W_TO_ADDR        \
   abus&=0xffffff;                                   \
