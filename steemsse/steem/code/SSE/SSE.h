@@ -123,11 +123,9 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_VERSION 371 // versions down to 340 still compile //TODO->320
 
-
-
 #if SSE_VERSION>370 //last release
-#define SSE_BETA //title, OSD, plus some testing - new features
-#define SSE_BETA_BUGFIX // beta for just bugfixes
+//#define SSE_BETA //title, OSD, plus some testing - new features
+//#define SSE_BETA_BUGFIX // beta for just bugfixes
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
 ///#define SSE_PRIVATE_BUILD // my "beta" option
 #endif
@@ -148,7 +146,7 @@ Beta: not SSE_PRIVATE_BUILD
     to compile an older version.
 */
 
-//#define SSE_SWITCHES_FEATURES
+#define SSE_SWITCHES_FEATURES
 
 
 //////////////
@@ -168,6 +166,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VS2008 // so that the VS2008 build compiles
 //#define SSE_INLINE_370
 #define SSE_VS2008_WARNING_370
+#define SSE_VS2008_WARNING_371
 #endif
 
 #define SSE_DELAY_LOAD_DLL // can run without DLL//never worked with bcc???
@@ -304,13 +303,14 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_BUS_ERROR_ADDRESS //high byte
 #define SSE_CPU_BUS_ERROR_ADDRESS2 //high byte
 #define SSE_CPU_EXCEPTION_FCO
-//#define SSE_CPU_IGNORE_RW_4MB // for F-29, works but shouldn't
-#define SSE_CPU_IGNORE_WRITE_B_0 // for Aladin, may write on 1st byte
+//#define SSE_CPU_IGNORE_RW_4MB // undef v3.7.0
+//#define SSE_CPU_IGNORE_WRITE_B_0 // undef v3.7.1
 #define SSE_CPU_POST_INC // no post increment if exception (Beyond)
 #define SSE_CPU_PRE_DEC // no "pre" decrement if exception
-#define SSE_CPU_SET_DEST_W_TO_0 // for Aladin
+//#define SSE_CPU_SET_DEST_W_TO_0 // undef v3.7.1
 #define SSE_CPU_TRUE_PC // based on Motorola microcodes!
 #define SSE_CPU_TRUE_PC2 // JMP, JSR
+#define SSE_CPU_TRUE_PC3 // Aladin
 
 #endif//exc
 
@@ -541,6 +541,9 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_BOILER_FRAME_REPORT_MASK // for interactive control in boiler
 
+#define SSE_BOILER_AUTO_FLUSH_TRACE// v3.7.1
+#define SSE_BOILER_BLIT_IN_HISTORY // v3.7.1
+#define SSE_BOILER_BLIT_WHEN_STOPPED // v3.7.1
 #define SSE_BOILER_BLAZING_STEP_OVER 
 #define SSE_BOILER_BROWSER_6301
 #define SSE_BOILER_BROWSER_ACIA
@@ -559,7 +562,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BOILER_EXCEPTION_NOT_TOS
 #define SSE_BOILER_EXTRA_IOLIST
 #define SSE_BOILER_FAKE_IO //to control some debug options
+//#define SSE_BOILER_FLUSH_TRACE
 #define SSE_BOILER_FRAME_INTERRUPTS2
+#define SSE_BOILER_LOGSECTIONS1 //v3.7.1
 #define SSE_BOILER_MENTION_READONLY_BROWSERS
 #define SSE_BOILER_MOD_REGS // big letters, no =
 #define SSE_BOILER_MOD_VBASE
@@ -580,6 +585,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BOILER_NO_SET_BRK_PC_MENU
 #define SSE_BOILER_NO_SOUND_DAMPING //PSG filter control 'd' and 'a'
 #define SSE_BOILER_PSEUDO_STACK
+#define SSE_BOILER_PSEUDO_STACK2 //v3.7.1
 #define SSE_BOILER_RUN_TO_RTS
 #define SSE_BOILER_SHOW_ACT
 #define SSE_BOILER_SHOW_FRAME
@@ -771,6 +777,8 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_DEBUG_WRITE_TRACK_TRACE_IDS
 
+#define SSE_OSD_DRIVE_INFO_EXT // v3.7.1
+
 #endif//SSE_DEBUG
 
 
@@ -790,10 +798,13 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_WD1772     // WD1772 floppy disk controller (IO, STW...)
 #define SSE_YM2149     // YM2149, needed for floppy and for sound
 
+#define SSE_DISK_SCP // Supercard Pro disk image format support
+
 #ifdef WIN32
 #define SSE_IPF        // CAPS support (IPF, CTR disk images) 
 #define SSE_PASTI      // Improvements in Pasti support (STX disk images)
 #endif
+
 
 // DISK //
 
@@ -831,7 +842,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 //#define SSE_DMA_ADDRESS // enforcing order for write (no use?)
 #define SSE_DMA_ADDRESS_EVEN
-#define SSE_DMA_COUNT_CYCLES
+//#define SSE_DMA_COUNT_CYCLES//undef again v3.7.1 ;)
 //#define SSE_DMA_DELAY // works but overkill 3.7.0 -> use generic floppy event?
 #define SSE_DMA_FDC_ACCESS
 //#define SSE_DMA_FDC_READ_HIGH_BYTE // like pasti, 0  
@@ -850,6 +861,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DMA_SECTOR_COUNT
 #define SSE_DMA_SECTOR_COUNT2
 #define SSE_DMA_TRACK_TRANSFER // debug + possible later use
+#define SSE_DMA_TRACK_TRANSFER2 //v3.7.1
 #define SSE_DMA_WRITE_CONTROL
 
 #endif//dma
@@ -866,6 +878,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DRIVE_EMPTY_VERIFY_TIME_OUT //GEM
 #define SSE_DRIVE_EMPTY_VERIFY_TIME_OUT2 //motor led still on
 #define SSE_DRIVE_INDEX_PULSE
+#define SSE_DRIVE_INDEX_PULSE2 // improvements for SCP (3.7.1)
 #define SSE_DRIVE_INDEX_STEP
 #define SSE_DRIVE_IPF1 // know image type (not used yet)
 #define SSE_DRIVE_IP_HACK
@@ -877,6 +890,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DRIVE_READ_TRACK_11
 #define SSE_DRIVE_READ_TRACK_11B //Gap 4: 1
 #define SSE_DRIVE_READ_TRACK_11C //Gap 5#endif
+#define SSE_DRIVE_READ_TRACK_11C2 //v3.5.1
 #define SSE_DRIVE_REM_HACKS // temp form...
 #define SSE_DRIVE_RW_SECTOR_TIMING // start of sector
 //#define SSE_DRIVE_RW_SECTOR_TIMING2 // end of sector (hack) //undef 3.7.0
@@ -920,6 +934,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DRIVE_SOUND_STW
 #define SSE_DRIVE_SOUND_VOLUME // logarithmic 
 #define SSE_DRIVE_SOUND_VOLUME_2 //bugfix on resume
+#define SSE_DRIVE_SOUND_VOLUME_3 //v3.7.1
 #endif//drive sound
 
 #if defined(SSE_DRIVE_SINGLE_SIDE)
@@ -956,7 +971,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_FDC_MULTIPLE_SECTORS
 #define SSE_FDC_PRECISE_HBL
 #define SSE_FDC_READ_ADDRESS_UPDATE_SR
-#define SSE_WD1772_RESET
+//#define SSE_WD1772_RESET
 #define SSE_FDC_RESTORE
 //#define SSE_FDC_RESTORE1//undef to remove bug //?
 #define SSE_FDC_SEEK
@@ -996,6 +1011,15 @@ Beta: not SSE_PRIVATE_BUILD
 
 #endif//ipf
 
+// SCP //
+
+#if defined(SSE_DISK_SCP)
+
+//#define SSE_DISK_SCP_TO_MFM_PREVIEW // keep it, could be useful
+#define SSE_DISK_SCP_WRITE //not tested
+
+#endif//scp
+
 // STX //
 
 #if defined(SSE_PASTI)
@@ -1020,14 +1044,19 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_WD1772)
 
+#define SSE_WD1772_371 // one switch for various fixes
+#define SSE_WD1772_AM_LOGIC // code inspired by SPS (CapsFDCEmulator.cpp)
 #define SSE_WD1772_CRC 
+#define SSE_WD1772_DPLL // code inspired by MAME/MESS (wd_fdc.c)
 #define SSE_WD1772_IDFIELD 
 #define SSE_WD1772_MFM 
+//#define SSE_WD1772_MFM_PRODUCE_TABLE // one-shot switch...
 #define SSE_WD1772_F7_ESCAPE
 #define SSE_WD1772_PHASE
 #define SSE_WD1772_REG2 // DSR, ByteCount
 #define SSE_WD1772_REG2_B // StatusType
-
+#define SSE_WD1772_RESET
+#define SSE_WD1772_WEAK_BITS //hack
 #endif
 
 // YM-2149 //
@@ -1255,8 +1284,10 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_INT_MFP_RATIO) 
 #define SSE_INT_MFP_RATIO_HIGH_SPEED
+#if defined(DEBUG_BUILD)
 #define SSE_INT_MFP_RATIO_OPTION // user can fine tune CPU clock
 #define SSE_INT_MFP_RATIO_OPTION2 // L/S
+#endif
 #define SSE_INT_MFP_RATIO_PRECISION // for short timers
 #define SSE_INT_MFP_RATIO_PRECISION_2 // 1 cycle precision
 #define SSE_INT_MFP_RATIO_PRECISION3 // 100%
@@ -1376,6 +1407,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 //#define SSE_MMU_NO_CONFUSION // breaks Diagnostic cartridge
 #define SSE_MMU_SDP1
+#define SSE_MMU_SDP1B //v3.7.1
 #define SSE_MMU_SDP2
 #define SSE_MMU_WRITE // programs in RAM may write in the MMU
 
@@ -1456,7 +1488,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_OSD_SCROLLER_CONTROL)
-#define SSE_OSD_SCROLLER_DISK_IMAGE //TODO sometimes wrong name
+//#define SSE_OSD_SCROLLER_DISK_IMAGE //undef v3.7.1
 #endif
 
 #ifdef SSE_DEBUG
@@ -1688,7 +1720,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SOUND_MICROWIRE_MIXMODE
 #define SSE_SOUND_MICROWIRE_MASK1 //bugfix
 #define SSE_SOUND_MICROWIRE_MASK2 //incorrect doc (?)
-#define SSE_SOUND_MICROWIRE_READ1
+//#define SSE_SOUND_MICROWIRE_READ1 //undef v3.7.1
 #define SSE_SOUND_MICROWIRE_WRITE_LATENCY // as documented 3.6.0
 #define SSE_SOUND_MICROWIRE_WRITE_LATENCY_B //bugfix Antiques 3.7.0
 #define SSE_SOUND_NO_EXTRA_PER_VBL //compensating hack? changes what? 3.5.1
@@ -1698,6 +1730,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_SOUND_VOL // -6db for PSG chipsound (using DSP) //undef v3.7.0
 #define SSE_SOUND_VOL_LOGARITHMIC // more intuitive setting 3.6.0
 #define SSE_SOUND_VOL_LOGARITHMIC_2 // bugfix on resume 3.7.0
+#define SSE_SOUND_VOL_LOGARITHMIC_3 //bugfix 3.7.1, 1st start
 #define SSE_SOUND_FILTER_STE // same very simple filter as for STF
 
 #if! defined(SSE_YM2149) // defined for floppy
@@ -1734,10 +1767,12 @@ Beta: not SSE_PRIVATE_BUILD
 #ifdef SSE_YM2149 
 
 #define SSE_YM2149_DELAY_RENDERING // so that we use table also for envelope
+#define SSE_YM2149_DELAY_RENDERING2 //v3.7.1
 #define SSE_YM2149_FIX_TABLES // option P.S.G. 3.6.0
 #define SSE_YM2149_FIXED_VOL_TABLE // was SSE_YM2149_FIXED_VOL_FIX2 in v3.6.4
 #define SSE_YM2149_OPT1
 #define SSE_YM2149_QUANTIZE1
+#define SSE_YM2149_QUANTIZE2 //v3.7.1
 #if defined(SSE_YM2149_FIX_TABLES)
 //#define SSE_YM2149_ENV_FIX1 //undef v3.7.0
 //#define SSE_YM2149_FIXED_VOL_FIX1 //undef v3.7.0
@@ -1864,6 +1899,7 @@ Beta: not SSE_PRIVATE_BUILD
 #ifdef WIN32
 #define SSE_VAR_CHECK_SNAPSHOT
 #define SSE_VAR_UNRAR // using unrar.dll, up to date
+#define SSE_VAR_UNRAR2 //v3.7.1
 #endif//win32
 
 
@@ -2845,9 +2881,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_FDC_FORCE_INTERRUPT // Panzer rotation using $D4
 #define SSE_FDC_FORCE_INTERRUPT_D4
 #define SSE_FDC_INDEX_PULSE2 // read STR
-#define SSE_WD1772_RESET
+//#define SSE_WD1772_RESET
 #define SSE_FDC_INDEX_PULSE_COUNTER
 #endif//fdc
+#define SSE_WD1772_RESET
 #endif//flp
 #if defined(SSE_INT_HBL)
 #define SSE_INT_HBL_IACK_FIX // from Hatari - BBC52 (works without?)
@@ -3963,6 +4000,91 @@ Beta: not SSE_PRIVATE_BUILD
 
 #endif//v3.7.0
 
+
+#if SSE_VERSION>=371
+
+#if defined(SSE_CPU_EXCEPTION)
+#undef SSE_CPU_IGNORE_WRITE_B_0 // Aladin remove hack
+#undef SSE_CPU_SET_DEST_W_TO_0 // Aladin remove hack
+#define SSE_CPU_TRUE_PC3 // Aladin real fix
+#endif
+
+#if defined(SSE_DEBUG)
+#define SSE_OSD_DRIVE_INFO_EXT // STX, MSA... 
+#endif
+
+#if defined(DEBUG_BUILD)
+#define SSE_BOILER_BLIT_IN_HISTORY
+#define SSE_BOILER_BLIT_WHEN_STOPPED // dangerous?
+//#define SSE_BOILER_FLUSH_TRACE
+#define SSE_BOILER_AUTO_FLUSH_TRACE//of course
+#define SSE_BOILER_LOGSECTIONS1 // init: too heavy (CPU log)
+#define SSE_BOILER_PSEUDO_STACK2 //in SSE menu
+#else
+#undef SSE_INT_MFP_RATIO_OPTION 
+#undef SSE_INT_MFP_RATIO_OPTION2
+#endif
+
+#if defined(SSE_FLOPPY)
+
+#define SSE_DISK_SCP // Supercard Pro disk image format support
+//#define SSE_DISK_SCP_TO_MFM_PREVIEW // keep it, could be useful
+#define SSE_DISK_SCP_WRITE //not tested
+
+#if defined(SSE_DMA)
+#undef SSE_DMA_COUNT_CYCLES //again... ;)
+#define SSE_DMA_TRACK_TRANSFER2 // also for CAPS images
+#endif
+
+#if defined(SSE_DRIVE)
+#define SSE_DRIVE_INDEX_PULSE2 // improvements for SCP
+#define SSE_DRIVE_READ_TRACK_11C2 //ProCopy 1.50 Analyze
+#if defined(SSE_DRIVE_SOUND)
+#define SSE_DRIVE_SOUND_VOLUME_3
+#endif
+#endif
+
+#if defined(SSE_WD1772)
+#define SSE_WD1772_371 // one switch for various fixes
+#define SSE_WD1772_AM_LOGIC // code inspired by SPS (CapsFDCEmulator.cpp)
+#define SSE_WD1772_DPLL // code inspired by MAME/MESS (wd_fdc.c)
+//#define SSE_WD1772_MFM_PRODUCE_TABLE // one-shot switch...
+#define SSE_WD1772_WEAK_BITS //hack
+#endif//wd1772
+#endif//flp
+
+#if defined(SSE_MMU)
+#define SSE_MMU_SDP1B
+#endif
+
+#if defined(SSE_OSD)
+#undef SSE_OSD_SCROLLER_DISK_IMAGE // doubles with status bar
+#endif
+
+#if defined(SSE_SOUND)
+#if defined(SSE_SOUND_MICROWIRE)
+#undef SSE_SOUND_MICROWIRE_READ1 //Sleepwalker STE
+#endif
+#if defined(SSE_SOUND_VOL_LOGARITHMIC_2)
+#define SSE_SOUND_VOL_LOGARITHMIC_3
+#endif
+#endif//snd
+
+#if defined(SSE_VARIOUS)
+#define SSE_VAR_UNRAR2 //ok with RAR5
+#endif
+
+#ifdef SSE_YM2149 
+#define SSE_YM2149_DELAY_RENDERING2 //bug in v3.7.0
+#define SSE_YM2149_QUANTIZE2 //bug in v3.7.0
+#endif
+
+#if defined(SSE_VIDEO)
+#endif
+
+#endif//371
+
+
 #endif//?SSE_SWITCHES_FEATURES
 
 
@@ -4099,78 +4221,11 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
 //#define SSE_TOS_GEMDOS_FDUP // for EmuTOS - it's fixed already, undef
 
-#define SSE_DISK_SCP // Supercard Pro disk image format support
-#define SSE_DISK_SCP2 // dev switch
-#define SSE_DISK_SCP3 //dev switch
-#define SSE_DISK_SCP4 //dev switch
-#define SSE_DISK_SCP_LS // in fact nothing to do
-//#define SSE_DISK_SCP_TO_MFM_PREVIEW // old interpret flux function
-#define SSE_DISK_SCP_START_REV1 // Turrican
-#define SSE_DISK_SCP_WRITE //not tested
-#define SSE_DRIVE_INDEX_PULSE2 // count revs
-#define SSE_DRIVE_INDEX_PULSE3 // trigger by image object possible
-#define SSE_DRIVE_INDEX_PULSE4 // change safety
-
-#define SSE_DRIVE_INDEX_PULSE_SCP
-
-
-#define SSE_WD1772_BYTES_BEFORE_DAM
-#define SSE_WD1772_AM_LOGIC // object
-
-
-
-#define SSE_WD1772_MOTOR1
-
-#define SSE_WD1772_WEAK_BITS
-#define SSE_WD1772_WEAK_BITS2 //using delays in us (hack)
-//#define SSE_WD1772_WEAK_BITS2A
-//#define SSE_WD1772_WEAK_BITS2B
-#define SSE_WD1772_WEAK_BITS2C
-#define SSE_WD1772_PRECISE_SYNC // some WD1772 code inspired by SPS 
-                            //  (CapsFDCEmulator.cpp)
-#define SSE_WD1772_DPLL // some WD1772 code inspired by MAME/MESS (wd_fdc.c)
-#define SSE_WD1772_AM_3A1 // not C2
-//#define SSE_WD1772_MFM_PRODUCE_TABLE // one-shot switch...
-#define SSE_WD1772_STR_TR00
-
-
-
-#define SSE_VS2008_WARNING_371
-
-#if defined(SSE_DEBUG)
-#define SSE_OSD_DRIVE_INFO_EXT // STX, MSA... 
-#endif
-
-#if defined(DEBUG_BUILD)
-#define SSE_BOILER_BLIT_IN_HISTORY
-#define SSE_BOILER_BLIT_WHEN_STOPPED // dangerous?
-//#define SSE_BOILER_FLUSH_TRACE
-#define SSE_BOILER_AUTO_FLUSH_TRACE//of course
-#define SSE_BOILER_LOGSECTIONS1 // init: too heavy (CPU log)
-#define SSE_BOILER_PSEUDO_STACK2 //in SSE menu
-#else
-#undef SSE_INT_MFP_RATIO_OPTION 
-#undef SSE_INT_MFP_RATIO_OPTION2
-#endif
-
-#endif
+#endif//beta
 
 #if defined(SSE_BETA_BUGFIX)
 
-#define SSE_DMA_TRACK_TRANSFER2 // also for CAPS images
-#define SSE_MMU_SDP1B
-#if defined(SSE_SOUND_VOL_LOGARITHMIC_2)
-#define SSE_SOUND_VOL_LOGARITHMIC_3
-#endif
-#define SSE_DRIVE_SOUND_VOLUME_3
-#define SSE_YM2149_DELAY_RENDERING2 //bug in v3.7.0
-#define SSE_YM2149_QUANTIZE2 //bug in v3.7.0
-#define SSE_VAR_UNRAR2 //ok with RAR5
-#undef SSE_SOUND_MICROWIRE_READ1 //Sleepwalker STE
-#define SSE_DRIVE_READ_TRACK_11C2 //ProCopy 1.50 Analyze
-#undef SSE_DMA_COUNT_CYCLES //again... ;)
-#define SSE_WD1772_TYPE3_RNF
-#endif//beta
+#endif//bugfix
 
 #else//!SS
 /////////////////////////////////////
