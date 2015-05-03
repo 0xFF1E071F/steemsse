@@ -1,7 +1,7 @@
 Steem SSE manual
 =================
 
-v3.7.0
+v3.7.1
 
 About the manual
 _________________
@@ -122,6 +122,9 @@ http://www.kryoflux.com/
 -D3DX9_43.dll
 http://www.microsoft.com/en-us/download/details.aspx?id=8109
 
+-FreeImage.dll
+http://freeimage.sourceforge.net/download.html
+
 -msa.exe
 http://msaconverter.free.fr/
 
@@ -230,11 +233,11 @@ Use this to skip intros but don't expect accurate emulation.
 -------
 
 A left click on the reset button emulates the reset button of the ST
-("warm reset").
+("warm reset") - you know, the button that doesn't exist on the Amiga?
 A right click stops the ST and clears the memory as if you
 had switched off. Keyboard shortcuts may be assigned to warm or
 cold reset as well.
-Notice that many demos were programmed to react on reset (hidden screen
+Notice that many demos were programmed to react on warm reset (hidden screen
 and such).
 
 
@@ -764,7 +767,8 @@ Enveloped sound was coded on 5bit, so other values are interpolated.
 2) The sound of the PSG was different, softer on the STE, but we only
 have one table, for STF.
 When it's not checked, the original small table is used (and memory is 
-freed).
+freed). It's fine enough. The option is more useful for sampled sound.
+
 
   
 -Microwire
@@ -1022,12 +1026,6 @@ than 8 megahertz.
 
 These messages pop up to delight and inform you, they have some useful tips for 
 how to get the best out of Steem.
-
-
--Disk image name
-
-This option will have the name of the game scrolling on the screen when 
-you insert a new virtual disk.
 
 
 -Disable on screen display
@@ -1407,6 +1405,9 @@ images in the current directory. The disk manager is like a little Explorer
 window, you can go into a folder by double clicking on it or by selecting it 
 and pressing return. All disk image files, zip/rar archive files and any 
 Windows shortcuts to those types of files are shown. 
+For zip and rar support, unzipd32.dll and unrar.dll must be in your system
+folder or in Steem folder.
+
 
 To insert a disk image into a drive, drag it to the box to the right of the 
 big drive icon. To remove it from the drive just drag it back out to the 
@@ -1424,8 +1425,8 @@ ST disk images contain raw data bytes without any meta information (so
 that emulators must guess the disk configuration).
 
 STW disk images include clock bits as well as data, encoded into MFM words.
-Those images are larger than ST images but allow to more precisely emulate
-the 'Format' command of the WD1772 disk controller. 
+Those images are more than twice larger than ST images but allow to more 
+precisely emulate the 'Format' command of the WD1772 disk controller. 
 Because they're formatted inside the emulated ST, there's no sides/tracks/
 sectors options.
 Specification of STW disk images:
@@ -1434,15 +1435,16 @@ http://ataristeven.t15.org/txt/STW%20specification.txt
 Besides those ST and STW disk images Steem may create itself, it is also
 able to handle:
 
-Caps IPF and CTR images (need CAPSImg.dll)
-DIM and MSA images
-Steem STT images
-Pasti STX images (need pasti.dll)
+-DIM and MSA images
+-STT images
+-STX images (need pasti.dll)
+-IPF and CTR images (need CAPSImg.dll)
+-SCP images
 
 About STX images, those are now also handled in Hatari, and it may happen
 that some game works in Hatari and not in Steem. Those are very rare cases
 and are explained by imprecisions in pasti.dll. This is no fault on Steem's
-side. The equivalent CTR or IPF images run fine.
+side. The equivalent CTR, IPF or SCP images generally run fine.
 
 If you right click in the box to the right of the big drive icon, a context 
 menu allows you to toggle the read-only property (important for some games),
@@ -1451,11 +1453,11 @@ The full name of the disk image is also displayed, clicking on it copies it
 into the clipboard (it was a request, OK?).
 
 Right clicking on a disk image displays a menu with a myriad of options to 
-allow you to organise and use your disk images. "Get Contents" is useful if the 
+allow you to organise and use your disk images. "Get Contents" is useful if the
 disk image is a compilation disk, selecting it will display a list of what the 
 disk contains. "MSA Converter" is a great program that allows you to edit the 
 contents of a disk and convert it to a different format. "Properties" allows 
-you to change the way Steem uses the disk, it is very unlikely you will have to 
+you to change the way Steem uses the disk, it is very unlikely you will have to
 change the setting from the default.
 
 If you double click in some empty space of the main window, you go to the
@@ -1474,7 +1476,8 @@ might still think there is a drive B when really there isn't.
 Right-clicking on the drive icons opens a context menu with some useful
 options to:
 Stop the motor (if it's running you crazy)
-Change the 'SEEK' sound (if it's running you crazy)
+Change the 'SEEK' sound (if it's running you crazy); note that it doesn't work
+with STX, IPF, CTR images.
 Change your fine SF314 double sided drive into a miserable SF354 single sided
 drive (if you feel really nostalgic)
 
@@ -1559,7 +1562,8 @@ useful in v02h. It's very likely a bug.
 
 -Pasti only for STX
    
-This makes Pasti handle only STX images, Steem being in charge of the rest. 
+This makes Pasti handle only STX images, Steem being in charge of ST and MSA
+images. 
 Interesting possibilities: you may try and copy STX images on a ST or STW disk
 image. No guarantee!   
 

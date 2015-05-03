@@ -1,7 +1,7 @@
 Steem SSE FAQ
 ---------------
 
-v3.7.0
+v3.7.1
 
 Q:
 What is Steem?
@@ -51,8 +51,6 @@ To use Steem, you need a copy of the Atari ROM, called "TOS", and some
 image disk files. 
 When you first launch Steem, you may indicate where they are, which you can
 change later.
-To get started you will find some TOS on the Steem SSE site:
-http://ataristeven.t15.org/Other_downloads.htm
 Disk images are easy to find. Some are also available on the site.
 Legally this is still copyrighted material, and if they really wanted,
 companies who own it could call a halt on emulation, but they don't.
@@ -111,7 +109,6 @@ impressive on the ST.
 The Atari ST is one of the contenders for best chip music. The
 sound of the Amiga was impressive back then but is nothing more
 than bad 8bit samples today, it was quickly outclassed by the Soundblaster.
-Notice that there's no Amiga Teenage Riot.
 
 
 Q:
@@ -124,7 +121,7 @@ TOS1.00 STF
 TOS1.02 STF
 TOS1.04 STF
 TOS1.06 STE
-TOS1.61 STE
+TOS1.62 STE
 TOS2.05 Mega STE
 TOS2.06 Mega STF/STE
 TOS3.0X TT
@@ -165,6 +162,33 @@ a blank screen.
 A:
 Check options ST model and TOS. With STF and TOS1.06, you'll have a blank
 screen.
+
+
+Q:
+Steem can't handle zip and rar files.
+A:
+For zip and rar support, unzipd32.dll and unrar.dll must be in your system
+folder or in Steem folder.
+
+
+Q:
+I find scrollers and games jerky compared with a real ST.
+A:
+Emulation is precise enough but smooth scrolling depends on your own 
+hardware. You need a video card and a monitor capable of displaying at
+the exact emulated frequency, 50hz most of the time.
+If your hardware is set to 60hz or 75hz, for example, it's impossible
+to have really smooth scrollers.
+Triple-buffering (also available in Steem) can't help that.
+
+
+Q:
+What's the use of triple-buffering?
+A:
+Triple-buffering eliminates the horrible "ghosting" effect.
+The option is only really useful in Windows XP. In later versions,
+this should be automatically done by the system, and the option
+would only interfere.
 
 
 Q:
@@ -213,6 +237,12 @@ Some options may make a difference, like VSync.
 
 
 Q:
+First run of the day is especially excruciating!
+A:
+I think it's because of DirectX 9, the system must load many DLLs.
+
+
+Q:
 Sometimes I lose keyboard control.
 A:
 Me too. Don't know the cause. It's not an emulation issue if quitting and 
@@ -232,6 +262,39 @@ disk mode, you won't see red for short operations.
 
 
 Q:
+When I take a screenshot in Steem my pictures turn out upside down and back
+to front if I am using FreeImage.dll.
+A:
+Steem was updated to work with later versions of this great plugin, because,
+hem, they broke compatibility between versions.
+So you need to use a recent version, that you can find there:
+http://freeimage.sourceforge.net/download.html
+
+
+Q:
+After starting Steem 3.7 on my Win7 machine, it asks for "D3DX9_43.dll". I 
+copied this file to the Steem directory, but still Steem refuses to start 
+(application error (0xc00007b)). 
+I had no problem with previous Steem versions.
+A:
+This is a common DirectX install error, no Steem bug.
+Here are some hints:
+- This error seems to be caused by calling into a 64 bit DLL from a 32 bit app
+or vice versa.
+This error message may occur on 64 bit operating systems when the Microsoft 
+Visual C++ 2008 Redistributable Package is not properly configured.
+You may try to reinstall it. 
+- Apply all Windows updates
+- Reinstall .Net Framwork 4.5.1
+- Copy the following files into Steem folder:
+d3d9.dll
+d3dx9_43.dll
+dxinput1_3.dll 
+If it doesn't help, some search engine will be more useful than me.
+There is also a NoD3D build available in case it really won't work.
+
+
+Q:
 Some Pasti images (STX) of games work in Hatari but not in Steem. Can you fix
 that?
 A:
@@ -239,7 +302,8 @@ Hatari directly handles those images, with up-to-date knowledge of drive
 emulation. Steem uses a plugin, pasti.dll, that is much older and is in need
 of an update.
 Fortunately, those cases are rare, and we have alternatives now, like CTR
-and IPF, that also use a plugin, capsimg.dll, which is up-to-date.
+and IPF, that also use a plugin, capsimg.dll, which is up-to-date, as well
+as SPC images using an up-to-date emulation.
 Who knows? Maybe one day pasti.dll will be improved.
 For those reasons directly handling STX images in Steem is not planned.
 
@@ -249,8 +313,6 @@ Are state snapshots (.STS) compatible between versions?
 A:
 While there's no 100% guarantee, we try to maintain compatibility.
 It's useful for me too, to quickly compare versions in case of bugs.
-You could have trouble because of 'HD6301' emu in some Steem versions
-(not the latest normally).
 
 
 Q:
@@ -265,7 +327,7 @@ display of some demos. They're mentioned in 'Hints'.
 Q:
 A program that used to work has a wrong picture and crashes...
 A:
-One reason could be option "wake-up state", try with setting to 'ignore'.
+One reason could be option "wake-up state", try with setting it to 'ignore'.
 
 
 Q:
@@ -275,7 +337,8 @@ A:
 All drive emulation improvements operate only in if the option 'Accurate Disk
 Access Times (Slow)' is checked in the Disk manager, for ST, MSA, DIM disk
 images.
-For STW disk images, the option isn't necessary as emulation is slow anyway!
+For STW and SCP disk images, the option isn't necessary as emulation is slow 
+anyway (no fast option yet).
 
 
 Q:
@@ -305,7 +368,7 @@ Why are there fewer features in the Linux build?
 A:
 It's very rare when I use Linux myself. I'm not really willing to delve deep
 into all Linux particularities. In fact it's a shame for the Linux community
-that nobody else did anything yet with Steem in Linux.
+that nobody else did anything yet with XSteem.
 
 
 Q:
@@ -317,6 +380,16 @@ Atari supported Falcon only for a few months, and little software was
 developed. Software was so specialised in audio it is very hard to emulate,
 not to mention protections.
 Now nothing keeps dedicated people from starting a Falcon branch of Steem.
+
+
+Q:
+What's the use of STW disk image format?
+A:
+A STW disk image is the simplest possible MFM encoding format of
+Atari ST floppy disks. 
+It allows Steem to fully emulate WD1772 commands such as 'Format', 'Read 
+Track', 'Read Address' and to support cases like Dragonflight, Realm of
+the Trolls, Union Demo, and anything that relies on fancy WD1772 formats.
 
 
 Q:
@@ -340,8 +413,15 @@ Of course the SSE version contains many improvements. It is Windows-only.
 Q:
 Doesn't the boiler icon look like a garbage bin?
 A:
-The icon's name is 'debug_trash.ico', so it seems it's on purpose!
+The icon's internal name is 'debug_trash.ico', so it seems to be on purpose!
 Why exactly only Steem authors know.
+
+
+Q:
+Why isn't the Boiler available for Linux?
+A:
+Steem authors developed it only for Windows. Efforts to port it to Linux would
+require some dedicated Linux users. That's not me (SS).
 
 
 Q:

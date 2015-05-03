@@ -315,3 +315,210 @@ reset pren
 MMRW2
 (pc)->db->aob,au
 +2->au
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+jmp (xxx).w
+
+jmaw1:
+
+(dbin)->abe -> at
+-> jmal2
+
+jmal2:
+
+(ath)->dbh->aob,au
+(dbin)->dbl->aob,au
+edb->irc
++2->au
+->b
+
+b:
+au->db->aob,au,pc
+(dbin)->dbd->alu
+(rxl)->ab*->alu
++2->au
+
+It's confusing and possibly contains mistakes, but what's clear is that
+PC isn't changed before the 'b' microcode.
+The address/bus error would strike before.
+
+
+jmp (xxx).l
+
+jmal1:
+
+au->db->aob,au
+(dbin)->ab->ath
+edb->dbin
++2->au
+-> jmal2
+
+jmal2:
+
+(ath)->dbh->aob,au
+(dbin)->dbl->aob,au
+edb->irc
++2->au
+->b
+
+b:
+au->db->aob,au,pc
+(dbin)->dbd->alu
+(rxl)->ab*->alu
++2->au
+
+Same conclusion regarding pc, it's updated later at step b.
+
+
+For other cases here's the microcode table.
+
+                                     JMP               JSR
+
+000	R            Dn              -                 -
+001	R            An              -                 -
+010	R            (An)            jmpa1             jsra1
+011	R            (An)+           -                 -
+100	R            –(An)           -                 -
+101	R            (d16, An)       jmpd1             jsrd1
+110	R            (d8, An, Xn)    jmpx0             jsrx0
+111	000          (xxx).W         jmaw1             jsaw0
+111	001          (xxx).L         jmal1             jsal1
+111	010          (d16, PC)       jmpd1             jsrd1
+111	011          (d8, PC, Xn)    jmpx0             jsrx0
+111	100          #<data>         -                 -
+
+It should be verified that none would change PC before a bus error
+(our hypothesis).
+
+
+
+
+PEA
+===========
+
+
+                                     PEA
+
+000	R            Dn              -    
+001	R            An              -                 
+010	R            (An)            peaa1
+011	R            (An)+           -                 
+100	R            –(An)           -                 
+101	R            (d16, An)       pead1           
+110	R            (d8, An, Xn)    peax0            
+111	000          (xxx).W         paaw1            
+111	001          (xxx).L         paal1           
+111	010          (d16, PC)       peapd1         
+111	011          (d8, PC, Xn)    peax0            
+111	100          #<data>         -                
+
+
+peaa1:
+
+au->aob,pc
+edb->dbin,irc
+(rxa)->db->au
+(rya)->ab->alu,at
+-1->alu
+-4->au
+-> peax6
+
+peax6:
+
+(ath)->ab->dob
+au->db->aob,au,rz
++2->au
+-> morw2
+
+morw2:
+
+alu->dob
+au->aob
+(ir)->ird
+(pc)->db->au
++2->au
+
+
+paaw1:
+au->aob,pc
+(dbin)->abo->at
+edb->irc
+(rxa)->db->au
+-4->au
+-> paaw2
+
+paaw2:
+
+(ath)->ab->dob
+au->db->aob,au,rz
++2->au
+-> mawl3
+
+mawl3:
+
+au->db->aob,au,pc
+(dbin)->ab->ftu
+edb->dbin,irc
++2->au
+-> b
+
+b:
+au->db->aob,au,pc
+(dbin)->dbd->alu
+(rxl)->ab*->alu
++2->au
+
+
+paal1:
+
+au->db->aob,au
+(dbin)->ab->ath
+edb->dbin
++2->au
+->paal2
+
+paal2:
+
+au->aob,pc
+(dbin)->ab->atl
+edb->irc
+(rxa)->db->au
+-4->au
+-> paaw2
+
+paaw2:
+
+(ath)->ab->dob
+au->db->aob,au,rz
++2->au
+-> mawl3
+
+mawl3:
+
+au->db->aob,au,pc
+(dbin)->ab->ftu
+edb->dbin,irc
++2->au
+-> b
+
+b:
+au->db->aob,au,pc
+(dbin)->dbd->alu
+(rxl)->ab*->alu
++2->au
+

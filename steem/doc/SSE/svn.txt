@@ -47,6 +47,9 @@ To list files that were changed
 svn diff >diff.txt
 To create a file showing all changes
 
+svn diff -r 16:27 >diff.txt
+To show changes between revisions 16 and 27 (powerful!)
+
 svn revert
 To restore a file as it is in the repository
 

@@ -1,9 +1,4 @@
 This is Steven Seagal's hit list!
-Also check file 'Hints'.
-The number between parentheses is the version of Steem when the program 
-started working, but there may have been regressions or improvements since.
-You're advised to keep the different Steem versions in the same folder.
-
 
 Games
 --------

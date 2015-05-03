@@ -698,6 +698,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   }
 
 #if defined(STEVEN_SEAGAL)
+#if SSE_VERSION>=330
   if(Version>=41) // Steem 3.3
   {
 #ifdef SSE_STF
@@ -707,6 +708,8 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     int dummy=0; // dummy for former Program ID
     ReadWrite(dummy);
   }
+#endif
+#if SSE_VERSION>=340
   if(Version>=42) // Steem 3.4
   {
 #if defined(SSE_SOUND_MICROWIRE)
@@ -753,8 +756,9 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     ST_TYPE=0;
 #endif
   }
-
+#endif
   //3.5.0: nothing special
+#if SSE_VERSION>=351
   if(Version>=44) // Steem 3.5.1
   {
 #if defined(SSE_SHIFTER)
@@ -798,7 +802,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #if defined(SSE_MMU_WAKE_UP)//same
 //  WAKE_UP_STATE=0;
 #endif
-
+#endif
 
 #if defined(SSE_VAR_CHECK_SNAPSHOT) //stupid!
   if(Version>=44)
@@ -817,6 +821,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
     }
   }
 #endif
+#if SSE_VERSION>=352
   if(Version>=45) //3.5.2
   {
 #if defined(SSE_DRIVE)
@@ -872,6 +877,8 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 
 #endif
   }
+#endif
+#if SSE_VERSION>=354
   if(Version>=46) // 3.5.4
   {
 #if defined(SSE_MMU_WAKE_UP)
@@ -885,6 +892,8 @@ Steem SSE will reset auto.sts and quit\nSorry!",
     
 #endif
   }
+#endif
+#if SSE_VERSION>=361
   if(Version>=48) // 3.6.1
   {
 #if defined(SSE_IPF_RESUME_____)//3.6.1
@@ -911,7 +920,8 @@ Steem SSE will reset auto.sts and quit\nSorry!",
   else
   {
   }
-
+#endif
+#if SSE_VERSION>=370
   if(Version>=49) // 3.7.0
   {
 
@@ -957,18 +967,19 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #endif
 
   }//3.7.0
-
-  if(Version>=50) // 3.7.1
-  {
-#if defined(SSE_DISK_SCP_LS)
-    // nothing to do, it will be reinitiated when disk is inserted
-    // we don't save when disk is operating (TODO)
 #endif
+#if SSE_VERSION>=371
+  if(Version>=50) // 3.7.1, last minute
+  {
+    ReadWriteStruct(WD1772); //yep, was missing before... explains a lot!
+    //TRACE("phase %d\n",WD1772.prg_phase);
+    SF314[0].time_of_next_ip=SF314[1].time_of_next_ip=ACT+n_cpu_cycles_per_second;
+    if(LoadOrSave==LS_LOAD && WD1772.prg_phase>TWD1772::WD_READY)
+    {
+      WD1772.update_time=ACT+256; // yeah, but it will work with some prgs
+    }
   }
-
-
-
-
+#endif
 #endif//#if defined(STEVEN_SEAGAL)
 
 

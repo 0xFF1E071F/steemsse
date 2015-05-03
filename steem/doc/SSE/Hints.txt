@@ -1,6 +1,8 @@
 Steem SSE Hints
 ===================
 
+v3.7.1
+
 If a program doesn't work in Steem SSE, please check the lists below,
 maybe the solution is there. 
 In some cases it will only work in such setup because of emulation
@@ -12,11 +14,13 @@ Explanation of symbols
 
 #: SSE option 'Hacks'
 
-C1: SSE option 'C1: 6850/6301/E-clock'
+C1: SSE option 'C1: 6850/6301/MIDI/E-Clock'
 C2: SSE option 'C2: 68901'
 
 DI: there are bad disk images around, you may want to check at
 ataristeven.t15.org for a good version!!
+
+HI: monochrome monitor
 
 STF or STE: select in Machine option 'ST model'
 
@@ -32,7 +36,7 @@ If not, right click and check Read Only.
 
 ADAT: Disk Manager option 'Accurate Disk Access times'
 
-No B: disconnect drive B: in Disk Manager (just click on drive icon)
+No B: disconnect drive B: in Disk Manager (click on drive B: icon)
 
 digits x digits: select in SSE option 'Display size'
 
@@ -42,7 +46,7 @@ patch: click on the patch icon, select patch, read instructions, apply
 Apps
 =========
 
-- Aladin: no WP
+- Aladin: no WP, HI
 - Copy and Utility Disk Volume 1: STF
 - Neochrome: C1
 - Notator: C1
@@ -56,11 +60,14 @@ Games
 - 4 Wheel Drive/Combo Racer STX: Pasti.dll version
 - Altaïr: to use the missile, press any SHIFT key
 - Amberstar STX: WP
-- Antago STX: WP
+- Antago STX, SCP: WP
+- Arctic Fox: not T106
+- Chessmaster 2000: STF
 - Crazy Cars 2: F7 for joystick control
 - Darius auto166: DI
-- Demoniak -ELT: STF, WU2, ADAT, C1, C2, or a selection of those
-- Dragonflight: create STW disk, disable B:
+- Demoniak -ELT: STF, WU2, ADAT, C1, C2 (hell!)
+- Dragonflight: create STW disk
+- Dungeon Master SCP: DI, #
 - Dynabusters+: STE; F1: music F2: volume
 - ESWAT: ADAT
 - Exile: ADAT
@@ -69,6 +76,7 @@ Games
 - Flying Shark STX: STF
 - Foundation's Waste, some versions: No B
 - Future Wars: No B
+- G.Nius: ADAT
 - Gunship: No B
 - Hyper Force: STF
 - International Tennis: not C1
@@ -78,14 +86,17 @@ Games
 - Logical-ELT: C2
 - The Lost Patrol: ADAT
 - Manchester United: C1
+- Mean Street: ADAT
+- Mercs STX: not T102
 - Microprose Golf ST: ADAT
 - Nightdawn: STF
 - Platoon STX: STF T100US
+- Power Drift SCP: #
 - Realm of the Trolls: create STW disk
 - Star Trek STX: not T102
 - Sundog IPF: Ghost disk
 - The Sentinel (aka The Sentry): C1
-- Test Drive: STF
+- Test Drive: RAM <4MB
 - Trauma STX: French TOS
 - Ultimate Arena: STE
 - Ultimate Ride: No B
@@ -119,7 +130,7 @@ Demos
 - Deep Lair on Fuzion 80: STE
 - Dragonnels: C1
 - E605: planet STE, #
-- European Demos: No B or insert both disks before starting (option auto)
+- European Demos: No B or insert both disks before starting
 - Extreme Rage: STE
 - Fantasia: STE T106 or DI
 - Froggies Over The Fence: C1
@@ -160,7 +171,7 @@ Demos
 - Ultimate 3D Dots: STE; no disk in B:
 - Ultimate GFA Demo boot screen: STF
 - UMD8730 STF: #
-- Union Demo: STF
+- Union Demo: STF 1MB
 - The World is my Oyster screen #2: STF
 - Ventura: mouse to rotate menu
 - Ventura/Board and Spheres: STF, WU2
@@ -175,6 +186,7 @@ Demos
 - Automation 168: STF
 - Automation 231/Rainbow Island: STF
 - Automation 239: DI, C1
+- Automation 398: ADAT
 Many Automation CDs were redone for the STE.
 - Awesome 04 STF: #
 - Awesome 17: DI
@@ -184,6 +196,7 @@ Many Automation CDs were redone for the STE.
 - Fuzion 042: STF
 - Fuzion 045: DI
 - Fuzion 048/Spellfire the Sorcerer: STF
+- Fuzion 078: DI
 - Fuzion 150: No B
 - Fuzion 155: DI
 - Medway 001, ...: STF because of the stupid antivirus by you guess who!

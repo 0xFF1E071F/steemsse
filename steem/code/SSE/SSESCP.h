@@ -63,19 +63,11 @@ struct  TImageSCP {
   // interface (the same as for STW disk images)
   bool Open(char *path);
   void Close();
-#if defined(SSE_DISK_SCP_START_REV1)
   bool LoadTrack(BYTE side,BYTE track,bool reload=false);
-#else
-  bool LoadTrack(BYTE side,BYTE track);
-#endif
   WORD GetMfmData(WORD position); 
   void SetMfmData(WORD position, WORD mfm_data);
 #if defined(SSE_WD1772_DPLL)
-#ifdef SSE_WD1772_WEAK_BITS2
   int GetNextTransition(BYTE& us_to_next_flux);
-#else
-  int GetNextTransition();
-#endif
 #endif
   // other functions
   TImageSCP();
@@ -83,7 +75,7 @@ struct  TImageSCP {
   void ComputePosition(WORD position);
   int UnitsToNextFlux(int position);
   int UsToNextFlux(int units_to_next_flux);
-#if !defined(SSE_WD1772_PRECISE_SYNC)  || defined(SSE_DISK_SCP_TO_MFM_PREVIEW)
+#if !defined(SSE_WD1772_AM_LOGIC)||defined(SSE_DISK_SCP_TO_MFM_PREVIEW)
   BYTE GetDelay(int position);
 #endif
   void IncPosition();
@@ -108,9 +100,6 @@ private:
 #endif
 #if defined(SSE_DISK_SCP_WRITE)
   bool is_dirty;
-#endif
-#if defined(SSE_WD1772_WEAK_BITS) && !defined(SSE_WD1772_DPLL)
-  char weak_bit_shift;
 #endif
 #if defined(SSE_BOILER) && defined(SSE_DISK_SCP_TO_MFM_PREVIEW)
   void InterpretFlux(); // was a dev step

@@ -1,8 +1,10 @@
 [Text]
-Description=Patch for the wrong pasti image (fails protection at track 79)
+Description=Protection at track 79 randomly fails
 ApplyWhen=Before pressing F2
-Version=Works on Steem v3.2
+
+Version=STF T102
 PatchAuthor=Seagal
+
 
 [Patch]
 114F4=$103C $0000

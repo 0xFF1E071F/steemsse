@@ -404,20 +404,20 @@ int TSF314::CyclesPerByte() {
     though 1/sec is OK!
 */
 
-#if defined(SSE_DRIVE_INDEX_PULSE3)
+#if defined(SSE_DRIVE_INDEX_PULSE2)
 void TSF314::IndexPulse(bool image_triggered) {
 #else
 void TSF314::IndexPulse() {
 #endif
   ASSERT(Id==0||Id==1);
 
-#if defined(SSE_DRIVE_INDEX_PULSE4) // moving safety
+#if defined(SSE_DRIVE_INDEX_PULSE2) // moving safety
   time_of_next_ip=time_of_next_event+n_cpu_cycles_per_second; 
 #endif
   
   if(ImageType.Manager!=MNGR_WD1772||FloppyDrive[Id].Empty()||!State.motor)
   {
-#if !defined(SSE_DRIVE_INDEX_PULSE4)
+#if !defined(SSE_DRIVE_INDEX_PULSE2)
 #ifdef SSE_DEBUG
     if(YM2149.SelectedDrive==Id)
       TRACE_LOG("%c: Manager %d Empty %d motor %d\n",'A'+Id,ImageType.Manager,FloppyDrive[Id].Empty(),State.motor);
@@ -436,7 +436,7 @@ void TSF314::IndexPulse() {
   // Make sure that we always end track at the same byte when R/W
   // Important for Realm of the Trolls TODO: as for SCP
   if(!State.reading && !State.writing 
-#if defined(SSE_DISK_SCP2)
+#if defined(SSE_DISK_SCP)
     || IMAGE_SCP
 #endif
     || Disk[Id].current_byte>=Disk[Id].TrackBytes-1) // 0 - n-1
@@ -444,11 +444,11 @@ void TSF314::IndexPulse() {
 
   // Program next event, at next IP or in 1 sec (more?)
   ASSERT(State.motor);
-#if !defined(SSE_DRIVE_INDEX_PULSE4)
+#if !defined(SSE_DRIVE_INDEX_PULSE2)
   if(State.motor)
 #endif
   {
-#if defined(SSE_DRIVE_INDEX_PULSE_SCP)
+#if defined(SSE_DRIVE_INDEX_PULSE2)
 /*  We set up a timing for next IP, but if the drive is reading there are 
     chances the SCP object will trigger IP itself at the end of the track.
     This is a place where we could have bug reports.
@@ -466,21 +466,17 @@ void TSF314::IndexPulse() {
 #endif
       time_of_next_ip=time_of_last_ip + CyclesPerByte() * Disk[Id].TrackBytes;
   }
-#if !defined(SSE_DRIVE_INDEX_PULSE4)
+#if !defined(SSE_DRIVE_INDEX_PULSE2)
   else //as a safety, or it could hang //TODO
     time_of_next_ip=ACT+n_cpu_cycles_per_second; // put into future
 #endif
   ASSERT(time_of_next_ip-time_of_last_ip>0);
   //TRACE_LOG("%c: IP at %d next at %d (%d cycles, %d ms)\n",Id,time_of_last_ip,time_of_next_ip,time_of_next_ip-time_of_last_ip,(time_of_next_ip-time_of_last_ip)/(n_cpu_cycles_per_second/1000));
 
-#if defined(SSE_DRIVE_INDEX_PULSE2)
-  nRevs++;
-#endif
-
   // send pulse to WD1772
   if(DRIVE==Id)
-#if defined(SSE_DRIVE_INDEX_PULSE3)
-    WD1772.OnIndexPulse(Id,image_triggered);
+#if defined(SSE_DRIVE_INDEX_PULSE2)
+    WD1772.OnIndexPulse(Id,image_triggered); // transmitting image_triggered
 #else
     WD1772.OnIndexPulse(Id); 
 #endif
@@ -508,9 +504,6 @@ void TSF314::Motor(bool state) {
     WORD bytes_to_next_ip= (Disk[Id].current_byte<Disk[Id].TrackBytes) 
       ? Disk[Id].TrackBytes-Disk[Id].current_byte : rand()%Disk[Id].TrackBytes;
     time_of_next_ip=ACT + bytes_to_next_ip * CyclesPerByte();
-#if defined(SSE_DRIVE_INDEX_PULSE2)
-    nRevs=0; //reset
-#endif
   }
 
 #if defined(SSE_DRIVE_IP_HACK)
@@ -586,7 +579,7 @@ void TSF314::Read() {
 
   if(!State.reading || Disk[Id].current_byte>=Disk[Id].TrackBytes-1)
   {
-#if defined(SSE_DISK_SCP2)
+#if defined(SSE_DISK_SCP)
 /*  We should refactor this so that also STW images trigger IP, but my
     first attempt didn't work at all so...
 */

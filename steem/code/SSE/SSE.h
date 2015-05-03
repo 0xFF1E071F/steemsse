@@ -832,6 +832,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_DISK_STW)
 #define SSE_DISK_STW_DISK_MANAGER //new context option
 #define SSE_DISK_STW_MFM // bytes are MFM encoded on the disk
+#define SSE_DISK_STW_READONLY //3.7.1 last minute
 #endif
 
 #endif
@@ -1141,6 +1142,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_INFOBOX14 // order 'about' 'hints'
 #define SSE_GUI_INFOBOX15 // release notes (not sse faq)
 #define SSE_GUI_INFOBOX16 // no crash on big files
+
+#define SSE_GUI_INFOBOX17 //mousewheel on links
+
 #define SSE_GUI_INFOBOX_LINKS
 #endif//info
 
@@ -1284,10 +1288,10 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_INT_MFP_RATIO) 
 #define SSE_INT_MFP_RATIO_HIGH_SPEED
-#if defined(DEBUG_BUILD)
+//#if defined(DEBUG_BUILD) //second thoughts...
 #define SSE_INT_MFP_RATIO_OPTION // user can fine tune CPU clock
 #define SSE_INT_MFP_RATIO_OPTION2 // L/S
-#endif
+//#endif
 #define SSE_INT_MFP_RATIO_PRECISION // for short timers
 #define SSE_INT_MFP_RATIO_PRECISION_2 // 1 cycle precision
 #define SSE_INT_MFP_RATIO_PRECISION3 // 100%
@@ -4021,8 +4025,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BOILER_LOGSECTIONS1 // init: too heavy (CPU log)
 #define SSE_BOILER_PSEUDO_STACK2 //in SSE menu
 #else
-#undef SSE_INT_MFP_RATIO_OPTION 
-#undef SSE_INT_MFP_RATIO_OPTION2
+//#undef SSE_INT_MFP_RATIO_OPTION  //second thoughts...
+//#undef SSE_INT_MFP_RATIO_OPTION2
 #endif
 
 #if defined(SSE_FLOPPY)
@@ -4030,7 +4034,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DISK_SCP // Supercard Pro disk image format support
 //#define SSE_DISK_SCP_TO_MFM_PREVIEW // keep it, could be useful
 #define SSE_DISK_SCP_WRITE //not tested
-
+#define SSE_DISK_STW_READONLY //3.7.1 last minute
 #if defined(SSE_DMA)
 #undef SSE_DMA_COUNT_CYCLES //again... ;)
 #define SSE_DMA_TRACK_TRANSFER2 // also for CAPS images
@@ -4079,7 +4083,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_YM2149_QUANTIZE2 //bug in v3.7.0
 #endif
 
-#if defined(SSE_VIDEO)
+#if defined(SSE_GUI_INFOBOX)
+#define SSE_GUI_INFOBOX17 //mousewheel on links
 #endif
 
 #endif//371

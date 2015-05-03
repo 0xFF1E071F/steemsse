@@ -1,3 +1,5 @@
+#ifdef UNIX //SS
+
 //---------------------------------------------------------------------------
 TGeneralInfo::TGeneralInfo()
 {
@@ -258,3 +260,4 @@ int TGeneralInfo::edit_notify_proc(hxc_edit *ed,int mess,int i)
 }
 //---------------------------------------------------------------------------
 
+#endif

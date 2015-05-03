@@ -21,6 +21,10 @@
 #endif
 
 #include <fdc.decla.h> //DRIVE
+#if defined(SSE_DISK_STW_READONLY) //3.7.1
+#include <floppy_drive.decla.h> //FloppyDrive[]
+#endif
+ 
 
 #define HEADER_SIZE (4+2+1+1+2) //STW Version nSides nTracks nBytes
 
@@ -50,7 +54,11 @@ void TImageSTW::Close() {
   {
     TRACE_LOG("STW save & close image\n");
     fseek(fCurrentImage,0,SEEK_SET); // rewind
-    if(ImageData)
+    if(ImageData
+#if defined(SSE_DISK_STW_READONLY) //3.7.1 last minute
+      &&!FloppyDrive[DRIVE].ReadOnly
+#endif
+      )
       fwrite(ImageData,1,IMAGE_SIZE,fCurrentImage);
     fclose(fCurrentImage);
     free(ImageData);
@@ -165,6 +173,10 @@ bool TImageSTW::Open(char *path) {
   bool ok=false;
   Close(); // make sure previous image is correctly closed
   fCurrentImage=fopen(path,"rb+"); // try to open existing file
+#if defined(SSE_DISK_STW_READONLY) //3.7.1 last minute
+  if(!fCurrentImage) // maybe it's read-only
+    fCurrentImage=fopen(path,"rb");
+#endif
   if(fCurrentImage) // image exists
   {
     ImageData=(BYTE*)malloc(IMAGE_SIZE); //max size
@@ -184,6 +196,7 @@ bool TImageSTW::Open(char *path) {
         SWAP_WORD(&nBytes);
         if(nSides>2 || nTracks>88 || nBytes>6800)
           ok=false;
+
 #ifdef SSE_DEBUG
         // check meta-format
         else for(BYTE track=0;track<NUM_TRACKS;track++)
