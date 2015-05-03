@@ -1,4 +1,9 @@
 - Documentation written or put together for Steem SSE emulator.
 The difference with the 'doc' folder in '3rdparty' is that files are edited.
-But they do contain 3rdparty documentation, sometimes copied and pasted.
+But they do contain 3rdparty documentation, sometimes copied and pasted, and
+credit isn't given all the time.
+
+
+
+
 - GPL .30 licence.

@@ -11,6 +11,11 @@
 
 #include <scrollingcontrolswin.h>
 
+#if defined(SSE_GUI_INFOBOX17)
+#define WM_MOUSEWHEEL 0x020A
+#include <SSE/SSEDebug.h>
+#endif
+
 ScrollControlWin::ScrollControlWin(){ Scroller=NULL; }
 ScrollControlWin::ScrollControlWin(DWORD Style,int x,int y,int w,int h,
                HWND Parent,int Id,HINSTANCE Inst,LPVOID CreateStuff)
@@ -116,8 +121,10 @@ HWND ScrollControlWin::GetControlPage(){ if (Scroller) return (HWND)ScrollWndPro
 WINDOWPROC ScrollControlWin::GetControlPageWndProc(){if (Scroller) return (WINDOWPROC)GetWindowLong((HWND)ScrollWndProc(Scroller,SCWM_GETCONTROLPAGE,0,0),GWL_WNDPROC); else return NULL;}
 WINDOWPROC ScrollControlWin::SetControlPageWndProc(WINDOWPROC Proc){if (Scroller) return (WINDOWPROC)SetWindowLong((HWND)ScrollWndProc(Scroller,SCWM_GETCONTROLPAGE,0,0),GWL_WNDPROC,(long)Proc); else return NULL;}
 //---------------------------------------------------------------------------
+
 bool ScrollControlWin::ShouldPassOnMessage(UINT Mess)
 {
+  //ASSERT( Mess!=WM_MOUSEWHEEL);
   switch (Mess){
     case WM_COMMAND:
     case DM_GETDEFID:
@@ -135,8 +142,13 @@ bool ScrollControlWin::ShouldPassOnMessage(UINT Mess)
   return 0;
 }
 //---------------------------------------------------------------------------
+
+
+
 LRESULT WINAPI ScrollControlWin::ScrollWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 {
+  //ASSERT( Mess!=WM_MOUSEWHEEL );
+  //TRACE("WM %X WP %x LP %x\n",Mess,wPar,lPar);
   switch (Mess){
     case WM_CREATE:
     {
@@ -201,6 +213,14 @@ LRESULT WINAPI ScrollControlWin::ScrollWndProc(HWND Win,UINT Mess,WPARAM wPar,LP
         MoveWindow((HWND)GetProp(Win,"ControlPage"),OffsetX,OffsetY,rc.right-OffsetX,rc.bottom-OffsetY,true);
       }
       break;
+#if defined(SSE_GUI_INFOBOX17) // v3.7.1 last minute
+    case WM_MOUSEWHEEL:
+      {
+        int zDelta = (signed)wPar>>16;
+        wPar=(zDelta>=0)?SB_PAGEUP:SB_PAGEDOWN;//brutal but effective
+        Mess=WM_VSCROLL; // not nice way...
+      }
+#endif
     case WM_VSCROLL:case WM_HSCROLL:
       if (LOWORD(wPar)!=SB_ENDSCROLL){
         bool v=(Mess==WM_VSCROLL);

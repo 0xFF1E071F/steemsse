@@ -547,10 +547,19 @@ void TGeneralInfo::CreateLinksPage()
   SetWindowAndChildrensFont(Scroller.GetControlPage(),Font);
 
   Scroller.AutoSize(2,2);
-
+#if !defined(SSE_GUI_INFOBOX17)
   if (Focus==NULL) Focus=PageTree;
+#else
+  Focus=Scroller;
+#endif
   SetPageControlsFont();
   ShowPageControls();
+
+#if defined(SSE_GUI_INFOBOX17)
+ //// SetFocus(Scroller);
+  PostMessage(Handle,WM_SETFOCUS,0,0); //rather hacky, but this is marginal
+#endif
+
 }
 //---------------------------------------------------------------------------
 void TGeneralInfo::CreateReadmePage(int p)
@@ -689,10 +698,12 @@ void TGeneralInfo::Hide()
 
 LRESULT __stdcall TGeneralInfo::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 {
+  //ASSERT( Mess!=WM_MOUSEWHEEL );
   LRESULT Ret=DefStemDialogProc(Win,Mess,wPar,lPar);
   if (StemDialog_RetDefVal) return Ret;
 
   TGeneralInfo *This;
+    
   switch (Mess){
     case WM_COMMAND:
       GET_THIS;

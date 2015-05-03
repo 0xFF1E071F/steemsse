@@ -57,7 +57,7 @@ struct TWD1772Crc {
   void Reset();
   void Add(BYTE data);
   bool Check(TWD1772IDField *IDField);
-#if defined(SSE_WD1772_PRECISE_SYNC)
+#if defined(SSE_WD1772_AM_LOGIC)
   DWORD crccnt;
 #endif
 };
@@ -84,7 +84,7 @@ struct TWD1772Dpll {
   int write_start_time;
   int write_buffer[32];
   int write_position;
-#if defined(SSE_WD1772_WEAK_BITS) && defined(SSE_WD1772_DPLL)
+#if defined(SSE_WD1772_WEAK_BITS)
   char weak_bit_pairing;
 #endif
 
@@ -99,16 +99,13 @@ struct TWD1772AmDetector {
   void Enable();
   bool Enabled;
   BYTE nA1; // counter
-#if defined(SSE_WD1772_PRECISE_SYNC)
+
+
   void Reset();
   BYTE amdatadelay,ammarkdist,ammarktype,amdataskip;
   DWORD amdecode,aminfo,amisigmask;
   // we keep those here because it's 32bit and integrated in the logic:
   int dsr,dsrcnt; 
-#else
-  WORD AMFound; // primitive system, remove before v3.7.1 release?
-  WORD AMWindow;
-#endif
 
 };
 
@@ -304,20 +301,19 @@ struct TWD1772 {
   int WritingToDisk();
 #endif
 
-#if defined(SSE_DRIVE_INDEX_PULSE)
-#if defined(SSE_DRIVE_INDEX_PULSE3)
+
+#if defined(SSE_DRIVE_INDEX_PULSE2)
   // called by drive or by image
   void OnIndexPulse(int id,bool image_triggered); 
-#else
+#elif defined(SSE_DRIVE_INDEX_PULSE)
   void OnIndexPulse(int id); // called by drives (activates ip line)
-#endif
 #endif
 
 #if defined(SSE_DISK_GHOST)
   bool CheckGhostDisk(BYTE drive,BYTE io_src_b);
 #endif
 
-#if defined(SSE_WD1772_PRECISE_SYNC)
+#if defined(SSE_WD1772_AM_LOGIC)
   bool ShiftBit(int bit);
 #endif
 

@@ -1,0 +1,133 @@
+Steem SSE Bugs
+===================
+
+v3.7.1
+
+Notes
+1) "Correct" means it's no Steem bug AFAIK.
+2) Please don't report bugs that are already known, think of my reputation!
+
+
+-20year / pdx bad sound (correct)
+
+-36.15 HMD giga: 
+cracks in sound
+freezes after a while if no Hacks
+
+-Amazine 4/Impact: often crashes at start (correct)
+
+-Antiques: end scroller (correct)
+
+-Arkanoid 2: ball ghosting (correct)
+
+-BIG demo
+screen 1: overscan flicker on STE (correct)
+screen 2: sometimes monochrome rasters! (now they'll find a body)
+
+-Blitter: the rare case where a CPU instruction is executed while the
+blitter is working isn't emulated.
+
+-Brattacas: poor control (correct)
+
+-CAPS: no fast mode
+
+-Checking option 6301/ACIA during emulation may crash Steem
+
+-Changing display settings during emulation may crash Steem
+
+-Civilization STX HD install fails at disk A (correct)
+
+-Crash possible when Windows automatically blocks the session
+
+-Dizzy Panic 1 player/start switching (correct)
+
+-Dynabuster+ flicker at scores (correct)
+
+-Eye of Horus -MCA (correct)
+
+-F-29 crashes on 4MB STE (correct)
+
+-File associations lost at new version
+
+-Hades Nebula sometimes fails to start
+
+-hard disk emu, Steem won't let you save memory
+
+-hi-fi dreams should sound better on STE
+
+-International Tennis 3D: controls don't respond right (correct)
+
+-Japtro hangs in STE mode (correct)
+
+-Jumping Jackson on Automation 239: sometimes crashes at start game
+
+-Keyboard: sometimes won't take input anymore - quit Steem and start again
+
+-Lose picture at stop with 400x278 display size
+Due to DirectDraw hacks
+
+-lowlife 60
+
+-MB31 ?
+
+-Microprose Golf STX: current pasti.dll has some wrong timings, not
+up to Steem (ST, IPF versions OK).
+
+-My Dog is Enjoying Fuzion skull screen crash (correct)
+
+-Notator: instrument assignment?
+
+-Oh no more froggies: ADAT too slow (STW ok)
+
+-Options may be messed up when going from earlier versions of Steem
+to the most recent one (I do that all the time for tests).
+
+-Pacemaker credits line 70 flicker/shift with large borders,
+noise without
+
+-Pacemaker credits crash at end (correct)
+
+-Panic v1
+frequent video shift, lose overscan if no 'Hacks'
+
+-Pasti: failure on resume snapshot
+
+-Pasti: some games that work in Hatari don't in Steem; timings are not 
+accurate.
+This is because pasti.dll should be improved, the fault isn't on
+Steem's side.
+
+-Random crashes and failures... (rare)
+
+-ReDMCSB fails halfway in TOS1.02 (you can compile 50%!)
+Is it Steem or TOS bug?
+
+-SCP no fast mode
+
+-Snapshot: can't save when HD files open (big problem!)
+
+-Snapshot: poor STW and SCP resuming
+
+-Star Trek 
+samples too noisy
+
+-Status info may disappear when you play around with windows
+
+-Steem 3.2+ crashes (back to OS) on resuming when Pasti was on
+
+-Steem SSE uses more CPU power than Steem 3.2
+
+-Steem is unable to take advantage of multiple cores in 'fast forward' mode.
+
+-STE microwire; treble control doesn't work
+
+-STW no fast mode
+
+-Switching between versions of Steem may corrupt auto.sts and cause crashes
+
+-Ultimate 3D dots STE can fail to load
+correct? hangs even more on real STE + HXC (TODO: real drive?)
+
+-Warp STX may fail
+
+

@@ -86,7 +86,7 @@ Fetching
 ==========
 
 The PC (program counter) points to a word (16bit value) in memory that is 
-supposed to be fetched. A fetch is copying the value pointed by PC to a 
+supposed to be fetched. A fetch is copying the value pointed at by PC to a 
 register in the CPU (IRC). Those values are the program, made of macro-
 instructions, that is instructions and their operands. 
 Both the instructions and the operands are fetched but only the instructions 
@@ -262,7 +262,7 @@ All in all, there's some more code running in the core CPU emulation but that's
 the price we pay for a more satisfying (hopefully) emulation.
 
 One may use tables based on opcode instead, but that will not be enough for
-some cases that also depends on the memory address (Aladin).
+some cases that also depend on the memory address (Aladin).
 
 
 

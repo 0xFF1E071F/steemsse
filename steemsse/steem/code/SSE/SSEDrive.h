@@ -98,7 +98,7 @@ struct TSF314 {
 #endif
 
 #if defined(SSE_DRIVE_INDEX_PULSE)
-#if defined(SSE_DRIVE_INDEX_PULSE3)
+#if defined(SSE_DRIVE_INDEX_PULSE2)
   void IndexPulse(bool image_triggered=false);
 #else
   void IndexPulse();
@@ -137,11 +137,6 @@ struct TSF314 {
 #if defined(SSE_DRIVE_INDEX_STEP)
   void Step(int direction);
 #endif
-
-#if defined(SSE_DRIVE_INDEX_PULSE2)
-  DWORD nRevs;
-#endif
-
 
 };
 
