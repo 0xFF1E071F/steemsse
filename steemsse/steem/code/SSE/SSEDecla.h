@@ -174,6 +174,23 @@ int SS_signal; // "handy" global mask (future coding horror case)
 
 #ifdef SSE_UNIX
 ///////#define ZeroMemory(p,sz) memset((p),0,(sz))
+
+
+#ifdef SSE_DISK_SCP
+#define CAPSFDC_AI_AMDETENABLE BIT_0
+#define CAPSFDC_AI_CRCENABLE   BIT_1
+#define CAPSFDC_AI_CRCACTIVE   BIT_2
+#define CAPSFDC_AI_AMACTIVE    BIT_3
+#define CAPSFDC_AI_MA1ACTIVE   BIT_4
+#define CAPSFDC_AI_AMFOUND     BIT_5
+#define CAPSFDC_AI_MARKA1      BIT_6
+#define CAPSFDC_AI_MARKC2      BIT_7
+#define CAPSFDC_AI_DSRREADY    BIT_8
+#define CAPSFDC_AI_DSRAM       BIT_9
+#define CAPSFDC_AI_DSRMA1      BIT_10
+#endif
+
+
 #endif
 
 

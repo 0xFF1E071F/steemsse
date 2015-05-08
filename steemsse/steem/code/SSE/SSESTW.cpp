@@ -56,7 +56,7 @@ void TImageSTW::Close() {
     fseek(fCurrentImage,0,SEEK_SET); // rewind
     if(ImageData
 #if defined(SSE_DISK_STW_READONLY) //3.7.1 last minute
-      &&!FloppyDrive[DRIVE].ReadOnly
+   ////   &&!FloppyDrive[DRIVE].ReadOnly //what if wrong drive?
 #endif
       )
       fwrite(ImageData,1,IMAGE_SIZE,fCurrentImage);
@@ -175,7 +175,10 @@ bool TImageSTW::Open(char *path) {
   fCurrentImage=fopen(path,"rb+"); // try to open existing file
 #if defined(SSE_DISK_STW_READONLY) //3.7.1 last minute
   if(!fCurrentImage) // maybe it's read-only
+  {
     fCurrentImage=fopen(path,"rb");
+
+  }
 #endif
   if(fCurrentImage) // image exists
   {
