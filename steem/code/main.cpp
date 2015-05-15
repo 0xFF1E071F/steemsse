@@ -7,7 +7,7 @@ startup/shutdown code for all the versions of Steem. It also includes the
 other files that make up the Steem module.
 ---------------------------------------------------------------------------*/
 
-#include "../pch.h" // SS this includes, among others, windows.h
+#include "../pch.h" // SS this includes, among others, windows.h (if in WIN32)
 #pragma hdrstop // SS this says 'precompile up to this point'
 
 /*
@@ -737,16 +737,34 @@ bool Initialise()
 __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #endif
 
-#ifndef SSE_GUI_NOTIFY1
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_GUI_NOTIFY1))
   WIN_ONLY( LoadUnzipDLL(); )
 #endif
   log("STARTUP: cpu_routines_init Called");
   cpu_routines_init();
 
 #if defined(STEVEN_SEAGAL)
+#if defined(SSE_VAR_ARCHIVEACCESS)
 #if defined(SSE_GUI_NOTIFY1)
+  SetNotifyInitText("ArchiveAccess.dll");
+#endif
+  WIN_ONLY( ARCHIVEACCESS_OK=LoadArchiveAccessDll("ArchiveAccess.dll"); )
+  WIN_ONLY( TRACE_LOG("LoadArchiveAccessDll ok:%d\n",ARCHIVEACCESS_OK); )
+#endif
+#if defined(SSE_GUI_NOTIFY1)
+#if defined(SSE_VAR_ARCHIVEACCESS3)
+  if(ARCHIVEACCESS_OK)
+    enable_zip=true;
+#if !defined(SSE_VAR_ARCHIVEACCESS4)
+  else
+#endif
+#endif
+#if !defined(SSE_VAR_ARCHIVEACCESS4)
+  {//ss scope
   SetNotifyInitText("unzipd32.dll");
   WIN_ONLY( LoadUnzipDLL(); )
+  }
+#endif
 #endif
 #if defined(SSE_VAR_UNRAR)
 #if defined(SSE_GUI_NOTIFY1)
@@ -772,7 +790,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #endif
   SDL_OK=SDL.Init();
 #endif
-#endif
+#endif//SS
 
 #ifdef DEBUG_BUILD
   log("STARTUP: d2_routines_init Called");
@@ -1247,8 +1265,13 @@ void CleanUpSteem()
   CleanupGUI();
 
   DestroyKeyTable();
-
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS4))
   WIN_ONLY( if (hUnzip) FreeLibrary(hUnzip); enable_zip=false; hUnzip=NULL; )
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS)
+  WIN_ONLY( if (ARCHIVEACCESS_OK) UnloadArchiveAccessDll(); )
+  WIN_ONLY( ARCHIVEACCESS_OK=0; )
+#endif
 
 #ifdef UNIX
   if (XD){

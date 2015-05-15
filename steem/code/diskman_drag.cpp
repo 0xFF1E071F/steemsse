@@ -192,7 +192,11 @@ void TDiskManager::EndDrag(int x,int y,bool RightDrag)
         if (i<102){  // Dragged from DiskView or other Floppy to Floppy ListView
           bool InsertIt=true;
           EasyStr DiskInZip;
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS4)
+          if (DragInf->Zip && enable_zip){
+#else
           if (DragInf->Zip && hUnzip){
+#endif
             if (DragLV!=DiskView){  // Dragged from one floppy ListView to another
               DiskInZip=FloppyDrive[GetDlgCtrlID(DragLV)-100].DiskInZip;
             }else{

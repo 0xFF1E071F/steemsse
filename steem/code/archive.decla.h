@@ -46,9 +46,10 @@ int (_stdcall *UnzipFile)(char*,char*,WORD,long,void*,long);        //unzipping
 #define UNZIP_InUse        -1              // DLL in use by other program!
 #define UNZIP_DLLNotFound  -2              // DLL not loaded!
 
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS4))
 extern HINSTANCE hUnzip;
-
 extern void LoadUnzipDLL();
+#endif
 
 #endif//win32
 
@@ -63,6 +64,10 @@ extern void LoadUnzipDLL();
 #if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
 #include <UnRARDLL/unrar.h>
 void LoadUnrarDLL();
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS)
+#include <ArchiveAccess/ArchiveAccess/ArchiveAccessSSE.h>
 #endif
 
 #define ZIPPY_FAIL true

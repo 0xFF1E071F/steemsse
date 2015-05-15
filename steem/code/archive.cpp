@@ -13,14 +13,18 @@ of the various unarchiving libraries it can use.
 #include <conditions.h>
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS)
+char ansi_name[MAX_PATH]; // for conversion from unicode
+#endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_ARCHIVE_H) 
 zipclass zippy; 
 
 #if defined(WIN32)
 
-HINSTANCE hUnzip=NULL;
 
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS4))
+HINSTANCE hUnzip=NULL;
 void LoadUnzipDLL()
 {
   hUnzip=LoadLibrary("unzipd32.dll");
@@ -39,6 +43,7 @@ void LoadUnzipDLL()
     }
   }//hunzip
 }
+#endif
 #endif //defined(WIN32)
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
@@ -118,7 +123,30 @@ bool zipclass::first(char *name)
   }
   if (type[0]==0) strcpy(type,"ZIP");
   strupr(type);
-
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS)
+#if defined(SSE_VAR_ARCHIVEACCESS3)
+  if(ARCHIVEACCESS_OK
+    && MatchesAnyString_I(type,"ZIP","7Z","BZ2","GZ","TAR","ARJ",NULL)){
+#elif defined(SSE_VAR_ARCHIVEACCESS2)
+  if(ARCHIVEACCESS_OK
+    && MatchesAnyString_I(type,"7Z","BZ2","GZ","TAR","ARJ",NULL)){
+#else
+  if (strcmp(type,"7Z")==0 && ARCHIVEACCESS_OK) {
+#endif
+    if(ArchiveAccess_Open(name))
+    {
+      is_open=true;
+      current_file_n=0;
+      current_file_offset=0;
+      attrib=WORD(FileInfo.attributes);
+      crc=0;//?
+      return ZIPPY_SUCCEED;
+    }
+    else
+      return ZIPPY_FAIL;
+} else
+#endif
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS4))
   if (strcmp(type,"ZIP")==0){
 #ifdef UNIX
     uf=unzOpen(name);
@@ -152,9 +180,8 @@ bool zipclass::first(char *name)
     attrib=PackInfo.Attr;
     crc=PackInfo.Crc;
 #endif
-
     return ZIPPY_SUCCEED;
-
+#endif
 #ifdef RAR_SUPPORT
   }else if (strcmp(type,"RAR")==0){
     if (urarlib_list(name,(ArchiveList_struct*)&rar_list)<=0) return ZIPPY_FAIL;
@@ -176,9 +203,10 @@ bool zipclass::first(char *name)
     return ZIPPY_SUCCEED;
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
-  }
-  else if (strcmp(type,"RAR")==0 && UNRAR_OK)
-  {
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS4))
+  } else 
+#endif
+  if (strcmp(type,"RAR")==0 && UNRAR_OK) {
     ArchiveData.ArcName=name;
     hArcData=RAROpenArchive(&ArchiveData);
     ASSERT(hArcData);
@@ -207,6 +235,30 @@ bool zipclass::next()
 {
   if (enable_zip==0) return ZIPPY_FAIL;
 
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS)
+#if defined(SSE_VAR_ARCHIVEACCESS3)
+  if(ARCHIVEACCESS_OK
+    && MatchesAnyString_I(type,"ZIP","7Z","BZ2","GZ","TAR","ARJ",NULL)){
+#elif defined(SSE_VAR_ARCHIVEACCESS2)
+  if(ARCHIVEACCESS_OK
+    && MatchesAnyString_I(type,"7Z","BZ2","GZ","TAR","ARJ",NULL)){
+#else
+  if (strcmp(type,"7Z")==0 && ARCHIVEACCESS_OK) {
+#endif
+    if (is_open==0 || !ArchiveHandle) 
+      return ZIPPY_FAIL;
+    current_file_n++;
+    current_archived_file++;
+    ASSERT(current_archived_file==current_file_n);
+    if(ArchiveAccess_Select(current_file_n))
+    {
+      attrib=WORD(FileInfo.attributes);
+      current_file_offset=current_file_n;
+      return ZIPPY_SUCCEED;
+    }
+  } else
+#endif
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS4))
   if (strcmp(type,"ZIP")==0){
 #ifdef UNIX
     if (is_open==0) return ZIPPY_FAIL;
@@ -230,7 +282,7 @@ bool zipclass::next()
 #endif
 
     return ZIPPY_SUCCEED;
-
+#endif
 #ifdef RAR_SUPPORT
   }else if (strcmp(type,"RAR")==0){
     if (is_open==0 || rar_current==NULL) return ZIPPY_FAIL;
@@ -249,7 +301,10 @@ bool zipclass::next()
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
-  }else if (strcmp(type,"RAR")==0){
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS4))
+  }else 
+#endif
+  if (strcmp(type,"RAR")==0){
 
     if (is_open==0 || !UNRAR_OK || !hArcData) 
       return ZIPPY_FAIL;
@@ -272,7 +327,6 @@ bool zipclass::next()
 //    else
 //      TRACE_LOG("UnRAR next %d ec %d\n",current_file_n,ec);
 #endif
-
   }
   return ZIPPY_FAIL;
 }
@@ -280,7 +334,31 @@ bool zipclass::next()
 char* zipclass::filename_in_zip()
 {
   if (enable_zip==0) return "";
-
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS)
+#if defined(SSE_VAR_ARCHIVEACCESS3)
+  if(ARCHIVEACCESS_OK
+    && MatchesAnyString_I(type,"ZIP","7Z","BZ2","GZ","TAR","ARJ",NULL)){
+#elif defined(SSE_VAR_ARCHIVEACCESS2)
+  if(ARCHIVEACCESS_OK
+    && MatchesAnyString_I(type,"7Z","BZ2","GZ","TAR","ARJ",NULL)){
+#else
+  if (strcmp(type,"7Z")==0 && ARCHIVEACCESS_OK) {
+#endif
+    if(ArchiveHandle) // need to convert name from unicode
+    {
+      WideCharToMultiByte ( CP_ACP,                // ANSI code page
+        WC_COMPOSITECHECK,     // Check for accented characters
+        (LPCWSTR)FileInfo.path,         // Source Unicode string
+        -1,                    // -1 means string is zero-terminated
+        (char*)ansi_name, //SS a global
+        MAX_PATH,  // Size of buffer
+        NULL,                  // No default character
+        NULL );                // Don't care about this flag
+      return (char*)ansi_name;
+    }
+  } else
+#endif
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS4))
   if (strcmp(type,"ZIP")==0){
 #ifdef UNIX
     return filename_inzip;
@@ -288,12 +366,16 @@ char* zipclass::filename_in_zip()
 #ifdef WIN32
     return PackInfo.FileName;
 #endif
+#endif//aa4
 #ifdef RAR_SUPPORT
   }else if (strcmp(type,"RAR")==0){
     if (rar_current) return rar_current->item.Name;
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
-  }else if (strcmp(type,"RAR")==0){
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS4))
+  }else 
+#endif
+  if (strcmp(type,"RAR")==0){
     if(UNRAR_OK&&hArcData) 
       return HeaderData.FileName;
 #endif
@@ -306,19 +388,40 @@ bool zipclass::close()
   if (enable_zip==0) return ZIPPY_FAIL;
 
   if (is_open){
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS)
+#if defined(SSE_VAR_ARCHIVEACCESS3)
+    if(ARCHIVEACCESS_OK
+      && MatchesAnyString_I(type,"ZIP","7Z","BZ2","GZ","TAR","ARJ",NULL)){
+#elif defined(SSE_VAR_ARCHIVEACCESS2)
+    if(ARCHIVEACCESS_OK
+      && MatchesAnyString_I(type,"7Z","BZ2","GZ","TAR","ARJ",NULL)){
+#else
+    if (strcmp(type,"7Z")==0 && ARCHIVEACCESS_OK) {
+#endif
+      ArchiveAccess_Close();
+      is_open=false;
+      return ZIPPY_SUCCEED;
+    }
+    else
+#endif
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS4))
     if (strcmp(type,"ZIP")==0){
       UNIX_ONLY( unzClose(uf); )
       WIN_ONLY( CloseZipFile(&PackInfo); )
-
       is_open=false;
       return ZIPPY_SUCCEED;
+#endif//aa4
 #ifdef RAR_SUPPORT
     }else if (strcmp(type,"RAR")==0){
       is_open=false;
       return ZIPPY_SUCCEED;
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
-    }else if (strcmp(type,"RAR")==0 && UNRAR_OK){
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS4))
+    }else 
+#endif
+    if (strcmp(type,"RAR")==0 && UNRAR_OK){
 //      TRACE_LOG("closing RAR archive\n");
       VERIFY( !RARCloseArchive(hArcData) );
       is_open=false;
@@ -362,6 +465,40 @@ bool zipclass::extract_file(char *fn,int offset,char *dest_dir,bool hide,DWORD a
 //  TRACE_LOG("zippy extract %s (#%d) to %s\n",fn,offset,dest_dir);
   if (enable_zip==0) return ZIPPY_FAIL;
 
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS)
+#if defined(SSE_VAR_ARCHIVEACCESS3)
+  if(ARCHIVEACCESS_OK
+    && MatchesAnyString_I(type,"ZIP","7Z","BZ2","GZ","TAR","ARJ",NULL)){
+#elif defined(SSE_VAR_ARCHIVEACCESS2) 
+  if(ARCHIVEACCESS_OK
+    && MatchesAnyString_I(type,"7Z","BZ2","GZ","TAR","ARJ",NULL)){
+#else
+  if (strcmp(type,"7Z")==0 && ARCHIVEACCESS_OK) {
+#endif
+    if (is_open) 
+      close();
+    if (first(fn)==0){
+      while (offset > 0){
+        if (next()){ // Failed
+          close();
+          return ZIPPY_FAIL;
+        }
+        offset--;
+      }
+    }
+    ArchiveAccess_Extract(dest_dir);
+    close();
+#ifdef WIN32
+    if (hide){
+      SetFileAttributes(dest_dir,FILE_ATTRIBUTE_HIDDEN);
+    }else{
+      SetFileAttributes(dest_dir,attrib);
+    }
+#endif
+    return ZIPPY_SUCCEED;
+  } else
+#endif
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS4))
   if (strcmp(type,"ZIP")==0){
     if (is_open) close();
 
@@ -454,7 +591,7 @@ bool zipclass::extract_file(char *fn,int offset,char *dest_dir,bool hide,DWORD a
 #endif
 
     return ZIPPY_SUCCEED;
-
+#endif//aa4
 #ifdef RAR_SUPPORT
   }else if (strcmp(type,"RAR")==0){
     if (is_open) close();
@@ -491,9 +628,11 @@ bool zipclass::extract_file(char *fn,int offset,char *dest_dir,bool hide,DWORD a
     return ZIPPY_SUCCEED;
 
 #endif
-
 #if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
-  }else if (strcmp(type,"RAR")==0 && UNRAR_OK){
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS4))
+  }else 
+#endif
+  if (strcmp(type,"RAR")==0 && UNRAR_OK){
     if (is_open) 
       close();
 
@@ -523,7 +662,6 @@ bool zipclass::extract_file(char *fn,int offset,char *dest_dir,bool hide,DWORD a
       SetFileAttributes(dest_dir,attrib);
     }
 #endif
-
     return ZIPPY_SUCCEED;
 #endif
 

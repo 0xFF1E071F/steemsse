@@ -101,7 +101,18 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
   }else if(UNRAR_OK&&MatchesAnyString_I(Ext,"RAR",NULL)){
     ret=DISK_COMPRESSED;
 #endif
-
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS)
+#if defined(SSE_VAR_ARCHIVEACCESS3)
+  }else if(ARCHIVEACCESS_OK
+    && MatchesAnyString_I(Ext,"ZIP","7Z","BZ2","GZ","TAR","ARJ",NULL)){
+#elif defined(SSE_VAR_ARCHIVEACCESS2)
+  }else if(ARCHIVEACCESS_OK
+    &&MatchesAnyString_I(Ext,"7Z","BZ2","GZ","TAR","ARJ",NULL)){
+#else
+  }else if(ARCHIVEACCESS_OK&&MatchesAnyString_I(Ext,"7Z",NULL)){
+#endif
+    ret=DISK_COMPRESSED;
+#endif
   }
 
 #if USE_PASTI
@@ -465,8 +476,6 @@ http://www.microsoft-questions.com/microsoft/Platform-SDK-Shell/32138755/vista-l
 
   Win=CreateWindow("Steem Disk Manager Drive Icon","A",WS_CHILD | WS_VISIBLE,
                 10,10,64,64,Handle,(HMENU)98,HInstance,NULL);
-
-//TRACE("Win A %d\n",Win);
 
   int Disabled=(AreNewDisksInHistory(0) ? 0:WS_DISABLED);
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_SMALLDOWNARROW),WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | Disabled,

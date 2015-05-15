@@ -1,4 +1,4 @@
-// for v3.7.1
+// for v3.7.2
 #pragma once // VC guard
 #ifndef STEVEN_SEAGAL_H // BCC guard
 #define STEVEN_SEAGAL_H
@@ -121,11 +121,11 @@ Beta: not SSE_PRIVATE_BUILD
 // VERSION //
 /////////////
 
-#define SSE_VERSION 371 // versions down to 340 still compile //TODO->320
+#define SSE_VERSION 372 // versions down to 340 still compile //TODO->320
 
-#if SSE_VERSION>370 //last release
-//#define SSE_BETA //title, OSD, plus some testing - new features
-//#define SSE_BETA_BUGFIX // beta for just bugfixes
+#if SSE_VERSION>371 //last release
+#define SSE_BETA //title, OSD, plus some testing - new features
+#define SSE_BETA_BUGFIX // beta for just bugfixes
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
 ///#define SSE_PRIVATE_BUILD // my "beta" option
 #endif
@@ -146,7 +146,7 @@ Beta: not SSE_PRIVATE_BUILD
     to compile an older version.
 */
 
-#define SSE_SWITCHES_FEATURES
+//#define SSE_SWITCHES_FEATURES
 
 
 //////////////
@@ -597,7 +597,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BOILER_SHOW_TRICKS //line
 #define SSE_BOILER_SHOW_TRICKS2 //frame
 #define SSE_BOILER_SSE_PERSISTENT // L/S options 
-#define SSE_BOILER_STACK_68030_FRAME //request, to check compatibility
+//#define SSE_BOILER_STACK_68030_FRAME //undef 3.7.1
 #define SSE_BOILER_STACK_CHOICE
 #define SSE_BOILER_TIMER_B // instead of 0
 #define SSE_BOILER_TIMERS_ACTIVE // (in reverse video) yeah!
@@ -795,13 +795,11 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_FDC        // WD1772 floppy disk controller
 #define SSE_FLOPPY_EVENT
 #define SSE_FLOPPY_EVENT2
-#define SSE_WD1772     // WD1772 floppy disk controller (IO, STW...)
+#define SSE_WD1772     // WD1772 floppy disk controller (IO, STW, SCP, HFE...)
 #define SSE_YM2149     // YM2149, needed for floppy and for sound
 
-#define SSE_DISK_SCP // Supercard Pro disk image format support
-
 #ifdef WIN32
-#define SSE_IPF        // CAPS support (IPF, CTR disk images) 
+#define SSE_IPF        // CAPS support (IPF, CTR disk images)
 #define SSE_PASTI      // Improvements in Pasti support (STX disk images)
 #endif
 
@@ -815,6 +813,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DISK_GHOST
 #endif
 #define SSE_DISK_IMAGETYPE
+#define SSE_DISK_SCP // Supercard Pro disk image format support
 #define SSE_DISK_STW
 
 #if defined(SSE_DISK_GHOST)
@@ -829,13 +828,18 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DISK_IMAGETYPE2
 #endif
 
+#if defined(SSE_DISK_SCP)
+//#define SSE_DISK_SCP_TO_MFM_PREVIEW // keep it, could be useful
+#define SSE_DISK_SCP_WRITE //not tested
+#endif//scp
+
 #if defined(SSE_DISK_STW)
 #define SSE_DISK_STW_DISK_MANAGER //new context option
 #define SSE_DISK_STW_MFM // bytes are MFM encoded on the disk
 #define SSE_DISK_STW_READONLY //3.7.1 last minute
-#endif
+#endif//stw
 
-#endif
+#endif //DISK
 
 // DMA //
 
@@ -1011,15 +1015,6 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_IPF_SAVE_WRITES //TODO?
 
 #endif//ipf
-
-// SCP //
-
-#if defined(SSE_DISK_SCP)
-
-//#define SSE_DISK_SCP_TO_MFM_PREVIEW // keep it, could be useful
-#define SSE_DISK_SCP_WRITE //not tested
-
-#endif//scp
 
 // STX //
 
@@ -1538,6 +1533,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_MEGAR_FIX_001 // intercept GEM in extended resolution
 #define SSE_TOS_BOOTER1//accept TOS boot of the 260ST
 #define SSE_TOS_FILETIME_FIX //from Petari
+//#define SSE_TOS_GEMDOS_FDUP // for EmuTOS - it's fixed already, not def
 #define SSE_TOS_GEMDOS_NOINLINE
 #define SSE_TOS_GEMDOS_PEXEC6 //ReDMCSB 100% in TOS104
 #define SSE_TOS_GEMDOS_VAR1 //various unimportant fixes 
@@ -3898,12 +3894,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SOUND_INLINE2E
 #define SSE_SOUND_INLINE2F
 #endif
-
 #define SSE_SOUND_MICROWIRE_MASK1 //bugfix
 #define SSE_SOUND_MICROWIRE_MASK2 //incorrect doc (?)
 #define SSE_SOUND_MICROWIRE_READ1
 #define SSE_SOUND_MICROWIRE_WRITE_LATENCY_B //Antiques 
-
 #undef  SSE_SOUND_VOL //Antiques sounds better without this precaution
 #define SSE_SOUND_VOL_LOGARITHMIC_2 // bugfix on resume
 #endif
@@ -4012,11 +4006,9 @@ Beta: not SSE_PRIVATE_BUILD
 #undef SSE_CPU_SET_DEST_W_TO_0 // Aladin remove hack
 #define SSE_CPU_TRUE_PC3 // Aladin real fix
 #endif
-
 #if defined(SSE_DEBUG)
 #define SSE_OSD_DRIVE_INFO_EXT // STX, MSA... 
 #endif
-
 #if defined(DEBUG_BUILD)
 #define SSE_BOILER_BLIT_IN_HISTORY
 #define SSE_BOILER_BLIT_WHEN_STOPPED // dangerous?
@@ -4024,13 +4016,12 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BOILER_AUTO_FLUSH_TRACE//of course
 #define SSE_BOILER_LOGSECTIONS1 // init: too heavy (CPU log)
 #define SSE_BOILER_PSEUDO_STACK2 //in SSE menu
+#undef SSE_BOILER_STACK_68030_FRAME //we emulate STF, STE, not the rest
 #else
 //#undef SSE_INT_MFP_RATIO_OPTION  //second thoughts...
 //#undef SSE_INT_MFP_RATIO_OPTION2
 #endif
-
 #if defined(SSE_FLOPPY)
-
 #define SSE_DISK_SCP // Supercard Pro disk image format support
 //#define SSE_DISK_SCP_TO_MFM_PREVIEW // keep it, could be useful
 #define SSE_DISK_SCP_WRITE //not tested
@@ -4039,7 +4030,6 @@ Beta: not SSE_PRIVATE_BUILD
 #undef SSE_DMA_COUNT_CYCLES //again... ;)
 #define SSE_DMA_TRACK_TRANSFER2 // also for CAPS images
 #endif
-
 #if defined(SSE_DRIVE)
 #define SSE_DRIVE_INDEX_PULSE2 // improvements for SCP
 #define SSE_DRIVE_READ_TRACK_11C2 //ProCopy 1.50 Analyze
@@ -4047,24 +4037,20 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DRIVE_SOUND_VOLUME_3
 #endif
 #endif
-
 #if defined(SSE_WD1772)
-#define SSE_WD1772_371 // one switch for various fixes
+#define SSE_WD1772_371 // SPC support
 #define SSE_WD1772_AM_LOGIC // code inspired by SPS (CapsFDCEmulator.cpp)
 #define SSE_WD1772_DPLL // code inspired by MAME/MESS (wd_fdc.c)
 //#define SSE_WD1772_MFM_PRODUCE_TABLE // one-shot switch...
 #define SSE_WD1772_WEAK_BITS //hack
 #endif//wd1772
 #endif//flp
-
 #if defined(SSE_MMU)
 #define SSE_MMU_SDP1B
 #endif
-
 #if defined(SSE_OSD)
 #undef SSE_OSD_SCROLLER_DISK_IMAGE // doubles with status bar
 #endif
-
 #if defined(SSE_SOUND)
 #if defined(SSE_SOUND_MICROWIRE)
 #undef SSE_SOUND_MICROWIRE_READ1 //Sleepwalker STE
@@ -4073,22 +4059,24 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SOUND_VOL_LOGARITHMIC_3
 #endif
 #endif//snd
-
+//#define SSE_TOS_GEMDOS_FDUP // for EmuTOS - it's fixed already, not def
 #if defined(SSE_VARIOUS)
 #define SSE_VAR_UNRAR2 //ok with RAR5
 #endif
-
 #ifdef SSE_YM2149 
 #define SSE_YM2149_DELAY_RENDERING2 //bug in v3.7.0
 #define SSE_YM2149_QUANTIZE2 //bug in v3.7.0
 #endif
-
 #if defined(SSE_GUI_INFOBOX)
 #define SSE_GUI_INFOBOX17 //mousewheel on links
 #endif
 
 #endif//371
 
+
+#if SSE_VERSION>=372
+
+#endif
 
 #endif//?SSE_SWITCHES_FEATURES
 
@@ -4201,7 +4189,7 @@ Beta: not SSE_PRIVATE_BUILD
 ///////////////
 
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
-//#define TEST01
+#define TEST01
 //#define TEST02
 //#define TEST03
 //#define TEST04
@@ -4224,12 +4212,20 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_DRIVE_WRITE_TRACK_11
 //#define SSE_GUI_FULLSCREEN_NO_VSYNC_OPTION //but all the rest?
 //#define SSE_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
-//#define SSE_TOS_GEMDOS_FDUP // for EmuTOS - it's fixed already, undef
+
+
+#if defined(SSE_VARIOUS)
+#if defined(WIN32) && defined(VC_BUILD) // works with VC6, VS2008 not BCC
+#define SSE_VAR_ARCHIVEACCESS // 7z support
+#define SSE_VAR_ARCHIVEACCESS2 // bz2 (with modded dll), gz, tar, arj
+#define SSE_VAR_ARCHIVEACCESS3 // zip managed by ArchiveAccess.dll
+#define SSE_VAR_ARCHIVEACCESS4 // remove code for unzipd32.dll
+#endif
+#endif
 
 #endif//beta
 
 #if defined(SSE_BETA_BUGFIX)
-
 #endif//bugfix
 
 #else//!SS
