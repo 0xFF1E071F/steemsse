@@ -1,3 +1,4 @@
+#ifndef SSE_STRUCTURE_ARCHIVE_H
 #ifdef WIN32
 typedef struct{
   char InternalUse[12];    // Used internally by the dll
@@ -57,3 +58,4 @@ void LoadUnzipDLL()
 //---------------------------------------------------------------------------
 
 #endif
+#endif//#ifndef SSE_STRUCTURE_ARCHIVE_H

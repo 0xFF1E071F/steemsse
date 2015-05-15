@@ -613,6 +613,10 @@ int ChangeBorderSize(int size_in) {
 
 #include "SSE/SSEMMU.h"
 
+#if defined(SSE_VAR_ARCHIVEACCESS)
+extern char ansi_name[MAX_PATH];
+#endif
+
 void GUIRefreshStatusBar() {
 
   HWND status_bar_win=GetDlgItem(StemWin,120); // get handle
@@ -623,8 +627,11 @@ void GUIRefreshStatusBar() {
   // build text of "status bar", only if we're to show it
   if(should_we_show)
   {
+#if defined(SSE_VAR_ARCHIVEACCESS)
+    char *status_bar=ansi_name; //first reuse!
+#else
     char status_bar[120+10]="\0"; //TODO: size
-
+#endif
     if(SSE_STATUS_BAR)
     {
       // basic ST/TOS/RAM
@@ -1830,7 +1837,7 @@ EasyStr Translation(char *s)
 }
 
 //---------------------------------------------------------------------------
-char FileTypes[512];
+char FileTypes[512]; //SS another global we could use...
 
 char *FSTypes(int Type,...)
 {
@@ -1847,6 +1854,15 @@ char *FSTypes(int Type,...)
     if(UNRAR_OK)
       strcpy(tp,";*.rar");tp+=strlen(tp);
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS)
+    if(ARCHIVEACCESS_OK)
+#if defined(SSE_VAR_ARCHIVEACCESS2)
+      strcpy(tp,";*.7z;*.bz2;*.gz;*.tar;*.arj");tp+=strlen(tp);
+#else
+      strcpy(tp,";*.7z");tp+=strlen(tp);
+#endif
+#endif
+
 #if USE_PASTI
     if (hPasti){
       tp[0]=';';tp++;
