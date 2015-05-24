@@ -1310,7 +1310,7 @@ void TOptionBox::CreateFullscreenPage()
 #if defined(SSE_VID_D3D_LIST_MODES)
   CreateWindow("Button",T("Direct3D"),
     WS_CHILD | BS_GROUPBOX,
-    page_l,y,page_w,45,Handle,(HMENU)99,HInstance,NULL);
+    page_l,y,page_w,45+10,Handle,(HMENU)99,HInstance,NULL); //v3.7.2 + 10
   y+=15;
   Offset=10;
   long Wid=GetCheckBoxSize(Font,T("On")).Width; 
@@ -1361,6 +1361,9 @@ void TOptionBox::CreateFullscreenPage()
 
 #if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION)
   y-=LineHeight;
+#if defined(SSE_VID_D3D_CRISP_OPTION)
+  y-=7;
+#endif
   Offset+=Wid+HorizontalSeparation;
 //  Offset=0;
   Wid=GetCheckBoxSize(Font,T("ST aspect ratio")).Width;
@@ -1368,9 +1371,26 @@ void TOptionBox::CreateFullscreenPage()
   Win=CreateWindow("Button",T("ST aspect ratio"),mask,
     page_l +Offset,y-1,Wid,25,Handle,(HMENU)7315,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_ST_ASPECT_RATIO,0);
+#if SSE_VERSION>=372
+  ToolAddWindow(ToolTip,Win,T("You like those distorted pixels? That's the option for you"));
+#else
   ToolAddWindow(ToolTip,Win,T("As is visible on many screenshots, the ST aspect ratio was distorted, with too high pixels. D3D fullscreen."));
+#endif
   y+=LineHeight+5;
 #endif
+
+#if defined(SSE_VID_D3D_CRISP_OPTION)
+  y-=LineHeight/2; // this is hard to fit!
+  Wid=GetCheckBoxSize(Font,T("Crisp rendering")).Width;
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+  Win=CreateWindow("Button",T("Crisp rendering"),mask,
+    page_l +Offset,y-1,Wid,25,Handle,(HMENU)7324,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,OPTION_D3D_CRISP,0);
+  ToolAddWindow(ToolTip,Win,T("You like those big pixels? That's the option for you"));
+  y+=LineHeight+5;
+#endif
+
+
 #endif
 
   w=get_text_width(T("Drawing mode"));
@@ -1597,9 +1617,15 @@ void TOptionBox::CreateFullscreenPage()
 
 #if defined(SSE_VID_D3D_OPTION5) //duplicate! TODO
 #if defined(SSE_VID_D3D_LIST_MODES)
+#if defined(SSE_VID_D3D_CRISP_OPTION)
+  WORD items[]={7315,7319,7324,205,280,208,204,210,220,221,222,223,224,225,226,0xFFFF};
+  for(int i=0;items[i]!=0xFFFF;i++)
+    EnableWindow(GetDlgItem(Handle,items[i]),!SSE_OPTION_D3D^ (i<4) ); 
+#else
   WORD items[]={7315,7319,205,280,208,204,210,220,221,222,223,224,225,226,0xFFFF};
   for(int i=0;items[i]!=0xFFFF;i++)
     EnableWindow(GetDlgItem(Handle,items[i]),!SSE_OPTION_D3D^ (i<3) ); 
+#endif
 #else
   WORD items[]={7315,280,208,0xFFFF};
   for(int i=0;items[i]!=0xFFFF;i++)
@@ -2367,7 +2393,11 @@ void TOptionBox::CreateAssocPage()
 #endif
 #else
 #if defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_IPF)
+#if defined(SSE_GUI_ASSOCIATE_HFE) //see note in options.cpp
+  AssAddToExtensionsLV(".HFE",T("ST/HxC Disk Image"),7); //height
+#else
   AssAddToExtensionsLV(".IPF",T("Caps Disk Image"),7); //height
+#endif
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_TOS_PRG_AUTORUN)
   AssAddToExtensionsLV(".PRG",T("Atari PRG executable"),8);

@@ -4223,6 +4223,9 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif
 
+#define SSE_VID_D3D_CRISP //D3D can do that
+#define SSE_VID_D3D_CRISP_OPTION //the harder part!
+
 #endif//beta
 
 #if defined(SSE_BETA_BUGFIX)

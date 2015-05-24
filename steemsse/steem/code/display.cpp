@@ -2439,6 +2439,12 @@ bool SteemDisplay::D3DBlit() {
   {
     d3derr=pD3DDevice->BeginScene();
     d3derr=pD3DSprite->Begin(0); // the picture is one big sprite
+#if defined(SSE_VID_D3D_CRISP)
+#if defined(SSE_VID_D3D_CRISP_OPTION)
+    if(OPTION_D3D_CRISP)
+#endif
+      pD3DDevice->SetSamplerState(0,D3DSAMP_MAGFILTER ,D3DTEXF_POINT); //v3.7.2
+#endif
     d3derr=pD3DSprite->Draw(pD3DTexture,NULL,NULL,NULL,0xFFFFFFFF);
     d3derr=pD3DSprite->End();
     d3derr=pD3DDevice->EndScene();
@@ -2704,12 +2710,24 @@ HRESULT SteemDisplay::D3DSpriteInit() {
     }
     else // "4:3"
     {
-      sh=sw=(float)SurfaceWidth/stx;
-//      TRACE("");
+      sh=sw= (float)SurfaceWidth/stx;
       ty=(SurfaceHeight-SurfaceWidth*sty/stx)/2;
-//      if(!(border&1))
-  //      ty-= 2*(BORDER_TOP+BORDER_BOTTOM);// not really correct
     }
+
+
+#if defined(SSE_VID_D3D_CRISP)
+/*  Trade-off, we sacrifice some screen space to have better proportions.
+    v3.7.2
+*/
+#if defined(SSE_VID_D3D_CRISP_OPTION)
+    if(OPTION_D3D_CRISP)
+#endif
+    {
+      sw=sh=(int)(sw); // no artefacts
+      tx= (SurfaceWidth-(sw*stx))/2; // correct translation (on my 4:3 anyway)
+      ty= (SurfaceHeight-(sw*sty))/2;
+    }
+#endif
 
 #if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO) 
 #if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION)
@@ -2725,8 +2743,10 @@ HRESULT SteemDisplay::D3DSpriteInit() {
       sh/=2;
     if(BORDER_40)
       tx-=16*sw; // same old trick (BPOC 400 pixels)
+
     TRACE_LOG("sw %f tx %f sh %f ty %f\n",sw,tx,sh,ty);
   }
+
   D3DMATRIX matrix= {
     sw,              0.0f,            0.0f,            0.0f,
     0.0f,            sh,              0.0f,            0.0f,
