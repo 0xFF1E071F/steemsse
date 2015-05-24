@@ -885,6 +885,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_TOS_PRG_AUTORUN)
   OPTION_PRG_SUPPORT=pCSF->GetInt("Option","PRG_support",OPTION_PRG_SUPPORT);
 #endif
+#if defined(SSE_VID_D3D_CRISP_OPTION)
+  OPTION_D3D_CRISP=pCSF->GetInt("Option","Direct3DCrisp",OPTION_D3D_CRISP);
+#endif
 #endif//steven_seagal
 
 
@@ -1353,6 +1356,9 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 #if defined(SSE_TOS_PRG_AUTORUN)
   pCSF->SetStr("Option","PRG_support",EasyStr(OPTION_PRG_SUPPORT));
+#endif
+#if defined(SSE_VID_D3D_CRISP_OPTION)
+  pCSF->SetStr("Option","Direct3DCrisp",EasyStr(OPTION_D3D_CRISP));
 #endif
 
 //boiler

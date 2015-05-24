@@ -1878,27 +1878,32 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if (HIWORD(wPar)==BN_CLICKED){
             SSE_OPTION_D3D=!SSE_OPTION_D3D;
             SendMessage(HWND(lPar),BM_SETCHECK,SSE_OPTION_D3D,0);
-#if defined(SSE_VID_D3D_OPTION5)
-//            WORD items[]={7315,280,208,210,220,221,222,223,224,225,226,0xFFFF};
-
 
 #if defined(SSE_VID_D3D_OPTION5) //duplicate! TODO
 #if defined(SSE_VID_D3D_LIST_MODES)
+#if defined(SSE_VID_D3D_CRISP_OPTION)
+  WORD items[]={7315,7319,7324,205,280,208,204,210,220,221,222,223,224,225,226,0xFFFF};
+  for(int i=0;items[i]!=0xFFFF;i++)
+    EnableWindow(GetDlgItem(Win,items[i]),!SSE_OPTION_D3D^ (i<4) ); 
+#else
   WORD items[]={7315,7319,205,280,208,204,210,220,221,222,223,224,225,226,0xFFFF};
   for(int i=0;items[i]!=0xFFFF;i++) //^ just a trick
     EnableWindow(GetDlgItem(Win,items[i]),!SSE_OPTION_D3D^ (i<3) ); 
+#endif
 #else
+
   WORD items[]={7315,280,208,0xFFFF};
   for(int i=0;items[i]!=0xFFFF;i++)
     EnableWindow(GetDlgItem(Win,items[i]),!SSE_OPTION_D3D^!i); 
+#endif
 #endif
             TRACE_LOG("Option D3D %d\n",SSE_OPTION_D3D);
             //Disp.Init();//big mistake!
           }
           break;
+
 #endif
-#endif
-#endif
+
 
 
 #if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION)
@@ -1971,6 +1976,16 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             OPTION_PRECISE_MFP=!OPTION_PRECISE_MFP;
             TRACE_LOG("Option MC68901 = %d\n",OPTION_PRECISE_MFP);
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_PRECISE_MFP,0);
+          }
+          break;
+#endif
+
+#if defined(SSE_VID_D3D_CRISP_OPTION) // Option Crisp D3D
+        case 7324:
+          if (HIWORD(wPar)==BN_CLICKED){
+            OPTION_D3D_CRISP=!OPTION_D3D_CRISP;
+            TRACE_LOG("Option Crisp D3D = %d\n",OPTION_D3D_CRISP);
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_D3D_CRISP,0);
           }
           break;
 #endif
