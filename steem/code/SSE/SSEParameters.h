@@ -193,7 +193,30 @@ MIDI is 4 times faster than IKBD
 
 //SF314[DRIVE].HblsPerRotation()
 
+//////////
+// DISK //
+//////////
 
+///////////////
+// STW + SCP //
+///////////////
+
+#if defined(SSE_DISK)
+#if defined(SSE_DISK_STW)
+#define DISK_EXT_STW "STW"
+#endif
+#if defined(SSE_DISK_SCP)
+#define DISK_EXT_SCP "SCP"
+#endif
+#if defined(SSE_DISK_HFE)
+#define DISK_EXT_HFE "HFE"
+#if defined(SSE_UNIX)
+#define DISK_HFE_BOOT_FILENAME "/HFE_boot.bin" 
+#else
+#define DISK_HFE_BOOT_FILENAME "\\HFE_boot.bin"
+#endif
+#endif
+#endif
 
 /////////
 // DMA //
@@ -612,18 +635,6 @@ Far more on the ST.
 #endif
 
 
-
-///////////////
-// STW + SCP //
-///////////////
-
-#if defined(SSE_DISK_STW)
-
-#define DISK_EXT_STW "STW"
-
-#endif
-
-#define DISK_EXT_SCP "SCP"
 
 /////////////
 // TIMINGS //

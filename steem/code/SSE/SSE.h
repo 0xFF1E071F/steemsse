@@ -34,6 +34,7 @@ timings found by ijor (also author of Pasti).
 -A folder 'SDL-WIN' for future (?) SDL support
 -A folder 'unRARDLL' in '3rdparty' for unrar support
 -A folder 'various' in '3rdparty'
+-A folder 'hfe' in '3rdparty' for HFE support
 -Files xxx.decla.h to better separate declaration/implementation
 TODO: restore previous h files
 
@@ -4213,6 +4214,10 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_GUI_FULLSCREEN_NO_VSYNC_OPTION //but all the rest?
 //#define SSE_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
 
+#if defined(SSE_DISK)
+#define SSE_DISK_HFE // HxC floppy emulator HFE image support
+#define SSE_DISK_HFE_DISK_MANAGER // creating HFE images in Steem
+#define SSE_DISK_HFE_TRIGGER_IP // changes nothing?
 
 #if defined(SSE_VARIOUS)
 #if defined(WIN32) && defined(VC_BUILD) // works with VC6, VS2008 not BCC

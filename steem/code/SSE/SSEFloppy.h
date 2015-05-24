@@ -36,9 +36,14 @@ interrupt."
 #include "SSEGhostDisk.h"
 #endif
 #include "SSEYM2149.h"
-#include "SSEScp.h"
+#if defined(SSE_DISK_SCP)
+#include "SSEScp.h" //3.7.1
+#endif
 #if defined(SSE_DISK_STW) //3.7.0
 #include "SSESTW.h"
+#endif
+#if defined(SSE_DISK_HFE) //3.7.2
+#include "SSEHfe.h"
 #endif
 #include "SSEWD1772.h"
 
@@ -67,6 +72,15 @@ extern TImageSCP ImageSCP[2];
 #else
 #define IMAGE_SCP 0
 #endif
+
+#if defined(SSE_DISK_HFE)
+extern TImageHFE ImageHFE[2];
+#define IMAGE_HFE (SF314[DRIVE].ImageType.Extension==EXT_HFE)
+#else
+#define IMAGE_HFE 0
+#endif
+
+
 
 #if defined(SSE_DMA)
 extern TDma Dma;

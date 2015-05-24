@@ -18,6 +18,10 @@
 #if defined(SSE_DISK_STW)
 #define DISK_STW 8 
 #endif
+#if defined(SSE_DISK_HFE)
+#define DISK_HFE 9 
+#endif
+
 
 #define FileIsDisk(s) ExtensionIsDisk(strrchr(s,'.'))
 
@@ -216,8 +220,11 @@ public:
 
   DiskManFileInfo PropInf;
   BPBINFO bpbi,file_bpbi,final_bpbi;
-
+#if defined(SSE_GUI_DISK_MANAGER_INSERT_DISKB_REMOVE)
+  BYTE SmallIcons,AutoInsert2;
+#else
   bool SmallIcons,AutoInsert2;
+#endif
   int IconSpacing;
   bool EjectDisksWhenQuit;
   WORD BytesPerSectorIdx,SecsPerTrackIdx,TracksIdx,SidesIdx;

@@ -74,6 +74,9 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
     "STW",
 #endif  
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_HFE)
+    DISK_EXT_HFE,
+#endif  
 #if defined(SSE_TOS_PRG_AUTORUN__)
     "PRG",//not a disk, must be handled differently
 #endif
@@ -1545,8 +1548,26 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
         case 1002:  // Custom disk image
           This->ShowDiskDiag();
           break;
-
-#if defined(SSE_DISK_STW_DISK_MANAGER)
+#if defined(SSE_DISK_STW_DISK_MANAGER) && defined(SSE_DISK_HFE_DISK_MANAGER)
+// when both are defined (should be the case), we save a couple of bytes
+        case 1003: // STW
+        case 1004: // HFE
+        {
+          char *extension=(wPar==1003)?extension_list[EXT_STW]
+            :extension_list[EXT_HFE];
+          EasyStr STName=This->DisksFol+"\\"+extension+" Disk."+extension;
+          int n=2;
+          while (Exists(STName)){
+            STName=This->DisksFol+"\\"+extension+" Disk ("+(n++)+")."+extension;
+          }
+          if((wPar==1003)&&ImageSTW[0].Create(STName) 
+            || (wPar==1004)&&ImageHFE[0].Create(STName)) // ugly C++
+            This->RefreshDiskView(STName,true);
+          else
+            Alert(EasyStr(T("Could not create the disk image "))+STName,T("Error"),MB_ICONEXCLAMATION);
+          return 0;
+        }
+#elif defined(SSE_DISK_STW_DISK_MANAGER)
         case 1003:  // STW
         {
           EasyStr STName=This->DisksFol+"\\"+T("STW Disk")+".STW";
@@ -1561,8 +1582,22 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
           }
           return 0;
         }
+#elif defined(SSE_DISK_HFE_DISK_MANAGER)
+        case 1004:  // HFE
+        {
+          EasyStr STName=This->DisksFol+"\\"+T("HFE Disk")+".HFE";
+          int n=2;
+          while (Exists(STName)){
+            STName=This->DisksFol+"\\"+T("HFE Disk")+" ("+(n++)+").HFE";
+          }
+          if(ImageHFE[0].Create(STName)) {
+            This->RefreshDiskView(STName,true);
+          }else{
+            Alert(EasyStr(T("Could not create the disk image "))+STName,T("Error"),MB_ICONEXCLAMATION);
+          }
+          return 0;
+        }
 #endif
-
         case 1005:
           PostMessage(Win,WM_COMMAND,IDCANCEL,0);
           break;
@@ -2212,6 +2247,9 @@ That will toggle bit x.
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1002,T("New Custom Disk &Image"));
 #if defined(SSE_DISK_STW_DISK_MANAGER) //new context option
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1003,T("New ST&W Disk Image"));
+#endif
+#if defined(SSE_DISK_HFE_DISK_MANAGER) //new context option
+        InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1004,T("New &HFE Disk Image"));
 #endif
         POINT pt;
         GetCursorPos(&pt);

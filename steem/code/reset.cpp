@@ -188,7 +188,9 @@ void power_on()
 #endif
 #endif
 #endif
-
+#if defined(SSE_DISK_HFE)
+    ImageHFE[floppyno].Id=floppyno;
+#endif
 #if defined(SSE_DISK1)
     Disk[floppyno].Id=floppyno;//same idea
 #endif

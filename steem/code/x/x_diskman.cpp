@@ -1,3 +1,4 @@
+#ifdef UNIX//SS
 //---------------------------------------------------------------------------
 TDiskManager::TDiskManager()
 {
@@ -99,6 +100,10 @@ int TDiskManager::dir_lv_notify_handler(hxc_dir_lv *dlv,int mess,int i)
 #if defined(SSE_DISK_STW_DISK_MANAGER) //new context option
     dlv->pop.menu.Add(StripAndT("New ST&W Disk Image"),ICO16_DISK,1003);
 #endif
+#if defined(SSE_DISK_HFE_DISK_MANAGER) //new context option
+    dlv->pop.menu.Add(StripAndT("New &HFE Disk Image"),ICO16_DISK,1004);
+#endif
+
   }else if (mess==DLVN_POPCHOOSE){
     if (dlv->pop.menu[i].NumData<2) return 0;
 
@@ -173,6 +178,23 @@ int TDiskManager::dir_lv_notify_handler(hxc_dir_lv *dlv,int mess,int i)
         if (STName.NotEmpty()){
           STName=GetUniquePath(This->DisksFol,STName+".stw");
           if(ImageSTW[0].Create(STName)) {
+            This->RefreshDiskView(STName);
+          }else{
+            Alert(Str(T("Could not create the disk image "))+STName,
+                      T("Error"),MB_ICONEXCLAMATION);
+          }
+        }
+        return 0;
+      }
+#endif
+#if defined(SSE_DISK_HFE_DISK_MANAGER)
+      case 1004:  // HFE
+      {
+        hxc_prompt prompt;
+        EasyStr STName=prompt.ask(XD,T("HFE Disk"),T("Enter Name"));
+        if (STName.NotEmpty()){
+          STName=GetUniquePath(This->DisksFol,STName+".hfe");
+          if(ImageHFE[0].Create(STName)) {
             This->RefreshDiskView(STName);
           }else{
             Alert(Str(T("Could not create the disk image "))+STName,
@@ -1036,3 +1058,4 @@ int TDiskManager::diag_ed_np(hxc_edit *ed,int mess,int i)
 }
 //---------------------------------------------------------------------------
 
+#endif//unix
