@@ -571,9 +571,9 @@ void TSF314::Read() {
 
 */
   ASSERT(!State.writing);
-  ASSERT(IMAGE_STW || IMAGE_SCP); // only for those now
+  ASSERT(IMAGE_STW || IMAGE_SCP || IMAGE_HFE); // only for those now
 
-#if defined(SSE_DISK_SCP)
+#if defined(SSE_DISK_SCP) || defined(SSE_DISK_HFE)
   bool new_position=!State.reading;
 #endif
 
@@ -599,6 +599,11 @@ void TSF314::Read() {
 
   if(IMAGE_STW)
     WD1772.Mfm.encoded=ImageSTW[Id].GetMfmData(Disk[Id].current_byte);
+#if defined(SSE_DISK_HFE)
+  else if(IMAGE_HFE)
+    WD1772.Mfm.encoded=ImageHFE[Id].GetMfmData(
+      new_position?Disk[Id].current_byte:0xffff);//ImageHFE[Id].GetMfmData(Disk[Id].current_byte);
+#endif
 #if defined(SSE_DISK_SCP)
   else if(IMAGE_SCP)//position kept in SCP manager?
     WD1772.Mfm.encoded=ImageSCP[Id].GetMfmData(
@@ -627,9 +632,8 @@ void TSF314::Read() {
 
 
 void TSF314::Write() {
-  ASSERT(IMAGE_STW||IMAGE_SCP); // only for those now
-
-#if defined(SSE_DISK_SCP)
+  ASSERT(IMAGE_STW||IMAGE_SCP||IMAGE_HFE); // only for those now
+#if defined(SSE_DISK_SCP) || defined(SSE_DISK_HFE)
   bool new_position=!State.writing;
 #endif
 
@@ -654,6 +658,11 @@ void TSF314::Write() {
 
   if(IMAGE_STW)
     ImageSTW[Id].SetMfmData(Disk[Id].current_byte,WD1772.Mfm.encoded);
+#if defined(SSE_DISK_HFE)
+  else if(IMAGE_HFE)
+    ImageHFE[Id].SetMfmData(new_position?Disk[Id].current_byte:0xffff,
+      WD1772.Mfm.encoded);//Disk[Id].current_byte,WD1772.Mfm.encoded);
+#endif
 #if defined(SSE_DISK_SCP)
   else if(IMAGE_SCP)
     ImageSCP[Id].SetMfmData(new_position?Disk[Id].current_byte:0xffff,

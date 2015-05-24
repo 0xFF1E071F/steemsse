@@ -57,6 +57,9 @@ public:
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
     STWDisk=
 #endif 
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_HFE)
+    HFEDisk=
+#endif 
     0;PastiBuf=NULL;RemoveDisk();}
 
   ~TFloppyImage()            { RemoveDisk(); }
@@ -83,7 +86,9 @@ public:
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
     || STWDisk
 #endif     
-
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_HFE)
+    || HFEDisk
+#endif
     ; }
   bool NotEmpty() { return DiskInDrive(); }
   bool Empty()       { return DiskInDrive()==0; }
@@ -118,6 +123,9 @@ public:
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
   bool STWDisk;
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_HFE)
+  bool HFEDisk;
 #endif
   DWORD STT_TrackStart[2][FLOPPY_MAX_TRACK_NUM+1];
   WORD STT_TrackLen[2][FLOPPY_MAX_TRACK_NUM+1];

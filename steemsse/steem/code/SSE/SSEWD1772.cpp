@@ -546,7 +546,6 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #endif//sound
 
       // Steem's native and WD1772 managers
-          ////if(manager==MNGR_STEEM)
 #if defined(SSE_DISK_IMAGETYPE)
     if(SF314[drive].ImageType.Manager==MNGR_STEEM)
 #else
@@ -554,7 +553,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
       floppy_fdc_command(io_src_b); // in fdc.cpp for ST, MSA, DIM, STT
 #if defined(SSE_DISK_STW)
     else if(SF314[drive].ImageType.Manager==MNGR_WD1772)
-      WriteCR(io_src_b); // for STW
+      WriteCR(io_src_b); // for STW, SCP, HFE
 #endif
     break;
   }
@@ -1134,6 +1133,8 @@ void TWD1772AmDetector::Reset() {
     A goal from the start was to be able to use it for another format
     like SCP as well, hence we work with a spinning drive and a flow (of
     bytes).
+    In v3.7.2, this emu is also used for HFE disk image support too, so
+    this "rewrite" proved much useful.
     We follow Western Digital flow charts, with some additions and (gasp!) 
     corrections. 
     Because we use Dma.Drq() for each byte, the agenda system is too gross.
@@ -1147,7 +1148,7 @@ void TWD1772AmDetector::Reset() {
 */
 
 
-#if defined(SSE_DISK_STW) || defined(SSE_DISK_SCP)
+#if defined(SSE_DISK_STW) || defined(SSE_DISK_SCP) || defined(SSE_DISK_HFE)
 
 bool TWD1772::Drq(bool state) {
   Lines.drq=state;
@@ -1233,7 +1234,7 @@ int TWD1772::MsToCycles(int ms) {
 */
 
 void TWD1772::NewCommand(BYTE command) {
-  ASSERT( IMAGE_STW || IMAGE_SCP);
+  ASSERT( IMAGE_STW || IMAGE_SCP || IMAGE_HFE);
   //TRACE_LOG("STW new command %X\n",command);
   CR=command;
 
@@ -1524,7 +1525,7 @@ void TWD1772::OnUpdate() {
   update_time=ACT+n_cpu_cycles_per_second; // we come here anyway
 #endif
 
-  if(!(IMAGE_STW)&&!(IMAGE_SCP)) // only for those images
+  if(!(IMAGE_STW)&&!(IMAGE_SCP)&&!(IMAGE_HFE)) // only for those images
   {
     return; 
   }
@@ -1671,6 +1672,13 @@ r1       r0            1772
         ImageSCP[DRIVE].LoadTrack(CURRENT_SIDE,SF314[DRIVE].Track());
       }
 #endif
+#if defined(SSE_DISK_HFE)
+      else if(IMAGE_HFE)
+      {
+        ImageHFE[DRIVE].LoadTrack(CURRENT_SIDE,SF314[DRIVE].Track());
+      }
+#endif
+
       prg_phase=WD_TYPEI_HEAD_SETTLE; 
 #if defined(SSE_FLOPPY_EVENT2)
       update_time=time_of_next_event+ MsToCycles(15);
@@ -1720,6 +1728,11 @@ r1       r0            1772
       Amd.amisigmask=CAPSFDC_AI_DSRREADY;
       Amd.nA1=3;
       CrcLogic.Reset(); 
+
+#if defined(SSE_WD1772_AM_LOGIC) && SSE_VERSION>=372
+      Amd.Enabled=false; // read IDs OK
+#endif
+
     }
     else
 #endif
@@ -1911,12 +1924,13 @@ r1       r0            1772
   case WD_TYPEII_FIND_DAM:
     CrcLogic.Add(DSR);//before eventual reset
     n_format_bytes++;
-
+    //TRACE_LOG("%d ",n_format_bytes);
 #if defined(SSE_WD1772_AM_LOGIC)
     if(n_format_bytes<27)
       ; // CAPS: first bytes aren't even read
     else if(n_format_bytes==27)
     {
+      TRACE_MFM("Enable AMD\n");
       Amd.Enable();
       Amd.amisigmask=CAPSFDC_AI_DSRREADY|CAPSFDC_AI_DSRMA1;
     }
@@ -1931,7 +1945,7 @@ r1       r0            1772
     else if(n_format_bytes==43) //timed out
 #endif
     {
-      TRACE_LOG("DAM time out!\n");
+      TRACE_LOG("DAM time out %d in\n",n_format_bytes);
       n_format_bytes=0;
       prg_phase=WD_TYPEII_FIND_ID;
 #if defined(SSE_WD1772_AM_LOGIC)
@@ -1951,7 +1965,7 @@ r1       r0            1772
     // wait for AM
     else if ((Amd.aminfo & CAPSFDC_AI_DSRAM))
     {
-      TRACE_LOG("AM found at byte %d, reset CRC\n",DSR,Disk[DRIVE].current_byte);
+      TRACE_LOG("AM found at byte %d (%d in), reset CRC\n",DSR,Disk[DRIVE].current_byte,n_format_bytes);
       // AM detected, read returns on dsr ready
       Amd.amisigmask=CAPSFDC_AI_DSRREADY;
       CrcLogic.Reset();
@@ -2055,15 +2069,15 @@ r1       r0            1772
       Lines.write=1;
       Mfm.data=0;
       Mfm.Encode(); 
+      TRACE_FDC("write %X at byte %d\n",Mfm.data,Disk[DRIVE].current_byte);
       CrcLogic.Add(Mfm.data); // shouldn't matter
       Write();
     }
     else if(n_format_bytes<23-1+12+3) // write 3x $A1 (missing in flow chart)
     {
-
       Mfm.data=0xA1;
       Mfm.Encode(TWD1772MFM::FORMAT_CLOCK); 
-      //TRACE("write %X at byte %d, reset CRC\n",Mfm.data,Disk[DRIVE].current_byte);
+      TRACE_FDC("write %X at byte %d, reset CRC\n",Mfm.data,Disk[DRIVE].current_byte);
       CrcLogic.Add(Mfm.data); // before reset   
       CrcLogic.Reset();
       Write();
@@ -2073,7 +2087,7 @@ r1       r0            1772
       ASSERT(!(CR&CR_A0)); //Amateur versions (>1.50?) of ProCopy use $A1 to copy
       Mfm.data= (CR&CR_A0)? 0xF9 : 0xFB;
       Mfm.Encode(); 
-      //TRACE_LOG("TR %d SR %d write %X at byte %d\n",TR,SR,Mfm.data,Disk[DRIVE].current_byte);
+      TRACE_LOG("TR %d SR %d write %X at byte %d, %d in\n",TR,SR,Mfm.data,Disk[DRIVE].current_byte,n_format_bytes);
       CrcLogic.Add(Mfm.data); // after eventual reset (TODO)        
       Write();     
     }
@@ -2083,7 +2097,6 @@ r1       r0            1772
       prg_phase=WD_TYPEII_WRITE_DATA;
       OnUpdate(); // some recursion is always cool  
     }
-
     break;
 
   case WD_TYPEII_WRITE_DATA:
@@ -2095,7 +2108,10 @@ r1       r0            1772
     ByteCount--;
     ASSERT(!n_format_bytes);
     if(!ByteCount)
+    {
       prg_phase=WD_TYPEII_WRITE_CRC;
+      TRACE_FDC("CRC: %X\n",CrcLogic.crc);
+    }
     Write();
     break;
 
@@ -2166,7 +2182,7 @@ r1       r0            1772
       )
     {
 #if defined(SSE_DISK_SCP) // don't need this hack with the SCP version
-      if(IMAGE_STW)    // CAPS-like code produces the $14, it's quite intricate
+      if(!IMAGE_SCP)// CAPS-like code produces the $14, it's quite intricate
 #endif
       if(CrcLogic.crc!=0xCDB4)
         DSR=0x14; // 1st AM doesn't read as $A1: Union Demo
@@ -2184,7 +2200,11 @@ r1       r0            1772
     // The most interesting part of STW support, and novelty in ST emulation!
     Drq(true);
 #ifdef SSE_DEBUG_WRITE_TRACK_TRACE_IDS // so we'll trace all written IDs
-    if((DR&0xFE)==0xFE)
+    if((DR&0xFE)==0xFE
+#if defined(SSE_BOILER_TRACE_CONTROL) && SSE_VERSION>=372
+      && !(TRACE_MASK3&(TRACE_CONTROL_FDCMFM|TRACE_CONTROL_FDCBYTES))
+#endif
+      )
       n_format_bytes=4;
 #endif
     // analyse byte in for MFM markers
@@ -2239,6 +2259,7 @@ r1       r0            1772
     Update:
     In fact, a byte following F7 isn't interpreted as a format byte, that's why
     the 2nd F7 is written F7, you can write F5, F6 the same way.
+    http://thethalionsource.w4f.eu/Artikel/fua.htm 
 */
 #if defined(SSE_WD1772_F7_ESCAPE)
     else if(DR==0xF7 && !F7_escaping)
@@ -2250,7 +2271,11 @@ r1       r0            1772
       Mfm.data=DSR=CrcLogic.crc>>8; // write 1st byte
       DR=CrcLogic.crc&0xFF; // save 2nd byte
       CrcLogic.Add(Mfm.data);
+#if defined(SSE_WD1772_372)
+      Mfm.Encode(); // of course, silly bug
+#else
       Mfm.Encode(TWD1772MFM::FORMAT_CLOCK);
+#endif
 #if defined(SSE_WD1772_F7_ESCAPE)
       F7_escaping=true;
 #endif
@@ -2268,7 +2293,11 @@ r1       r0            1772
     else // other bytes ($0, $E5...)
     {
       Mfm.data=DSR=DR;
+#if defined(SSE_WD1772_372)
+      Mfm.Encode(); // of course, silly bug
+#else
       Mfm.Encode(TWD1772MFM::FORMAT_CLOCK);
+#endif
       CrcLogic.Add(DSR);
 #if defined(SSE_WD1772_F7_ESCAPE)
       F7_escaping=false;
@@ -2277,7 +2306,7 @@ r1       r0            1772
 #ifdef SSE_DEBUG_WRITE_TRACK_TRACE_IDS
       if(n_format_bytes&&DR!=0xFE)
       {
-        TRACE_LOG("%d-",DSR);
+        TRACE_LOG("%d ",DSR);
         if(n_format_bytes==1)
           TRACE_LOG("\n");
         n_format_bytes--;
@@ -2291,7 +2320,11 @@ r1       r0            1772
     // write 2nd byte of CRC
     Mfm.data=DSR=DR;// as saved
     CrcLogic.Add(Mfm.data);
+#if defined(SSE_WD1772_372)
+    Mfm.Encode(); // of course, silly bug
+#else
     Mfm.Encode(TWD1772MFM::FORMAT_CLOCK);
+#endif
     Write(); 
 #ifdef SSE_DEBUG_WRITE_TRACK_TRACE_IDS
     if(n_format_bytes)
@@ -2314,11 +2347,13 @@ void TWD1772::Read() {
   {
     SF314[DRIVE].Read(); // this gets data and creates event
     Mfm.Decode();
-
-#if defined(SSE_WD1772_AM_LOGIC) // DSR shouldn't be messed with...
-    if(!IMAGE_SCP)
+#if defined(SSE_WD1772_AM_LOGIC) 
+    if(!IMAGE_SCP) // DSR shouldn't be messed with...
 #endif
-    DSR=Mfm.data;
+      DSR=Mfm.data;
+#ifdef SSE_DEBUG // for SCP it's not perfectly aligned
+    TRACE_MFM("%s #%d MFM %04X c $%02X d $%02X\n",wd_phase_name[prg_phase],Disk[DRIVE].current_byte,Mfm.encoded,Mfm.clock,DSR);
+#endif
   }
 }
 
@@ -2340,6 +2375,9 @@ void TWD1772::Write() {
     We don't do it here because we don't know if we code for special
     format bytes or not.
 */
+#ifdef SSE_DEBUG
+  TRACE_MFM("%s #%d MFM %04X c $%02X d $%02X\n",wd_phase_name[prg_phase],Disk[DRIVE].current_byte,Mfm.encoded,Mfm.clock,Mfm.data);
+#endif
   if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE)
     SF314[DRIVE].Write(); // this writes data and creates event  
 }
@@ -2349,9 +2387,9 @@ void TWD1772::Write() {
 
 
 void  TWD1772::WriteCR(BYTE io_src_b) {
-
+  ASSERT(IMAGE_STW||IMAGE_SCP||IMAGE_HFE);
   ASSERT( SF314[DRIVE].ImageType.Manager==MNGR_WD1772 );
-//  TRACE_LOG("PC %X STW new command %X\n",old_pc,io_src_b);
+
   if(CommandType(io_src_b)==2 || CommandType(io_src_b)==3) //or no condition?
   {
     if(IMAGE_STW)
@@ -2359,6 +2397,10 @@ void  TWD1772::WriteCR(BYTE io_src_b) {
 #if defined(SSE_DISK_SCP)
     else if(IMAGE_SCP)
       ImageSCP[DRIVE].LoadTrack(floppy_current_side(),floppy_head_track[DRIVE]);
+#endif
+#if defined(SSE_DISK_HFE)
+    else if(IMAGE_HFE)
+      ImageHFE[DRIVE].LoadTrack(floppy_current_side(),floppy_head_track[DRIVE]);
 #endif
   }
 
@@ -2531,6 +2573,7 @@ bool TWD1772::ShiftBit(int bit) {
 
       // if AM found set dsr signal
       if (aminfo & CAPSFDC_AI_AMACTIVE) {
+        TRACE_MFM(" -AM- ");
         aminfo&=~CAPSFDC_AI_AMACTIVE;
         aminfo|=CAPSFDC_AI_DSRAM;
       }
@@ -2551,7 +2594,12 @@ bool TWD1772::ShiftBit(int bit) {
         Amd.amdataskip--;
     }
   } else
+  {
     Amd.amdatadelay--;
+#ifdef SSE_DEBUG
+    Mfm.encoded=(WORD)Amd.amdecode; //wrong byte/clock order for 1st $A1
+#endif
+  }
 
   // save new am info
   Amd.aminfo=aminfo;
@@ -2559,11 +2607,7 @@ bool TWD1772::ShiftBit(int bit) {
   // if a byte is complete, break and signal new byte
   //  if (Amd.aminfo & Amd.amisigmask) { //SS hangs...
   if (Amd.aminfo & CAPSFDC_AI_DSRREADY) { //SS ?
-    TRACE_MFM(" byte %d = %X ",Disk[DRIVE].current_byte,Amd.dsr); // current_byte mostly wrong
-    //TRACE_MFM(" DSR $%X ",Amd.dsr); // current_byte mostly wrong
-
     byte_ready=true;
-
   }
   return byte_ready;
 }

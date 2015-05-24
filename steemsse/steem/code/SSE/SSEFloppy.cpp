@@ -56,6 +56,11 @@ TImageSTW ImageSTW[2];
 TImageSCP ImageSCP[2];
 #endif
 
+#if defined(SSE_DISK_HFE)
+TImageHFE ImageHFE[2];
+#endif
+
+
 #if defined(SSE_DMA)
 TDma Dma;
 #endif

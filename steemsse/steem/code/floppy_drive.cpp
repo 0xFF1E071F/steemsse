@@ -11,8 +11,11 @@ data.
 #pragma message("Included for compilation: floppydrive.cpp")
 #endif
 
+//TODO refactor, much duplicate code here
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_FLOPPYDRIVE_H)
-TFloppyImage FloppyDrive[2];
+TFloppyImage FloppyDrive[2]; //SS fascinating names of class and object:
+  // it's hard to tell what is 'drive' from what is 'disk'.
 bool FloppyArchiveIsReadWrite=0;
 #endif
 
@@ -91,7 +94,9 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #if defined(SSE_TOS_TOS_AUTORUN)
   bool TOS=OPTION_PRG_SUPPORT && IsSameStr_I(Ext,"TOS");
 #endif
-  
+#if defined(SSE_DISK_HFE)
+  bool HFE=IsSameStr_I(Ext,DISK_EXT_HFE);
+#endif  
 
   // NewDiskInZip will be blank for default disk, RealDiskInZip will be the
   // actual name of the file in the zip that is a disk image
@@ -154,6 +159,9 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
               STW=has_extension(fn,DISK_EXT_STW); // in archive, makes less sense
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_HFE)
+              HFE=has_extension(fn,DISK_EXT_HFE);
+#endif
 #if defined(SSE_TOS_PRG_AUTORUN)
               PRG=OPTION_PRG_SUPPORT && has_extension(fn,"PRG");
 #endif
@@ -182,7 +190,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
         }
       }while (zippy.next()==0);
     }
-    zippy.close();
+    zippy.close(); // SS archive always opened twice
 
     if (HOffset!=-1){
       NewZipTemp.SetLength(MAX_PATH);
@@ -356,6 +364,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     Sides=img_info.maxhead+1;
     TracksPerSide=img_info.maxcylinder;
 #endif
+//SS this horror needs to be refactored of course
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
   }else if(SCP) { 
 
@@ -397,6 +406,30 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     SF314[drive].State.reading=SF314[drive].State.writing=0;
 
 #endif//stw
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_HFE)
+  }else if(HFE) { 
+
+#if defined(SSE_DISK_REMOVE_DISK_ON_SET_DISK)
+    RemoveDisk();
+#endif
+
+    if(drive==-1  || !ImageHFE[drive].Open(File))
+      return FIMAGE_WRONGFORMAT;
+#if defined(SSE_DISK1)
+    Disk[drive].TrackBytes=DRIVE_BYTES_ROTATION_STW; //default
+#endif
+#if defined(SSE_DISK_IMAGETYPE)
+#if USE_PASTI//#ifdef WIN32//replace with...
+    if(SF314[1-drive].ImageType.Extension!=EXT_STX)
+      pasti_active=false;
+#endif
+    SF314[drive].ImageType.Manager=MNGR_WD1772;
+    SF314[drive].ImageType.Extension=EXT_HFE;
+#endif
+    SF314[drive].State.reading=SF314[drive].State.writing=0;
+#endif//hfe
+
 
   }
 
@@ -810,6 +843,9 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
   STWDisk=STW;
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_HFE)
+  HFEDisk=HFE;
+#endif
 
   WrittenTo=0;
 
@@ -848,6 +884,9 @@ bool TFloppyImage::ReinsertDisk()
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
     || SCPDisk //not right, but we're starting...
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_HFE)
+    || HFEDisk //?
+#endif
     ) return 0;
 
   fclose(f);
@@ -880,6 +919,9 @@ bool TFloppyImage::OpenFormatFile()
 #endif   
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
     || STWDisk
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_HFE)
+    || HFEDisk
 #endif
     ) return 0;
 
@@ -926,6 +968,9 @@ bool TFloppyImage::ReopenFormatFile()
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
     || STWDisk
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_HFE)
+    || HFEDisk
 #endif
     ) return 0;
 
@@ -1478,7 +1523,18 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   if(SF314[drive].ImageType.Extension==EXT_SCP)
     ImageSCP[drive].Close();
   SCPDisk=0;
+#if !defined(SSE_DISK_STW)
   SF314[drive].State.reading=SF314[drive].State.writing=0;
+#endif
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_HFE)
+  if(SF314[drive].ImageType.Extension==EXT_HFE)
+    ImageHFE[drive].Close();
+  HFEDisk=0;
+#if !defined(SSE_DISK_STW) && !defined(SSE_DISK_SCP)
+  SF314[drive].State.reading=SF314[drive].State.writing=0;
+#endif
 #endif
 
   if (f) fclose(f);
