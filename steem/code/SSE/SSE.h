@@ -832,7 +832,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_DISK_SCP)
 //#define SSE_DISK_SCP_TO_MFM_PREVIEW // keep it, could be useful
-#define SSE_DISK_SCP_WRITE //not tested
 #endif//scp
 
 #if defined(SSE_DISK_STW)
@@ -4026,7 +4025,6 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_FLOPPY)
 #define SSE_DISK_SCP // Supercard Pro disk image format support
 //#define SSE_DISK_SCP_TO_MFM_PREVIEW // keep it, could be useful
-#define SSE_DISK_SCP_WRITE //not tested
 #define SSE_DISK_STW_READONLY //3.7.1 last minute
 #if defined(SSE_DMA)
 #undef SSE_DMA_COUNT_CYCLES //again... ;)
@@ -4232,7 +4230,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_DISK_SCP2A //id
 #define SSE_DISK_SCP2B //all IP 1->2 (..->1 during rev) - perf?
-#undef SSE_DISK_SCP_WRITE // only bugs in that section :brr:
 #endif
 
 #if defined(SSE_GUI)

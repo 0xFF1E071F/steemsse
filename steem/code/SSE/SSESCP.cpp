@@ -67,10 +67,6 @@ void TImageSCP::Close() {
   if(fCurrentImage)
   {
     TRACE_LOG("SCP close image\n");
-#if defined(SSE_DISK_SCP_WRITE)
-    if(is_dirty)
-      SaveTrack();
-#endif    
     fclose(fCurrentImage);
     if(TimeFromIndexPulse)
       free(TimeFromIndexPulse);
@@ -86,11 +82,6 @@ void  TImageSCP::ComputePosition(WORD position) {
   // when we start reading/writing, where on the disk?
   position=position%nBytes; // 0-6256, safety
   Position=0; // safety
-
-//#if !defined(SSE_WD1772_DPLL) || defined(SSE_DISK_SCP_WRITE)
-#if defined(SSE_DISK_SCP_WRITE) 
-  ShiftsToNextOne=0; 
-#endif
 
   // ignore "position", compute using IP timing and ACT //? TODO
   int cycles=time_of_next_event-SF314[DRIVE].time_of_last_ip;
@@ -374,12 +365,6 @@ bool TImageSCP::LoadTrack(BYTE side,BYTE track,bool reload) {
   ASSERT( side<2 && track<nTracks ); // unique side may be 1
   if(side>=2 || track>=nTracks)
     return ok; //no crash
-
-#if defined(SSE_DISK_SCP_WRITE)
-  if(is_dirty)
-    SaveTrack();
-#endif  
-
   BYTE trackn=track;
   if(nSides==2) // general case
     trackn=track*2+side; 
@@ -452,9 +437,6 @@ bool TImageSCP::LoadTrack(BYTE side,BYTE track,bool reload) {
       Position=0;
       free(flux_to_flux_units_table_16bit);
       ok=true;
-#if defined(SSE_DISK_SCP_WRITE)
-      is_dirty=false;
-#endif
     }
 
     TRACE_LOG("SCP LoadTrack side %d track %d %c%c%c %d rev %d/%d  \
@@ -483,13 +465,7 @@ track_header.TDH_TABLESTART[rev].TDH_OFFSET,track_header.track_data_checksum);
 bool TImageSCP::Open(char *path) {
   bool ok=false;
   Close(); // make sure previous image is correctly closed
-#if defined(SSE_DISK_SCP_WRITE) //no :)
-  fCurrentImage=fopen(path,"rb+"); // try to open existing file
-  if(!fCurrentImage) // maybe it's read-only
-    fCurrentImage=fopen(path,"rb");
-#else
   fCurrentImage=fopen(path,"rb");
-#endif
   if(fCurrentImage) // image exists
   {
     // we read only the header
@@ -525,104 +501,8 @@ file_header.IFF_HEADS,file_header.IFF_RSRVED,file_header.IFF_CHECKSUM);
   return ok;
 }
 
-#if defined(SSE_DISK_SCP_WRITE)
-
-// finally tested that and it couldn't work as it is, it's just
-// gonna run to a crash - undef v3.7.2 - this code should be wiped out!!
-// so bad it is TODO
-
-bool  TImageSCP::SaveTrack() {
-/*  We need to convert back to big endian relative delays - not tested
-*/
-  bool ok=false;
-  BYTE trackn=track_header.TDH_TRACKNUM;
-  ASSERT(file_header.IFF_NUMREVS==1);
-  ASSERT(is_dirty);
-  if(TimeFromIndexPulse && fCurrentImage)
-  {
-    int offset= file_header.IFF_THDOFFSET[trackn]; // base = start of file
-
-    WORD* flux_to_flux_units_table_16bit=(WORD*)calloc(track_header.\
-      TDH_TABLESTART[rev].TDH_LENGTH,sizeof(WORD));
-
-    if(flux_to_flux_units_table_16bit && TimeFromIndexPulse)
-    {
-
-      int total_units,previous_total_units=0;
-      ASSERT( nBits>0 && nBits<=track_header.TDH_TABLESTART[rev].TDH_LENGTH);
-      int k=0;
-      for(DWORD i=0;i<nBits;i++)
-      {
-        total_units=TimeFromIndexPulse[i];
-        ASSERT( total_units>=previous_total_units );
-        int flux_to_flux_units_32bit=total_units-previous_total_units;        
-        while( flux_to_flux_units_32bit>0xFFFF)
-        {
-          flux_to_flux_units_table_16bit[k++]=0;
-          flux_to_flux_units_32bit-=0xFFFF;
-        }
-        flux_to_flux_units_table_16bit[k]=flux_to_flux_units_32bit;
-        SWAP_WORD( &flux_to_flux_units_table_16bit[k] );
-        k++;
-        previous_total_units=total_units;      
-      }//nxt i
-      ASSERT( k == track_header.TDH_TABLESTART[rev].TDH_LENGTH-1 );
-
-      fseek(fCurrentImage,offset+track_header.TDH_TABLESTART[rev].TDH_OFFSET,
-        SEEK_SET);
-
-      fwrite(flux_to_flux_units_table_16bit,sizeof(WORD),track_header.\
-        TDH_TABLESTART[rev].TDH_LENGTH,fCurrentImage);
-
-      ok=true;
-     
-      free(flux_to_flux_units_table_16bit);
-    }
-  }
-  TRACE_LOG("SCP save track %d OK %d\n",trackn,ok);
-  return ok;
-}
-
-#endif
-
-
 void TImageSCP::SetMfmData(WORD position, WORD mfm_data) {
 
-#if defined(SSE_DISK_SCP_WRITE) // not tested...
-
-  if(file_header.IFF_NUMREVS==1 && TimeFromIndexPulse
-    && !FloppyDrive[DRIVE].ReadOnly)
-  {
-    int starting_delay=TimeFromIndexPulse[Position];
-    is_dirty=true;
-    // must compute new starting point?
-    if(position!=0xFFFF)
-      ComputePosition(position);
-    for(int i=0;i<16;i++)
-    {
-      ShiftsToNextOne++;
-      bool bit=(mfm_data&1);
-      if(bit)
-      {
-        TimeFromIndexPulse[Position++]= (ShiftsToNextOne*2)*40; // perfect sync
-        ShiftsToNextOne=0;
-      }
-      mfm_data>>=1;
-    }//nxt
-
-    // set up timing of DRQ
-    // we don't count shifts between transitions, so it's not cycle-accurate
-    int units_to_next_flux= UnitsToNextFlux(Position);
-    int cycles_to_next_flux=units_to_next_flux/5;
-    WD1772.update_time=time_of_next_event+cycles_to_next_flux; 
-    if(WD1772.update_time-ACT<0) // safety
-    {
-      TRACE_LOG("Argh! wrong disk timing %d ACT %d diff %d last IP %d pos %d shifts %d units %d cycles %d\n",
-        WD1772.update_time,ACT,ACT-WD1772.update_time,SF314[DRIVE].time_of_last_ip,Position,ShiftsToNextOne,TimeFromIndexPulse[Position-1],cycles_to_next_flux);
-      WD1772.update_time=ACT+SF314[DRIVE].cycles_per_byte;
-    }
-  }
-#endif
 }
 
 #undef LOGSECTION

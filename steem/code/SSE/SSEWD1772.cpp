@@ -529,10 +529,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
       if((SF314[drive].ImageType.Manager==MNGR_PASTI 
         && SF314[drive].ImageType.Extension==EXT_STX)
         || SF314[drive].ImageType.Manager==MNGR_CAPS
-#if !defined(SSE_DISK_SCP_WRITE)
-        || SF314[drive].ImageType.Extension==EXT_SCP
-#endif
-        )
+        || SF314[drive].ImageType.Extension==EXT_SCP)
         CheckGhostDisk(drive,io_src_b); // updates CommandWasIntercepted
     }
 #endif//ghost

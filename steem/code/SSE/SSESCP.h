@@ -73,9 +73,6 @@ struct  TImageSCP {
 #endif
   void IncPosition();
   void Init();
-#if defined(SSE_DISK_SCP_WRITE)
-  bool SaveTrack();
-#endif
   // variables
 #if defined(SSE_DISK_SCP2A) 
   BYTE Id; //0,1, same as drive
@@ -95,13 +92,6 @@ private:
   FILE *fCurrentImage; // use FloppyDrive's
 #endif
   DWORD *TimeFromIndexPulse; // from IP
-//#if !defined(SSE_WD1772_DPLL) || defined(SSE_DISK_SCP_WRITE)
-#if defined(SSE_DISK_SCP_WRITE) 
-  BYTE ShiftsToNextOne;
-#endif
-#if defined(SSE_DISK_SCP_WRITE)
-  bool is_dirty;
-#endif
 #if defined(SSE_BOILER) && defined(SSE_DISK_SCP_TO_MFM_PREVIEW)
   void InterpretFlux(); // was a dev step
 #endif
