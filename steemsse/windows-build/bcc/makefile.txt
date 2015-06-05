@@ -14,9 +14,13 @@ ASMOBJDIR = $(OUT)
 # to avoid useless compile time.
 
 #3RDPARTYOBJS = $(OUT)\div68kCycleAccurate.obj $(OUT)\dsp.obj $(OUT)\6301.obj $(OUT)\AviFile.obj
-3RDPARTYOBJS = $(OUT)\div68kCycleAccurate.obj $(OUT)\dsp.obj $(OUT)\6301.obj $(OUT)\AviFile.obj
+3RDPARTYOBJS = $(OUT)\div68kCycleAccurate.obj $(OUT)\dsp.obj $(OUT)\6301.obj
+3RDPARTYOBJS = $(3RDPARTYOBJS) $(OUT)\AviFile.obj $(OUT)\ArchiveAccessSSE.obj
 
-INCLUDEPATHS = $(STEEMROOT)\code;$(BCCROOT)\Include;$(INCDIR);$(3RDPARTYROOT);$(3RDPARTYROOT)\unrarlib;$(3RDPARTYROOT)\pasti;$(3RDPARTYROOT)\6301;$(3RDPARTYROOT)\d3d 
+# Format: no space at all between paths in INCLUDEPATHS!!
+INCLUDEPATHS = $(STEEMROOT)\code;$(BCCROOT)\Include;$(INCDIR);$(3RDPARTYROOT);
+INCLUDEPATHS = $(INCLUDEPATHS)$(3RDPARTYROOT)\unrarlib;$(3RDPARTYROOT)\pasti;
+INCLUDEPATHS = $(INCLUDEPATHS)$(3RDPARTYROOT)\6301;$(3RDPARTYROOT)\d3d
 
 ALLOBJS = $(ASMOBJDIR)\asm_draw.obj $(OUT)\emu.obj c0w32.obj $(OUT)\Steem.obj $(ASMOBJS) $(OUT)\helper.obj
 ALLOBJS = $(ALLOBJS) $(ASMOBJDIR)\asm_osd_draw.obj $(ASMINCOBJDIR)\asm_portio.obj
@@ -24,8 +28,8 @@ ALLOBJS = $(ALLOBJS) $(OUT)\SSE.obj $(OUT)\SSEOption.obj $(OUT)\SSEMMU.obj $(OUT
 ALLOBJS = $(ALLOBJS) $(OUT)\SSEFrameReport.obj $(OUT)\SSEShifter.obj $(OUT)\SSESTF.obj $(OUT)\SSEVideo.obj $(OUT)\SSEGlue.obj
 ALLOBJS = $(ALLOBJS) $(OUT)\SSEFloppy.obj $(OUT)\SSESTW.obj $(OUT)\SSEGhostDisk.obj 
 ALLOBJS = $(ALLOBJS) $(OUT)\SSEWD1772.obj $(OUT)\SSEDrive.obj $(OUT)\SSEDisk.obj 
-ALLOBJS = $(ALLOBJS) $(OUT)\SSEDma.obj $(OUT)\SSEYM2149.obj 
-ALLOBJS = $(ALLOBJS) $(OUT)\SSECapsImg.obj $(OUT)\SSESCP.obj
+ALLOBJS = $(ALLOBJS) $(OUT)\SSEDma.obj $(OUT)\SSEYM2149.obj $(OUT)\SSEAcsi.obj
+ALLOBJS = $(ALLOBJS) $(OUT)\SSECapsImg.obj $(OUT)\SSESCP.obj $(OUT)\SSEHfe.obj 
 
 !ifndef ONEGAME
 
@@ -120,7 +124,7 @@ ALL: Steem.res Steem.obj helper.obj emu.obj SSE.obj SSEOption.obj \
   SSEFrameReport.obj SSEShifter.obj SSESTF.obj SSEVideo.obj \
   SSESTW.obj SSEGhostDisk.obj SSEWD1772.obj SSEDrive.obj \
   SSEDma.obj SSEDisk.obj SSEYM2149.obj SSEGlue.obj \
-  SSECapsImg.obj SSESCP.obj link
+  SSECapsImg.obj SSESCP.obj SSEHfe.obj SSEAcsi.obj link
 
 link:
            $(LINKER) $(LINKOPTS) $(ALLOBJS), "$(OUTPUTDIR)\$(NAME).exe", ,import32.lib cw32mt.lib, ,$(OUT)\Steem.res
@@ -201,10 +205,25 @@ SSEGlue.obj:
 SSESCP.obj:
            $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSESCP.obj $(STEEMROOT)\code\SSE\SSESCP.cpp
 
+SSEHfe.obj:
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSEHfe.obj $(STEEMROOT)\code\SSE\SSEHfe.cpp
+
+SSEAcsi.obj:
+           $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\SSEAcsi.obj $(STEEMROOT)\code\SSE\SSEAcsi.cpp
+
+SSE:	SSE.obj SSEOption.obj SSEMMU.obj SSE6301.obj SSECpu.obj SSEDebug.obj \
+  SSEFloppy.obj SSEFrameReport.obj SSEShifter.obj SSESTF.obj SSEVideo.obj \
+  SSESTW.obj SSEGhostDisk.obj SSEWD1772.obj SSEDrive.obj \
+  SSEDma.obj SSEDisk.obj SSEYM2149.obj SSEGlue.obj \
+  SSECapsImg.obj SSESCP.obj SSEHfe.obj SSEAcsi.obj
 
 #3rdparty:	unrarlib div68kCycleAccurate dsp 6301
 
-3rdparty:	div68kCycleAccurate dsp 6301 AviFile
+3rdparty:	div68kCycleAccurate dsp 6301 AviFile ArchiveAccessSSE
+
+
+ArchiveAccessSSE:
+        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -c -o$(OUT)\ArchiveAccessSSE.obj $(3RDPARTYROOT)\ArchiveAccess\ArchiveAccess\ArchiveAccessSSE.cpp $(CFLAGS) 
 
 #unrarlib:
 #	$(CPP) $(CPPFLAGS) -DWIN32 -c -o$(OUT)\unrarlib.obj $(3RDPARTYROOT)\unrarlib\unrarlib\unrarlib.c $(CFLAGS) 
