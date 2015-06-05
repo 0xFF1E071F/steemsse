@@ -1421,11 +1421,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
 
 #if defined(SSE_DISK_GHOST) && defined(SSE_GUI_DISK_MANAGER_GHOST)
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
-#if !defined(SSE_DISK_SCP_WRITE)
-              (SSE_GHOST_DISK?MF_CHECKED:0),2027,T("Enable ghost disks for CTR-IPF-STX-SCP"));
-#else
-              (SSE_GHOST_DISK?MF_CHECKED:0),2027,T("Enable ghost disks for CTR-IPF-STX"));
-#endif
+              (SSE_GHOST_DISK?MF_CHECKED:0),2027,T("Enable ghost disks for CTR-IPF-SCP-STX"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_TOS_PRG_AUTORUN) 
