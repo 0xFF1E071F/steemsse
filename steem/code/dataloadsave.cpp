@@ -888,6 +888,10 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_VID_D3D_CRISP_OPTION)
   OPTION_D3D_CRISP=pCSF->GetInt("Option","Direct3DCrisp",OPTION_D3D_CRISP);
 #endif
+#if defined(SSE_ACSI_OPTION)
+  SSEOption.Acsi=pCSF->GetInt("Option","Acsi",SSEOption.Acsi);
+#endif
+
 #endif//steven_seagal
 
 
@@ -1067,11 +1071,11 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
         Sound_Start();
       }
     #endif//UNIX
-
+#if !defined(SOUND_DISABLE_INTERNAL_SPEAKER)
     sound_internal_speaker=pCSF->GetInt("Sound","InternalSpeaker",sound_internal_speaker);
-
     // Trying to write to ports on WINNT causes the program to be killed!
     WIN_ONLY( if (WinNT) sound_internal_speaker=0; )
+#endif
   }
 
   SEC(PSEC_PORTS){
@@ -1360,7 +1364,9 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_VID_D3D_CRISP_OPTION)
   pCSF->SetStr("Option","Direct3DCrisp",EasyStr(OPTION_D3D_CRISP));
 #endif
-
+#if defined(SSE_ACSI_OPTION)
+  pCSF->SetStr("Option","Acsi",EasyStr(SSEOption.Acsi));
+#endif
 //boiler
 #if defined(SSE_BOILER_SSE_PERSISTENT)
   pCSF->SetStr("Debug","UseTraceFile",EasyStr(USE_TRACE_FILE)); 
@@ -1386,8 +1392,6 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
     }
 #endif
 #endif//debug
-
-
 #endif//SS
 
   pCSF->SetStr("Display","ResChangeResize",EasyStr(ResChangeResize));
@@ -1442,8 +1446,9 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
     #endif
     pCSF->SetStr("Sound","PADevice",Str(sound_device_name));
   #endif
+#if !defined(SOUND_DISABLE_INTERNAL_SPEAKER)
   pCSF->SetStr("Sound","InternalSpeaker",Str(sound_internal_speaker));
-
+#endif
   for (int p=0;p<3;p++){
     EasyStr PNam=EasyStr("Port_")+p+"_";
     pCSF->SetStr("MIDI",PNam+"Type",EasyStr(STPort[p].Type));

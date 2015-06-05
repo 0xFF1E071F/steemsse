@@ -143,20 +143,17 @@ EXT int cpu_cycles_from_hbl_to_timer_b;
 
 #define CYCLES_FOR_VERTICAL_RETURN_IN_70HZ 200
 #define CYCLES_FROM_START_VBL_TO_INTERRUPT 1544 //SS same for all freqs?
-// SS we keep this also for medres or it complicates 4bit scroll a lot (TODO):
 #define CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN 84
-
-
 #define CYCLES_FROM_HBL_TO_RIGHT_BORDER_CLOSE (CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320)
 
-
+#if !defined(SSE_INT_MFP_TIMER_B_AER2)  // refactored 
 #define CALC_CYCLES_FROM_HBL_TO_TIMER_B(freq) \
   switch (freq){ \
     case MONO_HZ: cpu_cycles_from_hbl_to_timer_b=192;break; \
     case 60: cpu_cycles_from_hbl_to_timer_b=(CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320-4);break; \
     default: cpu_cycles_from_hbl_to_timer_b=(CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320); \
 } // 320+84 = 404, the same in Hatari
-
+#endif
 
 #define HBLS_PER_SECOND_AVE 15700 // Average between 50 and 60hz
 #define HBLS_PER_SECOND_MONO (501.0*71.42857)

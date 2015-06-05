@@ -395,7 +395,7 @@ void inline prepare_event_again() //might be an earlier one
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_IRQ_DELAY)
-// not defined anymore (v3.5.2), see MFP//MFD
+// not defined anymore (v3.5.2), see MFP
     PREPARE_EVENT_CHECK_FOR_ACIA_IKBD_IN;
 #endif
 
@@ -593,6 +593,7 @@ void event_timer_d_timeout()
 #define LOGSECTION LOGSECTION_INTERRUPTS
 void event_timer_b() 
 {
+  //ASSERT(scan_y>=shifter_first_draw_line)//asserts (when a "future" TB triggers?)
   if (scan_y<shifter_first_draw_line){
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;
   }else if (scan_y<shifter_last_draw_line){
@@ -617,7 +618,7 @@ void event_timer_b()
     }
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+cpu_cycles_from_hbl_to_timer_b+
         scanline_time_in_cpu_cycles_at_start_of_vbl + TB_TIME_WOBBLE;
-#if defined(SSE_GLUE) && defined(SSE_INT_MFP_TIMER_B_AER)
+#if defined(SSE_GLUE) && defined(SSE_INT_MFP_TIMER_B_AER) // refactored
     if(mfp_reg[1]&8)
       time_of_next_timer_b-=Glue.DE_cycles[shifter_freq_idx];
 #endif
@@ -776,6 +777,12 @@ void event_scanline()
     We must separate SSE_SHIFTER from SSE_INTERRUPT, which makes for many
     #if blocks.
 */
+
+#if defined(SSE_GLUE) && defined(SSE_INT_MFP_TIMER_B_AER2)
+  if(OPTION_PRECISE_MFP)
+    CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq); // update each scanline
+#endif
+
   if (scan_y<shifter_first_draw_line-1){
     if (scan_y>=draw_first_scanline_for_border){
       if (bad_drawing==0) 
@@ -795,8 +802,8 @@ void event_scanline()
 #endif
     time_of_next_timer_b=time_of_next_event
       +cpu_cycles_from_hbl_to_timer_b+TB_TIME_WOBBLE;
-#if defined(SSE_GLUE) && defined(SSE_INT_MFP_TIMER_B_AER) //v3.7 also 1st line
-    if(mfp_reg[1]&8)
+#if defined(SSE_GLUE) && defined(SSE_INT_MFP_TIMER_B_AER) // refactored
+    if(mfp_reg[1]&8) //v3.7 also 1st line
       time_of_next_timer_b-=Glue.DE_cycles[shifter_freq_idx];
 #endif
   }else if (scan_y<shifter_last_draw_line-1){
@@ -808,13 +815,12 @@ void event_scanline()
 #endif
     time_of_next_timer_b=time_of_next_event
       +cpu_cycles_from_hbl_to_timer_b+TB_TIME_WOBBLE;
-#if defined(SSE_INT_MFP_TIMER_B_AER)
-//  from Hatari, fixes Seven Gates of Jambala; Trex Warrior
+#if defined(SSE_INT_MFP_TIMER_B_AER) // refactored 
     if(mfp_reg[1]&8)
 #if defined(SSE_GLUE)
       time_of_next_timer_b-=Glue.DE_cycles[shifter_freq_idx];
 #else
-      time_of_next_timer_b-=320; //gross?
+      time_of_next_timer_b-=320;
 #endif
 #endif
   }else if (scan_y<draw_last_scanline_for_border){

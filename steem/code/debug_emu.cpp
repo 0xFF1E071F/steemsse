@@ -52,8 +52,11 @@ EXT WORD debug_mon_read_mask_io[MAX_BREAKPOINTS],debug_mon_write_mask_io[MAX_BRE
 //---------------------------------------------------------------------------
 EXT MEM_ADDRESS trace_over_breakpoint INIT(0xffffffff);
 EXT int debug_run_until INIT(DRU_OFF),debug_run_until_val;
-
+#if defined(SSE_BOILER_MONITOR_372) //v3.7.2 to clarify code
+EXT int monitor_mode INIT(MONITOR_MODE_STOP),breakpoint_mode INIT(2);
+#else
 EXT int monitor_mode INIT(2),breakpoint_mode INIT(2);
+#endif
 bool break_on_irq[NUM_BREAK_IRQS]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 EXT MEM_ADDRESS pc_history[HISTORY_SIZE];
 EXT int pc_history_idx INIT(0);
@@ -186,9 +189,12 @@ void breakpoint_log()
 void breakpoint_check()
 {
   if (runstate!=RUNSTATE_RUNNING) return;
-
+  //ASSERT(pc!=0x1CA4E);
+  //ASSERT(debug_num_bk);
   for (int n=0;n<debug_num_bk;n++){
+    //TRACE("%X\n",debug_bk_ad[n]);
     if (debug_bk_ad[n]==pc){
+      //ASSERT(pc!=0x1CA4E);
       if (debug_get_ad_mode(pc)==3){
         breakpoint_log();
       }else{
@@ -312,9 +318,19 @@ void debug_hit_mon(MEM_ADDRESS ad,int read)
   int mode=debug_get_ad_mode(ad & ~1);
 #if defined(SSE_BOILER_MONITOR_RANGE) // mode is likely 0 (ad not found)
   if(Debug.MonitorRange)
+#if defined(SSE_BOILER_MONITOR_372)
+    mode=monitor_mode;
+#else
     mode=2;
 #endif
+#endif
+#if defined(SSE_BOILER_MONITOR_372) //v3.7.2 to clarify code
+  if (mode==MONITOR_MODE_STOP
+   ///////// &&  runstate!=RUNSTATE_STOPPING
+    ){
+#else
   if (mode==2){
+#endif
     if (runstate==RUNSTATE_RUNNING){
       runstate=RUNSTATE_STOPPING;
       SET_WHY_STOP(mess);
@@ -322,8 +338,14 @@ void debug_hit_mon(MEM_ADDRESS ad,int read)
       Alert(mess,"Monitor Activated",0);
     }
   }else{
+    //ASSERT(!read); //Boiler bug!
     debug_mem_write_log_address=ad;
     debug_mem_write_log_bytes=bytes;
+#if defined(SSE_BOILER_MONITOR_TRACE)//3.7.2
+    if(read)
+      ioaccess|=IOACCESSE_DEBUG_MEM_READ_LOG;
+    else
+#endif
     ioaccess|=IOACCESSE_DEBUG_MEM_WRITE_LOG;
   }
 }

@@ -414,8 +414,12 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
           }
 #endif
 #endif
-          
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
+#if defined(STEVEN_SEAGAL) && defined(SSE_TOS_CHECK_VERSION)
+/*  We can't know word 2 of every img file, so we need another
+    way to list only real TOS files...
+*/
+          if(Ver>=0x100 && Ver<0x410) // still not very good...
+#elif defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
           if(Ver!=0x81AA) // 6301 ST Rom mustn't be listed
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_STF_MATCH_TOS)
@@ -1120,6 +1124,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if SSE_VERSION>=360 && SSE_VERSION<370
               HD6301EMU_ON=false; // v3.6.0 - because mouse is slow in high res
 #endif
+#if defined(SSE_ACSI_MEGASTF) // default to ACSI hard disk
+              if(SSEConfig.AcsiImg)
+                SSEOption.Acsi=true;
+              else
+#endif
 #if SSE_VERSION>=360
               HardDiskMan.DisableHardDrives=false; // v3.6.0
 //              TRACE("hd off %d\n",HardDiskMan.DisableHardDrives);
@@ -1522,7 +1531,15 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               case 5107: Ext=".STC";AssociateSteem(Ext,"st_cartridge",true,T("ST ROM Cartridge"),CART_ICON_NUM,0); break;
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_IPF)
+#if defined(SSE_GUI_ASSOCIATE_HFE)
+/*  It's not that we dislike or demote IPF format, but space is running out
+    and HFE is less likely to be zipped as HxC hardware needs unzipped files.
+    Besides, CAPS also handles CTR files.
+*/
+              case 5107: Ext=".HFE";AssociateSteem(Ext,"st_hfe_disk_image",true,T("ST/HxC Disk Image"),DISK_ICON_NUM,0); break;
+#else
               case 5107: Ext=".IPF";AssociateSteem(Ext,"st_ipf_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
+#endif
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_TOS_PRG_AUTORUN)
               case 5108: Ext=".PRG";AssociateSteem(Ext,"st_atari_prg_executable",true,T("Atari PRG executable"),DISK_ICON_NUM,0); break;
@@ -1679,6 +1696,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SendMessage(HWND(lPar),BM_SETCHECK,This->RecordWarnOverwrite,0);
           }
           break;
+#if !defined(SOUND_DISABLE_INTERNAL_SPEAKER)
         case 7300:
           if (HIWORD(wPar)==BN_CLICKED){
             if (sound_internal_speaker) SoundStopInternalSpeaker();
@@ -1687,7 +1705,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SendMessage(HWND(lPar),BM_SETCHECK,sound_internal_speaker,0);
           }
           break;
-
+#endif
 #if defined(STEVEN_SEAGAL)
 
 #if defined(SSE_VAR_KEYBOARD_CLICK)

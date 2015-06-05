@@ -249,7 +249,7 @@ MIDI is 4 times faster than IKBD
     For STW images the value is 6256 for same cases.
 */
 
-#define DRIVE_BYTES_ROTATION (6256+14) 
+#define DRIVE_BYTES_ROTATION (6256+14)  //little hack...
 #define DRIVE_BYTES_ROTATION_STW (6256)
 #else
 #define DRIVE_BYTES_ROTATION (8000) // 3.2 (!)
@@ -262,8 +262,8 @@ MIDI is 4 times faster than IKBD
 #endif
 
 #if defined(SSE_DRIVE_SOUND)
-#ifdef SSE_UNIX
-#define DRIVE_SOUND_DIRECTORY "/DriveSound"
+#ifdef SSE_UNIX //TODO...
+#define DRIVE_SOUND_DIRECTORY "/DriveSound" 
 #else
 #define DRIVE_SOUND_DIRECTORY "\\DriveSound"
 #endif
@@ -326,6 +326,17 @@ SS_SIGNAL_ENUM_EnumDisplayModes, // wait until finished (?)
 };
 #endif
 
+/////////
+// HDC //
+/////////
+
+#if defined(SSE_ACSI_NOGUISELECT) // only one file in Steem root can be HD
+#if defined(SSE_UNIX)
+#define ACSI_HD_NAME "./ACSI_HD0.img"
+#else
+#define ACSI_HD_NAME "\\ACSI_HD0.img"
+#endif
+#endif
 
 //////////
 // IKBD //

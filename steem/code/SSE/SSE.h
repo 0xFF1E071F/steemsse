@@ -34,6 +34,7 @@ timings found by ijor (also author of Pasti).
 -A folder 'SDL-WIN' for future (?) SDL support
 -A folder 'unRARDLL' in '3rdparty' for unrar support
 -A folder 'various' in '3rdparty'
+-A folder 'ArchiveAccess' in '3rdparty' for 7z support
 -A folder 'hfe' in '3rdparty' for HFE support
 -Files xxx.decla.h to better separate declaration/implementation
 TODO: restore previous h files
@@ -4129,7 +4130,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_STRUCTURE_FDC_H
 #define SSE_STRUCTURE_FLOPPYDRIVE_H
 #define SSE_STRUCTURE_GUI_H
-//#define SSE_STRUCTURE_HARDDISKMAN_H
+#define SSE_STRUCTURE_HARDDISKMAN_H //3.7.2
 #define SSE_STRUCTURE_HDIMG_H
 //#define SSE_STRUCTURE_HISTORYLIST_H
 #define SSE_STRUCTURE_IKBD_H
@@ -4214,26 +4215,93 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_GUI_FULLSCREEN_NO_VSYNC_OPTION //but all the rest?
 //#define SSE_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
 
+#if defined(SSE_BOILER)
+#define SSE_BOILER_MONITOR_372 // v3.7.2 to clarify code
+#define SSE_BOILER_MONITOR_TRACE // v3.7.2 mode log also in TRACE (duh!)
+#endif
+
 #if defined(SSE_DISK)
+#define SSE_DISK2 //add info
 #define SSE_DISK_HFE // HxC floppy emulator HFE image support
 #define SSE_DISK_HFE_DISK_MANAGER // creating HFE images in Steem
 #define SSE_DISK_HFE_TRIGGER_IP // changes nothing?
+//#define SSE_DISK_HFE_TO_STW // using Steem to convert current disk
+#define SSE_DISK_STW2 
+#define SSE_DISK_HFE_DYNAMIC_HEADER //spare some memory
+//#define SSE_DISK_STW_TRIGGER_IP //TODO
+
+#define SSE_DISK_SCP2A //id
+#define SSE_DISK_SCP2B //all IP 1->2 (..->1 during rev) - perf?
+#undef SSE_DISK_SCP_WRITE // only bugs in that section :brr:
+#endif
+
+#if defined(SSE_GUI)
+#define SSE_GUI_ASSOCIATE_HFE // they're generally not zipped...
+#define SSE_GUI_DISK_MANAGER_INSERT_DISKB_REMOVE //works?
+#define SSE_GUI_STATUS_STRING_DISK_TYPE // A:MSA B:STW
+#endif
 
 #if defined(SSE_VARIOUS)
 #if defined(WIN32) && defined(VC_BUILD) // works with VC6, VS2008 not BCC
 #define SSE_VAR_ARCHIVEACCESS // 7z support
 #define SSE_VAR_ARCHIVEACCESS2 // bz2 (with modded dll), gz, tar, arj
-#define SSE_VAR_ARCHIVEACCESS3 // zip managed by ArchiveAccess.dll
-#define SSE_VAR_ARCHIVEACCESS4 // remove code for unzipd32.dll
+//#define SSE_VAR_ARCHIVEACCESS3 // zip managed by ArchiveAccess.dll by default - no, because of MSA Converter
+//#define SSE_VAR_ARCHIVEACCESS4 // remove code for unzipd32.dll - what if archiveaccess fails!
 #endif
+#define SSE_VAR_NO_UPDATE_372
+#define SSE_VAR_RESIZE_372
 #endif
 
 #define SSE_VID_D3D_CRISP //D3D can do that
 #define SSE_VID_D3D_CRISP_OPTION //the harder part!
 
+
+// beta-only for now, risky, fixes nothing serious...
+#define SSE_INT_MFP_REFACTOR3 //enums
+#undef SSE_INT_MFP_TIMER_B_AER // refactor
+#define SSE_INT_MFP_TIMER_B_AER2 // refactor
+#define SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS // timer B should be updated
+#define SSE_INT_MFP_TMP2//switch is temp
+
+#define SSE_TOS_STE_FAST_BOOT2 // check each cold reset
+#define SSE_TOS_CHECK_VERSION // to avoid ID something else as TOS
+
+#define SSE_ACSI
+#if defined(SSE_ACSI)
+//#define SSE_ACSI_FORMAT 
+#ifdef SSE_DEBUG
+#define SSE_ACSI_BOOTCHECKSUM
+#endif
+#define SSE_ACSI_INQUIRY // could even do without but it's too cool
+#define SSE_ACSI_LED // cool too
+#define SSE_ACSI_LS
+#define SSE_ACSI_MEGASTF // cool
+//#define SSE_ACSI_MODESELECT
+#define SSE_ACSI_NOGUISELECT // no GUI headache: one file, in root
+#define SSE_ACSI_OPTION
+//#define SSE_ACSI_REQUEST_SENSE
+#define SSE_ACSI_TIMING // ADAT -> slower (risky?)
+#endif
+
+//#define DISABLE_STEMDOS
+//#define DISABLE_STEMDOS2//TODO
+
+#define SOUND_DISABLE_INTERNAL_SPEAKER //of course, about time
+
+#if defined(SSE_GUI)
+#define SSE_GUI_STATUS_STRING_HISPEED
+#endif
+
+
+
+
+
 #endif//beta
 
 #if defined(SSE_BETA_BUGFIX)
+#define SSE_DISK_REMOVE_DISK_ON_SET_DISK //hmm, could explain some strange bugs
+#define SSE_INT_MFP_SPURIOUS2 // bugfix Return -HMD "spurious spurious"
+#define SSE_WD1772_372 // bugfix write MFM word with missing clock bit on data!
 #endif//bugfix
 
 #else//!SS

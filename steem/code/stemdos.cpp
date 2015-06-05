@@ -59,7 +59,7 @@ short stemdos_save_sr;
 
 int stemdos_current_drive;
 
-#endif
+#endif//DISABLE_STEMDOS
 
 #undef EXT
 #undef INIT
@@ -1081,8 +1081,14 @@ void stemdos_Pexec() //called from stemdos_rte, nothing done after this fn calle
     To simplify we test TOS version.
     v3.6.3: add hack condition, after all we still don't know if that
     project compiles on a real ST. Fixes devpac2?
+    v3.7.2: remove hack condition, project compiles in an ACSI drive,
+    it probably works on real HW
 */
+#if SSE_VERSION<363 || SSE_VERSION>=372
+          m68k_dpoke(sp+2, ( (tos_version>=0x104) ? 6 : 4));
+#else
           m68k_dpoke(sp+2, ( (tos_version>=0x104&&SSE_HACKS_ON) ? 6 : 4));
+#endif
 #else
           m68k_dpoke(sp+2,4); //SS mode4
 #endif
@@ -1158,6 +1164,9 @@ void stemdos_control_c() //control-c pressed
 
 void stemdos_intercept_trap_1()
 {
+#ifdef TEST01
+  ////return ;
+#endif
   bool Invalid=0;
   MEM_ADDRESS sp=get_sp_before_trap(&Invalid);//ss by looking at the stack
   ASSERT( !Invalid );
@@ -2070,59 +2079,6 @@ void stemdos_restore_path_buffer(){
 }
 */
 
-#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2) && defined(WIN32)
-// refactoring to avoid duplication, code was originally in options.cpp
-
-EasyStr TTos::GetNextTos(DirSearch &ds) { // to enumerate TOS files
-  EasyStr Path;
-  if((ds.Attrib & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_HIDDEN))==0)
-  {
-    Path=RunDir+SLASH+ds.Name;
-#ifdef WIN32
-    if (has_extension(Path,"LNK")){
-       WIN32_FIND_DATA wfd;
-       EasyStr DestPath=GetLinkDest(Path,&wfd);
-       if (has_extension_list(DestPath,"IMG","ROM",NULL)){
-         if (Exists(DestPath)) Path=DestPath;
-       }
-     }
-#elif defined(UNIX)
-     memset(LinkPath,0,MAX_PATH+1);
-     if (readlink(Path,LinkPath,MAX_PATH)>0){
-       if (has_extension_list(LinkPath,"IMG","ROM",NULL)){
-         if (Exists(LinkPath)){
-           Path=LinkPath;
-         }else{
-           Path="";
-         }
-       }
-     }
-#endif
-  }
-  return Path;
-}
-
-void TTos::GetTosProperties(EasyStr Path,WORD &Ver,BYTE &Country,WORD &Date) {
-  FILE *f=fopen(Path,"rb");
-  if (f){
-    fseek(f,2,SEEK_SET);
-    BYTE b_high,b_low;
-    fread(&b_high,1,1,f);fread(&b_low,1,1,f);
-    Ver=MAKEWORD(b_low,b_high);
-    
-    fseek(f,0x1d,SEEK_SET);
-    fread(&Country,1,1,f);
-    
-    fseek(f,0x1e,SEEK_SET);
-    fread(&b_high,1,1,f);fread(&b_low,1,1,f);
-    Date=MAKEWORD(b_low,b_high);
-    
-    fclose(f);
-  }
-}
-
-#endif//#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2)
-
 #undef LOGSECTION
 
 #define LOGSECTION LOGSECTION_INIT
@@ -2199,5 +2155,57 @@ void STStringToPC(char *)
 #endif//#if !defined(SSE_TOS_GEMDOS_VAR1) 
 
 //---------------------------------------------------------------------------
-#endif
+#endif//DISABLE_STEMDOS
 
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2) && defined(WIN32)
+// refactoring to avoid duplication, code was originally in options.cpp
+
+EasyStr TTos::GetNextTos(DirSearch &ds) { // to enumerate TOS files
+  EasyStr Path;
+  if((ds.Attrib & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_HIDDEN))==0)
+  {
+    Path=RunDir+SLASH+ds.Name;
+#ifdef WIN32
+    if (has_extension(Path,"LNK")){
+       WIN32_FIND_DATA wfd;
+       EasyStr DestPath=GetLinkDest(Path,&wfd);
+       if (has_extension_list(DestPath,"IMG","ROM",NULL)){
+         if (Exists(DestPath)) Path=DestPath;
+       }
+     }
+#elif defined(UNIX)
+     memset(LinkPath,0,MAX_PATH+1);
+     if (readlink(Path,LinkPath,MAX_PATH)>0){
+       if (has_extension_list(LinkPath,"IMG","ROM",NULL)){
+         if (Exists(LinkPath)){
+           Path=LinkPath;
+         }else{
+           Path="";
+         }
+       }
+     }
+#endif
+  }
+  return Path;
+}
+
+void TTos::GetTosProperties(EasyStr Path,WORD &Ver,BYTE &Country,WORD &Date) {
+  FILE *f=fopen(Path,"rb");
+  if (f){
+    fseek(f,2,SEEK_SET);
+    BYTE b_high,b_low;
+    fread(&b_high,1,1,f);fread(&b_low,1,1,f);
+    Ver=MAKEWORD(b_low,b_high);
+    
+    fseek(f,0x1d,SEEK_SET);
+    fread(&Country,1,1,f);
+    
+    fseek(f,0x1e,SEEK_SET);
+    fread(&b_high,1,1,f);fread(&b_low,1,1,f);
+    Date=MAKEWORD(b_low,b_high);
+    
+    fclose(f);
+  }
+}
+
+#endif//#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2)

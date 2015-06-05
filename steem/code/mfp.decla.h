@@ -31,6 +31,37 @@ extern "C" void ASMCALL check_for_interrupts_pending();
 
 EXT BYTE mfp_reg[24]; // 24 directly addressable internal registers, each 8bit
 
+
+#if defined(SSE_INT_MFP_REFACTOR3)
+enum {
+MFPR_GPIP= 0, // ff fa01 MFP General Purpose I/O
+MFPR_AER= 1, // ff fa03 MFP Active Edge
+MFPR_DDR= 2, // ff fa05 MFP Data Direction
+MFPR_IERA= 3, // ff fa07 MFP Interrupt Enable A
+MFPR_IERB= 4, // ff fa09 MFP Interrupt Enable B
+MFPR_IPRA= 5, // ff fa0b MFP Interrupt Pending A
+MFPR_IPRB= 6, // ff fa0d MFP Interrupt Pending B
+MFPR_ISRA= 7, // ff fa0f MFP Interrupt In-Service A
+MFPR_ISRB= 8, // ff fa11 MFP Interrupt In-Service B
+MFPR_IMRA= 9, // ff fa13 MFP Interrupt Mask A
+MFPR_IMRB= 10, // ff fa15 MFP Interrupt Mask B
+MFPR_VR= 11, // ff fa17 MFP Vector
+MFPR_TACR= 12, // ff fa19 MFP Timer A Control
+MFPR_TBCR= 13, // ff fa1b MFP Timer B Control
+MFPR_TCDCR= 14, // ff fa1d MFP Timers C and D Control
+MFPR_TADR= 15, // ff fa1f  MFP Timer A Data
+MFPR_TBDR= 16, // ff fa21  MFP Timer B Data
+MFPR_TCDR= 17, // ff fa23  MFP Timer C Data
+MFPR_TDDR= 18, // ff fa25  MFP Timer D Data
+
+// RS232
+MFPR_SCR= 19, // ff fa27 MFP Sync Character
+MFPR_UCR= 20, // ff fa29 MFP USART Control
+MFPR_RSR= 21, // ff fa2b MFP Receiver Status
+MFPR_TSR= 22, // ff fa2d MFP Transmitter Status
+MFPR_UDR= 23 // ff fa2f MFP USART Data
+};
+#else
 #define MFPR_GPIP 0 // ff fa01 MFP General Purpose I/O
 #define MFPR_AER 1 // ff fa03 MFP Active Edge
 #define MFPR_DDR 2 // ff fa05 MFP Data Direction
@@ -58,8 +89,30 @@ EXT BYTE mfp_reg[24]; // 24 directly addressable internal registers, each 8bit
 #define MFPR_TSR 22 // ff fa2d MFP Transmitter Status
 #define MFPR_UDR 23 // ff fa2f MFP USART Data
 
+#endif
+
 EXT BYTE mfp_gpip_no_interrupt INIT(0xf7);
 
+#if defined(SSE_INT_MFP_REFACTOR3)
+enum {
+MFP_INT_MONOCHROME_MONITOR_DETECT =15,
+MFP_INT_RS232_RING_INDICATOR= 14,
+MFP_INT_TIMER_A= 13,
+MFP_INT_RS232_RECEIVE_BUFFER_FULL= 12,
+MFP_INT_RS232_RECEIVE_ERROR =11,
+MFP_INT_RS232_TRANSMIT_BUFFER_EMPTY= 10,
+MFP_INT_RS232_TRANSMIT_ERROR =9,
+MFP_INT_TIMER_B =8,
+MFP_INT_FDC_AND_DMA =7,
+MFP_INT_ACIA =6,  // Vector at $118
+MFP_INT_TIMER_C =5,
+MFP_INT_TIMER_D =4,
+MFP_INT_BLITTER =3,
+MFP_INT_RS232_CTS =2,
+MFP_INT_RS232_DCD =1,
+MFP_INT_CENTRONICS_BUSY= 0
+};
+#else
 #define MFP_INT_MONOCHROME_MONITOR_DETECT 15
 #define MFP_INT_RS232_RING_INDICATOR 14
 #define MFP_INT_TIMER_A 13
@@ -76,6 +129,7 @@ EXT BYTE mfp_gpip_no_interrupt INIT(0xf7);
 #define MFP_INT_RS232_CTS 2
 #define MFP_INT_RS232_DCD 1
 #define MFP_INT_CENTRONICS_BUSY 0
+#endif
 
 #define MFP_GPIP_COLOUR BYTE(0x80)
 #define MFP_GPIP_NOT_COLOUR BYTE(~0x80)
@@ -83,6 +137,19 @@ EXT BYTE mfp_gpip_no_interrupt INIT(0xf7);
 #define MFP_GPIP_DCD BYTE(BIT_1)
 #define MFP_GPIP_RING BYTE(BIT_6)
 
+
+#if defined(SSE_INT_MFP_REFACTOR3)
+enum {
+MFP_GPIP_CENTRONICS_BIT =0,
+MFP_GPIP_DCD_BIT =1,
+MFP_GPIP_CTS_BIT =2,
+MFP_GPIP_BLITTER_BIT =3,
+MFP_GPIP_ACIA_BIT =4,
+MFP_GPIP_FDC_BIT= 5,
+MFP_GPIP_RING_BIT =6,
+MFP_GPIP_MONO_BIT =7
+};
+#else
 #define MFP_GPIP_CENTRONICS_BIT 0
 #define MFP_GPIP_DCD_BIT 1
 #define MFP_GPIP_CTS_BIT 2
@@ -91,7 +158,7 @@ EXT BYTE mfp_gpip_no_interrupt INIT(0xf7);
 #define MFP_GPIP_FDC_BIT 5
 #define MFP_GPIP_RING_BIT 6
 #define MFP_GPIP_MONO_BIT 7
-
+#endif
 //#ifdef IN_EMU
 
 #if defined(SSE_INT_MFP_IRQ_DELAY3)
@@ -156,7 +223,7 @@ struct TMC68901 {
 
   TMC68901();
   void Init();
-  bool Irq;  
+  bool Irq;  // asserted or not, problem, we're not in real-time
   char NextIrq; //-1 reset
   char LastIrq;
   char IrqInService;
@@ -198,8 +265,18 @@ struct TMC68901 {
 #if defined(SSE_INT_MFP_SPURIOUS)
   bool CheckSpurious(int irq);
 #endif
+#if defined(SSE_INT_MFP_TIMER_B_AER2)
+  void CalcCyclesFromHblToTimerB(int freq);
+#endif
+#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
+  void AdjustTimerB();
+#endif
 #endif
 };
+
+#if defined(SSE_INT_MFP_TIMER_B_AER2)
+#define CALC_CYCLES_FROM_HBL_TO_TIMER_B(freq) MC68901.CalcCyclesFromHblToTimerB(freq)
+#endif
 
 extern TMC68901 MC68901; // declaring the singleton
 

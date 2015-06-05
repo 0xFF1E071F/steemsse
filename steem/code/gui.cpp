@@ -665,6 +665,16 @@ void GUIRefreshStatusBar() {
 #else
       sprintf(status_bar,"%s %s %s",sb_st_model,sb_tos,sb_ram);
 #endif 
+
+#if defined(SSE_GUI_STATUS_STRING_HISPEED)
+      if(n_cpu_cycles_per_second>CpuNormalHz)
+      {
+        char sb_clock[10];
+        sprintf(sb_clock," %dMHZ",n_cpu_cycles_per_second/1000000);
+        strcat(status_bar,sb_clock);
+      }
+#endif
+
       // some options
 
 #if defined(SSE_IKBD_6301) && defined(SSE_GUI_STATUS_STRING_6301)
@@ -717,6 +727,7 @@ void GUIRefreshStatusBar() {
       else if(ADAT)
         strcat(status_bar," ADAT");
 #else
+
 #if defined(SSE_GUI_STATUS_STRING_HD)
       if(!HardDiskMan.DisableHardDrives) //v3.7.0
         strcat(status_bar," HD");
@@ -796,6 +807,18 @@ void GUIRefreshStatusBar() {
 #undef MAX_TEXT_LENGTH_BORDER_ON
 #undef MAX_TEXT_LENGTH_BORDER_OFF
 
+#if defined(SSE_GUI_STATUS_STRING_DISK_TYPE)
+/*  If the game in A: isn't displayed on status bar, then we
+    show what kind of file is in A: and B:. v3.7.2
+*/
+    else
+    {
+      char disk_type[13]; // " A:MSA B:STW"
+      sprintf(disk_type," A:%s B:%s",extension_list[SF314[0].ImageType.Extension]
+      ,extension_list[SF314[1].ImageType.Extension]);
+      strcat(status_bar,disk_type);
+    }
+#endif
 #endif
 
 #if defined(SSE_GUI_STATUS_STRING_HALT) && defined(SSE_CPU_HALT)
@@ -977,6 +1000,18 @@ void GUIColdResetChangeSettings()
 #endif
     OptionBox.NewMonitorSel=-1;
   }
+#if defined(SSE_TOS_STE_FAST_BOOT2) //force recheck
+  if(SSE_HACKS_ON && (tos_version==0x106||tos_version==0x162)
+#if USE_PASTI
+    && !pasti_active
+#endif
+#if defined(SSE_ACSI)
+    && !(ACSI_EMU_ON) 
+#endif
+    && OptionBox.NewROMFile.IsEmpty()
+    )
+    OptionBox.NewROMFile=ROMFile;
+#endif
   if (OptionBox.NewROMFile.NotEmpty()){
     if (load_TOS(OptionBox.NewROMFile)){
       Alert(T("The selected TOS file")+" "+OptionBox.NewROMFile+" "+T("is not in the correct format or may be corrupt."),T("Cannot Load TOS"),MB_ICONEXCLAMATION);

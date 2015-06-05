@@ -11,16 +11,6 @@
 #include <easystr.h>
 #include "fdc.decla.h"//FLOPPY_MAX_TRACK_NUM?
 
-
-#if defined(SSE_DISK_GHOST__)
-#include <easystr.h>
-#include "fdc.decla.h"
-#endif
-
-
-//#define EXT extern
-//#define INIT(s)
-
 #define FIMAGE_OK                  0
 #define FIMAGE_WRONGFORMAT         1
 #define FIMAGE_CANTOPEN            2

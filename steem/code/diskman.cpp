@@ -25,7 +25,7 @@ void TDiskManager::RefreshDiskView(EasyStr SelPath,bool EditLabel,EasyStr SelLin
 
 #endif
 
-#if defined(STEVEN_SEAGAL) && USE_PASTI && defined(SSE_PASTI_ON_WARNING)
+#if defined(STEVEN_SEAGAL) && USE_PASTI && defined(SSE_PASTI_ON_WARNING) //no
 char sDiskManagerWindowCaption[]="Disk Manager (Pasti On)"; // and a nice global
 #endif
 
@@ -58,31 +58,26 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
 
   if (*Ext=='.') Ext++;
   int ret=0;
+  //SS can't simplify, with all the #ifdefs... ?
   if (MatchesAnyString_I(Ext,"ST","STT","DIM","MSA",
 #if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
-    "IPF", 
+    "IPF", //rename
 #ifdef SSE_IPF_CTRAW
-    SSE_IPF_CTRAW, //CTR
+    SSE_IPF_CTRAW, //CTR //rename
 #endif
 #ifdef SSE_IPF_KFSTREAM
     SSE_IPF_KFSTREAM, //RAW
 #endif
 #endif    
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
-    "SCP",
+    DISK_EXT_SCP,
 #endif    
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
-    "STW",
+    DISK_EXT_STW,
 #endif  
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_HFE)
     DISK_EXT_HFE,
 #endif  
-#if defined(SSE_TOS_PRG_AUTORUN__)
-    "PRG",//not a disk, must be handled differently
-#endif
-#if defined(SSE_TOS_TOS_AUTORUN__)
-    "TOS",//not a disk, must be handled differently
-#endif
     NULL)){
     ret=DISK_UNCOMPRESSED;
 #if defined(SSE_TOS_PRG_AUTORUN)
@@ -105,7 +100,7 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
     ret=DISK_COMPRESSED;
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS)
-#if defined(SSE_VAR_ARCHIVEACCESS3)
+#if defined(SSE_VAR_ARCHIVEACCESS3___) //zip already covered
   }else if(ARCHIVEACCESS_OK
     && MatchesAnyString_I(Ext,"ZIP","7Z","BZ2","GZ","TAR","ARJ",NULL)){
 #elif defined(SSE_VAR_ARCHIVEACCESS2)
@@ -1426,12 +1421,23 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
 
 #if defined(SSE_DISK_GHOST) && defined(SSE_GUI_DISK_MANAGER_GHOST)
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
+#if !defined(SSE_DISK_SCP_WRITE)
+              (SSE_GHOST_DISK?MF_CHECKED:0),2027,T("Enable ghost disks for CTR-IPF-STX-SCP"));
+#else
               (SSE_GHOST_DISK?MF_CHECKED:0),2027,T("Enable ghost disks for CTR-IPF-STX"));
+#endif
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_TOS_PRG_AUTORUN) 
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
               (OPTION_PRG_SUPPORT?MF_CHECKED:0),2028,T("Run PRG and TOS files"));
+            InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_ACSI_OPTION)  //v3.7.2
+            InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING 
+              | (int)(SSEOption.Acsi?MF_CHECKED:0)
+              | (int)(SSEConfig.AcsiImg?0:MF_DISABLED)
+              ,2029,T("ACSI hard disk image"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #endif
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(This->AutoInsert2 ? MF_CHECKED:0),2016,T("Automatically Insert &Second Disk"));
@@ -1947,19 +1953,18 @@ That will toggle bit x.
 #if defined(SSE_PASTI_ONLY_STX_OPTION3)
         case 2026:
           PASTI_JUST_STX=!PASTI_JUST_STX;
-//TODO indent
-            TRACE_LOG("Option Pasti just STX %d\n",PASTI_JUST_STX);
-            for(int i=0;i<2;i++) // necessary, later refactor (structure) TODO
+          TRACE_LOG("Option Pasti just STX %d\n",PASTI_JUST_STX);
+          for(int i=0;i<2;i++) // necessary, later refactor (structure) TODO
+          {
+            if(FloppyDrive[i].NotEmpty())
             {
-              if(FloppyDrive[i].NotEmpty())
-              {
-                EasyStr name=FloppyDrive[i].DiskName;
-                EasyStr path=FloppyDrive[i].GetImageFile(); 
-                This->EjectDisk(i);
-                This->InsertDisk(i,name,path,0,0,"",true);
-                This->RefreshDiskView();
-              }
-            }            
+              EasyStr name=FloppyDrive[i].DiskName;
+              EasyStr path=FloppyDrive[i].GetImageFile(); 
+              This->EjectDisk(i);
+              This->InsertDisk(i,name,path,0,0,"",true);
+              This->RefreshDiskView();
+            }
+          }            
 
           break;
 
@@ -1979,6 +1984,12 @@ That will toggle bit x.
         case 2028:
           OPTION_PRG_SUPPORT=!OPTION_PRG_SUPPORT;
           TRACE_LOG("Option PRG support %d\n",SSE_GHOST_DISK);
+          break;
+#endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_ACSI_OPTION)
+        case 2029:
+          SSEOption.Acsi=!SSEOption.Acsi;
+          TRACE_LOG("Option ACSI support %d\n",SSEOption.Acsi);
           break;
 #endif
       }
@@ -2287,6 +2298,8 @@ That will toggle bit x.
 #if defined(SSE_GUI_DISK_MANAGER_LONG_NAMES1)
 /*  This is so the player can read the full name of the disk without
     checking at the place of storage.
+    If he clicks on it, it is copied in the clipboard, whatever use this
+    then may have.
 */
 #if defined(SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD)
           InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1082,
@@ -3272,7 +3285,9 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
 #endif
 
     InsertHistoryAdd(Drive,Name,Path,DiskInZip);
-
+#if defined(SSE_GUI_DISK_MANAGER_INSERT_DISKB_REMOVE)
+    AutoInsert2&=~2; //TODO def
+#endif
     if (AllowInsert2 && Drive==0 && AutoInsert2){
       Err=1;
 #if !defined(SSE_GUI_DISK_MANAGER_INSERT_DISKB)
@@ -3311,7 +3326,15 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
           dot=strrchr(NewName,'.');
           NewName=NewName.Lefts(dot-NewName.Text);
 #endif
+#if defined(SSE_GUI_DISK_MANAGER_INSERT_DISKB_REMOVE)
+          if (Err==0) 
+          {
+            InsertDisk(1,NewName,NewPath,0,0,NewDiskInZip,true,0);
+            AutoInsert2|=2; //TODO def
+          }
+#else
           if (Err==0) InsertDisk(1,NewName,NewPath,0,0,NewDiskInZip,true,0);
+#endif
         }
       }
 

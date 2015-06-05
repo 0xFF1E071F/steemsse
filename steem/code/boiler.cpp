@@ -184,6 +184,21 @@ void debug_set_mon(MEM_ADDRESS ad,bool read,WORD mask)
   if (ad>=0xe00000 && ad<MEM_IO_BASE) return; // Monitors only on RAM and IO  
 
   DEBUG_ADDRESS *pda=debug_find_or_add_address(ad);
+#if defined(SSE_BOILER_MONITOR_TRACE________)
+  // both reads & writes... wrong!
+  for(int bit=((monitor_mode==MONITOR_MODE_LOG)?1:(read?2:1));
+    bit<=((monitor_mode==MONITOR_MODE_LOG)?2:(read?2:1))
+    ;bit++)
+  {
+    if (mask==0){
+      pda->bwr&=~(1 << bit);
+      pda->mask[bit-1]=0; 
+    }else{
+      pda->bwr|=1 << bit;
+      pda->mask[bit-1]=mask;
+    }
+  }//nxt
+#else
   int bit=int(read ? 2:1);
   if (mask==0){
     pda->bwr&=~(1 << bit);
@@ -192,6 +207,7 @@ void debug_set_mon(MEM_ADDRESS ad,bool read,WORD mask)
     pda->bwr|=1 << bit;
     pda->mask[bit-1]=mask;
   }
+#endif
   if (pda->bwr==0 && pda->name[0]==0){
     debug_remove_address(ad);
   }else{
@@ -256,9 +272,12 @@ void debug_update_bkmon()
 int debug_get_ad_mode(MEM_ADDRESS ad)
 {
   DEBUG_ADDRESS *pda=debug_find_address(ad);
+  //ASSERT(pc!=0x1CA4E);
   if (pda==NULL) return 0;
+  
 
   int mode=pda->mode;
+//if(pc==0x1CA4E) TRACE("mode %d %d\n",mode,pda->bwr);
   if (mode==1) mode=int((pda->bwr & 1) ? breakpoint_mode:monitor_mode);
   return mode;
 }
@@ -325,8 +344,15 @@ void breakpoint_menu_setup()
   }
 #endif
 
+#if defined(SSE_BOILER_MONITOR_372) //v3.7.2 to clarify code
+  AppendMenu(monitor_menu,MF_STRING|int((monitor_mode==MONITOR_MODE_STOP) 
+    ? MF_CHECKED:0),1103,"Stop On Activation");
+  AppendMenu(monitor_menu,MF_STRING|int((monitor_mode==MONITOR_MODE_LOG) 
+    ? MF_CHECKED:0),1104,"Log On Activation");
+#else
   AppendMenu(monitor_menu,MF_STRING|int((monitor_mode==2) ? MF_CHECKED:0),1103,"Stop On Activation");
   AppendMenu(monitor_menu,MF_STRING|int((monitor_mode==3) ? MF_CHECKED:0),1104,"Log On Activation");
+#endif
   AppendMenu(monitor_menu,MF_STRING,1106,"Clear All Monitored Addresses");
   AppendMenu(monitor_menu,MF_STRING,1105,"Set Monitor On Screen");
 
@@ -858,7 +884,12 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               SendMessage(Win,WM_COMMAND,1100,0); // clear all breakpoints
               if (breakpoint_mode!=2) SendMessage(Win,WM_COMMAND,1107,0);
               SendMessage(Win,WM_COMMAND,1106,0); // clear all monitors
+#if defined(SSE_BOILER_MONITOR_372) //v3.7.2 to clarify code
+              if (monitor_mode!=MONITOR_MODE_STOP) 
+                SendMessage(Win,WM_COMMAND,1103,0);
+#else
               if (monitor_mode!=2) SendMessage(Win,WM_COMMAND,1103,0);
+#endif
               SendMessage(Win,WM_COMMAND,9031,0); // turn off all irq breaks
               SendMessage(Win,WM_COMMAND,1009,0); // turn off all logsections
               SendMessage(Win,WM_COMMAND,1502,0); // notify on crash with bombs
@@ -1181,17 +1212,35 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
             case 1103:   //toggle monitoring
             case 1104:   //toggle monitoring to logfile
             case 1105:   //set monitor on screen
+#if defined(SSE_BOILER_MONITOR_372) //v3.7.2 to clarify code
+              if (id==1103) monitor_mode=int((monitor_mode==MONITOR_MODE_STOP)
+                ? 0:MONITOR_MODE_STOP);
+              if (id==1104) monitor_mode=int((monitor_mode==MONITOR_MODE_LOG) 
+                ? 0:MONITOR_MODE_LOG);
+              if (id==1105){
+                monitor_mode=MONITOR_MODE_STOP;
+                stem_mousemode=STEM_MOUSEMODE_BREAKPOINT;
+              }
+#else
               if (id==1103) monitor_mode=int((monitor_mode==2) ? 0:2);
               if (id==1104) monitor_mode=int((monitor_mode==3) ? 0:3);
               if (id==1105){
                 monitor_mode=2;
                 stem_mousemode=STEM_MOUSEMODE_BREAKPOINT;
               }
+#endif
               mem_browser_update_all();
               breakpoint_menu_setup();
               debug_update_bkmon();
+#if defined(SSE_BOILER_MONITOR_372) //v3.7.2 to clarify code
+              CheckMenuItem(monitor_menu,1103,MF_BYCOMMAND | 
+                int((monitor_mode==MONITOR_MODE_STOP)?MF_CHECKED:MF_UNCHECKED));
+              CheckMenuItem(monitor_menu,1104,MF_BYCOMMAND | 
+                int((monitor_mode==MONITOR_MODE_LOG)?MF_CHECKED:MF_UNCHECKED));
+#else
               CheckMenuItem(monitor_menu,1103,MF_BYCOMMAND | int((monitor_mode==2) ? MF_CHECKED:MF_UNCHECKED));
               CheckMenuItem(monitor_menu,1104,MF_BYCOMMAND | int((monitor_mode==3) ? MF_CHECKED:MF_UNCHECKED));
+#endif
               break;
 
 #if USE_PASTI

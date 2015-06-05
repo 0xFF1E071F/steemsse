@@ -519,9 +519,12 @@ bool load_TOS(char *File)
 #if USE_PASTI
     && !pasti_active
 #endif
+#if defined(SSE_ACSI)
+    && !(ACSI_EMU_ON)
+#endif
     )
   {
-    TRACE_INIT("STE tos boot patch\n");
+    TRACE_INIT("STE tos boot patch %X %X %X\n",0x576,ROM_LPEEK(0x576),0x4E714E71);
     ROM_LPEEK(0x576)=0x4E714E71; // bsr +$e4 -> nop, "dma boot"
   }
 #endif
@@ -761,8 +764,15 @@ void LoadState(GoodConfigStoreFile *pCSF)
   CheckMenuItem(boiler_op_menu,1515,MF_BYCOMMAND | int(debug_monospace_disa ? MF_CHECKED:MF_UNCHECKED));
   CheckMenuItem(boiler_op_menu,1516,MF_BYCOMMAND | int(debug_uppercase_disa ? MF_CHECKED:MF_UNCHECKED));
   CheckMenuItem(logsection_menu,1013,MF_BYCOMMAND | int(debug_wipe_log_on_reset ? MF_CHECKED:MF_UNCHECKED));
+#if defined(SSE_BOILER_MONITOR_372) //v3.7.2 to clarify code
+  CheckMenuItem(breakpoint_menu,1103,MF_BYCOMMAND 
+    | int((monitor_mode==MONITOR_MODE_STOP) ? MF_CHECKED:MF_UNCHECKED));
+  CheckMenuItem(breakpoint_menu,1104,MF_BYCOMMAND 
+    | int((monitor_mode==MONITOR_MODE_LOG) ? MF_CHECKED:MF_UNCHECKED));
+#else
   CheckMenuItem(breakpoint_menu,1103,MF_BYCOMMAND | int((monitor_mode==2) ? MF_CHECKED:MF_UNCHECKED));
   CheckMenuItem(breakpoint_menu,1104,MF_BYCOMMAND | int((monitor_mode==3) ? MF_CHECKED:MF_UNCHECKED));
+#endif
   CheckMenuItem(breakpoint_menu,1107,MF_BYCOMMAND | int((breakpoint_mode==2) ? MF_CHECKED:MF_UNCHECKED));
   CheckMenuItem(breakpoint_menu,1108,MF_BYCOMMAND | int((breakpoint_mode==3) ? MF_CHECKED:MF_UNCHECKED));
   CheckMenuItem(logsection_menu,1012,MF_BYCOMMAND | int(logging_suspended ? MF_CHECKED:MF_UNCHECKED));

@@ -37,7 +37,7 @@ other files that make up the Steem module.
 #include "SSE/SSE.h" // get switches
 #include "SSE/SSEOption.h"
 #if defined(SSE_STRUCTURE_SSECPU_OBJ) && defined(BCC_BUILD)//temp
-#include "SSE/SSECpu.h"
+//#include "SSE/SSECpu.h"
 #endif
 #include "SSE/SSEDebug.h" 
 #if defined(SSE_STF)
@@ -46,6 +46,7 @@ other files that make up the Steem module.
 #if defined(SSE_SDL)
 #include "SSE/SSESDL.h"
 #endif
+#include "SSE/SSEAcsi.h"
 #endif//SS
 
 
@@ -58,7 +59,7 @@ const char *stem_version_date_text=__DATE__ " - " __TIME__;
 const 
 #endif
 //char stem_window_title[]=WINDOW_TITLE; // in SSE.h //the [] for VS2008
-char stem_window_title[WINDOW_TITLE_MAX_CHARS];//=WINDOW_TITLE;
+char stem_window_title[WINDOW_TITLE_MAX_CHARS+1];//=WINDOW_TITLE; //+1 v3.7.2
 #elif SSE_VERSION<370
 char stem_window_title[WINDOW_TITLE_MAX_CHARS]="Steem Engine";
 #else
@@ -354,7 +355,7 @@ void FindWriteDir()
 bool Initialise()
 {
   FindWriteDir();
-#if defined(SSE_VERSION)
+#if defined(SSE_VERSION) //this is no proper switch
   {
     // build stem_version_text eg "3.7.0" - quite complicated for what it does!
     char *pchar=(char*)stem_version_text + SSE_VERSION_TXT_LEN;
@@ -729,6 +730,15 @@ bool Initialise()
   }
 #endif
 
+#if defined(SSE_ACSI_NOGUISELECT)
+  // try to open ACSI_HD0.img
+#if defined(SSE_GUI_NOTIFY1)
+  SetNotifyInitText(ACSI_HD_NAME);
+#endif
+  EasyStr hdname=RunDir+ACSI_HD_NAME;
+  SSEConfig.AcsiImg=AcsiHdc.Init(0,hdname); 
+#endif
+
   SetNotifyInitText(T("Jump Tables"));
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_DELAY_LOAD_DLL) \
@@ -806,14 +816,14 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
     MainRetVal=EXIT_FAILURE;
     return 0;
   }
-
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_NO_UPDATE_372))
   if (Exists(RunDir+SLASH "new_steemupdate.exe")){
     DeleteFile(RunDir+SLASH "steemupdate.exe");
     if (Exists(RunDir+SLASH "steemupdate.exe")==0){
       MoveFile(RunDir+SLASH "new_steemupdate.exe",RunDir+SLASH "steemupdate.exe");
     }
   }
-
+#endif
 #ifndef ONEGAME
   ParseCommandLine(_argc-1,_argv+1);
 #endif
@@ -895,7 +905,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 
   init_DirID_to_text();
 
-#ifdef WIN32
+#ifdef WIN32 //SS this was commented out
 /*
   if (StepByStepInit && WinNT==0){
     if (CSF.GetInt("Main","AllowDTOn98",0)){

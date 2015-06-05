@@ -13,6 +13,10 @@
 
 #if defined(SSE_DISK)
 
+#if defined(SSE_GUI_STATUS_STRING_DISK_TYPE) //adapted to enum of course
+char *extension_list[]={ "","ST","MSA","DIM","STT","STX","IPF",
+"CTR","STW","PRG","TOS","SCP","HFE",""};
+#endif
 
 #if defined(SSE_DISK1)
 
@@ -29,9 +33,6 @@ void TDisk::Init() {
 }
 
 #endif
-
-
-
 
 #endif//disk
 

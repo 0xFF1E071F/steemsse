@@ -6,6 +6,8 @@
 
 
 #if defined(SSE_DRIVE)
+// TODO refactor
+// separate file for sound?
 
 #include <cpu.decla.h>
 #include <fdc.decla.h>
@@ -471,7 +473,8 @@ void TSF314::IndexPulse() {
     time_of_next_ip=ACT+n_cpu_cycles_per_second; // put into future
 #endif
   ASSERT(time_of_next_ip-time_of_last_ip>0);
-  //TRACE_LOG("%c: IP at %d next at %d (%d cycles, %d ms)\n",Id,time_of_last_ip,time_of_next_ip,time_of_next_ip-time_of_last_ip,(time_of_next_ip-time_of_last_ip)/(n_cpu_cycles_per_second/1000));
+  //TRACE("Yo!\n");
+  //TRACE("%c: IP at %d next at %d (%d cycles, %d ms)\n",Id,time_of_last_ip,time_of_next_ip,time_of_next_ip-time_of_last_ip,(time_of_next_ip-time_of_last_ip)/(n_cpu_cycles_per_second/1000));
 
   // send pulse to WD1772
   if(DRIVE==Id)
@@ -489,7 +492,7 @@ void TSF314::Motor(bool state) {
 */
  
 #ifdef SSE_DEBUG
-  if(state!=State.motor)
+  if(state!=State.motor && FloppyDrive[Id].NotEmpty() )   //State.empty is never updated...
   {
     TRACE_LOG("Drive %c: motor %s\n",'A'+Id,state?"on":"off");
   }
@@ -568,10 +571,14 @@ void TSF314::Read() {
     After that, we do each successive byte until the command is
     finished. That way, we won't lose any byte, and we add
     2 events/scanline only when reading.
-
 */
   ASSERT(!State.writing);
   ASSERT(IMAGE_STW || IMAGE_SCP || IMAGE_HFE); // only for those now
+  ASSERT(Id==DRIVE);
+#if defined(SSE_DISK2)
+  ASSERT(Disk[Id].current_side==CURRENT_SIDE);
+  ASSERT(Disk[Id].current_track==Track());
+#endif
 
 #if defined(SSE_DISK_SCP) || defined(SSE_DISK_HFE)
   bool new_position=!State.reading;
@@ -583,7 +590,7 @@ void TSF314::Read() {
 /*  We should refactor this so that also STW images trigger IP, but my
     first attempt didn't work at all so...
 */
-    if(!State.reading || !(IMAGE_SCP) )
+    if(!State.reading || !(IMAGE_SCP))
       Disk[Id].current_byte=BytePosition();
     else
       Disk[Id].current_byte++;
@@ -596,7 +603,6 @@ void TSF314::Read() {
   }
   else // get next byte regardless of timing
     Disk[Id].current_byte++;
-
   if(IMAGE_STW)
     WD1772.Mfm.encoded=ImageSTW[Id].GetMfmData(Disk[Id].current_byte);
 #if defined(SSE_DISK_HFE)
@@ -611,6 +617,7 @@ void TSF314::Read() {
 #endif
 
 #if defined(SSE_DRIVE_SINGLE_SIDE_RND)
+  ASSERT(!(SSEOption.SingleSideDriveMap&(Id+1) && CURRENT_SIDE==1));
   if(SSEOption.SingleSideDriveMap&(Id+1) && CURRENT_SIDE==1)
     WD1772.Mfm.encoded=rand()%0xFFFF;
 #endif
@@ -633,6 +640,12 @@ void TSF314::Read() {
 
 void TSF314::Write() {
   ASSERT(IMAGE_STW||IMAGE_SCP||IMAGE_HFE); // only for those now
+  ASSERT(Id==DRIVE);
+#if defined(SSE_DISK2)
+  ASSERT(Disk[Id].current_side==CURRENT_SIDE);
+  ASSERT(Disk[Id].current_track==Track());
+#endif
+
 #if defined(SSE_DISK_SCP) || defined(SSE_DISK_HFE)
   bool new_position=!State.writing;
 #endif
@@ -649,13 +662,11 @@ void TSF314::Write() {
   }
   else
     Disk[Id].current_byte++;
-
 #if defined(SSE_DRIVE_SINGLE_SIDE_RND)
   if(SSEOption.SingleSideDriveMap&(Id+1) && CURRENT_SIDE==1)
     ; 
   else
 #endif
-
   if(IMAGE_STW)
     ImageSTW[Id].SetMfmData(Disk[Id].current_byte,WD1772.Mfm.encoded);
 #if defined(SSE_DISK_HFE)

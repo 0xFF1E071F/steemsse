@@ -18,11 +18,6 @@
 #endif
 EasyStr GetEXEDir();//#include <mymisc.h>//missing...
 
-#if defined(SSE_DRIVE_IPF1)
-#include <stemdialogs.h>//temp...
-#include <diskman.decla.h>
-#endif
-
 #if !defined(SSE_CPU)
 #include <mfp.decla.h>
 #endif
@@ -41,6 +36,12 @@ EasyStr GetEXEDir();//#include <mymisc.h>//missing...
     Remarkably few changes are necessary in the byte-level WD1772 emu to have
     some SCP images loading.
 */
+
+#if defined(SSE_VAR_RESIZE_372)
+#define fCurrentImage FloppyDrive[Id].f
+#define nSides FloppyDrive[Id].Sides
+#define nTracks FloppyDrive[Id].TracksPerSide
+#endif
 
 #define LOGSECTION LOGSECTION_IMAGE_INFO
 
@@ -86,7 +87,8 @@ void  TImageSCP::ComputePosition(WORD position) {
   position=position%nBytes; // 0-6256, safety
   Position=0; // safety
 
-#if !defined(SSE_WD1772_DPLL) || defined(SSE_DISK_SCP_WRITE)
+//#if !defined(SSE_WD1772_DPLL) || defined(SSE_DISK_SCP_WRITE)
+#if defined(SSE_DISK_SCP_WRITE) 
   ShiftsToNextOne=0; 
 #endif
 
@@ -194,6 +196,8 @@ WORD TImageSCP::GetMfmData(WORD position) {
 
   //WD1772.Mfm.data_last_bit=(mfm_data&1); // no use
 
+  a2=WD1772.Dpll.ctime;
+  int delay_in_cycles=(a2-a1);
 
 #ifdef SSE_DEBUG  // only report DPLL if there's some adjustment
   if(WD1772.Dpll.increment!=128|| WD1772.Dpll.phase_add||WD1772.Dpll.phase_sub
@@ -203,12 +207,14 @@ WORD TImageSCP::GetMfmData(WORD position) {
     ASSERT( !(WD1772.Dpll.phase_add && WD1772.Dpll.phase_sub) );
     TRACE_MFM(" DPLL (%d,%d,%d) ",WD1772.Dpll.increment,WD1772.Dpll.phase_add-WD1772.Dpll.phase_sub,WD1772.Dpll.freq_add-WD1772.Dpll.freq_sub);
   }
-#endif
-
-  a2=WD1772.Dpll.ctime;
-  int delay_in_cycles=(a2-a1);
   ASSERT(delay_in_cycles>0);
   TRACE_MFM(" %d cycles\n",delay_in_cycles);
+#endif
+
+//  a2=WD1772.Dpll.ctime;
+//  int delay_in_cycles=(a2-a1);
+//  ASSERT(delay_in_cycles>0);
+//  TRACE_MFM(" %d cycles\n",delay_in_cycles);
 #endif
 
   WD1772.update_time=time_of_next_event+delay_in_cycles; 
@@ -220,6 +226,7 @@ WORD TImageSCP::GetMfmData(WORD position) {
   }
 
   ASSERT(!mfm_data); // see note at top of function
+  mfm_data=WD1772.Mfm.encoded; // correct?
   return mfm_data;
 }
 
@@ -256,9 +263,16 @@ void TImageSCP::IncPosition() {
 #endif
 
 #if defined(SSE_DRIVE_INDEX_PULSE2) 
-    // We step revs only if there's reading over the IP
+    // provided there are >1 revs...    
     if(file_header.IFF_NUMREVS>1)
     {
+#if defined(SSE_DISK_SCP2B)
+      // we step revs 0->1 each IP, we'll reload 0 during rev
+      // works with Turrican, I Ludicrus, Leavin' Teramis
+      // and you can see that it's simpler
+      LoadTrack(CURRENT_SIDE,SF314[DRIVE].Track(),true);
+#else
+      // We step revs only if there's reading over the IP
       switch(WD1772.prg_phase)
       {
       case TWD1772::WD_TYPEI_READ_ID:
@@ -267,7 +281,14 @@ void TImageSCP::IncPosition() {
       case TWD1772::WD_TYPEII_READ_DATA: 
       case TWD1772::WD_TYPEII_READ_CRC:
         LoadTrack(CURRENT_SIDE,SF314[DRIVE].Track(),true);
-      }
+        break;
+#if SSE_VERSION>=372 // test... will  fail on a $A1 though
+      case TWD1772::WD_TYPEII_FIND_ID://3.7.2 I Ludicrus vs Turrican, or need 3 revs
+        if(!WD1772.Amd.Enabled)
+          LoadTrack(CURRENT_SIDE,SF314[DRIVE].Track(),true);
+#endif
+      }//sw
+#endif
     }      
 #endif
   }
@@ -362,7 +383,9 @@ bool TImageSCP::LoadTrack(BYTE side,BYTE track,bool reload) {
   BYTE trackn=track;
   if(nSides==2) // general case
     trackn=track*2+side; 
-
+#if defined(SSE_DISK_SCP2B)
+  if(!rev) // if on 2nd rev we reload 1st rev during "idle"
+#endif
   if(! reload && track_header.TDH_TRACKNUM==trackn) //already loaded
     return true;
 
@@ -444,7 +467,10 @@ track_header.TDH_TABLESTART[rev].TDH_DURATION,
 (float)track_header.TDH_TABLESTART[rev].TDH_DURATION*25/1000000,
 track_header.TDH_TABLESTART[rev].TDH_LENGTH, nBits,TimeFromIndexPulse[nBits-1],
 track_header.TDH_TABLESTART[rev].TDH_OFFSET,track_header.track_data_checksum);
-
+#if defined(SSE_DISK2)
+    Disk[Id].current_side=side;
+    Disk[Id].current_track=track;
+#endif
 #if defined(SSE_BOILER) && defined(SSE_DISK_SCP_TO_MFM_PREVIEW)
     InterpretFlux();
 #endif
@@ -455,25 +481,15 @@ track_header.TDH_TABLESTART[rev].TDH_OFFSET,track_header.track_data_checksum);
 
 
 bool TImageSCP::Open(char *path) {
-
-#ifdef SSE_WD1772_MFM_PRODUCE_TABLE // one-shot switch...
-  // todo, also in bits
- for(int i=0;i<256;i++)
- {
-   WD1772.Mfm.data=i;
-   WD1772.Mfm.Encode();
-   TRACE("D %02X -> C %02X MFM %04X\n",i,WD1772.Mfm.clock,WD1772.Mfm.encoded);
- }
-#endif
-
   bool ok=false;
   Close(); // make sure previous image is correctly closed
-
+#if defined(SSE_DISK_SCP_WRITE) //no :)
   fCurrentImage=fopen(path,"rb+"); // try to open existing file
-
   if(!fCurrentImage) // maybe it's read-only
     fCurrentImage=fopen(path,"rb");
-
+#else
+  fCurrentImage=fopen(path,"rb");
+#endif
   if(fCurrentImage) // image exists
   {
     // we read only the header
@@ -481,7 +497,6 @@ bool TImageSCP::Open(char *path) {
     {
       if(!strncmp(DISK_EXT_SCP,(char*)&file_header.IFF_ID,3)) // it's SCP
       {
-
         // compute nSides and nTracks
         if(file_header.IFF_HEADS)
         {
@@ -490,16 +505,15 @@ bool TImageSCP::Open(char *path) {
         }
         else
           nTracks=(file_header.IFF_END-file_header.IFF_START+1)/2;
-
+#ifdef SSE_DEBUG //lots of info
 TRACE_LOG("SCP sides %d tracks %d IFF_VER %X IFF_DISKTYPE %X IFF_NUMREVS %d \
 IFF_START %d IFF_END %d IFF_FLAGS %d IFF_ENCODING %d IFF_HEADS %d \
 IFF_RSRVED %X IFF_CHECKSUM %X\n",nSides,nTracks,file_header.IFF_VER,
 file_header.IFF_DISKTYPE,file_header.IFF_NUMREVS,file_header.IFF_START,
 file_header.IFF_END,file_header.IFF_FLAGS,file_header.IFF_ENCODING,
 file_header.IFF_HEADS,file_header.IFF_RSRVED,file_header.IFF_CHECKSUM);
-
+#endif
         track_header.TDH_TRACKNUM=0xFF;
-
         ok=true; //TODO some checks?
       }//cmp
     }//read
@@ -512,6 +526,10 @@ file_header.IFF_HEADS,file_header.IFF_RSRVED,file_header.IFF_CHECKSUM);
 }
 
 #if defined(SSE_DISK_SCP_WRITE)
+
+// finally tested that and it couldn't work as it is, it's just
+// gonna run to a crash - undef v3.7.2 - this code should be wiped out!!
+// so bad it is TODO
 
 bool  TImageSCP::SaveTrack() {
 /*  We need to convert back to big endian relative delays - not tested
@@ -536,6 +554,7 @@ bool  TImageSCP::SaveTrack() {
       for(DWORD i=0;i<nBits;i++)
       {
         total_units=TimeFromIndexPulse[i];
+        ASSERT( total_units>=previous_total_units );
         int flux_to_flux_units_32bit=total_units-previous_total_units;        
         while( flux_to_flux_units_32bit>0xFFFF)
         {
@@ -570,6 +589,7 @@ bool  TImageSCP::SaveTrack() {
 void TImageSCP::SetMfmData(WORD position, WORD mfm_data) {
 
 #if defined(SSE_DISK_SCP_WRITE) // not tested...
+
   if(file_header.IFF_NUMREVS==1 && TimeFromIndexPulse
     && !FloppyDrive[DRIVE].ReadOnly)
   {

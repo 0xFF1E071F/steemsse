@@ -6,12 +6,6 @@
 #include <conditions.h>
 #include "SSEParameters.h"
 
-#if defined(SSE_DRIVE_SOUND) && defined(SSE_STRUCTURE_SSEDEBUG_OBJ)
-#ifdef WIN32
-#include <dsound.h>
-#endif
-#endif
-
 #include "SSEDma.h"
 #include "SSEDrive.h"
 #include "SSEYM2149.h"
@@ -58,7 +52,6 @@ struct TSCP_track_header {
   DWORD track_data_checksum; //? see hxc project
 };
 
-
 struct  TImageSCP {
   // interface (the same as for STW disk images)
   bool Open(char *path);
@@ -84,18 +77,26 @@ struct  TImageSCP {
   bool SaveTrack();
 #endif
   // variables
+#if defined(SSE_DISK_SCP2A) 
+  BYTE Id; //0,1, same as drive
+#endif
+  WORD nBytes;
+#if !defined(SSE_VAR_RESIZE_372)
   BYTE nSides;
   BYTE nTracks;
-  WORD nBytes;
+#endif
   DWORD nBits;
   TSCP_file_header file_header;
   TSCP_track_header track_header;
   DWORD Position;
   BYTE rev;
 private: 
-  FILE *fCurrentImage;
+#if !defined(SSE_VAR_RESIZE_372)
+  FILE *fCurrentImage; // use FloppyDrive's
+#endif
   DWORD *TimeFromIndexPulse; // from IP
-#if !defined(SSE_WD1772_DPLL) || defined(SSE_DISK_SCP_WRITE)
+//#if !defined(SSE_WD1772_DPLL) || defined(SSE_DISK_SCP_WRITE)
+#if defined(SSE_DISK_SCP_WRITE) 
   BYTE ShiftsToNextOne;
 #endif
 #if defined(SSE_DISK_SCP_WRITE)

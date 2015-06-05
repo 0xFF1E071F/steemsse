@@ -61,11 +61,11 @@ bool TYM2149::LoadFixedVolTable() {
     if(nwords==16*16*16)
       ok=true;
     fclose(fp);
-//    TRACE("PSG %s loaded %d words in ram %p\n",filename.Text,nwords,p_fixed_vol_3voices);
+    TRACE_INIT("PSG %s loaded %d words in ram %p\n",filename.Text,nwords,p_fixed_vol_3voices);
   }
   else
   {
-    TRACE("No file %s\n",filename.Text);
+    TRACE_INIT("No file %s\n",filename.Text);
     FreeFixedVolTable();
     SSE_OPTION_PSG=0;
   }

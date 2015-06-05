@@ -120,32 +120,32 @@ Practically on the ST, the request is placed by clearing the bit in the GPIP.
   }
 }
 //---------------------------------------------------------------------------
-void calc_time_of_next_timer_b()
+void calc_time_of_next_timer_b() //SS called only by mfp_set_timer_reg()
 {
   int cycles_in=int(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
+#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS) 
+/*  Try to avoid triggering 2 timer B on the same scanline...
+    Fixes 2nd value of TIMERB04.TOS
+*/
+  if(!OPTION_PRECISE_MFP||cycles_in<=Shifter.CurrentScanline.EndCycle+28)
+#endif
   if (cycles_in<cpu_cycles_from_hbl_to_timer_b){
     if (scan_y>=shifter_first_draw_line && scan_y<shifter_last_draw_line){
-#if defined(SSE_INT_MFP_TIMER_B_AER)
+#if defined(SSE_INT_MFP_TIMER_B_AER) //refactored
       if(mfp_reg[1]&8)
-#if defined(SSE_GLUE__) //NO it was right to put into future (Trex Warrior)
-        time_of_next_timer_b=cpu_timer_at_start_of_hbl+TB_TIME_WOBBLE
-        +cpu_cycles_from_hbl_to_timer_b-Glue.DE_cycles[shifter_freq_idx];
-#else
         time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;  //put into future
-#endif
       else
 #endif
-      time_of_next_timer_b=cpu_timer_at_start_of_hbl+cpu_cycles_from_hbl_to_timer_b
+        time_of_next_timer_b=cpu_timer_at_start_of_hbl+cpu_cycles_from_hbl_to_timer_b
 #if defined(SSE_INT_MFP_TIMER_B_WOBBLE_HACK)
-/*  We need the hack when emulation is more precise??
-    Possible explanation: writing now forces some sync with MFP?
-    TODO
-*/
-      + (OPTION_PRECISE_MFP&&SSE_HACKS_ON?0:TB_TIME_WOBBLE);
+        /*  We need the hack when emulation is more precise??
+        Possible explanation: writing now forces some sync with MFP?
+        TODO
+        */
+        + (OPTION_PRECISE_MFP&&SSE_HACKS_ON?0:TB_TIME_WOBBLE);
 #else
-      +TB_TIME_WOBBLE;
+        +TB_TIME_WOBBLE;
 #endif
-
     }else{
       time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;  //put into future
     }
@@ -1311,7 +1311,11 @@ BYTE TMC68901::GetReg(int reg_num,int at_time) {
 
 bool TMC68901::Enabled(int irq,int at_time) {
   int reg_num=MFPR_IERA+mfp_interrupt_i_ab(irq);
+#if defined(SSE_INT_MFP_TMP2)
+  BYTE reg=GetReg(reg_num,at_time);
+#else
   BYTE reg=GetReg(reg_num);
+#endif
   bool is_enabled=(bool)(reg & mfp_interrupt_i_bit(irq));
   return is_enabled;
   //return mfp_interrupt_enabled[irq];
@@ -1320,7 +1324,11 @@ bool TMC68901::Enabled(int irq,int at_time) {
 
 bool TMC68901::InService(int irq,int at_time){
   int reg_num=MFPR_ISRA+mfp_interrupt_i_ab(irq);
+#if defined(SSE_INT_MFP_TMP2)
+  BYTE reg=GetReg(reg_num,at_time);
+#else
   BYTE reg=GetReg(reg_num);
+#endif
   bool in_service=(reg & mfp_interrupt_i_bit(irq)); 
   return in_service;
 }
@@ -1328,7 +1336,11 @@ bool TMC68901::InService(int irq,int at_time){
 
 bool TMC68901::MaskOK(int irq,int at_time) { //used
   int reg_num=MFPR_IMRA+mfp_interrupt_i_ab(irq);
+#if defined(SSE_INT_MFP_TMP2)
+  BYTE reg=GetReg(reg_num,at_time);
+#else
   BYTE reg=GetReg(reg_num);
+#endif
   bool mask_ok=(reg & mfp_interrupt_i_bit(irq)); 
   return mask_ok;
 }
@@ -1373,8 +1385,33 @@ bool TMC68901::CheckSpurious(int irq) {
   ASSERT((sr&SR_IPL_6)<SR_IPL_6);
   ASSERT( OPTION_PRECISE_MFP ); // you need more CPU power
   bool spurious_triggered=false;
+
+#if defined(SSE_INT_MFP_SPURIOUS2)
+/* v3.7.2 bugfix Return STE -HMD
+    dangerous code (interrupt is pending):
+	move #$2700,sr                                   ; 012DA2: 46FC 2700 
+	move.l #$12dcc,$68.w                             ; 012DA6: 21FC 0001 2DCC 0068 
+	move.b $fa13.W,$12e2d                            ; 012DAE: 13F8 FA13 0001 2E2D 
+	move.b $fa15.W,$12e33                            ; 012DB6: 13F8 FA15 0001 2E33 
+	clr.b $fa13.W                                    ; 012DBE: 4238 FA13 
+	clr.b $fa15.W                                    ; 012DC2: 4238 FA15 
+	stop #$2100                                      ; 012DC6: 4E72 2100 
+	bra.s -6 {$012DC6}                               ; 012DCA: 60FA 
+
+This should trigger spurious but it doesn't on real STE.
+Fix is pragmatic (TEST10D still working).
+*/
+  BYTE mfp_write_latency=MFP_WRITE_LATENCY;
+  if(LastRegisterWritten==MFPR_IMRA||LastRegisterWritten==MFPR_IMRB) //mask
+    mfp_write_latency-=1; // it's all done after the STOP (no IRQ)
+#endif
+
   if(IrqInfo[irq].IsTimer && ACT-WriteTiming>=0 
+#if defined(SSE_INT_MFP_SPURIOUS2)
+    && ACT-WriteTiming<=mfp_write_latency)
+#else
     && ACT-WriteTiming<=MFP_SPURIOUS_LATENCY)
+#endif
   {
 
     BYTE i_ab=mfp_interrupt_i_ab(irq);
@@ -1391,9 +1428,14 @@ bool TMC68901::CheckSpurious(int irq) {
 
     BYTE reg_pending_after=mfp_reg[MFPR_IPRA+i_ab];
 
+
     // Value of register is set only after 4 cycles, possibly
     // voiding an interrupt.
+#if defined(SSE_INT_MFP_SPURIOUS2)
+    if(IrqTiming-WriteTiming<=mfp_write_latency)
+#else
     if(IrqTiming-WriteTiming<=MFP_WRITE_LATENCY)
+#endif
     {
       if(LastRegisterWritten==MFPR_IPRA+i_ab)
       {
@@ -1418,6 +1460,12 @@ bool TMC68901::CheckSpurious(int irq) {
     BYTE reg_masked_before=(LastRegisterWritten==MFPR_IMRA+i_ab)
       ? LastRegisterFormerValue : mfp_reg[MFPR_IMRA+i_ab];
 
+#if defined(SSE_INT_MFP_SPURIOUS2)
+    BYTE reg_masked_after=(LastRegisterWritten==MFPR_IMRA+i_ab 
+      && ACT-WriteTiming<mfp_write_latency)//MFP_WRITE_LATENCY+2)
+      ? LastRegisterFormerValue : mfp_reg[MFPR_IMRA+i_ab];
+#endif
+
     //  TRACE_LOG("%d ?Spurious irq %d timer %d skip %d reg_enabled_before %X  reg_pending_before %X reg_masked_before %X timeout %d last reg %d former value %X\n",
   // ACT,irq,IrqInfo[irq].Timer,MC68901.SkipTimer[IrqInfo[irq].Timer],reg_enabled_before,reg_pending_before,reg_masked_before,next_timeout,MC68901.LastRegisterWritten,MC68901.LastRegisterFormerValue);
 
@@ -1428,9 +1476,12 @@ bool TMC68901::CheckSpurious(int irq) {
       && next_timeout-ACT>=0 //fuz105, LTC2
       && next_timeout-WriteTiming<=MFP_WRITE_LATENCY)
       && ( !(mfp_reg[MFPR_IERA+i_ab] & i_bit) ||!(reg_pending_after & i_bit)
+#if defined(SSE_INT_MFP_SPURIOUS2)
+      ||!(reg_masked_after & i_bit)))
+#else
       ||!(mfp_reg[MFPR_IMRA+i_ab] & i_bit)))
+#endif
     {
-
       spurious_triggered=true;
     }
     // expect reports of bad spurious now! (hence TRACE, not _LOG)
@@ -1463,7 +1514,7 @@ bool TMC68901::CheckSpurious(int irq) {
 //This isn't used yet and probably not working
 void TMC68901::Update() {
   // make 16bit registers
-  WORD IER=(GetReg(MFPR_IERA)<<8) + GetReg(MFPR_IERB);
+  WORD IER=(GetReg(MFPR_IERA)<<8) + GetReg(MFPR_IERB); // we should have our 16bit regs all the time?
   WORD IMR=(GetReg(MFPR_IERA)<<8) + GetReg(MFPR_IERB);
   WORD ISR=(GetReg(MFPR_IERA)<<8) + GetReg(MFPR_IERB);
   IPR=(GetReg(MFPR_IERA)<<8) + GetReg(MFPR_IERB);
@@ -1516,6 +1567,50 @@ int TMC68901::UpdateNextIrq(int start_from_irq,int at_time) {
 #endif
 
 #endif
+
+
+#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
+/*  Shifter tricks can change timing of timer B. This wasn't handled yet
+    in Steem. Don't think any game/demo depends on this, I added it for a
+    test program.
+*/
+
+void TMC68901::AdjustTimerB() {
+  ASSERT(OPTION_PRECISE_MFP); // another waste of cycles...
+  int CyclesIn=LINECYCLES;
+  int linecycle_of_timer_b=(mfp_reg[MFPR_AER]&8)
+    ?Shifter.CurrentScanline.StartCycle:Shifter.CurrentScanline.EndCycle;
+  if(linecycle_of_timer_b==-1) //0byte -> no timer B?
+    linecycle_of_timer_b+=28+scanline_time_in_cpu_cycles_8mhz[shifter_freq_idx];
+  else
+    linecycle_of_timer_b+=28;
+  if(CyclesIn<=linecycle_of_timer_b 
+    && linecycle_of_timer_b != time_of_next_timer_b-LINECYCLE0)
+  {
+    bool adapt_time_of_next_event=(time_of_next_event==time_of_next_timer_b);
+    time_of_next_timer_b=LINECYCLE0+linecycle_of_timer_b;
+    if(adapt_time_of_next_event)
+      time_of_next_event=time_of_next_timer_b;//risky stuff...
+  }
+}
+
+#endif
+
+#if defined(SSE_INT_MFP_TIMER_B_AER2) // refactoring
+
+void TMC68901::CalcCyclesFromHblToTimerB(int freq) {
+  switch (freq){ //this part was the macro
+    case MONO_HZ: cpu_cycles_from_hbl_to_timer_b=192;break; 
+    case 60: cpu_cycles_from_hbl_to_timer_b=(CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320-4);break; 
+    default: cpu_cycles_from_hbl_to_timer_b=(CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320); 
+  }
+  if(OPTION_PRECISE_MFP && (mfp_reg[MFPR_AER]&8)) 
+    // from Hatari, fixes Seven Gates of Jambala; Trex Warrior
+    cpu_cycles_from_hbl_to_timer_b-=Glue.DE_cycles[shifter_freq_idx];
+}
+
+#endif
+
 
 //---------------------------------------------------------------------------
 #undef LOGSECTION

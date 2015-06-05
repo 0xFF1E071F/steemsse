@@ -13,6 +13,13 @@ that deal with reads from ST I/O addresses ($ff8000 onwards).
 bool io_word_access=false;
 #endif
 
+#if defined(SSE_ACSI)
+#include "harddiskman.decla.h"
+#if defined(SSE_ACSI_TIMING) 
+#include "SSE/SSEAcsi.h"
+#endif
+#endif
+
 #define LOGSECTION LOGSECTION_IO
 
 #if !defined(STEVEN_SEAGAL) || !defined(SSE_SHIFTER_SDP_READ) \
@@ -640,6 +647,17 @@ when it does).
             //  7   Monochrome monitor detect
             ior_byte=BYTE(mfp_reg[MFPR_GPIP] & ~mfp_reg[MFPR_DDR]);
             ior_byte|=BYTE(mfp_gpip_input_buffer & mfp_reg[MFPR_DDR]);
+
+#if defined(SSE_ACSI_TIMING)  
+/*  Keep the HDC bit set as long as we deem a real hard disk would
+    take to trigger IRQ. We do it this way to avoid adding overhead
+    (events, block DMA transfers...), knowing that generally GPIP
+    is polled by programs. It is a bit risky.
+*/
+            if(ADAT && ACSI_EMU_ON && AcsiHdc.Active==2 && !(ior_byte&32)
+              && AcsiHdc.time_of_irq-ACT>0)
+              ior_byte|=32; // active-low: inactive
+#endif
           }
           else if (addr<0xfffa30)
           {
