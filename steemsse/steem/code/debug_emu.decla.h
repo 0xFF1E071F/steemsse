@@ -228,6 +228,10 @@ EXT MEM_ADDRESS trace_over_breakpoint INIT(0xffffffff);
 
 EXT int debug_run_until INIT(DRU_OFF),debug_run_until_val;
 
+#if defined(SSE_BOILER_MONITOR_372) //v3.7.2 to clarify code
+enum enum_monitor_mode {MONITOR_MODE_STOP=2,MONITOR_MODE_LOG=3};
+#endif
+
 EXT int monitor_mode INIT(2),breakpoint_mode INIT(2);
 
 #define BREAK_IRQ_HBL_IDX 16

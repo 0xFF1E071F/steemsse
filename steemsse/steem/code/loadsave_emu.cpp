@@ -971,15 +971,30 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if SSE_VERSION>=371
   if(Version>=50) // 3.7.1, last minute
   {
+#ifdef SSE_WD1772
     ReadWriteStruct(WD1772); //yep, was missing before... explains a lot!
     //TRACE("phase %d\n",WD1772.prg_phase);
-    SF314[0].time_of_next_ip=SF314[1].time_of_next_ip=ACT+n_cpu_cycles_per_second;
     if(LoadOrSave==LS_LOAD && WD1772.prg_phase>TWD1772::WD_READY)
     {
       WD1772.update_time=ACT+256; // yeah, but it will work with some prgs
     }
+#endif
+#ifdef SSE_DRIVE
+    SF314[0].time_of_next_ip=SF314[1].time_of_next_ip=ACT+n_cpu_cycles_per_second;
+#endif
   }
 #endif
+#if SSE_VERSION>=372
+  if(Version>=51) 
+  {
+#if defined(SSE_ACSI_LS____) //trouble...
+    FILE* save_fp=AcsiHdc.hard_disk_image;
+    ReadWriteStruct(AcsiHdc);
+    AcsiHdc.hard_disk_image=save_fp;
+#endif
+  }
+#endif
+
 #endif//#if defined(STEVEN_SEAGAL)
 
 

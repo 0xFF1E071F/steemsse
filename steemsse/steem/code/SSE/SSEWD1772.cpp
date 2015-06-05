@@ -52,7 +52,13 @@ void TWD1772::Reset(bool Cold) {
 #if defined(SSE_DISK_GHOST)
   Lines.CommandWasIntercepted=0;
 #endif
+
+#if defined(SSE_WD1772_PHASE) && SSE_VERSION>=372
+  prg_phase=WD_READY;
+#endif
+
 }
+
 
 #endif//reset
 
@@ -486,17 +492,17 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #endif
 
 #if defined(SSE_DEBUG) && defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_IMAGE_INFO
+//#undef LOGSECTION
+//#define LOGSECTION LOGSECTION_IMAGE_INFO
 /*  Used this for Auto239.
     Gives the checksum of bootsector.
     $1234 means executable. Use last WORD to adjust.
 */
     if(SF314[drive].SectorChecksum)
-      TRACE_LOG("%c: bootsector checksum=$%X\n",'A'+drive,SF314[drive].SectorChecksum);
+      TRACE_LOG("%c: bootsector checksum $%X\n",'A'+drive,SF314[drive].SectorChecksum);
     SF314[drive].SectorChecksum=0;
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_FDC
+//#undef LOGSECTION
+//#define LOGSECTION LOGSECTION_FDC
 #endif//checksum
 
 #if !defined(SSE_DISK_IMAGETYPE) //old block "can_send"
@@ -522,7 +528,11 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
     {
       if((SF314[drive].ImageType.Manager==MNGR_PASTI 
         && SF314[drive].ImageType.Extension==EXT_STX)
-        || SF314[drive].ImageType.Manager==MNGR_CAPS)
+        || SF314[drive].ImageType.Manager==MNGR_CAPS
+#if !defined(SSE_DISK_SCP_WRITE)
+        || SF314[drive].ImageType.Extension==EXT_SCP
+#endif
+        )
         CheckGhostDisk(drive,io_src_b); // updates CommandWasIntercepted
     }
 #endif//ghost
@@ -836,6 +846,18 @@ void TWD1772IDField::Trace() {
 //#if defined(SSE_DISK_STW)
 #if defined(SSE_WD1772_MFM)
 
+/*
+#ifdef SSE_WD1772_MFM_PRODUCE_TABLE // one-shot switch...
+  // todo, also in bits
+ for(int i=0;i<256;i++)
+ {
+   WD1772.Mfm.data=i;
+   WD1772.Mfm.Encode();
+   TRACE("D %02X -> C %02X MFM %04X\n",i,WD1772.Mfm.clock,WD1772.Mfm.encoded);
+ }
+#endif
+*/
+
 void TWD1772MFM::Decode() {
 
 #if defined(SSE_DISK_STW_MFM) // not optimised
@@ -1143,8 +1165,9 @@ void TWD1772AmDetector::Reset() {
     goto.
     So it doesn't work with emulation cycles like CapsImg but with timed
     events like Pasti. Still not sure what's the best approach here.
-    For a better support of SCP format, we integrated parts inspired by
-    their competitor SPS/CAPS/Kryoflux.
+    For a better support of SCP format, we integrated a "data separator"
+    inspired by their competitor SPS/CAPS/Kryoflux, as well as a "DPLL"
+    inspired by MESS.
 */
 
 
@@ -1467,7 +1490,10 @@ void TWD1772::OnIndexPulse(int id) {
     case WD_TYPEIII_READ_DATA:
       // stop R/W, but not for type II: Realm of the Trolls
       SF314[DRIVE].State.reading=SF314[DRIVE].State.writing=0; 
+#ifdef SSE_DEBUG
+      if(WritingToDisk()) TRACE_LOG("%d bytes transferred\n",Dma.Datachunk*16);
       TRACE_LOG("\n");//stop list of sector nums
+#endif
       Irq(true);
       break;
 
@@ -1755,6 +1781,7 @@ r1       r0            1772
       if(DSR==0xA1)
 #endif
         CrcLogic.Reset(); // only special $A1 resets the CRC logic
+
 #if defined(SSE_WD1772_AM_LOGIC)
       Amd.amisigmask=CAPSFDC_AI_DSRREADY;
 #endif
@@ -1799,6 +1826,14 @@ r1       r0            1772
     else if(n_format_bytes)
       n_format_bytes=n00=nFF=0;
 #endif
+
+#if defined(SSE_DISK_SCP2B)
+    // switch back to rev1 if we're on rev2
+    else if(IMAGE_SCP && ImageSCP[DRIVE].rev)
+      ImageSCP[DRIVE].LoadTrack(CURRENT_SIDE,CURRENT_TRACK);
+#endif
+
+
     Read(); // this sets up next event
     break;
 
@@ -1954,7 +1989,7 @@ r1       r0            1772
     }
 #if defined(SSE_WD1772_AM_LOGIC)
     //if not A1 mark, restart
-    else	if (IMAGE_SCP 
+    else	if ( (IMAGE_SCP)
       && (Amd.aminfo & CAPSFDC_AI_DSRAM) && !(Amd.aminfo & CAPSFDC_AI_DSRMA1)
       && n_format_bytes>=43)
     {
@@ -1973,8 +2008,8 @@ r1       r0            1772
     }
 #endif
 
-    else if(DSR==0xA1 && !(Mfm.clock&BIT_5)
-#if defined(SSE_WD1772_AM_LOGIC) //!!!!!!!!!!!! last minute
+    else if(DSR==0xA1 && !(Mfm.clock&BIT_5) //stw
+#if defined(SSE_WD1772_AM_LOGIC) //last minute 3.7.1
       || (Amd.aminfo&CAPSFDC_AI_DSRMA1)
 #endif
       ) 
@@ -2120,7 +2155,9 @@ r1       r0            1772
     if(n_format_bytes==1)
       Mfm.data=CrcLogic.crc>>8;
     else if(n_format_bytes==2)
+    {
       Mfm.data=CrcLogic.crc&0xFF;
+    }
     else
     {
       n_format_bytes=0;
@@ -2342,7 +2379,9 @@ r1       r0            1772
 
 
 void TWD1772::Read() {
-//  ASSERT(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE);
+#if SSE_VERSION>=372
+  ASSERT(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE);
+#endif
   if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE)
   {
     SF314[DRIVE].Read(); // this gets data and creates event
@@ -2377,6 +2416,7 @@ void TWD1772::Write() {
 */
 #ifdef SSE_DEBUG
   TRACE_MFM("%s #%d MFM %04X c $%02X d $%02X\n",wd_phase_name[prg_phase],Disk[DRIVE].current_byte,Mfm.encoded,Mfm.clock,Mfm.data);
+  ASSERT(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE);
 #endif
   if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE)
     SF314[DRIVE].Write(); // this writes data and creates event  
@@ -2392,6 +2432,7 @@ void  TWD1772::WriteCR(BYTE io_src_b) {
 
   if(CommandType(io_src_b)==2 || CommandType(io_src_b)==3) //or no condition?
   {
+    // there's certainly a more elegant C++ way... TODO!
     if(IMAGE_STW)
       ImageSTW[DRIVE].LoadTrack(floppy_current_side(),floppy_head_track[DRIVE]);
 #if defined(SSE_DISK_SCP)
@@ -2608,6 +2649,10 @@ bool TWD1772::ShiftBit(int bit) {
   //  if (Amd.aminfo & Amd.amisigmask) { //SS hangs...
   if (Amd.aminfo & CAPSFDC_AI_DSRREADY) { //SS ?
     byte_ready=true;
+#ifdef TEST01___
+    if(Disk[DRIVE].current_side!=CURRENT_SIDE)
+      Amd.dsr=rand()&0xFF; // garbage
+#endif
   }
   return byte_ready;
 }

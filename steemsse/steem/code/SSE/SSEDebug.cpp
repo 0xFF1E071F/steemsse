@@ -58,10 +58,10 @@ TDebug::TDebug() {
   ZeroMemory(logsection_enabled,100*sizeof(bool)); // 100> our need
   logsection_enabled[ LOGSECTION_ALWAYS ] = 1;
 #if defined(_DEBUG) && !defined(DEBUG_BUILD) // VC6 IDE debug no boiler
-  logsection_enabled[ LOGSECTION_FDC ] = 0;
+  logsection_enabled[ LOGSECTION_FDC ] = 1;
   logsection_enabled[ LOGSECTION_IO ] = 0;
   logsection_enabled[ LOGSECTION_MFP_TIMERS ] = 0;
-  logsection_enabled[ LOGSECTION_INIT ] =0;
+  logsection_enabled[ LOGSECTION_INIT ] =1;
   logsection_enabled[ LOGSECTION_CRASH ] = 0;
   logsection_enabled[ LOGSECTION_STEMDOS ] = 0;
   logsection_enabled[ LOGSECTION_IKBD ] = 0;
@@ -84,7 +84,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_FDC_BYTES ] = 0;
   //logsection_enabled[ LOGSECTION_IPF_LOCK_INFO ] = 0; //remove option
 #endif
-  logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 1;
+  logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 0;
 #endif
   logsection_enabled[ LOGSECTION_OPTIONS ] = 1; // no boiler control
 #endif

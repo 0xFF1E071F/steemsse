@@ -583,6 +583,10 @@ TODO!
       left_border=0;
 #if defined(SSE_SHIFTER_TRICKS)
       CurrentScanline.StartCycle=lim_r2;//0; //not really used
+#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
+      if(OPTION_PRECISE_MFP)
+        MC68901.AdjustTimerB();
+#endif
 #endif
       overscan=OVERSCAN_MAX_COUNTDOWN;
     }
@@ -815,6 +819,12 @@ STF2:
       shifter_draw_pointer-=160; // hack: Steem will draw black and update SDP
       CurrentScanline.Bytes=0;
       TrickExecuted|=TRICK_0BYTE_LINE;
+#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
+      CurrentScanline.StartCycle=CurrentScanline.EndCycle=-1;//never starts
+      if(OPTION_PRECISE_MFP)
+        MC68901.AdjustTimerB();
+#endif
+
     //  TRACE_OSD("0byte");
     }
 //    return; // we must still check for stabiliser (Beescroll)
@@ -1298,7 +1308,11 @@ STF2:
 */
 //    ASSERT( !Preload ); //DSOS!
 #endif
-
+#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
+    CurrentScanline.EndCycle=166+WU_res_modifier;
+      if(OPTION_PRECISE_MFP)
+        MC68901.AdjustTimerB(); // Fixes 1st value of TIMERB04.TOS
+#endif
   }
 
 
@@ -1732,6 +1746,11 @@ Tests are arranged to be efficient.
 #endif
     CurrentScanline.Bytes+=44;
     CurrentScanline.EndCycle=464; //or 460?
+#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
+    if(OPTION_PRECISE_MFP)
+      MC68901.AdjustTimerB();
+#endif
+
     overscan=OVERSCAN_MAX_COUNTDOWN; 
 #if !defined(SSE_VAR_RESIZE_370) 
     right_border_changed=true;
@@ -2045,7 +2064,7 @@ Problem: too many cases of WU1, that should be the rarer one
     overscan=OVERSCAN_MAX_COUNTDOWN;
     time_of_next_timer_b=time_of_next_event+cpu_cycles_from_hbl_to_timer_b
       + TB_TIME_WOBBLE; 
-#if defined(SSE_GLUE) && defined(SSE_INT_MFP_TIMER_B_AER) //v3.7 
+#if defined(SSE_GLUE) && defined(SSE_INT_MFP_TIMER_B_AER) // refactored 
     if(mfp_reg[1]&8)
       time_of_next_timer_b-=Glue.DE_cycles[shifter_freq_idx];
 #endif
@@ -3611,7 +3630,13 @@ void TShifter::SetShiftMode(BYTE NewMode) {
   }
 
   freq_change_this_scanline=true; // all switches are interesting
-
+#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
+  if(OPTION_PRECISE_MFP)
+  {
+    CALC_CYCLES_FROM_HBL_TO_TIMER_B((NewMode==2 ? MONO_HZ : shifter_freq));
+    calc_time_of_next_timer_b();
+  }
+#endif
 }
 
 
@@ -3712,8 +3737,6 @@ void TShifter::SetSyncMode(BYTE NewSync) {
 
     if(FetchingLine())
     {
-
-
       if(CyclesIn<=52 && left_border) // TO CHECK
         CurrentScanline.StartCycle=52; 
 
@@ -3734,6 +3757,13 @@ void TShifter::SetSyncMode(BYTE NewSync) {
     CALC_CYCLES_FROM_HBL_TO_TIMER_B(new_freq); //3.6.1B test
 #endif
   }
+#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
+  if(OPTION_PRECISE_MFP)
+  {
+    CALC_CYCLES_FROM_HBL_TO_TIMER_B(new_freq);
+    calc_time_of_next_timer_b();
+  }
+#endif
   shifter_freq=new_freq;
   
 #if defined(SSE_SHIFTER_TRICKS)
@@ -4422,7 +4452,7 @@ MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
     }
 
     // note: same in all shift modes (eg Monoscreen by Dead Braincells)
-    ASSERT(SHIFTER_RASTER_PREFETCH_TIMING==16);
+    //ASSERT(SHIFTER_RASTER_PREFETCH_TIMING==16);
 
 /*  TEST11F
     On the STE, prefetch starts 16 cycles earlier only if HSCROLL is non null.

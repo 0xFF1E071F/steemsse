@@ -83,8 +83,9 @@ EXT int sound_variable_d INIT(208);
 //#define SOUND_MODE_MONITOR      5
 #endif
 #endif
-
+#if !defined(SOUND_DISABLE_INTERNAL_SPEAKER)
 EXT bool sound_internal_speaker INIT(false);
+#endif
 EXT int sound_freq INIT(50066),sound_comline_freq INIT(0),sound_chosen_freq INIT(50066);
 EXT int sound_mode INIT(SOUND_MODE_CHIP),sound_last_mode INIT(SOUND_MODE_CHIP);
 EXT BYTE sound_num_channels INIT(1),sound_num_bits INIT(8);

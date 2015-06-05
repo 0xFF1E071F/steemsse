@@ -1855,7 +1855,8 @@ void m68k_lpoke_abus2(LONG x){
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
     } //otherwise throw away
   }else{
-#if !defined(SSE_BOILER_MONITOR_VALUE4)
+#if !defined(SSE_BOILER_MONITOR_VALUE4) //??
+/////#if defined(SSE_BOILER_MONITOR_VALUE2) //3.7.2 bugfix ?!
     DEBUG_CHECK_WRITE_L(abus);
 #endif
 #if defined(SSE_CPU_CHECK_VIDEO_RAM_L)
@@ -1869,7 +1870,8 @@ void m68k_lpoke_abus2(LONG x){
     else if(abus>=MEM_START_OF_USER_AREA)
       LPEEK(abus)=x;
     else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
-#if !defined(SSE_BOILER_MONITOR_VALUE2)
+//#if !defined(SSE_BOILER_MONITOR_VALUE2)
+#if defined(SSE_BOILER_MONITOR_VALUE2) //3.7.2 bugfix?
     DEBUG_CHECK_WRITE_L(abus);
 #endif
 

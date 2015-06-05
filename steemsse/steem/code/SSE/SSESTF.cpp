@@ -19,7 +19,11 @@
 
 // note this is global here, not in classes. TODO?
 
-char* st_model_name[]={"STE","STF","Mega ST4","STF 8.00 MHZ"};
+char* st_model_name[]={"STE","STF","Mega ST4"
+#if defined(SSE_STF_8MHZ)
+  ,"STF 8.00 MHZ"
+#endif
+};
 
 #if defined(SSE_TOS_WARNING1)
 void CheckSTTypeAndTos() {

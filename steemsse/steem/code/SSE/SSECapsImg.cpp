@@ -150,16 +150,15 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
   ASSERT( CAPSIMG_OK );
   if(!CAPSIMG_OK)
     return -1;
-
   ASSERT( !drive || drive==1 );
   ASSERT( img_info );
   ASSERT( ContainerID[drive]!=-1 );
-  ASSERT( ContainerID[drive]!=-1 );
+
 #if !defined(SSE_DISK_IMAGETYPE)
   DriveMap|=(drive+1); // not <<!
 #endif
   bool FileIsReadOnly=bool(GetFileAttributes(File) & FILE_ATTRIBUTE_READONLY);
-  VERIFY( !CAPSLockImage(ContainerID[drive],File) ); // open the IPF file
+  VERIFY( !CAPSLockImage(ContainerID[drive],File) ); // open the CAPS file
   VERIFY( !CAPSGetImageInfo(img_info,ContainerID[drive]) );
   ASSERT( img_info->type==ciitFDD );
   TRACE_LOG("Disk in %c is CAPS release %d rev %d of %d/%d/%d for ",

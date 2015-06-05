@@ -624,12 +624,18 @@ void osd_draw()
     so it's valid for both drives, we see clearly what happens with
     different types mixed.
 */
+#if !defined(SSE_GUI_STATUS_STRING_DISK_TYPE)
           static char *extension_list[]={ "ST","MSA","DIM","STT","STX","IPF",
-            "CTR","STW","PRG","TOS","SCP"};
+            "CTR","STW","PRG","TOS","SCP","HFE"};
+#endif
           ASSERT(SF314[DRIVE].ImageType.Extension-1>=0);
-          ASSERT(SF314[DRIVE].ImageType.Extension-1<EXT_SCP);
+          ASSERT(SF314[DRIVE].ImageType.Extension-1<EXT_HFE);
           sprintf(tmp_buffer,"%C:%s-%02X-%d-%02d-%02d",'A'+DRIVE,
+#if defined(SSE_GUI_STATUS_STRING_DISK_TYPE)
+            extension_list[SF314[DRIVE].ImageType.Extension],fdc_cr,
+#else
             extension_list[SF314[DRIVE].ImageType.Extension-1],fdc_cr,
+#endif
 #else
           sprintf(tmp_buffer,"%2X-%C:%d-%02d-%02d",fdc_cr,'A'+DRIVE,
 #endif

@@ -78,7 +78,11 @@ void TOptionBox::CreateMachinePage()
   SendMessage(STTypeOption,CB_ADDSTRING,0,(long)CStrT(st_model_name[3]));
 #endif
   SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,SSE_STF_ST_MODELS-1),0);
+#if defined(SSE_STF_8MHZ)
   Wid+=get_text_width(st_model_name[3]);//longest
+#else
+  Wid+=73;//by hand...
+#endif
   ToolAddWindow(ToolTip,Win,
     T("Some programs will run only with STF or STE. Changing ST model will preselect a TOS for next cold reset."));
 #endif
@@ -2166,13 +2170,13 @@ void TOptionBox::CreateSoundPage()
   SendMessage(Win,BM_SETCHECK,RecordWarnOverwrite,0);
   y+=30;
   y+=5;
-
+#if !defined(SOUND_DISABLE_INTERNAL_SPEAKER)
   Wid=GetCheckBoxSize(Font,T("Internal speaker sound")).Width;
   Win=CreateWindow("Button",T("Internal speaker sound"),WS_CHILD | WS_TABSTOP |
                           BS_CHECKBOX | DisableIfNT,
                           page_l,y,Wid,25,Handle,(HMENU)7300,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,sound_internal_speaker,0);
-
+#endif
   if (Focus==NULL) Focus=GetDlgItem(Handle,7099);
   SetPageControlsFont();
   ShowPageControls();

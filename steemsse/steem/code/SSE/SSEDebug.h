@@ -457,6 +457,8 @@ enum logsection_enum_tag {
 #endif
 #endif
 
+#define TRACE_HDC TRACE_FDC //3.7.2
+
 // TRACE_INIT 3.7.0
 #if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
 #ifdef __cplusplus // visible only to C++ objects

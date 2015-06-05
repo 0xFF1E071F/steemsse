@@ -8,6 +8,8 @@ DESCRIPTION: The code for the hard drive manager dialog.
 #pragma message("Included for compilation: harddiskman.cpp")
 #endif
 
+#include "SSE/SSEAcsi.h"
+
 //---------------------------------------------------------------------------
 void THardDiskManager::update_mount()
 {
@@ -229,6 +231,12 @@ void THardDiskManager::CreateDriveControls(int Idx)
                 425,y,75,23,Handle,(HMENU)(200+Idx),HInstance,NULL);
   SendMessage(Win,WM_SETFONT,(UINT)Font,0);
 
+#ifdef TEST01____
+  Win=CreateWindow("Button",T("ACSI"),WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
+                525,y,75,23,Handle,(HMENU)(150+Idx),HInstance,NULL);
+  SendMessage(Win,WM_SETFONT,(UINT)Font,0);
+#endif
+
   SetWindowHeight();
 }
 //---------------------------------------------------------------------------
@@ -367,7 +375,6 @@ LRESULT __stdcall THardDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARA
           }
         }
       }else if (ID==90){
-///        BRK(yoho);
         This->DisableHardDrives=SendMessage(HWND(lPar),BM_GETCHECK,0,0)==BST_CHECKED;
       }else if (ID==IDOK || ID==IDCANCEL){
         if (HIWORD(wPar)==BN_CLICKED){
@@ -383,7 +390,6 @@ LRESULT __stdcall THardDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARA
             // Browse
             SendMessage(HWND(lPar),BM_SETCHECK,1,true);
             EnableAllWindows(0,Win);
-
             This->GetDriveInfo();
             EasyStr NewFol=ChooseFolder(HWND(FullScreen ? StemWin:Win),T("Pick a Folder"),This->Drive[ID].Path);
             if (NewFol.NotEmpty()){

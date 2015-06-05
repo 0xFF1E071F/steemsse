@@ -17,12 +17,16 @@
 */
 enum { MNGR_STEEM=1,MNGR_PASTI,MNGR_CAPS,MNGR_WD1772};
 enum { EXT_ST=1,EXT_MSA,EXT_DIM,EXT_STT,EXT_STX,EXT_IPF,EXT_CTR,EXT_STW,
-EXT_PRG,EXT_TOS,EXT_SCP};
+EXT_PRG,EXT_TOS,EXT_SCP,EXT_HFE};
 
-  struct TImageType {
-    BYTE Manager;
-    BYTE Extension;
-  };
+#if defined(SSE_GUI_STATUS_STRING_DISK_TYPE) //adapted to enum of course
+extern char *extension_list[];
+#endif
+
+struct TImageType {
+  BYTE Manager;
+  BYTE Extension;
+};
 #endif//defined(SSE_DISK_IMAGETYPE) 
 
 
@@ -42,16 +46,19 @@ EXT_PRG,EXT_TOS,EXT_SCP};
 
 #if defined(SSE_DISK1)
 
-  struct TDisk {
-    BYTE Id; //0,1, same as drive
-    WORD current_byte;
-    WORD TrackBytes;
-    TDisk();
-    void Init();
-  };
+struct TDisk {
+  BYTE Id; //0,1, same as drive
+  WORD current_byte;
+  WORD TrackBytes;
+#if defined(SSE_DISK2)
+  BYTE current_side; //used in HFE
+  BYTE current_track;
+#endif
+  TDisk();
+  void Init();
+};
 
 #endif
-
 
 #endif//#if defined(SSE_DISK)
 

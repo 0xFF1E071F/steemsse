@@ -109,6 +109,11 @@ signal component. It was important for the CPU that the clock was running while 
 is issued, and that the reset was active for at least 132 clock cycles [27].
 */
 
+#if defined(SSE_ACSI)
+#include "harddiskman.decla.h"
+#include "SSE/SSEAcsi.h"
+#endif
+
 //---------------------------------------------------------------------------
 void power_on()
 {
@@ -188,8 +193,14 @@ void power_on()
 #endif
 #endif
 #endif
+#if defined(SSE_DISK_STW2)
+    ImageSTW[floppyno].Id=floppyno;
+#endif
 #if defined(SSE_DISK_HFE)
     ImageHFE[floppyno].Id=floppyno;
+#endif
+#if defined(SSE_DISK_SCP2A)
+    ImageSCP[floppyno].Id=floppyno;
 #endif
 #if defined(SSE_DISK1)
     Disk[floppyno].Id=floppyno;//same idea
@@ -346,6 +357,11 @@ void reset_peripherals(bool Cold)
 #if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
   if(CAPSIMG_OK)
     Caps.Reset();
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_ACSI) 
+  if(ACSI_EMU_ON)
+    AcsiHdc.Reset(Cold);
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_TxDR_RESET)

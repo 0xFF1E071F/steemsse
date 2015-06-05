@@ -175,6 +175,8 @@ EXT BYTE fdc_read_address_buffer[20];
 
 #define CURRENT_TRACK (SF314[DRIVE].Track())
 
+
+
 #endif
 
 #undef EXT

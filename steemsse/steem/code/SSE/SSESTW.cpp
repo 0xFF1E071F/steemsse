@@ -1,7 +1,6 @@
 #include "SSE.h"
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
-
 /*  We really go for it here as this simplistic interface knows nothing but
     the side, track and words on the track. Eventual MFM encoding/decoding,
     timing and all the rest is for the distinct WD1772 emulator.
@@ -12,7 +11,7 @@
 #include "SSESTW.h"
 #include "SSEDebug.h"
 #include "SSEParameters.h"
-
+#include "SSEFloppy.h"
 #if !defined(BIG_ENDIAN_PROCESSOR)
 #include <acc.decla.h>
 #define SWAP_WORD(val) *val=change_endian(*val);
@@ -36,6 +35,15 @@
 #define IMAGE_SIZE (HEADER_SIZE+NUM_SIDES*NUM_TRACKS*\
 (TRACK_HEADER_SIZE+NUM_BYTES*sizeof(WORD)))
 
+#if defined(SSE_VAR_RESIZE_372) // saves space, complicates debugging...
+#define fCurrentImage FloppyDrive[Id].f
+#define nSides FloppyDrive[Id].Sides
+#define nTracks FloppyDrive[Id].TracksPerSide
+#if defined(SSE_DISK1)
+#define nBytes Disk[Id].TrackBytes
+#endif
+#endif
+
 #define LOGSECTION LOGSECTION_IMAGE_INFO
 
 
@@ -52,14 +60,13 @@ TImageSTW::~TImageSTW() {
 void TImageSTW::Close() {
   if(fCurrentImage)
   {
-    TRACE_LOG("STW save & close image\n");
+    TRACE_LOG("STW %s image\n",FloppyDrive[Id].WrittenTo?"save and close":"close");
     fseek(fCurrentImage,0,SEEK_SET); // rewind
-    if(ImageData
-#if defined(SSE_DISK_STW_READONLY) //3.7.1 last minute
-   ////   &&!FloppyDrive[DRIVE].ReadOnly //what if wrong drive?
+    if(ImageData)
+#ifdef SSE_DISK_STW2
+      if(FloppyDrive[Id].WrittenTo)
 #endif
-      )
-      fwrite(ImageData,1,IMAGE_SIZE,fCurrentImage);
+        fwrite(ImageData,1,IMAGE_SIZE,fCurrentImage);
     fclose(fCurrentImage);
     free(ImageData);
   }
@@ -106,7 +113,7 @@ bool TImageSTW::Create(char *path) {
     ok=true;
     Close(); 
   }
-  TRACE_LOG("STW create %s %s\n",path,ok?"OK":"Failed");  
+  TRACE_LOG("STW create %s %s\n",path,ok?"OK":"failed");  
   return ok;
 }
 
@@ -147,19 +154,34 @@ bool  TImageSTW::LoadTrack(BYTE side,BYTE track) {
     int position=HEADER_SIZE
       +track*NUM_SIDES*(TRACK_HEADER_SIZE+NUM_BYTES*sizeof(WORD))
       +side*(TRACK_HEADER_SIZE+NUM_BYTES*sizeof(WORD));
-
+#if defined(SSE_DISK_STW2) //runtime format check
+    if( !strncmp("TRK",(char*)ImageData+position,3) 
+      && *(ImageData+position+3)==side && *(ImageData+position+4)==track)
+    {
+#ifdef SSE_DEBUG
+      if(TrackData!=(WORD*)(ImageData+position+TRACK_HEADER_SIZE)) //only once
+        TRACE_LOG("STW LoadTrack %c: side %d track %d\n",'A'+DRIVE,side,track);  
+#endif
+#if defined(SSE_DISK2)
+      Disk[Id].current_side=side;
+      Disk[Id].current_track=track;
+#endif      
+      TrackData=(WORD*)(ImageData+position+TRACK_HEADER_SIZE);
+      ok=true;
+    }
+#else
     ASSERT( !strncmp("TRK",(char*)ImageData+position,3) );
     ASSERT( *(ImageData+position+3)==side );
     ASSERT( *(ImageData+position+4)==track );
-#ifdef SSE_DEBUG
-    if(TrackData!=(WORD*)(ImageData+position+TRACK_HEADER_SIZE)) //only once
-      TRACE_LOG("STW LoadTrack %c: side %d track %d\n",'A'+DRIVE,side,track);  
-#endif
+
     TrackData=(WORD*)(ImageData+position+TRACK_HEADER_SIZE);
-    
-    //TRACE_LOG("STW LoadTrack side %d track %d at %d\n",side,track,position);  
-    
+    TRACE_LOG("STW LoadTrack %c: side %d track %d\n",'A'+DRIVE,side,track);  
     ok=true;
+#if defined(SSE_DISK2)
+      Disk[Id].current_side=side;
+      Disk[Id].current_track=track;
+#endif
+#endif//stw2?
   }
 #ifdef SSE_DEBUG
   else
@@ -175,10 +197,7 @@ bool TImageSTW::Open(char *path) {
   fCurrentImage=fopen(path,"rb+"); // try to open existing file
 #if defined(SSE_DISK_STW_READONLY) //3.7.1 last minute
   if(!fCurrentImage) // maybe it's read-only
-  {
     fCurrentImage=fopen(path,"rb");
-
-  }
 #endif
   if(fCurrentImage) // image exists
   {
@@ -199,7 +218,6 @@ bool TImageSTW::Open(char *path) {
         SWAP_WORD(&nBytes);
         if(nSides>2 || nTracks>88 || nBytes>6800)
           ok=false;
-
 #ifdef SSE_DEBUG
         // check meta-format
         else for(BYTE track=0;track<NUM_TRACKS;track++)
@@ -226,19 +244,16 @@ bool TImageSTW::Open(char *path) {
 }
 
 
-void TImageSTW::SetMfmData(WORD position, WORD mfm_data) {
+void TImageSTW::SetMfmData(WORD position,WORD mfm_data) {
   if(TrackData && position<NUM_BYTES)
   {
     TrackData[position]=mfm_data;
     SWAP_WORD(&TrackData[position]);
-  }
-#ifdef SSE_DEBUG
-  else 
-  {
-    TRACE_LOG("SetMfmData(%d,%X) error\n",position,mfm_data);
-    TRACE_OSD("STW ERR");
-  }
+#ifdef SSE_DISK_STW2
+    if(!FloppyDrive[Id].ReadOnly)
+      FloppyDrive[Id].WrittenTo=true;
 #endif
+  }
 }
 
 #endif//defined(SSE_DISK_STW)

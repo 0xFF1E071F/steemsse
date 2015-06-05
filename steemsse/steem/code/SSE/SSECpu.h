@@ -324,7 +324,32 @@ extern void (*m68k_jump_get_source_l_not_a[8])();
 #endif//?SSE_CPU_INLINE_READ_FROM_ADDR
 
 
-#ifdef DEBUG_BUILD
+
+#if defined(SSE_BOILER_MONITOR_TRACE)
+#define DEBUG_CHECK_IOACCESS \
+  if (ioaccess & IOACCESSE_DEBUG_MEM_WRITE_LOG){ \
+    int val=int((debug_mem_write_log_bytes==1) ? int(m68k_peek(debug_mem_write_log_address)):int(m68k_dpeek(debug_mem_write_log_address))); \
+    log_write(HEXSl(old_pc,6)+": Write to address $"+HEXSl(debug_mem_write_log_address,6)+ \
+                  ", new value is "+val+" ($"+HEXSl(val,debug_mem_write_log_bytes*2)+")"); \
+    val=m68k_peek(debug_mem_write_log_address);\
+    int val2=debug_mem_write_log_address&1?0:m68k_dpeek(debug_mem_write_log_address);\
+    int val3=debug_mem_write_log_address&1?0:m68k_lpeek(debug_mem_write_log_address);\
+    TRACE("PC %X %s write %X|%X|%X to %X\n",old_pc,disa_d2(old_pc).Text,  \
+      val,val2,val3,debug_mem_write_log_address);\
+    ioaccess|=IOACCESSE_DEBUG_MEM_WRITE_LOG;\
+  }  else if (ioaccess & IOACCESSE_DEBUG_MEM_READ_LOG){ \
+    int val=int((debug_mem_write_log_bytes==1) ? int(m68k_peek(debug_mem_write_log_address)):int(m68k_dpeek(debug_mem_write_log_address))); \
+    log_write(HEXSl(old_pc,6)+": Read from address $"+HEXSl(debug_mem_write_log_address,6)+ \
+      ", = "+val+" ($"+HEXSl(val,debug_mem_write_log_bytes*2)+")"); \
+    val=m68k_peek(debug_mem_write_log_address);\
+    int val2=debug_mem_write_log_address&1?0:m68k_dpeek(debug_mem_write_log_address);\
+    int val3=debug_mem_write_log_address&1?0:m68k_lpeek(debug_mem_write_log_address);\
+    TRACE("PC %X %s read %X|%X|%X from %X\n",old_pc,disa_d2(old_pc).Text,\
+      val,val2,val3,debug_mem_write_log_address);\
+    ioaccess|=IOACCESSE_DEBUG_MEM_READ_LOG;\
+  } 
+
+#elif defined(DEBUG_BUILD)
 #define DEBUG_CHECK_IOACCESS \
   if (ioaccess & IOACCESSE_DEBUG_MEM_WRITE_LOG){ \
     int val=int((debug_mem_write_log_bytes==1) ? int(m68k_peek(debug_mem_write_log_address)):int(m68k_dpeek(debug_mem_write_log_address))); \

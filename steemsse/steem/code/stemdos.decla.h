@@ -182,6 +182,7 @@ void STStringToPC(char*),PCStringToST(char*);
 #endif
 //#endif//#ifdef IN_EMU
 
+#endif//#ifndef DISABLE_STEMDOS
 
 #ifdef SSE_TOS_STRUCT
 
@@ -197,7 +198,7 @@ extern TTos Tos;
 
 #endif
 
-#endif//#ifndef DISABLE_STEMDOS
+//#endif//#ifndef DISABLE_STEMDOS
 
 #undef EXT
 #undef INIT

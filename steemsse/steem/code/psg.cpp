@@ -22,8 +22,9 @@ ior.cpp and iow.cpp for the lowest level emulation.
 EXT int sound_variable_a INIT(32);
 EXT int sound_variable_d INIT(208);
 #endif
-
+#if !defined(SOUND_DISABLE_INTERNAL_SPEAKER)
 EXT bool sound_internal_speaker INIT(false);
+#endif
 EXT int sound_freq INIT(50066),sound_comline_freq INIT(0),sound_chosen_freq INIT(50066);
 EXT int sound_mode INIT(SOUND_MODE_CHIP),sound_last_mode INIT(SOUND_MODE_CHIP);
 EXT BYTE sound_num_channels INIT(1),sound_num_bits INIT(8);
@@ -351,6 +352,7 @@ extern IDirectSoundBuffer *PrimaryBuf,*SoundBuf;
 HRESULT Sound_Start() // SS called by
 {
 #ifdef UNIX
+#if !defined(SOUND_DISABLE_INTERNAL_SPEAKER)
   if (sound_internal_speaker){
     console_device=open("/dev/console",O_RDONLY | O_NDELAY,0);
     if (console_device==-1){
@@ -359,6 +361,7 @@ HRESULT Sound_Start() // SS called by
       GUIUpdateInternalSpeakerBut();
     }
   }
+#endif
 #endif
   if (sound_mode==SOUND_MODE_MUTE) return DS_OK;
   if (UseSound==0) return DSERR_GENERIC;  // Not initialised
@@ -1461,6 +1464,7 @@ HRESULT Sound_VBL()
   screens_countdown=SCREENS_PER_SOUND_VBL;
   cpu_time_of_last_sound_vbl=ABSOLUTE_CPU_TIME;
 #endif
+#if !defined(SOUND_DISABLE_INTERNAL_SPEAKER)
   if (sound_internal_speaker){
     static double op=0;
     int abc,chan=-1,max_vol=0,vol;
@@ -1486,7 +1490,7 @@ HRESULT Sound_VBL()
       }
     }
   }
-
+#endif
   if (psg_capture_file){
     psg_capture_check_boundary();
   }

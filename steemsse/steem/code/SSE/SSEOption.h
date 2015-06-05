@@ -53,6 +53,8 @@ struct TOption {
   unsigned int FinetuneCPUclock:1;
   unsigned int MC68901:1;
   unsigned int PRG_support:1;
+  unsigned int Direct3DCrisp:1;
+  unsigned int Acsi:1;
 
 #ifdef __cplusplus // visible only to C++ objects
   TOption();
@@ -105,6 +107,8 @@ extern struct TOption SSEOption;
 #define OPTION_CPU_CLOCK (SSEOption.FinetuneCPUclock)
 #define OPTION_PRECISE_MFP (SSEOption.MC68901)
 #define OPTION_PRG_SUPPORT (SSEOption.PRG_support)
+#define OPTION_D3D_CRISP (SSEOption.Direct3DCrisp)
+
 
 #else//!defined(SSE_SSE_OPTION_STRUCT)
 
@@ -125,6 +129,8 @@ struct TConfig {
   unsigned int CapsImgDll:1;
   unsigned int PastiDll:1;
   unsigned int Direct3d9:1;
+  unsigned int ArchiveAccess:1;
+  unsigned int AcsiImg:1;
 
 #ifdef __cplusplus // visible only to C++ objects
   TConfig();
@@ -144,6 +150,8 @@ extern struct TConfig SSEConfig;
 #define SDL_OK (SSEConfig.SdlDll)
 #define UNRAR_OK (SSEConfig.UnrarDll)
 #define D3D9_OK (SSEConfig.Direct3d9)
+#define ARCHIVEACCESS_OK (SSEConfig.ArchiveAccess)
+#define ACSI_EMU_ON (!HardDiskMan.DisableHardDrives && SSEConfig.AcsiImg && SSEOption.Acsi)
 
 #else//#if ! defined(SSE_SSE_CONFIG_STRUCT)
 

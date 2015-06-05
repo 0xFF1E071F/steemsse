@@ -89,10 +89,10 @@ void TFrameEvents::Init() {
 
 
 int TFrameEvents::Report() {
-  TRACE("Saving frame events...\n");
+  //TRACE("Saving frame events...\n");
   FILE* fp;
   fp=fopen(FRAME_REPORT_FILENAME,"w"); // unique file name
-  //ASSERT(fp);
+  ASSERT(fp);
   if(fp)
   {
 #if defined(WIN32)
@@ -134,7 +134,6 @@ int TFrameEvents::Report() {
     fclose(fp);
     fprintf(fp,"\n--"); // so we know it was OK
   }
-  
   m_nReports++;
   return m_nReports;
 }

@@ -778,6 +778,9 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 
 #ifdef ENABLE_LOGFILE
 #define IOACCESSE_DEBUG_MEM_WRITE_LOG BIT_14
+#if defined(SSE_BOILER_MONITOR_TRACE)
+#define IOACCESSE_DEBUG_MEM_READ_LOG BIT_15 //no conflict I hope...
+#endif
 extern MEM_ADDRESS debug_mem_write_log_address;
 extern int debug_mem_write_log_bytes;
 #endif

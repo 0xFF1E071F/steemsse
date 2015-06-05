@@ -966,6 +966,7 @@ LONG m68k_read_dest_l(){
   return 0;
 }
 
+#if !defined(SSE_BOILER_MONITOR_372) // defined in SSECpu.h
 #ifdef DEBUG_BUILD
 #define DEBUG_CHECK_IOACCESS \
   if (ioaccess & IOACCESSE_DEBUG_MEM_WRITE_LOG){ \
@@ -975,6 +976,7 @@ LONG m68k_read_dest_l(){
   }
 #else
 #define DEBUG_CHECK_IOACCESS
+#endif
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU)
@@ -5889,7 +5891,7 @@ Also see SSE_TOS_GEMDOS_PEXEC6 for ReDMCSB
     ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
 //    check_for_interrupts_pending();// was commented out
 #if !defined(SSE_TOS_NO_INTERCEPT_ON_RTE1)
-#if defined(SSE_TOS_NO_INTERCEPT_ON_RTE2)
+#if defined(SSE_TOS_NO_INTERCEPT_ON_RTE2) && !defined(DISABLE_STEMDOS)
 /*  This is less heavy-handed than the 1st mod, but we need a new
     variable.
     It's better but not enough for ReDMCSB, that will only complete 50%
@@ -6719,7 +6721,6 @@ void                              m68k_or_b_from_dN_or_sbcd(){
     $F-6=9
     result: 96 with carry ?
 
-    this must be tested
 */
 
 
@@ -6750,10 +6751,9 @@ void                              m68k_or_b_from_dN_or_sbcd(){
     SR_SET(SR_X+SR_C+SR_N);
   }
   m68k_DEST_B=(hi_nibble&0xF0)+(lo_nibble&0xF);
-  ASSERT( m68k_DEST_B==n ); // The Teller, Dark Castle
+  //ASSERT( m68k_DEST_B==n ); // The Teller, Dark Castle, Jupiter's Masterdrive...
   if(!m68k_DEST_B)
     SR_SET(SR_Z)
-
 
 #else
     int n=100+

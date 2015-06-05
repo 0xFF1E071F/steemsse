@@ -72,6 +72,7 @@ void TOption::Init() {
   FinetuneCPUclock=0;
   MC68901=1;
   PRG_support=1;
+  Direct3DCrisp=0;
 }
 
 #endif//#if defined(SSE_SSE_OPTION_STRUCT)

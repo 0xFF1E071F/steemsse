@@ -379,12 +379,13 @@ void intercept_xbios()
     emudetect_init();
     M68K_PERFORM_RTE(;);  //don't need to check interrupts because sr won't actually have changed
   }
+#if !(defined(STEVEN_SEAGAL) && defined(DISABLE_STEMDOS))
   else if (m68k_dpeek(sp)==23 && stemdos_intercept_datetime){ // Get clock time
     time_t timer=time(NULL);
     struct tm *lpTime=localtime(&timer);
     r[0]=TMToDOSDateTime(lpTime);
     M68K_PERFORM_RTE(;);  //don't need to check interrupts because sr won't actually have changed
-/*
+/* //SS was commented out
   }else if (m68k_dpeek(sp)==4 && extended_monitor){
     /// Getrez returns different values in TT modes
     int em_mode=-1;
@@ -396,6 +397,7 @@ void intercept_xbios()
     }
 */
   }
+#endif
 #define SSE_TOS_RANDOM //?
 #if defined(STEVEN_SEAGAL) && defined(SSE_TOS_RANDOM)
   //Random() returns a 24 bit random number

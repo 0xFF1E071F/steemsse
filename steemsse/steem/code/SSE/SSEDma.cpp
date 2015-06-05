@@ -36,7 +36,10 @@
 #include "SSEGhostDisk.h"
 #endif
 
-
+#ifdef SSE_ACSI
+#include "SSEAcsi.h"
+#include <harddiskman.decla.h>
+#endif
 
 #if SSE_VERSION<351
 #define DMA_INC_ADDRESS                                    \
@@ -110,6 +113,10 @@ bool TDma::Drq() {
   {
     if(!(MCR&CR_HDC_OR_FDC)) //floppy select
       WD1772.DR=GetFifoByte();
+#if defined(SSE_ACSI)
+    else if(ACSI_EMU_ON)
+      AcsiHdc.DR=GetFifoByte();
+#endif
 #if defined(SSE_DMA_DRQ_RND)
     else // hd
       GetFifoByte(); //TODO: put it on HD DR?
@@ -124,6 +131,10 @@ bool TDma::Drq() {
 #endif
     if(!(MCR&CR_HDC_OR_FDC))
       AddToFifo(WD1772.DR);
+#if defined(SSE_ACSI)
+    else if(ACSI_EMU_ON)
+      AddToFifo(AcsiHdc.DR);
+#endif
 #if defined(SSE_DMA_DRQ_RND)
     else
       AddToFifo( (BYTE)rand() ); //TODO take HD DR?
@@ -262,6 +273,9 @@ BYTE TDma::IORead(MEM_ADDRESS addr) {
     // HD access
     else if(MCR&CR_HDC_OR_FDC) 
     {
+#ifdef TEST01__
+      ior_byte=0;
+#endif
 #ifdef SSE_CPU
       LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
         " - Reading high byte of HDC register #"+((MCR & BIT_1) ? 1:0)); )
@@ -303,6 +317,14 @@ is ignored and when reading the 8 upper bits consistently reads 1."
 //      TRACE_LOG("HD");
       LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
                   " - Reading low byte of HDC register #"+((dma_mode & BIT_1) ? 1:0)); )
+
+#if defined(SSE_ACSI)
+      ASSERT(MCR&CR_DRQ_FDC_OR_HDC);
+      if(ACSI_EMU_ON)
+        ior_byte=AcsiHdc.IORead( (MCR&(CR_A1|CR_A0))/2 );
+#endif
+
+
     }
     // Read FDC register
 #if defined(SSE_DMA_FDC_ACCESS)
@@ -605,6 +627,12 @@ is ignored and when reading the 8 upper bits consistently reads 1."
 //      TRACE_LOG("HD");
  //     TRACE("HDC %x: W %x\n",(dma_mode & BIT_1) ? 1:0,io_src_b);
       log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Writing $xx"+HEXSl(io_src_b,2)+" to HDC register #"+((dma_mode & BIT_1) ? 1:0));
+#if defined(SSE_ACSI)
+      ASSERT(MCR&CR_DRQ_FDC_OR_HDC);
+      if(ACSI_EMU_ON)
+        AcsiHdc.IOWrite((MCR&(CR_A1|CR_A0))/2,io_src_b);
+#endif
+
       break;
     }
     // Write FDC register
@@ -903,11 +931,12 @@ void TDma::UpdateRegs(bool trace_them) {
 #if defined(SSE_FDC_TRACE_IRQ)
   if(trace_them)
   {
-    ASSERT(fdc_str);
+    //ASSERT(fdc_str);
     if(MCR&CR_HDC_OR_FDC)
-      TRACE_LOG("HDC IRQ ");
+      TRACE_LOG("HDC IRQ\n");
     else
     {
+      ASSERT(fdc_str);
 #if defined(SSE_DISK_IMAGETYPE) 
       TRACE_LOG("%d FDC(%d) IRQ CR %X STR %X ",ACT,SF314[DRIVE].ImageType.Manager,fdc_cr,fdc_str);
 #else
@@ -917,12 +946,13 @@ void TDma::UpdateRegs(bool trace_them) {
       WD1772.TraceStatus();
 #endif
       TRACE_LOG("TR %d SR %d DR %d",fdc_tr,fdc_sr,fdc_dr);
-    }
+//    }
 #if defined(SSE_YM2149A)//
     TRACE_LOG(" %c%d:",'A'+YM2149.SelectedDrive,YM2149.SelectedSide);
 #endif
     TRACE_LOG(" CYL %d byte %d DMA CR %X $%X #%d\n",
       floppy_head_track[DRIVE],SF314[DRIVE].BytePosition(),MCR,BaseAddress,Counter);
+    }
   }
 #endif
 
@@ -1006,9 +1036,16 @@ void TDma::TransferBytes() {
     We do it here in DMA because it should work with native, STX, IPF.
 */
 
-#define LOGSECTION LOGSECTION_IMAGE_INFO
+//#define LOGSECTION LOGSECTION_IMAGE_INFO
 
+#ifdef TEST01
+  if( !(MCR&CR_HDC_OR_FDC) && fdc_cr==0x80 && !fdc_tr && fdc_sr==1 
+    && !(MCR&CR_WRITE) && !CURRENT_SIDE || (MCR&CR_HDC_OR_FDC) && 
+    !(MCR&CR_WRITE) && ACSI_EMU_ON && AcsiHdc.cmd_block[0]==8
+     && AcsiHdc.SectorNum()<3 && AcsiHdc.cmd_block[4]==1 )
+#else
   if(fdc_cr==0x80 && !fdc_tr && fdc_sr==1 && !(MCR&CR_WRITE) && !CURRENT_SIDE)
+#endif
   {
     for(int i=0;i<16;i+=2)
     {
@@ -1029,23 +1066,26 @@ void TDma::TransferBytes() {
 
 #endif//checksum
 
-#undef LOGSECTION
+//#undef LOGSECTION
 #if defined(SSE_BOILER_TRACE_CONTROL)
 #define LOGSECTION LOGSECTION_ALWAYS // for just the bytes 
 #else
 #define LOGSECTION LOGSECTION_FDC_BYTES 
 #endif
 
-#if defined(SSE_BOILER_TRACE_CONTROL)
-  if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
-#endif
-  {
 #if defined(SSE_DMA_TRACK_TRANSFER)
-    Datachunk++; 
-    TRACE_FDC("#%03d (%d-%02d-%02d) %s %06X: ",Datachunk,floppy_current_side(),floppy_head_track[DRIVE],WD1772.CommandType()==2?fdc_sr:0,(MCR&0x100)?"from":"to",BaseAddress);
-#else
+  Datachunk++; 
+#if defined(SSE_BOILER_TRACE_CONTROL)
+// this is not relevant for HD, problem when writing too
+  if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
+#ifdef SSE_ACSI
+    if((MCR&CR_HDC_OR_FDC))
+      TRACE_HDC("#%03d (%d) %s %06X: ",Datachunk, AcsiHdc.SectorNum(),(MCR&0x100)?"from":"to",BaseAddress);
+    else
 #endif
-  }
+      TRACE_FDC("#%03d (%d-%02d-%02d) %s %06X: ",Datachunk,floppy_current_side(),floppy_head_track[DRIVE],WD1772.CommandType()==2?fdc_sr:0,(MCR&0x100)?"from":"to",BaseAddress);
+#endif
+#endif
 
   for(int i=0;i<16;i++) // burst, 16byte packets strictly, 8 words
   {
@@ -1060,7 +1100,11 @@ void TDma::TransferBytes() {
     else if((MCR&0x100) && DMA_ADDRESS_IS_VALID_R) // RAM -> disk
       Fifo
 #if defined(SSE_DMA_DOUBLE_FIFO)
+#if SSE_VERSION>=372
+        [!BufferInUse] // well, that was wrong!
+#else
         [BufferInUse] // because we fill the new buffer
+#endif
 #endif
         [15-i]=PEEK(BaseAddress);
     else 
@@ -1070,13 +1114,12 @@ void TDma::TransferBytes() {
           TRACE_FDC("!!!");
 #if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
-#endif
       TRACE_FDC("%02X ",Fifo
 #if defined(SSE_DMA_DOUBLE_FIFO)
       [!BufferInUse]
 #endif
       [(MCR&CR_WRITE)?15-i:i]);//bugfix 3.6.1 reverse order
-
+#endif
 #if USE_PASTI    
     if(hPasti&&pasti_active
 #if defined(SSE_PASTI_ONLY_STX)
@@ -1103,8 +1146,21 @@ void TDma::TransferBytes() {
 #endif
 #if defined(SSE_BOILER_TRACE_CONTROL)
   if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
-#endif
     TRACE_FDC("\n");
+#endif
+
+#ifdef TEST01
+#if defined(SSE_BOILER)
+  for(int i=0;i<8;i++) // 
+  {
+    if(!(MCR&0x100)&& DMA_ADDRESS_IS_VALID_W) // disk -> RAM
+    {DEBUG_CHECK_WRITE_W(BaseAddress-16+i*2)}
+    else if((MCR&0x100) && DMA_ADDRESS_IS_VALID_R) // RAM -> disk
+    {DEBUG_CHECK_READ_W(BaseAddress-16+i*2)}
+  }
+#endif
+#endif
+
   Request=FALSE;
 }
 

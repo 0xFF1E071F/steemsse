@@ -175,12 +175,6 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
                 pasti_active=false;
               //TRACE_LOG("pasti_active %d\n",pasti_active);
 #endif
-
-              /*    ??
-#if defined(SSE_PASTI_AUTO_SWITCH)
-              pasti_active=false;
-#endif
-              */
             }
             HOffset=zippy.current_file_offset;
             NewDiskInZip=CompressedDiskName;
@@ -331,12 +325,19 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
   }else if(CAPSIMG_OK &&
-#if defined(SSE_IPF_CTRAW)
+#if defined(SSE_IPF_CTRAW) && defined(SSE_IPF_KFSTREAM)
+    (RAW||CTR||IPF))
+#elif defined(SSE_IPF_CTRAW)
     (CTR||IPF))
 #else
     IPF) 
 #endif
   { 
+
+#if defined(SSE_DISK_REMOVE_DISK_ON_SET_DISK)
+    RemoveDisk();
+#endif
+
 #if defined(SSE_IPF_CTRAW)
 #if defined(SSE_DISK_IMAGETYPE)
 //    TRACE_LOG("Set ImageType Caps\n");
@@ -368,6 +369,10 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
   }else if(SCP) { 
 
+#if defined(SSE_DISK_REMOVE_DISK_ON_SET_DISK)
+    RemoveDisk();
+#endif
+
     if(drive==-1  || !ImageSCP[drive].Open(File))
       return FIMAGE_WRONGFORMAT;
 
@@ -388,6 +393,11 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
   }else if(STW) { 
+
+#if defined(SSE_DISK_REMOVE_DISK_ON_SET_DISK)
+    RemoveDisk();
+#endif
+
     if(drive==-1  || !ImageSTW[drive].Open(File))
       return FIMAGE_WRONGFORMAT;
 
@@ -400,12 +410,47 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     SF314[drive].ImageType.Extension=EXT_STW;
 #endif
 #if defined(SSE_DISK1)
+#if !defined(SSE_VAR_RESIZE_372)
     Disk[drive].TrackBytes=ImageSTW[drive].nBytes;
+#if defined(SSE_DISK_STW2) // HxC converter track is too big...
+    //hack works but not when we save space (Disk[drive].TrackBytes==ImageSTW[drive].nBytes)
+    //the problem is in hxc software, if we don't like that we need to 
+    //create our own STW images... see below; this code isn't compiled
+    if(SSE_HACKS_ON && Disk[drive].TrackBytes-DRIVE_BYTES_ROTATION_STW>50
+      && ImageSTW[drive].Version==0x100)
+      Disk[drive].TrackBytes=DRIVE_BYTES_ROTATION_STW; 
     ASSERT(Disk[drive].TrackBytes==DRIVE_BYTES_ROTATION_STW);
+#endif
+#endif
+
 #endif
     SF314[drive].State.reading=SF314[drive].State.writing=0;
 
+#if defined(SSE_DISK_HFE_TO_STW) 
+    // using Steem to convert, because HxC software counts too many bytes
+    // see just above
+    // this code is only compiled on demand, it's no Steem feature
+    if(drive==1 && SF314[0].ImageType.Extension==EXT_HFE)
+    {
+      TRACE("Converting HFE to STW...\n");
+      for(int si=0;si<2;si++)
+        for(int tr=0;tr<ImageHFE[0].file_header.number_of_track;tr++)
+        {
+          ImageHFE[0].LoadTrack(si,tr);
+          ImageSTW[1].LoadTrack(si,tr);
+          for(int by=0;by<Disk[1].TrackBytes;by++)
+          {
+            WORD mfm=ImageHFE[0].GetMfmData(by);
+            ImageSTW[1].SetMfmData(by,mfm);
+          }
+        }
+        WrittenTo=true;
+        ImageSTW[1].Close();
+    }
+#endif
+
 #endif//stw
+
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_HFE)
   }else if(HFE) { 
@@ -429,8 +474,6 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #endif
     SF314[drive].State.reading=SF314[drive].State.writing=0;
 #endif//hfe
-
-
   }
 
 #if defined(SSE_TOS_PRG_AUTORUN)
@@ -867,7 +910,6 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       ", Sides="+Sides);
   log(Str("     TracksPerSide=")+TracksPerSide+", ReadOnly="+ReadOnly);
   log("");
-
   return 0;
 }
 //---------------------------------------------------------------------------
@@ -1046,6 +1088,7 @@ bool TFloppyImage::SeekSector(int Side,int Track,int Sector,bool Format)
 
         // I'm not sure but it is very possible changing sides during a disk operation
         // would cause it to immediately start reading the other side
+        //SS: we don't do that for SCP etc. it would return garbage
         if (TrackNum==Track && SideNum==floppy_current_side() && SectorNum==Sector && SectorLen!=0){
           fseek(f,TrackStart+SectorOffset,SEEK_SET);
           BytesPerSector=SectorLen;
@@ -1213,6 +1256,12 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
 #if defined(STEVEN_SEAGAL) &&  defined(SSE_VAR_DONT_REMOVE_NON_EXISTENT_IMAGES)
   if(Empty()) // nothing to do
     return;
+#endif
+
+#if defined(SSE_GUI_DISK_MANAGER_INSERT_DISKB_REMOVE)
+  if((this==&FloppyDrive[0]) && DiskMan.AutoInsert2&2)
+    DiskMan.EjectDisk(1); // v3.7.2 don't keep former disk B
+  DiskMan.AutoInsert2&=~2; //TODO def
 #endif
 
   static bool Removing=0;
@@ -1547,7 +1596,6 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   SF314[drive].ImageType.Manager=MNGR_STEEM; //default
   SF314[drive].ImageType.Extension=0;
 #endif
-
 #if defined(SSE_DISK_GHOST)
   // This makes sure to update the image before leaving, though
   // there's a destructor. Really needed?
