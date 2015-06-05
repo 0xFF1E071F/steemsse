@@ -1,7 +1,7 @@
 Steem SSE Hints
 ===================
 
-v3.7.1
+v3.7.2
 
 If a program doesn't work in Steem SSE, please check the lists below,
 maybe the solution is there. 
@@ -36,6 +36,8 @@ If not, right click and check Read Only.
 
 ADAT: Disk Manager option 'Accurate Disk Access times'
 
+ACSI: use the SH204.img hard drive image (option 'ACSI hard disk image')
+
 No B: disconnect drive B: in Disk Manager (click on drive B: icon)
 
 digits x digits: select in SSE option 'Display size'
@@ -48,9 +50,9 @@ Apps
 
 - Aladin: no WP, HI
 - Copy and Utility Disk Volume 1: STF
+- Megamax C (ReDMCSB building): T104
 - Neochrome: C1
 - Notator: C1
-- ReDMCSB building: T104, #
 - Spectrum 512: use correct TOS for 50/60hz
 
 
@@ -81,8 +83,9 @@ Games
 - Hyper Force: STF
 - International Tennis: not C1
 - Jupiter Masterdrive STX: Pasti.dll version
-- Live & Let Die: STF
+- Les Aventures De Moktar: no ghost disk
 - Lethal Xcess: put disk B in drive B before boot
+- Live & Let Die: STF
 - Logical-ELT: C2
 - The Lost Patrol: ADAT
 - Manchester United: C1
@@ -93,11 +96,13 @@ Games
 - Platoon STX: STF T100US
 - Power Drift SCP: #
 - Realm of the Trolls: create STW disk
+- Seven Gates of Jambala: C2 
 - Star Trek STX: not T102
 - Sundog IPF: Ghost disk
 - The Sentinel (aka The Sentry): C1
 - Test Drive: RAM <4MB
 - Trauma STX: French TOS
+- Trex Warrior: C2
 - Ultimate Arena: STE
 - Ultimate Ride: No B
 - Vroom -RPL: ADAT
@@ -182,12 +187,14 @@ Demos
 ==============
 
 - A-Ha/Mig 29: press space & wait
-- Automation 001/The Sentinel: C1, ADAT
+- Automation 000/IK+: STF
+- Automation 001/The Sentinel: STF, C1, ADAT
+- Automation 081/Star Wars: STF
 - Automation 168: STF
 - Automation 231/Rainbow Island: STF
 - Automation 239: DI, C1
 - Automation 398: ADAT
-Many Automation CDs were redone for the STE.
+Many Automation CDs were redone for the STE, they're not mentioned here.
 - Awesome 04 STF: #
 - Awesome 17: DI
 - Deadly FX 02/Line of Fire: STE, ADAT

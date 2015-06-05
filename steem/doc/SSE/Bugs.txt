@@ -73,6 +73,8 @@ Due to DirectDraw hacks
 -Microprose Golf STX: current pasti.dll has some wrong timings, not
 up to Steem (ST, IPF versions OK).
 
+-Mono emulator!
+
 -My Dog is Enjoying Fuzion skull screen crash (correct)
 
 -Notator: instrument assignment?
@@ -98,6 +100,8 @@ This is because pasti.dll should be improved, the fault isn't on
 Steem's side.
 
 -Random crashes and failures... (rare)
+
+-Realm of the Trolls STX bad init disc (STW/HFE)
 
 -ReDMCSB fails halfway in TOS1.02 (you can compile 50%!)
 Is it Steem or TOS bug?

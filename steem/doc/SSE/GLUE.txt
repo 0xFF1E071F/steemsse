@@ -280,3 +280,42 @@ STF when this condition is fulfilled.
 
 
 
+
+
+DE
+====
+
+
+from STF schematics, we draw such graphic concerning DE signal:
+
+
+
+GLUE ----------------T--------- MMU
+                     |
+                     |
+                     +--------- Shifter
+                     |
+                     |
+                     +--------- MFP (timer B in)
+
+
+We know the DE timings for timer B and for MMU are different!
+For example, GLUE stops DE and MMU stops fetching at cycle 376.
+But the Shifter keeps on displaying and timer B isn't toggled until
+cycle 404 (28 cycles later).
+
+
+
+We would better understand such graphic:
+
+GLUE ------------DE-----------> MMU
+                                 |
+                                 | LOAD
+                                 |                     
+                                 V                    
+MFP (timer B in) <-----DE------Shifter
+                              
+
+
+
+
