@@ -117,6 +117,7 @@ Automation 001 (The Sentinel)
 BIG Demo
 Blood
 Braindamage
+Chessmaster 2000
 Darkside of the Spoon
 Delirious 3 (issues but loads)
 Delirious 4

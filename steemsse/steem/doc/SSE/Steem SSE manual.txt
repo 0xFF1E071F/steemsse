@@ -1,7 +1,7 @@
 Steem SSE manual
 =================
 
-v3.7.1
+v3.7.2
 
 About the manual
 _________________
@@ -16,6 +16,8 @@ A copy of it is available at:
 http://ataristeven.t15.org/Steem_sse_manual.htm
 
 It can be read from inside Steem if you click on the blue (i) button.
+Please, before you ask questions, for once that freeware software is
+well documented, consult the manual. 
 
 
 Atari ST
@@ -116,6 +118,9 @@ __________
 
 Steem works with various other programs or libraries:
 
+-ArchiveAccess.dll (*)
+http://sourceforge.net/projects/archiveaccess/
+
 -CAPSImg.dll 
 http://www.kryoflux.com/
 
@@ -128,23 +133,19 @@ http://freeimage.sourceforge.net/download.html
 -msa.exe
 http://msaconverter.free.fr/
 
--pasti.dll
+-pasti.dll (*)
 http://pasti.fxatari.com/
 
 -unrar.dll 
 http://www.rarlab.com/rar_add.htm
 
--unzipd32.dll
-Was included in Steem 3.2
-http://www.econsultant.com/dll-database-u/unzipd32.dll-download.html
 
 You may download them from here too:
 
 http://ataristeven.t15.org/Other_downloads.htm
 
-For pasti.dll, it is recommended to use the hacked version at ataristeven,
-so that you get no nag at startup, and some other fix.
-
+For libraries marked with (*) it actually is recommended (fixed versions).
+ArchiveAccess.dll is included with the main download.
 
 Steem uses additional data files, that are included in the main 
 download:
@@ -153,11 +154,13 @@ download:
 
 -HD6301V1ST.img (the keyboard chip rom)
 
+-HFE_boot.bin, a file that helps Steem create HFE disk images
+
 -ym2149_fixed_vol.bin (the P.S.G. soundchip table by ljbk)
 
 They should be copied into Steem's folder.
-If some of those files aren't present, Steem will still work, but fewer
-features will be available.
+If some of those files aren't present, Steem will still work, but some
+features will not work.
 
 
 Getting started
@@ -472,7 +475,7 @@ howto.txt" file that comes with Steem.
 TOS
 ----   
    
-TOS stands for 'The Operating System', also called 'Tramiel Operating System'.
+TOS simply stands for 'The Operating System'.
 
 Including the BIOS, the GEM graphic environment and other layers, the full OS,
 except on very early models (also emulated), was printed on a ROM chip. You 
@@ -481,9 +484,14 @@ need an image of one of those roms to use Steem.
 There are many more OS roms for the ST than for the Amiga. This is both 
 entertaining and confusing.
 
-Generally, TOS 1.02 is the most compatible for STF mode, and TOS 1.62 for STE
-mode. Steem will try to match those TOS when you switch ST model.
-Some rare programs prefer another version.
+Generally, TOS 1.02 is the most compatible for STF mode, although TOS 1.04 may
+be preferred for hard disk emulation; and TOS 1.62 for STE mode. 
+Steem will try to match those TOS when you switch ST model.
+Some rare programs prefer another version (check Hints file).
+People report troubles with TOS 2.X, but before debugging we really must be sure
+it wouldn't do the same on real hardware. Steem doesn't try to emulate the Mega
+STE (yet).
+
  TOS1.00 STF
  TOS1.02 STF
  TOS1.04 STF
@@ -764,11 +772,10 @@ a ST. If you uncheck the option we fall back on Steem 3.2's softer sound.
 There currently are 2 limitations:
 1) The table only has values for fixed volumes, that were coded on 4bit.
 Enveloped sound was coded on 5bit, so other values are interpolated.
-2) The sound of the PSG was different, softer on the STE, but we only
-have one table, for STF.
-When it's not checked, the original small table is used (and memory is 
-freed). It's fine enough. The option is more useful for sampled sound.
-
+2) The sound of the PSG was different, relatively softer on the STE, but
+we only have one table, for STF.
+When the option isn't checked, the original small table is used (and memory 
+is freed). It's fine enough. The option is more useful for sampled sound.
 
   
 -Microwire
@@ -822,14 +829,7 @@ These options allow you to record Steem's output to a wav file. Clicking on the
 red button begins recording, clicking on it again (or stopping emulation) will 
 end recording. You can choose the na-me and location of the wav file to output 
 by clicking on choose.
-
-
--Internal speaker sound
-
-This option is not available on Windows NT/XP. It is a bit of fun really, if 
-you haven't got a sound card you can make your internal PC speaker output 
-Steem's sound. Try it with a few tunes!
-     
+    
       
 Display
 --------   
@@ -1061,12 +1061,8 @@ When the option isn't checked, DirectDraw is used.
 When it is checked, other options on this page that are not relevant,
 because they only work with DirectDraw, are disabled.
 
-Because not every computer has the latest version of DirectX9, a build
-without the feature is available here:
-
-http://sourceforge.net/projects/steemsse/ 
-or
-http://ataristeven.t15.org/Steem_all_builds.htm
+Because not every computer has the a working version of DirectX9, a build
+without the feature is available.
 
 --Mode
 
@@ -1081,6 +1077,9 @@ This option only works with D3D fullscreen for the moment.
 When it's checked, we emulate the Atari ST's distorted aspect ratio, 
 visible on many screenshots: pixels are higher than they should, so that
 squares and circles ain't.
+
+--Crisp rendering
+Similar to DirectDraw "straight blit" mode, you get neat but big pixels.
 
 
 -DirectDraw
@@ -1128,8 +1127,8 @@ can get jerkiness and wobbling that didn't appear on a real ST. Using these
 options you can hopefully put that right. Vsync to PC display tells Steem to 
 wait for the PC to be ready before it displays its next frame. To make this 
 option work better you should try and make the PC refresh rate the same or 
-double the ST one. The ST used 50Hz (PAL), 60Hz (NTSC) and 70Hz (Mono). Many 
-video cards and monitors will refuse to switch to frequencies below 70Hz.
+double the ST one. The ST used 50Hz (PAL), 60Hz (NTSC) and 70Hz (Mono). 
+Hardware (video cards and monitors) that displays at 50Hz is now rare.
      
       
 Brightness/Contrast
@@ -1266,18 +1265,19 @@ Status info includes ST model, TOS version, RAM quantity and:
  C1 and C2: respective options are checked (see further).
  When one of these isn't checked, a X stands to attract your attention to
  this unfortunate fact.
+ !       The CPU/MFP ratio has been changed
  #       'Hacks on'
  ADAT    'Accurate Disk Access Times' (Slow drive)
  V       'Vertical Sync'
- HD      'Harddrive' ("Gemdos")
-
-In previous versions, Pasti or Caps were also indicated but not anymore,
-because you may have a mixed situation (pasti in A:, Caps in B:, etc.).
-
+ HD1     'Hard Disk' (GEMDOS)
+ HD2     'Hard Disk' (ACSI)
+ MHZ      CPU speed higher than (original) 8MHZ is indicated
 
 -Disk name
 
 Displays the name of the current disk (in A:) in the tool bar.
+If this option isn't checked, Steem will display the type of image in
+each drive instead (ST, MSA...)
 
      
 -Hacks
@@ -1288,7 +1288,7 @@ This option covers two kinds of things:
 - Emulation hacks, when emulation of some feature isn't perfect yet we want
 the programs to run. Since we don't understand everything in the feature,
 those hacks could break something, hence the option.
-It is recommended to disable 'Hacks' only if you meet problems.   
+It is recommended to disable 'Hacks' only if you meet problems (please report).   
 
   
 -Emu detect
@@ -1343,8 +1343,6 @@ In case you're curious, the demos that reprogram the chip are:
 Dragonnels, Froggies over the Fence, Transbeauce 2.
 All are available here:
 http://ataristeven.t15.org/Steem_demos1.htm
-For this option to work, copy the (supplied) IKBD rom 'HD6301V1ST.img' into
-your Steem folder.
 
 The option also commands ACIA (the MC6850 chip) and MIDI (the musical 
 interface) improvements, because timings corrections concerning those 3
@@ -1403,11 +1401,17 @@ floppy disks have a look at the "disk image howto.txt" that comes with Steem.
 The large box at the bottom of the disk manager window shows all the disk 
 images in the current directory. The disk manager is like a little Explorer 
 window, you can go into a folder by double clicking on it or by selecting it 
-and pressing return. All disk image files, zip/rar archive files and any 
-Windows shortcuts to those types of files are shown. 
-For zip and rar support, unzipd32.dll and unrar.dll must be in your system
-folder or in Steem folder.
+and pressing return. All disk image files, zip/rar/7z/bz2/gz/tar/arj archive
+files and any Windows shortcuts to those types of files are shown. 
 
+Note that Steem needs some DLL to handle archive files
+-unzipd32.dll for zip files (ArchiveAccess could handle them but there's
+some incompatibility to investigate with MSA Converter)
+-7z/bz2/gz/tar/arj: ArchiveAccess.dll
+-rar: unrar.dll.
+Steem doesn't know if some archive contains an image or not, so all
+archives are displayed regardless, but maybe clicking on them is useless.
+It's up to you to sort your directories, of course.
 
 To insert a disk image into a drive, drag it to the box to the right of the 
 big drive icon. To remove it from the drive just drag it back out to the 
@@ -1415,7 +1419,8 @@ directory view.
 
 If you right click in the directory view a menu will pop up allowing you to 
 create a new standard size disk image (ST), a custom size disk image (ST), 
-a disk image with format information (STW) or a folder. 
+a disk image with format information (STW), a HFE disk image compatible with
+the HxC harware floppy emulator, or a folder. 
 
 Custom disk images can be up to 2 megabytes in size, although larger ones 
 are emulated correctly most TOS versions didn't support them, you 
@@ -1424,7 +1429,10 @@ may find they will only work with TOS 2.06 or maybe not at all.
 ST disk images contain raw data bytes without any meta information (so
 that emulators must guess the disk configuration).
 
-STW disk images include clock bits as well as data, encoded into MFM words.
+STW and HFE disk images include clock bits as well as data, encoded into MFM
+words.
+STW is the simplest such format, HFE is optimised for HxC floppy emulator
+hardware.
 Those images are more than twice larger than ST images but allow to more 
 precisely emulate the 'Format' command of the WD1772 disk controller. 
 Because they're formatted inside the emulated ST, there's no sides/tracks/
@@ -1432,19 +1440,22 @@ sectors options.
 Specification of STW disk images:
 http://ataristeven.t15.org/txt/STW%20specification.txt
 
-Besides those ST and STW disk images Steem may create itself, it is also
+Besides those ST, STW and HFE disk images Steem may create itself, it is also
 able to handle:
 
 -DIM and MSA images
 -STT images
 -STX images (need pasti.dll)
--IPF and CTR images (need CAPSImg.dll)
--SCP images
+-IPF and CTR images created with Kryoflux hardware (need CAPSImg.dll)
+-SCP images created with Supercard Pro hardware
 
 About STX images, those are now also handled in Hatari, and it may happen
 that some game works in Hatari and not in Steem. Those are very rare cases
 and are explained by imprecisions in pasti.dll. This is no fault on Steem's
 side. The equivalent CTR, IPF or SCP images generally run fine.
+
+About SCP images, Steem only uses first 2 revs and works with only 1 rev too,
+provided the image is good.
 
 If you right click in the box to the right of the big drive icon, a context 
 menu allows you to toggle the read-only property (important for some games),
@@ -1476,8 +1487,8 @@ might still think there is a drive B when really there isn't.
 Right-clicking on the drive icons opens a context menu with some useful
 options to:
 Stop the motor (if it's running you crazy)
-Change the 'SEEK' sound (if it's running you crazy); note that it doesn't work
-with STX, IPF, CTR images.
+Change the 'SEEK' sound (if it's running you crazy); note that with STX, IPF,
+CTR images you can't change the sound, but with SCP you can.
 Change your fine SF314 double sided drive into a miserable SF354 single sided
 drive (if you feel really nostalgic)
 
@@ -1487,7 +1498,13 @@ drive (if you feel really nostalgic)
 Another important button on the disk manager is the Hard Drives button, it 
 opens the hard drive manager. You can have up to 10 virtual hard drives. To set
 one up select the folder on your PC and then select the letter that you want it
-to be on the ST. Hard drives aren't as reliable as disk images, most things 
+to be on the ST. Those virtual drives are called GEMDOS drives because they're
+based on interception of GEMDOS commands.
+You need to know that this type of emulation is very convenient for you, 
+because you just use your PC hard drive, but it is based on hacks, and in some
+cases it could not work as on a real Atari.
+For serious work we really advise to use TOS 1.04 or TOS 1.62.
+Hard drives aren't as reliable as disk images, most things 
 will work but not everything. If a program isn't working properly copy it to a
 disk image (using the ST desktop) to see if that helps. Another option in this
 box is to choose which hard drive to boot from if floppy drive A is empty. You
@@ -1524,9 +1541,9 @@ or you will surely go insane!
 Though the 'Drive sound' and 'Drive track info' options may make this ordeal
 more bearable, as you can see and hear what the drive is doing, you don't get
 the feeling the emulator is stuck.
-Note that all 'SSE' floppy drive emulation improvements are enabled only
-when this option is selected. Please don't report drive emulation bugs if
-this option wasn't even checked.
+Note that all 'SSE' floppy drive emulation improvements for ST, MSA and DIM
+images are enabled only when this option is selected.
+Please don't report drive emulation bugs if this option wasn't even checked.
 
 
 -Read/Write Archives (Changes Lost On Eject)
@@ -1549,7 +1566,7 @@ it will use the Pasti DLL as needed.
 You would check it if you want Pasti to handle some ST or MSA disk image,
 but except for possible bugs, Steem native emulation of those is now a bit
 better anyway.
-Changing this option won't reset the ST.
+Changing this option won't reset the ST in Steem SSE.
 
 
 -Pasti Configuration
@@ -1565,18 +1582,21 @@ useful in v02h. It's very likely a bug.
 This makes Pasti handle only STX images, Steem being in charge of ST and MSA
 images. 
 Interesting possibilities: you may try and copy STX images on a ST or STW disk
-image. No guarantee!   
+image. No guarantee!
+You could have problems with this option if you use Pasti hard disk emulation
+at the same time.
 
 
--Enable ghost disks for CTR-IPF-STX
+-Enable ghost disks for CTR-IPF-STX-SCP
 
-Check this option to harmlessly save hiscore with CTR/IPF/STX disk images.
+Check this option to harmlessly save hiscore with CTR/IPF/STX/SCP disk images.
 STG files are automatically created when the game tries to save data on
 the disk, leaving your image file untouched. 
 The image may be in an archive.
 
 STG files are simple and compact collections of sectors, only those
 that have been written.
+If needed, this could be improved, but as nobody reports anything...
  
 Specification of STG files:
 http://ataristeven.t15.org/txt/STG%20specification.txt
@@ -1593,6 +1613,21 @@ worry about space waste).
 This should work with files inside archives.
 The main limitation is that it only handles single files. If you want
 more then you need to use a virtual hard disk.
+
+
+-ACSI hard disk support
+
+This option is independent of other hard disk options. It uses a lower-
+level emulation of ACSI (Atari Computer Systems Interface) commands,  
+just like the Pasti plugin, instead of GEMDOS commands.
+It should be more compatible, on the other hand you need to use a hard disk
+image file.
+A compatible file "ACSI_HD0.img" (up to 1 GB) needs to be present in Steem 
+folder.
+It is also possible to enable GEMDOS virtual hard disks at the same
+time, you need to adapt letters of course.
+Transfer speed depends on 'Accurate Disk Access Times' option, but even
+when it's not checked, the ST operates slowly compared with a PC.
 
 
 -Automatically Insert Second Disk

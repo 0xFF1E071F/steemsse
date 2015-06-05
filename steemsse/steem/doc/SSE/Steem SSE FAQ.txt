@@ -1,7 +1,7 @@
 Steem SSE FAQ
 ---------------
 
-v3.7.1
+v3.7.2
 
 Q:
 What is Steem?
@@ -13,7 +13,7 @@ It's an excellent Atari STE emulator coded by Anthony and Russel Hayward.
 Q:
 Where are Steem authors?
 A:
-They tragically disappeared in the lower border never to be seen again...
+They suddenly disappeared in the lower border never to be seen again...
 Before that they released the source of their great emulator, mercifully.
 
 
@@ -22,6 +22,8 @@ What is 'SSE'?
 A:
 SSE stands for 'Steven Seagal Edition', a branch of Steem, and the only one
 with active development and exciting new features.
+One important feature is that Steem SSE also emulates the STF, not only
+the STE. Despite this, the name isn't changed. Should be STem?
 
 
 Q:
@@ -102,7 +104,7 @@ A:
 Some yes, others not. Generally games were better, though some of the 
 important games of the era were actually better on the ST or not even
 released on the Amiga.
-Generally, serious applications were better on the ST. The multitask
+Generally, serious applications were better on the ST. The "multitask"
 Amiga OS was a joke.
 Demos, as strange as it may sound, were often more interesting and 
 impressive on the ST.
@@ -116,7 +118,8 @@ Which TOS should I use?
 A:
 Generally, TOS 1.02 is the most compatible for STF mode, and TOS 1.62 for STE
 mode. Steem will try to match those TOS when you switch ST model.
-Some rare programs prefer another version, like TOS 1.00 for very old games.
+Some rare programs prefer another version, like TOS 1.00 for very old games,
+or even depend on a country specific TOS.
 TOS1.00 STF
 TOS1.02 STF
 TOS1.04 STF
@@ -154,21 +157,23 @@ Help! Something went wrong and now even quitting and restarting Steem
 doesn't help.
 A:
 Try deleting the file 'auto.sts' in Steem's directory. It can get corrupted.
+In rare cases of very bad corruption you may even need to delete or edit 
+steem.ini.
 
 
 Q:
 Help! I reset the ST, stop and start Steem, delete auto.sts and I just get
 a blank screen.
 A:
-Check options ST model and TOS. With STF and TOS1.06, you'll have a blank
+Check options ST model and TOS. With STF and TOS1.6, you'll have a blank
 screen.
 
 
 Q:
 Steem can't handle zip and rar files.
 A:
-For zip and rar support, unzipd32.dll and unrar.dll must be in your system
-folder or in Steem folder.
+For archive support, ArchiveAccess.dll must be in your system folder or in
+Steem folder. And unrar.dll for rar support.
 
 
 Q:
@@ -179,7 +184,7 @@ hardware. You need a video card and a monitor capable of displaying at
 the exact emulated frequency, 50hz most of the time.
 If your hardware is set to 60hz or 75hz, for example, it's impossible
 to have really smooth scrollers.
-Triple-buffering (also available in Steem) can't help that.
+Triple-buffering (also available in Steem, of course) can't help that.
 
 
 Q:
@@ -234,12 +239,6 @@ more tests are required by scanline.
 Partly it has to do with parallel emulations running together, for the 
 HD6301, for CAPS...
 Some options may make a difference, like VSync.
-
-
-Q:
-First run of the day is especially excruciating!
-A:
-I think it's because of DirectX 9, the system must load many DLLs.
 
 
 Q:
@@ -303,7 +302,7 @@ emulation. Steem uses a plugin, pasti.dll, that is much older and is in need
 of an update.
 Fortunately, those cases are rare, and we have alternatives now, like CTR
 and IPF, that also use a plugin, capsimg.dll, which is up-to-date, as well
-as SPC images using an up-to-date emulation.
+as SPC images using an up-to-date emulation in Steem.
 Who knows? Maybe one day pasti.dll will be improved.
 For those reasons directly handling STX images in Steem is not planned.
 
@@ -321,7 +320,7 @@ A:
 It is the state in which your ST booted, due to synchronisation between 
 various chips. It has an influence on shifter trick timings.
 You may generally ignore this option, it is useful only to check the
-display of some demos. They're mentioned in 'Hints'.
+display of some demos. Those are mentioned in 'Hints'.
 
 
 Q:
@@ -337,8 +336,8 @@ A:
 All drive emulation improvements operate only in if the option 'Accurate Disk
 Access Times (Slow)' is checked in the Disk manager, for ST, MSA, DIM disk
 images.
-For STW and SCP disk images, the option isn't necessary as emulation is slow 
-anyway (no fast option yet).
+For IPF, CTR, STW, SCP and HFE disk images, the option isn't necessary as 
+emulation is slow anyway :) (no fast option yet).
 
 
 Q:
@@ -347,6 +346,7 @@ A:
 For it to work you first need to manually remove the associations in the
 HKEY_CLASSES_ROOT part of the registry, that were put by previous versions of
 Steem.
+By the way, with most files zipped, file association makes less sense.
 
 
 Q:
@@ -375,21 +375,32 @@ Q:
 Is support for Falcon planned?
 A:
 No. To me those machines, like the TT, have no interest.
-Steem SSE is strictly STF/STE.
+Steem SSE is strictly STF/STE (Steen not SSE is STE-only).
 Atari supported Falcon only for a few months, and little software was
 developed. Software was so specialised in audio it is very hard to emulate,
-not to mention protections.
+not to mention protections. Only some professionals in audio production
+would be interested, and for this end Steem should be a paying tool anyway.
 Now nothing keeps dedicated people from starting a Falcon branch of Steem.
 
 
 Q:
-What's the use of STW disk image format?
+What about Mega STE emulation?
+A:
+Maybe one day. First need to get one myself, or to have some really good tester
+with one. 
+
+
+Q:
+What's the use of the STW disk image format?
 A:
 A STW disk image is the simplest possible MFM encoding format of
 Atari ST floppy disks. 
 It allows Steem to fully emulate WD1772 commands such as 'Format', 'Read 
 Track', 'Read Address' and to support cases like Dragonflight, Realm of
 the Trolls, Union Demo, and anything that relies on fancy WD1772 formats.
+As of v3.7.2, Steem can do all this with HFE files as well, which has a
+somewhat more complicated format. It makes STW already less useful, at
+least to people who own the HxC floppy emulator, which isn't everybody.
 
 
 Q:
@@ -434,6 +445,7 @@ http://sourceforge.net/projects/steemsse/
 If you don't like this versioning software, just submit your ideas at
 atari-forum:
 http://www.atari-forum.com/viewforum.php?f=94
+Or send me an e-mail.
 
 
 Q:
@@ -441,3 +453,10 @@ I'd like to help but can't code.
 A:
 You can help by testing stuff and reporting bugs.
 
+
+Q:
+I can't code, I don't help, I use Linux (only recently switched from Amiga
+OS), Hatari is better than Steem, fullscreen don't work, STW is useless, you
+suck, in fact Steven Seagull's movies are notoriously bad.
+A:
+https://www.youtube.com/watch?v=_SzXGblMcsE
