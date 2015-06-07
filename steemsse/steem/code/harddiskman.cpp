@@ -231,12 +231,6 @@ void THardDiskManager::CreateDriveControls(int Idx)
                 425,y,75,23,Handle,(HMENU)(200+Idx),HInstance,NULL);
   SendMessage(Win,WM_SETFONT,(UINT)Font,0);
 
-#ifdef TEST01____
-  Win=CreateWindow("Button",T("ACSI"),WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
-                525,y,75,23,Handle,(HMENU)(150+Idx),HInstance,NULL);
-  SendMessage(Win,WM_SETFONT,(UINT)Font,0);
-#endif
-
   SetWindowHeight();
 }
 //---------------------------------------------------------------------------

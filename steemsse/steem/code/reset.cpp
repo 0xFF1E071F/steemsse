@@ -361,7 +361,12 @@ void reset_peripherals(bool Cold)
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_ACSI) 
   if(ACSI_EMU_ON)
+#if defined(SSE_ACSI_MULTIPLE)
+    for(int i=0;i<MAX_ACSI_DEVICES;i++)
+      AcsiHdc[i].Reset(Cold);
+#else
     AcsiHdc.Reset(Cold);
+#endif
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_TxDR_RESET)

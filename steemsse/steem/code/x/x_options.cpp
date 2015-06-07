@@ -1,3 +1,4 @@
+#ifdef UNIX
 #define OPTIONS_HEIGHT 400
 
 #include "SSE/SSE6301.h"
@@ -340,11 +341,13 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
       }
     }else if (b->id==5102){
       This->RecordWarnOverwrite=b->checked;
+#if !defined(SOUND_DISABLE_INTERNAL_SPEAKER)
     }else if (b->id==5300){
       if (sound_internal_speaker) internal_speaker_sound_by_period(0);
 
       sound_internal_speaker=!sound_internal_speaker;
       b->set_check(sound_internal_speaker);
+#endif
     }else if (b->id==737){ // Choose cart
     	b->set_check(true);
       Str LastCartFol=This->LastCartFile;
@@ -934,3 +937,4 @@ int TOptionBox::dir_lv_notify_proc(hxc_dir_lv *lv,int Mess,int i)
 }
 //---------------------------------------------------------------------------
 
+#endif

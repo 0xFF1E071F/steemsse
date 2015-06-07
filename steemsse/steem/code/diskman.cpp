@@ -1433,7 +1433,11 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING 
               | (int)(SSEOption.Acsi?MF_CHECKED:0)
               | (int)(SSEConfig.AcsiImg?0:MF_DISABLED)
+#if defined(SSE_ACSI_MULTIPLE)
+              ,2029,T("ACSI hard disk images")); // with a s
+#else
               ,2029,T("ACSI hard disk image"));
+#endif
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #endif
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(This->AutoInsert2 ? MF_CHECKED:0),2016,T("Automatically Insert &Second Disk"));

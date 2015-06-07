@@ -1269,8 +1269,7 @@ Status info includes ST model, TOS version, RAM quantity and:
  #       'Hacks on'
  ADAT    'Accurate Disk Access Times' (Slow drive)
  V       'Vertical Sync'
- HD1     'Hard Disk' (GEMDOS)
- HD2     'Hard Disk' (ACSI)
+ HD      'Hard Disk'
  MHZ      CPU speed higher than (original) 8MHZ is indicated
 
 -Disk name
@@ -1615,15 +1614,21 @@ The main limitation is that it only handles single files. If you want
 more then you need to use a virtual hard disk.
 
 
--ACSI hard disk support
+-ACSI hard disk images
 
-This option is independent of other hard disk options. It uses a lower-
-level emulation of ACSI (Atari Computer Systems Interface) commands,  
-just like the Pasti plugin, instead of GEMDOS commands.
-It should be more compatible, on the other hand you need to use a hard disk
-image file.
-A compatible file "ACSI_HD0.img" (up to 1 GB) needs to be present in Steem 
-folder.
+Much like ST files for floppies, those img files contain all sectors of a hard
+disk. They allow lower-level emulation of those. 
+ACSI (Atari Computer Systems Interface) was the SCSI-like interface between
+the ST and a hard disk or a laser printer (not emulated).
+The feature was already available with Pasti.
+It will recognise up to four image file names, it they're placed in
+Steem folder.
+ACSI_HD0.img; ACSI_HD1.img (max 1GB)
+SH204.img; MEGAFILE 60.img (included in download)
+It is even possible to format those disk images inside Steem (for advanced
+users).
+A floppy disk image with necessary utilities is available here:
+http://ataristeven.t15.org/Steem_apps.htm#HD_UTILS
 It is also possible to enable GEMDOS virtual hard disks at the same
 time, you need to adapt letters of course.
 Transfer speed depends on 'Accurate Disk Access Times' option, but even

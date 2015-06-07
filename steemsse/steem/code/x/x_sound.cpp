@@ -1,3 +1,4 @@
+#ifdef UNIX//SS
 // Enough for 500ms at 100Khz in 16-bit stereo
 #define X_SOUND_BUF_LEN_BYTES (50000*4)
 BYTE x_sound_buf[X_SOUND_BUF_LEN_BYTES+16];
@@ -80,8 +81,9 @@ HRESULT Sound_Stop(bool Immediate)
 {
   sound_record_close_file();
   sound_record=false;
+#if !defined(SOUND_DISABLE_INTERNAL_SPEAKER)
   if (sound_internal_speaker) SoundStopInternalSpeaker();
-
+#endif
   PA_ONLY( if (UseSound==XS_PA) return PA_Stop(Immediate); )
   RT_ONLY( if (UseSound==XS_RT) return Rt_Stop(Immediate); )
   return DS_OK;
@@ -129,3 +131,4 @@ void internal_speaker_sound_by_period(int UNIX_ONLY( counter ))
 }
 //---------------------------------------------------------------------------
 
+#endif

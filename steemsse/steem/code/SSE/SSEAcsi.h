@@ -36,8 +36,17 @@ struct TAcsiHdc {
 #if defined(SSE_ACSI_TIMING)
   int time_of_irq;
 #endif
+#if defined(SSE_ACSI_INQUIRY2)
+  char inquiry_string[32];
+#endif
 };
 
+#if defined(SSE_ACSI_MULTIPLE)
+#define MAX_ACSI_DEVICES 4
+extern BYTE acsi_dev;
+extern TAcsiHdc AcsiHdc[MAX_ACSI_DEVICES]; // each object is <64 bytes
+#else
 extern TAcsiHdc AcsiHdc;
+#endif
 
 #endif//#ifndef SSEACSI_H

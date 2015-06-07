@@ -1164,9 +1164,6 @@ void stemdos_control_c() //control-c pressed
 
 void stemdos_intercept_trap_1()
 {
-#ifdef TEST01
-  ////return ;
-#endif
   bool Invalid=0;
   MEM_ADDRESS sp=get_sp_before_trap(&Invalid);//ss by looking at the stack
   ASSERT( !Invalid );

@@ -730,6 +730,23 @@ bool Initialise()
   }
 #endif
 
+#if defined(SSE_ACSI_MULTIPLE)
+  ASSERT(!acsi_dev);
+  //char *acsi_hd_name[]={"SH204.img","MEGAFILE 60.img","ACSI_HD0.img","ACSI_HD1.img"};
+  char *acsi_hd_name[]={"ACSI_HD0.img","ACSI_HD1.img","SH204.img","MEGAFILE 60.img"};
+  EasyStr hdname;
+  for(int i=0;i<MAX_ACSI_DEVICES;i++)
+  {
+    hdname=RunDir+SLASH+acsi_hd_name[i];
+    bool ok=AcsiHdc[acsi_dev].Init(acsi_dev,hdname); 
+    if(ok)
+    {
+      SSEConfig.AcsiImg=true;
+      acsi_dev++;
+    }
+  }
+
+#else
 #if defined(SSE_ACSI_NOGUISELECT)
   // try to open ACSI_HD0.img
 #if defined(SSE_GUI_NOTIFY1)
@@ -738,7 +755,7 @@ bool Initialise()
   EasyStr hdname=RunDir+ACSI_HD_NAME;
   SSEConfig.AcsiImg=AcsiHdc.Init(0,hdname); 
 #endif
-
+#endif
   SetNotifyInitText(T("Jump Tables"));
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_DELAY_LOAD_DLL) \

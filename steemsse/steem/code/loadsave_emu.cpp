@@ -987,11 +987,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if SSE_VERSION>=372
   if(Version>=51) 
   {
-#if defined(SSE_ACSI_LS____) //trouble...
-    FILE* save_fp=AcsiHdc.hard_disk_image;
-    ReadWriteStruct(AcsiHdc);
-    AcsiHdc.hard_disk_image=save_fp;
-#endif
+
   }
 #endif
 
