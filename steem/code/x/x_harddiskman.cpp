@@ -1,3 +1,4 @@
+#ifdef UNIX//SS
 //---------------------------------------------------------------------------
 THardDiskManager::THardDiskManager()
 {
@@ -252,3 +253,4 @@ int THardDiskManager::WinProc(THardDiskManager *This,Window Win,XEvent*Ev)
 }
 //---------------------------------------------------------------------------
 
+#endif

@@ -654,8 +654,13 @@ when it does).
     (events, block DMA transfers...), knowing that generally GPIP
     is polled by programs. It is a bit risky.
 */
+#if defined(SSE_ACSI_MULTIPLE)
+            if(ADAT && ACSI_EMU_ON && AcsiHdc[acsi_dev].Active==2 && !(ior_byte&32)
+              && AcsiHdc[acsi_dev].time_of_irq-ACT>0)
+#else
             if(ADAT && ACSI_EMU_ON && AcsiHdc.Active==2 && !(ior_byte&32)
               && AcsiHdc.time_of_irq-ACT>0)
+#endif
               ior_byte|=32; // active-low: inactive
 #endif
           }

@@ -695,7 +695,8 @@ system exclusive start and end messages (F0 and F7).
                 mfp_reg[n]=io_src_b;
 #if defined(SSE_INT_MFP_TIMER_B_AER2) // maybe Timer B's AER bit changed?
                 ASSERT(n==MFPR_AER || n==MFPR_DDR);
-                CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq); //update
+                if(OPTION_PRECISE_MFP)
+                  CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq); //update
 #endif
               }
               BYTE new_gpip=BYTE(mfp_reg[MFPR_GPIP] & ~mfp_reg[MFPR_DDR]);

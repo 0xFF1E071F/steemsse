@@ -1,19 +1,18 @@
 #include "SSE.h"
 
 /*
-    The DMA was a custom chip developed by Atari.
-    It uses 16byte FIFO buffers to handle byte transfers between the 
+    The DMA (Direct Memory Access) chip was developed by Atari.
+    It uses two 16-byte FIFO buffers to handle byte transfers between the 
     drive  controller (floppy or hard disk) and memory so that the CPU is
     freed from the task.
-    Transfers compete with the CPU, it's like the Blitter, so we must
-    count cycles  ;) (see Alien's Overscan articles)
-    It has no impact on programs working or not AFAIK.
     Transfers occur at the end of the scanline, when the MMU/Shifter
+    frees the bus.
+    We don't count cycles for this, CPU isn't working ;)
 */
 
 #if defined(STEVEN_SEAGAL)
 
-//#if defined(SSE_STRUCTURE_SSEFLOPPY_OBJ)
+
 #include "../pch.h"
 #include <cpu.decla.h>
 #include <fdc.decla.h>
@@ -26,7 +25,7 @@
 #if !defined(SSE_CPU)
 #include <mfp.decla.h>
 #endif
-//#endif//#if defined(SSE_STRUCTURE_SSEFLOPPY_OBJ)
+
 
 #include "SSEDecla.h"
 #include "SSEDebug.h"
@@ -96,13 +95,13 @@ void TDma::AddToFifo(BYTE data) {
 #if defined(SSE_DMA_DRQ)//3.7.0 
 
 /*  This just transfers one byte between controller's DR and Fifo at request.
-    Direction depends on control register.
-    For the moment only DRQ for FDC is really handled.
+    Direction depends on control register, function checks it itself.
     Note that bits 6 (CR_DISABLE) and 7 (CR_DRQ_FDC_OR_HDC) don't count,
     DMA transfer will happen whatever their value.
     This is observed for example in Kick Off 2 (IPF).
     That's pretty strange when you consider that the DMA chip was designed and
-    documented by Atari.
+    documented by Atari, but then one needs to consider development speed (aka
+    the rush to market).
 */
 
 bool TDma::Drq() {
@@ -115,7 +114,11 @@ bool TDma::Drq() {
       WD1772.DR=GetFifoByte();
 #if defined(SSE_ACSI)
     else if(ACSI_EMU_ON)
+#if defined(SSE_ACSI_MULTIPLE)
+      AcsiHdc[acsi_dev].DR=GetFifoByte();
+#else
       AcsiHdc.DR=GetFifoByte();
+#endif
 #endif
 #if defined(SSE_DMA_DRQ_RND)
     else // hd
@@ -133,7 +136,11 @@ bool TDma::Drq() {
       AddToFifo(WD1772.DR);
 #if defined(SSE_ACSI)
     else if(ACSI_EMU_ON)
+#if defined(SSE_ACSI_MULTIPLE)
+      AddToFifo(AcsiHdc[acsi_dev].DR);
+#else
       AddToFifo(AcsiHdc.DR);
+#endif
 #endif
 #if defined(SSE_DMA_DRQ_RND)
     else
@@ -273,9 +280,6 @@ BYTE TDma::IORead(MEM_ADDRESS addr) {
     // HD access
     else if(MCR&CR_HDC_OR_FDC) 
     {
-#ifdef TEST01__
-      ior_byte=0;
-#endif
 #ifdef SSE_CPU
       LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
         " - Reading high byte of HDC register #"+((MCR & BIT_1) ? 1:0)); )
@@ -321,7 +325,11 @@ is ignored and when reading the 8 upper bits consistently reads 1."
 #if defined(SSE_ACSI)
       ASSERT(MCR&CR_DRQ_FDC_OR_HDC);
       if(ACSI_EMU_ON)
+#if defined(SSE_ACSI_MULTIPLE)
+        ior_byte=AcsiHdc[acsi_dev].IORead( (MCR&(CR_A1|CR_A0))/2 );
+#else
         ior_byte=AcsiHdc.IORead( (MCR&(CR_A1|CR_A0))/2 );
+#endif
 #endif
 
 
@@ -628,9 +636,26 @@ is ignored and when reading the 8 upper bits consistently reads 1."
  //     TRACE("HDC %x: W %x\n",(dma_mode & BIT_1) ? 1:0,io_src_b);
       log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Writing $xx"+HEXSl(io_src_b,2)+" to HDC register #"+((dma_mode & BIT_1) ? 1:0));
 #if defined(SSE_ACSI)
+/*  According to defines, send byte to unique or "correct" ACSI device
+    A1 in ACSI doc is A0 in DMA doc
+*/
       ASSERT(MCR&CR_DRQ_FDC_OR_HDC);
       if(ACSI_EMU_ON)
-        AcsiHdc.IOWrite((MCR&(CR_A1|CR_A0))/2,io_src_b);
+      {
+#if defined(SSE_ACSI_MULTIPLE)
+        int device=acsi_dev;
+        if(!(MCR&CR_A0) &&  (io_src_b>>5)<MAX_ACSI_DEVICES
+          //&& AcsiHdc[(io_src_b>>5)].cmd_ctr==7
+          ) // assume new command
+        {
+          device=(io_src_b>>5);
+          TRACE("new device %d\n",device);
+        }
+        AcsiHdc[device].IOWrite((MCR&CR_A0),io_src_b);
+#else
+        AcsiHdc.IOWrite((MCR&CR_A0)/2,io_src_b);
+#endif
+      }
 #endif
 
       break;
@@ -1033,16 +1058,22 @@ void TDma::TransferBytes() {
 
 #if defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)
 /*  Computing the checksum if it's bootsector.
-    We do it here in DMA because it should work with native, STX, IPF.
+    We do it here in DMA because it should work with native, STX, IPF,
+    and now ACSI harddisk.
 */
 
-//#define LOGSECTION LOGSECTION_IMAGE_INFO
-
-#ifdef TEST01
+#ifdef SSE_ACSI_BOOTCHECKSUM // floppy + harddrive
+#if defined(SSE_ACSI_MULTIPLE)
+  if( !(MCR&CR_HDC_OR_FDC) && fdc_cr==0x80 && !fdc_tr && fdc_sr==1 
+    && !(MCR&CR_WRITE) && !CURRENT_SIDE || (MCR&CR_HDC_OR_FDC) && 
+    !(MCR&CR_WRITE) && ACSI_EMU_ON && AcsiHdc[acsi_dev].cmd_block[0]==8
+     && AcsiHdc[acsi_dev].SectorNum()<3 && AcsiHdc[acsi_dev].cmd_block[4]==1 )
+#else
   if( !(MCR&CR_HDC_OR_FDC) && fdc_cr==0x80 && !fdc_tr && fdc_sr==1 
     && !(MCR&CR_WRITE) && !CURRENT_SIDE || (MCR&CR_HDC_OR_FDC) && 
     !(MCR&CR_WRITE) && ACSI_EMU_ON && AcsiHdc.cmd_block[0]==8
      && AcsiHdc.SectorNum()<3 && AcsiHdc.cmd_block[4]==1 )
+#endif
 #else
   if(fdc_cr==0x80 && !fdc_tr && fdc_sr==1 && !(MCR&CR_WRITE) && !CURRENT_SIDE)
 #endif
@@ -1060,13 +1091,10 @@ void TDma::TransferBytes() {
 #endif
         [i+1]; 
     }
-    //ASSERT( SF314[floppy_current_drive()].SectorChecksum!=0x1234 );
-    //TRACE_LOG("Boot sector of %c checksum %X\n",'A'+floppy_current_drive(),SF314[floppy_current_drive()].SectorChecksum);
   }
 
 #endif//checksum
 
-//#undef LOGSECTION
 #if defined(SSE_BOILER_TRACE_CONTROL)
 #define LOGSECTION LOGSECTION_ALWAYS // for just the bytes 
 #else
@@ -1080,7 +1108,11 @@ void TDma::TransferBytes() {
   if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
 #ifdef SSE_ACSI
     if((MCR&CR_HDC_OR_FDC))
+#if defined(SSE_ACSI_MULTIPLE)      
+      TRACE_HDC("#%03d (%d) %s %06X: ",Datachunk, AcsiHdc[acsi_dev].SectorNum(),(MCR&0x100)?"from":"to",BaseAddress);
+#else
       TRACE_HDC("#%03d (%d) %s %06X: ",Datachunk, AcsiHdc.SectorNum(),(MCR&0x100)?"from":"to",BaseAddress);
+#endif
     else
 #endif
       TRACE_FDC("#%03d (%d-%02d-%02d) %s %06X: ",Datachunk,floppy_current_side(),floppy_head_track[DRIVE],WD1772.CommandType()==2?fdc_sr:0,(MCR&0x100)?"from":"to",BaseAddress);
@@ -1100,11 +1132,7 @@ void TDma::TransferBytes() {
     else if((MCR&0x100) && DMA_ADDRESS_IS_VALID_R) // RAM -> disk
       Fifo
 #if defined(SSE_DMA_DOUBLE_FIFO)
-#if SSE_VERSION>=372
-        [!BufferInUse] // well, that was wrong!
-#else
-        [BufferInUse] // because we fill the new buffer
-#endif
+        [BufferInUse] //bugfix 3.7.2 !  no!!!!!!!!!!! wrong line!
 #endif
         [15-i]=PEEK(BaseAddress);
     else 
@@ -1116,7 +1144,7 @@ void TDma::TransferBytes() {
     if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
       TRACE_FDC("%02X ",Fifo
 #if defined(SSE_DMA_DOUBLE_FIFO)
-      [!BufferInUse]
+      [(MCR&CR_WRITE)?BufferInUse:!BufferInUse] //this is correct bugfix 3.7.2
 #endif
       [(MCR&CR_WRITE)?15-i:i]);//bugfix 3.6.1 reverse order
 #endif
@@ -1148,10 +1176,8 @@ void TDma::TransferBytes() {
   if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
     TRACE_FDC("\n");
 #endif
-
-#ifdef TEST01
-#if defined(SSE_BOILER)
-  for(int i=0;i<8;i++) // 
+#if defined(SSE_BOILER) && SSE_VERSION>=372
+  for(int i=0;i<8;i++) // for Boiler monitor, intercept DMA traffic
   {
     if(!(MCR&0x100)&& DMA_ADDRESS_IS_VALID_W) // disk -> RAM
     {DEBUG_CHECK_WRITE_W(BaseAddress-16+i*2)}
@@ -1159,8 +1185,6 @@ void TDma::TransferBytes() {
     {DEBUG_CHECK_READ_W(BaseAddress-16+i*2)}
   }
 #endif
-#endif
-
   Request=FALSE;
 }
 

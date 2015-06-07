@@ -774,11 +774,11 @@ void TOptionBox::CreateSoundPage()
     BT_CHECKBOX,T("Warn before overwrite"),5102,BkCol);
   overwrite_ask_but.set_check(RecordWarnOverwrite);
   y+=100;
-
+#if !defined(SOUND_DISABLE_INTERNAL_SPEAKER)
   internal_speaker_but.create(XD,page_p,page_l,y,0,25,button_notify_proc,this,
     BT_CHECKBOX,T("Internal speaker sound"),5300,BkCol);
   internal_speaker_but.set_check(sound_internal_speaker);
-
+#endif
   XFlush(XD);
 }
 //---------------------------------------------------------------------------

@@ -4265,18 +4265,20 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_ACSI
 #if defined(SSE_ACSI)
-//#define SSE_ACSI_FORMAT 
+#define SSE_ACSI_FORMAT 
 #ifdef SSE_DEBUG
 #define SSE_ACSI_BOOTCHECKSUM
 #endif
 #define SSE_ACSI_INQUIRY // could even do without but it's too cool
+#define SSE_ACSI_INQUIRY2 // take name of file without extension
 #define SSE_ACSI_LED // cool too
 #define SSE_ACSI_LS
-#define SSE_ACSI_MEGASTF // cool
-//#define SSE_ACSI_MODESELECT
-#define SSE_ACSI_NOGUISELECT // no GUI headache: one file, in root
+#define SSE_ACSI_MEGASTF
+#define SSE_ACSI_MULTIPLE
+#define SSE_ACSI_MODESELECT
+#define SSE_ACSI_NOGUISELECT // no GUI headache yet...
 #define SSE_ACSI_OPTION
-//#define SSE_ACSI_REQUEST_SENSE
+#define SSE_ACSI_REQUEST_SENSE
 #define SSE_ACSI_TIMING // ADAT -> slower (risky?)
 #endif
 

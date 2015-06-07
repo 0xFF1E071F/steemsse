@@ -29,17 +29,24 @@ extern "C" int cpu_timer,cpu_cycles;  //#include <emu.decla.h>
 #include <fdc.decla.h>
 #endif
 
-
+#if defined(SSE_ACSI_MULTIPLE)
+TAcsiHdc AcsiHdc[MAX_ACSI_DEVICES];
+#else
 TAcsiHdc AcsiHdc; // only one
+#endif
 
 #include <cpu.decla.h>
 #define TRACE_HD TRACE // temp
 #define BLOCK_SIZE 512 // fortunately it seems constant
 
+#if defined(SSE_ACSI_MULTIPLE)
+BYTE acsi_dev=0;
+#endif
 
 TAcsiHdc::TAcsiHdc() {
   hard_disk_image=NULL;
   Active=false;
+  ///int y=sizeof(TAcsiHdc);
 }
 
 
@@ -70,6 +77,9 @@ void TAcsiHdc::Format() { // fill full image with $6c, sector by sector for spee
 
 bool TAcsiHdc::Init(int num, char *path) {
   CloseImageFile();
+#if defined(SSE_ACSI_INQUIRY2)
+  memset(inquiry_string,0,32);
+#endif
   hard_disk_image=fopen(path,"rb+");
   Active=(hard_disk_image!=NULL); // file is there or not
   if(Active)
@@ -78,8 +88,18 @@ bool TAcsiHdc::Init(int num, char *path) {
     ASSERT(!(l%512));
     nSectors=l/512;
     device_num=num&7;
-    TRACE_INIT("ACSI %d open %s %d sectors %d MB\n",device_num,path,nSectors,nSectors/(2*1024));
+#if defined(SSE_ACSI_INQUIRY2)
+    char *filename=GetFileNameFromPath(path);
+    char *dot=strrchr(filename,'.');
+    int nchars=dot?(dot-filename):23;
+    strncpy(inquiry_string+8,filename,nchars);
+    TRACE_HDC("ACSI %d init %s %d sectors %d MB\n",device_num,inquiry_string+8,nSectors,nSectors/(2*1024));
+#endif
+#if defined(SSE_ACSI_MULTIPLE)
+    acsi_dev=device_num; 
+#endif
   }
+  //TRACE_INIT("ACSI %d open %s %d sectors %d MB\n",device_num,path,nSectors,nSectors/(2*1024));
   return (bool)Active;
 }
 
@@ -103,10 +123,14 @@ void TAcsiHdc::IOWrite(BYTE Line,BYTE io_src_b) {
   //TRACE_HD("ACSI PC %X write %X = %X\n",old_pc,Line,io_src_b);
   bool do_irq=false;
   // take new command only if A1 is low, it's our ID and we're ready
+  // A1 in ACSI doc is A0 in DMA doc
   if(!Line && (io_src_b>>5)==device_num && cmd_ctr==7)
   {
     cmd_ctr=0;
     io_src_b&=0x1f;
+#if defined(SSE_ACSI_MULTIPLE)
+    acsi_dev=device_num; // we have the bus
+#endif
   }
   if(cmd_ctr<6) // getting command
   {
@@ -152,6 +176,7 @@ void TAcsiHdc::IOWrite(BYTE Line,BYTE io_src_b) {
 #if defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM) && defined(SSE_ACSI_BOOTCHECKSUM)
         if(SF314[DRIVE].SectorChecksum)
           TRACE_HDC("Sector %d checksum $%X\n",SectorNum(),SF314[DRIVE].SectorChecksum);
+        SF314[DRIVE].SectorChecksum=0;
 #endif
         break;
 
@@ -212,13 +237,17 @@ void TAcsiHdc::IOWrite(BYTE Line,BYTE io_src_b) {
 
 
 void TAcsiHdc::Inquiry() {//drivers display this so we have a cool name
+#if !defined(SSE_ACSI_INQUIRY2)
   const char inquiry_string[]="STEEM_ACSI";  //"SH204"; 
+#endif
   TRACE_HDC("Inquiry: %s\n",inquiry_string);
   DR=0; //?
   for(int i=0;i<32;i++)
   {
+#if !defined(SSE_ACSI_INQUIRY2)
     if(i>7 && i<=7+11) // 6 strange...
-      DR=inquiry_string[i-8];
+#endif
+    DR=inquiry_string[i];
     Dma.Drq();
   }
 }
