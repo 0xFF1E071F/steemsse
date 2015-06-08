@@ -737,7 +737,8 @@ bool Initialise()
   EasyStr hdname;
   for(int i=0;i<MAX_ACSI_DEVICES;i++)
   {
-    hdname=RunDir+SLASH+acsi_hd_name[i];
+    //hdname=RunDir+SLASH+acsi_hd_name[i];
+    hdname=RunDir+ACSI_HD_DIR+acsi_hd_name[i];  
     bool ok=AcsiHdc[acsi_dev].Init(acsi_dev,hdname); 
     if(ok)
     {

@@ -1270,7 +1270,8 @@ Status info includes ST model, TOS version, RAM quantity and:
  ADAT    'Accurate Disk Access Times' (Slow drive)
  V       'Vertical Sync'
  HD      'Hard Disk'
- MHZ      CPU speed higher than (original) 8MHZ is indicated
+ MHZ      CPU speed is indicated if higher than 8MHZ
+
 
 -Disk name
 
@@ -1616,23 +1617,32 @@ more then you need to use a virtual hard disk.
 
 -ACSI hard disk images
 
-Much like ST files for floppies, those img files contain all sectors of a hard
-disk. They allow lower-level emulation of those. 
+Much like ST files for floppies, some img files contain all sectors of a
+Atari hard disk. Using those files allows lower-level emulation of hard
+disks in Steem.
+The feature was already available with Pasti, but with some limitations.
 ACSI (Atari Computer Systems Interface) was the SCSI-like interface between
 the ST and a hard disk or a laser printer (not emulated).
-The feature was already available with Pasti.
-It will recognise up to four image file names, it they're placed in
-Steem folder.
-ACSI_HD0.img; ACSI_HD1.img (max 1GB)
-SH204.img; MEGAFILE 60.img (included in download)
+Steem will recognise up to four image file names, it they're placed in
+its ACSI folder (sorry about that, no GUI selection for now).
+Steem looks for those file names, in that order:
+ACSI_HD0.img (max 1GB)
+ACSI_HD1.img (max 1GB)
+SH204.img (20MB, included in download)
+MEGAFILE 60.img (60MB, included in download)
+
+You may have none, just one or a combination of those.
+It is also possible to enable GEMDOS virtual hard disks at the same
+time, you need to adapt letters of course. ACSI drives will take the
+first letters.
+Hard drives must be enabled ('Hard Drives' icon).
+Transfer speed depends on 'Accurate Disk Access Times' option, but even
+when it's not checked, the ST operates slowly compared with a PC.
+
 It is even possible to format those disk images inside Steem (for advanced
 users).
 A floppy disk image with necessary utilities is available here:
 http://ataristeven.t15.org/Steem_apps.htm#HD_UTILS
-It is also possible to enable GEMDOS virtual hard disks at the same
-time, you need to adapt letters of course.
-Transfer speed depends on 'Accurate Disk Access Times' option, but even
-when it's not checked, the ST operates slowly compared with a PC.
 
 
 -Automatically Insert Second Disk

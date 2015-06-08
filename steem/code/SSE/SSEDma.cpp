@@ -649,7 +649,7 @@ is ignored and when reading the 8 upper bits consistently reads 1."
           ) // assume new command
         {
           device=(io_src_b>>5);
-          TRACE("new device %d\n",device);
+          //TRACE("new device %d\n",device);
         }
         AcsiHdc[device].IOWrite((MCR&CR_A0),io_src_b);
 #else

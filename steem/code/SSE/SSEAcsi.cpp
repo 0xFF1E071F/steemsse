@@ -246,8 +246,10 @@ void TAcsiHdc::Inquiry() {//drivers display this so we have a cool name
   {
 #if !defined(SSE_ACSI_INQUIRY2)
     if(i>7 && i<=7+11) // 6 strange...
-#endif
+      DR=inquiry_string[i-8];
+#else
     DR=inquiry_string[i];
+#endif
     Dma.Drq();
   }
 }
