@@ -331,10 +331,18 @@ SS_SIGNAL_ENUM_EnumDisplayModes, // wait until finished (?)
 /////////
 
 #if defined(SSE_ACSI_NOGUISELECT) // only one file in Steem root can be HD
+#if defined(SSE_ACSI_MULTIPLE)
+#if defined(SSE_UNIX)
+#define ACSI_HD_DIR "/ACSI/"
+#else
+#define ACSI_HD_DIR "\\ACSI\\"
+#endif
+#else
 #if defined(SSE_UNIX)
 #define ACSI_HD_NAME "./ACSI_HD0.img"
 #else
 #define ACSI_HD_NAME "\\ACSI_HD0.img"
+#endif
 #endif
 #endif
 
