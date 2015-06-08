@@ -4275,6 +4275,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_ACSI_LS
 #define SSE_ACSI_MEGASTF
 #define SSE_ACSI_MULTIPLE
+#define SSE_ACSI_MULTIPLE2
 #define SSE_ACSI_MODESELECT
 #define SSE_ACSI_NOGUISELECT // no GUI headache yet...
 #define SSE_ACSI_OPTION

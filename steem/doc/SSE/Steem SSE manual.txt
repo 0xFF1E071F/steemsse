@@ -1503,6 +1503,7 @@ based on interception of GEMDOS commands.
 You need to know that this type of emulation is very convenient for you, 
 because you just use your PC hard drive, but it is based on hacks, and in some
 cases it could not work as on a real Atari.
+See below for "ACSI" hard drive emulation.
 For serious work we really advise to use TOS 1.04 or TOS 1.62.
 Hard drives aren't as reliable as disk images, most things 
 will work but not everything. If a program isn't working properly copy it to a
@@ -1623,19 +1624,15 @@ disks in Steem.
 The feature was already available with Pasti, but with some limitations.
 ACSI (Atari Computer Systems Interface) was the SCSI-like interface between
 the ST and a hard disk or a laser printer (not emulated).
+
 Steem will recognise up to four image file names, it they're placed in
 its ACSI folder (sorry about that, no GUI selection for now).
-Steem looks for those file names, in that order:
-ACSI_HD0.img (max 1GB)
-ACSI_HD1.img (max 1GB)
-SH204.img (20MB, included in download)
-MEGAFILE 60.img (60MB, included in download)
-
-You may have none, just one or a combination of those.
-It is also possible to enable GEMDOS virtual hard disks at the same
-time, you need to adapt letters of course. ACSI drives will take the
-first letters.
+Extension must be img, order should be alphabetical.
 Hard drives must be enabled ('Hard Drives' icon).
+
+It is also possible to enable GEMDOS virtual hard disks at the same
+time as an ACSI virtual hard disk, you need to adapt letters of course.
+ACSI drives will take the first letters.
 Transfer speed depends on 'Accurate Disk Access Times' option, but even
 when it's not checked, the ST operates slowly compared with a PC.
 

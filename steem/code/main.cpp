@@ -730,7 +730,24 @@ bool Initialise()
   }
 #endif
 
-#if defined(SSE_ACSI_MULTIPLE)
+#if defined(SSE_ACSI_MULTIPLE2)
+  ASSERT(!acsi_dev);
+  DirSearch ds; // it is available in Steem, let's use it
+  EasyStr Fol=RunDir+ACSI_HD_DIR;//SLASH "ACSI" SLASH;
+  if (ds.Find(Fol+"*.img")){
+    do{
+      strcpy(ansi_name,Fol.Text);
+      strcat(ansi_name,ds.Name);
+      bool ok=AcsiHdc[acsi_dev].Init(acsi_dev,ansi_name); 
+      if(ok)
+      {
+        SSEConfig.AcsiImg=true;
+        acsi_dev++;
+      }
+    }while (ds.Next() && acsi_dev<4);
+    ds.Close();
+  }
+#elif defined(SSE_ACSI_MULTIPLE)
   ASSERT(!acsi_dev);
   //char *acsi_hd_name[]={"SH204.img","MEGAFILE 60.img","ACSI_HD0.img","ACSI_HD1.img"};
   char *acsi_hd_name[]={"ACSI_HD0.img","ACSI_HD1.img","SH204.img","MEGAFILE 60.img"};
