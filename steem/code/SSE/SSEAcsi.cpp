@@ -7,11 +7,8 @@
     Emulation seems to be straightforward: just fetch sector #n, all seem to
     be 512bytes. It's more difficult to adapt the GUI (hard disk manager...)
     without introducing overhead and complications for the player, so we don't
-    yet.
-    A file "ACSI_HD0.img" (up to 1 GB) needs to be present in Steem folder, 
-    option "ACSI hard disk image" needs to be checked in Disk manager.
-    The feature is compatible with Stemdos hard drive emulation, you need
-    to adapt letters of course.
+    yet. Instead, img files are grouped in Steem/ACSI folder, and Steem will
+    try to open up them at startup.
 */
 
 #include "../pch.h"
@@ -30,7 +27,7 @@ extern "C" int cpu_timer,cpu_cycles;  //#include <emu.decla.h>
 #endif
 
 #if defined(SSE_ACSI_MULTIPLE)
-TAcsiHdc AcsiHdc[MAX_ACSI_DEVICES];
+TAcsiHdc AcsiHdc[TAcsiHdc::MAX_ACSI_DEVICES]; 
 #else
 TAcsiHdc AcsiHdc; // only one
 #endif
@@ -40,13 +37,12 @@ TAcsiHdc AcsiHdc; // only one
 #define BLOCK_SIZE 512 // fortunately it seems constant
 
 #if defined(SSE_ACSI_MULTIPLE)
-BYTE acsi_dev=0;
+BYTE acsi_dev=0; // active device
 #endif
 
 TAcsiHdc::TAcsiHdc() {
   hard_disk_image=NULL;
   Active=false;
-  ///int y=sizeof(TAcsiHdc);
 }
 
 
@@ -64,29 +60,34 @@ void TAcsiHdc::CloseImageFile() {
 
 #if defined(SSE_ACSI_FORMAT)
 
-void TAcsiHdc::Format() { // fill full image with $6c, sector by sector for speed
+void TAcsiHdc::Format() { 
+/*  Fill full image with $6c, sector by sector for speed
+    We do this because otherwise it can be really slow and Steem looks
+    hanged ("not responding") for a while, and because we dont want to
+    add agendas on the other hand.
+*/
   BYTE sector[512];       
   memset(sector,0x6c,512);
-  fseek(hard_disk_image,0,SEEK_SET);
+  fseek(hard_disk_image,0,SEEK_SET); //restore
   for(int i=0;i<nSectors;i++)
-    fwrite(sector,512,1,hard_disk_image); 
+    fwrite(sector,512,1,hard_disk_image); //fill sectors
 }
 
 #endif
 
-
 bool TAcsiHdc::Init(int num, char *path) {
+  ASSERT(num<MAX_ACSI_DEVICES);
   CloseImageFile();
 #if defined(SSE_ACSI_INQUIRY2)
   memset(inquiry_string,0,32);
 #endif
   hard_disk_image=fopen(path,"rb+");
   Active=(hard_disk_image!=NULL); // file is there or not
-  if(Active)
+  if(Active) // note it could be anything, even HD6301V1ST.img ot T102.img
   {
-    int l=GetFileLength(hard_disk_image); //in bytes
-    ASSERT(!(l%512));
+    int l=GetFileLength(hard_disk_image); //in bytes - int is enough
     nSectors=l/512;
+    ASSERT(!(l%512) && nSectors>=20480 && device_num>=0 && device_num<8); // but we take it
     device_num=num&7;
 #if defined(SSE_ACSI_INQUIRY2)
     char *filename=GetFileNameFromPath(path);
@@ -130,12 +131,13 @@ void TAcsiHdc::IOWrite(BYTE Line,BYTE io_src_b) {
     io_src_b&=0x1f;
 #if defined(SSE_ACSI_MULTIPLE)
     acsi_dev=device_num; // we have the bus
+    ASSERT(acsi_dev<MAX_ACSI_DEVICES);
 #endif
   }
   if(cmd_ctr<6) // getting command
   {
     cmd_block[cmd_ctr]=io_src_b;
-    //ASSERT( Line || !cmd_ctr); //asserts on buggy drivers, but it should work
+    ASSERT( Line || !cmd_ctr); //asserts on buggy drivers, but it should work if there's only 1 device
     cmd_ctr++;
     do_irq=true;
   }
@@ -215,6 +217,7 @@ void TAcsiHdc::IOWrite(BYTE Line,BYTE io_src_b) {
       TRACE_HDC("ACSI error STR %X error code %X\n",STR,error_code);
 #endif
     cmd_ctr++;
+    ASSERT(cmd_ctr<8);
 #if defined(SSE_ACSI_LED) && defined(SSE_OSD_DRIVE_LED)
     HDDisplayTimer=timer+HD_TIMER;
 #endif
@@ -288,17 +291,17 @@ void TAcsiHdc::Reset(bool Cold) {
 
 
 int TAcsiHdc::SectorNum() {
-    int block_number=(cmd_block[1] <<16) + (cmd_block[2] <<8 )+ cmd_block[3];
-    //block_number&=0x1FFFFF; //limit is?
-    return block_number;
+  int block_number=(cmd_block[1] <<16) + (cmd_block[2] <<8 )+ cmd_block[3];
+  //block_number&=0x1FFFFF; //limit is?
+  return block_number;
 }
 
 
 bool TAcsiHdc::Seek() {
-   int block_number=SectorNum();
-   if( fseek(hard_disk_image,block_number*BLOCK_SIZE,SEEK_SET) )
-     STR=2;
-   return (STR!=2); // that would mean "OK"
+ int block_number=SectorNum();
+ if( fseek(hard_disk_image,block_number*BLOCK_SIZE,SEEK_SET) )
+   STR=2;
+ return (STR!=2); // that would mean "OK"
 }
 
 #endif

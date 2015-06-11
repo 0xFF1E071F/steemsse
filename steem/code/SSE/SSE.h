@@ -4260,8 +4260,12 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS // timer B should be updated
 #define SSE_INT_MFP_TMP2//switch is temp
 
-#define SSE_TOS_STE_FAST_BOOT2 // check each cold reset
+#ifdef SSE_TOS
 #define SSE_TOS_CHECK_VERSION // to avoid ID something else as TOS
+#define SSE_TOS_STE_FAST_BOOT2 // check each cold reset
+#define SSE_TOS_STEMDOS_RESTRICT_TOS // T1.04 or T1.62
+#define SSE_TOS_STEMDOS_RESTRICT_TOS2 // warning
+#endif
 
 #define SSE_ACSI
 #if defined(SSE_ACSI)
@@ -4279,6 +4283,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_ACSI_MODESELECT
 #define SSE_ACSI_NOGUISELECT // no GUI headache yet...
 #define SSE_ACSI_OPTION
+#define SSE_ACSI_OPTION_INDEPENDENT // of 'HardDiskMan.DisableHardDrives'
 #define SSE_ACSI_REQUEST_SENSE
 #define SSE_ACSI_TIMING // ADAT -> slower (risky?)
 #endif
@@ -4291,10 +4296,6 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_GUI)
 #define SSE_GUI_STATUS_STRING_HISPEED
 #endif
-
-
-
-
 
 #endif//beta
 

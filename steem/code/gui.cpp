@@ -613,7 +613,7 @@ int ChangeBorderSize(int size_in) {
 
 #include "SSE/SSEMMU.h"
 
-#if defined(SSE_VAR_ARCHIVEACCESS)
+#if defined(SSE_VAR_ARCHIVEACCESS) || defined(SSE_ACSI_MULTIPLE2)
 extern char ansi_name[MAX_PATH];
 #endif
 
@@ -627,7 +627,7 @@ void GUIRefreshStatusBar() {
   // build text of "status bar", only if we're to show it
   if(should_we_show)
   {
-#if defined(SSE_VAR_ARCHIVEACCESS)
+#if defined(SSE_VAR_ARCHIVEACCESS) || defined(SSE_ACSI_MULTIPLE2)
     char *status_bar=ansi_name; //first reuse!
 #else
     char status_bar[120+10]="\0"; //TODO: size
@@ -729,7 +729,8 @@ void GUIRefreshStatusBar() {
 #else
 
 #if defined(SSE_GUI_STATUS_STRING_HD)
-      if(!HardDiskMan.DisableHardDrives) //v3.7.0
+      if(!HardDiskMan.DisableHardDrives //v3.7.0
+        || ACSI_EMU_ON) //v3.7.2
         strcat(status_bar," HD");
 #endif
       if(!floppy_instant_sector_access) // the option only //3.7.0

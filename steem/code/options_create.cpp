@@ -3254,7 +3254,7 @@ Windows 2000	5.0
     page_l+Offset,y,Wid,25,Handle,(HMENU)7322,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_CPU_CLOCK,0);
   ToolAddWindow(ToolTip,Win,
-    T("Advanced. Changing this parameter changes the CPU/MFP clock ratio"));
+    T("Advanced. This parameter changes the CPU/MFP clock ratio"));
 
   CreateWindow("Static","",WS_CHILD | SS_CENTER,page_l+115,y+5,100,20,Handle,(HMENU)7321,HInstance,NULL);
   y+=20;

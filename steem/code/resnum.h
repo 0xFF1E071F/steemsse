@@ -2,9 +2,9 @@
 #if defined(STEVEN_SEAGAL)
 // resnum.h is included by rc\resource.rc
 #include "SSE/SSE.h"
-#endif
-
-
+//#endif
+#include "resnum.decla.h"//v3.7.2, forgotten
+#else
 #define RC_ICO_APP 1
 #define RC_ICO_APP256 2
 #define RC_ICO_BACK 3
@@ -132,3 +132,4 @@ int RCGetSizeOfIcon(int n)
 #define DEBUG_ICONS_H 9
 #define DEBUG_NUM_ICONS 9
 
+#endif//ss
