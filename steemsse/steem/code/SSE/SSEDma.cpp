@@ -644,13 +644,8 @@ is ignored and when reading the 8 upper bits consistently reads 1."
       {
 #if defined(SSE_ACSI_MULTIPLE)
         int device=acsi_dev;
-        if(!(MCR&CR_A0) &&  (io_src_b>>5)<MAX_ACSI_DEVICES
-          //&& AcsiHdc[(io_src_b>>5)].cmd_ctr==7
-          ) // assume new command
-        {
-          device=(io_src_b>>5);
-          //TRACE("new device %d\n",device);
-        }
+        if(!(MCR&CR_A0) &&  (io_src_b>>5)<TAcsiHdc::MAX_ACSI_DEVICES) 
+          device=(io_src_b>>5); // assume new command
         AcsiHdc[device].IOWrite((MCR&CR_A0),io_src_b);
 #else
         AcsiHdc.IOWrite((MCR&CR_A0)/2,io_src_b);

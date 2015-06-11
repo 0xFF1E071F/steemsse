@@ -509,11 +509,15 @@ http://www.microsoft-questions.com/microsoft/Platform-SDK-Shell/32138755/vista-l
       WS_CHILD | WS_VISIBLE | WS_TABSTOP | PBS_RIGHTCLICK,
                   400,10,60,64,Handle,(HMENU)10,HInstance,NULL);
 #else
-
     Win=CreateWindow("Steem Flat PicButton",Str(ico),WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                   400,10,60,64,Handle,(HMENU)10,HInstance,NULL);
 #endif
+
+#ifdef SSE_ACSI_OPTION_INDEPENDENT
+    ToolAddWindow(ToolTip,Win,T("GEMDOS Hard Drive Manager - right click to toggle on/off"));
+#else
     ToolAddWindow(ToolTip,Win,T("Hard Drive Manager"));
+#endif
   }
 
   SetWindowAndChildrensFont(Handle,Font);

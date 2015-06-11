@@ -2082,6 +2082,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_TOS_WARNING1)
             CheckSTTypeAndTos();
 #endif
+#if defined(SSE_TOS_STEMDOS_RESTRICT_TOS2) // warning
+            HardDiskMan.CheckTos();
+#endif
           break;
         case 8401: // Keyboard language
           if (HIWORD(wPar)==CBN_SELENDOK){

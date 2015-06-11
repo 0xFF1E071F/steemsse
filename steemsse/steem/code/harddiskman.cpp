@@ -120,9 +120,16 @@ void THardDiskManager::Show()
   EnableWindow(DiskMan.Handle,0);
 
   ManageWindowClasses(SD_REGISTER);
+#ifdef SSE_ACSI_OPTION_INDEPENDENT
+  Handle=CreateWindowEx(WS_EX_CONTROLPARENT,"Steem Hard Disk Manager",T("GEMDOS Hard Drives"),WS_CAPTION | WS_SYSMENU,
+                        Left,Top,516,90+GetSystemMetrics(SM_CYCAPTION),
+                        DiskMan.Handle,0,HInstance,NULL);
+
+#else
   Handle=CreateWindowEx(WS_EX_CONTROLPARENT,"Steem Hard Disk Manager",T("Hard Drives"),WS_CAPTION | WS_SYSMENU,
                         Left,Top,516,90+GetSystemMetrics(SM_CYCAPTION),
                         DiskMan.Handle,0,HInstance,NULL);
+#endif
   if (HandleIsInvalid()){
     ManageWindowClasses(SD_UNREGISTER);
     return;
@@ -131,10 +138,16 @@ void THardDiskManager::Show()
   SetWindowLong(Handle,GWL_USERDATA,(long)this);
 
   if (FullScreen) MakeParent(StemWin);
-
+#ifdef SSE_ACSI_OPTION_INDEPENDENT
+  int w=GetCheckBoxSize(Font,T("&Disable GEMDOS Hard Drives")).Width;
+  Win=CreateWindow("Button",T("&Disable GEMDOS Hard Drives"),WS_CHILD 
+    | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX,10,10,w,23,Handle,(HMENU)90,
+    HInstance,NULL);
+#else
   int w=GetCheckBoxSize(Font,T("&Disable All Hard Drives")).Width;
   Win=CreateWindow("Button",T("&Disable All Hard Drives"),WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX,
                              10,10,w,23,Handle,(HMENU)90,HInstance,NULL);
+#endif
   SendMessage(Win,BM_SETCHECK,(UINT)(DisableHardDrives ? BST_CHECKED:BST_UNCHECKED),0);
   SendMessage(Win,WM_SETFONT,(UINT)Font,0);
 
@@ -451,6 +464,22 @@ LRESULT __stdcall THardDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARA
   }
   return DefWindowProc(Win,Mess,wPar,lPar);
 }
+
+
+#if defined(SSE_TOS_STEMDOS_RESTRICT_TOS2) // warning
+void THardDiskManager::CheckTos() {
+  SSEConfig.Stemdos=false;
+  if(!DisableHardDrives && nDrives)
+  { 
+    if(tos_version!=0x104 && tos_version!=0x162 || ROM_PEEK(0x1E)>0x15)
+      Alert(T("GEMDOS hard disk emulation will work only with Atari TOS 1.04 or 1.62.\
+ For other TOS, use an ACSI image instead."),"Warning",MB_OK|MB_ICONWARNING);
+    else
+      SSEConfig.Stemdos=true;
+  }
+}
+#endif
+
 
 #undef GET_THIS
 //---------------------------------------------------------------------------

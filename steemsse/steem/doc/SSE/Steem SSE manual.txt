@@ -1,7 +1,7 @@
 Steem SSE manual
 =================
 
-v3.7.2
+v3.7.2b
 
 About the manual
 _________________
@@ -1618,27 +1618,31 @@ more then you need to use a virtual hard disk.
 
 -ACSI hard disk images
 
-Much like ST files for floppies, some img files contain all sectors of a
-Atari hard disk. Using those files allows lower-level emulation of hard
-disks in Steem.
+Much like ST files for floppies, some img files contain all sectors of an
+Atari hard disk (data only).
+Using those files allows lower-level emulation of hard disks in Steem.
 The feature was already available with Pasti, but with some limitations.
 ACSI (Atari Computer Systems Interface) was the SCSI-like interface between
 the ST and a hard disk or a laser printer (not emulated).
 
 Steem will recognise up to four image file names, it they're placed in
 its ACSI folder (sorry about that, no GUI selection for now).
-Extension must be img, order should be alphabetical.
-Hard drives must be enabled ('Hard Drives' icon).
+The driver you use must be able to handle each of those drives...
+Extension must be img, order should be alphabetical. You are responsible
+for the files you put there. Two ready examples are provided in the 
+download, images of the familiar SH204 and MEGAFILE 60.
 
 It is also possible to enable GEMDOS virtual hard disks at the same
-time as an ACSI virtual hard disk, you need to adapt letters of course.
+time as ACSI virtual hard disks, you need to adapt letters of course.
 ACSI drives will take the first letters.
-Transfer speed depends on 'Accurate Disk Access Times' option, but even
-when it's not checked, the ST operates slowly compared with a PC.
+It's handy to copy files.
+Transfer speed depends on Disk manager 'Accurate Disk Access Times' option,
+but even when it's not checked, the ST operates slowly compared with a PC.
 
 It is even possible to format those disk images inside Steem (for advanced
 users).
-A floppy disk image with necessary utilities is available here:
+A floppy disk image with necessary utilities is available here, so you can
+see with what I actually pass time:
 http://ataristeven.t15.org/Steem_apps.htm#HD_UTILS
 
 

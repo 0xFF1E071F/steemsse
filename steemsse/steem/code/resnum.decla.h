@@ -86,13 +86,12 @@
 #define RC_ICO_TAKESCREENSHOTBUT 72
 #define RC_ICO_DISKMANTOOLS 73
 
-//#if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE)                          
+#if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE)                          
 #define RC_ICO_OPS_SSE 74
 #define RC_NUM_ICONS 75
-//#else
-//#define RC_NUM_ICONS 74
-//#endif
-
+#else
+#define RC_NUM_ICONS 74
+#endif
 
 #define CART_ICON_NUM (RC_ICO_CHIP-1)
 #define DISK_ICON_NUM (RC_ICO_DRIVE-1)
@@ -104,6 +103,39 @@
 //#ifdef IN_MAIN
 int RCGetSizeOfIcon(int n);
 //#endif
+
+#ifdef IN_MAIN//as copied from resnum.h TODO
+int RCGetSizeOfIcon(int n)
+{
+  switch (n){
+    case RC_ICO_DRIVE:case RC_ICO_DRIVELINK:
+    case RC_ICO_DRIVEBROKEN:case RC_ICO_DRIVEREADONLY:
+    case RC_ICO_DRIVEZIPPED_RO:case RC_ICO_DRIVEZIPPED_RW:
+    case RC_ICO_FOLDER:case RC_ICO_FOLDERLINK:
+    case RC_ICO_FOLDERBROKEN:case RC_ICO_PARENTDIR:
+      return 33;
+
+    case RC_ICO_RECORD:case RC_ICO_PLAY_BIG:
+      return 32;
+
+    case RC_ICO_HARDDRIVES:case RC_ICO_HARDDRIVES_FR:
+    case 75:
+    case RC_ICO_DRIVEA:case RC_ICO_DRIVEB:case RC_ICO_DRIVEB_DISABLED:
+      return 64;
+    case RC_ICO_SNAPSHOTFILEICO:
+    case RC_ICO_PRGFILEICO:
+    case RC_ICO_APP256:
+#ifndef DEBUG_BUILD
+    case RC_ICO_TRASH:
+    case RC_ICO_STCLOSE:
+#endif
+
+      return 0;
+  }
+  return 16;
+}
+#endif
+
 
 #define DEBUG_ICONS_W 9
 #define DEBUG_ICONS_H 9

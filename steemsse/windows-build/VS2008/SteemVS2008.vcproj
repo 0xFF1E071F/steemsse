@@ -1650,6 +1650,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Steem\rc\dm_hard_drives_gemdos.ico"
+				>
+			</File>
+			<File
 				RelativePath="..\..\steem\rc\dm_home.ico"
 				>
 			</File>

@@ -49,7 +49,9 @@ other files that make up the Steem module.
 #include "SSE/SSEAcsi.h"
 #endif//SS
 
-
+#if defined(BCC_BUILD) && defined(SSE_ACSI_MULTIPLE2)
+extern char ansi_name[MAX_PATH];
+#endif
 
 const char *stem_version_date_text=__DATE__ " - " __TIME__;
 
@@ -731,12 +733,15 @@ bool Initialise()
 #endif
 
 #if defined(SSE_ACSI_MULTIPLE2)
-  ASSERT(!acsi_dev);
-  DirSearch ds; // it is available in Steem, let's use it
+/*  We use the existing Steem "crawler" to load whatever hard disk IMG 
+    files are in Steem/ACSI, up to MAX_ACSI_DEVICES.
+*/
+  ASSERT(!acsi_dev && !SSEConfig.AcsiImg);
+  DirSearch ds; 
   EasyStr Fol=RunDir+ACSI_HD_DIR;//SLASH "ACSI" SLASH;
   if (ds.Find(Fol+"*.img")){
     do{
-      strcpy(ansi_name,Fol.Text);
+      strcpy(ansi_name,Fol.Text);//2nd reuse!
       strcat(ansi_name,ds.Name);
       bool ok=AcsiHdc[acsi_dev].Init(acsi_dev,ansi_name); 
       if(ok)
@@ -744,10 +749,13 @@ bool Initialise()
         SSEConfig.AcsiImg=true;
         acsi_dev++;
       }
-    }while (ds.Next() && acsi_dev<4);
+    }while (ds.Next() && acsi_dev<TAcsiHdc::MAX_ACSI_DEVICES);
     ds.Close();
   }
 #elif defined(SSE_ACSI_MULTIPLE)
+/*  Steem looks for predefined and hardcoded names (at least the names are
+    cool).
+*/
   ASSERT(!acsi_dev);
   //char *acsi_hd_name[]={"SH204.img","MEGAFILE 60.img","ACSI_HD0.img","ACSI_HD1.img"};
   char *acsi_hd_name[]={"ACSI_HD0.img","ACSI_HD1.img","SH204.img","MEGAFILE 60.img"};
@@ -764,7 +772,8 @@ bool Initialise()
     }
   }
 
-#else
+#else // 0 or 1 ACSI image will be handled
+
 #if defined(SSE_ACSI_NOGUISELECT)
   // try to open ACSI_HD0.img
 #if defined(SSE_GUI_NOTIFY1)
@@ -773,7 +782,8 @@ bool Initialise()
   EasyStr hdname=RunDir+ACSI_HD_NAME;
   SSEConfig.AcsiImg=AcsiHdc.Init(0,hdname); 
 #endif
-#endif
+#endif//ACSI
+
   SetNotifyInitText(T("Jump Tables"));
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_DELAY_LOAD_DLL) \
@@ -1107,6 +1117,9 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 
 #if defined(SSE_TOS_WARNING1) && defined(SSE_VAR_POWERON2)
   CheckSTTypeAndTos();
+#endif
+#if defined(SSE_TOS_STEMDOS_RESTRICT_TOS2) // warning
+  HardDiskMan.CheckTos();
 #endif
 
   CheckResetDisplay();

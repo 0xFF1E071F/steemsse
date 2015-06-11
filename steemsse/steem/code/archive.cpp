@@ -13,7 +13,8 @@ of the various unarchiving libraries it can use.
 #include <conditions.h>
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS)
+#if defined(STEVEN_SEAGAL) && (defined(SSE_VAR_ARCHIVEACCESS) \
+  ||defined(SSE_ACSI_MULTIPLE2) )
 char ansi_name[MAX_PATH]; // for conversion from unicode
 #endif
 

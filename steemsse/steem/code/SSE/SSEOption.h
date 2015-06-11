@@ -131,6 +131,7 @@ struct TConfig {
   unsigned int Direct3d9:1;
   unsigned int ArchiveAccess:1;
   unsigned int AcsiImg:1;
+  unsigned int Stemdos:1;
 
 #ifdef __cplusplus // visible only to C++ objects
   TConfig();
@@ -151,7 +152,14 @@ extern struct TConfig SSEConfig;
 #define UNRAR_OK (SSEConfig.UnrarDll)
 #define D3D9_OK (SSEConfig.Direct3d9)
 #define ARCHIVEACCESS_OK (SSEConfig.ArchiveAccess)
+
+#if defined(SSE_ACSI_OPTION_INDEPENDENT)
+#define ACSI_EMU_ON (SSEConfig.AcsiImg && SSEOption.Acsi)
+#elif defined(SSE_ACSI)
 #define ACSI_EMU_ON (!HardDiskMan.DisableHardDrives && SSEConfig.AcsiImg && SSEOption.Acsi)
+#else
+#define ACSI_EMU_ON 0
+#endif
 
 #else//#if ! defined(SSE_SSE_CONFIG_STRUCT)
 
