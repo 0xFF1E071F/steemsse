@@ -8,7 +8,7 @@
     be 512bytes. It's more difficult to adapt the GUI (hard disk manager...)
     without introducing overhead and complications for the player, so we don't
     yet. Instead, img files are grouped in Steem/ACSI folder, and Steem will
-    try to open up them at startup.
+    try to open them at startup.
 */
 
 #include "../pch.h"
