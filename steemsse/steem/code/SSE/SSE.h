@@ -4263,8 +4263,8 @@ Beta: not SSE_PRIVATE_BUILD
 #ifdef SSE_TOS
 #define SSE_TOS_CHECK_VERSION // to avoid ID something else as TOS
 #define SSE_TOS_STE_FAST_BOOT2 // check each cold reset
-#define SSE_TOS_STEMDOS_RESTRICT_TOS // T1.04 or T1.62
-#define SSE_TOS_STEMDOS_RESTRICT_TOS2 // warning
+//#define SSE_TOS_STEMDOS_RESTRICT_TOS // enforce T1.04 or T1.62 only for GEMDOS
+#define SSE_TOS_STEMDOS_RESTRICT_TOS2 // warning 
 #endif
 
 #define SSE_ACSI
@@ -4290,6 +4290,9 @@ Beta: not SSE_PRIVATE_BUILD
 
 //#define DISABLE_STEMDOS
 //#define DISABLE_STEMDOS2//TODO
+
+//define SSE_TOS_ACSI_TO_PC// the solution?
+//define SSE_TOS_PC_TO_ACSI//?
 
 #define SOUND_DISABLE_INTERNAL_SPEAKER //of course, about time
 

@@ -133,7 +133,8 @@ Some intros also benefit from larger display.
 - Applications
 ----------------
 
-- Aladin (3.5.0; broken 3.5.1, fixed 3.5.2, broken 3.6.0, fixed 3.6.1)
+- Aladin (3.5.0; broken 3.5.1, fixed 3.5.2, broken 3.6.0, fixed 3.6.1,
+  legit 3.7.1)
 - Atari Diagnostic Cartridge (3.5.2)
 - Megamax C (scripts on HD) (3.6.1)
 - NEOchrome: mouse speed? (3.4)

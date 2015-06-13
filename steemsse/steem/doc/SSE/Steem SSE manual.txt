@@ -1502,8 +1502,8 @@ to be on the ST. Those virtual drives are called GEMDOS drives because they're
 based on interception of GEMDOS commands.
 You need to know that this type of emulation is very convenient for you, 
 because you just use your PC hard drive, but it is based on hacks, and in some
-cases it could not work as on a real Atari.
-See below for "ACSI" hard drive emulation.
+cases it could not work as on a real Atari. See below for "ACSI" hard 
+drive emulation.
 For serious work we really advise to use TOS 1.04 or TOS 1.62.
 Hard drives aren't as reliable as disk images, most things 
 will work but not everything. If a program isn't working properly copy it to a
@@ -1631,6 +1631,7 @@ The driver you use must be able to handle each of those drives...
 Extension must be img, order should be alphabetical. You are responsible
 for the files you put there. Two ready examples are provided in the 
 download, images of the familiar SH204 and MEGAFILE 60.
+The size limit is 1GB.
 
 It is also possible to enable GEMDOS virtual hard disks at the same
 time as ACSI virtual hard disks, you need to adapt letters of course.

@@ -43,6 +43,8 @@ blitter is working isn't emulated.
 
 -Dynabuster+ flicker at scores (correct)
 
+-GEMDOS hard disk emulation in EMUTOS 
+
 -Eye of Horus -MCA (correct)
 
 -F-29 crashes on 4MB STE (correct)
