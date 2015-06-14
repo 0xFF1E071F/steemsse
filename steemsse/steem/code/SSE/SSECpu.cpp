@@ -2099,7 +2099,7 @@ void                              m68k_divu(){
     The value of SR is used by the trace protection decoder of those demos.
     But Z must be cleared.
     v3.7: 
-    C — Always cleared, official doc, this was forgotten in case of overflow,
+    C — Always cleared, official doc, this was forgotten in case of overflow
 */
       SR_SET(SR_N);
 #endif
@@ -2147,11 +2147,15 @@ void                              m68k_divs(){
     signed short divisor = (signed short) m68k_src_w;
     int cycles_for_instr=getDivs68kCycles(dividend,divisor)-4; // -prefetch
     INSTRUCTION_TIME(cycles_for_instr);   // fixes Dragonnels loader
+#if defined(SSE_CPU_DIVS_OVERFLOW_PC)
+    ASSERT(divisor);
+    ASSERT(dividend!=INT_MIN); // X86 crashes on div overflow
+    if(dividend==INT_MIN)
+      q=-32768-1; 
+    else
+#endif
     q=(signed long)((signed long)dividend)/(signed long)((signed short)divisor);
     if(q<-32768 || q>32767){
-
-   //   r[PARAM_N]=((((unsigned long)r[PARAM_N])%((unsigned short)m68k_src_w))<<16)+q;
-//      r[PARAM_N]=((((signed long)r[PARAM_N])%((signed short)m68k_src_w))<<16)|((long)LOWORD(q));
       SR_SET(SR_V);
 #if defined(SSE_CPU_DIVS_OVERFLOW)
       SR_SET(SR_N); // maybe, see SSE_CPU_DIVU_OVERFLOW

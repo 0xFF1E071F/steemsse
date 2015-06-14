@@ -691,7 +691,11 @@ void GUIRefreshStatusBar() {
         strcat(status_bar," C2");
       else
         strcat(status_bar," X");
-      if(OPTION_CPU_CLOCK)
+      if(OPTION_CPU_CLOCK 
+#if defined(SSE_GUI_STATUS_STRING_SINGLE_SIDE)
+  || (SSEOption.SingleSideDriveMap&3)
+#endif
+        )
         strcat(status_bar,"!");
 #endif
 
