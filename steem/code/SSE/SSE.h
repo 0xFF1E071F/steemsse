@@ -4236,13 +4236,15 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_ASSOCIATE_HFE // they're generally not zipped...
 #define SSE_GUI_DISK_MANAGER_INSERT_DISKB_REMOVE //works?
 #define SSE_GUI_STATUS_STRING_DISK_TYPE // A:MSA B:STW
+#define SSE_GUI_STATUS_STRING_HISPEED
+#define SSE_GUI_STATUS_STRING_SINGLE_SIDE
 #endif
 
 #if defined(SSE_VARIOUS)
 #if defined(WIN32) && defined(VC_BUILD) // works with VC6, VS2008 not BCC
 #define SSE_VAR_ARCHIVEACCESS // 7z support
 #define SSE_VAR_ARCHIVEACCESS2 // bz2 (with modded dll), gz, tar, arj
-//#define SSE_VAR_ARCHIVEACCESS3 // zip managed by ArchiveAccess.dll by default - no, because of MSA Converter
+//#define SSE_VAR_ARCHIVEACCESS3 // zip managed by ArchiveAccess.dll by default - no, because of MSA Converter TODO
 //#define SSE_VAR_ARCHIVEACCESS4 // remove code for unzipd32.dll - what if archiveaccess fails!
 #endif
 #define SSE_VAR_NO_UPDATE_372
@@ -4252,9 +4254,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_D3D_CRISP //D3D can do that
 #define SSE_VID_D3D_CRISP_OPTION //the harder part!
 
-
 // beta-only for now, risky, fixes nothing serious...
-#define SSE_INT_MFP_REFACTOR3 //enums
+#define SSE_INT_MFP_REFACTOR3 //enums -note REFACTOR2 not active
 #undef SSE_INT_MFP_TIMER_B_AER // refactor
 #define SSE_INT_MFP_TIMER_B_AER2 // refactor
 #define SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS // timer B should be updated
@@ -4295,14 +4296,10 @@ Beta: not SSE_PRIVATE_BUILD
 //define SSE_TOS_PC_TO_ACSI//?
 
 #define SOUND_DISABLE_INTERNAL_SPEAKER //of course, about time
-
-#if defined(SSE_GUI)
-#define SSE_GUI_STATUS_STRING_HISPEED
-#endif
-
 #endif//beta
 
 #if defined(SSE_BETA_BUGFIX)
+#define SSE_CPU_DIVS_OVERFLOW_PC
 #define SSE_DISK_REMOVE_DISK_ON_SET_DISK //hmm, could explain some strange bugs
 #define SSE_INT_MFP_SPURIOUS2 // bugfix Return -HMD "spurious spurious"
 #define SSE_WD1772_372 // bugfix write MFM word with missing clock bit on data!
