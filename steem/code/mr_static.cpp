@@ -10,6 +10,8 @@ in the debugger.
 #pragma message("Included for compilation: mr_static.cpp")
 #endif
 
+#ifdef DEBUG_BUILD//SS
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_MRSTATIC_H)
 mr_static *m_s[MAX_MR_STATICS];
 #endif
@@ -383,3 +385,4 @@ void mr_static::update()
   SetWindowText(handle,tb);
 }
 
+#endif//#ifdef DEBUG_BUILD//SS

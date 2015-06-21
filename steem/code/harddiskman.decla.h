@@ -56,7 +56,7 @@ public:
   Hard_Disk_Info Drive[MAX_HARDDRIVES];
   int nDrives;
   bool DisableHardDrives;
-#if defined(SSE_TOS_STEMDOS_RESTRICT_TOS2) // warning
+#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) // warning
   void CheckTos();
 #endif
 };

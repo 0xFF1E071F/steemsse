@@ -20,6 +20,7 @@ _DWin_edit_subject_content DWin_edit_subject_content;
 bool DWin_edit_is_being_temporarily_defocussed=false;
 #endif
 
+#ifdef DEBUG_BUILD//SS
 
 long __stdcall DWin_edit_WndProc(HWND,unsigned int,unsigned int,long);
 WNDPROC Old_edit_WndProc;
@@ -241,3 +242,4 @@ long __stdcall DWin_edit_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 	return CallWindowProc(Old_edit_WndProc,Win,Mess,wPar,lPar);
 }
 
+#endif

@@ -125,7 +125,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_VERSION 372 // versions down to 340 still compile //TODO->320
 
-#if SSE_VERSION>371 //last release
+#if SSE_VERSION>372 //last release
 #define SSE_BETA //title, OSD, plus some testing - new features
 #define SSE_BETA_BUGFIX // beta for just bugfixes
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
@@ -221,6 +221,108 @@ Beta: not SSE_PRIVATE_BUILD
 
 
 
+///////////////
+// STRUCTURE //
+///////////////
+
+
+#if defined(SSE_STRUCTURE)
+/* Those were dev switches. 
+   TODO Steem "not SSE" builds the ancient way, Steem "SSE" builds using
+   decla.h files exclusively
+*/
+
+#if defined(LEGACY_BUILD)
+#define SSE_STRUCTURE_DECLA // for all features
+#endif
+
+#if !defined(LEGACY_BUILD)
+#define SSE_STRUCTURE_DECLA // necessary
+#define SSE_STRUCTURE_SSE_OBJ // try to have all separate SSE objects
+#endif
+
+//3 switches appeared in v3.5.0...
+#define SSE_SSE_OPTION_PAGE // a new page for all our options
+#define SSE_SSE_OPTION_STRUCT // structure SSEOption 
+#define SSE_SSE_CONFIG_STRUCT // structure SSEConfig 
+
+#if defined(SSE_STRUCTURE_DECLA)
+// those were dev switches 
+#define SSE_STRUCTURE_ACC_H
+#define SSE_STRUCTURE_ARCHIVE_H
+#define SSE_STRUCTURE_BLITTER_H
+#define SSE_STRUCTURE_BOILER_H
+#define SSE_STRUCTURE_CPU_H
+#define SSE_STRUCTURE_D2_H
+#define SSE_STRUCTURE_DATALOADSAVE_H
+#define SSE_STRUCTURE_DEBUGEMU_H
+#define SSE_STRUCTURE_DIRID_H
+#define SSE_STRUCTURE_DISKMAN_H
+#define SSE_STRUCTURE_DISPLAY_H
+#define SSE_STRUCTURE_DRAW_H
+#define SSE_STRUCTURE_DWINEDIT_H
+#define SSE_STRUCTURE_EMULATOR_H
+#define SSE_STRUCTURE_FDC_H
+#define SSE_STRUCTURE_FLOPPYDRIVE_H
+#define SSE_STRUCTURE_GUI_H
+#define SSE_STRUCTURE_HARDDISKMAN_H //3.7.2
+#define SSE_STRUCTURE_HDIMG_H
+//#define SSE_STRUCTURE_HISTORYLIST_H
+#define SSE_STRUCTURE_IKBD_H
+#define SSE_STRUCTURE_INFOBOX_H //systematic use of .decla.h
+#define SSE_STRUCTURE_INITSOUND_H
+#define SSE_STRUCTURE_IOLIST_H
+#define SSE_STRUCTURE_IORW_H
+#define SSE_STRUCTURE_KEYTABLE_H
+#define SSE_STRUCTURE_LOADSAVE_H
+#define SSE_STRUCTURE_MACROS_H
+#define SSE_STRUCTURE_MEMBROWSER_H
+#define SSE_STRUCTURE_MFP_H
+#define SSE_STRUCTURE_MIDI_H
+#define SSE_STRUCTURE_MRSTATIC_H
+#define SSE_STRUCTURE_NOTIFYINIT_H
+#define SSE_STRUCTURE_ONEGAME_H
+#define SSE_STRUCTURE_OPTIONS_H
+#define SSE_STRUCTURE_OSD_H
+#define SSE_STRUCTURE_PALETTE_H
+//#define SSE_STRUCTURE_PATCHESBOX_H// nothing to do?
+#define SSE_STRUCTURE_PSG_H
+//#define SSE_STRUCTURE_RESET_H// nothing to do?
+#define SSE_STRUCTURE_RS232_H
+#define SSE_STRUCTURE_RUN_H
+//#define SSE_STRUCTURE_SCREENSAVER_H// nothing to do?
+#define SSE_STRUCTURE_SHORTCUTBOX_H
+#define SSE_STRUCTURE_STEEMH_H
+#define SSE_STRUCTURE_STEMDIALOGS_H
+#define SSE_STRUCTURE_STEMDOS_H
+#define SSE_STRUCTURE_STJOY_H
+#define SSE_STRUCTURE_STPORTS_H
+#define SSE_STRUCTURE_TRACE_H
+#define SSE_STRUCTURE_TRANSLATE_H
+#endif//SSE_STRUCTURE_DECLA
+
+#if defined(SSE_STRUCTURE_SSE_OBJ)
+// We begin with our SSE additions. Notice that it already slows down compiling
+#define SSE_STRUCTURE_SSE6301_OBJ//3.6.0
+#define SSE_STRUCTURE_SSECPU_OBJ//3.6.0
+#define SSE_STRUCTURE_SSEDEBUG_OBJ//3.6.0
+#define SSE_STRUCTURE_SSEFLOPPY_OBJ//3.6.1
+#define SSE_STRUCTURE_SSEFRAMEREPORT_OBJ//3.6.1
+//#define SSE_STRUCTURE_SSE_INTERRUPT_OBJ//skip for now...
+#define SSE_STRUCTURE_SSESHIFTER_OBJ//3.6.1
+#define SSE_STRUCTURE_SSESTF_OBJ//3.6.1
+#define SSE_STRUCTURE_SSESTF_VIDEO//3.6.1
+#endif//#if defined(SSE_STRUCTURE_SSE_OBJ)
+
+#if defined(SSE_STRUCTURE)
+#define SSE_STRUCTURE_CPU_POKE_NOINLINE //little detail 3.6.0
+#define SSE_STRUCTURE_IOR//3.5.1
+#endif
+
+#endif//structure
+
+
+
 #if defined(SSE_SWITCHES_FEATURES)
 
 
@@ -260,6 +362,8 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_CPU)
 
+#define SSE_CPU_256MHZ //3.7.2
+//#define SSE_CPU_512MHZ // ready if someone requests it!
 #define SSE_CPU_ALT_REG_NAMES// 3.7 convenience
 #define SSE_CPU_DATABUS //3.7
 #define SSE_CPU_DEST_IS_REGISTER //just new macro
@@ -334,6 +438,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_ABCD
 #define SSE_CPU_DIV          // divide like Caesar
 #define SSE_CPU_DIV_CC //carry clear: always
+#define SSE_CPU_DIVS_OVERFLOW_PC //long-standing bug that could crash Steem
 #define SSE_CPU_MOVE_B       // move like a superstar
 #define SSE_CPU_MOVE_W       
 #define SSE_CPU_MOVE_L
@@ -571,8 +676,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BOILER_MOD_REGS // big letters, no =
 #define SSE_BOILER_MOD_VBASE
 #define SSE_BOILER_MOD_VBASE2 //move it
+#define SSE_BOILER_MONITOR_372 // v3.7.2 to clarify code
 #define SSE_BOILER_MONITOR_IO_FIX1 // ? word check, not 2x byte on word access
 #define SSE_BOILER_MONITOR_RANGE // will stop for every address between 2 stops
+#define SSE_BOILER_MONITOR_TRACE // v3.7.2 mode log also in TRACE (duh!)
 #define SSE_BOILER_MONITOR_VALUE // specify value (RW) that triggers stop
 #define SSE_BOILER_MONITOR_VALUE2 // write before check
 #define SSE_BOILER_MONITOR_VALUE3 // add checks for CLR
@@ -811,10 +918,15 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_DISK)
 
 #define SSE_DISK1//struct
+#define SSE_DISK2 //add info 3.7.2
 #ifdef WIN32
 #define SSE_DISK_GHOST
 #endif
+#define SSE_DISK_HFE // 3.7.2 HxC floppy emulator HFE image support
+//#define SSE_DISK_HFE_TO_STW // using Steem to convert current disk
+
 #define SSE_DISK_IMAGETYPE
+#define SSE_DISK_REMOVE_DISK_ON_SET_DISK //hmm, could explain some strange bugs
 #define SSE_DISK_SCP // Supercard Pro disk image format support
 #define SSE_DISK_STW
 
@@ -825,19 +937,29 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DISK_GHOST_SECTOR_STX1 // in pasti
 #endif
 
+#if defined(SSE_DISK_HFE)
+#define SSE_DISK_HFE_DISK_MANAGER // creating HFE images in Steem
+#define SSE_DISK_HFE_DYNAMIC_HEADER //spare some memory
+#define SSE_DISK_HFE_TRIGGER_IP // changes nothing?
+#endif
+
 #if defined(SSE_DISK_IMAGETYPE)
 #define SSE_DISK_IMAGETYPE1 // replace "TCaps::IsIpf()"
 #define SSE_DISK_IMAGETYPE2
 #endif
 
 #if defined(SSE_DISK_SCP)
+#define SSE_DISK_SCP2A //id 3.7.2
+#define SSE_DISK_SCP2B //all IP 1->2 (..->1 during rev) - perf? 3.7.2
 //#define SSE_DISK_SCP_TO_MFM_PREVIEW // keep it, could be useful
 #endif//scp
 
 #if defined(SSE_DISK_STW)
+#define SSE_DISK_STW2 //3.7.2
 #define SSE_DISK_STW_DISK_MANAGER //new context option
 #define SSE_DISK_STW_MFM // bytes are MFM encoded on the disk
 #define SSE_DISK_STW_READONLY //3.7.1 last minute
+//#define SSE_DISK_STW_TRIGGER_IP //TODO
 #endif//stw
 
 #endif //DISK
@@ -1042,6 +1164,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_WD1772)
 
 #define SSE_WD1772_371 // one switch for various fixes
+#define SSE_WD1772_372 // bugfix write MFM word with missing clock bit on data!
 #define SSE_WD1772_AM_LOGIC // code inspired by SPS (CapsFDCEmulator.cpp)
 #define SSE_WD1772_CRC 
 #define SSE_WD1772_DPLL // code inspired by MAME/MESS (wd_fdc.c)
@@ -1100,6 +1223,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #ifdef SSE_GUI_ASSOCIATE
+#define SSE_GUI_ASSOCIATE_HFE // they're generally not zipped...
 #define SSE_GUI_ASSOCIATE_IPF // extension may be associated with Steem //RENAME
 #define SSE_GUI_ASSOCIATE_CU // current user, not root
 #define SSE_GUI_MAY_REMOVE_ASSOCIATION
@@ -1114,6 +1238,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_DISK_MANAGER_GHOST
 #define SSE_GUI_DISK_MANAGER_INSERT_DISKB
 #define SSE_GUI_DISK_MANAGER_INSERT_DISKB_LS//load/save option
+#define SSE_GUI_DISK_MANAGER_INSERT_DISKB_REMOVE //works?
 #define SSE_GUI_DISK_MANAGER_LONG_NAMES1
 #define SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD
 #define SSE_GUI_DISK_MANAGER_NO_DISABLE_B_MENU // click on icon
@@ -1138,8 +1263,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_INFOBOX14 // order 'about' 'hints'
 #define SSE_GUI_INFOBOX15 // release notes (not sse faq)
 #define SSE_GUI_INFOBOX16 // no crash on big files
-
 #define SSE_GUI_INFOBOX17 //mousewheel on links
+#define SSE_GUI_INFOBOX18 //open links in new instance, IE
 
 #define SSE_GUI_INFOBOX_LINKS
 #endif//info
@@ -1167,10 +1292,13 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_STATUS_STRING_ADAT
 #define SSE_GUI_STATUS_STRING_DISK_NAME
 #define SSE_GUI_STATUS_STRING_DISK_NAME_OPTION
+#define SSE_GUI_STATUS_STRING_DISK_TYPE // A:MSA B:STW
 #define SSE_GUI_STATUS_STRING_HACKS
 #define SSE_GUI_STATUS_STRING_HD
+#define SSE_GUI_STATUS_STRING_HISPEED
 //#define SSE_GUI_STATUS_STRING_IPF // undef v3.7.0
 //#define SSE_GUI_STATUS_STRING_PASTI // undef v3.7.0
+#define SSE_GUI_STATUS_STRING_SINGLE_SIDE
 #define SSE_GUI_STATUS_STRING_THRESHOLD //not if window too small
 #define SSE_GUI_STATUS_STRING_VSYNC // V as VSync
 #if defined(SSE_CPU_HALT)
@@ -1278,6 +1406,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_INT_MFP_RECORD_PENDING_TIMING
 #endif
 #define SSE_INT_MFP_SPURIOUS//cool crashes
+#define SSE_INT_MFP_SPURIOUS_372 // bugfix Return -HMD "spurious spurious"
 #define SSE_INT_MFP_CHECKTIMEOUT_ON_STOP
 #define SSE_INT_MFP_WRITE_DELAY2
 #endif
@@ -1533,10 +1662,13 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_AVTANDIL_FIX_001 // Russin TOS number
 #define SSE_MEGAR_FIX_001 // intercept GEM in extended resolution
 #define SSE_TOS_BOOTER1//accept TOS boot of the 260ST
+#define SSE_TOS_CHECK_VERSION // to avoid ID something else as TOS 3.7.2
 #define SSE_TOS_FILETIME_FIX //from Petari
 //#define SSE_TOS_GEMDOS_FDUP // for EmuTOS - it's fixed already, not def
 #define SSE_TOS_GEMDOS_NOINLINE
 #define SSE_TOS_GEMDOS_PEXEC6 //ReDMCSB 100% in TOS104
+//#define SSE_TOS_GEMDOS_RESTRICT_TOS // enforce T1.04 or T1.62 only for GEMDOS
+#define SSE_TOS_GEMDOS_RESTRICT_TOS2 // warning 
 #define SSE_TOS_GEMDOS_VAR1 //various unimportant fixes 
 //#define SSE_TOS_NO_INTERCEPT_ON_RTE1 // undef v3.6.1
 #define SSE_TOS_STRUCT
@@ -1550,6 +1682,7 @@ Beta: not SSE_PRIVATE_BUILD
 #ifdef SSE_HACKS
 //#define SSE_TOS_PATCH106 // undef v3.7
 #define SSE_TOS_STE_FAST_BOOT //from hatari
+#define SSE_TOS_STE_FAST_BOOT2 // check each cold reset 3.7.2
 #endif
 
 #ifdef SSE_STF
@@ -1713,6 +1846,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_SOUND)
 
 #define SSE_SOUND_CHANGE_TIME_METHOD_DELAY //detail
+#define SOUND_DISABLE_INTERNAL_SPEAKER //3.7.2
 #define SSE_SOUND_DMA_CLOCK //3.7 not CPU, apart clock
 #define SSE_SOUND_INLINE // macro->inline, easier for my tests, but hard to do
 #define SSE_SOUND_INLINE2 //3.7, to generalise ljbk's table
@@ -1883,6 +2017,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_KEYBOARD_CLICK // not a sound nor IKBD option
 //#define SSE_VAR_NO_ASSOCIATE //changed later//????
 #define SSE_VAR_NO_UPDATE // remove all code in relation to updating
+#define SSE_VAR_NO_UPDATE_372
 #define SSE_VAR_NO_WINSTON // nuke WinSTon import, saves 16K in VC6 release yeah
 //#define SSE_VAR_PROG_ID // Program ID; code removed
 //#define SSE_VAR_POWERON1 // undef 3.6.2 ;)
@@ -1890,6 +2025,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_RESET_SAME_DISK//test (with .PRG support)
 #define SSE_VAR_RESIZE // reduce memory set (int->BYTE etc.)
 #define SSE_VAR_RESIZE_370
+#define SSE_VAR_RESIZE_372
 #define SSE_VAR_REWRITE // to conform to what compilers expect (warnings...)
 #define SSE_INLINE_370
 #define SSE_VAR_SNAPSHOT_INI//3.7
@@ -1898,6 +2034,12 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_WRONG_IMAGE_ALERT1
 
 #ifdef WIN32
+#if defined(VC_BUILD) // works with VC6, VS2008 not BCC
+#define SSE_VAR_ARCHIVEACCESS // 7z support 3.7.2
+#define SSE_VAR_ARCHIVEACCESS2 // bz2 (with modded dll), gz, tar, arj
+//#define SSE_VAR_ARCHIVEACCESS3 // zip managed by ArchiveAccess.dll by default - no, because of MSA Converter TODO
+//#define SSE_VAR_ARCHIVEACCESS4 // remove code for unzipd32.dll - what if archiveaccess fails!
+#endif
 #define SSE_VAR_CHECK_SNAPSHOT
 #define SSE_VAR_UNRAR // using unrar.dll, up to date
 #define SSE_VAR_UNRAR2 //v3.7.1
@@ -1996,6 +2138,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_D3D //main
 #define SSE_VID_D3D1 //adaptation
 #define SSE_VID_D3D2 //adaptation
+#define SSE_VID_D3D_CRISP //D3D can do that 3.7.2
+#define SSE_VID_D3D_CRISP_OPTION //the harder part!
 #define SSE_VID_D3D_LIST_MODES // player can choose
 #define SSE_VID_D3D_NO_GUI
 #define SSE_VID_D3D_OPTION
@@ -3747,7 +3891,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_INFOBOX14 // order 'about' 'hints'
 #define SSE_GUI_INFOBOX15 // release notes (not sse faq)
 #define SSE_GUI_INFOBOX16 // no crash on big files
-#define SSE_GUI_INFOBOX_LINKS
+#define SSE_GUI_INFOBOX_LINKS//MFD
 #endif
 #if defined(SSE_GUI_STATUS_STRING)
 #undef SSE_GUI_STATUS_STRING_IPF // what if mixed?
@@ -4076,113 +4220,80 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if SSE_VERSION>=372
 
+#if defined(SSE_BOILER)
+#define SSE_BOILER_MONITOR_372 // v3.7.2 to clarify code
+#define SSE_BOILER_MONITOR_TRACE // v3.7.2 mode log also in TRACE (duh!)
 #endif
+#if defined(SSE_CPU)
+#define SSE_CPU_256MHZ
+//#define SSE_CPU_512MHZ // ready if someone requests it!
+#define SSE_CPU_DIVS_OVERFLOW_PC //long-standing bug that could crash Steem
+#endif
+#if defined(SSE_DISK)
+#define SSE_DISK2 //add info
+#define SSE_DISK_HFE // HxC floppy emulator HFE image support
+#define SSE_DISK_HFE_DISK_MANAGER // creating HFE images in Steem
+#define SSE_DISK_HFE_TRIGGER_IP // changes nothing?
+//#define SSE_DISK_HFE_TO_STW // using Steem to convert current disk
+#define SSE_DISK_STW2 
+#define SSE_DISK_HFE_DYNAMIC_HEADER //spare some memory
+//#define SSE_DISK_STW_TRIGGER_IP //TODO
+#define SSE_DISK_REMOVE_DISK_ON_SET_DISK //hmm, could explain some strange bugs
+#define SSE_DISK_SCP2A //id
+#define SSE_DISK_SCP2B //all IP 1->2 (..->1 during rev) - perf?
+#endif
+#if defined(SSE_GUI)
+#define SSE_GUI_ASSOCIATE_HFE // they're generally not zipped...
+#define SSE_GUI_DISK_MANAGER_INSERT_DISKB_REMOVE //works?
+#define SSE_GUI_INFOBOX18 //open links in new instance, IE
+#define SSE_GUI_STATUS_STRING_DISK_TYPE // A:MSA B:STW
+#define SSE_GUI_STATUS_STRING_HISPEED
+#define SSE_GUI_STATUS_STRING_SINGLE_SIDE
+#endif//gui
+#if defined(SSE_INT_MFP)
+#define SSE_INT_MFP_SPURIOUS_372 // bugfix Return -HMD "spurious spurious"
+#endif
+#if defined(SSE_SOUND)
+#define SOUND_DISABLE_INTERNAL_SPEAKER //of course, about time
+#endif
+#ifdef SSE_TOS
+#define SSE_TOS_CHECK_VERSION // to avoid ID something else as TOS
+#define SSE_TOS_STE_FAST_BOOT2 // check each cold reset
+//#define SSE_TOS_GEMDOS_RESTRICT_TOS // enforce T1.04 or T1.62 only for GEMDOS
+#define SSE_TOS_GEMDOS_RESTRICT_TOS2 // warning 
+#endif
+#if defined(SSE_VARIOUS)
+#if defined(WIN32) && defined(VC_BUILD) // works with VC6, VS2008 not BCC
+#define SSE_VAR_ARCHIVEACCESS // 7z support
+#define SSE_VAR_ARCHIVEACCESS2 // bz2 (with modded dll), gz, tar, arj
+//#define SSE_VAR_ARCHIVEACCESS3 // zip managed by ArchiveAccess.dll by default - no, because of MSA Converter TODO
+//#define SSE_VAR_ARCHIVEACCESS4 // remove code for unzipd32.dll - what if archiveaccess fails!
+#endif
+#define SSE_VAR_NO_UPDATE_372
+#define SSE_VAR_RESIZE_372
+#endif//var
+#if defined(SSE_VIDEO)
+#define SSE_VID_D3D_CRISP //D3D can do that
+#define SSE_VID_D3D_CRISP_OPTION //the harder part!
+#endif//vid
+#if defined(SSE_WD1772)
+#define SSE_WD1772_372 // bugfix write MFM word with missing clock bit on data!
+#endif
+#endif//372
+
+
+//////////
+// v3.8 //
+//////////
+
+ 
+#if SSE_VERSION>=380
+
+#endif//380
+
 
 #endif//?SSE_SWITCHES_FEATURES
 
-
-
-
-
-///////////////
-// STRUCTURE //
-///////////////
-
-
-#if defined(SSE_STRUCTURE)
-/* Those were dev switches. 
-   TODO Steem "not SSE" builds the ancient way, Steem "SSE" builds using
-   decla.h files exclusively
-*/
-
-#if defined(LEGACY_BUILD)
-#define SSE_STRUCTURE_DECLA // for all features
-#endif
-
-#if !defined(LEGACY_BUILD)
-#define SSE_STRUCTURE_DECLA // necessary
-#define SSE_STRUCTURE_SSE_OBJ // try to have all separate SSE objects
-#endif
-
-//3 switches appeared in v3.5.0...
-#define SSE_SSE_OPTION_PAGE // a new page for all our options
-#define SSE_SSE_OPTION_STRUCT // structure SSEOption 
-#define SSE_SSE_CONFIG_STRUCT // structure SSEConfig 
-
-#if defined(SSE_STRUCTURE_DECLA)
-// those were dev switches 
-#define SSE_STRUCTURE_ACC_H
-#define SSE_STRUCTURE_ARCHIVE_H
-#define SSE_STRUCTURE_BLITTER_H
-#define SSE_STRUCTURE_BOILER_H
-#define SSE_STRUCTURE_CPU_H
-#define SSE_STRUCTURE_D2_H
-#define SSE_STRUCTURE_DATALOADSAVE_H
-#define SSE_STRUCTURE_DEBUGEMU_H
-#define SSE_STRUCTURE_DIRID_H
-#define SSE_STRUCTURE_DISKMAN_H
-#define SSE_STRUCTURE_DISPLAY_H
-#define SSE_STRUCTURE_DRAW_H
-#define SSE_STRUCTURE_DWINEDIT_H
-#define SSE_STRUCTURE_EMULATOR_H
-#define SSE_STRUCTURE_FDC_H
-#define SSE_STRUCTURE_FLOPPYDRIVE_H
-#define SSE_STRUCTURE_GUI_H
-#define SSE_STRUCTURE_HARDDISKMAN_H //3.7.2
-#define SSE_STRUCTURE_HDIMG_H
-//#define SSE_STRUCTURE_HISTORYLIST_H
-#define SSE_STRUCTURE_IKBD_H
-#define SSE_STRUCTURE_INFOBOX_H //systematic use of .decla.h
-#define SSE_STRUCTURE_INITSOUND_H
-#define SSE_STRUCTURE_IOLIST_H
-#define SSE_STRUCTURE_IORW_H
-#define SSE_STRUCTURE_KEYTABLE_H
-#define SSE_STRUCTURE_LOADSAVE_H
-#define SSE_STRUCTURE_MACROS_H
-#define SSE_STRUCTURE_MEMBROWSER_H
-#define SSE_STRUCTURE_MFP_H
-#define SSE_STRUCTURE_MIDI_H
-#define SSE_STRUCTURE_MRSTATIC_H
-#define SSE_STRUCTURE_NOTIFYINIT_H
-#define SSE_STRUCTURE_ONEGAME_H
-#define SSE_STRUCTURE_OPTIONS_H
-#define SSE_STRUCTURE_OSD_H
-#define SSE_STRUCTURE_PALETTE_H
-//#define SSE_STRUCTURE_PATCHESBOX_H// nothing to do?
-#define SSE_STRUCTURE_PSG_H
-//#define SSE_STRUCTURE_RESET_H// nothing to do?
-#define SSE_STRUCTURE_RS232_H
-#define SSE_STRUCTURE_RUN_H
-//#define SSE_STRUCTURE_SCREENSAVER_H// nothing to do?
-#define SSE_STRUCTURE_SHORTCUTBOX_H
-#define SSE_STRUCTURE_STEEMH_H
-#define SSE_STRUCTURE_STEMDIALOGS_H
-#define SSE_STRUCTURE_STEMDOS_H
-#define SSE_STRUCTURE_STJOY_H
-#define SSE_STRUCTURE_STPORTS_H
-#define SSE_STRUCTURE_TRACE_H
-#define SSE_STRUCTURE_TRANSLATE_H
-#endif//SSE_STRUCTURE_DECLA
-
-#if defined(SSE_STRUCTURE_SSE_OBJ)
-// We begin with our SSE additions. Notice that it already slows down compiling
-#define SSE_STRUCTURE_SSE6301_OBJ//3.6.0
-#define SSE_STRUCTURE_SSECPU_OBJ//3.6.0
-#define SSE_STRUCTURE_SSEDEBUG_OBJ//3.6.0
-#define SSE_STRUCTURE_SSEFLOPPY_OBJ//3.6.1
-#define SSE_STRUCTURE_SSEFRAMEREPORT_OBJ//3.6.1
-//#define SSE_STRUCTURE_SSE_INTERRUPT_OBJ//skip for now...
-#define SSE_STRUCTURE_SSESHIFTER_OBJ//3.6.1
-#define SSE_STRUCTURE_SSESTF_OBJ//3.6.1
-#define SSE_STRUCTURE_SSESTF_VIDEO//3.6.1
-#endif//#if defined(SSE_STRUCTURE_SSE_OBJ)
-
-#if defined(SSE_STRUCTURE)
-#define SSE_STRUCTURE_CPU_POKE_NOINLINE //little detail 3.6.0
-#define SSE_STRUCTURE_IOR//3.5.1
-#endif
-
-#endif//structure
 
 ///////////////
 // DEV BUILD //
@@ -4213,67 +4324,13 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_GUI_FULLSCREEN_NO_VSYNC_OPTION //but all the rest?
 //#define SSE_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
 
-#if defined(SSE_BOILER)
-#define SSE_BOILER_MONITOR_372 // v3.7.2 to clarify code
-#define SSE_BOILER_MONITOR_TRACE // v3.7.2 mode log also in TRACE (duh!)
-#endif
-
-#if defined(SSE_DISK)
-#define SSE_DISK2 //add info
-#define SSE_DISK_HFE // HxC floppy emulator HFE image support
-#define SSE_DISK_HFE_DISK_MANAGER // creating HFE images in Steem
-#define SSE_DISK_HFE_TRIGGER_IP // changes nothing?
-//#define SSE_DISK_HFE_TO_STW // using Steem to convert current disk
-#define SSE_DISK_STW2 
-#define SSE_DISK_HFE_DYNAMIC_HEADER //spare some memory
-//#define SSE_DISK_STW_TRIGGER_IP //TODO
-
-#define SSE_DISK_SCP2A //id
-#define SSE_DISK_SCP2B //all IP 1->2 (..->1 during rev) - perf?
-#endif
-
-#if defined(SSE_GUI)
-#define SSE_GUI_ASSOCIATE_HFE // they're generally not zipped...
-#define SSE_GUI_DISK_MANAGER_INSERT_DISKB_REMOVE //works?
-#define SSE_GUI_STATUS_STRING_DISK_TYPE // A:MSA B:STW
-#define SSE_GUI_STATUS_STRING_HISPEED
-#define SSE_GUI_STATUS_STRING_SINGLE_SIDE
-#endif
-
-#if defined(SSE_VARIOUS)
-#if defined(WIN32) && defined(VC_BUILD) // works with VC6, VS2008 not BCC
-#define SSE_VAR_ARCHIVEACCESS // 7z support
-#define SSE_VAR_ARCHIVEACCESS2 // bz2 (with modded dll), gz, tar, arj
-//#define SSE_VAR_ARCHIVEACCESS3 // zip managed by ArchiveAccess.dll by default - no, because of MSA Converter TODO
-//#define SSE_VAR_ARCHIVEACCESS4 // remove code for unzipd32.dll - what if archiveaccess fails!
-#endif
-#define SSE_VAR_NO_UPDATE_372
-#define SSE_VAR_RESIZE_372
-#endif
-
-#define SSE_VID_D3D_CRISP //D3D can do that
-#define SSE_VID_D3D_CRISP_OPTION //the harder part!
-
-// beta-only for now, risky, fixes nothing serious...
-#define SSE_INT_MFP_REFACTOR3 //enums -note REFACTOR2 not active
-#undef SSE_INT_MFP_TIMER_B_AER // refactor
-#define SSE_INT_MFP_TIMER_B_AER2 // refactor
-#define SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS // timer B should be updated
-#define SSE_INT_MFP_TMP2//switch is temp
-
-#ifdef SSE_TOS
-#define SSE_TOS_CHECK_VERSION // to avoid ID something else as TOS
-#define SSE_TOS_STE_FAST_BOOT2 // check each cold reset
-//#define SSE_TOS_STEMDOS_RESTRICT_TOS // enforce T1.04 or T1.62 only for GEMDOS
-#define SSE_TOS_STEMDOS_RESTRICT_TOS2 // warning 
-#endif
-
-#define SSE_ACSI
+#define SSE_ACSI //3.8.0 new feature
 #if defined(SSE_ACSI)
 #define SSE_ACSI_FORMAT 
 #ifdef SSE_DEBUG
 #define SSE_ACSI_BOOTCHECKSUM
 #endif
+#define SSE_ACSI_DISABLE_HDIMG // former Steem medium-level stub
 #define SSE_ACSI_INQUIRY // could even do without but it's too cool
 #define SSE_ACSI_INQUIRY2 // take name of file without extension
 #define SSE_ACSI_LED // cool too
@@ -4287,22 +4344,25 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_ACSI_OPTION_INDEPENDENT // of 'HardDiskMan.DisableHardDrives'
 #define SSE_ACSI_REQUEST_SENSE
 #define SSE_ACSI_TIMING // ADAT -> slower (risky?)
+#endif//acsi
+
+// beta-only for now, risky, fixes nothing serious...
+#if defined(SSE_INT_MFP)
+#define SSE_INT_MFP_REFACTOR3 //enums -note REFACTOR2 not active
+#undef SSE_INT_MFP_TIMER_B_AER // refactor
+#define SSE_INT_MFP_TIMER_B_AER2 // refactor
+#define SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS // timer B should be updated
 #endif
 
+#ifdef SSE_TOS
 //#define DISABLE_STEMDOS
 //#define DISABLE_STEMDOS2//TODO
+#endif
 
-//define SSE_TOS_ACSI_TO_PC// the solution?
-//define SSE_TOS_PC_TO_ACSI//?
-
-#define SOUND_DISABLE_INTERNAL_SPEAKER //of course, about time
 #endif//beta
 
 #if defined(SSE_BETA_BUGFIX)
-#define SSE_CPU_DIVS_OVERFLOW_PC
-#define SSE_DISK_REMOVE_DISK_ON_SET_DISK //hmm, could explain some strange bugs
-#define SSE_INT_MFP_SPURIOUS2 // bugfix Return -HMD "spurious spurious"
-#define SSE_WD1772_372 // bugfix write MFM word with missing clock bit on data!
+#define SSE_INT_MFP_UTIL2 // bugfix parameter not used
 #endif//bugfix
 
 #else//!SS

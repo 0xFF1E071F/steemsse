@@ -21,20 +21,22 @@ well documented, consult the manual.
 
 
 Atari ST
-_________
+__________
 
-You may skip this part if you know what the Atari ST is, this is just
-a point of view.
+You may skip this part if you think you know what the Atari ST is, 
+this is just a point of view.
 
 The Atari ST was the first 16/32 computer available at a reasonable price. 
 It was built around a Motorola 68000 microprocessor and made of cheap, 
 sometimes outdated, off-the-shelf components like the  WD1772 floppy disk
 controller (no side control!), the HD6301 "intelligent keyboard", or IKBD,
 that also handles joysticks and mouse, the YM-2149, or "PSG" sound chip,
-the infamous MC68901 MFP (Multi-Function Peripheral), and some custom
-Atari chips, like the DMA (direct memory access), the GLUE, the MMU, the 
-video shifter... all hastily patched together and rushed to market, because 
-Commodore had just stolen the Amiga from Atari. 
+the same that was in some 8bit computers, the infamous MC68901 MFP
+(Multi-Function Peripheral), and some custom Atari chips, like the DMA
+(direct memory access), the GLU (Generalized Logic Unit), the MMU
+(Memory Manager Unit), the video shifter... all hastily patched together
+and rushed to market, because Commodore had just stolen the Amiga from 
+Atari. 
 
 Considering the way it was designed, it did fairly well against the Amiga. 
 The machine had many downsides, yet some fantastic programs (apps, games,
@@ -63,8 +65,7 @@ containing images of the content (ROM, disks...).
 
 
 Steem Engine, by Anthony & Russell Hayward
-___________________________________________
-
+____________________________________________
 
 Steem is a legendary Atari ST emulator, both accurate and easy to use thanks
 to its great user interface.
@@ -74,21 +75,23 @@ In 2011 the Hayward bros released the source code for further development.
 
 
 SSE
-____
+_____
 
-Steem SSE is a new version of Steem based on this release. It incorporates
-new features and emulation improvements, some of them based on the Hatari 
-and SainT emulators (this "emulation" goes both ways), some on various 
-internet discussions technical documentation, like chip datasheets, and 
-tests on real hardware.
+Steem SSE is an updated version of Steem based on that source release. It 
+incorporates new features and emulation improvements, some of them based on
+other emulators (I credit each time and this "emulation" goes both ways), 
+some on various internet discussions, technical documentation, like chip 
+datasheets, and tests on real hardware.
 
 Steem SSE aims to be the #1 STF/STE emulator. There's no limitation in
 the original Steem code structure (in C++) that would make that goal 
 unreachable.
 
-'SSE' stands for 'Steven Seagal Edition'. Steven Seagal is a well known
-Aikido grandmaster, action movie star, musician and playboy.
-It is rumoured he has a shadowy past working for some secret agencies.
+'SSE' pompously stands for 'Steven Seagal Edition'. 
+Steven Seagal is a well known Aikido grandmaster, action movie star,
+environmentalist, musician, reserve deputy sheriff and playboy.
+It is rumoured he has a shadowy past working for some secret agencies, and
+that he learnt the ancient secrets of emulation somewhere in the Far East.
 This is also my silly handle at http://www.atari-forum.com (AF).
 
 
@@ -416,7 +419,8 @@ whack it up to get things going faster. A couple of points: setting the CPU
 speed above 8MHz will cause the emulator to run _slower_, because it has more 
 processing to do for each screen displayed. It will also cause many ST programs 
 to crash/not work properly, because they rely on the processor running at the 
-correct speed.
+correct speed. When we reach 128Mhz, we may lose MFP emulation cycle accuracy
+and everything relying on timers will start acting weird.
 
 
 -Memory size
@@ -1265,7 +1269,7 @@ Status info includes ST model, TOS version, RAM quantity and:
  C1 and C2: respective options are checked (see further).
  When one of these isn't checked, a X stands to attract your attention to
  this unfortunate fact.
- !       The CPU/MFP ratio has been changed
+ !       The CPU/MFP ratio has been changed or drive is in single-sided mode
  #       'Hacks on'
  ADAT    'Accurate Disk Access Times' (Slow drive)
  V       'Vertical Sync'
@@ -1356,6 +1360,8 @@ option has many consequences.
 Why an option then? Emulation is more processor-intensive, you may prefer the
 PC mouse feel to the ST's, and all those modifications could very well break
 programs.
+If the option isn't checked, Steem falls back on the same emulation as 
+Steem 3.2.
      
 
 -C2: 68901
@@ -1502,9 +1508,9 @@ to be on the ST. Those virtual drives are called GEMDOS drives because they're
 based on interception of GEMDOS commands.
 You need to know that this type of emulation is very convenient for you, 
 because you just use your PC hard drive, but it is based on hacks, and in some
-cases it could not work as on a real Atari. See below for "ACSI" hard 
-drive emulation.
-For serious work we really advise to use TOS 1.04 or TOS 1.62.
+cases it could not work as on a real Atari. 
+For serious work we really advise to use TOS 1.04 or TOS 1.62, or to use
+an ACSI hard disk image (see below).
 Hard drives aren't as reliable as disk images, most things 
 will work but not everything. If a program isn't working properly copy it to a
 disk image (using the ST desktop) to see if that helps. Another option in this
@@ -1616,7 +1622,7 @@ The main limitation is that it only handles single files. If you want
 more then you need to use a virtual hard disk.
 
 
--ACSI hard disk images
+-ACSI hard disk images (option available in v3.8 and in beta)
 
 Much like ST files for floppies, some img files contain all sectors of an
 Atari hard disk (data only).
@@ -1646,15 +1652,19 @@ A floppy disk image with necessary utilities is available here, so you can
 see with what I actually pass time:
 http://ataristeven.t15.org/Steem_apps.htm#HD_UTILS
 
+More importantly, you could use a 3rd party file manager to edit ST hard 
+disk images, 'Drive image' by Petari:
+http://atari.8bitchip.info/drimus.php 
+
 
 -Automatically Insert Second Disk
 
 Lots of games come on two disks, if this option is on when inserting a disk 
 into drive A Steem will look for a second disk image with a similar name and 
 insert it into drive B.
-Note that even is Steem manages to insert the second disk in drive B:, the
+Note that even if Steem manages to insert the second disk in drive B:, the
 game may still require a disk swap in drive A:. Many games had only one drive
-in mind.
+in mind. The same for demos unfortunately.
 
 
 -Hide Broken Shortcuts
@@ -1722,8 +1732,7 @@ to find one quickly.
 
 -Run MSA Converter
 
-This loads the fantastic MSA Converter program that can be used to edit disk 
-images.
+This loads the MSA Converter program that can be used to edit disk images.
 
 
 

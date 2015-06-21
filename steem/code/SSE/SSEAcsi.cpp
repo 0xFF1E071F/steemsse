@@ -97,7 +97,7 @@ bool TAcsiHdc::Init(int num, char *path) {
     TRACE_HDC("ACSI %d init %s %d sectors %d MB\n",device_num,inquiry_string+8,nSectors,nSectors/(2*1024));
 #endif
 #if defined(SSE_ACSI_MULTIPLE)
-    acsi_dev=device_num; 
+    acsi_dev=device_num;
 #endif
   }
   //TRACE_INIT("ACSI %d open %s %d sectors %d MB\n",device_num,path,nSectors,nSectors/(2*1024));
@@ -241,10 +241,12 @@ void TAcsiHdc::IOWrite(BYTE Line,BYTE io_src_b) {
 
 void TAcsiHdc::Inquiry() {//drivers display this so we have a cool name
 #if !defined(SSE_ACSI_INQUIRY2)
-  const char inquiry_string[]="STEEM_ACSI";  //"SH204"; 
-#endif
+  const char inquiry_string[]="STEEM_ACSI";
   TRACE_HDC("Inquiry: %s\n",inquiry_string);
   DR=0; //?
+#else
+  TRACE_HDC("Inquiry: %s\n",inquiry_string+8); //strange...
+#endif
   for(int i=0;i<32;i++)
   {
 #if !defined(SSE_ACSI_INQUIRY2)
@@ -305,3 +307,4 @@ bool TAcsiHdc::Seek() {
 }
 
 #endif
+

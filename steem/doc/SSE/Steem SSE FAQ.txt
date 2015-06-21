@@ -142,6 +142,15 @@ that it should work.
 
 
 Q:
+What's the most accurate display size?
+A:
+It seems the original Steem size, 384x270, is what you typically got on a
+monitor. Some monitors or TV certainly could display more, or no ST coder
+would ever have proposed larger images, and the option wouldn't make any
+sense.
+
+
+Q:
 Hey my shortcut for F12 doesn't work anymore!
 A:
 This is by design. F12 will start/stop emulation in Steem like in other
@@ -170,10 +179,10 @@ screen.
 
 
 Q:
-Steem can't handle zip and rar files.
+Steem can't handle zip or rar or 7z files.
 A:
-For archive support, ArchiveAccess.dll must be in your system folder or in
-Steem folder. And unrar.dll for rar support.
+Check that necessary DLL are in your Steem folder.
+In Unix, Steem will only handle zip files.
 
 
 Q:
@@ -223,14 +232,6 @@ Can't help! Please join the call for some Linux maintainers.
 
 
 Q:
-I have some crashes that could be related to sound.
-A:
-Some DSP code has been added to Steem to handle Microwire emulation.
-This code is primitive and its use of the math coprocessor can cause bugs
-that we can't easily handle. You may try disabling option 'Microwire'. 
-
-
-Q:
 Emulation is crawling!
 A:
 It's a fact that Steem SSE is more CPU-intensive than Steem 3.2.
@@ -254,7 +255,6 @@ A:
 It's because Pasti (v0.2h) doesn't attempt to emulate correct timings for
 writes. The operation is instantaneous, so you have no time to catch the 
 red led.
-Remedying this with some hack doesn't seem worth it.
 Notice that without Pasti as well, write operations are followed by seek and 
 read operations, so that the led doesn't remain red all the time. In fast
 disk mode, you won't see red for short operations.
@@ -302,7 +302,7 @@ emulation. Steem uses a plugin, pasti.dll, that is much older and is in need
 of an update.
 Fortunately, those cases are rare, and we have alternatives now, like CTR
 and IPF, that also use a plugin, capsimg.dll, which is up-to-date, as well
-as SPC images using an up-to-date emulation in Steem.
+as SPC images using an up-to-date emulation in Steem itself.
 Who knows? Maybe one day pasti.dll will be improved.
 For those reasons directly handling STX images in Steem is not planned.
 
@@ -338,6 +338,7 @@ Access Times (Slow)' is checked in the Disk manager, for ST, MSA, DIM disk
 images.
 For IPF, CTR, STW, SCP and HFE disk images, the option isn't necessary as 
 emulation is slow anyway :) (no fast option yet).
+For STX images, settings are in 'Pasti configuration'.
 
 
 Q:
@@ -425,7 +426,8 @@ Q:
 Doesn't the boiler icon look like a garbage bin?
 A:
 The icon's internal name is 'debug_trash.ico', so it seems to be on purpose!
-Why exactly only Steem authors know.
+Why exactly only Steem authors know. It may be a way to say that not all
+programs on the platform were that good.
 
 
 Q:
@@ -455,8 +457,8 @@ You can help by testing stuff and reporting bugs.
 
 
 Q:
-I can't code, I don't help, I use Linux (only recently switched from Amiga
+I can't code, I won't help, I use Linux (only recently switched from Amiga
 OS), Hatari is better than Steem, fullscreen don't work, STW is useless, you
 suck, in fact Steven Seagull's movies are notoriously bad.
 A:
-https://www.youtube.com/watch?v=_SzXGblMcsE
+https://www.youtube.com/watch?v=299slo2tb0I

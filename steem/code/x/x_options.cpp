@@ -691,7 +691,13 @@ int TOptionBox::dd_notify_proc(hxc_dropdown*dd,int mess,int i)
 	if (mess!=DDN_SELCHANGE) return 0;
 
   if (dd->id==8){
+#if defined(SSE_CPU_512MHZ)
+    n_cpu_cycles_per_second=max(min(dd->sl[dd->sel].Data[0],512000000l),8000000l);
+#elif defined(SSE_CPU_256MHZ)
+    n_cpu_cycles_per_second=max(min(dd->sl[dd->sel].Data[0],256000000l),8000000l);
+#else
     n_cpu_cycles_per_second=max(min(dd->sl[dd->sel].Data[0],128000000l),8000000l);
+#endif
     if (runstate==RUNSTATE_RUNNING) osd_init_run(0);
     prepare_cpu_boosted_event_plans();
   }else if (dd->id==5001){ //sound mode

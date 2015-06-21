@@ -10,10 +10,11 @@ emulation, but it hasn't been written yet (and probably won't be).
 #pragma message("Included for compilation: hdimg.cpp")
 #endif
 
+#if !defined(SSE_ACSI_DISABLE_HDIMG)
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_HDIMG_H)
 #define EXT
 #define INIT(s) =s
-
 
 EXT bool hdimg_active INIT(0);
 
@@ -60,3 +61,4 @@ void hdimg_intercept_init()
 }
 //---------------------------------------------------------------------------
 
+#endif//#if !defined(SSE_ACSI_DISABLE_HDIMG)

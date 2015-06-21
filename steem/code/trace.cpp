@@ -37,6 +37,8 @@ const char*exception_action_name[4]={"read from","write to","fetch from","instru
 
 #endif
 
+#ifdef DEBUG_BUILD//SS
+
 //---------------------------------------------------------------------------
 void trace()
 {
@@ -449,4 +451,4 @@ void trace_window_init()
   SetWindowAndChildrensFont(trace_window_handle,fnt);
 }
 
-
+#endif//#ifdef DEBUG_BUILD//SS

@@ -2,6 +2,7 @@
 #pragma message("Included for compilation: debug.cpp")
 #endif
 
+//SS this isn't used at all
 
 #ifdef DEBUG_FUNCTIONS
 
