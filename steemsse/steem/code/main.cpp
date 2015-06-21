@@ -1118,7 +1118,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #if defined(SSE_TOS_WARNING1) && defined(SSE_VAR_POWERON2)
   CheckSTTypeAndTos();
 #endif
-#if defined(SSE_TOS_STEMDOS_RESTRICT_TOS2) // warning
+#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) // warning
   HardDiskMan.CheckTos();
 #endif
 

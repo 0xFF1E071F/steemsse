@@ -556,7 +556,6 @@ void TGeneralInfo::CreateLinksPage()
   ShowPageControls();
 
 #if defined(SSE_GUI_INFOBOX17)
- //// SetFocus(Scroller);
   PostMessage(Handle,WM_SETFOCUS,0,0); //rather hacky, but this is marginal
 #endif
 

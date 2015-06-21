@@ -19,8 +19,9 @@ HDC mem_browser::icons_dc=NULL;
 mem_browser *m_b[MAX_MEMORY_BROWSERS];
 char reg_browser_entry_name[20][8];
 unsigned long *reg_browser_entry_pointer[20];
-
 #endif
+
+#ifdef DEBUG_BUILD//SS
 
 LRESULT __stdcall mem_browser_WndProc(HWND,UINT,UINT,long);
 WNDPROC Old_mem_browser_WndProc;
@@ -1668,3 +1669,4 @@ mem_browser::~mem_browser()
 }
 //---------------------------------------------------------------------------
 
+#endif//#ifdef DEBUG_BUILD//SS

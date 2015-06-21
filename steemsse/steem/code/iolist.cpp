@@ -33,6 +33,7 @@ iolist_entry iolist[300
 #undef INIT
 #endif
 
+#ifdef DEBUG_BUILD//SS
 
 void iolist_add_entry(MEM_ADDRESS ad,char*name,int bytes,char*bitmask,BYTE*ptr)
 {
@@ -565,5 +566,5 @@ int iolist_box_draw(HDC dc,int x1,int y1,int w,int h,iolist_entry *il,BYTE *ptr)
   return 10;
 }
 
-
+#endif//#ifdef DEBUG_BUILD//SS
 

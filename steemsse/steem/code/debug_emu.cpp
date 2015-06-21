@@ -74,6 +74,8 @@ DynamicArray<DEBUGPLUGININFO> debug_plugins;
 
 #endif//SSE_STRUCTURE_DEBUGEMU_H
 
+#ifdef DEBUG_BUILD//SS
+
 //---------------------------------------------------------------------------
 // This is for if the emu is half way though the screen, it should be called
 // immediately after draw_begin to fix draw_dest_ad
@@ -189,12 +191,8 @@ void breakpoint_log()
 void breakpoint_check()
 {
   if (runstate!=RUNSTATE_RUNNING) return;
-  //ASSERT(pc!=0x1CA4E);
-  //ASSERT(debug_num_bk);
   for (int n=0;n<debug_num_bk;n++){
-    //TRACE("%X\n",debug_bk_ad[n]);
     if (debug_bk_ad[n]==pc){
-      //ASSERT(pc!=0x1CA4E);
       if (debug_get_ad_mode(pc)==3){
         breakpoint_log();
       }else{
@@ -325,9 +323,7 @@ void debug_hit_mon(MEM_ADDRESS ad,int read)
 #endif
 #endif
 #if defined(SSE_BOILER_MONITOR_372) //v3.7.2 to clarify code
-  if (mode==MONITOR_MODE_STOP
-   ///////// &&  runstate!=RUNSTATE_STOPPING
-    ){
+  if (mode==MONITOR_MODE_STOP){
 #else
   if (mode==2){
 #endif
@@ -652,3 +648,4 @@ int __stdcall debug_plugin_write_mem(DWORD ad,BYTE *buf,int len)
 }
 #endif
 
+#endif//#ifdef DEBUG_BUILD//SS

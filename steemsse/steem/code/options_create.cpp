@@ -142,6 +142,13 @@ void TOptionBox::CreateMachinePage()
   CBAddString(Win,EasyStr("80 ")+Mhz,80000000);
   CBAddString(Win,EasyStr("96 ")+Mhz,96000000);
   CBAddString(Win,EasyStr("128 ")+Mhz,128000000);
+#if defined(SSE_CPU_256MHZ)
+  CBAddString(Win,EasyStr("256 ")+Mhz,256000000);
+#endif
+#if defined(SSE_CPU_512MHZ)
+  CBAddString(Win,EasyStr("512 ")+Mhz,256000000);
+#endif
+
   if (CBSelectItemWithData(Win,n_cpu_cycles_per_second)<0){
     EasyStr Cycles=n_cpu_cycles_per_second;
     Cycles=Cycles.Lefts(Cycles.Length()-6);
@@ -149,12 +156,6 @@ void TOptionBox::CreateMachinePage()
     SendMessage(Win,CB_SETCURSEL,CBAddString(Win,Cycles+" "+T("Megahertz"),n_cpu_cycles_per_second),0);
   }
   y+=30;
-
-
-
-
-
-
 
   Wid=GetTextSize(Font,T("Memory size")).Width;
   CreateWindow("Static",T("Memory size"),WS_CHILD,page_l,y+4,Wid,20,Handle,HMENU(8090),HInstance,NULL);

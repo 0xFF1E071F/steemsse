@@ -92,6 +92,8 @@ THistoryList HistList;
 
 */
 
+#ifdef DEBUG_BUILD//SS
+
 //---------------------------------------------------------------------------
 void debug_trace_crash(m68k_exception &e)
 {
@@ -184,21 +186,6 @@ void debug_set_mon(MEM_ADDRESS ad,bool read,WORD mask)
   if (ad>=0xe00000 && ad<MEM_IO_BASE) return; // Monitors only on RAM and IO  
 
   DEBUG_ADDRESS *pda=debug_find_or_add_address(ad);
-#if defined(SSE_BOILER_MONITOR_TRACE________)
-  // both reads & writes... wrong!
-  for(int bit=((monitor_mode==MONITOR_MODE_LOG)?1:(read?2:1));
-    bit<=((monitor_mode==MONITOR_MODE_LOG)?2:(read?2:1))
-    ;bit++)
-  {
-    if (mask==0){
-      pda->bwr&=~(1 << bit);
-      pda->mask[bit-1]=0; 
-    }else{
-      pda->bwr|=1 << bit;
-      pda->mask[bit-1]=mask;
-    }
-  }//nxt
-#else
   int bit=int(read ? 2:1);
   if (mask==0){
     pda->bwr&=~(1 << bit);
@@ -207,7 +194,6 @@ void debug_set_mon(MEM_ADDRESS ad,bool read,WORD mask)
     pda->bwr|=1 << bit;
     pda->mask[bit-1]=mask;
   }
-#endif
   if (pda->bwr==0 && pda->name[0]==0){
     debug_remove_address(ad);
   }else{
@@ -272,12 +258,8 @@ void debug_update_bkmon()
 int debug_get_ad_mode(MEM_ADDRESS ad)
 {
   DEBUG_ADDRESS *pda=debug_find_address(ad);
-  //ASSERT(pc!=0x1CA4E);
   if (pda==NULL) return 0;
-  
-
   int mode=pda->mode;
-//if(pc==0x1CA4E) TRACE("mode %d %d\n",mode,pda->bwr);
   if (mode==1) mode=int((pda->bwr & 1) ? breakpoint_mode:monitor_mode);
   return mode;
 }
@@ -2531,3 +2513,4 @@ void debug_load_file_to_address(HWND par,MEM_ADDRESS ad)
 //---------------------------------------------------------------------------
 #undef LOGSECTION
 
+#endif//#ifdef DEBUG_BUILD//SS

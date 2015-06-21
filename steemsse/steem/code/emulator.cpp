@@ -274,8 +274,9 @@ void intercept_os() // SS could we do much more here?
     ioaccess|=IOACCESS_INTERCEPT_OS;
   }
 //TRACE("hdimg_active %d\n",hdimg_active);//0 for "img"
+#if !defined(SSE_ACSI_DISABLE_HDIMG)
   if (hdimg_active) hdimg_intercept(pc);
-
+#endif
 #ifndef NO_CRAZY_MONITOR
   if (extended_monitor){
 #if defined(SSE_MEGAR_FIX_001)
@@ -330,7 +331,9 @@ void intercept_bios()
 #endif
 
   if (func==10){ // Drvbits
+#if !defined(SSE_ACSI_DISABLE_HDIMG)
     if (os_hdimg_init_vector==0) hdimg_init_vectors();
+#endif
     if (disable_input_vbl_count>30) disable_input_vbl_count=0; // If TOS is making BIOS calls then the IKBD int is ready
 #ifdef DISABLE_STEMDOS
   }

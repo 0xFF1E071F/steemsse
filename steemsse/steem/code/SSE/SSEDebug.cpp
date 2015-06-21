@@ -61,7 +61,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_FDC ] = 1;
   logsection_enabled[ LOGSECTION_IO ] = 0;
   logsection_enabled[ LOGSECTION_MFP_TIMERS ] = 0;
-  logsection_enabled[ LOGSECTION_INIT ] =1;
+  logsection_enabled[ LOGSECTION_INIT ] =0;
   logsection_enabled[ LOGSECTION_CRASH ] = 0;
   logsection_enabled[ LOGSECTION_STEMDOS ] = 0;
   logsection_enabled[ LOGSECTION_IKBD ] = 0;
@@ -92,9 +92,6 @@ TDebug::TDebug() {
 #if defined(SSE_DEBUG_TRACE_FILE)
   IgnoreErrors=0; 
   nTrace=0; // trace counter
-  ////////EasyStr filename=WriteDir + SLASH  + SSE_TRACE_FILE_NAME;
-
-
   SetCurrentDirectory(GetEXEDir().Text);
 
   trace_file_pointer=freopen(SSE_TRACE_FILE_NAME, "w", stdout );
@@ -193,8 +190,7 @@ void TDebug::Vbl(){
   FrameInterrupts=0;
   FrameMfpIrqs=0;
 #endif  
-  //TRACE_OSD("hbi %d",nHbis);
-  nHbis=0;
+   nHbis=0;
 }
 
 
@@ -427,11 +423,7 @@ void TDebug::TraceLog(char *fmt, ...) { // static
     Current systems are powerful enough to accomodate a lot of those
     messages, eg when the CPU is in trace mode (Transbeauce 2).
 */  
-
-//void osd_draw_full_stop();
-
 void TDebug::TraceOsd(char *fmt, ...) {
-
   va_list body;	
   va_start(body, fmt);	
 #if defined(SSE_UNIX)
@@ -441,11 +433,7 @@ void TDebug::TraceOsd(char *fmt, ...) {
 #endif
   va_end(body);	
   strupr(m_OsdMessage); // OSD font is upper-only
-//  TRACE("osdinfo %s %d %d\n",Debug.m_OsdMessage,Debug.OsdTimer,timer);
   OsdTimer=timer+OSD_DEBUG_MESSAGE_TIME*1000;
-//  if(runstate!=RUNSTATE_RUNNING) //TODO
-//    osd_draw_full_stop();
-
 }
 #endif
 

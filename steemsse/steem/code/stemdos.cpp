@@ -1165,7 +1165,7 @@ void stemdos_control_c() //control-c pressed
 void stemdos_intercept_trap_1()
 {
 
-#if defined(SSE_TOS_STEMDOS_RESTRICT_TOS)
+#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS)
   if(!SSEConfig.Stemdos)
     return;
 #endif

@@ -921,7 +921,13 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
       switch (LOWORD(wPar)){
         case 404:
           if (HIWORD(wPar)==CBN_SELENDOK){
+#if defined(SSE_CPU_512MHZ)
+            n_cpu_cycles_per_second=max(min(SendMessage(HWND(lPar),CB_GETITEMDATA,SendMessage(HWND(lPar),CB_GETCURSEL,0,0),0),512000000l),8000000l);
+#elif defined(SSE_CPU_256MHZ)
+            n_cpu_cycles_per_second=max(min(SendMessage(HWND(lPar),CB_GETITEMDATA,SendMessage(HWND(lPar),CB_GETCURSEL,0,0),0),256000000l),8000000l);
+#else
             n_cpu_cycles_per_second=max(min(SendMessage(HWND(lPar),CB_GETITEMDATA,SendMessage(HWND(lPar),CB_GETCURSEL,0,0),0),128000000l),8000000l);
+#endif
             if (runstate==RUNSTATE_RUNNING) osd_init_run(0);
             prepare_cpu_boosted_event_plans();
           }
@@ -2082,7 +2088,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_TOS_WARNING1)
             CheckSTTypeAndTos();
 #endif
-#if defined(SSE_TOS_STEMDOS_RESTRICT_TOS2) // warning
+#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) // warning
             HardDiskMan.CheckTos();
 #endif
           break;

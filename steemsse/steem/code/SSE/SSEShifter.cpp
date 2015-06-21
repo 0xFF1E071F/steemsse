@@ -585,7 +585,7 @@ TODO!
       CurrentScanline.StartCycle=lim_r2;//0; //not really used
 #if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
       if(OPTION_PRECISE_MFP)
-        MC68901.AdjustTimerB();
+        MC68901.AdjustTimerB(); //isn't it too late?
 #endif
 #endif
       overscan=OVERSCAN_MAX_COUNTDOWN;

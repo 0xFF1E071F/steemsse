@@ -20,6 +20,8 @@ WORD d2_ap;
 int d2_n_movem_regs;
 #endif
 
+#ifdef DEBUG_BUILD//SS
+
 void (*d2_high_nibble_jump_table[16])();
 void (*d2_jump_line_0[64])();
 void (*d2_jump_line_4[64])();
@@ -3101,3 +3103,4 @@ EasyStr disa_d2(MEM_ADDRESS new_dpc)
   return dt;
 }
 
+#endif//#ifdef DEBUG_BUILD//SS

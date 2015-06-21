@@ -1311,7 +1311,7 @@ BYTE TMC68901::GetReg(int reg_num,int at_time) {
 
 bool TMC68901::Enabled(int irq,int at_time) {
   int reg_num=MFPR_IERA+mfp_interrupt_i_ab(irq);
-#if defined(SSE_INT_MFP_TMP2)
+#if defined(SSE_INT_MFP_UTIL2)
   BYTE reg=GetReg(reg_num,at_time);
 #else
   BYTE reg=GetReg(reg_num);
@@ -1324,7 +1324,7 @@ bool TMC68901::Enabled(int irq,int at_time) {
 
 bool TMC68901::InService(int irq,int at_time){
   int reg_num=MFPR_ISRA+mfp_interrupt_i_ab(irq);
-#if defined(SSE_INT_MFP_TMP2)
+#if defined(SSE_INT_MFP_UTIL2)
   BYTE reg=GetReg(reg_num,at_time);
 #else
   BYTE reg=GetReg(reg_num);
@@ -1336,7 +1336,7 @@ bool TMC68901::InService(int irq,int at_time){
 
 bool TMC68901::MaskOK(int irq,int at_time) { //used
   int reg_num=MFPR_IMRA+mfp_interrupt_i_ab(irq);
-#if defined(SSE_INT_MFP_TMP2)
+#if defined(SSE_INT_MFP_UTIL2)
   BYTE reg=GetReg(reg_num,at_time);
 #else
   BYTE reg=GetReg(reg_num);
@@ -1386,7 +1386,7 @@ bool TMC68901::CheckSpurious(int irq) {
   ASSERT( OPTION_PRECISE_MFP ); // you need more CPU power
   bool spurious_triggered=false;
 
-#if defined(SSE_INT_MFP_SPURIOUS2)
+#if defined(SSE_INT_MFP_SPURIOUS_372)
 /* v3.7.2 bugfix Return STE -HMD
     dangerous code (interrupt is pending):
 	move #$2700,sr                                   ; 012DA2: 46FC 2700 
@@ -1407,7 +1407,7 @@ Fix is pragmatic (TEST10D still working).
 #endif
 
   if(IrqInfo[irq].IsTimer && ACT-WriteTiming>=0 
-#if defined(SSE_INT_MFP_SPURIOUS2)
+#if defined(SSE_INT_MFP_SPURIOUS_372)
     && ACT-WriteTiming<=mfp_write_latency)
 #else
     && ACT-WriteTiming<=MFP_SPURIOUS_LATENCY)
@@ -1431,7 +1431,7 @@ Fix is pragmatic (TEST10D still working).
 
     // Value of register is set only after 4 cycles, possibly
     // voiding an interrupt.
-#if defined(SSE_INT_MFP_SPURIOUS2)
+#if defined(SSE_INT_MFP_SPURIOUS_372)
     if(IrqTiming-WriteTiming<=mfp_write_latency)
 #else
     if(IrqTiming-WriteTiming<=MFP_WRITE_LATENCY)
@@ -1460,7 +1460,7 @@ Fix is pragmatic (TEST10D still working).
     BYTE reg_masked_before=(LastRegisterWritten==MFPR_IMRA+i_ab)
       ? LastRegisterFormerValue : mfp_reg[MFPR_IMRA+i_ab];
 
-#if defined(SSE_INT_MFP_SPURIOUS2)
+#if defined(SSE_INT_MFP_SPURIOUS_372)
     BYTE reg_masked_after=(LastRegisterWritten==MFPR_IMRA+i_ab 
       && ACT-WriteTiming<mfp_write_latency)//MFP_WRITE_LATENCY+2)
       ? LastRegisterFormerValue : mfp_reg[MFPR_IMRA+i_ab];
@@ -1476,7 +1476,7 @@ Fix is pragmatic (TEST10D still working).
       && next_timeout-ACT>=0 //fuz105, LTC2
       && next_timeout-WriteTiming<=MFP_WRITE_LATENCY)
       && ( !(mfp_reg[MFPR_IERA+i_ab] & i_bit) ||!(reg_pending_after & i_bit)
-#if defined(SSE_INT_MFP_SPURIOUS2)
+#if defined(SSE_INT_MFP_SPURIOUS_372)
       ||!(reg_masked_after & i_bit)))
 #else
       ||!(mfp_reg[MFPR_IMRA+i_ab] & i_bit)))
@@ -1573,6 +1573,7 @@ int TMC68901::UpdateNextIrq(int start_from_irq,int at_time) {
 /*  Shifter tricks can change timing of timer B. This wasn't handled yet
     in Steem. Don't think any game/demo depends on this, I added it for a
     test program.
+    Refactoring due together with shifter tricks.
 */
 
 void TMC68901::AdjustTimerB() {

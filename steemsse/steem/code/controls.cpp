@@ -861,8 +861,11 @@ LRESULT __stdcall HyperLinkWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 
             char *tp=Text;
             if (strchr(Text,'|')) tp=strchr(Text,'|')+1;
+#if defined(SSE_GUI_INFOBOX18) //new instance
+            ShellExecute(0,0,"iexplore.exe", tp, 0, SW_SHOWNORMAL); 
+#else
             ShellExecute(NULL,NULL,tp,"","",SW_SHOW);
-
+#endif
             delete[] Text;
           }
         }

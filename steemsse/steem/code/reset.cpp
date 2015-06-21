@@ -231,9 +231,9 @@ void power_on()
 #endif
 
 #endif//ss
-
+#if !defined(SSE_ACSI_DISABLE_HDIMG)
   hdimg_reset();
-
+#endif
   reset_peripherals(true);
 
   init_screen();
