@@ -687,7 +687,11 @@ Far more on the ST.
 #endif
 
 #if defined(SSE_STF_MATCH_TOS2)
+#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2)
+#define DEFAULT_TOS_STF (HardDiskMan.DisableHardDrives?0x102:0x104)
+#else
 #define DEFAULT_TOS_STF 0x102
+#endif
 #define DEFAULT_TOS_STE 0x162
 #endif
 

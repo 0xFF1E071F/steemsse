@@ -389,7 +389,11 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
 
 #if defined(SSE_STF_MATCH_TOS2) // 1.62 instead of 1.06
           // remember paths of default TOS for STF and STE
-          if(Ver==DEFAULT_TOS_STF && KnownSTFTosPath.Empty())
+          if(Ver==DEFAULT_TOS_STF
+#if !defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) // check each time, HD may be on/off
+            && KnownSTFTosPath.Empty()
+#endif
+          )
           {
             //TRACE_LOG("Memorising %s for TOS%X\n",Path.c_str(),Ver);
             KnownSTFTosPath=Path;

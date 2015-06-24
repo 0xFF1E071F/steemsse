@@ -1,7 +1,7 @@
 Steem SSE Bugs
 ===================
 
-v3.7.1
+v3.7.2
 
 Notes
 1) "Correct" means it's no Steem bug AFAIK.

@@ -1,7 +1,7 @@
 Steem SSE manual
 =================
 
-v3.7.2b
+v3.7.2
 
 About the manual
 _________________

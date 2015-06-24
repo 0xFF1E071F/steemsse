@@ -2015,6 +2015,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_VAR_FULLSCREEN_DONT_START // disable run when going fullscreen - option?
 //#define SSE_VAR_HIDE_OPTIONS_AT_START // hack before debugging
 #define SSE_VAR_KEYBOARD_CLICK // not a sound nor IKBD option
+#define SSE_VAR_MAIN_LOOP1 // protect from crash with try/catch 3.7.2
 //#define SSE_VAR_NO_ASSOCIATE //changed later//????
 #define SSE_VAR_NO_UPDATE // remove all code in relation to updating
 #define SSE_VAR_NO_UPDATE_372
@@ -4269,6 +4270,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_VAR_ARCHIVEACCESS3 // zip managed by ArchiveAccess.dll by default - no, because of MSA Converter TODO
 //#define SSE_VAR_ARCHIVEACCESS4 // remove code for unzipd32.dll - what if archiveaccess fails!
 #endif
+#define SSE_VAR_MAIN_LOOP1 // protect from crash with try/catch
 #define SSE_VAR_NO_UPDATE_372
 #define SSE_VAR_RESIZE_372
 #endif//var
@@ -4279,6 +4281,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_WD1772)
 #define SSE_WD1772_372 // bugfix write MFM word with missing clock bit on data!
 #endif
+
 #endif//372
 
 
