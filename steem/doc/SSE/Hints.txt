@@ -1,7 +1,7 @@
 Steem SSE Hints
 ===================
 
-v3.7.2b
+v3.7.2
 
 If a program doesn't work in Steem SSE, please check the lists below,
 maybe the solution is there. 

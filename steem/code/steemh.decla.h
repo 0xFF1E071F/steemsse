@@ -52,9 +52,17 @@ EXT BYTE stick[8];
 EXT const char *stem_version_text INIT("3.2");
 #endif
 
+#ifdef STEVEN_SEAGAL
+#define STEEM_EMAIL "donmegacool@hotmail.net"
+#else
 #define STEEM_EMAIL "steem@gmx.net"
+#endif
 
+#ifdef STEVEN_SEAGAL
+#define STEEM_WEB "http:/""/ataristeven.t15.org/"
+#else
 #define STEEM_WEB "http:/""/steem.atari.st/"
+#endif
 
 #define MSACONV_WEB "http:/""/msaconverter.free.fr/"
 #define DIDATABASE_WEB STEEM_WEB "database.htm"

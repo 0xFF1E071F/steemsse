@@ -526,7 +526,7 @@ this state, no further memory references are made."
     bit in the CPU, so that it knows that the trace bit was set at the
     start of the instruction.
 */
-  enum {NORMAL,EXCEPTION,HALTED,STOPPED,TRACE_MODE}; 
+  enum {NORMAL,EXCEPTION,HALTED,STOPPED,TRACE_MODE,INTEL_CRASH}; 
   BYTE ProcessingState;
 #endif
 

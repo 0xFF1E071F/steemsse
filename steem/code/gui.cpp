@@ -826,6 +826,11 @@ void GUIRefreshStatusBar() {
 #endif
 #endif
 
+#if defined(SSE_VAR_MAIN_LOOP1) && defined(SSE_CPU_HALT)
+    if(M68000.ProcessingState==TM68000::INTEL_CRASH)
+      strcpy(status_bar,T("STEEM CRASHED!"));  
+#endif
+
 #if defined(SSE_GUI_STATUS_STRING_HALT) && defined(SSE_CPU_HALT)
     if(M68000.ProcessingState==TM68000::HALTED)
       strcpy(status_bar,T("HALT (ST crashed)"));

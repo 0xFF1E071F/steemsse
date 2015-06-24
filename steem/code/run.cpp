@@ -216,7 +216,9 @@ void run()
   if (Blit.Busy) Blitter_Draw();
   do{
     ExcepHappened=0;
-
+#if defined(SSE_VAR_MAIN_LOOP1)
+    try {
+#endif
     TRY_M68K_EXCEPTION
 
       while (runstate==RUNSTATE_RUNNING){
@@ -300,6 +302,21 @@ void run()
       if (runstate!=RUNSTATE_RUNNING) ExcepHappened=0;
 #endif
     END_M68K_EXCEPTION
+#if defined(SSE_VAR_MAIN_LOOP1)
+/*  This will catch some exceptions. Tested with DIVMAX.TOS when
+    SSE_CPU_DIVS_OVERFLOW_PC isn't defined.
+*/
+    }
+    catch(...)
+    {
+      runstate=RUNSTATE_STOPPING;
+#if defined(SSE_GUI_STATUS_STRING) && defined(SSE_CPU_HALT)
+      M68000.ProcessingState=TM68000::INTEL_CRASH; // Intel M68000 crashed
+      GUIRefreshStatusBar();
+#endif
+    }
+#endif
+
   }while (ExcepHappened);
 
   PortsRunEnd();

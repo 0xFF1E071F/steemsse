@@ -1,7 +1,7 @@
 Steem SSE FAQ
 ---------------
 
-v3.7.2b
+v3.7.2
 
 Q:
 What is Steem?

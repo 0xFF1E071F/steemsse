@@ -116,7 +116,7 @@ void TOptionBox::CreateMachinePage()
   cpu_boost_dd.additem(EasyStr("256 ")+Mhz,256000000);
 #endif
 #if defined(SSE_CPU_512MHZ)
-  cpu_boost_dd.additem(EasyStr("512 ")+Mhz,256000000);
+  cpu_boost_dd.additem(EasyStr("512 ")+Mhz,512000000);
 #endif
 
   if (cpu_boost_dd.select_item_by_data(n_cpu_cycles_per_second)<0){
