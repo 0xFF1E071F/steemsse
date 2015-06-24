@@ -53,7 +53,7 @@ EXT const char *stem_version_text INIT("3.2");
 #endif
 
 #ifdef STEVEN_SEAGAL
-#define STEEM_EMAIL "donmegacool@hotmail.net"
+#define STEEM_EMAIL "donmegacool@hotmail.com"
 #else
 #define STEEM_EMAIL "steem@gmx.net"
 #endif
