@@ -30,7 +30,7 @@ typedef unsigned char BYTE;
 
 #endif
 
-#if defined(SSE_UNIX) || defined(MINGW_BUILD) 
+#if defined(UNIX) || defined(MINGW_BUILD) 
 #include <stdint.h>
 #else // for CAPS, HFE
 typedef signed __int8		int8_t;
