@@ -59,7 +59,7 @@ OBJS=./obj/asm_draw.o ./obj/emu.o ./obj/asm_osd.o ./obj/main.o ./obj/helper.o \
  ./obj/SSECpu.o ./obj/SSEDebug.o ./obj/SSEFrameReport.o ./obj/SSEShifter.o    \
  ./obj/SSESTF.o ./obj/SSEVideo.o ./obj/SSEFloppy.o ./obj/SSEWD1772.o          \
  ./obj/SSEDrive.o ./obj/SSEDisk.o ./obj/SSEYM2149.o ./obj/SSEDma.o            \
- ./obj/SSESTW.o ./obj/SSEGlue.o 
+ ./obj/SSESTW.o ./obj/SSEGlue.o ./obj/SSEScp.o ./obj/SSEHfe.o
 
 # Targets
 
@@ -87,6 +87,8 @@ all:	asm
 	$(MAKE) -fMakefile.txt SSEDma
 	$(MAKE) -fMakefile.txt SSESTW
 	$(MAKE) -fMakefile.txt SSEGlue
+	$(MAKE) -fMakefile.txt SSEScp
+	$(MAKE) -fMakefile.txt SSEHfe
 	$(MAKE) -fMakefile.txt link
 
 clean:
@@ -189,6 +191,13 @@ SSESTW:
 
 SSEGlue:
 	$(CC) -o ./obj/SSEGlue.o -c $(ROOT)/steem/code/SSE/SSEGlue.cpp $(CFLAGS) $(STEEMFLAGS)
+
+SSEScp:
+	$(CC) -o ./obj/SSEScp.o -c $(ROOT)/steem/code/SSE/SSEScp.cpp $(CFLAGS) $(STEEMFLAGS)
+
+SSEHfe:
+	$(CC) -o ./obj/SSEHfe.o -c $(ROOT)/steem/code/SSE/SSEHfe.cpp $(CFLAGS) $(STEEMFLAGS)
+
 
 #3rdparty:	zlib unrarlib portaudio rtaudio div68kCycleAccurate 6301
 3rdparty:	div68kCycleAccurate 6301 dsp zlib rtaudio 
