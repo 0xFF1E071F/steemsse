@@ -7,16 +7,6 @@
 // PORTABILITY //
 /////////////////
 
-//dinput8.lib dxguid.lib winmm.lib ComCtl32.Lib odbc32.lib odbccp32.lib d3d9.lib
-
-/*
- DEFINE_GUID( IID_IDirectDraw,		0x6C14DB80,0xA733,0x11CE,0xA5,0x21,0x00,0x20,0xAF,0x0B,0xE5,0x60 );
- DEFINE_GUID( IID_IDirectDraw2,		0xB3A6F3E0,0x2B43,0x11CF,0xA2,0xDE,0x00,0xAA,0x00,0xB9,0x33,0x56 );
-*/
-
-
-
-
 #if defined(BCC_BUILD) // after x warnings, BCC stops compiling!
 #pragma warn- 8004 
 #pragma warn- 8010 // continuation character
@@ -40,7 +30,7 @@ typedef unsigned char BYTE;
 
 #endif
 
-#ifdef MINGW_BUILD
+#if defined(SSE_UNIX) || defined(MINGW_BUILD) 
 #include <stdint.h>
 #else // for CAPS, HFE
 typedef signed __int8		int8_t;
