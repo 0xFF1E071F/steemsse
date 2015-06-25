@@ -16,6 +16,10 @@
 #include <floppy_drive.decla.h>
 #include <mymisc.h> //long GetFileLength(FILE *f)
 
+#ifdef UNIX
+extern EasyStr GetEXEDir();
+#endif
+
 #define IMAGE_SIZE image_size //member variable
 #define NUM_SIDES 2
 #if defined(SSE_DISK_HFE_DYNAMIC_HEADER)
