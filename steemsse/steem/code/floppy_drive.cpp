@@ -369,9 +369,18 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
   }else if(SCP) { 
 
+  ASSERT(!(this==&FloppyDrive[0] && drive!=0));
+  ASSERT(!(this==&FloppyDrive[1] && drive!=1));
+
+
+
 #if defined(SSE_DISK_REMOVE_DISK_ON_SET_DISK)
     RemoveDisk();
 #endif
+
+  ASSERT(!(this==&FloppyDrive[0] && drive!=0));
+  ASSERT(!(this==&FloppyDrive[1] && drive!=1));
+
 
     if(drive==-1  || !ImageSCP[drive].Open(File))
       return FIMAGE_WRONGFORMAT;
@@ -846,12 +855,12 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       }
 
       fseek(nf,HeaderLen,SEEK_SET);
-#ifdef SSE_OSD_DRIVE_INFO_EXT
+#if defined(SSE_OSD_DRIVE_INFO_EXT) && defined(SSE_DISK_IMAGETYPE)
       //this is pretty annoying, this RemoveDisk
       TImageType save_type=SF314[drive].ImageType;
 #endif
       RemoveDisk();
-#ifdef SSE_OSD_DRIVE_INFO_EXT
+#if defined(SSE_OSD_DRIVE_INFO_EXT) && defined(SSE_DISK_IMAGETYPE)
       //this is pretty annoying, this RemoveDisk
       SF314[drive].ImageType=save_type;
 #endif
