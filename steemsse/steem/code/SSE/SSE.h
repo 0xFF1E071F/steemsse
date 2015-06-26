@@ -148,7 +148,7 @@ Beta: not SSE_PRIVATE_BUILD
     to compile an older version.
 */
 
-#define SSE_SWITCHES_FEATURES
+//#define SSE_SWITCHES_FEATURES
 
 
 //////////////
