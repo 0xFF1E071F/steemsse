@@ -812,7 +812,7 @@ void GUIRefreshStatusBar() {
 #undef MAX_TEXT_LENGTH_BORDER_ON
 #undef MAX_TEXT_LENGTH_BORDER_OFF
 
-#if defined(SSE_GUI_STATUS_STRING_DISK_TYPE)
+#if defined(SSE_GUI_STATUS_STRING_DISK_TYPE) && defined(SSE_DISK_IMAGETYPE)
 /*  If the game in A: isn't displayed on status bar, then we
     show what kind of file is in A: and B:. v3.7.2
 */

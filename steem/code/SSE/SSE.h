@@ -951,6 +951,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_DISK_SCP)
 #define SSE_DISK_SCP2A //id 3.7.2
 #define SSE_DISK_SCP2B //all IP 1->2 (..->1 during rev) - perf? 3.7.2
+#define SSE_DISK_SCP_DRIVE_WOBBLE//3.7.2
 //#define SSE_DISK_SCP_TO_MFM_PREVIEW // keep it, could be useful
 #endif//scp
 
@@ -1176,7 +1177,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_WD1772_REG2 // DSR, ByteCount
 #define SSE_WD1772_REG2_B // StatusType
 #define SSE_WD1772_RESET
-#define SSE_WD1772_WEAK_BITS //hack
+//#define SSE_WD1772_WEAK_BITS //hack undef 3.7.2
 #endif
 
 // YM-2149 //
@@ -4238,10 +4239,11 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_DISK_HFE_TO_STW // using Steem to convert current disk
 #define SSE_DISK_STW2 
 #define SSE_DISK_HFE_DYNAMIC_HEADER //spare some memory
-//#define SSE_DISK_STW_TRIGGER_IP //TODO
 #define SSE_DISK_REMOVE_DISK_ON_SET_DISK //hmm, could explain some strange bugs
 #define SSE_DISK_SCP2A //id
 #define SSE_DISK_SCP2B //all IP 1->2 (..->1 during rev) - perf?
+#define SSE_DISK_SCP_DRIVE_WOBBLE
+//#define SSE_DISK_STW_TRIGGER_IP //TODO
 #endif
 #if defined(SSE_GUI)
 #define SSE_GUI_ASSOCIATE_HFE // they're generally not zipped...
@@ -4279,6 +4281,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_D3D_CRISP_OPTION //the harder part!
 #endif//vid
 #if defined(SSE_WD1772)
+#undef SSE_WD1772_WEAK_BITS
 #define SSE_WD1772_372 // bugfix write MFM word with missing clock bit on data!
 #endif
 

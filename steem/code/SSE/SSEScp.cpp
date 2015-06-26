@@ -66,7 +66,7 @@ TImageSCP::~TImageSCP() {
 void TImageSCP::Close() {
   if(fCurrentImage)
   {
-    TRACE_LOG("SCP close image\n");
+    TRACE_LOG("SCP %d close image\n",Id);
     fclose(fCurrentImage);
     if(TimeFromIndexPulse)
       free(TimeFromIndexPulse);
@@ -119,6 +119,7 @@ BYTE TImageSCP::GetDelay(int position) {
 
 #endif
 
+
 int TImageSCP::UnitsToNextFlux(int position) {
   // 1 unit = 25 nanoseconds = 1/40 ms
   ASSERT(position<nBits);
@@ -130,6 +131,11 @@ int TImageSCP::UnitsToNextFlux(int position) {
   time2=TimeFromIndexPulse[position];
   ASSERT( time2>time1 );
   int units_to_next_flux=time2-time1; 
+#if defined(SSE_DISK_SCP_DRIVE_WOBBLE)
+  // like SSE_WD1772_WEAK_BITS but simpler (not "better")
+  int wobble=(rand()%4)-2;
+  units_to_next_flux+=wobble;
+#endif
   return units_to_next_flux;    
 }
 
@@ -482,9 +488,9 @@ bool TImageSCP::Open(char *path) {
         else
           nTracks=(file_header.IFF_END-file_header.IFF_START+1)/2;
 #ifdef SSE_DEBUG //lots of info
-TRACE_LOG("SCP sides %d tracks %d IFF_VER %X IFF_DISKTYPE %X IFF_NUMREVS %d \
+TRACE_LOG("SCP %d sides %d tracks %d IFF_VER %X IFF_DISKTYPE %X IFF_NUMREVS %d \
 IFF_START %d IFF_END %d IFF_FLAGS %d IFF_ENCODING %d IFF_HEADS %d \
-IFF_RSRVED %X IFF_CHECKSUM %X\n",nSides,nTracks,file_header.IFF_VER,
+IFF_RSRVED %X IFF_CHECKSUM %X\n",Id,nSides,nTracks,file_header.IFF_VER,
 file_header.IFF_DISKTYPE,file_header.IFF_NUMREVS,file_header.IFF_START,
 file_header.IFF_END,file_header.IFF_FLAGS,file_header.IFF_ENCODING,
 file_header.IFF_HEADS,file_header.IFF_RSRVED,file_header.IFF_CHECKSUM);
