@@ -996,6 +996,7 @@ int TWD1772Dpll::GetNextBit(int &tm, BYTE drive) {
       $E8 11101000 MFM 544A 0101010001001010 
     With other values, the 1st gate won't even open for your party.
     We nudge by only 1 cycle, but it makes the difference.
+    undef 3.7.2
 */
     if(!SSE_HACKS_ON) 
       ; // it is a dangerous hack, protected by the option
