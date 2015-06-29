@@ -788,11 +788,7 @@ void TSF314::Sound_CheckCommand(BYTE cr) {
     else 
 #endif
     if(Sound_Buffer[SEEK])
-    {
       Sound_Buffer[SEEK]->Play(0,0,DSBPLAY_LOOPING);
-      //Sound_Buffer[SEEK]
-      //TRACE("play seek sound\n");
-    }
   }
 }
 
@@ -803,13 +799,9 @@ void TSF314::Sound_CheckIrq() {
     Emit a "STEP" click noise if we were effectively seeking.
     We don't come here if ADAT and SSE_DRIVE_SOUND_SEEK2.
 */
-#if !defined(SSE_DRIVE_SOUND_CHECK_SEEK_VBL)
   if(Sound_Buffer[SEEK])
-  {
     Sound_Buffer[SEEK]->Stop();
-//    TRACE("stop seek sound\n");
-  }
-#endif
+
 #if defined(SSE_FDC) 
   if(WD1772.CommandType()==1 && TrackAtCommand!=Track() && Sound_Buffer[STEP]
 #if defined(SSE_DRIVE_SOUND_SEEK3)    
@@ -817,7 +809,6 @@ void TSF314::Sound_CheckIrq() {
 #endif
     )
   {
-    //TRACE("Step track %d\n",Track());
     DWORD dwStatus ;
     Sound_Buffer[STEP]->GetStatus(&dwStatus);
     if( (dwStatus&DSBSTATUS_PLAYING) )
@@ -849,16 +840,6 @@ void TSF314::Sound_CheckMotor() {
     Sound_Buffer[MOTOR]->Play(0,0,DSBPLAY_LOOPING); // start motor loop
   else if((!SSEOption.DriveSound||!motor_on) && (dwStatus&DSBSTATUS_PLAYING))
     Sound_Buffer[MOTOR]->Stop();
-#if defined(SSE_DRIVE_SOUND_CHECK_SEEK_VBL)//no, MFD
-  // because of some buggy programs? (normally not defined)
-  if(Sound_Buffer[SEEK] && !(FRAME%10) && WD1772.CommandType()!=1)
-  {
-    Sound_Buffer[SEEK]->GetStatus(&dwStatus);
-    if((dwStatus&DSBSTATUS_PLAYING))
-      Sound_Buffer[SEEK]->Stop();
-  }
-#endif
-
 }
 
 
@@ -867,8 +848,6 @@ void TSF314::Sound_LoadSamples(IDirectSound *DSObj,DSBUFFERDESC *dsbd,WAVEFORMAT
     We load each sample in its own secondary buffer, each time, which doesn't 
     seem optimal, but saves memory.
 */
-
-  //TRACE("TSF314::Sound_LoadSamples\n");
 
   HRESULT Ret;
   TWavFileFormat WavFileFormat;
@@ -902,10 +881,7 @@ void TSF314::Sound_LoadSamples(IDirectSound *DSObj,DSBUFFERDESC *dsbd,WAVEFORMAT
         DWORD dwAudioBytes1;
         Ret=Sound_Buffer[i]->Lock(0,0,&lpvAudioPtr1,&dwAudioBytes1,NULL,0,DSBLOCK_ENTIREBUFFER );
         if(Ret==DS_OK)
-        {
           fread(lpvAudioPtr1,1,dwAudioBytes1,fp);
-          //TRACE("load sample %s\n",pathplusfile.Text);
-        }
         Ret=Sound_Buffer[i]->Unlock(lpvAudioPtr1,dwAudioBytes1,NULL,0);
 #if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
         SF314[1].Sound_Buffer[i]=Sound_Buffer[i]; // not beautiful C++...
@@ -927,7 +903,6 @@ void TSF314::Sound_LoadSamples(IDirectSound *DSObj,DSBUFFERDESC *dsbd,WAVEFORMAT
 void TSF314::Sound_ReleaseBuffers() {
 /* Called from init_sound.cpp's  DSReleaseAllBuffers(HRESULT Ret=DS_OK)
 */
-  //TRACE("TSF314::Sound_ReleaseBuffers()\n");
   HRESULT Ret1,Ret2;
   for(int i=0;i<NSOUNDS;i++)
   {
@@ -939,7 +914,6 @@ void TSF314::Sound_ReleaseBuffers() {
 #if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
       SF314[1].Sound_Buffer[i]=NULL; // not beautiful C++...
 #endif
-      //TRACE("Release Buffer %d: %d %d\n",i,Ret1,Ret2);
     }
   }
 }
@@ -970,15 +944,11 @@ void TSF314::Sound_Step() {
 
 
 void TSF314::Sound_StopBuffers() {
-  //TRACE("TSF314::Sound_StopBuffers()\n");
   HRESULT Ret1;
   for(int i=0;i<NSOUNDS;i++)
   {
     if(Sound_Buffer[i])
-    {
       Ret1=Sound_Buffer[i]->Stop();
-      //TRACE("Stop Buffer %d: %d\n",i,Ret1);
-    }
   }
 }
 

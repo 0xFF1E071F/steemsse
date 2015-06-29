@@ -1923,9 +1923,9 @@ void dma_sound_fetch()
       while (dma_sound_output_countdown>=0){
         if (dma_sound_channel_buf_last_write_t>=DMA_SOUND_BUFFER_LENGTH) break;
 
-#if defined (STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STE_________)
+#if defined (STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STE)
         // exactly the same low-pass filter as for STF sound
-        // ->3.6.3 it filters but also pollutes the sound, MFD
+        // ->3.6.3 it filters but also pollutes the sound
         if(MICROWIRE_ON
           &&PSG_FILTER_FIX //for v3.6.3 tests
           &&dma_sound_channel_buf_last_write_t>3)

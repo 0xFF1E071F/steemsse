@@ -449,11 +449,6 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   CapsTrackInfoT2 track_info; // apparently we must use type 2...
   track_info.type=1;
   UDWORD flags=DI_LOCK_DENALT|DI_LOCK_DENVAR|DI_LOCK_UPDATEFD|DI_LOCK_TYPE;
-
-#if defined(SSE_DRIVE_SINGLE_SIDE_IPF) // wait for IPF feature, not defined//MFD
-  if( SSEOption.SingleSideDriveMap&(floppy_current_drive()+1) )
-    side=0;
-#endif
   
   CapsRevolutionInfo CRI;
 

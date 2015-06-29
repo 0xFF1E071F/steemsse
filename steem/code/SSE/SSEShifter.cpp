@@ -1570,15 +1570,6 @@ detect unstable: switch MED/LOW - Beeshift
   if((CurrentScanline.Tricks&TRICK_LINE_MINUS_2)
     &&!(TrickExecuted&TRICK_LINE_MINUS_2))
   {
-    //TRACE("-2\n");
-    //ASSERT( !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) );//false alerts anyway
-
-#if defined(SSE_SHIFTER_TRICKS) && defined(SSE_SHIFTER_UNSTABLE)//MFD
-// wrong, of course, just to have Overdrive menu OK when you come back
-//   if(Preload)//==3) //3.6.0: other way now, see EndHBL()
-  //    Preload=0;
-#endif
-
     overscan_add_extra+=-2;
     CurrentScanline.Bytes+=-2;
     TrickExecuted|=TRICK_LINE_MINUS_2;
@@ -1588,8 +1579,6 @@ detect unstable: switch MED/LOW - Beeshift
 //    TRACE_LOG("-2 y %d c %d s %d e %d ea %d\n",scan_y,LINECYCLES,scanline_drawn_so_far,overscan_add_extra,ExtraAdded);
   }
 
-
-  // TODO right off for 60hz...
 
   /////////////////////////////////
   // RIGHT BORDER OFF (line +44) // 
@@ -2087,16 +2076,6 @@ Problem: too many cases of WU1, that should be the rarer one
   {
     FrameEvents.ReportLine();
     TRACE_LOG("F%d y%d freq at %d %d at %d %d switch %d to %d, %d to %d, %d to %d overscan %X\n",FRAME,scan_y,t,FreqAtCycle(t),t-2,FreqAtCycle(t-2),PreviousFreqChange(PreviousFreqChange(t)),FreqChangeAtCycle(PreviousFreqChange(PreviousFreqChange(t))),PreviousFreqChange(t),FreqChangeAtCycle(PreviousFreqChange(t)),NextFreqChange(t),FreqChangeAtCycle(NextFreqChange(t)),CurrentScanline.Tricks);
-  }
-#endif
-
-#if defined(SSE_SHIFTER_VERTICAL_OVERSCAN_TRACE)//MFD
-  if(on_overscan_limit) 
-  {
-   ///////// FrameEvents.ReportLine();
-    TRACE_LOG("F%d y%d freq at %d %d at %d %d switch %d to %d, %d to %d, %d to %d overscan %X\n",FRAME,scan_y,t,FreqAtCycle(t),t-2,FreqAtCycle(t-2),PreviousFreqChange(PreviousFreqChange(t)),FreqChangeAtCycle(PreviousFreqChange(PreviousFreqChange(t))),PreviousFreqChange(t),FreqChangeAtCycle(PreviousFreqChange(t)),NextFreqChange(t),FreqChangeAtCycle(NextFreqChange(t)),CurrentScanline.Tricks);
-  //  ASSERT( scan_y!=199|| (CurrentScanline.Tricks&TRICK_BOTTOM_OVERSCAN) );
-    //ASSERT( scan_y!=199|| shifter_last_draw_line==247 );
   }
 #endif
 

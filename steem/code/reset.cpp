@@ -194,18 +194,6 @@ void power_on()
 #endif
 #endif
 
-    
-/*  it's too late here MFD
-#if defined(SSE_DISK_STW2)
-    ImageSTW[floppyno].Id=floppyno;
-#endif
-#if defined(SSE_DISK_HFE)
-    ImageHFE[floppyno].Id=floppyno;
-#endif
-#if defined(SSE_DISK_SCP2A)
-    ImageSCP[floppyno].Id=floppyno;
-#endif
-    */
 #if defined(SSE_DISK1) && !defined(SSE_DISK2)
     Disk[floppyno].Id=floppyno;//same idea
 #endif

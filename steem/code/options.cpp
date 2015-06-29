@@ -421,8 +421,9 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
 #if defined(STEVEN_SEAGAL) && defined(SSE_TOS_CHECK_VERSION)
 /*  We can't know word 2 of every img file, so we need another
     way to list only real TOS files...
+    ! Ver: TOSLOAD
 */
-          if(Ver>=0x100 && Ver<0x410) // still not very good...
+          if(!Ver || Ver>=0x100 && Ver<0x410) // still not very good...
 #elif defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
           if(Ver!=0x81AA) // 6301 ST Rom mustn't be listed
 #endif

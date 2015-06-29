@@ -148,7 +148,7 @@ Beta: not SSE_PRIVATE_BUILD
     to compile an older version.
 */
 
-//#define SSE_SWITCHES_FEATURES
+#define SSE_SWITCHES_FEATURES
 
 
 //////////////
@@ -1041,7 +1041,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_DRIVE_SINGLE_SIDE)
-#undef SSE_DRIVE_SINGLE_SIDE_IPF//?
+
 #undef SSE_DRIVE_SINGLE_SIDE_NAT1//?
 #undef SSE_DRIVE_SINGLE_SIDE_PASTI//?
 #define SSE_DRIVE_SINGLE_SIDE_CAPS //using the new feature
@@ -1050,7 +1050,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_DRIVE_SOUND)
-//#define SSE_DRIVE_SOUND_CHECK_SEEK_VBL
 #define SSE_DRIVE_SOUND_EMPTY // none
 #define SSE_DRIVE_SOUND_SINGLE_SET // drive B uses sounds of A
 //#define SSE_DRIVE_SOUND_EDIT // 1st beta soundset
@@ -1067,7 +1066,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//drive sound
 
 #if defined(SSE_DRIVE_SINGLE_SIDE)
-#define SSE_DRIVE_SINGLE_SIDE_IPF
 #define SSE_DRIVE_SINGLE_SIDE_NAT1
 #define SSE_DRIVE_SINGLE_SIDE_PASTI
 #endif
@@ -1867,7 +1865,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SOUND_VOL_LOGARITHMIC // more intuitive setting 3.6.0
 #define SSE_SOUND_VOL_LOGARITHMIC_2 // bugfix on resume 3.7.0
 #define SSE_SOUND_VOL_LOGARITHMIC_3 //bugfix 3.7.1, 1st start
-#define SSE_SOUND_FILTER_STE // same very simple filter as for STF
+//#define SSE_SOUND_FILTER_STE // same very simple filter as for STF//undef 3.6.3
 
 #if! defined(SSE_YM2149) // defined for floppy
 #define SSE_YM2149
@@ -2488,7 +2486,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SOUND_FILTER_STF // a very simple filter
 #define SSE_SOUND_MICROWIRE // volume, balance, bass & treble, primitive DSP
 #define SSE_SOUND_VOL // -6db for PSG chipsound (using DSP) //undef v3.7.0
-#define SSE_SOUND_FILTER_STE // same very simple filter as for STF
+#define SSE_SOUND_FILTER_STE // same very simple filter as for STF//undef 3.6.3
 #endif
 #if defined(SSE_STF)
 #ifdef WIN32
@@ -3257,13 +3255,11 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DRIVE_CREATE_ST_DISK_FIX // from Petari
 #define SSE_DRIVE_SINGLE_SIDE
 #if defined(SSE_DRIVE_SINGLE_SIDE)
-#define SSE_DRIVE_SINGLE_SIDE_IPF
 #define SSE_DRIVE_SINGLE_SIDE_NAT1
 #define SSE_DRIVE_SINGLE_SIDE_PASTI
 #endif
 #if defined(WIN32) //TODO Unix
 #define SSE_DRIVE_SOUND // heavily requested, delivered!//3.6.0
-//#define SSE_DRIVE_SOUND_CHECK_SEEK_VBL
 #if defined(SSE_DRIVE_SOUND)
 #define SSE_DRIVE_SOUND_SINGLE_SET // drive B uses sounds of A
 //#define SSE_DRIVE_SOUND_EDIT // 1st beta soundset
@@ -3522,6 +3518,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//tricks
 #endif//sft
 #if defined(SSE_SOUND)
+#undef SSE_SOUND_FILTER_STE
 #define SSE_SOUND_MICROWIRE_MIXMODE
 #endif
 #if defined(SSE_VARIOUS)
@@ -3816,7 +3813,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DRIVE_RW_SECTOR_TIMING4 //remove more hacks
 #endif
 #if defined(SSE_DRIVE_SINGLE_SIDE)
-#undef SSE_DRIVE_SINGLE_SIDE_IPF
 #undef SSE_DRIVE_SINGLE_SIDE_NAT1
 #undef SSE_DRIVE_SINGLE_SIDE_PASTI
 #define SSE_DRIVE_SINGLE_SIDE_CAPS //using the new feature
@@ -3893,7 +3889,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_INFOBOX14 // order 'about' 'hints'
 #define SSE_GUI_INFOBOX15 // release notes (not sse faq)
 #define SSE_GUI_INFOBOX16 // no crash on big files
-#define SSE_GUI_INFOBOX_LINKS//MFD
 #endif
 #if defined(SSE_GUI_STATUS_STRING)
 #undef SSE_GUI_STATUS_STRING_IPF // what if mixed?

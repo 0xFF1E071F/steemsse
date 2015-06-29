@@ -173,7 +173,6 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #if defined(STEVEN_SEAGAL) && defined(SSE_FLOPPY)  && SSE_VERSION>=370 && defined(WIN32)
               if(PASTI_JUST_STX&& drive!=-1 && SF314[1-drive].ImageType.Extension!=EXT_STX)
                 pasti_active=false;
-              //TRACE_LOG("pasti_active %d\n",pasti_active);
 #endif
             }
             HOffset=zippy.current_file_offset;
@@ -209,35 +208,15 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     && (IsSameStr_I(Ext,"STX")||pasti_active)
 #endif
     ){
-    /*
-    //moved below, here it's useless because RemoveDisk() will be called //MFD
-#if defined(STEVEN_SEAGAL)&&defined(SSE_PASTI_ONLY_STX)
-    ASSERT(drive!=-1);
-    if(drive!=-1)
-    {
-      //TRACE_LOG("Disk in %c is STX\n",'A'+drive);
-#if defined(SSE_DISK_IMAGETYPE)
-      TRACE_LOG("Set ImageType STX\n");
-      SF314[drive].ImageType.Manager=MNGR_PASTI;
-      SF314[drive].ImageType.Extension=EXT_STX;
-#else
-      SF314[drive].ImageType=DISK_PASTI;
-#endif
-    }
-#endif
-    */
     f_PastiDisk=true;
 #if defined(SSE_PASTI_AUTO_SWITCH)
-//    TRACE_LOG("Activate pasti 1\n");
     pasti_active=true;
-    //TRACE_LOG("pasti_active %d\n",pasti_active);
 #endif
   }else if (Type==0){
     TRACE_LOG("Disk type 0\n");
     return FIMAGE_WRONGFORMAT;
   }
-//  TRACE("pasti %d\n",pasti_active);
-//#if !(defined(STEVEN_SEAGAL) && defined(SSE_PASTI_ONLY_STX))
+
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_DRIVE))
   int drive=-1;
   if (this==&FloppyDrive[0]) drive=0;

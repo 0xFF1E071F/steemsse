@@ -206,21 +206,6 @@ EXT int cpu_timer_at_start_of_hbl;
 #if defined(STEVEN_SEAGAL) && defined(SSE_FLOPPY_EVENT)
 
 // version with 3 events: 1 for WD1772, 1 for each drive
-/*
-#define PREPARE_EVENT_CHECK_FOR_FLOPPY       \
-if ((time_of_next_event-SF314[0].time_of_next_ip) >= 0){                 \
-    time_of_next_event=SF314[0].time_of_next_ip;  \
-    screen_event_vector=event_driveA_ip;                    \
-  }\
-  else if ((time_of_next_event-SF314[1].time_of_next_ip) >= 0){                 \
-    time_of_next_event=SF314[1].time_of_next_ip;  \
-    screen_event_vector=event_driveB_ip;                    \
-  }\
-  else if ((time_of_next_event-WD1772.update_time) >= 0){                 \
-    time_of_next_event=WD1772.update_time;  \
-    screen_event_vector=event_wd1772;                    \
-  }
-*/
 
 #define PREPARE_EVENT_CHECK_FOR_FLOPPY       \
   if ((time_of_next_event-WD1772.update_time) >= 0){                 \
@@ -236,21 +221,11 @@ if ((time_of_next_event-SF314[0].time_of_next_ip) >= 0){                 \
     screen_event_vector=event_driveB_ip;                    \
   }
 
-
-/*
-#define PREPARE_EVENT_CHECK_FOR_FLOPPY       \
-  if ((time_of_next_event-floppy_update_time) >= 0){                 \
-    time_of_next_event=floppy_update_time;  \
-    screen_event_vector=event_floppy;                    \
-  }
-
-*/
-
 #else
 #define PREPARE_EVENT_CHECK_FOR_FLOPPY
 #endif
 
-// SS:PREPARE_EVENT_CHECK_FOR_ACIA_IKBD_IN is defined in ikbd.h//MFD
+
 
 typedef void(*EVENTPROC)();
 typedef struct{
@@ -290,10 +265,6 @@ void event_timer_c_timeout();
 void event_timer_d_timeout();
 void event_scanline();
 void event_timer_b();
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_IRQ_DELAY)//MFD
-void event_acia_rx_irq(); // not defined anymore (v3.5.2), see MFP
-#endif
 
 //void event_hbl();
 //void event_border_scanline();

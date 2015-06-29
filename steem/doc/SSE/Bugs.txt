@@ -68,6 +68,8 @@ blitter is working isn't emulated.
 -Lose picture at stop with 400x278 display size
 Due to DirectDraw hacks
 
+-loste screens STE bad display possible
+
 -lowlife 60
 
 -MB31 ?

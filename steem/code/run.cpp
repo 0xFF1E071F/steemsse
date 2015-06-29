@@ -451,11 +451,6 @@ void inline prepare_next_event() //SS check this "inline" thing
     PREPARE_EVENT_CHECK_FOR_DMA;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_IRQ_DELAY)
-// not defined anymore (v3.5.2), see MFP//MFD
-    PREPARE_EVENT_CHECK_FOR_ACIA_IKBD_IN;
-#endif
-
   // It is safe for events to be in past, whatever happens events
   // cannot get into a constant loop.
   // If a timer is set to shorter than the time for an MFP interrupt then it will
@@ -998,19 +993,6 @@ void event_scanline()
 #endif
 
   }
-#endif
-
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_POLL_IN_FRAME) //MFD, def doesn't exist anymore
-  // We peek Windows message once during the frame and not just at VBL
-  // note: undefined for now
-  if(scan_y==ikbd.scanline_to_poll
-    && shifter_freq_at_start_of_vbl!=60 // HighRes Mode (hack) TODO: why?
-#if defined(SSE_HACKS)
-    && SSE_HACKS_ON // in case there's more trouble
-#endif
-    ) // scanline_to_poll is different each VBL
-    PeekEvent();  // fixes Corporation STE, but messes HighResMode
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_JITTER)//no
