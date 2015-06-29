@@ -5,7 +5,15 @@
 #ifdef CAPS_USER
 #define LIB_USER
 #endif
+
+#if defined(STEVEN_SEAGAL) && defined(MINGW_BUILD)
+#define LIB_USER
+#endif
+
 #include "ComLib.h"
+//#define ExtSub
+//#define __cdecl
+
 
 ExtSub SDWORD __cdecl CAPSInit();
 ExtSub SDWORD __cdecl CAPSExit();
@@ -34,5 +42,8 @@ ExtSub SDWORD __cdecl CAPSSetRevolution(SDWORD id, UDWORD value);
 ExtSub SDWORD __cdecl CAPSGetImageType(PCHAR name);
 ExtSub SDWORD __cdecl CAPSGetImageTypeMemory(PUBYTE buffer, UDWORD length);
 ExtSub SDWORD __cdecl CAPSGetDebugRequest();
+
+
+//#define __cdecl __cdecl
 
 #endif

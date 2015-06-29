@@ -1,3 +1,5 @@
+Pasti = Protected Atari ST Interface
+
 The pasti.dll here was hacked two times:
 - no annoying message box at startup
 - no format data randomisation in command 'read track'
