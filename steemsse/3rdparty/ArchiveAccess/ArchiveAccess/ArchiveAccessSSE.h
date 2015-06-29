@@ -3,10 +3,11 @@
 #define ARCHIVEACCESSSSE_H
 
 #include "../ArchiveAccess/bgstr.h"
+
 #include "../ArchiveAccess/ArchiveAccessBase.h"
+
 //#include "../ArchiveAccess/ArchiveAccessDynamic.h"
 // check that file for some C++ horror :(
-
 #define FileInArchiveInfoStringSize 1024
 struct FileInArchiveInfo {
 	int ArchiveHandle; // handle for Archive/class pointer
@@ -26,6 +27,7 @@ extern aaHandle ArchiveHandle;
 
 bool LoadArchiveAccessDll (const TCHAR* LibName);
 void UnloadArchiveAccessDll();
+
 bool ArchiveAccess_Open(TCHAR* name) ; // returns true = success
 void ArchiveAccess_Close();
 bool ArchiveAccess_Extract(char *dest_dir);

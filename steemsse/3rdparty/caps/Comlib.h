@@ -15,6 +15,10 @@
 
 #endif
 
+#ifdef __cplusplus//ss
 #define ExtSub extern "C" DllSub
 #define ExtVar extern "C" DllVar
-
+#else
+#define ExtSub extern DllSub
+#define ExtVar extern DllVar
+#endif
