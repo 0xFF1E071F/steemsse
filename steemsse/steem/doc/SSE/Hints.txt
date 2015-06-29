@@ -69,7 +69,7 @@ Games
 - Darius auto166: DI
 - Demoniak -ELT: STF, WU2, ADAT, C1, C2 (hell!)
 - Dragonflight: create STW disk
-- Dungeon Master SCP: DI, #
+- Dungeon Master SCP: DI
 - Dynabusters+: STE; F1: music F2: volume
 - ESWAT: ADAT
 - Exile: ADAT
@@ -94,7 +94,6 @@ Games
 - Microprose Golf ST: ADAT
 - Nightdawn: STF
 - Platoon STX: STF T100US
-- Power Drift SCP: #
 - Realm of the Trolls: create STW disk
 - Seven Gates of Jambala: C2 
 - Star Trek STX: not T102

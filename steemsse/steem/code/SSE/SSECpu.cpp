@@ -2149,7 +2149,7 @@ void                              m68k_divs(){
     INSTRUCTION_TIME(cycles_for_instr);   // fixes Dragonnels loader
 #if defined(SSE_CPU_DIVS_OVERFLOW_PC)
     ASSERT(divisor);
-#if defined(BCC_BUILD)
+#if defined(BCC_BUILD) || (defined(VC_BUILD) && _MSC_VER < 1500) 
     ASSERT(dividend!=(-2147483647 - 1)); // X86 crashes on div overflow
     if(dividend==(-2147483647 - 1))
 #else

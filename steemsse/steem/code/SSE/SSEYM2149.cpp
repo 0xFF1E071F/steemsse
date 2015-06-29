@@ -90,12 +90,6 @@ BYTE TYM2149::PortA(){
   return psg_reg[PSGR_PORT_A];
 }
 
-#if !defined(SSE_YM2149A)//MFD
-BYTE TYM2149::Side(){
-  return (PortA()&BIT_0)==0;  //0: side 1;  1: side 0 !
-}
-#endif
-
 #endif//SSE_YM2149
 
 #endif//#if defined(STEVEN_SEAGAL)

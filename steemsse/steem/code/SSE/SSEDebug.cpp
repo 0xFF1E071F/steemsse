@@ -26,12 +26,7 @@
 #include <run.decla.h>
 #include <steemh.decla.h>
 #include "SSEFloppy.h"
-
-
-//#ifdef __cplusplus
 #include <display.decla.h>
-//#endif
-
 #endif
 
 int debug0,debug1=0,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9;
@@ -58,7 +53,7 @@ TDebug::TDebug() {
   ZeroMemory(logsection_enabled,100*sizeof(bool)); // 100> our need
   logsection_enabled[ LOGSECTION_ALWAYS ] = 1;
 #if defined(_DEBUG) && !defined(DEBUG_BUILD) // VC6 IDE debug no boiler
-  logsection_enabled[ LOGSECTION_FDC ] = 1;
+  logsection_enabled[ LOGSECTION_FDC ] = 0;
   logsection_enabled[ LOGSECTION_IO ] = 0;
   logsection_enabled[ LOGSECTION_MFP_TIMERS ] = 0;
   logsection_enabled[ LOGSECTION_INIT ] =0;
@@ -93,17 +88,7 @@ TDebug::TDebug() {
   IgnoreErrors=0; 
   nTrace=0; // trace counter
   SetCurrentDirectory(GetEXEDir().Text);
-
   trace_file_pointer=freopen(SSE_TRACE_FILE_NAME, "w", stdout );
-  //trace_file_pointer=fopen(SSE_TRACE_FILE_NAME, "w");
-  //trace_file_pointer=freopen(filename.Text, "w", stdout );
-  //ASSERT(trace_file_pointer);
-
-
-  //SetCurrentPath
-
-
-
   if(!trace_file_pointer)
     Alert("Couldn't open TRACE file",GetEXEDir().Text,0);
   //if(!trace_file_pointer) TRACE_IDE("%s\n",WriteDir.Text);
