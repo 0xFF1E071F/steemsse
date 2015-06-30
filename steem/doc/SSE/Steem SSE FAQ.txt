@@ -206,6 +206,12 @@ would only interfere.
 
 
 Q:
+Steem needs much time at first run.
+A:
+It depends on the system, apparently it's due to sound initialisation.
+
+
+Q:
 I have problems with sound (in Windows)!
 A:
 Me too!

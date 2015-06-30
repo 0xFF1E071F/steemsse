@@ -63,6 +63,8 @@ blitter is working isn't emulated.
 
 -Jumping Jackson on Automation 239: sometimes crashes at start game
 
+-Jumping Jacskon -MCA STE lower border flickers (correct)
+
 -Keyboard: sometimes won't take input anymore - quit Steem and start again
 
 -Lose picture at stop with 400x278 display size
