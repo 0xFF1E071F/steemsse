@@ -123,7 +123,7 @@ Beta: not SSE_PRIVATE_BUILD
 // VERSION //
 /////////////
 
-#define SSE_VERSION 372 // versions down to 340 still compile //TODO->320
+#define SSE_VERSION 380 // versions down to 340 still compile //TODO->320
 
 #if SSE_VERSION>372 //last release
 #define SSE_BETA //title, OSD, plus some testing - new features
@@ -4346,6 +4346,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_ACSI_REQUEST_SENSE
 #define SSE_ACSI_TIMING // ADAT -> slower (risky?)
 #endif//acsi
+
+#if defined(SSE_FLOPPY)
+#define SSE_PASTI_AUTO_SWITCH2
+#endif
 
 // beta-only for now, risky, fixes nothing serious...
 #if defined(SSE_INT_MFP)
