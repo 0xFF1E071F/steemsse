@@ -347,20 +347,13 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 //SS this horror needs to be refactored of course
 #if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
   }else if(SCP) { 
-
-  ASSERT(!(this==&FloppyDrive[0] && drive!=0));
-  ASSERT(!(this==&FloppyDrive[1] && drive!=1));
-
-
-
+    ASSERT(!(this==&FloppyDrive[0] && drive!=0));
+    ASSERT(!(this==&FloppyDrive[1] && drive!=1));
 #if defined(SSE_DISK_REMOVE_DISK_ON_SET_DISK)
     RemoveDisk();
 #endif
-
-  ASSERT(!(this==&FloppyDrive[0] && drive!=0));
-  ASSERT(!(this==&FloppyDrive[1] && drive!=1));
-
-
+    ASSERT(!(this==&FloppyDrive[0] && drive!=0));
+    ASSERT(!(this==&FloppyDrive[1] && drive!=1));
     if(drive==-1  || !ImageSCP[drive].Open(File))
       return FIMAGE_WRONGFORMAT;
 
@@ -862,6 +855,15 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   DiskInZip=NewDiskInZip;
   ImageFile=OriginalFile;
   PastiDisk=f_PastiDisk;
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_PASTI_AUTO_SWITCH2) //3.8.0
+/*  We deactivate pasti even without option 'Pasti only for STX' if we're
+    running CAPS or WD1772 manager. To test in beta.
+*/
+  if(pasti_active && !PASTI_JUST_STX && SF314[drive].ImageType.Manager!=MNGR_PASTI)
+    pasti_active=false;
+#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
   IPFDisk=IPF;
 #ifdef SSE_IPF_CTRAW
