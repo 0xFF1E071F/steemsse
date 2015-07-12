@@ -206,7 +206,7 @@ div68kCycleAccurate:
 	gcc -c $(ROOT)/3rdparty/pasti/div68kCycleAccurate.c $(CFLAGS) -o./obj/div68kCycleAccurate.o
 
 6301:
-	gcc -c $(ROOT)/3rdparty/6301/6301.c $(CFLAGS) -DSTEVEN_SEAGAL -o./obj/6301.o
+	gcc -c $(ROOT)/3rdparty/6301/6301.c $(CFLAGS) -DSSE_UNIX -DSTEVEN_SEAGAL -o./obj/6301.o
 
 dsp:
 	$(CC) -o ./obj/dsp.o -c $(ROOT)/3rdparty/dsp/dsp.cpp $(CFLAGS) $(STEEMFLAGS)

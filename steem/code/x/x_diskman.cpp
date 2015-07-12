@@ -695,7 +695,9 @@ void TDiskManager::Show()
 #if defined(SSE_DISK_SCP)
   dir_lv.ext_sl.Add(4,"scp",ICO16_DISK,ICO16_DISKLINK,ICO16_DISKLINKBROKEN,ICO16_DISK_RO);
 #endif
-
+#if defined(SSE_DISK_HFE)
+  dir_lv.ext_sl.Add(4,"hfe",ICO16_DISK,ICO16_DISKLINK,ICO16_DISKLINKBROKEN,ICO16_DISK_RO);
+#endif
   ArchiveTypeIdx=dir_lv.ext_sl.NumStrings;
   int zipicon=ICO16_ZIP_RO;
   if (FloppyArchiveIsReadWrite) zipicon=ICO16_ZIP_RW;

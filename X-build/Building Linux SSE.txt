@@ -9,6 +9,7 @@ To build XSteem SSE, enter this in the terminal:
 Other builds
 Makefile_dbg.txt: a debug build that may output some TRACE and info
 about shifter tricks. This is NOT the famous Steem Boiler.
+Makefile_dbg.txt is outdated for the moment.
 
 Makefile_modules.txt: this was the original way to build Steem, with
 fewer object files, using #include "xxx.cpp" instead. This should
