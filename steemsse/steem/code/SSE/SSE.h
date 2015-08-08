@@ -849,7 +849,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 //#define SSE_CPU_TRACE_DETECT
-//#define SSE_FDC_TRACE_IRQ
+#define SSE_FDC_TRACE_IRQ //for some reason was commented out in v3.7.2
 #define SSE_FDC_TRACE_STATUS //spell out status register
 //#define SSE_FDC_TRACE_STR // trace read STR (careful)
 
@@ -4349,6 +4349,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_FLOPPY)
 #define SSE_PASTI_AUTO_SWITCH2
+#define SSE_DISK_SCP380 // War Heli
 #endif
 
 // beta-only for now, risky, fixes nothing serious...
