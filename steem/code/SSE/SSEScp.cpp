@@ -95,6 +95,18 @@ void  TImageSCP::ComputePosition(WORD position) {
     }
   }
 
+#if defined(SSE_DISK_SCP380)
+/* Randomise first bit when starting reading a track.
+   Fixes War Heli track 68
+   The protection is looking for A1 47 4D 43 then checks that the byte
+   before A1 isn't twice the same.
+   Using rand(), it still may fail.
+   TODO test if it breaks other SCP games?
+*/
+  if(!Position)
+    Position=rand()%4;
+#endif
+
 #if defined(SSE_WD1772_DPLL)
   WD1772.Dpll.Reset(ACT); 
 #endif
