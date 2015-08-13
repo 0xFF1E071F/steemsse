@@ -1,7 +1,7 @@
 Steem SSE manual
 =================
 
-v3.7.2
+v3.8.0
 
 About the manual
 _________________
@@ -57,9 +57,11 @@ It also featured a very good flicker-free monochrome display, which for
 professional use was more important than fancy eye-killing Amiga high
 resolutions. 
 It wouldn't have taken so much to be a serious competitor to the Mac and 
-the PC. 
-Maybe Atari didn't tackle the right market. Anyway it's done, and now we
-have thousands of great games not to mention the demos.
+the PC. Maybe Atari didn't tackle the right market.
+But then again, Apple didn't take Atari seriously.
+
+Anyway it's done, and now we have thousands of great games not to mention
+the demos.
 To run this all on your much faster PC, you need an emulator and files
 containing images of the content (ROM, disks...).
 
@@ -157,7 +159,7 @@ download:
 
 -HD6301V1ST.img (the keyboard chip rom)
 
--HFE_boot.bin, a file that helps Steem create HFE disk images
+-HFE_boot.bin (a file that helps Steem create HFE disk images)
 
 -ym2149_fixed_vol.bin (the P.S.G. soundchip table by ljbk)
 
@@ -269,6 +271,7 @@ With the freeimage.dll plugin, more formats are available, such as PNG, JPG...
 Alternatively, you can copy the full window into the paperclip using the 
 usual Alt-PrtScr combination.
 
+
 'Paste'
 -------
 
@@ -310,7 +313,8 @@ rather than edit the 'Default' set.
 'Options'
 ---------
 
-The icon makes the options dialog of Steem (see below) appear or disappear.
+The icon makes the extensive options dialog of Steem (see below) appear
+or disappear.
 
 
 'Joysticks'
@@ -348,7 +352,7 @@ These options configure the hardware inside the virtual ST.
 
 -ST Model
    
-This is the long awaited STF/STE switch in Steem.
+This is the long awaited STF/STE switch in Steem (an 'SSE' improvement).
 The STE was the better computer but most programs were coded with the older
 STF in mind. 
 Emulating the differences between STF and STE is not so hard and makes a lot
@@ -1499,13 +1503,14 @@ Change your fine SF314 double sided drive into a miserable SF354 single sided
 drive (if you feel really nostalgic)
 
 
--Hard Drives
+-GEMDOS Hard Drives
 
-Another important button on the disk manager is the Hard Drives button, it 
-opens the hard drive manager. You can have up to 10 virtual hard drives. To set
-one up select the folder on your PC and then select the letter that you want it
-to be on the ST. Those virtual drives are called GEMDOS drives because they're
-based on interception of GEMDOS commands.
+Another handy button on the disk manager is the GEMDOS Hard Drives button.
+It opens the hard drive manager. You can have up to 10 virtual hard drives.
+To set one up select the folder on your PC and then select the letter that
+you want it to be on the ST. 
+Those virtual drives are called GEMDOS drives because they're based on 
+interception of GEMDOS commands.
 You need to know that this type of emulation is very convenient for you, 
 because you just use your PC hard drive, but it is based on hacks, and in some
 cases it could not work as on a real Atari. 
@@ -1519,7 +1524,47 @@ can force Steem to boot from a hard drive even when drive A contains a disk by
 holding down the CONTROL key when you run after performing a cold reset of the
 ST.
 
-Right-clicking on this icon will toggle hard drives on/off.
+Right-clicking on this icon will toggle GEMDOS hard drives on/off.
+
+
+-ACSI Hard Drives
+
+Much like ST files for floppies, some img files contain all sectors of an
+Atari hard disk (data only).
+Using those files allows lower-level emulation of hard disks in Steem.
+The feature was already available with Pasti, but with some limitations.
+ACSI (Atari Computer Systems Interface) was the SCSI-like interface between
+the ST and a hard disk or a laser printer (not emulated).
+
+The driver you use must be able to handle each of those drives...
+Two ready examples are provided in the download, images of the familiar
+SH204 and MEGAFILE 60.
+The size limit is 1GB.
+
+It is also possible to enable GEMDOS virtual hard disks at the same
+time as ACSI virtual hard disks, you need to adapt letters of course.
+ACSI drives will take the first letters.
+It's handy to copy files.
+Transfer speed depends on Disk manager 'Accurate Disk Access Times' option,
+but even when it's not checked, the ST operates slowly compared with a PC.
+
+It is even possible to format those disk images inside Steem (for advanced
+users).
+A floppy disk image with necessary utilities is available here, so you can
+see with what I actually pass time:
+http://ataristeven.t15.org/Steem_apps.htm#HD_UTILS
+
+More importantly, you could use a 3rd party file manager to edit ST hard 
+disk images, 'Drive image' by Petari:
+http://atari.8bitchip.info/drimus.php 
+
+Since v3.8, the Windows build of Steem features another icon for ACSI hard
+drives.
+Up to 4 virtual ACSI hard drives may be added.
+Note that unlike GEMDOS hard drives, each ACSI device may be split into
+several partitions (C:, D:...).
+
+Right-clicking on this icon will toggle ACSI hard drives on/off.
 
 
 -Home Folder
@@ -1550,7 +1595,11 @@ more bearable, as you can see and hear what the drive is doing, you don't get
 the feeling the emulator is stuck.
 Note that all 'SSE' floppy drive emulation improvements for ST, MSA and DIM
 images are enabled only when this option is selected.
-Please don't report drive emulation bugs if this option wasn't even checked.
+Please don't report floppy drive emulation bugs if this option wasn't even
+checked.
+The option is not necessary for CTR, HFE, IPF, SCP, STW images.
+Speed for STX images is set in 'Pasti configuration'.
+The option also works on ACSI hard drives (but not GEMDOS).
 
 
 -Read/Write Archives (Changes Lost On Eject)
@@ -1582,6 +1631,8 @@ It opens a dialog box managed by pasti.dll.
 It is recommended to set all 'speed' options to 'slow' for precise emulation.
 Options'fake write-protect' as well as 'disable randomize' seem to do nothing 
 useful in v02h. It's very likely a bug.
+Pasti.dll hasn't been updated in a long time.
+Check my site for a "no-nag" version.
 
 
 -Pasti only for STX
@@ -1622,39 +1673,14 @@ The main limitation is that it only handles single files. If you want
 more then you need to use a virtual hard disk.
 
 
--ACSI hard disk images (option available in v3.8 and in beta)
+-ACSI hard disk images (Unix-only)
 
-Much like ST files for floppies, some img files contain all sectors of an
-Atari hard disk (data only).
-Using those files allows lower-level emulation of hard disks in Steem.
-The feature was already available with Pasti, but with some limitations.
-ACSI (Atari Computer Systems Interface) was the SCSI-like interface between
-the ST and a hard disk or a laser printer (not emulated).
-
+In XSteem, there's no GUI for ACSI image files.
 Steem will recognise up to four image file names, it they're placed in
-its ACSI folder (sorry about that, no GUI selection for now).
-The driver you use must be able to handle each of those drives...
+its ACSI folder.
 Extension must be img, order should be alphabetical. You are responsible
-for the files you put there. Two ready examples are provided in the 
-download, images of the familiar SH204 and MEGAFILE 60.
-The size limit is 1GB.
-
-It is also possible to enable GEMDOS virtual hard disks at the same
-time as ACSI virtual hard disks, you need to adapt letters of course.
-ACSI drives will take the first letters.
-It's handy to copy files.
-Transfer speed depends on Disk manager 'Accurate Disk Access Times' option,
-but even when it's not checked, the ST operates slowly compared with a PC.
-
-It is even possible to format those disk images inside Steem (for advanced
-users).
-A floppy disk image with necessary utilities is available here, so you can
-see with what I actually pass time:
-http://ataristeven.t15.org/Steem_apps.htm#HD_UTILS
-
-More importantly, you could use a 3rd party file manager to edit ST hard 
-disk images, 'Drive image' by Petari:
-http://atari.8bitchip.info/drimus.php 
+for the files you put there. 
+Emulation is toggled with this option.
 
 
 -Automatically Insert Second Disk
@@ -1664,7 +1690,7 @@ into drive A Steem will look for a second disk image with a similar name and
 insert it into drive B.
 Note that even if Steem manages to insert the second disk in drive B:, the
 game may still require a disk swap in drive A:. Many games had only one drive
-in mind. The same for demos unfortunately.
+in mind unfortunately. The same for demos.
 
 
 -Hide Broken Shortcuts

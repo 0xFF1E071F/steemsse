@@ -512,12 +512,29 @@ http://www.microsoft-questions.com/microsoft/Platform-SDK-Shell/32138755/vista-l
     Win=CreateWindow("Steem Flat PicButton",Str(ico),WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                   400,10,60,64,Handle,(HMENU)10,HInstance,NULL);
 #endif
-
 #ifdef SSE_ACSI_OPTION_INDEPENDENT
     ToolAddWindow(ToolTip,Win,T("GEMDOS Hard Drive Manager - right click to toggle on/off"));
 #else
     ToolAddWindow(ToolTip,Win,T("Hard Drive Manager"));
 #endif
+
+#ifdef SSE_ACSI_ICON
+    ico=RC_ICO_HARDDRIVES_ACSI;
+    DWORD style=WS_CHILD | WS_VISIBLE | WS_TABSTOP | PBS_RIGHTCLICK;
+#if !defined(SSE_ACSI_HDMAN)
+    if(!SSEConfig.AcsiImg)//with no manager...
+      style|=WS_DISABLED;
+#endif
+    Win=CreateWindow("Steem Flat PicButton",Str(ico),style,
+                  400,10,60,64,Handle,(HMENU)11,HInstance,NULL);
+     SendMessage(Win,BM_SETCHECK,SSEOption.Acsi,0);
+#if defined(SSE_ACSI_HDMAN)
+    ToolAddWindow(ToolTip,Win,T("ACSI Hard Drive Manager - right click to toggle on/off"));
+#else
+    ToolAddWindow(ToolTip,Win,T("ACSI disks - right click to toggle on/off"));
+#endif
+#endif
+
   }
 
   SetWindowAndChildrensFont(Handle,Font);
@@ -582,6 +599,9 @@ void TDiskManager::LoadIcons()
       if (GetDlgItem(Handle,id)) PostMessage(GetDlgItem(Handle,id),BM_RELOADICON,0,0);
     }
     PostMessage(GetDlgItem(Handle,10),BM_RELOADICON,0,0);
+#ifdef SSE_ACSI_ICON 
+    PostMessage(GetDlgItem(Handle,11),BM_RELOADICON,0,0);
+#endif
     PostMessage(GetDlgItem(GetDlgItem(Handle,98),100),BM_RELOADICON,0,0);
     PostMessage(GetDlgItem(GetDlgItem(Handle,99),100),BM_RELOADICON,0,0);
     InvalidateRect(GetDlgItem(Handle,98),NULL,true);
@@ -1243,6 +1263,9 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
 #if defined(SSE_GUI_STATUS_STRING)
               GUIRefreshStatusBar();
 #endif
+#ifdef SSE_GUI_DISK_MANAGER_HD_SELECTED
+              SendMessage(icon_handle,BM_SETCHECK,!HardDiskMan.DisableHardDrives,0);
+#endif
             }
             else if (HIWORD(wPar)==BN_CLICKED){
               SendMessage(icon_handle,BM_SETCHECK,1,0);
@@ -1256,6 +1279,31 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
           }
 #endif
           break;
+
+#ifdef SSE_ACSI_ICON 
+        case 11:
+          {
+            HWND icon_handle=GetDlgItem(Win,LOWORD(wPar));
+
+            if (SendMessage(icon_handle,BM_GETCLICKBUTTON,0,0)==2) //right click
+            {
+              SSEOption.Acsi=!SSEOption.Acsi;
+             // HardDiskMan.update_mount();
+#if defined(SSE_GUI_STATUS_STRING)
+              GUIRefreshStatusBar();
+#endif
+              SendMessage(icon_handle,BM_SETCHECK,SSEOption.Acsi,0);
+            }
+            else if (HIWORD(wPar)==BN_CLICKED){
+#if defined(SSE_ACSI_HDMAN)
+              SendMessage(icon_handle,BM_SETCHECK,1,0);
+              AcsiHardDiskMan.Show();
+#endif
+            }
+          }
+          break;
+#endif
+
         case 80:  // Go Home
           if (This->Dragging>-1) break;
 
@@ -1433,7 +1481,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
               (OPTION_PRG_SUPPORT?MF_CHECKED:0),2028,T("Run PRG and TOS files"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACSI_OPTION)  //v3.7.2
+#if defined(STEVEN_SEAGAL) && defined(SSE_ACSI_OPTION) && !defined(SSE_ACSI_ICON)
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING 
               | (int)(SSEOption.Acsi?MF_CHECKED:0)
               | (int)(SSEConfig.AcsiImg?0:MF_DISABLED)
@@ -1990,7 +2038,7 @@ That will toggle bit x.
           TRACE_LOG("Option PRG support %d\n",SSE_GHOST_DISK);
           break;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACSI_OPTION)
+#if defined(STEVEN_SEAGAL) && defined(SSE_ACSI_OPTION) && !defined(SSE_ACSI_ICON)
         case 2029:
           SSEOption.Acsi=!SSEOption.Acsi;
           TRACE_LOG("Option ACSI support %d\n",SSEOption.Acsi);
@@ -2705,7 +2753,20 @@ That will toggle bit x.
           }
         }
       }
+#ifdef SSE_GUI_DISK_MANAGER_HD_SELECTED
+     SendMessage(GetDlgItem(Win,10),BM_SETCHECK,
+       !HardDiskMan.DisableHardDrives || HardDiskMan.IsVisible(),0);
+#else
       SendMessage(GetDlgItem(Win,10),BM_SETCHECK,HardDiskMan.IsVisible(),0);
+#endif
+#ifdef SSE_ACSI_ICON 
+      SendMessage(GetDlgItem(Win,11),BM_SETCHECK,
+        SSEOption.Acsi
+#if defined(SSE_ACSI_HDMAN)
+        || AcsiHardDiskMan.IsVisible()
+#endif
+        ,0);
+#endif
 
       break;
     case WM_SIZE:
@@ -2713,13 +2774,15 @@ That will toggle bit x.
 
       if (GetDlgItem(Win,10)){
         SetWindowPos(GetDlgItem(Win,10),0,LOWORD(lPar)-70,10,0,0,SWP_NOSIZE | SWP_NOZORDER);
+#ifdef SSE_ACSI_ICON 
+        SetWindowPos(GetDlgItem(Win,11),0,LOWORD(lPar)-70*2,10,0,0,SWP_NOSIZE | SWP_NOZORDER);
+#endif
 
         SetWindowPos(GetDlgItem(Win,97),0,0,0,LOWORD(lPar)-(125+26+50+10),21,SWP_NOMOVE | SWP_NOZORDER);
 
         SetWindowPos(GetDlgItem(Win,102),0,0,0,LOWORD(lPar)-20,HIWORD(lPar)-114,SWP_NOMOVE | SWP_NOZORDER);
         if (This->SmallIcons==0) SendMessage(GetDlgItem(Win,102),LVM_ARRANGE,LVA_DEFAULT,0);
       }
-
       if (FullScreen){
         if (IsZoomed(Win)==0){
           This->FSMaximized=0;

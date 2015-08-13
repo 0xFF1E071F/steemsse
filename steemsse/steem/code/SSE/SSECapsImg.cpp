@@ -224,8 +224,9 @@ void TCaps::RemoveDisk(int drive) {
 }
 
 
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_FDC
+//#undef LOGSECTION
+//#define LOGSECTION LOGSECTION_FDC //3.8.0 = image info
+
 
 void TCaps::WritePsgA(int data) {//TODO use data
   // drive selection 
@@ -266,7 +267,7 @@ UDWORD TCaps::ReadWD1772(BYTE Line) {
         data|=FDC_STR_WRITE_PROTECT;
       else
         data&=~FDC_STR_WRITE_PROTECT;
-      TRACE_LOG("FDC SR mediach %d WP %x\n",floppy_mediach[drive],data&FDC_STR_WRITE_PROTECT);
+      TRACE_FDC("FDC SR mediach %d WP %x\n",floppy_mediach[drive],data&FDC_STR_WRITE_PROTECT);
     }
   }
 
@@ -399,12 +400,17 @@ void TCaps::CallbackIRQ(PCAPSFDC pc, UDWORD lineout) {
   ASSERT(pc==&Caps.WD1772);
 
 #if defined(SSE_DEBUG)
+#undef LOGSECTION //it's getting verbose, but those are just macros
+#define LOGSECTION LOGSECTION_FDC 
   if(TRACE_ENABLED) 
   {
 //    TRACE("caps ");
+   // BRK(yoho);
     Dma.UpdateRegs(true);
   }
     else
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_IMAGE_INFO
 #endif
     Dma.UpdateRegs(); // why it only worked in boiler, log on...
   

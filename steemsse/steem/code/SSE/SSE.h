@@ -4340,16 +4340,25 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_ACSI_MULTIPLE
 #define SSE_ACSI_MULTIPLE2
 #define SSE_ACSI_MODESELECT
-#define SSE_ACSI_NOGUISELECT // no GUI headache yet...
+#define SSE_ACSI_NOGUISELECT // ignored if SSE_ACSI_HDMAN defined
 #define SSE_ACSI_OPTION
 #define SSE_ACSI_OPTION_INDEPENDENT // of 'HardDiskMan.DisableHardDrives'
 #define SSE_ACSI_REQUEST_SENSE
 #define SSE_ACSI_TIMING // ADAT -> slower (risky?)
+#ifdef WIN32
+#define SSE_ACSI_HDMAN // browser
+#define SSE_ACSI_ICON
+#endif
 #endif//acsi
 
 #if defined(SSE_FLOPPY)
 #define SSE_PASTI_AUTO_SWITCH2
 #define SSE_DISK_SCP380 // War Heli
+#endif
+
+#if defined(SSE_GUI_DISK_MANAGER)
+#define SSE_GUI_DISK_MANAGER_RGT_CLK_HD3 //when changing on/off in hdm
+#define SSE_GUI_DISK_MANAGER_HD_SELECTED //stay pushed if on
 #endif
 
 // beta-only for now, risky, fixes nothing serious...

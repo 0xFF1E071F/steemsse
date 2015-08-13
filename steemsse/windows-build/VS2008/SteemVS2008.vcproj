@@ -1646,6 +1646,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\steem\rc\dm_hard_drives_acsi.ico"
+				>
+			</File>
+			<File
 				RelativePath="..\..\steem\rc\dm_hard_drives_francais.ico"
 				>
 			</File>

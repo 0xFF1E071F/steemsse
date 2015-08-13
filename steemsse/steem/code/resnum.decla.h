@@ -86,12 +86,26 @@
 #define RC_ICO_TAKESCREENSHOTBUT 72
 #define RC_ICO_DISKMANTOOLS 73
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE)                          
+//#if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE)
+
+#if defined(SSE_SSE_OPTION_PAGE)
+#ifdef SSE_ACSI_ICON //depends on WIN32!
+#define RC_ICO_HARDDRIVES_ACSI 74
+#define RC_ICO_OPS_SSE 75
+#define RC_NUM_ICONS 76
+#else                          
 #define RC_ICO_OPS_SSE 74
 #define RC_NUM_ICONS 75
+#endif//#ifdef SSE_ACSI_ICON 
 #else
 #define RC_NUM_ICONS 74
 #endif
+
+/*
+#define RC_ICO_HARDDRIVES_ACSI 74
+#define RC_ICO_OPS_SSE 75
+#define RC_NUM_ICONS 76
+*/
 
 #define CART_ICON_NUM (RC_ICO_CHIP-1)
 #define DISK_ICON_NUM (RC_ICO_DRIVE-1)
@@ -114,12 +128,14 @@ int RCGetSizeOfIcon(int n)
     case RC_ICO_FOLDER:case RC_ICO_FOLDERLINK:
     case RC_ICO_FOLDERBROKEN:case RC_ICO_PARENTDIR:
       return 33;
-
     case RC_ICO_RECORD:case RC_ICO_PLAY_BIG:
       return 32;
 
     case RC_ICO_HARDDRIVES:case RC_ICO_HARDDRIVES_FR:
-    case 75:
+#ifdef SSE_ACSI_ICON 
+    case RC_ICO_HARDDRIVES_ACSI:
+#endif
+   // case 75: // = RC_ICO_OPS_SSE... MFD
     case RC_ICO_DRIVEA:case RC_ICO_DRIVEB:case RC_ICO_DRIVEB_DISABLED:
       return 64;
     case RC_ICO_SNAPSHOTFILEICO:
@@ -129,7 +145,6 @@ int RCGetSizeOfIcon(int n)
     case RC_ICO_TRASH:
     case RC_ICO_STCLOSE:
 #endif
-
       return 0;
   }
   return 16;

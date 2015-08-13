@@ -306,6 +306,9 @@ bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDi
 #endif
 
   HardDiskMan.LoadData(FirstLoad,pCSF,SecDisabled);
+#if defined(SSE_ACSI_HDMAN)
+  AcsiHardDiskMan.LoadData(FirstLoad,pCSF,SecDisabled);
+#endif
 
   return true;
 }
@@ -422,6 +425,9 @@ bool TDiskManager::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 
   HardDiskMan.SaveData(FinalSave,pCSF);
+#if defined(SSE_ACSI_HDMAN)
+  AcsiHardDiskMan.SaveData(FinalSave,pCSF);
+#endif
 
   return true;
 }
@@ -442,11 +448,14 @@ bool THardDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *S
         Drive[nDrives].Letter=Str[0];
       }
     }
+
 #ifndef DISABLE_STEMDOS
     stemdos_boot_drive=pCSF->GetInt("HardDrives","BootDrive",stemdos_boot_drive);
 #endif
     DisableHardDrives=pCSF->GetInt("HardDrives","DisableHardDrives",DisableHardDrives);
-
+#ifdef SSE_GUI_DISK_MANAGER_HD_SELECTED
+    SendMessage(GetDlgItem(DiskMan.Handle,10),BM_SETCHECK,!HardDiskMan.DisableHardDrives,0);
+#endif
     update_mount();
     UPDATE;
   }
@@ -474,6 +483,54 @@ bool THardDiskManager::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 
   return true;
 }
+
+#if defined(SSE_ACSI_HDMAN)
+
+bool TAcsiHardDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisabled) {
+
+  SEC(PSEC_HARDDRIVES){//what is this?
+    if (nDrives==0 || FirstLoad==0){  // In case of SteemIntro
+      EasyStr Str;
+      for (nDrives=0;nDrives<TAcsiHdc::MAX_ACSI_DEVICES;nDrives++){
+        Str=pCSF->GetStr("HardDrives",EasyStr("AcsiDrive_")+nDrives+"_Path","NOT ASSIGNED");
+        if (Str=="NOT ASSIGNED") break;
+
+        NO_SLASH(Str);
+        Drive[nDrives].Path=Str;
+        Str=pCSF->GetStr("HardDrives",EasyStr("AcsiDrive_")+nDrives+"_Letter",EasyStr(char('C'+nDrives)));
+        Drive[nDrives].Letter=Str[0];
+
+        if(AcsiHdc[nDrives].Init(nDrives,Drive[nDrives].Path))
+        {
+          SSEConfig.AcsiImg=true;
+        }
+      }
+    }
+    UPDATE;//what is this?
+  }
+
+  return true;
+}
+
+
+bool TAcsiHardDiskManager::SaveData(bool FinalSave,ConfigStoreFile *pCSF) {
+  SavePosition(FinalSave,pCSF);//what is this?
+
+  for (int n=0;n<TAcsiHdc::MAX_ACSI_DEVICES;n++){
+    if (n<nDrives){
+      pCSF->SetStr("HardDrives",EasyStr("AcsiDrive_")+n+"_Letter",EasyStr(Drive[n].Letter));
+      pCSF->SetStr("HardDrives",EasyStr("AcsiDrive_")+n+"_Path",Drive[n].Path);
+    }else{
+      pCSF->SetStr("HardDrives",EasyStr("AcsiDrive_")+n+"_Letter","NOT ASSIGNED");
+      pCSF->SetStr("HardDrives",EasyStr("AcsiDrive_")+n+"_Path","NOT ASSIGNED");
+    }
+  }
+
+  return true;
+}
+
+#endif
+
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -896,6 +953,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #endif
 #if defined(SSE_ACSI_OPTION)
   SSEOption.Acsi=pCSF->GetInt("Option","Acsi",SSEOption.Acsi);
+#if defined(SSE_ACSI_ICON)
+  SendMessage(GetDlgItem(DiskMan.Handle,11),BM_SETCHECK,SSEOption.Acsi,0);
+#endif
 #endif
 
 #endif//steven_seagal

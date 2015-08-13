@@ -13,7 +13,11 @@ DESCRIPTION: The code for the hard drive manager dialog.
 //---------------------------------------------------------------------------
 void THardDiskManager::update_mount()
 {
+#if defined(SSE_ACSI_HDMAN)
+  for (int n=2;!acsi&&n<26;n++){
+#else
   for (int n=2;n<26;n++){
+#endif
     if (IsMountedDrive(char(n+'A')) && DisableHardDrives==0){
       mount_flag[n]=true;
       mount_path[n]=GetMountedDrivePath(char(n+'A'));
@@ -51,8 +55,12 @@ EasyStr THardDiskManager::GetMountedDrivePath(char d)
 //---------------------------------------------------------------------------
 bool THardDiskManager::NewDrive(char *Path)
 {
+#if defined(SSE_ACSI_HDMAN)
+  if(acsi&&nDrives>=TAcsiHdc::MAX_ACSI_DEVICES||!acsi&&nDrives>=MAX_HARDDRIVES)
+    return 0;
+#else
   if (nDrives>=MAX_HARDDRIVES) return 0;
-
+#endif
   int Idx=nDrives;
   bool Found=0;
 
@@ -77,6 +85,9 @@ bool THardDiskManager::NewDrive(char *Path)
 //---------------------------------------------------------------------------
 THardDiskManager::THardDiskManager()
 {
+#if defined(SSE_ACSI_HDMAN)
+  acsi=false;
+#endif
   Left=GetSystemMetrics(SM_CXSCREEN)/2-258;
   Top=GetSystemMetrics(SM_CYSCREEN)/2-90+GetSystemMetrics(SM_CYCAPTION);
 
@@ -121,10 +132,18 @@ void THardDiskManager::Show()
 
   ManageWindowClasses(SD_REGISTER);
 #ifdef SSE_ACSI_OPTION_INDEPENDENT
-  Handle=CreateWindowEx(WS_EX_CONTROLPARENT,"Steem Hard Disk Manager",T("GEMDOS Hard Drives"),WS_CAPTION | WS_SYSMENU,
+#if defined(SSE_ACSI_HDMAN)
+  Handle=CreateWindowEx(WS_EX_CONTROLPARENT,"Steem Hard Disk Manager",
+                        (acsi? T("ACSI Hard Drives"):T("GEMDOS Hard Drives")),
+                        WS_CAPTION | WS_SYSMENU,
                         Left,Top,516,90+GetSystemMetrics(SM_CYCAPTION),
                         DiskMan.Handle,0,HInstance,NULL);
 
+#else
+  Handle=CreateWindowEx(WS_EX_CONTROLPARENT,"Steem Hard Disk Manager",T("GEMDOS Hard Drives"),WS_CAPTION | WS_SYSMENU,
+                        Left,Top,516,90+GetSystemMetrics(SM_CYCAPTION),
+                        DiskMan.Handle,0,HInstance,NULL);
+#endif
 #else
   Handle=CreateWindowEx(WS_EX_CONTROLPARENT,"Steem Hard Disk Manager",T("Hard Drives"),WS_CAPTION | WS_SYSMENU,
                         Left,Top,516,90+GetSystemMetrics(SM_CYCAPTION),
@@ -139,16 +158,31 @@ void THardDiskManager::Show()
 
   if (FullScreen) MakeParent(StemWin);
 #ifdef SSE_ACSI_OPTION_INDEPENDENT
+#if defined(SSE_ACSI_HDMAN)
+  int w=GetCheckBoxSize(Font,
+    (acsi?T("&Disable ACSI Hard Drives"):T("&Disable GEMDOS Hard Drives"))).Width;
+  Win=CreateWindow("Button",
+    (acsi?T("&Disable ACSI Hard Drives"):T("&Disable GEMDOS Hard Drives")),
+    WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX,10,10,w,23,Handle,
+    (HMENU)90,HInstance,NULL);
+#else
   int w=GetCheckBoxSize(Font,T("&Disable GEMDOS Hard Drives")).Width;
   Win=CreateWindow("Button",T("&Disable GEMDOS Hard Drives"),WS_CHILD 
     | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX,10,10,w,23,Handle,(HMENU)90,
     HInstance,NULL);
+#endif
 #else
   int w=GetCheckBoxSize(Font,T("&Disable All Hard Drives")).Width;
   Win=CreateWindow("Button",T("&Disable All Hard Drives"),WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX,
                              10,10,w,23,Handle,(HMENU)90,HInstance,NULL);
 #endif
+#if defined(SSE_ACSI_HDMAN)
+  SendMessage(Win,BM_SETCHECK,(UINT)( 
+    (acsi&&!SSEOption.Acsi||!acsi&&DisableHardDrives) 
+    ? BST_CHECKED:BST_UNCHECKED),0);
+#else
   SendMessage(Win,BM_SETCHECK,(UINT)(DisableHardDrives ? BST_CHECKED:BST_UNCHECKED),0);
+#endif
   SendMessage(Win,WM_SETFONT,(UINT)Font,0);
 
   SendMessage( CreateWindow("Button",T("&New Hard Drive"),WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
@@ -156,6 +190,10 @@ void THardDiskManager::Show()
                     ,WM_SETFONT,(UINT)Font,0);
 
   int Wid=get_text_width(T("When drive A is empty boot from"));
+#if defined(SSE_ACSI_HDMAN)
+  if(!acsi)
+  {
+#endif
   SendMessage( CreateWindow("Static",T("When drive A is empty boot from"),WS_CHILD | WS_VISIBLE,
                             10,44,Wid,20,Handle,(HMENU)91,HInstance,NULL)
                     ,WM_SETFONT,(UINT)Font,0);
@@ -176,6 +214,10 @@ void THardDiskManager::Show()
 #else
   SendMessage(Win,CB_SETCURSEL,0,0);
   EnableWindow(Win,0);
+#endif
+
+#if defined(SSE_ACSI_HDMAN)
+  }
 #endif
 
 
@@ -216,9 +258,21 @@ void THardDiskManager::CreateDriveControls(int Idx)
                 10,y,40,300,Handle,(HMENU)(300+Idx),HInstance,NULL);
   SendMessage(Win,WM_SETFONT,(UINT)Font,0);
   char DriveName[8];
+#if defined(SSE_ACSI_HDMAN)
+  if(acsi)
+    DriveName[1]=0;
+  else
+#endif
   DriveName[1]=':';DriveName[2]=0;
   SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("Off"));
+#if defined(SSE_ACSI_HDMAN)
+  for (int i=0;i<(acsi?TAcsiHdc::MAX_ACSI_DEVICES:24);i++){
+    if(acsi)
+      DriveName[0]=(char)('0'+i);
+    else
+#else
   for (int i=0;i<24;i++){
+#endif
     DriveName[0]=(char)('C'+i);
     SendMessage(Win,CB_ADDSTRING,0,(long)DriveName);
   }
@@ -291,7 +345,11 @@ void THardDiskManager::Hide()
         if (Type==1){
           Alert(EasyStr(Drive[i].Path[0])+" "+T("is not a valid drive letter."),T("Invalid Drive"),MB_ICONEXCLAMATION);
           return;
-        }else if (Type!=DRIVE_REMOVABLE && Type!=DRIVE_CDROM){
+        }else if (Type!=DRIVE_REMOVABLE && Type!=DRIVE_CDROM
+#if defined(SSE_ACSI_HDMAN)
+          && !acsi
+#endif
+          ){
           DWORD Attrib=GetFileAttributes(Drive[i].Path);
           if (Attrib==0xffffffff){
             if (Alert(Drive[i].Path+" "+T("does not exist. Do you want to create it?"),T("New Folder?"),
@@ -308,9 +366,18 @@ void THardDiskManager::Hide()
             return;
           }
         }
+#if defined(SSE_ACSI_HDMAN)
+        else if(acsi && AcsiHdc[i].Init(i,Drive[i].Path))
+        {
+          SSEConfig.AcsiImg=true;
+        }
+#endif
       }
     }
 
+#if defined(SSE_ACSI_HDMAN)
+    if(!acsi) {
+#endif
     //Remove old stemdos drives from ST memory
     long DrvMask=LPEEK(SV_drvbits);
     for (int i=0;i<nOldDrives;i++){
@@ -329,7 +396,10 @@ void THardDiskManager::Hide()
 
     stemdos_check_paths();
 #endif
-  }else{
+#if defined(SSE_ACSI_HDMAN)
+    }
+#endif
+  }else{ //SS cancel
     nDrives=nOldDrives;
     for (int i=0;i<nOldDrives;i++) Drive[i]=OldDrive[i];
     DisableHardDrives=OldDisableHardDrives;
@@ -372,7 +442,12 @@ LRESULT __stdcall THardDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARA
       if (ID==10){
         // New Hard Drive
         if (HIWORD(wPar)==BN_CLICKED){
+#if defined(SSE_ACSI_HDMAN)
+          if (This->acsi && This->nDrives<TAcsiHdc::MAX_ACSI_DEVICES
+            || !This->acsi && This->nDrives<MAX_HARDDRIVES){
+#else
           if (This->nDrives<MAX_HARDDRIVES){
+#endif
             This->GetDriveInfo();
             This->NewDrive(WriteDir);
             This->CreateDriveControls(This->nDrives-1);
@@ -383,6 +458,13 @@ LRESULT __stdcall THardDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARA
         }
       }else if (ID==90){
         This->DisableHardDrives=SendMessage(HWND(lPar),BM_GETCHECK,0,0)==BST_CHECKED;
+#if defined(SSE_ACSI_HDMAN)
+        if(This->acsi)
+          SSEOption.Acsi=!SendMessage(HWND(lPar),BM_GETCHECK,0,0)==BST_CHECKED;
+#endif        
+#if defined(SSE_GUI_STATUS_STRING) && defined(SSE_GUI_DISK_MANAGER_RGT_CLK_HD3)
+        GUIRefreshStatusBar();
+#endif
       }else if (ID==IDOK || ID==IDCANCEL){
         if (HIWORD(wPar)==BN_CLICKED){
           if (ID==IDOK){
@@ -398,11 +480,21 @@ LRESULT __stdcall THardDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARA
             SendMessage(HWND(lPar),BM_SETCHECK,1,true);
             EnableAllWindows(0,Win);
             This->GetDriveInfo();
+#if defined(SSE_ACSI_HDMAN)
+            EasyStr NewPath;
+            if(This->acsi)
+              NewPath=FileSelect(NULL,T("Select ACSI Image"),RunDir,FSTypes(3,NULL),1,true,"img");
+            else
+              NewPath=ChooseFolder(HWND(FullScreen ? StemWin:Win),T("Pick a Folder"),This->Drive[ID].Path);
+            if (NewPath.NotEmpty()){
+              SendMessage(GetDlgItem(This->Handle,100+ID),WM_SETTEXT,0,(long)NewPath.Text);
+            }
+#else
             EasyStr NewFol=ChooseFolder(HWND(FullScreen ? StemWin:Win),T("Pick a Folder"),This->Drive[ID].Path);
             if (NewFol.NotEmpty()){
               SendMessage(GetDlgItem(This->Handle,100+ID),WM_SETTEXT,0,(long)NewFol.Text);
             }
-
+#endif
             SetForegroundWindow(Win);
             EnableAllWindows(true,Win);
             SetFocus(HWND(lPar));
@@ -484,6 +576,13 @@ void THardDiskManager::CheckTos() {
     else
       SSEConfig.Stemdos=true;
   }
+}
+#endif
+
+#if defined(SSE_ACSI_HDMAN)
+TAcsiHardDiskManager::TAcsiHardDiskManager()
+{
+  acsi=true;
 }
 #endif
 

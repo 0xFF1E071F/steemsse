@@ -1461,6 +1461,10 @@ SOURCE=..\..\steem\rc\dm_hard_drives.ico
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\steem\rc\dm_hard_drives_acsi.ico
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\steem\rc\dm_hard_drives_francais.ico
 # End Source File
 # Begin Source File

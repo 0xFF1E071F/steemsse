@@ -79,6 +79,9 @@ void PerformCleanShutdown();
 EasyStr CrashFile;
 
 THardDiskManager HardDiskMan;
+#if defined(SSE_ACSI_HDMAN)
+TAcsiHardDiskManager AcsiHardDiskMan;
+#endif
 TDiskManager DiskMan;
 TJoystickConfig JoyConfig;
 TGeneralInfo InfoBox;
@@ -750,7 +753,7 @@ bool Initialise()
   }
 #endif
 
-#if defined(SSE_ACSI_MULTIPLE2)
+#if defined(SSE_ACSI_MULTIPLE2) && !defined(SSE_ACSI_HDMAN)
 /*  We use the existing Steem "crawler" to load whatever hard disk IMG 
     files are in Steem/ACSI, up to MAX_ACSI_DEVICES.
 */
@@ -770,7 +773,8 @@ bool Initialise()
     }while (ds.Next() && acsi_dev<TAcsiHdc::MAX_ACSI_DEVICES);
     ds.Close();
   }
-#elif defined(SSE_ACSI_MULTIPLE)
+#elif defined(SSE_ACSI_MULTIPLE) && !defined(SSE_ACSI_HDMAN)
+#if defined(SSE_ACSI_NOGUISELECT) 
 /*  Steem looks for predefined and hardcoded names (at least the names are
     cool).
 */
@@ -792,13 +796,14 @@ bool Initialise()
 
 #else // 0 or 1 ACSI image will be handled
 
-#if defined(SSE_ACSI_NOGUISELECT)
+#if defined(SSE_ACSI_NOGUISELECT) && !defined(SSE_ACSI_HDMAN)
   // try to open ACSI_HD0.img
 #if defined(SSE_GUI_NOTIFY1)
   SetNotifyInitText(ACSI_HD_NAME);
 #endif
   EasyStr hdname=RunDir+ACSI_HD_NAME;
   SSEConfig.AcsiImg=AcsiHdc.Init(0,hdname); 
+#endif
 #endif
 #endif//ACSI
 
