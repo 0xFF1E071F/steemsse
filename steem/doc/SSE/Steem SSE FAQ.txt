@@ -1,7 +1,7 @@
 Steem SSE FAQ
 ---------------
 
-v3.7.2
+v3.8.0
 
 Q:
 What is Steem?
@@ -22,14 +22,6 @@ What is 'SSE'?
 A:
 SSE stands for 'Steven Seagal Edition', a branch of Steem, and the only one
 with active development and exciting new features.
-One important feature is that Steem SSE also emulates the STF, not only
-the STE. Despite this, the name isn't changed. Should be STem?
-
-
-Q:
-How much does it cost?
-A:
-Steem is free software.
 
 
 Q:
@@ -37,6 +29,12 @@ Is Steem really being improved by Steven Seagal?
 A:
 How unlikely does it sound to you? Don't you think it's more fun than
 churning out crappy DTV movies just for the money?
+
+
+Q:
+How much does it cost?
+A:
+Steem is free software.
 
 
 Q:
@@ -105,19 +103,23 @@ Some yes, others not. Generally games were better, though some of the
 important games of the era were actually better on the ST or not even
 released on the Amiga.
 Generally, serious applications were better on the ST. The "multitask"
-Amiga OS was a joke.
+Amiga OS was a joke, as well as its directory-free drives.
 Demos, as strange as it may sound, were often more interesting and 
-impressive on the ST.
+impressive on the ST. Amiga "epics" were just boring.
 The Atari ST is one of the contenders for best chip music. The
 sound of the Amiga was impressive back then but is nothing more
-than bad 8bit samples today, it was quickly outclassed by the Soundblaster.
+than bad 8bit samples today (ouch!), and it was quickly outclassed by
+the Soundblaster.
+One may prefer the soundchip on some games, it was a weakness before,
+not really today.
 
 
 Q:
 Which TOS should I use?
 A:
 Generally, TOS 1.02 is the most compatible for STF mode, and TOS 1.62 for STE
-mode. Steem will try to match those TOS when you switch ST model.
+mode. Steem will try to match those TOS when you switch ST model, if option
+'Hacks' is checked.
 Some rare programs prefer another version, like TOS 1.00 for very old games,
 or even depend on a country specific TOS.
 TOS1.00 STF
@@ -162,6 +164,12 @@ work.
 
 
 Q:
+The icon in the taskbar is wrong (eg Disk Manager instead of Steem Fuji).
+A:
+This happens in Windows 7, not XP nor Vista, and I have no idea why.
+
+
+Q:
 Help! Something went wrong and now even quitting and restarting Steem 
 doesn't help.
 A:
@@ -191,6 +199,7 @@ A:
 Emulation is precise enough but smooth scrolling depends on your own 
 hardware. You need a video card and a monitor capable of displaying at
 the exact emulated frequency, 50hz most of the time.
+I have such a 50hz display and it's just perfect.
 If your hardware is set to 60hz or 75hz, for example, it's impossible
 to have really smooth scrollers.
 Triple-buffering (also available in Steem, of course) can't help that.
@@ -311,6 +320,15 @@ and IPF, that also use a plugin, capsimg.dll, which is up-to-date, as well
 as SPC images using an up-to-date emulation in Steem itself.
 Who knows? Maybe one day pasti.dll will be improved.
 For those reasons directly handling STX images in Steem is not planned.
+
+
+Q:
+What's the difference between ACSI and GEMDOS hard drives?
+A:
+ACSI emulation is lower level, it operates on image files of hard disks,
+and should work as a real Atari.
+GEMDOS emulation directly uses folders on your PC hard drive and intercept
+TOS commands. It is more convenient but less compatible. 
 
 
 Q:

@@ -59,11 +59,29 @@ public:
 #if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) // warning
   void CheckTos();
 #endif
+#if defined(SSE_ACSI_HDMAN)
+  bool acsi; // for RTTI, booh!
+#endif
 };
+
+
+#if defined(SSE_ACSI_HDMAN)
+class TAcsiHardDiskManager : public THardDiskManager {
+public:
+  TAcsiHardDiskManager();
+  void CheckTos() {}
+  bool LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisabled);
+  bool SaveData(bool FinalSave,ConfigStoreFile *pCSF);
+};
+#endif
+
 
 
 #if defined(SSE_STRUCTURE_SSEDEBUG_OBJ)
 extern THardDiskManager HardDiskMan; // singleton defined in main.cpp
+#if defined(SSE_ACSI_HDMAN)
+extern TAcsiHardDiskManager AcsiHardDiskManager;
+#endif
 #endif
 
 #endif//#ifndef HARDDISKMAN_DECLA_H

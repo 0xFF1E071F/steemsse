@@ -487,7 +487,7 @@ bool load_TOS(char *File)
 
   if (new_rom_addr==0xfc0000){
     tos_high=true;
-    tos_len=192*1024;
+    tos_len=192*1024;//SS not correct for miniTOS
   }else if (new_rom_addr==0xe00000){
     tos_high=0;
     tos_len=256*1024;

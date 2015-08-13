@@ -1,4 +1,5 @@
 #define STEVEN_SEAGAL //we must do it here... 3.7.2
+#define WIN32 //3.8.0 for SSE_ACSI_ICON in VC, not BCC
 #include "../code/SSE/SSE.h"
 #include "../code/resnum.h"
 // EDIT in NOTEPAD, not the VC IDE!!!!!!!
@@ -73,7 +74,7 @@ RC_ICO_HOME ICON "dm_home.ico"
 RC_ICO_SETHOME ICON "dm_set_home.ico"
 RC_ICO_BACK ICON "dm_back.ico"
 RC_ICO_FORWARD ICON "dm_forward.ico"
-#ifdef SSE_ACSI_OPTION_INDEPENDENT
+#ifdef SSE_ACSI_ICON //SSE_ACSI_OPTION_INDEPENDENT
 RC_ICO_HARDDRIVES ICON "dm_hard_drives_gemdos.ico"
 #else
 RC_ICO_HARDDRIVES ICON "dm_hard_drives.ico"
@@ -146,6 +147,10 @@ RC_ICO_SHORTCUT_ON ICON "shortcut_on.ico"
 RC_ICO_SHORTCUT_OFF ICON "shortcut_off.ico"
 
 RC_ICO_PCFOLDER ICON "pc_folder.ico"
+
+#ifdef SSE_ACSI_ICON //SSE_ACSI_OPTION_INDEPENDENT
+RC_ICO_HARDDRIVES_ACSI ICON "dm_hard_drives_acsi.ico"
+#endif
 
 // DirectX Errors
 #define REAL_E_UNEXPECTED 65535
