@@ -1762,7 +1762,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SHIFTER_HIRES_OVERSCAN//3.7.0
 #define SSE_SHIFTER_LEFT_OFF_60HZ //24 bytes!
 #define SSE_SHIFTER_LEFT_OFF_TEST_BEFORE_HBL // for Riverside
-//#define SSE_SHIFTER_LEFT_OFF_THRESHOLD//Hackabonds Demo not WS1
 #define SSE_SHIFTER_LINE_MINUS_2_DONT_FETCH //BIG Demo #2 bad raster finally!
 #define SSE_SHIFTER_LINE_MINUS_106_BLACK // loSTE screens
 //#define SSE_SHIFTER_LINE_PLUS_2_STE // undef 3.7
@@ -4361,12 +4360,19 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_DISK_MANAGER_HD_SELECTED //stay pushed if on
 #endif
 
-// beta-only for now, risky, fixes nothing serious...
+
 #if defined(SSE_INT_MFP)
 #define SSE_INT_MFP_REFACTOR3 //enums -note REFACTOR2 not active
 #undef SSE_INT_MFP_TIMER_B_AER // refactor
 #define SSE_INT_MFP_TIMER_B_AER2 // refactor
 #define SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS // timer B should be updated
+#define SSE_INT_MFP_TIMERS_WOBBLE //
+#define SSE_INT_MFP_RATIO_STE3 // 
+#define SSE_INT_MFP_TIMERS_STARTING_DELAY //
+#endif
+
+#ifdef SSE_SHIFTER
+#define SSE_SHIFTER_380 // some modest refactoring
 #endif
 
 #ifdef SSE_TOS

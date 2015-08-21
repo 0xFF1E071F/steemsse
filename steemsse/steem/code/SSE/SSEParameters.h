@@ -567,9 +567,18 @@ Far more on the ST.
 
 #if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY)
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
-// it just breaks things in current build, maybe it doesn't exist
+/*  This wasn't defined in v3.7, but in v3.8 it is, because the CPU/MFP ratio
+    should be the same as on the STF. This fixes the intermittent bug in loSTE
+    screens STE.
+    TEST10.TOS is less satisfactory.
+    Other cases to check, in STE mode, for spurious line +2:
+    Overscan Demos
+    Reality/Schnusdie
+    DSOTS
+    Not sure Shifter tricks refactoring has made a difference here.
+*/
 #if defined(SSE_INT_MFP_RATIO_STE2)
-#define MFP_TIMER_SET_DELAY 8//10 // overscan/schnusdie...
+#define MFP_TIMER_SET_DELAY 8//10 // overscan/schnusdie... [8]
 #else
 #define MFP_TIMER_SET_DELAY 7 //  Schnusdie vs DSOTS (depends on clock?!)
 #endif

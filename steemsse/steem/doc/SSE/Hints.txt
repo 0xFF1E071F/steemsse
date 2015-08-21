@@ -67,7 +67,7 @@ Games
 - Chessmaster 2000: STF
 - Crazy Cars 2: F7 for joystick control
 - Darius auto166: DI
-- Demoniak -ELT: STF, WU2, ADAT, C1, C2 (hell!)
+- Demoniak -ELT: STF, C1, C2, WU2
 - Dragonflight: create STW disk
 - Dungeon Master SCP: DI
 - Dynabusters+: STE; F1: music F2: volume
@@ -138,7 +138,7 @@ Demos
 - Extreme Rage: STE
 - Fantasia: STE T106 or DI
 - Froggies Over The Fence: C1
-- Hackabounds Demo: STF WS1
+- Hackabonds Demo: STF
 - Hier sind noch zwei Plätze frei/plasma: C1
 - Imagination/Roller Coaster: STF
 - Japtro: STF, DI

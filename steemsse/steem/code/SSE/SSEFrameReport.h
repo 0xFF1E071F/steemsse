@@ -81,14 +81,8 @@ private:
 
 extern TFrameEvents FrameEvents; // singleton
 
-#if defined(SSE_DEBUG)
-#define REPORT_LINE FrameEvents.ReportLine()
-#else
-#define REPORT_LINE
-#endif
 
 // inline functions
-
 
 inline void SFrameEvent::Add(int scanline,int cycle, char type, int value) {
   Scanline=scanline;
