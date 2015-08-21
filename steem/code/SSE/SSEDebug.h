@@ -568,7 +568,11 @@ enum { // to pass compilation
  };
 #endif
 
-
+#if defined(SSE_DEBUG)
+#define REPORT_LINE FrameEvents.ReportLine()
+#else
+#define REPORT_LINE
+#endif
  
 
 #endif//#ifndef SSEDEBUG_H

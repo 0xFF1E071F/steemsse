@@ -326,8 +326,8 @@ Q:
 What's the difference between ACSI and GEMDOS hard drives?
 A:
 ACSI emulation is lower level, it operates on image files of hard disks,
-and should work as a real Atari.
-GEMDOS emulation directly uses folders on your PC hard drive and intercept
+and should work as on a real Atari.
+GEMDOS emulation directly uses folders on your PC hard drive and intercepts
 TOS commands. It is more convenient but less compatible. 
 
 

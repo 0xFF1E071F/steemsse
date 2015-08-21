@@ -889,7 +889,9 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if defined(SSE_GUI_STATUS_STRING)
     GUIRefreshStatusBar();//overkill
 #endif
-    
+#if defined(SSE_SHIFTER_380)    
+    Glue.Update();
+#endif
 #endif
   }
 #endif

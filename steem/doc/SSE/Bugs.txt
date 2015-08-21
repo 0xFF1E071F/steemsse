@@ -55,6 +55,8 @@ blitter is working isn't emulated.
 
 -hard disk emu, Steem won't let you save memory
 
+-HFE no fast mode
+
 -hi-fi dreams should sound better on STE
 
 -International Tennis 3D: controls don't respond right (correct)
@@ -70,14 +72,9 @@ blitter is working isn't emulated.
 -Lose picture at stop with 400x278 display size
 Due to DirectDraw hacks
 
--loste screens STE bad display possible
-
 -lowlife 60
 
 -MB31 ?
-
--Microprose Golf STX: current pasti.dll has some wrong timings, not
-up to Steem (ST, IPF versions OK).
 
 -Mono emulator!
 
@@ -100,8 +97,8 @@ frequent video shift, lose overscan if no 'Hacks'
 
 -Pasti: failure on resume snapshot
 
--Pasti: some games that work in Hatari don't in Steem; timings are not 
-accurate.
+-Pasti: some games that work in Hatari don't in Steem
+Microprose Golf, 4 Wheel Drive/Combo Racer, Jupiter Masterdrive
 This is because pasti.dll should be improved, the fault isn't on
 Steem's side.
 
@@ -116,7 +113,7 @@ Is it Steem or TOS bug?
 
 -Snapshot: can't save when HD files open (big problem!)
 
--Snapshot: poor STW and SCP resuming
+-Snapshot: poor STW and SCP resuming (improved in v3.7.2)
 
 -Star Trek 
 samples too noisy

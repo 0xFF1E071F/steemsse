@@ -197,7 +197,7 @@ bool TImageHFE::LoadTrack(BYTE side,BYTE track) {
 WORD TImageHFE::MirrorMFM(WORD mfm_word) {
 /*  Because it's easier so for HxC hardware, bits are in the
     reverse order each word.  eg  $4489 reads $9122
-    Needed some time to figure this out :(
+    Needed some time to figure this out :)
 */
     WORD mirror_mfm=0;
     for(int i=0;i<16;i++)
@@ -273,9 +273,6 @@ TRACE_LOG("RPM %d  WP %d WA %X offset %d step %X TR0/1 %X%X TR1/1 %X%X\n",
   }//if(fCurrentImage)
   if(!ok)
     Close();
-
-
-  //TODO temp, convert to STW
 
   return ok;
 }

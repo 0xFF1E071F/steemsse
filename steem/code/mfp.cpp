@@ -434,6 +434,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
     We add some time to delay, which we'll correct at timeout for
     next timer.
     update: TEST10B doesn't confirm, but unconlusive, undef
+    update v3.8.0: defined again
 */
             MC68901.Wobble[timer]=(rand()&MFP_TIMERS_WOBBLE);
             mfp_timer_timeout[timer]+=MC68901.Wobble[timer];
@@ -488,7 +489,6 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 
 #if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY)
     INSTRUCTION_TIME(OPTION_PRECISE_MFP?-MFP_TIMER_SET_DELAY:-12); 
-    //INSTRUCTION_TIME(-MFP_TIMER_SET_DELAY);//oops
 #else
     INSTRUCTION_TIME(-12);
 #endif
