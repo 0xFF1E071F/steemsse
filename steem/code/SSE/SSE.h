@@ -4378,6 +4378,8 @@ Beta: not SSE_PRIVATE_BUILD
 #ifdef SSE_TOS
 //#define DISABLE_STEMDOS
 //#define DISABLE_STEMDOS2//TODO
+#define SSE_TOS_GEMDOS_DRVBIT // sooner
+#define SSE_TOS_GEMDOS_RESTRICT_TOS3 // EmuTOS
 #endif
 
 #endif//beta

@@ -330,7 +330,7 @@ void intercept_bios()
   }
 #endif
 
-  if (func==10){ // Drvbits
+  if (func==10){ // Drvbits //SS Drvmap()
 #if !defined(SSE_ACSI_DISABLE_HDIMG)
     if (os_hdimg_init_vector==0) hdimg_init_vectors();
 #endif

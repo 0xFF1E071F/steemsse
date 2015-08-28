@@ -561,9 +561,16 @@ LRESULT __stdcall THardDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARA
 #if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) // warning
 void THardDiskManager::CheckTos() {
   SSEConfig.Stemdos=false;
+  //TRACE("%X\n",ROM_LPEEK(0x2c));
   if(!DisableHardDrives && nDrives)
   { 
-    if(tos_version!=0x104 && tos_version!=0x162 || ROM_PEEK(0x1E)>0x15)
+    if(tos_version!=0x104 && tos_version!=0x162
+#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS3) // now it works
+      && ROM_LPEEK(0x2C)!=0x45544F53 // "ETOS"
+#else
+      || ROM_PEEK(0x1E)>0x15
+#endif
+      )
 #if defined(SSE_TOS_GEMDOS_RESTRICT_TOS) // Steem won't interecept if bad version
       Alert(T("GEMDOS hard disk emulation will work only with Atari TOS 1.04 or 1.62.\
  For other TOS, use an ACSI image instead."),"Warning",MB_OK|MB_ICONWARNING);
