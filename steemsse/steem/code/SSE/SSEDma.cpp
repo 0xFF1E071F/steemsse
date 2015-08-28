@@ -25,7 +25,9 @@
 #if !defined(SSE_CPU)
 #include <mfp.decla.h>
 #endif
-
+#if defined(SSE_TOS_GEMDOS_DRVBIT)
+#include <stemdos.decla.h>
+#endif
 
 #include "SSEDecla.h"
 #include "SSEDebug.h"
@@ -651,6 +653,14 @@ is ignored and when reading the 8 upper bits consistently reads 1."
         AcsiHdc.IOWrite((MCR&CR_A0)/2,io_src_b);
 #endif
       }
+#endif
+
+#if defined(SSE_TOS_GEMDOS_DRVBIT)
+/*  This will put the correct value (in $4C2) when TOS tests for hard drives,
+    not waiting for a call to BIOS function Drvmap() ($10)
+*/
+      if(SSE_HACKS_ON && !HardDiskMan.DisableHardDrives && !(MCR&CR_A0))
+        stemdos_update_drvbits(); 
 #endif
 
       break;
