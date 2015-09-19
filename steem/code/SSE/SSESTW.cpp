@@ -60,7 +60,9 @@ TImageSTW::~TImageSTW() {
 void TImageSTW::Close() {
   if(fCurrentImage)
   {
+#if defined(SSE_DEBUG) && SSE_VERSION>=371
     TRACE_LOG("STW %s image\n",FloppyDrive[Id].WrittenTo?"save and close":"close");
+#endif
     fseek(fCurrentImage,0,SEEK_SET); // rewind
     if(ImageData)
 #ifdef SSE_DISK_STW2

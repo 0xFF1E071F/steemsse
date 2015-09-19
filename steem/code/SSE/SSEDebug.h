@@ -499,7 +499,7 @@ enum logsection_enum_tag {
 #endif
 
 // TRACE_MFM 3.7.1
-#if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_TRACE_CONTROL)
+#if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_TRACE_CONTROL) && SSE_VERSION>=371
 #ifdef __cplusplus // visible only to C++ objects
 #define TRACE_MFM if(TRACE_MASK3&TRACE_CONTROL_FDCMFM) Debug.LogSection=LOGSECTION_FDC, Debug.TraceLog //!
 #endif//C++
