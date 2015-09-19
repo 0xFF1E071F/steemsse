@@ -1734,7 +1734,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_SHIFTER_SDP)
 #define SSE_SHIFTER_SDP_READ
 #define SSE_SHIFTER_STE_DE_MED_RES // bugfix
-#define SSE_SHIFTER_STE_READ_SDP_HSCROLL1 // bugfix 
+//#define SSE_SHIFTER_STE_READ_SDP_HSCROLL1 // bugfix //breaks 20year STE intro
 #define SSE_SHIFTER_STE_READ_SDP_SKIP // bugfix
 #define SSE_SHIFTER_SDP_WRITE
 #define SSE_SHIFTER_SDP_WRITE_ADD_EXTRA
@@ -3622,7 +3622,6 @@ Beta: not SSE_PRIVATE_BUILD
 
  
 #if SSE_VERSION>=370
-
 #if defined(SSE_BLITTER) && defined(SSE_HACKS)
 #define SSE_BLITTER_RELAPSE//hack
 #endif
@@ -3863,6 +3862,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//floppy
 #if defined(SSE_GUI)
 #define SSE_GUI_CUSTOM_WINDOW_TITLE
+#define SSE_GUI_DISK_MANAGER//was missing in v3.7.2
 #define SSE_GUI_DISK_MANAGER_DOUBLE_CLK_GO_UP //habit with some file managers
 #define SSE_GUI_DISK_MANAGER_GHOST
 #define SSE_GUI_DISK_MANAGER_INSERT_DISKB
@@ -4006,7 +4006,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SHIFTER_PALETTE_NOISE2
 //#define SSE_SHIFTER_PALETTE_STF
 #define SSE_SHIFTER_STE_DE_MED_RES // bugfix
-#define SSE_SHIFTER_STE_READ_SDP_HSCROLL1 // bugfix 
+#define SSE_SHIFTER_STE_READ_SDP_HSCROLL1 // bugfix  //breaks 20year STE intro
 #define SSE_SHIFTER_STE_READ_SDP_SKIP // bugfix
 #define SSE_SHIFTER_LINE_MINUS_2_DONT_FETCH //BIG Demo #2 bad raster finally!
 #undef SSE_SHIFTER_LINE_PLUS_2_STE
@@ -4386,6 +4386,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA_BUGFIX)
 #define SSE_INT_MFP_UTIL2 // bugfix parameter not used
+#undef SSE_SHIFTER_STE_READ_SDP_HSCROLL1 //v3.7 breaks 20year STE intro
 #endif//bugfix
 
 #else//!SS

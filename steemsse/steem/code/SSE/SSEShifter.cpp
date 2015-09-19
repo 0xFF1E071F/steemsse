@@ -4617,7 +4617,7 @@ MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
     Apparently the 1st prefetch is also 16 cycles in med res.
 */
 
-#if defined(SSE_SHIFTER_STE_READ_SDP_HSCROLL1) // TEST11D
+#if defined(SSE_SHIFTER_STE_READ_SDP_HSCROLL1) // TEST11D //breaks 20year STE intro
     int bytes_ahead=(shifter_hscroll_extra_fetch&&shifter_skip_raster_for_hscroll) 
 #else
     int bytes_ahead=(shifter_hscroll_extra_fetch) 
