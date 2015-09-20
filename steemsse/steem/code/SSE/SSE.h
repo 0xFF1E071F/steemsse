@@ -146,6 +146,9 @@ Beta: not SSE_PRIVATE_BUILD
     track bugs.
     Normally, SSE_SWITCHES_FEATURES is defined. You undef it if you need
     to compile an older version.
+
+    // see fiasco with SSE_CPU_PREFETCH_TIMING_MOVEM_HACK ->
+    // should go back to one system, probably versions
 */
 
 #define SSE_SWITCHES_FEATURES
@@ -507,7 +510,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_CPU_PREFETCH_TIMING)
-#define SSE_CPU_PREFETCH_TIMING_MOVEM_HACK // undef v3.7.0
+//#define SSE_CPU_PREFETCH_TIMING_MOVEM_HACK // undef v3.7.0 //argh, wasn't!
 #define SSE_CPU_PREFETCH_TIMING_SET_PC // necessary for some SET PC cases
 #endif
 
@@ -2576,7 +2579,7 @@ Beta: not SSE_PRIVATE_BUILD
 // Move the timing counting from FETCH_TIMING to PREFETCH_IRC:
 #define SSE_CPU_PREFETCH_TIMING //big, big change
 #if defined(SSE_CPU_PREFETCH_TIMING)
-#define SSE_CPU_PREFETCH_TIMING_MOVEM_HACK // undef v3.7.0
+#define SSE_CPU_PREFETCH_TIMING_MOVEM_HACK // undef v3.7.0 
 #define SSE_CPU_PREFETCH_TIMING_SET_PC // necessary for some SET PC cases
 #endif
 //#define SSE_CPU_PREFETCH_TIMING_EXCEPT // to mix unique switch + lines
