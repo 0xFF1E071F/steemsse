@@ -1302,6 +1302,10 @@ void res_change()
 //---------------------------------------------------------------------------
 bool draw_routines_init()
 {
+#if !defined(SSE_GLUE_FRAME_TIMINGS_B)
+/*  Those timings are now computed at each event, so we don't need
+    the frame plans anymore.
+*/
   {
     event_plan[0]=event_plan_50hz;
     event_plan[1]=event_plan_60hz;
@@ -1495,6 +1499,7 @@ bool draw_routines_init()
     evp++;
     evp->event=NULL;
   }
+#endif//no plans
 
   PCpal=Get_PCpal(); // SS defined in asm_draw.asm
 

@@ -552,11 +552,9 @@ Far more on the ST.
 #define  MFP_CLK_TH_EXACT 2457600 // ( 2^15 * 3 * 5^2 )
 #endif
 
-/*  Parameters are a compromise, those give the best results for TEST10.TOS
-    and TEST10D.TOS (spurious interrupt detector) in current build.
-*/
 
-#if defined(SSE_INT_MFP_TIMERS_WOBBLE)//no
+
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE)//yes in v3.8
 #define MFP_WRITE_LATENCY 4
 #define MFP_TIMERS_WOBBLE 1 //2
 #else
@@ -566,7 +564,7 @@ Far more on the ST.
 #define MFP_TIMER_DATA_REGISTER_ADVANCE (4)
 
 #if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY)
-#if defined(SSE_INT_MFP_TIMERS_WOBBLE)
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE) 
 /*  This wasn't defined in v3.7, but in v3.8 it is, because the CPU/MFP ratio
     should be the same as on the STF. This fixes the intermittent bug in loSTE
     screens STE.
@@ -576,8 +574,11 @@ Far more on the ST.
     Reality/Schnusdie
     DSOTS
     Not sure Shifter tricks refactoring has made a difference here.
+    But Glue refactoring seems to do.
 */
-#if defined(SSE_INT_MFP_RATIO_STE2)
+#if defined(SSE_GLUE_FRAME_TIMINGS_A) 
+#define MFP_TIMER_SET_DELAY (7)
+#elif defined(SSE_INT_MFP_RATIO_STE2)
 #define MFP_TIMER_SET_DELAY 8//10 // overscan/schnusdie... [8]
 #else
 #define MFP_TIMER_SET_DELAY 7 //  Schnusdie vs DSOTS (depends on clock?!)
@@ -590,8 +591,7 @@ Far more on the ST.
 #endif
 #endif
 #endif//starting_delay
-
-#define MFP_IACK_LATENCY 28 // it may seem high but it's not #IACK cycles
+#define MFP_IACK_LATENCY (28) // it may seem high but it's not #IACK cycles
 #define MFP_SPURIOUS_LATENCY MFP_WRITE_LATENCY//?? (MFP_IACK_LATENCY) //?
 
 #endif//mfp
@@ -670,7 +670,7 @@ Far more on the ST.
 
 // DMA sound has its own clock, it's not CPU's
 // We adjust this so that we have 50065 in ljbk's test
-
+//TODO
 #if defined(SSE_INT_MFP_RATIO_STE2)
 
 #if CPU_STE_PAL==(8020736) // too slow for Overscan Demos STE...
@@ -680,7 +680,8 @@ Far more on the ST.
 #elif CPU_STE_PAL==(8021030)
 #define STE_DMA_CLOCK 8021500 //50065; MOLZ OK
 #else
-#define STE_DMA_CLOCK 8021118 //(8021502-256-128)
+#define STE_DMA_CLOCK 8021350 // 50065; MOLZ OK v3.8.0
+//#define STE_DMA_CLOCK 8021118 //(8021502-256-128) // before v3.8.0
 #endif
 #else
 #define STE_DMA_CLOCK 8021502 //OK with STE clock=STF?

@@ -947,12 +947,20 @@ void ASMCALL check_for_interrupts_pending()
     if (vbl_pending){ //SS IPL4
       if ((sr & SR_IPL)<SR_IPL_4){
         VBL_INTERRUPT
+#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+        if(Glue.Status.hbi_done)
+          hbl_pending=false;
+#endif
       }
     }
 #if defined(SSE_INT_MFP_REFACTOR1)
     else
 #endif
-    if (hbl_pending){ 
+    if (hbl_pending
+#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+      && !Glue.Status.hbi_done
+#endif      
+      ){ 
       if ((sr & SR_IPL)<SR_IPL_2){ //SS rare
         // Make sure this HBL can't occur when another HBL has already happened
         // but the event hasn't fired yet.

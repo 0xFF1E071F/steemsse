@@ -1,4 +1,4 @@
-// for v3.7.2
+// for v3.8.0
 #pragma once // VC guard
 #ifndef STEVEN_SEAGAL_H // BCC guard
 #define STEVEN_SEAGAL_H
@@ -10,10 +10,10 @@ Steem Steven Seagal Edition (SSE)
 
 This is based on the source code for Steem R63 as released by Steem authors,
 Ant & Russ Hayward.
-Current site for this build: 
-http://ataristeven.t15.org/Steem.htm
 SVN code repository is at:
  http://sourceforge.net/projects/steemsse/
+Homepage:
+ http://ataristeven.exxoshost.co.uk/
 
 Added some files to the project. 
 - acia.h, key_table.cpp in 'steem\code'.
@@ -42,8 +42,9 @@ TODO: restore previous h files
 Other mods are in Steem code, inside blocks where STEVEN_SEAGAL is defined.
 Many other defines are used to segment code. This is heavy but it makes 
 debugging a lot easier (real life-savers when something is broken).
-Starting from v3.7, switches are duplicated, sorted first by features then
-by version. This again makes debugging easier.
+
+[Starting from v3.7, switches are duplicated, sorted first by features then
+by version. This again makes debugging easier.]
 
 To enjoy the new features, you must define STEVEN_SEAGAL!
 If not, you should get the last 3.2 build that compiles in VC6 (only
@@ -151,7 +152,7 @@ Beta: not SSE_PRIVATE_BUILD
     // should go back to one system, probably versions
 */
 
-#define SSE_SWITCHES_FEATURES
+//#define SSE_SWITCHES_FEATURES
 
 
 //////////////
@@ -2425,7 +2426,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_INT_JITTER_HBL
 #endif
 #if defined(SSE_INT_VBL)
-//#define SSE_INT_VBI_START 
+//#define SSE_INT_VBI_START //MFD, was never defined in any release
 #endif
 #if defined(SSE_INT_JITTER) && defined(SSE_INT_VBL) && defined(SSE_STF)
 #define SSE_INT_JITTER_VBL
@@ -3716,6 +3717,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_ROUNDING_MOVEM
 #define SSE_CPU_ROUNDING_MOVEM_MR_L // renamed
 #define SSE_CPU_ROUNDING_MOVEM6
+
+///*
 #define SSE_CPU_ROUNDING_MOVEP_MR_L
 #define SSE_CPU_ROUNDING_MOVEP_MR_W
 #define SSE_CPU_ROUNDING_MOVEP_RM_L
@@ -3723,14 +3726,18 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_ROUNDING_SUB_BW_DN
 #define SSE_CPU_ROUNDING_SUB_BW_DN2
 #define SSE_CPU_ROUNDING_SUB_L_DN
+///*
 #define SSE_CPU_ROUNDING_SUB_L_DN2
 #define SSE_CPU_ROUNDING_SUBA_W_DN
 #define SSE_CPU_ROUNDING_SUBA_L_DN
 #define SSE_CPU_ROUNDING_ABCD
+///*
 #undef SSE_CPU_ROUNDING_ADD_BW_DN //simplify
 #undef SSE_CPU_ROUNDING_ADD_BW_DN2 //simplify
 #define SSE_CPU_ROUNDING_ADD
 #undef SSE_CPU_ROUNDING_ADDA_L_DN2 //correct
+//*/
+
 #define SSE_CPU_ROUNDING_ADDA
 #define SSE_CPU_ROUNDING_ADDQ
 #define SSE_CPU_ROUNDING_ADDX
@@ -4363,6 +4370,17 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_DISK_MANAGER_HD_SELECTED //stay pushed if on
 #endif
 
+#if defined(SSE_GLUE)
+#define SSE_GLUE_FRAME_TIMINGS 
+#if defined(SSE_GLUE_FRAME_TIMINGS)
+#undef SSE_SHIFTER_FIX_LINE508_CONFUSION
+#undef SSE_TIMINGS_FRAME_ADJUSTMENT
+#define SSE_GLUE_FRAME_TIMINGS_A
+#define SSE_GLUE_FRAME_TIMINGS_B // remove old var and functions
+#define SSE_GLUE_FRAME_TIMINGS_C // extended resolutions
+#define SSE_GLUE_THRESHOLDS // computing thresholds only when changing option
+#endif
+#endif//glue
 
 #if defined(SSE_INT_MFP)
 #define SSE_INT_MFP_REFACTOR3 //enums -note REFACTOR2 not active
@@ -4377,6 +4395,17 @@ Beta: not SSE_PRIVATE_BUILD
 #ifdef SSE_SHIFTER
 #define SSE_SHIFTER_380 // some modest refactoring
 #endif
+
+
+#ifdef SSE_SHIFTER //switch names should be changed later
+
+#define SSE_SHIFTER_380 // some modest refactoring, debugging
+
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
+#define SSE_SHIFTER_HIRES_COLOUR_DISPLAY5//better test, compatible with GLUE refactoring
+#endif
+
+#endif//sft
 
 #ifdef SSE_TOS
 //#define DISABLE_STEMDOS

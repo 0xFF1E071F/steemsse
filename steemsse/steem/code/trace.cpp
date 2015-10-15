@@ -53,9 +53,9 @@ void trace()
   runstate=RUNSTATE_STOPPED;
   runstate_why_stop="";
   debug_in_trace=true;
-
+#if !defined(SSE_GLUE_FRAME_TIMINGS_B)
   debug_trace_event_plan_init();
-
+#endif
   int old_cpu_time=ABSOLUTE_CPU_TIME;
 
   //execute

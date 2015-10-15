@@ -889,7 +889,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if defined(SSE_GUI_STATUS_STRING)
     GUIRefreshStatusBar();//overkill
 #endif
-#if defined(SSE_SHIFTER_380)    
+#if defined(SSE_GLUE_THRESHOLDS)    
     Glue.Update();
 #endif
 #endif
@@ -986,12 +986,26 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #endif
   }
 #endif
+
 #if SSE_VERSION>=372
   if(Version>=51) 
   {
 
+
+
   }
 #endif
+
+#if SSE_VERSION>=380
+  if(Version>=52) 
+  {
+#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+    Glue.scanline=0; // Steem is always stopped at the start of a frame
+#endif
+  }
+#endif
+
+
 
 #endif//#if defined(STEVEN_SEAGAL)
 

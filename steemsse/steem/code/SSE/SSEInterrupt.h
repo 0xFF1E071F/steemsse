@@ -4,6 +4,8 @@
 
 #include "SSESTF.h"
 
+#include "SSEGLUE.H"
+
 #if defined(SSE_INT_MFP_RATIO) 
 extern double CpuMfpRatio;
 extern DWORD CpuNormalHz;
@@ -110,11 +112,15 @@ inline void HBLInterrupt() {
   INSTRUCTION_TIME_ROUND(SSE_INT_HBL_TIMING); 
 
   // jitter?
-#if defined(SSE_INT_JITTER_HBL)
+#if defined(SSE_INT_JITTER_HBL) //no
 #if defined(SSE_INT_E_CLOCK)
   if(!HD6301EMU_ON)
 #endif
     INSTRUCTION_TIME(HblJitter[HblJitterIndex]); //Hatari
+#endif
+
+#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+  Glue.Status.hbi_done=true;
 #endif
 
   // set CPU registers

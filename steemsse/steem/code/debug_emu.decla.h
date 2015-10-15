@@ -62,8 +62,9 @@ EXT int debug_time_to_timer_ticks[4];
 EXT int debug_frame_interrupts;
 #endif
 EXT void debug_check_for_events();
+#if !defined(SSE_GLUE_FRAME_TIMINGS_B)
 EXT void debug_trace_event_plan_init();
-
+#endif
 EXT void iolist_debug_add_pseudo_addresses();
 
 #define CYCLE_COL_SPEED 4
