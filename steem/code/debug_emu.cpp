@@ -404,10 +404,12 @@ void debug_check_for_events()
   }
 }
 //---------------------------------------------------------------------------
+#if !defined(SSE_GLUE_FRAME_TIMINGS_B)
 void debug_trace_event_plan_init()
 {
   if (screen_event_pointer==NULL) screen_event_pointer=event_plan[shifter_freq_idx];
 }
+#endif
 //---------------------------------------------------------------------------
 void iolist_debug_add_pseudo_addresses()
 {

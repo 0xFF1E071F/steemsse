@@ -229,9 +229,9 @@ void power_on()
 
   init_screen();
   init_timings();
-
-  hbl_pending=false;
-
+#if !defined(SSE_GLUE_FRAME_TIMINGS_A)
+  hbl_pending=false; // sure?
+#endif
   disable_input_vbl_count=50*3; // 3 seconds
 
 #if defined(SSE_VID_3BUFFER_WIN)
@@ -249,10 +249,19 @@ void power_on()
 void reset_peripherals(bool Cold)
 {
   log("***** reset peripherals ****");
+
+#ifdef SSE_DEBUG
+#if SSE_VERSION>=380 
+  TRACE_LOG("Reset (%d)\n",Cold);
+  TRACE_OSD("RESET"); // always interesting to know
+#else
   if(Cold)
     TRACE_LOG("Reset peripherals (cold)\n");
   else
     TRACE_LOG("Reset peripherals (warm)\n");
+#endif
+#endif
+  
 
 #if defined(SSE_OSD_CONTROL)
   if( !Cold && (OSD_MASK_CPU&OSD_CONTROL_CPURESET)) 
@@ -263,11 +272,23 @@ void reset_peripherals(bool Cold)
   if (extended_monitor){
     if (em_planes==1){
       screen_res=2;
+#if defined(SSE_GLUE_FRAME_TIMINGS_C)
+    shifter_freq=72;
+    shifter_freq_idx=2;
+#endif
     }else{
       screen_res=0;
+#if defined(SSE_GLUE_FRAME_TIMINGS_C)
+      screen_res=Shifter.m_ShiftMode;
+      shifter_freq=50;
+      shifter_freq_idx=0;
+#endif
+
     }
+#if !defined(SSE_GLUE_FRAME_TIMINGS_C)
     shifter_freq=50;
     shifter_freq_idx=0;
+#endif
   }else
 #endif
 
@@ -437,13 +458,18 @@ void reset_peripherals(bool Cold)
   M68000.NextIrFetched=false;
 #endif
 
-  if (runstate==RUNSTATE_RUNNING) 
+  if (runstate==RUNSTATE_RUNNING) //SS savage mod?
     prepare_event_again();
 
 #if defined(SSE_DRIVE_SOUND)
   if(Cold)
     SF314[0].Sound_StopBuffers();
 #endif
+
+#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+  Glue.Reset(Cold);
+#endif
+
 }
 #undef LOGSECTION
 //---------------------------------------------------------------------------

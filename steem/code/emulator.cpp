@@ -167,6 +167,14 @@ void init_timings()
   hbl_pending=true;
 
   cpu_time_of_start_of_event_plan=0; //0x7f000000; // test overflow
+
+#if defined(STEVEN_SEAGAL)
+#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+  Glue.GetNextScreenEvent();
+  Shifter.CurrentScanline.Cycles=scanline_time_in_cpu_cycles_at_start_of_vbl;
+  ASSERT(Shifter.CurrentScanline.Cycles>=224);
+#endif
+#if !defined(SSE_GLUE_FRAME_TIMINGS_B)
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO)
   if (n_cpu_cycles_per_second>CpuNormalHz){
 #else
@@ -176,14 +184,16 @@ void init_timings()
   }else{
     screen_event_pointer=event_plan[shifter_freq_idx];
   }
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START) 
+#endif
+#if defined(SSE_INT_VBI_START) 
   screen_event_pointer++; // best part of the creation - hack
 #endif
+#endif//SS
 
   screen_event_vector=screen_event_pointer->event;
   time_of_next_event=cpu_time_of_start_of_event_plan+(screen_event_pointer->time);
   cpu_cycles=(screen_event_pointer->time);
+
   cpu_timer=time_of_next_event;
 
   cpu_time_of_last_vbl=ABSOLUTE_CPU_TIME;
@@ -199,9 +209,12 @@ void init_timings()
   cpu_time_of_first_mfp_tick=ABSOLUTE_CPU_TIME;
 #endif
   shifter_cycle_base=ABSOLUTE_CPU_TIME;
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START___) //test...
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START) //test...
   // We lose the vertical overscan at restart pretty often with this mod.
   TRACE("Init timings PC %X VBI %X pending %d\n",pc,LPEEK(0x0070),vbl_pending);
+#elif defined(STEVEN_SEAGAL) && defined(SSE_GLUE_FRAME_TIMINGS_A)
+  // Now the hack is placed where we load the snapshot
 #else
   // This is a hack to make the first screen work
   if (pc==(MEM_ADDRESS)(LPEEK(0x0070) & 0xffffff)){
@@ -223,7 +236,11 @@ void init_timings()
   left_border=BORDER_SIDE;right_border=BORDER_SIDE;
   overscan_add_extra=0;
   scanline_drawn_so_far=0;
+#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+  cpu_timer_at_start_of_hbl=0; // the -444 was a Steem hack we can now remove
+#else
   cpu_timer_at_start_of_hbl=cpu_time_of_last_vbl-(scanline_time_in_cpu_cycles_at_start_of_vbl-(screen_event_pointer->time));
+#endif
   shifter_freq_change_idx=0;
   for (int n=0;n<32;n++){
     shifter_freq_change[n]=shifter_freq;

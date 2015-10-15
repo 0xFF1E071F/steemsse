@@ -233,8 +233,12 @@ typedef struct{
   EVENTPROC event;
 }screen_event_struct;
 
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START)
+#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+void event_trigger_vbi();
+#endif
+#if defined(SSE_GLUE_FRAME_TIMINGS_B)
+// no more plans!
+#elif defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START)
 EXT screen_event_struct event_plan_50hz[313*2+2+1],event_plan_60hz[263*2+2+1],event_plan_70hz[600*2+2+1],
                     event_plan_boosted_50hz[313*2+2+1],event_plan_boosted_60hz[263*2+2+1],event_plan_boosted_70hz[600*2+2+1];
 
@@ -255,8 +259,11 @@ EXT screen_event_struct event_plan_50hz[313+4],event_plan_60hz[263+4],event_plan
 EXT screen_event_struct event_plan_50hz[313*2+2],event_plan_60hz[263*2+2],event_plan_70hz[600*2+2],
                     event_plan_boosted_50hz[313*2+2],event_plan_boosted_60hz[263*2+2],event_plan_boosted_70hz[600*2+2];
 #endif
-
+#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+#define screen_event_pointer (&Glue.screen_event)
+#else
 EXT screen_event_struct*screen_event_pointer,*event_plan[4],*event_plan_boosted[4];
+#endif
 void prepare_next_event();
 void inline prepare_event_again();
 void event_timer_a_timeout();
