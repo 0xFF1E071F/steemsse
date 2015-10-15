@@ -4382,6 +4382,12 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif//glue
 
+
+#if defined(SSE_INT_HBL)
+#undef SSE_INT_HBL_E_CLOCK_HACK // use patch instead for 3615-HMD
+#define SSE_INT_HBL_380 //bugfix
+#endif
+
 #if defined(SSE_INT_MFP)
 #define SSE_INT_MFP_REFACTOR3 //enums -note REFACTOR2 not active
 #undef SSE_INT_MFP_TIMER_B_AER // refactor
@@ -4390,10 +4396,12 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_INT_MFP_TIMERS_WOBBLE //
 #define SSE_INT_MFP_RATIO_STE3 // 
 #define SSE_INT_MFP_TIMERS_STARTING_DELAY //
+#define SSE_INT_MFP_UPDATE_IP_ON_GPIP_CHANGE
+#define SSE_INT_MFP_SPURIOUS_380
 #endif
 
-#ifdef SSE_SHIFTER
-#define SSE_SHIFTER_380 // some modest refactoring
+#if defined(SSE_INT_VBL)
+#define SSE_INT_VBL_380 //bugfix
 #endif
 
 
