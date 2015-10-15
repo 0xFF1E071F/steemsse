@@ -52,7 +52,7 @@ inline void HBLInterrupt() {
 #if defined(SSE_BOILER_FRAME_INTERRUPTS)
   Debug.FrameInterrupts|=2;
 #endif
-#if defined(SSE_BOILER_FRAME_REPORT_MASK)
+#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
 #if defined(SSE_BOILER_FRAME_REPORT_MASK2)
   if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_INT)
 #else
@@ -89,7 +89,11 @@ inline void HBLInterrupt() {
 #if defined(SSE_CPU_E_CLOCK2)
   { 
     int current_cycles=ACT;
+#if defined(SSE_INT_HBL_380) // was experiment?
+    INSTRUCTION_TIME_ROUND(ECLOCK_AUTOVECTOR_CYCLE);
+#else
     INSTRUCTION_TIME/*_ROUND*/(ECLOCK_AUTOVECTOR_CYCLE);
+#endif
     BYTE e_clock_wait_states=
 #endif
 #ifdef SSE_CPU_E_CLOCK_DISPATCHER
@@ -146,7 +150,7 @@ inline void VBLInterrupt() {
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
   Debug.RecordInterrupt("VBI");
 #endif
-#if defined(SSE_BOILER_FRAME_REPORT_MASK)
+#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
 #if defined(SSE_BOILER_FRAME_REPORT_MASK2)
   if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_INT)
 #else
@@ -186,8 +190,8 @@ inline void VBLInterrupt() {
 #endif
 
 
-#if defined(DEBUG_BUILD)
-  if(mode==STEM_MODE_CPU) // no cycles when boiler is reading
+#if defined(DEBUG_BUILD) && !defined(SSE_INT_VBL_380) //auto168 boiler wu1
+  if(mode==STEM_MODE_CPU) // no cycles when boiler is reading //bug?
 #endif
     // E-Clock?
 #if defined(SSE_CPU_E_CLOCK)

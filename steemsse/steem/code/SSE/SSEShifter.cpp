@@ -4017,10 +4017,12 @@ void TShifter::SetSyncMode(BYTE NewSync) {
       if(CyclesIn<=372)
       {
         CurrentScanline.EndCycle=372;
+#if !defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS) // not twice...
         // adjust timer B, not sure it changes anything
         if(time_of_next_event==time_of_next_timer_b) 
           time_of_next_event-=4;
-        time_of_next_timer_b-=4; 
+        time_of_next_timer_b-=4;
+#endif
       }
     }
   }
@@ -4033,9 +4035,8 @@ void TShifter::SetSyncMode(BYTE NewSync) {
   }
 #if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
   if(OPTION_PRECISE_MFP)
-  {
-    CALC_CYCLES_FROM_HBL_TO_TIMER_B(new_freq);
-    calc_time_of_next_timer_b();
+    MC68901.AdjustTimerB(); 
+#endif
   }
 #endif
   shifter_freq=new_freq;
@@ -4135,7 +4136,6 @@ int TShifter::CheckFreq(int t) {
     i=-1; // this ugly thing still necessary anyway
   return i;
 }
-
 
 // TODO DE()
 

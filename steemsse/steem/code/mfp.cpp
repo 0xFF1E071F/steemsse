@@ -98,6 +98,11 @@ Practically on the ST, the request is placed by clearing the bit in the GPIP.
   BYTE mask=BYTE(1 << bit); //SS get the bit in hexa //is cast useless?
   BYTE set_mask=BYTE(set ? mask:0); //SS same or 0 if we clear
   BYTE cur_val=(mfp_reg[MFPR_GPIP] & mask); //SS state of that GPIP bit
+#ifdef SSE_INT_MFP_UPDATE_IP_ON_GPIP_CHANGE //v3.8.0
+  if(!set)
+    mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(mfp_gpip_irq[bit])]&=
+      BYTE(~mfp_interrupt_i_bit(mfp_gpip_irq[bit]));
+#endif
   if (cur_val==set_mask) return; //no change
   //SS detects if we're setting an IRQ
   bool old_1_to_0_detector_input=(cur_val ^ (mfp_reg[MFPR_AER] & mask))==mask;
@@ -123,12 +128,6 @@ Practically on the ST, the request is placed by clearing the bit in the GPIP.
 void calc_time_of_next_timer_b() //SS called only by mfp_set_timer_reg()
 {
   int cycles_in=int(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
-#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS) 
-/*  Try to avoid triggering 2 timer B on the same scanline...
-    Fixes 2nd value of TIMERB04.TOS
-*/
-  if(!OPTION_PRECISE_MFP||cycles_in<=Shifter.CurrentScanline.EndCycle+28)
-#endif
   if (cycles_in<cpu_cycles_from_hbl_to_timer_b){
     if (scan_y>=shifter_first_draw_line && scan_y<shifter_last_draw_line){
 #if defined(SSE_INT_MFP_TIMER_B_AER) //refactored
@@ -152,6 +151,10 @@ void calc_time_of_next_timer_b() //SS called only by mfp_set_timer_reg()
   }else{
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;  //put into future
   }
+#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
+  if((Shifter.CurrentScanline.Tricks&TRICK_LINE_MINUS_106))
+    time_of_next_timer_b+=scanline_time_in_cpu_cycles[shifter_freq_idx]; 
+#endif 
 }
 //---------------------------------------------------------------------------
 #if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_MFP_H)
@@ -258,7 +261,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
         new_control=BYTE((new_val >> 4) & 7);
         break;
     }
-#if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY) //no
+#if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY) //no//yes
 /*  Steem authors shift 1st timeout 12 cycles later, we use a parameter
     to test that. In current build 3.7.0, this is still the best
     value.
@@ -434,7 +437,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
     We add some time to delay, which we'll correct at timeout for
     next timer.
     update: TEST10B doesn't confirm, but unconlusive, undef
-    update v3.8.0: defined again
+    update v3.8.0: defined?
 */
             MC68901.Wobble[timer]=(rand()&MFP_TIMERS_WOBBLE);
             mfp_timer_timeout[timer]+=MC68901.Wobble[timer];
@@ -1061,7 +1064,7 @@ void mfp_interrupt(int irq,int when_fired) {
   mfp_time_of_start_of_last_interrupt[irq]=ABSOLUTE_CPU_TIME; 
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
-#if defined(SSE_BOILER_FRAME_REPORT_MASK)
+#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
 #if defined(SSE_BOILER_FRAME_REPORT_MASK2)
   if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_INT)
 #else
@@ -1456,7 +1459,11 @@ Fix is pragmatic (TEST10D still working).
         // maybe an irq was voided but it will timeout again during IACK!
         if( (reg_pending_before&i_bit) && !(reg_pending_after&i_bit) 
           && (next_timeout-ACT>0 
-          && next_timeout-ACT<=MFP_IACK_LATENCY-4))
+          && next_timeout-ACT<=MFP_IACK_LATENCY-4
+#if defined(SSE_INT_MFP_SPURIOUS_380)
+          -2
+#endif
+          ))
         {
           TRACE_OSD("cancel spurious");
           TRACE_LOG("%d next_timeout-ACT=%d next_timeout-WriteTiming=%d\n",ACT,next_timeout-ACT,next_timeout-WriteTiming);
@@ -1581,25 +1588,26 @@ int TMC68901::UpdateNextIrq(int start_from_irq,int at_time) {
 /*  Shifter tricks can change timing of timer B. This wasn't handled yet
     in Steem. Don't think any game/demo depends on this, I added it for a
     test program.
-    Refactoring due together with shifter tricks.
+    Refactoring due together with shifter tricks. [?]
 */
 
 void TMC68901::AdjustTimerB() {
   ASSERT(OPTION_PRECISE_MFP); // another waste of cycles...
   int CyclesIn=LINECYCLES;
-  int linecycle_of_timer_b=(mfp_reg[MFPR_AER]&8)
+  int linecycle_of_end_de=(mfp_reg[MFPR_AER]&8)
     ?Shifter.CurrentScanline.StartCycle:Shifter.CurrentScanline.EndCycle;
-  if(linecycle_of_timer_b==-1) //0byte -> no timer B?
-    linecycle_of_timer_b+=28+scanline_time_in_cpu_cycles_8mhz[shifter_freq_idx];
-  else
-    linecycle_of_timer_b+=28;
-  if(CyclesIn<=linecycle_of_timer_b 
-    && linecycle_of_timer_b != time_of_next_timer_b-LINECYCLE0)
+  if(linecycle_of_end_de==-1) //0byte -> no timer B?
+    linecycle_of_end_de+=scanline_time_in_cpu_cycles_8mhz[shifter_freq_idx];
+  
+  if(CyclesIn<=linecycle_of_end_de 
+    && linecycle_of_end_de-(time_of_next_timer_b-28-LINECYCLE0) >2)
   {
+    int tmp=time_of_next_timer_b-LINECYCLE0;
     bool adapt_time_of_next_event=(time_of_next_event==time_of_next_timer_b);
-    time_of_next_timer_b=LINECYCLE0+linecycle_of_timer_b;
+    time_of_next_timer_b=LINECYCLE0+linecycle_of_end_de+28+TB_TIME_WOBBLE;
+    TRACE_LOG("F%d y%d c%d timer b type %d %d -> %d adapt %d\n",TIMING_INFO,tmp,(mfp_reg[MFPR_AER]&8),time_of_next_timer_b-LINECYCLE0,adapt_time_of_next_event);
     if(adapt_time_of_next_event)
-      time_of_next_event=time_of_next_timer_b;//risky stuff...
+      time_of_next_event=time_of_next_timer_b;
   }
 }
 
@@ -1616,6 +1624,7 @@ void TMC68901::CalcCyclesFromHblToTimerB(int freq) {
   if(OPTION_PRECISE_MFP && (mfp_reg[MFPR_AER]&8)) 
     // from Hatari, fixes Seven Gates of Jambala; Trex Warrior
     cpu_cycles_from_hbl_to_timer_b-=Glue.DE_cycles[shifter_freq_idx];
+  ASSERT(cpu_cycles_from_hbl_to_timer_b<512); // can be short
 }
 
 #endif
