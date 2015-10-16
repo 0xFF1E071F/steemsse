@@ -449,7 +449,12 @@ Far more on the ST.
 
 #define HBL_IACK_LATENCY 28
 #define VBL_IACK_LATENCY 28
+#if defined(SSE_CPU_E_CLOCK4)
+//Mental Hangover STE - what matters is relation to ACIA
+#define ECLOCK_AUTOVECTOR_CYCLE 4
+#else
 #define ECLOCK_AUTOVECTOR_CYCLE 28 //whatever!
+#endif
 
 #if defined(SSE_INT_VBI_START)
 #undef SSE_INT_VBI_START
