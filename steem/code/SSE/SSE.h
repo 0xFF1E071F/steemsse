@@ -4360,6 +4360,20 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif//acsi
 
+#if defined(SSE_BLITTER)
+#undef SSE_BLITTER_RELAPSE
+#define SSE_BLT_CLEAR_HOG
+#define SSE_BLT_TIMING_CPU_NO_BUS
+#define SSE_BLT_TIMING_FXSR
+#define SSE_BLT_TIMING_NFSR
+#define SSE_BLT_TIMING_START_BLITTER
+#endif//blt
+
+#ifdef SSE_CPU
+#define SSE_CPU_E_CLOCK4
+#endif
+
+
 #if defined(SSE_FLOPPY)
 #define SSE_PASTI_AUTO_SWITCH2
 #define SSE_DISK_SCP380 // War Heli
@@ -4405,7 +4419,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 
-#ifdef SSE_SHIFTER //switch names should be changed later
+#ifdef SSE_SHIFTER
 
 #define SSE_SHIFTER_380 // some modest refactoring, debugging
 

@@ -12,6 +12,10 @@ DESCRIPTION: Emulation of the STE only blitter chip.
 TBlitter Blit;
 #endif
 
+#ifdef SSE_DEBUG
+int nBytesBlitted=0; // for traces
+#endif
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING)
 /*  This follows a table giving total execution times.
     Using this or Steem's way seems to give equivalent results.
@@ -19,6 +23,8 @@ TBlitter Blit;
     up to 3x4 cycles are added at once. Normally we keep Steem's
     system (SSE_BLT_TIMING isn't defined).
     Lines are OP, columns HOP. The comment columns are the original timings.
+    update 3.8.0: by just taking the table values, we're sometimes wrong (mask,
+    NFSR...)-> MFD, this was never in use, and will never be
 */
 int blitter_cycles[16][4]= 
 {
@@ -39,8 +45,16 @@ int blitter_cycles[16][4]=
  2,  2,  3,  3, // 14 | 2  2  3  3
  1,  1,  1,  1};// 15 | 1  1  1  1
 
-#define BLITTER_START_WAIT 4 // this also doesn't seem to matter, but
-#define BLITTER_END_WAIT 4 // we must have 1+2=8 eg:?
+#define BLITTER_START_WAIT 4
+#define BLITTER_END_WAIT 4
+
+#elif defined(SSE_BLT_TIMING_START_BLITTER)
+/*  Those values shouldn't be correct, we should have something like
+    4 for CPU and BLiTTER, but it works better so in Steem.
+*/
+
+#define BLITTER_START_WAIT (8-2) //4
+#define BLITTER_END_WAIT (0) //4
 
 #else
 
@@ -132,15 +146,41 @@ inline void Blitter_ReadSource(MEM_ADDRESS SrcAdr)
 void Blitter_Start_Line()
 {
   if (Blit.YCounter<=0){ // Blit finished?
+#ifdef SSE_DEBUG
+    TRACE_LOG("Blitted %d bytes src=%X dst=%X\n",nBytesBlitted,Blit.SrcAdr,Blit.DestAdr);
+    nBytesBlitted=0;
+#endif
+#if defined(SSE_BLT_CLEAR_HOG) 
+//v 3.8.0 BLTBENCH.TOS, http://www.atari-forum.com/viewtopic.php?f=25&t=28424 (1st version)
+    Blit.Hog=Blit.Busy=Blit.HasBus=false; 
+#else
     Blit.Busy=false;
+#endif
     log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Blitter_Start_Line changing GPIP bit from "+
             bool(mfp_reg[MFPR_GPIP] & MFP_GPIP_BLITTER_BIT)+" to 0");
     mfp_gpip_set_bit(MFP_GPIP_BLITTER_BIT,0);
+#if !defined(SSE_BLT_CLEAR_HOG)
     Blit.HasBus=false;
-#if BLITTER_END_WAIT!=0
+#endif
+#if BLITTER_END_WAIT!=0 
     INSTRUCTION_TIME_ROUND(BLITTER_END_WAIT);
 #endif
-
+#if defined(SSE_BLT_TIMING_CPU_NO_BUS)
+/*  Steem doesn't emulate the CPU running when the Blitter has the bus.
+    This hack corrects for it when the next instruction doesn't access
+    the bus at once, but it works only for one bus cycle (not MULU DN,DN).
+    If we wanted to do it for as long as the CPU doesn't need the bus, we
+    should add a variable in core emulation (probably INSTRUCTION_TIME_ROUND).
+    It's the same idea as in Hatari 1.9.0, but more general than just DBCC.
+    It's a hack because it's negative and it counts on the timing being rounded
+    up by the next INSTRUCTION_TIME_ROUND.
+    It is in this form because BLITTER_END_WAIT=0 (probably not correct). (TODO)
+    It's a better fix than SSE_BLITTER_RELAPSE for Relapse plasma but it acts
+    sooner, when the screen is being set up.
+*/
+    if(SSE_HACKS_ON)
+      INSTRUCTION_TIME(-2);
+#endif
     log(Str("BLITTER: ")+HEXSl(old_pc,6)+" ------------- BLITTING DONE --------------");
 
 #ifdef DEBUG_BUILD
@@ -152,9 +192,14 @@ void Blitter_Start_Line()
   }else{ //prepare next line
 
     Blit.Mask=Blit.EndMask[0]; //SS mask for 1st word
+
     Blit.Last=0;
 
-    if (Blit.FXSR){
+    if (Blit.FXSR
+#if defined(SSE_BLT_TIMING_FXSR) //same rule as for normal fetches
+      && ((Blit.Op % 5)!=0 &&(Blit.Hop>1 || (Blit.Hop==1 && Blit.Smudge)))
+#endif
+      ){
 /*
   FXSR stands  for Force  eXtra Source Read.  When this bit is set one extra
   source read is performed at the  start  of  each  line  to  initialize the
@@ -163,6 +208,9 @@ void Blitter_Start_Line()
   performed at the beginning of each  line  to  "prime"  the  source buffer.
 */      
       Blitter_ReadSource(Blit.SrcAdr); //ss prefetch
+#if defined(SSE_BLT_TIMING_FXSR)
+      INSTRUCTION_TIME_ROUND(4); // bugfix, was missing
+#endif
       Blit.SrcAdr+=Blit.SrcXInc;       
     }
   }
@@ -176,7 +224,6 @@ void ASMCALL Blitter_Start_Now()
           bool(mfp_reg[MFPR_GPIP] & MFP_GPIP_BLITTER_BIT)+" to 1");
   mfp_gpip_set_bit(MFP_GPIP_BLITTER_BIT,true);
   Blit.YCounter=Blit.YCount;
-
   /*Only want to start the line if not in the middle of one.*/
   if (WORD(Blit.XCounter-Blit.XCount)==0) Blitter_Start_Line();
 
@@ -191,6 +238,7 @@ void ASMCALL Blitter_Start_Now()
 //---------------------------------------------------------------------------
 void Blitter_Blit_Word() //SS Data is blitted word by word
 {
+  ASSERT(Blit.Busy && Blit.HasBus);//there's no stupid assert
   if (Blit.Busy==0) return;
 
   WORD SrcDat,DestDat=0,NewDat;  //internal data registers
@@ -205,16 +253,7 @@ void Blitter_Blit_Word() //SS Data is blitted word by word
 */
   //won't read source for 0,5,10,15 or Hop=0,1 (unless 1 and smudge on)
 
-
-  if(! ((Blit.Op % 5)!=0 && (Blit.Hop>1 || (Blit.Hop==1 && Blit.Smudge))) )
-  {
-//    ASSERT(!Blit.Smudge);
-  }
-
-
-  if (
-    //Blit.Smudge*0||
-    (Blit.Op % 5)!=0 && (Blit.Hop>1 || (Blit.Hop==1 && Blit.Smudge))){
+  if ((Blit.Op % 5)!=0 &&(Blit.Hop>1 || (Blit.Hop==1 && Blit.Smudge))){
     if (Blit.NFSR && Blit.Last){
 /*
   NFSR stands  for No  Final Source  Read.   When this  bit is  set the last
@@ -314,7 +353,17 @@ void Blitter_Blit_Word() //SS Data is blitted word by word
     DestDat=Blitter_DPeek(Blit.DestAdr);
     NewDat=DestDat & WORD(~(Blit.Mask));
 #if !defined(STEVEN_SEAGAL) ||!defined(SSE_BLT_TIMING)
+#if defined(SSE_BLT_TIMING_NFSR)
+/* It's protected by option 'Hacks' because we could be misreading doc
+   about "read-modify cycle".
+*/
+    if(SSE_HACKS_ON && Blit.NFSR && Blit.Last)
+      INSTRUCTION_TIME(6);
+    else
+      INSTRUCTION_TIME_ROUND(4);
+#else
     INSTRUCTION_TIME_ROUND(4);
+#endif
 #endif
   }else{
     NewDat=0; //Blit.Mask is FFFF and we're in a source-only mode
@@ -355,7 +404,9 @@ void Blitter_Blit_Word() //SS Data is blitted word by word
   }
 
   Blitter_DPoke(Blit.DestAdr,NewDat); //SS writing the word to dest
-
+#ifdef SSE_DEBUG
+  nBytesBlitted+=sizeof(WORD);
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING) 
   INSTRUCTION_TIME_ROUND(blitter_cycles[Blit.Op][Blit.Hop]*4); // all at once
 #else
@@ -417,14 +468,26 @@ void Blitter_Draw()
 //  MEM_ADDRESS SrcAdr=Blit.SrcAdr,DestAdr=Blit.DestAdr;
 
 //  Blit.YCounter=int(Blit.YCount ? Blit.YCount:65536);
+
+#if defined(SSE_BLT_TIMING_START_BLITTER)
+/*  It most probably changes nothing, but all blitter tests were done with
+    this defined, by accident :)
+*/
+  INSTRUCTION_TIME(BLITTER_START_WAIT);
+#else
   INSTRUCTION_TIME_ROUND(BLITTER_START_WAIT);
+#endif
   if (Blit.YCount==0){  //see note in Blitter.txt - trying to restart with a ycount of zero results in no restart
 /*
      * If the BUSY flag is
      * reset when the Y_Count is zero, the flag will remain clear
      * indicating BLiTTER completion and the BLiTTER won't be restarted.
 */
+#if defined(SSE_BLT_CLEAR_HOG)
+    Blit.Busy=Blit.Hog=false; 
+#else
     Blit.Busy=false; 
+#endif
 
     log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Blitter_Draw YCount==0 changing GPIP bit from "+
          bool(mfp_reg[MFPR_GPIP] & MFP_GPIP_BLITTER_BIT)+" to 0");
@@ -433,8 +496,8 @@ void Blitter_Draw()
   }else{
     Blit.YCounter=Blit.YCount;
 
-#if defined(SSE_BLITTER_RELAPSE)
-    // for research...
+#if defined(SSE_BLITTER_RELAPSE) //breaks a screen in Drone, undef v3.8
+    // for research... 
     if(SSE_HACKS_ON 
       && IR==0x4E71  // maybe
       && Blit.YCount==1) // targetting
@@ -471,7 +534,7 @@ void Blitter_Draw()
 //  }
   // SS the blitter's own process loop!
 #if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_BLIT_WHEN_STOPPED)
-  while (1 ){
+  while (1 ){ //Even if that was dangerous, only the Boiler build is affected
     while (cpu_cycles>0 && 1){
 #else
   while (runstate==RUNSTATE_RUNNING){
@@ -494,8 +557,7 @@ void Blitter_Draw()
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_BLT_BLIT_MODE_CYCLES)
       // make sure to check for interrupts often enough
-      if(!Blit.Hog 
-        && ABSOLUTE_CPU_TIME-Blit.TimeToCheckIrq>=0)
+      if(!Blit.Hog && ABSOLUTE_CPU_TIME-Blit.TimeToCheckIrq>=0)
       {
         Blit.TimeToCheckIrq+=SSE_BLT_BLIT_MODE_IRQ_CHK;
         check_for_interrupts_pending();
@@ -505,6 +567,9 @@ void Blitter_Draw()
       if (Blit.Busy){
         if (Blit.Hog==0){ //not in hog mode, keep switching bus
           if (((ABSOLUTE_CPU_TIME-Blit.TimeToSwapBus)>=0)){
+#if defined(SSE_BLT_TIMING_START_BLITTER) // same explanation as above...
+            INSTRUCTION_TIME(Blit.HasBus?0:6);
+#endif
             Blit.HasBus=!(Blit.HasBus);
             if (Blit.HasBus){
               log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Swapping bus to blitter at "+ABSOLUTE_CPU_TIME);
@@ -513,7 +578,12 @@ void Blitter_Draw()
             }
 #if defined(SSE_BLT_BLIT_MODE_CYCLES)
             Blit.TimeToCheckIrq=Blit.TimeToSwapBus+SSE_BLT_BLIT_MODE_IRQ_CHK;
+#if defined(SSE_BLT_TIMING_START_BLITTER)
+            Blit.TimeToSwapBus=ACT+SSE_BLT_BLIT_MODE_CYCLES; // + delay
+#else
             Blit.TimeToSwapBus+=SSE_BLT_BLIT_MODE_CYCLES;
+#endif
+              ;
 #else
             Blit.TimeToSwapBus+=64;
 #endif
@@ -716,12 +786,10 @@ Source Y Increment Register:
 */
     case 0x20: WORD_B_1(&Blit.SrcXInc)=Val;return;
     case 0x21: WORD_B_0(&Blit.SrcXInc)=BYTE(Val & ~1);
-  //    ASSERT( Blit.SrcXInc );
       log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Set blitter SrcXInc to "+Blit.SrcXInc);
       return;
     case 0x22: WORD_B_1(&Blit.SrcYInc)=Val;return;
     case 0x23: WORD_B_0(&Blit.SrcYInc)=BYTE(Val & ~1);
-  //    ASSERT( Blit.SrcYInc );
       log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Set blitter SrcYInc to "+Blit.SrcYInc);
       return;
 /*
@@ -870,7 +938,6 @@ Byte instructions can not be used to read or write this register.
       return;
     case 0x37:
       WORD_B_0(&Blit.XCount)=Val;
-      //ASSERT( Blit.XCount );
       Blit.XCounter=Blit.XCount;
       if (Blit.XCounter==0) Blit.XCounter=65536;
       log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Set blitter XCount to "+Blit.XCount);
@@ -889,7 +956,7 @@ Byte instructions can not be used to read or write this register.
     case 0x38:
       WORD_B_1(&Blit.YCount)=Val;
 #if defined(STEVEN_SEAGAL) && defined(SSE_BLT_YCOUNT)
-      Blit.YCount&=0xFFFF; // hack, YCount is now 32bit
+      Blit.YCount&=0xFFFF; // hack, YCount is now 32bit //TODO, as for XCount?
 #endif
       return;
     case 0x39:
@@ -912,9 +979,10 @@ Byte instructions can not be used to read or write this register.
   (1:1 copy). "11" makes the halftone-pattern work as supposed and does a copy 
   "Halftone AND source".
 */
-    case 0x3A: Blit.Hop=BYTE(Val & (BIT_0 | BIT_1));
-               log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Set blitter Hop to "+Blit.Hop);
-               return;
+    case 0x3A: 
+      Blit.Hop=BYTE(Val & (BIT_0 | BIT_1));
+      log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Set blitter Hop to "+Blit.Hop);
+      return;
 /*
   Blit OP (logical OPeration) Register:
 
@@ -974,22 +1042,29 @@ Byte instructions can not be used to read or write this register.
 */
     case 0x3C:
       Blit.LineNumber=BYTE(Val & (BIT_0 | BIT_1 | BIT_2 | BIT_3)); 
-      Blit.Smudge=bool(Val & BIT_5);
-//      ASSERT(!Blit.Smudge); // Braindamage polygon
-      //Blit.Smudge=0;
-      Blit.Hog=bool(Val & BIT_6);
+      Blit.Smudge=bool(Val & BIT_5); //SS persistent
+      Blit.Hog=bool(Val & BIT_6); //SS volatile
+
       if (Blit.Busy==0){
         if (Val & BIT_7){ //start new
-          TRACE_LOG("F%d y%d c%d Blt %X Hg%d Hp%d Op%d x%d y%d NF%d FX%d Sk%d from %X (x+%d y+%d) to %X (x+%d y+%d) Msk %X %X %X\n",
-            FRAME,scan_y,LINECYCLES,Val,Blit.Hog,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.NFSR,Blit.FXSR,Blit.Skew,Blit.SrcAdr,Blit.SrcXInc,Blit.SrcYInc,Blit.DestAdr,Blit.DestXInc,Blit.DestYInc,Blit.EndMask[0],Blit.EndMask[1],Blit.EndMask[2]);
-
+#ifdef SSE_DEBUG
+          if(!Blit.YCount)
+            TRACE_LOG("No blit\n");
+          else
+          {
+            int end_src=Blit.SrcAdr+Blit.SrcXInc*(Blit.XCount-1)*Blit.YCount+Blit.YCount*Blit.SrcYInc;
+            int end_dst=Blit.DestAdr+Blit.DestXInc*(Blit.XCount-1)*Blit.YCount+Blit.YCount*Blit.DestYInc;
+TRACE_LOG("PC %X F%d y%d c%d Blt %X Hop%d Op%X %dx%d from %X (x%d y%d end %X) to %X (x%d y%d end %X) NF%d FX%d Sk%d Msk %X %X %X\n",
+old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.SrcAdr,Blit.SrcXInc,Blit.SrcYInc,end_src,Blit.DestAdr,Blit.DestXInc,end_dst,Blit.DestYInc,Blit.NFSR,Blit.FXSR,Blit.Skew,Blit.EndMask[0],Blit.EndMask[1],Blit.EndMask[2]);
+          }
 #if defined(SSE_OSD_CONTROL)
           if(OSD_MASK3 & OSD_CONTROL_STEBLT) 
             TRACE_OSD("%X %dx%d",Val,Blit.XCount,Blit.YCount);
 #endif
+#endif//dbg
 
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_OVERLAP)//TODO
+#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_OVERLAP)//MFD
           // GEM doc viewer, Braindamage - no glitch visible
           if(!(Blit.SrcAdr > Blit.DestAdr || Blit.DestAdr-Blit.SrcAdr>Blit.XCount/2)) // bad test!
           {
@@ -1032,9 +1107,13 @@ Byte instructions can not be used to read or write this register.
      * termination of the interrupt service routine.)
 */
         if (Val & BIT_7){ // Restart
+#ifdef SSE_DEBUG
+ TRACE_LOG("PC %X F%d y%d c%d REBlt %X Hop%d Op%X %d(%d)x%d from %X (x%d y%d) to %X (x%d y%d) NF%d FX%d Sk%d Msk %X %X %X\n",
+   old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.XCounter,Blit.YCount,Blit.SrcAdr,Blit.SrcXInc,Blit.SrcYInc,Blit.DestAdr,Blit.DestXInc,Blit.DestYInc,Blit.NFSR,Blit.FXSR,Blit.Skew,Blit.EndMask[0],Blit.EndMask[1],Blit.EndMask[2]);
+#endif
           log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Blitter restarted - swapping bus to Blitter at "+ABSOLUTE_CPU_TIME);
           Blit.HasBus=true;
-//          Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+64;
+//          Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+64; //SS this was commented out
 
 #if defined(SSE_BLT_BLIT_MODE_CYCLES)
           Blit.TimeToCheckIrq=Blit.TimeToSwapBus+SSE_BLT_BLIT_MODE_IRQ_CHK;
@@ -1068,17 +1147,16 @@ Byte instructions can not be used to read or write this register.
       Bit 6  -  NFSR (No final source read)
       Bit 7  -  FXSR (Force extra Source Read).
  
-  NFSR means the last word of course is not being read anymore. This is only 
+  NFSR means the last word of sourse is not being read anymore. This is only 
   sensible with certain Endmask and skew values. 
 
   FXSR is the opposite and forces the Blitter to read one more word. Also only
   sensible with certain Endmask/Skew combinations.
 
 */
-    case 0x3D: Blit.Skew=BYTE(Val & (BIT_0 | BIT_1 | BIT_2 | BIT_3));
-               ASSERT(Blit.Skew<16);
-               Blit.NFSR=bool(Val & BIT_6);
-               Blit.FXSR=bool(Val & BIT_7);
+    case 0x3D: Blit.Skew=BYTE(Val & (BIT_0 | BIT_1 | BIT_2 | BIT_3)); //SS persistent
+               Blit.NFSR=bool(Val & BIT_6); //SS persistent
+               Blit.FXSR=bool(Val & BIT_7); //SS persistent
                log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Set blitter Skew to "+Blit.Skew+", NFSR to "+(int)Blit.NFSR+", FXSR to "+(int)Blit.FXSR);
     case 0x3E:case 0x3F:
       return;
