@@ -796,8 +796,13 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   }
 
 #if defined(SSE_SHIFTER)//don't trust content of snapshot
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+  Glue.m_ShiftMode=Shifter.m_ShiftMode=(BYTE)screen_res;
+  Glue.m_SyncMode= (BYTE)((shifter_freq==50)?2:0);
+#else
   Shifter.m_ShiftMode=(BYTE)screen_res;
   Shifter.m_SyncMode= (BYTE)((shifter_freq==50)?2:0);
+#endif
 #endif
 #if defined(SSE_MMU_WAKE_UP)//same
 //  WAKE_UP_STATE=0;

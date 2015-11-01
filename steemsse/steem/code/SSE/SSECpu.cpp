@@ -20,6 +20,9 @@ extern const char*exception_action_name[4];//={"read from","write to","fetch fro
 #endif//#if defined(SSE_STRUCTURE_SSECPU_OBJ)
 
 #include "SSESTF.h"
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#include "SSEGlue.h"
+#endif
 
 #if defined(SSE_CPU)
 
@@ -1442,7 +1445,7 @@ FC2 FC1 FC0 Address Space
         // Very rare, generally indicates emulation/snapshot bug, but there are cases
         bombs=BOMBS_ADDRESS_ERROR;
 #if defined(SSE_DEBUG)
-        BRK(odd exception vector); // GEN4-OVL
+//        BRK(odd exception vector); // GEN4-OVR
         M68000.nExceptions++;
         TRACE_LOG("->%d bombs\n",bombs);
 #endif
@@ -1756,7 +1759,11 @@ void m68k_poke_abus2(BYTE x){
     we have performance in mind: CPU poke is used a lot, it is rare
     when the address bus is around the current scanline.
 */
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+    if(Glue.FetchingLine()
+#else
     if(Shifter.FetchingLine() 
+#endif
       && abus>=shifter_draw_pointer
       && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2)
       Shifter.Render(LINECYCLES,DISPATCHER_CPU); 
@@ -1810,7 +1817,11 @@ void m68k_dpoke_abus2(WORD x){
     DEBUG_CHECK_WRITE_W(abus);
 #endif
 #if defined(SSE_CPU_CHECK_VIDEO_RAM_W) // 3615 GEN4
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+    if(Glue.FetchingLine()
+#else
     if(Shifter.FetchingLine() 
+#endif
       && abus>=shifter_draw_pointer
       && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2
       //&& DPEEK(abus)!=x
@@ -1860,7 +1871,11 @@ void m68k_lpoke_abus2(LONG x){
     DEBUG_CHECK_WRITE_L(abus);
 #endif
 #if defined(SSE_CPU_CHECK_VIDEO_RAM_L)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+    if(Glue.FetchingLine()
+#else
     if(Shifter.FetchingLine() 
+#endif
       && abus>=shifter_draw_pointer
       && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2)
       Shifter.Render(LINECYCLES,DISPATCHER_CPU); 
@@ -1962,10 +1977,9 @@ TM68000::SyncEClock(
 
   int act=ACT;
 
-#if defined(SSE_SHIFTER) && defined(SSE_TIMINGS_FRAME_ADJUSTMENT)
+#if defined(SSE_SHIFTER) && defined(SSE_TIMINGS_FRAME_ADJUSTMENT)//no
   act-=4*Shifter.n508lines; //legit hack: NOJITTER.PRG
 #endif
-
 #if defined(SSE_CPU_E_CLOCK3)
 /*
   int a=2147483644;
@@ -1994,9 +2008,11 @@ TM68000::SyncEClock(
   case 0:
     wait_states=8;
 #if defined(SSE_INT_HBL_E_CLOCK_HACK)
-    // pathetic hack for 3615GEN4 HMD #1, make it 4 cycles instead on HBI
-    // TEST16: jitter is 0, 4, 8 -> we know it's not correct...
-    if(dispatcher==ECLOCK_HBL&&SSE_HACKS_ON&&ST_TYPE==STF)
+    // pathetic hack for 3615GEN4 HMD #1 and 3615GEN4-OVR, make it 4
+    // cycles instead on HBI of STF
+    // TEST16, HBITMG: jitter is 0, 4, 8, timing is 56 
+    // -> we know it's not correct...
+    if(dispatcher==ECLOCK_HBL&&ST_TYPE==STF&&SSE_HACKS_ON)
       TRACE_LOG("ECLK 8->4\n");
     else
 #endif
@@ -2017,7 +2033,7 @@ TM68000::SyncEClock(
 #if defined(SSE_DEBUG_FRAME_REPORT_ACIA)
   FrameEvents.Add(scan_y,LINECYCLES,'E',wait_states);
 #endif
-#if defined(SSE_BOILER_FRAME_REPORT_MASK)
+#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
 #if defined(SSE_BOILER_FRAME_REPORT_MASK2)
   if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_INT)
 #else
@@ -2494,7 +2510,7 @@ void m68k_0010()  //move.l
       m68k_unrecognised();
 #endif
 
-  m68k_GET_SOURCE_L; // where tb2 etc crash
+  m68k_GET_SOURCE_L; // where tb2 etc (used to) crash
 
   // Destination
 #if defined(SSE_CPU_TRUE_PC)

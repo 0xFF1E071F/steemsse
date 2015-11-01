@@ -2232,18 +2232,30 @@ void DWin_init()
 #if defined(SSE_BOILER_SHOW_FREQ) && defined(SSE_SHIFTER)
     GetWindowRectRelativeToParent(ms->handle,&rc);
     ms=new mr_static("Sync ","",rc.right+5,y,Par,
-        NULL,(MEM_ADDRESS)&Shifter.m_SyncMode,1,MST_REGISTER,0,NULL);
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+      NULL,(MEM_ADDRESS)&Glue.m_SyncMode,1,MST_REGISTER,0,NULL);
+#else
+      NULL,(MEM_ADDRESS)&Shifter.m_SyncMode,1,MST_REGISTER,0,NULL);
+#endif
 #endif
 
 #if defined(SSE_BOILER_SHOW_TRICKS) && defined(SSE_SHIFTER)
 // Shifter tricks of the line!
     GetWindowRectRelativeToParent(ms->handle,&rc);
     ms=new mr_static("Tricks ","",rc.right+5,y,Par,
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+      NULL,(MEM_ADDRESS)&Glue.CurrentScanline.Tricks,3,MST_REGISTER,0,NULL);
+#else
       NULL,(MEM_ADDRESS)&Shifter.CurrentScanline.Tricks,3,MST_REGISTER,0,NULL);
+#endif
 // and since we still have room:
     GetWindowRectRelativeToParent(ms->handle,&rc);
     new mr_static("bytes ","",rc.right+5,y,Par,
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+      NULL,(MEM_ADDRESS)&Glue.CurrentScanline.Bytes,2,MST_DECIMAL,0,NULL);
+#else
       NULL,(MEM_ADDRESS)&Shifter.CurrentScanline.Bytes,2,MST_DECIMAL,0,NULL);
+#endif
 #endif
 
 

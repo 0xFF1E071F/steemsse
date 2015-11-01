@@ -99,7 +99,8 @@ Practically on the ST, the request is placed by clearing the bit in the GPIP.
   BYTE set_mask=BYTE(set ? mask:0); //SS same or 0 if we clear
   BYTE cur_val=(mfp_reg[MFPR_GPIP] & mask); //SS state of that GPIP bit
 #ifdef SSE_INT_MFP_UPDATE_IP_ON_GPIP_CHANGE //v3.8.0
-  if(!set)
+  //if(!set) //oops :)
+  if(set)
     mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(mfp_gpip_irq[bit])]&=
       BYTE(~mfp_interrupt_i_bit(mfp_gpip_irq[bit]));
 #endif
@@ -145,16 +146,19 @@ void calc_time_of_next_timer_b() //SS called only by mfp_set_timer_reg()
 #else
         +TB_TIME_WOBBLE;
 #endif
+
+#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS) && defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+  if(OPTION_PRECISE_MFP&&(Glue.CurrentScanline.Tricks&TRICK_LINE_MINUS_106)
+    && LINECYCLES>166+28+4) // not if Timer B occurred in shift mode 2
+    time_of_next_timer_b+=scanline_time_in_cpu_cycles[shifter_freq_idx]; 
+#endif 
+
     }else{
       time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;  //put into future
     }
   }else{
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;  //put into future
   }
-#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
-  if((Shifter.CurrentScanline.Tricks&TRICK_LINE_MINUS_106))
-    time_of_next_timer_b+=scanline_time_in_cpu_cycles[shifter_freq_idx]; 
-#endif 
 }
 //---------------------------------------------------------------------------
 #if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_MFP_H)
@@ -759,8 +763,24 @@ void ASMCALL check_for_interrupts_pending()
         if (mfp_reg[MFPR_ISRA+i_ab] & i_bit){ //interrupt in service
           break;  //time to stop looking for pending interrupts
         }
+
+#if defined(SSE_INT_MFP_IS_DELAY) //v3.8.0, forgot this one
+        if(OPTION_PRECISE_MFP && MC68901.LastRegisterWritten==MFPR_ISRA+i_ab
+          && ACT-MC68901.WriteTiming>=0
+          && ACT-MC68901.WriteTiming<=MFP_WRITE_LATENCY
+          && (MC68901.LastRegisterWrittenValue&i_bit))
+        {
+          break; // unlikely in normal code because of SR
+        }
+#endif
+
 #if defined(SSE_INT_MFP_SPURIOUS)
+#if defined(SSE_SHIFTER_TRICKS_OPTION_C2)
+        // we protect with option 'Hacks' since 'C2' is more necessary
+        if(SSE_HACKS_ON && OPTION_PRECISE_MFP && MC68901.CheckSpurious(irq))
+#else
         if(OPTION_PRECISE_MFP && MC68901.CheckSpurious(irq))
+#endif
           break;
 #endif
         if (mfp_reg[MFPR_IPRA+i_ab] & i_bit){ //is this interrupt pending?
@@ -1292,7 +1312,6 @@ void TMC68901::Init() {
   IrqInfo[13].Timer=0;  // timer A
   ASSERT( IrqInfo[5].IsGpip==0 );
 #endif
-
 }
 
 #if defined(SSE_INT_MFP_UTIL)
@@ -1584,7 +1603,7 @@ int TMC68901::UpdateNextIrq(int start_from_irq,int at_time) {
 #endif
 
 
-#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
+#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS) 
 /*  Shifter tricks can change timing of timer B. This wasn't handled yet
     in Steem. Don't think any game/demo depends on this, I added it for a
     test program.
@@ -1595,7 +1614,11 @@ void TMC68901::AdjustTimerB() {
   ASSERT(OPTION_PRECISE_MFP); // another waste of cycles...
   int CyclesIn=LINECYCLES;
   int linecycle_of_end_de=(mfp_reg[MFPR_AER]&8)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+    ?Glue.CurrentScanline.StartCycle:Glue.CurrentScanline.EndCycle;
+#else
     ?Shifter.CurrentScanline.StartCycle:Shifter.CurrentScanline.EndCycle;
+#endif
   if(linecycle_of_end_de==-1) //0byte -> no timer B?
     linecycle_of_end_de+=scanline_time_in_cpu_cycles_8mhz[shifter_freq_idx];
   

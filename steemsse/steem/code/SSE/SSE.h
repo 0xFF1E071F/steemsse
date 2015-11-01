@@ -350,7 +350,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BLT_BLIT_MODE_INTERRUPT // trigger at once (not after blit phase)
 #define SSE_BLT_HOG_MODE_INTERRUPT // no interrupt in hog mode
 //#define SSE_BLT_OVERLAP // TODO ?
-//#define SSE_BLT_TIMING // based on a table, but Steem does it better
 #define SSE_BLT_YCOUNT // 0=65536
 #if defined(SSE_HACKS)
 #define SSE_BLITTER_RELAPSE//hack 3.7
@@ -2350,7 +2349,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BLT_BLIT_MODE_INTERRUPT // trigger at once (not after blit phase)
 #define SSE_BLT_HOG_MODE_INTERRUPT // no interrupt in hog mode
 //#define SSE_BLT_OVERLAP // TODO ?
-//#define SSE_BLT_TIMING // based on a table, but Steem does it better
 #endif
 #if defined(SSE_BOILER)
 #define SSE_BOILER_CLIPBOARD // right-click on 'dump' to copy then paste
@@ -3480,7 +3478,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//var
 #if defined(SSE_VID_BORDERS)
 #define SSE_VID_BORDERS_416_NO_SHIFT0
-#define SSE_VID_BORDERS_416_NO_SHIFT1 / check border on/off
+#define SSE_VID_BORDERS_416_NO_SHIFT1 // check border on/off
 #define SSE_VID_BORDERS_LB_DX1 // check border on/off
 #endif
 
@@ -4329,6 +4327,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA)
 // those switches are later moved to both features and version zones!
+// TODO only 1 zone (again)
 
 //#define SSE_DRIVE_WRITE_TRACK_11
 //#define SSE_GUI_FULLSCREEN_NO_VSYNC_OPTION //but all the rest?
@@ -4385,7 +4384,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_GLUE)
-#define SSE_GLUE_FRAME_TIMINGS 
+#define SSE_GLUE_FRAME_TIMINGS
 #if defined(SSE_GLUE_FRAME_TIMINGS)
 #undef SSE_SHIFTER_FIX_LINE508_CONFUSION
 #undef SSE_TIMINGS_FRAME_ADJUSTMENT
@@ -4393,16 +4392,18 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_FRAME_TIMINGS_B // remove old var and functions
 #define SSE_GLUE_FRAME_TIMINGS_C // extended resolutions
 #define SSE_GLUE_THRESHOLDS // computing thresholds only when changing option
+
 #endif
 #endif//glue
 
 
 #if defined(SSE_INT_HBL)
-#undef SSE_INT_HBL_E_CLOCK_HACK // use patch instead for 3615-HMD
+//#undef SSE_INT_HBL_E_CLOCK_HACK // no, because there's 3615GEN4-OVR too
 #define SSE_INT_HBL_380 //bugfix
 #endif
 
 #if defined(SSE_INT_MFP)
+#define SSE_INT_MFP_IS_DELAY
 #define SSE_INT_MFP_REFACTOR3 //enums -note REFACTOR2 not active
 #undef SSE_INT_MFP_TIMER_B_AER // refactor
 #define SSE_INT_MFP_TIMER_B_AER2 // refactor
@@ -4434,6 +4435,19 @@ Beta: not SSE_PRIVATE_BUILD
 //#define DISABLE_STEMDOS2//TODO
 #define SSE_TOS_GEMDOS_DRVBIT // sooner
 #define SSE_TOS_GEMDOS_RESTRICT_TOS3 // EmuTOS
+#endif
+
+#if defined(SSE_GLUE_FRAME_TIMINGS) && defined(SSE_MMU) && defined(SSE_SHIFTER)
+#define SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1
+#undef SSE_SHIFTER_LEFT_OFF_60HZ//forget it
+#define SSE_SHIFTER_ARMADA_IS_DEAD2
+#define SSE_SHIFTER_SCHNUSDIE2
+#define SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1
+#define SSE_SHIFTER_TRICKS_OPTION_C2
+
+//#define SSE_GLUE_001 //to show all the Tekila oddities
+#define SSE_GLUE_002
+
 #endif
 
 #endif//beta

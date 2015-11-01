@@ -1,7 +1,7 @@
 #include "SSEDebug.h"
-
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 #include "SSEMMU.h"
-
+#endif
 #if defined(SSE_DEBUG) 
 
 #if defined(UNIX) || defined(BCC_BUILD)
@@ -27,6 +27,9 @@
 #include <steemh.decla.h>
 #include "SSEFloppy.h"
 #include <display.decla.h>
+#endif
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#include "SSEMMU.h"
 #endif
 
 int debug0,debug1=0,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9;

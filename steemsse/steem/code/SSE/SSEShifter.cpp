@@ -46,10 +46,12 @@ TShifter::TShifter() {
 #if defined(WIN32)
   ScanlineBuffer=NULL;
 #endif
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 #if defined(SSE_GLUE_FRAME_TIMINGS_A) //not that important, there's an assert
   CurrentScanline.Cycles=scanline_time_in_cpu_cycles_8mhz[1]; 
 #else
   CurrentScanline.Cycles=500;
+#endif
 #endif
 }
 
@@ -57,6 +59,7 @@ TShifter::TShifter() {
 TShifter::~TShifter() {
 }
 
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 /*  Check overscan functions:
     -  CheckSideOverscan()
     -  EndHBL() 
@@ -69,7 +72,7 @@ TShifter::~TShifter() {
     Also like in Hatari comments briefly explain Shifter tricks.
 */
 
-
+//note: this isn't compiled anymore in v3.8
 void TShifter::CheckSideOverscan() {
 /*  An overbloated version of Steem's draw_check_border_removal()
     This function is called before rendering if there have been Shifter events.
@@ -2054,6 +2057,8 @@ Tests are arranged to be efficient.
 
 }
 
+//note: this isn't compiled anymore in v3.8
+void TShifter::CheckVerticalOverscan() { 
 
 void TShifter::CheckVerticalOverscan() {
 
@@ -2291,6 +2296,7 @@ Problem: too many cases of WU1, that should be the rarer one
 */
 }
 
+#endif//#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 
 void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
 #ifdef SSE_SHIFTER_DRAW_DBG
@@ -2317,7 +2323,11 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
           if (in_pic){
             nsdp=shifter_draw_pointer + pic*emudetect_falcon_mode;
             draw_scanline(bord,pic,bord,HSCROLL);
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+            Glue.AddExtraToShifterDrawPointerAtEndOfLine(nsdp);
+#else
             AddExtraToShifterDrawPointerAtEndOfLine(nsdp);
+#endif
             shifter_draw_pointer=nsdp;
           }else{
             draw_scanline(bord+pic+bord,0,0,0);
@@ -2403,7 +2413,11 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
 #if defined(SSE_SHIFTER_HIRES_OVERSCAN)
       if(freq_change_this_scanline)
       {
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+        Glue.CheckSideOverscan();
+#else
         CheckSideOverscan();
+#endif
         if(draw_line_off)
         {
           for(int i=0;i<=20;i++)
@@ -2458,7 +2472,11 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
           ///////////////// RENDER VIDEO /////////////////
 #if defined(SSE_SHIFTER_HIRES_OVERSCAN)
 // experimental, right off, left off?
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+          if(Glue.CurrentScanline.Tricks&2)
+#else
           if((CurrentScanline.Tricks&2))
+#endif
             draw_scanline((BORDER_SIDE*2)/16-16, 640/16+16*2, (BORDER_SIDE*2)/16-16,0);
             //draw_scanline((BORDER_SIDE*2)/16, 640/16+16*2, (BORDER_SIDE*2)/16-16*2,0);
           else
@@ -2509,7 +2527,8 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
   }//end Monochrome
 }
 
-
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+//note: this isn't compiled anymore in v3.8
 void TShifter::EndHBL() {
 
 #if defined(SSE_SHIFTER_END_OF_LINE_CORRECTION)
@@ -2671,7 +2690,7 @@ dragon, right
 
 }
 
-
+//note: this isn't compiled anymore in v3.8
 void TShifter::IncScanline() { // a big extension of 'scan_y++'!
 //should be "Glue"?
 #if defined(SSE_DEBUG)
@@ -2841,6 +2860,23 @@ void TShifter::IncScanline() { // a big extension of 'scan_y++'!
 
 }
 
+#endif//#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+
+void TShifter::IncScanline() {
+  scan_y++;   // -63-249
+  HblPixelShift=0;  
+  left_border=BORDER_SIDE;
+  if(HSCROLL) 
+    left_border+=16;
+  if(shifter_hscroll_extra_fetch) 
+    left_border-=16;
+  right_border=BORDER_SIDE;
+}
+
+#endif
+
 /*  For simplification, GLUE/MMU/Shifter IO is considered just Shifter for what
     concerns the ST video circuits. TODO
     We moved the parts of ior.cpp and iow.cpp dealing with video circuits here.
@@ -2890,7 +2926,11 @@ BYTE TShifter::IORead(MEM_ADDRESS addr) {
     case 0xff8209:{  //low byte of screen draw pointer
       MEM_ADDRESS sdp;
 #if defined(SSE_SHIFTER_SDP_READ)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
+      sdp=MMU.ReadSDP(LINECYCLES); // a complicated affair
+#else
       sdp=ReadSDP(LINECYCLES); // a complicated affair
+#endif
 #else
       if(scan_y<shifter_first_draw_line || scan_y>=shifter_last_draw_line){
         sdp=shifter_draw_pointer;
@@ -2913,8 +2953,12 @@ BYTE TShifter::IORead(MEM_ADDRESS addr) {
       break;
       
     case 0xff820a:  //synchronization mode
-      ior_byte&=~3;           // this way takes care
-      ior_byte|=m_SyncMode;   // of both STF & STE
+      ior_byte&=~3;           // this way takes care...
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+      ior_byte|=Glue.m_SyncMode;   // ...of both STF & STE
+#else
+      ior_byte|=m_SyncMode;   // ...of both STF & STE
+#endif
       break;
 
     case 0xff820d:  //low byte of screen memory address
@@ -3071,7 +3115,11 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
     case 0xff8209:  //low byte of draw pointer
       
 #if defined(SSE_SHIFTER_SDP_WRITE)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
+      MMU.WriteSDP(addr,io_src_b); // very complicated!
+#else
       WriteSDP(addr,io_src_b); // very complicated!
+#endif
       break;
       
 #else // Steem 3.2 or SSE_SHIFTER_SDP_WRITE not defined
@@ -3117,7 +3165,11 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
 #endif
 
     case 0xff820a: //synchronization mode      
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+      Glue.SetSyncMode(io_src_b); 
+#else
       SetSyncMode(io_src_b); 
+#endif
       break;
       
 /* 
@@ -3218,8 +3270,13 @@ must NOT be skipped using the Line Offset Register.
       break;
 
     case 0xff8260: //resolution
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+      Glue.SetShiftMode(io_src_b);
+#else
       SetShiftMode(io_src_b);
+#endif
       break;
+
       
 /*
 HSCROLL 
@@ -3320,7 +3377,17 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
   if(extended_monitor || emudetect_falcon_mode!=EMUD_FALC_MODE_OFF) 
     return;
 #endif
-
+/*
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+    if(Glue.FetchingLine()) // even if cycles_in too small to rendre (more tests)?
+    {
+      if(freq_change_this_scanline
+#if defined(SSE_SHIFTER_UNSTABLE)
+        || Preload // must go apply trick at each scanline
+#endif
+        )
+        Glue.CheckSideOverscan(); 
+#else
   if(freq_change_this_scanline
 #if defined(SSE_SHIFTER_DRAGON1)//temp
     || SS_signal==SS_SIGNAL_SHIFTER_CONFUSED_2
@@ -3330,6 +3397,8 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 #endif
     )
     CheckSideOverscan(); 
+#endif
+*/
 
 /*  What happens here is very confusing; we render in real time, but not
     quite. As on a real ST, there's a delay of fetch+8 between the 
@@ -3368,18 +3437,28 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     OK: Overscan #6, HighResMode STE
     bugfix v3.6.0: for STE line +20 there's nothing to compensate! (pcsv62im)
 */
+#if defined(SSE_VID_BORDERS_416_NO_SHIFT2)
+      if(SideBorderSize==VERY_LARGE_BORDER_SIDE  
+#else
       if(SSE_HACKS_ON && SideBorderSize==VERY_LARGE_BORDER_SIDE  
+#endif
 #if defined(SSE_VID_BORDERS_416_NO_SHIFT1)
         && border
 #endif
-        && shifter_freq_at_start_of_vbl==50
+#if !defined(SSE_VID_BORDERS_416_NO_SHIFT3)
+        && shifter_freq_at_start_of_vbl==50//?
+#endif
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+        && (Glue.CurrentScanline.Tricks&TRICK_LINE_PLUS_26))
+#else
         && (CurrentScanline.Tricks&TRICK_LINE_PLUS_26))
+#endif
         cycles_since_hbl+=4;
 #endif
 #endif
     break;
   case DISPATCHER_SET_SHIFT_MODE:
-    RoundCycles(cycles_since_hbl); // eg Drag/Happy Islands, Cool STE
+    RoundCycles(cycles_since_hbl); // eg Drag/Happy Islands, Cool STE (...)
     break; 
 #if defined(SSE_SHIFTER_RENDER_SYNC_CHANGES)//no
   case DISPATCHER_SET_SYNC:
@@ -3388,18 +3467,20 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     break;
 #endif
   case DISPATCHER_WRITE_SDP:
-    RoundCycles(cycles_since_hbl); // eg D4/Tekila
+#if defined(SSE_GLUE_001)
+    break;
+#endif
+    RoundCycles(cycles_since_hbl); // eg D4/Tekila in large display
     break;
   }//sw
 #endif
 
   int pixels_in=cycles_since_hbl-(CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN-BORDER_SIDE);
 
-
-#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+#if defined(SSE_GLUE_FRAME_TIMINGS_A) && defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
   // highresmode, CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN is too high (50hz)
   // if we correct in read sdp, we should do it at rendering too
-  if(CurrentScanline.Cycles==508)
+  if(Glue.CurrentScanline.Cycles==508)
     pixels_in+=4;
 #endif
 
@@ -3430,17 +3511,23 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
       }
     }
 #endif
-    if(FetchingLine())
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1) // fewer checks?
+    if(Glue.FetchingLine())
     {
-      ASSERT( left_border>=0 );
-/*
-      if(left_border<0) // shouldn't happen
+      if(freq_change_this_scanline
+#if defined(SSE_SHIFTER_UNSTABLE)
+        || Preload // must go apply trick at each scanline
+#endif
+        )
+        Glue.CheckSideOverscan(); 
+#endif
+      if(left_border<0) // shouldn't happen but sometimes it does
       {
         BRK( LB<0 leaving render ) ; //test if should remove...
         TRACE_LOG("LB<0, leaving render\n");
         return; // may avoid crash
       }
-*/
+
       int border1=0,border2=0,picture=0,hscroll=0; // parameters for ASM routine
       int picture_left_edge=left_border; // 0, BS, BS-4, BS-16 (...)
       //last pixel from extreme left to draw of picture
@@ -3465,7 +3552,6 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
       }
       if(scanline_drawn_so_far<left_border)
       {
-
         if(pixels_in>left_border)
         {
           border1=left_border-scanline_drawn_so_far;
@@ -3480,8 +3566,15 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     This is a simple hack that surprisingly works even for:
     Beeshift, Dragonnels menu
 */
+#if defined(SSE_VID_BORDERS_416_NO_SHIFT2)
+          if(SideBorderSize==VERY_LARGE_BORDER_SIDE 
+#else
           if(SSE_HACKS_ON && SideBorderSize==VERY_LARGE_BORDER_SIDE 
+#endif
             && left_border
+#if defined(SSE_VID_BORDERS_LINE_PLUS_20) && defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+            &&!(Glue.CurrentScanline.Tricks&TRICK_LINE_PLUS_20)
+#endif
 #if defined(SSE_VID_BORDERS_416_NO_SHIFT1)
             && border
 #endif
@@ -3507,6 +3600,17 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 /*  On lines -2, don't fetch the last 2 bytes as if it was a 160byte line.
     Fixes screen #2 of the venerable B.I.G. Demo.
 */
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1) // + for med res
+#if SSE_VERSION>=380 // remove 'Hacks' condition, saw no problem with this
+      if((Glue.CurrentScanline.Tricks&TRICK_LINE_MINUS_2)
+#else
+      if(SSE_HACKS_ON && (Glue.CurrentScanline.Tricks&TRICK_LINE_MINUS_2)
+#endif
+        && picture>=SHIFTER_RASTER*2)
+      {
+        picture-=SHIFTER_RASTER*2,border2+=SHIFTER_RASTER*2; // cancel last raster
+      }
+#else
       if(SSE_HACKS_ON && (CurrentScanline.Tricks&TRICK_LINE_MINUS_2)
         && picture>=16)
       {
@@ -3515,10 +3619,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
         //overscan_add_extra=0; // no, because shifter_pixel was updated
       }
 #endif
-
-
-
-
+#endif
       if(!screen_res) // LOW RES
       {
         hscroll=old_shifter_pixel & 15;
@@ -3536,7 +3637,10 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     TODO: be able to shift the line by an arbitrary #pixels left ot right
     (assembly)
 */
-
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+        if(Glue.CurrentScanline.Tricks
+          &(TRICK_4BIT_SCROLL|TRICK_LINE_PLUS_20|TRICK_UNSTABLE))
+#else
         if( (CurrentScanline.Tricks&TRICK_4BIT_SCROLL)
 #if defined(SSE_SHIFTER_LINE_PLUS_20_SHIFT)
           || (CurrentScanline.Tricks&TRICK_LINE_PLUS_20)
@@ -3545,6 +3649,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
           || (CurrentScanline.Tricks&TRICK_UNSTABLE)
 #endif
           )
+#endif
         {
           hscroll-=HblPixelShift;
           if(hscroll<0)
@@ -3585,7 +3690,6 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 #endif
           && scan_y<draw_last_possible_line)
         {
-          //ASSERT(scan_y!=-28 || scan_y<draw_first_possible_line);
           // actually draw it
           if(picture_left_edge<0) 
             picture+=picture_left_edge;
@@ -3631,18 +3735,30 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
       shifter_draw_pointer=nsdp;
      
       // adjust SDP according to Shifter tricks
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+      if(!Glue.ExtraAdded // only once - kind of silly variable
+#else
       if(!ExtraAdded // only once - kind of silly variable
+#endif
         && ( dispatcher==DISPATCHER_DSTE || 
          dispatcher!=DISPATCHER_WRITE_SDP  && 
          pixels_in>=picture_right_edge 
         && scanline_drawn_so_far<picture_right_edge
 #if defined(SSE_SHIFTER_SDP_WRITE_ADD_EXTRA)
         || dispatcher==DISPATCHER_WRITE_SDP // fixes flicker in Cool STE 
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+        && cycles_since_hbl>=Glue.CurrentScanline.EndCycle
+          +SHIFTER_PREFETCH_LATENCY // this + is suspicious...
+#else
         && cycles_since_hbl>=CurrentScanline.EndCycle+SHIFTER_PREFETCH_LATENCY
 #endif
+#endif
         ) )
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+        Glue.AddExtraToShifterDrawPointerAtEndOfLine(shifter_draw_pointer);
+#else
         AddExtraToShifterDrawPointerAtEndOfLine(shifter_draw_pointer);
-
+#endif
     }
     // overscan lines = a big "left border"
     else if(scan_y>=draw_first_scanline_for_border 
@@ -3684,8 +3800,11 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 
 
 void TShifter::Reset(bool Cold) {
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#else
   m_SyncMode=0; 
   m_ShiftMode=screen_res; // we know it's updated first, debug strange screen!
+#endif
 #if defined(SSE_DEBUG)
   nVbl=0; // cold or warm
 #endif
@@ -3709,6 +3828,8 @@ void TShifter::Reset(bool Cold) {
 
 }
 
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+
 /*  SetShiftMode() and SetSyncMode() are called when a program writes
     on "Shifter" registers FF8260 (shift) or FF820A (sync). 
     Most Shifter tricks use those registers. 
@@ -3723,7 +3844,7 @@ void TShifter::Reset(bool Cold) {
     coders and doc.
 */
 
-
+//note: this isn't compiled anymore in v3.8
 void TShifter::SetShiftMode(BYTE NewMode) {
 /*
   The ST possesses three modes  of  video  configuration:
@@ -3901,7 +4022,7 @@ void TShifter::SetShiftMode(BYTE NewMode) {
 
 }
 
-
+//note: this isn't compiled anymore in v3.8
 void TShifter::SetSyncMode(BYTE NewSync) {
 /*
     ff 820a   R/W             |------xx|   Sync Mode
@@ -3994,7 +4115,7 @@ void TShifter::SetSyncMode(BYTE NewSync) {
         overscan_add_extra+=2;
       }
 #endif
-#endif
+//#endif
 
     }
   }
@@ -4037,8 +4158,6 @@ void TShifter::SetSyncMode(BYTE NewSync) {
   if(OPTION_PRECISE_MFP)
     MC68901.AdjustTimerB(); 
 #endif
-  }
-#endif
   shifter_freq=new_freq;
 #if defined(SSE_GLUE_FRAME_TIMINGS_A)
   prepare_next_event();
@@ -4056,38 +4175,44 @@ void TShifter::SetSyncMode(BYTE NewSync) {
     draw_last_possible_line+=off;
   }
 }
-
+#endif
+#endif//#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 
 void TShifter::Vbl() {
   // called at the very end of event_vbl_interrupt()
-#if defined(SSE_DEBUG_FRAME_REPORT)
-  FrameEvents.Vbl(); 
-#endif
 
 #if defined(SSE_DEBUG)
   nVbl++; 
-
+#if defined(SSE_DEBUG_FRAME_REPORT)
+  FrameEvents.Vbl(); 
+#endif
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 #if defined(SSE_OSD_DEBUG_MESSAGE_FREQ) // tell when 60hz
   if(!TRACE_ENABLED  && shifter_freq_at_start_of_vbl==60)
     TRACE_OSD("60HZ");
 #endif
 #if defined(SSE_OSD_CONTROL)
   if( (OSD_MASK2&OSD_CONTROL_60HZ))// && shifter_freq_at_start_of_vbl==60) 
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
     TRACE_OSD("R%d S%d",m_ShiftMode,m_SyncMode);
     //TRACE_OSD("60HZ");
 #endif
-
 #endif
+#endif
+#endif//dbg
+
 #if defined(SSE_SHIFTER_UNSTABLE)
   HblPixelShift=0;
 #endif
 #if defined(SSE_TIMINGS_FRAME_ADJUSTMENT)
   n508lines=0;
 #endif
-#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+
+#if defined(SSE_GLUE_FRAME_TIMINGS_A) && !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1) //soon MFD...
   CurrentScanline.Cycles=scanline_time_in_cpu_cycles_8mhz[shifter_freq_idx];
-#endif
   ASSERT(CurrentScanline.Cycles<=512);
+#endif
+
 }
 
 #undef LOGSECTION
@@ -4098,7 +4223,8 @@ void TShifter::Vbl() {
 #if defined(SSE_STRUCTURE_SSESHIFTER_OBJ)
 
 #define LOGSECTION LOGSECTION_VIDEO
-
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+//note: this isn't compiled anymore in v3.8
 void TShifter::AddExtraToShifterDrawPointerAtEndOfLine(unsigned long &extra) {
   // What a beautiful name!
   // Replacing macro ADD_EXTRA_TO_SHIFTER_DRAW_POINTER_AT_END_OF_LINE(s)
@@ -4122,7 +4248,7 @@ void TShifter::AddExtraToShifterDrawPointerAtEndOfLine(unsigned long &extra) {
   ExtraAdded++;
 }
 
-
+//note: this isn't compiled anymore in v3.8
 int TShifter::CheckFreq(int t) {
 /* This is taken from Steem's draw_check_border_removal()
    v3.4: rewritten with a 'for' instead of a 'while' to avoid a 'break'
@@ -4136,6 +4262,7 @@ int TShifter::CheckFreq(int t) {
     i=-1; // this ugly thing still necessary anyway
   return i;
 }
+#endif
 
 // TODO DE()
 
@@ -4171,6 +4298,8 @@ void TShifter::DrawBufferedScanlineToVideo() {
 
 #endif
 
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+//note: this isn't compiled anymore in v3.8
 int TShifter::FetchingLine() {
   // does the current scan_y involve fetching by the Shifter?
   // notice < shifter_last_draw_line, not <=
@@ -4185,6 +4314,7 @@ int TShifter::FetchingLine() {
         );
 }
 
+#endif
 
 #if defined(SSE_SHIFTER_FIX_LINE508_CONFUSION)
 /*  In Steem the timings of all HBLs are prepared for each frame
@@ -4199,6 +4329,7 @@ int TShifter::FetchingLine() {
     Cases where it matters:
     Omega, TCB
 */
+//note: this isn't compiled anymore in v3.8
 bool TShifter::Line508Confusion() {
   bool rv=(PreviousScanline.Cycles==508 && CurrentScanline.Cycles==508 
     && shifter_freq_at_start_of_vbl==50);
@@ -4335,7 +4466,7 @@ FF825E
     }
 }
 
-#if defined(SSE_SHIFTER_TRICKS)
+#if defined(SSE_SHIFTER_TRICKS) && !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 
 /* V.3.3 used Hatari analysis. Now that we do without this hack, we need
    look-up functions to extend the existing Steem system.
@@ -4345,7 +4476,7 @@ FF825E
    project for v3.7.1 is to replace those functions with a table recording only
    pertinent info
 */
-
+//note: this isn't compiled anymore in v3.8
 void TShifter::AddFreqChange(int f) {
   // Replacing macro ADD_SHIFTER_FREQ_CHANGE(shifter_freq)
   shifter_freq_change_idx++;
@@ -4358,7 +4489,7 @@ void TShifter::AddFreqChange(int f) {
   shifter_freq_change[shifter_freq_change_idx]=f;                    
 }
 
-
+//note: this isn't compiled anymore in v3.8
 void TShifter::AddShiftModeChange(int mode) {
   // called only by SetShiftMode
   ASSERT(!mode||mode==1||mode==2);
@@ -4372,7 +4503,7 @@ void TShifter::AddShiftModeChange(int mode) {
   shifter_shift_mode_change[shifter_shift_mode_change_idx]=mode;                    
 }
 
-
+//note: this isn't compiled anymore in v3.8
 int TShifter::CheckShiftMode(int t) {
   // this is inspired by the original Steem tests in draw_check_border_removal
   int i,j;
@@ -4384,24 +4515,7 @@ int TShifter::CheckShiftMode(int t) {
   return i;
 }
 
-/*
-inline int TShifter::FreqChange(int idx) { //not used...
-  // return value of this change (50 or 60)
-  idx&=31;
-  //ASSERT(shifter_freq_change[idx]==50||shifter_freq_change[idx]==60);//OK
-  return shifter_freq_change[idx];
-}
-
-inline int TShifter::ShiftModeChange(int idx) { //not used...
-  // return value of this change (0,1,2)
-  if(idx==-1)
-    return m_ShiftMode;
-  idx&=31;
-  //ASSERT(!shifter_shift_mode_change[idx]||shifter_shift_mode_change[idx]==1||shifter_shift_mode_change[idx]==2);
-  return shifter_shift_mode_change[idx];
-}
-*/
-
+//note: this isn't compiled anymore in v3.8
 int TShifter::FreqChangeCycle(int idx) {
   // just give the relative cycle of element idx
   idx&=31; // so you can send idx+1 or whatever here
@@ -4409,7 +4523,7 @@ int TShifter::FreqChangeCycle(int idx) {
   int rv=shifter_freq_change_time[idx]-LINECYCLE0;
   return rv;
 }
-
+//note: this isn't compiled anymore in v3.8
 int TShifter::ShiftModeChangeCycle(int idx) {
   // just give the relative cycle of element idx
   idx&=31; // so you can send idx+1 or whatever here
@@ -4418,7 +4532,7 @@ int TShifter::ShiftModeChangeCycle(int idx) {
   return rv;
 }
 
-
+//note: this isn't compiled anymore in v3.8
 int TShifter::FreqChangeAtCycle(int cycle) {
   // if there was a change at this cycle, return it, otherwise -1
   int t=cycle+LINECYCLE0; // convert to absolute
@@ -4437,7 +4551,7 @@ int TShifter::FreqChangeAtCycle(int cycle) {
   return rv;
 }
 
-
+//note: this isn't compiled anymore in v3.8
 int TShifter::ShiftModeChangeAtCycle(int cycle) {
   // if there was a change at this cycle, return it, otherwise -1
   int t=cycle+LINECYCLE0; // convert to absolute
@@ -4453,7 +4567,7 @@ int TShifter::ShiftModeChangeAtCycle(int cycle) {
 
 }
 
-
+//note: this isn't compiled anymore in v3.8
 int TShifter::FreqChangeIdx(int cycle) {
   // give the idx of freq change at this cycle, if any
   int t=cycle+LINECYCLE0; // convert to absolute
@@ -4462,7 +4576,7 @@ int TShifter::FreqChangeIdx(int cycle) {
     return idx;
   return -1;
 }
-
+//note: this isn't compiled anymore in v3.8
 int TShifter::ShiftModeChangeIdx(int cycle) {
   // give the idx of shift mode change at this cycle, if any
   int t=cycle+LINECYCLE0; // convert to absolute
@@ -4472,7 +4586,7 @@ int TShifter::ShiftModeChangeIdx(int cycle) {
   return -1;
 }
 
-
+//note: this isn't compiled anymore in v3.8
 int TShifter::FreqAtCycle(int cycle) {
   // what was the frequency at this cycle?
 
@@ -4512,7 +4626,7 @@ int TShifter::FreqAtCycle(int cycle) {
 
 
 }
-
+//note: this isn't compiled anymore in v3.8
 int TShifter::ShiftModeAtCycle(int cycle) {
   // what was the shift mode at this cycle?
 //  ASSERT(cycle<=LINECYCLES);
@@ -4529,7 +4643,7 @@ int TShifter::ShiftModeAtCycle(int cycle) {
   return m_ShiftMode; //  return 0;
 }
 
-// REDO it stinks
+//note: this isn't compiled anymore in v3.8
 int TShifter::NextFreqChange(int cycle,int value) {
   // return cycle of next change after this cycle
   int t=cycle+LINECYCLE0; // convert to absolute
@@ -4543,7 +4657,7 @@ int TShifter::NextFreqChange(int cycle,int value) {
     return shifter_freq_change_time[idx]-LINECYCLE0;
   return -1;
 }
-
+//note: this isn't compiled anymore in v3.8
 int TShifter::NextShiftModeChange(int cycle,int value) {
   // return cycle of next change after this cycle
   int t=cycle+LINECYCLE0; // convert to absolute
@@ -4558,7 +4672,7 @@ int TShifter::NextShiftModeChange(int cycle,int value) {
   return -1;
 }
 
-
+//note: this isn't compiled anymore in v3.8
 int TShifter::NextFreqChangeIdx(int cycle) {
   // return idx next change after this cycle
   int t=cycle+LINECYCLE0; // convert to absolute
@@ -4571,7 +4685,7 @@ int TShifter::NextFreqChangeIdx(int cycle) {
     return idx;
   return -1;
 }
-
+//note: this isn't compiled anymore in v3.8
 int TShifter::NextShiftModeChangeIdx(int cycle) {
   // return idx next change after this cycle
   int t=cycle+LINECYCLE0; // convert to absolute
@@ -4585,7 +4699,7 @@ int TShifter::NextShiftModeChangeIdx(int cycle) {
   return -1;
 }
 
-
+//note: this isn't compiled anymore in v3.8
 int TShifter::PreviousFreqChange(int cycle) {
   // return cycle of previous change before this cycle
   int t=cycle+LINECYCLE0; // convert to absolute
@@ -4597,7 +4711,7 @@ int TShifter::PreviousFreqChange(int cycle) {
     return shifter_freq_change_time[i]-LINECYCLE0;
   return -1;
 }
-
+//note: this isn't compiled anymore in v3.8
 int TShifter::PreviousShiftModeChange(int cycle) {
   // return cycle of previous change before this cycle
   int t=cycle+LINECYCLE0; // convert to absolute
@@ -4610,7 +4724,7 @@ int TShifter::PreviousShiftModeChange(int cycle) {
   return -1;
 }
 
-
+//note: this isn't compiled anymore in v3.8
 int TShifter::PreviousFreqChangeIdx(int cycle) {
   // return idx of previous change before this cycle
   int t=cycle+LINECYCLE0; // convert to absolute
@@ -4622,7 +4736,7 @@ int TShifter::PreviousFreqChangeIdx(int cycle) {
     return i; 
   return -1;
 }
-
+//note: this isn't compiled anymore in v3.8
 int TShifter::PreviousShiftModeChangeIdx(int cycle) {
   // return idx of previous change before this cycle
   int t=cycle+LINECYCLE0; // convert to absolute
@@ -4635,7 +4749,7 @@ int TShifter::PreviousShiftModeChangeIdx(int cycle) {
   return -1;
 }
 
-
+//note: this isn't compiled anymore in v3.8
 int TShifter::CycleOfLastChangeToFreq(int value) {
   int i,j;
   for(i=shifter_freq_change_idx,j=0
@@ -4645,7 +4759,7 @@ int TShifter::CycleOfLastChangeToFreq(int value) {
     return shifter_freq_change_time[i]-LINECYCLE0;
   return -1;
 }
-
+//note: this isn't compiled anymore in v3.8
 int TShifter::CycleOfLastChangeToShiftMode(int value) {
   int i,j;
   for(i=shifter_shift_mode_change_idx,j=0
@@ -4659,7 +4773,7 @@ int TShifter::CycleOfLastChangeToShiftMode(int value) {
 #endif//#if defined(SSE_SHIFTER_TRICKS)
 
 
-
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
 //////////////////////////
 // Shifter draw pointer //
 //////////////////////////
@@ -4701,6 +4815,8 @@ int TShifter::CycleOfLastChangeToShiftMode(int value) {
 #endif
 
 #if defined(SSE_SHIFTER_SDP_READ)
+
+//note: this isn't compiled anymore in v3.8
 MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
 
 //ASSERT(old_pc!=0x45336);
@@ -4900,6 +5016,7 @@ MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
 
 #ifdef SSE_SHIFTER_SDP_WRITE
 
+//note: this isn't compiled anymore in v3.8
 void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 /*
     This is a difficult side of STE emulation, made difficult too by
@@ -5170,18 +5287,20 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 }
 
 #endif
-
-//#endif//#ifdef IN_EMU
-
+//note: this isn't compiled anymore in v3.8
 void TShifter::ShiftSDP(int shift) { 
   shifter_draw_pointer+=shift; 
   overscan_add_extra-=shift;
 }
 
+#endif//#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
+
+//#endif//#ifdef IN_EMU
+
+
 #undef LOGSECTION
 //#endif//SSE_STRUCTURE_SSESHIFTER_OBJ
 
-
-
 #endif//#if defined(SSE_SHIFTER)
+
 #endif//STEVEN_SEAGAL//?

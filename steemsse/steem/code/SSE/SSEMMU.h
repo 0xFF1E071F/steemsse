@@ -64,6 +64,10 @@ yet.
 #include "SSEParameters.h"
 #include "SSESTF.h"
 
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
+#include "SSEShifter.h"
+#endif
+
 #ifdef SSE_MMU
 
 struct TMMU {
@@ -75,6 +79,12 @@ struct TMMU {
   inline bool OnMmuCycles(int CyclesIn);
   inline bool WakeUpState1(); // for STF
   inline bool WakeUpState2(); // for STF 
+#endif
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
+  short SDPMiddleByte; // glue it! 
+  MEM_ADDRESS ReadSDP(int cycles_since_hbl,int dispatcher=DISPATCHER_NONE);
+  void ShiftSDP(int shift);  
+  void WriteSDP(MEM_ADDRESS addr, BYTE io_src_b);
 #endif
 };
 
