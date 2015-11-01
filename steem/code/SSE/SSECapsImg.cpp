@@ -336,11 +336,14 @@ void TCaps::Hbl() {
 
   // we run cycles at each HBL if there's an IPF file in. Performance OK
 #if defined(SSE_SHIFTER)
-  ASSERT( Shifter.CurrentScanline.Cycles>100)
 #if defined(SSE_IPF_RUN_PRE_IO) || defined(SSE_IPF_RUN_POST_IO)
   ASSERT( Shifter.CurrentScanline.Cycles-Caps.CyclesRun>0 );
 #endif
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+  CAPSFdcEmulate(&WD1772,Glue.CurrentScanline.Cycles
+#else
   CAPSFdcEmulate(&WD1772,Shifter.CurrentScanline.Cycles
+#endif
 #if defined(SSE_IPF_RUN_PRE_IO) || defined(SSE_IPF_RUN_POST_IO)
     -CyclesRun
 #endif

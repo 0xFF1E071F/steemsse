@@ -209,7 +209,11 @@ void debug_update_cycle_counts()
   debug_cycles_since_VBL=ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl;
   debug_cycles_since_HBL=ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl;
 #if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER_SDP_READ)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
+  debug_VAP=MMU.ReadSDP(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
+#else
   debug_VAP=Shifter.ReadSDP(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
+#endif
 #else
   debug_VAP=get_shifter_draw_pointer(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
 #endif

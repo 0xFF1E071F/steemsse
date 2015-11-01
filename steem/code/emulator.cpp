@@ -171,8 +171,14 @@ void init_timings()
 #if defined(STEVEN_SEAGAL)
 #if defined(SSE_GLUE_FRAME_TIMINGS_A)
   Glue.GetNextScreenEvent();
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+  Glue.CurrentScanline.Cycles=scanline_time_in_cpu_cycles_at_start_of_vbl;
+  ASSERT(Glue.CurrentScanline.Cycles>=224);
+#else
   Shifter.CurrentScanline.Cycles=scanline_time_in_cpu_cycles_at_start_of_vbl;
   ASSERT(Shifter.CurrentScanline.Cycles>=224);
+#endif
+  
 #endif
 #if !defined(SSE_GLUE_FRAME_TIMINGS_B)
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO)

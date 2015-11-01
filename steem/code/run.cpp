@@ -179,7 +179,11 @@ void run()
   Sound_Start();
 
 #if defined (STEVEN_SEAGAL) && defined(SSE_SHIFTER_TRICKS)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+  Glue.AddFreqChange(shifter_freq);
+#else
   Shifter.AddFreqChange(shifter_freq);
+#endif
 #else
   ADD_SHIFTER_FREQ_CHANGE(shifter_freq);
 #endif	
@@ -309,7 +313,7 @@ void run()
 #if defined(SSE_VAR_MAIN_LOOP1)
 /*  This will catch some exceptions. Tested with DIVMAX.TOS when
     SSE_CPU_DIVS_OVERFLOW_PC isn't defined.
-    Also triggered when refactoring GLUE/Frame timings
+    Also triggered sometimes when refactoring GLUE/Frame timings
 */
     }
     catch(...)
@@ -779,7 +783,13 @@ void event_scanline()
       ASSERT(HD6301_OK);
       int n6301cycles;
 #if defined(SSE_SHIFTER)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+      ASSERT(Glue.CurrentScanline.Cycles>=224);
+      n6301cycles=Glue.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
+#else
+      ASSERT(Shifter.CurrentScanline.Cycles>=224);
       n6301cycles=Shifter.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
+#endif
 #else
       n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
 #endif
@@ -882,8 +892,20 @@ void event_scanline()
   log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: Event Scanline at end of line ")+scan_y+" sdp is $"+HEXSl(shifter_draw_pointer,6));
   
 #if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER) &&!defined(SSE_SHIFTER_DRAW_DBG)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if defined(SSE_SHIFTER_TRICKS_OPTION_C2)
+  if(OPTION_PRECISE_MFP)
+#endif
+  {
+    Glue.EndHBL(); // check for +2 -2 errors + unstable Shifter
+    if((scan_y==-30||scan_y==shifter_last_draw_line-1&&scan_y<245)
+      &&Glue.CurrentScanline.Cycles>224)
+      Glue.CheckVerticalOverscan(); // check top & bottom borders
+  }
+#else
   Shifter.EndHBL(); // check for +2 -2 errors + unstable Shifter
   Shifter.CheckVerticalOverscan(); // top & bottom borders
+#endif
 #else // Steem 3.2's vertical overscan check
   if (shifter_freq_at_start_of_vbl==50){
     if (scan_y==-30 || scan_y==199 || scan_y==225){
@@ -985,13 +1007,21 @@ void event_scanline()
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+  Glue.IncScanline();
+#else
   Shifter.IncScanline();
+#endif
 #else
   scan_y++;
 #endif
 
 #if defined(SSE_DEBUG_REPORT_SDP) && defined(SSE_SHIFTER)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+  if(Glue.FetchingLine())
+#else
   if(Shifter.FetchingLine())
+#endif
   {
 #if defined(SSE_DEBUG_FRAME_REPORT_SDP_LINES) // A is for ACIA now
     FrameEvents.Add(scan_y,0,'@',(shifter_draw_pointer&0x00FF0000)>>16 ); 
@@ -1129,7 +1159,11 @@ void event_vbl_interrupt() //SS misleading name?
         Shifter.DrawScanlineToEnd();
       scanline_drawn_so_far=0;
       shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+      Glue.IncScanline();
+#else
       Shifter.IncScanline();
+#endif
 #else
       if (bad_drawing==0) draw_scanline_to_end();
       scanline_drawn_so_far=0;
@@ -1565,9 +1599,9 @@ void event_vbl_interrupt() //SS misleading name?
     ST in highres, then uses the video counter in the middle of
     its trace decoding routine.
 */
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY5)
-  if( screen_res<2 && (Shifter.m_ShiftMode&2) && COLOUR_MONITOR
-    && Shifter.CurrentScanline.Cycles==224) 
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY5) && defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1) //assume
+  if( screen_res<2 && (Glue.m_ShiftMode&2) && COLOUR_MONITOR
+    && Glue.CurrentScanline.Cycles==224) 
 #else
   if( screen_res<2 && (Shifter.m_ShiftMode&2) && COLOUR_MONITOR
     && (ACT-Shifter.CycleOfLastChangeToShiftMode(2)>512)) //weak
@@ -1655,7 +1689,11 @@ void event_vbl_interrupt() //SS misleading name?
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SHIFTMODE) 
     FrameEvents.Add(scan_y,0,'R',Shifter.m_ShiftMode); 
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SYNCMODE)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+    FrameEvents.Add(scan_y,0,'S',Glue.m_SyncMode); 
+#else
     FrameEvents.Add(scan_y,0,'S',Shifter.m_SyncMode); 
+#endif
 #endif
 #endif
 

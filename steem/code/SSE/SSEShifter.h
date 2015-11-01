@@ -30,7 +30,7 @@
     (more to add)
 */
 
-
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 /*  The Shifter trick mask is an imitation of Hatari's BorderMask.
     Each trick has a dedicated bit, to set it we '|' it, to check it
     we '&' it. Each value is the previous one x2.
@@ -63,6 +63,7 @@
 #define TRICK_LINE_PLUS_4 0x40000
 #define TRICK_LINE_PLUS_6 0x80000
 #define TRICK_NEO 0x100000//tests
+#endif
 
 // register names in Atari doc / Steem variable
 #define HSCROLL shifter_hscroll
@@ -97,7 +98,7 @@ enum {BORDERS_NONE, BORDERS_ON, BORDERS_AUTO_OFF, BORDERS_AUTO_ON};
 /*  There's something wrong with the cycles when the line is 508 cycles,
     but fixing it will take some care. See the Omega hack
 */
-
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 struct TScanline {
   int StartCycle; // eg 56
   int EndCycle; // eg 376
@@ -106,6 +107,7 @@ struct TScanline {
   int Tricks; // see mask description above
 };
 
+#endif//#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 
 struct TShifter {
 /*  As explained by ST-CNX and others, the video picture is produced by the
@@ -116,20 +118,24 @@ struct TShifter {
 */
   TShifter(); 
   ~TShifter();
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
   inline void AddExtraToShifterDrawPointerAtEndOfLine(unsigned long &extra);
   inline int CheckFreq(int t);
   void CheckSideOverscan(); // left & right border effects
   void CheckVerticalOverscan(); // top & bottom borders
   void EndHBL(); // at end of HBL, check if +2 -2 were correct
+#endif
 #if defined(WIN32)
   inline void DrawBufferedScanlineToVideo();
 #endif
   void DrawScanlineToEnd();
 
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 #if !defined(SSE_STRUCTURE_SSECPU_OBJ)
   inline // TODO
 #endif
     int FetchingLine();
+#endif
   void IncScanline();
 #if defined(SSE_SHIFTER_FIX_LINE508_CONFUSION)
   inline bool Line508Confusion();
@@ -140,12 +146,16 @@ struct TShifter {
   void Reset(bool Cold);
   inline void RoundCycles(int &cycles_in);
   inline void SetPal(int n, WORD NewPal);
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
   void SetShiftMode(BYTE NewRes);
   void SetSyncMode(BYTE NewSync);
+#endif
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
   inline void ShiftSDP(int shift);
+#endif
   void Vbl();
 
-#if defined(SSE_SHIFTER_TRICKS) // some functions aren't used
+#if defined(SSE_SHIFTER_TRICKS) && !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
   inline void AddFreqChange(int f);
   inline void AddShiftModeChange(int r);
   inline int CheckShiftMode(int t);
@@ -178,6 +188,7 @@ struct TShifter {
   inline int CycleOfLastChangeToShiftMode(int value);
 #endif
 
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
 #if defined(SSE_SHIFTER_SDP)
 #ifdef SSE_SHIFTER_SDP_READ
   inline MEM_ADDRESS ReadSDP(int cycles_since_hbl,int dispatcher=DISPATCHER_NONE);
@@ -191,25 +202,29 @@ struct TShifter {
   int SDPMiddleByte; // glue it! 
 #endif 
 #endif
+#endif
 
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
   // we need keep info for only 3 scanlines 
   TScanline PreviousScanline, CurrentScanline, NextScanline;
-
   int ExtraAdded;//rather silly
+#endif
   int HblStartingHscroll; // saving true hscroll in MED RES (no use)
   int HblPixelShift; // for 4bit scrolling, other shifts //BYTE?
 #if defined(WIN32)
   BYTE *ScanlineBuffer;
 #endif
 
-#if defined(SSE_VAR_RESIZE)
-  BYTE m_ShiftMode,m_SyncMode;
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+  BYTE m_ShiftMode; // Shifter has its copy, Glue could do with only 1 bit
 #else
-  int m_ShiftMode; // contrary to screen_res, it's updated at each change
-  int m_SyncMode;//
-#endif
+  BYTE m_ShiftMode,m_SyncMode;
+#endif//#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
   int TrickExecuted; //make sure that each trick will only be applied once
-#if defined(SSE_DEBUG)
+#endif
+#if defined(SSE_DEBUG) && SSE_VERSION<380
   int nVbl;
 #endif
 #if defined(SSE_SHIFTER_UNSTABLE)
@@ -218,12 +233,13 @@ struct TShifter {
 #if defined(SSE_SHIFTER_PANIC) || defined(SSE_SHIFTER_STE_HI_HSCROLL)
   DWORD Scanline[230/4+2]; // the price of fun
 #endif
-
-#if defined(SSE_TIMINGS_FRAME_ADJUSTMENT) // introduced v3.6.4
+#if defined(SSE_TIMINGS_FRAME_ADJUSTMENT) // v3.6.4->v3.7.2
   // it's a hack, less involved than making a reliable statemachine
   WORD n508lines;
 #endif
-
+#if defined(SSE_DEBUG) && SSE_VERSION>=380
+  int nVbl;
+#endif
 };
 
 extern TShifter Shifter; // singleton

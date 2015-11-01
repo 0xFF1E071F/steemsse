@@ -12,10 +12,13 @@
 #include "SSEFrameReport.h"
 #include "SSEMMU.h"
 #include "SSEOption.h"
-#include "SSEShifter.h"
 #include "SSESTF.h"
 #endif
-
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#include "SSEGlue.h"
+#else
+#include "SSEShifter.h"
+#endif
 
 
 #if defined(SSE_DEBUG_FRAME_REPORT)
@@ -31,7 +34,12 @@ TFrameEvents::TFrameEvents() {
 #if defined(SSE_INLINE_370)
 void TFrameEvents::Add(int scanline, int cycle, char type, int value) {
   m_nEvents++;  // starting from 0 each VBL, event 0 is dummy 
-  if(m_nEvents<=0||m_nEvents>MAX_EVENTS) {BRK(bad m_nEvents); return;}
+/*  3.8.0 fix >= not >, no version switch, it's a too bad bug.
+    DSOTS was broken only in VC boiler builds, both as STE and STF,with "glue 
+    timings" because Glue.ScanlineTiming[TGlue::MMU_DE_ON][TGlue::FREQ_50]
+    (and not FREQ_60) was written over: 0 instead of 40/56!
+*/
+  if(m_nEvents<=0||m_nEvents>=MAX_EVENTS) {BRK(bad m_nEvents); return;} // >=, not > !!!
   int total_cycles= (shifter_freq_at_start_of_vbl==50) ?512:508;// Shifter.CurrentScanline.Cycles;//512;
   m_FrameEvent[m_nEvents].Add(scanline, cycle, type, value);
 }
@@ -169,8 +177,8 @@ int TFrameEvents::Vbl() {
 #if defined(SSE_SHIFTER_REPORT_VBL_TRICKS)
 #if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK1 & TRACE_CONTROL_SUMMARY)
-#endif
       TRACE_LOG("VBL %d Shifter tricks %X\n",nVbl,Debug.ShifterTricks);
+#endif
 //#undef LOGSECTION
 #endif  
 

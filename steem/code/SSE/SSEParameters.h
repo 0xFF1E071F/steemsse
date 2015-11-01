@@ -27,9 +27,11 @@
 //#define ACT ABSOLUTE_CPU_TIME
 
 #if defined(SSE_SHIFTER_TRICKS) && defined(SSE_INT_MFP_RATIO)
-
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#define HBL_PER_SECOND (CpuNormalHz/Glue.CurrentScanline.Cycles)
+#else
 #define HBL_PER_SECOND (CpuNormalHz/Shifter.CurrentScanline.Cycles)
-
+#endif
 //Frequency   50          60            72
 //#HBL/sec    15666.5 15789.85827 35809.14286
 
@@ -382,7 +384,6 @@ SS_SIGNAL_ENUM_EnumDisplayModes, // wait until finished (?)
 #define HD6301_CLOCK (1000000) //used in 6301/ireg.c
 //#endif
 
-
 // in HBL, for Steem, -1 for precise timing (RX/IRQ delay)
 #define HD6301_CYCLES_TO_SEND_BYTE_IN_HBL \
 ((HD6301_CYCLES_TO_SEND_BYTE*HD6301_CYCLE_DIVISOR/\
@@ -406,7 +407,6 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define HD6301_MOUSE_SPEED_CHUNKS 15
 #define HD6301_MOUSE_SPEED_CYCLES_PER_CHUNK 1000
 #endif
-
 #endif
 
 
@@ -631,8 +631,10 @@ Far more on the ST.
 // SHIFTER //
 /////////////
 
-#define VERT_OVSCN_LIMIT (502) //502
 
+#ifndef SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1
+#define VERT_OVSCN_LIMIT (502) //502
+#endif
 
 #if defined(SSE_MMU_WU_IO_BYTES_W_SHIFTER_ONLY)
 #define WU2_PLUS_CYCLES 4 // we make cycles +2
@@ -662,9 +664,9 @@ Far more on the ST.
 
 
 #if defined(SSE_STF_VERT_OVSCN)
-
+#ifndef SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1
 #define STF_VERT_OVSCN_OFFSET 4
-
+#endif
 #endif
 
 
@@ -685,7 +687,7 @@ Far more on the ST.
 #elif CPU_STE_PAL==(8021030)
 #define STE_DMA_CLOCK 8021500 //50065; MOLZ OK
 #else
-#define STE_DMA_CLOCK 8021350 // 50065; MOLZ OK v3.8.0
+#define STE_DMA_CLOCK 8021250//8021350 // 50065; MOLZ OK v3.8.0
 //#define STE_DMA_CLOCK 8021118 //(8021502-256-128) // before v3.8.0
 #endif
 #else
