@@ -14,7 +14,7 @@ of the various unarchiving libraries it can use.
 #endif
 
 #if defined(STEVEN_SEAGAL) && (defined(SSE_VAR_ARCHIVEACCESS) \
-  ||defined(SSE_ACSI_MULTIPLE2) )
+  ||defined(SSE_ACSI_MULTIPLE2) || defined(SSE_GUI_STATUS_STRING_TOSFLAG))
 char ansi_name[MAX_PATH]; // for conversion from unicode
 #endif
 

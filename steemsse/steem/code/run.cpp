@@ -149,6 +149,14 @@ void run()
 #if defined(SSE_CPU_HALT)
   if(M68000.ProcessingState==TM68000::HALTED)
     return; // cancel "run" until cold reset
+#if defined(SSE_GUI_STATUS_STRING_TOSFLAG)
+  else if(M68000.ProcessingState==TM68000::BOILER_MESSAGE)
+  {
+    M68000.ProcessingState=TM68000::NORMAL;
+    HWND status_bar_win=GetDlgItem(StemWin,120); // get handle
+    InvalidateRect(status_bar_win,NULL,false);
+  }
+#endif
 #endif
 
   bool ExcepHappened;
