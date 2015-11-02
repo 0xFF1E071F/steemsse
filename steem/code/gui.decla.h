@@ -55,7 +55,11 @@ UNIX_ONLY( EXT void PostRunMessage(); )
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_GUI_STATUS_STRING)
-   void GUIRefreshStatusBar();
+#if defined(SSE_GUI_STATUS_STRING_TOSFLAG)
+  void GUIRefreshStatusBar(bool invalidate=true);
+#else
+  void GUIRefreshStatusBar();
+#endif
 #endif
 #define EXT extern//SSESTF.obj-tmp
 #define INIT(s)//SSESTF.obj-tmp

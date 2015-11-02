@@ -617,7 +617,11 @@ int ChangeBorderSize(int size_in) {
 extern char ansi_name[MAX_PATH];
 #endif
 
+#if defined(SSE_GUI_STATUS_STRING_TOSFLAG)
+void GUIRefreshStatusBar(bool invalidate) {
+#else
 void GUIRefreshStatusBar() {
+#endif
 
   HWND status_bar_win=GetDlgItem(StemWin,120); // get handle
 
@@ -625,12 +629,24 @@ void GUIRefreshStatusBar() {
   bool should_we_show=(SSE_STATUS_BAR||SSE_STATUS_BAR_GAME_NAME); 
 
   // build text of "status bar", only if we're to show it
+
+
+#if defined(SSE_GUI_STATUS_STRING_TOSFLAG) && defined(SSE_CPU_HALT)
+  // and it's no special string
+  if(should_we_show && M68000.ProcessingState!=TM68000::INTEL_CRASH
+    && M68000.ProcessingState!=TM68000::HALTED
+    && M68000.ProcessingState!=TM68000::BOILER_MESSAGE)
+#else
   if(should_we_show)
+#endif
   {
 #if defined(SSE_VAR_ARCHIVEACCESS) || defined(SSE_ACSI_MULTIPLE2)
     char *status_bar=ansi_name; //first reuse!
 #else
     char status_bar[120+10]="\0"; //TODO: size
+#endif
+#if defined(SSE_GUI_STATUS_STRING_380)
+    status_bar[0]='\0';
 #endif
     if(SSE_STATUS_BAR)
     {
@@ -642,7 +658,6 @@ void GUIRefreshStatusBar() {
         sb_tos[5],sb_ram[7];
 #if !defined(SSE_GUI_STATUS_STRING_FULL_ST_MODEL)
 #if defined(SSE_MMU_WU_DL)
-
       sprintf(sb_st_model,"%s%d",(ST_TYPE)? "STF":"STE",MMU.WS[WAKE_UP_STATE]);
       if(!WAKE_UP_STATE)
         sb_st_model[3]=0;
@@ -650,6 +665,7 @@ void GUIRefreshStatusBar() {
       sprintf(sb_st_model,"%s",(ST_TYPE)? "STF":"STE");
 #endif
 #endif
+      ASSERT(tos_version<0x1000);
       sprintf(sb_tos,"T%x",tos_version);
       sprintf(sb_ram,"%dK",mem_len/1024);
 #if defined(SSE_GUI_STATUS_STRING_FULL_ST_MODEL)
@@ -663,7 +679,11 @@ void GUIRefreshStatusBar() {
       }
 #endif
 #else
+#if defined(SSE_GUI_STATUS_STRING_TOSFLAG) // make room for flag after TXXX
+      sprintf(status_bar,"%s %s       %s",sb_st_model,sb_tos,sb_ram);
+#else
       sprintf(status_bar,"%s %s %s",sb_st_model,sb_tos,sb_ram);
+#endif
 #endif 
 
 #if defined(SSE_GUI_STATUS_STRING_HISPEED)
@@ -680,7 +700,7 @@ void GUIRefreshStatusBar() {
 #if defined(SSE_IKBD_6301) && defined(SSE_GUI_STATUS_STRING_6301)
       if(HD6301EMU_ON)
         strcat(status_bar," C1"); //saves som space
-#if defined(SSE_GUI_STATUS_STRING_68901)
+#if defined(SSE_GUI_STATUS_STRING_68901) && !defined(SSE_GUI_STATUS_STRING_380)
       else
         strcat(status_bar," X");
 #endif
@@ -689,11 +709,13 @@ void GUIRefreshStatusBar() {
 #if defined(SSE_GUI_STATUS_STRING_68901)
       if(OPTION_PRECISE_MFP)
         strcat(status_bar," C2");
+#if !defined(SSE_GUI_STATUS_STRING_380)
       else
         strcat(status_bar," X");
+#endif
       if(OPTION_CPU_CLOCK 
 #if defined(SSE_GUI_STATUS_STRING_SINGLE_SIDE)
-  || (SSEOption.SingleSideDriveMap&3)
+        || (SSEOption.SingleSideDriveMap&3)
 #endif
         )
         strcat(status_bar,"!");
@@ -819,13 +841,22 @@ void GUIRefreshStatusBar() {
     else
     {
       char disk_type[13]; // " A:MSA B:STW"
+#if defined(SSE_GUI_STATUS_STRING_380)
+      if(num_connected_floppies==1)
+        sprintf(disk_type," A:%s",extension_list[SF314[0].ImageType.Extension]);
+      else
+#endif
       sprintf(disk_type," A:%s B:%s",extension_list[SF314[0].ImageType.Extension]
       ,extension_list[SF314[1].ImageType.Extension]);
+
       strcat(status_bar,disk_type);
     }
 #endif
 #endif
 
+    //TRACE("status string len %d\n",strlen(status_bar));
+    // change text
+#if !defined(SSE_GUI_STATUS_STRING_TOSFLAG)
 #if defined(SSE_VAR_MAIN_LOOP1) && defined(SSE_CPU_HALT)
     if(M68000.ProcessingState==TM68000::INTEL_CRASH)
       strcpy(status_bar,T("STEEM CRASHED!"));  
@@ -833,13 +864,26 @@ void GUIRefreshStatusBar() {
 
 #if defined(SSE_GUI_STATUS_STRING_HALT) && defined(SSE_CPU_HALT)
     if(M68000.ProcessingState==TM68000::HALTED)
-      strcpy(status_bar,T("HALT (ST crashed)"));
+      //strcpy(status_bar,T("HALT (ST crashed)"));
+      strcpy(status_bar,T("HALT"));
 #endif
 
-    //TRACE("status string len %d\n",strlen(status_bar));
-    // change text
     SendMessage(status_bar_win,WM_SETTEXT,0,(LPARAM)(LPCTSTR)status_bar);
+#endif
   }
+
+#if defined(SSE_GUI_STATUS_STRING_TOSFLAG)
+#if defined(SSE_VAR_MAIN_LOOP1) && defined(SSE_CPU_HALT)
+    if(M68000.ProcessingState==TM68000::INTEL_CRASH)
+      strcpy(ansi_name,T("STEEM CRASHED!"));  
+#endif
+
+#if defined(SSE_GUI_STATUS_STRING_HALT) && defined(SSE_CPU_HALT)
+    if(M68000.ProcessingState==TM68000::HALTED)
+      //strcpy(status_bar,T("HALT (ST crashed)"));
+      strcpy(ansi_name,T("HALT"));
+#endif
+#endif
 
   if(should_we_show)
   {
@@ -864,6 +908,11 @@ void GUIRefreshStatusBar() {
 
   // show or hide
   ShowWindow(status_bar_win, (should_we_show) ? SW_SHOW : SW_HIDE);
+
+#if defined(SSE_GUI_STATUS_STRING_TOSFLAG)
+  if(invalidate)
+    InvalidateRect(status_bar_win,NULL,FALSE); //to get message WM_DRAWITEM
+#endif
 }
 
 #endif
@@ -1265,10 +1314,17 @@ bool MakeGUI()
 */
 
   Win=CreateWindowEx(0,"Static",WINDOW_TITLE,WS_CHILD | WS_VISIBLE
+//    |SS_CENTER // horizontally
+  //  |SS_CENTERIMAGE // vertically
+  //|SS_SUNKEN // frame
+#if defined(SSE_GUI_STATUS_STRING_TOSFLAG)
+    |SS_OWNERDRAW
+#else
     |SS_CENTER // horizontally
     |SS_CENTERIMAGE // vertically
-  //|SS_SUNKEN // frame
+#endif
     ,x, 0,50,20,StemWin,(HMENU)120,Inst,NULL);
+
 #endif
 
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_INFO),WS_CHILD | WS_VISIBLE,

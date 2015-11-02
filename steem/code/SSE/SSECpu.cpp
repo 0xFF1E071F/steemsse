@@ -1558,6 +1558,12 @@ FC2 FC1 FC0 Address Space
   }
 #if defined(SSE_CPU_HALT) || defined(SSE_CPU_TRACE_REFACTOR)
   // formalising that there's no trace after a crash
+#if defined(SSE_GUI_STATUS_STRING_TOSFLAG) //problem showed up with this
+  if(M68000.ProcessingState!=TM68000::HALTED
+    &&M68000.ProcessingState!=TM68000::INTEL_CRASH
+    &&M68000.ProcessingState!=TM68000::BOILER_MESSAGE
+    )
+#endif
   M68000.ProcessingState=TM68000::NORMAL;
 #endif
 
