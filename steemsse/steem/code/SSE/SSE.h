@@ -4383,6 +4383,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_DISK_MANAGER_HD_SELECTED //stay pushed if on
 #endif
 
+#define SSE_GUI_RESET_BUTTON2
+#define SSE_GUI_380//tmp name
 #if defined(SSE_GUI_STATUS_STRING)
 #undef SSE_GUI_STATUS_STRING_FULL_ST_MODEL // or more complicated
 #define SSE_GUI_STATUS_STRING_380

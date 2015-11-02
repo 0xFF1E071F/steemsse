@@ -1261,7 +1261,11 @@ bool MakeGUI()
   int x=0;
   HWND Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_PLAY),WS_CHILDWINDOW | WS_VISIBLE |
                           PBS_RIGHTCLICK,x,0,20,20,StemWin,(HMENU)101,Inst,NULL);
+#if defined(SSE_GUI_380)
+  ToolAddWindow(ToolTip,Win,T("Run (Left Click = Run/Stop, Right Click = Slow Motion)"));
+#else
   ToolAddWindow(ToolTip,Win,T("Run (Right Click = Slow Motion)"));
+#endif
   x+=23;
 
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_FF),WS_CHILDWINDOW | WS_VISIBLE |
@@ -1272,7 +1276,9 @@ bool MakeGUI()
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_RESET),WS_CHILDWINDOW | WS_VISIBLE |
                           PBS_RIGHTCLICK,x,0,20,20,StemWin,(HMENU)102,Inst,NULL);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_RESET_BUTTON)
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_RESET_BUTTON2)
+  ToolAddWindow(ToolTip,Win,T("Reset (Left Click = Warm, Right Click = Cold)"));
+#elif defined(STEVEN_SEAGAL) && defined(SSE_GUI_RESET_BUTTON)
   ToolAddWindow(ToolTip,Win,T("Reset (Left Click) - Switch off (Right Click)"));
 #else
   ToolAddWindow(ToolTip,Win,T("Reset (Left Click = Cold, Right Click = Warm)"));

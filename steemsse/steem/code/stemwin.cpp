@@ -1199,8 +1199,13 @@ void HandleButtonMessage(UINT Id,HWND hBut)
 #else
       bool Warm=(SendMessage(hBut,BM_GETCLICKBUTTON,0,0)==2);
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_RESET_BUTTON2)
+      reset_st(DWORD(Warm ? RESET_WARM:RESET_COLD) | DWORD(RESET_NOSTOP) |
+                  RESET_CHANGESETTINGS | RESET_BACKUP);
+#else
       reset_st(DWORD(Warm ? RESET_WARM:RESET_COLD) | DWORD(Warm ? RESET_NOSTOP:RESET_STOP) |
                   RESET_CHANGESETTINGS | RESET_BACKUP);
+#endif
       break;
     }
     case 106:
