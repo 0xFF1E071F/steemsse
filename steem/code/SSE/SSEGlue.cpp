@@ -25,6 +25,10 @@
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_GLUE)
 
+#if defined(SSE_GLUE_004C)
+//using namespace NGlue;
+#endif
+
 TGlue::TGlue() {
 #if !defined(SSE_VAR_RESIZE_380)
   DE_cycles[0]=DE_cycles[1]=320;
@@ -69,11 +73,17 @@ TGlue::TGlue() {
 #define LOGSECTION LOGSECTION_VIDEO
 
 
-void TGlue::AdaptScanlineValues(int CyclesIn) { // on set sync or shift mode
+void TGlue::AdaptScanlineValues(int CyclesIn) { 
+  // on set sync or shift mode
+  // on IncScanline (CyclesIn=-1)
 
   if(FetchingLine())
   {
+#if defined(SSE_GLUE_004B)
+    if((m_ShiftMode&2)&&CyclesIn==-1) // at IncScanline
+#else
     if((m_ShiftMode&2)&& !CyclesIn) // at IncScanline
+#endif
     {
       CurrentScanline.StartCycle=ScanlineTiming[MMU_DE_ON][FREQ_72];
       CurrentScanline.EndCycle=ScanlineTiming[MMU_DE_OFF][FREQ_72];
@@ -92,6 +102,40 @@ void TGlue::AdaptScanlineValues(int CyclesIn) { // on set sync or shift mode
       [(m_ShiftMode&2)?2:shifter_freq_idx];
     prepare_next_event();
   }
+
+#if defined(SSE_GLUE_004)
+  // fill up table of modes
+
+  // deal with "line+1" mess
+//  ASSERT(scan_y!=-25);
+  TScanline* WhichScanline;
+  if(CyclesIn>=CurrentScanline.Cycles)
+  {
+    ASSERT(CurrentScanline.Cycles);
+    CyclesIn%=CurrentScanline.Cycles;
+    WhichScanline=&NextScanline;
+  }
+  else
+  {
+    WhichScanline=&CurrentScanline;
+    for(int i=0;i<TScanline::NMODES;i++)
+    {
+      NextScanline.ShiftMode[i]=m_ShiftMode;
+      NextScanline.SyncMode[i]=m_SyncMode;
+    }
+  }
+  if(CyclesIn==-1)
+    CyclesIn=LINECYCLES;
+  for(int i=0;i<TScanline::NMODES;i++)
+  {
+    if(CyclesIn<=ScanlineCheckTimings[i])
+    {
+      WhichScanline->ShiftMode[i]=m_ShiftMode;
+      WhichScanline->SyncMode[i]=m_SyncMode;
+    }
+  }//nxt
+#endif
+
 }
 
 
@@ -258,8 +302,27 @@ cycle       0               4               8               12               12
 #endif
     {
       ASSERT(!(CurrentScanline.Tricks&(TRICK_LINE_PLUS_20|TRICK_LINE_PLUS_26)));
+//proof of concept 
+#if defined(SSE_GLUE_004B) 
+
       if(!(ShiftModeAtCycle(ScanlineTiming[MMU_DE_ON][FREQ_72]+4+2)&2)  // is R0 at 6
         && (ShiftModeAtCycle(ScanlineTiming[MMU_DE_ON][FREQ_72]+2)&2))  // is R2 at 2
+;//        BRK(i);
+
+// argh! TScanline:: !!
+// it's annoying and verbose but don't we prefer some form of qualification?
+// and those are timings expressed in scanline cycles...
+// We also can see the total length is nearly equivalent.
+// Also our ScanlineTiming[MMU_DE_ON][FREQ_72] etc. have no more future...
+// silly but refactoring is a step by step process.
+// With this we finally can get rid of those infamous look-up functions.
+
+      if(!(CurrentScanline.ShiftMode[TScanline::MMU_DE_ON_72_PLUS_4]&2)
+        &&(CurrentScanline.ShiftMode[TScanline::MMU_DE_ON_72]&2))
+#else
+      if(!(ShiftModeAtCycle(ScanlineTiming[MMU_DE_ON][FREQ_72]+4+2)&2)  // is R0 at 6
+        && (ShiftModeAtCycle(ScanlineTiming[MMU_DE_ON][FREQ_72]+2)&2))  // is R2 at 2
+#endif
         CurrentScanline.Tricks|=TRICK_LINE_PLUS_20;
     }
 #endif
@@ -1646,8 +1709,11 @@ void TGlue::IncScanline() {
     ASSERT( !FetchingLine() );
     NextScanline.Bytes=0;
   }
-
+#if defined(SSE_GLUE_004B)
+  AdaptScanlineValues(-1);
+#else
   AdaptScanlineValues(0);
+#endif
   ASSERT(CurrentScanline.Cycles>=224);
   TrickExecuted=0;
   NextScanline.Tricks=0; // eg for 0byte lines mess
@@ -1997,6 +2063,9 @@ void TGlue::GetNextScreenEvent() {
   // when VSYNC stops.
   if(!Status.vbi_done&&!scanline)
   {
+#if defined(SSE_GLUE_003)
+    Status.vbl_done=false;
+#endif
     screen_event.time=ScanlineTiming[ENABLE_VBI][FREQ_50]; //60, 72?
     screen_event.event=event_trigger_vbi;
     if(!Status.hbi_done)
@@ -2016,14 +2085,15 @@ void TGlue::GetNextScreenEvent() {
   else if(!Status.vbl_done && 
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
     (CurrentScanline.Cycles==512&&scanline==312&&screen_res!=2
-    || CurrentScanline.Cycles==508&&scanline==262&&screen_res!=2
-    || scanline==500))
+    || CurrentScanline.Cycles==508&&scanline==262&&screen_res!=2)
+    || scanline==500) // scanline 500: unconditional to catch oddities...
 #else
     (Shifter.CurrentScanline.Cycles==512&&scanline==312 
     || Shifter.CurrentScanline.Cycles==508&&scanline==262
     || Shifter.CurrentScanline.Cycles==224&&scanline==500))
 #endif
   {
+//    ASSERT(scanline!=500);
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
     screen_event.time=CurrentScanline.Cycles;
 #else
@@ -2034,8 +2104,7 @@ void TGlue::GetNextScreenEvent() {
      //TRACE("prg VBL at %d\n",scanline);
   }  
 #if !defined(SSE_GLUE_002)
-  // What if VSYNC was never started? (happens a lot)
-  else if(scan_y>502) // ?
+  else if(scan_y>502) // no Status.vbl_done, Overscan Demos
   {
     scan_y=-scanlines_above_screen[shifter_freq_idx]; 
     scanline=0; 
@@ -2385,6 +2454,44 @@ Problem: too many cases of WU1, that should be the rarer one
 #endif
   ScanlineTiming[VERT_OVSCN_LIMIT][FREQ_60]
     =ScanlineTiming[VERT_OVSCN_LIMIT][FREQ_50];//?
+
+
+#if defined(SSE_GLUE_004)
+  // fill up interesting check timings in order
+  // but argh! we must qualify with TScanline:: !!
+  ScanlineCheckTimings[TScanline::START]=0;
+  ScanlineCheckTimings[TScanline::MMU_DE_ON_72]
+    =ScanlineTiming[MMU_DE_ON][FREQ_72];
+  ScanlineCheckTimings[TScanline::MMU_DE_ON_72_PLUS_4] //for line +20
+    =ScanlineTiming[MMU_DE_ON][FREQ_72]+4;
+  ScanlineCheckTimings[TScanline::MMU_HBLANK_OFF_60]
+    =ScanlineTiming[HBLANK_OFF][FREQ_60];
+  ScanlineCheckTimings[TScanline::MMU_HBLANK_OFF_50]
+    =ScanlineTiming[HBLANK_OFF][FREQ_50];
+  ScanlineCheckTimings[TScanline::MMU_DE_ON_60]
+    =ScanlineTiming[MMU_DE_ON][FREQ_60];
+  ScanlineCheckTimings[TScanline::MMU_DE_ON_50]
+    =ScanlineTiming[MMU_DE_ON][FREQ_50];
+  ScanlineCheckTimings[TScanline::MMU_DE_OFF_72]
+    =ScanlineTiming[MMU_DE_OFF][FREQ_72];
+  ScanlineCheckTimings[TScanline::END_72]=224;
+  ScanlineCheckTimings[TScanline::MMU_DE_OFF_60]
+    =ScanlineTiming[MMU_DE_OFF][FREQ_60];
+  ScanlineCheckTimings[TScanline::MMU_DE_OFF_50]
+    =ScanlineTiming[MMU_DE_OFF][FREQ_50];
+  ScanlineCheckTimings[TScanline::MMU_HSYNC_ON_60]
+    =ScanlineTiming[HSYNC_ON][FREQ_60];
+  ScanlineCheckTimings[TScanline::MMU_HSYNC_ON_50]
+    =ScanlineTiming[HSYNC_ON][FREQ_50];
+  ScanlineCheckTimings[TScanline::MMU_HSYNC_OFF_50]
+    =ScanlineTiming[HSYNC_OFF][FREQ_50];
+  ScanlineCheckTimings[TScanline::VERT_OVSCN_LIMIT]
+    =ScanlineTiming[VERT_OVSCN_LIMIT][FREQ_50];
+  ScanlineCheckTimings[TScanline::END_60]=508;
+  ScanlineCheckTimings[TScanline::END_50]=512;
+
+//todo  ASSERT(ScanlineCheckTimings[TScanline::MMU_HSYNC_OFF_50]==ScanlineCheckTimings[TScanline::VERT_OVSCN_LIMIT]);
+#endif
 
 #else // this wasn't used anyway
   char STE_modifier=-16; // not correct!

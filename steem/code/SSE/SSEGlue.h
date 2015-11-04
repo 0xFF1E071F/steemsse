@@ -4,6 +4,25 @@
 
 #include <run.decla.h>
 
+#if defined(SSE_GLUE_004C)
+namespace NGlue {
+  enum {START,MMU_DE_ON_72,MMU_DE_ON_72_PLUS_4,MMU_HBLANK_OFF_60,
+    MMU_HBLANK_OFF_50,MMU_DE_ON_60,MMU_DE_ON_50, MMU_DE_OFF_72,END_72,
+    MMU_DE_OFF_60,MMU_DE_OFF_50,MMU_HSYNC_ON_60,MMU_HSYNC_ON_50,
+    MMU_HSYNC_OFF_50,VERT_OVSCN_LIMIT,END_60,END_50,NMODES};
+}
+  using namespace NGlue;
+#endif
+
+#if defined(SSE_GLUE_004D)
+  enum EScanlineTimings
+  {START,MMU_DE_ON_72,MMU_DE_ON_72_PLUS_4,MMU_HBLANK_OFF_60,
+    MMU_HBLANK_OFF_50,MMU_DE_ON_60,MMU_DE_ON_50, MMU_DE_OFF_72,END_72,
+    MMU_DE_OFF_60,MMU_DE_OFF_50,MMU_HSYNC_ON_60,MMU_HSYNC_ON_50,
+    MMU_HSYNC_OFF_50,VERT_OVSCN_LIMIT,END_60,END_50,NMODES};
+#endif
+
+
 #if defined(SSE_GLUE_FRAME_TIMINGS_A)
 
 struct TGlueStatusBYTE { 
@@ -45,18 +64,35 @@ struct TGlueStatusBYTE {
 #define TRICK_LINE_PLUS_6 0x80000
 #define TRICK_NEO 0x100000//tests
 
+
+
 struct TScanline {
+
   short StartCycle; // eg 56
   short EndCycle; // eg 376
   BYTE Bytes; // eg 160 - TODO make sure it's always correct
   short Cycles; // eg 512 
   DWORD Tricks; // see mask description above
+#if defined(SSE_GLUE_004)
+#if defined(SSE_GLUE_004D)
+  enum EScanlineTimings;
+#elif !defined(SSE_GLUE_004C)
+  enum {START,MMU_DE_ON_72,MMU_DE_ON_72_PLUS_4,MMU_HBLANK_OFF_60,
+    MMU_HBLANK_OFF_50,MMU_DE_ON_60,MMU_DE_ON_50, MMU_DE_OFF_72,END_72,
+    MMU_DE_OFF_60,MMU_DE_OFF_50,MMU_HSYNC_ON_60,MMU_HSYNC_ON_50,
+    MMU_HSYNC_OFF_50,VERT_OVSCN_LIMIT,END_60,END_50,NMODES};
+#endif
+  BYTE ShiftMode[NMODES];
+  BYTE SyncMode[NMODES];
+#endif
 };
 #endif
 
 // Generalized Logic Unit
 struct TGlue {
-
+#if defined(SSE_GLUE_004D)
+  enum EScanlineTimings;
+#endif
   TGlue();
   void Update();
   enum {FREQ_50,FREQ_60,FREQ_72,NFREQS};
@@ -73,6 +109,11 @@ struct TGlue {
   WORD DE_cycles[NFREQS];
   // cycles can be 0-512, hence words
   WORD ScanlineTiming[NTIMINGS][NFREQS];
+#if defined(SSE_GLUE_004D)
+  WORD ScanlineCheckTimings[NMODES];
+#elif defined(SSE_GLUE_004)
+  WORD ScanlineCheckTimings[TScanline::NMODES];
+#endif
 #if defined(SSE_GLUE_FRAME_TIMINGS_A)
   TGlueStatusBYTE Status;
   screen_event_struct screen_event; // there's only one now
