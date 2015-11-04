@@ -4454,8 +4454,12 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SHIFTER_TRICKS_OPTION_C2
 
 //#define SSE_GLUE_001 //to show all the Tekila oddities
-#define SSE_GLUE_002
-
+#define SSE_GLUE_002//no safety net
+//#define SSE_GLUE_003 
+#define SSE_GLUE_004 //tmp name, table instead of look-up functions TODO
+#define SSE_GLUE_004B // use...
+//#define SSE_GLUE_004C // namespace
+//#define SSE_GLUE_004D // enum
 #endif
 
 #endif//beta
