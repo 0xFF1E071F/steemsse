@@ -2060,8 +2060,6 @@ Tests are arranged to be efficient.
 //note: this isn't compiled anymore in v3.8
 void TShifter::CheckVerticalOverscan() { 
 
-void TShifter::CheckVerticalOverscan() {
-
 /* Vertical overscan
 
     1) The two different MMU are not emulated, we emulate the common ST with
@@ -2408,8 +2406,6 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
   {
     if(scan_y>=shifter_first_draw_line && scan_y<shifter_last_draw_line)
     {
-
-
 #if defined(SSE_SHIFTER_HIRES_OVERSCAN)
       if(freq_change_this_scanline)
       {
@@ -2536,8 +2532,6 @@ void TShifter::EndHBL() {
     Those tests are much like EndHBL in Hatari
     Check Shifter stability (preliminary)
 */
-
-
   if((CurrentScanline.Tricks&TRICK_LINE_PLUS_2) && CurrentScanline.EndCycle==372)     
   {
 //TRACE_OSD("no +2");
@@ -3480,8 +3474,21 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 #if defined(SSE_GLUE_FRAME_TIMINGS_A) && defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
   // highresmode, CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN is too high (50hz)
   // if we correct in read sdp, we should do it at rendering too
+/*
   if(Glue.CurrentScanline.Cycles==508)
     pixels_in+=4;
+ update: after refactoring of ReadSDP, we shouldn't anymore...
+ yet this made sense
+ were there compensating bugs? Or are bugs still present?
+ *
+ I think it could be shifter_pixel+=4; in "remove left border", this is 
+ for a line +26, here it's +24, Steem still has a 32 pixel border
+ instead of 48 (52-4), not 52 (56-4)
+ 16 pixels skipped by manipulating video counter 32+16=48
+ none to skip but we did! so it makes up, was already the case in old
+ Steem - yet ReadSDP had no correction...
+ ?
+*/
 #endif
 
   if(pixels_in > BORDER_SIDE+320+BORDER_SIDE) 

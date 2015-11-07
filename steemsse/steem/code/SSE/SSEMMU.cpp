@@ -111,8 +111,7 @@ MEM_ADDRESS TMMU::ReadSDP(int CyclesIn,int dispatcher) {
     int starts_counting=(Glue.CurrentScanline.StartCycle+8)/2;
 
     // can't be odd though (hires)
-    if(starts_counting&1)
-      starts_counting-=1;
+    starts_counting&=-2;
 
     // starts earlier if HSCROLL
     if(shifter_hscroll_extra_fetch)
@@ -306,7 +305,7 @@ void TMMU::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 
   if(addr==0xff8209 && SDPMiddleByte!=999) // it has been set?
   {
-    ASSERT(SSE_HACKS_ON);
+//    ASSERT(SSE_HACKS_ON);//TODO
     int current_sdp_middle_byte=(shifter_draw_pointer&0xFF00)>>8;
     if(current_sdp_middle_byte != SDPMiddleByte) // need to restore?
     {
