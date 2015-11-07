@@ -1728,6 +1728,13 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_VAR_KEYBOARD_CLICK)
         case 7301: // Keyboard click on/off
           if (HIWORD(wPar)==BN_CLICKED){
+#if defined(SSE_VAR_KEYBOARD_CLICK2)
+            OPTION_KEYBOARD_CLICK=!OPTION_KEYBOARD_CLICK;
+            TRACE_LOG("Option Keyboard click %d\n",OPTION_KEYBOARD_CLICK);
+            if(LPEEK(0x44E)==xbios2) // not perfect, at least it's a check
+              Tos.CheckKeyboardClick(); // immediate effect
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_KEYBOARD_CLICK,0);
+#else
             BOOL keyboard_click=( PEEK(0x484)&1 ); // current bit
             keyboard_click=!keyboard_click; // reverse bit
             if(keyboard_click) // pathetic, there must be a better way
@@ -1740,6 +1747,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             }
             TRACE_LOG("Option Keyboard click $464 %X\n",PEEK(0x484));
             SendMessage(HWND(lPar),BM_SETCHECK,keyboard_click,0);
+#endif
           }
           break; 
 #endif

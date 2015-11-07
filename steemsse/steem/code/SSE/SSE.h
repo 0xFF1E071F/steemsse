@@ -4427,15 +4427,11 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_INT_VBL_380 //bugfix
 #endif
 
-
 #ifdef SSE_SHIFTER
-
 #define SSE_SHIFTER_380 // some modest refactoring, debugging
-
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
 #define SSE_SHIFTER_HIRES_COLOUR_DISPLAY5//better test, compatible with GLUE refactoring
 #endif
-
 #endif//sft
 
 #ifdef SSE_TOS
@@ -4443,6 +4439,10 @@ Beta: not SSE_PRIVATE_BUILD
 //#define DISABLE_STEMDOS2//TODO
 #define SSE_TOS_GEMDOS_DRVBIT // sooner
 #define SSE_TOS_GEMDOS_RESTRICT_TOS3 // EmuTOS
+#endif
+
+#ifdef SSE_VARIOUS
+#define SSE_VAR_KEYBOARD_CLICK2 // persistent
 #endif
 
 #ifdef SSE_VIDEO

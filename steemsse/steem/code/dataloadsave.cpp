@@ -956,6 +956,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_ACSI_ICON)
   SendMessage(GetDlgItem(DiskMan.Handle,11),BM_SETCHECK,SSEOption.Acsi,0);
 #endif
+#endif//acsi
+#if defined(SSE_VAR_KEYBOARD_CLICK2) // option is persistent
+  OPTION_KEYBOARD_CLICK=pCSF->GetInt("Option","KeyboardClick",OPTION_KEYBOARD_CLICK);
 #endif
 
 #endif//steven_seagal
@@ -1433,6 +1436,10 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_ACSI_OPTION)
   pCSF->SetStr("Option","Acsi",EasyStr(SSEOption.Acsi));
 #endif
+#if defined(SSE_VAR_KEYBOARD_CLICK2)
+  pCSF->SetStr("Option","KeyboardClick",EasyStr(OPTION_KEYBOARD_CLICK));
+#endif
+
 //boiler
 #if defined(SSE_BOILER_SSE_PERSISTENT)
   pCSF->SetStr("Debug","UseTraceFile",EasyStr(USE_TRACE_FILE)); 
