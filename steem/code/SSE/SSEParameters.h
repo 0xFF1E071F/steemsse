@@ -731,8 +731,20 @@ Far more on the ST.
 #define VERY_LARGE_BORDER_SIDE 48 // 416 pixels wide for emulation
 #define VERY_LARGE_BORDER_SIDE_WIN 46 // trick, 412 pixels wide for rendering
 #define ORIGINAL_BORDER_BOTTOM 40 
+
+#if defined(SSE_VID_BORDERS_LIMIT_TO_245)
+/*  v3.8.0
+    As seen on Overscan demos on real STE + CRT: there's no trash in the lower
+    border because VBLANK is already on.
+    This is also in agreement with Atari Monitor Summary Specifications.
+    Menu Zuul 86 is buggy: no monitor will display the bottom of the letters.
+*/
+#define LARGE_BORDER_BOTTOM 45
+#define VERY_LARGE_BORDER_BOTTOM 45
+#else
 #define LARGE_BORDER_BOTTOM 48
 #define VERY_LARGE_BORDER_BOTTOM 50  // counts for raster fx
+#endif
 
 #define ORIGINAL_BORDER_TOP 30
 #define BIG_BORDER_TOP 36 // for The Musical Wonder 1990

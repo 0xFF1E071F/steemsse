@@ -21,15 +21,17 @@ extern WORD fixed_vol_3voices[16][16][16];
 
 EasyStr WAVOutputFile;
 EasyStringList DSDriverModuleList;
-
-const int extmon_res[EXTMON_RESOLUTIONS][3]={
+#if !defined(SSE_VID_EXT_FS2)
+const
+#endif
+int extmon_res[EXTMON_RESOLUTIONS][3]={
 {800,600,1},
 #if defined(SSE_VID_EXT_MON_1024X720)
 {1024,720,1},
 #endif
 {1024,768,1},
 {1280,960,1},
-#if defined(SSE_VID_EXT_MON_1280X1024)
+#if defined(SSE_VID_EXT_MON_1280X1024) && !defined(SSE_VID_EXT_FS2)
 {1280,1024,1},
 #endif
 {640,400,4},
@@ -39,8 +41,12 @@ const int extmon_res[EXTMON_RESOLUTIONS][3]={
 #endif
 {1024,768,4},
 {1280,960,4}
-#if defined(SSE_VID_EXT_MON_1280X1024)
-,{1280,1024,4}
+#if defined(SSE_VID_EXT_MON_1280X1024) && !defined(SSE_VID_EXT_FS2)
+,{1280,1024,4},
+#endif
+#if defined(SSE_VID_EXT_FS2)
+,{0,0,1}, //must be init
+{0,0,4}
 #endif
 };
 

@@ -2687,12 +2687,30 @@ HRESULT SteemDisplay::D3DSpriteInit() {
   {
     int stx=STXPixels();
     int sty=STYPixels();
-
+#ifndef NO_CRAZY_MONITOR
+#ifdef SSE_VID_EXT_FS1
+    if(extended_monitor)
+    {
+      stx=em_width; // that's it
+      sty=em_height;
+    }
+#endif
+#endif
 #if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO) 
 /*  Imitating a feature first seen in SainT, the screen is higher than it
     should, so that circles aren't perfect, squares are rectangles, etc.
     Note: you could use some settings on your monitor to cancel this effect,
     but many magazine screenshots show it.
+    On an American display, 60hz, the picture is better, so Atari wasn't really
+    aware of the problem.
+
+    Some references:
+    TV AR 4:3 = 1.333
+    PAL 720:576 = 1.25
+    NTSC 720:480 = 1.5
+    ST AR LORES
+      320:200 = 1.6 (useful picture)
+      416:281 = 1.480 (plasma)
 */
 #if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION)
     if(OPTION_ST_ASPECT_RATIO)
@@ -2743,6 +2761,11 @@ HRESULT SteemDisplay::D3DSpriteInit() {
       sh/=2;
     if(BORDER_40)
       tx-=16*sw; // same old trick (BPOC 400 pixels)
+
+#ifdef SSE_VID_EXT_FS1
+    if(extended_monitor && stx==SurfaceWidth)
+      sw=sh=1;
+#endif
 
     TRACE_LOG("sw %f tx %f sh %f ty %f\n",sw,tx,sh,ty);
   }

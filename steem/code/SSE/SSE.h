@@ -4445,6 +4445,18 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_TOS_GEMDOS_RESTRICT_TOS3 // EmuTOS
 #endif
 
+#ifdef SSE_VIDEO
+#define SSE_VID_D3D_LIST_MODES2 // safer
+#define SSE_VID_EXT_FS1 // fix
+#define SSE_VID_EXT_FS2 // max screen
+#if defined(SSE_VID_BORDERS)
+#define SSE_VID_BORDERS_LIMIT_TO_245
+#define SSE_VID_BORDERS_LINE_PLUS_20
+#define SSE_VID_BORDERS_416_NO_SHIFT2 //remove hack condition
+#define SSE_VID_BORDERS_416_NO_SHIFT3
+#endif
+#endif
+
 #if defined(SSE_GLUE_FRAME_TIMINGS) && defined(SSE_MMU) && defined(SSE_SHIFTER)
 #define SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1
 #undef SSE_SHIFTER_LEFT_OFF_60HZ//forget it

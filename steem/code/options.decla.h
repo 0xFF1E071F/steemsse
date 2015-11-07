@@ -285,9 +285,10 @@ public:
 EXT EasyStr WAVOutputFile;
 EXT EasyStringList DSDriverModuleList;
 
-#if defined(SSE_VID_EXT_MON_1280X1024)
+
+#if defined(SSE_VID_EXT_MON_1280X1024) || defined(SSE_VID_EXT_FS2)
 #if defined(SSE_VID_EXT_MON_1024X720)
-#define EXTMON_RESOLUTIONS (7+2+2) //TODO enum
+#define EXTMON_RESOLUTIONS (7+2+2)
 #else
 #define EXTMON_RESOLUTIONS (7+2)
 #endif
@@ -295,8 +296,11 @@ EXT EasyStringList DSDriverModuleList;
 #define EXTMON_RESOLUTIONS 7
 #endif
 
+#if defined(SSE_VID_EXT_FS2)
+EXT int extmon_res[EXTMON_RESOLUTIONS][3];
+#else
 EXT const int extmon_res[EXTMON_RESOLUTIONS][3];
-
+#endif
 #undef EXT
 #undef INIT
 
