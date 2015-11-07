@@ -192,6 +192,9 @@ struct TTos {
   EasyStr GetNextTos(DirSearch &ds); // to enumerate TOS files
   void GetTosProperties(EasyStr Path,WORD &Ver,BYTE &Country,WORD &Date);
 #endif
+#if defined(SSE_VAR_KEYBOARD_CLICK2)
+  void CheckKeyboardClick();
+#endif
 };
 
 extern TTos Tos;

@@ -1948,8 +1948,12 @@ void TOptionBox::CreateSoundPage()
   Wid=GetCheckBoxSize(Font,T("Keyboard click")).Width;
   Win=CreateWindow("Button",T("Keyboard click"),WS_CHILD | WS_TABSTOP |
     BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)7301,HInstance,NULL);
+#if defined(SSE_VAR_KEYBOARD_CLICK2)
+  SendMessage(Win,BM_SETCHECK,OPTION_KEYBOARD_CLICK,0);
+#else
   BOOL keyboard_click=( PEEK(0x484)&1 ); // get current setting
   SendMessage(Win,BM_SETCHECK,keyboard_click,0);
+#endif
   ToolAddWindow(ToolTip,Win,
 #if SSE_VERSION>=370
     T("When you're annoyed by those clicks, uncheck this option\

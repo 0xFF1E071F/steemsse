@@ -1723,6 +1723,10 @@ void stemdos_intercept_trap_1()
 
     }case 0x4B:{   // EXEC(mode,fil,com,env)
 
+#if defined(SSE_VAR_KEYBOARD_CLICK2) 
+      Tos.CheckKeyboardClick(); // check sys variable at each exec
+#endif    
+
       //modes - 0=Load n' go
       //        3=Load n' dont go (return basepage address in D0)
       //        4=Run from memory (fil=ignored,com=Address,env=ignored)
@@ -2206,9 +2210,24 @@ void TTos::GetTosProperties(EasyStr Path,WORD &Ver,BYTE &Country,WORD &Date) {
     fseek(f,0x1e,SEEK_SET);
     fread(&b_high,1,1,f);fread(&b_low,1,1,f);
     Date=MAKEWORD(b_low,b_high);
-    
+    TRACE_INIT("TOS v%X country %X date %X path %s\n",Ver,Country,Date,Path.Text);
     fclose(f);
   }
 }
+
+
+#if defined(SSE_VAR_KEYBOARD_CLICK2)
+
+void TTos::CheckKeyboardClick() {
+  if(OPTION_KEYBOARD_CLICK) // pathetic, there must be a better way
+    PEEK(0x484)|=0x01;
+  else
+    PEEK(0x484)&=0xFE;
+}
+
+#endif
+
+
+ 
 
 #endif//#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2)
