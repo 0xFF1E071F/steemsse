@@ -930,6 +930,24 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 
   log("STARTUP: Initialising display");
   Disp.Init();
+#if defined(SSE_VID_EXT_FS2) && defined(SSE_VID_D3D_LIST_MODES)
+#if defined(SSE_VID_D3D_LIST_MODES2)
+  if(D3D9_OK)
+#endif
+  {
+    UINT Adapter=D3DADAPTER_DEFAULT;
+    D3DFORMAT DisplayFormat=D3DFMT_X8R8G8B8; //32bit; D3DFMT_R5G6B5=16bit
+    UINT nD3Dmodes=Disp.pD3D->GetAdapterModeCount(Adapter,DisplayFormat);
+    D3DDISPLAYMODE Mode;
+    Disp.pD3D->EnumAdapterModes(Adapter,DisplayFormat,nD3Dmodes-1,&Mode);
+    for (int n=0;n<EXTMON_RESOLUTIONS;n++){
+      if(!extmon_res[n][0])
+        extmon_res[n][0]=Mode.Width;
+      if(!extmon_res[n][1])
+        extmon_res[n][1]=Mode.Height;
+    }
+  }
+#endif
 #ifdef ENABLE_LOGFILE
   {
     EasyStr Mess="STARTUP: Display Init finished. ";

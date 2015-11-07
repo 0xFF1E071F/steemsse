@@ -953,14 +953,21 @@ void TOptionBox::CreateDisplayPage()
     page_l+5+Wid,y,80,200,Handle,(HMENU)1026,HInstance,NULL);
   //TRACE("border handle %d\n",Win);
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("384 x 270"));
+#if defined(SSE_VID_BORDERS_LIMIT_TO_245)
+  SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("400 x 275"));
+#else
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("400 x 278"));
-
+#endif
 #if defined(SSE_VID_BORDERS_412)
 #if defined(SSE_VID_BORDERS_413) // !
 #if defined(SSE_VID_BORDERS_BIGTOP) && !defined(SSE_VID_BORDERS_416)
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("413 x 286"));
 #else
+#if defined(SSE_VID_BORDERS_LIMIT_TO_245)
+  SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("413 x 275"));
+#else
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("413 x 280"));//def
+#endif
 #endif
 #else
 #if defined(SSE_VID_BORDERS_BIGTOP) && !defined(SSE_VID_BORDERS_416)
@@ -972,7 +979,11 @@ void TOptionBox::CreateDisplayPage()
 #endif//412
 #if defined(SSE_VID_BORDERS_416)
 #if defined(SSE_VID_BORDERS_BIGTOP)
+#if defined(SSE_VID_BORDERS_LIMIT_TO_245)
+  SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("416 x 281"));
+#else
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("416 x 286"));
+#endif
 #else
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("416 x 280"));
 #endif
@@ -1303,7 +1314,6 @@ void TOptionBox::CreateFullscreenPage()
   long w;
   int y=10;
 
-
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D_OPTION4)
   const int LineHeight=30;
   const int HorizontalSeparation=15;
@@ -1312,6 +1322,10 @@ void TOptionBox::CreateFullscreenPage()
 #if defined(SSE_VID_D3D_OPTION)
 
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX; 
+#if defined(SSE_VID_D3D_LIST_MODES2)
+  if(!D3D9_OK)
+    mask|=WS_DISABLED;
+#endif
 #if defined(SSE_VID_D3D_LIST_MODES)
   CreateWindow("Button",T("Direct3D"),
     WS_CHILD | BS_GROUPBOX,
@@ -1339,7 +1353,12 @@ void TOptionBox::CreateFullscreenPage()
   Offset+=Wid+HorizontalSeparation;
   UINT Adapter=D3DADAPTER_DEFAULT;
   D3DFORMAT DisplayFormat=D3DFMT_X8R8G8B8; //32bit; D3DFMT_R5G6B5=16bit
+#if defined(SSE_VID_D3D_LIST_MODES2)
+  UINT nD3Dmodes=(D3D9_OK)
+    ? Disp.pD3D->GetAdapterModeCount(Adapter,DisplayFormat) : 0;
+#else
   UINT nD3Dmodes=Disp.pD3D->GetAdapterModeCount(Adapter,DisplayFormat);
+#endif
   w=get_text_width(T("Mode"));
   CreateWindow("Static",T("Mode"),WS_CHILD ,
                           page_l+Offset,y+4,w,23,Handle,(HMENU)205,HInstance,NULL);
@@ -2973,22 +2992,12 @@ Windows 2000	5.0
   y-=LineHeight; // maybe it will be optimised away!
 #endif
   Offset=Wid+HorizontalSeparation;
-#if defined(SSE_SHIFTER_TRICKS_OPTION_C2)
-  Wid=GetCheckBoxSize(Font,T("C2: GLU/68901")).Width;
-  Win=CreateWindow("Button",T("C2: GLU/68901"),WS_CHILD | WS_TABSTOP |
-    BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)7323,HInstance,NULL);
-#else
   Wid=GetCheckBoxSize(Font,T("C2: 68901")).Width;
   Win=CreateWindow("Button",T("C2: 68901"),WS_CHILD | WS_TABSTOP |
     BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)7323,HInstance,NULL);
-#endif
   SendMessage(Win,BM_SETCHECK,OPTION_PRECISE_MFP,0);
   ToolAddWindow(ToolTip,Win,
-#if defined(SSE_SHIFTER_TRICKS_OPTION_C2)
-    T("Chipset 2 - Check for overscan (Shifter tricks) and a more precise emulation of the MFP."));
-#else
     T("Chipset 2 - Check for a more precise emulation of the MFP."));
-#endif
   y+=LineHeight;
 #endif
 
