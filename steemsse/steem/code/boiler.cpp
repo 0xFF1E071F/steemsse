@@ -1012,12 +1012,14 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               break;
 #if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
 #if defined(SSE_DEBUG_TRACE_FILE)
+#if !defined(SSE_BOILER_TRACE_NOT_OPTIONAL)
             case 1517: // Output TRACE to file
               USE_TRACE_FILE=!USE_TRACE_FILE;
               CheckMenuItem(sse_menu,1517,
                 MF_BYCOMMAND|((int)(USE_TRACE_FILE)
                 ?MF_CHECKED:MF_UNCHECKED));
               break;
+#endif
             case 1518: // Limit TRACE file size
               TRACE_FILE_REWIND=!TRACE_FILE_REWIND;
               CheckMenuItem(sse_menu,1518,
@@ -1827,7 +1829,9 @@ void DWin_init()
 #if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
  // AppendMenu(boiler_op_menu,MF_STRING|MF_SEPARATOR,0,NULL);
 #if defined(SSE_DEBUG_TRACE_FILE)
+#if !defined(SSE_BOILER_TRACE_NOT_OPTIONAL)
   AppendMenu(sse_menu,MF_STRING,1517,"Output TRACE to file");
+#endif
   AppendMenu(sse_menu,MF_STRING,1518,"Limit TRACE file size");//remove this?
   //AppendMenu(sse_menu,MF_STRING,1519,"flush TRACE.txt"); // v3.7.1
 #endif

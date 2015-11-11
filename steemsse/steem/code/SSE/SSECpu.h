@@ -526,7 +526,7 @@ this state, no further memory references are made."
     bit in the CPU, so that it knows that the trace bit was set at the
     start of the instruction.
 */
-  enum {NORMAL,EXCEPTION,HALTED,STOPPED,TRACE_MODE,INTEL_CRASH, BOILER_MESSAGE}; 
+  enum {NORMAL,EXCEPTION,HALTED,STOPPED,TRACE_MODE,INTEL_CRASH,BLIT_ERROR,BOILER_MESSAGE}; 
   BYTE ProcessingState;
 #endif
 
@@ -948,6 +948,8 @@ inline void TM68000::PerformRte() {
   Debug.Rte();
 #endif
 
+
+
 }
 #define M68K_PERFORM_RTE(checkints) M68000.PerformRte()
 
@@ -1111,7 +1113,7 @@ inline void TM68000::Process() {
     else
       TRACE_LOG("%X %X %s\n",pc,ir,disa_d2(pc).Text);
   }
-#endif
+#endif//boiler
 
 #if defined(SSE_DEBUG)
   IrAddress=pc;

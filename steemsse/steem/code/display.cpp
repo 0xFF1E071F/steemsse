@@ -615,7 +615,7 @@ HRESULT SteemDisplay::DDError(char *ErrorText,HRESULT DErr)
 //---------------------------------------------------------------------------
 bool SteemDisplay::InitGDI()
 { // SS generally Direct X is used instead
-  Release();
+  Release(); // note this will kill D3D
 
   int w=640,h=480;
 #ifndef NO_CRAZY_MONITOR
@@ -1065,6 +1065,9 @@ bool SteemDisplay::Blit()
         else if(hRet) 
         {
           TRACE_LOG("Fullscreen blit error %d\n",hRet);
+#if defined(SSE_GUI_STATUS_STRING_HALT) && defined(SSE_CPU_HALT)
+          M68000.ProcessingState=TM68000::BLIT_ERROR;
+#endif
           runstate=RUNSTATE_STOPPING;
         }
 #endif
@@ -1151,7 +1154,7 @@ bool SteemDisplay::Blit()
           hRet=DDPrimarySur->Blt(&dest,OurBackSur,&draw_blit_source_rect,
             DDBLT_WAIT,NULL);
         else
-          TRACE("Can't blt\n");;
+          TRACE_VID("Can't blt\n");;
 #else
         hRet=DDPrimarySur->Blt(&dest,DDBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
 #endif
@@ -2226,7 +2229,7 @@ bitmap in the desired bit depth, FALSE otherwise.
                                           0xff0000,0x00ff00,0x0000ff,true);
 #endif
       }
-      TRACE("ImageFree save %s format %d convert%d\n",ShotFile.Text,ScreenShotFormat,ConvertPixels);
+      TRACE_VID("ImageFree save %s format %d convert%d\n",ShotFile.Text,ScreenShotFormat,ConvertPixels);
       FreeImage_Save((FREE_IMAGE_FORMAT)ScreenShotFormat,FIBmp,ShotFile,ScreenShotFormatOpts);
       FreeImage_Free(FIBmp);
     }else
@@ -2419,21 +2422,19 @@ int SteemDisplay::STYPixels() {
 
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D)
-
 /* Direct3D support
    There's no complaint about DirectDraw in window mode, only fullscreen,
    and we can't replicate all our DirectDraw tricks in Direct3D, so for
    now we limit Direct3D support to fullscreen.
-   Two modes are offered:
-   Straight: double pixel, centred
-   Stretch: keeping aspect ratio, the biggest we can
+   TODO: D3D Window could be useful for video capture
    We use DirectX9 and the ID3DXSprite interface.
    DirectDraw modes are still available, so nothing that worked is changed,
    more options are offered.
-   This is commanded by SSE option 'D3D fullscreen'.
+   This is commanded by an option on Fullscreen page.
 */
 
 bool SteemDisplay::D3DBlit() {
+  ASSERT(pD3D);
   HRESULT d3derr=E_FAIL;
   if(pD3DDevice && pD3DSprite)
   {
@@ -2462,6 +2463,7 @@ bool SteemDisplay::D3DBlit() {
 
 HRESULT check_device_type(D3DDEVTYPE DeviceType,D3DFORMAT DisplayFormat) {
   HRESULT d3derr;
+  ASSERT(Disp.pD3D);
   d3derr=Disp.pD3D->CheckDeviceType(D3DADAPTER_DEFAULT,DeviceType,DisplayFormat,DisplayFormat,false);
   TRACE_LOG("CheckDeviceType %d format %d err %d\n",DeviceType,DisplayFormat,d3derr);
   return d3derr;
@@ -2475,6 +2477,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
     Too bad all this burden is on our programmers' shoulders.
 */
   HRESULT d3derr=E_FAIL;
+  ASSERT(pD3D);
   if(!pD3D)
     return d3derr;
   UINT Adapter=D3DADAPTER_DEFAULT;
@@ -2499,7 +2502,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
     d3derr=check_device_type(DeviceType,DisplayFormat);
     if(d3derr) // no HW abilities?
     {
-      TRACE("D3D: poor hardware detected, software rendering\n");
+      TRACE_LOG("D3D: poor hardware detected, software rendering\n");
       D3DDEVTYPE DeviceType=D3DDEVTYPE_REF; // try software processing (slow)
       d3derr=check_device_type(DeviceType,DisplayFormat);
     }
@@ -2594,6 +2597,7 @@ VOID SteemDisplay::D3DDestroySurfaces() {
     pD3DTexture->Release();
     pD3DTexture=NULL;
   }
+
   if (pD3DDevice)
   {
     pD3DDevice->Release();
@@ -2605,11 +2609,13 @@ VOID SteemDisplay::D3DDestroySurfaces() {
 HRESULT SteemDisplay::D3DInit()
 {
   SetNotifyInitText("DirectD3D");
+  ASSERT(!pD3D);
   if(pD3D)
     pD3D->Release();
   // Create the D3D object - computer needs DirectX9
   if ((pD3D = Direct3DCreate9(D3D_SDK_VERSION)) == NULL) 
   {
+    BRK(D3D Init Fail!);
     TRACE_LOG("D3D Init Fail!\n");
     return E_FAIL; 
   }
@@ -2651,6 +2657,9 @@ VOID SteemDisplay::D3DRelease()
   {
     pD3D->Release();
     pD3D = NULL;
+#if defined(SSE_VID_D3D_380)
+    D3D9_OK=false;
+#endif
   }
 }
 
@@ -2664,11 +2673,14 @@ void SteemDisplay::D3DUnlock() {
 
 
 HRESULT SteemDisplay::D3DSpriteInit() {
-
   // called by D3DCreateSurfaces() and by ...
   // ScreenChange() calls DDCreateSurfaces()
-
   HRESULT hr=E_FAIL;
+#if defined(SSE_VID_D3D_380)
+  ASSERT(pD3D);
+  if(!pD3D)
+    return hr;
+#endif
   if(pD3DSprite)
     pD3DSprite->Release(); //so we can init sprite anytime
   hr = D3DXCreateSprite(pD3DDevice,&pD3DSprite); 

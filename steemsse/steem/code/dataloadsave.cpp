@@ -828,7 +828,11 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_VID_BORDERS) && !defined(SSE_VID_BORDERS_NO_LOAD_SETTING)
     //v3.7.0, we wouldn't keep this setting through sessions
     DISPLAY_SIZE=pCSF->GetInt("Display","BorderSize",DISPLAY_SIZE);
-    if(DISPLAY_SIZE<0||DISPLAY_SIZE>BIGGEST_DISPLAY)
+    if(DISPLAY_SIZE<0||DISPLAY_SIZE>BIGGEST_DISPLAY
+#if defined(SSE_VID_380)
+      || Disp.Method==DISPMETHOD_GDI // Disp has already been initialised
+#endif
+      )
       DISPLAY_SIZE=0;
     ChangeBorderSize(DISPLAY_SIZE);
 #endif
@@ -965,9 +969,11 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 
 
 #if defined(SSE_BOILER_SSE_PERSISTENT)
+#if !defined(SSE_BOILER_TRACE_NOT_OPTIONAL)
     USE_TRACE_FILE=pCSF->GetInt("Debug","UseTraceFile",USE_TRACE_FILE);
     CheckMenuItem(sse_menu,1517,MF_BYCOMMAND|
       ((USE_TRACE_FILE)?MF_CHECKED:MF_UNCHECKED));
+#endif
     TRACE_FILE_REWIND=pCSF->GetInt("Debug","TraceFileRewind",TRACE_FILE_REWIND);
     CheckMenuItem(sse_menu,1518,MF_BYCOMMAND|
       ((TRACE_FILE_REWIND)?MF_CHECKED:MF_UNCHECKED));
@@ -1442,7 +1448,9 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 
 //boiler
 #if defined(SSE_BOILER_SSE_PERSISTENT)
+#if !defined(SSE_BOILER_TRACE_NOT_OPTIONAL)
   pCSF->SetStr("Debug","UseTraceFile",EasyStr(USE_TRACE_FILE)); 
+#endif
   pCSF->SetStr("Debug","TraceFileRewind",EasyStr(TRACE_FILE_REWIND)); 
 #if defined(SSE_BOILER_MONITOR_VALUE)
   pCSF->SetStr("Debug","MonitorValueSpecified",EasyStr(Debug.MonitorValueSpecified)); 
