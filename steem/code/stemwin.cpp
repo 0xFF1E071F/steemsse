@@ -1083,7 +1083,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 #define myRect ((DRAWITEMSTRUCT*)lPar)->rcItem
         HWND status_bar_win=GetDlgItem(StemWin,120); // get handle
         ASSERT(status_bar_win);
-        // erase rectangle
+        // erase rectangle (different colour for hires)
         FillRect(myHdc,&((DRAWITEMSTRUCT*)lPar)->rcItem,((COLOUR_MONITOR)?
           (HBRUSH)(COLOR_MENU+1):(HBRUSH)(COLOR_WINDOWFRAME+1)));
         GUIRefreshStatusBar(false); // make sure the string is correct
@@ -1110,6 +1110,47 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           }
           DeleteObject(SelectObject(TempDC,OldBmp));
           DeleteDC(TempDC);
+
+          int myx=myRect.left+Size.cx+3;
+
+#if defined(SSE_GUI_STATUS_STRING_ADAT_ICON)
+          if(ADAT)
+          {
+            DrawIconEx(myHdc,myx,0,
+              hGUIIcon[RC_ICO_ACCURATEFDC],16,16,0,NULL,DI_NORMAL);
+            myx+=19;
+          }
+#endif
+#if defined(SSE_GUI_STATUS_STRING_HD_ICON) && defined(SSE_GUI_STATUS_STRING_HD)
+          if(!HardDiskMan.DisableHardDrives||ACSI_EMU_ON)
+          {
+            DrawIconEx(myHdc,myx,2,
+              hGUIIcon[RC_ICO_HARDDRIVE16],16,16,0,NULL,DI_NORMAL);
+            myx+=19;
+          }
+#endif
+#if defined(SSE_GUI_STATUS_STRING_CHIPSET_ICON)
+          if(HD6301EMU_ON)
+          {
+            DrawIconEx(myHdc,myx,2,
+              hGUIIcon[RC_ICO_OPS_C1],16,16,0,NULL,DI_NORMAL);
+            myx+=19;
+          }
+          if(OPTION_PRECISE_MFP)
+          {
+            DrawIconEx(myHdc,myx,2,
+              hGUIIcon[RC_ICO_OPS_C2],16,16,0,NULL,DI_NORMAL);
+            myx+=19;
+          }
+#endif
+#if defined(SSE_GUI_STATUS_STRING_HACKS) && defined(SSE_GUI_STATUS_STRING_HACKS_ICON)
+          if(SSE_HACKS_ON)
+          {
+            DrawIconEx(myHdc,myx,2,
+              hGUIIcon[RC_ICO_PATCHES],16,16,0,NULL,DI_NORMAL);
+            myx+=19;
+          }
+#endif
         }
         return TRUE;
       }
