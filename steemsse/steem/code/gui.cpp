@@ -696,7 +696,7 @@ void GUIRefreshStatusBar() {
 #endif
 
       // some options
-
+#if !defined(SSE_GUI_STATUS_STRING_CHIPSET_ICON)
 #if defined(SSE_IKBD_6301) && defined(SSE_GUI_STATUS_STRING_6301)
       if(HD6301EMU_ON)
         strcat(status_bar," C1"); //saves som space
@@ -713,6 +713,7 @@ void GUIRefreshStatusBar() {
       else
         strcat(status_bar," X");
 #endif
+#endif//!icon
       if(OPTION_CPU_CLOCK 
 #if defined(SSE_GUI_STATUS_STRING_SINGLE_SIDE)
         || (SSEOption.SingleSideDriveMap&3)
@@ -753,20 +754,23 @@ void GUIRefreshStatusBar() {
       else if(ADAT)
         strcat(status_bar," ADAT");
 #else
-
+#if !defined(SSE_GUI_STATUS_STRING_HD_ICON)
 #if defined(SSE_GUI_STATUS_STRING_HD)
       if(!HardDiskMan.DisableHardDrives //v3.7.0
         || ACSI_EMU_ON) //v3.7.2
         strcat(status_bar," HD");
 #endif
+#endif
+#if !defined(SSE_GUI_STATUS_STRING_ADAT_ICON)
       if(!floppy_instant_sector_access) // the option only //3.7.0
         strcat(status_bar," ADAT");
 #endif
 #endif
+#endif
 
 
 
-#if defined(SSE_GUI_STATUS_STRING_HACKS)
+#if defined(SSE_GUI_STATUS_STRING_HACKS) && !defined(SSE_GUI_STATUS_STRING_HACKS_ICON)
       if(SSE_HACKS_ON)
         strcat(status_bar," #"); // which symbol?
 #endif
@@ -884,7 +888,7 @@ void GUIRefreshStatusBar() {
       strcpy(ansi_name,T("HALT"));
 
     if(M68000.ProcessingState==TM68000::BLIT_ERROR)
-      strcpy(ansi_name,T("BLIT_ERROR"));
+      strcpy(ansi_name,T("BLIT ERROR"));
 #endif
 #endif
 

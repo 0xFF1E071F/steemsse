@@ -1561,6 +1561,14 @@ SOURCE=..\..\steem\rc\options_brightcon.ico
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\steem\rc\options_C1.ico
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\steem\rc\options_C2.ico
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\steem\rc\options_display.ico
 # End Source File
 # Begin Source File

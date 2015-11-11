@@ -760,6 +760,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="dinput8.lib dxguid.lib winmm.lib ComCtl32.Lib odbc32.lib odbccp32.lib d3d9.lib d3dx9d.lib"
+				ShowProgress="0"
 				OutputFile="Debug\Steem.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -770,6 +771,7 @@
 				SubSystem="2"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
+				Profile="false"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1743,6 +1745,14 @@
 			</File>
 			<File
 				RelativePath="..\..\steem\rc\options_brightcon.ico"
+				>
+			</File>
+			<File
+				RelativePath="..\..\steem\rc\options_C1.ico"
+				>
+			</File>
+			<File
+				RelativePath="..\..\steem\rc\options_C2.ico"
 				>
 			</File>
 			<File
