@@ -882,6 +882,9 @@ void GUIRefreshStatusBar() {
     if(M68000.ProcessingState==TM68000::HALTED)
       //strcpy(status_bar,T("HALT (ST crashed)"));
       strcpy(ansi_name,T("HALT"));
+
+    if(M68000.ProcessingState==TM68000::BLIT_ERROR)
+      strcpy(ansi_name,T("BLIT_ERROR"));
 #endif
 #endif
 

@@ -4308,8 +4308,10 @@ Beta: not SSE_PRIVATE_BUILD
 ///////////////
 
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
-#define TEST01
-//#define TEST02
+#define TEST01//quick switch
+
+//#define TEST02//track bug
+
 //#define TEST03
 //#define TEST04
 //#define TEST05
@@ -4368,6 +4370,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BLT_TIMING_START_BLITTER
 #endif//blt
 
+#if defined(SSE_BOILER)
+//#define SSE_BOILER_TRACE_NOT_OPTIONAL
+#endif//boiler
+
 #ifdef SSE_CPU
 #define SSE_CPU_E_CLOCK4
 #endif
@@ -4400,13 +4406,21 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_FRAME_TIMINGS_B // remove old var and functions
 #define SSE_GLUE_FRAME_TIMINGS_C // extended resolutions
 #define SSE_GLUE_THRESHOLDS // computing thresholds only when changing option
+#define SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#undef SSE_SHIFTER_LEFT_OFF_60HZ//forget it
+//#define SSE_GLUE_001 //to show all the Tekila oddities
+#define SSE_GLUE_002//no safety net
+#define SSE_GLUE_003
+#endif//SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1
+#endif//SSE_GLUE_FRAME_TIMINGS
+#endif//glue
 
 #endif
 #endif//glue
 
-
 #if defined(SSE_INT_HBL)
-//#undef SSE_INT_HBL_E_CLOCK_HACK // no, because there's 3615GEN4-OVR too
+//#undef SSE_INT_HBL_E_CLOCK_HACK 
 #define SSE_INT_HBL_380 //bugfix
 #endif
 
@@ -4425,6 +4439,12 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_INT_VBL)
 #define SSE_INT_VBL_380 //bugfix
+#endif
+
+#if defined(SSE_MMU)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#define SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1
+#endif
 #endif
 
 #ifdef SSE_SHIFTER
@@ -4446,27 +4466,16 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #ifdef SSE_VIDEO
-#define SSE_VID_D3D_LIST_MODES2 // safer
+#define SSE_VID_380
+#define SSE_VID_D3D_380
 #define SSE_VID_EXT_FS1 // fix
 #define SSE_VID_EXT_FS2 // max screen
 #if defined(SSE_VID_BORDERS)
 #define SSE_VID_BORDERS_LIMIT_TO_245
 #define SSE_VID_BORDERS_LINE_PLUS_20
 #define SSE_VID_BORDERS_416_NO_SHIFT2 //remove hack condition
-#define SSE_VID_BORDERS_416_NO_SHIFT3
+#define SSE_VID_BORDERS_416_NO_SHIFT3 //?
 #endif
-#endif
-
-#if defined(SSE_GLUE_FRAME_TIMINGS) && defined(SSE_MMU) && defined(SSE_SHIFTER)
-#define SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1
-#undef SSE_SHIFTER_LEFT_OFF_60HZ//forget it
-#define SSE_SHIFTER_ARMADA_IS_DEAD2
-#define SSE_SHIFTER_SCHNUSDIE2
-#define SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1
-//#define SSE_GLUE_001 //to show all the Tekila oddities
-#define SSE_GLUE_002//no safety net
-#define SSE_GLUE_003
-
 #endif
 
 #endif//beta
