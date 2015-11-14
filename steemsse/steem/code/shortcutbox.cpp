@@ -94,7 +94,10 @@ enum {
 #if defined(SSE_VAR_SNAPSHOT_INI)
   CUT_DEFAULT_SNAPSHOT,
 #endif
-
+#if defined(SSE_GUI_SHORTCUT_SELECT_DISK)
+  CUT_SELECT_DISK_A,
+  CUT_SELECT_DISK_B,
+#endif
   CUT_LAST_ITEM_SS
 };
 
@@ -138,6 +141,10 @@ const char *ShortcutNames[NUM_SHORTCUTS*2]=
 #endif
 #if defined(SSE_VAR_SNAPSHOT_INI)
     "Load Default Memory Snapshot",(char*)CUT_DEFAULT_SNAPSHOT,
+#endif
+#if defined(SSE_GUI_SHORTCUT_SELECT_DISK)
+    "Select Disk A",(char*)CUT_SELECT_DISK_A,
+    "Select Disk B",(char*)CUT_SELECT_DISK_B,
 #endif
 #endif
 
@@ -552,7 +559,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
     case 28:
       fast_forward_change(true,true);
       break;
-    case 43:
+    case 43: //SS multiple
       DoSaveScreenShot|=2;
       break;
     case 29:
@@ -683,8 +690,21 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       video_recording=!video_recording;
       break;
 #undef LOGSECTION
-#endif      
-#endif      
+#endif  
+#if defined(SSE_GUI_SHORTCUT_SELECT_DISK)
+    case CUT_SELECT_DISK_A:
+    case CUT_SELECT_DISK_B:
+    {
+      ASSERT(Inf.Action==CUT_SELECT_DISK_A||Inf.Action==CUT_SELECT_DISK_B);
+      EasyStr path=FileSelect(NULL,T("Select Disk Image"),DiskMan.DisksFol,
+        FSTypes(2,NULL),1,true,"");
+      EasyStr name=GetFileNameFromPath(path);
+      DiskMan.InsertDisk(Inf.Action-CUT_SELECT_DISK_A,name,path,0,0,"",true);
+    }
+      break;
+#endif
+
+#endif//ss      
       
 #ifdef DEBUG_BUILD
     case 200: // Trace Into
