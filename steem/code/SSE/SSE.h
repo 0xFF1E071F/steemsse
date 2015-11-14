@@ -4309,9 +4309,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
 #define TEST01//quick switch
-
 //#define TEST02//track bug
-
 //#define TEST03
 //#define TEST04
 //#define TEST05
@@ -4378,19 +4376,21 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_E_CLOCK4
 #endif
 
-
 #if defined(SSE_FLOPPY)
 #define SSE_PASTI_AUTO_SWITCH2
 #define SSE_DISK_SCP380 // War Heli
 #endif
 
+#ifdef SSE_GUI
+#define SSE_GUI_CONFIG_FILE//TODO
+#define SSE_GUI_380//tmp name
+#define SSE_GUI_RESET_BUTTON2
+#define SSE_GUI_SHORTCUT_SELECT_DISK//request
 #if defined(SSE_GUI_DISK_MANAGER)
 #define SSE_GUI_DISK_MANAGER_RGT_CLK_HD3 //when changing on/off in hdm
 #define SSE_GUI_DISK_MANAGER_HD_SELECTED //stay pushed if on
 #endif
 
-#define SSE_GUI_RESET_BUTTON2
-#define SSE_GUI_380//tmp name
 #if defined(SSE_GUI_STATUS_STRING)
 #undef SSE_GUI_STATUS_STRING_FULL_ST_MODEL // or more complicated
 #define SSE_GUI_STATUS_STRING_380
@@ -4400,6 +4400,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_STATUS_STRING_HD_ICON 
 #define SSE_GUI_STATUS_STRING_TOSFLAG
 #endif
+#endif//gui
 
 #if defined(SSE_GLUE)
 #define SSE_GLUE_FRAME_TIMINGS
@@ -4415,7 +4416,6 @@ Beta: not SSE_PRIVATE_BUILD
 #undef SSE_SHIFTER_LEFT_OFF_60HZ//forget it
 //#define SSE_GLUE_001 //to show all the Tekila oddities
 #define SSE_GLUE_002//no safety net
-#define SSE_GLUE_003
 #endif//SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1
 #endif//SSE_GLUE_FRAME_TIMINGS
 #endif//glue
@@ -4424,7 +4424,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//glue
 
 #if defined(SSE_INT_HBL)
-//#undef SSE_INT_HBL_E_CLOCK_HACK 
+//#undef SSE_INT_HBL_E_CLOCK_HACK //the patch doesn't even work
 #define SSE_INT_HBL_380 //bugfix
 #endif
 
@@ -4451,6 +4451,10 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif
 
+#if !defined(SSE_DEBUG)
+#define SSE_OSD_DRIVE_INFO_EXT // STX, MSA... 
+#endif
+
 #ifdef SSE_SHIFTER
 #define SSE_SHIFTER_380 // some modest refactoring, debugging
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
@@ -4474,6 +4478,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_D3D_380
 #define SSE_VID_EXT_FS1 // fix
 #define SSE_VID_EXT_FS2 // max screen
+#define SSE_VID_SCREENSHOTS_MULTIPLE_INTERVAL //TODO?
 #if defined(SSE_VID_BORDERS)
 #define SSE_VID_BORDERS_LIMIT_TO_245
 #define SSE_VID_BORDERS_LINE_PLUS_20

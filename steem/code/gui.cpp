@@ -813,10 +813,20 @@ void GUIRefreshStatusBar() {
       if(SideBorderSizeWin==ORIGINAL_BORDER_SIDE)
         max_text_length-=5;
 #endif
+#if defined(SSE_GUI_STATUS_STRING_380)
+      char tmp[MAX_TEXT_LENGTH_BORDER_ON+2+1]=" ";
+#else
       char tmp[MAX_TEXT_LENGTH_BORDER_ON+2+1]=" \"";
+#endif
       if( strlen(FloppyDrive[floppy_current_drive()].DiskName.Text)<=max_text_length)
       {
-        strncpy(tmp+2,FloppyDrive[floppy_current_drive()].DiskName.Text,max_text_length);
+        strncpy(tmp
+#if defined(SSE_GUI_STATUS_STRING_380)
+          +1
+#else
+          +2
+#endif
+          ,FloppyDrive[floppy_current_drive()].DiskName.Text,max_text_length);
 #if defined(SSE_TOS_PRG_AUTORUN)
         if(SF314[0].ImageType.Extension==EXT_PRG)
           strcat(tmp,".PRG");
@@ -829,11 +839,19 @@ void GUIRefreshStatusBar() {
       }
       else
       {
-        strncpy(tmp+2,FloppyDrive[floppy_current_drive()].DiskName.Text,max_text_length-3);
+        strncpy(tmp
+#if defined(SSE_GUI_STATUS_STRING_380)
+          +1
+#else
+          +2
+#endif
+          ,FloppyDrive[floppy_current_drive()].DiskName.Text,max_text_length-3);
         strcat(tmp,"...");
       }
       strcat(status_bar,tmp);
+#if !defined(SSE_GUI_STATUS_STRING_380)
       strcat(status_bar,"\"");
+#endif
     }
 #undef MAX_TEXT_LENGTH_BORDER_ON
 #undef MAX_TEXT_LENGTH_BORDER_OFF
