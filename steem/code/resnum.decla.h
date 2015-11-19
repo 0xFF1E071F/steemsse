@@ -90,6 +90,14 @@
 
 #if defined(SSE_SSE_OPTION_PAGE)
 #ifdef SSE_ACSI_ICON //depends on WIN32!
+#ifdef SSE_GUI_CONFIG_FILE
+#define RC_ICO_HARDDRIVES_ACSI 74
+#define RC_ICO_OPS_SSE 75
+#define RC_ICO_OPS_C1 76
+#define RC_ICO_OPS_C2 77
+#define RC_ICO_CFG 78
+#define RC_NUM_ICONS 79
+#else
 #ifdef SSE_GUI_STATUS_STRING_CHIPSET_ICON
 #define RC_ICO_HARDDRIVES_ACSI 74
 #define RC_ICO_OPS_SSE 75
@@ -101,10 +109,11 @@
 #define RC_ICO_OPS_SSE 75
 #define RC_NUM_ICONS 76
 #endif
+#endif//#ifdef SSE_ACSI_ICON 
 #else                          
 #define RC_ICO_OPS_SSE 74
 #define RC_NUM_ICONS 75
-#endif//#ifdef SSE_ACSI_ICON 
+#endif//SSE_GUI_CONFIG_FILE
 #else
 #define RC_NUM_ICONS 74
 #endif

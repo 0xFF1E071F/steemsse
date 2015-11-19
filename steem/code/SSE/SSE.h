@@ -4382,7 +4382,10 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #ifdef SSE_GUI
-#define SSE_GUI_CONFIG_FILE//TODO
+#define SSE_GUI_CONFIG_FILE // new option to L/S ini files
+#if defined(SSE_GUI_CONFIG_FILE)
+#define SSE_GUI_CONFIG_FILE2 // TOS: relative path
+#endif
 #define SSE_GUI_380//tmp name
 #define SSE_GUI_RESET_BUTTON2
 #define SSE_GUI_SHORTCUT_SELECT_DISK//request

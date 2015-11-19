@@ -311,7 +311,11 @@ MIDI is 4 times faster than IKBD
 #define STEEM_MANUAL_SSE "Steem SSE manual"
 #endif
 
+#if defined(SSE_GUI_CONFIG_FILE)
+#define CONFIG_FILE_EXT "ini" // ini, cfg?
 #endif
+
+#endif//gui
 
 
 ///////////

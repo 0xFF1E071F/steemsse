@@ -553,6 +553,12 @@ void TOptionBox::LoadProfile(char *File)
   int CurMonSel=GetCurrentMonitorSel();
 
   Str ProfileROM=CSF.GetStr("Machine","ROM_File",ROMFile);
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_CONFIG_FILE2)
+  if(strchr(ROMFile.Text,SLASHCHAR)==NULL)
+     ProfileROM=TOSBrowseDir + SLASH + ROMFile;
+#endif
+
   BYTE ProfileMemConf[2]={(BYTE)CSF.GetInt("Machine","Mem_Bank_1",CurMemConf[0]),
                           (BYTE)CSF.GetInt("Machine","Mem_Bank_2",CurMemConf[1])};
   int ProfileMonSel=!bool(CSF.GetInt("Machine","Colour_Monitor",mfp_gpip_no_interrupt & MFP_GPIP_COLOUR));
