@@ -333,8 +333,59 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
               SendMessage(GetDlgItem(OptionBox.Handle,1024),BM_SETCHECK,Disp.ScreenShotMinSize,0);
             }
           }
-
         }
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_CONFIG_FILE)
+/*  v3.8.0 Player has clicked on the 'Configuration' icon, then
+    on 'Load configuration file' or 'Save configuration file'.
+    We load/save an ini file like it was steem.ini, using Steem's
+    powerful system (thx Steem authors), which minimises code and
+    will satisfy most players.
+*/
+        else if(LOWORD(wPar)==443 || LOWORD(wPar)==444)
+        {
+          Str LastCfgFol=LastCfgFile;
+          RemoveFileNameFromPath(LastCfgFol,REMOVE_SLASH);
+          EasyStr FilNam=FileSelect(Win,LOWORD(wPar)==443
+            ?T("Load configuration file"):T("Save configuration file"),
+            LastCfgFol,
+            FSTypes(0,T("Configuration files").Text,"*."CONFIG_FILE_EXT,NULL),
+            1,(LOWORD(wPar)==443),CONFIG_FILE_EXT,
+            GetFileNameFromPath(LastCfgFile));
+          if (FilNam.NotEmpty()){
+            LastCfgFile=FilNam;
+            ConfigStoreFile CSF; //on the stack
+            // TRACE("CSF size = %d\n",sizeof(CSF)); //76
+            CSF.Open(FilNam);
+            // Load
+            if (LOWORD(wPar)==443){
+              //TRACE("load config file %s\n",FilNam.Text);
+              WAKE_UP_STATE=CSF.GetInt("Machine","WakeUpState",0);
+              LoadAllDialogData(false,"",NULL,&CSF); // radical!
+              ROMFile=CSF.GetStr("Machine","ROM_File",ROMFile);
+#if defined(SSE_GUI_CONFIG_FILE2)
+              // add current TOS path if necessary
+              if(strchr(ROMFile.Text,SLASHCHAR)==NULL) // no slash = no path
+              {
+                EasyStr tmp=OptionBox.TOSBrowseDir + SLASH + ROMFile;
+                ROMFile=tmp;
+                //TRACE("TOS: %s\n",ROMFile.Text);
+              }
+              OptionBox.NewROMFile=ROMFile;
+#endif
+              reset_st(RESET_COLD|RESET_STOP|RESET_CHANGESETTINGS|RESET_BACKUP);
+              SetForegroundWindow(StemWin);
+            }
+            // Save
+            else
+            {
+              //TRACE("save config file %s\n",FilNam.Text);
+              SaveAllDialogData(false,"",&CSF); // radical!
+              CSF.SetStr("Machine","WakeUpState",EasyStr(WAKE_UP_STATE));
+            }     
+            CSF.Close();
+          }
+        }
+#endif//SSE_GUI_CONFIG_FILE
       }else{
         if (HIWORD(wPar)==0){
           switch (LOWORD(wPar)){
@@ -1252,7 +1303,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
     case 106:
       Disp.ChangeToWindowedMode();
       break;
-#if !defined(SSE_VAR_NO_UPDATE)
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_NO_UPDATE))
     case 120:
       if (UpdateWin){
         SendMessage(hBut,BM_SETCHECK,1,0);
@@ -1261,6 +1312,26 @@ void HandleButtonMessage(UINT Id,HWND hBut)
       }
       break;
 #endif
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_CONFIG_FILE)
+/*  Player has clicked on the 'Configuration' icon, this makes a
+    popup menu appear, 'Load configuration file' or 'Save configuration file'.
+*/
+    case 121:
+    {
+      RECT rc;
+      GetWindowRect(hBut,&rc);
+      HMENU Pop=CreatePopupMenu();
+      AppendMenu(Pop,MF_STRING,443,T("Load configuration file"));
+      AppendMenu(Pop,MF_STRING,444,T("Save configuration file"));
+      SendMessage(hBut,BM_SETCHECK,1,0);
+      TrackPopupMenu(Pop,TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
+                      rc.left,rc.bottom,0,StemWin,NULL);
+      SendMessage(hBut,BM_SETCHECK,0,0);
+      DestroyMenu(Pop);	    
+      break;
+    }
+#endif
+
     case 108:
     {
       EasyStringList sl;

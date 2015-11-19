@@ -704,6 +704,18 @@ bool Initialise()
     SetNotifyInitText(T("ST Operating System"));
     if (IntroResult==2){
       ROMFile=CSF.GetStr("Machine","ROM_File",RunDir+SLASH "tos.img");
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_CONFIG_FILE2)
+      // add current TOS path if necessary
+      if(strchr(ROMFile.Text,SLASHCHAR)==NULL) // no slash = no path
+      {
+        //ASSERT(OptionBox.TOSBrowseDir.NotEmpty());//asserts
+        EasyStr tmp=CSF.GetStr("Machine","ROM_Add_Dir",RunDir) + SLASH + ROMFile;
+        ROMFile=tmp;
+        //TRACE("main TOS: %s\n",ROMFile.Text);
+      }
+#endif
+
       if (StepByStepInit){
         if (Alert(T("A different TOS version may help to stop Steem crashing, would you like to choose one?"),
                      T("Change TOS?"),MB_ICONQUESTION | MB_YESNO)==IDYES){

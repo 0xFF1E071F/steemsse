@@ -57,6 +57,9 @@ void LoadAllDialogData(bool FirstLoad,Str INIFile,bool *SecDisabled,GoodConfigSt
 
   SEC(PSEC_SNAP){
     LastSnapShot=pCSF->GetStr("Main","LastSnapShot",WriteDir+SLASH+T("memory snapshots")+SLASH);
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_CONFIG_FILE)
+    LastCfgFile=pCSF->GetStr("Main","LastCfgFile",WriteDir+SLASH+T("config")+SLASH);
+#endif
     Str Dir=LastSnapShot;
     RemoveFileNameFromPath(Dir,REMOVE_SLASH);
     if (GetFileAttributes(Dir)==0xffffffff){
@@ -157,6 +160,9 @@ void SaveAllDialogData(bool FinalSave,Str INIFile,ConfigStoreFile *pCSF)
   for (int n=0;n<10;n++){
     pCSF->SetStr("Main",Str("SnapShotHistory")+n,StateHist[n]);
   }
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_CONFIG_FILE)
+  pCSF->SetStr("Main","LastCfgFile",LastCfgFile);
+#endif
   pCSF->SetInt("Main","PasteSpeed",PasteSpeed);
 
   int i=pCSF->GetInt("Display","ScreenShotUseFullName",999);
@@ -1430,7 +1436,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_VID_D3D_LIST_MODES)
   pCSF->SetStr("Display","D3DMode",EasyStr(Disp.D3DMode));
 #endif
-#if defined(SSE_INT_MFP_OPTION)
+#if defined(SSE_INT_MFP_OPTION)//TODO
   pCSF->SetStr("Option","MC68901",EasyStr(OPTION_PRECISE_MFP));
 #endif
 #if defined(SSE_TOS_PRG_AUTORUN)
@@ -1595,8 +1601,22 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetStr("Option","FinetuneCPUclock",EasyStr(OPTION_CPU_CLOCK));
   pCSF->SetStr("Machine","CpuCustomHz",EasyStr(CpuCustomHz));
 #endif
-
+#if defined(SSE_GUI_CONFIG_FILE2)
+/*  v3.8.0 Remove path info if it's TOS browse path.
+    We do that to make config files more portable: the full path
+    is individual, but TOS files are universal.
+*/
+  EasyStr tmp=ROMFile;
+  RemoveFileNameFromPath(tmp,REMOVE_SLASH);
+  if(tmp==TOSBrowseDir)
+  {
+      tmp=GetFileNameFromPath(ROMFile.Text); // don't change ROMFile itself
+      pCSF->SetStr("Machine","ROM_File",tmp);
+  }
+  else
+#endif
   pCSF->SetStr("Machine","ROM_File",ROMFile);
+  TRACE("write ROM_Add_Dir = %s\n",TOSBrowseDir.Text);
   pCSF->SetStr("Machine","ROM_Add_Dir",TOSBrowseDir);
   pCSF->SetStr("Machine","Cart_File",CartFile);
   pCSF->SetStr("Machine","LastCartFile",LastCartFile);

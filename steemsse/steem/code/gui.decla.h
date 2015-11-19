@@ -538,6 +538,9 @@ void CleanUpSteem();
 EXT bool StepByStepInit;
 EXT EasyStr RunDir,WriteDir,INIFile,ScreenShotFol;
 EXT EasyStr LastSnapShot,BootStateFile,StateHist[10],AutoSnapShotName;
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_CONFIG_FILE)
+EXT EasyStr LastCfgFile;
+#endif
 EXT Str BootDisk[2];
 
 #define BOOT_PASTI_DEFAULT 0

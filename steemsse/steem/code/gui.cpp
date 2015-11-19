@@ -153,6 +153,9 @@ Str Comlines[NUM_COMLINES]={Comlines_Default[0][0],Comlines_Default[1][0],Comlin
 bool StepByStepInit=0;
 EasyStr RunDir,WriteDir,INIFile,ScreenShotFol;
 EasyStr LastSnapShot,BootStateFile,StateHist[10],AutoSnapShotName="auto";
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_CONFIG_FILE)
+EasyStr LastCfgFile;
+#endif
 Str BootDisk[2];
 
 int BootPasti=BOOT_PASTI_DEFAULT;
@@ -914,7 +917,12 @@ void GUIRefreshStatusBar() {
   {
     // compute free width
     RECT window_rect1,window_rect2,window_rect3;
+    // last icon on the left is...
+#if defined(SSE_GUI_CONFIG_FILE)
+    HWND previous_icon=GetDlgItem(StemWin,121); // config
+#else
     HWND previous_icon=GetDlgItem(StemWin,114); // paste
+#endif
     HWND next_icon=GetDlgItem(StemWin,105); // info
     GetWindowRect(previous_icon,&window_rect1);
     GetWindowRect(next_icon,&window_rect2);
@@ -928,7 +936,11 @@ void GUIRefreshStatusBar() {
 #endif    
 
     // resize status bar without trashing other icons
+#if defined(SSE_GUI_CONFIG_FILE) // TODO, more "pro"
+    MoveWindow(status_bar_win,23*7,0,w,window_rect3.bottom-window_rect3.top,FALSE);
+#else
     MoveWindow(status_bar_win,23*6,0,w,window_rect3.bottom-window_rect3.top,FALSE);
+#endif
   }
 
   // show or hide
@@ -1190,8 +1202,11 @@ void LoadAllIcons(ConfigStoreFile *NOT_ONEGAME( pCSF ),bool NOT_ONEGAME( FirstCa
     }
 #endif
     for (int n=0;n<nStemDialogs;n++) DialogList[n]->UpdateMainWindowIcon();
-
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_CONFIG_FILE)
+    for (int id=100;id<=120+1;id++){
+#else
     for (int id=100;id<=120;id++){
+#endif
       if (GetDlgItem(StemWin,id)) PostMessage(GetDlgItem(StemWin,id),BM_RELOADICON,0,0);
     }
     DiskMan.LoadIcons();
@@ -1337,6 +1352,13 @@ bool MakeGUI()
   ToolAddWindow(ToolTip,Win,T("Steem Update Available! Click Here For Details!"));
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_CONFIG_FILE)
+  // new 'wrench' icon for config files, popup menu when left click
+  Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_CFG),WS_CHILDWINDOW
+    | WS_VISIBLE,x,0,20,20,StemWin,(HMENU)121,Inst,NULL);
+  ToolAddWindow(ToolTip,Win,T("Load/save configuration file"));
+  x+=23;
+#endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_GUI_STATUS_STRING)  
 /*  Create a static control as text status bar. We take the undef update icon's
@@ -1355,7 +1377,6 @@ bool MakeGUI()
     |SS_CENTERIMAGE // vertically
 #endif
     ,x, 0,50,20,StemWin,(HMENU)120,Inst,NULL);
-
 #endif
 
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_INFO),WS_CHILD | WS_VISIBLE,

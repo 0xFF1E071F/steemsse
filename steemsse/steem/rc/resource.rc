@@ -134,6 +134,9 @@ RC_ICO_OPS_SSE ICON "options_sse.ico"
 RC_ICO_OPS_C1 ICON "options_C1.ico"
 RC_ICO_OPS_C2 ICON "options_C2.ico"
 #endif
+#ifdef SSE_GUI_CONFIG_FILE 
+RC_ICO_CFG ICON "config.ico"
+#endif
 RC_ICO_SOUND ICON "options_sound.ico"
 RC_ICO_EXTERNAL ICON "options_ports.ico"
 RC_ICO_CHIP ICON "options_tos.ico"
