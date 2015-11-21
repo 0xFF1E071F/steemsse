@@ -240,6 +240,9 @@ void TDiskManager::SetNumFloppies(int NewNum)
 	}
 #endif
   CheckResetDisplay();
+#if defined(SSE_GUI_STATUS_STRING_380)
+  GUIRefreshStatusBar();
+#endif
 }
 //---------------------------------------------------------------------------
 #ifdef WIN32 // SS: big block
@@ -1907,13 +1910,16 @@ That will toggle bit x.
 #if defined(SSE_GUI_OPTIONS_REFRESH)
           OptionBox.SSEUpdateIfVisible(); // other way
 #endif
-#if defined(SSE_GUI_STATUS_STRING_ADAT)
+#if defined(SSE_GUI_STATUS_STRING_ADAT) && SSE_VERSION<380
           GUIRefreshStatusBar();
 #endif
 #else
           InvalidateRect(GetDlgItem(Win,98),NULL,0);
           InvalidateRect(GetDlgItem(Win,99),NULL,0);
           CheckResetDisplay();
+#endif
+#if defined(SSE_GUI_STATUS_STRING_ADAT) && SSE_VERSION>=380
+          GUIRefreshStatusBar();
 #endif
           break;
         case 2014:
@@ -3587,6 +3593,20 @@ void TDiskManager::ExtractArchiveToSTHardDrive(Str Path)
 void TDiskManager::EjectDisk(int Drive)
 {
   FloppyDrive[Drive].RemoveDisk();
+
+#ifdef SSE_TOS_PRG_AUTORUN2
+  if(SF314[Drive].ImageType.Extension==EXT_PRG
+    ||SF314[Drive].ImageType.Extension==EXT_TOS)
+  {
+    HardDiskMan.DisableHardDrives=true; // we suppose it's wanted
+#ifdef SSE_GUI_DISK_MANAGER_HD_SELECTED // update icon
+    HWND icon_handle=GetDlgItem(Handle,10);
+    SendMessage(icon_handle,BM_SETCHECK,!HardDiskMan.DisableHardDrives,0);
+#endif
+  }
+  SF314[Drive].ImageType.Extension=0;
+#endif
+
 #ifdef WIN32
   if (Handle){
     SendMessage(GetDlgItem(Handle,100+Drive),LVM_DELETEITEM,0,0);

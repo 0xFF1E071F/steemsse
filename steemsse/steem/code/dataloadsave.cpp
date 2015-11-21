@@ -513,6 +513,9 @@ bool TAcsiHardDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,boo
       }
     }
     UPDATE;//what is this?
+#ifdef SSE_GUI_DISK_MANAGER_HD_SELECTED
+    SendMessage(GetDlgItem(DiskMan.Handle,11),BM_SETCHECK,SSEConfig.AcsiImg,0);
+#endif
   }
 
   return true;
@@ -939,6 +942,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     file. This seems appropriate behaviour.
 */
     BootStateFile=pCSF->GetStr("Main","DefaultSnapshot","");
+#endif
+#if defined(SSE_STF_MATCH_TOS3)
+    Tos.DefaultCountry=pCSF->GetInt("Main","TosDefaultCountry",7);
 #endif
 #if defined(SSE_GUI_OPTION_FOR_TESTS)
     SSE_TEST_ON=pCSF->GetInt("Options","TestingNewFeatures",SSE_TEST_ON);
@@ -1605,10 +1611,12 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 /*  v3.8.0 Remove path info if it's TOS browse path.
     We do that to make config files more portable: the full path
     is individual, but TOS files are universal.
+    Only for those config files, not steem.ini, so older versions
+    of Steem won't be lost.
 */
   EasyStr tmp=ROMFile;
   RemoveFileNameFromPath(tmp,REMOVE_SLASH);
-  if(tmp==TOSBrowseDir)
+  if(!FinalSave&&tmp==TOSBrowseDir)
   {
       tmp=GetFileNameFromPath(ROMFile.Text); // don't change ROMFile itself
       pCSF->SetStr("Machine","ROM_File",tmp);
