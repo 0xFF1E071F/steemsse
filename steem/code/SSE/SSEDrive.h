@@ -2,8 +2,6 @@
 #ifndef SSEDRIVE_H
 #define SSEDRIVE_H
 
-
-
 #if defined(SSE_DRIVE)
 
 #include "SSEParameters.h"
@@ -93,7 +91,7 @@ struct TSF314 {
 #endif
 #endif//sound
 
-#if defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)//debug only?
+#if defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)//debug only
   WORD SectorChecksum;
 #endif
 
@@ -120,7 +118,9 @@ struct TSF314 {
 #endif
 
 #if defined(SSE_DRIVE_INDEX_PULSE)
+#if !defined(SSE_DRIVE_INIT2)
   WORD rpm; // default 300
+#endif
   int time_of_next_ip;
   int time_of_last_ip;
 #endif

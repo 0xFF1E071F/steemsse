@@ -64,6 +64,7 @@ void TImageSTW::Close() {
     TRACE_LOG("STW %s image\n",FloppyDrive[Id].WrittenTo?"save and close":"close");
 #endif
     fseek(fCurrentImage,0,SEEK_SET); // rewind
+    ASSERT(ImageData);
     if(ImageData)
 #ifdef SSE_DISK_STW2
       if(FloppyDrive[Id].WrittenTo)
@@ -235,6 +236,7 @@ bool TImageSTW::Open(char *path) {
               ok=false;
           }//nxt side
         }//nxt track
+        ASSERT(ok);
         TRACE_LOG("Open STW %s, V%X S%d T%d B%d OK%d\n",path,Version,nSides,nTracks,nBytes,ok); 
 #endif
       }

@@ -187,7 +187,9 @@ void power_on()
     SF314[floppyno].motor_on=false;
 #endif
 #ifdef SSE_DISK_STW
+#if !defined(SSE_DRIVE_INIT2)
     SF314[floppyno].rpm=300; // temp
+#endif
     WD1772.Lines.motor=false;
 #endif
 #endif
@@ -253,7 +255,7 @@ void reset_peripherals(bool Cold)
 #ifdef SSE_DEBUG
 #if SSE_VERSION>=380 
   TRACE_LOG("Reset (%d)\n",Cold);
-  TRACE_OSD("RESET"); // always interesting to know
+ // TRACE_OSD("RESET"); // always interesting to know//see CMB
 #else
   if(Cold)
     TRACE_LOG("Reset peripherals (cold)\n");
