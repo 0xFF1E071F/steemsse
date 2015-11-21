@@ -138,7 +138,7 @@ void TSF314::Init() {
   SectorChecksum=0;
 #endif
 
-#if defined(SSE_DRIVE_INIT)
+#if defined(SSE_DRIVE_INIT)//MFD
 
 #if defined(SSE_DRIVE_STATE)
     State.motor=false;
@@ -387,7 +387,12 @@ int TSF314::CyclesPerByte() {
 #else
   int cycles=8000000; // per second  
 #endif
+#if defined(SSE_DRIVE_INIT2)
+  cycles/=RPM/60; // per rotation (300/60 = 5)
+#else
+  ASSERT(rpm==300);//argh!
   cycles/=rpm/60; // per rotation (300/60 = 5)
+#endif
   cycles/=Disk[Id].TrackBytes; // per byte
   cycles_per_byte=cycles; // save
   ASSERT(cycles);
@@ -466,7 +471,11 @@ void TSF314::IndexPulse() {
     }
     else
 #endif
+    {
+      //TRACE("time_of_next_ip %d time_of_last_ip %d CyclesPerByte() %d Disk[Id].TrackBytes %d\n",time_of_next_ip,time_of_last_ip,CyclesPerByte(),Disk[Id].TrackBytes);
+      // time_of_next_ip 21210123 time_of_last_ip 13188876 CyclesPerByte() 1 Disk[Id].TrackBytes 6256
       time_of_next_ip=time_of_last_ip + CyclesPerByte() * Disk[Id].TrackBytes;
+    }
   }
 #if !defined(SSE_DRIVE_INDEX_PULSE2)
   else //as a safety, or it could hang //TODO

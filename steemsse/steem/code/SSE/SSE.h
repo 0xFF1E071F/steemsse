@@ -124,7 +124,7 @@ Beta: not SSE_PRIVATE_BUILD
 // VERSION //
 /////////////
 
-#define SSE_VERSION 380 // versions down to 340 still compile //TODO->320
+#define SSE_VERSION 380 // versions down to 340 still compile
 
 #if SSE_VERSION>372 //last release
 #define SSE_BETA //title, OSD, plus some testing - new features
@@ -195,7 +195,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_BLITTER    // spelled BLiTTER by those in the known!
 #define SSE_CPU        // MC68000 microprocessor
-#define SSE_GLUE       // TODO
+#define SSE_GLUE       // General Logic Unit
 #define SSE_INTERRUPT  // HBL, VBL, MFP
 #define SSE_FLOPPY     // DMA, FDC, Pasti, etc
 #define SSE_KEYBOARD   // ACIA, IKBD
@@ -4493,6 +4493,8 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//beta
 
 #if defined(SSE_BETA_BUGFIX)
+//#define SSE_DRIVE_INIT // was never defined -> MFD
+#define SSE_DRIVE_INIT2 //bugfix, don't play with 300 rpm (remove 2)
 #define SSE_INT_MFP_UTIL2 // bugfix parameter not used
 #undef SSE_SHIFTER_STE_READ_SDP_HSCROLL1 //v3.7 breaks 20year STE intro
 #endif//bugfix

@@ -1424,9 +1424,9 @@ void TWD1772::OnIndexPulse(int id) {
 #ifdef SSE_DEBUG
   if(prg_phase!=WD_READY)
 #if defined(SSE_DRIVE_INDEX_PULSE2)
-  TRACE_LOG("%c: IP #%d (%s) (%s) CR %X TR %d SR %d DR %d STR %X\n",
-    'A'+id,IndexCounter,wd_phase_name[prg_phase],image_triggered?"triggered":"timeout",
-    CR,TR,SR,DR,STR);
+  TRACE_LOG("%c: IP #%d (%s) (%s) CR %X TR %d SR %d DR %d STR %X ACT %d\n",
+    'A'+id,IndexCounter,wd_phase_name[prg_phase],image_triggered?"triggered":"event",
+    CR,TR,SR,DR,STR,ACT);
 #else
   TRACE_LOG("%c: IP #%d (%s) CR %X TR %d SR %d DR %d\n",
     'A'+id,IndexCounter,wd_phase_name[prg_phase], CR,TR,SR,DR);
@@ -1464,7 +1464,7 @@ void TWD1772::OnIndexPulse(int id) {
       //TRACE_LOG("%d IP for stop track operation\n",IndexCounter);
       if(CR&CR_TYPEIII_WRITE)
       {
-        TRACE_LOG("Format %c:%d-%d ",'A'+DRIVE,CURRENT_SIDE,CURRENT_TRACK);
+        TRACE_LOG("Format track %c:S%d T%d (DMA %d sectors)\n",'A'+DRIVE,CURRENT_SIDE,CURRENT_TRACK,Dma.Counter);
         prg_phase=WD_TYPEIII_WRITE_DATA;
 #if defined(SSE_WD1772_F7_ESCAPE)
         F7_escaping=false;
@@ -1474,7 +1474,7 @@ void TWD1772::OnIndexPulse(int id) {
       else
       {
         //TRACE_LOG("Start reading track\n");
-        TRACE_LOG("Read track %c:%d-%d ",'A'+DRIVE,CURRENT_SIDE,CURRENT_TRACK);
+        TRACE_LOG("Read track %c:S%d F%d  (DMA %d sectors)\n",'A'+DRIVE,CURRENT_SIDE,CURRENT_TRACK,Dma.Counter);
         prg_phase=WD_TYPEIII_READ_DATA;
 #if defined(SSE_WD1772_AM_LOGIC)
         Amd.Reset();
@@ -2102,7 +2102,7 @@ r1       r0            1772
       Lines.write=1;
       Mfm.data=0;
       Mfm.Encode(); 
-      TRACE_FDC("write %X at byte %d\n",Mfm.data,Disk[DRIVE].current_byte);
+      //TRACE_FDC("write %X at byte %d\n",Mfm.data,Disk[DRIVE].current_byte);
       CrcLogic.Add(Mfm.data); // shouldn't matter
       Write();
     }
@@ -2110,7 +2110,7 @@ r1       r0            1772
     {
       Mfm.data=0xA1;
       Mfm.Encode(TWD1772MFM::FORMAT_CLOCK); 
-      TRACE_FDC("write %X at byte %d, reset CRC\n",Mfm.data,Disk[DRIVE].current_byte);
+      //TRACE_FDC("write %X at byte %d, reset CRC\n",Mfm.data,Disk[DRIVE].current_byte);
       CrcLogic.Add(Mfm.data); // before reset   
       CrcLogic.Reset();
       Write();
