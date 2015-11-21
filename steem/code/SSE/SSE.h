@@ -4465,11 +4465,16 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif//sft
 
+#ifdef SSE_STF
+#define SSE_STF_MATCH_TOS3 // + default country
+#endif
+
 #ifdef SSE_TOS
 //#define DISABLE_STEMDOS
 //#define DISABLE_STEMDOS2//TODO
 #define SSE_TOS_GEMDOS_DRVBIT // sooner
-#define SSE_TOS_GEMDOS_RESTRICT_TOS3 // EmuTOS
+#define SSE_TOS_GEMDOS_RESTRICT_TOS3 // EmuTOS + PRG/TOS
+#define SSE_TOS_PRG_AUTORUN2
 #endif
 
 #ifdef SSE_VARIOUS

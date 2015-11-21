@@ -2,6 +2,7 @@
 #ifndef STEMDOS_DECLA_H
 #define STEMDOS_DECLA_H
 
+#include <dirsearch.h>
 
 #define EXT extern
 #define INIT(s)
@@ -188,6 +189,9 @@ void STStringToPC(char*),PCStringToST(char*);
 
 struct TTos {
   BYTE LastPTermedProcess; //to go around (Steem) bug...
+#if defined(SSE_STF_MATCH_TOS3)
+  BYTE DefaultCountry;
+#endif
 #if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2) //version with refactoring
   EasyStr GetNextTos(DirSearch &ds); // to enumerate TOS files
   void GetTosProperties(EasyStr Path,WORD &Ver,BYTE &Country,WORD &Date);

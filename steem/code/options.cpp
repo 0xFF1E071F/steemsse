@@ -392,19 +392,30 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
 #endif//SSE_TOS_SNAPSHOT_AUTOSELECT3
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_STF_MATCH_TOS)
-
 #if defined(SSE_STF_MATCH_TOS2) // 1.62 instead of 1.06
           // remember paths of default TOS for STF and STE
+
+#if defined(SSE_STF_MATCH_TOS3) 
+          if(Ver==DEFAULT_TOS_STF && Date<0x2000
+            &&(KnownSTETosPath.Empty()||Country==Tos.DefaultCountry))
+#else
           if(Ver==DEFAULT_TOS_STF
+
 #if !defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) // check each time, HD may be on/off
             && KnownSTFTosPath.Empty()
 #endif
           )
+#endif
           {
             //TRACE_LOG("Memorising %s for TOS%X\n",Path.c_str(),Ver);
             KnownSTFTosPath=Path;
           }
+#if defined(SSE_STF_MATCH_TOS3) 
+          else if(Ver==DEFAULT_TOS_STE && Date<0x2000
+            &&(KnownSTETosPath.Empty()||Country==Tos.DefaultCountry)) 
+#else
           else if(Ver==DEFAULT_TOS_STE && KnownSTETosPath.Empty())
+#endif
           {
             //TRACE_LOG("Memorising %s for TOS%X\n",Path.c_str(),Ver);
             KnownSTETosPath=Path;
@@ -2109,6 +2120,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
         case 8601: // Cold reset
           if (HIWORD(wPar)==BN_CLICKED) 
+          {//SS
             reset_st(RESET_COLD | RESET_STOP | RESET_CHANGESETTINGS | RESET_BACKUP);
 #if defined(SSE_TOS_WARNING1)
             CheckSTTypeAndTos();
@@ -2116,6 +2128,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) // warning
             HardDiskMan.CheckTos();
 #endif
+          }//SS
           break;
         case 8401: // Keyboard language
           if (HIWORD(wPar)==CBN_SELENDOK){

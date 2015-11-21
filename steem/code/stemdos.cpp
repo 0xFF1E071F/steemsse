@@ -120,6 +120,7 @@ int stemdos_get_boot_drive()
   // the control key is being held down
   bool NoControl=true;
   if (CutDisableKey[VK_CONTROL]==0) NoControl=(GetKeyState(VK_CONTROL)<0)==0;
+ // ASSERT(!FloppyDrive[0].DiskInDrive());
   if (FloppyDrive[0].DiskInDrive() && NoControl) return 0;
 
 #if defined(SSE_TOS_PRG_AUTORUN)
@@ -1569,6 +1570,13 @@ void stemdos_intercept_trap_1()
       return;
     }case 0x0E:{  //long SetDrv(short Drive) //For Drive 0=A, 1=B, 2=C
       log(Str("STEMDOS: Set current drive to ")+char('A'+m68k_dpeek(sp+2))+":");
+#if defined(SSE_TOS_PRG_AUTORUN2)
+      if(OPTION_PRG_SUPPORT && (SF314[DRIVE].ImageType.Extension==EXT_PRG
+#if defined(SSE_TOS_TOS_AUTORUN)
+      || SF314[DRIVE].ImageType.Extension==EXT_TOS
+#endif
+      )) ; else
+#endif
       stemdos_current_drive=BYTE(m68k_dpeek(sp+2));
       return;   //let Gemdos set its drive
 
@@ -1997,15 +2005,15 @@ void stemdos_trap_1_Fdup(){
     parameter, which may cause some crashes.
     Hence this hack.
 */
-  TRACE_LOG("Call TOS $45 (3) Fdup\n");
+  //TRACE_LOG("Call TOS $45 (3) Fdup\n");
   if(SSE_HACKS_ON)
   {//this is macro
-    m68k_PUSH_L(3); 
+    TRACE_LOG("Call TOS $45 (3 L) Fdup\n");
+    m68k_PUSH_L(3); //3
   }
   else
 #endif
-    m68k_PUSH_W(3);
-
+    m68k_PUSH_W(3); 
   m68k_PUSH_W(0x45);
   STEMDOS_TRAP_1;
 }
@@ -2086,13 +2094,9 @@ void stemdos_restore_path_buffer(){
 }
 */
 
-#undef LOGSECTION
-
-#define LOGSECTION LOGSECTION_INIT
-
 void stemdos_init()
 {
-  TRACE_LOG("stemdos_init!\n");
+  TRACE_INIT("stemdos_init\n");
   for (int n=0;n<26;n++){
     mount_flag[n]=false;
     mount_path[n]="";
@@ -2117,7 +2121,6 @@ void stemdos_init()
   stemdos_Pexec_file=NULL;
 }
 
-#undef LOGSECTION
 //---------------------------------------------------------------------------
 // Misc functions to deal with special chars in file names
 //---------------------------------------------------------------------------
@@ -2210,6 +2213,16 @@ void TTos::GetTosProperties(EasyStr Path,WORD &Ver,BYTE &Country,WORD &Date) {
     fseek(f,0x1e,SEEK_SET);
     fread(&b_high,1,1,f);fread(&b_low,1,1,f);
     Date=MAKEWORD(b_low,b_high);
+
+
+#ifdef TEST01___
+    DWORD check_emutos;
+    fseek(f,0x2C,SEEK_SET);
+    fread(&check_emutos,sizeof(DWORD),1,f);
+      )!=0x45544F53 
+#endif
+
+
     TRACE_INIT("TOS v%X country %X date %X path %s\n",Ver,Country,Date,Path.Text);
     fclose(f);
   }
@@ -2227,7 +2240,7 @@ void TTos::CheckKeyboardClick() {
 
 #endif
 
-
+#undef LOGSECTION
  
 
 #endif//#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2)
