@@ -88,12 +88,12 @@ void TOptionBox::CreateMachinePage()
 #endif
 #if defined(SSE_GUI_OPTIONS_WU_IN_MACHINE)
 #if defined(SSE_MMU_WAKE_UP)
-  long Offset=Wid+40;
+  long Offset=Wid+40-20;
   Wid=get_text_width(T("Wake-up state"));
   CreateWindow("Static",T("Wake-up state"),WS_CHILD,
     page_l+Offset,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
   Win=MMUWakeUpOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
-    page_l+5+Wid+Offset,y,85,200,Handle,(HMENU)212,HInstance,NULL);
+    page_l+5+Wid+Offset,y,85+20,200,Handle,(HMENU)212,HInstance,NULL);
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("Ignore"));
 
 #if defined(SSE_MMU_WU_DL)
@@ -1386,8 +1386,9 @@ void TOptionBox::CreateFullscreenPage()
   y+=LineHeight;
   Wid+=w;
 #endif
-
-#if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION)
+  
+#if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION) && !defined(SSE_VID_STRETCH_ASPECT_RATIO)
+  // option has been moved
   y-=LineHeight;
 #if defined(SSE_VID_D3D_CRISP_OPTION)
   y-=7;
@@ -1408,7 +1409,12 @@ void TOptionBox::CreateFullscreenPage()
 #endif
 
 #if defined(SSE_VID_D3D_CRISP_OPTION)
+#if defined(SSE_VID_STRETCH_ASPECT_RATIO)
+  y-=LineHeight;
+  Offset+=Wid+HorizontalSeparation;
+#else
   y-=LineHeight/2; // this is hard to fit!
+#endif
   Wid=GetCheckBoxSize(Font,T("Crisp rendering")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
   Win=CreateWindow("Button",T("Crisp rendering"),mask,
@@ -2942,6 +2948,17 @@ Windows 2000	5.0
     T("Very technical - Some demos will display correctly only in one of those states."));
   y+=LineHeight;
 #endif
+#endif
+
+#if defined(SSE_VID_STRETCH_ASPECT_RATIO)
+  Offset=0;
+  Wid=GetCheckBoxSize(Font,T("PAL aspect ratio")).Width;
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+  Win=CreateWindow("Button",T("PAL aspect ratio"),mask,
+    page_l +Offset,y-1,Wid,25,Handle,(HMENU)7315,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,OPTION_ST_ASPECT_RATIO,0);
+  ToolAddWindow(ToolTip,Win,T("The good old distorted screen. Works in window stretch mode and fullscreen D3D"));
+  y+=LineHeight;
 #endif
 
 #if defined(SSE_IKBD_6301) 

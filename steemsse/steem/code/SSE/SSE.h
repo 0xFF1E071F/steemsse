@@ -4309,7 +4309,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
 #define TEST01//quick switch
-//#define TEST02//track bug
+#define TEST02//track bug
 //#define TEST03
 //#define TEST04
 //#define TEST05
@@ -4396,7 +4396,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_GUI_STATUS_STRING)
 #undef SSE_GUI_STATUS_STRING_FULL_ST_MODEL // or more complicated
-#define SSE_GUI_STATUS_STRING_380
+#define SSE_GUI_STATUS_STRING_380 //will be just this switch for rlz
 #define SSE_GUI_STATUS_STRING_ADAT_ICON 
 #define SSE_GUI_STATUS_STRING_CHIPSET_ICON 
 #define SSE_GUI_STATUS_STRING_HACKS_ICON
@@ -4486,7 +4486,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_D3D_380
 #define SSE_VID_EXT_FS1 // fix
 #define SSE_VID_EXT_FS2 // max screen
-#define SSE_VID_SCREENSHOTS_MULTIPLE_INTERVAL //TODO?
+#define SSE_VID_STRETCH_ASPECT_RATIO 
 #if defined(SSE_VID_BORDERS)
 #define SSE_VID_BORDERS_LIMIT_TO_245
 #define SSE_VID_BORDERS_LINE_PLUS_20
