@@ -17,7 +17,7 @@ extern char ansi_name[MAX_PATH];
 //---------------------------------------------------------------------------
 void StemWinResize(int xo,int yo)
 {
-  TRACE_INIT("StemWinResize(%d,%d)\n",xo,yo);
+  //TRACE_INIT("StemWinResize(%d,%d)\n",xo,yo);
   int res=screen_res;
   if (mixed_output)
     res=1;
@@ -35,6 +35,30 @@ void StemWinResize(int xo,int yo)
                     0,0);
   }else
 #endif
+
+
+#if defined(SSE_VID_STRETCH_ASPECT_RATIO)
+/*  v3.8.0
+    With this little mod we have PAL aspect ratio in windowed mode too.
+*/
+  if (border & 1){
+    while (WinSizeBorder[res][Idx].x>GetScreenWidth()) Idx--;
+    int h=WinSizeBorder[res][Idx].y;
+    if(OPTION_ST_ASPECT_RATIO 
+      && res<2 && WinSizeForRes[res]==1 && draw_win_mode[res]==0)
+      h*=ST_ASPECT_RATIO_DISTORTION;
+    SetStemWinSize(WinSizeBorder[res][Idx].x,h,
+      xo*WinSize[res][Idx].x/640,yo*WinSize[res][Idx].y/400);
+  }else{
+    while (WinSize[res][Idx].x>GetScreenWidth()) Idx--;
+    int h=WinSize[res][Idx].y;
+    if(OPTION_ST_ASPECT_RATIO 
+      && res<2 && WinSizeForRes[res]==1 && draw_win_mode[res]==0)
+      h*=ST_ASPECT_RATIO_DISTORTION;
+    SetStemWinSize(WinSize[res][Idx].x,h,
+      xo*WinSize[res][Idx].x/640,yo*WinSize[res][Idx].y/400);
+  }
+#else
   if (border & 1){
     while (WinSizeBorder[res][Idx].x>GetScreenWidth()) Idx--;
     SetStemWinSize(WinSizeBorder[res][Idx].x,WinSizeBorder[res][Idx].y,
@@ -44,6 +68,8 @@ void StemWinResize(int xo,int yo)
     SetStemWinSize(WinSize[res][Idx].x,WinSize[res][Idx].y,
       xo*WinSize[res][Idx].x/640,yo*WinSize[res][Idx].y/400);
   }
+#endif
+
 #if defined(SSE_VID_D3D1)
   if(D3D9_OK && SSE_OPTION_D3D)
     Disp.D3DSpriteInit(); //smooth res changes (eg in GEM)
@@ -974,7 +1000,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           (cw==(4+640+ 4* SideBorderSizeWin) 
 #endif
           && ch==(MENUHEIGHT+4+400 + 2*(BORDER_TOP+BottomBorderSize)));
-        TRACE_LOG("CanUse_400 %d cw %d %d ch %d %d\n",CanUse_400,cw,(4+640+ 4* SideBorderSizeWin),ch,(MENUHEIGHT+4+400 + 2*(BORDER_TOP+BottomBorderSize)));
+        //TRACE_LOG("CanUse_400 %d cw %d %d ch %d %d\n",CanUse_400,cw,(4+640+ 4* SideBorderSizeWin),ch,(MENUHEIGHT+4+400 + 2*(BORDER_TOP+BottomBorderSize)));
       }else{
         CanUse_400=(cw==644 && ch==404+MENUHEIGHT);
       }
@@ -1132,20 +1158,40 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 #define myHdc ((DRAWITEMSTRUCT*)lPar)->hDC 
 #define status_bar ansi_name
 #define myRect ((DRAWITEMSTRUCT*)lPar)->rcItem
-        HWND status_bar_win=GetDlgItem(StemWin,120); // get handle
+        HWND status_bar_win=GetDlgItem(StemWin,wPar); // get handle
         ASSERT(status_bar_win);
         // erase rectangle (different colour for hires)
         FillRect(myHdc,&((DRAWITEMSTRUCT*)lPar)->rcItem,((COLOUR_MONITOR)?
           (HBRUSH)(COLOR_MENU+1):(HBRUSH)(COLOR_WINDOWFRAME+1)));
         GUIRefreshStatusBar(false); // make sure the string is correct
         ASSERT(status_bar);
-#if !defined(BCC_BUILD) // old compiler
+#if !defined(BCC_BUILD) && !(defined(VC_BUILD) && _MSC_VER<=1200) // old compilers
         ASSERT(strnlen(status_bar,MAX_PATH)<MAX_PATH);
 #endif
         int nchars=strlen(status_bar); // safe version?
         SIZE Size;
         GetTextExtentPoint32(myHdc,status_bar,nchars,&Size);
         myRect.left=myRect.right/2-Size.cx/2;
+        // smart coding alert! (should resolve in only 1 switch for v3.8.0)
+#if defined(SSE_GUI_STATUS_STRING_ADAT_ICON)
+        if(ADAT)
+          myRect.left-=8;
+#endif
+#if defined(SSE_GUI_STATUS_STRING_HD_ICON) && defined(SSE_GUI_STATUS_STRING_HD)
+        if(!HardDiskMan.DisableHardDrives||ACSI_EMU_ON)
+          myRect.left-=8;
+#endif
+#if defined(SSE_GUI_STATUS_STRING_CHIPSET_ICON)
+        if(HD6301EMU_ON)
+          myRect.left-=8;
+        if(OPTION_PRECISE_MFP)
+          myRect.left-=8;
+#endif
+#if defined(SSE_GUI_STATUS_STRING_HACKS) && defined(SSE_GUI_STATUS_STRING_HACKS_ICON)
+        if(SSE_HACKS_ON)
+          myRect.left-=8;
+#endif
+        //ASSERT(myRect.left>=0);//that would be stupid
         TextOut(myHdc,myRect.left,3,status_bar,nchars);
         if(SSE_STATUS_BAR && M68000.ProcessingState==TM68000::NORMAL) 
         {
