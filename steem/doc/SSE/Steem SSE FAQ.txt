@@ -1,7 +1,7 @@
 Steem SSE FAQ
 ---------------
 
-v3.8.0
+v3.7.3
 
 Q:
 What is Steem?
@@ -32,16 +32,24 @@ churning out crappy DTV movies just for the money?
 
 
 Q:
+Why should I use the SSE version and not the older version?
+A:
+It depends on what you need the emulator for. If you want to check all
+sorts of demos, I strongly recommend the SSE version. For most games,
+Steem 3.2 is still alright (there are exceptions).
+
+
+Q:
 How much does it cost?
 A:
 Steem is free software.
 
 
 Q:
-Why use Steem and not X or Y?
+Why use Steem and not emulator X or Y?
 A:
-For the nice GUI, for very high compatibility, for some unique features.
-If you're in Linux or want to emulate the Falcon, that's another story.
+For the nice GUI, for very high compatibility, for some unique features
+(especially in Windows).
 
 
 Q:
@@ -66,7 +74,7 @@ an image of one of those roms to use Steem.
 
 To get started you will find some TOS on the Steem SSE site:
 
-http://ataristeven.t15.org/Other_downloads.htm
+http://ataristeven.exxoshost.co.uk/Other_downloads.htm
 or here:
 http://www.avtandil.narod.ru/tose.html
 
@@ -265,6 +273,18 @@ restarting Steem gives you control back.
 
 
 Q:
+With Windows 8 or 10, the mouse is all over the place.
+A:
+I haven't been able to reproduce this yet, but I suspect this isn't a Steem
+bug. At this point, you'll have better luck with some search engine.
+You could try:
+
+- With other versions of Steem, including the "NoD3D" ones.
+- If options C1, mouse speed make a difference (please check the manual).
+- run without Hyper-V if you're using it
+
+
+Q:
 When Pasti is on, the red led for writing doesn't seem to work.
 A:
 It's because Pasti (v0.2h) doesn't attempt to emulate correct timings for
@@ -286,12 +306,22 @@ http://freeimage.sourceforge.net/download.html
 
 
 Q:
-After starting Steem 3.7 on my Win7 machine, it asks for "D3DX9_43.dll". I 
-copied this file to the Steem directory, but still Steem refuses to start 
-(application error (0xc00007b)). 
+After starting Steem 3.7 on my Win7 or above machine, it asks for 
+D3DX9_43.dll.
+A:
+Your DX9 installation isn't complete. 
+You may try to update it, or copy D3DX9_43.dll into Steem directory.
+[available on my site: http://ataristeven.exxoshost.co.uk/Files/D3DX9_43.zip]
+
+
+Q:
+I copied D3DX9_43.dll to the Steem directory, but still Steem refuses to
+start (application error (0xc00007b)). 
 I had no problem with previous Steem versions.
 A:
 This is a common DirectX install error, no Steem bug.
+You had no problem with previous Steem versions because those didn't use
+D3D.
 Here are some hints:
 - This error seems to be caused by calling into a 64 bit DLL from a 32 bit app
 or vice versa.
@@ -303,7 +333,7 @@ You may try to reinstall it.
 - Copy the following files into Steem folder:
 d3d9.dll
 d3dx9_43.dll
-dxinput1_3.dll 
+xinput1_3.dll 
 If it doesn't help, some search engine will be more useful than me.
 There is also a NoD3D build available in case it really won't work.
 
@@ -319,16 +349,8 @@ Fortunately, those cases are rare, and we have alternatives now, like CTR
 and IPF, that also use a plugin, capsimg.dll, which is up-to-date, as well
 as SPC images using an up-to-date emulation in Steem itself.
 Who knows? Maybe one day pasti.dll will be improved.
-For those reasons directly handling STX images in Steem is not planned.
-
-
-Q:
-What's the difference between ACSI and GEMDOS hard drives?
-A:
-ACSI emulation is lower level, it operates on image files of hard disks,
-and should work as on a real Atari.
-GEMDOS emulation directly uses folders on your PC hard drive and intercepts
-TOS commands. It is more convenient but less compatible. 
+For those reasons directly handling STX images in Steem is not planned and
+those errors will remain for the time being.
 
 
 Q:
@@ -344,20 +366,14 @@ A:
 It is the state in which your ST booted, due to synchronisation between 
 various chips. It has an influence on shifter trick timings.
 You may generally ignore this option, it is useful only to check the
-display of some demos. Those are mentioned in 'Hints'.
-
-
-Q:
-A program that used to work has a wrong picture and crashes...
-A:
-One reason could be option "wake-up state", try with setting it to 'ignore'.
+display of some rare demos. Those are mentioned in 'Hints'.
 
 
 Q:
 Hey you claim to have fixed this or that issue with drive emulation but when
 I try it doesn't work.
 A:
-All drive emulation improvements operate only in if the option 'Accurate Disk
+All drive emulation improvements operate only if the option 'Accurate Disk
 Access Times (Slow)' is checked in the Disk manager, for ST, MSA, DIM disk
 images.
 For IPF, CTR, STW, SCP and HFE disk images, the option isn't necessary as 
@@ -372,6 +388,20 @@ For it to work you first need to manually remove the associations in the
 HKEY_CLASSES_ROOT part of the registry, that were put by previous versions of
 Steem.
 By the way, with most files zipped, file association makes less sense.
+
+
+Q:
+There's a strange bug, the keyboard doesn't click like on a real ST.
+A:
+If you really want that click, check sound options.
+
+
+Q:
+In release notes, you claim that "there are no bugs in this release", but
+in the next release notes, we can see that some bugs were fixed. How do you
+explain this contradiction?
+A:
+I lie.
 
 
 Q:
@@ -411,8 +441,8 @@ Now nothing keeps dedicated people from starting a Falcon branch of Steem.
 Q:
 What about Mega STE emulation?
 A:
-Maybe one day. First need to get one myself, or to have some really good tester
-with one. 
+Maybe one day. First need to get one myself, or to have some really good
+tester with one. 
 
 
 Q:
@@ -443,7 +473,7 @@ A:
 The Boiler is the amazing debugger coded by Steem authors. It is Steem with a 
 parallel window where you can check code, memory, etc., just using a powerful
 IDE. The name is a probable reference to 'Steam' and 'Engine'.
-Of course the SSE version contains many improvements. It is Windows-only.
+Of course the SSE version contains many improvements.
 
 
 Q:
@@ -483,6 +513,7 @@ You can help by testing stuff and reporting bugs.
 Q:
 I can't code, I won't help, I use Linux (only recently switched from Amiga
 OS), Hatari is better than Steem, fullscreen don't work, STW is useless, you
-suck, in fact Steven Seagull's movies are notoriously bad.
+suck, Aikido is fake, in fact Steven Seagull's movies are notoriously bad, 
+that's why all his releases are DTV!
 A:
-https://www.youtube.com/watch?v=299slo2tb0I
+https://www.youtube.com/watch?v=YIZsazaQick

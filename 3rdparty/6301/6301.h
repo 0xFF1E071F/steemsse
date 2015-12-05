@@ -67,7 +67,7 @@ int hd6301_destroy(); // like a C++ destructor
 int hd6301_reset(int Cold); 
 int hd6301_run_cycles(u_int cycles); // emulate
 int hd6301_load_save(int one_if_save, unsigned char *buffer); // for snaphot
-int hd6301_transmit_byte(u_char byte_in); // just passing through
+int hd6301_receive_byte(u_char byte_in); // just passing through
 
 #if defined(SSE_IKBD_6301_MOUSE_MASK3)
 #if defined(SSE_IKBD_6301_MOUSE_MASK)

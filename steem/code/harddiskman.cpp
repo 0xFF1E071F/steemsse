@@ -461,7 +461,13 @@ LRESULT __stdcall THardDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARA
 #if defined(SSE_ACSI_HDMAN)
         if(This->acsi)
           SSEOption.Acsi=!SendMessage(HWND(lPar),BM_GETCHECK,0,0)==BST_CHECKED;
-#endif        
+#ifdef SSE_DEBUG
+        if(This->acsi)
+          TRACE_INIT("Option ACSI %d\n",SSEOption.Acsi);
+        else
+#endif  
+          TRACE_INIT("Option GEMDOS HD %d\n",!This->DisableHardDrives);
+#endif  
 #if defined(SSE_GUI_STATUS_STRING) && defined(SSE_GUI_DISK_MANAGER_RGT_CLK_HD3)
         GUIRefreshStatusBar();
 #endif
@@ -566,9 +572,9 @@ void THardDiskManager::CheckTos() {
   { 
     if(tos_version!=0x104 && tos_version!=0x162
 #if defined(SSE_TOS_GEMDOS_RESTRICT_TOS3) 
+      && Tos.VersionWarning // steem.ini
       && ROM_LPEEK(0x2C)!=0x45544F53 // "ETOS"
-     // && stemdos_get_boot_drive()!=AUTORUN_HD // PRG and TOS support
-     && !stemdos_check_mount(AUTORUN_HD) // PRG and TOS support
+      && !stemdos_check_mount(AUTORUN_HD) // PRG and TOS support
 #else
       || ROM_PEEK(0x1E)>0x15
 #endif
@@ -588,7 +594,7 @@ void THardDiskManager::CheckTos() {
       Alert(T("GEMDOS hard disk emulation works better with Atari TOS 1.04 or 1.62."),"Warning",MB_OK|MB_ICONWARNING);
 #endif
     else
-      SSEConfig.Stemdos=true;
+      SSEConfig.Stemdos=true; //note: this has no effect
   }
 }
 #endif

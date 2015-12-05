@@ -420,8 +420,7 @@ when it does).
           break;
         }
         
-#endif // Steem 3.2
-
+#endif // Steem 3.2   
         ior_byte=0;
         if (ACIA_IKBD.rx_not_read || ACIA_IKBD.overrun==ACIA_OVERRUN_YES) ior_byte|=BIT_0; //full bit
         if (ACIA_IKBD.tx_flag==0) ior_byte|=BIT_1; //empty bit
@@ -431,7 +430,13 @@ when it does).
 
       // ACIA keyboard read data
       case 0xfffc02:
+#if defined(SSE_BOILER_ACIA_373)
+        if(mode!=STEM_MODE_CPU) 
+          return (HD6301EMU_ON)?ACIA_IKBD.RDR:ACIA_IKBD.data; 
+#else
         DEBUG_ONLY( if (mode!=STEM_MODE_CPU) return ACIA_IKBD.data; ) // boiler
+#endif
+
 #if defined(SSE_IKBD_6301)
           
           if(HD6301EMU_ON)
@@ -443,6 +448,9 @@ when it does).
               ACIA_IKBD.SR|=BIT_5; // set overrun (only now, conform to doc)
               if(ACIA_IKBD.CR&BIT_7) // irq enabled
                 ACIA_IKBD.SR|=BIT_7; // there's a new IRQ when overrun bit is set
+              TRACE_LOG("%d %d %d PC %X reads ACIA RDR %X, OVR\n",TIMING_INFO,old_pc,ACIA_IKBD.RDR);
+              //TRACE_LOG("%d %d %d PC %X CPU reads IKBD data %X in OVR\n",TIMING_INFO,old_pc,ACIA_IKBD.RDR);
+
             }
             // no overrun, normal
             else
@@ -786,7 +794,7 @@ when it does).
 #if defined(SSE_DEBUG_FRAME_REPORT_BLITTER)
       FrameEvents.Add(scan_y,LINECYCLES,'b',((addr-0xff8a00)<<8)|ior_byte);
 #endif
-#if defined(SSE_BOILER_FRAME_REPORT_MASK)
+#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
       if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_BLITTER)
         FrameEvents.Add(scan_y,LINECYCLES,'b',((addr-0xff8a00)<<8)|ior_byte);
 #endif
@@ -2098,8 +2106,8 @@ Done one cycle of all palettes
 DWORD ASMCALL io_read_l(MEM_ADDRESS addr)
 {
 /*  SS same way for long accesses, so that a .L read will resolve in 4 .B reads.
-    Notice the timing trick. At CPU emu level, the read is counted for eg 8 
-    cycles, the adjustment is here where it counts.
+    Notice the timing trick. At CPU emu level, the read is counted for 8 
+    cycles right before coming here, the adjustment is here where it counts.
 */
   INSTRUCTION_TIME(-4);
   DWORD x=io_read_w(addr) << 16;

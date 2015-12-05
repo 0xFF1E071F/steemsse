@@ -138,22 +138,6 @@ void TSF314::Init() {
   SectorChecksum=0;
 #endif
 
-#if defined(SSE_DRIVE_INIT)//MFD
-
-#if defined(SSE_DRIVE_STATE)
-    State.motor=false;
-#else
-    motor_on=false;
-#endif
-    WD1772.Lines.motor=false;//MOVE
-
-#if defined(SSE_DRIVE_INDEX_PULSE)
-  rpm=300; // could be changed in other version
-  time_of_next_ip=0;//useful?
-  time_of_last_ip=0;//useful?
-#endif
-#endif
-
 #if defined(SSE_DISK_IMAGETYPE) 
   ImageType.Manager=MNGR_STEEM; //default
 #endif
@@ -387,7 +371,7 @@ int TSF314::CyclesPerByte() {
 #else
   int cycles=8000000; // per second  
 #endif
-#if defined(SSE_DRIVE_INIT2)
+#if defined(SSE_DRIVE_INIT_373)
   cycles/=RPM/60; // per rotation (300/60 = 5)
 #else
   ASSERT(rpm==300);//argh!

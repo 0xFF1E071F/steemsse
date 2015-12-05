@@ -61,8 +61,8 @@ instr_exec ()
 */
   if(hd6301_completed_transmission_to_MC6850)
   {
-#if defined(SSE_IKBD_6301_TRACE_SCI_TX)
-    TRACE("6301 send byte completed\n");
+#if defined(SSE_DEBUG_IKBD_6301_TRACE_SCI_TX)
+    //TRACE("6301 send byte completed\n");
 #endif
     hd6301_completed_transmission_to_MC6850--;
     ASSERT(!hd6301_completed_transmission_to_MC6850);
@@ -82,13 +82,17 @@ instr_exec ()
 */
     if(ACIA_IKBD.ByteWaitingRx)
     {
+#if defined(SSE_DEBUG_IKBD_6301_TRACE_SCI_TX)
+      //TRACE("HD6301: waiting $%X ->ACIA RDRS\n",iram[TDR]);
+      //TRACE("HD6301 $%X TDR -> TDRS -> ACIA RDRS\n",iram[TDR]);
+      TRACE("6301 TDRS waiting %X\n",iram[TDR]);
+#endif
       keyboard_buffer_write( iram[TDR] ); // call Steem's ikbd function
       ACIA_IKBD.ByteWaitingRx=0;
       //txinterrupts=1;
     }
 #endif
   }
-
 
   if (!reg_getiflag () 
 #if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
@@ -100,14 +104,14 @@ instr_exec ()
      * Check for interrupts in priority order
      */
     if ((ireg_getb (TCSR) & OCF) && (ireg_getb (TCSR) & EOCI)) {
-#if defined(SSE_IKBD_6301_TRACE_INT_TIMER)
+#if defined(SSE_DEBUG_IKBD_6301_TRACE_INT_TIMER)
       TRACE("ACT %d Timer interrupt\n",act);
 #endif
       int_addr (OCFVECTOR);
       interrupted = 1;
     } 
     else if (serial_int ()) {
-#if defined(SSE_IKBD_6301_TRACE_INT_SCI)
+#if defined(SSE_DEBUG_IKBD_6301_TRACE_INT_SCI)
       TRACE("SCI interrupt TRCSR=%X RXi=%d TXi=%d\n",ireg_getb (TRCSR),rxinterrupts,txinterrupts);
 #endif
       txinterrupts=0; 
@@ -135,10 +139,7 @@ instr_exec ()
   else
   {
     int pc=reg_getpc (); 
-    
-    ASSERT( pc<0xFFFF );
-    ASSERT( pc>=0x80 );
-    
+
     if( ! ( pc>=0x80 && pc<0xFFFF) ) // eg bad snapshot
     {
       TRACE("6301 emu is hopelessly crashed!\n");
@@ -156,7 +157,7 @@ instr_exec ()
   return 0;
 }
 
-
+#ifdef SSE_DEBUG
 /*
  * instr_print - print (unassemble) an instruction
  */
@@ -171,6 +172,7 @@ instr_print (addr)
   /*
    * In case somebody changes the opcodemap, verify it
    */
+
   ASSERT (opptr->op_value == op);
 
   if(pc==mem_getw(0xFFF0)) // SS
@@ -210,7 +212,7 @@ instr_print (addr)
     if (symname = sym_find_name (mem_getw (pc + 1)))
       printf ("\t%s", symname);
   }
-#if !defined(SSE_IKBD_6301_DISASSEMBLE_ROM)
+#if !defined(SSE_IKBD_6301_DISASSEMBLE_ROM) && !defined(SSE_BOILER_DUMP_6301_RAM2)
   TRACE ("\t[%d]\n", cpu_getncycles ());
 #endif
   putchar('\n');
@@ -218,3 +220,4 @@ instr_print (addr)
     putchar('\n');
   return opptr->op_n_operands + 1;
 }
+#endif

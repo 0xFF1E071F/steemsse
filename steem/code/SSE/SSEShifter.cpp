@@ -945,7 +945,7 @@ TODO!
     if(CyclesIn>=t+4 && FreqAtCycle(t)==50 && FreqAtCycle(t+4)==60)
       CurrentScanline.Tricks|=TRICK_BLACK_LINE;
 #elif defined(SSE_SHIFTER_STATE_MACHINE2) // really
-    t=28+WU_sync_modifier;
+    t=28+WU_sync_modifier-2; //-2: v3.7.3 fix Forest WU2
     if(FreqAtCycle(t)==50 && FreqAtCycle(t+4)==60)
       CurrentScanline.Tricks|=TRICK_BLACK_LINE;
 #elif defined(SSE_SHIFTER_STATE_MACHINE) // more or less
@@ -3527,6 +3527,9 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 #endif
         )
         Glue.CheckSideOverscan(); 
+#else
+    if(FetchingLine())
+    {
 #endif
       if(left_border<0) // shouldn't happen but sometimes it does
       {

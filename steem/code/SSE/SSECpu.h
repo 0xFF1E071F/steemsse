@@ -468,7 +468,6 @@ struct TM68000 {
   inline void GetSourceWordNotA();
   inline void GetSourceLongNotA();
 
-
 #if defined(SSE_CPU_PREFETCH)
 
 #if defined(SSE_CPU_PREFETCH_CLASS)
@@ -693,6 +692,7 @@ inline void TM68000::FetchWord(WORD &dest_word) {
   else
 #if defined(SSE_CPU_FETCH_IO2)
   // don't use lpfetch for fetching in IO zone, use io_read
+  // (palette was already handled by Steem)
   if(pc>=MEM_IO_BASE && !(pc>=0xff8240 && pc<0xff8260))
   {
     IR=io_read_w(pc);
@@ -704,7 +704,7 @@ inline void TM68000::FetchWord(WORD &dest_word) {
 #if defined(SSE_CPU_FETCH_80000B)
   if(pc>himem && pc>=0x80000 && pc<0x3FFFFF)
   {
-    IR=0xFFFF;
+    IR=0xFFFF; // TODO
     TRACE("Fetch IR %X in empty zone %X\n",IR,pc);
     return;
   }
@@ -899,7 +899,7 @@ inline void TM68000::InstructionTimeRound(int t) {
 }
 #define INSTRUCTION_TIME_ROUND(t) M68000.InstructionTimeRound(t)
 
-#ifdef CPU_ABUS_ACCESS //just new macros
+#ifdef SSE_CPU_ABUS_ACCESS //just new macros
 #define CPU_ABUS_ACCESS_READ  M68000.InstructionTimeRound(4)
 #define CPU_ABUS_ACCESS_WRITE  M68000.InstructionTimeRound(4)
 #endif
@@ -916,7 +916,7 @@ inline void TM68000::PerformRte() {
   // An Illegal routine could manipulate this value.
   SetPC(pushed_return_address);
   sr=m68k_dpeek(r[15]);r[15]+=6;    
-#if defined(SSE_BOILER_STACK_68030_FRAME)
+#if defined(SSE_BOILER_68030_STACK_FRAME)
   if(Debug.M68030StackFrame)
     r[15]+=2;   
 #endif  
@@ -1302,7 +1302,7 @@ exception vector.
 #endif
 inline void TM68000::RefetchIr() {
 //this is no fix, it was already in Steem 3.2
-  ASSERT( IR==*(lpfetch+1) ); // detect cases Synth Dream Sound Demo II
+  ASSERT( IR==*(lpfetch+1) ); //detect cases
   ASSERT( MEM_DIR==-1 );
   IR=*(lpfetch-MEM_DIR); //needed for Synth Dream Sound Demo II!
 }

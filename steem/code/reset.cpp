@@ -177,9 +177,6 @@ void power_on()
     floppy_head_track[floppyno]=0;
 #if defined(STEVEN_SEAGAL) && defined(SSE_DRIVE)
     SF314[floppyno].Id=floppyno;
-#if defined(SSE_DRIVE_INIT)
-    SF314[floppyno].Init();
-#else
 #if defined(SSE_DRIVE_MOTOR_ON)
 #if defined(SSE_DRIVE_STATE)
     SF314[floppyno].State.motor=false;
@@ -187,16 +184,14 @@ void power_on()
     SF314[floppyno].motor_on=false;
 #endif
 #ifdef SSE_DISK_STW
-#if !defined(SSE_DRIVE_INIT2)
-    SF314[floppyno].rpm=300; // temp
+#if !defined(SSE_DRIVE_INIT_373)
+    SF314[floppyno].rpm=300; 
 #endif
     WD1772.Lines.motor=false;
-#endif
-#endif
-#endif
-#endif
-
-#if defined(SSE_DISK1) && !defined(SSE_DISK2)
+#endif//stw
+#endif//motor
+#endif//drv
+#if defined(STEVEN_SEAGAL) && defined(SSE_DISK1) && !defined(SSE_DISK2)
     Disk[floppyno].Id=floppyno;//same idea
 #endif
   }
@@ -253,22 +248,19 @@ void reset_peripherals(bool Cold)
   log("***** reset peripherals ****");
 
 #ifdef SSE_DEBUG
-#if SSE_VERSION>=380 
-  TRACE_LOG("Reset (%d)\n",Cold);
- // TRACE_OSD("RESET"); // always interesting to know//see CMB
+#if defined(SSE_DEBUG_RESET)
+  Debug.Reset(Cold);
 #else
   if(Cold)
     TRACE_LOG("Reset peripherals (cold)\n");
   else
     TRACE_LOG("Reset peripherals (warm)\n");
 #endif
-#endif
-  
-
 #if defined(SSE_OSD_CONTROL)
   if( !Cold && (OSD_MASK_CPU&OSD_CONTROL_CPURESET)) 
     TRACE_OSD("RESET");
 #endif
+#endif//dbg
 
 #ifndef NO_CRAZY_MONITOR
   if (extended_monitor){

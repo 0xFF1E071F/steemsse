@@ -1417,7 +1417,7 @@ void SteemDisplay::DrawFullScreenLetterbox()
 void SteemDisplay::ScreenChange()
 {
   draw_end();
-  TRACE_LOG("ScreenChange()\n");
+  //TRACE_LOG("ScreenChange()\n");
 #if defined(STEVEN_SEAGAL) && defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
   // temp, dubious
   if(USE_SDL && !SDL.InUse)
@@ -2657,7 +2657,7 @@ VOID SteemDisplay::D3DRelease()
   {
     pD3D->Release();
     pD3D = NULL;
-#if defined(SSE_VID_D3D_380)
+#if defined(SSE_VID_D3D_373)
     D3D9_OK=false;
 #endif
   }
@@ -2676,7 +2676,7 @@ HRESULT SteemDisplay::D3DSpriteInit() {
   // called by D3DCreateSurfaces() and by ...
   // ScreenChange() calls DDCreateSurfaces()
   HRESULT hr=E_FAIL;
-#if defined(SSE_VID_D3D_380)
+#if defined(SSE_VID_D3D_373)
   ASSERT(pD3D);
   if(!pD3D)
     return hr;

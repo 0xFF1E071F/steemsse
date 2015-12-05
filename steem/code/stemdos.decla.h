@@ -192,6 +192,9 @@ struct TTos {
 #if defined(SSE_STF_MATCH_TOS3)
   BYTE DefaultCountry;
 #endif
+#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS3)
+  BYTE VersionWarning;
+#endif
 #if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2) //version with refactoring
   EasyStr GetNextTos(DirSearch &ds); // to enumerate TOS files
   void GetTosProperties(EasyStr Path,WORD &Ver,BYTE &Country,WORD &Date);

@@ -75,7 +75,7 @@ struct TDebug {
 #ifdef __cplusplus // visible only to C++ objects
 
 #if defined(SSE_DEBUG_START_STOP_INFO)
-  enum {START,STOP} ;
+  enum {START,STOP,INIT} ;
   void TraceGeneralInfos(int when);
 #endif
 
@@ -114,7 +114,7 @@ struct TDebug {
   BYTE MonitorRange; //check from ad1 to ad2
 #endif
 
-#if defined(SSE_BOILER_STACK_68030_FRAME)
+#if defined(SSE_BOILER_68030_STACK_FRAME)
   BYTE M68030StackFrame;//flag
 #endif
 
@@ -127,6 +127,9 @@ struct TDebug {
 #endif
 
   void Vbl(); //3.6.1
+#if defined(SSE_DEBUG_RESET)
+  void Reset(bool Cold);
+#endif
 
 #endif//c++
 
@@ -226,7 +229,7 @@ enum logsection_enum_tag {
 // LOGSECTION_IPF_LOCK_INFO,
 #endif
  LOGSECTION_IMAGE_INFO, //was Pasti
- LOGSECTION_OPTIONS,
+ LOGSECTION_OPTIONS, // now free (we use INIT for options)
  NUM_LOGSECTIONS,
  };
 #endif
@@ -247,6 +250,7 @@ enum logsection_enum_tag {
 #define OSD_CONTROL_CPUIO  (1<<13)
 #define OSD_CONTROL_CPURESET            (1<<12)
 #define OSD_CONTROL_CPUPREFETCH   (1<<11)    
+#define OSD_CONTROL_CPUROUNDING   (1<<10)
 
 #define OSD_MASK2 (Debug.ControlMask[4])
 #define OSD_CONTROL_SHIFTERTRICKS           (1<<15)
@@ -273,6 +277,7 @@ enum logsection_enum_tag {
 #define TRACE_CONTROL_SUMMARY (1<<13) //all tricks of the frame orred
 #define TRACE_CONTROL_LINEOFF (1<<12) //don't draw
 #define TRACE_CONTROL_ADJUSTMENT (1<<11) //-2, +2 corrections
+#define TRACE_CONTROL_0BYTE (1<<10) //
 
 
 #define TRACE_MASK2 (Debug.ControlMask[7])
@@ -317,6 +322,10 @@ enum logsection_enum_tag {
 #if defined(SSE_BOILER_NEXT_PRG_RUN)
 #define BOILER_CONTROL_MASK1 (Debug.ControlMask[11])
 #define BOILER_CONTROL_NEXT_PRG_RUN (1<<15)
+#if defined(SSE_BOILER_VBL_HBL)
+#define BOILER_CONTROL_VBL_PENDING (1<<14)
+#define BOILER_CONTROL_HBL_PENDING (1<<13)
+#endif
 #endif
 
 #endif//#if defined(SSE_BOILER_FAKE_IO)
@@ -524,6 +533,19 @@ enum logsection_enum_tag {
 #endif
 #endif
 
+// TRACE_VID 3.7.3
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#ifdef __cplusplus // visible only to C++ objects
+#define TRACE_VID Debug.LogSection=LOGSECTION_VIDEO, Debug.TraceLog //!
+#endif//C++
+#else
+#if defined(VC_BUILD) // OK for Unix?
+#define TRACE_VID(x) // no code left?
+#else
+#define TRACE_VID // some code left to the compiler
+#endif
+#endif
+
 // TRACE_OSD
 #if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DEBUG_MESSAGE)
 #ifdef __cplusplus // visible only to C++ objects
@@ -568,7 +590,7 @@ enum { // to pass compilation
  };
 #endif
 
-#if defined(SSE_DEBUG)
+#if defined(SSE_DEBUG_FRAME_REPORT)
 #define REPORT_LINE FrameEvents.ReportLine()
 #else
 #define REPORT_LINE

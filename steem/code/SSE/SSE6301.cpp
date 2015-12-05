@@ -1,27 +1,29 @@
 #include "SSE.h"
+
+#if defined(SSE_IKBD_6301)
+/*  Note most useful 6301 emulation code is in 3rdparty folder '6301', in C.
+    Object HD6301 is more for some support, of both true and fake IKBD
+    emulation.
+    v3.7.3: done some refactoring without compile switches.
+*/
+
 #if defined(SSE_STRUCTURE_SSE6301_OBJ)
-
 #include "../pch.h"
-
-#include "SSE6301.h"
-#include "SSEDebug.h"
-#include <mymisc.h>
 #include <easystr.h>
-extern EasyStr GetEXEDir();//when no SSE_OSD...
+#include <mymisc.h>
 #include <acia.h>
 #include <emulator.decla.h>
 #include <ikbd.decla.h>
-#endif
+#endif//SSE_STRUCTURE_SSE6301_OBJ
 
-#if defined(SSE_IKBD_6301)
-
+#include "SSEDebug.h"
+#include "SSE6301.h"
 #include "SSEOption.h"
 #include "SSEShifter.h" //frame //TODO
 #if !defined(SSE_SHIFTER)
 #include "SSEFrameReport.h" //for some trace
 #endif
 
-// note most useful emulation code is in 3rdparty folder '6301'
 
 #define LOGSECTION LOGSECTION_INIT
 
@@ -33,13 +35,9 @@ THD6301::THD6301() {
 
 
 THD6301::~THD6301() {
-  hd6301_destroy(); // calling the 6301 function
+  hd6301_destroy(); // calling the C 6301 function
 }
 
-
-#ifdef UNIX
-extern EasyStr GetEXEDir();
-#endif
 
 #if SSE_VERSION<=350
 
@@ -55,17 +53,6 @@ void THD6301::Init() { // called in 'main'
     TRACE_LOG("HD6301 emu NOT initialised\n");
     HD6301EMU_ON=0;
   }
-/*
-  int a=0;
-  int b=7;
-  try {
-  int c=b/a;
-  }
-  catch(...)
-  {
-    TRACE("ho ho\n");
-  }
-  */
 }
 
 #else//!ver
@@ -73,35 +60,39 @@ void THD6301::Init() { // called in 'main'
 void THD6301::Init() { // called in 'main'
   Initialised=Crashed=0;
   BYTE* ram=hd6301_init();
-  EasyStr romfile;
-  int checksum=0;
+  EasyStr romfile=GetEXEDir() + HD6301_ROM_FILENAME; 
   FILE *fp;
-
+#if defined(SSE_DEBUG)
+  int checksum=0;
+#endif
   if(ram)
   {
-    romfile=GetEXEDir(); // Steem's function WIN/Linux
-    romfile+=HD6301_ROM_FILENAME;
     fp=fopen(romfile.Text,"r+b");
-    if(fp)
+    ASSERT(fp);
+    if(fp) // put ROM (4KB) at the end of 6301 RAM
     {
+#if defined(SSE_IKBD_6301_MINIRAM)
+      int n=fread(ram+256,1,4096,fp);
+#else
       int n=fread(ram+0xF000,1,4096,fp);
+#endif
 #if defined(SSE_DEBUG)
       ASSERT(n==4096); // this detected the missing +b above
       for(int i=0;i<n;i++)
+#if defined(SSE_IKBD_6301_MINIRAM)
+        checksum+=ram[256+i];
+#else
         checksum+=ram[0xF000+i];
+#endif
       ASSERT( checksum==HD6301_ROM_CHECKSUM );
 #endif
       fclose(fp);
-      HD6301_OK=Initialised=1;
+      HD6301_OK=Initialised=true;
     }
     else 
     {
-     // printf("6301 rom error %s %d %d %d\n",romfile.Text,HD6301_OK,Initialised,ram);
-      HD6301_OK=Initialised=0;
-   //   if(ram)
-       // free(ram);//linux: no direct access
+      HD6301_OK=false;
       hd6301_destroy(); 
-//      ram=NULL;
     } 
   }
 
@@ -119,10 +110,11 @@ void THD6301::Init() { // called in 'main'
 #undef LOGSECTION//init
 #define LOGSECTION LOGSECTION_IKBD
 
-#if defined(SSE_DEBUG) 
+#if defined(SSE_DEBUG) && defined(SSE_IKBD_6301_IKBDI)
+
 /*  This should work for both 'fake' and 'true' 6301 emulation.
     We know command codes & parameters, we report this info through trace.
-    when the command is complete.
+    when the command is complete. It has no effect. Debug-only.
     3.5.3: bugfix IKBD reprogramming mess
 */
 void THD6301::InterpretCommand(BYTE ByteIn) {
@@ -200,8 +192,10 @@ void THD6301::InterpretCommand(BYTE ByteIn) {
   // report?
   if(CurrentCommand!=-1 && nParameters==CurrentParameter)
   {
+#if defined(SSE_IKBD_6301_IKBDI)
 #if defined(SSE_DEBUG)
     ReportCommand();
+#endif
 #endif
     // how to treat further bytes?
     switch(CurrentCommand) {
@@ -221,8 +215,6 @@ void THD6301::InterpretCommand(BYTE ByteIn) {
 
 #define LOGSECTION LOGSECTION_IKBD
 
-#if defined(SSE_DEBUG)
-
 void THD6301::ReportCommand() {
   ASSERT( CurrentCommand!=-1 );
 
@@ -232,7 +224,8 @@ void THD6301::ReportCommand() {
 #endif
 
   // give command code
-  TRACE_LOG("[IKBDi $%02X ",CurrentCommand);//i for interpreter
+  //TRACE_LOG("[IKBDi $%02X ",CurrentCommand);//i for interpreter
+  TRACE_LOG("IKBDi $%02X ",CurrentCommand);//i for interpreter
   // spell out command (as in Atari manual)
   switch(CurrentCommand) {
     case 0x80: TRACE_LOG("RESET"); break;
@@ -277,15 +270,15 @@ void THD6301::ReportCommand() {
   {
     TRACE_LOG(" (");
     for(int i=0;i<nParameters;i++)
-      TRACE_LOG("%d=$%X ",Parameter[i],Parameter[i]);
+      //TRACE_LOG("%d=$%X ",Parameter[i],Parameter[i]);
+      TRACE_LOG("%d=$%X ",i,Parameter[i]); // v3.8
     TRACE_LOG(")");
   }
-  TRACE_LOG("]\n");
+  //TRACE_LOG("]\n");
+  TRACE_LOG("\n");
 }
 
-#endif
-
-#endif
+#endif//#if defined(SSE_IKBD_6301_IKBDI) || !defined(SSE_IKBD_6301_380E)
 
 #if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
 
@@ -293,7 +286,8 @@ void THD6301::ReceiveByte(BYTE data) {
 /*  Transfer byte to 6301 (call of this function initiates transfer).
     This function is used for true and fake 6301 emu.
 */
-  TRACE_LOG("ACIA TDR->TDRS->IKBD RDRS $%X\n",data);
+  //TRACE_LOG("ACIA TDR->TDRS->IKBD RDRS $%X\n",data);
+  TRACE_LOG("%d %d %d ACIA TDRS %X\n",TIMING_INFO,data);
   ACIA_IKBD.ByteWaitingTx=false;
   agenda_add(agenda_ikbd_process,HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL,data);
   ACIA_IKBD.TDRS=ACIA_IKBD.TDR; // shift register
@@ -304,69 +298,65 @@ void THD6301::ReceiveByte(BYTE data) {
 
 void THD6301::ResetChip(int Cold) {
   TRACE_LOG("6301 Reset chip %d\n",Cold);
+//#if defined(SSE_IKBD_6301_IKBDI) || !defined(SSE_IKBD_6301_380E)
+#if defined(SSE_IKBD_6301_IKBDI)
   CustomProgram=CUSTOM_PROGRAM_NONE;
 #if SSE_VERSION>=351
   ResetProgram();
 #endif
+#endif
 #if defined(SSE_IKBD_6301)
   if(HD6301_OK && HD6301EMU_ON)
   {
-    HD6301.Crashed=0;
+    HD6301.Crashed=false;
     hd6301_reset(Cold);
   }
 #endif
-
 #if defined(SSE_IKBD_6301_STUCK_KEYS)
   if(Cold)  // real cold
     ZeroMemory(ST_Key_Down,sizeof(ST_Key_Down));
 #endif
 }
 
-
-void THD6301::ResetProgram() {
+#if defined(SSE_IKBD_6301_IKBDI) 
+void THD6301::ResetProgram() { // debug only
   TRACE_LOG("6301 Reset ST program\n");
   LastCommand=CurrentCommand=-1;
   CurrentParameter=0;
   nParameters=0;
 }
+#endif
 
 #if defined(SSE_IKBD_6301_VBL)
 
 void THD6301::Vbl() {
   //TRACE_LOG("6301 VBL cycles %d\n",hd6301_vbl_cycles);
   hd6301_vbl_cycles=0;
+
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
-// if both are defined, Hacks makes the difference, for comparison (beta)
-  if(SSE_HACKS_ON)
-#endif
-  {
-    click_x=click_y=0;
-    // the following avoids the mouse going backward at high speed
-    const int max_pix_h=(screen_res)?30:50-10;
-    const int max_pix_v=(screen_res==2)?30:50-10;
-    //if(screen_res==1) MouseVblDeltaX*=2;//?
-    if(MouseVblDeltaX>max_pix_h)
-      MouseVblDeltaX=max_pix_h;
-    else if(MouseVblDeltaX<-max_pix_h)
-      MouseVblDeltaX=-max_pix_h;
-    if(MouseVblDeltaY>max_pix_v)
-      MouseVblDeltaY=max_pix_v;
-    else if(MouseVblDeltaY<-max_pix_v)
-      MouseVblDeltaY=-max_pix_v;
-    
+  click_x=click_y=0;
+  // the following avoids the mouse going backward at high speed
+  const int max_pix_h=(screen_res)?30:40;
+  const int max_pix_v=(screen_res==2)?30:40;
+  if(MouseVblDeltaX>max_pix_h)
+    MouseVblDeltaX=max_pix_h;
+  else if(MouseVblDeltaX<-max_pix_h)
+    MouseVblDeltaX=-max_pix_h;
+  if(MouseVblDeltaY>max_pix_v)
+    MouseVblDeltaY=max_pix_v;
+  else if(MouseVblDeltaY<-max_pix_v)
+    MouseVblDeltaY=-max_pix_v;
 #ifdef SSE_DEBUG
-    if(MouseVblDeltaX||MouseVblDeltaX)
+  if(MouseVblDeltaX||MouseVblDeltaX)
       TRACE_LOG("F%d 6301 mouse move %d,%d\n",FRAME,MouseVblDeltaX,MouseVblDeltaY);
 #endif
-  }
-#endif
+#endif//SSE_IKBD_6301_MOUSE_ADJUST_SPEED2
 }
 
-#endif
+#endif//SSE_IKBD_6301_VBL
 
 #undef LOGSECTION
 
 #endif//ver?
 
-#endif
+#endif//SSE_IKBD_6301

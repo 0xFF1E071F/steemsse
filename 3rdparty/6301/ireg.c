@@ -98,8 +98,19 @@ BYTE get_scancode(int dr1bit,int column) {
   BYTE val=0;
   ASSERT(dr1bit<8);
   ASSERT(column<15);
-  ASSERT(ram[0xF319]==0x3E);
-  ASSERT(ram[0xF206]==0x1D);
+  ASSERT(mem_getb(0xF319)==0x3E);
+  ASSERT(mem_getb(0xF206)==0x1D);
+#if defined(SSE_IKBD_6301_MINIRAM)
+  if(column<4)
+  {
+    if(!dr1bit)
+      val=mem_getb(0xF312+column);
+    else if(dr1bit-4==column)
+      val=mem_getb(0xF206+column);
+  }
+  else
+    val=mem_getb(0xF319+dr1bit+((column-4)*8));
+#else
   if(column<4)
   {
     if(!dr1bit)
@@ -109,6 +120,7 @@ BYTE get_scancode(int dr1bit,int column) {
   }
   else
     val=ram[0xF319+dr1bit+((column-4)*8)];
+#endif
 #if defined(SSE_DEBUG)
   ASSERT(val==dr_table[dr1bit][column]);
 #endif
@@ -206,7 +218,7 @@ u_int offs;
       if(found)
       {
         value&=~mask; // clear bit
-#if defined(SSE_IKBD_6301_TRACE_KEYS)
+#if defined(SSE_DEBUG_IKBD_6301_TRACE_KEYS)
         TRACE("Read DR1 %X\n",value);
 #endif
       }
@@ -331,9 +343,9 @@ static dr4_getb (offs)
   {
 
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)//yes: better than SainT now!
-
-    int cycles_per_frame=HD6301_CLOCK/shifter_freq;   
-
+    int cycles_per_frame;
+    ASSERT(shifter_freq);
+    cycles_per_frame=HD6301_CLOCK/shifter_freq;   
     if(HD6301.MouseVblDeltaX) // horizontal
     { 
       int clicks=abs(HD6301.MouseVblDeltaX);
@@ -444,7 +456,7 @@ static dr4_getb (offs)
     }
   }  
 
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)//no
   // We do it that way because mouse speed is better if we don't update that
   // value only when the mouse has moved.
   if(!joy0mvt

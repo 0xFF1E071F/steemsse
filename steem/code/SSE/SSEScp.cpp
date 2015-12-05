@@ -35,6 +35,7 @@ EasyStr GetEXEDir();//#include <mymisc.h>//missing...
     Steem (disk manager, FDC commands...) is straightforward.
     Remarkably few changes are necessary in the byte-level WD1772 emu to have
     some SCP images loading.
+    For some others, however, we had to graft bit-level algorithms.
 */
 
 #if defined(SSE_VAR_RESIZE_372)
@@ -88,14 +89,14 @@ void  TImageSCP::ComputePosition(WORD position) {
   DWORD units=cycles*5;
   for(DWORD i=0;i<nBits;i++)
   {
-    if( TimeFromIndexPulse[i]>=units)
+    if(TimeFromIndexPulse[i]>=units)
     {
       Position=i;
       break;
     }
   }
 
-#if defined(SSE_DISK_SCP380)
+#if defined(SSE_DISK_SCP373)
 /* Randomise first bit when starting reading a track.
    Fixes War Heli track 68
    The protection is looking for A1 47 4D 43 then checks that the byte
@@ -110,7 +111,6 @@ void  TImageSCP::ComputePosition(WORD position) {
 #if defined(SSE_WD1772_DPLL)
   WD1772.Dpll.Reset(ACT); 
 #endif
-
 
   Disk[DRIVE].current_byte=(ACT-SF314[DRIVE].time_of_last_ip)/SF314[DRIVE].CyclesPerByte();
 //TRACE("%d %d %d\n",ACT,SF314[DRIVE].time_of_last_ip,Disk[DRIVE].TrackBytes);

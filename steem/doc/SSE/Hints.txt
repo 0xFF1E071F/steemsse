@@ -1,7 +1,7 @@
 Steem SSE Hints
 ===================
 
-v3.7.2
+v3.7.3
 
 If a program doesn't work in Steem SSE, please check the lists below,
 maybe the solution is there. 
@@ -67,7 +67,7 @@ Games
 - Chessmaster 2000: STF
 - Crazy Cars 2: F7 for joystick control
 - Darius auto166: DI
-- Demoniak -ELT: STF, C1, C2, WU2
+- Demoniak -ELT: STF, WU2, ADAT, C1, C2 (hell!)
 - Dragonflight: create STW disk
 - Dungeon Master SCP: DI
 - Dynabusters+: STE; F1: music F2: volume
@@ -138,7 +138,7 @@ Demos
 - Extreme Rage: STE
 - Fantasia: STE T106 or DI
 - Froggies Over The Fence: C1
-- Hackabonds Demo: STF
+- Hackabounds Demo: STF WS1
 - Hier sind noch zwei Plätze frei/plasma: C1
 - Imagination/Roller Coaster: STF
 - Japtro: STF, DI
