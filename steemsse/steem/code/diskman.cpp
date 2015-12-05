@@ -1262,6 +1262,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             if (SendMessage(icon_handle,BM_GETCLICKBUTTON,0,0)==2)
             {
               HardDiskMan.DisableHardDrives=!HardDiskMan.DisableHardDrives;
+              TRACE_INIT("Option GEMDOS HD %d\n",!HardDiskMan.DisableHardDrives);
               HardDiskMan.update_mount();
 #if defined(SSE_GUI_STATUS_STRING)
               GUIRefreshStatusBar();
@@ -1291,6 +1292,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             if (SendMessage(icon_handle,BM_GETCLICKBUTTON,0,0)==2) //right click
             {
               SSEOption.Acsi=!SSEOption.Acsi;
+              TRACE_INIT("Option ACSI %d\n",SSEOption.Acsi);
              // HardDiskMan.update_mount();
 #if defined(SSE_GUI_STATUS_STRING)
               GUIRefreshStatusBar();

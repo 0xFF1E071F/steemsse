@@ -1,5 +1,4 @@
-/*  
-    6301.c
+/*  6301.c
     This file is compiled as one distinct module (resulting in an OBJ file)
     We don't compile each C file
  */
@@ -53,20 +52,10 @@ int ExecutingInt=NOT_EXECUTING_INT;
 #endif
 int Crashed6301=0;
 
-#if defined(SSE_IKBD_6301_CHECK_COMMANDS) 
-int LoadingMemory=0; // ID command $20
-int CustomPrgAddress=0; // parameters 1&2
-int BytesToLoad=0; // parameter 3
-int CurrentCommand=0;
-int CurrentParameter=0;
-int TotalParameters=0; // #parameters
-#endif
-
 #if defined(SSE_IKBD_6301_MOUSE_MASK3)
 unsigned int mouse_x_counter;
 unsigned int mouse_y_counter;
 #endif
-
 
 #if defined(SSE_IKBD_6301_VBL)
 int hd6301_vbl_cycles;
@@ -150,23 +139,21 @@ hd6301_destroy() {
 
 
 hd6301_reset(int Cold) {
-  TRACE("6301 emu cpu reset\n");
+  TRACE("6301 emu cpu reset (cold %d)\n",Cold);
   cpu_reset();
-
   if(Cold)
     memset (ram, 0, 256);
-
   hd6301_completed_transmission_to_MC6850=0;
-  Crashed6301=0;
+  Crashed6301=0; // note no cold condition?
   iram[TRCSR]=0x20;
 #if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
   ExecutingInt=NOT_EXECUTING_INT;
 #endif
-
   mouse_x_counter=MOUSE_MASK;
   mouse_y_counter=MOUSE_MASK;
-
+#if !defined(SSE_IKBD_6301_373)
   cpu_start(); // since we don't use the command.c file
+#endif
 }
 
 
@@ -229,23 +216,36 @@ hd6301_run_cycles(u_int cycles_to_run) {
 #if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
   if(ExecutingInt)
   {
+    ASSERT(!Crashed6301);
     ASSERT( ExecutingInt==FINISHED_EXECUTING_INT );
+    ASSERT( !reg_getiflag () ); 
+#ifdef SSE_DEBUG
+    if(ExecutingInt!=FINISHED_EXECUTING_INT)
+      TRACE("cycles_run %d cycles_to_run %d ExecutingInt %d\n",cycles_run,cycles_to_run,ExecutingInt);
+#endif
     ExecutingInt=NOT_EXECUTING_INT;
   }
 #endif
+//  ASSERT( !reg_getiflag () );
 #if defined(SSE_IKBD_6301_ADJUST_CYCLES)
 //  ASSERT( !cycles_to_give_back );
   cycles_to_give_back+=cycles_run-cycles_to_run;
+//  TRACE("6301 cycles run %d (%d)\n",cycles_run,cycles_to_give_back);
 #endif
 #if defined(SSE_IKBD_6301_VBL)
   hd6301_vbl_cycles+=cycles_run;
 #endif
-  return (Crashed6301) ? 0 : cycles_run; 
+ // return (Crashed6301) ? 0 : cycles_run; 
+   return (Crashed6301) ? -1 : cycles_run; //v3.7.3
 }
 
 
-hd6301_transmit_byte(u_char byte_in) {
+hd6301_receive_byte(u_char byte_in) {
+#ifdef SSE_IKBD_6301_373
+  return sci_in(&byte_in,1);
+#else
   sci_in(&byte_in,1);
+#endif
 }
 
 
@@ -364,8 +364,20 @@ dump_rom() {
 #if defined(SSE_BOILER_DUMP_6301_RAM)
 
 hd6301_dump_ram() { // commanded by Boiler
+#if defined(SSE_BOILER_DUMP_6301_RAM2)
+  int i;
+#endif
   printf("6301 RAM dump\n    \t00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F\n");
   mem_print (0,256,16);
+#if defined(SSE_BOILER_DUMP_6301_RAM2)
+  // disassembly in case
+  for(i=0x89;i<256;i++)
+  {
+      i+=instr_print (i)-1;
+  }//nxt
+#endif
+
+
 }
 
 #endif

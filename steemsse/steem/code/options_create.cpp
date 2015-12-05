@@ -1324,7 +1324,7 @@ void TOptionBox::CreateFullscreenPage()
   long Offset=0;
 #if defined(SSE_VID_D3D_OPTION)
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX; 
-#if defined(SSE_VID_D3D_380)
+#if defined(SSE_VID_D3D_373)
   if(!D3D9_OK)
     mask|=WS_DISABLED;
 #endif
@@ -1355,7 +1355,7 @@ void TOptionBox::CreateFullscreenPage()
   Offset+=Wid+HorizontalSeparation;
   UINT Adapter=D3DADAPTER_DEFAULT;
   D3DFORMAT DisplayFormat=D3DFMT_X8R8G8B8; //32bit; D3DFMT_R5G6B5=16bit
-#if defined(SSE_VID_D3D_380)
+#if defined(SSE_VID_D3D_373)
   ASSERT(Disp.pD3D);
   UINT nD3Dmodes=(Disp.pD3D)
     ? Disp.pD3D->GetAdapterModeCount(Adapter,DisplayFormat) : 0;

@@ -7,10 +7,11 @@ Note that this is functional rather than hardware-level emulation.
 Reprogramming is not implemented. 
 SS: 
 Added doc, trace of commands
-V3.3, fake emu borrowed from Hatari for reprogramming
-V3.4, hardware-level emulation
+V3.3: fake emu borrowed from Hatari for reprogramming
+V3.4: low-level emulation of the 6301 added
 V3.5.1: fake emu for reprogramming nuked (avoid bloat)
-V3.6.0: all non 6301 true emu mods removed (ACIA + IKBD)
+V3.6.0: all non 6301 true emu mods removed (ACIA + IKBD), so if option
+C1 isn't checked, behaviour should be exactly the same as v3.2.
 ---------------------------------------------------------------------------*/
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
@@ -507,17 +508,18 @@ void ikbd_inc_hack(int &hack_val,int inc_val) // SS using a reference
 
 /*  All bytes that are written by the program on address $fffc02 end
     up here, after a transmission delay. In Steem, this happens via
-    the agenda (not very precise). TODO: event?
+    the agenda (not very precise). 
     This function handles dispatching to the true 6301 emu as well.
+    To improve precision, this used the event system.
 */
 
 void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
 {
   log(EasyStr("IKBD: At ")+hbl_count+" receives $"+HEXSl(src,2));
-  TRACE_LOG("IKBD RDRS->RDR $%X\n",src);
+  //TRACE_LOG("IKBD RDRS->RDR $%X\n",src);
+  TRACE_LOG("%d %d %d IKBD RDRS %X\n",TIMING_INFO,src);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG) && defined(SSE_ACIA)\
-&&SSE_VERSION>=351
+#if defined(SSE_DEBUG) && defined(SSE_IKBD_6301_IKBDI)
   // our powerful 6301 command interpreter, working for both emulations
   HD6301.InterpretCommand(src); 
 #endif
@@ -547,7 +549,7 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
     if(!HD6301.Crashed) 
     {
       ASSERT(!HD6301.RunThisHbl); // may assert
-      hd6301_transmit_byte(src);// send byte to 6301 emu
+      hd6301_receive_byte(src);// send byte to 6301 emu
       // run some cycles now to maybe avoid sync problems (may be useless)
 #if defined(SSE_SHIFTER)
       int n6301cycles=Shifter.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
@@ -574,21 +576,37 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
       ACIA_IKBD.SR|=BIT_7; 
       mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0); //trigger IRQ
     }
-
+#if defined(SSE_IKBD_6301_380B) 
+    ASSERT(ACIA_IKBD.TDRS==src);
+    HD6301.rdrs=ACIA_IKBD.TDRS;
+#endif
+#if defined(SSE_IKBD_6301_RXFREE_TIMING)
+    int cycles=LINECYCLES;
+    HD6301.LineRxFreeTime=cycles/8;
+    if(!HD6301.LineRxFreeTime) // rare
+    {
+      TRACE_LOG("6301 Rx free %d\n");
+      hd6301_receive_byte(src);
+    }
+#else//?
+   ////////// hd6301_receive_byte(src);
+#endif
 #if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
-    /*  If there's a byte in TDR waiting to be shifted, do it now.
-    */
+    //  If there's a byte in TDR waiting to be shifted, do it now.
+    ASSERT(ACIA_IKBD.LineTxBusy);
     ACIA_IKBD.LineTxBusy=false;
     if(ACIA_IKBD.ByteWaitingTx) 
       HD6301.ReceiveByte(ACIA_IKBD.TDR);
 #endif
-
+#if !defined(SSE_IKBD_6301_RXFREE_TIMING)
     //TRACE_LOG("6301 RDRS->RDR %X\n",src);
-    hd6301_transmit_byte(src);// send byte to 6301 emu
-    
+    hd6301_receive_byte(src);// send byte to 6301 emu
+#endif
 #if defined(SSE_IKBD_6301_RUN_CYCLES_AT_IO)//no...
     ASSERT(!HD6301.RunThisHbl); 
-#if defined(SSE_SHIFTER)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+    int n6301cycles=Glue.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
+#elif defined(SSE_SHIFTER)
     int n6301cycles=Shifter.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
 #else
     int n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
@@ -600,7 +618,6 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
     }
     HD6301.RunThisHbl=true; // stupid signal
 #endif
-    
     // That's it for Steem, the rest is handled by the program in ROM!
     return; 
   }//if
@@ -878,6 +895,10 @@ Code:
 
 This command permits the host to load arbitrary values into the IKBD controller
  memory. The time between data bytes must be less than 20ms.
+ Note:
+ http://www.atari-forum.com/viewtopic.php?f=16&t=5297&start=25#p282438
+ "Finally I found out that the "MEMORY LOAD" function 0x20 of IKBD ROM, 
+ won't load any "0x00" value !!"
 */
       case 0x20:  //load memory
         ikbd.command=0x50; // Ant's command about loading memory
@@ -1442,20 +1463,32 @@ void agenda_keyboard_replace(int) {
 #if defined(SSE_IKBD_6301)
   if(HD6301EMU_ON) 
   {
-    if (keyboard_buffer_length){ //temp still use those var?
+    if (keyboard_buffer_length){ 
 #if !defined(SSE_IKBD_6301_SEND1) // bugfix v3.7
       if (!ikbd.send_nothing) //no, not this one, could freeze true emu
 #endif
       {
         keyboard_buffer_length--;
         ASSERT( keyboard_buffer_length>=0 );
-
+#if defined(SSE_IKBD_6301_380B) 
+        ACIA_IKBD.RDRS=HD6301.tdrs;
+#endif
 #if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
-        // here we should take care of next byte but we have another
-        // problem anyway (txinterrupts)
+        ASSERT( keyboard_buffer_length<2 );
         ASSERT( ACIA_IKBD.LineRxBusy );
         ACIA_IKBD.LineRxBusy=false;
+#ifdef SSE_IKBD_6301_TXFREE_TIMING
+        int cycles=LINECYCLES;
+        HD6301.LineTxFreeTime=cycles/8;
+        if(!HD6301.LineTxFreeTime)//rare
+        {
+          TRACE_LOG("6301 Tx free\n");
+          hd6301_completed_transmission_to_MC6850=true;
+        }
+#else
         hd6301_completed_transmission_to_MC6850=true;
+#endif
+
 #endif
 
         /*  Check overrun.
@@ -1464,10 +1497,11 @@ void agenda_keyboard_replace(int) {
         => 1. SR is updated at next read of RDR
         2. The old byte will be read, the new byte is lost
         */
-        
         if(ACIA_IKBD.SR&BIT_0) // RDR full
         {
-          TRACE_LOG("ACIA RDRS OVR: $%X->$%X\n",keyboard_buffer[keyboard_buffer_length],keyboard_buffer[keyboard_buffer_length+1]);
+          //TRACE_LOG("ACIA RDRS OVR: $%X->$%X\n",keyboard_buffer[keyboard_buffer_length],keyboard_buffer[keyboard_buffer_length+1]);
+          //TRACE_LOG("%d %d %d ACIA OVR RDR $%X RDRS $%X\n",TIMING_INFO,ACIA_IKBD.RDR,ACIA_IKBD.RDRS);
+          TRACE_LOG("%d %d %d ACIA OVR (RDRS %X)\n",TIMING_INFO,ACIA_IKBD.RDRS);
           log("IKBD: Overrun on keyboard ACIA");
           if(ACIA_IKBD.overrun!=ACIA_OVERRUN_YES) 
           {
@@ -1476,24 +1510,26 @@ void agenda_keyboard_replace(int) {
         }
         else // not overrun, OK
         {
-          TRACE_LOG("ACIA RDRS->RDR %X\n",ACIA_IKBD.RDRS);
+          //TRACE_LOG("%d %d %d ACIA RDRS->RDR %X\n",TIMING_INFO,ACIA_IKBD.RDRS);
           ACIA_IKBD.RDR=ACIA_IKBD.RDRS; // transfer shifted byte
+          TRACE_LOG("%d %d %d ACIA RDR %X\n",TIMING_INFO,ACIA_IKBD.RDR);
           ACIA_IKBD.SR|=BIT_0; // set RDR full
 
-#if defined(SSE_ACIA_IRQ_DELAY2)
+#if defined(SSE_ACIA_IRQ_DELAY2)//no
 /*  This variable was defined but never used in Steem, we use it now for
     a little hack.
 */
           ACIA_IKBD.last_rx_read_time=ACT;
 #endif
         }
-        
+     
         // Check if we must activate IRQ (overrun or normal)
         if(ACIA_IKBD.CR&BIT_7)
         {
           log(EasyStr("IKBD: Changing ACIA IRQ bit from ")+ACIA_IKBD.irq+" to 1");
           ACIA_IKBD.SR|=BIT_7;
-          TRACE_LOG("ACIA IRQ (RDR)\n");
+          //TRACE_LOG("ACIA IRQ (RDR)\n");
+          TRACE_LOG("ACIA IRQ\n");
           ASSERT(  mfp_reg[MFPR_GPIP]&MFP_GPIP_ACIA_BIT ); // just curious
           mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0);
         }
@@ -1503,11 +1539,26 @@ void agenda_keyboard_replace(int) {
     // More to process?
     if(keyboard_buffer_length) 
     {
-      agenda_add(agenda_keyboard_replace,HD6301_TO_ACIA_IN_HBL,0);
+#if defined(SSE_IKBD_EVENT)
+      if(HD6301EMU_ON)
+      {
+        HD6301.tdrs=HD6301.tdr;
+        TRACE_LOG("Buffer %d 6301 TDRS %X\n",keyboard_buffer_length,HD6301.tdrs);
+        time_of_event_ikbd=time_of_next_event+HD6301_TO_ACIA_IN_CYCLES; 
+      }
+      else
+#endif
+        agenda_add(agenda_keyboard_replace,HD6301_TO_ACIA_IN_HBL,0);
+
+#if defined(SSE_IKBD_6301_380B) 
+      HD6301.tdrs=keyboard_buffer[keyboard_buffer_length-1];
+#else
       ACIA_IKBD.RDRS=keyboard_buffer[keyboard_buffer_length-1];
+#endif
 #if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
       ACIA_IKBD.LineRxBusy=true;
 #endif
+
     }
     if (macro_start_after_ikbd_read_count) 
       macro_start_after_ikbd_read_count--;
@@ -1560,10 +1611,7 @@ void keyboard_buffer_write_n_record(BYTE src)
 
 void keyboard_buffer_write(BYTE src) {
 
-
 #if SSE_VERSION<=350
-
-
   // This function handles all output of the 6301 in fake emulation
 #if defined(SS_IKBD_6301)
   ASSERT(!HD6301EMU_ON);
@@ -1604,8 +1652,6 @@ void keyboard_buffer_write(BYTE src) {
     TRACE_LOG("IKBD: Keyboard buffer overflow\n");
   }
 
-
-
 #else//!ver
 
 #if defined(SSE_IKBD_6301)
@@ -1616,7 +1662,12 @@ void keyboard_buffer_write(BYTE src) {
     if(!ACIA_IKBD.LineRxBusy)
     {
 #endif
+#if defined(SSE_IKBD_6301_380B)
+      ASSERT(HD6301.tdrs==src);
+#endif
+#if !defined(SSE_IKBD_6301_380B)
       ACIA_IKBD.RDRS=src; // byte is being shifted
+#endif
 #if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
     }
     ACIA_IKBD.LineRxBusy=true;
@@ -1638,10 +1689,22 @@ void keyboard_buffer_write(BYTE src) {
       if(keyboard_buffer_length)
         memmove(keyboard_buffer+1,keyboard_buffer,keyboard_buffer_length); // shift
       else
+#if defined(SSE_IKBD_EVENT)
+      {
+        TRACE_LOG("IKBD TDRS %X\n",src);
+        if(HD6301EMU_ON)
+          time_of_event_ikbd=cpu_timer_at_start_of_hbl
+            +( (cycles_run)*HD6301_CYCLE_DIVISOR)+ACIA_TO_HD6301_IN_CYCLES;
+        else 
+          agenda_add(agenda_keyboard_replace,HD6301_TO_ACIA_IN_HBL,0);
+      }
+#else
         agenda_add(agenda_keyboard_replace,HD6301_TO_ACIA_IN_HBL,0);
+#endif
       keyboard_buffer_length++;
       keyboard_buffer[0]=src;
-      TRACE_LOG("IKBD +$%X(%d)\n",src,keyboard_buffer_length);
+      //TRACE_LOG("IKBD +$%X (%d)\n",src,keyboard_buffer_length);
+      
     }
     else
       TRACE_LOG("IKBD: Keyboard buffer overflow\n");
@@ -1684,7 +1747,7 @@ void ikbd_mouse_move(int x,int y,int mousek,int max_mouse_move)
 #if defined(STEVEN_SEAGAL) &&defined(SSE_IKBD_6301)
   if(HD6301EMU_ON)
   {
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)//no
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
 // if both are defined, Hacks makes the difference, for comparison (beta)
     if(!SSE_HACKS_ON)
@@ -1897,8 +1960,12 @@ void agenda_keyboard_reset(int SendF0) // SS scheduled by ikbd_reset()
     log(EasyStr("IKBD: Finished reset at ")+hbl_count);
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301) && SSE_VERSION>=351
-    if(HD6301EMU_ON) 
+    if(HD6301EMU_ON) // shouldn't we leave at once?
+#if defined(SSE_IKBD_6301_IKBDI)
       HD6301.ResetProgram();
+#else
+      ;
+#endif
     else
 #endif
       keyboard_buffer_write(IKBD_RESET_MESSAGE); // 0xF1

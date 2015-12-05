@@ -73,6 +73,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   MSA=IsSameStr_I(Ext,"MSA");
   STT=IsSameStr_I(Ext,"STT");
   DIM=IsSameStr_I(Ext,"DIM");
+#if defined(STEVEN_SEAGAL)
 #if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
   bool IPF=IsSameStr_I(Ext,"IPF");
 #ifdef SSE_IPF_CTRAW
@@ -82,7 +83,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   bool RAW=IsSameStr_I(Ext,SSE_IPF_KFSTREAM);
 #endif
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
+#if defined(SSE_DISK_SCP)
   bool SCP=IsSameStr_I(Ext,DISK_EXT_SCP);
 #endif
 #if defined(SSE_DISK_STW)
@@ -97,6 +98,10 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #if defined(SSE_DISK_HFE)
   bool HFE=IsSameStr_I(Ext,DISK_EXT_HFE);
 #endif  
+#if defined(SSE_DISK_ST)
+  bool ST=IsSameStr_I(Ext,DISK_EXT_ST);
+#endif
+#endif//SS
 
   // NewDiskInZip will be blank for default disk, RealDiskInZip will be the
   // actual name of the file in the zip that is a disk image
@@ -119,20 +124,31 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
         if (Type==DISK_UNCOMPRESSED || Type==DISK_PASTI){
           if (CompressedDiskName.Empty() || IsSameStr_I(CompressedDiskName,fn.Text)){
             // Blank DiskInZip name means default disk (first in zip)
-
-            
+#ifdef SSE_DISK_MSA
+            MSA=has_extension(fn,"MSA");
+#endif
+#ifdef SSE_DISK_ST
+            ST=has_extension(fn,"ST");
+#endif
             if (Type==DISK_PASTI){
 #if defined(STEVEN_SEAGAL) && defined(SSE_PASTI_ONLY_STX)
               ASSERT(drive!=-1);
               if(drive!=-1)
               {
-                TRACE_LOG("Disk in %c is STX\n",'A'+drive);
+                TRACE_LOG("Disk in %c (%s) is managed by Pasti.dll\n",'A'+drive,fn.Text);
 #if defined(SSE_DISK_IMAGETYPE)
                 SF314[drive].ImageType.Manager=MNGR_PASTI;
-                SF314[drive].ImageType.Extension=EXT_STX;
+#ifdef SSE_DISK_ST
+                if(ST)
+                  SF314[drive].ImageType.Extension=EXT_ST;
+                else if(MSA)
+                  SF314[drive].ImageType.Extension=EXT_MSA;
+                else
+#endif
+                  SF314[drive].ImageType.Extension=EXT_STX;
 #else
                 SF314[drive].ImageType=DISK_PASTI;
-#endif
+#endif                
               }
 #endif
               f_PastiDisk=true;
@@ -141,7 +157,9 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
               //TRACE_LOG("pasti_active %d\n",pasti_active);
 #endif
             }else{
+#ifndef SSE_DISK_MSA
               MSA=has_extension(fn,"MSA");
+#endif
               STT=has_extension(fn,"STT");
               DIM=has_extension(fn,"DIM");
 #if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
@@ -252,9 +270,15 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       {
         //TRACE_LOG("Disk in %c is STX\n",'A'+drive);
 #if defined(SSE_DISK_IMAGETYPE)
-//        TRACE_LOG("Set ImageType STX\n");
         SF314[drive].ImageType.Manager=MNGR_PASTI;
-        SF314[drive].ImageType.Extension=EXT_STX;
+#ifdef SSE_DISK_ST
+        if(ST)
+          SF314[drive].ImageType.Extension=EXT_ST;
+        else if(MSA)
+          SF314[drive].ImageType.Extension=EXT_MSA;
+        else
+#endif                
+          SF314[drive].ImageType.Extension=EXT_STX;
 #else
         SF314[drive].ImageType=DISK_PASTI;
 #endif
@@ -520,7 +544,9 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       || SF314[drive].ImageType.Extension==EXT_TOS
 #endif
       )
+    {
       HardDiskMan.DisableHardDrives=true; // we guess
+    }
 #endif
 
     SF314[drive].ImageType.Manager=MNGR_STEEM;
@@ -891,8 +917,9 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   if (this==&FloppyDrive[1]) floppy_mediach[1]=30;
   // disable input for pasti
   disable_input_vbl_count=max(disable_input_vbl_count,30);
-
-
+#if defined(SSE_DISK_IMAGETYPE)
+  ASSERT(SF314[drive].ImageType.Extension);
+#endif
   log("");
   log(EasyStr("FDC: Inserted disk ")+OriginalFile);
   log(EasyStr("     Into drive ")+LPSTR(floppy_current_drive() ? "B":"A")+" its BPB was "+LPSTR(ValidBPB ? "valid.":"invalid."));

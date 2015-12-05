@@ -141,10 +141,11 @@ void Blitter_Start_Line()
     It's a hack because it's negative and it counts on the timing being rounded
     up by the next INSTRUCTION_TIME_ROUND.
     It is in this form because BLITTER_END_WAIT=0 (probably not correct). (TODO)
-    It's a better fix than SSE_BLITTER_RELAPSE for Relapse plasma but it acts
-    sooner, when the screen is being set up.
+    Cases: Relapse plasma, Return -HMD
 */
+#ifdef SSE_BETA
     if(SSE_HACKS_ON)
+#endif
       INSTRUCTION_TIME(-2);
 #endif
     log(Str("BLITTER: ")+HEXSl(old_pc,6)+" ------------- BLITTING DONE --------------");
@@ -456,6 +457,9 @@ void Blitter_Draw()
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_BLITTER_RELAPSE) //breaks a screen in Drone, undef v3.8
     if(SSE_HACKS_ON && IR==0x4E71 && Blit.YCount==1)
+#if defined(SSE_BLITTER_RELAPSE2)
+      if(LPEEK(LPEEK(0x70))==0x11fc0001)//shameful but only for v3.7.3
+#endif
       INSTRUCTION_TIME_ROUND(4);
 #endif
 

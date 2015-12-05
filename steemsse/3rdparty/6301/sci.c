@@ -41,9 +41,6 @@ static int  rxindex      = 0; /* Index of first byte in recvbuf */
 
 /*  This function is called by Steem when a byte sent to the 6301 is supposed
     to have been received, decoded in the shift register and transferred in RDR.
-    The transmission delay is taken care of in Steem (agenda).
-    The function allows accumulation of input, but in real hardware, there can
-    be only one byte in the RDR.
 */
 
 sci_in (s, nbytes)
@@ -52,12 +49,9 @@ int nbytes;
 {
   int i;
   u_char trcsr=iram[TRCSR];
-#if defined(SSE_IKBD_6301_CHECK_COMMANDS)
-  int pc=reg_getpc(); // word
-#endif
-
   ASSERT(nbytes==1);
   ASSERT(trcsr&RE);
+  ASSERT(!(trcsr&RDRF));
   //ASSERT(!(trcsr&WU));
 
   for (i=0; i<nbytes; i++)
@@ -82,13 +76,13 @@ int nbytes;
   return 0;//warning
 }
 
-
+#if !defined(SSE_IKBD_6301_373) 
 sci_print ()
 {
   printf ("sci recvbuf:\n");
   fprinthex (stdout, recvbuf + rxindex, rxinterrupts);
 }
-
+#endif
 
 /*
 TRCSR
@@ -150,19 +144,21 @@ trcsr_getb (offs)
     rv&= ~RDRF;
 
 #if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
-/*  This is guess work
+#if defined(SSE_IKBD_6301_373)
+/*  Bugfix, if a byte is waiting, TDRE is false.
+    Cases: Froggies
 */
+  if(!ACIA_IKBD.ByteWaitingRx)
+#else
   if(!ACIA_IKBD.LineRxBusy||!ACIA_IKBD.ByteWaitingRx)
+#endif
     rv|=TDRE; // is empty
   else
     rv&=~TDRE; // is full
 #endif
 
-#if defined(SSE_IKBD_6301_TRACE_STATUS)
-  if(ACIA_IKBD.LineRxBusy&&!ACIA_IKBD.ByteWaitingRx&&(rv&TDRE))
-    TRACE("TRCSR %X transmit OK, line busy\n",rv);
-  else if(rv&TDRE)
-    TRACE("TRCSR %X transmit OK, line free\n",rv);
+#if defined(SSE_DEBUG_IKBD_6301_TRACE_STATUS)
+  //TRACE("6301 PC %X read TRCSR %X txi%d wb%d cycles %d\n",reg_getpc(),rv,txinterrupts,ACIA_IKBD.ByteWaitingRx,cycles_run); //tmp
 #endif
 
   return rv;
@@ -184,12 +180,23 @@ trcsr_putb (offs, value)
   if(value&1)
     TRACE("Set 6301 stand-by\n");
   
-#if defined(SSE_IKBD_6301_SET_TDRE)
+#if defined(SSE_IKBD_6301_373)
+/*  Enable serial int when TIE set, assuming the condition
+    for IRQ is true.
+    Cases: Cobra Compil 1, Defulloir
+*/
+  value&=0x1F;
+  if( (value&TIE) && ! (ireg_getb(TRCSR)&TIE))
+  {
+    TRACE("6301 set TIE tx %d\n",txinterrupts);
+    txinterrupts=1; // force check - hack?
+  }
+#elif defined(SSE_IKBD_6301_SET_TDRE)
 /*  Here we do as if the program could set bit 5 of TRCSR - correct?
     Cobra Compil 1: if we don't, "keyboard panic" (maybe we're compensating
     another bug)
 */
-  value&=0x3F; 
+  value&=0x3F;
   if(value&TDRE/*0x20*/) 
   {
     if((value & TIE)
@@ -205,6 +212,7 @@ trcsr_putb (offs, value)
 #else // here, bit 5 of TRCSR can't be set by software
   value&=0x1F;  
 #endif
+  //TRACE("6301 PC %X program writes TRCSR %X->%X\n",reg_getpc(),ireg_getb(TRCSR),value);
   ireg_putb (TRCSR, value);
 #if 0 // ST: We do nothing of the sort, of course
   trcsr = trcsr_getb (TRCSR);
@@ -217,6 +225,7 @@ trcsr_putb (offs, value)
   else
     txinterrupts = 0;
 #endif
+
   return 0;//warning
 }
 
@@ -238,9 +247,11 @@ rdr_getb (offs)
     if (rxinterrupts) {
 
       rec_byte=recvbuf[rxindex];
-#if defined(SSE_IKBD_6301_TRACE_SCI_RX)
-      TRACE("6301 SCI read RX $%x (#%d)\n",rec_byte,rxindex);
-#endif
+
+#if defined(SSE_DEBUG_IKBD_6301_TRACE_SCI_RX)
+      //TRACE("6301 SCI read RX $%x (#%d)\n",rec_byte,rxindex);
+      TRACE("6301 PC %X read RDR %X\n",reg_getpc(),rec_byte);
+ #endif
 
       ireg_putb (RDR, recvbuf[rxindex++]);
 
@@ -296,7 +307,6 @@ tdr_putb (offs, value)
   if (trcsr & TIE)
     txinterrupts = 1;
 #endif
-
 #if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
 /*  Froggies: the line is never busy, but bytes are transmitted when
     the ACIA is in overrun. If we "blocked" them, Froggies wouldn't work
@@ -304,8 +314,8 @@ tdr_putb (offs, value)
 */
   if(ACIA_IKBD.LineRxBusy)
   {
-#if defined(SSE_IKBD_6301_TRACE_SCI_TX)
-    TRACE("HD6301: $%X waits in TDR\n",value);
+#if defined(SSE_DEBUG_IKBD_6301_TRACE_SCI_TX)
+    TRACE("6301 %X waits in TDR\n",value);
 #endif
     ASSERT( !ACIA_IKBD.ByteWaitingRx );
     ACIA_IKBD.ByteWaitingRx=1;
@@ -313,8 +323,8 @@ tdr_putb (offs, value)
   else
 #endif
   {
-#if defined(SSE_IKBD_6301_TRACE_SCI_TX)
-    TRACE("HD6301: $%X ->ACIA RDRS\n",value);
+#if defined(SSE_DEBUG_IKBD_6301_TRACE_SCI_TX)
+    TRACE("6301: $%X ->ACIA RDRS\n",value);
 #endif
     keyboard_buffer_write(value); // call Steem's ikbd function
   }

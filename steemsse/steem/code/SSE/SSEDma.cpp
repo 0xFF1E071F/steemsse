@@ -958,7 +958,7 @@ void TDma::UpdateRegs(bool trace_them) {
   } 
 #endif
 
-#if defined(SSE_FDC_TRACE_IRQ)
+#if defined(SSE_DEBUG_FDC_TRACE_IRQ)
   if(trace_them)
   {
     //ASSERT(fdc_str);
@@ -972,7 +972,7 @@ void TDma::UpdateRegs(bool trace_them) {
 #else
       TRACE_LOG("%d FDC IRQ CR %X STR %X ",ACT,fdc_cr,fdc_str);
 #endif
-#if defined(SSE_FDC_TRACE_STATUS)
+#if defined(SSE_DEBUG_FDC_TRACE_STATUS)
       WD1772.TraceStatus();
 #endif
       TRACE_LOG("TR %d SR %d DR %d",fdc_tr,fdc_sr,fdc_dr);

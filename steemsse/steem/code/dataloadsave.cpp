@@ -944,7 +944,10 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     BootStateFile=pCSF->GetStr("Main","DefaultSnapshot","");
 #endif
 #if defined(SSE_STF_MATCH_TOS3)
-    Tos.DefaultCountry=pCSF->GetInt("Main","TosDefaultCountry",7);
+    Tos.DefaultCountry=pCSF->GetInt("Main","TosDefaultCountry",7); // 7=UK
+#endif
+#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS3)
+    Tos.VersionWarning=pCSF->GetInt("Main","TosVersionWarning",1);
 #endif
 #if defined(SSE_GUI_OPTION_FOR_TESTS)
     SSE_TEST_ON=pCSF->GetInt("Options","TestingNewFeatures",SSE_TEST_ON);
@@ -999,7 +1002,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     CheckMenuItem(sse_menu,1523,MF_BYCOMMAND|
       ((Debug.MonitorRange)?MF_CHECKED:MF_UNCHECKED));
 #endif
-#if defined(SSE_BOILER_STACK_68030_FRAME)
+#if defined(SSE_BOILER_68030_STACK_FRAME)
     Debug.M68030StackFrame=pCSF->GetInt("Debug","M68030StackFrame",Debug.M68030StackFrame); 
     CheckMenuItem(sse_menu,1525,MF_BYCOMMAND|
       ((Debug.M68030StackFrame)?MF_CHECKED:MF_UNCHECKED));
@@ -1470,7 +1473,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_BOILER_MONITOR_RANGE)
   pCSF->SetStr("Debug","MonitorRange",EasyStr(Debug.MonitorRange)); 
 #endif
-#if defined(SSE_BOILER_STACK_68030_FRAME)
+#if defined(SSE_BOILER_68030_STACK_FRAME)
   pCSF->SetStr("Debug","M68030StackFrame",EasyStr(Debug.M68030StackFrame)); 
 #endif
 #if defined(SSE_BOILER_STACK_CHOICE)

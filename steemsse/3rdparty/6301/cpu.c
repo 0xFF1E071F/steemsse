@@ -25,10 +25,11 @@ cpu_reset ()
   cpu_setstackmax (0x00FF);
 #endif
 }
-
+#if !defined(STEVEN_SEAGAL)
 cpu_print ()
 {
   reg_printall ();
   printf ("\t[%d]\n", cpu_getncycles ());
   instr_print (reg_getpc ());
 }
+#endif

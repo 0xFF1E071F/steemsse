@@ -67,7 +67,7 @@ mem_getb (addr)
     {
 #if !defined(NDEBUG)
     if(reg_getpc()!=0xB5) // Froggies (changes nothing)
-      TRACE("NOTE PX %X reading WO register %X\n",reg_getpc(),addr);
+      TRACE("NOTE PC %X reading WO register %X\n",reg_getpc(),addr);
 #endif
       return 0xFF; // as in HD6301V1 doc
     }
@@ -79,6 +79,13 @@ mem_getb (addr)
     else
       return iram[offs];
     } else if (addr >= ram_start && addr <= ram_end) {
+#if defined(SSE_IKBD_6301_MINIRAM)
+      if(addr>=0xF000)
+        return ram[addr-0xF000+256];
+      else if(addr<0x80||addr>=256)
+        return 0xff; // error
+      else
+#endif
     return ram[addr];
   } else {
 #if defined(SSE_IKBD_6301_DISABLE_CALLSTACK)
@@ -131,7 +138,7 @@ mem_putb (addr, value)
 		else
 			iram [offs] = value;
 	} else if (addr >= ram_start && addr <= ram_end) {
-#if defined(SSE_IKBD_6301_TRACE_WRITES)
+#if defined(SSE_DEBUG_IKBD_6301_TRACE_WRITES)
 		// "watches"
 		switch(addr) {
                 case 0x88: // init
@@ -140,6 +147,13 @@ mem_putb (addr, value)
 			TRACE("6301 $%X->$%X\n",value,addr);
 			break;
 		}//sw
+#endif
+#if defined(SSE_IKBD_6301_MINIRAM)
+      if(addr>=0xF000)
+        ram[addr-0xF000+256]=value;
+      else if(addr<0x80||addr>=256)
+        ; // error
+      else
 #endif
 		ram [addr] = value;
 	} else {

@@ -82,9 +82,10 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #if defined(SSE_IKBD_6301)
 
 #define HD6301_TO_ACIA_IN_CYCLES (HD6301_CYCLES_TO_SEND_BYTE*HD6301_CYCLE_DIVISOR)
+#define ACIA_TO_HD6301_IN_CYCLES (HD6301_CYCLES_TO_RECEIVE_BYTE*HD6301_CYCLE_DIVISOR)
 #define HD6301_TO_ACIA_IN_HBL (HD6301EMU_ON?HD6301_CYCLES_TO_SEND_BYTE_IN_HBL:(screen_res==2?24:12))
 
-#else
+#else //that was not correct, for older versions (?)
 
 #define HD6301_TO_ACIA_IN_CYCLES (7200) // from WinSTon
 #define HD6301_TO_ACIA_IN_HBL (screen_res==2?24:12) // to be <7200
@@ -136,6 +137,7 @@ MIDI is 4 times faster than IKBD
     TESTING
     Since we prolong the access times, we make sure to check for interrupts
     more often. The smaller the value, the higher the emulation load!
+    TODO: compute a sort of cpu_cycles to be precise
 */
 #undef SSE_BLT_BLIT_MODE_CYCLES
 #define SSE_BLT_BLIT_MODE_CYCLES ((65-1)*4) // 'NOP' x 4 = cycles
@@ -199,11 +201,14 @@ MIDI is 4 times faster than IKBD
 // DISK //
 //////////
 
-///////////////
-// STW + SCP //
-///////////////
-
 #if defined(SSE_DISK)
+
+#ifdef SSE_DISK_ST
+#define DISK_EXT_ST "ST"
+#endif
+#ifdef SSE_DISK_MSA
+#define DISK_EXT_MSA "MSA"
+#endif
 #if defined(SSE_DISK_STW)
 #define DISK_EXT_STW "STW"
 #endif
@@ -389,11 +394,17 @@ SS_SIGNAL_ENUM_EnumDisplayModes, // wait until finished (?)
 //#endif
 
 // in HBL, for Steem, -1 for precise timing (RX/IRQ delay)
+#if defined(SSE_IKBD_6301_373)
+#define HD6301_CYCLES_TO_SEND_BYTE_IN_HBL \
+  (((HD6301_CYCLES_TO_SEND_BYTE*HD6301_CYCLE_DIVISOR) \
+  /scanline_time_in_cpu_cycles_at_start_of_vbl)-1)
+#else// those were useless calculations while the result was available as a variable
 #define HD6301_CYCLES_TO_SEND_BYTE_IN_HBL \
 ((HD6301_CYCLES_TO_SEND_BYTE*HD6301_CYCLE_DIVISOR/\
 (shifter_freq_at_start_of_vbl==50?SCANLINE_TIME_IN_CPU_CYCLES_50HZ: \
 (screen_res==2?SCANLINE_TIME_IN_CPU_CYCLES_70HZ:\
 SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))-1)
+#endif
 
 #define HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL \
 (HD6301_CYCLES_TO_RECEIVE_BYTE*HD6301_CYCLE_DIVISOR/ \
@@ -403,8 +414,16 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define HD6301_MAX_DIS_INSTR 2000 
 
 
-#define HD6301_CYCLES_TO_SEND_BYTE (1350) // see ACIA6850.txt
+
+#if defined(SSE_IKBD_EVENT)//380
+#elif defined(SSE_ACIA_OVR_TIMING)
+// hack: we count more cycle when overrun is detected, for Froggies
+#define HD6301_CYCLES_TO_SEND_BYTE ((SSE_HACKS_ON&&(ACIA_IKBD.overrun==ACIA_OVERRUN_COMING))?1380+30:1300)
+#define HD6301_CYCLES_TO_RECEIVE_BYTE HD6301_CYCLES_TO_SEND_BYTE
+#else
+#define HD6301_CYCLES_TO_SEND_BYTE (1350)
 #define HD6301_CYCLES_TO_RECEIVE_BYTE (1350)
+#endif
 
 // far from ideal, but maybe we must change method or timings instead //v3.7 done!
 #if !defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
@@ -418,7 +437,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 // INTERRUPT //
 ///////////////
 
-//#if defined(SSE_INTERRUPT)
+#if defined(SSE_INTERRUPT)
 /*  
     IACK (interrupt acknowledge)  16
     Exception processing          40
@@ -465,8 +484,8 @@ Far more on the ST.
 #define SSE_INT_VBI_START (68) // default = STE
 #endif
 
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 #define THRESHOLD_LINE_PLUS_2_STF (54)
-
 #if defined(SSE_INT_VBL_STF) // modest hack still works
 #define HBL_FOR_STE (444)
 #define THRESHOLD_LINE_PLUS_2_STE (40) //3.7.0
@@ -479,9 +498,8 @@ Far more on the ST.
 #else
 #define THRESHOLD_LINE_PLUS_2_STE (THRESHOLD_LINE_PLUS_2_STF-2)
 #endif
-
-//#endif
-
+#endif
+#endif//int
 
 /////////
 // IPF //
@@ -503,8 +521,6 @@ Far more on the ST.
 #undef SSE_IPF_DRAFT
 #define SSE_IPF_DRAFT "RAW"  //?
 #endif
-
-
 
 #endif//ipf
 
@@ -638,14 +654,12 @@ Far more on the ST.
 
 #ifndef SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1
 #define VERT_OVSCN_LIMIT (502) //502
-#endif
-
 #if defined(SSE_MMU_WU_IO_BYTES_W_SHIFTER_ONLY)
 #define WU2_PLUS_CYCLES 4 // we make cycles +2
 #else
 #define WU2_PLUS_CYCLES 2 // we don't
 #endif
-
+#endif
 
 
 ///////////
@@ -709,7 +723,7 @@ Far more on the ST.
 
 #if defined(SSE_STF_MATCH_TOS2)
 #if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2)
-#define DEFAULT_TOS_STF (HardDiskMan.DisableHardDrives?0x102:0x104)
+#define DEFAULT_TOS_STF (HardDiskMan.DisableHardDrives?0x102:0x104) // how caring!
 #else
 #define DEFAULT_TOS_STF 0x102
 #endif
@@ -761,11 +775,15 @@ Far more on the ST.
 
 #endif
 
-#if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO) // like SainT, higher pixels
-#define ST_ASPECT_RATIO_DISTORTION 1.15//110 //in % of Y axis
+#if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO) || defined(SSE_VID_STRETCH_ASPECT_RATIO)
+#if SSE_VERSION>=380
+#define ST_ASPECT_RATIO_DISTORTION 1.10 // multiplier for Y axis
+#else
+#define ST_ASPECT_RATIO_DISTORTION 1.15 // multiplier for Y axis
+#endif
 #endif
 
-#if defined(SSE_VID_RECORD_AVI)
+#if defined(SSE_VID_RECORD_AVI)//no, Fraps or other 3rd party programs will do a fantastic job
 #define SSE_VID_RECORD_AVI_FILENAME "SteemVideo.avi"
 #define SSE_VID_RECORD_AVI_CODEC "MPG4"
 #endif
@@ -781,6 +799,5 @@ Far more on the ST.
 #define YM2149_FIXED_VOL_FILENAME "\\ym2149_fixed_vol.bin"
 #endif
 #endif
-
 
 #endif//#ifndef SSEPARAMETERS_H

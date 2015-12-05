@@ -79,7 +79,8 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 
 #include "SSE/SSEGlue.h"
 
-#define LOGSECTION LOGSECTION_OPTIONS//SS
+//#define LOGSECTION LOGSECTION_OPTIONS//SS
+#define LOGSECTION LOGSECTION_INIT //SS
 
 //---------------------------------------------------------------------------
 bool TOptionBox::ChangeBorderModeRequest(int newborder)

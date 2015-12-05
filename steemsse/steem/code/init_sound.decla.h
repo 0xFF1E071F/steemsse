@@ -58,7 +58,7 @@ EXT int pa_output_buffer_size INIT(128);
 #endif
 
 
-
+EXT bool TrySound;
 
 #undef EXT
 #undef INIT

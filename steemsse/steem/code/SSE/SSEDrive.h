@@ -118,7 +118,7 @@ struct TSF314 {
 #endif
 
 #if defined(SSE_DRIVE_INDEX_PULSE)
-#if !defined(SSE_DRIVE_INIT2)
+#if !defined(SSE_DRIVE_INIT_373)
   WORD rpm; // default 300
 #endif
   int time_of_next_ip;

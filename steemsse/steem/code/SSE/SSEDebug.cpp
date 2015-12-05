@@ -27,10 +27,12 @@
 #include <steemh.decla.h>
 #include "SSEFloppy.h"
 #include <display.decla.h>
+#include <init_sound.decla.h>
 #endif
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 #include "SSEMMU.h"
 #endif
+#include "SSEInterrupt.h"
 
 int debug0,debug1=0,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9;
 
@@ -84,7 +86,7 @@ TDebug::TDebug() {
 #endif
   logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 0;
 #endif
-  logsection_enabled[ LOGSECTION_OPTIONS ] = 1; // no boiler control
+//  logsection_enabled[ LOGSECTION_OPTIONS ] = 1; // now free
 #endif
 
 #if defined(SSE_DEBUG_TRACE_FILE)
@@ -119,7 +121,7 @@ TDebug::TDebug() {
   ZeroMemory(&InterruptTable,sizeof(SInterruptTable));
 #endif
 
-#if defined(SSE_BOILER_STACK_68030_FRAME)
+#if defined(SSE_BOILER_68030_STACK_FRAME)
   M68030StackFrame=0;
 #endif
 #if defined(SSE_BOILER_STACK_CHOICE)
@@ -141,7 +143,7 @@ TDebug::~TDebug() {
 
 
 void TDebug::Vbl(){ 
-#if defined(SSE_BOILER_FRAME_INTERRUPTS)
+#if defined(SSE_OSD_CONTROL) && defined(SSE_BOILER_FRAME_INTERRUPTS)
 /*  This system so that we only report these once per frame, giving
     convenient info about VBI, HBI, and MFP IRQ.
 */
@@ -181,6 +183,20 @@ void TDebug::Vbl(){
    nHbis=0;
 }
 
+
+#if defined(SSE_DEBUG_RESET)
+
+void TDebug::Reset(bool Cold) {
+  TRACE("Reset (%d)\n",Cold);
+  if(Cold)
+    IgnoreErrors=0;
+#if defined(SSE_OSD_CONTROL)
+  else if((OSD_MASK_CPU&OSD_CONTROL_CPURESET)) 
+    TRACE_OSD("RESET");
+#endif
+}
+
+#endif
 
 
 #if defined(SSE_DEBUG_TRACE)
@@ -243,10 +259,10 @@ extern int dma_sound_bass,dma_sound_treble;
 
 
 void TDebug::TraceGeneralInfos(int when) {
-  
-  if(when==START)
-  {
 
+#if defined(SSE_DEBUG_START_STOP_INFO2)
+  if(when==INIT)
+  {
 #if defined(SSE_BOILER_WIPE_TRACE2) && defined(SSE_DEBUG_TRACE_FILE)
 #ifdef WIN32 // at each start now because of wiping
     // http://www.ehow.com/how_2190605_use-date-time-c-program.html
@@ -257,20 +273,38 @@ void TDebug::TraceGeneralInfos(int when) {
     TRACE("Steem SSE TRACE - %s -%s\n",sdate,stime);
 #endif
 #endif
-
-    TRACE(">>> Start Emulation <<<\n");
-#if defined(SSE_STF)
-    TRACE("%s; ",st_model_name[ST_TYPE]);
+    TRACE("HighPriority %d PauseWhenInactive %d floppy_access_ff %d StartEmuOnClick %d AutoLoadSnapShot %d\n",HighPriority,PauseWhenInactive,floppy_access_ff,StartEmuOnClick,AutoLoadSnapShot);
+    TRACE("AllowTaskSwitch %d DirectDraw %d DrawToVidMem %d BlitHideMouse %d DirectSound %d\n",AllowTaskSwitch,TryDD,Disp.DrawToVidMem,Disp.BlitHideMouse,TrySound);
+  }
+  else
 #endif
-    TRACE("T%X; ",tos_version);
+  if(when==START)
+  {
+#if !defined(SSE_DEBUG_START_STOP_INFO2)
+#if defined(SSE_BOILER_WIPE_TRACE2) && defined(SSE_DEBUG_TRACE_FILE)
+#ifdef WIN32 // at each start now because of wiping
+    // http://www.ehow.com/how_2190605_use-date-time-c-program.html
+    char sdate[9];
+    char stime[9];
+    _strdate( sdate );
+    _strtime( stime );
+    TRACE("Steem SSE TRACE - %s -%s\n",sdate,stime);
+#endif
+#endif
+#endif
+    TRACE(">>> Start Emulation <<<\n");
+#if defined(SSE_STF) && defined(SSE_MMU_WU_DL)
+    TRACE("%s%d; ",st_model_name[ST_TYPE],MMU.WS[WAKE_UP_STATE]);
+#endif
+    TRACE("T%X %d; ",tos_version,ROM_PEEK(0x1D)); //+country
     TRACE("%dK; ",mem_len/1024);
     if(MONO)
-      TRACE("Monochrome");  
+      TRACE("Monochrome\n");  
 #if defined(SSE_VID_BORDERS)
     else if(DISPLAY_SIZE)
-      TRACE("Size %d", DISPLAY_SIZE);
+      TRACE("Size %d\n", DISPLAY_SIZE);
 #endif
-    TRACE("\n");
+    //TRACE("\n");
     TRACE("%d drives",num_connected_floppies);
     if(FloppyDrive[0].DiskInDrive())
       TRACE("; Disk A: %s",FloppyDrive[0].DiskName.c_str()); 
@@ -280,19 +314,17 @@ void TDebug::TraceGeneralInfos(int when) {
     if(!HardDiskMan.DisableHardDrives && stemdos_current_drive) // check
       TRACE("; HD ON");
 #endif
+#if defined(SSE_ACSI_OPTION)
+    if(SSEOption.Acsi)
+      TRACE("; ACSI ON");
+#endif
 #if defined(SSE_FDC)
     if(ADAT)
       TRACE("; ADAT");
 #endif
 #if USE_PASTI
     if(pasti_active)
-    {
-      TRACE("; Pasti %d",pasti_active);
-#if defined(SSE_PASTI_ONLY_STX)
-      if(PASTI_JUST_STX)
-        TRACE(" STX only");
-#endif
-    }
+      TRACE("; Pasti active %s",PASTI_JUST_STX?"STX only":"");
 #endif
 #if defined(SSE_HACKS)
     if(SSE_HACKS_ON)
@@ -300,17 +332,26 @@ void TDebug::TraceGeneralInfos(int when) {
 #endif
 #if defined(SSE_IKBD_6301)
     if(HD6301EMU_ON)
-      TRACE("; HD6301");
+      TRACE("; C1");
 #endif
-
+    if(OPTION_PRECISE_MFP)
+      TRACE("; C2");
+    if(n_cpu_cycles_per_second>CpuNormalHz)
+      TRACE("; Speed %d",n_cpu_cycles_per_second);
+#if defined(SSE_INT_MFP_RATIO_OPTION)
+    if(OPTION_CPU_CLOCK)
+      TRACE("; Clock %d",CpuCustomHz);
+#endif
+/*
 #if defined(SSE_MMU_WU_DL)
     if(WAKE_UP_STATE)
       TRACE("; WS%d",MMU.WS[WAKE_UP_STATE]);
 #elif defined(SSE_MMU_WAKE_UP)
     TRACE("; WU%d",WAKE_UP_STATE);
 #endif
-
+    */
     TRACE("\n");
+//    TRACE(">>> Start Emulation <<<\n");
   }
   else
   {    // pick the info you need...
@@ -320,7 +361,8 @@ void TDebug::TraceGeneralInfos(int when) {
     // Vectors
     TRACE("HBL %X VBL %X\n",LPEEK(0x68),LPEEK(0x70));
     TRACE("Timers A %X B %X C %X D %X\n",LPEEK(0x134),LPEEK(0x120),LPEEK(0x114),LPEEK(0x110));
-//    TRACE("ACIA IKBD %X\n",LPEEK(0x118));
+    TRACE("ACIA %X FDC %X\n",LPEEK(0x118),LPEEK(0x11C));
+    TRACE("BUS %X ADDR %X ILLEG %X TRACE %X\n",LPEEK(0x8),LPEEK(0xC),LPEEK(0x10),LPEEK(0x24));
     // Misc
 #if defined(SSE_SOUND_MICROWIRE___)
     if(dma_sound_bass!=6||dma_sound_treble!=6)
@@ -398,6 +440,7 @@ void TDebug::TraceLog(char *fmt, ...) { // static
       Debug.nTrace=0;
       rewind(Debug.trace_file_pointer); // it doesn't erase
       TRACE("\n============\nREWIND TRACE\n============\n");
+      Debug.TraceGeneralInfos(INIT);
     }
 #endif
   }

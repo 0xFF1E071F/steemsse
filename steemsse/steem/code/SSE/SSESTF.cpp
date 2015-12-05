@@ -1,52 +1,57 @@
 #include "SSE.h"
 
-#if defined(STEVEN_SEAGAL)
+#if defined(STEVEN_SEAGAL) && defined(SSE_STF)
+
 
 #if defined(SSE_STRUCTURE_SSESTF_OBJ)
 #include "../pch.h"
 #include <conditions.h>
 #include <emulator.decla.h>
 #include <gui.decla.h>
+#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS3)
+#include <stemdos.decla.h>
+#endif
 #include "SSEDebug.h"
 #include "SSEInterrupt.h"
 #include "SSESTF.h"
 #include "SSEOption.h"
 #include "SSEGlue.h"
-
 #endif//SSE_STRUCTURE_SSESTF_OBJ
 
-#if defined(SSE_STF)
 
 // note this is global here, not in classes. TODO?
 
 char* st_model_name[]={"STE","STF","Mega ST4"
-#if defined(SSE_STF_8MHZ)
+#if defined(SSE_STF_8MHZ)//no
   ,"STF 8.00 MHZ"
 #endif
 };
 
-#if defined(SSE_TOS_WARNING1)
+#if defined(SSE_TOS_WARNING1) //TODO refactor, functions in TTos
 void CheckSTTypeAndTos() {
+#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS3)
+  if(Tos.VersionWarning)
+#endif
   if(tos_version<0x106 && ST_TYPE==STE || tos_version>=0x106 && ST_TYPE!=STE)
     Alert("TOS and ST type normally not compatible","Warning",MB_OK|MB_ICONWARNING);
 }
 #endif
 
-int SwitchSTType(int new_type) {
+int SwitchSTType(int new_type) { // it was one of the first added functions, no object
 
   ASSERT(new_type>=0 && new_type<SSE_STF_ST_MODELS);
   ST_TYPE=new_type;
   if(ST_TYPE!=STE) // all STF types
   {
 //    stfm_borders=4; // Steem 3.2 command-line option STFMBORDER (not used)
-#if defined(SSE_INT_VBL_STF) // instead of SSE_INT_VBI_START
+#if defined(SSE_INT_VBL_STF) // instead of SSE_INT_VBI_START //no
     HblTiming=HBL_FOR_STF; 
 #endif
 #if defined(SSE_INT_MFP_RATIO)
 
 #if defined(SSE_INT_MFP_RATIO_STF) 
 
-#if defined(SSE_STF_8MHZ)
+#if defined(SSE_STF_8MHZ)//no
     if(ST_TYPE==STF8MHZ) // this removes artefacts in panic.tos, is it normal?
     {
       CpuMfpRatio=(double)CPU_STF_ALT/(double)MFP_CLK_TH_EXACT;
@@ -122,5 +127,5 @@ int SwitchSTType(int new_type) {
   return ST_TYPE;
 }
 
-#endif//#if defined(SSE_STF)
-#endif//#if defined(STEVEN_SEAGAL)
+
+#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_STF)

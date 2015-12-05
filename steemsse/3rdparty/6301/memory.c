@@ -46,15 +46,24 @@ u_int  break_addr;		/* Last breakpoint address accessed */
 u_char *
 mem_init ()
 {
+#if defined(SSE_IKBD_6301_MINIRAM)
+  u_int size = (256+4096);
+#else
   u_int size = MEMSIZE; /* MEMSIZE also hard coded in command.c */
+#endif
   if (ram == NULL) {
     if ((ram = malloc (size)) == NULL) {
       perror ("Couldn't allocate ram");
       return NULL;
     }
-    printf("ram %d allocated OK\n",size);//SS
+    //printf("6301: ram %d allocated OK\n",size);//SS
+    TRACE("6301: ram %d allocated OK\n",size);//SS
     ram_start = 0;
+#if defined(SSE_IKBD_6301_MINIRAM)
+    ram_end   = MEMSIZE - 1;
+#else
     ram_end   = size - 1;
+#endif
     memset (ram, 0, 256);
 #if SSE_VERSION<=350
     load_rom(); // ST

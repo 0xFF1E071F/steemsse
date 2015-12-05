@@ -692,6 +692,11 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
 #undef LOGSECTION
 #endif  
 #if defined(SSE_GUI_SHORTCUT_SELECT_DISK)
+/*  Request. v3.7.3.
+    So one can insert disk images in drives without using the disk manager.
+    Scripts can then be used in Window's file selector.
+    This is useful for those who use Steem in a cabinet.
+*/
     case CUT_SELECT_DISK_A:
     case CUT_SELECT_DISK_B:
     {
