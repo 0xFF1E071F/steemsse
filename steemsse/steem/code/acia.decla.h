@@ -15,7 +15,6 @@
 extern "C" {  // necessary for VC6
 #endif
 
-
 struct ACIA_STRUCT{ // removed _ ..
   int clock_divide; //OLD_VARIABLES?
 #if !defined(SSE_ACIA_REMOVE_OLD_VARIABLES)
@@ -57,6 +56,9 @@ struct ACIA_STRUCT{ // removed _ ..
 #else
   BYTE ByteWaitingTx;
   BYTE LineTxBusy; // transmitting to 6301 or MIDI
+#if !defined(SSE_ACIA_REGISTERS)
+  BYTE WaitingByte; // would be TDR before going to TDRS
+#endif
 #endif//ver
 #endif
 

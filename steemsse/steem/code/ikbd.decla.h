@@ -307,14 +307,13 @@ EXT IKBD_STRUCT ikbd;
 
 BYTE keyboard_buffer_read();
 
-
+/*
 #if (defined(STEVEN_SEAGAL) && defined(SSE_ACIA)) 
 //temp moved from emulator.h to have it compile
-//#include "acia.h"
-#include "acia.decla.h" //should choose one...
+#include "acia.decla.h"
 EXT ACIA_STRUCT acia[2];
 #endif
-
+*/
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_IRQ_DELAY)
 // not defined anymore (v3.5.2), see MFP

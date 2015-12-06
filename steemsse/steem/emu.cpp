@@ -220,7 +220,9 @@ EXT char m68k_src_b;
 #undef INIT
 
 #endif
-
+#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA)
+#include "acia.decla.h"
+#endif
 #include "cpu.h"
 #include "run.h"
 #ifdef DEBUG_BUILD

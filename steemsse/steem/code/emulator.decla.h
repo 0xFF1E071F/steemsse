@@ -240,7 +240,7 @@ int ACIAClockToHBLS(int,bool=0);
 void ACIA_Reset(int,bool);
 void ACIA_SetControl(int,BYTE);
 
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_ACIA)) //see new file acia.h
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_ACIA)) //see new file acia.decla.h
 struct _ACIA_STRUCT{
   int clock_divide;
 

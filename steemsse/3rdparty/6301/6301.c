@@ -6,7 +6,7 @@
 #include "SSE/SSE.h"
 #include <SSE/SSEDebug.h>
 #include <SSE/SSE6301.h>
-#include <acia.h>
+#include <acia.decla.h>
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
 #include <SSE/SSEOption.h>
