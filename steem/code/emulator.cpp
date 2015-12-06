@@ -125,7 +125,7 @@ LPAGENDAPROC agenda_list[]={
   (LPAGENDAPROC)1};
   
 
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_ACIA)) //see new file acia.h
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_ACIA)) //see new file acia.decla.h
 struct _ACIA_STRUCT acia[2];
 #endif
 

@@ -11,7 +11,7 @@
 #include "../pch.h"
 #include <easystr.h>
 #include <mymisc.h>
-#include <acia.h>
+#include <acia.decla.h>
 #include <emulator.decla.h>
 #include <ikbd.decla.h>
 #endif//SSE_STRUCTURE_SSE6301_OBJ

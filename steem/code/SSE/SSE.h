@@ -1,4 +1,4 @@
-// for v3.7.3
+// for v3.8.0
 #pragma once // VC guard
 #ifndef STEVEN_SEAGAL_H // BCC guard
 #define STEVEN_SEAGAL_H
@@ -16,7 +16,7 @@ Homepage:
  http://ataristeven.exxoshost.co.uk/
 
 Added some files to the project. 
-- acia.h, key_table.cpp in 'steem\code'.
+- acia.decla.h, key_table.cpp in 'steem\code'.
 -In folder 'steem\code\SSE', several files starting with 'SSE', including 
 this one.
 -In folder 'steem\doc\SSE', some doc files (mainly done by me, but sometimes
@@ -125,7 +125,7 @@ Beta: not SSE_PRIVATE_BUILD
 // VERSION //
 /////////////
 
-#define SSE_VERSION 373 // versions down to 340 still compile
+#define SSE_VERSION 380 // versions down to 340 still compile
                         // full v330 not publicly available anymore
 
 #if SSE_VERSION>373 //last release
