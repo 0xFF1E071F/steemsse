@@ -375,15 +375,7 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
             else
               TRACE_LOG("ACIA IKBD new byte waiting $%X (instead of $%X)\n",io_src_b,ACIA_IKBD.TDR);
 #endif
-#if defined(SSE_ACIA_380)
-#if defined(SSE_ACIA_TDR_COPY_DELAY) // for Grumbler
-            if(ACT-ACIA_IKBD.last_tx_write_time<ACIA_TDR_COPY_DELAY)
-              ACIA_IKBD.TDRS=ACIA_IKBD.TDR; // replaces
-            else
-#endif
-#else
             ACIA_IKBD.TDR=io_src_b; // replaces
-#endif
             ACIA_IKBD.ByteWaitingTx=true;
           }
 
