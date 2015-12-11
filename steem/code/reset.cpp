@@ -317,6 +317,10 @@ void reset_peripherals(bool Cold)
   WD1772.Reset(Cold);
 #endif
 
+#if defined(SSE_INT_MFP_REFACTOR2B)
+  MC68901.Reset(Cold);
+#endif
+
 #if defined(SSE_INT_JITTER_RESET) 
   if(Cold)
   {

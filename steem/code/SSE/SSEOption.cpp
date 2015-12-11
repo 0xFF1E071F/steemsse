@@ -40,7 +40,7 @@ void TOption::Init() {
   DisplaySize=0; // original Steem 3.2
   StealthMode=0;
 #if defined(DEBUG_BUILD)  
-  OutputTraceToFile=1; // can be disabled in Boiler
+  OutputTraceToFile=1;
 #else
   OutputTraceToFile=0; 
 #endif

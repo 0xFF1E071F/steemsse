@@ -27,8 +27,8 @@ struct TOption {
   unsigned int PSGFilter:1;
   unsigned int CaptureMouse:1;
   unsigned int StealthMode:1;
-  unsigned int OutputTraceToFile:1; // can be disabled in Boiler // BOOL -> int for Unix...
-  unsigned int TraceFileLimit:1; // stop TRACING to file at +-3+MB // BOOL -> int for Unix...
+  unsigned int OutputTraceToFile:1; 
+  unsigned int TraceFileLimit:1; // stop TRACING to file at +-3+MB 
   unsigned int UseSDL:1;
   unsigned int OsdDriveInfo:1;
   unsigned int Dsp:1; // giving the ability to disable buggy DSP
@@ -55,6 +55,7 @@ struct TOption {
   unsigned int PRG_support:1;
   unsigned int Direct3DCrisp:1;
   unsigned int Acsi:1;
+  unsigned int KeyboardClick:1;
 
 #ifdef __cplusplus // visible only to C++ objects
   TOption();
@@ -108,7 +109,7 @@ extern struct TOption SSEOption;
 #define OPTION_PRECISE_MFP (SSEOption.MC68901)
 #define OPTION_PRG_SUPPORT (SSEOption.PRG_support)
 #define OPTION_D3D_CRISP (SSEOption.Direct3DCrisp)
-
+#define OPTION_KEYBOARD_CLICK (SSEOption.KeyboardClick)
 
 #else//!defined(SSE_SSE_OPTION_STRUCT)
 

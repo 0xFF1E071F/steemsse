@@ -125,7 +125,7 @@ Beta: not SSE_PRIVATE_BUILD
 // VERSION //
 /////////////
 
-#define SSE_VERSION 373 // versions down to 340 still compile
+#define SSE_VERSION 380 // versions down to 340 still compile
                         // full v330 not publicly available anymore
 
 #if SSE_VERSION>373 //last release
@@ -1425,7 +1425,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if SSE_VERSION>=364
 
-
 #if defined(SSE_CPU)
 #define SSE_CPU_E_CLOCK // other place?
 #if defined(SSE_CPU_E_CLOCK)
@@ -1811,9 +1810,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_INT_MFP_TIMERS_NO_BOOST_LIMIT
 #define SSE_INT_MFP_OPTION //performance/precision
 #define SSE_INT_MFP_UTIL
-#ifdef SSE_BETA
-#define SSE_INT_MFP_RECORD_PENDING_TIMING
-#endif
 #define SSE_INT_MFP_SPURIOUS//cool crashes
 #define SSE_INT_MFP_CHECKTIMEOUT_ON_STOP
 #undef SSE_INT_MFP_PATCH_TIMER_D//Audio Artistic
@@ -1915,8 +1911,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_TOS_TOS_AUTORUN// Atari TOS file direct support
 #endif
 #endif
-#if defined(SSE_UNIX)
-#endif
 #if defined(SSE_VARIOUS)
 #undef SSE_VAR_FULLSCREEN_DONT_START
 #define SSE_GUI_PATCH_SCROLLBAR
@@ -1947,8 +1941,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_DIRECT3D 
 #endif//vs2008
 #if defined(BCC_BUILD) // Borland C++ 5.5 (after some efforts!)
-#define SSE_VID_DD7
-#define SSE_VID_DIRECT3D
+#define SSE_VID_DD7      
+#define SSE_VID_DIRECT3D  // could be trouble on some machines
 #endif
 #if _MSC_VER == 1200 //VC6 //it works but we make a 'No D3D' build
 //#define SSE_VID_DD7
@@ -2087,7 +2081,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_STATUS_STRING_SINGLE_SIDE
 #endif//gui
 #if defined(SSE_INT_MFP)
-#define SSE_INT_MFP_SPURIOUS_372 // bugfix Return -HMD "spurious spurious"
+#define SSE_INT_MFP_SPURIOUS_372 // bugfix Return -HMD "spurious spurious"//see 380
 #endif
 #if defined(SSE_SOUND)
 #define SOUND_DISABLE_INTERNAL_SPEAKER //of course, about time
@@ -2501,11 +2495,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_E_CLOCK4
 #endif
 
-#if defined(SSE_FLOPPY)
-#define SSE_PASTI_AUTO_SWITCH2
-#define SSE_DISK_SCP380 // War Heli
-#endif
-
 #ifdef SSE_GUI
 #define SSE_GUI_CONFIG_FILE // new option to L/S ini files
 #if defined(SSE_GUI_CONFIG_FILE)
@@ -2534,6 +2523,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_GLUE_FRAME_TIMINGS)
 #undef SSE_SHIFTER_FIX_LINE508_CONFUSION
 #undef SSE_TIMINGS_FRAME_ADJUSTMENT
+#undef SSE_INT_VBL_STF
 #define SSE_GLUE_FRAME_TIMINGS_A
 #define SSE_GLUE_FRAME_TIMINGS_B // remove old var and functions
 #define SSE_GLUE_FRAME_TIMINGS_C // extended resolutions
@@ -2554,15 +2544,25 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_INT_MFP)
 #define SSE_INT_MFP_IS_DELAY
+//#define SSE_INT_MFP_RECORD_PENDING_TIMING
+#define SSE_INT_MFP_REFACTOR2B //new attempt
+#if defined(SSE_INT_MFP_REFACTOR2B)
+#define SSE_INT_MFP_REFACTOR2C //test, assert
+#define SSE_INT_MFP_REFACTOR2D //debug
+#define SSE_INT_MFP_REFACTOR2E //refactor a
+#define SSE_INT_MFP_REFACTOR2F //refactor b
+#undef SSE_INT_MFP_IACK_LATENCY4 // "skip timer"
+#endif
 #define SSE_INT_MFP_REFACTOR3 //enums -note REFACTOR2 not active
+#undef SSE_INT_MFP_SPURIOUS_372
+#define SSE_INT_MFP_SPURIOUS_380
 #undef SSE_INT_MFP_TIMER_B_AER // refactor
 #define SSE_INT_MFP_TIMER_B_AER2 // refactor
 #define SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS // timer B should be updated
 #define SSE_INT_MFP_TIMERS_WOBBLE //
-#define SSE_INT_MFP_RATIO_STE3 // 
+//#define SSE_INT_MFP_RATIO_STE3 // same ratio as STF?
 #define SSE_INT_MFP_TIMERS_STARTING_DELAY //
-#define SSE_INT_MFP_UPDATE_IP_ON_GPIP_CHANGE
-#define SSE_INT_MFP_SPURIOUS_380
+//#define SSE_INT_MFP_UPDATE_IP_ON_GPIP_CHANGE //mistake, MFD (do test prg b4?)
 #endif
 
 #if defined(SSE_INT_VBL)
