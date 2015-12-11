@@ -306,6 +306,13 @@ enum logsection_enum_tag {
 #define TRACE_CONTROL_CPU_SP (1<<13) 
 #define TRACE_CONTROL_CPU_CYCLES (1<<12) 
 
+#if SSE_VERSION>=380
+
+#define TRACE_MASK_14 (Debug.ControlMask[14]) //Shifter 2
+#define TRACE_CONTROL_SHIFTER_PLUS_2 (1<<15) 
+
+#endif
+
 #endif
 
 #if defined(SSE_BOILER_VIDEO_CONTROL)

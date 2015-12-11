@@ -33,7 +33,7 @@ EXT BYTE mfp_reg[24]; // 24 directly addressable internal registers, each 8bit
 
 
 #if defined(SSE_INT_MFP_REFACTOR3)
-enum {
+enum EMfpRegs {
 MFPR_GPIP= 0, // ff fa01 MFP General Purpose I/O
 MFPR_AER= 1, // ff fa03 MFP Active Edge
 MFPR_DDR= 2, // ff fa05 MFP Data Direction
@@ -94,7 +94,7 @@ MFPR_UDR= 23 // ff fa2f MFP USART Data
 EXT BYTE mfp_gpip_no_interrupt INIT(0xf7);
 
 #if defined(SSE_INT_MFP_REFACTOR3)
-enum {
+enum EMfpInterrupts{
 MFP_INT_MONOCHROME_MONITOR_DETECT =15,
 MFP_INT_RS232_RING_INDICATOR= 14,
 MFP_INT_TIMER_A= 13,
@@ -165,7 +165,7 @@ MFP_GPIP_MONO_BIT =7
 EXT int mfp_time_of_set_pending[16];
 #endif
 
-#if defined(SSE_INT_MFP_WRITE_DELAY1)//no
+#if defined(SSE_INT_MFP_WRITE_DELAY1)//no (it's in 68901 object)
 EXT int time_of_last_write_to_mfp_reg;
 #endif
 
@@ -237,8 +237,19 @@ struct TMC68901 {
   */
   BYTE Vector;
   WORD IPR;
-  int IrqTiming;
+  int IrqSetTime;
+#if defined(SSE_INT_MFP_REFACTOR2B)
+  int IrqClearTime;
+#endif
+//#if !defined(SSE_INT_MFP_REFACTOR2F)
   int IackTiming;
+//#endif
+//#if defined(SSE_INT_MFP_REFACTOR2F)
+//  BYTE IackCycles;
+//#endif
+#if defined(SSE_INT_MFP_REFACTOR2B)
+  void Reset(bool Cold);
+#endif
 #ifdef SSE_BETA
   void Update();
 #endif

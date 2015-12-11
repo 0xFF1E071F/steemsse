@@ -47,7 +47,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 #if defined(SSE_BOILER_TRACE_CONTROL)
     && (((1<<15)&d2_dpeek(FAKE_IO_START+24))) 
     // we add conditions address range - logsection enabled
-      && (old_pc<rom_addr)
+      //&& (old_pc<rom_addr)
 //      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_INTERRUPTS] ) //mfp
       && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_MFP] ) //mfp
       && ( (addr&0xffff00)!=0xfffc00 || logsection_enabled[LOGSECTION_IKBD] ) //acia
@@ -375,7 +375,15 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
             else
               TRACE_LOG("ACIA IKBD new byte waiting $%X (instead of $%X)\n",io_src_b,ACIA_IKBD.TDR);
 #endif
+#if defined(SSE_ACIA_380)
+#if defined(SSE_ACIA_TDR_COPY_DELAY) // for Grumbler
+            if(ACT-ACIA_IKBD.last_tx_write_time<ACIA_TDR_COPY_DELAY)
+              ACIA_IKBD.TDRS=ACIA_IKBD.TDR; // replaces
+            else
+#endif
+#else
             ACIA_IKBD.TDR=io_src_b; // replaces
+#endif
             ACIA_IKBD.ByteWaitingTx=true;
           }
 
@@ -808,17 +816,22 @@ system exclusive start and end messages (F0 and F7).
 #if defined(SSE_INT_MFP_IRQ_TIMING)
             if(OPTION_PRECISE_MFP)
             {
+#if !defined(SSE_INT_MFP_REFACTOR2F)
               MC68901.UpdateNextIrq();
+#endif
               //if((sr & SR_IPL)<SR_IPL_6) //temp hack to avoid bad spurious (Rainbow Island)
               {
                 MC68901.WriteTiming=ACT;
                 MC68901.LastRegisterWritten=n;
+#if defined(SSE_INT_MFP_REFACTOR2F)
+                MC68901.UpdateNextIrq();
+#endif
               }
             }
 #endif
             // The MFP doesn't update for about 8 cycles, so we should execute the next
             // instruction before causing any interrupts
-            //SS this seems suspicious but it is actually needed: Super Hang-On
+            //SS this seems suspicious but it is actually needed: Super Hang-On TODO
             ioaccess=old_ioaccess;
             if ((ioaccess & (IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE | IOACCESS_FLAG_FOR_CHECK_INTRS |
                                 IOACCESS_FLAG_DELAY_MFP))==0){
@@ -857,7 +870,7 @@ system exclusive start and end messages (F0 and F7).
 #if defined(SSE_DEBUG_FRAME_REPORT_BLITTER)
       FrameEvents.Add(scan_y,LINECYCLES,'B',((addr-0xff8a00)<<8)|io_src_b);
 #endif
-#if defined(SSE_BOILER_FRAME_REPORT_MASK)
+#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
       if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_BLITTER)
         FrameEvents.Add(scan_y,LINECYCLES,'B',((addr-0xff8a00)<<8)|io_src_b);
 #endif
@@ -2246,7 +2259,7 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
     else
       FrameEvents.Add(scan_y,LINECYCLES,'P',(n<<12)|io_src_w); 
 #endif
-#if defined(SSE_BOILER_FRAME_REPORT_MASK)
+#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK1&FRAME_REPORT_MASK_PAL) 
   {
     if(Blit.HasBus)
