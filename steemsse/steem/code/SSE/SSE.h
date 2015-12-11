@@ -125,7 +125,7 @@ Beta: not SSE_PRIVATE_BUILD
 // VERSION //
 /////////////
 
-#define SSE_VERSION 380 // versions down to 340 still compile
+#define SSE_VERSION 373 // versions down to 340 still compile
                         // full v330 not publicly available anymore
 
 #if SSE_VERSION>373 //last release
@@ -2362,6 +2362,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//midi
 
 #ifdef SSE_OSD
+#define SSE_OSD_DEBUG_MESSAGE
 //#define SSE_OSD_DEBUG_MESSAGE_FREQ // tell when 60hz (?)
 #define SSE_OSD_DRIVE_INFO_EXT // v3.7.1
 #endif
