@@ -131,7 +131,7 @@ extern HWND  StemWin;
 //---------------------------------------------------------------------------
 void exception(int exn,exception_action ea,MEM_ADDRESS a)
 {
-  //ASSERT(!Blit.HasBus); // boiler update
+  ASSERT(!Blit.HasBus); // cases?
   io_word_access=0;
   ioaccess=0;
   ExceptionObject.init(exn,ea,a);
@@ -236,10 +236,12 @@ void run()
     try {
 #endif
     TRY_M68K_EXCEPTION
+
       while (runstate==RUNSTATE_RUNNING){
         // cpu_cycles is the amount of cycles before next event.
         // SS It is *decremented* by instruction timings, not incremented.
         while (cpu_cycles>0 && runstate==RUNSTATE_RUNNING){
+
           DEBUG_ONLY( pc_history[pc_history_idx++]=pc; )
           DEBUG_ONLY( if (pc_history_idx>=HISTORY_SIZE) pc_history_idx=0; )
           
@@ -435,22 +437,15 @@ void inline prepare_event_again() //might be an earlier one
     PREPARE_EVENT_CHECK_FOR_ACIA_IKBD_IN;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_EVENT)
-    PREPARE_EVENT_CHECK_FOR_IKBD;
-#endif
-
   // cpu_timer must always be set to the next 4 cycle boundary after time_of_next_event
   int oo=time_of_next_event-cpu_timer;
   oo=(oo+3) & -4;
+
 //  log_write(EasyStr("prepare event again: offset=")+oo);
   cpu_cycles+=oo;cpu_timer+=oo;
 }
 
-#if defined(SSE_COMPILER_380)
-void prepare_next_event() //VC6 would inline
-#else
 void inline prepare_next_event() //SS check this "inline" thing
-#endif
 {
 
 #if defined(SSE_GLUE_FRAME_TIMINGS_A)
@@ -480,10 +475,6 @@ void inline prepare_next_event() //SS check this "inline" thing
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_DMA_DELAY)
     PREPARE_EVENT_CHECK_FOR_DMA;
-#endif
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_EVENT)
-    PREPARE_EVENT_CHECK_FOR_IKBD; // two events: both directions
 #endif
 
   // It is safe for events to be in past, whatever happens events
@@ -546,8 +537,8 @@ inline void handle_timeout(int tn) {
 #endif
 #endif
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
-   new_timeout+=MC68901.Wobble[tn]=rand()&MFP_TIMERS_WOBBLE;
-  //new_timeout+=MC68901.Wobble[tn];
+  MC68901.Wobble[tn]=rand()&MFP_TIMERS_WOBBLE;
+  new_timeout+=MC68901.Wobble[tn];
 #endif
   }
 #if defined(SSE_INT_MFP_IACK_LATENCY4)
@@ -640,12 +631,6 @@ void event_timer_d_timeout()
 #define LOGSECTION LOGSECTION_INTERRUPTS
 void event_timer_b() 
 {
-#if defined(SSE_INT_MFP_REFACTOR2G)
-  if(Glue.Status.timer_b_done)
-    return;
-  Glue.Status.timer_b_done=true;
-#endif
-
   if (scan_y<shifter_first_draw_line){
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;
   }else if (scan_y<shifter_last_draw_line){
@@ -916,10 +901,15 @@ void event_scanline()
   
 #if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER) &&!defined(SSE_SHIFTER_DRAW_DBG)
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-  Glue.EndHBL(); // check for +2 -2 errors + unstable Shifter
-  if((scan_y==-30||scan_y==shifter_last_draw_line-1&&scan_y<245)
-    &&Glue.CurrentScanline.Cycles>224)
-    Glue.CheckVerticalOverscan(); // check top & bottom borders
+#if defined(SSE_SHIFTER_TRICKS_OPTION_C2)
+  if(OPTION_PRECISE_MFP)
+#endif
+  {
+    Glue.EndHBL(); // check for +2 -2 errors + unstable Shifter
+    if((scan_y==-30||scan_y==shifter_last_draw_line-1&&scan_y<245)
+      &&Glue.CurrentScanline.Cycles>224)
+      Glue.CheckVerticalOverscan(); // check top & bottom borders
+  }
 #else
   Shifter.EndHBL(); // check for +2 -2 errors + unstable Shifter
   Shifter.CheckVerticalOverscan(); // top & bottom borders
@@ -1072,12 +1062,11 @@ void event_scanline()
 #endif
 
 #if !defined(SSE_INT_HBL_EVENT)
+
 #if defined(SSE_INT_HBL_IACK2) && defined(SSE_CPU_E_CLOCK2)
   BYTE iack_latency=(HD6301EMU_ON)
     ? HBL_IACK_LATENCY + M68000.LastEClockCycles[TM68000::ECLOCK_HBL]
     : CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED;
-#else
-  BYTE iack_latency=28;
 #endif
 
   if (abs_quick(cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt)
@@ -1089,7 +1078,7 @@ void event_scanline()
     -12 //this was for BBC52, useless now
 #endif
 #endif
-    ){
+    ){ 
     hbl_pending=true;
   }
 #ifdef SSE_DEBUG
@@ -1120,10 +1109,6 @@ void event_scanline()
   ASSERT(!Glue.Status.scanline_done);
   Glue.Status.scanline_done=true;
   Glue.Status.sdp_reload_done=false;
-#if defined(SSE_INT_MFP_REFACTOR2G)
-  Glue.Status.timer_b_done=false;
-#endif
-
 #endif
 }
 //---------------------------------------------------------------------------
@@ -2020,46 +2005,6 @@ void event_driveA_ip() {
 void event_driveB_ip() {
   SF314[1].IndexPulse();
 }
-
-#if defined(SSE_IKBD_EVENT)
-/*  As usual with events, we come every second so we need other conditions.
-    TODO: Super Hang-On glitches when defined
-*/
-
-int time_of_event_ikbd;
-void event_ikbd() {
-  time_of_event_ikbd=time_of_next_event+n_cpu_cycles_per_second; 
-#if defined(SSE_IKBD_EVENT_STATUS)
-  if(HD6301EMU_ON && (HD6301.EventStatus&1))
-  {
-    HD6301.EventStatus&=0xFE;
-    agenda_keyboard_replace(0);
-  }
-#else
-  if(HD6301EMU_ON && keyboard_buffer_length)
-    agenda_keyboard_replace(0);
-#endif
-}
-
-#endif
-
-#if defined(SSE_IKBD_EVENT2)
-int time_of_event_ikbd2;
-void event_ikbd2() {
-  time_of_event_ikbd2=time_of_next_event+n_cpu_cycles_per_second; 
-#if defined(SSE_IKBD_EVENT_STATUS)
-  if(HD6301EMU_ON && (HD6301.EventStatus&2))
-  {
-    HD6301.EventStatus&=0xFD;
-    agenda_ikbd_process(ACIA_IKBD.TDRS);
-  }
-#else
-  if(HD6301EMU_ON && ACIA_IKBD.LineTxBusy)
-    agenda_ikbd_process(ACIA_IKBD.TDRS);
-#endif
-}
-
-#endif
 
 #endif
 
