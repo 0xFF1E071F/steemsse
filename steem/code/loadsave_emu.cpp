@@ -970,7 +970,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if defined(SSE_INT_MFP_OBJECT)
     //TRACE("L/S MFP\n");
     ReadWriteStruct(MC68901);
-#if defined(SSE_INT_MFP_REFACTOR2F)
+#if defined(SSE_INT_MFP_REFACTOR2)
     if(LoadOrSave==LS_LOAD)
 #endif
     MC68901.Init(); // in case of bad snapshot

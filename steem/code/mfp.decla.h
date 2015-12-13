@@ -238,27 +238,19 @@ struct TMC68901 {
   BYTE Vector;
   WORD IPR;
   int IrqSetTime;
-#if defined(SSE_INT_MFP_REFACTOR2B)
+#if defined(SSE_INT_MFP_REFACTOR2)
   int IrqClearTime;
 #endif
-//#if !defined(SSE_INT_MFP_REFACTOR2F)
   int IackTiming;
-//#endif
-//#if defined(SSE_INT_MFP_REFACTOR2F)
-//  BYTE IackCycles;
-//#endif
-#if defined(SSE_INT_MFP_REFACTOR2B)
+#if defined(SSE_INT_MFP_REFACTOR2)
   void Reset(bool Cold);
-#endif
-#ifdef SSE_BETA
-  void Update();
 #endif
   int UpdateNextIrq(int start_from_irq=15,int at_time=-1);
   int WriteTiming;
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
   BYTE Wobble[4];
 #endif
-#if defined(SSE_INT_MFP_IACK_LATENCY4)
+#if defined(SSE_INT_MFP_IACK_LATENCY4)//no
   BYTE SkipTimer[4];
 #endif
 #if defined(SSE_INT_MFP_UTIL)
@@ -273,7 +265,7 @@ struct TMC68901 {
 #if defined(SSE_INT_MFP_RECORD_PENDING_TIMING)
   int PendingTiming[16];
 #endif
-#if defined(SSE_INT_MFP_SPURIOUS)
+#if defined(SSE_INT_MFP_SPURIOUS) && !defined(SSE_INT_MFP_REFACTOR2)
   bool CheckSpurious(int irq);
 #endif
 #if defined(SSE_INT_MFP_TIMER_B_AER2)

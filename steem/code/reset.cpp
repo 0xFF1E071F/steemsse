@@ -317,11 +317,11 @@ void reset_peripherals(bool Cold)
   WD1772.Reset(Cold);
 #endif
 
-#if defined(SSE_INT_MFP_REFACTOR2B)
+#if defined(SSE_INT_MFP_REFACTOR2)
   MC68901.Reset(Cold);
 #endif
 
-#if defined(SSE_INT_JITTER_RESET) 
+#if defined(SSE_INT_JITTER_RESET) //no
   if(Cold)
   {
     HblJitterIndex=0;

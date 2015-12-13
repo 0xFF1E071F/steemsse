@@ -808,14 +808,14 @@ system exclusive start and end messages (F0 and F7).
 #if defined(SSE_INT_MFP_IRQ_TIMING)
             if(OPTION_PRECISE_MFP)
             {
-#if !defined(SSE_INT_MFP_REFACTOR2F)
+#if !defined(SSE_INT_MFP_REFACTOR2)
               MC68901.UpdateNextIrq();
 #endif
               //if((sr & SR_IPL)<SR_IPL_6) //temp hack to avoid bad spurious (Rainbow Island)
               {
                 MC68901.WriteTiming=ACT;
                 MC68901.LastRegisterWritten=n;
-#if defined(SSE_INT_MFP_REFACTOR2F)
+#if defined(SSE_INT_MFP_REFACTOR2)
                 MC68901.UpdateNextIrq();
 #endif
               }

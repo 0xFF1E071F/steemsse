@@ -1826,7 +1826,6 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_INT_MFP_RATIO_STE3 // = STF
 #define SSE_INT_MFP_RATIO_STF2 
 #define SSE_INT_MFP_REFACTOR1
-//#define SSE_INT_MFP_REFACTOR2 //doesn't work at all yet
 #undef SSE_INT_MFP_TIMER_B_NO_WOBBLE //there is wobble
 #define SSE_INT_MFP_TIMER_B_WOBBLE2 // 2 instead of 4
 #define SSE_INT_MFP_TIMER_B_WOBBLE_HACK //for Sunny
@@ -2348,6 +2347,10 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_DEBUG_LOG_OPTIONS // mine, boiler or _DEBUG
 
+#ifdef SSE_INT_MFP
+#define SSE_DEBUG_MFP_DEACTIVATE_IACK_SUBSTITUTION // to check cases
+#endif
+
 #if defined(SSE_MIDI)
 //#define SSE_MIDI_TRACE_BYTES_IN
 //#define SSE_MIDI_TRACE_BYTES_OUT
@@ -2543,19 +2546,14 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_INT_MFP)
-#define SSE_INT_MFP_IS_DELAY
 //#define SSE_INT_MFP_RECORD_PENDING_TIMING
-#define SSE_INT_MFP_REFACTOR2B //new attempt
-#if defined(SSE_INT_MFP_REFACTOR2B)
-#define SSE_INT_MFP_REFACTOR2C //test, assert
-#define SSE_INT_MFP_REFACTOR2D //debug
-#define SSE_INT_MFP_REFACTOR2E //refactor a
-#define SSE_INT_MFP_REFACTOR2F //refactor b
+#define SSE_INT_MFP_REFACTOR2 //simpler way for IACK and Spurious
+#if defined(SSE_INT_MFP_REFACTOR2)
+#define SSE_INT_MFP_IS_DELAY
 #undef SSE_INT_MFP_IACK_LATENCY4 // "skip timer"
-#endif
+#endif//ref2
 #define SSE_INT_MFP_REFACTOR3 //enums -note REFACTOR2 not active
 #undef SSE_INT_MFP_SPURIOUS_372
-#define SSE_INT_MFP_SPURIOUS_380
 #undef SSE_INT_MFP_TIMER_B_AER // refactor
 #define SSE_INT_MFP_TIMER_B_AER2 // refactor
 #define SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS // timer B should be updated
