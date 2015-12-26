@@ -2438,7 +2438,11 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
     SSE_SHIFTER_STE_HI_HSCROLL is defined only in the beta or the boiler.
 */
 
+#if defined(SSE_SHIFTER_HSCROLL_380_B)
+      if(hscroll0)
+#else
       if(HSCROLL)
+#endif
       {
         // save ST memory
         for(int i=0;i<=20;i++)
@@ -2446,8 +2450,13 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
         // shift pixels of full scanline
         for(MEM_ADDRESS i=shifter_draw_pointer; i<nsdp ;i+=2)
         {
+#if defined(SSE_SHIFTER_HSCROLL_380_B)
+          WORD new_value=DPEEK(i)<<hscroll0;  // shift first bits away
+          new_value|=DPEEK(i+2)>>(16-hscroll0); // add first bits of next word at the end
+#else
           WORD new_value=DPEEK(i)<<HSCROLL;  // shift first bits away
           new_value|=DPEEK(i+2)>>(16-HSCROLL); // add first bits of next word at the end
+#endif
           DPEEK(i)=new_value;
         }
       }
@@ -2490,7 +2499,11 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
 #if defined(SSE_SHIFTER_HIRES_OVERSCAN)
         draw_line_off ||
 #endif        
+#if defined(SSE_SHIFTER_HSCROLL_380_B)
+        hscroll0)
+#else
         HSCROLL) 
+#endif
       {
         for(int i=0;i<=20;i++)// restore ST memory
           LPEEK(i*4+shifter_draw_pointer)=Scanline[i]; 
@@ -2864,6 +2877,9 @@ void TShifter::IncScanline() {
   left_border=BORDER_SIDE;
   if(HSCROLL) 
     left_border+=16;
+#if defined(SSE_SHIFTER_HSCROLL_380_B)
+  hscroll0=HSCROLL; // save
+#endif
   if(shifter_hscroll_extra_fetch) 
     left_border-=16;
   right_border=BORDER_SIDE;
@@ -2978,7 +2994,9 @@ BYTE TShifter::IORead(MEM_ADDRESS addr) {
       break;
 
     case 0xff8265:  //HSCROLL
+#if !defined(SSE_SHIFTER_HSCROLL_380_A1) //what is this doing in read?
       DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) shifter_hscroll_extra_fetch=(shifter_hscroll!=0);
+#endif
 #if defined(SSE_STF_HSCROLL)
       if(ST_TYPE==STE)
 #endif
@@ -3331,15 +3349,26 @@ rasterline to allow horizontal fine-scrolling.
 
         log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set horizontal scroll ("+HEXSl(addr,6)+
           ") to "+(shifter_hscroll)+" at "+scanline_cycle_log());
-        if (addr==0xff8265) shifter_hscroll_extra_fetch=(HSCROLL!=0);
-        
-        
-#if defined(SSE_VID_BORDERS)
+        if (addr==0xff8265) 
+          shifter_hscroll_extra_fetch=(HSCROLL!=0);
+#if defined(SSE_SHIFTER_HSCROLL_380_A)
+/*  Better test, should new HSCROLL apply on current line
+    TODO: what is exact threshold ?
+*/
+        if(cycles_in<=Glue.CurrentScanline.StartCycle+24) {
+#elif defined(SSE_VID_BORDERS)
         if (cycles_in<=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN-BORDER_SIDE){
 #else
         if (cycles_in<=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN-32){
-#endif           // eg Coreflakes hidden screen
+#endif           // eg Coreflakes hidden screen //SS:which one?...
+#if defined(SSE_SHIFTER_HSCROLL_380_B)
+          hscroll0=HSCROLL;
+#endif
+#if defined(SSE_SHIFTER_HSCROLL_380_A)
+          {
+#else
           if (left_border>0){ // Don't do this if left border removed!
+#endif
             shifter_skip_raster_for_hscroll = (HSCROLL!=0); //SS computed at end of line anyway
 ////            if(HSCROLL) TRACE("%d %d %d write skip\n",TIMING_INFO);
             left_border=BORDER_SIDE;
@@ -3347,6 +3376,10 @@ rasterline to allow horizontal fine-scrolling.
               left_border+=16;
             if(shifter_hscroll_extra_fetch) 
               left_border-=16;
+#if defined(SSE_SHIFTER_HSCROLL_380_C) // update shifter_pixel for new HSCROLL
+//            ASSERT(!scanline_drawn_so_far);
+            shifter_pixel=HSCROLL; //fixes We Were STE distorter
+#endif
           }
         }
       } 

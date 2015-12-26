@@ -347,7 +347,11 @@ void TMMU::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 #if !defined(SSE_GLUE_001)
     // cancel the Steem 3.2 fix for left off with STE scrolling on
     if(!Glue.ExtraAdded && (Glue.CurrentScanline.Tricks&TRICK_LINE_PLUS_26)
-      && HSCROLL>=12
+#if defined(SSE_SHIFTER_HSCROLL_380_B1)
+      && Shifter.hscroll0>=12
+#else
+      && HSCROLL>=12 
+#endif
 #if defined(SSE_VID_BORDERS_416_NO_SHIFT) 
       // don't try to understand this, I don't
 #if defined(SSE_VID_BORDERS_416_NO_SHIFT2)

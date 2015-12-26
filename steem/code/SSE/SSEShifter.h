@@ -237,6 +237,9 @@ struct TShifter {
   // it's a hack, less involved than making a reliable statemachine
   WORD n508lines;
 #endif
+#if defined(SSE_SHIFTER_HSCROLL_380_B)
+  BYTE hscroll0; // what is/was HSCROLL at start of line
+#endif
 #if defined(SSE_DEBUG) && SSE_VERSION>=380
   int nVbl;
 #endif

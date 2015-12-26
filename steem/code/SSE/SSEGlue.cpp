@@ -432,7 +432,11 @@ cycle       0               4               8               12               12
         overscan_add_extra+=2;
 
 #if !defined(SSE_GLUE_001)
+#if defined(SSE_SHIFTER_HSCROLL_380_B1)
+        if(Shifter.hscroll0>=12)
+#else
         if(HSCROLL>=12) // STE Shifter bug (Steem authors) //TODO
+#endif
 #if defined(SSE_VID_BORDERS_416_NO_SHIFT) //E605 & Tekila artefacts
 #if defined(SSE_VID_BORDERS_416_NO_SHIFT2)
           if(SideBorderSize!=VERY_LARGE_BORDER_SIDE
@@ -487,7 +491,11 @@ cycle       0               4               8               12               12
 -27 - 404:C0507 428:C074B 452:C0932 512:R0082 512:TC000 512:#0160
 -26 - 012:R00F0 376:S00F0 384:S0082 444:R0082 456:R00F0 512:R0082 512:T2011 512:#0230
 */
+#if defined(SSE_SHIFTER_HSCROLL_380_B1)
+          if((PreviousScanline.Tricks&TRICK_WRITE_SDP_POST_DE) && Shifter.hscroll0  // so it's STE-only
+#else
           if((PreviousScanline.Tricks&TRICK_WRITE_SDP_POST_DE) && HSCROLL  // so it's STE-only
+#endif
 #if defined(SSE_SHIFTER_ARMADA_IS_DEAD)
 /*
 198 - 436:C0501 440:C0747 472:C094E 512:R0082 512:TC000 512:#0160
@@ -506,27 +514,32 @@ cycle       0               4               8               12               12
 #if defined(SSE_SHIFTER_XMAS2004)
 /*  Those are just hacks, as ususal for those cases, but they correct
     the last screen of XMAS 2004
+    Strange that it doesn't break things (it will come!)
 */
           if((PreviousScanline.Tricks&TRICK_WRITE_SDP_POST_DE)
-            && r0cycle==16 && !HSCROLL && LINEWID)
-            shifter_draw_pointer+=4;
-
-          if((PreviousScanline.Tricks&TRICK_WRITE_SDP_POST_DE)
-            && r0cycle==16 && HSCROLL && LINEWID)
-            shifter_draw_pointer+=-2;
+            && (r0cycle-r2cycle)==16 && LINEWID)
+#if defined(SSE_SHIFTER_HSCROLL_380_B1)
+            if(!Shifter.hscroll0)
+#else
+            if(!HSCROLL) // we find back this 6bytes difference, this could be simplified
+#endif
+              shifter_draw_pointer+=4;
+            else
+              shifter_draw_pointer+=-2;
 #endif
 #if defined(SSE_SHIFTER_SCHNUSDIE)
           if(!(PreviousScanline.Tricks&TRICK_STABILISER)
-#if defined(SSE_SHIFTER_SCHNUSDIE2)
-            && (r0cycle-r2cycle)==24
+            && (r0cycle-r2cycle)==24 // 508/20: very long in mode 2
+            && shifter_hscroll_extra_fetch 
+#if defined(SSE_SHIFTER_HSCROLL_380_B1)
+            && !Shifter.hscroll0)
 #else
-            && r2cycle==-4 && r0cycle==20 // 508/20: very long in mode 2
+            && !HSCROLL) // further "targeting"
 #endif
-            && shifter_hscroll_extra_fetch && !HSCROLL) // further "targeting"
-            overscan_add_extra+=2; // fixes Reality is a Lie/Schnusdie
+            overscan_add_extra+=2; // fixes Reality is a Lie/Schnusdie bottom border
 #endif
         }//hacks
-      }
+      }//+26
 #if !defined(SSE_VID_BORDERS_LINE_PLUS_20)
       left_border=0;
 #endif
