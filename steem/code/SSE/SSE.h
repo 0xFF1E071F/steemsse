@@ -2495,6 +2495,11 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//boiler
 
 #ifdef SSE_CPU
+#define SSE_CPU_512MHZ
+#define SSE_CPU_1GHZ 
+#define SSE_CPU_2GHZ
+#define SSE_CPU_3GHZ
+#define SSE_CPU_4GHZ//after this I hope they'll leave me alone for a while
 #define SSE_CPU_E_CLOCK4
 #endif
 

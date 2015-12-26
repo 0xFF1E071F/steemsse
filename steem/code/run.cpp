@@ -1735,6 +1735,10 @@ void prepare_cpu_boosted_event_plans()
   screen_event_struct *source,*dest;
 #endif
   int factor=n_millions_cycles_per_sec;
+#if defined(SSE_CPU_4GHZ) || defined(SSE_CPU_3GHZ) || defined(SSE_CPU_2GHZ) || defined(SSE_CPU_1GHZ) || defined(SSE_CPU_512MHZ)
+  if(factor>=512)
+    SSEOption.MC68901=SSEOption.HD6301Emu=false; 
+#endif
   for (int idx=0;idx<3;idx++){ //3 frequencies
 #if !defined(SSE_GLUE_FRAME_TIMINGS_B)
     source=event_plan[idx];

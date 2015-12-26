@@ -691,7 +691,15 @@ int TOptionBox::dd_notify_proc(hxc_dropdown*dd,int mess,int i)
 	if (mess!=DDN_SELCHANGE) return 0;
 
   if (dd->id==8){
-#if defined(SSE_CPU_512MHZ)
+#if defined(SSE_CPU_4GHZ)
+    n_cpu_cycles_per_second=max(min(dd->sl[dd->sel].Data[0],4096000000l),8000000l);
+#elif defined(SSE_CPU_3GHZ)
+    n_cpu_cycles_per_second=max(min(dd->sl[dd->sel].Data[0],3072000000l),8000000l);
+#elif defined(SSE_CPU_2GHZ)
+    n_cpu_cycles_per_second=max(min(dd->sl[dd->sel].Data[0],2048000000l),8000000l);
+#elif defined(SSE_CPU_1GHZ)
+    n_cpu_cycles_per_second=max(min(dd->sl[dd->sel].Data[0],1024000000l),8000000l);
+#elif defined(SSE_CPU_512MHZ)
     n_cpu_cycles_per_second=max(min(dd->sl[dd->sel].Data[0],512000000l),8000000l);
 #elif defined(SSE_CPU_256MHZ)
     n_cpu_cycles_per_second=max(min(dd->sl[dd->sel].Data[0],256000000l),8000000l);
