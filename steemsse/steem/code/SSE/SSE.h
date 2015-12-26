@@ -2584,6 +2584,13 @@ Beta: not SSE_PRIVATE_BUILD
 
 #ifdef SSE_SHIFTER
 #define SSE_SHIFTER_380 // some modest refactoring, debugging
+#define SSE_SHIFTER_HSCROLL_380_A // better test, should new HSCROLL apply on current line
+#define SSE_SHIFTER_HSCROLL_380_A1
+#define SSE_SHIFTER_HSCROLL_380_B // new variable to hold HSCROLL at start of line
+#ifdef SSE_SHIFTER_HSCROLL_380_B
+#define SSE_SHIFTER_HSCROLL_380_B1 // use this instead of HSCROLL for some tests
+#endif
+#define SSE_SHIFTER_HSCROLL_380_C // update shifter_pixel for new HSCROLL
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
 #define SSE_SHIFTER_HIRES_COLOUR_DISPLAY5//better test, compatible with GLUE refactoring
 #endif
