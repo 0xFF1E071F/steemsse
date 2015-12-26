@@ -148,6 +148,18 @@ void TOptionBox::CreateMachinePage()
 #if defined(SSE_CPU_512MHZ)
   CBAddString(Win,EasyStr("512 ")+Mhz,512000000);
 #endif
+#if defined(SSE_CPU_1GHZ)
+  CBAddString(Win,EasyStr("1 Ghz"),1024000000);
+#endif
+#if defined(SSE_CPU_2GHZ)
+  CBAddString(Win,EasyStr("2 Ghz"),2048000000);
+#endif
+#if defined(SSE_CPU_3GHZ)
+  CBAddString(Win,EasyStr("3 Ghz"),3072000000);
+#endif
+#if defined(SSE_CPU_4GHZ)
+  CBAddString(Win,EasyStr("4 Ghz"),4096000000);
+#endif
 
   if (CBSelectItemWithData(Win,n_cpu_cycles_per_second)<0){
     EasyStr Cycles=n_cpu_cycles_per_second;
