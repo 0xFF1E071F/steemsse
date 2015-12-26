@@ -2590,6 +2590,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//sft
 
 #ifdef SSE_STF
+#define SSE_STE_4MB
 #define SSE_STF_MATCH_TOS3 // + default country
 #endif
 

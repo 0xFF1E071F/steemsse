@@ -1137,8 +1137,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             if(ST_TYPE==MEGASTF)
               Conf=MAKELONG(MEMCONF_2MB,MEMCONF_2MB);
 #endif
-#if defined(SSE_STE_2MB)
-            if(ST_TYPE==STE) // STE with 2MB (not Mega STE!)
+#if defined(SSE_STE_4MB) // v3.8 many demos require 4MB
+            if(ST_TYPE==STE) // STE with 4MB (not Mega STE!)
+              Conf=MAKELONG(MEMCONF_2MB,MEMCONF_2MB);
+#elif defined(SSE_STE_2MB)
+            if(ST_TYPE==STE) // STE with 2MB
               Conf=MAKELONG(MEMCONF_2MB,MEMCONF_0);
 #endif
 #if defined(SSE_STF_1MB)
