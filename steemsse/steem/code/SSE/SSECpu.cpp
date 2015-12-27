@@ -43,6 +43,9 @@ void TM68000::Reset(bool cold) {
 #if defined(SSE_CPU_PREFETCH_CALL) //yes
   CallPrefetch=FALSE;
 #endif
+#if defined(SSE_CPU_ROUNDING_BUS2)
+  Unrounded=false;
+#endif
 }
 
 
@@ -1248,7 +1251,12 @@ void TM68000::PrefetchIrc() {
   if(debug_prefetch_timing(IRD))
     ; else
 #endif
-    InstructionTimeRound(4);
+#if defined(SSE_CPU_ROUNDING_BUS)
+    if(pc>=rom_addr && pc<rom_addr+tos_len)
+      InstructionTime(4);
+    else
+#endif
+      InstructionTimeRound(4);
 #endif//SSE_CPU_PREFETCH_TIMING
 
 }
@@ -2262,6 +2270,83 @@ instruction.
 Note: The behavior is the same disregarding transfer size (byte, word or long). 
 But if the source operand is a data or address register, or immediate, then the 
 behavior is the same as other MOVE variants (class 1 instruction).
+*/
+
+/*
+Note for SSE_CPU_ROUNDING_BUS (v3.8.0)
+
+This removes a long standing hack in Steem.
+The INSTRUCTION_TIME() macros in MOVE when writing to memory weren't correct,
+it should have been INSTRUCTION_TIME_ROUND().
+
+On the other hand, you need "round cycles up to 4" only for RAM and Shifter
+accesses.
+
+I suspect it was so to have more programs running, hecause timing is super-
+important for GLU sync and shift mode registers. Writes to the GLU aren't
+subject to wait states.
+
+Funny but this was already in the Engineering Hardware Specification of 1986:
+
+    ---------------
+    | MC68000 MPU   |<--
+    |               |   |
+     ---------------    |
+                        |                           ----------
+                        |<------------------------>|192 Kbyte |<--->EXPAN
+               ---------|------------------------->| ROM      |
+              |         |                           ----------
+              |         |                           ----------
+              |         |                          |512K or 1M|  
+              |         |                       -->| byte RAM |<--
+      ----------        |        ----------    |    ----------    |
+     | Control  |<----->|<----->| Memory   |<--                   |
+     | Logic    |-------|------>|Controller|<--                   |
+      ----------        |        ----------    |    ----------    |
+       |||||            |        ----------     -->| Video    |<--  RF MOD
+       |||||            |<----->| Buffers  |<----->| Shifter  |---->RGB
+       |||||            |       |          |        ----------      MONO
+       |||||            |        ----------
+       |||||            |        ----------         ----------
+       |||||            |<----->| MC6850   |<----->| Keyboard |<--->IKBD
+       |||| ------------|------>| ACIA     |       | Port     |
+       ||||             |        ----------         ----------
+       ||||             |        ----------         ----------
+       ||||             |<----->| MC6850   |<----->| MIDI     |---->OUT/THRU
+       ||| -------------|------>| ACIA     |       | Ports    |<----IN
+       |||              |        ----------         ----------
+       |||              |        ----------         ----------
+       |||              |<----->| MK68901  |<----->| RS232    |<--->MODEM
+       || --------------|------>| MFP      |<--    | Port     |
+       ||               |        ----------    |    ----------
+       ||               |                      |    ----------
+       ||               |                       ---| Parallel |<--->PRINTER
+       ||               |                       -->| Port     |
+       ||               |        ----------    |    ----------
+       ||               |<----->| YM-2149  |<--     ----------
+       | ---------------|------>| PSG      |------>| Sound    |---->AUDIO
+       |                |       |          |---    | Channels |
+       |                |        ----------    |    ----------
+       |                |                      |    ----------
+       |                |        ----------     -->| Floppy   |<--->FLOPPY
+       |                |<------| WD1772   |<----->|Disk Port |     DRIVE
+       |                |    -->| FDC      |        ----------
+       |                |   |    ----------
+       |                |   |    ----------         ----------
+       |                |    -->| DMA      |<----->|Hard Disk |<--->HARD
+       |                |<----->|Controller|       | Port     |     DRIVE
+        ----------------------->|          |        ----------
+                                 ----------
+
+The CPU accesses RAM and the Shifter through the MMU, which forces it to share
+cycles with the video system. All the rest is directly available on the bus.
+Though there are wait states too for all 8bit peripherals.
+
+It is not such a breaking change, nor does it fix anything, but it does 
+add overhead.
+
+TODO: we added on the current system, but we could refactor into
+something simpler, now that we better understand rounding rules.
 
 */
 
@@ -2269,11 +2354,8 @@ behavior is the same as other MOVE variants (class 1 instruction).
 
 void m68k_0001() {  // move.b
 
-//ASSERT(old_pc!=0x4532e);
-
 #if (!defined(SSE_CPU_LINE_3_TIMINGS) && !defined(SSE_CPU_PREFETCH_TIMING)) \
   || !defined(SSE_CPU_PREFETCH_MOVE_MEM)
-  
 #if defined(SSE_CPU_FETCH_TIMING)
   if((ir&BITS_876)==BITS_876_000)
     FETCH_TIMING_NO_ROUND; // it's the same, but recorded as fetch timing
@@ -2342,15 +2424,15 @@ void m68k_0001() {  // move.b
     {
     case BITS_876_010: // (An)
 #if (defined(SSE_CPU_LINE_1_TIMINGS) || defined(SSE_CPU_PREFETCH_TIMING)) \
-  && defined(SSE_CPU_PREFETCH_MOVE_MEM)
-      INSTRUCTION_TIME(4);
+  && defined(SSE_CPU_PREFETCH_MOVE_MEM) && !defined(SSE_CPU_ROUNDING_BUS)
+      INSTRUCTION_TIME(4); // write B
 #endif
       abus=areg[PARAM_N];
       break;
     case BITS_876_011: // (An)+
 #if (defined(SSE_CPU_LINE_1_TIMINGS) || defined(SSE_CPU_PREFETCH_TIMING)) \
-  && defined(SSE_CPU_PREFETCH_MOVE_MEM)
-      INSTRUCTION_TIME(4);
+  && defined(SSE_CPU_PREFETCH_MOVE_MEM) && !defined(SSE_CPU_ROUNDING_BUS)
+      INSTRUCTION_TIME(4); // write B
 #endif
       abus=areg[PARAM_N];
 #if defined(SSE_CPU_POST_INC)
@@ -2368,8 +2450,8 @@ void m68k_0001() {  // move.b
       FETCH_TIMING;
 #endif  
 #if (defined(SSE_CPU_LINE_1_TIMINGS) || defined(SSE_CPU_PREFETCH_TIMING)) \
-  && defined(SSE_CPU_PREFETCH_MOVE_MEM)
-      INSTRUCTION_TIME(4);
+  && defined(SSE_CPU_PREFETCH_MOVE_MEM) && !defined(SSE_CPU_ROUNDING_BUS)
+      INSTRUCTION_TIME(4); // write B
 #endif
 #if defined(SSE_CPU_PRE_DEC)
       UpdateAn=(PARAM_N==7)?-2:-1;
@@ -2384,8 +2466,8 @@ void m68k_0001() {  // move.b
     case BITS_876_101: // (d16, An)
       INSTRUCTION_TIME(12-4-4);
 #if (defined(SSE_CPU_LINE_1_TIMINGS) || defined(SSE_CPU_PREFETCH_TIMING)) \
-  && defined(SSE_CPU_PREFETCH_MOVE_MEM)
-      INSTRUCTION_TIME(4);
+  && defined(SSE_CPU_PREFETCH_MOVE_MEM) && !defined(SSE_CPU_ROUNDING_BUS)
+      INSTRUCTION_TIME(4); // write B
 #endif
       abus=areg[PARAM_N]+(signed short)m68k_fetchW();
       pc+=2; 
@@ -2393,8 +2475,8 @@ void m68k_0001() {  // move.b
     case BITS_876_110: // (d8, An, Xn)
       INSTRUCTION_TIME(14-4-4);
 #if (defined(SSE_CPU_LINE_1_TIMINGS) || defined(SSE_CPU_PREFETCH_TIMING)) \
-  && defined(SSE_CPU_PREFETCH_MOVE_MEM)
-      INSTRUCTION_TIME(4);
+  && defined(SSE_CPU_PREFETCH_MOVE_MEM) && !defined(SSE_CPU_ROUNDING_BUS)
+      INSTRUCTION_TIME(4); // write B
 #endif
 
       m68k_iriwo=m68k_fetchW();pc+=2; 
@@ -2410,8 +2492,8 @@ void m68k_0001() {  // move.b
       case BITS_ba9_000: // (xxx).W
         INSTRUCTION_TIME(12-4-4);
 #if (defined(SSE_CPU_LINE_1_TIMINGS) || defined(SSE_CPU_PREFETCH_TIMING)) \
-  && defined(SSE_CPU_PREFETCH_MOVE_MEM)
-        INSTRUCTION_TIME(4);
+  && defined(SSE_CPU_PREFETCH_MOVE_MEM) && !defined(SSE_CPU_ROUNDING_BUS)
+        INSTRUCTION_TIME(4); // write B
 #endif
         abus=0xffffff & (unsigned long)((signed long)((signed short)m68k_fetchW()));
         pc+=2; 
@@ -2423,8 +2505,8 @@ void m68k_0001() {  // move.b
 #endif
         INSTRUCTION_TIME(16-4-4);
 #if (defined(SSE_CPU_LINE_1_TIMINGS) || defined(SSE_CPU_PREFETCH_TIMING)) \
-  && defined(SSE_CPU_PREFETCH_MOVE_MEM)
-        INSTRUCTION_TIME(4);
+  && defined(SSE_CPU_PREFETCH_MOVE_MEM) && !defined(SSE_CPU_ROUNDING_BUS)
+        INSTRUCTION_TIME(4); // write B
 #endif
 
         abus=m68k_fetchL() & 0xffffff;
@@ -2448,7 +2530,9 @@ void m68k_0001() {  // move.b
 #if defined(SSE_CPU_DATABUS)
     M68000.dbus|=m68k_src_b;
 #endif
-
+#if defined(SSE_CPU_ROUNDING_BUS)
+    CPU_ABUS_ACCESS_WRITE;
+#endif
     m68k_poke_abus(m68k_src_b); // write; could crash
 
 #if defined(SSE_CPU_POST_INC) || defined(SSE_CPU_PRE_DEC)
@@ -2546,18 +2630,22 @@ void m68k_0010()  //move.l
     switch(ir&BITS_876)
     {
     case BITS_876_010: // (An)
-      INSTRUCTION_TIME(12-4-4);
+#if !defined(SSE_CPU_ROUNDING_BUS)
+      INSTRUCTION_TIME(12-4-4); // write L1
 #if (defined(SSE_CPU_LINE_2_TIMINGS) || defined(SSE_CPU_PREFETCH_TIMING)) \
   && defined(SSE_CPU_PREFETCH_MOVE_MEM)
-      INSTRUCTION_TIME(4);
+      INSTRUCTION_TIME(4); // write L2
+#endif
 #endif
       abus=areg[PARAM_N];
       break;
     case BITS_876_011: // (An)+
-      INSTRUCTION_TIME(12-4-4);
+#if !defined(SSE_CPU_ROUNDING_BUS)
+      INSTRUCTION_TIME(12-4-4); // write L1
 #if (defined(SSE_CPU_LINE_2_TIMINGS) || defined(SSE_CPU_PREFETCH_TIMING)) \
   && defined(SSE_CPU_PREFETCH_MOVE_MEM)
-      INSTRUCTION_TIME(4);
+      INSTRUCTION_TIME(4); // write L2
+#endif
 #endif
       abus=areg[PARAM_N];
 #if defined(SSE_CPU_POST_INC)
@@ -2567,12 +2655,13 @@ void m68k_0010()  //move.l
 #endif
       break;
     case BITS_876_100: // -(An)
-      INSTRUCTION_TIME(12-4-4);
+#if !defined(SSE_CPU_ROUNDING_BUS)
+      INSTRUCTION_TIME(12-4-4); // write L1
 #if (defined(SSE_CPU_LINE_2_TIMINGS) || defined(SSE_CPU_PREFETCH_TIMING)) \
   && defined(SSE_CPU_PREFETCH_MOVE_MEM)
-      INSTRUCTION_TIME(4);
+      INSTRUCTION_TIME(4); // write L2
 #endif
-
+#endif
 #if defined(SSE_CPU_PREFETCH_CLASS)
       M68000.PrefetchClass=0; 
       PREFETCH_IRC;
@@ -2587,20 +2676,26 @@ void m68k_0010()  //move.l
 #endif
       break;
     case BITS_876_101: // (d16, An)
-      INSTRUCTION_TIME(16-4-4);
+#if !defined(SSE_CPU_ROUNDING_BUS)
+      INSTRUCTION_TIME(16-4-4); // write L
+#endif
 #if (defined(SSE_CPU_LINE_2_TIMINGS) || defined(SSE_CPU_PREFETCH_TIMING)) \
   && defined(SSE_CPU_PREFETCH_MOVE_MEM)
-      INSTRUCTION_TIME(4);
+      INSTRUCTION_TIME(4); // fetch W
 #endif
 
       abus=areg[PARAM_N]+(signed short)m68k_fetchW();
       pc+=2; 
       break;
     case BITS_876_110: // (d8, An, Xn)
-      INSTRUCTION_TIME(18-4-4);
+#if defined(SSE_CPU_ROUNDING_BUS)
+      INSTRUCTION_TIME(2);
+ #else
+      INSTRUCTION_TIME(18-4-4); // 2 + write L
+#endif
 #if (defined(SSE_CPU_LINE_2_TIMINGS) || defined(SSE_CPU_PREFETCH_TIMING)) \
   && defined(SSE_CPU_PREFETCH_MOVE_MEM)
-      INSTRUCTION_TIME(4);
+      INSTRUCTION_TIME(4); // fetch W
 #endif
 
       m68k_iriwo=m68k_fetchW();pc+=2; 
@@ -2614,20 +2709,27 @@ void m68k_0010()  //move.l
       if (SOURCE_IS_REGISTER_OR_IMMEDIATE==0) refetch=true;
       switch(ir&BITS_ba9){
       case BITS_ba9_000: // (xxx).W
-        INSTRUCTION_TIME(16-4-4);
+#if !defined(SSE_CPU_ROUNDING_BUS)
+        INSTRUCTION_TIME(16-4-4); // write L
+#endif
 #if (defined(SSE_CPU_LINE_2_TIMINGS) || defined(SSE_CPU_PREFETCH_TIMING)) \
   && defined(SSE_CPU_PREFETCH_MOVE_MEM)
-      INSTRUCTION_TIME(4);
+        INSTRUCTION_TIME(4); // fetch W
 #endif
 
         abus=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
         pc+=2; 
         break;
       case BITS_ba9_001: // (xxx).L
-        INSTRUCTION_TIME(20-4-4);
+#if defined(SSE_CPU_ROUNDING_BUS)
+        INSTRUCTION_TIME(4); // fetch L1
+#endif
+#if !defined(SSE_CPU_ROUNDING_BUS)
+        INSTRUCTION_TIME(20-4-4); // 1 fetch + write L
+#endif
 #if (defined(SSE_CPU_LINE_2_TIMINGS) || defined(SSE_CPU_PREFETCH_TIMING)) \
   && defined(SSE_CPU_PREFETCH_MOVE_MEM)
-        INSTRUCTION_TIME(4);
+        INSTRUCTION_TIME(4); // fetch L2
 #endif
 
 #if defined(SSE_CPU_PREFETCH_CLASS)
@@ -2654,7 +2756,10 @@ void m68k_0010()  //move.l
 #if defined(SSE_CPU_DATABUS)
     M68000.dbus=m68k_src_l&0xFFFF; // 2nd part?
 #endif
-
+#if defined(SSE_CPU_ROUNDING_BUS)
+    CPU_ABUS_ACCESS_WRITE;
+    CPU_ABUS_ACCESS_WRITE;
+#endif
     m68k_lpoke_abus(m68k_src_l);
 
 #if defined(SSE_CPU_POST_INC) || defined(SSE_CPU_PRE_DEC)
@@ -2695,6 +2800,7 @@ void m68k_0010()  //move.l
 
 void m68k_0011() //move.w
 {
+
 #if (!defined(SSE_CPU_LINE_3_TIMINGS) && !defined(SSE_CPU_PREFETCH_TIMING)) \
   || !defined(SSE_CPU_PREFETCH_MOVE_MEM)
 #if defined(SSE_CPU_FETCH_TIMING)
@@ -2751,15 +2857,15 @@ void m68k_0011() //move.w
     {
     case BITS_876_010: // (An)
 #if (defined(SSE_CPU_LINE_3_TIMINGS) || defined(SSE_CPU_PREFETCH_TIMING)) \
-  && defined(SSE_CPU_PREFETCH_MOVE_MEM)
-      INSTRUCTION_TIME(4);
+  && defined(SSE_CPU_PREFETCH_MOVE_MEM) && !defined(SSE_CPU_ROUNDING_BUS)
+      INSTRUCTION_TIME(4); // write W
 #endif
       abus=areg[PARAM_N];
       break;
     case BITS_876_011:  // (An)+
 #if (defined(SSE_CPU_LINE_3_TIMINGS) || defined(SSE_CPU_PREFETCH_TIMING)) \
-  && defined(SSE_CPU_PREFETCH_MOVE_MEM)
-      INSTRUCTION_TIME(4);
+  && defined(SSE_CPU_PREFETCH_MOVE_MEM) && !defined(SSE_CPU_ROUNDING_BUS)
+      INSTRUCTION_TIME(4); // write W
 #endif
       abus=areg[PARAM_N];
 #if defined(SSE_CPU_POST_INC)
@@ -2770,8 +2876,8 @@ void m68k_0011() //move.w
       break;
     case BITS_876_100: // -(An)
 #if (defined(SSE_CPU_LINE_3_TIMINGS) || defined(SSE_CPU_PREFETCH_TIMING)) \
-  && defined(SSE_CPU_PREFETCH_MOVE_MEM)
-      INSTRUCTION_TIME(4);
+  && defined(SSE_CPU_PREFETCH_MOVE_MEM) && !defined(SSE_CPU_ROUNDING_BUS)
+      INSTRUCTION_TIME(4); // write W
 #endif
 #if defined(SSE_CPU_PREFETCH_CLASS)
       M68000.PrefetchClass=0; 
@@ -2795,8 +2901,8 @@ void m68k_0011() //move.w
     case BITS_876_101: // (d16, An)
       INSTRUCTION_TIME(12-4-4);
 #if (defined(SSE_CPU_LINE_3_TIMINGS) || defined(SSE_CPU_PREFETCH_TIMING)) \
-  && defined(SSE_CPU_PREFETCH_MOVE_MEM)
-      INSTRUCTION_TIME(4);
+  && defined(SSE_CPU_PREFETCH_MOVE_MEM) && !defined(SSE_CPU_ROUNDING_BUS)
+      INSTRUCTION_TIME(4); // write W
 #endif
       abus=areg[PARAM_N]+(signed short)m68k_fetchW();
       pc+=2; 
@@ -2804,8 +2910,8 @@ void m68k_0011() //move.w
     case BITS_876_110: // (d8, An, Xn)
       INSTRUCTION_TIME(14-4-4);
 #if (defined(SSE_CPU_LINE_3_TIMINGS) || defined(SSE_CPU_PREFETCH_TIMING)) \
-  && defined(SSE_CPU_PREFETCH_MOVE_MEM)
-      INSTRUCTION_TIME(4);
+  && defined(SSE_CPU_PREFETCH_MOVE_MEM) && !defined(SSE_CPU_ROUNDING_BUS)
+      INSTRUCTION_TIME(4); // write W
 #endif
 
       m68k_iriwo=m68k_fetchW();pc+=2; 
@@ -2821,8 +2927,8 @@ void m68k_0011() //move.w
       case BITS_ba9_000: // (xxx).W
         INSTRUCTION_TIME(12-4-4);
 #if (defined(SSE_CPU_LINE_3_TIMINGS) || defined(SSE_CPU_PREFETCH_TIMING)) \
-  && defined(SSE_CPU_PREFETCH_MOVE_MEM)
-      INSTRUCTION_TIME(4);
+  && defined(SSE_CPU_PREFETCH_MOVE_MEM) && !defined(SSE_CPU_ROUNDING_BUS)
+        INSTRUCTION_TIME(4); // write W
 #endif
 
         abus=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
@@ -2831,8 +2937,8 @@ void m68k_0011() //move.w
       case BITS_ba9_001: // (xxx).L
         INSTRUCTION_TIME(16-4-4);
 #if (defined(SSE_CPU_LINE_3_TIMINGS) || defined(SSE_CPU_PREFETCH_TIMING)) \
-  && defined(SSE_CPU_PREFETCH_MOVE_MEM)
-      INSTRUCTION_TIME(4);
+  && defined(SSE_CPU_PREFETCH_MOVE_MEM) && !defined(SSE_CPU_ROUNDING_BUS)
+        INSTRUCTION_TIME(4); // write W
 #endif
 
 #if defined(SSE_CPU_PREFETCH_CLASS)
@@ -2860,6 +2966,9 @@ void m68k_0011() //move.w
 //    M68000.dbus=m68k_src_w;
 #endif
 
+#if defined(SSE_CPU_ROUNDING_BUS)
+    CPU_ABUS_ACCESS_WRITE;
+#endif
     m68k_dpoke_abus(m68k_src_w);
 
 #if defined(SSE_CPU_POST_INC) || defined(SSE_CPU_PRE_DEC)

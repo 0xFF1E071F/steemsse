@@ -448,6 +448,12 @@ struct TM68000 {
   MEM_ADDRESS Pc;
   bool CheckRead; // most 'write' instructions read before, crash at read...
 #endif
+#endif//excp
+#if defined(SSE_CPU_ROUNDING_BUS)
+  bool Rounded;
+#endif
+#if defined(SSE_CPU_ROUNDING_BUS2)
+  bool Unrounded; // for blitter
 #endif
   inline void GetDestByte();
   inline void GetDestWord();
@@ -710,8 +716,17 @@ inline void TM68000::FetchWord(WORD &dest_word) {
   }
   else
 #endif
-    IR=*lpfetch; // next instr
+#if defined(SSE_CPU_ROUNDING_BUS)
+  {
+    if(Rounded && pc>=rom_addr && pc<rom_addr+tos_len)
+      InstructionTime(-2);
+    IR=*lpfetch; // next instr or imm
+  }
+#else
+    IR=*lpfetch; // next instr or imm
+#endif
   //ASSERT( !(pc>=MEM_IO_BASE && !(pc>=0xff8240 && pc<0xff8260)) ); // Warp, Union
+
 #if defined(SSE_CPU_FETCH_IO)
 #if defined(SSE_CPU_FETCH_IO3)
   if(pc>=MEM_IO_BASE && !(pc>=0xff8240 && pc<0xff8260))
@@ -724,6 +739,7 @@ inline void TM68000::FetchWord(WORD &dest_word) {
   if(lpfetch MEM_GE lpfetch_bound) // MEM_GE : <=
     ::exception(BOMBS_BUS_ERROR,EA_FETCH,pc); // :: for gcc "ambiguous" ?
 }
+
 #define FETCH_W(dest_word) M68000.FetchWord(dest_word);
 
 
@@ -745,7 +761,6 @@ inline void TM68000::FetchWord(WORD &dest_word) {
 #define m68k_GET_SOURCE_B_NOT_A M68000.GetSourceByteNotA();
 #define m68k_GET_SOURCE_W_NOT_A M68000.GetSourceWordNotA();
 #define m68k_GET_SOURCE_L_NOT_A M68000.GetSourceLongNotA();
-
 
 inline void TM68000::GetDestByte() {
 #if defined(SSE_CPU_TRUE_PC)
@@ -827,6 +842,7 @@ inline void TM68000::GetDestLongNotAOrD() {
   m68k_jump_get_dest_l_not_a_or_d[(ir&BITS_543)>>3]();
 }
 
+
 #if !defined(SSE_CPU_ROUNDING_NO_FASTER_FOR_D)
 inline void TM68000::GetDestByteNotAFasterForD() {
 #if defined(SSE_CPU_TRUE_PC)
@@ -888,24 +904,37 @@ inline void TM68000::GetSourceLongNotA() {
 inline void TM68000::InstructionTime(int t) {
   cpu_cycles-=(t);
 }
+
 #define INSTRUCTION_TIME(t)  M68000.InstructionTime(t)
 
 
 inline void TM68000::InstructionTimeRound(int t) {
   InstructionTime(t);
 #if ! defined(SSE_MMU_WAIT_STATES)
+#if defined(SSE_CPU_ROUNDING_BUS)
+  Rounded=(cpu_cycles&2); //horrible because it's inlined each time
+#endif
   cpu_cycles&=-4;
 #endif
 }
+
 #define INSTRUCTION_TIME_ROUND(t) M68000.InstructionTimeRound(t)
 
-#ifdef SSE_CPU_ABUS_ACCESS //just new macros
+///#ifdef SSE_CPU_ABUS_ACCESS //just new macros
 #define CPU_ABUS_ACCESS_READ  M68000.InstructionTimeRound(4)
-#define CPU_ABUS_ACCESS_WRITE  M68000.InstructionTimeRound(4)
+
+#if defined(SSE_CPU_ROUNDING_BUS) // TODO: cartridge
+#define CPU_ABUS_ACCESS_READ_PC \
+    if(pc>=rom_addr && pc<rom_addr+tos_len)\
+      INSTRUCTION_TIME(4);\
+    else\
+      INSTRUCTION_TIME_ROUND(4);
+#else
+#define CPU_ABUS_ACCESS_READ_PC CPU_ABUS_ACCESS_READ //so we can directly replace macros
 #endif
 
+#define CPU_ABUS_ACCESS_WRITE  M68000.InstructionTimeRound(4)
 #define m68k_interrupt(ad) M68000.Interrupt(ad)
-
 
 inline void TM68000::PerformRte() {
   // replacing macro M68K_PERFORM_RTE(checkints)
@@ -951,6 +980,7 @@ inline void TM68000::PerformRte() {
 
 
 }
+
 #define M68K_PERFORM_RTE(checkints) M68000.PerformRte()
 
 

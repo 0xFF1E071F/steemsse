@@ -581,7 +581,7 @@ Far more on the ST.
 
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)//yes in v3.8
 #define MFP_WRITE_LATENCY 4
-#define MFP_TIMERS_WOBBLE 1 //2
+#define MFP_TIMERS_WOBBLE 4//1 //2
 #else
 #define MFP_WRITE_LATENCY (4)
 #endif
@@ -602,7 +602,7 @@ Far more on the ST.
     But Glue refactoring seems to do.
 */
 #if defined(SSE_GLUE_FRAME_TIMINGS_A) 
-#define MFP_TIMER_SET_DELAY (7)
+#define MFP_TIMER_SET_DELAY (7+1)
 #elif defined(SSE_INT_MFP_RATIO_STE2)
 #define MFP_TIMER_SET_DELAY 8//10 // overscan/schnusdie... [8]
 #else

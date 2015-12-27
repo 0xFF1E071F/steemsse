@@ -69,6 +69,26 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
      cpu_cycles+=-2; // = +2 cycles!
 #endif
 
+#if defined(SSE_CPU_ROUNDING_BUS)
+/*  Should round up only for RAM and Shifter (palette), not peripherals
+    that sit on the CPU bus.
+    Not a big change because we corrected MOVE rounding too.
+*/
+  if(M68000.Rounded && !(addr>=0xff8240 && addr<0xff8260)// || addr==0xFF8265)
+#if defined(SSE_CPU_ROUNDING_BUS2)
+    && !M68000.Unrounded
+#endif
+  )
+  {
+    INSTRUCTION_TIME(-2);
+    M68000.Rounded=false;
+#if defined(SSE_OSD_CONTROL)
+    if((OSD_MASK_CPU&OSD_CONTROL_CPUROUNDING))
+      TRACE_OSD("W %X -2",addr);
+#endif
+   }
+#endif//SSE_CPU_ROUNDING_BUS
+
 #ifdef DEBUG_BUILD
 #if defined(SSE_BOILER_MONITOR_IO_FIX1)
   if(!io_word_access)
