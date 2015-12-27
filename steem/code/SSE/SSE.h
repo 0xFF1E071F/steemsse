@@ -2498,10 +2498,12 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_512MHZ
 #define SSE_CPU_1GHZ 
 #define SSE_CPU_2GHZ
-#define SSE_CPU_3GHZ
-#define SSE_CPU_4GHZ//after this I hope they'll leave me alone for a while
+//#define SSE_CPU_3GHZ
+//#define SSE_CPU_4GHZ//after this I hope they'll leave me alone for a while
 #define SSE_CPU_E_CLOCK4
 #endif
+#define SSE_CPU_ROUNDING_BUS // big change, much overhead, little effect 
+#define SSE_CPU_ROUNDING_BUS2 // blitter problem
 
 #ifdef SSE_GUI
 #define SSE_GUI_CONFIG_FILE // new option to L/S ini files

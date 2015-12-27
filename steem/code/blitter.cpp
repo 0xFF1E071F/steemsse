@@ -142,11 +142,22 @@ void Blitter_Start_Line()
     up by the next INSTRUCTION_TIME_ROUND.
     It is in this form because BLITTER_END_WAIT=0 (probably not correct). (TODO)
     Cases: Relapse plasma, Return -HMD
+
+    Interferes with SSE_CPU_ROUNDING_BUS, hence SSE_CPU_ROUNDING_BUS2
+    Case: We Were
+	move.b d0,(a3)                                   ; 007D78: 1680  blit
+	move.b d6,(a5)                                   ; 007D7A: 1A86  write sync
+    Problem to avoid: remove 2 cycles twice for one INSTRUCTION_TIME_ROUND
 */
-#ifdef SSE_BETA
+#ifdef SSE_BETA //detect cases
     if(SSE_HACKS_ON)
 #endif
+    {
       INSTRUCTION_TIME(-2);
+#if defined(SSE_CPU_ROUNDING_BUS2)
+      M68000.Unrounded=true; // barbarous, hacky, but reduces # checks
+#endif
+    }
 #endif
     log(Str("BLITTER: ")+HEXSl(old_pc,6)+" ------------- BLITTING DONE --------------");
 
@@ -578,6 +589,13 @@ the Blitter is active - Not even for interrupts. "
 
     }
     CHECK_BREAKPOINT
+
+#if defined(SSE_CPU_ROUNDING_BUS2)
+/*  Hopefully, having this here in the blitter routine is enough.
+    We wouldn't want to have this in Process or inlined in INSTRUCTION_TIME...
+*/
+    M68000.Unrounded=false;
+#endif
         
     DEBUG_ONLY( mode=STEM_MODE_CPU; )
 //---------------------------------------------------------------------------

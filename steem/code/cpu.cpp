@@ -664,13 +664,37 @@ BYTE m68k_peek(MEM_ADDRESS ad){
       if(SUPERFLAG)return io_read_b(ad);
       else exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else if(ad>=0xfc0000){
+#if defined(SSE_CPU_ROUNDING_BUS)
+      if(tos_high && ad<(0xfc0000+192*1024))
+      {
+        if(M68000.Rounded)
+        {
+          INSTRUCTION_TIME(-2);
+          M68000.Rounded=false;
+        }
+        return ROM_PEEK(ad-rom_addr);
+      }
+#else
       if(tos_high && ad<(0xfc0000+192*1024))return ROM_PEEK(ad-rom_addr);
+#endif
       else if (ad<0xfe0000 || ad>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else if(ad>=MEM_EXPANSION_CARTRIDGE){
       if (cart) return CART_PEEK(ad-MEM_EXPANSION_CARTRIDGE);
       else return 0xff;
     }else if(ad>=rom_addr){
+#if defined(SSE_CPU_ROUNDING_BUS)
+      if (ad<(0xe00000+256*1024)) 
+      {
+        if(M68000.Rounded)
+        {
+          INSTRUCTION_TIME(-2);
+          M68000.Rounded=false;
+        }
+        return ROM_PEEK(ad-rom_addr);
+      }
+#else
       if (ad<(0xe00000+256*1024)) return ROM_PEEK(ad-rom_addr);
+#endif
       if (ad>=0xec0000) exception(BOMBS_BUS_ERROR,EA_READ,ad);
       return 0xff;
     }else if (ad>=0xd00000 && ad<0xd80000){
@@ -704,13 +728,37 @@ WORD m68k_dpeek(MEM_ADDRESS ad){
       if(SUPERFLAG)return io_read_w(ad);
       else exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else if(ad>=0xfc0000){
+#if defined(SSE_CPU_ROUNDING_BUS)
+      if(tos_high && ad<(0xfc0000+192*1024))
+      {
+        if(M68000.Rounded)
+        {
+          INSTRUCTION_TIME(-2);
+          M68000.Rounded=false;
+        }
+        return ROM_DPEEK(ad-rom_addr);
+      }
+#else
       if(tos_high && ad<(0xfc0000+192*1024))return ROM_DPEEK(ad-rom_addr);
+#endif
       else if (ad<0xfe0000 || ad>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else if(ad>=MEM_EXPANSION_CARTRIDGE){
       if (cart) return CART_DPEEK(ad-MEM_EXPANSION_CARTRIDGE);
       else return 0xffff;
     }else if(ad>=rom_addr){
+#if defined(SSE_CPU_ROUNDING_BUS)
+      if (ad<(0xe00000+256*1024)) 
+      {
+        if(M68000.Rounded)
+        {
+          INSTRUCTION_TIME(-2);
+          M68000.Rounded=false;
+        }
+        return ROM_DPEEK(ad-rom_addr);
+      }
+#else
       if (ad<(0xe00000+256*1024)) return ROM_DPEEK(ad-rom_addr);
+#endif
       if (ad>=0xec0000) exception(BOMBS_BUS_ERROR,EA_READ,ad);
       return 0xffff;
     }else if (ad>=0xd00000 && ad<0xd80000){
@@ -751,13 +799,37 @@ LONG m68k_lpeek(MEM_ADDRESS ad){
       if(SUPERFLAG)return io_read_l(ad);
       else exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else if(ad>=0xfc0000){
+#if defined(SSE_CPU_ROUNDING_BUS)
+      if(tos_high && ad<(0xfc0000+192*1024))
+      {
+        if(M68000.Rounded)
+        {
+          INSTRUCTION_TIME(-2);
+          M68000.Rounded=false;
+        }
+        return ROM_LPEEK(ad-rom_addr);
+      }
+#else
       if(tos_high && ad<(0xfc0000+192*1024-2))return ROM_LPEEK(ad-rom_addr);
+#endif
       else if (ad<0xfe0000 || ad>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else if (ad>=MEM_EXPANSION_CARTRIDGE){
       if (cart) return CART_LPEEK(ad-MEM_EXPANSION_CARTRIDGE);
       else return 0xffffffff;
     }else if (ad>=rom_addr){
+#if defined(SSE_CPU_ROUNDING_BUS)
+      if (ad<(0xe00000+256*1024)) 
+      {
+        if(M68000.Rounded)
+        {
+          INSTRUCTION_TIME(-2);
+          M68000.Rounded=false;
+        }
+        return ROM_LPEEK(ad-rom_addr);
+      }
+#else
       if (ad<(0xe00000+256*1024-2)) return ROM_LPEEK(ad-rom_addr);
+#endif
       if (ad>=0xec0000) exception(BOMBS_BUS_ERROR,EA_READ,ad);
       return 0xffffffff;
     }else if (ad>=0xd00000 && ad<0xd80000){
@@ -5224,6 +5296,9 @@ void                              m68k_jsr()
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_CALL)
   // read new PC before pushing current PC; fixes nothing AFAIK
   M68000.PrefetchClass=1; 
+#if defined(SSE_CPU_ROUNDING_BUS)
+  M68000.Rounded=false;
+#endif
   m68k_READ_W(effective_address); // Check for bus/address errors
   FETCH_TIMING; // Fetch from new address before setting PC
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC) \
@@ -5360,6 +5435,9 @@ NOTES :
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC) \
   && !defined(SSE_CPU_PREFETCH_TIMING_JMP)
   INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+#endif
+#if defined(SSE_CPU_ROUNDING_BUS)
+  M68000.Rounded=false;
 #endif
   m68k_READ_W(effective_address); // Check for bus/address errors
   CPU_ABUS_ACCESS_READ; // there are 2 prefetches in those instructions
@@ -5991,6 +6069,9 @@ void                              m68k_rtr(){
   sr&=SR_VALID_BITMASK;
 
   effective_address=m68k_lpeek(r[15]);r[15]+=4;
+#if defined(SSE_CPU_ROUNDING_BUS)
+  M68000.Rounded=false;
+#endif
   m68k_READ_W(effective_address); // Check for bus/address errors
   SET_PC(effective_address);
   intercept_os();
@@ -6428,6 +6509,9 @@ TODO
       (*((WORD*)(&(r[PARAM_M]))))--; //SS Timing included in the 4 that follow
       if( (*( (signed short*)(&(r[PARAM_M]) ))) != (signed short)(-1) ){
         MEM_ADDRESS new_pc=(pc+(signed short)m68k_src_w-2) | pc_high_byte;
+#if defined(SSE_CPU_ROUNDING_BUS)
+        M68000.Rounded=false;
+#endif
         m68k_READ_W(new_pc); // Check for bus/address errors
         SET_PC(new_pc); // SS branch taken (prefetch in SET_PC)
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_5_TIMINGS)
@@ -10264,6 +10348,9 @@ extern "C" void m68k_0110(){  //bCC //SS + BSR
 #if defined(SSE_BOILER_PSEUDO_STACK)
       Debug.PseudoStackPush(PC32);
 #endif
+#if defined(SSE_CPU_ROUNDING_BUS)
+      M68000.Rounded=false;
+#endif
       m68k_READ_W(new_pc); // Check for bus/address errors
 #if (defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING))
       INSTRUCTION_TIME(18-4);
@@ -10293,10 +10380,16 @@ extern "C" void m68k_0110(){  //bCC //SS + BSR
       INSTRUCTION_TIME(2);
 #endif
       if (m68k_CONDITION_TEST){ //SS branch taken
-#if defined(SSE_CPU_ROUNDING_BCC)
+#if defined(SSE_CPU_ROUNDING_BCC) && !defined(SSE_CPU_ROUNDING_BUS)
         CPU_ABUS_ACCESS_READ;
 #endif
+#if defined(SSE_CPU_ROUNDING_BUS)
+        M68000.Rounded=false;
+#endif
         m68k_READ_W(new_pc); // Check for bus/address errors
+#if defined(SSE_CPU_ROUNDING_BCC) && defined(SSE_CPU_ROUNDING_BUS)
+        CPU_ABUS_ACCESS_READ;
+#endif
 #if !defined(SSE_CPU_ROUNDING_BCC)
 #if (defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING))
         INSTRUCTION_TIME(10-4); // DSOS Lots of scrollers
@@ -10341,6 +10434,9 @@ extern "C" void m68k_0110(){  //bCC //SS + BSR
 #endif
       MEM_ADDRESS new_pc=(pc+(signed long)((signed short)m68k_fetchW())) | pc_high_byte;
       // stacked pc is always instruction pc+2 due to prefetch (pc doesn't increase before new_pc is read)
+#if defined(SSE_CPU_ROUNDING_BUS)
+      M68000.Rounded=false;
+#endif
       m68k_READ_W(new_pc); // Check for bus/address errors
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
       INSTRUCTION_TIME(18-4);    
