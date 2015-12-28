@@ -923,6 +923,12 @@ inline void TM68000::InstructionTimeRound(int t) {
 ///#ifdef SSE_CPU_ABUS_ACCESS //just new macros
 #define CPU_ABUS_ACCESS_READ  M68000.InstructionTimeRound(4)
 
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+#define CPU_ABUS_ACCESS_READ_FETCH
+#else
+#define CPU_ABUS_ACCESS_READ_FETCH CPU_ABUS_ACCESS_READ
+#endif
+
 #if defined(SSE_CPU_ROUNDING_BUS) // TODO: cartridge
 #define CPU_ABUS_ACCESS_READ_PC \
     if(pc>=rom_addr && pc<rom_addr+tos_len)\
