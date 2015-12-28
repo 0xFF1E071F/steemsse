@@ -856,6 +856,9 @@ LONG m68k_lpeek(MEM_ADDRESS ad){
 BYTE m68k_fetchB()
 {
   WORD ret;
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+  INSTRUCTION_TIME_ROUND(4);
+#endif
   FETCH_W(ret)
   return LOBYTE(ret);
 }
@@ -863,6 +866,9 @@ BYTE m68k_fetchB()
 WORD m68k_fetchW()
 {
   WORD ret;
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+  INSTRUCTION_TIME_ROUND(4);
+#endif
   FETCH_W(ret)
   return ret;
 }
@@ -870,6 +876,9 @@ WORD m68k_fetchW()
 LONG m68k_fetchL()
 {
   LONG ret;
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+  INSTRUCTION_TIME_ROUND(8);
+#endif
   FETCH_W(*LPHIWORD(ret));
   FETCH_W(*LPLOWORD(ret));
   return ret;
@@ -901,13 +910,30 @@ BYTE m68k_read_dest_b(){
     INSTRUCTION_TIME_ROUND(6);
     return m68k_peek(areg[PARAM_M]);
   case BITS_543_101:{
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+    //  (d16,An)        | 101 | reg |   8(2/0)   |              np    nr     
+    CPU_ABUS_ACCESS_READ_FETCH;
+#else
     INSTRUCTION_TIME_ROUND(8);
+#endif
     register MEM_ADDRESS ad=areg[PARAM_M]+(signed short)m68k_fetchW();pc+=2; 
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+    CPU_ABUS_ACCESS_READ;
+#endif
     x=m68k_peek(ad);
     return x;
   }case BITS_543_110:
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+//  (d8,An,Xn)      |         10(2/0) |                   n    np    nr           
+    INSTRUCTION_TIME(2);
+    CPU_ABUS_ACCESS_READ_FETCH;
+#else
     INSTRUCTION_TIME_ROUND(10);
+#endif
     m68k_iriwo=m68k_fetchW();pc+=2; 
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+    CPU_ABUS_ACCESS_READ;
+#endif
     if(m68k_iriwo&BIT_b){  //.l
       return m68k_peek(areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12]);
     }else{         //.w
@@ -916,15 +942,32 @@ BYTE m68k_read_dest_b(){
   case BITS_543_111:
     switch(ir&0x7){
     case 0:{
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+//  (xxx).W         | 111 | 000 |   8(2/0)   |              np    nr       
+      CPU_ABUS_ACCESS_READ_FETCH;
+#else
       INSTRUCTION_TIME_ROUND(8);
+#endif
       register MEM_ADDRESS ad=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
       pc+=2; 
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+      CPU_ABUS_ACCESS_READ;
+#endif
       x=m68k_peek(ad);
       return x;
     }case 1:{
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+//  (xxx).L         | 111 | 001 |  12(3/0)   |           np np    nr    
+      CPU_ABUS_ACCESS_READ_FETCH;
+      CPU_ABUS_ACCESS_READ_FETCH;
+#else
       INSTRUCTION_TIME_ROUND(12);
+#endif
       register MEM_ADDRESS ad=m68k_fetchL()&0xffffff;
       pc+=4;  
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+      CPU_ABUS_ACCESS_READ;
+#endif
       x=m68k_peek(ad);
       return x;
     }default:
@@ -953,13 +996,30 @@ WORD m68k_read_dest_w(){
     areg[PARAM_M]-=2;
     return m68k_dpeek(areg[PARAM_M]);
   case BITS_543_101:{
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+    //  (d16,An)        | 101 | reg |   8(2/0)   |              np    nr     
+    CPU_ABUS_ACCESS_READ_FETCH;
+#else
     INSTRUCTION_TIME_ROUND(8);
+#endif
     register MEM_ADDRESS ad=areg[PARAM_M]+(signed short)m68k_fetchW();pc+=2; 
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+    CPU_ABUS_ACCESS_READ;
+#endif
     x=m68k_dpeek(ad);
     return x;
   }case BITS_543_110:
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+//  (d8,An,Xn)      |         10(2/0) |                   n    np    nr           
+    INSTRUCTION_TIME(2);
+    CPU_ABUS_ACCESS_READ_FETCH;
+#else
     INSTRUCTION_TIME_ROUND(10);
+#endif
     m68k_iriwo=m68k_fetchW();pc+=2; 
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+    CPU_ABUS_ACCESS_READ;
+#endif
     if(m68k_iriwo&BIT_b){  //.l
       return m68k_dpeek(areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12]);
     }else{         //.w
@@ -968,15 +1028,32 @@ WORD m68k_read_dest_w(){
   case BITS_543_111:
     switch(ir&ir&0x7){
     case 0:{
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+//  (xxx).W         | 111 | 000 |   8(2/0)   |              np    nr       
+      CPU_ABUS_ACCESS_READ_FETCH;
+#else
       INSTRUCTION_TIME_ROUND(8);
+#endif
       register MEM_ADDRESS ad=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
       pc+=2; 
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+      CPU_ABUS_ACCESS_READ;
+#endif
       x=m68k_dpeek(ad);
       return x;
     }case 1:{
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+//  (xxx).L         | 111 | 001 |  12(3/0)   |           np np    nr    
+      CPU_ABUS_ACCESS_READ_FETCH;
+      CPU_ABUS_ACCESS_READ_FETCH;
+#else
       INSTRUCTION_TIME_ROUND(12);
+#endif
       register MEM_ADDRESS ad=m68k_fetchL()&0xffffff;
       pc+=4;  
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+      CPU_ABUS_ACCESS_READ;
+#endif
       x=m68k_dpeek(ad);
       return x;
     }default:
@@ -1005,13 +1082,32 @@ LONG m68k_read_dest_l(){
     areg[PARAM_M]-=4;
     return m68k_lpeek(areg[PARAM_M]);
   case BITS_543_101:{
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+    //  (d16,An)        | 101 | reg |  12(3/0)   |              np nR nr          
+    CPU_ABUS_ACCESS_READ_FETCH;
+#else
     INSTRUCTION_TIME_ROUND(12);
+#endif
     register MEM_ADDRESS ad=areg[PARAM_M]+(signed short)m68k_fetchW();pc+=2; 
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+    CPU_ABUS_ACCESS_READ;
+    CPU_ABUS_ACCESS_READ;
+#endif
     x=m68k_lpeek(ad);
     return x;
   }case BITS_543_110:
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+//  (d8,An,Xn)      | 110 | reg |  14(3/0)   |         n    np nR nr           
+    INSTRUCTION_TIME(2);
+    CPU_ABUS_ACCESS_READ_FETCH;
+#endif
     m68k_iriwo=m68k_fetchW();pc+=2; 
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+    CPU_ABUS_ACCESS_READ;
+    CPU_ABUS_ACCESS_READ;
+#else
     INSTRUCTION_TIME_ROUND(14);
+#endif
     if(m68k_iriwo&BIT_b){  //.l
       return m68k_lpeek(areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12]);
     }else{         //.w
@@ -1020,15 +1116,34 @@ LONG m68k_read_dest_l(){
   case BITS_543_111:
     switch(ir&0x7){
     case 0:{
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+//  (xxx).W         | 111 | 000 |  12(3/0)   |              np nR nr      
+      CPU_ABUS_ACCESS_READ_FETCH;
+#else
       INSTRUCTION_TIME_ROUND(12);
+#endif
       register MEM_ADDRESS ad=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
       pc+=2; 
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ;
+#endif
       x=m68k_lpeek(ad);
       return x;
     }case 1:{
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+//(xxx).L         | 111 | 001 |  16(4/0)   |           np np nR nr           
+      CPU_ABUS_ACCESS_READ_FETCH;
+      CPU_ABUS_ACCESS_READ_FETCH;
+#else
       INSTRUCTION_TIME_ROUND(16);
+#endif
       register MEM_ADDRESS ad=m68k_fetchL()&0xffffff;
       pc+=4;  
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ;
+#endif
       x=m68k_lpeek(ad);
       return x;
     }default:
@@ -1877,6 +1992,10 @@ bool m68k_condition_test_gt(){return (!(sr&SR_Z) && ( ((sr&(SR_N+SR_V))==0) || (
 bool m68k_condition_test_le(){return ((sr&SR_Z) || ( ((sr&(SR_N+SR_V))==SR_N) || ((sr&(SR_N+SR_V))==SR_V) ));}
 
 
+//TODO make sure we have other macros than IT() when reading/writing on the bus
+// that way it will be easier to refactor (count timing at R/W)
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1934,9 +2053,9 @@ void                              m68k_ori_b(){
     INSTRUCTION_TIME(16);
 #endif
 #if defined(SSE_CPU_ROUNDING_ORI)
-    CPU_ABUS_ACCESS_READ;
+    CPU_ABUS_ACCESS_READ;//? respecting Yacht
     INSTRUCTION_TIME(8);
-    CPU_ABUS_ACCESS_READ; //? respecting Yacht
+    CPU_ABUS_ACCESS_READ_FETCH; 
 #endif
     CCR|=m68k_IMMEDIATE_B;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS)
@@ -1950,7 +2069,7 @@ void                              m68k_ori_b(){
     INSTRUCTION_TIME(8);
 #endif
 #if defined(SSE_CPU_ROUNDING_ORI)
-    CPU_ABUS_ACCESS_READ;
+    CPU_ABUS_ACCESS_READ_FETCH;
 #endif
     m68k_GET_IMMEDIATE_B;
 #if !defined(SSE_CPU_ROUNDING_ORI)
@@ -1967,7 +2086,7 @@ void                              m68k_ori_b(){
     if(!DEST_IS_DATA_REGISTER)
       CPU_ABUS_ACCESS_WRITE;
 #endif
-    m68k_DEST_B|=m68k_src_b;
+    m68k_DEST_B|=m68k_src_b;//ss we'll have a new macro operation + timing?
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_B
   }
@@ -1983,9 +2102,9 @@ void                              m68k_ori_w(){
       INSTRUCTION_TIME(16);
 #endif
 #if defined(SSE_CPU_ROUNDING_ORI)
-      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ;//? respecting Yacht
       INSTRUCTION_TIME(8);
-      CPU_ABUS_ACCESS_READ; //? respecting Yacht
+      CPU_ABUS_ACCESS_READ_FETCH; 
 #endif
       sr|=m68k_IMMEDIATE_W;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS)
@@ -2003,7 +2122,7 @@ void                              m68k_ori_w(){
     INSTRUCTION_TIME(8);
 #endif
 #if defined(SSE_CPU_ROUNDING_ORI)
-    CPU_ABUS_ACCESS_READ;
+    CPU_ABUS_ACCESS_READ_FETCH;
 #endif
     m68k_GET_IMMEDIATE_W;
 #if !defined(SSE_CPU_ROUNDING_ORI)
@@ -2034,8 +2153,8 @@ void                              m68k_ori_l(){
   INSTRUCTION_TIME(16);
 #endif
 #if defined(SSE_CPU_ROUNDING_ORI)
-  CPU_ABUS_ACCESS_READ;
-  CPU_ABUS_ACCESS_READ;
+  CPU_ABUS_ACCESS_READ_FETCH;
+  CPU_ABUS_ACCESS_READ_FETCH;
 #endif
   m68k_GET_IMMEDIATE_L;
 #if !defined(SSE_CPU_ROUNDING_ORI)
@@ -2072,9 +2191,9 @@ void                              m68k_andi_b(){
     INSTRUCTION_TIME(16);
 #endif
 #if defined(SSE_CPU_ROUNDING_ANDI)
-    CPU_ABUS_ACCESS_READ;
+    CPU_ABUS_ACCESS_READ;//? respecting Yacht
     INSTRUCTION_TIME(8);
-    CPU_ABUS_ACCESS_READ; //? respecting Yacht
+    CPU_ABUS_ACCESS_READ_FETCH; 
 #endif
     CCR&=m68k_IMMEDIATE_B;
     PREFETCH_IRC;
@@ -2087,7 +2206,7 @@ void                              m68k_andi_b(){
     INSTRUCTION_TIME(8);
 #endif
 #if defined(SSE_CPU_ROUNDING_ANDI)
-    CPU_ABUS_ACCESS_READ;
+    CPU_ABUS_ACCESS_READ_FETCH;
 #endif
     m68k_GET_IMMEDIATE_B;
 #if defined(SSE_CPU_DATABUS)
@@ -2139,7 +2258,7 @@ void                              m68k_andi_w(){
     INSTRUCTION_TIME(8);
 #endif
 #if defined(SSE_CPU_ROUNDING_ANDI)
-    CPU_ABUS_ACCESS_READ;
+    CPU_ABUS_ACCESS_READ_FETCH;
 #endif
     m68k_GET_IMMEDIATE_W;
 #if !defined(SSE_CPU_ROUNDING_ANDI)
@@ -2181,8 +2300,8 @@ void                              m68k_andi_l(){
   INSTRUCTION_TIME(16);
 #endif
 #if defined(SSE_CPU_ROUNDING_ANDI)
-  CPU_ABUS_ACCESS_READ;
-  CPU_ABUS_ACCESS_READ;
+  CPU_ABUS_ACCESS_READ_FETCH;
+  CPU_ABUS_ACCESS_READ_FETCH;
 #endif
   m68k_GET_IMMEDIATE_L;
 
@@ -2220,7 +2339,7 @@ void                              m68k_subi_b(){
   INSTRUCTION_TIME(8);
 #endif
 #if defined(SSE_CPU_ROUNDING_SUBI)
-  CPU_ABUS_ACCESS_READ;
+  CPU_ABUS_ACCESS_READ_FETCH;
 #endif
   m68k_GET_IMMEDIATE_B;
 #if !defined(SSE_CPU_ROUNDING_SUBI)
@@ -2266,7 +2385,7 @@ void                              m68k_subi_w(){
   INSTRUCTION_TIME(8);
 #endif
 #if defined(SSE_CPU_ROUNDING_SUBI)
-  CPU_ABUS_ACCESS_READ;
+  CPU_ABUS_ACCESS_READ_FETCH;
 #endif
   m68k_GET_IMMEDIATE_W;
 #if !defined(SSE_CPU_ROUNDING_SUBI)
@@ -2297,8 +2416,8 @@ void                              m68k_subi_l(){
   INSTRUCTION_TIME(16);
 #endif
 #if defined(SSE_CPU_ROUNDING_SUBI)
-  CPU_ABUS_ACCESS_READ;
-  CPU_ABUS_ACCESS_READ;
+  CPU_ABUS_ACCESS_READ_FETCH;
+  CPU_ABUS_ACCESS_READ_FETCH;
 #endif
   m68k_GET_IMMEDIATE_L;
 #if !defined(SSE_CPU_ROUNDING_SUBI)
@@ -2332,7 +2451,7 @@ void                              m68k_addi_b(){
   INSTRUCTION_TIME(8);
 #endif
 #if defined(SSE_CPU_ROUNDING_ADDI)
-  CPU_ABUS_ACCESS_READ;
+  CPU_ABUS_ACCESS_READ_FETCH;
 #endif
   m68k_GET_IMMEDIATE_B;
 #if !defined(SSE_CPU_ROUNDING_ADDI)
@@ -2361,7 +2480,7 @@ void                              m68k_addi_w(){
   INSTRUCTION_TIME(8);
 #endif
 #if defined(SSE_CPU_ROUNDING_ADDI)
-  CPU_ABUS_ACCESS_READ;
+  CPU_ABUS_ACCESS_READ_FETCH;
 #endif
   m68k_GET_IMMEDIATE_W;
 #if !defined(SSE_CPU_ROUNDING_ADDI)
@@ -2394,15 +2513,15 @@ void                              m68k_addi_l(){
   INSTRUCTION_TIME(16);
 #endif
 #if defined(SSE_CPU_ROUNDING_ADDI)
-  CPU_ABUS_ACCESS_READ;
-  CPU_ABUS_ACCESS_READ;
+  CPU_ABUS_ACCESS_READ_FETCH;
+  CPU_ABUS_ACCESS_READ_FETCH;
 #endif
   m68k_GET_IMMEDIATE_L;
 #if !defined(SSE_CPU_ROUNDING_ADDI)
   m68k_GET_DEST_L_NOT_A_FASTER_FOR_D; //SS this removes 4 cycles
 #endif
 #if defined(SSE_CPU_ROUNDING_ADDI)
-  m68k_GET_DEST_L_NOT_A; //SS this removes 4 cycles
+  m68k_GET_DEST_L_NOT_A;
 #endif
   PREFETCH_IRC;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS)
@@ -2431,7 +2550,7 @@ void                              m68k_btst(){
   FETCH_TIMING;
 #endif
 #if defined(SSE_CPU_ROUNDING_BTST)
-  CPU_ABUS_ACCESS_READ;
+  CPU_ABUS_ACCESS_READ_FETCH;
 #endif
   m68k_GET_IMMEDIATE_B;
   if ((ir&BITS_543)==BITS_543_000){
@@ -2495,7 +2614,7 @@ void                              m68k_bchg(){
 #endif
 
 #if defined(SSE_CPU_ROUNDING_BCHG)
-  CPU_ABUS_ACCESS_READ;
+  CPU_ABUS_ACCESS_READ_FETCH;
 #endif
   m68k_GET_IMMEDIATE_B; //SS this doesn't count any cycles
 
@@ -2574,7 +2693,7 @@ void                              m68k_bclr(){
   FETCH_TIMING;
 #endif
 #if defined(SSE_CPU_ROUNDING_BCLR)
-  CPU_ABUS_ACCESS_READ;
+  CPU_ABUS_ACCESS_READ_FETCH;
 #endif
   m68k_GET_IMMEDIATE_B;
   if((ir&BITS_543)==BITS_543_000){
@@ -2648,7 +2767,7 @@ void                              m68k_bset(){
   FETCH_TIMING;
 #endif
 #if defined(SSE_CPU_ROUNDING_BSET)
-  CPU_ABUS_ACCESS_READ;
+  CPU_ABUS_ACCESS_READ_FETCH;
 #endif
   m68k_GET_IMMEDIATE_B;
   if ((ir&BITS_543)==BITS_543_000){ //SS to Dn
@@ -2726,9 +2845,9 @@ void                              m68k_eori_b(){
     INSTRUCTION_TIME(16);
 #endif
 #if defined(SSE_CPU_ROUNDING_EORI)
-    CPU_ABUS_ACCESS_READ;
+    CPU_ABUS_ACCESS_READ;//? respecting Yacht
     INSTRUCTION_TIME(8);
-    CPU_ABUS_ACCESS_READ; //? respecting Yacht
+    CPU_ABUS_ACCESS_READ_FETCH; 
 #endif
     CCR^=m68k_IMMEDIATE_B;
     PREFETCH_IRC;
@@ -2742,7 +2861,7 @@ void                              m68k_eori_b(){
     INSTRUCTION_TIME(8);
 #endif
 #if defined(SSE_CPU_ROUNDING_EORI)
-    CPU_ABUS_ACCESS_READ;
+    CPU_ABUS_ACCESS_READ_FETCH;
 #endif
     m68k_GET_IMMEDIATE_B;
 #if !defined(SSE_CPU_ROUNDING_EORI)
@@ -2776,9 +2895,9 @@ void                              m68k_eori_w(){
       INSTRUCTION_TIME(16);
 #endif
 #if defined(SSE_CPU_ROUNDING_EORI)
-      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ;//? respecting Yacht
       INSTRUCTION_TIME(8);
-      CPU_ABUS_ACCESS_READ; //? respecting Yacht
+      CPU_ABUS_ACCESS_READ_FETCH; 
 #endif
       sr^=m68k_IMMEDIATE_W;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS)
@@ -2802,7 +2921,7 @@ void                              m68k_eori_w(){
     INSTRUCTION_TIME(8);
 #endif
 #if defined(SSE_CPU_ROUNDING_EORI)
-    CPU_ABUS_ACCESS_READ; //oops, bug seen thanks to lowlife60
+    CPU_ABUS_ACCESS_READ_FETCH; //oops, bug seen thanks to lowlife60
 #endif
     m68k_GET_IMMEDIATE_W;
 #if !defined(SSE_CPU_ROUNDING_EORI)
@@ -2846,8 +2965,8 @@ void                              m68k_eori_l(){
   INSTRUCTION_TIME(16);
 #endif
 #if defined(SSE_CPU_ROUNDING_EORI)
-  CPU_ABUS_ACCESS_READ;
-  CPU_ABUS_ACCESS_READ;
+  CPU_ABUS_ACCESS_READ_FETCH;
+  CPU_ABUS_ACCESS_READ_FETCH;
 #endif
   m68k_GET_IMMEDIATE_L;
 #if !defined(SSE_CPU_ROUNDING_EORI)
@@ -2896,12 +3015,12 @@ void                              m68k_cmpi_b(){
   FETCH_TIMING;
 #endif
 #if defined(SSE_CPU_ROUNDING_CMPI)
-  CPU_ABUS_ACCESS_READ;
+  CPU_ABUS_ACCESS_READ_FETCH;
 #else
   INSTRUCTION_TIME(4);
 #endif
-  m68k_GET_IMMEDIATE_B; //SS this doesn't count cycles
-  m68k_old_dest=m68k_read_dest_b(); //SS this counts cycles
+  m68k_GET_IMMEDIATE_B;
+  m68k_old_dest=m68k_read_dest_b();
   PREFETCH_IRC;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS)
   FETCH_TIMING;
@@ -2917,7 +3036,7 @@ void                              m68k_cmpi_w(){
   FETCH_TIMING;
 #endif
 #if defined(SSE_CPU_ROUNDING_CMPI)
-  CPU_ABUS_ACCESS_READ;
+  CPU_ABUS_ACCESS_READ_FETCH;
 #else
   INSTRUCTION_TIME(4);
 #endif
@@ -2950,8 +3069,8 @@ void                              m68k_cmpi_l(){
   FETCH_TIMING;
 #endif
 #if defined(SSE_CPU_ROUNDING_CMPI_L) && defined(SSE_CPU_ROUNDING_CMPI_L2)
-  CPU_ABUS_ACCESS_READ;
-  CPU_ABUS_ACCESS_READ;
+  CPU_ABUS_ACCESS_READ_FETCH;
+  CPU_ABUS_ACCESS_READ_FETCH;
 #endif
   m68k_GET_IMMEDIATE_L; //SS this doesn't count cycles
 #if !defined(SSE_CPU_ROUNDING_CMPI_L)
@@ -2976,18 +3095,6 @@ void                              m68k_cmpi_l(){
   SR_SUB_L(0);
 }
 
-/*
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage
-      MOVEP       |      INSTR      |                  INSTR
-------------------+-----------------+------------------------------------------
-Dx,(d16,Ay) :     |                 |
-  .W :            | 16(2/2)         |                np    nW    nw np          
-  .L :            | 24(2/4)         |                np nW nW nw nw np          
-(d16,Ay),Dx :     |                 |
-  .W :            | 16(4/0)         |                np    nR    nr np          
-  .L :            | 24(6/0)         |                np nR nR nr nr np          
-*/
 
 //#define SSE_CPU_LINE_0_TIMINGS
 void                              m68k_movep_w_to_dN_or_btst(){
@@ -2996,11 +3103,23 @@ void                              m68k_movep_w_to_dN_or_btst(){
   FETCH_TIMING;
 #endif
   if((ir&BITS_543)==BITS_543_001){ //SS MOVEP
+    
+/*
+-------------------------------------------------------------------------------
+                  |    Exec Time    |               Data Bus Usage
+      MOVEP       |      INSTR      |                  INSTR
+------------------+-----------------+------------------------------------------
+(d16,Ay),Dx :     |                 |
+  .W :            | 16(4/0)         |                np    nR    nr np          
+  .L :            | 24(6/0)         |                np nR nR nr nr np          
+*/
+
+    
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_CLASS)
     M68000.PrefetchClass=1;
 #endif
 #if defined(SSE_CPU_ROUNDING_MOVEP_MR_W)
-    CPU_ABUS_ACCESS_READ;
+    CPU_ABUS_ACCESS_READ_FETCH;
 #endif
     MEM_ADDRESS addr=areg[PARAM_M]+(signed short)m68k_fetchW();
 #if !defined(SSE_CPU_ROUNDING_MOVEP_MR_W)
@@ -3072,7 +3191,7 @@ void                              m68k_movep_l_to_dN_or_bchg(){
 #endif
 
 #if defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
-    CPU_ABUS_ACCESS_READ;
+    CPU_ABUS_ACCESS_READ_FETCH;
 #endif
     MEM_ADDRESS addr=areg[PARAM_M]+(signed short)m68k_fetchW();
     pc+=2; 
@@ -3085,7 +3204,7 @@ void                              m68k_movep_l_to_dN_or_bchg(){
 #endif
     ///// Should handle blitter here, blitter would start 1 word after busy is set
     //SS not here, in "to memory"
-    m68k_READ_B(addr)
+    m68k_READ_B(addr)//ss problem with putting timing there, sometimes it shouldn't be there
     DWORD_B_3(&r[PARAM_N])=m68k_src_b;
 #if !defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
     INSTRUCTION_TIME(4);
@@ -3190,9 +3309,8 @@ void                              m68k_movep_w_from_dN_or_bclr(){
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_CLASS)
     M68000.PrefetchClass=1;
 #endif
-
 #if defined(SSE_CPU_ROUNDING_MOVEP_RM_W)
-    CPU_ABUS_ACCESS_READ;
+    CPU_ABUS_ACCESS_READ_FETCH;
 #endif
     MEM_ADDRESS ad=areg[PARAM_M]+(short)m68k_fetchW();
     pc+=2; 
@@ -3295,13 +3413,28 @@ void                              m68k_movep_l_from_dN_or_bset(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
 #endif
-
   if ((ir&BITS_543)==BITS_543_001){  //SS MOVEP
+/*
+ eg movep.l d0,0(a1)  01C9 0000 
+-------------------------------------------------------------------------------
+                  |    Exec Time    |               Data Bus Usage
+      MOVEP       |      INSTR      |                  INSTR
+------------------+-----------------+------------------------------------------
+Dx,(d16,Ay) :     |                 |
+  .L :            | 24(2/4)         |                np nW nW nw nw np          
+
+NOTES :
+  .Read and write operations are done from the MSB to the LSB on 2 words if 
+  using ".w" (first read/write word at Ay+d16 then word at Ay+d16+2)and on 
+  4 words if using ".l" (first read/write word at Ay+d16 then word at Ay+d16+2 
+  then word at Ay+d16+4 and finally word at Ay+d16+6).
+*/
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_CLASS)
     M68000.PrefetchClass=1; 
 #endif
 #if defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
-    CPU_ABUS_ACCESS_READ;
+    CPU_ABUS_ACCESS_READ_FETCH;
 #endif
     MEM_ADDRESS ad=areg[PARAM_M]+(signed short)m68k_fetchW();
     pc+=2; 
@@ -3323,7 +3456,6 @@ void                              m68k_movep_l_from_dN_or_bset(){
 #if defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
     CPU_ABUS_ACCESS_WRITE;
 #endif
-
 #if !defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
     INSTRUCTION_TIME(4);
 #endif
@@ -3350,7 +3482,6 @@ void                              m68k_movep_l_from_dN_or_bset(){
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS)
     FETCH_TIMING;
 #endif
-    
     PREFETCH_IRC; 
   }else{ // SS bset
     if((ir&BITS_543)==BITS_543_000){
@@ -4303,13 +4434,13 @@ Dn :              |                 |
       effective_address=areg[PARAM_M];
       break;
     case BITS_543_101: //SS (d16,An)
-      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ_FETCH;
       effective_address=areg[PARAM_M]+(signed short)m68k_fetchW();
       pc+=2; 
       break;
     case BITS_543_110: //SS (d8,An,Xn)
       INSTRUCTION_TIME(2);
-      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ_FETCH;
       m68k_iriwo=m68k_fetchW();pc+=2; 
       INSTRUCTION_TIME(2);
       if (m68k_iriwo & BIT_b){  //.l
@@ -4321,7 +4452,7 @@ Dn :              |                 |
     case BITS_543_111:
       switch (ir & 0x7){
       case 0: //SS (xxx).W
-        CPU_ABUS_ACCESS_READ;
+        CPU_ABUS_ACCESS_READ_FETCH;
         effective_address=(signed long)(signed short)m68k_fetchW();
         pc+=2; 
 #if defined(SSE_CPU_TRUE_PC)
@@ -4329,8 +4460,8 @@ Dn :              |                 |
 #endif
         break;
       case 1: //SS (xxx).L
-        CPU_ABUS_ACCESS_READ;
-        CPU_ABUS_ACCESS_READ;
+        CPU_ABUS_ACCESS_READ_FETCH;
+        CPU_ABUS_ACCESS_READ_FETCH;
         effective_address=m68k_fetchL();
         pc+=4;  
 #if defined(SSE_CPU_TRUE_PC)
@@ -4338,14 +4469,14 @@ Dn :              |                 |
 #endif
         break;
       case 2: //SS (d16,PC) 
-        CPU_ABUS_ACCESS_READ;
+        CPU_ABUS_ACCESS_READ_FETCH;
         effective_address=(PC_RELATIVE_PC+(signed short)m68k_fetchW()) | pc_high_byte;
         PC_RELATIVE_MONITOR(effective_address);
         pc+=2; 
         break;
       case 3: //SS (d8,PC,Xn)
         INSTRUCTION_TIME(2);
-        CPU_ABUS_ACCESS_READ;
+        CPU_ABUS_ACCESS_READ_FETCH;
         m68k_iriwo=m68k_fetchW();
         INSTRUCTION_TIME(2);
         if (m68k_iriwo & BIT_b){  //.l
@@ -4437,7 +4568,7 @@ Dn :              |                 |               |
     M68000.PrefetchClass=1; 
 #endif
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-    CPU_ABUS_ACCESS_READ;
+    CPU_ABUS_ACCESS_READ_FETCH;
 #endif
     m68k_src_w=m68k_fetchW();pc+=2; 
 #if !defined(SSE_CPU_ROUNDING_MOVEM)
@@ -4506,7 +4637,7 @@ Dn :              |                 |               |
     }
 #endif
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-    CPU_ABUS_ACCESS_READ;
+    CPU_ABUS_ACCESS_READ_FETCH;
 #endif
     m68k_src_w=m68k_fetchW();pc+=2; 
 #if !defined(SSE_CPU_ROUNDING_MOVEM)
@@ -4519,7 +4650,7 @@ Dn :              |                 |               |
       break;
     case BITS_543_101: // (d16,An)
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ_FETCH;
 #else
       INSTRUCTION_TIME(4);
 #endif
@@ -4528,7 +4659,7 @@ Dn :              |                 |               |
       break;
     case BITS_543_110: // (d8, An, Xn)
 #if defined(SSE_CPU_ROUNDING_MOVEM6)
-      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ_FETCH;
 #else
       INSTRUCTION_TIME(6);
 #endif
@@ -4546,7 +4677,7 @@ Dn :              |                 |               |
       switch(ir&0x7){
       case 0:
 #if defined(SSE_CPU_ROUNDING_MOVEM6)
-        CPU_ABUS_ACCESS_READ;
+        CPU_ABUS_ACCESS_READ_FETCH;
 #else
         INSTRUCTION_TIME(4);
 #endif
@@ -4555,8 +4686,8 @@ Dn :              |                 |               |
         break;
       case 1:
 #if defined(SSE_CPU_ROUNDING_MOVEM6)
-        CPU_ABUS_ACCESS_READ;
-        CPU_ABUS_ACCESS_READ;
+        CPU_ABUS_ACCESS_READ_FETCH;
+        CPU_ABUS_ACCESS_READ_FETCH;
 #else
         INSTRUCTION_TIME(8);
 #endif
@@ -4652,14 +4783,23 @@ Dn :              |                 |               |
 #endif
 
   }else if((ir&BITS_543)==BITS_543_100){ //predecrement //SS MOVEM -(An)
+/*
 
+-------------------------------------------------------------------------------
+	                |    Exec Time    |               Data Bus Usage
+      MOVEM       |      INSTR      |                  INSTR
+------------------+-----------------+------------------------------------------
+R --> M           |                 | 
+  .L              |                 |                             
+    -(An)         |  8+8m(2/2m)     |                np (nw nW)*    np      
+*/
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_CLASS) 
     M68000.PrefetchClass=1; 
 #endif
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-    CPU_ABUS_ACCESS_READ;
+    CPU_ABUS_ACCESS_READ_FETCH; // no action if SSE_CPU_TIMINGS_REFACTOR_FETCH defined
 #endif
-    m68k_src_w=m68k_fetchW();pc+=2; 
+    m68k_src_w=m68k_fetchW();pc+=2;
 #if !defined(SSE_CPU_ROUNDING_MOVEM)
     INSTRUCTION_TIME(4);
 #endif
@@ -4702,6 +4842,22 @@ Dn :              |                 |               |
     PREFETCH_IRC;
 #endif
   }else{ //SS MOVEM other cases
+
+/*
+
+-------------------------------------------------------------------------------
+	                |    Exec Time    |               Data Bus Usage
+      MOVEM       |      INSTR      |                  INSTR
+------------------+-----------------+------------------------------------------
+R --> M           |                 | 
+  .L              |                 |                             
+    (An)          |  8+8m(2/2m)     |                np (nW nw)*    np          
+    (d16,An)      | 12+8m(3/2m)     |             np np (nW nw)*    np          
+    (d8,An,Xn)    | 14+8m(3/2m)     |        n    np np (nW nw)*    np          
+    (xxx).W       | 12+8m(3/2m)     |             np np (nW nw)*    np          
+    (xxx).L       | 16+8m(4/2m)     |          np np np (nW nw)*    np      
+*/
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_CLASS) 
     M68000.PrefetchClass=1; 
 #endif
@@ -4724,22 +4880,21 @@ Dn :              |                 |               |
       m68k_unrecognised();
     }
 #endif
-#if defined(SSE_CPU_ROUNDING_MOVEM)
-    CPU_ABUS_ACCESS_READ;
+#if defined(SSE_CPU_ROUNDING_MOVEM) 
+    CPU_ABUS_ACCESS_READ_FETCH; // no action if SSE_CPU_TIMINGS_REFACTOR_FETCH defined
 #endif
     m68k_src_w=m68k_fetchW();pc+=2; 
 #if !defined(SSE_CPU_ROUNDING_MOVEM)
     INSTRUCTION_TIME(4);
 #endif
     MEM_ADDRESS ad;
-//    ASSERT(scan_y!=200);
     switch(ir&BITS_543){
     case BITS_543_010:
       ad=areg[PARAM_M];
       break;
     case BITS_543_101:
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ_FETCH;
 #else
       INSTRUCTION_TIME(4);
 #endif
@@ -4747,12 +4902,17 @@ Dn :              |                 |               |
       pc+=2; 
       break;
     case BITS_543_110:
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+      CPU_ABUS_ACCESS_READ_FETCH
+#endif
       m68k_ap=m68k_fetchW();pc+=2; 
-#if defined(SSE_CPU_ROUNDING_MOVEM6)
+#if !defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+#if defined(SSE_CPU_ROUNDING_MOVEM6) 
       CPU_ABUS_ACCESS_READ;
       ///INSTRUCTION_TIME_ROUND(6);
 #else
       INSTRUCTION_TIME(6);
+#endif
 #endif
       if(m68k_ap&BIT_b){  //.l
         ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_ap)+(int)r[m68k_ap>>12];
@@ -4767,7 +4927,7 @@ Dn :              |                 |               |
       switch(ir&0x7){
       case 0://(xxx).W
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-        CPU_ABUS_ACCESS_READ;
+        CPU_ABUS_ACCESS_READ_FETCH;
 #endif
         ad=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
 #if !defined(SSE_CPU_ROUNDING_MOVEM)
@@ -4777,8 +4937,8 @@ Dn :              |                 |               |
         break;
       case 1://(xxx).L
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-        CPU_ABUS_ACCESS_READ;
-        CPU_ABUS_ACCESS_READ;
+        CPU_ABUS_ACCESS_READ_FETCH;
+        CPU_ABUS_ACCESS_READ_FETCH;
 #endif
         ad=0xffffff&m68k_fetchL();
 #if !defined(SSE_CPU_ROUNDING_MOVEM)
@@ -4881,7 +5041,7 @@ void                              m68k_movem_l_to_regs(){
 #endif
   bool postincrement=false;
 #if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
-  CPU_ABUS_ACCESS_READ;// fixes Hackabonds Demo instructions scroller (STF)
+  CPU_ABUS_ACCESS_READ_FETCH;// fixes Hackabonds Demo instructions scroller (STF)
 #endif
   m68k_src_w=m68k_fetchW();pc+=2;  // SS: TODO what if m68k_src_w=0?
 #if !defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
@@ -4898,7 +5058,7 @@ void                              m68k_movem_l_to_regs(){
     break;
   case BITS_543_101:
 #if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
-    CPU_ABUS_ACCESS_READ;
+    CPU_ABUS_ACCESS_READ_FETCH;
 #endif
     ad=areg[PARAM_M]+(signed short)m68k_fetchW();
 #if !defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
@@ -4908,7 +5068,7 @@ void                              m68k_movem_l_to_regs(){
     break;
   case BITS_543_110:
 #if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
-    CPU_ABUS_ACCESS_READ;
+    CPU_ABUS_ACCESS_READ_FETCH;
 #else
     INSTRUCTION_TIME(6);
 #endif
@@ -4926,7 +5086,7 @@ void                              m68k_movem_l_to_regs(){
     switch(ir&0x7){
     case 0:
 #if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
-      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ_FETCH;
 #else
       INSTRUCTION_TIME(4);
 #endif
@@ -4935,8 +5095,8 @@ void                              m68k_movem_l_to_regs(){
       break;
     case 1:
 #if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
-      CPU_ABUS_ACCESS_READ;
-      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ_FETCH;
+      CPU_ABUS_ACCESS_READ_FETCH;
 #else
       INSTRUCTION_TIME(8);
 #endif
@@ -4945,7 +5105,7 @@ void                              m68k_movem_l_to_regs(){
       break;
     case 2:
 #if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
-      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ_FETCH;
 #else
       INSTRUCTION_TIME(4);
 #endif
@@ -4954,7 +5114,7 @@ void                              m68k_movem_l_to_regs(){
       break;
     case 3:
 #if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
-      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ_FETCH;
 #else
       INSTRUCTION_TIME(6);
 #endif
@@ -5058,7 +5218,7 @@ void                              m68k_movem_w_to_regs(){
 #endif
   bool postincrement=false;
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-  CPU_ABUS_ACCESS_READ;
+  CPU_ABUS_ACCESS_READ_FETCH;
 #else
   INSTRUCTION_TIME(4);
 #endif
@@ -5075,7 +5235,7 @@ void                              m68k_movem_w_to_regs(){
     break;
   case BITS_543_101:
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-    CPU_ABUS_ACCESS_READ;
+    CPU_ABUS_ACCESS_READ_FETCH;
 #else
     INSTRUCTION_TIME(4);
 #endif
@@ -5084,7 +5244,7 @@ void                              m68k_movem_w_to_regs(){
     break;
   case BITS_543_110:
 #if defined(SSE_CPU_ROUNDING_MOVEM6)
-    CPU_ABUS_ACCESS_READ;
+    CPU_ABUS_ACCESS_READ_FETCH;
     //INSTRUCTION_TIME_ROUND(6);
 #else
     INSTRUCTION_TIME(6);
@@ -5103,7 +5263,7 @@ void                              m68k_movem_w_to_regs(){
     switch(ir&0x7){
     case 0:
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ_FETCH;
 #else
       INSTRUCTION_TIME(4);
 #endif      
@@ -5112,8 +5272,8 @@ void                              m68k_movem_w_to_regs(){
       break;
     case 1:
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-      CPU_ABUS_ACCESS_READ;
-      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ_FETCH;
+      CPU_ABUS_ACCESS_READ_FETCH;
 #else
       INSTRUCTION_TIME(8);
 #endif      
@@ -5122,7 +5282,7 @@ void                              m68k_movem_w_to_regs(){
       break;
     case 2:
 #if defined(SSE_CPU_ROUNDING_MOVEM)
-      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ_FETCH;
 #else
       INSTRUCTION_TIME(4);
 #endif
@@ -5131,7 +5291,7 @@ void                              m68k_movem_w_to_regs(){
       break;
     case 3:
 #if defined(SSE_CPU_ROUNDING_MOVEM6)
-      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ_FETCH;
       //INSTRUCTION_TIME_ROUND(6);
 #else
       INSTRUCTION_TIME(6);
@@ -5225,15 +5385,27 @@ void                              m68k_jsr()
 */
   switch (ir & BITS_543){
     case BITS_543_010: //SS (An)
+      // (An)          | 16(2/2)         |                      np nS ns np          
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+      CPU_ABUS_ACCESS_READ_PC; // = prefetch but Steem doesn't work like that yet
+#endif
       effective_address=areg[PARAM_M];
       break;
     case BITS_543_101: //SS (d16,An)
-      INSTRUCTION_TIME(2);
+      // (d16,An)      | 18(2/2)         |                 n    np nS ns np          
+      INSTRUCTION_TIME(2); //immediate was already prefetched...
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+      CPU_ABUS_ACCESS_READ_FETCH; //...so this really fetches next ir (see FetchWord)
+#endif
       effective_address=areg[PARAM_M]+(signed short)m68k_fetchW();
       pc+=2; 
       break;
     case BITS_543_110: //SS (d8,An,Xn)
+      // (d8,An,Xn)    | 22(2/2)         |                 n nn np nS ns np          
       INSTRUCTION_TIME(6);
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+      CPU_ABUS_ACCESS_READ_FETCH;
+#endif
       m68k_iriwo=m68k_fetchW();pc+=2; 
       if (m68k_iriwo & BIT_b){  //.l
         effective_address=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
@@ -5244,7 +5416,11 @@ void                              m68k_jsr()
     case BITS_543_111:
       switch (ir & 0x7){
       case 0: //SS (xxx).W
+        // (xxx).W       | 18(2/2)         |                 n    np nS ns np          
         INSTRUCTION_TIME(2);
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+        CPU_ABUS_ACCESS_READ_FETCH;
+#endif
         effective_address=(signed long)(signed short)m68k_fetchW();
         pc+=2; 
 #if defined(SSE_CPU_TRUE_PC)
@@ -5254,7 +5430,13 @@ void                              m68k_jsr()
 #endif
         break;
       case 1: //SS (xxx).L
+        // (xxx).L       | 20(3/2)         |                   np np nS ns np     
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+        CPU_ABUS_ACCESS_READ_FETCH;
+        CPU_ABUS_ACCESS_READ_FETCH;
+#else
         CPU_ABUS_ACCESS_READ;
+#endif
         effective_address=m68k_fetchL();
         pc+=4;  
 #if defined(SSE_CPU_TRUE_PC)
@@ -5265,12 +5447,18 @@ void                              m68k_jsr()
         break;
       case 2: //SS (d16,PC) 
         INSTRUCTION_TIME(2);
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+        CPU_ABUS_ACCESS_READ_FETCH;
+#endif
         effective_address=(PC_RELATIVE_PC+(signed short)m68k_fetchW()) | pc_high_byte;
         PC_RELATIVE_MONITOR(effective_address);
         pc+=2; 
         break;
       case 3: //SS (d8,PC,Xn)
         INSTRUCTION_TIME(6);
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+        CPU_ABUS_ACCESS_READ_FETCH
+#endif
         m68k_iriwo=m68k_fetchW();
         if (m68k_iriwo & BIT_b){  //.l
           effective_address=(PC_RELATIVE_PC+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12]) | pc_high_byte;
@@ -5288,7 +5476,9 @@ void                              m68k_jsr()
     default:
       m68k_unrecognised();
   }
+#if !defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
   CPU_ABUS_ACCESS_READ; 
+#endif
 #endif
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_ROUNDING_JSR))
   INSTRUCTION_TIME_ROUND(8);
@@ -5323,9 +5513,8 @@ void                              m68k_jsr()
 #endif
   SET_PC(effective_address); //SS where prefetch happens
 #if defined(SSE_CPU_PREFETCH_TIMING_JSR)
-  CPU_ABUS_ACCESS_READ; // count cycles for prefetch in SET_PC (TODO...)
+  CPU_ABUS_ACCESS_READ_PC;
 #endif
-
   intercept_os();
 }
 
@@ -5367,15 +5556,24 @@ NOTES :
 
   switch (ir & BITS_543){
     case BITS_543_010: //SS (An)
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+      CPU_ABUS_ACCESS_READ_PC; // see JSR
+#endif
       effective_address=areg[PARAM_M];
       break;
     case BITS_543_101: //SS (d16,An)
       INSTRUCTION_TIME(2);
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+      CPU_ABUS_ACCESS_READ_FETCH;
+#endif
       effective_address=areg[PARAM_M]+(signed short)m68k_fetchW();
       pc+=2; 
       break;
     case BITS_543_110: //SS (d8,An,Xn)
       INSTRUCTION_TIME(6);
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+      CPU_ABUS_ACCESS_READ_FETCH;
+#endif
       m68k_iriwo=m68k_fetchW();pc+=2; 
       if (m68k_iriwo & BIT_b){  //.l
         effective_address=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
@@ -5387,6 +5585,9 @@ NOTES :
       switch (ir & 0x7){
       case 0: //SS (xxx).W
         INSTRUCTION_TIME(2);
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+        CPU_ABUS_ACCESS_READ_FETCH;
+#endif
         effective_address=(signed long)(signed short)m68k_fetchW();
         pc+=2; 
 #if defined(SSE_CPU_TRUE_PC)
@@ -5396,7 +5597,12 @@ NOTES :
 #endif
         break;
       case 1: //SS (xxx).L
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+        CPU_ABUS_ACCESS_READ_FETCH;
+        CPU_ABUS_ACCESS_READ_FETCH;
+#else
         CPU_ABUS_ACCESS_READ;
+#endif
         effective_address=m68k_fetchL();
         pc+=4;  
 #if defined(SSE_CPU_TRUE_PC)
@@ -5407,12 +5613,18 @@ NOTES :
         break;
       case 2: //SS (d16,PC) 
         INSTRUCTION_TIME(2);
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+        CPU_ABUS_ACCESS_READ_FETCH;
+#endif
         effective_address=(PC_RELATIVE_PC+(signed short)m68k_fetchW()) | pc_high_byte;
         PC_RELATIVE_MONITOR(effective_address);
         pc+=2; 
         break;
       case 3: //SS (d8,PC,Xn)
         INSTRUCTION_TIME(6);
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+        CPU_ABUS_ACCESS_READ_FETCH;
+#endif
         m68k_iriwo=m68k_fetchW();
         if (m68k_iriwo & BIT_b){  //.l
           effective_address=(PC_RELATIVE_PC+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12]) | pc_high_byte;
@@ -5440,10 +5652,12 @@ NOTES :
   M68000.Rounded=false;
 #endif
   m68k_READ_W(effective_address); // Check for bus/address errors
+#if !defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
   CPU_ABUS_ACCESS_READ; // there are 2 prefetches in those instructions
+#endif
   SET_PC(effective_address);  
 #if (defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_JMP))
-  CPU_ABUS_ACCESS_READ;
+  CPU_ABUS_ACCESS_READ_PC;
 #endif
   intercept_os();
 }
@@ -5516,7 +5730,7 @@ void                              m68k_chk(){
       INSTRUCTION_TIME(40-4);
       FETCH_TIMING;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-      INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+      CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
 #endif
 #else
       INSTRUCTION_TIME_ROUND(40);
@@ -5525,10 +5739,14 @@ void                              m68k_chk(){
       SR_CLEAR(SR_N);
       m68k_interrupt(LPEEK(BOMBS_CHK*4));
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
+#if defined(SSE_CPU_ROUNDING_CHK)
+      INSTRUCTION_TIME(28-4); //10 already counted + 2 fewer acording to Yacht
+#else
       INSTRUCTION_TIME(40-4);
+#endif
       FETCH_TIMING;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-      INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+      CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
 #endif
 #else
       INSTRUCTION_TIME_ROUND(40);
@@ -5582,13 +5800,13 @@ void                              m68k_lea(){
       effective_address=areg[PARAM_M];
       break;
     case BITS_543_101: //SS (d16,An)
-      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ_FETCH;
       effective_address=areg[PARAM_M]+(signed short)m68k_fetchW();
       pc+=2; 
       break;
     case BITS_543_110: //SS (d8,An,Xn)
       INSTRUCTION_TIME(2);
-      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ_FETCH;
       m68k_iriwo=m68k_fetchW();pc+=2; 
       INSTRUCTION_TIME(2);
       if (m68k_iriwo & BIT_b){  //.l
@@ -5600,7 +5818,7 @@ void                              m68k_lea(){
     case BITS_543_111:
       switch (ir & 0x7){
       case 0: //SS (xxx).W
-        CPU_ABUS_ACCESS_READ;
+        CPU_ABUS_ACCESS_READ_FETCH;
         effective_address=(signed long)(signed short)m68k_fetchW();
         pc+=2; 
 #if defined(SSE_CPU_TRUE_PC)
@@ -5608,8 +5826,8 @@ void                              m68k_lea(){
 #endif
         break;
       case 1: //SS (xxx).L
-        CPU_ABUS_ACCESS_READ;
-        CPU_ABUS_ACCESS_READ;
+        CPU_ABUS_ACCESS_READ_FETCH;
+        CPU_ABUS_ACCESS_READ_FETCH;
         effective_address=m68k_fetchL();
         pc+=4;  
 #if defined(SSE_CPU_TRUE_PC)
@@ -5617,14 +5835,14 @@ void                              m68k_lea(){
 #endif
         break;
       case 2: //SS (d16,PC) 
-        CPU_ABUS_ACCESS_READ;
+        CPU_ABUS_ACCESS_READ_FETCH;
         effective_address=(PC_RELATIVE_PC+(signed short)m68k_fetchW()) | pc_high_byte;
         PC_RELATIVE_MONITOR(effective_address);
         pc+=2; 
         break;
       case 3: //SS (d8,PC,Xn)
         INSTRUCTION_TIME(2);
-        CPU_ABUS_ACCESS_READ;
+        CPU_ABUS_ACCESS_READ_FETCH;
         m68k_iriwo=m68k_fetchW();
         INSTRUCTION_TIME(2);
         if (m68k_iriwo & BIT_b){  //.l
@@ -5697,7 +5915,7 @@ void                              m68k_trap(){
   INSTRUCTION_TIME(26-4);
   FETCH_TIMING;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-  INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+  CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
 #endif
 #else
   INSTRUCTION_TIME_ROUND(26);
@@ -5776,11 +5994,11 @@ void                              m68k_move_from_usp(){
     exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
   }
 }
+
 void                              m68k_reset(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
 #endif
-
   if (SUPERFLAG){
     reset_peripherals(0);
     INSTRUCTION_TIME(128);
@@ -5788,11 +6006,11 @@ void                              m68k_reset(){
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
   FETCH_TIMING;
 #endif
-
   }else{
     exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
   }
 }
+
 void                              m68k_nop(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
@@ -5814,6 +6032,7 @@ void                              m68k_nop(){
 
 
 void                              m68k_stop(){
+
   if (SUPERFLAG){
     if (cpu_stopped==0){
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING) //36.15 OVR
@@ -5823,9 +6042,8 @@ void                              m68k_stop(){
       FETCH_TIMING;
 #endif
 #if defined(SSE_CPU_PREFETCH_TIMING_STOP)
-      CPU_ABUS_ACCESS_READ;
+      CPU_ABUS_ACCESS_READ_FETCH;
 #endif
-
       m68k_GET_IMMEDIATE_W;
 #if !defined(SSE_CPU_PREFETCH_TIMING_STOP)
       INSTRUCTION_TIME_ROUND(4); // time for immediate fetch
@@ -5895,14 +6113,13 @@ Also see SSE_TOS_GEMDOS_PEXEC6 for ReDMCSB
 */
   bool dont_intercept_os=false;
 #endif
-  //ASSERT( old_pc!=0xFC431A);
   if (SUPERFLAG){
     DEBUG_ONLY( int debug_old_sr=sr; )
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
     INSTRUCTION_TIME_ROUND(20-4); //v3.7 rounds up, changes nothing
     FETCH_TIMING;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-    INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+    CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
 #endif
 #else
     INSTRUCTION_TIME_ROUND(20);
@@ -6485,10 +6702,6 @@ FLOWCHART :
                    +---------------------------->np                  |          
                                                  |                   |          
                                                  np<-----------------+          
-SS:
-Trying to follow this schema isn't easy and seems to break things.
-And it seems this instruction isn't optimised.
-TODO
 
 */
 //#undef SSE_CPU_ROUNDING_DBCC
@@ -6499,14 +6712,12 @@ TODO
 #endif
 #if defined(SSE_CPU_ROUNDING_DBCC)
     INSTRUCTION_TIME(2); //do the test
-    CPU_ABUS_ACCESS_READ; // get displacement (whether we go or not...)
+    CPU_ABUS_ACCESS_READ_FETCH; // get displacement (whether we go or not...)
     m68k_GET_IMMEDIATE_W;
 #endif
 
-
-
     if (!m68k_CONDITION_TEST){
-      (*((WORD*)(&(r[PARAM_M]))))--; //SS Timing included in the 4 that follow
+      (*((WORD*)(&(r[PARAM_M]))))--;
       if( (*( (signed short*)(&(r[PARAM_M]) ))) != (signed short)(-1) ){
         MEM_ADDRESS new_pc=(pc+(signed short)m68k_src_w-2) | pc_high_byte;
 #if defined(SSE_CPU_ROUNDING_BUS)
@@ -6519,7 +6730,7 @@ TODO
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
 #if defined(SSE_CPU_ROUNDING_DBCC)
-        CPU_ABUS_ACCESS_READ; // SET_PC doesn't count cycles (TODO?)
+        CPU_ABUS_ACCESS_READ_PC; // SET_PC doesn't count cycles (TODO?)
 #else
         INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
 #endif
@@ -9613,7 +9824,6 @@ void                             m68k_lsl_b_to_dM(){
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_E_TIMINGS)
   FETCH_TIMING;
 #endif
-
   INSTRUCTION_TIME(2+2*m68k_src_w);
   if(m68k_src_w>31)m68k_src_w=31;
   m68k_dest=&(r[PARAM_M]);
@@ -9725,7 +9935,6 @@ void                             m68k_lsl_w_to_dM(){
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_E_TIMINGS)
   FETCH_TIMING;
 #endif
-
   INSTRUCTION_TIME(2+2*m68k_src_w);
   if(m68k_src_w>31)m68k_src_w=31;
   m68k_dest=&(r[PARAM_M]);
@@ -10359,7 +10568,7 @@ extern "C" void m68k_0110(){  //bCC //SS + BSR
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
       FETCH_TIMING;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-      INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+      CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
 #endif
 #else
       INSTRUCTION_TIME_ROUND(18); // round for fetch
@@ -10405,7 +10614,7 @@ extern "C" void m68k_0110(){  //bCC //SS + BSR
         FETCH_TIMING;
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-        INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+        CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
 #endif
       }else{ //SS branch not taken
 #if defined(SSE_CPU_ROUNDING_BCC)
@@ -10432,20 +10641,26 @@ extern "C" void m68k_0110(){  //bCC //SS + BSR
 #if defined(SSE_BOILER_PSEUDO_STACK)
       Debug.PseudoStackPush(PC32+2);
 #endif
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+      INSTRUCTION_TIME(2);
+      CPU_ABUS_ACCESS_WRITE;
+      CPU_ABUS_ACCESS_WRITE;
+      CPU_ABUS_ACCESS_READ_FETCH;
+#endif
       MEM_ADDRESS new_pc=(pc+(signed long)((signed short)m68k_fetchW())) | pc_high_byte;
       // stacked pc is always instruction pc+2 due to prefetch (pc doesn't increase before new_pc is read)
 #if defined(SSE_CPU_ROUNDING_BUS)
       M68000.Rounded=false;
 #endif
       m68k_READ_W(new_pc); // Check for bus/address errors
-#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
+#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING) && !defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
       INSTRUCTION_TIME(18-4);    
 #endif
       SET_PC(new_pc);      
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
       FETCH_TIMING;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-      INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+      CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
 #endif
 #else
       INSTRUCTION_TIME_ROUND(18); // round for fetch
@@ -10465,17 +10680,26 @@ extern "C" void m68k_0110(){  //bCC //SS + BSR
 #if defined(SSE_CPU_ROUNDING_BCC)
       INSTRUCTION_TIME(2);
 #endif
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+#if defined(SSE_CPU_ROUNDING_BUS)
+      M68000.Rounded=false;//? will be useless in the end
+#endif
+      //CPU_ABUS_ACCESS_READ_FETCH;
+      MEM_ADDRESS new_pc;
+#else
       MEM_ADDRESS new_pc=(pc+(signed long)((signed short)m68k_fetchW())) | pc_high_byte;
+#endif
       if (m68k_CONDITION_TEST){ //SS bramch taken
         // stacked pc is always instruction pc+2 due to prefetch (pc doesn't increase before new_pc is read)
-#if defined(SSE_CPU_ROUNDING_BCC)
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+        CPU_ABUS_ACCESS_READ_FETCH;
+        new_pc=(pc+(signed long)((signed short)m68k_fetchW())) | pc_high_byte;
+#elif defined(SSE_CPU_ROUNDING_BCC)
         CPU_ABUS_ACCESS_READ;
 #endif
         m68k_READ_W(new_pc); // Check for bus/address errors
-#if !defined(SSE_CPU_ROUNDING_BCC)
-#if (defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING))
+#if !defined(SSE_CPU_ROUNDING_BCC) && defined(SSE_CPU_FETCH_TIMING)
         INSTRUCTION_TIME(10-4);
-#endif
 #endif
         SET_PC(new_pc);
 #if !defined(SSE_CPU_ROUNDING_BCC)
@@ -10487,12 +10711,20 @@ extern "C" void m68k_0110(){  //bCC //SS + BSR
         FETCH_TIMING;
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-        INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+        CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
 #endif
       }else{
 #if defined(SSE_CPU_ROUNDING_BCC)
-      INSTRUCTION_TIME(2);
-      CPU_ABUS_ACCESS_READ;
+        INSTRUCTION_TIME(2);
+#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+        // fetched but not used
+        // we surmise M68000 has a 'fetch' routine to advance PC, and not
+        // another one to advance PC without fetching?
+        CPU_ABUS_ACCESS_READ_FETCH;
+        new_pc=(pc+(signed long)((signed short)m68k_fetchW())) | pc_high_byte;
+#else
+        CPU_ABUS_ACCESS_READ;
+#endif
 #endif
         pc+=2; 
 #if !defined(SSE_CPU_ROUNDING_BCC)
@@ -10585,7 +10817,7 @@ extern "C" void m68k_1010() //line-a
   INSTRUCTION_TIME_ROUND(34-4);
   FETCH_TIMING;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-  INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+  CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
 #endif
 #else
   INSTRUCTION_TIME_ROUND(34);
@@ -10632,7 +10864,7 @@ extern "C" void m68k_1111(){  //line-f emulator
   INSTRUCTION_TIME_ROUND(34-4);
   FETCH_TIMING;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-  INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+  CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
 #endif
 #else
   INSTRUCTION_TIME_ROUND(34);
