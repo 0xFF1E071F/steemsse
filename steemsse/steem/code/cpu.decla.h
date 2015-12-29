@@ -832,6 +832,26 @@ extern signed int compare_buffer;
 
 #define m68k_CONDITION_TEST m68k_jump_condition_test[(ir&0xf00)>>8]()
 
+
+#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH) // count timing in push macros
+
+#define m68k_PUSH_W(x)                   \
+    CPU_ABUS_ACCESS_WRITE; \
+    r[15]-=2;abus=r[15];                 \
+    m68k_SET_DEST_W_TO_ADDR;             \
+    m68k_DEST_W=x;
+
+
+#define m68k_PUSH_L(x)                   \
+    CPU_ABUS_ACCESS_WRITE; \
+    CPU_ABUS_ACCESS_WRITE; \
+    r[15]-=4;abus=r[15];                 \
+    m68k_SET_DEST_L_TO_ADDR;             \
+    m68k_DEST_L=x;
+
+
+#else
+
 #define m68k_PUSH_W(x)                   \
     r[15]-=2;abus=r[15];                 \
     m68k_SET_DEST_W_TO_ADDR;             \
@@ -843,6 +863,7 @@ extern signed int compare_buffer;
     m68k_SET_DEST_L_TO_ADDR;             \
     m68k_DEST_L=x;
 
+#endif
 
 #define m68k_BIT_SHIFT_TO_dM_GET_SOURCE         \
   if(ir&BIT_5){                               \
@@ -1067,8 +1088,8 @@ extern signed int compare_buffer;
 #define m68k_GET_IMMEDIATE_B m68k_src_b=m68k_fetchB();pc+=2; 
 #define m68k_GET_IMMEDIATE_W m68k_src_w=m68k_fetchW();pc+=2; 
 #define m68k_GET_IMMEDIATE_L m68k_src_l=m68k_fetchL();pc+=4; 
-#define m68k_IMMEDIATE_B (signed char)m68k_fetchB()
-#define m68k_IMMEDIATE_W (short)m68k_fetchW()
+#define m68k_IMMEDIATE_B (signed char)m68k_fetchB()   //ss very few calls
+#define m68k_IMMEDIATE_W (short)m68k_fetchW() //ss very few calls
 #if !defined(SSE_VAR_REWRITE)
 #define m68k_IMMEDIATE_L (long)m68k_fetchL() // SS unused
 #endif

@@ -1674,10 +1674,14 @@ FC2 FC1 FC0 Address Space
         change_to_supervisor_mode();
       TRACE_LOG("Push crash address %X->%X on %X\n",crash_address,(crash_address & 0x00ffffff) | pc_high_byte,r[15]-4);
       m68k_PUSH_L(( (crash_address) & 0x00ffffff) | pc_high_byte);  // crash address = old_pc
+#if !defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
       INSTRUCTION_TIME_ROUND(8);
+#endif
       TRACE_LOG("Push SR %X on %X\n",_sr,r[15]-2);
       m68k_PUSH_W(_sr); // Status register 
+#if !defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
       INSTRUCTION_TIME_ROUND(4); //Round first for interrupts
+#endif
       MEM_ADDRESS ad=LPEEK(bombs*4); // Get the vector
       if(ad & 1) // bad vector!
       {
@@ -1781,10 +1785,14 @@ FC2 FC1 FC0 Address Space
       SR_CLEAR(SR_TRACE);
 
 #if defined(SSE_CPU_FETCH_TIMING)
+#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
+      INSTRUCTION_TIME_ROUND(50-4-8-4-4-4-8-4); //TODO
+#else
       INSTRUCTION_TIME_ROUND(50-4); // TODO micro timings?
+#endif
       FETCH_TIMING;
 #if defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-      INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+      CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
 #endif
 #else
       INSTRUCTION_TIME_ROUND(50); //Round for fetch

@@ -815,7 +815,11 @@ void ASMCALL check_for_interrupts_pending()
             BRK(Spurious interrupt); 
 #endif
             int iack_cycles=ACT-MC68901.IackTiming;
+#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
+            INSTRUCTION_TIME_ROUND(50-12-iack_cycles); //? unimportant
+#else
             INSTRUCTION_TIME(50-iack_cycles); //?
+#endif
             m68k_interrupt(LPEEK(0x60)); // vector for Spurious, NOT Bus Error
             sr=WORD((sr & (~SR_IPL)) | SR_IPL_6); // the CPU does that anyway
           }
@@ -1206,13 +1210,15 @@ void mfp_interrupt(int irq,int when_fired) {
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
 #if defined(SSE_INT_MFP_REFACTOR2)
   int iack_cycles=ACT-MC68901.IackTiming;
-  INSTRUCTION_TIME(SSE_INT_MFP_TIMING-4-iack_cycles);
+  INSTRUCTION_TIME(SSE_INT_MFP_TIMING-12-4-iack_cycles);
+#elif defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
+  INSTRUCTION_TIME_ROUND(SSE_INT_MFP_TIMING-12-4);
 #else
   INSTRUCTION_TIME_ROUND(SSE_INT_MFP_TIMING-4);
 #endif
   FETCH_TIMING;
 #if defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-  INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+  CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
 #endif
 #else
   INSTRUCTION_TIME_ROUND(34);
@@ -1604,7 +1610,11 @@ Fix is pragmatic (TEST10D still working).
         !!(reg_enabled_before&i_bit),!!(reg_masked_before&i_bit),!!(reg_pending_before&i_bit),
         !!(mfp_reg[MFPR_IERA+i_ab] & i_bit),!!(mfp_reg[MFPR_IMRA+i_ab] & i_bit),!!(reg_pending_after & i_bit),
         LastRegisterWritten,LastRegisterFormerValue,WriteTiming,next_timeout-WriteTiming);
+#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
+      INSTRUCTION_TIME_ROUND(50-12); //?
+#else
       INSTRUCTION_TIME(50); //?
+#endif
       m68k_interrupt(LPEEK(0x60)); // vector for Spurious, NOT Bus Error
       sr=WORD((sr & (~SR_IPL)) | SR_IPL_6); // the CPU does that anyway
 
