@@ -331,6 +331,7 @@ void Blitter_Blit_Word() //SS Data is blitted word by word
 #if defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING_NFSR)
 /* It's protected by option 'Hacks' because we could be misreading doc
    about "read-modify cycle".
+   Update We Were: we were not correct indeed (undef).
 */
     if(SSE_HACKS_ON && Blit.NFSR && Blit.Last)
       INSTRUCTION_TIME(6);
