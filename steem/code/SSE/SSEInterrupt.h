@@ -113,8 +113,11 @@ inline void HBLInterrupt() {
   time_of_last_hbl_interrupt=ABSOLUTE_CPU_TIME;
 #endif
 
+#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
+  INSTRUCTION_TIME_ROUND(SSE_INT_HBL_TIMING-12); 
+#else
   INSTRUCTION_TIME_ROUND(SSE_INT_HBL_TIMING); 
-
+#endif
   // jitter?
 #if defined(SSE_INT_JITTER_HBL) //no
 #if defined(SSE_INT_E_CLOCK)
@@ -220,7 +223,11 @@ inline void VBLInterrupt() {
 #endif
 #endif
 
+#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
+  INSTRUCTION_TIME_ROUND(SSE_INT_VBL_TIMING-12); 
+#else
   INSTRUCTION_TIME_ROUND(SSE_INT_VBL_TIMING);
+#endif
 
   m68k_interrupt(LPEEK(0x0070));
 

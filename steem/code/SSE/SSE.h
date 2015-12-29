@@ -2504,7 +2504,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_ROUNDING_BUS // big change, much overhead, little effect 
 #define SSE_CPU_ROUNDING_BUS2 // blitter problem
 #define SSE_CPU_TIMINGS_REFACTOR_FETCH // moving timings to fetching functions
+#define SSE_CPU_TIMINGS_REFACTOR_PUSH // count timing in push macros
 #endif
+
 #ifdef SSE_GUI
 #define SSE_GUI_CONFIG_FILE // new option to L/S ini files
 #if defined(SSE_GUI_CONFIG_FILE)

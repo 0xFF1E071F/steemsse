@@ -4512,10 +4512,10 @@ Dn :              |                 |
 #endif
 
 #if defined(SSE_CPU_ROUNDING_PEA)
-    CPU_ABUS_ACCESS_WRITE;
-    CPU_ABUS_ACCESS_WRITE;
+    CPU_ABUS_ACCESS_WRITE_PUSH; //not defined
+    CPU_ABUS_ACCESS_WRITE_PUSH;
 #endif
-    m68k_PUSH_L(effective_address);
+    m68k_PUSH_L(effective_address); //because timing is counted here
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_PEA)
     if(M68000.PrefetchClass==1)
@@ -5499,8 +5499,8 @@ void                              m68k_jsr()
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_ROUNDING_JSR)
   // 8 cycles more than JMP because we push PC
-  CPU_ABUS_ACCESS_WRITE;
-  CPU_ABUS_ACCESS_WRITE;
+  CPU_ABUS_ACCESS_WRITE_PUSH;
+  CPU_ABUS_ACCESS_WRITE_PUSH;
 #endif
   m68k_PUSH_L(PC32); 
 #else
@@ -5727,7 +5727,11 @@ void                              m68k_chk(){
       SR_SET(SR_N);
       m68k_interrupt(LPEEK(BOMBS_CHK*4));
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
-      INSTRUCTION_TIME(40-4);
+#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
+      INSTRUCTION_TIME_ROUND(30-4-12); // includes a timing fix for CHK
+#else
+      INSTRUCTION_TIME(40-4); //10 already counted
+#endif
       FETCH_TIMING;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
       CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
@@ -5912,7 +5916,11 @@ void                              m68k_trap(){
 #endif
   m68k_interrupt(Vector);
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
+#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
+  INSTRUCTION_TIME_ROUND(26-12-4); 
+#else
   INSTRUCTION_TIME(26-4);
+#endif
   FETCH_TIMING;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
   CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
@@ -6254,10 +6262,14 @@ void                              m68k_trapv(){
     m68k_interrupt(LPEEK(BOMBS_TRAPV*4));
     INSTRUCTION_TIME_ROUND(0); //Round first for interrupts
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
+#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
+    INSTRUCTION_TIME(34-12-4);
+#else
     INSTRUCTION_TIME(34-4);
+#endif
     FETCH_TIMING;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-    INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+    CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
 #endif
 #else
     INSTRUCTION_TIME_ROUND(34);
@@ -10550,8 +10562,19 @@ extern "C" void m68k_0110(){  //bCC //SS + BSR
   if (LOBYTE(ir)){ //SS 8-bit displacement
     MEM_ADDRESS new_pc=(pc+(signed long)((signed char)LOBYTE(ir))) | pc_high_byte;
     if ((ir & 0xf00)==0x100){ //BSR
+/*
+-------------------------------------------------------------------------------
+                  |    Exec Time    |               Data Bus Usage
+        BSR       |      INSTR      |                   INSTR
+------------------+-----------------+------------------------------------------
+<label> :         |                 |
+  .B .S or .W :   | 18(2/2)         |                 n    nS ns np np          
+*/
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_CLASS)
       M68000.PrefetchClass=2;
+#endif
+#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
+      INSTRUCTION_TIME(2);
 #endif
       m68k_PUSH_L(PC32);
 #if defined(SSE_BOILER_PSEUDO_STACK)
@@ -10561,8 +10584,12 @@ extern "C" void m68k_0110(){  //bCC //SS + BSR
       M68000.Rounded=false;
 #endif
       m68k_READ_W(new_pc); // Check for bus/address errors
+#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
+      CPU_ABUS_ACCESS_READ_PC; //as first prefetch...
+#else
 #if (defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING))
       INSTRUCTION_TIME(18-4);
+#endif
 #endif
       SET_PC(new_pc);
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
@@ -10634,17 +10661,31 @@ extern "C" void m68k_0110(){  //bCC //SS + BSR
   }else{
 //#undef SSE_CPU_LINE_6_TIMINGS
     if ((ir & 0xf00)==0x100){ //bsr.l //SS .W?
+/*
+-------------------------------------------------------------------------------
+                  |    Exec Time    |               Data Bus Usage
+        BSR       |      INSTR      |                   INSTR
+------------------+-----------------+------------------------------------------
+<label> :         |                 |
+  .B .S or .W :   | 18(2/2)         |                 n    nS ns np np          
+*/
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_CLASS)
       M68000.PrefetchClass=2;
+#endif
+#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
+      INSTRUCTION_TIME(2);
 #endif
       m68k_PUSH_L(PC32+2);
 #if defined(SSE_BOILER_PSEUDO_STACK)
       Debug.PseudoStackPush(PC32+2);
 #endif
 #if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
+#if !defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
       INSTRUCTION_TIME(2);
       CPU_ABUS_ACCESS_WRITE;
       CPU_ABUS_ACCESS_WRITE;
+#endif
       CPU_ABUS_ACCESS_READ_FETCH;
 #endif
       MEM_ADDRESS new_pc=(pc+(signed long)((signed short)m68k_fetchW())) | pc_high_byte;
@@ -10814,7 +10855,11 @@ extern "C" void m68k_1010() //line-a
 //  intercept_line_a();
   INSTRUCTION_TIME_ROUND(0);  // Round first for interrupts
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
+#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
+  INSTRUCTION_TIME_ROUND(34-12-4);
+#else
   INSTRUCTION_TIME_ROUND(34-4);
+#endif
   FETCH_TIMING;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
   CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
@@ -10861,7 +10906,11 @@ extern "C" void m68k_1111(){  //line-f emulator
 
   INSTRUCTION_TIME_ROUND(0);  // Round first for interrupts
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
+#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
+  INSTRUCTION_TIME_ROUND(34-12-4);
+#else
   INSTRUCTION_TIME_ROUND(34-4);
+#endif
   FETCH_TIMING;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
   CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
