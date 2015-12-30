@@ -2550,8 +2550,8 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//glue
 
 #if defined(SSE_INT_HBL)
-//#undef SSE_INT_HBL_E_CLOCK_HACK //the patch doesn't even work
-#define SSE_INT_HBL_380 //bugfix
+#undef SSE_INT_HBL_E_CLOCK_HACK // made a patch instead
+#define SSE_INT_HBL_380 
 #endif
 
 #if defined(SSE_INT_MFP)
@@ -2573,7 +2573,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_INT_VBL)
-#define SSE_INT_VBL_380 //bugfix
+#define SSE_INT_VBL_380
 #endif
 
 #if defined(SSE_MMU)
