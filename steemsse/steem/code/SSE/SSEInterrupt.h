@@ -68,8 +68,8 @@ inline void HBLInterrupt() {
   M68K_UNSTOP;
 #endif
 
-#if defined(SSE_INT_HBL_IACK2) 
-  time_of_last_hbl_interrupt=ABSOLUTE_CPU_TIME;
+#if defined(SSE_INT_HBL_IACK2) && !defined(SSE_INT_HBL_380)
+  time_of_last_hbl_interrupt=ABSOLUTE_CPU_TIME; //move this after (undefined) wobble
 #endif
 
   // wobble?
@@ -82,18 +82,18 @@ inline void HBLInterrupt() {
   }
 #endif
 
+#if defined(SSE_INT_HBL_IACK2) && defined(SSE_INT_HBL_380)
+  time_of_last_hbl_interrupt=ABSOLUTE_CPU_TIME; //before e-clock cycles
+#endif
+
   // E-clock?
 
 #if defined(SSE_INT_E_CLOCK)
   if(HD6301EMU_ON)
-#if defined(SSE_CPU_E_CLOCK2)
-  { 
+  {
+#if defined(SSE_CPU_E_CLOCK2) 
     int current_cycles=ACT;
-#if defined(SSE_INT_HBL_380) // was experiment?
-    INSTRUCTION_TIME_ROUND(ECLOCK_AUTOVECTOR_CYCLE);
-#else
-    INSTRUCTION_TIME/*_ROUND*/(ECLOCK_AUTOVECTOR_CYCLE);
-#endif
+    INSTRUCTION_TIME(ECLOCK_AUTOVECTOR_CYCLE);
     BYTE e_clock_wait_states=
 #endif
 #ifdef SSE_CPU_E_CLOCK_DISPATCHER
@@ -104,8 +104,8 @@ inline void HBLInterrupt() {
 #if defined(SSE_CPU_E_CLOCK2)
     INSTRUCTION_TIME(current_cycles-ACT);
     INSTRUCTION_TIME(e_clock_wait_states);
-  }
 #endif
+  }
 #endif
 
 
@@ -173,7 +173,7 @@ inline void VBLInterrupt() {
   M68K_UNSTOP;
 #endif
 
-#if defined(SSE_INT_VBL_IACK2) 
+#if defined(SSE_INT_VBL_IACK2) && !defined(SSE_INT_VBL_380)
   time_of_last_vbl_interrupt=ABSOLUTE_CPU_TIME;
 #endif
 
@@ -192,6 +192,9 @@ inline void VBLInterrupt() {
     }
 #endif
 
+#if defined(SSE_INT_VBL_IACK2) && defined(SSE_INT_VBL_380)
+  time_of_last_vbl_interrupt=ABSOLUTE_CPU_TIME;
+#endif
 
 #if defined(DEBUG_BUILD) && !defined(SSE_INT_VBL_380) //auto168 boiler wu1
   if(mode==STEM_MODE_CPU) // no cycles when boiler is reading //bug?
@@ -199,10 +202,14 @@ inline void VBLInterrupt() {
     // E-Clock?
 #if defined(SSE_CPU_E_CLOCK)
   if(HD6301EMU_ON)
-#if defined(SSE_CPU_E_CLOCK2)
   { 
+#if defined(SSE_CPU_E_CLOCK2)
     int current_cycles=ACT;
+#if defined(SSE_INT_VBL_380)
+    INSTRUCTION_TIME(ECLOCK_AUTOVECTOR_CYCLE);
+#else
     INSTRUCTION_TIME_ROUND(ECLOCK_AUTOVECTOR_CYCLE);
+#endif
     BYTE e_clock_wait_states=
 #endif
 #ifdef SSE_CPU_E_CLOCK_DISPATCHER
@@ -213,7 +220,9 @@ inline void VBLInterrupt() {
 #if defined(SSE_CPU_E_CLOCK2)
     INSTRUCTION_TIME(current_cycles-ACT);
     INSTRUCTION_TIME(e_clock_wait_states);
+#endif
   }
+
 #endif
 #endif
 

@@ -1078,7 +1078,7 @@ void event_scanline()
     -12 //this was for BBC52, useless now
 #endif
 #endif
-    ){ 
+    ){
     hbl_pending=true;
   }
 #ifdef SSE_DEBUG
@@ -1968,7 +1968,19 @@ void event_trigger_vbi() { //6X cycles into frame (reference end of HSYNC)
 #if defined(SSE_GLUE_FRAME_TIMINGS_A)
   ASSERT(!Glue.Status.vbi_done);
 #endif
-  vbl_pending=true;
+
+
+#if defined(SSE_INT_VBL_380) && defined(SSE_CPU_E_CLOCK2) && defined(SSE_INT_VBL_IACK2)
+  BYTE iack_latency=(HD6301EMU_ON)
+    ? HBL_IACK_LATENCY + M68000.LastEClockCycles[TM68000::ECLOCK_VBL]
+    : CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED;
+  if(abs_quick(cpu_timer_at_start_of_hbl-time_of_last_vbl_interrupt)
+    >iack_latency)
+#endif
+    vbl_pending=true;
+  //We don't expect cases:
+  ASSERT(vbl_pending||!cpu_timer_at_start_of_hbl&&!time_of_last_vbl_interrupt);
+
 #if !defined(SSE_GLUE_FRAME_TIMINGS_B)
   screen_event_pointer++;
 #endif
