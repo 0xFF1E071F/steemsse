@@ -1665,9 +1665,10 @@ FC2 FC1 FC0 Address Space
 #if defined(SSE_CPU_HALT) && defined(SSE_GUI_STATUS_STRING_HALT)
     M68000.ProcessingState=TM68000::EXCEPTION;
 #endif
-
+#if !defined(SSE_INT_ROUNDING)
     //SS:never quite understood this rounding for interrupts thing
     INSTRUCTION_TIME_ROUND(0); //Round first for interrupts 
+#endif
     if(bombs==BOMBS_ILLEGAL_INSTRUCTION || bombs==BOMBS_PRIVILEGE_VIOLATION)
     {
       if(!SUPERFLAG) 
@@ -1700,7 +1701,7 @@ FC2 FC1 FC0 Address Space
         TRACE_LOG("PC = %X\n\n",ad);
         M68000.SetPC(ad);
         SR_CLEAR(SR_TRACE);
-        INSTRUCTION_TIME_ROUND(22); 
+        INSTRUCTION_TIME_ROUND(22);  // 8+4+22=36: OK
         interrupt_depth++; // Is this necessary?
       }
     }
@@ -2343,7 +2344,9 @@ void                              m68k_divu(){
     Debug.RecordInterrupt("DIV");
 #endif
     m68k_interrupt(LPEEK(BOMBS_DIVISION_BY_ZERO*4));
+#if !defined(SSE_INT_ROUNDING)
     INSTRUCTION_TIME_ROUND(0); //Round first for interrupts
+#endif
     INSTRUCTION_TIME_ROUND(38);
   }else{
     PREFETCH_IRC; // TODO: at the end?
@@ -2404,7 +2407,9 @@ void                              m68k_divs(){
     Debug.RecordInterrupt("DIV");
 #endif
     m68k_interrupt(LPEEK(BOMBS_DIVISION_BY_ZERO*4));
+#if !defined(SSE_INT_ROUNDING)
     INSTRUCTION_TIME_ROUND(0); //Round first for interrupts
+#endif
     INSTRUCTION_TIME_ROUND(38);
   }else{
     PREFETCH_IRC;

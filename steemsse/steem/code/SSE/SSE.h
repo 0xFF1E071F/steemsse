@@ -2549,6 +2549,10 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//SSE_GLUE_FRAME_TIMINGS
 #endif//glue
 
+#if defined(SSE_INTERRUPT)
+#define SSE_INT_ROUNDING
+#endif
+
 #if defined(SSE_INT_HBL)
 #undef SSE_INT_HBL_E_CLOCK_HACK // made a patch instead
 #define SSE_INT_HBL_380 
