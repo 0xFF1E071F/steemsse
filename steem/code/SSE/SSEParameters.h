@@ -439,42 +439,69 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 #if defined(SSE_INTERRUPT)
 /*  
-    IACK (interrupt acknowledge)  16
-    Exception processing          40
-    Total                         56
+Doc
 
-Motorola:
-Interrupt* 46(5/4)
+Motorola UM:
+Interrupt 44(5/3)*
+* The interrupt acknowledge cycle is assumed to take four clock periods.
 
-* The interrupt acknowledge and breakpoint cycles
-are assumed to take four clock periods.
-Far more on the ST.
+Yacht
+  Interrupt           | 44(5/3)  |      n nn ns ni n-  n nS ns nV nv np np      
 
--> that's quite a lot of cycles and you still must add E-Clock jitter
-   for HBL, VBL
+WinUAE
+Interrupt:
 
-   verified for MFP's timer B: TIMERB01.TOS; TIMERB03.TOS
+- 6 idle cycles
+- write PC low word
+- read exception number byte from (0xfffff1 | (interrupt number << 1)) [amiga specific]
+- 4 idle cycles
+- write SR
+- write PC high word                       [wrong order...is this credible?]
+- read exception address high word
+- read exception address low word
+- prefetch
+- 2 idle cycles
+- prefetch
+total 44 (don't repeat it, the amiga interrupts better...)
 
-   Forest, TCB "need" 56 cycles for HBI
-   No reason to think it's less for VBI
+ST (speculative)
+-IACK = 16 cycles instead of 4
+-2 idle cycles between fetches = 4
+could be the cycles are used to increment "PC"
+
+Interrupt IACK (MFP)     |  54(5/3)   | n nn ns ni ni ni ni nS ns nV nv np n np
+Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n np
+(E=E-clock synchronisation 0-8)
+
+ Cases
+
+ MFP  TIMERB01.TOS; TIMERB03.TOS
+ HBI  Forest, TCB, 3615GEN4-HMD, HBITMG.TOS
+ VBI  Auto 168, Dragonnels/Happy Islands, 3615GEN4-CKM
 
 */
 
+#if defined(SSE_INT_ROUNDING)
+#define SSE_INT_MFP_TIMING 54
+#define SSE_INT_HBL_TIMING 54
+#define SSE_INT_VBL_TIMING 54
+#else
 #if defined(SSE_INT_MFP)
-#define SSE_INT_MFP_TIMING (56)
+#define SSE_INT_MFP_TIMING (56) 
 #endif
 #if defined(SSE_INT_HBL)
-#define SSE_INT_HBL_TIMING (56) 
+#define SSE_INT_HBL_TIMING (56)
 #endif
 #if defined(SSE_INT_VBL)
 #define SSE_INT_VBL_TIMING (56)
 #endif
+#endif
 
 #define HBL_IACK_LATENCY 28
 #define VBL_IACK_LATENCY 28
+
 #if defined(SSE_CPU_E_CLOCK4)
-//Mental Hangover STE - what matters is relation to ACIA
-#define ECLOCK_AUTOVECTOR_CYCLE 4
+#define ECLOCK_AUTOVECTOR_CYCLE 10 // IACK starts at cycle 10
 #else
 #define ECLOCK_AUTOVECTOR_CYCLE 28 //whatever!
 #endif
@@ -616,7 +643,9 @@ Far more on the ST.
 #endif
 #endif
 #endif//starting_delay
-#define MFP_IACK_LATENCY (28) // it may seem high but it's not #IACK cycles
+// it may seem high but it's not #IACK cycles
+// cases Final Conflict, Anomaly menu
+#define MFP_IACK_LATENCY (28) 
 #define MFP_SPURIOUS_LATENCY MFP_WRITE_LATENCY//?? (MFP_IACK_LATENCY) //?
 
 #endif//mfp

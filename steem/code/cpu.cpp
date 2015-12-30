@@ -6260,7 +6260,9 @@ void                              m68k_trapv(){
     Debug.RecordInterrupt("TRAPV");
 #endif
     m68k_interrupt(LPEEK(BOMBS_TRAPV*4));
+#if !defined(SSE_INT_ROUNDING)
     INSTRUCTION_TIME_ROUND(0); //Round first for interrupts
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
 #if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
     INSTRUCTION_TIME(34-12-4);
@@ -10852,8 +10854,10 @@ extern "C" void m68k_1010() //line-a
 {
   pc-=2;  //pc not incremented for illegal instruction
 //  log_write("CPU sees line-a instruction");
-//  intercept_line_a();
+//  intercept_line_a();//SS doesn't exist
+#if !defined(SSE_INT_ROUNDING)
   INSTRUCTION_TIME_ROUND(0);  // Round first for interrupts
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
 #if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
   INSTRUCTION_TIME_ROUND(34-12-4);
@@ -10903,8 +10907,9 @@ extern "C" void m68k_1111(){  //line-f emulator
     return;
   }
 #endif
-
+#if !defined(SSE_INT_ROUNDING)
   INSTRUCTION_TIME_ROUND(0);  // Round first for interrupts
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
 #if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
   INSTRUCTION_TIME_ROUND(34-12-4);

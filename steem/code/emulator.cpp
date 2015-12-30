@@ -869,12 +869,14 @@ void call_a000()
 
   on_rte_return_address=(PC32);
   //now save regs a0,a1,d0 ?
+#if !defined(SSE_INT_ROUNDING)
   INSTRUCTION_TIME_ROUND(0);  // Round first for interrupts
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
   INSTRUCTION_TIME_ROUND(34-4);
   FETCH_TIMING;
 #if defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-    INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+  CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
 #endif
 #else
   INSTRUCTION_TIME_ROUND(34);
