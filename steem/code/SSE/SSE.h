@@ -2348,7 +2348,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DEBUG_LOG_OPTIONS // mine, boiler or _DEBUG
 
 #ifdef SSE_INT_MFP
-#define SSE_DEBUG_MFP_DEACTIVATE_IACK_SUBSTITUTION // to check cases
+//#define SSE_DEBUG_MFP_DEACTIVATE_IACK_SUBSTITUTION // to check cases
 #endif
 
 #if defined(SSE_MIDI)
@@ -2570,18 +2570,20 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_INT_MFP)
+#define SSE_INT_MFP_READ_DELAY2 //timer B
 //#define SSE_INT_MFP_RECORD_PENDING_TIMING
 #define SSE_INT_MFP_REFACTOR2 //simpler way for IACK and Spurious
 #if defined(SSE_INT_MFP_REFACTOR2)
 #define SSE_INT_MFP_IS_DELAY
-#undef SSE_INT_MFP_IACK_LATENCY4 // "skip timer"
+#undef SSE_INT_MFP_IACK_LATENCY4 // adios "skip timer" hack
 #endif//ref2
-#define SSE_INT_MFP_REFACTOR3 //enums -note REFACTOR2 not active
+#define SSE_INT_MFP_REFACTOR3 //enums 
 #undef SSE_INT_MFP_SPURIOUS_372
 #undef SSE_INT_MFP_TIMER_B_AER // refactor
 #define SSE_INT_MFP_TIMER_B_AER2 // refactor
+//#define SSE_INT_MFP_TIMER_B_PULSE //TODO
 #define SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS // timer B should be updated
-#define SSE_INT_MFP_TIMERS_WOBBLE //
+#define SSE_INT_MFP_TIMERS_WOBBLE //(v3.8.0: Overscan #6B; Spurious)
 //#define SSE_INT_MFP_RATIO_STE3 // same ratio as STF?
 #define SSE_INT_MFP_TIMERS_STARTING_DELAY //
 //#define SSE_INT_MFP_UPDATE_IP_ON_GPIP_CHANGE //mistake, MFD (do test prg b4?)

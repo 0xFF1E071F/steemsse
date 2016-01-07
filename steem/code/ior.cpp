@@ -719,7 +719,22 @@ when it does).
               //if(OPTION_PRECISE_MFP) TRACE_OSD("read mfp %d",MFP_TIMER_DATA_REGISTER_ADVANCE);
 #endif
               mfp_calc_timer_counter(n-MFPR_TADR);
-#if defined(SSE_INT_MFP_READ_DELAY1)
+#if defined(SSE_INT_MFP_READ_DELAY1) && !defined(SSE_INT_MFP_READ_DELAY2)
+/*  v3.8.0
+    BIG demo #1
+    We surmise the same delay for timer B
+    TBI -> register -> IRQ : some delays in the chain?
+ 	moveq #0,d0                                      ; 0146AA: 7000 
+	mulu d0,d0                                       ; 0146AC: C0C0 
+	mulu d0,d0                                       ; 0146AE: C0C0 
+	move.b #$0,$ffff820a                             ; 0146B0: 13FC 0000 FFFF 820A 
+	move.b $fa21.W,d0                                ; 0146B8: 1038 FA21 
+	cmp.b $fa21.W,d0                                 ; 0146BC: B038 FA21 
+	beq .l -6 {$0146BC}                              ; 0146C0: 6700 FFFA 
+	mulu d0,d0                                       ; 0146C4: C0C0 
+	mulu d0,d0                                       ; 0146C6: C0C0 
+	move.b #$2,$ffff820a                             ; 0146C8: 13FC 0002 FFFF 820A 
+*/
               if(OPTION_PRECISE_MFP)
                 INSTRUCTION_TIME(-MFP_TIMER_DATA_REGISTER_ADVANCE);
 #endif
@@ -737,6 +752,10 @@ when it does).
                   }
                 }
               }
+#if defined(SSE_INT_MFP_READ_DELAY2)//see above
+              if(OPTION_PRECISE_MFP)
+                INSTRUCTION_TIME(-MFP_TIMER_DATA_REGISTER_ADVANCE);
+#endif
               LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_MFP_TIMERS,Str("MFP: ")+HEXSl(old_pc,6)+
                       " - Read timer "+char('A'+(n-MFPR_TADR))+" counter as "+ior_byte); )
             }else if (n>=MFPR_SCR){
