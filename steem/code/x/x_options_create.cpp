@@ -885,10 +885,17 @@ void TOptionBox::CreateDisplayPage()
     BT_LABEL,T("Borders"),0,BkCol);
 
   border_dd.make_empty();
+#if defined(SSE_VID_DISABLE_AUTOBORDER)
+  border_dd.additem(T("Off"));
+  border_dd.additem(T("On"));
+#else
   border_dd.additem(T("Never Show Borders"));
   border_dd.additem(T("Always Show Borders"));
   border_dd.additem(T("Auto Borders"));
-#if SSE_VERSION>=370
+#endif
+#if defined(SSE_VID_DISABLE_AUTOBORDER)
+  border_dd.changesel(min((int)border,1));
+#elif SSE_VERSION>=370
   border_dd.changesel(min((int)border,2));
 #else
   border_dd.changesel(min(border,2));

@@ -1255,7 +1255,7 @@ void event_vbl_interrupt() //SS misleading name?
 #endif
   if (floppy_mediach[0]) floppy_mediach[0]--;  //counter for media change
   if (floppy_mediach[1]) floppy_mediach[1]--;  //counter for media change
-
+#if !defined(SSE_VID_DISABLE_AUTOBORDER)
   if (border & 2){ //auto-border
     if (overscan){	// SS: overscan started at 25, so it's in VBL
       overscan--;
@@ -1284,6 +1284,7 @@ void event_vbl_interrupt() //SS misleading name?
       }
     }
   }
+#endif  
   if (mixed_output>0){
     mixed_output--;
     if (mixed_output==2){

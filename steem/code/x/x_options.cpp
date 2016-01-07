@@ -754,8 +754,13 @@ int TOptionBox::dd_notify_proc(hxc_dropdown*dd,int mess,int i)
       change_window_size_for_border_change(oldborder,newborder);
       draw(false);
     }else{
+#if defined(SSE_VID_DISABLE_AUTOBORDER)
+      dd->changesel(min(oldborder,1));dd->draw();
+      dd->lv.changesel(min(oldborder,1));dd->lv.draw(true,true);
+#else
       dd->changesel(min(oldborder,2));dd->draw();
       dd->lv.changesel(min(oldborder,2));dd->lv.draw(true,true);
+#endif
       border=oldborder;
     }
 

@@ -138,6 +138,7 @@ void SaveAllDialogData(bool FinalSave,Str INIFile,ConfigStoreFile *pCSF)
 
   WINPOSITIONDATA wpd={0,0,0,0,0,0};
   GetWindowPositionData(StemWin,&wpd);
+#if !defined(SSE_VID_DISABLE_AUTOBORDER)
   if (border==3 && ResChangeResize){  //Auto border on and border on
     int xmult=WinSize[screen_res][WinSizeForRes[screen_res]].x/WinSize[screen_res][0].x;
     int ymult=WinSize[screen_res][WinSizeForRes[screen_res]].y/WinSize[screen_res][0].y;
@@ -148,6 +149,7 @@ void SaveAllDialogData(bool FinalSave,Str INIFile,ConfigStoreFile *pCSF)
     wpd.Top+=BORDER_TOP*ymult;
     wpd.Height-=BORDER_BOTTOM*ymult + BORDER_TOP*ymult;
   }
+#endif
   pCSF->SetStr("Main","Left",EasyStr(wpd.Left));
   pCSF->SetStr("Main","Top",EasyStr(wpd.Top));
   pCSF->SetStr("Main","Width",EasyStr(wpd.Width));
@@ -1068,9 +1070,13 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 
     // Loading of border is now practically ignored (because it can be set to 0
     // by going to windowed mode). Only used first load of v2.06.
+#if defined(SSE_VID_DISABLE_AUTOBORDER)
+    border=min(pCSF->GetInt("Display","Border",border),1);
+    border_last_chosen=min(pCSF->GetInt("Display","BorderLastChosen",border),1);
+#else
     border=min(pCSF->GetInt("Display","Border",border),2);
     border_last_chosen=min(pCSF->GetInt("Display","BorderLastChosen",border),2);
-
+#endif
     if (!Disp.BorderPossible())
     {
       border=0;
@@ -1312,7 +1318,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #endif
 
 #ifdef WIN32
-#if defined(SSE_VAR_RESIZE_370)
+#if defined(SSE_VID_DISABLE_AUTOBORDER)
+  CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min((int)border,1),MF_BYCOMMAND);
+#elif defined(SSE_VAR_RESIZE_370)
   CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min((int)border,2),MF_BYCOMMAND);
 #else
   CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min(border,2),MF_BYCOMMAND);

@@ -1469,12 +1469,14 @@ void TGlue::CheckVerticalOverscan() {
     if(on_overscan_limit==LIMIT_TOP) // top border off
     {
       shifter_first_draw_line=-29;
+#if !defined(SSE_VID_DISABLE_AUTOBORDER)
       if(FullScreen && border==2) // TODO a macro
       {    //hack overscans
         int off=shifter_first_draw_line-draw_first_possible_line;
         draw_first_possible_line+=off;
         draw_last_possible_line+=off;
       }
+#endif
     }
     else // bottom border off
       // Timer B will fire for the last time when scan_y is 246	    
@@ -2295,12 +2297,14 @@ void TGlue::SetSyncMode(BYTE NewSync) {
   if(OPTION_PRECISE_MFP)
     MC68901.AdjustTimerB(); 
 #endif
+#if !defined(SSE_VID_DISABLE_AUTOBORDER)
   if(FullScreen && border==BORDERS_AUTO_OFF)
   {
     int off=shifter_first_draw_line-draw_first_possible_line;
     draw_first_possible_line+=off;
     draw_last_possible_line+=off;
   }
+#endif
 }
 
 #endif//#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)

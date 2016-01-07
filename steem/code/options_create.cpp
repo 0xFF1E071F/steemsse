@@ -913,7 +913,11 @@ void TOptionBox::CreateBrightnessPage()
 void TOptionBox::CreateDisplayPage()
 {
   HWND Win;
+#if defined(SSE_VID_DISABLE_AUTOBORDER2)
+  long Wid,Offset=0;
+#else
   long Wid;
+#endif
   int y=10;
   int x=page_l;
   int w=get_text_width(T("Frameskip"));
@@ -934,19 +938,35 @@ void TOptionBox::CreateDisplayPage()
   CreateWindow("Static",T("Borders"),WS_CHILD,
                           page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
 
+#if defined(SSE_VID_DISABLE_AUTOBORDER)
+  BorderOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
+                          page_l+5+Wid,y,Wid+15,200,Handle,(HMENU)207,HInstance,NULL);
+
+  SendMessage(BorderOption,CB_ADDSTRING,0,(long)CStrT("Off"));
+  SendMessage(BorderOption,CB_ADDSTRING,1,(long)CStrT("On"));
+#else
   BorderOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
                           page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)207,HInstance,NULL);
   SendMessage(BorderOption,CB_ADDSTRING,0,(long)CStrT("Never Show Borders"));
   SendMessage(BorderOption,CB_ADDSTRING,1,(long)CStrT("Always Show Borders"));
   SendMessage(BorderOption,CB_ADDSTRING,2,(long)CStrT("Auto Borders"));
+#endif
   if (Disp.BorderPossible()==0 && FullScreen==0) EnableBorderOptions(0);
+#if defined(SSE_VID_DISABLE_AUTOBORDER2)
+  Offset=100;
+#else
   y+=30;
-
+#endif
 
 #if defined(SSE_VID_BORDERS) && defined(SSE_GUI_OPTIONS_DISPLAY_SIZE_IN_DISPLAY)
   Wid=get_text_width(T("Display size (with borders)")); //text is different?
+#if defined(SSE_VID_DISABLE_AUTOBORDER2)
+  CreateWindow("Static",T("Display size (with borders)"),WS_CHILD,
+	  page_l+Offset,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
+#else
   CreateWindow("Static",T("Display size (with borders)"),WS_CHILD,
 	  page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
+#endif
   int mask=WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST;
 #if defined(SSE_VID_BORDERS_GUARD_EM)
   if(NewMonitorSel==-1 && (extended_monitor 
@@ -964,8 +984,13 @@ void TOptionBox::CreateDisplayPage()
       )
     mask|=WS_DISABLED;
 #endif
+#if defined(SSE_VID_DISABLE_AUTOBORDER2)
+  Win=BorderSizeOption=CreateWindow("Combobox","",mask,
+    page_l+5+Wid+Offset,y,80,200,Handle,(HMENU)1026,HInstance,NULL);
+#else
   Win=BorderSizeOption=CreateWindow("Combobox","",mask,
     page_l+5+Wid,y,80,200,Handle,(HMENU)1026,HInstance,NULL);
+#endif
   //TRACE("border handle %d\n",Win);
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("384 x 270"));
 #if defined(SSE_VID_BORDERS_LIMIT_TO_245)
@@ -1014,8 +1039,13 @@ void TOptionBox::CreateDisplayPage()
 #endif
 
 #if defined(SSE_VID_BLOCK_WINDOW_SIZE) // absolute placement TODO?
+#if defined(SSE_VID_DISABLE_AUTOBORDER2)
+  Offset=10;
+  y+=10;
+#else
   y-=40;
   long Offset=220-5;
+#endif
   Wid=GetCheckBoxSize(Font,T("Lock window size")).Width;
   ASSERT(Wid>0);
   Win=CreateWindow("Button",T("Lock window size"),WS_CHILD  | WS_TABSTOP | BS_CHECKBOX,
@@ -1023,11 +1053,17 @@ void TOptionBox::CreateDisplayPage()
   SendMessage(Win,BM_SETCHECK,OPTION_BLOCK_RESIZE,0);
  // ToolAddWindow(ToolTip,Win,
    // T("If you don't want to stretch the main window by accident"));
+#if !defined(SSE_VID_DISABLE_AUTOBORDER2)
   y+=40;
+#endif
 #endif
 
 #if defined(SSE_VID_LOCK_ASPET_RATIO)
+#if defined(SSE_VID_DISABLE_AUTOBORDER2)
+  Offset+=Wid+10;
+#else
   y-=16;
+#endif
   Wid=GetCheckBoxSize(Font,T("Lock aspect ratio")).Width;
   ASSERT(Wid>0);
   mask=WS_CHILD  | WS_TABSTOP | BS_CHECKBOX;
@@ -1036,11 +1072,20 @@ void TOptionBox::CreateDisplayPage()
   Win=CreateWindow("Button",T("Lock aspect ratio"),mask,
                           page_l+Offset,y,Wid,23,Handle,(HMENU)7318,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_LOCK_ASPECT_RATIO,0);
+#if defined(SSE_VID_DISABLE_AUTOBORDER2)
+  y+=10;
+#else
   y+=16;
 #endif
+#endif
 
+#if defined(SSE_VID_DISABLE_AUTOBORDER2)
+  CreateWindow("Button",T("Window Size"),WS_CHILD | BS_GROUPBOX,
+                  page_l,y-25,page_w,20+30+30+30+30+2+25,Handle,(HMENU)99,HInstance,NULL);
+#else
   CreateWindow("Button",T("Window Size"),WS_CHILD | BS_GROUPBOX,
                   page_l,y,page_w,20+30+30+30+30+2,Handle,(HMENU)99,HInstance,NULL);
+#endif
   y+=20;
 
   Wid=GetCheckBoxSize(Font,T("Automatic resize on resolution change")).Width;
@@ -1214,7 +1259,9 @@ void TOptionBox::FillScreenShotFormatOptsCombo()
 void TOptionBox::UpdateWindowSizeAndBorder()
 {
   if (BorderOption==NULL) return;
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE_370)
+#if defined(SSE_VID_DISABLE_AUTOBORDER)
+  SendMessage(BorderOption,CB_SETCURSEL,min((int)border,1),0);
+#elif defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE_370)
   SendMessage(BorderOption,CB_SETCURSEL,min((int)border,2),0);
 #else
   SendMessage(BorderOption,CB_SETCURSEL,min(border,2),0);

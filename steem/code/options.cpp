@@ -88,7 +88,9 @@ bool TOptionBox::ChangeBorderModeRequest(int newborder)
   int newval=newborder;
   if (Disp.BorderPossible()==0 && (FullScreen==0)) newval=0;
   bool proceed=true;
-#if defined(SSE_VAR_RESIZE_370)
+#if defined(SSE_VID_DISABLE_AUTOBORDER)
+  if (min((int)border,1)==min(newval,1)){
+#elif defined(SSE_VAR_RESIZE_370)
   if (min((int)border,2)==min(newval,2)){
 #else
   if (min(border,2)==min(newval,2)){
@@ -846,7 +848,9 @@ void TOptionBox::EnableBorderOptions(bool enable)
   }else{
     border=border_last_chosen | (border & 1);
   }
-#if defined(SSE_VAR_RESIZE_370)
+#if defined(SSE_VID_DISABLE_AUTOBORDER)
+  CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min((int)border,1),MF_BYCOMMAND);
+#elif defined(SSE_VAR_RESIZE_370)
   CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min((int)border,2),MF_BYCOMMAND);
 #else
   CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min(border,2),MF_BYCOMMAND);
@@ -854,7 +858,9 @@ void TOptionBox::EnableBorderOptions(bool enable)
   if (Handle==NULL || BorderOption==NULL) return;
 
   EnableWindow(BorderOption,enable);
-#if defined(SSE_VAR_RESIZE_370)
+#if defined(SSE_VID_DISABLE_AUTOBORDER)
+  SendMessage(BorderOption,CB_SETCURSEL,min((int)border,1),0);
+#elif defined(SSE_VAR_RESIZE_370)
   SendMessage(BorderOption,CB_SETCURSEL,min((int)border,2),0);
 #else
   SendMessage(BorderOption,CB_SETCURSEL,min(border,2),0);
@@ -919,7 +925,9 @@ void TOptionBox::SetBorder(int newborder)
     if (Handle) if (GetDlgItem(Handle,207)) SendDlgItemMessage(Handle,207,CB_SETCURSEL,oldborder,0);
     border=oldborder;
   }
-#if defined(SSE_VAR_RESIZE_370)
+#if defined(SSE_VID_DISABLE_AUTOBORDER)
+  CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min((int)border,1),MF_BYCOMMAND);
+#elif defined(SSE_VAR_RESIZE_370)
   CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min((int)border,2),MF_BYCOMMAND);
 #else
   CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min(border,2),MF_BYCOMMAND);

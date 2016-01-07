@@ -1272,9 +1272,14 @@ bool MakeGUI()
   InsertMenu(StemWin_SysMenu,pos,MF_BYPOSITION | MF_STRING,105,T("Smaller Window"));
   InsertMenu(StemWin_SysMenu,pos,MF_BYPOSITION | MF_STRING,104,T("Bigger Window"));
   InsertMenu(StemWin_SysMenu,pos,MF_BYPOSITION | MF_SEPARATOR,0,NULL);
+#if defined(SSE_VID_DISABLE_AUTOBORDER)
+  InsertMenu(StemWin_SysMenu,pos,MF_BYPOSITION | MF_STRING,110,T("Borders Off"));
+  InsertMenu(StemWin_SysMenu,pos,MF_BYPOSITION | MF_STRING,111,T("Borders On"));
+#else
   InsertMenu(StemWin_SysMenu,pos,MF_BYPOSITION | MF_STRING,112,T("Auto Borders"));
   InsertMenu(StemWin_SysMenu,pos,MF_BYPOSITION | MF_STRING,111,T("Always Show Borders"));
   InsertMenu(StemWin_SysMenu,pos,MF_BYPOSITION | MF_STRING,110,T("Never Show Borders"));
+#endif
   InsertMenu(StemWin_SysMenu,pos,MF_BYPOSITION | MF_SEPARATOR,0,NULL);
   InsertMenu(StemWin_SysMenu,pos,MF_BYPOSITION | MF_STRING,113,T("Disable On Screen Display"));
   InsertMenu(StemWin_SysMenu,pos,MF_BYPOSITION | MF_SEPARATOR,0,NULL);
