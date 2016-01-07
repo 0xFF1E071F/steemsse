@@ -224,7 +224,7 @@ inline void VBLInterrupt() {
   }
 
 #endif
-#endif
+//#endif
 
 #if !defined(SSE_INT_VBL_IACK2) 
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBL_IACK)

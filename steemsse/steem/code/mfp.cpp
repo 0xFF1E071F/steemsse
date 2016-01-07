@@ -741,11 +741,54 @@ void ASMCALL check_for_interrupts_pending()
             if (mfp_reg[MFPR_ISRA+i_ab] & i_bit){ //interrupt in service
               break;  //time to stop looking for pending interrupts
             }
-#if defined(SSE_INT_MFP_WRITE_DELAY2) && defined(SSE_INT_MFP_IS_DELAY) //v3.8.0, forgot this one
+#if defined(SSE_INT_MFP_WRITE_DELAY2) && defined(SSE_INT_MFP_IS_DELAY)
+/*  v3.8.0, forgot this one
+    It is unlikely in normal code because of SR, but of course, there's
+    a case: Super Hang-On
+
+Timer B
+	move.l d0,-(a7)                                  ; 001AD6: 2F00 
+	move.w d1,-(a7)                                  ; 001AD8: 3F01 
+	move.l a0,-(a7)                                  ; 001ADA: 2F08 
+	clr.b $fffffa1b                                  ; 001ADC: 4239 FFFF FA1B 
+	move.l $ffff8244,d0                              ; 001AE2: 2039 FFFF 8244 
+	stop #$2100                                      ; 001AE8: 4E72 2100 
+it waits for HBI, VBI is far away
+ACIA won't trigger because Timer B is in service
+	movea.l $23402(pc),a0 {$007658}                  ; 001AEC: 207A 5B6A 
+	move.l (a0)+,d0                                  ; 001AF0: 2018 
+	move.l a0,$7658                                  ; 001AF2: 23C8 0000 7658 
+	movea.l $23402(pc),a0 {$007664}                  ; 001AF8: 207A 5B6A 
+	move.b (a0)+,d1                                  ; 001AFC: 1218 
+	move.l a0,$7664                                  ; 001AFE: 23C8 0000 7664 
+	subq.b #1,d1                                     ; 001B04: 5301 
+	beq.s +8 {$001B10}                               ; 001B06: 6708 
+	movea.l (a7)+,a0                                 ; 001B08: 205F 
+	move.b d1,$fffffa21                              ; 001B0A: 13C1 FFFF FA21 
+	stop #$2100                                      ; 001B10: 4E72 2100 
+	tst.b d1                                         ; 001B14: 4A01 
+	beq.s -44 {$001AEC}                              ; 001B16: 67D4 
+	bcs.s +8 {$001B22}                               ; 001B18: 6508 
+	move.b #$8,$fffffa1b                             ; 001B1A: 13FC 0008 FFFF FA1B 
+	move.w (a7)+,d1                                  ; 001B22: 321F 
+	move.l (a7)+,d0                                  ; 001B24: 201F 
+	bclr #$0,$fffffa0f                               ; 001B26: 08B9 0000 FFFF FA0F 
+here ACIA could trigger, D0 is wrong and there's a raster glitch
+It seemed an ACIA bug because it happened when we started using
+the event system instead of agenda (v3.8). 
+In fact, the agenda system would snap ACIA IRQ at the end of a scanline, so
+wouldn't be pending at PC=001B26.
+Real reason: MFP writing delay, effect of clearing service bit delayed for
+4 cycles.
+	rte                                              ; 001B2E: 4E73 
+
+*/
             if(post_write && MC68901.LastRegisterWritten==MFPR_ISRA+i_ab
-              && (MC68901.LastRegisterWrittenValue&i_bit))
-            {
-              break; // unlikely in normal code because of SR
+              && !(MC68901.LastRegisterWrittenValue&i_bit) // was clearing
+              && (MC68901.LastRegisterFormerValue&i_bit)) // was set
+             {
+              TRACE_LOG("%d MFP delay write ISR%c %X->%X irq %d %d\n",ACT,'A'+i_ab,MC68901.LastRegisterFormerValue,MC68901.LastRegisterWrittenValue,irq,MC68901.IackTiming-MC68901.WriteTiming);
+              break;
             }
 #endif
             BYTE relevant_pending_register=mfp_reg[MFPR_IPRA+i_ab] & i_bit;
