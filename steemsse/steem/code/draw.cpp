@@ -26,7 +26,11 @@ EXT int stfm_b_timer INIT(0);//tmp
 EXT BYTE bad_drawing INIT(0);
 EXT BYTE draw_fs_blit_mode INIT( UNIX_ONLY(DFSM_STRAIGHTBLIT) WIN_ONLY(DFSM_STRETCHBLIT) );
 EXT BYTE draw_fs_fx INIT(DFSFX_NONE),draw_grille_black INIT(6);
+#if defined(SSE_VID_DISABLE_AUTOBORDER)
+EXT bool border INIT(1),border_last_chosen INIT(1);
+#else
 EXT BYTE border INIT(2),border_last_chosen INIT(2);
+#endif
 EXT BYTE draw_fs_topgap INIT(0);
 BYTE prefer_pc_hz[2][3]={{0,0,0},{0,0,0}};
 BYTE tested_pc_hz[2][3]={{0,0,0},{0,0,0}};
@@ -218,12 +222,16 @@ void draw_begin()
   }else{
     draw_first_possible_line=0;
     draw_last_possible_line=shifter_y;
+#if defined(SSE_VID_DISABLE_AUTOBORDER)
+    draw_fs_topgap=40;
+#else
     if (FullScreen && overscan && (border==2)){ //hack overscan
       draw_last_possible_line+=40;
       draw_fs_topgap=0;
     }else{
       draw_fs_topgap=40;
     }
+#endif
   }
   UNIX_ONLY( draw_fs_topgap=0; )
   if (draw_grille_black>0) Disp.DrawFullScreenLetterbox();
@@ -365,7 +373,9 @@ void draw_set_jumps_and_source()
 #ifdef WIN32
         if (FullScreen) ox=(800-ow)/2, oy=(600-oh)/2;
       }else if (FullScreen && using_res_640_400==0){
+#if !defined(SSE_VID_DISABLE_AUTOBORDER)
         if (overscan && border==2 && emudetect_falcon_extra_height) oh=480;
+#endif
         oy=(480-oh)/2;
 #endif
       }
@@ -376,8 +386,10 @@ void draw_set_jumps_and_source()
         // We double the size of borders too to keep the aspect ratio of the screen the same
         ow+=BORDER_SIDE*2*emudetect_falcon_mode_size;
         oh+=(BORDER_TOP+BORDER_BOTTOM)*emudetect_falcon_mode_size;
+#if !defined(SSE_VID_DISABLE_AUTOBORDER)
       }else if (overscan && border==2 && emudetect_falcon_extra_height){
         oh+=40*emudetect_falcon_mode_size;
+#endif
       }
     }
     draw_blit_source_rect.left=ox;
@@ -477,9 +489,11 @@ void draw_set_jumps_and_source()
 //      if(!(D3D9_OK && SSE_OPTION_D3D)) //?
 #endif
       WIN_ONLY( oy=int(using_res_640_400 ? 0:40); )
+#if !defined(SSE_VID_DISABLE_AUTOBORDER)
       if (overscan && (border==2)){ //hack overscan
         oy=0;oh=480;
       }
+#endif
     }
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_SCANLINES_INTERPOLATED)
@@ -546,11 +560,12 @@ void draw_set_jumps_and_source()
       if(!(D3D9_OK && SSE_OPTION_D3D))
 #endif
       WIN_ONLY( oy=int(using_res_640_400 ? 0:40); )
-
+#if !defined(SSE_VID_DISABLE_AUTOBORDER)
       if (overscan && (border==2)){ //hack overscan
         oy=0;
         oh=240;
       }
+#endif
     }
 //    ox=0;oy=0;ow=736;oh=460;  //horrible big
     draw_blit_source_rect.left=ox;
@@ -1215,10 +1230,12 @@ void get_fullscreen_rect(RECT *rc)
     rc->top=int(using_res_640_400 ? 0:40);
     rc->right=640;
     rc->bottom=int(using_res_640_400 ? 400:440);
+#if !defined(SSE_VID_DISABLE_AUTOBORDER)
     if (overscan && (border==2)){ //hack overscan
       rc->top=0;
       rc->bottom=480;
     }
+#endif
   }
 }
 //---------------------------------------------------------------------------

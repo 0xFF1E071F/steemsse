@@ -1636,9 +1636,9 @@ void SteemDisplay::ChangeToWindowedMode(bool Emergency)
     DirectoryTree::PopupParent=NULL;
 
     LockWindowUpdate(NULL);
-
+#if !defined(SSE_VID_DISABLE_AUTOBORDER)
     if (border==3) overscan=OVERSCAN_MAX_COUNTDOWN; // Make sure auto border turns off
-
+#endif
     // Sometimes things won't work if you do them immediately after switching to
     // windowed mode, so post a message and resize all the windows back when we can
     PostMessage(StemWin,WM_USER,12,0);

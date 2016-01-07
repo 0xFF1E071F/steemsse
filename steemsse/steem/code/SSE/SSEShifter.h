@@ -1299,7 +1299,7 @@ void TShifter::ShiftSDP(int shift) { //inline
 #endif// defined(IN_EMU)
 
 
-
+#if !defined(SSE_VID_DISABLE_AUTOBORDER)
 // just taking some unimportant code out of Render for clarity
 
 #define   AUTO_BORDER_ADJUST  \
@@ -1332,6 +1332,7 @@ void TShifter::ShiftSDP(int shift) { //inline
             } \
             border1=border2=0; \
           }
+#endif
 
 
 #endif//#if defined(SSE_SHIFTER)

@@ -49,7 +49,11 @@ EXT int stfm_b_timer INIT(0);//tmp
 EXT BYTE bad_drawing INIT(0);
 EXT BYTE draw_fs_blit_mode INIT( UNIX_ONLY(DFSM_STRAIGHTBLIT) WIN_ONLY(DFSM_STRETCHBLIT) );
 EXT BYTE draw_fs_fx INIT(DFSFX_NONE),draw_grille_black INIT(6);
+#if defined(SSE_VID_DISABLE_AUTOBORDER)
+EXT bool border INIT(1),border_last_chosen INIT(1);
+#else
 EXT BYTE border INIT(2),border_last_chosen INIT(2);
+#endif
 EXT BYTE draw_fs_topgap INIT(0);
 extern BYTE prefer_pc_hz[2][3];
 extern BYTE tested_pc_hz[2][3];

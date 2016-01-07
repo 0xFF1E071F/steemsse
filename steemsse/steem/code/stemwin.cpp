@@ -652,7 +652,9 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         case 110:case 111:case 112: //Borders
           OptionBox.SetBorder(wPar-110);
           OptionBox.UpdateWindowSizeAndBorder();
-#if defined(SSE_VAR_RESIZE_370)
+#if defined(SSE_VID_DISABLE_AUTOBORDER)
+          CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min((int)border,1),MF_BYCOMMAND);
+#elif defined(SSE_VAR_RESIZE_370)
           CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min((int)border,2),MF_BYCOMMAND);
 #else
           CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min(border,2),MF_BYCOMMAND);
@@ -1653,12 +1655,13 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
 
   int hz256=int(display_option_8_bit_fs ? 0:1);
   int hz_ok=0,hz=prefer_pc_hz[hz256][1+(border & 1)];
-
+#if !defined(SSE_VID_DISABLE_AUTOBORDER)
   if (border==3){ // auto border on
     border&=~1;
     overscan=0;
     change_window_size_for_border_change(3,border);
   }
+#endif
   if (border & 1){
     rc.right=800;rc.bottom=600;
   }

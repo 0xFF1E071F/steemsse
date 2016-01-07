@@ -3760,7 +3760,9 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
           // actually draw it
           if(picture_left_edge<0) 
             picture+=picture_left_edge;
+#if !defined(SSE_VID_DISABLE_AUTOBORDER)
           AUTO_BORDER_ADJUST; // hack borders if necessary
+#endif
           DEBUG_ONLY( shifter_draw_pointer+=debug_screen_shift; );
           if(hscroll>=16) // convert excess hscroll in SDP shift
           {
