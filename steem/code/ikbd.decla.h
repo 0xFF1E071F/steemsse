@@ -8,6 +8,9 @@
 #define EXT extern
 #define INIT(s)
 
+#include "acia.decla.h"
+//EXT ACIA_STRUCT acia[2];
+
 
 /*
                The Atari Intelligent Keyboard (ikbd) transmits encoded
@@ -120,8 +123,11 @@ extern "C" void keyboard_buffer_write(BYTE);
 #else
 EXT void keyboard_buffer_write(BYTE);
 #endif
-
+#if defined(SSE_IKBD_6301_380)
+extern "C" void keyboard_buffer_write_n_record(BYTE);
+#else
 EXT void keyboard_buffer_write_n_record(BYTE);
+#endif
 EXT void keyboard_buffer_write_string(int s1,...);
 EXT bool ikbd_keys_disabled();
 EXT void ikbd_mouse_move(int,int,int,int DEFVAL(IKBD_DEFAULT_MOUSE_MOVE_MAX));

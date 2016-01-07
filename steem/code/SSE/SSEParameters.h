@@ -364,34 +364,24 @@ SS_SIGNAL_ENUM_EnumDisplayModes, // wait until finished (?)
 #if defined(SSE_IKBD)
 
 #if defined(SSE_IKBD_6301)
-/*
-#if defined(SSE_UNIX)
-#define HD6301_ROM_FILENAME "./HD6301V1ST.img" 
-#else
-#define HD6301_ROM_FILENAME "HD6301V1ST.img"
-#endif
-*/
 
 #if defined(SSE_UNIX)
 #define HD6301_ROM_FILENAME "/HD6301V1ST.img" 
 #else
 #define HD6301_ROM_FILENAME "\\HD6301V1ST.img"
 #endif
-
-
-
 #define HD6301_ROM_CHECKSUM 451175 // BTW this rom sends $F1 after reset (80,1)
 #endif
 
 // Parameters used in true and fake 6301 emu
 
-
+#ifndef SSE_SHIFTER
 #define HD6301_CYCLES_PER_SCANLINE 64 // used if SSE_SHIFTER not defined
-#define HD6301_CYCLE_DIVISOR 8 // the 6301 runs at 1MHz (verified by Stefan jL)
+#endif
 
-//#if defined(SSE_INT_MFP_RATIO)//why was that?
+#define HD6301_CYCLE_DIVISOR 8 // the 6301 runs at 1MHz (verified by Stefan jL)
 #define HD6301_CLOCK (1000000) //used in 6301/ireg.c
-//#endif
+
 
 // in HBL, for Steem, -1 for precise timing (RX/IRQ delay)
 #if defined(SSE_IKBD_6301_373)
@@ -411,11 +401,14 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))-1)
 (shifter_freq_at_start_of_vbl==50?SCANLINE_TIME_IN_CPU_CYCLES_50HZ:\
 (screen_res==2?SCANLINE_TIME_IN_CPU_CYCLES_70HZ:\
 SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
+
+#ifdef SSE_DEBUG
 #define HD6301_MAX_DIS_INSTR 2000 
+#endif
 
-
-
-#if defined(SSE_IKBD_EVENT)//380
+#if defined(SSE_IKBD_6301_EVENT)//380
+#define HD6301_CYCLES_TO_SEND_BYTE ((SSE_HACKS_ON&& LPEEK(0x18)==0xFEE74)?1350:1290) // boo!
+#define HD6301_CYCLES_TO_RECEIVE_BYTE (HD6301_CYCLES_TO_SEND_BYTE)
 #elif defined(SSE_ACIA_OVR_TIMING)
 // hack: we count more cycle when overrun is detected, for Froggies
 #define HD6301_CYCLES_TO_SEND_BYTE ((SSE_HACKS_ON&&(ACIA_IKBD.overrun==ACIA_OVERRUN_COMING))?1380+30:1300)

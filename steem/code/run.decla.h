@@ -273,6 +273,10 @@ void event_timer_d_timeout();
 void event_scanline();
 void event_timer_b();
 
+#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_IRQ_DELAY)
+void event_acia_rx_irq();// not defined anymore (v3.5.2), see MFP
+#endif
+
 //void event_hbl();
 //void event_border_scanline();
 //void event_picture_scanline();
@@ -331,6 +335,22 @@ void event_driveB_ip();
 
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301_EVENT)
+
+extern int time_of_event_ikbd,time_of_event_ikbd2;
+void event_ikbd(),event_ikbd2();
+
+#define PREPARE_EVENT_CHECK_FOR_IKBD       \
+  if ((time_of_next_event-time_of_event_ikbd) >= 0){                 \
+    time_of_next_event=time_of_event_ikbd;  \
+    screen_event_vector=event_ikbd;                    \
+  } \
+  if ((time_of_next_event-time_of_event_ikbd2) >= 0){                 \
+    time_of_next_event=time_of_event_ikbd2;  \
+    screen_event_vector=event_ikbd2;                    \
+  }
+
+#endif//ikbdevt
 #undef EXT
 #undef INIT
 

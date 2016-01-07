@@ -437,6 +437,10 @@ void inline prepare_event_again() //might be an earlier one
     PREPARE_EVENT_CHECK_FOR_ACIA_IKBD_IN;
 #endif
 
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301_EVENT)
+    PREPARE_EVENT_CHECK_FOR_IKBD;
+#endif
+
   // cpu_timer must always be set to the next 4 cycle boundary after time_of_next_event
   int oo=time_of_next_event-cpu_timer;
   oo=(oo+3) & -4;
@@ -475,6 +479,10 @@ void inline prepare_next_event() //SS check this "inline" thing
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_DMA_DELAY)
     PREPARE_EVENT_CHECK_FOR_DMA;
+#endif
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301_EVENT)
+    PREPARE_EVENT_CHECK_FOR_IKBD; // two events: both directions
 #endif
 
   // It is safe for events to be in past, whatever happens events
@@ -2023,6 +2031,32 @@ void event_driveB_ip() {
 }
 
 #endif
+
+#if defined(SSE_IKBD_6301_EVENT)
+
+int time_of_event_ikbd,time_of_event_ikbd2;
+
+
+void event_ikbd() {
+  time_of_event_ikbd=time_of_next_event+n_cpu_cycles_per_second; 
+  if(HD6301EMU_ON && (HD6301.EventStatus&1))
+  {
+    HD6301.EventStatus&=0xFE;
+    agenda_keyboard_replace(0);
+  }
+}
+
+
+void event_ikbd2() {
+  time_of_event_ikbd2=time_of_next_event+n_cpu_cycles_per_second; 
+  if(HD6301EMU_ON && (HD6301.EventStatus&2))
+  {
+    HD6301.EventStatus&=0xFD;
+    agenda_ikbd_process(ACIA_IKBD.TDRS);
+  }
+}
+
+#endif//ikbd
 
 #endif//seagal
 

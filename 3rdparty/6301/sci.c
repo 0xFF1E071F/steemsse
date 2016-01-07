@@ -53,19 +53,22 @@ int nbytes;
   ASSERT(trcsr&RE);
   ASSERT(!(trcsr&RDRF));
   //ASSERT(!(trcsr&WU));
-
+#if defined(SSE_IKBD_6301_380)
+  ASSERT(rxinterrupts < BUFSIZE);
+  recvbuf[rxinterrupts++] = *s;
+#else
   for (i=0; i<nbytes; i++)
     if (rxinterrupts < BUFSIZE)
       recvbuf[rxinterrupts++] = s[i];
     else
       warning ("sci_in:: buffer full\n");
   rec_byte=*s;
-
-  TRACE("6301 SCI in #%d $%x (TRCSR %X)\n",rxinterrupts,rec_byte,trcsr);
-
+  //TRACE("6301 SCI in #%d $%x (TRCSR %X)\n",rxinterrupts,rec_byte,trcsr);
+#endif
+#ifdef SSE_DEBUG
   if(trcsr&WU) // bug?
     TRACE("6301 in standby mode\n");
-
+#endif
   if(rxinterrupts>1)  
   {
     TRACE("6301 OVR rx %d RDR %X RDRS %X SR %X->%X\n",rxinterrupts,recvbuf[rxinterrupts-2],recvbuf[rxinterrupts-1],iram[TRCSR],iram[TRCSR]|ORFE);
@@ -73,6 +76,13 @@ int nbytes;
     //recvbuf[0]=recvbuf[rxinterrupts-1]; // replace 
     rxinterrupts=1; // there can be only one byte to read
   }
+#if defined(SSE_IKBD_6301_380) 
+  else
+  {
+    HD6301.rdr=*s;
+    TRACE("6301 RDR %X (PC %X)\n",HD6301.rdr,reg_getpc());
+  }
+#endif
   return 0;//warning
 }
 
@@ -158,7 +168,7 @@ trcsr_getb (offs)
 #endif
 
 #if defined(SSE_DEBUG_IKBD_6301_TRACE_STATUS)
-  //TRACE("6301 PC %X read TRCSR %X txi%d wb%d cycles %d\n",reg_getpc(),rv,txinterrupts,ACIA_IKBD.ByteWaitingRx,cycles_run); //tmp
+  TRACE("6301 PC %X read TRCSR %X txi%d wb%d cycles %d\n",reg_getpc(),rv,txinterrupts,ACIA_IKBD.ByteWaitingRx,cycles_run); //tmp
 #endif
 
   return rv;
@@ -247,7 +257,9 @@ rdr_getb (offs)
     if (rxinterrupts) {
 
       rec_byte=recvbuf[rxindex];
-
+#if defined(SSE_IKBD_6301_380) && defined(SSE_DEBUG)
+      ASSERT(rec_byte==HD6301.rdr);
+#endif
 #if defined(SSE_DEBUG_IKBD_6301_TRACE_SCI_RX)
       //TRACE("6301 SCI read RX $%x (#%d)\n",rec_byte,rxindex);
       TRACE("6301 PC %X read RDR %X\n",reg_getpc(),rec_byte);
@@ -308,10 +320,12 @@ tdr_putb (offs, value)
     txinterrupts = 1;
 #endif
 #if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
-/*  Froggies: the line is never busy, but bytes are transmitted when
-    the ACIA is in overrun. If we "blocked" them, Froggies wouldn't work
-    at all.
-*/
+#if defined(SSE_IKBD_6301_380) 
+  HD6301.tdr=value;
+#if defined(SSE_DEBUG_IKBD_6301_TRACE_SCI_TX)
+  TRACE("6301 TDR %X\n",HD6301.tdr);
+#endif
+#endif
   if(ACIA_IKBD.LineRxBusy)
   {
 #if defined(SSE_DEBUG_IKBD_6301_TRACE_SCI_TX)
@@ -323,10 +337,17 @@ tdr_putb (offs, value)
   else
 #endif
   {
+#if defined(SSE_IKBD_6301_380) 
+    HD6301.tdrs=value;
 #if defined(SSE_DEBUG_IKBD_6301_TRACE_SCI_TX)
-    TRACE("6301: $%X ->ACIA RDRS\n",value);
+    TRACE("6301 TDRS %X\n",HD6301.tdrs);
 #endif
+#endif
+#if defined(SSE_IKBD_6301_380)
+    keyboard_buffer_write_n_record(value); // call Steem's ikbd function
+#else
     keyboard_buffer_write(value); // call Steem's ikbd function
+#endif
   }
   return 0;//warning
 }
