@@ -743,6 +743,11 @@ system exclusive start and end messages (F0 and F7).
                   bool new_1_to_0_detector_input=((new_gpip & mask) ^ (new_aer & mask))==mask;
                   if (old_1_to_0_detector_input && new_1_to_0_detector_input==0){
                     // Transition the right way! Set pending (interrupts happen later)
+#if defined(SSE_INT_MFP_REFACTOR2)
+                    if(OPTION_PRECISE_MFP) 
+                      mfp_set_pending(irq,ACT); // update timing, Irq...
+                    else
+#endif                      
                     // Don't need to call set_pending routine here as this can never
                     // happen soon after an interrupt
                     mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)]|=mfp_interrupt_i_bit(irq);

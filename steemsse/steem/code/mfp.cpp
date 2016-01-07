@@ -539,6 +539,15 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 #ifdef SSE_DEBUG
     ASSERT(reg>=MFPR_TACR);
     if(reg<=MFPR_TBCR && new_val>8) //Froggies OVR
+#if defined(SSE_INT_MFP_TIMER_B_PULSE)
+/*  TODO
+*/    
+      if(OPTION_PRECISE_MFP && reg==MFPR_TBCR)
+      {
+        TRACE_LOG("MFP Pulse mode %X\n",new_val);
+      }
+      else        
+#endif   
       TRACE_LOG("MFP: --------------- PULSE EXTENSION MODE!! -----------------\n");
 #endif
     prepare_event_again();
@@ -553,6 +562,10 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
       mfp_timer_counter[timer]=((int)BYTE_00_TO_256(new_val))*64;
       mfp_timer_period[timer]=int(double(mfp_timer_prescale[new_control]*int(BYTE_00_TO_256(new_val)))*CPU_CYCLES_PER_MFP_CLK);
     }else if (new_control & 7){
+/*
+If the Timer Data Register is written while the timer is running, the new word
+is not loaded into the timer until it counts through H01.      
+*/      
       // Need to calculate the period next time the timer times out
       mfp_timer_period_change[timer]=true;
       if (mfp_timer_enabled[timer]==0){
@@ -685,10 +698,15 @@ void ASMCALL check_for_interrupts_pending()
     myself with Steem's inner working before I could do it.
 */
       MC68901.IackTiming=ACT; // record start of IACK cycle (also if option C2 not checked)
+
+
       if(OPTION_PRECISE_MFP) // if not, "old" Steem test
       {
         if(MC68901.Irq) // not real time, must check if it's really set
         {
+#if defined(SSE_INT_MFP_SPURIOUS)  
+          bool no_real_irq=false; // if it wasn't set, there can be no spurious
+#endif
 #if defined(SSE_INT_MFP_WRITE_DELAY2)
 /*  The MFP doesn't update its registers at once after a write.
     There's a delay of estimated 4 CPU cycles.
@@ -738,6 +756,7 @@ void ASMCALL check_for_interrupts_pending()
           for (irq=15;irq>=0;irq--) {
             BYTE i_ab=mfp_interrupt_i_ab(irq);
             BYTE i_bit=mfp_interrupt_i_bit(irq);
+
             if (mfp_reg[MFPR_ISRA+i_ab] & i_bit){ //interrupt in service
               break;  //time to stop looking for pending interrupts
             }
@@ -810,7 +829,7 @@ Real reason: MFP writing delay, effect of clearing service bit delayed for
                 relevant_mask_register=MC68901.LastRegisterFormerValue;
                 ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;//always? but it can't hurt
                 if(!(relevant_mask_register&i_bit))
-                  post_write=false; //no spurious though! (trick)
+                  no_real_irq=true;
               }
 #endif
               if(relevant_mask_register&i_bit) {
@@ -827,7 +846,8 @@ Real reason: MFP writing delay, effect of clearing service bit delayed for
                       ASSERT(irq<4||irq==6||irq==7||irq>13);
                       TRACE_LOG("MFP delay GPIP-irq %d %d\n",irq,MC68901.IackTiming-MC68901.IrqSetTime);
                       ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;//come back later
-                      break;
+                      no_real_irq=true;
+                      continue; // examine lower irqs too
                   }
 #endif    
 #if defined(SSE_DEBUG) && defined(SSE_OSD_CONTROL) \
@@ -850,7 +870,7 @@ Real reason: MFP writing delay, effect of clearing service bit delayed for
     For the moment, the previous test in v3.7 was better for my test program
     SPURIOUS.TOS. It could be due to MFP timer delays, on set, on trigger. TODO
 */
-          if(post_write && irq==-1) // couldn't find one and there was no break
+          if(irq==-1 && post_write && !no_real_irq) // couldn't find one and there was no break
           {
             TRACE_OSD("Spurious!");
             TRACE_MFP("PC %X Spurious!\n",old_pc);
@@ -1083,6 +1103,7 @@ Real reason: MFP writing delay, effect of clearing service bit delayed for
     }
 #endif//refactor
 
+
     if (vbl_pending){ //SS IPL4
       if ((sr & SR_IPL)<SR_IPL_4){
         VBL_INTERRUPT
@@ -1104,6 +1125,7 @@ Real reason: MFP writing delay, effect of clearing service bit delayed for
         // Make sure this HBL can't occur when another HBL has already happened
         // but the event hasn't fired yet.
         //SS scanline_time_in_cpu_cycles_at_start_of_vbl is 512, 508 or 224
+        //ASSERT( int(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl)<scanline_time_in_cpu_cycles_at_start_of_vbl );
         if (int(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl)<scanline_time_in_cpu_cycles_at_start_of_vbl){
           HBL_INTERRUPT;
         }
@@ -1113,6 +1135,7 @@ Real reason: MFP writing delay, effect of clearing service bit delayed for
 #endif
       }
     }
+
   }
   prepare_event_again();
 }
@@ -1253,7 +1276,11 @@ void mfp_interrupt(int irq,int when_fired) {
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
 #if defined(SSE_INT_MFP_REFACTOR2)
   int iack_cycles=ACT-MC68901.IackTiming;
+#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
   INSTRUCTION_TIME(SSE_INT_MFP_TIMING-12-4-iack_cycles);
+#else
+  INSTRUCTION_TIME(SSE_INT_MFP_TIMING-4-iack_cycles);
+#endif
 #elif defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
   INSTRUCTION_TIME_ROUND(SSE_INT_MFP_TIMING-12-4);
 #else
