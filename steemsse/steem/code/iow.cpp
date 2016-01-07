@@ -330,9 +330,13 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 
 #elif defined(SSE_IKBD_6301) //current version
 
+#if defined(SSE_ACIA_380)
+        ACIA_IKBD.TDR=io_src_b;
+#endif
         if(HD6301EMU_ON)
         {
-          TRACE_LOG("CPU $%X -> ACIA IKDB TDR (SR $%X)\n",io_src_b,ACIA_IKBD.SR);
+          //TRACE_LOG("%d %d %d PC %X CPU $%X -> ACIA IKDB TDR (SR $%X)\n",TIMING_INFO,old_pc,io_src_b,ACIA_IKBD.SR);
+          TRACE_LOG("%d %d %d PC %x ACIA TDR %X\n",TIMING_INFO,old_pc,io_src_b);
 
 /*  Effect of write on status register.
     The 'Tx data register empty' (TDRE) bit is cleared: register isn't empty.
@@ -395,7 +399,15 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
             else
               TRACE_LOG("ACIA IKBD new byte waiting $%X (instead of $%X)\n",io_src_b,ACIA_IKBD.TDR);
 #endif
+#if defined(SSE_ACIA_380)
+#if defined(SSE_ACIA_TDR_COPY_DELAY) // for Grumbler
+            if(ACT-ACIA_IKBD.last_tx_write_time<ACIA_TDR_COPY_DELAY)
+              ACIA_IKBD.TDRS=ACIA_IKBD.TDR; // replaces
+            else
+#endif
+#else
             ACIA_IKBD.TDR=io_src_b; // replaces
+#endif
             ACIA_IKBD.ByteWaitingTx=true;
           }
 

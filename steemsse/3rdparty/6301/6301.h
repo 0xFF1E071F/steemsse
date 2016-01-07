@@ -61,6 +61,10 @@ extern int hd6301_mouse_move_since_last_interrupt_x; // different lifetime
 extern int hd6301_mouse_move_since_last_interrupt_y;
 #endif
 
+#if defined(SSE_IKBD_6301_EVENT)
+extern int cycles_run; 
+#endif
+
 // functions used by Steem
 BYTE* hd6301_init();
 int hd6301_destroy(); // like a C++ destructor

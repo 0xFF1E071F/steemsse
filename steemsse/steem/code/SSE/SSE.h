@@ -814,7 +814,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//floppy
 #if defined(SSE_IKBD_6301)
 #define SSE_IKBD_6301_MOUSE_ADJUST_SPEED // undef 3.7.0
-//#define SSE_IKBD_6301_RUN_CYCLES_AT_IO // overkill
+//#define SSE_IKBD_6301_RUN_CYCLES_AT_IO // overkill //MFD
 #endif
 #if defined(SSE_INT_VBL)
 #define SSE_INT_VBL_INLINE 
@@ -2456,6 +2456,11 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
 
 #define SSE_ACSI //3.8.0 new feature
+
+#if defined(SSE_ACIA)
+#define SSE_ACIA_380
+#endif
+
 #if defined(SSE_ACSI)
 #define SSE_ACSI_FORMAT 
 #ifdef SSE_DEBUG
@@ -2548,6 +2553,12 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1
 #endif//SSE_GLUE_FRAME_TIMINGS
 #endif//glue
+
+#ifdef SSE_IKBD_6301
+#undef SSE_IKBD_6301_SET_TDRE //SSE_IKBD_6301_373 was defined anyway
+#define SSE_IKBD_6301_380
+#define SSE_IKBD_6301_EVENT
+#endif//6301
 
 #if defined(SSE_INTERRUPT)
 #define SSE_INT_ROUNDING

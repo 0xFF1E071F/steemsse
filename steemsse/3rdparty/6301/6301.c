@@ -38,6 +38,9 @@ int hd6301_mouse_move_since_last_interrupt_x; // different lifetime
 int hd6301_mouse_move_since_last_interrupt_y;
 #endif
 
+#if defined(SSE_IKBD_6301_EVENT)
+int cycles_run=0; 
+#endif
 
 // additional variables for our module
 
@@ -160,12 +163,17 @@ hd6301_reset(int Cold) {
 hd6301_run_cycles(u_int cycles_to_run) {
   // Called by Steem to run some cycles, generally 64/scanline
   int pc;
+#if !defined(SSE_IKBD_6301_EVENT)
   int cycles_run=0;
+#endif
   int i=0;
 #if defined(SSE_IKBD_6301_ADJUST_CYCLES)
   static int cycles_to_give_back=0;
 #endif
   int starting_cycles=cpu.ncycles;
+#if defined(SSE_IKBD_EVENT_)
+  cycles_run=0;
+#endif
   // make sure our 6301 is running OK
   if(!cpu_isrunning())
   {
@@ -201,15 +209,51 @@ hd6301_run_cycles(u_int cycles_to_run) {
 #endif
     cycles_to_run-=cycles_given_back;
     cycles_to_give_back-=cycles_given_back;
+
+#ifdef SSE_IKBD_6301_EVENT
+    if(HD6301.LineRxFreeTime>cycles_given_back)
+      HD6301.LineRxFreeTime-=cycles_given_back;
+    else if(HD6301.LineRxFreeTime)
+      HD6301.LineRxFreeTime=-1;
+    if(HD6301.LineTxFreeTime>cycles_given_back)
+      HD6301.LineTxFreeTime-=cycles_given_back;
+    else  if(HD6301.LineTxFreeTime)
+      HD6301.LineTxFreeTime=-1;
+#endif
+
   }
 #endif
 
   while(!Crashed6301 && (cycles_run<cycles_to_run 
 #if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
-    || ExecutingInt==EXECUTING_INT
+    || ExecutingInt==EXECUTING_INT 
+#endif
+#ifdef SSE_IKBD_6301_EVENT
+    || HD6301.LineRxFreeTime || HD6301.LineTxFreeTime
 #endif
   ))
   {
+#ifdef SSE_IKBD_6301_EVENT
+    if(HD6301.LineTxFreeTime && cycles_run>=HD6301.LineTxFreeTime)
+    {
+//      TRACE("6301 Tx free %d cycles in\n",cycles_run);
+      TRACE("6301 sending $%X %d cycles in\n",ACIA_IKBD.RDRS,cycles_run);
+      ASSERT(!hd6301_completed_transmission_to_MC6850);
+      hd6301_completed_transmission_to_MC6850=TRUE; 
+      HD6301.LineTxFreeTime=0;
+    }
+    if(HD6301.LineRxFreeTime && cycles_run>=HD6301.LineRxFreeTime)
+    {
+//      TRACE("6301 Rx free %d cycles in\n",cycles_run);
+      TRACE("6301 receiving $%X %d cycles in\n",ACIA_IKBD.TDRS,cycles_run);
+#if defined(SSE_IKBD_6301_380) 
+      hd6301_receive_byte(HD6301.rdrs); // ACIA_IKBD.TDRS could have been updated
+#else
+      hd6301_receive_byte(ACIA_IKBD.TDRS);
+#endif
+      HD6301.LineRxFreeTime=0;
+    }
+#endif
     instr_exec (); // execute one instruction
     cycles_run=cpu.ncycles-starting_cycles;
   }
@@ -236,11 +280,18 @@ hd6301_run_cycles(u_int cycles_to_run) {
   hd6301_vbl_cycles+=cycles_run;
 #endif
  // return (Crashed6301) ? 0 : cycles_run; 
-   return (Crashed6301) ? -1 : cycles_run; //v3.7.3
+#if defined(SSE_IKBD_6301_EVENT)
+  cycles_run=0;
+#endif
+  return (Crashed6301) ? -1 : cycles_run; //v3.7.3
+
 }
 
 
 hd6301_receive_byte(u_char byte_in) {
+#if defined(SSE_IKBD_6301_380) 
+  ASSERT(byte_in==HD6301.rdrs);
+#endif
 #ifdef SSE_IKBD_6301_373
   return sci_in(&byte_in,1);
 #else

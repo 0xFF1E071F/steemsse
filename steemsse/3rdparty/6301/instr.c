@@ -67,11 +67,7 @@ instr_exec ()
     hd6301_completed_transmission_to_MC6850--;
     ASSERT(!hd6301_completed_transmission_to_MC6850);
 
-#if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
-    ASSERT( ExecutingInt!=EXECUTING_INT );
-#endif
-
-//#if !defined(SSE_ACIA_DOUBLE_BUFFER_RX)
+//#if !(defined(SSE_ACIA_DOUBLE_BUFFER_RX))
     // this is very dubious, we need it, because of this, do we have
     // working double buffer?
     txinterrupts=1; // we may trigger IRQ 
@@ -87,9 +83,13 @@ instr_exec ()
       //TRACE("HD6301 $%X TDR -> TDRS -> ACIA RDRS\n",iram[TDR]);
       TRACE("6301 TDRS waiting %X\n",iram[TDR]);
 #endif
+#if defined(SSE_IKBD_6301_380) 
+      HD6301.tdrs=iram[TDR];
+      keyboard_buffer_write_n_record(HD6301.tdrs); // call Steem's ikbd function
+#else
       keyboard_buffer_write( iram[TDR] ); // call Steem's ikbd function
+#endif
       ACIA_IKBD.ByteWaitingRx=0;
-      //txinterrupts=1;
     }
 #endif
   }

@@ -52,16 +52,38 @@ struct THD6301 {
   BYTE RunThisHbl; 
 #endif
   BYTE Crashed; // oops
+/*
   short CurrentCommand;
   BYTE LastCommand;
   BYTE CurrentParameter; //0-5
   BYTE nParameters; //0-6
   BYTE Parameter[6]; // max 6
   BYTE CustomProgram;
+*/
   short MouseVblDeltaX; // must keep separate for true emu
   short MouseVblDeltaY;
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
   BYTE click_x,click_y; // current click
+#endif
+
+#if defined(SSE_IKBD_6301_380) 
+  // lower case because uppercase are constants in 6301 emu itself
+  BYTE rdr,rdrs,tdr,tdrs; 
+#endif
+
+#if defined(SSE_IKBD_6301_EVENT)
+  char LineRxFreeTime; // cycles in (0-63)
+  char LineTxFreeTime; // cycles in (0-63)
+  BYTE EventStatus; // bit0 event1 bit1 event2
+#endif
+
+#if defined(SSE_DEBUG) 
+  short CurrentCommand;
+  BYTE LastCommand;
+  BYTE CurrentParameter; //0-5
+  BYTE nParameters; //0-6
+  BYTE Parameter[6]; // max 6
+  BYTE CustomProgram;
 #endif
 };
 

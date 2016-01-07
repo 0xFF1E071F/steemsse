@@ -39,74 +39,6 @@ THD6301::~THD6301() {
 }
 
 
-#if SSE_VERSION<=350
-
-void THD6301::Init() { // called in 'main'
-  Initialised=Crashed=0;
-  if(hd6301_init()) // calling the 6301 function
-  {
-    HD6301_OK=Initialised=1;
-    TRACE_LOG("HD6301 emu initialised\n");
-  }
-  else
-  {
-    TRACE_LOG("HD6301 emu NOT initialised\n");
-    HD6301EMU_ON=0;
-  }
-}
-
-#else//!ver
-
-void THD6301::Init() { // called in 'main'
-  Initialised=Crashed=0;
-  BYTE* ram=hd6301_init();
-  EasyStr romfile=GetEXEDir() + HD6301_ROM_FILENAME; 
-  FILE *fp;
-#if defined(SSE_DEBUG)
-  int checksum=0;
-#endif
-  if(ram)
-  {
-    fp=fopen(romfile.Text,"r+b");
-    ASSERT(fp);
-    if(fp) // put ROM (4KB) at the end of 6301 RAM
-    {
-#if defined(SSE_IKBD_6301_MINIRAM)
-      int n=fread(ram+256,1,4096,fp);
-#else
-      int n=fread(ram+0xF000,1,4096,fp);
-#endif
-#if defined(SSE_DEBUG)
-      ASSERT(n==4096); // this detected the missing +b above
-      for(int i=0;i<n;i++)
-#if defined(SSE_IKBD_6301_MINIRAM)
-        checksum+=ram[256+i];
-#else
-        checksum+=ram[0xF000+i];
-#endif
-      ASSERT( checksum==HD6301_ROM_CHECKSUM );
-#endif
-      fclose(fp);
-      HD6301_OK=Initialised=true;
-    }
-    else 
-    {
-      HD6301_OK=false;
-      hd6301_destroy(); 
-    } 
-  }
-
-#if defined(SSE_DEBUG)
-  TRACE_LOG("6301 emu %d RAM %d file %s open %d checksum %d\n",HD6301_OK,(bool)ram,romfile.Text,(bool)fp,checksum);
-  if(!Initialised)
-  {
-    TRACE_OSD("NO HD6301");
-    HD6301EMU_ON=0;
-  }
-#endif
-
-}
-
 #undef LOGSECTION//init
 #define LOGSECTION LOGSECTION_IKBD
 
@@ -180,6 +112,10 @@ void THD6301::InterpretCommand(BYTE ByteIn) {
     CurrentCommand=ByteIn;
     CurrentParameter=0;
   }
+
+  else if(nParameters>12) //snapshot trouble
+    CurrentCommand=-1; 
+
   // taking parameters of a command?
   else if(CurrentCommand!=-1)
   {
@@ -278,27 +214,116 @@ void THD6301::ReportCommand() {
   TRACE_LOG("\n");
 }
 
-#endif//#if defined(SSE_IKBD_6301_IKBDI) || !defined(SSE_IKBD_6301_380E)
+#endif//#if defined(SSE_IKBD_6301_IKBDI)
+
+
+
+#if SSE_VERSION<=350
+
+void THD6301::Init() { // called in 'main'
+  Initialised=Crashed=0;
+  if(hd6301_init()) // calling the 6301 function
+  {
+    HD6301_OK=Initialised=1;
+    TRACE_LOG("HD6301 emu initialised\n");
+  }
+  else
+  {
+    TRACE_LOG("HD6301 emu NOT initialised\n");
+    HD6301EMU_ON=0;
+  }
+}
+
+#else//!ver
+
+void THD6301::Init() { // called in 'main'
+  Initialised=Crashed=0;
+  BYTE* ram=hd6301_init();
+  EasyStr romfile=GetEXEDir() + HD6301_ROM_FILENAME; 
+  FILE *fp;
+#if defined(SSE_DEBUG)
+  int checksum=0;
+#endif
+  if(ram)
+  {
+    fp=fopen(romfile.Text,"r+b");
+    ASSERT(fp);
+    if(fp) // put ROM (4KB) at the end of 6301 RAM
+    {
+#if defined(SSE_IKBD_6301_MINIRAM)
+      int n=fread(ram+256,1,4096,fp);
+#else
+      int n=fread(ram+0xF000,1,4096,fp);
+#endif
+#if defined(SSE_DEBUG)
+      ASSERT(n==4096); // this detected the missing +b above
+      for(int i=0;i<n;i++)
+#if defined(SSE_IKBD_6301_MINIRAM)
+        checksum+=ram[256+i];
+#else
+        checksum+=ram[0xF000+i];
+#endif
+      ASSERT( checksum==HD6301_ROM_CHECKSUM );
+#endif
+      fclose(fp);
+      HD6301_OK=Initialised=true;
+    }
+    else 
+    {
+      HD6301_OK=false;
+      hd6301_destroy(); 
+    } 
+  }
+
+#if defined(SSE_DEBUG)
+  TRACE_LOG("6301 emu %d RAM %d file %s open %d checksum %d\n",HD6301_OK,(bool)ram,romfile.Text,(bool)fp,checksum);
+  if(!Initialised)
+  {
+    TRACE_OSD("NO HD6301");
+    HD6301EMU_ON=0;
+  }
+#endif
+
+}
+
 
 #if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
 
 void THD6301::ReceiveByte(BYTE data) {
-/*  Transfer byte to 6301 (call of this function initiates transfer).
+/*  Transfer byte to 6301.
+    Call of this function initiates transfer. The function sets up an
+    agenda or an event about 20 scanlines later.
     This function is used for true and fake 6301 emu.
 */
   //TRACE_LOG("ACIA TDR->TDRS->IKBD RDRS $%X\n",data);
   TRACE_LOG("%d %d %d ACIA TDRS %X\n",TIMING_INFO,data);
   ACIA_IKBD.ByteWaitingTx=false;
-  agenda_add(agenda_ikbd_process,HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL,data);
+
+#if defined(SSE_IKBD_6301_EVENT)
+  ASSERT(ACIA_IKBD.TDR==data);
+  ACIA_IKBD.TDRS=ACIA_IKBD.TDR=data;
+  ASSERT(!ACIA_IKBD.LineTxBusy||ACT-ACIA_IKBD.last_tx_write_time<ACIA_TDR_COPY_DELAY);
+  ACIA_IKBD.LineTxBusy=true;
+  if(HD6301EMU_ON)
+  {
+    time_of_event_ikbd2=ACT+ACIA_TO_HD6301_IN_CYCLES;
+    EventStatus|=2;
+  }
+  else
+#endif
+    agenda_add(agenda_ikbd_process,HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL,data);
+
+#if defined(SSE_ACIA_REGISTERS) && !defined(SSE_IKBD_6301_EVENT)
   ACIA_IKBD.TDRS=ACIA_IKBD.TDR; // shift register
   ACIA_IKBD.LineTxBusy=true;
+#endif
 }
 
 #endif
 
 void THD6301::ResetChip(int Cold) {
   TRACE_LOG("6301 Reset chip %d\n",Cold);
-//#if defined(SSE_IKBD_6301_IKBDI) || !defined(SSE_IKBD_6301_380E)
+
 #if defined(SSE_IKBD_6301_IKBDI)
   CustomProgram=CUSTOM_PROGRAM_NONE;
 #if SSE_VERSION>=351
