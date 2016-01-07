@@ -2610,6 +2610,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SHIFTER_HSCROLL_380_B1 // use this instead of HSCROLL for some tests
 #endif
 #define SSE_SHIFTER_HSCROLL_380_C // update shifter_pixel for new HSCROLL
+#define SSE_SHIFTER_HIRES_RASTER // edgy stuff in monochrome mode
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
 #define SSE_SHIFTER_HIRES_COLOUR_DISPLAY5//better test, compatible with GLUE refactoring
 #endif
