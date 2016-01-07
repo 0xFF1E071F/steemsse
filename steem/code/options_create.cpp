@@ -256,10 +256,17 @@ void TOptionBox::CreateMachinePage()
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_STF) \
   && defined(SSE_GUI_OPTIONS_STF_IN_MACHINE)
+#if SSE_VERSION>=380
+  WIDTHHEIGHT wh=GetTextSize(Font,T("Memory and monitor changes don't take effect until the next cold reset of the ST"));
+  if (wh.Width>=page_w) wh.Height=(wh.Height+1)*2;
+  CreateWindow("Static",T("Memory and monitor changes don't take effect until the next cold reset of the ST"),
+        WS_CHILD,page_l,y,page_w,wh.Height,Handle,HMENU(8600),HInstance,NULL);
+#else
   WIDTHHEIGHT wh=GetTextSize(Font,T("ST model, memory and monitor changes don't take effect until the next cold reset of the ST"));
   if (wh.Width>=page_w) wh.Height=(wh.Height+1)*2;
   CreateWindow("Static",T("ST model, memory and monitor changes don't take effect until the next cold reset of the ST"),
         WS_CHILD,page_l,y,page_w,wh.Height,Handle,HMENU(8600),HInstance,NULL);
+#endif
 #else
   WIDTHHEIGHT wh=GetTextSize(Font,T("Memory and monitor changes don't take effect until the next cold reset of the ST"));
   if (wh.Width>=page_w) wh.Height=(wh.Height+1)*2;
@@ -1388,9 +1395,15 @@ void TOptionBox::CreateFullscreenPage()
     mask|=WS_DISABLED;
 #endif
 #if defined(SSE_VID_D3D_LIST_MODES)
+#if defined(SSE_VID_STRETCH_ASPECT_RATIO)
+  CreateWindow("Button",T("Direct3D"),
+    WS_CHILD | BS_GROUPBOX,
+    page_l,y,page_w,45,Handle,(HMENU)99,HInstance,NULL); //v3.7.2 + 10
+#else
   CreateWindow("Button",T("Direct3D"),
     WS_CHILD | BS_GROUPBOX,
     page_l,y,page_w,45+10,Handle,(HMENU)99,HInstance,NULL); //v3.7.2 + 10
+#endif
   y+=15;
   Offset=10;
   long Wid=GetCheckBoxSize(Font,T("On")).Width; 
@@ -2912,6 +2925,7 @@ Windows 2000	5.0
   osver.dwOSVersionInfoSize = sizeof(osver);
   if (GetVersionEx(&osver) && osver.dwPlatformId>=2 && osver.dwMajorVersion>=6)
   {
+#if SSE_VERSION<380 // vsync can work on a Win 8 system...
     if(osver.dwMinorVersion>=2) //Win 8
     {
       //TODO don't even display option?
@@ -2921,6 +2935,7 @@ Windows 2000	5.0
       mask|=WS_DISABLED;
       SSE_WIN_VSYNC=SSE_3BUFFER=0;
     }
+#endif
 #if !defined(SSE_GUI_OPTIONS_DONT_MENTION_WINDOW_COMPOSITING)
     else // vista+Win7
       strcpy(add_tip," Don't use together with Window Compositing.");
