@@ -36,7 +36,7 @@ void TFrameEvents::Add(int scanline, int cycle, char type, int value) {
   m_nEvents++;  // starting from 0 each VBL, event 0 is dummy 
 /*  3.8.0 fix >= not >, no version switch, it's a too bad bug.
     DSOTS was broken only in VC boiler builds, both as STE and STF,with "glue 
-    timings" because Glue.ScanlineTiming[TGlue::MMU_DE_ON][TGlue::FREQ_50]
+    timings" because Glue.ScanlineTiming[TGlue::GLU_DE_ON][TGlue::FREQ_50]
     (and not FREQ_60) was written over: 0 instead of 40/56!
 */
   if(m_nEvents<=0||m_nEvents>=MAX_EVENTS) {BRK(bad m_nEvents); return;} // >=, not > !!!
