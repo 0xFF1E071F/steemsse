@@ -950,8 +950,15 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     We also don't want to bloat Steem, so we use BootStateFile.
     This variable is overwritten if Steem is launched with a state
     file. This seems appropriate behaviour.
+    bugfix v3.8.0: statefile as argument was ignored, broke DemoBaseST
 */
+//    TRACE_INIT("BootStateFile %s\n",BootStateFile.Text);
+#if defined(SSE_VAR_SNAPSHOT_INI2)
+    BootStateFile=pCSF->GetStr("Main","DefaultSnapshot",BootStateFile.Text);
+#else
     BootStateFile=pCSF->GetStr("Main","DefaultSnapshot","");
+#endif
+    TRACE_INIT("BootStateFile %s\n",BootStateFile.Text);
 #endif
 #if defined(SSE_STF_MATCH_TOS3)
     Tos.DefaultCountry=pCSF->GetInt("Main","TosDefaultCountry",7); // 7=UK
@@ -1643,7 +1650,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   else
 #endif
   pCSF->SetStr("Machine","ROM_File",ROMFile);
-  TRACE("write ROM_Add_Dir = %s\n",TOSBrowseDir.Text);
+  TRACE_INIT("write ROM_Add_Dir = %s\n",TOSBrowseDir.Text);
   pCSF->SetStr("Machine","ROM_Add_Dir",TOSBrowseDir);
   pCSF->SetStr("Machine","Cart_File",CartFile);
   pCSF->SetStr("Machine","LastCartFile",LastCartFile);
