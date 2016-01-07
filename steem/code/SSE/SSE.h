@@ -2633,6 +2633,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #ifdef SSE_VARIOUS
 #define SSE_VAR_KEYBOARD_CLICK2 // persistent
+#define SSE_VAR_SNAPSHOT_INI2
 #endif
 
 #ifdef SSE_VIDEO
