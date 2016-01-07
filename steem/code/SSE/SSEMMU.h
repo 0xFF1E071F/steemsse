@@ -1,5 +1,6 @@
 /*
 
+MMU = Memory Management Unit
 
 Wake-up states (WU): how every 4 cycles are shared
 
@@ -26,7 +27,7 @@ WAKE_UP_STATE is WU or 0.
 | Steem  option    |    Wake-up concepts     |    Cycle      |
 |    variable      |                         |  adjustment   |
 +------------------+------------+------------+-------+-------+
-|  WAKE_UP_STATE   |     WU     |      WS    |  MODE |  SYNC |
+|  WAKE_UP_STATE   |     WU     |      WS    | SHIFT |  SYNC |
 |                  |    (ijor)  |    (LJBK)  | (Res) |(Freq) |
 +------------------+------------+------------+-------+-------+
 |   0 (ignore)     |     -      |      -     |    -  |    -  |
@@ -42,7 +43,7 @@ is more confusing, its value is no wake-up state but just an option index.
 | Steem  option    |              Wake-up concepts           |    Cycle      |
 |    variable      |                                         |  adjustment   |
 +------------------+---------------+------------+------------+-------+-------+
-|  WAKE_UP_STATE   |   DL Latency  |     WU     |      WS    |  MODE |  SYNC |
+|  WAKE_UP_STATE   |   DL Latency  |     WU     |      WS    | SHIFT |  SYNC |
 |                  |     (Dio)     |    (ijor)  |    (LJBK)  | (Res) |(Freq) |
 +------------------+---------------+------------+------------+-------+-------+
 |   0 (ignore)     |      5        |     -      |      -     |    -  |    -  |
@@ -82,9 +83,9 @@ struct TMMU {
 #endif
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
   short SDPMiddleByte; // glue it! 
-  MEM_ADDRESS ReadSDP(int cycles_since_hbl,int dispatcher=DISPATCHER_NONE);
+  MEM_ADDRESS ReadVideoCounter(int cycles_since_hbl,int dispatcher=DISPATCHER_NONE);
   void ShiftSDP(int shift);  
-  void WriteSDP(MEM_ADDRESS addr, BYTE io_src_b);
+  void WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b);
 #endif
 };
 

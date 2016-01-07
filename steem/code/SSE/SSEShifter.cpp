@@ -120,7 +120,7 @@ void TShifter::CheckSideOverscan() {
 
 #if defined(SSE_GLUE_THRESHOLDS)
     if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE)
-      && !(ShiftModeAtCycle(Glue.ScanlineTiming[TGlue::MMU_DE_ON]
+      && !(ShiftModeAtCycle(Glue.ScanlineTiming[TGlue::GLU_DE_ON]
       [TGlue::FREQ_72]+2)&2))
 #else
     if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE)
@@ -133,7 +133,7 @@ void TShifter::CheckSideOverscan() {
     }
 #if defined(SSE_GLUE_THRESHOLDS)
     else if( !(CurrentScanline.Tricks&2) 
-      && !(ShiftModeAtCycle(Glue.ScanlineTiming[TGlue::MMU_DE_OFF]
+      && !(ShiftModeAtCycle(Glue.ScanlineTiming[TGlue::GLU_DE_OFF]
       [TGlue::FREQ_72]+2)&2))
 #else
     else if( !(CurrentScanline.Tricks&2) 
@@ -259,9 +259,9 @@ cycle       0               4               8               12               12
 #if defined(SSE_GLUE_THRESHOLDS)
       if(!(CurrentScanline.Tricks
         &(TRICK_LINE_PLUS_20|TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_24))
-        && !(ShiftModeChangeAtCycle(Glue.ScanlineTiming[TGlue::MMU_DE_ON]
+        && !(ShiftModeChangeAtCycle(Glue.ScanlineTiming[TGlue::GLU_DE_ON]
         [TGlue::FREQ_72]+2)&2)
-        && (ShiftModeAtCycle(Glue.ScanlineTiming[TGlue::MMU_DE_ON]
+        && (ShiftModeAtCycle(Glue.ScanlineTiming[TGlue::GLU_DE_ON]
         [TGlue::FREQ_72])&2))
         CurrentScanline.Tricks|=TRICK_LINE_PLUS_20;
 #elif defined(SSE_SHIFTER_STATE_MACHINE) && defined(SSE_SHIFTER_LINE_PLUS_20B)
@@ -319,7 +319,7 @@ cycle       0               4               8               12               12
 */
 
 #if defined(SSE_GLUE_THRESHOLDS) // argh: need signed values
-    short lim_r2=Glue.ScanlineTiming[TGlue::MMU_DE_ON][TGlue::FREQ_72];
+    short lim_r2=Glue.ScanlineTiming[TGlue::GLU_DE_ON][TGlue::FREQ_72];
     short lim_r0=Glue.ScanlineTiming[TGlue::HBLANK_OFF][TGlue::FREQ_50];
     ASSERT(lim_r0==(ST_TYPE==STE)?28:32);
 #elif defined(SSE_SHIFTER_TRICKS) 
@@ -739,8 +739,8 @@ TODO!
   {
 #if defined(SSE_GLUE_THRESHOLDS)
     r2cycle=Glue.ScanlineTiming[TGlue::HBLANK_OFF][TGlue::FREQ_50];
-#define s0cycle Glue.ScanlineTiming[TGlue::MMU_DE_ON][TGlue::FREQ_60]
-#define s2cycle Glue.ScanlineTiming[TGlue::MMU_DE_ON][TGlue::FREQ_50]
+#define s0cycle Glue.ScanlineTiming[TGlue::GLU_DE_ON][TGlue::FREQ_60]
+#define s2cycle Glue.ScanlineTiming[TGlue::GLU_DE_ON][TGlue::FREQ_50]
     ASSERT(s0cycle>0);
     ASSERT(s2cycle>0);
     if(ST_TYPE!=STE //our new hypothesis
@@ -1138,7 +1138,7 @@ TODO!
     | TRICK_LINE_PLUS_4 | TRICK_LINE_PLUS_6)))
   {
 #if defined(SSE_GLUE_THRESHOLDS)
-    t=FreqAtCycle(Glue.ScanlineTiming[TGlue::MMU_DE_ON][TGlue::FREQ_60]+2==50)
+    t=FreqAtCycle(Glue.ScanlineTiming[TGlue::GLU_DE_ON][TGlue::FREQ_60]+2==50)
       ? 44: 40;
 #else
     t=FreqAtCycle(DEcycle60)==50 ? 44 : 40; 
@@ -1206,7 +1206,7 @@ TODO!
 #endif
   {
 #if defined(SSE_GLUE_THRESHOLDS)
-    t=Glue.ScanlineTiming[TGlue::MMU_DE_ON][TGlue::FREQ_50]-2;
+    t=Glue.ScanlineTiming[TGlue::GLU_DE_ON][TGlue::FREQ_50]-2;
 #elif defined(SSE_SHIFTER_LINE_PLUS_2_STE2)
 /*  TEST11B: 40 for STE
 */
@@ -1255,9 +1255,9 @@ TODO!
 
 #if defined(SSE_GLUE_THRESHOLDS)
     if(CyclesIn>=t && FreqAtCycle(t)==60 
-      && ((CyclesIn<Glue.ScanlineTiming[TGlue::MMU_DE_OFF][TGlue::FREQ_60] && shifter_freq==50) 
-      || CyclesIn>=Glue.ScanlineTiming[TGlue::MMU_DE_OFF][TGlue::FREQ_60] &&
-      FreqAtCycle(Glue.ScanlineTiming[TGlue::MMU_DE_OFF][TGlue::FREQ_60])==50))
+      && ((CyclesIn<Glue.ScanlineTiming[TGlue::GLU_DE_OFF][TGlue::FREQ_60] && shifter_freq==50) 
+      || CyclesIn>=Glue.ScanlineTiming[TGlue::GLU_DE_OFF][TGlue::FREQ_60] &&
+      FreqAtCycle(Glue.ScanlineTiming[TGlue::GLU_DE_OFF][TGlue::FREQ_60])==50))
 #elif defined(SSE_SHIFTER_LINE_PLUS_2_STE2)
     if(CyclesIn>=t && FreqAtCycle(t)==60 
       && ((CyclesIn<372+WU_sync_modifier+2 && shifter_freq==50) 
@@ -1337,7 +1337,7 @@ TODO!
 */
 
 #if defined(SSE_GLUE_THRESHOLDS)
-  t=Glue.ScanlineTiming[TGlue::MMU_DE_OFF][TGlue::FREQ_72]+2;
+  t=Glue.ScanlineTiming[TGlue::GLU_DE_OFF][TGlue::FREQ_72]+2;
   if(CyclesIn>=t && !(CurrentScanline.Tricks&TRICK_0BYTE_LINE)
     && !(CurrentScanline.Tricks&TRICK_LINE_MINUS_106)
     && (ShiftModeAtCycle(t)&2))
@@ -1599,11 +1599,11 @@ detect unstable: switch MED/LOW - Beeshift
 */
 
 #if defined(SSE_GLUE_THRESHOLDS)
-  t=Glue.ScanlineTiming[TGlue::MMU_DE_OFF][TGlue::FREQ_60]; 
+  t=Glue.ScanlineTiming[TGlue::GLU_DE_OFF][TGlue::FREQ_60]; 
   if(!(CurrentScanline.Tricks
     &(TRICK_0BYTE_LINE|TRICK_LINE_MINUS_106|TRICK_LINE_MINUS_2))
     && CyclesIn>t+2 
-    && FreqAtCycle(Glue.ScanlineTiming[TGlue::MMU_DE_ON][TGlue::FREQ_60]+2)!=60
+    && FreqAtCycle(Glue.ScanlineTiming[TGlue::GLU_DE_ON][TGlue::FREQ_60]+2)!=60
     && FreqAtCycle(t+2)==60)
       CurrentScanline.Tricks|=TRICK_LINE_MINUS_2;
 
@@ -1731,7 +1731,7 @@ Tests are arranged to be efficient.
 
 */
 #if defined(SSE_GLUE_THRESHOLDS)
-  t=Glue.ScanlineTiming[TGlue::MMU_DE_OFF][TGlue::FREQ_50] - 2; //376-2
+  t=Glue.ScanlineTiming[TGlue::GLU_DE_OFF][TGlue::FREQ_50] - 2; //376-2
 #else  
   t=374+WU_sync_modifier;
 #endif
@@ -2397,7 +2397,7 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
       draw_dest_ad=draw_dest_next_scanline;
       draw_dest_next_scanline+=draw_dest_increase_y;
     }
-    shifter_pixel=HSCROLL; //start by drawing this pixel
+    shifter_pixel=HSCROLL; //start by drawing this pixel (note: for next line)
 #if defined(SSE_SHIFTER_STE_MED_HSCROLL) 
     HblStartingHscroll=shifter_pixel; // save the real one (not important for Cool STE)
     if(screen_res==1) //it's in cycles, bad name
@@ -2721,7 +2721,7 @@ dragon, right
 
 }
 
-//note: this isn't compiled anymore in v3.8
+//note: this isn't compiled anymore in v3.8 (see new version further)
 void TShifter::IncScanline() { // a big extension of 'scan_y++'!
 //should be "Glue"?
 #if defined(SSE_DEBUG)
@@ -2834,8 +2834,8 @@ void TShifter::IncScanline() { // a big extension of 'scan_y++'!
 #if defined(SSE_GLUE_THRESHOLDS) //TODO refactor
   if(m_ShiftMode&2)
   {
-    CurrentScanline.StartCycle=Glue.ScanlineTiming[TGlue::MMU_DE_ON][TGlue::FREQ_72];
-    CurrentScanline.EndCycle=Glue.ScanlineTiming[TGlue::MMU_DE_OFF][TGlue::FREQ_72];
+    CurrentScanline.StartCycle=Glue.ScanlineTiming[TGlue::GLU_DE_ON][TGlue::FREQ_72];
+    CurrentScanline.EndCycle=Glue.ScanlineTiming[TGlue::GLU_DE_OFF][TGlue::FREQ_72];
     CurrentScanline.Cycles=SCANLINE_TIME_IN_CPU_CYCLES_70HZ;
 #if defined(SSE_SHIFTER_STE_HI_HSCROLL)
     if(screen_res>=2)
@@ -2961,7 +2961,7 @@ BYTE TShifter::IORead(MEM_ADDRESS addr) {
       MEM_ADDRESS sdp;
 #if defined(SSE_SHIFTER_SDP_READ)
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
-      sdp=MMU.ReadSDP(LINECYCLES); // a complicated affair
+      sdp=MMU.ReadVideoCounter(LINECYCLES); // a complicated affair
 #else
       sdp=ReadSDP(LINECYCLES); // a complicated affair
 #endif
@@ -3152,7 +3152,7 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
       
 #if defined(SSE_SHIFTER_SDP_WRITE)
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
-      MMU.WriteSDP(addr,io_src_b); // very complicated!
+      MMU.WriteVideoCounter(addr,io_src_b); // very complicated!
 #else
       WriteSDP(addr,io_src_b); // very complicated!
 #endif
@@ -3297,7 +3297,7 @@ must NOT be skipped using the Line Offset Register.
       draw_scanline_to(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl); // Update sdp if off right  
 #endif
       
-#if defined(SSE_SHIFTER_SDP_TRACE_LOG)
+#if defined(SSE_SHIFTER_SDP_TRACE)
       TRACE_LOG("F%d y%d c%d LW %d -> %d\n",FRAME,scan_y,LINECYCLES,LINEWID,io_src_b);
 #endif
       LINEWID=io_src_b;
@@ -3365,7 +3365,7 @@ rasterline to allow horizontal fine-scrolling.
       {
         int cycles_in=(int)(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
         
-#if defined(SSE_SHIFTER_SDP_TRACE_LOG)
+#if defined(SSE_SHIFTER_SDP_TRACE)
         TRACE_LOG("F%d y%d c%d HS %d -> %d\n",FRAME,scan_y,LINECYCLES,HSCROLL,io_src_b);
 #endif
         
@@ -3375,7 +3375,7 @@ rasterline to allow horizontal fine-scrolling.
           ") to "+(shifter_hscroll)+" at "+scanline_cycle_log());
         if (addr==0xff8265) 
           shifter_hscroll_extra_fetch=(HSCROLL!=0);
-#if defined(SSE_SHIFTER_HSCROLL_380_A)
+#if defined(SSE_SHIFTER_HSCROLL_380_A) && defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 /*  Better test, should new HSCROLL apply on current line
     TODO: what is exact threshold ?
 */
@@ -3428,8 +3428,9 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
   if(extended_monitor || emudetect_falcon_mode!=EMUD_FALC_MODE_OFF) 
     return;
 #endif
-/*
+
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+/*
     if(Glue.FetchingLine()) // even if cycles_in too small to rendre (more tests)?
     {
       if(freq_change_this_scanline
@@ -3438,6 +3439,8 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 #endif
         )
         Glue.CheckSideOverscan(); 
+    }
+    */
 #else
   if(freq_change_this_scanline
 #if defined(SSE_SHIFTER_DRAGON1)//temp
@@ -3449,7 +3452,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     )
     CheckSideOverscan(); 
 #endif
-*/
+
 
 /*  What happens here is very confusing; we render in real time, but not
     quite. As on a real ST, there's a delay of fetch+8 between the 
@@ -4262,10 +4265,10 @@ void TShifter::Vbl() {
 #endif
 #if defined(SSE_OSD_CONTROL)
   if( (OSD_MASK2&OSD_CONTROL_60HZ))// && shifter_freq_at_start_of_vbl==60) 
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+//#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
     TRACE_OSD("R%d S%d",m_ShiftMode,m_SyncMode);
     //TRACE_OSD("60HZ");
-#endif
+//#endif
 #endif
 #endif
 #endif//dbg
@@ -4917,7 +4920,7 @@ MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
 
   if (bad_drawing){
     // Fake SDP
-#if defined(SSE_SHIFTER_SDP_TRACE_LOG)
+#if defined(SSE_SHIFTER_SDP_TRACE)
     TRACE_LOG("fake SDP\n");
 #endif
     if (scan_y<0){
@@ -5054,8 +5057,8 @@ MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
       )
       starts_counting-=26;
 #if defined(SSE_GLUE_FRAME_TIMINGS_A)
-    if(left_border && CyclesIn>=Glue.ScanlineTiming[TGlue::MMU_DE_ON]
-      [TGlue::FREQ_60]+2 && FreqAtCycle(Glue.ScanlineTiming[TGlue::MMU_DE_ON]
+    if(left_border && CyclesIn>=Glue.ScanlineTiming[TGlue::GLU_DE_ON]
+      [TGlue::FREQ_60]+2 && FreqAtCycle(Glue.ScanlineTiming[TGlue::GLU_DE_ON]
       [TGlue::FREQ_60]+2)==60)
       starts_counting-=2; 
 #elif defined(SSE_SHIFTER_TCB) && defined(SSE_SHIFTER_TRICKS)
@@ -5081,7 +5084,7 @@ MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
       sdp+=c;
     }
 
-#if defined(SSE_SHIFTER_SDP_TRACE_LOG3) // compare with Steem (can't be 100%)
+#if defined(SSE_SHIFTER_SDP_TRACE3) // compare with Steem (can't be 100%)
     if(sdp>shifter_draw_pointer_at_start_of_line)
     {
       MEM_ADDRESS sdpdbg=get_shifter_draw_pointer(CyclesIn);
@@ -5227,7 +5230,7 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 
   int cycles=LINECYCLES; // cycle in Shifter reckoning
 
-#if defined(SSE_SHIFTER_SDP_TRACE_LOG2)
+#if defined(SSE_SHIFTER_SDP_TRACE2)
   TRACE_LOG("F%d y%d c%d Write %X to %X\n",FRAME,scan_y,cycles,io_src_b,addr);
 #endif
 
@@ -5249,7 +5252,7 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
   // some STF programs write to those addresses, it just must be ignored.
   if(ST_TYPE!=STE)
   {
-#if defined(SSE_SHIFTER_SDP_TRACE_LOG)
+#if defined(SSE_SHIFTER_SDP_TRACE)
     TRACE_LOG("STF ignore write to SDP %x %x\n",addr,io_src_b);
 #endif
     return; // fixes Nightdawn, STF-only game
@@ -5289,7 +5292,7 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
     int current_sdp_middle_byte=(shifter_draw_pointer&0xFF00)>>8;
     if(current_sdp_middle_byte != SDPMiddleByte) // need to restore?
     {
-#if defined(SSE_SHIFTER_SDP_TRACE_LOG)
+#if defined(SSE_SHIFTER_SDP_TRACE)
       TRACE_LOG("F%d y%d c%d SDP %X reset middle byte from %X to %X\n",FRAME,scan_y,cycles,shifter_draw_pointer,current_sdp_middle_byte,SDPMiddleByte);
 #endif
       DWORD_B(&shifter_draw_pointer,(0xff8209-0xff8207)/2)=SDPMiddleByte;

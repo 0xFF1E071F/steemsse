@@ -1,3 +1,5 @@
+#include "SSE.h"
+#if defined(STEVEN_SEAGAL) && defined(SSE_MMU)
 
 #include "../pch.h"
 #include "SSEMMU.h"
@@ -6,7 +8,7 @@
 #include "SSEFrameReport.h"
 #endif
 
-#if defined(SSE_MMU)
+//#if defined(SSE_MMU)
 
 #if defined(SSE_MMU_WU_DL)
 /*
@@ -79,7 +81,7 @@ TMMU MMU;
 #define max(a,b) (a>b ? a:b)
 #endif
 
-MEM_ADDRESS TMMU::ReadSDP(int CyclesIn,int dispatcher) {
+MEM_ADDRESS TMMU::ReadVideoCounter(int CyclesIn,int dispatcher) {
   // the function has been greatly streamlined in v3.8.0,
   // relying on info already in "CurrentScanline" (no WS modifiers)
  
@@ -107,7 +109,7 @@ MEM_ADDRESS TMMU::ReadSDP(int CyclesIn,int dispatcher) {
 #else
     bool hires=!left_border;
 #endif
-    // 8 cycles latency before MMU starts prefetching, 4 more after prefetch
+    // 8 cycles latency before MMU starts prefetching
     int starts_counting=(Glue.CurrentScanline.StartCycle+8)/2;
 
     // can't be odd though (hires)
@@ -117,6 +119,7 @@ MEM_ADDRESS TMMU::ReadSDP(int CyclesIn,int dispatcher) {
     if(shifter_hscroll_extra_fetch)
       starts_counting-=(hires?2:8);
 
+    // compute sdp
     int c=CyclesIn/2-starts_counting;
     sdp=shifter_draw_pointer_at_start_of_line;
     if (c>=bytes_to_count)
@@ -139,7 +142,7 @@ void TMMU::ShiftSDP(int shift) {
 }
 
 
-void TMMU::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
+void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
 /*
     This is a difficult side of STE emulation, made difficult too by
     Steem's rendering system, that uses the Shifter draw pointer as 
@@ -249,7 +252,7 @@ void TMMU::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 -27 - 012:R0000 376:S0000 388:S0082 408:C0506 424:C07A2 436:C09FE 444:R0082 456:R0000 468:H000E 508:R0082 512:T6011 512:#0230
 
     note that other lines must be aligned with -28: the shift is
-    different because of HSCROLL=0 when line -28 starts
+    different because HSCROLL=0 when line -28 starts
 
     instruction used move.b
 
@@ -296,7 +299,7 @@ void TMMU::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 
   Shifter.Render(cycles,DISPATCHER_WRITE_SDP); //rounding trouble
 
-  MEM_ADDRESS sdp_real=ReadSDP(cycles,DISPATCHER_WRITE_SDP); 
+  MEM_ADDRESS sdp_real=ReadVideoCounter(cycles,DISPATCHER_WRITE_SDP); 
   int bytes_in=sdp_real-shifter_draw_pointer_at_start_of_line;
   ASSERT(bytes_in>=0);
   // the 'draw' pointer can be <, = or > 'real'
@@ -309,7 +312,7 @@ void TMMU::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
     int current_sdp_middle_byte=(shifter_draw_pointer&0xFF00)>>8;
     if(current_sdp_middle_byte != SDPMiddleByte) // need to restore?
     {
-#if defined(SSE_SHIFTER_SDP_TRACE_LOG)
+#if defined(SSE_SHIFTER_SDP_TRACE)
       TRACE_LOG("F%d y%d c%d SDP %X reset middle byte from %X to %X\n",FRAME,scan_y,cycles,shifter_draw_pointer,current_sdp_middle_byte,SDPMiddleByte);
 #endif
       DWORD_B(&shifter_draw_pointer,(0xff8209-0xff8207)/2)=SDPMiddleByte;
@@ -325,9 +328,8 @@ void TMMU::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
   // Writing low byte while the MMU is fetching
   if(addr==0xFF8209 && de)
   {
-
     // recompute right off bonus bytes (E605 Planet, D4/Tekila)
-    // that's no hack by itself, but the method could be...
+    // the idea is no hack by itself, but the method could be...
     if(!right_border && !Glue.ExtraAdded)
     {
       int pxtodraw=320+BORDER_SIDE*2-scanline_drawn_so_far;
@@ -341,9 +343,24 @@ void TMMU::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
       // we can't set extra because of bumpy scrolling
       overscan_add_extra+=-28+bytes_to_run-bytestofetch;
 #endif
-      if(SSE_HACKS_ON&&!shifter_skip_raster_for_hscroll)
-        overscan_add_extra+=6; // Tekila line -28
+#if defined(SSE_SHIFTER_SDP_WRITE_DE_HSCROLL) && defined(SSE_SHIFTER_TEKILA)
+      // TODO, those conditions are certainly not correct
+      if(SSE_HACKS_ON && !left_border)
+      {
+        if(!shifter_skip_raster_for_hscroll)
+          overscan_add_extra+=6; // Tekila line -28
+        else if(Glue.PreviousScanline.Tricks&TRICK_STABILISER) //especially this
+          nsdp+=4; // Tekila other lines
+      }
+#endif
     }
+#if defined(SSE_SHIFTER_SOMMARHACK_2010) //greets
+    // write on cycle 284 or 292
+    else
+      Shifter.RoundCycles(shifter_pixel);
+#endif
+
+
 #if !defined(SSE_GLUE_001)
     // cancel the Steem 3.2 fix for left off with STE scrolling on
     if(!Glue.ExtraAdded && (Glue.CurrentScanline.Tricks&TRICK_LINE_PLUS_26)
@@ -361,16 +378,18 @@ void TMMU::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 #endif
 #endif
       )
-      overscan_add_extra+=8; // fixes bumpy scrolling in E605 Planet
+      overscan_add_extra+=8; // fixes bumpy scrolling in Tekila [E605 Planet]
 #endif//001
-#if defined(SSE_SHIFTER_SDP_WRITE_DE_HSCROLL) && defined(SSE_SHIFTER_TEKILA)
+
+
+#if defined(SSE_SHIFTER_SDP_WRITE_DE_HSCROLL) && defined(SSE_SHIFTER_TEKILA__)
     // TODO, those conditions are certainly not correct
     if(SSE_HACKS_ON && shifter_skip_raster_for_hscroll && !left_border 
       && !right_border && !Glue.ExtraAdded 
       && (Glue.PreviousScanline.Tricks&TRICK_STABILISER)) //especially this
       nsdp+=4; // Tekila other lines
 #endif
-  }
+  }//de
 
 #if defined(SSE_SHIFTER_DANGEROUS_FANTAISY)
   if(SSE_HACKS_ON
@@ -378,7 +397,8 @@ void TMMU::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
     nsdp+=-8; // hack for Dangerous Fantaisy credits lower overscan flicker
 #endif
 
-  // update shifter_draw_pointer_at_start_of_line or ReadSDP returns garbage
+  // update shifter_draw_pointer_at_start_of_line or ReadVideoCounter will
+  // return garbage
   shifter_draw_pointer_at_start_of_line-=shifter_draw_pointer; //sdp_real
   shifter_draw_pointer_at_start_of_line+=nsdp;
   shifter_draw_pointer=nsdp;

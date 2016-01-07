@@ -62,10 +62,10 @@ struct TGlue {
   void Update();
   enum {FREQ_50,FREQ_60,FREQ_72,NFREQS};
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-  enum {MMU_DE_ON,HBLANK_OFF,MMU_DE_OFF,HBLANK_ON,HSYNC_ON,HSYNC_OFF,RELOAD_SDP,
+  enum {GLU_DE_ON,HBLANK_OFF,GLU_DE_OFF,HBLANK_ON,HSYNC_ON,HSYNC_OFF,RELOAD_SDP,
     ENABLE_VBI,VERT_OVSCN_LIMIT,NTIMINGS};
 #elif defined(SSE_GLUE_THRESHOLDS)
-  enum {MMU_DE_ON,HBLANK_OFF,MMU_DE_OFF,HBLANK_ON,HSYNC_ON,HSYNC_OFF,RELOAD_SDP,
+  enum {GLU_DE_ON,HBLANK_OFF,GLU_DE_OFF,HBLANK_ON,HSYNC_ON,HSYNC_OFF,RELOAD_SDP,
     ENABLE_VBI,NTIMINGS};
 #else //it wasn't used anyway
   enum {NEGATE_HSYNC,NEGATE_HBLANK,START_PREFETCH,STOP_PREFETCH,ASSERT_HBL,ASSERT_HSYNC,NTIMINGS};
@@ -116,7 +116,9 @@ struct TGlue {
   int FreqAtCycle(int cycle);
   int ShiftModeAtCycle(int cycle);
   // cycle of next change to whatever value after this cycle
+#ifdef SSE_BOILER
   int NextFreqChange(int cycle,int value=-1);
+#endif
   int NextShiftModeChange(int cycle,int value=-1);
   // idx of next change to whatever value after this cycle
   int NextFreqChangeIdx(int cycle);

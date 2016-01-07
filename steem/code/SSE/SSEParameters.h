@@ -292,6 +292,29 @@ MIDI is 4 times faster than IKBD
 #endif//#if defined(SSE_FDC)
 
 
+/////////
+// GLU //
+/////////
+
+
+#if defined(SSE_GLUE_THRESHOLDS)
+
+enum {
+  GLU_DE_ON_72=6, //+ WU_res_modifier; STE-4
+  GLU_DE_ON_60=52, //+ WU_sync_modifier; STE -16
+  GLU_DE_ON_50=56, //+ WU_sync_modifier; STE -16
+  GLU_HBLANK_OFF_50=28, //+ WU_sync_modifier
+  GLU_HSYNC_ON_50=464, //+ WU_res_modifier, STE-2
+  GLU_HSYNC_DURATION=40,
+  GLU_RELOAD_VIDEO_COUNTER_50=64, //+ WU_sync_modifier (STE -2?)
+  GLU_TRIGGER_VBI_50=64, // STE +4
+  GLU_DECIDE_NCYCLES=54, //+ WU_sync_modifier, STE +2
+  GLU_VERTICAL_OVERSCAN_50=504 //+ WU_sync_modifier, STE -2
+};
+
+#endif
+
+
 ////////
 //GUI //
 ////////
@@ -601,7 +624,7 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
 
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)//yes in v3.8
 #define MFP_WRITE_LATENCY 4
-#define MFP_TIMERS_WOBBLE 4//1 //2
+#define MFP_TIMERS_WOBBLE 4//2//1 //2 // if there's wobble, at least 2 seems likelier
 #else
 #define MFP_WRITE_LATENCY (4)
 #endif
@@ -610,19 +633,10 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
 
 #if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY)
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE) 
-/*  This wasn't defined in v3.7, but in v3.8 it is, because the CPU/MFP ratio
-    should be the same as on the STF. This fixes the intermittent bug in loSTE
-    screens STE.
-    TEST10.TOS is less satisfactory.
-    Other cases to check, in STE mode, for spurious line +2:
-    Overscan Demos
-    Reality/Schnusdie
-    DSOTS
-    Not sure Shifter tricks refactoring has made a difference here.
-    But Glue refactoring seems to do.
-*/
-#if defined(SSE_GLUE_FRAME_TIMINGS_A) 
-#define MFP_TIMER_SET_DELAY (7+1)
+#if defined(SSE_GLUE_FRAME_TIMINGS_A) && !defined(SSE_INT_MFP_RATIO_STE3)
+#define MFP_TIMER_SET_DELAY (8) //schnusdie
+#elif defined(SSE_GLUE_FRAME_TIMINGS_A) 
+#define MFP_TIMER_SET_DELAY (7)
 #elif defined(SSE_INT_MFP_RATIO_STE2)
 #define MFP_TIMER_SET_DELAY 8//10 // overscan/schnusdie... [8]
 #else
