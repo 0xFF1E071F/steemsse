@@ -53,6 +53,9 @@ TShifter::TShifter() {
   CurrentScanline.Cycles=500;
 #endif
 #endif
+#ifdef SSE_SHIFTER_HIRES_RASTER
+  Scanline2[112]=0;
+#endif
 }
 
 
@@ -2435,10 +2438,12 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
     At least in monochrome we mustn't deal with bit planes, there's only
     one plane.
     We need some examples to test the feature with a correctly set-up screen.
-    SSE_SHIFTER_STE_HI_HSCROLL is defined only in the beta or the boiler.
+    Case: Time Slice, it works!
 */
 
-#if defined(SSE_SHIFTER_HSCROLL_380_B)
+#if defined(SSE_SHIFTER_HIRES_RASTER) && defined(SSE_SHIFTER_HSCROLL_380_B)
+      if(hscroll0||Scanline2[112])
+#elif defined(SSE_SHIFTER_HSCROLL_380_B)
       if(hscroll0)
 #else
       if(HSCROLL)
@@ -2447,6 +2452,9 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
         // save ST memory
         for(int i=0;i<=20;i++)
           Scanline[i]=LPEEK(i*4+shifter_draw_pointer); 
+#if defined(SSE_SHIFTER_HIRES_RASTER) && defined(SSE_SHIFTER_HSCROLL_380_B)
+        if(hscroll0)
+#endif
         // shift pixels of full scanline
         for(MEM_ADDRESS i=shifter_draw_pointer; i<nsdp ;i+=2)
         {
@@ -2465,6 +2473,15 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
       shifter_pixel=HSCROLL; //start by drawing this pixel
 #endif
 #endif
+#ifdef SSE_SHIFTER_HIRES_RASTER
+      if(Scanline2[112]) // apply raster effect!
+      {
+        for(int byte=0;byte<Scanline2[112];byte++)
+          PEEK(shifter_draw_pointer+byte)
+            =PEEK(shifter_draw_pointer+byte)^Scanline2[byte]; // using XOR
+      }
+#endif
+
       if(scan_y>=draw_first_possible_line && scan_y<draw_last_possible_line)
       {
 
@@ -2499,6 +2516,9 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
 #if defined(SSE_SHIFTER_HIRES_OVERSCAN)
         draw_line_off ||
 #endif        
+#ifdef SSE_SHIFTER_HIRES_RASTER
+        Scanline2[112] ||
+#endif
 #if defined(SSE_SHIFTER_HSCROLL_380_B)
         hscroll0)
 #else
@@ -2507,6 +2527,10 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
       {
         for(int i=0;i<=20;i++)// restore ST memory
           LPEEK(i*4+shifter_draw_pointer)=Scanline[i]; 
+#ifdef SSE_SHIFTER_HIRES_RASTER
+        if(Scanline2[112])
+          ZeroMemory(Scanline2,113);
+#endif
       }
 #endif
       shifter_draw_pointer=nsdp;
@@ -4500,6 +4524,31 @@ FF825E
       if(draw_lock)
 #endif
         Shifter.Render(CyclesIn,DISPATCHER_SET_PAL);
+
+#if defined(SSE_SHIFTER_HIRES_RASTER) && defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+/*  v3.8.0 
+    Record when palette is changed during display, so that we apply effect
+    at rendering time (there's no real-time rendering for HIRES).
+    Limitations: 
+    -Our trick uses video RAM, so this limits the field to real picture.
+    -Resolution is byte, not bit/cycle. It seems OK for Time Slice.
+*/
+      if(screen_res==2 && Glue.FetchingLine())
+      {
+        ASSERT(STpal[n]!=NewPal); // we're in this test, remember
+        int time_to_first_pixel
+          =Glue.ScanlineTiming[TGlue::GLU_DE_ON][TGlue::FREQ_72]+28-6;
+        int cycle=CyclesIn-time_to_first_pixel;
+        if(cycle>=0 && cycle<160) // only during Shifter DE
+        {
+          int byte=cycle/2; // HIRES: 4 pixels/cycle
+          for(int i=Scanline2[112];i<=byte;i++) // from previous pixel chunk to now
+            Scanline2[i]=(NewPal&1)?0xFF:0x00; // and not the reverse...
+          Scanline2[112]=byte; //record where we are
+        }
+      }
+#endif
+
       STpal[n]=NewPal;
 #if !defined(SSE_SHIFTER_PALETTE_STF)
       PAL_DPEEK(n*2)=STpal[n];

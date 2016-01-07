@@ -233,6 +233,11 @@ struct TShifter {
 #if defined(SSE_SHIFTER_PANIC) || defined(SSE_SHIFTER_STE_HI_HSCROLL)
   DWORD Scanline[230/4+2]; // the price of fun
 #endif
+
+#ifdef SSE_SHIFTER_HIRES_RASTER
+  BYTE Scanline2[112+1]; // element 112 holds # raster bytes
+#endif
+
 #if defined(SSE_TIMINGS_FRAME_ADJUSTMENT) // v3.6.4->v3.7.2
   // it's a hack, less involved than making a reliable statemachine
   WORD n508lines;
