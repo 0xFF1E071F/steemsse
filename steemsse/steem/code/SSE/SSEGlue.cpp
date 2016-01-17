@@ -979,26 +979,66 @@ detect unstable: switch MED/LOW - Beeshift
 - 1 (screen shifted by 4 pixels because only 3 words will be read before the 4 are available to draw the bitmap);
 - 0 (screen shifted by 0 pixels because the 4 words will be read to draw the bitmap);
 */
-  if(ST_TYPE!=STE && WAKE_UP_STATE  && !Shifter.Preload
-    && !(CurrentScanline.Tricks&(TRICK_UNSTABLE|TRICK_0BYTE_LINE
-    |TRICK_LINE_PLUS_26|TRICK_LINE_MINUS_106))) 
+ 
+  if(ST_TYPE!=STE && WAKE_UP_STATE 
+#if defined(SSE_SHIFTER_MED_RES_SCROLLING_360)
+    && !Shifter.Preload // would complicate matters
+#else
+    && (PreviousScanline.Tricks&TRICK_STABILISER) // shifter is stable
+#endif    
+#if defined(SSE_SHIFTER_MED_RES_SCROLLING_380)
+    && !(CurrentScanline.Tricks
+    &(TRICK_UNSTABLE|TRICK_0BYTE_LINE|TRICK_LINE_PLUS_26|TRICK_LINE_MINUS_106))
+    && FetchingLine()
+#else
+    && left_border && LINECYCLES>56 && LINECYCLES<372 //'DE'
+#if defined(SSE_SHIFTER_HI_RES_SCROLLING)
+    && !(CurrentScanline.Tricks&TRICK_UNSTABLE) 
+    && !(CurrentScanline.Tricks&TRICK_0BYTE_LINE)
+    && !(CurrentScanline.Tricks&TRICK_LINE_MINUS_106)  // of course
+#endif
+#endif
+    ) 
   {
-    // detect switch to medium during DE
-    r1cycle=NextShiftModeChange(ScanlineTiming[GLU_DE_ON][FREQ_50],1); 
+#if defined(SSE_SHIFTER_MED_RES_SCROLLING_380)
+    // detect switch to medium or high during DE (more compact code)
+    int mode;
+    r1cycle=NextShiftModeChange(ScanlineTiming[GLU_DE_ON][FREQ_50]); 
     if(r1cycle>ScanlineTiming[GLU_DE_ON][FREQ_50] 
-    && r1cycle<=ScanlineTiming[GLU_DE_OFF][FREQ_50])
+    && r1cycle<=ScanlineTiming[GLU_DE_OFF][FREQ_50]
+    && (mode=ShiftModeChangeAtCycle(r1cycle))
+    )
+    {
+      r0cycle=NextShiftModeChange(r1cycle,0); // detect switch to low
+      int cycles_in_med_or_high=r0cycle-r1cycle;
+      if(r0cycle<=ScanlineTiming[GLU_DE_OFF][FREQ_50]&&cycles_in_med_or_high>0)
+      {
+        Shifter.Preload=((cycles_in_med_or_high/4)%4);
+        if((mode&2)&&Shifter.Preload&1) // if it's 3 or 5
+          Shifter.Preload+=(4-Shifter.Preload)*2; // swap value
+#if defined(SSE_DEBUG) && defined(SSE_OSD_CONTROL)
+        if((OSD_MASK2 & OSD_CONTROL_PRELOAD) && Shifter.Preload)
+          TRACE_OSD("R%d %d R0 %d LOAD %d",mode,r1cycle,r0cycle,Shifter.Preload);
+#endif
+        CurrentScanline.Tricks|=TRICK_UNSTABLE;//don't apply on this line
+//        TRACE_LOG("y%d R1 %d R0 %d cycles in med %d Preload %d\n",scan_y,r1cycle,r0cycle,cycles_in_med,Shifter.Preload);
+      }
+    }
+#else
+    r1cycle=NextShiftModeChange(56,1); // detect switch to medium
+    if(r1cycle>-1)
     {
       r0cycle=NextShiftModeChange(r1cycle,0); // detect switch to low
       int cycles_in_med=r0cycle-r1cycle;
-      if(r0cycle<=ScanlineTiming[GLU_DE_OFF][FREQ_50]
-        && cycles_in_med>0 && cycles_in_med<=20+4) 
+      if(cycles_in_med>0 && cycles_in_med<=20+4) 
       {
-        ASSERT(LINECYCLES>56 && LINECYCLES<372); // "bee"
         Shifter.Preload=((cycles_in_med/4)%4)+4-4;  // '+4' to make sure >1 (3.6.0 no)
         CurrentScanline.Tricks|=TRICK_UNSTABLE;//don't apply on this line
-//        TRACE_LOG("y%d R1 %d R0 %d cycles in med %d Preload %d\n",scan_y,r1cycle,r0cycle,cycles_in_med,Preload);
+//        TRACE_LOG("y%d R1 %d R0 %d cycles in med %d Preload %d\n",scan_y,r1cycle,r0cycle,cycles_in_med,Shifter.Preload);
       }
     }
+//#endif
+
 #if defined(SSE_SHIFTER_HI_RES_SCROLLING)
 /*  We had to move this part after the check for 'line -106'. Adding R2/R0 
     switches is always more "dangerous" in emulation.
@@ -1013,30 +1053,26 @@ detect unstable: switch MED/LOW - Beeshift
 */
     else 
     {
-      // detect switch to high during DE
-      r2cycle=NextShiftModeChange(ScanlineTiming[GLU_DE_ON][FREQ_50],2); 
-      if(r2cycle>ScanlineTiming[GLU_DE_ON][FREQ_50] 
-        && r2cycle<=ScanlineTiming[GLU_DE_OFF][FREQ_50])
+      // there was no switch to MED, detect switch to high during DE
+      r2cycle=NextShiftModeChange(56,2); // detect switch to high
+      if(r2cycle>-1)
       {
         r0cycle=NextShiftModeChange(r2cycle,0); // detect switch to low
         int cycles_in_high=r0cycle-r2cycle;
-        if(r0cycle<=ScanlineTiming[GLU_DE_OFF][FREQ_50] 
-        && cycles_in_high>0 && cycles_in_high<=20+4)
+        if(cycles_in_high>0 && cycles_in_high<=20+4)
         {
           Shifter.Preload=((cycles_in_high/4)%4);
           CurrentScanline.Tricks|=TRICK_UNSTABLE;//don't apply on this line
-          ASSERT(LINECYCLES>56 && LINECYCLES<372);
           if(Shifter.Preload&1) // if it's 3 or 5
             Shifter.Preload+=(4-Shifter.Preload)*2; // swap value
-//          Preload+=4; // like for MED, hack for correct SDP shift
-//          TRACE_LOG("y%d R1 %d R0 %d cycles in HI %d Preload %d\n",scan_y,r1cycle,r0cycle,cycles_in_high,Preload);
+//          TRACE_LOG("y%d R1 %d R0 %d cycles in HI %d Preload %d\n",scan_y,r1cycle,r0cycle,cycles_in_high,Shifter.Preload);
         }
       }
     }
+#endif  
 #endif
-
   }
-  
+
 #endif
 
 #if defined(SSE_SHIFTER_TRICKS) && defined(SSE_SHIFTER_UNSTABLE)
@@ -1052,10 +1088,15 @@ detect unstable: switch MED/LOW - Beeshift
   
   if(WAKE_UP_STATE && Shifter.Preload && 
 #if !defined(SSE_SHIFTER_DOLB_STE)
-    && ST_TYPE==STF &&
+   ST_TYPE==STF &&
 #endif
     !(CurrentScanline.Tricks&(TRICK_UNSTABLE|TRICK_0BYTE_LINE|TRICK_LINE_PLUS_2))
+#if defined(SSE_SHIFTER_MED_RES_SCROLLING_380)
+    && !(TrickExecuted&TRICK_UNSTABLE))
+#else
     && CyclesIn>ScanlineTiming[GLU_DE_ON][FREQ_50])   // wait for eventual +2
+#endif
+
   {
 
     // 1. planes

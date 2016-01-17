@@ -1230,6 +1230,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #if defined(SSE_SHIFTER)
 #if defined(SSE_SHIFTER_TRICKS)
+#define SSE_SHIFTER_MED_RES_SCROLLING_360//switch was missing in original source revision
 #define SSE_SHIFTER_PALETTE_NOISE //UMD8730 STF
 #if defined(SSE_HACKS)
 #define SSE_SHIFTER_XMAS2004 // XMas 2004 by Paradox shift
@@ -2616,6 +2617,8 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
 #define SSE_SHIFTER_HIRES_COLOUR_DISPLAY5//better test, compatible with GLUE refactoring
 #endif
+//#undef SSE_SHIFTER_MED_RES_SCROLLING_360
+#define SSE_SHIFTER_MED_RES_SCROLLING_380
 #endif//sft
 
 #ifdef SSE_STF

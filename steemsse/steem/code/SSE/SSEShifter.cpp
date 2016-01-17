@@ -1429,7 +1429,11 @@ detect unstable: switch MED/LOW - Beeshift
 
   if( WAKE_UP_STATE && ST_TYPE==STF // condition STF for now
     && !(CurrentScanline.Tricks&TRICK_UNSTABLE) 
+#if defined(SSE_SHIFTER_MED_RES_SCROLLING_360) //this missing switch caused hours of bug tracking...
     && !Preload // would complicate matters
+#else
+    && (PreviousScanline.Tricks&TRICK_STABILISER) // shifter is stable
+#endif
     && left_border && LINECYCLES>56 && LINECYCLES<372 //'DE'
 #if defined(SSE_SHIFTER_HI_RES_SCROLLING)
     && !(CurrentScanline.Tricks&TRICK_0BYTE_LINE)
