@@ -33,6 +33,12 @@
 #include "SSEFrameReport.cpp"
 #endif
 
+#if  defined(SSE_SHIFTER_HSCROLL_380_B)
+#define HSCROLL0 hscroll0
+#else
+#define HSCROLL0 HSCROLL
+#endif
+
 TShifter Shifter; // singleton
 
 
@@ -1263,7 +1269,11 @@ TODO!
       && ((CyclesIn<372+WU_sync_modifier+2 && shifter_freq==50) 
       || FreqAtCycle(372+WU_sync_modifier+2)==50))
 #else
+#if SSE_VERSION==364
+    if(CyclesIn>=t && FreqAtCycle(t+2)==60 // another source error...
+#else
     if(CyclesIn>=t && FreqAtCycle(t-2)==60 
+#endif
       && ((CyclesIn<372+WU_sync_modifier+2 && shifter_freq==50) 
       || FreqAtCycle(372+WU_sync_modifier+2)==50))
 #endif
@@ -1306,10 +1316,6 @@ TODO!
     //TRACE_OSD("+2 y%d",scan_y);
   //  TRACE_LOG("+2 y %d c %d +2 60 %d 50 %d\n",scan_y,LINECYCLES,FreqChangeCycle(i),FreqChangeCycle(i+1));
   //  REPORT_LINE;
-#if defined(SSE_VID_TRACE_LOG_SUSPICIOUS2)
-    if(shifter_freq_change_time[i]-LINECYCLE0<0)
-      TRACE_LOG("F%d Suspicious +2 y %d tmg sw %d tmg hbl %d diff %d\n",FRAME,scan_y,shifter_freq_change_time[i],cpu_timer_at_start_of_hbl,shifter_freq_change_time[i]-cpu_timer_at_start_of_hbl);
-#endif
   }
 
 
@@ -1656,11 +1662,6 @@ detect unstable: switch MED/LOW - Beeshift
       )
       CurrentScanline.Tricks|=TRICK_LINE_MINUS_2;
   }
-#endif
-
-#if defined(SSE_VID_TRACE_LOG_SUSPICIOUS2)
-  if((CurrentScanline.Tricks&TRICK_LINE_MINUS_2)&&!(shifter_freq_change_time[i]-LINECYCLE0>56))
-    TRACE_LOG("F%d Suspicious -2 y %d tmg sw %d tmg hbl %d diff %d\n",FRAME,scan_y,shifter_freq_change_time[i],LINECYCLE0,shifter_freq_change_time[i]-LINECYCLE0);
 #endif
 
   if((CurrentScanline.Tricks&TRICK_LINE_MINUS_2)
@@ -2441,14 +2442,11 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
     Since I can't code in assembly yet I provide the feature in C.
     At least in monochrome we mustn't deal with bit planes, there's only
     one plane.
-    We need some examples to test the feature with a correctly set-up screen.
     Case: Time Slice, it works!
 */
 
-#if defined(SSE_SHIFTER_HIRES_RASTER) && defined(SSE_SHIFTER_HSCROLL_380_B)
-      if(hscroll0||Scanline2[112])
-#elif defined(SSE_SHIFTER_HSCROLL_380_B)
-      if(hscroll0)
+#if defined(SSE_SHIFTER_HIRES_RASTER)
+      if(HSCROLL0||Scanline2[112])
 #else
       if(HSCROLL)
 #endif
@@ -2456,19 +2454,14 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
         // save ST memory
         for(int i=0;i<=20;i++)
           Scanline[i]=LPEEK(i*4+shifter_draw_pointer); 
-#if defined(SSE_SHIFTER_HIRES_RASTER) && defined(SSE_SHIFTER_HSCROLL_380_B)
-        if(hscroll0)
+#if defined(SSE_SHIFTER_HIRES_RASTER)
+        if(HSCROLL0)
 #endif
         // shift pixels of full scanline
         for(MEM_ADDRESS i=shifter_draw_pointer; i<nsdp ;i+=2)
         {
-#if defined(SSE_SHIFTER_HSCROLL_380_B)
-          WORD new_value=DPEEK(i)<<hscroll0;  // shift first bits away
-          new_value|=DPEEK(i+2)>>(16-hscroll0); // add first bits of next word at the end
-#else
-          WORD new_value=DPEEK(i)<<HSCROLL;  // shift first bits away
-          new_value|=DPEEK(i+2)>>(16-HSCROLL); // add first bits of next word at the end
-#endif
+          WORD new_value=DPEEK(i)<<HSCROLL0;  // shift first bits away
+          new_value|=DPEEK(i+2)>>(16-HSCROLL0); // add first bits of next word at the end
           DPEEK(i)=new_value;
         }
       }
@@ -2523,11 +2516,7 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
 #ifdef SSE_SHIFTER_HIRES_RASTER
         Scanline2[112] ||
 #endif
-#if defined(SSE_SHIFTER_HSCROLL_380_B)
-        hscroll0)
-#else
-        HSCROLL) 
-#endif
+        HSCROLL0) 
       {
         for(int i=0;i<=20;i++)// restore ST memory
           LPEEK(i*4+shifter_draw_pointer)=Scanline[i]; 
@@ -3406,7 +3395,7 @@ rasterline to allow horizontal fine-scrolling.
               left_border-=16;
 #if defined(SSE_SHIFTER_HSCROLL_380_C) // update shifter_pixel for new HSCROLL
 //            ASSERT(!scanline_drawn_so_far);
-            shifter_pixel=HSCROLL; //fixes We Were STE distorter
+            shifter_pixel=HSCROLL; //fixes We Were STE distorter (party version)
 #endif
           }
         }
@@ -3485,7 +3474,11 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 #if defined(SSE_STF)
       ST_TYPE==STE &&
 #endif
-      WAKE_UP_STATE==1))
+#if defined(SSE_MMU_WU_STE_380) 
+      MMU.WU[WAKE_UP_STATE]==2)) // it really is another WU, to check Spectrum 512 pics
+#else
+      WAKE_UP_STATE==1))//TODO
+#endif
 #endif
       cycles_since_hbl++; // eg Overscan Demos #6, already in v3.2 TODO why?
 
@@ -3528,7 +3521,10 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 #if defined(SSE_GLUE_001)
     break;
 #endif
-    RoundCycles(cycles_since_hbl); // eg D4/Tekila in large display
+#if defined(SSE_SHIFTER_HSCROLL_380_E) 
+    if(!right_border)//Sommarhack 2010 greets, just a hack
+#endif
+      RoundCycles(cycles_since_hbl); // eg D4/Tekila in large display 
     break;
   }//sw
 #endif
@@ -4065,7 +4061,7 @@ void TShifter::SetShiftMode(BYTE NewMode) {
     const int limit512=
 #if defined(SSE_STF) && defined (SSE_MMU_WAKE_UP)
     (
-#if !defined(SSE_MMU_WU_STE)
+#if !defined(SSE_MMU_WU_STE)//TODO this doesn't exist
       ST_TYPE!=STE && 
 #endif
 #if SSE_VERSION<360

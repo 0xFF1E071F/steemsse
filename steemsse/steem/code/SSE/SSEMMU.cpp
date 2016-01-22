@@ -10,6 +10,12 @@
 
 //#if defined(SSE_MMU)
 
+#if  defined(SSE_SHIFTER_HSCROLL_380_B)
+#define HSCROLL0 Shifter.hscroll0
+#else
+#define HSCROLL0 HSCROLL
+#endif
+
 #if defined(SSE_MMU_WU_DL)
 /*
 +------------------------------------------------------------+---------------+
@@ -354,7 +360,7 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
       }
 #endif
     }
-#if defined(SSE_SHIFTER_SOMMARHACK_2010) //greets
+#if defined(SSE_SHIFTER_HSCROLL_380_E) //greets
     // write on cycle 284 or 292
     else
       Shifter.RoundCycles(shifter_pixel);
@@ -364,11 +370,7 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
 #if !defined(SSE_GLUE_001)
     // cancel the Steem 3.2 fix for left off with STE scrolling on
     if(!Glue.ExtraAdded && (Glue.CurrentScanline.Tricks&TRICK_LINE_PLUS_26)
-#if defined(SSE_SHIFTER_HSCROLL_380_B1)
-      && Shifter.hscroll0>=12
-#else
-      && HSCROLL>=12 
-#endif
+      && HSCROLL0>=12 
 #if defined(SSE_VID_BORDERS_416_NO_SHIFT) 
       // don't try to understand this, I don't
 #if defined(SSE_VID_BORDERS_416_NO_SHIFT2)

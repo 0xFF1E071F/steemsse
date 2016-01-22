@@ -309,7 +309,7 @@ enum logsection_enum_tag {
 #if SSE_VERSION>=380
 
 #define TRACE_MASK_14 (Debug.ControlMask[14]) //Shifter 2
-#define TRACE_CONTROL_SHIFTER_PLUS_2 (1<<15) 
+#define TRACE_CONTROL_LINE_PLUS_2 (1<<15) 
 
 #endif
 
