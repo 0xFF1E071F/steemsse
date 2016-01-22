@@ -2549,9 +2549,13 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 #undef SSE_SHIFTER_LEFT_OFF_60HZ//forget it
-//#define SSE_GLUE_001 //to show all the Tekila oddities
-#define SSE_GLUE_002//no safety net
-#endif//SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1
+//#define SSE_GLUE_001 //to show all the Tekila oddities//tmp switch
+#define SSE_GLUE_002//no safety net//tmp switch
+#define SSE_GLUE_LINE_PLUS_2_380 //bugfix (old bug)
+#endif//SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE
+#define SSE_GLUE_003//opt//tmp switch
+#define SSE_GLUE_004//
+#define SSE_SHIFTER_LINE_PLUS_2_HACK_380
 #endif//SSE_GLUE_FRAME_TIMINGS
 #endif//glue
 
@@ -2596,6 +2600,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_MMU)
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#define SSE_MMU_WU_STE_380
 #define SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1
 #endif
 #endif
@@ -2606,19 +2611,24 @@ Beta: not SSE_PRIVATE_BUILD
 
 #ifdef SSE_SHIFTER
 #define SSE_SHIFTER_380 // some modest refactoring, debugging
+#define SSE_SHIFTER_HSCROLL_380
+#if defined(SSE_SHIFTER_HSCROLL_380)
 #define SSE_SHIFTER_HSCROLL_380_A // better test, should new HSCROLL apply on current line
 #define SSE_SHIFTER_HSCROLL_380_A1
 #define SSE_SHIFTER_HSCROLL_380_B // new variable to hold HSCROLL at start of line
-#ifdef SSE_SHIFTER_HSCROLL_380_B
-#define SSE_SHIFTER_HSCROLL_380_B1 // use this instead of HSCROLL for some tests
-#endif
 #define SSE_SHIFTER_HSCROLL_380_C // update shifter_pixel for new HSCROLL
-#define SSE_SHIFTER_HIRES_RASTER // edgy stuff in monochrome mode
+#define SSE_SHIFTER_HSCROLL_380_D // line +20 + HSCROLL
+#define SSE_SHIFTER_HSCROLL_380_E // not always rounding cycles to render on write to SDP (hack)
+#endif
+#define SSE_SHIFTER_HIRES_RASTER // edgy stuff in monochrome mode (Time Slices)
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
 #define SSE_SHIFTER_HIRES_COLOUR_DISPLAY5//better test, compatible with GLUE refactoring
 #endif
 //#undef SSE_SHIFTER_MED_RES_SCROLLING_360
-#define SSE_SHIFTER_MED_RES_SCROLLING_380
+#define SSE_SHIFTER_MED_RES_SCROLLING_380 // refactoring
+#if defined(SSE_SHIFTER_UNSTABLE)
+#define SSE_SHIFTER_UNSTABLE_380 // for demo Closure
+#endif
 #endif//sft
 
 #ifdef SSE_STF

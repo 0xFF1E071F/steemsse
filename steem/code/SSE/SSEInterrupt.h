@@ -74,9 +74,9 @@ inline void HBLInterrupt() {
 
   // wobble?
 #if !defined(SSE_INT_JITTER_HBL)
-#if defined(SSE_INT_E_CLOCK)
+//#if defined(SSE_INT_E_CLOCK)
   if(!HD6301EMU_ON) // not if mode "E-Clock"
-#endif
+//#endif
   {
     INTERRUPT_START_TIME_WOBBLE; //Steem 3.2
   }
@@ -120,9 +120,9 @@ inline void HBLInterrupt() {
 #endif
   // jitter?
 #if defined(SSE_INT_JITTER_HBL) //no
-#if defined(SSE_INT_E_CLOCK)
+//#if defined(SSE_INT_E_CLOCK)
   if(!HD6301EMU_ON)
-#endif
+//#endif
     INSTRUCTION_TIME(HblJitter[HblJitterIndex]); //Hatari
 #endif
 

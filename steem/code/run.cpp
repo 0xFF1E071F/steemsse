@@ -442,6 +442,10 @@ void inline prepare_event_again() //might be an earlier one
 #endif
 
   // cpu_timer must always be set to the next 4 cycle boundary after time_of_next_event
+  //SS: this is still true after rounding refactoring
+  //guess (!) it's because it enforces CPU R/W cycle, which is still 4 cycles
+  //(clocks) in our reckoning, but still don't see how exactly
+
   int oo=time_of_next_event-cpu_timer;
   oo=(oo+3) & -4;
 
@@ -1125,11 +1129,16 @@ void event_scanline()
 
 void event_start_vbl()
 {
-#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+#if defined(SSE_GLUE_FRAME_TIMINGS)
+/*  This emulates several "reloads" just in case, but we use # line cycles to
+    avoid spurious "reloads", because we don't even know the exact timing,
+    nor how the GLU decides (Closure multi-scroll triggered reload if checking
+    shifter_freq)
+*/
   Glue.Status.sdp_reload_done=true; // checked this line
-  // this emulates several "reloads" just in case
-  if(Glue.scanline==310&&shifter_freq!=50||Glue.scanline==260&&shifter_freq!=60
-    ||Glue.scanline==494&&shifter_freq!=72)
+  if(Glue.scanline==310&&Glue.CurrentScanline.Cycles!=512
+    ||Glue.scanline==260&&Glue.CurrentScanline.Cycles!=508
+    ||Glue.scanline==494&&Glue.CurrentScanline.Cycles!=224)
     return;
 #endif
 #if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)

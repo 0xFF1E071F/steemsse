@@ -306,7 +306,7 @@ enum {
   GLU_HBLANK_OFF_50=28, //+ WU_sync_modifier
   GLU_HSYNC_ON_50=464, //+ WU_res_modifier, STE-2
   GLU_HSYNC_DURATION=40,
-  GLU_RELOAD_VIDEO_COUNTER_50=64, //+ WU_sync_modifier (STE -2?)
+  GLU_RELOAD_VIDEO_COUNTER_50=64-2, //+ WU_sync_modifier (STE -2?)
   GLU_TRIGGER_VBI_50=64, // STE +4
   GLU_DECIDE_NCYCLES=54, //+ WU_sync_modifier, STE +2
   GLU_VERTICAL_OVERSCAN_50=504 //+ WU_sync_modifier, STE -2

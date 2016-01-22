@@ -28,6 +28,13 @@
 
 //#if defined(STEVEN_SEAGAL) && defined(SSE_GLUE)
 
+#if  defined(SSE_SHIFTER_HSCROLL_380_B)
+#define HSCROLL0 Shifter.hscroll0
+#else
+#define HSCROLL0 HSCROLL
+#endif
+
+
 TGlue::TGlue() {
 #if !defined(SSE_VAR_RESIZE_380)
   DE_cycles[0]=DE_cycles[1]=320;
@@ -214,7 +221,11 @@ void TGlue::CheckSideOverscan() {
     Enable) sooner.
 */
 #if defined(SSE_VID_BORDERS_LINE_PLUS_20) // there could be some border left
+#if defined(SSE_GLUE_004)
+  if(!(TrickExecuted
+#else
   if(!(CurrentScanline.Tricks
+#endif
     &(TRICK_LINE_PLUS_20|TRICK_LINE_PLUS_26|TRICK_0BYTE_LINE)))
 #else
   if(left_border)
@@ -263,9 +274,21 @@ cycle       0               4               8               12               12
     if(ST_TYPE==STE) 
 #endif
     {
+#if !defined(SSE_GLUE_004)
       ASSERT(!(CurrentScanline.Tricks&(TRICK_LINE_PLUS_20|TRICK_LINE_PLUS_26)));
+#endif
+#if  defined(SSE_SHIFTER_HSCROLL_380_D)
+/*  When HSCROLL is on, the switch to low-res may happen later.
+    Cases: E605 planet, Sommarhack 2010 credits, left off is +20, as tested on 
+    STE
+*/
+      if( CyclesIn>ScanlineTiming[GLU_DE_ON][FREQ_72]+4+2
+        && !(ShiftModeAtCycle(ScanlineTiming[GLU_DE_ON][FREQ_72]+4+2
+        +(HSCROLL0?2:0))&2)
+#else
       if( CyclesIn>ScanlineTiming[GLU_DE_ON][FREQ_72]+4
         && !(ShiftModeAtCycle(ScanlineTiming[GLU_DE_ON][FREQ_72]+4+2)&2)  // is R0 at 6
+#endif
         && (ShiftModeAtCycle(ScanlineTiming[GLU_DE_ON][FREQ_72]+2)&2))  // is R2 at 2
         CurrentScanline.Tricks|=TRICK_LINE_PLUS_20;
     }
@@ -324,13 +347,13 @@ cycle       0               4               8               12               12
     emulation-wise (in v3.7 we had a separate trick).
 */
 
+    // test line +26
     if(CyclesIn>ScanlineTiming[GLU_DE_ON][FREQ_72]
       && !(CurrentScanline.Tricks&TRICK_LINE_PLUS_20)
       && (ShiftModeAtCycle(ScanlineTiming[GLU_DE_ON][FREQ_72]+2)&2))
       CurrentScanline.Tricks|=TRICK_LINE_PLUS_26; // mark "left-off"
 
     // action for line+26 & line+20
-
     if(CurrentScanline.Tricks&(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_20))
     {
 #if defined(SSE_SHIFTER_LINE_PLUS_20)
@@ -406,11 +429,7 @@ cycle       0               4               8               12               12
         overscan_add_extra+=2;
 
 #if !defined(SSE_GLUE_001)
-#if defined(SSE_SHIFTER_HSCROLL_380_B1)
-        if(Shifter.hscroll0>=12)
-#else
-        if(HSCROLL>=12) // STE Shifter bug (Steem authors) //TODO
-#endif
+        if(HSCROLL0>=12) // STE Shifter bug (Steem authors) //TODO
 #if defined(SSE_VID_BORDERS) //[E605 &] Tekila artefacts
           if(SideBorderSize!=VERY_LARGE_BORDER_SIDE || !border) 
 #endif
@@ -437,11 +456,78 @@ cycle       0               4               8               12               12
     (left border removed, right border misses)
 
 */
-      r2cycle=PreviousShiftModeChange(ScanlineTiming[GLU_DE_ON][FREQ_72]+2);
-      if(CyclesIn>ScanlineTiming[GLU_DE_ON][FREQ_72])
-        r0cycle=NextShiftModeChange(ScanlineTiming[GLU_DE_ON][FREQ_72]);  
-
+          r2cycle=PreviousShiftModeChange(ScanlineTiming[GLU_DE_ON][FREQ_72]+2);
+          if(CyclesIn>ScanlineTiming[GLU_DE_ON][FREQ_72])
+            r0cycle=NextShiftModeChange(ScanlineTiming[GLU_DE_ON][FREQ_72]);  
+#if defined(SSE_SHIFTER_UNSTABLE_380)
+/*  Hacks, hacks, hacks...
+    We rewrote this part to support Closure STE WS1 and STF WS2.
+    We try to integrate with previous hacks. Now Reality is a Lie/Schnusdie
+    requires WS1.
+*/
+#if defined(SSE_SHIFTER_SCHNUSDIE)
+          if((r0cycle-r2cycle)==24 // bottom border
+            && !(PreviousScanline.Tricks&TRICK_STABILISER)
+            && !(CurrentScanline.Tricks&TRICK_OVERSCAN_MED_RES))
+          {
+            Shifter.Preload=1;
+            CurrentScanline.Tricks|=TRICK_OVERSCAN_MED_RES;
+            if(shifter_hscroll_extra_fetch && !HSCROLL0) // further "targeting"
+              shifter_draw_pointer+=2; // 2 bytes lost?
+          }
+          else if((r0cycle-r2cycle)==20 // rest
+            && !(PreviousScanline.Tricks&TRICK_STABILISER)
+            && !(CurrentScanline.Tricks&TRICK_OVERSCAN_MED_RES))
+          {
+            if(Shifter.Preload==1)
+              Shifter.Preload=0;
+            CurrentScanline.Tricks|=TRICK_OVERSCAN_MED_RES;
+          }
+          else
+#endif
+          if((r0cycle-r2cycle)==16
+            && r0cycle!=12 // Ventura/Naos WS2
+            ) 
+          {
 #if defined(SSE_SHIFTER_UNSTABLE_DOLB)
+            if(Shifter.Preload==1)
+            {
+#if defined(SSE_DEBUG) && defined(SSE_OSD_CONTROL)
+              if((OSD_MASK2 & OSD_CONTROL_PRELOAD))
+                TRACE_OSD("y %d R2 %d R0 %d DOLB",scan_y,r2cycle,r0cycle,Shifter.Preload);
+#endif
+              MMU.ShiftSDP(-4); // Death of the Left Border WS1,3,4
+              Shifter.Preload=0;
+            }
+            else 
+#endif
+              if(!(CurrentScanline.Tricks&TRICK_OVERSCAN_MED_RES)
+              && (MMU.WS[WAKE_UP_STATE]==1 && ST_TYPE==STE  
+              && (FreqChangeAtCycle(8)==50) // Closure
+                || MMU.WS[WAKE_UP_STATE]==2 && ST_TYPE!=STE))
+            {
+              if(ST_TYPE==STE)
+              {
+                Shifter.Preload=2; // Closure STE WS1
+                if(shifter_pixel<=4)
+                  shifter_pixel+=6; // hicolor pics shift
+              }
+              else
+              {
+                Shifter.Preload=1; // Closure STF WS2
+                if(r0cycle==16)
+                  Shifter.Preload++; // DOLB WS2
+                if(shifter_pixel<=4)
+                  shifter_pixel+=4; // hicolor pics shift
+              }
+              CurrentScanline.Tricks|=TRICK_OVERSCAN_MED_RES;
+#if defined(SSE_DEBUG) && defined(SSE_OSD_CONTROL)
+              if((OSD_MASK2 & OSD_CONTROL_PRELOAD) && Shifter.Preload)
+                TRACE_OSD("y %d R2 %d R0 %d LOAD %d",scan_y,r2cycle,r0cycle,Shifter.Preload);
+#endif
+            }
+          }//if((r0cycle-r2cycle)==16)
+#elif defined(SSE_SHIFTER_UNSTABLE_DOLB)
 /*  The famous Death of the Left Border
     016:R0000 376:S0000 388:S0002 512:R0002 512:T10011 512:#0230
     We guess that because it's set in HIRES during 16 cycles, this affects
@@ -457,11 +543,7 @@ cycle       0               4               8               12               12
 -27 - 404:C0507 428:C074B 452:C0932 512:R0082 512:TC000 512:#0160
 -26 - 012:R00F0 376:S00F0 384:S0082 444:R0082 456:R00F0 512:R0082 512:T2011 512:#0230
 */
-#if defined(SSE_SHIFTER_HSCROLL_380_B1)
-          if((PreviousScanline.Tricks&TRICK_WRITE_SDP_POST_DE) && Shifter.hscroll0  // so it's STE-only
-#else
-          if((PreviousScanline.Tricks&TRICK_WRITE_SDP_POST_DE) && HSCROLL  // so it's STE-only
-#endif
+          if((PreviousScanline.Tricks&TRICK_WRITE_SDP_POST_DE) && HSCROLL0  // so it's STE-only
 #if defined(SSE_SHIFTER_ARMADA_IS_DEAD)
 /*
 198 - 436:C0501 440:C0747 472:C094E 512:R0082 512:TC000 512:#0160
@@ -472,34 +554,43 @@ cycle       0               4               8               12               12
 #endif
             && scan_y==-26
             ) 
-            shifter_draw_pointer+=-4; // "fixes" Big Wobble shift
-          //TODO: black left border
+            shifter_draw_pointer+=-4; // "fixes" Big Wobble shift //TODO: black left border
 #endif
-#if defined(SSE_SHIFTER_XMAS2004)
+#if defined(SSE_SHIFTER_XMAS2004) 
 /*  Those are just hacks, as ususal for those cases, but they correct
     the last screen of XMAS 2004
-    Strange that it doesn't break things (it will come!)
+    TODO
 */
           if((PreviousScanline.Tricks&TRICK_WRITE_SDP_POST_DE)
             && (r0cycle-r2cycle)==16 && LINEWID)
-#if defined(SSE_SHIFTER_HSCROLL_380_B1)
-            if(!Shifter.hscroll0)
-#else
-            if(!HSCROLL) // we find back this 6bytes difference, this could be simplified
-#endif
+          {
+            if(!HSCROLL0) // we find back this 6bytes difference, this could be simplified
+            {
               shifter_draw_pointer+=4;
+              CurrentScanline.Bytes+=4;//so that it shows in FrameReport (no trick recorded)
+            }
             else
+            {
               shifter_draw_pointer+=-2;
+              CurrentScanline.Bytes+=-2;
+            }
+          }
 #endif
-#if defined(SSE_SHIFTER_SCHNUSDIE)
+#if defined(SSE_SHIFTER_SCHNUSDIE) && !defined(SSE_SHIFTER_UNSTABLE_380)
+/*
+195 - 020:R0000 376:S0000 396:S0002 476:C0502 480:C07B6 492:C0904 512:R0002 512:T1C011 512:#0230
+196 - 020:R0000 376:S0000 396:S0002 476:C0502 480:C07B7 492:C0904 512:R0002 512:T1C011 512:#0230
+197 - 020:R0000 376:S0000 396:S0002 476:C0502 480:C07B8 492:C0904 512:R0002 512:T1C011 512:#0230
+198 - 020:R0000 376:S0000 396:S0002 476:C0502 480:C07B8 492:C0904 512:R0002 512:T1C011 512:#0230
+199 - 020:R0000 376:S0000 396:S0002 424:C0503 452:C071D 472:S0000 500:C092C 512:TC211 512:#0230
+200 - 020:S0002 376:S0000 396:S0002 508:R0002 512:T0010 512:#0204
+201 - 020:R0000 376:S0000 396:S0002 508:R0002 512:T0011 512:#0230
+...
+*/
           if(!(PreviousScanline.Tricks&TRICK_STABILISER)
             && (r0cycle-r2cycle)==24 // 508/20: very long in mode 2
             && shifter_hscroll_extra_fetch 
-#if defined(SSE_SHIFTER_HSCROLL_380_B1)
-            && !Shifter.hscroll0)
-#else
-            && !HSCROLL) // further "targeting"
-#endif
+            && !HSCROLL0) // further "targeting"
             overscan_add_extra+=2; // fixes Reality is a Lie/Schnusdie bottom border
 #endif
         }//hacks
@@ -514,7 +605,9 @@ cycle       0               4               8               12               12
       if(OPTION_PRECISE_MFP)
         MC68901.AdjustTimerB(); //isn't it too late? TODO
 #endif
+#if !defined(SSE_VID_DISABLE_AUTOBORDER)
       overscan=OVERSCAN_MAX_COUNTDOWN;
+#endif
     }
   }
 
@@ -673,8 +766,11 @@ cycle       0               4               8               12               12
 
     Test cases: Forest, Overscan #5, #6
 */
-
+#if defined(SSE_GLUE_004)
   if(!draw_line_off) // equivalent to "trick executed"
+#else
+  if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE)&&!draw_line_off) // equivalent to "trick executed"
+#endif
   {
     // test
     if(CyclesIn>ScanlineTiming[HBLANK_OFF][FREQ_50] 
@@ -708,6 +804,8 @@ cycle       0               4               8               12               12
     12 & 16 for PYM/STCNX left off (which is really doing 4bit hardcsroll)
     D4/Nightmare shift=2:
 082 - 012:R0000 020:R0001 028:R0000 376:S0000 388:S0082 444:R0082 456:R0000 508:R0082 512:T2071
+
+    v3.8: we've added support for Closure STF WS1,3,4 in this part
 */
 
 #if defined(SSE_SHIFTER_TRICKS) && defined(SSE_SHIFTER_MED_OVERSCAN)
@@ -716,8 +814,11 @@ cycle       0               4               8               12               12
   {
     // look for switch to R1
     r1cycle=CycleOfLastChangeToShiftMode(1);
+#if defined(SSE_SHIFTER_UNSTABLE_380)
+    if(r1cycle>=8 && r1cycle<=40) // we'll check another effect
+#else
     if(r1cycle>16 && r1cycle<=40)
-    //if(r1cycle>=12 && r1cycle<=40)
+#endif
     {
       // look for switch to R0 before switch to R1
       r0cycle=PreviousShiftModeChange(r1cycle);
@@ -731,13 +832,47 @@ cycle       0               4               8               12               12
         shifter_pixel+=4; // hmm...
 #endif
 #if defined(SSE_VID_BORDERS) && defined(SSE_VID_BPOC)
+#if defined(SSE_VID_380)
+        if(SSE_HACKS_ON && cycles_in_low_res==16) 
+          if(SideBorderSize==VERY_LARGE_BORDER_SIDE)
+            shifter_pixel+=6; // the '?' is cut-off on the right by some pixel(s)
+          else if(BORDER_40)
+          { // fit text of Best Part of the Creation on a 800 display (pure hack)
+            MMU.ShiftSDP(4);      
+            shifter_pixel+=4; 
+          }
+
+#else
         if(BORDER_40 && SSE_HACKS_ON && cycles_in_low_res==16) 
         { // fit text of Best Part of the Creation on a 800 display (pure hack)
           MMU.ShiftSDP(4);      
           shifter_pixel+=4; 
         }
 #endif
+#endif
       }
+#if defined(SSE_SHIFTER_UNSTABLE_380)
+/*  Demo Closure uses a new technique (2015!) to remove the left border without
+    a stabiliser on an STF.
+    My understanding is that one shift compensates the other, but at this point,
+    we're just adding some hacks to support the demo in STF mode, WS 1,3,4.
+*/
+      // look for switch to R0 after switch to R1
+      else r0cycle=NextShiftModeChange(r1cycle);
+      if(r0cycle!=-1 
+        && r0cycle<Glue.ScanlineTiming[TGlue::GLU_DE_OFF][TGlue::FREQ_50])
+      {
+        int cycles_in_low_res=r0cycle-r1cycle;
+        Shifter.Preload=(cycles_in_low_res/8)%4;
+        CurrentScanline.Tricks|=TRICK_OVERSCAN_MED_RES; //same flag
+        if(shifter_pixel<=4)
+          shifter_pixel+=4;  // hicolor pics shift
+#if defined(SSE_DEBUG) && defined(SSE_OSD_CONTROL)
+        if((OSD_MASK2 & OSD_CONTROL_PRELOAD) && Shifter.Preload)
+          TRACE_OSD("y %d R1 %d R0 %d LOAD %d",scan_y,r1cycle,r0cycle,Shifter.Preload);
+#endif
+      }
+#endif
     }
   }
 #endif
@@ -829,7 +964,9 @@ cycle       0               4               8               12               12
       left_border-=2*6; 
       overscan_add_extra+=6;
       CurrentScanline.Bytes+=6;
+#if !defined(SSE_VID_DISABLE_AUTOBORDER)
       overscan=OVERSCAN_MAX_COUNTDOWN;
+#endif
       TrickExecuted|=TRICK_LINE_PLUS_6;
       TRACE_OSD("+6 y%d",scan_y);
 #endif
@@ -841,7 +978,9 @@ cycle       0               4               8               12               12
       left_border-=2*4; 
       overscan_add_extra+=4;
       CurrentScanline.Bytes+=4;
+#if !defined(SSE_VID_DISABLE_AUTOBORDER)
       overscan=OVERSCAN_MAX_COUNTDOWN;
+#endif
       TrickExecuted|=TRICK_LINE_PLUS_4;
       TRACE_OSD("+4 y%d",scan_y);
 #endif
@@ -862,47 +1001,92 @@ cycle       0               4               8               12               12
     on the STE: the GLU checks frequency earlier because of possible horizontal
     scrolling, and this may interfere with the trick that removes top or bottom
     border.
-    A real headache in Steem, because some apparent "video" issues were in
-    fact MFP or CPU timing issues.
-    Positive cases: Mindbomb/No Shit, Forest, LoSTE screens
-    Spurious to avoid as STE (emulation problem): DSoTS, Overscan
+
+    Positive cases: Mindbomb/No Shit, Forest, LoSTE screens, Closure
+    Spurious to avoid as STE (emulation problem): DSoTS, Overscan,
+    nordlicht_stniccc2015_partyversion
     Spurious unavoidable as STE (correct emulation): BIG Demo #1, ... [many]
     Spurious to avoid as STF: Panic, 3615GEN4-CKM
 */
 
-  // test
-  if(!(CurrentScanline.Tricks&
-    (TRICK_0BYTE_LINE|TRICK_LINE_PLUS_2|TRICK_LINE_PLUS_4|TRICK_LINE_PLUS_6|
-    TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_20)))  
-  {
-    ASSERT(screen_res<2);//was?
+#if defined(SSE_SHIFTER_LINE_PLUS_2_TEST)
 
-    // With this test, "line +2" isn't detected before MMU DE OFF, it's no
-    // problem for ReadVideoCounter(), which doesn't check tricks
-    if(CyclesIn>ScanlineTiming[GLU_DE_OFF][FREQ_60]
-      && FreqAtCycle(ScanlineTiming[GLU_DE_ON][FREQ_60]+2)==60
-      && FreqAtCycle(ScanlineTiming[GLU_DE_OFF][FREQ_60]+2)!=60)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE) 
+   ASSERT(screen_res<2);
+  if(!(CurrentScanline.Tricks&
+    (TRICK_0BYTE_LINE|TRICK_LINE_PLUS_2|TRICK_LINE_PLUS_4|TRICK_LINE_PLUS_6)))
+#elif defined(SSE_SHIFTER_380)
+  if(!(CurrentScanline.Tricks&(TRICK_0BYTE_LINE|TRICK_LINE_PLUS_2))  
+    && left_border && screen_res<2)
+#else
+  if(!(TrickExecuted&TRICK_LINE_PLUS_2) && screen_res<2
+    && left_border && !(CurrentScanline.Tricks&TRICK_0BYTE_LINE) ) 
+#endif
+  {
+
+#if defined(SSE_GLUE_THRESHOLDS)
+    t=Glue.ScanlineTiming[TGlue::GLU_DE_ON][TGlue::FREQ_50]-2;
+#ifdef SSE_SHIFTER_LINE_PLUS_2_HACK_380
+/*  Argh! This time it's nordlicht_stniccc2015_partyversion.
+    STOP, HBI, NOP, hits at 40, 44
+    Maybe there's a bug someplace else.
+    Meanwhile we use this hack (again).
+*/
+    if(SSE_HACKS_ON && ST_TYPE==STE && !HSCROLL0 && scan_y==-29)
+      t+=16;
+#endif
+#elif defined(SSE_SHIFTER_LINE_PLUS_2_STE2)
+/*  TEST11B: 40 for STE
+*/
+    if(ST_TYPE==STE)
+    {
+      t=THRESHOLD_LINE_PLUS_2_STE;
+    }
+#if defined(SSE_STF)
+    else
+      t=THRESHOLD_LINE_PLUS_2_STF+WU_sync_modifier;
+#endif
+#endif
+
+#if defined(SSE_GLUE_THRESHOLDS)
+    if(CyclesIn>=t && FreqAtCycle(t)==60 
+      && ((CyclesIn<Glue.ScanlineTiming[TGlue::GLU_DE_OFF][TGlue::FREQ_60] && shifter_freq==50) 
+      || CyclesIn>=Glue.ScanlineTiming[TGlue::GLU_DE_OFF][TGlue::FREQ_60] &&
+      FreqAtCycle(Glue.ScanlineTiming[TGlue::GLU_DE_OFF][TGlue::FREQ_60])==50))
+#elif defined(SSE_SHIFTER_LINE_PLUS_2_STE2)
+    if(CyclesIn>=t && FreqAtCycle(t)==60 
+      && ((CyclesIn<372+WU_sync_modifier+2 && shifter_freq==50) 
+      || FreqAtCycle(372+WU_sync_modifier+2)==50))
+#else
+    if(CyclesIn>=t && FreqAtCycle(t-2)==60 
+      && ((CyclesIn<372+WU_sync_modifier+2 && shifter_freq==50) 
+      || FreqAtCycle(372+WU_sync_modifier+2)==50))
+#endif
       CurrentScanline.Tricks|=TRICK_LINE_PLUS_2;
   }
 
-  // action
   if((CurrentScanline.Tricks&TRICK_LINE_PLUS_2)
     && !(TrickExecuted&TRICK_LINE_PLUS_2))
   {
+#ifndef SSE_GLUE_LINE_PLUS_2_380
     left_border-=4; // 2 bytes -> 4 cycles
+#endif
     overscan_add_extra+=2;
     CurrentScanline.Bytes+=2;
+#if !defined(SSE_VID_DISABLE_AUTOBORDER)
     overscan=OVERSCAN_MAX_COUNTDOWN;
+#endif
     TrickExecuted|=TRICK_LINE_PLUS_2;
-
 #if defined(SSE_BOILER_TRACE_CONTROL)
-    if(TRACE_MASK_14 & TRACE_CONTROL_SHIFTER_PLUS_2)
+    if(TRACE_MASK_14 & TRACE_CONTROL_LINE_PLUS_2)
     {
+      //REPORT_LINE;
       TRACE_OSD("+2 y%d",scan_y);
-      REPORT_LINE;
     }
 #endif
   }
+#endif//+2
+
 
   ///////////////
   // LINE -106 //
@@ -950,6 +1134,7 @@ cycle       0               4               8               12               12
     the scanline is black, but Steem renders the full scanline in colour.
     It's in fact data of next scanline. We make sure nothing ugly will appear
     (loSTE screens).
+    In some cases, maybe we should display border colour after R0?
 */
     draw_line_off=true;
     memset(PCpal,0,sizeof(long)*16); // all colours black
@@ -979,9 +1164,12 @@ detect unstable: switch MED/LOW - Beeshift
 - 1 (screen shifted by 4 pixels because only 3 words will be read before the 4 are available to draw the bitmap);
 - 0 (screen shifted by 0 pixels because the 4 words will be read to draw the bitmap);
 */
- 
-  if(ST_TYPE!=STE && WAKE_UP_STATE 
-#if defined(SSE_SHIFTER_MED_RES_SCROLLING_360)
+  if(
+#if !defined(SSE_SHIFTER_UNSTABLE_380)
+    ST_TYPE!=STE && 
+#endif
+    WAKE_UP_STATE 
+#if defined(SSE_SHIFTER_MED_RES_SCROLLING_360) // beescroll
     && !Shifter.Preload // would complicate matters
 #else
     && (PreviousScanline.Tricks&TRICK_STABILISER) // shifter is stable
@@ -1021,7 +1209,7 @@ detect unstable: switch MED/LOW - Beeshift
           TRACE_OSD("R%d %d R0 %d LOAD %d",mode,r1cycle,r0cycle,Shifter.Preload);
 #endif
         CurrentScanline.Tricks|=TRICK_UNSTABLE;//don't apply on this line
-//        TRACE_LOG("y%d R1 %d R0 %d cycles in med %d Preload %d\n",scan_y,r1cycle,r0cycle,cycles_in_med,Shifter.Preload);
+        TRACE_LOG("y%d R%d %d R0 %d Preload %d Tricks %X\n",scan_y,mode,r1cycle,r0cycle,Shifter.Preload,CurrentScanline.Tricks);
       }
     }
 #else
@@ -1083,7 +1271,10 @@ detect unstable: switch MED/LOW - Beeshift
     DOLB, Omega: 3 words preloaded but it becomes 2 due to left off
     Dragon: 1 word preloaded    
     It could be that both determining preload and using preload are wrong!
-    v3.6.0: it's one word for +26 or 230; ignore when line +2 (TODO)
+    v3.6.0: it's one word for +26 or 230, because "right off" doesn't load
+    44 extra bytes in the Shifter, even if those are fetched. Loading stops
+    at HBLANK, before HSYNC.
+    ignore when line +2 (TODO)
 */
   
   if(WAKE_UP_STATE && Shifter.Preload && 
@@ -1100,14 +1291,14 @@ detect unstable: switch MED/LOW - Beeshift
   {
 
     // 1. planes
-    int shift_sdp=-(Shifter.Preload%4)*2; // unique formula
+    int shift_sdp=-((Shifter.Preload)%4)*2; // unique formula
     MMU.ShiftSDP(shift_sdp); // correct plane shift
 
 #if defined(SSE_SHIFTER_PANIC) //fun, bad scanlines (unoptimised code!)
     if(WAKE_UP_STATE==WU_SHIFTER_PANIC)
     {
 #if defined(SSE_SHIFTER_UNSTABLE_DOLB) && defined(SSE_STF)
-      ASSERT(Shifter.Preload==1);
+//      ASSERT(Shifter.Preload==1);
       if(SSE_HACKS_ON && ShiftModeChangeAtCycle(8)==-1)   //TODO: Omega
         shift_sdp-=2; // align planes on correct bands
 #endif
@@ -1122,6 +1313,7 @@ detect unstable: switch MED/LOW - Beeshift
       Shifter.Scanline[230/4+1]=shift_sdp;
     }
 #endif
+
     // 2. pixels
     // Beeshift, the full frame shifts in the border
     // Dragon: shifts -4, just like the 230 byte lines below
@@ -1131,8 +1323,12 @@ detect unstable: switch MED/LOW - Beeshift
       left_border-=(Shifter.Preload%4)*4;
       right_border+=(Shifter.Preload%4)*4;
     }
+
 #if defined(SSE_SHIFTER_DOLB_SHIFT1) 
     else  //  hack for DOLB, Omega, centering the pic
+#if defined(SSE_SHIFTER_UNSTABLE_380)
+    if(!(CurrentScanline.Tricks&TRICK_OVERSCAN_MED_RES))
+#endif
     {
 #if defined(SSE_SHIFTER_DOLB1)
       if(SSE_HACKS_ON)
@@ -1154,7 +1350,8 @@ detect unstable: switch MED/LOW - Beeshift
     }
 #endif
     //TRACE_LOG("Y%d Preload %d shift SDP %d pixels %d lb %d rb %d\n",scan_y,Preload,shift_sdp,HblPixelShift,left_border,right_border);
-    CurrentScanline.Tricks|=TRICK_UNSTABLE;
+    CurrentScanline.Tricks|=TRICK_UNSTABLE; //??? remove
+    TrickExecuted|=TRICK_UNSTABLE;
   }
 #endif
 
@@ -1186,6 +1383,11 @@ detect unstable: switch MED/LOW - Beeshift
   if((CurrentScanline.Tricks&TRICK_LINE_MINUS_2)
     &&!(TrickExecuted&TRICK_LINE_MINUS_2))
   {
+  //  ASSERT(!Shifter.Preload);
+#if defined(SSE_SHIFTER_UNSTABLE_380)
+    if(Shifter.Preload)
+      Shifter.Preload=0; //hack for Closure Chipman, can't hurt
+#endif
     overscan_add_extra-=2;
     CurrentScanline.Bytes-=2;
     TrickExecuted|=TRICK_LINE_MINUS_2;
@@ -1249,6 +1451,8 @@ WS                           1         2         3         4
 -60/50 at 378/388            N         Y         N         Y
 
 Tests are arranged to be efficient.
+
+TODO Closure doesn't agree with 'Bees' for WS1?
 */
 
   // test
@@ -1292,7 +1496,9 @@ Tests are arranged to be efficient.
     if(OPTION_PRECISE_MFP)
       MC68901.AdjustTimerB();
 #endif
+#if !defined(SSE_VID_DISABLE_AUTOBORDER)
     overscan=OVERSCAN_MAX_COUNTDOWN; 
+#endif
   }
 
   ////////////////
@@ -1318,12 +1524,22 @@ Tests are arranged to be efficient.
       if(r0cycle>-1 && r0cycle<464) 
       {
         CurrentScanline.Tricks|=TRICK_STABILISER;
-#if defined(SSE_SHIFTER_UNSTABLE)
+#if defined(SSE_SHIFTER_UNSTABLE) && !defined(SSE_GLUE_004)
         Shifter.Preload=0; // "reset" empties RR
 #endif
       }
     }
   }
+
+#if defined(SSE_GLUE_004)
+  if((CurrentScanline.Tricks&TRICK_STABILISER)&&!(TrickExecuted&TRICK_STABILISER))
+  {
+#if defined(SSE_SHIFTER_UNSTABLE)
+    Shifter.Preload=0; // "reset" empties RR
+#endif
+  }
+#endif
+
 #endif
 
   /////////////////////////////////////////////////////////
@@ -1460,7 +1676,9 @@ void TGlue::CheckVerticalOverscan() {
   if(CurrentScanline.Tricks&
     (TRICK_TOP_OVERSCAN|TRICK_BOTTOM_OVERSCAN|TRICK_BOTTOM_OVERSCAN_60HZ))
   {
+#if !defined(SSE_VID_DISABLE_AUTOBORDER)
     overscan=OVERSCAN_MAX_COUNTDOWN;
+#endif
     ASSERT(screen_event.event==event_scanline);
     time_of_next_timer_b=time_of_next_event+cpu_cycles_from_hbl_to_timer_b
       + TB_TIME_WOBBLE; 
@@ -1537,6 +1755,8 @@ void TGlue::EndHBL() {
 #if defined(SSE_SHIFTER_UNSTABLE)
 /*  Shifter unstable (preloaded registers) due to overscan tricks without
     stabiliser.
+    Nice collection of hacks still necessary (compare Overdrive menu/dragon!!!)
+    We just try to add working cases without breaking the rest.
 */
 
   if(WAKE_UP_STATE)
@@ -1548,7 +1768,14 @@ void TGlue::EndHBL() {
 //      &&!((PreviousScanline.Tricks&TRICK_STABILISER)&&PreviousScanline.Bytes==CurrentScanline.Bytes)
       &&!((PreviousScanline.Tricks&TRICK_STABILISER)&&ShiftModeChangeAtCycle(448-512)==2) //?
       &&!(CurrentScanline.Tricks&TRICK_LINE_MINUS_2))
-      Shifter.Preload=1;
+    {
+#ifdef SSE_SHIFTER_UNSTABLE_380
+      if(Shifter.Preload&&(CurrentScanline.Tricks&TRICK_OVERSCAN_MED_RES))
+        Shifter.Preload=0; // preload only for one scanline, I think I'm just simplifying things
+      else
+#endif
+        Shifter.Preload=1;
+    }
     else if(CurrentScanline.Cycles==508 && FetchingLine()
       && FreqAtCycle(0)==60 && FreqAtCycle(464)==60)
       Shifter.Preload=0; // a full 60hz scanline should reset the shifter
@@ -1566,10 +1793,6 @@ void TGlue::EndHBL() {
         LPEEK(i+shift_sdp+4)=Shifter.Scanline[i/4+1];
       }
     }
-#endif
-#if defined(SSE_DEBUG) && defined(SSE_OSD_CONTROL)
-    if((OSD_MASK2 & OSD_CONTROL_PRELOAD) && Shifter.Preload)
-      TRACE_OSD("Preload %d\n",Shifter.Preload);
 #endif
   }
 #endif
@@ -1609,10 +1832,13 @@ void TGlue::IncScanline() {
   if((FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_SHIFTER_TRICKS) 
     && CurrentScanline.Tricks)
     FrameEvents.Add(scan_y,CurrentScanline.Cycles,'T',CurrentScanline.Tricks);
-  if((FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_SHIFTER_TRICKS_BYTES)
-    //&& CurrentScanline.Tricks
-    )
+  if((FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_SHIFTER_TRICKS_BYTES))
     FrameEvents.Add(scan_y,CurrentScanline.Cycles,'#',CurrentScanline.Bytes);
+#if defined(SSE_DEBUG) && defined(SSE_OSD_CONTROL)
+  if((OSD_MASK2 & OSD_CONTROL_PRELOAD) && Shifter.Preload)
+    FrameEvents.Add(scan_y,CurrentScanline.Cycles,'P',Shifter.Preload); // P of Preload, not Palette
+#endif
+
 #endif
 #if defined(SSE_BOILER_TRACE_CONTROL)
 /*  It works but the value has to be validated at least once by clicking
@@ -2070,10 +2296,10 @@ void TGlue::GetNextScreenEvent() {
 
 #if defined(SSE_INT_MFP_RATIO)
   if (n_cpu_cycles_per_second>CpuNormalHz){
+    ASSERT(n_millions_cycles_per_sec>8);
 #else
   if (n_cpu_cycles_per_second>8000000){
 #endif
-    ASSERT(n_millions_cycles_per_sec>8);
     int factor=n_millions_cycles_per_sec;
     screen_event.time*=factor;
     screen_event.time/=8;
@@ -2155,10 +2381,10 @@ void TGlue::SetShiftMode(BYTE NewMode) {
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SHIFTMODE)
     FrameEvents.Add(scan_y,CyclesIn,'R',NewMode); 
 #endif
-  
+
   NewMode&=3; // only two lines would physically exist
   // Update both Shifter and GLU - on the STE it should be one chip, one register
-  Shifter.m_ShiftMode=m_ShiftMode=NewMode; 
+  Shifter.m_ShiftMode=m_ShiftMode=NewMode; //TODO delay!
 
   if(screen_res
 #if defined(SSE_SHIFTER_HIRES_OVERSCAN)
@@ -2281,7 +2507,7 @@ void TGlue::SetSyncMode(BYTE NewSync) {
   m_SyncMode=NewSync&3; // 2bits
 
 #if defined(SSE_SHIFTER_RENDER_SYNC_CHANGES) //no!
-  Render(CyclesIn,DISPATCHER_SET_SYNC);
+  Shifter.Render(CyclesIn,DISPATCHER_SET_SYNC);
 #endif
 
   shifter_freq_idx=(screen_res>=2) ? 2 : ((NewSync&2)?0:1);
@@ -2327,7 +2553,10 @@ void TGlue::Update() {
     As you can see, demo Forest by ljbk (AF) helps us a lot here.
 */
 //#define ST_TYPE 0
-#if defined(SSE_MMU_WU_DL)
+#if defined(SSE_MMU_WU_STE_380)
+  char WU_res_modifier=MMU.ResMod[WAKE_UP_STATE]; //-2, 0, 2
+  char WU_sync_modifier=MMU.FreqMod[WAKE_UP_STATE]; // 0 or 2
+#elif defined(SSE_MMU_WU_DL)
   char WU_res_modifier=(ST_TYPE==STE)?0:MMU.ResMod[WAKE_UP_STATE]; //-2, 0, 2
   char WU_sync_modifier=(ST_TYPE==STE)?0:MMU.FreqMod[WAKE_UP_STATE]; // 0 or 2
 #else
@@ -2336,7 +2565,7 @@ void TGlue::Update() {
 #endif
 
   // DE (Display Enable)
-  // Before the image is really displayed,there's a delay of 28 cycles:
+  // Before the image is really displayed,there's a delay of 28 cycles (27?):
   // 16 for Shifter prefetch, of course, but also 12 "other" 
   // (8 before prefetch, 4 after).
   // Timer B is triggered after those 28 cycles, on "Shifter DE".
@@ -2379,8 +2608,9 @@ void TGlue::Update() {
 
   // Reload video counter
   // Cases: DSOTS, Forest
-  ScanlineTiming[RELOAD_SDP][FREQ_50]=GLU_RELOAD_VIDEO_COUNTER_50
-    +WU_sync_modifier;
+  // value isn't precise and sync/STE modifier aren't known
+  // 64+2 would break DSOTS STF2 though
+  ScanlineTiming[RELOAD_SDP][FREQ_50]= GLU_RELOAD_VIDEO_COUNTER_50+WU_sync_modifier;
 //  if(ST_TYPE==STE)
   //  ScanlineTiming[RELOAD_SDP][FREQ_50]-=2;
   ScanlineTiming[RELOAD_SDP][FREQ_60]=ScanlineTiming[RELOAD_SDP][FREQ_50];//?
@@ -2397,10 +2627,10 @@ void TGlue::Update() {
 /*  A strange aspect of the GLU is that it decides around cycle 54 how
     many cycles the scanline will be, like it had an internal variable for
     this, or various paths.
-    What's more, the cycle where it's decided is about the same on the STE, 
-    despite the fact that GLU DE starts earlier.
+    What's more, the cycle where it's decided is about the same on the STE
+    (2 cycles later actually), despite the fact that GLU DE starts earlier.
 */
-  // Cases: Forest
+  // Cases: Forest, Closure
   cycle_of_scanline_length_decision=GLU_DECIDE_NCYCLES+WU_sync_modifier;
   if(ST_TYPE==STE)
     cycle_of_scanline_length_decision+=2;
@@ -2408,7 +2638,11 @@ void TGlue::Update() {
 
   // Top and bottom border, little trick here, we assume STF is in WU2
   ScanlineTiming[VERT_OVSCN_LIMIT][FREQ_50]=GLU_VERTICAL_OVERSCAN_50+2;
+#ifdef SSE_MMU_WU_STE_380
+  if(MMU.WU[WAKE_UP_STATE]==1)
+#else
   if(ST_TYPE==STE||MMU.WU[WAKE_UP_STATE]==1)
+#endif
     ScanlineTiming[VERT_OVSCN_LIMIT][FREQ_50]-=2;
 
   ScanlineTiming[VERT_OVSCN_LIMIT][FREQ_60]
