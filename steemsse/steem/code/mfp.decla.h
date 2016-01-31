@@ -21,6 +21,12 @@ inline int abs_quick(int i) //was in emu.cpp (!)
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_TIMER_B_NO_WOBBLE)
 #define TB_TIME_WOBBLE (0) // no wobble for Timer B 
 // there's wobble, confirmed by TIMERB01.TOS; TIMERB03.TOS; could be 2?
+
+
+//TODO timer b wobble = gpip delay  -> one or the other?
+//and no delay timer wobble?
+//who knows?
+
 #elif defined(SSE_INT_MFP_TIMER_B_WOBBLE2)
 #define TB_TIME_WOBBLE (rand() & 2)
 #else
@@ -238,14 +244,13 @@ struct TMC68901 {
   BYTE Vector;
   WORD IPR;
   int IrqSetTime;
-#if defined(SSE_INT_MFP_REFACTOR2)
-  int IrqClearTime;
-#endif
   int IackTiming;
 #if defined(SSE_INT_MFP_REFACTOR2)
   void Reset(bool Cold);
-#endif
+  int UpdateNextIrq(int at_time=-1);
+#else
   int UpdateNextIrq(int start_from_irq=15,int at_time=-1);
+#endif
   int WriteTiming;
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
   BYTE Wobble[4];
@@ -255,12 +260,16 @@ struct TMC68901 {
 #endif
 #if defined(SSE_INT_MFP_UTIL)
   TMC68901IrqInfo IrqInfo[16];
+#if !defined(SSE_INT_MFP_EVENT_WRITE) //see all the junk that disappears
   BYTE GetReg(int reg_num,int at_time=-1);
   bool Enabled(int irq, int at_time=-1);
   bool InService(int irq, int at_time=-1);
   bool MaskOK(int irq, int at_time=-1);
   bool Pending(int irq, int at_time=-1);
+#endif
+#if !defined(SSE_INT_MFP_REFACTOR2)
   bool TimerBActive();
+#endif
 #endif
 #if defined(SSE_INT_MFP_RECORD_PENDING_TIMING)
   int PendingTiming[16];
@@ -273,6 +282,9 @@ struct TMC68901 {
 #endif
 #if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
   void AdjustTimerB();
+#endif
+#if defined(SSE_INT_MFP_EVENT_WRITE)
+  bool WritePending;
 #endif
 #endif
 };
@@ -376,6 +388,14 @@ void mfp_check_for_timer_timeouts(); // SS not implemented
 
 #define mfp_interrupt_i_bit(irq) (BYTE(1 << (irq & 7)))
 #define mfp_interrupt_i_ab(irq) (1-((irq & 8) >> 3))
+
+
+#if defined(SSE_INT_MFP_REFACTOR2) // instant IRQ detector
+#define MFP_IRQ ( mfp_reg[MFPR_IERA]&mfp_reg[MFPR_IPRA]&mfp_reg[MFPR_IMRA]\
+                &(~mfp_reg[MFPR_ISRA]) \
+               || mfp_reg[MFPR_IERB]&mfp_reg[MFPR_IPRB]&mfp_reg[MFPR_IMRB]\
+               &(~mfp_reg[MFPR_ISRB]))
+#endif
 
 //TODO check the condition
 #define mfp_interrupt_pend(irq,when_fired)                                       \

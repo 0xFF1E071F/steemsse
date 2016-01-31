@@ -704,6 +704,18 @@ system exclusive start and end messages (F0 and F7).
 #if defined(SSE_INT_MFP_IRQ_TIMING)
             if(OPTION_PRECISE_MFP)
             {
+#if defined(SSE_INT_MFP_EVENT_WRITE)
+/*    If we come here while a write is pending, it should mean that we're at
+      least 4 cycles later, so there's been some delay.
+      We have no choice anyway, registers must be correct at the end of the
+      day and we keep no buffer/agenda for multiple writes.
+*/
+              if(MC68901.WritePending)
+              {
+                TRACE_MFP("IOW Flush MFP event ");
+                event_mfp_write(); //flush
+              }
+#endif
               MC68901.LastRegisterFormerValue=mfp_reg[n]; // save for our hacks
               MC68901.LastRegisterWrittenValue=io_src_b;
             }
@@ -757,7 +769,8 @@ system exclusive start and end messages (F0 and F7).
             }else if (n>=MFPR_IERA && n<=MFPR_IERB){ //enable
 
               
-              TRACE_MFP("F%d y%d c%d PC %X MFP IER%c %X\n",TIMING_INFO,old_pc,'A'+n-MFPR_IERA,io_src_b);
+//              TRACE_MFP("F%d y%d c%d PC %X MFP IER%c %X\n",TIMING_INFO,old_pc,'A'+n-MFPR_IERA,io_src_b);
+              TRACE_MFP("%d PC %X MFP IER%c %X -> %X\n",ACT,old_pc,'A'+n-MFPR_IERA,mfp_reg[n],io_src_b);
 
               // See if timers have timed out before write to enabled. This is needed
               // because MFP_CALC_INTERRUPTS_ENABLED religns the timers (so they would
@@ -772,19 +785,23 @@ system exclusive start and end messages (F0 and F7).
               mfp_reg[n]=io_src_b;
 
               MFP_CALC_INTERRUPTS_ENABLED;
+#if defined(SSE_VAR_REWRITE_380)
+              for (int n=0;n<4;n++){ // we need to save n now
+#else
               for (n=0;n<4;n++){
+#endif
                 bool new_enabled=(mfp_interrupt_enabled[mfp_timer_irq[n]] && (mfp_get_timer_control_register(n) & 7));
                 if (new_enabled && mfp_timer_enabled[n]==0){
                   // Timer should have been running but isn't, must put into future
                   int stage=(mfp_timer_timeout[n]-ABSOLUTE_CPU_TIME);
-                  TRACE_MFP("F%d y%d c%d PC %X enable Timer %C stage %d",TIMING_INFO,old_pc,'A'+n,stage);
+                  //TRACE_MFP("F%d y%d c%d PC %X enable Timer %C stage %d",TIMING_INFO,old_pc,'A'+n,stage);
                   if (stage<=0){
                     stage+=((-stage/mfp_timer_period[n])+1)*mfp_timer_period[n];
                   }else{
                     stage%=mfp_timer_period[n];
                   }
                   mfp_timer_timeout[n]=ABSOLUTE_CPU_TIME+stage;
-                  TRACE_MFP(":%d\n",stage);
+                  //TRACE_MFP(":%d\n",stage);
                 }
                 LOG_ONLY( if (new_enabled!=mfp_timer_enabled[n]) log_to(LOGSECTION_MFP_TIMERS,Str("MFP: ")+HEXSl(old_pc,6)+
                                                   " - Timer "+char('A'+n)+" enabled="+new_enabled); )
@@ -810,23 +827,37 @@ system exclusive start and end messages (F0 and F7).
               mfp_reg[MFPR_IPRA]&=mfp_reg[MFPR_IERA]; //no pending on disabled registers
               mfp_reg[MFPR_IPRB]&=mfp_reg[MFPR_IERB]; //no pending on disabled registers
             }else if (n>=MFPR_IPRA && n<=MFPR_ISRB){ //can only clear bits in IPR, ISR
+#ifdef SSE_DEBUG
+            if (n>=MFPR_IPRA && n<=MFPR_IPRB)
+              TRACE_MFP("%d PC %X MFP IPR%c %X -> %X\n",ACT,old_pc,'A'+n-MFPR_IPRA,mfp_reg[n],mfp_reg[n]&io_src_b);
+            else
+              TRACE_MFP("%d PC %X MFP ISR%c %X -> %X\n",ACT,old_pc,'A'+n-MFPR_ISRA,mfp_reg[n],mfp_reg[n]&io_src_b);
+#endif
               mfp_reg[n]&=io_src_b;
             }else if (n>=MFPR_TADR && n<=MFPR_TDDR){ //have to set counter as well as data register
-              TRACE_MFP("F%d y%d c%d PC %X MFP T%cDR %X\n",TIMING_INFO,old_pc,'A'+n-MFPR_TADR,io_src_b);
+//              TRACE_MFP("F%d y%d c%d PC %X MFP T%cDR %X\n",TIMING_INFO,old_pc,'A'+n-MFPR_TADR,io_src_b);
+              TRACE_MFP("%d PC %X MFP T%cDR %X -> %X\n",ACT,old_pc,'A'+n-MFPR_TADR,mfp_reg[n],io_src_b);
               mfp_set_timer_reg(n,mfp_reg[n],io_src_b);
               mfp_reg[n]=io_src_b;
             }else if (n==MFPR_TACR || n==MFPR_TBCR){ //wipe low-bit on set
-              TRACE_MFP("F%d y%d c%d PC %X MFP T%cCR %X\n",TIMING_INFO,old_pc,'A'+n-MFPR_TACR,io_src_b);
+//              TRACE_MFP("F%d y%d c%d PC %X MFP T%cCR %X\n",TIMING_INFO,old_pc,'A'+n-MFPR_TACR,mfp_reg[n],io_src_b);
+              TRACE_MFP("%d PC %X MFP T%cCR %X -> %X\n",ACT,old_pc,'A'+n-MFPR_TACR,mfp_reg[n],io_src_b);
               io_src_b &= BYTE(0xf);
               mfp_set_timer_reg(n,mfp_reg[n],io_src_b);
               mfp_reg[n]=io_src_b;
             }else if (n==MFPR_TCDCR){
-              TRACE_MFP("F%d y%d c%d PC %X MFP TCDCR %X\n",TIMING_INFO,old_pc,io_src_b);
+//              TRACE_MFP("F%d y%d c%d PC %X MFP TCDCR %X\n",TIMING_INFO,old_pc,io_src_b);
+              TRACE_MFP("%d PC %X MFP TCDCR %X -> %X\n",ACT,old_pc,mfp_reg[n],io_src_b);
               io_src_b&=BYTE(b01110111);
               mfp_set_timer_reg(n,mfp_reg[n],io_src_b);
               mfp_reg[n]=io_src_b;
             }else if (n==MFPR_VR){
+              TRACE_MFP("%d PC %X MFP VR %X -> %X\n",ACT,old_pc,mfp_reg[n],io_src_b);
+#if defined(SSE_VAR_REWRITE_380)
+              mfp_reg[n]=io_src_b;
+#else
               mfp_reg[MFPR_VR]=io_src_b;
+#endif
               if (!MFP_S_BIT){ //SS clearing this bit clears In Service registers
                 mfp_reg[MFPR_ISRA]=0;
                 mfp_reg[MFPR_ISRB]=0;
@@ -836,8 +867,8 @@ system exclusive start and end messages (F0 and F7).
             }else{
               ASSERT(n!=16);
 #ifdef SSE_DEBUG
-//              if (n>=MFPR_IMRA && n<=MFPR_IMRB)
-//                TRACE_MFP("%d PC %X MFP IMR%c %X (IER%c %X)\n",ACT,old_pc,'A'+n-MFPR_IMRA,io_src_b,'A'+n-MFPR_IMRA,mfp_reg[MFPR_IERA+n-MFPR_IMRA]);
+              if (n>=MFPR_IMRA && n<=MFPR_IMRB)
+                TRACE_MFP("%d PC %X MFP IMR%c %X -> %X (IER%c %X)\n",ACT,old_pc,'A'+n-MFPR_IMRA, mfp_reg[n],io_src_b,'A'+n-MFPR_IMRA,mfp_reg[MFPR_IERA+n-MFPR_IMRA]);
 #endif
               mfp_reg[n]=io_src_b;
             }
@@ -845,17 +876,29 @@ system exclusive start and end messages (F0 and F7).
 #if defined(SSE_INT_MFP_IRQ_TIMING)
             if(OPTION_PRECISE_MFP)
             {
-#if !defined(SSE_INT_MFP_REFACTOR2)
+#if !defined(SSE_INT_MFP_REFACTOR2) // later, when register is updated
               MC68901.UpdateNextIrq();
 #endif
-              //if((sr & SR_IPL)<SR_IPL_6) //temp hack to avoid bad spurious (Rainbow Island)
-              {
-                MC68901.WriteTiming=ACT;
-                MC68901.LastRegisterWritten=n;
-#if defined(SSE_INT_MFP_REFACTOR2)
-                MC68901.UpdateNextIrq();
+              MC68901.WriteTiming=ACT;
+              MC68901.LastRegisterWritten=n;
+#if defined(SSE_INT_MFP_EVENT_WRITE)
+/*  We execute the write now, but we'll update the register value after a
+    while. We could do otherwise (delay everything), it was just faster that
+    way.
+*/
+              MC68901.LastRegisterWrittenValue=mfp_reg[n]; // in case there was a mask
+              mfp_reg[n]=MC68901.LastRegisterFormerValue; // revert write for a while
+              ASSERT(!MC68901.WritePending);
+              bool prepare_event=(time_of_next_event==time_of_event_mfp_write);
+              time_of_event_mfp_write=MC68901.WriteTiming+MFP_WRITE_LATENCY;
+              if(prepare_event)
+                prepare_next_event(); // for SPURIOUS.TOS
+              MC68901.WritePending=true;
+              ASSERT(!(MC68901.LastRegisterWrittenValue==0&&io_src_b==0x20));//TODO
+              TRACE_MFP("plan event to write %X on reg %d at %d\n",MC68901.LastRegisterWrittenValue,n,time_of_event_mfp_write);
+#elif defined(SSE_INT_MFP_REFACTOR2) // so, not if event write
+              MC68901.UpdateNextIrq();
 #endif
-              }
             }
 #endif
             // The MFP doesn't update for about 8 cycles, so we should execute the next

@@ -624,18 +624,21 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
 
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)//yes in v3.8
 #define MFP_WRITE_LATENCY 4
-#define MFP_TIMERS_WOBBLE 4//2//1 //2 // if there's wobble, at least 2 seems likelier
+#define MFP_TIMERS_WOBBLE 2//4//2//1 //2 // if there's wobble, at least 2 seems likelier
 #else
-#define MFP_WRITE_LATENCY (4)
+#define MFP_WRITE_LATENCY (5) //5 (=8?) best for TEST10.TOS
 #endif
 
 #define MFP_TIMER_DATA_REGISTER_ADVANCE (4)
 
 #if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY)
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE) 
-#if defined(SSE_GLUE_FRAME_TIMINGS_A) && !defined(SSE_INT_MFP_RATIO_STE3)
-#define MFP_TIMER_SET_DELAY (8) //schnusdie
-#elif defined(SSE_GLUE_FRAME_TIMINGS_A) 
+
+#if defined(SSE_INT_MFP_EVENT_WRITE)
+#define MFP_TIMER_SET_DELAY 10
+#elif defined(SSE_GLUE_FRAME_TIMINGS) && !defined(SSE_INT_MFP_RATIO_STE3)
+#define MFP_TIMER_SET_DELAY 8//(8) //schnusdie
+#elif defined(SSE_GLUE_FRAME_TIMINGS) 
 #define MFP_TIMER_SET_DELAY (7)
 #elif defined(SSE_INT_MFP_RATIO_STE2)
 #define MFP_TIMER_SET_DELAY 8//10 // overscan/schnusdie... [8]
@@ -644,8 +647,12 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
 #endif
 #else
 // if = 12, better not define, it reduces code
-#define MFP_TIMER_SET_DELAY 12 // (12=Steem 3.2)
-#if (MFP_TIMER_SET_DELAY==12)
+#if defined(SSE_INT_MFP_RATIO_STE3)
+#define MFP_TIMER_SET_DELAY 9 // DSOS main but then TEST10 gets bad...
+#else
+#define MFP_TIMER_SET_DELAY 11 //11: OVSC6 STE (12 breaks)
+#endif
+#if (MFP_TIMER_SET_DELAY==12) // (12=Steem 3.2)
 #undef SSE_INT_MFP_TIMERS_STARTING_DELAY
 #endif
 #endif

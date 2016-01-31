@@ -540,7 +540,7 @@ this state, no further memory references are made."
 #endif
 
 #if defined(SSE_INT_MFP_REFACTOR2)
-  bool Iack;
+  bool IackCycle; // flag to avoid starting IACK during IACK (in an emulator, anything goes...)
 #endif
 
 };
