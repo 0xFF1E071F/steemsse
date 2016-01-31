@@ -193,7 +193,7 @@ inline bool mfp_set_pending(int irq,int when_set)
 
 bool mfp_set_pending(int irq,int when_set) { //SS this function travels...
 
-#if defined(SSE_INT_MFP_IRQ_TIMING) && !defined(SSE_INT_MFP_REFACTOR2)
+#if defined(SSE_INT_MFP_IRQ_TIMING) && !defined(SSE_INT_MFP_REFACTOR2) // moved at the end
   if(OPTION_PRECISE_MFP)
   {
 #if defined(SSE_INT_MFP_GPIP_TO_IRQ_DELAY)     
@@ -221,8 +221,11 @@ bool mfp_set_pending(int irq,int when_set) { //SS this function travels...
 #endif
 
   {
+#if defined(SSE_DEBUG)
+    bool was_already_pending=(mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)]&mfp_interrupt_i_bit(irq));
+#endif
     mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)]|=mfp_interrupt_i_bit(irq); // Set pending
-//TRACE_LOG("%d set %d pending...\n",ACT,irq);
+
 #if defined(SSE_INT_MFP_IRQ_DELAY3)//no
     mfp_time_of_set_pending[irq]=when_set; // not always ACT
 #endif
@@ -237,19 +240,19 @@ bool mfp_set_pending(int irq,int when_set) { //SS this function travels...
 #if defined(SSE_INT_MFP_RECORD_PENDING_TIMING)
     MC68901.PendingTiming[irq]=when_set; // record timing
 #endif
+#if defined(SSE_DEBUG)
+    if(was_already_pending)
+      TRACE_MFP("%d MFP irq %d pending again\n",when_set,irq);
+    else
+      TRACE_MFP("%d MFP irq %d pending\n",when_set,irq);
+#endif
+#if defined(SSE_INT_MFP_REFACTOR2)
+    MC68901.UpdateNextIrq(when_set);
+#else
     MC68901.UpdateNextIrq(irq,when_set);
-#ifdef SSE_DEBUG
-    //if(!MC68901.Irq) // shouldn't always be
-    {
-      bool a=MC68901.Enabled(irq,when_set);
-      bool b=MC68901.Pending(irq,when_set);
-      bool c=MC68901.MaskOK(irq,when_set);
-      //ASSERT(MC68901.Irq); 
-    }
 #endif
   }
 #endif
-
     return true;
   }
 #if defined(SSE_DEBUG) && ( !defined(SSE_INT_MFP_IACK_LATENCY2)  \
@@ -468,7 +471,6 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
     We add some time to delay, which we'll correct at timeout for
     next timer.
     update: TEST10B doesn't confirm, but unconlusive, undef
-    update v3.8.0: defined?
 */
             MC68901.Wobble[timer]=(rand()&MFP_TIMERS_WOBBLE);
             mfp_timer_timeout[timer]+=MC68901.Wobble[timer];
@@ -484,23 +486,38 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
           // it will set the pend bit. This is dangerous, messes up LXS!
           // mfp_check_for_timer_timeouts(); // ss not implemented
 
-#if defined(SSE_INT_MFP_CHECKTIMEOUT_ON_STOP) //&& !defined(SSE_INT_MFP_REFACTOR2)
+#if defined(SSE_INT_MFP_CHECKTIMEOUT_ON_STOP) 
 /*  Idea, see just above, this version OK with LXS
 
     TODO: eg Anomaly menu asserts on test Irq + extreme rage
 */
+
+#if defined(SSE_INT_MFP_EVENT_WRITE)
+          if(OPTION_PRECISE_MFP && !new_val 
+            && mfp_timer_enabled[timer] && ACT-mfp_timer_timeout[timer]>=0)
+          {
+            BYTE i_ab=mfp_interrupt_i_ab(mfp_timer_irq[timer]);
+            BYTE i_bit=mfp_interrupt_i_bit(mfp_timer_irq[timer]);
+            if(!(mfp_reg[MFPR_ISRA+i_ab]&i_bit) &&
+              (mfp_reg[MFPR_IERA+i_ab]&mfp_reg[MFPR_IMRA+i_ab]&i_bit))
+            {
+              TRACE_MFP("%d timer %c pending on stop\n",ACT,'A'+timer);
+              mfp_interrupt_pend(mfp_timer_irq[timer],mfp_timer_timeout[timer]);
+            }
+          }
+#else
           if(OPTION_PRECISE_MFP && !new_val 
             && mfp_timer_enabled[timer] // hem... Platoon STX
             && ACT-mfp_timer_timeout[timer]>=0
-            && ! MC68901.InService(mfp_timer_irq[timer]) 
+            && ! MC68901.InService(mfp_timer_irq[timer]) //only use
             && MC68901.Enabled(mfp_timer_irq[timer]) 
             && MC68901.MaskOK(mfp_timer_irq[timer]) )
           {
-            TRACE_LOG("MFP timer %c enabled %d pending on stop; timed out %d cycles ago last serviced %d before\n",
+            TRACE_MFP("MFP timer %c enabled %d pending on stop; timed out %d cycles ago last serviced %d before\n",
              'A'+timer, mfp_timer_enabled[timer],ACT-mfp_timer_timeout[timer],-(mfp_time_of_start_of_last_interrupt[mfp_timer_irq[timer]]-mfp_timer_timeout[timer]));
-
             mfp_interrupt_pend(mfp_timer_irq[timer],mfp_timer_timeout[timer]);
           }
+#endif//event write?
 #endif
 
 
@@ -582,6 +599,7 @@ is not loaded into the timer until it counts through H01.
       RS232_CalculateBaud(bool(mfp_reg[MFPR_UCR] & BIT_7),new_control,0);
     }
   }
+  //TRACE("mfp_timer_period_change[3] %d\n",mfp_timer_period_change[3]);
 }
 
 void mfp_init_timers() // For load state and CPU speed change
@@ -696,157 +714,185 @@ void ASMCALL check_for_interrupts_pending()
     trigger events themselves, related or not to MFP.
     This is far simpler than the 3.7 way. I needed to further familiarise
     myself with Steem's inner working before I could do it.
+    It also adds ACIA events to the test.
 */
       MC68901.IackTiming=ACT; // record start of IACK cycle (also if option C2 not checked)
-
-
       if(OPTION_PRECISE_MFP) // if not, "old" Steem test
       {
-        if(MC68901.Irq) // not real time, must check if it's really set
-        {
-#if defined(SSE_INT_MFP_SPURIOUS)  
-          bool no_real_irq=false; // if it wasn't set, there can be no spurious
+#if defined(SSE_INT_MFP_EVENT_WRITE_SPURIOUS)
+        // make sure we don't start IACK if IRQ should be cleared by a write
+        if(MC68901.WritePending&&ACT-MC68901.WriteTiming>=MFP_WRITE_LATENCY)
+          event_mfp_write(); // this will update MC68901.Irq
 #endif
-#if defined(SSE_INT_MFP_WRITE_DELAY2)
+#if defined(SSE_DEBUG) && defined(SSE_INT_MFP_REFACTOR2)
+        ASSERT(MFP_IRQ==false||MFP_IRQ==true); //  is boolean
+        ASSERT(MFP_IRQ^(!MC68901.Irq)); // synchronised
+#endif
+        if(MC68901.Irq) 
+        {
+          TRACE_MFP("%d Start IACK for irq %d\n",MC68901.IackTiming,MC68901.NextIrq);
+          ASSERT(!M68000.IackCycle);
+          M68000.IackCycle=true;
+#if defined(SSE_INT_MFP_SPURIOUS) 
+          bool no_real_irq=false; // if irq wasn't really set, there can be no spurious
+#endif
+#if defined(SSE_INT_MFP_WRITE_DELAY2) && !defined(SSE_INT_MFP_EVENT_WRITE_SPURIOUS)
 /*  The MFP doesn't update its registers at once after a write.
     There's a delay of estimated 4 CPU cycles.
     This complicates emulation quite a deal.
+    We don't need it if we use the MFP write event.
 */
           bool post_write=(MC68901.IackTiming-MC68901.WriteTiming>=0 
             && MC68901.IackTiming-MC68901.WriteTiming<=MFP_WRITE_LATENCY);
 #endif
+
 #ifndef SSE_DEBUG_MFP_DEACTIVATE_IACK_SUBSTITUTION
 /*  Start the IACK cycle. We don't do the actual pushing yet.
-    But we trigger any event during the cycle.
+    But we trigger any event during the cycle. This could change
+    the irq, or clear two interrupts at once.
     Cases:
     Anomaly menu
     Extreme Rage guest screen
     Final Conflict
     Froggies/OVR
+    Fuzion 77, 78, 84, 146...
     There are many other cases where it happens but emulation seems
     fine without the feature.
 */
           WORD oldsr=sr;
-#if defined(SSE_DEBUG) && defined(SSE_OSD_CONTROL)
-          bool dbg_iack_subst=false;
+#if defined(SSE_DEBUG)
+          char dbg_iack_subst=0;
 #endif
           sr=WORD((sr & (~SR_IPL)) | SR_IPL_6); // already forbid other interrupts
-          while(cpu_cycles && cpu_cycles<=iack_latency) // can be negative: Froggies/OVR
+          while(cpu_cycles<=iack_latency) // can be negative: Froggies/OVR
           {
             iack_latency-=cpu_cycles;
             INSTRUCTION_TIME(cpu_cycles); // hop to event
-            screen_event_vector();  // trigger event
-#if defined(SSE_DEBUG) && defined(SSE_OSD_CONTROL)
-            if(OSD_MASK1 & OSD_CONTROL_IACK)
+            screen_event_vector();  // trigger event //big possible bug:twice??
+#if defined(SSE_DEBUG) 
             {
-              if(screen_event_vector==event_timer_a_timeout
-                || screen_event_vector==event_timer_b_timeout
-                || screen_event_vector==event_timer_c_timeout
-                || screen_event_vector==event_timer_d_timeout
-                || screen_event_vector==event_timer_b) //more?
-                dbg_iack_subst=true;
+              if(screen_event_vector==event_timer_a_timeout)
+                dbg_iack_subst='A';
+              else if(screen_event_vector==event_timer_b_timeout||screen_event_vector==event_timer_b)
+                dbg_iack_subst='B';
+              else if(screen_event_vector==event_timer_c_timeout)
+                dbg_iack_subst='C';
+              else if(screen_event_vector==event_timer_d_timeout)
+                dbg_iack_subst='D';
+              if(dbg_iack_subst)
+                TRACE_MFP("%d IACK run timer %c\n",time_of_next_event,dbg_iack_subst);
+#if defined(SSE_INT_MFP_EVENT_WRITE)
+              else if(screen_event_vector==event_mfp_write)
+                TRACE_MFP("IACK %d wrote %X to MFP reg %d (before: %X)\n",ACT,MC68901.LastRegisterWrittenValue,MC68901.LastRegisterWritten,MC68901.LastRegisterFormerValue);
+              else
+                TRACE_MFP("executed vector %X\n",screen_event_vector);
+#endif             
+            }
+#endif//dbg
+#if defined(SSE_INT_MFP_WRITE_DELAY2) && defined(SSE_INT_MFP_REFACTOR2) \
+  && !defined(SSE_INT_MFP_EVENT_WRITE_SPURIOUS)
+            post_write=(ACT-MC68901.WriteTiming>=0 
+              && ACT-MC68901.WriteTiming<=MFP_WRITE_LATENCY);
+#endif
+#if defined(SSE_INT_MFP_REFACTOR2) && defined(SSE_INT_MFP_EVENT_WRITE_SPURIOUS)
+/*  As soon as an event clears IRQ during IACK, we go in panic mode. 
+    This should trigger spurious interrupt.
+    It could actually depend on when exactly during IACK but in TEST10.TOS,
+    the timer would trigger again during IACK, asserting IRQ (or maybe there's
+    another delay timeout-pend-IRQ, or another bug).
+*/
+            if(!MFP_IRQ)
+            {
+              TRACE_MFP("lost IRQ during IACK %d\n",iack_latency);
+              break;
             }
 #endif
             prepare_next_event();
           }//wend
           sr=oldsr;
 #endif//#ifndef SSE_DEBUG_MFP_DEACTIVATE_IACK_SUBSTITUTION
-          // browse possible irq, starting with highest priority
+
+          // browse 15 MFP irq, starting with highest priority
           char irq; //signed
           for (irq=15;irq>=0;irq--) {
             BYTE i_ab=mfp_interrupt_i_ab(irq);
             BYTE i_bit=mfp_interrupt_i_bit(irq);
-
             if (mfp_reg[MFPR_ISRA+i_ab] & i_bit){ //interrupt in service
               break;  //time to stop looking for pending interrupts
             }
-#if defined(SSE_INT_MFP_WRITE_DELAY2) && defined(SSE_INT_MFP_IS_DELAY)
-/*  v3.8.0, forgot this one
-    It is unlikely in normal code because of SR, but of course, there's
-    a case: Super Hang-On
-
-Timer B
-	move.l d0,-(a7)                                  ; 001AD6: 2F00 
-	move.w d1,-(a7)                                  ; 001AD8: 3F01 
-	move.l a0,-(a7)                                  ; 001ADA: 2F08 
-	clr.b $fffffa1b                                  ; 001ADC: 4239 FFFF FA1B 
-	move.l $ffff8244,d0                              ; 001AE2: 2039 FFFF 8244 
-	stop #$2100                                      ; 001AE8: 4E72 2100 
-it waits for HBI, VBI is far away
-ACIA won't trigger because Timer B is in service
-	movea.l $23402(pc),a0 {$007658}                  ; 001AEC: 207A 5B6A 
-	move.l (a0)+,d0                                  ; 001AF0: 2018 
-	move.l a0,$7658                                  ; 001AF2: 23C8 0000 7658 
-	movea.l $23402(pc),a0 {$007664}                  ; 001AF8: 207A 5B6A 
-	move.b (a0)+,d1                                  ; 001AFC: 1218 
-	move.l a0,$7664                                  ; 001AFE: 23C8 0000 7664 
-	subq.b #1,d1                                     ; 001B04: 5301 
-	beq.s +8 {$001B10}                               ; 001B06: 6708 
-	movea.l (a7)+,a0                                 ; 001B08: 205F 
-	move.b d1,$fffffa21                              ; 001B0A: 13C1 FFFF FA21 
-	stop #$2100                                      ; 001B10: 4E72 2100 
-	tst.b d1                                         ; 001B14: 4A01 
-	beq.s -44 {$001AEC}                              ; 001B16: 67D4 
-	bcs.s +8 {$001B22}                               ; 001B18: 6508 
-	move.b #$8,$fffffa1b                             ; 001B1A: 13FC 0008 FFFF FA1B 
-	move.w (a7)+,d1                                  ; 001B22: 321F 
-	move.l (a7)+,d0                                  ; 001B24: 201F 
-	bclr #$0,$fffffa0f                               ; 001B26: 08B9 0000 FFFF FA0F 
-here ACIA could trigger, D0 is wrong and there's a raster glitch
-It seemed an ACIA bug because it happened when we started using
-the event system instead of agenda (v3.8). 
-In fact, the agenda system would snap ACIA IRQ at the end of a scanline, so
-wouldn't be pending at PC=001B26.
-Real reason: MFP writing delay, effect of clearing service bit delayed for
-4 cycles.
-	rte                                              ; 001B2E: 4E73 
-
-*/
+#if defined(SSE_INT_MFP_WRITE_DELAY2) && defined(SSE_INT_MFP_IS_DELAY) && !defined(SSE_INT_MFP_EVENT_WRITE)
             if(post_write && MC68901.LastRegisterWritten==MFPR_ISRA+i_ab
               && !(MC68901.LastRegisterWrittenValue&i_bit) // was clearing
               && (MC68901.LastRegisterFormerValue&i_bit)) // was set
              {
-              TRACE_LOG("%d MFP delay write ISR%c %X->%X irq %d %d\n",ACT,'A'+i_ab,MC68901.LastRegisterFormerValue,MC68901.LastRegisterWrittenValue,irq,MC68901.IackTiming-MC68901.WriteTiming);
-              break;
+              TRACE_MFP("%d MFP delay write ISR%c %X->%X irq %d %d\n",ACT,'A'+i_ab,MC68901.LastRegisterWrittenValue,MC68901.LastRegisterFormerValue,irq,MC68901.IackTiming-MC68901.WriteTiming);
+#if defined(SSE_INT_MFP_REFACTOR2)
+              ioaccess|=IOACCESS_FLAG_DELAY_MFP;
+#endif
+              break; // fixes Super Hang-On C1 + C2 (if event write MFP not defined)
             }
 #endif
-            BYTE relevant_pending_register=mfp_reg[MFPR_IPRA+i_ab] & i_bit;
-#if defined(SSE_INT_MFP_WRITE_DELAY2)
+            BYTE relevant_pending_register=mfp_reg[MFPR_IPRA+i_ab];
+#if defined(SSE_INT_MFP_WRITE_DELAY2) && !defined(SSE_INT_MFP_EVENT_WRITE)
             if(post_write && MC68901.LastRegisterWritten==MFPR_IPRA+i_ab)
             {
-              TRACE_LOG("%d MFP delay write IPR%c %X->%X irq %d %d\n",ACT,'A'+i_ab,MC68901.LastRegisterFormerValue,relevant_pending_register,irq,MC68901.IackTiming-MC68901.WriteTiming);
+              TRACE_MFP("%d MFP delay write IPR%c %X->%X irq %d %d\n",ACT,'A'+i_ab,relevant_pending_register,MC68901.LastRegisterFormerValue,irq,MC68901.IackTiming-MC68901.WriteTiming);
               relevant_pending_register=MC68901.LastRegisterFormerValue;
-              ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
+#if defined(SSE_INT_MFP_REFACTOR2)
+              ioaccess|=IOACCESS_FLAG_DELAY_MFP;
+#else
+              ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS; // would be cleared
+#endif
             }
 #endif
             if (relevant_pending_register & i_bit){ //is this interrupt pending?
-              BYTE relevant_mask_register=mfp_reg[MFPR_IMRA+i_ab] & i_bit;
-#if defined(SSE_INT_MFP_WRITE_DELAY2)
+              BYTE relevant_mask_register=mfp_reg[MFPR_IMRA+i_ab]
+#if !defined(SSE_INT_MFP_REFACTOR2)
+              & i_bit
+#endif
+                ;
+#if defined(SSE_INT_MFP_WRITE_DELAY2) && !defined(SSE_INT_MFP_EVENT_WRITE)
               // eg Audio Artistic Demo
               if(post_write && MC68901.LastRegisterWritten==MFPR_IMRA+i_ab)
               {
-                TRACE_LOG("%d MFP delay write IMR%c %X->%X irq %d %d\n",ACT,'A'+i_ab,MC68901.LastRegisterFormerValue,relevant_mask_register,irq,MC68901.IackTiming-MC68901.WriteTiming);
+                TRACE_MFP("%d MFP delay write IMR%c %X->%X irq %d %d\n",ACT,'A'+i_ab,relevant_mask_register,MC68901.LastRegisterFormerValue,irq,MC68901.IackTiming-MC68901.WriteTiming);
                 relevant_mask_register=MC68901.LastRegisterFormerValue;
-                ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;//always? but it can't hurt
+#if defined(SSE_INT_MFP_REFACTOR2)
+                ioaccess|=IOACCESS_FLAG_DELAY_MFP;
+#else
+                ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS; // would be cleared
+#endif
+#if defined(SSE_INT_MFP_SPURIOUS)  
                 if(!(relevant_mask_register&i_bit))
                   no_real_irq=true;
+#endif
               }
 #endif
-              if(relevant_mask_register&i_bit) {
+              if(relevant_mask_register&i_bit) 
+              {
                 ASSERT(mfp_reg[MFPR_IERA+i_ab] & i_bit);
+                ASSERT(!(mfp_reg[MFPR_ISRA+i_ab] & i_bit));
                 {
 #if defined(SSE_INT_MFP_IRQ_TIMING) && defined(SSE_INT_MFP_GPIP_TO_IRQ_DELAY)
 /*  If the GPIP input has just transitioned, IRQ hasn't fired 
     yet. Fixes V8 Music System.
+    Note: this is maintained also with SSE_INT_MFP_EVENT_WRITE contrary to 
+    other tests above.
 */
                   if( MC68901.IrqInfo[irq].IsGpip 
                     && MC68901.IackTiming-MC68901.IrqSetTime<0 
                     && MC68901.IackTiming-MC68901.IrqSetTime>=-4)
                   {
                       ASSERT(irq<4||irq==6||irq==7||irq>13);
-                      TRACE_LOG("MFP delay GPIP-irq %d %d\n",irq,MC68901.IackTiming-MC68901.IrqSetTime);
-                      ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;//come back later
+                      TRACE_MFP("MFP delay GPIP-irq %d %d\n",irq,MC68901.IackTiming-MC68901.IrqSetTime);
+#if defined(SSE_INT_MFP_REFACTOR2)
+                      ioaccess|=IOACCESS_FLAG_DELAY_MFP;
+#else
+                      ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS; // would be cleared
+#endif
+#if defined(SSE_INT_MFP_SPURIOUS)  
                       no_real_irq=true;
+#endif
                       continue; // examine lower irqs too
                   }
 #endif    
@@ -866,15 +912,17 @@ Real reason: MFP writing delay, effect of clearing service bit delayed for
 #if defined(SSE_INT_MFP_SPURIOUS)          
 /*  The dangerous spurious test.
     It triggers automatically at the end of IACK if we couldn't find an irq.
-    post_write is a safeguard against false alerts.
-    For the moment, the previous test in v3.7 was better for my test program
-    SPURIOUS.TOS. It could be due to MFP timer delays, on set, on trigger. TODO
 */
-          if(irq==-1 && post_write && !no_real_irq) // couldn't find one and there was no break
+          if(irq==-1 
+#if !defined(SSE_INT_MFP_EVENT_WRITE_SPURIOUS)
+            && post_write 
+#endif
+            && !no_real_irq) // couldn't find one and there was no break
           {
             TRACE_OSD("Spurious!");
-            TRACE_MFP("PC %X Spurious!\n",old_pc);
-#ifndef SSE_BETA //enable for official Boiler
+            TRACE_MFP("%d PC %X Spurious!\n",ACT,old_pc);
+            TRACE_MFP("IRQ %d (%d) IERA %X IPRA %X IMRA %X ISRA %X IERB %X IPRB %X IMRB %X ISRB %X\n",MC68901.Irq,MC68901.NextIrq,mfp_reg[MFPR_IERA],mfp_reg[MFPR_IPRA],mfp_reg[MFPR_IMRA],mfp_reg[MFPR_ISRA],mfp_reg[MFPR_IERB],mfp_reg[MFPR_IPRB],mfp_reg[MFPR_IMRB],mfp_reg[MFPR_ISRB]);
+#ifdef SSE_BETA //enable for public beta
             BRK(Spurious interrupt); 
 #endif
             int iack_cycles=ACT-MC68901.IackTiming;
@@ -887,6 +935,7 @@ Real reason: MFP writing delay, effect of clearing service bit delayed for
             sr=WORD((sr & (~SR_IPL)) | SR_IPL_6); // the CPU does that anyway
           }
 #endif//spurious-380
+          M68000.IackCycle=false;
         }//MC68901.Irq
       }//precise
       // no C2 option = Steem 3.2
@@ -1146,7 +1195,8 @@ Real reason: MFP writing delay, effect of clearing service bit delayed for
 
 void mfp_interrupt(int irq,int when_fired) {
 
-  // we redo some tests for the RS232 part that comes directly here (TODO :( ):
+  // we redo some tests for the RS232 part that comes directly here, and also
+  // when option C2 isn't checked!
   if(!(mfp_interrupt_enabled[irq]) || (sr & SR_IPL) >= SR_IPL_6
     || (ioaccess & (IOACCESS_FLAG_DELAY_MFP | IOACCESS_INTERCEPT_OS | IOACCESS_INTERCEPT_OS2))
     || ((mfp_reg[MFPR_IMRA+mfp_interrupt_i_ab(irq)] & mfp_interrupt_i_bit(irq))==0)
@@ -1156,7 +1206,9 @@ void mfp_interrupt(int irq,int when_fired) {
     TRACE_LOG("MFP irq denied\n"); // funny message
     return;
   }
+
   M68K_UNSTOP;
+
   mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)]&=BYTE(~mfp_interrupt_i_bit(irq));
   /*
   There are two end-of-interrupt modes: the automatic end-of-interrupt mode and
@@ -1192,7 +1244,7 @@ void mfp_interrupt(int irq,int when_fired) {
     // cleared by program
     mfp_reg[MFPR_ISRA+mfp_interrupt_i_ab(irq)]|=mfp_interrupt_i_bit(irq);
   }else{ // SS automatic
-#if !defined(SSE_INT_MFP_AUTO_NO_IS_CLEAR)
+#if !defined(SSE_INT_MFP_AUTO_NO_IS_CLEAR__)//recheck...
     // doc doesn't say it's cleared?
     mfp_reg[MFPR_ISRA+mfp_interrupt_i_ab(irq)]&=BYTE(~mfp_interrupt_i_bit(irq));
 #endif
@@ -1208,10 +1260,10 @@ void mfp_interrupt(int irq,int when_fired) {
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_BLT_BLIT_MODE_INTERRUPT)
-  /*  Stop blitter to start interrupt. This is a bugfix and necessary for Lethal
-  Xcess if we use the correct BLIT mode cycles (64x4).
-  v3.7 This mod is better placed here, when there's an actual interrupt.
-  */
+/*  Stop blitter to start interrupt. This is a bugfix and necessary for Lethal
+    Xcess if we use the correct BLIT mode cycles (64x4).
+    v3.7 This mod is better placed here, when there's an actual interrupt.
+*/
   if(Blit.HasBus) // opt: we assume the test is quicker than clearing
     Blit.HasBus=false; 
 #endif
@@ -1231,7 +1283,8 @@ void mfp_interrupt(int irq,int when_fired) {
 #endif
     FrameEvents.Add(scan_y,LINECYCLES,'I',0x60+irq);
 #endif
-  TRACE_INT("%d %d %d (%d) PC %X IRQ %d VEC %X ",TIMING_INFO,ACT,old_pc,irq,LPEEK(vector));
+  //TRACE_INT("%d %d %d (%d) PC %X IRQ %d VEC %X ",TIMING_INFO,ACT,old_pc,irq,LPEEK(vector));
+  TRACE_INT("%d PC %X IRQ %d VEC %X ",ACT,old_pc,irq,LPEEK(vector));
   switch(irq)
   {
   case 0:TRACE_INT("Centronics busy\n");          break;
@@ -1251,6 +1304,10 @@ void mfp_interrupt(int irq,int when_fired) {
   case 14:TRACE_INT("RS-232 Ring detect\n");      break;             
   case 15:TRACE_INT("Monochrome Detect\n");       break;                     
   }//sw
+
+//TRACE("mfp_timer_period_change[3] %d\n",mfp_timer_period_change[3]);
+
+
 #if defined(SSE_BOILER_FRAME_INTERRUPTS)
   Debug.FrameInterrupts|=4;
   Debug.FrameMfpIrqs|= 1<<irq;
@@ -1457,14 +1514,10 @@ void TMC68901::Init() {
   IrqInfo[5].Timer=2;  // timer C
   IrqInfo[8].Timer=1;  // timer B
   IrqInfo[13].Timer=0;  // timer A
-  ASSERT( IrqInfo[5].IsGpip==0 );
-#if defined(SSE_INT_MFP_REFACTOR2)
-  Irq=false;//?
-#endif
 #endif
 }
 
-#if defined(SSE_INT_MFP_UTIL)
+#if defined(SSE_INT_MFP_UTIL) 
 /* we already may use from Steem 3.2:
 #define mfp_interrupt_i_bit(irq) (BYTE(1 << (irq & 7)))
 #define mfp_interrupt_i_ab(irq) (1-((irq & 8) >> 3))
@@ -1477,12 +1530,17 @@ problem: we're anticipating on a next version but use some functions
 already...
 */
 
+#if !defined(SSE_INT_MFP_EVENT_WRITE)
+/*  Adding an event is always a load on emulation, but here it does
+    away with some little check functions that could be a drain as well.
+*/
 
 BYTE TMC68901::GetReg(int reg_num,int at_time) {
   if(at_time==-1)
     at_time=ACT;
   BYTE reg= (reg_num==LastRegisterWritten 
-    && at_time-WriteTiming>=0 && at_time-WriteTiming<=MFP_SPURIOUS_LATENCY) //should be write_latency
+    && at_time-WriteTiming>=0 
+    && at_time-WriteTiming<=MFP_SPURIOUS_LATENCY) //should be write_latency
     ? LastRegisterFormerValue : mfp_reg[reg_num];
   //and update if necessary in setpending
   return reg;
@@ -1516,6 +1574,7 @@ bool TMC68901::InService(int irq,int at_time){
 
 
 bool TMC68901::MaskOK(int irq,int at_time) { //used
+//  ASSERT(at_time==-1);
   int reg_num=MFPR_IMRA+mfp_interrupt_i_ab(irq);
 #if defined(SSE_INT_MFP_UTIL2)
   BYTE reg=GetReg(reg_num,at_time);
@@ -1535,7 +1594,6 @@ bool TMC68901::Pending(int irq,int at_time) {
   int reg_num=MFPR_IMRA+mfp_interrupt_i_ab(irq); // argh! mask
   BYTE reg=GetReg(reg_num); //argh! timing
 #endif
-  
   // if it times out just before the effective write to reg
   // we're checking later anyway and it's rightfully cleared
   bool is_pending= 
@@ -1545,13 +1603,15 @@ bool TMC68901::Pending(int irq,int at_time) {
     ((reg & mfp_interrupt_i_bit(irq)));
   return is_pending;
 }
+#endif
 
-
-bool TMC68901::TimerBActive() { //used
+#if !defined(SSE_INT_MFP_REFACTOR2)
+bool TMC68901::TimerBActive() {
   bool timer_b_active=mfp_reg[MFPR_TBCR]==8 && mfp_interrupt_enabled[8] 
     && MaskOK(8);
   return timer_b_active;
 }
+#endif
 
 #endif
 
@@ -1566,6 +1626,8 @@ bool TMC68901::TimerBActive() { //used
     but negated right after, yet the CPU started a IACK cycle.
     On the ST that should produce 24 bombs.
     Tests not perfect, work with test programs (without breaking everything).
+    In v3.8, those complicated tests have been replaced with something
+    more simple.
 */
 
 bool TMC68901::CheckSpurious(int irq) {
@@ -1586,7 +1648,8 @@ bool TMC68901::CheckSpurious(int irq) {
 	bra.s -6 {$012DC6}                               ; 012DCA: 60FA 
 
 This should trigger spurious but it doesn't on real STE.
-Fix is pragmatic (TEST10D still working).
+Fix is pragmatic (TEST10 still working).
+This whole part isn't compiled now anayway (3.8)
 */
   BYTE mfp_write_latency=MFP_WRITE_LATENCY;
   if(LastRegisterWritten==MFPR_IMRA||LastRegisterWritten==MFPR_IMRB) //mask
@@ -1699,40 +1762,49 @@ Fix is pragmatic (TEST10D still working).
 /*  This logic is instant on the MFP.
     The IRQ line depends only on MFP registers, not on IPL in the CPU.
     It may be asserted then later negated without the CPU handling it.
+    In v3.7, it was useful for some cases.
+    In v3.8 it has become vital for precise MFP emu.
 */
 
-// this is used for the GPIP delay and CheckSpurious
-// called by mfp_set_pending, io_write_b, mfp_interrupt
+#if defined(SSE_INT_MFP_REFACTOR2)
+int TMC68901::UpdateNextIrq(int at_time) {
+#else
 int TMC68901::UpdateNextIrq(int start_from_irq,int at_time) {
+#endif
   ASSERT(OPTION_PRECISE_MFP);
   NextIrq=-1; //default: none in sight
-#if defined(SSE_INT_MFP_REFACTOR2)
-  bool old_irq=Irq;
-#endif
   Irq=false;
-  if(at_time==-1)
+  if(at_time==-1)//default
     at_time=ACT;
+#if defined(SSE_INT_MFP_REFACTOR2)
+  if(MFP_IRQ) // global test before we check each irq
+    for (int irq=15;irq>=0;irq--) { //need to check all
+#else
   for (int irq=start_from_irq;irq>=0;irq--) {
+#endif
     BYTE i_ab=mfp_interrupt_i_ab(irq);
     BYTE i_bit=mfp_interrupt_i_bit(irq);
 #if !defined(SSE_INT_MFP_REFACTOR2)
     if(InService(irq,at_time))
       break;
 #endif
+#if defined(SSE_INT_MFP_EVENT_WRITE)
+    if(i_bit // instant test thanks to event system
+    & mfp_reg[MFPR_IERA+i_ab]&mfp_reg[MFPR_IPRA+i_ab]&mfp_reg[MFPR_IMRA+i_ab])
+#else
     if(Enabled(irq,at_time) && Pending(irq,at_time) && MaskOK(irq,at_time))
+#endif
     {
-      Irq=true; // line is asserted 
+      Irq=true; // line is asserted by the MFP
       NextIrq=irq;
       IrqSetTime=at_time;
-//      TRACE("PC %X set irq %d at %d\n",old_pc,irq,at_time);
+      TRACE_MFP("%d MFP IRQ (%d)\n",ACT,NextIrq);
       break;
     }
   }//nxt irq
-#if defined(SSE_INT_MFP_REFACTOR2)
-  if(old_irq&&!Irq)
-  {
-    IrqClearTime=at_time;
-  }
+#if defined(SSE_INT_MFP_REFACTOR2) && defined(SSE_DEBUG)
+  if(!Irq) 
+    ASSERT(!MFP_IRQ);
 #endif
   return NextIrq;
 }
@@ -1795,7 +1867,7 @@ void TMC68901::CalcCyclesFromHblToTimerB(int freq) {
 #if defined(SSE_INT_MFP_REFACTOR2)
 void TMC68901::Reset(bool Cold) {
   Irq=false;
-  IrqSetTime=IrqClearTime=ACT;
+  IrqSetTime=ACT;
 }
 #endif
 

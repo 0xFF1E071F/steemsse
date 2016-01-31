@@ -419,6 +419,10 @@ void inline prepare_event_again() //might be an earlier one
     PREPARE_EVENT_CHECK_FOR_TIMER_TIMEOUTS(3);
     
     PREPARE_EVENT_CHECK_FOR_TIMER_B;
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_EVENT_WRITE)
+    PREPARE_EVENT_CHECK_FOR_MFP_WRITE;
+#endif
     
     PREPARE_EVENT_CHECK_FOR_DEBUG;
     
@@ -472,6 +476,10 @@ void inline prepare_next_event() //SS check this "inline" thing
     PREPARE_EVENT_CHECK_FOR_TIMER_TIMEOUTS(3);
     
     PREPARE_EVENT_CHECK_FOR_TIMER_B;
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_EVENT_WRITE)
+    PREPARE_EVENT_CHECK_FOR_MFP_WRITE;
+#endif
       
     PREPARE_EVENT_CHECK_FOR_DEBUG;
       
@@ -512,6 +520,16 @@ inline void handle_timeout(int tn) {
     " period was "+mfp_timer_period[tn]);
 
   if (mfp_timer_period_change[tn]){    
+#if defined(SSE_INT_MFP_EVENT_WRITE)
+/*  Here we go again...
+    Audio Artistic, timer D would count through before the write
+*/
+    if(MC68901.WritePending)
+    {
+      TRACE_MFP("Handle time-out Flush MFP event ");
+      event_mfp_write(); //flush
+    }
+#endif
     MFP_CALC_TIMER_PERIOD(tn);          
     mfp_timer_period_change[tn]=0;       
   }
@@ -549,8 +567,8 @@ inline void handle_timeout(int tn) {
 #endif
 #endif
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
-  MC68901.Wobble[tn]=rand()&MFP_TIMERS_WOBBLE;
-  new_timeout+=MC68901.Wobble[tn];
+   new_timeout+=MC68901.Wobble[tn]=rand()&MFP_TIMERS_WOBBLE;
+  //new_timeout+=MC68901.Wobble[tn];
 #endif
   }
 #if defined(SSE_INT_MFP_IACK_LATENCY4)
@@ -2067,6 +2085,39 @@ void event_ikbd2() {
 }
 
 #endif//ikbd
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_EVENT_WRITE)
+
+int time_of_event_mfp_write;
+
+void event_mfp_write() {
+  
+  if(OPTION_PRECISE_MFP && MC68901.WritePending
+    //&& ACT-MC68901.WriteTiming>0
+    )
+  {
+    //ASSERT(ACT>=time_of_event_mfp_write);
+    ASSERT(time_of_event_mfp_write!=MC68901.WriteTiming);
+//    ASSERT(ACT!=MC68901.WriteTiming);
+    TRACE_MFP("%d execute event_mfp_write(): mfp_reg[%d]=%X\n",ACT,MC68901.LastRegisterWritten,MC68901.LastRegisterWrittenValue);
+    //TRACE("mfp_timer_period_change[3] %d\n",mfp_timer_period_change[3]);
+    //ASSERT(MC68901.WritePending);
+    mfp_reg[MC68901.LastRegisterWritten]=MC68901.LastRegisterWrittenValue;
+
+
+
+    MC68901.UpdateNextIrq(); // for example to clear IRQ
+    MC68901.WritePending=false;
+    if(MC68901.Irq && !M68000.IackCycle)
+      check_for_interrupts_pending();   // radical? //test10 vs audio artistic
+
+  }
+  else
+    time_of_event_mfp_write=time_of_next_event+n_cpu_cycles_per_second;
+}
+
+
+#endif//mfp
 
 #endif//seagal
 

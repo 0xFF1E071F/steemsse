@@ -351,6 +351,27 @@ void event_ikbd(),event_ikbd2();
   }
 
 #endif//ikbdevt
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_EVENT_WRITE)
+/*  v3.8
+    We create an event for write to MFP registers, because the
+    alternative is getting too complicated.
+    The event triggers MFP_WRITE_LATENCY cycles later, which
+    practically means after the next instruction, or during
+    the IACK cycle.
+*/
+
+void event_mfp_write();
+extern int time_of_event_mfp_write; //temp?
+
+#define PREPARE_EVENT_CHECK_FOR_MFP_WRITE       \
+  if ((time_of_next_event-time_of_event_mfp_write) >= 0){                 \
+    time_of_next_event=time_of_event_mfp_write;  \
+    screen_event_vector=event_mfp_write;                    \
+  } 
+
+#endif//mfp
+
 #undef EXT
 #undef INIT
 
