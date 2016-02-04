@@ -894,7 +894,6 @@ system exclusive start and end messages (F0 and F7).
               if(prepare_event)
                 prepare_next_event(); // for SPURIOUS.TOS
               MC68901.WritePending=true;
-              ASSERT(!(MC68901.LastRegisterWrittenValue==0&&io_src_b==0x20));//TODO
               TRACE_MFP("plan event to write %X on reg %d at %d\n",MC68901.LastRegisterWrittenValue,n,time_of_event_mfp_write);
 #elif defined(SSE_INT_MFP_REFACTOR2) // so, not if event write
               MC68901.UpdateNextIrq();
@@ -905,6 +904,11 @@ system exclusive start and end messages (F0 and F7).
             // instruction before causing any interrupts
             //SS this seems suspicious but it is actually needed: Super Hang-On TODO
             ioaccess=old_ioaccess;
+#if defined(SSE_INT_MFP_REFACTOR2A)
+            if(OPTION_PRECISE_MFP)
+                ioaccess|=IOACCESS_FLAG_DELAY_MFP; // we manage delay another way
+            else
+#endif
             if ((ioaccess & (IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE | IOACCESS_FLAG_FOR_CHECK_INTRS |
                                 IOACCESS_FLAG_DELAY_MFP))==0){
               ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE;
