@@ -695,6 +695,18 @@ when it does).
           else if (addr<0xfffa30)
           {
             int n=(addr-0xfffa01) >> 1;
+
+#if defined(SSE_INT_MFP_EVENT_WRITE)
+/*    If a write is pending, maybe it's time to execute it so that the register
+      we read is the correct one.
+      Especially in case of ORI or the like... (My Socks Are Weapons)
+*/
+            if(OPTION_PRECISE_MFP && MC68901.WritePending)
+            {
+              TRACE_MFP("IOR Flush MFP event ");
+              event_mfp_write(); //flush
+            }
+#endif
             if (n>=MFPR_TADR && n<=MFPR_TDDR){ //timer data registers
 //#undef SSE_INT_MFP_READ_DELAY1
 #if defined(SSE_INT_MFP_READ_DELAY1)
