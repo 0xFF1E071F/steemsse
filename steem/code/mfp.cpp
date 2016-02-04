@@ -726,10 +726,19 @@ void ASMCALL check_for_interrupts_pending()
 #endif
 #if defined(SSE_DEBUG) && defined(SSE_INT_MFP_REFACTOR2)
         ASSERT(MFP_IRQ==false||MFP_IRQ==true); //  is boolean
+#if !defined(SSE_INT_MFP_REFACTOR2A)
         ASSERT(MFP_IRQ^(!MC68901.Irq)); // synchronised
 #endif
+#endif
+#if defined(SSE_INT_MFP_REFACTOR2A)
         if(MC68901.Irq) 
+#else
+        if(MFP_IRQ)
+#endif
         {
+#if defined(SSE_INT_MFP_REFACTOR2A)
+          ASSERT(MFP_IRQ);
+#endif
           TRACE_MFP("%d Start IACK for irq %d\n",MC68901.IackTiming,MC68901.NextIrq);
           ASSERT(!M68000.IackCycle);
           M68000.IackCycle=true;
@@ -764,7 +773,7 @@ void ASMCALL check_for_interrupts_pending()
           char dbg_iack_subst=0;
 #endif
           sr=WORD((sr & (~SR_IPL)) | SR_IPL_6); // already forbid other interrupts
-          while(cpu_cycles<=iack_latency) // can be negative: Froggies/OVR
+          while(cpu_cycles&&cpu_cycles<=iack_latency) // can be negative: Froggies/OVR
           {
             iack_latency-=cpu_cycles;
             INSTRUCTION_TIME(cpu_cycles); // hop to event
@@ -780,12 +789,12 @@ void ASMCALL check_for_interrupts_pending()
               else if(screen_event_vector==event_timer_d_timeout)
                 dbg_iack_subst='D';
               if(dbg_iack_subst)
-                TRACE_MFP("%d IACK run timer %c\n",time_of_next_event,dbg_iack_subst);
+                TRACE_MFP(">IACK run timer %c at %d\n",dbg_iack_subst,time_of_next_event);
 #if defined(SSE_INT_MFP_EVENT_WRITE)
               else if(screen_event_vector==event_mfp_write)
-                TRACE_MFP("IACK %d wrote %X to MFP reg %d (before: %X)\n",ACT,MC68901.LastRegisterWrittenValue,MC68901.LastRegisterWritten,MC68901.LastRegisterFormerValue);
+                TRACE_MFP(">IACK %d wrote %X to MFP reg %d (before: %X)\n",ACT,MC68901.LastRegisterWrittenValue,MC68901.LastRegisterWritten,MC68901.LastRegisterFormerValue);
               else
-                TRACE_MFP("executed vector %X\n",screen_event_vector);
+                TRACE_MFP(">IACK executed vector %X\n",screen_event_vector);
 #endif             
             }
 #endif//dbg
@@ -1789,8 +1798,12 @@ int TMC68901::UpdateNextIrq(int start_from_irq,int at_time) {
       break;
 #endif
 #if defined(SSE_INT_MFP_EVENT_WRITE)
-    if(i_bit // instant test thanks to event system
+    if((i_bit // instant test thanks to event system
     & mfp_reg[MFPR_IERA+i_ab]&mfp_reg[MFPR_IPRA+i_ab]&mfp_reg[MFPR_IMRA+i_ab])
+#if defined(SSE_INT_MFP_REFACTOR2A)
+    && !(i_bit&mfp_reg[MFPR_ISRA+i_ab])
+#endif
+    )
 #else
     if(Enabled(irq,at_time) && Pending(irq,at_time) && MaskOK(irq,at_time))
 #endif
@@ -1801,10 +1814,14 @@ int TMC68901::UpdateNextIrq(int start_from_irq,int at_time) {
       TRACE_MFP("%d MFP IRQ (%d)\n",ACT,NextIrq);
       break;
     }
+#if defined(SSE_INT_MFP_REFACTOR2A)
+    else if((i_bit&mfp_reg[MFPR_ISRA+i_ab]))
+      break; // no IRQ possible then (was bug)
+#endif
   }//nxt irq
-#if defined(SSE_INT_MFP_REFACTOR2) && defined(SSE_DEBUG)
+#if defined(SSE_INT_MFP_REFACTOR2) && !defined(SSE_INT_MFP_REFACTOR2A) && defined(SSE_DEBUG)
   if(!Irq) 
-    ASSERT(!MFP_IRQ);
+   ASSERT(!MFP_IRQ);
 #endif
   return NextIrq;
 }

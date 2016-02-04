@@ -2579,6 +2579,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_INT_MFP_RECORD_PENDING_TIMING
 #define SSE_INT_MFP_REFACTOR2 //simpler way for IACK and Spurious
 #if defined(SSE_INT_MFP_REFACTOR2)
+#define SSE_INT_MFP_REFACTOR2A//debug...
 #undef SSE_INT_MFP_IACK_LATENCY4 // adios "skip timer" hack
 #define SSE_INT_MFP_EVENT_WRITE 
 #if defined(SSE_INT_MFP_EVENT_WRITE)
