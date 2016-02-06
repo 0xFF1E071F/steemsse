@@ -697,11 +697,12 @@ when it does).
             int n=(addr-0xfffa01) >> 1;
 
 #if defined(SSE_INT_MFP_EVENT_WRITE)
-/*    If a write is pending, maybe it's time to execute it so that the register
-      we read is the correct one.
+/*    If a write on the same register is pending, maybe it's time to
+      execute it so that the register we read is the correct one.
       Especially in case of ORI or the like... (My Socks Are Weapons)
 */
-            if(OPTION_PRECISE_MFP && MC68901.WritePending)
+            if(OPTION_PRECISE_MFP && MC68901.WritePending 
+              && n==MC68901.LastRegisterWritten)
             {
               TRACE_MFP("IOR Flush MFP event ");
               event_mfp_write(); //flush

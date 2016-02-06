@@ -773,7 +773,7 @@ void ASMCALL check_for_interrupts_pending()
           char dbg_iack_subst=0;
 #endif
           sr=WORD((sr & (~SR_IPL)) | SR_IPL_6); // already forbid other interrupts
-          while(cpu_cycles&&cpu_cycles<=iack_latency) // can be negative: Froggies/OVR
+          while(cpu_cycles&&cpu_cycles<=iack_latency) // can be negative: Froggies/OVR // need (cpu_cycles)?
           {
             iack_latency-=cpu_cycles;
             INSTRUCTION_TIME(cpu_cycles); // hop to event
@@ -782,14 +782,16 @@ void ASMCALL check_for_interrupts_pending()
             {
               if(screen_event_vector==event_timer_a_timeout)
                 dbg_iack_subst='A';
-              else if(screen_event_vector==event_timer_b_timeout||screen_event_vector==event_timer_b)
+              else if(screen_event_vector==event_timer_b_timeout)
                 dbg_iack_subst='B';
+              else if(screen_event_vector==event_timer_b)
+                dbg_iack_subst='b';
               else if(screen_event_vector==event_timer_c_timeout)
                 dbg_iack_subst='C';
               else if(screen_event_vector==event_timer_d_timeout)
                 dbg_iack_subst='D';
               if(dbg_iack_subst)
-                TRACE_MFP(">IACK run timer %c at %d\n",dbg_iack_subst,time_of_next_event);
+                TRACE_MFP(">IACK timer %c at %d\n",dbg_iack_subst,time_of_next_event);
 #if defined(SSE_INT_MFP_EVENT_WRITE)
               else if(screen_event_vector==event_mfp_write)
                 TRACE_MFP(">IACK %d wrote %X to MFP reg %d (before: %X)\n",ACT,MC68901.LastRegisterWrittenValue,MC68901.LastRegisterWritten,MC68901.LastRegisterFormerValue);
@@ -803,10 +805,18 @@ void ASMCALL check_for_interrupts_pending()
             post_write=(ACT-MC68901.WriteTiming>=0 
               && ACT-MC68901.WriteTiming<=MFP_WRITE_LATENCY);
 #endif
-#if defined(SSE_INT_MFP_REFACTOR2) && defined(SSE_INT_MFP_EVENT_WRITE_SPURIOUS)
+
+#if defined(SSE_INT_MFP_REFACTOR2A) && defined(SSE_INT_MFP_EVENT_WRITE_SPURIOUS)
+/*  Spurious triggers even if we don't break, there certainly were other bugs?
+*/
+#ifdef SSE_DEBUG
+            if(!MFP_IRQ)
+              TRACE_MFP("lost IRQ during IACK %d\n",iack_latency);
+#endif
+#elif defined(SSE_INT_MFP_REFACTOR2) && defined(SSE_INT_MFP_EVENT_WRITE_SPURIOUS) //MFD
 /*  As soon as an event clears IRQ during IACK, we go in panic mode. 
     This should trigger spurious interrupt.
-    It could actually depend on when exactly during IACK but in TEST10.TOS,
+    It could actually depend on when exactly during IACK but in SPURIOUS.TOS,
     the timer would trigger again during IACK, asserting IRQ (or maybe there's
     another delay timeout-pend-IRQ, or another bug).
 */
@@ -821,7 +831,7 @@ void ASMCALL check_for_interrupts_pending()
           sr=oldsr;
 #endif//#ifndef SSE_DEBUG_MFP_DEACTIVATE_IACK_SUBSTITUTION
 
-          // browse 15 MFP irq, starting with highest priority
+          // check irq, starting with highest priority
           char irq; //signed
           for (irq=15;irq>=0;irq--) {
             BYTE i_ab=mfp_interrupt_i_ab(irq);
@@ -907,7 +917,7 @@ void ASMCALL check_for_interrupts_pending()
 #endif    
 #if defined(SSE_DEBUG) && defined(SSE_OSD_CONTROL) \
   && !defined(SSE_DEBUG_MFP_DEACTIVATE_IACK_SUBSTITUTION)
-                  if(dbg_iack_subst)
+                  if(dbg_iack_subst && (OSD_MASK1 & OSD_CONTROL_IACK))
                     TRACE_OSD("IACK %d %d -> %d",iack_latency,MC68901.NextIrq,irq);
 #endif
 
@@ -928,8 +938,8 @@ void ASMCALL check_for_interrupts_pending()
 #endif
             && !no_real_irq) // couldn't find one and there was no break
           {
-            TRACE_OSD("Spurious!");
-            TRACE_MFP("%d PC %X Spurious!\n",ACT,old_pc);
+            TRACE_OSD("Spurious! %d",iack_latency);
+            TRACE_MFP("%d PC %X Spurious! %d\n",ACT,old_pc,iack_latency);
             TRACE_MFP("IRQ %d (%d) IERA %X IPRA %X IMRA %X ISRA %X IERB %X IPRB %X IMRB %X ISRB %X\n",MC68901.Irq,MC68901.NextIrq,mfp_reg[MFPR_IERA],mfp_reg[MFPR_IPRA],mfp_reg[MFPR_IMRA],mfp_reg[MFPR_ISRA],mfp_reg[MFPR_IERB],mfp_reg[MFPR_IPRB],mfp_reg[MFPR_IMRB],mfp_reg[MFPR_ISRB]);
 #ifdef SSE_BETA //enable for public beta
             BRK(Spurious interrupt); 

@@ -2092,25 +2092,20 @@ int time_of_event_mfp_write;
 
 void event_mfp_write() {
   
-  if(OPTION_PRECISE_MFP && MC68901.WritePending
-    //&& ACT-MC68901.WriteTiming>0
-    )
+  if(OPTION_PRECISE_MFP && MC68901.WritePending)
   {
-    //ASSERT(ACT>=time_of_event_mfp_write);
     ASSERT(time_of_event_mfp_write!=MC68901.WriteTiming);
-//    ASSERT(ACT!=MC68901.WriteTiming);
     TRACE_MFP("%d execute event_mfp_write(): mfp_reg[%d]=%X\n",ACT,MC68901.LastRegisterWritten,MC68901.LastRegisterWrittenValue);
-    //TRACE("mfp_timer_period_change[3] %d\n",mfp_timer_period_change[3]);
-    //ASSERT(MC68901.WritePending);
+#if defined(SSE_INT_MFP_REFACTOR2B) && defined(SSE_DEBUG) //for trace
+    MC68901.LastRegisterFormerValue=mfp_reg[MC68901.LastRegisterWritten];
+#endif
     mfp_reg[MC68901.LastRegisterWritten]=MC68901.LastRegisterWrittenValue;
-
-
-
     MC68901.UpdateNextIrq(); // for example to clear IRQ
     MC68901.WritePending=false;
+#if !defined(SSE_INT_MFP_REFACTOR2A) //remove bug/hack 
     if(MC68901.Irq && !M68000.IackCycle)
       check_for_interrupts_pending();   // radical? //test10 vs audio artistic
-
+#endif
   }
   else
     time_of_event_mfp_write=time_of_next_event+n_cpu_cycles_per_second;
