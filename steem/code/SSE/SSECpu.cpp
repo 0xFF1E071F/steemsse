@@ -20,7 +20,7 @@ extern const char*exception_action_name[4];//={"read from","write to","fetch fro
 #endif//#if defined(SSE_STRUCTURE_SSECPU_OBJ)
 
 #include "SSESTF.h"
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 #include "SSEGlue.h"
 #endif
 
@@ -45,6 +45,9 @@ void TM68000::Reset(bool cold) {
 #endif
 #if defined(SSE_CPU_ROUNDING_BUS2)
   Unrounded=false;
+#endif
+#if defined(SSE_INT_MFP_REFACTOR2)
+  IackCycle=false; 
 #endif
 }
 
@@ -2013,11 +2016,8 @@ void m68k_poke_abus2(BYTE x){
     we have performance in mind: CPU poke is used a lot, it is rare
     when the address bus is around the current scanline.
 */
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-    if(Glue.FetchingLine()
-#else
-    if(Shifter.FetchingLine() 
-#endif
+
+    if(GLU.FetchingLine()
       && abus>=shifter_draw_pointer
       && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2)
       Shifter.Render(LINECYCLES,DISPATCHER_CPU); 
@@ -2071,11 +2071,7 @@ void m68k_dpoke_abus2(WORD x){
     DEBUG_CHECK_WRITE_W(abus);
 #endif
 #if defined(SSE_CPU_CHECK_VIDEO_RAM_W) // 3615 GEN4
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-    if(Glue.FetchingLine()
-#else
-    if(Shifter.FetchingLine() 
-#endif
+    if(GLU.FetchingLine()
       && abus>=shifter_draw_pointer
       && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2
       //&& DPEEK(abus)!=x
@@ -2125,11 +2121,7 @@ void m68k_lpoke_abus2(LONG x){
     DEBUG_CHECK_WRITE_L(abus);
 #endif
 #if defined(SSE_CPU_CHECK_VIDEO_RAM_L)
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-    if(Glue.FetchingLine()
-#else
-    if(Shifter.FetchingLine() 
-#endif
+    if(GLU.FetchingLine()
       && abus>=shifter_draw_pointer
       && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2)
       Shifter.Render(LINECYCLES,DISPATCHER_CPU); 

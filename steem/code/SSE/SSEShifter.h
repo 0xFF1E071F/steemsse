@@ -30,7 +30,7 @@
     (more to add)
 */
 
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 /*  The Shifter trick mask is an imitation of Hatari's BorderMask.
     Each trick has a dedicated bit, to set it we '|' it, to check it
     we '&' it. Each value is the previous one x2.
@@ -98,7 +98,7 @@ enum {BORDERS_NONE, BORDERS_ON, BORDERS_AUTO_OFF, BORDERS_AUTO_ON};
 /*  There's something wrong with the cycles when the line is 508 cycles,
     but fixing it will take some care. See the Omega hack
 */
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 struct TScanline {
   int StartCycle; // eg 56
   int EndCycle; // eg 376
@@ -106,8 +106,7 @@ struct TScanline {
   int Cycles; // eg 512 
   int Tricks; // see mask description above
 };
-
-#endif//#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#endif
 
 struct TShifter {
 /*  As explained by ST-CNX and others, the video picture is produced by the
@@ -118,7 +117,7 @@ struct TShifter {
 */
   TShifter(); 
   ~TShifter();
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
   inline void AddExtraToShifterDrawPointerAtEndOfLine(unsigned long &extra);
   inline int CheckFreq(int t);
   void CheckSideOverscan(); // left & right border effects
@@ -130,7 +129,7 @@ struct TShifter {
 #endif
   void DrawScanlineToEnd();
 
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 #if !defined(SSE_STRUCTURE_SSECPU_OBJ)
   inline // TODO
 #endif
@@ -146,7 +145,7 @@ struct TShifter {
   void Reset(bool Cold);
   inline void RoundCycles(int &cycles_in);
   inline void SetPal(int n, WORD NewPal);
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
   void SetShiftMode(BYTE NewRes);
   void SetSyncMode(BYTE NewSync);
 #endif
@@ -155,7 +154,7 @@ struct TShifter {
 #endif
   void Vbl();
 
-#if defined(SSE_SHIFTER_TRICKS) && !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if defined(SSE_SHIFTER_TRICKS) && !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
   inline void AddFreqChange(int f);
   inline void AddShiftModeChange(int r);
   inline int CheckShiftMode(int t);
@@ -204,7 +203,7 @@ struct TShifter {
 #endif
 #endif
 
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
   // we need keep info for only 3 scanlines 
   TScanline PreviousScanline, CurrentScanline, NextScanline;
   int ExtraAdded;//rather silly
@@ -215,13 +214,13 @@ struct TShifter {
   BYTE *ScanlineBuffer;
 #endif
 
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
   BYTE m_ShiftMode; // Shifter has its copy, Glue could do with only 1 bit
 #else
   BYTE m_ShiftMode,m_SyncMode;
-#endif//#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#endif
 
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
   int TrickExecuted; //make sure that each trick will only be applied once
 #endif
 #if defined(SSE_DEBUG) && SSE_VERSION<380
@@ -842,7 +841,7 @@ inline MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
   ff
   if (bad_drawing){
     // Fake SDP
-#if defined(SSE_SHIFTER_SDP_TRACE_LOG)
+#if defined(SSE_SHIFTER_SDP_TRACE)
     TRACE_LOG("fake SDP\n");
 #endif
     if (scan_y<0){
@@ -1000,7 +999,7 @@ Cases to consider: TCB, Mindbomb/No Shit, Omega
       sdp+=c;
     }
     
-#if defined(SSE_SHIFTER_SDP_TRACE_LOG3) // compare with Steem (can't be 100%)
+#if defined(SSE_SHIFTER_SDP_TRACE3) // compare with Steem (can't be 100%)
     if(sdp>shifter_draw_pointer_at_start_of_line)
     {
       MEM_ADDRESS sdpdbg=get_shifter_draw_pointer(CyclesIn);
@@ -1015,7 +1014,7 @@ Cases to consider: TCB, Mindbomb/No Shit, Omega
   else // lines witout fetching (before or after frame)
     sdp=shifter_draw_pointer;
 
-#if defined(SSE_SHIFTER_SDP_TRACE_LOG2)
+#if defined(SSE_SHIFTER_SDP_TRACE2)
   if(scan_y==-29) TRACE_LOG("Read SDP F%d y%d c%d SDP %X (%d - %d) sdp %X\n",FRAME,scan_y,CyclesIn,sdp,sdp-shifter_draw_pointer_at_start_of_line,CurrentScanline.Bytes,shifter_draw_pointer);
 #endif
   int nbytes=sdp-shifter_draw_pointer_at_start_of_line;
@@ -1144,7 +1143,7 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 
   int cycles=LINECYCLES; // cycle in Shifter reckoning
 
-#if defined(SSE_SHIFTER_SDP_TRACE_LOG2)
+#if defined(SSE_SHIFTER_SDP_TRACE2)
   TRACE_LOG("F%d y%d c%d Write %X to %X\n",FRAME,scan_y,cycles,io_src_b,addr);
 #endif
 
@@ -1159,7 +1158,7 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
   // some STF programs write to those addresses, it just must be ignored.
   if(ST_TYPE!=STE)
   {
-#if defined(SSE_SHIFTER_SDP_TRACE_LOG)
+#if defined(SSE_SHIFTER_SDP_TRACE)
     TRACE_LOG("STF ignore write to SDP %x %x\n",addr,io_src_b);
 #endif
     return; // fixes Nightdawn, STF-only game
@@ -1199,7 +1198,7 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
     int current_sdp_middle_byte=(shifter_draw_pointer&0xFF00)>>8;
     if(current_sdp_middle_byte != SDPMiddleByte) // need to restore?
     {
-#if defined(SSE_SHIFTER_SDP_TRACE_LOG)
+#if defined(SSE_SHIFTER_SDP_TRACE)
       TRACE_LOG("F%d y%d c%d SDP %X reset middle byte from %X to %X\n",FRAME,scan_y,cycles,shifter_draw_pointer,current_sdp_middle_byte,SDPMiddleByte);
 #endif
       DWORD_B(&shifter_draw_pointer,(0xff8209-0xff8207)/2)=SDPMiddleByte;
@@ -1299,7 +1298,7 @@ void TShifter::ShiftSDP(int shift) { //inline
 #endif// defined(IN_EMU)
 
 
-#if !defined(SSE_VID_DISABLE_AUTOBORDER)
+//#if !defined(SSE_VID_DISABLE_AUTOBORDER)
 // just taking some unimportant code out of Render for clarity
 
 #define   AUTO_BORDER_ADJUST  \
@@ -1332,8 +1331,7 @@ void TShifter::ShiftSDP(int shift) { //inline
             } \
             border1=border2=0; \
           }
-#endif
-
+//#endif
 
 #endif//#if defined(SSE_SHIFTER)
 

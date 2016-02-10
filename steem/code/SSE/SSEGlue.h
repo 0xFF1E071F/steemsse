@@ -4,7 +4,7 @@
 
 #include <run.decla.h>
 
-#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+#if defined(SSE_GLUE_FRAME_TIMINGS)
 
 struct TGlueStatusBYTE { 
   // used to avoid doing tasks twice on repeat calls, a little cheat maybe
@@ -17,7 +17,7 @@ struct TGlueStatusBYTE {
 
 #endif
 
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 #define TRICK_LINE_PLUS_26 0x001
 #define TRICK_LINE_PLUS_2 0x02
 #define TRICK_LINE_MINUS_106 0x04
@@ -61,7 +61,7 @@ struct TGlue {
   TGlue();
   void Update();
   enum {FREQ_50,FREQ_60,FREQ_72,NFREQS};
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
   enum {GLU_DE_ON,HBLANK_OFF,GLU_DE_OFF,HBLANK_ON,HSYNC_ON,HSYNC_OFF,RELOAD_SDP,
     ENABLE_VBI,VERT_OVSCN_LIMIT,NTIMINGS};
 #elif defined(SSE_GLUE_THRESHOLDS)
@@ -74,7 +74,7 @@ struct TGlue {
   WORD DE_cycles[NFREQS];
   // cycles can be 0-512, hence words
   WORD ScanlineTiming[NTIMINGS][NFREQS];
-#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+#if defined(SSE_GLUE_FRAME_TIMINGS)
   TGlueStatusBYTE Status;
   screen_event_struct screen_event; // there's only one now
   WORD scanline; 
@@ -82,7 +82,7 @@ struct TGlue {
   void Reset(bool Cold);
   void Vbl();
 #endif
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
   BYTE m_ShiftMode,m_SyncMode;
   BYTE Freq[NFREQS];
   // we need keep info for only 3 scanlines 
@@ -134,7 +134,7 @@ struct TGlue {
   int CycleOfLastChangeToFreq(int value);
   int CycleOfLastChangeToShiftMode(int value);
 #endif
-#endif//SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1
+#endif//
 };
 
 extern TGlue Glue;

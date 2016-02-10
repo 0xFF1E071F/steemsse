@@ -169,17 +169,6 @@ void init_timings()
   cpu_time_of_start_of_event_plan=0; //0x7f000000; // test overflow
 
 #if defined(STEVEN_SEAGAL)
-#if defined(SSE_GLUE_FRAME_TIMINGS_A)
-  Glue.GetNextScreenEvent();
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-  Glue.CurrentScanline.Cycles=scanline_time_in_cpu_cycles_at_start_of_vbl;
-  ASSERT(Glue.CurrentScanline.Cycles>=224);
-#else
-  Shifter.CurrentScanline.Cycles=scanline_time_in_cpu_cycles_at_start_of_vbl;
-  ASSERT(Shifter.CurrentScanline.Cycles>=224);
-#endif
-  
-#endif
 #if !defined(SSE_GLUE_FRAME_TIMINGS_B)
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO)
   if (n_cpu_cycles_per_second>CpuNormalHz){
@@ -190,6 +179,11 @@ void init_timings()
   }else{
     screen_event_pointer=event_plan[shifter_freq_idx];
   }
+#endif
+#if defined(SSE_GLUE_FRAME_TIMINGS)
+  Glue.GetNextScreenEvent();
+  GLU.CurrentScanline.Cycles=scanline_time_in_cpu_cycles_at_start_of_vbl;
+  ASSERT(GLU.CurrentScanline.Cycles>=224);
 #endif
 #if defined(SSE_INT_VBI_START) 
   screen_event_pointer++; // best part of the creation - hack
@@ -219,7 +213,7 @@ void init_timings()
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START) //test...
   // We lose the vertical overscan at restart pretty often with this mod.
   TRACE("Init timings PC %X VBI %X pending %d\n",pc,LPEEK(0x0070),vbl_pending);
-#elif defined(STEVEN_SEAGAL) && defined(SSE_GLUE_FRAME_TIMINGS_A)
+#elif defined(STEVEN_SEAGAL) && defined(SSE_GLUE_FRAME_TIMINGS4)
   // Now the hack is placed where we load the snapshot
 #else
   // This is a hack to make the first screen work
@@ -242,7 +236,7 @@ void init_timings()
   left_border=BORDER_SIDE;right_border=BORDER_SIDE;
   overscan_add_extra=0;
   scanline_drawn_so_far=0;
-#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+#if defined(SSE_GLUE_FRAME_TIMINGS4)
   cpu_timer_at_start_of_hbl=0; // the -444 was a Steem hack we can now remove
 #else
   cpu_timer_at_start_of_hbl=cpu_time_of_last_vbl-(scanline_time_in_cpu_cycles_at_start_of_vbl-(screen_event_pointer->time));

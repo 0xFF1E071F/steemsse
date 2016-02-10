@@ -126,12 +126,12 @@ inline void HBLInterrupt() {
     INSTRUCTION_TIME(HblJitter[HblJitterIndex]); //Hatari
 #endif
 
-#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+#if defined(SSE_GLUE_FRAME_TIMINGS)
   Glue.Status.hbi_done=true;
 #endif
-
-  // set CPU registers
+  
   m68k_interrupt(LPEEK(0x0068));       
+  // set CPU registers
   sr=(sr & (WORD)(~SR_IPL)) | (WORD)(SR_IPL_2);
   debug_check_break_on_irq(BREAK_IRQ_HBL_IDX); 
 }
@@ -187,7 +187,7 @@ inline void VBLInterrupt() {
 #if defined(SSE_INT_E_CLOCK)
     if(!HD6301EMU_ON) // no jitter no wobble if "E-clock"
 #endif
-    {//3.6.1: Argh! macro must be scoped!
+    {//3.6.1: Argh! macro must be scoped! TODO proper switches
       INTERRUPT_START_TIME_WOBBLE; //wobble for STE
     }
 #endif
