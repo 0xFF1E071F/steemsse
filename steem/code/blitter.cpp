@@ -16,7 +16,11 @@ TBlitter Blit;
 int nBytesBlitted=0; // for traces
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING_START_BLITTER)
+#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING_START_BLITTER2)
+// 4 + 4 breaks Circus!
+#define BLITTER_START_WAIT 4 
+#define BLITTER_END_WAIT 4
+#elif defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING_START_BLITTER)
 /*  Those values shouldn't be correct, we should have something like
     4 for CPU and BLiTTER, but it works better so in Steem.
     Normally the 8-2 changes nothing, it was a silly test but I don't
@@ -328,18 +332,7 @@ void Blitter_Blit_Word() //SS Data is blitted word by word
   if (Blit.NeedDestRead || Blit.Mask!=0xffff){
     DestDat=Blitter_DPeek(Blit.DestAdr);
     NewDat=DestDat & WORD(~(Blit.Mask));
-#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING_NFSR)
-/* It's protected by option 'Hacks' because we could be misreading doc
-   about "read-modify cycle".
-   Update We Were: we were not correct indeed (undef).
-*/
-    if(SSE_HACKS_ON && Blit.NFSR && Blit.Last)
-      INSTRUCTION_TIME(6);
-    else
-      INSTRUCTION_TIME_ROUND(4);
-#else
     INSTRUCTION_TIME_ROUND(4);
-#endif
   }else{
     NewDat=0; //Blit.Mask is FFFF and we're in a source-only mode
   }
@@ -495,8 +488,10 @@ void Blitter_Draw()
 
   Blit.HasBus=true;
 #if defined(STEVEN_SEAGAL) && defined(SSE_BLT_BLIT_MODE_CYCLES)
+#if !defined(SSE_BLT_BLIT_MODE_CYCLES2)
   Blit.TimeToCheckIrq=ABSOLUTE_CPU_TIME+SSE_BLT_BLIT_MODE_IRQ_CHK;
-  Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+SSE_BLT_BLIT_MODE_CYCLES;
+#endif
+  Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+BLITTER_BLIT_MODE_CYCLES;
 #else
   Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+64;
 #endif
@@ -526,7 +521,8 @@ void Blitter_Draw()
         CHECK_BREAKPOINT
       }
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_BLIT_MODE_CYCLES)
+#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_BLIT_MODE_CYCLES) \
+  && !defined(SSE_BLT_BLIT_MODE_CYCLES2)
       // make sure to check for interrupts often enough
       if(!Blit.Hog && ABSOLUTE_CPU_TIME-Blit.TimeToCheckIrq>=0)
       {
@@ -539,20 +535,28 @@ void Blitter_Draw()
         if (Blit.Hog==0){ //not in hog mode, keep switching bus
           if (((ABSOLUTE_CPU_TIME-Blit.TimeToSwapBus)>=0)){
 #if defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING_START_BLITTER) // same explanation as above...
+#if defined(SSE_BLT_BLIT_MODE_CYCLES3)
+            INSTRUCTION_TIME(Blit.HasBus?BLITTER_END_WAIT:BLITTER_START_WAIT);
+#else
             INSTRUCTION_TIME(Blit.HasBus?0:6);
 #endif
+#endif
             Blit.HasBus=!(Blit.HasBus);
+#if defined(DEBUG_BUILD) || !defined(STEVEN_SEAGAL)
             if (Blit.HasBus){
               log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Swapping bus to blitter at "+ABSOLUTE_CPU_TIME);
             }else{
               log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Swapping bus to CPU at "+ABSOLUTE_CPU_TIME);
             }
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_BLT_BLIT_MODE_CYCLES)
+#if !defined(SSE_BLT_BLIT_MODE_CYCLES2)
             Blit.TimeToCheckIrq=Blit.TimeToSwapBus+SSE_BLT_BLIT_MODE_IRQ_CHK;
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING_START_BLITTER)
-            Blit.TimeToSwapBus=ACT+SSE_BLT_BLIT_MODE_CYCLES; // + delay
+            Blit.TimeToSwapBus=ACT+BLITTER_BLIT_MODE_CYCLES; // + delay
 #else
-            Blit.TimeToSwapBus+=SSE_BLT_BLIT_MODE_CYCLES;
+            Blit.TimeToSwapBus+=BLITTER_BLIT_MODE_CYCLES;
 #endif
               ;
 #else
@@ -562,7 +566,8 @@ void Blitter_Draw()
         }
       }else{
         Blit.HasBus=false;  
-#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_BLIT_MODE_CYCLES)
+#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_BLIT_MODE_CYCLES) \
+  && !defined(SSE_BLT_BLIT_MODE_CYCLES2)
         Blit.TimeToCheckIrq=0;
 #endif
         break;
@@ -1075,8 +1080,10 @@ old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.SrcAdr,Blit
 //          Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+64; //SS this was commented out
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_BLT_BLIT_MODE_CYCLES)
+#if !defined(SSE_BLT_BLIT_MODE_CYCLES2)
           Blit.TimeToCheckIrq=Blit.TimeToSwapBus+SSE_BLT_BLIT_MODE_IRQ_CHK;
-          Blit.TimeToSwapBus+=SSE_BLT_BLIT_MODE_CYCLES;
+#endif
+          Blit.TimeToSwapBus+=BLITTER_BLIT_MODE_CYCLES;
 #else
           Blit.TimeToSwapBus+=64;
 #endif
