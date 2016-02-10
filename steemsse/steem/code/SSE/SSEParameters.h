@@ -139,9 +139,15 @@ MIDI is 4 times faster than IKBD
     more often. The smaller the value, the higher the emulation load!
     TODO: compute a sort of cpu_cycles to be precise
 */
-#undef SSE_BLT_BLIT_MODE_CYCLES
-#define SSE_BLT_BLIT_MODE_CYCLES ((65-1)*4) // 'NOP' x 4 = cycles
+//#undef SSE_BLT_BLIT_MODE_CYCLES
+#ifdef SSE_BLT_BLIT_MODE_CYCLES4
+#define BLITTER_BLIT_MODE_CYCLES 128 // or cycles = 2 clock? //TODO test prg
+#else
+#define BLITTER_BLIT_MODE_CYCLES ((65-1)*4) // 'NOP' x 4 = cycles //63?
+#endif
+#if !defined(SSE_BLT_BLIT_MODE_CYCLES2)
 #define SSE_BLT_BLIT_MODE_IRQ_CHK (64) // when we check for IRQ, in cycles
+#endif
 #endif
 #endif
 
