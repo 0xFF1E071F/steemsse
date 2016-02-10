@@ -2543,23 +2543,42 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_GLUE)
 #define SSE_GLUE_FRAME_TIMINGS
 #if defined(SSE_GLUE_FRAME_TIMINGS)
-#undef SSE_SHIFTER_FIX_LINE508_CONFUSION
-#undef SSE_TIMINGS_FRAME_ADJUSTMENT
-#undef SSE_INT_VBL_STF
-#define SSE_GLUE_FRAME_TIMINGS_A
-#define SSE_GLUE_FRAME_TIMINGS_B // remove old var and functions
-#define SSE_GLUE_FRAME_TIMINGS_C // extended resolutions
+
+#define SSE_GLUE_FRAME_TIMINGS3 //hbi done
+#define SSE_GLUE_FRAME_TIMINGS4 //init stuff
+#define SSE_GLUE_FRAME_TIMINGS7B // routines of last scanline
+#define SSE_GLUE_FRAME_TIMINGS9 //reload sdp 2
+
+#define SSE_GLUE_FRAME_TIMINGS_B // eliminate old var
+#if !defined(SSE_GLUE_FRAME_TIMINGS_B)
+//#define SSE_GLUE_FRAME_TIMINGS_C // for debug -Steem can hang!
+#endif
+#if defined(SSE_GLUE_FRAME_TIMINGS_C)
+#undef SSE_GLUE_FRAME_TIMINGS3
+#endif
+#undef SSE_SHIFTER_FIX_LINE508_CONFUSION // hack unnecessary
+#undef SSE_TIMINGS_FRAME_ADJUSTMENT // hack unnecessary
+#undef SSE_INT_VBL_STF // hack unnecessary
 #define SSE_GLUE_THRESHOLDS // computing thresholds only when changing option
-#define SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#define SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 #undef SSE_SHIFTER_LEFT_OFF_60HZ//forget it
 //#define SSE_GLUE_001 //to show all the Tekila oddities//tmp switch
 #define SSE_GLUE_002//no safety net//tmp switch
+#define SSE_GLUE_LEFT_OFF_380 // TODO rest... ???
 #define SSE_GLUE_LINE_PLUS_2_380 //bugfix (old bug)
+#define SSE_GLUE_RIGHT_OFF_380
 #endif//SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE
+
 #define SSE_GLUE_003//opt//tmp switch
 #define SSE_GLUE_004//
+#define SSE_GLUE_005
+#define SSE_GLUE_006
+#define SSE_GLUE_007
+#define SSE_GLUE_007B
+#define SSE_GLUE_008
 #define SSE_SHIFTER_LINE_PLUS_2_HACK_380
+
 #endif//SSE_GLUE_FRAME_TIMINGS
 #endif//glue
 
@@ -2614,7 +2633,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_MMU)
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 #define SSE_MMU_WU_STE_380
 #define SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1
 #endif
@@ -2626,24 +2645,38 @@ Beta: not SSE_PRIVATE_BUILD
 
 #ifdef SSE_SHIFTER
 #define SSE_SHIFTER_380 // some modest refactoring, debugging
+#define SSE_SHIFTER_380_STAB
 #define SSE_SHIFTER_HSCROLL_380
 #if defined(SSE_SHIFTER_HSCROLL_380)
-#define SSE_SHIFTER_HSCROLL_380_A // better test, should new HSCROLL apply on current line
-#define SSE_SHIFTER_HSCROLL_380_A1
+//#define SSE_SHIFTER_HSCROLL_380_A // better test, should new HSCROLL apply on current line
+////#define SSE_SHIFTER_HSCROLL_380_A1 // wrong, MFD
 #define SSE_SHIFTER_HSCROLL_380_B // new variable to hold HSCROLL at start of line
 #define SSE_SHIFTER_HSCROLL_380_C // update shifter_pixel for new HSCROLL
 #define SSE_SHIFTER_HSCROLL_380_D // line +20 + HSCROLL
-#define SSE_SHIFTER_HSCROLL_380_E // not always rounding cycles to render on write to SDP (hack)
+////#define SSE_SHIFTER_HSCROLL_380_E // not always rounding cycles to render on write to SDP (hack) + bad name??
+#define SSE_SHIFTER_HSCROLL_380_F
+#define SSE_GLUE_SDP_WRITE_380
+#define SSE_GLUE_SDP_WRITE_380B
 #endif
+#if defined(SSE_GLUE_FRAME_TIMINGS)
 #define SSE_SHIFTER_HIRES_RASTER // edgy stuff in monochrome mode (Time Slices)
+#endif
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
 #define SSE_SHIFTER_HIRES_COLOUR_DISPLAY5//better test, compatible with GLUE refactoring
 #endif
+#if defined(SSE_SHIFTER_MED_RES_SCROLLING)
 //#undef SSE_SHIFTER_MED_RES_SCROLLING_360
 #define SSE_SHIFTER_MED_RES_SCROLLING_380 // refactoring
+#endif
+#if defined(SSE_SHIFTER_SDP_WRITE)
+#define SSE_SHIFTER_SDP_WRITE_380
+#define SSE_SHIFTER_SDP_WRITE_380B
+#endif
 #if defined(SSE_SHIFTER_UNSTABLE)
 #define SSE_SHIFTER_UNSTABLE_380 // for demo Closure
 #endif
+#define SSE_SHIFTER_60HZ_LINE // compensate fix in 'read SDP'
+#define SSE_SHIFTER_KRYOS//hack
 #endif//sft
 
 #ifdef SSE_STF

@@ -3,7 +3,7 @@
 
 #include "../pch.h"
 #include "SSEMMU.h"
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 #include "SSEGlue.h"
 #include "SSEFrameReport.h"
 #endif
@@ -22,7 +22,7 @@
 | Steem  option    |              Wake-up concepts           |    Cycle      |
 |    variable      |                                         |  adjustment   |
 +------------------+---------------+------------+------------+-------+-------+
-|  WAKE_UP_STATE   |   DL Latency  |     WU     |      WS    |  MODE |  SYNC |
+|  WAKE_UP_STATE   |   DL Latency  |     WU     |      WS    | SHIFT |  SYNC |
 |                  |     (Dio)     |    (ijor)  |    (LJBK)  | (Res) |(Freq) |
 +------------------+---------------+------------+------------+-------+-------+
 |   0 (ignore)     |      5        |     -      |      -     |    -  |    -  |
@@ -32,7 +32,7 @@
 |        4         |      6        |     1      |      1     |   -2  |    -  |
 +------------------+---------------+------------+------------+-------+-------+
 */
-// yes we can:  WU - WS - MODE - SYNC
+// yes we can:  WU - WS - SHIFT - SYNC
 TMMU MMU={{0,2,2,1,1,2},{0,2,4,3,1,2},{0,2,0,0,-2,2},{0,2,2,0,0,2}};
 
 #else
@@ -115,6 +115,7 @@ MEM_ADDRESS TMMU::ReadVideoCounter(int CyclesIn,int dispatcher) {
 #else
     bool hires=!left_border;
 #endif
+
     // 8 cycles latency before MMU starts prefetching
     int starts_counting=(Glue.CurrentScanline.StartCycle+8)/2;
 
@@ -296,8 +297,18 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
 #endif
 
   bool fl=Glue.FetchingLine();
+
+#if defined(SSE_SHIFTER_SDP_WRITE_380) 
   bool de_started=fl && cycles>=Glue.CurrentScanline.StartCycle;
-  bool de_finished=de_started && cycles>Glue.CurrentScanline.EndCycle;
+  bool de_finished=de_started && cycles>=Glue.CurrentScanline.EndCycle; //kryos
+#else
+  bool de_started=fl && cycles>=Glue.CurrentScanline.StartCycle
+    +SHIFTER_PREFETCH_LATENCY; // TESTING //normally not correct...
+    ;
+  bool de_finished=de_started && cycles>Glue.CurrentScanline.EndCycle
+    +SHIFTER_PREFETCH_LATENCY; // TESTING //normally not correct...
+    ;
+#endif
   bool de=de_started && !de_finished;
 
   if(de_finished && addr==0xff8209)
@@ -311,10 +322,11 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
   // the 'draw' pointer can be <, = or > 'real'
   int bytes_drawn=shifter_draw_pointer-shifter_draw_pointer_at_start_of_line;
   ASSERT(bytes_drawn>=0);
-
+#if SSE_VERSION>=380
+  if(SSE_HACKS_ON)
+#endif
   if(addr==0xff8209 && SDPMiddleByte!=999) // it has been set?
   {
-//    ASSERT(SSE_HACKS_ON);//TODO
     int current_sdp_middle_byte=(shifter_draw_pointer&0xFF00)>>8;
     if(current_sdp_middle_byte != SDPMiddleByte) // need to restore?
     {
@@ -334,6 +346,16 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
   // Writing low byte while the MMU is fetching
   if(addr==0xFF8209 && de)
   {
+
+#if defined(SSE_SHIFTER_SDP_WRITE_380B)
+    // If we're writing the video counter, our plan to add 2 to it
+    // makes no more sense. It's no hack, not doing it was a hack.
+    // Fixes Cryos scroller shift.
+    if(!GLU.ExtraAdded&&
+      (GLU.CurrentScanline.Tricks&(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_2)))
+      overscan_add_extra-=2;
+#endif
+
     // recompute right off bonus bytes (E605 Planet, D4/Tekila)
     // the idea is no hack by itself, but the method could be...
     if(!right_border && !Glue.ExtraAdded)
@@ -346,23 +368,32 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
 #if defined(SSE_GLUE_001)
       overscan_add_extra=bytes_to_run-bytestofetch;
 #else
-      // we can't set extra because of bumpy scrolling
+      // we can't set extra because of bumpy scrolling (but OK in large display)
       overscan_add_extra+=-28+bytes_to_run-bytestofetch;
 #endif
 #if defined(SSE_SHIFTER_SDP_WRITE_DE_HSCROLL) && defined(SSE_SHIFTER_TEKILA)
       // TODO, those conditions are certainly not correct
       if(SSE_HACKS_ON && !left_border)
       {
+#if defined(SSE_SHIFTER_SDP_WRITE_380B)
+        if(!shifter_skip_raster_for_hscroll)
+          overscan_add_extra+=6+2; // Tekila line -28
+        else if(Glue.PreviousScanline.Tricks&TRICK_STABILISER) //especially this
+          nsdp+=4+2; // Tekila other lines
+#else
         if(!shifter_skip_raster_for_hscroll)
           overscan_add_extra+=6; // Tekila line -28
         else if(Glue.PreviousScanline.Tricks&TRICK_STABILISER) //especially this
           nsdp+=4; // Tekila other lines
+#endif
       }
 #endif
     }
-#if defined(SSE_SHIFTER_HSCROLL_380_E) //greets
-    // write on cycle 284 or 292
-    else
+#if defined(SSE_SHIFTER_HSCROLL_380_E)  || defined(SSE_GLUE_SDP_WRITE_380)
+    else // Sommarhack 2010 greets write on cycle 284 or 292
+#if defined(SSE_GLUE_SDP_WRITE_380B)
+      if(SSE_HACKS_ON)
+#endif
       Shifter.RoundCycles(shifter_pixel);
 #endif
 

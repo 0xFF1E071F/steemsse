@@ -27,17 +27,12 @@
 //#define ACT ABSOLUTE_CPU_TIME
 
 #if defined(SSE_SHIFTER_TRICKS) && defined(SSE_INT_MFP_RATIO)
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-#define HBL_PER_SECOND (CpuNormalHz/Glue.CurrentScanline.Cycles)
-#else
-#define HBL_PER_SECOND (CpuNormalHz/Shifter.CurrentScanline.Cycles)
-#endif
+#define HBL_PER_SECOND (CpuNormalHz/GLU.CurrentScanline.Cycles) //TODO assert
+//#endif
 //Frequency   50          60            72
 //#HBL/sec    15666.5 15789.85827 35809.14286
 
 #else 
-
-
 #if defined(SSE_FDC_PRECISE_HBL)//todo table
 #define HBL_PER_FRAME ( (shifter_freq_at_start_of_vbl==50)?HBLS_50HZ: \
   ( (shifter_freq_at_start_of_vbl==60)? HBLS_60HZ : HBLS_72HZ))
@@ -313,9 +308,9 @@ enum {
   GLU_HSYNC_ON_50=464, //+ WU_res_modifier, STE-2
   GLU_HSYNC_DURATION=40,
   GLU_RELOAD_VIDEO_COUNTER_50=64-2, //+ WU_sync_modifier (STE -2?)
-  GLU_TRIGGER_VBI_50=64, // STE +4
+  GLU_TRIGGER_VBI_50=64,	//STE+4
   GLU_DECIDE_NCYCLES=54, //+ WU_sync_modifier, STE +2
-  GLU_VERTICAL_OVERSCAN_50=504 //+ WU_sync_modifier, STE -2
+  GLU_VERTICAL_OVERSCAN_50=GLU_HSYNC_ON_50+GLU_HSYNC_DURATION // 504 //+ WU_sync_modifier, STE -2
 };
 
 #endif
@@ -327,7 +322,7 @@ enum {
 
 #if defined(SSE_GUI)
 
-#define WINDOW_TITLE_MAX_CHARS 20
+#define WINDOW_TITLE_MAX_CHARS 20 
 
 #define README_FONT_NAME "Courier New"
 #define README_FONT_HEIGHT 16
@@ -436,7 +431,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #endif
 
 #if defined(SSE_IKBD_6301_EVENT)//380
-#define HD6301_CYCLES_TO_SEND_BYTE ((SSE_HACKS_ON&& LPEEK(0x18)==0xFEE74)?1350:1290) // boo!
+#define HD6301_CYCLES_TO_SEND_BYTE 1330//((SSE_HACKS_ON&& LPEEK(0x18)==0xFEE74)?1350:1290) // boo!
 #define HD6301_CYCLES_TO_RECEIVE_BYTE (HD6301_CYCLES_TO_SEND_BYTE)
 #elif defined(SSE_ACIA_OVR_TIMING)
 // hack: we count more cycle when overrun is detected, for Froggies
@@ -498,15 +493,15 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
  Cases
 
  MFP  TIMERB01.TOS; TIMERB03.TOS
- HBI  Forest, TCB, 3615GEN4-HMD, HBITMG.TOS
+ HBI  Forest, TCB, 3615GEN4-HMD, TEST16.TOS
  VBI  Auto 168, Dragonnels/Happy Islands, 3615GEN4-CKM
 
 */
 
 #if defined(SSE_INT_ROUNDING)
-#define SSE_INT_MFP_TIMING 54
-#define SSE_INT_HBL_TIMING 54
-#define SSE_INT_VBL_TIMING 54
+#define SSE_INT_MFP_TIMING (54)
+#define SSE_INT_HBL_TIMING (54)
+#define SSE_INT_VBL_TIMING (54)
 #else
 #if defined(SSE_INT_MFP)
 #define SSE_INT_MFP_TIMING (56) 
@@ -533,7 +528,7 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
 #define SSE_INT_VBI_START (68) // default = STE
 #endif
 
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if !defined(SSE_GLUE_THRESHOLDS)//(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 #define THRESHOLD_LINE_PLUS_2_STF (54)
 #if defined(SSE_INT_VBL_STF) // modest hack still works
 #define HBL_FOR_STE (444)
@@ -596,8 +591,20 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
 
     MFP (no variation) ~ 2457600 hz
     CPU STF ~ 8021247
-    CPU STE ~ 8021030, being pragmatic (programs must run)
+    CPU STE ~ 8021030, being pragmatic (programs must run - or not - like on
+    my STE)
   
+*/
+/*
+The master clock crystal and derived CPU clock table is:
+
+
+Code: Select all
+PAL (all variants)       32.084988   8.021247
+NTSC (pre-STE)           32.0424     8.0106
+NTSC (STE)               32.215905   8.053976
+Peritel (STE) (as PAL)   32.084988   8.021247
+Some STFs                32.02480    8.0071
 */
 
 #define  MFP_CLK_LE 2451 // Steem 3.2
@@ -609,7 +616,11 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
 #define  MFP_CLK_STE_EXACT 2451182 // not if 'STE as STF' is defined
 
 #if defined(SSE_INT_MFP_RATIO_STF2)
+#ifdef TEST01________
+#define  CPU_STF_PAL 8021030//temp test
+#else
 #define  CPU_STF_PAL 8021247//(8020736+512+512)// should be 8021247
+#endif
 #else
 #define  CPU_STF_PAL (8021248) // ( 2^8 * 31333 )
 #endif
@@ -701,7 +712,7 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
 /////////////
 
 
-#ifndef SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1
+#ifndef SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE
 #define VERT_OVSCN_LIMIT (502) //502
 #if defined(SSE_MMU_WU_IO_BYTES_W_SHIFTER_ONLY)
 #define WU2_PLUS_CYCLES 4 // we make cycles +2
@@ -730,10 +741,8 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
 /////////
 
 
-#if defined(SSE_STF_VERT_OVSCN)
-#ifndef SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1
+#if defined(SSE_STF_VERT_OVSCN) && !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 #define STF_VERT_OVSCN_OFFSET 4
-#endif
 #endif
 
 

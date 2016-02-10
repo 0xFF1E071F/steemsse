@@ -25,9 +25,9 @@
 #include "SSESTF.h"
 #endif
 
-#if defined(SSE_GLUE_THRESHOLDS)
+//#if defined(SSE_GLUE_THRESHOLDS)
 #include "SSEGlue.h"
-#endif
+//#endif
 
 #if defined(SSE_DEBUG_FRAME_REPORT) && !defined(SSE_STRUCTURE_SSEFRAMEREPORT_OBJ)
 #include "SSEFrameReport.cpp"
@@ -52,8 +52,8 @@ TShifter::TShifter() {
 #if defined(WIN32)
   ScanlineBuffer=NULL;
 #endif
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-#if defined(SSE_GLUE_FRAME_TIMINGS_A) //not that important, there's an assert
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if defined(SSE_GLUE_FRAME_TIMINGS) //not that important, there's an assert
   CurrentScanline.Cycles=scanline_time_in_cpu_cycles_8mhz[1]; 
 #else
   CurrentScanline.Cycles=500;
@@ -68,7 +68,7 @@ TShifter::TShifter() {
 TShifter::~TShifter() {
 }
 
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 /*  Check overscan functions:
     -  CheckSideOverscan()
     -  EndHBL() 
@@ -1921,7 +1921,7 @@ Tests are arranged to be efficient.
     {
 
 #if defined(SSE_GLUE_THRESHOLDS)
-#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+#if defined(SSE_GLUE_FRAME_TIMINGS)
       r2cycle=(CurrentScanline.Cycles==508)?
         Glue.ScanlineTiming[TGlue::HSYNC_ON][TGlue::FREQ_60]:
         Glue.ScanlineTiming[TGlue::HSYNC_ON][TGlue::FREQ_50];
@@ -1975,7 +1975,7 @@ Tests are arranged to be efficient.
       }
       else 
       {
-#if !defined(SSE_GLUE_FRAME_TIMINGS_A)
+#if !defined(SSE_GLUE_FRAME_TIMINGS)
         r2cycle=Glue.ScanlineTiming[TGlue::HSYNC_OFF][TGlue::FREQ_50];
 #else
         r2cycle+=40;
@@ -2302,7 +2302,7 @@ Problem: too many cases of WU1, that should be the rarer one
 */
 }
 
-#endif//#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#endif//moved
 
 void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
 #ifdef SSE_SHIFTER_DRAW_DBG
@@ -2329,11 +2329,7 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
           if (in_pic){
             nsdp=shifter_draw_pointer + pic*emudetect_falcon_mode;
             draw_scanline(bord,pic,bord,HSCROLL);
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-            Glue.AddExtraToShifterDrawPointerAtEndOfLine(nsdp);
-#else
-            AddExtraToShifterDrawPointerAtEndOfLine(nsdp);
-#endif
+            GLU.AddExtraToShifterDrawPointerAtEndOfLine(nsdp);
             shifter_draw_pointer=nsdp;
           }else{
             draw_scanline(bord+pic+bord,0,0,0);
@@ -2417,11 +2413,7 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
 #if defined(SSE_SHIFTER_HIRES_OVERSCAN)
       if(freq_change_this_scanline)
       {
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-        Glue.CheckSideOverscan();
-#else
-        CheckSideOverscan();
-#endif
+        GLU.CheckSideOverscan();
         if(draw_line_off)
         {
           for(int i=0;i<=20;i++)
@@ -2442,7 +2434,7 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
     Since I can't code in assembly yet I provide the feature in C.
     At least in monochrome we mustn't deal with bit planes, there's only
     one plane.
-    Case: Time Slice, it works!
+    Case: Time Slices, it works!
 */
 
 #if defined(SSE_SHIFTER_HIRES_RASTER)
@@ -2491,11 +2483,7 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
           ///////////////// RENDER VIDEO /////////////////
 #if defined(SSE_SHIFTER_HIRES_OVERSCAN)
 // experimental, right off, left off?
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-          if(Glue.CurrentScanline.Tricks&2)
-#else
-          if((CurrentScanline.Tricks&2))
-#endif
+          if(GLU.CurrentScanline.Tricks&2)
             draw_scanline((BORDER_SIDE*2)/16-16, 640/16+16*2, (BORDER_SIDE*2)/16-16,0);
             //draw_scanline((BORDER_SIDE*2)/16, 640/16+16*2, (BORDER_SIDE*2)/16-16*2,0);
           else
@@ -2553,7 +2541,7 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
   }//end Monochrome
 }
 
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 //note: this isn't compiled anymore in v3.8
 void TShifter::EndHBL() {
 
@@ -2771,7 +2759,7 @@ void TShifter::IncScanline() { // a big extension of 'scan_y++'!
 
   scan_y++; 
 
-#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+#if defined(SSE_GLUE_FRAME_TIMINGS)
   Glue.scanline++; // note we'll refactor Shifter->Glue parts anyway
 #endif
 
@@ -2878,15 +2866,15 @@ void TShifter::IncScanline() { // a big extension of 'scan_y++'!
   //SS: in fact the last prefetch of the line
   shifter_skip_raster_for_hscroll = (HSCROLL!=0);
 
-#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+#if defined(SSE_GLUE_FRAME_TIMINGS)
   Glue.Status.scanline_done=false;
 #endif
 
 }
 
-#endif//#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#endif
 
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 
 void TShifter::IncScanline() {
   scan_y++;   // -63-249
@@ -2981,15 +2969,10 @@ BYTE TShifter::IORead(MEM_ADDRESS addr) {
       
     case 0xff820a:  //synchronization mode
       ior_byte&=~3;           // this way takes care...
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-      ior_byte|=Glue.m_SyncMode;   // ...of both STF & STE
-#else
-      ior_byte|=m_SyncMode;   // ...of both STF & STE
-#endif
+      ior_byte|=GLU.m_SyncMode;   // ...of both STF & STE
       break;
 
     case 0xff820d:  //low byte of screen memory address
-      ASSERT(!(xbios2&1));
 #if defined(SSE_STF_VBASELO)
       ASSERT( ST_TYPE==STE || !(xbios2&0xFF) );
       if(ST_TYPE==STE) 
@@ -3011,7 +2994,7 @@ BYTE TShifter::IORead(MEM_ADDRESS addr) {
       break;
 
     case 0xff8265:  //HSCROLL
-#if !defined(SSE_SHIFTER_HSCROLL_380_A1) //what is this doing in read?
+#if !defined(SSE_SHIFTER_HSCROLL_380_A1) //what is this doing in read? //Kultur Melk: it has a reason fool
       DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) shifter_hscroll_extra_fetch=(shifter_hscroll!=0);
 #endif
 #if defined(SSE_STF_HSCROLL)
@@ -3194,11 +3177,7 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
 #endif
 
     case 0xff820a: //synchronization mode      
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-      Glue.SetSyncMode(io_src_b); 
-#else
-      SetSyncMode(io_src_b); 
-#endif
+      GLU.SetSyncMode(io_src_b); 
       break;
       
 /* 
@@ -3293,19 +3272,15 @@ must NOT be skipped using the Line Offset Register.
 #if defined(SSE_SHIFTER_SDP_TRACE)
       TRACE_LOG("F%d y%d c%d LW %d -> %d\n",FRAME,scan_y,LINECYCLES,LINEWID,io_src_b);
 #endif
+//      ASSERT(Glue.ExtraAdded);
       LINEWID=io_src_b;
       log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set shifter_fetch_extra_words to "+
         (shifter_fetch_extra_words)+" at "+scanline_cycle_log());
       break;
 
     case 0xff8260: //resolution
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-      Glue.SetShiftMode(io_src_b);
-#else
-      SetShiftMode(io_src_b);
-#endif
+      GLU.SetShiftMode(io_src_b);
       break;
-
       
 /*
 HSCROLL 
@@ -3350,7 +3325,7 @@ rasterline to allow horizontal fine-scrolling.
 #if defined(SSE_STF_HSCROLL)
       if(ST_TYPE!=STE) 
       {
-//        TRACE_LOG("STF write %X to %X\n",io_src_b,addr); //ST-CNX
+        TRACE_LOG("STF write %X to %X\n",io_src_b,addr); //ST-CNX
         break; // fixes Hyperforce
       }
       else
@@ -3368,11 +3343,11 @@ rasterline to allow horizontal fine-scrolling.
           ") to "+(shifter_hscroll)+" at "+scanline_cycle_log());
         if (addr==0xff8265) 
           shifter_hscroll_extra_fetch=(HSCROLL!=0);
-#if defined(SSE_SHIFTER_HSCROLL_380_A) && defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if defined(SSE_SHIFTER_HSCROLL_380_A)
 /*  Better test, should new HSCROLL apply on current line
     TODO: what is exact threshold ?
 */
-        if(cycles_in<=Glue.CurrentScanline.StartCycle+24) {
+        if(cycles_in<=GLU.CurrentScanline.StartCycle+24) {
 #elif defined(SSE_VID_BORDERS)
         if (cycles_in<=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN-BORDER_SIDE){
 #else
@@ -3422,19 +3397,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     return;
 #endif
 
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-/*
-    if(Glue.FetchingLine()) // even if cycles_in too small to rendre (more tests)?
-    {
-      if(freq_change_this_scanline
-#if defined(SSE_SHIFTER_UNSTABLE)
-        || Preload // must go apply trick at each scanline
-#endif
-        )
-        Glue.CheckSideOverscan(); 
-    }
-    */
-#else
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
   if(freq_change_this_scanline
 #if defined(SSE_SHIFTER_DRAGON1)//temp
     || SS_signal==SS_SIGNAL_SHIFTER_CONFUSED_2
@@ -3446,6 +3409,12 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     CheckSideOverscan(); 
 #endif
 
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE) && defined(SSE_GLUE_006)
+/*  Must check side overscan before the switch (Sea of Colour large display)
+*/
+  if(GLU.FetchingLine()&&(freq_change_this_scanline||Preload))
+    GLU.CheckSideOverscan();
+#endif
 
 /*  What happens here is very confusing; we render in real time, but not
     quite. As on a real ST, there's a delay of fetch+8 between the 
@@ -3468,6 +3437,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     break;
 */
   case DISPATCHER_SET_PAL:
+//    ASSERT(cycles_since_hbl!=100);
 #if defined(SSE_SHIFTER_PALETTE_TIMING)
 #if defined(SSE_MMU_WU_PALETTE_STE)
     if(!(
@@ -3503,17 +3473,19 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 #if !defined(SSE_VID_BORDERS_416_NO_SHIFT3)
         && shifter_freq_at_start_of_vbl==50//?
 #endif
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-        && (Glue.CurrentScanline.Tricks&TRICK_LINE_PLUS_26))
-#else
-        && (CurrentScanline.Tricks&TRICK_LINE_PLUS_26))
-#endif
+        && (GLU.CurrentScanline.Tricks&TRICK_LINE_PLUS_26))
         cycles_since_hbl+=4;
 #endif
 #endif
+
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1) && defined(SSE_SHIFTER_60HZ_LINE)
+      if(GLU.CurrentScanline.StartCycle==52)
+        cycles_since_hbl+=4; // it's a girl 2 bear
+#endif
+
     break;
   case DISPATCHER_SET_SHIFT_MODE:
-    RoundCycles(cycles_since_hbl); // eg Drag/Happy Islands, Cool STE (...)
+    RoundCycles(cycles_since_hbl); // eg Drag/Happy Islands, Cool STE, Bees (...)
     break; 
 #if defined(SSE_SHIFTER_RENDER_SYNC_CHANGES)//no
   case DISPATCHER_SET_SYNC:
@@ -3525,36 +3497,22 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 #if defined(SSE_GLUE_001)
     break;
 #endif
+#if defined(SSE_GLUE_SDP_WRITE_380) //hacks
+    //if(!SSE_HACKS_ON||cycles_since_hbl>=376)
+    if(!SSE_HACKS_ON||cycles_since_hbl>=GLU.CurrentScanline.EndCycle //Riverside
+#if defined(SSE_GLUE_SDP_WRITE_380B)
+      || !right_border // E605
+#endif
+      )
+#endif
 #if defined(SSE_SHIFTER_HSCROLL_380_E) 
-    if(!right_border)//Sommarhack 2010 greets, just a hack
+    if(!right_border)//Sommarhack 2010 greets, just a hack //breaks Riverside rotating rasters
 #endif
       RoundCycles(cycles_since_hbl); // eg D4/Tekila in large display 
     break;
   }//sw
 #endif
-
   int pixels_in=cycles_since_hbl-(CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN-BORDER_SIDE);
-
-#if defined(SSE_GLUE_FRAME_TIMINGS_A) && defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-  // highresmode, CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN is too high (50hz)
-  // if we correct in read sdp, we should do it at rendering too
-/*
-  if(Glue.CurrentScanline.Cycles==508)
-    pixels_in+=4;
- update: after refactoring of ReadSDP, we shouldn't anymore...
- yet this made sense
- were there compensating bugs? Or are bugs still present?
- *
- I think it could be shifter_pixel+=4; in "remove left border", this is 
- for a line +26, here it's +24, Steem still has a 32 pixel border
- instead of 48 (52-4), not 52 (56-4)
- 16 pixels skipped by manipulating video counter 32+16=48
- none to skip but we did! so it makes up, was already the case in old
- Steem - yet ReadSDP had no correction...
- ?
-*/
-#endif
-
   if(pixels_in > BORDER_SIDE+320+BORDER_SIDE) 
     pixels_in=BORDER_SIDE+320+BORDER_SIDE;  
   if(pixels_in>=0) // time to render?
@@ -3569,9 +3527,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 #endif
         && scan_y<draw_last_scanline_for_border)
       {
-        if(draw_store_dest_ad==NULL 
-          && pixels_in<BORDER_SIDE+320+BORDER_SIDE
-          )
+        if(draw_store_dest_ad==NULL && pixels_in<BORDER_SIDE+320+BORDER_SIDE)
         {
           draw_store_dest_ad=draw_dest_ad;
           ScanlineBuffer=draw_dest_ad=draw_temp_line_buf;
@@ -3582,7 +3538,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
       }
     }
 #endif
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1) // fewer checks?
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE) && !defined(SSE_GLUE_006) // fewer checks? //MFD
     if(Glue.FetchingLine())
     {
       if(freq_change_this_scanline
@@ -3592,7 +3548,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
         )
         Glue.CheckSideOverscan(); 
 #else
-    if(FetchingLine())
+    if(GLU.FetchingLine())
     {
 #endif
       if(left_border<0) // shouldn't happen but sometimes it does
@@ -3646,8 +3602,8 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
           if(SSE_HACKS_ON && SideBorderSize==VERY_LARGE_BORDER_SIDE 
 #endif
             && left_border
-#if defined(SSE_VID_BORDERS_LINE_PLUS_20) && defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-            &&!(Glue.CurrentScanline.Tricks&TRICK_LINE_PLUS_20)
+#if defined(SSE_VID_BORDERS_LINE_PLUS_20)
+            &&!(GLU.CurrentScanline.Tricks&TRICK_LINE_PLUS_20)
 #endif
 #if defined(SSE_VID_BORDERS_416_NO_SHIFT1)
             && border
@@ -3674,18 +3630,14 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 /*  On lines -2, don't fetch the last 2 bytes as if it was a 160byte line.
     Fixes screen #2 of the venerable B.I.G. Demo.
 */
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1) // + for med res
-#if SSE_VERSION>=380 // remove 'Hacks' condition, saw no problem with this
-      if((Glue.CurrentScanline.Tricks&TRICK_LINE_MINUS_2)
-#else
-      if(SSE_HACKS_ON && (Glue.CurrentScanline.Tricks&TRICK_LINE_MINUS_2)
-#endif
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE) // + for med res, no 'Hacks'
+      if((GLU.CurrentScanline.Tricks&TRICK_LINE_MINUS_2)
         && picture>=SHIFTER_RASTER*2)
       {
         picture-=SHIFTER_RASTER*2,border2+=SHIFTER_RASTER*2; // cancel last raster
       }
 #else
-      if(SSE_HACKS_ON && (CurrentScanline.Tricks&TRICK_LINE_MINUS_2)
+      if(SSE_HACKS_ON && (GLU.CurrentScanline.Tricks&TRICK_LINE_MINUS_2)
         && picture>=16)
       {
         picture-=16,border2+=16; // cancel last raster
@@ -3711,16 +3663,16 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     TODO: be able to shift the line by an arbitrary #pixels left ot right
     (assembly)
 */
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-        if(Glue.CurrentScanline.Tricks
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+        if(GLU.CurrentScanline.Tricks
           &(TRICK_4BIT_SCROLL|TRICK_LINE_PLUS_20|TRICK_UNSTABLE))
 #else
-        if( (CurrentScanline.Tricks&TRICK_4BIT_SCROLL)
+        if( (GLU.CurrentScanline.Tricks&TRICK_4BIT_SCROLL)
 #if defined(SSE_SHIFTER_LINE_PLUS_20_SHIFT)
-          || (CurrentScanline.Tricks&TRICK_LINE_PLUS_20)
+          || (GLU.CurrentScanline.Tricks&TRICK_LINE_PLUS_20)
 #endif
 #if defined(SSE_SHIFTER_UNSTABLE)
-          || (CurrentScanline.Tricks&TRICK_UNSTABLE)
+          || (GLU.CurrentScanline.Tricks&TRICK_UNSTABLE)
 #endif
           )
 #endif
@@ -3798,43 +3750,30 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
             return;
           }
 #endif
-      ///   ASSERT(!Shifter.ScanlineBuffer);
-        ///  ASSERT(draw_temp_line_buf);
-          // draw_dest_ad corrupted
 
           // call to appropriate ASSEMBLER routine!
           ///////////////// RENDER VIDEO /////////////////
           draw_scanline(border1,picture,border2,hscroll); 
-          //debug1=scan_y;
         }
       }
       shifter_draw_pointer=nsdp;
-     
+
       // adjust SDP according to Shifter tricks
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-      if(!Glue.ExtraAdded // only once - kind of silly variable
-#else
-      if(!ExtraAdded // only once - kind of silly variable
-#endif
+      if(!GLU.ExtraAdded // only once - kind of silly variable
         && ( dispatcher==DISPATCHER_DSTE || 
          dispatcher!=DISPATCHER_WRITE_SDP  && 
          pixels_in>=picture_right_edge 
         && scanline_drawn_so_far<picture_right_edge
 #if defined(SSE_SHIFTER_SDP_WRITE_ADD_EXTRA)
+/*  LINEWID is added to the videocounter right when the Shifter is
+    finished rendering (depends on Shifter, not GLU)
+*/
         || dispatcher==DISPATCHER_WRITE_SDP // fixes flicker in Cool STE 
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-        && cycles_since_hbl>=Glue.CurrentScanline.EndCycle
-          +SHIFTER_PREFETCH_LATENCY // this + is suspicious...
-#else
-        && cycles_since_hbl>=CurrentScanline.EndCycle+SHIFTER_PREFETCH_LATENCY
-#endif
+        && cycles_since_hbl>GLU.CurrentScanline.EndCycle
+          +SHIFTER_PREFETCH_LATENCY // case: Kryos 
 #endif
         ) )
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-        Glue.AddExtraToShifterDrawPointerAtEndOfLine(shifter_draw_pointer);
-#else
-        AddExtraToShifterDrawPointerAtEndOfLine(shifter_draw_pointer);
-#endif
+        GLU.AddExtraToShifterDrawPointerAtEndOfLine(shifter_draw_pointer);
     }
     // overscan lines = a big "left border"
     else if(scan_y>=draw_first_scanline_for_border 
@@ -3862,6 +3801,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
         border1=pixels_in-left_visible_edge;
       else
         border1=pixels_in-scanline_drawn_so_far;
+
       if(border1<0)
         border1=0;
       else if(border1> (right_visible_edge - left_visible_edge))
@@ -3880,8 +3820,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 
 
 void TShifter::Reset(bool Cold) {
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-#else
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
   m_SyncMode=0; 
   m_ShiftMode=screen_res; // we know it's updated first, debug strange screen!
 #endif
@@ -3908,7 +3847,7 @@ void TShifter::Reset(bool Cold) {
 
 }
 
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 
 /*  SetShiftMode() and SetSyncMode() are called when a program writes
     on "Shifter" registers FF8260 (shift) or FF820A (sync). 
@@ -4093,7 +4032,7 @@ void TShifter::SetShiftMode(BYTE NewMode) {
     {
       CurrentScanline.Cycles=scanline_time_in_cpu_cycles_8mhz[(NewMode&2)?2:shifter_freq_idx];
       ASSERT(CurrentScanline.Cycles<=512);
-#if defined(SSE_GLUE_FRAME_TIMINGS_A)  
+#if defined(SSE_GLUE_FRAME_TIMINGS)  
       prepare_next_event();
 #endif
     }
@@ -4239,7 +4178,7 @@ void TShifter::SetSyncMode(BYTE NewSync) {
     MC68901.AdjustTimerB(); 
 #endif
   shifter_freq=new_freq;
-#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+#if defined(SSE_GLUE_FRAME_TIMINGS)
   prepare_next_event();
 #endif
 #if defined(SSE_SHIFTER_TRICKS)
@@ -4256,7 +4195,7 @@ void TShifter::SetSyncMode(BYTE NewSync) {
   }
 }
 #endif
-#endif//#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#endif
 
 void TShifter::Vbl() {
   // called at the very end of event_vbl_interrupt()
@@ -4266,14 +4205,14 @@ void TShifter::Vbl() {
 #if defined(SSE_DEBUG_FRAME_REPORT)
   FrameEvents.Vbl(); 
 #endif
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 #if defined(SSE_OSD_DEBUG_MESSAGE_FREQ) // tell when 60hz
   if(!TRACE_ENABLED  && shifter_freq_at_start_of_vbl==60)
     TRACE_OSD("60HZ");
 #endif
 #if defined(SSE_OSD_CONTROL)
   if( (OSD_MASK2&OSD_CONTROL_60HZ))// && shifter_freq_at_start_of_vbl==60) 
-//#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+//#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
     TRACE_OSD("R%d S%d",m_ShiftMode,m_SyncMode);
     //TRACE_OSD("60HZ");
 //#endif
@@ -4288,7 +4227,7 @@ void TShifter::Vbl() {
   n508lines=0;
 #endif
 
-#if defined(SSE_GLUE_FRAME_TIMINGS_A) && !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1) //soon MFD...
+#if defined(SSE_GLUE_FRAME_TIMINGS) && !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE) //soon MFD...//?
   CurrentScanline.Cycles=scanline_time_in_cpu_cycles_8mhz[shifter_freq_idx];
   ASSERT(CurrentScanline.Cycles<=512);
 #endif
@@ -4303,7 +4242,7 @@ void TShifter::Vbl() {
 #if defined(SSE_STRUCTURE_SSESHIFTER_OBJ)
 
 #define LOGSECTION LOGSECTION_VIDEO
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 //note: this isn't compiled anymore in v3.8
 void TShifter::AddExtraToShifterDrawPointerAtEndOfLine(unsigned long &extra) {
   // What a beautiful name!
@@ -4378,7 +4317,7 @@ void TShifter::DrawBufferedScanlineToVideo() {
 
 #endif
 
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 //note: this isn't compiled anymore in v3.8
 int TShifter::FetchingLine() {
   // does the current scan_y involve fetching by the Shifter?
@@ -4413,7 +4352,7 @@ int TShifter::FetchingLine() {
 bool TShifter::Line508Confusion() {
   bool rv=(PreviousScanline.Cycles==508 && CurrentScanline.Cycles==508 
     && shifter_freq_at_start_of_vbl==50);
-  ASSERT(!rv);
+//  ASSERT(!rv);
 
 //  if(rv) TRACE("508? %d\n",scan_y);
 //  if(rv) REPORT_LINE;
@@ -4538,7 +4477,7 @@ FF825E
 #endif
         Shifter.Render(CyclesIn,DISPATCHER_SET_PAL);
 
-#if defined(SSE_SHIFTER_HIRES_RASTER) && defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if defined(SSE_SHIFTER_HIRES_RASTER) && defined(SSE_GLUE_THRESHOLDS)
 /*  v3.8.0 
     Record when palette is changed during display, so that we apply effect
     at rendering time (there's no real-time rendering for HIRES).
@@ -4546,7 +4485,7 @@ FF825E
     -Our trick uses video RAM, so this limits the field to real picture.
     -Resolution is byte, not bit/cycle. It seems OK for Time Slice.
 */
-      if(screen_res==2 && Glue.FetchingLine())
+      if(screen_res==2 && GLU.FetchingLine())
       {
         ASSERT(STpal[n]!=NewPal); // we're in this test, remember
         int time_to_first_pixel
@@ -4571,7 +4510,7 @@ FF825E
     }
 }
 
-#if defined(SSE_SHIFTER_TRICKS) && !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if defined(SSE_SHIFTER_TRICKS) && !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 
 /* V.3.3 used Hatari analysis. Now that we do without this hack, we need
    look-up functions to extend the existing Steem system.
@@ -5064,7 +5003,7 @@ MEM_ADDRESS TShifter::ReadSDP(int CyclesIn,int dispatcher) {
 #endif      
       )
       starts_counting-=26;
-#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+#if defined(SSE_GLUE_FRAME_TIMINGS) && defined(SSE_GLUE_THRESHOLDS)
     if(left_border && CyclesIn>=Glue.ScanlineTiming[TGlue::GLU_DE_ON]
       [TGlue::FREQ_60]+2 && FreqAtCycle(Glue.ScanlineTiming[TGlue::GLU_DE_ON]
       [TGlue::FREQ_60]+2)==60)

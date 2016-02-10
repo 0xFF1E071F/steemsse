@@ -149,8 +149,8 @@ void calc_time_of_next_timer_b() //SS called only by mfp_set_timer_reg()
         +TB_TIME_WOBBLE;
 #endif
 
-#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS) && defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-  if(OPTION_PRECISE_MFP&&(Glue.CurrentScanline.Tricks&TRICK_LINE_MINUS_106)
+#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
+  if(OPTION_PRECISE_MFP&&(GLU.CurrentScanline.Tricks&TRICK_LINE_MINUS_106)
     && LINECYCLES>166+28+4) // not if Timer B occurred in shift mode 2
     time_of_next_timer_b+=scanline_time_in_cpu_cycles[shifter_freq_idx]; 
 #endif 
@@ -731,7 +731,9 @@ void ASMCALL check_for_interrupts_pending()
 #endif
 #endif
 #if defined(SSE_INT_MFP_REFACTOR2A)
-        if(MC68901.Irq) 
+        if(MC68901.Irq
+          &&MFP_IRQ
+          ) 
 #else
         if(MFP_IRQ)
 #endif
@@ -823,7 +825,7 @@ void ASMCALL check_for_interrupts_pending()
             if(!MFP_IRQ)
             {
               TRACE_MFP("lost IRQ during IACK %d\n",iack_latency);
-              break;
+              break; 
             }
 #endif
             prepare_next_event();
@@ -931,6 +933,9 @@ void ASMCALL check_for_interrupts_pending()
 #if defined(SSE_INT_MFP_SPURIOUS)          
 /*  The dangerous spurious test.
     It triggers automatically at the end of IACK if we couldn't find an irq.
+    Cases: 
+    TEST10.TOS and SPURIOUS.TOS (of course)
+    Pacemaker STE! Spurious interrupt has a handler (RTE)
 */
           if(irq==-1 
 #if !defined(SSE_INT_MFP_EVENT_WRITE_SPURIOUS)
@@ -1175,7 +1180,7 @@ void ASMCALL check_for_interrupts_pending()
     if (vbl_pending){ //SS IPL4
       if ((sr & SR_IPL)<SR_IPL_4){
         VBL_INTERRUPT
-#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+#if defined(SSE_GLUE_FRAME_TIMINGS3)
         if(Glue.Status.hbi_done)
           hbl_pending=false;
 #endif
@@ -1185,7 +1190,7 @@ void ASMCALL check_for_interrupts_pending()
     else
 #endif
     if (hbl_pending
-#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+#if defined(SSE_GLUE_FRAME_TIMINGS3)
       && !Glue.Status.hbi_done
 #endif      
       ){ 
@@ -1807,6 +1812,10 @@ int TMC68901::UpdateNextIrq(int start_from_irq,int at_time) {
     if(InService(irq,at_time))
       break;
 #endif
+#if defined(SSE_INT_MFP_REFACTOR2A__)
+    if((i_bit&mfp_reg[MFPR_ISRA+i_ab]))
+      break; // no IRQ possible then (was bug)
+#endif
 #if defined(SSE_INT_MFP_EVENT_WRITE)
     if((i_bit // instant test thanks to event system
     & mfp_reg[MFPR_IERA+i_ab]&mfp_reg[MFPR_IPRA+i_ab]&mfp_reg[MFPR_IMRA+i_ab])
@@ -1853,11 +1862,7 @@ void TMC68901::AdjustTimerB() {
     return;
   int CyclesIn=LINECYCLES;
   int linecycle_of_end_de=(mfp_reg[MFPR_AER]&8)
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-    ?Glue.CurrentScanline.StartCycle:Glue.CurrentScanline.EndCycle;
-#else
-    ?Shifter.CurrentScanline.StartCycle:Shifter.CurrentScanline.EndCycle;
-#endif
+    ? GLU.CurrentScanline.StartCycle : GLU.CurrentScanline.EndCycle;
   if(linecycle_of_end_de==-1) //0byte -> no timer B?
     linecycle_of_end_de+=scanline_time_in_cpu_cycles_8mhz[shifter_freq_idx];
   

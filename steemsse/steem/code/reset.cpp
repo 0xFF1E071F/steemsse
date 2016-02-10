@@ -226,7 +226,7 @@ void power_on()
 
   init_screen();
   init_timings();
-#if !defined(SSE_GLUE_FRAME_TIMINGS_A)
+#if !defined(SSE_GLUE_FRAME_TIMINGS4)
   hbl_pending=false; // sure?
 #endif
   disable_input_vbl_count=50*3; // 3 seconds
@@ -272,20 +272,20 @@ void reset_peripherals(bool Cold)
   if (extended_monitor){
     if (em_planes==1){
       screen_res=2;
-#if defined(SSE_GLUE_FRAME_TIMINGS_C)
+#if defined(SSE_GLUE_FRAME_TIMINGS4)
     shifter_freq=72;
     shifter_freq_idx=2;
 #endif
     }else{
       screen_res=0;
-#if defined(SSE_GLUE_FRAME_TIMINGS_C)
+#if defined(SSE_GLUE_FRAME_TIMINGS4)
       screen_res=Shifter.m_ShiftMode;
       shifter_freq=50;
       shifter_freq_idx=0;
 #endif
 
     }
-#if !defined(SSE_GLUE_FRAME_TIMINGS_C)
+#if !defined(SSE_GLUE_FRAME_TIMINGS4)
     shifter_freq=50;
     shifter_freq_idx=0;
 #endif
@@ -470,7 +470,7 @@ void reset_peripherals(bool Cold)
     SF314[0].Sound_StopBuffers();
 #endif
 
-#if defined(SSE_GLUE_FRAME_TIMINGS_A)
+#if defined(SSE_GLUE_FRAME_TIMINGS4)
   Glue.Reset(Cold);
 #endif
 

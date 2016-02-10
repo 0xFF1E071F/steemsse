@@ -2,6 +2,8 @@
 #ifndef SSEDECLA_H
 #define SSEDECLA_H
 
+#include "SSE.h"
+#if defined(STEVEN_SEAGAL)
 
 /////////////////
 // PORTABILITY //
@@ -254,6 +256,15 @@ extern BYTE *stem_version_text[SSE_VERSION_TXT_LEN];
 #define LINECYCLES (ABSOLUTE_CPU_TIME-LINECYCLE0) 
 #define FRAMECYCLES (ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl)
 
+
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE) 
+// for smaller code, we directly change
+#define GLU Glue 
+#else
+#define GLU Shifter // TShifter functions call Shifter as if extern
+#endif
+
+
 #if defined(SSE_SHIFTER) && defined(SSE_DEBUG)
 #define FRAME (Shifter.nVbl) 
 #elif defined(SSE_DEBUG_FRAME_REPORT)
@@ -351,3 +362,5 @@ extern TOsdControl OsdControl;
 #endif
 
 #endif//SSEDECLA_H
+
+#endif//ss

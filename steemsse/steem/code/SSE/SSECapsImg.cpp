@@ -339,11 +339,7 @@ void TCaps::Hbl() {
 #if defined(SSE_IPF_RUN_PRE_IO) || defined(SSE_IPF_RUN_POST_IO)
   ASSERT( Shifter.CurrentScanline.Cycles-Caps.CyclesRun>0 );
 #endif
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-  CAPSFdcEmulate(&WD1772,Glue.CurrentScanline.Cycles
-#else
-  CAPSFdcEmulate(&WD1772,Shifter.CurrentScanline.Cycles
-#endif
+  CAPSFdcEmulate(&WD1772,GLU.CurrentScanline.Cycles
 #if defined(SSE_IPF_RUN_PRE_IO) || defined(SSE_IPF_RUN_POST_IO)
     -CyclesRun
 #endif
@@ -532,7 +528,7 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   Caps.LockedSide[drive]=side;
   Caps.LockedTrack[drive]=track;
 
-#if defined(SSE_IPF_TRACE_SECTORS) &&defined(SSE_DISK_IMAGETYPE) // debug info
+#if defined(SSE_DEBUG_IPF_TRACE_SECTORS) &&defined(SSE_DISK_IMAGETYPE) // debug info
   if(::SF314[drive].ImageType.Extension==EXT_IPF)
   {
 #if SSE_VERSION<=370 // included in image info
