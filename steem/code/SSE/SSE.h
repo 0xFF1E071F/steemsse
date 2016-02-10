@@ -2666,12 +2666,14 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_D3D_380
 #define SSE_VID_DISABLE_AUTOBORDER
 #define SSE_VID_DISABLE_AUTOBORDER2 // move options around
+#define SSE_VID_DISABLE_AUTOBORDER3 // different for monochrome
 #define SSE_VID_STRETCH_ASPECT_RATIO 
 #if defined(SSE_VID_BORDERS)
 #define SSE_VID_BORDERS_LIMIT_TO_245
 #define SSE_VID_BORDERS_LINE_PLUS_20
 #define SSE_VID_BORDERS_416_NO_SHIFT2 //remove hack condition
 #define SSE_VID_BORDERS_416_NO_SHIFT3 //?
+#define SSE_VID_BORDERS_416_NO_SHIFT4 //large display mode shift pixels for non-fetching lines
 #endif
 #endif
 

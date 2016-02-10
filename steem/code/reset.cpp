@@ -239,6 +239,12 @@ void power_on()
   M68000.ProcessingState=TM68000::NORMAL; //care later for exception
 #endif
 
+#if defined(SSE_VID_DISABLE_AUTOBORDER3) 
+  if(MONO && SSEOption.MonochromeDisableBorder)
+    border=0;
+  else
+    border=border_last_chosen;
+#endif
 
 }
 //---------------------------------------------------------------------------
