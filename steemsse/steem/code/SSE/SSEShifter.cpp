@@ -3481,7 +3481,11 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 #endif
 #endif
       cycles_since_hbl++; // eg Overscan Demos #6, already in v3.2 TODO why?
-
+#if defined(SSE_VID_BORDERS_LINE_PLUS_20) 
+    if(SSE_HACKS_ON&&SideBorderSize==VERY_LARGE_BORDER_SIDE
+      && (GLU.CurrentScanline.Tricks&TRICK_LINE_PLUS_20))
+      cycles_since_hbl+=2; // Circus 
+#endif
 #if defined(SSE_VID_BORDERS_416_NO_SHIFT)
 /*  We must compensate the "no shifter_pixel+4" of "left off" to get correct
     palette timings. This is a hack but we must manage various sizes.
@@ -3763,9 +3767,9 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
           // actually draw it
           if(picture_left_edge<0) 
             picture+=picture_left_edge;
-#if !defined(SSE_VID_DISABLE_AUTOBORDER)
+//#if !defined(SSE_VID_DISABLE_AUTOBORDER) //argh!
           AUTO_BORDER_ADJUST; // hack borders if necessary
-#endif
+//#endif
           DEBUG_ONLY( shifter_draw_pointer+=debug_screen_shift; );
           if(hscroll>=16) // convert excess hscroll in SDP shift
           {
@@ -3843,6 +3847,10 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
       {
         left_visible_edge=0;
         right_visible_edge=BORDER_SIDE + 320 + BORDER_SIDE;
+#if defined(SSE_VID_BORDERS_416_NO_SHIFT4)
+        if(SideBorderSize==VERY_LARGE_BORDER_SIDE && pixels_in>BORDER_SIDE)
+          pixels_in+=4;// fixes Appendix 4 pixel rgb plasma in this display size
+#endif
       }
       // No, only the part between the borders
       else 

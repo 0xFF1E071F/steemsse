@@ -1078,8 +1078,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     // Loading of border is now practically ignored (because it can be set to 0
     // by going to windowed mode). Only used first load of v2.06.
 #if defined(SSE_VID_DISABLE_AUTOBORDER)
-    border=min(pCSF->GetInt("Display","Border",border),1);
-    border_last_chosen=min(pCSF->GetInt("Display","BorderLastChosen",border),1);
+    //border=min(pCSF->GetInt("Display","Border",border),1);
+    border=pCSF->GetInt("Display","Border",border)&1;
+    border_last_chosen=pCSF->GetInt("Display","BorderLastChosen",border)&1;
 #else
     border=min(pCSF->GetInt("Display","Border",border),2);
     border_last_chosen=min(pCSF->GetInt("Display","BorderLastChosen",border),2);
