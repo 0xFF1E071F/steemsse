@@ -81,23 +81,50 @@ b543	b210         Mode           .B, .W             .L
 
 */
 /*
-Effective Address 						
-						
-		Mode Field	Reg Field	Cycles (n(r/w))		
-Addressing Mode 	source	b543	b210	Byte, Word 	Long	
-	dest	b876	bBA9			
-Dn		000	R	0(0/0)	0(0/0)	Data Register Direct
-An		001	R	0(0/0)	0(0/0)	Address Register Direct
-(An)		010	R	4(1/0)	8(2/0)	Address Register Indirect
-(An)+		011	R	4(1/0)	8(2/0)	Address Register Indirect with Postincrement
-–(An)		100	R	6(1/0)	10(2/0)	Address Register Indirect with Predecrement
-(d16, An)		101	R	8(2/0)	12(3/0)	Address Register Indirect with Displacement
-(d8, An, Xn)*		110	R	10(2/0)	14(3/0)	Address Register Indirect with Index
-(xxx).W		111	000	8(2/0)	12(3/0)	Absolute Short
-(xxx).L		111	001	12(3/0)	16(4/0)	Absolute Long
-(d16, PC)		111	010	8(2/0)	12(3/0)	Program Counter Indirect with Displacement
+Dn		          000	R	  0(0/0)	0(0/0)	Data Register Direct
+An		          001	R	  0(0/0)	0(0/0)	Address Register Direct
+(An)		        010	R	  4(1/0)	8(2/0)	Address Register Indirect
+(An)+		        011	R	  4(1/0)	8(2/0)	Address Register Indirect with Postincrement
+–(An)		        100	R	  6(1/0)	10(2/0)	Address Register Indirect with Predecrement
+(d16, An)	      101	R	  8(2/0)	12(3/0)	Address Register Indirect with Displacement
+(d8, An, Xn)*		110	R	  10(2/0)	14(3/0)	Address Register Indirect with Index
+(xxx).W		      111	000	8(2/0)	12(3/0)	Absolute Short
+(xxx).L		      111	001	12(3/0)	16(4/0)	Absolute Long
+(d16, PC)		    111	010	8(2/0)	12(3/0)	Program Counter Indirect with Displacement
 (d8, PC, Xn)*		111	011	10(2/0)	14(3/0)	Program Counter Indirect with Index - 8-Bit Displacement
-#<data>		111	100	4(1/0)	8(2/0)	Immediate
+#<data>		      111	100	4(1/0)	8(2/0)	Immediate
+*/
+
+/*
+
+*******************************************************************************
+                   OPERAND EFFECTIVE ADDRESS CALCULATION TIMES
+*******************************************************************************
+-------------------------------------------------------------------------------
+       <ea>       |    Exec Time    |               Data Bus Usage
+------------------+-----------------+------------------------------------------
+.B or .W :        |                 |
+  Dn              |          0(0/0) |
+  An              |          0(0/0) |
+  (An)            |          4(1/0) |                              nr           
+  (An)+           |          4(1/0) |                              nr           
+  -(An)           |          6(1/0) |                   n          nr           
+  (d16,An)        |          8(2/0) |                        np    nr           
+  (d8,An,Xn)      |         10(2/0) |                   n    np    nr           
+  (xxx).W         |          8(2/0) |                        np    nr           
+  (xxx).L         |         12(3/0) |                     np np    nr           
+  #<data>         |          4(1/0) |                        np                 
+.L :              |                 |
+  Dn              |          0(0/0) |
+  An              |          0(0/0) |
+  (An)            |          8(2/0) |                           nR nr           
+  (An)+           |          8(2/0) |                           nR nr           
+  -(An)           |         10(2/0) |                   n       nR nr           
+  (d16,An)        |         12(3/0) |                        np nR nr           
+  (d8,An,Xn)      |         14(3/0) |                   n    np nR nr           
+  (xxx).W         |         12(3/0) |                        np nR nr           
+  (xxx).L         |         16(4/0) |                     np np nR nr           
+  #<data>         |          8(2/0) |                     np np                 
 
 */
 
@@ -296,16 +323,6 @@ void m68k_get_source_101_l(){ // .L (d16, An)
 }
 
 // (d8,An,Xn)
-
-/*  (d8,An,Xn) +(d8,PC,Xn)
-    Hatari: 
-    "On ST, d8(An,Xn) takes 2 cycles more (which can generate pairing)."
-    It was already correctly handled in Steem by using :
-    INSTRUCTION_TIME_ROUND(10);
-    It will take 12 cycles except if pairing.
-    Cases: DSoS, Anomaly
-    Strange though, still to examine.
-*/
 
 void m68k_get_source_110_b(){ // .B (d8,An,Xn)
 
@@ -1439,7 +1456,7 @@ void TM68000::PrefetchSetPC() {
 
 #endif
 
-#if defined(SSE_INLINE_370)
+#if defined(SSE_INLINE_370) && !defined(SSE_COMPILER_380)
 #define LOGSECTION LOGSECTION_CRASH
 void TM68000::PrefetchIrc() {
 
@@ -1498,6 +1515,7 @@ void TM68000::PrefetchIrc() {
 #endif
 
 // VC6 won't inline this function
+// we don't count cycles here, they are variable (trace, irq...)
 
 void TM68000::Interrupt(MEM_ADDRESS ad) {
 
@@ -1511,14 +1529,12 @@ void TM68000::Interrupt(MEM_ADDRESS ad) {
 #if defined(SSE_CPU_PREFETCH_CLASS)
   PrefetchClass=2;
 #endif
-
-#if defined(SSE_BOILER_STACK_68030_FRAME)
+#if defined(SSE_BOILER_68030_STACK_FRAME)
   if(Debug.M68030StackFrame)
   {//macro must be scoped!
     m68k_PUSH_W(0); // format + offset, both may be 0
   }
 #endif
-
   m68k_PUSH_L(PC32);
 #if defined(SSE_BOILER_PSEUDO_STACK)
   Debug.PseudoStackPush(PC32);
@@ -1565,7 +1581,6 @@ FC2 FC1 FC0 Address Space
   For those cases, we generally get "data" at this point, but "program"
   may be more appropriate.
   
-
 */
   if(bombs==BOMBS_BUS_ERROR || bombs==BOMBS_ADDRESS_ERROR)
   {
@@ -1926,7 +1941,7 @@ NOT_DEBUG(inline) void m68k_dpoke_abus(WORD x){
     exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
   else if(abus>=MEM_IO_BASE && super)
       io_write_w(abus,x);
-#if defined(SSE_CPU_CHECK_VIDEO_RAM_W) // 3615 GEN4 100
+#if defined(SSE_CPU_CHECK_VIDEO_RAM_W) // 3615 GEN4 100%
   else if(abus<shifter_draw_pointer_at_start_of_line && abus<himem
     && (abus>=MEM_START_OF_USER_AREA ||super && abus>=MEM_FIRST_WRITEABLE))
 #else
@@ -2144,7 +2159,65 @@ void m68k_lpoke_abus2(LONG x){
 
 // E-clock
 
-#if defined(SSE_CPU_E_CLOCK)
+#if defined(SSE_CPU_E_CLOCK) && SSE_VERSION==364 // another source error...
+
+#define LOGSECTION LOGSECTION_INTERRUPTS
+
+#ifdef SSE_CPU_E_CLOCK_DISPATCHER
+void TM68000::SyncEClock(int dispatcher) {
+#else
+void TM68000::SyncEClock() {
+#endif
+
+  // sync with E max once per instruction: Demoniak (?)
+  if(EClock_synced) 
+    return;
+  EClock_synced=true; 
+ 
+  int act=ACT;
+
+#if defined(SSE_SHIFTER)&& defined(SSE_TIMINGS_FRAME_ADJUSTMENT)//no
+  act-=4*Shifter.n508lines; //legit hack: NOJITTER.PRG
+#endif
+
+  BYTE wait_states;
+  switch(abs(act%10)) {
+  case 0:
+    wait_states=8;
+#if defined(SSE_INT_HBL_E_CLOCK_HACK)
+    // pathetic hack for 3615GEN4 HMD #1, make it 4 cycles instead on HBI
+    // (suspect wrong timing in an instruction?)
+    if(!(dispatcher==TM68000::ECLOCK_HBL&&SSE_HACKS_ON))
+#endif
+    break;
+  case 2:
+  case 4: 
+    wait_states=4;
+    break;
+  default:
+    wait_states=0;
+  }//sw
+
+  InstructionTime(wait_states); 
+
+#if defined(SSE_DEBUG)
+  char* sdispatcher[]={"ACIA","HBL","VBL"};
+#if defined(SSE_DEBUG_FRAME_REPORT_ACIA)
+  FrameEvents.Add(scan_y,LINECYCLES,'E',wait_states);
+#endif
+#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
+  if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_ACIA)
+    FrameEvents.Add(scan_y,LINECYCLES,'E',wait_states);
+#endif
+  if(wait_states) 
+    TRACE_LOG("F%d y%d c%d %s E-Clock +%d\n",TIMING_INFO,sdispatcher[dispatcher],wait_states);
+#endif
+  
+}
+
+#undef LOGSECTION
+
+#elif defined(SSE_CPU_E_CLOCK)
 /*  
 "Enable (E)
 This signal is the standard enable signal common to all M6800 Family peripheral
@@ -2169,14 +2242,6 @@ CPU-Clock  E-clock Keyboard read
  1121792  112179.2     24
  1282048  128204.8     20
  1442304  144230.4     24
-
-
-  Compare with jitter tables in Hatari:
- 
-  int HblJitter[] = {8,4,4,0,0}; 
-  int VblJitter[] = {8,0,4,0,4}; 
-
-  Sync with E-clock is more precise emulation.
 
   Cases:
   3615GEN4 HMD #1
@@ -2207,11 +2272,9 @@ TM68000::SyncEClock(
                     int dispatcher
 #endif
                     ) {
-                      
 #if defined(SSE_CPU_E_CLOCK2)
   BYTE wait_states=0;
 #endif
-
   // sync with E max once per instruction
   if(EClock_synced) 
 #if defined(SSE_CPU_E_CLOCK2)
@@ -2220,9 +2283,7 @@ TM68000::SyncEClock(
     return;
 #endif
   EClock_synced=true; 
-
   int act=ACT;
-
 #if defined(SSE_SHIFTER) && defined(SSE_TIMINGS_FRAME_ADJUSTMENT)//no
   act-=4*Shifter.n508lines; //legit hack: NOJITTER.PRG
 #endif
@@ -2250,14 +2311,15 @@ TM68000::SyncEClock(
 #else
   switch(abs(act%10)) {
 #endif
-
   case 0:
     wait_states=8;
 #if defined(SSE_INT_HBL_E_CLOCK_HACK)
-    // pathetic hack for 3615GEN4 HMD #1 and 3615GEN4-OVR, make it 4
+    // pathetic hack for 3615GEN4 HMD #1, make it 4
     // cycles instead on HBI of STF
     // TEST16, HBITMG: jitter is 0, 4, 8, timing is 56 
     // -> we know it's not correct...
+    // on the other hand, the demo can crash on real STF too
+    // v3.8.0 undef, made a patch instead
     if(dispatcher==ECLOCK_HBL&&ST_TYPE==STF&&SSE_HACKS_ON)
       TRACE_LOG("ECLK 8->4\n");
     else
@@ -2270,6 +2332,7 @@ TM68000::SyncEClock(
   default: //6,8
     wait_states=0;
   }//sw
+ // TRACE_OSD("%d %d",act,wait_states);
 
 #if !defined(SSE_CPU_E_CLOCK2)
   InstructionTime(wait_states); 
@@ -2618,7 +2681,7 @@ void m68k_0001() {  // move.b
     || (ir&BITS_876)==BITS_876_111
     && (ir&BITS_ba9)!=BITS_ba9_000
     && (ir&BITS_ba9)!=BITS_ba9_001 
-#if defined(SSE_CPU_ASSERT_ILLEGAL2)
+#if defined(SSE_CPU_ASSERT_ILLEGAL2) && !defined(SSE_CPU_ASSERT_ILLEGAL3_380)
 /* v3.7
      "For byte size operation, address register direct is not allowed."
      ->  move.b EA=an is illegal
@@ -2633,7 +2696,11 @@ void m68k_0001() {  // move.b
 #endif
 
   // Source
+#if defined(SSE_CPU_ASSERT_ILLEGAL3_380)
+  m68k_GET_SOURCE_B_NOT_A; //of course, though the remark about early handling still applies
+#else
   m68k_GET_SOURCE_B;
+#endif
 
   // Destination
 #if defined(SSE_CPU_TRUE_PC)

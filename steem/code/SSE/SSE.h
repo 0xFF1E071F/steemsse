@@ -2250,7 +2250,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BOILER_MOD_REGS // big letters, no =
 #define SSE_BOILER_MOD_VBASE
 #define SSE_BOILER_MOD_VBASE2 //move it
+#ifdef SSE_CPU
 #define SSE_BOILER_MONITOR_372 // v3.7.2 to clarify code
+#endif
 #define SSE_BOILER_MONITOR_IO_FIX1 // ? word check, not 2x byte on word access
 #define SSE_BOILER_MONITOR_RANGE // will stop for every address between 2 stops
 #define SSE_BOILER_MONITOR_TRACE // v3.7.2 mode log also in TRACE (duh!)
@@ -2500,22 +2502,46 @@ Beta: not SSE_PRIVATE_BUILD
 ////#define SSE_BLT_TIMING_START_BLITTER2
 #endif//blt
 
-#if defined(SSE_BOILER)
-//#define SSE_BOILER_TRACE_NOT_OPTIONAL
-#endif//boiler
+#if defined(SSE_COMPILER)
+#define SSE_COMPILER_380
+#endif
 
 #ifdef SSE_CPU
 #define SSE_CPU_512MHZ
 #define SSE_CPU_1GHZ 
-#define SSE_CPU_2GHZ
-//#define SSE_CPU_3GHZ
-//#define SSE_CPU_4GHZ//after this I hope they'll leave me alone for a while
+#define SSE_CPU_2GHZ//after this I hope they'll leave me alone for a while
+//#define SSE_CPU_3GHZ   //note: 2147483647 = max int
+//#define SSE_CPU_4GHZ
+#if defined(SSE_CPU_ASSERT_ILLEGAL)
+#define SSE_CPU_ASSERT_ILLEGAL3_380 // mini-refactoring
+#endif
+#if defined(SSE_CPU_E_CLOCK)
 #define SSE_CPU_E_CLOCK4
+#endif
+#if defined(SSE_CPU_ROUNDING)
+#define SSE_CPU_ROUNDING_ANDI2
 #define SSE_CPU_ROUNDING_BUS // big change, much overhead, little effect 
 #define SSE_CPU_ROUNDING_BUS2 // blitter problem
+#define SSE_CPU_ROUNDING_CHK
+#define SSE_CPU_ROUNDING_DBCC2
+#define SSE_CPU_ROUNDING_IMMEDIATE_TO_SR //dubious... future bug reports?
+#define SSE_CPU_ROUNDING_MOVEM_380 //final?
+#define SSE_CPU_ROUNDING_UNLK
+#define SSE_CPU_ROUNDING_LINK
+#define SSE_CPU_ROUNDING_RTR
+#define SSE_CPU_ROUNDING_RTS
+#define SSE_CPU_ROUNDING_TRAP
+#define SSE_CPU_ROUNDING_TRAPV
+#endif//round
+#define SSE_CPU_STOP_380A // little refactoring
+#define SSE_CPU_STOP_DELAY // from WinUAE
+#undef SSE_CPU_UNSTOP2//placement is paramount!
 #define SSE_CPU_TIMINGS_REFACTOR_FETCH // moving timings to fetching functions
 #define SSE_CPU_TIMINGS_REFACTOR_PUSH // count timing in push macros
-#endif
+#define SSE_CPU_TRACE_TIMING
+#define SSE_CPU_TRACE_TIMING_EXT //EXT for "extended" (see SSECpu.h)
+#define SSE_CPU_TRACE_LINE_A_F
+#endif//cpu
 
 #ifdef SSE_GUI
 #define SSE_GUI_CONFIG_FILE // new option to L/S ini files
@@ -2694,7 +2720,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #ifdef SSE_VARIOUS
 #define SSE_VAR_KEYBOARD_CLICK2 // persistent
-#define SSE_VAR_SNAPSHOT_INI2
+#define SSE_VAR_RESIZE_380
 #define SSE_VAR_REWRITE_380
 #endif
 

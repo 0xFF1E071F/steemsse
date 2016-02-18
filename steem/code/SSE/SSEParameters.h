@@ -154,6 +154,15 @@ MIDI is 4 times faster than IKBD
 #if defined(SSE_CPU)
 
 //todo move clock here?
+
+#if defined(SSE_CPU_TRACE_TIMING)
+#define CPU_TRACE_TIMING 36 // doc 34
+#endif
+
+#if defined(SSE_CPU_STOP_DELAY)
+#define CPU_STOP_DELAY 8
+#endif
+
 #endif
 
 
