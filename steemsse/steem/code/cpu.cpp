@@ -47,6 +47,13 @@ EXT MEM_ADDRESS pc_rel_stop_on_ref;
 #undef EXT
 #undef INIT
 
+#ifndef CPU_ABUS_ACCESS_READ
+#define CPU_ABUS_ACCESS_READ INSTRUCTION_TIME_ROUND(4)
+#endif
+#ifndef CPU_ABUS_ACCESS_WRITE
+#define CPU_ABUS_ACCESS_WRITE INSTRUCTION_TIME_ROUND(4)
+#endif
+
 #ifdef SSE_UNIX
 //temp! Don't understand what's going on
 //#include "SSE/SSEDecla.h"
@@ -89,11 +96,6 @@ void sr_check_z_n_l_for_r0()
 #if !defined(SSE_CPU_ROUNDING2)
 #define PREFETCH_IRC_NO_ROUND
 #endif
-#endif
-
-#ifndef CPU_ABUS_ACCESS
-#define CPU_ABUS_ACCESS_READ INSTRUCTION_TIME_ROUND(4)
-#define CPU_ABUS_ACCESS_WRITE INSTRUCTION_TIME_ROUND(4)
 #endif
 
 #if !defined(TRUE_PC)
@@ -1214,9 +1216,7 @@ LONG m68k_read_dest_l(){
 
 #define LOGSECTION LOGSECTION_TRACE
 
-#if defined(SSE_CPU_TRACE_REFACTOR)
-// See TM68000:Process in SSECpu.h
-#else
+#if !defined(SSE_CPU_TRACE_REFACTOR) // See TM68000:Process in SSECpu.h
 
 #if defined(STEVEN_SEAGAL) && (defined(SSE_VAR_REWRITE) || defined(SSE_VS2008))
 extern "C" void ASMCALL m68k_trace() //execute instruction with trace bit set
@@ -2052,12 +2052,21 @@ void                              m68k_ori_b(){
 #if !defined(SSE_CPU_ROUNDING_ORI)
     INSTRUCTION_TIME(16);
 #endif
+#if defined(SSE_CPU_ROUNDING_IMMEDIATE_TO_SR)
+    CPU_ABUS_ACCESS_READ_FETCH; 
+    BYTE immediate=m68k_IMMEDIATE_B; //timing counted there
+    INSTRUCTION_TIME(8);
+    CCR|=immediate;
+    CPU_ABUS_ACCESS_READ_PC;
+    //REFETCH_IR; //probably not...
+#else
 #if defined(SSE_CPU_ROUNDING_ORI)
     CPU_ABUS_ACCESS_READ;//? respecting Yacht
     INSTRUCTION_TIME(8);
     CPU_ABUS_ACCESS_READ_FETCH; 
 #endif
     CCR|=m68k_IMMEDIATE_B;
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS)
     FETCH_TIMING;
 #endif
@@ -2101,12 +2110,21 @@ void                              m68k_ori_w(){
 #if !defined(SSE_CPU_ROUNDING_ORI)
       INSTRUCTION_TIME(16);
 #endif
+#if defined(SSE_CPU_ROUNDING_IMMEDIATE_TO_SR)
+      CPU_ABUS_ACCESS_READ_FETCH; 
+      WORD immediate=m68k_IMMEDIATE_W; //timing counted there
+      INSTRUCTION_TIME(8);
+      sr|=immediate;
+      CPU_ABUS_ACCESS_READ_PC;
+      //REFETCH_IR; //probably not...
+#else
 #if defined(SSE_CPU_ROUNDING_ORI)
       CPU_ABUS_ACCESS_READ;//? respecting Yacht
       INSTRUCTION_TIME(8);
       CPU_ABUS_ACCESS_READ_FETCH; 
 #endif
       sr|=m68k_IMMEDIATE_W;
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS)
       FETCH_TIMING;
 #endif
@@ -2190,12 +2208,21 @@ void                              m68k_andi_b(){
 #if !defined(SSE_CPU_ROUNDING_ANDI)
     INSTRUCTION_TIME(16);
 #endif
+#if defined(SSE_CPU_ROUNDING_IMMEDIATE_TO_SR)
+    CPU_ABUS_ACCESS_READ_FETCH; 
+    BYTE immediate=m68k_IMMEDIATE_B; //timing counted there
+    INSTRUCTION_TIME(8);
+    CCR&=immediate;
+    //REFETCH_IR; //probably not...
+    CPU_ABUS_ACCESS_READ_PC;
+#else
 #if defined(SSE_CPU_ROUNDING_ANDI)
     CPU_ABUS_ACCESS_READ;//? respecting Yacht
     INSTRUCTION_TIME(8);
     CPU_ABUS_ACCESS_READ_FETCH; 
 #endif
     CCR&=m68k_IMMEDIATE_B;
+#endif
     PREFETCH_IRC;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS)
     FETCH_TIMING;
@@ -2239,8 +2266,23 @@ void                              m68k_andi_w(){
   if((ir&B6_111111)==B6_111100){  //to sr
     if(SUPERFLAG){
       DEBUG_ONLY( int debug_old_sr=sr; )
+#if defined(SSE_CPU_ROUNDING_IMMEDIATE_TO_SR)
+      CPU_ABUS_ACCESS_READ_FETCH; 
+      WORD immediate=m68k_IMMEDIATE_W; //timing counted there
+      INSTRUCTION_TIME(8);
+      sr&=immediate;
+      CPU_ABUS_ACCESS_READ_PC;
+      //REFETCH_IR; //probably not...
+#else
+#if defined(SSE_CPU_ROUNDING_ANDI2)
+    CPU_ABUS_ACCESS_READ;//? respecting Yacht
+    INSTRUCTION_TIME(8);
+    CPU_ABUS_ACCESS_READ_FETCH; 
+#else      
       INSTRUCTION_TIME(16);
+#endif
       sr&=m68k_IMMEDIATE_W;
+#endif
       PREFETCH_IRC;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS)
       FETCH_TIMING;
@@ -2844,12 +2886,20 @@ void                              m68k_eori_b(){
 #if !defined(SSE_CPU_ROUNDING_EORI)
     INSTRUCTION_TIME(16);
 #endif
+#if defined(SSE_CPU_ROUNDING_IMMEDIATE_TO_SR)
+    CPU_ABUS_ACCESS_READ_FETCH; 
+    BYTE immediate=m68k_IMMEDIATE_B; //timing counted there
+    INSTRUCTION_TIME(8);
+    CCR^=immediate;
+    //REFETCH_IR; //probably not...
+#else
 #if defined(SSE_CPU_ROUNDING_EORI)
     CPU_ABUS_ACCESS_READ;//? respecting Yacht
     INSTRUCTION_TIME(8);
     CPU_ABUS_ACCESS_READ_FETCH; 
 #endif
     CCR^=m68k_IMMEDIATE_B;
+#endif
     PREFETCH_IRC;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS)
     FETCH_TIMING;
@@ -2894,12 +2944,21 @@ void                              m68k_eori_w(){
 #if !defined(SSE_CPU_ROUNDING_EORI)
       INSTRUCTION_TIME(16);
 #endif
+#if defined(SSE_CPU_ROUNDING_IMMEDIATE_TO_SR)
+      CPU_ABUS_ACCESS_READ_FETCH; 
+      WORD immediate=m68k_IMMEDIATE_W; //timing counted there
+      INSTRUCTION_TIME(8);
+      sr^=immediate;
+      CPU_ABUS_ACCESS_READ_PC;
+      //REFETCH_IR; //probably not...
+#else
 #if defined(SSE_CPU_ROUNDING_EORI)
       CPU_ABUS_ACCESS_READ;//? respecting Yacht
       INSTRUCTION_TIME(8);
       CPU_ABUS_ACCESS_READ_FETCH; 
 #endif
       sr^=m68k_IMMEDIATE_W;
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_0_TIMINGS)
       FETCH_TIMING;
 #endif
@@ -4535,7 +4594,8 @@ void                              m68k_movem_w_from_regs_or_ext_w(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
 #endif
-  if((ir&BITS_543)==BITS_543_000){ //SS EXT.W
+  if((ir&BITS_543)==BITS_543_000){ 
+    //SS EXT.W
 /*
 -------------------------------------------------------------------------------
                   |    Exec Time    |               Data Bus Usage
@@ -4880,6 +4940,10 @@ R --> M           |                 |
       m68k_unrecognised();
     }
 #endif
+#if defined(SSE_CPU_ROUNDING_MOVEM_380)
+    if((ir&BITS_543)==BITS_543_110) // (d8,An,Xn)
+      INSTRUCTION_TIME(2); // Yacht
+#endif
 #if defined(SSE_CPU_ROUNDING_MOVEM) 
     CPU_ABUS_ACCESS_READ_FETCH; // no action if SSE_CPU_TIMINGS_REFACTOR_FETCH defined
 #endif
@@ -4919,7 +4983,7 @@ R --> M           |                 |
       }else{         //.w
         ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_ap)+(signed short)r[m68k_ap>>12];
       }
-#if defined(SSE_CPU_ROUNDING_MOVEM6)
+#if defined(SSE_CPU_ROUNDING_MOVEM6) && !defined(SSE_CPU_ROUNDING_MOVEM_380)
       INSTRUCTION_TIME(2);
 #endif
       break;
@@ -5172,8 +5236,13 @@ void                              m68k_movem_l_to_regs(){
     mask<<=1;
   }
   if (postincrement) areg[PARAM_M]=ad | areg_hi;
+#ifdef SSE_CPU_ROUNDING_MOVEM_380
+  CPU_ABUS_ACCESS_READ;
+#endif
   m68k_dpeek(ad); //extra word read (discarded)
+#ifndef SSE_CPU_ROUNDING_MOVEM_380
   INSTRUCTION_TIME_ROUND(4);
+#endif
 #if !defined(SSE_CPU_PREFETCH_TIMING_MOVEM_HACK)
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
   FETCH_TIMING;
@@ -5347,8 +5416,13 @@ void                              m68k_movem_w_to_regs(){
     mask<<=1;
   }
   if (postincrement) areg[PARAM_M]=ad | areg_hi;
+#ifdef SSE_CPU_ROUNDING_MOVEM_380
+  CPU_ABUS_ACCESS_READ;
+#endif
   m68k_dpeek(ad); //extra word read (discarded)
+#ifndef SSE_CPU_ROUNDING_MOVEM_380
   INSTRUCTION_TIME_ROUND(4);
+#endif
 #if !defined(SSE_CPU_PREFETCH_TIMING_MOVEM_HACK)
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
   FETCH_TIMING;
@@ -5662,6 +5736,7 @@ NOTES :
   intercept_os();
 }
 /*
+Yacht:
 -------------------------------------------------------------------------------
                   |    Exec Time    |               Data Bus Usage
         CHK       |  INSTR     EA   |  1st OP (ea)  |          INSTR
@@ -5704,9 +5779,23 @@ trap :            |                 |            |
 NOTES :
   . for more informations about the "trap" lines see exceptions section below.
 
+WinUAE
+CHK:
+
+- 8 idle cycles
+- write PC low word
+- write SR
+- write PC high word
+- read exception address high word
+- read exception address low word
+- prefetch
+- 2 idle cycles
+- prefetch
+
+Not exactly the same... cases?
 */
 void                              m68k_chk(){
-  #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
+#if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
 #endif
   if((ir&BITS_543)==BITS_543_001){
@@ -5714,7 +5803,7 @@ void                              m68k_chk(){
   }else{
     m68k_GET_SOURCE_W;
 #if defined(SSE_CPU_PREFETCH_TIMING_CHK)
-    PREFETCH_IRC;
+    PREFETCH_IRC; // apparently, we do it anyway? (not optimised)
     INSTRUCTION_TIME(6);
 #else
     INSTRUCTION_TIME(4);
@@ -5892,7 +5981,18 @@ void                              m68k_line_4_stuff(){
 
 #define LOGSECTION LOGSECTION_TRAP
 void                              m68k_trap(){
+//  TRAP instruction    | 34(4/3)  |              nn    ns nS ns nV nv np np      
+// case Bird Mad Girl Show
+
+#if defined(SSE_CPU_ROUNDING_TRAP)
+  INSTRUCTION_TIME(4);
+#if !defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
+  INSTRUCTION_TIME_ROUND(4); 
+#endif
+#else
   INSTRUCTION_TIME_ROUND(8); // Time to read address to jump to
+#endif
+
   MEM_ADDRESS Vector=LPEEK( 0x80+((ir & 0xf)*4) );
   switch (ir & 0xf){
     case 1: //GEMDOS
@@ -5905,21 +6005,32 @@ void                              m68k_trap(){
       if (os_xbios_vector==0) if (Vector>=rom_addr) os_xbios_vector=Vector;
       break;
   }
+#if defined(DEBUG_BUILD) && defined(SSE_CPU)
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
   Debug.RecordInterrupt("TRAP",(ir&0xF));
 #endif
-//#ifdef SSE_DEBUG
-#ifdef DEBUG_BUILD
   if((ir&0xf)!=1)
     //TRACE_LOG("PC %X TRAP #%d, %X\n",old_pc,(ir&0xf),DPEEK(areg[7]));//unsafe!
     TRACE_LOG("PC %X TRAP #%d, %X\n",old_pc,(ir&0xf),d2_dpeek(areg[7]));
 #endif
   m68k_interrupt(Vector);
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
+#if defined(SSE_CPU_ROUNDING_TRAP)
+#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
+#if defined(SSE_CPU_TRACE_TIMING_EXT)
+  INSTRUCTION_TIME_ROUND(CPU_TRACE_TIMING-4-12-4); 
+#else
+  INSTRUCTION_TIME_ROUND(14); 
+#endif
+#else
+  INSTRUCTION_TIME(26-4-4);
+#endif
+#else
 #if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
   INSTRUCTION_TIME_ROUND(26-12-4); 
 #else
   INSTRUCTION_TIME(26-4);
+#endif
 #endif
   FETCH_TIMING;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
@@ -5938,6 +6049,12 @@ void                              m68k_link(){
 Pushes the contents of the specified address register onto the stack. Then
 loads the updated stack pointer into the address register. Finally, adds the
 displacement value to the stack pointer.
+-------------------------------------------------------------------------------
+                  |    Exec Time    |               Data Bus Usage
+       LINK       |      INSTR      |  2nd Operand  |   INSTR
+------------------+-----------------+---------------+--------------------------
+An,#<data> :      |                 |
+  .W :            | 16(2/2)         |                      np nS ns np          
 */
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_CLASS)
   M68000.PrefetchClass=1; 
@@ -5945,9 +6062,16 @@ displacement value to the stack pointer.
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
 #endif
-
+#if defined(SSE_CPU_ROUNDING_LINK)
+  CPU_ABUS_ACCESS_READ_FETCH;
+#else
   INSTRUCTION_TIME(12);
+#endif
   m68k_GET_IMMEDIATE_W;
+#if defined(SSE_CPU_ROUNDING_LINK)
+  CPU_ABUS_ACCESS_WRITE_PUSH;
+  CPU_ABUS_ACCESS_WRITE_PUSH;
+#endif
   m68k_PUSH_L(areg[PARAM_M]);
   areg[PARAM_M]=r[15];
   r[15]+=(signed short)m68k_src_w;
@@ -5957,12 +6081,25 @@ displacement value to the stack pointer.
 #endif
 
 }
+
+/*
+-------------------------------------------------------------------------------
+	                |    Exec Time    |               Data Bus Usage
+      UNLNK       |      INSTR      |                  INSTR
+------------------+-----------------+------------------------------------------
+An :              | 12(3/0)         |                         nU nu np          
+*/
+
 void                              m68k_unlk(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
 #endif
-
+#if defined(SSE_CPU_ROUNDING_UNLK)
+  CPU_ABUS_ACCESS_READ;
+  CPU_ABUS_ACCESS_READ;
+#else
   INSTRUCTION_TIME(8);
+#endif
   r[15]=areg[PARAM_M];
   abus=r[15];m68k_READ_L_FROM_ADDR;
   PREFETCH_IRC;
@@ -6052,34 +6189,57 @@ void                              m68k_stop(){
 #if defined(SSE_CPU_PREFETCH_TIMING_STOP)
       CPU_ABUS_ACCESS_READ_FETCH;
 #endif
-      m68k_GET_IMMEDIATE_W;
+      m68k_GET_IMMEDIATE_W;//SS timing counted there now
 #if !defined(SSE_CPU_PREFETCH_TIMING_STOP)
       INSTRUCTION_TIME_ROUND(4); // time for immediate fetch
 #endif
       DEBUG_ONLY( int debug_old_sr=sr; )
-
       sr=m68k_src_w; // SS contains IPL
       sr&=SR_VALID_BITMASK;
       DETECT_CHANGE_TO_USER_MODE;
       cpu_stopped=true;
+#if !defined(SSE_CPU_STOP_380A)
       SET_PC((pc-4) | pc_high_byte); // SS: go back on the stop
+#endif
       DETECT_TRACE_BIT;
       // Interrupts must come after trace exception
       ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
-//      check_for_interrupts_pending(); // was commented out
-
+//      check_for_interrupts_pending(); //SS was commented out
       CHECK_STOP_ON_USER_CHANGE;
+#if defined(SSE_CPU_STOP_DELAY)
+/*  from WinUAE:
+    The CPU can't be restarted at once after a STOP, there's a
+    delay of 8 cycles, even if an interrupt is pending.
+    option C2: this fixes the spurious interrupt in Return -HMD (STE)
+*/
+      if(M68000.ProcessingState!=TM68000::TRACE_MODE && OPTION_PRECISE_MFP)
+        INSTRUCTION_TIME(CPU_STOP_DELAY); 
+#endif
     }else{ //SS already stopped
+#if !defined(SSE_CPU_STOP_380A)
       SET_PC((pc-2) | pc_high_byte);
+#endif
       // If we have got here then there were no interrupts pending when the IPL
       // was changed. Now unless we are in a blitter loop nothing can possibly
       // happen until cpu_cycles<=0.
+#if defined(SSE_CPU_STOP_380A)
+      // keep counting, it can't hurt and it's clearer in the Boiler
+      INSTRUCTION_TIME(4); 
+#else
       if (Blit.Busy){
         INSTRUCTION_TIME_ROUND(4);
       }else if (cpu_cycles>0){
         cpu_cycles=0; // It takes 0 cycles to unstop
       }
+#endif
     }
+#if defined(SSE_CPU_STOP_380A) 
+/*  Just sparing some code.
+    Normally we shouldn't fill prefetch but it's simpler so in process.
+    Note that SET_PC itself shouldn't count CPU timing.
+*/
+    SET_PC(old_pc);
+#endif
   }else{
     exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
   }
@@ -6224,12 +6384,20 @@ void                              m68k_rtd(){
 //  m68k_GET_IMMEDIATE_W; // was commented out
   m68k_unrecognised();
 }
+/*
+-------------------------------------------------------------------------------
+	                |    Exec Time    |               Data Bus Usage
+       RTS        |      INSTR      |                  INSTR
+------------------+-----------------+------------------------------------------
+                  | 16(4/0)         |                   nU nu    np np          
+*/
 void                              m68k_rts(){
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
   INSTRUCTION_TIME(16-4);
   FETCH_TIMING;
-#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-  INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC) \
+  && !defined(SSE_CPU_ROUNDING_RTS)
+  CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
 #endif
 #else
   INSTRUCTION_TIME_ROUND(16);
@@ -6241,8 +6409,11 @@ void                              m68k_rts(){
   r[15]+=4;
   m68k_READ_W(effective_address); // Check for bus/address errors
   SET_PC(effective_address);
+#if defined(SSE_CPU_ROUNDING_RTS)
+  CPU_ABUS_ACCESS_READ_PC; 
+#endif
   intercept_os();
-#if defined(SSE_BOILER_RUN_TO_RTS)
+#if defined(SSE_BOILER_RUN_TO_RTS) //rather useless?
   if(on_rte==ON_RTS_STOP)
   {
     if (runstate==RUNSTATE_RUNNING){
@@ -6254,6 +6425,16 @@ void                              m68k_rts(){
 #endif
 
 }
+/*
+-------------------------------------------------------------------------------
+	                |    Exec Time    |               Data Bus Usage
+      TRAPV       |      INSTR      |                  INSTR
+------------------+-----------------+------------------------------------------
+no trap           |  4(1/0)         |                               np          
+   trap           | 34(5/3)         |          np ns nS ns np np np np          
+NOTES :
+  . for more informations about the "trap" line see exceptions section below.
+*/
 void                              m68k_trapv(){
   if (sr & SR_V){
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
@@ -6264,10 +6445,18 @@ void                              m68k_trapv(){
     INSTRUCTION_TIME_ROUND(0); //Round first for interrupts
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
+#if defined(SSE_CPU_TRACE_TIMING_EXT)
+#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
+    INSTRUCTION_TIME_ROUND(CPU_TRACE_TIMING-4-12); 
+#else
+    INSTRUCTION_TIME_ROUND(CPU_TRACE_TIMING-4);
+#endif
+#else
 #if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
     INSTRUCTION_TIME(34-12-4);
 #else
     INSTRUCTION_TIME(34-4);
+#endif
 #endif
     FETCH_TIMING;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
@@ -6280,18 +6469,32 @@ void                              m68k_trapv(){
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS)
     FETCH_TIMING_NO_ROUND; //?
 #else
-    INSTRUCTION_TIME(4);
+#if !defined(SSE_CPU_ROUNDING_TRAPV)
+    INSTRUCTION_TIME(4);//my bug, fix v3.8.0
+#endif
 #endif
     PREFETCH_IRC;
 
   }
 }
+/*
+-------------------------------------------------------------------------------
+	                |    Exec Time    |               Data Bus Usage
+     RTE, RTR     |      INSTR      |                  INSTR
+------------------+-----------------+------------------------------------------
+                  | 20(5/0)         |                      nU nu nu np np       
+NOTES :
+  .M68000UM is probably wrong with bus read accesses for RTR instruction. 
+   It reads "20(2/0)" but, according to USP4325121 and with a little common 
+   sense, 2 bus read accesses aren't enough for reading status register and 
+   program counter values from the stack and prefetching.
+*/
 void                              m68k_rtr(){
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
   INSTRUCTION_TIME(20-4);
   FETCH_TIMING;
-#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-    INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
+#if defined(SSE_CPU_PREFETCH_TIMING_SET_PC) && !defined(SSE_CPU_ROUNDING_RTR)
+  CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
 #endif
 #else
   INSTRUCTION_TIME_ROUND(20);
@@ -6305,6 +6508,9 @@ void                              m68k_rtr(){
 #endif
   m68k_READ_W(effective_address); // Check for bus/address errors
   SET_PC(effective_address);
+#if defined(SSE_CPU_ROUNDING_RTR)
+  CPU_ABUS_ACCESS_READ_PC; 
+#endif
   intercept_os();
 }
 void                              m68k_movec(){
@@ -6362,6 +6568,7 @@ NOTES :
    on real hardware confirms the 8 cycles timing and, last, it makes addq and 
    subbq coherent in term of timing.
 */
+//  ADDQ.B SUBQ.B #<data>,An illegal
 
 void                              m68k_addq_b(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_5_TIMINGS))
@@ -6456,7 +6663,7 @@ void                             m68k_addq_w(){
 #endif
     m68k_DEST_W+=m68k_src_w;
 #if defined(SSE_CPU_DATABUS)
-    M68000.dbus=m68k_old_dest+m68k_src_w;
+    M68000.dbus=m68k_DEST_W;//m68k_old_dest+m68k_src_w;
 #endif
     SR_ADD_W;
   }
@@ -6530,7 +6737,7 @@ void                             m68k_addq_l(){
 void                              m68k_subq_b(){
 /*
     Dn            |  4(1/0)  0(0/0) |               |               np          
-    An            |  8(1/0)  0(0/0) |               |               np       nn 
+    An            |                 |               | 
     (An)          |  8(1/1)  4(1/0) |            nr |               np nw       
     (An)+         |  8(1/1)  4(1/0) |            nr |               np nw       
     -(An)         |  8(1/1)  6(1/0) | n          nr |               np nw       
@@ -6633,6 +6840,18 @@ void                             m68k_subq_w(){
 //#undef SSE_CPU_ROUNDING_SUBQ
 
 void                             m68k_subq_l(){
+/*
+  .L :            |                 |               |
+    Dn            |  8(1/0)  0(0/0) |               |               np       nn 
+    An            |  8(1/0)  0(0/0) |               |               np       nn 
+    (An)          | 12(1/2)  8(2/0) |         nR nr |               np nw nW    
+    (An)+         | 12(1/2)  8(2/0) |         nR nr |               np nw nW    
+    -(An)         | 12(1/2) 10(2/0) | n       nR nr |               np nw nW    
+    (d16,An)      | 12(1/2) 12(3/0) |      np nR nr |               np nw nW    
+    (d8,An,Xn)    | 12(1/2) 14(3/0) | n    np nR nr |               np nw nW    
+    (xxx).W       | 12(1/2) 12(3/0) |      np nR nr |               np nw nW    
+    (xxx).L       | 12(1/2) 16(4/0) |   np np nR nr |               np nw nW    
+*/
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_5_TIMINGS))
   FETCH_TIMING;
 #endif
@@ -6717,6 +6936,10 @@ FLOWCHART :
                                                  |                   |          
                                                  np<-----------------+          
 
+v3.8.0
+We at least strictly follow the Yacht table (SSE_CPU_ROUNDING_DBCC2):
+fixes Bird Mad Girl Show fullscreen boot (long standing bug).
+
 */
 //#undef SSE_CPU_ROUNDING_DBCC
 
@@ -6724,7 +6947,9 @@ FLOWCHART :
     INSTRUCTION_TIME(6);
     m68k_GET_IMMEDIATE_W;
 #endif
-#if defined(SSE_CPU_ROUNDING_DBCC)
+#if defined(SSE_CPU_ROUNDING_DBCC2)
+    INSTRUCTION_TIME(2);
+#elif defined(SSE_CPU_ROUNDING_DBCC)
     INSTRUCTION_TIME(2); //do the test
     CPU_ABUS_ACCESS_READ_FETCH; // get displacement (whether we go or not...)
     m68k_GET_IMMEDIATE_W;
@@ -6733,6 +6958,11 @@ FLOWCHART :
     if (!m68k_CONDITION_TEST){
       (*((WORD*)(&(r[PARAM_M]))))--;
       if( (*( (signed short*)(&(r[PARAM_M]) ))) != (signed short)(-1) ){
+#if defined(SSE_CPU_ROUNDING_DBCC2)
+        //   branch taken    | 10(2/0)         |                      n np       np        
+        CPU_ABUS_ACCESS_READ_FETCH;
+        m68k_GET_IMMEDIATE_W;
+#endif
         MEM_ADDRESS new_pc=(pc+(signed short)m68k_src_w-2) | pc_high_byte;
 #if defined(SSE_CPU_ROUNDING_BUS)
         M68000.Rounded=false;
@@ -6750,6 +6980,11 @@ FLOWCHART :
 #endif
 #endif
       }else{ //SS end of loop
+#if defined(SSE_CPU_ROUNDING_DBCC2)
+//    counter exp   | 14(3/0)         |                      n np    np np     
+        CPU_ABUS_ACCESS_READ_FETCH;
+        m68k_GET_IMMEDIATE_W;
+#endif
 #if defined(SSE_CPU_ROUNDING_DBCC)
         CPU_ABUS_ACCESS_READ; // but what for?
 #else
@@ -6759,9 +6994,15 @@ FLOWCHART :
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_5_TIMINGS)
         FETCH_TIMING;
 #endif
-    }
+      }
     }else{ //SS condition true
       INSTRUCTION_TIME(2);//SS what for?
+#if defined(SSE_CPU_ROUNDING_DBCC2)
+      CPU_ABUS_ACCESS_READ_FETCH;
+      m68k_GET_IMMEDIATE_W;
+//     cc true       | 12(2/0)         |                      n     n np np  
+// this is where it's different
+#endif
 #if defined(SSE_CPU_ROUNDING_DBCC__)
       //CPU_ABUS_ACCESS_READ; //CPU prefetches once for nothing
       m68k_GET_IMMEDIATE_W; 
@@ -6987,6 +7228,18 @@ void                              m68k_or_b_from_dN_or_sbcd(){
 
   switch(ir&BITS_543){
   case BITS_543_000:case BITS_543_001:{  //sbcd
+/*
+------------------------------------------------------------------------------- 
+                  |    Exec Time    |               Data Bus Usage              
+    ABCD, SBCD    |      INSTR      |                  INSTR                    
+------------------+-----------------+------------------------------------------ 
+Dy,Dx :           |                 |
+  .B :            |  6(1/0)         |                               np       n  
+-(Ay),-(Ax) :     |                 |
+  .B :            | 18(3/1)         |                 n    nr    nr np nw       
+
+*/
+
     if((ir&BITS_543)==BITS_543_000){
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_8_TIMINGS)
@@ -7033,7 +7286,7 @@ void                              m68k_or_b_from_dN_or_sbcd(){
 */
 
 
-#ifdef SSE_DEBUG
+#ifdef SSE_DEBUG__
     int n=100+
        ( ((m68k_DEST_B&0xf0)>>4)*10+(m68k_DEST_B&0xf) )
       -( ((m68k_src_b&0xf0)>>4)*10+(m68k_src_b&0xf) );
@@ -7926,14 +8179,16 @@ void                              m68k_cmp_b(){
 #if !defined(SSE_CPU_LINE_B_TIMINGS)
   FETCH_TIMING;
 #endif
-
-#if defined(SSE_CPU_ASSERT_ILLEGAL3)
+#if defined(SSE_CPU_ASSERT_ILLEGAL3_380)
+  m68k_GET_SOURCE_B_NOT_A; //shorter
+#elif defined(SSE_CPU_ASSERT_ILLEGAL3)
   if((ir&BITS_543)==BITS_543_001) // .B An...
     m68k_unrecognised();
-//    ILLEGAL
-#endif
-
   m68k_GET_SOURCE_B;
+//    ILLEGAL
+#else
+  m68k_GET_SOURCE_B;
+#endif
   m68k_old_dest=LOBYTE(r[PARAM_N]);
   compare_buffer=m68k_old_dest;
   m68k_dest=&compare_buffer;
@@ -8471,7 +8726,7 @@ void                              m68k_mulu(){
   FETCH_TIMING; 
 #endif
   PREFETCH_IRC; // prefetch before computing (but after <EA>)
-  INSTRUCTION_TIME(34);  
+  INSTRUCTION_TIME(34);  //SS here a tricky programmer can fool Steem with the blitter
 
   ///// Hey, this is right apparently
   for (WORD Val=m68k_src_w;Val;Val>>=1){
@@ -8480,7 +8735,7 @@ void                              m68k_mulu(){
 
   m68k_dest=&(r[PARAM_N]);
   m68k_DEST_L=(unsigned long)LOWORD(r[PARAM_N])*(unsigned long)((unsigned short)m68k_src_w);
-  SR_CLEAR(SR_Z+SR_N+SR_C+SR_V);
+  SR_CLEAR(SR_Z+SR_N+SR_C+SR_V); //SS 16bit x 16bit < 32bit, no overflow
   SR_CHECK_Z_AND_N_L;
 }
 //#define SSE_CPU_LINE_C_TIMINGS
@@ -8559,7 +8814,7 @@ Dy,Dx :           |                 |
   that uses the "+6" trick.
   http://tams-www.informatik.uni-hamburg.de/applets/hades/webdemos/20-arithmetic/10-adders/bcd-adder.html
   In the MC68000, the 'DAA' decimal adjust accumulator is integrated into ABCD.
-  It is correct in Hatari, so we use the same way now.
+  It is correct in WinUAE, so we use the same way now.
   Fixes Espana 92 -ICS
 */
   BYTE src = m68k_src_b;
@@ -8581,7 +8836,7 @@ Dy,Dx :           |                 |
   if(!m68k_DEST_B)
     SR_SET(SR_Z)
   else if(m68k_DEST_B<0)
-    SR_SET(SR_N) // not sure of that, it's so in Hatari
+    SR_SET(SR_N) // not sure of that, it's so in WinUAE
   break;
 
 #else  // Steem 3.2
@@ -9214,7 +9469,20 @@ void                              m68k_add_w_from_dN(){
     break;
 
   default://SS ADD.W Dn,<EA>
-#if !defined(SSE_CPU_ROUNDING_ADDX)
+/*
+Dn,<ea> :         |                 |              /              |
+  .B or .W :      |                 |             |               |
+    (An)          |  8(1/1)  4(1/0) |             |            nr | np nw       
+    (An)+         |  8(1/1)  4(1/0) |             |            nr | np nw       
+    -(An)         |  8(1/1)  6(1/0) |             | n          nr | np nw       
+    (d16,An)      |  8(1/1)  8(2/0) |             |      np    nr | np nw       
+    (d8,An,Xn)    |  8(1/1) 10(2/0) |             | n    np    nr | np nw       
+    (xxx).W       |  8(1/1)  8(2/0) |             |      np    nr | np nw       
+    (xxx).L       |  8(1/1) 12(3/0) |             |   np np    nr | np nw       
+*/
+    ASSERT((ir&BITS_543)!=BITS_543_000);// Dn,Dn done elsewhere
+//#if !defined(SSE_CPU_ROUNDING_ADDX) //was wrong switch
+#if !defined(SSE_CPU_ROUNDING_ADD)
     INSTRUCTION_TIME(4);
 #endif
     EXTRA_PREFETCH; 
@@ -9505,7 +9773,7 @@ void                              m68k_asr_b_to_dM(){
   FETCH_TIMING;
 #endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
-  if(m68k_src_w>31)m68k_src_w=31;
+  if(m68k_src_w>31)m68k_src_w=31; // but don't change timing
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
   if (m68k_src_w){
@@ -10859,10 +11127,18 @@ extern "C" void m68k_1010() //line-a
   INSTRUCTION_TIME_ROUND(0);  // Round first for interrupts
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
+#if defined(SSE_CPU_TRACE_TIMING_EXT)
+#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
+  INSTRUCTION_TIME_ROUND(CPU_TRACE_TIMING-4-12); 
+#else
+  INSTRUCTION_TIME_ROUND(CPU_TRACE_TIMING-4);
+#endif
+#else
 #if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
   INSTRUCTION_TIME_ROUND(34-12-4);
 #else
   INSTRUCTION_TIME_ROUND(34-4);
+#endif
 #endif
   FETCH_TIMING;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
@@ -10871,11 +11147,55 @@ extern "C" void m68k_1010() //line-a
 #else
   INSTRUCTION_TIME_ROUND(34);
 #endif
+#ifdef SSE_DEBUG
+#if defined(SSE_OSD_CONTROL)
+  if(OSD_MASK3 & OSD_CONTROL_STEBLT) // by default
+    TRACE_OSD("LINE A %X",(IRD&0xF));
+#endif
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
   Debug.RecordInterrupt("LINEA");
 #endif
+/*
+B_WD            equ     +00     ; width of block in pixels                          
+B_HT            equ     +02     ; height of block in pixels                         
+
+PLANE_CT        equ     +04     ; number of consecutive planes to blt       {D}     
+
+FG_COL          equ     +06     ; foreground color (logic op index:hi bit)  {D}     
+BG_COL          equ     +08     ; background color (logic op index:lo bit)  {D}     
+OP_TAB          equ     +10     ; logic ops for all fore and background combos      
+S_XMIN          equ     +14     ; minimum X: source                                 
+S_YMIN          equ     +16     ; minimum Y: source                                 
+S_FORM          equ     +18     ; source form base address                          
+S_NXWD          equ     +22     ; offset to next word in line  (in bytes)           
+S_NXLN          equ     +24     ; offset to next line in plane (in bytes)           
+S_NXPL          equ     +26     ; offset to next plane from start of current plane  
+
+D_XMIN          equ     +28     ; minimum X: destination                            
+D_YMIN          equ     +30     ; minimum Y: destination                            
+D_FORM          equ     +32     ; destination form base address                     
+D_NXWD          equ     +36     ; offset to next word in line  (in bytes)           
+D_NXLN          equ     +38     ; offset to next line in plane (in bytes)           
+D_NXPL          equ     +40     ; offset to next plane from start of current plane  
+
+P_ADDR          equ     +42     ; address of pattern buffer   (0:no pattern) {D}
+P_NXLN          equ     +46     ; offset to next line in pattern  (in bytes)    
+P_NXPL          equ     +48     ; offset to next plane in pattern (in bytes)    
+P_MASK          equ     +50     ; pattern index mask                            
+
+*/
+#define LOGSECTION LOGSECTION_BLITTER // by default
+  if((IRD&0xF)==7) //bitblt
+  {
+    MEM_ADDRESS p=areg[6];
+    TRACE_LOG("Line A biblt %dx%d %d planes fg %d bg %d op %X src %X x %d y %d p %d dst %X x %d y %d p %d pattern %X\n",DPEEK(p),DPEEK(p+2),DPEEK(p+4),DPEEK(p+6),DPEEK(p+8),LPEEK(p+10),LPEEK(p+18),DPEEK(p+22),DPEEK(p+24),DPEEK(p+26),LPEEK(p+32),DPEEK(p+36),DPEEK(p+38),DPEEK(p+40),LPEEK(p+42));
+  }
+#undef LOGSECTION
+#endif//dbg
   m68k_interrupt(LPEEK(BOMBS_LINE_A*4));
+#if !defined(SSE_CPU_TRACE_LINE_A_F)
   m68k_do_trace_exception=0;
+#endif
   debug_check_break_on_irq(BREAK_IRQ_LINEA_IDX);
 }
 
@@ -10911,10 +11231,18 @@ extern "C" void m68k_1111(){  //line-f emulator
   INSTRUCTION_TIME_ROUND(0);  // Round first for interrupts
 #endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
+#if defined(SSE_CPU_TRACE_TIMING_EXT)
+#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
+  INSTRUCTION_TIME_ROUND(CPU_TRACE_TIMING-4-12); 
+#else
+  INSTRUCTION_TIME_ROUND(CPU_TRACE_TIMING-4);
+#endif
+#else
 #if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
   INSTRUCTION_TIME_ROUND(34-12-4);
 #else
   INSTRUCTION_TIME_ROUND(34-4);
+#endif
 #endif
   FETCH_TIMING;
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
@@ -10927,8 +11255,9 @@ extern "C" void m68k_1111(){  //line-f emulator
 //  Debug.RecordInterrupt("LINEF");
 #endif
   m68k_interrupt(LPEEK(BOMBS_LINE_F*4));
+#if !defined(SSE_CPU_TRACE_LINE_A_F)
   m68k_do_trace_exception=0;
-
+#endif
   debug_check_break_on_irq(BREAK_IRQ_LINEF_IDX);
 }
 //       check PC-relative addressing  // SS: gulp

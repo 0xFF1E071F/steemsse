@@ -361,6 +361,51 @@ extern void (*m68k_jump_get_source_l_not_a[8])();
 #endif
 
 
+#ifdef SSE_DEBUG
+
+
+
+inline void handle_ioaccess() {
+  if (ioaccess/*||(OPTION_PRECISE_MFP&&MC68901.Irq)*/){                             \
+    switch (ioaccess & IOACCESS_NUMBER_MASK){                        \
+      case 1: io_write_b(ioad,LOBYTE(iobuffer)); break;    \
+      case 2: io_write_w(ioad,LOWORD(iobuffer)); break;    \
+      case 4: io_write_l(ioad,iobuffer); break;      \
+      case TRACE_BIT_JUST_SET: break;                                        \
+    }                                             \
+    if (ioaccess & IOACCESS_FLAG_DELAY_MFP){ \
+      ioaccess&=~IOACCESS_FLAG_DELAY_MFP;  \
+      ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS; \
+    }else if (ioaccess & IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE){ \
+      ioaccess|=IOACCESS_FLAG_DELAY_MFP;  \
+    } \
+    if (ioaccess & IOACCESS_INTERCEPT_OS2){ \
+      ioaccess&=~IOACCESS_INTERCEPT_OS2;  \
+      ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS; \
+    }else if (ioaccess & IOACCESS_INTERCEPT_OS){ \
+      ioaccess|=IOACCESS_INTERCEPT_OS2; \
+    } \
+    if (/*(OPTION_PRECISE_MFP&&MC68901.Irq)||*/(ioaccess & IOACCESS_FLAG_FOR_CHECK_INTRS)){   \
+      check_for_interrupts_pending();          \
+      CHECK_STOP_USER_MODE_NO_INTR \
+    }                                             \
+    DEBUG_CHECK_IOACCESS; \
+    if (ioaccess & IOACCESS_FLAG_DO_BLIT) Blitter_Start_Now(); \
+    /* These flags stay until the next instruction to stop interrupts */  \
+    ioaccess=ioaccess & (IOACCESS_FLAG_DELAY_MFP | IOACCESS_INTERCEPT_OS2);                                   \
+  }
+}
+
+#define HANDLE_IOACCESS(tracefunc) handle_ioaccess();
+
+
+#else
+
+
+
+
+
+
 // keep as macro, wouldn't be inlined in VC6
 // but since we changed trace... (change was reverted...)
 
@@ -393,6 +438,9 @@ extern void (*m68k_jump_get_source_l_not_a[8])();
     /* These flags stay until the next instruction to stop interrupts */  \
     ioaccess=ioaccess & (IOACCESS_FLAG_DELAY_MFP | IOACCESS_INTERCEPT_OS2);                                   \
   }
+
+
+#endif//inline??
 
 #if defined(SSE_CPU_POKE)  && !defined(SSE_INLINE_370)
 void m68k_poke_abus2(BYTE);
@@ -477,7 +525,11 @@ struct TM68000 {
 #if defined(SSE_CPU_PREFETCH)
 
 #if defined(SSE_CPU_PREFETCH_CLASS)
+#if defined(SSE_VAR_RESIZE_380)
+  BYTE PrefetchClass; // see ijor's article
+#else
   int PrefetchClass; // see ijor's article
+#endif
 #endif
 
 #if defined(SSE_CPU_PREFETCH_CALL)
@@ -486,7 +538,7 @@ struct TM68000 {
   WORD *PrefetchAddress; 
   WORD PrefetchedOpcode;
 #endif
-#if !defined(SSE_INLINE_370)
+#if !defined(SSE_INLINE_370) && !defined(SSE_COMPILER_380)
   inline 
 #endif
     void PrefetchIrc();
@@ -501,7 +553,8 @@ struct TM68000 {
   bool EClock_synced;
 
 #ifdef SSE_CPU_E_CLOCK_DISPATCHER
-  enum {ECLOCK_ACIA,ECLOCK_HBL,ECLOCK_VBL}; //debug/hacks
+ // enum {ECLOCK_ACIA,ECLOCK_HBL,ECLOCK_VBL}; //debug/hacks
+  enum {ECLOCK_VBL,ECLOCK_HBL,ECLOCK_ACIA}; //debug/hacks
 #endif
 #if defined(SSE_CPU_E_CLOCK2)
   int
@@ -530,6 +583,9 @@ this state, no further memory references are made."
     We add TRACE_MODE to spare a byte, it should correspond to a hidden
     bit in the CPU, so that it knows that the trace bit was set at the
     start of the instruction.
+v3.8.0
+Different states are used, but some have NOTHING to do with processor state,
+so refactoring due!
 */
   enum {NORMAL,EXCEPTION,HALTED,STOPPED,TRACE_MODE,INTEL_CRASH,BLIT_ERROR,BOILER_MESSAGE}; 
   BYTE ProcessingState;
@@ -538,11 +594,9 @@ this state, no further memory references are made."
 #if defined(SSE_CPU_DATABUS)
   WORD dbus; // TODO; we have global abus, which isn't always up-to-date
 #endif
-
 #if defined(SSE_INT_MFP_REFACTOR2)
   bool IackCycle; // flag to avoid starting IACK during IACK (in an emulator, anything goes...)
 #endif
-
 };
 
 extern TM68000 M68000;
@@ -946,6 +1000,7 @@ inline void TM68000::InstructionTimeRound(int t) {
 #endif
 
 #define CPU_ABUS_ACCESS_WRITE  M68000.InstructionTimeRound(4)
+
 #define m68k_interrupt(ad) M68000.Interrupt(ad)
 
 inline void TM68000::PerformRte() {
@@ -998,8 +1053,8 @@ inline void TM68000::PerformRte() {
 
 #if defined(SSE_CPU_PREFETCH)
 
-#if !defined(SSE_INLINE_370)
-// InstructionTimeRound(4); ended up not being inlined
+#if !defined(SSE_INLINE_370) || defined(SSE_COMPILER_380)
+// InstructionTimeRound(4); ended up not being inlined //3.8.0: only sometimes
 inline void TM68000::PrefetchIrc() {
 
 #if defined(SSE_DEBUG) && defined(SSE_CPU_PREFETCH_ASSERT)
@@ -1241,7 +1296,7 @@ already fetched. One word will be in IRD and another one in IRC.
   EClock_synced=false; // one more bool in Process()!
 #endif
 
-//not defined
+//not defined MFD?
 #if defined(SSE_IPF_CPU) //|| defined(SSE_DEBUG)
   int cycles=cpu_cycles;
 #endif
@@ -1302,9 +1357,49 @@ exception vector.
 #else
     TRACE_LOG("TRACE PC %X IR %X SR %X $24 %X\n",pc,ir,sr,LPEEK(0x24));
 #endif
+#if defined(SSE_CPU_TRACE_TIMING)
+/*
+Trace timing: 32 34 or 36???
+Why "round first for interrupts" ?
+
+Motorola
+Trace	34(4/3)
+
+Yacht
+Trace               | 34(4/3)  |              nn    ns nS ns nV nv np np   
+  .For all these exceptions, there is a difference of 2 cycles between Data 
+   bus usage as obtained from USP4325121 and periods as written in M68000UM.
+   There's no proven theory to explain this gap.
+   SS: addition of timings is 32
+
+WinUAE
+- 4 idle cycles
+- write PC low word
+- write SR
+- write PC high word                       [wrong order...is this credible?]
+- read exception address high word
+- read exception address low word
+- prefetch
+- 2 idle cycles
+- prefetch
+
+On ST, if there are 2 idle cycles between 2 prefetches from RAM,
+we must add 2 wait states. -> round(36) instead of 34, and we explain
+the timing for LEGACY.
+Assume the same for Illegal, Privilege, Line A and Line F 
++TRAPV (SSE_CPU_TRACE_TIMING_EXT)
+
+*/
+#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
+    INSTRUCTION_TIME_ROUND(CPU_TRACE_TIMING-12); 
+#else
+    INSTRUCTION_TIME_ROUND(CPU_TRACE_TIMING); //36, including prefetch
+#endif
+#else
     INSTRUCTION_TIME_ROUND(0); // Round first for interrupts
     INSTRUCTION_TIME_ROUND(34); // note: tested timing (Legacy.msa)
-    //INSTRUCTION_TIME(36);
+#endif
+    
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
     Debug.RecordInterrupt("TRACE");
 #endif
@@ -1384,7 +1479,7 @@ inline void TM68000::Unstop() {
   if(cpu_stopped)
   {
     cpu_stopped=false;     
-    SetPC((pc+4) | pc_high_byte);          
+    SetPC((pc+4) | pc_high_byte); 
   }
 }
 #define M68K_UNSTOP M68000.Unstop()
