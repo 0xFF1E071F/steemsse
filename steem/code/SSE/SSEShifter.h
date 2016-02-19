@@ -30,7 +30,7 @@
     (more to add)
 */
 
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 /*  The Shifter trick mask is an imitation of Hatari's BorderMask.
     Each trick has a dedicated bit, to set it we '|' it, to check it
     we '&' it. Each value is the previous one x2.
@@ -98,7 +98,7 @@ enum {BORDERS_NONE, BORDERS_ON, BORDERS_AUTO_OFF, BORDERS_AUTO_ON};
 /*  There's something wrong with the cycles when the line is 508 cycles,
     but fixing it will take some care. See the Omega hack
 */
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 struct TScanline {
   int StartCycle; // eg 56
   int EndCycle; // eg 376
@@ -117,7 +117,7 @@ struct TShifter {
 */
   TShifter(); 
   ~TShifter();
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
   inline void AddExtraToShifterDrawPointerAtEndOfLine(unsigned long &extra);
   inline int CheckFreq(int t);
   void CheckSideOverscan(); // left & right border effects
@@ -129,7 +129,7 @@ struct TShifter {
 #endif
   void DrawScanlineToEnd();
 
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 #if !defined(SSE_STRUCTURE_SSECPU_OBJ)
   inline // TODO
 #endif
@@ -145,7 +145,7 @@ struct TShifter {
   void Reset(bool Cold);
   inline void RoundCycles(int &cycles_in);
   inline void SetPal(int n, WORD NewPal);
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
   void SetShiftMode(BYTE NewRes);
   void SetSyncMode(BYTE NewSync);
 #endif
@@ -154,7 +154,7 @@ struct TShifter {
 #endif
   void Vbl();
 
-#if defined(SSE_SHIFTER_TRICKS) && !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if defined(SSE_SHIFTER_TRICKS) && !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
   inline void AddFreqChange(int f);
   inline void AddShiftModeChange(int r);
   inline int CheckShiftMode(int t);
@@ -203,7 +203,7 @@ struct TShifter {
 #endif
 #endif
 
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
   // we need keep info for only 3 scanlines 
   TScanline PreviousScanline, CurrentScanline, NextScanline;
   int ExtraAdded;//rather silly
@@ -214,13 +214,13 @@ struct TShifter {
   BYTE *ScanlineBuffer;
 #endif
 
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
   BYTE m_ShiftMode; // Shifter has its copy, Glue could do with only 1 bit
 #else
   BYTE m_ShiftMode,m_SyncMode;
 #endif
 
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
   int TrickExecuted; //make sure that each trick will only be applied once
 #endif
 #if defined(SSE_DEBUG) && SSE_VERSION<380

@@ -17,7 +17,7 @@ struct TGlueStatusBYTE {
 
 #endif
 
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 #define TRICK_LINE_PLUS_26 0x001
 #define TRICK_LINE_PLUS_2 0x02
 #define TRICK_LINE_MINUS_106 0x04
@@ -61,7 +61,7 @@ struct TGlue {
   TGlue();
   void Update();
   enum {FREQ_50,FREQ_60,FREQ_72,NFREQS};
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
   enum {GLU_DE_ON,HBLANK_OFF,GLU_DE_OFF,HBLANK_ON,HSYNC_ON,HSYNC_OFF,RELOAD_SDP,
     ENABLE_VBI,VERT_OVSCN_LIMIT,NTIMINGS};
 #elif defined(SSE_GLUE_THRESHOLDS)
@@ -82,7 +82,7 @@ struct TGlue {
   void Reset(bool Cold);
   void Vbl();
 #endif
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
   BYTE m_ShiftMode,m_SyncMode;
   BYTE Freq[NFREQS];
   // we need keep info for only 3 scanlines 

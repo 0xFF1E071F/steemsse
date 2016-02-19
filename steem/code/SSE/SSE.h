@@ -2575,12 +2575,11 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_GLUE)
 #define SSE_GLUE_FRAME_TIMINGS
 #if defined(SSE_GLUE_FRAME_TIMINGS)
-
 #define SSE_GLUE_FRAME_TIMINGS3 //hbi done
 #define SSE_GLUE_FRAME_TIMINGS4 //init stuff
 #define SSE_GLUE_FRAME_TIMINGS7B // routines of last scanline
 #define SSE_GLUE_FRAME_TIMINGS9 //reload sdp 2
-
+#define SSE_GLUE_FRAME_TIMINGS10
 #define SSE_GLUE_FRAME_TIMINGS_B // eliminate old var
 #if !defined(SSE_GLUE_FRAME_TIMINGS_B)
 //#define SSE_GLUE_FRAME_TIMINGS_C // for debug -Steem can hang!
@@ -2594,14 +2593,18 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_THRESHOLDS // computing thresholds only when changing option
 #define SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#define SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1 // the boring stuff
 #undef SSE_SHIFTER_LEFT_OFF_60HZ//forget it
 //#define SSE_GLUE_001 //to show all the Tekila oddities//tmp switch
 #define SSE_GLUE_002//no safety net//tmp switch
+// funny how many switches appear when we're looking for a bug
 #define SSE_GLUE_LEFT_OFF_380 // TODO rest... ???
-#define SSE_GLUE_LINE_PLUS_2_380 //bugfix (old bug)
+#define SSE_GLUE_LINE_MINUS_106_380
+#define SSE_GLUE_LINE_MINUS_2_380
+#define SSE_GLUE_LINE_PLUS_2_380
 #define SSE_GLUE_RIGHT_OFF_380
-#endif//SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE
-
+#define SSE_GLUE_SET_SHIFT_380
+#define SSE_GLUE_SET_SYNC_380
 #define SSE_GLUE_003//opt//tmp switch
 #define SSE_GLUE_004//
 #define SSE_GLUE_005
@@ -2609,8 +2612,25 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_007
 #define SSE_GLUE_007B
 #define SSE_GLUE_008
-#define SSE_SHIFTER_LINE_PLUS_2_HACK_380
+#define SSE_GLUE_009
+#define SSE_GLUE_009B
+#define SSE_GLUE_010
+#define SSE_GLUE_011
+#define SSE_GLUE_012
+#define SSE_GLUE_013
+#define SSE_GLUE_014
 
+#define SSE_GLUE_015A
+
+#define SSE_GLUE_015B
+#define SSE_GLUE_015C//bugged LXS - or mfp...
+#define SSE_GLUE_015C2
+#define SSE_GLUE_015C3
+#define SSE_GLUE_015C4 // could point to other trouble?
+#define SSE_GLUE_015D
+
+#endif//SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE
+//#define SSE_SHIFTER_LINE_PLUS_2_HACK_380 //no need!
 #endif//SSE_GLUE_FRAME_TIMINGS
 #endif//glue
 
@@ -2667,6 +2687,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 #define SSE_MMU_WU_STE_380
 #define SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1
+#define SSE_MMU_READ_SDP_380
 #endif
 #endif
 
@@ -2677,9 +2698,10 @@ Beta: not SSE_PRIVATE_BUILD
 #ifdef SSE_SHIFTER
 #define SSE_SHIFTER_380 // some modest refactoring, debugging
 #define SSE_SHIFTER_380_STAB
+#define SSE_SHIFTER_380_STAB2
 #define SSE_SHIFTER_HSCROLL_380
 #if defined(SSE_SHIFTER_HSCROLL_380)
-//#define SSE_SHIFTER_HSCROLL_380_A // better test, should new HSCROLL apply on current line
+#define SSE_SHIFTER_HSCROLL_380_A // better test, should new HSCROLL apply on current line
 ////#define SSE_SHIFTER_HSCROLL_380_A1 // wrong, MFD
 #define SSE_SHIFTER_HSCROLL_380_B // new variable to hold HSCROLL at start of line
 #define SSE_SHIFTER_HSCROLL_380_C // update shifter_pixel for new HSCROLL
@@ -2705,9 +2727,15 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #if defined(SSE_SHIFTER_UNSTABLE)
 #define SSE_SHIFTER_UNSTABLE_380 // for demo Closure
+#define SSE_SHIFTER_UNSTABLE_380_LINE_PLUS_2 // NPG_WOM
+#define SSE_SHIFTER_UNSTABLE_380_A
+#define SSE_SHIFTER_UNSTABLE_380_B // chipman -2
+#define SSE_SHIFTER_UNSTABLE_380_C // chipman -106
 #endif
 #define SSE_SHIFTER_60HZ_LINE // compensate fix in 'read SDP'
+#define SSE_SHIFTER_60HZ_OVERSCAN2 // # lines in bottom
 #define SSE_SHIFTER_KRYOS//hack
+#define SSE_SHIFTER_STE_MED_HSCROLL2 // Desktop Central
 #endif//sft
 
 #ifdef SSE_STF

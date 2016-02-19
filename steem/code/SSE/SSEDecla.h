@@ -257,7 +257,7 @@ extern BYTE *stem_version_text[SSE_VERSION_TXT_LEN];
 #define FRAMECYCLES (ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl)
 
 
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE) 
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1) 
 // for smaller code, we directly change
 #define GLU Glue 
 #else
