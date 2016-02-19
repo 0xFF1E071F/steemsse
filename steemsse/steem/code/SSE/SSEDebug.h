@@ -52,7 +52,11 @@ struct TDebug {
   FILE *trace_file_pointer; 
   int nTrace;
 #endif
+#if defined(SSE_VAR_RESIZE_380)
+  BYTE IgnoreErrors;
+#else
   int IgnoreErrors; 
+#endif
   BYTE logsection_enabled[100]; // we want a double anyway //bool
   int LogSection;
 
@@ -129,6 +133,9 @@ struct TDebug {
   void Vbl(); //3.6.1
 #if defined(SSE_DEBUG_RESET)
   void Reset(bool Cold);
+#endif
+#if defined(SSE_BOILER_TRACE_EVENTS)
+  void TraceEvent( void* pointer);
 #endif
 
 #endif//c++
@@ -283,7 +290,7 @@ enum logsection_enum_tag {
 #define TRACE_MASK2 (Debug.ControlMask[7])
 #define TRACE_CONTROL_ECLOCK (1<<15)
 #define TRACE_CONTROL_RTE (1<<14)
-//#define TRACE_CONTROL_HBI   (1<<13)
+#define TRACE_CONTROL_EVENT (1<<13)
 
 
 #define TRACE_MASK3 (Debug.ControlMask[8])
@@ -551,6 +558,13 @@ enum logsection_enum_tag {
 #else
 #define TRACE_VID // some code left to the compiler
 #endif
+#endif
+
+
+#if defined(SSE_BOILER_TRACE_EVENTS) //3.8.0
+#define TRACE_EVENT(x) Debug.TraceEvent(x)
+#else
+#define TRACE_EVENT(x) 
 #endif
 
 // TRACE_OSD

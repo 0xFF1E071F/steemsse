@@ -94,13 +94,60 @@ void THistoryList::RefreshHistoryBox()
   SendMessage(Win,LB_RESETCONTENT,0,0);
 
   int n=pc_history_idx;
-  EasyStr Dissasembly;
+  EasyStr Dissasembly;//TODO fix typo everywhere
   do{
     n--;
     if (n<0) n=HISTORY_SIZE-1;
     if (pc_history[n]==0xffffff71) break;
+
+#if defined(SSE_BOILER_HISTORY_VECS)
+//see SSE_BOILER_BROWSERS_VECS
+    EasyStr header;
+    if(pc_history[n]==LPEEK(0x120))
+      header="TB ";
+    else if(pc_history[n]==LPEEK(0x2C))
+      header="lF ";
+    else if(pc_history[n]==LPEEK(0x28))
+      header="lA ";
+    else if(pc_history[n]==LPEEK(0x24))
+      header="trc ";
+    else if(pc_history[n]==LPEEK(0x18))
+      header="chk ";
+    else if(pc_history[n]==LPEEK(0x10))
+      header="Ill ";
+    else if(pc_history[n]==LPEEK(0xC))
+      header="AddE ";
+    else if(pc_history[n]==LPEEK(0x8))
+      header="BusE ";
+    else if(pc_history[n]==LPEEK(0x70))
+      header="VBi ";
+    else if(pc_history[n]==LPEEK(0x68))
+      header="HBi ";
+    else if(pc_history[n]==LPEEK(0x114))
+      header="TC ";
+    else if(pc_history[n]==LPEEK(0x134))
+      header="TA ";
+    else if(pc_history[n]==LPEEK(0x110))
+      header="TD ";
+    else if(pc_history[n]==LPEEK(0x118))
+      header="Acia ";
+    else if(pc_history[n]==LPEEK(0x11c))
+      header="fdc "; 
+#endif
     Dissasembly=debug_parse_disa_for_display(disa_d2(pc_history[n]));
+#if defined(SSE_BOILER_HISTORY_VECS)
+#if defined(SSE_BOILER_HISTORY_TIMING)
+    char timing[30];
+    sprintf(timing,"%d %d",pc_history_y[n],pc_history_c[n]);
+    SendMessage(Win,LB_INSERTSTRING,0,(long)((header+HEXSl(pc_history[n],6)
+      +" - "+Dissasembly+" - "+timing).Text));
+#else
+    SendMessage(Win,LB_INSERTSTRING,0,(long)((header+HEXSl(pc_history[n],6)
+      +" - "+Dissasembly).Text));
+#endif
+#else
     SendMessage(Win,LB_INSERTSTRING,0,(long)((HEXSl(pc_history[n],6)+" - "+Dissasembly).Text));
+#endif
     SendMessage(Win,LB_SETITEMDATA,0,n);
   }while (n!=pc_history_idx);
 

@@ -236,7 +236,10 @@ void run()
         // cpu_cycles is the amount of cycles before next event.
         // SS It is *decremented* by instruction timings, not incremented.
         while (cpu_cycles>0 && runstate==RUNSTATE_RUNNING){
-
+#if defined(SSE_BOILER_HISTORY_TIMING)
+          pc_history_y[pc_history_idx]=scan_y;
+          pc_history_c[pc_history_idx]=LINECYCLES;
+#endif
           DEBUG_ONLY( pc_history[pc_history_idx++]=pc; )
           DEBUG_ONLY( if (pc_history_idx>=HISTORY_SIZE) pc_history_idx=0; )
           
@@ -250,6 +253,10 @@ void run()
         DEBUG_ONLY( if (runstate!=RUNSTATE_RUNNING) break; )
         DEBUG_ONLY( mode=STEM_MODE_INSPECT; )
         while (cpu_cycles<=0){
+#if defined(SSE_BOILER_TRACE_CONTROL)
+          if(TRACE_MASK2&TRACE_CONTROL_EVENT)
+            TRACE_EVENT(screen_event_vector);        
+#endif
           screen_event_vector(); 
           prepare_next_event();
           // This has to be in while loop as it can cause an interrupt,
@@ -1226,10 +1233,11 @@ void event_start_vbl()
 //---------------------------------------------------------------------------
 void event_vbl_interrupt() //SS misleading name?
 { 
+  //ASSERT(dma_sound_on_this_screen);
 #if defined(SSE_GLUE_FRAME_TIMINGS7B) && !defined(SSE_GLUE_FRAME_TIMINGS_C)
 /*  With GLU/video event refactoring, we call event_scanline() one time fewer,
     if we did now it would mess up some timings, so we call the sub
-    with some HBL-dependent tasks: DMA sound, HD6301 & CAPS emu.
+    with some HBL-dependent taskes: DMA sound, HD6301 & CAPS emu.
     Important for Relapse DMA sound
 */
   event_scanline_sub(); 
@@ -2060,9 +2068,10 @@ void event_trigger_vbi() { //6X cycles into frame (reference end of HSYNC)
 #if defined(SSE_GLUE_FRAME_TIMINGS9) && !defined(SSE_GLUE_FRAME_TIMINGS_C)
 /*  The video counter is reloaded from VBASE a second time at the end
     of VSYNC, when VBI is set pending.
-    Cases: Beyond/Universal Coders
+    Beyond/Universal Coders
 */
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer=xbios2;
+  //event_start_vbl();
 #endif
 
 #if defined(SSE_INT_VBL_380) && defined(SSE_CPU_E_CLOCK2) && defined(SSE_INT_VBL_IACK2)

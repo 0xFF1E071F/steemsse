@@ -1054,7 +1054,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               hd6301_dump_ram();
               break;
 #endif
-#if defined(SSE_BOILER_STACK_68030_FRAME)
+#if defined(SSE_BOILER_68030_STACK_FRAME)
             case 1525: 
               Debug.M68030StackFrame=!Debug.M68030StackFrame;
               CheckMenuItem(sse_menu,1525,
@@ -1079,6 +1079,12 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 #if defined(SSE_BOILER_FAKE_IO)
             case 1527: // fake IO zone for boiler control
               new mem_browser(FAKE_IO_START,DT_MEMORY); 
+              break;
+#endif
+
+#if defined(SSE_BOILER_OPTION_SAVE_FRAME_REPORT)
+            case 1529:
+              FrameEvents.Report();
               break;
 #endif
 
@@ -1314,6 +1320,42 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               break;
 #endif
 
+#if defined(SSE_BOILER_BROWSER_EXCEPTION_HANDLERS)
+            case 925: // Bus Error
+              new mem_browser( LPEEK(0x8),DT_INSTRUCTION);
+              break;
+            case 926: // Illegal
+              new mem_browser( LPEEK(0x10),DT_INSTRUCTION);
+              break;
+            case 927: // Trace
+              new mem_browser( LPEEK(0x24),DT_INSTRUCTION);
+              break;
+#endif
+
+#if defined(SSE_BOILER_BROWSER_IRQ_HANDLERS)
+            case 918: // timer A
+              new mem_browser( LPEEK(0x134),DT_INSTRUCTION);
+              break;
+            case 919: // timer B
+              new mem_browser( LPEEK(0x120),DT_INSTRUCTION);
+              break;
+            case 920: // timer C
+              new mem_browser( LPEEK(0x114),DT_INSTRUCTION);
+              break;
+            case 921: // timer D
+              new mem_browser( LPEEK(0x110),DT_INSTRUCTION);
+              break;
+            case 922: // ACIA
+              new mem_browser( LPEEK(0x118),DT_INSTRUCTION);
+              break;
+            case 923: // HBI
+              new mem_browser( LPEEK(0x68),DT_INSTRUCTION);
+              break;
+            case 924: // VBI
+              new mem_browser( LPEEK(0x70),DT_INSTRUCTION);
+              break;
+#endif
+
 #if defined(SSE_BOILER_BROWSER_SHIFTER)
             case 912:
               new mem_browser(0xFF8240,DT_MEMORY);
@@ -1347,9 +1389,6 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 #if defined(SSE_BOILER_PSEUDO_STACK)// && !defined(SSE_BOILER_PSEUDO_STACK2)
             case 917:
               new mem_browser(IOLIST_PSEUDO_AD_STACK,DT_MEMORY);
-              {
-
-              }
               break;
 #endif
 
@@ -1433,6 +1472,12 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 #endif
 #if defined(SSE_BOILER_BROWSER_VECTORS)
         items++;
+#endif
+#if defined(SSE_BOILER_BROWSER_EXCEPTION_HANDLERS)
+        items+=3;
+#endif
+#if defined(SSE_BOILER_BROWSER_IRQ_HANDLERS)
+        items+=4+2+1; // timers + HBI + VBI + ACIA
 #endif
 #if defined(SSE_BOILER_BROWSER_6301)
         items++;
@@ -1715,6 +1760,20 @@ void DWin_init()
 #if defined(SSE_BOILER_BROWSER_VECTORS)
   AppendMenu(mem_browser_menu,MF_STRING,911,"New &Vectors Browser");
 #endif
+#if defined(SSE_BOILER_BROWSER_EXCEPTION_HANDLERS)
+  AppendMenu(mem_browser_menu,MF_STRING,925,"New Bus Error Browser");
+  AppendMenu(mem_browser_menu,MF_STRING,926,"New Illegal Browser");
+  AppendMenu(mem_browser_menu,MF_STRING,927,"New Trace Browser");
+#endif
+#if defined(SSE_BOILER_BROWSER_IRQ_HANDLERS)
+  AppendMenu(mem_browser_menu,MF_STRING,923,"New HBI Browser");
+  AppendMenu(mem_browser_menu,MF_STRING,924,"New VBI Browser");
+  AppendMenu(mem_browser_menu,MF_STRING,918,"New Timer A Browser");
+  AppendMenu(mem_browser_menu,MF_STRING,919,"New Timer B Browser");
+  AppendMenu(mem_browser_menu,MF_STRING,920,"New Timer C Browser");
+  AppendMenu(mem_browser_menu,MF_STRING,921,"New Timer D Browser");
+  AppendMenu(mem_browser_menu,MF_STRING,922,"New ACIA Browser");
+#endif
 #if defined(SSE_BOILER_BROWSER_SHIFTER)
   AppendMenu(mem_browser_menu,MF_STRING,912,"New &Shifter Browser");
 #endif
@@ -1845,7 +1904,7 @@ void DWin_init()
 #if defined(SSE_BOILER_MONITOR_RANGE)
   AppendMenu(sse_menu,MF_STRING,1523,"Monitor: address range");
 #endif
-#if defined(SSE_BOILER_STACK_68030_FRAME)
+#if defined(SSE_BOILER_68030_STACK_FRAME)
   AppendMenu(sse_menu,MF_STRING|MF_SEPARATOR,0,NULL);
 #if SSE_VERSION>=370
   AppendMenu(sse_menu,MF_STRING,1525,"68030 stack frame (at your risk!)");
@@ -1866,6 +1925,9 @@ void DWin_init()
 #endif
 #if defined(SSE_BOILER_PSEUDO_STACK) && defined(SSE_BOILER_PSEUDO_STACK2)
   AppendMenu(sse_menu,MF_STRING,917,"Pseudo Stack");
+#endif
+#if defined(SSE_BOILER_OPTION_SAVE_FRAME_REPORT)
+  AppendMenu(sse_menu,MF_STRING,1529,"Save frame report");
 #endif
 
 #endif//ss_debug
@@ -2236,30 +2298,18 @@ void DWin_init()
 #if defined(SSE_BOILER_SHOW_FREQ) && defined(SSE_SHIFTER)
     GetWindowRectRelativeToParent(ms->handle,&rc);
     ms=new mr_static("Sync ","",rc.right+5,y,Par,
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-      NULL,(MEM_ADDRESS)&Glue.m_SyncMode,1,MST_REGISTER,0,NULL);
-#else
-      NULL,(MEM_ADDRESS)&Shifter.m_SyncMode,1,MST_REGISTER,0,NULL);
-#endif
+      NULL,(MEM_ADDRESS)&GLU.m_SyncMode,1,MST_REGISTER,0,NULL);
 #endif
 
 #if defined(SSE_BOILER_SHOW_TRICKS) && defined(SSE_SHIFTER)
 // Shifter tricks of the line!
     GetWindowRectRelativeToParent(ms->handle,&rc);
     ms=new mr_static("Tricks ","",rc.right+5,y,Par,
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-      NULL,(MEM_ADDRESS)&Glue.CurrentScanline.Tricks,3,MST_REGISTER,0,NULL);
-#else
-      NULL,(MEM_ADDRESS)&Shifter.CurrentScanline.Tricks,3,MST_REGISTER,0,NULL);
-#endif
+      NULL,(MEM_ADDRESS)&GLU.CurrentScanline.Tricks,3,MST_REGISTER,0,NULL);
 // and since we still have room:
     GetWindowRectRelativeToParent(ms->handle,&rc);
     new mr_static("bytes ","",rc.right+5,y,Par,
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-      NULL,(MEM_ADDRESS)&Glue.CurrentScanline.Bytes,2,MST_DECIMAL,0,NULL);
-#else
-      NULL,(MEM_ADDRESS)&Shifter.CurrentScanline.Bytes,2,MST_DECIMAL,0,NULL);
-#endif
+      NULL,(MEM_ADDRESS)&GLU.CurrentScanline.Bytes,2,MST_DECIMAL,0,NULL);
 #endif
 
 
@@ -2268,8 +2318,45 @@ void DWin_init()
         NULL,(MEM_ADDRESS)&scan_y,2,MST_DECIMAL,0,NULL);
 #endif
     y+=30;
-
     int x=5;
+    
+#if defined(SSE_BOILER_SHOW_PRELOAD)
+    new mr_static("Preload ","",x,y,Par,
+        NULL,(MEM_ADDRESS)&Shifter.Preload,1,MST_REGISTER,true,NULL);
+    y+=30;
+#endif    
+
+#if defined(SSE_BOILER_SHOW_ECLOCK) && defined(SSE_CPU_E_CLOCK_DISPATCHER) && defined(SSE_CPU_E_CLOCK2)
+    y-=30;
+    x+=70;
+    new mr_static("E-clk ","",x,y,Par,
+        NULL,(MEM_ADDRESS)&M68000.LastEClockCycles,3,MST_REGISTER,0,NULL);
+    x+=30;
+    y+=30;
+#endif
+
+#if defined(SSE_BOILER_SHOW_PENDING) && defined(SSE_INT_MFP_OBJECT)
+    y-=30;
+    x+=70;
+    new mr_static("VBi ","",x,y,Par,
+        NULL,(MEM_ADDRESS)&vbl_pending,1,MST_REGISTER,0,NULL);
+    x+=60;
+    new mr_static("HBi ","",x,y,Par,
+        NULL,(MEM_ADDRESS)&hbl_pending,1,MST_REGISTER,0,NULL);
+    x+=60;
+   // new mr_static("Irq ","",x,y,Par,
+     //   NULL,(MEM_ADDRESS)&MC68901.NextIrq,1,MST_REGISTER,0,NULL);
+ //  new mr_static("Irq ","",x,y,Par,
+   //    NULL,(MEM_ADDRESS)&MC68901.Irq,1,MST_REGISTER,0,NULL);
+
+        new mr_static("IOA ","",x,y,Par,
+        NULL,(MEM_ADDRESS)&ioaccess,4,MST_REGISTER,0,NULL);
+
+
+    y+=30;
+    x=5;
+#endif
+    
     for (int t=0;t<4;t++){
       ms=new mr_static(Str("Timer ")+char('A'+t)+" ","",x,y,Par,
             NULL,(MEM_ADDRESS)&debug_time_to_timer_timeout[t],4,MST_DECIMAL,0,NULL);
@@ -2379,12 +2466,12 @@ void logfile_wipe()
     fclose(logfile);
     logfile=fopen(LogFileName,"wb");
   }
-#if defined(SSE_BOILER_WIPE_TRACE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_WIPE_TRACE)
   fclose(Debug.trace_file_pointer);
   Debug.trace_file_pointer=freopen(SSE_TRACE_FILE_NAME, "w", stdout );
-
-
-
+#if defined(SSE_DEBUG_START_STOP_INFO2)
+  Debug.TraceGeneralInfos(TDebug::INIT);
+#endif
 #endif
 
 }

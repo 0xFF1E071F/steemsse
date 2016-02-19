@@ -777,8 +777,13 @@ void ASMCALL check_for_interrupts_pending()
           {
             iack_latency-=cpu_cycles;
             INSTRUCTION_TIME(cpu_cycles); // hop to event
+#if defined(SSE_BOILER_TRACE_EVENTS)
+            TRACE_MFP(">IACK ");
+            if(TRACE_ENABLED)
+              TRACE_EVENT(screen_event_vector);
+#endif
             screen_event_vector();  // trigger event //big possible bug:twice??
-#if defined(SSE_DEBUG) 
+#if defined(SSE_DEBUG) && !defined(SSE_BOILER_TRACE_EVENTS) //MFD
             {
               if(screen_event_vector==event_timer_a_timeout)
                 dbg_iack_subst='A';

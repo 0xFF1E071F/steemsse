@@ -66,8 +66,11 @@ EXT BYTE *draw_dest_ad,*draw_dest_next_scanline;
 
 EXT bool display_option_8_bit_fs INIT(false);
 EXT bool prefer_res_640_400 INIT(0),using_res_640_400 INIT(0);
-
+#if defined(SSE_VAR_RESIZE_380)
+EXT char overscan INIT(0)
+#else
 EXT int overscan INIT(0)
+#endif
 #if !defined(SSE_SHIFTER_REMOVE_USELESS_VAR) || defined(SSE_SHIFTER_DRAW_DBG)
 ,stfm_borders INIT(0)
 #endif
@@ -78,8 +81,26 @@ WIN_ONLY( EXT HWND ClipWin; )
 
 
 
-
+#if defined(SSE_VAR_RESIZE_380)
+short cpu_cycles_from_hbl_to_timer_b;
+#else
 int cpu_cycles_from_hbl_to_timer_b;
+#endif
+
+#if defined(SSE_VAR_RESIZE_380)
+
+const BYTE scanlines_above_screen[4]={SCANLINES_ABOVE_SCREEN_50HZ,
+                                    SCANLINES_ABOVE_SCREEN_60HZ,
+                                    SCANLINES_ABOVE_SCREEN_70HZ,
+                                    16};
+
+const WORD scanline_time_in_cpu_cycles_8mhz[4]={SCANLINE_TIME_IN_CPU_CYCLES_50HZ,
+                                                SCANLINE_TIME_IN_CPU_CYCLES_60HZ,
+                                                SCANLINE_TIME_IN_CPU_CYCLES_70HZ,
+                                                128};
+
+
+#else
 
 const int scanlines_above_screen[4]={SCANLINES_ABOVE_SCREEN_50HZ,
                                     SCANLINES_ABOVE_SCREEN_60HZ,
@@ -90,6 +111,8 @@ const int scanline_time_in_cpu_cycles_8mhz[4]={SCANLINE_TIME_IN_CPU_CYCLES_50HZ,
                                                 SCANLINE_TIME_IN_CPU_CYCLES_60HZ,
                                                 SCANLINE_TIME_IN_CPU_CYCLES_70HZ,
                                                 128};
+
+#endif
 
 int scanline_time_in_cpu_cycles[4]={SCANLINE_TIME_IN_CPU_CYCLES_50HZ,
                                     SCANLINE_TIME_IN_CPU_CYCLES_60HZ,
@@ -110,8 +133,11 @@ int left_border=BORDER_SIDE,right_border=BORDER_SIDE;
 #if !defined(SSE_VAR_RESIZE_370) //we use the border mask instead
 bool right_border_changed=0;
 #endif
+#if defined(SSE_VAR_RESIZE_380)
+short overscan_add_extra;
+#else
 int overscan_add_extra;
-
+#endif
 LPPIXELWISESCANPROC jump_draw_scanline[3][4][3],draw_scanline,draw_scanline_lowres,draw_scanline_medres;
 
 int shifter_freq_change_time[32];
@@ -1139,7 +1165,10 @@ void draw(bool osd)
   MEM_ADDRESS save_drawn_so_far=scanline_drawn_so_far;
   MEM_ADDRESS save_pixel=shifter_pixel;
   shifter_draw_pointer=xbios2;
-
+#if defined(SSE_BOILER_XBIOS2)
+  int save_shifter_first_draw_line=shifter_first_draw_line;
+  int save_shifter_last_draw_line=shifter_last_draw_line;
+#endif
 #if defined(SSE_VID_3BUFFER_WIN)
   // we blit the unlocked backsurface
   if (!draw_lock || SSE_3BUFFER 
@@ -1166,14 +1195,19 @@ void draw(bool osd)
       scan_y=yy;
       scanline_drawn_so_far=0;
       shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
-
 #if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER)
       Shifter.DrawScanlineToEnd();
 #else      
       draw_scanline_to_end();
 #endif
-
-//      shifter_draw_pointer+=shifter_scanline_width_in_bytes;
+#if defined(SSE_BOILER_XBIOS2)
+      DWORD Tricks=FrameEvents.GetShifterTricks(scan_y);
+      if(Tricks&TRICK_TOP_OVERSCAN)
+        shifter_first_draw_line=-29;
+      else if(Tricks&(TRICK_BOTTOM_OVERSCAN|TRICK_BOTTOM_OVERSCAN_60HZ))
+        shifter_last_draw_line=247;  
+#endif
+      //      shifter_draw_pointer+=shifter_scanline_width_in_bytes;
     }
     if (osd) osd_init_draw_static();
     draw_end();
@@ -1185,6 +1219,10 @@ void draw(bool osd)
   shifter_draw_pointer_at_start_of_line=save_sdp_at_start_of_line;
   scanline_drawn_so_far=save_drawn_so_far;
   shifter_pixel=save_pixel;
+#if defined(SSE_BOILER_XBIOS2)
+  shifter_first_draw_line=save_shifter_first_draw_line;
+  shifter_last_draw_line=save_shifter_last_draw_line;
+#endif
 
   DEBUG_ONLY( update_display_after_trace(); )
 }

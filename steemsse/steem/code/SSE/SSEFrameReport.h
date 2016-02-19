@@ -64,6 +64,9 @@ public:
   inline
 #endif
     void Add(int scanline, int cycle, char type, int value);
+#if defined(SSE_BOILER_XBIOS2)
+  DWORD GetShifterTricks(int y);
+#endif
   void Init();
   int Report();
   void ReportLine();
