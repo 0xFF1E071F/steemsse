@@ -689,7 +689,7 @@ void GUIRefreshStatusBar() {
 #endif
 #endif 
 
-#if defined(SSE_GUI_STATUS_STRING_HISPEED)
+#if defined(SSE_GUI_STATUS_STRING_HISPEED) && defined(SSE_INT_MFP_RATIO)
       if(n_cpu_cycles_per_second>CpuNormalHz)
       {
         char sb_clock[10];
@@ -1689,7 +1689,6 @@ int GetComLineArgType(char *Arg,EasyStr &Path)
     char *dot=strrchr(GetFileNameFromPath(Path),'.');
     if (dot){
       if (ExtensionIsDisk(dot,false)){
-        //BRK(yoho);
         return ARG_DISKIMAGEFILE;
       }else if (ExtensionIsPastiDisk(dot)){
         return ARG_PASTIDISKIMAGEFILE;
@@ -1700,7 +1699,6 @@ int GetComLineArgType(char *Arg,EasyStr &Path)
       }else if (IsSameStr_I(dot,".PRG") || IsSameStr_I(dot,".APP") || IsSameStr_I(dot,".TOS")){
         return ARG_STPROGRAMFILE;
       }else if (IsSameStr_I(dot,".GTP") || IsSameStr_I(dot,".TTP")){
-
         return ARG_STPROGRAMTPFILE;
       }else if (IsSameStr_I(dot,".LNK")){
         return ARG_LINKFILE;
@@ -1752,6 +1750,11 @@ void ParseCommandLine(int NumArgs,char *Arg[],int Level)
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER_REMOVE_USELESS_VAR))
       case ARG_STFMBORDER:    stfm_borders=4; break;
 #endif
+#if defined(SSE_VAR_ARG_STFM)
+      case ARG_STFMBORDER:
+        ST_TYPE=STF; // to help DemobaseST just in case
+        break;
+#endif
       case ARG_SCREENSHOTUSEFULLNAME: Disp.ScreenShotUseFullName=true; break;
       case ARG_SCREENSHOTALWAYSADDNUM: Disp.ScreenShotAlwaysAddNum=true; break;
       case ARG_ALLOWLPTINPUT: comline_allow_LPT_input=true; break;
@@ -1781,6 +1784,7 @@ WIN_ONLY( case ARG_GDIFSBORDER:   Disp.DrawLetterboxWithGDI=true; break; )
         BootDisk[0]=".";
         BootDisk[1]=".";
         BootStateFile=Path;
+        TRACE_INIT("BootStateFile %s given as argument\n",BootStateFile.Text);
         break;
       case ARG_CARTFILE:
         if (load_cart(Path)==0){
@@ -2188,7 +2192,7 @@ void HandleKeyPress(UINT VKCode,bool Up,int Extended)
     ST_Key_Down[STCode]=!Up; // this is used by ikbd.cpp & ireg.c
 
 
-#if defined(SSE_DEBUG) //&& defined(SSE_IKBD_6301_TRACE_KEYS)
+#if defined(SSE_DEBUG) //&& defined(SSE_DEBUG_IKBD_6301_TRACE_KEYS)
 #define LOGSECTION LOGSECTION_IKBD
     TRACE_LOG("Key PC $%X ST $%X ",VKCode,STCode);
     TRACE_LOG( (Up) ? "-\n" : "+\n");

@@ -966,6 +966,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_TOS_GEMDOS_RESTRICT_TOS3)
     Tos.VersionWarning=pCSF->GetInt("Main","TosVersionWarning",1);
 #endif
+#if defined(SSE_VID_DISABLE_AUTOBORDER3) // monochrome
+    SSEOption.MonochromeDisableBorder=pCSF->GetInt("Main","MonochromeDisableBorder",0);
+#endif
 #if defined(SSE_GUI_OPTION_FOR_TESTS)
     SSE_TEST_ON=pCSF->GetInt("Options","TestingNewFeatures",SSE_TEST_ON);
 #endif
