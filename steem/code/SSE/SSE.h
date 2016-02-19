@@ -2717,16 +2717,17 @@ Beta: not SSE_PRIVATE_BUILD
 
 #ifdef SSE_TOS
 //#define DISABLE_STEMDOS
-//#define DISABLE_STEMDOS2//TODO
-#define SSE_TOS_GEMDOS_DRVBIT // sooner
+//#define DISABLE_STEMDOS2//TODO//no, MFD
+//#define SSE_TOS_GEMDOS_DRVBIT // sooner //really necessary?
 #define SSE_TOS_GEMDOS_RESTRICT_TOS3 // EmuTOS + PRG/TOS
-#define SSE_TOS_PRG_AUTORUN2
 #endif
 
 #ifdef SSE_VARIOUS
+#define SSE_VAR_ARG_STFM // start as STF (unless overruled)
 #define SSE_VAR_KEYBOARD_CLICK2 // persistent
 #define SSE_VAR_RESIZE_380
 #define SSE_VAR_REWRITE_380
+#define SSE_VAR_SNAPSHOT_INI2 //bugfix
 #endif
 
 #ifdef SSE_VIDEO
