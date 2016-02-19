@@ -620,11 +620,7 @@ Some STFs                32.02480    8.0071
 #define  MFP_CLK_STE_EXACT 2451182 // not if 'STE as STF' is defined
 
 #if defined(SSE_INT_MFP_RATIO_STF2)
-#ifdef TEST01________
-#define  CPU_STF_PAL 8021030//temp test
-#else
 #define  CPU_STF_PAL 8021247//(8020736+512+512)// should be 8021247
-#endif
 #else
 #define  CPU_STF_PAL (8021248) // ( 2^8 * 31333 )
 #endif
@@ -643,9 +639,9 @@ Some STFs                32.02480    8.0071
 
 
 
-#if defined(SSE_INT_MFP_TIMERS_WOBBLE)//yes in v3.8
-#define MFP_WRITE_LATENCY 4
-#define MFP_TIMERS_WOBBLE 2//4//2//1 //2 // if there's wobble, at least 2 seems likelier
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE)//yes in v3.8??
+#define MFP_WRITE_LATENCY (8)
+#define MFP_TIMERS_WOBBLE 4//2//1 //2 // if there's wobble, at least 2 seems likelier
 #else
 #define MFP_WRITE_LATENCY (5) //5 (=8?) best for TEST10.TOS
 #endif
@@ -654,9 +650,8 @@ Some STFs                32.02480    8.0071
 
 #if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY)
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE) 
-
 #if defined(SSE_INT_MFP_EVENT_WRITE)
-#define MFP_TIMER_SET_DELAY 10
+#define MFP_TIMER_SET_DELAY (10-2) // 8 OK with wobble 4 for LXS
 #elif defined(SSE_GLUE_FRAME_TIMINGS) && !defined(SSE_INT_MFP_RATIO_STE3)
 #define MFP_TIMER_SET_DELAY 8//(8) //schnusdie
 #elif defined(SSE_GLUE_FRAME_TIMINGS) 
@@ -669,9 +664,10 @@ Some STFs                32.02480    8.0071
 #else
 // if = 12, better not define, it reduces code
 #if defined(SSE_INT_MFP_RATIO_STE3)
-#define MFP_TIMER_SET_DELAY 9 // DSOS main but then TEST10 gets bad...
+#define MFP_TIMER_SET_DELAY 8//9 // DSOS main but then TEST10 gets bad...
 #else
-#define MFP_TIMER_SET_DELAY 11 //11: OVSC6 STE (12 breaks)
+// 8-10 break LXS! 
+#define MFP_TIMER_SET_DELAY (8)//11 //11: OVSC6 STE (12 breaks) // 8 loSTE STE
 #endif
 #if (MFP_TIMER_SET_DELAY==12) // (12=Steem 3.2)
 #undef SSE_INT_MFP_TIMERS_STARTING_DELAY
