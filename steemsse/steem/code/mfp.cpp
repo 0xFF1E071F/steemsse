@@ -320,7 +320,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
         // prescale_count is the number of MFP_CLKs there has been since the
         // counter last decreased.
         int prescale_count=mfp_calc_timer_counter(timer);
-        TRACE_LOG("Timer %c main %d prescale %d\n",'A'+timer,mfp_timer_counter[timer],prescale_count);
+        //TRACE_LOG("Timer %c main %d prescale %d\n",'A'+timer,mfp_timer_counter[timer],prescale_count);
 
         if (new_control){ // Timer running in delay mode
                           // SS or pulse, but it's very unlikely
@@ -523,9 +523,9 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 
 #ifdef SSE_DEBUG
           if(new_val & BIT_3)
-            TRACE_LOG("%d PC %X set Timer %C %d\n",ACT,old_pc,'A'+timer,mfp_timer_counter[timer]/64);
+            TRACE_LOG("%d PC %X set Timer %C\n",ACT,old_pc,'A'+timer);
           else
-            TRACE_LOG("%d PC %X stop Timer %C prescale %d\n",ACT,old_pc,'A'+timer,prescale_count);
+            TRACE_LOG("%d PC %X stop Timer %C\n",ACT,old_pc,'A'+timer);
 #endif
 
           mfp_timer_enabled[timer]=false;
@@ -711,7 +711,7 @@ void ASMCALL check_for_interrupts_pending()
 #endif
 #if defined(SSE_INT_MFP_REFACTOR2) //v3.8.0
 /*  Instead of looking up which timers will trigger during IACK, we just
-    trigger events themselves, related or not to MFP.
+    trigger events themselves, related or not to the MFP.
     This is far simpler than the 3.7 way. I needed to further familiarise
     myself with Steem's inner working before I could do it.
     It also adds ACIA events to the test.
@@ -731,9 +731,7 @@ void ASMCALL check_for_interrupts_pending()
 #endif
 #endif
 #if defined(SSE_INT_MFP_REFACTOR2A)
-        if(MC68901.Irq
-          &&MFP_IRQ
-          ) 
+        if(MC68901.Irq) 
 #else
         if(MFP_IRQ)
 #endif
@@ -808,8 +806,9 @@ void ASMCALL check_for_interrupts_pending()
               && ACT-MC68901.WriteTiming<=MFP_WRITE_LATENCY);
 #endif
 
-#if defined(SSE_INT_MFP_REFACTOR2A) && defined(SSE_INT_MFP_EVENT_WRITE_SPURIOUS)
+#if defined(SSE_INT_MFP_REFACTOR2A1) && defined(SSE_INT_MFP_EVENT_WRITE_SPURIOUS)
 /*  Spurious triggers even if we don't break, there certainly were other bugs?
+    - hmm, no more, rahter confusing!
 */
 #ifdef SSE_DEBUG
             if(!MFP_IRQ)
@@ -933,13 +932,17 @@ void ASMCALL check_for_interrupts_pending()
 #if defined(SSE_INT_MFP_SPURIOUS)          
 /*  The dangerous spurious test.
     It triggers automatically at the end of IACK if we couldn't find an irq.
-    Cases: 
-    TEST10.TOS and SPURIOUS.TOS (of course)
+    Possible cases: 
+    TEST10.TOS and SPURIOUS.TOS (of course, we try to)
     Pacemaker STE! Spurious interrupt has a handler (RTE)
+    Zikdisk2        ditto
 */
           if(irq==-1 
 #if !defined(SSE_INT_MFP_EVENT_WRITE_SPURIOUS)
             && post_write 
+#endif
+#if defined(SSE_INT_MFP_REFACTOR2A2)
+            && iack_latency <=20 
 #endif
             && !no_real_irq) // couldn't find one and there was no break
           {
@@ -947,7 +950,7 @@ void ASMCALL check_for_interrupts_pending()
             TRACE_MFP("%d PC %X Spurious! %d\n",ACT,old_pc,iack_latency);
             TRACE_MFP("IRQ %d (%d) IERA %X IPRA %X IMRA %X ISRA %X IERB %X IPRB %X IMRB %X ISRB %X\n",MC68901.Irq,MC68901.NextIrq,mfp_reg[MFPR_IERA],mfp_reg[MFPR_IPRA],mfp_reg[MFPR_IMRA],mfp_reg[MFPR_ISRA],mfp_reg[MFPR_IERB],mfp_reg[MFPR_IPRB],mfp_reg[MFPR_IMRB],mfp_reg[MFPR_ISRB]);
 #ifdef SSE_BETA //enable for public beta
-            BRK(Spurious interrupt); 
+         //   BRK(Spurious interrupt); 
 #endif
             int iack_cycles=ACT-MC68901.IackTiming;
 #if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
@@ -1538,6 +1541,9 @@ void TMC68901::Init() {
   IrqInfo[5].Timer=2;  // timer C
   IrqInfo[8].Timer=1;  // timer B
   IrqInfo[13].Timer=0;  // timer A
+#endif
+#if defined(SSE_INT_MFP_REFACTOR2A)
+  Irq=false; //?
 #endif
 }
 

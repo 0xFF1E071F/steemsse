@@ -2635,29 +2635,28 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_INT_MFP_REFACTOR2 //simpler way for IACK and Spurious
 #if defined(SSE_INT_MFP_REFACTOR2)
 #define SSE_INT_MFP_REFACTOR2A//debug...
+//#define SSE_INT_MFP_REFACTOR2A1//define for fewer spurious...
+#define SSE_INT_MFP_REFACTOR2A2//define for fewer spurious...
 #define SSE_INT_MFP_REFACTOR2B//"improve"...
 #undef SSE_INT_MFP_IACK_LATENCY4 // adios "skip timer" hack
 #define SSE_INT_MFP_EVENT_WRITE 
 #if defined(SSE_INT_MFP_EVENT_WRITE)
 #define SSE_INT_MFP_EVENT_WRITE_SPURIOUS
+#define SSE_INT_MFP_EVENT_WRITE2
 #else
 #define SSE_INT_MFP_IS_DELAY
 #endif
 #endif//ref2
-#ifndef SSE_BOILER // too advanced
-#undef SSE_INT_MFP_RATIO_OPTION
-#undef SSE_INT_MFP_RATIO_OPTION2
-#endif
 #define SSE_INT_MFP_REFACTOR3 //enums 
 #undef SSE_INT_MFP_SPURIOUS_372
 #undef SSE_INT_MFP_TIMER_B_AER // refactor
 #define SSE_INT_MFP_TIMER_B_AER2 // refactor
 //#define SSE_INT_MFP_TIMER_B_PULSE //TODO
 #define SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS // timer B should be updated
-//#define SSE_INT_MFP_TIMERS_WOBBLE //(v3.8.0: Overscan #6B; Spurious)//bad if event_write defined
+#define SSE_INT_MFP_TIMERS_WOBBLE // trade off with timer set delay
 //#define SSE_INT_MFP_RATIO_STE3 // same ratio as STF?
 #define SSE_INT_MFP_TIMERS_STARTING_DELAY //
-//#define SSE_INT_MFP_UPDATE_IP_ON_GPIP_CHANGE //mistake, MFD (do test prg b4?)
+////#define SSE_INT_MFP_UPDATE_IP_ON_GPIP_CHANGE //mistake, MFD (do test prg b4?)
 #endif
 
 #if defined(SSE_INT_VBL)

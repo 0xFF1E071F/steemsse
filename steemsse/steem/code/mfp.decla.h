@@ -390,7 +390,7 @@ void mfp_check_for_timer_timeouts(); // SS not implemented
 #define mfp_interrupt_i_ab(irq) (1-((irq & 8) >> 3))
 
 
-#if defined(SSE_INT_MFP_REFACTOR2) // instant IRQ detector (if no irq in service)
+#if defined(SSE_INT_MFP_REFACTOR2) // instant IRQ detector (if no irq in service...)
 #define MFP_IRQ ( mfp_reg[MFPR_IERA]&mfp_reg[MFPR_IPRA]&mfp_reg[MFPR_IMRA]\
                 &(~mfp_reg[MFPR_ISRA]) \
                || mfp_reg[MFPR_IERB]&mfp_reg[MFPR_IPRB]&mfp_reg[MFPR_IMRB]\
