@@ -2060,24 +2060,22 @@ void event_trigger_vbi() { //6X cycles into frame (reference end of HSYNC)
 #if defined(SSE_GLUE_FRAME_TIMINGS9) && !defined(SSE_GLUE_FRAME_TIMINGS_C)
 /*  The video counter is reloaded from VBASE a second time at the end
     of VSYNC, when VBI is set pending.
-    Beyond/Universal Coders
+    Cases: Beyond/Universal Coders
 */
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer=xbios2;
-  //event_start_vbl();
 #endif
 
 #if defined(SSE_INT_VBL_380) && defined(SSE_CPU_E_CLOCK2) && defined(SSE_INT_VBL_IACK2)
   BYTE iack_latency=(HD6301EMU_ON)
     ? HBL_IACK_LATENCY + M68000.LastEClockCycles[TM68000::ECLOCK_VBL]
-    : CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED;
- // if(abs_quick(cpu_timer_at_start_of_hbl-time_of_last_vbl_interrupt)
- //   >iack_latency)
-    if(cpu_timer_at_start_of_hbl-time_of_last_vbl_interrupt>iack_latency
+  : CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED;
+
+  if(cpu_timer_at_start_of_hbl-time_of_last_vbl_interrupt>iack_latency
     ||!cpu_timer_at_start_of_hbl&&!time_of_last_vbl_interrupt)
 #endif
-      vbl_pending=true;
+    vbl_pending=true;
   //We don't expect cases:
-  ASSERT(vbl_pending);
+  //ASSERT(vbl_pending); //there are some, it's an annoying assert
 
 #if !defined(SSE_GLUE_FRAME_TIMINGS_B)
   screen_event_pointer++;

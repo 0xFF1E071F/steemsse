@@ -15,8 +15,10 @@ TBlitter Blit;
 #if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
 int nBytesBlitted=0; // for traces
 #endif
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING_START_BLITTER2)
+#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING_START_BLITTER3)
+#define BLITTER_START_WAIT 8 
+#define BLITTER_END_WAIT 0
+#elif defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING_START_BLITTER2)
 // 4 + 4 breaks Circus!
 #define BLITTER_START_WAIT 4 
 #define BLITTER_END_WAIT 4
@@ -153,7 +155,7 @@ void Blitter_Start_Line()
 	move.b d6,(a5)                                   ; 007D7A: 1A86  write sync
     Problem to avoid: remove 2 cycles twice for one INSTRUCTION_TIME_ROUND
 */
-#ifdef SSE_BETA //detect cases
+#if defined(SSE_BETA) && !defined(SSE_BLT_TIMING_TEST) //detect cases
     if(SSE_HACKS_ON)
 #endif
     {
@@ -432,8 +434,9 @@ void Blitter_Draw()
 //  MEM_ADDRESS SrcAdr=Blit.SrcAdr,DestAdr=Blit.DestAdr;
 
 //  Blit.YCounter=int(Blit.YCount ? Blit.YCount:65536);
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING_START_BLITTER)
+#if defined(SSE_BLT_TIMING_TEST)
+  INSTRUCTION_TIME_ROUND(BLITTER_START_WAIT);
+#elif defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING_START_BLITTER)
 /*  It most probably changes nothing, but all blitter tests were done with
     this defined, by accident :)
 */
