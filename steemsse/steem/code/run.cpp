@@ -450,7 +450,11 @@ void inline prepare_event_again() //might be an earlier one
   cpu_cycles+=oo;cpu_timer+=oo;
 }
 
+#if defined(SSE_COMPILER_380)
+void prepare_next_event() //VC6 would inline
+#else
 void inline prepare_next_event() //SS check this "inline" thing
+#endif
 {
 
 #if defined(SSE_GLUE_FRAME_TIMINGS)
@@ -898,11 +902,7 @@ void event_scanline()
 */
 
 #if defined(SSE_GLUE) && defined(SSE_INT_MFP_TIMER_B_AER2)
-  if(OPTION_PRECISE_MFP
-#ifdef TEST01
-    && GLU.FetchingLine()
-#endif
-    )
+  if(OPTION_PRECISE_MFP && GLU.FetchingLine())
     CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq); // update each scanline
 #endif
 
@@ -2068,14 +2068,15 @@ void event_trigger_vbi() { //6X cycles into frame (reference end of HSYNC)
 #if defined(SSE_INT_VBL_380) && defined(SSE_CPU_E_CLOCK2) && defined(SSE_INT_VBL_IACK2)
   BYTE iack_latency=(HD6301EMU_ON)
     ? HBL_IACK_LATENCY + M68000.LastEClockCycles[TM68000::ECLOCK_VBL]
-  : CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED;
-
-  if(cpu_timer_at_start_of_hbl-time_of_last_vbl_interrupt>iack_latency
+    : CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED;
+ // if(abs_quick(cpu_timer_at_start_of_hbl-time_of_last_vbl_interrupt)
+ //   >iack_latency)
+    if(cpu_timer_at_start_of_hbl-time_of_last_vbl_interrupt>iack_latency
     ||!cpu_timer_at_start_of_hbl&&!time_of_last_vbl_interrupt)
 #endif
-    vbl_pending=true;
+      vbl_pending=true;
   //We don't expect cases:
-  //ASSERT(vbl_pending); //there are some, it's an annoying assert
+   //ASSERT(vbl_pending); //there are some, it's an annoying assert
 
 #if !defined(SSE_GLUE_FRAME_TIMINGS_B)
   screen_event_pointer++;
@@ -2087,7 +2088,8 @@ void event_trigger_vbi() { //6X cycles into frame (reference end of HSYNC)
 #endif
 
 
-#if defined(SSE_FLOPPY_EVENT)
+#if defined(SSE_FLOPPY_EVENT) 
+#if defined(SSE_DISK_STW) || defined(SSE_DISK_SCP) || defined(SSE_DISK_HFE)
 /*  There's an event for floppy now because we want to handle DRQ for each
     byte, and the resolution of HBL is too gross for that:
 
@@ -2117,7 +2119,7 @@ void event_driveA_ip() {
 void event_driveB_ip() {
   SF314[1].IndexPulse();
 }
-
+#endif
 #endif//flp
 
 #if defined(SSE_IKBD_6301_EVENT)

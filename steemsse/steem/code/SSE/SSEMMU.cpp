@@ -3,7 +3,7 @@
 
 #include "../pch.h"
 #include "SSEMMU.h"
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 #include "SSEGlue.h"
 #include "SSEFrameReport.h"
 #endif
@@ -88,6 +88,8 @@ TMMU MMU;
 #endif
 
 MEM_ADDRESS TMMU::ReadVideoCounter(int CyclesIn,int dispatcher) {
+
+#if defined(SSE_MMU_READ_SDP_380)
   // the function has been greatly streamlined in v3.8.0,
   // relying on info already in "CurrentScanline" (no WS modifiers)
  
@@ -140,6 +142,200 @@ MEM_ADDRESS TMMU::ReadVideoCounter(int CyclesIn,int dispatcher) {
     sdp=shifter_draw_pointer;
 
   return sdp;
+
+#else
+
+
+  if (bad_drawing){
+    // Fake SDP
+#if defined(SSE_SHIFTER_SDP_TRACE)
+    TRACE_LOG("fake SDP\n");
+#endif
+    if (scan_y<0){
+      return xbios2;
+    }else if (scan_y<shifter_y){
+      int line_len=(160/res_vertical_scale);
+      return xbios2 + scan_y*line_len + min(CyclesIn/2,line_len) & ~1;
+    }else{
+      return xbios2+32000;
+    }
+  }
+  GLU.CheckSideOverscan();
+  MEM_ADDRESS sdp; // return value
+  if(GLU.FetchingLine())
+  {
+    int bytes_to_count=GLU.CurrentScanline.Bytes; // implicit fixes (Forest)
+
+    if(shifter_skip_raster_for_hscroll)
+    {
+      //TRACE("%d %d %d read skip\n",TIMING_INFO);
+#if defined(SSE_SHIFTER_STE_READ_SDP_SKIP) // bugfix
+      bytes_to_count+=SHIFTER_RASTER; // raster size depends on shift mode
+#else
+      bytes_to_count+=SHIFTER_RASTER_PREFETCH_TIMING/2;
+#endif
+    }
+
+    // note: same in all shift modes (eg Monoscreen by Dead Braincells)
+    //ASSERT(SHIFTER_RASTER_PREFETCH_TIMING==16);
+
+/*  TEST11F
+    On the STE, prefetch starts 16 cycles earlier only if HSCROLL is non null.
+    If it did start earlier whatever the value of HSCROLL, the following
+    line wouldn't be correct.
+    Apparently the 1st prefetch is also 16 cycles in med res.
+*/
+
+#if defined(SSE_SHIFTER_STE_READ_SDP_HSCROLL1) // TEST11D //breaks 20year STE intro
+    int bytes_ahead=(shifter_hscroll_extra_fetch&&shifter_skip_raster_for_hscroll) 
+#else
+    int bytes_ahead=(shifter_hscroll_extra_fetch) 
+#endif
+      ?(SHIFTER_RASTER_PREFETCH_TIMING/2)*2:(SHIFTER_RASTER_PREFETCH_TIMING/2);
+
+    int starts_counting=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN/2 - bytes_ahead;
+
+/*  84/2-8 = 34
+    In Hatari, they start at 56 + 12 = 68, /2 = 34
+    In both cases we use kind of magic values.
+    The same results from Hatari because their CPU timing at time of read is 
+    wrong like in Steem pre 3.5.
+
+    Hack-approach necessary while we're fixing instruction timings, but
+    this is the right ST value.
+
+    TODO: modify CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN
+    Before that, we keep this big debug block (normally only 
+    SSE_CPU_PREFETCH_TIMING will be defined).
+*/
+
+#if defined(SSE_CPU_PREFETCH_TIMING)
+  starts_counting-=2;
+#else
+  if(0);
+#if defined(SSE_CPU_LINE_0_TIMINGS)
+  else if( (ir&0xF000)==0x0000)
+    starts_counting-=2;
+#endif
+#if defined(SSE_CPU_LINE_1_TIMINGS)
+  else if( (ir&0xF000)==0x1000)
+    starts_counting-=2;
+#endif
+#if defined(SSE_CPU_LINE_2_TIMINGS)
+  else if( (ir&0xF000)==0x2000) 
+    starts_counting-=2;
+#endif
+#if defined(SSE_CPU_LINE_3_TIMINGS)
+  else if( (ir&0xF000)==0x3000) 
+    starts_counting-=2;
+#endif
+#if defined(SSE_CPU_LINE_4_TIMINGS)
+  else if( (ir&0xF000)==0x4000) 
+    starts_counting-=2;
+#endif
+#if defined(SSE_CPU_LINE_5_TIMINGS)
+  else if( (ir&0xF000)==0x5000) 
+    starts_counting-=2;
+#endif
+#if defined(SSE_CPU_LINE_8_TIMINGS)
+  else if( (ir&0xF000)==0x8000) 
+    starts_counting-=2;
+#endif
+#if defined(SSE_CPU_LINE_9_TIMINGS)
+  else if( (ir&0xF000)==0x9000)
+    starts_counting-=2;
+#endif
+#if defined(SSE_CPU_LINE_B_TIMINGS)
+  else if( (ir&0xF000)==0xB000) // CMP & EOR
+    starts_counting-=2;
+#endif
+#if defined(SSE_CPU_LINE_C_TIMINGS)
+  else if( (ir&0xF000)==0xC000) // (+ ABCD, EXG, MUL, line C)
+    starts_counting-=2;
+#endif
+#if defined(SSE_CPU_LINE_D_TIMINGS)
+  else if( (ir&0xF000)==0xD000) // (+ ABCD, EXG, MUL, line C)
+    starts_counting-=2;
+#endif
+#if defined(SSE_CPU_LINE_E_TIMINGS)
+  else if( (ir&0xF000)==0xE000) 
+    starts_counting-=2;
+#endif
+#if defined(SSE_DEBUG_TRACE_LOG_SDP_READ_IR)
+  else 
+  {
+    if(ir!=debug1)
+    {
+#if defined(DEBUG_BUILD)
+      EasyStr instr=disa_d2(old_pc);
+      TRACE_LOG("Read SDP ir %x Disa %s\n",ir,instr.c_str());
+#else
+      TRACE_LOG("Read SDP ir %4X\n",ir);
+#endif    
+      debug1=ir;
+    }
+  }
+#endif
+#endif
+
+    if(!left_border
+#if defined(SSE_SHIFTER_HIRES_OVERSCAN)
+      || screen_res==2
+#endif      
+      )
+      starts_counting-=26;
+#if defined(SSE_GLUE_FRAME_TIMINGS) && defined(SSE_GLUE_THRESHOLDS)
+    if(left_border && CyclesIn>=GLU.ScanlineTiming[TGlue::GLU_DE_ON]
+      [TGlue::FREQ_60]+2 && GLU.FreqAtCycle(GLU.ScanlineTiming[TGlue::GLU_DE_ON]
+      [TGlue::FREQ_60]+2)==60)
+      starts_counting-=2; 
+#elif defined(SSE_SHIFTER_TCB) && defined(SSE_SHIFTER_TRICKS)
+    else if(SSE_HACKS_ON && CurrentScanline.Cycles==508
+      && PreviousScanline.Cycles==512)
+    {
+      int c2=PreviousFreqChange(0);
+      int c1=PreviousFreqChange(c2);
+      if(c2>440-512 && c1>360-512 && FreqChangeAtCycle(c2)==60 
+        && FreqChangeAtCycle(c1)==60)
+        starts_counting+=2; // former hack: +2!
+    }
+#endif
+
+    int c=CyclesIn/2-starts_counting;
+
+    sdp=shifter_draw_pointer_at_start_of_line;
+
+    if (c>=bytes_to_count)
+      sdp+=bytes_to_count+(LINEWID*2);
+    else if (c>=0){
+      c&=-2;
+      sdp+=c;
+    }
+
+#if defined(SSE_SHIFTER_SDP_TRACE3) // compare with Steem (can't be 100%)
+    if(sdp>shifter_draw_pointer_at_start_of_line)
+    {
+      MEM_ADDRESS sdpdbg=get_shifter_draw_pointer(CyclesIn);
+      if(sdpdbg!=sdp)
+      {
+        TRACE_LOG("SDP 0 %X %d %X (+%d) Steem 3.2 %X (+%d)\n",shifter_draw_pointer_at_start_of_line,CyclesIn,sdp,sdp-shifter_draw_pointer_at_start_of_line,sdpdbg,sdpdbg-shifter_draw_pointer_at_start_of_line);
+        MEM_ADDRESS sdpdbg=get_shifter_draw_pointer(CyclesIn); // rego...
+      }
+    }
+#endif
+  }
+  else // lines witout fetching (before or after frame)
+    sdp=shifter_draw_pointer;
+
+//if(!scan_y)TRACE("Read SDP F%d y%d c%d SDP %X (%d - %d) sdp %X xtr %d\n",FRAME,scan_y,CyclesIn,sdp,sdp-shifter_draw_pointer_at_start_of_line,CurrentScanline.Bytes,shifter_draw_pointer,shifter_hscroll_extra_fetch);
+#if defined(SSE_SHIFTER_SDP_TRACE2)
+  int nbytes=sdp-shifter_draw_pointer_at_start_of_line;
+  if(nbytes && scan_y==-29) TRACE("Read SDP F%d y%d c%d SDP %X (%d - %d) sdp %X\n",FRAME,scan_y,CyclesIn,sdp,sdp-shifter_draw_pointer_at_start_of_line,CurrentScanline.Bytes,shifter_draw_pointer);
+#endif
+  return sdp;
+
+
+#endif
 }
 
 

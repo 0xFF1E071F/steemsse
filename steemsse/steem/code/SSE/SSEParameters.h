@@ -435,7 +435,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #endif
 
 #if defined(SSE_IKBD_6301_EVENT)//380
-#define HD6301_CYCLES_TO_SEND_BYTE 1330//((SSE_HACKS_ON&& LPEEK(0x18)==0xFEE74)?1350:1290) // boo!
+#define HD6301_CYCLES_TO_SEND_BYTE ((SSE_HACKS_ON&& LPEEK(0x18)==0xFEE74)?1350:1280) // boo!
 #define HD6301_CYCLES_TO_RECEIVE_BYTE (HD6301_CYCLES_TO_SEND_BYTE)
 #elif defined(SSE_ACIA_OVR_TIMING)
 // hack: we count more cycle when overrun is detected, for Froggies
@@ -522,7 +522,7 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
 #define VBL_IACK_LATENCY 28
 
 #if defined(SSE_CPU_E_CLOCK4)
-#define ECLOCK_AUTOVECTOR_CYCLE 10 // IACK starts at cycle 10
+#define ECLOCK_AUTOVECTOR_CYCLE 10 // IACK starts at cycle 10 (?)
 #else
 #define ECLOCK_AUTOVECTOR_CYCLE 28 //whatever!
 #endif
@@ -532,7 +532,7 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
 #define SSE_INT_VBI_START (68) // default = STE
 #endif
 
-#if !defined(SSE_GLUE_THRESHOLDS)//(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if !defined(SSE_GLUE_THRESHOLDS)
 #define THRESHOLD_LINE_PLUS_2_STF (54)
 #if defined(SSE_INT_VBL_STF) // modest hack still works
 #define HBL_FOR_STE (444)
@@ -712,7 +712,7 @@ Some STFs                32.02480    8.0071
 /////////////
 
 
-#ifndef SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE
+#ifndef SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1
 #define VERT_OVSCN_LIMIT (502) //502
 #if defined(SSE_MMU_WU_IO_BYTES_W_SHIFTER_ONLY)
 #define WU2_PLUS_CYCLES 4 // we make cycles +2
@@ -741,7 +741,7 @@ Some STFs                32.02480    8.0071
 /////////
 
 
-#if defined(SSE_STF_VERT_OVSCN) && !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if defined(SSE_STF_VERT_OVSCN) && !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 #define STF_VERT_OVSCN_OFFSET 4
 #endif
 
@@ -753,7 +753,7 @@ Some STFs                32.02480    8.0071
 
 // DMA sound has its own clock, it's not CPU's
 // We adjust this so that we have 50065 in ljbk's test
-//TODO
+//TODO should be 8010613
 #if defined(SSE_INT_MFP_RATIO_STE2)
 
 #if CPU_STE_PAL==(8020736) // too slow for Overscan Demos STE...
@@ -762,14 +762,17 @@ Some STFs                32.02480    8.0071
 #define STE_DMA_CLOCK 8021350
 #elif CPU_STE_PAL==(8021030)
 #define STE_DMA_CLOCK 8021500 //50065; MOLZ OK
+//#define STE_DMA_CLOCK 8012800
 #else
-#define STE_DMA_CLOCK 8021250//8021350 // 50065; MOLZ OK v3.8.0
+#define STE_DMA_CLOCK 8012800//8021250//8021350 // 50065; MOLZ OK v3.8.0 : 8021250
 //#define STE_DMA_CLOCK 8021118 //(8021502-256-128) // before v3.8.0
 #endif
 #else
 #define STE_DMA_CLOCK 8021502 //OK with STE clock=STF?
 #endif
 
+//#define STE_DMA_CLOCK 8010613//test
+//#define CPU_STE_PAL CPU_STF_PAL//test
 
 /////////
 // TOS //

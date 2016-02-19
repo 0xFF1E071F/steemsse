@@ -52,7 +52,7 @@ TShifter::TShifter() {
 #if defined(WIN32)
   ScanlineBuffer=NULL;
 #endif
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 #if defined(SSE_GLUE_FRAME_TIMINGS) //not that important, there's an assert
   CurrentScanline.Cycles=scanline_time_in_cpu_cycles_8mhz[1]; 
 #else
@@ -68,7 +68,7 @@ TShifter::TShifter() {
 TShifter::~TShifter() {
 }
 
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 /*  Check overscan functions:
     -  CheckSideOverscan()
     -  EndHBL() 
@@ -2541,7 +2541,7 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
   }//end Monochrome
 }
 
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 //note: this isn't compiled anymore in v3.8
 void TShifter::EndHBL() {
 
@@ -3397,7 +3397,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     return;
 #endif
 
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
   if(freq_change_this_scanline
 #if defined(SSE_SHIFTER_DRAGON1)//temp
     || SS_signal==SS_SIGNAL_SHIFTER_CONFUSED_2
@@ -3409,11 +3409,24 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     CheckSideOverscan(); 
 #endif
 
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE) && defined(SSE_GLUE_006)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1) && defined(SSE_GLUE_006)
 /*  Must check side overscan before the switch (Sea of Colour large display)
 */
   if(GLU.FetchingLine()&&(freq_change_this_scanline||Preload))
     GLU.CheckSideOverscan();
+
+#else
+
+  if(freq_change_this_scanline
+#if defined(SSE_SHIFTER_DRAGON1)//temp
+    || SS_signal==SS_SIGNAL_SHIFTER_CONFUSED_2
+#endif
+#if defined(SSE_SHIFTER_UNSTABLE)
+    || Preload // must go apply trick at each scanline
+#endif
+    )
+    GLU.CheckSideOverscan(); 
+
 #endif
 
 /*  What happens here is very confusing; we render in real time, but not
@@ -3538,7 +3551,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
       }
     }
 #endif
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE) && !defined(SSE_GLUE_006) // fewer checks? //MFD
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1) && defined(SSE_GLUE_011) // fewer checks? //MFD
     if(Glue.FetchingLine())
     {
       if(freq_change_this_scanline
@@ -3630,11 +3643,17 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 /*  On lines -2, don't fetch the last 2 bytes as if it was a 160byte line.
     Fixes screen #2 of the venerable B.I.G. Demo.
 */
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE) // + for med res, no 'Hacks'
+#if defined(SSE_GLUE_012)
       if((GLU.CurrentScanline.Tricks&TRICK_LINE_MINUS_2)
         && picture>=SHIFTER_RASTER*2)
       {
         picture-=SHIFTER_RASTER*2,border2+=SHIFTER_RASTER*2; // cancel last raster
+      }
+#elif defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1) // + for med res, no 'Hacks'
+      if(SSE_HACKS_ON && (GLU.CurrentScanline.Tricks&TRICK_LINE_MINUS_2)
+        && picture>=16)
+      {
+        picture-=16,border2+=16; // cancel last raster
       }
 #else
       if(SSE_HACKS_ON && (GLU.CurrentScanline.Tricks&TRICK_LINE_MINUS_2)
@@ -3663,7 +3682,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     TODO: be able to shift the line by an arbitrary #pixels left ot right
     (assembly)
 */
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if defined(SSE_GLUE_013)
         if(GLU.CurrentScanline.Tricks
           &(TRICK_4BIT_SCROLL|TRICK_LINE_PLUS_20|TRICK_UNSTABLE))
 #else
@@ -3820,7 +3839,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 
 
 void TShifter::Reset(bool Cold) {
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
   m_SyncMode=0; 
   m_ShiftMode=screen_res; // we know it's updated first, debug strange screen!
 #endif
@@ -3847,7 +3866,7 @@ void TShifter::Reset(bool Cold) {
 
 }
 
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 
 /*  SetShiftMode() and SetSyncMode() are called when a program writes
     on "Shifter" registers FF8260 (shift) or FF820A (sync). 
@@ -4227,9 +4246,9 @@ void TShifter::Vbl() {
   n508lines=0;
 #endif
 
-#if defined(SSE_GLUE_FRAME_TIMINGS) && !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE) //soon MFD...//?
-  CurrentScanline.Cycles=scanline_time_in_cpu_cycles_8mhz[shifter_freq_idx];
-  ASSERT(CurrentScanline.Cycles<=512);
+#if defined(SSE_GLUE_FRAME_TIMINGS) && !defined(SSE_GLUE_014) //soon MFD...//?
+  GLU.CurrentScanline.Cycles=scanline_time_in_cpu_cycles_8mhz[shifter_freq_idx];
+  ASSERT(GLU.CurrentScanline.Cycles<=512);
 #endif
 
 }
@@ -4242,7 +4261,7 @@ void TShifter::Vbl() {
 #if defined(SSE_STRUCTURE_SSESHIFTER_OBJ)
 
 #define LOGSECTION LOGSECTION_VIDEO
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 //note: this isn't compiled anymore in v3.8
 void TShifter::AddExtraToShifterDrawPointerAtEndOfLine(unsigned long &extra) {
   // What a beautiful name!
@@ -4317,7 +4336,7 @@ void TShifter::DrawBufferedScanlineToVideo() {
 
 #endif
 
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 //note: this isn't compiled anymore in v3.8
 int TShifter::FetchingLine() {
   // does the current scan_y involve fetching by the Shifter?
@@ -4510,7 +4529,7 @@ FF825E
     }
 }
 
-#if defined(SSE_SHIFTER_TRICKS) && !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if defined(SSE_SHIFTER_TRICKS) && !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 
 /* V.3.3 used Hatari analysis. Now that we do without this hack, we need
    look-up functions to extend the existing Steem system.
