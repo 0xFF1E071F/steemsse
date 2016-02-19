@@ -2494,12 +2494,18 @@ Beta: not SSE_PRIVATE_BUILD
 ////#undef SSE_BLT_BLIT_MODE_CYCLES
 #define SSE_BLT_BLIT_MODE_CYCLES2 //check for irq not needed... ?
 #define SSE_BLT_BLIT_MODE_CYCLES3 //go slower in blit mode
-#define SSE_BLT_BLIT_MODE_CYCLES4 // # cycles of a blit cycle
+#define SSE_BLT_BLIT_MODE_CYCLES4 // # cycles of a blit cycle (hack)
 #define SSE_BLT_CLEAR_HOG
 #define SSE_BLT_TIMING_CPU_NO_BUS
 #define SSE_BLT_TIMING_FXSR
 #define SSE_BLT_TIMING_START_BLITTER
-////#define SSE_BLT_TIMING_START_BLITTER2
+//#define SSE_BLT_TIMING_START_BLITTER2// should be but...
+#define SSE_BLT_TIMING_START_BLITTER3// Circus OK
+//#define SSE_BLT_TIMING_TEST
+#if defined(SSE_BLT_TIMING_TEST)
+#define SSE_BLT_TIMING_START_BLITTER2
+#undef SSE_BLT_BLIT_MODE_CYCLES4
+#endif
 #endif//blt
 
 #if defined(SSE_COMPILER)

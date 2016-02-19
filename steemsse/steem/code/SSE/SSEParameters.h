@@ -127,16 +127,11 @@ MIDI is 4 times faster than IKBD
     cycles but in NOP units (4 cycles). 
     It could be deduced from the example program and the mention restarting 
     the blitter takes "7 cycles". The timing table is also in NOP.
-    We could choose 65 instead of 64 for some latency? But then are cycles
-    lost? 
-    TESTING
-    Since we prolong the access times, we make sure to check for interrupts
-    more often. The smaller the value, the higher the emulation load!
-    TODO: compute a sort of cpu_cycles to be precise
 */
 //#undef SSE_BLT_BLIT_MODE_CYCLES
 #ifdef SSE_BLT_BLIT_MODE_CYCLES4
-#define BLITTER_BLIT_MODE_CYCLES 128 // or cycles = 2 clock? //TODO test prg
+//#define BLITTER_BLIT_MODE_CYCLES (SSE_HACKS_ON?(128):(64*4)) // or cycles = 2 clock? //TODO test prg
+#define BLITTER_BLIT_MODE_CYCLES (SSE_HACKS_ON?(160):(64*4))//160 hack for AC2011, Down TLN, SmokeTown
 #else
 #define BLITTER_BLIT_MODE_CYCLES ((65-1)*4) // 'NOP' x 4 = cycles //63?
 #endif
