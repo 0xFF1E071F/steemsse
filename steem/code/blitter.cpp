@@ -512,6 +512,10 @@ void Blitter_Draw()
       if (Blit.HasBus){
         Blitter_Blit_Word();
       }else{
+#if defined(SSE_BOILER_HISTORY_TIMING)
+        pc_history_y[pc_history_idx]=scan_y;
+        pc_history_c[pc_history_idx]=LINECYCLES;
+#endif
         DEBUG_ONLY( pc_history[pc_history_idx++]=pc; )
         DEBUG_ONLY( if (pc_history_idx>=HISTORY_SIZE) pc_history_idx=0; )
 
@@ -584,6 +588,10 @@ void Blitter_Draw()
     DEBUG_ONLY( mode=STEM_MODE_INSPECT; )
 
     while (cpu_cycles<=0){
+#if defined(SSE_BOILER_TRACE_CONTROL)
+      if(TRACE_MASK2&TRACE_CONTROL_EVENT)
+        TRACE_EVENT(screen_event_vector);        
+#endif
       screen_event_vector();
       prepare_next_event();
 #if defined(STEVEN_SEAGAL) && defined(SSE_BLT_HOG_MODE_INTERRUPT)

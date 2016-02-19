@@ -105,7 +105,11 @@ EXT bool prefer_res_640_400 INIT(0),using_res_640_400 INIT(0);
 
 
 EXT void get_fullscreen_rect(RECT *);
+#if defined(SSE_VAR_RESIZE_380)
+EXT char overscan INIT(0)
+#else
 EXT int overscan INIT(0)
+#endif
 #if !defined(SSE_SHIFTER_REMOVE_USELESS_VAR) || defined(SSE_SHIFTER_DRAW_DBG)
 ,stfm_borders INIT(0)
 #endif
@@ -121,8 +125,12 @@ WIN_ONLY( EXT HWND ClipWin; )
 
 
 
-
+#if defined(SSE_VAR_RESIZE_380)
+EXT short cpu_cycles_from_hbl_to_timer_b;
+#else
 EXT int cpu_cycles_from_hbl_to_timer_b;
+#endif
+
 
 #define SCANLINES_ABOVE_SCREEN_50HZ 63 
 #define SCANLINES_ABOVE_SCREEN_60HZ 34
@@ -147,7 +155,7 @@ EXT int cpu_cycles_from_hbl_to_timer_b;
 
 #define CYCLES_FOR_VERTICAL_RETURN_IN_70HZ 200
 #define CYCLES_FROM_START_VBL_TO_INTERRUPT 1544 //SS same for all freqs?
-#define CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN 84
+#define CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN 84 //SS 84 = 56+28
 #define CYCLES_FROM_HBL_TO_RIGHT_BORDER_CLOSE (CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320)
 
 #if !defined(SSE_INT_MFP_TIMER_B_AER2)  // refactored 
@@ -162,10 +170,16 @@ EXT int cpu_cycles_from_hbl_to_timer_b;
 #define HBLS_PER_SECOND_AVE 15700 // Average between 50 and 60hz
 #define HBLS_PER_SECOND_MONO (501.0*71.42857)
 
+
+#if defined(SSE_VAR_RESIZE_380)
+EXT const BYTE scanlines_above_screen[4];
+
+EXT const WORD scanline_time_in_cpu_cycles_8mhz[4];
+#else
 EXT const int scanlines_above_screen[4];
 
 EXT const int scanline_time_in_cpu_cycles_8mhz[4];
-
+#endif
 EXT int scanline_time_in_cpu_cycles[4];
 
 EXT int draw_dest_increase_y;
@@ -188,8 +202,11 @@ EXT int left_border,right_border;
 #if !defined(SSE_VAR_RESIZE_370) 
 EXT bool right_border_changed;
 #endif
+#if defined(SSE_VAR_RESIZE_380)
+EXT short overscan_add_extra;
+#else
 EXT int overscan_add_extra;
-
+#endif
 //LPSCANPROC draw_scanline;
 
 typedef void ASMCALL PIXELWISESCANPROC(int,int,int,int);

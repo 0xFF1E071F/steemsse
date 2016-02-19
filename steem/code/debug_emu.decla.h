@@ -248,6 +248,11 @@ extern bool break_on_irq[NUM_BREAK_IRQS];
 #define HIST_MENU_SIZE 20
 
 EXT MEM_ADDRESS pc_history[HISTORY_SIZE];
+#if defined(SSE_BOILER_HISTORY_TIMING)
+EXT short pc_history_y[HISTORY_SIZE];
+EXT short pc_history_c[HISTORY_SIZE];
+#endif
+
 EXT int pc_history_idx INIT(0);
 EXT BYTE debug_send_alt_keys INIT(0),debug_send_alt_keys_vbl_countdown INIT(0);
 

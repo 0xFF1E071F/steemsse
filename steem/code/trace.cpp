@@ -61,6 +61,11 @@ void trace()
   //execute
 //  try{
   TRY_M68K_EXCEPTION
+
+#if defined(SSE_BOILER_HISTORY_TIMING)
+    pc_history_y[pc_history_idx]=scan_y;
+    pc_history_c[pc_history_idx]=LINECYCLES;
+#endif
     pc_history[pc_history_idx++]=pc;
     if (pc_history_idx>=HISTORY_SIZE) pc_history_idx=0;
 

@@ -91,6 +91,27 @@ MEM_ADDRESS TFrameEvents::GetSDP(int x,int guessed_scan_y) {
 }
 #endif
 
+#if defined(SSE_BOILER_XBIOS2)
+
+DWORD TFrameEvents::GetShifterTricks(int y) {
+  DWORD tricks=0;
+  for(int i=1; i<=MAX_EVENTS && m_FrameEvent[i].Scanline<=y;i++)
+  {
+    if(m_FrameEvent[i].Scanline==y)
+    {
+      if(m_FrameEvent[i].Type=='T')
+      {
+        tricks=m_FrameEvent[i].Value;
+        break;
+      }
+    }
+  }//nxt
+  return tricks;
+}
+
+#endif
+
+
 void TFrameEvents::Init() {
   m_nEvents=m_nReports=TriggerReport=nVbl=0;
 }
@@ -178,6 +199,8 @@ int TFrameEvents::Vbl() {
 #if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK1 & TRACE_CONTROL_SUMMARY)
       TRACE_LOG("VBL %d Shifter tricks %X\n",nVbl,Debug.ShifterTricks);
+    //if(Debug.ShifterTricks==0x133D1) //handy
+      //Report();
 #endif
 //#undef LOGSECTION
 #endif  

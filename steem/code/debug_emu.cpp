@@ -59,6 +59,12 @@ EXT int monitor_mode INIT(2),breakpoint_mode INIT(2);
 #endif
 bool break_on_irq[NUM_BREAK_IRQS]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 EXT MEM_ADDRESS pc_history[HISTORY_SIZE];
+
+#if defined(SSE_BOILER_HISTORY_TIMING)
+EXT short pc_history_y[HISTORY_SIZE];
+EXT short pc_history_c[HISTORY_SIZE];
+#endif
+
 EXT int pc_history_idx INIT(0);
 EXT BYTE debug_send_alt_keys INIT(0),debug_send_alt_keys_vbl_countdown INIT(0);
 void *debug_plugin_routines[]={(void*)2,(void*)debug_plugin_read_mem,(void*)debug_plugin_write_mem};
@@ -230,7 +236,7 @@ void debug_update_cycle_counts()
       debug_time_to_timer_timeout[t]=mfp_timer_timeout[t]-ABSOLUTE_CPU_TIME;
 
 #if defined(SSE_BOILER_DECRYPT_TIMERS)
-        ASSERT(mfp_get_timer_control_register(t)>0);
+        ASSERT(mfp_get_timer_control_register(t)>=0);
         ASSERT(mfp_get_timer_control_register(t)<16);
         debug_time_to_timer_prescale[t]=mfp_timer_8mhz_prescale[mfp_get_timer_control_register(t)];
         debug_time_to_timer_data[t]=mfp_reg[MFPR_TADR+t]; //could directly point to it?

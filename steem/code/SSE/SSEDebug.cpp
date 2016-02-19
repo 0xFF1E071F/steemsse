@@ -336,11 +336,13 @@ void TDebug::TraceGeneralInfos(int when) {
 #endif
     if(OPTION_PRECISE_MFP)
       TRACE("; C2");
+#if defined(SSE_INT_MFP_RATIO) 
     if(n_cpu_cycles_per_second>CpuNormalHz)
       TRACE("; Speed %d",n_cpu_cycles_per_second);
 #if defined(SSE_INT_MFP_RATIO_OPTION)
     if(OPTION_CPU_CLOCK)
       TRACE("; Clock %d",CpuCustomHz);
+#endif
 #endif
 /*
 #if defined(SSE_MMU_WU_DL)
@@ -359,10 +361,10 @@ void TDebug::TraceGeneralInfos(int when) {
 //    TRACE("debug var 0: %d 1: %d 2: %d 3: %d 4: %d 5: %d 6: %d 7: %d 8: %d 9: %d\n",debug0,debug1,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9);
 //    TRACE("HblTiming %d\n",HblTiming);
     // Vectors
-    TRACE("HBL %X VBL %X\n",LPEEK(0x68),LPEEK(0x70));
-    TRACE("Timers A %X B %X C %X D %X\n",LPEEK(0x134),LPEEK(0x120),LPEEK(0x114),LPEEK(0x110));
-    TRACE("ACIA %X FDC %X\n",LPEEK(0x118),LPEEK(0x11C));
-    TRACE("BUS %X ADDR %X ILLEG %X TRACE %X\n",LPEEK(0x8),LPEEK(0xC),LPEEK(0x10),LPEEK(0x24));
+    //TRACE("HBL %X VBL %X\n",LPEEK(0x68),LPEEK(0x70));
+    //TRACE("Timers A %X B %X C %X D %X\n",LPEEK(0x134),LPEEK(0x120),LPEEK(0x114),LPEEK(0x110));
+    //TRACE("ACIA %X FDC %X\n",LPEEK(0x118),LPEEK(0x11C));
+    //TRACE("BUS %X ADDR %X ILLEG %X TRACE %X\n",LPEEK(0x8),LPEEK(0xC),LPEEK(0x10),LPEEK(0x24));
     // Misc
 #if defined(SSE_SOUND_MICROWIRE___)
     if(dma_sound_bass!=6||dma_sound_treble!=6)
@@ -584,6 +586,57 @@ void TDebug::PseudoStackPush(DWORD return_address) {
 #endif
 }
 
+#endif
+
+
+#if defined(SSE_BOILER_TRACE_EVENTS)
+  // not very smart...
+void TDebug::TraceEvent(void* pointer) {
+  TRACE("%d ",ACT);
+  if(pointer==event_timer_a_timeout)
+    TRACE("event_timer_a_timeout");
+  else if(pointer==event_timer_b_timeout)
+    TRACE("event_timer_b_timeout");
+  else if(pointer==event_timer_c_timeout)
+    TRACE("event_timer_c_timeout");
+  else if(pointer==event_timer_d_timeout)
+    TRACE("event_timer_d_timeout");
+  else if(pointer==event_timer_b)
+    TRACE("event_timer_b");
+  else if(pointer==event_scanline)
+    TRACE("event_scanline");
+  else if(pointer==event_start_vbl)
+    TRACE("event_start_vbl");
+  else if(pointer==event_vbl_interrupt)
+    TRACE("event_vbl_interrupt");
+#if defined(SSE_INT_VBI_START) || defined(SSE_GLUE_FRAME_TIMINGS)
+  else if(pointer==event_trigger_vbi)
+    TRACE("event_trigger_vbi");
+#endif
+#if defined(SSE_FLOPPY_EVENT)
+  else if(pointer==event_wd1772)
+    TRACE("event_wd1772");
+  else if(pointer==event_driveA_ip)
+    TRACE("event_driveA_ip");
+  else if(pointer==event_driveB_ip)
+    TRACE("event_driveB_ip");
+#endif
+#if defined(SSE_IKBD_6301_EVENT)
+  else if(pointer==event_ikbd)
+    TRACE("event_ikbd");
+  else if(pointer==event_ikbd2)
+    TRACE("event_ikbd2");
+#endif
+#if defined(SSE_INT_MFP_EVENT_WRITE)
+  else if(pointer==event_mfp_write)
+    TRACE("event_mfp_write");
+#endif
+#if defined(SSE_PASTI)
+  else if(pointer==event_pasti_update)
+    TRACE("event_pasti_update");
+#endif
+    TRACE(" (%d)\n",ACT-time_of_next_event);
+}
 #endif
 
 #endif//#if defined(SSE_DEBUG) 
