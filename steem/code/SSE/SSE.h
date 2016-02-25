@@ -2755,6 +2755,12 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SHIFTER_STE_MED_HSCROLL2 // Desktop Central
 #endif//sft
 
+#if defined(SSE_SOUND)
+#define SSE_SOUND_DMA_380
+#define SSE_SOUND_DMA_380B //hack
+#define SSE_SOUND_MICROWIRE_MIXMODE2 //hack
+#endif
+
 #ifdef SSE_STF
 #define SSE_STE_4MB
 #define SSE_STF_MATCH_TOS3 // + default country
@@ -2789,6 +2795,11 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_BORDERS_416_NO_SHIFT3 //?
 #define SSE_VID_BORDERS_416_NO_SHIFT4 //large display mode shift pixels for non-fetching lines
 #endif
+#endif
+
+#ifdef SSE_YM2149
+#define SSE_YM2149_NO_JAM_IF_NOT_RW
+#define SSE_YM2149_ENV_DEPHASING
 #endif
 
 #endif//beta
