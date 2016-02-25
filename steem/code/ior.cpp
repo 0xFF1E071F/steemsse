@@ -139,7 +139,12 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
     that sit on the CPU bus.
     Not a big change because we corrected MOVE rounding too.
 */
+#if defined(SSE_CPU_ROUNDING_BUS3)
+   // see iow.cpp
+   if(M68000.Rounded && !(addr>=0xff8240 && addr<=0xff8265)
+#else
   if(M68000.Rounded && !(addr>=0xff8240 && addr<0xff8260)
+#endif
 #if defined(SSE_CPU_ROUNDING_BUS2)
     && !M68000.Unrounded
 #endif

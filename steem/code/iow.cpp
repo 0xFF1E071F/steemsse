@@ -74,7 +74,12 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
     that sit on the CPU bus.
     Not a big change because we corrected MOVE rounding too.
 */
+#if defined(SSE_CPU_ROUNDING_BUS3)
+   // 3615GEN4 - Naos menu -STE, so probably HSCROLL too
+   if(M68000.Rounded && !(addr>=0xff8240 && addr<=0xff8265)
+#else
   if(M68000.Rounded && !(addr>=0xff8240 && addr<0xff8260)// || addr==0xFF8265)
+#endif
 #if defined(SSE_CPU_ROUNDING_BUS2)
     && !M68000.Unrounded
 #endif
