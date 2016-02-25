@@ -12,6 +12,8 @@
 
 #include "SSE.h"
 
+#if defined(STEVEN_SEAGAL) && defined(SSE_FDC)
+
 #include "../pch.h"
 #ifdef WIN32
 #include <pasti/pasti.h>
@@ -29,7 +31,7 @@
 #include "SSEInterrupt.h"
 #include "SSEWD1772.h"
 
-#if defined(SSE_FDC)
+//#if defined(SSE_FDC)
 //#if defined(SSE_WD1772)
 
 #define LOGSECTION LOGSECTION_FDC
@@ -415,7 +417,7 @@ WD doc:
   if(TRACE_MASK3 & TRACE_CONTROL_FDCSTR)
 #endif
   {
-#if !defined(SSE_DEBUG_TRACE_IDE) || defined(SSE_FDC_TRACE_STR)
+#if !defined(SSE_DEBUG_TRACE_IDE) || defined(SSE_DEBUG_FDC_TRACE_STR)
     TRACE_LOG("FDC STR %X PC %X\n",ior_byte,old_pc);
 #endif
   }
@@ -491,7 +493,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
     }
 #endif
 
-#if defined(SSE_DEBUG) && defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)
+#if defined(SSE_DEBUG) && defined(SSE_DRIVE) && defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)
 //#undef LOGSECTION
 //#define LOGSECTION LOGSECTION_IMAGE_INFO
 /*  Used this for Auto239.
@@ -843,7 +845,7 @@ void TWD1772IDField::Trace() {
 //#if defined(SSE_DISK_STW)
 #if defined(SSE_WD1772_MFM)
 
-/*
+
 #ifdef SSE_WD1772_MFM_PRODUCE_TABLE // one-shot switch...
   // todo, also in bits
  for(int i=0;i<256;i++)
@@ -853,7 +855,7 @@ void TWD1772IDField::Trace() {
    TRACE("D %02X -> C %02X MFM %04X\n",i,WD1772.Mfm.clock,WD1772.Mfm.encoded);
  }
 #endif
-*/
+
 
 void TWD1772MFM::Decode() {
 
@@ -1181,7 +1183,6 @@ bool TWD1772::Drq(bool state) {
     return Dma.Drq();
   return state;
 }
-
 
 void TWD1772::Irq(bool state) {
 
@@ -2647,8 +2648,8 @@ bool TWD1772::ShiftBit(int bit) {
   //  if (Amd.aminfo & Amd.amisigmask) { //SS hangs...
   if (Amd.aminfo & CAPSFDC_AI_DSRREADY) { //SS ?
     byte_ready=true;
-#ifdef TEST01___
-    if(Disk[DRIVE].current_side!=CURRENT_SIDE)
+#if defined(SSE_DISK_380) // are we taking a risk?
+    if(Disk[DRIVE].current_side!=CURRENT_SIDE && SSE_HACKS_ON)
       Amd.dsr=rand()&0xFF; // garbage
 #endif
   }

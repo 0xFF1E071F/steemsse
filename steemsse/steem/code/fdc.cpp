@@ -1799,7 +1799,9 @@ instant_sector_access_loop:
             break;
           }
         }
-#if defined(SSE_DMA_FIFO_NATIVE2)
+#if defined(SSE_DMA_FIFO_NATIVE3)
+        if(dma_sector_count) // bugfix Sabotage 3.8.0
+#elif defined(SSE_DMA_FIFO_NATIVE2)
 /*  This was in Steem 3.2 and I forgot it when doing DMA FIFO.
     bugfix International Sports Challenge-ICS fast drive mode 3.7.0
     It must be placed here (and for "STW"), not in DMA object,
@@ -1808,7 +1810,7 @@ instant_sector_access_loop:
         if(DMA_ADDRESS_IS_VALID_W && dma_sector_count)
 #endif
 
-        Dma.AddToFifo(Temp); 
+          Dma.AddToFifo(Temp); 
 #else
         if (DMA_ADDRESS_IS_VALID_W && dma_sector_count){
           lpDest=lpPEEK(dma_address);

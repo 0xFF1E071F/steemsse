@@ -2565,8 +2565,16 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BOILER_TRACE_EVENTS
 #define SSE_BOILER_XBIOS2
 #endif
-
 #endif
+
+#if defined(SSE_DISK)
+#define SSE_DISK_380 // update side
+#endif
+#if defined(SSE_DMA)
+#define SSE_DMA_FIFO_NATIVE3 //bugfix Sabotage
+#endif
+
+
 #ifdef SSE_GUI
 #define SSE_GUI_CONFIG_FILE // new option to L/S ini files
 #if defined(SSE_GUI_CONFIG_FILE)

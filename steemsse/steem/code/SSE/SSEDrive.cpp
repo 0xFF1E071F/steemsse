@@ -569,6 +569,24 @@ void TSF314::Read() {
   ASSERT(IMAGE_STW || IMAGE_SCP || IMAGE_HFE); // only for those now
   ASSERT(Id==DRIVE);
 #if defined(SSE_DISK2)
+
+#if defined(SSE_DISK_380) && defined(SSE_DISK_STW)
+  //it works but side could change again in the interval
+  if(Disk[Id].current_side!=CURRENT_SIDE && (IMAGE_STW||IMAGE_HFE|IMAGE_SCP))
+  {
+    if(IMAGE_STW)
+      ImageSTW[Id].LoadTrack(CURRENT_SIDE,Track());
+#if defined(SSE_DISK_HFE)
+    else if(IMAGE_HFE)
+      ImageHFE[Id].LoadTrack(CURRENT_SIDE,Track());
+#endif
+#if defined(SSE_DISK_SCP)
+    else if(IMAGE_SCP)
+      ImageSCP[Id].LoadTrack(CURRENT_SIDE,Track());
+#endif
+  }
+#endif
+
   ASSERT(Disk[Id].current_side==CURRENT_SIDE);
   ASSERT(Disk[Id].current_track==Track());
 #endif
