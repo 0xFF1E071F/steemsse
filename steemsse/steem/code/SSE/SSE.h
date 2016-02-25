@@ -2528,6 +2528,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_ROUNDING_ANDI2
 #define SSE_CPU_ROUNDING_BUS // big change, much overhead, little effect 
 #define SSE_CPU_ROUNDING_BUS2 // blitter problem
+#define SSE_CPU_ROUNDING_BUS3 // more shifter regs
 #define SSE_CPU_ROUNDING_CHK
 #define SSE_CPU_ROUNDING_DBCC2
 #define SSE_CPU_ROUNDING_IMMEDIATE_TO_SR //dubious... future bug reports?
