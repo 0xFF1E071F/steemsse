@@ -2314,7 +2314,7 @@ void psg_prepare_tone(int toneperiod,double &af,double &bf,
 
 
 #if defined(SSE_SOUND_INLINE2D)
-#if defined(SSE_YM2149_ENV_DEPHASING) && defined(SSE_YM2149_ENV_DEPHASING2)
+#if defined(SSE_YM2149_ENV_DEPHASING)
 void psg_envelope_advance(int abc,int &psg_envmodulo,int &psg_envstage,int &psg_envcountdown,int &envdeath,int &envshape,int &envvol) {
 #else
 void psg_envelope_advance(int &psg_envmodulo,int &psg_envstage,int &psg_envcountdown,int &envdeath,int &envshape,int &envvol) {
