@@ -514,7 +514,7 @@ cycle       0               4               8               12               12
 
 
         if(
-#if defined(SSE_SHIFTER_DOLB_SHIFT2)
+#if defined(SSE_SHIFTER_DOLB_SHIFT2) //never was, MFD
           (r0cycle<16 || !SSE_HACKS_ON)
 #else
           (shifter_freq_at_start_of_vbl==50) 
@@ -3486,6 +3486,9 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 #if !defined(SSE_VID_BORDERS_416_NO_SHIFT3)
         && shifter_freq_at_start_of_vbl==50//?
 #endif
+#if defined(SSE_VID_BORDERS_416_NO_SHIFT6) // closure hicolour pics
+        && !((GLU.CurrentScanline.Tricks&TRICK_OVERSCAN_MED_RES)&&ST_TYPE!=STE)
+#endif
         && (GLU.CurrentScanline.Tricks&TRICK_LINE_PLUS_26))
         cycles_since_hbl+=4;
 #endif
@@ -3806,7 +3809,11 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
         left_visible_edge=0;
         right_visible_edge=BORDER_SIDE + 320 + BORDER_SIDE;
 #if defined(SSE_VID_BORDERS_416_NO_SHIFT4)
-        if(SideBorderSize==VERY_LARGE_BORDER_SIDE && pixels_in>BORDER_SIDE)
+        if(
+#if !defined(SSE_VID_BORDERS_416_NO_SHIFT2)
+          SSE_HACKS_ON&&
+#endif
+          SideBorderSize==VERY_LARGE_BORDER_SIDE && pixels_in>BORDER_SIDE)
           pixels_in+=4;// fixes Appendix 4 pixel rgb plasma in this display size
 #endif
       }
@@ -4486,7 +4493,18 @@ FF825E
   if(!n && NewPal && NewPal!=0x777) // basic test
     overscan=OVERSCAN_MAX_COUNTDOWN;
 #endif
+#if defined(SSE_VID_BORDERS_416_NO_SHIFT5) 
+/*  Also render when pal doesn't change
+    Fixes Gobliins II-ICS in large display mode (pure rendering problem)
+*/
+#if defined(SSE_VID_BORDERS_416_NO_SHIFT2)
+    if(STpal[n]!=NewPal || SideBorderSize==VERY_LARGE_BORDER_SIDE)
+#else
+    if(STpal[n]!=NewPal || SSE_HACKS_ON&&SideBorderSize==VERY_LARGE_BORDER_SIDE)
+#endif
+#else
     if(STpal[n]!=NewPal)
+#endif
     {
       int CyclesIn=LINECYCLES;
 #if defined(SHIFTER_PREFETCH_LATENCY)
@@ -4506,7 +4524,7 @@ FF825E
 */
       if(screen_res==2 && GLU.FetchingLine())
       {
-        ASSERT(STpal[n]!=NewPal); // we're in this test, remember
+       // ASSERT(STpal[n]!=NewPal); // we're in this test, remember
         int time_to_first_pixel
           =Glue.ScanlineTiming[TGlue::GLU_DE_ON][TGlue::FREQ_72]+28-6;
         int cycle=CyclesIn-time_to_first_pixel;

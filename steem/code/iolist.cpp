@@ -83,7 +83,8 @@ void iolist_init()
   iolist_add_entry(0x6c,"68000 Level 3 Interrupt (not connected)",4);
   iolist_add_entry(0x70,"68000 Level 4 Interrupt (VBL)",4);
   iolist_add_entry(0x74,"68000 Level 5 Interrupt (not connected)",4);
-  iolist_add_entry(0x78,"68000 Level 6 Interrupt (MFP)",4);
+  //iolist_add_entry(0x78,"68000 Level 6 Interrupt (MFP)",4);
+  iolist_add_entry(0x78,"68000 Level 6 Interrupt (MFP, no autovector)",4);
   iolist_add_entry(0x7c,"68000 Level 7 Interrupt (not connected)",4);
   iolist_add_entry(0x80,"Trap #0",4);
   iolist_add_entry(0x84,"Trap #1 (GEMDOS)",4);
@@ -297,10 +298,10 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
 
 #if defined(SSE_DEBUG_FRAME_REPORT)
   iolist_add_entry(FAKE_IO_START,"Frame report1",2,
-    "sync|mode|pal|rsdp|wsdp|sdp lines|hscroll|base|.|.|.|.|.|.|.|.");
+    "sync|shift|pal|rsdp|wsdp|sdp lines|hscroll|base|.|.|.|.|.|.|.|.");
 #if defined(SSE_BOILER_FRAME_REPORT_MASK2)
   iolist_add_entry(FAKE_IO_START+2,"Frame report2",2, // problem +2 etc hardcoded
-    "int|blt|tricks|bytes|.|.|.|.|.|.|.|.|.|.|.|.");
+    "int|blt|tricks|bytes|xtr|.|.|.|.|.|.|.|.|.|.|.");
 #else
   iolist_add_entry(FAKE_IO_START+2,"Frame report2",2, // problem +2 etc hardcoded
     "Acia|Blt|Tricks|Bytes|hbi|vbi|mfp|.|.|.|.|.|.|.|.|.");
@@ -311,7 +312,7 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
   iolist_add_entry(FAKE_IO_START+4,"OSD1",2,
     "irq|ikbd|iack|fdc|.|.|.|.|.|.|.|.|.|.|.|.");
   iolist_add_entry(FAKE_IO_START+6,"OSD2 CPU",2,
-    "trace|bombs|io|reset|prefetch|.|.|.|.|.|.|.|.|.|.|.");
+    "trc|bmb|io|rst|prf|rnd|.|.|.|.|.|.|.|.|.|.");
   iolist_add_entry(FAKE_IO_START+8,"OSD2 Shifter",2,
     "tricks|load|RS|.|.|.|.|.|.|.|.|.|.|.|.|.");
   iolist_add_entry(FAKE_IO_START+10,"OSD3 STE",2,
@@ -320,9 +321,13 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
 
 #if defined(SSE_BOILER_TRACE_CONTROL)
   iolist_add_entry(FAKE_IO_START+12,"TRACE Shifter",2,
+#if SSE_VERSION>=380 //+there was a bug
+    "vert|1line|vbl|off|adj|0byte|.|.|.|.|.|.|.|.|.|.");
+#else
     "vert|1line|vbl|adj|.|.|.|.|.|.|.|.|.|.|.|.");
+#endif
   iolist_add_entry(FAKE_IO_START+14,"TRACE irq",2,
-    "E|rte|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
+    "E|rte|evt|.|.|.|.|.|.|.|.|.|.|.|.|.");
 #if SSE_VERSION>370
   iolist_add_entry(FAKE_IO_START+16,"TRACE floppy",2,
     "str|data|psg|reg|mfm|dma|.|.|.|.|.|.|.|.|.|.");
@@ -342,7 +347,10 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
     "dma|psg1|psg2|psg3|noise|env|.|.|.|.|.|.|.|.|.|.");
 #endif
 
-#if defined(SSE_BOILER_NEXT_PRG_RUN)
+#if defined(SSE_BOILER_VBL_HBL)
+  iolist_add_entry(FAKE_IO_START+22,"Boiler ctrl",2,
+    "Prg|Vbl|Hbl|.|.|.|.|.|.|.|.|.|.|.|.|.");
+#elif defined(SSE_BOILER_NEXT_PRG_RUN)
   iolist_add_entry(FAKE_IO_START+22,"Boiler ctrl",2,
     "PrgRun|.|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
 #endif
@@ -356,6 +364,11 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
   iolist_add_entry(FAKE_IO_START+26,"TRACE CPU",2,
     "reg|val|sp|cyc|.|.|.|.|.|.|.|.|.|.|.|.");
 
+#endif
+
+#if defined(SSE_BOILER_TRACE_CONTROL) && SSE_VERSION>=380
+  iolist_add_entry(FAKE_IO_START+28,"TRACE Shifter2",2,
+    "+2|.|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
 #endif
 
 #endif//fake io
