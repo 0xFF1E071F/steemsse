@@ -490,6 +490,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SHIFTER_MED_OVERSCAN // BPOC
 #define SSE_SHIFTER_NON_STOPPING_LINE // Enchanted Land
 #define SSE_SHIFTER_PALETTE_BYTE_CHANGE //undef v3.6.3
+#define SSE_SHIFTER_STE_MED_HSCROLL // Cool STE
 //#define SSE_SHIFTER_UNSTABLE_LEFT_OFF // DoLB, Omega, Overdrive/Dragon old hack
 #endif
 #if defined(SSE_SHIFTER_SDP)
@@ -698,7 +699,6 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_SHIFTER_TRICKS)
 #define SSE_SHIFTER_END_OF_LINE_CORRECTION // correct +2, -2 lines 
 #define SSE_SHIFTER_PALETTE_TIMING //Overscan Demos #6
-#define SSE_SHIFTER_STE_MED_HSCROLL // Cool STE
 #define SSE_SHIFTER_STE_HSCROLL_LEFT_OFF //MOLZ/Spiral
 #define SSE_SHIFTER_STE_VERTICAL_OVERSCAN //RGBeast
 #endif
@@ -2609,7 +2609,7 @@ Beta: not SSE_PRIVATE_BUILD
 #undef SSE_TIMINGS_FRAME_ADJUSTMENT // hack unnecessary
 #undef SSE_INT_VBL_STF // hack unnecessary
 #define SSE_GLUE_THRESHOLDS // computing thresholds only when changing option
-#define SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE
+#define SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE // I regret this switch now... doubles code!
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 #define SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1 // the boring stuff
 #undef SSE_SHIFTER_LEFT_OFF_60HZ//forget it
@@ -2617,9 +2617,16 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_002//no safety net//tmp switch
 // funny how many switches appear when we're looking for a bug
 #define SSE_GLUE_LEFT_OFF_380 // TODO rest... ???
+#if defined(SSE_GLUE_LEFT_OFF_380)
+//#define SSE_GLUE_LEFT_OFF_380A//to disable buggy new code in 3.8.0?
+#define SSE_GLUE_LEFT_OFF_380B
+#define SSE_GLUE_LEFT_OFF_380C
+#define SSE_GLUE_LEFT_OFF_380D
+#endif
 #define SSE_GLUE_LINE_MINUS_106_380
 #define SSE_GLUE_LINE_MINUS_2_380
 #define SSE_GLUE_LINE_PLUS_2_380
+
 #define SSE_GLUE_RIGHT_OFF_380
 #define SSE_GLUE_SET_SHIFT_380
 #define SSE_GLUE_SET_SYNC_380
@@ -2637,18 +2644,37 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_012
 #define SSE_GLUE_013
 #define SSE_GLUE_014
-
 #define SSE_GLUE_015A
-
 #define SSE_GLUE_015B
 #define SSE_GLUE_015C//bugged LXS - or mfp...
 #define SSE_GLUE_015C2
 #define SSE_GLUE_015C3
 #define SSE_GLUE_015C4 // could point to other trouble?
 #define SSE_GLUE_015D
-
+#define SSE_GLUE_016
+#define SSE_GLUE_017//add extra
+#define SSE_GLUE_017B//add extra
+#define SSE_GLUE_018//check side preambule
+#define SSE_GLUE_019//left off
+#define SSE_GLUE_020//left off
+#define SSE_GLUE_021//left off countdown (useless)
+#define SSE_GLUE_022
+#define SSE_GLUE_023
+#define SSE_GLUE_024
+#define SSE_GLUE_024B
+#define SSE_GLUE_025
+#define SSE_GLUE_026
+#define SSE_GLUE_026B
+#define SSE_GLUE_026C
+#define SSE_GLUE_026D
+#define SSE_GLUE_026E
+#define SSE_GLUE_026F
+#define SSE_GLUE_026G
+//#define SSE_GLUE_026H
+#define SSE_GLUE_026I
+#define SSE_GLUE_027//0byte1
+#define SSE_GLUE_028 // activate +4, +6 just in case
 #endif//SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE
-//#define SSE_SHIFTER_LINE_PLUS_2_HACK_380 //no need!
 #endif//SSE_GLUE_FRAME_TIMINGS
 #endif//glue
 
@@ -2791,10 +2817,16 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_STRETCH_ASPECT_RATIO 
 #if defined(SSE_VID_BORDERS)
 #define SSE_VID_BORDERS_LIMIT_TO_245
+#ifdef SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1
 #define SSE_VID_BORDERS_LINE_PLUS_20
-#define SSE_VID_BORDERS_416_NO_SHIFT2 //remove hack condition
-#define SSE_VID_BORDERS_416_NO_SHIFT3 //?
+#endif
+//#undef SSE_VID_BORDERS_416_NO_SHIFT
+//#define SSE_VID_BORDERS_416_NO_SHIFT2 //remove hack condition
+#define SSE_VID_BORDERS_416_NO_SHIFT3 //bugfixes
 #define SSE_VID_BORDERS_416_NO_SHIFT4 //large display mode shift pixels for non-fetching lines
+#define SSE_VID_BORDERS_416_NO_SHIFT5 // also render when pal is same
+#define SSE_VID_BORDERS_416_NO_SHIFT6 // not for unstable left-off STF?
+#define SSE_VID_BORDERS_416_NO_SHIFT7
 #endif
 #endif
 
