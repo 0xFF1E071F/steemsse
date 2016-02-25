@@ -64,6 +64,10 @@ EXT DWORD SoundBufStartTime;
 EXT int cpu_time_of_last_sound_vbl INIT(0);
 #endif
 
+#if defined(SSE_YM2149_ENV_DEPHASING)
+BYTE env_phase[3];
+#endif
+
 EXT DWORD psg_last_play_cursor;
 EXT DWORD psg_last_write_time;
 EXT DWORD psg_time_of_start_of_buffer;
@@ -393,6 +397,12 @@ HRESULT Sound_Start() // SS called by
     }else if (envshape==b1011 || envshape==b1101){
       flatlevel+=psg_flat_volume_level[15]; //SS 15 = 1 anyway
     }
+#if defined(SSE_YM2149_ENV_DEPHASING)
+/*  For demo Closure but not sure it makes a hearable difference
+    http://www.atari-forum.com/viewtopic.php?f=18&t=27521&sid=a0d1b43f0f66988900541b039ab5f6d4#p285292
+*/
+    env_phase[abc]=(rand()&0xFF);
+#endif
   }
   psg_voltage=flatlevel;psg_dv=0;
 
@@ -806,6 +816,9 @@ always audible."
     if(MICROWIRE_ON 
 #if defined(SSE_STF)
       && ST_TYPE==STE // only if option checked and we're on STE
+#endif
+#if defined(SSE_SOUND_MICROWIRE_MIXMODE2)//3.8.0
+      && (dma_sound_on_this_screen||!SSE_HACKS_ON) // hack Sabotage
 #endif
       )
     {
@@ -1705,7 +1718,12 @@ Writing a "00" to the last 2 bits terminate DMA sound replay.
 
 Bit 0 controls Replay off/on, Bit 1 controls Loop off/on (0=off, 1=on).
 */
-  TRACE_LOG("DMA sound ");
+#if defined(SSE_DEBUG)
+  TRACE_LOG("%d DMA sound ",ACT);
+  if(io_src_b&BIT_1)
+    TRACE_LOG("loop ");
+#endif
+
   if ((dma_sound_control & BIT_0) && (io_src_b & BIT_0)==0){  //Stopping
     TRACE_LOG("stop");
     dma_sound_start=next_dma_sound_start;
@@ -1755,6 +1773,15 @@ Bit 0 controls Replay off/on, Bit 1 controls Loop off/on (0=off, 1=on).
       dma_sound_on_this_screen=1;
     }
   }
+#if defined(SSE_SOUND_DMA_380B) //hack for Light megademo screen by New Core
+  else if(SSE_HACKS_ON && (io_src_b&BIT_0) && !(dma_sound_control&BIT_1))
+  {
+    TRACE_LOG("DMA restart ");
+    dma_sound_start=next_dma_sound_start;
+    dma_sound_end=next_dma_sound_end;
+    dma_sound_fetch_address=dma_sound_start;
+  }
+#endif
   TRACE_LOG(" Freq %d\n",dma_sound_freq);
   log_to(LOGSECTION_SOUND,EasyStr("SOUND: ")+HEXSl(old_pc,6)+" - DMA sound control set to "+(io_src_b & 3)+" from "+(dma_sound_control & 3));
  
@@ -1851,8 +1878,14 @@ void dma_sound_fetch()
     freq/15650 = freq*512/8000000 ?
 
     Then we would have: 8000000/15650 = 512
-    Yet 8000000/15650 = 15625
+    Yet 8000000/512 = 15625
+
+    It works with a DMA clock = 8012800
+
 */
+  //ASSERT(scanline_time_in_cpu_cycles_at_start_of_vbl==512);
+
+ // FrameEvents.Add(scan_y,LINECYCLES,'f',0); 
 
   if (Mono){  //play half as many words
     dma_sound_samples_countdown+=dma_sound_freq*scanline_time_in_cpu_cycles_at_start_of_vbl/2;
@@ -1967,7 +2000,15 @@ void dma_sound_fetch()
   //SS fill FIFO with up to 8 bytes
 
   for (int i=0;i<4;i++){
+#if defined(SSE_SOUND_DMA_380)
+/*  If by any chance a DMA sound is started with frame end = frame start,
+    the STE won't stop the sound at once.
+    Funny bug in A Little Bit Insane by Lazer.
+*/
+    if (dma_sound_fetch_address==dma_sound_end){
+#else
     if (dma_sound_fetch_address>=dma_sound_end){
+#endif
 /*
        SS reset loop - immediate?
  A group of samples is called a "frame." A frame may be played once or can 
@@ -1978,7 +2019,8 @@ void dma_sound_fetch()
  -> this seems OK in Steem
 */
 
-      TRACE_LOG("DMA sound reset loop %X->%X\n",next_dma_sound_start,next_dma_sound_end);
+      ////TRACE_LOG("DMA sound reset loop %X->%X\n",next_dma_sound_start,next_dma_sound_end);
+      TRACE_LOG("%d DMA frame end reached (loop %d)\n",ACT,!!(dma_sound_control & BIT_1));
 
       dma_sound_start=next_dma_sound_start;
       dma_sound_end=next_dma_sound_end;
@@ -1999,7 +2041,7 @@ void dma_sound_fetch()
     dma_sound_fetch_address+=2;
     if (dma_sound_internal_buf_len>=4) break;
   }//nxt
-  TRACE_LOG("Y%d DMA frame counter %X\n",scan_y,dma_sound_fetch_address);
+  ////TRACE_LOG("Y%d DMA frame counter %X\n",scan_y,dma_sound_fetch_address);
 }
 //---------------------------------------------------------------------------
 void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
@@ -2049,8 +2091,13 @@ void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
 
 #if defined(SSE_SOUND_INLINE2A)
 
+#if defined(SSE_YM2149_ENV_DEPHASING)
+void psg_prepare_envelope(int abc,double &af,double &bf,int &psg_envmodulo,DWORD t,
+  int &psg_envstage,int &psg_envcountdown,int &envdeath,int &envshape,int &envvol) {
+#else
 void psg_prepare_envelope(double &af,double &bf,int &psg_envmodulo,DWORD t,
   int &psg_envstage,int &psg_envcountdown,int &envdeath,int &envshape,int &envvol) {
+#endif
       //int envperiod=1|psg_reg[PSGR_ENVELOPE_PERIOD_LOW]+((psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]) <<8);//buggy!
     int envperiod=max( (((int)psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]) <<8) + psg_reg[PSGR_ENVELOPE_PERIOD_LOW],1);
       af=envperiod;
@@ -2088,7 +2135,11 @@ void psg_prepare_envelope(double &af,double &bf,int &psg_envmodulo,DWORD t,
       }else{        
 #if defined(SSE_YM2149_DELAY_RENDERING)  
         envvol=(SSE_OPTION_PSG) 
+#if defined(SSE_YM2149_ENV_DEPHASING) // does it even change anything?
+          ? psg_envelope_level3[envshape][(psg_envstage+(SSE_HACKS_ON?env_phase[abc]:0)) & 63]
+#else
           ? psg_envelope_level3[envshape][psg_envstage & 63]
+#endif
           : psg_envelope_level[envshape][psg_envstage & 63] ;                   
 
 #elif defined(SSE_YM2149_ENV_FIX1) //no                      
@@ -2100,8 +2151,14 @@ void psg_prepare_envelope(double &af,double &bf,int &psg_envmodulo,DWORD t,
 #endif
       }																															\
 }
-
+#if defined(SSE_YM2149_ENV_DEPHASING)
+#define PSG_PREPARE_ENVELOPE psg_prepare_envelope(abc,af,bf,psg_envmodulo,t,psg_envstage,psg_envcountdown,envdeath,envshape,envvol);
+#else
 #define PSG_PREPARE_ENVELOPE psg_prepare_envelope(af,bf,psg_envmodulo,t,psg_envstage,psg_envcountdown,envdeath,envshape,envvol);
+#endif
+
+
+
 // double &af,double &bf,int &psg_envmodulo,DWORD t,
 //  int &psg_envstage,int &psg_envcountdown,int &envdeath,int &envshape,int &envvol
 
@@ -2257,8 +2314,11 @@ void psg_prepare_tone(int toneperiod,double &af,double &bf,
 
 
 #if defined(SSE_SOUND_INLINE2D)
-
+#if defined(SSE_YM2149_ENV_DEPHASING) && defined(SSE_YM2149_ENV_DEPHASING2)
+void psg_envelope_advance(int abc,int &psg_envmodulo,int &psg_envstage,int &psg_envcountdown,int &envdeath,int &envshape,int &envvol) {
+#else
 void psg_envelope_advance(int &psg_envmodulo,int &psg_envstage,int &psg_envcountdown,int &envdeath,int &envshape,int &envvol) {
+#endif
 
           psg_envcountdown-=TWO_TO_SEVENTEEN; //  131072
           while (psg_envcountdown<0){           \
@@ -2269,7 +2329,11 @@ void psg_envelope_advance(int &psg_envmodulo,int &psg_envstage,int &psg_envcount
             }else{   
 #if defined(SSE_YM2149_DELAY_RENDERING)  
         envvol=(SSE_OPTION_PSG) 
+#if defined(SSE_YM2149_ENV_DEPHASING)
+          ? psg_envelope_level3[envshape][(psg_envstage+(SSE_HACKS_ON?env_phase[abc]:0)) & 63]
+#else
           ? psg_envelope_level3[envshape][psg_envstage & 63]
+#endif
           : psg_envelope_level[envshape][psg_envstage & 63] ;                   
                  
 #elif defined(SSE_YM2149_ENV_FIX1)
@@ -2282,8 +2346,11 @@ void psg_envelope_advance(int &psg_envmodulo,int &psg_envstage,int &psg_envcount
           }
 }
 
+#if defined(SSE_YM2149_ENV_DEPHASING)
+#define PSG_ENVELOPE_ADVANCE  psg_envelope_advance(abc,psg_envmodulo,psg_envstage,psg_envcountdown,envdeath,envshape,envvol);
+#else
 #define PSG_ENVELOPE_ADVANCE  psg_envelope_advance(psg_envmodulo,psg_envstage,psg_envcountdown,envdeath,envshape,envvol);
-
+#endif
 
 #else
 
@@ -2389,6 +2456,7 @@ void psg_write_buffer(int abc,DWORD to_t)
 {
 
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
+  // It was a request and I received no thanks no feedback from the amiga lamer
 #if SSE_VERSION>=370 // C<->A
   if( (4>>abc) & (d2_dpeek(FAKE_IO_START+20)>>12 ))
 #else

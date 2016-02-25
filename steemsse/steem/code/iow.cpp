@@ -1074,7 +1074,8 @@ this address, the DMA-sound system will either stop or loop.
                 
                 next_dma_sound_end&=0xffff00;next_dma_sound_end|=io_src_b;break;
             }
-            TRACE_LOG("DMA frame end %X\n",next_dma_sound_start);
+            //TRACE_LOG("DMA frame end %X\n",next_dma_sound_start);//imbecile
+            TRACE_LOG("PC %X DMA frame end %X\n",old_pc,next_dma_sound_end);
             if ((dma_sound_control & BIT_0)==0) dma_sound_end=next_dma_sound_end;
             log_to(LOGSECTION_SOUND,EasyStr("SOUND: ")+HEXSl(old_pc,6)+" - DMA sound end address set to "+HEXSl(next_dma_sound_end,6));
             break;
@@ -1516,6 +1517,10 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 
 */
     case 0xff8800:{  //--------------------------------------- sound chip
+#if defined(SSE_YM2149_NO_JAM_IF_NOT_RW)
+      if (SSE_HACKS_ON && (addr & 1) && io_word_access)
+        break; //odd addresses ignored on word writes, don't jam?
+#endif
       if ((ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_W)==0){
         //SS this will jam only once for .W or .L
         DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) BUS_JAM_TIME(4);

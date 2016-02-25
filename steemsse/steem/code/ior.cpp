@@ -973,7 +973,10 @@ when it does).
     /////////
 
     case 0xff8800:
-
+#if defined(SSE_YM2149_NO_JAM_IF_NOT_RW)
+      if (SSE_HACKS_ON && (addr & 1) && io_word_access) 
+        break; //odd addresses ignored on word read, don't jam ?
+#endif
       if(!(ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_R))
       {
         DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) BUS_JAM_TIME(4);
