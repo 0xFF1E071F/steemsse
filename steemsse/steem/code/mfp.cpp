@@ -689,12 +689,10 @@ int mfp_calc_timer_counter(int timer)
 
 */
 
-
 void ASMCALL check_for_interrupts_pending()
 {
 //SS  check_for_interrupts_pending() concerns not just the MFP,
 // but also HBL and VBL interrupts
-
 #if defined(SSE_INT_MFP_REFACTOR1)//v3.7.0
 /*  For MFP interrupts, there are all sorts of tests before triggering the
     interrupt, the problem was that some of those tests were in mfp_interrupt().
@@ -926,7 +924,6 @@ void ASMCALL check_for_interrupts_pending()
                   if(dbg_iack_subst && (OSD_MASK1 & OSD_CONTROL_IACK))
                     TRACE_OSD("IACK %d %d -> %d",iack_latency,MC68901.NextIrq,irq);
 #endif
-
                   mfp_interrupt(irq,ABSOLUTE_CPU_TIME); //then cause interrupt
                   break;        //lower priority interrupts not allowed now.
                 }//enabled

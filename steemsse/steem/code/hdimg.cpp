@@ -11,7 +11,8 @@ emulation, but it hasn't been written yet (and probably won't be).
 #endif
 
 #if !defined(SSE_ACSI_DISABLE_HDIMG)
-
+/*  Stub is disabled (finally, wasn't aware of it before). See SSEAcsi.cpp.
+*/
 #if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_HDIMG_H)
 #define EXT
 #define INIT(s) =s

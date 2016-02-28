@@ -59,7 +59,7 @@ EXT const char *stem_version_text INIT("3.2");
 #endif
 
 #ifdef STEVEN_SEAGAL
-#define STEEM_WEB "http:/""/ataristeven.t15.org/"
+#define STEEM_WEB "http:/""/ataristeven.exxoshost.co.uk/"
 #else
 #define STEEM_WEB "http:/""/steem.atari.st/"
 #endif

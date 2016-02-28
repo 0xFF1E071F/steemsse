@@ -1,43 +1,41 @@
 #include "SSE.h"
-
 #if defined(STEVEN_SEAGAL) && defined(SSE_ACSI)
-/*  
-    This is based on "Atari ACSI/DMA Integration guide", June 28, 1991
+/*  This is based on "Atari ACSI/DMA Integration guide", June 28, 1991
     (no copy/paste of code this time, it's for some fun).
-    Emulation seems to be straightforward: just fetch sector #n, all seem to
-    be 512bytes. It's more difficult to adapt the GUI (hard disk manager...)
-    without introducing overhead and complications for the player, so we don't
-    yet. Instead, img files are grouped in Steem/ACSI folder, and Steem will
-    try to open them at startup.
+    Emulation is straightforward: just fetch sector #n, all seem to
+    be 512bytes. 
+    It was more difficult to adapt the GUI (hard disk manager...).
 */
 
 #include "../pch.h"
-#include "SSEAcsi.h"
-#include "SSEDebug.h"
-#include "SSEFloppy.h"
+
 #include <mfp.decla.h>
+#include <run.decla.h>
 #include <mymisc.h> //GetFileLength()
 #if defined(SSE_ACSI_LED) && defined(SSE_OSD_DRIVE_LED)
-extern DWORD HDDisplayTimer;//#include <osd.decla.h>
+#include <osd.decla.h>
 #include <run.decla.h>
 #endif
 #if defined(SSE_ACSI_TIMING)
-extern "C" int cpu_timer,cpu_cycles;  //#include <emu.decla.h>
+#include <steemh.decla.h> //cpu_timer,cpu_cycles
 #include <fdc.decla.h>
 #endif
+#include "SSEAcsi.h"
+#include "SSEDebug.h"
+#include "SSEFloppy.h"
 
 #if defined(SSE_ACSI_MULTIPLE)
-TAcsiHdc AcsiHdc[TAcsiHdc::MAX_ACSI_DEVICES]; 
+TAcsiHdc AcsiHdc[TAcsiHdc::MAX_ACSI_DEVICES]; // several, going beyond pasti
 #else
 TAcsiHdc AcsiHdc; // only one
 #endif
 
 #include <cpu.decla.h>
-#define TRACE_HD TRACE // temp
+
 #define BLOCK_SIZE 512 // fortunately it seems constant
 
 #if defined(SSE_ACSI_MULTIPLE)
-BYTE acsi_dev=0; // active device
+BYTE acsi_dev=0; // active device, ugly global, private to this file
 #endif
 
 TAcsiHdc::TAcsiHdc() {
@@ -61,16 +59,18 @@ void TAcsiHdc::CloseImageFile() {
 #if defined(SSE_ACSI_FORMAT)
 
 void TAcsiHdc::Format() { 
-/*  Fill full image with $6c, sector by sector for speed
-    We do this because otherwise it can be really slow and Steem looks
-    hanged ("not responding") for a while, and because we dont want to
-    add agendas on the other hand.
+/*  For fun. Fill full image with $6C.
+    We do this sector by sector because otherwise it can be really slow
+    and Steem looks hanged ("not responding") for a while, and because 
+    we dont want to add agendas on the other hand.
 */
-  BYTE sector[512];       
-  memset(sector,0x6c,512);
+  BYTE sector[BLOCK_SIZE];
+  memset(sector,0x6c,BLOCK_SIZE);
+  ASSERT(hard_disk_image);
   fseek(hard_disk_image,0,SEEK_SET); //restore
+  ASSERT(nSectors>0);
   for(int i=0;i<nSectors;i++)
-    fwrite(sector,512,1,hard_disk_image); //fill sectors
+    fwrite(sector,BLOCK_SIZE,1,hard_disk_image); //fill sectors
 }
 
 #endif
@@ -79,6 +79,7 @@ bool TAcsiHdc::Init(int num, char *path) {
   ASSERT(num<MAX_ACSI_DEVICES);
   CloseImageFile();
 #if defined(SSE_ACSI_INQUIRY2)
+  ASSERT(inquiry_string);
   memset(inquiry_string,0,32);
 #endif
   hard_disk_image=fopen(path,"rb+");
@@ -86,13 +87,15 @@ bool TAcsiHdc::Init(int num, char *path) {
   if(Active) // note it could be anything, even HD6301V1ST.img ot T102.img
   {
     int l=GetFileLength(hard_disk_image); //in bytes - int is enough
-    nSectors=l/512;
-    ASSERT(!(l%512) && nSectors>=20480 && device_num>=0 && device_num<8); // but we take it
+    nSectors=l/BLOCK_SIZE;
+    ASSERT(!(l%BLOCK_SIZE) && nSectors>=20480 && device_num>=0 && device_num<MAX_ACSI_DEVICES); // but we take it?
     device_num=num&7;
 #if defined(SSE_ACSI_INQUIRY2)
     char *filename=GetFileNameFromPath(path);
     char *dot=strrchr(filename,'.');
     int nchars=dot?(dot-filename):23;
+    ASSERT(nchars>0);
+    ASSERT(inquiry_string);
     strncpy(inquiry_string+8,filename,nchars);
     TRACE_HDC("ACSI %d init %s %d sectors %d MB\n",device_num,inquiry_string+8,nSectors,nSectors/(2*1024));
 #endif
@@ -222,7 +225,7 @@ void TAcsiHdc::IOWrite(BYTE Line,BYTE io_src_b) {
     HDDisplayTimer=timer+HD_TIMER;
 #endif
 #if defined(SSE_ACSI_TIMING) // some delay... 1MB/s 512bytes/ 0.5ms
-    if(ADAT&&(*cmd_block==8 || *cmd_block==0xa)&&!STR)
+    if(!floppy_instant_sector_access&&(*cmd_block==8 || *cmd_block==0xa)&&!STR)
     {
       time_of_irq=ACT+cmd_block[4]*4000;
       Active=2; // signal for ior
@@ -273,6 +276,7 @@ void TAcsiHdc::ReadWrite(bool write,BYTE block_count) {
   {
     for(int j=0;ok&&j<BLOCK_SIZE;j++)
     {
+      ASSERT(hard_disk_image);
       if(write)
       {
         Dma.Drq(); // get byte write from DMA
@@ -293,7 +297,7 @@ void TAcsiHdc::Reset(bool Cold) {
 
 
 int TAcsiHdc::SectorNum() {
-  int block_number=(cmd_block[1] <<16) + (cmd_block[2] <<8 )+ cmd_block[3];
+  int block_number=(cmd_block[1]<<16) + (cmd_block[2]<<8) + cmd_block[3];
   //block_number&=0x1FFFFF; //limit is?
   return block_number;
 }
@@ -301,10 +305,9 @@ int TAcsiHdc::SectorNum() {
 
 bool TAcsiHdc::Seek() {
  int block_number=SectorNum();
- if( fseek(hard_disk_image,block_number*BLOCK_SIZE,SEEK_SET) )
+ if(fseek(hard_disk_image,block_number*BLOCK_SIZE,SEEK_SET))
    STR=2;
  return (STR!=2); // that would mean "OK"
 }
 
-#endif
-
+#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_ACSI)

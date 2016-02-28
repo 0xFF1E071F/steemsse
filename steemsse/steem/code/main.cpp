@@ -62,7 +62,7 @@ const
 #endif
 //char stem_window_title[]=WINDOW_TITLE; // in SSE.h //the [] for VS2008
 char stem_window_title[WINDOW_TITLE_MAX_CHARS+1];//=WINDOW_TITLE; //+1 v3.7.2
-#elif SSE_VERSION<370
+#elif defined(STEVEN_SEAGAL) && SSE_VERSION<370
 char stem_window_title[WINDOW_TITLE_MAX_CHARS]="Steem Engine";
 #else
 const char *stem_window_title="Steem Engine";
@@ -359,7 +359,9 @@ void FindWriteDir()
 //---------------------------------------------------------------------------
 bool Initialise()
 {
-
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_START_STOP_INFO2)
+  Debug.TraceGeneralInfos(TDebug::INIT);
+#endif
 #if defined(SSE_DISK2) // do it before disks are reinserted!
   for(BYTE id=0;id<2;id++)
   {
@@ -377,9 +379,6 @@ bool Initialise()
 #endif
   }
 #endif//disk2
-  
-
-
 
   FindWriteDir();
 #if defined(SSE_VERSION) //this is no proper switch
@@ -410,7 +409,7 @@ bool Initialise()
 #endif
 #else // release
 #ifdef DEBUG_BUILD
-    strcpy((char*)stem_window_title,"Steem Boiler ");
+    strcpy((char*)stem_window_title,"Steem SSE Boiler ");
     strcat((char*)stem_window_title,(char*)stem_version_text);
 #else
     strcpy((char*)stem_window_title,"Steem SSE ");
@@ -948,7 +947,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
   Disp.Init();
 
 #if defined(SSE_VID_EXT_FS2) && defined(SSE_VID_D3D_LIST_MODES)
-  ASSERT(Disp.pD3D);
+  ASSERT(Disp.pD3D || Disp.Method==DISPMETHOD_GDI);
   if(Disp.pD3D) // previous build crashed here when GDI was used
   {
     UINT Adapter=D3DADAPTER_DEFAULT;
@@ -977,6 +976,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
       case DISPMETHOD_XSHM:Mess+="Xlib with shared memory extension will be used to draw.";break;
       case DISPMETHOD_BE:  Mess+="Standard Be will be used to draw.";break;
     }
+    TRACE_INIT("%s\n",Mess.Text);
     log(Mess);
   }
 #endif
@@ -1034,6 +1034,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
       }
     }
     if (PortOpen){
+      TRACE_INIT("PortOpen\n");
       if (Alert(T("Accessing parallel/serial/MIDI ports can cause Steem to freeze up or crash on some systems.")+" "+
                 T("Do you want to stop Steem accessing these ports?"),
                    T("Disable Ports?"),MB_ICONQUESTION | MB_YESNO)==IDYES){
@@ -1084,7 +1085,6 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
   log("STARTUP: LoadState Called");
   LoadState(&CSF);
   log("STARTUP: LoadState finished");
-//  TRACE("main->power on\n");
   log("STARTUP: power_on Called");
   power_on();
 #ifdef WIN32
@@ -1126,6 +1126,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
     if (BootStateFile.NotEmpty()){
       if (LoadSnapShot(BootStateFile)) BootInMode|=BOOT_MODE_RUN;
       LastSnapShot=BootStateFile;
+      TRACE_INIT("BootStateFile %s\n",BootStateFile.Text);
     }else{
 #if USE_PASTI
       if (pasti_active){
@@ -1177,7 +1178,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #if defined(SSE_TOS_WARNING1) && defined(SSE_VAR_POWERON2)
   CheckSTTypeAndTos();
 #endif
-#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) && defined(WIN32)// warning
+#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) && defined(WIN32) 
   HardDiskMan.CheckTos();
 #endif
 
@@ -1190,6 +1191,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
       Full=CSF.GetInt("Options","StartFullscreen",0);
     }
     if (Full){
+      TRACE_INIT("StartFullscreen\n");
 #ifdef WIN32
       PostMessage(StemWin,WM_SYSCOMMAND,SC_MAXIMIZE,0);
 #elif defined(UNIX)

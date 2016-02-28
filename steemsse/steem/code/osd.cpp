@@ -619,7 +619,7 @@ void osd_draw()
 
 #ifdef SSE_DEBUG // add current command (CR)
 
-#ifdef SSE_OSD_DRIVE_INFO_EXT
+#if defined(SSE_DISK_IMAGE) && defined(SSE_OSD_DRIVE_INFO_EXT) 
 /*  Instead of the status bar, we put image info on debug OSD track info,
     so it's valid for both drives, we see clearly what happens with
     different types mixed.
@@ -627,9 +627,10 @@ void osd_draw()
 #if !defined(SSE_GUI_STATUS_STRING_DISK_TYPE)
           static char *extension_list[]={ "ST","MSA","DIM","STT","STX","IPF",
             "CTR","STW","PRG","TOS","SCP","HFE"};
-#endif
+#else
           ASSERT(SF314[DRIVE].ImageType.Extension-1>=0);
           ASSERT(SF314[DRIVE].ImageType.Extension-1<EXT_HFE);
+#endif
           sprintf(tmp_buffer,"%C:%s-%02X-%d-%02d-%02d",'A'+DRIVE,
 #if defined(SSE_GUI_STATUS_STRING_DISK_TYPE)
             extension_list[SF314[DRIVE].ImageType.Extension],fdc_cr,

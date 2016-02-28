@@ -9,9 +9,11 @@ and its various buttons.
 #pragma message("Included for compilation: stemwin.cpp")
 #endif
 
+#include "mfp.decla.h" //for an ASSERT if SSE_CPU not defined
+
 #define LOGSECTION LOGSECTION_INIT//SS
 
-#if defined(SSE_GUI_STATUS_STRING_TOSFLAG)
+#if defined(SSE_GUI_STATUS_STRING_380)
 extern char ansi_name[MAX_PATH];
 #endif
 //---------------------------------------------------------------------------
@@ -71,7 +73,11 @@ void StemWinResize(int xo,int yo)
 #endif
 
 #if defined(SSE_VID_D3D1)
-  if(D3D9_OK && SSE_OPTION_D3D)
+  if(D3D9_OK && SSE_OPTION_D3D
+#if defined(SSE_VID_D3D_380)
+    && Disp.pD3DDevice // "D3DX: pDevice pointer is invalid"
+#endif
+    )
     Disp.D3DSpriteInit(); //smooth res changes (eg in GEM)
     //Disp.ScreenChange(); //radical
 #endif
@@ -570,18 +576,6 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           Disp.RunOnChangeToWindow=0;
         }
       }
-
-/*
-//tmp
-      else if (wPar==14)
-      {
-        if(timeGetTime()<Disp.ChangeToWinTimeOut)
-          PostMessage(StemWin,WM_USER,14,0);
-        else
-          InvalidateRect(StemWin,NULL,true);
-      }
-*/
-
       break;
     case WM_NCLBUTTONDBLCLK:
       if (wPar==HTCAPTION){
@@ -804,16 +798,14 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
               guessed_scan_y/=2;
             if(border)
               guessed_scan_y-=(screen_res==2)?BORDER_TOP*2:BORDER_TOP;
-#if defined(SS_VID_BORDERS)
+#if defined(SSE_VID_BORDERS)
             int guessed_x=LOWORD(lPar)/2-SideBorderSizeWin;
 #else
             int guessed_x=LOWORD(lPar)/2;
 #endif
 #if defined(SSE_GUI_STATUS_STRING)
             
-
-#if defined(SSE_GUI_STATUS_STRING_TOSFLAG)
-
+#if defined(SSE_GUI_STATUS_STRING_380)
 #if defined(SSE_DEBUG_REPORT_SDP_ON_CLICK) && defined(SSE_SHIFTER)
             MEM_ADDRESS computed_sdp=FrameEvents.GetSDP(guessed_x,guessed_scan_y);
             sprintf(ansi_name,"X%d Y%d $%X",guessed_x,guessed_scan_y,computed_sdp);
@@ -836,7 +828,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             sprintf(tmp,"X%d Y%d",guessed_x,guessed_scan_y);
 #endif
             SendMessage(status_bar_win,WM_SETTEXT,0,(LPARAM)(LPCTSTR)tmp);
-#endif//#define SSE_GUI_STATUS_STRING_TOSFLAG
+#endif//#define SSE_GUI_STATUS_STRING_380
 #endif
           }
 
@@ -1148,7 +1140,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       ChangeClipboardChain(StemWin,NextClipboardViewerWin);
       StemWin=NULL;
       break;
-#if defined(SSE_GUI_STATUS_STRING_TOSFLAG) //v3.8.0
+#if defined(SSE_GUI_STATUS_STRING_380) //v3.8.0
 /*  It is cool to add country flag next to TOS in the status bar, so
     let's do some Windows programming. 
 */
@@ -1174,25 +1166,18 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         SIZE Size;
         GetTextExtentPoint32(myHdc,status_bar,nchars,&Size);
         myRect.left=myRect.right/2-Size.cx/2;
-        // smart coding alert! (should resolve in only 1 switch for v3.8.0)
-#if defined(SSE_GUI_STATUS_STRING_ADAT_ICON)
         if(ADAT)
           myRect.left-=8;
-#endif
-#if defined(SSE_GUI_STATUS_STRING_HD_ICON) && defined(SSE_GUI_STATUS_STRING_HD)
+#if defined(SSE_GUI_STATUS_STRING_HD)
         if(!HardDiskMan.DisableHardDrives||ACSI_EMU_ON)
           myRect.left-=8;
 #endif
-#if defined(SSE_GUI_STATUS_STRING_CHIPSET_ICON)
         if(HD6301EMU_ON)
           myRect.left-=8;
         if(OPTION_PRECISE_MFP)
           myRect.left-=8;
-#endif
-#if defined(SSE_GUI_STATUS_STRING_HACKS) && defined(SSE_GUI_STATUS_STRING_HACKS_ICON)
         if(SSE_HACKS_ON)
           myRect.left-=8;
-#endif
         //ASSERT(myRect.left>=0);//that would be stupid
         TextOut(myHdc,myRect.left,3,status_bar,nchars);
         if(SSE_STATUS_BAR && M68000.ProcessingState==TM68000::NORMAL) 
@@ -1209,18 +1194,14 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           }
           DeleteObject(SelectObject(TempDC,OldBmp));
           DeleteDC(TempDC);
-
           int myx=myRect.left+Size.cx+3;
-
-#if defined(SSE_GUI_STATUS_STRING_ADAT_ICON)
           if(ADAT)
           {
             DrawIconEx(myHdc,myx,0,
               hGUIIcon[RC_ICO_ACCURATEFDC],16,16,0,NULL,DI_NORMAL);
             myx+=19;
           }
-#endif
-#if defined(SSE_GUI_STATUS_STRING_HD_ICON) && defined(SSE_GUI_STATUS_STRING_HD)
+#if defined(SSE_GUI_STATUS_STRING_HD)
           if(!HardDiskMan.DisableHardDrives||ACSI_EMU_ON)
           {
             DrawIconEx(myHdc,myx,2,
@@ -1228,7 +1209,6 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             myx+=19;
           }
 #endif
-#if defined(SSE_GUI_STATUS_STRING_CHIPSET_ICON)
           if(HD6301EMU_ON)
           {
             DrawIconEx(myHdc,myx,2,
@@ -1241,15 +1221,12 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
               hGUIIcon[RC_ICO_OPS_C2],16,16,0,NULL,DI_NORMAL);
             myx+=19;
           }
-#endif
-#if defined(SSE_GUI_STATUS_STRING_HACKS) && defined(SSE_GUI_STATUS_STRING_HACKS_ICON)
           if(SSE_HACKS_ON)
           {
             DrawIconEx(myHdc,myx,2,
               hGUIIcon[RC_ICO_PATCHES],16,16,0,NULL,DI_NORMAL);
             myx+=19;
           }
-#endif
         }
         return TRUE;
       }

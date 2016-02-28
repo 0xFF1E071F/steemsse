@@ -215,6 +215,16 @@ WORD d2_dpeek(MEM_ADDRESS ad)
 */
   if(ad>=FAKE_IO_START && ad<=FAKE_IO_END)
   {
+#if defined(SSE_BOILER_VBL_HBL) // update control
+    if(vbl_pending)
+      BOILER_CONTROL_MASK1|=BOILER_CONTROL_VBL_PENDING;
+    else
+      BOILER_CONTROL_MASK1&=~BOILER_CONTROL_VBL_PENDING;
+    if(hbl_pending)
+      BOILER_CONTROL_MASK1|=BOILER_CONTROL_HBL_PENDING;
+    else
+      BOILER_CONTROL_MASK1&=~BOILER_CONTROL_HBL_PENDING;
+#endif
     return Debug.ControlMask[(ad-FAKE_IO_START)/2];
   }
 #endif
@@ -340,6 +350,10 @@ bool d2_dpoke(MEM_ADDRESS ad,WORD val){
   if(ad>=FAKE_IO_START && ad<=FAKE_IO_END)
   {
     Debug.ControlMask[(ad-FAKE_IO_START)/2]=val&0xFF00;
+#if defined(SSE_BOILER_VBL_HBL) // update variables, but there's no event?
+    vbl_pending=!!(BOILER_CONTROL_MASK1&BOILER_CONTROL_VBL_PENDING);
+    hbl_pending=!!(BOILER_CONTROL_MASK1&BOILER_CONTROL_HBL_PENDING);
+#endif
     return true;
   }
 #endif

@@ -1031,6 +1031,7 @@ Even though the samples are built on a byte-base, the DMA chip also only
  highbyte clears the others. Hence it must be written first.
  [Isn't it false? Sounds wrong when we do that]
 */
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_SOUND__)
                 next_dma_sound_start=0;
 #else
@@ -1538,7 +1539,6 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
         ioaccess|=IOACCESS_FLAG_PSG_BUS_JAM_W;
       }
       if ((addr & 1) && io_word_access) break; //odd addresses ignored on word writes
-
       if ((addr & 2)==0){  //read data / register select
         psg_reg_select=io_src_b;
         if (psg_reg_select<16){
@@ -2391,7 +2391,7 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
     io_write_b(addr+1,LOBYTE(io_src_w));
     io_word_access=0;
   }
-#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_WU_IOW_HACK)
+#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_WU_IOW_HACK)//MFD if never in a release
   if(MMU.OnMmuCycles(CyclesIn))
     cpu_cycles+=2;
 #endif
@@ -2440,7 +2440,7 @@ void ASMCALL io_write_l(MEM_ADDRESS addr,LONG io_src_l)
   }
 /*  SS same way for long accesses, so that a .L write will resolve in 4 .B writes.
     Notice the timing trick. At CPU emu level, the write is counted for eg 8 
-    cycles, the adjustment is here where it counts.
+    cycles, before coming here, the adjustment is here where it counts.
 */
   INSTRUCTION_TIME(-4);
   io_write_w(addr,HIWORD(io_src_l));

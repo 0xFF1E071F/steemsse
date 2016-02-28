@@ -336,7 +336,8 @@ void mr_static::edit(char*ttt)
 
 
   if (mem_browser_update!=NULL) mem_browser_update->update();
-  if ((MEM_ADDRESS*)ptr==&xbios2) draw(false);
+  if ((MEM_ADDRESS*)ptr==&xbios2) 
+    draw(false);
   if ((MEM_ADDRESS*)ptr==&pc){
   	SET_PC(PC32);
   }

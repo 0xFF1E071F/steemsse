@@ -131,7 +131,7 @@ MIDI is 4 times faster than IKBD
 //#undef SSE_BLT_BLIT_MODE_CYCLES
 #ifdef SSE_BLT_BLIT_MODE_CYCLES4
 //#define BLITTER_BLIT_MODE_CYCLES (SSE_HACKS_ON?(128):(64*4)) // or cycles = 2 clock? //TODO test prg
-#define BLITTER_BLIT_MODE_CYCLES (SSE_HACKS_ON?(160):(64*4))//160 hack for AC2011, Down TLN, SmokeTown
+#define BLITTER_BLIT_MODE_CYCLES (SSE_HACKS_ON?(160):(64*4))//160 hack for AC2011, Down TLN (not good), SmokeTown
 #else
 #define BLITTER_BLIT_MODE_CYCLES ((65-1)*4) // 'NOP' x 4 = cycles //63?
 #endif
@@ -326,7 +326,7 @@ enum {
 
 #if defined(SSE_GUI)
 
-#define WINDOW_TITLE_MAX_CHARS 20 
+#define WINDOW_TITLE_MAX_CHARS 20+5 //argh, 20 wasn't enough
 
 #define README_FONT_NAME "Courier New"
 #define README_FONT_HEIGHT 16
@@ -435,7 +435,8 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #endif
 
 #if defined(SSE_IKBD_6301_EVENT)//380
-#define HD6301_CYCLES_TO_SEND_BYTE ((SSE_HACKS_ON&& LPEEK(0x18)==0xFEE74)?1350:1280) // boo!
+//#define HD6301_CYCLES_TO_SEND_BYTE ((SSE_HACKS_ON&& LPEEK(0x18)==0xFEE74)?1350:1280) // boo!
+#define HD6301_CYCLES_TO_SEND_BYTE ((SSE_HACKS_ON&& LPEEK(0x18)==0xFEE74)?1345:1280) // boo!
 #define HD6301_CYCLES_TO_RECEIVE_BYTE (HD6301_CYCLES_TO_SEND_BYTE)
 #elif defined(SSE_ACIA_OVR_TIMING)
 // hack: we count more cycle when overrun is detected, for Froggies

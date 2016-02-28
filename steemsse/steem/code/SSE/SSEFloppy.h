@@ -64,6 +64,8 @@ extern TGhostDisk GhostDisk[2];
 #if defined(SSE_DISK_STW)
 extern TImageSTW ImageSTW[2];
 #define IMAGE_STW (SF314[DRIVE].ImageType.Extension==EXT_STW)
+#else
+#define IMAGE_STW 0
 #endif
 
 #if defined(SSE_DISK_SCP)

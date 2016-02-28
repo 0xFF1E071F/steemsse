@@ -119,9 +119,13 @@ void THD6301::InterpretCommand(BYTE ByteIn) {
   // taking parameters of a command?
   else if(CurrentCommand!=-1)
   {
+#if 0// SSE_VERSION>=373 //annoying asserts, player clicks 'ignore', crash
     ASSERT( nParameters );
     ASSERT( CurrentParameter>=0 && CurrentParameter<nParameters );
-    Parameter[CurrentParameter++]=ByteIn;
+#else
+    if(CurrentParameter>=0 && CurrentParameter<nParameters)
+#endif
+      Parameter[CurrentParameter++]=ByteIn;
   }
   else ; // could be junk?
 

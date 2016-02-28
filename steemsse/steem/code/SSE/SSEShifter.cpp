@@ -3336,7 +3336,9 @@ rasterline to allow horizontal fine-scrolling.
 #if defined(SSE_SHIFTER_SDP_TRACE)
         TRACE_LOG("F%d y%d c%d HS %d -> %d\n",FRAME,scan_y,LINECYCLES,HSCROLL,io_src_b);
 #endif
-        
+#if defined(SSE_SHIFTER_HSCROLL_380_C) 
+        BYTE former_hscroll=HSCROLL;
+#endif
         HSCROLL=io_src_b & 0xf; // limited to 4bits
 
         log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set horizontal scroll ("+HEXSl(addr,6)+
@@ -3363,14 +3365,23 @@ rasterline to allow horizontal fine-scrolling.
 #endif
             shifter_skip_raster_for_hscroll = (HSCROLL!=0); //SS computed at end of line anyway
 ////            if(HSCROLL) TRACE("%d %d %d write skip\n",TIMING_INFO);
-            left_border=BORDER_SIDE;
-            if (HSCROLL)
-              left_border+=16;
-            if(shifter_hscroll_extra_fetch) 
-              left_border-=16;
+
+#if defined(SSE_SHIFTER_HSCROLL_380_A2)
+            if (left_border>0){ // Don't do this if left border removed!
+#endif
+              left_border=BORDER_SIDE;
+              if (HSCROLL)
+                left_border+=16;
+              if(shifter_hscroll_extra_fetch) 
+                left_border-=16;
+#if defined(SSE_SHIFTER_HSCROLL_380_A2)
+            }
+#endif
 #if defined(SSE_SHIFTER_HSCROLL_380_C) // update shifter_pixel for new HSCROLL
-//            ASSERT(!scanline_drawn_so_far);
+            ASSERT(!scanline_drawn_so_far);
             shifter_pixel=HSCROLL; //fixes We Were STE distorter (party version)
+           // shifter_pixel-=former_hscroll;
+           // shifter_pixel+=HSCROLL;
 #endif
           }
         }
@@ -3465,7 +3476,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 #endif
       cycles_since_hbl++; // eg Overscan Demos #6, already in v3.2 TODO why?
 #if defined(SSE_VID_BORDERS_LINE_PLUS_20) 
-    if(SSE_HACKS_ON&&SideBorderSize==VERY_LARGE_BORDER_SIDE
+    if(SSE_HACKS_ON&&SideBorderSize==VERY_LARGE_BORDER_SIDE&&border
       && (GLU.CurrentScanline.Tricks&TRICK_LINE_PLUS_20))
       cycles_since_hbl+=2; // Circus 
 #endif
@@ -3513,7 +3524,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 #if defined(SSE_GLUE_001)
     break;
 #endif
-#if defined(SSE_GLUE_SDP_WRITE_380) //hacks
+#if defined(SSE_GLUE_SDP_WRITE_380A) //hacks
     //if(!SSE_HACKS_ON||cycles_since_hbl>=376)
     if(!SSE_HACKS_ON||cycles_since_hbl>=GLU.CurrentScanline.EndCycle //Riverside
 #if defined(SSE_GLUE_SDP_WRITE_380B)
@@ -3811,7 +3822,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 #if defined(SSE_VID_BORDERS_416_NO_SHIFT4)
         if(
 #if !defined(SSE_VID_BORDERS_416_NO_SHIFT2)
-          SSE_HACKS_ON&&
+          SSE_HACKS_ON &&
 #endif
           SideBorderSize==VERY_LARGE_BORDER_SIDE && pixels_in>BORDER_SIDE)
           pixels_in+=4;// fixes Appendix 4 pixel rgb plasma in this display size
@@ -4500,7 +4511,8 @@ FF825E
 #if defined(SSE_VID_BORDERS_416_NO_SHIFT2)
     if(STpal[n]!=NewPal || SideBorderSize==VERY_LARGE_BORDER_SIDE)
 #else
-    if(STpal[n]!=NewPal || SSE_HACKS_ON&&SideBorderSize==VERY_LARGE_BORDER_SIDE)
+    if(STpal[n]!=NewPal || SSE_HACKS_ON&&SideBorderSize==VERY_LARGE_BORDER_SIDE
+      &&border)
 #endif
 #else
     if(STpal[n]!=NewPal)

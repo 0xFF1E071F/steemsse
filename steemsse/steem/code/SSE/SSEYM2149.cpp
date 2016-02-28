@@ -48,7 +48,7 @@ void TYM2149::FreeFixedVolTable() {
 
 bool TYM2149::LoadFixedVolTable() {
   bool ok=false;
-  ASSERT(!p_fixed_vol_3voices); // may happen...
+///////////  ASSERT(!p_fixed_vol_3voices); // may happen...
   FreeFixedVolTable(); //safety
   p_fixed_vol_3voices=new WORD[16*16*16];
   ASSERT(p_fixed_vol_3voices);

@@ -118,17 +118,19 @@ Beta: not SSE_PRIVATE_BUILD
 
 */
 
-#if defined(STEVEN_SEAGAL)
-
+#if defined(STEVEN_SEAGAL) 
+// TODO: remove #ifdef STEVEN_SEAGAL from other parts of the source
 
 /////////////
 // VERSION //
 /////////////
 
-#define SSE_VERSION 380 // versions down to 340 still compile
+#define SSE_VERSION 380 // versions down to 330 still compile
                         // full v330 not publicly available anymore
 
-#if SSE_VERSION>373 //last release
+                        // TODO options in v341!
+
+#if SSE_VERSION>380 //last release
 #define SSE_BETA //title, OSD, plus some testing - new features
 #define SSE_BETA_BUGFIX // beta for just bugfixes
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
@@ -138,7 +140,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 
 //////////////////
-// BIG SWITCHES //
+// BIG SWITCHES // //TODO? not all can be disabled one by one
 //////////////////
 
 #define SSE_BLITTER    // spelled BLiTTER by those in the known!
@@ -147,7 +149,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE       // General Logic Unit
 #define SSE_GUI        // Graphic User Interface
 #define SSE_HACKS      // an option for dubious fixes
-#define SSE_HARDDISK
+#define SSE_HARDDISK   // GEMDOS improvements + ACSI feature
 #define SSE_INTERRUPT  // HBL, VBL, MFP
 #define SSE_FLOPPY     // DMA, FDC, Pasti, etc
 #define SSE_KEYBOARD   // ACIA, IKBD
@@ -1524,7 +1526,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_HALT // no reset, just stop
 #endif
 #define SSE_CPU_TRACE_REFACTOR//debug-only?
-//#define SSE_CPU_TRACE_TIMING//tests
+//#define SSE_CPU_TRACE_TIMING//tests//MFD this old version of the switch?
 #define SSE_CPU_UNSTOP2//not twice
 #if defined(SSE_CPU_EXCEPTION)
 #undef SSE_CPU_IGNORE_RW_4MB // F-29 hangs on 4MB machines, nothing to fix
@@ -2183,6 +2185,382 @@ Beta: not SSE_PRIVATE_BUILD
  
 #if SSE_VERSION>=380
 
+#ifdef SSE_HARDDISK
+#define SSE_ACSI //3.8.0 new feature
+#endif
+
+#if defined(SSE_ACIA)
+#define SSE_ACIA_380
+#endif
+
+#if defined(SSE_ACSI)
+#define SSE_ACSI_FORMAT 
+#ifdef SSE_DEBUG
+#define SSE_ACSI_BOOTCHECKSUM
+#endif
+#define SSE_ACSI_DISABLE_HDIMG // former Steem medium-level stub
+#define SSE_ACSI_INQUIRY // could even do without but it's too cool
+#define SSE_ACSI_INQUIRY2 // take name of file without extension
+#define SSE_ACSI_LED // cool too
+#define SSE_ACSI_LS
+#define SSE_ACSI_MEGASTF
+#define SSE_ACSI_MULTIPLE
+#define SSE_ACSI_MULTIPLE2
+#define SSE_ACSI_MODESELECT
+#define SSE_ACSI_NOGUISELECT // ignored if SSE_ACSI_HDMAN defined
+#define SSE_ACSI_OPTION
+#define SSE_ACSI_OPTION_INDEPENDENT // of 'HardDiskMan.DisableHardDrives'
+#define SSE_ACSI_REQUEST_SENSE
+#define SSE_ACSI_TIMING // ADAT -> slower (risky?)
+#ifdef WIN32
+#define SSE_ACSI_HDMAN // browser
+#define SSE_ACSI_ICON
+#endif
+#endif//acsi
+
+#if defined(SSE_BLITTER)
+#undef SSE_BLITTER_RELAPSE //remove bad hack
+////#undef SSE_BLT_BLIT_MODE_CYCLES
+#define SSE_BLT_BLIT_MODE_CYCLES2 //check for irq not needed... ?
+#define SSE_BLT_BLIT_MODE_CYCLES3 //go slower in blit mode
+#define SSE_BLT_BLIT_MODE_CYCLES4 // # cycles of a blit cycle (hack)
+#define SSE_BLT_CLEAR_HOG
+#define SSE_BLT_TIMING_CPU_NO_BUS
+#define SSE_BLT_TIMING_FXSR
+#define SSE_BLT_TIMING_START_BLITTER
+//#define SSE_BLT_TIMING_START_BLITTER2// should be but...
+#define SSE_BLT_TIMING_START_BLITTER3// Circus OK
+//#define SSE_BLT_TIMING_TEST
+#if defined(SSE_BLT_TIMING_TEST)
+#define SSE_BLT_TIMING_START_BLITTER2
+#undef SSE_BLT_BLIT_MODE_CYCLES4
+#endif
+#endif//blt
+
+#if defined(SSE_COMPILER)
+#define SSE_COMPILER_380
+#endif
+
+#ifdef SSE_CPU
+#define SSE_CPU_512MHZ
+#define SSE_CPU_1GHZ 
+#define SSE_CPU_2GHZ//after this I hope they'll leave me alone for a while
+//#define SSE_CPU_3GHZ   //note: 2147483647 = max int
+//#define SSE_CPU_4GHZ
+#if defined(SSE_CPU_ASSERT_ILLEGAL)
+#define SSE_CPU_ASSERT_ILLEGAL3_380 // mini-refactoring
+#endif
+#if defined(SSE_CPU_E_CLOCK)
+#define SSE_CPU_E_CLOCK4
+#endif
+#if defined(SSE_CPU_PREFETCH_CLASS)
+#define SSE_CPU_PREFETCH_CLASS_380
+#endif
+#if defined(SSE_CPU_ROUNDING)
+#define SSE_CPU_ROUNDING_ANDI2
+#define SSE_CPU_ROUNDING_BUS // big change, much overhead, little effect 
+#define SSE_CPU_ROUNDING_BUS2 // blitter problem
+#define SSE_CPU_ROUNDING_BUS3 // more shifter regs
+#define SSE_CPU_ROUNDING_BUS3B // ...but not for STF
+#define SSE_CPU_ROUNDING_CHK
+#define SSE_CPU_ROUNDING_DBCC2
+#define SSE_CPU_ROUNDING_IMMEDIATE_TO_SR //dubious... future bug reports?
+#define SSE_CPU_ROUNDING_MOVEM_380 //final?
+#define SSE_CPU_ROUNDING_UNLK
+#define SSE_CPU_ROUNDING_LINK
+#define SSE_CPU_ROUNDING_RTR
+#define SSE_CPU_ROUNDING_RTS
+#define SSE_CPU_ROUNDING_TRAP
+#define SSE_CPU_ROUNDING_TRAPV
+#endif//round
+#define SSE_CPU_STOP_380A // little refactoring
+#define SSE_CPU_STOP_DELAY // from WinUAE
+#undef SSE_CPU_UNSTOP2//placement is paramount!
+#define SSE_CPU_TIMINGS_REFACTOR_FETCH // moving timings to fetching functions
+#define SSE_CPU_TIMINGS_REFACTOR_PUSH // count timing in push macros
+#define SSE_CPU_TRACE_TIMING
+#define SSE_CPU_TRACE_TIMING_EXT //EXT for "extended" (see SSECpu.h)
+#define SSE_CPU_TRACE_LINE_A_F
+#endif//cpu
+
+#if defined(SSE_DISK)
+#define SSE_DISK_380 // update side
+#endif
+#if defined(SSE_DMA)
+#define SSE_DMA_FIFO_NATIVE3 //bugfix Sabotage
+#endif
+
+#ifdef SSE_GUI
+#define SSE_GUI_CONFIG_FILE // new option to L/S ini files
+#if defined(SSE_GUI_CONFIG_FILE)
+#define SSE_GUI_CONFIG_FILE2 // TOS: relative path
+#endif
+#define SSE_GUI_380//tmp name
+#define SSE_GUI_RESET_BUTTON2
+#if defined(SSE_GUI_DISK_MANAGER)
+#define SSE_GUI_DISK_MANAGER_RGT_CLK_HD3 //when changing on/off in hdm
+#define SSE_GUI_DISK_MANAGER_HD_SELECTED //stay pushed if on
+#endif
+
+#if defined(SSE_GUI_STATUS_STRING) && (defined(SSE_CPU_HALT) || defined(SSE_CPU_TRACE_REFACTOR))
+#undef SSE_GUI_STATUS_STRING_FULL_ST_MODEL // or more complicated
+#define SSE_GUI_STATUS_STRING_380
+#endif
+#endif//gui
+
+#if defined(SSE_GLUE)
+#define SSE_GLUE_FRAME_TIMINGS
+#if defined(SSE_GLUE_FRAME_TIMINGS)
+#define SSE_GLUE_FRAME_TIMINGS3 //hbi done
+#define SSE_GLUE_FRAME_TIMINGS4 //init stuff
+#define SSE_GLUE_FRAME_TIMINGS7B // routines of last scanline
+#define SSE_GLUE_FRAME_TIMINGS9 //reload sdp 2
+#define SSE_GLUE_FRAME_TIMINGS10
+#define SSE_GLUE_FRAME_TIMINGS_B // eliminate old var
+#if !defined(SSE_GLUE_FRAME_TIMINGS_B)
+//#define SSE_GLUE_FRAME_TIMINGS_C // for debug -Steem can hang!
+#endif
+#if defined(SSE_GLUE_FRAME_TIMINGS_C)
+#undef SSE_GLUE_FRAME_TIMINGS3
+#endif
+#undef SSE_SHIFTER_FIX_LINE508_CONFUSION // hack unnecessary
+#undef SSE_TIMINGS_FRAME_ADJUSTMENT // hack unnecessary
+#undef SSE_INT_VBL_STF // hack unnecessary
+#define SSE_GLUE_THRESHOLDS // computing thresholds only when changing option
+#define SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE // I regret this switch now... doubles code!
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#define SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1 // the boring stuff
+#undef SSE_SHIFTER_LEFT_OFF_60HZ//forget it
+//#define SSE_GLUE_001 //to show all the Tekila oddities//tmp switch
+#define SSE_GLUE_002//no safety net//tmp switch
+// funny how many switches appear when we're looking for a bug
+#define SSE_GLUE_LEFT_OFF_380 // TODO rest... ???
+#if defined(SSE_GLUE_LEFT_OFF_380)
+//#define SSE_GLUE_LEFT_OFF_380A//to disable buggy new code in 3.8.0?
+#define SSE_GLUE_LEFT_OFF_380B
+#define SSE_GLUE_LEFT_OFF_380C
+#define SSE_GLUE_LEFT_OFF_380D
+#endif
+#define SSE_GLUE_LINE_MINUS_106_380
+#define SSE_GLUE_LINE_MINUS_2_380
+#define SSE_GLUE_LINE_PLUS_2_380
+#define SSE_GLUE_RIGHT_OFF_380
+#define SSE_GLUE_SET_SHIFT_380
+#define SSE_GLUE_SET_SYNC_380
+#define SSE_GLUE_003//opt//tmp switch
+#define SSE_GLUE_004//
+#define SSE_GLUE_005
+#define SSE_GLUE_006
+#define SSE_GLUE_007
+#define SSE_GLUE_007B
+#define SSE_GLUE_008
+#define SSE_GLUE_009
+#define SSE_GLUE_009B
+#define SSE_GLUE_010
+#define SSE_GLUE_011
+#define SSE_GLUE_012
+#define SSE_GLUE_013
+#define SSE_GLUE_014
+#define SSE_GLUE_015A
+#define SSE_GLUE_015B
+#define SSE_GLUE_015C//bugged LXS - or mfp...
+#define SSE_GLUE_015C2
+#define SSE_GLUE_015C3
+#define SSE_GLUE_015C4 // could point to other trouble?
+#define SSE_GLUE_015D
+//#define SSE_GLUE_016//odd... hack necessary then not
+#define SSE_GLUE_016B
+#define SSE_GLUE_017//add extra
+#define SSE_GLUE_017B//add extra
+#define SSE_GLUE_018//check side preambule
+#define SSE_GLUE_019//left off
+#define SSE_GLUE_020//left off
+#define SSE_GLUE_021//left off countdown (useless)
+#define SSE_GLUE_022
+//#define SSE_GLUE_023//stupid
+#define SSE_GLUE_024
+#define SSE_GLUE_024B
+#define SSE_GLUE_025
+#define SSE_GLUE_026
+#define SSE_GLUE_026B
+#define SSE_GLUE_026C
+#define SSE_GLUE_026D
+#define SSE_GLUE_026E
+#define SSE_GLUE_026F
+#define SSE_GLUE_026G
+//#define SSE_GLUE_026H
+#define SSE_GLUE_026I
+#define SSE_GLUE_026J
+#define SSE_GLUE_027//0byte1
+#define SSE_GLUE_028 // activate +4, +6 just in case
+#endif//SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE
+#endif//SSE_GLUE_FRAME_TIMINGS
+#endif//glue
+
+#ifdef SSE_IKBD_6301
+////#undef SSE_IKBD_6301_SET_TDRE //SSE_IKBD_6301_373 was defined anyway
+#define SSE_IKBD_6301_380
+#define SSE_IKBD_6301_380B
+#define SSE_IKBD_6301_EVENT
+#endif//6301
+
+#if defined(SSE_INTERRUPT)
+#define SSE_INT_ROUNDING
+#define SSE_INT_CHECK_BEFORE_PREFETCH
+#endif
+
+#if defined(SSE_INT_HBL)
+#undef SSE_INT_HBL_E_CLOCK_HACK  // made a patch instead
+#define SSE_INT_HBL_380 
+#endif
+
+#if defined(SSE_INT_MFP)
+#define SSE_INT_MFP_READ_DELAY2 //timer B
+//#define SSE_INT_MFP_RECORD_PENDING_TIMING
+#define SSE_INT_MFP_REFACTOR2 //simpler way for IACK and Spurious
+#if defined(SSE_INT_MFP_REFACTOR2)
+#define SSE_INT_MFP_REFACTOR2A//debug...
+//#define SSE_INT_MFP_REFACTOR2A1//define for fewer spurious...
+#define SSE_INT_MFP_REFACTOR2A2//define for fewer spurious...
+#define SSE_INT_MFP_REFACTOR2B//"improve"...
+#undef SSE_INT_MFP_IACK_LATENCY4 // adios "skip timer" hack
+#define SSE_INT_MFP_EVENT_WRITE 
+#if defined(SSE_INT_MFP_EVENT_WRITE)
+#define SSE_INT_MFP_EVENT_WRITE_SPURIOUS
+#define SSE_INT_MFP_EVENT_WRITE2
+#else
+#define SSE_INT_MFP_IS_DELAY
+#endif
+#endif//ref2
+#define SSE_INT_MFP_REFACTOR3 //enums 
+#undef SSE_INT_MFP_SPURIOUS_372
+#undef SSE_INT_MFP_TIMER_B_AER // refactor
+#define SSE_INT_MFP_TIMER_B_AER2 // refactor
+//#define SSE_INT_MFP_TIMER_B_PULSE //TODO
+#define SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS // timer B should be updated
+#define SSE_INT_MFP_TIMERS_WOBBLE // trade off with timer set delay
+//#define SSE_INT_MFP_RATIO_STE3 // same ratio as STF?
+#define SSE_INT_MFP_TIMERS_STARTING_DELAY //
+////#define SSE_INT_MFP_UPDATE_IP_ON_GPIP_CHANGE //mistake, MFD (do test prg b4?)
+#endif
+
+#if defined(SSE_INT_VBL)
+#define SSE_INT_VBL_380
+#endif
+
+#if defined(SSE_MMU)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#define SSE_MMU_WU_STE_380
+#define SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1
+#define SSE_MMU_READ_SDP_380
+#endif
+#endif
+
+#if defined(SSE_OSD) && defined(SSE_DRIVE)
+#define SSE_OSD_DRIVE_INFO_EXT // STX, MSA... 
+#endif
+
+#ifdef SSE_SHIFTER
+#define SSE_SHIFTER_380 // some modest refactoring, debugging
+#define SSE_SHIFTER_380_STAB
+#define SSE_SHIFTER_380_STAB2
+#define SSE_SHIFTER_HSCROLL_380
+#if defined(SSE_SHIFTER_HSCROLL_380)
+#define SSE_SHIFTER_HSCROLL_380_A // better test, should new HSCROLL apply on current line
+//#define SSE_SHIFTER_HSCROLL_380_A1 // wrong, MFD
+#define SSE_SHIFTER_HSCROLL_380_A2
+#define SSE_SHIFTER_HSCROLL_380_B // new variable to hold HSCROLL at start of line
+#define SSE_SHIFTER_HSCROLL_380_C // update shifter_pixel for new HSCROLL
+#define SSE_SHIFTER_HSCROLL_380_D // line +20 + HSCROLL
+////#define SSE_SHIFTER_HSCROLL_380_E // not always rounding cycles to render on write to SDP (hack) + bad name??
+#define SSE_SHIFTER_HSCROLL_380_F
+#define SSE_GLUE_SDP_WRITE_380
+////#define SSE_GLUE_SDP_WRITE_380A
+#define SSE_GLUE_SDP_WRITE_380B
+#define SSE_GLUE_SDP_WRITE_380C
+////#define SSE_GLUE_SDP_WRITE_380C1
+#endif
+#if defined(SSE_GLUE_FRAME_TIMINGS)
+#define SSE_SHIFTER_HIRES_RASTER // edgy stuff in monochrome mode (Time Slices)
+#endif
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
+#define SSE_SHIFTER_HIRES_COLOUR_DISPLAY5//better test, compatible with GLUE refactoring
+#endif
+#if defined(SSE_SHIFTER_MED_RES_SCROLLING)
+//#undef SSE_SHIFTER_MED_RES_SCROLLING_360
+#define SSE_SHIFTER_MED_RES_SCROLLING_380 // refactoring
+#endif
+#if defined(SSE_SHIFTER_SDP_WRITE)
+#define SSE_SHIFTER_SDP_WRITE_380
+#define SSE_SHIFTER_SDP_WRITE_380B
+#endif
+#if defined(SSE_SHIFTER_UNSTABLE)
+#define SSE_SHIFTER_UNSTABLE_380 // for demo Closure
+#define SSE_SHIFTER_UNSTABLE_380_LINE_PLUS_2 // NPG_WOM
+#define SSE_SHIFTER_UNSTABLE_380_A
+#define SSE_SHIFTER_UNSTABLE_380_B // chipman -2
+#define SSE_SHIFTER_UNSTABLE_380_C // chipman -106
+#define SSE_SHIFTER_UNSTABLE_380_D // we were greets
+#endif
+#define SSE_SHIFTER_60HZ_LINE // compensate fix in 'read SDP'
+#define SSE_SHIFTER_60HZ_OVERSCAN2 // # lines in bottom
+#define SSE_SHIFTER_KRYOS//hack
+#define SSE_SHIFTER_STE_MED_HSCROLL2 // Desktop Central
+#endif//sft
+
+#if defined(SSE_SOUND)
+#define SSE_SOUND_DMA_380
+#define SSE_SOUND_DMA_380B //hack
+#define SSE_SOUND_MICROWIRE_MIXMODE2 //hack
+#endif
+
+#ifdef SSE_STF
+#define SSE_STE_4MB // new default memory
+#define SSE_STF_MATCH_TOS3 // + default country
+#endif
+
+#ifdef SSE_TOS
+//#define DISABLE_STEMDOS
+//#define DISABLE_STEMDOS2//TODO//no, MFD
+//#define SSE_TOS_GEMDOS_DRVBIT // sooner //really necessary?
+#define SSE_TOS_GEMDOS_RESTRICT_TOS3 // EmuTOS + PRG/TOS
+#endif
+
+#ifdef SSE_VARIOUS
+#define SSE_VAR_ARG_STFM // start as STF (unless overruled)
+#define SSE_VAR_KEYBOARD_CLICK2 // persistent
+#define SSE_VAR_RESIZE_380
+#define SSE_VAR_REWRITE_380
+#define SSE_VAR_SNAPSHOT_INI2 //bugfix
+#endif
+
+#ifdef SSE_VIDEO
+#define SSE_VID_380
+#define SSE_VID_D3D_380
+#define SSE_VID_DISABLE_AUTOBORDER
+#define SSE_VID_DISABLE_AUTOBORDER2 // move options around
+#define SSE_VID_DISABLE_AUTOBORDER3 // different for monochrome
+#define SSE_VID_STRETCH_ASPECT_RATIO 
+#if defined(SSE_VID_BORDERS)
+#define SSE_VID_BORDERS_LIMIT_TO_245
+#ifdef SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1
+#define SSE_VID_BORDERS_LINE_PLUS_20
+#endif
+//#undef SSE_VID_BORDERS_416_NO_SHIFT
+//#define SSE_VID_BORDERS_416_NO_SHIFT2 //remove hack condition//later
+#define SSE_VID_BORDERS_416_NO_SHIFT3 //bugfixes
+#define SSE_VID_BORDERS_416_NO_SHIFT4 //large display mode shift pixels for non-fetching lines
+#define SSE_VID_BORDERS_416_NO_SHIFT5 // also render when pal is same
+#define SSE_VID_BORDERS_416_NO_SHIFT6 // not for unstable left-off STF?
+#define SSE_VID_BORDERS_416_NO_SHIFT7
+#endif
+#endif
+
+#ifdef SSE_YM2149
+#define SSE_YM2149_NO_JAM_IF_NOT_RW
+#define SSE_YM2149_ENV_DEPHASING
+#endif
+
 #endif//380
 
 
@@ -2240,7 +2618,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #define SSE_BOILER_MUTE_SOUNDCHANNELS //fake io
 #define SSE_BOILER_TRACE_CONTROL //beyond log options
-#define SSE_BOILER_VBL_HBL 
+//#define SSE_BOILER_VBL_HBL //no and MFD
 #define SSE_BOILER_VIDEO_CONTROL
 #endif//fake io
 //#define SSE_BOILER_FLUSH_TRACE
@@ -2425,6 +2803,21 @@ Beta: not SSE_PRIVATE_BUILD
 
 //#define SHOW_DRAW_SPEED //was already in Steem
 
+//v3.8.0
+#if defined(SSE_BOILER)
+#define SSE_BOILER_BROWSER_EXCEPTION_HANDLERS
+#define SSE_BOILER_BROWSER_IRQ_HANDLERS
+#define SSE_BOILER_CLOCK
+#define SSE_BOILER_HISTORY_VECS
+#define SSE_BOILER_HISTORY_TIMING
+#define SSE_BOILER_OPTION_SAVE_FRAME_REPORT
+#define SSE_BOILER_SHOW_ECLOCK
+#define SSE_BOILER_SHOW_PENDING
+#define SSE_BOILER_SHOW_PRELOAD
+#define SSE_BOILER_TRACE_EVENTS
+#define SSE_BOILER_XBIOS2
+#endif
+
 #endif//SSE_DEBUG
 
 
@@ -2451,401 +2844,10 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_BETA)
-// those switches are later moved to both features and version zones!
-// TODO only 1 zone (again)
 
 //#define SSE_DRIVE_WRITE_TRACK_11
 //#define SSE_GUI_FULLSCREEN_NO_VSYNC_OPTION //but all the rest?
 //#define SSE_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
-
-#define SSE_ACSI //3.8.0 new feature
-
-#if defined(SSE_ACIA)
-#define SSE_ACIA_380
-#endif
-
-#if defined(SSE_ACSI)
-#define SSE_ACSI_FORMAT 
-#ifdef SSE_DEBUG
-#define SSE_ACSI_BOOTCHECKSUM
-#endif
-#define SSE_ACSI_DISABLE_HDIMG // former Steem medium-level stub
-#define SSE_ACSI_INQUIRY // could even do without but it's too cool
-#define SSE_ACSI_INQUIRY2 // take name of file without extension
-#define SSE_ACSI_LED // cool too
-#define SSE_ACSI_LS
-#define SSE_ACSI_MEGASTF
-#define SSE_ACSI_MULTIPLE
-#define SSE_ACSI_MULTIPLE2
-#define SSE_ACSI_MODESELECT
-#define SSE_ACSI_NOGUISELECT // ignored if SSE_ACSI_HDMAN defined
-#define SSE_ACSI_OPTION
-#define SSE_ACSI_OPTION_INDEPENDENT // of 'HardDiskMan.DisableHardDrives'
-#define SSE_ACSI_REQUEST_SENSE
-#define SSE_ACSI_TIMING // ADAT -> slower (risky?)
-#ifdef WIN32
-#define SSE_ACSI_HDMAN // browser
-#define SSE_ACSI_ICON
-#endif
-#endif//acsi
-
-#if defined(SSE_BLITTER)
-#undef SSE_BLITTER_RELAPSE //remove bad hack
-////#undef SSE_BLT_BLIT_MODE_CYCLES
-#define SSE_BLT_BLIT_MODE_CYCLES2 //check for irq not needed... ?
-#define SSE_BLT_BLIT_MODE_CYCLES3 //go slower in blit mode
-#define SSE_BLT_BLIT_MODE_CYCLES4 // # cycles of a blit cycle (hack)
-#define SSE_BLT_CLEAR_HOG
-#define SSE_BLT_TIMING_CPU_NO_BUS
-#define SSE_BLT_TIMING_FXSR
-#define SSE_BLT_TIMING_START_BLITTER
-//#define SSE_BLT_TIMING_START_BLITTER2// should be but...
-#define SSE_BLT_TIMING_START_BLITTER3// Circus OK
-//#define SSE_BLT_TIMING_TEST
-#if defined(SSE_BLT_TIMING_TEST)
-#define SSE_BLT_TIMING_START_BLITTER2
-#undef SSE_BLT_BLIT_MODE_CYCLES4
-#endif
-#endif//blt
-
-#if defined(SSE_COMPILER)
-#define SSE_COMPILER_380
-#endif
-
-#ifdef SSE_CPU
-#define SSE_CPU_512MHZ
-#define SSE_CPU_1GHZ 
-#define SSE_CPU_2GHZ//after this I hope they'll leave me alone for a while
-//#define SSE_CPU_3GHZ   //note: 2147483647 = max int
-//#define SSE_CPU_4GHZ
-#if defined(SSE_CPU_ASSERT_ILLEGAL)
-#define SSE_CPU_ASSERT_ILLEGAL3_380 // mini-refactoring
-#endif
-#if defined(SSE_CPU_E_CLOCK)
-#define SSE_CPU_E_CLOCK4
-#endif
-#if defined(SSE_CPU_PREFETCH_CLASS)
-#define SSE_CPU_PREFETCH_CLASS_380
-#endif
-#if defined(SSE_CPU_ROUNDING)
-#define SSE_CPU_ROUNDING_ANDI2
-#define SSE_CPU_ROUNDING_BUS // big change, much overhead, little effect 
-#define SSE_CPU_ROUNDING_BUS2 // blitter problem
-#define SSE_CPU_ROUNDING_BUS3 // more shifter regs
-#define SSE_CPU_ROUNDING_BUS3B // ...but not for STF
-#define SSE_CPU_ROUNDING_CHK
-#define SSE_CPU_ROUNDING_DBCC2
-#define SSE_CPU_ROUNDING_IMMEDIATE_TO_SR //dubious... future bug reports?
-#define SSE_CPU_ROUNDING_MOVEM_380 //final?
-#define SSE_CPU_ROUNDING_UNLK
-#define SSE_CPU_ROUNDING_LINK
-#define SSE_CPU_ROUNDING_RTR
-#define SSE_CPU_ROUNDING_RTS
-#define SSE_CPU_ROUNDING_TRAP
-#define SSE_CPU_ROUNDING_TRAPV
-#endif//round
-#define SSE_CPU_STOP_380A // little refactoring
-#define SSE_CPU_STOP_DELAY // from WinUAE
-#undef SSE_CPU_UNSTOP2//placement is paramount!
-#define SSE_CPU_TIMINGS_REFACTOR_FETCH // moving timings to fetching functions
-#define SSE_CPU_TIMINGS_REFACTOR_PUSH // count timing in push macros
-#define SSE_CPU_TRACE_TIMING
-#define SSE_CPU_TRACE_TIMING_EXT //EXT for "extended" (see SSECpu.h)
-#define SSE_CPU_TRACE_LINE_A_F
-#endif//cpu
-
-#ifdef SSE_DEBUG
-#if defined(SSE_BOILER)
-#define SSE_BOILER_BROWSER_EXCEPTION_HANDLERS
-#define SSE_BOILER_BROWSER_IRQ_HANDLERS
-#define SSE_BOILER_CLOCK
-#define SSE_BOILER_HISTORY_VECS
-#define SSE_BOILER_HISTORY_TIMING
-#define SSE_BOILER_OPTION_SAVE_FRAME_REPORT
-#define SSE_BOILER_SHOW_ECLOCK
-#define SSE_BOILER_SHOW_PENDING
-#define SSE_BOILER_SHOW_PRELOAD
-#define SSE_BOILER_TRACE_EVENTS
-#define SSE_BOILER_XBIOS2
-#endif
-#endif
-
-#if defined(SSE_DISK)
-#define SSE_DISK_380 // update side
-#endif
-#if defined(SSE_DMA)
-#define SSE_DMA_FIFO_NATIVE3 //bugfix Sabotage
-#endif
-
-
-#ifdef SSE_GUI
-#define SSE_GUI_CONFIG_FILE // new option to L/S ini files
-#if defined(SSE_GUI_CONFIG_FILE)
-#define SSE_GUI_CONFIG_FILE2 // TOS: relative path
-#endif
-#define SSE_GUI_380//tmp name
-#define SSE_GUI_RESET_BUTTON2
-#if defined(SSE_GUI_DISK_MANAGER)
-#define SSE_GUI_DISK_MANAGER_RGT_CLK_HD3 //when changing on/off in hdm
-#define SSE_GUI_DISK_MANAGER_HD_SELECTED //stay pushed if on
-#endif
-
-#if defined(SSE_GUI_STATUS_STRING)
-#undef SSE_GUI_STATUS_STRING_FULL_ST_MODEL // or more complicated
-#define SSE_GUI_STATUS_STRING_380 //will be just this switch for rlz
-#define SSE_GUI_STATUS_STRING_ADAT_ICON 
-#define SSE_GUI_STATUS_STRING_CHIPSET_ICON 
-#define SSE_GUI_STATUS_STRING_HACKS_ICON
-#define SSE_GUI_STATUS_STRING_HD_ICON 
-#define SSE_GUI_STATUS_STRING_TOSFLAG
-#endif
-#endif//gui
-
-#if defined(SSE_GLUE)
-#define SSE_GLUE_FRAME_TIMINGS
-#if defined(SSE_GLUE_FRAME_TIMINGS)
-#define SSE_GLUE_FRAME_TIMINGS3 //hbi done
-#define SSE_GLUE_FRAME_TIMINGS4 //init stuff
-#define SSE_GLUE_FRAME_TIMINGS7B // routines of last scanline
-#define SSE_GLUE_FRAME_TIMINGS9 //reload sdp 2
-#define SSE_GLUE_FRAME_TIMINGS10
-#define SSE_GLUE_FRAME_TIMINGS_B // eliminate old var
-#if !defined(SSE_GLUE_FRAME_TIMINGS_B)
-//#define SSE_GLUE_FRAME_TIMINGS_C // for debug -Steem can hang!
-#endif
-#if defined(SSE_GLUE_FRAME_TIMINGS_C)
-#undef SSE_GLUE_FRAME_TIMINGS3
-#endif
-#undef SSE_SHIFTER_FIX_LINE508_CONFUSION // hack unnecessary
-#undef SSE_TIMINGS_FRAME_ADJUSTMENT // hack unnecessary
-#undef SSE_INT_VBL_STF // hack unnecessary
-#define SSE_GLUE_THRESHOLDS // computing thresholds only when changing option
-#define SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE // I regret this switch now... doubles code!
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
-#define SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1 // the boring stuff
-#undef SSE_SHIFTER_LEFT_OFF_60HZ//forget it
-//#define SSE_GLUE_001 //to show all the Tekila oddities//tmp switch
-#define SSE_GLUE_002//no safety net//tmp switch
-// funny how many switches appear when we're looking for a bug
-#define SSE_GLUE_LEFT_OFF_380 // TODO rest... ???
-#if defined(SSE_GLUE_LEFT_OFF_380)
-//#define SSE_GLUE_LEFT_OFF_380A//to disable buggy new code in 3.8.0?
-#define SSE_GLUE_LEFT_OFF_380B
-#define SSE_GLUE_LEFT_OFF_380C
-#define SSE_GLUE_LEFT_OFF_380D
-#endif
-#define SSE_GLUE_LINE_MINUS_106_380
-#define SSE_GLUE_LINE_MINUS_2_380
-#define SSE_GLUE_LINE_PLUS_2_380
-
-#define SSE_GLUE_RIGHT_OFF_380
-#define SSE_GLUE_SET_SHIFT_380
-#define SSE_GLUE_SET_SYNC_380
-#define SSE_GLUE_003//opt//tmp switch
-#define SSE_GLUE_004//
-#define SSE_GLUE_005
-#define SSE_GLUE_006
-#define SSE_GLUE_007
-#define SSE_GLUE_007B
-#define SSE_GLUE_008
-#define SSE_GLUE_009
-#define SSE_GLUE_009B
-#define SSE_GLUE_010
-#define SSE_GLUE_011
-#define SSE_GLUE_012
-#define SSE_GLUE_013
-#define SSE_GLUE_014
-#define SSE_GLUE_015A
-#define SSE_GLUE_015B
-#define SSE_GLUE_015C//bugged LXS - or mfp...
-#define SSE_GLUE_015C2
-#define SSE_GLUE_015C3
-#define SSE_GLUE_015C4 // could point to other trouble?
-#define SSE_GLUE_015D
-#define SSE_GLUE_016
-#define SSE_GLUE_017//add extra
-#define SSE_GLUE_017B//add extra
-#define SSE_GLUE_018//check side preambule
-#define SSE_GLUE_019//left off
-#define SSE_GLUE_020//left off
-#define SSE_GLUE_021//left off countdown (useless)
-#define SSE_GLUE_022
-#define SSE_GLUE_023
-#define SSE_GLUE_024
-#define SSE_GLUE_024B
-#define SSE_GLUE_025
-#define SSE_GLUE_026
-#define SSE_GLUE_026B
-#define SSE_GLUE_026C
-#define SSE_GLUE_026D
-#define SSE_GLUE_026E
-#define SSE_GLUE_026F
-#define SSE_GLUE_026G
-//#define SSE_GLUE_026H
-#define SSE_GLUE_026I
-#define SSE_GLUE_027//0byte1
-#define SSE_GLUE_028 // activate +4, +6 just in case
-#endif//SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE
-#endif//SSE_GLUE_FRAME_TIMINGS
-#endif//glue
-
-#ifdef SSE_IKBD_6301
-#undef SSE_IKBD_6301_SET_TDRE //SSE_IKBD_6301_373 was defined anyway
-#define SSE_IKBD_6301_380
-#define SSE_IKBD_6301_EVENT
-#endif//6301
-
-#if defined(SSE_INTERRUPT)
-#define SSE_INT_ROUNDING
-#define SSE_INT_CHECK_BEFORE_PREFETCH
-#endif
-
-#if defined(SSE_INT_HBL)
-#undef SSE_INT_HBL_E_CLOCK_HACK // made a patch instead
-#define SSE_INT_HBL_380 
-#endif
-
-#if defined(SSE_INT_MFP)
-#define SSE_INT_MFP_READ_DELAY2 //timer B
-//#define SSE_INT_MFP_RECORD_PENDING_TIMING
-#define SSE_INT_MFP_REFACTOR2 //simpler way for IACK and Spurious
-#if defined(SSE_INT_MFP_REFACTOR2)
-#define SSE_INT_MFP_REFACTOR2A//debug...
-//#define SSE_INT_MFP_REFACTOR2A1//define for fewer spurious...
-#define SSE_INT_MFP_REFACTOR2A2//define for fewer spurious...
-#define SSE_INT_MFP_REFACTOR2B//"improve"...
-#undef SSE_INT_MFP_IACK_LATENCY4 // adios "skip timer" hack
-#define SSE_INT_MFP_EVENT_WRITE 
-#if defined(SSE_INT_MFP_EVENT_WRITE)
-#define SSE_INT_MFP_EVENT_WRITE_SPURIOUS
-#define SSE_INT_MFP_EVENT_WRITE2
-#else
-#define SSE_INT_MFP_IS_DELAY
-#endif
-#endif//ref2
-#define SSE_INT_MFP_REFACTOR3 //enums 
-#undef SSE_INT_MFP_SPURIOUS_372
-#undef SSE_INT_MFP_TIMER_B_AER // refactor
-#define SSE_INT_MFP_TIMER_B_AER2 // refactor
-//#define SSE_INT_MFP_TIMER_B_PULSE //TODO
-#define SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS // timer B should be updated
-#define SSE_INT_MFP_TIMERS_WOBBLE // trade off with timer set delay
-//#define SSE_INT_MFP_RATIO_STE3 // same ratio as STF?
-#define SSE_INT_MFP_TIMERS_STARTING_DELAY //
-////#define SSE_INT_MFP_UPDATE_IP_ON_GPIP_CHANGE //mistake, MFD (do test prg b4?)
-#endif
-
-#if defined(SSE_INT_VBL)
-#define SSE_INT_VBL_380
-#endif
-
-#if defined(SSE_MMU)
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
-#define SSE_MMU_WU_STE_380
-#define SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1
-#define SSE_MMU_READ_SDP_380
-#endif
-#endif
-
-#if !defined(SSE_DEBUG)
-#define SSE_OSD_DRIVE_INFO_EXT // STX, MSA... 
-#endif
-
-#ifdef SSE_SHIFTER
-#define SSE_SHIFTER_380 // some modest refactoring, debugging
-#define SSE_SHIFTER_380_STAB
-#define SSE_SHIFTER_380_STAB2
-#define SSE_SHIFTER_HSCROLL_380
-#if defined(SSE_SHIFTER_HSCROLL_380)
-#define SSE_SHIFTER_HSCROLL_380_A // better test, should new HSCROLL apply on current line
-////#define SSE_SHIFTER_HSCROLL_380_A1 // wrong, MFD
-#define SSE_SHIFTER_HSCROLL_380_B // new variable to hold HSCROLL at start of line
-#define SSE_SHIFTER_HSCROLL_380_C // update shifter_pixel for new HSCROLL
-#define SSE_SHIFTER_HSCROLL_380_D // line +20 + HSCROLL
-////#define SSE_SHIFTER_HSCROLL_380_E // not always rounding cycles to render on write to SDP (hack) + bad name??
-#define SSE_SHIFTER_HSCROLL_380_F
-#define SSE_GLUE_SDP_WRITE_380
-#define SSE_GLUE_SDP_WRITE_380B
-#endif
-#if defined(SSE_GLUE_FRAME_TIMINGS)
-#define SSE_SHIFTER_HIRES_RASTER // edgy stuff in monochrome mode (Time Slices)
-#endif
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
-#define SSE_SHIFTER_HIRES_COLOUR_DISPLAY5//better test, compatible with GLUE refactoring
-#endif
-#if defined(SSE_SHIFTER_MED_RES_SCROLLING)
-//#undef SSE_SHIFTER_MED_RES_SCROLLING_360
-#define SSE_SHIFTER_MED_RES_SCROLLING_380 // refactoring
-#endif
-#if defined(SSE_SHIFTER_SDP_WRITE)
-#define SSE_SHIFTER_SDP_WRITE_380
-#define SSE_SHIFTER_SDP_WRITE_380B
-#endif
-#if defined(SSE_SHIFTER_UNSTABLE)
-#define SSE_SHIFTER_UNSTABLE_380 // for demo Closure
-#define SSE_SHIFTER_UNSTABLE_380_LINE_PLUS_2 // NPG_WOM
-#define SSE_SHIFTER_UNSTABLE_380_A
-#define SSE_SHIFTER_UNSTABLE_380_B // chipman -2
-#define SSE_SHIFTER_UNSTABLE_380_C // chipman -106
-#endif
-#define SSE_SHIFTER_60HZ_LINE // compensate fix in 'read SDP'
-#define SSE_SHIFTER_60HZ_OVERSCAN2 // # lines in bottom
-#define SSE_SHIFTER_KRYOS//hack
-#define SSE_SHIFTER_STE_MED_HSCROLL2 // Desktop Central
-#endif//sft
-
-#if defined(SSE_SOUND)
-#define SSE_SOUND_DMA_380
-#define SSE_SOUND_DMA_380B //hack
-#define SSE_SOUND_MICROWIRE_MIXMODE2 //hack
-#endif
-
-#ifdef SSE_STF
-#define SSE_STE_4MB
-#define SSE_STF_MATCH_TOS3 // + default country
-#endif
-
-#ifdef SSE_TOS
-//#define DISABLE_STEMDOS
-//#define DISABLE_STEMDOS2//TODO//no, MFD
-//#define SSE_TOS_GEMDOS_DRVBIT // sooner //really necessary?
-#define SSE_TOS_GEMDOS_RESTRICT_TOS3 // EmuTOS + PRG/TOS
-#endif
-
-#ifdef SSE_VARIOUS
-#define SSE_VAR_ARG_STFM // start as STF (unless overruled)
-#define SSE_VAR_KEYBOARD_CLICK2 // persistent
-#define SSE_VAR_RESIZE_380
-#define SSE_VAR_REWRITE_380
-#define SSE_VAR_SNAPSHOT_INI2 //bugfix
-#endif
-
-#ifdef SSE_VIDEO
-#define SSE_VID_380
-#define SSE_VID_D3D_380
-#define SSE_VID_DISABLE_AUTOBORDER
-#define SSE_VID_DISABLE_AUTOBORDER2 // move options around
-#define SSE_VID_DISABLE_AUTOBORDER3 // different for monochrome
-#define SSE_VID_STRETCH_ASPECT_RATIO 
-#if defined(SSE_VID_BORDERS)
-#define SSE_VID_BORDERS_LIMIT_TO_245
-#ifdef SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1
-#define SSE_VID_BORDERS_LINE_PLUS_20
-#endif
-//#undef SSE_VID_BORDERS_416_NO_SHIFT
-//#define SSE_VID_BORDERS_416_NO_SHIFT2 //remove hack condition
-#define SSE_VID_BORDERS_416_NO_SHIFT3 //bugfixes
-#define SSE_VID_BORDERS_416_NO_SHIFT4 //large display mode shift pixels for non-fetching lines
-#define SSE_VID_BORDERS_416_NO_SHIFT5 // also render when pal is same
-#define SSE_VID_BORDERS_416_NO_SHIFT6 // not for unstable left-off STF?
-#define SSE_VID_BORDERS_416_NO_SHIFT7
-#endif
-#endif
-
-#ifdef SSE_YM2149
-#define SSE_YM2149_NO_JAM_IF_NOT_RW
-#define SSE_YM2149_ENV_DEPHASING
-#endif
 
 #endif//beta
 

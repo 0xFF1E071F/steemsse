@@ -172,7 +172,7 @@ MEM_ADDRESS get_sp_before_trap(bool *pInvalid)
 {
   MEM_ADDRESS sp=(areg[7] & 0xffffff)+6;
 
-#if defined(SSE_BOILER_STACK_68030_FRAME)
+#if defined(SSE_BOILER_68030_STACK_FRAME)
   if(Debug.M68030StackFrame)
     sp+=2;
 #endif

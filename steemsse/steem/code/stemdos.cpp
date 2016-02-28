@@ -1124,7 +1124,7 @@ bool stemdos_mfree_from_Pexec_list()
       }
     }
     stemdos_Pexec_list_ptr--;
-    TRACE_LOG("PExec ptr %d -> %d\n",stemdos_Pexec_list_ptr+1,stemdos_Pexec_list_ptr);
+    //TRACE_LOG("PExec ptr %d -> %d\n",stemdos_Pexec_list_ptr+1,stemdos_Pexec_list_ptr);
     log(EasyStr("STEMDOS: Taking ")+HEXSl(stemdos_Pexec_list[stemdos_Pexec_list_ptr],6)+" from Pexec list");
     if (stemdos_Pexec_list[stemdos_Pexec_list_ptr]){ //one of ours
       log("     one of ours!");
@@ -1145,7 +1145,7 @@ void stemdos_add_to_Pexec_list(MEM_ADDRESS ad)
     stemdos_Pexec_list_ptr--;
   }
   stemdos_Pexec_list[stemdos_Pexec_list_ptr++]=ad;
-  TRACE_LOG("PExec ptr %d -> %d\n",stemdos_Pexec_list_ptr-1,stemdos_Pexec_list_ptr);
+  //TRACE_LOG("PExec ptr %d -> %d\n",stemdos_Pexec_list_ptr-1,stemdos_Pexec_list_ptr);
 }
 
 
@@ -1185,7 +1185,8 @@ void stemdos_intercept_trap_1()
 
 #if defined(SSE_DEBUG) && defined(DEBUG_BUILD)
 
-  if(TRACE_ENABLED) TRACE_OSD("TRAP1 %X",stemdos_command);
+  if(TRACE_ENABLED) 
+    TRACE_OSD("TRAP1 %X",stemdos_command);
 
   switch(stemdos_command)
   {
@@ -1240,7 +1241,8 @@ void stemdos_intercept_trap_1()
       }      
       TRACE_LOG("PC %X TRAP #1, $%X %s\n",old_pc,stemdos_command,l.Text);
     }
-  }
+  } //sw
+
 #endif
 
   switch (stemdos_command){
@@ -1755,7 +1757,6 @@ void stemdos_intercept_trap_1()
           stop_on_next_program_run=2;
         }
 #endif
-
         stemdos_filename=read_string_from_memory(m68k_lpeek(sp+4),100);
         log(EasyStr("STEMDOS: Got filename as ")+stemdos_filename);
         int x=stemdos_get_file_path();
@@ -2213,15 +2214,6 @@ void TTos::GetTosProperties(EasyStr Path,WORD &Ver,BYTE &Country,WORD &Date) {
     fseek(f,0x1e,SEEK_SET);
     fread(&b_high,1,1,f);fread(&b_low,1,1,f);
     Date=MAKEWORD(b_low,b_high);
-
-
-#ifdef TEST01___
-    DWORD check_emutos;
-    fseek(f,0x2C,SEEK_SET);
-    fread(&check_emutos,sizeof(DWORD),1,f);
-      )!=0x45544F53 
-#endif
-
 
     TRACE_INIT("TOS v%X country %X date %X path %s\n",Ver,Country,Date,Path.Text);
     fclose(f);

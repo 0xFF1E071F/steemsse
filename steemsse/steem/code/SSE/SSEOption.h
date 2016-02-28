@@ -134,7 +134,7 @@ struct TConfig {
   unsigned int ArchiveAccess:1;
   unsigned int AcsiImg:1;
   unsigned int Stemdos:1;
-  unsigned int Borders:1; // the option
+ // unsigned int Borders:1; // the option
 
 #ifdef __cplusplus // visible only to C++ objects
   TConfig();

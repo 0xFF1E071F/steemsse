@@ -914,6 +914,10 @@ bool TOptionBox::HasHandledMessage(MSG *mess)
 void TOptionBox::SetBorder(int newborder)
 {
   int oldborder=border;
+#if defined(SSE_VID_DISABLE_AUTOBORDER)
+  if(!newborder) 
+    ChangeBorderSize(0); // TODO with this we can remove the (border&1) tests
+#endif
   if (ChangeBorderModeRequest(newborder)){
     border=newborder;
     if (FullScreen) change_fullscreen_display_mode(true);
@@ -1992,6 +1996,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             OPTION_ST_ASPECT_RATIO=!OPTION_ST_ASPECT_RATIO;
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_ST_ASPECT_RATIO,0);
             TRACE_LOG("Option Aspect Ratio %d\n",OPTION_ST_ASPECT_RATIO);
+#if defined(SSE_VID_380)
+            if(ResChangeResize)
+              StemWinResize();
+            //Disp.ScreenChange();
+#endif
           }
           break;
 

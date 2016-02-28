@@ -483,23 +483,25 @@ when it does).
             // no overrun, normal
             else
             {
-            /*
-            "The Overrun indication is reset after the reading of data from the 
-            Receive Data Register."
-              */
+/*
+"The Overrun indication is reset after the reading of data from the 
+Receive Data Register."
+ACIA02.TOS: reading ACIA RDR once after overrun bit is set is enough
+to clear overrun
+*/
               ACIA_IKBD.overrun=ACIA_OVERRUN_NO;
               ACIA_IKBD.SR&=~BIT_0; // ACIA bugfix 3.5.2, bit cleared only if no OVR
-              ACIA_IKBD.SR&=~BIT_5;//normally first read SR (TODO)
-              if(!( ACIA_IKBD.IrqForTx() && ACIA_IKBD.SR&BIT_1) )
-                ACIA_IKBD.SR&=~BIT_7; // clear IRQ bit, normally first read SR
+              ACIA_IKBD.SR&=~BIT_5;
+              if(!( ACIA_IKBD.IrqForTx() && ACIA_IKBD.SR&BIT_1))
+                ACIA_IKBD.SR&=~BIT_7;
+              TRACE_LOG("%d %d %d PC %X CPU reads IKBD data %X\n",TIMING_INFO,old_pc,ACIA_IKBD.RDR);
             }
-            
             mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,
               !( (ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7)) );
-              /*
-              "The nondestructive read cycle (...) although the data in the
-              Receiver Data Register is retained.
-            */
+/*
+"The nondestructive read cycle (...) although the data in the
+Receiver Data Register is retained.
+*/
             ior_byte=ACIA_IKBD.RDR;
             break;
           }
@@ -717,7 +719,7 @@ when it does).
             }
 #endif
             if (n>=MFPR_TADR && n<=MFPR_TDDR){ //timer data registers
-//#undef SSE_INT_MFP_READ_DELAY1
+//#undef SSE_INT_MFP_READ_DELAY2
 #if defined(SSE_INT_MFP_READ_DELAY1)
 /*  v3.7.0 
     MC68901 doc:
@@ -773,7 +775,7 @@ when it does).
                   }
                 }
               }
-#if defined(SSE_INT_MFP_READ_DELAY2)//see above
+#if defined(SSE_INT_MFP_READ_DELAY1) && defined(SSE_INT_MFP_READ_DELAY2)//see above
               if(OPTION_PRECISE_MFP)
                 INSTRUCTION_TIME(-MFP_TIMER_DATA_REGISTER_ADVANCE);
 #endif
