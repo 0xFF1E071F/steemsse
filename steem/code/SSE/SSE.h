@@ -2524,6 +2524,9 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_CPU_E_CLOCK)
 #define SSE_CPU_E_CLOCK4
 #endif
+#if defined(SSE_CPU_PREFETCH_CLASS)
+#define SSE_CPU_PREFETCH_CLASS_380
+#endif
 #if defined(SSE_CPU_ROUNDING)
 #define SSE_CPU_ROUNDING_ANDI2
 #define SSE_CPU_ROUNDING_BUS // big change, much overhead, little effect 
@@ -2694,6 +2697,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_INTERRUPT)
 #define SSE_INT_ROUNDING
+#define SSE_INT_CHECK_BEFORE_PREFETCH
 #endif
 
 #if defined(SSE_INT_HBL)

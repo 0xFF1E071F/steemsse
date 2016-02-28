@@ -4110,6 +4110,9 @@ void                              m68k_tst_b(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
 #endif
+#if defined(SSE_CPU_PREFETCH_CLASS_380)
+  M68000.PrefetchClass=1;
+#endif
   BYTE x=m68k_read_dest_b();
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
   if(!x)SR_SET(SR_Z);
@@ -4119,8 +4122,12 @@ void                              m68k_tst_b(){
 #endif
   PREFETCH_IRC;
 }void                             m68k_tst_w(){
+  //ASSERT(!(old_pc==0x040154 && scan_y==-31 && LINECYCLES==508));
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
+#if defined(SSE_CPU_PREFETCH_CLASS_380)
+  M68000.PrefetchClass=1;
 #endif
   WORD x=m68k_read_dest_w();
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
@@ -4133,6 +4140,9 @@ void                              m68k_tst_b(){
 }void                             m68k_tst_l(){
 #if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
+#endif
+#if defined(SSE_CPU_PREFETCH_CLASS_380)
+  M68000.PrefetchClass=1;
 #endif
   LONG x=m68k_read_dest_l();
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);

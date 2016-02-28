@@ -2,8 +2,9 @@
 #ifndef SSEINTERRUPT_H
 #define SSEINTERRUPT_H
 
-#include "SSESTF.h"
+//#include <run.decla.h>
 
+#include "SSESTF.h"
 #include "SSEGLUE.H"
 
 #if defined(SSE_INT_MFP_RATIO) 
@@ -41,6 +42,7 @@ extern int HblJitterIndex,VblJitterIndex;
 // not sure it's inlined, nor that it should be
 
 inline void HBLInterrupt() {
+// BRK(yo);
   ASSERT(hbl_pending);
   hbl_pending=false;
   log_to_section(LOGSECTION_INTERRUPTS,Str("INTERRUPT: HBL at PC=")+HEXSl(pc,6)+" "+scanline_cycle_log());
@@ -63,9 +65,9 @@ inline void HBLInterrupt() {
   TRACE_LOG("%d %d %d (%d) HBI #%d Vec %X\n",TIMING_INFO,ACT,Debug.nHbis,LPEEK(0x0068));
 #endif//dbg
 
-#if !defined(SSE_CPU_UNSTOP2)
+#if !defined(SSE_CPU_UNSTOP2) //TODO proper switches
   if (cpu_stopped)
-  M68K_UNSTOP;
+    M68K_UNSTOP;
 #endif
 
 #if defined(SSE_INT_HBL_IACK2) && !defined(SSE_INT_HBL_380)
@@ -87,10 +89,29 @@ inline void HBLInterrupt() {
 #endif
 
   // E-clock?
-
 #if defined(SSE_INT_E_CLOCK)
   if(HD6301EMU_ON)
   {
+
+#if defined(SSE_INT_CHECK_BEFORE_PREFETCH)
+/*  3.8.0
+    On some instructions, interrupt is triggered before prefetch.
+    It makes sense as the prefetch is useless.
+    Maybe it is indicated by 'dbi' in US patent 4,325,121.
+    It explains why some interrupts seem to take too much time in
+    emulation.
+    Only partial now, TST/HBI (for a fix)
+*/
+  if(SSE_HACKS_ON && M68000.PrefetchClass==1 && LINECYCLES>=4)
+  {
+    if((ir&0xFF00)==0x4A00 && (ir&0xFFC0)!=0x4AC0) //TST
+    {
+      INSTRUCTION_TIME(-4); // fixes Phantom end scroller
+      //TRACE_OSD("-4");
+    }
+  }
+#endif  
+
 #if defined(SSE_CPU_E_CLOCK2) 
     int current_cycles=ACT;
     INSTRUCTION_TIME(ECLOCK_AUTOVECTOR_CYCLE);
@@ -108,7 +129,6 @@ inline void HBLInterrupt() {
   }
 #endif
 
-
 #if !defined(SSE_INT_HBL_IACK2) 
   time_of_last_hbl_interrupt=ABSOLUTE_CPU_TIME;
 #endif
@@ -118,6 +138,7 @@ inline void HBLInterrupt() {
 #else
   INSTRUCTION_TIME_ROUND(SSE_INT_HBL_TIMING); 
 #endif
+
   // jitter?
 #if defined(SSE_INT_JITTER_HBL) //no
 //#if defined(SSE_INT_E_CLOCK)
@@ -129,7 +150,7 @@ inline void HBLInterrupt() {
 #if defined(SSE_GLUE_FRAME_TIMINGS)
   Glue.Status.hbi_done=true;
 #endif
-  
+
   m68k_interrupt(LPEEK(0x0068));       
   // set CPU registers
   sr=(sr & (WORD)(~SR_IPL)) | (WORD)(SR_IPL_2);
@@ -224,7 +245,6 @@ inline void VBLInterrupt() {
   }
 
 #endif
-//#endif
 
 #if !defined(SSE_INT_VBL_IACK2) 
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBL_IACK)
