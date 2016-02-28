@@ -11,7 +11,7 @@ typedef EasyStr Str;//?!
 
 #include <dynamicarray.h>
 
-#include <stdio.h>
+//#include <stdio.h>
 //#include <SSE/SSEDebug.h>
 #endif
 

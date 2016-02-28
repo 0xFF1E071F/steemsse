@@ -797,6 +797,7 @@ What was in the buffers will go nowhere, the internal counter is reset.
     BaseAddress|=io_src_b;
 #endif   
 #if defined(SSE_DMA_ADDRESS_EVEN)    
+    //ASSERT(!(io_src_b&1));
     BaseAddress&=0xfffffe;//remark by Petari: bit0 ignored
 #endif
     //TRACE("W BaseAddress %x\n",BaseAddress);

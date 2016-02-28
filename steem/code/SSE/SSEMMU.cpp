@@ -355,8 +355,6 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
     cases.
     TODO: examine interaction write SDP/left off in Steem
 
-    rechecked those cases for v3.8.0
-
     An Cool STE
     Line 000 - 008:r0900 028:r0900 048:r0900 068:r0908 452:w050D 480:w07F1 508:w0990 512:T1000
     Not in DE
@@ -424,6 +422,9 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
     Line -28 - 040:V0000 044:w051D 048:w0799 052:w0940  not DE
     Line 245 - 212:V0000 216:w0500 220:w0700 224:w0900  in DE but doesn't count
 
+    Ooh Crikey hidden STE
+    -29 - 028:c0900 048:c0900 068:c0902 160:R0000 176:R0000 260:C0502 280:C0745 300:C09A0 512:T4000 512:#0160
+
     Pacemaker credits
     ...
     Line 063 - 472:V0000 476:w0507 480:w070F 484:w0940 500:P0000 504:P102E
@@ -435,6 +436,7 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
 
     RGBeast
     Line -29 - 072:r0902 332:w0502 336:w07E6 340:w0903 ... 376:S0192 384:S0130
+    -29 - 064:c0900 084:c090A 328:C0502 332:C0787 336:C09E7 376:S00C0 384:S0082 440:R0082 452:R00C0
     DE, right border still to be removed
     instruction used movep.l
 
@@ -456,6 +458,7 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
 
     note that other lines must be aligned with -28: the shift is
     different because HSCROLL=0 when line -28 starts
+    TODO trouble with VLB
 
     instruction used move.b
 
@@ -495,7 +498,11 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
   bool fl=Glue.FetchingLine();
 
 #if defined(SSE_SHIFTER_SDP_WRITE_380) 
-  bool de_started=fl && cycles>=Glue.CurrentScanline.StartCycle;
+  bool de_started=fl && cycles>=Glue.CurrentScanline.StartCycle
+#if defined(SSE_GLUE_SDP_WRITE_380C)
+    +(SSE_HACKS_ON?SHIFTER_PREFETCH_LATENCY:0) //temp, ST Magazin
+#endif
+    ;
   bool de_finished=de_started && cycles>=Glue.CurrentScanline.EndCycle; //kryos
 #else
   bool de_started=fl && cycles>=Glue.CurrentScanline.StartCycle
@@ -539,6 +546,12 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
 #endif
   DWORD_B(&nsdp,(0xff8209-addr)/2)=io_src_b;
 
+#if defined(SSE_GLUE_SDP_WRITE_380C1)
+//no, in fact we should count #rasters skipped
+  if(de) 
+    nsdp+=-SHIFTER_RASTER+(cycles%8)/2; 
+#endif
+
   // Writing low byte while the MMU is fetching
   if(addr==0xFF8209 && de)
   {
@@ -571,7 +584,7 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
       // TODO, those conditions are certainly not correct
       if(SSE_HACKS_ON && !left_border)
       {
-#if defined(SSE_SHIFTER_SDP_WRITE_380B)
+#if defined(SSE_SHIFTER_SDP_WRITE_380B) && !defined(SSE_GLUE_SDP_WRITE_380C1)
         if(!shifter_skip_raster_for_hscroll)
           overscan_add_extra+=6+2; // Tekila line -28
         else if(Glue.PreviousScanline.Tricks&TRICK_STABILISER) //especially this
@@ -586,13 +599,25 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
 #endif
     }
 #if defined(SSE_SHIFTER_HSCROLL_380_E)  || defined(SSE_GLUE_SDP_WRITE_380)
-    else // Sommarhack 2010 greets write on cycle 284 or 292
+    else
+    {
+#if defined(SSE_GLUE_SDP_WRITE_380C)
+#if !defined(SSE_GLUE_SDP_WRITE_380C1)
+/*  Fix/hack for writes to videocounter OK for Sommarhack 2010 greets, 
+    Ooh Crikey hidden screen #2, RGBeast still OK
+*/
+      if(SSE_HACKS_ON) // last minute change so...
+        nsdp+=-SHIFTER_RASTER+((cycles-GLU.CurrentScanline.StartCycle)%8)/2; 
+#endif
+#else
+      // Sommarhack 2010 greets write on cycle 284 or 292
 #if defined(SSE_GLUE_SDP_WRITE_380B)
       if(SSE_HACKS_ON)
 #endif
       Shifter.RoundCycles(shifter_pixel);
 #endif
-
+    }
+#endif
 
 #if !defined(SSE_GLUE_001)
     // cancel the Steem 3.2 fix for left off with STE scrolling on

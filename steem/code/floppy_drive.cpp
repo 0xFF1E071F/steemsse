@@ -7,6 +7,9 @@ to move to the correct place in the disk image file and then reads/writes
 data.
 ---------------------------------------------------------------------------*/
 
+
+#include "SSE/SSEDebug.h"
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: floppydrive.cpp")
 #endif
@@ -917,7 +920,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   if (this==&FloppyDrive[1]) floppy_mediach[1]=30;
   // disable input for pasti
   disable_input_vbl_count=max(disable_input_vbl_count,30);
-#if defined(SSE_DISK_IMAGETYPE)
+#if defined(SSE_DISK_IMAGETYPE__)
   ASSERT(SF314[drive].ImageType.Extension);
 #endif
   log("");

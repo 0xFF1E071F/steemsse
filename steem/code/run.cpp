@@ -149,7 +149,7 @@ void run()
 #if defined(SSE_CPU_HALT)
   if(M68000.ProcessingState==TM68000::HALTED)
     return; // cancel "run" until cold reset
-#if defined(SSE_GUI_STATUS_STRING_TOSFLAG)
+#if defined(SSE_GUI_STATUS_STRING_380)
   else if(M68000.ProcessingState==TM68000::BOILER_MESSAGE)
   {
     M68000.ProcessingState=TM68000::NORMAL;
@@ -1237,7 +1237,7 @@ void event_vbl_interrupt() //SS misleading name?
 #if defined(SSE_GLUE_FRAME_TIMINGS7B) && !defined(SSE_GLUE_FRAME_TIMINGS_C)
 /*  With GLU/video event refactoring, we call event_scanline() one time fewer,
     if we did now it would mess up some timings, so we call the sub
-    with some HBL-dependent taskes: DMA sound, HD6301 & CAPS emu.
+    with some HBL-dependent tasks: DMA sound, HD6301 & CAPS emu.
     Important for Relapse DMA sound
 */
   event_scanline_sub(); 

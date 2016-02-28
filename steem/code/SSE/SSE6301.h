@@ -52,14 +52,6 @@ struct THD6301 {
   BYTE RunThisHbl; 
 #endif
   BYTE Crashed; // oops
-/*
-  short CurrentCommand;
-  BYTE LastCommand;
-  BYTE CurrentParameter; //0-5
-  BYTE nParameters; //0-6
-  BYTE Parameter[6]; // max 6
-  BYTE CustomProgram;
-*/
   short MouseVblDeltaX; // must keep separate for true emu
   short MouseVblDeltaY;
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)

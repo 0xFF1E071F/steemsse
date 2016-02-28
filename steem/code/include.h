@@ -110,7 +110,6 @@ typedef EasyStr Str;
 #include "options.h"
 #include "shortcutbox.h"
 #include "patchesbox.h"
-
 #include "display.h"
 #include "draw.h"
 #include "osd.h"

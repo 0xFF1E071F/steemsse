@@ -172,7 +172,7 @@ void TGlue::AddExtraToShifterDrawPointerAtEndOfLine(unsigned long &extra) {
 #endif
 #endif
   
-#if defined(SSE_GLUE_016)
+#if defined(SSE_GLUE_016) // as strangely as it became necessary, it became unnecessary
   // pure hack for confusing rendering issue in Closure WS2 VLB,
   if(SSE_HACKS_ON && SideBorderSize==VERY_LARGE_BORDER_SIDE && border
     && MMU.WS[WAKE_UP_STATE]==2  && (CurrentScanline.Tricks&TRICK_LINE_PLUS_26)
@@ -529,6 +529,10 @@ cycle       0               4               8               12               12
 #endif
         
         TrickExecuted|=TRICK_LINE_PLUS_20;
+
+#if defined(SSE_SHIFTER_UNSTABLE_380_D)
+        Shifter.Preload=0; // again because we miss the real reset (We were greets)
+#endif
         
 #if defined(SSE_SHIFTER_LINE_PLUS_20_SHIFT) // Riverside
 #if defined(SSE_VID_BORDERS)
@@ -701,7 +705,7 @@ cycle       0               4               8               12               12
                 Shifter.Preload++; // DOLB WS2
               else if(shifter_pixel<=4)
                 shifter_pixel+=
-#if defined(SSE_GLUE_016)
+#if defined(SSE_GLUE_016B)
                   (SSE_HACKS_ON&&SideBorderSize==VERY_LARGE_BORDER_SIDE&&border)
                   ?8:
 #endif                
@@ -1054,7 +1058,7 @@ cycle       0               4               8               12               12
 #if defined(SSE_VID_BORDERS) && defined(SSE_VID_BPOC)
 #if defined(SSE_VID_380)
         if(SSE_HACKS_ON && cycles_in_low_res==16) 
-          if(SideBorderSize==VERY_LARGE_BORDER_SIDE)
+          if(SideBorderSize==VERY_LARGE_BORDER_SIDE && border)
             shifter_pixel+=6; // the '?' is cut-off on the right by some pixel(s)
           else if(BORDER_40)
           { // fit text of Best Part of the Creation on a 800 display (pure hack)
@@ -1557,11 +1561,12 @@ detect unstable: switch MED/LOW - Beeshift
 #endif
         MMU.ShiftSDP(8); // again...
 #endif
+#if defined(SSE_VID_BORDERS_416_NO_SHIFT)
       if(
 #if !defined(SSE_GLUE_026F) && !defined(SSE_VID_BORDERS_416_NO_SHIFT2)
         SSE_HACKS_ON &&
 #endif
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT)
+
         (SideBorderSize!=VERY_LARGE_BORDER_SIDE
 #if defined(SSE_VID_BORDERS_416_NO_SHIFT3)
         ||!(border&1)
@@ -1569,8 +1574,8 @@ detect unstable: switch MED/LOW - Beeshift
         ||border
 #endif
         )
-#endif
         )
+#endif
         Shifter.HblPixelShift=4; 
     }
 #endif
@@ -1751,7 +1756,11 @@ TODO Closure doesn't agree with 'Bees' for WS1?
     overscan_add_extra+=OVERSCAN_ADD_EXTRA_FOR_RIGHT_BORDER_REMOVAL;  // 28 (+16=44)
     TrickExecuted|=TRICK_LINE_PLUS_44;
 #if defined(SSE_VID_BORDERS)
-    if(SideBorderSize==VERY_LARGE_BORDER_SIDE)
+    if(SideBorderSize==VERY_LARGE_BORDER_SIDE
+#if defined(SSE_VID_380)
+        && border
+#endif      
+      )
       overscan_add_extra-=BORDER_EXTRA/2; // 20 + 24=44
 #endif
     CurrentScanline.Bytes+=44;
@@ -2177,16 +2186,6 @@ void TGlue::EndHBL() {
       &&!((PreviousScanline.Tricks&TRICK_STABILISER)&&ShiftModeChangeAtCycle(448-512)==2) //?
       &&!(CurrentScanline.Tricks&TRICK_LINE_MINUS_2))
     {
-
-
-#if 0
-     if( (CurrentScanline.Tricks&TRICK_LINE_PLUS_26)
-       && !(CurrentScanline.Tricks&TRICK_LINE_PLUS_44)
-       && SideBorderSize==VERY_LARGE_BORDER_SIDE && border)
-       TRACE("%d %d %d\n",FRAME,scan_y,shifter_pixel);
-       //shifter_pixel+=4;
-#endif
-
 #ifdef SSE_SHIFTER_UNSTABLE_380
       if(Shifter.Preload&&(CurrentScanline.Tricks&TRICK_OVERSCAN_MED_RES))
         Shifter.Preload=0; // preload only for one scanline, I think I'm just simplifying things
@@ -2900,6 +2899,11 @@ void TGlue::SetShiftMode(BYTE NewMode) {
 
 #if !defined(SSE_SHIFTER_HIRES_OVERSCAN)
   ASSERT( COLOUR_MONITOR );
+#endif
+
+#if defined(SSE_GLUE_026J) // TODO, one of our tests looks for 2
+  if(NewMode==3) 
+    NewMode=2; // fixes The World is my Oyster screen #2
 #endif
 
 #if defined(SSE_SHIFTER_TRICKS) // before rendering

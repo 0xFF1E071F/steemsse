@@ -12,7 +12,7 @@ for Steem's memory snapshots system.
 #if defined(STEVEN_SEAGAL)
 extern EasyStr RunDir,WriteDir,INIFile,ScreenShotFol;
 extern EasyStr LastSnapShot,BootStateFile,StateHist[10],AutoSnapShotName;
-
+#undef LOGSECTION
 #define LOGSECTION LOGSECTION_INIT
 
 #if defined(SSE_VS2008)
@@ -117,10 +117,10 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
                       bool LoadOrSave,int Version,bool NOT_ONEGAME( ChangeDisksAndCart ),int *pVerRet)
 {
   ONEGAME_ONLY( BYTE *pStartByte=f; )
-
-  //temp debugging traces
-  //TRACE("LoadSaveAllStuff(L/S%d,V%d (%d),%d)\n",LoadOrSave,Version,SNAPSHOT_VERSION,ChangeDisksAndCart);
-
+#ifdef SSE_DEBUG
+  TRACE_INIT("%d memory snaphot V%d/%d %c\n",
+    Version,SNAPSHOT_VERSION,LoadOrSave==LS_LOAD?"Load":"Save");
+#endif
   if (Version==-1) Version=SNAPSHOT_VERSION;
   ReadWrite(Version);        //4
   if (pVerRet) *pVerRet=Version;
@@ -128,13 +128,13 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(pc);             //4
   ReadWrite(pc_high_byte);   //4
 
-  ReadWriteArray(r);
+  ReadWriteArray(r);//SS 64
   ReadWrite(sr);             //2
   ReadWrite(other_sp);       //4
 
 
   ReadWrite(xbios2);         //4
-  ReadWriteArray(STpal);
+  ReadWriteArray(STpal);//SS 32
 
   ReadWrite(interrupt_depth); //4
   ReadWrite(on_rte);          //4
@@ -168,10 +168,10 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 
   ReadWrite(mmu_memory_configuration);  //1
 
-  ReadWriteArray(mfp_reg);
+  ReadWriteArray(mfp_reg);//SS 24
 
   int dummy[4]; //was mfp_timer_precounter[4];
-  ReadWriteArray(dummy);
+  ReadWriteArray(dummy);//SS 16
 
   {
     // Make sure saving can't affect current emulation
@@ -181,7 +181,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
       memcpy(save_mfp_timer_period,mfp_timer_period,sizeof(mfp_timer_period));
       for (int n=0;n<4;n++) mfp_calc_timer_counter(n);
     }
-    ReadWriteArray(mfp_timer_counter);
+    ReadWriteArray(mfp_timer_counter);//SS 16
     if (LoadOrSave==LS_SAVE){
       memcpy(mfp_timer_counter,save_mfp_timer_counter,sizeof(mfp_timer_counter));
       memcpy(mfp_timer_period,save_mfp_timer_period,sizeof(mfp_timer_period));
@@ -191,7 +191,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(mfp_gpip_no_interrupt); //1
 
   ReadWrite(psg_reg_select);        //4
-  ReadWriteArray(psg_reg);
+  ReadWriteArray(psg_reg);//SS16
 
   ReadWrite(dma_sound_control);     //1
   ReadWrite(dma_sound_start);       //4
@@ -199,8 +199,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(dma_sound_mode);        //1
 
   ReadWriteStruct(ikbd);
-
-  ReadWriteArray(keyboard_buffer);
+  ReadWriteArray(keyboard_buffer);//SS 1024
   ReadWrite(keyboard_buffer_length); //4
   if (Version<8){
     keyboard_buffer[0]=0;
@@ -210,7 +209,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(dma_mode);          //2
   ReadWrite(dma_status);        //1
   ReadWrite(dma_address);       //4
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DMA)//defined(SSE_VAR_RESIZE)
   {
     int dma_sector_count_tmp=dma_sector_count;
     ReadWrite(dma_sector_count_tmp);
@@ -231,7 +230,6 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(fdc_last_step_inwards_flag); //1
 #endif
   ReadWriteArray(floppy_head_track);
-
 #if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
   {
     int floppy_mediach_tmp[2];
@@ -242,7 +240,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     floppy_mediach[1]=floppy_mediach_tmp[1];
   }
 #else
-  ReadWriteArray(floppy_mediach);
+  ReadWriteArray(floppy_mediach);//SS 8
 #endif
 #ifdef DISABLE_STEMDOS
   int stemdos_Pexec_list_ptr=0;
@@ -251,12 +249,13 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   int stemdos_current_drive=0;
 #endif
   ReadWrite(stemdos_Pexec_list_ptr);  //4
-  ReadWriteArray(stemdos_Pexec_list);
+//  TRACE("ftell %d\n",ftell(f));
+  ReadWriteArray(stemdos_Pexec_list); //SS 304
+  //TRACE("ftell %d\n",ftell(f));
   ReadWrite(stemdos_current_drive);   //4
-
+  //TRACE("ftell %d\n",ftell(f));
   EasyStr NewROM=ROMFile;
   ReadWriteStr(NewROM);
-
   WORD NewROMVer=tos_version;
   if (Version>=7){
     ReadWrite(NewROMVer); // 2
@@ -304,13 +303,14 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     ACIA_IKBD.SR=2; // usually
     ACIA_MIDI.CR=0x95; // usually
     ACIA_MIDI.SR=2; // usually
-  }
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_DOUBLE_BUFFER_RX)
-  ACIA_IKBD.LineRxBusy=0;
+  //}//3.8.0
+#if defined(SSE_ACIA_DOUBLE_BUFFER_RX) && !defined(SSE_ACIA_380)
+    ACIA_IKBD.LineRxBusy=0;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_DOUBLE_BUFFER_TX)
-  ACIA_IKBD.LineTxBusy=0;
+#if defined(SSE_ACIA_DOUBLE_BUFFER_TX) && !defined(SSE_ACIA_380)
+    ACIA_IKBD.LineTxBusy=0;
 #endif
+    }//3.8.0
 #endif
 
   if (Version>=9){
@@ -967,7 +967,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if defined(SSE_INT_MFP_REFACTOR2)
     if(LoadOrSave==LS_LOAD)
 #endif
-    MC68901.Init(); // in case of bad snapshot
+      MC68901.Init(); // in case of bad snapshot
 #endif
 
   }//3.7.0
@@ -1004,10 +1004,13 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if defined(SSE_GLUE_FRAME_TIMINGS4)
     Glue.scanline=0; // Steem is always stopped at the start of a frame
 #endif
+#if defined(SSE_IKBD_6301_380)
+    BYTE HD6301_Initialised=HD6301.Initialised;
+    ReadWriteStruct(HD6301); // registers... 
+    HD6301.Initialised=HD6301_Initialised;
+#endif
   }
 #endif
-
-
 
 #endif//#if defined(STEVEN_SEAGAL)
 
@@ -1050,16 +1053,19 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #ifndef ONEGAME
   if (ChangeTOS){
     int ret=LoadSnapShotChangeTOS(NewROM,NewROMVer);
+    TRACE_INIT("LoadSnapShotChangeTOS %d\n",ret);
     if (ret>0) return ret;
   }
 
   if (ChangeDisks){
     int ret=LoadSnapShotChangeDisks(NewDisk,NewDiskInZip,NewDiskName);
+    TRACE_INIT("ChangeDisks %d\n",ret);
     if (ret>0) return ret;
   }
 
   if (ChangeCart){
     int ret=LoadSnapShotChangeCart(NewCart);
+    TRACE_INIT("ChangeCart %d\n",ret);
     if (ret>0) return ret;
   }
 

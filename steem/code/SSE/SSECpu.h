@@ -1300,7 +1300,7 @@ already fetched. One word will be in IRD and another one in IRC.
 #if defined(SSE_IPF_CPU) //|| defined(SSE_DEBUG)
   int cycles=cpu_cycles;
 #endif
-
+//  ASSERT(ir!=0x3358);
   /////////// JUMP TO CPU EMU: ///////////////
   m68k_high_nibble_jump_table[ir>>12](); // go to instruction...
 
@@ -1313,6 +1313,7 @@ already fetched. One word will be in IRD and another one in IRC.
     step, can't set breakpoint). Now this works.
     Because it seems more natural, formalising a flag that must
     be in the CPU.
+    Update: it is one-bit latch 'tpend' TODO
     Issue: more tests in Process
 
 

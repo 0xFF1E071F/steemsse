@@ -53,13 +53,14 @@ struct ACIA_STRUCT{ // removed _ ..
 */
 #if SSE_VERSION<=350
   BYTE data_tdr;
-#else
+#endif
+//#else
   BYTE ByteWaitingTx;
   BYTE LineTxBusy; // transmitting to 6301 or MIDI
 #if !defined(SSE_ACIA_REGISTERS)
   BYTE WaitingByte; // would be TDR before going to TDRS
 #endif
-#endif//ver
+//#endif//ver
 #endif
 
 #if defined(SSE_ACIA_REGISTERS)

@@ -1073,8 +1073,15 @@ LRESULT __stdcall mem_browser_window_WndProc(HWND Win,UINT Mess,UINT wPar,long l
               MessageBeep(NULL);
               break;
             }
+            //TRACE("bytes=%d\n",bytes); 
+
             FILE *f=NULL; // signal for these functions
+#define SSE_BOILER_CLIPBOARD2
+#if defined(SSE_BOILER_CLIPBOARD2)
+            disa_to_file(f,mb->ad,bytes/10,mb->disp_type!=DT_MEMORY);
+#else
             disa_to_file(f,mb->ad,500,mb->disp_type!=DT_MEMORY);
+#endif
       }//if
     }break;
 #endif

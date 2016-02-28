@@ -581,9 +581,11 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
     case 33:
       if (slow_motion==0) slow_motion_change(true);
       break;
+#if !defined(SSE_VID_DISABLE_AUTOBORDER)
     case 34:
       if (runstate==RUNSTATE_RUNNING) overscan=OVERSCAN_MAX_COUNTDOWN*2;
       break;
+#endif
     case 35:
       cut_slow_motion_speed=100;
       if (slow_motion==0) slow_motion_change(true);

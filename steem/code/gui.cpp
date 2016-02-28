@@ -596,6 +596,9 @@ int ChangeBorderSize(int size_in) {
         }//sw
       }
     }
+#if defined(SSE_VID_DISABLE_AUTOBORDER2)
+    SendMessage(OptionBox.BorderSizeOption,CB_SETCURSEL,DISPLAY_SIZE,0);
+#endif
     draw_last_scanline_for_border=shifter_y+res_vertical_scale*(BORDER_BOTTOM);
     StemWinResize();
 //#if !defined(SSE_VID_D3D1) // done in StemWinResize()
@@ -620,7 +623,7 @@ int ChangeBorderSize(int size_in) {
 extern char ansi_name[MAX_PATH];
 #endif
 
-#if defined(SSE_GUI_STATUS_STRING_TOSFLAG)
+#if defined(SSE_GUI_STATUS_STRING_380)
 void GUIRefreshStatusBar(bool invalidate) {
 #else
 void GUIRefreshStatusBar() {
@@ -634,7 +637,7 @@ void GUIRefreshStatusBar() {
   // build text of "status bar", only if we're to show it
 
 
-#if defined(SSE_GUI_STATUS_STRING_TOSFLAG) && defined(SSE_CPU_HALT)
+#if defined(SSE_GUI_STATUS_STRING_380) && defined(SSE_CPU_HALT)
   // and it's no special string
   if(should_we_show && M68000.ProcessingState!=TM68000::INTEL_CRASH
     && M68000.ProcessingState!=TM68000::HALTED
@@ -682,7 +685,7 @@ void GUIRefreshStatusBar() {
       }
 #endif
 #else
-#if defined(SSE_GUI_STATUS_STRING_TOSFLAG) // make room for flag after TXXX
+#if defined(SSE_GUI_STATUS_STRING_380) // make room for flag after TXXX
       sprintf(status_bar,"%s %s       %s",sb_st_model,sb_tos,sb_ram);
 #else
       sprintf(status_bar,"%s %s %s",sb_st_model,sb_tos,sb_ram);
@@ -699,7 +702,7 @@ void GUIRefreshStatusBar() {
 #endif
 
       // some options
-#if !defined(SSE_GUI_STATUS_STRING_CHIPSET_ICON)
+#if !defined(SSE_GUI_STATUS_STRING_380)
 #if defined(SSE_IKBD_6301) && defined(SSE_GUI_STATUS_STRING_6301)
       if(HD6301EMU_ON)
         strcat(status_bar," C1"); //saves som space
@@ -757,14 +760,14 @@ void GUIRefreshStatusBar() {
       else if(ADAT)
         strcat(status_bar," ADAT");
 #else
-#if !defined(SSE_GUI_STATUS_STRING_HD_ICON)
+#if !defined(SSE_GUI_STATUS_STRING_380)
 #if defined(SSE_GUI_STATUS_STRING_HD)
       if(!HardDiskMan.DisableHardDrives //v3.7.0
         || ACSI_EMU_ON) //v3.7.2
         strcat(status_bar," HD");
 #endif
 #endif
-#if !defined(SSE_GUI_STATUS_STRING_ADAT_ICON)
+#if !defined(SSE_GUI_STATUS_STRING_380)
       if(!floppy_instant_sector_access) // the option only //3.7.0
         strcat(status_bar," ADAT");
 #endif
@@ -773,7 +776,7 @@ void GUIRefreshStatusBar() {
 
 
 
-#if defined(SSE_GUI_STATUS_STRING_HACKS) && !defined(SSE_GUI_STATUS_STRING_HACKS_ICON)
+#if defined(SSE_GUI_STATUS_STRING_HACKS) && !defined(SSE_GUI_STATUS_STRING_380)
       if(SSE_HACKS_ON)
         strcat(status_bar," #"); // which symbol?
 #endif
@@ -810,7 +813,7 @@ void GUIRefreshStatusBar() {
       int max_text_length=(border&1)?MAX_TEXT_LENGTH_BORDER_ON:MAX_TEXT_LENGTH_BORDER_OFF;
       if(SSE_STATUS_BAR)
         max_text_length-=30;
-#if defined(SS_VID_BORDERS)
+#if defined(SSE_VID_BORDERS)
       if(SideBorderSizeWin<VERY_LARGE_BORDER_SIDE)
         max_text_length-=5;
       if(SideBorderSizeWin==ORIGINAL_BORDER_SIDE)
@@ -881,7 +884,7 @@ void GUIRefreshStatusBar() {
 
     //TRACE("status string len %d\n",strlen(status_bar));
     // change text
-#if !defined(SSE_GUI_STATUS_STRING_TOSFLAG)
+#if !defined(SSE_GUI_STATUS_STRING_380)
 #if defined(SSE_VAR_MAIN_LOOP1) && defined(SSE_CPU_HALT)
     if(M68000.ProcessingState==TM68000::INTEL_CRASH)
       strcpy(status_bar,T("STEEM CRASHED!"));  
@@ -897,7 +900,7 @@ void GUIRefreshStatusBar() {
 #endif
   }
 
-#if defined(SSE_GUI_STATUS_STRING_TOSFLAG)
+#if defined(SSE_GUI_STATUS_STRING_380)
 #if defined(SSE_VAR_MAIN_LOOP1) && defined(SSE_CPU_HALT)
     if(M68000.ProcessingState==TM68000::INTEL_CRASH)
       strcpy(ansi_name,T("STEEM CRASHED!"));  
@@ -946,7 +949,7 @@ void GUIRefreshStatusBar() {
   // show or hide
   ShowWindow(status_bar_win, (should_we_show) ? SW_SHOW : SW_HIDE);
 
-#if defined(SSE_GUI_STATUS_STRING_TOSFLAG)
+#if defined(SSE_GUI_STATUS_STRING_380)
   if(invalidate)
     InvalidateRect(status_bar_win,NULL,FALSE); //to get message WM_DRAWITEM
 #endif
@@ -1375,7 +1378,7 @@ bool MakeGUI()
 //    |SS_CENTER // horizontally
   //  |SS_CENTERIMAGE // vertically
   //|SS_SUNKEN // frame
-#if defined(SSE_GUI_STATUS_STRING_TOSFLAG)
+#if defined(SSE_GUI_STATUS_STRING_380)
     |SS_OWNERDRAW
 #else
     |SS_CENTER // horizontally

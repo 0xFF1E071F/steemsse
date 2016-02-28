@@ -20,7 +20,7 @@ extern const char*exception_action_name[4];//={"read from","write to","fetch fro
 #endif//#if defined(SSE_STRUCTURE_SSECPU_OBJ)
 
 #include "SSESTF.h"
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 #include "SSEGlue.h"
 #endif
 
@@ -1824,7 +1824,7 @@ FC2 FC1 FC0 Address Space
   }
 #if defined(SSE_CPU_HALT) || defined(SSE_CPU_TRACE_REFACTOR)
   // formalising that there's no trace after a crash
-#if defined(SSE_GUI_STATUS_STRING_TOSFLAG) //problem showed up with this
+#if defined(SSE_GUI_STATUS_STRING_380) //problem showed up with this
   if(M68000.ProcessingState!=TM68000::HALTED
     &&M68000.ProcessingState!=TM68000::INTEL_CRASH
     &&M68000.ProcessingState!=TM68000::BOILER_MESSAGE
@@ -2338,7 +2338,8 @@ TM68000::SyncEClock(
   InstructionTime(wait_states); 
 #endif
 #if defined(SSE_DEBUG) 
-  char* sdispatcher[]={"ACIA","HBL","VBL"};
+  //char* sdispatcher[]={"ACIA","HBL","VBL"};
+  char* sdispatcher[]={"VBL","HBL","ACIA"};
 #if defined(SSE_DEBUG_FRAME_REPORT_ACIA)
   FrameEvents.Add(scan_y,LINECYCLES,'E',wait_states);
 #endif

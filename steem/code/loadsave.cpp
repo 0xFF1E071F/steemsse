@@ -326,10 +326,12 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
     reset_st(RESET_COLD | RESET_STOP | RESET_NOCHANGESETTINGS | RESET_NOBACKUP);
 
     FILE *f=fopen(FilNam,"rb");
+    
     if (f){
 #if defined(STEVEN_SEAGAL) && defined(SSE_VAR_CHECK_SNAPSHOT)
     try {
 #endif
+      TRACE_INIT("Load %s\n",FilNam);
       Failed=LoadSaveAllStuff(f,LS_LOAD,-1,ChangeDisks,&Version);
 #if defined(STEVEN_SEAGAL) && defined(SSE_VAR_CHECK_SNAPSHOT)
     }
@@ -341,7 +343,7 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
       if (Failed==0){
         Failed=int((EasyUncompressToMem(Mem+MEM_EXTRA_BYTES,mem_len,f)!=0) ? 2:0);
         TRACE("Memory snapshot %s loaded\n",FilNam);
-#if defined(SSE_GLUE_FRAME_TIMINGS_A) 
+#if defined(SSE_GLUE_FRAME_TIMINGS4) 
         // This is a hack to make the first screen work
         if (pc==(MEM_ADDRESS)(LPEEK(0x0070) & 0xffffff))
           Glue.Status.hbi_done=Glue.Status.vbi_done=true;

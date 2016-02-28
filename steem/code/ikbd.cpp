@@ -608,10 +608,8 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
 #endif
 #if defined(SSE_IKBD_6301_RUN_CYCLES_AT_IO)//no...
     ASSERT(!HD6301.RunThisHbl); 
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-    int n6301cycles=Glue.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
-#elif defined(SSE_SHIFTER)
-    int n6301cycles=Shifter.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
+#if defined(SSE_SHIFTER)
+    int n6301cycles=GLU.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
 #else
     int n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
 #endif
@@ -1536,7 +1534,7 @@ void agenda_keyboard_replace(int) {
           ACIA_IKBD.SR|=BIT_7;
           //TRACE_LOG("ACIA IRQ (RDR)\n");
           TRACE_LOG("ACIA IRQ\n");
-          ASSERT(  mfp_reg[MFPR_GPIP]&MFP_GPIP_ACIA_BIT ); // just curious
+          //ASSERT(  mfp_reg[MFPR_GPIP]&MFP_GPIP_ACIA_BIT ); // just curious
           mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0);
         }
       }//if (!ikbd.send_nothing){
@@ -1604,9 +1602,7 @@ void agenda_keyboard_replace(int) {
 
 void keyboard_buffer_write_n_record(BYTE src)
 {
- // debug1=1;
   keyboard_buffer_write(src);
- // debug1=0;
   if (macro_record) macro_record_key(src);
 }
 
@@ -1666,7 +1662,6 @@ void keyboard_buffer_write(BYTE src) {
 #if defined(SSE_IKBD_6301)
   if(HD6301EMU_ON)
   {
-   // ASSERT(debug1);
 #if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
     if(!ACIA_IKBD.LineRxBusy)
     {

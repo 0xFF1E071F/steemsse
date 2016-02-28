@@ -213,6 +213,7 @@ HRESULT InitSound()
     for (int i=0;i<DSDriverModuleList.NumStrings;i++){
       if (IsSameStr_I(DSDriverModuleList[i].String,DSDriverModName)){
         Driver=LPGUID(DSDriverModuleList[i].Data[0]);
+        TRACE_INIT("Sound driver %s\n",DSDriverModName.Text);
         break;
       }
     }

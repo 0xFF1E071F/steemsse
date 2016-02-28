@@ -1,5 +1,8 @@
 // This file is compiled as a distinct module (resulting in an OBJ file)
 
+#include "SSE.h"
+#if defined(STEVEN_SEAGAL)
+
 #include "../pch.h"
 
 #include "SSEOption.h"
@@ -91,3 +94,5 @@ TConfig::TConfig() {
 }
 
 #endif//#if defined(SSE_SSE_CONFIG_STRUCT)
+
+#endif//ss

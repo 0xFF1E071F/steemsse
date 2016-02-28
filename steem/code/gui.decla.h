@@ -55,7 +55,7 @@ UNIX_ONLY( EXT void PostRunMessage(); )
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_GUI_STATUS_STRING)
-#if defined(SSE_GUI_STATUS_STRING_TOSFLAG)
+#if defined(SSE_GUI_STATUS_STRING_380)
   void GUIRefreshStatusBar(bool invalidate=true);
 #else
   void GUIRefreshStatusBar();
@@ -256,7 +256,6 @@ int GetComLineArgType(char *,EasyStr &);
 
 #define ARG_NONEWINSTANCE 250
 #define ARG_ALWAYSNEWINSTANCE 251
-
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_UNIX_TRACE)
 #define ARG_LOGSECTION 252

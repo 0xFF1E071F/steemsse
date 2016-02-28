@@ -185,7 +185,11 @@ void TOptionBox::CreateMachinePage()
   CBAddString(Win,"2.5 MB",MAKELONG(MEMCONF_512,MEMCONF_2MB));
 #endif
   CBAddString(Win,"4 MB",MAKELONG(MEMCONF_2MB,MEMCONF_2MB));
+#if defined(STEVEN_SEAGAL) && SSE_VERSION>=380
+  CBAddString(Win,"14 MB (hack)",MAKELONG(MEMCONF_7MB,MEMCONF_7MB));
+#else  
   CBAddString(Win,"14 MB",MAKELONG(MEMCONF_7MB,MEMCONF_7MB));
+#endif
   y+=30;
 
   Wid=GetTextSize(Font,T("Monitor")).Width;

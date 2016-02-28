@@ -2,9 +2,13 @@
 
 // Don't look for anything important here, it's a trash can
 
-#include "../pch.h"
 
 #include "SSE.h"
+#if defined(STEVEN_SEAGAL)
+
+#include "../pch.h"
+
+//#include "SSE.h"
 #include "SSEDecla.h"
 #ifdef SSE_UNIX
 //#define KeyCode int
@@ -21,7 +25,7 @@ extern "C" int iDummy=0;
 #endif
 
 #if defined(SSE_HACKS)
-extern "C" int SS_signal=0;
+extern "C" int SS_signal=0;//used??
 #endif
 
 #if defined(SSE_VERSION)
@@ -70,3 +74,4 @@ void TOsdControl::StartScroller(EasyStr text) {
 
 
 #endif//#if defined(STEVEN_SEAGAL)
+#endif
