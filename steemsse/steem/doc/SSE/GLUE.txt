@@ -20,11 +20,13 @@ Introduction
 The proper acronym is GLU for "Generalized Logic Unit".
 It's generally spelled GLUE or Glue. 
 As the name suggests, this IC glues the system together. 
+It is a custom Atari chip.
 It is responsible for address decoding and providing 'chip select' (CS) lines.
 It also handles the control of interrupt lines to the CPU, and bus arbitration 
 between CPU and DMA. 
 It also creates the video timing signals.
-In the STE, the GLUE and the MMU are one single chip, the GST MCU.
+On the STE, the GLUE and the MMU are one single chip, the GST MCU.
+The Shifter is a separate chip, running at 32mhz.
 
 
 Registers
@@ -40,8 +42,8 @@ $FFFF820A   R/W             |------xx|   Sync Mode
 Bit 1 corresponds to the monitor refresh rate (0 for 60Hz, 1 for 50 Hz).
 We'll call this register SYNC.
 
-(SYNC&2)==0  (and MODE<2) <-->  Frequency==60Hz
-(SYNC&2)==2  (and MODE<2) <-->  Frequency==50Hz
+(SYNCMODE&2)==0  (and SHIFTMODE<2) <-->  Frequency==60Hz
+(SYNCMODE&2)==2  (and SHIFTMODE<2) <-->  Frequency==50Hz
 
 
 $FFFF8260   R/W             |------xx|   Shift Mode
@@ -55,28 +57,31 @@ $FFFF8260   R/W             |------xx|   Shift Mode
 This byte can have  one of 3 values:  0 for low-,  1 for middle- and  2 for
 high-resolution.  The GLUE needs this register,  because in high-resolution
 the picture is displayed at ~70 Hz which requires different synchronization
-signal.
+signals.
 
 We notice 2 things:
 1) if shift mode=3 ("reserved"), it's considered as 2 (HIRES) by the Glue
 (demo "Oyster")
 2) display timings are the same for low res and medium res, as tested on
 a STE.
-We conclude that only bit1 is memorised/considered by the Glue.
-The Shifter needs 2 bits.
-Register MODE is held in the Shifter, line HIRES is held in the Glue.
+We conclude that only bit1 is memorised/considered by the Glue, bit 0 is
+irrelevant.
+The Shifter needs 2 bits to know its frequency, # bitplanes adn # colours.
+Register SHIFTMODE is held in the Shifter, line HIRES is held in the Glue.
+(In Steem we hold SHIFTMODE in two identical BYTE variables in both Glue and
+Shifter.)
 
 Internal registers
 -------------------
 
-The Glue must use some other registers to know where it is in the frame.
+The Glue must use some internal registers to know where it is in the frame.
 Those counters run continuously.
 
 HCTR   position in HBL
 
 The precision of this counter isn't known. Is it 4 CPU cycles, as in Alien's
 article, 2 CPU cycles, as some cases seem to imply?
-Not knowing any better we'll use the CPU precision (emulator cycles).
+Not knowing any better we'll use the CPU precision (emulator scanline cycles).
 
 
 VCTR   HBL#
@@ -86,35 +91,39 @@ normally completely reset. It isn't important if the beam is at the very top
 or at the very bottom.
 The vertical counter is  incremented every line, i.e.  at every edge of  the HBL
 signal, and reset on each edge of the VBL.
-The first border line depends on the monitor.
-The first useful line is 63 at 50hz and 34 at 60hz or 71hz.
-In Steem, this line corresponds to scan_y=0.
-The last useful line is 247 (?)
-The last border line depends on the monitor.
+The first useful line is 63 at 50hz and 34 at 60hz or 72hz.
+(In Steem, this line corresponds to scan_y=0.)
+The last useful line is 247 on a colour monitor, but VBLANK starts at line
+245.
 
 
 Additional registers we guess:
 
-
 H_END    position of last cycle of this line (224, 508, 512)
 
-The GLue decides the value of this line at cycle 54, in function of MODE and
-SYNC.
+The GLue decides the value of this line in function of SHIFTMODE and SYNCMODE
+at cycle:
+54 + sync modifer on STF
+56 on STE.
+
 For example, a line -106, stopped because the ST was in HIRES at cycle 164, 
 will still run 512 cycles if it was at 50hz at cycles 54.
 
 
 Additional registers on the STE:
 
-4bit  HSCROLL  If HSCROLL<>0, video memory must be fetched in advance.
+HSCROLL  If HSCROLL<>0, video memory must be fetched in advance.
 How it exactly happens is speculative, but the Glue/MMU, as well as the
 Shifter, need the info.
-Precise HSCROLL (4bit) is held in the Shifter, a HSCROLL yes/no line is held in
-the Glue.
+Precise HSCROLL (4bit) is held in the Shifter, a HSCROLL yes/no line is 
+held in the Glue.
 
+When HSCROLL<>0 at the start of the line, DE will be on for a raster more,
+even if HSCROLL=0 before the end of the line (TODO TEST).
+This implies a bit to hold this information.
 
-Signals
-=========
+Signal descritpions
+====================
 
 Bus error
 ----------
@@ -199,71 +208,7 @@ be accessed on any phase.
 
 
 
-DE-Load latency
-=================
 
-The Shifter may load only when the MMU has fetched the video data
-and put it on the bus, so the actual fetching happens (at least)
-2 cycles before.
-
-Traces show a higher latency between signal DE and signal LOAD.
-This latency depends on the wake-up state of the ST when it's booted.
-
-On the graph: 575.35-574.6 =  0.75 microseconds
-500ns = 4 CPU cycles (~8.000 MHz...)
-750ns = 6 CPU cycles
-
-
-CPU-GLUE  |   DE-to-LOAD |  Prefetch
- offset   |    latency   |   latency 
-----------------------------------------
-    0     |      3       |     0 or 1
-    1     |      4       |     1 or 2
-    2     |      5       |     2 or 3
-    3     |      6       |     3 or 4
-
-
-On the graph, we observe a delay of 3-6 cycles, according to
-wake-up state, between DE and LOAD, but the Shifter can LOAD only
-when data has been fetched and is on the bus, so the delay between
-real signal DE and MMU fetching video memory is only 1-4 cycles, assuming
-2 cycles between fetch and LOAD.
-
-This implies that 'DE' isn't asserted at cycle 52 (60hz) or 56 (50hz), but
-some 8 cycles later.
-
-DE on timing = 56 + 8 + WS offset = 64 + WS offset
-
-
-On the graph we also see that DE stops before LOAD.
-The MMU stops fetching at once, but the Shifter is 2 cycles behind.
-The Shifter must still shift and display the memory it loads, so
-DE doesn't stop that at once.
-
-We wonder what use the Shifter makes of DE!
-
-
-It seems the latency between DE on and 1st LOAD is longer than between
-DE off and last LOAD.
-
-DE off timing = 376 + 8 + WS offset = 384 + WS offset
-
-
-shifter_160.png
-
-
-Hsync on        339
-Blank off pixel 400
-DE on           421
-DE off          667
-
-De off - DE on = 246 pixels for 320 cycles
-
-
-There would be 27,3 cycles between blank off and DE on
-
-Blank off at 50hz = 32
-32+27.3 = 59.3
 
 STE
 =====
@@ -277,9 +222,6 @@ is non null, an extra raster is fetched to complete the line.
 When HSCROLL is null, the last prefetch also occurs at cycle 376, as
 on the STF. This points to prefetch having the same timing as on the
 STF when this condition is fulfilled.
-
-
-
 
 
 DE
@@ -316,6 +258,33 @@ GLUE ------------DE-----------> MMU
 MFP (timer B in) <-----DE------Shifter
                               
 
+[nobody can explain that todate]
 
+
+
+
+
+
+
+
+Timings used in Steem v3.8.0
+==============================
+
+Wake-up modifiers for STF (0 on STE):
+
+WS                   1    2   3   4
+WU_res_modifier     -2   +2   0   0
+WU_sync_modifier     0   +2   0  +2
+
+  GLU_DE_ON_72=6, //+ WU_res_modifier; STE-4
+  GLU_DE_ON_60=52, //+ WU_sync_modifier; STE -16
+  GLU_DE_ON_50=56, //+ WU_sync_modifier; STE -16
+  GLU_HBLANK_OFF_50=28, //+ WU_sync_modifier
+  GLU_HSYNC_ON_50=464, //+ WU_res_modifier, STE-2
+  GLU_HSYNC_DURATION=40,
+  GLU_RELOAD_VIDEO_COUNTER_50=64, //+ WU_sync_modifier (STE -2?)
+  GLU_TRIGGER_VBI_50=64, //+ WU_sync_modifier, STE +4
+  GLU_DECIDE_NCYCLES=54, //+ WU_sync_modifier, STE +2
+  GLU_VERTICAL_OVERSCAN_50=504 //+ WU_sync_modifier, STE -2
 
 

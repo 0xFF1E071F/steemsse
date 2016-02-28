@@ -1,7 +1,7 @@
 Steem SSE FAQ
 ---------------
 
-v3.7.3
+v3.8.0
 
 Q:
 What is Steem?
@@ -36,7 +36,9 @@ Why should I use the SSE version and not the older version?
 A:
 It depends on what you need the emulator for. If you want to check all
 sorts of demos, I strongly recommend the SSE version. For most games,
-Steem 3.2 is still alright (there are exceptions).
+Steem 3.2 is still alright (if you don't care about sound emulation,
+and if you don't need IPF/CTR or SCP support, you don't need Direct3D
+fullscreen, etc.).
 
 
 Q:
@@ -48,8 +50,7 @@ Steem is free software.
 Q:
 Why use Steem and not emulator X or Y?
 A:
-For the nice GUI, for very high compatibility, for some unique features
-(especially in Windows).
+For the nice GUI, for very high compatibility, for some unique features.
 
 
 Q:
@@ -174,7 +175,7 @@ work.
 Q:
 The icon in the taskbar is wrong (eg Disk Manager instead of Steem Fuji).
 A:
-This happens in Windows 7, not XP nor Vista, and I have no idea why.
+Apparently it's a Windows bug.
 
 
 Q:
@@ -249,12 +250,6 @@ the volume slider has been fixed.
 
 
 Q:
-I have problems with sound (in Linux)!
-A:
-Can't help! Please join the call for some Linux maintainers.
-
-
-Q:
 Emulation is crawling!
 A:
 It's a fact that Steem SSE is more CPU-intensive than Steem 3.2.
@@ -280,8 +275,10 @@ bug. At this point, you'll have better luck with some search engine.
 You could try:
 
 - With other versions of Steem, including the "NoD3D" ones.
+
 - If options C1, mouse speed make a difference (please check the manual).
-- run without Hyper-V if you're using it
+
+- Run without Hyper-V if you're using it.
 
 
 Q:
@@ -354,6 +351,15 @@ those errors will remain for the time being.
 
 
 Q:
+What's the difference between ACSI and GEMDOS hard drives?
+A:
+ACSI emulation is lower level, it operates on image files of hard disks,
+and should work as on a real Atari.
+GEMDOS emulation directly uses folders on your PC hard drive and intercepts
+TOS commands. It is more convenient but less compatible. 
+
+
+Q:
 Are state snapshots (.STS) compatible between versions?
 A:
 While there's no 100% guarantee, we try to maintain compatibility.
@@ -394,36 +400,6 @@ Q:
 There's a strange bug, the keyboard doesn't click like on a real ST.
 A:
 If you really want that click, check sound options.
-
-
-Q:
-In release notes, you claim that "there are no bugs in this release", but
-in the next release notes, we can see that some bugs were fixed. How do you
-explain this contradiction?
-A:
-I lie.
-
-
-Q:
-Will there be a port of Steem on [fill in]?
-A:
-For the moment two OS are supported: Windows 32 and Linux 32.
-Before considering other ports, it could be a good idea to use a portable
-multimedia library working with both those systems, such as SDL or OpenGL.
-
-
-Q:
-What is XSteem?
-A:
-The Linux build of Steem. It's a reference to the Windows-like X system.
-
-
-Q:
-Why are there fewer features in the Linux build?
-A:
-It's very rare when I use Linux myself. I'm not really willing to delve deep
-into all Linux particularities. In fact it's a shame for the Linux community
-that nobody else did anything yet with XSteem.
 
 
 Q:
@@ -473,7 +449,7 @@ A:
 The Boiler is the amazing debugger coded by Steem authors. It is Steem with a 
 parallel window where you can check code, memory, etc., just using a powerful
 IDE. The name is a probable reference to 'Steam' and 'Engine'.
-Of course the SSE version contains many improvements.
+Of course the SSE version contains many improvements. It is Windows-only.
 
 
 Q:
@@ -482,13 +458,6 @@ A:
 The icon's internal name is 'debug_trash.ico', so it seems to be on purpose!
 Why exactly only Steem authors know. It may be a way to say that not all
 programs on the platform were that good.
-
-
-Q:
-Why isn't the Boiler available for Linux?
-A:
-Steem authors developed it only for Windows. Efforts to port it to Linux would
-require some dedicated Linux users. That's not me (SS).
 
 
 Q:

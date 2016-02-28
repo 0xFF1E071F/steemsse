@@ -167,6 +167,9 @@ is effective.
 You add this to prefetch time to know the difference between 'DE' cycle
 and 'render' cycle, that is, 28.
 
+Or else, DE is sent at different timings to MMU and to Shifter.
+
+
 IRI: input register index
 This guessed register may be just 2bit. 
 It indexes IR registers so that the Shifter knows where to copy the word put 
