@@ -1,5 +1,5 @@
 This file contains specific info that is necessary to implement a 6301 keyboard
-chip (IKBD) emulation in an Atari ST emulation (spoiler alert!)
+chip (IKBD) emulation in an Atari ST emulation, specifically Steem.
 It is mainly based on the official doc for the MC6500 and the HD6301 by
 Motorola and Hitachi, the indispensable doc by Stephane Catala - Belzebub 
 / ST Connexion, STMagazine No 53 - 55, and on the translation by Tobe, 
@@ -20,6 +20,7 @@ Lethal Xcess
 Manchester United
 NEOchrome
 Sentinel
+Snork/Defulloir
 Transbeauce 2 (Menu)
 
 Internal Registers
@@ -117,20 +118,9 @@ fcfe	71 ef 11	aim ef11
 
 Speed, timings
 ===============
-
-[Steem SSE 3.4]
 The 6301 runs at 1Mhz, the M68000 at 8Mhz. The most practical way to integrate
 both emulations is to run 1/8 CPU cycles every scanline.
-
-Computing a theoretical #cycles for transmitting a byte:
-7812.5 bit/s
-976.5625 bytes/s
-1 s = 1M 6301 cycles
-976.5625 bytes in 1M cycles
-1 byte in 1000000/976.5625 cycles = 1024 cycles
-
-Value that works in the ST (esp. for loading a custom program): 1350 cycles
-Lower values would work, but not with Froggies.
+64 for a 50hz line (512 cycles)
 
 A problem of 6301 emulation is that the ST program didn't have a "ready" 
 message.
@@ -348,6 +338,10 @@ A 6301 browser in the boiler gives the RAM too.
 |PSHX| 3C|   |   |   |   |   |......| (SP)=X,SP-                             |
 |PULA| 36|   |   |   |   |   |......| SP+,A=(SP)                             |
 |PULB| 37|   |   |   |   |   |......| SP+,B=(SP)                             |
+(fix: http://www.atari-forum.com/viewtopic.php?f=16&t=5297&start=25#p282440
+|PULA| 32|   |   |   |   |   |......| SP+,A=(SP)                             |
+|PULB| 33|   |   |   |   |   |......| SP+,B=(SP)                             |
+)
 |PULX| 38|   |   |   |   |   |......| SP+,X=(SP)                             |
 |STAA|   |   |   | 97| A7| B7|..**0.| M=A                                    |
 |STAB|   |   |   | D7| E7| F7|..**0.| M=B                                    |

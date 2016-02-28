@@ -1,7 +1,7 @@
 Steem SSE manual
 =================
 
-v3.7.3
+v3.8.0
 
 About the manual
 _________________
@@ -13,11 +13,15 @@ It is included as a text file in the main Steem download.
 
 A copy of it is available at:
 
-http://ataristeven.t15.org/Steem_sse_manual.htm
+http://ataristeven.exxoshost.co.uk/Steem_sse_manual.htm
 
 It can be read from inside Steem if you click on the blue (i) button.
-Please, before you ask questions, for once that freeware software is
-well documented, consult the manual. 
+
+Please, before you ask questions, check the manual. 
+
+There's no manual for the Boiler (debugger); in this we follow the same policy
+as Steem authors. If you use it, you know how to use it and will get familiar
+quickly enough.
 
 
 Atari ST
@@ -46,23 +50,26 @@ the video shifter, the Yamaha sound chip, later the blitter... the Atari
 magic!
 
 The system was run by a stable and intuitive graphic user interface (GUI) 
-controlled by mouse, the GEM. 
+controlled by mouse, the GEM. This OS was rather sober, but if icons were not
+as big and colourful as on other systems, at least getting the disk directory
+was fast and straightforward.
+Unlike most computers even today, the ST featured two useful keys: Help and 
+Undo.
 Anybody with some competency could code in C and other languages some serious
 applications for the ST (most games were coded in assembly), that would be 
 more user-friendly (windows, menus, dialogs... like today) and powerful than
 on the PC (stuck with poorer Intel microprocessor, text-mode display, keyboard
 control).
-The Atari ST was the enthusiast's computer.
-
 It also featured a very good flicker-free monochrome display, which for 
 professional use was more important than fancy eye-killing Amiga high
 resolutions. 
+The Atari ST was the enthusiast's computer.
 It wouldn't have taken so much to be a serious competitor to the Mac and 
 the PC. Maybe Atari didn't tackle the right market.
 But then again, Apple didn't take Atari too seriously.
 
 Anyway it's done, and now we have thousands of great games not to mention
-the apps and demos.
+the apps and demos, and the infamous "menu disks".
 To run this all on your much faster PC, you need an emulator and files
 containing images of the content (ROM, disks...).
 
@@ -82,13 +89,9 @@ _____
 
 Steem SSE is an updated version of Steem based on that source release. It 
 incorporates new features and emulation improvements, some of them based on
-other emulators (I credit each time and this "emulation" goes both ways), 
-some on various internet discussions, technical documentation, like chip 
-datasheets, and tests on real hardware.
-
-Steem SSE aims to be the #1 STF/STE emulator. There's no limitation in
-the original Steem code structure (in C++) that would make that goal 
-unreachable.
+other emulators (of Atari ST or other platforms), some on various internet 
+discussions, technical documentation, like chip datasheets, and test programs
+on real hardware.
 
 'SSE' pompously stands for 'Steven Seagal Edition'. 
 Steven Seagal is a well known Aikido grandmaster, action movie star,
@@ -96,6 +99,11 @@ environmentalist, musician, reserve deputy sheriff and playboy.
 It is rumoured he has a shadowy past working for some secret agencies, and
 that he learnt the ancient secrets of emulation somewhere in the Far East.
 This is also my silly handle at http://www.atari-forum.com (AF).
+
+Steem SSE aims to be the #1 STF/STE emulator. There's no limitation in
+the original Steem code structure (in C++) that would make that goal 
+unreachable. Some people say that it's already been reached, leaving 
+the competition in the dust!
 
 
 Licence
@@ -112,7 +120,7 @@ Steem SSE may be downloaded from various places.
 
 The official sites are:
 
-http://ataristeven.t15.org/Steem.htm
+http://ataristeven.exxoshost.co.uk/Steem.htm
 (presentation website, with games and more to download)
 
 http://sourceforge.net/projects/steemsse/files
@@ -133,8 +141,18 @@ http://www.kryoflux.com/
 -D3DX9_43.dll
 http://www.microsoft.com/en-us/download/details.aspx?id=8109
 
+About D3D9, it's normal that you must complete your installation, it's
+due to some strange Micro$oft policy. Please try to fix it on your own
+before asking for help, not that we don't want to help you, but google
+(or bing) will offer you better advice.
+
+-Drive image
+http://atari.8bitchip.info/drimus.php 
+
 -FreeImage.dll
 http://freeimage.sourceforge.net/download.html
+If it's not up-to-date, it will not work well with recent versions of
+Steem SSE.
 
 -msa.exe
 http://msaconverter.free.fr/
@@ -146,9 +164,10 @@ http://pasti.fxatari.com/
 http://www.rarlab.com/rar_add.htm
 
 
+
 You may download them from here too:
 
-http://ataristeven.t15.org/Other_downloads.htm
+http://ataristeven.exxoshost.co.uk/Other_downloads.htm
 
 For libraries marked with (*) it actually is recommended (fixed versions).
 ArchiveAccess.dll is included with the main download.
@@ -160,7 +179,7 @@ download:
 
 -HD6301V1ST.img (the keyboard chip rom)
 
--HFE_boot.bin, a file that helps Steem create HFE disk images
+-HFE_boot.bin (a file that helps Steem create HFE disk images)
 
 -ym2149_fixed_vol.bin (the P.S.G. soundchip table by ljbk)
 
@@ -175,20 +194,22 @@ ________________
 To use Steem, you need a copy of the Atari ROM, called "TOS", and image disk
 files. When you first launch Steem, you may point to where they are,
 and you can change that later.
+One important point is to match ST model and TOS (see further),
+for example STF - TOS 1.02, STE - TOS 1.62.
 
-Use the disk manager to select the disk image, there are various ways
-to start emulation.
+Use the disk manager or a shortcut to select the disk image, there are
+various ways to start emulation.
 
 To get started you will find some TOS on the Steem SSE site:
 
-http://ataristeven.t15.org/Other_downloads.htm
+http://ataristeven.exxoshost.co.uk/Other_downloads.htm
 or here:
 http://www.avtandil.narod.ru/tose.html
 
 Disk images are easy to find. For example:
 http://planetemu.net/index.php?section=menus&machine=34 
 
-Some are also available at http://ataristeven.t15.org.
+Some are also available at http://ataristeven.exxoshost.co.uk.
 
 Legally this is all still copyrighted material, and if they really wanted,
 companies that own it could call a halt on emulation, but they don't.
@@ -208,6 +229,7 @@ On the toolbar you find some icons; from left to right:
 'Memory snaphot'
 'Screenshot'
 'Paste'
+'Configuration files'
 
 2nd group on the right
 'Info'
@@ -224,10 +246,11 @@ Some words of explanation are given for each icon.
 ------
 
 You start/stop emulation by using the play button or function key F12.
+If you right click on 'Play', you advance frame by frame.
 
 When emulation starts, the mouse cursor is grabbed by Steem. You may
 change this (tricky) behaviour in the SSE options. 
-To free the mouse, press the 'Break' key. 
+To free/grab the mouse, press the 'Break' key. 
 If you press 'Pause' (shift + 'Break'), emulation is stopped and the mouse
 is freed. You may assign other shortcuts to control Steem.
 
@@ -235,7 +258,7 @@ is freed. You may assign other shortcuts to control Steem.
 'Fast forward'
 --------------
 
-Use this to skip intros but don't expect accurate emulation.
+Use this to skip boring intros but don't expect accurate emulation.
 
 
 'Reset'
@@ -243,11 +266,12 @@ Use this to skip intros but don't expect accurate emulation.
 
 A left click on the reset button emulates the reset button of the ST
 ("warm reset") - you know, the button that doesn't exist on the Amiga?
-A right click stops the ST and clears the memory as if you
-had switched off. Keyboard shortcuts may be assigned to warm or
-cold reset as well.
 Notice that many demos were programmed to react on warm reset (hidden screen
 and such).
+A right click emulates switching off, waiting as long as necessary for
+the RAM chips to clear, switching on again, except it's instant (don't think
+we'll get requests for precise delay).
+Keyboard shortcuts may be assigned to warm or cold reset as well.
 
 
 'Memory snaphot'
@@ -271,6 +295,10 @@ Steem can natively save a screenshot as BMP or NEO.
 With the freeimage.dll plugin, more formats are available, such as PNG, JPG...
 Alternatively, you can copy the full window into the paperclip using the 
 usual Alt-PrtScr combination.
+Note: Steem SSE expects the up-to-date version of freeimage, the older 
+versions work with older Steem.
+It is also possible to save multiple screenshots in a row using a shortcut.
+
 
 'Paste'
 -------
@@ -281,11 +309,21 @@ speed. Some programs may struggle with the top speed, to slow it down right
 click on the button and choose a longer delay. 
 
 
+'Configuration files'
+---------------------
+
+As of v3.8, it is possible to load or save configuration files in Steem.
+This includes all your current options and joystick settings.
+Loading a configuration file resets the ST.
+Carefully edited, those ini files could be publicly used to help people
+run programs.
+
+
 'Info'
 ------
 
 The 'i' icon opens an info box that displays this very manual
-and other useful documentation (FAQ, hints...).
+and other useful documentation (release blurb, FAQ, hints...).
 
 
 'Patches'
@@ -313,7 +351,8 @@ rather than edit the 'Default' set.
 'Options'
 ---------
 
-The icon makes the options dialog of Steem (see below) appear or disappear.
+The icon makes the extensive options dialog of Steem (see below) appear
+or disappear.
 
 
 'Joysticks'
@@ -351,7 +390,7 @@ These options configure the hardware inside the virtual ST.
 
 -ST Model
    
-This is the long awaited STF/STE switch in Steem.
+This is the long awaited STF/STE switch in Steem (an 'SSE' improvement).
 The STE was the better computer but most programs were coded with the older
 STF in mind. 
 Emulating the differences between STF and STE is not so hard and makes a lot
@@ -401,17 +440,18 @@ WU are the two wake-up states first found by ijor.
 WS are the more detailed "wake states" found by LJBK.
 They're in that strange order for "historical" reasons.
 
+On the STE, the chips responsible for 'DE' and 'LOAD' were merged so
+that only WS1 makes sense.
+If you select STE WU2, Steem will emulate the pixel shift observed on some
+demos like the Overscan Demos. It is not a GLU state but a Shifter one. It
+is like this to avoid placing yet another option.
+
 The "Forest" demo by LJBK will recognise STF WU1-2 and STE.
 The "Bee" demos by LJBK will recognise WS1-4, and the demos will behave as
 expected in all WS (sync scrolling).
+Demo Closure by SYNC should work as STF (WS2,3,4) and STE (WS1).
 
-On the STE, the chips responsible for 'DE' and 'LOAD' were merged so
-that variable latency doesn't exist anymore.
-Yet there seens to exist some kind of wake-up too, but that varies without a
-cold reset too. This hasn't been much studied.
-There's some preliminary emulation of that STE behaviour in Steem SSE.
-
-Needless to say, Steem is leading the way for this issue.
+Needless to say, Steem SSE is leading the way for this issue.
 
 
 -ST CPU speed
@@ -442,6 +482,8 @@ high resolution).
 
 It was an important choice on the ST, because only the appropriate monitor
 could display such or such resolution. 
+Steem runs in one or the other mode. You can't change monitor type on the
+fly.
 
 Also available are extended monitors; these are larger screens than a standard 
 ST could manage but are achieved by some tinkering with the ST operating
@@ -503,7 +545,7 @@ STE (yet).
  TOS1.02 STF
  TOS1.04 STF
  TOS1.06 STE
- TOS1.61 STE
+ TOS1.62 STE
  TOS2.05 Mega STE
  TOS2.06 Mega STF/STE
  TOS3.0X TT
@@ -539,7 +581,7 @@ program, you may give it a try.
  Images:
 
  http://www.avtandil.narod.ru/tose.html 
- http://ataristeven.t15.org/Other_downloads.htm 
+ http://ataristeven.exxoshost.co.uk/Other_downloads.htm 
   
   
 Ports
@@ -781,8 +823,6 @@ There currently are 2 limitations:
 Enveloped sound was coded on 5bit, so other values are interpolated.
 2) The sound of the PSG was different, relatively softer on the STE, but
 we only have one table, for STF.
-When the option isn't checked, the original small table is used (and memory 
-is freed). It's fine enough. The option is more useful for sampled sound.
 
   
 -Microwire
@@ -798,14 +838,10 @@ Note: due to some bugs, treble control has been disabled for now.
 
 -Keyboard click
    
-This option reflects the state of bit 1 of address $484 in the ST, that
-is checked by the OS to know if it must produce that annoying click or not
-when you press a key. It's like on the GEM Control Panel, but always 
-available. It was often requested and is at last available in this Steem 
-build. It would be most useful for playing the Pasti version of The Pawn, 
+It was often requested and is available in Steem SSE, of course. 
+It would be most useful for playing the Pasti version of The Pawn, 
 for example.
-Use this switch only when you want to get rid of clicks. Many programs 
-overwrite this memory zone, and changing some byte there could crash the ST.
+Option is persistent as of v3.8.
 Note: unchecked means no clicks.
 
 
@@ -854,67 +890,34 @@ to 8 frames dependant on how fast it is running.
 Here you can choose whether you want to see the ST borders. Some games 
 (and quite a lot of demos) use a technique called "overscan" to display
  graphics in the borders, that's one reason you might want to see them.
-The option "Auto Borders" will keep them turned off most of the time, 
-only coming on when there's an overscan. You can also choose to have 
-borders always on or always off. The border option affects fullscreen 
-mode: with borders on, Steem displays fullscreen in the 800x600 
-screen resolution. Auto-borders won't work so well in fullscreen because we 
-don't want to keep changing the PC monitor's resolution; so if you are running 
-a program in fullscreen that makes use of the borders, turn on "Always Show 
-Borders".
+You can also choose to have borders always on or always off. 
+The border option affects DirectDraw fullscreen mode: with borders on, 
+Steem displays fullscreen in the 800x600 screen resolution.
 
 
 -Display size
    
 The option is only useful if you show the borders. If borders are not 
 displayed, or the ST is in high resolution, the option is disabled.
-Quite a few programs used tricks to display rasters or pixels in the borders.
+
 Steem SSE offers no less than 4 modes:
 
- 384 x 270         normal, original Steem
- 400 x 278         max in fullscreen 800x600 mode (DirectDraw)
- 413 x 280         max overscan
- 416 x 286         max plasma
-
-Depending on the program, one or the other size will be better.
-Generally the smallest is sufficient.
-The sizes count only for border effects in colour mode.
+ 384 x 270      normal, original Steem
+ 400 x 275      max in fullscreen 800x600 mode (DirectDraw, straight blit)
+ 413 x 275      max overscan (window only)
+ 416 x 281      max plasma
 
 Why various sizes, while other emulators only offer one? 
-There are many reasons.
-- The option was built as a hack on the original size. It started a bit
-buggy, so it's best to keep the original size available.
-Note that internally 400 x 278 is emulated as 416 x 286, and a trick is used
-to change resolution at rendering time (blit). 
-This trick will work in DirectDraw fullscreen mode with option
-straight blit'.
-'Screen flip' will only work with 384 x 270.
-This may cause the display to go black or be shifted or another kind of 
-bizarre when the emulator isn't running. 
-400 x 278 allows one to read the full text of Best Part of The Creation.
-416 x 286 has recently been modified, so this mode and derived modes
-400 x 278 and 413 x 280 could still be a bit buggy!
-In short, all bigger than normal (384 x 270) display sizes use various
-tricks, and may be trouble in fullscreen mode.
+There are many reasons:
+- Bigger display sizes use various tricks and hacks and it's always 
+"dangerous", so we keep the original size available.
 - There's a performance hit for larger displays.
-- 400 x 278 is more useful in DirectDraw fullscreen mode, 413 x 280
-and 416 x 286 in windowed mode.
-- Some programs look better with larger displays, other worse!
-Because not every monitor showed the full borders, programmers could leave
-some "trash" in the borders.
-On the other hand, some demo texts are readable only with larger borders.
-- Some real monitors or TV will actually display no more than Steem's original
-size, or even less. There isn't one unique good size.
+- Not all monitors display the full border, in particular LCD screens
+  would typically display the same borders as Steem in 384x270 mode.
+- Most programs, including games, don't use the border at all.
 
-Technical info:
-Steem displays what's inside the video RAM even at the extremities of the
-borders, regardless of blanking or plane shifs introduced by shifter tricks
-on a true ST. That's why 413 x 280 may be actually more faithful than the
-max size. If option 'Hacks' is checked, the image will show 52 left
-border pixels in 413 x 280 and 416 x 286 modes. If not, only 48.
-I believe 52 is the right number, but am not sure. In order to avoid 
-rewriting the rendering system we also use tricks to obtain those 4 more 
-pixels. It may break in some yet unknown cases.
+We claim Steem SSE has the most accurate display of "fullscreens" in 
+413 x 275 mode, and of "plasmas" in 416 x 281 mode.
 
 
 -Lock window size
@@ -929,6 +932,8 @@ With this you may drag all you want, but the window should keep more or less
 the same proportions (to spare code, it's not perfect).
 You may check this even if the current window has a grotesque aspect ratio
 if for some reason you like that.
+Note that if you want to imitate the ST typical aspect ratio, there's now an
+option just for that on the SSE page.
 
 
 -Window size
@@ -1055,6 +1060,7 @@ mode. You can also directly quit Steem (bottom left icon).
 With Direct3D, you switch back as soon as you stop emulation.
 It is so not because we want it that way but because Microsoft stopped 
 supporting its interface in fullscreen mode with Direct3D.
+If you have complaints, please address them to Microsoft.
 
 You may assign shortcuts to enter, exit, toggle fullscreen mode.
 
@@ -1068,7 +1074,7 @@ When the option isn't checked, DirectDraw is used.
 When it is checked, other options on this page that are not relevant,
 because they only work with DirectDraw, are disabled.
 
-Because not every computer has the a working version of DirectX9, a build
+Because not every computer has a working version of DirectX9, a build
 without the feature is available.
 
 --Mode
@@ -1077,13 +1083,6 @@ This option lists all D3D 32bit fullscreen "modes" that are available on
 your video card. You just select the one you like.
 Note that whether a mode works or not also depends on your display.
 Only some CRT monitors will display 320x200 or 320x240 properly.
-
---ST aspet ratio
-
-This option only works with D3D fullscreen for the moment.
-When it's checked, we emulate the Atari ST's distorted aspect ratio, 
-visible on many screenshots: pixels are higher than they should, so that
-squares and circles ain't.
 
 --Crisp rendering
 Similar to DirectDraw "straight blit" mode, you get neat but big pixels.
@@ -1176,6 +1175,8 @@ can return to what you were doing next time you run it. Below the option is a
 box where you can type in the filename that will be used to save the state, 
 this file will be saved in the directory Steem.exe is in.
 
+Hint: sometimes, auto.sts gets corrupted and makes Steem fail, possibly crash.
+The solution is to delete auto.sts.
 
 -Start in Fullscreen Mode
 
@@ -1267,17 +1268,38 @@ In Steem SSE, some options are grouped onto a new page logically called
 -Status info
 
 This toggles visibility of the status info line in the tool bar.
-Status info includes ST model, TOS version, RAM quantity and:
+We call it the status bar.
+Status info includes ST model, TOS version, RAM quantity and some
+icons for "slow disk drive", "hard disk drive", "chipset 1" (6301, etc.),
+"chipset 2" (MFP), when those are selected.
+The icons for "Hacks" is the same as the one for patches, on the
+right.
+See further for how to activate all those options.
 
- C1 and C2: respective options are checked (see further).
- When one of these isn't checked, a X stands to attract your attention to
- this unfortunate fact.
- !       The CPU/MFP ratio has been changed or drive is in single-sided mode
- #       'Hacks on'
- ADAT    'Accurate Disk Access Times' (Slow drive)
+In addition:
  V       'Vertical Sync'
- HD      'Hard Disk'
  MHZ      CPU speed is indicated if higher than 8MHZ
+
+Instead of all this info, the status bar may contain only...
+
+ HALT
+
+In some conditions, the ST processor could 'halt', that is stop operating,
+and not even a 'warm reset' would restart it.
+In that case, 'HALT' will appear in the status bar. It's correct emulation
+most of the times, you need to 'cold reset' or launch another game from
+the disk manager (which cold resets).
+
+ STEEM CRASHED!
+
+If this appears in the status bar, this means that some serious bug would
+have crashed Steem itself if it hadn't been caught.
+In that case, you should quit and restart (or switch to a more
+reliable emulator).
+
+ BLIT ERROR
+
+Normally, this isn't fatal. Maybe check your display options.
 
 
 -Disk name
@@ -1295,7 +1317,8 @@ This option covers two kinds of things:
 - Emulation hacks, when emulation of some feature isn't perfect yet we want
 the programs to run. Since we don't understand everything in the feature,
 those hacks could break something, hence the option.
-It is recommended to disable 'Hacks' only if you meet problems (please report).   
+It is recommended to disable 'Hacks' only if you meet problems (and please
+report).
 
   
 -Emu detect
@@ -1307,12 +1330,14 @@ is disabled.
 
 -Interpolated scanlines
    
-This option mixes Steems' display modes 'stretch' with 'scanlines'.
+This option mixes Steem's display modes 'stretch' with 'scanlines'.
 That way the picture resembles more the display of a not so sharp colour
 monitor on a real ST. 
 The option is available in both low and medium resolutions (not high).
 It works (or should) for both windowed and fullscreen modes. 
-Like some other SSE features, it's more a hack than anything.
+Like other SSE video features, it's more a hack than anything else.
+That's why I chose this name, 'Interpolated scanlines', it sounds pretty
+elaborate.
       
   
 -VSync
@@ -1332,9 +1357,23 @@ This should work in window mode as well as in fullscreen mode (DirectDraw,
 stretch mode only though).
 
 Compositing, a feature introduced in Windows Vista and enforced (can't 
-disable) in  Windows 8, will interfere with the latter two options, in
+disable) in  Windows 8, could interfere with the latter two options, in
 that case they're not recommended.
 Compositing does its own Triple Buffering, but no VSync.
+
+
+-PAL aspect ratio in stretch mode
+
+When it's checked, we emulate the Atari ST's distorted aspect ratio, 
+visible on many screenshots: pixels are higher than they should, so that
+squares and circles ain't.
+
+This option only works with D3D fullscreen and with "stretched" modes
+in a window.
+
+Whether it looks good or with artefacts depends on your system (display,
+adapter, drivers). On some systems, it will work better in fullscreen
+mode.
 
 
 -C1: 6850/6301/MIDI/E-Clock
@@ -1349,10 +1388,10 @@ normally should reset the ST, but Steem won't force you.
 In case you're curious, the demos that reprogram the chip are:
 Dragonnels, Froggies over the Fence, Transbeauce 2.
 All are available here:
-http://ataristeven.t15.org/Steem_demos1.htm
+http://ataristeven.exxoshost.co.uk/Steem_demos1.htm
 
 The option also commands ACIA (the MC6850 chip) and MIDI (the musical 
-interface) improvements, because timings corrections concerning those 3
+interface) improvements, because timing corrections concerning those 3
 chips have an "all or nothing" character.
 Both the IKBD and the MIDI connector use a 6850 to communicate with
 the CPU. Communication between the 68000 and the 6850 uses the E-Clock
@@ -1364,22 +1403,23 @@ Why an option then? Emulation is more processor-intensive, you may prefer the
 PC mouse feel to the ST's, and all those modifications could very well break
 programs.
 If the option isn't checked, Steem falls back on the same emulation as 
-Steem 3.2.
+Steem 3.2 for all those chips.
      
 
 -C2: 68901
 
-Advanced: this activates some MFP (an important chip on the ST) emulation 
-improvements that are seldom needed and are more processor-intensive, and
-a bit risky, such as IACK and writing latencies, IRQ latency, spurious
-interrupt, cycle-precise timers...
+This activates some MFP (aka MC68901, an important chip on the ST) emulation
+improvements that are seldom needed and are more processor-intensive,
+and a bit risky, such as IACK and writing latencies, IRQ latency, (especially)
+spurious interrupt, cycle-precise timers...
 
 
 -Capture mouse
    
 By default Steem grabs the mouse when running, even if you don't really need
-it. You may use a keyboard shortcut to release the mouse. 
-Key 'pause' is the default.
+it. 
+You may use a keyboard shortcut to release the mouse. Key 'pause' is the
+default.
 This behaviour isn't always what you would want, so use the option to
 change it. When it's unchecked, Steem will capture the mouse only when
 you click in the window.
@@ -1392,6 +1432,8 @@ other Steem speed options, this changes the CPU/MFP clock ratio.
 It's an interesting and quite "dangerous" variable in emulation.
 It may help some programs to work, and will certainly break other programs.
 When unchecked, default values are used.
+In some cases, changing this variable is a "cheat", but in some cases it's
+legit, as there was variation among STs.
 
 
 Disk manager
@@ -1420,16 +1462,16 @@ some incompatibility to investigate with MSA Converter)
 -rar: unrar.dll.
 Steem doesn't know if some archive contains an image or not, so all
 archives are displayed regardless, but maybe clicking on them is useless.
-It's up to you to sort your directories, of course.
+It's up to you to sort your directories, of course. "Garbage in, garbage out."
+This was my school's motto.
 
 To insert a disk image into a drive, drag it to the box to the right of the 
 big drive icon. To remove it from the drive just drag it back out to the 
-directory view. 
+directory view (or press Delete).
 
 If you right click in the directory view a menu will pop up allowing you to 
 create a new standard size disk image (ST), a custom size disk image (ST), 
-a disk image with format information (STW), a HFE disk image compatible with
-the HxC harware floppy emulator, or a folder. 
+a STW disk image or a HFE disk image. 
 
 Custom disk images can be up to 2 megabytes in size, although larger ones 
 are emulated correctly most TOS versions didn't support them, you 
@@ -1441,18 +1483,16 @@ that emulators must guess the disk configuration).
 STW and HFE disk images include clock bits as well as data, encoded into MFM
 words.
 STW is the simplest such format, HFE is optimised for HxC floppy emulator
-hardware.
-Those images are more than twice larger than ST images but allow to more 
-precisely emulate the 'Format' command of the WD1772 disk controller. 
+hardware and is less "readable".
+Those images are more than twice larger than ST images but allow to emulate
+the WD1772 disk controller at a lower level and so handle special formats.
 Because they're formatted inside the emulated ST, there's no sides/tracks/
-sectors options.
-Specification of STW disk images:
-http://ataristeven.t15.org/txt/STW%20specification.txt
+sectors options. You get a raw disk full of random data, lucky you!
 
 Besides those ST, STW and HFE disk images Steem may create itself, it is also
 able to handle:
 
--DIM and MSA images
+-DIM and MSA images (read and write)
 -STT images
 -STX images (need pasti.dll)
 -IPF and CTR images created with Kryoflux hardware (need CAPSImg.dll)
@@ -1463,8 +1503,22 @@ that some game works in Hatari and not in Steem. Those are very rare cases
 and are explained by imprecisions in pasti.dll. This is no fault on Steem's
 side. The equivalent CTR, IPF or SCP images generally run fine.
 
-About SCP images, Steem only uses first 2 revs and works with only 1 rev too,
-provided the image is good.
+About IPF and CTR images, as they are handled by a third party plugin, whether
+they work or not is also up to this plugin. Make sure you have the last 
+version.
+
+About SCP images, Steem typically only uses the first 2 revs and also works
+with only 1 rev, provided the image is good. 
+It is very hard to get a perfect 1 rev copy, because common floppy drives 
+are not accurate enough to perfectly replicate data around the index pulse.
+Steem directly handles those bit-level images, there's no plugin, so any bug
+should be fixed in Steem itself. 
+But compatibility was very high at the introduction of the feature (v3.7.1).
+This is the triumph of low-level emulation. All sorts of disk protections are
+handled just by transforming fluxes into bits using basic algorithms, without
+knowing anything of the protection.
+The algorithms (WD1772 emulation) were vaguely inspired by code in MESS and 
+SPS (formerly CAPS) projects.
 
 If you right click in the box to the right of the big drive icon, a context 
 menu allows you to toggle the read-only property (important for some games),
@@ -1483,6 +1537,9 @@ change the setting from the default.
 If you double click in some empty space of the main window, you go to the
 parent folder of the current one.
 
+If you don't want to use the Disk manager to select disk images, two shortcuts
+are available to use Windows' classic file selector instead.
+
 
 -Drive icons
 
@@ -1493,7 +1550,7 @@ programs will get confused when there are two.
 It is usually a good idea to reset after you change this option as the ST
 might still think there is a drive B when really there isn't.
 
-Right-clicking on the drive icons opens a context menu with some useful
+Right-clicking on the drive icons opens a context menu with some "useful"
 options to:
 Stop the motor (if it's running you crazy)
 Change the 'SEEK' sound (if it's running you crazy); note that with STX, IPF,
@@ -1502,17 +1559,19 @@ Change your fine SF314 double sided drive into a miserable SF354 single sided
 drive (if you feel really nostalgic)
 
 
--Hard Drives
+-GEMDOS Hard Drives
 
-Another important button on the disk manager is the Hard Drives button, it 
-opens the hard drive manager. You can have up to 10 virtual hard drives. To set
-one up select the folder on your PC and then select the letter that you want it
-to be on the ST. Those virtual drives are called GEMDOS drives because they're
-based on interception of GEMDOS commands.
+Another handy button on the disk manager is the GEMDOS Hard Drives button.
+It opens the hard drive manager. You can have up to 10 virtual hard drives.
+To set one up select the folder on your PC and then select the letter that
+you want it to be on the ST. 
+Those virtual drives are called GEMDOS drives because they're based on 
+interception of GEMDOS commands.
 You need to know that this type of emulation is very convenient for you, 
 because you just use your PC hard drive, but it is based on hacks, and in some
 cases it could not work as on a real Atari. 
-For serious work we really advise to use TOS 1.04 or TOS 1.62.
+For serious work we really advise to use TOS 1.04, TOS 1.62, EMUTOS or to use
+an ACSI hard disk image (see below).
 Hard drives aren't as reliable as disk images, most things 
 will work but not everything. If a program isn't working properly copy it to a
 disk image (using the ST desktop) to see if that helps. Another option in this
@@ -1521,7 +1580,46 @@ can force Steem to boot from a hard drive even when drive A contains a disk by
 holding down the CONTROL key when you run after performing a cold reset of the
 ST.
 
-Right-clicking on this icon will toggle hard drives on/off.
+Right-clicking on this icon will toggle GEMDOS hard drives on/off.
+
+
+-ACSI Hard Drives
+
+Since v3.8, the Windows build of Steem features another icon for ACSI hard
+drives. Right-clicking on this icon will toggle ACSI hard drives on/off.
+They are img files and contain all sectors of an Atari hard disk (data only,
+like a ST floppy disk image).
+Using those files allows lower-level emulation of hard disks in Steem.
+
+ACSI (Atari Computer Systems Interface) was the SCSI-like interface between
+the ST and a hard disk or a laser printer (not emulated).
+The feature was already available with Pasti, but with some limitations.
+With Steem's native ACSI emulation, up to 4 virtual ACSI hard drives may be
+added.
+Note that unlike GEMDOS hard drives, each ACSI device may be split into
+several partitions (C:, D:...).
+The driver you use must be able to handle each of those drives...
+
+Two ready examples are provided in the download, images of the familiar
+SH204 and MEGAFILE 60.
+The size limit is 1GB.
+
+It is also possible to enable GEMDOS virtual hard disks at the same
+time as ACSI virtual hard disks, you need to adapt letters of course.
+ACSI drives will take the first letters.
+It's handy to copy files.
+Transfer speed depends on Disk manager 'Accurate Disk Access Times' option,
+but even when it's not checked, the ST operates slowly compared with a PC.
+
+It is even possible to format those disk images inside Steem (for advanced
+users).
+A floppy disk image with necessary utilities is available here, so you can
+see with what I actually pass time:
+http://ataristeven.exxoshost.co.uk/Steem_apps.htm#HD_UTILS
+
+More importantly, you can use a 3rd party file manager to edit ST hard 
+disk images, 'Drive image' by Petari:
+http://atari.8bitchip.info/drimus.php 
 
 
 -Home Folder
@@ -1552,7 +1650,12 @@ more bearable, as you can see and hear what the drive is doing, you don't get
 the feeling the emulator is stuck.
 Note that all 'SSE' floppy drive emulation improvements for ST, MSA and DIM
 images are enabled only when this option is selected.
-Please don't report drive emulation bugs if this option wasn't even checked.
+Please don't report floppy drive emulation bugs if this option wasn't even
+checked.
+The option is not necessary for CTR, HFE, IPF, SCP, STW images (they're all
+slow!)
+Speed for STX images is set in 'Pasti configuration'.
+The option also works on ACSI hard drives (but not GEMDOS).
 
 
 -Read/Write Archives (Changes Lost On Eject)
@@ -1573,8 +1676,7 @@ them.
 In Steem SSE, you normally don't need to care about this option because
 it will use the Pasti DLL as needed.
 You would check it if you want Pasti to handle some ST or MSA disk image,
-but except for possible bugs, Steem native emulation of those is now a bit
-better anyway.
+but I know no case where Steem fails and not Pasti.
 Changing this option won't reset the ST in Steem SSE.
 
 
@@ -1584,6 +1686,8 @@ It opens a dialog box managed by pasti.dll.
 It is recommended to set all 'speed' options to 'slow' for precise emulation.
 Options'fake write-protect' as well as 'disable randomize' seem to do nothing 
 useful in v02h. It's very likely a bug.
+Pasti.dll hasn't been updated in a long time.
+Check my site for a "no-nag" version.
 
 
 -Pasti only for STX
@@ -1605,10 +1709,12 @@ The image may be in an archive.
 
 STG files are simple and compact collections of sectors, only those
 that have been written.
+The feature may interfere with some programs working, in that case
+you only need to disable the option.
 If needed, this could be improved, but as nobody reports anything...
  
 Specification of STG files:
-http://ataristeven.t15.org/txt/STG%20specification.txt
+http://ataristeven.exxoshost.co.uk/txt/STG%20specification.txt
       
 
 -Run PRG and TOS files
@@ -1620,8 +1726,9 @@ It is part of Steem 3.7 download, so if you extracted all files, it is ready.
 Steem will copy the file in this folder (always under the same name, so don't 
 worry about space waste).
 This should work with files inside archives.
-The main limitation is that it only handles single files. If you want
-more then you need to use a virtual hard disk.
+The main limitation is that it only handles single files.
+Also some programs just aren't meant to work that way.
+In this case they should be run from a hard disk.
 
 
 -Automatically Insert Second Disk
@@ -1631,7 +1738,7 @@ into drive A Steem will look for a second disk image with a similar name and
 insert it into drive B.
 Note that even if Steem manages to insert the second disk in drive B:, the
 game may still require a disk swap in drive A:. Many games had only one drive
-in mind. The same for demos unfortunately.
+in mind unfortunately. The same for demos.
 
 
 -Hide Broken Shortcuts
@@ -1780,17 +1887,15 @@ screenshot name, rather than just the first word.
 
  NONOTIFYINIT - disable the "Steem is Initialising" box.
 
-Legacy:
-
- STFMBORDER - does nothing in SSE version: no need for that when you have the
-STE/STF switch!
+ STFMBORDER - if it is not overruled by the saved options or memory snapshot,
+this makes steem start as a STF.
 
 
 INI file options
 _________________
 
 Those options are inside the steem.ini file to avoid bloating the emulator
-interface itself.
+interface (GUI) itself.
 
 
 - DefaultSnapshot
@@ -1817,11 +1922,46 @@ own folder.
 Limitation: mustn't be longer than 20 characters.
 
 
+- TosDefaultCountry
+
+When you use the ST Model switch, Steem tries to preselect a matching TOS.
+This option allows you to specify a country code if you're not happy with the
+UK.
+For example, type
+TosDefaultCountry=5
+in the [main] part of steem.ini
+
+Country TOS table
+
+0: US
+3: German
+5: French
+7: UK
+9: Spanish
+11: Italian
+13: Swedish
+17: Swiss German
+27: Dutch
+39: Russian
+
+
 - TosVersionWarning
 
 Steem checks TOS version for STF/STE compatibility and for better GEMDOS
 hard drive emulation.
+But some people use an exotic setup.
 If you get sick of all those messages and think you know what you're doing,
 you may add this in the [main] part of steem.ini:
 
 TosVersionWarning=0
+
+
+- MonochromeDisableBorder
+
+If you add this line in the [main] part of steem.ini:
+
+MonochromeDisableBorder=1
+
+Borders will be off in monochrome mode, except if you switch them on after
+the cold reset.
+
