@@ -190,10 +190,11 @@ trcsr_putb (offs, value)
   if(value&1)
     TRACE("Set 6301 stand-by\n");
   
-#if defined(SSE_IKBD_6301_373)
+#if defined(SSE_IKBD_6301_373) && !defined(SSE_IKBD_6301_380B)
 /*  Enable serial int when TIE set, assuming the condition
     for IRQ is true.
     Cases: Cobra Compil 1, Defulloir
+    Undef, this version breaks Pothole 2
 */
   value&=0x1F;
   if( (value&TIE) && ! (ireg_getb(TRCSR)&TIE))
@@ -203,15 +204,21 @@ trcsr_putb (offs, value)
   }
 #elif defined(SSE_IKBD_6301_SET_TDRE)
 /*  Here we do as if the program could set bit 5 of TRCSR - correct?
-    Cobra Compil 1: if we don't, "keyboard panic" (maybe we're compensating
-    another bug)
+    Maybe we're compensating another bug (internal problem with txinterrupts?)
+    Cases:
+    Cobra Compil 1: if we don't, "keyboard panic" 
+    Defulloir
+    Pothole 2
 */
   value&=0x3F;
   if(value&TDRE/*0x20*/) 
   {
     if((value & TIE)
-#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
-      &&!ACIA_IKBD.LineRxBusy
+#if defined(SSE_IKBD_6301_380B)
+      && SSE_HACKS_ON // don't understand well
+#endif
+#if defined(SSE_ACIA_DOUBLE_BUFFER_RX) && !defined(SSE_IKBD_6301_380B) // Defulloir
+     &&!ACIA_IKBD.LineRxBusy
 #endif
       ) 
     {
