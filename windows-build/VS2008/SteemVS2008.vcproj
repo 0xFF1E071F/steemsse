@@ -206,7 +206,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy &quot;Release\BoilerBeta.exe&quot; &quot;D:\emu\ST\bin\steem\BoilerVC9.exe&quot;"
+				CommandLine="copy &quot;Release\BoilerBeta.exe&quot; &quot;D:\emu\ST\bin\steem\BoilerVC9.exe&quot;&#x0D;&#x0A;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -849,9 +849,10 @@
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
 				BrowseInformation="1"
-				WarningLevel="3"
+				WarningLevel="1"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
+				CompileAs="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -865,6 +866,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalOptions="/LTCG"
 				AdditionalDependencies="dinput8.lib dxguid.lib winmm.lib ComCtl32.Lib odbc32.lib odbccp32.lib d3d9.lib d3dx9.lib"
 				OutputFile="Release\SteemBeta.exe"
 				LinkIncremental="1"

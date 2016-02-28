@@ -437,7 +437,7 @@ static dr4_getb (offs)
         mouse_y_counter=mouse_x_counter=MOUSE_MASK; 
       value|= joy0mvt | ( joy1mvt<<4);
       value=~value;
-      //TRACE("stick %X\n",value);
+      //TRACE("sticks %X 0 %x 1 %X\n",value,stick[0],stick[1]);
 
 #if defined(SSE_IKBD_6301_MOUSE_MASK2)//no
 /*  Hack to have both Jumping Jackson-WNW and International Tennis working
@@ -466,8 +466,9 @@ static dr4_getb (offs)
 #endif
     )
 #endif
-
   value = (value&(~0xF))  | (mouse_x_counter&3) | ((mouse_y_counter&3)<<2);
+  //TRACE("mvt %X\n",value);
+
   iram[offs]=value;
   return value;
 }

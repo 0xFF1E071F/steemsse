@@ -1,3 +1,4 @@
+#ifdef UNIX//SS
 #include <sys/time.h>
 //---------------------------------------------------------------------------
 void unix_non_resizable_window(Display*XD,Window Handle)
@@ -498,3 +499,4 @@ void shell_execute(char *path,char *replacements,Display *XD)
 }
 //---------------------------------------------------------------------------
 
+#endif

@@ -67,7 +67,7 @@ instr_exec ()
     hd6301_completed_transmission_to_MC6850--;
     ASSERT(!hd6301_completed_transmission_to_MC6850);
 
-//#if !(defined(SSE_ACIA_DOUBLE_BUFFER_RX))
+//#if !(defined(SSE_ACIA_DOUBLE_BUFFER_RX)
     // this is very dubious, we need it, because of this, do we have
     // working double buffer?
     txinterrupts=1; // we may trigger IRQ 

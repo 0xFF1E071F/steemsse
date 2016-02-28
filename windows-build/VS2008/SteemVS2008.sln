@@ -12,6 +12,7 @@ Global
 		Debug_modules|Win32 = Debug_modules|Win32
 		Debug|Win32 = Debug|Win32
 		Release_modules|Win32 = Release_modules|Win32
+		Release_Opt|Win32 = Release_Opt|Win32
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
@@ -29,6 +30,8 @@ Global
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Debug|Win32.Build.0 = Debug|Win32
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Release_modules|Win32.ActiveCfg = Release_modules|Win32
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Release_modules|Win32.Build.0 = Release_modules|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Release_Opt|Win32.ActiveCfg = Release_Opt|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Release_Opt|Win32.Build.0 = Release_Opt|Win32
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Release|Win32.ActiveCfg = Release|Win32
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection

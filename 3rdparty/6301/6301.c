@@ -27,7 +27,11 @@ extern int cpu_timer,cpu_cycles; // for debug
 #define act ABSOLUTE_CPU_TIME
 extern unsigned char  stick[8]; // joysticks
 // variables from Steem we declare here as 'C' linkage (easier than in Steem)
+#if defined(SSE_VAR_RESIZE_380)
+BYTE ST_Key_Down[128];//my mistake - now snapshot trouble?
+#else
 int ST_Key_Down[128]; // not better than what I envisioned but effective!
+#endif
 int mousek;
 // our variables that Steem must see
 int hd6301_completed_transmission_to_MC6850; // for sync
@@ -51,7 +55,11 @@ unsigned char rec_byte;
 #define EXECUTING_INT 1
 #define FINISHED_EXECUTING_INT -1
 
+#ifdef SSE_VAR_RESIZE_380
+char ExecutingInt=NOT_EXECUTING_INT;
+#else
 int ExecutingInt=NOT_EXECUTING_INT;
+#endif
 #endif
 int Crashed6301=0;
 
@@ -171,9 +179,6 @@ hd6301_run_cycles(u_int cycles_to_run) {
   static int cycles_to_give_back=0;
 #endif
   int starting_cycles=cpu.ncycles;
-#if defined(SSE_IKBD_EVENT_)
-  cycles_run=0;
-#endif
   // make sure our 6301 is running OK
   if(!cpu_isrunning())
   {

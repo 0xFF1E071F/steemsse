@@ -53,10 +53,14 @@ RC         = $(BCCROOT)\Bin\brcc32
 
 #    Set the linker options
 LINKOPTS = -L$(BCCROOT)\Lib;$(BCCROOT)\Lib\PSDK -aa -Tpe -t -x -w -v- -C -Gn
+##LINKOPTS = -L$(BCCROOT)\Lib;$(BCCROOT)\Lib\PSDK -aa -Tpe -t -x -w -C -Gn -Rr
 #LINKOPTS = -L$(3RDPARTYROOT)\SDL-WIN\BccLib;-dSDL.DLL $(LINKOPTS)
 LINKOPTS = -L$(3RDPARTYROOT)\UnRARDLL\bcclib;-dunrar.DLL $(LINKOPTS)
+##LINKOPTS = -L$(3RDPARTYROOT)\UnRARDLL\bcclib $(LINKOPTS)
 LINKOPTS = -L$(3RDPARTYROOT)\caps\bcclib;-dCAPSImg.DLL $(LINKOPTS)
+##LINKOPTS = -L$(3RDPARTYROOT)\caps\bcclib $(LINKOPTS)
 LINKOPTS = -L$(3RDPARTYROOT)\FreeImage\bcclib;-dFreeImage.DLL $(LINKOPTS)
+##LINKOPTS = -L$(3RDPARTYROOT)\FreeImage\bcclib $(LINKOPTS)
 #LINKOPTS = -L$(3RDPARTYROOT)\SDL-WIN\bcclib $(LINKOPTS)
 LINKOPTS = -L$(3RDPARTYROOT)\d3d\bcc $(LINKOPTS)
 #pragma comment(lib, "../../3rdparty/d3d/bcc/d3dx9_43.lib")
