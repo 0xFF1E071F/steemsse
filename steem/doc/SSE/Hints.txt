@@ -1,7 +1,7 @@
 Steem SSE Hints
 ===================
 
-v3.8.0
+v3.8.1
 
 If a program doesn't work in Steem SSE, please check the lists below,
 maybe the solution is there. 
@@ -114,21 +114,21 @@ Demos
 
 - 0913: STE French TOS
 - 36.15 Gen4 by Cakeman: STF
-- 36.15 HMD #1: STF, patch
+- 36.15 HMD: not ADAT; #1: STF, patch
 - 36.15 OVR: STF, CPU speed
 - Audio Artistic Demo: C2
 - Awakening of the Gods: press space twice for menu; not T102
 - B.I.G. Demo: DI or patch
 - Beat Demo: Microwire (not 100%)
 - Big Wobble: STE, #; use arrow keys
+- The Black Demo by The Black Cats: <4MB; Spritedemo and Circle: not T162
 - Cernit Trandafir: STE, 4MB
 - Choice of Gods/Attack of the Indigestion: STF WU1
 - Circus back²STage: STE, 4MB
 - Closure: STF WS2,3,4, STE WS1, ADAT, #
-- Cool STE: STE, # or patch
 - Corporation Megademo: STE, C1
-- Cuddly Demos: DI
-- Dangerous Fantaisy: STE, #
+- Cuddly Demos: DI, WS1 if STE
+- Dangerous Fantaisy: STE
 - Death of the Clock Cycles: 1MB
 - Death of the Left Border STF, WS2
 - Delirious 3: STE, ADAT, numpad
@@ -136,11 +136,12 @@ Demos
 - Deep Lair on Fuzion 80: STE
 - Dragonnels: C1
 - Drone: STE, 4MB
-- E605: planet STE, #
+- E605: planet STE
 - European Demos: No B or insert both disks before starting
 - Extreme Rage: STE
 - Fantasia: STE T106 or DI
 - Froggies Over The Fence: C1, #
+- Garcimore 1, 2 (FR): 1MB
 - Hackabonds Demo: STF
 - Hier sind noch zwei Plätze frei/plasma: C1
 - Imagination/Roller Coaster: STF
@@ -148,6 +149,7 @@ Demos
 - Japtro: DI, STF (depends on Steem version)
 - Knocking at Krystals Doors: press return
 - Kryos: STE, WS1, #
+- Megablast demo by Fashion: <4MB
 - More or less Zero: STE, 2MB, 400x275
 - Musical Wonder 1990: 416x281, WU1
 - New Stream Writer.prg: STW, HD, no acc
@@ -161,15 +163,18 @@ Demos
 - Pacemaker: STE; Space: credits at once
 - Panic.tos v1: STF, C2
 - Phalanx: STF T102
+- Phaleon "normal loader": DI
 - Place To Be Again: not T102
 - Punish Your Machine/Best Part of the Creation: 400x275 or higher
 - Punish Your Machine/Coast: 400x275 or higher
 - Punish Your Machine/Let's Do The Twist Again: STF
 - Q-Lize: STE T162
-- Reality is a Lie STE/Schnusdie: WS1
+- Reality is a Lie STE/Schnusdie: STE
+- Red Fox sound demo by Exocet: <4MB
 - Relapse: STE, 'Help'; plasma: #
 - RGBeast: STE
 - Riverside: STE
+- Ronnie 2 demo by OUCH: <4MB
 - The Sierpinski Overdose: STE, medium res
 - Sadeness: WU1
 - Sinfull Sinuses: STE T162 French 
@@ -189,6 +194,7 @@ Demos
 - Transbeauce 2: C1; Naos: STE or STF WU1
 - Tyranny: STE
 - Ultimate 3D Dots: STE, ADAT, No B
+- Ultimate Demo by dynamic duo: <4MB
 - Ultimate GFA Demo boot screen: STF
 - UMD8730 STF: #
 - Union Demo: STF 1MB
@@ -201,6 +207,9 @@ Demos
 
 - Menu disks
 ==============
+
+General hint for menu disks: always try different sources/versions if
+available.
 
 - A-Ha/Mig 29: press space & wait
 - Automation 000/IK+: STF

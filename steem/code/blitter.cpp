@@ -15,19 +15,21 @@ TBlitter Blit;
 #if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
 int nBytesBlitted=0; // for traces
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING_START_BLITTER3)
+#if defined(SSE_BLT_BLIT_MODE_CYCLES5)
+/*  Those values shouldn't be correct, we should have something like
+    4 for CPU and BLiTTER, but it works better so in Steem.
+    4 + 4 breaks Circus!
+    6 + 0 better for Down TLN (still not good), breaks nothing (I know)
+*/
+#define BLITTER_START_WAIT 6 
+#define BLITTER_END_WAIT 0
+#elif defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING_START_BLITTER3)
 #define BLITTER_START_WAIT 8 
 #define BLITTER_END_WAIT 0
 #elif defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING_START_BLITTER2)
-// 4 + 4 breaks Circus!
 #define BLITTER_START_WAIT 4 
 #define BLITTER_END_WAIT 4
 #elif defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING_START_BLITTER)
-/*  Those values shouldn't be correct, we should have something like
-    4 for CPU and BLiTTER, but it works better so in Steem.
-    Normally the 8-2 changes nothing, it was a silly test but I don't
-    want to check cases again.
-*/
 #define BLITTER_START_WAIT (8-2) //4
 #define BLITTER_END_WAIT (0) //4
 #else
@@ -192,7 +194,9 @@ void Blitter_Start_Line()
   performed at the beginning of each  line  to  "prime"  the  source buffer.
 */      
       Blitter_ReadSource(Blit.SrcAdr); //ss prefetch
-#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING_FXSR)
+#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING_FXSR2)
+      INSTRUCTION_TIME(4); // don't round, because "start" cycle weren't counted yet
+#elif defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING_FXSR)
       INSTRUCTION_TIME_ROUND(4); // bugfix, was missing
 #endif
       Blit.SrcAdr+=Blit.SrcXInc;       
@@ -212,6 +216,12 @@ void ASMCALL Blitter_Start_Now()
   if (WORD(Blit.XCounter-Blit.XCount)==0) Blitter_Start_Line();
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_BLIT_IN_HISTORY)
+#if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_BLIT_IN_HISTORY2)
+#if defined(SSE_BOILER_HISTORY_TIMING)
+  pc_history_y[pc_history_idx]=scan_y;
+  pc_history_c[pc_history_idx]=LINECYCLES;
+#endif
+#endif
   DEBUG_ONLY( pc_history[pc_history_idx++]=0x98764321; )
   DEBUG_ONLY( if (pc_history_idx>=HISTORY_SIZE) pc_history_idx=0; )
 #endif
@@ -432,9 +442,9 @@ void Blitter_Blit_Word() //SS Data is blitted word by word
 void Blitter_Draw()
 {
 //  MEM_ADDRESS SrcAdr=Blit.SrcAdr,DestAdr=Blit.DestAdr;
-
 //  Blit.YCounter=int(Blit.YCount ? Blit.YCount:65536);
-#if defined(SSE_BLT_TIMING_TEST)
+#if defined(SSE_BLT_BLIT_MODE_CYCLES5) // not if there's no blit anyway
+#elif defined(SSE_BLT_TIMING_TEST)
   INSTRUCTION_TIME_ROUND(BLITTER_START_WAIT);
 #elif defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING_START_BLITTER)
 /*  It most probably changes nothing, but all blitter tests were done with
@@ -461,6 +471,13 @@ void Blitter_Draw()
     mfp_gpip_set_bit(MFP_GPIP_BLITTER_BIT,0);
     return;
   }else{
+#if defined(SSE_BLT_BLIT_MODE_CYCLES5)
+#ifdef SSE_BLT_BLIT_MODE_CYCLES5A //for BLIT02A, temp hack
+    INSTRUCTION_TIME((Blit.Hog||!SSE_HACKS_ON)?BLITTER_START_WAIT:4);
+#else
+    INSTRUCTION_TIME(BLITTER_START_WAIT);
+#endif
+#endif
     Blit.YCounter=Blit.YCount;
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_BLITTER_RELAPSE) //breaks a screen in Drone, undef v3.8
@@ -526,6 +543,8 @@ void Blitter_Draw()
 #define LOGSECTION LOGSECTION_BLITTER
 
         CHECK_BREAKPOINT
+
+        // TODO Boiler stops at wrong place
       }
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_BLT_BLIT_MODE_CYCLES) \
@@ -541,16 +560,37 @@ void Blitter_Draw()
       if (Blit.Busy){
         if (Blit.Hog==0){ //not in hog mode, keep switching bus
           if (((ABSOLUTE_CPU_TIME-Blit.TimeToSwapBus)>=0)){
-#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING_START_BLITTER) // same explanation as above...
+#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_TIMING_START_BLITTER)
 #if defined(SSE_BLT_BLIT_MODE_CYCLES3)
             INSTRUCTION_TIME(Blit.HasBus?BLITTER_END_WAIT:BLITTER_START_WAIT);
 #else
             INSTRUCTION_TIME(Blit.HasBus?0:6);
 #endif
 #endif
+#if defined(SSE_BLT_BLIT_MODE_CYCLES6) // BLIT03C, experimental but true feature
+            if(SSE_HACKS_ON && !Blit.HasBus
+              &&(ABSOLUTE_CPU_TIME-Blit.TimeToSwapBus)
+              && ((ir&0xf0c0)==0xc0c0 || (ir&0xf100)==0xd000))
+            {
+           //   INSTRUCTION_TIME(-(ABSOLUTE_CPU_TIME-Blit.TimeToSwapBus));
+              TRACE_LOG("No blit for you, fool IR %X tmg %d\n",ir,(ABSOLUTE_CPU_TIME-Blit.TimeToSwapBus));
+            }
+            else
+#endif
             Blit.HasBus=!(Blit.HasBus);
+
 #if defined(DEBUG_BUILD) || !defined(STEVEN_SEAGAL)
             if (Blit.HasBus){
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_BLIT_IN_HISTORY2)
+#if defined(SSE_BOILER_HISTORY_TIMING)
+              pc_history_y[pc_history_idx]=scan_y;
+              pc_history_c[pc_history_idx]=LINECYCLES;
+#endif
+              DEBUG_ONLY( pc_history[pc_history_idx++]=0x98764321; )
+              DEBUG_ONLY( if (pc_history_idx>=HISTORY_SIZE) pc_history_idx=0; )
+#endif
+
               log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Swapping bus to blitter at "+ABSOLUTE_CPU_TIME);
             }else{
               log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Swapping bus to CPU at "+ABSOLUTE_CPU_TIME);
@@ -579,13 +619,14 @@ void Blitter_Draw()
 #endif
         break;
       }
-    }
+    }//while (cpu_cycles>0
 
     if (cpu_cycles>0) break;
     if (Blit.Busy==0) break; //enough!
 
     DEBUG_ONLY( if (runstate!=RUNSTATE_RUNNING) break; )
     DEBUG_ONLY( mode=STEM_MODE_INSPECT; )
+    
 
     while (cpu_cycles<=0){
 #if defined(SSE_BOILER_TRACE_CONTROL)
@@ -613,8 +654,9 @@ the Blitter is active - Not even for interrupts. "
 */
     M68000.Unrounded=false;
 #endif
-        
+
     DEBUG_ONLY( mode=STEM_MODE_CPU; )
+
 //---------------------------------------------------------------------------
   } //more CPU!
 
@@ -1094,7 +1136,12 @@ old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.SrcAdr,Blit
 #if !defined(SSE_BLT_BLIT_MODE_CYCLES2)
           Blit.TimeToCheckIrq=Blit.TimeToSwapBus+SSE_BLT_BLIT_MODE_IRQ_CHK;
 #endif
+#if defined(SSE_BLT_BLIT_MODE_CYCLES5)
+          INSTRUCTION_TIME(BLITTER_START_WAIT);
+          Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+BLITTER_BLIT_MODE_CYCLES;
+#else
           Blit.TimeToSwapBus+=BLITTER_BLIT_MODE_CYCLES;
+#endif
 #else
           Blit.TimeToSwapBus+=64;
 #endif

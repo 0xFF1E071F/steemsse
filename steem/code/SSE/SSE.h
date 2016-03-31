@@ -1,4 +1,4 @@
-// for v3.8.0
+// for v3.8.1
 #pragma once // VC guard
 #ifndef STEVEN_SEAGAL_H // BCC guard
 #define STEVEN_SEAGAL_H
@@ -125,16 +125,16 @@ Beta: not SSE_PRIVATE_BUILD
 // VERSION //
 /////////////
 
-#define SSE_VERSION 380 // versions down to 330 still compile
+#define SSE_VERSION 381 // versions down to 330 still compile
                         // full v330 not publicly available anymore
 
                         // TODO options in v341!
 
-#if SSE_VERSION>380 //last release
+#if SSE_VERSION>381 //last release
 #define SSE_BETA //title, OSD, plus some testing - new features
 #define SSE_BETA_BUGFIX // beta for just bugfixes
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
-///#define SSE_PRIVATE_BUILD // my "beta" option
+//#define SSE_PRIVATE_BUILD // my "beta" option
 #endif
 #endif
 
@@ -2274,7 +2274,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_ROUNDING_TRAPV
 #endif//round
 #define SSE_CPU_STOP_380A // little refactoring
-#define SSE_CPU_STOP_DELAY // from WinUAE
+#define SSE_CPU_STOP_DELAY // from Hatari
 #undef SSE_CPU_UNSTOP2//placement is paramount!
 #define SSE_CPU_TIMINGS_REFACTOR_FETCH // moving timings to fetching functions
 #define SSE_CPU_TIMINGS_REFACTOR_PUSH // count timing in push macros
@@ -2523,7 +2523,8 @@ Beta: not SSE_PRIVATE_BUILD
 //#define DISABLE_STEMDOS
 //#define DISABLE_STEMDOS2//TODO//no, MFD
 //#define SSE_TOS_GEMDOS_DRVBIT // sooner //really necessary?
-#define SSE_TOS_GEMDOS_RESTRICT_TOS3 // EmuTOS + PRG/TOS
+////#define SSE_TOS_GEMDOS_RESTRICT_TOS3 // EmuTOS + PRG/TOS//already defined
+#undef SSE_TOS_CHECK_VERSION // MagicOs v 6+
 #endif
 
 #ifdef SSE_VARIOUS
@@ -2562,6 +2563,93 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #endif//380
+
+
+#if SSE_VERSION>=381
+
+#if defined(SSE_ACSI)
+#define SSE_ACSI_ICON2 // more space for the ACSI icon in initial disk manager
+#endif
+
+#if defined(SSE_BLITTER)
+#define SSE_BLT_BLIT_MODE_CYCLES5
+#define SSE_BLT_BLIT_MODE_CYCLES5A
+#define SSE_BLT_BLIT_MODE_CYCLES6
+#define SSE_BLT_TIMING_FXSR2
+#endif
+
+#if defined(SSE_CPU)
+#define SSE_CPU_CHECK_VIDEO_RAM_381
+#define SSE_CPU_E_CLOCK5
+#if defined(SSE_CPU_HALT)
+#define SSE_CPU_HALT2 // can reset
+#define SSE_CPU_HALT2B // warm reset runs emulation
+#endif
+#if defined(SSE_CPU_ROUNDING_BUS)
+#define SSE_CPU_ROUNDING_BUS3C
+#define SSE_CPU_ROUNDING_BUS_STOP
+#endif
+#define SSE_CPU_TPEND // internal bit latch
+#if defined(SSE_CPU_TRACE_REFACTOR)
+#define SSE_CPU_TPEND2 //use it
+#endif
+#endif
+
+#if defined(SSE_GLUE)
+#undef SSE_GLUE_011 //double check side overscan!
+#define SSE_GLUE_008B
+//#define SSE_GLUE_011B //shows that ST-CNX VLB depends on double test!
+#define SSE_GLUE_011C // temp, avoid interferences
+#define SSE_GLUE_381_A
+#define SSE_GLUE_381_B
+#define SSE_GLUE_EXT_SYNC
+#endif
+
+#if defined(SSE_MMU)
+#ifdef SSE_GLUE
+#define SSE_GLUE_REFACTOR_OVERSCAN_EXTRA // separate shifter_draw_pointer / video counter
+#define SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2 // eliminate old code and variables
+#endif
+#define SSE_MMU_LINEWID_TIMING
+#define SSE_MMU_WU_STE_381
+#endif//mmu
+
+#if defined(SSE_SHIFTER)
+#define SSE_SHIFTER_60HZ_LINE2
+#define SSE_SHIFTER_HSCROLL_381
+#define SSE_SHIFTER_HSCROLL_LEFT_OFF
+#define SSE_SHIFTER_MED_OVERSCAN_SHIFT2
+#define SSE_SHIFTER_SCHNUSDIE_381
+#define SSE_SHIFTER_UNSTABLE_381
+#define SSE_SHIFTER_XMAS2004B
+#endif//sft
+
+#ifdef SSE_TOS
+#define SSE_TOS_GEMDOS_EM_381A // done the day before release
+#define SSE_TOS_GEMDOS_EM_381B // so is it rock-solid?
+#endif
+
+#if defined(SSE_VARIOUS)
+#define SSE_VAR_KEYBOARD_CLICK2B // touch on "run process" only to disable
+#endif
+
+#if defined(SSE_VIDEO)
+#if defined(SSE_VID_BORDERS)
+#define SSE_VID_BORDERS_413_381
+#define SSE_VID_BORDERS_416_NO_SHIFT2 //remove hack condition?
+#undef SSE_VID_BORDERS_416_NO_SHIFT4
+#define SSE_VID_BORDERS_416_NO_SHIFT_381 // change left_border and right_border
+#define SSE_VID_BORDERS_BIGTOP_381
+#define SSE_VID_BORDERS_LINE_PLUS_20_381 // left border 12 pixels
+#endif//borders
+#define SSE_VID_SCANLINES_INTERPOLATED_381
+#endif
+
+#if defined(SSE_YM2149)
+#undef SSE_YM2149_ENV_DEPHASING // don't understand, it sounds like we shouldn't?
+#endif
+
+#endif//381
 
 
 ///////////
@@ -2818,6 +2906,15 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BOILER_XBIOS2
 #endif
 
+//v3.8.1
+#if defined(SSE_BOILER)
+#define SSE_BOILER_BLIT_IN_HISTORY2
+#define SSE_BOILER_BLIT_WHEN_STOPPED2
+#define SSE_BOILER_BLIT_WHEN_TRACING
+#define SSE_BOILER_GO_AUTOSAVE_FRAME
+#define SSE_BOILER_IOLIST_381
+#endif
+
 #endif//SSE_DEBUG
 
 
@@ -2845,6 +2942,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA)
 
+
 //#define SSE_DRIVE_WRITE_TRACK_11
 //#define SSE_GUI_FULLSCREEN_NO_VSYNC_OPTION //but all the rest?
 //#define SSE_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
@@ -2852,6 +2950,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//beta
 
 #if defined(SSE_BETA_BUGFIX)
+
 #endif//bugfix
 
 #else//!SS

@@ -32,8 +32,11 @@ struct TGlueStatusBYTE {
 #define TRICK_LINE_PLUS_20 0x800	
 #define TRICK_0BYTE_LINE 0x1000	
 #define TRICK_STABILISER 0x2000
-#define TRICK_WRITE_SDP 0x4000
+#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
+// at least hacks involving those have been removed
+#define TRICK_WRITE_SDP 0x4000 
 #define TRICK_WRITE_SDP_POST_DE 0x8000
+#endif
 #if defined(SSE_SHIFTER_DRAGON1)
 #define TRICK_CONFUSED_SHIFTER 0x10000//tmp hack
 #endif
@@ -89,9 +92,13 @@ struct TGlue {
   TScanline PreviousScanline, CurrentScanline, NextScanline;
   int TrickExecuted; //make sure that each trick will only be applied once
   BYTE cycle_of_scanline_length_decision; 
+#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
   bool ExtraAdded;//rather silly, should do without
+#endif
   void AdaptScanlineValues(int CyclesIn); // on set sync of shift mode
+#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
   void AddExtraToShifterDrawPointerAtEndOfLine(unsigned long &extra);
+#endif
   int CheckFreq(int t);
   void CheckSideOverscan(); // left & right border effects
   void CheckVerticalOverscan(); // top & bottom borders

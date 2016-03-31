@@ -139,7 +139,13 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
     that sit on the CPU bus.
     Not a big change because we corrected MOVE rounding too.
 */
-#if defined(SSE_CPU_ROUNDING_BUS3B)
+#if defined(SSE_CPU_ROUNDING_BUS3C)
+/*  Reading Shifter registers will cause rounding up to 4, we don't read
+    the latch in GLU.
+*/
+   if(M68000.Rounded 
+     && !(addr>=0xff8240 && addr<=(ST_TYPE==STE?0xff8265:0xff8260))
+#elif defined(SSE_CPU_ROUNDING_BUS3B)
    if(M68000.Rounded 
      && !(addr>=0xff8240 && addr<(ST_TYPE==STE?0xff8266:0xff8260))
 #elif defined(SSE_CPU_ROUNDING_BUS3)

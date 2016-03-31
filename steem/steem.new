@@ -1,53 +1,37 @@
 [SCROLLERS]
 §v, built §b
 running §d
-Use F12 key to start or stop emulation
+F12 key is reserved for start/stop emulation
 Press the pause/break key to release the mouse, shift-pause/break to stop emulation
-visit the steem SSE website for all the latest news & updates: http://ataristeven.t15.org
-Comments or queries? www.Atari-forum.com
 Steem, the STE emulating engine, written by Anthony and Russell Hayward
-found a bug or a game that won't run?  Send us a bug report (www.Atari-forum.com)
+SSE stands for Steven Seagal Edition, Steem SSE is just an improvement on Steem
+Steem is the best so why bother with the rest?
 Right-click on the fast forward button to use the flashlight - see if there is really something there on a black screen
-Having problems? Read the FAQ, the manual and the Hints... if that doesn't help then forget it
-steem was created using Borland's Free C++ compiler
-Thanks to all the people who have helped make Steem better
+steem was created using Borland's Free C++ compiler, it is maintained with Visual C++ too
+Thanks to all the people who have helped, knowingly or not, make Steem better
 If a program won't run from hard drives, copy it to a disk image using the ST desktop, and it might work better
 Some programs won't work if their disk is read only, always try making it read-write (or extracting the disk if it is in an archive) if you have problems
 Some programs won't work with memory size set to 4Mb or 512Kb
 fast forward is very useful, map it to a key using shortcuts to get the full effect
-Check the new options in this SSE build
-Steem is the best so why bother with the rest?
-Steem doesn't step on toes it steps on necks!
-To use the 'C1: 6850/6301/MIDI/E-Clock' option, you need the dump of the keyboard controller rom (HD6301V1.IMG) in your Steem folder
-SSE stands for Steven Seagal Edition
-More programs than you think require Accurate Disk Access Times (slow) option
-http://ataristeven.t15.org/
-http://sourceforge.net/projects/steemsse/
-Steem runs everything!
-Option Hacks is recommended
-You can directly run standalone PRG or TOS programs, check the manual
-Steven Seagal begins where Chuck Norris stops
-The only way to make Chuck Norris cry: say Steem SSE
-Chuck Norris knows nothing of MC68000 assembly
-When Chuck Norris can't do it, call Steven Seagal
-Chuck Norris doesn't debug programs, he is the bug
+Check the new options in this SSE build: ST model, wake-up state, C1, C2, Hacks...
+More programs than you think require Accurate Disk Access Times (slow) option in the Disk manager, check Hints
+Steem SSE site is now http://ataristeven.exxoshost.co.uk
+The source of Steem SSE is at http://sourceforge.net/projects/steemsse
 
 [WINSCROLLERS]
 maximize the window to go to fullscreen mode (directx required)
+Check which fullscreen option works for you: directdraw, direct3d
 Know your mc68k from your mk68901?  Download the debug build of steem and help us get those bad games working
 drag a file to the Home button with right mouse button - easy shortcuts to your disks
 If you are using fullscreen monochrome, turn on Options - Fullscreen Mode - Use 256 Colour mode for extra speed
 Steem Boiler: Power without the price!
-option drive sound requires samples in DriveSound folder
-To run IPF or CTR disks, you need CAPSimg.DLL in your Steem folder
-With unrar.dll in your system or steem folder, you can use the rar format
-With archiveaccess.dll in your system or steem folder, you can use the 7z format
-Make sure to use the latest version of Freeimage.dll 
+ST, MSA, DIM, STT, STX, IPF, CTR, SCP, PRG, TOS: Steem runs everything!
+You need pasti.dll for STX images, capslib.dll for IPF and CTR images
+With unrar.dll, you can use the rar format
+With archiveaccess.dll, you can use the 7z format and many more
+Make sure to use the latest version of Freeimage.dll or you could get upside-down pictures!
 
 [LINKS]
-Steem manual
-http://ataristeven.t15.org/Steem_sse_manual.htm
-
 
 ...Forums
 Atari Forum

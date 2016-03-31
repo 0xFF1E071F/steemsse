@@ -53,8 +53,7 @@ is more confusing, its value is no wake-up state but just an option index.
 |        4         |      6        |     1      |      1     |   -2  |    -  |
 +------------------+---------------+------------+------------+-------+-------+
 
-On STE there's no latency, DL=3, but our code doesn't seem ready for that
-yet.
+On STE there's no latency, DL=3, WS=1.
 
 */
 
@@ -83,9 +82,17 @@ struct TMMU {
 #endif
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
   short SDPMiddleByte; // glue it! 
-  MEM_ADDRESS ReadVideoCounter(int cycles_since_hbl,int dispatcher=DISPATCHER_NONE);
+  MEM_ADDRESS ReadVideoCounter(int CyclesIn,int dispatcher=DISPATCHER_NONE);
   void ShiftSDP(int shift);  
   void WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b);
+#endif
+#if defined(SSE_MMU_LINEWID_TIMING)
+  BYTE Linewid0;
+#endif
+#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
+  BYTE WordsToSkip; // for HSCROLL
+  MEM_ADDRESS VideoCounter; // to separate from rendering
+  void UpdateVideoCounter(int CyclesIn);
 #endif
 };
 

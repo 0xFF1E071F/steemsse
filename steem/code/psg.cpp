@@ -400,8 +400,10 @@ HRESULT Sound_Start() // SS called by
 #if defined(SSE_YM2149_ENV_DEPHASING)
 /*  For demo Closure but not sure it makes a hearable difference
     http://www.atari-forum.com/viewtopic.php?f=18&t=27521&sid=a0d1b43f0f66988900541b039ab5f6d4#p285292
+    update: yes it does, it's bad for kid kong! thought I tested it :(
 */
     env_phase[abc]=(rand()&0xFF);
+    //env_phase[abc]=(rand()& (64-1));//worse
 #endif
   }
   psg_voltage=flatlevel;psg_dv=0;
@@ -2135,7 +2137,7 @@ void psg_prepare_envelope(double &af,double &bf,int &psg_envmodulo,DWORD t,
       }else{        
 #if defined(SSE_YM2149_DELAY_RENDERING)  
         envvol=(SSE_OPTION_PSG) 
-#if defined(SSE_YM2149_ENV_DEPHASING) // does it even change anything?
+#if defined(SSE_YM2149_ENV_DEPHASING)
           ? psg_envelope_level3[envshape][(psg_envstage+(SSE_HACKS_ON?env_phase[abc]:0)) & 63]
 #else
           ? psg_envelope_level3[envshape][psg_envstage & 63]

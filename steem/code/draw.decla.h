@@ -202,7 +202,8 @@ EXT int left_border,right_border;
 #if !defined(SSE_VAR_RESIZE_370) 
 EXT bool right_border_changed;
 #endif
-#if defined(SSE_VAR_RESIZE_380)
+#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
+#elif defined(SSE_VAR_RESIZE_380)
 EXT short overscan_add_extra;
 #else
 EXT int overscan_add_extra;
@@ -267,7 +268,7 @@ void ASMCALL draw_scanline_24_hires(int,int,int,int),draw_scanline_32_hires(int,
 
 
 }
-
+#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
 #define OVERSCAN_ADD_EXTRA_FOR_LEFT_BORDER_REMOVAL 2
 #define OVERSCAN_ADD_EXTRA_FOR_SMALL_LEFT_BORDER_REMOVAL 2
 #define OVERSCAN_ADD_EXTRA_FOR_GREAT_BIG_RIGHT_BORDER -106
@@ -284,7 +285,7 @@ void ASMCALL draw_scanline_24_hires(int,int,int,int),draw_scanline_32_hires(int,
             } \
           }                           \
           s+=overscan_add_extra;
-
+#endif
 EXT int shifter_freq_change_time[32];
 #if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
 EXT BYTE shifter_freq_change[32];

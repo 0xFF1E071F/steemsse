@@ -202,6 +202,9 @@ struct TTos {
 #if defined(SSE_VAR_KEYBOARD_CLICK2)
   void CheckKeyboardClick();
 #endif
+#if defined(SSE_TOS_GEMDOS_EM_381B)
+  void HackMemoryForExtendedMonitor();
+#endif
 };
 
 extern TTos Tos;

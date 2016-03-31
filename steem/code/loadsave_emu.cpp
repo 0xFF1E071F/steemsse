@@ -420,6 +420,13 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     ReadWriteArray(save_r);
     ReadWrite(line_a_base);
     ReadWrite(vdi_intout);
+
+#ifdef SSE_TOS_GEMDOS_EM_381B
+    if(LoadOrSave==LS_LOAD)
+      vdi_intout=line_a_base=0;//?
+#endif
+
+
   }else if (LoadOrSave==LS_LOAD){
     extended_monitor=0;
   }
@@ -1091,6 +1098,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 //---------------------------------------------------------------------------
 void LoadSnapShotUpdateVars(int Version)
 {
+
   SET_PC(PC32);
   ioaccess=0;
 
@@ -1140,6 +1148,7 @@ void LoadSnapShotUpdateVars(int Version)
   res_change();
 
   palette_convert_all();
+
   draw(false);
 
   for (int n=0;n<16;n++) PAL_DPEEK(n*2)=STpal[n];

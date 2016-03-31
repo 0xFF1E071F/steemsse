@@ -207,6 +207,16 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
 
   iolist_add_entry(0xff8001,"MMU mem config",1,"Bank0h|Bank0l|Bank1h|Bank1l");
 
+#if defined(SSE_BOILER_IOLIST_381)
+  iolist_add_entry(0xff8201,"VBASEHI",1);
+  iolist_add_entry(0xff8203,"VBASEMI",1);
+  iolist_add_entry(0xff8205,"VCOUNTHI",1);
+  iolist_add_entry(0xff8207,"VCOUNTMI",1);
+  iolist_add_entry(0xff8209,"VCOUNTLO",1);
+  iolist_add_entry(0xff820a,"SYNC",1,"50Hz|.");
+  iolist_add_entry(0xff820d,"VBASELO",1);
+  iolist_add_entry(0xff820f,"LINEWID",1);
+#else
   iolist_add_entry(0xff8201,"Screen Base High",1);
   iolist_add_entry(0xff8203,"Screen Base Mid",1);
   iolist_add_entry(0xff8205,"Vid Ptr High",1);
@@ -215,13 +225,19 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
   iolist_add_entry(0xff820a,"Freq",1,"50Hz|.");
   iolist_add_entry(0xff820d,"Screen Base Low",1);
   iolist_add_entry(0xff820f,"Scanline Word Skip Count",1);
+#endif
   for(int n=0;n<16;n++){
     iolist_add_entry(0xff8240+n*2,EasyStr("pal")+n,2,"#COLOUR");
   }
+#if defined(SSE_BOILER_IOLIST_381)
+  iolist_add_entry(0xff8260,"SHIFT",1);
+  iolist_add_entry(0xff8264,"HSCROLL (No Extra Fetch)",1);
+  iolist_add_entry(0xff8265,"HSCROLL",1);
+#else
   iolist_add_entry(0xff8260,"Res",1);
   iolist_add_entry(0xff8264,"HScroll (No Extra Fetch)",1);
   iolist_add_entry(0xff8265,"HScroll",1);
-
+#endif
   iolist_add_entry(0xff8604,"FDC access/sector count",2);
   iolist_add_entry(0xff8606,"DMA mode/status",2);
   iolist_add_entry(0xff8609,"DMA high",1);
@@ -301,7 +317,7 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
     "sync|shift|pal|rsdp|wsdp|sdp lines|hscroll|base|.|.|.|.|.|.|.|.");
 #if defined(SSE_BOILER_FRAME_REPORT_MASK2)
   iolist_add_entry(FAKE_IO_START+2,"Frame report2",2, // problem +2 etc hardcoded
-    "int|blt|tricks|bytes|xtr|.|.|.|.|.|.|.|.|.|.|.");
+    "int|blt|tricks|bytes|.|.|.|.|.|.|.|.|.|.|.|.");
 #else
   iolist_add_entry(FAKE_IO_START+2,"Frame report2",2, // problem +2 etc hardcoded
     "Acia|Blt|Tricks|Bytes|hbi|vbi|mfp|.|.|.|.|.|.|.|.|.");
@@ -316,7 +332,7 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
   iolist_add_entry(FAKE_IO_START+8,"OSD2 Shifter",2,
     "tricks|load|RS|.|.|.|.|.|.|.|.|.|.|.|.|.");
   iolist_add_entry(FAKE_IO_START+10,"OSD3 STE",2,
-    "dma|blt|sdp|.|.|.|.|.|.|.|.|.|.|.|.|.");
+    "dma|blt|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
 #endif
 
 #if defined(SSE_BOILER_TRACE_CONTROL)
@@ -368,7 +384,7 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
 
 #if defined(SSE_BOILER_TRACE_CONTROL) && SSE_VERSION>=380
   iolist_add_entry(FAKE_IO_START+28,"TRACE Shifter2",2,
-    "+2|.|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
+    "+2|VC|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
 #endif
 
 #endif//fake io

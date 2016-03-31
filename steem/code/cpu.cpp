@@ -6200,6 +6200,26 @@ void                              m68k_stop(){
       CPU_ABUS_ACCESS_READ_FETCH;
 #endif
       m68k_GET_IMMEDIATE_W;//SS timing counted there now
+
+#if defined(SSE_CPU_ROUNDING_BUS_STOP)
+/*http://www.atari-forum.com/viewtopic.php?f=68&t=13264&p=292437#p292437
+"Yes, STOP can (kinda) pair with the previous instruction. It's not a pairing
+in the strict sense. STOP would always take a multiple of 4 cycles. 
+But STOP is transparent (because it doesn't perform any bus access) in terms 
+of pairing to the previous instruction.
+
+So EXG+STOP+INTR does pair, because EXG and INTR pair."
+
+--> STOP must read the immediate, but we know it's already fetched, so 
+    maybe it just uses it without refetching?
+*/
+      if(M68000.Rounded)
+      {
+        INSTRUCTION_TIME(-2);
+        M68000.Rounded=false;
+      }
+#endif
+
 #if !defined(SSE_CPU_PREFETCH_TIMING_STOP)
       INSTRUCTION_TIME_ROUND(4); // time for immediate fetch
 #endif
@@ -6217,7 +6237,7 @@ void                              m68k_stop(){
 //      check_for_interrupts_pending(); //SS was commented out
       CHECK_STOP_ON_USER_CHANGE;
 #if defined(SSE_CPU_STOP_DELAY)
-/*  from WinUAE:
+/*  from Hatari:
     The CPU can't be restarted at once after a STOP, there's a
     delay of 8 cycles, even if an interrupt is pending.
     option C2: this fixes the spurious interrupt in Return -HMD (STE)
@@ -6341,16 +6361,18 @@ Also see SSE_TOS_GEMDOS_PEXEC6 for ReDMCSB
             SET_PC(on_rte_return_address);
             extended_monitor_hack();
             break;
-
+#ifndef SSE_TOS_GEMDOS_EM_381B
           case ON_RTE_DONE_MALLOC_FOR_EM:
 //            log_write(HEXSl(pc,6)+EasyStr(": Malloc done - returned $")+HEXSl(r[0],8));
             xbios2=(r[0]+255)&-256;
+            //TRACE("EM xbios 2 %X\n",xbios2);
             LPEEK(SV_v_bas_ad)=xbios2;
             LPEEK(SVscreenpt)=xbios2;
             memcpy(r,save_r,16*4);
             on_rte=ON_RTE_RTE;
 //            log_write_stack();
             break;
+#endif
           case ON_RTE_EMHACK:
             on_rte=ON_RTE_RTE;
             extended_monitor_hack();
@@ -10936,6 +10958,7 @@ extern "C" void m68k_0110(){  //bCC //SS + BSR
 #endif
 #endif
         PREFETCH_IRC;
+        ASSERT(M68000.PrefetchClass==0);
       }
     }
   }else{

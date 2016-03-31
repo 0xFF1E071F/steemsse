@@ -329,16 +329,16 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
     
     if (f){
 #if defined(STEVEN_SEAGAL) && defined(SSE_VAR_CHECK_SNAPSHOT)
-    try {
+      try {
 #endif
       TRACE_INIT("Load %s\n",FilNam);
       Failed=LoadSaveAllStuff(f,LS_LOAD,-1,ChangeDisks,&Version);
 #if defined(STEVEN_SEAGAL) && defined(SSE_VAR_CHECK_SNAPSHOT)
-    }
-    catch(...) { //Works in VC6 - BCC? Unix certainly not.
-      TRACE("Exception in LoadSaveAllStuff\n");
-      Failed=FileError=true;
-    }
+      }
+      catch(...) { //Works in VC6 - BCC? Unix certainly not.
+        TRACE("Exception in LoadSaveAllStuff\n");
+        Failed=FileError=true;
+      }
 #endif
       if (Failed==0){
         Failed=int((EasyUncompressToMem(Mem+MEM_EXTRA_BYTES,mem_len,f)!=0) ? 2:0);
@@ -347,6 +347,10 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
         // This is a hack to make the first screen work
         if (pc==(MEM_ADDRESS)(LPEEK(0x0070) & 0xffffff))
           Glue.Status.hbi_done=Glue.Status.vbi_done=true;
+#endif
+#ifdef SSE_TOS_GEMDOS_EM_381B
+        if(extended_monitor)
+          Tos.HackMemoryForExtendedMonitor();
 #endif
       }
       fclose(f);

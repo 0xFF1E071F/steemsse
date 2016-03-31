@@ -267,8 +267,9 @@ enum logsection_enum_tag {
 #define OSD_MASK3 (Debug.ControlMask[5])
 #define OSD_CONTROL_DMASND                  (1<<15)
 #define OSD_CONTROL_STEBLT                  (1<<14)
+#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
 #define OSD_CONTROL_WRITESDP                (1<<13)
-
+#endif
 #endif//osdcontrol
 
 #if defined(SSE_BOILER_TRACE_CONTROL)
@@ -317,6 +318,7 @@ enum logsection_enum_tag {
 
 #define TRACE_MASK_14 (Debug.ControlMask[14]) //Shifter 2
 #define TRACE_CONTROL_LINE_PLUS_2 (1<<15) 
+#define TRACE_CONTROL_VIDEO_COUNTER (1<<14)
 
 #endif
 

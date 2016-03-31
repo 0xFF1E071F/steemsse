@@ -1368,7 +1368,7 @@ void agenda_fdc_motor_flag_off(int revs_to_wait)
 
   if(ADAT)
   {
-    ASSERT( WD1772.IndexCounter<10 );//TODO +1?
+    //ASSERT( WD1772.IndexCounter<10 );//TODO +1? //conflicts with pasti?
 #if defined(SSE_DRIVE_STATE)
     if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE&&SF314[DRIVE].State.motor
 #else

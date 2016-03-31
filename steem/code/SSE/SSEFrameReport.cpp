@@ -154,7 +154,7 @@ int TFrameEvents::Report() {
         j=m_FrameEvent[i].Scanline;
         fprintf(fp,"\n%03d -",j);
       }
-      if(m_FrameEvent[i].Type=='L' // || m_FrameEvent[i].Type=='C' 
+      if(m_FrameEvent[i].Type=='L' || m_FrameEvent[i].Type=='a'
         || m_FrameEvent[i].Type=='#') // decimal
         fprintf(fp," %03d:%c%04d",m_FrameEvent[i].Cycle,m_FrameEvent[i].Type,m_FrameEvent[i].Value);
       else  // hexa

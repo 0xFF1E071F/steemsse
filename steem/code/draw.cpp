@@ -133,7 +133,10 @@ int left_border=BORDER_SIDE,right_border=BORDER_SIDE;
 #if !defined(SSE_VAR_RESIZE_370) //we use the border mask instead
 bool right_border_changed=0;
 #endif
-#if defined(SSE_VAR_RESIZE_380)
+#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
+// We finally do without this confusing variable (especially annoying
+// for large display mode differences :)
+#elif defined(SSE_VAR_RESIZE_380)
 short overscan_add_extra;
 #else
 int overscan_add_extra;
@@ -300,13 +303,13 @@ void draw_begin()
     if(SCANLINES_INTERPOLATED) 
       using_grille=true;
 #endif
+
     if (using_grille){
       int l=640;
       if (Disp.BorderPossible()) l+=BORDER_SIDE*2 * 2;
       l*=BytesPerPixel;
       BYTE *d=draw_dest_ad+draw_line_length;
       int y=200;
-
 #if defined(STEVEN_SEAGAL) &&  defined(SSE_VID_BORDERS_BIGTOP)
      // if (Disp.BorderPossible()) y=200+BORDER_BOTTOM+ 30;
       if (Disp.BorderPossible()) y=200+BottomBorderSize+ BORDER_TOP;
@@ -507,7 +510,9 @@ void draw_set_jumps_and_source()
       }
 #endif
     }else if (FullScreen
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_3BUFFER)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED_381)
+        && !(SCANLINES_INTERPOLATED&&(SSE_3BUFFER||SSE_OPTION_D3D))
+#elif defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_3BUFFER)
         && !(SCANLINES_INTERPOLATED&&SSE_3BUFFER)
 #endif
       ){
@@ -603,6 +608,9 @@ void draw_set_jumps_and_source()
     //TRACE("no big source rect %d %d %d %d\n",draw_blit_source_rect.left,draw_blit_source_rect.top,draw_blit_source_rect.right,draw_blit_source_rect.bottom);
     //-> y = +40 in all modes
   }
+
+  //TRACE_INIT("draw %d %d %d %d big %d\n",draw_blit_source_rect.left,draw_blit_source_rect.top,draw_blit_source_rect.right,draw_blit_source_rect.bottom,big_draw);
+
   WIN_ONLY( draw_buffer_complex_scanlines=(Disp.Method==DISPMETHOD_DD &&
                   Disp.DrawToVidMem && draw_med_low_double_height); )
 //  ASSERT(draw_buffer_complex_scanlines);
@@ -1183,6 +1191,8 @@ void draw(bool osd)
     int yy,yy2;
 #ifndef NO_CRAZY_MONITOR
     if(extended_monitor){
+      ASSERT(shifter_draw_pointer==xbios2);
+      //ASSERT(draw_scanline==draw_scanline_32_lowres_pixelwise);
       yy=0;yy2=min(em_height,Disp.SurfaceHeight);
     }else
 #endif

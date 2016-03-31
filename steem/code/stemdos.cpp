@@ -1734,6 +1734,12 @@ void stemdos_intercept_trap_1()
     }case 0x4B:{   // EXEC(mode,fil,com,env)
 
 #if defined(SSE_VAR_KEYBOARD_CLICK2) 
+#if defined(SSE_VAR_KEYBOARD_CLICK2B) 
+/*  Don't enable keyboard click if a program disabled it 
+    (Pump ab das Bier by The Confederacy)
+*/
+      if(!OPTION_KEYBOARD_CLICK)
+#endif
       Tos.CheckKeyboardClick(); // check sys variable at each exec
 #endif    
 
@@ -2232,7 +2238,27 @@ void TTos::CheckKeyboardClick() {
 
 #endif
 
+#if defined(SSE_TOS_GEMDOS_EM_381B)
+
+void TTos::HackMemoryForExtendedMonitor() {
+  TRACE_INIT("EM mem_len %X xbios2 %X phystop %X _memtop %X\n",mem_len,xbios2,m68k_lpeek(0x42E),m68k_lpeek(0x436));
+  int bytes_needed=max((em_width*em_height*em_planes)/8,0x8000);
+  ASSERT(bytes_needed>0x8000);
+  int xbios2a=mem_len-(bytes_needed+256);
+  xbios2=(xbios2a+255)&-256;
+  ASSERT(xbios2+bytes_needed<=mem_len);
+  m68k_lpoke(0x436,xbios2);//_memtop
+  LPEEK(SV_v_bas_ad)=xbios2;
+  LPEEK(SVscreenpt)=xbios2;
+  if(em_planes==1)
+    mfp_reg[MFPR_GPIP]|=0x80;
+  //else
+    //mfp_reg[MFPR_GPIP]&=~0x80;
+  TRACE_INIT("EM bytes_needed %d xbios2 %X phystop %X _memtop %X\n",bytes_needed,xbios2,m68k_lpeek(0x42E),m68k_lpeek(0x436));
+}
+
+#endif
+
 #undef LOGSECTION
- 
 
 #endif//#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2)
