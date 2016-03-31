@@ -32,7 +32,7 @@
 #define FRAME_REPORT_MASK_BLITTER                  (1<<14)
 #define FRAME_REPORT_MASK_SHIFTER_TRICKS           (1<<13)
 #define FRAME_REPORT_MASK_SHIFTER_TRICKS_BYTES     (1<<12)
-#define FRAME_REPORT_MASK_EXTRA                    (1<<11)
+//#define FRAME_REPORT_MASK_EXTRA                    (1<<11)
 #else
 #define FRAME_REPORT_MASK_ACIA                     (1<<15)
 #define FRAME_REPORT_MASK_BLITTER                  (1<<14)

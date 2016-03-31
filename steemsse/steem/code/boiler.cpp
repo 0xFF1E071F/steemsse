@@ -2349,9 +2349,10 @@ void DWin_init()
  //  new mr_static("Irq ","",x,y,Par,
    //    NULL,(MEM_ADDRESS)&MC68901.Irq,1,MST_REGISTER,0,NULL);
 
-        new mr_static("IOA ","",x,y,Par,
-        NULL,(MEM_ADDRESS)&ioaccess,4,MST_REGISTER,0,NULL);
-
+       // new mr_static("IOA ","",x,y,Par,
+       // NULL,(MEM_ADDRESS)&ioaccess,4,MST_REGISTER,0,NULL);
+    new mr_static("cc ","",x,y,Par,
+    NULL,(MEM_ADDRESS)&cpu_cycles,4,MST_DECIMAL,0,NULL);
 
     y+=30;
     x=5;

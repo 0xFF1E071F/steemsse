@@ -49,6 +49,9 @@ void TM68000::Reset(bool cold) {
 #if defined(SSE_INT_MFP_REFACTOR2)
   IackCycle=false; 
 #endif
+#if defined(SSE_CPU_TPEND)  
+  tpend=false; //guess so
+#endif  
 }
 
 
@@ -1683,6 +1686,11 @@ FC2 FC1 FC0 Address Space
 #if defined(SSE_CPU_HALT) && defined(SSE_GUI_STATUS_STRING_HALT)
     M68000.ProcessingState=TM68000::EXCEPTION;
 #endif
+
+#if defined(SSE_CPU_TPEND)
+    M68000.tpend=false;
+#endif
+
 #if !defined(SSE_INT_ROUNDING)
     //SS:never quite understood this rounding for interrupts thing
     INSTRUCTION_TIME_ROUND(0); //Round first for interrupts 
@@ -2284,6 +2292,12 @@ TM68000::SyncEClock(
 #endif
   EClock_synced=true; 
   int act=ACT;
+
+#if defined(SSE_CPU_E_CLOCK5)
+  if(ST_TYPE==STE && dispatcher==ECLOCK_VBL)//temp, it's some compensation for sure
+    act+=2;
+#endif
+
 #if defined(SSE_SHIFTER) && defined(SSE_TIMINGS_FRAME_ADJUSTMENT)//no
   act-=4*Shifter.n508lines; //legit hack: NOJITTER.PRG
 #endif

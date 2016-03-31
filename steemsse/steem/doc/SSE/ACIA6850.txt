@@ -7,6 +7,7 @@ Sources:
 Official MC6850 documentation by Motorola
 Some general Atari ST documentation
 Development of Steem
+Some tests on real hardware
 Hatari
 
 
@@ -21,10 +22,12 @@ High Fidelity Dreams
 Nightdawn
 Overdrive by Phalanx
 Pandemonium Demos
+Snork/Defulloir
 V8 Music System (ACIA/MFP)
 
 
--------------------------------------------------------------------------------
+Introduction
+=============
 
 ACIA stands for 'Asynchronous Communications Interface Adapter'
 
@@ -32,7 +35,9 @@ Two ACIA MC6850 equip the Atari ST, one for the keyboard controller (called
 IKBD, it's a Hitachi HD6301V1 chip, also documented here) and one for the
 MIDI controller.
 
-Pins (lines):
+Pins (lines)
+=============
+
 +---------+
 |VSS      |
 |VCC      |
@@ -84,13 +89,16 @@ E     = Enable line (input) A derivative of a CPU clock
 It is 1/10th of the CPU clock (+- 800000hz on the ST)
 
 
+Registers
+==========
+
 The Motorola ACIA MC6850 has 4 "visible" (accessible by the programmer) 
 8bit registers:
 
-RDR Receive Data
-TDR Transmit Data
-CR  Control
-SR  Status
+RDR Receive Data   (read-only)
+TDR Transmit Data  (write-only)
+CR  Control        (write-only)
+SR  Status         (read-only)
 
 Those 4 registers are mapped on only 2 R/W bytes for each ACIA.
 
@@ -99,6 +107,10 @@ $FFFC00 for CR and SR of the IKBD controller
 $FFFC02 for RDR and TDR of the IKBD controller
 $FFFC04 for CR and SR of the MIDI controller
 $FFFC06 for RDR and TDR of the MIDI controller
+
+Reading or writing on those addresses involves some "jam" time, cycles
+needed by the CPU to access the 8bit peripheral.
+The "jam" is computed as 6 + E-clock MC68000 cycles. This is emulated in Steem.
 
 Data registers are double buffered: R/W can occur during the transmission or
 reception of the next byte.
@@ -118,6 +130,8 @@ CPU -> byte -> TDR -> TDRS -> bits -> other serial interface -> other chip
 Double buffering means that two bytes may be written very fast one after
 the other on TDR. The first byte will be transferred almost at once into
 TDRS. Subsequent bytes will have to wait the full serial transfer time.
+This way, the flow doesn't need to be interrupted at each character, provided
+both the sending and the receiving sides are fast enough.
 
 'Almost' doesn't mean instant, for a few cycles , the TDRE bit in SR will
 be cleared. 
@@ -125,11 +139,6 @@ TDR will take a byte however, and this new byte will be shifted after the
 short delay.
 This explains why Delirious IV fails to center the mouse on a real ST as well.
 The byte may be replaced all the time before it's transferred, and after.
-But we must take care not to compute the delay relative to the last write,
-or the Pandemonium Demos menu won't appear.
-TODO: maybe it's a hack in v3.5.3, is it that SR would show "ready" for a
-very short time, which isn't emulated yet? But this demo worked before ACIA
-'enhancements'.
 
 Cases: 
 Delirious 4 fake GEM
@@ -140,7 +149,9 @@ Pandemonium Demos
 Based on those cases, we set the delay to 200 CPU cycles in Steem. 
 This isn't precise emulation, but it will work with those programs.
 
+
 Control Register CR
+--------------------
 
 One writes on the ST's CR by writing on addresses $FFFC00 (IKBD) or $FFFC04 
 (MIDI). This register can't be read by the program.
@@ -182,136 +193,16 @@ SS1 SS0                  Speed (bit/s)
  0   1    Div by 16          31250 (ST: MIDI)
  1   0    Div by 64         7812.5 (ST: IKBD)
 
-The speed applies to both sending & receiving bits. It's been set at
+The clock applies to both sending & receiving bits. It's been set at
 500khz for both TxCLK & RxCLK on the ST chips.
 
 Bits 4-3-2 are set as 101 on the ST (8 bit, 1 stop bit). 
 There's also a start bit, so you must count 10bit/byte.
+The transfer rate unit is in "bauds": bits, including control bits.
 
-Timings
-
-
-ACIA <--> IKBD timings
-
-Data is transmitted at 7812.5 bauds between the ACIA and the HD6301.
-
-1MHz / 128 = 7812.5
-
-7812.5 bit/s, 10bits should translate into 1280 ACIA cycles/byte
-(Even less if we should count 8 bits: 1024).
-
-In Steem, we must use 1350 cycles instead, that is 70 cycles more, 
-or Froggies menu won't work well.
-No improvement in ACIA emu could lower this number, so we try and
-justify it instead ;)
-
-Froggies: 
-When the CPU sends $4, IKBD sends 4 bytes.
-With adapted timing, 2 bytes are ignored due to ACIA OVR, the
-program uses the 2 remaining bytes and it works.
-With theoretical timings, 3 bytes are ignored and it's broken.
-
-Possible explanation: there's starting & finishing delay for each byte,
-because copying TDR to TDRS and RDRS to RDR takes some time in both chips,
-maybe more in one that the other.
-
-For example:
-
-ACIA/IKBD transfer 
-
-Baud                          7812.5
-#bits                             10
-bytes/s	                      781.25
-
-ACIA frequency               1000000
-ACIA cycles/byte                1280
-
-TDR->TDRS delay                   25
-in CPU cycles                    200 (value OK for Nightdawn and Hades Nebula)
-RDRS->RDR delay                   25
-in CPU cycles                    200
-
-ACIA cycles/byte                1330
-
-MC68000 real frequency       8021248
-MC68000 used frequency       8000000
-ratio                       1.002656
-
-ACIA cycles/byte          1333.53248
-More delay in 6301?             16.5
-ACIA cycles/byte          1350.03248 (value OK for Froggies over the Fence)
-MC68000 cycles/byte      10800.25984
-
-This is speculative.
-Anyway, a difference of 70 ACIA cycles isn't too terrible. It looked worse
-before because 
-- WinSTon/Hatari used a "measured" value of 7200 (CPU cycles)
-That was the older versions. In current version of Hatari there's a low level
-emulation of the ACIA, but we notice a hack for Froggies in it as well, where
-the timings are made longer than theory.
-- 7812.5 baud is ambiguous, it isn't clear that you must add control bits to 
-get real speed.
-
-
-
-
-ACIA <--> IKBD timings
-
-7812.5 bit/s, 10bits-> 1280 HD6301 cycles/byte
-
-In Steem, we must use 1350 cycles instead, that is 70 cycles more, 
-or Froggies menu won't work well.
-No improvement in ACIA emu could lower this number, so we try and
-justify it instead ;)
-
-Froggies: 
-When the CPU sends $4, IKBD sends 4 bytes.
-With adapted timing, 2 bytes are ignored due to ACIA OVR, the
-program uses the 2 remaining bytes and it works.
-With theoretical timings, 3 bytes are ignored and it's broken.
-
-Possible explanation: there's starting & finishing delay for each byte,
-because copying TDR to TDRS and RDRS to RDR takes some time in both chips,
-maybe more in one that the other.
-
-For example:
-
-ACIA/IKBD transfer	
-
-Baud	                      7812.5
-#bits	                          10
-bytes/s	                      781.25
-
-ACIA frequency               1000000
-ACIA cycles/byte                1280
-
-TDR->TDRS delay                   25
-in CPU cycles                    200 (value OK for Nightdawn and Hades Nebula)
-RDRS->RDR delay                   25
-in CPU cycles                    200
-
-ACIA cycles/byte                1330
-
-MC68000 real frequency       8021248
-MC68000 used frequency       8000000
-ratio                       1.002656
-
-ACIA cycles/byte          1333.53248
-More delay in 6301?             16.5
-ACIA cycles/byte          1350.03248
-MC68000 cycles/byte      10800.25984
-
-This is speculative.
-Anyway, a difference of 70 ACIA cycles isn't too terrible. It looked worse
-before because 
-- WinSTon/Hatari used a "measured" value of 7200 (CPU cycles)
-- 7812.5 baud is ambiguous, it isn't clear that you must add control bits to 
-  get real speed.
-
-ACIA <--> MIDI timings 
-(TODO)
 
 Status Register SR
+-------------------
 
 The SR is read on the ST on addresses $FFFC00 (IKBD) or $FFFC04 (MIDI). 
 This register can't be written by the program. Bits are set or cleared
@@ -328,18 +219,20 @@ by the hardware (or the emulation).
        |     |Rx data register full ------------------------------'|
 
 In ST emulation, we will never set Parity error or Framing error.
-Rx overrun can be set if the program fails to read one byte.
 We don't care about CTS and DCD.
+
+Receiver (Rx) overrun (OVRN) will be set if the program reads a byte and the 
+previous byte was never read (frequent case). 
+It isn't set when the new byte is copied into RDR, only when it is read.
+
+Notice that there's no overrun for Tx: the ACIA doesn't know about bits it
+sends, only those it receives.
 
 At power on, SR will have value 2 (Tx data register empty), not 0 (or the
 ST would never boot).
 
 At 'master reset', bits 0 and 5 are cleared. The other bits don't change,
 at least according to our reading of doc.
-
-Receiver overrun (OVRN) will be set if the program reads a byte and the previous
-byte was never read. It isn't set when the new byte is copied into RDR, only
-when it is read.
 
 IRQ may be set depending on CR, if a byte has been transmitted or/and a 
 byte has arrived, or an overrun occured.
@@ -348,19 +241,26 @@ It remains so as long as the condition is true and is cleared only by the
 correct operation (read or write depending on the trigger), not by 
 'master reset'.
 
+On the ST, we shouldn't care too much about bits 6, 4, 3 and 2.
+
 
 Receive Data RDR
+-----------------
+
 Reading a byte doesn't clear it. SR is used by the hardware to know if data
 has been read.
 
+
 Transmit Data TDR
+------------------
 
 Doc states: master reset initialises both the transmitter and the receiver.
 Does it mean RDR=TDR=0?
-Are RDRS and TDRS cleared? Apparently not. [examples?]
-[in hatari 1.7.0, all those registers are cleared]
+Are RDRS and TDRS cleared?
+
 
 IRQ
+====
 
 IRQ may be enabled for both receiving and transmitting.
 
@@ -380,38 +280,53 @@ Few programs do use this stupid IRQ.
 Cases: 
 Hades Nebula
 
---
 
-Overrun
+Overrun (OVR)
+==============
 
 When a byte has been shifted but the previous byte hasn't been read by the CPU
 yet, the new byte isn't copied into RDR, it stays in RDRS, and the ACIA knows
-that the chip is in a overrun situation (internal register).
+that the chip is in a overrun situation (internal flag).
+The byte is lost, it will never be transferred into RDR.
+Other bytes will be shifted, and lost on arrival.
 As said before, the OVRN status bit will be set only when reading RDR.
-What's not clear: can the sending device (6301) shift another byte into RDRS 
-while the overrun condition is present, yet RDR hasn't been read yet?
-Apparently yes, and the new byte replaces the byte currently waiting in RDRS.
-Cases:
-Froggies
+Doc says one should read SR then RDR to clear overrun condition (and allow
+transfer of bytes to RDR), but reading RDR once is enough (ACIA02.TOS).
+
+
+Timings
+========
+
+ACIA <--> IKBD timings
+
+Data is transmitted at 7812.5 bauds between the ACIA and the HD6301,
+both directions.
+Bauds are the raw bits, including control bits.
+In this case, there's a start and a stop bit, so 10 bits per character
+to transmit.
+
+In Steem we use HD6301 cycles for reference.
+1MHz / 128 = 7812.5
+
+7812.5 bit/s, 10bits should translate into 1280 HD6301 cycles/byte.
+
+Case: Defulloir
+The program sends IKBD commands and directly reads the results in a fullscreen,
+every 20 scanlines, which translates to precisely 1280 HD6301 cycles.
+If transmission is too slow, the mouse will hop around. 
+
+Case: Froggies
+When the CPU sends '1', IKBD sends 1 byte.
+When the CPU sends '4', IKBD sends 4 bytes.
+2 bytes are ignored due to ACIA OVR, the program reads the 2 remaining bytes.
+The program uses the ACIA interrupt to get those last 2 bytes.
+With theoretical timings, 3 bytes will arrive during OVR, and so be discarded,
+and only one will be read (horizontal axis).
+
+If we increase transmission time when the overrun condition is detected, this
+program works, but such delay isn't documented and is just a hack in Steem.
 
 
 
 
-////////:
 
-
-CPU-Clock  E-clock Keyboard read
-  000000   00000.0     28
-  160256   16025.6     20
-  320512   32051.2     24
-  480768   48076.8     20
-  641024   64102.4     24
-  801280   80128.0     28
-  961536   96153.6     20
- 1121792  112179.2     24
- 1282048  128204.8     20
- 1442304  144230.4     24
-
-
-
-  int VblJitter[] = {8,0,4,0,4}; 

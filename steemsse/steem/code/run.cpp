@@ -148,7 +148,7 @@ void run()
 
 #if defined(SSE_CPU_HALT)
   if(M68000.ProcessingState==TM68000::HALTED)
-    return; // cancel "run" until cold reset
+    return; // cancel "run" until reset
 #if defined(SSE_GUI_STATUS_STRING_380)
   else if(M68000.ProcessingState==TM68000::BOILER_MESSAGE)
   {
@@ -1082,8 +1082,39 @@ void event_scanline()
     shifter_draw_pointer&=0x3FFFFE;
 #endif
 #endif
-
-  shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
+#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
+/*  Refactoring of "add extra".
+    We don't use variable overscan_add_extra to adjust SDP anymore.
+    Too many interferences with rendering when writing to GLU and MMU registers,
+    and too many hacks due to border size.
+    Instead, the video counter is recomputed every scanline, based on
+    the counter at the start of the line (adapted or not because of a write)
+    and #bytes recorded in CurrentScanline.Bytes (must be accurate now!).
+*/
+  if(!emudetect_falcon_mode && GLU.FetchingLine())
+  {
+#if 0 
+    //looks nice but guess it takes more CPU power? (another CheckSideOverscan round)
+    MMU.UpdateVideoCounter(LINECYCLES);
+    shifter_draw_pointer=shifter_draw_pointer_at_start_of_line=MMU.VideoCounter;
+#else
+    short added_bytes=GLU.CurrentScanline.Bytes;
+    if(ST_TYPE==STE && added_bytes)
+      added_bytes+=(LINEWID+MMU.WordsToSkip)*2; 
+#if defined(SSE_BOILER_FRAME_REPORT_MASK) && defined(SSE_GLUE_017B)
+    if((FRAME_REPORT_MASK1&FRAME_REPORT_MASK_SDP_LINES))
+      FrameEvents.Add(scan_y,LINECYCLES,'a',added_bytes);
+#endif
+    shifter_draw_pointer_at_start_of_line+=added_bytes;
+    shifter_draw_pointer=shifter_draw_pointer_at_start_of_line;
+#endif
+  }
+  else 
+#endif
+    shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
+#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
+  MMU.VideoCounter=shifter_draw_pointer_at_start_of_line;
+#endif
   /////// SS as defined in draw.cpp,
   /////// and relative to cpu_time_of_last_vbl:
   cpu_timer_at_start_of_hbl=time_of_next_event; 
@@ -1101,23 +1132,12 @@ void event_scanline()
   scan_y++;
 #endif
 
-#if defined(SSE_DEBUG_REPORT_SDP) && defined(SSE_SHIFTER)
-  if(GLU.FetchingLine())
-  {
-#if defined(SSE_DEBUG_FRAME_REPORT_SDP_LINES) // A is for ACIA now
-    FrameEvents.Add(scan_y,0,'@',(shifter_draw_pointer&0x00FF0000)>>16 ); 
-    FrameEvents.Add(scan_y,0,'@',(shifter_draw_pointer&0xFFFF) ); 
-#endif
-
 #if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
-  if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SDP_LINES) 
+  if(GLU.FetchingLine() && (FRAME_REPORT_MASK1&FRAME_REPORT_MASK_SDP_LINES)) 
   {
    // FrameEvents.Add(scan_y,0,'H',Glue.scanline);
     FrameEvents.Add(scan_y,0,'@',(shifter_draw_pointer&0x00FF0000)>>16 ); 
     FrameEvents.Add(scan_y,0,'@',(shifter_draw_pointer&0xFFFF) ); 
-  }
-#endif
-
   }
 #endif
 
@@ -1131,6 +1151,9 @@ void event_scanline()
   if (debug_run_until==DRU_SCANLINE){
     if (debug_run_until_val==scan_y){
       if (runstate==RUNSTATE_RUNNING) runstate=RUNSTATE_STOPPING;
+#if defined(SSE_BOILER_GO_AUTOSAVE_FRAME)
+      FrameEvents.Report(); // sick of clicking 'Go' then 'Save frame report'
+#endif
     }
   }
 #endif
@@ -1215,10 +1238,15 @@ void event_start_vbl()
   //TRACE("RELOAD SDP %X -> %X h %d y %d f %d c %d\n",shifter_draw_pointer,xbios2,Glue.scanline,scan_y,shifter_freq,LINECYCLES);
 
   //ASSERT(!(xbios2&0xFF));
+#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
+  MMU.VideoCounter=
+#endif
   shifter_draw_pointer=xbios2; // SS: reload SDP
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
   shifter_pixel=shifter_hscroll;
-  overscan_add_extra=0; //SS?
+#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
+  overscan_add_extra=0;
+#endif
   left_border=BORDER_SIDE;right_border=BORDER_SIDE;
 #if !defined(SSE_GLUE_FRAME_TIMINGS_B)
   screen_event_pointer++;
@@ -1657,9 +1685,10 @@ void event_vbl_interrupt() //SS misleading name?
   while (abs(ABSOLUTE_CPU_TIME-shifter_cycle_base)>160000){
     shifter_cycle_base+=60000; //SS 60000?
   }
-
   shifter_pixel=shifter_hscroll;
+#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
   overscan_add_extra=0;
+#endif
   left_border=BORDER_SIDE;right_border=BORDER_SIDE;
 #if !defined(SSE_VID_DISABLE_AUTOBORDER)
   if (shifter_hscroll_extra_fetch && shifter_hscroll==0) overscan=OVERSCAN_MAX_COUNTDOWN;
@@ -2068,8 +2097,17 @@ void event_trigger_vbi() { //6X cycles into frame (reference end of HSYNC)
 #if defined(SSE_GLUE_FRAME_TIMINGS9) && !defined(SSE_GLUE_FRAME_TIMINGS_C)
 /*  The video counter is reloaded from VBASE a second time at the end
     of VSYNC, when VBI is set pending.
+"When the MMU sees the VSync signal from the GLUE, it resets the video counter
+with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
+    The MMU reacts to signal change, that's why it resets the counter twice, when
+    VSYNC is asserted, and when it is negated. 
+
+    Cases
     Beyond/Universal Coders
 */
+#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
+  MMU.VideoCounter=
+#endif
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer=xbios2;
   //event_start_vbl();
 #endif

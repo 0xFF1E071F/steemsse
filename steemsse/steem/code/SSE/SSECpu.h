@@ -390,7 +390,8 @@ inline void handle_ioaccess() {
       CHECK_STOP_USER_MODE_NO_INTR \
     }                                             \
     DEBUG_CHECK_IOACCESS; \
-    if (ioaccess & IOACCESS_FLAG_DO_BLIT) Blitter_Start_Now(); \
+    if (ioaccess & IOACCESS_FLAG_DO_BLIT) 
+      Blitter_Start_Now(); \
     /* These flags stay until the next instruction to stop interrupts */  \
     ioaccess=ioaccess & (IOACCESS_FLAG_DELAY_MFP | IOACCESS_INTERCEPT_OS2);                                   \
   }
@@ -597,6 +598,9 @@ so refactoring due!
 #if defined(SSE_INT_MFP_REFACTOR2)
   bool IackCycle; // flag to avoid starting IACK during IACK (in an emulator, anything goes...)
 #endif
+#if defined(SSE_CPU_TPEND)  
+  bool tpend; // actual internal latch set when CPU should trace current instruction
+#endif  
 };
 
 extern TM68000 M68000;
@@ -1231,12 +1235,22 @@ inline void TM68000::Process() {
 #endif
 
 #if defined(SSE_CPU_TRACE_REFACTOR)
+#if defined(SSE_CPU_TPEND2)  
+  if(tpend)
+#else  
   if(ProcessingState==TRACE_MODE)
+#endif    
   {
+#if defined(SSE_CPU_TPEND)
+    tpend=false;
+#endif    
     ProcessingState=NORMAL;
   }
   else if(sr&SR_TRACE)
   {
+#if defined(SSE_CPU_TPEND)
+    tpend=true; // hardware latch (=flag)
+#endif
     ProcessingState=TRACE_MODE; //internal flag: trace after this instruction
 #if defined(SSE_CPU_TRACE_DETECT) && !defined(DEBUG_BUILD)
     TRACE_OSD("TRACE");
@@ -1353,6 +1367,9 @@ exception vector.
   if(ProcessingState==TRACE_MODE)
   {
 #ifdef DEBUG_BUILD
+#if defined(SSE_CPU_TPEND) && !defined(SSE_CPU_TPEND2)
+    ASSERT(tpend);
+#endif
     if(!Debug.logsection_enabled[LOGSECTION_CPU] && !logsection_enabled[LOGSECTION_CPU])
       TRACE_LOG("(T) PC %X SR %X VEC %X IR %04X: %s\n",old_pc,sr,LPEEK(0x24),ir,disa_d2(old_pc).Text);
 #else

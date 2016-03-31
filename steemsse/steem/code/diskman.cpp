@@ -255,7 +255,11 @@ void TDiskManager::SetNumFloppies(int NewNum)
 //---------------------------------------------------------------------------
 TDiskManager::TDiskManager()
 {
+#ifdef SSE_ACSI_ICON2 // more space for the ACSI icon in initial disk manager
+  Width=403+70+GetSystemMetrics(SM_CXFRAME)*2+GetSystemMetrics(SM_CXVSCROLL);
+#else 
   Width=403+GetSystemMetrics(SM_CXFRAME)*2+GetSystemMetrics(SM_CXVSCROLL);
+#endif
   Height=331+GetSystemMetrics(SM_CYCAPTION);
   Left=(GetSystemMetrics(SM_CXSCREEN)-Width)/2;
   Top=(GetSystemMetrics(SM_CYSCREEN)-Height)/2;

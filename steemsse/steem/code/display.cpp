@@ -518,7 +518,7 @@ HRESULT SteemDisplay::DDCreateSurfaces()
           if(Ret!=DD_OK)
           {
             TRACE_LOG("Failed create DDBackSur2 DDERR %d\n",Ret);
-            DDBackSur2=NULL; // prevents system to be used
+            DDBackSur2=NULL; // prevents system from being used
             SSE_3BUFFER=false; // reset option
 #if defined(SSE_GUI_OPTIONS_REFRESH)
             OptionBox.SSEUpdateIfVisible(); 

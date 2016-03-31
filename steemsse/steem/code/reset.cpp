@@ -114,6 +114,8 @@ is issued, and that the reset was active for at least 132 clock cycles [27].
 #include "SSE/SSEAcsi.h"
 #endif
 
+#define BM_SETCLICKBUTTON 0x00FA //BM_SETCLICKBUTTON for PostRunMessage
+
 //---------------------------------------------------------------------------
 void power_on()
 {
@@ -235,7 +237,7 @@ void power_on()
   Disp.VSyncTiming=0;
 #endif
 
-#if defined(SSE_CPU_HALT)
+#if defined(SSE_CPU_HALT) && !defined(SSE_CPU_HALT2)
   M68000.ProcessingState=TM68000::NORMAL; //care later for exception
 #endif
 
@@ -268,6 +270,10 @@ void reset_peripherals(bool Cold)
 #endif
 #endif//dbg
 
+#if defined(SSE_CPU_HALT) && defined(SSE_CPU_HALT2)
+  M68000.ProcessingState=TM68000::NORMAL;
+#endif
+  
 #ifndef NO_CRAZY_MONITOR
   if (extended_monitor){
     if (em_planes==1){
@@ -289,6 +295,11 @@ void reset_peripherals(bool Cold)
     shifter_freq=50;
     shifter_freq_idx=0;
 #endif
+
+#ifdef SSE_TOS_GEMDOS_EM_381B
+    Tos.HackMemoryForExtendedMonitor();
+#endif
+
   }else
 #endif
 
@@ -491,6 +502,10 @@ void reset_st(DWORD flags)
   if (Backup) GUISaveResetBackup();
 
   if (Warm){
+#if defined(SSE_CPU_HALT2B) // real ST can be reset on HALT
+    if(M68000.ProcessingState==TM68000::HALTED)
+      PostRunMessage();
+#endif
     reset_peripherals(0);
 #ifndef DISABLE_STEMDOS
     stemdos_set_drive_reset();
@@ -528,6 +543,11 @@ void reset_st(DWORD flags)
   vdi_intout=0;
   aes_calls_since_reset=0;
   if (extended_monitor) extended_monitor=1; //first stage of extmon init
+#ifdef SSE_TOS_GEMDOS_EM_381B
+ //phystop 100000 _memtop F8000
+    m68k_lpoke(0x42E,mem_len); //phystop
+    //m68k_lpoke(0x436,mem_len-0x8000); //_memtop
+#endif
 #endif
 
 #if defined(SSE_BOILER_PSEUDO_STACK)

@@ -6,7 +6,7 @@
 //Update "FileVersion" and "ProductVersion" too!
 #define STEEM_VER_MAJOR 3
 #define STEEM_VER_MINOR_1 8
-#define STEEM_VER_MINOR_2 0
+#define STEEM_VER_MINOR_2 1
 
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION STEEM_VER_MAJOR,STEEM_VER_MINOR_1,STEEM_VER_MINOR_2,0
@@ -24,12 +24,12 @@ BEGIN
             VALUE "Comments", "Atari ST Emulator for all Windows systems\000"
             VALUE "CompanyName", "Anthony and Russell Hayward\000"
             VALUE "FileDescription", "Steem Engine (Atari ST Emulator)\000"
-            VALUE "FileVersion", "3.8.0\000"
+            VALUE "FileVersion", "3.8.1\000"
             VALUE "InternalName", "Steem\000"
             VALUE "LegalCopyright", "Copyright Anthony and Russell Hayward\000"
-            VALUE "OriginalFilename", "Steem SSE 3.8.0.exe\000"
+            VALUE "OriginalFilename", "Steem SSE 3.8.1.exe\000"
             VALUE "ProductName", "The Steem Engine\000"
-            VALUE "ProductVersion", "3.8.0\000"
+            VALUE "ProductVersion", "3.8.1\000"
         END
     END
     BLOCK "VarFileInfo"
@@ -130,10 +130,10 @@ RC_ICO_OPS_OSD ICON "options_osd.ico"
 #ifdef SSE_SSE_OPTION_PAGE
 RC_ICO_OPS_SSE ICON "options_sse.ico"
 #endif
-#ifdef SSE_GUI_STATUS_STRING_CHIPSET_ICON
+//#ifdef SSE_GUI_STATUS_STRING_380
 RC_ICO_OPS_C1 ICON "options_C1.ico"
 RC_ICO_OPS_C2 ICON "options_C2.ico"
-#endif
+//#endif
 #ifdef SSE_GUI_CONFIG_FILE 
 RC_ICO_CFG ICON "config.ico"
 #endif

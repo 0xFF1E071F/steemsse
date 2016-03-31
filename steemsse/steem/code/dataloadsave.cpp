@@ -764,7 +764,8 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
       em_width=pCSF->GetInt("Machine","ExMonWidth",em_width);
       em_height=pCSF->GetInt("Machine","ExMonHeight",em_height);
       em_planes=pCSF->GetInt("Machine","ExMonPlanes",em_planes);
-      if (extended_monitor) Disp.ScreenChange();
+      if (extended_monitor) 
+        Disp.ScreenChange();
     }
 
     NewMemConf0=int(pCSF->GetInt("Options","NewMemConf0",NewMemConf0));

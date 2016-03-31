@@ -1,7 +1,7 @@
 Steem SSE Bugs
 ===================
 
-v3.8.0
+v3.8.1
 
 Notes
 1) "Correct" means the bug may happen on a real STE
@@ -12,25 +12,25 @@ Notes
 
 -36.15 HMD giga: 
 cracks in sound
-freezes after a while if no Hacks
+freezes after a while if no patch
 
 -Amazine 4/Impact: often crashes at start (correct)
 
--Antiques: end scroller (correct)
+-Antiques: end scroller glitches (correct)
 
--Arkanoid 2: ball ghosting (correct)
+-Arkanoid 2: ball ghosting (correct - :( )
 
 -BIG demo
 screen 1: overscan flicker on STE (correct)
 screen 2: sometimes monochrome rasters! (now they'll find a body)
           sometimes wrong rasters (lacking colour)
 
--Blitter: the rare case where a CPU instruction is executed while the
-blitter is working isn't emulated.
+-Blitter: only partial emulation of CPU instruction executed while the
+blitter is working
 
 -Brattacas: poor control (correct)
 
--CAPS: no fast mode
+-CAPS (IPF, CTR disk images): no fast mode
 
 -Checking option 6301/ACIA during emulation may crash Steem
 
@@ -38,8 +38,11 @@ blitter is working isn't emulated.
 
 -Circus BackSTage: bad display in clown chin (correct)
 Some lines on 3 clowns (correct)
+Dots in WU2 (correct)
 
 -Civilization STX HD install fails at disk A (correct)
+
+-Closure doesn't work as STF WS1
 
 -Crash possible when Windows automatically blocks the session
 
@@ -47,18 +50,18 @@ Some lines on 3 clowns (correct)
 
 -Dynabuster+ flicker at scores (correct)
 
--GEMDOS hard disk emulation in EMUTOS:
-not real bugs, but incompatible hacks
+-Extended monitor hack
+Mouse move can be erratic with option C1
 
 -Eye of Horus -MCA (correct)
 
 -F-29 crashes on 4MB STE (correct)
 
+-Fast forward may hang some timing-sensitive programs
+
 -File associations lost at new version
 
 -Hades Nebula sometimes fails to start
-
--hard disk emu, Steem won't let you save memory
 
 -HFE no fast mode
 
@@ -66,7 +69,7 @@ not real bugs, but incompatible hacks
 
 -International Tennis 3D: controls don't respond right (correct)
 
--Japtro hangs in STE mode (correct)
+-Japtro hangs in STE mode (correct - depends on hardware rev.?)
 
 -Jumping Jackson on Automation 239: sometimes crashes at start game
 
@@ -92,9 +95,6 @@ STE sometimes lower border scanlines are shifted
 
 -Oh no more froggies: ADAT too slow (STW ok)
 
--Options may be messed up when going from earlier versions of Steem
-to the most recent one (I do that all the time for tests).
-
 -Pacemaker credits line 70 flicker/shift with large borders,
 noise without
 
@@ -102,6 +102,8 @@ noise without
 
 -Panic v1
 display totally wrong on STE (correct)
+
+-Paste text into ST incompatible with option C1 (no surprise)
 
 -Pasti: failure on resume snapshot
 
@@ -112,9 +114,11 @@ Steem's side. (eg Jupiter's Masterdrive)
 -pcsv62im
 no lower oversan, glitches on the right (correct)
 
--Random crashes and failures... (rare)
+-Random crashes and failures... (rare!)
 
 -Realm of the Trolls STX bad init disc (STW/HFE)
+
+-Rebirth -Cybernetics crashes after a while (correct)
 
 -ReDMCSB fails halfway in TOS1.02 (you can compile 50%!)
 Is it Steem or TOS bug?
@@ -123,7 +127,7 @@ Is it Steem or TOS bug?
 
 -SCP no fast mode
 
--Sinfull Sinuses: bad 4bit rasters display on most TOS (correct)
+-Sinfull Sinuses: bad 4bit rasters display on TOS 1.62UK (correct)
 
 -Snapshot: can't save when HD files open (big problem!)
 
@@ -131,6 +135,8 @@ Is it Steem or TOS bug?
 
 -Star Trek 
 samples too noisy
+
+-Starting emulation too fast after loading a snapshot can hang Steem
 
 -Status info may disappear when you play around with windows
 
@@ -144,10 +150,15 @@ samples too noisy
 
 -STW no fast mode
 
+-Super Hang-On sound not clean (correct)
+
+-Super Hang-On -BLR Crash after some checkpoints (correct)
+
+-Super Hang-On -RPL Crash after few seconds (correct)
+
 -Switching between versions of Steem may corrupt auto.sts and cause crashes
 
 -Ultimate 3D dots STE can fail to load
-correct? hangs even more on real STE + HXC (TODO: real drive?)
 
 -Tyranny STE: dot clouds between 3D shapes (correct)
 

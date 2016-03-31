@@ -129,7 +129,9 @@ MIDI is 4 times faster than IKBD
     the blitter takes "7 cycles". The timing table is also in NOP.
 */
 //#undef SSE_BLT_BLIT_MODE_CYCLES
-#ifdef SSE_BLT_BLIT_MODE_CYCLES4
+#if defined(SSE_BLT_BLIT_MODE_CYCLES5)
+#define BLITTER_BLIT_MODE_CYCLES ((63*4)) // hack of 380 removed in 381
+#elif defined(SSE_BLT_BLIT_MODE_CYCLES4)
 //#define BLITTER_BLIT_MODE_CYCLES (SSE_HACKS_ON?(128):(64*4)) // or cycles = 2 clock? //TODO test prg
 #define BLITTER_BLIT_MODE_CYCLES (SSE_HACKS_ON?(160):(64*4))//160 hack for AC2011, Down TLN (not good), SmokeTown
 #else

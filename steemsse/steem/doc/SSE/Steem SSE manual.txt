@@ -1,7 +1,7 @@
 Steem SSE manual
 =================
 
-v3.8.0
+v3.8.1
 
 About the manual
 _________________
@@ -442,9 +442,11 @@ They're in that strange order for "historical" reasons.
 
 On the STE, the chips responsible for 'DE' and 'LOAD' were merged so
 that only WS1 makes sense.
-If you select STE WU2, Steem will emulate the pixel shift observed on some
-demos like the Overscan Demos. It is not a GLU state but a Shifter one. It
-is like this to avoid placing yet another option.
+If you select STE WU2, Steem will emulate the pixel shift that can often
+be observed on Spectrum 512 pictures. It is not a GLU state but a Shifter one. 
+So even if you choose WU2 for the STE, it is still in WS1 for the GLU.
+On the other hand, there's no such pixel emulation in STF mode.
+I know it is complicated, it is like this to avoid placing yet another option. 
 
 The "Forest" demo by LJBK will recognise STF WU1-2 and STE.
 The "Bee" demos by LJBK will recognise WS1-4, and the demos will behave as
@@ -1234,7 +1236,7 @@ a single click on the "Load Icon Scheme" button, go to:
 
  http://steem.atari.st/icons.htm (link still working)
 
- To see what is available.   
+to see what is available.   
       
   
 File Associations
@@ -1284,11 +1286,13 @@ Instead of all this info, the status bar may contain only...
 
  HALT
 
-In some conditions, the ST processor could 'halt', that is stop operating,
-and not even a 'warm reset' would restart it.
-In that case, 'HALT' will appear in the status bar. It's correct emulation
-most of the times, you need to 'cold reset' or launch another game from
-the disk manager (which cold resets).
+In some conditions, the ST processor could 'halt', that is stop operating.
+It means the program it was running crashed, and it's not possible to
+recover from this situation. 
+This may be an emulation bug or not.
+The ST must be reset. On the ST you would press the reset button 
+(left click on the icon), or in very bad cases, switch off
+and on (right click on the icon).
 
  STEEM CRASHED!
 
@@ -1441,6 +1445,7 @@ _____________
 
 This window controls all the disks on the ST, and the two boxes up the top 
 hold the disks currently in the drives. 
+This window is resizable.
 
 
 -Disk Images
@@ -1478,46 +1483,46 @@ are emulated correctly most TOS versions didn't support them, you
 may find they will only work with TOS 2.06 or maybe not at all.
 
 ST disk images contain raw data bytes without any meta information (so
-that emulators must guess the disk configuration).
+that emulators must guess the disk configuration, if it isn't correctly
+written on the disk image).
 
 STW and HFE disk images include clock bits as well as data, encoded into MFM
 words.
-STW is the simplest such format, HFE is optimised for HxC floppy emulator
-hardware and is less "readable".
-Those images are more than twice larger than ST images but allow to emulate
-the WD1772 disk controller at a lower level and so handle special formats.
+Those STW and HFE images are more than twice larger than ST images but allow
+to emulate the WD1772 disk controller at a lower level and so handle special
+formats.
 Because they're formatted inside the emulated ST, there's no sides/tracks/
 sectors options. You get a raw disk full of random data, lucky you!
+STW is the simplest such format. If you open a disk image in a hex editor,
+you will find address marks coded as '$4489'.
+HFE is optimised for the HxC floppy emulator hardware. 
 
 Besides those ST, STW and HFE disk images Steem may create itself, it is also
 able to handle:
 
 -DIM and MSA images (read and write)
--STT images
--STX images (need pasti.dll)
--IPF and CTR images created with Kryoflux hardware (need CAPSImg.dll)
--SCP images created with Supercard Pro hardware
+-STT images (read-only)
+-STX images (read-only, need pasti.dll)
+-IPF and CTR images created with Kryoflux hardware (read-only, need
+CAPSImg.dll)
+-SCP images created with Supercard Pro hardware (read-only)
 
-About STX images, those are now also handled in Hatari, and it may happen
-that some game works in Hatari and not in Steem. Those are very rare cases
-and are explained by imprecisions in pasti.dll. This is no fault on Steem's
-side. The equivalent CTR, IPF or SCP images generally run fine.
-
-About IPF and CTR images, as they are handled by a third party plugin, whether
-they work or not is also up to this plugin. Make sure you have the last 
+About STX, IPF and CTR images, as they are handled by a third party plugin,
+whether they work or not is also up to this plugin. Make sure you have the last 
 version.
 
 About SCP images, Steem typically only uses the first 2 revs and also works
 with only 1 rev, provided the image is good. 
 It is very hard to get a perfect 1 rev copy, because common floppy drives 
 are not accurate enough to perfectly replicate data around the index pulse.
-Steem directly handles those bit-level images, there's no plugin, so any bug
-should be fixed in Steem itself. 
-But compatibility was very high at the introduction of the feature (v3.7.1).
+Steem SSE directly handles those bit-level images, there's no plugin, so any 
+bug should be fixed in Steem SSE itself. 
+But compatibility was already very high at the introduction of the feature
+(v3.7.1).
 This is the triumph of low-level emulation. All sorts of disk protections are
 handled just by transforming fluxes into bits using basic algorithms, without
 knowing anything of the protection.
-The algorithms (WD1772 emulation) were vaguely inspired by code in MESS and 
+Those algorithms (WD1772 emulation) were vaguely inspired by code in MESS and 
 SPS (formerly CAPS) projects.
 
 If you right click in the box to the right of the big drive icon, a context 
@@ -1585,8 +1590,8 @@ Right-clicking on this icon will toggle GEMDOS hard drives on/off.
 
 -ACSI Hard Drives
 
-Since v3.8, the Windows build of Steem features another icon for ACSI hard
-drives. Right-clicking on this icon will toggle ACSI hard drives on/off.
+Since v3.8, Steem SSE features another icon for ACSI hard drives. 
+Right-clicking on this icon will toggle ACSI hard drives on/off.
 They are img files and contain all sectors of an Atari hard disk (data only,
 like a ST floppy disk image).
 Using those files allows lower-level emulation of hard disks in Steem.
@@ -1598,7 +1603,8 @@ With Steem's native ACSI emulation, up to 4 virtual ACSI hard drives may be
 added.
 Note that unlike GEMDOS hard drives, each ACSI device may be split into
 several partitions (C:, D:...).
-The driver you use must be able to handle each of those drives...
+The driver you use must be able to handle each of those drives (Atari AHDI
+is fine).
 
 Two ready examples are provided in the download, images of the familiar
 SH204 and MEGAFILE 60.
@@ -1662,13 +1668,15 @@ The option also works on ACSI hard drives (but not GEMDOS).
 
 To access disk images in archives (ZIP or RAR files) Steem extracts them to a 
 temporary file and uses that like a normal disk image file. Unfortunately 
-re-archiving the temporary file is very difficult, Steem can't do it. Because 
-of this by default all disk images in archives are treated as read-only, so 
-they can't be changed. By turning on this option you can make Steem allow 
-writes to the temporary file, but any changes will get lost when the temporary 
-file is deleted (the disk is ejected). Some ST programs require their disk to 
-be read/write, this option will allow you to run them without having to extract 
-them.
+re-archiving the temporary file is very difficult, Steem can't do it. 
+Besides, modifying an archive is questionable, maybe we just shouldn't.
+Because of this by default all disk images in archives are treated as
+read-only, so they can't be changed. 
+By turning on this option you can make Steem allow writes to the temporary
+file, but any changes will get lost when the temporary file is deleted
+(the disk is ejected). 
+Some ST programs require their disk to be read/write, this option will 
+allow you to run them without having to extract them.
 
 
 -Use Pasti
@@ -1728,7 +1736,7 @@ worry about space waste).
 This should work with files inside archives.
 The main limitation is that it only handles single files.
 Also some programs just aren't meant to work that way.
-In this case they should be run from a hard disk.
+In this case they should be run from a floppy or hard disk.
 
 
 -Automatically Insert Second Disk
@@ -1929,7 +1937,7 @@ This option allows you to specify a country code if you're not happy with the
 UK.
 For example, type
 TosDefaultCountry=5
-in the [main] part of steem.ini
+in the [main] part of steem.ini for French.
 
 Country TOS table
 
@@ -1947,7 +1955,7 @@ Country TOS table
 
 - TosVersionWarning
 
-Steem checks TOS version for STF/STE compatibility and for better GEMDOS
+Steem SSE checks TOS version for STF/STE compatibility and for better GEMDOS
 hard drive emulation.
 But some people use an exotic setup.
 If you get sick of all those messages and think you know what you're doing,

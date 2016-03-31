@@ -73,7 +73,13 @@ void trace()
 
     draw_begin();
     debug_update_drawing_position();
-
+#if defined(SSE_BOILER_BLIT_WHEN_TRACING)
+    if (Blit.Busy && !Blit.HasBus && (ABSOLUTE_CPU_TIME-Blit.TimeToSwapBus)>=0)
+    {
+      INSTRUCTION_TIME(-4); //?? quick fix TODO
+      Blitter_Start_Now();
+    }
+#endif
     m68k_process();
     cpu_cycles_this_instruction=ABSOLUTE_CPU_TIME-old_cpu_time;
 

@@ -67,7 +67,12 @@
 
 // register names in Atari doc / Steem variable
 #define HSCROLL shifter_hscroll
+
+#if defined(SSE_MMU_LINEWID_TIMING)
+#define LINEWID MMU.Linewid0
+#else
 #define LINEWID shifter_fetch_extra_words
+#endif
 
 // ID which part of emulation required video rendering
 enum {DISPATCHER_NONE, DISPATCHER_CPU, DISPATCHER_LINEWIDTH,
@@ -88,9 +93,22 @@ enum {BORDERS_NONE, BORDERS_ON, BORDERS_AUTO_OFF, BORDERS_AUTO_ON};
     to shift lines with the same result.
     We try to rationalise this.
     Update: the delay is reduced after we corrected prefetch timing.
-    TODO, but all reversible
+    This latency would be GLUE - MMU, since it impacts the timing of video RAM
+    fetches (we renamed the constant MMU_PREFETCH_LATENCY instead of 
+    MMU_PREFETCH_LATENCY).
+    There's a further +4 latency in the Shifter before palette registers are 
+    used. 
+    8+16+4=28 cycles
+    Current implementation: wake-up states are not directly integrated
+    into this latency, nor in scanline start/stop cycles.
 */
-#define SHIFTER_PREFETCH_LATENCY 12 
+
+#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA) && defined(SSE_CPU_PREFETCH_TIMING)
+#define MMU_PREFETCH_LATENCY 8
+#else
+#define MMU_PREFETCH_LATENCY 12 
+#endif
+
 #define SHIFTER_RASTER_PREFETCH_TIMING 16//(shifter_freq==72 ? 4 : 16) 
 #define SHIFTER_RASTER (shifter_freq==72? 2 : (screen_res ? 4 : 8)) 
 
@@ -489,8 +507,8 @@ FF825E
     if(STpal[n]!=NewPal)
     {
       int CyclesIn=LINECYCLES;
-#if defined(SHIFTER_PREFETCH_LATENCY)
-      if(draw_lock && CyclesIn>SHIFTER_PREFETCH_LATENCY+SHIFTER_RASTER_PREFETCH_TIMING)
+#if defined(MMU_PREFETCH_LATENCY)
+      if(draw_lock && CyclesIn>MMU_PREFETCH_LATENCY+SHIFTER_RASTER_PREFETCH_TIMING)
 #else
       if(draw_lock)
 #endif
@@ -1175,9 +1193,9 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
 
   BOOL fl=FetchingLine();
   BOOL de_started=fl && cycles>=CurrentScanline.StartCycle
-    +SHIFTER_PREFETCH_LATENCY; // TESTING
+    +MMU_PREFETCH_LATENCY; // TESTING
   BOOL de_finished=de_started && cycles>CurrentScanline.EndCycle
-    +SHIFTER_PREFETCH_LATENCY; // TESTING
+    +MMU_PREFETCH_LATENCY; // TESTING
   BOOL de=de_started && !de_finished;
   BOOL middle_byte_corrected=FALSE;
 
@@ -1233,7 +1251,7 @@ void TShifter::WriteSDP(MEM_ADDRESS addr, BYTE io_src_b) {
     {
       int pxtodraw=320+BORDER_SIDE*2-scanline_drawn_so_far;
       int bytestofetch=pxtodraw/2;
-      int bytes_to_run=(CurrentScanline.EndCycle-cycles+SHIFTER_PREFETCH_LATENCY)/2;
+      int bytes_to_run=(CurrentScanline.EndCycle-cycles+MMU_PREFETCH_LATENCY)/2;
 //      ASSERT(CurrentScanline.EndCycle==460);  bytes_to_run+=2; // is it 460 or 464?//v3.5.4
       overscan_add_extra+=-44+bytes_to_run-bytestofetch;
     }

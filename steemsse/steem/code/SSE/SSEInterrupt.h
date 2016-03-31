@@ -101,16 +101,20 @@ inline void HBLInterrupt() {
     It explains why some interrupts seem to take too much time in
     emulation.
     Only partial now, TST/HBI (for a fix)
+    Update 3.8.1
+    It was another of those last-minute insights, can't help it.
+    A generalisation of this seems incorrect, but we'll keep it
+    until it breaks something or we find a better fix.
 */
-  if(SSE_HACKS_ON && M68000.PrefetchClass==1 && LINECYCLES>=4)
-  {
-    if((ir&0xFF00)==0x4A00 && (ir&0xFFC0)!=0x4AC0) //TST
+    if(SSE_HACKS_ON && M68000.PrefetchClass==1 && LINECYCLES>=4)
     {
-      INSTRUCTION_TIME(-4); // fixes Phantom end scroller
-      //TRACE_OSD("-4");
+      if((ir&0xFF00)==0x4A00 && (ir&0xFFC0)!=0x4AC0) //TST
+      {
+        INSTRUCTION_TIME(-4); // fixes Phantom end scroller
+        //TRACE_OSD("-4");
+      }
     }
-  }
-#endif  
+#endif//SSE_INT_CHECK_BEFORE_PREFETCH  
 
 #if defined(SSE_CPU_E_CLOCK2) 
     int current_cycles=ACT;

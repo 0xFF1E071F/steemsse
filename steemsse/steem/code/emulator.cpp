@@ -27,6 +27,7 @@ EXT int em_width INIT(480);
 EXT int em_height INIT(480);
 EXT int em_planes INIT(4);
 EXT int extended_monitor INIT(0);
+
 EXT DWORD n_cpu_cycles_per_second INIT(8000000),new_n_cpu_cycles_per_second INIT(0),n_millions_cycles_per_sec INIT(8);
 EXT int on_rte;
 EXT int on_rte_interrupt_depth;
@@ -234,7 +235,9 @@ void init_timings()
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
   shifter_pixel=shifter_hscroll; //start by drawing this pixel
   left_border=BORDER_SIDE;right_border=BORDER_SIDE;
+#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
   overscan_add_extra=0;
+#endif
   scanline_drawn_so_far=0;
 #if defined(SSE_GLUE_FRAME_TIMINGS4)
   cpu_timer_at_start_of_hbl=0; // the -444 was a Steem hack we can now remove
@@ -307,7 +310,21 @@ void intercept_os() // SS could we do much more here?
       if (r[0]==0x73){ //vdi
         MEM_ADDRESS adddd=m68k_lpeek(r[1]); //r[1] has vdi parameter block.  adddd points to the control array
         if (m68k_dpeek(adddd+0)==1){ //v_opnwk OPCODE
-          if (vdi_intout==0){ //only do this once
+#ifndef SSE_TOS_GEMDOS_EM_381A
+/*
+"There's a fix I'd like to see to the extended monitor hack.
+
+Currently, it's setup to do its thing only on the first open workstation call.
+It fails if a version of GDOS is loaded.
+
+It should be checking the device ID to make sure the request is for the screen, 
+and it should do the line-a patching every time, not just the first time. 
+
+The only first-time-only bit should be allocating memory for the screen buffer."
+*/
+          if (vdi_intout==0)
+#endif
+          { //only do this once
             on_rte=ON_RTE_EMHACK;
             on_rte_interrupt_depth=interrupt_depth;
             vdi_intout=m68k_lpeek(r[1]+12);
@@ -860,7 +877,7 @@ void ASMCALL mmu_confused_set_dest_to_addr(int bytes,bool cause_exception)
 
 void call_a000()
 {
-
+  //TRACE_INIT("call_a000()\n");
   on_rte_return_address=(PC32);
   //now save regs a0,a1,d0 ?
 #if !defined(SSE_INT_ROUNDING)
@@ -915,6 +932,18 @@ void extended_monitor_hack()
   m68k_dpoke(line_a_base-44,WORD(em_width/8-1));        //V_CEL_MX -44  WORD  Number of text columns - 1.
   m68k_dpoke(line_a_base-42,WORD(em_height/h-1));      //V_CEL_MY -42  WORD  Number of text rows - 1.
 
+#ifdef SSE_TOS_GEMDOS_EM_381B
+/* "Also, allocating memory for the screen buffer should not be done with Malloc
+as this will put it at an arbitrary location.
+
+I recommend that allocating the screen buffer should be a separate thing from
+patching line-a. Put it at the end of RAM and set the _memtop system variable
+to keep the buffer out of the TPA."
+*/
+
+  if(!vdi_intout)
+    Tos.HackMemoryForExtendedMonitor();
+#endif
   if (vdi_intout){
 //    log_write("Changing intout[0] etc.");
     m68k_dpoke(line_a_base-692,WORD(em_width-1));
@@ -923,6 +952,7 @@ void extended_monitor_hack()
     m68k_dpoke(vdi_intout,WORD(em_width-1));
     m68k_dpoke(vdi_intout+2,WORD(em_height-1));
 //    log_write(EasyStr("Wrote the new dimensions to $")+HEXSl(vdi_intout,6));
+#ifndef SSE_TOS_GEMDOS_EM_381B
   }else{
     int bytes_required=em_width*em_height*em_planes/8;
     if (bytes_required>32000){
@@ -952,6 +982,7 @@ void extended_monitor_hack()
       LPEEK(SV_v_bas_ad)=xbios2;
       LPEEK(SVscreenpt)=xbios2; */
     }
+#endif
   }
 
 /*

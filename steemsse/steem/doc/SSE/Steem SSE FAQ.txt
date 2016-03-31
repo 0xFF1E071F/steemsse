@@ -1,7 +1,7 @@
 Steem SSE FAQ
 ---------------
 
-v3.8.0
+v3.8.1
 
 Q:
 What is Steem?
@@ -210,17 +210,29 @@ hardware. You need a video card and a monitor capable of displaying at
 the exact emulated frequency, 50hz most of the time.
 I have such a 50hz display and it's just perfect.
 If your hardware is set to 60hz or 75hz, for example, it's impossible
-to have really smooth scrollers.
-Triple-buffering (also available in Steem, of course) can't help that.
+to have really smooth 50hz scrollers.
+Triple-buffering (also available in Steem, of course) can't help that,
+but VSync (working in a window in SteemSSE!) will.
 
 
 Q:
 What's the use of triple-buffering?
 A:
-Triple-buffering eliminates the horrible "ghosting" effect.
+Triple-buffering eliminates the horrible "ghosting" effect at the cost
+of high CPU use.
 The option is only really useful in Windows XP. In later versions,
-this should be automatically done by the system, and the option
-would only interfere.
+this should be automatically done by the system, without a CPU use penalty,
+and the option would only interfere.
+
+
+Q:
+What is better, VSync or triple-buffering?
+A:
+VSync if it works on your system. With this, rendering is almost perfect.
+The disadvantages are:
+- Monitors that can display at 50hz are rare.
+- Frequency is set in the options (fullscreen) or on your system (window),
+and won't automatically be adjusted if the emulated ST switches frequencies.
 
 
 Q:
@@ -230,7 +242,7 @@ It depends on the system, apparently it's due to sound initialisation.
 
 
 Q:
-I have problems with sound (in Windows)!
+I have problems with sound!
 A:
 Me too!
 It isn't easy to fix.
@@ -257,7 +269,7 @@ Partly it has to do with the large extension of "shifter tricks" emulation,
 more tests are required by scanline.
 Partly it has to do with parallel emulations running together, for the 
 HD6301, for CAPS...
-Some options may make a difference, like VSync.
+Some options may make a difference, like Triple buffering, VSync...
 
 
 Q:
@@ -273,18 +285,15 @@ A:
 I haven't been able to reproduce this yet, but I suspect this isn't a Steem
 bug. At this point, you'll have better luck with some search engine.
 You could try:
-
 - With other versions of Steem, including the "NoD3D" ones.
-
 - If options C1, mouse speed make a difference (please check the manual).
-
 - Run without Hyper-V if you're using it.
 
 
 Q:
 When Pasti is on, the red led for writing doesn't seem to work.
 A:
-It's because Pasti (v0.2h) doesn't attempt to emulate correct timings for
+It's because Pasti (v0.2i) doesn't attempt to emulate correct timings for
 writes. The operation is instantaneous, so you have no time to catch the 
 red led.
 Notice that without Pasti as well, write operations are followed by seek and 
