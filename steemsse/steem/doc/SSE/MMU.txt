@@ -89,7 +89,7 @@ STE it fetches DMA sound. It works even with full overscan (230 byte lines).
 On the fly change of video counter
 ====================================
 (source: tests on real hardware)
-Emulation of write to the video counter is actually straightforward,
+Emulation of write to the video counter (on STE) is actually straightforward,
 here's the rule:
 The byte in the MMU register is replaced with the byte on the bus, that's it,
 even if the counter is running at the time (Display Enable), whatever words

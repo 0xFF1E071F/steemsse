@@ -1,7 +1,7 @@
 Steem SSE manual
 =================
 
-v3.8.1
+v3.8.2
 
 About the manual
 _________________
@@ -17,7 +17,7 @@ http://ataristeven.exxoshost.co.uk/Steem_sse_manual.htm
 
 It can be read from inside Steem if you click on the blue (i) button.
 
-Please, before you ask questions, check the manual. 
+Please, before you ask questions or dare report a bug, check the manual. 
 
 There's no manual for the Boiler (debugger); in this we follow the same policy
 as Steem authors. If you use it, you know how to use it and will get familiar
@@ -171,6 +171,11 @@ http://ataristeven.exxoshost.co.uk/Other_downloads.htm
 
 For libraries marked with (*) it actually is recommended (fixed versions).
 ArchiveAccess.dll is included with the main download.
+
+The 64bit build of Steem SSE can use only 64bit DLL libraries.
+A pack is also available at:
+http://ataristeven.exxoshost.co.uk/Other_downloads.htm
+
 
 Steem uses additional data files, that are included in the main 
 download:
@@ -905,8 +910,8 @@ displayed, or the ST is in high resolution, the option is disabled.
 Steem SSE offers no less than 4 modes:
 
  384 x 270      normal, original Steem
- 400 x 275      max in fullscreen 800x600 mode (DirectDraw, straight blit)
- 413 x 275      max overscan (window only)
+ 400 x 275      only in the DirectDraw build, for fullscreen mode
+ 413 x 275      max overscan (window only, in fullscreen it will be 416)
  416 x 281      max plasma
 
 Why various sizes, while other emulators only offer one? 
@@ -917,9 +922,6 @@ There are many reasons:
 - Not all monitors display the full border, in particular LCD screens
   would typically display the same borders as Steem in 384x270 mode.
 - Most programs, including games, don't use the border at all.
-
-We claim Steem SSE has the most accurate display of "fullscreens" in 
-413 x 275 mode, and of "plasmas" in 416 x 281 mode.
 
 
 -Lock window size
@@ -985,10 +987,11 @@ screenshots to put on a website. Warning: Sometimes this might make a mess as
 Steem will have to shrink the picture, but this is never a problem if you are 
 using Stretch mode for drawing (see the Fullscreen options and Display | Window 
 Size options).
+In Steem SSE, you may even save NEO (Neochrome) screenshots!
      
   
-On Screen Display
------------------- 
+On Screen Display (OSD)
+------------------------
  
 The Steem OSD is there to look pretty and give information, it can be 
 configured to suit your needs.
@@ -1041,6 +1044,10 @@ than 8 megahertz.
 These messages pop up to delight and inform you, they have some useful tips for 
 how to get the best out of Steem.
 
+-Time
+
+If you ever wonder how much time you waste on Steem, this is the control for
+you. Mercifully it resets at each cold reset.
 
 -Disable on screen display
 
@@ -1051,50 +1058,69 @@ are taking screenshots.
 Fullscreen Mode
 ----------------   
   
+-Fullscreen GUI  
+  
 To enter fullscreen mode, click on the 'maximize' window control.
 
-How to exit fullscreen mode depends on whether DirectDraw or Direct3D
-is used. 
+To leave fullscreen mode, click on the top right icon of the interface
+if 'Fullscreen GUI' option is checked; if not, stopping emulation will
+go back to your desktop.
 
-With DirectDraw, there's an icon on top right to switch back to windowed 
-mode. You can also directly quit Steem (bottom left icon).
-
-With Direct3D, you switch back as soon as you stop emulation.
-It is so not because we want it that way but because Microsoft stopped 
-supporting its interface in fullscreen mode with Direct3D.
-If you have complaints, please address them to Microsoft.
+Fullscreen GUI is handy if it works. Blame Microsoft and video card driver 
+coder for all bugs.
 
 You may assign shortcuts to enter, exit, toggle fullscreen mode.
 
 
--Direct3D
+-Synchronisation
 
-Check this option to use Direct3D 9 instead of DirectDraw 7 for fullscreen.
-This is more compatible for computers running Windows 8 for example.
-Aspect ratio is preserved, whatever your screen form.
-When the option isn't checked, DirectDraw is used.
-When it is checked, other options on this page that are not relevant,
-because they only work with DirectDraw, are disabled.
+When the PC and ST are displaying a different number of frames per second you 
+can get jerkiness and wobbling that didn't appear on a real ST. Using these 
+options you can hopefully put that right. Vsync to PC display tells Steem to 
+wait for the PC to be ready before it displays its next frame. To make this 
+option work better you should try and make the PC refresh rate the same or 
+double the ST one. The ST used 50Hz (PAL), 60Hz (NTSC) and 72Hz (Mono). 
+Hardware (video cards and monitors) that displays at 50Hz is now rare.
 
-Because not every computer has a working version of DirectX9, a build
-without the feature is available.
+
+The other options depend on the build.
+In the main build, we use Direct3D9 for all video rendering.
+In the DirectDraw build, we use DirectDraw 2.
+
+
+-Options for the Direct3D build
+
+Your computer must have an up-to-date DirectX 9 installation. Unfortunately,
+Microsoft makes a point of not distributing full installations with Windows,
+so you may have to download some additional files. This hassle is a reason why
+we also maintain a DirectDraw build.
 
 --Mode
 
-This option lists all D3D 32bit fullscreen "modes" that are available on
+This lists all D3D 32bit fullscreen "modes" that are available on
 your video card. You just select the one you like.
 Note that whether a mode works or not also depends on your display.
 Only some CRT monitors will display 320x200 or 320x240 properly.
+On a LCD screen, you should go for the maximal resolution (the same as your
+desktop).
 
 --Crisp rendering
-Similar to DirectDraw "straight blit" mode, you get neat but big pixels.
+
+You get neat but blocky pixels.
+Don't use this in high resolution.
+
+--Triple Buffering
+
+One more buffer is used in video rendering.
+It doesn't seem to make a great difference.
+It depends on the video card abilities, it could fail on some systems. 
 
 
--DirectDraw
+-Options for the DirectDraw build
 
-If option Direct3D isn't checked (or there's no such option), then fullscreen
-uses DirectDraw, and following options are relevant.
-   
+In the DirectDraw build, Steem uses 800x600 mode if borders are displayed,
+640x480 if not.
+
 --Drawing mode
 
 This is a bit of a confusing option, you really don't need to know what the 
@@ -1120,6 +1146,7 @@ will not look good with very colourful games (for 8-bit mode the maximum is 118
 colours on screen at any time, most ST programs only need 16). This option is 
 very useful for high-res, because there are only 2 colours to display and using 
 65536 or more seems excessive. 
+Note: 8bit mode is not generally available anymore in 2016, 32bit is the norm.
 
 --Use 640x400
 
@@ -1128,16 +1155,6 @@ fullscreen. This means the ST display will fill the entire screen instead of
 having small borders to the top and bottom. You can only use 640x400 mode when 
 borders are set to "Never Show Borders".
 
---Synchronisation
-
-When the PC and ST are displaying a different number of frames per second you 
-can get jerkiness and wobbling that didn't appear on a real ST. Using these 
-options you can hopefully put that right. Vsync to PC display tells Steem to 
-wait for the PC to be ready before it displays its next frame. To make this 
-option work better you should try and make the PC refresh rate the same or 
-double the ST one. The ST used 50Hz (PAL), 60Hz (NTSC) and 70Hz (Mono). 
-Hardware (video cards and monitors) that displays at 50Hz is now rare.
-     
       
 Brightness/Contrast
 --------------------   
@@ -1170,6 +1187,8 @@ above) you can organise all your profiles using the profile folder display.
 Startup
 --------   
   
+You need to quit and restart Steem for those options to have effect.
+
 -Restore Previous State
 
 You can choose to have Steem remember the state of the ST when it quits, so you 
@@ -1210,7 +1229,7 @@ while Steem is running, if that is a problem try turning it off and see if your
 video card is one of the messy ones.
 
 
--Never Use DirectDraw/DirectSound
+-Never Use Direct3D/DirectDraw/DirectSound
 
 If you have DirectX errors when you boot up, or DirectX doesn't work properly, 
 then you can tell Steem to not use it. Sound doesn't work without DirectSound 
@@ -1316,8 +1335,7 @@ each drive instead (ST, MSA...)
 -Hacks
    
 This option covers two kinds of things:
-- Convenience hacks, like fitting the window size in Best Part of the Creation,
- or accelerating STE booting.
+- Convenience hacks, like accelerating STE booting.
 - Emulation hacks, when emulation of some feature isn't perfect yet we want
 the programs to run. Since we don't understand everything in the feature,
 those hacks could break something, hence the option.
@@ -1338,7 +1356,8 @@ This option mixes Steem's display modes 'stretch' with 'scanlines'.
 That way the picture resembles more the display of a not so sharp colour
 monitor on a real ST. 
 The option is available in both low and medium resolutions (not high).
-It works (or should) for both windowed and fullscreen modes. 
+It works (or should) for both windowed (especially in the DirectDraw build)
+and fullscreen modes. 
 Like other SSE video features, it's more a hack than anything else.
 That's why I chose this name, 'Interpolated scanlines', it sounds pretty
 elaborate.
@@ -1349,21 +1368,22 @@ elaborate.
 This version of 'vertical synchronisation' also works in windowed mode. 
 Your monitor needs a compatible refresh rate, or emulation speed is adjusted.
 With the right monitor, emulation of many programs is about perfect on the
-video side. Games like Goldrunner, Lethal Xcess, Xenon, etc. won't look
+video side. Games like Goldrunner, Lethal Xcess, Xenon, etc. won't look much
 smoother on a real ST.
 
    
--Triple Buffering
+-Triple Buffering (DirectDraw build)
    
 This may be useful to eliminate "tearing" or "ghosting", at the price 
 of higher CPU use.
-This should work in window mode as well as in fullscreen mode (DirectDraw,
-stretch mode only though).
+This should work in window mode as well as in fullscreen mode (stretch 
+mode only though).
 
 Compositing, a feature introduced in Windows Vista and enforced (can't 
 disable) in  Windows 8, could interfere with the latter two options, in
 that case they're not recommended.
-Compositing does its own Triple Buffering, but no VSync.
+Compositing does its own Triple Buffering, without CPU use penalty, but
+no VSync.
 
 
 -PAL aspect ratio in stretch mode
@@ -1427,6 +1447,13 @@ default.
 This behaviour isn't always what you would want, so use the option to
 change it. When it's unchecked, Steem will capture the mouse only when
 you click in the window.
+
+
+-VM-friendly mouse
+This option helps when Steem is run in a virtual machine (works with VirtualBox).
+Another method is used to poll the mouse, and the cursor isn't limited to the
+window frame. 
+Some people actually prefer this way, even without a virtual machine.
 
 
 -Fine tune CPU clock
@@ -1495,7 +1522,8 @@ Because they're formatted inside the emulated ST, there's no sides/tracks/
 sectors options. You get a raw disk full of random data, lucky you!
 STW is the simplest such format. If you open a disk image in a hex editor,
 you will find address marks coded as '$4489'.
-HFE is optimised for the HxC floppy emulator hardware. 
+HFE is optimised for the HxC floppy emulator hardware. It's quite handy if
+you own such device.
 
 Besides those ST, STW and HFE disk images Steem may create itself, it is also
 able to handle:
@@ -1684,7 +1712,7 @@ allow you to run them without having to extract them.
 In Steem SSE, you normally don't need to care about this option because
 it will use the Pasti DLL as needed.
 You would check it if you want Pasti to handle some ST or MSA disk image,
-but I know no case where Steem fails and not Pasti.
+but I know no case where Steem SSE fails and not Pasti.
 Changing this option won't reset the ST in Steem SSE.
 
 
@@ -1704,8 +1732,6 @@ This makes Pasti handle only STX images, Steem being in charge of ST and MSA
 images. 
 Interesting possibilities: you may try and copy STX images on a ST or STW disk
 image. No guarantee!
-You could have problems with this option if you use Pasti hard disk emulation
-at the same time.
 
 
 -Enable ghost disks for CTR-IPF-STX-SCP
@@ -1896,7 +1922,7 @@ screenshot name, rather than just the first word.
  NONOTIFYINIT - disable the "Steem is Initialising" box.
 
  STFMBORDER - if it is not overruled by the saved options or memory snapshot,
-this makes steem start as a STF.
+this makes Steem SSE start as a STF.
 
 
 INI file options
@@ -1904,6 +1930,7 @@ _________________
 
 Those options are inside the steem.ini file to avoid bloating the emulator
 interface (GUI) itself.
+They were mostly requested for special needs.
 
 
 - DefaultSnapshot
@@ -1932,7 +1959,7 @@ Limitation: mustn't be longer than 20 characters.
 
 - TosDefaultCountry
 
-When you use the ST Model switch, Steem tries to preselect a matching TOS.
+When you use the ST Model switch, Steem SSE tries to preselect a matching TOS.
 This option allows you to specify a country code if you're not happy with the
 UK.
 For example, type
@@ -1973,3 +2000,24 @@ MonochromeDisableBorder=1
 Borders will be off in monochrome mode, except if you switch them on after
 the cold reset.
 
+
+Debugging info
+_______________
+
+Steem SSE saves a log called TRACE.txt each time it is stopped. 
+It is overwritten at each cold reset.
+
+Abbreviations:
+
+DD    DirectDraw
+D3D   Direct3D
+HP    High Priority 
+ATS   Allow Task Switch
+PWI   Pause When Inactive
+FAFF  Fast Forward on Floppy Access
+SEOC  Start Emu On Click
+ALSS  Auto Load SnapShot
+Mem   Use Video Ram
+BHM   Hide Mouse on Blit
+DX    DirectX
+YM    Sampled YM-2149
