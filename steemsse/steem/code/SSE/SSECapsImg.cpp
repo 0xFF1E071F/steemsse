@@ -19,7 +19,7 @@
 #if defined(WIN32)
 #include <pasti/pasti.h>
 #endif
-EasyStr GetEXEDir();//#include <mymisc.h>//missing...
+//EasyStr GetEXEDir();//#include <mymisc.h>//missing...
 
 #if defined(SSE_DRIVE_IPF1)
 #include <stemdialogs.h>//temp...
@@ -98,7 +98,8 @@ int TCaps::Init() {
   }
   VERIFY( !CAPSGetVersionInfo((void*)&versioninfo,0) );
   ASSERT( !versioninfo.type );
-  TRACE_LOG("Using CapsImg library V%d.%d\n",versioninfo.release,versioninfo.revision);
+//  TRACE_LOG("Using CapsImg library V%d.%d\n",versioninfo.release,versioninfo.revision);
+  TRACE_INIT("CAPSImg.dll loaded, v%d.%d\n",versioninfo.release,versioninfo.revision);
   Version=versioninfo.release*10+versioninfo.revision; 
 
   CAPSIMG_OK= (Version>0);
@@ -167,8 +168,10 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
   bool found=0;
   for(int i=0;i<CAPS_MAXPLATFORM;i++)
   {
+#ifdef SSE_DEBUG
     if((img_info->platform[i])!=ciipNA)
       TRACE_LOG("%s ",CAPSGetPlatformName(img_info->platform[i]));
+#endif
     if(img_info->platform[i]==ciipAtariST 
 #if defined(SSE_IPF_CTRAW) 
 #if defined(SSE_DISK_IMAGETYPE)
@@ -369,6 +372,7 @@ int TCaps::IsIpf(BYTE drive) {
 
 /*  Callback functions. Since they're static, they access object data like
     any external function, using 'Caps.'
+    Ignore warning C4100.
 */
 
 void TCaps::CallbackDRQ(PCAPSFDC pc, UDWORD setting) {
@@ -446,7 +450,7 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
 #else
   ASSERT( Caps.IsIpf(drive) );
 #endif
-  ASSERT( drive==floppy_current_drive() );
+  ASSERT( drive==(unsigned)floppy_current_drive() );
 
   int side=Caps.SF314[drive].side;
 //  ASSERT( side==!(psg_reg[PSGR_PORT_A]& BIT_0) ); //elvira
@@ -516,7 +520,7 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
 
   CAPSGetInfo(&CRI,Caps.ContainerID[drive],track,side,cgiitRevolution,0);
   TRACE_LOG("max rev %d real %d next %d\n",CRI.max,CRI.real,CRI.next);
-  ASSERT( track==track_info.cylinder );
+  ASSERT( track==(int)track_info.cylinder );
   ASSERT( !track_info.sectorsize );
   TRACE_LOG("CAPS Lock %c:S%dT%d flags %X sectors %d bits %d overlap %d startbit %d timebuf %x\n",
     drive+'A',side,track,flags,track_info.sectorcnt,track_info.tracklen,track_info.overlap,track_info.startbit,track_info.timebuf);

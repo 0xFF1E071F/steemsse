@@ -52,9 +52,7 @@ void THistoryList::Show()
     ManageWindowClasses(SD_UNREGISTER);
     return;
   }
-
   SetWindowLong(Handle,GWL_USERDATA,(long)this);
-
   HWND hLB=CreateWindowEx(512,"ListBox","History",WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_USETABSTOPS |
                             WS_TABSTOP | LBS_NOINTEGRALHEIGHT | LBS_HASSTRINGS | LBS_NOTIFY,
                             10,10,280,250,Handle,(HMENU)100,HInstance,NULL);
@@ -133,6 +131,12 @@ void THistoryList::RefreshHistoryBox()
       header="Acia ";
     else if(pc_history[n]==LPEEK(0x11c))
       header="fdc "; 
+#endif
+
+#if defined(SSE_BOILER_BLIT_IN_HISTORY3)
+    if(pc_history[n]==0x98764321)
+      Dissasembly="BLiT";
+    else
 #endif
     Dissasembly=debug_parse_disa_for_display(disa_d2(pc_history[n]));
 #if defined(SSE_BOILER_HISTORY_VECS)

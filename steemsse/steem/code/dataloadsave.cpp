@@ -461,7 +461,8 @@ bool THardDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *S
     stemdos_boot_drive=pCSF->GetInt("HardDrives","BootDrive",stemdos_boot_drive);
 #endif
     DisableHardDrives=pCSF->GetInt("HardDrives","DisableHardDrives",DisableHardDrives);
-#ifdef SSE_GUI_DISK_MANAGER_HD_SELECTED
+//#ifdef SSE_GUI_DISK_MANAGER_HD_SELECTED
+#if defined(SSE_GUI_DISK_MANAGER_HD_SELECTED) && defined(WIN32)//ux382
     SendMessage(GetDlgItem(DiskMan.Handle,10),BM_SETCHECK,!HardDiskMan.DisableHardDrives,0);
 #endif
     update_mount();
@@ -924,8 +925,11 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_DISK_GHOST)
     SSE_GHOST_DISK=pCSF->GetInt("Options","GhostDisk",SSE_GHOST_DISK);
 #endif
-#if defined(SSE_VID_D3D_OPTION)
+#if defined(SSE_VID_D3D_OPTION) &&!defined(SSE_VID_D3D_ONLY)
     SSE_OPTION_D3D=pCSF->GetInt("Options","Direct3D",SSE_OPTION_D3D);
+#ifndef SSE_VID_D3D_ONLY
+    Disp.ScreenChange();
+#endif
 #endif
 #if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION)
     OPTION_ST_ASPECT_RATIO=pCSF->GetInt("Options","STAspectRatio",OPTION_ST_ASPECT_RATIO);
@@ -953,13 +957,16 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     file. This seems appropriate behaviour.
     bugfix v3.8.0: statefile as argument was ignored, broke DemoBaseST
 */
-//    TRACE_INIT("BootStateFile %s\n",BootStateFile.Text);
+
 #if defined(SSE_VAR_SNAPSHOT_INI2)
     BootStateFile=pCSF->GetStr("Main","DefaultSnapshot",BootStateFile.Text);
 #else
     BootStateFile=pCSF->GetStr("Main","DefaultSnapshot","");
 #endif
-    TRACE_INIT("BootStateFile %s\n",BootStateFile.Text);
+#ifdef SSE_DEBUG
+    if(BootStateFile.NotEmpty())
+      TRACE_INIT("BootStateFile %s\n",BootStateFile.Text);
+#endif
 #endif
 #if defined(SSE_STF_MATCH_TOS3)
     Tos.DefaultCountry=pCSF->GetInt("Main","TosDefaultCountry",7); // 7=UK
@@ -981,6 +988,10 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #endif
 #if defined(SSE_VID_D3D_LIST_MODES)
     Disp.D3DMode=pCSF->GetInt("Display","D3DMode",Disp.D3DMode);
+#if defined(SSE_VID_D3D_382)
+    Disp.D3DUpdateWH(Disp.D3DMode); // function returns if no pD3D
+  //TRACE_LOG("Option D3D mode = %d %dx%d\n",Disp.D3DMode,Disp.D3DFsW,Disp.D3DFsH);
+#endif
 #endif
 #if defined(SSE_INT_MFP_OPTION)
   OPTION_PRECISE_MFP=pCSF->GetInt("Option","MC68901",OPTION_PRECISE_MFP);
@@ -999,6 +1010,15 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #endif//acsi
 #if defined(SSE_VAR_KEYBOARD_CLICK2) // option is persistent
   OPTION_KEYBOARD_CLICK=pCSF->GetInt("Option","KeyboardClick",OPTION_KEYBOARD_CLICK);
+#endif
+#if defined(SSE_VID_FS_GUI_OPTION)
+  OPTION_FULLSCREEN_GUI=pCSF->GetInt("Option","FullScreenGUI",OPTION_FULLSCREEN_GUI);
+#endif
+#if defined(SSE_GUI_MOUSE_VM_FRIENDLY)
+  SSEOption.VMMouse=pCSF->GetInt("Option","VMMouse",SSEOption.VMMouse);
+#endif
+#if defined(SSE_OSD_SHOW_TIME)
+  SSEOption.OsdTime=pCSF->GetInt("Option","OsdTime",SSEOption.OsdTime);
 #endif
 
 #endif//steven_seagal
@@ -1053,17 +1073,20 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 
 #endif // SS
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VARIOUS____)
-#else
     frameskip=pCSF->GetInt("Options","FrameSkip",frameskip);
-#endif
 //    osd_on=(bool)pCSF->GetInt("Options","OSD",osd_on);
+#if !defined(SSE_VID_D3D_ONLY)
     draw_fs_blit_mode=pCSF->GetInt("Options","DrawFSMode",draw_fs_blit_mode);
+#endif
     FSDoVsync=(bool)pCSF->GetInt("Display","FSDoVsync",FSDoVsync);
+#if !defined(SSE_VID_D3D_ONLY)
     prefer_res_640_400=(bool)pCSF->GetInt("Display","Prefer640x400",prefer_res_640_400);
+#endif
     ResChangeResize=(bool)pCSF->GetInt("Display","ResChangeResize",ResChangeResize);
+#if !defined(SSE_VID_D3D_ONLY)
     draw_fs_fx=pCSF->GetInt("Options","InterlaceMode",draw_fs_fx);
     if (draw_fs_fx==DFSFX_BLUR) draw_fs_fx=DFSFX_NONE;
+#endif
     UNIX_ONLY( ResChangeResize=true; )
     WinSizeForRes[0]=pCSF->GetInt("Display","WinSizeLowRes",WinSizeForRes[0]);
     WinSizeForRes[1]=pCSF->GetInt("Display","WinSizeMedRes",WinSizeForRes[1]);
@@ -1072,8 +1095,14 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     int sl=pCSF->GetInt("Display","DrawWinMode_LowRes",-1);
     int sm=pCSF->GetInt("Display","DrawWinMode_MedRes",-1);
     if (sl<0){
+#if defined(SSE_VID_D3D_ONLY)
+      sl=sm=DWM_NOSTRETCH;
+#else
       sl=sm=int((draw_fs_blit_mode==DFSM_STRETCHBLIT || draw_fs_blit_mode==DFSM_LAPTOP) ? DWM_STRETCH:DWM_NOSTRETCH);
+#endif
+#if !defined(SSE_VID_D3D_ONLY)
       if (draw_fs_fx==DFSFX_GRILLE && sl==DWM_NOSTRETCH) sl=sm=DWM_GRILLE;
+#endif
     }
     draw_win_mode[0]=sl;
     draw_win_mode[1]=sm;
@@ -1102,7 +1131,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     brightness=pCSF->GetInt("Options","Brightness",brightness);
     contrast=pCSF->GetInt("Options","Contrast",contrast);
     make_palette_table(brightness,contrast);
-
+#if !defined(SSE_VID_D3D_ONLY)
     for (int c16=0;c16<2;c16++){
       Str c256=LPSTR(c16 ? "":"_256");
       for (int res=0;res<3;res++){
@@ -1110,7 +1139,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
         tested_pc_hz[c16][res]=(WORD)pCSF->GetInt("Options",Str("TestedHz_")+res+c256,tested_pc_hz[c16][res]);
       }
     }
-
+#endif//#if !defined(SSE_VID_D3D_ONLY)
     Disp.DoAsyncBlit=pCSF->GetInt("Options","DoAsyncBlit",Disp.DoAsyncBlit);
 
     ScreenShotFol=pCSF->GetStr("Options","ScreenShotFol",WriteDir+SLASH+"screenshots");
@@ -1373,10 +1402,13 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 
 
   pCSF->SetStr("Options","FrameSkip",EasyStr(frameskip));
+#if !defined(SSE_VID_D3D_ONLY)
   pCSF->SetStr("Options","DrawFSMode",EasyStr(draw_fs_blit_mode));
+#endif
   pCSF->SetStr("Display","FSDoVsync",LPSTR(FSDoVsync ? "1":"0"));
+#if !defined(SSE_VID_D3D_ONLY)
   pCSF->SetStr("Display","Prefer640x400",LPSTR(prefer_res_640_400 ? "1":"0"));
-
+#endif
   pCSF->SetStr("Options","ShowToolTips",EasyStr(ShowTips));
 
 #if defined(STEVEN_SEAGAL)
@@ -1488,6 +1520,15 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_VAR_KEYBOARD_CLICK2)
   pCSF->SetStr("Option","KeyboardClick",EasyStr(OPTION_KEYBOARD_CLICK));
 #endif
+#if defined(SSE_VID_FS_GUI_OPTION)
+  pCSF->SetStr("Option","FullScreenGUI",EasyStr(OPTION_FULLSCREEN_GUI));
+#endif
+#if defined(SSE_GUI_MOUSE_VM_FRIENDLY)
+  pCSF->SetStr("Option","VMMouse",EasyStr(SSEOption.VMMouse));
+#endif
+#if defined(SSE_OSD_SHOW_TIME)
+  pCSF->SetStr("Option","OsdTime",EasyStr(SSEOption.OsdTime));
+#endif
 
 //boiler
 #if defined(SSE_BOILER_SSE_PERSISTENT)
@@ -1538,7 +1579,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetStr("Options","SlowMotionSpeed",EasyStr(slow_motion_speed));
 
   pCSF->SetStr("Options","Page",EasyStr(Page));
-
+#if !defined(SSE_VID_D3D_ONLY)
   for (int c16=0;c16<2;c16++){
     Str c256=LPSTR(c16 ? "":"_256");
     for (int res=0;res<3;res++){
@@ -1547,6 +1588,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
     }
   }
   pCSF->SetInt("Options","InterlaceMode",draw_fs_fx);
+#endif//#if !defined(SSE_VID_D3D_ONLY)
   pCSF->SetInt("Options","DoAsyncBlit",Disp.DoAsyncBlit);
 
   pCSF->SetStr("Options","Volume",EasyStr(MaxVolume));
@@ -1655,7 +1697,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   else
 #endif
   pCSF->SetStr("Machine","ROM_File",ROMFile);
-  TRACE_INIT("write ROM_Add_Dir = %s\n",TOSBrowseDir.Text);
+  //TRACE_INIT("write ROM_Add_Dir = %s\n",TOSBrowseDir.Text);
   pCSF->SetStr("Machine","ROM_Add_Dir",TOSBrowseDir);
   pCSF->SetStr("Machine","Cart_File",CartFile);
   pCSF->SetStr("Machine","LastCartFile",LastCartFile);

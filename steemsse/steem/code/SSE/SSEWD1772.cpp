@@ -990,7 +990,7 @@ int TWD1772Dpll::GetNextBit(int &tm, BYTE drive) {
     aa=ImageSCP[drive].GetNextTransition(timing_in_us); // cycles to next 1
     TRACE_MFM("(%d)",timing_in_us);
 
-#if defined(SSE_WD1772_WEAK_BITS) 
+#if defined(SSE_WD1772_WEAK_BITS) //NO
 /*  We make sure that Dungeon Master's weak bits are paired.
     See sector 0-00-7
     Formed bytes should be random, out of those 2 values only:
@@ -1051,7 +1051,7 @@ int TWD1772Dpll::GetNextBit(int &tm, BYTE drive) {
 
     slot++;
     tm = etime;
-    ASSERT( 128*16==0x800 );
+    //ASSERT( 128*16==0x800 );
     if(counter & 0x800)
       break;
   }

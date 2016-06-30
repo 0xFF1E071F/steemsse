@@ -19,7 +19,7 @@ extern char ansi_name[MAX_PATH];
 //---------------------------------------------------------------------------
 void StemWinResize(int xo,int yo)
 {
-  //TRACE_INIT("StemWinResize(%d,%d)\n",xo,yo);
+  TRACE_INIT("StemWinResize(%d,%d)\n",xo,yo);
   int res=screen_res;
   if (mixed_output)
     res=1;
@@ -39,7 +39,8 @@ void StemWinResize(int xo,int yo)
 #endif
 
 
-#if defined(SSE_VID_STRETCH_ASPECT_RATIO)
+//#if defined(SSE_VID_STRETCH_ASPECT_RATIO)
+#if defined(SSE_VID_STRETCH_ASPECT_RATIO) && defined(WIN32) //ux382
 /*  v3.8.0
     With this little mod we have PAL aspect ratio in windowed mode too.
 */
@@ -228,6 +229,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 #endif
 
         int x_gap=0,y_gap=0;
+#if !defined(SSE_VID_D3D_ONLY)
         if (draw_fs_blit_mode!=DFSM_LAPTOP){
 #ifndef NO_CRAZY_MONITOR
           if (extended_monitor){
@@ -238,11 +240,13 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           if (border & 1){
             x_gap=(800 - (BORDER_SIDE+320+BORDER_SIDE)*2)/2;
             y_gap=(600-(BORDER_TOP*2+400+BORDER_BOTTOM*2))/2;
+#if !defined(SSE_VID_D3D_ONLY)
           }else if (draw_fs_topgap){
             y_gap=draw_fs_topgap;
+#endif//#if !defined(SSE_VID_D3D_ONLY)
           }
         }
-
+#endif//#if !defined(SSE_VID_D3D_ONLY)
         HBRUSH br=(HBRUSH)GetStockObject(BLACK_BRUSH);
         RECT rc;
         //TRACE("x_gap %d y_gap %d\n",x_gap,y_gap);
@@ -332,7 +336,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           if (LOWORD(wPar)==207) fn=WriteDir+SLASH+"auto_reset_backup.sts", AddToHistory=0;
           if (LOWORD(wPar)==208) fn=WriteDir+SLASH+"auto_loadsnapshot_backup.sts", AddToHistory=0;
 #if defined(SSE_VAR_SNAPSHOT_INI)
-          TRACE("BootStateFile = %s\n",BootStateFile.Text);
+          //TRACE("BootStateFile = %s\n",BootStateFile.Text);
           if(LOWORD(wPar)==209)
             fn=BootStateFile;
 #endif
@@ -380,7 +384,11 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           EasyStr FilNam=FileSelect(Win,LOWORD(wPar)==443
             ?T("Load configuration file"):T("Save configuration file"),
             LastCfgFol,
+#if defined(SSE_VS2015)
+			FSTypes(0, T("Configuration files").Text, "*." CONFIG_FILE_EXT, NULL),
+#else
             FSTypes(0,T("Configuration files").Text,"*."CONFIG_FILE_EXT,NULL),
+#endif
             1,(LOWORD(wPar)==443),CONFIG_FILE_EXT,
             GetFileNameFromPath(LastCfgFile));
           if (FilNam.NotEmpty()){
@@ -535,9 +543,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           PostMessage(StemWin,WM_USER,12,0);
           break;
         }
-
         SetWindowLong(DiskMan.Handle,GWL_STYLE,(GetWindowLong(DiskMan.Handle,GWL_STYLE) & ~WS_MAXIMIZE) | WS_MINIMIZEBOX);
-
         bool MaximizeDiskMan=DiskMan.Maximized && DiskMan.IsVisible();
         for (int n=0;n<nStemDialogs;n++){
           DEBUG_ONLY( if (DialogList[n]!=&HistList) ) DialogList[n]->MakeParent(NULL);
@@ -564,7 +570,6 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           break;
         }
         SetWindowLong(StemWin,GWL_STYLE,WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_SIZEBOX | WS_MAXIMIZEBOX | WS_VISIBLE);
-
         SetForegroundWindow(StemWin);
         CheckResetDisplay();
 
@@ -958,21 +963,36 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
     case WM_SIZE:
     {
       int cw=LOWORD(lPar),ch=HIWORD(lPar);
+      //TRACE("WM_SIZE cw %d ch %d\n",cw,ch);
       RECT rc={0,MENUHEIGHT,cw,ch};
       InvalidateRect(Win,&rc,0);
 #ifndef ONEGAME
       if (FullScreen){
+#if defined(SSE_VID_D3D) && defined(SSE_VID_FS_GUI_OPTION) 
+        //circles  around a bug I don't understand
+        if(SSE_OPTION_D3D)
+          cw=Disp.D3DFsW, ch=Disp.D3DFsH; // make size correct
+#endif
         if (FSQuitBut) SetWindowPos(FSQuitBut,0,0,ch-14-MENUHEIGHT,0,0,SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
-
-        SetWindowPos(GetDlgItem(Win,106),0,cw-20,0,0,0,SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+        SetWindowPos(GetDlgItem(Win,106),0,cw-20,0,0,0,SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);//SS backs to windoed mode
         cw-=30;
       }
+#if defined(SSE_VAR_OPT_382)//useless?
+      UINT mask=(SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
+      SetWindowPos(GetDlgItem(Win,105),0,cw-135,0,0,0,mask);
+      SetWindowPos(GetDlgItem(Win,113),0,cw-112,0,0,0,mask);
+      SetWindowPos(GetDlgItem(Win,112),0,cw-89,0,0,0,mask);
+      SetWindowPos(GetDlgItem(Win,107),0,cw-66,0,0,0,mask);
+      SetWindowPos(GetDlgItem(Win,103),0,cw-43,0,0,0,mask);
+      SetWindowPos(GetDlgItem(Win,100),0,cw-20,0,0,0,mask);
+#else
       SetWindowPos(GetDlgItem(Win,105),0,cw-135,0,0,0,SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
       SetWindowPos(GetDlgItem(Win,113),0,cw-112,0,0,0,SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
       SetWindowPos(GetDlgItem(Win,112),0,cw-89,0,0,0,SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
       SetWindowPos(GetDlgItem(Win,107),0,cw-66,0,0,0,SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
       SetWindowPos(GetDlgItem(Win,103),0,cw-43,0,0,0,SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
       SetWindowPos(GetDlgItem(Win,100),0,cw-20,0,0,0,SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
+#endif
       if (ResetInfoWin) SendMessage(ResetInfoWin,WM_USER,1789,0);
 #endif
 
@@ -997,6 +1017,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         TRACE_LOG("CanUse_400 %d cw %d %d ch %d %d\n",CanUse_400,cw,(4+640+ 4* SideBorderSizeWin),ch,(MENUHEIGHT+4+400 + 2*(BORDER_TOP+BottomBorderSize)));
       }else{
         CanUse_400=(cw==644 && ch==404+MENUHEIGHT);
+        TRACE_LOG("CanUse_400 %d cw %d ch %d\n",CanUse_400,cw,ch);
       }
 #else
     }else if (border & 1){
@@ -1062,11 +1083,12 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 #endif
       if (FullScreen){
         if (wPar){  //Activating
+#if !defined(SSE_VID_D3D_ONLY)
           if (using_res_640_400){
             using_res_640_400=0;
             change_fullscreen_display_mode(true);
           }
-
+#endif
           for (int n=0;n<nStemDialogs;n++){
             if (DialogList[n]->Handle){
               SetWindowPos(DialogList[n]->Handle,NULL,DialogList[n]->FSLeft,DialogList[n]->FSTop,0,0,SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
@@ -1188,7 +1210,8 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           int FlagIdx=OptionBox.TOSLangToFlagIdx((int)ROM_PEEK(0x1D));
           ASSERT(FlagIdx!=-1); // error code
           if (FlagIdx>=0){ 
-            ASSERT(FlagIdx<10);
+             //ASSERT(FlagIdx<10); 
+             ASSERT(FlagIdx<14); 
             BitBlt(myHdc,myRect.left+((WAKE_UP_STATE)?58:51),4,RC_FLAG_WIDTH,
               RC_FLAG_HEIGHT,TempDC,FlagIdx*RC_FLAG_WIDTH,0,SRCCOPY);
           }
@@ -1467,7 +1490,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
 //---------------------------------------------------------------------------
 void SetStemWinSize(int w,int h,int xo,int yo)
 {
-  //TRACE_LOG("SetStemWinSize w %d,h %d,%d,%d\n",w,h,xo,yo); //not that important
+  TRACE_INIT("SetStemWinSize %d %d %d %d\n",xo,yo,w,h);
 #if defined(STEVEN_SEAGAL) && defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
   if(SDL.InUse)
   {
@@ -1486,6 +1509,14 @@ void SetStemWinSize(int w,int h,int xo,int yo)
     if (bAppMaximized==0 && bAppMinimized==0){
       RECT rc;
       GetWindowRect(StemWin,&rc);
+
+      /*
+      TRACE_INIT("Window %d %d %d %d\n",
+                    max(rc.left+xo,0l),
+                    max((int)(rc.top+yo),-GetSystemMetrics(SM_CYCAPTION)),
+                    w+4+GetSystemMetrics(SM_CXFRAME)*2,
+                    h+MENUHEIGHT+4+GetSystemMetrics(SM_CYFRAME)*2+GetSystemMetrics(SM_CYCAPTION));
+*/
       SetWindowPos(StemWin,0,max(rc.left+xo,0l),max((int)(rc.top+yo),-GetSystemMetrics(SM_CYCAPTION)),
                     w+4+GetSystemMetrics(SM_CXFRAME)*2,
                     h+MENUHEIGHT+4+GetSystemMetrics(SM_CYFRAME)*2+GetSystemMetrics(SM_CYCAPTION),
@@ -1624,14 +1655,36 @@ LRESULT __stdcall FSQuitWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 //---------------------------------------------------------------------------
 HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
 {
+  TRACE_INIT("change_fullscreen_display_mode\n");
   HRESULT Ret;
 
+#if defined(SSE_VID_DD_FS_32BIT)
+/*  Fortunately, we only need to specify bpp, Steem already has the correct
+    rendering routines.
+*/
+  int bpp=32; // new default
+  if(display_option_8_bit_fs && SSEConfig.VideoCard8bit)
+    bpp=8;
+  else if(SSEConfig.VideoCard16bit)
+    bpp=16;
+#else
   int bpp=int(display_option_8_bit_fs ? 8:16);
-
+#endif
+#if defined(SSE_VID_D3D_ONLY)
+  RECT rc={0,MENUHEIGHT,monitor_width,monitor_height};
+//  int hz256=0;
+  int hz_ok=0,hz=0;
+#else
   RECT rc={0,MENUHEIGHT,640,480};
 
   int hz256=int(display_option_8_bit_fs ? 0:1);
-  int hz_ok=0,hz=prefer_pc_hz[hz256][1+(border & 1)];
+  
+#if defined(SSE_VID_D3D_ONLY)
+  ///int hz_ok=0,hz=0;
+#else
+  int hz_ok=0,hz=prefer_pc_hz[hz256][1+(border & 1)]
+#endif
+  ;
 #if !defined(SSE_VID_DISABLE_AUTOBORDER)
   if (border==3){ // auto border on
     border&=~1;
@@ -1648,14 +1701,17 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
     rc.right=max(em_width,640);rc.bottom=max(em_height,480);hz=0;
   }
 #endif
+//#if !defined(SSE_VID_D3D_ONLY)
   if (draw_fs_blit_mode==DFSM_LAPTOP){
     rc.right=monitor_width;rc.bottom=monitor_height;
   }
-
+//#endif
+#endif//#if defined(SSE_VID_D3D_ONLY)
   if ((Ret=Disp.SetDisplayMode(rc.right,rc.bottom,bpp,hz,&hz_ok))!=DD_OK) 
     return Ret;
+#if !defined(SSE_VID_D3D_ONLY)
   if (hz) tested_pc_hz[hz256][1+(border & 1)]=MAKEWORD(hz,hz_ok);
-
+#endif
 #ifdef WIN32
   SetWindowPos(StemWin,HWND_TOPMOST,0,0,rc.right,rc.bottom,0);
   if (resizeclippingwindow){
@@ -1673,8 +1729,9 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
                     SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
     }
   }
+#if !defined(SSE_VID_D3D_ONLY)
   OptionBox.UpdateHzDisplay();
-
+#endif
   HDC DC=GetDC(StemWin);
   FillRect(DC,&rc,(HBRUSH)GetStockObject(BLACK_BRUSH));
   ReleaseDC(StemWin,DC);

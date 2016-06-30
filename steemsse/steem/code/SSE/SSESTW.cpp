@@ -36,7 +36,9 @@
 (TRACK_HEADER_SIZE+NUM_BYTES*sizeof(WORD)))
 
 #if defined(SSE_VAR_RESIZE_372) // saves space, complicates debugging...
+#if !defined(SSE_VAR_RESIZE_382)
 #define fCurrentImage FloppyDrive[Id].f
+#endif
 #define nSides FloppyDrive[Id].Sides
 #define nTracks FloppyDrive[Id].TracksPerSide
 #if defined(SSE_DISK1)

@@ -154,7 +154,11 @@ void THardDiskManager::Show()
     return;
   }
 
+#if defined(SSE_X64_LPTR)
+  SetWindowLongPtr(Handle, GWLP_USERDATA, (LONG_PTR)this);
+#else
   SetWindowLong(Handle,GWL_USERDATA,(long)this);
+#endif
 
   if (FullScreen) MakeParent(StemWin);
 #ifdef SSE_ACSI_OPTION_INDEPENDENT
@@ -425,7 +429,11 @@ void THardDiskManager::Hide()
   ManageWindowClasses(SD_UNREGISTER);
 }
 //---------------------------------------------------------------------------
+#if defined(SSE_X64_LPTR)
+#define GET_THIS This=(THardDiskManager*)GetWindowLongPtr(Win,GWLP_USERDATA);
+#else
 #define GET_THIS This=(THardDiskManager*)GetWindowLong(Win,GWL_USERDATA);
+#endif
 
 LRESULT __stdcall THardDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 {

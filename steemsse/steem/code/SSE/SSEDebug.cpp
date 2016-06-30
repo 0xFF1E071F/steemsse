@@ -2,7 +2,8 @@
 #if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 #include "SSEMMU.h"
 #endif
-#if defined(SSE_DEBUG) 
+
+#if defined(SSE_DEBUG) || defined(DEBUG_FACILITIES_IN_RELEASE)
 
 #if defined(UNIX) || defined(BCC_BUILD)
 #include "../pch.h" 
@@ -34,13 +35,18 @@
 #endif
 #include "SSEInterrupt.h"
 
+#include "SSECpu.h"//tmp
+#if defined(SSE_DEBUG)
 int debug0,debug1=0,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9;
+#endif
 
+#if defined(SSE_DEBUG)
 #if defined(SSE_IKBD_6301)
 #if defined(SSE_UNIX)
 extern "C" void (*hd6301_trace)(char *fmt, ...);
 #else
 extern "C" void (_stdcall *hd6301_trace)(char *fmt, ...);
+#endif
 #endif
 #endif
 
@@ -50,9 +56,9 @@ extern "C" void (_stdcall *hd6301_trace)(char *fmt, ...);
 TDebug Debug; // singleton
 
 TDebug::TDebug() {
-
+#if defined(SSE_DEBUG)
   ZeroMemory(&debug0,10*sizeof(int));  
-
+#endif
 #if defined(SSE_DEBUG_LOG_OPTIONS)
   //  We must init those variables for the builds without the boiler
   ZeroMemory(logsection_enabled,100*sizeof(bool)); // 100> our need
@@ -90,15 +96,31 @@ TDebug::TDebug() {
 #endif
 
 #if defined(SSE_DEBUG_TRACE_FILE)
+#if defined(SSE_DEBUG_ASSERT)
   IgnoreErrors=0; 
+#endif
+#if defined(SSE_DEBUG)
   nTrace=0; // trace counter
+#endif
+#if defined(SSE_VAR_OPT_382)
+  SetCurrentDirectory(RunDir.Text);
+#else
   SetCurrentDirectory(GetEXEDir().Text);
+#endif
   trace_file_pointer=freopen(SSE_TRACE_FILE_NAME, "w", stdout );
+#ifdef SSE_DEBUG
   if(!trace_file_pointer)
     Alert("Couldn't open TRACE file",GetEXEDir().Text,0);
+#endif
   //if(!trace_file_pointer) TRACE_IDE("%s\n",WriteDir.Text);
 #if !defined(SSE_BOILER_WIPE_TRACE2)
 #ifdef WIN32 // at each start now because of wiping
+
+#ifdef TRACE_FOR_RELEASE //date is enough, time on start/stop
+  char sdate[9];
+  _strdate( sdate );
+  if(trace_file_pointer)printf("Steem SSE TRACE - %s\n",sdate);
+#else
   // http://www.ehow.com/how_2190605_use-date-time-c-program.html
   char sdate[9];
   char stime[9];
@@ -108,14 +130,16 @@ TDebug::TDebug() {
 #endif
 #endif
 #endif
+#endif
 
+#if defined(SSE_DEBUG)
 #if defined(SSE_IKBD_6301)
   hd6301_trace=&TDebug::TraceLog;
 #endif
-
 #if defined(SSE_OSD_DEBUG_MESSAGE)
   TraceOsd("Debug Build"); // implies clean init
 #endif
+#endif//#if defined(SSE_DEBUG)
 
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
   ZeroMemory(&InterruptTable,sizeof(SInterruptTable));
@@ -127,7 +151,6 @@ TDebug::TDebug() {
 #if defined(SSE_BOILER_STACK_CHOICE)
   StackDisplayUseOtherSp=0;
 #endif
-
 }
 
 
@@ -135,12 +158,14 @@ TDebug::~TDebug() {
 #if defined(SSE_DEBUG_TRACE_FILE)
   if(trace_file_pointer)
   {
-    TRACE("Closing TRACE file...\n"); // silly but it shows it's OK
+    //TRACE("Closing TRACE file...\n"); // silly but it shows it's OK
+    TRACE("End\n");
     fclose(trace_file_pointer);
   }
 #endif
 }
 
+#if defined(SSE_DEBUG) || defined(SSE_OSD_SHOW_TIME)
 
 void TDebug::Vbl(){ 
 #if defined(SSE_OSD_CONTROL) && defined(SSE_BOILER_FRAME_INTERRUPTS)
@@ -176,20 +201,44 @@ void TDebug::Vbl(){
   }
 #endif
 
-
   FrameInterrupts=0;
   FrameMfpIrqs=0;
 #endif  
-   nHbis=0;
+
+#if defined(SSE_OSD_SHOW_TIME)
+  if(OPTION_OSD_TIME)
+  {
+    DWORD ms=timer-StartingTime;
+    DWORD s=ms/1000;
+    DWORD h=s/(60*60);
+    s=s%(60*60);
+    DWORD m=s/60;
+    s=s%60;
+    TRACE_OSD2("%02d:%02d:%02d",h,m,s);
+  }
+#endif
+#ifdef SSE_DEBUG
+  nHbis=0;
+#endif
 }
 
+#endif//#if defined(SSE_DEBUG)
 
-#if defined(SSE_DEBUG_RESET)
+
+#if defined(SSE_DEBUG_RESET) 
 
 void TDebug::Reset(bool Cold) {
-  TRACE("Reset (%d)\n",Cold);
+  TRACE_INIT("%s reset\n",(Cold?"Cold":"Warm"));
   if(Cold)
+  {
+#if defined(SSE_DEBUG_ASSERT)
     IgnoreErrors=0;
+#endif
+#if defined(SSE_OSD_SHOW_TIME)
+    StartingTime=timeGetTime();
+    StoppingTime=0;
+#endif
+  }
 #if defined(SSE_OSD_CONTROL)
   else if((OSD_MASK_CPU&OSD_CONTROL_CPURESET)) 
     TRACE_OSD("RESET");
@@ -219,9 +268,10 @@ void TDebug::Trace(char *fmt, ...){
   int nchars=_vsnprintf(trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
 #endif
   va_end(body);	
+#ifdef SSE_DEBUG
   if(nchars==-1)
     strcpy(trace_buffer,"TRACE buffer overrun\n");
-
+#endif
 #if defined(SSE_DEBUG_TRACE_IDE) && defined(WIN32)
   OutputDebugString(trace_buffer);
 #endif
@@ -235,13 +285,26 @@ void TDebug::Trace(char *fmt, ...){
 #if defined(DEBUG_BUILD) || defined(SSE_UNIX)
   if(USE_TRACE_FILE && trace_file_pointer && trace_buffer)
 #endif      
-    printf(trace_buffer),nTrace++; 
+  {
+    printf(trace_buffer);
+#if defined(SSE_DEBUG)
+    nTrace++; 
+//#endif
+
+#else
+    if(Debug.trace_file_pointer)
+      fflush(Debug.trace_file_pointer);
+#endif
+
+  }
+#if defined(SSE_DEBUG)
   if(TRACE_FILE_REWIND && nTrace>=TRACE_MAX_WRITES && trace_file_pointer)
   {
     nTrace=0;
     rewind(trace_file_pointer); // it doesn't erase
     TRACE("\n============\nREWIND TRACE\n============\n");
   }
+#endif
 #endif
 
 }
@@ -251,10 +314,12 @@ void TDebug::Trace(char *fmt, ...){
 // A series of TRACE giving precious info at the start & end of emulation
 // forward
 #ifndef DISABLE_STEMDOS
-extern int stemdos_current_drive;
+//extern int stemdos_current_drive;
+#include <stemdos.decla.h>
 #endif
 #if defined(SSE_SOUND_MICROWIRE)
-extern int dma_sound_bass,dma_sound_treble;
+//extern int dma_sound_bass,dma_sound_treble;
+#include <psg.decla.h>
 #endif
 
 
@@ -267,19 +332,61 @@ void TDebug::TraceGeneralInfos(int when) {
 #ifdef WIN32 // at each start now because of wiping
     // http://www.ehow.com/how_2190605_use-date-time-c-program.html
     char sdate[9];
+#if !defined(SSE_DEBUG_START_STOP_INFO3)
     char stime[9];
+#endif
     _strdate( sdate );
+#if defined(SSE_DEBUG_START_STOP_INFO3)
+    TRACE("Steem SSE TRACE - %s\n",sdate);
+#else
     _strtime( stime );
     TRACE("Steem SSE TRACE - %s -%s\n",sdate,stime);
 #endif
 #endif
-    TRACE("HighPriority %d PauseWhenInactive %d floppy_access_ff %d StartEmuOnClick %d AutoLoadSnapShot %d\n",HighPriority,PauseWhenInactive,floppy_access_ff,StartEmuOnClick,AutoLoadSnapShot);
-    TRACE("AllowTaskSwitch %d DirectDraw %d DrawToVidMem %d BlitHideMouse %d DirectSound %d\n",AllowTaskSwitch,TryDD,Disp.DrawToVidMem,Disp.BlitHideMouse,TrySound);
+#endif
+    TRACE("Build: ");
+#ifdef SSE_BETA
+    TRACE("Beta ");
+#endif
+#ifdef BCC_BUILD
+    TRACE("BCC ");
+#endif
+#ifdef VC_BUILD
+    TRACE("VC %d ",_MSC_VER);
+#endif
+#ifdef SSE_X64_MISC
+    TRACE("x64 ");
+#endif
+#ifdef SSE_BOILER
+    TRACE("Boiler ");
+#endif
+#ifndef SSE_NO_D3D
+    TRACE("D3D ");
+#endif
+#ifndef SSE_NO_DD //v3.8.2
+    TRACE("DD ");
+#endif
+    TRACE("v%d %s %s\n",SSE_VERSION,__DATE__,__TIME__);
+    TRACE("%s %d %s %d %s %d %s %d %s %d %s %d\n",UNRAR_DLL,SSEConfig.UnrarDll,
+      UNZIP_DLL,SSEConfig.unzipd32Dll,SSE_IPF_PLUGIN_FILE,SSEConfig.CapsImgDll,
+      PASTI_DLL,SSEConfig.PastiDll,ARCHIVEACCESS_DLL,SSEConfig.ArchiveAccess,
+      HD6301_ROM_FILENAME,SSEConfig.Hd6301v1Img);
+    //TRACE("High priority %d Task switch %d Auto pause %d Floppy skip %d Start on click %d Load snapshot %d\n",HighPriority,AllowTaskSwitch,PauseWhenInactive,floppy_access_ff,StartEmuOnClick,AutoLoadSnapShot);
+    TRACE("HP %d ATS %d PWI %d FAFF %d SEOC %d ALSS %d\n",HighPriority,AllowTaskSwitch,PauseWhenInactive,floppy_access_ff,StartEmuOnClick,AutoLoadSnapShot);
+    TRACE("Video DX %d D3D %d Mem %d BHM %d 8 %d 16 %d \n",TryDD,SSEConfig.Direct3d9,Disp.DrawToVidMem,Disp.BlitHideMouse,SSEConfig.VideoCard8bit,SSEConfig.VideoCard16bit);
+    //TRACE("Sound DX %d drive %d\n",TrySound,SSEConfig.DriveSound);
+    //TRACE("ACSI %d 6301 %d\n",SSEConfig.AcsiImg,SSEConfig.Hd6301v1Img);
+
+    
   }
   else
 #endif
   if(when==START)
   {
+#if defined(SSE_OSD_SHOW_TIME)
+    if(StoppingTime)
+      StartingTime+=timeGetTime()-StoppingTime;
+#endif
 #if !defined(SSE_DEBUG_START_STOP_INFO2)
 #if defined(SSE_BOILER_WIPE_TRACE2) && defined(SSE_DEBUG_TRACE_FILE)
 #ifdef WIN32 // at each start now because of wiping
@@ -292,43 +399,29 @@ void TDebug::TraceGeneralInfos(int when) {
 #endif
 #endif
 #endif
+#if defined(SSE_DEBUG_START_STOP_INFO3)
+    char stime[9];
+    _strtime( stime );
+    //TRACE(">>> Start Emulation %s <<<\n",stime);
+    TRACE("%s Run\n",stime);
+#else
     TRACE(">>> Start Emulation <<<\n");
+#endif
+    //options
+#if defined(SSE_INT_MFP_RATIO)
+    if (n_cpu_cycles_per_second>CpuNormalHz)
+      TRACE("Speed %d Mhz ",n_cpu_cycles_per_second/1000000);
+#endif
 #if defined(SSE_STF) && defined(SSE_MMU_WU_DL)
     TRACE("%s%d; ",st_model_name[ST_TYPE],MMU.WS[WAKE_UP_STATE]);
 #endif
     TRACE("T%X %d; ",tos_version,ROM_PEEK(0x1D)); //+country
-    TRACE("%dK; ",mem_len/1024);
-    if(MONO)
-      TRACE("Monochrome\n");  
-#if defined(SSE_VID_BORDERS)
-    else if(DISPLAY_SIZE)
-      TRACE("Size %d\n", DISPLAY_SIZE);
-#endif
-    //TRACE("\n");
-    TRACE("%d drives",num_connected_floppies);
-    if(FloppyDrive[0].DiskInDrive())
-      TRACE("; Disk A: %s",FloppyDrive[0].DiskName.c_str()); 
-    if(num_connected_floppies==2 && FloppyDrive[1].DiskInDrive())
-      TRACE("; Disk B: %s",FloppyDrive[1].DiskName.c_str()); 
-#ifndef DISABLE_STEMDOS
-    if(!HardDiskMan.DisableHardDrives && stemdos_current_drive) // check
-      TRACE("; HD ON");
-#endif
-#if defined(SSE_ACSI_OPTION)
-    if(SSEOption.Acsi)
-      TRACE("; ACSI ON");
-#endif
-#if defined(SSE_FDC)
-    if(ADAT)
-      TRACE("; ADAT");
-#endif
-#if USE_PASTI
-    if(pasti_active)
-      TRACE("; Pasti active %s",PASTI_JUST_STX?"STX only":"");
-#endif
+    TRACE("%dK",mem_len/1024);
+
 #if defined(SSE_HACKS)
     if(SSE_HACKS_ON)
-      TRACE("\nHacks");
+      //TRACE("\nHacks");
+      TRACE("; #");
 #endif
 #if defined(SSE_IKBD_6301)
     if(HD6301EMU_ON)
@@ -344,20 +437,61 @@ void TDebug::TraceGeneralInfos(int when) {
       TRACE("; Clock %d",CpuCustomHz);
 #endif
 #endif
-/*
-#if defined(SSE_MMU_WU_DL)
-    if(WAKE_UP_STATE)
-      TRACE("; WS%d",MMU.WS[WAKE_UP_STATE]);
-#elif defined(SSE_MMU_WAKE_UP)
-    TRACE("; WU%d",WAKE_UP_STATE);
+    if(SSEOption.PSGMod)
+      TRACE("; YM");
+    if(MONO)
+      //TRACE("Monochrome\n");  
+      TRACE("; HI");  
+#if defined(SSE_VID_BORDERS)
+    else if(DISPLAY_SIZE)
+      //TRACE("Dispay size %d\n", DISPLAY_SIZE);
+      TRACE("; Size %d", DISPLAY_SIZE);
 #endif
-    */
+    TRACE("\n");
+    //disk
+    //TRACE("%d drives",num_connected_floppies);
+    if(FloppyDrive[0].DiskInDrive())
+      //TRACE("; Disk A: %s",FloppyDrive[0].DiskName.c_str()); 
+      TRACE("A: %s",FloppyDrive[0].DiskName.c_str()); 
+    if(num_connected_floppies==2 && FloppyDrive[1].DiskInDrive())
+      //TRACE("; Disk B: %s",FloppyDrive[1].DiskName.c_str()); 
+      TRACE("; B: %s",FloppyDrive[1].DiskName.c_str()); 
+#if defined(SSE_FDC)
+    if(ADAT)
+      TRACE("; ADAT");
+#endif
+#ifndef DISABLE_STEMDOS
+    if(!HardDiskMan.DisableHardDrives && stemdos_current_drive) // check
+      //TRACE("; HD ON");
+      TRACE("; HD");
+#endif
+#if defined(SSE_ACSI_OPTION)
+    if(SSEOption.Acsi)
+      //TRACE("; ACSI ON");
+      TRACE("; ACSI");
+#endif
+#if USE_PASTI
+    if(pasti_active)
+      //TRACE("; Pasti active %s",PASTI_JUST_STX?"STX only":"");
+      TRACE("; Pasti");
+#endif
     TRACE("\n");
 //    TRACE(">>> Start Emulation <<<\n");
   }
   else
-  {    // pick the info you need...
+  {
+#if defined(SSE_OSD_SHOW_TIME)
+    StoppingTime=timeGetTime();
+#endif
+    // pick the info you need...
+#if defined(SSE_DEBUG_START_STOP_INFO3)
+    char stime[9];
+    _strtime( stime );
+    //TRACE(">>> Stop Emulation %s <<<\n",stime);
+    TRACE("%s Stop\n",stime);
+#else
     TRACE(">>> Stop Emulation <<<\n");
+#endif
 //    TRACE("debug var 0: %d 1: %d 2: %d 3: %d 4: %d 5: %d 6: %d 7: %d 8: %d 9: %d\n",debug0,debug1,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9);
 //    TRACE("HblTiming %d\n",HblTiming);
     // Vectors
@@ -397,6 +531,7 @@ void TDebug::TraceIde(char *fmt, ...){
 #endif
 }
 
+#if defined(SSE_DEBUG)
 
 void TDebug::TraceLog(char *fmt, ...) { // static
   
@@ -447,6 +582,8 @@ void TDebug::TraceLog(char *fmt, ...) { // static
 #endif
   }
 }
+#endif//#if defined(SSE_DEBUG)
+
 
 #endif
 
@@ -465,6 +602,10 @@ void TDebug::TraceOsd(char *fmt, ...) {
   int nchars=_vsnprintf(m_OsdMessage,OSD_DEBUG_MESSAGE_LENGTH,fmt,body); // check for overrun 
 #endif
   va_end(body);	
+#if defined(SSE_COMPILER_382)
+  if(nchars==-1)
+    strcpy(m_OsdMessage,"OSD OVR");
+#endif
   strupr(m_OsdMessage); // OSD font is upper-only
   OsdTimer=timer+OSD_DEBUG_MESSAGE_TIME*1000;
 }

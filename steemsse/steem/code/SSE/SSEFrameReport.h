@@ -8,6 +8,8 @@
 #include "SSEDebug.h"
 #endif
 
+#include "run.decla.h"
+
 #if defined(SSE_BOILER_FRAME_REPORT_MASK)
 /*  We use the new general fake io control masks, they are 16bit, but 
     only 8 bits should be used for the GUI.
@@ -97,7 +99,7 @@ inline void SFrameEvent::Add(int scanline,int cycle, char type, int value) {
 
 
 
-extern int shifter_freq_at_start_of_vbl; // forward
+//extern int shifter_freq_at_start_of_vbl; // forward
 
 #if !defined(SSE_INLINE_370)
 inline void TFrameEvents::Add(int scanline, int cycle, char type, int value) {

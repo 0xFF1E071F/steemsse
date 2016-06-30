@@ -183,10 +183,13 @@ public:
   HWND DiskView;
   HICON DriveIcon[2],AccurateFDCIcon,DisableDiskIcon;
   HWND DatabaseDiag,ContentDiag,DiskDiag,LinksDiag,ImportDiag,PropDiag,DiagFocus;
-
+#ifdef SSE_X64_LPTR
+  HWND VisibleDiag() { return HWND(int64_t(DiskDiag) | int64_t(LinksDiag) | int64_t(ImportDiag) |
+                          int64_t(PropDiag) | int64_t(ContentDiag) | int64_t(DatabaseDiag)); }
+#else
   HWND VisibleDiag() { return HWND(long(DiskDiag) | long(LinksDiag) | long(ImportDiag) |
                           long(PropDiag) | long(ContentDiag) | long(DatabaseDiag)); }  
-
+#endif
   bool AtHome;
   bool ExplorerFolders;
 

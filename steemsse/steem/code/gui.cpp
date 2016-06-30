@@ -206,7 +206,7 @@ const POINT WinSize[4][5]={ {{320,200},{640,400},{960, 600},{1280,800},{-1,-1}},
 {-1,-1}}
 };
 
-
+#if !defined(SSE_VID_D3D_ONLY)
  POINT WinSizeBorderLarge[4][5]={ 
 {{320+LARGE_BORDER_SIDE_WIN*2,200+(BORDER_TOP+LARGE_BORDER_BOTTOM)},
 {640+(LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BORDER_TOP+LARGE_BORDER_BOTTOM)}, 
@@ -224,7 +224,7 @@ const POINT WinSize[4][5]={ {{320,200},{640,400},{960, 600},{1280,800},{-1,-1}},
 {{800,600},
 {-1,-1}}
 };
-
+#endif
 
 
 
@@ -513,7 +513,10 @@ BYTE STCharToPCChar[128]={199,  0,233,226,228,224,229,231,234,235,232,239,238,23
 extern int draw_last_scanline_for_border,res_vertical_scale; // forward
 
 int ChangeBorderSize(int size_in) {
-  TRACE_LOG("Setting display size to %d (%d)\n",size_in,DISPLAY_SIZE);
+  //TRACE_LOG("Setting display size to %d (%d)\n",size_in,DISPLAY_SIZE);
+
+  //ASSERT(size_in!=3);
+  
   int size=size_in; // use lost?
   if(size<0||size>BIGGEST_DISPLAY)
     size=0;
@@ -527,6 +530,18 @@ int ChangeBorderSize(int size_in) {
       SideBorderSizeWin=ORIGINAL_BORDER_SIDE;
       BottomBorderSize=ORIGINAL_BORDER_BOTTOM;
       break;
+#if defined(SSE_VID_D3D_ONLY)
+    case 1:
+      SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
+      SideBorderSizeWin=VERY_LARGE_BORDER_SIDE_WIN; // show 412
+      BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
+      break;
+    case 2:
+      SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
+      SideBorderSizeWin=VERY_LARGE_BORDER_SIDE; // show 416
+      BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
+      break;
+#else
     case 1:
       SideBorderSize=LARGE_BORDER_SIDE; // render 416
       SideBorderSizeWin=LARGE_BORDER_SIDE_WIN; // show 400
@@ -562,7 +577,7 @@ int ChangeBorderSize(int size_in) {
       break;
 #endif
 #endif//ver
-
+#endif//#if defined(SSE_VID_D3D_ONLY)
     }//sw
     int i,j;
     for(i=0;i<4;i++) 
@@ -574,6 +589,14 @@ int ChangeBorderSize(int size_in) {
         case 0:
           WinSizeBorder[i][j]=WinSizeBorderOriginal[i][j];
           break;
+#if defined(SSE_VID_D3D_ONLY)
+        case 1:
+          WinSizeBorder[i][j]=WinSizeBorderVeryLarge[i][j];
+          break;
+        case 2:
+          WinSizeBorder[i][j]=WinSizeBorderVeryLarge2[i][j];
+          break;
+#else
         case 1:
           WinSizeBorder[i][j]=WinSizeBorderLarge[i][j];
           break;
@@ -597,6 +620,7 @@ int ChangeBorderSize(int size_in) {
           break;
 #endif
 #endif//ver
+#endif//#if defined(SSE_VID_D3D_ONLY)
         }//sw
       }
     }
@@ -604,13 +628,19 @@ int ChangeBorderSize(int size_in) {
     SendMessage(OptionBox.BorderSizeOption,CB_SETCURSEL,DISPLAY_SIZE,0);
 #endif
     draw_last_scanline_for_border=shifter_y+res_vertical_scale*(BORDER_BOTTOM);
+
+
+    TRACE_INIT("ChangeBorderSize(%d) side %d side win %d bottom %d\n",size_in,SideBorderSize,SideBorderSizeWin,BottomBorderSize);
+
     StemWinResize();
 //#if !defined(SSE_VID_D3D1) // done in StemWinResize()
     Disp.ScreenChange();
 //#endif
     return TRUE;
   }
+#if !defined(SSE_VS2008_WARNING_382)
   return FALSE;
+#endif
 }
 
 #endif
@@ -814,7 +844,11 @@ void GUIRefreshStatusBar() {
     {
 #define MAX_TEXT_LENGTH_BORDER_ON (30+62+10) 
 #define MAX_TEXT_LENGTH_BORDER_OFF (30+42+10) 
+#ifdef SSE_VS2008_WARNING_382
+      size_t max_text_length=(border&1)?MAX_TEXT_LENGTH_BORDER_ON:MAX_TEXT_LENGTH_BORDER_OFF;
+#else
       int max_text_length=(border&1)?MAX_TEXT_LENGTH_BORDER_ON:MAX_TEXT_LENGTH_BORDER_OFF;
+#endif
       if(SSE_STATUS_BAR)
         max_text_length-=30;
 #if defined(SSE_VID_BORDERS)
@@ -1200,10 +1234,19 @@ void LoadAllIcons(ConfigStoreFile *NOT_ONEGAME( pCSF ),bool NOT_ONEGAME( FirstCa
   }
   if (FirstCall==0){
     // Update all window classes, buttons and other icon thingies
+#if defined(SSE_X64_LPTR)
+    SetClassLongPtr(StemWin, GCLP_HICON, long(hGUIIcon[RC_ICO_APP]));
+#else
     SetClassLong(StemWin,GCL_HICON,long(hGUIIcon[RC_ICO_APP]));
+#endif
 #ifdef DEBUG_BUILD
+#if defined(SSE_X64_LPTR)
+    SetClassLongPtr(DWin,GCLP_HICON,long(hGUIIcon[RC_ICO_TRASH]));
+    SetClassLongPtr(trace_window_handle,GCLP_HICON,long(hGUIIcon[RC_ICO_STCLOSE]));
+#else
     SetClassLong(DWin,GCL_HICON,long(hGUIIcon[RC_ICO_TRASH]));
     SetClassLong(trace_window_handle,GCL_HICON,long(hGUIIcon[RC_ICO_STCLOSE]));
+#endif
     for (int n=0;n<MAX_MEMORY_BROWSERS;n++){
       if (m_b[n]) m_b[n]->update_icon();
     }
@@ -1240,7 +1283,6 @@ bool MakeGUI()
   PCArrow=LoadCursor(NULL,IDC_ARROW);
 
   ParentWin=GetDesktopWindow();
-
   WNDCLASS wc={0,WndProc,0,0,Inst,hGUIIcon[RC_ICO_APP],
                 PCArrow,NULL,NULL,"Steem Window"};
   RegisterClass(&wc);
@@ -2240,8 +2282,13 @@ void SetStemMouseMode(int NewMM)
   if (stem_mousemode!=STEM_MOUSEMODE_WINDOW && NewMM==STEM_MOUSEMODE_WINDOW) GetCursorPos(&OldMousePos);
   stem_mousemode=NewMM;
   if (NewMM==STEM_MOUSEMODE_WINDOW){
+#if defined(SSE_GUI_MOUSE_VM_FRIENDLY)
+    if (no_set_cursor_pos || (SSEOption.VMMouse)){
+      SetCursor( (no_set_cursor_pos)? LoadCursor(NULL,RCNUM(IDC_CROSS)) : NULL);
+#else
     if (no_set_cursor_pos){
       SetCursor(LoadCursor(NULL,RCNUM(IDC_CROSS)));
+#endif
       POINT pt;
       GetCursorPos(&pt);
       window_mouse_centre_x=pt.x;
@@ -2256,18 +2303,21 @@ void SetStemMouseMode(int NewMM)
     }
 
 #ifndef DEBUG_BUILD
-    if (FullScreen){
-      ClipCursor(NULL);
-    }else{
-      RECT rc;
-      POINT pt={0,0};
-      GetClientRect(StemWin,&rc);
-      rc.right-=6;
-      rc.bottom-=6+MENUHEIGHT;
-      ClientToScreen(StemWin,&pt);
-      OffsetRect(&rc,pt.x+3,pt.y+3+MENUHEIGHT);
-      ClipCursor(&rc);
-    }
+#if defined(SSE_GUI_MOUSE_VM_FRIENDLY)
+    if(!SSEOption.VMMouse)// we don't clip, mouse can exit window
+#endif
+      if (FullScreen){
+        ClipCursor(NULL);
+      }else{
+        RECT rc;
+        POINT pt={0,0};
+        GetClientRect(StemWin,&rc);
+        rc.right-=6;
+        rc.bottom-=6+MENUHEIGHT;
+        ClientToScreen(StemWin,&pt);
+        OffsetRect(&rc,pt.x+3,pt.y+3+MENUHEIGHT);
+        ClipCursor(&rc);
+      }
 #endif
   }else{
     SetCursor(PCArrow);
@@ -2275,10 +2325,13 @@ void SetStemMouseMode(int NewMM)
 #ifndef DEBUG_BUILD
     ClipCursor(NULL);
 #endif
-    if (OldMousePos.x>=0 && no_set_cursor_pos==0){
-      SetCursorPos(OldMousePos.x,OldMousePos.y);
-      OldMousePos.x=-1;
-    }
+#if defined(SSE_GUI_MOUSE_VM_FRIENDLY)
+    if(!SSEOption.VMMouse)
+#endif
+      if (OldMousePos.x>=0 && no_set_cursor_pos==0){
+        SetCursorPos(OldMousePos.x,OldMousePos.y);
+        OldMousePos.x=-1;
+      }
   }
   mouse_move_since_last_interrupt_x=0;
   mouse_move_since_last_interrupt_y=0;

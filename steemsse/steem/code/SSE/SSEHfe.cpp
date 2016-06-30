@@ -16,8 +16,9 @@
 #include <floppy_drive.decla.h>
 #include <mymisc.h> //long GetFileLength(FILE *f)
 
+#include <gui.decla.h>
 #ifdef UNIX
-extern EasyStr GetEXEDir();
+//extern EasyStr GetEXEDir();
 #endif
 
 #define IMAGE_SIZE image_size //member variable
@@ -31,7 +32,9 @@ extern EasyStr GetEXEDir();
 #define MFM_SIDE_BLOCK_SIZE 128
 
 #if defined(SSE_VAR_RESIZE_372)
+#if !defined(SSE_VAR_RESIZE_382)
 #define fCurrentImage FloppyDrive[Id].f
+#endif
 #if defined(SSE_DISK1)
 #define nBytes Disk[Id].TrackBytes
 #endif
@@ -72,8 +75,12 @@ bool TImageHFE::Create(char *path) {
   fCurrentImage=fopen(path,"wb+"); // create new image
   if(fCurrentImage)
   {
+#if defined(SSE_VAR_OPT_382)
+    EasyStr filename=RunDir+SLASH+DISK_HFE_BOOT_FILENAME;
+#else
     EasyStr filename=GetEXEDir();
     filename+=DISK_HFE_BOOT_FILENAME;
+#endif
     FILE *fp=fopen(filename.Text,"rb"); // open boot
     if(fp)
     {
@@ -111,7 +118,7 @@ Bit 0-> Bit 1-> Bit 2-> Bit 3-> Bit 4-> Bit 5-> Bit 6-> Bit 7->(next byte)"
 #if defined(SSE_DISK2)
     BYTE &current_side=Disk[Id].current_side;
 #endif
-    ASSERT(MFM_SIDE_BLOCK_SIZE);
+    //ASSERT(MFM_SIDE_BLOCK_SIZE);
     int block=(Position/MFM_SIDE_BLOCK_SIZE)*2+current_side;
     int index=(Position%MFM_SIDE_BLOCK_SIZE)+block*MFM_SIDE_BLOCK_SIZE;
 //TRACE("S %d T %d P %d B %d i %d\n",current_side,CURRENT_TRACK,Position,block,index);

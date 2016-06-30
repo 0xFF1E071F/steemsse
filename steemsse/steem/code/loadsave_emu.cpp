@@ -117,11 +117,10 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
                       bool LoadOrSave,int Version,bool NOT_ONEGAME( ChangeDisksAndCart ),int *pVerRet)
 {
   ONEGAME_ONLY( BYTE *pStartByte=f; )
-#ifdef SSE_DEBUG
-  TRACE_INIT("%d memory snaphot V%d/%d %c\n",
-    Version,SNAPSHOT_VERSION,LoadOrSave==LS_LOAD?"Load":"Save");
-#endif
   if (Version==-1) Version=SNAPSHOT_VERSION;
+
+  //TRACE_INIT("%s memory snaphot V%d\n",(LoadOrSave==LS_LOAD?"Load":"Save"),Version);
+
   ReadWrite(Version);        //4
   if (pVerRet) *pVerRet=Version;
 
@@ -235,7 +234,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     int floppy_mediach_tmp[2];
     floppy_mediach_tmp[0]=floppy_mediach[0];
     floppy_mediach_tmp[1]=floppy_mediach[1];
-    ReadWriteArray(floppy_mediach_tmp);
+    ReadWriteArray(floppy_mediach_tmp);//2
     floppy_mediach[0]=floppy_mediach_tmp[0];
     floppy_mediach[1]=floppy_mediach_tmp[1];
   }
@@ -249,11 +248,14 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   int stemdos_current_drive=0;
 #endif
   ReadWrite(stemdos_Pexec_list_ptr);  //4
-//  TRACE("ftell %d\n",ftell(f));
   ReadWriteArray(stemdos_Pexec_list); //SS 304
-  //TRACE("ftell %d\n",ftell(f));
+#if defined(SSE_VAR_RESIZE_382)
+  int stemdos_current_drive_int=stemdos_current_drive;
+  ReadWrite(stemdos_current_drive_int);
+  stemdos_current_drive=stemdos_current_drive_int;
+#else
   ReadWrite(stemdos_current_drive);   //4
-  //TRACE("ftell %d\n",ftell(f));
+#endif
   EasyStr NewROM=ROMFile;
   ReadWriteStr(NewROM);
   WORD NewROMVer=tos_version;
@@ -710,6 +712,9 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   {
 #ifdef SSE_STF
     ReadWrite(ST_TYPE);
+#if SSE_VERSION>=382
+    if(LoadOrSave==LS_LOAD)
+#endif
     SwitchSTType(ST_TYPE);
 #endif
     int dummy=0; // dummy for former Program ID
@@ -999,9 +1004,6 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if SSE_VERSION>=372
   if(Version>=51) 
   {
-
-
-
   }
 #endif
 
@@ -1011,13 +1013,35 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if defined(SSE_GLUE_FRAME_TIMINGS4)
     Glue.scanline=0; // Steem is always stopped at the start of a frame
 #endif
-#if defined(SSE_IKBD_6301_380)
+#if defined(SSE_IKBD_6301_380) 
     BYTE HD6301_Initialised=HD6301.Initialised;
     ReadWriteStruct(HD6301); // registers... 
     HD6301.Initialised=HD6301_Initialised;
 #endif
   }
 #endif
+
+  if(Version>=53) //382
+  {
+#if defined(SSE_TIMINGS_SNAPSHOT_CORRECTION)
+/*  Steem starts/stops at the start of a frame. But the last instruction of
+    the previous frame will be completed exactly at cycle 0 of the new frame
+    only irregularly.
+    When loading a snapshot, timing of next event (VBI trigger) should be
+    adapted, see LoadSnapShotUpdateVars()
+    We use ioaccess as temporary variable, it's a hack that spares a variable.
+*/
+    ioaccess=(Glue.screen_event.time-cpu_cycles);
+    ReadWrite(ioaccess);
+#if defined(SSE_CPU_E_CLOCK_382)
+    M68000.cycles_for_eclock-=ioaccess;
+#endif
+#endif
+#if defined(SSE_CPU_E_CLOCK_382) // keep E-Clock synced on loading a snapshot
+    ReadWrite(M68000.cycles_for_eclock); 
+#endif
+
+  }
 
 #endif//#if defined(STEVEN_SEAGAL)
 
@@ -1060,19 +1084,19 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #ifndef ONEGAME
   if (ChangeTOS){
     int ret=LoadSnapShotChangeTOS(NewROM,NewROMVer);
-    TRACE_INIT("LoadSnapShotChangeTOS %d\n",ret);
+    //TRACE_INIT("LoadSnapShotChangeTOS %d\n",ret);
     if (ret>0) return ret;
   }
 
   if (ChangeDisks){
     int ret=LoadSnapShotChangeDisks(NewDisk,NewDiskInZip,NewDiskName);
-    TRACE_INIT("ChangeDisks %d\n",ret);
+    //TRACE_INIT("ChangeDisks %d\n",ret);
     if (ret>0) return ret;
   }
 
   if (ChangeCart){
     int ret=LoadSnapShotChangeCart(NewCart);
-    TRACE_INIT("ChangeCart %d\n",ret);
+    //TRACE_INIT("ChangeCart %d\n",ret);
     if (ret>0) return ret;
   }
 
@@ -1100,9 +1124,15 @@ void LoadSnapShotUpdateVars(int Version)
 {
 
   SET_PC(PC32);
+#if !defined(SSE_TIMINGS_SNAPSHOT_CORRECTION)
   ioaccess=0;
-
+#endif
   init_timings();
+
+#if defined(SSE_TIMINGS_SNAPSHOT_CORRECTION)
+  INSTRUCTION_TIME(ioaccess);
+  ioaccess=0;
+#endif
 
   UpdateSTKeys();
 

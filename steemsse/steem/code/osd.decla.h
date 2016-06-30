@@ -2,7 +2,8 @@
 #ifndef OSD_DECLA_H
 #define OSD_DECLA_H
 #if defined(SSE_ACSI_LED)
-#include <EasyStringList.h>
+//#include <EasyStringList.h>
+#include <easystringlist.h>//ux382
 #endif
 #define EXT extern
 #define INIT(s)
@@ -124,11 +125,17 @@ void ASMCALL osd_blueize_line_24(int,int,int),osd_blueize_line_32(int,int,int);
 
 void ASMCALL palette_convert_16_555(int),palette_convert_line_16_565(int);
 void ASMCALL palette_convert_line_24(int),palette_convert_line_32(int);
-
+#if defined(SSE_COMPILER_382__)
+void ASMCALL osd_black_box_8(void*,int,int,int,int,long,long);
+void ASMCALL osd_black_box_16(void*,int,int,int,int,long,long);
+void ASMCALL osd_black_box_24(void*,int,int,int,int,long,long);
+void ASMCALL osd_black_box_32(void*,int,int,int,int,long,long);
+#else
 void ASMCALL osd_black_box_8(void*,int,int,int,int,long);
 void ASMCALL osd_black_box_16(void*,int,int,int,int,long);
 void ASMCALL osd_black_box_24(void*,int,int,int,int,long);
 void ASMCALL osd_black_box_32(void*,int,int,int,int,long);
+#endif
 }
 
 //#endif//IN_MAIN

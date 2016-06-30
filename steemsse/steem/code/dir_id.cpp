@@ -293,7 +293,6 @@ LRESULT __stdcall ButtonPickerWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
     case WM_SETFOCUS:
     {
       SetTimer(Win,1,100,NULL);
-
       if (GetWindowLong(Win,GWL_STYLE) & BPS_INSHORTCUT){
         EasyStr Message;
         if ((GetWindowLong(Win,GWL_STYLE) & 1)==0){

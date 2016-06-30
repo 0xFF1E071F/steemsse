@@ -223,13 +223,13 @@ void psg_write_buffer(int,DWORD);
 #define MOD_PSG_NOISE_ARRAY & 8191
 
 #ifndef ONEGAME
-#define PSG_WRITE_EXTRA 300
-#else
 #if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_NO_EXTRA_PER_VBL)
 #define PSG_WRITE_EXTRA 0
 #else
-#define PSG_WRITE_EXTRA OGExtraSamplesPerVBL
+#define PSG_WRITE_EXTRA 300
 #endif
+#else
+#define PSG_WRITE_EXTRA OGExtraSamplesPerVBL
 #endif
 
 //#define PSG_WRITE_EXTRA 10

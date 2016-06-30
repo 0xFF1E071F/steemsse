@@ -885,9 +885,9 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   ImageFile=OriginalFile;
   PastiDisk=f_PastiDisk;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_PASTI_AUTO_SWITCH2) //3.8.0
+#if USE_PASTI && defined(SSE_PASTI_AUTO_SWITCH2) //3.8.0
 /*  We deactivate pasti even without option 'Pasti only for STX' if we're
-    running CAPS or WD1772 manager. To test in beta.
+    running CAPS or WD1772 manager.
 */
   if(pasti_active && !PASTI_JUST_STX && SF314[drive].ImageType.Manager!=MNGR_PASTI)
     pasti_active=false;

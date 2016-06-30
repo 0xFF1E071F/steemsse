@@ -255,7 +255,12 @@ bool floppy_track_index_pulse_active()
 #endif
 
   if (floppy_type1_command_active){
+#if defined(SSE_VS2008_WARNING_382) 
+    return ((hbl_count) % FDC_HBLS_PER_ROTATION)
+      >=(DWORD)(FDC_HBLS_PER_ROTATION-FDC_HBLS_OF_INDEX_PULSE);
+#else
     return (((DWORD)hbl_count) % FDC_HBLS_PER_ROTATION)>=(FDC_HBLS_PER_ROTATION-FDC_HBLS_OF_INDEX_PULSE);
+#endif
   }
   return 0;
 }
@@ -2404,7 +2409,7 @@ void agenda_floppy_write_track(int part)
               case 1:  SectorLen=256;break;
               case 2:  SectorLen=512;break;
               case 3:  Error=true /*SectorLen=1024*/ ;
-                TRACE("Format 1024!\n");
+                TRACE_LOG("Format 1024!\n");
                 break; //SS why?
               default: Error=true;
             }

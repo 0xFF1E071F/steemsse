@@ -32,7 +32,7 @@ struct TImageSTW {
   BYTE Id; //0,1, same as drive
 #endif
 private: 
-#if !defined(SSE_VAR_RESIZE_372)
+#if !defined(SSE_VAR_RESIZE_372) || defined(SSE_VAR_RESIZE_382)
   FILE *fCurrentImage; // use FloppyDrive's
 #endif
   WORD *TrackData;

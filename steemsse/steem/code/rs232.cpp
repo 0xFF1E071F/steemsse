@@ -63,9 +63,17 @@ BYTE RS232_ReadReg(int Reg)
         mfp_reg[MFPR_RSR]|=BIT_6;
         rs232_recv_overrun=0;
         if (mfp_interrupt_enabled[MFP_INT_RS232_RECEIVE_ERROR]){
+#if defined(SSE_INT_MFP_REFACTOR1) && defined(SSE_VS2008_WARNING_382)
+          mfp_interrupt(MFP_INT_RS232_RECEIVE_ERROR);
+#else
           mfp_interrupt(MFP_INT_RS232_RECEIVE_ERROR,ABSOLUTE_CPU_TIME);
+#endif
         }else{
+#if defined(SSE_INT_MFP_REFACTOR1) && defined(SSE_VS2008_WARNING_382)
+          mfp_interrupt(MFP_INT_RS232_RECEIVE_BUFFER_FULL);
+#else
           mfp_interrupt(MFP_INT_RS232_RECEIVE_BUFFER_FULL,ABSOLUTE_CPU_TIME);
+#endif
         }
       }
       return rs232_recv_byte;
@@ -194,18 +202,29 @@ void RS232_WriteReg(int Reg,BYTE NewVal)
 void agenda_serial_sent_byte(int)
 {
   mfp_reg[MFPR_TSR]|=BYTE(BIT_7); //buffer empty
+#if defined(SSE_INT_MFP_REFACTOR1) && defined(SSE_VS2008_WARNING_382)
+  mfp_interrupt(MFP_INT_RS232_TRANSMIT_BUFFER_EMPTY);
+#else
   mfp_interrupt(MFP_INT_RS232_TRANSMIT_BUFFER_EMPTY,ABSOLUTE_CPU_TIME);
-
+#endif
   if ((mfp_reg[MFPR_TSR] & BIT_0)==0){ // transmitter disabled
     mfp_reg[MFPR_TSR]|=BYTE(BIT_4); //End
+#if defined(SSE_INT_MFP_REFACTOR1) && defined(SSE_VS2008_WARNING_382)
+    mfp_interrupt(MFP_INT_RS232_TRANSMIT_ERROR);
+#else
     mfp_interrupt(MFP_INT_RS232_TRANSMIT_ERROR,ABSOLUTE_CPU_TIME);
+#endif
     if (mfp_reg[MFPR_TSR] & BIT_5) mfp_reg[MFPR_RSR]|=BIT_0; //Auto turnaround! 
   }
 }
 
 void agenda_serial_break_boundary(int)
 {
+#if defined(SSE_INT_MFP_REFACTOR1) && defined(SSE_VS2008_WARNING_382)
+  if ((mfp_reg[MFPR_TSR] & BIT_6)==0) mfp_interrupt(MFP_INT_RS232_TRANSMIT_ERROR);
+#else
   if ((mfp_reg[MFPR_TSR] & BIT_6)==0) mfp_interrupt(MFP_INT_RS232_TRANSMIT_ERROR,ABSOLUTE_CPU_TIME);
+#endif
   agenda_add(agenda_serial_break_boundary,rs232_hbls_per_word,0);
 }
 
@@ -222,7 +241,11 @@ void agenda_serial_loopback_byte(int NewVal)
     mfp_reg[MFPR_RSR]&=BYTE(~(BIT_2 /*Char in progress*/ | BIT_3 /*Break*/ |
                               BIT_4 /*Frame Error*/ |      BIT_5 /*Parity Error*/));
     mfp_reg[MFPR_RSR]|=BIT_7 /*Buffer Full*/;
+#if defined(SSE_INT_MFP_REFACTOR1) && defined(SSE_VS2008_WARNING_382)
+    mfp_interrupt(MFP_INT_RS232_RECEIVE_BUFFER_FULL);
+#else
     mfp_interrupt(MFP_INT_RS232_RECEIVE_BUFFER_FULL,ABSOLUTE_CPU_TIME);
+#endif
   }
 }
 

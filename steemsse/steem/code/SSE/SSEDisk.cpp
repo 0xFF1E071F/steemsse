@@ -29,7 +29,7 @@ TDisk::TDisk() {
 }
 
 void TDisk::Init() {
-  TrackBytes=DRIVE_BYTES_ROTATION; // 6256+20 default for ST/MSA/DIM
+  TrackBytes=DRIVE_BYTES_ROTATION; // 6256+14 default for ST/MSA/DIM
 }
 
 #endif

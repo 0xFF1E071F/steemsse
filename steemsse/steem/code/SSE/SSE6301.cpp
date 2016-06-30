@@ -10,9 +10,15 @@
 #if defined(SSE_STRUCTURE_SSE6301_OBJ)
 #include "../pch.h"
 #include <easystr.h>
-#include <mymisc.h>
+//#include <mymisc.h>//ux382
 #include <acia.decla.h>
 #include <emulator.decla.h>
+#include <mymisc.h>//ux382
+#if defined(SSE_VAR_OPT_382)
+#include <gui.decla.h>
+#else
+extern EasyStr GetEXEDir(); //argh, ux382
+#endif
 #include <ikbd.decla.h>
 #endif//SSE_STRUCTURE_SSE6301_OBJ
 
@@ -243,19 +249,28 @@ void THD6301::Init() { // called in 'main'
 void THD6301::Init() { // called in 'main'
   Initialised=Crashed=0;
   BYTE* ram=hd6301_init();
+#if defined(SSE_VAR_OPT_382)
+  EasyStr romfile=RunDir+SLASH+HD6301_ROM_FILENAME;
+#else
   EasyStr romfile=GetEXEDir() + HD6301_ROM_FILENAME; 
+#endif
   FILE *fp;
 #if defined(SSE_DEBUG)
   int checksum=0;
 #endif
   if(ram)
   {
+//	  TRACE("open 6301 rom file %s\n", romfile.Text);
     fp=fopen(romfile.Text,"r+b");
-    ASSERT(fp);
+    //ASSERT(fp);
     if(fp) // put ROM (4KB) at the end of 6301 RAM
     {
 #if defined(SSE_IKBD_6301_MINIRAM)
+#if defined(SSE_VS2008_WARNING_382)
+      size_t n=fread(ram+256,1,4096,fp);
+#else
       int n=fread(ram+256,1,4096,fp);
+#endif
 #else
       int n=fread(ram+0xF000,1,4096,fp);
 #endif
@@ -268,7 +283,11 @@ void THD6301::Init() { // called in 'main'
         checksum+=ram[0xF000+i];
 #endif
       ASSERT( checksum==HD6301_ROM_CHECKSUM );
+      TRACE_INIT("%s loaded, checksum %d\n",romfile.Text,checksum);
+#else
+      TRACE_INIT("%s loaded\n",romfile.Text);
 #endif
+
       fclose(fp);
       HD6301_OK=Initialised=true;
     }

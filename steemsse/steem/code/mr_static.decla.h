@@ -25,7 +25,6 @@ public:
   bool editflag;
   mem_browser *mem_browser_update;
   iolist_entry *ile;
-
   mr_static(char*label,char*name,int x,int y,
       HWND owner,HMENU id,MEM_ADDRESS ad,int bytes,_mr_static_type type,
       bool editflag,mem_browser*mem_browser_update);

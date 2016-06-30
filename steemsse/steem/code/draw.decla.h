@@ -47,19 +47,29 @@ EXT int stfm_b_timer INIT(0);//tmp
 
 #if defined(SSE_VAR_RESIZE_370)
 EXT BYTE bad_drawing INIT(0);
+#if !defined(SSE_VID_D3D_ONLY)
 EXT BYTE draw_fs_blit_mode INIT( UNIX_ONLY(DFSM_STRAIGHTBLIT) WIN_ONLY(DFSM_STRETCHBLIT) );
+#endif
+#if defined(SSE_VID_D3D_ONLY)
 EXT BYTE draw_fs_fx INIT(DFSFX_NONE),draw_grille_black INIT(6);
+#else
+EXT BYTE draw_fs_fx INIT(DFSFX_NONE),draw_grille_black INIT(6);
+#endif
 #if defined(SSE_VID_DISABLE_AUTOBORDER)
 EXT bool border INIT(1),border_last_chosen INIT(1);
 #else
 EXT BYTE border INIT(2),border_last_chosen INIT(2);
 #endif
+#if !defined(SSE_VID_D3D_ONLY)
 EXT BYTE draw_fs_topgap INIT(0);
 extern BYTE prefer_pc_hz[2][3];
 extern BYTE tested_pc_hz[2][3];
+#endif
 #else
 EXT int bad_drawing INIT(0);
+#if !defined(SSE_VID_D3D_ONLY)
 EXT int draw_fs_blit_mode INIT( UNIX_ONLY(DFSM_STRAIGHTBLIT) WIN_ONLY(DFSM_STRETCHBLIT) );
+#endif
 EXT int draw_fs_fx INIT(DFSFX_NONE),draw_grille_black INIT(6);
 EXT int border INIT(2),border_last_chosen INIT(2);
 EXT int draw_fs_topgap INIT(0);
@@ -101,10 +111,13 @@ EXT BYTE *draw_dest_ad,*draw_dest_next_scanline;
 #define OVERSCAN_MAX_COUNTDOWN 25
 
 EXT bool display_option_8_bit_fs INIT(false);
+#if !defined(SSE_VID_D3D_ONLY)
 EXT bool prefer_res_640_400 INIT(0),using_res_640_400 INIT(0);
+#endif
 
-
+#if !defined(SSE_VID_D3D_ONLY)
 EXT void get_fullscreen_rect(RECT *);
+#endif
 #if defined(SSE_VAR_RESIZE_380)
 EXT char overscan INIT(0)
 #else
@@ -134,10 +147,10 @@ EXT int cpu_cycles_from_hbl_to_timer_b;
 
 #define SCANLINES_ABOVE_SCREEN_50HZ 63 
 #define SCANLINES_ABOVE_SCREEN_60HZ 34
-#define SCANLINES_ABOVE_SCREEN_70HZ 61
+#define SCANLINES_ABOVE_SCREEN_70HZ 61 // should be 34?
 #define SCANLINES_BELOW_SCREEN_50HZ 50
 #define SCANLINES_BELOW_SCREEN_60HZ 29
-#define SCANLINES_BELOW_SCREEN_70HZ 40
+#define SCANLINES_BELOW_SCREEN_70HZ 40 // 40+(61-34) ?
 #define SCANLINE_TIME_IN_CPU_CYCLES_50HZ 512
 #define SCANLINE_TIME_IN_CPU_CYCLES_60HZ 508
 #define SCANLINE_TIME_IN_CPU_CYCLES_70HZ 224

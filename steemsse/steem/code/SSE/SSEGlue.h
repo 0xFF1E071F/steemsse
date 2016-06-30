@@ -37,6 +37,9 @@ struct TGlueStatusBYTE {
 #define TRICK_WRITE_SDP 0x4000 
 #define TRICK_WRITE_SDP_POST_DE 0x8000
 #endif
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_382)
+#define TRICK_80BYTE_LINE 0x4000 // don't assume a "no trick" colour line = 160byte
+#endif
 #if defined(SSE_SHIFTER_DRAGON1)
 #define TRICK_CONFUSED_SHIFTER 0x10000//tmp hack
 #endif
@@ -53,7 +56,7 @@ struct TGlueStatusBYTE {
 struct TScanline {
   short StartCycle; // eg 56
   short EndCycle; // eg 376
-  BYTE Bytes; // eg 160 - TODO make sure it's always correct
+  BYTE Bytes; // eg 160
   short Cycles; // eg 512 
   DWORD Tricks; // see mask description above
 };
@@ -78,6 +81,9 @@ struct TGlue {
   // cycles can be 0-512, hence words
   WORD ScanlineTiming[NTIMINGS][NFREQS];
 #if defined(SSE_GLUE_FRAME_TIMINGS)
+#ifdef UNIX
+#undef Status // ?? ux382
+#endif
   TGlueStatusBYTE Status;
   screen_event_struct screen_event; // there's only one now
   WORD scanline; 

@@ -23,8 +23,13 @@ extern const char*exception_action_name[4];//={"read from","write to","fetch fro
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 #include "SSEGlue.h"
 #endif
+#if defined(SSE_INT_HBL_E_CLOCK_HACK_382)
+#include "SSEMMU.h"
+#endif
 
 #if defined(SSE_CPU)
+
+#define LOGSECTION LOGSECTION_CPU
 
 TM68000 M68000; // singleton
 
@@ -34,9 +39,9 @@ TM68000::TM68000() {
 }
 
 
-void TM68000::Reset(bool cold) {
+void TM68000::Reset(bool Cold) {
 #if defined(SSE_DEBUG)    
-  if(cold)
+  if(Cold)
     nExceptions=nInstr=0;
   NextIrFetched=false; //at power on
 #endif
@@ -52,7 +57,33 @@ void TM68000::Reset(bool cold) {
 #if defined(SSE_CPU_TPEND)  
   tpend=false; //guess so
 #endif  
+#if defined(SSE_CPU_E_CLOCK_382)
+  if(Cold)
+    cycles_for_eclock=cycles0=0;
+#endif
 }
+
+/////////////////////
+// Counting cycles //
+/////////////////////
+
+#if defined(SSE_CPU_TIMINGS_NO_INLINE_382)
+
+void TM68000::InstructionTimeRound(int t) {
+  InstructionTime(t);
+#if ! defined(SSE_MMU_WAIT_STATES)
+#if defined(SSE_CPU_ROUNDING_BUS)
+#if defined(SSE_VC_INTRINSICS_382)
+  Rounded=BITTEST(cpu_cycles,1); // causes inlining anyway
+#else
+  Rounded=(cpu_cycles&2);
+#endif
+#endif
+  cpu_cycles&=-4;
+#endif
+}
+
+#endif
 
 
 //////////////////////////////
@@ -1391,7 +1422,7 @@ void TM68000::SetPC(MEM_ADDRESS ad) {
 #if defined(SSE_CPU_FETCH_80000A)
         if(pc>=0x80000 && pc<0x3FFFFF)
         {
-          TRACE("fake fetching address for %x\n",pc);
+          TRACE_LOG("fake fetching address for %x\n",pc);
           lpfetch=lpDPEEK(xbios2); 
           lpfetch_bound=lpDPEEK(mem_len+(MEM_EXTRA_BYTES/2)); 
         }
@@ -1427,7 +1458,7 @@ void TM68000::PrefetchSetPC() {
   {
     prefetch_buf[0]=io_read_w(pc);
     prefetch_buf[1]=io_read_w(pc+2);
-    TRACE("Set PC in IO zone %X\n",pc);
+    TRACE_LOG("Set PC in IO zone %X\n",pc);
     prefetched_2=true;
     return;
   }
@@ -1438,7 +1469,7 @@ void TM68000::PrefetchSetPC() {
   {
     prefetch_buf[0]=prefetch_buf[1]=0xFFFF; // default, incorrect?
     prefetched_2=true;
-    TRACE("Set PC in empty zone %X\n",pc);
+    TRACE_LOG("Set PC in empty zone %X\n",pc);
     return;
   }
 #endif
@@ -1556,7 +1587,7 @@ void TM68000::Interrupt(MEM_ADDRESS ad) {
 ////////////////
 
 #if defined(SSE_CPU_EXCEPTION)
-
+#undef LOGSECTION//3.8.2 warning
 #define LOGSECTION LOGSECTION_CRASH
 
 void m68k_exception::crash() { // copied from cpu.cpp and improved
@@ -2291,13 +2322,23 @@ TM68000::SyncEClock(
     return;
 #endif
   EClock_synced=true; 
+
+#if defined(SSE_CPU_E_CLOCK_382)
+
+  UpdateCyclesForEClock();
+  BYTE cycles=cycles_for_eclock%10;
+
+#else
+
   int act=ACT;
+
+
+// if(dispatcher==TM68000::ECLOCK_HBL MMU.WS[WAKE_UP_STATE]==1 && ST_TYPE==STF) act+=-8;
 
 #if defined(SSE_CPU_E_CLOCK5)
   if(ST_TYPE==STE && dispatcher==ECLOCK_VBL)//temp, it's some compensation for sure
     act+=2;
 #endif
-
 #if defined(SSE_SHIFTER) && defined(SSE_TIMINGS_FRAME_ADJUSTMENT)//no
   act-=4*Shifter.n508lines; //legit hack: NOJITTER.PRG
 #endif
@@ -2316,6 +2357,8 @@ TM68000::SyncEClock(
     cycles=6-cycles;
 #endif
 
+#endif//#if defined(SSE_CPU_E_CLOCK_382)
+
 #if !defined(SSE_CPU_E_CLOCK2)
   BYTE wait_states;
 #endif
@@ -2327,7 +2370,11 @@ TM68000::SyncEClock(
 #endif
   case 0:
     wait_states=8;
-#if defined(SSE_INT_HBL_E_CLOCK_HACK)
+#if defined(SSE_INT_HBL_E_CLOCK_HACK_382)
+    if(MMU.WS[WAKE_UP_STATE]==1 && ST_TYPE==STF && dispatcher==ECLOCK_HBL 
+      && SSE_HACKS_ON)
+     wait_states-=2;// still a hack: Closure 3615GEN4 STF WS1
+#elif defined(SSE_INT_HBL_E_CLOCK_HACK)
     // pathetic hack for 3615GEN4 HMD #1, make it 4
     // cycles instead on HBI of STF
     // TEST16, HBITMG: jitter is 0, 4, 8, timing is 56 
@@ -2351,7 +2398,7 @@ TM68000::SyncEClock(
 #if !defined(SSE_CPU_E_CLOCK2)
   InstructionTime(wait_states); 
 #endif
-#if defined(SSE_DEBUG) 
+#if defined(SSE_BOILER) 
   //char* sdispatcher[]={"ACIA","HBL","VBL"};
   char* sdispatcher[]={"VBL","HBL","ACIA"};
 #if defined(SSE_DEBUG_FRAME_REPORT_ACIA)
@@ -2381,6 +2428,21 @@ TM68000::SyncEClock(
   return wait_states;
 #endif
 }
+
+
+#if defined(SSE_CPU_E_CLOCK_382)
+/*  We come here at each VBL and each time the e-clock is read,
+    so cycles_for_eclock should never overflow or go negative.
+*/
+void TM68000::UpdateCyclesForEClock() {
+  int cycles1=ACT; // current CPU cycles (can be negative)
+  int ncycles=cycles1-cycles0; // elapsed CPU cycles since last refresh
+  cycles_for_eclock+=ncycles; // update counter for E-clock
+  cycles_for_eclock%=(10*16); // remove high bits
+  cycles0=cycles1; // record current CPU cycles
+}
+#endif
+
 
 #undef LOGSECTION
 

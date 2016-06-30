@@ -40,9 +40,17 @@ EXT bool mouse_change_since_last_interrupt;
 EXT int mousek;
 #endif
 #ifndef CYGWIN
+#if defined(SSE_VAR_RESIZE_382)
+EXT BYTE no_set_cursor_pos INIT(0);
+#else
 EXT int no_set_cursor_pos INIT(0);
+#endif
+#else
+#if defined(SSE_VAR_RESIZE_382)
+EXT BYTE no_set_cursor_pos INIT(true);
 #else
 EXT int no_set_cursor_pos INIT(true);
+#endif
 #endif
 
 //#ifdef IN_EMU
@@ -336,8 +344,14 @@ void IKBD_VBL()
           }
           mouse_change_since_last_interrupt=true; 
         }
-        
-        if (no_set_cursor_pos){
+        if (
+#if defined(SSE_GUI_MOUSE_VM_FRIENDLY)
+/*  SetCursorPos() and ClipCursor() don't work in some VM because the host
+    keeps control of the mouse cursor. This fixes the drifting mouse issue.
+*/
+          SSEOption.VMMouse ||
+#endif
+          no_set_cursor_pos){
           window_mouse_centre_x=pt.x;
           window_mouse_centre_y=pt.y;
         }else{
@@ -597,7 +611,7 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
 #endif
 #if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
     //  If there's a byte in TDR waiting to be shifted, do it now.
-    ASSERT(ACIA_IKBD.LineTxBusy);
+///    ASSERT(ACIA_IKBD.LineTxBusy); //TODO on resume
     ACIA_IKBD.LineTxBusy=false;
     if(ACIA_IKBD.ByteWaitingTx) 
       HD6301.ReceiveByte(ACIA_IKBD.TDR);

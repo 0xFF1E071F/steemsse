@@ -16,8 +16,11 @@ handled here, in event_scanline and event_vbl_interrupt.
 
 #define EXT
 #define INIT(s) =s
-
+#if defined(SSE_VAR_RESIZE_382)
+EXT BYTE runstate;
+#else
 EXT int runstate;
+#endif
 // fast_forward_max_speed=(1000 / (max %/100)); 0 for unlimited
 EXT int fast_forward INIT(0),fast_forward_max_speed INIT(0);
 EXT bool fast_forward_stuck_down INIT(0);
@@ -32,19 +35,23 @@ EXT DWORD speed_limit_wait_till;
 EXT int avg_frame_time_counter INIT(0);
 EXT DWORD auto_frameskip_target_time;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VARIOUS___)
-EXT int frameskip INIT(1);
+#if defined(SSE_VAR_RESIZE_382)
+EXT BYTE frameskip INIT(AUTO_FRAMESKIP);
+EXT BYTE frameskip_count INIT(1);
 #else
 EXT int frameskip INIT(AUTO_FRAMESKIP);
-#endif
 EXT int frameskip_count INIT(1);
+#endif
+
 
 EXT bool flashlight_flag INIT(false);
 
 DEBUG_ONLY(EXT int mode);
-
+#if defined(SSE_VAR_RESIZE_382)
+EXT BYTE mixed_output INIT(0);
+#else
 EXT int mixed_output INIT(0);
-
+#endif
 EXT int cpu_time_of_last_vbl,shifter_cycle_base;
 
 EXT int cpu_timer_at_start_of_hbl;
@@ -96,9 +103,13 @@ int time_of_last_hbl_interrupt;
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBL_IACK)
 int time_of_last_vbl_interrupt;
 #endif
-
+#if defined(SSE_VAR_RESIZE_382)
+BYTE screen_res_at_start_of_vbl;
+BYTE shifter_freq_at_start_of_vbl;
+#else
 int screen_res_at_start_of_vbl;
 int shifter_freq_at_start_of_vbl;
+#endif
 int scanline_time_in_cpu_cycles_at_start_of_vbl;
 bool hbl_pending;
 
@@ -328,6 +339,7 @@ void run()
     }
     catch(...)
     {
+      TRACE("System exception\n");
       runstate=RUNSTATE_STOPPING;
 #if defined(SSE_GUI_STATUS_STRING) && defined(SSE_CPU_HALT)
       M68000.ProcessingState=TM68000::INTEL_CRASH; // Intel M68000 crashed
@@ -341,8 +353,10 @@ void run()
   PortsRunEnd();
 
   Sound_Stop(Quitting);
-
-  Disp.RunEnd();
+#if defined(SSE_VID_FS_382)
+  if(FullScreen)
+#endif
+    Disp.RunEnd();
 
   runstate=RUNSTATE_STOPPED;
 
@@ -354,6 +368,7 @@ void run()
 
 #ifdef DEBUG_BUILD
   if (redraw_on_stop){
+    //TRACE("redraw_on_stop\n");
     draw(0);
   }else{
     update_display_after_trace();
@@ -676,7 +691,9 @@ void event_timer_b()
       log_to(LOGSECTION_MFP_TIMERS,EasyStr("MFP: Timer B counter decreased to ")+(mfp_timer_counter[1]/64)+" at "+scanline_cycle_log());
       if (mfp_timer_counter[1]<64){
         log(EasyStr("MFP: Timer B timeout at ")+scanline_cycle_log());
-        TRACE_LOG("F%d y%d c%d Timer B pending\n",TIMING_INFO);
+#ifdef SSE_DEBUG
+        if (mfp_interrupt_enabled[8]) TRACE_LOG("F%d y%d c%d Timer B pending\n",TIMING_INFO); //?
+#endif
         mfp_timer_counter[1]=BYTE_00_TO_256(mfp_reg[MFPR_TBDR])*64;
         
 #if defined(SSE_INT_MFP_IACK_LATENCY4) && defined(SSE_INT_MFP_IACK_LATENCY5)
@@ -839,6 +856,7 @@ void event_scanline_sub() {
 #define LOGSECTION LOGSECTION_IKBD
         TRACE_LOG("6301 emu is hopelessly crashed!\n");
 #undef LOGSECTION
+        TRACE2("6301 emu crash\n");
         HD6301.Crashed=1; 
       }
     }
@@ -1195,6 +1213,7 @@ void event_scanline()
 #if !defined(SSE_GLUE_FRAME_TIMINGS_B)
   screen_event_pointer++;
 #endif
+#if !defined(SSE_VID_D3D_3BUFFER)
 #if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC)
   if(SSE_3BUFFER && !(scan_y%2)
 #if !defined(SSE_VID_3BUFFER_FS)
@@ -1203,6 +1222,7 @@ void event_scanline()
     )
     Disp.BlitIfVBlank();
 #endif
+#endif//#if !defined(SSE_VID_D3D_3BUFFER)
 #if defined(SSE_GLUE_FRAME_TIMINGS)
   Glue.Status.hbi_done=false;
   ASSERT(!Glue.Status.scanline_done);
@@ -1304,11 +1324,15 @@ void event_vbl_interrupt() //SS misleading name?
   if (draw_lock){
     draw_end();
 #if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC)
-    if (VSyncing==0 &&( !SSE_3BUFFER
+    if (VSyncing==0 
+#if !defined(SSE_VID_D3D_3BUFFER)
+      &&( !SSE_3BUFFER
 #if !defined(SSE_VID_3BUFFER_FS)
       || FullScreen
 #endif
-      ))
+      )
+#endif//#if !defined(SSE_VID_D3D_3BUFFER)
+      )
       draw_blit();
 #else
     if (VSyncing==0) draw_blit();
@@ -1317,6 +1341,7 @@ void event_vbl_interrupt() //SS misleading name?
   }else if (bad_drawing & 2){
     // bad_drawing bits: & 1 - bad drawing option selected  & 2 - bad-draw next screen
     //                   & 4 - temporary bad drawing because of extended monitor.
+    //TRACE("bad drawing\n");
     draw(0);
     bad_drawing&=(~2);
   }
@@ -1474,7 +1499,7 @@ void event_vbl_interrupt() //SS misleading name?
   int m=0;
   LOOP{
     timer=timeGetTime();
-
+//#if !defined(SSE_VID_D3D_3BUFFER)
 #if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC)
   if(SSE_3BUFFER
 #if !defined(SSE_VID_3BUFFER_FS)
@@ -1483,7 +1508,7 @@ void event_vbl_interrupt() //SS misleading name?
     )
     Disp.BlitIfVBlank();
 #endif
-
+//#endif//#if !defined(SSE_VID_D3D_3BUFFER)
 
     // Break if used up enough time and processed at least 3 messages
     if (int(frame_delay_timeout-timer)<=time_for_exact_limit && m>=3) break;
@@ -1521,7 +1546,7 @@ void event_vbl_interrupt() //SS misleading name?
     int time_to_sleep=(int(frame_delay_timeout)-int(timeGetTime()))-time_for_exact_limit;
     if (time_to_sleep>0){
       log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: Sleeping for ")+time_to_sleep);
-
+#if !defined(SSE_VID_D3D_3BUFFER)
 #if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC)
 /*  This is the part responsible for high CPU use.
     Sleep(1) is sure to make us miss VBLANK.
@@ -1540,6 +1565,7 @@ void event_vbl_interrupt() //SS misleading name?
       }
       else
 #endif
+#endif//#if !defined(SSE_VID_D3D_3BUFFER)
       Sleep(DWORD(time_to_sleep));
 
     }
@@ -1560,6 +1586,7 @@ void event_vbl_interrupt() //SS misleading name?
       // Wait until desired time (to nearest 1000th of a second).
       do{
         timer=timeGetTime();
+#if !defined(SSE_VID_D3D_3BUFFER)
 #if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC)
         if(SSE_3BUFFER //&& SSE_WIN_VSYNC
 #if !defined(SSE_VID_3BUFFER_FS)
@@ -1567,6 +1594,7 @@ void event_vbl_interrupt() //SS misleading name?
 #endif
           )
           Disp.BlitIfVBlank();
+#endif
 #endif
       }while (int(frame_delay_timeout-timer)>0);
       log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: Finished speed limiting at ")+(timer-run_start_time));
@@ -1701,6 +1729,10 @@ void event_vbl_interrupt() //SS misleading name?
     shifter_last_draw_line=320;
     overscan=OVERSCAN_MAX_COUNTDOWN;
   }
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_382)
+  if((GLU.m_ShiftMode&2)&&screen_res<2)
+    shifter_last_draw_line*=2; //400 fetching lines
+#endif
 
 #if !defined(SSE_GLUE_FRAME_TIMINGS9) || defined(SSE_GLUE_FRAME_TIMINGS_C)
   event_start_vbl(); // Reset SDP again!
@@ -1727,7 +1759,8 @@ void event_vbl_interrupt() //SS misleading name?
     The protection of this demo is rather vicious. It sets the
     ST in highres, then uses the video counter in the middle of
     its trace decoding routine.
-*///todo sw
+    Update v3.8.2: other way (SSE_SHIFTER_HIRES_COLOUR_DISPLAY_382)
+*/
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY5)
   if( screen_res<2 && (GLU.m_ShiftMode&2) && COLOUR_MONITOR
     && GLU.CurrentScanline.Cycles==224) 
@@ -1799,12 +1832,12 @@ void event_vbl_interrupt() //SS misleading name?
   debug_vbl();
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)//3.6.1
+#if defined(STEVEN_SEAGAL) && (defined(SSE_DEBUG)||defined(SSE_OSD_SHOW_TIME))
   Debug.Vbl();
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER)
-  Shifter.Vbl();
+  Shifter.Vbl(); 
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER) && defined(SSE_DEBUG_FRAME_REPORT)
@@ -1849,6 +1882,10 @@ void event_vbl_interrupt() //SS misleading name?
 
   }
 #endif
+#endif
+
+#if defined(SSE_CPU_E_CLOCK_382)
+  M68000.UpdateCyclesForEClock(); // this function is called at least each VBL
 #endif
 
 }
@@ -2204,7 +2241,8 @@ void event_mfp_write() {
   if(OPTION_PRECISE_MFP && MC68901.WritePending)
   {
     ASSERT(time_of_event_mfp_write!=MC68901.WriteTiming);
-    TRACE_MFP("%d execute event_mfp_write(): mfp_reg[%d]=%X\n",ACT,MC68901.LastRegisterWritten,MC68901.LastRegisterWrittenValue);
+//    TRACE_MFP("%d execute event_mfp_write(): mfp_reg[%d]=%X\n",ACT,MC68901.LastRegisterWritten,MC68901.LastRegisterWrittenValue);
+    TRACE_MFP("%d %s=%X\n",ACT,mfp_reg_name[MC68901.LastRegisterWritten],MC68901.LastRegisterWrittenValue);
 #if defined(SSE_INT_MFP_REFACTOR2B) && defined(SSE_DEBUG) //for trace
     MC68901.LastRegisterFormerValue=mfp_reg[MC68901.LastRegisterWritten];
 #endif

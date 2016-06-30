@@ -141,7 +141,11 @@ void agenda_serial_replace(int)
       mfp_reg[MFPR_RSR]&=BYTE(~(BIT_2 /*Char in progress*/ | BIT_3 /*Break*/ |
                                 BIT_4 /*Frame Error*/ |      BIT_5 /*Parity Error*/));
       mfp_reg[MFPR_RSR]|=BIT_7 /*Buffer Full*/;
+#if defined(SSE_INT_MFP_REFACTOR1) && defined(SSE_VS2008_WARNING_382)
+      mfp_interrupt(MFP_INT_RS232_RECEIVE_BUFFER_FULL);
+#else
       mfp_interrupt(MFP_INT_RS232_RECEIVE_BUFFER_FULL,ABSOLUTE_CPU_TIME);
+#endif
     }
 
     if (SerialPort.AreBytesToCome()){

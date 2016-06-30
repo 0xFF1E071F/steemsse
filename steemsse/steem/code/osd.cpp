@@ -68,7 +68,6 @@ extern BYTE floppy_head_track[2];
 
 #endif
 
-
 void ASMCALL osd_draw_char_dont(long*,BYTE*,long,long,int,long,long) {}
 
 void ASMCALL osd_draw_char_clipped_dont(long*,BYTE*,long,long,int,long,long,RECT*) {}
@@ -186,14 +185,16 @@ void osd_pick_scroller()
   if (osd_scroller_array.NumStrings==0) return;
 
   srand(osd_start_time);
+#if !defined(SSE_DEBUG_OSD_SCROLLER_EVERYTIME)
   if ((rand() % CHANCE_OF_SCROLLER)!=0) return;
-
+#endif
   int n=(rand() % osd_scroller_array.NumStrings);
   osd_scroller = get_osd_scroller_text(n);
   strupr(osd_scroller.Text);
 
   osd_shown_scroller=true;
   osd_scroller_start_time=timer+100;
+  //TRACE("%d\n",osd_scroller.Length());
   osd_scroller_finish_time=osd_scroller_start_time + 20*20 + osd_scroller.Length()*4*20 + (1280/4*20);
 }
 //---------------------------------------------------------------------------
@@ -211,7 +212,9 @@ void osd_draw_full_stop()
 {
   if (osd_no_draw || osd_disable) return;
 #ifndef ONEGAME
+#if !(defined(SSE_OSD_FORCE_REDRAW_AT_STOP) && defined(SSE_VS2008_WARNING_382))
   int seconds=max(min((timer-osd_start_time)/1000,DWORD(30)),DWORD(0));
+#endif
   if (
 #if !defined(SSE_OSD_FORCE_REDRAW_AT_STOP)
     (seconds<osd_show_icons || pc==rom_addr) && 
@@ -264,14 +267,24 @@ void osd_draw()
   int x1,y1;
   x1=draw_blit_source_rect.right-draw_blit_source_rect.left;
 
+#if !defined(SSE_VID_D3D_ONLY)
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS_LB_DX)
   if(BORDER_40 && border && !SCANLINES_INTERPOLATED)
+#ifdef SSE_VID_D3D_WINDOW
+    x1+=16+8;
+#else
     x1+=16;
+#endif
+#endif
 #endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_SCANLINES_INTERPOLATED)
 #if defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
-  if(SSE_INTERPOLATE && FullScreen && !screen_res)
+  if(SSE_INTERPOLATE && FullScreen && !screen_res
+#if defined(SSE_VID_D3D_382)
+    || FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE 
+#endif    
+    )
 #else
   if(draw_win_mode[screen_res]==DWM_STRETCH_SCANLINES && FullScreen)
 #endif
@@ -505,10 +518,17 @@ void osd_draw()
     // TODO refactor in basic function?
     RECT cliprect={THE_LEFT,0,THE_RIGHT,y1};
     int x=0;
+#if !defined(SSE_VID_D3D_ONLY)
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS_LB_DX)
     if(BORDER_40 && border && !SCANLINES_INTERPOLATED)
+#ifdef SSE_VID_D3D_WINDOW
+      x+=16+8;// argh! forget this, no BORDER_40 with D3D, it
+    // was for fullscreen anyway
+#else
       x+=16;
 #endif
+#endif
+#endif//#if !defined(SSE_VID_D3D_ONLY)
     int start_y=0+8;
     for(unsigned int i=0;i<strlen(Debug.m_OsdMessage);i++)
     {
@@ -619,7 +639,7 @@ void osd_draw()
 
 #ifdef SSE_DEBUG // add current command (CR)
 
-#if defined(SSE_DISK_IMAGE) && defined(SSE_OSD_DRIVE_INFO_EXT) 
+#if defined(SSE_DISK_IMAGETYPE) && defined(SSE_OSD_DRIVE_INFO_EXT) //3.8.2, was SSE_DISK_IMAGE
 /*  Instead of the status bar, we put image info on debug OSD track info,
     so it's valid for both drives, we see clearly what happens with
     different types mixed.
@@ -1037,10 +1057,13 @@ LRESULT __stdcall ResetInfoWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       osd_get_reset_info(&sl);
 
       RECT rc;
+#if !defined(SSE_VID_D3D_ONLY)
       if (FullScreen){
         get_fullscreen_rect(&rc);
         rc.top-=MENUHEIGHT;
-      }else{
+      }else
+#endif//#if !defined(SSE_VID_D3D_ONLY)
+      {
         GetClientRect(StemWin,&rc);
         rc.bottom-=2;
         rc.top+=MENUHEIGHT+2;

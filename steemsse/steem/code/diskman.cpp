@@ -13,6 +13,9 @@ as changing disk images and determining what files are disks.
 #if defined(SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD)
 #include <acc.decla.h>
 #endif
+#if defined(SSE_ACSI_RELOAD_TOS)
+#include <loadsave.decla.h>
+#endif
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DISKMAN_H)
 
@@ -387,9 +390,11 @@ void TDiskManager::Show()
     ManageWindowClasses(SD_UNREGISTER);
     return;
   }
-
+#if defined(SSE_X64_LPTR)
+  SetWindowLongPtr(Handle, GWLP_USERDATA,(LONG_PTR)this);
+#else
   SetWindowLong(Handle,GWL_USERDATA,(long)this);
-
+#endif
   MakeParent(HWND(FullScreen ? StemWin:NULL));
 
   HWND Win;
@@ -545,7 +550,17 @@ http://www.microsoft-questions.com/microsoft/Platform-SDK-Shell/32138755/vista-l
   }
 
   SetWindowAndChildrensFont(Handle,Font);
-
+#if defined(SSE_X64_LPTR)
+  SetWindowLongPtr(GetDlgItem(Handle, 98), GWLP_USERDATA,(LONG_PTR) this);
+  SetWindowLongPtr(GetDlgItem(Handle, 99), GWLP_USERDATA,(LONG_PTR) this);
+  Old_ListView_WndProc = (WINDOWPROC)GetClassLongPtr(GetDlgItem(Handle, 100), GCLP_WNDPROC);
+  SetWindowLongPtr(GetDlgItem(Handle, 100), GWLP_USERDATA,(LONG_PTR) this);
+  SetWindowLongPtr(GetDlgItem(Handle, 100), GWLP_WNDPROC, (LONG_PTR)DriveView_WndProc);
+  SetWindowLongPtr(GetDlgItem(Handle, 101), GWLP_USERDATA,(LONG_PTR) this);
+  SetWindowLongPtr(GetDlgItem(Handle, 101), GWLP_WNDPROC,(LONG_PTR) DriveView_WndProc);
+  SetWindowLongPtr(GetDlgItem(Handle, 102), GWLP_USERDATA,(LONG_PTR) this);
+  SetWindowLongPtr(GetDlgItem(Handle, 102), GWLP_WNDPROC,(LONG_PTR) DiskView_WndProc);
+#else
   SetWindowLong(GetDlgItem(Handle,98),GWL_USERDATA,(long)this);
   SetWindowLong(GetDlgItem(Handle,99),GWL_USERDATA,(long)this);
 
@@ -556,7 +571,7 @@ http://www.microsoft-questions.com/microsoft/Platform-SDK-Shell/32138755/vista-l
   SetWindowLong(GetDlgItem(Handle,101),GWL_WNDPROC,(long)DriveView_WndProc);
   SetWindowLong(GetDlgItem(Handle,102),GWL_USERDATA,(long)this);
   SetWindowLong(GetDlgItem(Handle,102),GWL_WNDPROC,(long)DiskView_WndProc);
-
+#endif
   for (int i=0;i<2;i++){
     if (FloppyDrive[i].DiskInDrive()){
       InsertDisk(i,FloppyDrive[i].DiskName,FloppyDrive[i].GetDisk(),true,0,FloppyDrive[i].DiskInZip);
@@ -598,8 +613,11 @@ void TDiskManager::LoadIcons()
     }
     pIcons=hGUIIconSmall;
   }
-
+#if defined(SSE_X64_LPTR)
+  if (VisibleDiag()) SetClassLongPtr(VisibleDiag(), GCLP_HICON, long(hGUIIconSmall[RC_ICO_DRIVE]));
+#else
   if (VisibleDiag()) SetClassLong(VisibleDiag(),GCL_HICON,long(hGUIIconSmall[RC_ICO_DRIVE]));
+#endif
   if (GetDlgItem(Handle,10)){
     // Update controls
     for (int id=80;id<90;id++){
@@ -627,9 +645,8 @@ void TDiskManager::LoadIcons()
 void TDiskManager::SetDiskViewMode(int Mode)
 {
   SetWindowLong(DiskView,GWL_STYLE,(GetWindowLong(DiskView,GWL_STYLE) & ~LVS_SMALLVIEW & ~LVS_ICON) | Mode);
-
   if (SmallIcons){
-    WIDTHHEIGHT widh=GetTextSize(Font,"WidtÁh of y Line in small icon view");
+    WIDTHHEIGHT widh=GetTextSize(Font,"Width of y Line in small icon view");
     widh.Width/=2;
     if (IconSpacing==1) widh.Width*=2;
     if (IconSpacing==2) widh.Width*=4;
@@ -1224,8 +1241,11 @@ void TDiskManager::GoToDisk(Str Path,bool Refresh)
   SetFocus(DiskView);
 }
 //---------------------------------------------------------------------------
+#if defined(SSE_X64_LPTR)
+#define GET_THIS This=(TDiskManager*)GetWindowLongPtr(Win,GWLP_USERDATA);
+#else
 #define GET_THIS This=(TDiskManager*)GetWindowLong(Win,GWL_USERDATA);
-
+#endif
 LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 {
   LRESULT Ret=DefStemDialogProc(Win,Mess,wPar,lPar);
@@ -1297,7 +1317,10 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             {
               SSEOption.Acsi=!SSEOption.Acsi;
               TRACE_INIT("Option ACSI %d\n",SSEOption.Acsi);
-             // HardDiskMan.update_mount();
+#if defined(SSE_ACSI_RELOAD_TOS)
+              if(SSEOption.Acsi)
+                load_TOS(ROMFile);
+#endif
 #if defined(SSE_GUI_STATUS_STRING)
               GUIRefreshStatusBar();
 #endif
@@ -2054,6 +2077,10 @@ That will toggle bit x.
         case 2029:
           SSEOption.Acsi=!SSEOption.Acsi;
           TRACE_LOG("Option ACSI support %d\n",SSEOption.Acsi);
+#if defined(SSE_ACSI_RELOAD_TOS)
+          if(SSEOption.Acsi)
+            load_TOS(ROMFile);
+#endif 
           break;
 #endif
       }
@@ -2820,6 +2847,9 @@ That will toggle bit x.
     case (WM_USER+1011):
     {
       GET_THIS;
+      ASSERT(This);
+
+      bool at_home=This->AtHome;//temp
 
       if (This->VisibleDiag()){
         SendMessage(This->VisibleDiag(),WM_COMMAND,IDCANCEL,0);
@@ -3599,7 +3629,7 @@ void TDiskManager::ExtractArchiveToSTHardDrive(Str Path)
 void TDiskManager::EjectDisk(int Drive)
 {
   FloppyDrive[Drive].RemoveDisk();
-
+#ifdef WIN32//ux382
 #ifdef SSE_TOS_PRG_AUTORUN2
   if(SF314[Drive].ImageType.Extension==EXT_PRG
     ||SF314[Drive].ImageType.Extension==EXT_TOS)
@@ -3613,7 +3643,7 @@ void TDiskManager::EjectDisk(int Drive)
   SF314[Drive].ImageType.Extension=0;
 #endif
 
-#ifdef WIN32
+//#ifdef WIN32//ux382
   if (Handle){
     SendMessage(GetDlgItem(Handle,100+Drive),LVM_DELETEITEM,0,0);
     EnableWindow(GetDlgItem(GetDlgItem(Handle,98+Drive),100),AreNewDisksInHistory(Drive));

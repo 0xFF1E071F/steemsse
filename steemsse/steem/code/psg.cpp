@@ -82,6 +82,12 @@ EXT DWORD temp_waveform_play_counter;
 
 #endif
 
+#if defined(SSE_YM2149_QUANTIZE_TRACE)
+#define TRACE_PSG TRACE_LOG
+#else
+#define TRACE_PSG
+#endif
+
 EXT FILE *psg_capture_file INIT(NULL);
 EXT int psg_capture_cycle_base INIT(0);
 
@@ -178,13 +184,7 @@ const int psg_flat_volume_level[16]={0*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,8*VA/10
                                       287*VA/1000+VZL*VFP,407*VA/1000+VZL*VFP,648*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP};
 
 
-#if defined(SSE_YM2149_FIXED_VOL_FIX1) //undef v3.7.0
-/*  Values based on the graphic in Yamaha doc.
-    It remains to be seen/heard if the sound is better with these values or
-    Steem original values.
-    For that reason, the mod is optional ("P.S.G.").
-*/
-
+#if defined(SSE_YM2149_FIXED_VOL_FIX1) //undef v3.7.0 (bad values?)
 const int psg_flat_volume_level2[16]=
 {0*VA/1000+VZL*VFP,3*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,13*VA/1000+VZL*VFP,
 22*VA/1000+VZL*VFP,31*VA/1000+VZL*VFP,41*VA/1000+VZL*VFP,63*VA/1000+VZL*VFP,
@@ -767,7 +767,7 @@ inline void Microwire(int channel,int &val) {
       if(dma_sound_bass!=6)
         d_dsp_v=MicrowireBass[channel].FilterAudio(d_dsp_v,LOW_SHELF_FREQ,
           dma_sound_bass-6);
-//      if(dma_sound_treble!=6)  //3.6.1? too buggy
+//      if(dma_sound_treble!=6)  //3.6.1? too buggy - made no switch...
   //      d_dsp_v=MicrowireTreble[channel].FilterAudio(d_dsp_v,HIGH_SHELF_FREQ
     //     ,dma_sound_treble-6);
       if(dma_sound_volume<0x28
@@ -1563,6 +1563,7 @@ HRESULT Sound_VBL()
   temp_waveform_play_counter=play_cursor;
 #endif
   log("SOUND: Working out data up to the end of this VBL plus a bit more for all channels");
+  TRACE_PSG("VBL finishing sound buffers from %d to %d (%d)+ extra %d\n",psg_time_of_last_vbl_for_writing,time_of_next_vbl_to_write,time_of_next_vbl_to_write-psg_time_of_last_vbl_for_writing,PSG_WRITE_EXTRA);
   for (int abc=2;abc>=0;abc--){
     psg_write_buffer(abc,time_of_next_vbl_to_write+PSG_WRITE_EXTRA);
   }
@@ -1693,6 +1694,8 @@ HRESULT Sound_VBL()
   log(EasyStr("SOUND: psg_time_of_next_vbl_for_writing=")+psg_time_of_next_vbl_for_writing);
 
   psg_n_samples_this_vbl=psg_time_of_next_vbl_for_writing-psg_time_of_last_vbl_for_writing;
+  //TRACE("psg_n_samples_this_vbl %d\n",psg_n_samples_this_vbl); //882 x 50 = 44100
+  //ASSERT(psg_n_samples_this_vbl*shifter_freq_at_start_of_vbl==sound_freq);
 
   log("SOUND: End of Sound_VBL");
   log("");
@@ -1885,9 +1888,6 @@ void dma_sound_fetch()
     It works with a DMA clock = 8012800
 
 */
-  //ASSERT(scanline_time_in_cpu_cycles_at_start_of_vbl==512);
-
- // FrameEvents.Add(scan_y,LINECYCLES,'f',0); 
 
   if (Mono){  //play half as many words
     dma_sound_samples_countdown+=dma_sound_freq*scanline_time_in_cpu_cycles_at_start_of_vbl/2;
@@ -2477,16 +2477,20 @@ void psg_write_buffer(int abc,DWORD to_t)
   double af,bf;
   bool psg_tonetoggle=true,psg_noisetoggle;
   int *p=psg_channels_buf+psg_buf_pointer[abc];
+ // TRACE("Write buffer %d to %d",abc,to_t);
   DWORD t=(psg_time_of_last_vbl_for_writing+psg_buf_pointer[abc]);//SS where we are now
   to_t=max(to_t,t);//SS can't go backwards
   to_t=min(to_t,psg_time_of_last_vbl_for_writing+PSG_CHANNEL_BUF_LENGTH);//SS don't exceed buffer
   int count=max(min((int)(to_t-t),PSG_CHANNEL_BUF_LENGTH-psg_buf_pointer[abc]),0);//SS don't exceed buffer
+  //TRACE(" t %d to_t %d count %d\n",t,to_t,count);
   ASSERT( count>=0 );
 #if defined(SSE_YM2149_OPT1)
   if(!count)
     return;
 #endif
   int toneperiod=(((int)psg_reg[abc*2+1] & 0xf) << 8) + psg_reg[abc*2];
+
+  TRACE_PSG("Write buffer %d from %d to %d\n",abc,t,to_t);
 
   if ((psg_reg[abc+8] & BIT_4)==0){ // Not Enveloped //SS bit 'M' in those registers
 
@@ -2725,7 +2729,6 @@ void psg_write_buffer(int abc,DWORD to_t)
       }
     }else{ //nothing enabled
       for (;count>0;count--){
-
 #if defined(SSE_YM2149_DELAY_RENDERING)
         if(SSE_OPTION_PSG || SSE_OPTION_PSG_FIXED)
         {
@@ -2744,6 +2747,7 @@ void psg_write_buffer(int abc,DWORD to_t)
   }
 }
 //---------------------------------------------------------------------------
+#if !defined(SSE_YM2149_QUANTIZE_382)
 DWORD psg_quantize_time(int abc,DWORD t)
 {
   int toneperiod=(((int)psg_reg[abc*2+1] & 0xf) << 8) + psg_reg[abc*2];
@@ -2758,9 +2762,10 @@ DWORD psg_quantize_time(int abc,DWORD t)
   b-=a;
   ASSERT(t>=psg_tone_start_time[abc]+DWORD(b)); //should be at least t??
   t=psg_tone_start_time[abc]+DWORD(b);
+  TRACE_PSG("new t %d\n",t);
   return t;
 }
-
+#endif
 DWORD psg_adjust_envelope_start_time(DWORD t,DWORD new_envperiod)
 {
   double b,c;
@@ -2836,11 +2841,14 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
   DWORDLONG a64=(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl);
 #endif
 
-  a64*=psg_n_samples_this_vbl; 
-  a64/=cpu_cycles_per_vbl;
+  a64*=psg_n_samples_this_vbl; //SS eg *882  (44100/50)
+  a64/=cpu_cycles_per_vbl; //SS eg 160420
 
   DWORD t=psg_time_of_last_vbl_for_writing+(DWORD)a64;
   log(EasyStr("SOUND: PSG reg ")+reg+" changed to "+new_val+" at "+scanline_cycle_log()+"; samples "+t+"; vbl was at "+psg_time_of_last_vbl_for_writing);
+
+  TRACE_PSG("PSG set reg %d = $%X (was %X), t=%d\n",reg,new_val,old_val,t);
+  
   switch (reg){
     case 0:case 1:
     case 2:case 3:
@@ -2851,16 +2859,49 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
       // psg_tone_start_time[abc] is set to the last end of wave, so if it is in future don't do anything.
       // Overflow will be a problem, however at 50Khz that will take a day of non-stop output.
 
-//#undef SSE_YM2149_QUANTIZE1
-
-#if defined(SSE_YM2149_QUANTIZE1) // fixes high pitch noise in YMT-Player 
-#if defined(SSE_YM2149_QUANTIZE2)
-      if(SSE_HACKS_ON && new_val>15) //pathetic hack: Union Demo text screens
+#if defined(SSE_YM2149_QUANTIZE1) // undef v3.8.2
+#if defined(SSE_YM2149_QUANTIZE2) //fixes high pitch noise in YMT-Player
+      if(SSE_HACKS_ON && new_val>15 ) //pathetic hack: Union Demo text screens
 #endif
         psg_write_buffer(abc,t);
 #endif
       if (t>psg_tone_start_time[abc]){
-        t=psg_quantize_time(abc,t); //SS look at the assert there
+
+#if defined(SSE_YM2149_QUANTIZE_382)
+/*  When the new period is long enough compared with progress of 
+    current period, we wait until current wave finishes.
+    Otherwise, we start the new wave at once.
+    It's a better fix (no hack needed) for high pitch songs in YMT-Player.
+    This is based on pym2149 (http://ym2149.org/), or at least on how I read it.
+    We need register info, so we don't call psg_quantize_time() anymore,
+    we do the computing here.
+*/
+        // before change
+        int toneperiod1=(((int)psg_reg[abc*2+1] & 0xf) << 8) + psg_reg[abc*2];
+        if(toneperiod1>1)
+        {
+          double a=toneperiod1*sound_freq;
+          a/=(15625*8);
+          double b=(t-psg_tone_start_time[abc]);
+          double a2=fmod(b,a);
+          b-=a2;
+          DWORD t2=psg_tone_start_time[abc]+DWORD(b); // adjusted start
+          // after change
+          int toneperiod2 = (reg&1)
+            ? (((int)new_val & 0xf) << 8) + psg_reg[abc*2]
+            : (((int)psg_reg[abc*2+1] & 0xf) << 8) + new_val;
+          double a_bis=toneperiod2*sound_freq;
+          a_bis/=(15625*8); 
+          // check progress of current wave
+          if(!a2 || a2>=a_bis)
+            t2=t-a_bis; // start at once
+          TRACE_PSG("Quantize start %d adjusted %d a %f a' %f\n",psg_tone_start_time[abc],t2,a,a_bis);
+          t=t2;
+        }
+
+#else
+        t=psg_quantize_time(abc,t);
+#endif//SSE_YM2149_QUANTIZE_382
 #if !defined(SSE_YM2149_QUANTIZE1)  || defined(SSE_YM2149_QUANTIZE2)
 #if defined(SSE_YM2149_QUANTIZE2)
         if(new_val<=15 || !SSE_HACKS_ON) // :roll:
@@ -2868,6 +2909,7 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
           psg_write_buffer(abc,t);
 #endif
         psg_tone_start_time[abc]=t;
+        
       }
       break;
     }

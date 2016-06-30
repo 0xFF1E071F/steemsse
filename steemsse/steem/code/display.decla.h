@@ -30,6 +30,11 @@
 #include "d3d\d3dx9core.h"
 #include "d3d\D3d9types.h"
 #include "d3d\D3dx9math.h"
+#elif defined(SSE_VS2015)
+#include "d3d\d3d9.h"
+#include "d3d\d3dx9core.h"
+#include "d3d\D3d9types.h"
+#include "d3d\D3dx9math.h"
 #else //bcc too?
 #include "d3d9.h"
 #include "d3dx9core.h"
@@ -67,7 +72,7 @@ typedef EasyStr Str;
 extern void draw_init_resdependent();
 
 #define DISPMETHOD_NONE 0
-#define DISPMETHOD_DD 1
+#define DISPMETHOD_DD 1 //SS also D3D
 #define DISPMETHOD_GDI 2
 #define DISPMETHOD_X 3
 #define DISPMETHOD_XSHM 4
@@ -75,9 +80,15 @@ extern void draw_init_resdependent();
 
 extern "C"
 {
+#if defined(SSE_VAR_RESIZE_382)
+EXT BYTE BytesPerPixel INIT(2),rgb32_bluestart_bit INIT(0);
+EXT bool rgb555 INIT(0);
+EXT WORD monitor_width,monitor_height; //true size of monitor, for LAPTOP mode.
+#else
 EXT int BytesPerPixel INIT(2),rgb32_bluestart_bit INIT(0);
 EXT bool rgb555 INIT(0);
 EXT int monitor_width,monitor_height; //true size of monitor, for LAPTOP mode.
+#endif
 }
 
 #define MONO_HZ 72 /*71.47*/
@@ -85,10 +96,12 @@ EXT int monitor_width,monitor_height; //true size of monitor, for LAPTOP mode.
 #define NUM_HZ 6
 #define DISP_MAX_FREQ_LEEWAY 5
 
+#if !defined(SSE_VID_D3D_ONLY)
 #if defined(SSE_VAR_RESIZE_370)
 EXT BYTE HzIdxToHz[NUM_HZ];
 #else
 EXT int HzIdxToHz[NUM_HZ];
+#endif
 #endif
 //---------------------------------------------------------------------------
 class SteemDisplay
@@ -96,6 +109,7 @@ class SteemDisplay
 private:
 #ifdef WIN32
   // DD Only
+#if !defined(SSE_VID_D3D_ONLY)
   HRESULT InitDD();
 #if defined(SSE_VID_DD7)
   static HRESULT WINAPI DDEnumModesCallback(LPDDSURFACEDESC2,LPVOID);
@@ -105,6 +119,7 @@ private:
   HRESULT DDCreateSurfaces();
   void DDDestroySurfaces();
   HRESULT DDError(char *,HRESULT);
+#endif//#if !defined(SSE_VID_D3D_ONLY)
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_UTIL)
   int STXPixels();
@@ -129,12 +144,18 @@ public:
 #if defined(SSE_VID_D3D_LIST_MODES)
   UINT D3DMode; // depends on video card and format
 #endif
+#if defined(SSE_VID_D3D_382)
+  UINT D3DFsW,D3DFsH;
+  void D3DUpdateWH(UINT mode);
+  void Cls();
+#endif
 private:
 #endif//d3d
 
   // GDI Only
   bool InitGDI();
 
+#if !defined(SSE_VID_D3D_ONLY)
 #if defined(SSE_VID_DD7)
   IDirectDraw7 *DDObj;
   IDirectDrawSurface7 *DDPrimarySur,*DDBackSur;
@@ -160,7 +181,7 @@ private:
   bool DDBackSurIsAttached,DDExclusive;
   bool DDDisplayModePossible[3][2];
   int DDClosestHz[3][2][NUM_HZ];
-
+#endif//#if !defined(SSE_VID_D3D_ONLY)
   HBITMAP GDIBmp;
   HDC GDIBmpDC;
   BYTE *GDIBmpMem;
@@ -232,7 +253,11 @@ public:
 #endif
 
   HINSTANCE hFreeImage;
+#if defined(SSE_VAR_RESIZE_382)
+  BYTE ScreenShotFormatOpts;
+#else
   int ScreenShotFormatOpts;
+#endif
   Str ScreenShotExt;
 #if defined(STEVEN_SEAGAL)
 #if defined(SSE_VID_SAVE_NEO)

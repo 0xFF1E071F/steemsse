@@ -693,7 +693,8 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       break;
 #undef LOGSECTION
 #endif  
-#if defined(SSE_GUI_SHORTCUT_SELECT_DISK)
+//#if defined(SSE_GUI_SHORTCUT_SELECT_DISK)
+#if defined(SSE_GUI_SHORTCUT_SELECT_DISK) && defined(WIN32)//ux382
 /*  Request. v3.7.3.
     So one can insert disk images in drives without using the disk manager.
     Scripts can then be used in Window's file selector.
@@ -915,7 +916,11 @@ void TShortcutBox::Show()
     return;
   }
 
+#if defined(SSE_X64_LPTR)
+  SetWindowLongPtr(Handle, GWLP_USERDATA,(LONG_PTR)this);
+#else
   SetWindowLong(Handle,GWL_USERDATA,(long)this);
+#endif
 
   MakeParent(HWND(FullScreen ? StemWin:NULL));
 
@@ -1112,7 +1117,11 @@ Str TShortcutBox::ShowChooseMacroBox(Str CurrentMacro)
 
   if (Win==NULL || IsWindow(Win)==0) return "";
 
-  SetWindowLong(Win,GWL_USERDATA,(long)this);
+#if defined(SSE_X64_LPTR)
+  SetWindowLongPtr(Win, GWLP_USERDATA,(LONG_PTR)this);
+#else
+  SetWindowLong(Win, GWL_USERDATA, (long)this);
+#endif
 
   CreateWindow("Button",T("OK"),WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_DEFPUSHBUTTON,
                     100,320,100,23,Win,(HMENU)IDOK,HInstance,NULL);
@@ -1163,8 +1172,11 @@ Str TShortcutBox::ShowChooseMacroBox(Str CurrentMacro)
   return Temp;
 }
 //---------------------------------------------------------------------------
+#if defined(SSE_X64_LPTR)
+#define GET_THIS This=(TShortcutBox*)GetWindowLongPtr(Win,GWLP_USERDATA);
+#else
 #define GET_THIS This=(TShortcutBox*)GetWindowLong(Win,GWL_USERDATA);
-
+#endif
 LRESULT __stdcall TShortcutBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 {
   LRESULT Ret=DefStemDialogProc(Win,Mess,wPar,lPar);

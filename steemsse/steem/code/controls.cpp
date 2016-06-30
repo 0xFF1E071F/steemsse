@@ -49,9 +49,11 @@ void RegisterSteemControls()
   wnd.lpszMenuName=NULL;
   wnd.lpszClassName="Steem Flat PicButton";
   RegisterClass(&wnd);
-
+#if defined(SSE_X64_LPTR)
+  PicButton_TimerID = SetTimer(NULL, 0, 100, (TIMERPROC)PicButton_TimerProc);
+#else
   PicButton_TimerID=SetTimer(NULL,0,100,PicButton_TimerProc);
-
+#endif
   wnd.lpfnWndProc=PathDisplay_WndProc;
   wnd.lpszClassName="Steem Path Display";
   RegisterClass(&wnd);
@@ -86,8 +88,11 @@ void UnregisterSteemControls()
 }
 //---------------------------------------------------------------------------
 #define GET_THIS Inf=(PicButtonInfo*)GetProp(Win,"PicInf");
-
+#if defined(SSE_X64_LPTR)
+LRESULT __stdcall PicButton_WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
+#else
 LRESULT __stdcall PicButton_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
+#endif
 {
   bool DoPaint=0,CheckState=0;
   PicButtonInfo *Inf;
@@ -263,7 +268,6 @@ LRESULT __stdcall PicButton_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
         GetClientRect(Win,&rc);
         if (pt.x>=0 && pt.x<rc.right && pt.y>=0 && pt.y<rc.bottom){
           bool Right=bool(GetWindowLong(Win,GWL_STYLE) & 1);
-
           Over=true;
           NewState=2; // Up
           if (GetCapture()==Win){
@@ -362,7 +366,11 @@ LRESULT __stdcall PicButton_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 
 #define PDS_VCENTRESTATIC 1
 
+#if defined(SSE_X64_LPTR)
+LRESULT __stdcall PathDisplay_WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
+#else
 LRESULT __stdcall PathDisplay_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
+#endif
 {
   switch (Mess){
     case WM_CREATE:
@@ -375,7 +383,6 @@ LRESULT __stdcall PathDisplay_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
       char *Text;
       int Len;
       bool Static=(GetWindowLong(Win,GWL_STYLE) & PDS_VCENTRESTATIC);
-
       BeginPaint(Win,&ps);
       SelectObject(ps.hdc,GetProp(Win,"DisplayPathFont"));
 
@@ -458,10 +465,18 @@ LRESULT __stdcall EditNoCaretWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 //---------------------------------------------------------------------------
 void MakeEditNoCaret(HWND Edit)
 {
+#if defined(SSE_X64_LPTR)
+  WINDOWPROC old = (WINDOWPROC)GetWindowLongPtr(Edit, GWLP_WNDPROC);
+#else
   WINDOWPROC old=(WINDOWPROC)GetWindowLong(Edit,GWL_WNDPROC);
+#endif
   if (old){
     OldEditWndProc=old;
+#if defined(SSE_X64_LPTR)
+    SetWindowLongPtr(Edit, GWLP_WNDPROC, (LONG_PTR)EditNoCaretWndProc);
+#else
     SetWindowLong(Edit,GWL_WNDPROC,(long)EditNoCaretWndProc);
+#endif
   }
 }
 //---------------------------------------------------------------------------
@@ -971,7 +986,6 @@ LRESULT __stdcall HyperLinkWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
     HBRUSH br;
     DWORD State=GetPropI(Win,"State");
     long Style=GetWindowLong(Win,GWL_STYLE);
-
     DC=GetDC(Win);
 
     GetClientRect(Win,&rc);
@@ -1052,7 +1066,11 @@ LRESULT __stdcall TextDisplayGroupBox_WndProc(HWND Win,UINT Mess,WPARAM wPar,LPA
 
 LRESULT __stdcall TextDisplayTextBox_WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar){
 //  HWND gb=(HWND)GetWindowLong(Win,GWL_USERDATA);
+#if defined(SSE_X64_LPTR)
+  WNDPROC old_edit_WndProc = (WNDPROC)GetWindowLongPtr(Win, GWLP_USERDATA);
+#else
   WNDPROC old_edit_WndProc=(WNDPROC)GetWindowLong(Win,GWL_USERDATA);
+#endif
   switch (Mess){
     case WM_SETFOCUS:    case WM_LBUTTONDOWN:
 
@@ -1077,12 +1095,22 @@ HWND CreateTextDisplay(HWND daddy,int x,int y,int w,int h,int id){
   HWND gb=CreateWindow("Steem Text Display","",WS_CHILD,
                             x,y,w,h,daddy,(HMENU)id,HInstance,NULL);
   if(gb==NULL)return gb; //fail
+#if defined(SSE_X64_LPTR)
+  WNDPROC old_gb_WndProc = (WNDPROC)SetWindowLongPtr(gb, GWLP_WNDPROC, (LONG_PTR)TextDisplayGroupBox_WndProc);
+  SetWindowLongPtr(gb, GWLP_USERDATA, (LONG_PTR)old_gb_WndProc);
+#else
   WNDPROC old_gb_WndProc=(WNDPROC)SetWindowLong(gb,GWL_WNDPROC,(long)TextDisplayGroupBox_WndProc);
-  SetWindowLong(gb,GWL_USERDATA,(long)old_gb_WndProc);
+  SetWindowLong(gb, GWL_USERDATA, (long)old_gb_WndProc);
+#endif
   HWND tb=CreateWindowEx(512,"Edit","",WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_NOHIDESEL | ES_AUTOVSCROLL | WS_VISIBLE,
                             0,0,w,h,gb,(HMENU)0,HInstance,NULL);
+#if defined(SSE_X64_LPTR)
+  WNDPROC old_edit_WndProc = (WNDPROC)SetWindowLongPtr(tb, GWLP_WNDPROC, (LONG_PTR)TextDisplayTextBox_WndProc);
+  SetWindowLongPtr(tb, GWLP_USERDATA, (LONG_PTR)old_edit_WndProc);
+#else
   WNDPROC old_edit_WndProc=(WNDPROC)SetWindowLong(tb,GWL_WNDPROC,(long)TextDisplayTextBox_WndProc);
-  SetWindowLong(tb,GWL_USERDATA,(long)old_edit_WndProc);
+  SetWindowLong(tb, GWL_USERDATA, (long)old_edit_WndProc);
+#endif
   return tb;
 }
 

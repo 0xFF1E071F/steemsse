@@ -41,7 +41,7 @@ extern
 int debug0,debug1,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9;
 #endif
 
-#if defined(SSE_DEBUG)
+#if defined(SSE_DEBUG) || defined(DEBUG_FACILITIES_IN_RELEASE)
 
 // a structure that may be used by C++ and C objects
 
@@ -50,22 +50,28 @@ int debug0,debug1,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9;
 struct TDebug {
 #if defined(SSE_DEBUG_TRACE_FILE)
   FILE *trace_file_pointer; 
+#if defined(SSE_DEBUG)
   int nTrace;
 #endif
+#endif
+#if defined(SSE_DEBUG_ASSERT)
 #if defined(SSE_VAR_RESIZE_380)
   BYTE IgnoreErrors;
 #else
   int IgnoreErrors; 
 #endif
+#endif
+#if defined(SSE_DEBUG)
   BYTE logsection_enabled[100]; // we want a double anyway //bool
   int LogSection;
-
+#endif
 
 #ifdef __cplusplus // visible only to C++ objects
   TDebug();
   ~TDebug();
+#if defined(SSE_DEBUG)
   int ShifterTricks;
-
+#endif
 #if defined(SSE_DEBUG_TRACE)
   enum {MAX_TRACE_CHARS=256}; // the function is safe anyway
   void Trace(char *fmt, ...); // one function for both IDE & file
@@ -129,14 +135,16 @@ struct TDebug {
 #if defined(SSE_BOILER_STACK_CHOICE)
   BYTE StackDisplayUseOtherSp;//flag
 #endif
-
+#if defined(SSE_DEBUG) || defined(SSE_OSD_SHOW_TIME)
   void Vbl(); //3.6.1
+#endif
 #if defined(SSE_DEBUG_RESET)
   void Reset(bool Cold);
 #endif
 #if defined(SSE_BOILER_TRACE_EVENTS)
   void TraceEvent( void* pointer);
 #endif
+
 
 #endif//c++
 
@@ -153,9 +161,9 @@ struct TDebug {
   BYTE FrameInterrupts; //bit0 VBI 1 HBI 2 MFP
   WORD FrameMfpIrqs; // for OSD report
 #endif
-
+#if defined(SSE_DEBUG)
   WORD nHbis; // counter for each frame
-
+#endif
 #if defined(SSE_BOILER_PSEUDO_STACK)
 #define PSEUDO_STACK_ELEMENTS 64
   DWORD PseudoStack[PSEUDO_STACK_ELEMENTS]; // rotating stack
@@ -165,7 +173,10 @@ struct TDebug {
   void PseudoStackPush(DWORD return_address);
 #endif
 #endif
-
+#if defined(SSE_OSD_SHOW_TIME)// using OSD trace, so may as well be here
+  DWORD StartingTime; // record time on cold reset
+  DWORD StoppingTime; // to adjsut when stopping/restarting
+#endif
 };
 
 
@@ -175,7 +186,7 @@ extern
 #endif
 struct TDebug Debug;
 
-#endif//#if defined(SSE_DEBUG)
+#endif//#if defined(SSE_DEBUG) ||...
 
 #ifdef __cplusplus
 #if defined(DEBUG_BUILD)
@@ -188,16 +199,14 @@ extern void debug_set_bk(unsigned long ad,bool set); //bool set
 #endif//#ifdef __cplusplus
 
 #if defined(SSE_DEBUG_LOG_OPTIONS)
-/* 
-   We replace defines (that were in acc.h but also other places!) with an enum
+/* We replace defines (that were in acc.h but also other places!) with an enum
    and we change some of the sections to better suit our needs.
    We use the same sections to control our traces in the boiler, menu log.
    So, Steem has a double log system!
    It came to be because:
    - unfamiliar with the log system
-   - familiar with a TRACE system (like in MFC) that outputs in the IDE
+   - familiar with a TRACE system (like in MFC) that can output in the IDE
    - the log system would choke the computer (each Shifter trick written down!)
-   This is unfinished business.
 */
 
 #undef LOGSECTION_INIFILE
@@ -352,12 +361,16 @@ enum logsection_enum_tag {
 #if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
 #if defined(_DEBUG) && defined(VC_BUILD)
 // Our ASSERT facility has no MFC dependency.
-#define ASSERT(x) {if(!(x) && !FullScreen) _asm{int 0x03}}
+#if defined(SSE_X64_DEBUG)
+#define ASSERT(x) {if(!(x) && !FullScreen) DebugBreak();}
+#else
+#define ASSERT(x) {if(!((x)) && !FullScreen) _asm{int 0x03}}
+#endif
 #elif defined(SSE_UNIX_TRACE)
 #define ASSERT(x) if (!(x)) {TRACE("Assert failed: %s\n",#x);} 
 #elif defined(DEBUG_BUILD) // for boiler
 #ifdef __cplusplus
-#define ASSERT(x) {if (!(x)) {TRACE("Assert failed: %s\n",#x); \
+#define ASSERT(x) {if (!((x))) {TRACE("Assert failed: %s\n",#x); \
   if(!Debug.IgnoreErrors) { \
   debug9=MessageBox(0,#x,"ASSERT",MB_ICONWARNING|MB_ABORTRETRYIGNORE);   \
   if(debug9==IDABORT) exit(EXIT_FAILURE);\
@@ -368,10 +381,26 @@ enum logsection_enum_tag {
 #define ASSERT(x)
 #endif
 
+#if defined(ASSERT_FOR_RELEASE)
+#ifdef __cplusplus
+#define ASSERT2(x) {if (!((x))) {TRACE("Assert failed: %s\n",#x); \
+  if(!Debug.IgnoreErrors) { \
+  int debug9=MessageBox(0,#x,"ASSERT",MB_ICONWARNING|MB_ABORTRETRYIGNORE);   \
+  if(debug9==IDABORT) exit(EXIT_FAILURE);\
+  Debug.IgnoreErrors=(debug9==IDIGNORE);}}}
+#else
+#define ASSERT2(x)
+#endif//c++
+#endif
+
 // BREAKPOINT 
 #if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
 #if defined(_DEBUG) && defined(VC_BUILD)
+#if defined(SSE_X64_DEBUG)
+#define BREAKPOINT {DebugBreak();}
+#else
 #define BREAKPOINT _asm { int 3 }
+#endif
 #elif defined(SSE_UNIX_TRACE)
 #define BREAKPOINT TRACE("BREAKPOINT\n"); // extremely silly, I know
 #elif defined(DEBUG_BUILD) // for boiler
@@ -402,7 +431,11 @@ enum logsection_enum_tag {
 
 #elif defined(VC_BUILD)
 
+#if defined(SSE_X64_DEBUG)
+#define BRK(x) {DebugBreak();}
+#else
 #define BRK(x) {TRACE("BRK %s\n",#x); _asm { int 3 } }
+#endif
 
 #endif
 
@@ -586,7 +619,11 @@ enum logsection_enum_tag {
 #if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
 #if defined(_DEBUG) && defined(VC_BUILD)
 // Our VERIFY facility has no MFC dependency.
-#define VERIFY(x) {if(!(x) && !FullScreen) _asm{int 0x03}}
+#if defined(SSE_X64_DEBUG)
+#define VERIFY(x) {if(!(x) && !FullScreen) DebugBreak();}
+#else
+#define VERIFY(x) {if(!((x)) && !FullScreen) _asm{int 0x03}}
+#endif
 #elif defined(SSE_UNIX_TRACE)
 #define VERIFY(x) if (!(x)) {TRACE("Verify failed: %s\n",#x);} 
 #elif defined(DEBUG_BUILD) // for boiler
@@ -619,5 +656,20 @@ enum { // to pass compilation
 #define REPORT_LINE
 #endif
  
+#if defined(OSD_FOR_RELEASE)
+#undef TRACE_OSD
+#define TRACE_OSD
+#define TRACE_OSD2 Debug.TraceOsd
+#else
+#define TRACE_OSD2 TRACE_OSD
+#endif
+
+#ifdef TRACE_FOR_RELEASE
+//#undef TRACE_INIT
+//#define TRACE_INIT Debug.Trace
+#define TRACE2 Debug.Trace
+#else
+#define TRACE2
+#endif
 
 #endif//#ifndef SSEDEBUG_H

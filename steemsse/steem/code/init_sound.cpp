@@ -57,8 +57,11 @@ DWORD DS_SetFormat_freq;
 bool DS_GetFormat_Wrong=0;
 DSCAPS SoundCaps;
 WAVEFORMATEX PrimaryFormat;
-
+#ifdef SSE_X64_LPTR
+void CALLBACK DSStopBufferTimerProc(HWND, UINT, UINT_PTR, DWORD);
+#else
 void CALLBACK DSStopBufferTimerProc(HWND,UINT,UINT,DWORD);
+#endif
 UINT DSStopBufferTimerID=0;
 #endif
 
@@ -715,7 +718,11 @@ HRESULT Sound_Stop(bool Immediate)
   return DS_OK;
 }
 //---------------------------------------------------------------------------
+#if defined(SSE_X64_LPTR)
+void CALLBACK DSStopBufferTimerProc(HWND, UINT, UINT_PTR, DWORD)
+#else
 void CALLBACK DSStopBufferTimerProc(HWND,UINT,UINT,DWORD)
+#endif
 {
   if (DSStopBufferTimerID){
     if (DSOpen==0 && SoundBuf) DSReleaseAllBuffers();

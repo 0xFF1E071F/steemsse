@@ -430,6 +430,7 @@ void ASMCALL perform_crash_and_burn()
 #else
   osd_start_scroller(T("CRASH AND BURN - ST RESET"));
 #endif
+  TRACE2("HALT\n");
 }
 //---------------------------------------------------------------------------
 #ifdef DEBUG_BUILD

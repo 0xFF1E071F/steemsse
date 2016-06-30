@@ -164,8 +164,9 @@ public:
   void ChooseScreenShotFolder(HWND);
 
   static BOOL CALLBACK EnumDateFormatsProc(char *);
-
+#if !defined(SSE_VID_D3D_ONLY)
   void UpdateHzDisplay();
+#endif
   void UpdateWindowSizeAndBorder();
   void SetBorder(int);
   void UpdateForDSError();
@@ -297,7 +298,12 @@ EXT EasyStringList DSDriverModuleList;
 #endif
 
 #if defined(SSE_VID_EXT_FS2)
-EXT int extmon_res[EXTMON_RESOLUTIONS][3];
+#if defined(SSE_VAR_RESIZE_382)
+EXT WORD
+#else
+EXT int 
+#endif
+ extmon_res[EXTMON_RESOLUTIONS][3];
 #else
 EXT const int extmon_res[EXTMON_RESOLUTIONS][3];
 #endif

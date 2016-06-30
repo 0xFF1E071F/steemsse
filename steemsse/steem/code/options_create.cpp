@@ -557,8 +557,13 @@ void TOptionBox::CreatePortsPage()
     }
     CtrlParent=CreateWindow("Button",PortName,WS_CHILD | BS_GROUPBOX,
                                 page_l,y,page_w,GroupHeight,Handle,HMENU(base),HInstance,NULL);
+#if defined(SSE_X64_LPTR)
+    SetWindowLongPtr(CtrlParent, GWLP_USERDATA,(LONG_PTR)this);
+    Old_GroupBox_WndProc = (WNDPROC)SetWindowLongPtr(CtrlParent, GWLP_WNDPROC, (LONG_PTR)GroupBox_WndProc);
+#else
     SetWindowLong(CtrlParent,GWL_USERDATA,(long)this);
-    Old_GroupBox_WndProc=(WNDPROC)SetWindowLong(CtrlParent,GWL_WNDPROC,(long)GroupBox_WndProc);
+    Old_GroupBox_WndProc = (WNDPROC)SetWindowLong(CtrlParent, GWL_WNDPROC, (long)GroupBox_WndProc);
+#endif
     y+=GroupHeight;
     y+=10;
 
@@ -698,7 +703,11 @@ void TOptionBox::UpdateParallel()
   if (Handle) PortsMakeTypeVisible(1);
 }
 //---------------------------------------------------------------------------
+#if defined(SSE_X64_LPTR)
+#define GET_THIS This=(TOptionBox*)GetWindowLongPtr(Win,GWLP_USERDATA);
+#else
 #define GET_THIS This=(TOptionBox*)GetWindowLong(Win,GWL_USERDATA);
+#endif
 LRESULT __stdcall TOptionBox::GroupBox_WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 {
   TOptionBox *This;
@@ -820,6 +829,7 @@ LRESULT __stdcall TOptionBox::Fullscreen_WndProc(HWND Win,UINT Mess,WPARAM wPar,
   return DefWindowProc(Win,Mess,wPar,lPar);
 }
 //---------------------------------------------------------------------------
+#if !defined(SSE_VID_D3D_ONLY_)
 void TOptionBox::FullscreenBrightnessBitmap()
 {
   int w=GetSystemMetrics(SM_CXSCREEN),h=GetSystemMetrics(SM_CYSCREEN);
@@ -840,7 +850,6 @@ void TOptionBox::FullscreenBrightnessBitmap()
   HWND Win=CreateWindow("Steem Temp Fullscreen Window","",0,
                             0,0,w,h,Handle,NULL,HInstance,NULL);
   SetWindowLong(Win,GWL_STYLE,0);
-
   HDC ScrDC=GetDC(NULL);
   HBITMAP hBmp=CreateCompatibleBitmap(ScrDC,w,h);
   ReleaseDC(NULL,ScrDC);
@@ -869,6 +878,7 @@ void TOptionBox::FullscreenBrightnessBitmap()
 
   UnregisterClass("Steem Temp Fullscreen Window",HInstance);
 }
+#endif
 //---------------------------------------------------------------------------
 void TOptionBox::CreateBrightnessPage()
 {
@@ -1004,11 +1014,13 @@ void TOptionBox::CreateDisplayPage()
 #endif
   //TRACE("border handle %d\n",Win);
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("384 x 270"));
+#if !defined(SSE_VID_D3D_ONLY)
 #if defined(SSE_VID_BORDERS_LIMIT_TO_245)
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("400 x 275"));
 #else
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("400 x 278"));
 #endif
+#endif//#if !defined(SSE_VID_D3D_ONLY)
 #if defined(SSE_VID_BORDERS_412)
 #if defined(SSE_VID_BORDERS_413) // !
 #if defined(SSE_VID_BORDERS_BIGTOP) && !defined(SSE_VID_BORDERS_416)
@@ -1370,6 +1382,15 @@ void TOptionBox::CreateOSDPage()
                           page_l+Wid2,y,Wid,23,Handle,(HMENU)12002,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OSD_IMAGE_NAME,0);
 #endif
+
+#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_SHOW_TIME)
+  y+=30;
+  Wid=GetCheckBoxSize(Font,T("Time")).Width;
+  Win=CreateWindow("Button",T("Time"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
+                          page_l,y,Wid,23,Handle,(HMENU)1036,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,OPTION_OSD_TIME,0);
+#endif
+
   y+=30;
   Wid=GetCheckBoxSize(Font,T("Disable on screen display")).Width;
   Win=CreateWindow("Button",T("Disable on screen display"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
@@ -1387,11 +1408,17 @@ void TOptionBox::CreateFullscreenPage()
   long w;
   int y=10;
 
+
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D_OPTION4)
   const int LineHeight=30;
+#if !defined(SSE_VS2008_WARNING_382)
   const int HorizontalSeparation=15;
+#endif
   int mask;
   long Offset=0;
+#if defined(SSE_VID_D3D_ONLY)
+  long Wid=0;
+#else
 #if defined(SSE_VID_D3D_OPTION)
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX; 
 #if defined(SSE_VID_D3D_373)
@@ -1422,13 +1449,16 @@ void TOptionBox::CreateFullscreenPage()
   ToolAddWindow(ToolTip,Win,T("You can use Direct3D instead of DirectDraw for fullscreen. It should be more compatible with Windows 7 or 8."));
   y+=LineHeight;
 #endif
+#endif//#if defined(SSE_VID_D3D_ONLY)
 
 #if defined(SSE_VID_D3D_LIST_MODES)
 /*  We do some D3D here, listing all modes only when necessary to save memory.
     Or we could have another function in display, but then code bloat...
 */
+#if !defined(SSE_VID_D3D_ONLY)
   y-=LineHeight;
   Offset+=Wid+HorizontalSeparation;
+#endif
   UINT Adapter=D3DADAPTER_DEFAULT;
   D3DFORMAT DisplayFormat=D3DFMT_X8R8G8B8; //32bit; D3DFMT_R5G6B5=16bit
 #if defined(SSE_VID_D3D_373)
@@ -1485,24 +1515,58 @@ void TOptionBox::CreateFullscreenPage()
 #endif
 
 #if defined(SSE_VID_D3D_CRISP_OPTION)
+#if defined(SSE_VID_D3D_ONLY)
+  Offset=10;
+#else
 #if defined(SSE_VID_STRETCH_ASPECT_RATIO)
   y-=LineHeight;
   Offset+=Wid+HorizontalSeparation;
 #else
   y-=LineHeight/2; // this is hard to fit!
 #endif
+#endif//#if defined(SSE_VID_D3D_ONLY)
   Wid=GetCheckBoxSize(Font,T("Crisp rendering")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
   Win=CreateWindow("Button",T("Crisp rendering"),mask,
     page_l +Offset,y-1,Wid,25,Handle,(HMENU)7324,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_D3D_CRISP,0);
   ToolAddWindow(ToolTip,Win,T("You like those big pixels? That's the option for you"));
+#if defined(SSE_VID_D3D_ONLY)
+  y+=LineHeight;
+#else
   y+=LineHeight+5;
 #endif
+#endif
 
 
 #endif
 
+#if !defined(SSE_VID_DIRECT3D)
+  const int LineHeight=30;
+  int mask;
+#endif
+
+#if defined(SSE_VID_FS_GUI_OPTION)
+  w=GetCheckBoxSize(Font,T("Fullscreen GUI")).Width;
+  Win=CreateWindow("Button",T("Fullscreen GUI"),WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX ,
+                          page_l+10,y,w,23,Handle,(HMENU)7325,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,OPTION_FULLSCREEN_GUI,0);
+  ToolAddWindow(ToolTip,Win,T("Depends on system, leaving this unchecked is safer\
+ but if it works it's quite handy"));
+  y+=LineHeight;
+#endif
+
+#if defined(SSE_VID_3BUFFER) && defined(SSE_VID_D3D_ONLY)
+  Offset=10;
+  Wid=GetCheckBoxSize(Font,T("Triple buffering")).Width;
+  Win=CreateWindow("Button",T("Triple buffering"), mask,
+               page_l +Offset,y,Wid,25,Handle,(HMENU)1034,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,SSE_3BUFFER,0);
+  ToolAddWindow(ToolTip,Win,T("This may reduce tearing"));
+  y+=LineHeight;
+#endif
+
+#if !defined(SSE_VID_D3D_ONLY)
   w=get_text_width(T("Drawing mode"));
   CreateWindow("Static",T("Drawing mode"),WS_CHILD ,
                           page_l,y+4,w,23,Handle,(HMENU)205,HInstance,NULL);
@@ -1532,7 +1596,10 @@ void TOptionBox::CreateFullscreenPage()
     ToolAddWindow(ToolTip,Win,T("SSE note: Screen Flip only works with 384 x 270. Straight blit OK with 400 x 278. For higher than 400 first switch to laptop mode."));
 #endif
 #endif
+
+
   y+=30;
+
   int disabledflag=0;
 #if defined(SSE_VID_D3D_OPTION3)
 /*  disable in fullscreen page
@@ -1544,14 +1611,27 @@ void TOptionBox::CreateFullscreenPage()
 #endif
   if (draw_fs_blit_mode==DFSM_STRETCHBLIT || draw_fs_blit_mode==DFSM_LAPTOP) disabledflag=WS_DISABLED;
   w=GetCheckBoxSize(Font,T("Scanline Grille")).Width;
+#if defined(SSE_VID_FS_GUI_OPTION)
+  Win=CreateWindow("Button",T("Scanline Grille"),WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX | disabledflag,
+                          page_l+130,y,w,23,Handle,(HMENU)280,HInstance,NULL);
+#else
   Win=CreateWindow("Button",T("Scanline Grille"),WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX | disabledflag,
                           page_l,y,w,23,Handle,(HMENU)280,HInstance,NULL);
+#endif
   SendMessage(Win,BM_SETCHECK,(draw_fs_fx==DFSFX_GRILLE ? BST_CHECKED:BST_UNCHECKED),0);
+#if !defined(SSE_VID_FS_GUI_OPTION)
   y+=30;
-
+#endif
   w=GetCheckBoxSize(Font,T("Use 256 colour mode")).Width;
-  
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D_OPTION3)
+
+#if defined(SSE_VID_DD_FS_32BIT) //disable if unavailable
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX | disabledflag;
+  if(!SSEConfig.VideoCard8bit||SSE_OPTION_D3D&&D3D9_OK)
+    mask|=WS_DISABLED;
+  Win=CreateWindow("Button",T("Use 256 colour mode"),
+    mask,
+    page_l,y,w,23,Handle,(HMENU)208,HInstance,NULL);
+#elif defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D_OPTION3)
   Win=CreateWindow("Button",T("Use 256 colour mode"),
     WS_CHILD | WS_TABSTOP | BS_CHECKBOX | disabledflag,
     page_l,y,w,23,Handle,(HMENU)208,HInstance,NULL);
@@ -1600,25 +1680,35 @@ void TOptionBox::CreateFullscreenPage()
     page_l,y,page_w,170,Handle,(HMENU)99,HInstance,NULL);
 #endif
 #endif
-    y+=20;
-
+  y+=20;
+#endif//#if !defined(SSE_VID_D3D_ONLY)
 #if !defined(SSE_GUI_FULLSCREEN_NO_VSYNC_OPTION)//but the rest?
-
+#if defined(SSE_VID_D3D_382)
+  w=GetCheckBoxSize(Font,T("VSync")).Width;
+#else
   w=GetCheckBoxSize(Font,T("Vsync to PC display")).Width;
-  
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D_OPTION3)
   Win=CreateWindow("Button",T("Vsync to PC display"),
     WS_CHILD | WS_TABSTOP | BS_CHECKBOX | disabledflag,
     page_l+10,y,w,23,Handle,(HMENU)206,HInstance,NULL);
 #else
+#if defined(SSE_VID_D3D_382)
+  Win=CreateWindow("Button",T("VSync"),
+    WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
+    page_l+10,y,w,23,Handle,(HMENU)206,HInstance,NULL);
+#else
   Win=CreateWindow("Button",T("Vsync to PC display"),
     WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
     page_l+10,y,w,23,Handle,(HMENU)206,HInstance,NULL);
+#endif
 #endif  
   SendMessage(Win,BM_SETCHECK,FSDoVsync,0);
   ToolAddWindow(ToolTip,Win,T("When this option is ticked Steem will synchronise the PC monitor with the ST in fullscreen mode, this makes some things look a lot smoother but can be very slow.")+
                               " "+T("The ST used 50Hz (PAL), 60Hz (NTSC) and 70Hz (Mono), for good synchronisation you should set the PC refresh rate to the same or double the ST refresh rate."));
 #endif
+
+#if !defined(SSE_VID_D3D_ONLY)
   y+=30;
 
   CreateWindow("Static",T("Preferred PC refresh rates:"),WS_CHILD,
@@ -1712,9 +1802,17 @@ void TOptionBox::CreateFullscreenPage()
     page_l+page_w-90,y,80,23,Handle,(HMENU)225,HInstance,NULL);
 #endif  
   y+=40;
+#endif//#if !defined(SSE_VID_D3D_ONLY)
 
+#if defined(SSE_VID_D3D_ONLY)
+  y+=LineHeight;
+#endif
   w=GetCheckBoxSize(Font,T("Confirm before quit")).Width;
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D_OPTION3)
+#if defined(SSE_VID_D3D_ONLY)
+  Win=CreateWindow("Button",T("Confirm before quit"),
+    WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
+    page_l+10,y,w,23,Handle,(HMENU)226,HInstance,NULL);
+#elif defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D_OPTION3)
   Win=CreateWindow("Button",T("Confirm before quit"),
     WS_CHILD | WS_TABSTOP | BS_CHECKBOX | disabledflag,
     page_l,y,w,23,Handle,(HMENU)226,HInstance,NULL);
@@ -1725,10 +1823,15 @@ void TOptionBox::CreateFullscreenPage()
 #endif  
   SendMessage(Win,BM_SETCHECK,FSQuitAskFirst,0);
 
+#if !defined(SSE_VID_D3D_ONLY)
 #if defined(SSE_VID_D3D_OPTION5) //duplicate! TODO
 #if defined(SSE_VID_D3D_LIST_MODES)
 #if defined(SSE_VID_D3D_CRISP_OPTION)
+#if defined(SSE_VID_DD_FS_32BIT)
+  WORD items[]={7315,7319,7324,205,280,204,210,220,221,222,223,224,225,226,0xFFFF};
+#else
   WORD items[]={7315,7319,7324,205,280,208,204,210,220,221,222,223,224,225,226,0xFFFF};
+#endif
   for(int i=0;items[i]!=0xFFFF;i++)
     EnableWindow(GetDlgItem(Handle,items[i]),!SSE_OPTION_D3D^ (i<4) ); 
 #else
@@ -1747,10 +1850,11 @@ void TOptionBox::CreateFullscreenPage()
   UpdateHzDisplay();
 
   if (Focus==NULL) Focus=GetDlgItem(Handle,204);
+#endif//#if !defined(SSE_VID_D3D_ONLY)
   SetPageControlsFont();
   ShowPageControls();
 }
-
+#if !defined(SSE_VID_D3D_ONLY)
 void TOptionBox::UpdateHzDisplay()
 {
   if (Handle==NULL) return;
@@ -1780,6 +1884,7 @@ void TOptionBox::UpdateHzDisplay()
     SendDlgItemMessage(Handle,221+i*2,WM_SETTEXT,0,LPARAM(Text.Text));
   }
 }
+#endif
 //---------------------------------------------------------------------------
 void TOptionBox::CreateMIDIPage()
 {
@@ -1926,7 +2031,9 @@ void TOptionBox::CreateSoundPage()
 
   DWORD DisableIfMute=DWORD(((sound_mode==SOUND_MODE_MUTE) || UseSound==0) ? WS_DISABLED:0);
   DWORD DisableIfNoSound=DWORD((UseSound==0) ? WS_DISABLED:0);
+#if !(defined(SSE_VS2008_WARNING_382) && defined(SOUND_DISABLE_INTERNAL_SPEAKER))
   DWORD DisableIfNT=DWORD(WinNT ? WS_DISABLED:0);
+#endif
 #if defined(STEVEN_SEAGAL______) && defined(SSE_SOUND_FILTER_STF) && SSE_VERSION>=370
   Wid=GetTextSize(Font,T("Output type (filter)")).Width;
   CreateWindow("Static",T("Output type (filter)"),WS_CHILD | DisableIfNoSound,
@@ -1982,6 +2089,10 @@ void TOptionBox::CreateSoundPage()
 #endif
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
 #if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
+#if defined(SSE_VAR_OPT_382)
+  if(!SSEConfig.ym2149_fixed_vol && !YM2149.LoadFixedVolTable())
+    mask|=WS_DISABLED;
+#else
   bool ok=(YM2149.p_fixed_vol_3voices!=NULL);
   if(!ok)
   {
@@ -1990,6 +2101,7 @@ void TOptionBox::CreateSoundPage()
   }
   if(!ok)
     mask|=WS_DISABLED;
+#endif
 #endif
 #if SSE_VERSION>=370
   Win=CreateWindow("Button",T("Sampled YM-2149"),mask,
@@ -2049,9 +2161,6 @@ void TOptionBox::CreateSoundPage()
 #endif
   y+=LineHeight;
 #endif  
-
-
-
 
 #if defined(SSE_GUI_OPTIONS_SOUND1)
   Str DrivStr=T("Device ");
@@ -2220,8 +2329,13 @@ void TOptionBox::CreateSoundPage()
 #if defined(SSE_DRIVE_SOUND) && defined(SSE_GUI_OPTIONS_SOUND2)
 
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX  ;
+
+#if defined(SSE_VAR_OPT_382)
+  EasyStr path=RunDir+DRIVE_SOUND_DIRECTORY; // we suppose the sounds are in it!
+#else
   EasyStr path=GetEXEDir();
   path+=DRIVE_SOUND_DIRECTORY; // we suppose the sounds are in it!
+#endif
   if(!Exists(path.Text))
   {
     SSEOption.DriveSound=0;
@@ -2342,10 +2456,19 @@ void TOptionBox::CreateStartupPage()
                     T("This option, when checked, makes Steem hide the mouse before it draws to the screen.")+" "+
                     T("Unfortunately this can make the mouse pointer flicker when Steem is running."));
   y+=30;
-
+#if defined(SSE_VID_D3D_ONLY)
+  Wid=GetCheckBoxSize(Font,T("Never use Direct3D")).Width;
+  Win=CreateWindow("Button",T("Never use Direct3D"),WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX,
+                          page_l,y,Wid,23,Handle,(HMENU)3300,HInstance,NULL);
+#elif defined(SSE_VID_D3D) && SSE_VERSION>=382
+  Wid=GetCheckBoxSize(Font,T("Never use DirectDraw or Direct3D")).Width;
+  Win=CreateWindow("Button",T("Never use DirectDraw  or Direct3D"),WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX,
+                          page_l,y,Wid,23,Handle,(HMENU)3300,HInstance,NULL);
+#else
   Wid=GetCheckBoxSize(Font,T("Never use DirectDraw")).Width;
   Win=CreateWindow("Button",T("Never use DirectDraw"),WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX,
                           page_l,y,Wid,23,Handle,(HMENU)3300,HInstance,NULL);
+#endif
   SendMessage(Win,BM_SETCHECK,NoDD,0);
   y+=30;
 
@@ -2900,6 +3023,9 @@ void TOptionBox::CreateSSEPage() {
   ToolAddWindow(ToolTip,Win,
     T("Blurry scanlines like on those bad monitors!"));
   y+=LineHeight;
+#else
+  Offset=0;
+  y+=LineHeight;
 #endif
 
 #if defined(SSE_VID_VSYNC_WINDOW) || defined(SSE_VID_3BUFFER)
@@ -2953,7 +3079,9 @@ Windows 2000	5.0
   Win=CreateWindow("Button",T("VSync"), mask,
                page_l +Offset,y,Wid,25,Handle,(HMENU)1033,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,SSE_WIN_VSYNC,0);
-#if SSE_VERSION>=370
+#if SSE_VERSION>=382
+  tip_text=T("Works with windows and fullscreen, but if your monitor refresh rate is wrong, emulation speed will change!");
+#elif SSE_VERSION>=370
   tip_text=T("Works with windows and fullscreen on XP but you need the correct frequency on your monitor.");
 #else
   tip_text=T("Works with windows and fullscreen but you need the correct frequency on your monitor.");
@@ -2965,6 +3093,7 @@ Windows 2000	5.0
 #endif
 
 #if defined(SSE_VID_3BUFFER)
+#if !defined(SSE_VID_D3D_ONLY)
   Offset+=Wid+HorizontalSeparation;
   Wid=GetCheckBoxSize(Font,T("Triple buffering")).Width;
   Win=CreateWindow("Button",T("Triple buffering"), mask,
@@ -2975,6 +3104,7 @@ Windows 2000	5.0
   tip_text+=add_tip;
 #endif
   ToolAddWindow(ToolTip,Win,tip_text.Text);
+#endif
   y+=LineHeight;
 #endif
 
@@ -3139,6 +3269,18 @@ Windows 2000	5.0
                           page_l+Offset,y,Wid,25,Handle,(HMENU)1028,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,CAPTURE_MOUSE,0);
   ToolAddWindow(ToolTip,Win,T("If unchecked, Steem will leave mouse control to Windows until you click in the window."));
+  y+=LineHeight;
+#endif
+
+#if defined(SSE_GUI_MOUSE_VM_FRIENDLY)
+  y-=LineHeight;
+  Offset+=Wid+HorizontalSeparation;
+  Wid=GetCheckBoxSize(Font,T("VM-friendly mouse")).Width;
+  Win=CreateWindow("Button",T("VM-friendly mouse"),
+                          WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
+                          page_l+Offset,y,Wid,25,Handle,(HMENU)1035,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,SSEOption.VMMouse,0);
+  ToolAddWindow(ToolTip,Win,T("Alternative mouse handling - cursor not bound"));
   y+=LineHeight;
 #endif
   
@@ -3371,8 +3513,10 @@ Windows 2000	5.0
 #if defined(SSE_INT_MFP_RATIO_OPTION) // user can fine tune CPU clock
   Wid=GetCheckBoxSize(Font,T("Fine tune CPU clock")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+#if SSE_VERSION<382//probably copy/paste
   if(!hPasti)
     mask|=WS_DISABLED;
+#endif
   Win=CreateWindow("Button",T("Fine tune CPU clock"),mask,
     page_l+Offset,y,Wid,25,Handle,(HMENU)7322,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_CPU_CLOCK,0);
@@ -3485,6 +3629,12 @@ void TOptionBox::SSEUpdateIfVisible() {
   Win=GetDlgItem(Handle,1034); 
   if(Win!=NULL) 
     SendMessage(Win,BM_SETCHECK,SSE_3BUFFER,0);
+#endif
+
+#if defined(SSE_GUI_MOUSE_VM_FRIENDLY)
+  Win=GetDlgItem(Handle,1035); 
+  if(Win!=NULL) 
+    SendMessage(Win,BM_SETCHECK,SSEOption.VMMouse,0);
 #endif
 
 #if defined(SSE_GUI_STATUS_STRING)

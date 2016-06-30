@@ -161,9 +161,17 @@ EXT bool mouse_change_since_last_interrupt;
 EXT int mousek;
 #endif
 #ifndef CYGWIN
+#if defined(SSE_VAR_RESIZE_382)
+EXT BYTE no_set_cursor_pos INIT(0);
+#else
 EXT int no_set_cursor_pos INIT(0);
+#endif
+#else
+#if defined(SSE_VAR_RESIZE_382)
+EXT BYTE no_set_cursor_pos INIT(true);
 #else
 EXT int no_set_cursor_pos INIT(true);
+#endif
 #endif
 
 //#ifdef IN_EMU

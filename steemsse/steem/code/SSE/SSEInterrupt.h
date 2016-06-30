@@ -5,7 +5,8 @@
 //#include <run.decla.h>
 
 #include "SSESTF.h"
-#include "SSEGLUE.H"
+//#include "SSEGLUE.H"
+#include "SSEGlue.h" //ux382
 
 #if defined(SSE_INT_MFP_RATIO) 
 extern double CpuMfpRatio;

@@ -1,4 +1,4 @@
-// for v3.8.1
+// for v3.8.2
 #pragma once // VC guard
 #ifndef STEVEN_SEAGAL_H // BCC guard
 #define STEVEN_SEAGAL_H
@@ -113,6 +113,7 @@ Important (note to self)
 Release: not SSE_BETA
 All SSE_TEST_ON must go
 Version for snapshot (in LoadSave.h) + Windows properties (rc\resource.rc)
+Rebuild so that dates are correct
 
 Beta: not SSE_PRIVATE_BUILD
 
@@ -125,12 +126,12 @@ Beta: not SSE_PRIVATE_BUILD
 // VERSION //
 /////////////
 
-#define SSE_VERSION 381 // versions down to 330 still compile
+#define SSE_VERSION 382 // versions down to 330 still compile
                         // full v330 not publicly available anymore
 
                         // TODO options in v341!
 
-#if SSE_VERSION>381 //last release
+#if SSE_VERSION>382 //last release
 #define SSE_BETA //title, OSD, plus some testing - new features
 #define SSE_BETA_BUGFIX // beta for just bugfixes
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
@@ -169,6 +170,12 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VARIOUS    // Mouse capture, keyboard click, unrar...
 #define SSE_VIDEO      // large borders, screenshot, recording
 
+#if _MSC_VER == 1200 //VC6
+#define SSE_NO_D3D
+#else
+//#define SSE_NO_D3D
+#define SSE_NO_DD //v3.8.2
+#endif
 
 //////////////
 // COMPILER //
@@ -177,6 +184,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define NO_RAR_SUPPORT
 
 #if defined(SSE_COMPILER)
+
+#ifdef _WIN64
+#define SSE_X64 //introduced in v3.8.2
+#endif
 
 #ifdef WIN32
 
@@ -189,11 +200,26 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_INLINE_370
 #define SSE_VS2008_WARNING_370
 #define SSE_VS2008_WARNING_371
+#define SSE_VS2008_WARNING_382
+
+#endif
+
+#if _MSC_VER >= 1900 //VS2015
+#define SSE_VS2015
 #endif
 
 #define SSE_DELAY_LOAD_DLL // can run without DLL//never worked with bcc???
 
 #endif//w32
+
+#if defined(SSE_X64)
+#define SSE_DRAW_C //introduced in v3.8.2
+#define SSE_X64_DEBUG
+#define SSE_X64_LIBS
+#define SSE_X64_LPTR
+#define SSE_X64_MISC
+#define SSE_X64_STACK
+#endif
 
 // #define SSE_LEAN_AND_MEAN //TODO
 
@@ -883,13 +909,8 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 //#define SSE_STRUCTURE_IOR
 #endif
-#define SSE_TIMINGS
 #if defined(SSE_TIMINGS)
 #define SSE_TIMINGS_MS_TO_HBL
-#endif
-#if defined(SSE_TOS)
-#endif
-#if defined(SSE_UNIX)
 #endif
 #if defined(SSE_VARIOUS)
 #define SSE_VAR_RESIZE // reduce memory set (int->BYTE etc.)
@@ -1939,12 +1960,16 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_CHECK_POINTERS
 #if defined(WIN32) 
 #if defined(_MSC_VER) && (_MSC_VER >= 1500) //VS2008
+#ifndef SSE_NO_D3D //use only DD2
 #define SSE_VID_DD7 // DirectDraw7 instead of 2
 #define SSE_VID_DIRECT3D 
+#endif
 #endif//vs2008
 #if defined(BCC_BUILD) // Borland C++ 5.5 (after some efforts!)
+#ifndef SSE_NO_D3D //use only DD2
 #define SSE_VID_DD7      
 #define SSE_VID_DIRECT3D  // could be trouble on some machines
+#endif
 #endif
 #if _MSC_VER == 1200 //VC6 //it works but we make a 'No D3D' build
 //#define SSE_VID_DD7
@@ -2098,8 +2123,10 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(WIN32) && defined(VC_BUILD) // works with VC6, VS2008 not BCC
 #define SSE_VAR_ARCHIVEACCESS // 7z support
 #define SSE_VAR_ARCHIVEACCESS2 // bz2 (with modded dll), gz, tar, arj
-//#define SSE_VAR_ARCHIVEACCESS3 // zip managed by ArchiveAccess.dll by default - no, because of MSA Converter TODO
-//#define SSE_VAR_ARCHIVEACCESS4 // remove code for unzipd32.dll - what if archiveaccess fails!
+#ifdef SSE_X64 //no unzip32, no unzipd64.dll...
+#define SSE_VAR_ARCHIVEACCESS3 // zip managed by ArchiveAccess.dll by default - no, because of MSA Converter TODO
+#define SSE_VAR_ARCHIVEACCESS4 // remove code for unzipd32.dll - what if archiveaccess fails!
+#endif
 #endif
 #define SSE_VAR_MAIN_LOOP1 // protect from crash with try/catch
 #define SSE_VAR_NO_UPDATE_372
@@ -2621,7 +2648,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SHIFTER_MED_OVERSCAN_SHIFT2
 #define SSE_SHIFTER_SCHNUSDIE_381
 #define SSE_SHIFTER_UNSTABLE_381
-#define SSE_SHIFTER_XMAS2004B
 #endif//sft
 
 #ifdef SSE_TOS
@@ -2652,6 +2678,99 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//381
 
 
+#if SSE_VERSION>=382
+
+#if defined(SSE_COMPILER)
+#define SSE_COMPILER_382
+#if defined(VC_BUILD) && _MSC_VER>=1500 //VS2008+
+#define SSE_VC_INTRINSICS_382 // only some uses
+#endif
+#endif
+
+#if defined(SSE_ACSI)
+#define SSE_ACSI_RELOAD_TOS
+#endif
+
+#if defined(SSE_CPU)
+#define SSE_CPU_E_CLOCK_382
+#define SSE_CPU_TIMINGS_NO_INLINE_382
+#define SSE_CPU_TPEND_382
+#endif//cpu
+
+#if defined(SSE_GLUE)
+#define SSE_GLUE_382
+#endif                                                             
+
+#if defined(SSE_GUI)
+#define SSE_GUI_MOUSE_VM_FRIENDLY //VM for virtual machine
+#endif
+
+#if defined(SSE_INT_HBL)
+#define SSE_INT_HBL_E_CLOCK_HACK_382 //here we go again
+#endif
+
+#if defined(SSE_OSD) 
+#undef SSE_OSD_FORCE_REDRAW_AT_STOP//was bugged anyway
+#define SSE_OSD_SHOW_TIME // measure time you waste
+#endif
+
+#if defined(SSE_SHIFTER)
+#define SSE_SHIFTER_382
+#define SSE_SHIFTER_HIRES_COLOUR_DISPLAY_382 // My Socks Are Weapons, other way
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_382) //undef junk, new way is simpler
+#undef SSE_SHIFTER_HIRES_COLOUR_DISPLAY
+#undef SSE_SHIFTER_HIRES_COLOUR_DISPLAY2
+#undef SSE_SHIFTER_HIRES_COLOUR_DISPLAY3
+#undef SSE_SHIFTER_HIRES_COLOUR_DISPLAY4
+#undef SSE_SHIFTER_HIRES_COLOUR_DISPLAY5
+#endif
+#undef SSE_SHIFTER_PANIC//it was cool, but fake emu, it's bugged now
+#define SSE_SHIFTER_UNSTABLE_382
+#endif//sft
+
+#if defined(SSE_SOUND)
+#undef SSE_SOUND_NO_EXTRA_PER_VBL // switch wasn't operating <382 anyway
+#endif
+
+#ifdef SSE_TOS
+#define SSE_TOS_GEMDOS_EM_382
+#define SSE_AVTANDIL_FIX_002 // we have new TOS flags
+#endif//tos
+
+#if defined(SSE_TIMINGS)
+#define SSE_TIMINGS_SNAPSHOT_CORRECTION
+#endif
+
+#if defined(SSE_VARIOUS)
+#define SSE_VAR_OPT_382
+#define SSE_VAR_RESIZE_382
+#endif
+
+#if defined(SSE_VIDEO)
+#define SSE_VID_DD_FS_32BIT
+#define SSE_VID_FS_382
+#define SSE_VID_FS_GUI_OPTION
+#ifdef SSE_VID_DIRECT3D
+#define SSE_VID_D3D_382
+#define SSE_VID_D3D_3BUFFER
+#define SSE_VID_D3D_INTERPOLATED_SCANLINES
+#define SSE_VID_D3D_WINDOW
+#if defined(SSE_NO_DD)
+#define SSE_VID_D3D_ONLY // D3D has smaller footprint than DD
+#endif
+#define SSE_VID_BORDERS_416_NO_SHIFT_382
+#endif
+#endif//vid
+
+#if defined(SSE_YM2149)
+#undef SSE_YM2149_QUANTIZE1
+#undef SSE_YM2149_QUANTIZE2
+#define SSE_YM2149_QUANTIZE_382
+#endif
+
+#endif//382
+
+
 ///////////
 // DEBUG //
 ///////////
@@ -2667,6 +2786,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_DEBUG) && defined(DEBUG_BUILD)
 #define SSE_BOILER
 #endif
+#define SSE_DEBUG_ASSERT // 3.8.2
 #if defined(SSE_BOILER)
 #define SSE_BOILER_ACIA_373 // fix annoying bug 6301 mode
 #define SSE_BOILER_AUTO_FLUSH_TRACE// v3.7.1
@@ -2909,10 +3029,54 @@ Beta: not SSE_PRIVATE_BUILD
 //v3.8.1
 #if defined(SSE_BOILER)
 #define SSE_BOILER_BLIT_IN_HISTORY2
-#define SSE_BOILER_BLIT_WHEN_STOPPED2
 #define SSE_BOILER_BLIT_WHEN_TRACING
 #define SSE_BOILER_GO_AUTOSAVE_FRAME
+
 #define SSE_BOILER_IOLIST_381
+#endif
+
+//3.8.2
+#define SSE_DEBUG_382
+#define SSE_DEBUG_D3D
+//#define SSE_DEBUG_OSD_SCROLLER_EVERYTIME
+#ifdef SSE_BOILER
+#define SSE_BOILER_BLIT_IN_HISTORY3
+#define SSE_BOILER_BLIT_WHEN_TRACING2
+#define SSE_BOILER_HIRES_DONT_REDRAW
+//#define SSE_YM2149_QUANTIZE_TRACE
+#endif//SSE_BOILER
+#define SSE_DEBUG_START_STOP_INFO3
+#ifdef _DEBUG
+#undef SSE_VAR_MAIN_LOOP1 // let exceptions trigger in VS IDE
+#endif
+
+#else//SSE_DEBUG
+
+//3.8.2
+#define DEBUG_FACILITIES_IN_RELEASE
+
+#if defined(DEBUG_FACILITIES_IN_RELEASE)
+//#define ASSERT_FOR_RELEASE //careful with this (performance)
+#define OSD_FOR_RELEASE // time
+#define TRACE_FOR_RELEASE // TRACE2: the new breed!
+#endif
+
+#if defined(ASSERT_FOR_RELEASE)
+#define SSE_DEBUG_ASSERT
+#endif
+
+#if defined(OSD_FOR_RELEASE)
+#define SSE_OSD_DEBUG_MESSAGE
+#define SSE_DEBUG_RESET
+#endif
+
+#ifdef TRACE_FOR_RELEASE
+#define SSE_DEBUG_TRACE
+#define SSE_DEBUG_TRACE_FILE
+#define SSE_DEBUG_START_STOP_INFO
+#define SSE_DEBUG_START_STOP_INFO2
+#define SSE_DEBUG_START_STOP_INFO3
+#define SSE_BOILER_AUTO_FLUSH_TRACE
 #endif
 
 #endif//SSE_DEBUG
@@ -2942,10 +3106,10 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA)
 
-
 //#define SSE_DRIVE_WRITE_TRACK_11
 //#define SSE_GUI_FULLSCREEN_NO_VSYNC_OPTION //but all the rest?
 //#define SSE_SOUND_APART_BUFFERS //TODO, one for PSG one for DMA, but Microwire?
+//#define SSE_VID_D3D_FILTERS//TODO?
 
 #endif//beta
 
