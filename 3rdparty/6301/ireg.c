@@ -248,7 +248,7 @@ static dr2_getb (offs)
 {
   u_char value;
 #if !defined(NDEBUG)
-  u_char ddr2=iram[DDR2];
+//  u_char ddr2=iram[DDR2];
   //ASSERT(ddr2==1); // strong
 #endif
   //ASSERT(offs==P2);

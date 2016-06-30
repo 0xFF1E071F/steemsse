@@ -99,6 +99,7 @@ mem_init ()
  *
  * Used by mem print routines
  */
+
 static
 mem_inramrom (addr)
 	u_int addr;

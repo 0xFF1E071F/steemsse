@@ -88,7 +88,7 @@ sym_add (value, name)
 	}
 }
 
-
+#ifndef SSE_COMPILER_382
 static
 read_aslink_file (ifp)
 	FILE *ifp;
@@ -192,7 +192,7 @@ sym_readfile (loadfile, symfile)
 	fclose (ifp);
 	return 0;
 }
-
+#endif//#ifndef SSE_COMPILER_382
 
 #ifdef MAIN
 main (argc, argv)

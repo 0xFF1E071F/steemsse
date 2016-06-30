@@ -76,8 +76,14 @@ int hd6301_vbl_cycles;
 // ASSERT
 #if defined(_MSC_VER) && defined(_DEBUG)
 #undef ASSERT
+
+#if defined(SSE_X64_DEBUG)
+#define ASSERT(x) {if(!(x)) {TRACE("Assert failed: %s\n",#x);\
+                  DebugBreak();}}
+#else
 #define ASSERT(x) {if(!(x)) {TRACE("Assert failed: %s\n",#x);\
                    _asm{int 0x03}}}
+#endif
 #else 
 #if !defined(NDEBUG)
 #define ASSERT(x) {if(!(x)) TRACE("Assert failed: %s\n",#x);} //just a trace
@@ -97,6 +103,9 @@ void (*hd6301_trace)(char *fmt, ...);
 #endif
 
 // constructing our module (OBJ) the good old Steem way, hem
+#ifdef VC_BUILD //on vs2008, v3.8.2
+#pragma warning( disable : 4013 4127 4131 4431)
+#endif
 
 #ifdef MINGW_BUILD
 //#pragma GCC diagnostic push
@@ -116,7 +125,9 @@ void (*hd6301_trace)(char *fmt, ...);
 #include "fprinthe.c"
 #include "memsetl.c"
 #include "symtab.c"  
+#ifndef SSE_COMPILER_382
 #include "tty.c"
+#endif
 // arch
 // m68xx
 #include "memory.c"
@@ -167,14 +178,19 @@ hd6301_reset(int Cold) {
 #endif
 }
 
-
+#ifdef SSE_VS2008_WARNING_382
+hd6301_run_cycles(int cycles_to_run) {
+#else
 hd6301_run_cycles(u_int cycles_to_run) {
+#endif
   // Called by Steem to run some cycles, generally 64/scanline
   int pc;
 #if !defined(SSE_IKBD_6301_EVENT)
   int cycles_run=0;
 #endif
+#ifndef SSE_VS2008_WARNING_382
   int i=0;
+#endif
 #if defined(SSE_IKBD_6301_ADJUST_CYCLES)
   static int cycles_to_give_back=0;
 #endif

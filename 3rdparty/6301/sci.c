@@ -47,7 +47,9 @@ sci_in (s, nbytes)
   u_char *s;
 int nbytes;
 {
+#ifndef SSE_VS2008_WARNING_382
   int i;
+#endif
   u_char trcsr=iram[TRCSR];
   ASSERT(nbytes==1);
   ASSERT(trcsr&RE);
@@ -130,7 +132,9 @@ reads or writes the status/control register $11.
 trcsr_getb (offs)
   u_int offs;
 {
+#ifndef SSE_VS2008_WARNING_382
   char c;
+#endif
   unsigned char rv;
 #if 0
   /*

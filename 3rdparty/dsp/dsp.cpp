@@ -10,7 +10,7 @@
   This is meant to be very basic DSP.
   This file is compiled as a distinct module (resulting in an OBJ file)
 */
-
+#include <SSE/SSE.h>//382
 
 #include "dsp.h"
 #include <math.h>
@@ -164,14 +164,14 @@ double TIirLowPass::FilterAudio(double Input,double Frequency,double Gain) {
   return TIirFilter::FilterAudio(Input,Frequency,1,Gain,1);
 }
 
-
+#if !defined(SSE_VAR_OPT_382) //compiler would scrub it anyway, normally
 double TIirHighShelf::FilterAudio(double Input,double Frequency,double Gain) {
 //    double rv=TIirFilter::FilterAudio(Input,Frequency,50,Gain,6);
   //  double rv=TIirFilter::FilterAudio(Input,Frequency,3,Gain>0?Gain:0,4);
    // return rv;
-return Input;//...
+  return Input;//...
 }
-
+#endif
 
 double TIirLowShelf::FilterAudio(double Input,double Frequency,double Gain) {
   return TIirFilter::FilterAudio(Input,Frequency,0,Gain,5);
