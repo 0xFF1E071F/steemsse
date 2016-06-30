@@ -52,9 +52,13 @@ bool LoadArchiveAccessDll (const TCHAR* LibName)
 		bool t5 = (aaGetFileInfo != NULL);
 		bool t6 = (aaExtract != NULL);
 		bool t7 = (aaCloseArchive != NULL);
+		TRACE_INIT("%s loaded, t1 %d t2 %d t3 %d t4 %d t5 %d t6 %d t7 %d\n",LibName,t1,t2,t3,t4,t5,t6,t7);
 		return (t1 && t2 && t3 && t4 && t5 && t6 && t7);
     } else 
+    {
+        TRACE_INIT("%s not available\n",LibName);
         return false;
+    }
 }
 
 void UnloadArchiveAccessDll ()
@@ -62,6 +66,7 @@ void UnloadArchiveAccessDll ()
     FreeLibrary(hinstLib); 
 }
 
+#pragma warning(disable: 4293)//'<<' : shift count negative or too big, undefined behavior//382
 
 ///////////////////////////////////////////////////////////////////////////////
 // Callback function for reading data
