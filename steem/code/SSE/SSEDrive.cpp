@@ -22,8 +22,12 @@
 #if defined(WIN32)
 #include <pasti/pasti.h>
 #endif
-EasyStr GetEXEDir();//#include <mymisc.h>//missing...
 
+#if defined(SSE_VAR_OPT_382)
+#include <gui.decla.h>//RunDir
+#else
+EasyStr GetEXEDir();//#include <mymisc.h>//missing...
+#endif
 #include "SSEDebug.h"
 #include "SSEDrive.h"
 #include "SSEFloppy.h"
@@ -184,7 +188,9 @@ WORD TSF314::BytesToID(BYTE &num,WORD &nHbls) {
     WORD record_length=RecordLength();
     BYTE n_sectors=nSectors();
     WORD byte_first_id=BytePositionOfFirstId();
+#if !defined(SSE_VS2008_WARNING_382)
     WORD byte_last_id=byte_first_id+(n_sectors-1)*record_length;
+#endif
     WORD byte_target_id;
 
     // If we're looking for whatever next num, we compute it first
@@ -485,7 +491,7 @@ void TSF314::Motor(bool state) {
 */
  
 #ifdef SSE_DEBUG
-  if(state!=State.motor && FloppyDrive[Id].NotEmpty() )   //State.empty is never updated...
+  if(state!=(bool)State.motor && FloppyDrive[Id].NotEmpty() )   //State.empty is never updated...
   {
     TRACE_LOG("Drive %c: motor %s\n",'A'+Id,state?"on":"off");
   }
@@ -513,7 +519,7 @@ void TSF314::Motor(bool state) {
   {
     int new_time_of_next_ip=ACT+(rand()%Disk[Id].TrackBytes) * CyclesPerByte();
     TRACE_LOG("ACT %d next IP %d diff %d %dms hack next IP %d\n",ACT,time_of_next_ip,time_of_next_ip-ACT,(time_of_next_ip-ACT)/8000,new_time_of_next_ip);
-    TRACE_OSD("IP BUG"); 
+    //TRACE_OSD("IP BUG"); 
     time_of_next_ip=new_time_of_next_ip;
   }
 #endif
@@ -587,8 +593,8 @@ void TSF314::Read() {
   }
 #endif
 
-  ASSERT(Disk[Id].current_side==CURRENT_SIDE);
-  ASSERT(Disk[Id].current_track==Track());
+  //ASSERT(Disk[Id].current_side==CURRENT_SIDE);
+//  ASSERT(Disk[Id].current_track==Track());
 #endif
 
 #if defined(SSE_DISK_SCP) || defined(SSE_DISK_HFE)
@@ -864,11 +870,13 @@ void TSF314::Sound_LoadSamples(IDirectSound *DSObj,DSBUFFERDESC *dsbd,WAVEFORMAT
   TWavFileFormat WavFileFormat;
   
   FILE *fp;
+#if defined(SSE_VAR_OPT_382)
+  EasyStr path=RunDir+DRIVE_SOUND_DIRECTORY+SLASH;
+#else
   EasyStr path=GetEXEDir();
   path+=DRIVE_SOUND_DIRECTORY;
-
   path+="\\";
-
+#endif
   EasyStr pathplusfile;
   for(int i=0;i<NSOUNDS;i++)
   {

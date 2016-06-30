@@ -65,6 +65,10 @@ TMC68901 MC68901; // singleton, the infamous MFP
 
 #ifdef SSE_DEBUG
 #define LOGSECTION LOGSECTION_MFP//SS
+
+char* mfp_reg_name[]={"GPIP","AER","DDR","IERA","IERB","IPRA","IPRB","ISRA",
+  "ISRB","IMRA","IMRB","VR","TACR","TBCR","TCDCR","TADR","TBDR","TCDR","TDDR",
+  "SCR","UCR","RSR","TSR","UDR"};
 #endif
 
 //---------------------------------------------------------------------------
@@ -385,7 +389,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 
 #if defined(SSE_DEBUG) && defined(SSE_INT_MFP_RATIO_PRECISION)
 #if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY)
-          TRACE_LOG("%d PC %X set timer %c control $%x, data $%x",
+          TRACE_LOG("%d PC %X set timer %c control %d data %d",
             ACT-MFP_TIMER_SET_DELAY,old_pc,'A'+timer,new_control,mfp_reg[MFPR_TADR+timer]);
 #else
           TRACE_LOG("%d PC %X set timer %c control $%x, data $%x",
@@ -394,7 +398,13 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
           if(reg==MFPR_TBCR && new_val==8)
             TRACE_LOG(" (%d)\n",mfp_reg[MFPR_TADR+timer]);
           else
-            TRACE_LOG(" count %d prescaler %d cycles %d.%d\n",prescale_count,mfp_timer_prescale[new_control],mfp_timer_period[timer],mfp_timer_period_fraction[timer]);
+          {
+            if(prescale_count) TRACE_LOG(" Prescale count %d",prescale_count); //rare?
+            TRACE_LOG(" prescaler %d MFP cycles %d CPU cycles %d.%d\n",
+            mfp_timer_prescale[new_control],
+            mfp_timer_prescale[new_control]*int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+timer])),
+            mfp_timer_period[timer],mfp_timer_period_fraction[timer]);
+          }
 #endif
 
 
@@ -470,7 +480,9 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
     have some wobble, like timer B, maybe because of CPU/MFP clock sync.
     We add some time to delay, which we'll correct at timeout for
     next timer.
-    update: TEST10B doesn't confirm, but unconlusive, undef
+    update: TEST10B doesn't confirm, but unconlusive, undef v3.7
+    def v3.8
+    MFPTA001 could indicate timer wobble
 */
             MC68901.Wobble[timer]=(rand()&MFP_TIMERS_WOBBLE);
             mfp_timer_timeout[timer]+=MC68901.Wobble[timer];
@@ -781,28 +793,6 @@ void ASMCALL check_for_interrupts_pending()
               TRACE_EVENT(screen_event_vector);
 #endif
             screen_event_vector();  // trigger event //big possible bug:twice??
-#if defined(SSE_DEBUG) && !defined(SSE_BOILER_TRACE_EVENTS) //MFD
-            {
-              if(screen_event_vector==event_timer_a_timeout)
-                dbg_iack_subst='A';
-              else if(screen_event_vector==event_timer_b_timeout)
-                dbg_iack_subst='B';
-              else if(screen_event_vector==event_timer_b)
-                dbg_iack_subst='b';
-              else if(screen_event_vector==event_timer_c_timeout)
-                dbg_iack_subst='C';
-              else if(screen_event_vector==event_timer_d_timeout)
-                dbg_iack_subst='D';
-              if(dbg_iack_subst)
-                TRACE_MFP(">IACK timer %c at %d\n",dbg_iack_subst,time_of_next_event);
-#if defined(SSE_INT_MFP_EVENT_WRITE)
-              else if(screen_event_vector==event_mfp_write)
-                TRACE_MFP(">IACK %d wrote %X to MFP reg %d (before: %X)\n",ACT,MC68901.LastRegisterWrittenValue,MC68901.LastRegisterWritten,MC68901.LastRegisterFormerValue);
-              else
-                TRACE_MFP(">IACK executed vector %X\n",screen_event_vector);
-#endif             
-            }
-#endif//dbg
 #if defined(SSE_INT_MFP_WRITE_DELAY2) && defined(SSE_INT_MFP_REFACTOR2) \
   && !defined(SSE_INT_MFP_EVENT_WRITE_SPURIOUS)
             post_write=(ACT-MC68901.WriteTiming>=0 
@@ -924,7 +914,11 @@ void ASMCALL check_for_interrupts_pending()
                   if(dbg_iack_subst && (OSD_MASK1 & OSD_CONTROL_IACK))
                     TRACE_OSD("IACK %d %d -> %d",iack_latency,MC68901.NextIrq,irq);
 #endif
+#if defined(SSE_INT_MFP_REFACTOR1) && defined(SSE_VS2008_WARNING_382)
+                  mfp_interrupt(irq); //then cause interrupt
+#else
                   mfp_interrupt(irq,ABSOLUTE_CPU_TIME); //then cause interrupt
+#endif
                   break;        //lower priority interrupts not allowed now.
                 }//enabled
               }//mask OK
@@ -949,6 +943,8 @@ void ASMCALL check_for_interrupts_pending()
             && !no_real_irq) // couldn't find one and there was no break
           {
             TRACE_OSD("Spurious! %d",iack_latency);
+            //TRACE_OSD2("Spurious"); // but maybe it annoys player
+            TRACE2("Spurious\n");
             TRACE_MFP("%d PC %X Spurious! %d\n",ACT,old_pc,iack_latency);
             TRACE_MFP("IRQ %d (%d) IERA %X IPRA %X IMRA %X ISRA %X IERB %X IPRB %X IMRB %X ISRB %X\n",MC68901.Irq,MC68901.NextIrq,mfp_reg[MFPR_IERA],mfp_reg[MFPR_IPRA],mfp_reg[MFPR_IMRA],mfp_reg[MFPR_ISRA],mfp_reg[MFPR_IERB],mfp_reg[MFPR_IPRB],mfp_reg[MFPR_IMRB],mfp_reg[MFPR_ISRB]);
 #ifdef SSE_BETA //enable for public beta
@@ -978,7 +974,11 @@ void ASMCALL check_for_interrupts_pending()
         }
         if (mfp_reg[MFPR_IPRA+i_ab] & i_bit){ //is this interrupt pending?
           if (mfp_reg[MFPR_IMRA+i_ab] & i_bit){ //is it not masked out?
+#if defined(SSE_INT_MFP_REFACTOR1) && defined(SSE_VS2008_WARNING_382)
+            mfp_interrupt(irq); //then cause interrupt
+#else
             mfp_interrupt(irq,ABSOLUTE_CPU_TIME); //then cause interrupt
+#endif
             break;        //lower priority interrupts not allowed now.
           }
         }
@@ -1222,8 +1222,11 @@ void ASMCALL check_for_interrupts_pending()
 
 #if defined(SSE_INT_MFP_REFACTOR1)
 
+#if defined(SSE_INT_MFP_REFACTOR1) && defined(SSE_VS2008_WARNING_382)
+void mfp_interrupt(int irq) {
+#else
 void mfp_interrupt(int irq,int when_fired) {
-
+#endif
   // we redo some tests for the RS232 part that comes directly here, and also
   // when option C2 isn't checked!
   if(!(mfp_interrupt_enabled[irq]) || (sr & SR_IPL) >= SR_IPL_6
@@ -1880,7 +1883,7 @@ void TMC68901::AdjustTimerB() {
     int tmp=time_of_next_timer_b-LINECYCLE0;
     bool adapt_time_of_next_event=(time_of_next_event==time_of_next_timer_b);
     time_of_next_timer_b=LINECYCLE0+linecycle_of_end_de+28+TB_TIME_WOBBLE;
-    TRACE_LOG("F%d y%d c%d timer b type %d %d -> %d adapt %d\n",TIMING_INFO,tmp,(mfp_reg[MFPR_AER]&8),time_of_next_timer_b-LINECYCLE0,adapt_time_of_next_event);
+//    TRACE_LOG("F%d y%d c%d timer b type %d %d -> %d adapt %d\n",TIMING_INFO,tmp,(mfp_reg[MFPR_AER]&8),time_of_next_timer_b-LINECYCLE0,adapt_time_of_next_event);
     if(adapt_time_of_next_event)
       time_of_next_event=time_of_next_timer_b;
   }

@@ -116,6 +116,20 @@ MIDI is 4 times faster than IKBD
 #define HD6301_TO_ACIA_IN_HBL (screen_res==2?24:12) // to be <7200
 #endif//ACIA
 
+/////////////
+// ARCHIVE //
+/////////////
+//v3.8.2
+#define ARCHIVEACCESS_DLL "ArchiveAccess.dll"
+#define UNRAR_DLL "unrar.dll" 
+#ifdef SSE_X64_DEBUG
+#define UNZIP_DLL ARCHIVEACCESS_DLL
+#else
+#define UNZIP_DLL "unzipd32.dll" 
+#endif
+
+
+
 
 /////////////
 // BLITTER //
@@ -167,7 +181,8 @@ MIDI is 4 times faster than IKBD
 // DEBUG //
 ///////////
 
-#if defined(SSE_DEBUG) 
+//#if defined(SSE_DEBUG) 
+#if defined(SSE_DEBUG_TRACE_FILE)//3.8.2
 #if defined(SSE_UNIX)
 #define SSE_TRACE_FILE_NAME "./TRACE.txt"
 #else
@@ -224,10 +239,14 @@ MIDI is 4 times faster than IKBD
 #endif
 #if defined(SSE_DISK_HFE)
 #define DISK_EXT_HFE "HFE"
+#if defined(SSE_VAR_OPT_382)
+#define DISK_HFE_BOOT_FILENAME "HFE_boot.bin"
+#else
 #if defined(SSE_UNIX)
 #define DISK_HFE_BOOT_FILENAME "/HFE_boot.bin" 
 #else
 #define DISK_HFE_BOOT_FILENAME "\\HFE_boot.bin"
+#endif
 #endif
 #endif
 #endif
@@ -394,11 +413,14 @@ SS_SIGNAL_ENUM_EnumDisplayModes, // wait until finished (?)
 #if defined(SSE_IKBD)
 
 #if defined(SSE_IKBD_6301)
-
+#if defined(SSE_VAR_OPT_382)
+#define HD6301_ROM_FILENAME "HD6301V1ST.img"
+#else
 #if defined(SSE_UNIX)
 #define HD6301_ROM_FILENAME "/HD6301V1ST.img" 
 #else
 #define HD6301_ROM_FILENAME "\\HD6301V1ST.img"
+#endif
 #endif
 #define HD6301_ROM_CHECKSUM 451175 // BTW this rom sends $F1 after reset (80,1)
 #endif
@@ -556,8 +578,10 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
 // IPF //
 /////////
 
-#if defined(SSE_IPF)
 #define SSE_IPF_PLUGIN_FILE "CAPSImg.dll" //Windows
+
+#if defined(SSE_IPF)
+
 #define SSE_IPF_FREQU 8000000//? CPU speed? - even for that I wasn't helped!
 
 #ifdef SSE_IPF_CTRAW
@@ -710,6 +734,14 @@ Some STFs                32.02480    8.0071
 #endif
 
 
+///////////
+// PASTI //
+///////////
+
+#define PASTI_DLL "pasti.dll" //v3.8.2
+
+
+
 /////////////
 // SHIFTER //
 /////////////
@@ -831,7 +863,9 @@ Some STFs                32.02480    8.0071
 #define ORIGINAL_BORDER_TOP 30
 #define BIG_BORDER_TOP 36 // for The Musical Wonder 1990
 
-#if defined(SSE_VID_BORDERS_416) && defined(SSE_VID_BORDERS_412)
+#if defined(SSE_VID_D3D_ONLY)
+#define BIGGEST_DISPLAY 2 //no more 400
+#elif defined(SSE_VID_BORDERS_416) && defined(SSE_VID_BORDERS_412)
 #define BIGGEST_DISPLAY 3
 #else
 #define BIGGEST_DISPLAY 2
@@ -841,7 +875,11 @@ Some STFs                32.02480    8.0071
 
 #if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO) || defined(SSE_VID_STRETCH_ASPECT_RATIO)
 #if SSE_VERSION>=380
+#if defined(SSE_COMPILER_382)
+#define ST_ASPECT_RATIO_DISTORTION 1.10f // multiplier for Y axis
+#else
 #define ST_ASPECT_RATIO_DISTORTION 1.10 // multiplier for Y axis
+#endif
 #else
 #define ST_ASPECT_RATIO_DISTORTION 1.15 // multiplier for Y axis
 #endif
@@ -857,10 +895,15 @@ Some STFs                32.02480    8.0071
 
 //YM2149
 #if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
+
+#if defined(SSE_VAR_OPT_382)
+#define YM2149_FIXED_VOL_FILENAME "ym2149_fixed_vol.bin"
+#else
 #if defined(SSE_UNIX)
 #define YM2149_FIXED_VOL_FILENAME "/ym2149_fixed_vol.bin" 
 #else
 #define YM2149_FIXED_VOL_FILENAME "\\ym2149_fixed_vol.bin"
+#endif
 #endif
 #endif
 

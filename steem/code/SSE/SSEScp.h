@@ -66,7 +66,11 @@ struct  TImageSCP {
   TImageSCP();
   ~TImageSCP();
   void ComputePosition(WORD position);
+#if defined(SSE_VS2008_WARNING_382)
+  int UnitsToNextFlux(DWORD position);
+#else
   int UnitsToNextFlux(int position);
+#endif
   int UsToNextFlux(int units_to_next_flux);
 #if !defined(SSE_WD1772_AM_LOGIC)||defined(SSE_DISK_SCP_TO_MFM_PREVIEW)
   BYTE GetDelay(int position);
@@ -88,7 +92,7 @@ struct  TImageSCP {
   DWORD Position;
   BYTE rev;
 private: 
-#if !defined(SSE_VAR_RESIZE_372)
+#if !defined(SSE_VAR_RESIZE_372) || defined(SSE_VAR_RESIZE_382)
   FILE *fCurrentImage; // use FloppyDrive's
 #endif
   DWORD *TimeFromIndexPulse; // from IP

@@ -4,7 +4,9 @@
 
 #if defined(STEVEN_SEAGAL)
 // rather silly but so we leave the define here
-#if SSE_VERSION>=380
+#if SSE_VERSION>=382
+#define SNAPSHOT_VERSION 53
+#elif SSE_VERSION>=380
 #define SNAPSHOT_VERSION 52
 #elif SSE_VERSION>=372
 #define SNAPSHOT_VERSION 51
@@ -48,5 +50,9 @@ extern void LoadSaveChangeNumFloppies(int);
 extern void LoadSavePastiActiveChange();
 
 extern MEM_ADDRESS get_TOS_address(char *);
+
+#if defined(SSE_ACSI_RELOAD_TOS)
+extern bool load_TOS(char *);
+#endif
 
 #endif//#ifndef LOADSAVE_DECLA_H

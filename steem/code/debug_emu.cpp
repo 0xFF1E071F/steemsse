@@ -132,6 +132,7 @@ void update_display_after_trace()
     if (draw_blit_source_rect.left!=old_src.left || draw_blit_source_rect.top!=old_src.top ||
           draw_blit_source_rect.right!=old_src.right || draw_blit_source_rect.bottom!=old_src.bottom){
       draw_end();
+      //TRACE("in update_display_after_trace\n");
       draw(false);
       draw_begin();
     }
@@ -171,9 +172,12 @@ void update_display_after_trace()
     }
     draw_end();
     draw_blit();
-  }else{
-    draw(false);
+
   }
+#if !defined(SSE_BOILER_HIRES_DONT_REDRAW) // not for overscan in hires
+  else
+    draw(false);
+#endif
   osd_no_draw=0;
   in=0;
 }

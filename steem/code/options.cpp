@@ -24,7 +24,12 @@ EasyStringList DSDriverModuleList;
 #if !defined(SSE_VID_EXT_FS2)
 const
 #endif
-int extmon_res[EXTMON_RESOLUTIONS][3]={
+#if defined(SSE_VAR_RESIZE_382)
+WORD
+#else
+int 
+#endif
+  extmon_res[EXTMON_RESOLUTIONS][3]={
 {800,600,1},
 #if defined(SSE_VID_EXT_MON_1024X720)
 {1024,720,1},
@@ -96,13 +101,19 @@ bool TOptionBox::ChangeBorderModeRequest(int newborder)
   if (min(border,2)==min(newval,2)){
 #endif
     proceed=false;
+#if defined(SSE_VS2008_WARNING_382)
+    }else if ((border^(bool)newval) & 1){
+#else
   }else if ((border^newval) & 1){
+#endif
+#if !defined(SSE_VID_D3D_ONLY)
     if (FullScreen && draw_fs_blit_mode!=DFSM_LAPTOP){
       if (IDCANCEL==Alert(T("This will cause the monitor to change resolution"),
                 T("Change Border Mode"),MB_OKCANCEL | MB_DEFBUTTON1 | MB_ICONEXCLAMATION)){
         proceed=false;
       }
     }
+#endif
   }
   if (proceed) border_last_chosen=newborder;
   return proceed;
@@ -271,8 +282,36 @@ int TOptionBox::TOSLangToFlagIdx(int Lang)
 #else
     case 14: return 9; //Russian
 #endif
+#if defined(SSE_AVTANDIL_FIX_002)
+    case 0x0F:
+#endif
     case 17: return 7; //Swiss German
     case 27: return 8; //Dutch
+#if defined(SSE_AVTANDIL_FIX_002)
+/*
+//adding support of more countries due to Atari compendium & EMUTOS project
+
+ID '0F' for 'Swiss French';
+ID '13' for 'Turkey';
+ID '15' for 'Finland';
+ID '17' for 'Norway';
+ID '19' for 'Denmark';
+ID '1D' for 'Nederland';
+ID '1F' for 'Czech';
+ID '21' for 'Hungary';
+ID '23' for 'Slovak';
+ID '25' for 'Greece';
+ID '27' for 'Russia';
+ID 'FF' for 'Multilanguage';
+ID '3F' for 'Greece';
+
+We have flags for Czech, Finland, Norway and Greece
+*/
+    case 0x1F: return 10;
+    case 0x15: return 11;
+    case 0x17: return 12;
+    case 0x3F: return 13;
+#endif
   }
   return -1;
 }
@@ -450,8 +489,9 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
 #if defined(STEVEN_SEAGAL) && defined(SSE_STF_MATCH_TOS)
             if(Win) {
 #endif
+              //TRACE("add %s %x %x $x\n",Path.Text,Ver,Country,Date);
               eslTOS.Add(3,Str(GetFileNameFromPath(Path))+"\01"+Path,
-                Ver,Country,Date);
+               Ver,Country,Date);
               if (Ver==tos_version && VersionPath.Empty()) VersionPath=Path;
 #if defined(STEVEN_SEAGAL) && defined(SSE_STF_MATCH_TOS)
             }
@@ -791,7 +831,11 @@ void TOptionBox::Show()
     return;
   }
 
+#if defined(SSE_X64_LPTR)
+  SetWindowLongPtr(Handle, GWLP_USERDATA,(LONG_PTR)this);
+#else
   SetWindowLong(Handle,GWL_USERDATA,(long)this);
+#endif
 
   MakeParent(HWND(FullScreen ? StemWin:NULL));
 
@@ -914,6 +958,7 @@ bool TOptionBox::HasHandledMessage(MSG *mess)
 void TOptionBox::SetBorder(int newborder)
 {
   int oldborder=border;
+  TRACE_INIT("Option Border %d->%d\n",oldborder,newborder);
 #if defined(SSE_VID_DISABLE_AUTOBORDER)
   if(!newborder) 
     ChangeBorderSize(0); // TODO with this we can remove the (border&1) tests
@@ -924,7 +969,11 @@ void TOptionBox::SetBorder(int newborder)
     change_window_size_for_border_change(oldborder,newborder);
     draw(false);
     InvalidateRect(StemWin,NULL,0);
-    if (Handle) if (GetDlgItem(Handle,210)) EnableWindow(GetDlgItem(Handle,210),border==0 && draw_fs_blit_mode!=DFSM_LAPTOP);
+    if (Handle) if (GetDlgItem(Handle,210)) EnableWindow(GetDlgItem(Handle,210),border==0 
+#if !defined(SSE_VID_D3D_ONLY)
+      && draw_fs_blit_mode!=DFSM_LAPTOP
+#endif
+      );
   }else{
     if (Handle) if (GetDlgItem(Handle,207)) SendDlgItemMessage(Handle,207,CB_SETCURSEL,oldborder,0);
     border=oldborder;
@@ -946,7 +995,11 @@ void TOptionBox::SetBorder(int newborder)
 #endif
 }
 //---------------------------------------------------------------------------
+#if defined(SSE_X64_LPTR)
+#define GET_THIS This=(TOptionBox*)GetWindowLongPtr(Win,GWLP_USERDATA);
+#else
 #define GET_THIS This=(TOptionBox*)GetWindowLong(Win,GWL_USERDATA);
+#endif
 
 LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 {
@@ -1016,6 +1069,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 //            This->ChangeOSD(!osd_on);
           }
           break;
+#if !defined(SSE_VID_D3D_ONLY)
         case 204:
           if (HIWORD(wPar)==CBN_SELENDOK){
             int proceed=1,new_mode=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);  //carry on, don't change res
@@ -1061,6 +1115,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             }
           }
           break;
+#endif//#if !defined(SSE_VID_D3D_ONLY)
         case 206:
           if (HIWORD(wPar)==BN_CLICKED){
             FSDoVsync=!FSDoVsync;
@@ -1091,17 +1146,20 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
                 draw(false);
                 InvalidateRect(StemWin,NULL,0);
               }
+#if !defined(SSE_VID_D3D_ONLY)
               This->UpdateHzDisplay();
+#endif
             }
           }
           break;
+#if !defined(SSE_VID_D3D_ONLY)
         case 210:
           if (HIWORD(wPar)==BN_CLICKED){
             prefer_res_640_400=!prefer_res_640_400;
             SendMessage(HWND(lPar),BM_SETCHECK,prefer_res_640_400,0);
           }
           break;
-
+#endif//#if !defined(SSE_VID_D3D_ONLY)
 #if defined(STEVEN_SEAGAL)
 
 #if defined(SSE_STF)          // option ST model
@@ -1225,7 +1283,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 #endif// defined(STEVEN_SEAGAL)
-
+#if !defined(SSE_VID_D3D_ONLY)
         case 220:case 222:case 224:
           if (HIWORD(wPar)==CBN_SELENDOK){
             int i=(LOWORD(wPar)-220)/2;
@@ -1249,14 +1307,14 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             }
           }
           break;
-
+#endif//#if !defined(SSE_VID_D3D_ONLY)
         case 226:
           if (HIWORD(wPar)==BN_CLICKED){
             FSQuitAskFirst=!FSQuitAskFirst;
             SendMessage(HWND(lPar),BM_SETCHECK,FSQuitAskFirst,0);
           }
           break;
-
+#if !defined(SSE_VID_D3D_ONLY)
         case 280:
           if (HIWORD(wPar)==BN_CLICKED){
             draw_fs_fx=(SendMessage(HWND(lPar),BM_GETCHECK,0,0)==BST_CHECKED ? DFSFX_GRILLE:DFSFX_NONE);
@@ -1264,6 +1322,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             if (runstate!=RUNSTATE_RUNNING && FullScreen) draw(false);
           }
           break;
+#endif
         case 300:
           if (HIWORD(wPar)==BN_CLICKED){
             ResChangeResize=!ResChangeResize;
@@ -1390,11 +1449,16 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SSE_INTERPOLATE=!SSE_INTERPOLATE;
             TRACE_LOG("Interpolate scanlines: %d\n",SSE_INTERPOLATE);
             SendMessage(HWND(lPar),BM_SETCHECK,SSE_INTERPOLATE,0);
+#if !defined(SSE_VID_D3D_ONLY)
             draw_fs_blit_mode=(SSE_INTERPOLATE)?DFSM_STRETCHBLIT:
 #if defined(SSE_VID_D3D2)
               (D3D9_OK && SSE_OPTION_D3D) ? DFSM_STRETCHBLIT :
 #endif
               DFSM_STRAIGHTBLIT;
+#endif//#if !defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D_INTERPOLATED_SCANLINES)
+            Disp.ScreenChange();
+#endif
           }
           break;
 #endif
@@ -1405,7 +1469,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           {
             SSE_WIN_VSYNC=!SSE_WIN_VSYNC;
             TRACE_LOG("Option Window VSync: %d\n",SSE_WIN_VSYNC);
-#if !defined(SSE_VID_3BUFFER_NO_VSYNC)
+#if !defined(SSE_VID_3BUFFER_NO_VSYNC) &&!defined(SSE_VID_D3D_3BUFFER)
             if(SSE_WIN_VSYNC)
               SSE_3BUFFER=false;
 #endif
@@ -1433,6 +1497,29 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             OptionBox.SSEUpdateIfVisible();
 #endif
             Disp.ScreenChange();
+          }
+          break;
+#endif
+
+#if defined(SSE_GUI_MOUSE_VM_FRIENDLY)
+        case 1035:
+          if(HIWORD(wPar)==BN_CLICKED)
+          {
+            SSEOption.VMMouse=!SSEOption.VMMouse;
+            TRACE_LOG("Option VMMouse: %d\n",SSEOption.VMMouse);
+            SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.VMMouse,0);
+          }
+          break;
+#endif
+#if defined(SSE_OSD_SHOW_TIME)
+        case 1036:
+          if(HIWORD(wPar)==BN_CLICKED)
+          {
+            SSEOption.OsdTime=!SSEOption.OsdTime;
+            Debug.StartingTime=timeGetTime();//reset
+            Debug.StoppingTime=0;//reset
+            TRACE_LOG("Option OsdTime: %d\n",SSEOption.OsdTime);
+            SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.OsdTime,0);
           }
           break;
 #endif
@@ -1517,7 +1604,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             if (LOWORD(wPar)==3302) key="StartFullscreen";
             if (LOWORD(wPar)==3304) key="DrawToVidMem";
             if (LOWORD(wPar)==3305) key="BlitHideMouse";
+#if defined(SSE_X64_MISC)
+            WriteCSFStr("Options", key, EasyStr((int)SendMessage(HWND(lPar), BM_GETCHECK, 0, 0)), INIFile);
+#else
             WriteCSFStr("Options",key,EasyStr(SendMessage(HWND(lPar),BM_GETCHECK,0,0)),INIFile);
+#endif
             if (LOWORD(wPar)==3300){
               EnableWindow(GetDlgItem(Win,3302),!SendMessage(HWND(lPar),BM_GETCHECK,0,0));
               EnableWindow(GetDlgItem(Win,3304),!SendMessage(HWND(lPar),BM_GETCHECK,0,0));
@@ -1962,7 +2053,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if (HIWORD(wPar)==BN_CLICKED){
             SSE_OPTION_D3D=!SSE_OPTION_D3D;
             SendMessage(HWND(lPar),BM_SETCHECK,SSE_OPTION_D3D,0);
-
+#ifndef SSE_VID_D3D_ONLY
 #if defined(SSE_VID_D3D_OPTION5) //duplicate! TODO
 #if defined(SSE_VID_D3D_LIST_MODES)
 #if defined(SSE_VID_D3D_CRISP_OPTION)
@@ -1981,7 +2072,13 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
     EnableWindow(GetDlgItem(Win,items[i]),!SSE_OPTION_D3D^!i); 
 #endif
 #endif
+#endif//#ifndef SSE_VID_D3D_ONLY
             TRACE_LOG("Option D3D %d\n",SSE_OPTION_D3D);
+
+#ifndef SSE_VID_D3D_ONLY
+    Disp.ScreenChange();
+#endif
+
             //Disp.Init();//big mistake!
           }
           break;
@@ -2041,8 +2138,30 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 7319: // Option D3D mode
           if (HIWORD(wPar)==CBN_SELENDOK)
           {
+#if defined(SSE_VID_D3D_382)
+            UINT old_mode=Disp.D3DMode;
+#endif
             Disp.D3DMode=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
-            TRACE_LOG("Option D3D mode = %d\n",Disp.D3DMode);
+#if defined(SSE_VID_D3D_382)
+            Disp.D3DUpdateWH(Disp.D3DMode);
+            TRACE_LOG("Option D3D mode = %d %dx%d\n",Disp.D3DMode,Disp.D3DFsW,Disp.D3DFsH);
+            if(FullScreen && SSE_OPTION_D3D && old_mode!=Disp.D3DMode)
+            {
+             // SetWindowPos(StemWin,HWND_TOPMOST,0,0,50,50,0);
+               //Disp.ScreenChange();
+              SetWindowPos(StemWin,HWND_TOPMOST,0,0,Disp.D3DFsW,Disp.D3DFsH,SWP_FRAMECHANGED   );
+              //MoveWindow(StemWin,0,0,Disp.D3DFsW,Disp.D3DFsH,TRUE);
+              InvalidateRect(StemWin,NULL,FALSE);
+              //
+              //Sleep(200);
+//              InvalidateRect(StemWin,NULL,FALSE);
+             // Disp.ScreenChange();
+              //SetWindowPos(StemWin,HWND_TOPMOST,0,0,Disp.D3DFsW,Disp.D3DFsH,SWP_FRAMECHANGED   );
+              //RECT rc; rc.top=rc.left=0; rc.right=Disp.D3DFsW; rc.bottom=Disp.D3DFsH;
+              //InvalidateRect(StemWin,&rc,FALSE);
+              
+            }
+#endif
           }
           break;
 #endif
@@ -2075,6 +2194,20 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             OPTION_D3D_CRISP=!OPTION_D3D_CRISP;
             TRACE_LOG("Option Crisp D3D = %d\n",OPTION_D3D_CRISP);
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_D3D_CRISP,0);
+#if defined(SSE_VID_D3D_382)
+            if(FullScreen && SSE_OPTION_D3D && D3D9_OK)
+              Disp.D3DSpriteInit();
+#endif
+          }
+          break;
+#endif
+
+#if defined(SSE_VID_FS_GUI_OPTION)
+        case 7325:
+          if (HIWORD(wPar)==BN_CLICKED) {
+            OPTION_FULLSCREEN_GUI=!OPTION_FULLSCREEN_GUI;
+            TRACE_LOG("Option FullScreen GUI = %d\n",OPTION_FULLSCREEN_GUI);
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_FULLSCREEN_GUI,0);
           }
           break;
 #endif
@@ -2837,6 +2970,10 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         if (di->itemID < 0xffffffff){
           int idx=di->itemID;
           if (This->eslTOS_Descend) idx=This->eslTOS.NumStrings-1 - di->itemID;
+
+
+          //for(int i=0;i<15;i++)          TRACE("%d %X\n",i,(WORD)This->eslTOS[idx].Data[i]);
+
           WORD Ver=(WORD)This->eslTOS[idx].Data[0];
           WORD Lang=(WORD)This->eslTOS[idx].Data[1];
           WORD Date=(WORD)This->eslTOS[idx].Data[2];

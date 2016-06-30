@@ -20,6 +20,7 @@
 
 
 // note this is global here, not in classes. TODO?
+// and it is also in the release build (but now used in TRACE)
 
 char* st_model_name[]={"STE","STF","Mega ST4"
 #if defined(SSE_STF_8MHZ)//no
@@ -116,7 +117,7 @@ int SwitchSTType(int new_type) { // it was one of the first added functions, no 
     n_cpu_cycles_per_second=CpuNormalHz; // no wrong CPU speed icon in OSD (3.5.1)
 #endif
 
-#if defined(SSE_INT_VBI_START) || defined(SSE_INT_VBL_STF)
+#if defined(SSE_INT_VBI_START) || defined(SSE_INT_VBL_STF)//no
   draw_routines_init(); // to adapt event plans (overkill?)
 #endif
 

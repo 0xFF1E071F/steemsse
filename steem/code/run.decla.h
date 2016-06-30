@@ -14,7 +14,11 @@
 EXT void run();
 EXT void prepare_cpu_boosted_event_plans();
 
+#if defined(SSE_VAR_RESIZE_382)
+EXT BYTE runstate;
+#else
 EXT int runstate;
+#endif
 // fast_forward_max_speed=(1000 / (max %/100)); 0 for unlimited
 EXT int fast_forward INIT(0),fast_forward_max_speed INIT(0);
 EXT bool fast_forward_stuck_down INIT(0);
@@ -29,12 +33,14 @@ EXT DWORD speed_limit_wait_till;
 EXT int avg_frame_time_counter INIT(0);
 EXT DWORD auto_frameskip_target_time;
 #define AUTO_FRAMESKIP 8
-#if defined(STEVEN_SEAGAL) && defined(SSE_VARIOUS___)
-EXT int frameskip INIT(1);
+#if defined(SSE_VAR_RESIZE_382)
+EXT BYTE frameskip INIT(AUTO_FRAMESKIP);
+EXT BYTE frameskip_count INIT(1);
 #else
 EXT int frameskip INIT(AUTO_FRAMESKIP);
-#endif
 EXT int frameskip_count INIT(1);
+#endif
+
 
 EXT bool flashlight_flag INIT(false);
 #ifdef DEBUG_BUILD
@@ -45,7 +51,11 @@ EXT bool flashlight_flag INIT(false);
 
 DEBUG_ONLY(EXT int mode);
 
+#if defined(SSE_VAR_RESIZE_382)
+EXT BYTE mixed_output INIT(0);
+#else
 EXT int mixed_output INIT(0);
+#endif
 
 EXT int cpu_time_of_last_vbl,shifter_cycle_base;
 
@@ -295,9 +305,13 @@ EXT int time_of_last_hbl_interrupt;
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBL_IACK)
 EXT int time_of_last_vbl_interrupt;
 #endif
-
+#if defined(SSE_VAR_RESIZE_382)
+EXT BYTE screen_res_at_start_of_vbl;
+EXT BYTE shifter_freq_at_start_of_vbl;
+#else
 EXT int screen_res_at_start_of_vbl;
 EXT int shifter_freq_at_start_of_vbl;
+#endif
 EXT int scanline_time_in_cpu_cycles_at_start_of_vbl;
 EXT bool hbl_pending;
 

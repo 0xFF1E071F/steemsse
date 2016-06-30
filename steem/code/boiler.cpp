@@ -1680,7 +1680,6 @@ void boiler_show_stack_display(int sel)
   }else{
     SendDlgItemMessage(DWin,209,CB_SETCURSEL,sel,0);
   }
-
   LockWindowUpdate(DWin);
   ShowWindow(DWin_timings_scroller,int((sel==1) ? SW_SHOW:SW_HIDE));
   ShowWindow(m_b_stack.handle,int((sel==0) ? SW_SHOW:SW_HIDE));

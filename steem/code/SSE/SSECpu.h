@@ -463,7 +463,11 @@ struct TM68000 {
 #endif
   inline void FetchWord(WORD &dest_word); 
   inline void InstructionTime(int n);
+#if defined(SSE_CPU_TIMINGS_NO_INLINE_382)
+  void InstructionTimeRound(int n);
+#else
   inline void InstructionTimeRound(int n);
+#endif
   void Interrupt(MEM_ADDRESS ad);
   inline void PerformRte();
 #if SSE_VERSION<370
@@ -483,7 +487,7 @@ struct TM68000 {
 #endif
   void SetPC(MEM_ADDRESS ad);
   inline void Unstop();
-  void Reset(bool cold);
+  void Reset(bool Cold);
 #if defined(SSE_DEBUG)
   int IrAddress; // pc at start
   int nExceptions;
@@ -601,6 +605,11 @@ so refactoring due!
 #if defined(SSE_CPU_TPEND)  
   bool tpend; // actual internal latch set when CPU should trace current instruction
 #endif  
+#if defined(SSE_CPU_E_CLOCK_382)
+  int cycles_for_eclock; // because of integer overflow problems
+  int cycles0; // to record ACT
+  void UpdateCyclesForEClock();
+#endif
 };
 
 extern TM68000 M68000;
@@ -660,7 +669,11 @@ void TM68000::PrefetchSetPC() {
 
 #if defined(SSE_CPU_PREFETCH_TIMING) && !defined(SSE_CPU_PREFETCH_TIMING_EXCEPT)
 
+#ifdef SSE_COMPILER_382
+#define FETCH_TIMING {}
+#else
 #define FETCH_TIMING 
+#endif
 
 #else
 
@@ -769,7 +782,7 @@ inline void TM68000::FetchWord(WORD &dest_word) {
   if(pc>himem && pc>=0x80000 && pc<0x3FFFFF)
   {
     IR=0xFFFF; // TODO
-    TRACE("Fetch IR %X in empty zone %X\n",IR,pc);
+    TRACE_LOG("Fetch IR %X in empty zone %X\n",IR,pc);
     return;
   }
   else
@@ -965,7 +978,7 @@ inline void TM68000::InstructionTime(int t) {
 
 #define INSTRUCTION_TIME(t)  M68000.InstructionTime(t)
 
-
+#if !defined(SSE_CPU_TIMINGS_NO_INLINE_382)
 inline void TM68000::InstructionTimeRound(int t) {
   InstructionTime(t);
 #if ! defined(SSE_MMU_WAIT_STATES)
@@ -975,6 +988,7 @@ inline void TM68000::InstructionTimeRound(int t) {
   cpu_cycles&=-4;
 #endif
 }
+#endif
 
 #define INSTRUCTION_TIME_ROUND(t) M68000.InstructionTimeRound(t)
 
@@ -1079,7 +1093,7 @@ inline void TM68000::PrefetchIrc() {
   if(pc>himem && pc>=0x80000 && pc<0x3FFFFF)
   {
     IRC=0xFFFF;
-    TRACE("Fetch IRC %X in empty zone %X\n",IRC,pc);
+    TRACE_LOG("Fetch IRC %X in empty zone %X\n",IRC,pc);
   }
   else
 #endif
@@ -1246,7 +1260,11 @@ inline void TM68000::Process() {
 #endif    
     ProcessingState=NORMAL;
   }
+#if defined(SSE_VC_INTRINSICS_382)
+  else if BITTEST(sr,0xf)
+#else
   else if(sr&SR_TRACE)
+#endif
   {
 #if defined(SSE_CPU_TPEND)
     tpend=true; // hardware latch (=flag)
@@ -1364,7 +1382,11 @@ exception vector.
 -> no trace after bus/address/illegal error
 
 */
+#if defined(SSE_CPU_TPEND_382)  //argh, forgot this!
+  if(tpend)
+#else
   if(ProcessingState==TRACE_MODE)
+#endif
   {
 #ifdef DEBUG_BUILD
 #if defined(SSE_CPU_TPEND) && !defined(SSE_CPU_TPEND2)
@@ -1458,7 +1480,7 @@ Assume the same for Illegal, Privilege, Line A and Line F
 inline void TM68000::RefetchIr() {
 //this is no fix, it was already in Steem 3.2
   ASSERT( IR==*(lpfetch+1) ); //detect cases
-  ASSERT( MEM_DIR==-1 );
+  //ASSERT( MEM_DIR==-1 );
   IR=*(lpfetch-MEM_DIR); //needed for Synth Dream Sound Demo II!
 }
 #define REFETCH_IR  M68000.RefetchIr();

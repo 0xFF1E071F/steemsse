@@ -149,6 +149,7 @@ MEM_ADDRESS vdi_intout=0;
 //---------------------------------------------------------------------------
 void init_timings()
 {
+  TRACE_INIT("init_timings()\n");
   // don't do anything to agendas here!
 #if !(defined(STEVEN_SEAGAL)&&defined(SSE_OSD_DRIVE_LED3))
   disk_light_off_time=timeGetTime()+DisableDiskLightAfter;
@@ -168,7 +169,6 @@ void init_timings()
   hbl_pending=true;
 
   cpu_time_of_start_of_event_plan=0; //0x7f000000; // test overflow
-
 #if defined(STEVEN_SEAGAL)
 #if !defined(SSE_GLUE_FRAME_TIMINGS_B)
 #if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO)
@@ -274,7 +274,6 @@ void init_timings()
     Dma.TransferTime=ABSOLUTE_CPU_TIME+8000000;
 #endif
 #endif
-
 
   hbl_count=0;
 }
@@ -441,7 +440,7 @@ void intercept_xbios()
   else if (m68k_dpeek(sp)==17)// && SSE_HACKS_ON) 
   {
 #ifdef SSE_BETA
-    TRACE_OSD("RND");
+    //TRACE_OSD("RND");
 //    r[0]=rand();
   //  M68K_PERFORM_RTE(;);  //don't need to check interrupts because sr won't actually have changed
 #endif
@@ -592,7 +591,8 @@ void agenda_add(LPAGENDAPROC action,int pause,int param)
 #endif
   if (agenda_length>=MAX_AGENDA_LENGTH){
     log_write("AARRRGGGHH!: Agenda full, can't add!");
-    TRACE("AARRRGGGHH!: Agenda full, can't add!\n"); // indicates a bug
+    //TRACE("AARRRGGGHH!: Agenda full, can't add!\n"); // indicates a bug
+    TRACE("Agenda full\n");
     ASSERT( agenda_length<MAX_AGENDA_LENGTH ); // boiler msg box -> quit
     return;
   }

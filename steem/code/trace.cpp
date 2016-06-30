@@ -74,6 +74,9 @@ void trace()
     draw_begin();
     debug_update_drawing_position();
 #if defined(SSE_BOILER_BLIT_WHEN_TRACING)
+#if defined(SSE_BOILER_BLIT_WHEN_TRACING2)
+    ASSERT(!Blit.HasBus);
+#endif
     if (Blit.Busy && !Blit.HasBus && (ABSOLUTE_CPU_TIME-Blit.TimeToSwapBus)>=0)
     {
       INSTRUCTION_TIME(-4); //?? quick fix TODO
@@ -81,6 +84,7 @@ void trace()
     }
 #endif
     m68k_process();
+
     cpu_cycles_this_instruction=ABSOLUTE_CPU_TIME-old_cpu_time;
 
     debug_check_for_events();
@@ -425,10 +429,8 @@ void trace_window_init()
   m_b_trace.handle=CreateWindowEx(512,WC_LISTVIEW,"",
       LVS_REPORT | LVS_SHAREIMAGELISTS | LVS_NOSORTHEADER | LVS_OWNERDRAWFIXED | WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS,
       10,1,400,55,m_b_trace.owner,(HMENU)1,Inst,NULL);
-
   SetWindowLong(m_b_trace.handle,GWL_WNDPROC,(long)mem_browser_WndProc);
   SetWindowLong(m_b_trace.handle,GWL_USERDATA,(LONG)&m_b_trace);
-
 //  m_b_trace.active=false;
   m_b_trace.disp_type=DT_INSTRUCTION;
   m_b_trace.mode=MB_MODE_FIXED;
@@ -445,7 +447,6 @@ void trace_window_init()
       60,60,200,20,trace_window_handle,(HMENU)0,Inst,NULL);
   SetWindowLong(trace_sr_before_display,GWL_USERDATA,(LONG)&trace_sr_before);
   SetWindowLong(trace_sr_before_display,GWL_WNDPROC,(long)sr_display_WndProc);
-
   CreateWindowEx(0,"Static","sr after",WS_VISIBLE | WS_CHILDWINDOW | SS_LEFTNOWORDWRAP,
       10,83,50,17,trace_window_handle,(HMENU)0,Inst,NULL);
 
@@ -453,7 +454,6 @@ void trace_window_init()
       60,80,200,20,trace_window_handle,(HMENU)0,Inst,NULL);
   SetWindowLong(trace_sr_after_display,GWL_USERDATA,(LONG)&sr);
   SetWindowLong(trace_sr_after_display,GWL_WNDPROC,(long)sr_display_WndProc);
-
   trace_scroller.CreateEx(512,WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL,10,105,260,130,trace_window_handle,100,Inst);
 
   trace_repeat_trace_button=CreateWindowEx(512,"Button","Repeat Trace",WS_BORDER | WS_VISIBLE | WS_CHILDWINDOW | BS_PUSHBUTTON,

@@ -127,6 +127,7 @@ void TMMU::UpdateVideoCounter(int CyclesIn) {
     else if(c>=bytes_to_count)
     {
       sdp+=bytes_to_count;
+      //TRACE("F%d y%d c%d bytes in %d\n",TIMING_INFO,bytes_to_count);
       // The timing of this is a strange thing on a real STE - TODO
       if(ST_TYPE==STE
         && CyclesIn>=GLU.CurrentScanline.EndCycle + (HSCROLL0?WordsToSkip*2:4)) 
@@ -135,6 +136,7 @@ void TMMU::UpdateVideoCounter(int CyclesIn) {
     else if (c>=0){
       c&=-2;
       sdp+=c;
+      //TRACE("F%d y%d c%d bytes in %d\n",TIMING_INFO,c);
     }
   }
   else // lines witout fetching (before or after frame)
@@ -145,9 +147,11 @@ void TMMU::UpdateVideoCounter(int CyclesIn) {
 
 #endif
 
-
+#if defined(SSE_VS2008_WARNING_382)
+MEM_ADDRESS TMMU::ReadVideoCounter(int CyclesIn) {
+#else
 MEM_ADDRESS TMMU::ReadVideoCounter(int CyclesIn,int dispatcher) {
-
+#endif
 #if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
 
   UpdateVideoCounter(CyclesIn);

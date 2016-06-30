@@ -119,7 +119,7 @@ is issued, and that the reset was active for at least 132 clock cycles [27].
 //---------------------------------------------------------------------------
 void power_on()
 {
-
+  TRACE_INIT("power_on\n");
 #if defined(STEVEN_SEAGAL) && defined(SSE_GUI_STATUS_STRING)
   GUIRefreshStatusBar();//overkill
 #endif
@@ -132,8 +132,12 @@ void power_on()
   ioaccess=0;
 
   xbios2=mem_len-0x8000;
+#if defined(SSE_TOS_GEMDOS_EM_382)
+  if (extended_monitor)
+    Tos.HackMemoryForExtendedMonitor();
+#else
   if (extended_monitor) xbios2=max(int(mem_len-(em_width*em_height*em_planes)/8),0);
-
+#endif
   ZeroMemory(STpal,sizeof(STpal));
   if (tos_version>0x104){
     STpal[0]=0xfff;
@@ -255,7 +259,7 @@ void reset_peripherals(bool Cold)
 {
   log("***** reset peripherals ****");
 
-#ifdef SSE_DEBUG
+#if defined(SSE_DEBUG) || defined(SSE_OSD_SHOW_TIME)
 #if defined(SSE_DEBUG_RESET)
   Debug.Reset(Cold);
 #else
@@ -289,17 +293,14 @@ void reset_peripherals(bool Cold)
       shifter_freq=50;
       shifter_freq_idx=0;
 #endif
-
     }
 #if !defined(SSE_GLUE_FRAME_TIMINGS4)
     shifter_freq=50;
     shifter_freq_idx=0;
 #endif
-
 #ifdef SSE_TOS_GEMDOS_EM_381B
     Tos.HackMemoryForExtendedMonitor();
 #endif
-
   }else
 #endif
 
@@ -388,11 +389,20 @@ void reset_peripherals(bool Cold)
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_ACSI) 
   if(ACSI_EMU_ON)
+#if defined(SSE_VS2008_WARNING_382)
+#if defined(SSE_ACSI_MULTIPLE)
+    for(int i=0;i<TAcsiHdc::MAX_ACSI_DEVICES;i++)
+      AcsiHdc[i].Reset();
+#else
+    AcsiHdc.Reset();
+#endif
+#else
 #if defined(SSE_ACSI_MULTIPLE)
     for(int i=0;i<TAcsiHdc::MAX_ACSI_DEVICES;i++)
       AcsiHdc[i].Reset(Cold);
 #else
     AcsiHdc.Reset(Cold);
+#endif
 #endif
 #endif
 
@@ -490,6 +500,7 @@ void reset_peripherals(bool Cold)
 //---------------------------------------------------------------------------
 void reset_st(DWORD flags)
 {
+  TRACE_INIT("reset_st, flags %X\n");
 #if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH)
   prefetched_2=FALSE;
 #endif
@@ -544,9 +555,7 @@ void reset_st(DWORD flags)
   aes_calls_since_reset=0;
   if (extended_monitor) extended_monitor=1; //first stage of extmon init
 #ifdef SSE_TOS_GEMDOS_EM_381B
- //phystop 100000 _memtop F8000
-    m68k_lpoke(0x42E,mem_len); //phystop
-    //m68k_lpoke(0x436,mem_len-0x8000); //_memtop
+  m68k_lpoke(0x42E,mem_len); //phystop
 #endif
 #endif
 

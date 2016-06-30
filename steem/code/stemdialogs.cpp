@@ -65,7 +65,11 @@ void TStemDialog::RegisterMainClass(WNDPROC WndProc,char *ClassName,int nIcon)
 //---------------------------------------------------------------------------
 void TStemDialog::UpdateMainWindowIcon()
 {
+#if defined(SSE_X64_LPTR)
+  if (Handle) SetClassLongPtr(Handle, GCLP_HICON, long(hGUIIcon[nMainClassIcon]));
+#else
   if (Handle) SetClassLong(Handle,GCL_HICON,long(hGUIIcon[nMainClassIcon]));
+#endif
 }
 //---------------------------------------------------------------------------
 inline bool TStemDialog::HandleIsInvalid()
@@ -145,8 +149,11 @@ void TStemDialog::SetPageControlsFont()
   for (int n=0;n<ChildList.NumItems;n++) SendMessage(ChildList[n],WM_SETFONT,WPARAM(Font),0);
 }
 //---------------------------------------------------------------------------
+#if defined(SSE_X64_LPTR)
+#define GET_THIS This=(TStemDialog*)GetWindowLongPtr(Win,GWLP_USERDATA);
+#else
 #define GET_THIS This=(TStemDialog*)GetWindowLong(Win,GWL_USERDATA);
-
+#endif
 LRESULT TStemDialog::DefStemDialogProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 {
   StemDialog_RetDefVal=0;

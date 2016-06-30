@@ -262,7 +262,11 @@ void TGeneralInfo::Show()
     DEFAULT_QUALITY,DEFAULT_PITCH | FF_SWISS,README_FONT_NAME);
 #endif
 
+#if defined(SSE_X64_LPTR)
+  SetWindowLongPtr(Handle, GWLP_USERDATA,(LONG_PTR)this);
+#else
   SetWindowLong(Handle,GWL_USERDATA,(long)this);
+#endif
 
   MakeParent(HWND(FullScreen ? StemWin:NULL));
 
@@ -379,7 +383,11 @@ void TGeneralInfo::CreateAboutPage()
   int y=10,h=4;
   HWND Win;
 #if defined(STEVEN_SEAGAL) && defined(SSE_GUI)
-  EasyStr Text=EasyStr("Steem SSE v")+SSE_VERSION+" (built " __DATE__" " +"- "__TIME__")\n";
+#if defined(SSE_VS2015)
+  EasyStr Text = EasyStr("Steem SSE v") + SSE_VERSION + " (built " __DATE__" " + "- " __TIME__")\n";
+#else
+   EasyStr Text=EasyStr("Steem SSE v")+SSE_VERSION+" (built " __DATE__" " +"- "__TIME__")\n";
+#endif
 #else
   EasyStr Text=EasyStr("Steem Engine v")+(char*)stem_version_text+" (built " __DATE__" " +"- "__TIME__")\n";
 #endif
@@ -396,6 +404,9 @@ void TGeneralInfo::CreateAboutPage()
   MSVC++ 6.0  _MSC_VER = 1200
   MSVC++ 5.0  _MSC_VER = 1100
   */
+#ifdef SSE_X64_MISC
+  Text+="x64 ";
+#endif
 #if _MSC_VER == 1200
   Text+="SSE VC6 build\n";
 #elif (_MSC_VER>1200) && (_MSC_VER <1400)
@@ -495,11 +506,15 @@ void TGeneralInfo::CreateSpeedPage()
       draw_blit();
     }
     blit_time=timeGetTime()-tt;
-
+#if defined(SSE_COMPILER_382) //for BCC build
+    unlock_time/=max((int)frameskip,1);
+    draw_time/=max((int)frameskip,1);
+    blit_time/=max((int)frameskip,1);
+#else
     unlock_time/=max(frameskip,1);
     draw_time/=max(frameskip,1);
     blit_time/=max(frameskip,1);
-
+#endif
 //    cpu_time=avg_frame_time-(draw_time+unlock_time+blit_time);
 
     inst_per_second=(((n_cpu_cycles_per_second/4)/shifter_freq)*12000)/avg_frame_time;
@@ -697,7 +712,11 @@ void TGeneralInfo::Hide()
   ManageWindowClasses(SD_UNREGISTER);
 }
 //---------------------------------------------------------------------------
+#if defined(SSE_X64_LPTR)
+#define GET_THIS This=(TGeneralInfo*)GetWindowLongPtr(Win,GWLP_USERDATA);
+#else
 #define GET_THIS This=(TGeneralInfo*)GetWindowLong(Win,GWL_USERDATA);
+#endif
 
 LRESULT __stdcall TGeneralInfo::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 {

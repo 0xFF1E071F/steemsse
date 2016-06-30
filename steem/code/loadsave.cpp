@@ -304,6 +304,7 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
 #endif
   )
 {
+  TRACE2("Loading %s\n",FilNam);
 #ifndef ONEGAME
   int Failed=2,Version=0;
   bool FileError=0;
@@ -311,7 +312,7 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
   if (Exists(FilNam)==0) 
   { //SS scope
     FileError=true;
-    TRACE("File %s doesn't exist\n",FilNam);
+    TRACE_INIT("File %s doesn't exist\n",FilNam);
   }
   if (FileError==0){
     bool LoadingResetBackup=IsSameStr_I(FilNam,WriteDir+SLASH+"auto_reset_backup.sts");
@@ -331,19 +332,19 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
 #if defined(STEVEN_SEAGAL) && defined(SSE_VAR_CHECK_SNAPSHOT)
       try {
 #endif
-      TRACE_INIT("Load %s\n",FilNam);
       Failed=LoadSaveAllStuff(f,LS_LOAD,-1,ChangeDisks,&Version);
+      TRACE_INIT("Load snapshot \"%s\" v%d ERR:%d\n",FilNam,Version,Failed);
 #if defined(STEVEN_SEAGAL) && defined(SSE_VAR_CHECK_SNAPSHOT)
       }
       catch(...) { //Works in VC6 - BCC? Unix certainly not.
-        TRACE("Exception in LoadSaveAllStuff\n");
+        TRACE_INIT("Exception in LoadSaveAllStuff\n");
         Failed=FileError=true;
       }
 #endif
       if (Failed==0){
         Failed=int((EasyUncompressToMem(Mem+MEM_EXTRA_BYTES,mem_len,f)!=0) ? 2:0);
-        TRACE("Memory snapshot %s loaded\n",FilNam);
-#if defined(SSE_GLUE_FRAME_TIMINGS4) 
+        //TRACE("Memory snapshot %s loaded\n",FilNam);
+#if defined(SSE_GLUE_FRAME_TIMINGS4)
         // This is a hack to make the first screen work
         if (pc==(MEM_ADDRESS)(LPEEK(0x0070) & 0xffffff))
           Glue.Status.hbi_done=Glue.Status.vbi_done=true;
@@ -355,7 +356,7 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
       }
       fclose(f);
     }else{
-      TRACE("File open error on %s\n",FilNam);
+      TRACE_INIT("File open error on %s\n",FilNam);
       FileError=true;
     }
   }
@@ -410,8 +411,13 @@ void SaveSnapShot(char *FilNam,int Version=-1,bool AddToHistory=true)
 {
   FILE *f=fopen(FilNam,"wb");
   if (f!=NULL){
+#if defined(SSE_DEBUG_382)
+    int Failed=LoadSaveAllStuff(f,LS_SAVE,Version,0,&Version);
+    TRACE_INIT("Save snapshot \"%s\" v%d ERR:%d\n",FilNam,Version,Failed);
+#else
     LoadSaveAllStuff(f,LS_SAVE,Version);
-
+#endif
+    
     EasyCompressFromMem(Mem+MEM_EXTRA_BYTES,mem_len,f);
 
     fclose(f);

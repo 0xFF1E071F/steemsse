@@ -66,7 +66,11 @@ void TOption::Init() {
   DriveSound=0;
   SingleSideDriveMap=0;
   GhostDisk=0;
+#ifdef SSE_VID_DIRECT3D
   Direct3D=1;
+#else
+  Direct3D=0; // just in case
+#endif
   STAspectRatio=0;
   DriveSoundSeekSample=0;
   TestingNewFeatures=0; //not defined, not loaded, not enabled
@@ -76,6 +80,12 @@ void TOption::Init() {
   MC68901=1;
   PRG_support=1;
   Direct3DCrisp=0;
+#if defined(SSE_GUI_MOUSE_VM_FRIENDLY)
+  VMMouse=0;
+#endif
+#if defined(SSE_OSD_SHOW_TIME)
+  OsdTime=0;
+#endif
 }
 
 #endif//#if defined(SSE_SSE_OPTION_STRUCT)

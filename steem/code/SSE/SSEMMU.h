@@ -82,7 +82,11 @@ struct TMMU {
 #endif
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
   short SDPMiddleByte; // glue it! 
+#if defined(SSE_VS2008_WARNING_382)
+  MEM_ADDRESS ReadVideoCounter(int CyclesIn);
+#else
   MEM_ADDRESS ReadVideoCounter(int CyclesIn,int dispatcher=DISPATCHER_NONE);
+#endif
   void ShiftSDP(int shift);  
   void WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b);
 #endif

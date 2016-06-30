@@ -61,6 +61,9 @@ typedef unsigned __int64	uint64_t;
 #pragma warning (disable : 4244) //conversion from 'int' to 'short', possible loss of data
 #endif
 
+#if defined(SSE_VC_INTRINSICS_382)
+#define BITTEST(var,bit) (_bittest((long*)&var,bit))
+#endif
 
 /////////
 // CPU //
@@ -133,7 +136,13 @@ int SS_signal; // "handy" global mask (future coding horror case)
 #if defined(WIN32) && defined(SSE_DELAY_LOAD_DLL)
 
 #ifdef _MSC_VER
+
+#if defined(SSE_X64_LIBS)
+#pragma comment(lib, "../../3rdparty/caps/x64/CAPSImg.lib")
+#else
 #pragma comment(lib, "../../3rdparty/caps/CAPSImg.lib")
+#endif
+
 #ifndef SSE_VS2003_DELAYDLL
 #pragma comment(linker, "/delayload:CAPSImg.dll")
 #endif
@@ -295,7 +304,9 @@ int ChangeBorderSize(int size); // gui.cpp
 
 
 #if defined(SSE_VID_BORDERS_LB_DX1) // see SSEDecla.h
+#if !defined(SSE_VID_D3D_ONLY)
 #define BORDER_40 (SSEOption.DisplaySize==1&&border) // avoids verbosity
+#endif
 #endif
 
 
@@ -309,7 +320,11 @@ int ChangeBorderSize(int size); // gui.cpp
 
 #if defined(SSE_VID_FREEIMAGE4)
 #ifdef _MSC_VER
+#if defined(SSE_X64_LIBS)
+#pragma comment(lib,"../../3rdparty/FreeImage/x64/FreeImage.lib")
+#else
 #pragma comment(lib,"../../3rdparty/FreeImage/FreeImage.lib")
+#endif
 #ifndef SSE_VS2003_DELAYDLL
 #pragma comment(linker, "/delayload:FreeImage.dll")
 #endif

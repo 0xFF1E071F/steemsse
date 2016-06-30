@@ -87,8 +87,11 @@ void TScreenSaver::hide() {
     }
 }
 
-
+#if defined(SSE_X64_LPTR)
+VOID CALLBACK TScreenSaver::activationTimerProc(HWND, UINT, UINT_PTR, DWORD) {
+#else
 VOID CALLBACK TScreenSaver::activationTimerProc(HWND, UINT, UINT, DWORD) {
+#endif
     if (FullScreen) {
         if (postponed){
             updateTimer();
@@ -101,7 +104,11 @@ VOID CALLBACK TScreenSaver::activationTimerProc(HWND, UINT, UINT, DWORD) {
     }
 }
 
+#if defined(SSE_X64_LPTR)
+VOID CALLBACK TScreenSaver::animationTimerProc(HWND, UINT, UINT_PTR, DWORD) {
+#else
 VOID CALLBACK TScreenSaver::animationTimerProc(HWND, UINT, UINT, DWORD) {
+#endif
     if (FullScreen) {
         if (isActive()) {  //animate screen saver
             instance->animate();

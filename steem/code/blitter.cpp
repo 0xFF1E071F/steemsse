@@ -544,7 +544,16 @@ void Blitter_Draw()
 
         CHECK_BREAKPOINT
 
-        // TODO Boiler stops at wrong place
+#if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_BLIT_IN_HISTORY3)
+        if(Blit.HasBus) //eg in a TAS loop (TOS)
+        {
+          pc_history_y[pc_history_idx]=scan_y;
+          pc_history_c[pc_history_idx]=LINECYCLES;
+          pc_history[pc_history_idx++]=0x98764321; 
+          if (pc_history_idx>=HISTORY_SIZE) 
+            pc_history_idx=0;
+        }
+#endif
       }
 
 #if defined(STEVEN_SEAGAL) && defined(SSE_BLT_BLIT_MODE_CYCLES) \
@@ -581,7 +590,9 @@ void Blitter_Draw()
 
 #if defined(DEBUG_BUILD) || !defined(STEVEN_SEAGAL)
             if (Blit.HasBus){
-
+#if defined(SSE_BOILER_BLIT_WHEN_TRACING2) // do the blit before leaving...
+              cpu_cycles+=BLITTER_BLIT_MODE_CYCLES;
+#endif
 #if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_BLIT_IN_HISTORY2)
 #if defined(SSE_BOILER_HISTORY_TIMING)
               pc_history_y[pc_history_idx]=scan_y;
@@ -590,7 +601,6 @@ void Blitter_Draw()
               DEBUG_ONLY( pc_history[pc_history_idx++]=0x98764321; )
               DEBUG_ONLY( if (pc_history_idx>=HISTORY_SIZE) pc_history_idx=0; )
 #endif
-
               log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Swapping bus to blitter at "+ABSOLUTE_CPU_TIME);
             }else{
               log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Swapping bus to CPU at "+ABSOLUTE_CPU_TIME);
@@ -623,9 +633,15 @@ void Blitter_Draw()
 
     if (cpu_cycles>0) break;
     if (Blit.Busy==0) break; //enough!
-
+#if defined(SSE_BOILER_BLIT_WHEN_TRACING2)
+    if(!Blit.HasBus)
+    {
+#endif
     DEBUG_ONLY( if (runstate!=RUNSTATE_RUNNING) break; )
     DEBUG_ONLY( mode=STEM_MODE_INSPECT; )
+#if defined(SSE_BOILER_BLIT_WHEN_TRACING2)
+    }
+#endif
     
 
     while (cpu_cycles<=0){

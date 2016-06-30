@@ -80,8 +80,12 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
    on the STE
    This or our limit for left off on STE is wrong.
 */
-   if(M68000.Rounded 
-     && !(addr>=0xff8240 && addr<(ST_TYPE==STE?0xff8266:0xff8260))
+   if(M68000.Rounded && !(addr>=0xff8240 
+#if defined(SSE_VS2008_WARNING_382) 
+     && addr<(MEM_ADDRESS)(ST_TYPE==STE?0xff8266:0xff8260))
+#else
+     && addr<(ST_TYPE==STE?0xff8266:0xff8260))
+#endif
 #elif defined(SSE_CPU_ROUNDING_BUS3)
    // 3615GEN4 - Naos menu -STE, so probably HSCROLL too
    if(M68000.Rounded && !(addr>=0xff8240 && addr<=0xff8265)
@@ -908,7 +912,8 @@ system exclusive start and end messages (F0 and F7).
               if(prepare_event)
                 prepare_next_event(); // for SPURIOUS.TOS
               MC68901.WritePending=true;
-              TRACE_MFP("plan event to write %X on reg %d at %d\n",MC68901.LastRegisterWrittenValue,n,time_of_event_mfp_write);
+//              TRACE_MFP("plan event to write %X on reg %d at %d\n",MC68901.LastRegisterWrittenValue,n,time_of_event_mfp_write);
+              TRACE_MFP("plan event to write %X on %s at %d\n",MC68901.LastRegisterWrittenValue,mfp_reg_name[n],time_of_event_mfp_write);
 #elif defined(SSE_INT_MFP_REFACTOR2) // so, not if event write
               MC68901.UpdateNextIrq();
 #endif
@@ -1205,7 +1210,7 @@ don't cares to get to data is used.
 */
                   if(MICROWIRE_ON && (MicroWire_Mask & (1 << dat_b)) == 0)
                   {
-                    TRACE("Microwire reject mask %X\n",MicroWire_Mask);
+                    TRACE_LOG("Microwire reject mask %X\n",MicroWire_Mask);
                     return;
                   } else
 #endif
@@ -1552,6 +1557,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 
         BYTE old_val=psg_reg[psg_reg_select];
         psg_set_reg(psg_reg_select,old_val,io_src_b);
+
         psg_reg[psg_reg_select]=io_src_b;
 
         if (psg_reg_select==PSGR_PORT_A){
@@ -1666,7 +1672,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
             if (ParallelPort.OutputByte(io_src_b)==0){
               log_write("ARRRGGHH: Lost printer character, printer not responding!!!!");
               BRK( printer char lost );
-              TRACE("ARRRGGHH: Lost printer character, printer not responding!!!!");
+              //TRACE("ARRRGGHH: Lost printer character, printer not responding!!!!");
             }
             UpdateCentronicsBusyBit();
           }

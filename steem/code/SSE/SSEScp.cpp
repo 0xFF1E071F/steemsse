@@ -16,7 +16,7 @@
 #if defined(WIN32)
 #include <pasti/pasti.h>
 #endif
-EasyStr GetEXEDir();//#include <mymisc.h>//missing...
+//EasyStr GetEXEDir();//#include <mymisc.h>//missing...
 
 #if !defined(SSE_CPU)
 #include <mfp.decla.h>
@@ -39,7 +39,9 @@ EasyStr GetEXEDir();//#include <mymisc.h>//missing...
 */
 
 #if defined(SSE_VAR_RESIZE_372)
+#if !defined(SSE_VAR_RESIZE_382)
 #define fCurrentImage FloppyDrive[Id].f
+#endif
 #define nSides FloppyDrive[Id].Sides
 #define nTracks FloppyDrive[Id].TracksPerSide
 #endif
@@ -131,8 +133,11 @@ BYTE TImageSCP::GetDelay(int position) {
 
 #endif
 
-
+#if defined(SSE_VS2008_WARNING_382)
+int TImageSCP::UnitsToNextFlux(DWORD position) {
+#else
 int TImageSCP::UnitsToNextFlux(int position) {
+#endif
   // 1 unit = 25 nanoseconds = 1/40 ms
   ASSERT(position<nBits);
   ASSERT(position>=0);

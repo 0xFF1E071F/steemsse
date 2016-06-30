@@ -21,6 +21,7 @@ struct TOption {
   BYTE STModel;
   BYTE DisplaySize;
   BYTE WakeUpState; 
+  // More than 32 fields OK, if not we would get a warning
   unsigned int Hacks:1;
   unsigned int HD6301Emu:1;
   unsigned int STEMicrowire:1;
@@ -57,6 +58,10 @@ struct TOption {
   unsigned int Acsi:1;
   unsigned int KeyboardClick:1;
   unsigned int MonochromeDisableBorder:1;
+  unsigned int FullScreenGui:1;
+  unsigned int VMMouse:1;
+  unsigned int OsdTime:1;
+
 
 #ifdef __cplusplus // visible only to C++ objects
   TOption();
@@ -111,6 +116,8 @@ extern struct TOption SSEOption;
 #define OPTION_PRG_SUPPORT (SSEOption.PRG_support)
 #define OPTION_D3D_CRISP (SSEOption.Direct3DCrisp)
 #define OPTION_KEYBOARD_CLICK (SSEOption.KeyboardClick)
+#define OPTION_FULLSCREEN_GUI (SSEOption.FullScreenGui)
+#define OPTION_OSD_TIME (SSEOption.OsdTime)
 
 #else//!defined(SSE_SSE_OPTION_STRUCT)
 
@@ -122,19 +129,21 @@ extern struct TOption SSEOption;
 struct TConfig {
 
   int FullscreenMask; // mask?
-
-  // files to load at start, were they found?
+  
   unsigned int UnrarDll:1;
   unsigned int SdlDll:1;
   unsigned int Hd6301v1Img:1;
-  unsigned int Unzip32Dll:1;
+  unsigned int unzipd32Dll:1;
   unsigned int CapsImgDll:1;
   unsigned int PastiDll:1;
   unsigned int Direct3d9:1;
   unsigned int ArchiveAccess:1;
   unsigned int AcsiImg:1;
   unsigned int Stemdos:1;
- // unsigned int Borders:1; // the option
+  unsigned int VideoCard8bit:1;
+  unsigned int VideoCard16bit:1;
+  unsigned int ym2149_fixed_vol:1;
+  
 
 #ifdef __cplusplus // visible only to C++ objects
   TConfig();

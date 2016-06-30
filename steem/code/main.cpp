@@ -359,7 +359,8 @@ void FindWriteDir()
 //---------------------------------------------------------------------------
 bool Initialise()
 {
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_START_STOP_INFO2)
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_START_STOP_INFO2)\
+  && !defined(SSE_DEBUG_START_STOP_INFO3)
   Debug.TraceGeneralInfos(TDebug::INIT);
 #endif
 #if defined(SSE_DISK2) // do it before disks are reinserted!
@@ -519,8 +520,13 @@ bool Initialise()
   InitTranslations();
 
 #if USE_PASTI
+#ifdef STEVEN_SEAGAL
+  hPasti=LoadLibrary(PASTI_DLL);
+  if (hPasti==NULL) hPasti=LoadLibrary("pasti\\" PASTI_DLL);
+#else
   hPasti=LoadLibrary("pasti.dll");
   if (hPasti==NULL) hPasti=LoadLibrary("pasti\\pasti.dll");
+#endif
   if (hPasti){
     bool Failed=true;
     LPPASTIINITPROC pastiInit=(LPPASTIINITPROC)GetProcAddress(hPasti,"pastiInit");
@@ -563,6 +569,9 @@ bool Initialise()
         p_dest+=strlen(p_dest)+1;
         p_src+=strlen(p_src)+1;
       }
+#if defined(SSE_SSE_CONFIG_STRUCT)//3.8.2
+      SSEConfig.PastiDll=true;
+#endif
     }
   }
 #endif
@@ -839,10 +848,13 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #if defined(STEVEN_SEAGAL)
 #if defined(SSE_VAR_ARCHIVEACCESS)
 #if defined(SSE_GUI_NOTIFY1)
-  SetNotifyInitText("ArchiveAccess.dll");
+  //SetNotifyInitText("ArchiveAccess.dll");
+  SetNotifyInitText(ARCHIVEACCESS_DLL);
 #endif
-  WIN_ONLY( ARCHIVEACCESS_OK=LoadArchiveAccessDll("ArchiveAccess.dll"); )
-  WIN_ONLY( TRACE_LOG("LoadArchiveAccessDll ok:%d\n",ARCHIVEACCESS_OK); )
+  //WIN_ONLY( ARCHIVEACCESS_OK=LoadArchiveAccessDll("ArchiveAccess.dll"); )
+  WIN_ONLY( ARCHIVEACCESS_OK=LoadArchiveAccessDll(ARCHIVEACCESS_DLL); )
+  //WIN_ONLY( TRACE_LOG("LoadArchiveAccessDll ok:%d\n",ARCHIVEACCESS_OK); )
+  WIN_ONLY( TRACE_LOG("%s ok:%d\n",ARCHIVEACCESS_DLL,ARCHIVEACCESS_OK); )
 #endif
 #if defined(SSE_GUI_NOTIFY1)
 #if defined(SSE_VAR_ARCHIVEACCESS3)
@@ -854,20 +866,23 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #endif
 #if !defined(SSE_VAR_ARCHIVEACCESS4)
   {//ss scope
-  SetNotifyInitText("unzipd32.dll");
+  //SetNotifyInitText("unzipd32.dll");
+  SetNotifyInitText("UNZIP_DLL");
   WIN_ONLY( LoadUnzipDLL(); )
   }
 #endif
 #endif
 #if defined(SSE_VAR_UNRAR)
 #if defined(SSE_GUI_NOTIFY1)
-  SetNotifyInitText("unrar.dll");
+  //SetNotifyInitText("unrar.dll");
+  SetNotifyInitText(UNRAR_DLL);
 #endif
   WIN_ONLY( LoadUnrarDLL(); )
 #endif
 #if defined(SSE_IPF)
 #if defined(SSE_GUI_NOTIFY1)
-  SetNotifyInitText(T("CAPS library"));
+  //SetNotifyInitText(T("CAPS library"));
+  SetNotifyInitText(T(SSE_IPF_PLUGIN_FILE));
 #endif
   Caps.Init();
 #endif
@@ -970,7 +985,11 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
     EasyStr Mess="STARTUP: Display Init finished. ";
     switch (Disp.Method){
       case DISPMETHOD_NONE:Mess+="It failed, nothing will be drawn.";break;
+#ifdef SSE_VID_D3D_ONLY
+      case DISPMETHOD_DD:  Mess+="Direct3D will be used to draw.";break;
+#else
       case DISPMETHOD_DD:  Mess+="DirectDraw will be used to draw.";break;
+#endif
       case DISPMETHOD_GDI: Mess+="The GDI will be used to draw.";break;
       case DISPMETHOD_X:   Mess+="Standard Xlib will be used to draw.";break;
       case DISPMETHOD_XSHM:Mess+="Xlib with shared memory extension will be used to draw.";break;
@@ -1224,6 +1243,9 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
   if (BootInMode & BOOT_MODE_RUN){
     if (GetForegroundWindow()==StemWin) PostRunMessage();
   }
+#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_START_STOP_INFO3)
+  Debug.TraceGeneralInfos(TDebug::INIT);
+#endif
 
   return true;
 }

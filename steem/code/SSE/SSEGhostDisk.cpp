@@ -82,6 +82,7 @@ void TGhostDisk::Init() {
   SectorBytes=1024;//max
 }
 
+#pragma warning(disable: 4996)//deprecated file functions//382
 
 bool TGhostDisk::Open(char *path) {
   bool ok=false;

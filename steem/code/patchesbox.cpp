@@ -319,9 +319,11 @@ void TPatchesBox::Show()
     ManageWindowClasses(SD_UNREGISTER);
     return;
   }
-
+#if defined(SSE_X64_LPTR)
+  SetWindowLongPtr(Handle, GWLP_USERDATA,(LONG_PTR)this);
+#else
   SetWindowLong(Handle,GWL_USERDATA,(long)this);
-
+#endif
   MakeParent(HWND(FullScreen ? StemWin:NULL));
 
   CreateWindow("Static",T("Available Patches"),WS_VISIBLE | WS_CHILD,
@@ -422,7 +424,11 @@ void TPatchesBox::Hide()
   ManageWindowClasses(SD_UNREGISTER);
 }
 //---------------------------------------------------------------------------
+#if defined(SSE_X64_LPTR)
+#define GET_THIS This=(TPatchesBox*)GetWindowLongPtr(Win,GWLP_USERDATA);
+#else
 #define GET_THIS This=(TPatchesBox*)GetWindowLong(Win,GWL_USERDATA);
+#endif
 
 LRESULT __stdcall TPatchesBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 {

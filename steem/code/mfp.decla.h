@@ -97,6 +97,10 @@ MFPR_UDR= 23 // ff fa2f MFP USART Data
 
 #endif
 
+#ifdef SSE_DEBUG
+extern char* mfp_reg_name[];//3.8.2
+#endif
+
 EXT BYTE mfp_gpip_no_interrupt INIT(0xf7);
 
 #if defined(SSE_INT_MFP_REFACTOR3)
@@ -361,7 +365,11 @@ EXT int cpu_time_of_first_mfp_tick;
 	}
 
 //int mfp_timer_tick_countdown[4];
+#if defined(SSE_INT_MFP_REFACTOR1) && defined(SSE_VS2008_WARNING_382)
+void mfp_interrupt(int);
+#else
 void mfp_interrupt(int,int);
+#endif
 //bool mfp_interrupt_enabled(int irq);
 #if !defined(STEVEN_SEAGAL) // this function isn't used
 void mfp_gpip_transition(int,bool);

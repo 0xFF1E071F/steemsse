@@ -22,7 +22,11 @@ struct  TImageHFE {
   ~TImageHFE();
   int ComputeIndex();
   void ComputePosition(WORD position);
+#if defined(SSE_COMPILER_382)
+  void IncPosition();
+#else
   inline void IncPosition();
+#endif
   void Init();
   WORD MirrorMFM(WORD mfm_word);
   // variables
@@ -42,7 +46,7 @@ struct  TImageHFE {
 #endif
   WORD Position;
 private: 
-#if !defined(SSE_VAR_RESIZE_372)
+#if !defined(SSE_VAR_RESIZE_372) || defined(SSE_VAR_RESIZE_382)
   FILE *fCurrentImage; // use FloppyDrive's
 #endif
   WORD *TrackData;

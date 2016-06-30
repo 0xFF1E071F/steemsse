@@ -32,10 +32,20 @@ int stemdos_rte_action;
 stemdos_file_struct stemdos_file[46];
 stemdos_file_struct stemdos_new_file;
 
+#if defined(SSE_VAR_RESIZE_382)
+BYTE stemdos_std_handle_forced_to[6]={0,0,0,0,0,0};
+#else
 int stemdos_std_handle_forced_to[6]={0,0,0,0,0,0};
+#endif
+
 stemdos_fsnext_struct_type stemdos_fsnext_struct[MAX_STEMDOS_FSNEXT_STRUCTS];
+#if defined(SSE_VAR_RESIZE_382)
+BYTE stemdos_command;
+BYTE stemdos_attr;
+#else
 int stemdos_command;
 int stemdos_attr;
+#endif
 //int stemdos_Fattrib_mode;
 EasyStr stemdos_filename;
 EasyStr stemdos_rename_to_filename;
@@ -43,8 +53,11 @@ EasyStr PC_filename;
 
 FILE *stemdos_Pexec_file=NULL;
 MEM_ADDRESS stemdos_Pexec_com,stemdos_Pexec_env;
+#if defined(SSE_VAR_RESIZE_382)
+BYTE stemdos_Pexec_mode;
+#else
 int stemdos_Pexec_mode;
-
+#endif
 int stemdos_Pexec_list_ptr;
 MEM_ADDRESS stemdos_Pexec_list[MAX_STEMDOS_PEXEC_LIST];
 bool stemdos_ignore_next_pexec4=0;
@@ -52,13 +65,19 @@ bool stemdos_ignore_next_pexec4=0;
 //const char* PC_file_mode[3]={"rb","r+b","r+b"};
 
 MEM_ADDRESS stemdos_dfree_buffer;
+#if defined(SSE_VAR_RESIZE_382)
+WORD stemdos_Fattrib_flag; //maybe byte
+#else
 int stemdos_Fattrib_flag;
+#endif
 MEM_ADDRESS stemdos_dta;
 
 short stemdos_save_sr;
-
+#if defined(SSE_VAR_RESIZE_382)
+BYTE stemdos_current_drive;
+#else
 int stemdos_current_drive;
-
+#endif
 #endif//DISABLE_STEMDOS
 
 #undef EXT
@@ -2103,7 +2122,7 @@ void stemdos_restore_path_buffer(){
 
 void stemdos_init()
 {
-  TRACE_INIT("stemdos_init\n");
+  //TRACE_INIT("stemdos_init\n");
   for (int n=0;n<26;n++){
     mount_flag[n]=false;
     mount_path[n]="";
@@ -2174,7 +2193,8 @@ void STStringToPC(char *)
 //---------------------------------------------------------------------------
 #endif//DISABLE_STEMDOS
 
-#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2) && defined(WIN32)
+//#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2) && defined(WIN32)
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2) //ux382
 // refactoring to avoid duplication, code was originally in options.cpp
 
 EasyStr TTos::GetNextTos(DirSearch &ds) { // to enumerate TOS files
@@ -2221,11 +2241,12 @@ void TTos::GetTosProperties(EasyStr Path,WORD &Ver,BYTE &Country,WORD &Date) {
     fread(&b_high,1,1,f);fread(&b_low,1,1,f);
     Date=MAKEWORD(b_low,b_high);
 
-    TRACE_INIT("TOS v%X country %X date %X path %s\n",Ver,Country,Date,Path.Text);
+    //TRACE_INIT("TOS v%X country %X date %X path %s\n",Ver,Country,Date,Path.Text);
     fclose(f);
   }
 }
 
+#endif//ux382
 
 #if defined(SSE_VAR_KEYBOARD_CLICK2)
 
@@ -2241,24 +2262,34 @@ void TTos::CheckKeyboardClick() {
 #if defined(SSE_TOS_GEMDOS_EM_381B)
 
 void TTos::HackMemoryForExtendedMonitor() {
-  TRACE_INIT("EM mem_len %X xbios2 %X phystop %X _memtop %X\n",mem_len,xbios2,m68k_lpeek(0x42E),m68k_lpeek(0x436));
+  TRACE_INIT("EM mem_len %X xbios2 %X phystop %X _memtop %X\n",mem_len,xbios2,LPEEK(0x42E),LPEEK(0x436));
   int bytes_needed=max((em_width*em_height*em_planes)/8,0x8000);
   ASSERT(bytes_needed>0x8000);
   int xbios2a=mem_len-(bytes_needed+256);
+#if defined(SSE_TOS_GEMDOS_EM_382)
+  int xbios2b=(xbios2a+255)&-256;
+  if(xbios2b+bytes_needed<mem_len) // should add minimum
+    xbios2=xbios2b;
+#else
   xbios2=(xbios2a+255)&-256;
+#endif
   ASSERT(xbios2+bytes_needed<=mem_len);
+#if defined(SSE_TOS_GEMDOS_EM_382)
+  LPEEK(0x436)=xbios2;//_memtop
+#else
   m68k_lpoke(0x436,xbios2);//_memtop
+#endif
   LPEEK(SV_v_bas_ad)=xbios2;
   LPEEK(SVscreenpt)=xbios2;
   if(em_planes==1)
     mfp_reg[MFPR_GPIP]|=0x80;
   //else
     //mfp_reg[MFPR_GPIP]&=~0x80;
-  TRACE_INIT("EM bytes_needed %d xbios2 %X phystop %X _memtop %X\n",bytes_needed,xbios2,m68k_lpeek(0x42E),m68k_lpeek(0x436));
+  TRACE_INIT("EM bytes_needed %d xbios2 %X phystop %X _memtop %X\n",bytes_needed,xbios2,LPEEK(0x42E),LPEEK(0x436));
 }
 
 #endif
 
 #undef LOGSECTION
 
-#endif//#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2)
+//#endif//#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2)//ux382

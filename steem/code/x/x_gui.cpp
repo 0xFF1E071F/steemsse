@@ -1,3 +1,4 @@
+#ifdef UNIX
 //---------------------------------------------------------------------------
 int HandleXError(Display *XD,XErrorEvent *pXErr)
 {
@@ -770,3 +771,4 @@ int hyperlink_np(hxc_button *b,int mess,int *pi)
 }
 //---------------------------------------------------------------------------
 
+#endif

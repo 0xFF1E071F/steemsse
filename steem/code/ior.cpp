@@ -143,8 +143,12 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
 /*  Reading Shifter registers will cause rounding up to 4, we don't read
     the latch in GLU.
 */
-   if(M68000.Rounded 
-     && !(addr>=0xff8240 && addr<=(ST_TYPE==STE?0xff8265:0xff8260))
+   if(M68000.Rounded && !(addr>=0xff8240 
+#if defined(SSE_VS2008_WARNING_382) 
+     && addr<=(MEM_ADDRESS)(ST_TYPE==STE?0xff8265:0xff8260))
+#else
+     && addr<=(ST_TYPE==STE?0xff8265:0xff8260))
+#endif
 #elif defined(SSE_CPU_ROUNDING_BUS3B)
    if(M68000.Rounded 
      && !(addr>=0xff8240 && addr<(ST_TYPE==STE?0xff8266:0xff8260))

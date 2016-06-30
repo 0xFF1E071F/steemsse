@@ -98,6 +98,7 @@ bool TAcsiHdc::Init(int num, char *path) {
     ASSERT(inquiry_string);
     strncpy(inquiry_string+8,filename,nchars);
     TRACE_HDC("ACSI %d init %s %d sectors %d MB\n",device_num,inquiry_string+8,nSectors,nSectors/(2*1024));
+    TRACE2("ACSI %d %s %d sectors %d MB\n",device_num,inquiry_string+8,nSectors,nSectors/(2*1024));
 #endif
 #if defined(SSE_ACSI_MULTIPLE)
     acsi_dev=device_num;
@@ -107,8 +108,11 @@ bool TAcsiHdc::Init(int num, char *path) {
   return (bool)Active;
 }
 
-
+#if defined(SSE_VS2008_WARNING_382)
+BYTE TAcsiHdc::IORead() {
+#else
 BYTE TAcsiHdc::IORead(BYTE Line) {
+#endif
   BYTE ior_byte=0;
   if((Dma.MCR&0xFF)==0x8a) // "read status"
     ior_byte=STR;
@@ -271,7 +275,11 @@ void TAcsiHdc::Irq(bool state) {
 void TAcsiHdc::ReadWrite(bool write,BYTE block_count) {
   ASSERT(block_count);
   TRACE_HDC("%s sectors %d-%d (%d)\n",write?"Write":"Read",SectorNum(),SectorNum()+block_count-1,block_count);
+#if defined(SSE_VS2008_WARNING_382)
+  bool ok=Seek(); // read/write implies seek
+#else
   int ok=Seek(); // read/write implies seek
+#endif
   for(int i=0;ok&&i<block_count;i++)
   {
     for(int j=0;ok&&j<BLOCK_SIZE;j++)
@@ -290,8 +298,11 @@ void TAcsiHdc::ReadWrite(bool write,BYTE block_count) {
     STR=2;
 }
 
-
+#if defined(SSE_VS2008_WARNING_382)
+void TAcsiHdc::Reset() {
+#else
 void TAcsiHdc::Reset(bool Cold) {
+#endif
   cmd_ctr=7; // "ready"; we don't restore
 }
 

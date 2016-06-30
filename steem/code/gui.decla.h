@@ -573,9 +573,9 @@ EXT const POINT WinSize[4][5];
 #if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS)
 
 EXT  POINT WinSizeBorderOriginal[4][5];
-
+#if !defined(SSE_VID_D3D_ONLY)
 EXT  POINT WinSizeBorderLarge[4][5];
-
+#endif
 //EXT  POINT WinSizeBorderLarge2[4][5];
 
 EXT  POINT WinSizeBorderVeryLarge[4][5];

@@ -390,7 +390,6 @@ extern void log_write(EasyStr);
 
 #define CSF_LOG(s) if (logsection_enabled[LOGSECTION_INIFILE] && logging_suspended==0) log_write(s)
 #define DTREE_LOG(s) if (logsection_enabled[LOGSECTION_GUI] && logging_suspended==0) log_write(s)
-
 #ifndef RELEASE_BUILD
 extern bool HWNDNotValid(HWND,char*,int);
 extern LRESULT SendMessage_checkforbugs(HWND,UINT,WPARAM,LPARAM,char*,int);

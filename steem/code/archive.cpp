@@ -28,7 +28,8 @@ zipclass zippy;
 HINSTANCE hUnzip=NULL;
 void LoadUnzipDLL()
 {
-  hUnzip=LoadLibrary("unzipd32.dll");
+  //hUnzip=LoadLibrary("unzipd32.dll");
+  hUnzip=LoadLibrary(UNZIP_DLL);
   enable_zip=(hUnzip!=NULL);
   if (hUnzip){
     GetFirstInZip=(int(_stdcall*)(char*,PackStruct*))GetProcAddress(hUnzip,"GetFirstInZip");
@@ -42,6 +43,15 @@ void LoadUnzipDLL()
       hUnzip=NULL;
       enable_zip=false;
     }
+#ifdef SSE_DEBUG
+    if(hUnzip)
+      TRACE_INIT("%s loaded\n",UNZIP_DLL);
+    else
+      TRACE_INIT("%s not available",UNZIP_DLL);
+#elif defined(SSE_SSE_CONFIG_STRUCT)//3.8.2
+    else SSEConfig.unzipd32Dll=true;
+#endif
+
   }//hunzip
 }
 #endif
@@ -52,7 +62,12 @@ void LoadUnzipDLL()
 #define LOGSECTION LOGSECTION_INIT
 
 #ifdef _MSC_VER
+
+#if defined(SSE_X64_LIBS)
+#pragma comment(lib,"../../3rdparty/UnRARDLL/x64/unrar64.lib")
+#else
 #pragma comment(lib,"../../3rdparty/UnRARDLL/unrar.lib")
+#endif
 #if defined(WIN32) && defined(SSE_DELAY_LOAD_DLL)
 #ifndef SSE_VS2003_DELAYDLL
 #pragma comment(linker, "/delayload:unrar.dll")
@@ -82,14 +97,17 @@ void LoadUnrarDLL() {
   }
   if (UNRAR_OK)
   {
-      TRACE_LOG("UnRAR.DLL loaded, v%d\n",UNRAR_OK);
+//      TRACE_LOG("UnRAR.DLL loaded, v%d\n",UNRAR_OK);
+      TRACE_INIT("unrar.dll loaded, v%d\n",RARGetDllVersion());
       // prefill structures for all archives
       ZeroMemory(&zippy.ArchiveData,sizeof(zippy.ArchiveData));  
       ZeroMemory(&zippy.HeaderData,sizeof(zippy.HeaderData));  
       zippy.ArchiveData.OpenMode=RAR_OM_EXTRACT;
   }
+#ifdef SSE_DEBUG
   else
-    TRACE_LOG("Failed to open UnRAR.DLL\n");
+    TRACE_INIT("Unrar.dll not available\n");
+#endif
 }
 #undef LOGSECTION
 #endif//ss
@@ -646,9 +664,10 @@ bool zipclass::extract_file(char *fn,int offset,char *dest_dir,bool hide,DWORD a
         offset--;
       }
     }
-
+#ifndef SSE_VS2008_WARNING_382
     char *data_ptr;
     DWORD data_size;
+#endif
     ASSERT(hArcData);
     int ec=RARProcessFile(hArcData,RAR_EXTRACT,NULL,dest_dir); 
 //    TRACE_LOG("%s -> %s : %d\n",HeaderData.FileName,dest_dir,ec);

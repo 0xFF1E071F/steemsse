@@ -22,9 +22,11 @@ void TDiskManager::ShowDatabaseDiag()
     return;
   }
   EnableWindow(Handle,0);
-
+#if defined(SSE_X64_LPTR)
+  SetWindowLongPtr(DatabaseDiag, GWLP_USERDATA,(LONG_PTR)this);
+#else
   SetWindowLong(DatabaseDiag,GWL_USERDATA,(long)this);
-
+#endif
   if (FullScreen) SetParent(DatabaseDiag,StemWin);
 
   int y=10,w,page_r=500-10;
@@ -89,9 +91,11 @@ void TDiskManager::ShowContentDiag()
     return;
   }
   EnableWindow(Handle,0);
-
+#if defined(SSE_X64_LPTR)
+  SetWindowLongPtr(ContentDiag, GWLP_USERDATA, (LONG_PTR)this);
+#else
   SetWindowLong(ContentDiag,GWL_USERDATA,(long)this);
-
+#endif
   if (FullScreen) SetParent(ContentDiag,StemWin);
 
   int y=10,w,page_r=400-10;
@@ -211,9 +215,11 @@ void TDiskManager::ShowDiskDiag()
     return;
   }
   EnableWindow(Handle,0);
-
+#if defined(SSE_X64_LPTR)
+  SetWindowLongPtr(DiskDiag, GWLP_USERDATA,(LONG_PTR)this);
+#else
   SetWindowLong(DiskDiag,GWL_USERDATA,(long)this);
-
+#endif
   if (FullScreen) SetParent(DiskDiag,StemWin);
 
   int Wid=get_text_width(T("Sides"));
@@ -290,9 +296,11 @@ void TDiskManager::ShowLinksDiag()
     return;
   }
   EnableWindow(Handle,0);
-
+#if defined(SSE_X64_LPTR)
+  SetWindowLongPtr(LinksDiag, GWLP_USERDATA,(LONG_PTR)this);
+#else
   SetWindowLong(LinksDiag,GWL_USERDATA,(long)this);
-
+#endif
   if (FullScreen) SetParent(LinksDiag,StemWin);
 
   int Wid=GetTextSize(Font,T("Create shortcuts to")).Width;
@@ -509,9 +517,11 @@ void TDiskManager::ShowPropDiag()
     return;
   }
   EnableWindow(Handle,0);
-
+#if defined(SSE_X64_LPTR)
+  SetWindowLongPtr(PropDiag, GWLP_USERDATA,(LONG_PTR)this);
+#else
   SetWindowLong(PropDiag,GWL_USERDATA,(long)this);
-
+#endif
   if (FullScreen) SetParent(PropDiag,StemWin);
 
   HWND Win;
@@ -710,8 +720,11 @@ void TDiskManager::PropShowFileInfo(int i)
       }
       SetWindowText(GetDlgItem(PropDiag,131),StrValBPB);
       SetWindowText(GetDlgItem(PropDiag,132),T(".ST size in bytes")+": "+TempDrive.DiskFileLen);
+#if defined(SSE_X64_LPTR)
+      SetWindowLongPtr(GetDlgItem(PropDiag, 132), GWLP_USERDATA,(LONG_PTR) TempDrive.DiskFileLen);
+#else
       SetWindowLong(GetDlgItem(PropDiag,132),GWL_USERDATA,TempDrive.DiskFileLen);
-
+#endif
       SendDlgItemMessage(PropDiag,141,CB_SETCURSEL,TempDrive.Sides-1,0);
       SendDlgItemMessage(PropDiag,151,CB_SETCURSEL,TempDrive.TracksPerSide-10,0);
       SendDlgItemMessage(PropDiag,161,CB_SETCURSEL,TempDrive.SectorsPerTrack-3,0);
@@ -750,10 +763,17 @@ void TDiskManager::PropShowFileInfo(int i)
 //---------------------------------------------------------------------------
 LRESULT __stdcall TDiskManager::Dialog_WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 {
+#if defined(SSE_X64_LPTR)
+  TDiskManager *This = (TDiskManager*)GetWindowLongPtr(Win, GWLP_USERDATA);
+#else
   TDiskManager *This=(TDiskManager*)GetWindowLong(Win,GWL_USERDATA);
-
+#endif
   if (This==NULL){
+#if defined(SSE_X64_LPTR)
+    if (Mess == WM_CREATE) SetClassLongPtr(Win, GCLP_HICON, long(hGUIIconSmall[RC_ICO_DRIVE]));
+#else
     if (Mess==WM_CREATE) SetClassLong(Win,GCL_HICON,long(hGUIIconSmall[RC_ICO_DRIVE]));
+#endif
     return DefWindowProc(Win,Mess,wPar,lPar);
   }
 
@@ -1117,8 +1137,11 @@ LRESULT __stdcall TDiskManager::Dialog_WndProc(HWND Win,UINT Mess,WPARAM wPar,LP
               int BytesPerSector=128 << SendDlgItemMessage(Win,171,CB_GETCURSEL,0,0);
               int Sectors=Sides*TracksPerSide*SectorsPerTrack;
               int Ret=IDYES;
-
+#if defined(SSE_X64_LPTR)
+              if ((Sectors*BytesPerSector)>GetWindowLongPtr(GetDlgItem(Win,132),GWLP_USERDATA)){
+#else
               if ((Sectors*BytesPerSector)>GetWindowLong(GetDlgItem(Win,132),GWL_USERDATA)){
+#endif
                 Ret=Alert(T("This disk configuration is too big for the size of the file, this could cause disk problems. Would you like to use it anyway?"),
                           T("Use Configuration?"),MB_ICONQUESTION | MB_YESNO);
               }

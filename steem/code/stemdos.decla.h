@@ -81,8 +81,11 @@ typedef struct{
 }stemdos_file_struct;
 EXT stemdos_file_struct stemdos_file[46];
 EXT stemdos_file_struct stemdos_new_file;
-
+#if defined(SSE_VAR_RESIZE_382)
+EXT BYTE stemdos_std_handle_forced_to[6];//h>=6 && h<46
+#else
 EXT int stemdos_std_handle_forced_to[6];
+#endif
 
 #define MAX_STEMDOS_FSNEXT_STRUCTS 100
 typedef struct{
@@ -94,8 +97,14 @@ typedef struct{
 }stemdos_fsnext_struct_type;
 EXT stemdos_fsnext_struct_type stemdos_fsnext_struct[MAX_STEMDOS_FSNEXT_STRUCTS];
 //---------------------------------------------------------------------------
+#if defined(SSE_VAR_RESIZE_382)
+EXT BYTE stemdos_command;
+EXT BYTE stemdos_attr;
+#else
 EXT int stemdos_command;
 EXT int stemdos_attr;
+#endif
+
 //int stemdos_Fattrib_mode;
 EXT EasyStr stemdos_filename;
 EXT EasyStr stemdos_rename_to_filename;
@@ -103,21 +112,28 @@ EXT EasyStr PC_filename;
 
 EXT FILE *stemdos_Pexec_file;
 EXT MEM_ADDRESS stemdos_Pexec_com,stemdos_Pexec_env;
+#if defined(SSE_VAR_RESIZE_382)
+EXT BYTE stemdos_Pexec_mode;
+#else
 EXT int stemdos_Pexec_mode;
-
+#endif
 #define MAX_STEMDOS_PEXEC_LIST 76 //Change loadsave_emu.cpp if change this! 
 void stemdos_add_to_Pexec_list(MEM_ADDRESS);
 bool stemdos_mfree_from_Pexec_list();
 
 EXT int stemdos_Pexec_list_ptr;
+
 EXT MEM_ADDRESS stemdos_Pexec_list[MAX_STEMDOS_PEXEC_LIST];
 EXT bool stemdos_ignore_next_pexec4;
 
 //const char* PC_file_mode[3]={"rb","r+b","r+b"};
 
 EXT MEM_ADDRESS stemdos_dfree_buffer;
+#if defined(SSE_VAR_RESIZE_382)
+EXT WORD stemdos_Fattrib_flag;
+#else
 EXT int stemdos_Fattrib_flag;
-
+#endif
 void stemdos_open_file(int);
 void stemdos_close_file(stemdos_file_struct*);
 
@@ -140,9 +156,11 @@ void stemdos_parse_path(); //remove \..\ etc.
 EXT MEM_ADDRESS stemdos_dta;
 
 EXT short stemdos_save_sr;
-
+#if defined(SSE_VAR_RESIZE_382)
+EXT BYTE stemdos_current_drive;
+#else
 EXT int stemdos_current_drive;
-
+#endif
 #if defined(SSE_TOS_GEMDOS_NOINLINE)
 
 void stemdos_trap_1_Fdup();

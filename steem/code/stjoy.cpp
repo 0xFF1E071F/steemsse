@@ -639,8 +639,11 @@ void TJoystickConfig::Show()
     ManageWindowClasses(SD_UNREGISTER);
     return;
   }
-
+#if defined(SSE_X64_LPTR)
+  SetWindowLongPtr(Handle, GWLP_USERDATA,(LONG_PTR)this);
+#else
   SetWindowLong(Handle,GWL_USERDATA,(long)this);
+#endif
 
   MakeParent(HWND(FullScreen ? StemWin:NULL));
 
@@ -698,16 +701,21 @@ void TJoystickConfig::Show()
     SetWindowPos(Tabs,0,0,0,520,HeightOfTabButs+285,SWP_NOZORDER | SWP_NOMOVE);
     SetWindowPos(Handle,0,0,0,546,JOYCONFIG_HEIGHT(HeightOfTabButs),SWP_NOZORDER | SWP_NOMOVE);
   }
-
   int x=20,y,FireY;
+
   for (int p=0;p<2;p++){
     y=rc.top;
     Group[p]=CreateWindow("Button","",WS_CHILD | WS_VISIBLE | BS_GROUPBOX | WS_CLIPCHILDREN,
                   x,y,245,275,Handle,(HMENU)(100+p*100),HInstance,NULL);
 
     if (p==0){
+#if defined(SSE_X64_LPTR)
+      SetWindowLongPtr(Group[0], GWLP_USERDATA, (LONG_PTR)this);
+      OldGroupBoxWndProc = (WINDOWPROC)SetWindowLongPtr(Group[0], GWLP_WNDPROC, (LONG_PTR)GroupBoxWndProc);
+#else
       SetWindowLong(Group[0],GWL_USERDATA,(DWORD)this);
-      OldGroupBoxWndProc=(WINDOWPROC)SetWindowLong(Group[0],GWL_WNDPROC,(DWORD)GroupBoxWndProc);
+      OldGroupBoxWndProc = (WINDOWPROC)SetWindowLong(Group[0], GWL_WNDPROC, (DWORD)GroupBoxWndProc);
+#endif
 
       w=GetCheckBoxSize(Font,"JagPad").Width;
       JagBut=CreateWindow("Button","JagPad",WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
@@ -766,7 +774,11 @@ void TJoystickConfig::Show()
     Win=CreateWindowEx(512,"Steem Joystick DeadZone","",
                       WS_CHILDWINDOW | WS_VISIBLE | WS_DISABLED,
                       x+88,y,70,70,Handle,(HMENU)(120+p*100),HInstance,NULL);
+#if defined(SSE_X64_LPTR)
+    SetWindowLongPtr(Win, GWLP_USERDATA,(LONG_PTR)this);
+#else
     SetWindowLong(Win,GWL_USERDATA,(long)this);
+#endif
     y+=24;
 
     //SS left
@@ -920,7 +932,6 @@ void TJoystickConfig::CheckJoyType()
   bool Port0Hidden=bool(GetWindowLong(GetDlgItem(Handle,95),GWL_STYLE) & WS_VISIBLE);
   int Port0ShowType=SW_SHOW;
   bool PortOAlter=Port0Hidden;
-
   bool Port1Jagpad=bool(GetWindowLong(GetDlgItem(Handle,170),GWL_STYLE) & WS_VISIBLE);
   int JagShowType=SW_HIDE,NormShowType=SW_SHOW;
   bool Port1Alter=Port1Jagpad;
@@ -1043,7 +1054,11 @@ void TJoystickConfig::JoyModeChange(int Port,int base)
   }
 }
 //---------------------------------------------------------------------------
+#if defined(SSE_X64_LPTR)
+#define GET_THIS This=(TJoystickConfig*)GetWindowLongPtr(Win,GWLP_USERDATA);
+#else
 #define GET_THIS This=(TJoystickConfig*)GetWindowLong(Win,GWL_USERDATA);
+#endif
 
 LRESULT __stdcall TJoystickConfig::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 {
@@ -1052,8 +1067,10 @@ LRESULT __stdcall TJoystickConfig::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM
 
   TJoystickConfig *This;
   switch (Mess){
+    //TRACE("%d %d\n",Mess,LOWORD(wPar));
     case WM_COMMAND:
       GET_THIS;
+      //TRACE("%d\n",LOWORD(wPar));
       switch LOWORD(wPar){
         case 91:
           if (HIWORD(wPar)==CBN_SELENDOK){
@@ -1320,7 +1337,7 @@ LRESULT __stdcall TJoystickConfig::GroupBoxWndProc(HWND Win,UINT Mess,WPARAM wPa
 {
   TJoystickConfig *This;
   GET_THIS;
-
+  //TRACE("%d %d\n",Mess,LOWORD(wPar));
   if (Mess==WM_COMMAND){
     if (LOWORD(wPar)==98){
       if (HIWORD(wPar)==BN_CLICKED){

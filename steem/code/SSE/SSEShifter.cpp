@@ -2388,15 +2388,19 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
 #endif// #ifndef NO_CRAZY_MONITOR
   
   // Colour
-
+  
   if(screen_res<2)
   {
+    //ASSERT(scan_y<248);
     Render(CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320+BORDER_SIDE,DISPATCHER_DSTE);
 #if defined(WIN32)
     DrawBufferedScanlineToVideo();
 #endif
     if(scan_y>=draw_first_possible_line 
-      && scan_y<draw_last_possible_line)
+      && scan_y<draw_last_possible_line
+      
+
+      )
     {
       // thsee variables are pointers to PC video memory
       draw_dest_ad=draw_dest_next_scanline;
@@ -2483,12 +2487,19 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
 #endif
         {
         ASSERT(screen_res==2);
+#if defined(SSE_SHIFTER_382)
+        if(nsdp<mem_len) // potential crash
+#endif
         if(border & 1)
           ///////////////// RENDER VIDEO /////////////////
 #if defined(SSE_SHIFTER_HIRES_OVERSCAN)
 // experimental, right off, left off?
           if(GLU.CurrentScanline.Tricks&2)
+#if defined(SSE_SHIFTER_382)
+            draw_scanline((BORDER_SIDE*2)/16-1, 640/16+3, 0,0);
+#else
             draw_scanline((BORDER_SIDE*2)/16-16, 640/16+16*2, (BORDER_SIDE*2)/16-16,0);
+#endif
             //draw_scanline((BORDER_SIDE*2)/16, 640/16+16*2, (BORDER_SIDE*2)/16-16*2,0);
           else
 #endif
@@ -2514,7 +2525,11 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
           LPEEK(i*4+shifter_draw_pointer)=Scanline[i]; 
 #ifdef SSE_SHIFTER_HIRES_RASTER
         if(Scanline2[112])
+#ifdef UNIX
+          memset(Scanline2,0,113);//ux382
+#else
           ZeroMemory(Scanline2,113);
+#endif
 #endif
       }
 #endif
@@ -3127,7 +3142,11 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
       // asserts on SoWatt, Leavin' Teramis, High Fidelity Dreams
       // ...
       //ASSERT( mem_len>FOUR_MEGS || !(io_src_b&(~b00111111)) ); 
-      if (mem_len<=FOUR_MEGS) 
+      if (mem_len<=FOUR_MEGS
+#if defined(SSE_TOS_GEMDOS_EM_382)
+        && !extended_monitor
+#endif
+        ) 
         io_src_b&=b00111111;
       DWORD_B_2(&xbios2)=io_src_b;
 #if defined(SSE_STF_VBASELO)
@@ -3145,6 +3164,9 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
       if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_VIDEOBASE)
         FrameEvents.Add(scan_y,LINECYCLES,'M',io_src_b); 
 #endif
+#if defined(SSE_TOS_GEMDOS_EM_382)
+      if(!extended_monitor)
+#endif
 
       DWORD_B_1(&xbios2)=io_src_b;
 
@@ -3161,7 +3183,7 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
       
 #if defined(SSE_SHIFTER_SDP_WRITE)
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
-      MMU.WriteVideoCounter(addr,io_src_b); // very complicated!
+      MMU.WriteVideoCounter(addr,io_src_b);
 #else
       WriteSDP(addr,io_src_b); // very complicated!
 #endif
@@ -3374,7 +3396,7 @@ rasterline to allow horizontal fine-scrolling.
 #if defined(SSE_SHIFTER_SDP_TRACE)
         TRACE_LOG("F%d y%d c%d HS %d -> %d\n",FRAME,scan_y,LINECYCLES,HSCROLL,io_src_b);
 #endif
-#if defined(SSE_SHIFTER_HSCROLL_380_C) 
+#if defined(SSE_SHIFTER_HSCROLL_380_C) && !defined(SSE_VS2008_WARNING_382)
         BYTE former_hscroll=HSCROLL;
 #endif
         HSCROLL=io_src_b & 0xf; // limited to 4bits
@@ -3408,7 +3430,11 @@ rasterline to allow horizontal fine-scrolling.
 #if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
             GLU.AdaptScanlineValues(cycles_in); // ST Magazin
 #endif
+#ifndef SSE_VID_BORDERS
+            if (left_border>=BORDER_SIDE) {//ux382
+#else
             if (left_border>=SideBorderSize){ // Don't do this if left border removed!
+#endif
 #elif defined(SSE_SHIFTER_HSCROLL_380_A2)
             if (left_border>0){ // Don't do this if left border removed!
 #endif
@@ -3439,8 +3465,11 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
   draw_scanline_to(cycles_since_hbl); // base function
   return;
 #endif
-
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_382)
+  if(screen_res>=2 || scan_y>247) // bugfix stf1pix_512k
+#else
   if(screen_res>=2) 
+#endif
     return; 
 
 #ifndef NO_CRAZY_MONITOR
@@ -3641,7 +3670,11 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
         )
         Glue.CheckSideOverscan(); 
 #else
-    if(GLU.FetchingLine())
+    if(GLU.FetchingLine()
+#if 0
+     && shifter_draw_pointer<mem_len
+#endif
+      )
     {
 #endif
       if(left_border<0) // shouldn't happen but sometimes it does
@@ -3849,6 +3882,10 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
               FRAME,scan_y,pixels_in,border1,picture,border2,hscroll); 
             return;
           }
+#endif
+
+#if defined(SSE_SHIFTER_382)
+          if(nsdp<mem_len) // potential crash
 #endif
 
           // call to appropriate ASSEMBLER routine!
