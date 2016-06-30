@@ -73,7 +73,11 @@ extern int cycles_run;
 BYTE* hd6301_init();
 int hd6301_destroy(); // like a C++ destructor
 int hd6301_reset(int Cold); 
+#ifdef SSE_VS2008_WARNING_382
+int hd6301_run_cycles(int cycles); // emulate
+#else
 int hd6301_run_cycles(u_int cycles); // emulate
+#endif
 int hd6301_load_save(int one_if_save, unsigned char *buffer); // for snaphot
 int hd6301_receive_byte(u_char byte_in); // just passing through
 
