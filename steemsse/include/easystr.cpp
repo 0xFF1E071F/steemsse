@@ -13,6 +13,8 @@ DESCRIPTION: A (supposedly) easy to use string class.
 
 #include <easystr.h>
 
+#pragma warning(disable: 4996)//This function or variable may be unsafe.//382
+
 char EasyStr::numbuf[32];
 char EasyStr::Empty_Text[4]={0,0,0,0}; // It is done like this so it can be written
                                         // to (in the case of EasyStr[0]=0
@@ -97,8 +99,13 @@ EasyStr::~EasyStr(){ DeleteBuf(); }
 char *EasyStr::c_str(){ return Text; }
 bool EasyStr::IsEmpty(){ return !(Text[0]); }
 bool EasyStr::Empty(){ return !(Text[0]); }
+#if defined(SSE_VS2008_WARNING_382)
+bool EasyStr::IsNotEmpty(){ return (Text[0]!=0); }
+bool EasyStr::NotEmpty(){ return (Text[0]!=0); }
+#else
 bool EasyStr::IsNotEmpty(){ return (bool)(Text[0]); }
 bool EasyStr::NotEmpty(){ return (bool)(Text[0]); }
+#endif
 int EasyStr::Length(){ return strlen(Text); }
 void EasyStr::SetLength(int size){ ResizeBuf(max(size,0)); }
 void EasyStr::SetBufSize(int size){ ResizeBuf(max(size,0)); }
@@ -311,12 +318,20 @@ EasyStr& EasyStr::PlusEqualsString(const char *new_text)
 //---------------------------------------------------------------------------
 bool EasyStr::SameAsString(const char *otext)
 {
+#if defined(SSE_VS2008_WARNING_382)
+  return (strcmp(Text,otext)==0);
+#else
   return !(bool)(strcmp(Text,otext));
+#endif
 }
 //---------------------------------------------------------------------------
 bool EasyStr::NotSameAsString(const char *otext)
 {
+#if defined(SSE_VS2008_WARNING_382)
+  return (strcmp(Text,otext)!=0);
+#else
   return (bool)strcmp(Text,otext);
+#endif
 }
 //---------------------------------------------------------------------------
 #endif

@@ -478,6 +478,7 @@ EasyStr GetCurrentDir()
   GetCurrentDirectory(MAX_PATH,Path);
   return Path;
 }
+#include "SSE/SSEDebug.h"
 EasyStr GetEXEDir()
 {
   EasyStr Path;
@@ -513,16 +514,20 @@ bool GetWindowPositionData(HWND Win,WINPOSITIONDATA *wpd)
   wpd->Top=rc.top+wp.rcNormalPosition.top;
   wpd->Width=wp.rcNormalPosition.right-wp.rcNormalPosition.left;
   wpd->Height=wp.rcNormalPosition.bottom-wp.rcNormalPosition.top;
-
   long l=GetWindowLong(Win,GWL_STYLE);
-
+#if defined(SSE_VS2008_WARNING_382)
+  wpd->Maximized=(l & WS_MAXIMIZE)!=0;
+#else
   wpd->Maximized=bool(l & WS_MAXIMIZE);
+#endif
   if (wp.showCmd==SW_SHOWMINIMIZED && (wp.flags & WPF_RESTORETOMAXIMIZED)){
     wpd->Maximized=true;
   }
-
+#if defined(SSE_VS2008_WARNING_382)
+  wpd->Minimized=(l & WS_MINIMIZE)!=0;
+#else
   wpd->Minimized=bool(l & WS_MINIMIZE);
-
+#endif
   return 0;
 }
 //---------------------------------------------------------------------------

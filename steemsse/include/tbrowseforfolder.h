@@ -100,14 +100,18 @@ int __stdcall TBrowseForFolder::BrowseCallbackProc(HWND hwnd,UINT uMsg,LPARAM lP
             (6*x)/4,(135*y)/8,(50*x)/4+1,(11*y)/8+1,
             hwnd,(HMENU)ChildId,GetModuleHandle(NULL),NULL);
       SendMessage(but,WM_SETFONT,SendMessage(hwnd,WM_GETFONT,0,0),0);
+#if defined(SSE_X64_LPTR)
+      SetWindowLongPtr(but,GWLP_USERDATA,(LONG_PTR)This);
+      This->OldBrowseWndProc=(WINDOWPROC)SetWindowLongPtr(hwnd,GWLP_WNDPROC,(LONG_PTR)This->BrowseWndProc);
+#else
       SetWindowLong(but,GWL_USERDATA,(long)This);
-
       This->OldBrowseWndProc=(WINDOWPROC)SetWindowLong(hwnd,GWL_WNDPROC,(long)This->BrowseWndProc);
+#endif
+      
 
       POINT pt={box.right/2,box.bottom/2};
       HWND TreeView=ChildWindowFromPoint(hwnd,pt);
       SetWindowLong(TreeView,GWL_STYLE,GetWindowLong(TreeView,GWL_STYLE) | TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP);
-
       break;
     }
     case BFFM_SELCHANGED:
@@ -126,7 +130,11 @@ LRESULT __stdcall TBrowseForFolder::BrowseWndProc(HWND hwnd,UINT uMsg,WPARAM wPa
     if (HIWORD(wPar)==BN_CLICKED){
       HWND but=FindWindowEx(hwnd,NULL,"BUTTON","New Folder");
       if ((HWND)lPar==but){
+#if defined(SSE_X64_LPTR)
+        TBrowseForFolder *This=(TBrowseForFolder*)GetWindowLongPtr(but,GWLP_USERDATA);
+#else
         TBrowseForFolder *This=(TBrowseForFolder*)GetWindowLong(but,GWL_USERDATA);
+#endif
         char *path=This->Selected;
         if (path[0]!=0){
           if (path[strlen(path)-1]!='\\') strcat(path,"\\");
@@ -185,8 +193,11 @@ void TBrowseForFolder::DoPrompt(HWND parent)
       WS_CAPTION | WS_SYSMENU,0,0,300,78+GetSystemMetrics(SM_CYCAPTION),
       parent,NULL,Inst,NULL);
   if (IsWindow(Win)){
+#if defined(SSE_X64_LPTR)
+    SetWindowLongPtr(Win,GWLP_USERDATA,(LONG_PTR)this);
+#else
     SetWindowLong(Win,GWL_USERDATA,(long)this);
-
+#endif
     HWND Edit=CreateWindowEx(512,"EDIT","",WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP,
         10,10,274,21,Win,(HMENU)100,Inst,NULL);
 
@@ -228,8 +239,11 @@ void TBrowseForFolder::DoPrompt(HWND parent)
   UnregisterClass(wnd.lpszClassName,Inst);
 }
 //---------------------------------------------------------------------------
+#if defined(SSE_X64_LPTR)
+#define GET_THIS This=(TBrowseForFolder*)GetWindowLongPtr(Win,GWLP_USERDATA)
+#else
 #define GET_THIS This=(TBrowseForFolder*)GetWindowLong(Win,GWL_USERDATA)
-
+#endif
 LRESULT __stdcall TBrowseForFolder::PromptWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 {
   TBrowseForFolder *This;

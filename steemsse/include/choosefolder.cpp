@@ -41,7 +41,6 @@ int __stdcall ChooseFolder_BrowseCallbackProc(HWND Win,UINT Mess,LPARAM,LPARAM l
 			pt.y=box.bottom/2;
       TreeView=ChildWindowFromPoint(Win,pt);
       SetWindowLong(TreeView,GWL_STYLE,GetWindowLong(TreeView,GWL_STYLE) | TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP);
-
       break;
     }
   }
