@@ -82,7 +82,7 @@ Games
 - International Tennis: not C1
 - Jupiter Masterdrive STX: Pasti.dll version
 - Les Aventures De Moktar: no ghost disk
-- Lethal Xcess: put disk B in drive B before boot
+- Lethal Xcess: Borders on
 - Live & Let Die: STF
 - Logical-ELT: C2
 - The Lost Patrol: ADAT
@@ -91,6 +91,9 @@ Games
 - Mercs STX: not T102
 - Microprose Golf ST: ADAT
 - Nightdawn: STF
+- Obsession: Borders on
+- Pacmania STE: Borders on
+- Pang: Borders on
 - Platoon STX: STF T100US
 - Realm of the Trolls: create STW disk
 - Seven Gates of Jambala: C2 
@@ -114,7 +117,7 @@ Demos
 
 - 0913: STE French TOS
 - 36.15 Gen4 by Cakeman: STF
-- 36.15 HMD: not ADAT; #1: STF, patch
+- 36.15 HMD: not ADAT or STW; #1: STF, patch or WS1, #
 - 36.15 OVR: STF, CPU speed
 - Audio Artistic Demo: C2
 - Awakening of the Gods: press space twice for menu; not T102
@@ -125,7 +128,7 @@ Demos
 - Cernit Trandafir: STE, 4MB
 - Choice of Gods/Attack of the Indigestion: STF WU1
 - Circus back²STage: STE, 4MB
-- Closure: STF WS2,3,4, STE WS1, ADAT, #
+- Closure: ADAT, #
 - Corporation Megademo: STE, C1
 - Cuddly Demos: DI, WS1 if STE
 - Dangerous Fantaisy: STE
@@ -186,6 +189,7 @@ Demos
 - ST-NICCC 2000 Final by Oxygene: ADAT
 - Summer Delights: STE, 4MB
 - Sunny: STE, C2, #
+- Suretrip II - Dopecode by Checkpoint: ADAT
 - Swedish New Year Demo 1989: STF; TCB: WS2
 - SNYD2/Sync fullscreen: STF
 - Symic Demo: ADAT

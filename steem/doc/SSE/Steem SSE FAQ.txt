@@ -1,7 +1,7 @@
 Steem SSE FAQ
 ---------------
 
-v3.8.1
+v3.8.2
 
 Q:
 What is Steem?
@@ -28,29 +28,29 @@ Q:
 Is Steem really being improved by Steven Seagal?
 A:
 How unlikely does it sound to you? Don't you think it's more fun than
-churning out crappy DTV movies just for the money?
+churning out crappy DTV movies?
 
 
 Q:
 Why should I use the SSE version and not the older version?
 A:
-It depends on what you need the emulator for. If you want to check all
-sorts of demos, I strongly recommend the SSE version. For most games,
-Steem 3.2 is still alright (if you don't care about sound emulation,
-and if you don't need IPF/CTR or SCP support, you don't need Direct3D
-fullscreen, etc.).
+Steem was already very compatible, but Steem SSE is even more so, with
+better sound emulation, more disk image formats handled, many cool options,
+bugfixes, etc. 
+Steem SSE works better on more recent systems. The old Steem consumes less
+CPU.
+
+
+Q:
+Why use Steem SSE and not emulator X or Y?
+A:
+For the nice GUI, for very high compatibility, for some unique features.
 
 
 Q:
 How much does it cost?
 A:
 Steem is free software.
-
-
-Q:
-Why use Steem and not emulator X or Y?
-A:
-For the nice GUI, for very high compatibility, for some unique features.
 
 
 Q:
@@ -108,19 +108,15 @@ programs are listed.
 Q:
 Aren't programs better on the Amiga anyway?
 A:
-Some yes, others not. Generally games were better, though some of the 
-important games of the era were actually better on the ST or not even
-released on the Amiga.
-Generally, serious applications were better on the ST. The "multitask"
-Amiga OS was a joke, as well as its directory-free drives.
-Demos, as strange as it may sound, were often more interesting and 
-impressive on the ST. Amiga "epics" were just boring.
-The Atari ST is one of the contenders for best chip music. The
-sound of the Amiga was impressive back then but is nothing more
+Generally, serious applications were better on the ST, thanks to a
+better file system and the outstanding monochrome monitor.
+Games were better animated on the Amiga, but the Atari ST is one of
+the contenders for best chip music. 
+The sound of the Amiga was impressive back then but is nothing more
 than bad 8bit samples today (ouch!), and it was quickly outclassed by
 the Soundblaster.
-One may prefer the soundchip on some games, it was a weakness before,
-not really today.
+Some important games of the era were actually better on the ST or not even
+released on the Amiga.
 
 
 Q:
@@ -153,29 +149,10 @@ that it should work.
 
 
 Q:
-What's the most accurate display size?
-A:
-It seems the original Steem size, 384x270, is what you typically got on a
-monitor. Some monitors or TV certainly could display more, or no ST coder
-would ever have proposed larger images, and the option wouldn't make any
-sense.
-
-
-Q:
 Hey my shortcut for F12 doesn't work anymore!
 A:
-This is by design. F12 will start/stop emulation in Steem like in other
+This is by design. F12 will start/stop emulation in Steem like in some other
 emulators. I ignore requests to the contrary or to make it optional.
-Because in case your boss barges in, such an easy key is handy.
-You may also define a definitive boss key by assigning the 'Exit Steem'
-function to a shortcut, but you have the guarantee that F12 will always
-work.
-
-
-Q:
-The icon in the taskbar is wrong (eg Disk Manager instead of Steem Fuji).
-A:
-Apparently it's a Windows bug.
 
 
 Q:
@@ -198,8 +175,7 @@ screen.
 Q:
 Steem can't handle zip or rar or 7z files.
 A:
-Check that necessary DLL are in your Steem folder.
-In Unix, Steem will only handle zip files.
+Check that necessary DLL files are in your Steem folder.
 
 
 Q:
@@ -208,31 +184,10 @@ A:
 Emulation is precise enough but smooth scrolling depends on your own 
 hardware. You need a video card and a monitor capable of displaying at
 the exact emulated frequency, 50hz most of the time.
-I have such a 50hz display and it's just perfect.
+I have such a 50hz display and it's almost perfect with VSync.
 If your hardware is set to 60hz or 75hz, for example, it's impossible
-to have really smooth 50hz scrollers.
-Triple-buffering (also available in Steem, of course) can't help that,
-but VSync (working in a window in SteemSSE!) will.
-
-
-Q:
-What's the use of triple-buffering?
-A:
-Triple-buffering eliminates the horrible "ghosting" effect at the cost
-of high CPU use.
-The option is only really useful in Windows XP. In later versions,
-this should be automatically done by the system, without a CPU use penalty,
-and the option would only interfere.
-
-
-Q:
-What is better, VSync or triple-buffering?
-A:
-VSync if it works on your system. With this, rendering is almost perfect.
-The disadvantages are:
-- Monitors that can display at 50hz are rare.
-- Frequency is set in the options (fullscreen) or on your system (window),
-and won't automatically be adjusted if the emulated ST switches frequencies.
+to have really smooth 50hz scrollers. You may check this using a 60hz
+program (ReadMe -TEX, HighResMode -PDX...).
 
 
 Q:
@@ -262,32 +217,10 @@ the volume slider has been fixed.
 
 
 Q:
-Emulation is crawling!
-A:
-It's a fact that Steem SSE is more CPU-intensive than Steem 3.2.
-Partly it has to do with the large extension of "shifter tricks" emulation,
-more tests are required by scanline.
-Partly it has to do with parallel emulations running together, for the 
-HD6301, for CAPS...
-Some options may make a difference, like Triple buffering, VSync...
-
-
-Q:
 Sometimes I lose keyboard control.
 A:
 Me too. Don't know the cause. It's not an emulation issue if quitting and 
 restarting Steem gives you control back.
-
-
-Q:
-With Windows 8 or 10, the mouse is all over the place.
-A:
-I haven't been able to reproduce this yet, but I suspect this isn't a Steem
-bug. At this point, you'll have better luck with some search engine.
-You could try:
-- With other versions of Steem, including the "NoD3D" ones.
-- If options C1, mouse speed make a difference (please check the manual).
-- Run without Hyper-V if you're using it.
 
 
 Q:
@@ -312,8 +245,7 @@ http://freeimage.sourceforge.net/download.html
 
 
 Q:
-After starting Steem 3.7 on my Win7 or above machine, it asks for 
-D3DX9_43.dll.
+After starting Steem SSE on my machine, it asks for D3DX9_43.dll.
 A:
 Your DX9 installation isn't complete. 
 You may try to update it, or copy D3DX9_43.dll into Steem directory.
@@ -326,8 +258,8 @@ start (application error (0xc00007b)).
 I had no problem with previous Steem versions.
 A:
 This is a common DirectX install error, no Steem bug.
-You had no problem with previous Steem versions because those didn't use
-D3D.
+You had no problem with previous (before 3.7) Steem versions because those
+didn't use D3D.
 Here are some hints:
 - This error seems to be caused by calling into a 64 bit DLL from a 32 bit app
 or vice versa.
@@ -341,7 +273,7 @@ d3d9.dll
 d3dx9_43.dll
 xinput1_3.dll 
 If it doesn't help, some search engine will be more useful than me.
-There is also a NoD3D build available in case it really won't work.
+There is also a DirectDraw build available in case it really won't work.
 
 
 Q:
@@ -353,7 +285,7 @@ emulation. Steem uses a plugin, pasti.dll, that is much older and is in need
 of an update.
 Fortunately, those cases are rare, and we have alternatives now, like CTR
 and IPF, that also use a plugin, capsimg.dll, which is up-to-date, as well
-as SPC images using an up-to-date emulation in Steem itself.
+as SPC images using an up-to-date emulation in Steem SSE itself.
 Who knows? Maybe one day pasti.dll will be improved.
 For those reasons directly handling STX images in Steem is not planned and
 those errors will remain for the time being.
@@ -392,7 +324,7 @@ All drive emulation improvements operate only if the option 'Accurate Disk
 Access Times (Slow)' is checked in the Disk manager, for ST, MSA, DIM disk
 images.
 For IPF, CTR, STW, SCP and HFE disk images, the option isn't necessary as 
-emulation is slow anyway :) (no fast option yet).
+emulation is slow anyway :)
 For STX images, settings are in 'Pasti configuration'.
 
 
@@ -435,21 +367,9 @@ What's the use of the STW disk image format?
 A:
 A STW disk image is the simplest possible MFM encoding format of
 Atari ST floppy disks. 
-It allows Steem to fully emulate WD1772 commands such as 'Format', 'Read 
-Track', 'Read Address' and to support cases like Dragonflight, Realm of
-the Trolls, Union Demo, and anything that relies on fancy WD1772 formats.
-As of v3.7.2, Steem can do all this with HFE files as well, which has a
-somewhat more complicated format. It makes STW already less useful, at
-least to people who own the HxC floppy emulator, which isn't everybody.
+It allows correct emulation of WD1772 command 'Format'.
 
-
-Q:
-Hmm I think this feature is incorrect in Steem SSE, my code proves it.
-A:
-Oh yeah? 
-I can't fix bugs without first asserting them. Please send some examples that
-prove that there's a problem.
-It's also better if the same program has been proved to run on a real ST.
+http://ataristeven.exxoshost.co.uk/Steem_370_coming_soon2.htm
 
 
 Q:
@@ -458,7 +378,7 @@ A:
 The Boiler is the amazing debugger coded by Steem authors. It is Steem with a 
 parallel window where you can check code, memory, etc., just using a powerful
 IDE. The name is a probable reference to 'Steam' and 'Engine'.
-Of course the SSE version contains many improvements. It is Windows-only.
+Of course the SSE version contains many improvements. It is Windows 32-only.
 
 
 Q:

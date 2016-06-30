@@ -241,29 +241,15 @@ GLUE ----------------T--------- MMU
                      +--------- MFP (timer B in)
 
 
-We know the DE timings for timer B and for MMU are different!
-For example, GLUE stops DE and MMU stops fetching at cycle 376.
-But the Shifter keeps on displaying and timer B isn't toggled until
-cycle 404 (28 cycles later).
+There's a variable (depending on wake-up state) delay between GLUE
+and MMU on the STF, fixed delay on the STE.
+
+The Shifter is also affected by this delay.
 
 
-
-We would better understand such graphic:
-
-GLUE ------------DE-----------> MMU
-                                 |
-                                 | LOAD
-                                 |                     
-                                 V                    
-MFP (timer B in) <-----DE------Shifter
-                              
-
-[nobody can explain that todate]
-
-
-
-
-
+[ijor]
+The Timer B interrupt happens so late (28 emulator cycles + jitter)
+due to processing delays in the chips, especially the MFP.
 
 
 
