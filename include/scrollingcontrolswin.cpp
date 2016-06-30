@@ -117,9 +117,13 @@ bool ScrollControlWin::GetVDisableNoScroll(){ if (Scroller) return (bool)ScrollW
 bool ScrollControlWin::GetAllowDrag(){ if (Scroller) return (bool)ScrollWndProc(Scroller,SCWM_GET,SCWS_ALLOWDRAG,0);else return 0;}
 
 HWND ScrollControlWin::GetControlPage(){ if (Scroller) return (HWND)ScrollWndProc(Scroller,SCWM_GETCONTROLPAGE,0,0); else return 0;}
-
+#if defined(SSE_X64_LPTR)
+WINDOWPROC ScrollControlWin::GetControlPageWndProc() { if (Scroller) return (WINDOWPROC)GetWindowLongPtr((HWND)ScrollWndProc(Scroller, SCWM_GETCONTROLPAGE, 0, 0), GWLP_WNDPROC); else return NULL; }
+WINDOWPROC ScrollControlWin::SetControlPageWndProc(WINDOWPROC Proc) { if (Scroller) return (WINDOWPROC)SetWindowLongPtr((HWND)ScrollWndProc(Scroller, SCWM_GETCONTROLPAGE, 0, 0), GWLP_WNDPROC, (LONG_PTR)Proc); else return NULL; }
+#else
 WINDOWPROC ScrollControlWin::GetControlPageWndProc(){if (Scroller) return (WINDOWPROC)GetWindowLong((HWND)ScrollWndProc(Scroller,SCWM_GETCONTROLPAGE,0,0),GWL_WNDPROC); else return NULL;}
 WINDOWPROC ScrollControlWin::SetControlPageWndProc(WINDOWPROC Proc){if (Scroller) return (WINDOWPROC)SetWindowLong((HWND)ScrollWndProc(Scroller,SCWM_GETCONTROLPAGE,0,0),GWL_WNDPROC,(long)Proc); else return NULL;}
+#endif
 //---------------------------------------------------------------------------
 
 bool ScrollControlWin::ShouldPassOnMessage(UINT Mess)
@@ -147,14 +151,18 @@ bool ScrollControlWin::ShouldPassOnMessage(UINT Mess)
 
 LRESULT WINAPI ScrollControlWin::ScrollWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 {
-  //ASSERT( Mess!=WM_MOUSEWHEEL );
-  //TRACE("WM %X WP %x LP %x\n",Mess,wPar,lPar);
   switch (Mess){
     case WM_CREATE:
     {
+#if defined(SSE_X64_LPTR)
+      HWND ControlPage = CreateWindowEx(WS_EX_NOPARENTNOTIFY, "Control Page Window", "",
+        WS_CHILD | WS_VISIBLE, 0, 0, 200, 200,
+        Win, (HMENU)100, (HINSTANCE)GetWindowLongPtr(Win, GWLP_HINSTANCE), NULL);
+#else
       HWND ControlPage=CreateWindowEx(WS_EX_NOPARENTNOTIFY,"Control Page Window","",
                                        WS_CHILD | WS_VISIBLE,0,0,200,200,
                                        Win,(HMENU)100,(HINSTANCE)GetWindowLong(Win,GWL_HINSTANCE),NULL);
+#endif
       if (ControlPage==NULL) return 1;
 
       SetProp(Win,"ControlPage",ControlPage);

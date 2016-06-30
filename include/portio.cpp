@@ -353,15 +353,21 @@ DWORD __stdcall TPortIO::OutThreadEntryPoint(void *t)
 bool TPortIO::StartBreak()
 {
   if (hCom==NULL) return 0;
-
+#if defined(SSE_VS2008_WARNING_382)
+  return (SetCommBreak(hCom)!=0);
+#else
   return SetCommBreak(hCom);
+#endif
 }
 //---------------------------------------------------------------------------
 bool TPortIO::EndBreak()
 {
   if (hCom==NULL) return 0;
-
+#if defined(SSE_VS2008_WARNING_382)
+  return (ClearCommBreak(hCom)!=0);
+#else
   return ClearCommBreak(hCom);
+#endif
 }
 //---------------------------------------------------------------------------
 void TPortIO::SetupCOM(int BaudRate,bool bXOn_XOff,int RTS,int DTR,bool bParity,BYTE ParityType,BYTE StopBits,BYTE WordLength)
@@ -404,15 +410,21 @@ DWORD TPortIO::GetModemFlags()
 bool TPortIO::SetDTR(bool Val)
 {
   if (hCom==NULL) return 0;
-
+#if defined(SSE_VS2008_WARNING_382)
+  return (EscapeCommFunction(hCom,DWORD(Val ? SETDTR:CLRDTR))!=0);
+#else
   return EscapeCommFunction(hCom,DWORD(Val ? SETDTR:CLRDTR));
+#endif
 }
 //---------------------------------------------------------------------------
 bool TPortIO::SetRTS(bool Val)
 {
   if (hCom==NULL) return 0;
-
+#if defined(SSE_VS2008_WARNING_382)
+  return (EscapeCommFunction(hCom,DWORD(Val ? SETRTS:CLRRTS))!=0);
+#else
   return EscapeCommFunction(hCom,DWORD(Val ? SETRTS:CLRRTS));
+#endif
 }
 //---------------------------------------------------------------------------
 HANDLE TPortIO::Handle() { return hCom; }

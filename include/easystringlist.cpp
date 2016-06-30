@@ -144,8 +144,11 @@ int EasyStringList::Insert(int n,long nDat,char *AddStr,long *p)
 
   Info[n].NumData=nDat;
   Info[n].Data=new long[nDat];
+#ifdef SSE_X64_STACK
+  for (int i=0;i<nDat;i++) p++,Info[n].Data[i]=*(p++);
+#else
   for (int i=0;i<nDat;i++) Info[n].Data[i]=*(p++);
-
+#endif
   NumStrings++;
   return n;
 }

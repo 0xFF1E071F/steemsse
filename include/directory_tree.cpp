@@ -107,8 +107,14 @@ bool DirectoryTree::Create(HWND Par,int x,int y,int w,int h,int ID,DWORD Flags,
                         COFlags | TVS_SHOWSELALWAYS | TVS_HASBUTTONS,
                         x,y,w,h,Par,(HMENU)ID,GetModuleHandle(NULL),NULL);
   SetProp(hTree,"DirectoryTreeThis",this);
+
+#if defined(SSE_X64_LPTR)
+  OldTVWndProc = (WNDPROC)GetWindowLongPtr(hTree, GWLP_WNDPROC);
+  SetWindowLongPtr(hTree, GWLP_WNDPROC, (LONG_PTR)TVWndProc);
+#else
   OldTVWndProc=(WNDPROC)GetWindowLong(hTree,GWL_WNDPROC);
   SetWindowLong(hTree,GWL_WNDPROC,(long)TVWndProc);
+#endif
 
   ReloadIcons(ILC_COLOR4);
 

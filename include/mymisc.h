@@ -59,6 +59,7 @@ extern bool MatchesAnyString_I(char *StrToCompare,char *Str,...);
 #if defined(_INC_TIME) || defined(_SYS_TIME_H)
 extern DWORD TMToDOSDateTime(struct tm *lpTime);
 #endif
+//#endif
 extern int log_to_base_2(unsigned long x);
 
 #ifdef EASYSTR_H
