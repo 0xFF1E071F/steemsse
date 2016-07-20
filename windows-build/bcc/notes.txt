@@ -8,9 +8,15 @@ The SET variables need to be edited according to your system
 build_bcc_asm.bat must be called first if asm files haven't been assembled 
 yet.
 
-build_debug.bat will build the boiler.
+build_debug.bat will build Steem Boiler SSE.
 
 build_user.bat will build regular Steem SSE.
 
-The _modules files are legacy. Normally they shouldn't be used.
+build_modules_user.bat will use makefil2.txt to build Steem as released by
+Steem Authors (3.2+)
+
+
+
+
+
 

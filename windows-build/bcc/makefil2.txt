@@ -10,11 +10,9 @@ INCDIR = $(ROOT)\include
 ASMOBJDIR = obj
 3RDPARTYROOT = $(ROOT)\3rdparty
 
-# Note that we don't use unrarlib anymore. Borland linker is smart enough to 
-# not include anything useless in the EXE, but we remove it from the project
-# to avoid useless compile time.
+
 #3RDPARTYOBJS = obj\unrarlib.obj obj\div68kCycleAccurate.obj obj\dsp.obj obj\6301.obj
-3RDPARTYOBJS = obj\div68kCycleAccurate.obj obj\dsp.obj obj\6301.obj obj\AviFile.obj
+#3RDPARTYOBJS = obj\div68kCycleAccurate.obj obj\dsp.obj obj\6301.obj obj\AviFile.obj
 
 INCLUDEPATHS = $(STEEMROOT)\code;$(BCCROOT)\Include;$(INCDIR);$(3RDPARTYROOT);$(3RDPARTYROOT)\unrarlib;$(3RDPARTYROOT)\pasti;$(3RDPARTYROOT)\6301
 
@@ -24,9 +22,9 @@ ALLOBJS = $(ALLOBJS) obj\SSE.obj obj\SSEOption.obj obj\SSEMMU.obj
 
 !ifndef ONEGAME
 
-ALLOBJS = $(ALLOBJS) $(3RDPARTYOBJS)
+#ALLOBJS = $(ALLOBJS) $(3RDPARTYOBJS)
 NAME = Steem
-RC_PATH = $(STEEMROOT)\rc\resource.rc
+RC_PATH = $(STEEMROOT)\rc\resourc2.rc
 
 !else
 
@@ -49,7 +47,7 @@ LINKOPTS = -L$(3RDPARTYROOT)\UnRARDLL\bcclib;-dunrar.DLL $(LINKOPTS)
 LINKOPTS = -L$(3RDPARTYROOT)\caps\BccLib;-dCAPSImg.DLL $(LINKOPTS)
 #LINKOPTS = -L$(3RDPARTYROOT)\SDL-WIN\BccLib $(LINKOPTS)
 #    Set the compiler options
-STEEMFLAGS = -DBCC_BUILD -DWIN32 -DSTEVEN_SEAGAL
+STEEMFLAGS = -DBCC_BUILD -DWIN32 
 #STEEMFLAGS = -DBCC_BUILD -DWIN32
 CCOPTS = -D_NO_VCL -DWINVER=0x0400 -D_WIN32_WINNT=0x0300
 CCOPTS = -w  -O2 -OS -Oi -Ov -O -Oc -K-                  $(CCOPTS)
