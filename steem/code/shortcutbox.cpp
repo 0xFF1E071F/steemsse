@@ -5,11 +5,11 @@ DESCRIPTION: Functions to implement Steem's flexible shortcuts system that
 maps all sorts of user input to all sorts of emulator functions.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: shortcutbox.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_SHORTCUTBOX_H)
+#if defined(SSE_STRUCTURE_DECLA)
 
 #ifdef IN_MAIN
 #define EXT
@@ -21,7 +21,6 @@ EXT int shortcut_vbl_count INIT(0),cut_slow_motion_speed INIT(0);
 EXT DWORD CutPauseUntilSysEx_Time INIT(0);
 EXT int CutModDown INIT(0);
 
-//#ifdef IN_MAIN
 DynamicArray<SHORTCUTINFO> Cuts,CurrentCuts;
 EasyStringList CutsStrings(eslNoSort);
 EasyStringList CurrentCutsStrings(eslNoSort);
@@ -48,28 +47,20 @@ DirectoryTree *TShortcutBox::pChooseMacroTree=NULL;
 DirectoryTree TShortcutBox::DTree;
 #endif
 
-
 bool CutDisableAxis[MAX_PC_JOYS][20],CutDisablePOV[MAX_PC_JOYS][9];
 DWORD CutButtonMask[MAX_PC_JOYS];
 int MouseWheelMove=0;
 bool CutButtonDown[2]={0,0};
 
 bool TShortcutBox::Picking=0;
-//#endif
 
 #undef EXT
 #undef INIT
 
-#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_SHORTCUTBOX_H)
-
-#if defined(STEVEN_SEAGAL)
-//#if defined(SSE_INTERRUPT)
 #include "SSE/SSEInterrupt.h"
-//#endif
-#if defined(SSE_DEBUG_FRAME_REPORT) //temp, same place
 #include "SSE/SSEFrameReport.h"
-#endif
-#endif
+
+#endif//decla
 
 #define CUT_PRESSKEY 0
 #define CUT_PRESSCHAR 39
@@ -79,19 +70,16 @@ bool TShortcutBox::Picking=0;
 #define CUT_TOGGLEFULLSCREEN 17
 #define CUT_TAKESCREENSHOT 29
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VARIOUS)
+#if defined(SSE_GUI)
 
 enum {
-
-  CUT_LAST_OLD_ITEM_SS=230,//lol, TODO
-
 #if !defined(SSE_GUI_DISK_MANAGER_RGT_CLK_HD)
   CUT_TOGGLEHARDDRIVES=231,
 #endif
 #if defined(SSE_VID_RECORD_AVI)
   CUT_RECORD_VIDEO,
 #endif
-#if defined(SSE_VAR_SNAPSHOT_INI)
+#if defined(SSE_GUI_SNAPSHOT_INI)
   CUT_DEFAULT_SNAPSHOT,
 #endif
 #if defined(SSE_GUI_SHORTCUT_SELECT_DISK)
@@ -132,14 +120,14 @@ const char *ShortcutNames[NUM_SHORTCUTS*2]=
 
   "Save Over Last Memory Snapshot",(char*)53,"Load Last Memory Snapshot",(char*)54,
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VARIOUS)
+#if defined(SSE_GUI)
 #if !defined(SSE_GUI_DISK_MANAGER_RGT_CLK_HD)
 	"Toggle Hard Drives On/Off",(char*)CUT_TOGGLEHARDDRIVES,
 #endif
 #if defined(SSE_VID_RECORD_AVI)
    "Record Video",(char*)CUT_RECORD_VIDEO,
 #endif
-#if defined(SSE_VAR_SNAPSHOT_INI)
+#if defined(SSE_GUI_SNAPSHOT_INI)
     "Load Default Memory Snapshot",(char*)CUT_DEFAULT_SNAPSHOT,
 #endif
 #if defined(SSE_GUI_SHORTCUT_SELECT_DISK)
@@ -326,7 +314,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
 #endif
   if (ShortcutBox.Picking) return;
   if (bAppActive==0) return;
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_F12)
+#if defined(SSE_GUI_F12)
   if(Inf.Id[0]==VK_F12)
     return; // ignore this shortcut (v3.5)
 #endif
@@ -435,7 +423,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       break;
 
     case 10:case 11:case 53:case 54:
-#if defined(SSE_VAR_SNAPSHOT_INI)
+#if defined(SSE_GUI_SNAPSHOT_INI)
       case CUT_DEFAULT_SNAPSHOT: //should be 55
 #endif
     {
@@ -445,7 +433,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
         if (StateHist[0].Empty()) break;
         i=210; // 210=Load StateHist[0]
       }
-#if defined(SSE_VAR_SNAPSHOT_INI)
+#if defined(SSE_GUI_SNAPSHOT_INI)
       if(Inf.Action==CUT_DEFAULT_SNAPSHOT)
         i=209;
 #endif
@@ -517,7 +505,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       }
       break;
     case 21:
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_INT_MFP_RATIO)
       if (n_cpu_cycles_per_second>CpuNormalHz){
 #else
       if (n_cpu_cycles_per_second>8000000){
@@ -528,7 +516,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       }
       break;
     case 22:
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_INT_MFP_RATIO)
       n_cpu_cycles_per_second=CpuNormalHz;
 #else
       n_cpu_cycles_per_second=8000000;
@@ -601,7 +589,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
     case 38:
       CutPauseUntilSysEx_Time=timeGetTime()+5000;
       break;
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_REWRITE) && SSE_VERSION>=370
+#if defined(SSE_VAR_REWRITE) && SSE_VERSION>=370
     case CUT_PRESSCHAR:
 #else
     case 39:
@@ -612,7 +600,11 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       int ModifierRestoreArray[3]={0,0,0};
       BYTE STCode=LOBYTE(LOWORD(Inf.PressChar));
       BYTE Modifiers=HIBYTE(LOWORD(Inf.PressChar));
+#if defined(SSE_VS2008_WARNING_383)
+      ShiftSwitchChangeModifiers(Modifiers & BIT_0,(Modifiers & BIT_1)!=0,ModifierRestoreArray);
+#else
       ShiftSwitchChangeModifiers(Modifiers & BIT_0,Modifiers & BIT_1,ModifierRestoreArray);
+#endif
       keyboard_buffer_write_n_record(STCode);
       keyboard_buffer_write_n_record(BYTE(STCode | BIT_7));
       ShiftSwitchRestoreModifiers(ModifierRestoreArray);
@@ -672,7 +664,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       }
       break;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VARIOUS)
+#if defined(SSE_GUI)
 #if !defined(SSE_GUI_DISK_MANAGER_RGT_CLK_HD)
     case CUT_TOGGLEHARDDRIVES:	// toggle hard drives on/off
       HardDiskMan.DisableHardDrives=!HardDiskMan.DisableHardDrives;	// toggle
@@ -1080,7 +1072,11 @@ bool TShortcutBox::HasHandledMessage(MSG *mess)
   if (Handle){
     if (mess->message==WM_KEYDOWN){
       if (mess->wParam==VK_TAB){
+#if defined(SSE_VS2008_WARNING_383)
+        if (GetKeyState(VK_CONTROL)>=0) return (IsDialogMessage(Handle,mess)!=0);
+#else
         if (GetKeyState(VK_CONTROL)>=0) return IsDialogMessage(Handle,mess);
+#endif
       }
     }
     return 0;

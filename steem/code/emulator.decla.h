@@ -2,15 +2,12 @@
 #ifndef EMULATOR_DECLA_H
 #define EMULATOR_DECLA_H
 
-
-#if defined(SSE_STRUCTURE_SSE6301_OBJ)
 #include <conditions.h>
 #include <dynamicarray.h>
-#endif
+
 // they've been nuked in conditions -> should do without...
 #define EXT extern 
 #define INIT(s)
-
 
 EXT int MILLISECONDS_TO_HBLS(int); 
 EXT void make_Mem(BYTE,BYTE);
@@ -37,10 +34,18 @@ EXT WORD tos_version;
 #endif
 
 EXT int interrupt_depth INIT(0);
+
+#if defined(SSE_VAR_RESIZE_383)
+EXT WORD em_width INIT(480);
+EXT WORD em_height INIT(480);
+EXT BYTE em_planes INIT(4);
+EXT BYTE extended_monitor INIT(0);
+#else
 EXT int em_width INIT(480);
 EXT int em_height INIT(480);
 EXT int em_planes INIT(4);
-EXT int extended_monitor INIT(0);
+EXT int extended_monitor INIT(0);//SS can't be bool
+#endif
 EXT DWORD n_cpu_cycles_per_second INIT(8000000),new_n_cpu_cycles_per_second INIT(0),n_millions_cycles_per_sec INIT(8);
 EXT int on_rte;
 EXT int on_rte_interrupt_depth;
@@ -48,7 +53,7 @@ EXT int on_rte_interrupt_depth;
 extern "C"
 {
 EXT MEM_ADDRESS shifter_draw_pointer;
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE shifter_hscroll, shifter_skip_raster_for_hscroll; // the latter bool
 #else
 EXT int shifter_hscroll,shifter_skip_raster_for_hscroll;
@@ -72,7 +77,7 @@ EXT int shifter_x,shifter_y;
 EXT int shifter_first_draw_line;
 EXT int shifter_last_draw_line;
 EXT int shifter_scanline_width_in_bytes;
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE shifter_fetch_extra_words;
 #else
 EXT int shifter_fetch_extra_words;
@@ -202,7 +207,7 @@ void agenda_acia_tx_delay_IKBD(int),agenda_acia_tx_delay_MIDI(int);
 EXT MEM_ADDRESS on_rte_return_address;
 
 
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU))
+#if !(defined(SSE_CPU))
 #define M68K_UNSTOP                         \
   if (cpu_stopped){ \
                    \
@@ -240,7 +245,7 @@ int ACIAClockToHBLS(int,bool=0);
 void ACIA_Reset(int,bool);
 void ACIA_SetControl(int,BYTE);
 
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_ACIA)) //see new file acia.decla.h
+#if !(defined(SSE_ACIA)) //see new file acia.decla.h
 struct _ACIA_STRUCT{
   int clock_divide;
 

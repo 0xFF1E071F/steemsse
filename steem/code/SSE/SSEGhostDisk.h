@@ -42,6 +42,8 @@ Interface:
     Allocated memory is freed.
 */
 
+#if defined(SSE_DISK_GHOST)
+
 #include "SSEWD1772.h"
 
 struct TGhostDisk {
@@ -67,5 +69,6 @@ struct TGhostDisk {
   WORD SectorBytes;
 };
 
+#endif//#if defined(SSE_DISK_GHOST)
 
 #endif//#ifndef SSE_GHOSTDISK_H

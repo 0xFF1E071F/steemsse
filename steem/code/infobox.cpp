@@ -4,7 +4,7 @@ MODULE: Steem
 DESCRIPTION: Steem's general information dialog.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: infobox.cpp")
 #endif
 
@@ -32,17 +32,17 @@ void TGeneralInfo::CreatePage(int pg)
 #if defined(SSE_GUI_INFOBOX0) && defined(UNIX)
     case INFOPAGE_UNIXREADME:
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX2)
+#if defined(SSE_GUI_INFOBOX2)
     case INFOPAGE_README_SSE: 
     case INFOPAGE_FAQ_SSE: 
 #endif
 #if defined(SSE_GUI_INFOBOX15)
     case INFOPAGE_README_SSE: 
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX7)
+#if defined(SSE_GUI_INFOBOX7)
     case INFOPAGE_HINTS:
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX9)
+#if defined(SSE_GUI_INFOBOX9)
 //    case INFOPAGE_MANUAL:
     case INFOPAGE_MANUAL_SSE:
 #endif
@@ -114,14 +114,14 @@ void TGeneralInfo::GetHyperlinkLists(EasyStringList &desc_sl,EasyStringList &lin
 {
   desc_sl.Sort=eslNoSort;
   link_sl.Sort=eslNoSort;
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX1)
+#if defined(SSE_GUI_INFOBOX1)
   desc_sl.Add(T("Official Steem website (legacy)"),0); //savage mod?
 #else
   desc_sl.Add(T("Official Steem website"),0);
 #endif
   link_sl.Add(STEEM_WEB);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX1)
+#if defined(SSE_GUI_INFOBOX1)
   desc_sl.Add(T("Steven Seagal's Atari website"),0);
   link_sl.Add("http:/""/ataristeven.exxoshost.co.uk/");
   desc_sl.Add(T("Steem SSE on Sourceforge"),0);
@@ -169,7 +169,7 @@ void TGeneralInfo::GetHyperlinkLists(EasyStringList &desc_sl,EasyStringList &lin
 TGeneralInfo::TGeneralInfo()
 {
   page_l=160;
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX4)
+#if defined(SSE_GUI_INFOBOX4)
   page_w=82*8;//with Courier New, should give 80 visible columns
 #else  
   page_w=500;
@@ -211,16 +211,16 @@ void TGeneralInfo::LoadIcons()
                               hGUIIcon[RC_ICO_FUJILINK],hGUIIcon[RC_ICO_TEXT],
                               hGUIIcon[RC_ICO_INFO] /*unused*/,hGUIIcon[RC_ICO_DISK_HOWTO],
                               hGUIIcon[RC_ICO_CART_HOWTO],hGUIIcon[RC_ICO_INFO_FAQ]
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX2)
+#if defined(SSE_GUI_INFOBOX2)
                               ,hGUIIcon[RC_ICO_OPS_SSE],hGUIIcon[RC_ICO_OPS_SSE]
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX15)
+#if defined(SSE_GUI_INFOBOX15)
                               ,hGUIIcon[RC_ICO_OPS_SSE]
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX7)
+#if defined(SSE_GUI_INFOBOX7)
                               ,hGUIIcon[RC_ICO_OPS_SSE]
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX9)
+#if defined(SSE_GUI_INFOBOX9)
                               ,hGUIIcon[RC_ICO_TEXT]
 #endif
                               ,0);
@@ -256,7 +256,7 @@ void TGeneralInfo::Show()
     return;
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX3)
+#if defined(SSE_GUI_INFOBOX3)
   hFontCourier=CreateFont (README_FONT_HEIGHT, 0, 0, 0, FW_DONTCARE, FALSE, 
     FALSE, FALSE, ANSI_CHARSET,OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
     DEFAULT_QUALITY,DEFAULT_PITCH | FF_SWISS,README_FONT_NAME);
@@ -276,32 +276,31 @@ void TGeneralInfo::Show()
 
   LoadIcons();
   SendMessage(PageTree,TVM_SETIMAGELIST,TVSIL_NORMAL,(LPARAM)il);
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX14)
+#if defined(SSE_GUI_INFOBOX14)
   AddPageLabel(T("About"),INFOPAGE_ABOUT);
 #endif
-
 #if defined(SSE_GUI_INFOBOX15)
-  if (Exists(RunDir+"\\"+WINDOW_TITLE+".txt")) AddPageLabel(WINDOW_TITLE,INFOPAGE_README_SSE);
+  if (Exists(RunDir+SLASH+WINDOW_TITLE+EXT_TXT)) 
+    AddPageLabel(WINDOW_TITLE,INFOPAGE_README_SSE); // release notes
+#endif
+#if defined(SSE_GUI_INFOBOX12)
+  if (Exists(RunDir+SLASH+STEEM_MANUAL_SSE+EXT_TXT)) 
+    AddPageLabel(STEEM_MANUAL_SSE,INFOPAGE_README); // manual
+#else
+  if (Exists(RunDir+"\\readme.txt")) AddPageLabel(T("Readme"),INFOPAGE_README); //readme
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX12)
-  if (Exists(RunDir+"\\"+STEEM_MANUAL_SSE+EXT_TXT)) AddPageLabel(STEEM_MANUAL_SSE,INFOPAGE_README);
+#if defined(SSE_GUI_INFOBOX13)
+  if (Exists(RunDir+SLASH+STEEM_SSE_FAQ+EXT_TXT)) 
+    AddPageLabel(STEEM_SSE_FAQ,INFOPAGE_FAQ); // SSE faq
 #else
-  if (Exists(RunDir+"\\readme.txt")) AddPageLabel(T("Readme"),INFOPAGE_README);
+  if (Exists(RunDir+"\\faq.txt")) AddPageLabel("FAQ",INFOPAGE_FAQ); // faq
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX13)
-  if (Exists(RunDir+"\\"+STEEM_SSE_FAQ+EXT_TXT)) AddPageLabel(STEEM_SSE_FAQ,INFOPAGE_FAQ);
-#else
-  if (Exists(RunDir+"\\faq.txt")) AddPageLabel("FAQ",INFOPAGE_FAQ);
+#if defined(SSE_GUI_INFOBOX7)  && defined(SSE_GUI_INFOBOX14)
+  if (Exists(RunDir+SLASH+STEEM_HINTS+EXT_TXT)) 
+    AddPageLabel(STEEM_HINTS,INFOPAGE_HINTS); // Hints
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX7)  && defined(SSE_GUI_INFOBOX14)
-#if SSE_VERSION>=370
-  if (Exists(RunDir+"\\"+STEEM_HINTS+EXT_TXT)) AddPageLabel(STEEM_HINTS,INFOPAGE_HINTS);
-#else
-  if (Exists(RunDir+"\\"+STEEM_SSE_HINTS_TXT)) AddPageLabel("Hints",INFOPAGE_FAQ_SSE);
-#endif
-#endif
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX14))
+#if !(defined(SSE_GUI_INFOBOX14))
   AddPageLabel(T("About"),INFOPAGE_ABOUT);
 #endif
 #ifdef DEBUG_BUILD
@@ -312,28 +311,20 @@ void TGeneralInfo::Show()
 #if !defined(SSE_GUI_INFOBOX5)
   if (Exists(RunDir+"\\cart image howto.txt")) AddPageLabel("Cartridge Image Howto",INFOPAGE_HOWTO_CART);
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX2)
+#if defined(SSE_GUI_INFOBOX2)
   if (Exists(RunDir+"\\"+WINDOW_TITLE+".txt")) AddPageLabel(WINDOW_TITLE,INFOPAGE_README_SSE);
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX9)
-//  if (Exists(RunDir+"\\"+STEEM_MANUAL+EXT_TXT)) AddPageLabel(STEEM_MANUAL,INFOPAGE_MANUAL);
+#if defined(SSE_GUI_INFOBOX9)
   if (Exists(RunDir+"\\"+STEEM_MANUAL_SSE+EXT_TXT)) AddPageLabel(STEEM_MANUAL_SSE,INFOPAGE_MANUAL_SSE);
 #endif
-#if SSE_VERSION>=370
-  if (Exists(RunDir+"\\"+STEEM_SSE_FAQ+EXT_TXT)) AddPageLabel(STEEM_SSE_FAQ,INFOPAGE_FAQ_SSE);
-#else
-  if (Exists(RunDir+"\\"+STEEM_SSE_FAQ_TXT)) AddPageLabel("SSE FAQ",INFOPAGE_FAQ_SSE);
+  if (Exists(RunDir+"\\"+STEEM_SSE_FAQ+EXT_TXT)) 
+    AddPageLabel(STEEM_SSE_FAQ,INFOPAGE_FAQ_SSE);
 #endif
-#endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX7)  && !defined(SSE_GUI_INFOBOX14)
-#if SSE_VERSION>=370
+#if defined(SSE_GUI_INFOBOX7)  && !defined(SSE_GUI_INFOBOX14)
   if (Exists(RunDir+"\\"+STEEM_HINTS+EXT_TXT)) AddPageLabel(STEEM_HINTS,INFOPAGE_HINTS);
-#else
-  if (Exists(RunDir+"\\"+STEEM_HINTS_TXT)) AddPageLabel("Hints",INFOPAGE_FAQ_SSE);
-#endif
 #endif
 
   page_l=2+TreeGetMaxItemWidth(PageTree)+5+2+10;
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX4))
+#if !(defined(SSE_GUI_INFOBOX4))
   page_w=min(page_w,620-page_l);
 #endif
 
@@ -382,7 +373,7 @@ void TGeneralInfo::CreateAboutPage()
 {
   int y=10,h=4;
   HWND Win;
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI)
+#if defined(SSE_GUI)
 #if defined(SSE_VS2015)
   EasyStr Text = EasyStr("Steem SSE v") + SSE_VERSION + " (built " __DATE__" " + "- " __TIME__")\n";
 #else
@@ -605,7 +596,7 @@ void TGeneralInfo::CreateReadmePage(int p)
 
   Str TextFile=RunDir+SLASH;
   switch (p){
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX12)
+#if defined(SSE_GUI_INFOBOX12)
     case INFOPAGE_README: TextFile+=STEEM_MANUAL_SSE; TextFile+=EXT_TXT; break;
 #else
     case INFOPAGE_README: TextFile+="readme.txt"; break;
@@ -614,48 +605,31 @@ void TGeneralInfo::CreateReadmePage(int p)
 #if !defined(SSE_GUI_INFOBOX5)
     case INFOPAGE_HOWTO_CART: TextFile+="cart image howto.txt"; break;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX13)
+#if defined(SSE_GUI_INFOBOX13)
     case INFOPAGE_FAQ: 
       TextFile+=STEEM_SSE_FAQ; TextFile+=EXT_TXT; break;
 #else
     case INFOPAGE_FAQ: TextFile+="faq.txt"; break;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX2)
-#if SSE_VERSION>=370
+#if defined(SSE_GUI_INFOBOX2)
     case INFOPAGE_README_SSE: TextFile+=WINDOW_TITLE; TextFile+=EXT_TXT; break;
     case INFOPAGE_FAQ_SSE: TextFile+=STEEM_SSE_FAQ; TextFile+=EXT_TXT; break;
-#else
-    case INFOPAGE_README_SSE: TextFile+=WINDOW_TITLE; TextFile+=".txt"; break;
-    case INFOPAGE_FAQ_SSE: TextFile+=STEEM_SSE_FAQ_TXT; break;
-#endif
 #endif
 #if defined(SSE_GUI_INFOBOX15)
     case INFOPAGE_README_SSE: TextFile+=WINDOW_TITLE; TextFile+=EXT_TXT; break;
 #endif
-#if SSE_VERSION>=370
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX7)
+#if (SSE_VERSION>=370 && defined(SSE_GUI_INFOBOX7))\
+    || (SSE_VERSION<370 && defined(SSE_GUI_INFOBOX2))
     case INFOPAGE_HINTS: TextFile+=STEEM_HINTS; TextFile+=EXT_TXT; break;
 #endif
-#else
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX2)
-    case INFOPAGE_HINTS: TextFile+=STEEM_HINTS_TXT; break;
-#endif
-#endif
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX9)
-#if SSE_VERSION>=370
-//    case INFOPAGE_MANUAL: TextFile+=STEEM_MANUAL; TextFile+=EXT_TXT; break;
+#if defined(SSE_GUI_INFOBOX9)
     case INFOPAGE_MANUAL_SSE: TextFile+=STEEM_MANUAL_SSE; TextFile+=EXT_TXT; break;
-#else
-    case INFOPAGE_MANUAL: TextFile+=STEEM_MANUAL_TXT; break;
-    case INFOPAGE_MANUAL_SSE: TextFile+=STEEM_SSE_MANUAL_TXT; break;
-#endif
 #endif
   }
   
   FILE *f=fopen(TextFile,"rb");
   if (f){
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX16)
+#if defined(SSE_GUI_INFOBOX16)
 /*  Steem SSE manual >64000 bytes! 
     Now this will take all it can or reject.
 */
@@ -663,20 +637,20 @@ void TGeneralInfo::CreateReadmePage(int p)
     char *text=(char*)malloc(nbytes);
     if(text)
     {
-#elif defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX5)
+#elif defined(SSE_GUI_INFOBOX5)
     {
       char *text=(char*)malloc(64000);
 #else
       char text[64000];
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX16)
+#if defined(SSE_GUI_INFOBOX16)
       text[fread(text,1,nbytes-1,f)]=0; //oops
 #else
       text[fread(text,1,64000,f)]=0;
 #endif
       fclose(f);
       SendMessage(GetDlgItem(Handle,500),WM_SETTEXT,0,(LPARAM)text);
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX5)
+#if defined(SSE_GUI_INFOBOX5)
       free(text);
   }
 #endif
@@ -684,7 +658,7 @@ void TGeneralInfo::CreateReadmePage(int p)
 
   if (Focus==NULL) Focus=GetDlgItem(Handle,504);
   SetPageControlsFont();
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX3)
+#if defined(SSE_GUI_INFOBOX3)
   SendMessage (GetDlgItem(Handle,500), WM_SETFONT, WPARAM (hFontCourier), TRUE);
 #endif
 
@@ -698,7 +672,7 @@ void TGeneralInfo::Hide()
   ShowWindow(Handle,SW_HIDE);
   if (FullScreen) SetFocus(StemWin);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX3)
+#if defined(SSE_GUI_INFOBOX3)
   DeleteObject(hFontCourier);
 #endif
 

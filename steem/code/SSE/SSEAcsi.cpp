@@ -1,5 +1,6 @@
 #include "SSE.h"
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACSI)
+
+#if defined(SSE_ACSI)
 /*  This is based on "Atari ACSI/DMA Integration guide", June 28, 1991
     (no copy/paste of code this time, it's for some fun).
     Emulation is straightforward: just fetch sector #n, all seem to
@@ -8,13 +9,11 @@
 */
 
 #include "../pch.h"
-
 #include <mfp.decla.h>
 #include <run.decla.h>
 #include <mymisc.h> //GetFileLength()
 #if defined(SSE_ACSI_LED) && defined(SSE_OSD_DRIVE_LED)
 #include <osd.decla.h>
-#include <run.decla.h>
 #endif
 #if defined(SSE_ACSI_TIMING)
 #include <steemh.decla.h> //cpu_timer,cpu_cycles
@@ -98,14 +97,18 @@ bool TAcsiHdc::Init(int num, char *path) {
     ASSERT(inquiry_string);
     strncpy(inquiry_string+8,filename,nchars);
     TRACE_HDC("ACSI %d init %s %d sectors %d MB\n",device_num,inquiry_string+8,nSectors,nSectors/(2*1024));
-    TRACE2("ACSI %d %s %d sectors %d MB\n",device_num,inquiry_string+8,nSectors,nSectors/(2*1024));
+    //TRACE2("ACSI %d %s %d sectors %d MB\n",device_num,inquiry_string+8,nSectors,nSectors/(2*1024));
 #endif
 #if defined(SSE_ACSI_MULTIPLE)
     acsi_dev=device_num;
 #endif
   }
   //TRACE_INIT("ACSI %d open %s %d sectors %d MB\n",device_num,path,nSectors,nSectors/(2*1024));
+#if defined(SSE_VS2008_WARNING_383)
+  return (Active!=0);
+#else
   return (bool)Active;
+#endif
 }
 
 #if defined(SSE_VS2008_WARNING_382)
@@ -275,7 +278,9 @@ void TAcsiHdc::Irq(bool state) {
 void TAcsiHdc::ReadWrite(bool write,BYTE block_count) {
   ASSERT(block_count);
   TRACE_HDC("%s sectors %d-%d (%d)\n",write?"Write":"Read",SectorNum(),SectorNum()+block_count-1,block_count);
-#if defined(SSE_VS2008_WARNING_382)
+#if defined(SSE_VS2008_WARNING_383)//!
+  size_t ok=Seek();
+#elif defined(SSE_VS2008_WARNING_382)
   bool ok=Seek(); // read/write implies seek
 #else
   int ok=Seek(); // read/write implies seek
@@ -290,7 +295,7 @@ void TAcsiHdc::ReadWrite(bool write,BYTE block_count) {
         Dma.Drq(); // get byte write from DMA
         ok=fwrite(&DR,1,1,hard_disk_image);
       }
-      else if(ok=fread(&DR,1,1,hard_disk_image)) // fails when driver tests size
+      else if((ok=fread(&DR,1,1,hard_disk_image))!=0) // fails when driver tests size
         Dma.Drq(); // put byte on DMA - if there is one
     }//j
   }//i
@@ -321,4 +326,4 @@ bool TAcsiHdc::Seek() {
  return (STR!=2); // that would mean "OK"
 }
 
-#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_ACSI)
+#endif//#if defined(SSE_ACSI)

@@ -4,7 +4,7 @@ MODULE: Steem
 DESCRIPTION: The dialogs that can be shown by the Disk Manager.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: diskman_diags.cpp")
 #endif
 
@@ -507,7 +507,11 @@ void TDiskManager::ShowPropDiag()
       return;
     }
   }else{
+#ifdef SSE_DISK_EXT
+    if (has_extension(PropInf.Path,dot_ext(EXT_STX))) return;
+#else
     if (has_extension(PropInf.Path,".STX")) return;
+#endif
   }
 #endif
 
@@ -547,8 +551,11 @@ void TDiskManager::ShowPropDiag()
                   Wid+15,y,290-(Wid+15),23,PropDiag,(HMENU)111,HInstance,NULL);
     y+=30;
   }
-
+#ifdef SSE_DISK_EXT
+  if (has_extension(PropInf.Path,dot_ext(EXT_STT))==0){
+#else
   if (has_extension(PropInf.Path,".STT")==0){
+#endif
     if (FileIsDisk(PropInf.Path)==DISK_COMPRESSED){
       WIDTHHEIGHT wh=GetTextSize(Font,T("Contents"));
       CreateWindow("Static",T("Contents"),WS_CHILD | WS_VISIBLE,
@@ -690,7 +697,11 @@ void TDiskManager::PropShowFileInfo(int i)
     Str ErrMsg;
     Str DiskPath=PropInf.Path;
     if (FileInZip.NotEmpty()) DiskPath=FileInZip;
+#ifdef SSE_DISK_EXT
+    if (has_extension(DiskPath,dot_ext(EXT_STT))==0 && FileIsDisk(DiskPath)!=DISK_PASTI){
+#else
     if (has_extension(DiskPath,".STT")==0 && FileIsDisk(DiskPath)!=DISK_PASTI){
+#endif
       // bpbi is what Steem detects the BPB should be (not including the .steembpb file)
       // file_bpbi is what the raw BPB from the disk is
       if (TempDrive.SetDisk(PropInf.Path,FileInZip,&bpbi,&file_bpbi)!=FIMAGE_OK){

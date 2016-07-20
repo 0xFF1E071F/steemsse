@@ -8,11 +8,11 @@ to be scheduled to the nearest cycle. Speed limiting and drawing is also
 handled here, in event_scanline and event_vbl_interrupt.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: run.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_RUN_H)
+#if defined(SSE_STRUCTURE_DECLA)
 
 #define EXT
 #define INIT(s) =s
@@ -56,24 +56,11 @@ EXT int cpu_time_of_last_vbl,shifter_cycle_base;
 
 EXT int cpu_timer_at_start_of_hbl;
 
-//#ifdef IN_EMU
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_GLUE_FRAME_TIMINGS_B)
+#if defined(SSE_GLUE_FRAME_TIMINGS_B)
 
 // no more plans!
 
-#elif defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START)
-screen_event_struct event_plan_50hz[313*2+2+1],event_plan_60hz[263*2+2+1],event_plan_70hz[600*2+2+1],
-                    event_plan_boosted_50hz[313*2+2+1],event_plan_boosted_60hz[263*2+2+1],event_plan_boosted_70hz[600*2+2+1];
-
-void event_trigger_vbi();
-
-#elif defined(STEVEN_SEAGAL) && defined(SSE_INT_HBL_EVENT)
-
-screen_event_struct event_plan_50hz[313*2+4],event_plan_60hz[263*2+4],event_plan_70hz[600*2+4],
-                    event_plan_boosted_50hz[313*2+4],event_plan_boosted_60hz[263*2+4],event_plan_boosted_70hz[600*2+4];
-
-#elif defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE_370) 
+#elif defined(SSE_VAR_RESIZE_370) 
 /*  There was room for hbi, hbl but only hbl was used for some reason.
     Since we can't fix anything with apart hbl and hbi events, we may as well
     reduce memory footprint by: 
@@ -100,7 +87,7 @@ int cpu_time_of_start_of_event_plan;
 //int cpu_time_of_next_hbl_interrupt=0;
 int time_of_next_timer_b=0;
 int time_of_last_hbl_interrupt;
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBL_IACK)
+#if defined(SSE_INT_VBL_IACK)
 int time_of_last_vbl_interrupt;
 #endif
 #if defined(SSE_VAR_RESIZE_382)
@@ -115,9 +102,6 @@ bool hbl_pending;
 
 int cpu_timer_at_res_change;
 
-
-//#endif
-
 #if USE_PASTI
 void event_pasti_update();
 #endif
@@ -125,15 +109,12 @@ void event_pasti_update();
 #undef EXT
 #undef INIT
 
-#endif//SSE_STRUCTURE_RUN_H
-
 #include "SSE/SSEDebug.h"
-
-#if defined(SSE_STRUCTURE_SSEFLOPPY_OBJ)
 #include "SSE/SSEFloppy.h"
-#endif
-
 #include "SSE/SSEGlue.h"
+
+#endif//decla
+
 
 #ifdef SHOW_DRAW_SPEED
 extern HWND  StemWin;
@@ -146,12 +127,16 @@ void exception(int exn,exception_action ea,MEM_ADDRESS a)
   io_word_access=0;
   ioaccess=0;
   ExceptionObject.init(exn,ea,a);
+#if defined(SSE_M68K_EXCEPTION_TRY_CATCH)
+  throw &ExceptionObject;
+#else
   if (pJmpBuf==NULL){
     log_write(Str("Unhandled exception! pc=")+HEXSl(old_pc,6)+" action="+int(ea)+" address involved="+HEXSl(a,6));
     BRK( Unhandled exception! ); //emulator crash on bad snapshot etc.
     return;
   }
   longjmp(*pJmpBuf,1);
+#endif
 }
 //---------------------------------------------------------------------------
 void run()
@@ -160,7 +145,7 @@ void run()
 #if defined(SSE_CPU_HALT)
   if(M68000.ProcessingState==TM68000::HALTED)
     return; // cancel "run" until reset
-#if defined(SSE_GUI_STATUS_STRING_380)
+#if defined(SSE_GUI_STATUS_STRING_ICONS)
   else if(M68000.ProcessingState==TM68000::BOILER_MESSAGE)
   {
     M68000.ProcessingState=TM68000::NORMAL;
@@ -197,7 +182,7 @@ void run()
 
   Sound_Start();
 
-#if defined (STEVEN_SEAGAL) && defined(SSE_SHIFTER_TRICKS)
+#if defined(SSE_SHIFTER_TRICKS)
   GLU.AddFreqChange(shifter_freq);
 #else
   ADD_SHIFTER_FREQ_CHANGE(shifter_freq);
@@ -216,7 +201,7 @@ void run()
 
   log_write(">>> Start Emulation <<<");
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_START_STOP_INFO)
+#if defined(SSE_DEBUG_START_STOP_INFO)
   Debug.TraceGeneralInfos(TDebug::START);
 #endif
 
@@ -239,10 +224,12 @@ void run()
   if (Blit.Busy) Blitter_Draw();
   do{
     ExcepHappened=0;
-#if defined(SSE_VAR_MAIN_LOOP1)
+#if defined(SSE_VAR_MAIN_LOOP1)//undef 383, see main.cpp
     try {
 #endif
+#pragma warning(disable: 4611) //383
     TRY_M68K_EXCEPTION
+#pragma warning(default: 4611)
       while (runstate==RUNSTATE_RUNNING){
         // cpu_cycles is the amount of cycles before next event.
         // SS It is *decremented* by instruction timings, not incremented.
@@ -292,7 +279,9 @@ void run()
       if (crash_notification!=CRASH_NOTIFICATION_NEVER){
         alertflag=true;
 //        try{
+#pragma warning(disable: 4611) //383
         TRY_M68K_EXCEPTION
+#pragma warning(default: 4611)
           WORD a=m68k_dpeek(LPEEK(e.bombs*4));
           if (e.bombs>8){
             alertflag=false;
@@ -331,9 +320,9 @@ void run()
       if (runstate!=RUNSTATE_RUNNING) ExcepHappened=0;
 #endif
     END_M68K_EXCEPTION
-#if defined(SSE_VAR_MAIN_LOOP1)
-/*  This will catch some exceptions. Tested with DIVMAX.TOS when
-    SSE_CPU_DIVS_OVERFLOW_PC isn't defined.
+#if defined(SSE_VAR_MAIN_LOOP1)//undef 383
+/*  This will catch exceptions during emulation.
+    Tested with DIVMAX.TOS when SSE_CPU_DIVS_OVERFLOW_PC isn't defined.
     Also triggered sometimes when refactoring GLUE/Frame timings
 */
     }
@@ -382,10 +371,10 @@ void run()
 
   log_write(">>> Stop Emulation <<<");
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_START_STOP_INFO)
+#if defined(SSE_DEBUG_START_STOP_INFO)
   Debug.TraceGeneralInfos(TDebug::STOP);
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_AUTO_FLUSH_TRACE)
+#if defined(SSE_BOILER_AUTO_FLUSH_TRACE)
   if(Debug.trace_file_pointer)
     fflush(Debug.trace_file_pointer);
 #endif
@@ -436,7 +425,7 @@ void inline prepare_event_again() //might be an earlier one
     
     PREPARE_EVENT_CHECK_FOR_TIMER_B;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_EVENT_WRITE)
+#if defined(SSE_INT_MFP_EVENT_WRITE)
     PREPARE_EVENT_CHECK_FOR_MFP_WRITE;
 #endif
     
@@ -444,20 +433,20 @@ void inline prepare_event_again() //might be an earlier one
     
     PREPARE_EVENT_CHECK_FOR_PASTI;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_FLOPPY_EVENT)
+#if defined(SSE_FLOPPY_EVENT)
     PREPARE_EVENT_CHECK_FOR_FLOPPY;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_DMA_DELAY)
+#if defined(SSE_DMA_DELAY)
     PREPARE_EVENT_CHECK_FOR_DMA;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_IRQ_DELAY)
+#if defined(SSE_ACIA_IRQ_DELAY)
 // not defined anymore (v3.5.2), see MFP
     PREPARE_EVENT_CHECK_FOR_ACIA_IKBD_IN;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301_EVENT)
+#if defined(SSE_IKBD_6301_EVENT)
     PREPARE_EVENT_CHECK_FOR_IKBD;
 #endif
 
@@ -496,7 +485,7 @@ void inline prepare_next_event() //SS check this "inline" thing
 
     PREPARE_EVENT_CHECK_FOR_TIMER_B;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_EVENT_WRITE)
+#if defined(SSE_INT_MFP_EVENT_WRITE)
     PREPARE_EVENT_CHECK_FOR_MFP_WRITE;
 #endif
       
@@ -504,15 +493,15 @@ void inline prepare_next_event() //SS check this "inline" thing
       
     PREPARE_EVENT_CHECK_FOR_PASTI;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_FLOPPY_EVENT)
+#if defined(SSE_FLOPPY_EVENT)
     PREPARE_EVENT_CHECK_FOR_FLOPPY;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_DMA_DELAY)
+#if defined(SSE_DMA_DELAY)
     PREPARE_EVENT_CHECK_FOR_DMA;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301_EVENT)
+#if defined(SSE_IKBD_6301_EVENT)
     PREPARE_EVENT_CHECK_FOR_IKBD; // two events: both directions
 #endif
 
@@ -535,7 +524,7 @@ void inline prepare_next_event() //SS check this "inline" thing
 */
 inline void handle_timeout(int tn) {
 
-  log(Str("MFP: Timer ")+char('A'+tn)+" timeout at "+ABSOLUTE_CPU_TIME+" timeout was "+mfp_timer_timeout[tn]+
+  dbg_log(Str("MFP: Timer ")+char('A'+tn)+" timeout at "+ABSOLUTE_CPU_TIME+" timeout was "+mfp_timer_timeout[tn]+
     " period was "+mfp_timer_period[tn]);
 
   if (mfp_timer_period_change[tn]){    
@@ -555,7 +544,7 @@ inline void handle_timeout(int tn) {
   int stage=(mfp_timer_timeout[tn]-ABSOLUTE_CPU_TIME); 
 
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
-  if(OPTION_PRECISE_MFP)
+  if(OPTION_C2)
     stage-=MC68901.Wobble[tn]; //get the correct timing (no drift)
 #endif
 
@@ -567,7 +556,7 @@ inline void handle_timeout(int tn) {
 
   int new_timeout=ABSOLUTE_CPU_TIME+stage; 
 
-  if(OPTION_PRECISE_MFP)
+  if(OPTION_C2)
   {
 #if defined(SSE_INT_MFP_RATIO_PRECISION)
   mfp_timer_period_current_fraction[tn]+=mfp_timer_period_fraction[tn]; 
@@ -605,7 +594,7 @@ inline void handle_timeout(int tn) {
 // adding the fractional part every 4 cycles
 
 #define HANDLE_TIMEOUT(tn) \
-  log(Str("MFP: Timer ")+char('A'+tn)+" timeout at "+ABSOLUTE_CPU_TIME+" timeout was "+mfp_timer_timeout[tn]+ \
+  dbg_log(Str("MFP: Timer ")+char('A'+tn)+" timeout at "+ABSOLUTE_CPU_TIME+" timeout was "+mfp_timer_timeout[tn]+ \
     " period was "+mfp_timer_period[tn]); \
   if (mfp_timer_period_change[tn]){    \
     MFP_CALC_TIMER_PERIOD(tn);          \
@@ -627,7 +616,7 @@ inline void handle_timeout(int tn) {
 #else 
 
 #define HANDLE_TIMEOUT(tn) \
-  log(Str("MFP: Timer ")+char('A'+tn)+" timeout at "+ABSOLUTE_CPU_TIME+" timeout was "+mfp_timer_timeout[tn]+ \
+  dbg_log(Str("MFP: Timer ")+char('A'+tn)+" timeout at "+ABSOLUTE_CPU_TIME+" timeout was "+mfp_timer_timeout[tn]+ \
     " period was "+mfp_timer_period[tn]); \
   if (mfp_timer_period_change[tn]){    \
     MFP_CALC_TIMER_PERIOD(tn);          \
@@ -690,7 +679,7 @@ void event_timer_b()
       mfp_timer_counter[1]-=64;
       log_to(LOGSECTION_MFP_TIMERS,EasyStr("MFP: Timer B counter decreased to ")+(mfp_timer_counter[1]/64)+" at "+scanline_cycle_log());
       if (mfp_timer_counter[1]<64){
-        log(EasyStr("MFP: Timer B timeout at ")+scanline_cycle_log());
+        dbg_log(EasyStr("MFP: Timer B timeout at ")+scanline_cycle_log());
 #ifdef SSE_DEBUG
         if (mfp_interrupt_enabled[8]) TRACE_LOG("F%d y%d c%d Timer B pending\n",TIMING_INFO); //?
 #endif
@@ -717,23 +706,7 @@ void event_timer_b()
 #undef LOGSECTION
 //---------------------------------------------------------------------------
 
-
-#if defined(SSE_INT_HBL_EVENT) //no, MFD
-
-void event_hbl()   //just HBL, don't draw yet
-{
- // if (abs_quick(screen_event_pointer->time-time_of_last_hbl_interrupt)>CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED)
-    hbl_pending=true;
-
-  screen_event_pointer++;  
-//  prepare_next_event();
-  ASSERT( screen_event_pointer->event==event_scanline );
-
- ////! cpu_timer_at_start_of_hbl=time_of_next_event; //linecycle0 stays the same
-
-}
-
-#elif defined(SSE_INT_VBI_START) || defined(SSE_INT_HBL_ONE_FUNCTION)
+#if defined(SSE_INT_HBL_ONE_FUNCTION)
 /*  Still to spare memory, we do without this function, that is
     duplicated in event_scanline().
 */
@@ -763,7 +736,7 @@ void event_hbl()   //just HBL, don't draw yet
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
   cpu_timer_at_start_of_hbl=time_of_next_event; // SS as defined in draw.cpp
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER)
+#if defined(SSE_SHIFTER)
   Shifter.IncScanline();
   ASSERT(scan_y==-32 || scan_y==-62 || scan_y==-33);
 #else
@@ -777,7 +750,7 @@ void event_hbl()   //just HBL, don't draw yet
   }
 #endif
   if (abs_quick(cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt)>CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_HBL_IACK_FIX)
+#if defined(SSE_INT_HBL_IACK_FIX)
     -12 // 28-12 = 16 = IACK cycles
 #endif
     ){
@@ -787,37 +760,29 @@ void event_hbl()   //just HBL, don't draw yet
 #if !defined(SSE_GLUE_FRAME_TIMINGS_B)
   screen_event_pointer++;  
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301)
   // we run some 6301 cycles at the end of each scanline (x1)
-  if(HD6301EMU_ON && !HD6301.Crashed)
+  if(OPTION_C1 && !HD6301.Crashed)
   {
-#if defined(SSE_IKBD_6301_RUN_CYCLES_AT_IO)
-    if(!HD6301.RunThisHbl) 
-#endif
-    {
-      ASSERT(HD6301_OK);
-      int n6301cycles;
+    ASSERT(HD6301_OK);
+    int n6301cycles;
 #if defined(SSE_SHIFTER)
-      n6301cycles=GLU.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
+    n6301cycles=GLU.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
 #else
-      n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
+    n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
 #endif
-      ASSERT(n6301cycles);
-      if(!hd6301_run_cycles(n6301cycles))
-      {
+    ASSERT(n6301cycles);
+    if(!hd6301_run_cycles(n6301cycles))
+    {
 #define LOGSECTION LOGSECTION_IKBD
-        TRACE_LOG("6301 emu is hopelessly crashed!\n");
+      TRACE_LOG("6301 emu is hopelessly crashed!\n");
 #undef LOGSECTION
-        HD6301.Crashed=1; 
-      }
+      HD6301.Crashed=1; 
     }
-#if defined(SSE_IKBD_6301_RUN_CYCLES_AT_IO)
-    HD6301.RunThisHbl=0; // reset for next hbl
-#endif
   }
 #endif//6301
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IPF) && !defined(SSE_IPF_CPU)
+#if defined(SSE_DISK_CAPS)
   if(Caps.Active==1) 
     Caps.Hbl(); 
 #endif
@@ -825,7 +790,7 @@ void event_hbl()   //just HBL, don't draw yet
 #endif
 //---------------------------------------------------------------------------
 
-#if defined(SSE_GLUE_FRAME_TIMINGS7B) && !defined(SSE_GLUE_FRAME_TIMINGS_C)
+#if defined(SSE_GLUE_FRAME_TIMINGS_HBL)
 /*  We take some tasks out of event_scanline(), so we can execute them from
     event_vbl_interrupt().
 */
@@ -834,107 +799,93 @@ void event_scanline_sub() {
 #define LOGSECTION LOGSECTION_AGENDA
   CHECK_AGENDA;
 #undef LOGSECTION
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301)
   // we run some 6301 cycles at the end of each scanline (x312)
-  if(HD6301EMU_ON && !HD6301.Crashed)
+  if(OPTION_C1 && !HD6301.Crashed)
   {
-#if defined(SSE_IKBD_6301_RUN_CYCLES_AT_IO)
-    if(!HD6301.RunThisHbl) 
-#endif
-    {
-      ASSERT(HD6301_OK);
-      int n6301cycles;
+    ASSERT(HD6301_OK);
+    int n6301cycles;
 #if defined(SSE_SHIFTER)
-      ASSERT(GLU.CurrentScanline.Cycles>=224);
-      n6301cycles=GLU.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
+    ASSERT(GLU.CurrentScanline.Cycles>=224);
+    n6301cycles=GLU.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
 #else
-      n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
+    n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
 #endif
-      ASSERT(n6301cycles);
-      if(hd6301_run_cycles(n6301cycles)==-1)
-      {
+    ASSERT(n6301cycles);
+    if(hd6301_run_cycles(n6301cycles)==-1)
+    {
 #define LOGSECTION LOGSECTION_IKBD
-        TRACE_LOG("6301 emu is hopelessly crashed!\n");
+      TRACE_LOG("6301 emu is hopelessly crashed!\n");
 #undef LOGSECTION
-        TRACE2("6301 emu crash\n");
-        HD6301.Crashed=1; 
-      }
+      TRACE2("6301 emu crash\n");
+      HD6301.Crashed=1; 
     }
-#if defined(SSE_IKBD_6301_RUN_CYCLES_AT_IO)
-    HD6301.RunThisHbl=0; // reset for next hbl
-#endif
   }
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IPF) && !defined(SSE_IPF_CPU)
+#if defined(SSE_DISK_CAPS)
   if(Caps.Active==1)
     Caps.Hbl();
 #endif
 
-  if (dma_sound_on_this_screen) dma_sound_fetch(); 
+  if (dma_sound_on_this_screen) 
+    dma_sound_fetch(); 
 }
 
 #endif
 
 void event_scanline()
 {
- // ASSERT(!shifter_skip_raster_for_hscroll);
 
-#if defined(SSE_GLUE_FRAME_TIMINGS7B) && !defined(SSE_GLUE_FRAME_TIMINGS_C)
+#if defined(SSE_GLUE_FRAME_TIMINGS_HBL)
+
   event_scanline_sub();
+
 #else
 
 #define LOGSECTION LOGSECTION_AGENDA
   CHECK_AGENDA;
 #undef LOGSECTION
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301)
   // we run some 6301 cycles at the end of each scanline (x312)
-  if(HD6301EMU_ON && !HD6301.Crashed)
+  if(OPTION_C1 && !HD6301.Crashed)
   {
-#if defined(SSE_IKBD_6301_RUN_CYCLES_AT_IO)
-    if(!HD6301.RunThisHbl) 
-#endif
-    {
-      ASSERT(HD6301_OK);
-      int n6301cycles;
+    ASSERT(HD6301_OK);
+    int n6301cycles;
 #if defined(SSE_SHIFTER)
-      ASSERT(GLU.CurrentScanline.Cycles>=224);
-      n6301cycles=GLU.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
+    ASSERT(GLU.CurrentScanline.Cycles>=224);
+    n6301cycles=GLU.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
 #else
-      n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
+    n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
 #endif
-      ASSERT(n6301cycles);
-      if(hd6301_run_cycles(n6301cycles)==-1)
-      {
+    ASSERT(n6301cycles);
+    if(hd6301_run_cycles(n6301cycles)==-1)
+    {
 #define LOGSECTION LOGSECTION_IKBD
-        TRACE_LOG("6301 emu is hopelessly crashed!\n");
+      TRACE_LOG("6301 emu is hopelessly crashed!\n");
 #undef LOGSECTION
-        HD6301.Crashed=1; 
-      }
+      HD6301.Crashed=1; 
     }
-#if defined(SSE_IKBD_6301_RUN_CYCLES_AT_IO)
-    HD6301.RunThisHbl=0; // reset for next hbl
-#endif
   }
 #endif
 
 #endif
 
-#if defined(STEVEN_SEAGAL)
+#if defined(SSE_VERSION)
 /*  Note: refactoring here is very dangerous!
     We must separate SSE_SHIFTER from SSE_INTERRUPT, which makes for many
     #if blocks.
 */
 
 #if defined(SSE_GLUE) && defined(SSE_INT_MFP_TIMER_B_AER2)
-  if(OPTION_PRECISE_MFP && GLU.FetchingLine())
+  if(OPTION_C2 && GLU.FetchingLine())
     CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq); // update each scanline
 #endif
 
   if (scan_y<shifter_first_draw_line-1){
     if (scan_y>=draw_first_scanline_for_border){
       if (bad_drawing==0) 
-#if defined(SSE_SHIFTER) &&!defined(SSE_SHIFTER_DRAW_DBG)
+#if defined(SSE_SHIFTER)
         Shifter.DrawScanlineToEnd();
 #else
         draw_scanline_to_end();
@@ -943,7 +894,7 @@ void event_scanline()
     }
   }else if (scan_y<shifter_first_draw_line){ //next line is first visible
     if (bad_drawing==0) 
-#if defined(SSE_SHIFTER) &&!defined(SSE_SHIFTER_DRAW_DBG)
+#if defined(SSE_SHIFTER)
       Shifter.DrawScanlineToEnd();
 #else
       draw_scanline_to_end();
@@ -956,7 +907,7 @@ void event_scanline()
 #endif
   }else if (scan_y<shifter_last_draw_line-1){
     if (bad_drawing==0) 
-#if defined(SSE_SHIFTER) &&!defined(SSE_SHIFTER_DRAW_DBG)
+#if defined(SSE_SHIFTER)
       Shifter.DrawScanlineToEnd();
 #else
       draw_scanline_to_end();
@@ -973,7 +924,7 @@ void event_scanline()
 #endif
   }else if (scan_y<draw_last_scanline_for_border){
     if (bad_drawing==0) 
-#if defined(SSE_SHIFTER) &&!defined(SSE_SHIFTER_DRAW_DBG)
+#if defined(SSE_SHIFTER)
       Shifter.DrawScanlineToEnd();
 #else
       draw_scanline_to_end();
@@ -1003,9 +954,12 @@ void event_scanline()
 
   log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: Event Scanline at end of line ")+scan_y+" sdp is $"+HEXSl(shifter_draw_pointer,6));
   
-#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER) &&!defined(SSE_SHIFTER_DRAW_DBG)
-  GLU.EndHBL(); // check for +2 -2 errors + unstable Shifter
-#if defined(SSE_GLUE_003) // don't go for every line
+#if defined(SSE_SHIFTER) || defined(SSE_GLUE)
+#if defined(SSE_VAR_OPT_383)
+  if(GLU.FetchingLine())
+#endif
+    GLU.EndHBL(); // check for +2 -2 errors + unstable Shifter
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE2) // don't go for every line
   if((scan_y==-30||scan_y==shifter_last_draw_line-1&&scan_y<245)
     &&GLU.CurrentScanline.Cycles>224)
 #endif
@@ -1094,7 +1048,7 @@ void event_scanline()
 /*  Enforce register limitations, so that "report SDP" isn't messed up
     in the debug build.
 */
-#if defined(SSE_MMU_SDP1B) //bugfix 3.7.1 not for 14MB
+#if defined(SSE_MMU_SDP1B) //bugfix 3.7.1 not for 14MB hack
   if(mem_len<=4*1024*1024)
 #endif
     shifter_draw_pointer&=0x3FFFFE;
@@ -1137,29 +1091,28 @@ void event_scanline()
   /////// and relative to cpu_time_of_last_vbl:
   cpu_timer_at_start_of_hbl=time_of_next_event; 
 
-#if !(defined(SSE_GLUE_FRAME_TIMINGS7B) && !defined(SSE_GLUE_FRAME_TIMINGS_C))
-#if defined(STEVEN_SEAGAL) && defined(SSE_IPF) && !defined(SSE_IPF_CPU)
+#if !defined(SSE_GLUE_FRAME_TIMINGS_HBL)
+#if defined(SSE_DISK_CAPS)
   if(Caps.Active==1)
     Caps.Hbl();
 #endif
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER)
-  GLU.IncScanline();
+#if defined(SSE_GLUE)
+  GLU.IncScanline(); // will call Shifter.IncScanline()
 #else
   scan_y++;
 #endif
 
-#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT_MASK) && defined(SSE_VIDEO_CHIPSET)
   if(GLU.FetchingLine() && (FRAME_REPORT_MASK1&FRAME_REPORT_MASK_SDP_LINES)) 
   {
-   // FrameEvents.Add(scan_y,0,'H',Glue.scanline);
     FrameEvents.Add(scan_y,0,'@',(shifter_draw_pointer&0x00FF0000)>>16 ); 
     FrameEvents.Add(scan_y,0,'@',(shifter_draw_pointer&0xFFFF) ); 
   }
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_JITTER)//no
+#if defined(SSE_INT_JITTER)//no
   HblJitterIndex++; 
   if(HblJitterIndex==5)
     HblJitterIndex=0;
@@ -1176,19 +1129,18 @@ void event_scanline()
   }
 #endif
 
-#if !defined(SSE_INT_HBL_EVENT)
-#if defined(SSE_INT_HBL_IACK2) && defined(SSE_CPU_E_CLOCK2)
-  BYTE iack_latency=(HD6301EMU_ON)
+#if defined(SSE_INT_HBL_IACK2) && defined(SSE_CPU_E_CLOCK_370)
+  BYTE iack_latency=(OPTION_C1)
     ? HBL_IACK_LATENCY + M68000.LastEClockCycles[TM68000::ECLOCK_HBL]
     : CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED;
 #endif
 
   if (abs_quick(cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt)
-#if defined(SSE_INT_HBL_IACK2) && defined(SSE_CPU_E_CLOCK2)
+#if defined(SSE_INT_HBL_IACK2) && defined(SSE_CPU_E_CLOCK_370)
     >iack_latency
 #else
     >CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_HBL_IACK_FIX)
+#if defined(SSE_INT_HBL_IACK_FIX)
     -12 //this was for BBC52, useless now
 #endif
 #endif
@@ -1204,10 +1156,8 @@ void event_scanline()
       TRACE_OSD("HBI %d IACK %d",scan_y,cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt);
 #endif
   }
-  //ASSERT(hbl_pending);
 #endif
-#endif
-#if !(defined(SSE_GLUE_FRAME_TIMINGS7B) && !defined(SSE_GLUE_FRAME_TIMINGS_C))
+#if !defined(SSE_GLUE_FRAME_TIMINGS_HBL)
   if (dma_sound_on_this_screen) dma_sound_fetch(); 
 #endif
 #if !defined(SSE_GLUE_FRAME_TIMINGS_B)
@@ -1248,7 +1198,7 @@ void event_start_vbl()
     ||Glue.scanline==494&&GLU.CurrentScanline.Cycles!=224)
     return;
 #endif
-#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_VIDEOBASE)
     FrameEvents.Add(scan_y,LINECYCLES,'r',shifter_freq_idx); // "reload"
 #endif
@@ -1257,7 +1207,6 @@ void event_start_vbl()
   //TRACE_LOG("F%d L%d reload SDP (%X) <- %X\n",FRAME,scan_y,shifter_draw_pointer,xbios2);
   //TRACE("RELOAD SDP %X -> %X h %d y %d f %d c %d\n",shifter_draw_pointer,xbios2,Glue.scanline,scan_y,shifter_freq,LINECYCLES);
 
-  //ASSERT(!(xbios2&0xFF));
 #if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
   MMU.VideoCounter=
 #endif
@@ -1281,8 +1230,7 @@ void event_start_vbl()
 //---------------------------------------------------------------------------
 void event_vbl_interrupt() //SS misleading name?
 { 
-  //ASSERT(dma_sound_on_this_screen);
-#if defined(SSE_GLUE_FRAME_TIMINGS7B) && !defined(SSE_GLUE_FRAME_TIMINGS_C)
+#if defined(SSE_GLUE_FRAME_TIMINGS_HBL)
 /*  With GLU/video event refactoring, we call event_scanline() one time fewer,
     if we did now it would mess up some timings, so we call the sub
     with some HBL-dependent tasks: DMA sound, HD6301 & CAPS emu.
@@ -1303,7 +1251,7 @@ void event_vbl_interrupt() //SS misleading name?
 #endif
   { // Make sure whole screen is drawn (in 60Hz and 70Hz there aren't enough lines)
     while (scan_y<draw_last_scanline_for_border){
-#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER)
+#if defined(SSE_SHIFTER)
       if(!bad_drawing) 
         Shifter.DrawScanlineToEnd();
       scanline_drawn_so_far=0;
@@ -1348,24 +1296,22 @@ void event_vbl_interrupt() //SS misleading name?
   log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: Finished blitting at ")+(timeGetTime()-run_start_time)+" timer="+(timer-run_start_time));
 
   //----------- VBL interrupt ---------
-#if !defined(SSE_GLUE_FRAME_TIMINGS) || defined(SSE_GLUE_FRAME_TIMINGS_C) 
-
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START))
+#if !defined(SSE_GLUE_FRAME_TIMINGS)
 /*  
     VBI isn't set pending now but in 64 or so cycles.
     TODO: implement SSE_INT_VBL_IACK in the vbi event
 */
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBL_IACK)
+#if defined(SSE_INT_VBL_IACK)
 /*  This is for the case when the VBI just started (second VBI pending during
     IACK is cleared), 
     Cases? Must be pretty rare, usually the problem is not too many VBI but
     missed VBI
 */
-#if defined(SSE_INT_VBL_IACK2) && defined(SSE_CPU_E_CLOCK2) //as for HBL
+#if defined(SSE_INT_VBL_IACK2) && defined(SSE_CPU_E_CLOCK_370) //as for HBL
   if(time_of_last_vbl_interrupt+VBL_IACK_LATENCY
     +M68000.LastEClockCycles[TM68000::ECLOCK_VBL]-ACT>0)
 #else
-  if(SSE_HACKS_ON && time_of_last_vbl_interrupt+56+16-ACT>0)
+  if(OPTION_HACKS && time_of_last_vbl_interrupt+56+16-ACT>0)
 #endif
   {
 #if defined(SSE_DEBUG)
@@ -1375,7 +1321,6 @@ void event_vbl_interrupt() //SS misleading name?
   else
 #endif
   vbl_pending=true;
-#endif
 #endif//!glue
 
 /* //SS this was a commented out part:
@@ -1463,9 +1408,6 @@ void event_vbl_interrupt() //SS misleading name?
         frameskip_count=1;   //we are ahead of target so draw the next frame
         speed_limit_wait_till=auto_frameskip_target_time;
       }else{
-#define LOGSECTION LOGSECTION_VIDEO//SS
-        TRACE_LOG("Overload - Skip VBL %d\n",FRAME);
-#undef LOGSECTION
         auto_frameskip_target_time+=(run_speed_ticks_per_second+(shifter_freq/2))/shifter_freq;
       }
     }else if (VSyncing){
@@ -1645,7 +1587,7 @@ void event_vbl_interrupt() //SS misleading name?
   }
   IKBD_VBL();    // Handle ST joysticks and mouse
 #if defined(SSE_IKBD_6301_VBL)
-  if(HD6301EMU_ON)
+  if(OPTION_C1)
     HD6301.Vbl();
 #endif
 
@@ -1734,7 +1676,7 @@ void event_vbl_interrupt() //SS misleading name?
     shifter_last_draw_line*=2; //400 fetching lines
 #endif
 
-#if !defined(SSE_GLUE_FRAME_TIMINGS9) || defined(SSE_GLUE_FRAME_TIMINGS_C)
+#if !defined(SSE_MMU_RELOAD_SDP_380)
   event_start_vbl(); // Reset SDP again!
 #endif
 
@@ -1743,11 +1685,11 @@ void event_vbl_interrupt() //SS misleading name?
 #endif
 
 #if defined(SSE_SHIFTER_DRAGON1)//not defined in v3.5.2
-  if(SS_signal==SS_SIGNAL_SHIFTER_CONFUSED_1)
-    SS_signal=SS_SIGNAL_SHIFTER_CONFUSED_2; // stage 2 of our hack
+  if(SS_signal==SIGNAL_SHIFTER_CONFUSED_1)
+    SS_signal=SIGNAL_SHIFTER_CONFUSED_2; // stage 2 of our hack
 #endif  
 
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_370)
 /*  v3.7
     The ST could be set on high resolution for a long time
     on a colour screen.
@@ -1761,7 +1703,7 @@ void event_vbl_interrupt() //SS misleading name?
     its trace decoding routine.
     Update v3.8.2: other way (SSE_SHIFTER_HIRES_COLOUR_DISPLAY_382)
 */
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY5)
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_380)
   if( screen_res<2 && (GLU.m_ShiftMode&2) && COLOUR_MONITOR
     && GLU.CurrentScanline.Cycles==224) 
 #else
@@ -1775,7 +1717,7 @@ void event_vbl_interrupt() //SS misleading name?
     shifter_freq_idx=2;
     init_screen(); //radical but spares much code
   }
-#if !defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY5)
+#if !defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_380)
   else if(screen_res==2 && !(Shifter.m_ShiftMode&2) && COLOUR_MONITOR) 
   {
     screen_res=Shifter.m_ShiftMode&2;//0;//back to LORES //bug
@@ -1800,7 +1742,7 @@ void event_vbl_interrupt() //SS misleading name?
   screen_event_pointer++;
   if (screen_event_pointer->event==NULL){
     cpu_time_of_start_of_event_plan=cpu_time_of_last_vbl;
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_INT_MFP_RATIO)
     if (n_cpu_cycles_per_second>CpuNormalHz){
 #else
     if (n_cpu_cycles_per_second>8000000){
@@ -1814,7 +1756,7 @@ void event_vbl_interrupt() //SS misleading name?
   cpu_time_of_start_of_event_plan=cpu_time_of_last_vbl;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_JITTER)//no
+#if defined(SSE_INT_JITTER)//no
     VblJitterIndex++; // like Hatari  
     if(VblJitterIndex==5)
       VblJitterIndex=0;
@@ -1832,25 +1774,18 @@ void event_vbl_interrupt() //SS misleading name?
   debug_vbl();
 #endif
 
-#if defined(STEVEN_SEAGAL) && (defined(SSE_DEBUG)||defined(SSE_OSD_SHOW_TIME))
+#if (defined(SSE_DEBUG)||defined(SSE_OSD_SHOW_TIME))
   Debug.Vbl();
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER)
+#if defined(SSE_SHIFTER)
   Shifter.Vbl(); 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER) && defined(SSE_DEBUG_FRAME_REPORT)
-#if defined(SSE_DEBUG_FRAME_REPORT_SHIFTMODE)
-  FrameEvents.Add(scan_y,0,'R',Shifter.m_ShiftMode); 
-#endif
-#if defined(SSE_DEBUG_FRAME_REPORT_SYNCMODE)
-  FrameEvents.Add(scan_y,0,'S',Shifter.m_SyncMode); 
-#endif
-#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
+#if defined(SSE_SHIFTER) && defined(SSE_BOILER_FRAME_REPORT)
+#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SDP_LINES) 
   {
-   // FrameEvents.Add(scan_y,0,'H',Glue.scanline);
     FrameEvents.Add(scan_y,0,'X',(xbios2&0x00FF0000)>>16 ); 
     FrameEvents.Add(scan_y,0,'X',(xbios2&0xFFFF) ); 
   }
@@ -1864,22 +1799,10 @@ void event_vbl_interrupt() //SS misleading name?
 #endif
 
 #if !defined(SSE_GLUE_FRAME_TIMINGS)
-#if defined(STEVEN_SEAGAL) && defined(SSE_TIMINGS_FRAME_ADJUSTMENT)
+#if defined(SSE_TIMINGS_FRAME_ADJUSTMENT)
   if(shifter_freq_at_start_of_vbl==50)
   {
-#if defined(SSE_INT_HBL_EVENT)
-    ASSERT(event_plan_50hz[627].event==event_vbl_interrupt);
-#endif
-    event_plan_50hz[314
-#if defined(SSE_INT_VBI_START)
-      +1 //TODO check if correct...
-#endif
-#if defined(SSE_INT_HBL_EVENT)
-      *2-1
-#endif
-
-      ].time=160256;//restore!!!
-
+    event_plan_50hz[314].time=160256;//restore!!!
   }
 #endif
 #endif
@@ -1899,7 +1822,7 @@ void prepare_cpu_boosted_event_plans()
   int factor=n_millions_cycles_per_sec;
 #if defined(SSE_CPU_4GHZ) || defined(SSE_CPU_3GHZ) || defined(SSE_CPU_2GHZ) || defined(SSE_CPU_1GHZ) || defined(SSE_CPU_512MHZ)
   if(factor>=512)
-    SSEOption.MC68901=SSEOption.HD6301Emu=false; 
+    SSEOption.Chipset2=SSEOption.Chipset1=false; 
 #endif
   for (int idx=0;idx<3;idx++){ //3 frequencies
 #if !defined(SSE_GLUE_FRAME_TIMINGS_B)
@@ -1936,20 +1859,20 @@ void prepare_cpu_boosted_event_plans()
 void event_pasti_update()
 {
   if (hPasti==NULL || pasti_active==false
-#if defined(STEVEN_SEAGAL) && defined(SSE_PASTI_ONLY_STX)
+#if defined(SSE_DISK_PASTI_ONLY_STX)
     || PASTI_JUST_STX && 
 #if defined(SSE_DISK_IMAGETYPE)
     SF314[YM2149.SelectedDrive].ImageType.Extension!=EXT_STX
 #else
     SF314[floppy_current_drive()].ImageType!=3
 #endif
-#if defined(SSE_PASTI_ONLY_STX_HD) && defined(SSE_DMA)
+#if defined(SSE_DISK_PASTI_ONLY_STX_HD) && defined(SSE_DMA_OBJECT)
 //    && ! ( pasti_active && (Dma.MCR&BIT_3)) // hard disk handling by pasti
     && ! ( pasti_active && (Dma.MCR&TDma::CR_HDC_OR_FDC)) // hard disk handling by pasti
 #endif
 #endif
     ){
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_INT_MFP_RATIO)
     pasti_update_time=ABSOLUTE_CPU_TIME+CpuNormalHz;
 #else
     pasti_update_time=ABSOLUTE_CPU_TIME+8000000;
@@ -1970,7 +1893,7 @@ void event_pasti_update()
 }
 #endif
 //---------------------------------------------------------------------------
-#if defined(STEVEN_SEAGAL) // added events
+// SSE added events
 
 #if defined(SSE_ACIA_IRQ_DELAY) 
 /*  <v3.5.2 -dead code unless we compile old versions
@@ -1987,7 +1910,7 @@ void event_acia_rx_irq() {
   { 
     ASSERT(lcycles>=HD6301_TO_ACIA_IN_CYCLES);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_DOUBLE_BUFFER_RX)//TX?!
+#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)//TX?!
     // here we should take care of next byte but we have another
     // problem anyway (txinterrupts)
     ASSERT(ACIA_IKBD.LineRxBusy)
@@ -1995,7 +1918,7 @@ void event_acia_rx_irq() {
     {
       ACIA_IKBD.LineRxBusy=false;
 #if defined(SSE_IKBD_6301) 
-      if(HD6301EMU_ON)
+      if(OPTION_C1)
         hd6301_completed_transmission_to_MC6850=true;
 #endif
     }
@@ -2014,7 +1937,7 @@ void event_acia_rx_irq() {
     {
       keyboard_buffer_length--;
       ASSERT( keyboard_buffer_length>=0 );
-      if(!HD6301EMU_ON)
+      if(!OPTION_C1)
       {
         if(ikbd.joy_packet_pos>=keyboard_buffer_length) 
           ikbd.joy_packet_pos=-1;
@@ -2122,7 +2045,7 @@ void event_acia_rx_irq() {
 #endif
 
 
-#if defined(SSE_INT_VBI_START) || defined(SSE_GLUE_FRAME_TIMINGS)
+#if defined(SSE_GLUE_FRAME_TIMINGS)
 void event_trigger_vbi() { //6X cycles into frame (reference end of HSYNC)
 #if !defined(SSE_GLUE_FRAME_TIMINGS) // too many false alerts
   ASSERT(scan_y==-scanlines_above_screen[0]||scan_y==-scanlines_above_screen[1]||scan_y==-scanlines_above_screen[2]);
@@ -2131,13 +2054,13 @@ void event_trigger_vbi() { //6X cycles into frame (reference end of HSYNC)
   ASSERT(!Glue.Status.vbi_done);
 #endif
 
-#if defined(SSE_GLUE_FRAME_TIMINGS9) && !defined(SSE_GLUE_FRAME_TIMINGS_C)
+#if defined(SSE_MMU_RELOAD_SDP_380)
 /*  The video counter is reloaded from VBASE a second time at the end
     of VSYNC, when VBI is set pending.
 "When the MMU sees the VSync signal from the GLUE, it resets the video counter
 with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
     The MMU reacts to signal change, that's why it resets the counter twice, when
-    VSYNC is asserted, and when it is negated. 
+    VSYNC is asserted, and when it is negated. (Our theory at least)
 
     Cases
     Beyond/Universal Coders
@@ -2149,8 +2072,8 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
   //event_start_vbl();
 #endif
 
-#if defined(SSE_INT_VBL_380) && defined(SSE_CPU_E_CLOCK2) && defined(SSE_INT_VBL_IACK2)
-  BYTE iack_latency=(HD6301EMU_ON)
+#if defined(SSE_INT_VBL_380) && defined(SSE_CPU_E_CLOCK_370) && defined(SSE_INT_VBL_IACK2)
+  BYTE iack_latency=(OPTION_C1)
     ? HBL_IACK_LATENCY + M68000.LastEClockCycles[TM68000::ECLOCK_VBL]
     : CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED;
  // if(abs_quick(cpu_timer_at_start_of_hbl-time_of_last_vbl_interrupt)
@@ -2213,7 +2136,7 @@ int time_of_event_ikbd,time_of_event_ikbd2;
 
 void event_ikbd() {
   time_of_event_ikbd=time_of_next_event+n_cpu_cycles_per_second; 
-  if(HD6301EMU_ON && (HD6301.EventStatus&1))
+  if(OPTION_C1 && (HD6301.EventStatus&1))
   {
     HD6301.EventStatus&=0xFE;
     agenda_keyboard_replace(0);
@@ -2223,7 +2146,7 @@ void event_ikbd() {
 
 void event_ikbd2() {
   time_of_event_ikbd2=time_of_next_event+n_cpu_cycles_per_second; 
-  if(HD6301EMU_ON && (HD6301.EventStatus&2))
+  if(OPTION_C1 && (HD6301.EventStatus&2))
   {
     HD6301.EventStatus&=0xFD;
     agenda_ikbd_process(ACIA_IKBD.TDRS);
@@ -2232,13 +2155,13 @@ void event_ikbd2() {
 
 #endif//ikbd
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_EVENT_WRITE)
+#if defined(SSE_INT_MFP_EVENT_WRITE)
 
 int time_of_event_mfp_write;
 
 void event_mfp_write() {
   
-  if(OPTION_PRECISE_MFP && MC68901.WritePending)
+  if(OPTION_C2 && MC68901.WritePending)
   {
     ASSERT(time_of_event_mfp_write!=MC68901.WriteTiming);
 //    TRACE_MFP("%d execute event_mfp_write(): mfp_reg[%d]=%X\n",ACT,MC68901.LastRegisterWritten,MC68901.LastRegisterWrittenValue);
@@ -2254,14 +2177,11 @@ void event_mfp_write() {
       check_for_interrupts_pending();   // radical? //test10 vs audio artistic
 #endif
   }
-#ifndef SSE_INT_MFP_EVENT_WRITE2
-  else  //MFD 
-#endif
-    time_of_event_mfp_write=time_of_next_event+n_cpu_cycles_per_second;
+  time_of_event_mfp_write=time_of_next_event+n_cpu_cycles_per_second;
 }
 
 
 #endif//mfp
 
-#endif//seagal
+
 

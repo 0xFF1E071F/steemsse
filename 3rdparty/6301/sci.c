@@ -47,10 +47,12 @@ sci_in (s, nbytes)
   u_char *s;
 int nbytes;
 {
-#ifndef SSE_VS2008_WARNING_382
+#if !defined(SSE_VS2008_WARNING_382) || !defined(SSE_IKBD_6301_380)
   int i;
 #endif
+#if !defined(SSE_VS2008_WARNING_383) || defined(SSE_DEBUG)
   u_char trcsr=iram[TRCSR];
+#endif
   ASSERT(nbytes==1);
   ASSERT(trcsr&RE);
   ASSERT(!(trcsr&RDRF));

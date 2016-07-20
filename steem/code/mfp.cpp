@@ -6,11 +6,11 @@ DESCRIPTION: The core of Steem's Multi Function Processor emulation
 the ST.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: mfp.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_MFP_H)
+#if defined(SSE_STRUCTURE_DECLA)
 
 #define EXT
 #define INIT(s) =s
@@ -39,8 +39,6 @@ int mfp_timer_period_fraction[4]; //={0,0,0,0}; //no need to init? //v3.7 not in
 int mfp_timer_period_current_fraction[4]; //={0,0,0,0}; 
 #endif
 bool mfp_timer_period_change[4]={0,0,0,0};
-//int mfp_timer_prescale_counter[4]={0,0,0,0};
-//int mfp_gpip_timeout;
 bool mfp_interrupt_enabled[16];
 int mfp_time_of_start_of_last_interrupt[16];
 #if defined(SSE_INT_MFP_IRQ_DELAY3)
@@ -55,17 +53,15 @@ int cpu_time_of_first_mfp_tick;
 #undef EXT
 #undef INIT
 
-#endif
-
 #include "SSE/SSEGlue.h"
+#endif
 
 #if defined(SSE_INT_MFP_OBJECT)
 TMC68901 MC68901; // singleton, the infamous MFP
 #endif
 
 #ifdef SSE_DEBUG
-#define LOGSECTION LOGSECTION_MFP//SS
-
+#define LOGSECTION LOGSECTION_MFP
 char* mfp_reg_name[]={"GPIP","AER","DDR","IERA","IERB","IPRA","IPRB","ISRA",
   "ISRB","IMRA","IMRB","VR","TACR","TBCR","TCDCR","TADR","TBDR","TCDR","TDDR",
   "SCR","UCR","RSR","TSR","UDR"};
@@ -102,13 +98,6 @@ Practically on the ST, the request is placed by clearing the bit in the GPIP.
   BYTE mask=BYTE(1 << bit); //SS get the bit in hexa //is cast useless?
   BYTE set_mask=BYTE(set ? mask:0); //SS same or 0 if we clear
   BYTE cur_val=(mfp_reg[MFPR_GPIP] & mask); //SS state of that GPIP bit
-#ifdef SSE_INT_MFP_UPDATE_IP_ON_GPIP_CHANGE //v3.8.0//mistake, MFD, but should be tested
-  //if(!set) //oops :)
-  if(OPTION_PRECISE_MFP && set && (mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(mfp_gpip_irq[bit])]&
-      BYTE(mfp_interrupt_i_bit(mfp_gpip_irq[bit])) ))
-    mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(mfp_gpip_irq[bit])]&=
-      BYTE(~mfp_interrupt_i_bit(mfp_gpip_irq[bit]));
-#endif
   if (cur_val==set_mask) return; //no change
   //SS detects if we're setting an IRQ
   // (but not the reverse: Hackabonds)
@@ -123,8 +112,8 @@ Practically on the ST, the request is placed by clearing the bit in the GPIP.
     // Transition the right way! Make the interrupt pend (don't cause an intr
     // straight away in case another more important one has just happened).
     mfp_interrupt_pend(mfp_gpip_irq[bit],ABSOLUTE_CPU_TIME);
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_IRQ_DELAY) //no
-    if(SSE_HACKS_ON)
+#if defined(SSE_INT_MFP_IRQ_DELAY) //no
+    if(OPTION_HACKS)
       ioaccess|=IOACCESS_FLAG_DELAY_MFP; 
     else
 #endif
@@ -144,17 +133,17 @@ void calc_time_of_next_timer_b() //SS called only by mfp_set_timer_reg()
 #endif
         time_of_next_timer_b=cpu_timer_at_start_of_hbl+cpu_cycles_from_hbl_to_timer_b
 #if defined(SSE_INT_MFP_TIMER_B_WOBBLE_HACK)
-        /*  We need the hack when emulation is more precise??
-        Possible explanation: writing now forces some sync with MFP?
-        TODO
-        */
-        + (OPTION_PRECISE_MFP&&SSE_HACKS_ON?0:TB_TIME_WOBBLE);
+/*  For Sunny STE. We need the hack when emulation is more precise??
+    Possible explanation: writing now forces some sync with MFP?
+    TODO
+*/
+        + (OPTION_C2&&OPTION_HACKS?0:TB_TIME_WOBBLE);
 #else
         +TB_TIME_WOBBLE;
 #endif
 
 #if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
-  if(OPTION_PRECISE_MFP&&(GLU.CurrentScanline.Tricks&TRICK_LINE_MINUS_106)
+  if(OPTION_C2&&(GLU.CurrentScanline.Tricks&TRICK_LINE_MINUS_106)
     && LINECYCLES>166+28+4) // not if Timer B occurred in shift mode 2
     time_of_next_timer_b+=scanline_time_in_cpu_cycles[shifter_freq_idx]; 
 #endif 
@@ -167,7 +156,7 @@ void calc_time_of_next_timer_b() //SS called only by mfp_set_timer_reg()
   }
 }
 //---------------------------------------------------------------------------
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_MFP_H)
+#if defined(SSE_STRUCTURE_DECLA)
 // inline functions -> mfp.decla.h
 #else
 inline BYTE mfp_get_timer_control_register(int n)
@@ -198,14 +187,11 @@ inline bool mfp_set_pending(int irq,int when_set)
 bool mfp_set_pending(int irq,int when_set) { //SS this function travels...
 
 #if defined(SSE_INT_MFP_IRQ_TIMING) && !defined(SSE_INT_MFP_REFACTOR2) // moved at the end
-  if(OPTION_PRECISE_MFP)
+  if(OPTION_C2)
   {
 #if defined(SSE_INT_MFP_GPIP_TO_IRQ_DELAY)     
     if(MC68901.IrqInfo[irq].IsGpip)
       when_set+=4; // documented delay between input transition and IRQ
-#endif
-#if defined(SSE_INT_MFP_RECORD_PENDING_TIMING)
-    MC68901.PendingTiming[irq]=when_set; // record timing
 #endif
     MC68901.UpdateNextIrq(irq,when_set);
     //ASSERT(MC68901.Irq); //argh! before we update register
@@ -215,7 +201,7 @@ bool mfp_set_pending(int irq,int when_set) { //SS this function travels...
 #if defined(SSE_INT_MFP_IACK_LATENCY2) || defined(SSE_INT_MFP_IACK_LATENCY4)
     //v3.7 - we check before
 #if defined(SSE_INT_MFP_OPTION)
-  if(OPTION_PRECISE_MFP
+  if(OPTION_C2
     || (abs_quick(when_set-mfp_time_of_start_of_last_interrupt[irq])
     >=CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED))
 #endif
@@ -235,14 +221,11 @@ bool mfp_set_pending(int irq,int when_set) { //SS this function travels...
 #endif
 
 #if defined(SSE_INT_MFP_IRQ_TIMING) && defined(SSE_INT_MFP_REFACTOR2)
-  if(OPTION_PRECISE_MFP)
+  if(OPTION_C2)
   {
 #if defined(SSE_INT_MFP_GPIP_TO_IRQ_DELAY)     
     if(MC68901.IrqInfo[irq].IsGpip)
       when_set+=4; // documented delay between input transition and IRQ
-#endif
-#if defined(SSE_INT_MFP_RECORD_PENDING_TIMING)
-    MC68901.PendingTiming[irq]=when_set; // record timing
 #endif
 #if defined(SSE_DEBUG)
     if(was_already_pending)
@@ -283,6 +266,9 @@ bool mfp_set_pending(int irq,int when_set) { //SS this function travels...
   pins, TAI and TBI, are used for the event and pulse width modes for timers A
   and B.
 */
+#if !defined(SSE_DEBUG)
+#define LOGSECTION LOGSECTION_MFP_TIMERS
+#endif
 void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 {
   ASSERT(reg>=MFPR_TACR && reg<=MFPR_TCDCR || reg>=MFPR_TADR && reg<=MFPR_TDDR); // data too!
@@ -306,14 +292,14 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
     This is explained by internal MFP delays, but it also covers a pre-IRQ
     delay (see MFP_TIMER_DATA_REGISTER_ADVANCE).
 */
-    INSTRUCTION_TIME(OPTION_PRECISE_MFP?MFP_TIMER_SET_DELAY:12); // SSEParameters.h
+    INSTRUCTION_TIME(OPTION_C2?MFP_TIMER_SET_DELAY:12); // SSEParameters.h
 #else
     INSTRUCTION_TIME(12); // The MFP doesn't do anything until 12 cycles after the write
 #endif
     do{ //SS this do to do D
       if (mfp_get_timer_control_register(timer)!=new_control){
         new_control&=7;
-        log( EasyStr("MFP: ")+HEXSl(old_pc,6)+" - Changing timer "+char('A'+timer)+" control; current time="+
+        dbg_log( EasyStr("MFP: ")+HEXSl(old_pc,6)+" - Changing timer "+char('A'+timer)+" control; current time="+
               ABSOLUTE_CPU_TIME+"; old timeout="+mfp_timer_timeout[timer]+";"
               "\r\n           ("+(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl)+
               " cycles into scanline #"+scan_y+")" );
@@ -329,8 +315,8 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
         if (new_control){ // Timer running in delay mode
                           // SS or pulse, but it's very unlikely
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_PATCH_TIMER_D) //no
-          if(SSE_HACKS_ON 
+#if defined(SSE_INT_MFP_PATCH_TIMER_D) //no
+          if(OPTION_HACKS 
             && timer==3 // = Timer D
             && old_pc > rom_addr // for Second Reality 2013 sound
             )
@@ -350,7 +336,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
           mfp_timer_enabled[timer]=mfp_interrupt_enabled[mfp_timer_irq[timer]];
 
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO_PRECISION_2)
+#if defined(SSE_INT_MFP_RATIO_PRECISION_2)
 /*  We keep the 'double' result instead of computing it twice like before.
 */
           double precise_cycles= mfp_timer_prescale[new_control]
@@ -358,7 +344,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
                                     *CPU_CYCLES_PER_MFP_CLK;
           mfp_timer_period[timer]=(int)precise_cycles;
 #if defined(SSE_INT_MFP_OPTION)
-          if(OPTION_PRECISE_MFP)
+          if(OPTION_C2)
 #endif
           {
             mfp_timer_period_fraction[timer]
@@ -374,7 +360,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
             * CPU_CYCLES_PER_MFP_CLK);
         //  TRACE("mfp_timer_period[%d]=%d\n",timer,mfp_timer_period[timer]);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO_PRECISION)
+#if defined(SSE_INT_MFP_RATIO_PRECISION)
 /*  Here we do exactly what Steem authors suggested above, and it does bring the
     timing measurements at the same level as SainT and Hatari, at least in
     HWTST001.PRG by ljbk, so it's definitely an improvement, and it isn't 
@@ -385,7 +371,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
           mfp_timer_period_current_fraction[timer]=0;//added later?
 #endif
 
-#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO_PRECISION_2)
+#endif//#if defined(SSE_INT_MFP_RATIO_PRECISION_2)
 
 #if defined(SSE_DEBUG) && defined(SSE_INT_MFP_RATIO_PRECISION)
 #if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY)
@@ -459,7 +445,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 #endif
 
 #if defined(SSE_INT_MFP_OPTION)
-          if(OPTION_PRECISE_MFP) 
+          if(OPTION_C2) 
 #endif
           {
 
@@ -467,7 +453,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
             //MC68901.SkipTimer[timer]=0;//?
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO_PRECISION3)
+#if defined(SSE_INT_MFP_RATIO_PRECISION3)
 /*  As soon as there's a fractional part (almost all the time), that means
     that the CPU can't be interrupted before next CPU cycle after IRQ.
 */
@@ -488,7 +474,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
             mfp_timer_timeout[timer]+=MC68901.Wobble[timer];
 #endif
           }
-          log(EasyStr("    Set control to ")+new_control+
+          dbg_log(EasyStr("    Set control to ")+new_control+
                 " (reg=$"+HEXSl(new_val,2)+"); data="+mfp_reg[MFPR_TADR+timer]+
                 "; counter="+mfp_timer_counter[timer]/64+
                 "; period="+mfp_timer_period[timer]+
@@ -505,7 +491,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 */
 
 #if defined(SSE_INT_MFP_EVENT_WRITE)
-          if(OPTION_PRECISE_MFP && !new_val 
+          if(OPTION_C2 && !new_val 
             && mfp_timer_enabled[timer] && ACT-mfp_timer_timeout[timer]>=0)
           {
             BYTE i_ab=mfp_interrupt_i_ab(mfp_timer_irq[timer]);
@@ -518,7 +504,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
             }
           }
 #else
-          if(OPTION_PRECISE_MFP && !new_val 
+          if(OPTION_C2 && !new_val 
             && mfp_timer_enabled[timer] // hem... Platoon STX
             && ACT-mfp_timer_timeout[timer]>=0
             && ! MC68901.InService(mfp_timer_irq[timer]) //only use
@@ -542,7 +528,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 
           mfp_timer_enabled[timer]=false;
           mfp_timer_period_change[timer]=0;
-          log(EasyStr("  Set control to ")+new_control+" (reg=$"+HEXSl(new_val,2)+")"+
+          dbg_log(EasyStr("  Set control to ")+new_control+" (reg=$"+HEXSl(new_val,2)+")"+
                 "; counter="+mfp_timer_counter[timer]/64+" ;"+
                 LPSTR((timer<2 && (new_val & BIT_3)) ? "event count mode.":"stopped.") );
         }
@@ -553,7 +539,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
     }while (timer==3);
 
 #if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY)
-    INSTRUCTION_TIME(OPTION_PRECISE_MFP?-MFP_TIMER_SET_DELAY:-12); 
+    INSTRUCTION_TIME(OPTION_C2?-MFP_TIMER_SET_DELAY:-12); 
 #else
     INSTRUCTION_TIME(-12);
 #endif
@@ -562,7 +548,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
       calc_time_of_next_timer_b();
 #ifdef ENABLE_LOGGING
     if (reg<=MFPR_TBCR && new_val>8){
-      log("MFP: --------------- PULSE EXTENSION MODE!! -----------------");
+      dbg_log("MFP: --------------- PULSE EXTENSION MODE!! -----------------");
     }
 #endif
 #ifdef SSE_DEBUG
@@ -571,7 +557,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 #if defined(SSE_INT_MFP_TIMER_B_PULSE)
 /*  TODO
 */    
-      if(OPTION_PRECISE_MFP && reg==MFPR_TBCR)
+      if(OPTION_C2 && reg==MFPR_TBCR)
       {
         TRACE_LOG("MFP Pulse mode %X\n",new_val);
       }
@@ -582,7 +568,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
     prepare_event_again();
   }else if (reg>=MFPR_TADR && reg<=MFPR_TDDR){ //data reg change
     timer=reg-MFPR_TADR;
-    log(Str("MFP: ")+HEXSl(old_pc,6)+" - Changing timer "+char(('A')+timer)+" data reg to "+new_val+" ($"+HEXSl(new_val,2)+") "+
+    dbg_log(Str("MFP: ")+HEXSl(old_pc,6)+" - Changing timer "+char(('A')+timer)+" data reg to "+new_val+" ($"+HEXSl(new_val,2)+") "+
           " at time="+ABSOLUTE_CPU_TIME+" ("+(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl)+
           " cycles into scanline #"+scan_y+"); timeout is "+mfp_timer_timeout[timer]);
     new_control=BYTE(mfp_get_timer_control_register(timer));
@@ -606,7 +592,7 @@ is not loaded into the timer until it counts through H01.
         mfp_timer_timeout[timer]=ABSOLUTE_CPU_TIME+stage; //realign
       }
     }
-    log(EasyStr("     Period is ")+mfp_timer_period[timer]+" cpu cycles");
+    dbg_log(EasyStr("     Period is ")+mfp_timer_period[timer]+" cpu cycles");
     if (reg==MFPR_TDDR && new_val!=old_val){
       RS232_CalculateBaud(bool(mfp_reg[MFPR_UCR] & BIT_7),new_control,0);
     }
@@ -727,7 +713,7 @@ void ASMCALL check_for_interrupts_pending()
     It also adds ACIA events to the test.
 */
       MC68901.IackTiming=ACT; // record start of IACK cycle (also if option C2 not checked)
-      if(OPTION_PRECISE_MFP) // if not, "old" Steem test
+      if(OPTION_C2) // if not, "old" Steem test
       {
 #if defined(SSE_INT_MFP_EVENT_WRITE_SPURIOUS)
         // make sure we don't start IACK if IRQ should be cleared by a write
@@ -779,7 +765,7 @@ void ASMCALL check_for_interrupts_pending()
     fine without the feature.
 */
           WORD oldsr=sr;
-#if defined(SSE_DEBUG)
+#if defined(SSE_BOILER) && defined(SSE_OSD_CONTROL)
           char dbg_iack_subst=0;
 #endif
           sr=WORD((sr & (~SR_IPL)) | SR_IPL_6); // already forbid other interrupts
@@ -789,7 +775,7 @@ void ASMCALL check_for_interrupts_pending()
             INSTRUCTION_TIME(cpu_cycles); // hop to event
 #if defined(SSE_BOILER_TRACE_EVENTS)
             TRACE_MFP(">IACK ");
-            if(TRACE_ENABLED)
+            if(TRACE_ENABLED(LOGSECTION_MFP))
               TRACE_EVENT(screen_event_vector);
 #endif
             screen_event_vector();  // trigger event //big possible bug:twice??
@@ -801,13 +787,13 @@ void ASMCALL check_for_interrupts_pending()
 
 #if defined(SSE_INT_MFP_REFACTOR2A1) && defined(SSE_INT_MFP_EVENT_WRITE_SPURIOUS)
 /*  Spurious triggers even if we don't break, there certainly were other bugs?
-    - hmm, no more, rahter confusing!
+    - hmm, no more, rather confusing!
 */
 #ifdef SSE_DEBUG
             if(!MFP_IRQ)
               TRACE_MFP("lost IRQ during IACK %d\n",iack_latency);
 #endif
-#elif defined(SSE_INT_MFP_REFACTOR2) && defined(SSE_INT_MFP_EVENT_WRITE_SPURIOUS) //MFD
+#elif defined(SSE_INT_MFP_REFACTOR2) && defined(SSE_INT_MFP_EVENT_WRITE_SPURIOUS)
 /*  As soon as an event clears IRQ during IACK, we go in panic mode. 
     This should trigger spurious interrupt.
     It could actually depend on when exactly during IACK but in SPURIOUS.TOS,
@@ -909,7 +895,7 @@ void ASMCALL check_for_interrupts_pending()
                       continue; // examine lower irqs too
                   }
 #endif    
-#if defined(SSE_DEBUG) && defined(SSE_OSD_CONTROL) \
+#if defined(SSE_BOILER) && defined(SSE_OSD_CONTROL) \
   && !defined(SSE_DEBUG_MFP_DEACTIVATE_IACK_SUBSTITUTION)
                   if(dbg_iack_subst && (OSD_MASK1 & OSD_CONTROL_IACK))
                     TRACE_OSD("IACK %d %d -> %d",iack_latency,MC68901.NextIrq,irq);
@@ -966,7 +952,7 @@ void ASMCALL check_for_interrupts_pending()
       // no C2 option = Steem 3.2
       else for (int irq=15;irq>=0;irq--)
       {
-        ASSERT(!OPTION_PRECISE_MFP)
+        ASSERT(!OPTION_C2)
         BYTE i_bit=BYTE(1 << (irq & 7));
         int i_ab=1-((irq & 8) >> 3);
         if (mfp_reg[MFPR_ISRA+i_ab] & i_bit){ //interrupt in service
@@ -996,7 +982,7 @@ void ASMCALL check_for_interrupts_pending()
         }
 
 #if defined(SSE_INT_MFP_SPURIOUS)
-        if(OPTION_PRECISE_MFP && MC68901.CheckSpurious(irq))
+        if(OPTION_C2 && MC68901.CheckSpurious(irq))
           break;
 #endif
 
@@ -1009,7 +995,7 @@ void ASMCALL check_for_interrupts_pending()
 */
           BYTE relevant_mask_register=mfp_reg[MFPR_IMRA+i_ab] & i_bit;
           BYTE relevant_pending_register=mfp_reg[MFPR_IPRA+i_ab] & i_bit;
-          if(OPTION_PRECISE_MFP && ACT-MC68901.WriteTiming<=MFP_WRITE_LATENCY
+          if(OPTION_C2 && ACT-MC68901.WriteTiming<=MFP_WRITE_LATENCY
             && ACT-MC68901.WriteTiming>=0)
           {
             if(MC68901.LastRegisterWritten==MFPR_IMRA+i_ab)
@@ -1037,7 +1023,7 @@ void ASMCALL check_for_interrupts_pending()
 #endif
               ASSERT(mfp_reg[MFPR_IERA+i_ab] & i_bit);
 #if defined(SSE_INT_MFP_OPTION)
-              if(OPTION_PRECISE_MFP)
+              if(OPTION_C2)
 #endif
               {
 #if defined(SSE_INT_MFP_IACK_LATENCY2)
@@ -1134,8 +1120,12 @@ void ASMCALL check_for_interrupts_pending()
                   break;
                 }
 #endif    
-              }//OPTION_PRECISE_MFP
+              }//OPTION_C2
+#if defined(SSE_INT_MFP_REFACTOR1) && defined(SSE_VS2008_WARNING_382)
+              mfp_interrupt(irq); //then cause interrupt
+#else
               mfp_interrupt(irq,ABSOLUTE_CPU_TIME); //then cause interrupt
+#endif
               break;        //lower priority interrupts not allowed now.
             }//enabled
           }//mask OK
@@ -1160,7 +1150,7 @@ void ASMCALL check_for_interrupts_pending()
         }
 
 #if defined(SSE_INT_MFP_IRQ_DELAY3)
-        if(irq==6 && SSE_HACKS_ON
+        if(irq==6 && OPTION_HACKS
           && ACT-mfp_time_of_set_pending[irq]<4 && ACT-mfp_time_of_set_pending[irq]>=0)
         {
           TRACE_LOG("IRQ %d set pending %d cycles ago\n",irq,ACT-mfp_time_of_set_pending[irq]);
@@ -1169,7 +1159,7 @@ void ASMCALL check_for_interrupts_pending()
 #endif
         if (mfp_reg[MFPR_IPRA+i_ab] & i_bit){ //is this interrupt pending?
           if (mfp_reg[MFPR_IMRA+i_ab] & i_bit){ //is it not masked out?
-#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_BLIT_MODE_INTERRUPT)
+#if defined(SSE_BLT_BLIT_MODE_INTERRUPT)
             if(Blit.HasBus) // opt: we assume the test is quicker than clearing
               Blit.HasBus=false; 
 #endif
@@ -1185,7 +1175,7 @@ void ASMCALL check_for_interrupts_pending()
     if (vbl_pending){ //SS IPL4
       if ((sr & SR_IPL)<SR_IPL_4){
         VBL_INTERRUPT
-#if defined(SSE_GLUE_FRAME_TIMINGS3)
+#if defined(SSE_GLUE_FRAME_TIMINGS)
         if(Glue.Status.hbi_done)
           hbl_pending=false;
 #endif
@@ -1195,7 +1185,7 @@ void ASMCALL check_for_interrupts_pending()
     else
 #endif
     if (hbl_pending
-#if defined(SSE_GLUE_FRAME_TIMINGS3)
+#if defined(SSE_GLUE_FRAME_TIMINGS)
       && !Glue.Status.hbi_done
 #endif      
       ){ 
@@ -1207,7 +1197,7 @@ void ASMCALL check_for_interrupts_pending()
         if (int(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl)<scanline_time_in_cpu_cycles_at_start_of_vbl){
           HBL_INTERRUPT;
         }
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG) 
+#if defined(SSE_DEBUG) 
         // can happen quite a lot
         else if(LPEEK(0x0068)<0xFC0000) TRACE_LOG("no hbl %X\n",LPEEK(0x0068));
 #endif
@@ -1282,7 +1272,7 @@ void mfp_interrupt(int irq,int when_fired) {
 #endif
 
   }
-#if defined(STEVEN_SEAGAL) && defined(SSE_IPF) 
+#if defined(SSE_DISK_CAPS) 
   // should be rare, most programs, including TOS, poll
   if(irq==7 && Caps.Active && (Caps.WD1772.lineout&CAPSFDC_LO_INTRQ))
   {
@@ -1291,7 +1281,7 @@ void mfp_interrupt(int irq,int when_fired) {
   }
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_BLT_BLIT_MODE_INTERRUPT)
+#if defined(SSE_BLT_BLIT_MODE_INTERRUPT)
 /*  Stop blitter to start interrupt. This is a bugfix and necessary for Lethal
     Xcess if we use the correct BLIT mode cycles (64x4).
     v3.7 This mod is better placed here, when there's an actual interrupt.
@@ -1306,16 +1296,11 @@ void mfp_interrupt(int irq,int when_fired) {
   //SS timing is recorded before counting any IACK/fetching cycle
   mfp_time_of_start_of_last_interrupt[irq]=ABSOLUTE_CPU_TIME; 
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
-#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
-#if defined(SSE_BOILER_FRAME_REPORT_MASK2)
+#if defined(SSE_DEBUG)
+#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_INT)
-#else
-  if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_MFP)
-#endif
     FrameEvents.Add(scan_y,LINECYCLES,'I',0x60+irq);
 #endif
-  //TRACE_INT("%d %d %d (%d) PC %X IRQ %d VEC %X ",TIMING_INFO,ACT,old_pc,irq,LPEEK(vector));
   TRACE_INT("%d PC %X IRQ %d VEC %X ",ACT,old_pc,irq,LPEEK(vector));
   switch(irq)
   {
@@ -1350,7 +1335,7 @@ void mfp_interrupt(int irq,int when_fired) {
 #endif//dbg
 
 #if defined(SSE_INT_MFP_IRQ_TIMING)
-  if(OPTION_PRECISE_MFP)
+  if(OPTION_C2)
   {
 #if !defined(SSE_INT_MFP_REFACTOR2)
     MC68901.IackTiming=ACT;//was never used as such
@@ -1360,9 +1345,9 @@ void mfp_interrupt(int irq,int when_fired) {
   }
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP) 
+#if defined(SSE_INT_MFP) 
 #if defined(SSE_CPU_FETCH_TIMING)
-#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
+#if defined(SSE_CPU_FETCH_TIMING)
 #if defined(SSE_INT_MFP_REFACTOR2)
   int iack_cycles=ACT-MC68901.IackTiming;
 #if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
@@ -1400,7 +1385,7 @@ void mfp_interrupt(int irq,int when_fired) {
 void mfp_interrupt(int irq,int when_fired)
 {
 #if defined(SSE_INT_MFP_WRITE_DELAY1)
-  if(SSE_HACKS_ON &&
+  if(OPTION_HACKS &&
     abs(when_fired-time_of_last_write_to_mfp_reg)<MFP_WRITE_LATENCY)
   {
     TRACE_LOG("mfp irq %d rejected because of write delay %d\n",irq,abs(when_fired-time_of_last_write_to_mfp_reg));
@@ -1420,7 +1405,7 @@ void mfp_interrupt(int irq,int when_fired)
       }else if ((mfp_reg[MFPR_ISRA+mfp_interrupt_i_ab(irq)] & (-mfp_interrupt_i_bit(irq))) || (mfp_interrupt_i_ab(irq) && mfp_reg[MFPR_ISRA])){
         log_to_section(LOGSECTION_INTERRUPTS,EasyStr("  but outprioritized - ISR = ")+HEXSl(mfp_reg[MFPR_ISRA],2)+HEXSl(mfp_reg[MFPR_ISRB],2));
 #if defined(SSE_ACIA_IRQ_DELAY2) 
-      }else if( SSE_HACKS_ON &&
+      }else if( OPTION_HACKS &&
         irq==6 && (abs(ACT-ACIA_IKBD.last_rx_read_time)<ACIA_RDRF_DELAY)){
         TRACE_LOG("MFP delay irq %d %d\n",irq,ACT-ACIA_IKBD.last_rx_read_time);
 #endif
@@ -1434,7 +1419,7 @@ void mfp_interrupt(int irq,int when_fired)
             }else{
               mfp_reg[MFPR_ISRA+mfp_interrupt_i_ab(irq)]&=BYTE(~mfp_interrupt_i_bit(irq));
             }
-#if defined(STEVEN_SEAGAL) && defined(SSE_IPF) 
+#if defined(SSE_DISK_CAPS) 
             // should be rare, most programs, including TOS, poll
             if(irq==7 && Caps.Active && (Caps.WD1772.lineout&CAPSFDC_LO_INTRQ))
             {
@@ -1449,14 +1434,10 @@ void mfp_interrupt(int irq,int when_fired)
             mfp_time_of_start_of_last_interrupt[irq]=ABSOLUTE_CPU_TIME; 
 #ifdef SSE_DEBUG // trace, osd, frame report
 #if defined(SSE_BOILER_FRAME_REPORT_MASK)
-#if defined(SSE_BOILER_FRAME_REPORT_MASK2)
-          if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_INT)
-#else
           if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_MFP)
-#endif
             FrameEvents.Add(scan_y,LINECYCLES,'I',0x70+irq);
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)//tmp
+#if defined(SSE_DEBUG)//tmp
           TRACE_LOG("%d %d %d (%d) PC %X IRQ %d VEC %X ",TIMING_INFO,ACT,old_pc,irq,LPEEK(vector));
           switch(irq)
           {
@@ -1487,9 +1468,9 @@ void mfp_interrupt(int irq,int when_fired)
 #endif
 #endif//dbg
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP) 
+#if defined(SSE_INT_MFP) 
 #if defined(SSE_CPU_FETCH_TIMING)
-#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_FETCH_TIMING)
+#if defined(SSE_CPU_FETCH_TIMING)
             INSTRUCTION_TIME_ROUND(SSE_INT_MFP_TIMING-4);
             FETCH_TIMING;
 #if defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
@@ -1632,9 +1613,6 @@ bool TMC68901::Pending(int irq,int at_time) {
   // if it times out just before the effective write to reg
   // we're checking later anyway and it's rightfully cleared
   bool is_pending= 
-#ifdef SSE_INT_MFP_RECORD_PENDING_TIMING
-    (at_time-PendingTiming[irq]>=0) && 
-#endif
     ((reg & mfp_interrupt_i_bit(irq)));
   return is_pending;
 }
@@ -1667,7 +1645,7 @@ bool TMC68901::TimerBActive() {
 
 bool TMC68901::CheckSpurious(int irq) {
   ASSERT((sr&SR_IPL_6)<SR_IPL_6);
-  ASSERT( OPTION_PRECISE_MFP ); // you need more CPU power
+  ASSERT( OPTION_C2 ); // you need more CPU power
   bool spurious_triggered=false;
 
 #if defined(SSE_INT_MFP_SPURIOUS_372)
@@ -1806,7 +1784,7 @@ int TMC68901::UpdateNextIrq(int at_time) {
 #else
 int TMC68901::UpdateNextIrq(int start_from_irq,int at_time) {
 #endif
-  ASSERT(OPTION_PRECISE_MFP);
+  ASSERT(OPTION_C2);
   NextIrq=-1; //default: none in sight
   Irq=false;
   if(at_time==-1)//default
@@ -1868,7 +1846,7 @@ int TMC68901::UpdateNextIrq(int start_from_irq,int at_time) {
 */
 
 void TMC68901::AdjustTimerB() {
-  ASSERT(OPTION_PRECISE_MFP); // another waste of cycles...
+  ASSERT(OPTION_C2); // another waste of cycles...
   if(mfp_reg[MFPR_TBCR]!=8)
     return;
   int CyclesIn=LINECYCLES;
@@ -1880,7 +1858,8 @@ void TMC68901::AdjustTimerB() {
   if(CyclesIn<=linecycle_of_end_de 
     && linecycle_of_end_de-(time_of_next_timer_b-28-LINECYCLE0) >2)
   {
-    int tmp=time_of_next_timer_b-LINECYCLE0;
+
+//    int tmp=time_of_next_timer_b-LINECYCLE0;
     bool adapt_time_of_next_event=(time_of_next_event==time_of_next_timer_b);
     time_of_next_timer_b=LINECYCLE0+linecycle_of_end_de+28+TB_TIME_WOBBLE;
 //    TRACE_LOG("F%d y%d c%d timer b type %d %d -> %d adapt %d\n",TIMING_INFO,tmp,(mfp_reg[MFPR_AER]&8),time_of_next_timer_b-LINECYCLE0,adapt_time_of_next_event);
@@ -1899,16 +1878,22 @@ void TMC68901::CalcCyclesFromHblToTimerB(int freq) {
     case 60: cpu_cycles_from_hbl_to_timer_b=(CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320-4);break; 
     default: cpu_cycles_from_hbl_to_timer_b=(CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320); 
   }
-  if(OPTION_PRECISE_MFP && (mfp_reg[MFPR_AER]&8)) 
+#ifdef SSE_GLUE
+  if(OPTION_C2 && (mfp_reg[MFPR_AER]&8)) 
     // from Hatari, fixes Seven Gates of Jambala; Trex Warrior
     cpu_cycles_from_hbl_to_timer_b-=Glue.DE_cycles[shifter_freq_idx];
   ASSERT(cpu_cycles_from_hbl_to_timer_b<512); // can be short
+#endif
 }
 
 #endif
 
 #if defined(SSE_INT_MFP_REFACTOR2)
+#if defined(SSE_VS2008_WARNING_383)
+void TMC68901::Reset() {
+#else
 void TMC68901::Reset(bool Cold) {
+#endif
   Irq=false;
   IrqSetTime=ACT;
 }
@@ -1918,7 +1903,7 @@ void TMC68901::Reset(bool Cold) {
 #undef LOGSECTION
 
 
-#if !defined(STEVEN_SEAGAL) // this function isn't used
+#if !defined(SSE_VAR_DEAD_CODE)
 // Use this for single-bit transitions in the GPIP
 void mfp_gpip_transition(int bitnum,bool is_0_1_transition)
 {

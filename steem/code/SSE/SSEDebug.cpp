@@ -1,7 +1,5 @@
+#include "SSE.h"
 #include "SSEDebug.h"
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-#include "SSEMMU.h"
-#endif
 
 #if defined(SSE_DEBUG) || defined(DEBUG_FACILITIES_IN_RELEASE)
 
@@ -9,11 +7,9 @@
 #include "../pch.h" 
 #pragma hdrstop 
 #else
-//#include <windows.h>
 #include <ddraw.h>
 #endif
 
-#if defined(SSE_STRUCTURE_SSEDEBUG_OBJ)
 #ifdef WIN32
 #include <time.h>
 #endif
@@ -29,13 +25,10 @@
 #include "SSEFloppy.h"
 #include <display.decla.h>
 #include <init_sound.decla.h>
-#endif
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 #include "SSEMMU.h"
-#endif
 #include "SSEInterrupt.h"
+#include "SSECpu.h"
 
-#include "SSECpu.h"//tmp
 #if defined(SSE_DEBUG)
 int debug0,debug1=0,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9;
 #endif
@@ -50,10 +43,7 @@ extern "C" void (_stdcall *hd6301_trace)(char *fmt, ...);
 #endif
 #endif
 
-#ifdef __cplusplus
-//extern "C" 
-#endif
-TDebug Debug; // singleton
+TDebug Debug; // singleton, now present in all builds
 
 TDebug::TDebug() {
 #if defined(SSE_DEBUG)
@@ -265,7 +255,11 @@ void TDebug::Trace(char *fmt, ...){
 #if defined(SSE_UNIX)
   int nchars=vsnprintf(trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
 #else
+#if defined(SSE_VS2008_WARNING_383) && !defined(SSE_DEBUG)
+  _vsnprintf(trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
+#else
   int nchars=_vsnprintf(trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
+#endif
 #endif
   va_end(body);	
 #ifdef SSE_DEBUG
@@ -367,8 +361,9 @@ void TDebug::TraceGeneralInfos(int when) {
     TRACE("DD ");
 #endif
     TRACE("v%d %s %s\n",SSE_VERSION,__DATE__,__TIME__);
+#ifdef SSE_SSE_CONFIG_STRUCT
     TRACE("%s %d %s %d %s %d %s %d %s %d %s %d\n",UNRAR_DLL,SSEConfig.UnrarDll,
-      UNZIP_DLL,SSEConfig.unzipd32Dll,SSE_IPF_PLUGIN_FILE,SSEConfig.CapsImgDll,
+      UNZIP_DLL,SSEConfig.unzipd32Dll,SSE_DISK_CAPS_PLUGIN_FILE,SSEConfig.CapsImgDll,
       PASTI_DLL,SSEConfig.PastiDll,ARCHIVEACCESS_DLL,SSEConfig.ArchiveAccess,
       HD6301_ROM_FILENAME,SSEConfig.Hd6301v1Img);
     //TRACE("High priority %d Task switch %d Auto pause %d Floppy skip %d Start on click %d Load snapshot %d\n",HighPriority,AllowTaskSwitch,PauseWhenInactive,floppy_access_ff,StartEmuOnClick,AutoLoadSnapShot);
@@ -376,7 +371,7 @@ void TDebug::TraceGeneralInfos(int when) {
     TRACE("Video DX %d D3D %d Mem %d BHM %d 8 %d 16 %d \n",TryDD,SSEConfig.Direct3d9,Disp.DrawToVidMem,Disp.BlitHideMouse,SSEConfig.VideoCard8bit,SSEConfig.VideoCard16bit);
     //TRACE("Sound DX %d drive %d\n",TrySound,SSEConfig.DriveSound);
     //TRACE("ACSI %d 6301 %d\n",SSEConfig.AcsiImg,SSEConfig.Hd6301v1Img);
-
+#endif
     
   }
   else
@@ -413,21 +408,21 @@ void TDebug::TraceGeneralInfos(int when) {
       TRACE("Speed %d Mhz ",n_cpu_cycles_per_second/1000000);
 #endif
 #if defined(SSE_STF) && defined(SSE_MMU_WU_DL)
-    TRACE("%s%d; ",st_model_name[ST_TYPE],MMU.WS[WAKE_UP_STATE]);
+    TRACE("%s%d; ",st_model_name[ST_TYPE],MMU.WS[OPTION_WS]);
 #endif
     TRACE("T%X %d; ",tos_version,ROM_PEEK(0x1D)); //+country
     TRACE("%dK",mem_len/1024);
 
 #if defined(SSE_HACKS)
-    if(SSE_HACKS_ON)
+    if(OPTION_HACKS)
       //TRACE("\nHacks");
       TRACE("; #");
 #endif
 #if defined(SSE_IKBD_6301)
-    if(HD6301EMU_ON)
+    if(OPTION_C1)
       TRACE("; C1");
 #endif
-    if(OPTION_PRECISE_MFP)
+    if(OPTION_C2)
       TRACE("; C2");
 #if defined(SSE_INT_MFP_RATIO) 
     if(n_cpu_cycles_per_second>CpuNormalHz)
@@ -456,7 +451,7 @@ void TDebug::TraceGeneralInfos(int when) {
     if(num_connected_floppies==2 && FloppyDrive[1].DiskInDrive())
       //TRACE("; Disk B: %s",FloppyDrive[1].DiskName.c_str()); 
       TRACE("; B: %s",FloppyDrive[1].DiskName.c_str()); 
-#if defined(SSE_FDC)
+#if defined(SSE_DRIVE_OBJECT)
     if(ADAT)
       TRACE("; ADAT");
 #endif
@@ -750,7 +745,7 @@ void TDebug::TraceEvent(void* pointer) {
     TRACE("event_start_vbl");
   else if(pointer==event_vbl_interrupt)
     TRACE("event_vbl_interrupt");
-#if defined(SSE_INT_VBI_START) || defined(SSE_GLUE_FRAME_TIMINGS)
+#if defined(SSE_GLUE_FRAME_TIMINGS)
   else if(pointer==event_trigger_vbi)
     TRACE("event_trigger_vbi");
 #endif
@@ -772,7 +767,7 @@ void TDebug::TraceEvent(void* pointer) {
   else if(pointer==event_mfp_write)
     TRACE("event_mfp_write");
 #endif
-#if defined(SSE_PASTI)
+#if defined(SSE_DISK_PASTI)
   else if(pointer==event_pasti_update)
     TRACE("event_pasti_update");
 #endif

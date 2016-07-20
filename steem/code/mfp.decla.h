@@ -8,9 +8,7 @@
 #define EXT extern
 #define INIT(s)
 
-#if defined(SSE_STRUCTURE_SSEDEBUG_OBJ)
 #include <binary.h>
-#endif
 
 inline int abs_quick(int i) //was in emu.cpp (!)
 {
@@ -18,7 +16,7 @@ inline int abs_quick(int i) //was in emu.cpp (!)
   return -i;
 }
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_TIMER_B_NO_WOBBLE)
+#if defined(SSE_INT_MFP_TIMER_B_NO_WOBBLE)
 #define TB_TIME_WOBBLE (0) // no wobble for Timer B 
 // there's wobble, confirmed by TIMERB01.TOS; TIMERB03.TOS; could be 2?
 
@@ -97,7 +95,7 @@ MFPR_UDR= 23 // ff fa2f MFP USART Data
 
 #endif
 
-#ifdef SSE_DEBUG
+#if defined(SSE_DEBUG) || defined(BCC_BUILD)
 extern char* mfp_reg_name[];//3.8.2
 #endif
 
@@ -194,14 +192,14 @@ EXT BYTE mfp_gpip_input_buffer;
 
 //#define MFP_CLK_EXACT 2450780  old version, checked inaccurately
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_INT_MFP_RATIO)
 // it's a variable now! See SSEDecla.h !!!!!!!!!!!!
 #else
 #define CPU_CYCLES_PER_MFP_CLK (8000000.0/double(MFP_CLK_EXACT))
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_IACK_LATENCY)//no
-#define CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED (SSE_HACKS_ON?32:28)
+#if defined(SSE_INT_MFP_IACK_LATENCY)//no
+#define CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED (OPTION_HACKS?32:28)
 #else
 #define CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED 20
 #endif
@@ -250,7 +248,11 @@ struct TMC68901 {
   int IrqSetTime;
   int IackTiming;
 #if defined(SSE_INT_MFP_REFACTOR2)
+#if defined(SSE_VS2008_WARNING_383)
+  void Reset();
+#else
   void Reset(bool Cold);
+#endif
   int UpdateNextIrq(int at_time=-1);
 #else
   int UpdateNextIrq(int start_from_irq=15,int at_time=-1);
@@ -274,9 +276,6 @@ struct TMC68901 {
 #if !defined(SSE_INT_MFP_REFACTOR2)
   bool TimerBActive();
 #endif
-#endif
-#if defined(SSE_INT_MFP_RECORD_PENDING_TIMING)
-  int PendingTiming[16];
 #endif
 #if defined(SSE_INT_MFP_SPURIOUS) && !defined(SSE_INT_MFP_REFACTOR2)
   bool CheckSpurious(int irq);
@@ -371,12 +370,12 @@ void mfp_interrupt(int);
 void mfp_interrupt(int,int);
 #endif
 //bool mfp_interrupt_enabled(int irq);
-#if !defined(STEVEN_SEAGAL) // this function isn't used
+#if !defined(SSE_VAR_DEAD_CODE)
 void mfp_gpip_transition(int,bool);
-void mfp_check_for_timer_timeouts(); // SS not implemented
+void mfp_check_for_timer_timeouts();
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO_PRECISION)
+#if defined(SSE_INT_MFP_RATIO_PRECISION)
 
 #define MFP_CALC_TIMER_PERIOD(t)  mfp_timer_period[t]=int(  \
           double(mfp_timer_prescale[mfp_get_timer_control_register(t)]* \
@@ -433,9 +432,9 @@ inline BYTE mfp_get_timer_control_register(int n) //was in mfp.cpp
 inline bool mfp_set_pending(int irq,int when_set) //was in mfp.cpp
 {
   ASSERT(mfp_interrupt_enabled[irq]);
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_IACK_LATENCY)
+#if defined(SSE_INT_MFP_IACK_LATENCY)
   if(abs_quick(when_set-mfp_time_of_start_of_last_interrupt[irq])
-    >= (SSE_HACKS_ON
+    >= (OPTION_HACKS
     ?56-8+CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED
     :CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED)){
 #else

@@ -7,11 +7,11 @@ frame of sound to the output buffer. The I/O code isn't included here, see
 ior.cpp and iow.cpp for the lowest level emulation.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: psg.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_PSG_H)
+#if defined(SSE_STRUCTURE_DECLA)
 
 #ifdef IN_EMU
 #define EXT
@@ -82,12 +82,6 @@ EXT DWORD temp_waveform_play_counter;
 
 #endif
 
-#if defined(SSE_YM2149_QUANTIZE_TRACE)
-#define TRACE_PSG TRACE_LOG
-#else
-#define TRACE_PSG
-#endif
-
 EXT FILE *psg_capture_file INIT(NULL);
 EXT int psg_capture_cycle_base INIT(0);
 
@@ -130,7 +124,7 @@ int dma_sound_mixer=1,dma_sound_volume=40;
 int dma_sound_l_volume=20,dma_sound_r_volume=20;
 int dma_sound_l_top_val=128,dma_sound_r_top_val=128;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE)
 #include "../../3rdparty/dsp/dsp.h"
 int dma_sound_bass=6; // 6 is neutral value
 int dma_sound_treble=6;
@@ -338,15 +332,20 @@ DWORD psg_envelope_start_time=0xfffff000;
 #undef INIT
 
 
-#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_PSG_H)
+#endif
 
 #define LOGSECTION LOGSECTION_SOUND
+#if defined(SSE_YM2149_QUANTIZE_TRACE)
+#define TRACE_PSG TRACE_LOG
+#else
+#define TRACE_PSG
+#endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_RECORD_AVI) && defined(WIN32)
+#if defined(SSE_VID_RECORD_AVI) && defined(WIN32)
 extern IDirectSoundBuffer *PrimaryBuf,*SoundBuf;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE)
 #define LOW_SHELF_FREQ 80 // 50
 #define HIGH_SHELF_FREQ (dma_sound_freq) // doesn't work very well
 #endif
@@ -374,7 +373,7 @@ HRESULT Sound_Start() // SS called by
   if (fast_forward || slow_motion || runstate!=RUNSTATE_RUNNING) return DSERR_GENERIC;
 
   sound_first_vbl=true;
-  log("SOUND: Starting sound buffers and initialising PSG variables");
+  dbg_log("SOUND: Starting sound buffers and initialising PSG variables");
 
   // Work out startup voltage
   int envshape=psg_reg[13] & 15;
@@ -464,7 +463,7 @@ void SoundStopInternalSpeaker()
   internal_speaker_sound_by_period(0);
 }
 //---------------------------------------------------------------------------
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_INLINE)
+#if defined(SSE_SOUND_INLINE)
 /*  We transform some macros into inline functions to make conditional 
     compilation easier.
     We use tricks to make the macro calls work without change
@@ -820,7 +819,7 @@ always audible."
       && ST_TYPE==STE // only if option checked and we're on STE
 #endif
 #if defined(SSE_SOUND_MICROWIRE_MIXMODE2)//3.8.0
-      && (dma_sound_on_this_screen||!SSE_HACKS_ON) // hack Sabotage
+      && (dma_sound_on_this_screen||!OPTION_HACKS) // hack Sabotage
 #endif
       )
     {
@@ -1017,7 +1016,7 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
 
 #ifdef ENABLE_VARIABLE_SOUND_DAMPING //SS for boiler...
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF)  
+#if defined(SSE_SOUND_FILTER_STF)  
 // a simplisctic but better (in my ears) low-pass filter, optional
 #define CALC_V_CHIP if(PSG_FILTER_FIX && (v!=*source_p || dv)) v=SSE_SOUND_FILTER_STF_V,dv=SSE_SOUND_FILTER_STF_DV;\
                     else if (v!=*source_p || dv){                            \
@@ -1047,7 +1046,7 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
 
 #else
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF)  
+#if defined(SSE_SOUND_FILTER_STF)  
 // a simplisctic but better (in my ears) low-pass filter, optional
 // not always better...
 #define CALC_V_CHIP if(PSG_FILTER_FIX && (v!=*source_p || dv)) v=SSE_SOUND_FILTER_STF_V,dv=SSE_SOUND_FILTER_STF_DV;\
@@ -1108,7 +1107,7 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
 
 #define SINE_ONLY(s)
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE)
 /*
 The LMC1992 is not a chip that controls the DMA-sound in its digital 
 form but manipulates the analogue sound that comes out of the DMA chip. 
@@ -1520,8 +1519,8 @@ HRESULT Sound_VBL()
   if (UseSound==0) return DSERR_GENERIC;  // Not initialised
   if (SoundActive()==0) return DS_OK;        // Not started
 
-  log("");
-  log("SOUND: Start of Sound_VBL");
+  dbg_log("");
+  dbg_log("SOUND: Start of Sound_VBL");
 
   void *DatAdr[2]={NULL,NULL};
   DWORD LockLength[2]={0,0};
@@ -1531,7 +1530,7 @@ HRESULT Sound_VBL()
   int *source_p;
 
   DWORD n_samples_per_vbl=(sound_freq*SCREENS_PER_SOUND_VBL)/shifter_freq;
-  log(EasyStr("SOUND: Calculating time; psg_time_of_start_of_buffer=")+psg_time_of_start_of_buffer);
+  dbg_log(EasyStr("SOUND: Calculating time; psg_time_of_start_of_buffer=")+psg_time_of_start_of_buffer);
 
 
   s_time=SoundGetTime();
@@ -1554,7 +1553,7 @@ HRESULT Sound_VBL()
     time_of_next_vbl_to_write=s_time+n_samples_per_vbl*(psg_write_n_screens_ahead+2);     // new bit added by Ant 9/1/2001 to stop the sound lagging behind
   }                                                                                    // get rid of it if it is causing problems
 
-  log(EasyStr("   writing from ")+write_time_1+" to "+write_time_2+"; current play cursor at "+s_time+" ("+play_cursor+"); minimum write at "+min_write_time+" ("+write_cursor+")");
+  dbg_log(EasyStr("   writing from ")+write_time_1+" to "+write_time_2+"; current play cursor at "+s_time+" ("+play_cursor+"); minimum write at "+min_write_time+" ("+write_cursor+")");
 
 //  log_write(EasyStr("writing ")+(write_time_1-s_time)+" samples ahead of play cursor, "+(write_time_1-min_write_time)+" ahead of min write");
 
@@ -1562,7 +1561,7 @@ HRESULT Sound_VBL()
   temp_waveform_display_counter=write_time_1 MOD_PSG_BUF_LENGTH;
   temp_waveform_play_counter=play_cursor;
 #endif
-  log("SOUND: Working out data up to the end of this VBL plus a bit more for all channels");
+  dbg_log("SOUND: Working out data up to the end of this VBL plus a bit more for all channels");
   TRACE_PSG("VBL finishing sound buffers from %d to %d (%d)+ extra %d\n",psg_time_of_last_vbl_for_writing,time_of_next_vbl_to_write,time_of_next_vbl_to_write-psg_time_of_last_vbl_for_writing,PSG_WRITE_EXTRA);
   for (int abc=2;abc>=0;abc--){
     psg_write_buffer(abc,time_of_next_vbl_to_write+PSG_WRITE_EXTRA);
@@ -1585,17 +1584,17 @@ HRESULT Sound_VBL()
   // write_time_1 and 2 are sample variables, convert to bytes
   DWORD StartByte=(write_time_1 MOD_PSG_BUF_LENGTH)*sound_bytes_per_sample;
   DWORD NumBytes=((write_time_2-write_time_1)+1)*sound_bytes_per_sample;
-  log(EasyStr("SOUND: Trying to lock from ")+StartByte+", length "+NumBytes);
+  dbg_log(EasyStr("SOUND: Trying to lock from ")+StartByte+", length "+NumBytes);
   Ret=SoundLockBuffer(StartByte,NumBytes,&DatAdr[0],&LockLength[0],&DatAdr[1],&LockLength[1]);
   if (Ret!=DSERR_BUFFERLOST){
     if (Ret!=DS_OK){
       log_write("SOUND: Lock totally failed, disaster!");
       return SoundError("Lock for PSG Buffer Failed",Ret);
     }
-    log(EasyStr("SOUND: Locked lengths ")+LockLength[0]+", "+LockLength[1]);
+    dbg_log(EasyStr("SOUND: Locked lengths ")+LockLength[0]+", "+LockLength[1]);
     int i=min(max(int(write_time_1-psg_time_of_last_vbl_for_writing),0),PSG_CHANNEL_BUF_LENGTH-10);
     int v=psg_voltage,dv=psg_dv; //restore from last time
-    log(EasyStr("SOUND: Zeroing channels buffer up to ")+i);
+    dbg_log(EasyStr("SOUND: Zeroing channels buffer up to ")+i);
     for (int j=0;j<i;j++){
       psg_channels_buf[j]=VOLTAGE_FP(VOLTAGE_ZERO_LEVEL); //zero the start of the buffer
     }
@@ -1617,7 +1616,7 @@ HRESULT Sound_VBL()
 #endif
 
     int val;
-    log("SOUND: Starting to write to buffers");
+    dbg_log("SOUND: Starting to write to buffers");
     WORD *lp_dma_sound_channel=dma_sound_channel_buf;
     WORD *lp_max_dma_sound_channel=dma_sound_channel_buf+dma_sound_channel_buf_last_write_t;
     BYTE *pb;
@@ -1670,7 +1669,7 @@ HRESULT Sound_VBL()
       }
     }
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_RECORD_AVI) 
+#if defined(SSE_VID_RECORD_AVI) 
     if(video_recording&&SoundBuf&&pAviFile&&pAviFile->Initialised)
     {
       VERIFY( pAviFile->AppendSound(DatAdr[0],LockLength[0])==0 );
@@ -1691,14 +1690,14 @@ HRESULT Sound_VBL()
                                        time_of_next_vbl_to_write+n_samples_per_vbl);
   psg_time_of_next_vbl_for_writing=min(psg_time_of_next_vbl_for_writing,
                                        s_time+(PSG_BUF_LENGTH/2));
-  log(EasyStr("SOUND: psg_time_of_next_vbl_for_writing=")+psg_time_of_next_vbl_for_writing);
+  dbg_log(EasyStr("SOUND: psg_time_of_next_vbl_for_writing=")+psg_time_of_next_vbl_for_writing);
 
   psg_n_samples_this_vbl=psg_time_of_next_vbl_for_writing-psg_time_of_last_vbl_for_writing;
   //TRACE("psg_n_samples_this_vbl %d\n",psg_n_samples_this_vbl); //882 x 50 = 44100
   //ASSERT(psg_n_samples_this_vbl*shifter_freq_at_start_of_vbl==sound_freq);
 
-  log("SOUND: End of Sound_VBL");
-  log("");
+  dbg_log("SOUND: End of Sound_VBL");
+  dbg_log("");
 
   //TRACE("PSG mixer %X\n",psg_reg[PSGR_MIXER]);
 
@@ -1767,7 +1766,7 @@ Bit 0 controls Replay off/on, Bit 1 controls Loop off/on (0=off, 1=on).
             }
           }
           
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_DMA_CLOCK)
+#if defined(SSE_SOUND_DMA_CLOCK)
           dma_sound_samples_countdown-=STE_DMA_CLOCK;
 #else
           dma_sound_samples_countdown-=n_cpu_cycles_per_second;
@@ -1779,7 +1778,7 @@ Bit 0 controls Replay off/on, Bit 1 controls Loop off/on (0=off, 1=on).
     }
   }
 #if defined(SSE_SOUND_DMA_380B) //hack for Light megademo screen by New Core
-  else if(SSE_HACKS_ON && (io_src_b&BIT_0) && !(dma_sound_control&BIT_1))
+  else if(OPTION_HACKS && (io_src_b&BIT_0) && !(dma_sound_control&BIT_1))
   {
     TRACE_LOG("DMA restart ");
     dma_sound_start=next_dma_sound_start;
@@ -1790,7 +1789,7 @@ Bit 0 controls Replay off/on, Bit 1 controls Loop off/on (0=off, 1=on).
   TRACE_LOG(" Freq %d\n",dma_sound_freq);
   log_to(LOGSECTION_SOUND,EasyStr("SOUND: ")+HEXSl(old_pc,6)+" - DMA sound control set to "+(io_src_b & 3)+" from "+(dma_sound_control & 3));
  
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_VOL)
+#if defined(SSE_SOUND_VOL)
   ASSERT(!(io_src_b&~3)); // Sadeness
   io_src_b&=3;
 #endif
@@ -1825,7 +1824,7 @@ void dma_sound_set_mode(BYTE new_mode)
   the CPU to mix the sample information together.
 */
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND)
+#if defined(SSE_SOUND)
 //  ASSERT(!(new_mode&~0x8F));
   new_mode&=0x8F;
   TRACE_LOG("DMA sound mode %X freq %d\n",new_mode,dma_sound_mode_to_freq[new_mode & 3]);
@@ -1833,7 +1832,7 @@ void dma_sound_set_mode(BYTE new_mode)
 
   dma_sound_mode=new_mode;
   dma_sound_freq=dma_sound_mode_to_freq[dma_sound_mode & 3];
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE)
   SampleRate=dma_sound_freq; // global of 3rd party dsp
 #endif
   log_to(LOGSECTION_SOUND,EasyStr("SOUND: ")+HEXSl(old_pc,6)+" - DMA sound mode set to $"+HEXSl(dma_sound_mode,2)+" freq="+dma_sound_freq);
@@ -1958,7 +1957,7 @@ void dma_sound_fetch()
       while (dma_sound_output_countdown>=0){
         if (dma_sound_channel_buf_last_write_t>=DMA_SOUND_BUFFER_LENGTH) break;
 
-#if defined (STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STE)
+#if defined(SSE_SOUND_FILTER_STE)//no
         // exactly the same low-pass filter as for STF sound
         // ->3.6.3 it filters but also pollutes the sound
         if(MICROWIRE_ON
@@ -2022,7 +2021,7 @@ void dma_sound_fetch()
 */
 
       ////TRACE_LOG("DMA sound reset loop %X->%X\n",next_dma_sound_start,next_dma_sound_end);
-      TRACE_LOG("%d DMA frame end reached (loop %d)\n",ACT,!!(dma_sound_control & BIT_1));
+      //TRACE_LOG("%d DMA frame end reached (loop %d)\n",ABSOLUTE_CPU_TIME,!!(dma_sound_control & BIT_1));
 
       dma_sound_start=next_dma_sound_start;
       dma_sound_end=next_dma_sound_end;
@@ -2069,7 +2068,7 @@ void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
 /*                                PSG SOUND                                  */
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-#if !defined(STEVEN_SEAGAL) //not used
+#if !defined(SSE_VAR_DEAD_CODE)
 #define PSG_CALC_VOLTAGE_ENVELOPE                                     \
       {																																	\
         envstage=(t64-est64)/envmodulo2;           \
@@ -2086,7 +2085,7 @@ void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
 #define PSG_PULSE_TONE_t64  ((t*64 / psg_tonemodulo_2) & 1)
 
 
-//#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_INLINE2)
+//#if defined(SSE_SOUND_INLINE2)
 /*  Second round of inlining
     Necessary for SSE_YM2149_DELAY_RENDERING
 */
@@ -2138,7 +2137,7 @@ void psg_prepare_envelope(double &af,double &bf,int &psg_envmodulo,DWORD t,
 #if defined(SSE_YM2149_DELAY_RENDERING)  
         envvol=(SSE_OPTION_PSG) 
 #if defined(SSE_YM2149_ENV_DEPHASING)
-          ? psg_envelope_level3[envshape][(psg_envstage+(SSE_HACKS_ON?env_phase[abc]:0)) & 63]
+          ? psg_envelope_level3[envshape][(psg_envstage+(OPTION_HACKS?env_phase[abc]:0)) & 63]
 #else
           ? psg_envelope_level3[envshape][psg_envstage & 63]
 #endif
@@ -2332,7 +2331,7 @@ void psg_envelope_advance(int &psg_envmodulo,int &psg_envstage,int &psg_envcount
 #if defined(SSE_YM2149_DELAY_RENDERING)  
         envvol=(SSE_OPTION_PSG) 
 #if defined(SSE_YM2149_ENV_DEPHASING)
-          ? psg_envelope_level3[envshape][(psg_envstage+(SSE_HACKS_ON?env_phase[abc]:0)) & 63]
+          ? psg_envelope_level3[envshape][(psg_envstage+(OPTION_HACKS?env_phase[abc]:0)) & 63]
 #else
           ? psg_envelope_level3[envshape][psg_envstage & 63]
 #endif
@@ -2829,7 +2828,7 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
   }
 
   if (SoundActive()==0){
-    log(Str("SOUND: ")+HEXSl(old_pc,6)+" - PSG reg "+reg+" changed to "+new_val+" at "+scanline_cycle_log());
+    dbg_log(Str("SOUND: ")+HEXSl(old_pc,6)+" - PSG reg "+reg+" changed to "+new_val+" at "+scanline_cycle_log());
     return;
   }
   int cpu_cycles_per_vbl=n_cpu_cycles_per_second/shifter_freq; //160000 at 50hz
@@ -2845,7 +2844,7 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
   a64/=cpu_cycles_per_vbl; //SS eg 160420
 
   DWORD t=psg_time_of_last_vbl_for_writing+(DWORD)a64;
-  log(EasyStr("SOUND: PSG reg ")+reg+" changed to "+new_val+" at "+scanline_cycle_log()+"; samples "+t+"; vbl was at "+psg_time_of_last_vbl_for_writing);
+  dbg_log(EasyStr("SOUND: PSG reg ")+reg+" changed to "+new_val+" at "+scanline_cycle_log()+"; samples "+t+"; vbl was at "+psg_time_of_last_vbl_for_writing);
 
   TRACE_PSG("PSG set reg %d = $%X (was %X), t=%d\n",reg,new_val,old_val,t);
   
@@ -2861,7 +2860,7 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
 
 #if defined(SSE_YM2149_QUANTIZE1) // undef v3.8.2
 #if defined(SSE_YM2149_QUANTIZE2) //fixes high pitch noise in YMT-Player
-      if(SSE_HACKS_ON && new_val>15 ) //pathetic hack: Union Demo text screens
+      if(OPTION_HACKS && new_val>15 ) //pathetic hack: Union Demo text screens
 #endif
         psg_write_buffer(abc,t);
 #endif
@@ -2904,7 +2903,7 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
 #endif//SSE_YM2149_QUANTIZE_382
 #if !defined(SSE_YM2149_QUANTIZE1)  || defined(SSE_YM2149_QUANTIZE2)
 #if defined(SSE_YM2149_QUANTIZE2)
-        if(new_val<=15 || !SSE_HACKS_ON) // :roll:
+        if(new_val<=15 || !OPTION_HACKS) // :roll:
 #endif
           psg_write_buffer(abc,t);
 #endif

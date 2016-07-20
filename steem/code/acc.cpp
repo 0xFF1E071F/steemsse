@@ -4,26 +4,18 @@ MODULE: Steem
 DESCRIPTION: Completely random accessory functions.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: acc.cpp")
 #endif
 
-#if !defined(SSE_STRUCTURE_CPU_H)
-void m68k_poke(MEM_ADDRESS ad,BYTE x);
-#endif
+#if defined(SSE_STRUCTURE_DECLA)
 
-#if defined(SSE_STRUCTURE_ACC_H)
-//#ifdef IN_MAIN // normally yes
 #define EXT
 #define INIT(s) =s
-//#endif
-
-
 
 #ifdef ENABLE_LOGFILE
 
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_VARIOUS)
+#if defined(SSE_VARIOUS)
   EXT bool logging_suspended INIT(TRUE);
 #else
   EXT bool logging_suspended INIT(false);
@@ -49,14 +41,14 @@ void m68k_poke(MEM_ADDRESS ad,BYTE x);
                                     {"IO",LOGSECTION_IO},
                                     {"Crash",LOGSECTION_CRASH},
                                     {"CPU",LOGSECTION_CPU},
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_BOILER_NODIV))
+#if !(defined(SSE_BOILER_NODIV))
                                     {"Div Instructions",LOGSECTION_DIV},
 #endif
                                     {"Trace",LOGSECTION_TRACE},
                                     {"-",-1},
                                     {"FDC",LOGSECTION_FDC},
                                      
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_LOG_OPTIONS)
+#if defined(SSE_DEBUG_LOG_OPTIONS)
 #if !defined(SSE_BOILER_TRACE_CONTROL)
                                     {"Floppy data",LOGSECTION_FDC_BYTES},
 //                                    {"IPF sector info",LOGSECTION_IPF_LOCK_INFO},
@@ -76,7 +68,7 @@ void m68k_poke(MEM_ADDRESS ad,BYTE x);
                                     {"MIDI",LOGSECTION_MIDI},
                                     {"-",-1},
                                     {"Speed Limiting",LOGSECTION_SPEEDLIMIT},
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_LOG_OPTIONS)
+#if defined(SSE_DEBUG_LOG_OPTIONS)
                                     {"Init",LOGSECTION_INIT},
 #else
                                     {"Startup",LOGSECTION_INIT},
@@ -141,15 +133,19 @@ int how_big_is_0000;
 
 char reg_name_buf[8]; // SS removed _
 
-
 #undef EXT
 #undef INIT
+
+#else
+
+void m68k_poke(MEM_ADDRESS ad,BYTE x);
+
 #endif
 
 
 // Porting: GetNearestPaletteIndex  get_text_width flush_message_queue
 
-/*void inline log(EasyStr a){
+/*void inline dbg_log(EasyStr a){
 #ifdef DEBUG_BUILD
   log_write(a);
 #endif
@@ -335,7 +331,9 @@ void STfile_read_to_ST_memory(FILE*f,MEM_ADDRESS ad,int n_bytes)
 
 void STfile_write_from_ST_memory(FILE *f,MEM_ADDRESS ad,int n_bytes)
 {
+#pragma warning(disable: 4611) //383
   TRY_M68K_EXCEPTION
+#pragma warning(default: 4611)
     for (int n=0;n<n_bytes;n++){
       fputc(m68k_peek(ad),f);
       ad++;
@@ -380,8 +378,11 @@ void log_os_call(int trap)
   if (logging_suspended) return;
 
   EasyStr l="",a="";
+#if defined(SSE_VS2008_WARNING_383)
+  long lpar=0;
+#else
   long lpar;
-
+#endif
   bool Invalid=0;
   MEM_ADDRESS sp=get_sp_before_trap(&Invalid);
   if (Invalid) return;
@@ -599,10 +600,18 @@ void acc_parse_search_string(Str OriginalText,DynamicArray<BYTE> &ByteList,bool 
         }
       }else{                    // Decimal
         NumLen=0;
+#if defined(SSE_VS2008_WARNING_383)
+        if (Text.Rights(2)==(char*)".W"){
+#else
         if (Text.Rights(2)==".W"){
+#endif
           NumLen=2;
           *(Text.Right()-1)=0;
+#if defined(SSE_VS2008_WARNING_383)
+        }else if (Text.Rights(2)==(char*)".L"){
+#else
         }else if (Text.Rights(2)==".L"){
+#endif
           NumLen=4;
           *(Text.Right()-1)=0;
         }
@@ -683,11 +692,9 @@ Str scanline_cycle_log()
 }
 #endif
 
-#if defined(STEVEN_SEAGAL) 
-
 #if defined(SSE_VID_SAVE_NEO) || defined(SSE_DISK_STW)
 WORD change_endian(WORD x) {
-  // it mustn't be efficient for current use
+  // it mustn't be efficient for current use //TODO is there an intrinsic?
   BYTE high=x>>8;
   BYTE low=x&0xFF;
   return (low<<8) | high;
@@ -717,7 +724,4 @@ BOOL SetClipboardText(LPCTSTR pszText) // from the 'net
    return ok;
 }
 #endif
-#endif
-
-
 #endif

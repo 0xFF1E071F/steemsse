@@ -1,6 +1,8 @@
 #ifndef DIRSEARCH_H
 #define DIRSEARCH_H
-
+#ifdef VC_BUILD
+#pragma warning(disable: 4512)//assignment operator could not be generated//383
+#endif
 class DirSearch
 {
 
@@ -55,6 +57,9 @@ public:
   bool st_only;
 };
 
+#ifdef VC_BUILD
+#pragma warning(default: 4512)
+#endif
 
 #endif
 

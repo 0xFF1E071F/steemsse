@@ -8,9 +8,8 @@ DESCRIPTION: Sets up all conditions that affect the Steem binary.
 //                         Conditional Defines for Steem
 //---------------------------------------------------------------------------
 
-#if defined(STEVEN_SEAGAL)
-#pragma once
-#endif
+
+#pragma once //SS
 #if !defined(CONDITIONS_H) //SS
 #define CONDITIONS_H //SS
 
@@ -117,7 +116,7 @@ DESCRIPTION: Sets up all conditions that affect the Steem binary.
 #ifndef DIDEVTYPE_JOYSTICK
 #define DIDEVTYPE_JOYSTICK 4
 #endif
-#if defined(STEVEN_SEAGAL) // no switch is defined here
+#if defined(COMPILER_VC6)
 #define _argc __argc  // this is M$'s name
 #define _argv __argv
 #else
@@ -383,10 +382,8 @@ extern bool logsection_enabled[100];
 class EasyStr;
 extern void log_write(EasyStr);
 
-//#if !(defined(STEVEN_SEAGAL)) && defined(SSE_DEBUG_LOG_OPTIONS))
 #define LOGSECTION_INIFILE 19
 #define LOGSECTION_GUI 20
-//#endif
 
 #define CSF_LOG(s) if (logsection_enabled[LOGSECTION_INIFILE] && logging_suspended==0) log_write(s)
 #define DTREE_LOG(s) if (logsection_enabled[LOGSECTION_GUI] && logging_suspended==0) log_write(s)

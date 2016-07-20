@@ -14,16 +14,15 @@ Some programs won't work if their disk is read only, always try making it read-w
 Some programs won't work with memory size set to 4Mb or 512Kb
 fast forward is very useful, map it to a key using shortcuts to get the full effect
 Check the new options in this SSE build: ST model, wake-up state, C1, C2, Hacks...
-More programs than you think require Accurate Disk Access Times (slow) option in the Disk manager, check Hints
+More programs than you think require Accurate Disk Access Times (slow) option in the Disk manager, check Hints.txt
 Steem SSE site is now http://ataristeven.exxoshost.co.uk
 The source of Steem SSE is at http://sourceforge.net/projects/steemsse
+Steem SSE doesn't step on toes, it steps on necks!
 
 [WINSCROLLERS]
 maximize the window to go to fullscreen mode (directx required)
-Check which fullscreen option works for you: directdraw, direct3d
 Know your mc68k from your mk68901?  Download the debug build of steem and help us get those bad games working
 drag a file to the Home button with right mouse button - easy shortcuts to your disks
-If you are using fullscreen monochrome, turn on Options - Fullscreen Mode - Use 256 Colour mode for extra speed
 Steem Boiler: Power without the price!
 ST, MSA, DIM, STT, STX, IPF, CTR, SCP, PRG, TOS: Steem runs everything!
 You need pasti.dll for STX images, capslib.dll for IPF and CTR images

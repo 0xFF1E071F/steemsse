@@ -6,7 +6,7 @@ apply patches to fix ST programs that don't work or are incompatible with
 Steem.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: patchesbox.cpp")
 #endif
 
@@ -14,7 +14,7 @@ Steem.
 void TPatchesBox::RefreshPatchList()
 {
   if (Handle==WINDOWTYPE(0)) return;
-#if defined(STEVEN_SEAGAL) && defined(SSE_VERSION)  //BCC
+#if defined(SSE_VERSION)  //BCC
   EasyStr ThisVerText=(char*)stem_version_text;
 #else
   EasyStr ThisVerText=stem_version_text;
@@ -85,7 +85,9 @@ void TPatchesBox::PatchPoke(MEM_ADDRESS &ad,int Len,DWORD Data)
       case 4: LPEEK(ad)=DWORD(Data); break;
     }
   }else if (ad>=MEM_IO_BASE){
+#pragma warning(disable: 4611) //383
     TRY_M68K_EXCEPTION
+#pragma warning(default: 4611)
       switch (Len){
         case 1: io_write_b(ad,BYTE(Data));  break;
         case 2: io_write_w(ad,WORD(Data));  break;
@@ -330,7 +332,7 @@ void TPatchesBox::Show()
                   10,10,200,20,Handle,(HMENU)99,HInstance,NULL);
 
   CreateWindowEx(512,"Listbox","",
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_PATCH_SCROLLBAR)
+#if defined(SSE_GUI_PATCH_SCROLLBAR)
     WS_VSCROLL| // easy fix, list can get longer
 #endif
     WS_VISIBLE | WS_CHILD | LBS_NOINTEGRALHEIGHT | LBS_NOTIFY,

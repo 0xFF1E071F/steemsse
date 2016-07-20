@@ -10,7 +10,7 @@
 #define BORDER_TOP 30
 #endif
 
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS))
+#if !(defined(SSE_VID_BORDERS))
 #define BORDER_SIDE 32 // redefined as variables! check SSEDecla.h
 #define BORDER_BOTTOM 40
 #endif
@@ -40,7 +40,7 @@ EXT void change_window_size_for_border_change(int oldborder,int newborder);
 
 EXT void res_change();
 
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE))
+#if !(defined(SSE_VAR_RESIZE))
 EXT int stfm_b_timer INIT(0);//tmp
 #endif
 
@@ -82,20 +82,14 @@ EXT RECT draw_blit_source_rect;
 #define DWM_STRETCH 0
 #define DWM_NOSTRETCH 1
 #define DWM_GRILLE 2
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SCANLINES_INTERPOLATED) \
+#if defined(SSE_VID_SCANLINES_INTERPOLATED) \
  && !defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
 #define DWM_STRETCH_SCANLINES 3
 #endif
 
 WIN_ONLY( EXT int draw_win_mode[2]; ) // Inited by draw_fs_blit_mode
 
-
-
-#if defined(SSE_STRUCTURE_SSE6301_OBJ)
 EXTC BYTE FullScreen INIT(0);
-#else
-EXT bool FullScreen INIT(0);
-#endif
 
 EXT bool draw_lock;
 
@@ -123,7 +117,7 @@ EXT char overscan INIT(0)
 #else
 EXT int overscan INIT(0)
 #endif
-#if !defined(SSE_SHIFTER_REMOVE_USELESS_VAR) || defined(SSE_SHIFTER_DRAW_DBG)
+#if !defined(SSE_SHIFTER_REMOVE_USELESS_VAR)
 ,stfm_borders INIT(0)
 #endif
 ;
@@ -155,10 +149,7 @@ EXT int cpu_cycles_from_hbl_to_timer_b;
 #define SCANLINE_TIME_IN_CPU_CYCLES_60HZ 508
 #define SCANLINE_TIME_IN_CPU_CYCLES_70HZ 224
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START)
-#define CYCLES_FOR_VERTICAL_RETURN_IN_50HZ 512//HBI timing
-#define CYCLES_FOR_VERTICAL_RETURN_IN_60HZ 508//HBI timing
-#elif defined(STEVEN_SEAGAL) && defined(SSE_INT_VBL_STF)
+#if defined(SSE_INT_VBL_STF)
 #define CYCLES_FOR_VERTICAL_RETURN_IN_50HZ (HblTiming)
 #define CYCLES_FOR_VERTICAL_RETURN_IN_60HZ (HblTiming)
 #else // Steem 3.2
@@ -204,7 +195,7 @@ EXT int draw_first_possible_line,draw_last_possible_line;
 
 void inline draw_scanline_to_end();
 
-#if !defined(STEVEN_SEAGAL) || !defined(SSE_VIDEO) || defined(SSE_DEBUG)
+#if !defined(SSE_VIDEO_CHIPSET)
 void inline draw_scanline_to(int);
 #endif
 
@@ -212,7 +203,7 @@ EXT int scanline_drawn_so_far;
 EXT int cpu_cycles_when_shifter_draw_pointer_updated;
 
 EXT int left_border,right_border;
-#if !defined(SSE_VAR_RESIZE_370) 
+#if !defined(SSE_VAR_RESIZE_370) || !defined(SSE_VIDEO_CHIPSET)
 EXT bool right_border_changed;
 #endif
 #if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
@@ -300,7 +291,7 @@ void ASMCALL draw_scanline_24_hires(int,int,int,int),draw_scanline_32_hires(int,
           s+=overscan_add_extra;
 #endif
 EXT int shifter_freq_change_time[32];
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE shifter_freq_change[32];
 EXT BYTE shifter_freq_change_idx;
 #else
@@ -308,7 +299,7 @@ EXT int shifter_freq_change[32];
 EXT int shifter_freq_change_idx;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER_TRICKS)
+#if defined(SSE_SHIFTER_TRICKS)
 // keeping a record for shift mode changes as well
 EXT int shifter_shift_mode_change_time[32];
 #if defined(SSE_VAR_RESIZE)
@@ -330,7 +321,7 @@ EXT int shifter_shift_mode_change_idx;
 // we then copy from draw_temp_line_buf to the old draw_dest_ad and
 // restore draw_scanline.
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS)
+#if defined(SSE_VID_BORDERS)
 //EXT BYTE draw_temp_line_buf[800*4+16+ 200 ]; // overkill but I can't count
 EXT BYTE draw_temp_line_buf[800*4+16+ 400 ]; // overkill but I can't count
 #else
@@ -355,7 +346,7 @@ EXT bool draw_line_off;
 
 EXT bool freq_change_this_scanline;
 
-#if !defined(STEVEN_SEAGAL) || !defined(SSE_VIDEO) || defined(SSE_DEBUG)
+#if !defined(SSE_VIDEO_CHIPSET)
 void draw_check_border_removal();
 #endif
 

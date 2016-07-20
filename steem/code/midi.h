@@ -1,19 +1,11 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_MIDI_H)
-
-#include "midi.decla.h"
-
-#else//!SSE_STRUCTURE_MIDI_H
-
-
 #ifdef IN_EMU
 #define EXT
 #define INIT(s) =s
 #else
 #define EXT extern
 #define INIT(s)
-
-#endif
-
+#endif
+
 int MidiGetStatusNumParams(BYTE);
 
 #define MAX_SYSEX_BUFS 10
@@ -122,5 +114,4 @@ public:
 
 #undef EXT
 #undef INIT
-
-#endif//SSE_STRUCTURE_MIDI_H
+

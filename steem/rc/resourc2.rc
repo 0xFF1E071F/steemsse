@@ -1,16 +1,9 @@
-#define WIN32 //3.8.0 for SSE_ACSI_ICON in VC, not BCC
-#ifdef STEVEN_SEAGAL // must be defined in config/resource
-#define IN_RC // to silent warning RC4011 in Visual Studio
-#include "../code/SSE/SSE.h"
-#include "../code/resnum.decla.h"
-#else
-#include "../code/resnum.h"
-#endif
-// EDIT in NOTEPAD, not the VC IDE!!!!!!!
+#include "..\\code\\resnum.h"
+
 //Update "FileVersion" and "ProductVersion" too!
 #define STEEM_VER_MAJOR 3
-#define STEEM_VER_MINOR_1 8
-#define STEEM_VER_MINOR_2 3
+#define STEEM_VER_MINOR_1 2
+#define STEEM_VER_MINOR_2 0
 
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION STEEM_VER_MAJOR,STEEM_VER_MINOR_1,STEEM_VER_MINOR_2,0
@@ -25,15 +18,15 @@ BEGIN
     BEGIN
         BLOCK "080904b0"
         BEGIN
-            VALUE "Comments", "Atari ST Emulator for all Windows systems\000"
+            VALUE "Comments", "Atari STE Emulator for all Windows systems\000"
             VALUE "CompanyName", "Anthony and Russell Hayward\000"
-            VALUE "FileDescription", "Steem Engine (Atari ST Emulator)\000"
-            VALUE "FileVersion", "3.8.3\000"
+            VALUE "FileDescription", "Steem Engine (Atari STE Emulator)\000"
+            VALUE "FileVersion", "3.2\000"
             VALUE "InternalName", "Steem\000"
             VALUE "LegalCopyright", "Copyright Anthony and Russell Hayward\000"
-            VALUE "OriginalFilename", "Steem SSE 3.8.3.exe\000"
+            VALUE "OriginalFilename", "Steem.exe\000"
             VALUE "ProductName", "The Steem Engine\000"
-            VALUE "ProductVersion", "3.8.3\000"
+            VALUE "ProductVersion", "3.2\000"
         END
     END
     BLOCK "VarFileInfo"
@@ -44,8 +37,8 @@ END
 
 
 //Bitmaps
-TOSFLAGS BITMAP "flags.bmp"
-ST_CHARS BITMAP "st_chars_mono.bmp"
+TOSFLAGS BITMAP "Flags.bmp"
+ST_CHARS BITMAP "ST_Chars_Mono.bmp"
 DEBUGICONS BITMAP "debug_icons.bmp"
 
 // Cursors
@@ -78,11 +71,7 @@ RC_ICO_HOME ICON "dm_home.ico"
 RC_ICO_SETHOME ICON "dm_set_home.ico"
 RC_ICO_BACK ICON "dm_back.ico"
 RC_ICO_FORWARD ICON "dm_forward.ico"
-#ifdef SSE_ACSI_ICON //SSE_ACSI_OPTION_INDEPENDENT
-RC_ICO_HARDDRIVES ICON "dm_hard_drives_gemdos.ico"
-#else
 RC_ICO_HARDDRIVES ICON "dm_hard_drives.ico"
-#endif
 RC_ICO_HARDDRIVES_FR ICON "dm_hard_drives_francais.ico"
 RC_ICO_DRIVEDROPDOWN ICON "dm_menu.ico"
 RC_ICO_DISKMANTOOLS ICON "dm_tools_menu.ico"
@@ -131,16 +120,6 @@ RC_ICO_OPS_PROFILES ICON "options_profiles.ico"
 RC_ICO_OPS_STARTUP ICON "options_startup.ico"
 RC_ICO_OPS_ICONS ICON "options_icons.ico"
 RC_ICO_OPS_OSD ICON "options_osd.ico"
-#ifdef SSE_GUI_OPTION_PAGE
-RC_ICO_OPS_SSE ICON "options_sse.ico"
-#endif
-//#ifdef SSE_GUI_STATUS_STRING_380
-RC_ICO_OPS_C1 ICON "options_C1.ico"
-RC_ICO_OPS_C2 ICON "options_C2.ico"
-//#endif
-#ifdef SSE_GUI_CONFIG_FILE 
-RC_ICO_CFG ICON "config.ico"
-#endif
 RC_ICO_SOUND ICON "options_sound.ico"
 RC_ICO_EXTERNAL ICON "options_ports.ico"
 RC_ICO_CHIP ICON "options_tos.ico"
@@ -158,10 +137,6 @@ RC_ICO_SHORTCUT_ON ICON "shortcut_on.ico"
 RC_ICO_SHORTCUT_OFF ICON "shortcut_off.ico"
 
 RC_ICO_PCFOLDER ICON "pc_folder.ico"
-
-#ifdef SSE_ACSI_ICON //SSE_ACSI_OPTION_INDEPENDENT
-RC_ICO_HARDDRIVES_ACSI ICON "dm_hard_drives_acsi.ico"
-#endif
 
 // DirectX Errors
 #define REAL_E_UNEXPECTED 65535
@@ -288,8 +263,7 @@ RC_ICO_HARDDRIVES_ACSI ICON "dm_hard_drives_acsi.ico"
 #define REAL_DDERR_VIDEONOTACTIVE 695
 #define REAL_DDERR_DEVICEDOESNTOWNSURFACE 699
 #define REAL_DDERR_NOTINITIALIZED REAL_CO_E_NOTINITIALIZED
-
-//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 STRINGTABLE
 {
 REAL_DD_OK,

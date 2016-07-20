@@ -1,8 +1,6 @@
-
 #pragma once //SS
 #ifndef INCLUDE_H //SS
 #define INCLUDE_H //SS
-
 
 #ifdef UNIX
 bool enable_zip=true;
@@ -54,9 +52,11 @@ using namespace std;
 #endif
 
 typedef EasyStr Str;
-
+#if defined(SSE_STRUCTURE_DECLA)
+#include "translate.decla.h"
+#else
 #include "translate.h"
-
+#endif
 #ifdef WIN32
 
 #include <choosefolder.h>
@@ -83,6 +83,26 @@ typedef EasyStr Str;
 
 #endif
 //---------------------------------------------------------------------------
+#if defined(SSE_STRUCTURE_DECLA)
+
+#ifdef WIN32
+#include "resnum.decla.h"
+#endif
+
+#include "steemh.decla.h"
+#include "notifyinit.decla.h"
+#include "stports.decla.h"
+#include "dir_id.decla.h"
+#include "fdc.decla.h"
+#include "floppy_drive.decla.h"
+#include "hdimg.decla.h"
+#include "init_sound.decla.h"
+#include "psg.decla.h"
+#include "loadsave.decla.h"
+
+
+#else
+
 #ifdef WIN32
 #include "resnum.h"
 #endif
@@ -98,9 +118,59 @@ typedef EasyStr Str;
 #include "psg.h"
 #include "loadsave.h"
 
+#endif
+
 #ifndef NO_GETCONTENTS
 #include "di_get_contents.h"
 #endif
+
+#if defined(SSE_STRUCTURE_DECLA)
+
+#include "stemdialogs.decla.h"
+#include "harddiskman.decla.h"
+#include "diskman.decla.h"
+#include "stjoy.decla.h"
+#include "infobox.decla.h"
+#include "options.decla.h"
+#include "shortcutbox.decla.h"
+#include "patchesbox.decla.h"
+#include "display.decla.h"
+#include "draw.decla.h"
+#include "osd.decla.h"
+#include "palette.decla.h"
+#include "acc.decla.h"
+#include "ikbd.decla.h"
+#include "key_table.decla.h"
+#include "mfp.decla.h"
+#include "blitter.decla.h"
+#include "run.decla.h"
+#include "reset.decla.h"
+#include "stemdos.decla.h"
+#include "iorw.decla.h"
+#include "cpu.decla.h"
+#include "midi.decla.h"
+#include "rs232.decla.h"
+#ifdef DEBUG_BUILD
+  #include "historylist.decla.h"
+  #include "d2.decla.h"
+  #include "dwin_edit.decla.h"
+  #include "iolist.decla.h"
+  #include "mem_browser.decla.h"
+  #include "mr_static.decla.h"
+  #include "debug_emu.decla.h"
+  #include "boiler.decla.h"
+  #include "trace.decla.h"
+#endif
+
+#include "archive.decla.h"
+#include "gui.decla.h"
+
+#include "macros.decla.h"
+#include "dataloadsave.decla.h"
+#include "emulator.decla.h"
+
+
+#else
 
 #include "stemdialogs.h"
 #include "harddiskman.h"
@@ -144,8 +214,16 @@ typedef EasyStr Str;
 #include "macros.h"
 #include "dataloadsave.h"
 #include "emulator.h"
+
+#endif
+
 #include <wordwrapper.h>
+
+#if defined(SSE_STRUCTURE_DECLA)
+#include "screen_saver.decla.h"
+#else
 #include "screen_saver.h"
+#endif
 
 #ifdef WIN32
 #include "dderr_meaning.h"

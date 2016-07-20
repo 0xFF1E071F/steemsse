@@ -1,6 +1,6 @@
 #include "SSE.h"
 
-#if defined(STEVEN_SEAGAL)
+#if defined(SSE_DISK)
 
 #include "../pch.h"
 
@@ -11,11 +11,17 @@
 #include "SSEDrive.h"
 #include "SSEFloppy.h"
 
-#if defined(SSE_DISK)
-
-#if defined(SSE_GUI_STATUS_STRING_DISK_TYPE) //adapted to enum of course
+#if defined(SSE_DISK_EXT) // available for all SSE versions
 char *extension_list[]={ "","ST","MSA","DIM","STT","STX","IPF",
-"CTR","STW","PRG","TOS","SCP","HFE",""};
+"CTR","STG","STW","PRG","TOS","SCP","HFE",""}; //need last?
+
+char buffer[5]=".XXX";
+
+char *dot_ext(int i) { // is it ridiculous? do we reduce or add overhead?
+  strcpy(buffer+1,extension_list[i]);
+  return buffer;
+}
+
 #endif
 
 #if defined(SSE_DISK1)
@@ -36,4 +42,3 @@ void TDisk::Init() {
 
 #endif//disk
 
-#endif//seagal

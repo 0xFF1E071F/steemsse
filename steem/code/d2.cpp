@@ -9,11 +9,11 @@ disa_d2 (see bottom of file) to disassemble an instruction and
 d2_routines_init to initialise the debugger.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: d2.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_D2_H)
+#if defined(SSE_STRUCTURE_DECLA)
 LONG d2_peekvalid;
 EasyStr d2_src,d2_dest,d2_command,d2_pc_rel_ex;
 WORD d2_ap;
@@ -173,7 +173,9 @@ BYTE d2_peek(MEM_ADDRESS ad){
       BYTE x;
       int old_mode=mode;
       mode=STEM_MODE_INSPECT;
+#pragma warning(disable: 4611) //383
       TRY_M68K_EXCEPTION
+#pragma warning(default: 4611)
 //      try{
         x=io_read_b(ad);
 //      }catch(m68k_exception){
@@ -214,19 +216,7 @@ WORD d2_dpeek(MEM_ADDRESS ad)
     variables.
 */
   if(ad>=FAKE_IO_START && ad<=FAKE_IO_END)
-  {
-#if defined(SSE_BOILER_VBL_HBL) // update control
-    if(vbl_pending)
-      BOILER_CONTROL_MASK1|=BOILER_CONTROL_VBL_PENDING;
-    else
-      BOILER_CONTROL_MASK1&=~BOILER_CONTROL_VBL_PENDING;
-    if(hbl_pending)
-      BOILER_CONTROL_MASK1|=BOILER_CONTROL_HBL_PENDING;
-    else
-      BOILER_CONTROL_MASK1&=~BOILER_CONTROL_HBL_PENDING;
-#endif
     return Debug.ControlMask[(ad-FAKE_IO_START)/2];
-  }
 #endif
 
   if(ad>=mem_len){
@@ -238,7 +228,9 @@ WORD d2_dpeek(MEM_ADDRESS ad)
       for(int nn=0;nn<2;nn++){
         x<<=8;
         d2_peekvalid<<=8;
+#pragma warning(disable: 4611) //383
         TRY_M68K_EXCEPTION
+#pragma warning(default: 4611)
           x|=io_read_b(ad+nn);
         CATCH_M68K_EXCEPTION
           d2_peekvalid|=0xff; //byte invalid
@@ -279,7 +271,9 @@ LONG d2_lpeek(MEM_ADDRESS ad){
         x<<=8;
         d2_peekvalid<<=8;
 //        try{
+#pragma warning(disable: 4611) //383
         TRY_M68K_EXCEPTION
+#pragma warning(default: 4611)
           x|=io_read_b(ad+nn);
 //        }catch(m68k_exception){
         CATCH_M68K_EXCEPTION
@@ -316,7 +310,9 @@ bool d2_poke(MEM_ADDRESS ad,BYTE val){
     if(ad>=MEM_IO_BASE){
 //      try{
       bool Ret=true;
+#pragma warning(disable: 4611) //383
       TRY_M68K_EXCEPTION
+#pragma warning(default: 4611)
         io_write_b(ad,val);
 //      }catch(m68k_exception){
       CATCH_M68K_EXCEPTION
@@ -350,10 +346,6 @@ bool d2_dpoke(MEM_ADDRESS ad,WORD val){
   if(ad>=FAKE_IO_START && ad<=FAKE_IO_END)
   {
     Debug.ControlMask[(ad-FAKE_IO_START)/2]=val&0xFF00;
-#if defined(SSE_BOILER_VBL_HBL) // update variables, but there's no event?
-    vbl_pending=!!(BOILER_CONTROL_MASK1&BOILER_CONTROL_VBL_PENDING);
-    hbl_pending=!!(BOILER_CONTROL_MASK1&BOILER_CONTROL_HBL_PENDING);
-#endif
     return true;
   }
 #endif
@@ -362,7 +354,9 @@ bool d2_dpoke(MEM_ADDRESS ad,WORD val){
     if(ad>=MEM_IO_BASE){
 //      try{
       bool Ret=true;
+#pragma warning(disable: 4611) //383
       TRY_M68K_EXCEPTION
+#pragma warning(default: 4611)
         io_write_w(ad,val);
 //      }catch(m68k_exception){
       CATCH_M68K_EXCEPTION
@@ -391,7 +385,9 @@ bool d2_lpoke(MEM_ADDRESS ad,LONG val){
     if(ad>=MEM_IO_BASE){
 //      try{
       bool Ret=true;
+#pragma warning(disable: 4611) //383
       TRY_M68K_EXCEPTION
+#pragma warning(default: 4611)
         io_write_l(ad,val);
 //      }catch(m68k_exception){
       CATCH_M68K_EXCEPTION
@@ -429,7 +425,11 @@ EasyStr d2_get_movem_regs(bool backwards){
   int regs=d2_dpeek(dpc);dpc+=2;
   bool had_one=false;
   d2_n_movem_regs=0;
+#if defined(SSE_VS2008_WARNING_383)
+  int msk=1,old_msk=0;if(backwards)msk=0x8000;
+#else
   int msk=1,old_msk;if(backwards)msk=0x8000;
+#endif
   for(int da=0;da<=1;da++){
     int mn=999;
     for(int r=0;r<8;r++){

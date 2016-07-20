@@ -1,9 +1,3 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_ACC_H)
-
-#include "acc.decla.h"
-
-#else//!defined(SSE_STRUCTURE_ACC_H)
-
 #ifdef IN_MAIN
 #define EXT
 #define INIT(s) =s
@@ -12,18 +6,23 @@
 #define INIT(s)
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SAVE_NEO)
-WORD change_endian(WORD x); // double of something?
-#endif
-
 #ifdef ENABLE_LOGFILE
 
   #define log(s)  \
    {if(logsection_enabled[LOGSECTION]){ \
       if(!logging_suspended){            \
-        log_write(s);                \
+        log_write(s);                 \
       }                               \
    }}
+
+// SSE see remark in acc.decla.h ////////////////////////////
+  #define dbg_log(s)  \
+   {if(logsection_enabled[LOGSECTION]){ \
+      if(!logging_suspended){            \
+        log_write(s);                 \
+      }                               \
+   }}
+/////////////////// END SSE /////////////////////////////////
 
   #define logc(s)      \
     if (mode==STEM_MODE_CPU && logsection_enabled[LOGSECTION]) log_write(s);
@@ -40,11 +39,7 @@ WORD change_endian(WORD x); // double of something?
   #define log_to_section(section,s) if (logsection_enabled[section] && logging_suspended==0) log_write(s);
   #define log_to(section,s)  if (logsection_enabled[section] && logging_suspended==0) log_write(s);
   EXT void log_write_stack();
-#if defined(STEVEN_SEAGAL) && defined(SSE_VARIOUS)
-  EXT bool logging_suspended INIT(TRUE);
-#else
   EXT bool logging_suspended INIT(false);
-#endif
   EXT bool logsection_enabled[100];
   EXT void log_io_write(MEM_ADDRESS,BYTE);
 
@@ -62,7 +57,6 @@ WORD change_endian(WORD x); // double of something?
   #define LOG_CPU
 #endif
 
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_LOG_OPTIONS))
   #define LOGSECTION_ALWAYS 0
   #define LOGSECTION_FDC 1
   #define LOGSECTION_IO 2
@@ -87,7 +81,7 @@ WORD change_endian(WORD x); // double of something?
   #define LOGSECTION_DIV 21
   #define LOGSECTION_PASTI 22
   #define NUM_LOGSECTIONS 23
-#endif
+
   extern const char *name_of_mfp_interrupt[21];
 
 #ifdef IN_MAIN
@@ -101,20 +95,11 @@ WORD change_endian(WORD x); // double of something?
                                     {"IO",LOGSECTION_IO},
                                     {"Crash",LOGSECTION_CRASH},
                                     {"CPU",LOGSECTION_CPU},
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_BOILER_NODIV))
                                     {"Div Instructions",LOGSECTION_DIV},
-#endif
                                     {"Trace",LOGSECTION_TRACE},
                                     {"-",-1},
                                     {"FDC",LOGSECTION_FDC},
-                                     
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_LOG_OPTIONS)
-  {"Floppy data",LOGSECTION_FDC_BYTES},
-  {"Image info",LOGSECTION_IMAGE_INFO},
-  {"IPF sector info",LOGSECTION_IPF_LOCK_INFO},
-#else
-  {"Pasti",LOGSECTION_PASTI},
-#endif
+                                    {"Pasti",LOGSECTION_PASTI},
                                     {"Stemdos",LOGSECTION_STEMDOS},
                                     {"Trap",LOGSECTION_TRAP},
                                     {"-",-1},
@@ -175,11 +160,16 @@ WORD change_endian(WORD x); // double of something?
 
   FILE *logfile=NULL;
   EasyStr LogFileName;
-
 #endif
 
 #else
   #define log(s)
+
+// SSE see remark in acc.decla.h ////////////////////////////
+  #define dbg_log(s)
+/////////////////// END SSE /////////////////////////////////
+
+
   #define logc(s)
   #define log_stack ;
 #ifdef UNIX
@@ -228,7 +218,7 @@ MEM_ADDRESS oi(MEM_ADDRESS,int);
 
 int how_big_is_0000;
 
-char reg_name_buf[8]; // SS removed _
+char reg_name_buf[8]; //SS removed _
 
 int file_read_num(FILE*);
 
@@ -248,4 +238,3 @@ EasyStr GetEXEFileName();
 #undef EXT
 #undef INIT
 
-#endif//defined(SSE_STRUCTURE_ACC_H)

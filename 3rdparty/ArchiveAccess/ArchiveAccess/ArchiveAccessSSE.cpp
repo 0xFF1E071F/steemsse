@@ -10,8 +10,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#if defined(STEVEN_SEAGAL)
-
 #include <SSE/SSE.h> // get switches
 
 #if defined(SSE_VAR_ARCHIVEACCESS)
@@ -192,4 +190,4 @@ bool ArchiveAccess_Select(int n) {
 }
 
 #endif//archiveaccess
-#endif//SS
+

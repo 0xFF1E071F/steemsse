@@ -1,4 +1,4 @@
-#if defined(STEVEN_SEAGAL)
+#if defined(STEVEN_SEAGAL) // other name?
 
 int rt_sound_buf_pointer=0; // sample count
 bool rt_started=0; // true when playing a sample

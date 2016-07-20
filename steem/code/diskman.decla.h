@@ -9,7 +9,7 @@
 #if defined(SSE_DRIVE_IPF1)
 #define DISK_IPF 4
 #endif
-#if defined(SSE_IPF_CTRAW)
+#if defined(SSE_DISK_CAPS_CTRAW)
 #define DISK_CTR 5
 #endif
 #if defined(SSE_DISK_SCP)
@@ -28,9 +28,11 @@
 #ifdef SSE_UNIX
 #include <x/hxc_dir_lv.h>
 #endif
-
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH) && defined(SSE_VS2008_WARNING_383)
+int ExtensionIsDisk(char*);
+#else
 int ExtensionIsDisk(char*,bool returnPastiDisksOnlyWhenPastiOn=true);
-
+#endif
 typedef struct{
   EasyStr Name,Path,LinkPath;
   bool UpFolder,Folder,ReadOnly,BrokenLink,Zip;
@@ -147,14 +149,14 @@ public:
   void ShowDatabaseDiag(),ShowContentDiag();
 
 #ifdef WIN32
-#if defined(STEVEN_SEAGAL)
-#if defined(SSE_PASTI_ON_WARNING2)
+
+#if defined(SSE_DISK_PASTI_ON_WARNING2)
   void RefreshPastiStatus();
 #endif
 #if defined(SSE_GUI_OPTION_SLOW_DISK_SSE)
   void RefreshSnails();
 #endif
-#endif
+
   bool HasHandledMessage(MSG*);
   void SetDir(EasyStr,bool,EasyStr="",bool=0,EasyStr="",int=0);
   bool SelectItemWithPath(char *,bool=0,char* = NULL);

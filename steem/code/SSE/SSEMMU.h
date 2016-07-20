@@ -21,13 +21,13 @@ State 2
 
 
 When we don't use the DL concept (SSE_MMU_WU_DL not defined), variable 
-WAKE_UP_STATE is WU or 0.
+OPTION_WS is WU or 0.
 
 +--------------------------------------------+---------------+
 | Steem  option    |    Wake-up concepts     |    Cycle      |
 |    variable      |                         |  adjustment   |
 +------------------+------------+------------+-------+-------+
-|  WAKE_UP_STATE   |     WU     |      WS    | SHIFT |  SYNC |
+|  OPTION_WS   |     WU     |      WS    | SHIFT |  SYNC |
 |                  |    (ijor)  |    (LJBK)  | (Res) |(Freq) |
 +------------------+------------+------------+-------+-------+
 |   0 (ignore)     |     -      |      -     |    -  |    -  |
@@ -36,14 +36,14 @@ WAKE_UP_STATE is WU or 0.
 +------------------+------------+------------+-------+-------+
 
 
-When we use the DL concept (SSE_MMU_WU_DL defined), WAKE_UP_STATE 
+When we use the DL concept (SSE_MMU_WU_DL defined), OPTION_WS 
 is more confusing, its value is no wake-up state but just an option index.
 
 +------------------------------------------------------------+---------------+
 | Steem  option    |              Wake-up concepts           |    Cycle      |
 |    variable      |                                         |  adjustment   |
 +------------------+---------------+------------+------------+-------+-------+
-|  WAKE_UP_STATE   |   DL Latency  |     WU     |      WS    | SHIFT |  SYNC |
+|  OPTION_WS   |   DL Latency  |     WU     |      WS    | SHIFT |  SYNC |
 |                  |     (Dio)     |    (ijor)  |    (LJBK)  | (Res) |(Freq) |
 +------------------+---------------+------------+------------+-------+-------+
 |   0 (ignore)     |      5        |     -      |      -     |    -  |    -  |
@@ -63,10 +63,7 @@ On STE there's no latency, DL=3, WS=1.
 #include "SSEOption.h"
 #include "SSEParameters.h"
 #include "SSESTF.h"
-
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
 #include "SSEShifter.h"
-#endif
 
 #ifdef SSE_MMU
 
@@ -81,7 +78,9 @@ struct TMMU {
   inline bool WakeUpState2(); // for STF 
 #endif
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
-  short SDPMiddleByte; // glue it! 
+#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA) || SSE_VERSION<383
+  short SDPMiddleByte;
+#endif
 #if defined(SSE_VS2008_WARNING_382)
   MEM_ADDRESS ReadVideoCounter(int CyclesIn);
 #else
@@ -128,9 +127,9 @@ inline bool TMMU::WakeUpState1() {
 #endif
 
 #if defined(SSE_MMU_WU_DL)
-  (WAKE_UP_STATE==3||WAKE_UP_STATE==4)
+  (OPTION_WS==3||OPTION_WS==4)
 #else
-  (WAKE_UP_STATE==1)
+  (OPTION_WS==1)
 #endif
   );
 }
@@ -141,13 +140,13 @@ inline bool TMMU::WakeUpState2() {
   (ST_TYPE!=STE) &&
 #endif
 #if defined(SSE_MMU_WU_DL)
-  (WAKE_UP_STATE==1||WAKE_UP_STATE==2
+  (OPTION_WS==1||OPTION_WS==2
 #if defined(SSE_SHIFTER_PANIC) // used for omega only
-  ||WAKE_UP_STATE==WU_SHIFTER_PANIC
+  ||OPTION_WS==WU_SHIFTER_PANIC
 #endif
   )
 #else
-  (WAKE_UP_STATE&2)
+  (OPTION_WS&2)
 #endif
   );
 }

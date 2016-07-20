@@ -4,7 +4,7 @@ MODULE: emu
 DESCRIPTION: Functions to reset the emulator to a startup state.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: reset.cpp")
 #endif
 
@@ -120,7 +120,7 @@ is issued, and that the reset was active for at least 132 clock cycles [27].
 void power_on()
 {
   TRACE_INIT("power_on\n");
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_STRING)
   GUIRefreshStatusBar();//overkill
 #endif
 
@@ -181,7 +181,7 @@ void power_on()
   fdc_str=BIT_2;
   for (int floppyno=0;floppyno<2;floppyno++){
     floppy_head_track[floppyno]=0;
-#if defined(STEVEN_SEAGAL) && defined(SSE_DRIVE)
+#if defined(SSE_DRIVE_OBJECT)
     SF314[floppyno].Id=floppyno;
 #if defined(SSE_DRIVE_MOTOR_ON)
 #if defined(SSE_DRIVE_STATE)
@@ -197,7 +197,7 @@ void power_on()
 #endif//stw
 #endif//motor
 #endif//drv
-#if defined(STEVEN_SEAGAL) && defined(SSE_DISK1) && !defined(SSE_DISK2)
+#if defined(SSE_DISK1) && !defined(SSE_DISK2)
     Disk[floppyno].Id=floppyno;//same idea
 #endif
   }
@@ -209,8 +209,6 @@ void power_on()
   floppy_irq_flag=0;
   fdc_spinning_up=0;
   floppy_type1_command_active=2;
-
-#if defined(STEVEN_SEAGAL) 
 
 #if defined(SSE_DMA_WRITE_CONTROL)
   dma_mode=0; // see reset_peripherals()
@@ -224,7 +222,7 @@ void power_on()
   ZeroMemory(&mfp_reg[MFPR_TADR],4);
 #endif
 
-#endif//ss
+
 #if !defined(SSE_ACSI_DISABLE_HDIMG)
   hdimg_reset();
 #endif
@@ -232,7 +230,7 @@ void power_on()
 
   init_screen();
   init_timings();
-#if !defined(SSE_GLUE_FRAME_TIMINGS4)
+#if !defined(SSE_GLUE_FRAME_TIMINGS_INIT)
   hbl_pending=false; // sure?
 #endif
   disable_input_vbl_count=50*3; // 3 seconds
@@ -257,7 +255,7 @@ void power_on()
 #define LOGSECTION LOGSECTION_ALWAYS
 void reset_peripherals(bool Cold)
 {
-  log("***** reset peripherals ****");
+  dbg_log("***** reset peripherals ****");
 
 #if defined(SSE_DEBUG) || defined(SSE_OSD_SHOW_TIME)
 #if defined(SSE_DEBUG_RESET)
@@ -282,19 +280,19 @@ void reset_peripherals(bool Cold)
   if (extended_monitor){
     if (em_planes==1){
       screen_res=2;
-#if defined(SSE_GLUE_FRAME_TIMINGS4)
+#if defined(SSE_GLUE_FRAME_TIMINGS_INIT)
     shifter_freq=72;
     shifter_freq_idx=2;
 #endif
     }else{
       screen_res=0;
-#if defined(SSE_GLUE_FRAME_TIMINGS4)
+#if defined(SSE_GLUE_FRAME_TIMINGS_INIT)
       screen_res=Shifter.m_ShiftMode;
       shifter_freq=50;
       shifter_freq_idx=0;
 #endif
     }
-#if !defined(SSE_GLUE_FRAME_TIMINGS4)
+#if !defined(SSE_GLUE_FRAME_TIMINGS_INIT)
     shifter_freq=50;
     shifter_freq_idx=0;
 #endif
@@ -305,13 +303,13 @@ void reset_peripherals(bool Cold)
 #endif
 
   if (COLOUR_MONITOR){
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY4)
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_370)
     BYTE old_screen_res=screen_res;
 #endif
     screen_res=0;
     shifter_freq=60; // SS notice reset freq=60hz
     shifter_freq_idx=1;
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY4)
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_370)
     if(old_screen_res==2)
       init_screen(); // or some bad crashes
 #endif
@@ -321,8 +319,6 @@ void reset_peripherals(bool Cold)
     shifter_freq_idx=2;
   }
   
-#if defined(STEVEN_SEAGAL)
-
 #if defined(SSE_CPU)
   M68000.Reset(Cold);
 #endif
@@ -332,11 +328,19 @@ void reset_peripherals(bool Cold)
 #endif
 
 #if defined(SSE_WD1772_RESET)
+#if defined(SSE_VS2008_WARNING_383)
+  WD1772.Reset();
+#else
   WD1772.Reset(Cold);
+#endif
 #endif
 
 #if defined(SSE_INT_MFP_REFACTOR2)
+#if defined(SSE_VS2008_WARNING_383)
+  MC68901.Reset();
+#else
   MC68901.Reset(Cold);
+#endif
 #endif
 
 #if defined(SSE_INT_JITTER_RESET) //no
@@ -345,8 +349,6 @@ void reset_peripherals(bool Cold)
     HblJitterIndex=0;
     VblJitterIndex=0;
   }
-#endif
-
 #endif
   
   shifter_hscroll=0;
@@ -358,7 +360,7 @@ void reset_peripherals(bool Cold)
   vbl_pending=false;
 
   dma_status=1;  //no error, apparently
-#if defined(STEVEN_SEAGAL) && defined(SSE_DMA_WRITE_CONTROL)
+#if defined(SSE_DMA_WRITE_CONTROL)
 /*
           The actual DMA operation is performed through a 32 byte
           FIFO  programmed  via  the  DMA  Mode Control Register (word
@@ -370,7 +372,7 @@ void reset_peripherals(bool Cold)
   dma_mode=0;
   dma_sector_count=0xffff;
 #endif
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_DMA_FIFO_READ_ADDRESS2))
+#if !(defined(SSE_DMA_FIFO_READ_ADDRESS2))
   fdc_read_address_buffer_len=0;
 #endif
   dma_bytes_written_for_sector_count=0;
@@ -382,12 +384,12 @@ void reset_peripherals(bool Cold)
   }
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
+#if defined(SSE_DISK_CAPS)
   if(CAPSIMG_OK)
     Caps.Reset();
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACSI) 
+#if defined(SSE_ACSI) 
   if(ACSI_EMU_ON)
 #if defined(SSE_VS2008_WARNING_382)
 #if defined(SSE_ACSI_MULTIPLE)
@@ -406,12 +408,12 @@ void reset_peripherals(bool Cold)
 #endif
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_TxDR_RESET)
+#if defined(SSE_INT_MFP_TxDR_RESET)
   DWORD tmp;
   memcpy(&tmp,&mfp_reg[MFPR_TADR],4);
 #endif
   ZeroMemory(mfp_reg,sizeof(mfp_reg));
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_TxDR_RESET)
+#if defined(SSE_INT_MFP_TxDR_RESET)
   if(!Cold)
     memcpy(&mfp_reg[MFPR_TADR],&tmp,4);
 #endif
@@ -444,7 +446,7 @@ void reset_peripherals(bool Cold)
   dma_sound_r_top_val=128;
   dma_sound_mixer=1;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE)
   dma_sound_bass=6; // 6 is neutral value
   dma_sound_treble=6;
 #endif
@@ -479,7 +481,7 @@ void reset_peripherals(bool Cold)
   ZeroMemory(&Blit,sizeof(Blit));
 
   cpu_stopped=false;
-#if defined(STEVEN_SEAGAL) && defined(SSE_CPU) && defined(SSE_DEBUG)
+#if defined(SSE_CPU) && defined(SSE_DEBUG)
   M68000.NextIrFetched=false;
 #endif
 
@@ -491,7 +493,7 @@ void reset_peripherals(bool Cold)
     SF314[0].Sound_StopBuffers();
 #endif
 
-#if defined(SSE_GLUE_FRAME_TIMINGS4)
+#if defined(SSE_GLUE_FRAME_TIMINGS_INIT)
   Glue.Reset(Cold);
 #endif
 
@@ -501,7 +503,7 @@ void reset_peripherals(bool Cold)
 void reset_st(DWORD flags)
 {
   TRACE_INIT("reset_st, flags %X\n");
-#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH)
+#if defined(SSE_CPU_PREFETCH)
   prefetched_2=FALSE;
 #endif
   bool Stop=bool(flags & RESET_NOSTOP)==0;

@@ -6,7 +6,7 @@ these functions are used in the emulation of Steem for vital processes such
 as changing disk images and determining what files are disks.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: diskman.cpp")
 #endif
 
@@ -17,7 +17,7 @@ as changing disk images and determining what files are disks.
 #include <loadsave.decla.h>
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DISKMAN_H)
+#if defined(SSE_STRUCTURE_DECLA)
 
 #ifdef WIN32
 void TDiskManager::RefreshDiskView(EasyStr SelPath,bool EditLabel,EasyStr SelLinkPath,int iItem)
@@ -28,7 +28,7 @@ void TDiskManager::RefreshDiskView(EasyStr SelPath,bool EditLabel,EasyStr SelLin
 
 #endif
 
-#if defined(STEVEN_SEAGAL) && USE_PASTI && defined(SSE_PASTI_ON_WARNING) //no
+#if USE_PASTI && defined(SSE_DISK_PASTI_ON_WARNING) //no
 char sDiskManagerWindowCaption[]="Disk Manager (Pasti On)"; // and a nice global
 #endif
 
@@ -40,55 +40,54 @@ bool ExtensionIsPastiDisk(char *Ext)
 #if USE_PASTI
   if (Ext==NULL || hPasti==NULL) return false;
   if (*Ext=='.') Ext++;
-#if defined(SSE_PASTI_ONLY_STX)
+#if defined(SSE_DISK_PASTI_ONLY_STX)
   if(PASTI_JUST_STX)
-    return (IsSameStr_I(Ext,"STX")) ? true : false;
+    return (IsSameStr_I(Ext,DISK_EXT_STX)) ? true : false;
 #endif
-#if !defined(SSE_PASTI_ONLY_STX_OPTION1)
   char *t=pasti_file_exts;
   while (*t){
     if (IsSameStr_I(Ext,t)) return true;
     t+=strlen(t)+1;
   }
 #endif
-#endif
   return false;
 }
 //---------------------------------------------------------------------------
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH) && defined(SSE_VS2008_WARNING_383)
+int ExtensionIsDisk(char *Ext)
+#else
 int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
+#endif
 {
   if (Ext==NULL) return 0;
 
   if (*Ext=='.') Ext++;
   int ret=0;
-  //SS can't simplify, with all the #ifdefs... ?
-  if (MatchesAnyString_I(Ext,"ST","STT","DIM","MSA",
-#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
-    "IPF", //rename
-#ifdef SSE_IPF_CTRAW
-    SSE_IPF_CTRAW, //CTR //rename
-#endif
-#ifdef SSE_IPF_KFSTREAM
-    SSE_IPF_KFSTREAM, //RAW
+#ifdef SSE_DISK_EXT
+  if (MatchesAnyString_I(Ext,DISK_EXT_ST,DISK_EXT_STT,DISK_EXT_DIM,DISK_EXT_MSA,
+#if defined(SSE_DISK_CAPS)
+    DISK_EXT_IPF,
+#ifdef SSE_DISK_CAPS_CTRAW
+    DISK_EXT_CTR,
 #endif
 #endif    
-#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
+#if defined(SSE_DISK_SCP)
     DISK_EXT_SCP,
 #endif    
-#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
+#if defined(SSE_DISK_STW)
     DISK_EXT_STW,
 #endif  
-#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_HFE)
+#if defined(SSE_DISK_HFE)
     DISK_EXT_HFE,
 #endif  
     NULL)){
+#else
+  if (MatchesAnyString_I(Ext,"ST","STT","DIM","MSA",NULL)){
+#endif
     ret=DISK_UNCOMPRESSED;
 #if defined(SSE_TOS_PRG_AUTORUN)
-  }else if (OPTION_PRG_SUPPORT && MatchesAnyString_I(Ext,"PRG",
-#if defined(SSE_TOS_TOS_AUTORUN)
-    "TOS",
-#endif
-    NULL)){
+  }else if (OPTION_PRG_SUPPORT 
+    && MatchesAnyString_I(Ext,DISK_EXT_PRG,DISK_EXT_TOS,NULL)){
     ret=DISK_UNCOMPRESSED;
 #endif
   }else if (MatchesAnyString_I(Ext,"STZ","ZIP",NULL)){
@@ -98,15 +97,12 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
   }else if (MatchesAnyString_I(Ext,"RAR",NULL)){
     ret=DISK_COMPRESSED;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
+#if defined(SSE_VAR_UNRAR)
   }else if(UNRAR_OK&&MatchesAnyString_I(Ext,"RAR",NULL)){
     ret=DISK_COMPRESSED;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS)
-#if defined(SSE_VAR_ARCHIVEACCESS3___) //zip already covered
-  }else if(ARCHIVEACCESS_OK
-    && MatchesAnyString_I(Ext,"ZIP","7Z","BZ2","GZ","TAR","ARJ",NULL)){
-#elif defined(SSE_VAR_ARCHIVEACCESS2)
+#if defined(SSE_VAR_ARCHIVEACCESS)
+#if defined(SSE_VAR_ARCHIVEACCESS2)
   }else if(ARCHIVEACCESS_OK
     &&MatchesAnyString_I(Ext,"7Z","BZ2","GZ","TAR","ARJ",NULL)){
 #else
@@ -118,30 +114,25 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
 
 #if USE_PASTI
   if (hPasti 
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_PASTI_ALWAYS_DISPLAY_STX_DISKS))
+#if !(defined(SSE_DISK_PASTI_ALWAYS_DISPLAY_STX_DISKS))
     && pasti_active
 #endif
     ){
     if (ExtensionIsPastiDisk(Ext)
-#if defined(SSE_PASTI_AUTO_SWITCH)
-    && (IsSameStr_I(Ext,"STX")||!PASTI_JUST_STX&&pasti_active)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH)
+    && (IsSameStr_I(Ext,DISK_EXT_STX)||!PASTI_JUST_STX&&pasti_active)
 #endif
     ){
       return DISK_PASTI;
     }else if (ret==DISK_COMPRESSED){
       return ret;
     }
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_PASTI_AUTO_SWITCH))    
+#if !(defined(SSE_DISK_PASTI_AUTO_SWITCH))    
     else{
       if (returnPastiDisksOnlyWhenPastiOn) return 0;
     }
 #endif
   }
-#endif
-
-#ifdef SSE_IPF_CTRAW
-  if(IsSameStr_I(Ext,"CTR") && Caps.Version<50)
-    ret=0;
 #endif
 
   return ret;
@@ -185,8 +176,8 @@ void TDiskManager::PerformInsertAction(int Action,EasyStr Name,EasyStr Path,Easy
     if (runstate!=RUNSTATE_RUNNING){
       PostRunMessage();
     }else{
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_MOUSE_CAPTURE)
-      if(CAPTURE_MOUSE)
+#if defined(SSE_GUI_MOUSE_CAPTURE_OPTION)
+      if(OPTION_CAPTURE_MOUSE)
         SetStemMouseMode(STEM_MOUSEMODE_WINDOW);
       else
         SetStemMouseMode(STEM_MOUSEMODE_DISABLED);
@@ -204,7 +195,7 @@ void TDiskManager::SetNumFloppies(int NewNum)
   ASSERT( NewNum==1 || NewNum==2 );
   num_connected_floppies=NewNum;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
+#if defined(SSE_DISK_CAPS)
   // it's not easy mixing IPF and native!
 
 #if defined(SSE_DISK_IMAGETYPE1)
@@ -243,7 +234,7 @@ void TDiskManager::SetNumFloppies(int NewNum)
 	}
 #endif
   CheckResetDisplay();
-#if defined(SSE_GUI_STATUS_STRING_380)
+#if defined(SSE_GUI_STATUS_STRING_ICONS)
   GUIRefreshStatusBar();
 #endif
 }
@@ -366,10 +357,10 @@ void TDiskManager::Show()
   bool MaximizeIt=bool(FullScreen ? FSMaximized:Maximized);
 
   ManageWindowClasses(SD_REGISTER);
-#if defined(STEVEN_SEAGAL) && USE_PASTI && defined(SSE_PASTI_ON_WARNING)
-#if !defined(SSE_PASTI_ON_WARNING2)
+#if USE_PASTI && defined(SSE_DISK_PASTI_ON_WARNING)
+#if !defined(SSE_DISK_PASTI_ON_WARNING2)
     sDiskManagerWindowCaption[12]=(pasti_active
-#if defined(SSE_PASTI_ONLY_STX)
+#if defined(SSE_DISK_PASTI_ONLY_STX)
       && (!PASTI_JUST_STX 
       || SF314[floppy_current_drive()].ImageType==DISK_PASTI)    
 #endif
@@ -378,7 +369,7 @@ void TDiskManager::Show()
   Handle=CreateWindowEx(WS_EX_CONTROLPARENT | WS_EX_APPWINDOW,"Steem Disk Manager",sDiskManagerWindowCaption,
       WS_CAPTION | WS_SYSMENU | WS_SIZEBOX | WS_MAXIMIZEBOX | WS_MINIMIZEBOX,
       Left,Top,Width,Height,ParentWin,NULL,HInstance,NULL);
-#if defined(SSE_PASTI_ON_WARNING2)
+#if defined(SSE_DISK_PASTI_ON_WARNING2)
   RefreshPastiStatus();
 #endif
 #else
@@ -524,7 +515,7 @@ http://www.microsoft-questions.com/microsoft/Platform-SDK-Shell/32138755/vista-l
     Win=CreateWindow("Steem Flat PicButton",Str(ico),WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                   400,10,60,64,Handle,(HMENU)10,HInstance,NULL);
 #endif
-#ifdef SSE_ACSI_OPTION_INDEPENDENT
+#if defined(SSE_ACSI_ICON)
     ToolAddWindow(ToolTip,Win,T("GEMDOS Hard Drive Manager - right click to toggle on/off"));
 #else
     ToolAddWindow(ToolTip,Win,T("Hard Drive Manager"));
@@ -983,11 +974,19 @@ int TDiskManager::GetSelectedItem()
 bool TDiskManager::HasHandledMessage(MSG *mess)
 {
   if (Handle!=NULL && Dragging==-1){
+#if defined(SSE_VS2008_WARNING_383)
+    if (VisibleDiag()){
+      return (IsDialogMessage(VisibleDiag(),mess)!=0);
+    }else{
+      return (IsDialogMessage(Handle,mess)!=0);
+    }
+#else
     if (VisibleDiag()){
       return IsDialogMessage(VisibleDiag(),mess);
     }else{
       return IsDialogMessage(Handle,mess);
     }
+#endif
   }else{
     return 0;
   }
@@ -1036,7 +1035,7 @@ Str TDiskManager::GetMSAConverterPath()
     //if (Exists(MSAConvPath)) return MSAConvPath;
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_MSA_CONVERTER)
+#if defined(SSE_GUI_MSA_CONVERTER)
 #if defined(_DEBUG)
   BRK(Auto MSA path wont work in _DEBUG);
 #else
@@ -1246,6 +1245,7 @@ void TDiskManager::GoToDisk(Str Path,bool Refresh)
 #else
 #define GET_THIS This=(TDiskManager*)GetWindowLong(Win,GWL_USERDATA);
 #endif
+#pragma warning (disable: 4701) //lvi in case WM_USER//383
 LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 {
   LRESULT Ret=DefStemDialogProc(Win,Mess,wPar,lPar);
@@ -1487,14 +1487,12 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #if USE_PASTI
             if (hPasti){
-#if !defined(SSE_PASTI_ONLY_STX_OPTION2)
               InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(pasti_active ? MF_CHECKED:0),2023,T("Use Pasti"));
-#endif
               InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,2024,T("Pasti Configuration"));
 //              InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(pasti_use_all_possible_disks ? MF_CHECKED:0),
 //                                    2024,T("Use Pasti For All Compatible Images"));
 
-#if defined(SSE_PASTI_ONLY_STX_OPTION3) //option moved from 'SSE' page
+#if defined(SSE_DISK_PASTI_ONLY_STX_OPTION3) //option moved from 'SSE' page
               InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
                 (PASTI_JUST_STX?MF_CHECKED:0),2026,T("Pasti only for STX"));
 #endif
@@ -1508,12 +1506,12 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
               (SSE_GHOST_DISK?MF_CHECKED:0),2027,T("Enable ghost disks for CTR-IPF-SCP-STX"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_TOS_PRG_AUTORUN) 
+#if defined(SSE_TOS_PRG_AUTORUN) 
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
               (OPTION_PRG_SUPPORT?MF_CHECKED:0),2028,T("Run PRG and TOS files"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACSI_OPTION) && !defined(SSE_ACSI_ICON)
+#if defined(SSE_ACSI_OPTION) && !defined(SSE_ACSI_ICON)
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING 
               | (int)(SSEOption.Acsi?MF_CHECKED:0)
               | (int)(SSEConfig.AcsiImg?0:MF_DISABLED)
@@ -1643,8 +1641,11 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
         case 1003: // STW
         case 1004: // HFE
         {
-          char *extension=(wPar==1003)?extension_list[EXT_STW]
-            :extension_list[EXT_HFE];
+#if defined(SSE_DISK_EXT)
+          char *extension=(wPar==1003)?DISK_EXT_STW:DISK_EXT_HFE;
+#else
+          char *extension=(wPar==1003)?"STW":"HFE";
+#endif
           EasyStr STName=This->DisksFol+"\\"+extension+" Disk."+extension;
           int n=2;
           while (Exists(STName)){
@@ -1934,7 +1935,7 @@ That will toggle bit x.
 #endif
         case 2013: // SS menu ADAT
           floppy_instant_sector_access=!floppy_instant_sector_access;
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_OPTION_SLOW_DISK_SSE)
+#if defined(SSE_GUI_OPTION_SLOW_DISK_SSE)
           This->RefreshSnails();
 #if defined(SSE_GUI_OPTIONS_REFRESH)
           OptionBox.SSEUpdateIfVisible(); // other way
@@ -1976,10 +1977,9 @@ That will toggle bit x.
           if (LOWORD(wPar)==2024){
             pasti->DlgConfig(HWND(FullScreen ? StemWin:This->Handle),0,NULL);
           }
-#if !defined(SSE_PASTI_ONLY_STX_OPTION2)
           if (LOWORD(wPar)==2023){ //SS option use pasti
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_PASTI_NO_RESET)
+#if defined(SSE_DISK_PASTI_NO_RESET)
 /*  More complicated than it looked, not foolproof.
     Maybe there's a better way but we created TFloppyDrive::GetImageFile()
     for the occasion.
@@ -2020,12 +2020,12 @@ That will toggle bit x.
             }
 #endif
 
-#if defined(SSE_PASTI_ON_WARNING2)
+#if defined(SSE_DISK_PASTI_ON_WARNING2)
             This->RefreshPastiStatus();
 #else
-#if defined(STEVEN_SEAGAL) && defined(SSE_PASTI_ON_WARNING)
+#if defined(SSE_DISK_PASTI_ON_WARNING)
             sDiskManagerWindowCaption[12]=(pasti_active
-#if defined(SSE_PASTI_ONLY_STX)
+#if defined(SSE_DISK_PASTI_ONLY_STX)
               && (!PASTI_JUST_STX 
               || SF314[floppy_current_drive()].ImageType==DISK_PASTI)
 #endif              
@@ -2034,10 +2034,10 @@ That will toggle bit x.
 #endif
 #endif
           }//if (LOWORD(wPar)==2023
-#endif//!defined(SSE_PASTI_ONLY_STX_OPTION2)
+
           break;
 
-#if defined(SSE_PASTI_ONLY_STX_OPTION3)
+#if defined(SSE_DISK_PASTI_ONLY_STX_OPTION3)
         case 2026:
           PASTI_JUST_STX=!PASTI_JUST_STX;
           TRACE_LOG("Option Pasti just STX %d\n",PASTI_JUST_STX);
@@ -2067,13 +2067,13 @@ That will toggle bit x.
           TRACE_LOG("Option Ghost disk %d\n",SSE_GHOST_DISK);
           break;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_TOS_PRG_AUTORUN) 
+#if defined(SSE_TOS_PRG_AUTORUN) 
         case 2028:
           OPTION_PRG_SUPPORT=!OPTION_PRG_SUPPORT;
           TRACE_LOG("Option PRG support %d\n",SSE_GHOST_DISK);
           break;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACSI_OPTION) && !defined(SSE_ACSI_ICON)
+#if defined(SSE_ACSI_OPTION) && !defined(SSE_ACSI_ICON)
         case 2029:
           SSEOption.Acsi=!SSEOption.Acsi;
           TRACE_LOG("Option ACSI support %d\n",SSEOption.Acsi);
@@ -2687,6 +2687,7 @@ That will toggle bit x.
         }
       }
       break;
+
     case WM_USER:
       GET_THIS;
 
@@ -2808,6 +2809,7 @@ That will toggle bit x.
 #endif
 
       break;
+
     case WM_SIZE:
       GET_THIS;
 
@@ -2849,8 +2851,6 @@ That will toggle bit x.
       GET_THIS;
       ASSERT(This);
 
-      bool at_home=This->AtHome;//temp
-
       if (This->VisibleDiag()){
         SendMessage(This->VisibleDiag(),WM_COMMAND,IDCANCEL,0);
       }
@@ -2890,6 +2890,7 @@ That will toggle bit x.
   }
   return DefWindowProc(Win,Mess,wPar,lPar);
 }
+#pragma warning (default: 4701)
 //---------------------------------------------------------------------------
 LRESULT __stdcall TDiskManager::Drive_Icon_WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 {
@@ -3367,6 +3368,7 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
             ExtractArchiveToSTHardDrive(Path);
             break;
           case FIMAGE_DIMNOMAGIC:
+            //SS message is clear enough, people still report "bugs"...
             Alert(Path+" "+T("is not in the correct format, it may be corrupt!")+"\r\n\r\n"+
                     T("This image has the extension DIM, unfortunately many different disk imaging programs use that extension for different disk image formats.")+" "+
                     T("Sometimes DIM images are actually ST images with the incorrect extension.")+" "+
@@ -3385,11 +3387,11 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
     }
     FloppyDrive[Drive].DiskName=Name;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_SCROLLER_DISK_IMAGE)
+#if defined(SSE_OSD_SCROLLER_DISK_IMAGE)
     if(OSD_IMAGE_NAME && !SSE_STATUS_BAR_GAME_NAME)
       OsdControl.StartScroller(Name); // display image disk name
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_STATUS_STRING_DISK_NAME)
+#if defined(SSE_GUI_STATUS_STRING_DISK_NAME)
     GUIRefreshStatusBar();
 #endif
 
@@ -3489,13 +3491,13 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
   UpdateDiskNames(Drive);
 #endif
 
-#if defined(SSE_PASTI_ON_WARNING2)
+#if defined(SSE_DISK_PASTI_ON_WARNING2)
   RefreshPastiStatus();
 #else
-#if defined(STEVEN_SEAGAL) && USE_PASTI && defined(SSE_PASTI_ON_WARNING)
+#if USE_PASTI && defined(SSE_DISK_PASTI_ON_WARNING)
   // check Pasti caption
   sDiskManagerWindowCaption[12]=(pasti_active
-#if defined(SSE_PASTI_ONLY_STX)
+#if defined(SSE_DISK_PASTI_ONLY_STX)
     && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==DISK_PASTI)    
 #endif    
     ) ? ' ' : '\0';
@@ -3648,7 +3650,7 @@ void TDiskManager::EjectDisk(int Drive)
     SendMessage(GetDlgItem(Handle,100+Drive),LVM_DELETEITEM,0,0);
     EnableWindow(GetDlgItem(GetDlgItem(Handle,98+Drive),100),AreNewDisksInHistory(Drive));
   }   
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_STATUS_STRING_DISK_NAME)
+#if defined(SSE_GUI_STATUS_STRING_DISK_NAME)
   GUIRefreshStatusBar();
 #endif
 #elif defined(UNIX)
@@ -3732,7 +3734,11 @@ BYTE* TDiskManager::GCConvertToST(char *Path,int Num,int *pLen)
 
   BYTE *mem=NULL;
   int len;
+#ifdef SSE_DISK_EXT
+  if (IsSameStr_I(ext,dot_ext(EXT_MSA))){
+#else
   if (IsSameStr_I(ext,".MSA")){
+#endif
     FILE *nf=fopen(file,"rb");
     if (nf==NULL){
       if (del) DeleteFile(file);
@@ -3805,7 +3811,11 @@ BYTE* TDiskManager::GCConvertToST(char *Path,int Num,int *pLen)
       mem=NULL;
       *pLen=0;
     }
+#ifdef SSE_DISK_EXT
+  }else if (IsSameStr_I(ext,dot_ext(EXT_DIM))){
+#else
   }else if (IsSameStr_I(ext,".DIM")){
+#endif
     FILE *f=fopen(file,"rb");
     if (f){
       len=GetFileLength(f)-32;
@@ -3914,7 +3924,7 @@ Str TDiskManager::GetContentsGetAppendName(Str TOSECName)
   return ShortName;
 }
 //---------------------------------------------------------------------------
-#if defined(STEVEN_SEAGAL) && defined(WIN32)
+#if defined(WIN32)
 #if defined(SSE_GUI_OPTION_SLOW_DISK_SSE) 
 
 // mini-function to avoid code duplication
@@ -3925,12 +3935,12 @@ void TDiskManager::RefreshSnails() {
 }
 
 #endif
-#if defined(SSE_PASTI_ON_WARNING2)//no more
+#if defined(SSE_DISK_PASTI_ON_WARNING2)//no more
 
 void TDiskManager::RefreshPastiStatus() {
   // check Pasti caption
   sDiskManagerWindowCaption[12]=(pasti_active
-#if defined(SSE_PASTI_ONLY_STX)
+#if defined(SSE_DISK_PASTI_ONLY_STX)
     && (!PASTI_JUST_STX || 
 #if defined(SSE_DISK_IMAGETYPE)
 

@@ -6,11 +6,11 @@ DESCRIPTION: The code for Steem's memory browsers, used heavily in the debug
 build to view memory and I/O areas.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: mem_browser.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_MEMBROWSER_H)
+#if defined(SSE_STRUCTURE_DECLA)
 // review this it looks strange
 WNDPROC mem_browser::OldEditWndProc;
 DWORD mem_browser::ex_style=WS_EX_TOOLWINDOW;
@@ -186,7 +186,7 @@ void mem_browser::new_window(MEM_ADDRESS address,type_disp_type new_disp_type)
           CBAddString(Win,"2MB",2*1024*1024);
           CBAddString(Win,"2.5MB",(2048+512)*1024);
           CBAddString(Win,"4MB",4*1024*1024);
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#if defined(SSE_DEBUG)
           SendMessage(Win,WM_SETTEXT,0,LPARAM("5Kb"));
 #else
           SendMessage(Win,WM_SETTEXT,0,LPARAM("100Kb"));
@@ -610,7 +610,9 @@ void mem_browser::draw(DRAWITEMSTRUCT *di)
       }else{
         if (mon_column==Col || break_column==Col){
           COLORREF text_col=GetSysColor(COLOR_WINDOWTEXT);
+#if !defined(SSE_VS2008_WARNING_383)
           WIDTHHEIGHT wh=GetTextSize((HFONT)GetCurrentObject(di->hDC,OBJ_FONT),Text);
+#endif
           int x=di->rcItem.left;
           int y=di->rcItem.top + (di->rcItem.bottom-di->rcItem.top)/2 - DEBUG_ICONS_H/2;
           for (size_t i=0;i<strlen(Text);i++){
@@ -1034,17 +1036,25 @@ void mem_browser::update()
   }
 }
 //--------------------------------------------------------------------------
+#if defined(SSE_VS2008_WARNING_383)
+LRESULT __stdcall mem_browser_window_WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
+#else
 LRESULT __stdcall mem_browser_window_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
+#endif
 {
   mem_browser *mb;
   switch (Mess){
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_CLIPBOARD)
+#if defined(SSE_BOILER_CLIPBOARD)
     // right click on 'Dump' button -> put assembly in clipboard
     case WM_CONTEXTMENU:
     {
       HWND dump_handle=GetDlgItem(Win,4);
-      if((int)dump_handle==wPar)
+#if defined(SSE_VS2008_WARNING_383)
+      if(dump_handle==(HWND)wPar)
+#else
+      if((int)dump_handle==wPar)      
+#endif
       {
         mb=(mem_browser*)GetWindowLong(Win,GWL_USERDATA);
         // compute #bytes to send (=copy from below /TODO refactor)
@@ -1175,7 +1185,9 @@ LRESULT __stdcall mem_browser_window_WndProc(HWND Win,UINT Mess,UINT wPar,long l
             }else{
               BYTE ToFind=BytesToFind[0];
 //              try{
-              TRY_M68K_EXCEPTION
+#pragma warning(disable: 4611) //383
+                TRY_M68K_EXCEPTION
+#pragma warning(default: 4611)
                 if (m68k_peek(ad)==ToFind || m68k_peek(ad+1)==ToFind) ad+=dir*2;
 //              }catch(...){}
               CATCH_M68K_EXCEPTION

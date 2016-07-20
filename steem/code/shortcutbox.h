@@ -1,9 +1,3 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_SHORTCUTBOX_H)
-
-#include "shortcutbox.decla.h"
-
-#else//!SSE_STRUCTURE_SHORTCUTBOX_H
-
 #ifdef IN_MAIN
 #define EXT
 #define INIT(s) =s
@@ -158,4 +152,3 @@ OldJoystickPosition JoyOldPos[MAX_PC_JOYS];
 #undef EXT
 #undef INIT
 
-#endif//!SSE_STRUCTURE_SHORTCUTBOX_H

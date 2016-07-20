@@ -62,7 +62,7 @@ EXT int sound_variable_a INIT(32);
 EXT int sound_variable_d INIT(208);
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF5)
+#if defined(SSE_SOUND_FILTER_STF5)
 #define SOUND_MODE_MUTE         0
 #define SOUND_MODE_EMULATED     1
 #define SOUND_MODE_CHIP         2
@@ -79,7 +79,7 @@ EXT int sound_variable_d INIT(208);
 #define SOUND_MODE_EMULATED     2
 #define SOUND_MODE_SHARPSAMPLES 3
 #define SOUND_MODE_SHARPCHIP    4
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF5)
+#if defined(SSE_SOUND_FILTER_STF5)
 //#define SOUND_MODE_MONITOR      5
 #endif
 #endif
@@ -205,7 +205,7 @@ EXT int dma_sound_mixer,dma_sound_volume;
 EXT int dma_sound_l_volume,dma_sound_r_volume;
 EXT int dma_sound_l_top_val,dma_sound_r_top_val;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE)
 #include "../../3rdparty/dsp/dsp.h"
 EXT int dma_sound_bass;
 EXT int dma_sound_treble;
@@ -223,7 +223,7 @@ void psg_write_buffer(int,DWORD);
 #define MOD_PSG_NOISE_ARRAY & 8191
 
 #ifndef ONEGAME
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_NO_EXTRA_PER_VBL)
+#if defined(SSE_SOUND_NO_EXTRA_PER_VBL)
 #define PSG_WRITE_EXTRA 0
 #else
 #define PSG_WRITE_EXTRA 300

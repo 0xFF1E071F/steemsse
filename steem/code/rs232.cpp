@@ -4,11 +4,11 @@ MODULE: emu
 DESCRIPTION: Serial port emulation.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: rs232.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_RS232_H)
+#if defined(SSE_STRUCTURE_DECLA)
 
 #ifdef IN_EMU
 #define EXT
@@ -20,7 +20,7 @@ EXT bool UpdateBaud INIT(0);
 EXT BYTE rs232_recv_byte INIT(0);
 EXT bool rs232_recv_overrun INIT(0);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RS232)
+#if defined(SSE_INT_MFP_RS232)
 // avoid negative values, prevents freeze in X-Out HD quitting
 EXT unsigned int rs232_bits_per_word INIT(8),rs232_hbls_per_word INIT(1);
 #else
@@ -28,7 +28,7 @@ EXT int rs232_bits_per_word INIT(8),rs232_hbls_per_word INIT(1);
 #endif
 
 
-#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_RS232_H)
+#endif
 
 
 //---------------------------------------------------------------------------
@@ -89,7 +89,7 @@ void RS232_CalculateBaud(bool Div16,BYTE cr,bool SetBaudNow)
       rs232_hbls_per_word=(mfp_timer_prescale[cr]*BYTE_00_TO_256(mfp_reg[MFPR_TDDR]))*16*
                               rs232_bits_per_word*hbls_per_second/MFP_CLK_EXACT;
     }else{
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RS232)
+#if defined(SSE_INT_MFP_RS232)
       // max works with int, and we made rs232_hbls_per_word unisgned
       rs232_hbls_per_word=(mfp_timer_prescale[cr]*BYTE_00_TO_256(mfp_reg[MFPR_TDDR]))*
                           rs232_bits_per_word*hbls_per_second/MFP_CLK_EXACT;
@@ -123,7 +123,7 @@ void RS232_CalculateBaud(bool Div16,BYTE cr,bool SetBaudNow)
       UpdateBaud=0;
     }
   }else{
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_INT_MFP_RATIO)
     rs232_hbls_per_word=CpuNormalHz;
 #else
     rs232_hbls_per_word=80000000;
@@ -136,7 +136,11 @@ void RS232_WriteReg(int Reg,BYTE NewVal)
   switch (Reg){
     case MFPR_UCR:
     {
+#if defined(SSE_VS2008_WARNING_383)
+      DWORD old_bpw=rs232_bits_per_word;
+#else
       int old_bpw=rs232_bits_per_word;
+#endif
       rs232_bits_per_word=1+BYTE(8-((NewVal & b01100000) >> 5))+1;
       switch (NewVal & b00011000){
         case b00010000: // 1.5

@@ -4,9 +4,8 @@
     objects we define in other files, such as Dma, WD1772, SF314, etc.
 */
 
-#if defined(STEVEN_SEAGAL)
+#if defined(SSE_BUILD)
 
-#if defined(SSE_STRUCTURE_SSEFLOPPY_OBJ)
 #include "../pch.h"
 #include <cpu.decla.h>
 #include <fdc.decla.h>
@@ -20,18 +19,13 @@
 #if defined(WIN32)
 #include <pasti/pasti.h>
 #endif
-//EasyStr GetEXEDir();//#include <mymisc.h>//missing...
-
 #if defined(SSE_DRIVE_IPF1)
-#include <stemdialogs.h>//temp...
+#include <stemdialogs.decla.h>//temp...
 #include <diskman.decla.h>
 #endif
-
 #if !defined(SSE_CPU)
 #include <mfp.decla.h>
 #endif
-
-#endif//#if defined(SSE_STRUCTURE_SSEFLOPPY_OBJ)
 
 #include "SSEDecla.h"
 #include "SSEDebug.h"
@@ -61,11 +55,11 @@ TImageHFE ImageHFE[2];
 #endif
 
 
-#if defined(SSE_DMA)
+#if defined(SSE_DMA_OBJECT)
 TDma Dma;
 #endif
 
-#if defined(SSE_DRIVE)
+#if defined(SSE_DRIVE_OBJECT)
 TSF314 SF314[2]; // cool!
 #endif
 
@@ -73,18 +67,12 @@ TSF314 SF314[2]; // cool!
 TDisk Disk[2]; // 
 #endif
 
-#if defined(SSE_FDC)
+#if defined(SSE_WD1772)
 TWD1772 WD1772;
 #endif
 
-#if defined(SSE_YM2149)
-TYM2149 YM2149;
-#endif
-
-#if defined(SSE_IPF) 
+#if defined(SSE_DISK_CAPS) 
 TCaps Caps;
 #endif
 
-
-
-#endif//#if defined(STEVEN_SEAGAL)
+#endif//#if defined(SSE_BUILD)

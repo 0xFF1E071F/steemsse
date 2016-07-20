@@ -28,7 +28,7 @@ EXT long col_yellow[2],col_blue,col_red,col_green,col_white;
 
 EXT DWORD FDCCantWriteDisplayTimer INIT(0);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DRIVE_LED)
+#if defined(SSE_OSD_DRIVE_LED)
 EXT long col_fd_red[2],col_fd_green[2];
 #if !defined(SSE_OSD_DRIVE_LED2)
 EXT DWORD FDCWriting INIT(0);

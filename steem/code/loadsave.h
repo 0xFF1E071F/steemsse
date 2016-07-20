@@ -1,32 +1,8 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_LOADSAVE_H)
-
-#include "loadsave.decla.h"
-
-#else//!SSE_STRUCTURE_LOADSAVE_H
-
-#if defined(STEVEN_SEAGAL)
-// rather silly but so we leave the define here
-#if SSE_VERSION>=353
-#define SNAPSHOT_VERSION 46
-#elif SSE_VERSION>=352
-#define SNAPSHOT_VERSION 45
-#elif SSE_VERSION>=351
-#define SNAPSHOT_VERSION 44
-#elif SSE_VERSION>=350
-#define SNAPSHOT_VERSION 43
-#elif SSE_VERSION>=340
-#define SNAPSHOT_VERSION 42
-#elif SSE_VERSION==330
-#define SNAPSHOT_VERSION 41
-#endif
-
-#else
 #define SNAPSHOT_VERSION 40
-#endif
 
 #define LS_LOAD 0
 #define LS_SAVE 1
-
+
 extern int LoadSaveAllStuff(NOT_ONEGAME( FILE * ) ONEGAME_ONLY( BYTE* & ),
                               bool,int DEFVAL(-1),bool DEFVAL(true),int* DEFVAL(NULL));
 extern void LoadSnapShotUpdateVars(int);
@@ -54,4 +30,3 @@ extern void LoadState(GoodConfigStoreFile *);
 extern void SaveState(ConfigStoreFile *);
 #endif
 
-#endif//!SSE_STRUCTURE_LOADSAVE_H

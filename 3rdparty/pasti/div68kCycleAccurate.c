@@ -57,8 +57,10 @@
 
  
  */
-
-
+#include <SSE/SSE.h>
+#if defined(SSE_VS2008_WARNING_383)
+extern int abs(int);
+#endif
 
 // Change this depending on architecture
 // This code assumes long is 32 bits and short is 16 bits

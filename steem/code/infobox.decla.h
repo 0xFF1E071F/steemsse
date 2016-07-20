@@ -1,6 +1,6 @@
 #define INFOPAGE_LINK_ID_BASE 200
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX0)
+#if defined(SSE_GUI_INFOBOX0)
 
 enum {
  INFOPAGE_ABOUT,
@@ -65,7 +65,7 @@ private:
   HIMAGELIST il;
   int MaxLinkID;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX3)
+#if defined(SSE_GUI_INFOBOX3)
   HFONT hFontCourier;
 #endif
 

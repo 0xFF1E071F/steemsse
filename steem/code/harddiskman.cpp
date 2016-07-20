@@ -4,7 +4,7 @@ MODULE: Steem
 DESCRIPTION: The code for the hard drive manager dialog.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: harddiskman.cpp")
 #endif
 
@@ -131,19 +131,13 @@ void THardDiskManager::Show()
   EnableWindow(DiskMan.Handle,0);
 
   ManageWindowClasses(SD_REGISTER);
-#ifdef SSE_ACSI_OPTION_INDEPENDENT
+
 #if defined(SSE_ACSI_HDMAN)
   Handle=CreateWindowEx(WS_EX_CONTROLPARENT,"Steem Hard Disk Manager",
                         (acsi? T("ACSI Hard Drives"):T("GEMDOS Hard Drives")),
                         WS_CAPTION | WS_SYSMENU,
                         Left,Top,516,90+GetSystemMetrics(SM_CYCAPTION),
                         DiskMan.Handle,0,HInstance,NULL);
-
-#else
-  Handle=CreateWindowEx(WS_EX_CONTROLPARENT,"Steem Hard Disk Manager",T("GEMDOS Hard Drives"),WS_CAPTION | WS_SYSMENU,
-                        Left,Top,516,90+GetSystemMetrics(SM_CYCAPTION),
-                        DiskMan.Handle,0,HInstance,NULL);
-#endif
 #else
   Handle=CreateWindowEx(WS_EX_CONTROLPARENT,"Steem Hard Disk Manager",T("Hard Drives"),WS_CAPTION | WS_SYSMENU,
                         Left,Top,516,90+GetSystemMetrics(SM_CYCAPTION),
@@ -161,7 +155,7 @@ void THardDiskManager::Show()
 #endif
 
   if (FullScreen) MakeParent(StemWin);
-#ifdef SSE_ACSI_OPTION_INDEPENDENT
+
 #if defined(SSE_ACSI_HDMAN)
   int w=GetCheckBoxSize(Font,
     (acsi?T("&Disable ACSI Hard Drives"):T("&Disable GEMDOS Hard Drives"))).Width;
@@ -169,22 +163,13 @@ void THardDiskManager::Show()
     (acsi?T("&Disable ACSI Hard Drives"):T("&Disable GEMDOS Hard Drives")),
     WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX,10,10,w,23,Handle,
     (HMENU)90,HInstance,NULL);
-#else
-  int w=GetCheckBoxSize(Font,T("&Disable GEMDOS Hard Drives")).Width;
-  Win=CreateWindow("Button",T("&Disable GEMDOS Hard Drives"),WS_CHILD 
-    | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX,10,10,w,23,Handle,(HMENU)90,
-    HInstance,NULL);
-#endif
-#else
-  int w=GetCheckBoxSize(Font,T("&Disable All Hard Drives")).Width;
-  Win=CreateWindow("Button",T("&Disable All Hard Drives"),WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX,
-                             10,10,w,23,Handle,(HMENU)90,HInstance,NULL);
-#endif
-#if defined(SSE_ACSI_HDMAN)
   SendMessage(Win,BM_SETCHECK,(UINT)( 
     (acsi&&!SSEOption.Acsi||!acsi&&DisableHardDrives) 
     ? BST_CHECKED:BST_UNCHECKED),0);
 #else
+  int w=GetCheckBoxSize(Font,T("&Disable All Hard Drives")).Width;
+  Win=CreateWindow("Button",T("&Disable All Hard Drives"),WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX,
+                             10,10,w,23,Handle,(HMENU)90,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,(UINT)(DisableHardDrives ? BST_CHECKED:BST_UNCHECKED),0);
 #endif
   SendMessage(Win,WM_SETFONT,(UINT)Font,0);
@@ -574,8 +559,6 @@ LRESULT __stdcall THardDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARA
 
 #if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) // warning
 void THardDiskManager::CheckTos() {
-  SSEConfig.Stemdos=false;
-  //TRACE("%X\n",ROM_LPEEK(0x2c));
   if(!DisableHardDrives && nDrives)
   { 
     if(tos_version!=0x104 && tos_version!=0x162
@@ -587,10 +570,7 @@ void THardDiskManager::CheckTos() {
       || ROM_PEEK(0x1E)>0x15
 #endif
       )
-#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS) // Steem won't interecept if bad version
-      Alert(T("GEMDOS hard disk emulation will work only with Atari TOS 1.04 or 1.62.\
- For other TOS, use an ACSI image instead."),"Warning",MB_OK|MB_ICONWARNING);
-#elif defined(SSE_ACSI) // just a warning
+#if defined(SSE_ACSI)
 #if defined(SSE_TOS_GEMDOS_RESTRICT_TOS3) 
       Alert(T("GEMDOS hard disk emulation works better with Atari TOS 1.04 or 1.62 or EmuTOS.\
  For other TOS, it is recommended to use an ACSI image instead."),"Warning",MB_OK|MB_ICONWARNING);
@@ -598,11 +578,9 @@ void THardDiskManager::CheckTos() {
       Alert(T("GEMDOS hard disk emulation works better with Atari TOS 1.04 or 1.62.\
  For other TOS, it is recommended to use an ACSI image instead."),"Warning",MB_OK|MB_ICONWARNING);
 #endif
-#else // just a warning
+#else
       Alert(T("GEMDOS hard disk emulation works better with Atari TOS 1.04 or 1.62."),"Warning",MB_OK|MB_ICONWARNING);
 #endif
-    else
-      SSEConfig.Stemdos=true; //note: this has no effect
   }
 }
 #endif

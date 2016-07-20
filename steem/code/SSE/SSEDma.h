@@ -3,7 +3,7 @@
 #define SSEDMA_H
 
 
-#if defined(SSE_DMA)
+#if defined(SSE_DMA_OBJECT)
 
 //   Steem original variables are defined as the new ones.
 #define dma_sector_count Dma.Counter
@@ -50,8 +50,11 @@ struct TDma {
     always up-to-date. This function copies the values from CAPS or
     Pasti so that they are. Useful for debug, OSD.
 */
+#if defined(SSE_VS2008_WARNING_383) && !defined(SSE_DEBUG)
+  void UpdateRegs();
+#else
   void UpdateRegs(bool trace_them=false);
-
+#endif
 #if defined(SSE_STRUCTURE_DMA_INC_ADDRESS)
   void IncAddress();
 #define DMA_INC_ADDRESS Dma.IncAddress();

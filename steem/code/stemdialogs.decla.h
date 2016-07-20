@@ -5,22 +5,15 @@
 #define EXT extern
 #define INIT(s)
 
-
-#if defined(SSE_STRUCTURE_SSEDEBUG_OBJ)
 #include <configstorefile.h>
-//#include <include.h> //no!
 #define GoodConfigStoreFile ConfigStoreFile //from include.h
-
 #ifdef WIN32
 #include <CommCtrl.h> //HTREEITEM
 #include <directory_tree.h>
 #endif
-
 #ifdef UNIX
 #include <x/hxc.h>
 #endif
-
-#endif//SSE_STRUCTURE_SSEDEBUG_OBJ
 
 #define MAX_DIALOGS 20
 #define SD_REGISTER 0

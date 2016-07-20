@@ -1,18 +1,9 @@
-// This file is compiled as a distinct module (resulting in an OBJ file)
-
 #include "SSE.h"
-#if defined(STEVEN_SEAGAL)
-
+#if defined(SSE_BUILD)
 #include "../pch.h"
-
 #include "SSEOption.h"
 #include "SSEDebug.h"
 #include "SSESTF.h" // for the enum
-
-
-
-
-#if defined(SSE_SSE_OPTION_STRUCT)
 
 TOption SSEOption; // singleton
 
@@ -20,8 +11,6 @@ TOption SSEOption; // singleton
 #ifdef UNIX
 #include <stdio.h>
 #include <string.h>
-//#define TRUE 1 // don't screw this one up...
-//#define FALSE 0
 #endif
 
 TOption::TOption() {
@@ -30,11 +19,38 @@ TOption::TOption() {
 
 
 void TOption::Init() {
+
+#if defined(SSE_VAR_OPT_383)
+#ifdef WIN32
+  ZeroMemory(this,sizeof(TConfig));
+#else
+  memset(this,0,sizeof(TConfig));
+#endif
+#if defined(SSE_HACKS)
+  Hacks=true;
+#endif
+#if defined(SSE_IKBD_6301)
+  Chipset1=true;
+#endif
+  Chipset2=true;
+#if defined(SSE_SOUND_FILTER_STF)
+  PSGFilter=true;
+#endif
+#if defined(DEBUG_BUILD)  
+  OutputTraceToFile=1;
+#endif
+  OsdDriveInfo=1;
+  StatusBar=1;
+  DriveSound=1;
+#ifdef SSE_VID_DIRECT3D
+  Direct3D=1;
+#endif
+#else//opt383?
 #if defined(SSE_HACKS)
   Hacks=TRUE;
 #endif
-  HD6301Emu=0;
-  STEMicrowire=0;
+  Chipset1=Chipset2=true;
+  Microwire=0;
 #if defined(SSE_SOUND_FILTER_STF)
   PSGFilter=1;
 #endif
@@ -53,11 +69,7 @@ void TOption::Init() {
   OsdDriveInfo=1;
   Dsp=1;//irrelevant
   OsdImageName=0;
-#if defined(SSE_PASTI_ONLY_STX_OPTION1)
-  PastiJustSTX=1; // go for it! (needed for autoload)
-#else
   PastiJustSTX=0; // dangerous? but handy!
-#endif
   Interpolate=0;
   StatusBar=1;
   WinVSync=0; // really need correct display (50hz, 100hz) or run at 60hz
@@ -77,7 +89,6 @@ void TOption::Init() {
   BlockResize=1;
   LockAspectRatio=0;
   FinetuneCPUclock=0;
-  MC68901=1;
   PRG_support=1;
   Direct3DCrisp=0;
 #if defined(SSE_GUI_MOUSE_VM_FRIENDLY)
@@ -86,9 +97,8 @@ void TOption::Init() {
 #if defined(SSE_OSD_SHOW_TIME)
   OsdTime=0;
 #endif
+#endif//opt383?
 }
-
-#endif//#if defined(SSE_SSE_OPTION_STRUCT)
 
 
 #if defined(SSE_SSE_CONFIG_STRUCT)
@@ -105,4 +115,4 @@ TConfig::TConfig() {
 
 #endif//#if defined(SSE_SSE_CONFIG_STRUCT)
 
-#endif//ss
+#endif//sse

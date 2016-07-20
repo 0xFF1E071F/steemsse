@@ -79,8 +79,9 @@ EXT void debug_hit_io_mon_write(MEM_ADDRESS,int);
 /*  Adding range check: is ad between ad1 and ad2
     We use the first 2 watches
 */
-#if defined(SSE_INLINE_370)
-  bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adarr,bool wr);
+#if defined(SSE_COMPILER_370_INLINE)
+  //bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adarr,bool wr);
+  bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adarr);//383 warning
 #else
 inline  bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adarr,bool wr) {
   MEM_ADDRESS ad1=0,ad2=0;
@@ -107,7 +108,7 @@ inline  bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adar
   if (num){ \
     WORD mask=WORD((ad & 1) ? 0x00ff:0xff00); \
     MEM_ADDRESS test_ad=ad & ~1;  \
-    if(Debug.MonitorRange&&debug_check_wr_check_range(test_ad,num,adarr,wr)) \
+    if(Debug.MonitorRange&&debug_check_wr_check_range(test_ad,num,adarr/*,wr*/)) \
       hit(ad,wr);\
     else\
     for (int i=0;i<num;i++){ \
@@ -122,7 +123,7 @@ inline  bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adar
 
 #define DEBUG_CHECK_WR_W(ad,num,adarr,hit,wr) \
   if (num){ \
-    if(Debug.MonitorRange&&debug_check_wr_check_range(ad,num,adarr,wr)) \
+    if(Debug.MonitorRange&&debug_check_wr_check_range(ad,num,adarr/*,wr*/)) \
       hit(ad,wr);\
     else\
     for (int i=0;i<num;i++){ \
@@ -137,7 +138,7 @@ inline  bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adar
 //ad+2 is hypothesis
 #define DEBUG_CHECK_WR_L(ad,num,adarr,hit,wr) \
   if (num){ \
-    if(Debug.MonitorRange&&debug_check_wr_check_range(ad,num,adarr,wr)) \
+    if(Debug.MonitorRange&&debug_check_wr_check_range(ad,num,adarr/*,wr*/)) \
       hit(ad,wr),hit(ad+2,wr);\
     else\
     for (int i=0;i<num;i++){ \

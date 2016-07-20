@@ -13,18 +13,16 @@
 
 #include "SSEDecla.h" //BYTE
 
-#if defined(SSE_SSE_OPTION_STRUCT)
 
 struct TOption {
-  // We keep all options in the structure so that snapshots are compatible
-  // even if a feature isn't compiled
+
   BYTE STModel;
   BYTE DisplaySize;
   BYTE WakeUpState; 
-  // More than 32 fields OK, if not we would get a warning
+  // More than 32 fields OK, if not we would get a warning (I hope)
   unsigned int Hacks:1;
-  unsigned int HD6301Emu:1;
-  unsigned int STEMicrowire:1;
+  unsigned int Chipset1:1;
+  unsigned int Microwire:1;
   unsigned int PSGFilter:1;
   unsigned int CaptureMouse:1;
   unsigned int StealthMode:1;
@@ -52,7 +50,7 @@ struct TOption {
   unsigned int BlockResize:1;
   unsigned int LockAspectRatio:1;
   unsigned int FinetuneCPUclock:1;
-  unsigned int MC68901:1;
+  unsigned int Chipset2:1;
   unsigned int PRG_support:1;
   unsigned int Direct3DCrisp:1;
   unsigned int Acsi:1;
@@ -62,14 +60,13 @@ struct TOption {
   unsigned int VMMouse:1;
   unsigned int OsdTime:1;
 
-
 #ifdef __cplusplus // visible only to C++ objects
   TOption();
   void Init();
 #endif
 };
 
-// C linkage to be accessible by 6301 emu (and maybe others)
+// C linkage to be accessible by 6301 emu
 #ifdef __cplusplus
 extern "C" TOption SSEOption;
 #else
@@ -77,12 +74,12 @@ extern struct TOption SSEOption;
 #endif
 
 // these macros were considered useful at some point
-#define SSE_HACKS_ON (SSEOption.Hacks)
-#define HD6301EMU_ON (SSEOption.HD6301Emu)
-#define MICROWIRE_ON (SSEOption.STEMicrowire)
+#define OPTION_HACKS (SSEOption.Hacks)
+#define OPTION_C1 (SSEOption.Chipset1)
+#define MICROWIRE_ON (SSEOption.Microwire)
 #define PSG_FILTER_FIX (SSEOption.PSGFilter)
 #define ST_TYPE (SSEOption.STModel)
-#define CAPTURE_MOUSE (SSEOption.CaptureMouse)
+#define OPTION_CAPTURE_MOUSE (SSEOption.CaptureMouse)
 #if !defined(SSE_VID_BORDERS_LB_DX1) // see SSEDecla.h
 #define BORDER_40 (SSEOption.DisplaySize==1)
 #endif
@@ -90,7 +87,7 @@ extern struct TOption SSEOption;
 #define STEALTH_MODE SSEOption.StealthMode
 #define USE_TRACE_FILE (SSEOption.OutputTraceToFile)
 #define TRACE_FILE_REWIND (SSEOption.TraceFileLimit)
-#define WAKE_UP_STATE (SSEOption.WakeUpState)
+#define OPTION_WS (SSEOption.WakeUpState)
 #define USE_SDL (SSEOption.UseSDL)
 #define OSD_DRIVE_INFO (SSEOption.OsdDriveInfo)
 #define DSP_ENABLED (SSEOption.Dsp)
@@ -108,21 +105,16 @@ extern struct TOption SSEOption;
 #define SSE_OPTION_PSG_FIXED (SSEOption.PSGFixedVolume)
 #define OPTION_ST_ASPECT_RATIO (SSEOption.STAspectRatio)
 #define DRIVE_SOUND_SEEK_SAMPLE (SSEOption.DriveSoundSeekSample)
-#define SSE_TEST_ON (SSEOption.TestingNewFeatures)
+#define SSE_TEST_ON (SSEOption.TestingNewFeatures)//use macro only for actual tests
 #define OPTION_BLOCK_RESIZE (SSEOption.BlockResize)
 #define OPTION_LOCK_ASPECT_RATIO (SSEOption.LockAspectRatio)
 #define OPTION_CPU_CLOCK (SSEOption.FinetuneCPUclock)
-#define OPTION_PRECISE_MFP (SSEOption.MC68901)
+#define OPTION_C2 (SSEOption.Chipset2)
 #define OPTION_PRG_SUPPORT (SSEOption.PRG_support)
 #define OPTION_D3D_CRISP (SSEOption.Direct3DCrisp)
 #define OPTION_KEYBOARD_CLICK (SSEOption.KeyboardClick)
 #define OPTION_FULLSCREEN_GUI (SSEOption.FullScreenGui)
 #define OPTION_OSD_TIME (SSEOption.OsdTime)
-
-#else//!defined(SSE_SSE_OPTION_STRUCT)
-
-#endif//#if defined(SSE_SSE_OPTION_STRUCT)
-
 
 #if defined(SSE_SSE_CONFIG_STRUCT)
 
@@ -131,7 +123,7 @@ struct TConfig {
   int FullscreenMask; // mask?
   
   unsigned int UnrarDll:1;
-  unsigned int SdlDll:1;
+  //unsigned int SdlDll:1;//forget it?
   unsigned int Hd6301v1Img:1;
   unsigned int unzipd32Dll:1;
   unsigned int CapsImgDll:1;
@@ -139,7 +131,7 @@ struct TConfig {
   unsigned int Direct3d9:1;
   unsigned int ArchiveAccess:1;
   unsigned int AcsiImg:1;
-  unsigned int Stemdos:1;
+  //unsigned int Stemdos:1; //unused
   unsigned int VideoCard8bit:1;
   unsigned int VideoCard16bit:1;
   unsigned int ym2149_fixed_vol:1;
@@ -165,7 +157,7 @@ extern struct TConfig SSEConfig;
 #define D3D9_OK (SSEConfig.Direct3d9)
 #define ARCHIVEACCESS_OK (SSEConfig.ArchiveAccess)
 
-#if defined(SSE_ACSI_OPTION_INDEPENDENT)
+#if defined(SSE_ACSI_HDMAN)
 #define ACSI_EMU_ON (SSEConfig.AcsiImg && SSEOption.Acsi)
 #elif defined(SSE_ACSI)
 #define ACSI_EMU_ON (!HardDiskMan.DisableHardDrives && SSEConfig.AcsiImg && SSEOption.Acsi)

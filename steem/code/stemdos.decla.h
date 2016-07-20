@@ -217,7 +217,7 @@ struct TTos {
   EasyStr GetNextTos(DirSearch &ds); // to enumerate TOS files
   void GetTosProperties(EasyStr Path,WORD &Ver,BYTE &Country,WORD &Date);
 #endif
-#if defined(SSE_VAR_KEYBOARD_CLICK2)
+#if defined(SSE_SOUND_KEYBOARD_CLICK2)
   void CheckKeyboardClick();
 #endif
 #if defined(SSE_TOS_GEMDOS_EM_381B)

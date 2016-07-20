@@ -1,22 +1,15 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_PALETTE_H)
-
-#include "palette.decla.h"
-
-#else//!SSE_STRUCTURE_PALETTE_H
-
 #ifdef IN_MAIN
 #define EXT
 #else
 #define EXT extern
 #endif
 
-
 EXT void palette_copy();
 EXT void palette_flip();
 EXT WORD palette_add_entry(DWORD col);
 EXT void palette_convert_all();
 EXT void palette_convert(int);
-
+
 #ifdef IN_MAIN
 EXT void palette_prepare(bool);
 EXT void palette_remove();
@@ -51,5 +44,3 @@ long logpal[257];
 #endif
 
 #undef EXT
-
-#endif//SSE_STRUCTURE_PALETTE_H

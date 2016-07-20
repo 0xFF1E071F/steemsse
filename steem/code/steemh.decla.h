@@ -38,7 +38,7 @@ EXT bool mmu_confused;        //144
 #endif
 EXT unsigned long hbl_count INIT(0);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301)
 // it's silly but I need to place those 'C' declarations here
 EXT int cpu_timer;  
 EXT BYTE stick[8];
@@ -46,21 +46,12 @@ EXT BYTE stick[8];
 
 
 // Don't forget to update this in the resource file too!
-#if defined(STEVEN_SEAGAL)
-//EXT const char *stem_version_text INIT(SSE_VERSION_TXT); // OSD + info box
-#else
-EXT const char *stem_version_text INIT("3.2");
-#endif
-
-#ifdef STEVEN_SEAGAL
+#if defined(SSE_VERSION)
 #define STEEM_EMAIL "donmegacool@hotmail.com"
-#else
-#define STEEM_EMAIL "steem@gmx.net"
-#endif
-
-#ifdef STEVEN_SEAGAL
 #define STEEM_WEB "http:/""/ataristeven.exxoshost.co.uk/"
 #else
+EXT const char *stem_version_text INIT("3.2");
+#define STEEM_EMAIL "steem@gmx.net"
 #define STEEM_WEB "http:/""/steem.atari.st/"
 #endif
 
@@ -86,7 +77,7 @@ EXT BYTE *Mem_End,
 #define PAL_EXTRA_BYTES 16
 EXT BYTE palette_exec_mem[64+PAL_EXTRA_BYTES];
 
-EXT long palette_table[4096]; // SS 4K!
+EXT long palette_table[4096]; // SS 16K!
 
 #define STEM_MODE_CPU 0
 #define STEM_MODE_D2 1
@@ -244,7 +235,7 @@ EXT MEM_ADDRESS abus;
 EXT long m68k_old_dest;
 EXT MEM_ADDRESS effective_address;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301)
 #else
 EXT int cpu_timer;
 #endif
@@ -385,8 +376,13 @@ EXT char m68k_src_b;
 #define PARAM_M (ir&0x7)
 
 #define MSB_B BYTE(0x80)
+#if defined(SSE_VS2008_WARNING_383)
+#define MSB_W (WORD)0x8000
+#define MSB_L (DWORD)0x80000000
+#else
 #define MSB_W 0x8000
 #define MSB_L 0x80000000
+#endif
 
 #define BYTE_00_TO_256(x) ( (int) ((unsigned char) (( (unsigned char)x )-1))  +1 )
 

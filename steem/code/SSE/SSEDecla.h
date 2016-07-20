@@ -3,11 +3,11 @@
 #define SSEDECLA_H
 
 #include "SSE.h"
-#if defined(STEVEN_SEAGAL)
+#if defined(SSE_BUILD)
 
-/////////////////
-// PORTABILITY //
-/////////////////
+///////////////
+// COMPILERS //
+///////////////
 
 #if defined(BCC_BUILD) // after x warnings, BCC stops compiling!
 #pragma warn- 8004 
@@ -20,16 +20,9 @@
 #endif
 
 #if !defined(WIN32) //|| defined(MINGW_BUILD)
-//#define TRUE 1
-//#define FALSE 0
-//#define BOOL int
 typedef unsigned char BYTE;
-//typedef BYTE BOOL;
-//#include <notwindows.h>
-
 #define max(a,b) (a>b ? a:b)
 #define min(a,b) (a>b ? b:a)
-
 #endif
 
 #if defined(SSE_UNIX) || defined(MINGW_BUILD)
@@ -49,20 +42,34 @@ typedef unsigned __int64	uint64_t;
 #include <windows.h>
 #endif
 
+#if defined(SSE_VS2008_WARNING_383) && !defined(NODEFAULT) //can be defined in caps/CommomTypes.h
+#ifdef _DEBUG
+#define NODEFAULT   assert(0)
+#else
+#define NODEFAULT   __assume(0)
+#endif
+#endif
 
 #if defined(VC_BUILD)
 #pragma warning (1 : 4710) // function '...' not inlined as warning L1
 #pragma warning (disable : 4800) // 'int' : forcing value to bool 'true' or 'false' (performance warning)
-#pragma warning(disable : 4996)// This function or variable may be unsafe.
-#if defined(_MSC_VER) && _MSC_VER <= 1200
+// C4800 isn't a silly warning but to avoid it we should write !=0 ourselves,
+// which is what the compiler does on its own, and warns us about
+#if (MSC_VER <= 1200)//VC6
 #pragma warning (disable : 4127) //conditional expression is constant (for scope trick)
 #endif
+#if defined(SSE_BOILER)
+#pragma warning (disable : 4125) //decimal digit terminates octal escape sequence
+#pragma warning (disable : 4127) //conditional expression is constant (for logsection)
+#else
 #pragma warning (disable : 4002) //too many actual parameters for macro 'TRACE_LOG'
+#endif
 #pragma warning (disable : 4244) //conversion from 'int' to 'short', possible loss of data
+#pragma warning (disable : 4996)// This function or variable may be unsafe.
 #endif
 
 #if defined(SSE_VC_INTRINSICS_382)
-#define BITTEST(var,bit) (_bittest((long*)&var,bit))
+#define BITTEST(var,bit) (_bittest((long*)&var,bit)/*!=0*/)
 #endif
 
 /////////
@@ -113,10 +120,6 @@ int SS_signal; // "handy" global mask (future coding horror case)
 // IKBD //
 //////////
 
-#if defined(SSE_IKBD)
-
-#endif
-
 
 ///////////////
 // INTERRUPT //
@@ -131,7 +134,7 @@ int SS_signal; // "handy" global mask (future coding horror case)
 // IPF //
 /////////
 
-#if defined(SSE_IPF)
+#if defined(SSE_DISK_CAPS)
 
 #if defined(WIN32) && defined(SSE_DELAY_LOAD_DLL)
 
@@ -165,11 +168,6 @@ int SS_signal; // "handy" global mask (future coding horror case)
 /////////////
 
 #if defined(SSE_SHIFTER)
-
-#if !defined(SSE_DEBUG) 
-#define draw_check_border_removal Shifter.CheckSideOverscan
-#define draw_scanline_to(cycles_since_hbl) Shifter.Render(cycles_since_hbl)
-#endif
 
 #endif
 
@@ -214,6 +212,12 @@ int SS_signal; // "handy" global mask (future coding horror case)
 // VARIOUS //
 /////////////
 
+#if defined(SSE_VAR_ARCHIVEACCESS)||defined(SSE_ACSI)\
+  ||defined(SSE_GUI_STATUS_STRING_ICONS)
+#define SSE_ANSI_STRING
+extern char ansi_name[MAX_PATH];
+#endif
+
 #if defined(SSE_DELAY_LOAD_DLL)
 // Delay loading DLLs
 // No switch because code depends on it and it's desireable,
@@ -245,7 +249,9 @@ FARPROC WINAPI MyLoadFailureHook(dliNotification dliNotify, DelayLoadInfo * pdli
 
 
 #define TIMING_INFO FRAME,scan_y,LINECYCLES
-
+#if defined(SSE_VS2008_383)
+#include <assert.h> //NODEFAULT
+#endif
 
 /////////////
 // VERSION //
@@ -268,7 +274,6 @@ extern BYTE *stem_version_text[SSE_VERSION_TXT_LEN];
 
 
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1) 
-// for smaller code, we directly change
 #define GLU Glue 
 #else
 #define GLU Shifter // TShifter functions call Shifter as if extern
@@ -277,7 +282,7 @@ extern BYTE *stem_version_text[SSE_VERSION_TXT_LEN];
 
 #if defined(SSE_SHIFTER) && defined(SSE_DEBUG)
 #define FRAME (Shifter.nVbl) 
-#elif defined(SSE_DEBUG_FRAME_REPORT)
+#elif defined(SSE_BOILER_FRAME_REPORT)
 #define FRAME (FrameEvents.nVbl)
 #else 
 #define FRAME (-1)

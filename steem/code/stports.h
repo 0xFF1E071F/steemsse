@@ -1,9 +1,3 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_STPORTS_H)
-
-#include "stports.decla.h"
-
-#else//!defined(SSE_STRUCTURE_STPORTS_H)
-
 extern void agenda_midi_replace(int);
 extern void MidiInBufNotEmpty();
 
@@ -106,4 +100,3 @@ TSTPort STPort[3];
 extern TSTPort STPort[3];
 #endif
 
-#endif//!defined(SSE_STRUCTURE_STPORTS_H)

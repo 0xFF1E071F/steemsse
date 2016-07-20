@@ -12,13 +12,12 @@
 
 #include "SSE.h"
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_FDC)
-
+#if defined(SSE_WD1772)
 #include "../pch.h"
-#ifdef WIN32
+#include <conditions.h>
+#if defined(WIN32) && USE_PASTI
 #include <pasti/pasti.h>
 #endif
-#include <conditions.h>
 #include <cpu.decla.h>
 #include <fdc.decla.h>
 #include <floppy_drive.decla.h>
@@ -31,20 +30,18 @@
 #include "SSEInterrupt.h"
 #include "SSEWD1772.h"
 
-//#if defined(SSE_FDC)
-//#if defined(SSE_WD1772)
-
 #define LOGSECTION LOGSECTION_FDC
 
 #if defined(SSE_WD1772_RESET)
 
+#if defined(SSE_VS2008_WARNING_383)
+void TWD1772::Reset() {
+#else
 void TWD1772::Reset(bool Cold) {
+#endif
   STR=2; // funny, like ACIA
 #ifdef SSE_FDC_FORCE_INTERRUPT
   InterruptCondition=0;
-#endif
-#if defined(SSE_FDC_INDEX_PULSE_COUNTER)
- // IndexCounter=0;
 #endif
 
 #ifdef SSE_WD1772_REG2_B
@@ -61,10 +58,9 @@ void TWD1772::Reset(bool Cold) {
 
 }
 
-
 #endif//reset
 
-/////////////////////////////////// GHOST /////////////////////////////////////
+//////////////////////////////// GHOST DISK ///////////////////////////////////
 
 #if defined(SSE_DISK_GHOST)
 /*  Ghost disks are described in doc/sse/stg.txt and implemented in
@@ -78,8 +74,11 @@ bool TWD1772::CheckGhostDisk(BYTE drive, BYTE io_src_b) {
   IDField.track=SF314[drive].Track(); // not TR
   IDField.side=YM2149.SelectedSide;
   IDField.num=SR; 
+#if defined(SSE_VS2008_WARNING_383)
+  WORD nbytes=512;
+#else
   WORD nbytes;
-  
+#endif
 #if defined(SSE_DISK_GHOST_SECTOR)
 /*  Simplest case: the game writes sectors using the "single sector"
     way. Super Cycles, Sundog, Great Courts.
@@ -92,11 +91,19 @@ bool TWD1772::CheckGhostDisk(BYTE drive, BYTE io_src_b) {
     switch(Dma.Counter) {
     case 0:
       nbytes=0;
+#if defined(SSE_DISK_GHOST_SECTOR_383)//oops
+      break;
+#endif
     case 2:
       nbytes=1024;
       IDField.len=3;
+#if defined(SSE_DISK_GHOST_SECTOR_383)
+      break;
+#endif
     default:
+#if !defined(SSE_VS2008_WARNING_383)
       nbytes=512;
+#endif
       IDField.len=2;
     }//sw
   }
@@ -247,15 +254,24 @@ bool TWD1772::CheckGhostDisk(BYTE drive, BYTE io_src_b) {
 
 BYTE TWD1772::IORead(BYTE Line) {
   
+#if defined(SSE_WD1772_383)
+  ASSERT( Line<=3 );
+  BYTE drive=DRIVE;
+#ifdef _DEBUG
+  BYTE ior_byte=0;  
+#else
+  BYTE ior_byte;  
+#endif
+#else
 #ifdef SSE_DEBUG
   ASSERT( Line<=3 );
   BYTE drive=DRIVE;
-  //drive=floppy_current_drive();
 #else
 #define drive DRIVE
 #endif
-
   BYTE ior_byte;  
+#endif
+  
 
   // Steem handling
 
@@ -345,103 +361,43 @@ WD doc:
           mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
         InterruptCondition=0;
 #else//before v3.7
-        
 #if defined(SSE_FDC_FORCE_INTERRUPT)
         if(InterruptCondition!=8)
 #endif
           mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
 #endif
       }
-#if defined(SSE_DISK_STW)
+#if defined(SSE_WD1772_LINES)
       Lines.irq=0;
 #endif
-      
       ior_byte=STR;
     }
-
-#if 0 //debug section, original steem
-          {
-            fdc_str=debug1;
-            int fn=floppy_current_drive();
-            if (floppy_track_index_pulse_active()){
-              fdc_str|=FDC_STR_T1_INDEX_PULSE;
-            }else{
-              // If not type 1 command we will get here, it is okay to clear
-              // it as this bit is only for the DMA chip for type 2/3.
-              fdc_str&=BYTE(~FDC_STR_T1_INDEX_PULSE);
-            }
-            if (floppy_type1_command_active){
-              /* From Jorge Cwik
-                The FDC has two different
-                type of status. There is a "Type I" status after any Type I command,
-                and there is a different "status" after types II & III commands. The
-                meaning of some of the status bits is different (this probably you
-                already know),  but the updating of these bits is different too.
-
-                In a Type II-III status, the write protect bit is updated from the write
-                protect signal only when trying to write to the disk (write sector
-                or format track), otherwise is clear. This bit is static, once it was
-                updated or cleared, it will never change until a new command is
-                issued to the FDC.
-              */
-              fdc_str&=(~FDC_STR_WRITE_PROTECT);
-              if (floppy_mediach[fn]){
-                if (floppy_mediach[fn]/10!=1) fdc_str|=FDC_STR_WRITE_PROTECT;
-              }else if (FloppyDrive[fn].ReadOnly){
-                fdc_str|=FDC_STR_WRITE_PROTECT;
-              }
-              if (fdc_spinning_up){
-                fdc_str&=BYTE(~FDC_STR_T1_SPINUP_COMPLETE);
-              }else{
-                fdc_str|=FDC_STR_T1_SPINUP_COMPLETE;
-              }
-            } // else it should be set in fdc_execute()
-            if ((mfp_reg[MFPR_GPIP] & BIT_5)==0){
-              LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
-                          " - Reading status register as "+Str(itoa(fdc_str,d2_t_buf,2)).LPad(8,'0')+
-                          " ($"+HEXSl(fdc_str,2)+"), clearing IRQ"); )
-              floppy_irq_flag=0;
-//              TRACE_FDC("R STR MFP_GPIP_FDC_BIT: %d\n",true);
-              mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
-            }
-//            log_DELETE_SOON(Str("FDC: ")+HEXSl(old_pc,6)+" - reading FDC status register as $"+HEXSl(fdc_str,2));
-/*
-            LOG_ONLY( if (mode==STEM_MODE_CPU) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
-                            " - Read status register as $"+HEXSl(fdc_str,2)); )
-*/
-            ASSERT(ior_byte==fdc_str);
-          }
-#endif//debug
-
 #if defined(SSE_BOILER_TRACE_CONTROL)
-  if(TRACE_MASK3 & TRACE_CONTROL_FDCSTR)
+    if(TRACE_MASK3 & TRACE_CONTROL_FDCSTR)
+      TRACE_FDC("FDC STR %X PC %X\n",ior_byte,old_pc);
 #endif
-  {
-#if !defined(SSE_DEBUG_TRACE_IDE) || defined(SSE_DEBUG_FDC_TRACE_STR)
-    TRACE_LOG("FDC STR %X PC %X\n",ior_byte,old_pc);
-#endif
-  }
-      break;
+    break;
 
     case 1:
       ior_byte=TR;
-//      TRACE_LOG("FDC R TR %d\n",ior_byte);
-      TRACE_LOG("FDC TR R %d PC %X\n",ior_byte,old_pc);
+      TRACE_FDC("FDC TR R %d PC %X\n",ior_byte,old_pc);
       break;      
     case 2:
       ior_byte=SR;
-//      TRACE_LOG("FDC R SR %d\n",ior_byte);
-      TRACE_LOG("FDC SR R %d PC %X\n",ior_byte,old_pc);
+      TRACE_FDC("FDC SR R %d PC %X\n",ior_byte,old_pc);
       break;
     case 3:
       ior_byte=DR;
-//      TRACE_LOG("FDC R DR %d\n",ior_byte);
-      TRACE_LOG("FDC DR R %d PC %X\n",ior_byte,old_pc);
+      TRACE_FDC("FDC DR R %d PC %X\n",ior_byte,old_pc);
       break;
+#if defined(SSE_VS2008_WARNING_383)
+		default:
+			NODEFAULT;
+#endif
     }//sw
 
     // IPF handling
-#if defined(SSE_IPF)
+#if defined(SSE_DISK_CAPS)
 
 #if defined(SSE_DISK_IMAGETYPE1)
     if(SF314[drive].ImageType.Manager==MNGR_CAPS)
@@ -453,7 +409,7 @@ WD doc:
 
   return ior_byte;
 
-#ifndef SSE_DEBUG
+#if !defined(SSE_DEBUG) && !defined(SSE_WD1772_383)
 #undef drive
 #endif
 }
@@ -461,60 +417,53 @@ WD doc:
 
 void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 
+#if defined(SSE_WD1772_383)
   ASSERT( Line<=3 );
-
+  BYTE drive=DRIVE;
+#else
 #ifdef SSE_DEBUG
+  ASSERT( Line<=3 );
   BYTE drive=DRIVE;
 #else
 #define drive DRIVE
 #endif
+#endif
 
   switch(Line)
   {
-  case 0: // CR - could be blocked, can't record here :(
+  case 0: // Write CR - could be blocked, can't record here :(
   {
-
 #if defined(SSE_DMA_TRACK_TRANSFER2) // we reset it here so it works for CAPS too
     Dma.Datachunk=0;
 #endif
-
-#if defined(SSE_DEBUG) && defined(SSE_DRIVE) && defined(SSE_DISK_IMAGETYPE)//&& SSE_VERSION>=364
-#if defined(SSE_BOILER_TRACE_CONTROL)
+#if defined(SSE_BOILER_TRACE_CONTROL) && defined(SSE_DRIVE_OBJECT) && defined(SSE_DISK_IMAGETYPE)
     if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
-#endif
     {
       if( SF314[drive].ImageType.Manager==MNGR_WD1772 
         && (CR&0xF0)==0x90 && !(STR&STR_RNF))
         TRACE_LOG("\n");
-
       BYTE drive_char= (psg_reg[PSGR_PORT_A]&6)==6? '?' : 'A'+drive;
-      TRACE_LOG("%d FDC(%d) CR $%02X %c:%d STR %X TR %d CYL %d SR %d DR %d dma $%X #%d PC $%X\n",
+      TRACE_FDC("%d FDC(%d) CR $%02X %c:%d STR %X TR %d CYL %d SR %d DR %d dma $%X #%d PC $%X\n",
         ACT,SF314[drive].ImageType.Manager,io_src_b,drive_char,CURRENT_SIDE,STR,TR,SF314[drive].Track(),SR,DR,Dma.BaseAddress,Dma.Counter,old_pc);
     }
 #endif
-
-#if defined(SSE_DEBUG) && defined(SSE_DRIVE) && defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)
-//#undef LOGSECTION
-//#define LOGSECTION LOGSECTION_IMAGE_INFO
+#if defined(SSE_DEBUG) && defined(SSE_DRIVE_OBJECT) && defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)
 /*  Used this for Auto239.
     Gives the checksum of bootsector.
     $1234 means executable. Use last WORD to adjust.
 */
     if(SF314[drive].SectorChecksum)
-      TRACE_LOG("%c: bootsector checksum $%X\n",'A'+drive,SF314[drive].SectorChecksum);
+      TRACE_FDC("%c: bootsector checksum $%X\n",'A'+drive,SF314[drive].SectorChecksum);
     SF314[drive].SectorChecksum=0;
-//#undef LOGSECTION
-//#define LOGSECTION LOGSECTION_FDC
 #endif//checksum
-
 #if !defined(SSE_DISK_IMAGETYPE) //old block "can_send"
     bool can_send=true; // are we in Steem's native emu?
-#if defined(SSE_IPF)
+#if defined(SSE_DISK_CAPS)
     can_send=can_send&&!Caps.IsIpf(drive);
 #endif
 #if USE_PASTI 
     can_send=can_send&&!(hPasti && pasti_active
-#if defined(SSE_DRIVE) && defined(SSE_PASTI_ONLY_STX)
+#if defined(SSE_DRIVE_OBJECT) && defined(SSE_DISK_PASTI_ONLY_STX)
       && (!PASTI_JUST_STX || SF314[drive].ImageType==3)
 #endif            
         );
@@ -537,12 +486,12 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #endif//ghost
 
 #if defined(SSE_DRIVE_SOUND)
-      if(SSEOption.DriveSound)
+    if(SSEOption.DriveSound)
 #if defined(SSE_DISK_GHOST)
       if(!Lines.CommandWasIntercepted) //would mess registers, and is instant
 #endif
       {
-#if defined(SSE_DMA)
+#if defined(SSE_DMA_OBJECT)
         Dma.UpdateRegs();
 #endif
         SF314[drive].TrackAtCommand=SF314[drive].Track(); //record
@@ -557,70 +506,66 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
       // Steem's native and WD1772 managers
 #if defined(SSE_DISK_IMAGETYPE)
     if(SF314[drive].ImageType.Manager==MNGR_STEEM)
-#else
 #endif
       floppy_fdc_command(io_src_b); // in fdc.cpp for ST, MSA, DIM, STT
 #if defined(SSE_DISK_STW)
     else if(SF314[drive].ImageType.Manager==MNGR_WD1772)
       WriteCR(io_src_b); // for STW, SCP, HFE
 #endif
+    // CAPS handled lower
     break;
   }
 
-  case 1: // TR
+  case 1: // Write TR
 #if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
+      TRACE_FDC("FDC TR W %d PC %X\n",io_src_b,old_pc);
 #endif
-    TRACE_LOG("FDC TR W %d PC %X\n",io_src_b,old_pc);
-
+    if (!(STR&FDC_STR_BUSY)
 #if defined(SSE_FDC_CHANGE_TRACK_WHILE_BUSY)
-    if(!(STR&FDC_STR_BUSY)||ADAT)
-      fdc_tr=io_src_b;
-#else
-    if (!(STR&FDC_STR_BUSY)){
+      ||ADAT
+#endif
+      ){
       log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC track register to "+io_src_b);
       TR=io_src_b;
     }else{
       log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Can't set FDC track register to "+io_src_b+", FDC is busy");
     }
-#endif
     break;
 
-  case 2: // SR
+  case 2: // Write SR
 #if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
+      TRACE_FDC("FDC SR W %d PC %X\n",io_src_b,old_pc);
 #endif
-    TRACE_LOG("FDC SR W %d PC %X\n",io_src_b,old_pc);
-//    TRACE_LOG("FDC SR %d (pc %x)\n",io_src_b,old_pc );
-
+    if (!(STR & FDC_STR_BUSY)
 #if defined(SSE_FDC_CHANGE_SECTOR_WHILE_BUSY)
-    if(!(STR&FDC_STR_BUSY)||ADAT)
-      SR=io_src_b; // fixes Delirious 4 loader without Pasti
-    
-#else
-    if (!(STR & FDC_STR_BUSY)){
+      ||ADAT // fixes Delirious 4 loader without Pasti
+#endif
+      ){
       log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC sector register to "+io_src_b);
       SR=io_src_b;
     }else{
       log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Can't set FDC sector register to "+io_src_b+", FDC is busy");
     }
-#endif
     break;
 
-  case 3: // DR
+  case 3: // Write DR
 #if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
+      TRACE_FDC("FDC DR W %d PC %X\n",io_src_b,old_pc);
 #endif
-//    TRACE_LOG("FDC DR %d\n",io_src_b);
-    TRACE_LOG("FDC DR W %d PC %X\n",io_src_b,old_pc);
-
     log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC data register to "+io_src_b);
     DR=io_src_b;
     break;
-  }
+#if defined(SSE_VS2008_WARNING_383)
+  default:
+    NODEFAULT;
+#endif
+  }//sw
   
-  // IPF handling
-#if defined(SSE_IPF)
+  // CAPS handling
+#if defined(SSE_DISK_CAPS)
 #if defined(SSE_DISK_IMAGETYPE1)
   if(SF314[drive].ImageType.Manager==MNGR_CAPS)
 #else
@@ -629,15 +574,15 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #if defined(SSE_DISK_GHOST)
     if(SSE_GHOST_DISK && Lines.CommandWasIntercepted)
     {
-      TRACE_LOG("Caps doesn't get command %x\n",io_src_b);
+      TRACE_FDC("Ghost - Caps doesn't get command %x\n",io_src_b);
       Caps.WD1772.r_command=CR;//update this...
     }
     else
 #endif
       Caps.WriteWD1772(Line,io_src_b);
-#endif//IPF
+#endif
       
-#ifndef SSE_DEBUG
+#if !defined(SSE_DEBUG) && !defined(SSE_WD1772_383)
 #undef drive
 #endif
   
@@ -663,15 +608,15 @@ BYTE TWD1772::CommandType(int command) {
 
 
 #if defined(SSE_DEBUG) || defined(SSE_OSD_DRIVE_LED)
-
+#if defined(SSE_VS2008_WARNING_383)
+bool TWD1772::WritingToDisk() {
+#else
 int TWD1772::WritingToDisk() { // could do this at DMA level?
+#endif
   return((CR&0xF0)==0xF0 || (CR&0xE0)==0xA0 || (CR&0xE0)==0xB0) ;
 }
 
 #endif
-
-/////////#endif//SSE_FDC
-
 
 ///////////////////////////////// Debug ///////////////////////////////////////
 
@@ -1000,7 +945,7 @@ int TWD1772Dpll::GetNextBit(int &tm, BYTE drive) {
     We nudge by only 1 cycle, but it makes the difference.
     undef 3.7.2
 */
-    if(!SSE_HACKS_ON) 
+    if(!OPTION_HACKS) 
       ; // it is a dangerous hack, protected by the option
     else if(weak_bit_pairing) // also if current timing is even
     {
@@ -1213,7 +1158,11 @@ void TWD1772::Irq(bool state) {
       SF314[0].Sound_CheckIrq();
 #endif
 #endif
+#if defined(SSE_VS2008_WARNING_383) && !defined(SSE_DEBUG)
+    Dma.UpdateRegs();
+#else
     Dma.UpdateRegs(true);
+#endif
   }
   Lines.irq=state;
 
@@ -1416,7 +1365,11 @@ void TWD1772::NewCommand(BYTE command) {
     Whether the WD1772 is waiting for it or not.
 */
 #if defined(SSE_DRIVE_INDEX_PULSE2)
+#if defined(SSE_VS2008_WARNING_383) && !defined(SSE_DEBUG)
+void TWD1772::OnIndexPulse(bool image_triggered) {
+#else
 void TWD1772::OnIndexPulse(int id,bool image_triggered) {
+#endif
 #else
 void TWD1772::OnIndexPulse(int id) {
 #endif
@@ -2446,7 +2399,7 @@ void  TWD1772::WriteCR(BYTE io_src_b) {
 
 /*  CR will accept a new command when busy bit is clear or when command
     is 'Force Interrupt'.
-    Not documented: also when the drive is still spinning up 
+    Not documented (from Hatari?): also when the drive is still spinning up 
     TODO only during a type I command? check in caps -> feature missing?
     TODO check general structure, not sure it's ideal even if limited
     to STW
@@ -2476,7 +2429,7 @@ void  TWD1772::WriteCR(BYTE io_src_b) {
     It interprets the bit flow from disk images such as SCP, coming
     from the DPLL.
     
-    Fluxes -> weak bit detect (hack) -> DPLL -> data separator -> DSR
+    Fluxes -> DPLL -> data separator -> DSR
 
     Thx to Istvan Fabian for some inspiration otherwise Steem would FAIL
     (err, why write in CAPS?) on some disk images that use the $C2 sync mark,
@@ -2649,7 +2602,7 @@ bool TWD1772::ShiftBit(int bit) {
   if (Amd.aminfo & CAPSFDC_AI_DSRREADY) { //SS ?
     byte_ready=true;
 #if defined(SSE_DISK_380) // are we taking a risk?
-    if(Disk[DRIVE].current_side!=CURRENT_SIDE && SSE_HACKS_ON)
+    if(Disk[DRIVE].current_side!=CURRENT_SIDE && OPTION_HACKS)
       Amd.dsr=rand()&0xFF; // garbage
 #endif
   }

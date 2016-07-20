@@ -7,7 +7,7 @@ int HandleXError(Display *XD,XErrorEvent *pXErr)
   char ErrText[300]={0};
   XGetErrorText(XD,XError.type,ErrText,299);
   if (ErrText[0]) log_write(ErrText);
-#if defined(STEVEN_SEAGAL) && defined(SSE_UNIX_TRACE)
+#if defined(SSE_UNIX_TRACE)
   if (ErrText[0]) 
     TRACE(ErrText); // newline?
 #endif
@@ -160,7 +160,7 @@ bool MakeGUI()
 
   DispGC=XCreateGC(XD,StemWin,0,NULL);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_UNIX) && defined(SSE_GUI_WINDOW_TITLE)
+#if defined(SSE_UNIX) && defined(SSE_GUI_WINDOW_TITLE)
   XSetStandardProperties(XD,StemWin,WINDOW_TITLE,"Steem",None,_argv,_argc,NULL);
 #else
   XSetStandardProperties(XD,StemWin,"Steem Engine","Steem",None,_argv,_argc,NULL);
@@ -194,7 +194,7 @@ bool MakeGUI()
                     BT_ICON,"",102,BkCol);
   ResetBut.set_icon(&Ico16,ICO16_RESET);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_RESET_BUTTON)
+#if defined(SSE_GUI_RESET_BUTTON)
   hints.add(ResetBut.handle,T("Reset (Left Click) - Switch off (Right Click)"),StemWin);
 #else
   hints.add(ResetBut.handle,T("Reset (Left Click = Cold, Right Click = Warm)"),StemWin);
@@ -617,7 +617,7 @@ void HandleKeyPress(UINT KeyCode,bool Up,int Extend)
     ST_Key_Down[STCode]=!Up;
     if (Up) STCode|=MSB_B;
     
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301)
     if(!HD6301EMU_ON)
 #endif
     

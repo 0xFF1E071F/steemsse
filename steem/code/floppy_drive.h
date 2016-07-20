@@ -1,10 +1,3 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_FLOPPYDRIVE_H)
-
-#include "floppy_drive.decla.h"
-
-#else//!defined(SSE_STRUCTURE_FLOPPYDRIVE_H)
-
-
 #define FIMAGE_OK                  0
 #define FIMAGE_WRONGFORMAT         1
 #define FIMAGE_CANTOPEN            2
@@ -14,42 +7,27 @@
 #define FIMAGE_DIMNOMAGIC          6
 #define FIMAGE_DIMTYPENOTSUPPORTED 7
 
-
 typedef struct{
-    BYTE Track,Side,SectorNum,SectorLen,CRC1,CRC2;
+  BYTE Track,Side,SectorNum,SectorLen,CRC1,CRC2;
 }FDC_IDField;
 
 typedef struct{
   int BytesPerSector,Sectors,SectorsPerTrack,Sides;
 }BPBINFO;
-
+
 class TFloppyImage
 {
 private:
   EasyStr ImageFile,MSATempFile,ZipTempFile,FormatTempFile;
 public:
-  TFloppyImage()             { f=NULL;Format_f=NULL;PastiDisk=
-#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)    
-    IPFDisk=
-#endif
-    0;PastiBuf=NULL;RemoveDisk();}
-
+  TFloppyImage()             { f=NULL;Format_f=NULL;PastiDisk=0;PastiBuf=NULL;RemoveDisk();}
   ~TFloppyImage()            { RemoveDisk(); }
-
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_PASTI_NO_RESET)
-  EasyStr GetImageFile() {return ImageFile;}
-#endif
 
   int SetDisk(EasyStr,EasyStr="",BPBINFO* = NULL,BPBINFO* = NULL);
   EasyStr GetDisk()  { return ImageFile; }
   bool ReinsertDisk();
   void RemoveDisk(bool=0);
-  bool DiskInDrive() { return f!=NULL || PastiDisk 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
-    || IPFDisk
-#endif    
-    ; }
+  bool DiskInDrive() { return f!=NULL || PastiDisk; }
   bool NotEmpty() { return DiskInDrive(); }
   bool Empty()       { return DiskInDrive()==0; }
   bool IsMSA()       { return MSATempFile.NotEmpty(); }
@@ -69,13 +47,9 @@ public:
   EasyStr DiskName,DiskInZip;
   DWORD DiskFileLen;
 
-  BYTE *PastiBuf; // SS same for IPF?
+  BYTE *PastiBuf;
   int PastiBufLen;
   bool STT_File,PastiDisk;
-#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
-  bool IPFDisk;
-#endif
-
   DWORD STT_TrackStart[2][FLOPPY_MAX_TRACK_NUM+1];
   WORD STT_TrackLen[2][FLOPPY_MAX_TRACK_NUM+1];
 
@@ -84,7 +58,7 @@ public:
   bool TrackIsFormatted[2][FLOPPY_MAX_TRACK_NUM+1];
   int FormatMostSectors,FormatLargestSector;
 
-  bool WrittenTo;	//SS: WrittenTo just means 'dirty'
+  bool WrittenTo;
 };
 
 #ifdef IN_MAIN
@@ -94,4 +68,3 @@ bool FloppyArchiveIsReadWrite=0;
 extern TFloppyImage FloppyDrive[2];
 #endif
 
-#endif//!defined(SSE_STRUCTURE_FLOPPYDRIVE_H)

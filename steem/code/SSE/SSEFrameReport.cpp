@@ -1,8 +1,7 @@
 #include "SSE.h"
 
-#if defined(STEVEN_SEAGAL)
+#if defined(SSE_BOILER_FRAME_REPORT)
 
-#if defined(SSE_STRUCTURE_SSEFRAMEREPORT_OBJ)
 #include "../pch.h"
 #include <conditions.h>
 #include <easystr.h>
@@ -13,15 +12,9 @@
 #include "SSEMMU.h"
 #include "SSEOption.h"
 #include "SSESTF.h"
-#endif
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#include "SSEVideo.h"
 #include "SSEGlue.h"
-#else
 #include "SSEShifter.h"
-#endif
-
-
-#if defined(SSE_DEBUG_FRAME_REPORT)
 
 
 TFrameEvents FrameEvents;  // singleton
@@ -31,7 +24,7 @@ TFrameEvents::TFrameEvents() {
   Init();
 } 
 
-#if defined(SSE_INLINE_370)
+#if defined(SSE_COMPILER_370_INLINE)
 void TFrameEvents::Add(int scanline, int cycle, char type, int value) {
   m_nEvents++;  // starting from 0 each VBL, event 0 is dummy 
 /*  3.8.0 fix >= not >, no version switch, it's a too bad bug.
@@ -48,7 +41,7 @@ void TFrameEvents::Add(int scanline, int cycle, char type, int value) {
 #endif
 
 
-#if defined(SSE_DEBUG_REPORT_SDP_ON_CLICK)
+#if defined(SSE_BOILER_REPORT_SDP_ON_CLICK)
 MEM_ADDRESS TFrameEvents::GetSDP(int x,int guessed_scan_y) {
   MEM_ADDRESS sdp=NULL;
   int i;
@@ -138,13 +131,13 @@ int TFrameEvents::Report() {
       "STE"
 #endif
 #if defined(SSE_MMU_WU_DL)
-      ,MMU.WS[WAKE_UP_STATE]);
+      ,MMU.WS[OPTION_WS]);
 #else
     ,0);
 #endif
 #else
     fprintf(fp,"Steem frame report - %s WS%d\n",
-      st_model_name[ST_TYPE],MMU.WS[WAKE_UP_STATE]);
+      st_model_name[ST_TYPE],MMU.WS[OPTION_WS]);
 #endif
     if(FloppyDrive[0].DiskInDrive())
       fprintf(fp,"Disk A: %s",FloppyDrive[0].DiskName.c_str()); 
@@ -216,7 +209,7 @@ int TFrameEvents::Vbl() {
 #if defined(SSE_OSD_CONTROL)
     if(OSD_MASK2 & OSD_CONTROL_SHIFTERTRICKS)
 #else
-    if(TRACE_ENABLED) 
+    if(TRACE_ENABLED(LOGSECTION_VIDEO)) 
 #endif
       TRACE_OSD("T%X",Debug.ShifterTricks);
 #endif
@@ -237,6 +230,5 @@ int TFrameEvents::Vbl() {
   return rv;
 }
 
-#endif//#if defined(SSE_DEBUG_FRAME_REPORT)
+#endif//#if defined(SSE_BOILER_FRAME_REPORT)
 
-#endif//#if defined(STEVEN_SEAGAL)

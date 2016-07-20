@@ -46,7 +46,7 @@ int (_stdcall *UnzipFile)(char*,char*,WORD,long,void*,long);        //unzipping
 #define UNZIP_InUse        -1              // DLL in use by other program!
 #define UNZIP_DLLNotFound  -2              // DLL not loaded!
 
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS4))
+#if !(defined(SSE_VAR_ARCHIVEACCESS4))
 extern HINSTANCE hUnzip;
 extern void LoadUnzipDLL();
 #endif
@@ -61,12 +61,12 @@ extern void LoadUnzipDLL();
 #include <unrarlib/unrarlib/unrarlib.h>	
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
+#if defined(SSE_VAR_UNRAR)
 #include <UnRARDLL/unrar.h>
 void LoadUnrarDLL();
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS)
+#if defined(SSE_VAR_ARCHIVEACCESS)
 #include <ArchiveAccess/ArchiveAccess/ArchiveAccessSSE.h>
 #endif
 
@@ -89,7 +89,7 @@ public:
 #ifdef RAR_SUPPORT
   ArchiveList_struct *rar_list,*rar_current;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
+#if defined(SSE_VAR_UNRAR)
   // persistent, good idea?
   RAROpenArchiveData ArchiveData;
   RARHeaderData HeaderData; // no Ex?

@@ -1,10 +1,3 @@
-
-#if defined(STEVEN_SEAGAL)
-// resnum.h is included by rc\resource.rc
-#include "SSE/SSE.h"
-//#endif
-#include "resnum.decla.h"//v3.7.2, forgotten
-#else
 #define RC_ICO_APP 1
 #define RC_ICO_APP256 2
 #define RC_ICO_BACK 3
@@ -81,14 +74,7 @@
 #define RC_ICO_OPS_OSD 71
 #define RC_ICO_TAKESCREENSHOTBUT 72
 #define RC_ICO_DISKMANTOOLS 73
-
-//#if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE)                          
-#define RC_ICO_OPS_SSE 74
-#define RC_NUM_ICONS 75
-//#else
-//#define RC_NUM_ICONS 74
-//#endif
-
+#define RC_NUM_ICONS 74
 
 #define CART_ICON_NUM (RC_ICO_CHIP-1)
 #define DISK_ICON_NUM (RC_ICO_DRIVE-1)
@@ -132,4 +118,3 @@ int RCGetSizeOfIcon(int n)
 #define DEBUG_ICONS_H 9
 #define DEBUG_NUM_ICONS 9
 
-#endif//ss

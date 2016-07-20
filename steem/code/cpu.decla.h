@@ -1,9 +1,8 @@
 #pragma once
-#if !defined(CPU_DECLA_H) //&& defined(SSE_STRUCTURE_CPU_H)
+#if !defined(CPU_DECLA_H)
 #define CPU_DECLA_H
-//#pragma message("CPU_DECLA_H")
 
-#if defined(SSE_STRUCTURE_SSECPU_OBJ)
+#if defined(SSE_STRUCTURE_DECLA)
 
 #include <binary.h>
 #include <conditions.h>
@@ -14,9 +13,10 @@
 #include "iorw.decla.h"
 #include "steemh.decla.h"
 
-#endif//#if defined(SSE_STRUCTURE_SSECPU_OBJ)
+#endif
 
-// those are pointers (variables)!
+//SS It is called jump but they are used as function calls, they return,
+// except if there's a ST crash detected
 extern void (*m68k_high_nibble_jump_table[16])();
 extern void (*m68k_jump_line_0[64])();
 extern void (*m68k_jump_line_4[64])();
@@ -74,6 +74,57 @@ void m68k_get_source_110_l();
 void m68k_get_source_111_b();
 void m68k_get_source_111_w();
 void m68k_get_source_111_l();
+
+void m68k_get_dest_000_b();
+void m68k_get_dest_000_w();
+void m68k_get_dest_000_l();
+void m68k_get_dest_001_b();
+void m68k_get_dest_001_w();
+void m68k_get_dest_001_l();
+void m68k_get_dest_010_b();
+void m68k_get_dest_010_w();
+void m68k_get_dest_010_l();
+void m68k_get_dest_011_b();
+void m68k_get_dest_011_w();
+void m68k_get_dest_011_l();
+void m68k_get_dest_100_b();
+void m68k_get_dest_100_w();
+void m68k_get_dest_100_l();
+void m68k_get_dest_101_b();
+void m68k_get_dest_101_w();
+void m68k_get_dest_101_l();
+void m68k_get_dest_110_b();
+void m68k_get_dest_110_w();
+void m68k_get_dest_110_l();
+void m68k_get_dest_111_b();
+void m68k_get_dest_111_w();
+void m68k_get_dest_111_l();
+#if !defined(SSE_CPU_ROUNDING_NO_FASTER_FOR_D)
+void m68k_get_dest_000_b_faster();
+void m68k_get_dest_000_w_faster();
+void m68k_get_dest_000_l_faster();
+void m68k_get_dest_001_b_faster();
+void m68k_get_dest_001_w_faster();
+void m68k_get_dest_001_l_faster();
+void m68k_get_dest_010_b_faster();
+void m68k_get_dest_010_w_faster();
+void m68k_get_dest_010_l_faster();
+void m68k_get_dest_011_b_faster();
+void m68k_get_dest_011_w_faster();
+void m68k_get_dest_011_l_faster();
+void m68k_get_dest_100_b_faster();
+void m68k_get_dest_100_w_faster();
+void m68k_get_dest_100_l_faster();
+void m68k_get_dest_101_b_faster();
+void m68k_get_dest_101_w_faster();
+void m68k_get_dest_101_l_faster();
+void m68k_get_dest_110_b_faster();
+void m68k_get_dest_110_w_faster();
+void m68k_get_dest_110_l_faster();
+void m68k_get_dest_111_b_faster();
+void m68k_get_dest_111_w_faster();
+void m68k_get_dest_111_l_faster();
+#endif
 
 BYTE m68k_fetchB();
 WORD m68k_fetchW();
@@ -136,11 +187,23 @@ extern jmp_buf *pJmpBuf;
 
 // This could be fixed by making a wrapper class for jmp_buf so it will call the
 // destructor when it goes out of scope, but GCC seems flakey on that sort of thing.
+#if defined(SSE_M68K_EXCEPTION_TRY_CATCH)
+/*  Using C++ try/catch works but it's dramatically slower in the debug build.
+    Check for example with the BIG Demo.
+    There's certainly a performance hit in the release builds too, as try/catch
+    does more than setjmp, but we don't need this work, because setjmp is only
+    used to go through the calling stack, in other words it's appropriate. 
 
+    No reason to define, but heed warning C4611.
+*/
+#define TRY_M68K_EXCEPTION try {
+#define CATCH_M68K_EXCEPTION } catch (m68k_exception* exception_object) { 
+#define END_M68K_EXCEPTION }
+#else
 #define TRY_M68K_EXCEPTION jmp_buf temp_excep_jump;jmp_buf *oldpJmpBuf=pJmpBuf;pJmpBuf=&temp_excep_jump;if (setjmp(temp_excep_jump)==0){
 #define CATCH_M68K_EXCEPTION }else{
 #define END_M68K_EXCEPTION }pJmpBuf=oldpJmpBuf;
-
+#endif
 #define areg (r+8)
 
 #ifdef SSE_CPU_ALT_REG_NAMES
@@ -223,7 +286,7 @@ inline  void m68k_lpoke(MEM_ADDRESS ad,LONG x){
 }
 #endif
 
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU)) // inlined in SSECpu.h
+#if !(defined(SSE_CPU)) // inlined in SSECpu.h
 #define INSTRUCTION_TIME(t) {cpu_cycles-=(t);}
 #define INSTRUCTION_TIME_ROUND(t) {INSTRUCTION_TIME(t); cpu_cycles&=-4;}
 #endif
@@ -301,14 +364,7 @@ extern WORD*lpfetch,*lpfetch_bound;
 extern bool prefetched_2;
 extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 
-
-// SS This one is apparently never used.
-#define EXTRA_PREFETCH_IF_TO_MEM \
-  if(DEST_IS_MEMORY){           \
-    EXTRA_PREFETCH               \
-  }
-
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU))
+#if !(defined(SSE_CPU))
 // SS I can't find one instance where checkints is passed.
 #define M68K_PERFORM_RTE(checkints)             \
             SET_PC(m68k_lpeek(r[15]+2));        \
@@ -387,7 +443,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_NO_CONFUSION) 
+#if defined(SSE_MMU_NO_CONFUSION) 
 // SSE_MMU_NO_CONFUSION isn't defined
 
 #define m68k_SET_DEST_B_TO_ADDR        \
@@ -609,7 +665,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 
 #else // (with MMU "confusion") //back on in v3.5.2
 
-
+//TODO create inline functions for those as well
 #define m68k_SET_DEST_B_TO_ADDR        \
   abus&=0xffffff;                                   \
   if(abus>=MEM_IO_BASE){               \
@@ -741,7 +797,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     }                                           \
   }
 
-#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_NO_CONFUSION)
+#endif//#if defined(SSE_MMU_NO_CONFUSION)
 
 
 #define m68k_SET_DEST_B(addr)           \
@@ -758,7 +814,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 
 
 
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU_PREFETCH))
+#if !(defined(SSE_CPU_PREFETCH))
 #define EXTRA_PREFETCH                    \
   prefetch_buf[1]=*lpfetch;              \
   prefetched_2=true;
@@ -777,9 +833,9 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 #define IOACCESS_INTERCEPT_OS2 BIT_13
 
 #ifdef ENABLE_LOGFILE
-#define IOACCESSE_DEBUG_MEM_WRITE_LOG BIT_14
+#define IOACCESS_DEBUG_MEM_WRITE_LOG BIT_14
 #if defined(SSE_BOILER_MONITOR_TRACE)
-#define IOACCESSE_DEBUG_MEM_READ_LOG BIT_15 //no conflict I hope...
+#define IOACCESS_DEBUG_MEM_READ_LOG BIT_15 //no conflict I hope...
 #endif
 extern MEM_ADDRESS debug_mem_write_log_address;
 extern int debug_mem_write_log_bytes;
@@ -788,7 +844,7 @@ extern int debug_mem_write_log_bytes;
 #define STOP_INTS_BECAUSE_INTERCEPT_OS bool(ioaccess & (IOACCESS_INTERCEPT_OS | IOACCESS_INTERCEPT_OS2))
 
 
-#if defined(SSE_STRUCTURE_SSECPU_OBJ)
+#if defined(SSE_STRUCTURE_DECLA)
 inline void change_to_user_mode();
 inline void change_to_supervisor_mode();
 #else
@@ -804,7 +860,7 @@ extern signed int compare_buffer;
 //(old_pc+2)
 //(old_dpc+2)
 
-#if !(defined(STEVEN_SEAGAL)&&defined(SSE_CPU)) // inlined in SSECpu.h
+#if !defined(SSE_CPU) // inlined in SSECpu.h
 #define m68k_GET_SOURCE_B m68k_jump_get_source_b[(ir&BITS_543)>>3]()
 #define m68k_GET_SOURCE_W m68k_jump_get_source_w[(ir&BITS_543)>>3]()
 #define m68k_GET_SOURCE_L m68k_jump_get_source_l[(ir&BITS_543)>>3]()
@@ -1114,32 +1170,21 @@ extern signed int compare_buffer;
 
 extern void sr_check_z_n_l_for_r0();
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_CPU)
+#if defined(SSE_CPU)
 #define SET_PC(ad) M68000.SetPC(ad);
-#elif defined(STEVEN_SEAGAL)
-// ...
 #else
-#define SET_PC(ad) set_pc(ad);
+//#define SET_PC(ad) set_pc(ad);// stack overflow!
 extern void set_pc(MEM_ADDRESS);
 #endif
 
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU))
+#if !(defined(SSE_CPU))
 extern void perform_rte();
 #endif
 
 extern void sr_check_z_n_l_for_r0();
 extern void m68k_process();
 
-#if !(defined(STEVEN_SEAGAL)&&defined(SSE_STRUCTURE_CPU_POKE_NOINLINE))
-#define m68k_poke m68k_poke_noinline
-#define m68k_dpoke m68k_dpoke_noinline
-#define m68k_lpoke m68k_lpoke_noinline
-extern void m68k_poke_noinline(MEM_ADDRESS ad,BYTE x);
-extern void m68k_dpoke_noinline(MEM_ADDRESS ad,WORD x);
-extern void m68k_lpoke_noinline(MEM_ADDRESS ad,LONG x);
-#endif
-
-#ifdef SSE_STRUCTURE_SSECPU_OBJ
+#ifdef SSE_STRUCTURE_DECLA
 inline void change_to_user_mode()
 {
 //  if(SUPERFLAG){

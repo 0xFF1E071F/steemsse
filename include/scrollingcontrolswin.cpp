@@ -111,11 +111,18 @@ short ScrollControlWin::GetHOverlapSize(){ if (Scroller) return (short)ScrollWnd
 short ScrollControlWin::GetVOverlapSize(){ if (Scroller) return (short)ScrollWndProc(Scroller,SCWM_GET,SCWS_VOVERLAPSIZE,0); else return 0;}
 short ScrollControlWin::GetHPos(){ if (Scroller) return (short)ScrollWndProc(Scroller,SCWM_GET,SCWS_HPOS,0); else return 0;}
 short ScrollControlWin::GetVPos(){ if (Scroller) return (short)ScrollWndProc(Scroller,SCWM_GET,SCWS_VPOS,0); else return 0;}
+#if defined(SSE_VS2008_WARNING_383)
+bool ScrollControlWin::GetHDisableNoScroll(){ if (Scroller) return (ScrollWndProc(Scroller,SCWM_GET,SCWS_HDISABLENOSCROLL,0)!=0); else return 0;}
+bool ScrollControlWin::GetVDisableNoScroll(){ if (Scroller) return (ScrollWndProc(Scroller,SCWM_GET,SCWS_VDISABLENOSCROLL,0)!=0); else return 0;}
+
+bool ScrollControlWin::GetAllowDrag(){ if (Scroller) return (ScrollWndProc(Scroller,SCWM_GET,SCWS_ALLOWDRAG,0)!=0);else return 0;}
+
+#else
 bool ScrollControlWin::GetHDisableNoScroll(){ if (Scroller) return (bool)ScrollWndProc(Scroller,SCWM_GET,SCWS_HDISABLENOSCROLL,0); else return 0;}
 bool ScrollControlWin::GetVDisableNoScroll(){ if (Scroller) return (bool)ScrollWndProc(Scroller,SCWM_GET,SCWS_VDISABLENOSCROLL,0); else return 0;}
 
 bool ScrollControlWin::GetAllowDrag(){ if (Scroller) return (bool)ScrollWndProc(Scroller,SCWM_GET,SCWS_ALLOWDRAG,0);else return 0;}
-
+#endif
 HWND ScrollControlWin::GetControlPage(){ if (Scroller) return (HWND)ScrollWndProc(Scroller,SCWM_GETCONTROLPAGE,0,0); else return 0;}
 #if defined(SSE_X64_LPTR)
 WINDOWPROC ScrollControlWin::GetControlPageWndProc() { if (Scroller) return (WINDOWPROC)GetWindowLongPtr((HWND)ScrollWndProc(Scroller, SCWM_GETCONTROLPAGE, 0, 0), GWLP_WNDPROC); else return NULL; }
@@ -325,9 +332,15 @@ LRESULT WINAPI ScrollControlWin::ScrollWndProc(HWND Win,UINT Mess,WPARAM wPar,LP
         case SCWS_VOVERLAPSIZE:case SCWS_HOVERLAPSIZE:
           return (LRESULT)GetProp(Win,LPCTSTR(v ? "OverlapSizeY":"OverlapSizeX"));
         case SCWS_VDISABLENOSCROLL:case SCWS_HDISABLENOSCROLL:
+#if defined(SSE_VS2008_WARNING_383)
+          return (GetProp(Win,LPCTSTR(v ? "DisableNoScrollY":"DisableNoScrollX"))!=0);
+        case SCWS_ALLOWDRAG:
+          return (GetProp(Win,"AllowDrag")!=0);
+#else
           return (bool)GetProp(Win,LPCTSTR(v ? "DisableNoScrollY":"DisableNoScrollX"));
         case SCWS_ALLOWDRAG:
           return (bool)GetProp(Win,"AllowDrag");
+#endif
       }
       break;
     }

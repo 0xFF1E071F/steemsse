@@ -1,8 +1,7 @@
 #include "SSE.h"
 
-#if defined(STEVEN_SEAGAL)
+#if defined(SSE_DISK_CAPS) // Implementation of CAPS support in Steem SSE
 
-#if defined(SSE_STRUCTURE_SSEFLOPPY_OBJ)
 #include "../pch.h"
 #include <cpu.decla.h>
 #include <fdc.decla.h>
@@ -19,18 +18,14 @@
 #if defined(WIN32)
 #include <pasti/pasti.h>
 #endif
-//EasyStr GetEXEDir();//#include <mymisc.h>//missing...
-
 #if defined(SSE_DRIVE_IPF1)
-#include <stemdialogs.h>//temp...
+#include <stemdialogs.decla.h>//temp...
 #include <diskman.decla.h>
 #endif
 
 #if !defined(SSE_CPU)
 #include <mfp.decla.h>
 #endif
-
-#endif//#if defined(SSE_STRUCTURE_SSEFLOPPY_OBJ)
 
 #include "SSECapsImg.h"
 #include "SSEDecla.h"
@@ -40,12 +35,6 @@
 #if defined(SSE_DISK_GHOST)
 #include "SSEGhostDisk.h"
 #endif
-
-
-#if defined(SSE_IPF) // Implementation of CAPS support in Steem
-
-#define CYCLES_PRE_IO 100 // those aren't
-#define CYCLES_POST_IO 100 // used
 
 
 TCaps::TCaps() {
@@ -77,11 +66,8 @@ int TCaps::Init() {
   ContainerID[0]=ContainerID[1]=-1;
   LockedSide[0]=LockedSide[1]=-1;
   LockedTrack[0]=LockedTrack[1]=-1; 
-#if defined(SSE_IPF_RUN_PRE_IO) || defined(SSE_IPF_RUN_POST_IO)
-  CyclesRun=0;
-#endif
 #if defined(SSE_GUI_NOTIFY1)
-  SetNotifyInitText(SSE_IPF_PLUGIN_FILE);
+  SetNotifyInitText(SSE_DISK_CAPS_PLUGIN_FILE);
 #endif
 
   CapsVersionInfo versioninfo;
@@ -106,7 +92,7 @@ int TCaps::Init() {
   // controller init
   WD1772.type=sizeof(CapsFdc);  // must be >=sizeof(CapsFdc)
   WD1772.model=cfdcmWD1772;
-  WD1772.clockfrq=SSE_IPF_FREQU; 
+  WD1772.clockfrq=SSE_DISK_CAPS_FREQU; 
   WD1772.drive=SF314; // ain't it cool?
   WD1772.drivecnt=2;
   WD1772.drivemax=0;
@@ -128,7 +114,7 @@ int TCaps::Init() {
   WD1772.cbirq=CallbackIRQ;
   WD1772.cbtrk=CallbackTRK;
 
-  // we already create our 2 IPF drives, instead of waiting for an image:
+  // we already create our 2 Caps drives, instead of waiting for an image:
   ContainerID[0]=CAPSAddImage();
   ContainerID[1]=CAPSAddImage();
   ASSERT( ContainerID[0]!=-1 && ContainerID[1]!=-1 );
@@ -173,14 +159,14 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
       TRACE_LOG("%s ",CAPSGetPlatformName(img_info->platform[i]));
 #endif
     if(img_info->platform[i]==ciipAtariST 
-#if defined(SSE_IPF_CTRAW) 
+#if defined(SSE_DISK_CAPS_CTRAW) 
 #if defined(SSE_DISK_IMAGETYPE)
       || ::SF314[drive].ImageType.Extension!=EXT_IPF
 #else
       || ::SF314[drive].ImageType!=DISK_IPF // the other SF314 (confusing)
 #endif
 #endif
-      || SSE_HACKS_ON) //MPS GOlf 'test'
+      || OPTION_HACKS) //MPS GOlf 'test'
       found=true;
   }
   TRACE_LOG("Sides:%d Tracks:%d-%d\n",img_info->maxhead+1,img_info->mincylinder,
@@ -227,10 +213,21 @@ void TCaps::RemoveDisk(int drive) {
 }
 
 
-//#undef LOGSECTION
-//#define LOGSECTION LOGSECTION_FDC //3.8.0 = image info
+#if defined(SSE_DISK_CAPS_383)
 
+void TCaps::WritePsgA(int data) {
+  // drive selection 
+  if ((data&BIT_1)==0)
+    WD1772.drivenew=0;
+  else if ((data&BIT_2)==0)
+    WD1772.drivenew=1;
+  else 
+    WD1772.drivenew=-2;
+  if(!WD1772.drivenew || WD1772.drivenew==1)
+    SF314[WD1772.drivenew].newside=((data&BIT_0)==0);
+}
 
+#else
 void TCaps::WritePsgA(int data) {//TODO use data
   // drive selection 
   if ((psg_reg[PSGR_PORT_A]&BIT_1)==0 /*&& DriveIsIPF[0]*/)
@@ -245,17 +242,12 @@ void TCaps::WritePsgA(int data) {//TODO use data
   if(!WD1772.drivenew || WD1772.drivenew==1)
     SF314[WD1772.drivenew].newside=((psg_reg[PSGR_PORT_A]&BIT_0)==0);
 }
-
+#endif
 
 UDWORD TCaps::ReadWD1772(BYTE Line) {
 
 #if defined(SSE_DEBUG)
   Dma.UpdateRegs();
-#endif
-
-#if defined(SSE_IPF_RUN_PRE_IO)
-  CAPSFdcEmulate(&WD1772,CYCLES_PRE_IO);
-  CyclesRun+=CYCLES_PRE_IO;
 #endif
 
   UDWORD data=CAPSFdcRead(&WD1772,Line); 
@@ -273,12 +265,6 @@ UDWORD TCaps::ReadWD1772(BYTE Line) {
       TRACE_FDC("FDC SR mediach %d WP %x\n",floppy_mediach[drive],data&FDC_STR_WRITE_PROTECT);
     }
   }
-
-#if defined(SSE_IPF_RUN_POST_IO)
-  CAPSFdcEmulate(&WD1772,CYCLES_POST_IO);
-  CyclesRun+=CYCLES_POST_IO;
-#endif
-  ASSERT(!(data&0xFF00));
   return data;
 }
 
@@ -287,33 +273,12 @@ void TCaps::WriteWD1772(BYTE Line,int data) {
 
   Dma.UpdateRegs();
 
-#if defined(SSE_IPF_RUN_PRE_IO)
-  CAPSFdcEmulate(&WD1772,CYCLES_PRE_IO);
-  CyclesRun+=CYCLES_PRE_IO;
-#endif  
-
   if(!Line) // command
   {
-    // TODO drive selection problem
-  //  mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Double Dragon II
-// + it's not correct, shouldn't we take cap's?
-
-    //DWORD lineout = WD1772.lineout;
-    //mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,!!!(WD1772.lineout&CAPSFDC_LO_INTRQ));//to test...
-
-
-#ifdef SSE_DEBUG
-    if( (Version==42||Version==50||Version==51) && (data&0xF0)==0xA0)
-    {
-      //ASSERT(!SSE_GHOST_DISK);//may assert on reload
-      TRACE_LOG("IPF unimplemented command %x\n",data);
-    }
-#endif
 #if defined(SSE_DRIVE_MOTOR_ON_IPF)
     // record time of motor start in hbl (TODO use)
     if(!(::WD1772.STR&FDC_STR_MOTOR_ON)) // assume no cycle run!
     {
-      //TRACE_LOG("record hbl %d\n");
 #if defined(SSE_DRIVE_STATE)
       ::SF314[DRIVE].State.motor=true;
 #else
@@ -328,10 +293,6 @@ void TCaps::WriteWD1772(BYTE Line,int data) {
   CAPSFdcWrite(&WD1772,Line,data); // send to DLL
   // update MFP register according to Caps' lineout; better?
   mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,!!!(WD1772.lineout&CAPSFDC_LO_INTRQ));
-#if defined(SSE_IPF_RUN_POST_IO)
-  CAPSFdcEmulate(&WD1772,CYCLES_POST_IO);
-  CyclesRun+=CYCLES_POST_IO;
-#endif
 }
 
 
@@ -339,19 +300,9 @@ void TCaps::Hbl() {
 
   // we run cycles at each HBL if there's an IPF file in. Performance OK
 #if defined(SSE_SHIFTER)
-#if defined(SSE_IPF_RUN_PRE_IO) || defined(SSE_IPF_RUN_POST_IO)
-  ASSERT( Shifter.CurrentScanline.Cycles-Caps.CyclesRun>0 );
-#endif
-  CAPSFdcEmulate(&WD1772,GLU.CurrentScanline.Cycles
-#if defined(SSE_IPF_RUN_PRE_IO) || defined(SSE_IPF_RUN_POST_IO)
-    -CyclesRun
-#endif
-    );
+  CAPSFdcEmulate(&WD1772,GLU.CurrentScanline.Cycles);
 #else
   CAPSFdcEmulate(&WD1772,screen_res==2? 224 : 512);
-#endif
-#if defined(SSE_IPF_RUN_PRE_IO) || defined(SSE_IPF_RUN_POST_IO)
-  CyclesRun=0;
 #endif
 
 }
@@ -372,12 +323,13 @@ int TCaps::IsIpf(BYTE drive) {
 
 /*  Callback functions. Since they're static, they access object data like
     any external function, using 'Caps.'
-    Ignore warning C4100.
 */
+
+#pragma warning (disable: 4100)//unreferenced formal parameter
 
 void TCaps::CallbackDRQ(PCAPSFDC pc, UDWORD setting) {
 
-#if defined(SSE_DEBUG) || !defined(VC_BUILD)
+#if defined(SSE_DEBUG) || !defined(VC_BUILD)//?
   Dma.UpdateRegs();
 #endif
 
@@ -403,26 +355,15 @@ void TCaps::CallbackIRQ(PCAPSFDC pc, UDWORD lineout) {
   ASSERT(pc==&Caps.WD1772);
 
 #if defined(SSE_DEBUG)
-#undef LOGSECTION //it's getting verbose, but those are just macros
-#define LOGSECTION LOGSECTION_FDC 
-  if(TRACE_ENABLED) 
-  {
-//    TRACE("caps ");
-   // BRK(yoho);
+  if(TRACE_ENABLED(LOGSECTION_FDC)) 
     Dma.UpdateRegs(true);
-  }
-    else
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_IMAGE_INFO
+  else
 #endif
     Dma.UpdateRegs(); // why it only worked in boiler, log on...
   
 #if defined(SSE_DRIVE_SOUND)
   if(SSEOption.DriveSound)
   {
-#if defined(SSE_DRIVE_SOUND_IPF)
- //   Dma.UpdateRegs(); // why it only worked in boiler, log on...
-#endif
 #if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
     ::SF314[DRIVE].Sound_CheckIrq();
 #else
@@ -462,7 +403,7 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   CapsRevolutionInfo CRI;
 
 
-#if !defined(SSE_IPF_CTRAW_NO_UNLOCK) 
+#if !defined(SSE_DISK_CAPS_CTRAW_NO_UNLOCK) 
 /*  This part is undefined, since unlocking messes internal variables that are
     important for games using "weak bits" protections, such as Outrun, Vroom.
 */
@@ -480,7 +421,7 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
     TRACE_LOG("CAPS Unlock %c:S%dT%d\n",drive+'A',Caps.LockedSide[drive],Caps.LockedTrack[drive]);
 
 
-#if defined(SSE_IPF_CTRAW_REV)
+#if defined(SSE_DISK_CAPS_CTRAW_REV)
 #if defined(SSE_DISK_IMAGETYPE)
     if(::SF314[drive].ImageType.Extension!=EXT_IPF)
 #else
@@ -498,19 +439,19 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
         CAPSSetRevolution(Caps.ContainerID[drive],0);
       }
     }
-#endif//SSE_IPF_CTRAW_NO_UNLOCK
+#endif//SSE_DISK_CAPS_CTRAW_NO_UNLOCK
 
   }
 #endif
 
-#if defined(SSE_IPF_CTRAW_1ST_LOCK)
+#if defined(SSE_DISK_CAPS_CTRAW_1ST_LOCK)
 /*  We've changed track, we reset # revs as recommended by caps authors.
     Up to now we haven't seen the difference (eg Turrican works with or
     without) so we "protect" this with option Hacks.
 */
   if(Caps.LockedSide[drive]!=side || Caps.LockedTrack[drive]!=track)
   {
-    if(SSE_HACKS_ON)
+    if(OPTION_HACKS)
       CAPSSetRevolution(Caps.ContainerID[drive],0);
   }
 #endif
@@ -574,6 +515,4 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
 
 #undef LOGSECTION
 
-#endif//ipf
-
-#endif//#if defined(STEVEN_SEAGAL)
+#endif//caps

@@ -1216,7 +1216,11 @@ HTREEITEM DirectoryTree::CopyItemAndChildren(HTREEITEM Item,HTREEITEM NewParent,
     SelectThis=true;
     Inf.state&=~TVIS_SELECTED; // Don't select now, wait until later
   }
+#if defined(SSE_VS2008_WARNING_383)
+  NewItem=InsertItem(buf,NewParent,After,Inf.iImage,(Inf.cChildren!=0),Inf.lParam,Inf.state);
+#else
   NewItem=InsertItem(buf,NewParent,After,Inf.iImage,Inf.cChildren,Inf.lParam,Inf.state);
+#endif
   if (SelectThis) *pSelItem=NewItem;
 
   NextItem=TreeView_GetChild(hTree,Item);

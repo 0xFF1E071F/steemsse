@@ -75,7 +75,7 @@ EXT int cpu_timer_at_start_of_hbl;
           INSTRUCTION_TIME((8000000-(ABSOLUTE_CPU_TIME-shifter_cycle_base)) % 10);
 
 // see SSEInterrupt.h for new definitions
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_INT_HBL_INLINE))
+#if !(defined(SSE_INT_HBL_INLINE))
 #define HBL_INTERRUPT  \
   {                  \
     hbl_pending=false;                 \
@@ -90,7 +90,7 @@ EXT int cpu_timer_at_start_of_hbl;
   }
 #endif
 
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_INT_VBL_INLINE))
+#if !(defined(SSE_INT_VBL_INLINE))
 #define VBL_INTERRUPT                                                        \
           {                                                               \
             vbl_pending=false;                                             \
@@ -112,7 +112,7 @@ EXT int cpu_timer_at_start_of_hbl;
   if ((hbl_count++)==agenda_next_time){                           \
     if (agenda_length){                                           \
       WIN_ONLY( EnterCriticalSection(&agenda_cs); )               \
-      log(EasyStr("TASKS: Executing agenda action at ")+hbl_count);      \
+      dbg_log(EasyStr("TASKS: Executing agenda action at ")+hbl_count);      \
       if (agenda_length){                                         \
         while ((signed int)(hbl_count-agenda[agenda_length-1].time)>=0){ \
           agenda_length--;                                        \
@@ -200,7 +200,7 @@ EXT int cpu_timer_at_start_of_hbl;
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_DMA_DELAY)
+#if defined(SSE_DMA_DELAY)
 #define PREPARE_EVENT_CHECK_FOR_DMA       \
   if ((time_of_next_event-Dma.TransferTime) >= 0){                 \
     time_of_next_event=Dma.TransferTime;  \
@@ -213,7 +213,7 @@ EXT int cpu_timer_at_start_of_hbl;
 
 //SS how to optimise when we don't use it?
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_FLOPPY_EVENT)
+#if defined(SSE_FLOPPY_EVENT)
 
 // version with 3 events: 1 for WD1772, 1 for each drive
 
@@ -248,17 +248,6 @@ void event_trigger_vbi();
 #endif
 #if defined(SSE_GLUE_FRAME_TIMINGS_B)
 // no more plans!
-#elif defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START)
-EXT screen_event_struct event_plan_50hz[313*2+2+1],event_plan_60hz[263*2+2+1],event_plan_70hz[600*2+2+1],
-                    event_plan_boosted_50hz[313*2+2+1],event_plan_boosted_60hz[263*2+2+1],event_plan_boosted_70hz[600*2+2+1];
-
-void event_trigger_vbi();
-
-#elif defined(SSE_INT_HBL_EVENT)
-
-EXT screen_event_struct event_plan_50hz[313*2+4],event_plan_60hz[263*2+4],event_plan_70hz[600*2+4],
-                    event_plan_boosted_50hz[313*2+4],event_plan_boosted_60hz[263*2+4],event_plan_boosted_70hz[600*2+4];
-
 #elif defined(SSE_VAR_RESIZE_370)
 EXT screen_event_struct event_plan_50hz[313+4],event_plan_60hz[263+4],event_plan_70hz[600+4],
                     event_plan_boosted_50hz[313+4],event_plan_boosted_60hz[263+4],event_plan_boosted_70hz[600+4];
@@ -281,7 +270,7 @@ void event_timer_d_timeout();
 void event_scanline();
 void event_timer_b();
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_IRQ_DELAY)
+#if defined(SSE_ACIA_IRQ_DELAY)
 void event_acia_rx_irq();// not defined anymore (v3.5.2), see MFP
 #endif
 
@@ -291,7 +280,7 @@ void event_acia_rx_irq();// not defined anymore (v3.5.2), see MFP
 void event_start_vbl();
 void event_vbl_interrupt();
 void event_hbl(); //just HBL, don't draw yet, don't increase scan_y
-#ifndef STEVEN_SEAGAL	//unused
+#if !defined(SSE_VAR_DEAD_CODE)
 void event_scanline_last_line_of_60Hz(),event_scanline_last_line_of_70Hz();
 #endif
 EXT EVENTPROC event_mfp_timer_timeout[4];
@@ -302,7 +291,7 @@ EXT int cpu_time_of_start_of_event_plan;
 //int cpu_time_of_next_hbl_interrupt=0;
 EXT int time_of_next_timer_b;
 EXT int time_of_last_hbl_interrupt;
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBL_IACK)
+#if defined(SSE_INT_VBL_IACK)
 EXT int time_of_last_vbl_interrupt;
 #endif
 #if defined(SSE_VAR_RESIZE_382)
@@ -335,7 +324,7 @@ EXT int cpu_timer_at_res_change;
 void event_pasti_update();
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_FLOPPY_EVENT)
+#if defined(SSE_FLOPPY_EVENT)
 
 /*  1 event for FDC: various parts of its program
     1 event for each drive: IP
@@ -347,7 +336,7 @@ void event_driveB_ip();
 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301_EVENT)
+#if defined(SSE_IKBD_6301_EVENT)
 
 extern int time_of_event_ikbd,time_of_event_ikbd2;
 void event_ikbd(),event_ikbd2();
@@ -364,7 +353,7 @@ void event_ikbd(),event_ikbd2();
 
 #endif//ikbdevt
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_EVENT_WRITE)
+#if defined(SSE_INT_MFP_EVENT_WRITE)
 /*  v3.8
     We create an event for write to MFP registers, because the
     alternative is getting too complicated.

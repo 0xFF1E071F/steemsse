@@ -6,16 +6,13 @@ DESCRIPTION: This file contains a lot of utility functions for Steem's debug
 build and the basis of the debug GUI.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: boiler.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_SSECPU_OBJ)
+#if defined(SSE_STRUCTURE_DECLA)
+
 #include "SSE/SSECpu.h" //m68k_lpoke()
-#endif
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_BOILER_H)
-
 MEM_ADDRESS dpc,old_dpc;
 HWND DWin=NULL,HiddenParent=NULL;
 HMENU menu,breakpoint_menu,monitor_menu,breakpoint_irq_menu;
@@ -23,11 +20,7 @@ HMENU insp_menu=NULL;
 HMENU mem_browser_menu,history_menu,logsection_menu;
 HMENU menu1;
 HMENU boiler_op_menu,shift_screen_menu;
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
-HMENU sse_menu;
-#endif
-
+HMENU sse_menu; //SSE
 HWND sr_display,DWin_edit;
 mr_static *lpms_other_sp;
 HWND DWin_trace_button,DWin_trace_over_button,DWin_run_button;
@@ -67,7 +60,7 @@ DynamicArray<DEBUG_ADDRESS> debug_ads;
 //---------------------------------------------------------------------------
 THistoryList HistList;
 
-#endif
+#endif//decla
 
 #if defined(SSE_BOILER_DUMP_6301_RAM)
 #include <6301/6301.h>
@@ -1010,7 +1003,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               CheckMenuItem(boiler_op_menu,1516,MF_BYCOMMAND | int(debug_uppercase_disa ? MF_CHECKED:MF_UNCHECKED));
               mem_browser_update_all();
               break;
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#if defined(SSE_DEBUG)
 #if defined(SSE_DEBUG_TRACE_FILE)
 #if !defined(SSE_BOILER_TRACE_NOT_OPTIONAL)
             case 1517: // Output TRACE to file
@@ -1262,7 +1255,11 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
             //////////////////// Browsers Menu
             case 900:case 901:
             {
+#if defined(SSE_VS2008_WARNING_383)
+              new mem_browser(pc,type_disp_type(LOWORD(wPar)==900 ? DT_MEMORY:DT_INSTRUCTION));
+#else
               mem_browser *mb=new mem_browser(pc,type_disp_type(LOWORD(wPar)==900 ? DT_MEMORY:DT_INSTRUCTION));
+#endif
 #if !defined(SSE_BOILER_MOUSE_WHEEL)
 // we don't want to preselect address, we want the wheel to work at once
               SetFocus(GetDlgItem(mb->owner,3));
@@ -1550,7 +1547,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
   return DefWindowProc(Win,Mess,wPar,lPar);
 }
 //---------------------------------------------------------------------------
-#if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_CLIPBOARD)
+#if defined(SSE_BOILER_CLIPBOARD)
 #if !defined(SSE_GUI_CLIPBOARD_TEXT)
 BOOL SetClipboardText(LPCTSTR pszText) // from the 'net, for disa_to_file mod
 {
@@ -1579,11 +1576,15 @@ void disa_to_file(FILE*f,MEM_ADDRESS dstart,int dlen,bool as_source)
   int tp;
   char t[20];
   dpc=dstart;
-#if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_CLIPBOARD)
+#if defined(SSE_BOILER_CLIPBOARD)
   // text bytes for 1 code byte, need a lot, your typical line is like
   // cmpi.b #$39,$8252                                ; 008078: 0C39 0039 0000 8252 
   const int multiplier=40; 
+#if defined(SSE_VS2008_WARNING_383)
+  BYTE *buffer=0,*buffer_ptr=0;
+#else
   BYTE *buffer,*buffer_ptr;
+#endif
   if(!f)
   {
     buffer=new BYTE[dlen*multiplier];
@@ -1607,7 +1608,7 @@ void disa_to_file(FILE*f,MEM_ADDRESS dstart,int dlen,bool as_source)
         odpc+=2;
       }
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_CLIPBOARD)
+#if defined(SSE_BOILER_CLIPBOARD)
       // we don't want disassembly for data dump
     }
     else if(!f) {
@@ -1646,7 +1647,7 @@ void disa_to_file(FILE*f,MEM_ADDRESS dstart,int dlen,bool as_source)
       }
       ot+=dt;
     }
-#if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_CLIPBOARD)
+#if defined(SSE_BOILER_CLIPBOARD)
     if(!f)
     {
       int c=sprintf((char*)buffer_ptr,"%s\r\n",ot.Text);
@@ -1663,7 +1664,7 @@ void disa_to_file(FILE*f,MEM_ADDRESS dstart,int dlen,bool as_source)
 #endif
     fprintf(f,"%s\r\n",ot.Text);
   }
-#if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_CLIPBOARD)
+#if defined(SSE_BOILER_CLIPBOARD)
   if(!f)
   {
     SetClipboardText( (LPCTSTR) buffer);
@@ -1689,8 +1690,12 @@ void boiler_show_stack_display(int sel)
 void DWin_init()
 {
   char ttt[200];
+#if defined(SSE_VS2008_WARNING_383)
+  int x=0,y=0;
+#else
   int x,y;
-  log("STARTUP: Setting up Reg Browser");
+#endif
+  dbg_log("STARTUP: Setting up Reg Browser");
   {//set up reg browser
     int n=1;
     strcpy(reg_browser_entry_name[0],"pc");reg_browser_entry_pointer[0]=&pc;
@@ -1705,7 +1710,7 @@ void DWin_init()
     n++;
     reg_browser_entry_name[n][0]=0;
   }
-  log("STARTUP: Reg Browser Done");
+  dbg_log("STARTUP: Reg Browser Done");
 
   shift_screen_menu=CreatePopupMenu();
   AppendMenu(shift_screen_menu,MF_STRING,1600,"0 bytes");
@@ -1714,7 +1719,7 @@ void DWin_init()
   AppendMenu(shift_screen_menu,MF_STRING,1603,"6 bytes");
   CheckMenuRadioItem(shift_screen_menu,1600,1603,1600+(debug_screen_shift/2),MF_BYCOMMAND);
 
-  log("STARTUP: Creating Menu");
+  dbg_log("STARTUP: Creating Menu");
   menu=CreateMenu();
   menu1=CreatePopupMenu();
   AppendMenu(menu1,MF_STRING,1783,"Debugger &Reset");
@@ -1738,9 +1743,9 @@ void DWin_init()
   AppendMenu(menu1,MF_STRING|MF_SEPARATOR,0,"-");
   AppendMenu(menu1,MF_STRING,1999,"&Quit");
   AppendMenu(menu,MF_STRING|MF_POPUP,(UINT)menu1,"&Debug");
-  log("STARTUP: Menu Done");
+  dbg_log("STARTUP: Menu Done");
 
-  log("STARTUP: Creating Breakpoint Menu");
+  dbg_log("STARTUP: Creating Breakpoint Menu");
   breakpoint_menu=CreatePopupMenu();
   breakpoint_irq_menu=CreatePopupMenu();
   monitor_menu=CreatePopupMenu();
@@ -1749,7 +1754,7 @@ void DWin_init()
   AppendMenu(menu,MF_STRING|MF_POPUP,(UINT)monitor_menu,"&Monitors");
 
   breakpoint_menu_setup();
-  log("STARTUP: Breakpoint Menu Done");
+  dbg_log("STARTUP: Breakpoint Menu Done");
 
   mem_browser_menu=CreatePopupMenu();
   AppendMenu(menu,MF_STRING | MF_POPUP,(UINT)mem_browser_menu,"&Browsers");
@@ -1815,7 +1820,7 @@ void DWin_init()
   AppendMenu(mem_browser_menu,MF_STRING|MF_SEPARATOR,0,NULL);
   AppendMenu(mem_browser_menu,MF_STRING,905,"&Close All");
 
-  log("STARTUP: mem_browser menu done");
+  dbg_log("STARTUP: mem_browser menu done");
 
   history_menu=CreatePopupMenu();
   AppendMenu(menu,MF_STRING | MF_POPUP,(UINT)history_menu,"&History");
@@ -1879,12 +1884,12 @@ void DWin_init()
   AppendMenu(menu,MF_STRING|MF_POPUP,(UINT)boiler_op_menu,"&Options");
 
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#if defined(SSE_DEBUG)
   sse_menu=CreatePopupMenu();
   AppendMenu(menu,MF_STRING | MF_POPUP,(UINT)sse_menu,"&SSE");
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#if defined(SSE_DEBUG)
  // AppendMenu(boiler_op_menu,MF_STRING|MF_SEPARATOR,0,NULL);
 #if defined(SSE_DEBUG_TRACE_FILE)
 #if !defined(SSE_BOILER_TRACE_NOT_OPTIONAL)
@@ -1931,13 +1936,13 @@ void DWin_init()
 
 #endif//ss_debug
 
-  log("STARTUP: calling iolist_init");
+  dbg_log("STARTUP: calling iolist_init");
 
   iolist_init();
 
-  log("STARTUP: iolist_init done");
+  dbg_log("STARTUP: iolist_init done");
 
-  log("STARTUP: Creating Boiler Room Window");
+  dbg_log("STARTUP: Creating Boiler Room Window");
   WNDCLASS wnd;
   wnd.style=CS_DBLCLKS;
   wnd.lpfnWndProc=DWndProc;
@@ -1952,7 +1957,7 @@ void DWin_init()
   RegisterClass(&wnd);
 
 //  HiddenParent=CreateWindow("Steem Debug Window","Steem Hidden Window",0,0,0,0,0,NULL,NULL,Inst,NULL);
-#if defined(STEVEN_SEAGAL) && defined(SSE_VERSION)  //BCC
+#if defined(SSE_VERSION)  //BCC
   DWin=CreateWindowEx(WS_EX_APPWINDOW,"Steem Debug Window",EasyStr("The Boiler Room: Steem v")+(char*)stem_version_text
       ,WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX
        | WS_SIZEBOX
@@ -1963,7 +1968,7 @@ void DWin_init()
        | WS_SIZEBOX
       ,60,60,640,400,ParentWin,menu,Inst,0);
 #endif
-  log("STARTUP: Boiler Room Window Done");
+  dbg_log("STARTUP: Boiler Room Window Done");
 
   {
     SIZE sz;
@@ -1976,7 +1981,7 @@ void DWin_init()
     ReleaseDC(DWin,dc);
   }
 
-  log("STARTUP: Registering Mem Browser and Trace Window Classes");
+  dbg_log("STARTUP: Registering Mem Browser and Trace Window Classes");
   wnd.style=CS_DBLCLKS;
   wnd.lpfnWndProc=mem_browser_window_WndProc;
   wnd.cbWndExtra=0;
@@ -2016,9 +2021,9 @@ void DWin_init()
   wnd.lpszMenuName=NULL;
   wnd.lpszClassName="Steem Mr Static Control";
   RegisterClass(&wnd);
-  log("STARTUP: Mem Browser and Trace Window Classes Registered");
+  dbg_log("STARTUP: Mem Browser and Trace Window Classes Registered");
 
-  log("STARTUP: Creating Child Windows");
+  dbg_log("STARTUP: Creating Child Windows");
 
 
 #if defined(SSE_BOILER_MOD_REGS) //big PC
@@ -2102,7 +2107,7 @@ void DWin_init()
 #endif
   SetWindowLong(sr_display,GWL_USERDATA,(LONG)&sr);
   Old_sr_display_WndProc=(WNDPROC)SetWindowLong(sr_display,GWL_WNDPROC,(long)sr_display_WndProc);
-  log("STARTUP: Subclassed sr display");
+  dbg_log("STARTUP: Subclassed sr display");
 
 
 //SS note char reg_name_buf[8];
@@ -2147,7 +2152,7 @@ void DWin_init()
   SetWindowLong(m_b_mem_disa.handle,GWL_USERDATA,(LONG)&m_b_mem_disa);
   Old_mem_browser_WndProc=(WNDPROC)SetWindowLong(m_b_mem_disa.handle,GWL_WNDPROC,
                                                 (long)mem_browser_WndProc);
-  log("STARTUP: SubClassed Mem_Browser Listview");
+  dbg_log("STARTUP: SubClassed Mem_Browser Listview");
 
   //  m_b_mem_disa.active=true;
   m_b_mem_disa.owner=DWin;
@@ -2157,9 +2162,9 @@ void DWin_init()
   m_b_mem_disa.editbox=NULL;
   m_b_mem_disa.editflag=true;
 
-  log("STARTUP: Initing Mem_Browser Listview");
+  dbg_log("STARTUP: Initing Mem_Browser Listview");
   m_b_mem_disa.init();
-  log("STARTUP: Mem_Browser Initialised");
+  dbg_log("STARTUP: Mem_Browser Initialised");
 
   // User controlled area, stack or timings
   DWin_right_display_combo=CreateWindowEx(512,"Combobox","",WS_CHILD | WS_VISIBLE | CBS_HASSTRINGS | CBS_DROPDOWNLIST,
@@ -2174,7 +2179,7 @@ void DWin_init()
       345,150,320,190,DWin,(HMENU)210,Inst,NULL);
   SetWindowLong(m_b_stack.handle,GWL_USERDATA,(LONG)&m_b_stack);
   SetWindowLong(m_b_stack.handle,GWL_WNDPROC,(long)mem_browser_WndProc);
-  log("STARTUP: SubClassed M_B_Stack Listview");
+  dbg_log("STARTUP: SubClassed M_B_Stack Listview");
 
   m_b_stack.owner=DWin;
   m_b_stack.disp_type=DT_MEMORY;
@@ -2184,7 +2189,7 @@ void DWin_init()
   m_b_stack.editbox=NULL;
   m_b_stack.editflag=true;
 
-  log("STARTUP: Initing M_B_Stack Listview");
+  dbg_log("STARTUP: Initing M_B_Stack Listview");
   m_b_stack.init();
 
 
@@ -2325,7 +2330,8 @@ void DWin_init()
     y+=30;
 #endif    
 
-#if defined(SSE_BOILER_SHOW_ECLOCK) && defined(SSE_CPU_E_CLOCK_DISPATCHER) && defined(SSE_CPU_E_CLOCK2)
+#if defined(SSE_BOILER_SHOW_ECLOCK) && defined(SSE_CPU_E_CLOCK_DISPATCHER)\
+  && defined(SSE_CPU_E_CLOCK_370)
     y-=30;
     x+=70;
     new mr_static("E-clk ","",x,y,Par,
@@ -2343,13 +2349,6 @@ void DWin_init()
     new mr_static("HBi ","",x,y,Par,
         NULL,(MEM_ADDRESS)&hbl_pending,1,MST_REGISTER,0,NULL);
     x+=60;
-   // new mr_static("Irq ","",x,y,Par,
-     //   NULL,(MEM_ADDRESS)&MC68901.NextIrq,1,MST_REGISTER,0,NULL);
- //  new mr_static("Irq ","",x,y,Par,
-   //    NULL,(MEM_ADDRESS)&MC68901.Irq,1,MST_REGISTER,0,NULL);
-
-       // new mr_static("IOA ","",x,y,Par,
-       // NULL,(MEM_ADDRESS)&ioaccess,4,MST_REGISTER,0,NULL);
     new mr_static("cc ","",x,y,Par,
     NULL,(MEM_ADDRESS)&cpu_cycles,4,MST_DECIMAL,0,NULL);
 
@@ -2399,7 +2398,7 @@ void DWin_init()
 
   trace_window_init();
 
-  log("STARTUP: Creating DWin_edit");
+  dbg_log("STARTUP: Creating DWin_edit");
   DWin_edit=CreateWindowEx(512,"Edit","hi",
       WS_BORDER | WS_CHILDWINDOW | WS_CLIPSIBLINGS | ES_AUTOHSCROLL,
       220,10,60,25,DWin,(HMENU)255,Inst,NULL);
@@ -2407,14 +2406,14 @@ void DWin_init()
   DWin_edit_subject_type=-1;
   Old_edit_WndProc=(WNDPROC)SetWindowLong(DWin_edit,GWL_WNDPROC,(long)DWin_edit_WndProc);
   BringWindowToTop(DWin_edit);
-  log("STARTUP: DWin_edit Created");
-  log("STARTUP: Child Windows Created");
+  dbg_log("STARTUP: DWin_edit Created");
+  dbg_log("STARTUP: Child Windows Created");
 
   SetWindowAndChildrensFont(DWin,fnt);
 
-  log("STARTUP: Creating insp_menu");
+  dbg_log("STARTUP: Creating insp_menu");
   insp_menu=CreatePopupMenu();
-  log("STARTUP: insp_menu Created");
+  dbg_log("STARTUP: insp_menu Created");
 
 #if defined(ENABLE_VARIABLE_SOUND_DAMPING2)
   int xx=240+30-30,yy=30-30;
@@ -2466,7 +2465,7 @@ void logfile_wipe()
     fclose(logfile);
     logfile=fopen(LogFileName,"wb");
   }
-#if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_WIPE_TRACE)
+#if defined(SSE_BOILER_WIPE_TRACE)
   fclose(Debug.trace_file_pointer);
   Debug.trace_file_pointer=freopen(SSE_TRACE_FILE_NAME, "w", stdout );
 #if defined(SSE_DEBUG_START_STOP_INFO2)
@@ -2508,7 +2507,11 @@ void debug_vbl()
         if (SpecialKey==0){
           Str HexI=HEXSl(debug_send_alt_keys,2).LowerCase();
           for (int n=0;n<2;n++){
+#if defined(SSE_VS2008_WARNING_383)
+            BYTE VKCode=0;
+#else
             BYTE VKCode;
+#endif
             if (HexI[n]>='0' && HexI[n]<='9') VKCode=BYTE(VK_NUMPAD0+(HexI[n]-'0'));
             if (HexI[n]>='a' && HexI[n]<='f') VKCode=BYTE('A'+(HexI[n]-'a'));
             keyboard_buffer_write(key_table[VKCode]);

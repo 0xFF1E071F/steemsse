@@ -14,16 +14,16 @@ V3.6.0: all non 6301 true emu mods removed (ACIA + IKBD), so if option
 C1 isn't checked, behaviour should be exactly the same as v3.2.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: ikbd.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_IKBD_H)
+#if defined(SSE_STRUCTURE_DECLA)
 
 #define EXT
 #define INIT(s) =s
 
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301))
+#if !(defined(SSE_IKBD_6301))
 EXT bool ST_Key_Down[128];
 #endif
 EXT int disable_input_vbl_count INIT(0);
@@ -36,7 +36,7 @@ EXT int mouse_speed INIT(10);
 
 EXT int mouse_move_since_last_interrupt_x,mouse_move_since_last_interrupt_y;
 EXT bool mouse_change_since_last_interrupt;
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301))
+#if !(defined(SSE_IKBD_6301))
 EXT int mousek;
 #endif
 #ifndef CYGWIN
@@ -121,7 +121,7 @@ const int ikbd_clock_max_val[6]={99,12,0,23,59,59};
 
 IKBD_STRUCT ikbd;
 
-#if (defined(STEVEN_SEAGAL) && defined(SSE_ACIA)) 
+#if (defined(SSE_ACIA)) 
 ACIA_STRUCT acia[2];
 #endif
 
@@ -214,8 +214,8 @@ void IKBD_VBL()
     if (IsJoyActive(N_JOY_PARALLEL_0)) stick[N_JOY_PARALLEL_0]|=BIT_4;
     if (IsJoyActive(N_JOY_PARALLEL_1)) stick[N_JOY_PARALLEL_1]|=BIT_4;
   }
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
-  if(HD6301EMU_ON) ; else // we write no packets ourselves, the ROM will do it
+#if defined(SSE_IKBD_6301)
+  if(OPTION_C1) ; else // we write no packets ourselves, the ROM will do it
 #endif
   switch (ikbd.joy_mode){
     case IKBD_JOY_MODE_DURATION:
@@ -381,8 +381,8 @@ void IKBD_VBL()
       if (LMB_DOWN(mousek) && LMB_DOWN(old_mousek)==0) report_button_abs|=BIT_2;
       if (LMB_DOWN(mousek)==0 && LMB_DOWN(old_mousek)) report_button_abs|=BIT_3;
       ikbd.abs_mousek_flags|=report_button_abs;
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301_380)
-      if(HD6301EMU_ON) ; else 
+#if defined(SSE_IKBD_6301_380)
+      if(OPTION_C1) ; else 
 #endif
       // Handle mouse buttons as keys
       if (ikbd.mouse_button_press_what_message & BIT_2){
@@ -412,15 +412,15 @@ void IKBD_VBL()
       mouse_move_since_last_interrupt_x=0;
       mouse_move_since_last_interrupt_y=0;
     }
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
-    else if(HD6301EMU_ON)
+#if defined(SSE_IKBD_6301)
+    else if(OPTION_C1)
     {
       HD6301.MouseVblDeltaX=HD6301.MouseVblDeltaY=0;
     }
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301_380)
-    if(HD6301EMU_ON) ; else 
+#if defined(SSE_IKBD_6301_380)
+    if(OPTION_C1) ; else 
 #endif
     if (report_button_abs){
       for (int bit=BIT_0;bit<=BIT_3;bit<<=1){
@@ -462,14 +462,14 @@ void IKBD_VBL()
     if (ModDown & b00001100) mss.LCtrl=true;
     if (ModDown & b00110000) mss.LAlt=true;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_REWRITE)
+#if defined(SSE_VAR_REWRITE)
     if((bool)ST_Key_Down[key_table[VK_LSHIFT]]!=mss.LShift){
 #else
     if (ST_Key_Down[key_table[VK_LSHIFT]]!=mss.LShift){
 #endif
       HandleKeyPress(VK_LSHIFT,mss.LShift==0,IGNORE_EXTEND);
     }
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_REWRITE)
+#if defined(SSE_VAR_REWRITE)
     if((bool)ST_Key_Down[key_table[VK_RSHIFT]]!=mss.RShift){
 #else
     if (ST_Key_Down[key_table[VK_RSHIFT]]!=mss.RShift){
@@ -534,19 +534,19 @@ void ikbd_inc_hack(int &hack_val,int inc_val) // SS using a reference
 
 void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
 {
-  log(EasyStr("IKBD: At ")+hbl_count+" receives $"+HEXSl(src,2));
-  //TRACE_LOG("IKBD RDRS->RDR $%X\n",src);
+  dbg_log(EasyStr("IKBD: At ")+hbl_count+" receives $"+HEXSl(src,2));
+#ifdef SSE_DEBUG
   TRACE_LOG("%d %d %d IKBD RDRS %X\n",TIMING_INFO,src);
-
+#endif
 #if defined(SSE_DEBUG) && defined(SSE_IKBD_6301_IKBDI)
   // our powerful 6301 command interpreter, working for both emulations
   HD6301.InterpretCommand(src); 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301)
 #if SSE_VERSION<=350//ver?
 
-  if(HD6301EMU_ON)
+  if(OPTION_C1)
   {
 //    TRACE_LOG("IKBD Finished transmitting byte %X to 6301 emu (act %d after %d cycles)\n",src,ABSOLUTE_CPU_TIME,ABSOLUTE_CPU_TIME-ACIA_IKBD.last_tx_write_time);
     hd6301_receiving_from_MC6850=0; // line is free
@@ -587,7 +587,7 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
 
 #else // current version
 
-  if(HD6301EMU_ON  && !HD6301.Crashed)
+  if(OPTION_C1  && !HD6301.Crashed)
   {
     ACIA_IKBD.SR|=BIT_1; // TDRE
     if((ACIA_IKBD.CR&BIT_5)&&!(ACIA_IKBD.CR&BIT_6))
@@ -619,20 +619,6 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
 #if !defined(SSE_IKBD_6301_EVENT)
     //TRACE_LOG("6301 RDRS->RDR %X\n",src);
     hd6301_receive_byte(src);// send byte to 6301 emu
-#endif
-#if defined(SSE_IKBD_6301_RUN_CYCLES_AT_IO)//no...
-    ASSERT(!HD6301.RunThisHbl); 
-#if defined(SSE_SHIFTER)
-    int n6301cycles=GLU.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
-#else
-    int n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
-#endif
-    if(hd6301_run_cycles(n6301cycles)==-1)
-    {
-      TRACE_LOG("6301 emu is hopelessly crashed!\n");
-      HD6301.Crashed=1; 
-    }
-    HD6301.RunThisHbl=true; // stupid signal
 #endif
     // That's it for Steem, the rest is handled by the program in ROM!
     return; 
@@ -803,7 +789,7 @@ the time-of-day clock, and monitor the joystick. The rate sets the interval
 transmitted.
 */
       case 0x17://joystick duration
-        log("IKBD: Joysticks set to duration mode");
+        dbg_log("IKBD: Joysticks set to duration mode");
         ikbd.joy_mode=IKBD_JOY_MODE_DURATION;
         ikbd.duration=ikbd.command_param[0]*10; //in 1000ths of a second
         ikbd.mouse_mode=IKBD_MOUSE_MODE_OFF;  //disable mouse
@@ -873,7 +859,7 @@ and not alter that particular field of the date or time. This permits
 setting only some subfields of the time-of-day clock.
 */
       case 0x1b://set clock time
-        log("IKBD: Set clock to... ");
+        dbg_log("IKBD: Set clock to... ");
         for (int n=0;n<6;n++){
           int newval=ikbd.command_param[n];
           if ((newval & 0xf0)>=0xa0){ // Invalid high nibble
@@ -895,7 +881,7 @@ setting only some subfields of the time-of-day clock.
           }
           ikbd.clock[n]=BYTE((val % 10) | ((val/10) << 4));
 
-          log(HEXSl(ikbd.clock[n],2));
+          dbg_log(HEXSl(ikbd.clock[n],2));
         }
         ikbd.clock_vbl_count=0;
         break;
@@ -920,11 +906,11 @@ This command permits the host to load arbitrary values into the IKBD controller
         ikbd.command=0x50; // Ant's command about loading memory
         ikbd.load_memory_address=MAKEWORD(ikbd.command_param[1],ikbd.command_param[0]);
         ikbd.command_read_count=ikbd.command_param[2]; //how many bytes to load
-        log(Str("IKBD: Loading next ")+ikbd.command_read_count+" bytes into IKBD memory address "+
+        dbg_log(Str("IKBD: Loading next ")+ikbd.command_read_count+" bytes into IKBD memory address "+
               HEXSl(ikbd.load_memory_address,4));
         break;
       case 0x50:
-        log("IKBD: Finished loading memory");
+        dbg_log("IKBD: Finished loading memory");
         break;    //but instead just throw it away!
 /*
 MEMORY READ
@@ -943,7 +929,7 @@ This command permits the host to read from the IKBD controller memory.
       case 0x21:  //read memory
       {
         WORD adr=MAKEWORD(ikbd.command_param[1],ikbd.command_param[0]);
-        log(Str("IKBD: Reading 6 bytes of IKBD memory, address ")+HEXSl(adr,4));
+        dbg_log(Str("IKBD: Reading 6 bytes of IKBD memory, address ")+HEXSl(adr,4));
         keyboard_buffer_write_string(0xf6,0x20,(-1));
         for (int n=0;n<6;n++){
           BYTE b=0;
@@ -972,7 +958,7 @@ This command allows the host to command the execution of a subroutine in the IKB
 */
       case 0x22:  //execute routine
 
-        log(Str("IKBD: Blimey! Executing IKBD routine at ")+
+        dbg_log(Str("IKBD: Blimey! Executing IKBD routine at ")+
               HEXSl(MAKEWORD(ikbd.command_param[1],ikbd.command_param[0]),4));
         break;   
 /*
@@ -1111,7 +1097,7 @@ command can be thought of as a NO OPERATION command. If this command is
  received by the IKBD and it is not PAUSED, it is simply ignored.
 */
       case 0x11: //okay to send!
-        log("IKBD turned on");
+        dbg_log("IKBD turned on");
         ikbd.send_nothing=false;
         break;
 /*
@@ -1127,7 +1113,7 @@ disabled). Any valid mouse mode command resumes mouse motion monitoring.
  this command DOES affect their actions.
 */
       case 0x12: //turn mouse off
-        log("IKBD: Mouse turned off");
+        dbg_log("IKBD: Mouse turned off");
         ikbd.mouse_mode=IKBD_MOUSE_MODE_OFF;
         ikbd.port_0_joy=true;
         ikbd_inc_hack(ikbd.reset_1214_hack,0);
@@ -1162,7 +1148,7 @@ temporarily stops the monitoring process (i.e. the samples are not enqueued
  for transmission).
 */
       case 0x13: //stop data transfer to main processor
-        log("IKBD turned off");
+        dbg_log("IKBD turned off");
         ikbd.send_nothing=true;
         break;
 /*
@@ -1175,7 +1161,7 @@ Each opening or closure of a joystick switch or trigger causes
 a joystick event record to be generated. 
 */
       case 0x14: //return joystick movements
-        log("IKBD: Changed joystick mode to change notification");
+        dbg_log("IKBD: Changed joystick mode to change notification");
         ikbd.port_0_joy=true; 
         ikbd.mouse_mode=IKBD_MOUSE_MODE_OFF;  //disable mouse
         agenda_delete(ikbd_report_abs_mouse);
@@ -1200,7 +1186,7 @@ Disables JOYSTICK EVENT REPORTING. Host must send individual JOYSTICK
 INTERROGATE commands to sense joystick state.
 */
       case 0x15: //don't return joystick movements
-        log("IKBD: Joysticks set to only report when asked");
+        dbg_log("IKBD: Joysticks set to only report when asked");
         ikbd.port_0_joy=true;
         ikbd.mouse_mode=IKBD_MOUSE_MODE_OFF;  //disable mouse
         agenda_delete(ikbd_report_abs_mouse);
@@ -1242,7 +1228,7 @@ The fire button is scanned at a rate that causes 8 samples to be made
 The sample interval should be as constant as possible.
 */
       case 0x18: //fire button duration, constant high speed joystick button test
-        log("IKBD: Joysticks set to fire button duration mode!");
+        dbg_log("IKBD: Joysticks set to fire button duration mode!");
         ikbd.joy_mode=IKBD_JOY_MODE_FIRE_BUTTON_DURATION;
         ikbd.mouse_mode=IKBD_MOUSE_MODE_OFF;  //disable mouse
         agenda_delete(ikbd_report_abs_mouse);
@@ -1261,7 +1247,7 @@ INTERROGATION MODE, SET JOYSTICK MONITORING, SET FIRE BUTTON MONITORING,
 and SET JOYSTICK KEYCODE MODE.)
 */
       case 0x1a: //turn off joysticks
-        log("IKBD: Joysticks turned off");
+        dbg_log("IKBD: Joysticks turned off");
       //  ikbd.mouse_mode=IKBD_MOUSE_MODE_OFF;  //disable mouse // already so in Steem 3.2
         ikbd.port_0_joy=0;
         ikbd.joy_mode=IKBD_JOY_MODE_OFF;
@@ -1389,9 +1375,7 @@ or FIRE BUTTON MONITORING mode.
                                       ikbd.abs_mouse_scale_y,
                                       0,0,0,0,(-1));
         break;
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD)
- // we want it to hit default
-#else
+#if !defined(SSE_VAR_RESIZE_383)// we want it to hit default
       case 0x8d: /*DEAD*/ break;
       case 0x8e: /*DEAD*/ break;
 #endif
@@ -1404,8 +1388,7 @@ or FIRE BUTTON MONITORING mode.
         }
         keyboard_buffer_write_string(0,0,0,0,0,0,(-1));
         break;
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD)
-#else
+#if !defined(SSE_VAR_RESIZE_383)
       case 0x91: /*DEAD*/ break;
 #endif
       case 0x92:  //is mouse off?
@@ -1417,8 +1400,7 @@ or FIRE BUTTON MONITORING mode.
         }
         keyboard_buffer_write_string(0,0,0,0,0,0,(-1));
         break;
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD)
-#else
+#if !defined(SSE_VAR_RESIZE_383)
       case 0x93: /*DEAD*/ break;
 #endif
       case 0x94:case 0x95:case 0x99:
@@ -1435,8 +1417,7 @@ or FIRE BUTTON MONITORING mode.
         }
         break;
       }
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD)
-#else
+#if !defined(SSE_VAR_RESIZE_383)
       case 0x96: /*DEAD*/ break;
       case 0x97: /*DEAD*/ break;
       case 0x98: /*DEAD*/ break;
@@ -1451,9 +1432,16 @@ or FIRE BUTTON MONITORING mode.
         keyboard_buffer_write_string(0,0,0,0,0,0,(-1));
         break;
         // > 0x9a all DEAD (tested up to 0xac)
-
+#if defined(SSE_IKBD)
       default: 
-        if(src) TRACE_LOG("Byte ignored",src);  // (TODO)
+#if defined(SSE_DEBUG)
+        if(src) TRACE_LOG("Byte ignored",src);
+/////#elif defined(SSE_VS2008_WARNING_383)
+///////        NODEFAULT;  //gross bug!!
+#else
+        ;
+#endif
+#endif
     }//sw
     ikbd.command_parameter_counter=0;
   }
@@ -1477,7 +1465,7 @@ void agenda_keyboard_replace(int) {
 #else//!ver
 
 #if defined(SSE_IKBD_6301)
-  if(HD6301EMU_ON) 
+  if(OPTION_C1) 
   {
     if (keyboard_buffer_length){ 
 #if !defined(SSE_IKBD_6301_SEND1) // bugfix v3.7
@@ -1520,7 +1508,7 @@ void agenda_keyboard_replace(int) {
           //TRACE_LOG("ACIA RDRS OVR: $%X->$%X\n",keyboard_buffer[keyboard_buffer_length],keyboard_buffer[keyboard_buffer_length+1]);
           //TRACE_LOG("%d %d %d ACIA OVR RDR $%X RDRS $%X\n",TIMING_INFO,ACIA_IKBD.RDR,ACIA_IKBD.RDRS);
           TRACE_LOG("%d %d %d ACIA OVR (RDRS %X)\n",TIMING_INFO,ACIA_IKBD.RDRS);
-          log("IKBD: Overrun on keyboard ACIA");
+          dbg_log("IKBD: Overrun on keyboard ACIA");
           if(ACIA_IKBD.overrun!=ACIA_OVERRUN_YES) 
           {
             ACIA_IKBD.overrun=ACIA_OVERRUN_COMING; // keep original system
@@ -1544,7 +1532,7 @@ void agenda_keyboard_replace(int) {
         // Check if we must activate IRQ (overrun or normal)
         if(ACIA_IKBD.CR&BIT_7)
         {
-          log(EasyStr("IKBD: Changing ACIA IRQ bit from ")+ACIA_IKBD.irq+" to 1");
+          dbg_log(EasyStr("IKBD: Changing ACIA IRQ bit from ")+ACIA_IKBD.irq+" to 1");
           ACIA_IKBD.SR|=BIT_7;
           //TRACE_LOG("ACIA IRQ (RDR)\n");
           TRACE_LOG("ACIA IRQ\n");
@@ -1558,7 +1546,7 @@ void agenda_keyboard_replace(int) {
     if(keyboard_buffer_length) 
     {
 #if defined(SSE_IKBD_6301_EVENT)
-      if(HD6301EMU_ON)
+      if(OPTION_C1)
       {
         HD6301.tdrs=HD6301.tdr;
         TRACE_LOG("Buffer %d 6301 TDRS %X\n",keyboard_buffer_length,HD6301.tdrs);
@@ -1585,7 +1573,7 @@ void agenda_keyboard_replace(int) {
   }
 #endif // Steem 3.2:
 
-  log(EasyStr("IKBD: agenda_keyboard_replace at time=")+hbl_count+" with keyboard_buffer_length="+keyboard_buffer_length);
+  dbg_log(EasyStr("IKBD: agenda_keyboard_replace at time=")+hbl_count+" with keyboard_buffer_length="+keyboard_buffer_length);
 
   if (keyboard_buffer_length){
     if (ikbd.send_nothing==0){
@@ -1594,7 +1582,7 @@ void agenda_keyboard_replace(int) {
       if (ikbd.mouse_packet_pos>=keyboard_buffer_length) ikbd.mouse_packet_pos=-1;
 
       if (ACIA_IKBD.rx_not_read){
-        log("IKBD: Overrun on keyboard ACIA");
+        dbg_log("IKBD: Overrun on keyboard ACIA");
         // discard data and set overrun
         if (ACIA_IKBD.overrun!=ACIA_OVERRUN_YES) ACIA_IKBD.overrun=ACIA_OVERRUN_COMING;
       }else{
@@ -1602,7 +1590,7 @@ void agenda_keyboard_replace(int) {
         ACIA_IKBD.rx_not_read=true;
       }
       if (ACIA_IKBD.rx_irq_enabled){
-        log(EasyStr("IKBD: Changing ACIA IRQ bit from ")+ACIA_IKBD.irq+" to 1");
+        dbg_log(EasyStr("IKBD: Changing ACIA IRQ bit from ")+ACIA_IKBD.irq+" to 1");
         ACIA_IKBD.irq=true;
       }
       mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
@@ -1633,7 +1621,7 @@ void keyboard_buffer_write(BYTE src) {
 #if SSE_VERSION<=350
   // This function handles all output of the 6301 in fake emulation
 #if defined(SS_IKBD_6301)
-  ASSERT(!HD6301EMU_ON);
+  ASSERT(!OPTION_C1);
 #endif
 #if defined(SSE_ACIA_IRQ_DELAY)
   ikbd.timer_when_keyboard_info=ABSOLUTE_CPU_TIME; // record exact timing
@@ -1659,7 +1647,7 @@ void keyboard_buffer_write(BYTE src) {
     keyboard_buffer[0]=src;
     TRACE_LOG("PC %X IKBD +%X(%d)\n",pc,src,keyboard_buffer_length);
 
-    log(EasyStr("IKBD: Wrote $")+HEXSl(src,2)+" keyboard buffer length="+keyboard_buffer_length);
+    dbg_log(EasyStr("IKBD: Wrote $")+HEXSl(src,2)+" keyboard buffer length="+keyboard_buffer_length);
     if(ikbd.joy_packet_pos>=0) 
       ikbd.joy_packet_pos++;
     if(ikbd.mouse_packet_pos>=0) 
@@ -1667,14 +1655,14 @@ void keyboard_buffer_write(BYTE src) {
   }
   else
   {
-    log("IKBD: Keyboard buffer overflow");
+    dbg_log("IKBD: Keyboard buffer overflow");
     TRACE_LOG("IKBD: Keyboard buffer overflow\n");
   }
 
 #else//!ver
 
 #if defined(SSE_IKBD_6301)
-  if(HD6301EMU_ON)
+  if(OPTION_C1)
   {
 #if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
     if(!ACIA_IKBD.LineRxBusy)
@@ -1709,7 +1697,7 @@ void keyboard_buffer_write(BYTE src) {
 #if defined(SSE_IKBD_6301_EVENT)
       {
         TRACE_LOG("IKBD TDRS %X\n",src);
-        if(HD6301EMU_ON)
+        if(OPTION_C1)
         {
           time_of_event_ikbd=cpu_timer_at_start_of_hbl
             + cycles_run*HD6301_CYCLE_DIVISOR + ACIA_TO_HD6301_IN_CYCLES;
@@ -1741,11 +1729,11 @@ void keyboard_buffer_write(BYTE src) {
     }
     keyboard_buffer_length++;
     keyboard_buffer[0]=src;
-    log(EasyStr("IKBD: Wrote $")+HEXSl(src,2)+" keyboard buffer length="+keyboard_buffer_length);
+    dbg_log(EasyStr("IKBD: Wrote $")+HEXSl(src,2)+" keyboard buffer length="+keyboard_buffer_length);
     if (ikbd.joy_packet_pos>=0) ikbd.joy_packet_pos++;
     if (ikbd.mouse_packet_pos>=0) ikbd.mouse_packet_pos++;
   }else{
-    log("IKBD: Keyboard buffer overflow");
+    dbg_log("IKBD: Keyboard buffer overflow");
   }
 #endif//ver?
 }
@@ -1762,15 +1750,15 @@ void keyboard_buffer_write_string(int s1,...)
 
 void ikbd_mouse_move(int x,int y,int mousek,int max_mouse_move)
 {
-  log(EasyStr("Mouse moves ")+x+","+y);
+  dbg_log(EasyStr("Mouse moves ")+x+","+y);
   
-#if defined(STEVEN_SEAGAL) &&defined(SSE_IKBD_6301)
-  if(HD6301EMU_ON)
+#if defined(SSE_IKBD_6301)
+  if(OPTION_C1)
   {
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)//no
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
 // if both are defined, Hacks makes the difference, for comparison (beta)
-    if(!SSE_HACKS_ON)
+    if(!OPTION_HACKS)
 #endif
     {
     //TODO still our attempts to get a smoother mouse
@@ -1898,15 +1886,15 @@ void ikbd_set_clock_to_correct_time()
 void ikbd_reset(bool Cold)
 {
 #if SSE_VERSION>350
-  ASSERT( Cold || !HD6301EMU_ON );// !!! always //check this
+  ASSERT( Cold || !OPTION_C1 );// !!! always //check this
 #endif
   agenda_delete(agenda_keyboard_reset);
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_IRQ_DELAY)
+#if defined(SSE_ACIA_IRQ_DELAY)
   ikbd.timer_when_keyboard_info=0;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
-  if(HD6301EMU_ON)
+#if defined(SSE_IKBD_6301)
+  if(OPTION_C1)
   {
     if(HD6301_OK) 
     {
@@ -1923,7 +1911,7 @@ void ikbd_reset(bool Cold)
       return;
     }
     else
-      HD6301EMU_ON=0; // and no return
+      OPTION_C1=0; // and no return
   }
 #endif
 
@@ -1980,10 +1968,10 @@ void agenda_keyboard_reset(int SendF0) // SS scheduled by ikbd_reset()
     stick[0]=0;
     stick[1]=0;
   }else{
-    log(EasyStr("IKBD: Finished reset at ")+hbl_count);
+    dbg_log(EasyStr("IKBD: Finished reset at ")+hbl_count);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301) && SSE_VERSION>=351
-    if(HD6301EMU_ON) // shouldn't we leave at once?
+#if defined(SSE_IKBD_6301) && SSE_VERSION>=351
+    if(OPTION_C1) // shouldn't we leave at once?
     {
 #if defined(SSE_IKBD_6301_IKBDI)
       HD6301.ResetProgram();
@@ -1994,13 +1982,13 @@ void agenda_keyboard_reset(int SendF0) // SS scheduled by ikbd_reset()
       keyboard_buffer_write(IKBD_RESET_MESSAGE); // 0xF1
 
     if (ikbd.psyg_hack_stage==3 || ikbd.reset_0814_hack==2 || ikbd.reset_1214_hack==2){
-      log("IKBD: HACK ACTIVATED - turning mouse on.");
+      dbg_log("IKBD: HACK ACTIVATED - turning mouse on.");
       TRACE_LOG("IKBD: HACK ACTIVATED - turning mouse on\n"); // Barbarian
       ikbd.mouse_mode=IKBD_MOUSE_MODE_RELATIVE;
       ikbd.port_0_joy=false;
     }
     if (ikbd.reset_121A_hack==2){ // Turned both mouse and joystick off, but they should be on.
-      log("IKBD: HACK ACTIVATED - turning mouse and joystick on.");
+      dbg_log("IKBD: HACK ACTIVATED - turning mouse and joystick on.");
       TRACE_LOG("IKBD: HACK ACTIVATED - turning mouse and joystick on.\n");
       ikbd.mouse_mode=IKBD_MOUSE_MODE_RELATIVE;
       ikbd.joy_mode=IKBD_JOY_MODE_AUTO_NOTIFY;
@@ -2008,8 +1996,8 @@ void agenda_keyboard_reset(int SendF0) // SS scheduled by ikbd_reset()
     }
     ikbd.mouse_button_press_what_message=0; // Hack to fix No Second Prize
     ikbd.send_nothing=0; // Fix Just Bugging (probably correct though)
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
-    if(!HD6301EMU_ON) 
+#if defined(SSE_IKBD_6301)
+    if(!OPTION_C1) 
 #endif
     for (int n=1;n<118;n++){
       // Send break codes for "stuck" keys
@@ -2019,7 +2007,7 @@ void agenda_keyboard_reset(int SendF0) // SS scheduled by ikbd_reset()
   }
   ikbd.resetting=0;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_IRQ_DELAY)
+#if defined(SSE_ACIA_IRQ_DELAY)
   ikbd.timer_when_keyboard_info=0;
 #endif
 
@@ -2093,7 +2081,7 @@ Code:
                       		  ; and x is the trigger
 */
     keyboard_buffer_write_string((BYTE)(0xfe + jn),s[jn],-1);
-    log(EasyStr("IKBD: Notified joystick movement, stick[")+jn+"]="+s[jn]);
+    dbg_log(EasyStr("IKBD: Notified joystick movement, stick[")+jn+"]="+s[jn]);
   }
 }
 

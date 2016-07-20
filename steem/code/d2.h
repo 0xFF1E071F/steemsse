@@ -1,9 +1,3 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_D2_H)
-
-#include "d2.decla.h"
-
-#else//!defined(SSE_STRUCTURE_D2_H)
-
 #define D2_PC_RELATIVE_PC dpc
 
 #define D2_GET_SOURCE_B d2_jump_get_source_b[(ir&BITS_543)>>3]()
@@ -58,6 +52,7 @@
 #define D2_aM EasyStr("a")+("0\0001\0002\0003\0004\0005\0006\0007\000"+2*PARAM_M)
 #define D2_BRACKETS_aN EasyStr("(a")+("0\0001\0002\0003\0004\0005\0006\0007\000"+2*PARAM_N)+")"
 #define D2_BRACKETS_aM EasyStr("(a")+("0\0001\0002\0003\0004\0005\0006\0007\000"+2*PARAM_M)+")"
+
 #define D2_IRIWO d2_iriwo()
 #define D2_IRIWO_N d2_iriwo_N()
 #define D2_IRIWO_PC d2_iriwo_pc()
@@ -74,4 +69,3 @@ EasyStr d2_src,d2_dest,d2_command,d2_pc_rel_ex;
 WORD d2_ap;
 int d2_n_movem_regs;
 
-#endif//SSE_STRUCTURE_D2_H

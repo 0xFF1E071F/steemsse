@@ -8,7 +8,7 @@
 #include <SSE/SSE6301.h>
 #include <acia.decla.h>
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301)
 #include <SSE/SSEOption.h>
 
 #ifndef WIN32
@@ -103,8 +103,9 @@ void (*hd6301_trace)(char *fmt, ...);
 #endif
 
 // constructing our module (OBJ) the good old Steem way, hem
-#ifdef VC_BUILD //on vs2008, v3.8.2
-#pragma warning( disable : 4013 4127 4131 4431)
+#ifdef VC_BUILD //on vs2008, v3.8.2, 383
+// we don't want to edit old working 3rd party C code
+#pragma warning( disable : 4013 4100 4127 4131 4431 4245 4706)
 #endif
 
 #ifdef MINGW_BUILD

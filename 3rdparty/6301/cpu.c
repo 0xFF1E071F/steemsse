@@ -25,7 +25,7 @@ cpu_reset ()
   cpu_setstackmax (0x00FF);
 #endif
 }
-#if !defined(STEVEN_SEAGAL)
+#if !defined(SSE_VAR_DEAD_CODE)
 cpu_print ()
 {
   reg_printall ();

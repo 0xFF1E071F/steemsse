@@ -1,6 +1,6 @@
 #include "SSE.h"
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_HFE)
+#if defined(SSE_DISK_HFE)
 /*  The HFE interface is based on the STW interface, so that integration in
     Steem (disk manager, FDC commands...) is straightforward.
     HFE is a lot like STW, except the bits of each MFM word are reversed and
@@ -8,18 +8,14 @@
 */
 
 #include "../pch.h"
+#include <fdc.decla.h>
+#include <floppy_drive.decla.h>
+#include <mymisc.h> //long GetFileLength(FILE *f)
+#include <gui.decla.h>
 #include "SSEHfe.h"
 #include "SSEDebug.h"
 #include "SSEFloppy.h"
 #include "SSEOption.h"
-#include <fdc.decla.h>
-#include <floppy_drive.decla.h>
-#include <mymisc.h> //long GetFileLength(FILE *f)
-
-#include <gui.decla.h>
-#ifdef UNIX
-//extern EasyStr GetEXEDir();
-#endif
 
 #define IMAGE_SIZE image_size //member variable
 #define NUM_SIDES 2
@@ -75,12 +71,7 @@ bool TImageHFE::Create(char *path) {
   fCurrentImage=fopen(path,"wb+"); // create new image
   if(fCurrentImage)
   {
-#if defined(SSE_VAR_OPT_382)
     EasyStr filename=RunDir+SLASH+DISK_HFE_BOOT_FILENAME;
-#else
-    EasyStr filename=GetEXEDir();
-    filename+=DISK_HFE_BOOT_FILENAME;
-#endif
     FILE *fp=fopen(filename.Text,"rb"); // open boot
     if(fp)
     {
@@ -304,4 +295,4 @@ void TImageHFE::SetMfmData(WORD position,WORD mfm_data) {
 }
 
 
-#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_HFE)
+#endif//#if defined(SSE_DISK_HFE)

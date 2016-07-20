@@ -210,7 +210,7 @@ int TDiskManager::dir_lv_notify_handler(hxc_dir_lv *dlv,int mess,int i)
       case 2010:
         shell_execute(Comlines[COMLINE_FIND],Str("[PATH]\n")+This->DisksFol);
         return 0;
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACSI_OPTION)
+#if defined(SSE_ACSI_OPTION)
       case 2029:
         SSEOption.Acsi=!SSEOption.Acsi;
         return 0;
@@ -375,7 +375,7 @@ int TDiskManager::button_notify_handler(hxc_button *But,int mess,int *Inf)
         pop.menu.Add(StripAndT("Open Current Folder In File Manager"),-1,2003);
         pop.menu.Add(StripAndT("Find In Current Folder"),-1,2010);
         pop.menu.Add("-",-1,0);
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACSI_OPTION)  //v3.7.2
+#if defined(SSE_ACSI_OPTION)  //v3.7.2
         pop.menu.Add(StripAndT("ACSI hard disk image"),
         	int(SSEOption.Acsi?ICO16_TICKED:ICO16_UNTICKED),2029);
         pop.menu.Add("-",-1,0);

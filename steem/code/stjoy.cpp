@@ -5,7 +5,7 @@ DESCRIPTION: This file contains both the code for the Steem joysticks dialog
 and the code to read the PC joysticks.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: stjoy.cpp")
 #endif
 
@@ -21,7 +21,7 @@ EXT KeyCode VK_NUMLOCK,VK_SCROLL;
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_STJOY_H)
+#if defined(SSE_STRUCTURE_DECLA)
 
 
 #define EXT
@@ -29,7 +29,7 @@ EXT KeyCode VK_NUMLOCK,VK_SCROLL;
 
 EXT WORD paddles_ReadMask INIT(0);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301)
 #else
 EXT BYTE stick[8];
 #endif
@@ -39,7 +39,11 @@ EXT BYTE stick[8];
 #if defined(SSE_UNIX) || defined(MINGW_BUILD)
 char AxisToName[7]={'X','Y','Z','R','U','V','P'};
 #else
+#if defined(SSE_VS2008_WARNING_383)
+const char AxisToName[7]={'X','Y','Z','R','U','V','P'};
+#else
 static char AxisToName[7]={'X','Y','Z','R','U','V','P'};
+#endif
 #endif
 
 JOYINFOEX JoyPos[MAX_PC_JOYS];
@@ -72,7 +76,7 @@ int nJoySetup=0;
 DWORD JoyAnyButtonMask[MAX_PC_JOYS];
 
 
-#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_STJOY_H)
+#endif
 
 
 //---------------------------------------------------------------------------
@@ -82,8 +86,9 @@ bool IsToggled(int j)
     // These joysticks are disabled when a JagPad is in their port
     if (Joy[j-1].Type==JOY_TYPE_JAGPAD) return 0;
   }
+//#pragma warning (disable : 4800)
   if (Joy[j].ToggleKey<=1) return Joy[j].ToggleKey;
-
+//#pragma warning (default : 4800)
   bool Toggled=bool(GetKeyState(Joy[j].ToggleKey) & 1);
   if (Joy[j].ToggleKey==VK_NUMLOCK) return Toggled==0;
 
@@ -370,19 +375,29 @@ BYTE JoyReadSTEAddress(MEM_ADDRESS addr,bool *pIllegal)
       if (Joy[N_JOY_STE_A_0].Type==JOY_TYPE_JAGPAD){
         Ret|=HIWORD(ReadJagPad(N_JOY_STE_A_0));
       }else{
-#if defined(STEVEN_SEAGAL)
+#if defined(SSE_VS2008_WARNING_383) 
+        Ret|=(stick[N_JOY_STE_A_0] & BIT_7);
+        Ret|=(stick[N_JOY_STE_A_1] & BIT_7)*BIT_1;
+#else
+#if defined(SSE_VERSION)
         Ret|=(BOOL)(stick[N_JOY_STE_A_0] & BIT_7);
 #else
         Ret|=bool(stick[N_JOY_STE_A_0] & BIT_7);
 #endif
         Ret|=bool(stick[N_JOY_STE_A_1] & BIT_7)*BIT_1;
+#endif
       }
 
       if (Joy[N_JOY_STE_B_0].Type==JOY_TYPE_JAGPAD){
         Ret|=HIWORD(ReadJagPad(N_JOY_STE_B_0));
       }else{
+#if defined(SSE_VS2008_WARNING_383) 
+        Ret|=(stick[N_JOY_STE_B_0] & BIT_7)*BIT_2;
+        Ret|=(stick[N_JOY_STE_B_1] & BIT_7)*BIT_3;
+#else
         Ret|=bool(stick[N_JOY_STE_B_0] & BIT_7)*BIT_2;
         Ret|=bool(stick[N_JOY_STE_B_1] & BIT_7)*BIT_3;
+#endif
       }
 
       return (BYTE)~Ret;
@@ -477,12 +492,19 @@ void InitJoysticks(int Method)
 
         JoyInfo[i].AxisExists[AXIS_X]=true;
         JoyInfo[i].AxisExists[AXIS_Y]=true;
+#if defined(SSE_VS2008_WARNING_383)         
+        JoyInfo[i].AxisExists[AXIS_Z]=(jc.wCaps & JOYCAPS_HASZ)!=0;
+        JoyInfo[i].AxisExists[AXIS_R]=(jc.wCaps & JOYCAPS_HASR)!=0;
+        JoyInfo[i].AxisExists[AXIS_U]=(jc.wCaps & JOYCAPS_HASU)!=0;
+        JoyInfo[i].AxisExists[AXIS_V]=(jc.wCaps & JOYCAPS_HASV)!=0;
+        JoyInfo[i].AxisExists[AXIS_POV]=(jc.wCaps & JOYCAPS_HASPOV)!=0;
+#else
         JoyInfo[i].AxisExists[AXIS_Z]=(bool)(jc.wCaps & JOYCAPS_HASZ);
         JoyInfo[i].AxisExists[AXIS_R]=(bool)(jc.wCaps & JOYCAPS_HASR);
         JoyInfo[i].AxisExists[AXIS_U]=(bool)(jc.wCaps & JOYCAPS_HASU);
         JoyInfo[i].AxisExists[AXIS_V]=(bool)(jc.wCaps & JOYCAPS_HASV);
         JoyInfo[i].AxisExists[AXIS_POV]=(bool)(jc.wCaps & JOYCAPS_HASPOV);
-
+#endif
         JoyInfo[i].NeedsEx=JoyInfo[i].AxisExists[AXIS_R] || JoyInfo[i].AxisExists[AXIS_U] ||
                             JoyInfo[i].AxisExists[AXIS_V] || JoyInfo[i].AxisExists[AXIS_POV] ||
                              (JoyInfo[i].NumButtons>4);
@@ -613,7 +635,11 @@ bool TJoystickConfig::HasHandledMessage(MSG *mess)
   if (Handle!=NULL){
     if (mess->message==WM_KEYDOWN){
       if (mess->wParam==VK_TAB){
+#if defined(SSE_VS2008_WARNING_383) 
+        if (GetKeyState(VK_CONTROL)>=0) return (IsDialogMessage(Handle,mess)!=0);
+#else
         if (GetKeyState(VK_CONTROL)>=0) return IsDialogMessage(Handle,mess);
+#endif
       }
     }
     return 0;
@@ -622,6 +648,7 @@ bool TJoystickConfig::HasHandledMessage(MSG *mess)
   }
 }
 //---------------------------------------------------------------------------
+#pragma warning (disable: 4701) //FireY init when p=0//383
 void TJoystickConfig::Show()
 {
   if (Handle!=NULL){
@@ -901,6 +928,7 @@ void TJoystickConfig::Show()
 
   if (StemWin!=NULL) PostMessage(StemWin,WM_USER,1234,0);
 }
+#pragma warning (default: 4701)
 //---------------------------------------------------------------------------
 void TJoystickConfig::Hide()
 {
@@ -929,10 +957,18 @@ void TJoystickConfig::FillJoyTypeCombo()
 //---------------------------------------------------------------------------
 void TJoystickConfig::CheckJoyType()
 {
+#if defined(SSE_VS2008_WARNING_383) 
+  bool Port0Hidden=(GetWindowLong(GetDlgItem(Handle,95),GWL_STYLE) & WS_VISIBLE)!=0;
+#else
   bool Port0Hidden=bool(GetWindowLong(GetDlgItem(Handle,95),GWL_STYLE) & WS_VISIBLE);
+#endif
   int Port0ShowType=SW_SHOW;
   bool PortOAlter=Port0Hidden;
+#if defined(SSE_VS2008_WARNING_383) 
+  bool Port1Jagpad=(GetWindowLong(GetDlgItem(Handle,170),GWL_STYLE) & WS_VISIBLE)!=0;
+#else
   bool Port1Jagpad=bool(GetWindowLong(GetDlgItem(Handle,170),GWL_STYLE) & WS_VISIBLE);
+#endif
   int JagShowType=SW_HIDE,NormShowType=SW_SHOW;
   bool Port1Alter=Port1Jagpad;
 
@@ -1341,7 +1377,7 @@ LRESULT __stdcall TJoystickConfig::GroupBoxWndProc(HWND Win,UINT Mess,WPARAM wPa
   if (Mess==WM_COMMAND){
     if (LOWORD(wPar)==98){
       if (HIWORD(wPar)==BN_CLICKED){
-#if defined(STEVEN_SEAGAL)
+#if defined(SSE_COMPILER)
         BOOL NewType=SendMessage((HWND)lPar,BM_GETCHECK,0,0);
 #else
         bool NewType=SendMessage((HWND)lPar,BM_GETCHECK,0,0);
@@ -1360,7 +1396,7 @@ LRESULT __stdcall TJoystickConfig::GroupBoxWndProc(HWND Win,UINT Mess,WPARAM wPa
 #undef GET_THIS
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_STJOY_H)//v3.7.1
+#if defined(SSE_STRUCTURE_DECLA)//v3.7.1
 #undef EXT
 #undef INIT
 #endif

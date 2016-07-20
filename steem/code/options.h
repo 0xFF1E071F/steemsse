@@ -1,14 +1,9 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_OPTIONS_H)
-
-#include "options.decla.h"
-
-#else//!SSE_STRUCTURE_OPTIONS_H
-
 //---------------------------------------------------------------------------
 class TOptionBox : public TStemDialog
 {
 private:
   int page_l,page_w;
+
 #ifdef WIN32
   static LRESULT __stdcall WndProc(HWND,UINT,WPARAM,LPARAM);
   static LRESULT __stdcall Fullscreen_WndProc(HWND,UINT,WPARAM,LPARAM);
@@ -28,7 +23,6 @@ private:
   ScrollControlWin Scroller;
   WNDPROC Old_GroupBox_WndProc;
   static DirectoryTree DTree;
-  //WIN32
 #elif defined(UNIX)
   static int WinProc(TOptionBox*,Window,XEvent*);
 	static int listview_notify_proc(hxc_listview*,int,int);
@@ -106,7 +100,7 @@ private:
   hxc_listview drop_lv;
 
   static hxc_dir_lv dir_lv;
-#endif//UNIX
+#endif
   void FullscreenBrightnessBitmap();
 
   EasyStr WAVOutputDir;
@@ -124,24 +118,16 @@ public:
   void CreateMachinePage(),CreateTOSPage(),CreateGeneralPage(),CreatePortsPage();
   void CreateSoundPage(),CreateDisplayPage(),CreateBrightnessPage();
   void CreateMacrosPage(),CreateProfilesPage(),CreateStartupPage(),CreateOSDPage();
-#if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE)
-  void CreateSSEPage();
-#endif
-
 #ifdef WIN32
-  void CreateFullscreenPage(),CreateMIDIPage();
-  void 
-#ifndef SSE_VAR_NO_UPDATE
-    CreateUpdatePage(),
-#endif
-    CreateAssocPage();
+	void CreateFullscreenPage(),CreateMIDIPage();
+  void CreateUpdatePage(),CreateAssocPage();
   void IconsAddToScroller(),CreateIconsPage();
 #else
   void CreatePathsPage();
 #endif
 
   void UpdateSoundFreq();
-  void ChangeSoundFormat(BYTE,BYTE);
+	void ChangeSoundFormat(BYTE,BYTE);
   void UpdateRecordBut();
   void SetRecord(bool);
   void SoundModeChange(int,bool,bool);
@@ -172,78 +158,13 @@ public:
   void UpdateParallel();
 
   HWND BorderOption;
-#if defined(STEVEN_SEAGAL) && defined(SSE_STF)
-  HWND STTypeOption;
-#endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_WAKE_UP)
-  HWND MMUWakeUpOption;
-#endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS)
-  HWND BorderSizeOption;
-#endif
 #elif defined(UNIX)
   void UpdatePortDisplay(int);
+
   hxc_button internal_speaker_but; // changed in Sound_Start
 #endif
 
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_UNIX)
-
-#if defined(SSE_VID_BORDERS)
-  hxc_button border_size_label; 
-  hxc_dropdown border_size_dd;
-#endif
-
-#if defined(SSE_GUI_MOUSE_CAPTURE)
-  hxc_button capture_mouse_but;
-#endif
-
-#if defined(SSE_HACKS)
-  hxc_button specific_hacks_but;
-#endif
-
-#if defined(SSE_VAR_STEALTH) 
-  hxc_button stealth_mode_but;
-#endif
-
-#if defined(SSE_STF)
-  hxc_button st_type_label;
-  hxc_dropdown st_type_dd;
-#endif
-
-#if defined(SSE_MMU_WAKE_UP)
-  hxc_button wake_up_label; 
-  hxc_dropdown wake_up_dd;
-#endif
-
-#if defined(SSE_IKBD_6301) 
-  hxc_button hd6301emu_but;
-#endif
-
-#if defined(SSE_VAR_KEYBOARD_CLICK)
-  hxc_button keyboard_click_but; 
-#endif
-
-#if defined(SSE_SOUND_FILTER_STF)
-  hxc_button psg_filter_but;
-#endif
-
-#if defined(SSE_SOUND_MICROWIRE)
-  hxc_button ste_microwire_but;
-  hxc_button enable_dsp_but;
-#endif
-
-#if defined(SSE_GUI_OPTION_SLOW_DISK_SSE)
-  hxc_button slow_disk_but;  
-#endif
-
-#endif
-
   void MachineUpdateIfVisible();
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_OPTIONS_REFRESH)
-  void SSEUpdateIfVisible();
-#endif
-
   void TOSRefreshBox(EasyStr="");
   bool NeedReset() { return NewMemConf0>=0 || NewMonitorSel>=0 || NewROMFile.NotEmpty(); }
   int GetCurrentMonitorSel();
@@ -279,4 +200,3 @@ const int extmon_res[EXTMON_RESOLUTIONS][3]={
 {1024,768,4},
 {1280,960,4}};
 
-#endif//SSE_STRUCTURE_OPTIONS_H

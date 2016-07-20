@@ -6,46 +6,16 @@
     experimenting (always fun) easier.
     A lot are still missing.
 */
-
 #pragma once
 #ifndef SSEPARAMETERS_H
 #define SSEPARAMETERS_H
+#if defined(SSE_BUILD)
 
-#if defined(SSE_STRUCTURE_SSE6301_OBJ) && defined(__cplusplus)
+#if defined(__cplusplus)
 #include <conditions.h>
 #include <draw.decla.h>
 #endif
 
-
-/////////////
-// GENERAL //
-/////////////
-
-
-#if defined(STEVEN_SEAGAL)
-
-//#define ACT ABSOLUTE_CPU_TIME
-
-#if defined(SSE_SHIFTER_TRICKS) && defined(SSE_INT_MFP_RATIO)
-#define HBL_PER_SECOND (CpuNormalHz/GLU.CurrentScanline.Cycles) //TODO assert
-//#endif
-//Frequency   50          60            72
-//#HBL/sec    15666.5 15789.85827 35809.14286
-
-#else 
-#if defined(SSE_FDC_PRECISE_HBL)//todo table
-#define HBL_PER_FRAME ( (shifter_freq_at_start_of_vbl==50)?HBLS_50HZ: \
-  ( (shifter_freq_at_start_of_vbl==60)? HBLS_60HZ : HBLS_72HZ))
-#else
-#define HBL_PER_FRAME ( shifter_freq_at_start_of_vbl==50?HBLS_50HZ: \
-  (shifter_freq_at_start_of_vbl==60?HBLS_60HZ:(HBLS_72HZ/2)))
-#endif
-
-#define HBL_PER_SECOND HBLS_PER_SECOND_AVE//(HBL_PER_FRAME*shifter_freq_at_start_of_vbl)  //still not super accurate
-#endif
-
-
-#endif
 
 
 //////////
@@ -78,7 +48,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 #define HD6301_TO_ACIA_IN_CYCLES (HD6301_CYCLES_TO_SEND_BYTE*HD6301_CYCLE_DIVISOR)
 #define ACIA_TO_HD6301_IN_CYCLES (HD6301_CYCLES_TO_RECEIVE_BYTE*HD6301_CYCLE_DIVISOR)
-#define HD6301_TO_ACIA_IN_HBL (HD6301EMU_ON?HD6301_CYCLES_TO_SEND_BYTE_IN_HBL:(screen_res==2?24:12))
+#define HD6301_TO_ACIA_IN_HBL (OPTION_C1?HD6301_CYCLES_TO_SEND_BYTE_IN_HBL:(screen_res==2?24:12))
 
 #else //that was not correct, for older versions (?)
 
@@ -109,26 +79,12 @@ MIDI is 4 times faster than IKBD
 #endif
 
 #if SSE_VERSION<=350
-#define IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESSE_ALT (HD6301EMU_ON?45:2)
+#define IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESSE_ALT (OPTION_C1?45:2)
 #endif
 
 #else //!ACIA
 #define HD6301_TO_ACIA_IN_HBL (screen_res==2?24:12) // to be <7200
 #endif//ACIA
-
-/////////////
-// ARCHIVE //
-/////////////
-//v3.8.2
-#define ARCHIVEACCESS_DLL "ArchiveAccess.dll"
-#define UNRAR_DLL "unrar.dll" 
-#ifdef SSE_X64_DEBUG
-#define UNZIP_DLL ARCHIVEACCESS_DLL
-#else
-#define UNZIP_DLL "unzipd32.dll" 
-#endif
-
-
 
 
 /////////////
@@ -143,17 +99,29 @@ MIDI is 4 times faster than IKBD
     the blitter takes "7 cycles". The timing table is also in NOP.
 */
 //#undef SSE_BLT_BLIT_MODE_CYCLES
-#if defined(SSE_BLT_BLIT_MODE_CYCLES5)
+#if defined(SSE_BLT_381)
 #define BLITTER_BLIT_MODE_CYCLES ((63*4)) // hack of 380 removed in 381
-#elif defined(SSE_BLT_BLIT_MODE_CYCLES4)
-//#define BLITTER_BLIT_MODE_CYCLES (SSE_HACKS_ON?(128):(64*4)) // or cycles = 2 clock? //TODO test prg
-#define BLITTER_BLIT_MODE_CYCLES (SSE_HACKS_ON?(160):(64*4))//160 hack for AC2011, Down TLN (not good), SmokeTown
+#elif defined(SSE_BLT_380)
+#define BLITTER_BLIT_MODE_CYCLES (OPTION_HACKS?(160):(64*4))//160 hack for AC2011, Down TLN (not good), SmokeTown
 #else
 #define BLITTER_BLIT_MODE_CYCLES ((65-1)*4) // 'NOP' x 4 = cycles //63?
 #endif
-#if !defined(SSE_BLT_BLIT_MODE_CYCLES2)
+#if !defined(SSE_BLT_380)
 #define SSE_BLT_BLIT_MODE_IRQ_CHK (64) // when we check for IRQ, in cycles
 #endif
+#endif
+#endif
+
+
+//////////
+// CAPS //
+//////////
+
+#if defined(SSE_DISK_CAPS)
+#if defined(SSE_INT_MFP_RATIO) && defined(SSE_DISK_CAPS_383)
+#define SSE_DISK_CAPS_FREQU CpuNormalHz
+#else
+#define SSE_DISK_CAPS_FREQU 8000000//? CPU speed? - even for that I wasn't helped!
 #endif
 #endif
 
@@ -167,7 +135,7 @@ MIDI is 4 times faster than IKBD
 //todo move clock here?
 
 #if defined(SSE_CPU_TRACE_TIMING)
-#define CPU_TRACE_TIMING 36 // doc 34
+#define CPU_TRACE_TIMING 36 // doc 34 //used in more than trace
 #endif
 
 #if defined(SSE_CPU_STOP_DELAY)
@@ -203,7 +171,7 @@ MIDI is 4 times faster than IKBD
 #define STR_FAKE_IO_CONTROL "Control mask browser"
 #endif
 
-#if defined(SSE_DEBUG_FRAME_REPORT)
+#if defined(SSE_BOILER_FRAME_REPORT)
 #if defined(SSE_UNIX)
 #define FRAME_REPORT_FILENAME "./FrameReport.txt" //a fix?
 #else
@@ -217,39 +185,6 @@ MIDI is 4 times faster than IKBD
 #define AVG_HBLS_SECTOR (200)
 #endif
 
-//SF314[DRIVE].HblsPerRotation()
-
-//////////
-// DISK //
-//////////
-
-#if defined(SSE_DISK)
-
-#ifdef SSE_DISK_ST
-#define DISK_EXT_ST "ST"
-#endif
-#ifdef SSE_DISK_MSA
-#define DISK_EXT_MSA "MSA"
-#endif
-#if defined(SSE_DISK_STW)
-#define DISK_EXT_STW "STW"
-#endif
-#if defined(SSE_DISK_SCP)
-#define DISK_EXT_SCP "SCP"
-#endif
-#if defined(SSE_DISK_HFE)
-#define DISK_EXT_HFE "HFE"
-#if defined(SSE_VAR_OPT_382)
-#define DISK_HFE_BOOT_FILENAME "HFE_boot.bin"
-#else
-#if defined(SSE_UNIX)
-#define DISK_HFE_BOOT_FILENAME "/HFE_boot.bin" 
-#else
-#define DISK_HFE_BOOT_FILENAME "\\HFE_boot.bin"
-#endif
-#endif
-#endif
-#endif
 
 /////////
 // DMA //
@@ -261,11 +196,12 @@ MIDI is 4 times faster than IKBD
 #endif
 #endif
 
+
 ///////////
 // DRIVE //
 ///////////
 
-#if defined(SSE_DRIVE)
+#if defined(SSE_DRIVE_OBJECT)
 
 #define DRIVE_11SEC_INTERLEAVE 6
 #define DRIVE_RPM 300
@@ -279,7 +215,7 @@ MIDI is 4 times faster than IKBD
     6256+14 is too much, but this is the value that has some delicate cases
     running, so we just keep it for now, couldn't improve.
     In Steem native emulation precision is HBL, so there are trade-offs.
-    For STW images the value is 6256 for same cases.
+    For STW images, precision is cycle and the value is 6256 for the same cases.
 */
 
 #define DRIVE_BYTES_ROTATION (6256+14)  //little hack...
@@ -288,34 +224,34 @@ MIDI is 4 times faster than IKBD
 #define DRIVE_BYTES_ROTATION (8000) // 3.2 (!)
 #endif
 
+#define DRIVE_SOUND_BUZZ_THRESHOLD 7 // distance between tracks
 
 #if defined(SSE_DRIVE_RW_SECTOR_TIMING2)//no?
-#define FDC_SECTOR_GAP_BEFORE_IRQ_9_10 (3+(SSE_HACKS_ON?28:0)) //CRC + hack (FDCTNF by Petari)
+#define FDC_SECTOR_GAP_BEFORE_IRQ_9_10 (3+(OPTION_HACKS?28:0)) //CRC + hack (FDCTNF by Petari)
 #define FDC_SECTOR_GAP_BEFORE_IRQ_11 (3)
 #endif
 
-#if defined(SSE_DRIVE_SOUND)
-#ifdef SSE_UNIX //TODO...
-#define DRIVE_SOUND_DIRECTORY "/DriveSound" 
-#else
-#define DRIVE_SOUND_DIRECTORY "\\DriveSound"
-#endif
-#define DRIVE_SOUND_BUZZ_THRESHOLD 7 // distance between tracks
-#endif
-
 #endif
 
 
-/////////
-// FDC //
-/////////
+///////////
+// FILES //
+///////////
 
-#if defined(SSE_FDC)
-
-#if defined(SSE_FDC_ACCURATE)
-#endif//#if defined(SSE_FDC_ACCURATE)
-
-#endif//#if defined(SSE_FDC)
+#define ACSI_HD_DIR "ACSI"
+#define SSE_VID_RECORD_AVI_FILENAME "SteemVideo.avi"
+#define DISK_HFE_BOOT_FILENAME "HFE_boot.bin"
+#define HD6301_ROM_FILENAME "HD6301V1ST.img"
+#define DRIVE_SOUND_DIRECTORY "DriveSound"
+#define YM2149_FIXED_VOL_FILENAME "ym2149_fixed_vol.bin"
+#define PASTI_DLL "pasti.dll"
+#define SSE_DISK_CAPS_PLUGIN_FILE "CAPSImg.dll"
+#define ARCHIVEACCESS_DLL "ArchiveAccess.dll"
+#define UNRAR_DLL "unrar.dll" 
+#define UNZIP_DLL "unzipd32.dll" 
+#define STEEM_SSE_FAQ "Steem SSE FAQ"
+#define STEEM_HINTS "Hints"
+#define STEEM_MANUAL_SSE "Steem SSE manual"
 
 
 /////////
@@ -324,7 +260,7 @@ MIDI is 4 times faster than IKBD
 
 
 #if defined(SSE_GLUE_THRESHOLDS)
-
+// extremely important parameters, modified according to ST model and wakestate
 enum {
   GLU_DE_ON_72=6, //+ WU_res_modifier; STE-4
   GLU_DE_ON_60=52, //+ WU_sync_modifier; STE -16
@@ -345,31 +281,16 @@ enum {
 //GUI //
 ////////
 
-#if defined(SSE_GUI)
-
 #define WINDOW_TITLE_MAX_CHARS 20+5 //argh, 20 wasn't enough
 
 #define README_FONT_NAME "Courier New"
 #define README_FONT_HEIGHT 16
 
-#if SSE_VERSION>=370
+
 #define EXT_TXT ".txt" //save bytes?
-#define STEEM_SSE_FAQ "Steem SSE FAQ"
-#define STEEM_HINTS "Hints"
-#else
-#define STEEM_SSE_FAQ_TXT "Steem SSE FAQ.txt"
-#define STEEM_HINTS_TXT "Hints.txt"
-#endif
-#if defined(SSE_GUI_INFOBOX9) || defined(SSE_GUI_INFOBOX12)
-#define STEEM_MANUAL "Steem manual"
-#define STEEM_MANUAL_SSE "Steem SSE manual"
-#endif
-
-#if defined(SSE_GUI_CONFIG_FILE)
 #define CONFIG_FILE_EXT "ini" // ini, cfg?
-#endif
 
-#endif//gui
+
 
 
 ///////////
@@ -377,51 +298,20 @@ enum {
 ///////////
 
 #if defined(SSE_HACKS)
-enum {
-SS_SIGNAL_TOS_PATCH106=1, // checking all ST files we open
-SS_SIGNAL_SHIFTER_CONFUSED_1,// temp hacks for 3.4
-SS_SIGNAL_SHIFTER_CONFUSED_2,// not looking for elegance!
-SS_SIGNAL_DRIVE_SPINNING_AT_COMMAND,
-SS_SIGNAL_ENUM_EnumDisplayModes, // wait until finished (?)
+enum { //none are used (v383)
+SIGNAL_TOS_PATCH106=1, // checking all ST files we open
+SIGNAL_SHIFTER_CONFUSED_1,// temp hacks for 3.4
+SIGNAL_SHIFTER_CONFUSED_2,// not looking for elegance!
 };
 #endif
 
-/////////
-// HDC //
-/////////
 
-#if defined(SSE_ACSI_NOGUISELECT) // only one file in Steem root can be HD
-#if defined(SSE_ACSI_MULTIPLE)
-#if defined(SSE_UNIX)
-#define ACSI_HD_DIR "/ACSI/"
-#else
-#define ACSI_HD_DIR "\\ACSI\\"
-#endif
-#else
-#if defined(SSE_UNIX)
-#define ACSI_HD_NAME "./ACSI_HD0.img"
-#else
-#define ACSI_HD_NAME "\\ACSI_HD0.img"
-#endif
-#endif
-#endif
 
 //////////
 // IKBD //
 //////////
 
-#if defined(SSE_IKBD)
-
 #if defined(SSE_IKBD_6301)
-#if defined(SSE_VAR_OPT_382)
-#define HD6301_ROM_FILENAME "HD6301V1ST.img"
-#else
-#if defined(SSE_UNIX)
-#define HD6301_ROM_FILENAME "/HD6301V1ST.img" 
-#else
-#define HD6301_ROM_FILENAME "\\HD6301V1ST.img"
-#endif
-#endif
 #define HD6301_ROM_CHECKSUM 451175 // BTW this rom sends $F1 after reset (80,1)
 #endif
 
@@ -459,12 +349,12 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #endif
 
 #if defined(SSE_IKBD_6301_EVENT)//380
-//#define HD6301_CYCLES_TO_SEND_BYTE ((SSE_HACKS_ON&& LPEEK(0x18)==0xFEE74)?1350:1280) // boo!
-#define HD6301_CYCLES_TO_SEND_BYTE ((SSE_HACKS_ON&& LPEEK(0x18)==0xFEE74)?1345:1280) // boo!
+//#define HD6301_CYCLES_TO_SEND_BYTE ((OPTION_HACKS&& LPEEK(0x18)==0xFEE74)?1350:1280) // boo!
+#define HD6301_CYCLES_TO_SEND_BYTE ((OPTION_HACKS&& LPEEK(0x18)==0xFEE74)?1345:1280) // boo!
 #define HD6301_CYCLES_TO_RECEIVE_BYTE (HD6301_CYCLES_TO_SEND_BYTE)
 #elif defined(SSE_ACIA_OVR_TIMING)
 // hack: we count more cycle when overrun is detected, for Froggies
-#define HD6301_CYCLES_TO_SEND_BYTE ((SSE_HACKS_ON&&(ACIA_IKBD.overrun==ACIA_OVERRUN_COMING))?1380+30:1300)
+#define HD6301_CYCLES_TO_SEND_BYTE ((OPTION_HACKS&&(ACIA_IKBD.overrun==ACIA_OVERRUN_COMING))?1380+30:1300)
 #define HD6301_CYCLES_TO_RECEIVE_BYTE HD6301_CYCLES_TO_SEND_BYTE
 #else
 #define HD6301_CYCLES_TO_SEND_BYTE (1350)
@@ -476,7 +366,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define HD6301_MOUSE_SPEED_CHUNKS 15
 #define HD6301_MOUSE_SPEED_CYCLES_PER_CHUNK 1000
 #endif
-#endif
+
 
 
 ///////////////
@@ -546,25 +436,20 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
 #define HBL_IACK_LATENCY 28
 #define VBL_IACK_LATENCY 28
 
-#if defined(SSE_CPU_E_CLOCK4)
+#if defined(SSE_CPU_E_CLOCK_380)
 #define ECLOCK_AUTOVECTOR_CYCLE 10 // IACK starts at cycle 10 (?)
 #else
 #define ECLOCK_AUTOVECTOR_CYCLE 28 //whatever!
 #endif
 
-#if defined(SSE_INT_VBI_START)
-#undef SSE_INT_VBI_START
-#define SSE_INT_VBI_START (68) // default = STE
-#endif
-
-#if !defined(SSE_GLUE_THRESHOLDS)
+#if !defined(SSE_GLUE_THRESHOLDS) || !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 #define THRESHOLD_LINE_PLUS_2_STF (54)
 #if defined(SSE_INT_VBL_STF) // modest hack still works
 #define HBL_FOR_STE (444)
 #define THRESHOLD_LINE_PLUS_2_STE (40) //3.7.0
 #if SSE_VERSION<364
 //this particular hack doesn't look useful for anything now
-#define HBL_FOR_STF (HBL_FOR_STE+4+(SSE_HACKS_ON?4:0))
+#define HBL_FOR_STF (HBL_FOR_STE+4+(OPTION_HACKS?4:0))
 #else
 #define HBL_FOR_STF (HBL_FOR_STE+4)
 #endif
@@ -573,31 +458,6 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
 #endif
 #endif
 #endif//int
-
-/////////
-// IPF //
-/////////
-
-#define SSE_IPF_PLUGIN_FILE "CAPSImg.dll" //Windows
-
-#if defined(SSE_IPF)
-
-#define SSE_IPF_FREQU 8000000//? CPU speed? - even for that I wasn't helped!
-
-#ifdef SSE_IPF_CTRAW
-#undef SSE_IPF_CTRAW
-#define SSE_IPF_CTRAW "CTR" 
-#endif
-#ifdef SSE_IPF_KFSTREAM//no
-#undef SSE_IPF_KFSTREAM
-#define SSE_IPF_KFSTREAM "RAW" 
-#endif
-#ifdef SSE_IPF_DRAFT//no
-#undef SSE_IPF_DRAFT
-#define SSE_IPF_DRAFT "RAW"  //?
-#endif
-
-#endif//ipf
 
 
 /////////
@@ -664,11 +524,9 @@ Some STFs                32.02480    8.0071
 #define  MFP_CLK_TH_EXACT 2457600 // ( 2^15 * 3 * 5^2 )
 #endif
 
-
-
-#if defined(SSE_INT_MFP_TIMERS_WOBBLE)//yes in v3.8??
-#define MFP_WRITE_LATENCY (8)
-#define MFP_TIMERS_WOBBLE 4//2//1 //2 // if there's wobble, at least 2 seems likelier
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE)//yes in v3.8
+#define MFP_WRITE_LATENCY (8) // is it high?
+#define MFP_TIMERS_WOBBLE 4//2  //if there's wobble, at least 2 seems likelier
 #else
 #define MFP_WRITE_LATENCY (5) //5 (=8?) best for TEST10.TOS
 #endif
@@ -701,10 +559,10 @@ Some STFs                32.02480    8.0071
 #endif
 #endif
 #endif//starting_delay
-// it may seem high but it's not #IACK cycles
+// it may seem high but it's not #IACK cycles, it's when IACK ends
 // cases Final Conflict, Anomaly menu
 #define MFP_IACK_LATENCY (28) 
-#define MFP_SPURIOUS_LATENCY MFP_WRITE_LATENCY//?? (MFP_IACK_LATENCY) //?
+#define MFP_SPURIOUS_LATENCY MFP_WRITE_LATENCY
 
 #endif//mfp
 
@@ -715,10 +573,12 @@ Some STFs                32.02480    8.0071
 
 #if defined(SSE_MMU)
 
+#ifdef SSE_SHIFTER_PANIC
 #if defined(SSE_MMU_WU_DL)
 #define WU_SHIFTER_PANIC 5
 #else
 #define WU_SHIFTER_PANIC 3
+#endif
 #endif
 
 #endif
@@ -733,12 +593,6 @@ Some STFs                32.02480    8.0071
 #define HD_TIMER 100 // Yellow hard disk led (imperfect timing)
 #endif
 
-
-///////////
-// PASTI //
-///////////
-
-#define PASTI_DLL "pasti.dll" //v3.8.2
 
 
 
@@ -776,7 +630,7 @@ Some STFs                32.02480    8.0071
 /////////
 
 
-#if defined(SSE_STF_VERT_OVSCN) && !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if defined(SSE_STF_VERT_OVSCN)
 #define STF_VERT_OVSCN_OFFSET 4
 #endif
 
@@ -785,6 +639,25 @@ Some STFs                32.02480    8.0071
 /////////////
 // TIMINGS //
 /////////////
+
+#if defined(SSE_SHIFTER_TRICKS) && defined(SSE_INT_MFP_RATIO)
+#define HBL_PER_SECOND (CpuNormalHz/GLU.CurrentScanline.Cycles) //TODO assert
+//#endif
+//Frequency   50          60            72
+//#HBL/sec    15666.5 15789.85827 35809.14286
+
+#else 
+#if defined(SSE_FDC_PRECISE_HBL)//todo table
+#define HBL_PER_FRAME ( (shifter_freq_at_start_of_vbl==50)?HBLS_50HZ: \
+  ( (shifter_freq_at_start_of_vbl==60)? HBLS_60HZ : HBLS_72HZ))
+#else
+#define HBL_PER_FRAME ( shifter_freq_at_start_of_vbl==50?HBLS_50HZ: \
+  (shifter_freq_at_start_of_vbl==60?HBLS_60HZ:(HBLS_72HZ/2)))
+#endif
+
+#define HBL_PER_SECOND HBLS_PER_SECOND_AVE//(HBL_PER_FRAME*shifter_freq_at_start_of_vbl)  //still not super accurate
+#endif
+
 
 // DMA sound has its own clock, it's not CPU's
 // We adjust this so that we have 50065 in ljbk's test
@@ -796,7 +669,7 @@ Some STFs                32.02480    8.0071
 #elif CPU_STE_PAL==(8020736+512+512)
 #define STE_DMA_CLOCK 8021350
 #elif CPU_STE_PAL==(8021030)
-#define STE_DMA_CLOCK 8021500 //50065; MOLZ OK
+#define STE_DMA_CLOCK 8021500 //50065; MOLZ OK // this is it in 3.8.2
 //#define STE_DMA_CLOCK 8012800
 #else
 #define STE_DMA_CLOCK 8012800//8021250//8021350 // 50065; MOLZ OK v3.8.0 : 8021250
@@ -818,7 +691,7 @@ Some STFs                32.02480    8.0071
 #endif
 
 #if defined(SSE_STF_MATCH_TOS2)
-#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2)
+#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) || defined(SSE_STF_MATCH_TOS_383)
 #define DEFAULT_TOS_STF (HardDiskMan.DisableHardDrives?0x102:0x104) // how caring!
 #else
 #define DEFAULT_TOS_STF 0x102
@@ -875,7 +748,7 @@ Some STFs                32.02480    8.0071
 
 #if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO) || defined(SSE_VID_STRETCH_ASPECT_RATIO)
 #if SSE_VERSION>=380
-#if defined(SSE_COMPILER_382)
+#if defined(SSE_VS2008_WARNING_382)
 #define ST_ASPECT_RATIO_DISTORTION 1.10f // multiplier for Y axis
 #else
 #define ST_ASPECT_RATIO_DISTORTION 1.10 // multiplier for Y axis
@@ -886,25 +759,13 @@ Some STFs                32.02480    8.0071
 #endif
 
 #if defined(SSE_VID_RECORD_AVI)//no, Fraps or other 3rd party programs will do a fantastic job
-#define SSE_VID_RECORD_AVI_FILENAME "SteemVideo.avi"
 #define SSE_VID_RECORD_AVI_CODEC "MPG4"
 #endif
 
 #endif//vid
 
 
-//YM2149
-#if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
 
-#if defined(SSE_VAR_OPT_382)
-#define YM2149_FIXED_VOL_FILENAME "ym2149_fixed_vol.bin"
-#else
-#if defined(SSE_UNIX)
-#define YM2149_FIXED_VOL_FILENAME "/ym2149_fixed_vol.bin" 
-#else
-#define YM2149_FIXED_VOL_FILENAME "\\ym2149_fixed_vol.bin"
-#endif
-#endif
-#endif
 
+#endif//sse
 #endif//#ifndef SSEPARAMETERS_H

@@ -1,10 +1,3 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DRAW_H)
-
-#include "draw.decla.h"
-
-#else//!defined(SSE_STRUCTURE_DRAW_H)
-
-
 #ifdef IN_EMU
 #define EXT
 #define EXTC
@@ -16,10 +9,8 @@
 #endif
 
 #define BORDER_TOP 30
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS))
-#define BORDER_SIDE 32 // redefined as variables! check SSEDecla.h
 #define BORDER_BOTTOM 40
-#endif
+#define BORDER_SIDE 32
 
 #define DFSM_FLIP 0
 #define DFSM_STRAIGHTBLIT 1
@@ -29,11 +20,8 @@
 #define DFSFX_NONE 0
 #define DFSFX_GRILLE 1
 #define DFSFX_BLUR 2
-#if !defined(STEVEN_SEAGAL) // double! ain't I smart?
+
 #define DFSM_LAPTOP 3
-#endif
-
-
 
 EXT bool draw_routines_init();
 
@@ -51,10 +39,6 @@ EXT void change_window_size_for_border_change(int oldborder,int newborder);
 
 EXT void res_change();
 
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE))
-EXT int stfm_b_timer INIT(0);//tmp
-#endif
-
 EXT int bad_drawing INIT(0);
 EXT int draw_fs_blit_mode INIT( UNIX_ONLY(DFSM_STRAIGHTBLIT) WIN_ONLY(DFSM_STRETCHBLIT) );
 EXT int draw_fs_fx INIT(DFSFX_NONE),draw_grille_black INIT(6);
@@ -64,10 +48,6 @@ EXT int draw_fs_topgap INIT(0);
 #define DWM_STRETCH 0
 #define DWM_NOSTRETCH 1
 #define DWM_GRILLE 2
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SCANLINES_INTERPOLATED)
-#define DWM_STRETCH_SCANLINES 3
-#endif
-
 WIN_ONLY( EXT int draw_win_mode[2]; ) // Inited by draw_fs_blit_mode
 
 
@@ -86,20 +66,13 @@ EXT BYTE *draw_dest_ad,*draw_dest_next_scanline;
 #define OVERSCAN_MAX_COUNTDOWN 25
 
 EXT int border INIT(2),border_last_chosen INIT(2);
-
 EXT bool display_option_8_bit_fs INIT(false);
 EXT bool prefer_res_640_400 INIT(0),using_res_640_400 INIT(0);
 extern int prefer_pc_hz[2][3];
 extern WORD tested_pc_hz[2][3];
 
 EXT void get_fullscreen_rect(RECT *);
-EXT int overscan INIT(0)
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE) \
- && defined(SSE_SHIFTER) && !defined(SSE_SHIFTER_DRAW_DBG) \
- && defined(SSE_STRUCTURE))
-,stfm_borders INIT(0)
-#endif
-;
+EXT int overscan INIT(0),stfm_borders INIT(0);
 
 UNIX_ONLY( EXT int x_draw_surround_count INIT(4); )
 
@@ -112,47 +85,37 @@ WIN_ONLY( EXT HWND ClipWin; )
 int prefer_pc_hz[2][3]={{0,0,0},{0,0,0}};
 WORD tested_pc_hz[2][3]={{0,0,0},{0,0,0}};
 
+#define CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN 84
+#define CYCLES_FROM_HBL_TO_RIGHT_BORDER_CLOSE (CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320)
 
 int cpu_cycles_from_hbl_to_timer_b;
-
-#define SCANLINES_ABOVE_SCREEN_50HZ 63 
-#define SCANLINES_ABOVE_SCREEN_60HZ 34
-#define SCANLINES_ABOVE_SCREEN_70HZ 61
-#define SCANLINES_BELOW_SCREEN_50HZ 50
-#define SCANLINES_BELOW_SCREEN_60HZ 29
-#define SCANLINES_BELOW_SCREEN_70HZ 40
-#define SCANLINE_TIME_IN_CPU_CYCLES_50HZ 512
-#define SCANLINE_TIME_IN_CPU_CYCLES_60HZ 508
-#define SCANLINE_TIME_IN_CPU_CYCLES_70HZ 224
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START)
-//#define CYCLES_FOR_VERTICAL_RETURN_IN_50HZ (444+SSE_INT_VBI_START)
-//#define CYCLES_FOR_VERTICAL_RETURN_IN_60HZ (444+SSE_INT_VBI_START-4)
-#elif defined(STEVEN_SEAGAL) && defined(SSE_INT_VBL_STF)
-#define CYCLES_FOR_VERTICAL_RETURN_IN_50HZ (HblTiming)
-#define CYCLES_FOR_VERTICAL_RETURN_IN_60HZ (HblTiming)
-#else // Steem 3.2
-#define CYCLES_FOR_VERTICAL_RETURN_IN_50HZ 444
-#define CYCLES_FOR_VERTICAL_RETURN_IN_60HZ 444
-#endif
-
-#define CYCLES_FOR_VERTICAL_RETURN_IN_70HZ 200
-#define CYCLES_FROM_START_VBL_TO_INTERRUPT 1544
-// SS we keep this also for medres or it complicates 4bit scroll a lot (TODO):
-#define CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN 84
-
-
-#define CYCLES_FROM_HBL_TO_RIGHT_BORDER_CLOSE (CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320)
 
 #define CALC_CYCLES_FROM_HBL_TO_TIMER_B(freq) \
   switch (freq){ \
     case MONO_HZ: cpu_cycles_from_hbl_to_timer_b=192;break; \
     case 60: cpu_cycles_from_hbl_to_timer_b=(CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320-4);break; \
     default: cpu_cycles_from_hbl_to_timer_b=(CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320); \
-} // 320+84 = 404, the same in Hatari
+  }
 
+#define CYCLES_FROM_START_VBL_TO_INTERRUPT 1544
+
+#define SCANLINE_TIME_IN_CPU_CYCLES_50HZ 512
+#define SCANLINES_ABOVE_SCREEN_50HZ 63
+#define SCANLINES_BELOW_SCREEN_50HZ 50
+#define CYCLES_FOR_VERTICAL_RETURN_IN_50HZ 444
+
+#define SCANLINE_TIME_IN_CPU_CYCLES_60HZ 508
+#define SCANLINES_ABOVE_SCREEN_60HZ 34
+#define SCANLINES_BELOW_SCREEN_60HZ 29
+#define CYCLES_FOR_VERTICAL_RETURN_IN_60HZ 444
 
 #define HBLS_PER_SECOND_AVE 15700 // Average between 50 and 60hz
+
+#define SCANLINE_TIME_IN_CPU_CYCLES_70HZ 224
+#define SCANLINES_ABOVE_SCREEN_70HZ 61
+#define SCANLINES_BELOW_SCREEN_70HZ 40
+#define CYCLES_FOR_VERTICAL_RETURN_IN_70HZ 200
+
 #define HBLS_PER_SECOND_MONO (501.0*71.42857)
 
 const int scanlines_above_screen[4]={SCANLINES_ABOVE_SCREEN_50HZ,
@@ -176,18 +139,11 @@ int res_vertical_scale=1;
 int draw_first_scanline_for_border,draw_last_scanline_for_border; //calculated from BORDER_TOP, BORDER_BOTTOM and res_vertical_scale
 
 int draw_first_possible_line=0,draw_last_possible_line=200;
+
 void inline draw_scanline_to_end();
-
-#if !defined(STEVEN_SEAGAL) || !defined(SSE_VIDEO) || defined(SSE_DEBUG)
 void inline draw_scanline_to(int);
-#endif
-
 int scanline_drawn_so_far;
 int cpu_cycles_when_shifter_draw_pointer_updated;
-
-
-
-
 int left_border=BORDER_SIDE,right_border=BORDER_SIDE;
 bool right_border_changed=0;
 int overscan_add_extra;
@@ -206,7 +162,6 @@ void ASMCALL draw_scanline_dont(int,int,int,int);
 //void palette_convert_16_565(int);
 //void palette_convert_24(int);
 //void palette_convert_32(int);
-
 
 extern "C"{
 
@@ -253,6 +208,7 @@ void ASMCALL draw_scanline_24_hires(int,int,int,int),draw_scanline_32_hires(int,
 
 }
 
+
 #define OVERSCAN_ADD_EXTRA_FOR_LEFT_BORDER_REMOVAL 2
 #define OVERSCAN_ADD_EXTRA_FOR_SMALL_LEFT_BORDER_REMOVAL 2
 #define OVERSCAN_ADD_EXTRA_FOR_GREAT_BIG_RIGHT_BORDER -106
@@ -270,27 +226,9 @@ void ASMCALL draw_scanline_24_hires(int,int,int,int),draw_scanline_32_hires(int,
           }                           \
           s+=overscan_add_extra;
 
-EXT int shifter_freq_change_time[32];
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
-EXT BYTE shifter_freq_change[32];
-EXT BYTE shifter_freq_change_idx;
-#else
-EXT int shifter_freq_change[32];
-EXT int shifter_freq_change_idx;
-#endif
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER_TRICKS)
-// keeping a record for shift mode changes as well
-EXT int shifter_shift_mode_change_time[32];
-#if defined(SSE_VAR_RESIZE)
-EXT BYTE shifter_shift_mode_change[32];
-EXT BYTE shifter_shift_mode_change_idx;
-#else
-EXT int shifter_shift_mode_change[32];
-EXT int shifter_shift_mode_change_idx;
-#endif
-#endif
-
+int shifter_freq_change_time[32];
+int shifter_freq_change[32];
+int shifter_freq_change_idx=0;
 
 #ifdef WIN32
 // This is for the new scanline buffering (v2.6). If you write a lot direct
@@ -300,13 +238,7 @@ EXT int shifter_shift_mode_change_idx;
 // set draw_scanline to draw_scanline_1_line. In draw_scanline_to_end
 // we then copy from draw_temp_line_buf to the old draw_dest_ad and
 // restore draw_scanline.
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS)
-BYTE draw_temp_line_buf[800*4+16+ 200 ]; // overkill but I can't count
-#else
-BYTE draw_temp_line_buf[800*4+16]; 
-#endif
-
+BYTE draw_temp_line_buf[800*4+16];
 BYTE *draw_store_dest_ad=NULL;
 LPPIXELWISESCANPROC draw_scanline_1_line[2],draw_store_draw_scanline;
 bool draw_buffer_complex_scanlines;
@@ -319,20 +251,16 @@ bool draw_line_off=0;
 #define ADD_SHIFTER_FREQ_CHANGE(f) \
   {shifter_freq_change_idx++;shifter_freq_change_idx&=31; \
   shifter_freq_change_time[shifter_freq_change_idx]=ABSOLUTE_CPU_TIME; \
-  shifter_freq_change[shifter_freq_change_idx]=(f);                    \
-  log_to_section(LOGSECTION_VIDEO,EasyStr("VIDEO: Change to freq ")+(f)+      \
+  shifter_freq_change[shifter_freq_change_idx]=f;                    \
+  log_to_section(LOGSECTION_VIDEO,EasyStr("VIDEO: Change to freq ")+f+      \
             " at time "+ABSOLUTE_CPU_TIME);}
 
 bool freq_change_this_scanline=false;
 
-#if !defined(STEVEN_SEAGAL) || !defined(SSE_VIDEO) || defined(SSE_DEBUG)
 void draw_check_border_removal();
-#endif
 
 #endif
 
 #undef EXT
 #undef INIT
 
-
-#endif//defined(SSE_STRUCTURE_DRAW_H)
