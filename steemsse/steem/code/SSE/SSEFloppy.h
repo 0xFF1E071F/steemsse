@@ -23,7 +23,7 @@ interrupt."
 #include <conditions.h>
 #include "SSEParameters.h"
 
-#if defined(SSE_DRIVE_SOUND) && defined(SSE_STRUCTURE_SSEDEBUG_OBJ)
+#if defined(SSE_DRIVE_SOUND)
 #ifdef WIN32
 #include <dsound.h>
 #endif
@@ -49,7 +49,7 @@ interrupt."
 
 #if defined(SSE_FLOPPY)
 
-#ifdef SSE_DRIVE
+#ifdef SSE_DRIVE_OBJECT
 #define ADAT (SF314[floppy_current_drive()].Adat())
 #else
 #define ADAT (!floppy_instant_sector_access)
@@ -83,8 +83,7 @@ extern TImageHFE ImageHFE[2];
 #endif
 
 
-
-#if defined(SSE_DMA)
+#if defined(SSE_DMA_OBJECT)
 extern TDma Dma;
 #define dma_sector_count Dma.Counter
 #define dma_address Dma.BaseAddress
@@ -93,7 +92,7 @@ extern TDma Dma;
 #define dma_status Dma.SR
 #endif//dma
 
-#if defined(SSE_DRIVE)
+#if defined(SSE_DRIVE_OBJECT)
 extern TSF314 SF314[2]; // 2 double-sided drives, wow!
 #endif
 
@@ -101,7 +100,7 @@ extern TSF314 SF314[2]; // 2 double-sided drives, wow!
 extern TDisk Disk[2]; // 
 #endif
 
-#if defined(SSE_FDC)
+#if defined(SSE_WD1772)
 extern TWD1772 WD1772;
 #define fdc_cr WD1772.CR     // problem:
 #define fdc_str WD1772.STR   // not identified in VC6 debugger
@@ -118,11 +117,7 @@ extern TWD1772 WD1772;
 #define floppy_type1_command_active WD1772.StatusType
 #endif
 
-#if defined(SSE_YM2149)
-extern TYM2149 YM2149;
-#endif
-
-#if defined(SSE_IPF)
+#if defined(SSE_DISK_CAPS)
 extern TCaps Caps;
 #endif
 

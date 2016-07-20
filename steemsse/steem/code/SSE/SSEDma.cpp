@@ -1,7 +1,4 @@
-#include "SSE.h"
-
-/*
-    The DMA (Direct Memory Access) chip was developed by Atari.
+/*  The DMA (Direct Memory Access) chip was developed by Atari.
     It uses two 16-byte FIFO buffers to handle byte transfers between the 
     drive  controller (floppy or hard disk) and memory so that the CPU is
     freed from the task.
@@ -9,9 +6,9 @@
     frees the bus.
     We don't count cycles for this, CPU isn't working ;)
 */
+#include "SSE.h"
 
-#if defined(STEVEN_SEAGAL)
-
+#if defined(SSE_DMA)
 
 #include "../pch.h"
 #include <cpu.decla.h>
@@ -57,7 +54,7 @@
 #endif
 
 
-#if defined(SSE_DMA)
+#if defined(SSE_DMA_OBJECT)
 
 TDma::TDma() {
 #if defined(SSE_DMA_FIFO)
@@ -359,7 +356,7 @@ note: this isn't clear, see Drq()
     }
 #endif
     else
-#if defined(SSE_FDC)
+#if defined(SSE_WD1772)
       ior_byte=WD1772.IORead( (MCR&(CR_A1|CR_A0))/2 );
 #else // old ior block... ugly but flexible - normally not compiled
     {
@@ -494,7 +491,7 @@ TODO?
     of ior_byte, but allows to go through TRACE and update our variables..
 */
   if(hPasti && pasti_active
-#if defined(SSE_PASTI_ONLY_STX)
+#if defined(SSE_DISK_PASTI_ONLY_STX)
     && (!PASTI_JUST_STX || 
 #if defined(SSE_DISK_IMAGETYPE)
 // in fact we should refactor this
@@ -502,7 +499,7 @@ TODO?
 #else
     SF314[floppy_current_drive()].ImageType==3//DISK_PASTI
 #endif
-#if defined(SSE_PASTI_ONLY_STX_HD)
+#if defined(SSE_DISK_PASTI_ONLY_STX_HD)
     || (MCR&CR_HDC_OR_FDC) // hard disk handling by pasti
 #endif
     )
@@ -667,7 +664,7 @@ is ignored and when reading the 8 upper bits consistently reads 1."
 /*  This will put the correct value (in $4C2) when TOS tests for hard drives,
     not waiting for a call to BIOS function Drvmap() ($10)
 */
-      if(SSE_HACKS_ON && !HardDiskMan.DisableHardDrives && !(MCR&CR_A0))
+      if(OPTION_HACKS && !HardDiskMan.DisableHardDrives && !(MCR&CR_A0))
         stemdos_update_drvbits(); 
 #endif
 
@@ -686,7 +683,7 @@ to generate DMA bus cycle."
       break;
 #endif
 
-#if defined(SSE_FDC)
+#if defined(SSE_WD1772)
     WD1772.IOWrite((MCR&(CR_A1|CR_A0))/2,io_src_b);
 #else // old iow block... ugly but flexible - normally not compiled
     {
@@ -825,7 +822,7 @@ What was in the buffers will go nowhere, the internal counter is reset.
 */
   if(hPasti && pasti_active
     
-#if defined(SSE_DRIVE)&&defined(SSE_PASTI_ONLY_STX)
+#if defined(SSE_DRIVE_OBJECT)&&defined(SSE_DISK_PASTI_ONLY_STX)
     && (!PASTI_JUST_STX 
 #if defined(SSE_DISK_IMAGETYPE)
     || SF314[YM2149.SelectedDrive].ImageType.Extension==EXT_STX
@@ -890,7 +887,11 @@ What was in the buffers will go nowhere, the internal counter is reset.
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_FDC
 
+#if defined(SSE_VS2008_WARNING_383) && !defined(SSE_DEBUG)
+void TDma::UpdateRegs() {
+#else
 void TDma::UpdateRegs(bool trace_them) {
+#endif
 /*  This is used for debugging and for pasti drive led
     and may have some other uses.
     We update both DMA and FDC registers (so we use old variable names for the
@@ -899,7 +900,7 @@ void TDma::UpdateRegs(bool trace_them) {
 
 #if USE_PASTI
   if(hPasti && pasti_active
-#if defined(SSE_PASTI_ONLY_STX) //all or nothing?
+#if defined(SSE_DISK_PASTI_ONLY_STX) //all or nothing?
     && (!PASTI_JUST_STX || 
 #if defined(SSE_DISK_IMAGETYPE)
 // in fact we should refactor this
@@ -907,11 +908,11 @@ void TDma::UpdateRegs(bool trace_them) {
 #else
     SF314[floppy_current_drive()].ImageType==3//DISK_PASTI
 #endif
-#if defined(SSE_PASTI_ONLY_STX_HD)
+#if defined(SSE_DISK_PASTI_ONLY_STX_HD)
     || (MCR&BIT_3) // hard disk handling by pasti
 #endif
     )
-#endif//defined(SSE_PASTI_ONLY_STX)
+#endif//defined(SSE_DISK_PASTI_ONLY_STX)
 #if defined(SSE_DISK_GHOST_SECTOR_STX1)
     // regs should be alright since last update (?)
     &&!(SSE_GHOST_DISK&&WD1772.Lines.CommandWasIntercepted)
@@ -935,7 +936,7 @@ void TDma::UpdateRegs(bool trace_them) {
     SR=ppi.dmaStatus;
   }
 #endif
-#if defined(SSE_IPF)
+#if defined(SSE_DISK_CAPS)
   if(CAPSIMG_OK && 
 #if defined(SSE_DISK_IMAGETYPE1)
     SF314[DRIVE].ImageType.Manager==MNGR_CAPS
@@ -1164,7 +1165,7 @@ void TDma::TransferBytes() {
 #endif
 #if USE_PASTI    
     if(hPasti&&pasti_active
-#if defined(SSE_PASTI_ONLY_STX)
+#if defined(SSE_DISK_PASTI_ONLY_STX)
     &&(!PASTI_JUST_STX || 
 #if defined(SSE_DISK_IMAGETYPE)
 // in fact we should refactor this
@@ -1172,7 +1173,7 @@ void TDma::TransferBytes() {
 #else
     SF314[floppy_current_drive()].ImageType==3)//DISK_PASTI)
 #endif    
-#if defined(SSE_PASTI_ONLY_STX_HD)
+#if defined(SSE_DISK_PASTI_ONLY_STX_HD)
     || (MCR&CR_HDC_OR_FDC) // hard disk handling by pasti
 #endif
 #endif        
@@ -1206,6 +1207,6 @@ void TDma::TransferBytes() {
 
 #endif//DMA_FIFO
 
-#endif//dma
+#endif//object
 
-#endif//#if defined(STEVEN_SEAGAL)
+#endif//dma

@@ -73,7 +73,7 @@ bool SteemDisplay::InitX() //SS normally we rarely do that
   int Scr=XDefaultScreen(XD);
   int w=640,h=480;
   if (Disp.BorderPossible()){
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS) && defined(SSE_UNIX)
+#if defined(SSE_VID_BORDERS) && defined(SSE_UNIX)
     w=640+4* (SideBorderSize); // 768 or 800 or 832
     h=400+2*(BORDER_TOP+BottomBorderSize);
 #else
@@ -145,7 +145,7 @@ bool SteemDisplay::InitXSHM()
   int Scr=XDefaultScreen(XD);
   int w=640,h=480;
   if (BorderPossible()){
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS) && defined(SSE_UNIX)
+#if defined(SSE_VID_BORDERS) && defined(SSE_UNIX)
     w=640+4* (SideBorderSize); // we draw larger
     h=400+2*(BORDER_TOP+BottomBorderSize);
 #else
@@ -207,7 +207,7 @@ bool SteemDisplay::InitXSHM()
 HRESULT SteemDisplay::Lock()
 {
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
   if(SDL.InUse)
   {
     SDL.Lock();
@@ -289,7 +289,7 @@ void SteemDisplay::VSync()
 bool SteemDisplay::Blit()
 {
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
   if(SDL.InUse)
   {
     SDL.Blit();
@@ -308,7 +308,7 @@ bool SteemDisplay::Blit()
     sy=draw_blit_source_rect.top;
     sw=draw_blit_source_rect.right;
     sh=draw_blit_source_rect.bottom;
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS_LB_DX)
+#if defined(SSE_VID_BORDERS_LB_DX)
     if(BORDER_40 && border) // clip from larger to 800
     {
       sx+=16; // eg BPOC
@@ -360,14 +360,14 @@ Screen *screen; /* back pointer to correct screen */
     dy=(h-draw_blit_source_rect.bottom)/2;
     sx=draw_blit_source_rect.left;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS)
+#if defined(SSE_VID_BORDERS)
     if(SideBorderSizeWin==VERY_LARGE_BORDER_SIDE_WIN)
     {
       dx=(w-(draw_blit_source_rect.right-4))/2;; // 412 (TODO 413)
     }
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS_LB_DX)
+#if defined(SSE_VID_BORDERS_LB_DX)
     if(BORDER_40 && border) // clip from larger to 800
     {
       sx+=16; // eg BPOC
@@ -377,7 +377,7 @@ Screen *screen; /* back pointer to correct screen */
     sy=draw_blit_source_rect.top;
     sw=draw_blit_source_rect.right;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS)
+#if defined(SSE_VID_BORDERS)
     if(SideBorderSizeWin==VERY_LARGE_BORDER_SIDE_WIN)
     {
       sw-=4*2; // 412 (TODO 413)
@@ -492,7 +492,7 @@ void SteemDisplay::WaitForAsyncBlitToFinish()
 void SteemDisplay::Unlock()
 {
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
   if(SDL.InUse)
   {
     SDL.Unlock();
@@ -521,7 +521,7 @@ void SteemDisplay::ScreenChange()
 {
 
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
   // temp, dubious
   if(USE_SDL && !SDL.InUse)
   {
@@ -627,7 +627,7 @@ void SteemDisplay::ChangeToFullScreen()
   XSetWindowAttributes swa; 
   swa.backing_store=NotUseful;
   swa.override_redirect=True;
-#if defined(STEVEN_SEAGAL) && defined(SSE_UNIX)
+#if defined(SSE_UNIX)
   XVM_FullWin=XCreateWindow(XD,XDefaultRootWindow(XD),0,0,w,h,Screen,
 #else
   XVM_FullWin=XCreateWindow(XD,XDefaultRootWindow(XD),x,y,w,h,Screen,			    
@@ -645,7 +645,7 @@ void SteemDisplay::ChangeToFullScreen()
   XMapWindow(XD,XVM_FullWin);
 
   XF86VidModeGetViewPort(XD,Screen,&XVM_ViewX,&XVM_ViewY);
-#if defined(STEVEN_SEAGAL) && defined(SSE_UNIX)
+#if defined(SSE_UNIX)
   TRACE("using XWarpPointer");
 //  XWarpPointer(XD, None, XDefaultRootWindow(XD),0, 0, 0, 0, 0, 0);
   XWarpPointer(XD, None, XVM_FullWin,0, 0, 0, 0, 0, 0);
@@ -766,7 +766,7 @@ bool SteemDisplay::CanGoToFullScreen()
   return 0;
 #else
   int evbase,errbase;
-#if defined(STEVEN_SEAGAL)
+#if defined(SSE_DEBUG)
   bool rv=XF86VidModeQueryExtension(XD,&evbase,&errbase);
   TRACE("XF86VidModeQueryExtension evbase=%d errbase=%d",evbase,errbase);
   return rv;

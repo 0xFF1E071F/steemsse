@@ -1,40 +1,30 @@
 #include "SSE.h"
 
-#if defined(STEVEN_SEAGAL)
-
+#if defined(SSE_DRIVE_OBJECT)
 #include "../pch.h"
-
-
-#if defined(SSE_DRIVE)
-// TODO refactor
-// separate file for sound?
-
 #include <cpu.decla.h>
 #include <fdc.decla.h>
 #include <floppy_drive.decla.h>
 #include <iorw.decla.h>
 #include <psg.decla.h>
 #include <run.decla.h>
+#include <gui.decla.h>
 #include "SSECpu.h"
 #include "SSEInterrupt.h"
 #include "SSEOption.h"
 #include "SSEShifter.h"
+
 #if defined(WIN32)
 #include <pasti/pasti.h>
 #endif
 
-#if defined(SSE_VAR_OPT_382)
-#include <gui.decla.h>//RunDir
-#else
-EasyStr GetEXEDir();//#include <mymisc.h>//missing...
-#endif
 #include "SSEDebug.h"
 #include "SSEDrive.h"
 #include "SSEFloppy.h"
 
 #define LOGSECTION LOGSECTION_FDC
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VS2008)
+#if defined(SSE_VS2008)
 #pragma warning(disable : 4710)
 #endif
 
@@ -60,7 +50,7 @@ bool TSF314::Adat() {
     && ImageType.Manager==MNGR_PASTI
 #endif
 
-#if defined(SSE_IPF)
+#if defined(SSE_DISK_CAPS)
 #if defined(SSE_DISK_IMAGETYPE1)
     || ImageType.Manager==MNGR_CAPS
 #else
@@ -110,7 +100,7 @@ bool TSF314::CheckGhostDisk(bool write) {
   if(!State.ghost) // need to open ghost image?
   {
     EasyStr STGPath=FloppyDrive[Id].GetImageFile();
-    STGPath+=".STG"; 
+    STGPath+=dot_ext(EXT_STG); 
     if(write || Exists(STGPath))
     {
       if(GhostDisk[Id].Open(STGPath.Text))
@@ -478,7 +468,11 @@ void TSF314::IndexPulse() {
   // send pulse to WD1772
   if(DRIVE==Id)
 #if defined(SSE_DRIVE_INDEX_PULSE2)
+#if defined(SSE_VS2008_WARNING_383) && !defined(SSE_DEBUG)
+    WD1772.OnIndexPulse(image_triggered); // transmitting image_triggered
+#else
     WD1772.OnIndexPulse(Id,image_triggered); // transmitting image_triggered
+#endif
 #else
     WD1772.OnIndexPulse(Id); 
 #endif
@@ -514,7 +508,7 @@ void TSF314::Motor(bool state) {
   coded for Realm of the Trolls STX but I think SSE_YM2149C is the real
   fix; we keep it just in case there's another bug.
 */
-  if(SSE_HACKS_ON && state && State.motor && ImageType.Manager==MNGR_WD1772
+  if(OPTION_HACKS && state && State.motor && ImageType.Manager==MNGR_WD1772
     && (time_of_next_ip-ACT<0 || time_of_next_ip-ACT> Disk[Id].TrackBytes*CyclesPerByte()))
   {
     int new_time_of_next_ip=ACT+(rand()%Disk[Id].TrackBytes) * CyclesPerByte();
@@ -819,7 +813,7 @@ void TSF314::Sound_CheckIrq() {
   if(Sound_Buffer[SEEK])
     Sound_Buffer[SEEK]->Stop();
 
-#if defined(SSE_FDC) 
+#if defined(SSE_WD1772) 
   if(WD1772.CommandType()==1 && TrackAtCommand!=Track() && Sound_Buffer[STEP]
 #if defined(SSE_DRIVE_SOUND_SEEK3)    
     && (!Adat()|| ImageType.Manager!=MNGR_STEEM && ImageType.Manager!=MNGR_WD1772)
@@ -844,7 +838,7 @@ void TSF314::Sound_CheckMotor() {
     return;
   DWORD dwStatus ;
   Sound_Buffer[MOTOR]->GetStatus(&dwStatus);
-#if defined(SSE_DMA)
+#if defined(SSE_DMA_OBJECT)
   Dma.UpdateRegs();//overkill
 #endif
   bool motor_on= ((fdc_str&0x80)//;//simplification TODO?
@@ -868,15 +862,8 @@ void TSF314::Sound_LoadSamples(IDirectSound *DSObj,DSBUFFERDESC *dsbd,WAVEFORMAT
 
   HRESULT Ret;
   TWavFileFormat WavFileFormat;
-  
   FILE *fp;
-#if defined(SSE_VAR_OPT_382)
-  EasyStr path=RunDir+DRIVE_SOUND_DIRECTORY+SLASH;
-#else
-  EasyStr path=GetEXEDir();
-  path+=DRIVE_SOUND_DIRECTORY;
-  path+="\\";
-#endif
+  EasyStr path=RunDir+SLASH+DRIVE_SOUND_DIRECTORY+SLASH;
   EasyStr pathplusfile;
   for(int i=0;i<NSOUNDS;i++)
   {
@@ -975,4 +962,4 @@ void TSF314::Sound_StopBuffers() {
 
 #endif//drive
 
-#endif//seagal
+

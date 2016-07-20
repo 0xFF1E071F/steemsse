@@ -142,7 +142,7 @@ void hxc::alloc_colours(Display *XD)
 void hxc::load_res(Display*XD)
 {
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_UNIX_STATIC_VAR_INIT)
+#if defined(SSE_UNIX_STATIC_VAR_INIT)
 /*  This is the first place where a font would be necessary.
     See note in constructor
 */
@@ -168,7 +168,7 @@ void hxc::load_res(Display*XD)
       if (font) break;
     }
     if (font==NULL) {
-#if defined(STEVEN_SEAGAL) && defined(SSE_UNIX_STATIC_VAR_INIT)
+#if defined(SSE_UNIX_STATIC_VAR_INIT)
 /*  This isn't good, but the alternative doesn't work either for whatever 
     reason.
 */
@@ -420,7 +420,7 @@ hxc::hxc()
   next_hxc=NULL;
   last_hxc=this;
 
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_UNIX_STATIC_VAR_INIT))
+#if !(defined(SSE_UNIX_STATIC_VAR_INIT))
 /*  Doing this in the constructor doesn't seem to work in later versions
     of Linux C++. Dialog boxes are empty, no font!
     We do it in load_res instead.

@@ -1,15 +1,7 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DISKMAN_H)
-
-#include "diskman.decla.h"
-
-#else//!defined(SSE_STRUCTURE_DISKMAN_H)
-
-
 #define DISK_UNCOMPRESSED 1
 #define DISK_COMPRESSED 2
 #define DISK_PASTI 3
 
-#define FileIsDisk(s) ExtensionIsDisk(strrchr(s,'.'))
 #ifdef IN_MAIN
 #define EXT
 #define INIT(s) =s
@@ -17,6 +9,8 @@
 #define EXT extern
 #define INIT(s)
 #endif
+
+#define FileIsDisk(s) ExtensionIsDisk(strrchr(s,'.'))
 int ExtensionIsDisk(char*,bool returnPastiDisksOnlyWhenPastiOn INIT(true));
 
 typedef struct{
@@ -53,15 +47,9 @@ private:
   static LRESULT __stdcall Dialog_WndProc(HWND,UINT,WPARAM,LPARAM);
   static int CALLBACK CompareFunc(LPARAM,LPARAM,LPARAM);
   void BeginDrag(int,HWND),MoveDrag(),EndDrag(int,int,bool);
-#ifndef SSE_VAR_NO_WINSTON
   HRESULT CreateLinkCheckForOverwrite(char *,char *,IShellLink *,IPersistFile *);
   bool ImportDiskExists(char *,EasyStr &);
-#endif
-  bool DoCreateMultiLinks()
-#ifndef SSE_VAR_NO_WINSTON    
-    ,DoImport()
-#endif
-  ;
+  bool DoCreateMultiLinks(),DoImport();
   void AddFoldersToMenu(HMENU,int,EasyStr,bool);
   bool MoveOrCopyFile(bool,char*,char*,char*,bool);
   void PropShowFileInfo(int);
@@ -87,7 +75,6 @@ private:
   Str MSAConvSel;
 
   bool Importing;
-
 #elif defined(UNIX)
 	int HistBackLength,HistForwardLength;
 
@@ -135,9 +122,6 @@ public:
   void ShowDatabaseDiag(),ShowContentDiag();
 
 #ifdef WIN32
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_OPTION_SLOW_DISK_SSE)
-  void RefreshSnails();
-#endif
   bool HasHandledMessage(MSG*);
   void SetDir(EasyStr,bool,EasyStr="",bool=0,EasyStr="",int=0);
   bool SelectItemWithPath(char *,bool=0,char* = NULL);
@@ -173,11 +157,11 @@ public:
   bool AtHome;
   bool ExplorerFolders;
 
-#ifndef SSE_VAR_NO_WINSTON
+
   EasyStr WinSTonPath,WinSTonDiskPath,ImportPath;
   bool ImportOnlyIfExist;
   int ImportConflictAction;
-#endif
+
   EasyStr MultipleLinksPath,LinksTargetPath;
 
   bool DoExtraShortcutCheck;
@@ -214,11 +198,10 @@ public:
   int DoubleClickAction;
 };
 
-#ifdef WIN32  // SS why here?
+#ifdef WIN32
 void TDiskManager::RefreshDiskView(EasyStr SelPath,bool EditLabel,EasyStr SelLinkPath,int iItem)
 {
   SetDir(DisksFol,0,SelPath,EditLabel,SelLinkPath,iItem);
 }
 #endif
 
-#endif//SSE_STRUCTURE_DISKMAN_H

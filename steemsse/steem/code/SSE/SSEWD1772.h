@@ -1,7 +1,7 @@
 #pragma once
 #ifndef WD1772_H
 #define WD1772_H
-
+#include "SSE.H"
 #include <conditions.h>
 
 /*
@@ -186,7 +186,7 @@ struct TWD1772 {
   bool F7_escaping;
 #endif
 
-#endif
+#endif//phases
 
   // IO registers
   BYTE CR;  // command
@@ -197,7 +197,6 @@ struct TWD1772 {
 
 /*  Internal registers
     Some of them are mentioned in the doc, some are guesses or constructs.
-    TODO: change order 
 */
 
 #if defined(SSE_WD1772_REG2) //v3.7.0
@@ -222,18 +221,17 @@ struct TWD1772 {
 #endif
 #endif
 
-#if defined(SSE_FDC_FORCE_INTERRUPT) || defined(SSE_WD1772)
+#if defined(SSE_FDC_FORCE_INTERRUPT)
   BYTE InterruptCondition; // guessed
 #endif
-#if defined(SSE_FDC_INDEX_PULSE_COUNTER) || defined(SSE_WD1772)
+
   BYTE IndexCounter; // guessed
-#endif
 
 /*  Lines (pins). Some are necessary (eg direction), others not
     really yet (eg write_gate).
     TODO put them all in then (fun)
 */
-#if defined(SSE_DISK_STW)
+#if defined(SSE_WD1772_LINES)
   struct {
     unsigned int drq:1;
     unsigned int irq:1;
@@ -256,7 +254,7 @@ struct TWD1772 {
   BYTE n00,nFF,n_format_bytes; // to examine sequences before ID
 #endif //n00, nFF aren't actually used and could be recycled
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_FLOPPY_EVENT)
+#if defined(SSE_FLOPPY_EVENT)
   int update_time; // when do we need to come back?
 #endif
   
@@ -275,7 +273,11 @@ struct TWD1772 {
   BYTE CommandType(int command=-1); // I->IV
 
 #if defined(SSE_WD1772_RESET)
+#if defined(SSE_VS2008_WARNING_383)
+  void Reset();
+#else
   void Reset(bool Cold);
+#endif
 #endif
 
 #if defined(SSE_DISK_STW)
@@ -288,7 +290,7 @@ struct TWD1772 {
   void Write(); // sends order to drive
   void WriteCR(BYTE io_src_b); //horrible TODO
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_FLOPPY_EVENT)
+#if defined(SSE_FLOPPY_EVENT)
   void OnUpdate();
 #endif
 
@@ -298,13 +300,21 @@ struct TWD1772 {
 /*  This is useful for OSD: if we're writing then we need to display a red
     light (green when reading). This is used by pasti & IPF.
 */
+#if defined(SSE_VS2008_WARNING_383)
+  bool WritingToDisk();
+#else
   int WritingToDisk();
+#endif
 #endif
 
 
 #if defined(SSE_DRIVE_INDEX_PULSE2)
   // called by drive or by image
+#if defined(SSE_VS2008_WARNING_383) && !defined(SSE_DEBUG)
+  void OnIndexPulse(bool image_triggered); 
+#else
   void OnIndexPulse(int id,bool image_triggered); 
+#endif
 #elif defined(SSE_DRIVE_INDEX_PULSE)
   void OnIndexPulse(int id); // called by drives (activates ip line)
 #endif

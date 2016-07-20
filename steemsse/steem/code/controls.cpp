@@ -4,7 +4,7 @@ MODULE: Steem
 DESCRIPTION: Custom controls used by Steem's GUI.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: controls.cpp")
 #endif
 

@@ -1,7 +1,7 @@
 /*  This file must be included whether STEVEN_SEAGAL is defined or not
     because we need to define macros ASSERT, TRACE etc. anyway, those
     aren't guarded.
-    We use '__cplusplus' to make some parts accessible to C objects.
+    We use '__cplusplus' because the file is included in 6301 (C).
 */
 
 #pragma once
@@ -15,15 +15,11 @@
 #pragma hdrstop
 #endif
 
-#if defined(SSE_STRUCTURE_SSEDEBUG_OBJ) && defined(__cplusplus)
+#if defined(__cplusplus)
 #ifdef WIN32
 #include <windows.h>
 #endif
-#ifdef UNIX
-//typedef int KeyCode;
-#endif
 #include "../conditions.h"
-
 #endif
 
 #include "SSEParameters.h"
@@ -347,10 +343,6 @@ enum logsection_enum_tag {
 #if defined(SSE_BOILER_NEXT_PRG_RUN)
 #define BOILER_CONTROL_MASK1 (Debug.ControlMask[11])
 #define BOILER_CONTROL_NEXT_PRG_RUN (1<<15)
-#if defined(SSE_BOILER_VBL_HBL)
-#define BOILER_CONTROL_VBL_PENDING (1<<14)
-#define BOILER_CONTROL_HBL_PENDING (1<<13)
-#endif
 #endif
 
 #endif//#if defined(SSE_BOILER_FAKE_IO)
@@ -358,7 +350,7 @@ enum logsection_enum_tag {
 // debug macros
 
 // ASSERT
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#if defined(SSE_DEBUG)
 #if defined(_DEBUG) && defined(VC_BUILD)
 // Our ASSERT facility has no MFC dependency.
 #if defined(SSE_X64_DEBUG)
@@ -394,7 +386,7 @@ enum logsection_enum_tag {
 #endif
 
 // BREAKPOINT 
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#if defined(SSE_DEBUG)
 #if defined(_DEBUG) && defined(VC_BUILD)
 #if defined(SSE_X64_DEBUG)
 #define BREAKPOINT {DebugBreak();}
@@ -415,7 +407,7 @@ enum logsection_enum_tag {
 #endif
 
 // BRK(x) 
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#if defined(SSE_DEBUG)
 
 #if defined(DEBUG_BUILD)
 
@@ -456,18 +448,21 @@ enum logsection_enum_tag {
 #else
 #define TRACE // some code left to the compiler
 #endif
-#endif//#if defined(SSE_DEBUG_TRACE)
+#endif//#if defined(SSE_DEBUG_TRACE) 
 
 // TRACE_ENABLED
-#if defined(STEVEN_SEAGAL) && defined(DEBUG_BUILD) // boiler
+#if defined(DEBUG_BUILD) // boiler
 #if defined(_DEBUG) // IDE
-#define TRACE_ENABLED (Debug.logsection_enabled[LOGSECTION] || LOGSECTION<NUM_LOGSECTIONS && logsection_enabled[LOGSECTION])
+//#define TRACE_ENABLED (Debug.logsection_enabled[LOGSECTION] || LOGSECTION<NUM_LOGSECTIONS && logsection_enabled[LOGSECTION])
+#define TRACE_ENABLED(section) (Debug.logsection_enabled[section] || section<NUM_LOGSECTIONS && logsection_enabled[section])
 #else // no IDE but boiler
-#define TRACE_ENABLED (Debug.logsection_enabled[LOGSECTION] || LOGSECTION<NUM_LOGSECTIONS && logsection_enabled[LOGSECTION])
+//#define TRACE_ENABLED (Debug.logsection_enabled[LOGSECTION] || LOGSECTION<NUM_LOGSECTIONS && logsection_enabled[LOGSECTION])
+#define TRACE_ENABLED(section) (Debug.logsection_enabled[section] || section<NUM_LOGSECTIONS && logsection_enabled[section])
 #endif
 #else // no boiler 
 #if defined(_DEBUG) // IDE
-#define TRACE_ENABLED (Debug.logsection_enabled[LOGSECTION])
+//#define TRACE_ENABLED (Debug.logsection_enabled[LOGSECTION])
+#define TRACE_ENABLED(section) (Debug.logsection_enabled[section])
 #else // 3rd party objects
 #define TRACE_ENABLED (0)
 #endif
@@ -488,7 +483,7 @@ enum logsection_enum_tag {
 
 
 // TRACE_LOG
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#if defined(SSE_DEBUG)
 #ifdef __cplusplus // visible only to C++ objects
 #define TRACE_LOG Debug.LogSection=LOGSECTION, Debug.TraceLog //!
 #endif//C++
@@ -503,7 +498,7 @@ enum logsection_enum_tag {
 
 // v3.6.3 introducing more traces,  verbose here, short in code
 // TRACE_FDC
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#if defined(SSE_DEBUG)
 #ifdef __cplusplus // visible only to C++ objects
 #define TRACE_FDC Debug.LogSection=LOGSECTION_FDC, Debug.TraceLog //!
 #endif//C++
@@ -518,7 +513,7 @@ enum logsection_enum_tag {
 #define TRACE_HDC TRACE_FDC //3.7.2
 
 // TRACE_INIT 3.7.0
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#if defined(SSE_DEBUG)
 #ifdef __cplusplus // visible only to C++ objects
 #define TRACE_INIT Debug.LogSection=LOGSECTION_INIT, Debug.TraceLog //!
 #endif//C++
@@ -531,7 +526,7 @@ enum logsection_enum_tag {
 #endif
 
 // TRACE_INT 3.7.0
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#if defined(SSE_DEBUG)
 #ifdef __cplusplus // visible only to C++ objects
 #define TRACE_INT Debug.LogSection=LOGSECTION_INTERRUPTS, Debug.TraceLog //!
 #endif//C++
@@ -544,7 +539,7 @@ enum logsection_enum_tag {
 #endif
 
 // TRACE_MFP 3.7.0
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#if defined(SSE_DEBUG)
 #ifdef __cplusplus // visible only to C++ objects
 #define TRACE_MFP Debug.LogSection=LOGSECTION_MFP, Debug.TraceLog //!
 #endif//C++
@@ -557,7 +552,7 @@ enum logsection_enum_tag {
 #endif
 
 // TRACE_MFM 3.7.1
-#if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_TRACE_CONTROL) && SSE_VERSION>=371
+#if defined(SSE_BOILER_TRACE_CONTROL) && SSE_VERSION>=371
 #ifdef __cplusplus // visible only to C++ objects
 #define TRACE_MFM if(TRACE_MASK3&TRACE_CONTROL_FDCMFM) Debug.LogSection=LOGSECTION_FDC, Debug.TraceLog //!
 #endif//C++
@@ -570,7 +565,7 @@ enum logsection_enum_tag {
 #endif
 
 // TRACE_TOS 3.7.1
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#if defined(SSE_DEBUG)
 #ifdef __cplusplus // visible only to C++ objects
 #define TRACE_TOS Debug.LogSection=LOGSECTION_STEMDOS, Debug.TraceLog //!
 #endif//C++
@@ -583,7 +578,7 @@ enum logsection_enum_tag {
 #endif
 
 // TRACE_VID 3.7.3
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#if defined(SSE_DEBUG)
 #ifdef __cplusplus // visible only to C++ objects
 #define TRACE_VID Debug.LogSection=LOGSECTION_VIDEO, Debug.TraceLog //!
 #endif//C++
@@ -603,7 +598,7 @@ enum logsection_enum_tag {
 #endif
 
 // TRACE_OSD
-#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DEBUG_MESSAGE)
+#if defined(SSE_OSD_DEBUG_MESSAGE)
 #ifdef __cplusplus // visible only to C++ objects
 #define TRACE_OSD Debug.TraceOsd
 #endif//C++
@@ -616,7 +611,7 @@ enum logsection_enum_tag {
 #endif
 
 // VERIFY
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#if defined(SSE_DEBUG)
 #if defined(_DEBUG) && defined(VC_BUILD)
 // Our VERIFY facility has no MFC dependency.
 #if defined(SSE_X64_DEBUG)
@@ -640,17 +635,18 @@ enum logsection_enum_tag {
 #pragma warning(disable : 4552)
 #endif
 
-#if !defined(STEVEN_SEAGAL) || !defined(SSE_DEBUG) 
+
+#if !defined(SSE_DEBUG) 
 enum { // to pass compilation
  LOGSECTION_FDC_BYTES, // was DIV
  LOGSECTION_IMAGE_INFO, //was Pasti
 // LOGSECTION_IPF_LOCK_INFO,
  LOGSECTION_OPTIONS,
- NUM_LOGSECTIONS,
+ //NUM_LOGSECTIONS,
  };
 #endif
 
-#if defined(SSE_DEBUG_FRAME_REPORT)
+#if defined(SSE_BOILER_FRAME_REPORT)
 #define REPORT_LINE FrameEvents.ReportLine()
 #else
 #define REPORT_LINE

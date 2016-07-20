@@ -1,4 +1,3 @@
-
 /*---------------------------------------------------------------------------
 FILE: main.cpp
 MODULE: Steem
@@ -36,33 +35,29 @@ other files that make up the Steem module.
 #if defined(STEVEN_SEAGAL)
 #include "SSE/SSE.h" // get switches
 #include "SSE/SSEOption.h"
-#if defined(SSE_STRUCTURE_SSECPU_OBJ) && defined(BCC_BUILD)//temp
-//#include "SSE/SSECpu.h"
-#endif
 #include "SSE/SSEDebug.h" 
 #if defined(SSE_STF)
 #include "SSE/SSESTF.h"//unix
 #endif
-#if defined(SSE_SDL)
+#if defined(SSE_VID_SDL)
 #include "SSE/SSESDL.h"
 #endif
 #include "SSE/SSEAcsi.h"
-#endif//SS
-
-#if defined(BCC_BUILD) && defined(SSE_ACSI_MULTIPLE2)
-extern char ansi_name[MAX_PATH];
+#if defined(SSE_VAR_MAIN_LOOP3)
+#include <eh.h>
 #endif
+#endif//SS
 
 const char *stem_version_date_text=__DATE__ " - " __TIME__;
 
 #ifndef ONEGAME
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_WINDOW_TITLE)
+#if defined(SSE_GUI_WINDOW_TITLE)
 #if !defined(SSE_GUI_CUSTOM_WINDOW_TITLE) && !defined(SSE_VERSION)
 const 
 #endif
 //char stem_window_title[]=WINDOW_TITLE; // in SSE.h //the [] for VS2008
 char stem_window_title[WINDOW_TITLE_MAX_CHARS+1];//=WINDOW_TITLE; //+1 v3.7.2
-#elif defined(STEVEN_SEAGAL) && SSE_VERSION<370
+#elif defined(SSE_VERSION) && SSE_VERSION<370
 char stem_window_title[WINDOW_TITLE_MAX_CHARS]="Steem Engine";
 #else
 const char *stem_window_title="Steem Engine";
@@ -112,10 +107,6 @@ TPatchesBox PatchesBox;
 #include "init_sound.cpp"
 #include "acc.cpp"
 
-#if defined(STEVEN_SEAGAL) && !defined(SSE_STRUCTURE_SSEDEBUG_OBJ)
-#include "SSE/SSEDebug.cpp"
-#endif
-
 #ifdef DEBUG_BUILD
   #include "d2.cpp"
 #endif
@@ -148,7 +139,7 @@ TPatchesBox PatchesBox;
 #include "onegame.cpp"
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301) 
+#if defined(SSE_IKBD_6301) 
 #include "SSE/SSE6301.h" //TODO
 #endif  
 
@@ -159,6 +150,35 @@ TPatchesBox PatchesBox;
 int MainRetVal=-50;
 
 #ifdef WIN32
+
+#if defined(SSE_VAR_MAIN_LOOP3)
+/*  The idea is to report a SEH exception in a normal try/catch block.
+    https://msdn.microsoft.com/en-us/library/5z4bw5h5(VS.80).aspx
+*/
+class SE_Exception //as adapted
+{
+public:
+//private:
+    unsigned int nSE;
+public:
+    EXCEPTION_POINTERS* m_pExp; 
+    //SE_Exception() {}
+    //SE_Exception( unsigned int n ) : nSE( n ) {}
+    SE_Exception(unsigned int u, EXCEPTION_POINTERS* pExp) {
+      nSE=u;
+      m_pExp=pExp;
+    }
+    ~SE_Exception() {}
+    //unsigned int getSeNumber() { return nSE; }
+};
+
+void trans_func( unsigned int u, EXCEPTION_POINTERS* pExp )
+{
+    throw SE_Exception(u,pExp); //caught in WinMain()
+}
+
+#endif
+
 int WINAPI WinMain(HINSTANCE Instance,HINSTANCE,char *,int)
 {
   Inst=Instance;
@@ -200,7 +220,7 @@ int main(int argc,char *argv[])
   printf(EasyStr("\n-- Steem Engine v")+stem_version_text+" --\n\n");
   printf(EasyStr("Steem will save all its settings to ")+RunDir.Text+"\n");
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301) 
+#if defined(SSE_IKBD_6301) 
   HD6301.Init(); // we don't forget to do this in Linux as well...
 #endif  
   
@@ -219,11 +239,12 @@ int main(int argc,char *argv[])
 #endif//UNIX
 
   NO_SLASH(RunDir);
-
-#if defined(STEVEN_SEAGAL) // strange, check this again
-
+#if defined(SSE_VAR_MAIN_LOOP2)
+  try {
+#if defined(SSE_VAR_MAIN_LOOP3) 
+    _set_se_translator( trans_func );
+#endif
 #elif defined(_MSC_VER)//SS
-
 #elif defined(WIN32) && !defined(DEBUG_BUILD) && !defined(MINGW_BUILD) && !defined(ONEGAME)
   __try{	// the old try - compile with GX- note: just to make compile
 		// I don't know the use of this
@@ -237,7 +258,7 @@ int main(int argc,char *argv[])
     }
 
 #ifdef WIN32
-    log("STARTUP: Starting Message Loop");
+    dbg_log("STARTUP: Starting Message Loop");
     MSG MainMess;
     while (GetMessage(&MainMess,NULL,0,0)){
       if (HandleMessage(&MainMess)){
@@ -261,8 +282,8 @@ int main(int argc,char *argv[])
           int RevertFlag;
           XGetInputFocus(XD,&FocusWin,&RevertFlag);
           if (FocusWin==StemWin && fast_forward!=RUNSTATE_STOPPED+1 && slow_motion!=RUNSTATE_STOPPED+1){
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_MOUSE_CAPTURE)
-            if(CAPTURE_MOUSE)
+#if defined(SSE_GUI_MOUSE_CAPTURE_OPTION)
+            if(OPTION_CAPTURE_MOUSE)
 #endif
               SetStemMouseMode(STEM_MOUSEMODE_WINDOW);
           }
@@ -278,18 +299,36 @@ int main(int argc,char *argv[])
 #endif//UNIX
 
     if (SnapShotGetLastBackupPath().NotEmpty()){
-      log("SHUTDOWN: Deleting last memory snapshot backup");
+      dbg_log("SHUTDOWN: Deleting last memory snapshot backup");
       DeleteFile(SnapShotGetLastBackupPath());
     }
     PerformCleanShutdown();
   	return EXIT_SUCCESS;
-#if defined(STEVEN_SEAGAL)
-/*  if you don't define STEVEN_SEAGAL and you get an error here in VC++,
-    try compile switch /GX-
+#if defined(SSE_VAR_MAIN_LOOP2)
+/*  If SSE_VAR_MAIN_LOOP1 is defined, this will catch all non-emulation related
+    system exceptions. If it isn't defined, it will catch everything, emu or 
+    not.
 */
-
+#if defined(SSE_VAR_MAIN_LOOP3)
+  }catch( SE_Exception e ){
+    //Normally this SEH info is enough to track the bug (using a debugger)
+    char exc_string[80];
+    sprintf(exc_string,"System exception $%X at $%X",
+      e.m_pExp->ExceptionRecord->ExceptionCode,
+      e.m_pExp->ExceptionRecord->ExceptionAddress);
+    Alert(exc_string,"STEEM CRASHED!",MB_ICONEXCLAMATION); // alert box before trace
+    TRACE("%s\n",exc_string);
+  }catch(...){
+    Alert("Unknown exception","STEEM CRASHED!",MB_ICONEXCLAMATION); // C++, CRT ?
+    TRACE("Unknown exception\n");
+  }
+#else
+  }catch(...){
+    TRACE("System exception\n"); // not in emu, so 
+    Alert("STEEM CRASHED!","STEEM CRASHED!",MB_ICONEXCLAMATION);
+  }
+#endif//4?
 #elif defined(_MSC_VER)//SS
-
 #elif defined(WIN32) && !defined(DEBUG_BUILD) && !defined(MINGW_BUILD) && !defined(ONEGAME)
   }__except(EXCEPTION_EXECUTE_HANDLER){
     if (AutoLoadSnapShot){
@@ -302,8 +341,7 @@ int main(int argc,char *argv[])
   }catch(...){}
 #endif
 
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_RECORD_AVI) 
+#if defined(SSE_VID_RECORD_AVI)//no
   if(pAviFile)
     delete pAviFile;
 #endif
@@ -359,7 +397,7 @@ void FindWriteDir()
 //---------------------------------------------------------------------------
 bool Initialise()
 {
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_START_STOP_INFO2)\
+#if defined(SSE_DEBUG_START_STOP_INFO2)\
   && !defined(SSE_DEBUG_START_STOP_INFO3)
   Debug.TraceGeneralInfos(TDebug::INIT);
 #endif
@@ -382,7 +420,7 @@ bool Initialise()
 #endif//disk2
 
   FindWriteDir();
-#if defined(SSE_VERSION) //this is no proper switch
+#if defined(SSE_GUI)
   {
     // build stem_version_text eg "3.7.0" - quite complicated for what it does!
     char *pchar=(char*)stem_version_text + SSE_VERSION_TXT_LEN;
@@ -410,7 +448,8 @@ bool Initialise()
 #endif
 #else // release
 #ifdef DEBUG_BUILD
-    strcpy((char*)stem_window_title,"Steem SSE Boiler ");
+    //strcpy((char*)stem_window_title,"Steem SSE Boiler ");
+    strcpy((char*)stem_window_title,"Steem Boiler ");//like rlz notes//382
     strcat((char*)stem_window_title,(char*)stem_version_text);
 #else
     strcpy((char*)stem_window_title,"Steem SSE ");
@@ -448,7 +487,7 @@ bool Initialise()
     }else if (Type==ARG_NONOTIFYINIT){
       ShowNotify=0;
     }
-#if defined(STEVEN_SEAGAL) && defined(SSE_UNIX_TRACE)
+#if defined(SSE_UNIX_TRACE)
     else if (Type==ARG_TRACEFILE){
       if(Path.Length()>0) // room for improvement...
         USE_TRACE_FILE=(Path.Mids(0,1)=="Y" || Path.Mids(0,1)=="y") ? 1 : 0;
@@ -483,7 +522,7 @@ bool Initialise()
   NoINI=(CSF.GetStr("Machine","ROM_File","")=="");
 
   CSF.SetInt("Main","DebugBuild",0 DEBUG_ONLY( +1 ) );
-#if defined(STEVEN_SEAGAL) && defined(SSE_VERSION)  //BCC
+#if defined(SSE_VERSION)  //BCC
   CSF.SetStr("Update","CurrentVersion",Str((char*)stem_version_text));
 #else
   CSF.SetStr("Update","CurrentVersion",Str(stem_version_text));
@@ -513,14 +552,14 @@ bool Initialise()
 
     }
   }
-  log("STARTUP: Logfile Open");
+  dbg_log("STARTUP: Logfile Open");
   load_logsections();
 #endif
 
   InitTranslations();
 
 #if USE_PASTI
-#ifdef STEVEN_SEAGAL
+#ifdef SSE_VERSION
   hPasti=LoadLibrary(PASTI_DLL);
   if (hPasti==NULL) hPasti=LoadLibrary("pasti\\" PASTI_DLL);
 #else
@@ -589,7 +628,7 @@ bool Initialise()
     bool CrashedLastTime=CleanupTempFiles();
     if (TwoSteems==0){
       if (CrashedLastTime){
-#if defined (STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#if defined(SSE_DEBUG) // boiler too
         // Crashes are common while testing
         StepByStepInit=0;
 #else
@@ -683,7 +722,7 @@ bool Initialise()
   stemdos_init();
 #endif
 
-  log("STARTUP: draw_routines_init Called");
+  dbg_log("STARTUP: draw_routines_init Called");
   if (draw_routines_init()==0){
     MainRetVal=EXIT_FAILURE;
     return 0;
@@ -692,7 +731,7 @@ bool Initialise()
 #ifndef ONEGAME
   {
     int IntroResult=2;
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_NO_INTRO))
+#if !(defined(SSE_VAR_NO_INTRO))
     if (NoINI){
       WIN_ONLY( ShowWindow(NotifyWin,SW_HIDE); )
       IntroResult=SteemIntro();
@@ -713,7 +752,7 @@ bool Initialise()
     if (IntroResult==2){
       ROMFile=CSF.GetStr("Machine","ROM_File",RunDir+SLASH "tos.img");
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_CONFIG_FILE2)
+#if defined(SSE_GUI_CONFIG_FILE2)
       // add current TOS path if necessary
       if(strchr(ROMFile.Text,SLASHCHAR)==NULL) // no slash = no path
       {
@@ -777,13 +816,13 @@ bool Initialise()
   }
 #endif
 
-#if defined(SSE_ACSI_MULTIPLE2) && !defined(SSE_ACSI_HDMAN)
+#if defined(SSE_ACSI_MULTIPLE) && !defined(SSE_ACSI_HDMAN)
 /*  We use the existing Steem "crawler" to load whatever hard disk IMG 
     files are in Steem/ACSI, up to MAX_ACSI_DEVICES.
 */
   ASSERT(!acsi_dev && !SSEConfig.AcsiImg);
   DirSearch ds; 
-  EasyStr Fol=RunDir+ACSI_HD_DIR;//SLASH "ACSI" SLASH;
+  EasyStr Fol=RunDir+SLASH+ACSI_HD_DIR+SLASH;
   if (ds.Find(Fol+"*.img")){
     do{
       strcpy(ansi_name,Fol.Text);//2nd reuse!
@@ -797,63 +836,27 @@ bool Initialise()
     }while (ds.Next() && acsi_dev<TAcsiHdc::MAX_ACSI_DEVICES);
     ds.Close();
   }
-#elif defined(SSE_ACSI_MULTIPLE) && !defined(SSE_ACSI_HDMAN)
-#if defined(SSE_ACSI_NOGUISELECT) 
-/*  Steem looks for predefined and hardcoded names (at least the names are
-    cool).
-*/
-  ASSERT(!acsi_dev);
-  //char *acsi_hd_name[]={"SH204.img","MEGAFILE 60.img","ACSI_HD0.img","ACSI_HD1.img"};
-  char *acsi_hd_name[]={"ACSI_HD0.img","ACSI_HD1.img","SH204.img","MEGAFILE 60.img"};
-  EasyStr hdname;
-  for(int i=0;i<MAX_ACSI_DEVICES;i++)
-  {
-    //hdname=RunDir+SLASH+acsi_hd_name[i];
-    hdname=RunDir+ACSI_HD_DIR+acsi_hd_name[i];  
-    bool ok=AcsiHdc[acsi_dev].Init(acsi_dev,hdname); 
-    if(ok)
-    {
-      SSEConfig.AcsiImg=true;
-      acsi_dev++;
-    }
-  }
-
-#else // 0 or 1 ACSI image will be handled
-
-#if defined(SSE_ACSI_NOGUISELECT) && !defined(SSE_ACSI_HDMAN)
-  // try to open ACSI_HD0.img
-#if defined(SSE_GUI_NOTIFY1)
-  SetNotifyInitText(ACSI_HD_NAME);
-#endif
-  EasyStr hdname=RunDir+ACSI_HD_NAME;
-  SSEConfig.AcsiImg=AcsiHdc.Init(0,hdname); 
-#endif
-#endif
 #endif//ACSI
 
   SetNotifyInitText(T("Jump Tables"));
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_DELAY_LOAD_DLL) \
+#if defined(SSE_DELAY_LOAD_DLL) \
   && defined(__BORLANDC__)
 ///__pfnDliNotifyHook=
 __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #endif
 
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_GUI_NOTIFY1))
+#if !(defined(SSE_GUI_NOTIFY1))
   WIN_ONLY( LoadUnzipDLL(); )
 #endif
-  log("STARTUP: cpu_routines_init Called");
+  dbg_log("STARTUP: cpu_routines_init Called");
   cpu_routines_init();
 
-#if defined(STEVEN_SEAGAL)
 #if defined(SSE_VAR_ARCHIVEACCESS)
 #if defined(SSE_GUI_NOTIFY1)
-  //SetNotifyInitText("ArchiveAccess.dll");
   SetNotifyInitText(ARCHIVEACCESS_DLL);
 #endif
-  //WIN_ONLY( ARCHIVEACCESS_OK=LoadArchiveAccessDll("ArchiveAccess.dll"); )
   WIN_ONLY( ARCHIVEACCESS_OK=LoadArchiveAccessDll(ARCHIVEACCESS_DLL); )
-  //WIN_ONLY( TRACE_LOG("LoadArchiveAccessDll ok:%d\n",ARCHIVEACCESS_OK); )
   WIN_ONLY( TRACE_LOG("%s ok:%d\n",ARCHIVEACCESS_DLL,ARCHIVEACCESS_OK); )
 #endif
 #if defined(SSE_GUI_NOTIFY1)
@@ -866,42 +869,43 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #endif
 #if !defined(SSE_VAR_ARCHIVEACCESS4)
   {//ss scope
-  //SetNotifyInitText("unzipd32.dll");
-  SetNotifyInitText("UNZIP_DLL");
+#ifdef SSE_VERSION
+  SetNotifyInitText(UNZIP_DLL);
+#else
+  SetNotifyInitText("unzipd32.dll");
+#endif
   WIN_ONLY( LoadUnzipDLL(); )
   }
 #endif
 #endif
 #if defined(SSE_VAR_UNRAR)
 #if defined(SSE_GUI_NOTIFY1)
-  //SetNotifyInitText("unrar.dll");
   SetNotifyInitText(UNRAR_DLL);
 #endif
   WIN_ONLY( LoadUnrarDLL(); )
 #endif
-#if defined(SSE_IPF)
+#if defined(SSE_DISK_CAPS)
 #if defined(SSE_GUI_NOTIFY1)
-  //SetNotifyInitText(T("CAPS library"));
-  SetNotifyInitText(T(SSE_IPF_PLUGIN_FILE));
+  SetNotifyInitText(T(SSE_DISK_CAPS_PLUGIN_FILE));
 #endif
   Caps.Init();
 #endif
 #if defined(SSE_IKBD_6301) 
 #if defined(SSE_GUI_NOTIFY1)
-  SetNotifyInitText(T("6301 emu"));
+  SetNotifyInitText(HD6301_ROM_FILENAME);
 #endif
   HD6301.Init();
 #endif
-#if defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
 #if defined(SSE_GUI_NOTIFY1)
   SetNotifyInitText(T("SDL"));
 #endif
   SDL_OK=SDL.Init();
 #endif
-#endif//SS
+
 
 #ifdef DEBUG_BUILD
-  log("STARTUP: d2_routines_init Called");
+  dbg_log("STARTUP: d2_routines_init Called");
   d2_routines_init();
 
   for (int n=0;n<HISTORY_SIZE;n++) pc_history[n]=0xffffff71;
@@ -909,12 +913,12 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #endif
 
   SetNotifyInitText(T("GUI"));
-  log("STARTUP: MakeGUI Called");
+  dbg_log("STARTUP: MakeGUI Called");
   if (MakeGUI()==0){
     MainRetVal=EXIT_FAILURE;
     return 0;
   }
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_NO_UPDATE_372))
+#if !(defined(SSE_VAR_NO_UPDATE_372))
   if (Exists(RunDir+SLASH "new_steemupdate.exe")){
     DeleteFile(RunDir+SLASH "steemupdate.exe");
     if (Exists(RunDir+SLASH "steemupdate.exe")==0){
@@ -927,14 +931,24 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #endif
 
 #ifdef WIN32
+#if defined(SSE_VS2008_WARNING_383)
+  Disp.DrawToVidMem=(CSF.GetInt("Options","DrawToVidMem",Disp.DrawToVidMem)!=0);
+  Disp.BlitHideMouse=(CSF.GetInt("Options","BlitHideMouse",Disp.BlitHideMouse)!=0);
+#else
   Disp.DrawToVidMem=(bool)CSF.GetInt("Options","DrawToVidMem",Disp.DrawToVidMem);
   Disp.BlitHideMouse=(bool)CSF.GetInt("Options","BlitHideMouse",Disp.BlitHideMouse);
-
+#endif
   if (CSF.GetInt("Options","NoDirectDraw",0)) TryDD=0;
   if (TryDD && StepByStepInit){
+#ifdef SSE_VID_D3D_ONLY
+    if (Alert(T("DirectX can cause problems on some set-ups, would you like Steem to stop using Direct3D for this session? (Note: Not using Direct3D slows down Steem).")+" "+
+              T("To permanently stop using Direct3D turn on Options->Startup->Never Use Direct3D."),
+                T("No DirectDraw?"),MB_ICONQUESTION | MB_YESNO)==IDYES){
+#else
     if (Alert(T("DirectX can cause problems on some set-ups, would you like Steem to stop using DirectDraw for this session? (Note: Not using DirectDraw slows down Steem).")+" "+
               T("To permanently stop using DirectDraw turn on Options->Startup->Never Use DirectDraw."),
                 T("No DirectDraw?"),MB_ICONQUESTION | MB_YESNO)==IDYES){
+#endif
       TryDD=0;
     }
   }
@@ -958,7 +972,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
   }
 #endif
 
-  log("STARTUP: Initialising display");
+  dbg_log("STARTUP: Initialising display");
   Disp.Init();
 
 #if defined(SSE_VID_EXT_FS2) && defined(SSE_VID_D3D_LIST_MODES)
@@ -996,7 +1010,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
       case DISPMETHOD_BE:  Mess+="Standard Be will be used to draw.";break;
     }
     TRACE_INIT("%s\n",Mess.Text);
-    log(Mess);
+    dbg_log(Mess);
   }
 #endif
 
@@ -1019,9 +1033,9 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
     }
   }
   if (TrySound){
-    log("STARTUP: InitSound Called");
+    dbg_log("STARTUP: InitSound Called");
     InitSound();
-    log(EasyStr("STARTUP: InitSound finished. ")+LPSTR(UseSound ? "DirectSound will be used.":"DirectSound will not be used."));
+    dbg_log(EasyStr("STARTUP: InitSound finished. ")+LPSTR(UseSound ? "DirectSound will be used.":"DirectSound will not be used."));
   }
 
   SetNotifyInitText(T("Get Ready..."));
@@ -1079,7 +1093,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #endif
   AssociateSteem(".STS","steem_memory_snapshot",0,T("Steem Memory Snapshot"),SNAP_ICON_NUM,0);
   AssociateSteem(".STC","st_cartridge",0,T("ST ROM Cartridge"),CART_ICON_NUM,0);
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_IPF)
+#if defined(SSE_GUI_ASSOCIATE_IPF)
   AssociateSteem(".IPF","st_disk_image",0,T("ST Disk Image"),DISK_ICON_NUM,0);
 #endif
 #endif//#if !defined(SSE_GUI_NO_AUTO_ASSOCIATE_DISK_STS_STC)
@@ -1101,10 +1115,10 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 
   CSF.SaveTo(INIFile); // Update the INI just in case a dialog does GetCSFInt
 
-  log("STARTUP: LoadState Called");
+  dbg_log("STARTUP: LoadState Called");
   LoadState(&CSF);
-  log("STARTUP: LoadState finished");
-  log("STARTUP: power_on Called");
+  dbg_log("STARTUP: LoadState finished");
+  dbg_log("STARTUP: power_on Called");
   power_on();
 #ifdef WIN32
 #ifndef ONEGAME
@@ -1113,7 +1127,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
       EasyStr Online=LPSTR(CSF.GetInt("Update","AlwaysOnline",0) ? " online":"");
       EasyStr NoPatch=LPSTR(CSF.GetInt("Update","PatchDownload",true)==0 ? " nopatchcheck":"");
       EasyStr AskPatch=LPSTR(CSF.GetInt("Update","AskPatchInstall",0) ? " askpatchinstall":"");
-#if !defined(STEVEN_SEAGAL) && !defined(STEVEN_SEAGAL_)
+#if !!defined(STEVEN_SEAGAL_)
       WinExec(EasyStr("\"")+RunDir+"\\SteemUpdate.exe\" silent"+Online+NoPatch+AskPatch,SW_SHOW);
 #endif
     }
@@ -1122,15 +1136,15 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #endif
 
 #ifdef DEBUG_BUILD
-  log("STARTUP: update_register_display called");
+  dbg_log("STARTUP: update_register_display called");
   update_register_display(true);
 #endif
 
-  log("STARTUP: draw_init_resdependent called");
+  dbg_log("STARTUP: draw_init_resdependent called");
   draw_init_resdependent(); //set up palette conversion & stuff
-  log("STARTUP: draw called");
+  dbg_log("STARTUP: draw called");
   draw(true);
-  log("STARTUP: draw finished");
+  dbg_log("STARTUP: draw finished");
 
 #ifdef WIN32
   SendMessage(ToolTip,TTM_ACTIVATE,ShowTips,0);
@@ -1207,7 +1221,11 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
     bool Full=(BootInMode & BOOT_MODE_FLAGS_MASK)==BOOT_MODE_FULLSCREEN;
 
     if ((BootInMode & BOOT_MODE_FLAGS_MASK)==BOOT_MODE_DEFAULT){
+#if defined(SSE_VS2008_WARNING_383)
+      Full=(CSF.GetInt("Options","StartFullscreen",0)!=0);
+#else
       Full=CSF.GetInt("Options","StartFullscreen",0);
+#endif
     }
     if (Full){
       TRACE_INIT("StartFullscreen\n");
@@ -1243,7 +1261,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
   if (BootInMode & BOOT_MODE_RUN){
     if (GetForegroundWindow()==StemWin) PostRunMessage();
   }
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_START_STOP_INFO3)
+#if defined(SSE_DEBUG_START_STOP_INFO3)
   Debug.TraceGeneralInfos(TDebug::INIT);
 #endif
 
@@ -1322,43 +1340,43 @@ void QuitSteem()
 #define LOGSECTION LOGSECTION_SHUTDOWN
 void CloseAllDialogs()
 {
-  log("SHUTDOWN: Hiding ShortcutBox");
+  dbg_log("SHUTDOWN: Hiding ShortcutBox");
   ShortcutBox.Hide();
-  log("SHUTDOWN: Hiding HardDiskMan");
+  dbg_log("SHUTDOWN: Hiding HardDiskMan");
   HardDiskMan.Hide();
-  log("SHUTDOWN: Hiding DiskMan");
+  dbg_log("SHUTDOWN: Hiding DiskMan");
   DiskMan.Hide();
-  log("SHUTDOWN: Hiding JoyConfig");
+  dbg_log("SHUTDOWN: Hiding JoyConfig");
   JoyConfig.Hide();
-  log("SHUTDOWN: Hiding InfoBox");
+  dbg_log("SHUTDOWN: Hiding InfoBox");
   InfoBox.Hide();
-  log("SHUTDOWN: Hiding OptionBox");
+  dbg_log("SHUTDOWN: Hiding OptionBox");
   OptionBox.Hide();
-  log("SHUTDOWN: Hiding PatchesBox");
+  dbg_log("SHUTDOWN: Hiding PatchesBox");
   PatchesBox.Hide();
 }
 //---------------------------------------------------------------------------
 void PerformCleanShutdown()
 {
 #ifndef ONEGAME
-  log("SHUTDOWN: Opening settings file");
+  dbg_log("SHUTDOWN: Opening settings file");
   ConfigStoreFile CSF(INIFile);
 
-  log("SHUTDOWN: Saving visible dialog info");
+  dbg_log("SHUTDOWN: Saving visible dialog info");
   HardDiskMan.Hide();
   for (int n=0;n<nStemDialogs;n++) DialogList[n]->SaveVisible(&CSF);
 
-  log("SHUTDOWN: CloseAllDialogs()");
+  dbg_log("SHUTDOWN: CloseAllDialogs()");
   CloseAllDialogs();
 
-  log("SHUTDOWN: SaveState()");
+  dbg_log("SHUTDOWN: SaveState()");
   SaveState(&CSF);
 
-  log("SHUTDOWN: Closing settings file");
+  dbg_log("SHUTDOWN: Closing settings file");
   CSF.Close();
 #endif
 
-  log("SHUTDOWN: CleanUpSteem()");
+  dbg_log("SHUTDOWN: CleanUpSteem()");
   CleanUpSteem();
   if (CrashFile.NotEmpty()) DeleteFile(CrashFile);
   CrashFile="";
@@ -1375,41 +1393,41 @@ void CleanUpSteem()
 
   macro_end(MACRO_ENDRECORD | MACRO_ENDPLAY);
 
-  log("SHUTDOWN: Calling  CloseAllDialogs()");
+  dbg_log("SHUTDOWN: Calling  CloseAllDialogs()");
   CloseAllDialogs();
 
-  log("SHUTDOWN: Closing MIDIPort");
+  dbg_log("SHUTDOWN: Closing MIDIPort");
   MIDIPort.Close();
-  log("SHUTDOWN: Closing Parallel Port");
+  dbg_log("SHUTDOWN: Closing Parallel Port");
   ParallelPort.Close();
-  log("SHUTDOWN: Closing Serial Port");
+  dbg_log("SHUTDOWN: Closing Serial Port");
   SerialPort.Close();
 
 #ifndef DISABLE_STEMDOS
-  log("SHUTDOWN: Closing all Stemdos files");
+  dbg_log("SHUTDOWN: Closing all Stemdos files");
   stemdos_close_all_files();
 #endif
 
-  log("SHUTDOWN: Releasing Disp (DX shutdown)");
+  dbg_log("SHUTDOWN: Releasing Disp (DX shutdown)");
   Disp.Release();
   if (osd_plasma_pal){
     delete[] osd_plasma_pal; osd_plasma_pal=NULL;
     delete[] osd_plasma;     osd_plasma=NULL;
   }
 
-  log("SHUTDOWN: Releasing Sound");
+  dbg_log("SHUTDOWN: Releasing Sound");
   SoundRelease();
-  log("SHUTDOWN: Releasing Joysticks");
+  dbg_log("SHUTDOWN: Releasing Joysticks");
   FreeJoysticks();
 
-  log("SHUTDOWN: Calling CleanupGUI()");
+  dbg_log("SHUTDOWN: Calling CleanupGUI()");
   CleanupGUI();
 
   DestroyKeyTable();
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS4))
+#if !(defined(SSE_VAR_ARCHIVEACCESS4))
   WIN_ONLY( if (hUnzip) FreeLibrary(hUnzip); enable_zip=false; hUnzip=NULL; )
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS)
+#if defined(SSE_VAR_ARCHIVEACCESS)
   WIN_ONLY( if (ARCHIVEACCESS_OK) UnloadArchiveAccessDll(); )
   WIN_ONLY( ARCHIVEACCESS_OK=0; )
 #endif
@@ -1421,22 +1439,22 @@ void CleanUpSteem()
   }
 #endif
 
-  log("SHUTDOWN: Freeing cart memory");
+  dbg_log("SHUTDOWN: Freeing cart memory");
   if (cart) {delete[] cart;cart=NULL;}
-  log("SHUTDOWN: Freeing RAM memory");
+  dbg_log("SHUTDOWN: Freeing RAM memory");
   if (Mem) {delete[] Mem;Mem=NULL;}
-  log("SHUTDOWN: Freeing ROM memory");
+  dbg_log("SHUTDOWN: Freeing ROM memory");
   if (Rom) {delete[] Rom;Rom=NULL;}
 
-  log("SHUTDOWN: DeleteCriticalSection()");
+  dbg_log("SHUTDOWN: DeleteCriticalSection()");
   WIN_ONLY( DeleteCriticalSection(&agenda_cs); )
 
-  log("SHUTDOWN: Deleting TranslateBuf");
+  dbg_log("SHUTDOWN: Deleting TranslateBuf");
   if (TranslateBuf) delete[] TranslateBuf;
   if (TranslateUpperBuf) delete[] TranslateUpperBuf;
   TranslateBuf=NULL;TranslateUpperBuf=NULL;
 
-  log("SHUTDOWN: Closing logfile - bye!!!");
+  dbg_log("SHUTDOWN: Closing logfile - bye!!!");
 
 #ifdef ENABLE_LOGFILE
   if (logfile) fclose(logfile);

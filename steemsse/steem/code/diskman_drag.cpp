@@ -4,7 +4,7 @@ MODULE: Steem
 DESCRIPTION: Routines to handle dragging in the Disk Manager.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: diskman_drag.cpp")
 #endif
 
@@ -192,7 +192,7 @@ void TDiskManager::EndDrag(int x,int y,bool RightDrag)
         if (i<102){  // Dragged from DiskView or other Floppy to Floppy ListView
           bool InsertIt=true;
           EasyStr DiskInZip;
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS4)
+#if defined(SSE_VAR_ARCHIVEACCESS4)
           if (DragInf->Zip && enable_zip){
 #else
           if (DragInf->Zip && hUnzip){

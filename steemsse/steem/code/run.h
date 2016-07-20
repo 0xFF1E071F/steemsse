@@ -1,9 +1,3 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_RUN_H)
-
-#include "run.decla.h"
-
-#else//!defined(SSE_STRUCTURE_RUN_H)
-
 #ifdef IN_EMU
 #define EXT
 #define INIT(s) =s
@@ -36,11 +30,7 @@ EXT DWORD speed_limit_wait_till;
 EXT int avg_frame_time_counter INIT(0);
 EXT DWORD auto_frameskip_target_time;
 #define AUTO_FRAMESKIP 8
-#if defined(STEVEN_SEAGAL) && defined(SSE_VARIOUS___)
-EXT int frameskip INIT(1);
-#else
 EXT int frameskip INIT(AUTO_FRAMESKIP);
-#endif
 EXT int frameskip_count INIT(1);
 
 EXT bool flashlight_flag INIT(false);
@@ -55,24 +45,20 @@ DEBUG_ONLY(EXT int mode);
 EXT int mixed_output INIT(0);
 
 EXT int cpu_time_of_last_vbl,shifter_cycle_base;
-
 EXT int cpu_timer_at_start_of_hbl;
 
 #ifdef IN_EMU
 
-#define CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED 28//SS don't change here
-
-
-//          INSTRUCTION_TIME(8-((ABSOLUTE_CPU_TIME-shifter_cycle_base) % 12));
-
-
+#define CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED 28
 
 #define INTERRUPT_START_TIME_WOBBLE  \
           INSTRUCTION_TIME_ROUND(0); \
           INSTRUCTION_TIME((8000000-(ABSOLUTE_CPU_TIME-shifter_cycle_base)) % 10);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_HBL) && defined(SSE_INT_JITTER)
-#else
+//          INSTRUCTION_TIME(8-((ABSOLUTE_CPU_TIME-shifter_cycle_base) % 12));
+
+
+
 #define HBL_INTERRUPT  \
   {                  \
     hbl_pending=false;                 \
@@ -85,9 +71,7 @@ EXT int cpu_timer_at_start_of_hbl;
     sr=(sr & WORD(~SR_IPL)) | WORD(SR_IPL_2);   \
     debug_check_break_on_irq(BREAK_IRQ_HBL_IDX);    \
   }
-#endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBL) && defined(SSE_INT_JITTER) 
-#else
+
 #define VBL_INTERRUPT                                                        \
           {                                                               \
             vbl_pending=false;                                             \
@@ -99,11 +83,6 @@ EXT int cpu_timer_at_start_of_hbl;
             sr=(sr&WORD(~SR_IPL))|WORD(SR_IPL_4);                         \
             debug_check_break_on_irq(BREAK_IRQ_VBL_IDX);    \
           }
-#endif
-
-/*  SS because agenda have an absolute timing (hbl count)
-    there's no need to delete them
-*/
 
 #define CHECK_AGENDA                                              \
   if ((hbl_count++)==agenda_next_time){                           \
@@ -132,7 +111,6 @@ EXT int cpu_timer_at_start_of_hbl;
               case 60:      shifter_freq_idx=1; break;   \
               default:      shifter_freq_idx=2;   \
             }
-
 
 #define PREPARE_EVENT_CHECK_FOR_TIMER_TIMEOUTS(tn)      \
     if (mfp_timer_enabled[tn] || mfp_timer_period_change[tn]){                           \
@@ -182,38 +160,14 @@ EXT int cpu_timer_at_start_of_hbl;
 #define PREPARE_EVENT_CHECK_FOR_PASTI
 #endif
 
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_DMA_DELAY)
-#define PREPARE_EVENT_CHECK_FOR_DMA       \
-  if ((time_of_next_event-Dma.TransferTime) >= 0){                 \
-    time_of_next_event=Dma.TransferTime;  \
-    screen_event_vector=TDma::Event;                    \
-  }
-
-#else
-#define PREPARE_EVENT_CHECK_FOR_DMA
-#endif
-
-
-// SS:PREPARE_EVENT_CHECK_FOR_ACIA_IKBD_IN is defined in ikbd.h
-
 typedef void(*EVENTPROC)();
 typedef struct{
   int time;
   EVENTPROC event;
 }screen_event_struct;
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START)
-screen_event_struct event_plan_50hz[313*2+2+1],event_plan_60hz[263*2+2+1],event_plan_70hz[600*2+2+1],
-                    event_plan_boosted_50hz[313*2+2+1],event_plan_boosted_60hz[263*2+2+1],event_plan_boosted_70hz[600*2+2+1];
-
-void event_trigger_vbi();
-
-#else
-
 screen_event_struct event_plan_50hz[313*2+2],event_plan_60hz[263*2+2],event_plan_70hz[600*2+2],
                     event_plan_boosted_50hz[313*2+2],event_plan_boosted_60hz[263*2+2],event_plan_boosted_70hz[600*2+2];
-#endif
+
 
 screen_event_struct*screen_event_pointer,*event_plan[4],*event_plan_boosted[4];
 void prepare_next_event();
@@ -224,20 +178,13 @@ void event_timer_c_timeout();
 void event_timer_d_timeout();
 void event_scanline();
 void event_timer_b();
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_IRQ_DELAY)
-void event_acia_rx_irq();// not defined anymore (v3.5.2), see MFP
-#endif
-
 //void event_hbl();
 //void event_border_scanline();
 //void event_picture_scanline();
 void event_start_vbl();
 void event_vbl_interrupt();
 void event_hbl(); //just HBL, don't draw yet, don't increase scan_y
-#ifndef STEVEN_SEAGAL	//unused
 void event_scanline_last_line_of_60Hz(),event_scanline_last_line_of_70Hz();
-#endif
 EVENTPROC event_mfp_timer_timeout[4]={event_timer_a_timeout,event_timer_b_timeout,
                           event_timer_c_timeout,event_timer_d_timeout};
 int time_of_next_event;
@@ -272,7 +219,7 @@ int cpu_timer_at_res_change;
 void event_pasti_update();
 #endif
 
+
 #undef EXT
 #undef INIT
 
-#endif//SSE_STRUCTURE_RUN_H

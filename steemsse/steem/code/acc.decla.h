@@ -2,32 +2,36 @@
 #ifndef ACC_DECLA_H
 #define ACC_DECLA_H
 
-
-
-#if defined(SSE_STRUCTURE_SSECPU_OBJ)///?
+#if defined(SSE_STRUCTURE_DECLA)
+#include <stdio.h>
 #include <easystr.h>
-////#include <include.h> //no!
 typedef EasyStr Str;//?!
-
 #include <dynamicarray.h>
-
-//#include <stdio.h>
-//#include <SSE/SSEDebug.h>
 #endif
 
 #define EXT extern
 #define INIT(s)
 
-
-
-#if defined(STEVEN_SEAGAL) \
-  && (defined(SSE_VID_SAVE_NEO) || defined(SSE_DISK_STW))
+#if defined(SSE_VID_SAVE_NEO) || defined(SSE_DISK_STW)
 WORD change_endian(WORD x); // double of something?
 #endif
 
 #ifdef ENABLE_LOGFILE
 
+//SS argh log(s) may interfere with math log!, so we replace with dbg_log
+
+/* before:
   #define log(s)  \
+   {if(logsection_enabled[LOGSECTION]){ \
+      if(!logging_suspended){            \
+        log_write(s);                \
+      }                               \
+   }}
+*/
+
+
+
+  #define dbg_log(s)  \
    {if(logsection_enabled[LOGSECTION]){ \
       if(!logging_suspended){            \
         log_write(s);                \
@@ -49,7 +53,7 @@ WORD change_endian(WORD x); // double of something?
   #define log_to_section(section,s) if (logsection_enabled[section] && logging_suspended==0) log_write(s);
   #define log_to(section,s)  if (logsection_enabled[section] && logging_suspended==0) log_write(s);
   EXT void log_write_stack();
-#if defined(STEVEN_SEAGAL) && defined(SSE_VARIOUS)
+#if defined(SSE_VARIOUS)
   EXT bool logging_suspended INIT(TRUE);
 #else
   EXT bool logging_suspended INIT(false);
@@ -90,7 +94,7 @@ WORD change_endian(WORD x); // double of something?
   #define LOG_CPU
 #endif
 
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_LOG_OPTIONS))
+#if !(defined(SSE_DEBUG_LOG_OPTIONS))
   #define LOGSECTION_ALWAYS 0
   #define LOGSECTION_FDC 1
   #define LOGSECTION_IO 2
@@ -142,7 +146,7 @@ WORD change_endian(WORD x); // double of something?
 //#endif
 
 #else
-  #define log(s)
+  #define dbg_log(s)
   #define logc(s)
   #define log_stack ;
 #ifdef UNIX

@@ -55,13 +55,8 @@ public:
 #ifdef WIN32
     static void checkMessage(MSG* mess);
     static LRESULT WINAPI WndProc(HWND,UINT,WPARAM,LPARAM);
-#if defined(SSE_X64_LPTR)
-    static VOID CALLBACK activationTimerProc(HWND, UINT, UINT_PTR, DWORD);
-    static VOID CALLBACK animationTimerProc(HWND, UINT, UINT_PTR, DWORD);
-#else
     static VOID CALLBACK activationTimerProc(HWND,UINT,UINT,DWORD);
     static VOID CALLBACK animationTimerProc(HWND,UINT,UINT,DWORD);
-#endif
 #endif
 
     static int getTextWidth(char*, int);

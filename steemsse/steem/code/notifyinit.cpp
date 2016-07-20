@@ -4,11 +4,11 @@ MODULE: Steem
 DESCRIPTION: The window that appears while Steem is initialising.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: notifyinit.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_NOTIFYINIT_H)
+#if defined(SSE_STRUCTURE_DECLA)
 
 #define EXT
 #define INIT(s) =s
@@ -75,15 +75,18 @@ void CreateNotifyInitWin()
 }
 //---------------------------------------------------------------------------
 #ifndef ONEGAME
+#pragma warning (disable: 4100)//383
 void SetNotifyInitText(char *NewText)
 {
-#if !defined(_DEBUG)
+#if defined(_DEBUG)
+#else
   if (NotifyWin==NULL) return;
   
   SendMessage(NotifyWin,WM_USER,12345,(LPARAM)NewText);
   UpdateWindow(NotifyWin);
 #endif
 }
+#pragma warning (default: 4100)
 #else
 void SetNotifyInitText(char *){}
 #endif
@@ -91,11 +94,10 @@ void SetNotifyInitText(char *){}
 LRESULT __stdcall NotifyInitWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 
 {
-
-  switch (Mess){
-
-#ifndef ONEGAME
 #if !defined(_DEBUG)
+  switch (Mess){
+#ifndef ONEGAME
+//#if !defined(_DEBUG)
     case WM_CREATE:
 
     {
@@ -157,7 +159,11 @@ LRESULT __stdcall NotifyInitWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       delete[] (char*)GetProp(Win,"NotifyText");
       RemoveProp(Win,"NotifyText");
       break;
-#endif//#if !defined(_DEBUG)
+//#endif//#if !defined(_DEBUG)
+#if defined(SSE_VS2008_WARNING_383)
+    default:
+      NODEFAULT;
+#endif
 #else
     case WM_PAINT:
     {
@@ -204,6 +210,7 @@ LRESULT __stdcall NotifyInitWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 */
 #endif
   }
+#endif
 	return DefWindowProc(Win,Mess,wPar,lPar);
 
 }

@@ -6,15 +6,11 @@ DESCRIPTION: Functions to handle tracing instructions in the debug version
 of Steem and displaying information on what happened.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: trace.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_SSECPU_OBJ)
-//void m68k_process();
-#endif
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_TRACE_H)
+#if defined(SSE_STRUCTURE_DECLA)
 
 trace_display_entry t_d_e[MAX_TRACE_DISPLAY_ENTRIES];
 unsigned short trace_sr_before,trace_sr_after;
@@ -60,7 +56,9 @@ void trace()
 
   //execute
 //  try{
-  TRY_M68K_EXCEPTION
+#pragma warning(disable: 4611) //383
+    TRY_M68K_EXCEPTION
+#pragma warning(default: 4611)
 
 #if defined(SSE_BOILER_HISTORY_TIMING)
     pc_history_y[pc_history_idx]=scan_y;

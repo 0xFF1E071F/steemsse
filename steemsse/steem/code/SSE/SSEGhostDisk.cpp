@@ -1,6 +1,6 @@
 #include "SSE.h"
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_GHOST)
+#if defined(SSE_DISK_GHOST)
 
 #include "../pch.h"
 
@@ -169,5 +169,5 @@ void TGhostDisk::WriteSector(TWD1772IDField *IDField) {
 
 }
 
-#endif//#if defined(STEVEN_SEAGAL)
+#endif//#if defined(SSE_DISK_GHOST)
 

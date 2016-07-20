@@ -32,17 +32,16 @@ typedef EasyStr Str;//SSESTF.obj
 #define MENUHEIGHT 0
 #endif
 
-#if defined(STEVEN_SEAGAL)
+
 #include "SSE/SSEDecla.h"
 #include "SSE/SSEParameters.h"
-#endif
 
 #define PEEKED_MESSAGE 0
 #define PEEKED_QUIT 1
 #define PEEKED_NOTHING 2
 #define PEEKED_RUN 3
 
-#if defined(STEVEN_SEAGAL) && defined(VC_BUILD)
+#if defined(VC_BUILD)
 extern "C" int ASMCALL  PeekEvent();
 #else
 extern "C" ASMCALL int PeekEvent();
@@ -54,8 +53,8 @@ UNIX_ONLY( extern void PostRunMessage(); )
 UNIX_ONLY( EXT void PostRunMessage(); )
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_STATUS_STRING)
-#if defined(SSE_GUI_STATUS_STRING_380)
+#if defined(SSE_GUI_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_STRING_ICONS)
   void GUIRefreshStatusBar(bool invalidate=true);
 #else
   void GUIRefreshStatusBar();
@@ -89,8 +88,11 @@ EXT DWORD DisableDiskLightAfter INIT(3000);
 
 #define IGNORE_EXTEND 2
 #define NO_SHIFT_SWITCH 8
+#if defined(SSE_VS2008_WARNING_383)
+EXT void HandleKeyPress(UINT,DWORD,int DEFVAL(IGNORE_EXTEND));
+#else
 EXT void HandleKeyPress(UINT,bool,int DEFVAL(IGNORE_EXTEND));
-
+#endif
 EXT LANGID KeyboardLangID INIT(0);
 
 #define STEM_MOUSEMODE_DISABLED 0
@@ -257,7 +259,7 @@ int GetComLineArgType(char *,EasyStr &);
 #define ARG_NONEWINSTANCE 250
 #define ARG_ALWAYSNEWINSTANCE 251
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_UNIX_TRACE)
+#if defined(SSE_UNIX_TRACE)
 #define ARG_LOGSECTION 252
 #define ARG_TRACEFILE 253
 #endif
@@ -283,8 +285,11 @@ EXT BYTE KeyDownModifierState[256];
 
 void ShiftSwitchChangeModifiers(bool,bool,int[]);
 void ShiftSwitchRestoreModifiers(int[]);
+#if defined(SSE_VS2008_WARNING_383)
+void HandleShiftSwitching(UINT,DWORD,BYTE&,int[]);
+#else
 void HandleShiftSwitching(UINT,bool,BYTE&,int[]);
-
+#endif
 Str SnapShotGetLastBackupPath();
 void SnapShotGetOptions(EasyStringList*);
 
@@ -310,7 +315,11 @@ void DisableTaskSwitch();
 void EnableTaskSwitch();
 
 bool IsSteemAssociated(EasyStr);
+#if defined(SSE_VS2008_WARNING_383) && defined(SSE_GUI_ASSOCIATE_CU)
+void AssociateSteem(EasyStr,EasyStr);
+#else
 void AssociateSteem(EasyStr,EasyStr,bool,char *,int,bool);
+#endif
 void UpdatePasteButton();
 
 EXT HWND StemWin,ParentWin,ToolTip,DisableFocusWin,UpdateWin;
@@ -537,7 +546,7 @@ void CleanUpSteem();
 EXT bool StepByStepInit;
 EXT EasyStr RunDir,WriteDir,INIFile,ScreenShotFol;
 EXT EasyStr LastSnapShot,BootStateFile,StateHist[10],AutoSnapShotName;
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_CONFIG_FILE)
+#if defined(SSE_GUI_CONFIG_FILE)
 EXT EasyStr LastCfgFile;
 #endif
 EXT Str BootDisk[2];
@@ -570,7 +579,7 @@ EXT bool NoINI;
 
 EXT const POINT WinSize[4][5];
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS)
+#if defined(SSE_VID_BORDERS)
 
 EXT  POINT WinSizeBorderOriginal[4][5];
 #if !defined(SSE_VID_D3D_ONLY)

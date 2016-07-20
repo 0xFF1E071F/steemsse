@@ -1,9 +1,3 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_OSD_H)
-
-#include "osd.decla.h"
-
-#else//!SSE_STRUCTURE_OSD_H
-
 #ifdef IN_MAIN
 #define EXT
 #define INIT(s) =s
@@ -28,18 +22,9 @@ EXT bool osd_old_pos INIT(0);
 EXT bool osd_show_disk_light INIT(true),osd_show_scrollers INIT(true);
 EXT DWORD osd_start_time,osd_scroller_start_time,osd_scroller_finish_time;
 EXT bool osd_shown_scroller INIT(0);
+
 EXT long col_yellow[2],col_blue,col_red,col_green,col_white;
-
 EXT DWORD FDCCantWriteDisplayTimer INIT(0);
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DRIVE_LED)
-EXT long col_fd_red[2],col_fd_green[2];
-#if !defined(SSE_OSD_DRIVE_LED2)
-EXT DWORD FDCWriting INIT(0);
-EXT DWORD FDCWritingTimer INIT(0);
-#endif
-EXT DWORD HDDisplayTimer INIT(0);
-#endif
 
 EXT void osd_draw_begin();
 EXT void osd_init_run(bool);
@@ -141,4 +126,3 @@ void ASMCALL osd_black_box_32(void*,int,int,int,int,long);
 #undef EXT
 #undef INIT
 
-#endif//SSE_STRUCTURE_OSD_H

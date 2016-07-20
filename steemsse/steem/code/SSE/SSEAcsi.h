@@ -42,7 +42,7 @@ enum {MAX_ACSI_DEVICES=4}; // could be 8 but we stop at 4
   BYTE cmd_ctr;
   BYTE STR,DR; //STR 0=OK
   BYTE error_code;
-  BYTE Active;
+  BYTE Active; // can't be bool, can be 2
   int nSectors; //total
 #if defined(SSE_ACSI_TIMING)
   int time_of_irq;

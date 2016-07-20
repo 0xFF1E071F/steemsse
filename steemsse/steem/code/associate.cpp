@@ -5,13 +5,13 @@ DESCRIPTION: The code to perform the sometimes confusing task of associating
 Steem with required file types.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: associate.cpp")
 #endif
 
 #ifdef WIN32
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_CU)
+#if defined(SSE_GUI_ASSOCIATE_CU)
 /*  v3.5.3
     The proper way to associate in Win32 is to use current user, not root.
     HKEY_CURRENT_USER instead of HKEY_CLASSES_ROOT, so you
@@ -34,7 +34,11 @@ char key_location[]="Software\\Classes\\"; // where we put the extensions
 //#include <strsafe.h>
 
 HRESULT StringCchCopy(LPTSTR pszDest,size_t cchDest,LPCTSTR pszSrc) {
+#if defined(SSE_VS2008_WARNING_383)
+  strncpy(pszDest,pszSrc,cchDest);
+#else
   strcpy(pszDest,pszSrc);
+#endif
   return 0;
 }
 
@@ -156,7 +160,7 @@ BOOL RegDelnode (HKEY hKeyRoot, LPTSTR lpSubKey)
 
 }
 
-#else // defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_CU)
+#else // defined(SSE_GUI_ASSOCIATE_CU)
 
 LONG RegCopyKey(HKEY FromKeyParent,char *FromKeyName,HKEY ToKeyParent,char *ToKeyName)
 {
@@ -200,7 +204,7 @@ LONG RegCopyKey(HKEY FromKeyParent,char *FromKeyName,HKEY ToKeyParent,char *ToKe
 
   return Ret;
 }
-#endif//else of defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_CU)
+#endif//else of defined(SSE_GUI_ASSOCIATE_CU)
 
 #endif//WIN32
 //---------------------------------------------------------------------------
@@ -208,7 +212,7 @@ bool IsSteemAssociated(EasyStr Exts)
 {
 #ifdef WIN32
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_CU)
+#if defined(SSE_GUI_ASSOCIATE_CU)
 
   LONG ErrorCode;
   HKEY Key;
@@ -267,7 +271,7 @@ bool IsSteemAssociated(EasyStr Exts)
 
   return 0; // no, our EXE is not associated
 
-#else//#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_CU)
+#else//#if defined(SSE_GUI_ASSOCIATE_CU)
 
   if (Exts[0]!='.') Exts.Insert(".",0);
 
@@ -308,23 +312,30 @@ bool IsSteemAssociated(EasyStr Exts)
       }
     }
   }
-#endif //else of defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_CU)
+#endif //else of defined(SSE_GUI_ASSOCIATE_CU)//383 warning
 #elif defined(UNIX)
 #endif
+#if !(defined(SSE_VS2008_WARNING_383) && defined(SSE_GUI_ASSOCIATE_CU))
   return 0;
+#endif
 }
 //---------------------------------------------------------------------------
+#if defined(SSE_VS2008_WARNING_383) && defined(SSE_GUI_ASSOCIATE_CU)
+void AssociateSteem(EasyStr Exts,EasyStr FileClass)
+#else
 void AssociateSteem(EasyStr Exts,EasyStr FileClass,bool Force,char *TypeDisplayName,int IconNum,bool IconOnly)
+#endif
 {
 #ifdef WIN32
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_CU)
+#if defined(SSE_GUI_ASSOCIATE_CU)
 
   LONG ErrorCode;
   HKEY Key;
   EasyStr KeyName,OriginalKeyName;
+#if !defined(SSE_VS2008_WARNING_383)
   unsigned long Size=400;
-
+#endif
   // check before Exts will change
   bool WasAlreadyAssociated=IsSteemAssociated(Exts); 
 
@@ -357,7 +368,7 @@ void AssociateSteem(EasyStr Exts,EasyStr FileClass,bool Force,char *TypeDisplayN
     RegCloseKey(Key);
   }
 #undef LOGSECTION
-#else// defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_CU)
+#else// defined(SSE_GUI_ASSOCIATE_CU)
 
   if (Exts[0]!='.') Exts.Insert(".",0);
 
@@ -515,7 +526,7 @@ void AssociateSteem(EasyStr Exts,EasyStr FileClass,bool Force,char *TypeDisplayN
   }
   RegCloseKey(Key);
 
-#endif// defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_CU)
+#endif// defined(SSE_GUI_ASSOCIATE_CU)
 
 #elif defined(UNIX)
 #endif

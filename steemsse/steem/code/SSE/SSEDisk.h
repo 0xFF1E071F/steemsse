@@ -2,6 +2,30 @@
 #ifndef SSEDISK_H
 #define SSEDISK_H
 
+#if defined(SSE_DISK_EXT) // available for all SSE versions
+enum { EXT_ST=1,EXT_MSA,EXT_DIM,EXT_STT,EXT_STX,EXT_IPF,EXT_CTR,EXT_STG,EXT_STW,
+EXT_PRG,EXT_TOS,EXT_SCP,EXT_HFE};
+
+extern char *extension_list[];
+
+extern char *dot_ext(int i);
+
+#define DISK_EXT_ST extension_list[EXT_ST]
+#define DISK_EXT_MSA extension_list[EXT_MSA]
+#define DISK_EXT_DIM extension_list[EXT_DIM]
+#define DISK_EXT_STT extension_list[EXT_STT]
+#define DISK_EXT_STX extension_list[EXT_STX]
+#define DISK_EXT_IPF extension_list[EXT_IPF]
+#define DISK_EXT_CTR extension_list[EXT_CTR] 
+#define DISK_EXT_STG extension_list[EXT_STG]
+#define DISK_EXT_STW extension_list[EXT_STW]
+#define DISK_EXT_PRG extension_list[EXT_PRG]
+#define DISK_EXT_TOS extension_list[EXT_TOS]
+#define DISK_EXT_SCP extension_list[EXT_SCP]
+#define DISK_EXT_HFE extension_list[EXT_HFE]
+
+#endif//SSE_DISK_EXT
+
 #if defined(SSE_DISK)
 
 #include "SSEWD1772.h"
@@ -16,12 +40,6 @@
     WD1772 is also Steem's, written to run STW disk images.
 */
 enum { MNGR_STEEM=1,MNGR_PASTI,MNGR_CAPS,MNGR_WD1772};
-enum { EXT_ST=1,EXT_MSA,EXT_DIM,EXT_STT,EXT_STX,EXT_IPF,EXT_CTR,EXT_STW,
-EXT_PRG,EXT_TOS,EXT_SCP,EXT_HFE};
-
-#if defined(SSE_GUI_STATUS_STRING_DISK_TYPE) //adapted to enum of course
-extern char *extension_list[];
-#endif
 
 struct TImageType {
   BYTE Manager;

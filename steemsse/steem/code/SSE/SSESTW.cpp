@@ -1,9 +1,9 @@
 #include "SSE.h"
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
+#if defined(SSE_DISK_STW)
 /*  We really go for it here as this simplistic interface knows nothing but
-    the side, track and words on the track. Eventual MFM encoding/decoding,
-    timing and all the rest is for the distinct WD1772 emulator.
+    the side, track and words on the track. MFM encoding/decoding, timing and
+    all the rest is for the distinct WD1772 emulator.
 */
 
 #include "../pch.h"
@@ -62,7 +62,7 @@ TImageSTW::~TImageSTW() {
 void TImageSTW::Close() {
   if(fCurrentImage)
   {
-#if defined(SSE_DEBUG) && SSE_VERSION>=371
+#if defined(SSE_DEBUG) && defined(SSE_DISK_STW2)
     TRACE_LOG("STW %s image\n",FloppyDrive[Id].WrittenTo?"save and close":"close");
 #endif
     fseek(fCurrentImage,0,SEEK_SET); // rewind

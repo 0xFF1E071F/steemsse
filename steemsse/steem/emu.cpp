@@ -10,9 +10,15 @@ functions. Basically includes all the files that are in the object.
 
 #define IN_EMU
 
-#include "conditions.h" //SS
-#include "SSE/SSE.h" //SS
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_MFP_H))
+#include "conditions.h"
+#include "SSE/SSEDebug.h" // SSE build or not
+
+#if defined(SSE_STRUCTURE_DECLA)
+#include "SSE/SSE.h"
+#include "SSE/SSEDecla.h"
+#include "SSE/SSEParameters.h"
+#include "SSE/SSEOption.h"
+#else
 inline int abs_quick(int i) // -> mfp.decla.h
 {
   if (i>=0) return i;
@@ -20,31 +26,22 @@ inline int abs_quick(int i) // -> mfp.decla.h
 }
 #endif
 
-#include "SSE/SSEDebug.h"
-
-#if defined(STEVEN_SEAGAL)
-#include "SSE/SSEDecla.h"
-#include "SSE/SSEParameters.h"
-#include "SSE/SSEOption.h"
-#if !defined(SSE_STRUCTURE_SSEFLOPPY_OBJ)
-#include "SSE/SSEFloppy.h"
-#endif
-#endif
-
 #if USE_PASTI
 #include <pasti/pasti.h>
 #endif
 
 #include "easystr.h"
-typedef EasyStr Str; // SS who?
+typedef EasyStr Str;
 #include "mymisc.h"
 #include "dirsearch.h"
 #include "dynamicarray.h"
 #include "portio.h"
-
+#if defined(SSE_STRUCTURE_DECLA)
+#include "translate.decla.h"
+#else
 #include "translate.h"
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_TRANSLATE_H)
+#endif
+#if defined(SSE_STRUCTURE_DECLA)
 #define EXT
 #define INIT(s) =s
 
@@ -72,6 +69,15 @@ EasyStr StripAndT(char *s)
 #include "onegame.h"
 #endif
 
+#if defined(SSE_STRUCTURE_DECLA)
+#include "acc.decla.h"
+#include "gui.decla.h"
+#include "shortcutbox.decla.h"
+#include "stjoy.decla.h"
+#include "init_sound.decla.h"
+#include "loadsave.decla.h"
+#include "macros.decla.h"
+#else
 #include "acc.h"
 #include "gui.h"
 #include "shortcutbox.h"
@@ -79,6 +85,7 @@ EasyStr StripAndT(char *s)
 #include "init_sound.h"
 #include "loadsave.h"
 #include "macros.h"
+#endif
 
 #ifdef WIN32
 #ifndef NO_ASM_PORTIO
@@ -92,12 +99,17 @@ void internal_speaker_sound_by_period(int){}
 
 #endif
 
+#if defined(SSE_STRUCTURE_DECLA)
+#include "reset.decla.h"
+#include "display.decla.h"
+#include "steemh.decla.h"
+#else
 #include "reset.h"
 #include "display.h"
 #include "steemh.h"
+#endif
 
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_STEEMH_H)
+#if defined(SSE_STRUCTURE_DECLA)
 
 #ifdef IN_EMU
 #define EXT
@@ -132,20 +144,11 @@ EXT bool mmu_confused;        //144
 #endif
 EXT unsigned long hbl_count INIT(0);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301)
 // it's silly but I need to place those 'C' declarations here
 EXT int cpu_timer;  
 EXT BYTE stick[8];
 #endif
-
-
-// Don't forget to update this in the resource file too!
-#if defined(STEVEN_SEAGAL)
-//EXT const char *stem_version_text INIT(SSE_VERSION_TXT); // OSD + info box
-#else
-EXT const char *stem_version_text INIT("3.2");
-#endif
-
 
 EXT BYTE *Mem_End,
      *Mem_End_minus_1,
@@ -198,15 +201,15 @@ DWORD* lpCART_LPEEK(DWORD ad){ RANGE_CHECK_MESSAGE(128*1024,3,0);return LPDWORD(
 #else
 #endif
 
+#if defined(DEBUG_BUILD)//yep, 200 bytes
 EXT char d2_t_buf[200];
-
+#endif
 EXT void* m68k_dest;
 EXT MEM_ADDRESS abus;
 EXT long m68k_old_dest;
 EXT MEM_ADDRESS effective_address;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
-#else
+#if !(defined(SSE_IKBD_6301))
 EXT int cpu_timer;
 #endif
 EXT WORD m68k_ap,m68k_iriwo;
@@ -214,15 +217,54 @@ EXT short m68k_src_w;
 EXT long m68k_src_l;
 EXT char m68k_src_b;
 
-
-
 #undef EXT
 #undef INIT
 
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA)
+
+#if defined(SSE_ACIA)
 #include "acia.decla.h"
 #endif
+
+#if defined(SSE_STRUCTURE_DECLA)
+
+#include "cpu.decla.h"
+#include "run.decla.h"
+#ifdef DEBUG_BUILD
+#include "debug_emu.decla.h"
+#include "iolist.decla.h"
+#endif
+#include "draw.decla.h"
+#include "osd.decla.h"
+#include "fdc.decla.h"
+#include "floppy_drive.decla.h"
+#include "hdimg.decla.h"
+#include "psg.decla.h"
+#include "mfp.decla.h"
+#include "iorw.decla.h"
+#include "stports.decla.h"
+#include "midi.decla.h"
+#include "rs232.decla.h"
+#include "blitter.decla.h"
+#include "palette.decla.h"
+#include "ikbd.decla.h"
+#include "stemdos.decla.h"
+#include "emulator.decla.h"
+#include "SSE/SSE6301.h"
+#include "SSE/SSECpu.h"
+#include "SSE/SSESTF.h"
+#include "SSE/SSEMMU.h"
+#if defined(SSE_DEBUG_FRAME_REPORT)
+#include "SSE/SSEFrameReport.h"
+#endif
+#include "SSE/SSEShifter.h"
+#include "SSE/SSEInterrupt.h"
+#include "SSE/SSEVideo.h"
+#include "SSE/SSEInline.h"
+#include "SSE/SSESDL.h"
+
+#else
+
 #include "cpu.h"
 #include "run.h"
 #ifdef DEBUG_BUILD
@@ -246,24 +288,6 @@ EXT char m68k_src_b;
 #include "stemdos.h"
 #include "emulator.h"
 
-#if defined(STEVEN_SEAGAL)
-///void set_pc(MEM_ADDRESS ad); // forward // still necessary?
-#include "SSE/SSE6301.h"
-#include "SSE/SSECpu.h"
-
-//#include "SSE/SSEInterrupt.h"
-#include "SSE/SSESTF.h"
-#include "SSE/SSEMMU.h"
-#if defined(SSE_DEBUG_FRAME_REPORT) //temp, same place
-#include "SSE/SSEFrameReport.h"
-#endif
-
-#include "SSE/SSEShifter.h"
-#include "SSE/SSEInterrupt.h"
-#include "SSE/SSEVideo.h"
-#include "SSE/SSEInline.h"
-#include "SSE/SSESDL.h"
-///#include "SSE/SSEDebug.h"
 #endif
 
 #include "cpu.cpp"
@@ -285,15 +309,11 @@ EXT char m68k_src_b;
 #include "rs232.cpp"
 #include "emulator.cpp"
 
-#if defined(STEVEN_SEAGAL)
-#include "SSE/SSEInterrupt.cpp"
-#if !defined(SSE_STRUCTURE_SSESTF_OBJ)
-#include "SSE/SSESTF.cpp"
+#if defined(SSE_STRUCTURE_DECLA)
+#include "SSE/SSEInterrupt.cpp" // not an object (yet?)
+#ifdef SSE_VID_SDL
+#include "SSE/SSESDL.cpp"
 #endif
-#if !defined(SSE_STRUCTURE_SSE6301_OBJ)
-#include "SSE/SSE6301.cpp" 
-#endif
-#include "SSE/SSESDL.cpp" //?
 #endif
 
 #include "reset.cpp"
@@ -307,7 +327,7 @@ void set_pc(MEM_ADDRESS ad)
   SET_PC(ad); 
 }
 
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_CPU))
+#if !(defined(SSE_CPU))
 
 void perform_rte()
 {
@@ -323,11 +343,7 @@ void m68k_process()
 }
 #undef LOGSECTION
 
-
-
-
-#if !(defined(STEVEN_SEAGAL)&&defined(SSE_STRUCTURE_CPU_POKE_NOINLINE))
-// this seems useless?
+#if !defined(SSE_CPU)
 void m68k_poke_noinline(MEM_ADDRESS ad,BYTE x){ m68k_poke(ad,x); }
 void m68k_dpoke_noinline(MEM_ADDRESS ad,WORD x){ m68k_dpoke(ad,x); }
 void m68k_lpoke_noinline(MEM_ADDRESS ad,LONG x){ m68k_lpoke(ad,x); }

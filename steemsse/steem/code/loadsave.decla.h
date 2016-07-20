@@ -2,7 +2,7 @@
 #ifndef LOADSAVE_DECLA_H
 #define LOADSAVE_DECLA_H
 
-#if defined(STEVEN_SEAGAL)
+#if defined(SSE_VERSION)
 // rather silly but so we leave the define here
 #if SSE_VERSION>=382
 #define SNAPSHOT_VERSION 53

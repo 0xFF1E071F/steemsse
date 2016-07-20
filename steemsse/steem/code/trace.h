@@ -1,9 +1,3 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_TRACE_H)
-
-#include "trace.decla.h"
-
-#else//!defined(SSE_STRUCTURE_TRACE_H)
-
 #define TDE_BEFORE 1
 #define TDE_AFTER 2
 #define TDE_TEXT_ONLY 0x80
@@ -49,6 +43,3 @@ const char*bombs_name[12]={"SSP after reset","PC after reset","bus error","addre
                       "TRAPV instruction","Privilege violation","Trace","Line-A","Line-F"};
 
 const char*exception_action_name[4]={"read from","write to","fetch from","instruction execution"};
-
-
-#endif//!defined(SSE_STRUCTURE_TRACE_H)

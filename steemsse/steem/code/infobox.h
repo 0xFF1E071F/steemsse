@@ -1,9 +1,3 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFOBOX_H)
-
-#include "infobox.decla.h"
-
-#else//!defined(SSE_STRUCTURE_STJOY_H)
-
 #define INFOPAGE_LINK_ID_BASE 200
 
 #define INFOPAGE_ABOUT 0
@@ -15,13 +9,7 @@
 #define INFOPAGE_HOWTO_CART 6
 #define INFOPAGE_FAQ 7
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX2)
-#define INFOPAGE_README_SSE 8
-#define INFOPAGE_FAQ_SSE 9
-#define NUM_INFOPAGE 10
-#else
 #define NUM_INFOPAGE 8
-#endif
 
 #define HL_STATIC 1
 #define HL_UNDERLINE 2
@@ -44,10 +32,6 @@ private:
   HBRUSH BkBrush;
   HIMAGELIST il;
   int MaxLinkID;
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_INFOBOX3)
-  HFONT hFontCourier;
-#endif
 
 #elif defined(UNIX)
   static int WinProc(TGeneralInfo*,Window,XEvent*);
@@ -91,4 +75,3 @@ public:
 };
 WIN_ONLY( WINDOWPROC TGeneralInfo::OldEditWndProc; );
 
-#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_STJOY_H)

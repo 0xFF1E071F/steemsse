@@ -1,4 +1,4 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_KEYTABLE_H)
+#if defined(SSE_STRUCTURE_DECLA)
 
 #ifndef STEEMKEYTEST
 // These are the characters that are produced by pressing Alt+[shift]+key.
@@ -107,6 +107,7 @@ WORD *shift_key_table[4]={NULL,NULL,NULL,NULL};
 bool EnableShiftSwitching=0,ShiftSwitchingAvailable=0;
 //---------------------------------------------------------------------------
 #ifdef WIN32
+//TODO X64 ???
 void SetSTKeys(char *Letters,int Val1,...)
 {
   int *lpVals=&Val1;
@@ -501,12 +502,16 @@ void InitKeyTable()
           Key #221 = ASCII å (#-27) = ST keycode 0x1a
           Key #222 = ASCII æ (#-26) = ST keycode 0x27
         */
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_REWRITE) // stops a warning L2
+#if defined(SSE_VS2008_WARNING_383)
+#pragma warning (disable: 4310)
+#endif
+#if defined(SSE_VAR_REWRITE) // stops a warning L2 in VC6
         char char_list[]= {(char)168,43,39,(char)248,(char)229,(char)230,0};
 #else
         char char_list[]= {168,43,39,248,229,230,0};        
 #endif
         SetSTKeys(char_list,0x1b,0xc,0x29,0x28,0x1a,0x27);
+#pragma warning (default: 4310)
       }
       break;
   }
@@ -550,4 +555,4 @@ void UNIX_get_fake_VKs()
 }
 #endif
 
-#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_KEYTABLE_H)
+#endif

@@ -6,11 +6,11 @@ takes the raw bytes from the MIDI ACIA and buffers them before sending them
 on to the Windows multimedia MIDI API. 
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: midi.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_MIDI_H)
+#if defined(SSE_STRUCTURE_DECLA)
 
 #define EXT
 #define INIT(s) =s
@@ -127,7 +127,7 @@ void TMIDIOut::SendByte(BYTE Val)
     }
   }else if (Val & BIT_7){ // Status byte
     if ( (Val & b11111000)==b11111000 ){  // Real time message
-#if defined(STEVEN_SEAGAL) && defined(SSE_MIDI_CHECK1)
+#if defined(SSE_MIDI_CHECK1)
       VERIFY( midiOutShortMsg(Handle,Val)==MMSYSERR_NOERROR );
 #else
       midiOutShortMsg(Handle,Val);
@@ -159,7 +159,7 @@ void TMIDIOut::SendByte(BYTE Val)
 
           pCurSysEx->pHdr=pHdr;
         }else{
-          log("MIDI: No sysex headers available, ignoring message!");
+          dbg_log("MIDI: No sysex headers available, ignoring message!");
           TRACE_LOG("MIDI: No sysex headers available, ignoring message!\n");
         }
 
@@ -179,7 +179,7 @@ void TMIDIOut::SendByte(BYTE Val)
             break;
           }
         }
-        LOG_ONLY( if (pCurSysEx==NULL) log("MIDI: No sysex buffers available, ignoring message!"); )
+        LOG_ONLY( if (pCurSysEx==NULL) dbg_log("MIDI: No sysex buffers available, ignoring message!"); )
       }else{
         if (AddToBuffer){
           int NumParams=MidiGetStatusNumParams(Val);
@@ -189,7 +189,7 @@ void TMIDIOut::SendByte(BYTE Val)
             nStatusParams=NumParams;
             ParamCount=NumParams;
           }else{
-#if defined(STEVEN_SEAGAL) && defined(SSE_MIDI_CHECK1)
+#if defined(SSE_MIDI_CHECK1)
             VERIFY( midiOutShortMsg(Handle,Val)==MMSYSERR_NOERROR );
 #else
             midiOutShortMsg(Handle,Val);
@@ -205,14 +205,14 @@ void TMIDIOut::SendByte(BYTE Val)
       if (MessBufLen<8){
         MessBuf[MessBufLen++]=Val;
       }else{
-        log("MIDI: Out message buffer overflow!");
+        dbg_log("MIDI: Out message buffer overflow!");
         TRACE_LOG("MIDI: Out message buffer overflow!\n");
       }
     }else{
       if (pCurSysEx->Len < MaxSysExLen){
         pCurSysEx->pData[pCurSysEx->Len++]=Val;
       }else{
-        log("MIDI: Out sysex buffer overflow!");
+        dbg_log("MIDI: Out sysex buffer overflow!");
         TRACE_LOG("MIDI: Out sysex buffer overflow!\n");
       }
     }
@@ -220,21 +220,21 @@ void TMIDIOut::SendByte(BYTE Val)
   if (SendBuffer){
     switch (MessBufLen){
       case 1:
-#if defined(STEVEN_SEAGAL) && defined(SSE_MIDI_CHECK1)
+#if defined(SSE_MIDI_CHECK1)
         VERIFY( midiOutShortMsg(Handle,MessBuf[0])==MMSYSERR_NOERROR );
 #else
         midiOutShortMsg(Handle,MessBuf[0]);
 #endif
         break;
       case 2:
-#if defined(STEVEN_SEAGAL) && defined(SSE_MIDI_CHECK1)
+#if defined(SSE_MIDI_CHECK1)
         VERIFY( midiOutShortMsg(Handle,MessBuf[0] | (MessBuf[1] << 8))==MMSYSERR_NOERROR );
 #else
         midiOutShortMsg(Handle,MessBuf[0] | (MessBuf[1] << 8));
 #endif
         break;
       default:
-#if defined(STEVEN_SEAGAL) && defined(SSE_MIDI_CHECK1)
+#if defined(SSE_MIDI_CHECK1)
         VERIFY( midiOutShortMsg(Handle,(MessBuf[1] << 8) | (MessBuf[2] << 16))==MMSYSERR_NOERROR );
 #else
         midiOutShortMsg(Handle,MessBuf[0] | (MessBuf[1] << 8) | (MessBuf[2] << 16));
@@ -296,7 +296,7 @@ void TMIDIOut::ReInitSysEx()
   if (Handle==NULL) return;
 
   midiOutReset(Handle);
-#if defined(STEVEN_SEAGAL) && defined(SSE_MIDI_CHECK1)
+#if defined(SSE_MIDI_CHECK1)
   VERIFY(midiOutShortMsg(Handle,b11110111)==MMSYSERR_NOERROR );
 #else
   midiOutShortMsg(Handle,b11110111); // Send an EOX, just in case (shouldn't do any harm)
@@ -314,7 +314,7 @@ TMIDIOut::~TMIDIOut()
   if (Handle==NULL) return;
 
   midiOutReset(Handle);
-#if defined(STEVEN_SEAGAL) && defined(SSE_MIDI_CHECK1)
+#if defined(SSE_MIDI_CHECK1)
   VERIFY(midiOutShortMsg(Handle,b11110111)==MMSYSERR_NOERROR );
 #else
   midiOutShortMsg(Handle,b11110111); // Send an EOX, just in case (shouldn't do any harm)
@@ -374,13 +374,17 @@ void CALLBACK TMIDIIn::InProc(HMIDIIN Handle,UINT Msg,DWORD dwThis,DWORD MidiMes
   TMIDIIn *This=(TMIDIIn*)dwThis;
 
   if (This->Killing) return;
+#if defined(SSE_VS2008_WARNING_383) && defined(_DEBUG)
+  BYTE *pData=NULL;
+#else
   BYTE *pData;
+#endif
   DWORD DataLen=0;
   MIDIHDR *pSysExHdr=NULL;
   LOG_ONLY( bool Err=0; )
   switch (Msg){
     case MIM_ERROR:
-      log(EasyStr("MIDI In: Invalid Short Message received - ")+HEXSl(MidiMess,8));
+      dbg_log(EasyStr("MIDI In: Invalid Short Message received - ")+HEXSl(MidiMess,8));
     case MIM_DATA:
     {
       pData=LPBYTE(&MidiMess);
@@ -408,8 +412,8 @@ void CALLBACK TMIDIIn::InProc(HMIDIIN Handle,UINT Msg,DWORD dwThis,DWORD MidiMes
       pData=LPBYTE(pSysExHdr->lpData);
       DataLen=pSysExHdr->dwBytesRecorded;
       This->RunningStatus=0;
-      LOG_ONLY( if (Err) log(EasyStr("MIDI In: Invalid Long Message received - length=")+DataLen) );
-      LOG_ONLY( if (Err==0) log(EasyStr("MIDI In: Long message received - length=")+DataLen) );
+      LOG_ONLY( if (Err) dbg_log(EasyStr("MIDI In: Invalid Long Message received - length=")+DataLen) );
+      LOG_ONLY( if (Err==0) dbg_log(EasyStr("MIDI In: Long message received - length=")+DataLen) );
       CutPauseUntilSysEx_Time=0;
 
       if (DataLen==0 || pData[DataLen-1]!=b11110111) pData[DataLen++]=b11110111; // If no EOX add it
@@ -419,8 +423,12 @@ void CALLBACK TMIDIIn::InProc(HMIDIIN Handle,UINT Msg,DWORD dwThis,DWORD MidiMes
         pData[0]=b11110000;
         DataLen++;
       }
-      LOG_ONLY( if (DataLen>This->MaxSysExLen-8) log("MIDI In: Large sysex message received, possible overflow.") );
+      LOG_ONLY( if (DataLen>This->MaxSysExLen-8) dbg_log("MIDI In: Large sysex message received, possible overflow.") );
       break;
+#if defined(SSE_VS2008_WARNING_383)
+    default:
+      NODEFAULT;
+#endif
   }
   if (DataLen){
     while (This->Buf.IsLocked()) Sleep(0);

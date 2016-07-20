@@ -5,11 +5,11 @@ DESCRIPTION: General palette utility functions. This covers both the code
 to create the ST palette and also the code to add to the PC palette.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: palette.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_PALETTE_H)
+#if defined(SSE_STRUCTURE_DECLA)
 
 #define EXT
 EXT int brightness=0,contrast=0;

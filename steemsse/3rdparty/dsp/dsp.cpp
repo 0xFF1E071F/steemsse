@@ -11,7 +11,7 @@
   This file is compiled as a distinct module (resulting in an OBJ file)
 */
 #include <SSE/SSE.h>//382
-
+#include <SSE/SSEDecla.h>//383
 #include "dsp.h"
 #include <math.h>
 #include <float.h> // TODO find a way not to crash when it fails?
@@ -31,8 +31,11 @@ TIirFilter::~TIirFilter() {
 
 double TIirFilter::FilterAudio(double Input,double Frequency,double Q,
                                double Gain,unsigned long Type) {
-
+#if defined(SSE_VS2008_WARNING_383) && defined(_DEBUG)
+   double Output=0,S,omega,A,sn,cs,alpha,beta,temp1,temp2,temp3,temp4;
+#else
    double Output,S,omega,A,sn,cs,alpha,beta,temp1,temp2,temp3,temp4;
+#endif
 /* -- check if frequency, Q, gain or type has changed.. and, if so, 
    update coefficients */
    if ( ( Frequency != f ) || ( Q != q ) || ( Gain != g ) || ( Type != t ) ) {
@@ -154,6 +157,10 @@ double TIirFilter::FilterAudio(double Input,double Frequency,double Q,
       case 7:                                                  /* peaking */
          Output = b0*Input + a1*i1 + b2*i2 - a1*o1 - a2*o2;
          break;
+#if defined(SSE_VS2008_WARNING_383)
+      default:
+        NODEFAULT;
+#endif
    }
    o2=o1; o1=Output; i2=i1; i1=Input; /* update variables for recursion */
    return(Output);

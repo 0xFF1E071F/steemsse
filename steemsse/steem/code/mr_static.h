@@ -1,10 +1,3 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_MRSTATIC_H)
-
-#include "mr_static.decla.h"
-
-#else//!SSE_STRUCTURE_MRSTATIC_H
-
-
 LRESULT __stdcall mr_static_WndProc(HWND,UINT,UINT,long);
 
 enum _mr_static_type{MST_MEMORY=0,MST_REGISTER,MST_HISTORIC_MEMORY,MST_MEM_BROWSER_ADDRESS,
@@ -40,4 +33,3 @@ mr_static *m_s[MAX_MR_STATICS];
 
 void mr_static_update_all();
 
-#endif//SSE_STRUCTURE_MRSTATIC_H

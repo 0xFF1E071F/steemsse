@@ -2,13 +2,13 @@
 #ifndef SSEFRAMEREPORT_H
 #define SSEFRAMEREPORT_H
 
-#if defined(SSE_DEBUG_FRAME_REPORT)
+#if defined(SSE_BOILER_FRAME_REPORT)
 
-#if defined(SSE_STRUCTURE_SSEFRAMEREPORT_OBJ)
+#include <run.decla.h>
+
+#if !defined(SSE_COMPILER_370_INLINE)
 #include "SSEDebug.h"
 #endif
-
-#include "run.decla.h"
 
 #if defined(SSE_BOILER_FRAME_REPORT_MASK)
 /*  We use the new general fake io control masks, they are 16bit, but 
@@ -29,22 +29,10 @@
 
 //mask 2
 #define FRAME_REPORT_MASK2 (Debug.ControlMask[1])
-#if defined(SSE_BOILER_FRAME_REPORT_MASK2)
 #define FRAME_REPORT_MASK_INT                      (1<<15) // for hbi, vbi, mfp
 #define FRAME_REPORT_MASK_BLITTER                  (1<<14)
 #define FRAME_REPORT_MASK_SHIFTER_TRICKS           (1<<13)
 #define FRAME_REPORT_MASK_SHIFTER_TRICKS_BYTES     (1<<12)
-//#define FRAME_REPORT_MASK_EXTRA                    (1<<11)
-#else
-#define FRAME_REPORT_MASK_ACIA                     (1<<15)
-#define FRAME_REPORT_MASK_BLITTER                  (1<<14)
-#define FRAME_REPORT_MASK_SHIFTER_TRICKS           (1<<13)
-#define FRAME_REPORT_MASK_SHIFTER_TRICKS_BYTES     (1<<12)
-//possible to make just one:
-#define FRAME_REPORT_MASK_VBI                      (1<<11)
-#define FRAME_REPORT_MASK_HBI                      (1<<10)
-#define FRAME_REPORT_MASK_MFP                      (1<<9)
-#endif
 #endif
 
 ////#define FRAME_REPORT_MASK_VERTICAL_OVERSCAN        (1<<13)    // trace!!!, not here
@@ -63,7 +51,7 @@ public:
   enum {MAX_EVENTS=210*32*2*2}; // too high?
   int TriggerReport; // set 2 to ask a full report, then it's set FALSE again
   TFrameEvents();
-#if !defined(SSE_INLINE_370)
+#if !defined(SSE_COMPILER_370_INLINE)
   inline
 #endif
     void Add(int scanline, int cycle, char type, int value);
@@ -76,7 +64,7 @@ public:
   int Vbl(); 
   int nVbl;
   struct SFrameEvent m_FrameEvent[MAX_EVENTS]; // it's public
-#if defined(SSE_DEBUG_REPORT_SDP_ON_CLICK)
+#if defined(SSE_BOILER_REPORT_SDP_ON_CLICK)
   MEM_ADDRESS GetSDP(int guessed_x,int guessed_scan_y);
 #endif
 private:
@@ -101,7 +89,7 @@ inline void SFrameEvent::Add(int scanline,int cycle, char type, int value) {
 
 //extern int shifter_freq_at_start_of_vbl; // forward
 
-#if !defined(SSE_INLINE_370)
+#if !defined(SSE_COMPILER_370_INLINE)
 inline void TFrameEvents::Add(int scanline, int cycle, char type, int value) {
   m_nEvents++;  // starting from 0 each VBL, event 0 is dummy 
   if(m_nEvents<=0||m_nEvents>MAX_EVENTS) {BRK(bad m_nEvents); return;}

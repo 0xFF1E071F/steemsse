@@ -1,4 +1,7 @@
-#if defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
+
+//we had a working display (window), but stopped development
+//we keep it just in case
 
 #include "SSESDL.h"
 
@@ -57,7 +60,7 @@ bool TSDL::EnterSDLVideoMode() {
     ASSERT( Surface );
     if(Surface)
     {
-#if !defined(SSE_SDL_KEEP_DDRAW_RUNNING)
+#if !defined(SSE_VID_SDL_KEEP_DDRAW_RUNNING)
       Disp.Release(); // leave current rendering system (GDI or DD)
 #endif
       InUse=true;
@@ -79,7 +82,7 @@ void TSDL::LeaveSDLVideoMode() {
     TRACE_LOG("SDL close window %s\n",SDL_GetError());
     Surface=0;
     InUse=false;
-#if !defined(SSE_SDL_KEEP_DDRAW_RUNNING)
+#if !defined(SSE_VID_SDL_KEEP_DDRAW_RUNNING)
     Disp.nUseMethod=0;
     Disp.Init();
 #endif
@@ -106,4 +109,4 @@ void TSDL::Unlock(){
 
 
 
-#endif//#if defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
+#endif//#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)

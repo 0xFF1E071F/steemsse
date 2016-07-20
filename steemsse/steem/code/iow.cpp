@@ -6,7 +6,7 @@ that deal with writes to ST I/O addresses ($ff8000 onwards), this is the only
 route of communication between programs and the chips in the emulated ST.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: iow.cpp")
 #endif
 
@@ -42,7 +42,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 */
 
   log_io_write(addr,io_src_b);
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_TRACE_IO)
+#if defined(SSE_DEBUG_TRACE_IO)
   if(!io_word_access
 #if defined(SSE_BOILER_TRACE_CONTROL)
     && (((1<<15)&d2_dpeek(FAKE_IO_START+24))) 
@@ -143,13 +143,13 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
       {
         if (io_word_access==0 || (addr & 1)==0)
         {
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA)
+#if defined(SSE_ACIA)
           BYTE wait_states=6;
 #if defined(SSE_ACIA_BUS_JAM_PRECISE_WOBBLE) //v3.6.4
-          if(HD6301EMU_ON)
+          if(OPTION_C1)
           {
             INSTRUCTION_TIME(wait_states);
-#if defined(SSE_CPU_E_CLOCK2)
+#if defined(SSE_CPU_E_CLOCK_370)
             wait_states=
 #endif              
 #if defined(SSE_CPU_E_CLOCK_DISPATCHER)
@@ -157,7 +157,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 #else
               M68000.SyncEClock();
 #endif
-#if defined(SSE_CPU_E_CLOCK2)              
+#if defined(SSE_CPU_E_CLOCK_370)              
             INSTRUCTION_TIME(wait_states);
 #endif
           }
@@ -242,7 +242,7 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
       case 0xfffc00:  //control //SS writing ACIA IKBD control register
 
 #if defined(SSE_IKBD_6301) && defined(SSE_ACIA_REGISTERS)
-        if(HD6301EMU_ON)
+        if(OPTION_C1)
           ACIA_IKBD.CR=io_src_b; // assign before we send to other functions
 #endif //... and we run the same functions in 6301 mode too:
         if ((io_src_b & 3)==3){
@@ -270,7 +270,7 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
           }
 
 #if defined(SSE_IKBD_6301) && defined(SSE_ACIA_DOUBLE_BUFFER_TX)
-          if(!HD6301EMU_ON) // see agenda_ikbd_process()
+          if(!OPTION_C1) // see agenda_ikbd_process()
 #endif
             agenda_add(agenda_acia_tx_delay_IKBD,
               IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESSE_ALT,0);
@@ -279,7 +279,7 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 #if defined(SSE_IKBD_6301)&& defined(SSE_ACIA_DOUBLE_BUFFER_TX)
         // If the line is free, the byte in register will be sent very soon 
         // and the TX bit cleared very soon (double buffer)
-        if(hd6301_receiving_from_MC6850||!HD6301EMU_ON)  
+        if(hd6301_receiving_from_MC6850||!OPTION_C1)  
 #endif
           ACIA_IKBD.tx_flag=true;
 
@@ -326,7 +326,7 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
         {
           ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
 #if defined(SSE_IKBD_TRACE_6301)
-          if(HD6301EMU_ON)
+          if(OPTION_C1)
             TRACE_LOG("iow IKBD write %X (act %d PC %X tx%d)\n",io_src_b,ABSOLUTE_CPU_TIME,pc,ACIA_IKBD.tx_flag);
 #endif
           // agenda the byte to process
@@ -340,7 +340,7 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
         }
 
 #if defined(SSE_IKBD_6301)
-        if(HD6301EMU_ON)
+        if(OPTION_C1)
           hd6301_receiving_from_MC6850=1; // line is busy
 #endif
 
@@ -351,7 +351,7 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 #if defined(SSE_ACIA_380)
         ACIA_IKBD.TDR=io_src_b;
 #endif
-        if(HD6301EMU_ON)
+        if(OPTION_C1)
         {
           //TRACE_LOG("%d %d %d PC %X CPU $%X -> ACIA IKDB TDR (SR $%X)\n",TIMING_INFO,old_pc,io_src_b,ACIA_IKBD.SR);
           TRACE_LOG("%d %d %d PC %x ACIA TDR %X\n",TIMING_INFO,old_pc,io_src_b);
@@ -595,7 +595,7 @@ system exclusive start and end messages (F0 and F7).
       case 0xfffc06:  //data
       {
 #if defined(SSE_ACIA_REGISTERS) && defined(SSE_IKBD_6301)
-        if(HD6301EMU_ON)
+        if(OPTION_C1)
         {
           if( (ACIA_MIDI.CR&BIT_5)&&!(ACIA_MIDI.CR&BIT_6) )// IRQ transmit enabled
             ACIA_MIDI.SR&=~BIT_7; // clear IRQ bit
@@ -616,7 +616,7 @@ system exclusive start and end messages (F0 and F7).
           );
 
 #if defined(SSE_ACIA_MIDI_SR02_CYCLES)
-        if(HD6301EMU_ON)
+        if(OPTION_C1)
         TXEmptyAgenda=(abs(ACT-ACIA_MIDI.last_tx_write_time)
           >=ACIA_MIDI_OUT_CYCLES);
 #endif
@@ -642,7 +642,7 @@ system exclusive start and end messages (F0 and F7).
 #endif
           ){
 #if defined(SSE_IKBD_6301) //what was it?
-          if(!HD6301EMU_ON)
+          if(!OPTION_C1)
 #endif
           if (ACIA_MIDI.tx_irq_enabled){
             ACIA_MIDI.irq=false;
@@ -652,7 +652,7 @@ system exclusive start and end messages (F0 and F7).
 #if defined(SSE_MIDI)
 #if defined(SSE_ACIA_MIDI_SR02_CYCLES)
           ACIA_MIDI.last_tx_write_time=ACT; // record timing
-          if(!HD6301EMU_ON) //beta bugfix, was if(HD6301EMU_ON)...
+          if(!OPTION_C1) //beta bugfix, was if(OPTION_C1)...
 #endif
           agenda_add(agenda_acia_tx_delay_MIDI,ACIAClockToHBLS(ACIA_MIDI.clock_divide),0);
           MIDIPort.OutputByte(io_src_b); //SS timing?
@@ -720,7 +720,7 @@ system exclusive start and end messages (F0 and F7).
             int n=(addr-0xfffa01) >> 1;
 
 #if defined(SSE_INT_MFP_IRQ_TIMING)
-            if(OPTION_PRECISE_MFP)
+            if(OPTION_C2)
             {
 #if defined(SSE_INT_MFP_EVENT_WRITE)
 /*    If we come here while a write is pending, it should mean that we're at
@@ -757,7 +757,7 @@ system exclusive start and end messages (F0 and F7).
                 mfp_reg[n]=io_src_b;
 #if defined(SSE_INT_MFP_TIMER_B_AER2) // maybe Timer B's AER bit changed?
                 ASSERT(n==MFPR_AER || n==MFPR_DDR);
-                if(OPTION_PRECISE_MFP)
+                if(OPTION_C2)
                   CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq); //update
 #endif
               }
@@ -774,7 +774,7 @@ system exclusive start and end messages (F0 and F7).
                   if (old_1_to_0_detector_input && new_1_to_0_detector_input==0){
                     // Transition the right way! Set pending (interrupts happen later)
 #if defined(SSE_INT_MFP_REFACTOR2)
-                    if(OPTION_PRECISE_MFP) 
+                    if(OPTION_C2) 
                       mfp_set_pending(irq,ACT); // update timing, Irq...
                     else
 #endif                      
@@ -788,7 +788,8 @@ system exclusive start and end messages (F0 and F7).
 
               
 //              TRACE_MFP("F%d y%d c%d PC %X MFP IER%c %X\n",TIMING_INFO,old_pc,'A'+n-MFPR_IERA,io_src_b);
-              TRACE_MFP("%d PC %X MFP IER%c %X -> %X\n",ACT,old_pc,'A'+n-MFPR_IERA,mfp_reg[n],io_src_b);
+
+              TRACE_MFP("%d PC %X MFP IER%c %X -> %X\n",ABSOLUTE_CPU_TIME,old_pc,'A'+n-MFPR_IERA,mfp_reg[n],io_src_b);
 
               // See if timers have timed out before write to enabled. This is needed
               // because MFP_CALC_INTERRUPTS_ENABLED religns the timers (so they would
@@ -854,23 +855,23 @@ system exclusive start and end messages (F0 and F7).
               mfp_reg[n]&=io_src_b;
             }else if (n>=MFPR_TADR && n<=MFPR_TDDR){ //have to set counter as well as data register
 //              TRACE_MFP("F%d y%d c%d PC %X MFP T%cDR %X\n",TIMING_INFO,old_pc,'A'+n-MFPR_TADR,io_src_b);
-              TRACE_MFP("%d PC %X MFP T%cDR %X -> %X\n",ACT,old_pc,'A'+n-MFPR_TADR,mfp_reg[n],io_src_b);
+              TRACE_MFP("%d PC %X MFP T%cDR %X -> %X\n",ABSOLUTE_CPU_TIME,old_pc,'A'+n-MFPR_TADR,mfp_reg[n],io_src_b);
               mfp_set_timer_reg(n,mfp_reg[n],io_src_b);
               mfp_reg[n]=io_src_b;
             }else if (n==MFPR_TACR || n==MFPR_TBCR){ //wipe low-bit on set
 //              TRACE_MFP("F%d y%d c%d PC %X MFP T%cCR %X\n",TIMING_INFO,old_pc,'A'+n-MFPR_TACR,mfp_reg[n],io_src_b);
-              TRACE_MFP("%d PC %X MFP T%cCR %X -> %X\n",ACT,old_pc,'A'+n-MFPR_TACR,mfp_reg[n],io_src_b);
+              TRACE_MFP("%d PC %X MFP T%cCR %X -> %X\n",ABSOLUTE_CPU_TIME,old_pc,'A'+n-MFPR_TACR,mfp_reg[n],io_src_b);
               io_src_b &= BYTE(0xf);
               mfp_set_timer_reg(n,mfp_reg[n],io_src_b);
               mfp_reg[n]=io_src_b;
             }else if (n==MFPR_TCDCR){
 //              TRACE_MFP("F%d y%d c%d PC %X MFP TCDCR %X\n",TIMING_INFO,old_pc,io_src_b);
-              TRACE_MFP("%d PC %X MFP TCDCR %X -> %X\n",ACT,old_pc,mfp_reg[n],io_src_b);
+              TRACE_MFP("%d PC %X MFP TCDCR %X -> %X\n",ABSOLUTE_CPU_TIME,old_pc,mfp_reg[n],io_src_b);
               io_src_b&=BYTE(b01110111);
               mfp_set_timer_reg(n,mfp_reg[n],io_src_b);
               mfp_reg[n]=io_src_b;
             }else if (n==MFPR_VR){
-              TRACE_MFP("%d PC %X MFP VR %X -> %X\n",ACT,old_pc,mfp_reg[n],io_src_b);
+              TRACE_MFP("%d PC %X MFP VR %X -> %X\n",ABSOLUTE_CPU_TIME,old_pc,mfp_reg[n],io_src_b);
 #if defined(SSE_VAR_REWRITE_380)
               mfp_reg[n]=io_src_b;
 #else
@@ -892,7 +893,7 @@ system exclusive start and end messages (F0 and F7).
             }
 
 #if defined(SSE_INT_MFP_IRQ_TIMING)
-            if(OPTION_PRECISE_MFP)
+            if(OPTION_C2)
             {
 #if !defined(SSE_INT_MFP_REFACTOR2) // later, when register is updated
               MC68901.UpdateNextIrq();
@@ -924,7 +925,7 @@ system exclusive start and end messages (F0 and F7).
             //SS this seems suspicious but it is actually needed: Super Hang-On TODO
             ioaccess=old_ioaccess;
 #if defined(SSE_INT_MFP_REFACTOR2A)
-            if(OPTION_PRECISE_MFP)
+            if(OPTION_C2)
                 ioaccess|=IOACCESS_FLAG_DELAY_MFP; // we manage delay another way
             else
 #endif
@@ -962,10 +963,7 @@ system exclusive start and end messages (F0 and F7).
       break;
 
     case 0xff8a00:      //----------------------------------- Blitter
-#if defined(SSE_DEBUG_FRAME_REPORT_BLITTER)
-      FrameEvents.Add(scan_y,LINECYCLES,'B',((addr-0xff8a00)<<8)|io_src_b);
-#endif
-#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
       if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_BLITTER)
         FrameEvents.Add(scan_y,LINECYCLES,'B',((addr-0xff8a00)<<8)|io_src_b);
 #endif
@@ -974,7 +972,7 @@ system exclusive start and end messages (F0 and F7).
 
     case 0xff8900:      //----------------------------------- STE DMA Sound
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STF_DMA)
+#if defined(SSE_STF_DMA)
       if(ST_TYPE!=STE)
       {
         TRACE_LOG("STF write %X to DMA %X\n",io_src_b,addr);
@@ -1037,7 +1035,7 @@ Even though the samples are built on a byte-base, the DMA chip also only
  [Isn't it false? Sounds wrong when we do that]
 */
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND__)
+#if defined(SSE_SOUND__)
                 next_dma_sound_start=0;
 #else
                 next_dma_sound_start&=0x00ffff;
@@ -1045,7 +1043,7 @@ Even though the samples are built on a byte-base, the DMA chip also only
                 next_dma_sound_start|=io_src_b << 16;break;
               case 0x5:next_dma_sound_start&=0xff00ff;next_dma_sound_start|=io_src_b << 8;break;
               case 0x7:
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND)
+#if defined(SSE_SOUND)
                 io_src_b&=0xFE;
 #endif
                 next_dma_sound_start&=0xffff00;next_dma_sound_start|=io_src_b;break;
@@ -1074,7 +1072,7 @@ this address, the DMA-sound system will either stop or loop.
           case 0xff8913:   //LoByte of frame end address
             switch (addr & 0xf){
               case 0xf:
-#if defined(STEVEN_SEAGAL) && defined(SS_STE_SND__)
+#if defined(SS_STE_SND__)
                 next_dma_sound_end=0; // like 0xff8903, also sounds wrong
 #else
                 next_dma_sound_end&=0x00ffff;
@@ -1082,7 +1080,7 @@ this address, the DMA-sound system will either stop or loop.
                 next_dma_sound_end|=io_src_b << 16;break;
               case 0x1:next_dma_sound_end&=0xff00ff;next_dma_sound_end|=io_src_b << 8;break;
               case 0x3:
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND)
+#if defined(SSE_SOUND)
                 //ASSERT(!(io_src_b&1));// MOLZ
                 io_src_b&=0xFE;
 #endif
@@ -1119,7 +1117,7 @@ This address is being used to feed the National LMC both address and data
  Bugfix v3.7, negative values if some minutes into emulation. eg Antiques.
 */
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY_B)
-            if(SSE_HACKS_ON 
+            if(OPTION_HACKS 
               && abs(ACT-MicroWire_StartTime) <MICROWIRE_LATENCY_CYCLES) 
 #else
             if(ACT-MicroWire_StartTime<MICROWIRE_LATENCY_CYCLES) 
@@ -1135,7 +1133,7 @@ This address is being used to feed the National LMC both address and data
           case 0xff8923: // Set low byte of MicroWire_Data
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY)
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY_B)
-            if(SSE_HACKS_ON 
+            if(OPTION_HACKS 
               && abs(ACT-MicroWire_StartTime) <MICROWIRE_LATENCY_CYCLES) 
 #else
             if(ACT-MicroWire_StartTime<MICROWIRE_LATENCY_CYCLES) 
@@ -1287,14 +1285,14 @@ bits are being ignored.
                       // lv rv and mv are numbers between 0 and 1
 //SS what is does here is transform the "DB" volume values in a sample
 //range??? isn't it gross?
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE)
                       dma_sound_l_top_val=128;
                       dma_sound_r_top_val=128;
 #else
                       dma_sound_l_top_val=BYTE(128.0*lv*mv);
                       dma_sound_r_top_val=BYTE(128.0*rv*mv);
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE)
                       TRACE_LOG("STE Snd master %X L %X R %X\n",dma_sound_volume,dma_sound_l_volume,dma_sound_r_volume);
                       TRACE_LOG("STE Snd vol L %d R %d\n",dma_sound_l_top_val,dma_sound_r_top_val);
                       //dma_sound_l_top_val=dma_sound_r_top_val=128;
@@ -1314,7 +1312,7 @@ Each increment represents 2 db, normalized at 15 KHz.
 Set at $8D by TOS1.06.
 Set at $86 for neutral by Beat Demo, max= min
 */
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE)
                       TRACE_LOG("DMA snd Treble $%X\n",io_src_b); 
                       io_src_b&=0xF;
                       if(io_src_b>0xC)
@@ -1333,7 +1331,7 @@ Set at $86 for neutral by Beat Demo, max= min
 Each increment represents 2 db, normalized at 50 Hz.
 Set at D by TOS1.06.
 */
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE)
                       TRACE_LOG("DMA snd Bass $%X\n",io_src_b); 
                       io_src_b&=0xF;
                       if(io_src_b>0xC)
@@ -1382,7 +1380,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
           case 0xff8924:  // Set high byte of MicroWire_Mask
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY)
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY_B)
-            if(SSE_HACKS_ON 
+            if(OPTION_HACKS 
               && abs(ACT-MicroWire_StartTime) <MICROWIRE_LATENCY_CYCLES) 
 #else
             if(ACT-MicroWire_StartTime<MICROWIRE_LATENCY_CYCLES) 
@@ -1398,7 +1396,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
           case 0xff8925:  // Set low byte of MicroWire_Mask
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY)
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY_B)
-            if(SSE_HACKS_ON 
+            if(OPTION_HACKS 
               && abs(ACT-MicroWire_StartTime) <MICROWIRE_LATENCY_CYCLES) 
 #else
             if(ACT-MicroWire_StartTime<MICROWIRE_LATENCY_CYCLES) 
@@ -1533,7 +1531,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 */
     case 0xff8800:{  //--------------------------------------- sound chip
 #if defined(SSE_YM2149_NO_JAM_IF_NOT_RW)
-      if (SSE_HACKS_ON && (addr & 1) && io_word_access)
+      if (OPTION_HACKS && (addr & 1) && io_word_access)
         break; //odd addresses ignored on word writes, don't jam?
 #endif
       if ((ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_W)==0){
@@ -1591,7 +1589,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
   }
 */
 #if defined(SSE_DRIVE_SINGLE_SIDE_PASTI)//no
-          if(SSE_HACKS_ON 
+          if(OPTION_HACKS 
            // && (SSEOption.SingleSideDriveMap&(floppy_current_drive()+1) ))
             && (SSEOption.SingleSideDriveMap&(
             //floppy_current_drive()
@@ -1605,14 +1603,13 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
           if (hPasti && pasti_active) 
             pasti->WritePorta(io_src_b,ABSOLUTE_CPU_TIME);
 #endif//pasti
-#if defined(SSE_FDC_INDEX_PULSE_COUNTER) && defined(SSE_DRIVE) \
-  && defined(SSE_DEBUG) && defined(SSE_YM2149)
+#if defined(SSE_FDC_INDEX_PULSE_COUNTER) && defined(SSE_DEBUG) && defined(SSE_YM2149_OBJECT)
 /* Symic Demo TODO right or wrong?
 */
           if(WD1772.IndexCounter && YM2149.Drive()==TYM2149::NO_VALID_DRIVE)
             TRACE_FDC("drive deselect while IP counter %d\n",WD1772.IndexCounter);
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
+#if defined(SSE_DISK_CAPS)
           if(Caps.Active) // like the above (we imitate!)
             Caps.WritePsgA(io_src_b);
 #endif
@@ -1660,7 +1657,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
               log_to_section(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Unset current drive - guess A:");
             }
 #endif
-#if !(defined(STEVEN_SEAGAL)&&defined(SSE_OSD_DRIVE_LED3))
+#if !defined(SSE_OSD_DRIVE_LED3)
             // disk_light_off_time can only get this far in the future when using pasti
             if (int(disk_light_off_time)-int(timer) < 1000*10){
               disk_light_off_time=timer+DisableDiskLightAfter;
@@ -1684,7 +1681,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
     }
     case 0xff8600:{  //--------------------------------------- DMA / FDC
 
-#if defined(SSE_DMA) // taken out of here, in SSEFloppy
+#if defined(SSE_DMA_OBJECT)
       Dma.IOWrite(addr,io_src_b);
       break;
 #else // Steem 3.2
@@ -1835,7 +1832,11 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 #endif//!dma
     }
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER_IO)
+#if defined(SSE_VIDEO_CHIPSET)
+
+    //////////////////////
+    // Shifter-MMU-GLUE //
+    //////////////////////
 
     case 0xff8200: {
 
@@ -1845,7 +1846,381 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
         cpu_cycles+=-2; // = +2 cycles!
 #endif
 
-      Shifter.IOWrite(addr,io_src_b);
+  ASSERT( (addr&0xFFFF00)==0xff8200 );
+
+#if defined(SSE_VIDEO_IOW_TRACE)  // not LOG
+  TRACE("(%d %d/%d) Shifter write %X=%X\n",FRAME,scan_y,LINECYCLES,addr,io_src_b);
+#endif  
+
+  if ((addr>=0xff8210 && addr<0xff8240) || addr>=0xff8280){
+    exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
+  }
+  
+  /////////////
+  // Palette // // SS word (long) writes far more frequent (see below)
+  /////////////
+  
+  else if (addr>=0xff8240 && addr<0xff8260){  //palette
+    int n=(addr-0xff8240) >> 1; 
+    
+    // Writing byte to palette writes that byte to both the low and high byte!
+    WORD new_pal=MAKEWORD(io_src_b,io_src_b & 0xf);
+
+#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
+      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_PAL)
+        FrameEvents.Add(scan_y,LINECYCLES,'p', (n<<12)|io_src_b);  // little p
+#endif
+    
+#if defined(SSE_SHIFTER_PALETTE_BYTE_CHANGE) 
+    // TESTING maybe Steem was right, Hatari is wrong
+    // v3.6.3 apparently Steem was right, undef
+    if(addr&1) // the double write happens only on even addresses (?)
+    {
+      new_pal=(STpal[n]&0xFF00)|io_src_b; // fixes Golden Soundtracker demo
+      TRACE_VID("Single byte  %X write pal %X STPal[%d] %X->%X\n",io_src_b,addr,n,STpal[n],new_pal);
+    }
+#endif
+    
+    Shifter.SetPal(n,new_pal);
+    log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Palette change at scan_y="+scan_y+" cycle "+(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl));
+    
+    
+  }
+  else{
+    switch(addr){
+      
+/*
+Video Base Address:                           ST     STE
+
+$FFFF8201    0 0 X X X X X X   High Byte      yes    yes
+$FFFF8203    X X X X X X X X   Mid Byte       yes    yes
+$FFFF820D    X X X X X X X 0   Low Byte       no     yes
+
+These registers only contain the "reset" value for the Shifter after a 
+whole screen has been drawn. It does not affect the current screen, but 
+the one for the next VBL. To make immediate changes on the screen, use 
+the Video Address Counter [(SDP)].
+
+According to ST-CNX, those registers are in the MMU, not in the Shifter.
+
+ STE doc by Paranoid: for compatibility reasons, the low-byte
+ of the Video Base Address is ALWAYS set to 0 when the mid- or high-byte of
+ the Video Base Address are set. 
+ E.g.: Leavin' Teramis
+
+*/
+     
+    case 0xff8201:  //high byte of screen memory address
+#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
+      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_VIDEOBASE)
+        FrameEvents.Add(scan_y,LINECYCLES,'V',io_src_b); 
+#endif
+
+      // asserts on SoWatt, Leavin' Teramis, High Fidelity Dreams
+      // ...
+      //ASSERT( mem_len>FOUR_MEGS || !(io_src_b&(~b00111111)) ); 
+      if (mem_len<=FOUR_MEGS
+#if defined(SSE_TOS_GEMDOS_EM_382)
+        && !extended_monitor
+#endif
+        ) 
+        io_src_b&=b00111111;
+      DWORD_B_2(&xbios2)=io_src_b;
+#if defined(SSE_STF_VBASELO)
+      if(ST_TYPE==STE) 
+#endif
+        DWORD_B_0(&xbios2)=0; 
+      log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set screen base to "+HEXSl(xbios2,6));
+      break;
+      
+    case 0xff8203:  //mid byte of screen memory address
+#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
+      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_VIDEOBASE)
+        FrameEvents.Add(scan_y,LINECYCLES,'M',io_src_b); 
+#endif
+#if defined(SSE_TOS_GEMDOS_EM_382)
+      if(!extended_monitor)
+#endif
+
+      DWORD_B_1(&xbios2)=io_src_b;
+
+#if defined(SSE_STF_VBASELO)
+      if(ST_TYPE==STE) 
+#endif
+        DWORD_B_0(&xbios2)=0; 
+      log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set screen base to "+HEXSl(xbios2,6));
+      break;
+      
+    case 0xff8205:  //high byte of draw pointer
+    case 0xff8207:  //mid byte of draw pointer
+    case 0xff8209:  //low byte of draw pointer
+      
+#if defined(SSE_SHIFTER_SDP_WRITE)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
+      MMU.WriteVideoCounter(addr,io_src_b);
+#else
+      Shifter.WriteSDP(addr,io_src_b);
+#endif
+      break;
+      
+#else // Steem 3.2 or SSE_SHIFTER_SDP_WRITE not defined
+      {
+        //          int srp=scanline_raster_position();
+        int dst=ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl;
+        dst-=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN;
+        dst+=16;dst&=-16;
+        dst+=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN;
+#if defined(SSE_SHIFTER) // video defined but not SDP
+        Shifter.Render(dst);
+#else
+        draw_scanline_to(dst); // This makes shifter_draw_pointer up to date
+#endif
+        MEM_ADDRESS nsdp=shifter_draw_pointer;
+        if (mem_len<=FOUR_MEGS && addr==0xff8205) io_src_b&=b00111111;
+        DWORD_B(&nsdp,(0xff8209-addr)/2)=io_src_b;
+        
+        /*
+        if (shifter_hscroll){
+        if (dst>=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN-32 && dst<CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320-16){
+        log_to(LOGSECTION_VIDEO,Str("ATTANT: addr=")+HEXSl(addr,6));
+        if (addr==0xff8209){
+        // If you set low byte while on screen with hscroll on then sdp will
+        // be an extra raster ahead. Steem's sdp is always 1 raster ahead, so
+        // correct for that here.
+        nsdp-=8;
+        }
+        }
+        }
+        */
+        
+        //          int off=(get_shifter_draw_pointer(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl)&-8)-shifter_draw_pointer;
+        //          shifter_draw_pointer=nsdp-off;
+        shifter_draw_pointer_at_start_of_line-=shifter_draw_pointer;
+        shifter_draw_pointer_at_start_of_line+=nsdp;
+        shifter_draw_pointer=nsdp;
+        
+        log_to(LOGSECTION_VIDEO,Str("VIDEO: ")+HEXSl(old_pc,6)+" - Set Shifter draw pointer to "+
+          HEXSl(shifter_draw_pointer,6)+" at "+scanline_cycle_log()+", aligned to "+dst);
+        break;
+      }
+#endif
+
+    case 0xff820a: //synchronization mode      
+      GLU.SetSyncMode(io_src_b); 
+      break;
+      
+/* 
+VBASELO 
+This register contains the low-order byte of the video display base address. 
+It can be altered at any time and will affect the next display processor data 
+fetch. it is recommended that the video display address be altered only during 
+vertical and horizontal blanking or display garbage may result. 
+
+STE only. That's why the low byte is separated from the high & mid bytes.
+Writing on it on a STF does nothing.
+
+Last bit always cleared (we must do it).
+*/
+    case 0xff820d:  //low byte of screen memory address
+#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
+      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_VIDEOBASE)
+        FrameEvents.Add(scan_y,LINECYCLES,'v',io_src_b); 
+#endif
+
+#if defined(SSE_STF_VBASELO)
+      if(ST_TYPE!=STE)
+      {
+        TRACE_VID("STF write %X to %X\n",io_src_b,addr);
+        break; // fixes Lemmings 40; used by Beyond/Pax Plax Parallax
+      }
+#endif
+      io_src_b&=~1;
+      xbios2&=0xFFFF00;
+      xbios2|=io_src_b;
+      log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set screen base to "+HEXSl(xbios2,6));
+      break;
+      
+/*
+LINEWID This register indicates the number of extra words of data (beyond
+that required by an ordinary ST at the same resolution) which represent
+a single display line. If it is zero, this is the same as an ordinary ST. 
+If it is nonzero, that many additional words of data will constitute a
+single video line (thus allowing virtual screens wider than the displayed 
+screen). CAUTION In fact, this register contains the word offset which 
+the display processor will add to the video display address to point to 
+the next line. If you are actively scrolling (HSCROLL <> 0), this register
+should contain The additional width of a display line minus one data fetch
+(in low resolution one data fetch would be four words, one word for 
+monochrome, etc.).
+
+Line-Offset Register
+  
+FFFF820F  X X X X X X X X X                  no     yes
+    
+This register contains the value how many WORDS (not BYTES!) the Shifter is
+supposed to skip after each Rasterline. This register enables virtual screens
+that are (horizontally) larger than the displayed screen by making the 
+Shifter skip the set number of words when a line has been drawn on screen.    
+
+The Line Offset Register is very critical. Make sure it contains the correct
+value at any time. If the Pixel Offset Register contains a zero, the Line 
+Offset Register contains the exact number of words to skip after each line. 
+But if you set the Pixel Offset Register to "X", the Shifter will still 
+display 320 (640) pixels a line and therefore has to read "X" pixels from
+the NEXT word which it would have skipped if the Pixel offset Register 
+contained a "0". Hence, for any Pixel Offset Value > 0, please note that 
+the Shifter has to read (a few bits) more each rasterline and these bits 
+must NOT be skipped using the Line Offset Register. 
+*/
+    case 0xff820f:   
+#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
+      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_HSCROLL)
+        FrameEvents.Add(scan_y,LINECYCLES,'L',io_src_b); 
+#endif
+
+#if defined(SSE_STF_LINEWID)
+      if(ST_TYPE!=STE)
+      {
+        TRACE_VID("STF write %X to %X\n",io_src_b,addr);
+        break; // fixes Imagination/Roller Coaster mush
+      }
+#endif
+      
+#if defined(SSE_SHIFTER) 
+      Shifter.Render(LINECYCLES,DISPATCHER_LINEWIDTH); // eg Beat Demo
+#else
+      draw_scanline_to(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl); // Update sdp if off right  
+#endif
+      
+#if defined(SSE_DEBUG_SDP_TRACE)
+      TRACE_VID("F%d y%d c%d LW %d -> %d\n",FRAME,scan_y,LINECYCLES,LINEWID,io_src_b);
+#endif
+
+#if defined(SSE_MMU_LINEWID_TIMING)
+      shifter_fetch_extra_words=io_src_b;
+      if(LINECYCLES<GLU.CurrentScanline.EndCycle+MMU_PREFETCH_LATENCY)
+        LINEWID=shifter_fetch_extra_words;
+#else
+      LINEWID=io_src_b;
+#endif
+      log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set shifter_fetch_extra_words to "+
+        (shifter_fetch_extra_words)+" at "+scanline_cycle_log());
+      break;
+
+    case 0xff8260: //resolution
+      GLU.SetShiftMode(io_src_b);
+      break;
+      
+/*
+HSCROLL 
+This register contains the pixel scroll offset. 
+If it is zero, this is the same as an ordinary ST. 
+If it is nonzero, it indicates which data bits constitute the first pixel 
+from the first word of data. 
+That is, the leftmost displayed pixel is selected from the first data word(s)
+of a given line by this register.
+
+
+FF8264 ---- ---- ---- xxxx
+
+[Notice how writes to FF8264 should be ignored. They aren't.]
+
+Horizontal Bitwise Scroll.
+Delays the start of screen by the specified number of bits. 
+
+Video Base Address Pixel Offset              STF     STE
+
+$FFFF8265  0 0 0 0 X X X X                   no      yes
+
+This register allows to skip from a single to 15 pixels at the start of each
+rasterline to allow horizontal fine-scrolling. 
+*/
+      
+    case 0xff8264:   
+      // Set hscroll and don't change line length
+      // This is an odd register, when you change hscroll below to non-zero each
+      // scanline becomes 4 words longer to allow for extra screen data. This register
+      // sets hscroll but doesn't do that, instead the left border is increased by
+      // 16 pixels. If you have got hscroll extra fetch turned on then setting this
+      // to 0 confuses the Shifter and causes it to shrink the left border by 16 pixels.
+    case 0xff8265:  // Hscroll
+#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
+      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_HSCROLL)
+        FrameEvents.Add(scan_y,LINECYCLES,(addr==0xff8264)?'h':'H',io_src_b); 
+#endif
+#if defined(SSE_STF_HSCROLL)
+      if(ST_TYPE!=STE) 
+      {
+        TRACE_VID("STF write %X to %X\n",io_src_b,addr); //ST-CNX
+        break; // fixes Hyperforce
+      }
+      else
+#endif
+      {
+        int cycles_in=(int)(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
+#if defined(SSE_DEBUG_SDP_TRACE)
+        TRACE_VID("F%d y%d c%d HS %d -> %d\n",FRAME,scan_y,LINECYCLES,HSCROLL,io_src_b);
+#endif
+#if defined(SSE_SHIFTER_HSCROLL_380) && !defined(SSE_VS2008_WARNING_382)
+        BYTE former_hscroll=HSCROLL;
+#endif
+        HSCROLL=io_src_b & 0xf; // limited to 4bit
+
+        log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set horizontal scroll ("+HEXSl(addr,6)+
+          ") to "+(shifter_hscroll)+" at "+scanline_cycle_log());
+        if (addr==0xff8265) 
+          shifter_hscroll_extra_fetch=(HSCROLL!=0);
+
+#if defined(SSE_SHIFTER_HSCROLL_380)
+/*  Better test, should new HSCROLL apply on current line
+    TODO: what is exact threshold ?
+*/
+        if(cycles_in<=GLU.CurrentScanline.StartCycle+24) {
+#elif defined(SSE_VID_BORDERS)
+        if (cycles_in<=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN-BORDER_SIDE){
+#else
+        if (cycles_in<=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN-32){
+#endif           // eg Coreflakes hidden screen //SS:which one?...
+#if defined(SSE_SHIFTER_HSCROLL_380)
+          Shifter.hscroll0=HSCROLL;
+#endif
+#if defined(SSE_SHIFTER_HSCROLL_380)
+          {
+#else
+          if (left_border>0){ // Don't do this if left border removed!
+#endif
+            shifter_skip_raster_for_hscroll = (HSCROLL!=0);
+
+#if defined(SSE_SHIFTER_HSCROLL_381) //argh!
+#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
+            GLU.AdaptScanlineValues(cycles_in); // ST Magazin
+#endif
+#ifndef SSE_VID_BORDERS
+            if (left_border>=BORDER_SIDE) {//ux382
+#else
+            if (left_border>=SideBorderSize){ // Don't do this if left border removed!
+#endif
+#elif defined(SSE_SHIFTER_HSCROLL_380)
+            if (left_border>0){ // Don't do this if left border removed!
+#endif
+              left_border=BORDER_SIDE;
+              if (HSCROLL)
+                left_border+=16;
+              if(shifter_hscroll_extra_fetch) 
+                left_border-=16;
+#if defined(SSE_SHIFTER_HSCROLL_380)
+            }
+#endif
+#if defined(SSE_SHIFTER_HSCROLL_380) // update shifter_pixel for new HSCROLL
+            shifter_pixel=HSCROLL; //fixes We Were STE distorter (party version)
+#endif
+          }
+        }
+      } 
+      break;
+        
+    }//sw
+  }//if     
 
 #if defined(SSE_MMU_WU_IO_BYTES_W_SHIFTER_ONLY)
       if(adjust_cycles)
@@ -2094,8 +2469,13 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_IO
-#endif//SS-Shifter
+#endif
     }
+
+    /////////
+    // MMU //
+    /////////
+
     case 0xff8000:  //--------------------------------------- memory
     {
       if (addr==0xff8001){ //Memory Configuration
@@ -2188,7 +2568,7 @@ MMU PC E000E6 Byte A RAM 1024K Bank 0 512 Bank 1 512 testing 1
 MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
 
 */
-#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_WRITE) 
+#if defined(SSE_MMU_WRITE) 
         if(mem_len<=FOUR_MEGS){ // programs actually may write here
 #else
         if (old_pc>=FOURTEEN_MEGS && mem_len<=FOUR_MEGS){
@@ -2204,7 +2584,7 @@ MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
           mmu_confused=false;
           if (bank_length[0]) if (mmu_bank_length[0]!=bank_length[0]) mmu_confused=true;
           if (bank_length[1]) if (mmu_bank_length[1]!=bank_length[1]) mmu_confused=true;
-#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_WRITE)
+#if defined(SSE_MMU_WRITE)
           if(old_pc<FOURTEEN_MEGS) // the write doesn't "confuse" the MMU
           {
 #if defined(SSE_BOILER_TRACE_CONTROL)
@@ -2283,7 +2663,7 @@ MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
       if (addr>0xff9001) exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
       break;
     }case 0xff9200:{ //paddles
-#if defined(STEVEN_SEAGAL) && defined(SSE_STF_PADDLES)
+#if defined(SSE_STF_PADDLES)
        if(ST_TYPE!=STE)
        {
          TRACE_LOG("STF write %X to %X\n",io_src_b,addr);
@@ -2313,7 +2693,7 @@ MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
 //---------------------------------------------------------------------------
 void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
 {
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_TRACE_IO)
+#if defined(SSE_DEBUG_TRACE_IO)
 #if defined(SSE_BOILER_TRACE_CONTROL)
   if (((1<<15)&d2_dpeek(FAKE_IO_START+24))
   // we add conditions address range - logsection enabled
@@ -2340,7 +2720,7 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
   M68000.dbus=io_src_w;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_WU_IOW_HACK)//no
+#if defined(SSE_MMU_WU_IOW_HACK)//no
   int CyclesIn=LINECYCLES;
   if(MMU.OnMmuCycles(CyclesIn))
       cpu_cycles-=2; // - = + !!!!
@@ -2352,15 +2732,9 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
 
 //    TRACE("PC %X W PAL %X %X\n",old_pc,n,io_src_w);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER)
-  
-#if defined(SSE_DEBUG_FRAME_REPORT_PAL)
-    if(Blit.HasBus)
-      FrameEvents.Add(scan_y,LINECYCLES,'Q',(n<<12)|io_src_w); 
-    else
-      FrameEvents.Add(scan_y,LINECYCLES,'P',(n<<12)|io_src_w); 
-#endif
-#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
+#if defined(SSE_SHIFTER)
+
+#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK1&FRAME_REPORT_MASK_PAL) 
   {
     if(Blit.HasBus)
@@ -2397,7 +2771,7 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
     io_write_b(addr+1,LOBYTE(io_src_w));
     io_word_access=0;
   }
-#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_WU_IOW_HACK)//MFD if never in a release
+#if defined(SSE_MMU_WU_IOW_HACK)//no
   if(MMU.OnMmuCycles(CyclesIn))
     cpu_cycles+=2;
 #endif

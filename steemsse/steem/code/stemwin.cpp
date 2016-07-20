@@ -5,7 +5,7 @@ DESCRIPTION: This file (included from gui.cpp) handles the main Steem window
 and its various buttons.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: stemwin.cpp")
 #endif
 
@@ -13,9 +13,6 @@ and its various buttons.
 
 #define LOGSECTION LOGSECTION_INIT//SS
 
-#if defined(SSE_GUI_STATUS_STRING_380)
-extern char ansi_name[MAX_PATH];
-#endif
 //---------------------------------------------------------------------------
 void StemWinResize(int xo,int yo)
 {
@@ -32,9 +29,15 @@ void StemWinResize(int xo,int yo)
 #else
     int FrameWidth=0;
 #endif
+#if defined(SSE_VAR_RESIZE_383)
+    SetStemWinSize(min(em_width,(WORD)(GetScreenWidth()-4-FrameWidth)),
+                    min(em_height,(WORD)(GetScreenHeight()-5-MENUHEIGHT-4-30)),
+                    0,0);
+#else
     SetStemWinSize(min(em_width,GetScreenWidth()-4-FrameWidth),
                     min(em_height,GetScreenHeight()-5-MENUHEIGHT-4-30),
                     0,0);
+#endif
   }else
 #endif
 
@@ -325,7 +328,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           }
         }
       }else if ((LOWORD(wPar)>=210 && LOWORD(wPar)<220) || LOWORD(wPar)==203 || LOWORD(wPar)==207 || LOWORD(wPar)==208
-#if defined(SSE_VAR_SNAPSHOT_INI)
+#if defined(SSE_GUI_SNAPSHOT_INI)
         || LOWORD(wPar)==209
 #endif
         ){
@@ -335,7 +338,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           EasyStr fn=LastSnapShot;
           if (LOWORD(wPar)==207) fn=WriteDir+SLASH+"auto_reset_backup.sts", AddToHistory=0;
           if (LOWORD(wPar)==208) fn=WriteDir+SLASH+"auto_loadsnapshot_backup.sts", AddToHistory=0;
-#if defined(SSE_VAR_SNAPSHOT_INI)
+#if defined(SSE_GUI_SNAPSHOT_INI)
           //TRACE("BootStateFile = %s\n",BootStateFile.Text);
           if(LOWORD(wPar)==209)
             fn=BootStateFile;
@@ -370,7 +373,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             }
           }
         }
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_CONFIG_FILE)
+#if defined(SSE_GUI_CONFIG_FILE)
 /*  v3.8.0 Player has clicked on the 'Configuration' icon, then
     on 'Load configuration file' or 'Save configuration file'.
     We load/save an ini file like it was steem.ini, using Steem's
@@ -399,7 +402,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             // Load
             if (LOWORD(wPar)==443){
               //TRACE("load config file %s\n",FilNam.Text);
-              WAKE_UP_STATE=CSF.GetInt("Machine","WakeUpState",0);
+              OPTION_WS=CSF.GetInt("Machine","WakeUpState",0);
               LoadAllDialogData(false,"",NULL,&CSF); // radical!
               ROMFile=CSF.GetStr("Machine","ROM_File",ROMFile);
 #if defined(SSE_GUI_CONFIG_FILE2)
@@ -420,7 +423,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             {
               //TRACE("save config file %s\n",FilNam.Text);
               SaveAllDialogData(false,"",&CSF); // radical!
-              CSF.SetStr("Machine","WakeUpState",EasyStr(WAKE_UP_STATE));
+              CSF.SetStr("Machine","WakeUpState",EasyStr(OPTION_WS));
             }     
             CSF.Close();
           }
@@ -438,7 +441,11 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
               int old_runstate=runstate;
               if (FullScreen && runstate==RUNSTATE_RUNNING){
                 runstate=RUNSTATE_STOPPED;
+#if defined(SSE_VS2008_WARNING_383)
+                Disp.RunEnd();
+#else
                 Disp.RunEnd(0);
+#endif
                 UpdateWindow(StemWin);
               }
 
@@ -649,7 +656,11 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           }
           return 0;
         case 110:case 111:case 112: //Borders
+#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_383)
+          OptionBox.SetBorder((wPar-110)!=0);
+#else
           OptionBox.SetBorder(wPar-110);
+#endif
           OptionBox.UpdateWindowSizeAndBorder();
 #if defined(SSE_VID_DISABLE_AUTOBORDER)
           CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min((int)border,1),MF_BYCOMMAND);
@@ -693,7 +704,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       }
 #endif
       
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_F12)
+#if defined(SSE_GUI_F12)
       // Adding F12 as emulator start/stop.
       if(wPar==VK_F12)
       {
@@ -703,7 +714,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           { PostRunMessage();} // it's a macro
           else
           {
-#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_DEBUG_FRAME_REPORT_ON_STOP)
+#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_ON_STOP)
             FrameEvents.Report();
 #endif
 
@@ -718,7 +729,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         if (wPar==VK_PAUSE){
           if (Mess==WM_KEYUP || Mess==WM_SYSKEYUP){
             if (FullScreen || GetKeyState(VK_SHIFT)<0){
-#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_DEBUG_FRAME_REPORT_ON_STOP)
+#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_ON_STOP)
               FrameEvents.Report();
 #endif
               runstate=RUNSTATE_STOPPING;
@@ -789,7 +800,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           }else if (StartEmuOnClick){
             PostRunMessage();
           }
-#if defined(SSE_DEBUG_REPORT_SCAN_Y_ON_CLICK)
+#if defined(SSE_BOILER_REPORT_SCAN_Y_ON_CLICK)
 /*  When emulation is stopped, right click in window will tell which
     scanline we're at.
     To do this we use the "status bar".
@@ -810,8 +821,8 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 #endif
 #if defined(SSE_GUI_STATUS_STRING)
             
-#if defined(SSE_GUI_STATUS_STRING_380)
-#if defined(SSE_DEBUG_REPORT_SDP_ON_CLICK) && defined(SSE_SHIFTER)
+#if defined(SSE_GUI_STATUS_STRING_ICONS)
+#if defined(SSE_BOILER_REPORT_SDP_ON_CLICK) && defined(SSE_SHIFTER)
             MEM_ADDRESS computed_sdp=FrameEvents.GetSDP(guessed_x,guessed_scan_y);
             sprintf(ansi_name,"X%d Y%d $%X",guessed_x,guessed_scan_y,computed_sdp);
 #else
@@ -822,9 +833,9 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             InvalidateRect(status_bar_win,NULL,false);
 #else
             HWND status_bar_win=GetDlgItem(StemWin,120); // get handle
-#if defined(SSE_DEBUG_REPORT_SDP_ON_CLICK) && defined(SSE_SHIFTER)
+#if defined(SSE_BOILER_REPORT_SDP_ON_CLICK) && defined(SSE_SHIFTER)
             char tmp[12+1+6];
-#if defined(SSE_DEBUG_FRAME_REPORT)
+#if defined(SSE_BOILER_FRAME_REPORT)
             MEM_ADDRESS computed_sdp = FrameEvents.GetSDP(guessed_x,guessed_scan_y);
             sprintf(tmp,"X%d Y%d $%X",guessed_x,guessed_scan_y,computed_sdp);
 #endif
@@ -833,7 +844,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             sprintf(tmp,"X%d Y%d",guessed_x,guessed_scan_y);
 #endif
             SendMessage(status_bar_win,WM_SETTEXT,0,(LPARAM)(LPCTSTR)tmp);
-#endif//#define SSE_GUI_STATUS_STRING_380
+#endif//#define SSE_GUI_STATUS_STRING_ICONS
 #endif
           }
 
@@ -1000,7 +1011,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       if (FullScreen){
         CanUse_400=true;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS)
+#if defined(SSE_VID_BORDERS)
       }
       else if (border & 1)
       {// blurry display in 'no stretch' mode? check here!!!!!!!!!!!!!!!!
@@ -1071,15 +1082,10 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       if (NextClipboardViewerWin) SendMessage(NextClipboardViewerWin,Mess,wPar,lPar);
       break;
     case WM_ACTIVATEAPP:
+#if defined(SSE_VS2008_WARNING_383)
+      bAppActive=(wPar!=0);
+#else
       bAppActive=(bool)wPar;
-#if defined(SSE_VID_VSYNC_WINDOW_CRASH_FIX2)
-      if(!bAppActive)
-      {
-        SSE_WIN_VSYNC=SSE_3BUFFER=false; // avoid crash going in or out
-#if defined(SSE_GUI_OPTIONS_REFRESH)
-        OptionBox.SSEUpdateIfVisible();
-#endif
-      }
 #endif
       if (FullScreen){
         if (wPar){  //Activating
@@ -1162,7 +1168,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       ChangeClipboardChain(StemWin,NextClipboardViewerWin);
       StemWin=NULL;
       break;
-#if defined(SSE_GUI_STATUS_STRING_380) //v3.8.0
+#if defined(SSE_GUI_STATUS_STRING_ICONS) //v3.8.0
 /*  It is cool to add country flag next to TOS in the status bar, so
     let's do some Windows programming. 
 */
@@ -1174,8 +1180,9 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 #define myHdc ((DRAWITEMSTRUCT*)lPar)->hDC 
 #define status_bar ansi_name
 #define myRect ((DRAWITEMSTRUCT*)lPar)->rcItem
+#if !defined(SSE_VS2008_WARNING_383)
         HWND status_bar_win=GetDlgItem(StemWin,wPar); // get handle
-        ASSERT(status_bar_win);
+#endif
         // erase rectangle (different colour for hires)
         FillRect(myHdc,&((DRAWITEMSTRUCT*)lPar)->rcItem,((COLOUR_MONITOR)?
           (HBRUSH)(COLOR_MENU+1):(HBRUSH)(COLOR_WINDOWFRAME+1)));
@@ -1188,17 +1195,19 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         SIZE Size;
         GetTextExtentPoint32(myHdc,status_bar,nchars,&Size);
         myRect.left=myRect.right/2-Size.cx/2;
+#ifdef SSE_FLOPPY
         if(ADAT)
           myRect.left-=8;
+#endif
 #if defined(SSE_GUI_STATUS_STRING_HD)
         if(!HardDiskMan.DisableHardDrives||ACSI_EMU_ON)
           myRect.left-=8;
 #endif
-        if(HD6301EMU_ON)
+        if(OPTION_C1)
           myRect.left-=8;
-        if(OPTION_PRECISE_MFP)
+        if(OPTION_C2)
           myRect.left-=8;
-        if(SSE_HACKS_ON)
+        if(OPTION_HACKS)
           myRect.left-=8;
         //ASSERT(myRect.left>=0);//that would be stupid
         TextOut(myHdc,myRect.left,3,status_bar,nchars);
@@ -1212,18 +1221,20 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           if (FlagIdx>=0){ 
              //ASSERT(FlagIdx<10); 
              ASSERT(FlagIdx<14); 
-            BitBlt(myHdc,myRect.left+((WAKE_UP_STATE)?58:51),4,RC_FLAG_WIDTH,
+            BitBlt(myHdc,myRect.left+((OPTION_WS)?58:51),4,RC_FLAG_WIDTH,
               RC_FLAG_HEIGHT,TempDC,FlagIdx*RC_FLAG_WIDTH,0,SRCCOPY);
           }
           DeleteObject(SelectObject(TempDC,OldBmp));
           DeleteDC(TempDC);
           int myx=myRect.left+Size.cx+3;
+#ifdef SSE_FLOPPY
           if(ADAT)
           {
             DrawIconEx(myHdc,myx,0,
               hGUIIcon[RC_ICO_ACCURATEFDC],16,16,0,NULL,DI_NORMAL);
             myx+=19;
           }
+#endif
 #if defined(SSE_GUI_STATUS_STRING_HD)
           if(!HardDiskMan.DisableHardDrives||ACSI_EMU_ON)
           {
@@ -1232,19 +1243,19 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             myx+=19;
           }
 #endif
-          if(HD6301EMU_ON)
+          if(OPTION_C1)
           {
             DrawIconEx(myHdc,myx,2,
               hGUIIcon[RC_ICO_OPS_C1],16,16,0,NULL,DI_NORMAL);
             myx+=19;
           }
-          if(OPTION_PRECISE_MFP)
+          if(OPTION_C2)
           {
             DrawIconEx(myHdc,myx,2,
               hGUIIcon[RC_ICO_OPS_C2],16,16,0,NULL,DI_NORMAL);
             myx+=19;
           }
-          if(SSE_HACKS_ON)
+          if(OPTION_HACKS)
           {
             DrawIconEx(myHdc,myx,2,
               hGUIIcon[RC_ICO_PATCHES],16,16,0,NULL,DI_NORMAL);
@@ -1312,8 +1323,8 @@ void HandleButtonMessage(UINT Id,HWND hBut)
 
         if (GetForegroundWindow()==StemWin && GetCapture()==NULL && IsIconic(StemWin)==0 &&
             fast_forward!=RUNSTATE_STOPPED+1 && slow_motion!=RUNSTATE_STOPPED+1){
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_MOUSE_CAPTURE)
-          if(CAPTURE_MOUSE)
+#if defined(SSE_GUI_MOUSE_CAPTURE_OPTION)
+          if(OPTION_CAPTURE_MOUSE)
 #endif
           SetStemMouseMode(STEM_MOUSEMODE_WINDOW);
         }
@@ -1323,7 +1334,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
         SendMessage(hBut,BM_SETCHECK,0,0);
       }else{
         if (runstate==RUNSTATE_RUNNING){
-#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_DEBUG_FRAME_REPORT_ON_STOP)
+#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_ON_STOP)
           FrameEvents.Report();
 #endif
 
@@ -1334,12 +1345,12 @@ void HandleButtonMessage(UINT Id,HWND hBut)
       break;
     case 102:
     {
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_RESET_BUTTON)
+#if defined(SSE_GUI_RESET_BUTTON)
       bool Warm=(SendMessage(hBut,BM_GETCLICKBUTTON,0,0)==1);
 #else
       bool Warm=(SendMessage(hBut,BM_GETCLICKBUTTON,0,0)==2);
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_RESET_BUTTON2)
+#if defined(SSE_GUI_RESET_BUTTON2)
       reset_st(DWORD(Warm ? RESET_WARM:RESET_COLD) | DWORD(RESET_NOSTOP) |
                   RESET_CHANGESETTINGS | RESET_BACKUP);
 #else
@@ -1351,7 +1362,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
     case 106:
       Disp.ChangeToWindowedMode();
       break;
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_NO_UPDATE))
+#if !(defined(SSE_VAR_NO_UPDATE))
     case 120:
       if (UpdateWin){
         SendMessage(hBut,BM_SETCHECK,1,0);
@@ -1360,7 +1371,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
       }
       break;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_CONFIG_FILE)
+#if defined(SSE_GUI_CONFIG_FILE)
 /*  Player has clicked on the 'Configuration' icon, this makes a
     popup menu appear, 'Load configuration file' or 'Save configuration file'.
 */
@@ -1467,11 +1478,11 @@ void HandleButtonMessage(UINT Id,HWND hBut)
         
         DestroyMenu(Pop);
       }else{
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SAVE_NEO)
+#if defined(SSE_VID_SAVE_NEO)
           if(Disp.ScreenShotFormat==IF_NEO)
           {
-            ASSERT( sizeof(neochrome_file)==32128 );
-            VERIFY( Disp.pNeoFile=new neochrome_file );
+            //ASSERT( sizeof(neochrome_file)==32128 );//constant
+            VERIFY( (Disp.pNeoFile=new neochrome_file)!=NULL );
             ZeroMemory(Disp.pNeoFile,sizeof(neochrome_file));
             for(int i=0;i<16;i++)
               Disp.pNeoFile->palette[i]=change_endian(STpal[i]);
@@ -1491,7 +1502,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
 void SetStemWinSize(int w,int h,int xo,int yo)
 {
   TRACE_INIT("SetStemWinSize %d %d %d %d\n",xo,yo,w,h);
-#if defined(STEVEN_SEAGAL) && defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
   if(SDL.InUse)
   {
     SDL.LeaveSDLVideoMode();
@@ -1595,8 +1606,11 @@ LRESULT __stdcall FSQuitWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       PAINTSTRUCT ps;
       BeginPaint(Win,&ps);
       FillRect(ps.hdc,&rc,(HBRUSH)GetSysColorBrush(COLOR_BTNFACE));
-
+#if defined(SSE_VS2008_WARNING_383)
+      int Down=int((GetProp(Win,"Down")) ? 1:0);
+#else
       int Down=int(bool(GetProp(Win,"Down")) ? 1:0);
+#endif
       DrawIconEx(ps.hdc,4+Down,3+Down,(HICON)hGUIIcon[RC_ICO_FULLQUIT],16,16,0,NULL,DI_NORMAL);
 
       DrawEdge(ps.hdc,&rc,int(Down ? EDGE_SUNKEN:EDGE_RAISED),BF_RECT);
@@ -1631,8 +1645,13 @@ LRESULT __stdcall FSQuitWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
     }
   }
   if (CheckDown){
+#if defined(SSE_VS2008_WARNING_383)
+    bool OldDown=(GetProp(Win,"Down")!=0);
+#else
     bool OldDown=(bool)GetProp(Win,"Down");
+#endif
     bool NewDown=0;
+
     if (GetCapture()==Win){
       RECT rc;
       GetClientRect(Win,&rc);
@@ -1673,7 +1692,9 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
 #if defined(SSE_VID_D3D_ONLY)
   RECT rc={0,MENUHEIGHT,monitor_width,monitor_height};
 //  int hz256=0;
+#if !defined(SSE_VS2008_WARNING_383)
   int hz_ok=0,hz=0;
+#endif
 #else
   RECT rc={0,MENUHEIGHT,640,480};
 
@@ -1707,7 +1728,11 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
   }
 //#endif
 #endif//#if defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_383)
+  if ((Ret=Disp.SetDisplayMode())!=DD_OK) 
+#else
   if ((Ret=Disp.SetDisplayMode(rc.right,rc.bottom,bpp,hz,&hz_ok))!=DD_OK) 
+#endif
     return Ret;
 #if !defined(SSE_VID_D3D_ONLY)
   if (hz) tested_pc_hz[hz256][1+(border & 1)]=MAKEWORD(hz,hz_ok);
@@ -1773,7 +1798,7 @@ void SnapShotGetOptions(EasyStringList *p_sl)
 
   EasyStr NoSaveExplain="";
 #ifndef DISABLE_STEMDOS
-#if defined(STEVEN_SEAGAL) && defined(SSE_CPU_LINE_F)
+#if defined(SSE_CPU_LINE_F)
   if (on_rte!=ON_RTE_RTE && on_rte!=ON_RTE_LINE_F){
 #else
   if (on_rte!=ON_RTE_RTE){

@@ -1,9 +1,3 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_STEMDIALOGS_H)
-
-#include "stemdialogs.decla.h"
-
-#else//!defined(SSE_STRUCTURE_STEMDIALOGS_H)
-
 #define MAX_DIALOGS 20
 
 #define SD_REGISTER 0
@@ -33,9 +27,8 @@ public:
   void DestroyCurrentPage();
   void GetPageControlList(DynamicArray<HWND> &);
   void ShowPageControls(),SetPageControlsFont();
-
-  void UpdateDirectoryTreeIcons(DirectoryTree*);
-
+  void UpdateDirectoryTreeIcons(DirectoryTree*);
+
   HWND Handle,Focus,PageTree;
   HFONT Font;
   int nMainClassIcon;
@@ -67,4 +60,3 @@ int nStemDialogs=0;
 const UINT BPPToILC[5]={0,ILC_COLOR4,ILC_COLOR16,ILC_COLOR16,ILC_COLOR16};
 #endif
 
-#endif//!defined(SSE_STRUCTURE_STEMDIALOGS_H)

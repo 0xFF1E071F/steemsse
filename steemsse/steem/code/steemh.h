@@ -5,12 +5,6 @@ DESCRIPTION: Many crucial variable declarations and macro definitions that
 allow Steem to perform emulation.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_STEEMH_H)
-
-#include "steemh.decla.h"
-
-#else//!defined(SSE_STRUCTURE_STEEMH_H)
-
 #ifdef IN_EMU
 #define EXT
 #define INIT(s) =s
@@ -39,29 +33,14 @@ EXT MEM_ADDRESS rom_addr;     //128
 EXT unsigned long tos_len;    //132
 EXT unsigned long mem_len;    //136
 EXT bool tos_high;            //140
-#if !defined(SSE_MMU_NO_CONFUSION)
-EXT bool mmu_confused;        //144 
-#endif
+EXT bool mmu_confused;        //144
 EXT unsigned long hbl_count INIT(0);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
-// it's silly but I need to place those 'C' declarations here
-EXT int cpu_timer;  
-EXT BYTE stick[8];
-#endif
-
-
 // Don't forget to update this in the resource file too!
-#if defined(STEVEN_SEAGAL)
-EXT const char *stem_version_text INIT(SSE_VERSION_TXT); // OSD + info box
-#else
 EXT const char *stem_version_text INIT("3.2");
-#endif
 
 #define STEEM_EMAIL "steem@gmx.net"
-
 #define STEEM_WEB "http:/""/steem.atari.st/"
-
 #define MSACONV_WEB "http:/""/msaconverter.free.fr/"
 #define DIDATABASE_WEB STEEM_WEB "database.htm"
 
@@ -84,7 +63,7 @@ EXT BYTE *Mem_End,
 #define PAL_EXTRA_BYTES 16
 EXT BYTE palette_exec_mem[64+PAL_EXTRA_BYTES];
 
-EXT long palette_table[4096]; // SS 4K!
+EXT long palette_table[4096];
 
 #define STEM_MODE_CPU 0
 #define STEM_MODE_D2 1
@@ -169,11 +148,9 @@ DWORD* lpCART_LPEEK(DWORD ad){ RANGE_CHECK_MESSAGE(128*1024,3,0);return LPDWORD(
 #else
 
 #ifndef BIG_ENDIAN_PROCESSOR
-//little endian version 
-//SS: like PC
+//little endian version
 
 #define PEEK(l)    *(BYTE*)(Mem_End_minus_1-(l))
-#define DPEEK(l)   *(WORD*)(Mem_End_minus_2-(l))
 #define DPEEK(l)   *(WORD*)(Mem_End_minus_2-(l))
 #define LPEEK(l)   *(DWORD*)(Mem_End_minus_4-(l))
 #define lpPEEK(l)  (BYTE*)(Mem_End_minus_1-(l))
@@ -246,10 +223,7 @@ EXT MEM_ADDRESS abus;
 EXT long m68k_old_dest;
 EXT MEM_ADDRESS effective_address;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
-#else
 EXT int cpu_timer;
-#endif
 EXT WORD m68k_ap,m68k_iriwo;
 EXT short m68k_src_w;
 EXT long m68k_src_l;
@@ -411,4 +385,3 @@ EXT char m68k_src_b;
 #undef EXT
 #undef INIT
 
-#endif//!SSE_STRUCTURE_STEEMH_H

@@ -125,7 +125,7 @@ public:
   void CreateMachinePage(),CreateTOSPage(),CreateGeneralPage(),CreatePortsPage();
   void CreateSoundPage(),CreateDisplayPage(),CreateBrightnessPage();
   void CreateMacrosPage(),CreateProfilesPage(),CreateStartupPage(),CreateOSDPage();
-#if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE)
+#if defined(SSE_GUI_OPTION_PAGE)
   void CreateSSEPage();
 #endif
 
@@ -168,19 +168,23 @@ public:
   void UpdateHzDisplay();
 #endif
   void UpdateWindowSizeAndBorder();
+#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_383)
+  void SetBorder(bool);
+#else
   void SetBorder(int);
+#endif
   void UpdateForDSError();
   void FillScreenShotFormatOptsCombo();
   void UpdateParallel();
 
   HWND BorderOption;
-#if defined(STEVEN_SEAGAL) && defined(SSE_STF)
+#if defined(SSE_STF)
   HWND STTypeOption;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_WAKE_UP)
+#if defined(SSE_MMU_WAKE_UP)
   HWND MMUWakeUpOption;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS)
+#if defined(SSE_VID_BORDERS)
   HWND BorderSizeOption;
 #endif
 #elif defined(UNIX)
@@ -188,14 +192,14 @@ public:
   hxc_button internal_speaker_but; // changed in Sound_Start
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_UNIX)
+#if defined(SSE_UNIX)
 
 #if defined(SSE_VID_BORDERS)
   hxc_button border_size_label; 
   hxc_dropdown border_size_dd;
 #endif
 
-#if defined(SSE_GUI_MOUSE_CAPTURE)
+#if defined(SSE_GUI_MOUSE_CAPTURE_OPTION)
   hxc_button capture_mouse_but;
 #endif
 
@@ -225,7 +229,7 @@ public:
   hxc_button mc68901_but;
 #endif
 
-#if defined(SSE_VAR_KEYBOARD_CLICK)
+#if defined(SSE_SOUND_KEYBOARD_CLICK)
   hxc_button keyboard_click_but; 
 #endif
 
@@ -253,14 +257,14 @@ public:
   hxc_button slow_disk_but;  
 #endif
 
-#if defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
   hxc_button use_sdl_but;    
 #endif
 
 #endif
 
   void MachineUpdateIfVisible();
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_OPTIONS_REFRESH)
+#if defined(SSE_GUI_OPTIONS_REFRESH)
   void SSEUpdateIfVisible();
 #endif
 
@@ -297,6 +301,18 @@ EXT EasyStringList DSDriverModuleList;
 #define EXTMON_RESOLUTIONS 7
 #endif
 
+EXT
+#if !defined(SSE_VID_EXT_FS2)
+const
+#endif
+#if defined(SSE_VAR_RESIZE_382)
+WORD
+#else
+int 
+#endif
+ extmon_res[EXTMON_RESOLUTIONS][3];
+
+/*
 #if defined(SSE_VID_EXT_FS2)
 #if defined(SSE_VAR_RESIZE_382)
 EXT WORD
@@ -307,6 +323,7 @@ EXT int
 #else
 EXT const int extmon_res[EXTMON_RESOLUTIONS][3];
 #endif
+*/
 #undef EXT
 #undef INIT
 

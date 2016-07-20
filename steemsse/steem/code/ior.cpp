@@ -5,11 +5,11 @@ DESCRIPTION: I/O address reads. This file contains crucial core functions
 that deal with reads from ST I/O addresses ($ff8000 onwards).
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: ior.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_IORW_H)
+#if defined(SSE_STRUCTURE_DECLA)
 bool io_word_access=false;
 #endif
 
@@ -22,8 +22,7 @@ bool io_word_access=false;
 
 #define LOGSECTION LOGSECTION_IO
 
-#if !defined(STEVEN_SEAGAL) || !defined(SSE_SHIFTER_SDP_READ) \
-  || defined(SSE_SHIFTER_DRAW_DBG) || !defined(SSE_STRUCTURE)
+#if !defined(SSE_SHIFTER_SDP_READ) || !defined(SSE_STRUCTURE)
 
 MEM_ADDRESS get_shifter_draw_pointer(int cycles_since_hbl)
 { 
@@ -117,12 +116,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
   }
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_IOR)
-/*  We've rewritten this full block because we don't want to directly return
-    values, we think it's better style to assign the value to a variable 
-    (ior_byte) then return it at the end, with eventual trace.
-    Not for blocks that normally aren't compiled.
-*/
+#if defined(SSE_STRUCTURE_DECLA)
 
   ASSERT( (addr&0xFFFFFF)==addr ); // done in 'peek' part
 
@@ -195,7 +189,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
       {
         if (io_word_access==0 || (addr & 1)==0){
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_BUS_JAM_NO_WOBBLE)
+#if defined(SSE_ACIA_BUS_JAM_NO_WOBBLE)
           const int rel_cycle=0; // hoping it will be trashed by compiler
 #else // Steem 3.2, 3.3
 
@@ -208,7 +202,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
           // should depend on the phase relationship between both clocks.
 
           int rel_cycle=ABSOLUTE_CPU_TIME-shifter_cycle_base;
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_INT_MFP_RATIO)
           rel_cycle=CpuNormalHz-rel_cycle;
 #else
           rel_cycle=8000000-rel_cycle;
@@ -216,7 +210,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
           rel_cycle%=10;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER_EVENTS)
+#if defined(SSE_SHIFTER_EVENTS)
           VideoEvents.Add(scan_y,LINECYCLES,'j',rel_cycle+6);
 #endif
           BUS_JAM_TIME(rel_cycle+6); // just 6 - fixes jitter in Spectrum 512
@@ -225,7 +219,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
       switch (addr){
 /******************** Keyboard ACIA ************************/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD)
+#if defined(SSE_ACIA)
       case 0xfffc00:  //status
       {
 #if defined(SSE_ACIA_IRQ_DELAY)//dbg info
@@ -242,7 +236,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
         // bit 1: can we send a byte to the 6301 now?
         if(ACIA_IKBD.tx_flag==0 
 #if defined(SSE_IKBD_6301) 
-          &&(!hd6301_receiving_from_MC6850 ||!HD6301EMU_ON)  
+          &&(!hd6301_receiving_from_MC6850 ||!OPTION_C1)  
 #endif
           )
           x|=BIT_1; //empty bit
@@ -370,11 +364,11 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
 
 #if defined(SSE_ACIA_BUS_JAM_PRECISE_WOBBLE) //v3.6.4
 
-        if(HD6301EMU_ON)
+        if(OPTION_C1)
         {
           INSTRUCTION_TIME(wait_states); 
 
-#if defined(SSE_CPU_E_CLOCK2)
+#if defined(SSE_CPU_E_CLOCK_370)
           wait_states=
 #endif              
 #if defined(SSE_CPU_E_CLOCK_DISPATCHER)
@@ -382,7 +376,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
 #else
             M68000.SyncEClock();
 #endif
-#if defined(SSE_CPU_E_CLOCK2)              
+#if defined(SSE_CPU_E_CLOCK_370)              
           INSTRUCTION_TIME(wait_states);
 #endif
         }
@@ -416,7 +410,7 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 
 #if defined(SSE_IKBD_6301)
 
-        if(HD6301EMU_ON)
+        if(OPTION_C1)
         {
           ior_byte=ACIA_IKBD.SR; 
 
@@ -438,7 +432,7 @@ when it does).
           if(abs(ACT-ACIA_IKBD.last_tx_write_time)<ACIA_TDR_COPY_DELAY)
           {
             TRACE_LOG("ACIA SR TDRE not set yet (%d)\n",ACT-ACIA_IKBD.last_tx_write_time);
-            ior_byte&=~BIT_1; // fixes Nightdawn
+            ior_byte&=~BIT_1; // eg Nightdawn STF
           }
 #endif
 
@@ -447,7 +441,7 @@ when it does).
  -> very bad if we define SSE_INT_MFP_GPIP_TO_IRQ_DELAY
 */
 
-          if(SSE_HACKS_ON && 
+          if(OPTION_HACKS && 
             abs(ACT-ACIA_IKBD.last_rx_read_time)<ACIA_RDRF_DELAY)
           {
             TRACE_LOG("ACIA SR RDRF not set yet (%d)\n",ACT-ACIA_IKBD.last_rx_read_time);
@@ -470,14 +464,14 @@ when it does).
       case 0xfffc02:
 #if defined(SSE_BOILER_ACIA_373)
         if(mode!=STEM_MODE_CPU) 
-          return (HD6301EMU_ON)?ACIA_IKBD.RDR:ACIA_IKBD.data; 
+          return (OPTION_C1)?ACIA_IKBD.RDR:ACIA_IKBD.data; 
 #else
         DEBUG_ONLY( if (mode!=STEM_MODE_CPU) return ACIA_IKBD.data; ) // boiler
 #endif
 
 #if defined(SSE_IKBD_6301)
           
-          if(HD6301EMU_ON)
+          if(OPTION_C1)
           {
             // Update status BIT 5 (overrun)
             if(ACIA_IKBD.overrun==ACIA_OVERRUN_COMING) // keep this, it's right
@@ -555,7 +549,7 @@ Receiver Data Register is retained.
 
 #if defined(SSE_IKBD_6301)
 
-        if(HD6301EMU_ON) // ACIA mods for MIDI also depend on option 6301/ACIA
+        if(OPTION_C1) // ACIA mods for MIDI also depend on option 6301/ACIA
         {
           ior_byte=ACIA_MIDI.SR; 
           // bit1=Tx data register empty, set when TDR is free (ready)
@@ -610,7 +604,7 @@ Receiver Data Register is retained.
        
 #if defined(SSE_IKBD_6301)
 
-        if(HD6301EMU_ON)
+        if(OPTION_C1)
         {
 #if defined(SSE_MIDI_TRACE_BYTES_IN)
           TRACE_LOG("MIDI Read RDR %X\n",ACIA_MIDI.RDR);
@@ -721,7 +715,7 @@ Receiver Data Register is retained.
       execute it so that the register we read is the correct one.
       Especially in case of ORI or the like... (My Socks Are Weapons)
 */
-            if(OPTION_PRECISE_MFP && MC68901.WritePending 
+            if(OPTION_C2 && MC68901.WritePending 
               && n==MC68901.LastRegisterWritten)
             {
               TRACE_MFP("IOR Flush MFP event ");
@@ -747,9 +741,9 @@ Receiver Data Register is retained.
     - they also sometimes flicker on a real STE
     - it depends on MFP parameter MFP_TIMER_SET_DELAY
 */
-              if(OPTION_PRECISE_MFP)
+              if(OPTION_C2)
                 INSTRUCTION_TIME(MFP_TIMER_DATA_REGISTER_ADVANCE);
-              //if(OPTION_PRECISE_MFP) TRACE_OSD("read mfp %d",MFP_TIMER_DATA_REGISTER_ADVANCE);
+              //if(OPTION_C2) TRACE_OSD("read mfp %d",MFP_TIMER_DATA_REGISTER_ADVANCE);
 #endif
               mfp_calc_timer_counter(n-MFPR_TADR);
 #if defined(SSE_INT_MFP_READ_DELAY1) && !defined(SSE_INT_MFP_READ_DELAY2)
@@ -768,7 +762,7 @@ Receiver Data Register is retained.
 	mulu d0,d0                                       ; 0146C6: C0C0 
 	move.b #$2,$ffff820a                             ; 0146C8: 13FC 0002 FFFF 820A 
 */
-              if(OPTION_PRECISE_MFP)
+              if(OPTION_C2)
                 INSTRUCTION_TIME(-MFP_TIMER_DATA_REGISTER_ADVANCE);
 #endif
               ior_byte=BYTE(mfp_timer_counter[n-MFPR_TADR]/64);
@@ -786,7 +780,7 @@ Receiver Data Register is retained.
                 }
               }
 #if defined(SSE_INT_MFP_READ_DELAY1) && defined(SSE_INT_MFP_READ_DELAY2)//see above
-              if(OPTION_PRECISE_MFP)
+              if(OPTION_C2)
                 INSTRUCTION_TIME(-MFP_TIMER_DATA_REGISTER_ADVANCE);
 #endif
               LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_MFP_TIMERS,Str("MFP: ")+HEXSl(old_pc,6)+
@@ -863,10 +857,7 @@ Receiver Data Register is retained.
 
     case 0xff8a00:
       ior_byte=Blitter_IO_ReadB(addr); // STF crash there
-#if defined(SSE_DEBUG_FRAME_REPORT_BLITTER)
-      FrameEvents.Add(scan_y,LINECYCLES,'b',((addr-0xff8a00)<<8)|ior_byte);
-#endif
-#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
       if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_BLITTER)
         FrameEvents.Add(scan_y,LINECYCLES,'b',((addr-0xff8a00)<<8)|ior_byte);
 #endif
@@ -989,7 +980,7 @@ Receiver Data Register is retained.
 
     case 0xff8800:
 #if defined(SSE_YM2149_NO_JAM_IF_NOT_RW)
-      if (SSE_HACKS_ON && (addr & 1) && io_word_access) 
+      if (OPTION_HACKS && (addr & 1) && io_word_access) 
         break; //odd addresses ignored on word read, don't jam ?
 #endif
       if(!(ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_R))
@@ -1041,12 +1032,8 @@ Receiver Data Register is retained.
 
     case 0xff8600:   
 
-#if defined(SSE_DMA) // taken out of here, in SSEFloppy
+#if defined(SSE_DMA_OBJECT)
       ior_byte=Dma.IORead(addr);
-
-//if(addr==0xff8605) TRACE("pc %x read %x = %x\n",old_pc,addr,ior_byte);
-
-
       break;
 #else 
     {  
@@ -1181,16 +1168,123 @@ Receiver Data Register is retained.
     }
 #endif//!dmaio
 
-
     //////////////////////
     // Shifter-MMU-GLUE //
     //////////////////////
 
     case 0xff8200:
 
-#if defined(SSE_SHIFTER_IO)
-      ior_byte=Shifter.IORead(addr);
+#if defined(SSE_VIDEO_CHIPSET)
+
+  ASSERT( (addr&0xFFFF00)==0xff8200 );
+/*
+    This was in Steem 3.2:
+    // Below $10 - Odd bytes return value or 0, even bytes return 0xfe/0x7e
+    // Above $40 - Unused return 0
+    //// Unused bytes between $60 and $80 should return 0!
+   For now, we keep that for STE (refactored), return $FF for STF.
+   ior_byte is our return value, to which we immediately give a default
+   value.
+   Cases 
+   R FF820D Lemmings40
+*/
+  ior_byte= ((addr&1)||addr>0xff8240) ? 0 : 0xFE; 
+#if defined(SSE_STF_VIDEO_IOR)
+  if(ST_TYPE!=STE)
+    ior_byte=0xFF; 
+#endif  
+
+  if (addr>=0xff8240 && addr<0xff8260){  //palette
+    int n=(addr-0xff8240)/2; // which palette
+    ior_byte= (addr&1) ? (STpal[n]&0xFF) : (STpal[n]>>8);
+  }else if (addr>0xff820f && addr<0xff8240){ //forbidden gap
+    exception(BOMBS_BUS_ERROR,EA_READ,addr);
+  }else if (addr>0xff827f){  //forbidden area after SHIFTER
+    exception(BOMBS_BUS_ERROR,EA_READ,addr);
+  }else{
+    switch(addr){
+      
+    case 0xff8201:  //high byte of screen memory address
+      ior_byte=LOBYTE(HIWORD(xbios2));
       break;
+      
+    case 0xff8203:  //mid byte of screen memory address
+      ior_byte=HIBYTE(LOWORD(xbios2));
+      break;
+      
+    case 0xff8205:  //high byte of screen draw pointer
+    case 0xff8207:  //mid byte of screen draw pointer
+    case 0xff8209:{  //low byte of screen draw pointer
+      MEM_ADDRESS sdp;
+#if defined(SSE_SHIFTER_SDP_READ)
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
+      sdp=MMU.ReadVideoCounter(LINECYCLES); // a complicated affair
+#else
+      sdp=Shifter.ReadSDP(LINECYCLES); // a complicated affair
+#endif
+#else
+      if(scan_y<shifter_first_draw_line || scan_y>=shifter_last_draw_line){
+        sdp=shifter_draw_pointer;
+      }else{
+        sdp=get_shifter_draw_pointer(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
+        LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_VIDEO,Str("VIDEO: ")+HEXSl(old_pc,6)+
+          " - Read Shifter draw pointer as $"+HEXSl(sdp,6)+
+          " on "+scanline_cycle_log()); )
+      }
+#endif
+      ior_byte=DWORD_B(&sdp,(2-(addr-0xff8205)/2)); // change for big endian !!!!!!!!!
+#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
+      if(mode!=STEM_MODE_INSPECT &&(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SDP_READ))
+        FrameEvents.Add(scan_y,LINECYCLES,'c',((addr&0xF)<<8)|ior_byte);
+#endif
+      }
+      break;
+      
+    case 0xff820a:  //synchronization mode
+      ior_byte&=~3;           // this way takes care...
+      ior_byte|=GLU.m_SyncMode;   // ...of both STF & STE
+      break;
+
+    case 0xff820d:  //low byte of screen memory address
+#if defined(SSE_STF_VBASELO)
+      ASSERT( ST_TYPE==STE || !(xbios2&0xFF) );
+      if(ST_TYPE==STE) 
+#endif
+        ior_byte=(BYTE)xbios2&0xFF;
+      break;
+  
+    case 0xff820f: // LINEWID
+#if defined(SSE_STF_LINEWID)
+      if(ST_TYPE==STE) 
+#endif
+#if defined(SSE_MMU_LINEWID_TIMING)
+        ior_byte=shifter_fetch_extra_words;
+#else
+        ior_byte=LINEWID;
+#endif
+      break;
+      
+    case 0xff8260: //resolution
+      ior_byte&=~3;           // this way takes care
+      ior_byte|=Shifter.m_ShiftMode;  // of both STF & STE
+      break;
+
+    case 0xff8265:  //HSCROLL
+      DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) 
+        shifter_hscroll_extra_fetch=(shifter_hscroll!=0); //case Kultur Melk
+#if defined(SSE_STF_HSCROLL)
+      if(ST_TYPE==STE)
+#endif
+        ior_byte=HSCROLL;
+      break;
+    }//if
+    
+  }
+#if defined(SSE_VIDEO_IOR_TRACE)
+  // made possible by our structure change
+  TRACE("Shifter read %X=%X\n",addr,ior_byte); // not LOG
+#endif
+  break;
 
 #else // Steem 3.2
     {
@@ -1252,11 +1346,11 @@ FF8240 - FF827F   palette, res
       }
       break;
     }
-#endif//SS-Shifter
+#endif
 
-    /////////////////
-    // MMU for RAM //
-    /////////////////
+    /////////
+    // MMU //
+    /////////
 
     case 0xff8000:
 //SS note  mmu_memory_configuration=BYTE((conf0 << 2) | conf1);
@@ -1291,7 +1385,7 @@ FF8240 - FF827F   palette, res
 #endif
         case 0xffc101:
           {
-#if defined(STEVEN_SEAGAL) && defined(SSE_VERSION)  //BCC
+#if defined(SSE_VERSION)  //BCC
             Str minor_ver=(char*)stem_version_text+2;
 #else
             Str minor_ver=stem_version_text+2;
@@ -1937,7 +2031,7 @@ FF8240 - FF827F   palette, res
 WORD ASMCALL io_read_w(MEM_ADDRESS addr)
 {
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_MMU_WU_IOR_HACK)//no
+#if defined(SSE_MMU_WU_IOR_HACK)//no
 
   WORD return_value;
   int CyclesIn=LINECYCLES;
@@ -1955,7 +2049,7 @@ WORD ASMCALL io_read_w(MEM_ADDRESS addr)
     WORD x=WORD(io_read_b(addr) << 8);
     x|=io_read_b(addr+1);
     io_word_access=0;
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_TRACE_IO)
+#if defined(SSE_DEBUG_TRACE_IO)
     TRACE_LOG("PC %X read word %X at %X\n",old_pc,x,addr);
 #endif
     return_value=x;
@@ -2112,16 +2206,12 @@ Done one cycle of all palettes
    
 */
 
-#if defined(SSE_SHIFTER_PALETTE_STF)//no
-    WORD palette=PAL_DPEEK(n*2); // breaks Forest STE test
-#else
     WORD palette=STpal[n];
-#endif
 
 #if defined(SSE_STF)
     if(ST_TYPE!=STE)
     {
-      if(SSE_HACKS_ON)
+      if(OPTION_HACKS)
 #if defined(SSE_SHIFTER_PALETTE_NOISE2)
         if(ir==0x3850)
           palette|=(0xF888)&(rand()); // UMD8730
@@ -2136,7 +2226,7 @@ Done one cycle of all palettes
 #endif
     }
 #endif//STF
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_TRACE_IO)
+#if defined(SSE_DEBUG_TRACE_IO)
 #if defined(SSE_BOILER_TRACE_CONTROL) // double condition, IO + Video
     if ( ((1<<14)&d2_dpeek(FAKE_IO_START+24))
       && (logsection_enabled[LOGSECTION_VIDEO]) )
@@ -2154,7 +2244,7 @@ Done one cycle of all palettes
     WORD x=WORD(io_read_b(addr) << 8);
     x|=io_read_b(addr+1);
     io_word_access=0;
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG_TRACE_IO)
+#if defined(SSE_DEBUG_TRACE_IO)
 #if defined(SSE_BOILER_TRACE_CONTROL)
     if (((1<<14)&d2_dpeek(FAKE_IO_START+24))
     // we add conditions address range - logsection enabled

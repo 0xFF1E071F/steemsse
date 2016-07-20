@@ -1,9 +1,3 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_HARDDISKMAN_H)
-                                    //SSE_STRUCTURE_HARDDISKMAN_H
-#include "harddiskman.decla.h" //3.7.2, was forgotten
-
-#else
-
 #define MAX_HARDDRIVES 10
 
 typedef struct{
@@ -55,5 +49,3 @@ public:
   bool DisableHardDrives;
 };
 
-
-#endif

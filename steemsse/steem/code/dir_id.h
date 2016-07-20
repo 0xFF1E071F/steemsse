@@ -1,13 +1,3 @@
-
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DIRID_H)
-
-#include "dir_id.decla.h"
-
-#else//!SSE_STRUCTURE_DIRID_H
-
-
-
 //---------------------------------------------------------------------------
 bool IsDirIDPressed(int,int,bool,bool=0);
 void init_DirID_to_text();
@@ -33,5 +23,3 @@ char *KeyboardButtonName[256]={NULL};
 #define BLANK_DIRID(i) (HIBYTE(i)==0xff)
 #define NOT_BLANK_DIRID(i) (HIBYTE(i)!=0xff)
 #endif
-
-#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DIRID_H)

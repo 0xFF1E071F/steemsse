@@ -1,10 +1,3 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_HDIMG_H)
-
-#include "hdimg.decla.h"
-
-#else//!defined(SSE_STRUCTURE_HDIMG_H)
-
-
 #ifdef IN_MAIN
 #define EXT
 #define INIT(s) =s
@@ -25,5 +18,3 @@ EXT MEM_ADDRESS os_hdimg_init_vector INIT(0),os_hdimg_bpb_vector INIT(0),os_hdim
 
 #undef EXT
 #undef INIT
-
-#endif//SSE_STRUCTURE_HDIMG_H

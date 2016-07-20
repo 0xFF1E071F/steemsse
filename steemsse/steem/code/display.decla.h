@@ -5,7 +5,7 @@
 #define EXT extern
 #define INIT(s)
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D)
+#if defined(SSE_VID_D3D)
 
 #ifdef BCC_BUILD
 // yes sir, the old BCC5.5 will build the new DX9 option too
@@ -58,13 +58,10 @@
 #endif
 
 
-#if defined(SSE_STRUCTURE_SSESHIFTER_OBJ)
 #include <easystr.h>//unix case-sensitive
 typedef EasyStr Str;
-#endif
 
-
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SAVE_NEO)
+#if defined(SSE_VID_SAVE_NEO)
 //http://wiki.multimedia.cx/index.php?title=Neochrome
 #include "../../3rdparty/various/neochrome.h"
 #endif
@@ -121,12 +118,12 @@ private:
   HRESULT DDError(char *,HRESULT);
 #endif//#if !defined(SSE_VID_D3D_ONLY)
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_UTIL)
+#if defined(SSE_VID_UTIL)
   int STXPixels();
   int STYPixels();
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_D3D)
+#if defined(SSE_VID_D3D)
 public:
   HRESULT D3DInit(); 
   HRESULT D3DCreateSurfaces();
@@ -166,7 +163,7 @@ private:
   DDSURFACEDESC DDBackSurDesc;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_3BUFFER_WIN)
+#if defined(SSE_VID_3BUFFER_WIN)
 #if defined(SSE_VID_DD7)
   IDirectDrawSurface7 *DDBackSur2; // our second back buffer
 #else
@@ -225,19 +222,31 @@ public:
 #ifdef SHOW_WAVEFORM
   void DrawWaveform();
 #endif
+#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_383)
+  void RunStart(bool=0),RunEnd();
+#else
   void RunStart(bool=0),RunEnd(bool=0);
+#endif
   void ScreenChange();
   void ChangeToFullScreen(),ChangeToWindowedMode(bool=0);
   void DrawFullScreenLetterbox(),FlipToDialogsScreen();
   bool CanGoToFullScreen();
+#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_383)
+  HRESULT SetDisplayMode();
+#else
   HRESULT SetDisplayMode(int,int,int,int=0,int* = NULL);
+#endif
   HRESULT RestoreSurfaces();
   void Release();
   HRESULT SaveScreenShot();
   bool BorderPossible();
   int Method,UseMethods[5],nUseMethod;
   bool RunOnChangeToWindow;
+#if defined(SSE_VAR_RESIZE_383)
+  WORD SurfaceWidth,SurfaceHeight;
+#else
   int SurfaceWidth,SurfaceHeight;
+#endif
   Str ScreenShotNextFile;
   int ScreenShotFormat;
   int ScreenShotMinSize;
@@ -259,14 +268,13 @@ public:
   int ScreenShotFormatOpts;
 #endif
   Str ScreenShotExt;
-#if defined(STEVEN_SEAGAL)
+
 #if defined(SSE_VID_SAVE_NEO)
   neochrome_file *pNeoFile;
 #endif
 #if defined(SSE_VID_3BUFFER_WIN)
   long VSyncTiming; // must be public
   BOOL BlitIfVBlank(); // our polling function
-#endif
 #endif
 
   bool DrawToVidMem,BlitHideMouse;
@@ -310,7 +318,7 @@ UNIX_ONLY( EXT bool TrySHM; )
 
 #include <FreeImage/FreeImage.h>
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SAVE_NEO)
+#if defined(SSE_VID_SAVE_NEO)
 enum {IF_NEO=FIF_LBM+1};
 #endif
 
@@ -352,7 +360,7 @@ FI_ENUM(FREE_IMAGE_FORMAT) {
 	FIF_PSD,
 	FIF_CUT,
 	FIF_IFF = FIF_LBM,
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SAVE_NEO)
+#if defined(SSE_VID_SAVE_NEO)
   IF_NEO,
 #endif
 };

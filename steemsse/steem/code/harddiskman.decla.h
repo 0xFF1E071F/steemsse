@@ -2,10 +2,7 @@
 #ifndef HARDDISKMAN_DECLA_H //BCC
 #define HARDDISKMAN_DECLA_H
 
-#if defined(SSE_STRUCTURE_SSEDEBUG_OBJ)
 #include <stemdialogs.decla.h>
-#endif
-
 
 #define MAX_HARDDRIVES 10
 
@@ -75,13 +72,9 @@ public:
 };
 #endif
 
-
-
-#if defined(SSE_STRUCTURE_SSEDEBUG_OBJ)
 extern THardDiskManager HardDiskMan; // singleton defined in main.cpp
 #if defined(SSE_ACSI_HDMAN)
 extern TAcsiHardDiskManager AcsiHardDiskManager;
-#endif
 #endif
 
 #endif//#ifndef HARDDISKMAN_DECLA_H

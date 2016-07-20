@@ -1,10 +1,8 @@
 #include "SSE.h"
 
-#if defined(STEVEN_SEAGAL)
-
-#if defined(SSE_YM2149)
-/*  In v3.5.1, object YM2149 was only used for drive management.
-    In v3.7.0, sound functions were introduced.
+#if defined(SSE_YM2149_OBJECT)
+/*  In v3.5.1, object YM2149 was only used for drive management (drive, side).
+    In v3.7.0, sound functions were introduced (sampled soundchip, more realistic).
 */
 
 #include "../pch.h"
@@ -13,11 +11,13 @@
 #include <psg.decla.h>
 #include "SSEYM2149.h"
 #include "SSEOption.h"
-#if defined(SSE_VAR_OPT_382)
 #include <gui.decla.h>
-#else
-extern EasyStr GetEXEDir();//TODO
+
+#if defined(SSE_YM2149_OBJECT)
+TYM2149 YM2149; //singleton
 #endif
+
+//SOUND
 
 TYM2149::TYM2149() { //v3.7.0
 #if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
@@ -31,10 +31,6 @@ TYM2149::~TYM2149() { //v3.7.0
   FreeFixedVolTable();
 #endif
 }
-
-
-//SOUND
-
 
 #if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
 #define LOGSECTION LOGSECTION_SOUND
@@ -55,12 +51,7 @@ bool TYM2149::LoadFixedVolTable() {
   FreeFixedVolTable(); //safety
   p_fixed_vol_3voices=new WORD[16*16*16];
   ASSERT(p_fixed_vol_3voices);
-#if defined(SSE_VAR_OPT_382)
   EasyStr filename=RunDir+SLASH+YM2149_FIXED_VOL_FILENAME;
-#else
-  EasyStr filename=GetEXEDir();
-  filename+=YM2149_FIXED_VOL_FILENAME;
-#endif
   FILE *fp=fopen(filename.Text,"r+b");
   if(fp && p_fixed_vol_3voices)
   {
@@ -98,6 +89,5 @@ BYTE TYM2149::PortA(){
   return psg_reg[PSGR_PORT_A];
 }
 
-#endif//SSE_YM2149
+#endif//SSE_YM2149_OBJECT
 
-#endif//#if defined(STEVEN_SEAGAL)

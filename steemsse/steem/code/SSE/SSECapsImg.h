@@ -1,8 +1,8 @@
 #pragma once
 #ifndef SSECAPSIMG_H
 #define SSECAPSIMG_H
-
-#if defined(SSE_IPF)
+#include "SSE.H"
+#if defined(SSE_DISK_CAPS)
 /* Support for IPF file format using the WD1772 emulator included in 
    CAPSimg.dll (Caps library).
 
@@ -63,12 +63,9 @@ struct TCaps {
 */
   static void CallbackTRK(PCAPSFDC pc, UDWORD driveact);
 
-
   int Version; // 0: failed; else release revision eg 42
   BOOL Active; // if there's an IPF disk in some drive, we must run IPF cycles
-#if defined(SSE_IPF_RUN_PRE_IO) || defined(SSE_IPF_RUN_POST_IO)
-  int CyclesRun; // must be the same for each line
-#endif
+
   //TODO: save space
   // for drive A & B
 #if !defined(SSE_DISK_IMAGETYPE)
@@ -85,6 +82,6 @@ struct TCaps {
   CapsFdc WD1772; // 1 cheap controller
 };
 
-#endif//ipf
+#endif//caps
 
 #endif//SSECAPSIMG_H

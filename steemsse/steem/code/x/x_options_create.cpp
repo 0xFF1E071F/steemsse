@@ -18,7 +18,7 @@ void TOptionBox::CreatePage(int n)
     case 11:CreateProfilesPage();break;
     case 6:CreateStartupPage();break;
     case 15:CreatePathsPage();break;
-#if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE)
+#if defined(SSE_GUI_OPTION_PAGE)
     case 16:CreateSSEPage();break;
 #endif
 	}
@@ -28,7 +28,7 @@ void TOptionBox::CreateMachinePage()
 {
   int y=10;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STF) \
+#if defined(SSE_STF) \
   && defined(SSE_GUI_OPTIONS_STF_IN_MACHINE)
   const int LineHeight=30;
   const int HorizontalSeparation=10;
@@ -594,7 +594,7 @@ void TOptionBox::CreateGeneralPage()
               page_p);
 
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_OPTION_DISABLE_DSP)
+#if defined(SSE_SOUND_OPTION_DISABLE_DSP)
   y+=35;
   enable_dsp_but.create(XD,page_p,page_l,y,0,25,
           button_notify_proc,this,BT_CHECKBOX,
@@ -630,12 +630,12 @@ void TOptionBox::CreateSoundPage()
 #endif
 #if SSE_VERSION>=370
   sound_mode_dd.additem(T("Filter 'coaxial' (Steem original)"));
-#elif defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF)
+#elif defined(SSE_SOUND_FILTER_STF)
   sound_mode_dd.additem(T("Simulated Monitor Speaker"));
 #else
   sound_mode_dd.additem(T("Simulated ST Speaker"));
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF5)
+#if defined(SSE_SOUND_FILTER_STF5)
   sound_mode_dd.additem(T("Filter 'SCART'"));
 #endif
 #if SSE_VERSION>=370
@@ -644,10 +644,10 @@ void TOptionBox::CreateSoundPage()
   sound_mode_dd.additem(T("Direct"));
   sound_mode_dd.additem(T("Sharp STFM Samples"));
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_STF5)
+#if defined(SSE_SOUND_FILTER_STF5)
   sound_mode_dd.additem(T("Filter 'coaxial' samples only"));
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_FILTER_HATARI)
+#if defined(SSE_SOUND_FILTER_HATARI)
   sound_mode_dd.additem(T("Filter 'Hatari'"));
 #endif
   sound_mode_dd.changesel(sound_mode);
@@ -760,7 +760,7 @@ void TOptionBox::CreateSoundPage()
 //  y+=LineHeight;
 #endif
 
-#if defined(SSE_VAR_KEYBOARD_CLICK) && defined(SSE_GUI_OPTIONS_SOUND4)
+#if defined(SSE_SOUND_KEYBOARD_CLICK) && defined(SSE_GUI_OPTIONS_SOUND4)
   keyboard_click_but.create(XD,page_p,page_l+240,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Keyboard click"),4007,BkCol);
   int keyboard_click=( PEEK(0x484)&1 ); // get current setting
@@ -823,7 +823,7 @@ void TOptionBox::FillSoundDevicesDD()
   if (UseSound==XS_RT){
     RtAudio::DeviceInfo radi;
     int c=rt_audio->getDeviceCount(),isel=0; //isel=default device, find while walking through list
-#if defined(STEVEN_SEAGAL)
+#if defined(SSE_UNIX)
     for (int i=0;i<c;i++){ // odd bug, the system must have changed
 #else
     for (int i=1;i<=c;i++){
@@ -968,7 +968,7 @@ void TOptionBox::CreateOSDPage()
   hxc_button *p_but;
   hxc_dropdown *p_dd;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DRIVE_LED)
+#if defined(SSE_OSD_DRIVE_LED)
   p_but=new hxc_button(XD,page_p,page_l,y,0,25,button_notify_proc,this,
                           BT_CHECKBOX,T("Disk access light"),12000,BkCol);
 #else
@@ -978,7 +978,7 @@ void TOptionBox::CreateOSDPage()
   p_but->set_check(osd_show_disk_light);
   y+=35;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DRIVE_INFO)
+#if defined(SSE_OSD_DRIVE_INFO)
   p_but=new hxc_button(XD,page_p,page_l,y,0,25,button_notify_proc,this,
                           BT_CHECKBOX,T("Disk drive track info"),12001,BkCol);
   p_but->set_check(OSD_DRIVE_INFO);
@@ -1018,7 +1018,7 @@ void TOptionBox::CreateOSDPage()
   p_but->set_check(osd_show_scrollers);
   y+=35;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_SCROLLER_DISK_IMAGE)
+#if defined(SSE_OSD_SCROLLER_DISK_IMAGE)
   p_but=new hxc_button(XD,page_p,page_l,y,0,25,button_notify_proc,this,
                           BT_CHECKBOX,T("Disk image names"),12002,BkCol);
   p_but->set_check(OSD_IMAGE_NAME);
@@ -1294,7 +1294,7 @@ void TOptionBox::CreatePathsPage()
 }
 //---------------------------------------------------------------------------
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE) && defined(SSE_UNIX)
+#if defined(SSE_GUI_OPTION_PAGE) && defined(SSE_UNIX)
 
 void TOptionBox::CreateSSEPage() {
   int y=10; // top
@@ -1457,7 +1457,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SSE_VAR_KEYBOARD_CLICK) && !defined(SSE_GUI_OPTIONS_SOUND4)
+#if defined(SSE_SOUND_KEYBOARD_CLICK) && !defined(SSE_GUI_OPTIONS_SOUND4)
   keyboard_click_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Keyboard click"),4007,BkCol);
   int keyboard_click=( PEEK(0x484)&1 ); // get current setting
@@ -1522,7 +1522,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif//no more room after this option!
 
-#if defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
   use_sdl_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Use SDL"),4011,BkCol);
   use_sdl_but.set_check(USE_SDL);

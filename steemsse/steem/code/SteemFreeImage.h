@@ -1,6 +1,3 @@
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DISPLAY_H))
-
-
 #define FI_ENUM(x)      enum x
 #define FI_STRUCT(x)	struct x
 
@@ -31,9 +28,6 @@ FI_ENUM(FREE_IMAGE_FORMAT) {
 	FIF_PSD,
 	FIF_CUT,
 	FIF_IFF = FIF_LBM,
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SAVE_NEO)
-  IF_NEO,
-#endif
 };
 
 #define BMP_DEFAULT         0
@@ -87,4 +81,3 @@ FI_SAVEPROC FreeImage_Save;
 FI_FREEPROC FreeImage_Free;
 FI_SUPPORTBPPPROC FreeImage_FIFSupportsExportBPP;
 
-#endif// !(defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DISPLAY_H))

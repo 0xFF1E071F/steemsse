@@ -1,7 +1,7 @@
 #pragma once
 #ifndef SSE_STW_H
 #define SSE_STW_H
-
+#include "SSE.H"
 #ifdef SSE_UNIX
 #include <conditions.h>
 #endif

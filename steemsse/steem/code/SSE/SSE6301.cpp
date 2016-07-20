@@ -7,31 +7,19 @@
     v3.7.3: done some refactoring without compile switches.
 */
 
-#if defined(SSE_STRUCTURE_SSE6301_OBJ)
 #include "../pch.h"
 #include <easystr.h>
-//#include <mymisc.h>//ux382
 #include <acia.decla.h>
 #include <emulator.decla.h>
-#include <mymisc.h>//ux382
-#if defined(SSE_VAR_OPT_382)
+#include <mymisc.h>
 #include <gui.decla.h>
-#else
-extern EasyStr GetEXEDir(); //argh, ux382
-#endif
 #include <ikbd.decla.h>
-#endif//SSE_STRUCTURE_SSE6301_OBJ
 
 #include "SSEDebug.h"
 #include "SSE6301.h"
 #include "SSEOption.h"
-#include "SSEShifter.h" //frame //TODO
-#if !defined(SSE_SHIFTER)
-#include "SSEFrameReport.h" //for some trace
-#endif
+#include "SSEShifter.h"
 
-
-#define LOGSECTION LOGSECTION_INIT
 
 THD6301 HD6301; // singleton
 
@@ -44,11 +32,9 @@ THD6301::~THD6301() {
   hd6301_destroy(); // calling the C 6301 function
 }
 
-
-#undef LOGSECTION//init
 #define LOGSECTION LOGSECTION_IKBD
 
-#if defined(SSE_DEBUG) && defined(SSE_IKBD_6301_IKBDI)
+#if defined(SSE_IKBD_6301_IKBDI)
 
 /*  This should work for both 'fake' and 'true' 6301 emulation.
     We know command codes & parameters, we report this info through trace.
@@ -240,33 +226,31 @@ void THD6301::Init() { // called in 'main'
   else
   {
     TRACE_LOG("HD6301 emu NOT initialised\n");
-    HD6301EMU_ON=0;
+    OPTION_C1=0;
   }
 }
 
 #else//!ver
 
+#pragma warning(disable: 4701)//potentially uninitialized local variable 'fp' used
+
 void THD6301::Init() { // called in 'main'
   Initialised=Crashed=0;
   BYTE* ram=hd6301_init();
-#if defined(SSE_VAR_OPT_382)
   EasyStr romfile=RunDir+SLASH+HD6301_ROM_FILENAME;
-#else
-  EasyStr romfile=GetEXEDir() + HD6301_ROM_FILENAME; 
-#endif
   FILE *fp;
 #if defined(SSE_DEBUG)
   int checksum=0;
 #endif
   if(ram)
   {
-//	  TRACE("open 6301 rom file %s\n", romfile.Text);
     fp=fopen(romfile.Text,"r+b");
-    //ASSERT(fp);
     if(fp) // put ROM (4KB) at the end of 6301 RAM
     {
 #if defined(SSE_IKBD_6301_MINIRAM)
-#if defined(SSE_VS2008_WARNING_382)
+#if defined(SSE_VS2008_WARNING_383) && !defined(SSE_DEBUG)
+      fread(ram+256,1,4096,fp);
+#elif defined(SSE_VS2008_WARNING_382)
       size_t n=fread(ram+256,1,4096,fp);
 #else
       int n=fread(ram+256,1,4096,fp);
@@ -276,7 +260,7 @@ void THD6301::Init() { // called in 'main'
 #endif
 #if defined(SSE_DEBUG)
       ASSERT(n==4096); // this detected the missing +b above
-      for(int i=0;i<n;i++)
+      for(size_t i=0;i<n;i++)
 #if defined(SSE_IKBD_6301_MINIRAM)
         checksum+=ram[256+i];
 #else
@@ -299,11 +283,12 @@ void THD6301::Init() { // called in 'main'
   }
 
 #if defined(SSE_DEBUG)
+
   TRACE_LOG("6301 emu %d RAM %d file %s open %d checksum %d\n",HD6301_OK,(bool)ram,romfile.Text,(bool)fp,checksum);
   if(!Initialised)
   {
     TRACE_OSD("NO HD6301");
-    HD6301EMU_ON=0;
+    OPTION_C1=0;
   }
 #endif
 
@@ -318,7 +303,6 @@ void THD6301::ReceiveByte(BYTE data) {
     agenda or an event about 20 scanlines later.
     This function is used for true and fake 6301 emu.
 */
-  //TRACE_LOG("ACIA TDR->TDRS->IKBD RDRS $%X\n",data);
   TRACE_LOG("%d %d %d ACIA TDRS %X\n",TIMING_INFO,data);
   ACIA_IKBD.ByteWaitingTx=false;
 
@@ -327,7 +311,7 @@ void THD6301::ReceiveByte(BYTE data) {
   ACIA_IKBD.TDRS=ACIA_IKBD.TDR=data;
   ASSERT(!ACIA_IKBD.LineTxBusy||ACT-ACIA_IKBD.last_tx_write_time<ACIA_TDR_COPY_DELAY);
   ACIA_IKBD.LineTxBusy=true;
-  if(HD6301EMU_ON)
+  if(OPTION_C1)
   {
     time_of_event_ikbd2=ACT+ACIA_TO_HD6301_IN_CYCLES;
     EventStatus|=2;
@@ -354,7 +338,7 @@ void THD6301::ResetChip(int Cold) {
 #endif
 #endif
 #if defined(SSE_IKBD_6301)
-  if(HD6301_OK && HD6301EMU_ON)
+  if(HD6301_OK && OPTION_C1)
   {
     HD6301.Crashed=false;
     hd6301_reset(Cold);
@@ -378,7 +362,6 @@ void THD6301::ResetProgram() { // debug only
 #if defined(SSE_IKBD_6301_VBL)
 
 void THD6301::Vbl() {
-  //TRACE_LOG("6301 VBL cycles %d\n",hd6301_vbl_cycles);
   hd6301_vbl_cycles=0;
 
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)

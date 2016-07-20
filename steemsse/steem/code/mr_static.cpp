@@ -6,13 +6,13 @@ DESCRIPTION: A class to encapsulate the labels that contain various data
 in the debugger.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: mr_static.cpp")
 #endif
 
 #ifdef DEBUG_BUILD//SS
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_MRSTATIC_H)
+#if defined(SSE_STRUCTURE_DECLA)
 mr_static *m_s[MAX_MR_STATICS];
 #endif
 

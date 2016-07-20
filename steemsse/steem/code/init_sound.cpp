@@ -8,11 +8,11 @@ for output.
 /*  SS 'init' is a bit of a misnomer as it's used during emulation
 */
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: init_sound.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INITSOUND_H)
+#if defined(SSE_STRUCTURE_DECLA)
 #define EXT
 #define INIT(s) =s
 
@@ -147,7 +147,7 @@ void sound_record_close_file()
 //---------------------------------------------------------------------------
 BOOL CALLBACK DSEnumProc(LPGUID Guid,LPCSTR Desc,LPCSTR /* Mod */,LPVOID)
 {
-  log(Str("SOUND: Found device ")+Desc);
+  dbg_log(Str("SOUND: Found device ")+Desc);
   DSDriverModuleList.Add((char*)Desc,(long)Guid);
   return TRUE;
 }
@@ -160,23 +160,23 @@ HRESULT InitSound()
 
   HRESULT Ret;
 
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_SOUND_SKIP_DSOUND_TEST)) //stupid?
+#if !(defined(SSE_SOUND_SKIP_DSOUND_TEST)) //stupid?
   // Hey, this allows Steem to run even if there is no DSound.dll
-  log("SOUND: Attempting to load dsound.dll");
+  dbg_log("SOUND: Attempting to load dsound.dll");
   HINSTANCE hDSDll=LoadLibrary("dsound");
   if (hDSDll){
     typedef HRESULT WINAPI DSENUMPROC(LPDSENUMCALLBACK,LPVOID);
     typedef DSENUMPROC* LPDSENUMPROC;
     LPDSENUMPROC DSEnum=(LPDSENUMPROC)GetProcAddress(hDSDll,"DirectSoundEnumerateA");
     DSDriverModuleList.Sort=eslNoSort;
-    log("SOUND: Attempting to enumerate devices");
+    dbg_log("SOUND: Attempting to enumerate devices");
     if (DSEnum!=NULL) DSEnum(DSEnumProc,NULL);
-    log("SOUND: Freeing library");
+    dbg_log("SOUND: Freeing library");
     FreeLibrary(hDSDll);
   }
 #endif
 
-  log("SOUND: Initialising, creating DirectSound object");
+  dbg_log("SOUND: Initialising, creating DirectSound object");
   Ret=CoCreateInstance(CLSID_DirectSound,NULL,CLSCTX_ALL,IID_IDirectSound,(void**)&DSObj);
   if (Ret!=S_OK || DSObj==NULL){
     DSObj=NULL;
@@ -221,58 +221,58 @@ HRESULT InitSound()
       }
     }
   }
-  log("SOUND: Initialising DirectSound object");
+  dbg_log("SOUND: Initialising DirectSound object");
   Ret=DSObj->Initialize(Driver);
   if (Ret != DS_OK) return SoundError("DSObj Initialise Failed",Ret);
 
-  log("SOUND: Calling SetCooperativeLevel");
+  dbg_log("SOUND: Calling SetCooperativeLevel");
   DSObj->SetCooperativeLevel(StemWin,DSSCL_PRIORITY);
 
-  log("SOUND: Calling GetCaps");
+  dbg_log("SOUND: Calling GetCaps");
   SoundCaps.dwSize=sizeof(SoundCaps);
   Ret=DSObj->GetCaps(&SoundCaps);
   if (Ret != DS_OK) return SoundError("GetCaps Failed",Ret);
 
 #ifdef ENABLE_LOGFILE
-  log("------ Sound capabilities: ------");
-  log(EasyStr("dwSize=")+SoundCaps.dwSize);
+  dbg_log("------ Sound capabilities: ------");
+  dbg_log(EasyStr("dwSize=")+SoundCaps.dwSize);
 
-  log(EasyStr("dwFlags=")+itoa(SoundCaps.dwFlags,d2_t_buf,2));
-  if (SoundCaps.dwFlags & DSCAPS_PRIMARYMONO    ) log("    DSCAPS_PRIMARYMONO  ");
-  if (SoundCaps.dwFlags & DSCAPS_PRIMARYSTEREO  ) log("    DSCAPS_PRIMARYSTEREO");
-  if (SoundCaps.dwFlags & DSCAPS_PRIMARY8BIT    ) log("    DSCAPS_PRIMARY8BIT      ");
-  if (SoundCaps.dwFlags & DSCAPS_PRIMARY16BIT   ) log("    DSCAPS_PRIMARY16BIT     ");
-  if (SoundCaps.dwFlags & DSCAPS_CONTINUOUSRATE ) log("    DSCAPS_CONTINUOUSRATE   ");
-  if (SoundCaps.dwFlags & DSCAPS_EMULDRIVER     ) log("    DSCAPS_EMULDRIVER       ");
-  if (SoundCaps.dwFlags & DSCAPS_CERTIFIED      ) log("    DSCAPS_CERTIFIED        ");
-  if (SoundCaps.dwFlags & DSCAPS_SECONDARYMONO  ) log("    DSCAPS_SECONDARYMONO    ");
-  if (SoundCaps.dwFlags & DSCAPS_SECONDARYSTEREO) log("    DSCAPS_SECONDARYSTEREO  ");
-  if (SoundCaps.dwFlags & DSCAPS_SECONDARY8BIT  ) log("    DSCAPS_SECONDARY8BIT    ");
-  if (SoundCaps.dwFlags & DSCAPS_SECONDARY16BIT ) log("    DSCAPS_SECONDARY16BIT   ");
+  dbg_log(EasyStr("dwFlags=")+itoa(SoundCaps.dwFlags,d2_t_buf,2));
+  if (SoundCaps.dwFlags & DSCAPS_PRIMARYMONO    ) dbg_log("    DSCAPS_PRIMARYMONO  ");
+  if (SoundCaps.dwFlags & DSCAPS_PRIMARYSTEREO  ) dbg_log("    DSCAPS_PRIMARYSTEREO");
+  if (SoundCaps.dwFlags & DSCAPS_PRIMARY8BIT    ) dbg_log("    DSCAPS_PRIMARY8BIT      ");
+  if (SoundCaps.dwFlags & DSCAPS_PRIMARY16BIT   ) dbg_log("    DSCAPS_PRIMARY16BIT     ");
+  if (SoundCaps.dwFlags & DSCAPS_CONTINUOUSRATE ) dbg_log("    DSCAPS_CONTINUOUSRATE   ");
+  if (SoundCaps.dwFlags & DSCAPS_EMULDRIVER     ) dbg_log("    DSCAPS_EMULDRIVER       ");
+  if (SoundCaps.dwFlags & DSCAPS_CERTIFIED      ) dbg_log("    DSCAPS_CERTIFIED        ");
+  if (SoundCaps.dwFlags & DSCAPS_SECONDARYMONO  ) dbg_log("    DSCAPS_SECONDARYMONO    ");
+  if (SoundCaps.dwFlags & DSCAPS_SECONDARYSTEREO) dbg_log("    DSCAPS_SECONDARYSTEREO  ");
+  if (SoundCaps.dwFlags & DSCAPS_SECONDARY8BIT  ) dbg_log("    DSCAPS_SECONDARY8BIT    ");
+  if (SoundCaps.dwFlags & DSCAPS_SECONDARY16BIT ) dbg_log("    DSCAPS_SECONDARY16BIT   ");
 
-  log(EasyStr("dwMinSecondarySampleRate=")+SoundCaps.dwMinSecondarySampleRate);
-  log(EasyStr("dwMaxSecondarySampleRate=")+SoundCaps.dwMaxSecondarySampleRate);
-  log(EasyStr("dwPrimaryBuffers=")+SoundCaps.dwPrimaryBuffers);
-  log(EasyStr("dwMaxHwMixingAllBuffers=")+SoundCaps.dwMaxHwMixingAllBuffers);
-  log(EasyStr("dwMaxHwMixingStaticBuffers=")+SoundCaps.dwMaxHwMixingStaticBuffers);
-  log(EasyStr("dwMaxHwMixingStreamingBuffers=")+SoundCaps.dwMaxHwMixingStreamingBuffers);
-  log(EasyStr("dwFreeHwMixingAllBuffers=")+SoundCaps.dwFreeHwMixingAllBuffers);
-  log(EasyStr("dwFreeHwMixingStaticBuffers=")+SoundCaps.dwFreeHwMixingStaticBuffers);
-  log(EasyStr("dwFreeHwMixingStreamingBuffers=")+SoundCaps.dwFreeHwMixingStreamingBuffers);
-  log(EasyStr("dwMaxHw3DAllBuffers=")+SoundCaps.dwMaxHw3DAllBuffers);
-  log(EasyStr("dwMaxHw3DStaticBuffers=")+SoundCaps.dwMaxHw3DStaticBuffers);
-  log(EasyStr("dwMaxHw3DStreamingBuffers=")+SoundCaps.dwMaxHw3DStreamingBuffers);
-  log(EasyStr("dwFreeHw3DAllBuffers=")+SoundCaps.dwFreeHw3DAllBuffers);
-  log(EasyStr("dwFreeHw3DStaticBuffers=")+SoundCaps.dwFreeHw3DStaticBuffers);
-  log(EasyStr("dwFreeHw3DStreamingBuffers=")+SoundCaps.dwFreeHw3DStreamingBuffers);
-  log(EasyStr("dwTotalHwMemBytes=")+SoundCaps.dwTotalHwMemBytes);
-  log(EasyStr("dwFreeHwMemBytes=")+SoundCaps.dwFreeHwMemBytes);
-  log(EasyStr("dwMaxContigFreeHwMemBytes=")+SoundCaps.dwMaxContigFreeHwMemBytes);
-  log(EasyStr("dwUnlockTransferRateHwBuffers=")+SoundCaps.dwUnlockTransferRateHwBuffers);
-  log(EasyStr("dwPlayCpuOverheadSwBuffers=")+SoundCaps.dwPlayCpuOverheadSwBuffers);
-  log(EasyStr("dwReserved1=")+SoundCaps.dwReserved1);
-  log(EasyStr("dwReserved2=")+SoundCaps.dwReserved2);
-  log("---------------------------------");
+  dbg_log(EasyStr("dwMinSecondarySampleRate=")+SoundCaps.dwMinSecondarySampleRate);
+  dbg_log(EasyStr("dwMaxSecondarySampleRate=")+SoundCaps.dwMaxSecondarySampleRate);
+  dbg_log(EasyStr("dwPrimaryBuffers=")+SoundCaps.dwPrimaryBuffers);
+  dbg_log(EasyStr("dwMaxHwMixingAllBuffers=")+SoundCaps.dwMaxHwMixingAllBuffers);
+  dbg_log(EasyStr("dwMaxHwMixingStaticBuffers=")+SoundCaps.dwMaxHwMixingStaticBuffers);
+  dbg_log(EasyStr("dwMaxHwMixingStreamingBuffers=")+SoundCaps.dwMaxHwMixingStreamingBuffers);
+  dbg_log(EasyStr("dwFreeHwMixingAllBuffers=")+SoundCaps.dwFreeHwMixingAllBuffers);
+  dbg_log(EasyStr("dwFreeHwMixingStaticBuffers=")+SoundCaps.dwFreeHwMixingStaticBuffers);
+  dbg_log(EasyStr("dwFreeHwMixingStreamingBuffers=")+SoundCaps.dwFreeHwMixingStreamingBuffers);
+  dbg_log(EasyStr("dwMaxHw3DAllBuffers=")+SoundCaps.dwMaxHw3DAllBuffers);
+  dbg_log(EasyStr("dwMaxHw3DStaticBuffers=")+SoundCaps.dwMaxHw3DStaticBuffers);
+  dbg_log(EasyStr("dwMaxHw3DStreamingBuffers=")+SoundCaps.dwMaxHw3DStreamingBuffers);
+  dbg_log(EasyStr("dwFreeHw3DAllBuffers=")+SoundCaps.dwFreeHw3DAllBuffers);
+  dbg_log(EasyStr("dwFreeHw3DStaticBuffers=")+SoundCaps.dwFreeHw3DStaticBuffers);
+  dbg_log(EasyStr("dwFreeHw3DStreamingBuffers=")+SoundCaps.dwFreeHw3DStreamingBuffers);
+  dbg_log(EasyStr("dwTotalHwMemBytes=")+SoundCaps.dwTotalHwMemBytes);
+  dbg_log(EasyStr("dwFreeHwMemBytes=")+SoundCaps.dwFreeHwMemBytes);
+  dbg_log(EasyStr("dwMaxContigFreeHwMemBytes=")+SoundCaps.dwMaxContigFreeHwMemBytes);
+  dbg_log(EasyStr("dwUnlockTransferRateHwBuffers=")+SoundCaps.dwUnlockTransferRateHwBuffers);
+  dbg_log(EasyStr("dwPlayCpuOverheadSwBuffers=")+SoundCaps.dwPlayCpuOverheadSwBuffers);
+  dbg_log(EasyStr("dwReserved1=")+SoundCaps.dwReserved1);
+  dbg_log(EasyStr("dwReserved2=")+SoundCaps.dwReserved2);
+  dbg_log("---------------------------------");
 #endif
 
   if (SoundCaps.dwMaxSecondarySampleRate<SOUND_DESIRED_LQ_FREQ-(SOUND_DESIRED_LQ_FREQ/5)){
@@ -338,7 +338,7 @@ position, but the current write position cannot be changed.
 
 */
     SoundBuf->GetCurrentPosition(&play_cursor,&write_cursor);
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_OPTIMISE) // one DIV fewer!
+#if defined(SSE_SOUND_OPTIMISE) // one DIV fewer!
     DWORD cursor=(sound_time_method==0) ? play_cursor:write_cursor;
     cursor/=sound_bytes_per_sample;
 #else
@@ -421,7 +421,7 @@ HRESULT DSGetPrimaryBuffer()
         PrimaryFormat.nSamplesPerSec=DS_SetFormat_freq;
         PrimaryFormat.nAvgBytesPerSec=PrimaryFormat.nSamplesPerSec*PrimaryFormat.nBlockAlign;
         Ret=PrimaryBuf->SetFormat(&PrimaryFormat);
-        log(EasyStr("SOUND: SetFormat to ")+DS_SetFormat_freq+"Hz, it "+LPSTR(Ret==DS_OK ? "succeeded.":"failed."));
+        dbg_log(EasyStr("SOUND: SetFormat to ")+DS_SetFormat_freq+"Hz, it "+LPSTR(Ret==DS_OK ? "succeeded.":"failed."));
         if (Ret==DS_OK){
           sound_freq=sound_comline_freq;
           DS_GetFormat_Wrong=true;
@@ -433,7 +433,7 @@ HRESULT DSGetPrimaryBuffer()
       PrimaryFormat.nSamplesPerSec=DS_SetFormat_freq;
       PrimaryFormat.nAvgBytesPerSec=PrimaryFormat.nSamplesPerSec*PrimaryFormat.nBlockAlign;
       Ret=PrimaryBuf->SetFormat(&PrimaryFormat);
-      log(EasyStr("SOUND: SetFormat to ")+DS_SetFormat_freq+"Hz, it "+LPSTR(Ret==DS_OK ? "succeeded.":"failed."));
+      dbg_log(EasyStr("SOUND: SetFormat to ")+DS_SetFormat_freq+"Hz, it "+LPSTR(Ret==DS_OK ? "succeeded.":"failed."));
       if (Ret==DS_OK) break;
 
       DS_SetFormat_freq=min((DWORD)((desired_freq/1000)*1000),SoundCaps.dwMaxSecondarySampleRate);
@@ -441,7 +441,7 @@ HRESULT DSGetPrimaryBuffer()
         PrimaryFormat.nSamplesPerSec=DS_SetFormat_freq;
         PrimaryFormat.nAvgBytesPerSec=PrimaryFormat.nSamplesPerSec*PrimaryFormat.nBlockAlign;
         if ((Ret=PrimaryBuf->SetFormat(&PrimaryFormat))==DS_OK) break;
-        log(EasyStr("SOUND: Couldn't SetFormat to ")+DS_SetFormat_freq+"Hz");
+        dbg_log(EasyStr("SOUND: Couldn't SetFormat to ")+DS_SetFormat_freq+"Hz");
 
         DS_SetFormat_freq-=500;
         // Fail if less than 4/5th of the desired frequency
@@ -458,10 +458,10 @@ HRESULT DSGetPrimaryBuffer()
     if (Ret!=DS_OK){
       sound_freq=DS_SetFormat_freq;
       DS_GetFormat_Wrong=true;
-      log(EasyStr("SOUND: GetFormat for primary sound buffer failed, assuming ")+sound_freq+"Hz");
+      dbg_log(EasyStr("SOUND: GetFormat for primary sound buffer failed, assuming ")+sound_freq+"Hz");
     }else{
       sound_freq=PrimaryFormat.nSamplesPerSec;
-      log(EasyStr("SOUND: GetFormat for primary sound buffer returned ")+sound_freq+"Hz");
+      dbg_log(EasyStr("SOUND: GetFormat for primary sound buffer returned ")+sound_freq+"Hz");
     }
 
     if (DS_GetFormat_Wrong) break;
@@ -469,11 +469,11 @@ HRESULT DSGetPrimaryBuffer()
     if (DWORD(sound_freq)>=(DS_SetFormat_freq-2500) &&(DWORD)(sound_freq)<=(DS_SetFormat_freq+2500)){
       break;
     }else if (desired_freq<20000){
-      log("   Sound card is a dirty liar! Ignoring what it says and restarting.");
+      dbg_log("   Sound card is a dirty liar! Ignoring what it says and restarting.");
       DS_GetFormat_Wrong=true;
       desired_freq=sound_chosen_freq;
     }else{
-      log("   SetFormat failed or sound card is a dirty liar! Trying again.");
+      dbg_log("   SetFormat failed or sound card is a dirty liar! Trying again.");
       desired_freq*=4;
       desired_freq/=5;
     }
@@ -557,7 +557,7 @@ HRESULT DSCreateSoundBuf()
   DSBCAPS caps={sizeof(DSBCAPS)};
   if (SoundBuf->GetCaps(&caps)==DS_OK) sound_buffer_length=caps.dwBufferBytes/sound_bytes_per_sample;
 
-  log(EasyStr("SOUND: Created secondry sound buffer at ")+wfx.nSamplesPerSec+"Hz");
+  dbg_log(EasyStr("SOUND: Created secondry sound buffer at ")+wfx.nSamplesPerSec+"Hz");
 
   return DS_OK;
 }

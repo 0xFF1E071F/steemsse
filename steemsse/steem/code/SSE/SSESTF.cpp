@@ -1,9 +1,7 @@
 #include "SSE.h"
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STF)
+#if defined(SSE_STF)
 
-
-#if defined(SSE_STRUCTURE_SSESTF_OBJ)
 #include "../pch.h"
 #include <conditions.h>
 #include <emulator.decla.h>
@@ -16,8 +14,6 @@
 #include "SSESTF.h"
 #include "SSEOption.h"
 #include "SSEGlue.h"
-#endif//SSE_STRUCTURE_SSESTF_OBJ
-
 
 // note this is global here, not in classes. TODO?
 // and it is also in the release build (but now used in TRACE)
@@ -33,7 +29,11 @@ void CheckSTTypeAndTos() {
 #if defined(SSE_TOS_GEMDOS_RESTRICT_TOS3)
   if(Tos.VersionWarning)
 #endif
-  if(tos_version<0x106 && ST_TYPE==STE || tos_version>=0x106 && ST_TYPE!=STE)
+  if(tos_version<0x106 && ST_TYPE==STE || tos_version>=0x106 && ST_TYPE!=STE
+#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS4)    
+    && tos_version!=0x206
+#endif
+    )
     Alert("TOS and ST type normally not compatible","Warning",MB_OK|MB_ICONWARNING);
 }
 #endif
@@ -45,7 +45,7 @@ int SwitchSTType(int new_type) { // it was one of the first added functions, no 
   if(ST_TYPE!=STE) // all STF types
   {
 //    stfm_borders=4; // Steem 3.2 command-line option STFMBORDER (not used)
-#if defined(SSE_INT_VBL_STF) // instead of SSE_INT_VBI_START //no
+#if defined(SSE_INT_VBL_STF)//no
     HblTiming=HBL_FOR_STF; 
 #endif
 #if defined(SSE_INT_MFP_RATIO)
@@ -117,7 +117,7 @@ int SwitchSTType(int new_type) { // it was one of the first added functions, no 
     n_cpu_cycles_per_second=CpuNormalHz; // no wrong CPU speed icon in OSD (3.5.1)
 #endif
 
-#if defined(SSE_INT_VBI_START) || defined(SSE_INT_VBL_STF)//no
+#if defined(SSE_INT_VBL_STF)//no
   draw_routines_init(); // to adapt event plans (overkill?)
 #endif
 
@@ -129,4 +129,4 @@ int SwitchSTType(int new_type) { // it was one of the first added functions, no 
 }
 
 
-#endif//#if defined(STEVEN_SEAGAL) && defined(SSE_STF)
+#endif//#if defined(SSE_STF)

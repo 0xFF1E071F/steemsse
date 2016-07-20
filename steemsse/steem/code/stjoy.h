@@ -1,9 +1,3 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_STJOY_H)
-
-#include "stjoy.decla.h"
-
-#else//!defined(SSE_STRUCTURE_STJOY_H)
-
 #ifdef IN_MAIN
 #define EXT
 #define INIT(s) =s
@@ -31,10 +25,7 @@ EXT bool joy_is_key_used(BYTE);
 #define N_JOY_PARALLEL_1 7
 
 EXT WORD paddles_ReadMask INIT(0);
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
-#else
 EXT BYTE stick[8];
-#endif
 EXT void InitJoysticks(int=0),FreeJoysticks();
 
 #ifdef IN_MAIN
@@ -236,9 +227,11 @@ class TJoystick
 public:
   TJoystick();
   ~TJoystick(){};
-
+#if defined(SSE_VS2008_WARNING_383)
+  DWORD ToggleKey; //,KeyAutoFire;
+#else
   int ToggleKey; //,KeyAutoFire;
-
+#endif
   int DirID[6];  // Up Down Left Right Fire AutoFire
   int AnyFireOnJoy,AutoFireSpeed;
   int DeadZone;
@@ -250,6 +243,7 @@ public:
 TJoystick::TJoystick()
 {
   ToggleKey=0;
+
   for (int n=0;n<6;n++) DirID[n]=0xffff;
   DeadZone=50;
   AutoFireSpeed=0;
@@ -274,4 +268,3 @@ DWORD JoyAnyButtonMask[MAX_PC_JOYS];
 
 #undef EXT
 
-#endif//!defined(SSE_STRUCTURE_STJOY_H)

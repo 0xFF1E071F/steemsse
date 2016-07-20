@@ -1,7 +1,3 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_HISTORYLIST_H)
-#pragma once
-#endif
-
 //---------------------------------------------------------------------------
 class THistoryList : public TStemDialog
 {

@@ -18,47 +18,12 @@ struct TGlueStatusBYTE {
 #endif
 
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-#define TRICK_LINE_PLUS_26 0x001
-#define TRICK_LINE_PLUS_2 0x02
-#define TRICK_LINE_MINUS_106 0x04
-#define TRICK_LINE_MINUS_2 0x08
-#define TRICK_LINE_PLUS_44 0x10
-#define TRICK_4BIT_SCROLL 0x20
-#define TRICK_OVERSCAN_MED_RES 0x40
-#define TRICK_BLACK_LINE 0x80	
-#define TRICK_TOP_OVERSCAN 0x100
-#define TRICK_BOTTOM_OVERSCAN 0x200
-#define TRICK_BOTTOM_OVERSCAN_60HZ 0x400
-#define TRICK_LINE_PLUS_20 0x800	
-#define TRICK_0BYTE_LINE 0x1000	
-#define TRICK_STABILISER 0x2000
-#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
-// at least hacks involving those have been removed
-#define TRICK_WRITE_SDP 0x4000 
-#define TRICK_WRITE_SDP_POST_DE 0x8000
-#endif
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_382)
-#define TRICK_80BYTE_LINE 0x4000 // don't assume a "no trick" colour line = 160byte
-#endif
-#if defined(SSE_SHIFTER_DRAGON1)
-#define TRICK_CONFUSED_SHIFTER 0x10000//tmp hack
-#endif
-#if defined(SSE_SHIFTER_UNSTABLE)
-#define TRICK_UNSTABLE 0x10000 // less specific
-#endif
-#define TRICK_LINE_PLUS_24 0x20000
-#define TRICK_LINE_PLUS_4 0x40000
-#define TRICK_LINE_PLUS_6 0x80000
-#define TRICK_NEO 0x100000//tests
-
-
-
 struct TScanline {
   short StartCycle; // eg 56
   short EndCycle; // eg 376
   BYTE Bytes; // eg 160
   short Cycles; // eg 512 
-  DWORD Tricks; // see mask description above
+  DWORD Tricks; // see mask description in SSEVideo.h
 };
 #endif
 
@@ -99,7 +64,7 @@ struct TGlue {
   int TrickExecuted; //make sure that each trick will only be applied once
   BYTE cycle_of_scanline_length_decision; 
 #if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
-  bool ExtraAdded;//rather silly, should do without
+  bool ExtraAdded;
 #endif
   void AdaptScanlineValues(int CyclesIn); // on set sync of shift mode
 #if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
@@ -108,7 +73,7 @@ struct TGlue {
   int CheckFreq(int t);
   void CheckSideOverscan(); // left & right border effects
   void CheckVerticalOverscan(); // top & bottom borders
-  void EndHBL(); // at end of HBL, check if +2 -2 were correct
+  void EndHBL();
   int FetchingLine();
   void IncScanline();
   void SetShiftMode(BYTE NewRes);

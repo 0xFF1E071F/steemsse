@@ -6,11 +6,11 @@ GUI functions. It creates the main window in MakeGUI, handles translations
 and (for some reason) command-line options.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: gui.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_GUI_H)
+#if defined(SSE_STRUCTURE_DECLA)
 
 #define EXT
 #define INIT(s) =s
@@ -153,7 +153,7 @@ Str Comlines[NUM_COMLINES]={Comlines_Default[0][0],Comlines_Default[1][0],Comlin
 bool StepByStepInit=0;
 EasyStr RunDir,WriteDir,INIFile,ScreenShotFol;
 EasyStr LastSnapShot,BootStateFile,StateHist[10],AutoSnapShotName="auto";
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_CONFIG_FILE)
+#if defined(SSE_GUI_CONFIG_FILE)
 EasyStr LastCfgFile;
 #endif
 Str BootDisk[2];
@@ -178,7 +178,7 @@ const POINT WinSize[4][5]={ {{320,200},{640,400},{960, 600},{1280,800},{-1,-1}},
                             {{640,400},{1280,800},{-1,-1}},
                             {{800,600},{-1,-1}}};
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS)
+#if defined(SSE_VID_BORDERS)
 
 // TODO, it works but there ought to be a better way
 
@@ -499,14 +499,12 @@ BYTE STCharToPCChar[128]={199,  0,233,226,228,224,229,231,234,235,232,239,238,23
 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_KEYTABLE_H)
+#if defined(SSE_STRUCTURE_DECLA)
 #include "key_table.cpp" //temp!
 #endif
 
 #include "stemwin.cpp"
 #define LOGSECTION LOGSECTION_INIT
-
-#if defined(STEVEN_SEAGAL)
 
 #if defined(SSE_VID_BORDERS)
 
@@ -645,7 +643,7 @@ int ChangeBorderSize(int size_in) {
 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_STRING)
 /*  Cool feature introduced with v3.5.4, a kind of status bar consisting
     in a formatted text string placed on the icon bar of Steem, when there
     is sufficient room between left and right icons.
@@ -653,11 +651,7 @@ int ChangeBorderSize(int size_in) {
 
 #include "SSE/SSEMMU.h"
 
-#if defined(SSE_VAR_ARCHIVEACCESS) || defined(SSE_ACSI_MULTIPLE2)
-extern char ansi_name[MAX_PATH];
-#endif
-
-#if defined(SSE_GUI_STATUS_STRING_380)
+#if defined(SSE_GUI_STATUS_STRING_ICONS)
 void GUIRefreshStatusBar(bool invalidate) {
 #else
 void GUIRefreshStatusBar() {
@@ -671,7 +665,7 @@ void GUIRefreshStatusBar() {
   // build text of "status bar", only if we're to show it
 
 
-#if defined(SSE_GUI_STATUS_STRING_380) && defined(SSE_CPU_HALT)
+#if defined(SSE_GUI_STATUS_STRING_ICONS) && defined(SSE_CPU_HALT)
   // and it's no special string
   if(should_we_show && M68000.ProcessingState!=TM68000::INTEL_CRASH
     && M68000.ProcessingState!=TM68000::HALTED
@@ -680,12 +674,12 @@ void GUIRefreshStatusBar() {
   if(should_we_show)
 #endif
   {
-#if defined(SSE_VAR_ARCHIVEACCESS) || defined(SSE_ACSI_MULTIPLE2)
+#if defined(SSE_ANSI_STRING)
     char *status_bar=ansi_name; //first reuse!
 #else
     char status_bar[120+10]="\0"; //TODO: size
 #endif
-#if defined(SSE_GUI_STATUS_STRING_380)
+#if defined(SSE_GUI_STATUS_STRING_ICONS)
     status_bar[0]='\0';
 #endif
     if(SSE_STATUS_BAR)
@@ -698,8 +692,8 @@ void GUIRefreshStatusBar() {
         sb_tos[5],sb_ram[7];
 #if !defined(SSE_GUI_STATUS_STRING_FULL_ST_MODEL)
 #if defined(SSE_MMU_WU_DL)
-      sprintf(sb_st_model,"%s%d",(ST_TYPE)? "STF":"STE",MMU.WS[WAKE_UP_STATE]);
-      if(!WAKE_UP_STATE)
+      sprintf(sb_st_model,"%s%d",(ST_TYPE)? "STF":"STE",MMU.WS[OPTION_WS]);
+      if(!OPTION_WS)
         sb_st_model[3]=0;
 #else
       sprintf(sb_st_model,"%s",(ST_TYPE)? "STF":"STE");
@@ -711,15 +705,15 @@ void GUIRefreshStatusBar() {
 #if defined(SSE_GUI_STATUS_STRING_FULL_ST_MODEL)
       sprintf(status_bar,"%s %s %s",st_model_name[ST_TYPE],sb_tos,sb_ram);
 #if defined(SSE_MMU_WU_DL)
-      if(WAKE_UP_STATE)
+      if(OPTION_WS)
       {
         char sb_wu[6];
-        sprintf(sb_wu," WS%c",'0'+MMU.WS[WAKE_UP_STATE]);
+        sprintf(sb_wu," WS%c",'0'+MMU.WS[OPTION_WS]);
         strcat(status_bar,sb_wu);
       }
 #endif
 #else
-#if defined(SSE_GUI_STATUS_STRING_380) // make room for flag after TXXX
+#if defined(SSE_GUI_STATUS_STRING_ICONS) // make room for flag after TXXX
       sprintf(status_bar,"%s %s       %s",sb_st_model,sb_tos,sb_ram);
 #else
       sprintf(status_bar,"%s %s %s",sb_st_model,sb_tos,sb_ram);
@@ -736,20 +730,20 @@ void GUIRefreshStatusBar() {
 #endif
 
       // some options
-#if !defined(SSE_GUI_STATUS_STRING_380)
+#if !defined(SSE_GUI_STATUS_STRING_ICONS)
 #if defined(SSE_IKBD_6301) && defined(SSE_GUI_STATUS_STRING_6301)
-      if(HD6301EMU_ON)
+      if(OPTION_C1)
         strcat(status_bar," C1"); //saves som space
-#if defined(SSE_GUI_STATUS_STRING_68901) && !defined(SSE_GUI_STATUS_STRING_380)
+#if defined(SSE_GUI_STATUS_STRING_68901) && !defined(SSE_GUI_STATUS_STRING_ICONS)
       else
         strcat(status_bar," X");
 #endif
 #endif
 
 #if defined(SSE_GUI_STATUS_STRING_68901)
-      if(OPTION_PRECISE_MFP)
+      if(OPTION_C2)
         strcat(status_bar," C2");
-#if !defined(SSE_GUI_STATUS_STRING_380)
+#if !defined(SSE_GUI_STATUS_STRING_ICONS)
       else
         strcat(status_bar," X");
 #endif
@@ -766,7 +760,7 @@ void GUIRefreshStatusBar() {
       
 #if USE_PASTI && defined(SSE_GUI_STATUS_STRING_PASTI)//no
       if(hPasti && pasti_active
-#if defined(SSE_DRIVE)&&defined(SSE_PASTI_ONLY_STX)
+#if defined(SSE_DRIVE_OBJECT)&&defined(SSE_DISK_PASTI_ONLY_STX)
 #if defined(SSE_DISK_IMAGETYPE)
 //        && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType.Extension==EXT_STX)
 #else
@@ -779,12 +773,12 @@ void GUIRefreshStatusBar() {
       //if(0);
 #endif
       
-#if defined(SSE_GUI_STATUS_STRING_IPF) && defined(SSE_IPF)//no
+#if defined(SSE_GUI_STATUS_STRING_IPF) && defined(SSE_DISK_CAPS)//no
       else if(Caps.Active)
         strcat(status_bar," Caps");
 #endif
       
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_STATUS_STRING_STW)//no
+#if defined(SSE_GUI_STATUS_STRING_STW)//no
       else if(IMAGE_STW)
         strcat(status_bar," STW");
 #endif      
@@ -794,14 +788,14 @@ void GUIRefreshStatusBar() {
       else if(ADAT)
         strcat(status_bar," ADAT");
 #else
-#if !defined(SSE_GUI_STATUS_STRING_380)
+#if !defined(SSE_GUI_STATUS_STRING_ICONS)
 #if defined(SSE_GUI_STATUS_STRING_HD)
       if(!HardDiskMan.DisableHardDrives //v3.7.0
         || ACSI_EMU_ON) //v3.7.2
         strcat(status_bar," HD");
 #endif
 #endif
-#if !defined(SSE_GUI_STATUS_STRING_380)
+#if !defined(SSE_GUI_STATUS_STRING_ICONS)
       if(!floppy_instant_sector_access) // the option only //3.7.0
         strcat(status_bar," ADAT");
 #endif
@@ -810,13 +804,13 @@ void GUIRefreshStatusBar() {
 
 
 
-#if defined(SSE_GUI_STATUS_STRING_HACKS) && !defined(SSE_GUI_STATUS_STRING_380)
-      if(SSE_HACKS_ON)
+#if defined(SSE_GUI_STATUS_STRING_HACKS) && !defined(SSE_GUI_STATUS_STRING_ICONS)
+      if(OPTION_HACKS)
         strcat(status_bar," #"); // which symbol?
 #endif
 
 #if defined(SSE_PRIVATE_BUILD)
-      if(SSE_TEST_ON)
+      if(SSEOption.TestingNewFeatures)
         strcat(status_bar," ##");
 #endif
 
@@ -834,12 +828,9 @@ void GUIRefreshStatusBar() {
     if(SSE_STATUS_BAR_GAME_NAME 
       && (FloppyDrive[floppy_current_drive()].NotEmpty() 
 #if defined(SSE_TOS_PRG_AUTORUN)
-      || SF314[0].ImageType.Extension==EXT_PRG
-#endif
-#if defined(SSE_TOS_TOS_AUTORUN)
+      || SF314[0].ImageType.Extension==EXT_PRG 
       || SF314[0].ImageType.Extension==EXT_TOS
 #endif
-
       ))
     {
 #define MAX_TEXT_LENGTH_BORDER_ON (30+62+10) 
@@ -857,7 +848,7 @@ void GUIRefreshStatusBar() {
       if(SideBorderSizeWin==ORIGINAL_BORDER_SIDE)
         max_text_length-=5;
 #endif
-#if defined(SSE_GUI_STATUS_STRING_380)
+#if defined(SSE_GUI_STATUS_STRING_ICONS)
       char tmp[MAX_TEXT_LENGTH_BORDER_ON+2+1]=" ";
 #else
       char tmp[MAX_TEXT_LENGTH_BORDER_ON+2+1]=" \"";
@@ -865,7 +856,7 @@ void GUIRefreshStatusBar() {
       if( strlen(FloppyDrive[floppy_current_drive()].DiskName.Text)<=max_text_length)
       {
         strncpy(tmp
-#if defined(SSE_GUI_STATUS_STRING_380)
+#if defined(SSE_GUI_STATUS_STRING_ICONS)
           +1
 #else
           +2
@@ -873,18 +864,15 @@ void GUIRefreshStatusBar() {
           ,FloppyDrive[floppy_current_drive()].DiskName.Text,max_text_length);
 #if defined(SSE_TOS_PRG_AUTORUN)
         if(SF314[0].ImageType.Extension==EXT_PRG)
-          strcat(tmp,".PRG");
-#if defined(SSE_TOS_TOS_AUTORUN)
+          strcat(tmp,dot_ext(EXT_PRG)); // TODO
         else if(SF314[0].ImageType.Extension==EXT_TOS)
-          strcat(tmp,".TOS");
-#endif
-
+          strcat(tmp,dot_ext(EXT_TOS));
 #endif
       }
       else
       {
         strncpy(tmp
-#if defined(SSE_GUI_STATUS_STRING_380)
+#if defined(SSE_GUI_STATUS_STRING_ICONS)
           +1
 #else
           +2
@@ -893,21 +881,21 @@ void GUIRefreshStatusBar() {
         strcat(tmp,"...");
       }
       strcat(status_bar,tmp);
-#if !defined(SSE_GUI_STATUS_STRING_380)
+#if !defined(SSE_GUI_STATUS_STRING_ICONS)
       strcat(status_bar,"\"");
 #endif
     }
 #undef MAX_TEXT_LENGTH_BORDER_ON
 #undef MAX_TEXT_LENGTH_BORDER_OFF
 
-#if defined(SSE_GUI_STATUS_STRING_DISK_TYPE) && defined(SSE_DISK_IMAGETYPE)
+#if defined(SSE_DISK_EXT) && defined(SSE_DISK_IMAGETYPE)
 /*  If the game in A: isn't displayed on status bar, then we
     show what kind of file is in A: and B:. v3.7.2
 */
     else
     {
       char disk_type[13]; // " A:MSA B:STW"
-#if defined(SSE_GUI_STATUS_STRING_380)
+#if defined(SSE_GUI_STATUS_STRING_ICONS)
       if(num_connected_floppies==1)
         sprintf(disk_type," A:%s",extension_list[SF314[0].ImageType.Extension]);
       else
@@ -922,7 +910,7 @@ void GUIRefreshStatusBar() {
 
     //TRACE("status string len %d\n",strlen(status_bar));
     // change text
-#if !defined(SSE_GUI_STATUS_STRING_380)
+#if !defined(SSE_GUI_STATUS_STRING_ICONS)
 #if defined(SSE_VAR_MAIN_LOOP1) && defined(SSE_CPU_HALT)
     if(M68000.ProcessingState==TM68000::INTEL_CRASH)
       strcpy(status_bar,T("STEEM CRASHED!"));  
@@ -938,7 +926,7 @@ void GUIRefreshStatusBar() {
 #endif
   }
 
-#if defined(SSE_GUI_STATUS_STRING_380)
+#if defined(SSE_GUI_STATUS_STRING_ICONS)
 #if defined(SSE_VAR_MAIN_LOOP1) && defined(SSE_CPU_HALT)
     if(M68000.ProcessingState==TM68000::INTEL_CRASH)
       strcpy(ansi_name,T("STEEM CRASHED!"));  
@@ -987,13 +975,11 @@ void GUIRefreshStatusBar() {
   // show or hide
   ShowWindow(status_bar_win, (should_we_show) ? SW_SHOW : SW_HIDE);
 
-#if defined(SSE_GUI_STATUS_STRING_380)
+#if defined(SSE_GUI_STATUS_STRING_ICONS)
   if(invalidate)
     InvalidateRect(status_bar_win,NULL,FALSE); //to get message WM_DRAWITEM
 #endif
 }
-
-#endif
 
 #endif
 
@@ -1098,7 +1084,11 @@ void GUIColdResetChangeSettings()
   }
   if (OptionBox.NewMonitorSel>=0){
 #ifndef NO_CRAZY_MONITOR
+#if defined(SSE_VS2008_WARNING_383)
+    BYTE old_em=extended_monitor; //would need type_of() 
+#else
     bool old_em=extended_monitor;
+#endif
     extended_monitor=0;
 #endif
     if (OptionBox.NewMonitorSel==1){
@@ -1127,7 +1117,11 @@ void GUIColdResetChangeSettings()
 #endif
     }
 #ifndef NO_CRAZY_MONITOR
+#if defined(SSE_VS2008_WARNING_383)
+    if (extended_monitor!=old_em || extended_monitor){
+#else
     if (bool(extended_monitor)!=old_em || extended_monitor){
+#endif
       if (FullScreen){
         change_fullscreen_display_mode(true);
       }else{
@@ -1138,7 +1132,7 @@ void GUIColdResetChangeSettings()
     OptionBox.NewMonitorSel=-1;
   }
 #if defined(SSE_TOS_STE_FAST_BOOT2) //force recheck
-  if(SSE_HACKS_ON && (tos_version==0x106||tos_version==0x162)
+  if(OPTION_HACKS && (tos_version==0x106||tos_version==0x162)
 #if USE_PASTI
     && !pasti_active
 #endif
@@ -1208,7 +1202,11 @@ void LoadAllIcons(ConfigStoreFile *NOT_ONEGAME( pCSF ),bool NOT_ONEGAME( FirstCa
   bool UseDefault=0;
   HDC dc=GetDC(NULL);
   if (GetDeviceCaps(dc,BITSPIXEL)<=8){
+#if defined(SSE_VS2008_WARNING_383)
+    UseDefault=(pCSF->GetInt("Icons","UseDefaultIn256",0)!=0);
+#else
     UseDefault=bool(pCSF->GetInt("Icons","UseDefaultIn256",0));
+#endif
   }
   ReleaseDC(NULL,dc);
 
@@ -1252,7 +1250,7 @@ void LoadAllIcons(ConfigStoreFile *NOT_ONEGAME( pCSF ),bool NOT_ONEGAME( FirstCa
     }
 #endif
     for (int n=0;n<nStemDialogs;n++) DialogList[n]->UpdateMainWindowIcon();
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_CONFIG_FILE)
+#if defined(SSE_GUI_CONFIG_FILE)
     for (int id=100;id<=120+1;id++){
 #else
     for (int id=100;id<=120;id++){
@@ -1370,9 +1368,9 @@ bool MakeGUI()
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_RESET),WS_CHILDWINDOW | WS_VISIBLE |
                           PBS_RIGHTCLICK,x,0,20,20,StemWin,(HMENU)102,Inst,NULL);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_RESET_BUTTON2)
+#if defined(SSE_GUI_RESET_BUTTON2)
   ToolAddWindow(ToolTip,Win,T("Reset (Left Click = Warm, Right Click = Cold)"));
-#elif defined(STEVEN_SEAGAL) && defined(SSE_GUI_RESET_BUTTON)
+#elif defined(SSE_GUI_RESET_BUTTON)
   ToolAddWindow(ToolTip,Win,T("Reset (Left Click) - Switch off (Right Click)"));
 #else
   ToolAddWindow(ToolTip,Win,T("Reset (Left Click = Cold, Right Click = Warm)"));
@@ -1400,13 +1398,13 @@ bool MakeGUI()
 #endif
   UpdatePasteButton();
 
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_NO_UPDATE))
+#if !(defined(SSE_VAR_NO_UPDATE))
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_UPDATE),WS_CHILD,
                           x,0,20,20,StemWin,(HMENU)120,Inst,NULL);
   ToolAddWindow(ToolTip,Win,T("Steem Update Available! Click Here For Details!"));
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_CONFIG_FILE)
+#if defined(SSE_GUI_CONFIG_FILE)
   // new 'wrench' icon for config files, popup menu when left click
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_CFG),WS_CHILDWINDOW
     | WS_VISIBLE,x,0,20,20,StemWin,(HMENU)121,Inst,NULL);
@@ -1414,7 +1412,7 @@ bool MakeGUI()
   x+=23;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_STATUS_STRING)  
+#if defined(SSE_GUI_STATUS_STRING)  
 /*  Create a static control as text status bar. We take the undef update icon's
     number.
     WINDOW_TITLE is dummy, the field will be updated later, its size too.
@@ -1424,7 +1422,7 @@ bool MakeGUI()
 //    |SS_CENTER // horizontally
   //  |SS_CENTERIMAGE // vertically
   //|SS_SUNKEN // frame
-#if defined(SSE_GUI_STATUS_STRING_380)
+#if defined(SSE_GUI_STATUS_STRING_ICONS)
     |SS_OWNERDRAW
 #else
     |SS_CENTER // horizontally
@@ -1477,7 +1475,7 @@ bool MakeGUI()
 #endif
 
 #ifdef DEBUG_BUILD
-  log("STARTUP: DWin_init Called");
+  dbg_log("STARTUP: DWin_init Called");
   DWin_init();
 #endif
 
@@ -1530,22 +1528,22 @@ void CleanupGUI()
   WNDCLASS wc;
 #ifdef DEBUG_BUILD
   DWin_edit_is_being_temporarily_defocussed=true;
-  log("SHUTDOWN: Destroying debug-build menus");
+  dbg_log("SHUTDOWN: Destroying debug-build menus");
   if (insp_menu) DestroyMenu(insp_menu);
 
   if (trace_window_handle) DestroyWindow(trace_window_handle);
   trace_window_handle=NULL;
 
-  log("SHUTDOWN: Destroying Boiler Room Mr Statics");
+  dbg_log("SHUTDOWN: Destroying Boiler Room Mr Statics");
   if (DWin){
     mr_static_delete_children_of(DWin);
     mr_static_delete_children_of(DWin_timings_scroller.GetControlPage());
   }
   
-  log("SHUTDOWN: Destroying debug-build Boiler Room window");
+  dbg_log("SHUTDOWN: Destroying debug-build Boiler Room window");
   if (DWin) DestroyWindow(DWin);
 
-  log("SHUTDOWN: Destroying debug-build memory browsers");
+  dbg_log("SHUTDOWN: Destroying debug-build memory browsers");
   for (int n=0;n<MAX_MEMORY_BROWSERS;n++){
     if (m_b[n]!=NULL){
       if (m_b[n]->owner!=NULL){
@@ -1575,13 +1573,13 @@ void CleanupGUI()
   }
 #endif
 
-  log("SHUTDOWN: Destroying StemWin");
+  dbg_log("SHUTDOWN: Destroying StemWin");
   if (StemWin){
     CheckResetDisplay(true);
     DestroyWindow(StemWin);
     StemWin=NULL;
   }
-  log("SHUTDOWN: Destroying ToolTip");
+  dbg_log("SHUTDOWN: Destroying ToolTip");
   if (ToolTip) DestroyWindow(ToolTip);
 
   if (GetClassInfo(Inst,"Steem Window",&wc)){
@@ -1591,7 +1589,7 @@ void CleanupGUI()
     UnregisterClass("Steem Fullscreen Clip Window",Inst);
   }
 
-  log("SHUTDOWN: Calling CoUninitialize()");
+  dbg_log("SHUTDOWN: Calling CoUninitialize()");
   CoUninitialize();
 
   for (int n=1;n<RC_NUM_ICONS;n++) if (hGUIIcon[n]) DestroyIcon(hGUIIcon[n]);
@@ -1706,7 +1704,7 @@ int GetComLineArgType(char *Arg,EasyStr &Path)
     Path=strchr(Arg,'=')+1;
     return ARG_RTBUFNUM;
   }
-#if defined(STEVEN_SEAGAL) && defined(SSE_UNIX_TRACE)
+#if defined(SSE_UNIX_TRACE)
   else if (ComLineArgCompare(Arg,"TRACEFILE=",true)){ //Y,N
     Path=strchr(Arg,'=')+1;
     return ARG_TRACEFILE;
@@ -1737,7 +1735,11 @@ int GetComLineArgType(char *Arg,EasyStr &Path)
 
     char *dot=strrchr(GetFileNameFromPath(Path),'.');
     if (dot){
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH) && defined(SSE_VS2008_WARNING_383)
+      if (ExtensionIsDisk(dot)){
+#else
       if (ExtensionIsDisk(dot,false)){
+#endif
         return ARG_DISKIMAGEFILE;
       }else if (ExtensionIsPastiDisk(dot)){
         return ARG_PASTIDISKIMAGEFILE;
@@ -1761,9 +1763,9 @@ int GetComLineArgType(char *Arg,EasyStr &Path)
 
 void ParseCommandLine(int NumArgs,char *Arg[],int Level)
 {
-  log("STARTUP: Command line arguments:");
+  dbg_log("STARTUP: Command line arguments:");
   for (int n=0;n<NumArgs;n++){
-    log(Str("     ")+Arg[n]);
+    dbg_log(Str("     ")+Arg[n]);
     EasyStr Path;
     int Type=GetComLineArgType(Arg[n],Path);
     switch (Type){
@@ -1796,10 +1798,9 @@ void ParseCommandLine(int NumArgs,char *Arg[],int Level)
       case ARG_SETPABUFSIZE:  UNIX_ONLY( pa_output_buffer_size=atoi(Path); ) break;
       case ARG_ALLOWREADOPEN: stemdos_comline_read_is_rb=true; break;
       case ARG_NOINTS:        no_ints=true; break; // SS removed _
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER_REMOVE_USELESS_VAR))
+#if !(defined(SSE_SHIFTER_REMOVE_USELESS_VAR))
       case ARG_STFMBORDER:    stfm_borders=4; break;
-#endif
-#if defined(SSE_VAR_ARG_STFM)
+#elif defined(SSE_VAR_ARG_STFM)
       case ARG_STFMBORDER:
         ST_TYPE=STF; // to help DemobaseST just in case
         break;
@@ -1956,6 +1957,7 @@ void InitTranslations()
   strupr(TranslateUpperBuf);
 }
 //---------------------------------------------------------------------------
+#pragma warning (disable: 4701) //EStart==0 if break;//383
 EasyStr Translation(char *s)
 {
 #ifdef TRANSLATION_TEST
@@ -2061,11 +2063,11 @@ char *FSTypes(int Type,...)
 #ifdef RAR_SUPPORT
     strcpy(tp,";*.rar");tp+=strlen(tp);
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_UNRAR)
+#if defined(SSE_VAR_UNRAR)
     if(UNRAR_OK)
       strcpy(tp,";*.rar");tp+=strlen(tp);
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_ARCHIVEACCESS)
+#if defined(SSE_VAR_ARCHIVEACCESS)
     if(ARCHIVEACCESS_OK)
 #if defined(SSE_VAR_ARCHIVEACCESS2)
       strcpy(tp,";*.7z;*.bz2;*.gz;*.tar;*.arj");tp+=strlen(tp);
@@ -2208,7 +2210,11 @@ void ShowAllDialogs(bool Show)
   if (FSQuitBut) ShowWindow(FSQuitBut,int(Show ? SW_SHOWNA:SW_HIDE));
 }
 //---------------------------------------------------------------------------
+#if defined(SSE_VS2008_WARNING_383)
+void HandleKeyPress(UINT VKCode,DWORD Up,int Extended)
+#else
 void HandleKeyPress(UINT VKCode,bool Up,int Extended)
+#endif
 {
   if (disable_input_vbl_count) return;
   if (ikbd_keys_disabled()) return; //in duration mode
@@ -2234,7 +2240,7 @@ void HandleKeyPress(UINT VKCode,bool Up,int Extended)
   
   if (STCode==0) STCode=key_table[BYTE(VKCode)]; //SS: +- ASCII -> ST scancode
   if (STCode
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_F12)
+#if defined(SSE_GUI_F12)
     && VKCode!=VK_F12
 #endif
     ){
@@ -2248,11 +2254,11 @@ void HandleKeyPress(UINT VKCode,bool Up,int Extended)
 #undef LOGSECTION
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301)
 /*  We don't write in a buffer, 6301 emu will do it after having scanned
     ST_Key_Down.
 */
-    if(!HD6301EMU_ON)
+    if(!OPTION_C1)
     {
       if (Up) STCode|=MSB_B; // MSB_B = $80
       keyboard_buffer_write_n_record(STCode);
@@ -2356,7 +2362,11 @@ LRESULT CALLBACK NTKeyboardProc(INT nCode,WPARAM wParam,LPARAM lParam)
   KBDLLHOOKSTRUCT *pkbhs=LPKBDLLHOOKSTRUCT(lParam);
 
   if (nCode==HC_ACTION){
+#if defined(SSE_VS2008_WARNING_383)
+    bool ControlDown=(GetAsyncKeyState(VK_CONTROL) < 0),AltDown=(pkbhs->flags & LLKHF_ALTDOWN)!=0;
+#else
     bool ControlDown=(GetAsyncKeyState(VK_CONTROL) < 0),AltDown=(pkbhs->flags & LLKHF_ALTDOWN);
+#endif
     bool ShiftDown=(GetAsyncKeyState(VK_SHIFT) < 0);
 
     if (pkbhs->vkCode==VK_TAB && AltDown) return 1;
@@ -2528,9 +2538,13 @@ int Alert(char *Mess,char *Title,UINT Flags)
 void ShiftSwitchChangeModifiers(bool ShiftShouldBePressed,bool AltShouldBePressed,int ModifierRestoreArray[3])
 {
   // Get current states
-
+#if defined(SSE_VS2008_WARNING_383)
+  BYTE STLShiftDown=(ST_Key_Down[key_table[VK_LSHIFT]]);
+  BYTE STRShiftDown=(ST_Key_Down[key_table[VK_RSHIFT]]);
+#else
   bool STLShiftDown=(ST_Key_Down[key_table[VK_LSHIFT]]);
   bool STRShiftDown=(ST_Key_Down[key_table[VK_RSHIFT]]);
+#endif
   int STAltDown=(ST_Key_Down[key_table[VK_MENU]] ? BIT_1:0);
 
   if ((STLShiftDown || STRShiftDown) && ShiftShouldBePressed==0){
@@ -2568,7 +2582,11 @@ void ShiftSwitchRestoreModifiers(int ModifierRestoreArray[3])
   if (ModifierRestoreArray[2]==2) keyboard_buffer_write_n_record(key_table[VK_MENU] | MSB_B);
 }
 //---------------------------------------------------------------------------
+#if defined(SSE_VS2008_WARNING_383)
+void HandleShiftSwitching(UINT VKCode,DWORD Up,BYTE &STCode,int ModifierRestoreArray[3])
+#else
 void HandleShiftSwitching(UINT VKCode,bool Up,BYTE &STCode,int ModifierRestoreArray[3])
+#endif
 {
   // These are set to tell the HandleKeyPress routine what to do after it has
   // sent the key.
@@ -2595,8 +2613,13 @@ void HandleShiftSwitching(UINT VKCode,bool Up,BYTE &STCode,int ModifierRestoreAr
   STCode=LOBYTE(KeyEntry);
   KeyDownModifierState[BYTE(VKCode)]=BYTE(Shift | Alt);
   if (STCode && Up==0){
+#if defined(SSE_VS2008_WARNING_383)
+    bool ShiftShouldBePressed=(HIBYTE(KeyEntry) & BIT_0)!=0;
+    bool AltShouldBePressed=(HIBYTE(KeyEntry) & BIT_1)!=0;
+#else
     bool ShiftShouldBePressed=(HIBYTE(KeyEntry) & BIT_0);
     bool AltShouldBePressed=(HIBYTE(KeyEntry) & BIT_1);
+#endif
     ShiftSwitchChangeModifiers(ShiftShouldBePressed,AltShouldBePressed,ModifierRestoreArray);
   }
 }
@@ -2680,7 +2703,12 @@ void PasteVBL()
               int ModifierRestoreArray[3]={0,0,0};
               BYTE STCode=LOBYTE(LOWORD(Chars[n]));
               BYTE Modifiers=HIBYTE(LOWORD(Chars[n]));
+#if defined(SSE_VS2008_WARNING_383)
+              ShiftSwitchChangeModifiers((Modifiers & BIT_0)!=0,
+                (Modifiers & BIT_1)!=0,ModifierRestoreArray);
+#else
               ShiftSwitchChangeModifiers(Modifiers & BIT_0,Modifiers & BIT_1,ModifierRestoreArray);
+#endif
               keyboard_buffer_write_n_record(STCode);
               keyboard_buffer_write_n_record(BYTE(STCode | BIT_7));
               ShiftSwitchRestoreModifiers(ModifierRestoreArray);
@@ -2704,8 +2732,8 @@ void UpdateSTKeys()
 {
 	for (int n=0;n<128;n++){
     if (ST_Key_Down[n]){
-#if defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
-      if(!HD6301EMU_ON)
+#if defined(SSE_IKBD_6301)
+      if(!OPTION_C1)
 #endif
       keyboard_buffer_write(BYTE(n | BIT_7));
 

@@ -4,11 +4,11 @@ MODULE: emu
 DESCRIPTION: General low-level debugging functions.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: debug_emu.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DEBUGEMU_H)
+#if defined(SSE_STRUCTURE_DECLA)
 #define EXT
 #define INIT(s) =s
 
@@ -74,11 +74,9 @@ DynamicArray<DEBUGPLUGININFO> debug_plugins;
 #undef EXT
 #undef INIT
 
-#if defined(SSE_STRUCTURE_SSEFLOPPY_OBJ)
 #include "SSE/SSEFloppy.h"
-#endif
 
-#endif//SSE_STRUCTURE_DEBUGEMU_H
+#endif//decla
 
 #ifdef DEBUG_BUILD//SS
 
@@ -141,7 +139,7 @@ void update_display_after_trace()
     int horz_scale=0;
     debug_update_drawing_position(&horz_scale);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER)
+#if defined(SSE_SHIFTER)
     Shifter.Render(LINECYCLES);
 #else
     draw_scanline_to(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
@@ -218,7 +216,7 @@ void debug_update_cycle_counts()
 {
   debug_cycles_since_VBL=ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl;
   debug_cycles_since_HBL=ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl;
-#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER_SDP_READ)
+#if defined(SSE_SHIFTER_SDP_READ)
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
   debug_VAP=MMU.ReadVideoCounter(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
 #else
@@ -282,29 +280,19 @@ extern WORD d2_dpeek(MEM_ADDRESS);
 void debug_hit_mon(MEM_ADDRESS ad,int read)
 {
   if (mode!=STEM_MODE_CPU) return;
-#if defined(STEVEN_SEAGAL___)//mistake!
-  WORD mask=debug_get_ad_mask(ad,TRUE);
-#else
-  WORD mask=debug_get_ad_mask(ad,read);
-#endif
-
   int bytes=2;
 #if defined(SSE_BOILER_MONITOR_VALUE)
 /*  When the option is checked, we will stop Steem only if the condition
     is met when R/W on the address.
     Problem: Steem didn't foresee it and more changes are needed for
     write (what value?)
-    We only check words.
 */
-  if(ad&1) ad--; //...
-#if SSE_VERSION>364
-  int val=(int)d2_dpeek(ad); // must read RAM or IO
-#else
-  int val=(int)(DPEEK(ad));//(d2_dpeek(ad)); //d2_dpeek?
-#endif
-  //TRACE("%x = %x\n",ad,val);
+  int val=0;
   if(Debug.MonitorValueSpecified && Debug.MonitorComparison)
   {
+    if(ad&1) 
+      ad--;  // We only check words
+    val=(int)d2_dpeek(ad); // must read RAM or IO
     if(
       (Debug.MonitorComparison=='=' && val!=Debug.MonitorValue)
       || (Debug.MonitorComparison=='!' && val==Debug.MonitorValue)
@@ -313,13 +301,22 @@ void debug_hit_mon(MEM_ADDRESS ad,int read)
     {
       return;
     }
-    //else TRACE("addr %X value %X %c %X\n",ad,val,Debug.MonitorComparison,Debug.MonitorValue);
+    else 
+      TRACE("addr %X value %X %c %X\n",ad,val,Debug.MonitorComparison,Debug.MonitorValue);
   }
-#else
-  if (mask==0xff00) bytes=1;
-  if (mask==0x00ff) bytes=1, ad++;
-  int val=int((bytes==1) ? int(d2_peek(ad)):int(d2_dpeek(ad)));
-#endif
+  else
+  {
+    WORD mask=debug_get_ad_mask(ad,read);
+    if (mask==0xff00) bytes=1;
+    if (mask==0x00ff) bytes=1, ad++;
+    val=int((bytes==1) ? int(d2_peek(ad)):int(d2_dpeek(ad)));
+  }
+#else 
+    WORD mask=debug_get_ad_mask(ad,read);
+    if (mask==0xff00) bytes=1;
+    if (mask==0x00ff) bytes=1, ad++;
+    int val=int((bytes==1) ? int(d2_peek(ad)):int(d2_dpeek(ad)));
+#endif//383
 
   Str mess;
   if (read){
@@ -353,22 +350,24 @@ void debug_hit_mon(MEM_ADDRESS ad,int read)
     debug_mem_write_log_bytes=bytes;
 #if defined(SSE_BOILER_MONITOR_TRACE)//3.7.2
     if(read)
-      ioaccess|=IOACCESSE_DEBUG_MEM_READ_LOG;
+      ioaccess|=IOACCESS_DEBUG_MEM_READ_LOG;
     else
 #endif
-    ioaccess|=IOACCESSE_DEBUG_MEM_WRITE_LOG;
+    ioaccess|=IOACCESS_DEBUG_MEM_WRITE_LOG;
   }
 }
 //---------------------------------------------------------------------------
 void debug_hit_io_mon_write(MEM_ADDRESS ad,int val)
 {
   if (mode!=STEM_MODE_CPU) return;
-#if defined(STEVEN_SEAGAL)
+
+#if defined(SSE_BOILER_383)
+  WORD mask=debug_get_ad_mask(ad,FALSE); // "return pda->mask[int(read ? 1:0)];"
+#elif defined(SSE_BOILER) // 330 
   WORD mask=debug_get_ad_mask(ad,TRUE);
 #else
-  WORD mask=debug_get_ad_mask(ad,read);
+  WORD mask=debug_get_ad_mask(ad,read); //SS read is a function
 #endif
-
 
 #if defined(SSE_BOILER_MONITOR_VALUE)
 /*  When the option is checked, we will stop Steem only if the condition
@@ -384,7 +383,8 @@ void debug_hit_io_mon_write(MEM_ADDRESS ad,int val)
     {
       return;
     }
-    //else TRACE("addr %X value %X %c %X\n",ad,val,Debug.MonitorComparison,Debug.MonitorValue);
+    else 
+      TRACE("addr %X value %X %c %X\n",ad,val,Debug.MonitorComparison,Debug.MonitorValue);
   }
 #endif
 
@@ -454,7 +454,7 @@ void iolist_debug_add_pseudo_addresses()
   iolist_add_entry(IOLIST_PSEUDO_AD_FDC+0x00e,"FDC Current Track Drive B",1,NULL,&(floppy_head_track[1]));
   iolist_add_entry(IOLIST_PSEUDO_AD_FDC+0x010,"FDC Spinning Up",1,NULL,lpDWORD_B_0(&fdc_spinning_up));
   iolist_add_entry(IOLIST_PSEUDO_AD_FDC+0x012,"FDC Type 1 Command Active",1,NULL,lpDWORD_B_0(&floppy_type1_command_active));
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW))
+#if !(defined(SSE_DISK_STW))
   iolist_add_entry(IOLIST_PSEUDO_AD_FDC+0x014,"FDC Stepping In Flag",1,NULL,lpDWORD_B_0(&fdc_last_step_inwards_flag));
 #endif
   iolist_add_entry(IOLIST_PSEUDO_AD_FDC+0x018,"DMA Address High",1,NULL,lpDWORD_B_2(&dma_address));
@@ -639,11 +639,12 @@ int __stdcall debug_plugin_write_mem(DWORD ad,BYTE *buf,int len)
 }
 //---------------------------------------------------------------------------
 
-#if defined(SSE_BOILER_MONITOR_RANGE) && defined(SSE_INLINE_370)
+#if defined(SSE_BOILER_MONITOR_RANGE) && defined(SSE_COMPILER_370_INLINE)
 /*  Adding range check: is ad between ad1 and ad2
     We use the first 2 watches
 */
-  bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adarr,bool wr) {
+  //bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adarr,bool wr) {
+bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adarr) {//383
   MEM_ADDRESS ad1=0,ad2=0;
   for(int i=0;i<num;i++)
   {

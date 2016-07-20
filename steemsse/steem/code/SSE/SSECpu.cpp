@@ -1,38 +1,26 @@
 /*
 */
 
-#if defined(SSE_STRUCTURE_INFO) && !defined(SSE_STRUCTURE_SSECPU_OBJ)
-#pragma message("Included for compilation: SSECpu.cpp")
-#endif
-
 #include "SSE.h"
 
-#if defined(SSE_STRUCTURE_SSECPU_OBJ) // defined or not in SSE.h
+#if defined(SSE_CPU)
+
 #include "../pch.h" // Each object should include this precompiled header
 #pragma hdrstop  // Signals the end of precompilation
 #include <gui.decla.h> //PeekEvent()
 #include "SSECpu.h"
 #include "SSEFrameReport.h"
 #if defined(DEBUG_BUILD)
-////////#include <trace.decla.h>
 extern const char*exception_action_name[4];//={"read from","write to","fetch from","instruction execution"};
 #endif
-#endif//#if defined(SSE_STRUCTURE_SSECPU_OBJ)
 
 #include "SSESTF.h"
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 #include "SSEGlue.h"
-#endif
-#if defined(SSE_INT_HBL_E_CLOCK_HACK_382)
 #include "SSEMMU.h"
-#endif
-
-#if defined(SSE_CPU)
 
 #define LOGSECTION LOGSECTION_CPU
 
 TM68000 M68000; // singleton
-
 
 TM68000::TM68000() {
   Reset(true);
@@ -71,7 +59,6 @@ void TM68000::Reset(bool Cold) {
 
 void TM68000::InstructionTimeRound(int t) {
   InstructionTime(t);
-#if ! defined(SSE_MMU_WAIT_STATES)
 #if defined(SSE_CPU_ROUNDING_BUS)
 #if defined(SSE_VC_INTRINSICS_382)
   Rounded=BITTEST(cpu_cycles,1); // causes inlining anyway
@@ -80,7 +67,6 @@ void TM68000::InstructionTimeRound(int t) {
 #endif
 #endif
   cpu_cycles&=-4;
-#endif
 }
 
 #endif
@@ -1446,7 +1432,7 @@ void TM68000::SetPC(MEM_ADDRESS ad) {
     PrefetchSetPC();
 }
 
-#if defined(SSE_INLINE_370)
+#if defined(SSE_COMPILER_370_INLINE)
 
 void TM68000::PrefetchSetPC() { 
   // called by SetPC; we don't count timing here
@@ -1490,7 +1476,7 @@ void TM68000::PrefetchSetPC() {
 
 #endif
 
-#if defined(SSE_INLINE_370) && !defined(SSE_COMPILER_380)
+#if defined(SSE_COMPILER_370_INLINE) && !defined(SSE_COMPILER_380)
 #define LOGSECTION LOGSECTION_CRASH
 void TM68000::PrefetchIrc() {
 
@@ -1708,6 +1694,7 @@ FC2 FC1 FC0 Address Space
   {
     // Double bus error, CPU halt (we crash and burn)
     // This only has to be done here, m68k_PUSH_ will cause bus error if invalid
+    // TODO: there should be other conditions, see WinUAE
     DEBUG_ONLY( log_history(bombs,crash_address) );
     TRACE_LOG("Double bus error SP:%d < bytes to stack %d\n",sp,bytes_to_stack);
     perform_crash_and_burn();
@@ -1766,7 +1753,9 @@ FC2 FC1 FC0 Address Space
     {
       if(!SUPERFLAG) 
         change_to_supervisor_mode();
-      TRY_M68K_EXCEPTION //TODO: warning C4611
+#pragma warning(disable: 4611) //383
+      TRY_M68K_EXCEPTION
+#pragma warning(default: 4611)
       {
 
 #if defined(SSE_CPU_DETECT_STACK_PC_USE)
@@ -1779,9 +1768,9 @@ FC2 FC1 FC0 Address Space
     Legit fix for Aladin, replacing the 'write on 0' hack.
     Hack confirmed invalid on real STE. Now that I think about it,
     it was a nonsense and dangerous hack!
-    CLR.W crashes on 'read' but not in that zone where only
-    writing crashes, so it's a logic 'exception' in our 'true pc'
-    system for bus error stack frame.
+    In bus errors, CLR.W usually crashes on 'read' but not in that
+    special ST memory zone where only writing crashes, so it's a logic
+    'exception' in our 'true pc' system for bus error stack frame.
     Suspect other CPU fixes helped remove the hack.
     We test here, not before, for performance.
 */
@@ -1863,7 +1852,7 @@ FC2 FC1 FC0 Address Space
   }
 #if defined(SSE_CPU_HALT) || defined(SSE_CPU_TRACE_REFACTOR)
   // formalising that there's no trace after a crash
-#if defined(SSE_GUI_STATUS_STRING_380) //problem showed up with this
+#if defined(SSE_GUI_STATUS_STRING_ICONS) //problem showed up with this
   if(M68000.ProcessingState!=TM68000::HALTED
     &&M68000.ProcessingState!=TM68000::INTEL_CRASH
     &&M68000.ProcessingState!=TM68000::BOILER_MESSAGE
@@ -1940,7 +1929,7 @@ WORD TM68000::FetchForCall(MEM_ADDRESS ad) {
 
 #if defined(SSE_CPU_POKE)
 
-#if defined(SSE_INLINE_370) 
+#if defined(SSE_COMPILER_370_INLINE) 
 
 #elif defined(DEBUG_BUILD)
 
@@ -1949,7 +1938,7 @@ NOT_DEBUG(inline) void m68k_poke_abus(BYTE x){
   BOOL super=SUPERFLAG;
   if(abus>=MEM_IO_BASE && super)
     io_write_b(abus,x);
-#if defined(SSE_CPU_CHECK_VIDEO_RAM_B)
+#if defined(SSE_CPU_CHECK_VIDEO_RAM)
 /*  To save some performance, we do just one basic Shifter test in the inline
     part. More precise test is in m68k_poke_abus2().
 */
@@ -1980,7 +1969,7 @@ NOT_DEBUG(inline) void m68k_dpoke_abus(WORD x){
     exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
   else if(abus>=MEM_IO_BASE && super)
       io_write_w(abus,x);
-#if defined(SSE_CPU_CHECK_VIDEO_RAM_W) // 3615 GEN4 100%
+#if defined(SSE_CPU_CHECK_VIDEO_RAM) // 3615 GEN4 100%
   else if(abus<shifter_draw_pointer_at_start_of_line && abus<himem
     && (abus>=MEM_START_OF_USER_AREA ||super && abus>=MEM_FIRST_WRITEABLE))
 #else
@@ -2009,7 +1998,7 @@ NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x){
   else 
   if(abus>=MEM_IO_BASE && super)
     io_write_l(abus,x);
-#if defined(SSE_CPU_CHECK_VIDEO_RAM_L)
+#if defined(SSE_CPU_CHECK_VIDEO_RAM)
   else if(abus<shifter_draw_pointer_at_start_of_line && abus<himem
     && (abus>=MEM_START_OF_USER_AREA ||super && abus>=MEM_FIRST_WRITEABLE))
 #else
@@ -2032,7 +2021,7 @@ NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x){
 #endif
 
 
-#if defined(SSE_INLINE_370) 
+#if defined(SSE_COMPILER_370_INLINE) 
 void m68k_poke_abus(BYTE x){
 #else
 void m68k_poke_abus2(BYTE x){
@@ -2060,11 +2049,11 @@ void m68k_poke_abus2(BYTE x){
 #if !defined(SSE_BOILER_MONITOR_VALUE2)
     DEBUG_CHECK_WRITE_B(abus);
 #endif
-#if defined(SSE_CPU_CHECK_VIDEO_RAM_B)
+#if defined(SSE_CPU_CHECK_VIDEO_RAM)
 /*  If we're going to write in video RAM of the current scanline,
     we check whether we need to render before. Some programs write
     just after the memory has been fetched, but Steem renders at
-    Shifter events, and if nothing happens, at the end of the line.
+    shift mode changes, and if nothing happens, at the end of the line.
     So if we do nothing it will render wrong memory.
     The test isn't perfect and will cause some "false alerts" but
     we have performance in mind: CPU poke is used a lot, it is rare
@@ -2091,7 +2080,7 @@ void m68k_poke_abus2(BYTE x){
   }
 }
 
-#if defined(SSE_INLINE_370) 
+#if defined(SSE_COMPILER_370_INLINE) 
 void m68k_dpoke_abus(WORD x){
 #else
 void m68k_dpoke_abus2(WORD x){
@@ -2124,7 +2113,7 @@ void m68k_dpoke_abus2(WORD x){
 #if !defined(SSE_BOILER_MONITOR_VALUE2)
     DEBUG_CHECK_WRITE_W(abus);
 #endif
-#if defined(SSE_CPU_CHECK_VIDEO_RAM_W) // 3615 GEN4
+#if defined(SSE_CPU_CHECK_VIDEO_RAM) // 3615 GEN4
     if(GLU.FetchingLine()
       && abus>=shifter_draw_pointer
       && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2
@@ -2144,7 +2133,7 @@ void m68k_dpoke_abus2(WORD x){
   }
 }
 
-#if defined(SSE_INLINE_370) 
+#if defined(SSE_COMPILER_370_INLINE) 
 void m68k_lpoke_abus(LONG x){
 #else
 void m68k_lpoke_abus2(LONG x){
@@ -2174,7 +2163,7 @@ void m68k_lpoke_abus2(LONG x){
 /////#if defined(SSE_BOILER_MONITOR_VALUE2) //3.7.2 bugfix ?!
     DEBUG_CHECK_WRITE_L(abus);
 #endif
-#if defined(SSE_CPU_CHECK_VIDEO_RAM_L)
+#if defined(SSE_CPU_CHECK_VIDEO_RAM)
     if(GLU.FetchingLine()
       && abus>=shifter_draw_pointer
       && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2)
@@ -2226,7 +2215,7 @@ void TM68000::SyncEClock() {
 #if defined(SSE_INT_HBL_E_CLOCK_HACK)
     // pathetic hack for 3615GEN4 HMD #1, make it 4 cycles instead on HBI
     // (suspect wrong timing in an instruction?)
-    if(!(dispatcher==TM68000::ECLOCK_HBL&&SSE_HACKS_ON))
+    if(!(dispatcher==TM68000::ECLOCK_HBL&&OPTION_HACKS))
 #endif
     break;
   case 2:
@@ -2241,9 +2230,6 @@ void TM68000::SyncEClock() {
 
 #if defined(SSE_DEBUG)
   char* sdispatcher[]={"ACIA","HBL","VBL"};
-#if defined(SSE_DEBUG_FRAME_REPORT_ACIA)
-  FrameEvents.Add(scan_y,LINECYCLES,'E',wait_states);
-#endif
 #if defined(SSE_DEBUG_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_ACIA)
     FrameEvents.Add(scan_y,LINECYCLES,'E',wait_states);
@@ -2298,7 +2284,7 @@ CPU-Clock  E-clock Keyboard read
 
 #define LOGSECTION LOGSECTION_INTERRUPTS
 
-#if defined(SSE_CPU_E_CLOCK2)
+#if defined(SSE_CPU_E_CLOCK_370)
 /*  Now the function returns # E-clock cycles, without changing CPU
     cycles itself.
 */
@@ -2311,12 +2297,12 @@ TM68000::SyncEClock(
                     int dispatcher
 #endif
                     ) {
-#if defined(SSE_CPU_E_CLOCK2)
+#if defined(SSE_CPU_E_CLOCK_370)
   BYTE wait_states=0;
 #endif
   // sync with E max once per instruction
   if(EClock_synced) 
-#if defined(SSE_CPU_E_CLOCK2)
+#if defined(SSE_CPU_E_CLOCK_370)
     return wait_states;
 #else
     return;
@@ -2333,7 +2319,7 @@ TM68000::SyncEClock(
   int act=ACT;
 
 
-// if(dispatcher==TM68000::ECLOCK_HBL MMU.WS[WAKE_UP_STATE]==1 && ST_TYPE==STF) act+=-8;
+// if(dispatcher==TM68000::ECLOCK_HBL MMU.WS[OPTION_WS]==1 && ST_TYPE==STF) act+=-8;
 
 #if defined(SSE_CPU_E_CLOCK5)
   if(ST_TYPE==STE && dispatcher==ECLOCK_VBL)//temp, it's some compensation for sure
@@ -2342,7 +2328,7 @@ TM68000::SyncEClock(
 #if defined(SSE_SHIFTER) && defined(SSE_TIMINGS_FRAME_ADJUSTMENT)//no
   act-=4*Shifter.n508lines; //legit hack: NOJITTER.PRG
 #endif
-#if defined(SSE_CPU_E_CLOCK3)
+#if defined(SSE_CPU_E_CLOCK_370)
 /*
   int a=2147483644;
   a+=8; //4 2
@@ -2359,11 +2345,11 @@ TM68000::SyncEClock(
 
 #endif//#if defined(SSE_CPU_E_CLOCK_382)
 
-#if !defined(SSE_CPU_E_CLOCK2)
+#if !defined(SSE_CPU_E_CLOCK_370)
   BYTE wait_states;
 #endif
 
-#if defined(SSE_CPU_E_CLOCK3)
+#if defined(SSE_CPU_E_CLOCK_370)
   switch(cycles) {
 #else
   switch(abs(act%10)) {
@@ -2371,8 +2357,8 @@ TM68000::SyncEClock(
   case 0:
     wait_states=8;
 #if defined(SSE_INT_HBL_E_CLOCK_HACK_382)
-    if(MMU.WS[WAKE_UP_STATE]==1 && ST_TYPE==STF && dispatcher==ECLOCK_HBL 
-      && SSE_HACKS_ON)
+    if(MMU.WS[OPTION_WS]==1 && ST_TYPE==STF && dispatcher==ECLOCK_HBL 
+      && OPTION_HACKS)
      wait_states-=2;// still a hack: Closure 3615GEN4 STF WS1
 #elif defined(SSE_INT_HBL_E_CLOCK_HACK)
     // pathetic hack for 3615GEN4 HMD #1, make it 4
@@ -2381,7 +2367,7 @@ TM68000::SyncEClock(
     // -> we know it's not correct...
     // on the other hand, the demo can crash on real STF too
     // v3.8.0 undef, made a patch instead
-    if(dispatcher==ECLOCK_HBL&&ST_TYPE==STF&&SSE_HACKS_ON)
+    if(dispatcher==ECLOCK_HBL&&ST_TYPE==STF&&OPTION_HACKS)
       TRACE_LOG("ECLK 8->4\n");
     else
 #endif
@@ -2395,21 +2381,13 @@ TM68000::SyncEClock(
   }//sw
  // TRACE_OSD("%d %d",act,wait_states);
 
-#if !defined(SSE_CPU_E_CLOCK2)
+#if !defined(SSE_CPU_E_CLOCK_370)
   InstructionTime(wait_states); 
 #endif
 #if defined(SSE_BOILER) 
-  //char* sdispatcher[]={"ACIA","HBL","VBL"};
   char* sdispatcher[]={"VBL","HBL","ACIA"};
-#if defined(SSE_DEBUG_FRAME_REPORT_ACIA)
-  FrameEvents.Add(scan_y,LINECYCLES,'E',wait_states);
-#endif
-#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
-#if defined(SSE_BOILER_FRAME_REPORT_MASK2)
+#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_INT)
-#else
-  if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_ACIA)
-#endif
     FrameEvents.Add(scan_y,LINECYCLES,'E',wait_states);
 #endif
 #if defined(SSE_BOILER_TRACE_CONTROL)
@@ -2421,7 +2399,7 @@ TM68000::SyncEClock(
 #endif
 #endif
 #endif//dbg
-#if defined(SSE_CPU_E_CLOCK2)
+#if defined(SSE_CPU_E_CLOCK_370)
 #if defined(SSE_CPU_E_CLOCK_DISPATCHER)
   LastEClockCycles[dispatcher]=wait_states;
 #endif
@@ -2726,7 +2704,7 @@ something simpler, now that we better understand rounding rules.
 
 */
 
-#if defined(SSE_CPU_MOVE_B)
+#if defined(SSE_CPU_MOVE)
 
 void m68k_0001() {  // move.b
 
@@ -2758,7 +2736,7 @@ void m68k_0001() {  // move.b
     || (ir&BITS_876)==BITS_876_111
     && (ir&BITS_ba9)!=BITS_ba9_000
     && (ir&BITS_ba9)!=BITS_ba9_001 
-#if defined(SSE_CPU_ASSERT_ILLEGAL2) && !defined(SSE_CPU_ASSERT_ILLEGAL3_380)
+#if defined(SSE_CPU_ASSERT_ILLEGAL_370) && !defined(SSE_CPU_ASSERT_ILLEGAL_380)
 /* v3.7
      "For byte size operation, address register direct is not allowed."
      ->  move.b EA=an is illegal
@@ -2773,7 +2751,7 @@ void m68k_0001() {  // move.b
 #endif
 
   // Source
-#if defined(SSE_CPU_ASSERT_ILLEGAL3_380)
+#if defined(SSE_CPU_ASSERT_ILLEGAL_380)
   m68k_GET_SOURCE_B_NOT_A; //of course, though the remark about early handling still applies
 #else
   m68k_GET_SOURCE_B;
@@ -2964,9 +2942,6 @@ void m68k_0001() {  // move.b
 
 }
 
-#endif
-
-#if defined(SSE_CPU_MOVE_L)
 
 void m68k_0010()  //move.l
 {
@@ -3198,9 +3173,6 @@ void m68k_0010()  //move.l
 #endif
 }
 
-#endif
-
-#if defined(SSE_CPU_MOVE_W)
 
 void m68k_0011() //move.w
 {
@@ -3424,3 +3396,4 @@ void m68k_0011() //move.w
 #endif
 
 #endif//#if defined(SSE_CPU)
+

@@ -6,12 +6,12 @@ DESCRIPTION: A global list that stores information about various special
 addresses and how they should be displayed in the debugger.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: iolist.cpp")
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_IOLIST_H)
+#if defined(SSE_STRUCTURE_DECLA)
 #define EXT
 #define INIT(s) =s
 
@@ -312,16 +312,11 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
     With this system, many controls are easy to add.
 */
 
-#if defined(SSE_DEBUG_FRAME_REPORT)
+#if defined(SSE_BOILER_FRAME_REPORT)
   iolist_add_entry(FAKE_IO_START,"Frame report1",2,
     "sync|shift|pal|rsdp|wsdp|sdp lines|hscroll|base|.|.|.|.|.|.|.|.");
-#if defined(SSE_BOILER_FRAME_REPORT_MASK2)
   iolist_add_entry(FAKE_IO_START+2,"Frame report2",2, // problem +2 etc hardcoded
     "int|blt|tricks|bytes|.|.|.|.|.|.|.|.|.|.|.|.");
-#else
-  iolist_add_entry(FAKE_IO_START+2,"Frame report2",2, // problem +2 etc hardcoded
-    "Acia|Blt|Tricks|Bytes|hbi|vbi|mfp|.|.|.|.|.|.|.|.|.");
-#endif
 #endif
 
 #if defined(SSE_OSD_CONTROL)
@@ -363,10 +358,7 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
     "dma|psg1|psg2|psg3|noise|env|.|.|.|.|.|.|.|.|.|.");
 #endif
 
-#if defined(SSE_BOILER_VBL_HBL)
-  iolist_add_entry(FAKE_IO_START+22,"Boiler ctrl",2,
-    "Prg|Vbl|Hbl|.|.|.|.|.|.|.|.|.|.|.|.|.");
-#elif defined(SSE_BOILER_NEXT_PRG_RUN)
+#if defined(SSE_BOILER_NEXT_PRG_RUN)
   iolist_add_entry(FAKE_IO_START+22,"Boiler ctrl",2,
     "PrgRun|.|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
 #endif

@@ -12,7 +12,7 @@ EXT HMENU insp_menu;
 EXT HMENU mem_browser_menu,history_menu,logsection_menu;
 EXT HMENU menu1;
 EXT HMENU boiler_op_menu,shift_screen_menu;
-#if defined(STEVEN_SEAGAL) && defined(SSE_DEBUG)
+#if defined(SSE_DEBUG)
 extern HMENU sse_menu;
 #endif
 EXT HWND sr_display,DWin_edit;

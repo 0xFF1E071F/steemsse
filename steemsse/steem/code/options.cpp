@@ -5,11 +5,11 @@ DESCRIPTION: The code for Steem's option dialog that allows the user to
 change Steem's many options to their heart's delight.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: options.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_OPTIONS_H)
+#if defined(SSE_STRUCTURE_DECLA)
 
 bool TOptionBox::USDateFormat=0;
 WIN_ONLY( DirectoryTree TOptionBox::DTree; )
@@ -57,24 +57,17 @@ int
 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STF_MATCH_TOS)
+#if defined(SSE_STF_MATCH_TOS)
 EasyStr KnownSTFTosPath,KnownSTETosPath; // global...
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_CPU)
+#if defined(SSE_CPU)
  // bad, at least we don't duplicate code
 extern WORD*lpfetch,*lpfetch_bound;
 extern bool prefetched_2;///////=false;
 extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 #define INC_PC
-//#include "SSE/SSEM68000.h"
-
-#if defined(SSE_STRUCTURE_SSECPU_OBJ)
 #include <SSE/SSECpu.h>
-#else
-#include <SSE/SSEM68000.h> 
-#endif
-
 #endif
 
 #if defined(SSE_SHIFTER_UNSTABLE)
@@ -84,7 +77,6 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 
 #include "SSE/SSEGlue.h"
 
-//#define LOGSECTION LOGSECTION_OPTIONS//SS
 #define LOGSECTION LOGSECTION_INIT //SS
 
 //---------------------------------------------------------------------------
@@ -101,8 +93,10 @@ bool TOptionBox::ChangeBorderModeRequest(int newborder)
   if (min(border,2)==min(newval,2)){
 #endif
     proceed=false;
-#if defined(SSE_VS2008_WARNING_382)
-    }else if ((border^(bool)newval) & 1){
+#if defined(SSE_VS2008_WARNING_383) // :)
+  }else if ((border^(newval!=0)) & 1){
+#elif defined(SSE_VS2008_WARNING_382)
+  }else if ((border^(bool)newval) & 1){
 #else
   }else if ((border^newval) & 1){
 #endif
@@ -115,7 +109,11 @@ bool TOptionBox::ChangeBorderModeRequest(int newborder)
     }
 #endif
   }
+#if defined(SSE_VS2008_WARNING_383) 
+  if (proceed) border_last_chosen=(newborder!=0);
+#else
   if (proceed) border_last_chosen=newborder;
+#endif
   return proceed;
 }
 //---------------------------------------------------------------------------
@@ -328,13 +326,13 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
 #endif
   EnumDateFormats(EnumDateFormatsProc,LOCALE_USER_DEFAULT,DATE_SHORTDATE);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STF_MATCH_TOS)
+#if defined(SSE_STF_MATCH_TOS)
   if(Win) {
 #endif
   SendMessage(Win,LB_RESETCONTENT,0,0);
   UpdateWindow(Win);
   SendMessage(Win,WM_SETREDRAW,0,0);
-#if defined(STEVEN_SEAGAL) && defined(SSE_STF_MATCH_TOS)
+#if defined(SSE_STF_MATCH_TOS)
   }
 #endif
 #elif defined(UNIX)
@@ -359,7 +357,7 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
   EasyStr Fol=RunDir; //SS links are in rundir
   EasyStr VersionPath; // The first TOS found which matches the current TOS version
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STF_MATCH_TOS)
+#if defined(SSE_STF_MATCH_TOS)
   if(Win) {
 #endif
   eslTOS.DeleteAll();
@@ -372,7 +370,7 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
       Sel=NewROMFile; //SS next TOS already selected by user
     }
   }
-#if defined(STEVEN_SEAGAL) && defined(SSE_STF_MATCH_TOS)
+#if defined(SSE_STF_MATCH_TOS)
   }
 #endif
 
@@ -433,7 +431,7 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
           }
 #endif//SSE_TOS_SNAPSHOT_AUTOSELECT3
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STF_MATCH_TOS)
+#if defined(SSE_STF_MATCH_TOS)
 #if defined(SSE_STF_MATCH_TOS2) // 1.62 instead of 1.06
           // remember paths of default TOS for STF and STE
 
@@ -477,23 +475,23 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
           }
 #endif
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_TOS_CHECK_VERSION)
+#if defined(SSE_TOS_CHECK_VERSION)
 /*  We can't know word 2 of every img file, so we need another
     way to list only real TOS files...
     ! Ver: TOSLOAD
 */
           if(!Ver || Ver>=0x100 && Ver<0x410) // still not very good...
-#elif defined(STEVEN_SEAGAL) && defined(SSE_IKBD_6301)
+#elif defined(SSE_IKBD_6301)
           if(Ver!=0x81AA) // 6301 ST Rom mustn't be listed
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_STF_MATCH_TOS)
+#if defined(SSE_STF_MATCH_TOS)
             if(Win) {
 #endif
               //TRACE("add %s %x %x $x\n",Path.Text,Ver,Country,Date);
               eslTOS.Add(3,Str(GetFileNameFromPath(Path))+"\01"+Path,
                Ver,Country,Date);
               if (Ver==tos_version && VersionPath.Empty()) VersionPath=Path;
-#if defined(STEVEN_SEAGAL) && defined(SSE_STF_MATCH_TOS)
+#if defined(SSE_STF_MATCH_TOS)
             }
 #endif
             
@@ -502,7 +500,7 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
     }while (ds.Next());
     ds.Close();
   }
-#if defined(STEVEN_SEAGAL) && defined(SSE_STF_MATCH_TOS)
+#if defined(SSE_STF_MATCH_TOS)
   if(!Win)  return; // that's it
 #endif
 
@@ -534,7 +532,7 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
     if (IsSameStr_I(FullPath,Sel)) Selected=idx;
     if (IsSameStr_I(FullPath,ROMFile)) ROMFileSel=idx;
     if (IsSameStr_I(FullPath,VersionPath)) VersionSel=idx;
-#if defined(STEVEN_SEAGAL) && defined(SSE_STF_MATCH_TOS) // ensure refresh list
+#if defined(SSE_STF_MATCH_TOS) // ensure refresh list
     if (IsSameStr_I(FullPath,NewROMFile)) Selected=idx;
 #endif
     i+=dir;
@@ -608,14 +606,18 @@ void TOptionBox::LoadProfile(char *File)
 
   Str ProfileROM=CSF.GetStr("Machine","ROM_File",ROMFile);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_CONFIG_FILE2)
+#if defined(SSE_GUI_CONFIG_FILE2)
   if(strchr(ROMFile.Text,SLASHCHAR)==NULL)
      ProfileROM=TOSBrowseDir + SLASH + ROMFile;
 #endif
 
   BYTE ProfileMemConf[2]={(BYTE)CSF.GetInt("Machine","Mem_Bank_1",CurMemConf[0]),
                           (BYTE)CSF.GetInt("Machine","Mem_Bank_2",CurMemConf[1])};
+#if defined(SSE_VS2008_WARNING_383) 
+  int ProfileMonSel=(CSF.GetInt("Machine","Colour_Monitor",mfp_gpip_no_interrupt & MFP_GPIP_COLOUR))!=0;
+#else
   int ProfileMonSel=!bool(CSF.GetInt("Machine","Colour_Monitor",mfp_gpip_no_interrupt & MFP_GPIP_COLOUR));
+#endif
 #ifndef NO_CRAZY_MONITOR
   if (CSF.GetInt("Machine","ExMon",extended_monitor)){
     int pro_em_width=CSF.GetInt("Machine","ExMonWidth",em_width);
@@ -790,7 +792,7 @@ void TOptionBox::LoadIcons()
                           hGUIIcon[RC_ICO_OPS_ASSOC],hGUIIcon[RC_ICO_OPS_MACHINE],hGUIIcon[RC_ICO_CHIP],
                           hGUIIcon[RC_ICO_OPS_PROFILES],hGUIIcon[RC_ICO_EXTERNAL],hGUIIcon[RC_ICO_OPS_MACROS],
                           hGUIIcon[RC_ICO_OPS_ICONS],hGUIIcon[RC_ICO_OPS_OSD],
-#if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE)                          
+#if defined(SSE_GUI_OPTION_PAGE)                          
                           hGUIIcon[RC_ICO_OPS_SSE], // YEAH!!
 #endif
                           0);
@@ -868,7 +870,7 @@ void TOptionBox::Show()
 #endif
   AddPageLabel(T("File Associations"),8);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE)
+#if defined(SSE_GUI_OPTION_PAGE)
   AddPageLabel("SSE",16);
 #endif
 
@@ -946,7 +948,11 @@ bool TOptionBox::HasHandledMessage(MSG *mess)
   if (Handle!=NULL){
     if (mess->message==WM_KEYDOWN){
       if (mess->wParam==VK_TAB){
+#if defined(SSE_VS2008_WARNING_383) 
+        return IsDialogMessage(Handle,mess)&1;
+#else
         return IsDialogMessage(Handle,mess);
+#endif
       }
     }
     return 0;
@@ -955,9 +961,17 @@ bool TOptionBox::HasHandledMessage(MSG *mess)
   }
 }
 //---------------------------------------------------------------------------
+#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_383)
+void TOptionBox::SetBorder(bool newborder)
+#else
 void TOptionBox::SetBorder(int newborder)
+#endif
 {
+#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_383)
+  bool oldborder=border;
+#else
   int oldborder=border;
+#endif
   TRACE_INIT("Option Border %d->%d\n",oldborder,newborder);
 #if defined(SSE_VID_DISABLE_AUTOBORDER)
   if(!newborder) 
@@ -990,7 +1004,7 @@ void TOptionBox::SetBorder(int newborder)
   EnableWindow(GetDlgItem(Handle,1026),(BOOL)border); 
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_STRING)
   GUIRefreshStatusBar();
 #endif
 }
@@ -1074,7 +1088,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if (HIWORD(wPar)==CBN_SELENDOK){
             int proceed=1,new_mode=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);  //carry on, don't change res
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SCANLINES_INTERPOLATED) \
+#if defined(SSE_VID_SCANLINES_INTERPOLATED) \
   && !defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
             if(new_mode!=DFSM_STRETCHBLIT 
               && draw_win_mode[screen_res]==DWM_STRETCH_SCANLINES)
@@ -1124,7 +1138,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
         case 207:
           if (HIWORD(wPar)==CBN_SELENDOK){
+#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_383)
+            This->SetBorder((SendMessage(HWND(lPar),CB_GETCURSEL,0,0))!=0);
+#else
             This->SetBorder(SendMessage(HWND(lPar),CB_GETCURSEL,0,0));
+#endif
             if (draw_grille_black<4) draw_grille_black=4;
           }
           break;
@@ -1160,7 +1178,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 #endif//#if !defined(SSE_VID_D3D_ONLY)
-#if defined(STEVEN_SEAGAL)
 
 #if defined(SSE_STF)          // option ST model
         case 211:
@@ -1171,7 +1188,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             TRACE_LOG("Option ST type = %d\n",ST_TYPE);
             SwitchSTType(ST_TYPE);
 #if defined(SSE_MMU_WU_RESET_ON_SWITCH_ST)
-            WAKE_UP_STATE=0;
+            OPTION_WS=0;
 #endif
 #if defined(SSE_GUI_OPTIONS_REFRESH)
             OptionBox.SSEUpdateIfVisible(); 
@@ -1238,7 +1255,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               This->NewMonitorSel=1; // preselect monochrome (v3.5.4)
 #endif
 #if SSE_VERSION>=360 && SSE_VERSION<370
-              HD6301EMU_ON=false; // v3.6.0 - because mouse is slow in high res
+              OPTION_C1=false; // v3.6.0 - because mouse is slow in high res
 #endif
 #if defined(SSE_ACSI_MEGASTF) // default to ACSI hard disk
               if(SSEConfig.AcsiImg)
@@ -1271,8 +1288,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 212:
           if (HIWORD(wPar)==CBN_SELENDOK)
           {
-            WAKE_UP_STATE=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
-            TRACE_LOG("Option WU = %d\n",WAKE_UP_STATE);
+            OPTION_WS=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
+            TRACE_LOG("Option WU = %d\n",OPTION_WS);
 #if defined(SSE_SHIFTER_UNSTABLE)
             Shifter.Preload=0; // reset the thing!
 #endif
@@ -1282,7 +1299,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 #endif
-#endif// defined(STEVEN_SEAGAL)
+
 #if !defined(SSE_VID_D3D_ONLY)
         case 220:case 222:case 224:
           if (HIWORD(wPar)==CBN_SELENDOK){
@@ -1341,7 +1358,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
                 draw_win_mode[Res]=HIWORD(dat);
                 redraw=true;
               }
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SCANLINES_INTERPOLATED) \
+#if defined(SSE_VID_SCANLINES_INTERPOLATED) \
  && !defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
               if(draw_win_mode[screen_res]==DWM_STRETCH_SCANLINES)
                 draw_fs_blit_mode=DFSM_STRETCHBLIT; // only compatible FS mode
@@ -1381,7 +1398,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 
-#if defined(STEVEN_SEAGAL) 
 #if defined(SSE_VID_BORDERS) // Option Display size
         case 1026:
           if (HIWORD(wPar)==CBN_SELENDOK)
@@ -1396,19 +1412,19 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 1027:
           if(HIWORD(wPar)==BN_CLICKED)
           {
-            SSE_HACKS_ON=!SSE_HACKS_ON;
-            TRACE_LOG("Option Hacks %d\n",SSE_HACKS_ON);
-            SendMessage(HWND(lPar),BM_SETCHECK,SSE_HACKS_ON,0);
+            OPTION_HACKS=!OPTION_HACKS;
+            TRACE_LOG("Option Hacks %d\n",OPTION_HACKS);
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_HACKS,0);
           }
           break;
 #endif
-#if defined(SSE_GUI_MOUSE_CAPTURE) // Option Capture mouse
+#if defined(SSE_GUI_MOUSE_CAPTURE_OPTION) // Option Capture mouse
         case 1028:
           if(HIWORD(wPar)==BN_CLICKED)
           {
-            CAPTURE_MOUSE=!CAPTURE_MOUSE;
-            TRACE_LOG("Option Capture mouse %d\n",CAPTURE_MOUSE);
-            SendMessage(HWND(lPar),BM_SETCHECK,CAPTURE_MOUSE,0);
+            OPTION_CAPTURE_MOUSE=!OPTION_CAPTURE_MOUSE;
+            TRACE_LOG("Option Capture mouse %d\n",OPTION_CAPTURE_MOUSE);
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_CAPTURE_MOUSE,0);
           }
           break;
 #endif
@@ -1416,12 +1432,12 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 1029:
           if(HIWORD(wPar)==BN_CLICKED)
           {
-            HD6301EMU_ON=!HD6301EMU_ON;
+            OPTION_C1=!OPTION_C1;
             if(!HD6301_OK) // it's not greyed out but nothing happens
-              HD6301EMU_ON=0; //TODO grey out
-            SendMessage(HWND(lPar),BM_SETCHECK,HD6301EMU_ON,0);
-            TRACE_LOG("Option HD6301 emu: %d\n",HD6301EMU_ON);
-//            printf("HD6301 emu: %d\n",HD6301EMU_ON);
+              OPTION_C1=0; //TODO grey out
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_C1,0);
+            TRACE_LOG("Option HD6301 emu: %d\n",OPTION_C1);
+//            printf("HD6301 emu: %d\n",OPTION_C1);
 #if defined(SSE_GUI_STATUS_STRING)
 //            GUIRefreshStatusBar();//overkill
 #endif
@@ -1524,7 +1540,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 
-#endif//SS
+
 
         case 1051://SS screenshot format
           if (HIWORD(wPar)==CBN_SELENDOK){
@@ -1617,7 +1633,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_OPTION_DISABLE_DSP)
+#if defined(SSE_SOUND_OPTION_DISABLE_DSP)
         case 3306:
           DSP_ENABLED=!DSP_ENABLED;
           break;
@@ -1648,25 +1664,51 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 
 
         case 5100:case 5101:case 5102:case 5103:case 5104:case 5105:case 5106:
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE)
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_GUI_NO_ASSOCIATE_STC)) //haha
+#if defined(SSE_GUI_ASSOCIATE)
+#if !(defined(SSE_GUI_NO_ASSOCIATE_STC)) //haha
         case 5107: //bugfix 3.5.3//hmm...
 #endif
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_IPF)
+#if defined(SSE_GUI_ASSOCIATE_IPF)
         //case 5108: //bugfix 3.5.3//hmm...
         case 5107://???
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_TOS_PRG_AUTORUN)
+#if defined(SSE_TOS_PRG_AUTORUN)
         case 5108:
-#endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_TOS_TOS_AUTORUN)
         case 5109:
 #endif
-
           if (HIWORD(wPar)==BN_CLICKED){
             EasyStr Ext;
             switch (LOWORD(wPar)){
+#if defined(SSE_VS2008_WARNING_383) && defined(SSE_GUI_ASSOCIATE_CU)
+              case 5100: Ext=dot_ext(EXT_ST);AssociateSteem(Ext,"st_disk_image"); break;
+              case 5101: Ext=dot_ext(EXT_STT);AssociateSteem(Ext,"st_disk_image"); break;
+              case 5102: Ext=dot_ext(EXT_MSA);AssociateSteem(Ext,"st_disk_image"); break;
+#if USE_PASTI
+              case 5103: Ext=dot_ext(EXT_STX);AssociateSteem(Ext,"st_pasti_disk_image"); break;
+#endif
+              case 5104: Ext=dot_ext(EXT_DIM);AssociateSteem(Ext,"st_disk_image"); break;
+              case 5105: Ext=".STZ";AssociateSteem(Ext,"st_disk_image"); break;
+              case 5106: Ext=".STS";AssociateSteem(Ext,"steem_memory_snapshot"); break;
+#if !(defined(SSE_GUI_NO_ASSOCIATE_STC))
+              case 5107: Ext=".STC";AssociateSteem(Ext,"st_cartridge",true,T("ST ROM Cartridge"),CART_ICON_NUM,0); break;
+#endif
+#if defined(SSE_GUI_ASSOCIATE_IPF)
+#if defined(SSE_GUI_ASSOCIATE_HFE)
+/*  It's not that we dislike or demote IPF format, but space is running out
+    and HFE is less likely to be zipped as HxC hardware needs unzipped files.
+    Besides, CAPS also handles CTR files.
+*/
+              case 5107: Ext=dot_ext(EXT_HFE);AssociateSteem(Ext,"st_hfe_disk_image"); break;
+#else
+              case 5107: Ext=dot_ext(EXT_IPF);AssociateSteem(Ext,"st_ipf_disk_image"); break;
+#endif
+#endif
+#if defined(SSE_TOS_PRG_AUTORUN) //TODO
+              case 5108: Ext=dot_ext(EXT_PRG);AssociateSteem(Ext,"st_atari_prg_executable"); break;
+              case 5109:Ext=dot_ext(EXT_TOS); AssociateSteem(Ext,"st_atari_prg_executable"); break;
+#endif
+#else////////////
               case 5100: Ext=".ST";AssociateSteem(Ext,"st_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
               case 5101: Ext=".STT";AssociateSteem(Ext,"st_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
               case 5102: Ext=".MSA";AssociateSteem(Ext,"st_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
@@ -1676,10 +1718,10 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               case 5104: Ext=".DIM";AssociateSteem(Ext,"st_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
               case 5105: Ext=".STZ";AssociateSteem(Ext,"st_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
               case 5106: Ext=".STS";AssociateSteem(Ext,"steem_memory_snapshot",true,T("Steem Memory Snapshot"),SNAP_ICON_NUM,0); break;
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_GUI_NO_ASSOCIATE_STC))
+#if !(defined(SSE_GUI_NO_ASSOCIATE_STC))
               case 5107: Ext=".STC";AssociateSteem(Ext,"st_cartridge",true,T("ST ROM Cartridge"),CART_ICON_NUM,0); break;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_ASSOCIATE_IPF)
+#if defined(SSE_GUI_ASSOCIATE_IPF)
 #if defined(SSE_GUI_ASSOCIATE_HFE)
 /*  It's not that we dislike or demote IPF format, but space is running out
     and HFE is less likely to be zipped as HxC hardware needs unzipped files.
@@ -1690,13 +1732,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               case 5107: Ext=".IPF";AssociateSteem(Ext,"st_ipf_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
 #endif
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_TOS_PRG_AUTORUN)
+#if defined(SSE_TOS_PRG_AUTORUN)
               case 5108: Ext=".PRG";AssociateSteem(Ext,"st_atari_prg_executable",true,T("Atari PRG executable"),DISK_ICON_NUM,0); break;
-#endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_TOS_TOS_AUTORUN)
               case 5109:Ext=".TOS"; AssociateSteem(Ext,"st_atari_prg_executable",true,T("Atari TOS executable"),DISK_ICON_NUM,0); break;
 #endif
-
+#endif
             }
             HWND But=HWND(lPar);
             if (IsSteemAssociated(Ext)){
@@ -1795,7 +1835,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               Sound_Stop(true);
               sound_time_method=nstm;
               if (runstate==RUNSTATE_RUNNING){
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_CHANGE_TIME_METHOD_DELAY)
+#if defined(SSE_SOUND_CHANGE_TIME_METHOD_DELAY)
                 Sleep(200);  //??
 #else
                 Sleep(50);
@@ -1855,12 +1895,10 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 #endif
-#if defined(STEVEN_SEAGAL)
-
-#if defined(SSE_VAR_KEYBOARD_CLICK)
+#if defined(SSE_SOUND_KEYBOARD_CLICK)
         case 7301: // Keyboard click on/off
           if (HIWORD(wPar)==BN_CLICKED){
-#if defined(SSE_VAR_KEYBOARD_CLICK2)
+#if defined(SSE_SOUND_KEYBOARD_CLICK2)
             OPTION_KEYBOARD_CLICK=!OPTION_KEYBOARD_CLICK;
             TRACE_LOG("Option Keyboard click %d\n",OPTION_KEYBOARD_CLICK);
             if(LPEEK(0x44E)==xbios2) // not perfect, at least it's a check
@@ -1950,7 +1988,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
-#if defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
         case 7304: // SDL
           if (HIWORD(wPar)==BN_CLICKED){
             USE_SDL=!USE_SDL;
@@ -1962,8 +2000,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
-#if defined(SSE_PASTI_ONLY_STX)
-#if !defined(SSE_PASTI_ONLY_STX_OPTION1) && !defined(SSE_PASTI_ONLY_STX_OPTION3)
+#if defined(SSE_DISK_PASTI_ONLY_STX)
+#if !defined(SSE_DISK_PASTI_ONLY_STX_OPTION3)
         case 7305: // Pasti only STX
           if (HIWORD(wPar)==BN_CLICKED){
             PASTI_JUST_STX=!PASTI_JUST_STX;
@@ -2106,9 +2144,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_GUI_OPTION_FOR_TESTS)
         case 7316: // Option Beta Tests
           if (HIWORD(wPar)==BN_CLICKED){
-            SSE_TEST_ON=!SSE_TEST_ON;
-            SendMessage(HWND(lPar),BM_SETCHECK,SSE_TEST_ON,0);
-            TRACE_LOG("Option Beta Tests %d\n",SSE_TEST_ON);
+            SSEOption.TestingNewFeatures=!SSEOption.TestingNewFeatures;
+            SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.TestingNewFeatures,0);
+            TRACE_LOG("Option Beta Tests %d\n",SSEOption.TestingNewFeatures);
           }
           break;
 #endif
@@ -2181,9 +2219,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_INT_MFP_OPTION) // Option MC68901
         case 7323:
           if (HIWORD(wPar)==BN_CLICKED){
-            OPTION_PRECISE_MFP=!OPTION_PRECISE_MFP;
-            TRACE_LOG("Option MC68901 = %d\n",OPTION_PRECISE_MFP);
-            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_PRECISE_MFP,0);
+            OPTION_C2=!OPTION_C2;
+            TRACE_LOG("Option MC68901 = %d\n",OPTION_C2);
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_C2,0);
           }
           break;
 #endif
@@ -2212,7 +2250,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 
-#endif//SS
+
 
         case 8100: // Memory size
           if (HIWORD(wPar)==CBN_SELENDOK){
@@ -2248,7 +2286,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               This->LastCartFile=NewCart;
               if (load_cart(NewCart)){
                 Alert(T("There was an error loading the cartridge."),T("Cannot Load Cartridge"),MB_ICONEXCLAMATION);
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_CARTRIDGE_NO_CRASH_ON_WRONG_FILE))
+#if !(defined(SSE_CARTRIDGE_NO_CRASH_ON_WRONG_FILE))
                 // breaking here hangs Steem
                 break;
 #endif
@@ -2302,7 +2340,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
         case 8402: // Keyboard alt and shift correction
           if (HIWORD(wPar)==BN_CLICKED){
+#if defined(SSE_VS2008_WARNING_383)
+            EnableShiftSwitching=(SendMessage(HWND(lPar),BM_GETCHECK,0,0)!=0);
+#else
             EnableShiftSwitching=SendMessage(HWND(lPar),BM_GETCHECK,0,0);
+#endif
             InitKeyTable();
           }
           break;
@@ -2459,7 +2501,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 8311:
           if (HIWORD(wPar)==CBN_SELENDOK){
             This->eslTOS_Sort=(ESLSortEnum)(signed short)LOWORD(CBGetSelectedItemData(HWND(lPar)));
+#if defined(SSE_VS2008_WARNING_383)
+            This->eslTOS_Descend=(HIWORD(CBGetSelectedItemData(HWND(lPar)))!=0);
+#else
             This->eslTOS_Descend=HIWORD(CBGetSelectedItemData(HWND(lPar)));
+#endif
             This->TOSRefreshBox("");
           }
           break;
@@ -2626,7 +2672,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
       }
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_STRING)
       GUIRefreshStatusBar();
 #endif
 
@@ -2752,14 +2798,14 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             osd_show_disk_light=!osd_show_disk_light;
             SendMessage(HWND(lPar),BM_SETCHECK,osd_show_disk_light,0);
           }
-#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DRIVE_INFO_OSD_PAGE)
+#if defined(SSE_OSD_DRIVE_INFO_OSD_PAGE)
         }else if(i==1) {
           if (HIWORD(wPar)==BN_CLICKED){
             OSD_DRIVE_INFO=!OSD_DRIVE_INFO;
             SendMessage(HWND(lPar),BM_SETCHECK,OSD_DRIVE_INFO,0);
           }
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_SCROLLER_DISK_IMAGE)
+#if defined(SSE_OSD_SCROLLER_DISK_IMAGE)
         }else if(i==2) {
           if (HIWORD(wPar)==BN_CLICKED){
             OSD_IMAGE_NAME=!OSD_IMAGE_NAME;

@@ -1,16 +1,14 @@
 #include "SSE.h"
-#if defined(STEVEN_SEAGAL) && defined(SSE_MMU)
+
+#if defined(SSE_MMU)
 
 #include "../pch.h"
+#include "SSEVideo.h"
 #include "SSEMMU.h"
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 #include "SSEGlue.h"
 #include "SSEFrameReport.h"
-#endif
 
-//#if defined(SSE_MMU)
-
-#if  defined(SSE_SHIFTER_HSCROLL_380_B)
+#if  defined(SSE_SHIFTER_HSCROLL_380)
 #define HSCROLL0 Shifter.hscroll0
 #else
 #define HSCROLL0 HSCROLL
@@ -22,7 +20,7 @@
 | Steem  option    |              Wake-up concepts           |    Cycle      |
 |    variable      |                                         |  adjustment   |
 +------------------+---------------+------------+------------+-------+-------+
-|  WAKE_UP_STATE   |   DL Latency  |     WU     |      WS    | SHIFT |  SYNC |
+|  OPTION_WS   |   DL Latency  |     WU     |      WS    | SHIFT |  SYNC |
 |                  |     (Dio)     |    (ijor)  |    (LJBK)  | (Res) |(Freq) |
 +------------------+---------------+------------+------------+-------+-------+
 |   0 (ignore)     |      5        |     -      |      -     |    -  |    -  |
@@ -45,19 +43,19 @@ TMMU MMU;
     it in the Shifter.
     Because the counter is used by Steem to render, it is called 
     shifter_draw_pointer (SDP). The dual nature of the variable may
-    be trouble.
+    be trouble. This is fixed in v3.8.1.
+
     As for GLU/Shifter tricks, this is the opportunity to simplify code.
     We assume: 
     - SSE_SHIFTER_SDP_READ, SSE_SHIFTER_SDP_WRITE, SSE_CPU_PREFETCH_TIMING,
     SSE_SHIFTER_STE_READ_SDP_SKIP, SSE_GLUE_FRAME_TIMINGS defined
-    - SSE_SHIFTER_STE_READ_SDP_HSCROLL1 undefined
     - version >= 380
 */
 #define LOGSECTION LOGSECTION_VIDEO
 
-//////////////////////////
-// Shifter draw pointer //
-//////////////////////////
+////////////////////////
+// MMU: Video counter //
+////////////////////////
 
 /* 
     Video Address Counter:
@@ -78,8 +76,7 @@ TMMU MMU;
     frame. 
     The effect is immediate, therefore it should be reloaded carefully 
     (or during blanking) to provide reliable results. 
-    Of course, some programs modify the counter during display, which
-    is difficult and funny to emulate.
+
 */
 
 #ifdef SSE_UNIX
@@ -89,7 +86,7 @@ TMMU MMU;
 
 #if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
 /*  "ReadVideoCounter" has been refactored in case we would want
-    to use it to recomputed the video counter at each scanline.
+    to use it to recompute the video counter at each scanline.
     Now we have a member variable VideoCounter and a function that
     updates it.
     CurrentScanline.StartCycle is mostly correct now, so it simplifies
@@ -108,7 +105,7 @@ void TMMU::UpdateVideoCounter(int CyclesIn) {
     }else
       sdp=xbios2+32000;
   }
-  else if(Glue.FetchingLine()) // when counter actually moves
+  else if(Glue.FetchingLine()) // lines where the counter actually moves
   {
     Glue.CheckSideOverscan(); // updates Bytes and StartCycle
     int bytes_to_count=Glue.CurrentScanline.Bytes;
@@ -157,7 +154,7 @@ MEM_ADDRESS TMMU::ReadVideoCounter(int CyclesIn,int dispatcher) {
   UpdateVideoCounter(CyclesIn);
   return VideoCounter;
 
-#elif defined(SSE_MMU_READ_SDP_380)
+#else
   // the function has been greatly streamlined in v3.8.0,
   // relying on info already in "CurrentScanline" (no WS modifiers)
  
@@ -211,204 +208,11 @@ MEM_ADDRESS TMMU::ReadVideoCounter(int CyclesIn,int dispatcher) {
     sdp=shifter_draw_pointer;
 
   return sdp;
-
-#else // before 380
-
-
-  if (bad_drawing){
-    // Fake SDP
-#if defined(SSE_SHIFTER_SDP_TRACE)
-    TRACE_LOG("fake SDP\n");
-#endif
-    if (scan_y<0){
-      return xbios2;
-    }else if (scan_y<shifter_y){
-      int line_len=(160/res_vertical_scale);
-      return xbios2 + scan_y*line_len + min(CyclesIn/2,line_len) & ~1;
-    }else{
-      return xbios2+32000;
-    }
-  }
-  GLU.CheckSideOverscan();
-  MEM_ADDRESS sdp; // return value
-  if(GLU.FetchingLine())
-  {
-    int bytes_to_count=GLU.CurrentScanline.Bytes; // implicit fixes (Forest)
-
-    if(shifter_skip_raster_for_hscroll)
-    {
-      //TRACE("%d %d %d read skip\n",TIMING_INFO);
-#if defined(SSE_SHIFTER_STE_READ_SDP_SKIP) // bugfix
-      bytes_to_count+=SHIFTER_RASTER; // raster size depends on shift mode
-#else
-      bytes_to_count+=SHIFTER_RASTER_PREFETCH_TIMING/2;
-#endif
-    }
-
-    // note: same in all shift modes (eg Monoscreen by Dead Braincells)
-    //ASSERT(SHIFTER_RASTER_PREFETCH_TIMING==16);
-
-/*  TEST11F
-    On the STE, prefetch starts 16 cycles earlier only if HSCROLL is non null.
-    If it did start earlier whatever the value of HSCROLL, the following
-    line wouldn't be correct.
-    Apparently the 1st prefetch is also 16 cycles in med res.
-*/
-
-#if defined(SSE_SHIFTER_STE_READ_SDP_HSCROLL1) // TEST11D //breaks 20year STE intro
-    int bytes_ahead=(shifter_hscroll_extra_fetch&&shifter_skip_raster_for_hscroll) 
-#else
-    int bytes_ahead=(shifter_hscroll_extra_fetch) 
-#endif
-      ?(SHIFTER_RASTER_PREFETCH_TIMING/2)*2:(SHIFTER_RASTER_PREFETCH_TIMING/2);
-
-    int starts_counting=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN/2 - bytes_ahead;
-
-/*  84/2-8 = 34
-    In Hatari, they start at 56 + 12 = 68, /2 = 34
-    In both cases we use kind of magic values.
-    The same results from Hatari because their CPU timing at time of read is 
-    wrong like in Steem pre 3.5.
-
-    Hack-approach necessary while we're fixing instruction timings, but
-    this is the right ST value.
-
-    TODO: modify CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN
-    Before that, we keep this big debug block (normally only 
-    SSE_CPU_PREFETCH_TIMING will be defined).
-*/
-
-#if defined(SSE_CPU_PREFETCH_TIMING)
-  starts_counting-=2;
-#else
-  if(0);
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-  else if( (ir&0xF000)==0x0000)
-    starts_counting-=2;
-#endif
-#if defined(SSE_CPU_LINE_1_TIMINGS)
-  else if( (ir&0xF000)==0x1000)
-    starts_counting-=2;
-#endif
-#if defined(SSE_CPU_LINE_2_TIMINGS)
-  else if( (ir&0xF000)==0x2000) 
-    starts_counting-=2;
-#endif
-#if defined(SSE_CPU_LINE_3_TIMINGS)
-  else if( (ir&0xF000)==0x3000) 
-    starts_counting-=2;
-#endif
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  else if( (ir&0xF000)==0x4000) 
-    starts_counting-=2;
-#endif
-#if defined(SSE_CPU_LINE_5_TIMINGS)
-  else if( (ir&0xF000)==0x5000) 
-    starts_counting-=2;
-#endif
-#if defined(SSE_CPU_LINE_8_TIMINGS)
-  else if( (ir&0xF000)==0x8000) 
-    starts_counting-=2;
-#endif
-#if defined(SSE_CPU_LINE_9_TIMINGS)
-  else if( (ir&0xF000)==0x9000)
-    starts_counting-=2;
-#endif
-#if defined(SSE_CPU_LINE_B_TIMINGS)
-  else if( (ir&0xF000)==0xB000) // CMP & EOR
-    starts_counting-=2;
-#endif
-#if defined(SSE_CPU_LINE_C_TIMINGS)
-  else if( (ir&0xF000)==0xC000) // (+ ABCD, EXG, MUL, line C)
-    starts_counting-=2;
-#endif
-#if defined(SSE_CPU_LINE_D_TIMINGS)
-  else if( (ir&0xF000)==0xD000) // (+ ABCD, EXG, MUL, line C)
-    starts_counting-=2;
-#endif
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  else if( (ir&0xF000)==0xE000) 
-    starts_counting-=2;
-#endif
-#if defined(SSE_DEBUG_TRACE_LOG_SDP_READ_IR)
-  else 
-  {
-    if(ir!=debug1)
-    {
-#if defined(DEBUG_BUILD)
-      EasyStr instr=disa_d2(old_pc);
-      TRACE_LOG("Read SDP ir %x Disa %s\n",ir,instr.c_str());
-#else
-      TRACE_LOG("Read SDP ir %4X\n",ir);
-#endif    
-      debug1=ir;
-    }
-  }
-#endif
-#endif
-
-    if(!left_border
-#if defined(SSE_SHIFTER_HIRES_OVERSCAN)
-      || screen_res==2
-#endif      
-      )
-      starts_counting-=26;
-#if defined(SSE_GLUE_FRAME_TIMINGS) && defined(SSE_GLUE_THRESHOLDS)
-    if(left_border && CyclesIn>=GLU.ScanlineTiming[TGlue::GLU_DE_ON]
-      [TGlue::FREQ_60]+2 && GLU.FreqAtCycle(GLU.ScanlineTiming[TGlue::GLU_DE_ON]
-      [TGlue::FREQ_60]+2)==60)
-      starts_counting-=2; 
-#elif defined(SSE_SHIFTER_TCB) && defined(SSE_SHIFTER_TRICKS)
-    else if(SSE_HACKS_ON && CurrentScanline.Cycles==508
-      && PreviousScanline.Cycles==512)
-    {
-      int c2=PreviousFreqChange(0);
-      int c1=PreviousFreqChange(c2);
-      if(c2>440-512 && c1>360-512 && FreqChangeAtCycle(c2)==60 
-        && FreqChangeAtCycle(c1)==60)
-        starts_counting+=2; // former hack: +2!
-    }
-#endif
-
-    int c=CyclesIn/2-starts_counting;
-
-    sdp=shifter_draw_pointer_at_start_of_line;
-
-    if (c>=bytes_to_count)
-      sdp+=bytes_to_count+(LINEWID*2);
-    else if (c>=0){
-      c&=-2;
-      sdp+=c;
-    }
-
-#if defined(SSE_SHIFTER_SDP_TRACE3) // compare with Steem (can't be 100%)
-    if(sdp>shifter_draw_pointer_at_start_of_line)
-    {
-      MEM_ADDRESS sdpdbg=get_shifter_draw_pointer(CyclesIn);
-      if(sdpdbg!=sdp)
-      {
-        TRACE_LOG("SDP 0 %X %d %X (+%d) Steem 3.2 %X (+%d)\n",shifter_draw_pointer_at_start_of_line,CyclesIn,sdp,sdp-shifter_draw_pointer_at_start_of_line,sdpdbg,sdpdbg-shifter_draw_pointer_at_start_of_line);
-        MEM_ADDRESS sdpdbg=get_shifter_draw_pointer(CyclesIn); // rego...
-      }
-    }
-#endif
-  }
-  else // lines witout fetching (before or after frame)
-    sdp=shifter_draw_pointer;
-
-//if(!scan_y)TRACE("Read SDP F%d y%d c%d SDP %X (%d - %d) sdp %X xtr %d\n",FRAME,scan_y,CyclesIn,sdp,sdp-shifter_draw_pointer_at_start_of_line,CurrentScanline.Bytes,shifter_draw_pointer,shifter_hscroll_extra_fetch);
-#if defined(SSE_SHIFTER_SDP_TRACE2)
-  int nbytes=sdp-shifter_draw_pointer_at_start_of_line;
-  if(nbytes && scan_y==-29) TRACE("Read SDP F%d y%d c%d SDP %X (%d - %d) sdp %X\n",FRAME,scan_y,CyclesIn,sdp,sdp-shifter_draw_pointer_at_start_of_line,CurrentScanline.Bytes,shifter_draw_pointer);
-#endif
-  return sdp;
-
-
 #endif
 }
 
 
-void TMMU::ShiftSDP(int shift) { 
+void TMMU::ShiftSDP(int shift) { // we count on the compiler to optimise this...
   shifter_draw_pointer+=shift; 
 #if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
   overscan_add_extra-=shift;
@@ -417,15 +221,14 @@ void TMMU::ShiftSDP(int shift) {
 
 
 void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
-  
+
 #if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
 /*  Now that video counter reckoning (MMU.VideoCouter) is separated from 
     rendering (shifter_draw_pointer), a lot of cases that seemed complicated
     are simplified. Most hacks could be removed.
 
     Also, a simple test program allowed us to demystify writes to the video
-    counter.
-    It is actually straightforward, here's the rule:
+    counter. It is actually straightforward, here's the rule:
     The byte in the MMU register is replaced with the byte on the bus, that's
     it, even if the counter is running at the time (Display Enable), and
     whatever words are in the Shifter.
@@ -435,7 +238,7 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
 
   int CyclesIn=LINECYCLES;
 
-#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SDP_WRITE)
     FrameEvents.Add(scan_y,LINECYCLES,'C',((addr&0xF)<<8)|io_src_b);
 #endif
@@ -458,13 +261,6 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
   if(fl)
     Shifter.Render(CyclesIn,DISPATCHER_WRITE_SDP);
 
-  // MMU sees GLUE's DE only after a while, even in the common STE chip
-  bool de_started=fl && CyclesIn>=Glue.CurrentScanline.StartCycle
-    +MMU_PREFETCH_LATENCY;
-  bool de_finished=de_started && CyclesIn>=Glue.CurrentScanline.EndCycle
-    +MMU_PREFETCH_LATENCY;
-  bool de=de_started && !de_finished;
-
   UpdateVideoCounter(CyclesIn);
   const MEM_ADDRESS former_video_counter=VideoCounter;
 
@@ -481,13 +277,15 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
   shifter_draw_pointer_at_start_of_line-=former_video_counter; 
   shifter_draw_pointer_at_start_of_line+=VideoCounter; 
 
-  // updating the sdp during DE could cause artefacts because of shifter latency
-  // not doing it could be trouble too but I know no case yet
-  if(!de)
+  // updating the video counter while video memory is still being fetched
+  // could cause display artefacts because of shifter latency (eg Tekila)
+  bool fetching=fl 
+    && CyclesIn>=Glue.CurrentScanline.StartCycle +MMU_PREFETCH_LATENCY
+    && CyclesIn<Glue.CurrentScanline.EndCycle+MMU_PREFETCH_LATENCY;
+ if(!fetching)
     shifter_draw_pointer=VideoCounter;
 
-
-#else // before v3.8.1
+#else // 3.8.0
     
 /*
     This is a difficult side of STE emulation, made difficult too by
@@ -496,7 +294,7 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
     otherwise, but there are difficulties and imprecisions anyway.
     So this is mainly a collection of hacks for now, that handle pratical
     cases.
-    TODO: examine interaction write SDP/left off in Steem
+    note: problem fixed in v3.8.1
 
     An Cool STE
     Line 000 - 008:r0900 028:r0900 048:r0900 068:r0908 452:w050D 480:w07F1 508:w0990 512:T1000
@@ -620,10 +418,10 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
 #if defined(SSE_OSD_CONTROL)
   if(OSD_MASK3 & OSD_CONTROL_WRITESDP) 
 #else
-  if(TRACE_ENABLED)
+  if(TRACE_ENABLED(LOGSECTION_VIDEO))
 #endif
     TRACE_OSD("WRITE SDP");  
-#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SDP_WRITE)
     FrameEvents.Add(scan_y,LINECYCLES,'C',((addr&0xF)<<8)|io_src_b);
 #endif
@@ -647,22 +445,10 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
 
   bool fl=Glue.FetchingLine();
 
-#if defined(SSE_SHIFTER_SDP_WRITE_380) 
-  bool de_started=fl && cycles>=Glue.CurrentScanline.StartCycle
-#if defined(SSE_GLUE_SDP_WRITE_380C)
-    +(SSE_HACKS_ON?MMU_PREFETCH_LATENCY:0) //temp, ST Magazin
-#endif
-    ;
-  bool de_finished=de_started && cycles>=Glue.CurrentScanline.EndCycle; //kryos
-#else
-  bool de_started=fl && cycles>=Glue.CurrentScanline.StartCycle
-    +MMU_PREFETCH_LATENCY; // TESTING //normally not correct...
-    ;
-  bool de_finished=de_started && cycles>Glue.CurrentScanline.EndCycle
-    +MMU_PREFETCH_LATENCY; // TESTING //normally not correct...
-    ;
-#endif
 
+  bool de_started=fl && cycles>=Glue.CurrentScanline.StartCycle
+    +(OPTION_HACKS?MMU_PREFETCH_LATENCY:0); //temp, ST Magazin
+  bool de_finished=de_started && cycles>=Glue.CurrentScanline.EndCycle; //kryos
   bool de=de_started && !de_finished;
 
   if(de_finished && addr==0xff8209)
@@ -678,164 +464,78 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
   int bytes_drawn=shifter_draw_pointer-shifter_draw_pointer_at_start_of_line;
   ASSERT(bytes_drawn>=0);
 
-#if SSE_VERSION>=380
-  if(SSE_HACKS_ON)
-#endif
-  if(addr==0xff8209 && SDPMiddleByte!=999) // it has been set?
+  if(OPTION_HACKS && addr==0xff8209 && SDPMiddleByte!=999) // it has been set?
   {
     int current_sdp_middle_byte=(shifter_draw_pointer&0xFF00)>>8;
     if(current_sdp_middle_byte != SDPMiddleByte) // need to restore?
-    {
-#if defined(SSE_SHIFTER_SDP_TRACE)
-      TRACE_LOG("F%d y%d c%d SDP %X reset middle byte from %X to %X\n",FRAME,scan_y,cycles,shifter_draw_pointer,current_sdp_middle_byte,SDPMiddleByte);
-#endif
       DWORD_B(&shifter_draw_pointer,(0xff8209-0xff8207)/2)=SDPMiddleByte;
-    }
   }
 
   MEM_ADDRESS nsdp=shifter_draw_pointer; //sdp_real (should be!)
-#if defined(SSE_GLUE_001)
-  nsdp=sdp_real;//test: problem only with Tekila?
-#endif
   DWORD_B(&nsdp,(0xff8209-addr)/2)=io_src_b;
-
-#if defined(SSE_GLUE_SDP_WRITE_380C1)
-//no, in fact we should count #rasters skipped
-  if(de) 
-    nsdp+=-SHIFTER_RASTER+(cycles%8)/2; 
-#endif
 
   // Writing low byte while the MMU is fetching
   if(addr==0xFF8209 && de)
   {
-#if defined(SSE_SHIFTER_SDP_WRITE_380B)
     // If we're writing the video counter, our plan to add 2 to it
     // makes no more sense. It's no hack, not doing it was a hack.
     // Fixes Cryos scroller shift.
     if(!GLU.ExtraAdded&&
       (GLU.CurrentScanline.Tricks&(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_2)))
       overscan_add_extra-=2;
-#endif
 
     // recompute right off bonus bytes (E605 Planet, D4/Tekila)
     // the idea is no hack by itself, but the method could be...
+      // note: all this headache is avoided in v381
     if(!right_border && !Glue.ExtraAdded)
     {
       int pxtodraw=320+BORDER_SIDE*2-scanline_drawn_so_far;
       int bytestofetch=pxtodraw/2;
-      //int bytes_to_run=(Glue.CurrentScanline.EndCycle-cycles)/2;
       int bytes_to_run=(464-cycles)/2; // this or round up cycles
       ASSERT(!(bytes_to_run&1));//!
-#if defined(SSE_GLUE_001)
-      overscan_add_extra=bytes_to_run-bytestofetch;
-#else
       // we can't set extra because of bumpy scrolling (but OK in large display)
       overscan_add_extra+=-28+bytes_to_run-bytestofetch;
-#endif
-
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT_381)
-      if(SideBorderSize==VERY_LARGE_BORDER_SIDE 
-#if !defined(SSE_VID_BORDERS_416_NO_SHIFT2)
-        && SSE_HACKS_ON
-#endif
-        )
-        overscan_add_extra-=2;
-#endif
 
 #if defined(SSE_SHIFTER_SDP_WRITE_DE_HSCROLL) && defined(SSE_SHIFTER_TEKILA)
-      // TODO, those conditions are certainly not correct
-      if(SSE_HACKS_ON && !left_border)
+      //those conditions are certainly not correct
+      if(OPTION_HACKS && !left_border)
       {
-#if defined(SSE_SHIFTER_SDP_WRITE_380B) && !defined(SSE_GLUE_SDP_WRITE_380C1)
         if(!shifter_skip_raster_for_hscroll)
           overscan_add_extra+=6+2; // Tekila line -28
         else if(Glue.PreviousScanline.Tricks&TRICK_STABILISER) //especially this
           nsdp+=4+2; // Tekila other lines
-#else
-        if(!shifter_skip_raster_for_hscroll)
-          overscan_add_extra+=6; // Tekila line -28
-        else if(Glue.PreviousScanline.Tricks&TRICK_STABILISER) //especially this
-          nsdp+=4; // Tekila other lines
-#endif
       }
 #endif
     }
-#if defined(SSE_SHIFTER_HSCROLL_380_E)  || defined(SSE_GLUE_SDP_WRITE_380)
     else
     {
-
-#if defined(SSE_GLUE_SDP_WRITE_380C)
-#if !defined(SSE_GLUE_SDP_WRITE_380C1)
 /*  Fix/hack for writes to videocounter OK for Sommarhack 2010 greets, 
     Ooh Crikey hidden screen #2, RGBeast still OK
 */
-      if(SSE_HACKS_ON) // last minute change so...
+      if(OPTION_HACKS) // last minute change so...
         nsdp+=-SHIFTER_RASTER+((cycles-GLU.CurrentScanline.StartCycle)%8)/2; 
-#endif
-#else
-      // Sommarhack 2010 greets write on cycle 284 or 292
-#if defined(SSE_GLUE_SDP_WRITE_380B)
-      if(SSE_HACKS_ON)
-#endif
       Shifter.RoundCycles(shifter_pixel);
-#endif
     }
-#endif
 
-#if !defined(SSE_GLUE_001)
     // cancel the Steem 3.2 fix for left off with STE scrolling on
     if(!Glue.ExtraAdded && (Glue.CurrentScanline.Tricks&TRICK_LINE_PLUS_26)
       && HSCROLL0>=12 
 #if defined(SSE_VID_BORDERS_416_NO_SHIFT) 
       // don't try to understand this, I don't
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT2)
-      && (SideBorderSize!=VERY_LARGE_BORDER_SIDE||!border)
-#else
-      && (!SSE_HACKS_ON||SideBorderSize!=VERY_LARGE_BORDER_SIDE||!border)
-#endif
+      && (!OPTION_HACKS||SideBorderSize!=VERY_LARGE_BORDER_SIDE||!border)
 #endif
       )
       overscan_add_extra+=8; // fixes bumpy scrolling in Tekila
-#endif//001
-
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT_381)
-//    ASSERT(!Glue.ExtraAdded);
-    if(SideBorderSize==VERY_LARGE_BORDER_SIDE && SSE_HACKS_ON)
-    {
-      if(
-#if !defined(SSE_VID_BORDERS_416_NO_SHIFT2)
-        SSE_HACKS_ON &&
-#endif
-        !Glue.ExtraAdded &&
-        (Glue.CurrentScanline.Tricks&TRICK_LINE_PLUS_20)
-        && HSCROLL0>=12
-#if defined(SSE_VID_BORDERS_LINE_PLUS_20_381)
-        -4
-#endif
-        )
-        overscan_add_extra+=8; // fixes bumpy scrolling in E605 Planet
-    }
-#endif
-
-
-#if defined(SSE_SHIFTER_SDP_WRITE_DE_HSCROLL) && defined(SSE_SHIFTER_TEKILA__)
-    // TODO, those conditions are certainly not correct
-    if(SSE_HACKS_ON && shifter_skip_raster_for_hscroll && !left_border 
-      && !right_border && !Glue.ExtraAdded 
-      && (Glue.PreviousScanline.Tricks&TRICK_STABILISER)) //especially this
-      nsdp+=4; // Tekila other lines
-#endif
   }//de
 
 #if defined(SSE_SHIFTER_DANGEROUS_FANTAISY)
-  if(SSE_HACKS_ON
+  if(OPTION_HACKS
     && bytes_drawn==Glue.CurrentScanline.Bytes-8 && bytes_in>bytes_drawn)
     nsdp+=-8; // hack for Dangerous Fantaisy credits lower overscan flicker
 #endif
 
   // update shifter_draw_pointer_at_start_of_line or ReadVideoCounter will
   // return garbage
-
   shifter_draw_pointer_at_start_of_line-=shifter_draw_pointer; //sdp_real
   shifter_draw_pointer_at_start_of_line+=nsdp; 
   shifter_draw_pointer=nsdp;
@@ -843,7 +543,7 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
 #if defined(SSE_SHIFTER_SDP_WRITE_MIDDLE_BYTE)
   // hack, record middle byte, programmer couldn't intend it to change
   // note for Cool STE it flickers on some real STE
-  if(SSE_HACKS_ON && fl && addr==0xff8207)  
+  if(OPTION_HACKS && fl && addr==0xff8207)  
     SDPMiddleByte=io_src_b; // fixes Tekila large display, Cool STE
 #endif
 

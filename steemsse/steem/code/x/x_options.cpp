@@ -152,7 +152,7 @@ void TOptionBox::Show()
   page_lv.sl.Add(T("Startup"),101+ICO16_FUJI16,6);
   page_lv.sl.Add(T("Paths"),101+ICO16_FUJI16,15);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE) && defined(SSE_UNIX)
+#if defined(SSE_GUI_OPTION_PAGE) && defined(SSE_UNIX)
   page_lv.sl.Add(T("SSE"),101+ICO16_SSE_OPTION,16);
 #endif
   
@@ -290,7 +290,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
       floppy_access_ff=b->checked;
     }else if (b->id==140){
       StartEmuOnClick=b->checked;
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_OPTION_DISABLE_DSP)
+#if defined(SSE_SOUND_OPTION_DISABLE_DSP)
     }else if (b->id==141){
       DSP_ENABLED=b->checked;
 #endif
@@ -579,7 +579,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
 
     }else if (b->id==12000){
       osd_show_disk_light=b->checked;
-#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_DRIVE_INFO)
+#if defined(SSE_OSD_DRIVE_INFO)
     }else if (b->id==12001){
       OSD_DRIVE_INFO=b->checked;
 #endif
@@ -609,7 +609,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
       XFlush(XD);
     }
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE) && defined(SSE_UNIX)
+#if defined(SSE_GUI_OPTION_PAGE) && defined(SSE_UNIX)
 
 #if defined(SSE_GUI_MOUSE_CAPTURE)
     else if(b->id==4002)
@@ -627,7 +627,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
     else if(b->id==4006)
       b->checked=HD6301EMU_ON=b->checked&HD6301_OK;
 #endif
-#if defined(SSE_VAR_KEYBOARD_CLICK)
+#if defined(SSE_SOUND_KEYBOARD_CLICK)
     else if(b->id==4007)
     {
       if(b->checked)// pathetic, there must be a better way
@@ -672,7 +672,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
     else if(b->id==4010)
       floppy_instant_sector_access=!b->checked;
 #endif   
-#if defined(SSE_SDL) && !defined(SSE_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
     else if(b->id==4011)
       USE_SDL=b->checked;
 #endif   
@@ -805,7 +805,7 @@ int TOptionBox::dd_notify_proc(hxc_dropdown*dd,int mess,int i)
     macro_file_options(MACRO_FILE_SET,This->MacroSel,&MFO);
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE) && defined(SSE_UNIX)
+#if defined(SSE_GUI_OPTION_PAGE) && defined(SSE_UNIX)
 #if defined(SSE_VID_BORDERS)
   else if(dd->id==4001) // display size
   {

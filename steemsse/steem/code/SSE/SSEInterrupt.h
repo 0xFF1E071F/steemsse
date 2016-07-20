@@ -2,11 +2,8 @@
 #ifndef SSEINTERRUPT_H
 #define SSEINTERRUPT_H
 
-//#include <run.decla.h>
-
 #include "SSESTF.h"
-//#include "SSEGLUE.H"
-#include "SSEGlue.h" //ux382
+#include "SSEGlue.h"
 
 #if defined(SSE_INT_MFP_RATIO) 
 extern double CpuMfpRatio;
@@ -55,12 +52,8 @@ inline void HBLInterrupt() {
 #if defined(SSE_BOILER_FRAME_INTERRUPTS)
   Debug.FrameInterrupts|=2;
 #endif
-#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
-#if defined(SSE_BOILER_FRAME_REPORT_MASK2)
+#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_INT)
-#else
-  if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_HBI)
-#endif
     FrameEvents.Add(scan_y,LINECYCLES,'I',0x20);
 #endif
   TRACE_LOG("%d %d %d (%d) HBI #%d Vec %X\n",TIMING_INFO,ACT,Debug.nHbis,LPEEK(0x0068));
@@ -78,7 +71,7 @@ inline void HBLInterrupt() {
   // wobble?
 #if !defined(SSE_INT_JITTER_HBL)
 //#if defined(SSE_INT_E_CLOCK)
-  if(!HD6301EMU_ON) // not if mode "E-Clock"
+  if(!OPTION_C1) // not if mode "E-Clock"
 //#endif
   {
     INTERRUPT_START_TIME_WOBBLE; //Steem 3.2
@@ -91,7 +84,7 @@ inline void HBLInterrupt() {
 
   // E-clock?
 #if defined(SSE_INT_E_CLOCK)
-  if(HD6301EMU_ON)
+  if(OPTION_C1)
   {
 
 #if defined(SSE_INT_CHECK_BEFORE_PREFETCH)
@@ -107,7 +100,7 @@ inline void HBLInterrupt() {
     A generalisation of this seems incorrect, but we'll keep it
     until it breaks something or we find a better fix.
 */
-    if(SSE_HACKS_ON && M68000.PrefetchClass==1 && LINECYCLES>=4)
+    if(OPTION_HACKS && M68000.PrefetchClass==1 && LINECYCLES>=4)
     {
       if((ir&0xFF00)==0x4A00 && (ir&0xFFC0)!=0x4AC0) //TST
       {
@@ -117,7 +110,7 @@ inline void HBLInterrupt() {
     }
 #endif//SSE_INT_CHECK_BEFORE_PREFETCH  
 
-#if defined(SSE_CPU_E_CLOCK2) 
+#if defined(SSE_CPU_E_CLOCK_370) 
     int current_cycles=ACT;
     INSTRUCTION_TIME(ECLOCK_AUTOVECTOR_CYCLE);
     BYTE e_clock_wait_states=
@@ -127,7 +120,7 @@ inline void HBLInterrupt() {
 #else
     M68000.SyncEClock();
 #endif
-#if defined(SSE_CPU_E_CLOCK2)
+#if defined(SSE_CPU_E_CLOCK_370)
     INSTRUCTION_TIME(current_cycles-ACT);
     INSTRUCTION_TIME(e_clock_wait_states);
 #endif
@@ -147,7 +140,7 @@ inline void HBLInterrupt() {
   // jitter?
 #if defined(SSE_INT_JITTER_HBL) //no
 //#if defined(SSE_INT_E_CLOCK)
-  if(!HD6301EMU_ON)
+  if(!OPTION_C1)
 //#endif
     INSTRUCTION_TIME(HblJitter[HblJitterIndex]); //Hatari
 #endif
@@ -179,12 +172,8 @@ inline void VBLInterrupt() {
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
   Debug.RecordInterrupt("VBI");
 #endif
-#if defined(SSE_DEBUG_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
-#if defined(SSE_BOILER_FRAME_REPORT_MASK2)
+#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_INT)
-#else
-  if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_VBI)
-#endif
     FrameEvents.Add(scan_y,LINECYCLES,'I',0x40);
 #endif
 #if defined(SSE_BOILER_FRAME_INTERRUPTS)
@@ -211,7 +200,7 @@ inline void VBLInterrupt() {
   if(ST_TYPE==STE)  // jitter for STF, wobble for STE
 #endif
 #if defined(SSE_INT_E_CLOCK)
-    if(!HD6301EMU_ON) // no jitter no wobble if "E-clock"
+    if(!OPTION_C1) // no jitter no wobble if "E-clock"
 #endif
     {//3.6.1: Argh! macro must be scoped! TODO proper switches
       INTERRUPT_START_TIME_WOBBLE; //wobble for STE
@@ -227,9 +216,9 @@ inline void VBLInterrupt() {
 #endif
     // E-Clock?
 #if defined(SSE_CPU_E_CLOCK)
-  if(HD6301EMU_ON)
+  if(OPTION_C1)
   { 
-#if defined(SSE_CPU_E_CLOCK2)
+#if defined(SSE_CPU_E_CLOCK_370)
     int current_cycles=ACT;
 #if defined(SSE_INT_VBL_380)
     INSTRUCTION_TIME(ECLOCK_AUTOVECTOR_CYCLE);
@@ -243,7 +232,7 @@ inline void VBLInterrupt() {
 #else
     M68000.SyncEClock();
 #endif
-#if defined(SSE_CPU_E_CLOCK2)
+#if defined(SSE_CPU_E_CLOCK_370)
     INSTRUCTION_TIME(current_cycles-ACT);
     INSTRUCTION_TIME(e_clock_wait_states);
 #endif
@@ -252,7 +241,7 @@ inline void VBLInterrupt() {
 #endif
 
 #if !defined(SSE_INT_VBL_IACK2) 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBL_IACK)
+#if defined(SSE_INT_VBL_IACK)
   time_of_last_vbl_interrupt=ACT;
 #endif
 #endif
@@ -273,7 +262,7 @@ inline void VBLInterrupt() {
   if(ST_TYPE!=STE) 
 #endif
 #if defined(SSE_INT_E_CLOCK)
-    if(!HD6301EMU_ON)
+    if(!OPTION_C1)
 #endif
       INSTRUCTION_TIME(VblJitter[VblJitterIndex]);
 #endif

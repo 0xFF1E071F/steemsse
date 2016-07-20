@@ -1,8 +1,15 @@
 #include "SSE.h"
 
-#if defined(STEVEN_SEAGAL)
+#if defined(SSE_DISK_SCP)
+/*  The SCP interface is based on the STW interface, so that integration in
+    Steem (disk manager, FDC commands...) is straightforward.
+    Remarkably few changes are necessary in the byte-level WD1772 emu to have
+    some SCP images loading.
+    For some others, however, we had to graft bit-level algorithms.
+    Up to date it seems Steem SSE can run all SCP images, with some difficulties
+    on weak bit protections.
+*/
 
-#if defined(SSE_STRUCTURE_SSEFLOPPY_OBJ)
 #include "../pch.h"
 #include <cpu.decla.h>
 #include <fdc.decla.h>
@@ -16,27 +23,15 @@
 #if defined(WIN32)
 #include <pasti/pasti.h>
 #endif
-//EasyStr GetEXEDir();//#include <mymisc.h>//missing...
-
 #if !defined(SSE_CPU)
 #include <mfp.decla.h>
 #endif
-
-#endif//#if defined(SSE_STRUCTURE_SSEFLOPPY_OBJ)
 
 #include "SSEDecla.h"
 #include "SSEDebug.h"
 #include "SSEFloppy.h"
 #include "SSEOption.h"
 #include "SSEScp.h"
-
-#if defined(SSE_DISK_SCP)
-/*  The SCP interface is based on the STW interface, so that integration in
-    Steem (disk manager, FDC commands...) is straightforward.
-    Remarkably few changes are necessary in the byte-level WD1772 emu to have
-    some SCP images loading.
-    For some others, however, we had to graft bit-level algorithms.
-*/
 
 #if defined(SSE_VAR_RESIZE_372)
 #if !defined(SSE_VAR_RESIZE_382)
@@ -69,7 +64,11 @@ TImageSCP::~TImageSCP() {
 void TImageSCP::Close() {
   if(fCurrentImage)
   {
+#if defined(SSE_DISK_STW2)
     TRACE_LOG("SCP %d close image\n",Id);
+#else
+    TRACE_LOG("SCP close image\n");
+#endif
     fclose(fCurrentImage);
     if(TimeFromIndexPulse)
       free(TimeFromIndexPulse);
@@ -115,7 +114,6 @@ void  TImageSCP::ComputePosition(WORD position) {
 #endif
 
   Disk[DRIVE].current_byte=(ACT-SF314[DRIVE].time_of_last_ip)/SF314[DRIVE].CyclesPerByte();
-//TRACE("%d %d %d\n",ACT,SF314[DRIVE].time_of_last_ip,Disk[DRIVE].TrackBytes);
 
   TRACE_LOG("Compute new position IP %d ACT %d cycles in %d units %d Position %d units %d byte %d\n",
     SF314[DRIVE].time_of_last_ip,ACT,ACT-SF314[DRIVE].time_of_last_ip,units,Position,TimeFromIndexPulse[Position],Disk[DRIVE].current_byte);
@@ -224,11 +222,6 @@ WORD TImageSCP::GetMfmData(WORD position) {
   ASSERT(delay_in_cycles>0);
   TRACE_MFM(" %d cycles\n",delay_in_cycles);
 #endif
-
-//  a2=WD1772.Dpll.ctime;
-//  int delay_in_cycles=(a2-a1);
-//  ASSERT(delay_in_cycles>0);
-//  TRACE_MFM(" %d cycles\n",delay_in_cycles);
 #endif
 
   WD1772.update_time=time_of_next_event+delay_in_cycles; 
@@ -504,7 +497,8 @@ bool TImageSCP::Open(char *path) {
         }
         else
           nTracks=(file_header.IFF_END-file_header.IFF_START+1)/2;
-#ifdef SSE_DEBUG //lots of info
+
+#if defined(SSE_DEBUG) && defined(SSE_DISK_STW2)
 TRACE_LOG("SCP %d sides %d tracks %d IFF_VER %X IFF_DISKTYPE %X IFF_NUMREVS %d \
 IFF_START %d IFF_END %d IFF_FLAGS %d IFF_ENCODING %d IFF_HEADS %d \
 IFF_RSRVED %X IFF_CHECKSUM %X\n",Id,nSides,nTracks,file_header.IFF_VER,
@@ -512,6 +506,7 @@ file_header.IFF_DISKTYPE,file_header.IFF_NUMREVS,file_header.IFF_START,
 file_header.IFF_END,file_header.IFF_FLAGS,file_header.IFF_ENCODING,
 file_header.IFF_HEADS,file_header.IFF_RSRVED,file_header.IFF_CHECKSUM);
 #endif
+
         track_header.TDH_TRACKNUM=0xFF;
         ok=true; //TODO some checks?
       }//cmp
@@ -524,12 +519,15 @@ file_header.IFF_HEADS,file_header.IFF_RSRVED,file_header.IFF_CHECKSUM);
   return ok;
 }
 
+#pragma warning(disable:4100)//unreferenced formal parameter
+
 void TImageSCP::SetMfmData(WORD position, WORD mfm_data) {
 
 }
 
+#pragma warning(default:4100)
 #undef LOGSECTION
 
 #endif//SCP
 
-#endif//#if defined(STEVEN_SEAGAL)
+

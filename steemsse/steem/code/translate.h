@@ -1,10 +1,3 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_TRANSLATE_H)
-
-#include "translate.decla.h"
-
-#else//!defined(SSE_STRUCTURE_TRANSLATE_H)
-
-
 #ifdef IN_MAIN
 #define EXT
 #define INIT(s) =s
@@ -42,4 +35,3 @@ extern EasyStr StripAndT(char*);
 #undef EXT
 #undef INIT
 
-#endif//!defined(SSE_STRUCTURE_TRANSLATE_H)

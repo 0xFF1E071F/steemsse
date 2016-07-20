@@ -2,12 +2,11 @@
 #ifndef SSEYM2149_H
 #define SSEYM2149_H
 
-#if defined(SSE_YM2149)
+#if defined(SSE_YM2149_OBJECT)
 /*  In v3.5.1, object PSG is only used for drive management.
     Drive is 0 (A:) or 1 (B:), but if both relevant bits in
     PSG port A are set then no drive is selected ($FF).
 */
-
 struct TYM2149 {
   TYM2149(); //v3.7.0
   ~TYM2149(); //v3.7.0
@@ -28,6 +27,8 @@ struct TYM2149 {
 #endif
 };
 
-#endif//PSG
+extern TYM2149 YM2149;
+
+#endif
 
 #endif//SSEYM2149_H

@@ -1,19 +1,11 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_ONEGAME_H)
-
-#include "onegame.decla.h"
-
-#else//!SSE_STRUCTURE_ONEGAME_H
-
-
 #ifdef IN_MAIN
 #define EXT
 #define INIT(s) =s
 #else
 #define EXT extern
 #define INIT(s)
-
-#endif
-
+#endif
+
 EXT void OGVBL(),OGIntercept(),OGWriteSector(int,int,int,int),OGHandleQuit(),OGSetRestart();
 
 #define OG_TEXT_ADDRESS 0xffa000
@@ -42,4 +34,3 @@ EXT int OGStopAction INIT(0);
 #undef EXT
 #undef INIT
 
-#endif//SSE_STRUCTURE_ONEGAME_H

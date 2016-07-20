@@ -7,17 +7,17 @@ draw one line, draw_end unlocks output and draw_blit blits the drawn output
 to the PC display. 
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: draw.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DRAW_H)
+#if defined(SSE_STRUCTURE_DECLA)
 
 #define EXT
 #define EXTC
 #define INIT(s) =s
 
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE))
+#if !(defined(SSE_VAR_RESIZE))
 EXT int stfm_b_timer INIT(0);//tmp
 #endif
 
@@ -59,11 +59,7 @@ EXT RECT draw_blit_source_rect;
 
 WIN_ONLY( EXT int draw_win_mode[2]; ) // Inited by draw_fs_blit_mode
 
-#if defined(SSE_STRUCTURE_SSE6301_OBJ) 
 EXTC BYTE FullScreen INIT(0);
-#else
-EXT bool FullScreen INIT(0);
-#endif
 
 EXT bool draw_lock;
 
@@ -83,7 +79,7 @@ EXT char overscan INIT(0)
 #else
 EXT int overscan INIT(0)
 #endif
-#if !defined(SSE_SHIFTER_REMOVE_USELESS_VAR) || defined(SSE_SHIFTER_DRAW_DBG)
+#if !defined(SSE_SHIFTER_REMOVE_USELESS_VAR)
 ,stfm_borders INIT(0)
 #endif
 ;
@@ -142,8 +138,8 @@ int scanline_drawn_so_far;
 int cpu_cycles_when_shifter_draw_pointer_updated;
 
 int left_border=BORDER_SIDE,right_border=BORDER_SIDE;
-#if !defined(SSE_VAR_RESIZE_370) //we use the border mask instead
-bool right_border_changed=0;
+#if !defined(SSE_VAR_RESIZE_370) || !defined(SSE_VIDEO_CHIPSET)
+bool right_border_changed=0;//we use the border mask instead
 #endif
 #if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
 // We finally do without this confusing variable (especially annoying
@@ -156,7 +152,7 @@ int overscan_add_extra;
 LPPIXELWISESCANPROC jump_draw_scanline[3][4][3],draw_scanline,draw_scanline_lowres,draw_scanline_medres;
 
 int shifter_freq_change_time[32];
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE)
 BYTE shifter_freq_change[32];
 BYTE shifter_freq_change_idx=0;
 #else
@@ -164,7 +160,7 @@ int shifter_freq_change[32];
 int shifter_freq_change_idx=0;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER_TRICKS)
+#if defined(SSE_SHIFTER_TRICKS)
 // keeping a record for shift mode changes as well
 int shifter_shift_mode_change_time[32];
 #if defined(SSE_VAR_RESIZE)
@@ -178,7 +174,7 @@ int shifter_shift_mode_change_idx=0;
 
 
 #ifdef WIN32
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS)
+#if defined(SSE_VID_BORDERS)
 //BYTE draw_temp_line_buf[800*4+16+ 200 ]; // overkill but I can't count
 BYTE draw_temp_line_buf[800*4+16+ 400 ]; // overkill but I can't count
 #else
@@ -200,19 +196,8 @@ bool freq_change_this_scanline=false;
 #undef EXTC
 #undef INIT
 
-#endif
+#endif//decla
 
-#if defined(STEVEN_SEAGAL)
-
-#if defined(SSE_SHIFTER) && !defined(SSE_STRUCTURE_SSESHIFTER_OBJ)
-#include "SSE/SSEShifter.cpp"
-#endif
-
-#if defined(SSE_VIDEO) && !defined(SSE_STRUCTURE_SSESTF_OBJ)
-#include "SSE/SSEVideo.cpp"
-#endif
-
-#endif
 //---------------------------------------------------------------------------
 void ASMCALL draw_scanline_dont(int,int,int,int) {}
 
@@ -297,7 +282,7 @@ void draw_begin()
   draw_dest_next_scanline=draw_dest_ad+draw_dest_increase_y;
   WIN_ONLY( draw_store_dest_ad=NULL; )
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SCANLINES_INTERPOLATED)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED)
     if(SCANLINES_INTERPOLATED
 #if defined(SSE_VID_D3D_382)
     || FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE 
@@ -322,7 +307,7 @@ void draw_begin()
       if (draw_fs_fx==DFSFX_GRILLE) using_grille=true;
 #endif
     }
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SCANLINES_INTERPOLATED)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED)
     if(SCANLINES_INTERPOLATED
 #if defined(SSE_VID_D3D_382)
     || FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE 
@@ -337,7 +322,7 @@ void draw_begin()
       l*=BytesPerPixel;
       BYTE *d=draw_dest_ad+draw_line_length;
       int y=200;
-#if defined(STEVEN_SEAGAL) &&  defined(SSE_VID_BORDERS_BIGTOP)
+#if  defined(SSE_VID_BORDERS_BIGTOP)
      // if (Disp.BorderPossible()) y=200+BORDER_BOTTOM+ 30;
       if (Disp.BorderPossible()) y=200+BottomBorderSize+ BORDER_TOP;
 #else
@@ -480,7 +465,7 @@ void draw_set_jumps_and_source()
 #endif
   
   if (big_draw
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SCANLINES_INTERPOLATED)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED)
     || (SCANLINES_INTERPOLATED
 #if defined(SSE_VID_D3D_382)
       ||FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE
@@ -513,7 +498,7 @@ void draw_set_jumps_and_source()
     if (draw_fs_fx==DFSFX_GRILLE) p=2; // 640x200 low/med
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SCANLINES_INTERPOLATED)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED)
     if(SCANLINES_INTERPOLATED
 #if defined(SSE_VID_D3D_382)
       ||FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE
@@ -535,7 +520,7 @@ void draw_set_jumps_and_source()
     int ox=0,oy=0,ow=640,oh=400;
     if (border & 1){
       oh=BORDER_TOP*2 + 400 + BORDER_BOTTOM*2;
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS)
+#if defined(SSE_VID_BORDERS)
       // this may not be larger than the window
       ow=SideBorderSizeWin*2 + 640 + SideBorderSizeWin*2;
 
@@ -579,7 +564,7 @@ void draw_set_jumps_and_source()
 #endif
     }
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_SCANLINES_INTERPOLATED)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED)
     if(!screen_res && SCANLINES_INTERPOLATED && 
 #if defined(SSE_VID_3BUFFER)
       (!FullScreen ||SSE_3BUFFER
@@ -697,7 +682,7 @@ void draw_end()
 
 #ifdef DEBUG_BUILD //SS? TODO
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER)
+#if defined(SSE_SHIFTER)
   Shifter.DrawBufferedScanlineToVideo(); 
 #else
   DRAW_BUFFERED_SCANLINE_TO_VIDEO
@@ -723,15 +708,12 @@ void draw_end()
 }
 
 #define LOGSECTION LOGSECTION_VIDEO
-
-#if !defined(STEVEN_SEAGAL) || !defined(SSE_SHIFTER) \
-  || defined(SSE_SHIFTER_DRAW_DBG) || !defined(SSE_STRUCTURE)
-
+#if !defined(SSE_SHIFTER)
 //---------------------------------------------------------------------------
 /* SS this was the core of Shifter trick analysis in Steem 3.2.
    There's not so much code but it ran many cases eg Darkside of the Spoon,
    it was missing the 0byte line, 4bit scrolling.
-   It has been much expanded and commented in SSEShifter.cpp.
+   It has been much expanded and commented in SSEShifter.cpp, then SSEGlue.cpp.
    This function isn't compiled.
 */
 void draw_check_border_removal()
@@ -998,7 +980,7 @@ void inline draw_scanline_to(int cycles_since_hbl)
         nsdp+=(shifter_pixel/8)*4;
       }
 //      if(shifter_pixel<320 && shifter_pixel>0){
-//        log(EasyStr("old_shifter_pixel=")+old_shifter_pixel+", shifter_pixel="+shifter_pixel
+//        dbg_log(EasyStr("old_shifter_pixel=")+old_shifter_pixel+", shifter_pixel="+shifter_pixel
 //          +" shifter_draw_pointer increase by "+(-(old_shifter_pixel/8)+(shifter_pixel/8))+" rasters hscroll="+hscroll);
 //      }
       if (draw_lock){
@@ -1289,12 +1271,12 @@ void draw(bool osd)
       scan_y=yy;
       scanline_drawn_so_far=0;
       shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
-#if defined(STEVEN_SEAGAL) && defined(SSE_SHIFTER)
+#if defined(SSE_SHIFTER)
       Shifter.DrawScanlineToEnd();
 #else      
       draw_scanline_to_end();
 #endif
-#if defined(SSE_BOILER_XBIOS2)
+#if defined(SSE_BOILER_XBIOS2) && defined(SSE_SHIFTER_TRICKS)
       DWORD Tricks=FrameEvents.GetShifterTricks(scan_y);
       if(Tricks&TRICK_TOP_OVERSCAN)
         shifter_first_draw_line=-29;
@@ -1346,7 +1328,7 @@ void get_fullscreen_rect(RECT *rc)
   }else
 #endif
   if (border & 1){
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS_LB_DX)
+#if defined(SSE_VID_BORDERS_LB_DX)
     // not sure about this...
     rc->left=(800 - (SideBorderSizeWin+320+SideBorderSizeWin)*2)/2;
     rc->top=(600 - (BORDER_TOP+200+BORDER_BOTTOM)*2)/2;
@@ -1402,7 +1384,7 @@ void init_screen()
 
   // These are used to determine where to draw
   draw_first_scanline_for_border=res_vertical_scale*(-BORDER_TOP);
-#if defined(STEVEN_SEAGAL) && defined(SSE_VID_BORDERS)//should have redefined
+#if defined(SSE_VID_BORDERS)//should have redefined
   draw_last_scanline_for_border=shifter_y+res_vertical_scale*(BottomBorderSize);
 #else
   draw_last_scanline_for_border=shifter_y+res_vertical_scale*(BORDER_BOTTOM);
@@ -1491,32 +1473,7 @@ bool draw_routines_init()
 */
     screen_event_struct *evp=event_plan_50hz;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START)
-/*
-    Setting VBI at 0 then having one 444 cycles line is a hack
-    but removing it isn't trivial.
-    Now it mostly works, but it's troubling session resuming
-    and it fixes nothing AFAIK. Normally not defined.
-*/
-    ASSERT( SSE_INT_VBI_START==68 );
-    evp->time=SSE_INT_VBI_START; // 68
-#if defined(SSE_STF) 
-    if(ST_TYPE!=STE)
-      evp->time-=4; 
-#endif
-    evp->event=event_trigger_vbi;
-    evp++;
-    evp->time=512; 
-    evp->event=event_scanline;
-#elif defined(SSE_INT_HBL_EVENT) //problem, both can't be defined?
-    evp->event=event_hbl;
-    evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_50HZ;
-    //if(ST_TYPE==STE)
-    ///evp->time-=4;
-    evp++;
-    evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_50HZ;
-    evp->event=event_scanline;
-#elif defined(SSE_INT_HBL_ONE_FUNCTION)
+#if defined(SSE_INT_HBL_ONE_FUNCTION)
     evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_50HZ; 
     evp->event=event_scanline;
 #else
@@ -1527,23 +1484,12 @@ bool draw_routines_init()
 #endif
     evp++;
     for (int y=1;y<313;y++){
-#if defined(SSE_INT_HBL_EVENT)
-      evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_50HZ + y*512;
-      //if(ST_TYPE==STE) evp->time-=8; 
-      evp->time-=4; 
-      evp->event=event_hbl;
-      evp++;
-#endif
       evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_50HZ + y*512;
       evp->event=event_scanline;
       evp++;
       if ((CYCLES_FOR_VERTICAL_RETURN_IN_50HZ+y*512) <= (160256-CYCLES_FROM_START_VBL_TO_INTERRUPT) &&
           (CYCLES_FOR_VERTICAL_RETURN_IN_50HZ+y*512+512) > (160256-CYCLES_FROM_START_VBL_TO_INTERRUPT)){
-        evp->time=160256-CYCLES_FROM_START_VBL_TO_INTERRUPT //SS -1544
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START)
-          +SSE_INT_VBI_START // it's relative to VBI (?)
-#endif
-        ; 
+        evp->time=160256-CYCLES_FROM_START_VBL_TO_INTERRUPT; //SS -1544
         evp->event=event_start_vbl;
         evp++;
       }
@@ -1561,24 +1507,8 @@ bool draw_routines_init()
       133604:  VBL
     */
     evp=event_plan_60hz;
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START)
-    evp->time=SSE_INT_VBI_START;
-#if defined(SSE_STF)
-    if(ST_TYPE!=STE)
-      evp->time-=4;
-#endif
-    evp->event=event_trigger_vbi;
-    evp++;
-    evp->time=508;
-    evp->event=event_scanline;
-#elif defined(SSE_INT_HBL_EVENT)
-    evp->event=event_hbl;
-    evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_60HZ;
-    //if(ST_TYPE==STE)evp->time-=8;
-    evp++;
-    evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_60HZ;
-    evp->event=event_scanline;
-#elif defined(SSE_INT_HBL_ONE_FUNCTION)
+
+#if defined(SSE_INT_HBL_ONE_FUNCTION)
     evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_60HZ; 
     evp->event=event_scanline;
 #else
@@ -1587,22 +1517,12 @@ bool draw_routines_init()
 #endif
     evp++;
     for(int y=1;y<263;y++){
-#if defined(SSE_INT_HBL_EVENT)
-      evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_60HZ + y*508;
-      //if(ST_TYPE==STE) evp->time-=8; 
-      evp->event=event_hbl;
-      evp++;
-#endif
       evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_60HZ + y*508;
       evp->event=event_scanline;
       evp++;
       if ((CYCLES_FOR_VERTICAL_RETURN_IN_60HZ+y*508) <= (133604-CYCLES_FROM_START_VBL_TO_INTERRUPT) &&
           (CYCLES_FOR_VERTICAL_RETURN_IN_60HZ+y*508+508) > (133604-CYCLES_FROM_START_VBL_TO_INTERRUPT)){
-        evp->time=133604-CYCLES_FROM_START_VBL_TO_INTERRUPT
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START)
-          +SSE_INT_VBI_START
-#endif
-          ;
+        evp->time=133604-CYCLES_FROM_START_VBL_TO_INTERRUPT;
         evp->event=event_start_vbl;
         evp++;
       }
@@ -1620,23 +1540,8 @@ bool draw_routines_init()
       112000:  VBL
     */
     evp=event_plan_70hz;
-#if defined(STEVEN_SEAGAL) && defined(SSE_INT_VBI_START)
-    evp->time=SSE_INT_VBI_START;//probably wrong
-#if defined(SSE_STF)
-    if(ST_TYPE!=STE)
-      evp->time-=4;
-#endif
-    evp->event=event_trigger_vbi;
-    evp++;
-#endif  
 
     for (int y=0;y < (SCANLINES_ABOVE_SCREEN_70HZ+400+SCANLINES_BELOW_SCREEN_70HZ);y++){
-#if defined(SSE_INT_HBL_EVENT)
-      evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_70HZ + y*SCANLINE_TIME_IN_CPU_CYCLES_70HZ;
-      //if(ST_TYPE==STE) evp->time-=8; 
-      evp->event=event_hbl;
-      evp++;
-#endif
       evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_70HZ + y*SCANLINE_TIME_IN_CPU_CYCLES_70HZ;
       evp->event=event_scanline;
       evp++;

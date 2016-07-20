@@ -2,7 +2,7 @@
 #define DYNAMICARRAY_H
 
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VS2008)
+#if defined(SSE_VS2008)
 #pragma warning(disable : 4710)
 #endif
 

@@ -4,12 +4,18 @@
 #define LOOP                 for(;;)
 #define IsSameStr(pc1,pc2)   (!strcmp(pc1,pc2))
 #define StringsMatch(pc1,pc2)   (!strcmp(pc1,pc2))
+#if defined(SSE_VS2008_WARNING_383)
+#define NotSameStr(pc1,pc2)  (strcmp(pc1,pc2)!=0)
+#else
 #define NotSameStr(pc1,pc2)  ((bool)strcmp(pc1,pc2))
-
+#endif
 #define IsSameStr_I(pc1,pc2)   (!strcmpi(pc1,pc2))
 #define StringsMatch_I(pc1,pc2)   (!strcmpi(pc1,pc2))
+#if defined(SSE_VS2008_WARNING_383)
+#define NotSameStr_I(pc1,pc2)  (strcmpi(pc1,pc2)!=0)
+#else
 #define NotSameStr_I(pc1,pc2)  ((bool)strcmpi(pc1,pc2))
-
+#endif
 #define Exists(pc)           (access(pc,0)==0)
 #define NOT                  !
 #define IS_TRUE              !=0

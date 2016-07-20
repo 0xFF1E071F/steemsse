@@ -5,36 +5,39 @@
     TODO: create acia.cpp, move code around
 */
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA)
+#if defined(SSE_ACIA)
 
-#if defined(SSE_STRUCTURE_SSE6301_OBJ)
 #include <binary.h>
-#endif
 
 #ifdef __cplusplus
 extern "C" {  // necessary for VC6
 #endif
 
 struct ACIA_STRUCT{ // removed _ ..
+#if defined(SSE_VAR_RESIZE_383_) // problem is memory snapshots
+  BYTE clock_divide;
+  BYTE rx_irq_enabled;
+  BYTE rx_not_read;
+  BYTE overrun;
+  BYTE tx_flag;
+  BYTE tx_irq_enabled;
+  BYTE data;
+  BYTE irq;
+  int last_tx_write_time;
+  int last_rx_read_time;
+#else
   int clock_divide; //OLD_VARIABLES?
-#if !defined(SSE_ACIA_REMOVE_OLD_VARIABLES)
   int rx_delay__unused; //SS see this?
   BYTE rx_irq_enabled;
   BYTE rx_not_read;
-#endif
   int overrun;
-
   int tx_flag;
-#if !defined(SSE_ACIA_REMOVE_OLD_VARIABLES)
   BYTE tx_irq_enabled;
-#endif
   BYTE data;
-#if !defined(SSE_ACIA_REMOVE_OLD_VARIABLES)
   BYTE irq;
-#endif
   int last_tx_write_time;
   int last_rx_read_time;
-
+#endif
 #if defined(SSE_ACIA_IRQ_DELAY)// not defined anymore (v3.5.2), see MFP
 /*  This is to help implement the short delay between RX set and IRQ set,
     as mentioned in Hatari.

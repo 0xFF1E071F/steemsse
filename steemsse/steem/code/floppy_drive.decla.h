@@ -4,10 +4,7 @@
 
 //SS this is ambiguous in Steem, class is 'image' but object is 'drive'
 
-#if defined(SSE_STRUCTURE_SSEDEBUG_OBJ)
 #include <stdio.h>
-#endif
-
 #include <easystr.h>
 #include "fdc.decla.h"//FLOPPY_MAX_TRACK_NUM?
 
@@ -35,19 +32,19 @@ private:
   EasyStr ImageFile,MSATempFile,ZipTempFile,FormatTempFile;
 public:
   TFloppyImage()             { f=NULL;Format_f=NULL;PastiDisk=
-#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)    
+#if defined(SSE_DISK_CAPS)    
     IPFDisk=
-#ifdef SSE_IPF_CTRAW
+#ifdef SSE_DISK_CAPS_CTRAW
     CTRDisk=
 #endif
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
+#if defined(SSE_DISK_SCP)
     SCPDisk=
 #endif 
-#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
+#if defined(SSE_DISK_STW)
     STWDisk=
 #endif 
-#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_HFE)
+#if defined(SSE_DISK_HFE)
     HFEDisk=
 #endif 
     0;PastiBuf=NULL;RemoveDisk();}
@@ -55,7 +52,7 @@ public:
   ~TFloppyImage()            { RemoveDisk(); }
 
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_PASTI_NO_RESET)
+#if defined(SSE_DISK_PASTI_NO_RESET)
   EasyStr GetImageFile() {return ImageFile;}
 #endif
 
@@ -64,19 +61,19 @@ public:
   bool ReinsertDisk();
   void RemoveDisk(bool LoseChanges=0);
   bool DiskInDrive() { return f!=NULL || PastiDisk 
-#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
+#if defined(SSE_DISK_CAPS)
     || IPFDisk
-#ifdef SSE_IPF_CTRAW
+#ifdef SSE_DISK_CAPS_CTRAW
     || CTRDisk
 #endif
 #endif    
-#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
+#if defined(SSE_DISK_SCP)
     || SCPDisk
 #endif   
-#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
+#if defined(SSE_DISK_STW)
     || STWDisk
 #endif     
-#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_HFE)
+#if defined(SSE_DISK_HFE)
     || HFEDisk
 #endif
     ; }
@@ -102,19 +99,19 @@ public:
   BYTE *PastiBuf; // SS same for IPF?
   int PastiBufLen;
   bool STT_File,PastiDisk;
-#if defined(STEVEN_SEAGAL) && defined(SSE_IPF)
+#if defined(SSE_DISK_CAPS)
   bool IPFDisk;
-#ifdef SSE_IPF_CTRAW
+#ifdef SSE_DISK_CAPS_CTRAW
   bool CTRDisk;
 #endif
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_SCP)
+#if defined(SSE_DISK_SCP)
   bool SCPDisk;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW)
+#if defined(SSE_DISK_STW)
   bool STWDisk;
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_DISK_HFE)
+#if defined(SSE_DISK_HFE)
   bool HFEDisk;
 #endif
   DWORD STT_TrackStart[2][FLOPPY_MAX_TRACK_NUM+1];

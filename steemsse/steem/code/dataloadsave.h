@@ -1,9 +1,3 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DATALOADSAVE_H)
-
-#include "dataloadsave.decla.h"
-
-#else//!SSE_STRUCTURE_DATALOADSAVE_H
-
 #define SEC(n) if (SecDisabled[int(n)]==0)
 
 #ifndef ONEGAME
@@ -13,13 +7,10 @@
     LoadPosition(pCSF); \
     if (pCSF->GetInt(Section,"Visible",0)) Show();
 
-
-#else
-
-#define UPDATE
-
-#endif
-
+#else
+#define UPDATE
+#endif
+
 void LoadAllDialogData(bool,Str,bool* = NULL,GoodConfigStoreFile* = NULL);
 void SaveAllDialogData(bool,Str,ConfigStoreFile* = NULL);
 
@@ -71,5 +62,3 @@ Str ProfileSectionGetStrFromID(int ID)
   }
   return "";
 }
-
-#endif

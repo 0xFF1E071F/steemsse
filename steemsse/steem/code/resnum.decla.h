@@ -2,12 +2,10 @@
 #ifndef RESNUM_DECLA_H
 #define RESNUM_DECLA_H
 
-
 #if defined(STEVEN_SEAGAL)
 // resnum.h is included by rc\resource.rc, also by include.h
 #include "SSE/SSE.h"
 #endif
-
 
 #define RC_ICO_APP 1
 #define RC_ICO_APP256 2
@@ -86,9 +84,9 @@
 #define RC_ICO_TAKESCREENSHOTBUT 72
 #define RC_ICO_DISKMANTOOLS 73
 
-//#if defined(STEVEN_SEAGAL) && defined(SSE_SSE_OPTION_PAGE)
+//#if defined(SSE_GUI_OPTION_PAGE)
 
-#if defined(SSE_SSE_OPTION_PAGE)
+#if defined(SSE_GUI_OPTION_PAGE) //// argh! need enum. possible?
 #ifdef SSE_ACSI_ICON //depends on WIN32!
 #ifdef SSE_GUI_CONFIG_FILE
 #define RC_ICO_HARDDRIVES_ACSI 74
@@ -98,7 +96,7 @@
 #define RC_ICO_CFG 78
 #define RC_NUM_ICONS 79
 #else
-#ifdef SSE_GUI_STATUS_STRING_380
+#ifdef SSE_GUI_STATUS_STRING_ICONS
 #define RC_ICO_HARDDRIVES_ACSI 74
 #define RC_ICO_OPS_SSE 75
 #define RC_ICO_OPS_C1 76
@@ -110,10 +108,27 @@
 #define RC_NUM_ICONS 76
 #endif
 #endif//#ifdef SSE_ACSI_ICON 
-#else                          
+#elif defined(SSE_INT_MFP_OPTION) && !defined(SSE_IKBD_6301)
 #define RC_ICO_OPS_SSE 74
-#define RC_NUM_ICONS 75
-#endif//SSE_GUI_CONFIG_FILE
+#define RC_ICO_OPS_C2 75
+#define RC_ICO_CFG 76
+#define RC_NUM_ICONS 77
+#elif !defined(SSE_INT_MFP_OPTION) && defined(SSE_IKBD_6301)
+#define RC_ICO_OPS_SSE 74
+#define RC_ICO_OPS_C1 75
+#define RC_ICO_CFG 76
+#define RC_NUM_ICONS 77
+#elif defined(SSE_INT_MFP_OPTION) && defined(SSE_IKBD_6301)
+#define RC_ICO_OPS_SSE 74
+#define RC_ICO_OPS_C1 75
+#define RC_ICO_OPS_C2 76
+#define RC_ICO_CFG 77
+#define RC_NUM_ICONS 78
+#else
+#define RC_ICO_OPS_SSE 74
+#define RC_ICO_CFG 75
+#define RC_NUM_ICONS 76
+#endif
 #else
 #define RC_NUM_ICONS 74
 #endif
@@ -152,7 +167,6 @@ int RCGetSizeOfIcon(int n)
 #ifdef SSE_ACSI_ICON 
     case RC_ICO_HARDDRIVES_ACSI:
 #endif
-   // case 75: // = RC_ICO_OPS_SSE... MFD
     case RC_ICO_DRIVEA:case RC_ICO_DRIVEB:case RC_ICO_DRIVEB_DISABLED:
       return 64;
     case RC_ICO_SNAPSHOTFILEICO:

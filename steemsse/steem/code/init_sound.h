@@ -1,9 +1,3 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INITSOUND_H)
-
-#include "init_sound.decla.h"
-
-#else//!defined(SSE_STRUCTURE_INITSOUND_H)
-
 #ifdef IN_MAIN
 #define EXT
 #define INIT(s) =s
@@ -34,12 +28,7 @@ EXT void internal_speaker_sound_by_period(int);
 EXT EasyStr sound_device_name; // INIT("/dev/dsp");
 EXT int console_device INIT(-1);
 
-
-#if defined(SS_RTAUDIO_LARGER_BUFFER)
-EXT int rt_buffer_size INIT(256*2),rt_buffer_num INIT(4);
-#else
 EXT int rt_buffer_size INIT(256),rt_buffer_num INIT(4);
-#endif
 
 #endif
 
@@ -94,4 +83,3 @@ int rt_unsigned_8bit=0;
 #undef EXT
 #undef INIT
 
-#endif//defined(SSE_STRUCTURE_INITSOUND_H)

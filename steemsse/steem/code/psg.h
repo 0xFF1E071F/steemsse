@@ -1,10 +1,3 @@
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_PSG_H)
-
-#include "psg.decla.h"
-
-#else//!SSE_STRUCTURE_PSG_H
-
-
 #ifdef IN_EMU
 #define EXT
 #define INIT(s) =s
@@ -58,9 +51,6 @@ __ENV__   Step period = 2EP/(15625*32) Hz.  Scale by 2^17 to scale 13124.5 to 1.
           million.  Step period is (EP*sound_freq*2^13)/15625.
 
 */
-
-
-
 
 #define SOUND_DESIRED_LQ_FREQ (50066/2)
 
@@ -183,7 +173,6 @@ MEM_ADDRESS dma_sound_fetch_address;
 
 // Max frequency/lowest refresh *2 for stereo
 #define DMA_SOUND_BUFFER_LENGTH 2600 * SCREENS_PER_SOUND_VBL * 2
-
 WORD dma_sound_channel_buf[DMA_SOUND_BUFFER_LENGTH+16];
 DWORD dma_sound_channel_buf_last_write_t;
 int dma_sound_on_this_screen=0;
@@ -201,23 +190,6 @@ int dma_sound_mixer=1,dma_sound_volume=40;
 int dma_sound_l_volume=20,dma_sound_r_volume=20;
 int dma_sound_l_top_val=128,dma_sound_r_top_val=128;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_MICROWIRE)
-#include "../../3rdparty/dsp/dsp.h"
-int dma_sound_bass=6; // 6 is neutral value
-int dma_sound_treble=6;
-TIirVolume MicrowireVolume[2];
-TIirLowShelf MicrowireBass[2];
-TIirHighShelf MicrowireTreble[2];
-#if defined(SSE_SOUND_VOL)
-TIirVolume PsgGain;
-#endif
-#if defined(SSE_SOUND_LOW_PASS_FILTER)
-TIirLowPass PSGLowFilter[2];
-#endif
-#endif//microwire
-
-
-
 //---------------------------------- PSG ------------------------------------
 
 void psg_write_buffer(int,DWORD);
@@ -232,17 +204,14 @@ void psg_write_buffer(int,DWORD);
 #ifndef ONEGAME
 #define PSG_WRITE_EXTRA 300
 #else
-#if defined(STEVEN_SEAGAL) && defined(SSE_SOUND_NO_EXTRA_PER_VBL)
-#define PSG_WRITE_EXTRA 0
-#else
 #define PSG_WRITE_EXTRA OGExtraSamplesPerVBL
-#endif
 #endif
 
 //#define PSG_WRITE_EXTRA 10
 
 //#define PSG_CHANNEL_BUF_LENGTH (2048*SCREENS_PER_SOUND_VBL)
 #define PSG_CHANNEL_BUF_LENGTH (8192*SCREENS_PER_SOUND_VBL)
+
 #define VOLTAGE_ZERO_LEVEL 0
 #define VOLTAGE_FIXED_POINT 256
 //must now be fixed at 256!
@@ -270,25 +239,6 @@ char psg_noise[PSG_NOISE_ARRAY];
 #define PSGR_ENVELOPE_PERIOD_LOW 11
 #define PSGR_ENVELOPE_PERIOD_HIGH 12
 #define PSGR_ENVELOPE_SHAPE 13
-
-/*
-       |     |13 Envelope Shape                         BIT 3 2 1 0|
-       |     |  Continue -----------------------------------' | | ||
-       |     |  Attack ---------------------------------------' | ||
-       |     |  Alternate --------------------------------------' ||
-       |     |  Hold ---------------------------------------------'|
-       |     |   00xx - \____________________________________      |
-       |     |   01xx - /|___________________________________      |
-       |     |   1000 - \|\|\|\|\|\|\|\|\|\|\|\|\|\|\|\|\|\|\      |
-       |     |   1001 - \____________________________________      |
-       |     |   1010 - \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\      |
-       |     |   1011 - \|-----------------------------------      |
-       |     |   1100 - /|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/      |
-       |     |   1101 - /------------------------------------      |
-       |     |   1110 - /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/      |
-       |     |   1111 - /|___________________________________      |
-
-*/
 
 #define PSG_ENV_SHAPE_HOLD BIT_0
 #define PSG_ENV_SHAPE_ALT BIT_1
@@ -343,30 +293,7 @@ E 0.71  0.648  0.67
 F 1     1      1
 */
 
-/*SS: 8x64=512; 16x16=256, x16=4096; 8*512=4096
-psg_envelope_level[envshape][psg_envstage & 63];
-there are 8 shapes, what are the 64 values?
 
-they should be how the wave changes with time, with a
-precision of 64 steps
-in sc68 it would be 256?
-
-
-
-#define VOLTAGE_ZERO_LEVEL 0
-#define VOLTAGE_FIXED_POINT 256
-#define PSG_CHANNEL_AMPLITUDE 60
-
-#define VFP VOLTAGE_FIXED_POINT
-#define VZL VOLTAGE_ZERO_LEVEL
-#define VA VFP*PSG_CHANNEL_AMPLITUDE
-
-
-1000*VA/1000+VZL*VFP -> 1000* (256*60)/1000 + 0*256
-YM master frequency in Atari ST:2Mhz
-static u16 ymout[16*16*16] =
-#include "io68/ym_fixed_vol.h"
-*/
 const int psg_envelope_level[8][64]={
     {1000*VA/1000+VZL*VFP,841*VA/1000+VZL*VFP,707*VA/1000+VZL*VFP,590*VA/1000+VZL*VFP,510*VA/1000+VZL*VFP,420*VA/1000+VZL*VFP,354*VA/1000+VZL*VFP,290*VA/1000+VZL*VFP,250*VA/1000+VZL*VFP,210*VA/1000+VZL*VFP,178*VA/1000+VZL*VFP,149*VA/1000+VZL*VFP,125*VA/1000+VZL*VFP,110*VA/1000+VZL*VFP,100*VA/1000+VZL*VFP,88*VA/1000+VZL*VFP,80*VA/1000+VZL*VFP,70*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,55*VA/1000+VZL*VFP,50*VA/1000+VZL*VFP,30*VA/1000+VZL*VFP,20*VA/1000+VZL*VFP,10*VA/1000+VZL*VFP,5*VA/1000+VZL*VFP,3*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,1*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,
     1000*VA/1000+VZL*VFP,841*VA/1000+VZL*VFP,707*VA/1000+VZL*VFP,590*VA/1000+VZL*VFP,510*VA/1000+VZL*VFP,420*VA/1000+VZL*VFP,354*VA/1000+VZL*VFP,290*VA/1000+VZL*VFP,250*VA/1000+VZL*VFP,210*VA/1000+VZL*VFP,178*VA/1000+VZL*VFP,149*VA/1000+VZL*VFP,125*VA/1000+VZL*VFP,110*VA/1000+VZL*VFP,100*VA/1000+VZL*VFP,88*VA/1000+VZL*VFP,80*VA/1000+VZL*VFP,70*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,55*VA/1000+VZL*VFP,50*VA/1000+VZL*VFP,30*VA/1000+VZL*VFP,20*VA/1000+VZL*VFP,10*VA/1000+VZL*VFP,5*VA/1000+VZL*VFP,3*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,1*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP},
@@ -400,5 +327,3 @@ DWORD psg_envelope_start_time=0xfffff000;
 #undef EXT
 #undef INIT
 
-
-#endif//!SSE_STRUCTURE_PSG_H

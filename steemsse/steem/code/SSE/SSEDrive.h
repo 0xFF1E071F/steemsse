@@ -2,7 +2,7 @@
 #ifndef SSEDRIVE_H
 #define SSEDRIVE_H
 
-#if defined(SSE_DRIVE)
+#if defined(SSE_DRIVE_OBJECT)
 
 #include "SSEParameters.h"
 
@@ -54,7 +54,7 @@ struct TSF314 {
 
 #if defined(SSE_DISK_IMAGETYPE)
   TImageType ImageType; //WORD size, 3.6.2
-#elif defined(SSE_PASTI_ONLY_STX)
+#elif defined(SSE_DISK_PASTI_ONLY_STX)
   WORD ImageType; //3.6.1, for future extension, snapshot problem?
 #endif
 
@@ -140,5 +140,5 @@ struct TSF314 {
 
 };
 
-#endif//SSE_DRIVE
+#endif//SSE_DRIVE_OBJECT
 #endif//#ifndef SSEDRIVE_H

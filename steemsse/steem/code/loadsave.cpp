@@ -6,11 +6,11 @@ to and from files. This includes loading TOS images and handling steem.ini
 and steem.new.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: loadsave.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_LOADSAVE_H)
+#if defined(SSE_STRUCTURE_DECLA)
 
 void AddSnapShotToHistory(char *);
 bool LoadSnapShot(char *,bool,bool,bool);
@@ -188,7 +188,7 @@ int LoadSnapShotChangeTOS(Str NewROM,int NewROMVer)
     Before prompting user, have a go at matching a TOS with the same
     version number.
 */
-    if(SSE_HACKS_ON)
+    if(OPTION_HACKS)
     {
       DirSearch ds;
       if (ds.Find(RunDir+SLASH+"*.*")){
@@ -329,12 +329,12 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
     FILE *f=fopen(FilNam,"rb");
     
     if (f){
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_CHECK_SNAPSHOT)
+#if defined(SSE_VAR_CHECK_SNAPSHOT)
       try {
 #endif
       Failed=LoadSaveAllStuff(f,LS_LOAD,-1,ChangeDisks,&Version);
       TRACE_INIT("Load snapshot \"%s\" v%d ERR:%d\n",FilNam,Version,Failed);
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_CHECK_SNAPSHOT)
+#if defined(SSE_VAR_CHECK_SNAPSHOT)
       }
       catch(...) { //Works in VC6 - BCC? Unix certainly not.
         TRACE_INIT("Exception in LoadSaveAllStuff\n");
@@ -344,7 +344,7 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
       if (Failed==0){
         Failed=int((EasyUncompressToMem(Mem+MEM_EXTRA_BYTES,mem_len,f)!=0) ? 2:0);
         //TRACE("Memory snapshot %s loaded\n",FilNam);
-#if defined(SSE_GLUE_FRAME_TIMINGS4)
+#if defined(SSE_GLUE_FRAME_TIMINGS_INIT)
         // This is a hack to make the first screen work
         if (pc==(MEM_ADDRESS)(LPEEK(0x0070) & 0xffffff))
           Glue.Status.hbi_done=Glue.Status.vbi_done=true;
@@ -392,14 +392,14 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
     reset_st(RESET_COLD | RESET_STOP | RESET_CHANGESETTINGS | RESET_NOBACKUP);
   }
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_OSD_SCROLLER_DISK_IMAGE)
+#if defined(SSE_OSD_SCROLLER_DISK_IMAGE)
     if(OSD_IMAGE_NAME && !SSE_STATUS_BAR_GAME_NAME && !FloppyDrive[0].Empty())
       OsdControl.StartScroller(FloppyDrive[0].DiskName); // display image disk name
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_STATUS_STRING_DISK_NAME)
+#if defined(SSE_GUI_STATUS_STRING_DISK_NAME)
     GUIRefreshStatusBar();
 #endif
-#if defined(STEVEN_SEAGAL) && defined(SSE_GUI_OPTIONS_REFRESH)
+#if defined(SSE_GUI_OPTIONS_REFRESH)
     OptionBox.SSEUpdateIfVisible();
 #endif
 
@@ -432,7 +432,7 @@ void SaveSnapShot(char *,int=-1,bool=true) {}
 #ifdef ENABLE_LOGFILE
 void load_logsections()
 {
-#if !(defined(STEVEN_SEAGAL) && defined(SSE_BOILER_LOGSECTIONS1))
+#if !(defined(SSE_BOILER_LOGSECTIONS1))
 /*  CPU TRACE is extremely heavy - default = all disabled
 */
   for (int n=0;n<100;n++) logsection_enabled[n]=true;
@@ -440,7 +440,7 @@ void load_logsections()
 
   FILE *f=fopen(WriteDir+SLASH "logsection.dat","rb");
   if (f!=NULL){
-#if defined(STEVEN_SEAGAL) && defined(SSE_BOILER_LOGSECTIONS1)
+#if defined(SSE_BOILER_LOGSECTIONS1)
     for (int n=0;n<100;n++) logsection_enabled[n]=true;
 #endif
     char tb[50];
@@ -468,7 +468,7 @@ MEM_ADDRESS get_TOS_address(char *File)
   fread(&HiLo,1,1,f);
   fread(&LoLo,1,1,f);
   if (HiLo==0x60 
-#if defined(STEVEN_SEAGAL) && defined(SSE_TOS_BOOTER1)    
+#if defined(SSE_TOS_BOOTER1)    
     && LoLo==0x06 // the loader we know of starts with $6006, not $6008
 #else
     && LoLo==0x08
@@ -532,7 +532,7 @@ bool load_TOS(char *File)
 
 #if defined(SSE_TOS_STE_FAST_BOOT) //from hatari
 //  TRACE("tos v %x loaded\n",tos_version);
-  if(SSE_HACKS_ON && (tos_version==0x106||tos_version==0x162)
+  if(OPTION_HACKS && (tos_version==0x106||tos_version==0x162)
 #if USE_PASTI
     && !pasti_active
 #endif
@@ -564,7 +564,7 @@ bool load_TOS(char *)
 }
 #endif
 //---------------------------------------------------------------------------
-#if defined(STEVEN_SEAGAL) && defined(SSE_CARTRIDGE)
+#if defined(SSE_CARTRIDGE_352)
 /*  Loading a ROM cartridge.
     Steem format STC has 4 null bytes at the start, then the 128 KB
     of the cartridge.
@@ -635,10 +635,10 @@ bool load_cart(char *filename) {
           SET_PC(PC32);        
         }
 #if defined(SSE_CARTRIDGE_DIAGNOSTIC)
-        /*  If these four bytes are found, the computer will transfer control
-        to memory location $FA0004, where you should start placing your 
-        MC68000 machine language instructions.
-        */
+/*  If these four bytes are found, the computer will transfer control
+    to memory location $FA0004, where you should start placing your 
+    MC68000 machine language instructions.
+*/
         if(FirstBytes==0x5F2352FA)
         {
           SET_PC(0xFA0004)

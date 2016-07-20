@@ -5,11 +5,11 @@ DESCRIPTION: Functions to load and save emulation variables. This is mainly
 for Steem's memory snapshots system.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: loadsave_emu.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL)
+#if defined(SSE_STRUCTURE_DECLA)
 extern EasyStr RunDir,WriteDir,INIFile,ScreenShotFol;
 extern EasyStr LastSnapShot,BootStateFile,StateHist[10],AutoSnapShotName;
 #undef LOGSECTION
@@ -144,7 +144,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(shifter_x);            //4
   ReadWrite(shifter_y);            //4
   ReadWrite(shifter_scanline_width_in_bytes); //4 //SS: unused
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE)
   {
     int tmp=shifter_fetch_extra_words;
     ReadWrite(tmp);       //4
@@ -208,7 +208,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(dma_mode);          //2
   ReadWrite(dma_status);        //1
   ReadWrite(dma_address);       //4
-#if defined(STEVEN_SEAGAL) && defined(SSE_DMA)//defined(SSE_VAR_RESIZE)
+#if defined(SSE_DMA_OBJECT)
   {
     int dma_sector_count_tmp=dma_sector_count;
     ReadWrite(dma_sector_count_tmp);
@@ -222,14 +222,14 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(fdc_sr);            //1
   ReadWrite(fdc_str);           //1
   ReadWrite(fdc_dr);                     //1
-#if (defined(STEVEN_SEAGAL) && defined(SSE_DISK_STW))
+#if (defined(SSE_DISK_STW))
   BYTE dummy_byte;
   ReadWrite(dummy_byte);
 #else
   ReadWrite(fdc_last_step_inwards_flag); //1
 #endif
   ReadWriteArray(floppy_head_track);
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE)
   {
     int floppy_mediach_tmp[2];
     floppy_mediach_tmp[0]=floppy_mediach[0];
@@ -298,7 +298,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 
   if (Version>=8) ReadWriteStruct(ACIA_IKBD);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_ACIA_REGISTERS)
+#if defined(SSE_ACIA_REGISTERS)
   if(Version<44 && LoadOrSave==LS_LOAD) //v3.5.1
   {
     ACIA_IKBD.CR=0x96; // usually
@@ -414,10 +414,39 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
   bool old_em=bool(extended_monitor);
   if (Version>=24){
+
+#if defined(SSE_VAR_RESIZE_383)
+/*
+#if defined(SSE_VAR_RESIZE_383)
+EXT WORD em_width INIT(480);
+EXT WORD em_height INIT(480);
+EXT BYTE em_planes INIT(4);
+EXT BYTE extended_monitor INIT(0);
+#else
+EXT int em_width INIT(480);
+EXT int em_height INIT(480);
+EXT int em_planes INIT(4);
+EXT int extended_monitor INIT(0);
+#endif
+*/
+    // what we win in pure size, we lose in code, but this function could be paged
+    int em_ints[4];
+    em_ints[0]=em_width;
+    em_ints[1]=em_height;
+    em_ints[2]=em_planes;
+    em_ints[3]=extended_monitor;
+    for(int i=0;i<4;i++)
+      ReadWrite(em_ints[i]);
+    em_width=em_ints[0];
+    em_height=em_ints[1];
+    em_planes=em_ints[2];
+    extended_monitor=em_ints[3];
+#else
     ReadWrite(em_width);
     ReadWrite(em_height);
     ReadWrite(em_planes);
     ReadWrite(extended_monitor);
+#endif
     ReadWrite(aes_calls_since_reset);
     ReadWriteArray(save_r);
     ReadWrite(line_a_base);
@@ -494,7 +523,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   bool spin_up=bool(fdc_spinning_up);
   if (Version>=32) ReadWrite(spin_up);
   if (Version>=33){
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE)
     {
       int fdc_spinning_up_tmp=fdc_spinning_up;
       ReadWrite(fdc_spinning_up_tmp);
@@ -512,11 +541,11 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   if (Version>=35){
     ReadWrite(psg_reg_data);
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_DMA_FIFO_READ_ADDRESS2)
+#if defined(SSE_DMA_FIFO_READ_ADDRESS2)
     BYTE fdc_read_address_buffer_len=0;
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE)
     {
       int floppy_type1_command_active_tmp=floppy_type1_command_active;
       ReadWrite(floppy_type1_command_active_tmp);
@@ -531,7 +560,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_DMA_FIFO_READ_ADDRESS2)
+#if defined(SSE_DMA_FIFO_READ_ADDRESS2)
     {
       BYTE fdc_read_address_buffer_fake[20];
       ReadWriteArray(fdc_read_address_buffer_fake);
@@ -541,7 +570,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
 
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE)
     {
       int dma_bytes_written_for_sector_count_tmp=dma_bytes_written_for_sector_count;
       ReadWrite(dma_bytes_written_for_sector_count_tmp);
@@ -596,7 +625,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   }
 
   if (Version>=37){
-#if defined(STEVEN_SEAGAL) && defined(DISABLE_STEMDOS)
+#if defined(DISABLE_STEMDOS)
     int stemdos_intercept_datetime=0;
 #endif
     ReadWrite(stemdos_intercept_datetime);
@@ -609,8 +638,11 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     DWORD l=256;
     if (emudetect_called==0) l=0;
     ReadWrite(l);
+#if defined(SSE_LOAD_SAVE_001)
+    for (DWORD n=0;n<(BYTE)l;n++){
+#else
     for (DWORD n=0;n<l;n++){
-
+#endif
       ReadWrite(emudetect_falcon_stpal[n]);
     }
   }
@@ -623,7 +655,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   BYTE *pasti_block=NULL;
   DWORD pasti_block_len=0;
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_VAR_REWRITE)
+#if defined(SSE_VAR_REWRITE)
   bool pasti_old_active;
 #else
   int pasti_old_active;
@@ -674,7 +706,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
       //read in length, read in block, pass it to pasti.
       ReadWrite(pasti_block_len);
       if (pasti_block_len){ //something to load in
-#if defined(STEVEN_SEAGAL) // avoid bad crash
+#ifdef COMPILER_VC6// avoid bad crash
         if(pasti_block_len>0 && pasti_block_len<1024*1024)
         {
           pasti_block=new BYTE[pasti_block_len];
@@ -706,7 +738,6 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
   }
 
-#if defined(STEVEN_SEAGAL)
 #if SSE_VERSION>=330
   if(Version>=41) // Steem 3.3
   {
@@ -762,7 +793,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   else // default to safe values
   {
 #if defined(SSE_IKBD_6301)
-    HD6301EMU_ON=0;
+    OPTION_C1=0;
 #endif
 #if defined(SSE_STF)
     ST_TYPE=0;
@@ -778,40 +809,22 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
 
 #if defined(SSE_IKBD_6301) // too bad it was forgotten before
-    WORD HD6301EMU_ON_tmp=HD6301EMU_ON;
+    WORD HD6301EMU_ON_tmp=OPTION_C1;
     ReadWrite(HD6301EMU_ON_tmp); // but is it better?
-    HD6301EMU_ON=HD6301EMU_ON_tmp!=0;
+    OPTION_C1=HD6301EMU_ON_tmp!=0;
     if(!HD6301_OK)
-      HD6301EMU_ON=0;
+      OPTION_C1=0;
 #endif
-
 #if defined(SSE_ACIA_REGISTERS)
     ReadWriteStruct(ACIA_MIDI);
 #endif
-
-#if defined(SSE_DMA)
+#if defined(SSE_DMA_OBJECT)
     ReadWriteStruct(Dma);
-#endif
-  }
-  else
-  {
-#if defined(SSE_SHIFTER)
-//    Shifter.m_ShiftMode=screen_res;
-#endif
-#if defined(SSE_ACIA_REGISTERS)
-#endif
-#if defined(SSE_DMA)
-#endif
-#if defined(SSE_MMU_WAKE_UP)
-//    WAKE_UP_STATE=0; //wasn't loaded?
 #endif
   }
 #if defined(SSE_SHIFTER)//don't trust content of snapshot
   GLU.m_ShiftMode=Shifter.m_ShiftMode=(BYTE)screen_res;
   GLU.m_SyncMode= (BYTE)((shifter_freq==50)?2:0);
-#endif
-#if defined(SSE_MMU_WAKE_UP)//same
-//  WAKE_UP_STATE=0;
 #endif
 #endif
 
@@ -820,6 +833,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   {
     int magic=123456;
     ReadWrite(magic);
+#if !defined(SSE_VAR_CHECK_SNAPSHOT2)
     //ASSERT(magic==123456);
     if(magic!=123456)
     {
@@ -830,16 +844,13 @@ Steem SSE will reset auto.sts and quit\nSorry!",
       DeleteFile(WriteDir+SLASH+AutoSnapShotName+".sts");
       PostQuitMessage(-1);
     }
+#endif
   }
 #endif
 #if SSE_VERSION>=352
   if(Version>=45) //3.5.2
   {
-#if defined(SSE_DRIVE)
-    if(Version>=48) // 3.6.0
-    {
-
-    }
+#if defined(SSE_DRIVE_OBJECT)
 
 #if defined(SSE_DRIVE_SOUND)
     TSF314 SF314Copy=SF314[0];
@@ -858,19 +869,14 @@ Steem SSE will reset auto.sts and quit\nSorry!",
       // same problem as for Pasti, we should find a shorter way to do that
       TImageType image_type=SF314[drive].ImageType;
       ReadWriteStruct(SF314[drive]);
-      //ASSERT( SF314[drive].Id==drive );
       if(SF314[drive].Id!=drive) // and not ==... 
       {
         SF314[drive].Init();
         SF314[drive].Id=drive;
       }
       SF314[drive].ImageType=image_type;
-      //SF314[drive].State.motor=0;//temp!
-      //ASSERT(SF314[drive].rpm==300);
-      //SF314[drive].rpm=300;//temp!
     }
 #endif
-
 
 #if defined(SSE_DRIVE_SOUND) // avoid crash, restore volume
 #if defined(SSE_DRIVE_SOUND_VOLUME)
@@ -893,10 +899,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
   if(Version>=46) // 3.5.4
   {
 #if defined(SSE_MMU_WAKE_UP)
-    ReadWrite(WAKE_UP_STATE); // and not struct MMU
-//    TRACE_LOG("WU option L/S %d\n",WAKE_UP_STATE);
-    if(WAKE_UP_STATE>WU_SHIFTER_PANIC)
-      WAKE_UP_STATE=0;
+    ReadWrite(OPTION_WS); // and not struct MMU
 #if defined(SSE_GUI_STATUS_STRING)
     GUIRefreshStatusBar();//overkill
 #endif
@@ -909,7 +912,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if SSE_VERSION>=361
   if(Version>=48) // 3.6.1
   {
-#if defined(SSE_IPF_RESUME_____)//3.6.1
+#if defined(SSE_DISK_CAPS_RESUME_____)//3.6.1
 /*  This just restore registers, not internal state.
     Funny to see how the "drive" then finds back its track,
     in some cases it will work, in other fail.
@@ -938,7 +941,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
   if(Version>=49) // 3.7.0
   {
 
-#if defined(SSE_IPF_RESUME)
+#if defined(SSE_DISK_CAPS_RESUME)
 /*  This just restore registers, not internal state.
     Funny to see how the "drive" then finds back its track,
     in some cases it will work, in other fail.
@@ -946,8 +949,6 @@ Steem SSE will reset auto.sts and quit\nSorry!",
     v3.6.3: check that Caps is loaded...
     v3.7.0: check that Caps was active...
 */
-    //TRACE("CAPSIMG_OK%d\n",CAPSIMG_OK);
-    /////ReadWrite(Caps.Active);//3.7.0//wrong
     if(LoadOrSave==LS_LOAD //3.6.2
       && CAPSIMG_OK //3.6.3
 //////      && Caps.Active //3.7.0
@@ -995,7 +996,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
       WD1772.update_time=ACT+256; // yeah, but it will work with some prgs
     }
 #endif
-#ifdef SSE_DRIVE
+#ifdef SSE_DRIVE_OBJECT
     SF314[0].time_of_next_ip=SF314[1].time_of_next_ip=ACT+n_cpu_cycles_per_second;
 #endif
   }
@@ -1010,7 +1011,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if SSE_VERSION>=380
   if(Version>=52) 
   {
-#if defined(SSE_GLUE_FRAME_TIMINGS4)
+#if defined(SSE_GLUE_FRAME_TIMINGS_INIT)
     Glue.scanline=0; // Steem is always stopped at the start of a frame
 #endif
 #if defined(SSE_IKBD_6301_380) 
@@ -1043,7 +1044,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 
   }
 
-#endif//#if defined(STEVEN_SEAGAL)
+
 
 
   //
@@ -1185,6 +1186,4 @@ void LoadSnapShotUpdateVars(int Version)
 }
 //---------------------------------------------------------------------------
 
-#ifdef STEVEN_SEAGAL
-#undef LOGSECTION 
-#endif
+#undef LOGSECTION //SS

@@ -6,11 +6,11 @@ of Steem's DirID system. A DirID is an integer representing a PC input that
 can be mapped to perform a function.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: dir_id.cpp")
 #endif
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_DIRID_H)
+#if defined(SSE_STRUCTURE_DECLA)
 char *KeyboardButtonName[256]={NULL};
 #endif
 
@@ -38,7 +38,11 @@ bool IsDirIDPressed(int ID,int DeadZonePercent,bool CheckDisable,bool DiagonalPO
       }
     }
 #endif
+#if defined(SSE_VS2008_WARNING_383)
+    return (GetAsyncKeyState(Key) & MSB_W)!=0;
+#else
     return bool(GetAsyncKeyState(Key) & MSB_W);
+#endif
   }else if (HIBYTE(ID)>=10){ // Joystick
     int DirID=LOBYTE(ID);
     if (HIBYTE(ID) & 1) DirID=-DirID;

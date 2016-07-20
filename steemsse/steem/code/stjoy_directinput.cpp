@@ -4,7 +4,7 @@ MODULE: Steem
 DESCRIPTION: Code to read PC joysticks using DirectInput.
 ---------------------------------------------------------------------------*/
 
-#if defined(STEVEN_SEAGAL) && defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: stjoy_directinput.cpp")
 #endif
 

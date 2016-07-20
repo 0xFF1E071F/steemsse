@@ -4,7 +4,7 @@
 typedef void *PVOID;
 typedef char *PCHAR;
 
-#if defined(STEVEN_SEAGAL)
+#if defined(STEVEN_SEAGAL) // depends on compiler?
 #include <SSE/SSEDecla.h>
 #endif
 
@@ -96,7 +96,7 @@ enum {
 
 #define DllImport __declspec(dllimport)
 
-#if !(defined(STEVEN_SEAGAL) && defined(DllExport))
+#if !(defined(DllExport))
 #define DllExport __declspec(dllexport)
 #endif
 

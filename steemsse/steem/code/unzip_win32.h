@@ -1,5 +1,5 @@
-#ifndef SSE_STRUCTURE_ARCHIVE_H
 #ifdef WIN32
+
 typedef struct{
   char InternalUse[12];    // Used internally by the dll
   int Time;                // File time
@@ -35,27 +35,24 @@ int (_stdcall *UnzipFile)(char*,char*,WORD,long,void*,long);        //unzipping
 #define UNZIP_DLLNotFound  -2              // DLL not loaded!
 
 HINSTANCE hUnzip=NULL;
-
 //---------------------------------------------------------------------------
 void LoadUnzipDLL()
 {
-  hUnzip=LoadLibrary("unzipd32.dll");
-  enable_zip=(hUnzip!=NULL);
-  if (hUnzip){
-    GetFirstInZip=(int(_stdcall*)(char*,PackStruct*))GetProcAddress(hUnzip,"GetFirstInZip");
-    GetNextInZip=(int(_stdcall*)(PackStruct*))GetProcAddress(hUnzip,"GetNextInZip");
-    CloseZipFile=(void(_stdcall*)(PackStruct*))GetProcAddress(hUnzip,"CloseZipFile");
-    isZip=(BYTE(_stdcall*)(char*))GetProcAddress(hUnzip,"isZip");
-    UnzipFile=(int(_stdcall*)(char*,char*,WORD,long,void*,long))GetProcAddress(hUnzip,"unzipfile");
+	hUnzip=LoadLibrary("unzipd32.dll");
+	enable_zip=(hUnzip!=NULL);
+	if (hUnzip){
+		GetFirstInZip=(int(_stdcall*)(char*,PackStruct*))GetProcAddress(hUnzip,"GetFirstInZip");
+		GetNextInZip=(int(_stdcall*)(PackStruct*))GetProcAddress(hUnzip,"GetNextInZip");
+		CloseZipFile=(void(_stdcall*)(PackStruct*))GetProcAddress(hUnzip,"CloseZipFile");
+		isZip=(BYTE(_stdcall*)(char*))GetProcAddress(hUnzip,"isZip");
+		UnzipFile=(int(_stdcall*)(char*,char*,WORD,long,void*,long))GetProcAddress(hUnzip,"unzipfile");
 
-    if (!(GetFirstInZip && GetNextInZip && CloseZipFile && isZip && UnzipFile)){
-      FreeLibrary(hUnzip);
+		if (!(GetFirstInZip && GetNextInZip && CloseZipFile && isZip && UnzipFile)){
+			FreeLibrary(hUnzip);
       hUnzip=NULL;
       enable_zip=false;
-    }
-  }//hunzip
+	  }
+	}
 }
 //---------------------------------------------------------------------------
-
 #endif
-#endif//#ifndef SSE_STRUCTURE_ARCHIVE_H

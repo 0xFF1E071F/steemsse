@@ -21,7 +21,7 @@
 void LoadAllDialogData(bool,Str,bool* = NULL,GoodConfigStoreFile* = NULL);
 void SaveAllDialogData(bool,Str,ConfigStoreFile* = NULL);
 
-#define PSEC_SNAP 0//SS todo enum
+#define PSEC_SNAP 0
 #define PSEC_PASTE 1
 #define PSEC_CUT 2
 #define PSEC_PATCH 3

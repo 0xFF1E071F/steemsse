@@ -798,7 +798,6 @@ idiv_inh ()
   }//SS
 }
 
-
 /*
  *  FDIV - Fractional divide 16 by 16 (partially implemented)
  *
