@@ -4,7 +4,6 @@ MODULE: Steem
 DESCRIPTION: Functions to create the pages of the options dialog box.
 ---------------------------------------------------------------------------*/
 
-
 #if defined(SSE_STRUCTURE_INFO)
 #pragma message("Included for compilation: options_create.cpp")
 #endif
@@ -888,35 +887,81 @@ void TOptionBox::CreateBrightnessPage()
   POINT pt={0,0};
   ClientToScreen(Handle,&pt);
   int y=(rc.bottom-pt.y)+5;
-
+#if defined(SSE_VID_GAMMA)
+/*  We make sliders smaller so that we can fit 3 more on the same page.
+*/
+  char tmp[30];
+  CreateWindow("Static",T("There should be 16 vertical strips (one black)"),WS_CHILD | SS_CENTER,
+                          page_l,y,page_w,40-20,Handle,(HMENU)2011,HInstance,NULL);
+  y+=40-20;
+#else
   CreateWindow("Static",T("There should be 16 vertical strips (one black)"),WS_CHILD | SS_CENTER,
                           page_l,y,page_w,40,Handle,(HMENU)2011,HInstance,NULL);
   y+=40;
+#endif
 
+#if defined(SSE_VID_GAMMA)
+  sprintf(tmp,"Brightness:%d",brightness);
+  CreateWindow("Static",tmp,WS_CHILD | SS_CENTER,
+                          page_l,y,page_w,25-10,Handle,(HMENU)2000,HInstance,NULL);
+  y+=25-10;
+  Win=CreateWindow(TRACKBAR_CLASS,"",WS_CHILD | WS_TABSTOP | TBS_HORZ,
+                    page_l,y,page_w,28-10,Handle,(HMENU)2001,HInstance,NULL);
+#else
   CreateWindow("Static",T("Brightness")+": "+brightness,WS_CHILD | SS_CENTER,
                           page_l,y,page_w,25,Handle,(HMENU)2000,HInstance,NULL);
   y+=25;
-
   Win=CreateWindow(TRACKBAR_CLASS,"",WS_CHILD | WS_TABSTOP | TBS_HORZ,
                     page_l,y,page_w,28,Handle,(HMENU)2001,HInstance,NULL);
+#endif
   SendMessage(Win,TBM_SETRANGE,0,MAKELPARAM(0,256));
   SendMessage(Win,TBM_SETPOS,1,brightness+128);
   SendMessage(Win,TBM_SETLINESIZE,0,1);
   SendMessage(Win,TBM_SETPAGESIZE,0,10);
   SendMessage(Win,TBM_SETTIC,0,128);
+
+#if defined(SSE_VID_GAMMA)
+  y+=40-20;
+  sprintf(tmp,"Contrast:%d",contrast);
+  CreateWindow("Static",tmp,WS_CHILD | SS_CENTER,
+                          page_l,y,page_w,25-10,Handle,(HMENU)2002,HInstance,NULL);
+  y+=25-10;
+  Win=CreateWindow(TRACKBAR_CLASS,"",WS_CHILD | WS_TABSTOP | TBS_HORZ,
+                    page_l,y,page_w,28-10,Handle,(HMENU)2003,HInstance,NULL);
+#else
   y+=40;
 
   CreateWindow("Static",T("Contrast")+": "+contrast,WS_CHILD | SS_CENTER,
                           page_l,y,page_w,25,Handle,(HMENU)2002,HInstance,NULL);
   y+=25;
-
   Win=CreateWindow(TRACKBAR_CLASS,"",WS_CHILD | WS_TABSTOP | TBS_HORZ,
                     page_l,y,page_w,28,Handle,(HMENU)2003,HInstance,NULL);
+#endif
   SendMessage(Win,TBM_SETRANGE,0,MAKELPARAM(0,256));
   SendMessage(Win,TBM_SETPOS,1,contrast+128);
   SendMessage(Win,TBM_SETLINESIZE,0,1);
   SendMessage(Win,TBM_SETPAGESIZE,0,10);
   SendMessage(Win,TBM_SETTIC,0,128);
+
+#if defined(SSE_VID_GAMMA)
+  for(int i=0;i<3;i++)
+  {
+    y+=40-20;
+    sprintf(tmp,"Gamma %s:%d",rgb_txt[i],gamma[i]); // red, green, blue
+    CreateWindow("Static",tmp,WS_CHILD | SS_CENTER,
+                          page_l,y,page_w,25-10,Handle,(HMENU)(2004+i*2),HInstance,NULL);
+
+    y+=25-10;
+    Win=CreateWindow(TRACKBAR_CLASS,"",WS_CHILD | WS_TABSTOP | TBS_HORZ,
+                    page_l,y,page_w,28-10,Handle,(HMENU)(2005+i*2),HInstance,NULL);
+
+    SendMessage(Win,TBM_SETRANGE,0,MAKELPARAM(1,256));
+    SendMessage(Win,TBM_SETPOS,1,gamma[i]+128);
+    SendMessage(Win,TBM_SETLINESIZE,0,1);
+    SendMessage(Win,TBM_SETPAGESIZE,0,10);
+    SendMessage(Win,TBM_SETTIC,0,128);
+  }
+#endif
 
   if (Focus==NULL) Focus=GetDlgItem(Handle,2001);
   SetPageControlsFont();

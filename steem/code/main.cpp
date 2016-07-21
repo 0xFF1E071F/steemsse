@@ -943,7 +943,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #ifdef SSE_VID_D3D_ONLY
     if (Alert(T("DirectX can cause problems on some set-ups, would you like Steem to stop using Direct3D for this session? (Note: Not using Direct3D slows down Steem).")+" "+
               T("To permanently stop using Direct3D turn on Options->Startup->Never Use Direct3D."),
-                T("No DirectDraw?"),MB_ICONQUESTION | MB_YESNO)==IDYES){
+                T("No Direct3D?"),MB_ICONQUESTION | MB_YESNO)==IDYES){
 #else
     if (Alert(T("DirectX can cause problems on some set-ups, would you like Steem to stop using DirectDraw for this session? (Note: Not using DirectDraw slows down Steem).")+" "+
               T("To permanently stop using DirectDraw turn on Options->Startup->Never Use DirectDraw."),
