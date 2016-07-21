@@ -70,7 +70,7 @@ void TOptionBox::CreateMachinePage()
   wake_up_dd.additem("Wake-up state 1",1);
   wake_up_dd.additem("Wake-up state 2",2);
 #endif
-  wake_up_dd.select_item_by_data(WAKE_UP_STATE);
+  wake_up_dd.select_item_by_data(OPTION_WS);
 
   hints.add(wake_up_dd.handle, // works?
     "Very technical - Some demos will display correctly only in one of those states."
@@ -1345,10 +1345,10 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SSE_GUI_MOUSE_CAPTURE)
+#if defined(SSE_GUI_MOUSE_CAPTURE_OPTION)
   capture_mouse_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Capture mouse"),4002,BkCol);
-  capture_mouse_but.set_check(CAPTURE_MOUSE);
+  capture_mouse_but.set_check(OPTION_CAPTURE_MOUSE);
   hints.add(capture_mouse_but.handle,
     T("If unchecked, Steem will leave mouse control to X-Windows until you click in the window"),
     page_p);
@@ -1358,7 +1358,7 @@ void TOptionBox::CreateSSEPage() {
 #if defined(SSE_HACKS)
   specific_hacks_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Hacks"),4003,BkCol);
-  specific_hacks_but.set_check(SSE_HACKS_ON);
+  specific_hacks_but.set_check(OPTION_HACKS);
   hints.add(specific_hacks_but.handle,
   T("For an edgier emulation, recommended!"),page_p);
   y+=LineHeight;
@@ -1411,7 +1411,7 @@ void TOptionBox::CreateSSEPage() {
   wake_up_dd.additem("Wake-up state 1",1);
   wake_up_dd.additem("Wake-up state 2",2);
 #endif
-  wake_up_dd.select_item_by_data(WAKE_UP_STATE);
+  wake_up_dd.select_item_by_data(OPTION_WS);
 
   hints.add(wake_up_dd.handle, // works?
     "Very technical - Some demos will display correctly only in one of those states."
@@ -1427,7 +1427,7 @@ void TOptionBox::CreateSSEPage() {
 #if SSE_VERSION>=370
   hd6301emu_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("C1: 6850/6301/MIDI/E-Clock"),4006,BkCol);
-  hd6301emu_but.set_check(HD6301EMU_ON);
+  hd6301emu_but.set_check(OPTION_C1);
   hints.add(hd6301emu_but.handle,
   T("Chipset 1 - This enables a low level emulation of the IKBD keyboard chip (using\
  the Sim6xxx code by Arne Riiber, thx dude!), precise E-Clock, as well as ACIA and MIDI \
@@ -1437,7 +1437,7 @@ void TOptionBox::CreateSSEPage() {
 #else
   hd6301emu_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("6301 true emu"),4006,BkCol);
-  hd6301emu_but.set_check(HD6301EMU_ON);
+  hd6301emu_but.set_check(OPTION_C1);
   hints.add(hd6301emu_but.handle,
   T("This enables a real emulation of the IKBD keyboard chip (using the Sim6xxx code by Arne Riiber, thx dude!)"),
     page_p);
@@ -1451,7 +1451,7 @@ void TOptionBox::CreateSSEPage() {
 #endif
   mc68901_but.create(XD,page_p,page_l+220,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("C2: 68901"),4014,BkCol);
-  mc68901_but.set_check(OPTION_PRECISE_MFP);
+  mc68901_but.set_check(OPTION_C2);
   hints.add(mc68901_but.handle,
   T("Chipset 2 - Check for a more precise emulation of the MFP."),page_p);
   y+=LineHeight;

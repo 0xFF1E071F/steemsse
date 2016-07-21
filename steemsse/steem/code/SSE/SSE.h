@@ -3049,6 +3049,8 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 //#undef SSE_CPU_DIVS_OVERFLOW_PC //temp for tests...
 
+#define SSE_VID_GAMMA
+
 #define SSE_WD1772_383
 
 #endif//beta
@@ -3061,11 +3063,13 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_BETA_BUGFIX)
 
 #define SSE_DISK_GHOST_SECTOR_383
+#define SSE_STF_MATCH_TOS_383 // to keep autoselect T104 for HD
 #define SSE_TOS_GEMDOS_EM_383 
 #undef SSE_TOS_GEMDOS_RESTRICT_TOS2 //HD/TOS check
 #undef SSE_TOS_GEMDOS_RESTRICT_TOS3 //INI option
 #define SSE_TOS_GEMDOS_RESTRICT_TOS4 // STF T206 OK!
-#define SSE_STF_MATCH_TOS_383 // to keep autoselect T104 for HD
+#define SSE_TOS_SNAPSHOT_AUTOSELECT_383 // correct country
+#define SSE_SHIFTER_UNSTABLE_383 //bugfixes
 #define SSE_VAR_CHECK_SNAPSHOT2
 
 #endif//bugfix

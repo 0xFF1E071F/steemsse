@@ -161,8 +161,10 @@ LRESULT __stdcall NotifyInitWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       break;
 //#endif//#if !defined(_DEBUG)
 #if defined(SSE_VS2008_WARNING_383)
+    //default:
+      //NODEFAULT; //not sure it is so...
     default:
-      NODEFAULT;
+      break;
 #endif
 #else
     case WM_PAINT:

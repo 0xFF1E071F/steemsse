@@ -4,7 +4,9 @@
 
 #if defined(SSE_VERSION)
 // rather silly but so we leave the define here
-#if SSE_VERSION>=382
+#if SSE_VERSION>=383
+#define SNAPSHOT_VERSION 54
+#elif SSE_VERSION>=382
 #define SNAPSHOT_VERSION 53
 #elif SSE_VERSION>=380
 #define SNAPSHOT_VERSION 52
@@ -43,7 +45,11 @@ extern int LoadSaveAllStuff(NOT_ONEGAME( FILE * ) ONEGAME_ONLY( BYTE* & ),
                               bool,int DEFVAL(-1),bool DEFVAL(true),int* DEFVAL(NULL));
 extern void LoadSnapShotUpdateVars(int);
 
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT_383)
+extern int LoadSnapShotChangeTOS(Str NewROM,int NewROMVer,int NewROMCountry);
+#else
 extern int LoadSnapShotChangeTOS(Str,int);
+#endif
 extern int LoadSnapShotChangeCart(Str);
 extern int LoadSnapShotChangeDisks(Str[2],Str[2],Str[2]);
 extern void LoadSaveChangeNumFloppies(int);

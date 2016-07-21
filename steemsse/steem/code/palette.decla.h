@@ -17,7 +17,16 @@ EXT bool palette_changed;
 
 EXT void make_palette_table(int brightness,int contrast);
 
+#if defined(SSE_VAR_RESIZE_383)
+EXT short brightness,contrast;
+#else
 EXT int brightness,contrast;
+#endif
+#if defined(SSE_VID_GAMMA)
+EXT char *rgb_txt[3];
+EXT short gamma[3]; // RGB
+#endif
+
 EXT int palhalf,palnum;
 
 #ifdef WIN32

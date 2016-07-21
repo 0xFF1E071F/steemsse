@@ -2159,7 +2159,6 @@ void STStringToPC(char *)
 //---------------------------------------------------------------------------
 #endif//DISABLE_STEMDOS
 
-//#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2) && defined(WIN32)
 #if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2) //ux382
 // refactoring to avoid duplication, code was originally in options.cpp
 
@@ -2258,8 +2257,6 @@ void TTos::HackMemoryForExtendedMonitor() {
   LPEEK(SVscreenpt)=xbios2;
   if(em_planes==1)
     mfp_reg[MFPR_GPIP]|=0x80;
-  //else
-    //mfp_reg[MFPR_GPIP]&=~0x80;
   TRACE_INIT("EM bytes_needed %d xbios2 %X phystop %X _memtop %X\n",bytes_needed,xbios2,LPEEK(0x42E),LPEEK(0x436));
 }
 
@@ -2267,4 +2264,4 @@ void TTos::HackMemoryForExtendedMonitor() {
 
 #undef LOGSECTION
 
-//#endif//#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2)//ux382
+

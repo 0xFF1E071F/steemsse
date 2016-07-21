@@ -1135,6 +1135,11 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 
     brightness=pCSF->GetInt("Options","Brightness",brightness);
     contrast=pCSF->GetInt("Options","Contrast",contrast);
+#if defined(SSE_VID_GAMMA)
+    gamma[0]=pCSF->GetInt("Options","GammaR",gamma[0]);
+    gamma[1]=pCSF->GetInt("Options","GammaG",gamma[1]);
+    gamma[2]=pCSF->GetInt("Options","GammaB",gamma[2]);
+#endif
     make_palette_table(brightness,contrast);
 #if !defined(SSE_VID_D3D_ONLY)
     for (int c16=0;c16<2;c16++){
@@ -1576,6 +1581,12 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetStr("Options","Brightness",EasyStr(brightness));
 
   pCSF->SetStr("Options","Contrast",EasyStr(contrast));
+
+#if defined(SSE_VID_GAMMA)
+  pCSF->SetStr("Options","GammaR",EasyStr(gamma[0]));
+  pCSF->SetStr("Options","GammaG",EasyStr(gamma[1]));
+  pCSF->SetStr("Options","GammaB",EasyStr(gamma[2]));
+#endif
 
   pCSF->SetStr("Options","SlowMotionSpeed",EasyStr(slow_motion_speed));
 

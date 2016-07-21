@@ -12,7 +12,15 @@ to create the ST palette and also the code to add to the PC palette.
 #if defined(SSE_STRUCTURE_DECLA)
 
 #define EXT
+#if defined(SSE_VAR_RESIZE_383)
+EXT short brightness=0,contrast=0;
+#else
 EXT int brightness=0,contrast=0;
+#endif
+#if defined(SSE_VID_GAMMA)
+EXT char *rgb_txt[3]={"Red","Green","Blue"}; // for option page
+EXT short gamma[3]={0,0,0}; // RGB
+#endif
 int palhalf=0,palnum=0;
 EXT bool palette_changed=false;
 #ifdef WIN32
@@ -38,7 +46,6 @@ long logpal[257];
 #undef EXT
 
 #endif
-
 //---------------------------------------------------------------------------
 void make_palette_table(int brightness,int contrast)
 {
@@ -53,6 +60,21 @@ void make_palette_table(int brightness,int contrast)
       l*=contrast;
       l/=256;
       l+=brightness;
+#if defined(SSE_VID_GAMMA)
+/*  Like brightness and contrast, we compute the gamma ourselves, using the
+    common formula. Normally gamma[r] can't be set to -128 in the GUI.
+    Not sure of the order (after brightness).
+    Comparing with a CRT display, I couldn't confirm that Steem needs gamma
+    correction, but it's always a handy setting.
+*/
+      int avg=128;
+      if(gamma[r] 
+#if ! defined(SSE_LEAN_AND_MEAN)
+      && gamma[r]>-avg
+#endif
+        )
+        l = int( pow( l / 255.0, (double) avg / (gamma[r]+128) ) * 255 );
+#endif
       if (l<0){
         l=0;
       }else if (l>255){

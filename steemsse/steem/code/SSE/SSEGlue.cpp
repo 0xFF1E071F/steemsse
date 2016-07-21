@@ -38,7 +38,7 @@ TGlue::TGlue() {
   DE_cycles[0]=DE_cycles[1]=DE_cycles[2]<<1; // do we reduce footprint?
 #endif
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-  Freq[FREQ_50]=50; //not used?
+  Freq[FREQ_50]=50;
   Freq[FREQ_60]=60;
   Freq[FREQ_72]=72;	
   CurrentScanline.Cycles=scanline_time_in_cpu_cycles_8mhz[1]; 
@@ -595,7 +595,7 @@ D4/Tekila
             {
 #if defined(SSE_SHIFTER_UNSTABLE_381)
               Shifter.Preload=2;
-              ASSERT(OPTION_HACKS);
+//              ASSERT(OPTION_HACKS);
               if(FreqChangeAtCycle(8)==50) // hack Closure
 //008:S0082 016:R0000 376:S0000 512:R0082 516:a0230 512:T0011
 #endif
@@ -729,6 +729,7 @@ Closure STF2
           && shifter_hscroll_extra_fetch && !HSCROLL0)
           overscan_add_extra+=2;
 #endif
+
       }//+20 or +26
 #if !defined(SSE_VID_BORDERS_LINE_PLUS_20)//no
       left_border=0;
@@ -1508,10 +1509,12 @@ detect unstable: switch MED/LOW - Beeshift
       left_border-=(Shifter.Preload%4)*4;
       right_border+=(Shifter.Preload%4)*4;
     }
-
+#ifndef TEST01__
 #if defined(SSE_SHIFTER_DOLB_SHIFT1) 
     else  //  hack for DOLB, Omega, centering the pic
-#if defined(SSE_SHIFTER_UNSTABLE_382)
+#if defined(SSE_SHIFTER_UNSTABLE_383) //interference with Closure STE
+    if(OPTION_HACKS && MMU.WS[OPTION_WS]==2&&Shifter.Preload==2 &&ST_TYPE!=STE)
+#elif defined(SSE_SHIFTER_UNSTABLE_382)
     if(OPTION_HACKS && MMU.WS[OPTION_WS]&&Shifter.Preload==2)
 #elif defined(SSE_SHIFTER_UNSTABLE_380)
     if(OPTION_HACKS && MMU.WS[OPTION_WS]==2&&Shifter.Preload==2)
@@ -1525,6 +1528,7 @@ detect unstable: switch MED/LOW - Beeshift
 #endif
         Shifter.HblPixelShift=4; 
     }
+#endif
 #endif
 
     //TRACE_LOG("Y%d Preload %d shift SDP %d pixels %d lb %d rb %d\n",scan_y,Preload,shift_sdp,HblPixelShift,left_border,right_border);
@@ -1720,7 +1724,6 @@ TODO Closure doesn't agree with 'Bees' for WS1?
   // STABILISER //
   ////////////////
 
-#if defined(TRICK_STABILISER)
 /*  A HI/LO switch after DE "resets" the Shifter by emptying its registers.
     All kinds of strange effects may result from absence of stabiliser when
     trying to display lines which have a length in bytes not multiple of 8,
@@ -1758,7 +1761,6 @@ Dragonnels reset
 #if defined(SSE_SHIFTER_UNSTABLE)
   if(CurrentScanline.Tricks&TRICK_STABILISER)
     Shifter.Preload=0; // "reset" empties RR (that's the goal)
-#endif
 #endif
 
   /////////////////////////////////////////////////////////
@@ -2020,7 +2022,7 @@ void TGlue::EndHBL() {
 #endif
         Shifter.Preload=1;
     }
-#ifndef TEST01
+#ifndef SSE_SHIFTER_UNSTABLE_383
     else if(CurrentScanline.Cycles==508 && FetchingLine()
       && FreqAtCycle(0)==60 && FreqAtCycle(464)==60)
       Shifter.Preload=0; // a full 60hz scanline should reset the shifter 

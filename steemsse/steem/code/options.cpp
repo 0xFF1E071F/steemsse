@@ -861,7 +861,11 @@ void TOptionBox::Show()
   AddPageLabel(T("Display"),1);
   AddPageLabel(T("On Screen Display"),15);
   AddPageLabel(T("Fullscreen Mode"),3);
+#if defined(SSE_VID_GAMMA)
+  AddPageLabel(T("Colour Control"),2);
+#else
   AddPageLabel(T("Brightness")+"/"+T("Contrast"),2);
+#endif
   AddPageLabel(T("Profiles"),11);
   AddPageLabel(T("Startup"),6);
   AddPageLabel(T("Icons"),14);
@@ -2890,14 +2894,39 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
     }
     case WM_HSCROLL:
     {
+#if defined(SSE_VID_GAMMA)
+      char tmp[30];
+#endif
       int ID=GetDlgCtrlID(HWND(lPar));
       switch (ID){
         case 2001:
         case 2003:
+#if defined(SSE_VID_GAMMA)
+        case 2005:
+        case 2007:
+        case 2009:
+#endif
+#if defined(SSE_VID_GAMMA) // avoid memory allocation
+          brightness=SendDlgItemMessage(Win,2001,TBM_GETPOS,0,0)-128;
+          sprintf(tmp,"Brightness:%d",brightness);
+          SendDlgItemMessage(Win,2000,WM_SETTEXT,0,LPARAM(tmp));
+          contrast=SendDlgItemMessage(Win,2003,TBM_GETPOS,0,0)-128;
+          sprintf(tmp,"Contrast:%d",contrast);
+          SendDlgItemMessage(Win,2002,WM_SETTEXT,0,LPARAM(tmp));
+#else
           brightness=SendDlgItemMessage(Win,2001,TBM_GETPOS,0,0)-128;
           SendDlgItemMessage(Win,2000,WM_SETTEXT,0,LPARAM((T("Brightness")+": "+brightness).Text));
           contrast=SendDlgItemMessage(Win,2003,TBM_GETPOS,0,0)-128;
           SendDlgItemMessage(Win,2002,WM_SETTEXT,0,LPARAM((T("Contrast")+": "+contrast).Text));
+#endif
+#if defined(SSE_VID_GAMMA)
+          for(int i=0;i<3;i++)
+          {
+            gamma[i]=SendDlgItemMessage(Win,2005+i*2,TBM_GETPOS,0,0)-128;
+            sprintf(tmp,"Gamma %s:%d",rgb_txt[i],gamma[i]);
+            SendDlgItemMessage(Win,2004+i*2,WM_SETTEXT,0,LPARAM(tmp));
+          }
+#endif
           make_palette_table(brightness,contrast);
           if (flashlight_flag==0) palette_convert_all();
 

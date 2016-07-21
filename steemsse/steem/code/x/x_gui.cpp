@@ -618,7 +618,7 @@ void HandleKeyPress(UINT KeyCode,bool Up,int Extend)
     if (Up) STCode|=MSB_B;
     
 #if defined(SSE_IKBD_6301)
-    if(!HD6301EMU_ON)
+    if(!OPTION_C1)
 #endif
     
     keyboard_buffer_write_n_record(STCode);

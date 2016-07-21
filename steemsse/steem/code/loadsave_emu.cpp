@@ -737,7 +737,7 @@ EXT int extended_monitor INIT(0);
     pasti_active=0;
 #endif
   }
-
+#if SSE_VERSION
 #if SSE_VERSION>=330
   if(Version>=41) // Steem 3.3
   {
@@ -1043,7 +1043,19 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #endif
 
   }
+#if SSE_VERSION>=383
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT_383)
+  int NewROMCountry=Tos.DefaultCountry;
+#endif
+  if(Version>=54) //383
+  {
+    if(LoadOrSave==LS_SAVE)
+      NewROMCountry=ROM_PEEK(0x1D);
+    ReadWrite(NewROMCountry);
+  }
+#endif
 
+#endif//#if SSE_VERSION
 
 
 
@@ -1084,7 +1096,11 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 
 #ifndef ONEGAME
   if (ChangeTOS){
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT_383)
+    int ret=LoadSnapShotChangeTOS(NewROM,NewROMVer,NewROMCountry);
+#else
     int ret=LoadSnapShotChangeTOS(NewROM,NewROMVer);
+#endif
     //TRACE_INIT("LoadSnapShotChangeTOS %d\n",ret);
     if (ret>0) return ret;
   }

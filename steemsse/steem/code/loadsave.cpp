@@ -178,7 +178,11 @@ int LoadSnapShotChangeCart(Str NewCart)
   return 0;
 }
 //---------------------------------------------------------------------------
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT_383)
+int LoadSnapShotChangeTOS(Str NewROM,int NewROMVer,int NewROMCountry)
+#else
 int LoadSnapShotChangeTOS(Str NewROM,int NewROMVer)
+#endif
 {
   bool Fail=0;
   if (load_TOS(NewROM)){
@@ -199,7 +203,11 @@ int LoadSnapShotChangeTOS(Str NewROM,int NewROMVer)
             WORD Ver,Date;
             BYTE Country;
             Tos.GetTosProperties(Path,Ver,Country,Date);
-            if(Ver==NewROMVer)
+            if(Ver==NewROMVer
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT_383)
+              && (Country==NewROMCountry)
+#endif
+              )
             {
               ROMFile=Path;
               TRACE_INIT("preselect TOS %s\n",ROMFile.Text);

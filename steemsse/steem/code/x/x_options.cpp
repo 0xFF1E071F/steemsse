@@ -611,13 +611,13 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
 
 #if defined(SSE_GUI_OPTION_PAGE) && defined(SSE_UNIX)
 
-#if defined(SSE_GUI_MOUSE_CAPTURE)
+#if defined(SSE_GUI_MOUSE_CAPTURE_OPTION)
     else if(b->id==4002)
-      CAPTURE_MOUSE=b->checked;
+      OPTION_CAPTURE_MOUSE=b->checked;
 #endif
 #if defined(SSE_HACKS)
     else if(b->id==4003)
-      SSE_HACKS_ON=b->checked;
+      OPTION_HACKS=b->checked;
 #endif
 #if defined(SSE_VAR_STEALTH)
     else if(b->id==4004)
@@ -625,7 +625,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
 #endif
 #if defined(SSE_IKBD_6301)
     else if(b->id==4006)
-      b->checked=HD6301EMU_ON=b->checked&HD6301_OK;
+      b->checked=OPTION_C1=b->checked&HD6301_OK;
 #endif
 #if defined(SSE_SOUND_KEYBOARD_CLICK)
     else if(b->id==4007)
@@ -678,7 +678,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
 #endif   
 #if defined(SSE_INT_MFP_OPTION)
     else if(b->id==4014)
-      OPTION_PRECISE_MFP=b->checked;
+      OPTION_C2=b->checked;
 #endif
 #endif
   }
@@ -824,7 +824,7 @@ int TOptionBox::dd_notify_proc(hxc_dropdown*dd,int mess,int i)
 #if defined(SSE_MMU_WAKE_UP)
   else if(dd->id==4006) // wake-up state
   {
-    WAKE_UP_STATE=dd->sel;
+    OPTION_WS=dd->sel;
   }
 #endif
 #endif
