@@ -1129,6 +1129,8 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_CPU_EXCEPTION)
 #define SSE_CPU_IGNORE_RW_4MB // for F-29, works but... 
 #endif
+
+
 #define SSE_CPU_INLINE       // supposes TM68000 exists!
 
 #if defined(SSE_CPU_INLINE)
@@ -1271,16 +1273,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_ACIA_IRQ_DELAY2// back to this approach (hack)
 #endif
 
-#if defined(SSE_CPU)
-
-#define SSE_CPU_ALT_REG_NAMES  // convenience
-
 #if defined(SSE_CPU_DIV)
 #define SSE_CPU_DIVS_OVERFLOW
 #define SSE_CPU_DIVU_OVERFLOW
 #endif
-
-#endif//cpu
 
 #if defined(SSE_FLOPPY)
 
@@ -2625,7 +2621,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_CPU)
 #define SSE_CPU_E_CLOCK_382
-#define SSE_CPU_TIMINGS_NO_INLINE_382
+#define SSE_CPU_TIMINGS_NO_INLINE_382 //undef 383
 #define SSE_CPU_TPEND_382
 #endif//cpu
 
@@ -3027,14 +3023,25 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VS2008_WARNING_383
 #endif
 #if defined(VC_BUILD) && _MSC_VER>=1500 //VS2008+
-#define SSE_VC_INTRINSICS_383 // some cpu sr checks
+#define SSE_VC_INTRINSICS_383
+#define SSE_VC_INTRINSICS_383A // some cpu sr checks //useless like 383E?
+#define SSE_VC_INTRINSICS_383B // popcount 
+#define SSE_VC_INTRINSICS_383C // byteswap
+#define SSE_VC_INTRINSICS_383D // instruction time
+#define SSE_VC_INTRINSICS_383E // set/clear some sr bits => more object code? => bad idea?
+#define SSE_VC_INTRINSICS_383F // avoid shifting mask in MOVEM //i'm sure it's a bad idea too!
 #endif
 
 #ifdef SSE_BOILER
 #define SSE_BOILER_383
 #endif
 
+#if defined(SSE_CPU_INLINE)
+#define SSE_CPU_INLINE_SET_DEST_TO_ADDR
+#endif
+
 #define SSE_DISK_CAPS_383
+#define SSE_GUI_383
 #define SSE_VAR_OPT_383
 #define SSE_VAR_RESIZE_383
 
@@ -3050,7 +3057,6 @@ Beta: not SSE_PRIVATE_BUILD
 //#undef SSE_CPU_DIVS_OVERFLOW_PC //temp for tests...
 
 #define SSE_VID_GAMMA
-
 #define SSE_WD1772_383
 
 #endif//beta
@@ -3062,6 +3068,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA_BUGFIX)
 
+#undef SSE_CPU_TIMINGS_NO_INLINE_382 // it's inlined anyway
 #define SSE_DISK_GHOST_SECTOR_383
 #define SSE_STF_MATCH_TOS_383 // to keep autoselect T104 for HD
 #define SSE_TOS_GEMDOS_EM_383 

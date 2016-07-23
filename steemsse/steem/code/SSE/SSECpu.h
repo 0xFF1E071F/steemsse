@@ -443,6 +443,11 @@ struct TM68000 {
   static void m68kReadWFromAddr();
   static void m68kReadLFromAddr();
 #endif
+#if defined(SSE_CPU_INLINE_SET_DEST_TO_ADDR)
+  inline void SetDestBToAddr();
+  inline void SetDestWToAddr();
+  inline void SetDestLToAddr();
+#endif
   void SetPC(MEM_ADDRESS ad);
   inline void Unstop();
   void Reset(bool Cold);
@@ -934,6 +939,130 @@ inline void TM68000::GetSourceLongNotA() {
 }
 
 
+#if defined(SSE_CPU_INLINE_SET_DEST_TO_ADDR)
+// but VC9 won't inline it -> exe size  reduction
+inline void TM68000::SetDestBToAddr() {
+  abus&=0xffffff;                                   
+  if(abus>=MEM_IO_BASE){               
+    if(SUPERFLAG){                        
+      ioaccess&=IOACCESS_FLAGS_MASK; 
+      ioaccess|=1;                     
+      ioad=abus;                        
+      m68k_dest=&iobuffer;               
+      DWORD_B_0(&iobuffer)=io_read_b(abus);        
+    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);             
+  }else if(abus>=himem){                               
+#if !defined(SSE_MMU_NO_CONFUSION)
+    if(mmu_confused){                               
+      mmu_confused_set_dest_to_addr(1,true);           
+    }else 
+#endif
+    if(abus>=FOUR_MEGS){                                                
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               
+    }else{                                                        
+      m68k_dest=&iobuffer;                             
+    }                                       
+  }else{                                            
+#if !defined(SSE_BOILER_MONITOR_VALUE4)
+    DEBUG_CHECK_WRITE_B(abus); 
+#endif
+    if (SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){                             
+      m68k_dest=lpPEEK(abus);           
+    }else if(abus>=MEM_START_OF_USER_AREA){ 
+      m68k_dest=lpPEEK(abus);           
+    }else{                                      
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       
+    }                                           
+#if defined(SSE_BOILER_MONITOR_VALUE4)
+    DEBUG_CHECK_WRITE_B(abus); 
+#endif
+  }
+}
+
+inline void TM68000::SetDestWToAddr() {
+  abus&=0xffffff;                                   
+  if(abus&1){                                      
+    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);    
+  }else if(abus>=MEM_IO_BASE){               
+    if(SUPERFLAG){                        
+      ioaccess&=IOACCESS_FLAGS_MASK; 
+      ioaccess|=2;                     
+      ioad=abus;                        
+      m68k_dest=&iobuffer;               
+      *((WORD*)&iobuffer)=io_read_w(abus);        
+    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                
+  }else if(abus>=himem){  
+#if !defined(SSE_MMU_NO_CONFUSION)
+    if(mmu_confused){                               
+      mmu_confused_set_dest_to_addr(2,true);           
+    }else 
+#endif
+    if(abus>=FOUR_MEGS){                                                
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               
+    }else{                                                        
+      m68k_dest=&iobuffer;                             
+    }                                       
+  }else{                   
+#if !defined(SSE_BOILER_MONITOR_VALUE4)
+    DEBUG_CHECK_WRITE_W(abus);  
+#endif
+    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){                       
+      m68k_dest=lpDPEEK(abus);           
+    }else if(abus>=MEM_START_OF_USER_AREA){ 
+      m68k_dest=lpDPEEK(abus);           
+    }else{                                      
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       
+    }                                           
+#if defined(SSE_BOILER_MONITOR_VALUE4)
+    DEBUG_CHECK_WRITE_W(abus);  
+#endif
+  }
+
+}
+
+inline void TM68000::SetDestLToAddr() {
+  abus&=0xffffff;                                   
+  if(abus&1){                                      
+    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);    
+  }else if(abus>=MEM_IO_BASE){               
+    if(SUPERFLAG){                        
+      ioaccess&=IOACCESS_FLAGS_MASK; 
+      ioaccess|=4;                     
+      ioad=abus;                         
+      m68k_dest=&iobuffer;               
+      iobuffer=io_read_l(abus);        
+    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                 
+  }else if(abus>=himem){  
+#if !defined(SSE_MMU_NO_CONFUSION)
+    if(mmu_confused){                               
+      mmu_confused_set_dest_to_addr(4,true);           
+    }else 
+#endif
+    if(abus>=FOUR_MEGS){                                                
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               
+    }else{                                                        
+      m68k_dest=&iobuffer;                             
+    }                                       
+  }else{                               
+#if !defined(SSE_BOILER_MONITOR_VALUE4)
+    DEBUG_CHECK_WRITE_L(abus);  
+#endif
+    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){                       
+      m68k_dest=lpLPEEK(abus);           
+    }else if(abus>=MEM_START_OF_USER_AREA){ 
+      m68k_dest=lpLPEEK(abus);           
+    }else{                                      
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       
+    }                                           
+#if defined(SSE_BOILER_MONITOR_VALUE4)
+    DEBUG_CHECK_WRITE_L(abus);  
+#endif
+  }
+}
+
+#endif
+
+
 inline void TM68000::InstructionTime(int t) {
   cpu_cycles-=(t);
 }
@@ -941,12 +1070,21 @@ inline void TM68000::InstructionTime(int t) {
 #define INSTRUCTION_TIME(t)  M68000.InstructionTime(t)
 
 #if !defined(SSE_CPU_TIMINGS_NO_INLINE_382)
+
 inline void TM68000::InstructionTimeRound(int t) {
   InstructionTime(t);
+#if defined(SSE_VC_INTRINSICS_383D) // great optimisation
+  Rounded=_bittestandreset((LONG*)&cpu_cycles,1);
+#else//383?
 #if defined(SSE_CPU_ROUNDING_BUS)
-  Rounded=(cpu_cycles&2); //horrible because it's inlined each time
+#if defined(SSE_VC_INTRINSICS_382)
+  Rounded=BITTEST(cpu_cycles,1); // causes inlining anyway
+#else
+  Rounded=(cpu_cycles&2);
+#endif
 #endif
   cpu_cycles&=-4;
+#endif//383?
 }
 #endif
 

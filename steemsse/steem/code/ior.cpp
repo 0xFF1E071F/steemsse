@@ -1959,7 +1959,7 @@ FF8240 - FF827F   palette, res
       }
       return 0xff;
     case 0xffc100:
-#ifdef _DEBUG_BUILD
+#ifdef DEBUG_BUILD
       if (addr==0xffc123) return (BYTE)runstate;
 #endif
       if (emudetect_called){

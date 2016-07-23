@@ -1915,12 +1915,12 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
       if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_VIDEOBASE)
         FrameEvents.Add(scan_y,LINECYCLES,'V',io_src_b); 
 #endif
-
-      // asserts on SoWatt, Leavin' Teramis, High Fidelity Dreams
-      // ...
-      //ASSERT( mem_len>FOUR_MEGS || !(io_src_b&(~b00111111)) ); 
+/* "Later 3rd-party upgrade kits allow a maximum of 14MB w/Magnum-ST,
+ bypassing the stock MMU with a replacement unit and the additional
+ chips on a separate board fitting over it."
+*/
       if (mem_len<=FOUR_MEGS
-#if defined(SSE_TOS_GEMDOS_EM_382)
+#if defined(SSE_TOS_GEMDOS_EM_382) && !defined(SSE_TOS_GEMDOS_EM_383)//oops
         && !extended_monitor
 #endif
         ) 
@@ -1928,6 +1928,9 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
       DWORD_B_2(&xbios2)=io_src_b;
 #if defined(SSE_STF_VBASELO)
       if(ST_TYPE==STE) 
+#endif
+#if defined(SSE_TOS_GEMDOS_EM_383)
+       if(!extended_monitor)
 #endif
         DWORD_B_0(&xbios2)=0; 
       log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set screen base to "+HEXSl(xbios2,6));
@@ -1941,7 +1944,6 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
 #if defined(SSE_TOS_GEMDOS_EM_382)
       if(!extended_monitor)
 #endif
-
       DWORD_B_1(&xbios2)=io_src_b;
 
 #if defined(SSE_STF_VBASELO)

@@ -46,7 +46,7 @@ DESCRIPTION: Sets up all conditions that affect the Steem binary.
 // This was always on in the Steem v3.2 release but it is not compatible with modern X.
 //#define ALLOW_XALLOCID
 
-#if defined(DEBUG_BUILD) && defined(_BCB_BUILD)
+#if defined(DEBUG_BUILD) && defined(BCB_BUILD)
 #define PEEK_RANGE_TEST
 #endif
 

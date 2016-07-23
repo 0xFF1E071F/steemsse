@@ -899,8 +899,11 @@ void call_a000()
   SET_PC(LPEEK(BOMBS_LINE_A*4));
 
 //  dbg_log(EasyStr("interrupt - increasing interrupt depth from ")+interrupt_depth+" to "+(interrupt_depth+1));
+#if defined(SSE_VC_INTRINSICS_383E)
+  BITRESET(sr,SR_TRACE_BIT);
+#else
   SR_CLEAR(SR_TRACE);
-
+#endif
   interrupt_depth++; 
   memcpy(save_r,r,16*4);
   on_rte_interrupt_depth=interrupt_depth;

@@ -9,6 +9,8 @@ typedef EasyStr Str;//?!
 #include <dynamicarray.h>
 #endif
 
+#include "SSE/SSEDebug.h"
+
 #define EXT extern
 #define INIT(s)
 
@@ -164,7 +166,12 @@ WORD change_endian(WORD x); // double of something?
 #define log_DELETE_SOON(s) log_write(s);
 
 EXT EasyStr HEXSl(long,int);
+
+#if defined(SSE_VC_INTRINSICS_383B)
+EXT int count_bits_set_in_word1(unsigned short w);
+#else
 EXT int count_bits_set_in_word(unsigned short w);
+#endif
 
 EXT EasyStr read_string_from_memory(MEM_ADDRESS,int);
 EXT MEM_ADDRESS write_string_to_memory(MEM_ADDRESS,char*);

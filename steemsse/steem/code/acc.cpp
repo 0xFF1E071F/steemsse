@@ -152,7 +152,11 @@ void m68k_poke(MEM_ADDRESS ad,BYTE x);
 }*/
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-int count_bits_set_in_word(unsigned short w)
+#if defined(SSE_VC_INTRINSICS_383B)
+int count_bits_set_in_word1(unsigned short w)
+#else
+int count_bits_set_in_word(unsigned short w) // now a pointer to function
+#endif
 {
   int t=0;
   for(int n=15;n>=0;n--){
@@ -466,7 +470,7 @@ EasyStr HEXSl(long n,int ln){
   return bf+8-ln+strlen(bf+8);
 }
 
-#ifdef DEBUG_BUILD // SS removed _
+#ifdef DEBUG_BUILD
 char *reg_name(int n){
 #if defined(SSE_BOILER_MOD_REGS)//interesting technique by the way
   reg_name_buf[0]="DA"[int((n & 8) ? 1:0)]; 
@@ -694,10 +698,13 @@ Str scanline_cycle_log()
 
 #if defined(SSE_VID_SAVE_NEO) || defined(SSE_DISK_STW)
 WORD change_endian(WORD x) {
-  // it mustn't be efficient for current use //TODO is there an intrinsic?
+#if defined(SSE_VC_INTRINSICS_383C)
+  return _byteswap_ushort(x); // every little byte counts...
+#else
   BYTE high=x>>8;
   BYTE low=x&0xFF;
   return (low<<8) | high;
+#endif
 }
 #endif
 
