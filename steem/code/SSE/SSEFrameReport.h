@@ -6,10 +6,6 @@
 
 #include <run.decla.h>
 
-#if !defined(SSE_COMPILER_370_INLINE)
-#include "SSEDebug.h"
-#endif
-
 #if defined(SSE_BOILER_FRAME_REPORT_MASK)
 /*  We use the new general fake io control masks, they are 16bit, but 
     only 8 bits should be used for the GUI.

@@ -802,11 +802,9 @@ void stemdos_rmdir()
   }else{
     r[0]=0; //succeed!
   }
-//  TRACE_LOG("RM dir %s : %d\n",PC_filename.Text,D0);
 #if defined(SSE_OSD_DRIVE_LED)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
-
 }
 
 void stemdos_Fdelete()
@@ -956,7 +954,6 @@ void stemdos_Pexec() //called from stemdos_rte, nothing done after this fn calle
   BYTE b;
   if (r[0]<0){
     dbg_log(EasyStr("STEMDOS: Exec returned error ")+r[0]);
-  //  TRACE_LOG("PExec error %d\n",D0);
     fclose(stemdos_Pexec_file);
     stemdos_Pexec_file=NULL;
     stemdos_finished();
@@ -964,7 +961,6 @@ void stemdos_Pexec() //called from stemdos_rte, nothing done after this fn calle
   }else{
     if (STfile_read_word(stemdos_Pexec_file)!=0x601a){ //not executable
       r[0]=-66;  //not executable
-  //    TRACE_LOG("PExec error %d\n",D0);
       dbg_log("STEMDOS: Exec didn't find magic number in file");
       fclose(stemdos_Pexec_file);
       stemdos_Pexec_file=NULL;

@@ -59,6 +59,9 @@ void TM68000::Reset(bool Cold) {
 
 void TM68000::InstructionTimeRound(int t) {
   InstructionTime(t);
+#if defined(SSE_VC_INTRINSICS_383D) // great optimisation
+  Rounded=_bittestandreset((LONG*)&cpu_cycles,1);
+#else//383?
 #if defined(SSE_CPU_ROUNDING_BUS)
 #if defined(SSE_VC_INTRINSICS_382)
   Rounded=BITTEST(cpu_cycles,1); // causes inlining anyway
@@ -67,6 +70,7 @@ void TM68000::InstructionTimeRound(int t) {
 #endif
 #endif
   cpu_cycles&=-4;
+#endif//383?
 }
 
 #endif
@@ -1561,7 +1565,11 @@ void TM68000::Interrupt(MEM_ADDRESS ad) {
 #endif
   m68k_PUSH_W(_sr);
   SetPC(ad);
+#if defined(SSE_VC_INTRINSICS_383E)
+  BITRESET(sr,SR_TRACE_BIT);
+#else
   SR_CLEAR(SR_TRACE);
+#endif
   interrupt_depth++;
 //  TRACE_LOG("%X %d\n",ad,interrupt_depth);
 }
@@ -1744,7 +1752,11 @@ FC2 FC1 FC0 Address Space
       {
         TRACE_LOG("PC = %X\n\n",ad);
         M68000.SetPC(ad);
+#if defined(SSE_VC_INTRINSICS_383E)
+        BITRESET(sr,SR_TRACE_BIT);
+#else
         SR_CLEAR(SR_TRACE);
+#endif
         INSTRUCTION_TIME_ROUND(22);  // 8+4+22=36: OK
         interrupt_depth++; // Is this necessary?
       }
@@ -1828,9 +1840,11 @@ FC2 FC1 FC0 Address Space
 #endif
 
       SET_PC(LPEEK(bombs*4)); // includes final prefetch
-
+#if defined(SSE_VC_INTRINSICS_383E)
+      BITRESET(sr,SR_TRACE_BIT);
+#else
       SR_CLEAR(SR_TRACE);
-
+#endif
 #if defined(SSE_CPU_FETCH_TIMING)
 #if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
       INSTRUCTION_TIME_ROUND(50-4-8-4-4-4-8-4); //TODO
@@ -2446,9 +2460,17 @@ void                              m68k_divu(){
   m68k_GET_SOURCE_W_NOT_A;
   if (m68k_src_w==0){ // div by 0
     // Clear V flag when dividing by zero. 
+#if defined(SSE_VC_INTRINSICS_383E)
+    BITRESET(sr,SR_V_BIT);
+#else
     SR_CLEAR(SR_V);
+#endif
 #if defined(SSE_CPU_DIV_CC)
+#if defined(SSE_VC_INTRINSICS_383E)
+    BITRESET(sr,SR_C_BIT);
+#else
     SR_CLEAR(SR_C);
+#endif
 #endif
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
     Debug.RecordInterrupt("DIV");
@@ -2470,7 +2492,11 @@ void                              m68k_divu(){
     INSTRUCTION_TIME(cycles_for_instr); // fixes Pandemonium loader
     q=(unsigned long)((unsigned long)dividend)/(unsigned long)((unsigned short)divisor);
     if(q&0xffff0000){
+#if defined(SSE_VC_INTRINSICS_383E)
+      BITSET(sr,SR_V_BIT);
+#else
       SR_SET(SR_V);
+#endif
 #if defined(SSE_CPU_DIVU_OVERFLOW)
 /*  
 "N : Set if the quotient is negative; cleared otherwise; undefined if overflow 
@@ -2483,15 +2509,30 @@ void                              m68k_divu(){
     v3.7: 
     C — Always cleared, official doc, this was forgotten in case of overflow
 */
+#if defined(SSE_VC_INTRINSICS_383E)
+      BITSET(sr,SR_N_BIT);
+#else
       SR_SET(SR_N);
 #endif
-#if defined(SSE_CPU_DIV_CC)
-      SR_CLEAR(SR_C);// fixes Spacker II
+#endif
+#if defined(SSE_CPU_DIV_CC)// fixes Spacker II
+#if defined(SSE_VC_INTRINSICS_383E)
+      BITRESET(sr,SR_C_BIT);
+#else
+      SR_CLEAR(SR_C);
+#endif
 #endif
     }else{
       SR_CLEAR(SR_Z+SR_N+SR_C+SR_V);
+#if defined(SSE_VC_INTRINSICS_383E)
+      if(q&MSB_W)
+        BITSET(sr,SR_N_BIT);
+      if(q==0)
+        BITSET(sr,SR_Z_BIT);
+#else
       if(q&MSB_W)SR_SET(SR_N);
       if(q==0)SR_SET(SR_Z);
+#endif
       r[PARAM_N]=((((unsigned long)r[PARAM_N])%((unsigned short)m68k_src_w))<<16)+q;
     }
   }
@@ -2505,13 +2546,21 @@ void                              m68k_divs(){
 
   m68k_GET_SOURCE_W_NOT_A;
   if (m68k_src_w==0){
-    /* Clear V flag when dividing by zero - Alcatraz Odyssey demo depends
-     * on this (actually, it's doing a DIVS).  
-    SS: it's an Amiga demo. 
-    */
+/* Clear V flag when dividing by zero - Alcatraz Odyssey demo depends
+ * on this (actually, it's doing a DIVS).  
+SS: it's an Amiga demo. 
+*/
+#if defined(SSE_VC_INTRINSICS_383E)
+    BITRESET(sr,SR_V_BIT);
+#else
     SR_CLEAR(SR_V);
+#endif
 #if defined(SSE_CPU_DIV_CC)
+#if defined(SSE_VC_INTRINSICS_383E)
+    BITRESET(sr,SR_C_BIT);
+#else
     SR_CLEAR(SR_C);
+#endif
 #endif
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
     Debug.RecordInterrupt("DIV");
@@ -2545,17 +2594,36 @@ void                              m68k_divs(){
 #endif
     q=(signed long)((signed long)dividend)/(signed long)((signed short)divisor);
     if(q<-32768 || q>32767){
+#if defined(SSE_VC_INTRINSICS_383E)
+      BITSET(sr,SR_V_BIT);
+#else
       SR_SET(SR_V);
+#endif
 #if defined(SSE_CPU_DIVS_OVERFLOW)
+#if defined(SSE_VC_INTRINSICS_383E)
+      BITSET(sr,SR_N_BIT); // TODO test prg
+#else
       SR_SET(SR_N); // maybe, see SSE_CPU_DIVU_OVERFLOW
 #endif
+#endif
 #if defined(SSE_CPU_DIV_CC)
+#if defined(SSE_VC_INTRINSICS_383E)
+      BITRESET(sr,SR_C_BIT);
+#else
       SR_CLEAR(SR_C);
+#endif
 #endif  
     }else{
       SR_CLEAR(SR_Z+SR_N+SR_C+SR_V);
+#if defined(SSE_VC_INTRINSICS_383E)
+      if(q&MSB_W)
+        BITSET(sr,SR_N_BIT);
+      if(q==0)
+        BITSET(sr,SR_Z_BIT);
+#else
       if(q&MSB_W)SR_SET(SR_N);
       if(q==0)SR_SET(SR_Z);
+#endif
       r[PARAM_N]=((((signed long)r[PARAM_N])%((signed short)m68k_src_w))<<16)|((long)LOWORD(q));
     }
   }
@@ -2896,10 +2964,18 @@ void m68k_0001() {  // move.b
     // Set flags
     SR_CLEAR(SR_Z+SR_N+SR_C+SR_V);
     if(!m68k_src_b){
+#if defined(SSE_VC_INTRINSICS_383E)
+      BITSET(sr,SR_Z_BIT);
+#else
       SR_SET(SR_Z);
+#endif
     }
     if(m68k_src_b&MSB_B){
+#if defined(SSE_VC_INTRINSICS_383E)
+      BITSET(sr,SR_N_BIT);
+#else
       SR_SET(SR_N);
+#endif
     }
 
 #if defined(SSE_CPU_DATABUS)
@@ -3131,10 +3207,18 @@ void m68k_0010()  //move.l
     }
     SR_CLEAR(SR_Z+SR_N+SR_C+SR_V);
     if(!m68k_src_l){
+#if defined(SSE_VC_INTRINSICS_383E)
+      BITSET(sr,SR_Z_BIT);
+#else
       SR_SET(SR_Z);
+#endif
     }
     if(m68k_src_l&MSB_L){
+#if defined(SSE_VC_INTRINSICS_383E)
+      BITSET(sr,SR_N_BIT);
+#else
       SR_SET(SR_N);
+#endif
     }
 #if defined(SSE_CPU_DATABUS)
     M68000.dbus=m68k_src_l&0xFFFF; // 2nd part?
@@ -3347,10 +3431,18 @@ void m68k_0011() //move.w
     }
     SR_CLEAR(SR_Z+SR_N+SR_C+SR_V);
     if (!m68k_src_w){
+#if defined(SSE_VC_INTRINSICS_383E)
+      BITSET(sr,SR_Z_BIT);
+#else
       SR_SET(SR_Z);
+#endif
     }
     if (m68k_src_w & MSB_W){
+#if defined(SSE_VC_INTRINSICS_383E)
+      BITSET(sr,SR_N_BIT);
+#else
       SR_SET(SR_N);
+#endif
     }
 
 #if defined(SSE_CPU_DATABUS)

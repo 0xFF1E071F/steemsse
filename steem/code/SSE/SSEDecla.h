@@ -69,7 +69,12 @@ typedef unsigned __int64	uint64_t;
 #endif
 
 #if defined(SSE_VC_INTRINSICS_382)
+#include <intrin.h>
 #define BITTEST(var,bit) (_bittest((long*)&var,bit)/*!=0*/)
+#if defined(SSE_VC_INTRINSICS_383E)
+#define BITRESET(var,bit) (_bittestandreset((long*)&var,bit))
+#define BITSET(var,bit) (_bittestandset((long*)&var,bit))
+#endif
 #endif
 
 /////////

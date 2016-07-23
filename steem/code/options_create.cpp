@@ -70,8 +70,14 @@ void TOptionBox::CreateMachinePage()
 #else
   Wid+=73;//by hand...
 #endif
+#if defined(SSE_GUI_383)
+  ToolAddWindow(ToolTip,Win,
+    T("The STE was more elaborated than the older STF but some programs are \
+compatible only with the STF"));
+#else
   ToolAddWindow(ToolTip,Win,
     T("Some programs will run only with STF or STE. Changing ST model will preselect a TOS for next cold reset."));
+#endif
 #endif
 
 #if defined(SSE_GUI_OPTIONS_WU_IN_MACHINE)
@@ -97,15 +103,19 @@ void TOptionBox::CreateMachinePage()
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,WU_SHIFTER_PANIC,(long)CStrT("Shifter panic"));
 #endif
   SendMessage(MMUWakeUpOption,CB_SETCURSEL,OPTION_WS,0);
+#if defined(SSE_GUI_383)
+  ToolAddWindow(ToolTip,Win,
+    T("Check Hints for cases"));
+#else
   ToolAddWindow(ToolTip,Win,
     T("Advanced - Some rare demos will display correctly only in one of those states."));
+#endif
   y+=30;
 #endif
 #elif defined(SSE_STF) && (defined(SSE_GUI_OPTIONS_STF_IN_MACHINE)\
   ||!defined(SSE_GUI_OPTION_PAGE))
   y+=30;
 #endif
-
 
   Wid=get_text_width(T("ST CPU speed"));
   CreateWindow("Static",T("ST CPU speed"),WS_CHILD,page_l,y+4,Wid,23,Handle,(HMENU)403,HInstance,NULL);
@@ -145,10 +155,10 @@ void TOptionBox::CreateMachinePage()
 #if defined(SSE_CPU_2GHZ)
   CBAddString(Win,EasyStr("2 Ghz"),2048000000);
 #endif
-#if defined(SSE_CPU_3GHZ)
+#if defined(SSE_CPU_3GHZ) //no!
   CBAddString(Win,EasyStr("3 Ghz"),3072000000);
 #endif
-#if defined(SSE_CPU_4GHZ)
+#if defined(SSE_CPU_4GHZ) //no!
   CBAddString(Win,EasyStr("4 Ghz"),4096000000);
 #endif
 

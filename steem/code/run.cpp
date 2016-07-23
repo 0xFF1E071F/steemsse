@@ -1043,17 +1043,16 @@ void event_scanline()
 #endif
   scanline_drawn_so_far=0;
 
-#if defined(SSE_MMU_SDP1)
-#if defined(DEBUG_BUILD) || !defined(SSE_MMU_SDP1B) //boiler-only
+#if defined(DEBUG_BUILD)
 /*  Enforce register limitations, so that "report SDP" isn't messed up
     in the debug build.
 */
-#if defined(SSE_MMU_SDP1B) //bugfix 3.7.1 not for 14MB hack
-  if(mem_len<=4*1024*1024)
+#if defined(SSE_MMU_SDP1B) //bugfix 3.7.1 not for 14MB hack!
+  if(mem_len<=FOUR_MEGS) 
 #endif
     shifter_draw_pointer&=0x3FFFFE;
 #endif
-#endif
+
 #if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
 /*  Refactoring of "add extra".
     We don't use variable overscan_add_extra to adjust SDP anymore.
@@ -1689,7 +1688,7 @@ void event_vbl_interrupt() //SS misleading name?
     SS_signal=SIGNAL_SHIFTER_CONFUSED_2; // stage 2 of our hack
 #endif  
 
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_370)
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_370)//no
 /*  v3.7
     The ST could be set on high resolution for a long time
     on a colour screen.

@@ -7,11 +7,14 @@
 #include <binary.h>
 #include <conditions.h>
 #include <setjmp.h>
-#include <SSE/SSEDebug.h>
+
 #include "acc.decla.h"
 #include "emulator.decla.h"
 #include "iorw.decla.h"
 #include "steemh.decla.h"
+
+#include <SSE/SSEDebug.h>
+#include <SSE/SSEDecla.h> //intrinsics
 
 #endif
 
@@ -126,13 +129,17 @@ void m68k_get_dest_111_w_faster();
 void m68k_get_dest_111_l_faster();
 #endif
 
+#if defined(SSE_VC_INTRINSICS_383B)
+extern int (*count_bits_set_in_word)(unsigned short);
+#endif
+
 BYTE m68k_fetchB();
 WORD m68k_fetchW();
 LONG m68k_fetchL();
 void ASMCALL perform_crash_and_burn();
 void m68k_unrecognised();
 
-#if defined(SSE_VAR_REWRITE) || defined(SSE_VS2008)//compiler warning
+#if defined(COMPILER_VC6)
 extern "C" void ASMCALL m68k_trace(); //execute instruction with trace bit set
 #else
 extern "C" ASMCALL void m68k_trace(); //execute instruction with trace bit set
@@ -206,16 +213,9 @@ extern jmp_buf *pJmpBuf;
 #endif
 #define areg (r+8)
 
-#ifdef SSE_CPU_ALT_REG_NAMES
-#define D0 r[0]
-#define SP areg[7]  // note Steem already defines USP and SSP
-#endif
-
 extern BYTE  m68k_peek(MEM_ADDRESS ad);
 extern WORD  m68k_dpeek(MEM_ADDRESS ad);
 extern LONG  m68k_lpeek(MEM_ADDRESS ad);
-
-
 
 extern void cpu_routines_init();
 
@@ -245,10 +245,17 @@ extern int m68k_divu_cycles,m68k_divs_cycles;
 #define SR_N 8
 #define SR_X 16
 #define SR_SUPER BIT_d
-#define SR_USER_BYTE 31
+#define SR_USER_BYTE 31 //SS = $1F
 #define SR_TRACE (WORD(BIT_f))
 
-#if defined(SSE_VAR_REWRITE)
+#if defined(SSE_VC_INTRINSICS_383)
+enum {SR_C_BIT,SR_V_BIT,SR_Z_BIT,SR_N_BIT,SR_X_BIT,SR_SUPER_BIT=0xd,
+SR_TRACE_BIT=0xf};
+#endif
+
+#if defined(SSE_VC_INTRINSICS_383A)
+#define SUPERFLAG (BITTEST(sr,SR_SUPER_BIT))
+#elif defined(SSE_VAR_REWRITE)
 #define SUPERFLAG ( ((sr&SR_SUPER)!=0) ) // warning C4800
 #else
 #define SUPERFLAG ((bool)(sr&SR_SUPER))
@@ -442,98 +449,13 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 #define FETCH_TIMING {INSTRUCTION_TIME(4); cpu_cycles&=-4;} 
 #endif
 
+#if defined(SSE_CPU_INLINE_SET_DEST_TO_ADDR) //383 (finally)
 
-#if defined(SSE_MMU_NO_CONFUSION) 
-// SSE_MMU_NO_CONFUSION isn't defined
+#define m68k_SET_DEST_B_TO_ADDR M68000.SetDestBToAddr();
+#define m68k_SET_DEST_W_TO_ADDR M68000.SetDestWToAddr();
+#define m68k_SET_DEST_L_TO_ADDR M68000.SetDestLToAddr();
 
-#define m68k_SET_DEST_B_TO_ADDR        \
-  abus&=0xffffff;                                   \
-  if(abus>=MEM_IO_BASE){               \
-    if(SUPERFLAG){                        \
-      ioaccess&=IOACCESS_FLAGS_MASK; \
-      ioaccess|=1;                     \
-      ioad=abus;                        \
-      m68k_dest=&iobuffer;               \
-      DWORD_B_0(&iobuffer)=io_read_b(abus);        \
-    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);             \
-  }else if(abus>=himem){                               \
-    if(abus>=FOUR_MEGS){                                                \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               \
-    }else{                                                        \
-      m68k_dest=&iobuffer;                             \
-    }                                       \
-  }else{                                            \
-    DEBUG_CHECK_WRITE_B(abus); \
-    if (SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){                             \
-      m68k_dest=lpPEEK(abus);           \
-    }else if(abus>=MEM_START_OF_USER_AREA){ \
-      m68k_dest=lpPEEK(abus);           \
-    }else{                                      \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
-    }                                           \
-  }
-
-#define m68k_SET_DEST_W_TO_ADDR        \
-  abus&=0xffffff;                                   \
-  if(abus&1){                                      \
-    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);    \
-  }else if(abus>=MEM_IO_BASE){               \
-    if(SUPERFLAG){                        \
-      ioaccess&=IOACCESS_FLAGS_MASK; \
-      ioaccess|=2;                     \
-      ioad=abus;                        \
-      m68k_dest=&iobuffer;               \
-      *((WORD*)&iobuffer)=io_read_w(abus);        \
-    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                \
-  }else if(abus>=himem){                               \
-    if(abus>=FOUR_MEGS){                                                \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               \
-    }else{                                                        \
-      m68k_dest=&iobuffer;                             \
-    }                                       \
-  }else{                               \
-    DEBUG_CHECK_WRITE_W(abus);  \
-    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){                       \
-      m68k_dest=lpDPEEK(abus);           \
-    }else if(abus>=MEM_START_OF_USER_AREA){ \
-      m68k_dest=lpDPEEK(abus);           \
-    }else{                                      \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
-    }                                           \
-  }
-
-#define m68k_SET_DEST_L_TO_ADDR        \
-  abus&=0xffffff;                                   \
-  if(abus&1){                                      \
-    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);    \
-  }else if(abus>=MEM_IO_BASE){               \
-    if(SUPERFLAG){                        \
-      ioaccess&=IOACCESS_FLAGS_MASK; \
-      ioaccess|=4;                     \
-      ioad=abus;                         \
-      m68k_dest=&iobuffer;               \
-      iobuffer=io_read_l(abus);        \
-    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                 \
-  }else if(abus>=himem){                               \
-    if(abus>=FOUR_MEGS){                                                \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               \
-    }else{                                                        \
-      m68k_dest=&iobuffer;                             \
-    }                                       \
-  }else{                               \
-    DEBUG_CHECK_WRITE_L(abus);  \
-    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){                       \
-      m68k_dest=lpLPEEK(abus);           \
-    }else if(abus>=MEM_START_OF_USER_AREA){ \
-      m68k_dest=lpLPEEK(abus);           \
-    }else{                                      \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
-    }                                           \
-  }
-
-
-#elif defined(SSE_BOILER_MONITOR_VALUE4) // changing the order of set/check
-
+#else // removed older mods (they're in the inline version)
 
 #define m68k_SET_DEST_B_TO_ADDR        \
   abus&=0xffffff;                                   \
@@ -554,137 +476,6 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
       m68k_dest=&iobuffer;                             \
     }                                       \
   }else{                                            \
-    if (SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){                             \
-      m68k_dest=lpPEEK(abus);           \
-    }else if(abus>=MEM_START_OF_USER_AREA){ \
-      m68k_dest=lpPEEK(abus);           \
-    }else{                                      \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
-    }                                           \
-    DEBUG_CHECK_WRITE_B(abus); \
-  }
-
-#if defined(SSE_CPU_SET_DEST_W_TO_0) //no
-
-#define m68k_SET_DEST_W_TO_ADDR        \
-  abus&=0xffffff;                                   \
-  if(abus&1){                                      \
-    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);    \
-  }else if(abus>=MEM_IO_BASE){               \
-    if(SUPERFLAG){                        \
-      ioaccess&=IOACCESS_FLAGS_MASK; \
-      ioaccess|=2;                     \
-      ioad=abus;                        \
-      m68k_dest=&iobuffer;               \
-      *((WORD*)&iobuffer)=io_read_w(abus);        \
-    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                \
-  }else if(abus>=himem){                               \
-    if(mmu_confused){                               \
-      mmu_confused_set_dest_to_addr(2,true);           \
-    }else if(abus>=FOUR_MEGS){                                                \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               \
-    }else{                                                        \
-      m68k_dest=&iobuffer;                             \
-    }                                       \
-  }else{                              \
-    if(SUPERFLAG && (abus>=MEM_FIRST_WRITEABLE|| ir==0x4251)){                       \
-      m68k_dest=lpDPEEK(abus);           \
-    }else if(abus>=MEM_START_OF_USER_AREA){ \
-      m68k_dest=lpDPEEK(abus);           \
-    }else{                                      \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
-    }                                           \
-    DEBUG_CHECK_WRITE_W(abus);  \
-  }
-
-#else
-#define m68k_SET_DEST_W_TO_ADDR        \
-  abus&=0xffffff;                                   \
-  if(abus&1){                                      \
-    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);    \
-  }else if(abus>=MEM_IO_BASE){               \
-    if(SUPERFLAG){                        \
-      ioaccess&=IOACCESS_FLAGS_MASK; \
-      ioaccess|=2;                     \
-      ioad=abus;                        \
-      m68k_dest=&iobuffer;               \
-      *((WORD*)&iobuffer)=io_read_w(abus);        \
-    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                \
-  }else if(abus>=himem){                               \
-    if(mmu_confused){                               \
-      mmu_confused_set_dest_to_addr(2,true);           \
-    }else if(abus>=FOUR_MEGS){                                                \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               \
-    }else{                                                        \
-      m68k_dest=&iobuffer;                             \
-    }                                       \
-  }else{                               \
-    DEBUG_CHECK_WRITE_W(abus);  \
-    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){                       \
-      m68k_dest=lpDPEEK(abus);           \
-    }else if(abus>=MEM_START_OF_USER_AREA){ \
-      m68k_dest=lpDPEEK(abus);           \
-    }else{                                      \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
-    }                                           \
-  }
-
-#endif
-
-#define m68k_SET_DEST_L_TO_ADDR        \
-  abus&=0xffffff;                                   \
-  if(abus&1){                                      \
-    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);    \
-  }else if(abus>=MEM_IO_BASE){               \
-    if(SUPERFLAG){                        \
-      ioaccess&=IOACCESS_FLAGS_MASK; \
-      ioaccess|=4;                     \
-      ioad=abus;                         \
-      m68k_dest=&iobuffer;               \
-      iobuffer=io_read_l(abus);        \
-    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                 \
-  }else if(abus>=himem){                               \
-    if(mmu_confused){                               \
-      mmu_confused_set_dest_to_addr(4,true);           \
-    }else if(abus>=FOUR_MEGS){                                                \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               \
-    }else{                                                        \
-      m68k_dest=&iobuffer;                             \
-    }                                       \
-  }else{                               \
-    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){                       \
-      m68k_dest=lpLPEEK(abus);           \
-    }else if(abus>=MEM_START_OF_USER_AREA){ \
-      m68k_dest=lpLPEEK(abus);           \
-    }else{                                      \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
-    }                                           \
-    DEBUG_CHECK_WRITE_L(abus);  \
-  }
-
-
-#else // (with MMU "confusion") //back on in v3.5.2
-
-//TODO create inline functions for those as well
-#define m68k_SET_DEST_B_TO_ADDR        \
-  abus&=0xffffff;                                   \
-  if(abus>=MEM_IO_BASE){               \
-    if(SUPERFLAG){                        \
-      ioaccess&=IOACCESS_FLAGS_MASK; \
-      ioaccess|=1;                     \
-      ioad=abus;                        \
-      m68k_dest=&iobuffer;               \
-      DWORD_B_0(&iobuffer)=io_read_b(abus);        \
-    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);             \
-  }else if(abus>=himem){                               \
-    if(mmu_confused){                               \
-      mmu_confused_set_dest_to_addr(1,true);           \
-    }else if(abus>=FOUR_MEGS){                                                \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               \
-    }else{                                                        \
-      m68k_dest=&iobuffer;                             \
-    }                                       \
-  }else{                                            \
     DEBUG_CHECK_WRITE_B(abus); \
     if (SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){                             \
       m68k_dest=lpPEEK(abus);           \
@@ -695,44 +486,6 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     }                                           \
   }
 
-#if defined(SSE_CPU_SET_DEST_W_TO_0) //no
-
-#define m68k_SET_DEST_W_TO_ADDR        \
-  abus&=0xffffff;                                   \
-  if(abus&1){                                      \
-    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);    \
-  }else if(abus>=MEM_IO_BASE){               \
-    if(SUPERFLAG){                        \
-      ioaccess&=IOACCESS_FLAGS_MASK; \
-      ioaccess|=2;                     \
-      ioad=abus;                        \
-      m68k_dest=&iobuffer;               \
-      *((WORD*)&iobuffer)=io_read_w(abus);        \
-    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                \
-  }else if(abus>=himem){                               \
-    if(mmu_confused){                               \
-      mmu_confused_set_dest_to_addr(2,true);           \
-    }else if(abus>=FOUR_MEGS){                                                \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               \
-    }else{                                                        \
-      m68k_dest=&iobuffer;                             \
-    }                                       \
-  }else{                               \
-    DEBUG_CHECK_WRITE_W(abus);  \
-    if(SUPERFLAG && (abus>=MEM_FIRST_WRITEABLE/*|| ir==0x4251*/)){                       \
-      m68k_dest=lpDPEEK(abus);           \
-    }else if(abus>=MEM_START_OF_USER_AREA){ \
-      m68k_dest=lpDPEEK(abus);           \
-    }else{                                      \
-    /*M68000.Pc=pc+2;*/\
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
-    }                                           \
-  }
-
-#else//!SSE_CPU_SET_DEST_W_TO_0
-
-// TODO = change those macros into regular code
-
 #define m68k_SET_DEST_W_TO_ADDR        \
   abus&=0xffffff;                                   \
   if(abus&1){                                      \
@@ -763,8 +516,6 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
     }                                           \
   }
-
-#endif
 
 #define m68k_SET_DEST_L_TO_ADDR        \
   abus&=0xffffff;                                   \
@@ -797,8 +548,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     }                                           \
   }
 
-#endif//#if defined(SSE_MMU_NO_CONFUSION)
-
+#endif//SSE_CPU_INLINE_SET_DEST_TO_ADDR
 
 #define m68k_SET_DEST_B(addr)           \
   abus=addr;                            \
@@ -940,6 +690,31 @@ extern signed int compare_buffer;
 
 #define SR_VALID_BITMASK 0xa71f
 
+#if defined(SSE_VC_INTRINSICS_383E)
+
+#define SR_CHECK_Z_AND_N_B                   \
+  if(_bittest((LONG*)m68k_dest,7)){          \
+    BITSET(sr,SR_N_BIT);                            \
+  }else if(m68k_DEST_B==0){                  \
+    BITSET(sr,SR_Z_BIT);                            \
+  }
+
+#define SR_CHECK_Z_AND_N_W                   \
+  if(_bittest((LONG*)m68k_dest,0xf)){        \
+    BITSET(sr,SR_N_BIT);                            \
+  }else if(m68k_DEST_W==0){                  \
+    BITSET(sr,SR_Z_BIT);                            \
+  }
+
+#define SR_CHECK_Z_AND_N_L                   \
+  if(_bittest((LONG*)m68k_dest,31)){         \
+    BITSET(sr,SR_N_BIT);                            \
+  }else if(m68k_DEST_L==0){                  \
+    BITSET(sr,SR_Z_BIT);                            \
+  }
+
+#else
+
 #define SR_CHECK_Z_AND_N_B                   \
   if(m68k_DEST_B&BIT_7){                     \
     SR_SET(SR_N);                            \
@@ -961,7 +736,25 @@ extern signed int compare_buffer;
     SR_SET(SR_Z);                            \
   }
 
+#endif
 
+#if defined(SSE_VC_INTRINSICS_383E)
+
+#define SR_ADD_B                                                        \
+  SR_CLEAR(SR_USER_BYTE)                                                \
+  if( ( (( m68k_src_b)&( m68k_old_dest)&(~m68k_DEST_B))|                \
+        ((~m68k_src_b)&(~m68k_old_dest)&( m68k_DEST_B)) ) & MSB_B){     \
+    BITSET(sr,SR_V_BIT);                                                \
+  }                                                                     \
+  if( ( (( m68k_src_b)&( m68k_old_dest)) |                              \
+        ((~m68k_DEST_B)&( m68k_old_dest))|                              \
+        (( m68k_src_b)&(~m68k_DEST_B)) ) & MSB_B){                      \
+    SR_SET(SR_C+SR_X);                                                  \
+  }                                                                     \
+  if(!m68k_DEST_B)BITSET(sr,SR_Z_BIT);                                  \
+  if(_bittest((LONG*)m68k_dest,7)) BITSET(sr,SR_N_BIT);               
+
+#else
 #define SR_ADD_B                                                        \
   SR_CLEAR(SR_USER_BYTE)                                                \
   if( ( (( m68k_src_b)&( m68k_old_dest)&(~m68k_DEST_B))|                \
@@ -976,6 +769,25 @@ extern signed int compare_buffer;
   if(!m68k_DEST_B)SR_SET(SR_Z);                                         \
   if(m68k_DEST_B & MSB_B)SR_SET(SR_N);                                  \
 
+#endif
+
+#if defined(SSE_VC_INTRINSICS_383E)
+
+#define SR_ADDX_B                                                       \
+  SR_CLEAR(SR_X+SR_N+SR_V+SR_C)                                         \
+  if( ( (( m68k_src_b)&( m68k_old_dest)&(~m68k_DEST_B))|                \
+        ((~m68k_src_b)&(~m68k_old_dest)&( m68k_DEST_B)) ) & MSB_B){     \
+    BITSET(sr,SR_V_BIT);                                    \
+  }                                                                     \
+  if( ( (( m68k_src_b)&( m68k_old_dest)) |                              \
+        ((~m68k_DEST_B)&( m68k_old_dest))|                              \
+        (( m68k_src_b)&(~m68k_DEST_B)) ) & MSB_B){                      \
+    SR_SET(SR_C+SR_X);                                                  \
+  }                                                                     \
+  if(BITTEST(sr,SR_Z_BIT))if(m68k_DEST_B)BITRESET(sr,SR_Z_BIT);               \
+  if(_bittest((LONG*)m68k_dest,7))BITSET(sr,SR_N_BIT);     
+
+#else
 
 #define SR_ADDX_B                                                       \
   SR_CLEAR(SR_X+SR_N+SR_V+SR_C)                                         \
@@ -991,7 +803,24 @@ extern signed int compare_buffer;
   if(sr&SR_Z)if(m68k_DEST_B)SR_CLEAR(SR_Z);                             \
   if(m68k_DEST_B & MSB_B)SR_SET(SR_N);                                  \
 
+#endif
 
+#if defined(SSE_VC_INTRINSICS_383E)
+#define SR_ADD_W                                                        \
+  SR_CLEAR(SR_USER_BYTE)                                                \
+  if( ( (( m68k_src_w)&( m68k_old_dest)&(~m68k_DEST_W))|                \
+        ((~m68k_src_w)&(~m68k_old_dest)&( m68k_DEST_W)) ) & MSB_W){     \
+    BITSET(sr,SR_V_BIT);                                                       \
+  }                                                                     \
+  if( ( (( m68k_src_w)&( m68k_old_dest)) |                              \
+        ((~m68k_DEST_W)&( m68k_old_dest))|                              \
+        (( m68k_src_w)&(~m68k_DEST_W)) ) & MSB_W){                      \
+    SR_SET(SR_C+SR_X);                                                  \
+  }                                                                     \
+  if(!m68k_DEST_W)BITSET(sr,SR_Z_BIT);                                         \
+  if(_bittest((LONG*)m68k_dest,15)) BITSET(sr,SR_N_BIT);               
+
+#else
 #define SR_ADD_W                                                        \
   SR_CLEAR(SR_USER_BYTE)                                                \
   if( ( (( m68k_src_w)&( m68k_old_dest)&(~m68k_DEST_W))|                \
@@ -1006,8 +835,28 @@ extern signed int compare_buffer;
   if(!m68k_DEST_W)SR_SET(SR_Z);                                         \
   if(m68k_DEST_W & MSB_W)SR_SET(SR_N);                                  \
 
+#endif
 
-#define SR_ADDX_W                                                       \
+#if defined(SSE_VC_INTRINSICS_383E)
+
+#define SR_ADDX_W                  \
+  SR_CLEAR(SR_X+SR_N+SR_V+SR_C) \
+  if( ( (( m68k_src_w)&( m68k_old_dest)&(~m68k_DEST_W))|  \
+        ((~m68k_src_w)&(~m68k_old_dest)&( m68k_DEST_W)) ) & MSB_W){  \
+    BITSET(sr,SR_V_BIT);                                                     \
+  }                                                                 \
+  if( ( (( m68k_src_w)&( m68k_old_dest)) |  \
+        ((~m68k_DEST_W)&( m68k_old_dest))|  \
+        (( m68k_src_w)&(~m68k_DEST_W)) ) & MSB_W){  \
+    SR_SET(SR_C+SR_X);                                                 \
+  }                                                                     \
+  if(BITTEST(sr,SR_Z_BIT))if(m68k_DEST_W)BITRESET(sr,SR_Z_BIT);                    \
+  if(_bittest((LONG*)m68k_dest,15))BITSET(sr,SR_N_BIT);          
+
+
+#else
+
+#define SR_ADDX_W                  \
   SR_CLEAR(SR_X+SR_N+SR_V+SR_C) \
   if( ( (( m68k_src_w)&( m68k_old_dest)&(~m68k_DEST_W))|  \
         ((~m68k_src_w)&(~m68k_old_dest)&( m68k_DEST_W)) ) & MSB_W){  \
@@ -1021,6 +870,24 @@ extern signed int compare_buffer;
   if(sr&SR_Z)if(m68k_DEST_W)SR_CLEAR(SR_Z);                                      \
   if(m68k_DEST_W & MSB_W)SR_SET(SR_N);                               \
 
+#endif
+
+#if defined(SSE_VC_INTRINSICS_383E)
+#define SR_ADD_L           \
+  SR_CLEAR(SR_USER_BYTE) \
+  if( ( (( m68k_src_l)&( m68k_old_dest)&(~m68k_DEST_L))|  \
+        ((~m68k_src_l)&(~m68k_old_dest)&( m68k_DEST_L)) ) & MSB_L){  \
+    BITSET(sr,SR_V_BIT);                                                       \
+  }                                                                     \
+  if( ( (( m68k_src_l)&( m68k_old_dest)) |  \
+        ((~m68k_DEST_L)&( m68k_old_dest))|  \
+        (( m68k_src_l)&(~m68k_DEST_L)) ) & MSB_L){  \
+    SR_SET(SR_C+SR_X);                                                 \
+  }                                                                     \
+  if(!m68k_DEST_L)BITSET(sr,SR_Z_BIT);                                         \
+  if(_bittest((LONG*)m68k_dest,31)) BITSET(sr,SR_N_BIT);               
+
+#else
 
 #define SR_ADD_L           \
   SR_CLEAR(SR_USER_BYTE) \
@@ -1036,6 +903,26 @@ extern signed int compare_buffer;
   if(!m68k_DEST_L)SR_SET(SR_Z);                                      \
   if(m68k_DEST_L & MSB_L)SR_SET(SR_N);                               \
 
+#endif
+
+#if defined(SSE_VC_INTRINSICS_383E)
+
+#define SR_ADDX_L           \
+  SR_CLEAR(SR_X+SR_N+SR_V+SR_C) \
+  if( ( (( m68k_src_l)&( m68k_old_dest)&(~m68k_DEST_L))|  \
+        ((~m68k_src_l)&(~m68k_old_dest)&( m68k_DEST_L)) ) & MSB_L){  \
+    BITSET(sr,SR_V_BIT);                                                     \
+  }                                                                 \
+  if( ( (( m68k_src_l)&( m68k_old_dest)) |  \
+        ((~m68k_DEST_L)&( m68k_old_dest))|  \
+        (( m68k_src_l)&(~m68k_DEST_L)) ) & MSB_L){  \
+    SR_SET(SR_C+SR_X);                                                 \
+  }                                                                     \
+  if(BITTEST(sr,SR_Z_BIT))if(m68k_DEST_L)BITRESET(sr,SR_Z_BIT);                                    \
+  if(_bittest((LONG*)m68k_dest,31))BITSET(sr,SR_N_BIT);                               \
+
+
+#else
 
 #define SR_ADDX_L           \
   SR_CLEAR(SR_X+SR_N+SR_V+SR_C) \
@@ -1051,8 +938,25 @@ extern signed int compare_buffer;
   if(sr&SR_Z)if(m68k_DEST_L)SR_CLEAR(SR_Z);                                      \
   if(m68k_DEST_L & MSB_L)SR_SET(SR_N);                               \
 
+#endif
 
+#if defined(SSE_VC_INTRINSICS_383E)
 
+#define SR_SUB_B(extend_flag)           \
+  SR_CLEAR(SR_N+SR_Z+SR_V+SR_C+extend_flag) \
+  if( ( ((~m68k_src_b)&( m68k_old_dest)&(~m68k_DEST_B))|  \
+        (( m68k_src_b)&(~m68k_old_dest)&( m68k_DEST_B)) ) & MSB_B){  \
+    BITSET(sr,SR_V_BIT);                                                     \
+  }                                                                 \
+  if( ( (( m68k_src_b)&(~m68k_old_dest)) |  \
+        (( m68k_DEST_B)&(~m68k_old_dest))|  \
+        (( m68k_src_b)&( m68k_DEST_B)) ) & MSB_B){  \
+    SR_SET(SR_C+extend_flag);                                                 \
+  }                                                                     \
+  if(!m68k_DEST_B)BITSET(sr,SR_Z_BIT);                                      \
+  if(_bittest((LONG*)m68k_dest,7)) BITSET(sr,SR_N_BIT); 
+
+#else
 
 #define SR_SUB_B(extend_flag)           \
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C+extend_flag) \
@@ -1068,6 +972,27 @@ extern signed int compare_buffer;
   if(!m68k_DEST_B)SR_SET(SR_Z);                                      \
   if(m68k_DEST_B & MSB_B)SR_SET(SR_N);                               \
 
+#endif
+
+#if defined(SSE_VC_INTRINSICS_383E)
+
+#define SR_SUBX_B                                                      \
+  SR_CLEAR(SR_X+SR_N+SR_V+SR_C) \
+  if( ( ((~m68k_src_b)&( m68k_old_dest)&(~m68k_DEST_B))|  \
+        (( m68k_src_b)&(~m68k_old_dest)&( m68k_DEST_B)) ) & MSB_B){  \
+    BITSET(sr,SR_V_BIT);                                                     \
+  }                                                                 \
+  if( ( (( m68k_src_b)&(~m68k_old_dest)) |  \
+        (( m68k_DEST_B)&(~m68k_old_dest))|  \
+        (( m68k_src_b)&( m68k_DEST_B)) ) & MSB_B){  \
+    SR_SET(SR_C+SR_X);                                                 \
+  }                                                                     \
+  if(BITTEST(sr,SR_Z_BIT))if(m68k_DEST_B)BITRESET(sr,SR_Z_BIT);                                  \
+  if(_bittest((LONG*)m68k_dest,7))BITSET(sr,SR_N_BIT);                               \
+
+
+#else
+
 #define SR_SUBX_B                                                      \
   SR_CLEAR(SR_X+SR_N+SR_V+SR_C) \
   if( ( ((~m68k_src_b)&( m68k_old_dest)&(~m68k_DEST_B))|  \
@@ -1081,6 +1006,26 @@ extern signed int compare_buffer;
   }                                                                     \
   if(sr&SR_Z)if(m68k_DEST_B)SR_CLEAR(SR_Z);                                      \
   if(m68k_DEST_B & MSB_B)SR_SET(SR_N);                               \
+
+#endif
+
+#if defined(SSE_VC_INTRINSICS_383E)
+
+#define SR_SUB_W(extend_flag)           \
+  SR_CLEAR(SR_N+SR_Z+SR_V+SR_C+extend_flag)                             \
+  if( ( ((~m68k_src_w)&( m68k_old_dest)&(~m68k_DEST_W))|  \
+        (( m68k_src_w)&(~m68k_old_dest)&( m68k_DEST_W)) ) & MSB_W){  \
+    BITSET(sr,SR_V_BIT);                                                     \
+  }                                                                 \
+  if( ( (( m68k_src_w)&(~m68k_old_dest)) |  \
+        (( m68k_DEST_W)&(~m68k_old_dest))|  \
+        (( m68k_src_w)&( m68k_DEST_W)) ) & MSB_W){  \
+    SR_SET(SR_C+extend_flag);                                                 \
+  }                                                                     \
+  if(!m68k_DEST_W)BITSET(sr,SR_Z_BIT);                                      \
+  if(_bittest((LONG*)m68k_dest,15)) BITSET(sr,SR_N_BIT);
+
+#else
 
 #define SR_SUB_W(extend_flag)           \
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C+extend_flag)                             \
@@ -1096,6 +1041,27 @@ extern signed int compare_buffer;
   if(!m68k_DEST_W)SR_SET(SR_Z);                                      \
   if(m68k_DEST_W & MSB_W)SR_SET(SR_N);                               \
 
+#endif
+
+#if defined(SSE_VC_INTRINSICS_383E)
+
+#define SR_SUBX_W           \
+  SR_CLEAR(SR_X+SR_N+SR_V+SR_C) \
+  if( ( ((~m68k_src_w)&( m68k_old_dest)&(~m68k_DEST_W))|  \
+        (( m68k_src_w)&(~m68k_old_dest)&( m68k_DEST_W)) ) & MSB_W){  \
+    BITSET(sr,SR_V_BIT);                                                     \
+  }                                                                 \
+  if( ( (( m68k_src_w)&(~m68k_old_dest)) |  \
+        (( m68k_DEST_W)&(~m68k_old_dest))|  \
+        (( m68k_src_w)&( m68k_DEST_W)) ) & MSB_W){  \
+    SR_SET(SR_C+SR_X);                                                 \
+  }                                                                     \
+  if(BITTEST(sr,SR_Z_BIT))if(m68k_DEST_W)BITRESET(sr,SR_Z_BIT);                                     \
+  if(_bittest((LONG*)m68k_dest,15))BITSET(sr,SR_N_BIT);   
+
+
+#else
+
 #define SR_SUBX_W           \
   SR_CLEAR(SR_X+SR_N+SR_V+SR_C) \
   if( ( ((~m68k_src_w)&( m68k_old_dest)&(~m68k_DEST_W))|  \
@@ -1110,6 +1076,25 @@ extern signed int compare_buffer;
   if(sr&SR_Z)if(m68k_DEST_W)SR_CLEAR(SR_Z);                                      \
   if(m68k_DEST_W & MSB_W)SR_SET(SR_N);                               \
 
+#endif
+
+#if defined(SSE_VC_INTRINSICS_383E)
+
+#define SR_SUB_L(extend_flag)           \
+  SR_CLEAR(SR_N+SR_Z+SR_V+SR_C+extend_flag)                             \
+  if( ( ((~m68k_src_l)&( m68k_old_dest)&(~m68k_DEST_L))|  \
+        (( m68k_src_l)&(~m68k_old_dest)&( m68k_DEST_L)) ) & MSB_L){  \
+    BITSET(sr,SR_V_BIT);                                                     \
+  }                                                                 \
+  if( ( (( m68k_src_l)&(~m68k_old_dest)) |  \
+        (( m68k_DEST_L)&(~m68k_old_dest))|  \
+        (( m68k_src_l)&( m68k_DEST_L)) ) & MSB_L){  \
+    SR_SET(SR_C+extend_flag);                                                 \
+  }                                                                     \
+  if(!m68k_DEST_L)BITSET(sr,SR_Z_BIT);                                      \
+  if(_bittest((LONG*)m68k_dest,31)) BITSET(sr,SR_N_BIT);
+
+#else
 
 #define SR_SUB_L(extend_flag)           \
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C+extend_flag)                             \
@@ -1125,6 +1110,27 @@ extern signed int compare_buffer;
   if(!m68k_DEST_L)SR_SET(SR_Z);                                      \
   if(m68k_DEST_L & MSB_L)SR_SET(SR_N);                               \
 
+#endif
+
+#if defined(SSE_VC_INTRINSICS_383E)
+
+#define SR_SUBX_L           \
+  SR_CLEAR(SR_X+SR_N+SR_V+SR_C) \
+  if( ( ((~m68k_src_l)&( m68k_old_dest)&(~m68k_DEST_L))|  \
+        (( m68k_src_l)&(~m68k_old_dest)&( m68k_DEST_L)) ) & MSB_L){  \
+    BITSET(sr,SR_V_BIT);                                                     \
+  }                                                                 \
+  if( ( (( m68k_src_l)&(~m68k_old_dest)) |  \
+        (( m68k_DEST_L)&(~m68k_old_dest))|  \
+        (( m68k_src_l)&( m68k_DEST_L)) ) & MSB_L){  \
+    SR_SET(SR_C+SR_X);                                                 \
+  }                                                                     \
+  if(BITTEST(sr,SR_Z_BIT))if(m68k_DEST_L)BITRESET(sr,SR_Z_BIT);                                      \
+  if(BITTEST(m68k_dest,31))BITSET(sr,SR_N_BIT);                               \
+
+
+#else
+
 #define SR_SUBX_L           \
   SR_CLEAR(SR_X+SR_N+SR_V+SR_C) \
   if( ( ((~m68k_src_l)&( m68k_old_dest)&(~m68k_DEST_L))|  \
@@ -1139,7 +1145,7 @@ extern signed int compare_buffer;
   if(sr&SR_Z)if(m68k_DEST_L)SR_CLEAR(SR_Z);                                      \
   if(m68k_DEST_L & MSB_L)SR_SET(SR_N);                               \
 
-
+#endif
 
 #define m68k_GET_IMMEDIATE_B m68k_src_b=m68k_fetchB();pc+=2; 
 #define m68k_GET_IMMEDIATE_W m68k_src_w=m68k_fetchW();pc+=2; 
@@ -1157,7 +1163,12 @@ extern signed int compare_buffer;
 
 #define ILLEGAL  exception(BOMBS_ILLEGAL_INSTRUCTION,EA_INST,0);
 
+#if defined(SSE_VC_INTRINSICS_383E)
+#define DETECT_TRACE_BIT {if (BITTEST(sr,SR_TRACE_BIT)) \
+  ioaccess=TRACE_BIT_JUST_SET | (ioaccess & IOACCESS_FLAGS_MASK);}
+#else
 #define DETECT_TRACE_BIT {if (sr & SR_TRACE) ioaccess=TRACE_BIT_JUST_SET | (ioaccess & IOACCESS_FLAGS_MASK);}
+#endif
 
 #define TRACE_BIT_JUST_SET 0x2b
 
@@ -1167,8 +1178,6 @@ extern signed int compare_buffer;
 #define FC_SUPERVISOR_DATA 5
 #define FC_SUPERVISOR_PROGRAM 6
 #define FC_INTERRUPT_VERIFICATION 7
-
-extern void sr_check_z_n_l_for_r0();
 
 #if defined(SSE_CPU)
 #define SET_PC(ad) M68000.SetPC(ad);
@@ -1188,9 +1197,12 @@ extern void m68k_process();
 inline void change_to_user_mode()
 {
 //  if(SUPERFLAG){
-  ASSERT(!SUPERFLAG);//?
   compare_buffer=r[15];r[15]=other_sp;other_sp=compare_buffer;
+#if defined(SSE_VC_INTRINSICS_383E)
+  BITRESET(sr,SR_SUPER_BIT);
+#else
   SR_CLEAR(SR_SUPER);
+#endif
 //  }
 }
 //---------------------------------------------------------------------------
@@ -1198,7 +1210,11 @@ inline void change_to_supervisor_mode()
 {
 //  if(!SUPERFLAG){
   compare_buffer=r[15];r[15]=other_sp;other_sp=compare_buffer;
+#if defined(SSE_VC_INTRINSICS_383E)
+  BITSET(sr,SR_SUPER_BIT);
+#else
   SR_SET(SR_SUPER);
+#endif
 //  }
 }
 #endif

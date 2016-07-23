@@ -207,9 +207,6 @@ const //const must be removed for linker
 #include "../../3rdparty/various/ym2149_fixed_vol.h" //more bloat...
 #endif
 
-
-//TODO load only when check option
-
 inline bool playing_samples() {
 #if defined(SSE_SOUND_FILTER_STF3)
 /*  This test is more complicated but will work with
@@ -396,13 +393,12 @@ HRESULT Sound_Start() // SS called by
     }else if (envshape==b1011 || envshape==b1101){
       flatlevel+=psg_flat_volume_level[15]; //SS 15 = 1 anyway
     }
-#if defined(SSE_YM2149_ENV_DEPHASING)
+#if defined(SSE_YM2149_ENV_DEPHASING)//no
 /*  For demo Closure but not sure it makes a hearable difference
     http://www.atari-forum.com/viewtopic.php?f=18&t=27521&sid=a0d1b43f0f66988900541b039ab5f6d4#p285292
     update: yes it does, it's bad for kid kong! thought I tested it :(
 */
     env_phase[abc]=(rand()&0xFF);
-    //env_phase[abc]=(rand()& (64-1));//worse
 #endif
   }
   psg_voltage=flatlevel;psg_dv=0;
