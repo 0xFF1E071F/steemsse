@@ -28,16 +28,18 @@ enum EOverscanMask {
  TRICK_STABILISER=0x2000,
 #if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
 // at least hacks involving those have been removed
- TRICK_WRITE_SDP=0x4000 
- TRICK_WRITE_SDP_POST_DE=0x8000
+ TRICK_WRITE_SDP=0x4000 ,
+ TRICK_WRITE_SDP_POST_DE=0x8000,
 #endif
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_382)
  TRICK_80BYTE_LINE=0x4000, // don't assume a "no trick" colour line = 160byte
 #endif
 #if defined(SSE_SHIFTER_DRAGON1)
- TRICK_CONFUSED_SHIFTER=0x10000//tmp hack//v?
+ TRICK_CONFUSED_SHIFTER=0x10000,//tmp hack//v?
+//#else
 #endif
  TRICK_UNSTABLE=0x10000, // less specific
+//#endif
  TRICK_LINE_PLUS_24=0x20000,
  TRICK_LINE_PLUS_4=0x40000,
  TRICK_LINE_PLUS_6=0x80000,

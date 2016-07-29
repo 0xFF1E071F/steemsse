@@ -2180,10 +2180,10 @@ void TOptionBox::CreateSoundPage()
 #endif
   Win=CreateWindow("Button",T("Microwire"),mask,
     page_l+Offset,y,Wid,25,Handle,(HMENU)7302,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,MICROWIRE_ON,0);
+  SendMessage(Win,BM_SETCHECK,OPTION_MICROWIRE,0);
   ToolAddWindow(ToolTip,Win,
-    //T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature."));
-    T("Microwire (STE sound), incomplete emulation"));
+    T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature."));
+    //T("Microwire (STE sound), incomplete emulation"));
   y+=LineHeight;
 #endif
 
@@ -3436,7 +3436,7 @@ Windows 2000	5.0
 #endif
   Win=CreateWindow("Button",T("Microwire"),mask,
     page_l+Offset,y,Wid,25,Handle,(HMENU)7302,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,MICROWIRE_ON,0);
+  SendMessage(Win,BM_SETCHECK,OPTION_MICROWIRE,0);
   ToolAddWindow(ToolTip,Win,
     //T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature."));
     T("Microwire (STE sound), incomplete emulation"));

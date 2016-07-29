@@ -1228,6 +1228,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//sft
 
 #if defined(SSE_SOUND)
+#define SSE_SOUND_DMA_360 // switch created in v383, was missing (undef 383)
 #define SSE_SOUND_MICROWIRE_WRITE_LATENCY // as documented
 #define SSE_SOUND_VOL_LOGARITHMIC // more intuitive setting
 #if ! defined(SSE_YM2149_OBJECT) // if sse_floppy undefined
@@ -1255,9 +1256,11 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//vid
 
 #ifdef SSE_YM2149_OBJECT 
+#ifdef SSE_SOUND
 #define SSE_YM2149_FIX_TABLES // option P.S.G.
 #define SSE_YM2149_FIXED_VOL_TABLE // was SSE_YM2149_FIXED_VOL_FIX2 in v3.6.4
 #define SSE_YM2149_OPT1
+#endif
 #if defined(SSE_YM2149_FIX_TABLES)
 #define SSE_YM2149_FIXED_VOL_FIX1 //undef v3.7.0
 #define SSE_YM2149_ENV_FIX1 //undef v3.7.0
@@ -1914,7 +1917,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SHIFTER_STATE_MACHINE2
 #endif//shifter
 
+#ifdef SSE_SOUND
 #define SSE_SOUND_DMA_CLOCK //not CPU, apart clock
+#endif
+
 #if defined(SSE_SOUND_FILTER_STF)
 #define SSE_SOUND_FILTER_HATARI
 //#define SSE_SOUND_FILTER_STF2 // for samples, original is better
@@ -2017,14 +2023,18 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//vid
 
 #ifdef SSE_YM2149_OBJECT
+
 #undef SSE_YM2149_ENV_FIX1 //my mistake
+#ifdef SSE_SOUND
 #define SSE_YM2149_DELAY_RENDERING // so that we use table also for envelope
 #define SSE_YM2149_QUANTIZE1 //undef 3.8.2
+#endif
 #if defined(SSE_YM2149_DELAY_RENDERING)  
 #undef SSE_YM2149_FIXED_VOL_FIX1 // former 'P.S.G.' option replaced with that
 #define SSE_YM2149_DELAY_RENDERING1 // use that table, interpolate...
 #define SSE_YM2149_NO_SAMPLES_OPTION // remove 'Samples' option
 #endif
+
 #if defined(SSE_YM2149_FIXED_VOL_TABLE)
 //#define SSE_YM2149_DYNAMIC_TABLE0 //temp, to build file
 #define SSE_YM2149_DYNAMIC_TABLE //using file
@@ -2493,6 +2503,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_ARG_STFM // start as STF (unless overruled)
 #ifdef SSE_TOS
 #endif
+#define SSE_VAR_OPT_380 //switch created in v383
 #define SSE_VAR_RESIZE_380
 #define SSE_VAR_REWRITE_380
 #endif
@@ -3022,15 +3033,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VS2008_383
 #define SSE_VS2008_WARNING_383
 #endif
-#if defined(VC_BUILD) && _MSC_VER>=1500 //VS2008+
-#define SSE_VC_INTRINSICS_383
-#define SSE_VC_INTRINSICS_383A // some cpu sr checks //useless like 383E?
-#define SSE_VC_INTRINSICS_383B // popcount 
-#define SSE_VC_INTRINSICS_383C // byteswap
-#define SSE_VC_INTRINSICS_383D // instruction time
-#define SSE_VC_INTRINSICS_383E // set/clear some sr bits => more object code? => bad idea?
-#define SSE_VC_INTRINSICS_383F // avoid shifting mask in MOVEM //i'm sure it's a bad idea too!
-#endif
 
 #ifdef SSE_BOILER
 #define SSE_BOILER_383
@@ -3041,9 +3043,31 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #define SSE_DISK_CAPS_383
+
 #define SSE_GUI_383
 #define SSE_VAR_OPT_383
+
+#if defined(SSE_VAR_OPT_383) && defined(VC_BUILD) && _MSC_VER>=1500 //VS2008+
+#define SSE_VC_INTRINSICS_383
+#if defined(SSE_VC_INTRINSICS_383)
+#define SSE_VC_INTRINSICS_383A // some cpu sr checks //useless like 383E?
+#define SSE_VC_INTRINSICS_383B // popcount 
+#define SSE_VC_INTRINSICS_383C // byteswap
+#define SSE_VC_INTRINSICS_383D // instruction time => much less object code :)
+#define SSE_VC_INTRINSICS_383E // set/clear some sr bits => more object code? => bad idea?
+#define SSE_VC_INTRINSICS_383F // avoid shifting mask in MOVEM //i'm sure it's a bad idea too!
+#define SSE_VC_INTRINSICS_383G // GLU functions
+#endif
+#endif
+
+#if defined(SSE_VAR_OPT_383)
+#define SSE_VAR_OPT_383A // variable to hold ABSOLUTE_CPU_TIME for a while (TODO)
+#define SSE_VAR_OPT_383A1 // Video chipset writes
+#define SSE_VAR_OPT_383B // dma init
+#endif
+
 #define SSE_VAR_RESIZE_383
+#define SSE_VAR_RESIZE_383A // acia, more problematic
 
 // Exception management...
 //#define SSE_M68K_EXCEPTION_TRY_CATCH //works but too slow, especially if _DEBUG
@@ -3070,6 +3094,11 @@ Beta: not SSE_PRIVATE_BUILD
 
 #undef SSE_CPU_TIMINGS_NO_INLINE_382 // it's inlined anyway
 #define SSE_DISK_GHOST_SECTOR_383
+#undef SSE_SOUND_DMA_360
+#undef SSE_SOUND_DMA_CLOCK // and molz still ok?
+#define SSE_SOUND_DMA_383A // no "dsp" for volume
+#define SSE_SOUND_DMA_383B // treble (trouble?)
+#define SSE_SOUND_DMA_383C //  balance 
 #define SSE_STF_MATCH_TOS_383 // to keep autoselect T104 for HD
 #define SSE_TOS_GEMDOS_EM_383 
 #undef SSE_TOS_GEMDOS_RESTRICT_TOS2 //HD/TOS check

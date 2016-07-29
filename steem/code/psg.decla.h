@@ -87,7 +87,6 @@ EXT int sound_variable_d INIT(208);
 EXT bool sound_internal_speaker INIT(false);
 #endif
 EXT int sound_freq INIT(50066),sound_comline_freq INIT(0),sound_chosen_freq INIT(50066);
-EXT int sound_mode INIT(SOUND_MODE_CHIP),sound_last_mode INIT(SOUND_MODE_CHIP);
 EXT BYTE sound_num_channels INIT(1),sound_num_bits INIT(8);
 EXT int sound_bytes_per_sample INIT(1);
 #if defined(SSE_SOUND_VOL_LOGARITHMIC_2)
@@ -98,7 +97,6 @@ EXT DWORD MaxVolume INIT(0xffff);
 EXT bool sound_low_quality INIT(0);
 EXT bool sound_write_primary INIT( NOT_ONEGAME(0) ONEGAME_ONLY(true) );
 EXT bool sound_click_at_start INIT(0);
-EXT int sound_time_method INIT(0);
 EXT bool sound_record INIT(false);
 EXT DWORD sound_record_start_time; //by timer variable = timeGetTime()
 EXT int psg_write_n_screens_ahead INIT(3 UNIX_ONLY(+7) );
@@ -110,7 +108,6 @@ EXT int psg_voltage,psg_dv;
 #define PSGR_PORT_A 14
 #define PSGR_PORT_B 15
 
-EXT int psg_reg_select;
 EXT BYTE psg_reg[16],psg_reg_data;
 
 EXT FILE *wav_file INIT(NULL);
@@ -178,11 +175,7 @@ EXT int MicroWire_StartTime;
 
 #define CPU_CYCLES_PER_MW_SHIFT 8
 
-EXT int dma_sound_mode_to_freq[4];
-EXT int dma_sound_freq,dma_sound_output_countdown,dma_sound_samples_countdown;
-
 EXT WORD dma_sound_internal_buf[4],dma_sound_last_word;
-EXT int dma_sound_internal_buf_len;
 EXT MEM_ADDRESS dma_sound_fetch_address;
 
 // Max frequency/lowest refresh *2 for stereo
@@ -190,7 +183,6 @@ EXT MEM_ADDRESS dma_sound_fetch_address;
 
 EXT WORD dma_sound_channel_buf[DMA_SOUND_BUFFER_LENGTH+16];
 EXT DWORD dma_sound_channel_buf_last_write_t;
-EXT int dma_sound_on_this_screen;
 
 #define DMA_SOUND_CHECK_TIMER_A \
     if (mfp_reg[MFPR_TACR]==8){ \
@@ -201,14 +193,38 @@ EXT int dma_sound_on_this_screen;
       }                                 \
     }
 
+#if defined(SSE_VAR_RESIZE_383)
+EXT BYTE psg_reg_select;
+EXT BYTE sound_time_method INIT(0);
+EXT BYTE sound_mode INIT(SOUND_MODE_CHIP),sound_last_mode INIT(SOUND_MODE_CHIP);
+EXT WORD dma_sound_mode_to_freq[4],dma_sound_freq;
+EXT int dma_sound_output_countdown,dma_sound_samples_countdown;
+EXT BYTE dma_sound_internal_buf_len;
+EXT bool dma_sound_on_this_screen;
+EXT BYTE dma_sound_mixer,dma_sound_volume;
+EXT BYTE dma_sound_l_volume,dma_sound_r_volume;
+EXT BYTE dma_sound_l_top_val,dma_sound_r_top_val;
+#else
+EXT int psg_reg_select;
+EXT int sound_time_method INIT(0);
+EXT int sound_mode INIT(SOUND_MODE_CHIP),sound_last_mode INIT(SOUND_MODE_CHIP);
+EXT int dma_sound_mode_to_freq[4];
+EXT int dma_sound_freq,dma_sound_output_countdown,dma_sound_samples_countdown;
+EXT int dma_sound_internal_buf_len;
+EXT int dma_sound_on_this_screen;
 EXT int dma_sound_mixer,dma_sound_volume;
 EXT int dma_sound_l_volume,dma_sound_r_volume;
 EXT int dma_sound_l_top_val,dma_sound_r_top_val;
-
+#endif
 #if defined(SSE_SOUND_MICROWIRE)
 #include "../../3rdparty/dsp/dsp.h"
+#if defined(SSE_VAR_RESIZE_383)
+EXT BYTE dma_sound_bass;
+EXT BYTE dma_sound_treble;
+#else
 EXT int dma_sound_bass;
 EXT int dma_sound_treble;
+#endif
 #endif//microwire
 
 //---------------------------------- PSG ------------------------------------

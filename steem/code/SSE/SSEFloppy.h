@@ -32,6 +32,7 @@ interrupt."
 #include "SSECapsImg.h"
 #include "SSEDma.h"
 #include "SSEDrive.h"
+#include "SSEDisk.h"
 #if defined(SSE_DISK_GHOST) //3.7.0
 #include "SSEGhostDisk.h"
 #endif

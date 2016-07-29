@@ -223,6 +223,11 @@ extern void cpu_routines_init();
 extern int m68k_divu_cycles,m68k_divs_cycles;
 #endif
 
+#if defined(SSE_VAR_OPT_383A)
+extern int act; // to be updated with ABSOLUTE_CPU_TIME and used as appropriate
+#endif
+
+
 #define PC32 ( (pc&0xffffff)|(pc_high_byte) )
 #define FOUR_MEGS 0x400000
 #define FOURTEEN_MEGS 0xE00000

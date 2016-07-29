@@ -666,7 +666,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
 #endif
 #if defined(SSE_SOUND_MICROWIRE)
     else if(b->id==4009)
-      MICROWIRE_ON=b->checked;
+      OPTION_MICROWIRE=b->checked;
 #endif   
 #if defined(SSE_GUI_OPTION_SLOW_DISK_SSE)
     else if(b->id==4010)

@@ -192,8 +192,9 @@ void init_timings()
   GLU.CurrentScanline.Cycles=scanline_time_in_cpu_cycles_at_start_of_vbl;
   ASSERT(GLU.CurrentScanline.Cycles>=224);
 #endif
-
+#if !defined(SSE_VAR_OPT_383)
   screen_event_vector=screen_event_pointer->event;
+#endif
   time_of_next_event=cpu_time_of_start_of_event_plan+(screen_event_pointer->time);
   cpu_cycles=(screen_event_pointer->time);
 

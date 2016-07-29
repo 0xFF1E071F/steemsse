@@ -79,6 +79,10 @@ bool cpu_stopped=0;
 bool m68k_do_trace_exception;
 signed int compare_buffer;
 
+#if defined(SSE_VAR_OPT_383A)
+int act; 
+#endif
+
 void sr_check_z_n_l_for_r0()
 {
   m68k_dest=&r[0];

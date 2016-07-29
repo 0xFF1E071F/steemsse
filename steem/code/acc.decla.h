@@ -9,7 +9,7 @@ typedef EasyStr Str;//?!
 #include <dynamicarray.h>
 #endif
 
-#include "SSE/SSEDebug.h"
+#include "SSE/SSEDebug.h" // for the logsection enum
 
 #define EXT extern
 #define INIT(s)

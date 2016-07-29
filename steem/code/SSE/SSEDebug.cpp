@@ -28,6 +28,8 @@
 #include "SSEMMU.h"
 #include "SSEInterrupt.h"
 #include "SSECpu.h"
+#include <stdio.h>
+#include <stdarg.h>
 
 #if defined(SSE_DEBUG)
 int debug0,debug1=0,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9;
@@ -57,7 +59,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_FDC ] = 0;
   logsection_enabled[ LOGSECTION_IO ] = 0;
   logsection_enabled[ LOGSECTION_MFP_TIMERS ] = 0;
-  logsection_enabled[ LOGSECTION_INIT ] =1; //0; by default
+  logsection_enabled[ LOGSECTION_INIT ] =0; //0; by default
   logsection_enabled[ LOGSECTION_CRASH ] = 0;
   logsection_enabled[ LOGSECTION_STEMDOS ] = 0;
   logsection_enabled[ LOGSECTION_IKBD ] = 0;
@@ -239,13 +241,7 @@ void TDebug::Reset(bool Cold) {
 
 
 #if defined(SSE_DEBUG_TRACE)
-//note: #define TRACE Debug.Trace
 
-#include <stdio.h>
-#include <stdarg.h>
-#if defined(SSE_DEBUG_TRACE_IDE) && defined(WIN32)
-#include <windows.h>
-#endif
 
 void TDebug::Trace(char *fmt, ...){ 
   // Our TRACE facility has no MFC dependency.
@@ -497,7 +493,7 @@ void TDebug::TraceGeneralInfos(int when) {
     // Misc
 #if defined(SSE_SOUND_MICROWIRE___)
     if(dma_sound_bass!=6||dma_sound_treble!=6)
-      TRACE("Microwire %d dma bass %X treble %X\n",MICROWIRE_ON,dma_sound_bass,dma_sound_treble);
+      TRACE("Microwire %d dma bass %X treble %X\n",OPTION_MICROWIRE,dma_sound_bass,dma_sound_treble);
 #endif
 #if defined(SSE_BOILER_PSEUDO_STACK___)
     for(int i=0;i<PSEUDO_STACK_ELEMENTS;i++)

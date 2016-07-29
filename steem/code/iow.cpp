@@ -872,7 +872,7 @@ system exclusive start and end messages (F0 and F7).
               mfp_reg[n]=io_src_b;
             }else if (n==MFPR_VR){
               TRACE_MFP("%d PC %X MFP VR %X -> %X\n",ABSOLUTE_CPU_TIME,old_pc,mfp_reg[n],io_src_b);
-#if defined(SSE_VAR_REWRITE_380)
+#if defined(SSE_VAR_OPT_380)
               mfp_reg[n]=io_src_b;
 #else
               mfp_reg[MFPR_VR]=io_src_b;
@@ -1034,19 +1034,20 @@ Even though the samples are built on a byte-base, the DMA chip also only
  highbyte clears the others. Hence it must be written first.
  [Isn't it false? Sounds wrong when we do that]
 */
-
-#if defined(SSE_SOUND__)
-                next_dma_sound_start=0;
-#else
                 next_dma_sound_start&=0x00ffff;
-#endif
-                next_dma_sound_start|=io_src_b << 16;break;
-              case 0x5:next_dma_sound_start&=0xff00ff;next_dma_sound_start|=io_src_b << 8;break;
+                next_dma_sound_start|=io_src_b << 16;
+                break;
+              case 0x5:
+                next_dma_sound_start&=0xff00ff;
+                next_dma_sound_start|=io_src_b << 8;
+                break;
               case 0x7:
 #if defined(SSE_SOUND)
                 io_src_b&=0xFE;
 #endif
-                next_dma_sound_start&=0xffff00;next_dma_sound_start|=io_src_b;break;
+                next_dma_sound_start&=0xffff00;
+                next_dma_sound_start|=io_src_b;
+                break;
             }
             TRACE_LOG("DMA frame start %X\n",next_dma_sound_start);
             if ((dma_sound_control & BIT_0)==0){
@@ -1072,19 +1073,13 @@ this address, the DMA-sound system will either stop or loop.
           case 0xff8913:   //LoByte of frame end address
             switch (addr & 0xf){
               case 0xf:
-#if defined(SS_STE_SND__)
-                next_dma_sound_end=0; // like 0xff8903, also sounds wrong
-#else
                 next_dma_sound_end&=0x00ffff;
-#endif
                 next_dma_sound_end|=io_src_b << 16;break;
               case 0x1:next_dma_sound_end&=0xff00ff;next_dma_sound_end|=io_src_b << 8;break;
               case 0x3:
 #if defined(SSE_SOUND)
-                //ASSERT(!(io_src_b&1));// MOLZ
                 io_src_b&=0xFE;
 #endif
-                
                 next_dma_sound_end&=0xffff00;next_dma_sound_end|=io_src_b;break;
             }
             //TRACE_LOG("DMA frame end %X\n",next_dma_sound_start);//imbecile
@@ -1148,15 +1143,11 @@ This address is being used to feed the National LMC both address and data
             MicroWire_Data=MAKEWORD(io_src_b,HIBYTE(MicroWire_Data));
             MicroWire_StartTime=ABSOLUTE_CPU_TIME;
             int dat=MicroWire_Data & MicroWire_Mask;
-
-
-           
-
             int b;
             for (b=15;b>=10;b--){
               if (MicroWire_Mask & (1 << b)
 #if defined(SSE_SOUND_MICROWIRE_MASK1)                 
-                && MicroWire_Mask & (1 << (b-1)) // both mask bits must be set
+                && (MicroWire_Mask & (1 << (b-1))) // both mask bits must be set //383 added ()
 #endif
                 ){
                 if ((dat & (1 << b)) && (dat & (1 << (b-1)))==0
@@ -1206,7 +1197,7 @@ contiguous.
 If option 'Microwire' isn't checked, the Steem 3.2 way of skipping
 don't cares to get to data is used.
 */
-                  if(MICROWIRE_ON && (MicroWire_Mask & (1 << dat_b)) == 0)
+                  if(OPTION_MICROWIRE && (MicroWire_Mask & (1 << dat_b)) == 0)
                   {
                     TRACE_LOG("Microwire reject mask %X\n",MicroWire_Mask);
                     return;
@@ -1234,8 +1225,6 @@ necessary to have a multiple of 6 though since the Microwire is a 3-bit serial
 
 */
                   int nController=(dat >> 6) & b0111;
-
-                  //TRACE("ACT %d microwire mask %x data %x result %x controller %x\n",ACT,MicroWire_Mask,MicroWire_Data,dat,nController);
 
                   switch (nController){
                     case b0011: // Master Volume
@@ -1275,6 +1264,10 @@ bits are being ignored.
                         if (nController==b0101) dma_sound_l_volume=new_val;
                         if (nController==b0100) dma_sound_r_volume=new_val;
                       }
+#if defined(SSE_SOUND_MICROWIRE) && !defined(SSE_SOUND_DMA_383A)
+                      dma_sound_l_top_val=128;
+                      dma_sound_r_top_val=128;
+#else // we keep Steem 3.2 code, but will filter further if necessary
                       long double lv,rv,mv;
                       lv=dma_sound_l_volume;lv=lv*lv*lv*lv;
                       lv/=(20.0*20.0*20.0*20.0);
@@ -1283,20 +1276,10 @@ bits are being ignored.
                       mv=dma_sound_volume;  mv=mv*mv*mv*mv*mv*mv*mv*mv;
                       mv/=(40.0*40.0*40.0*40.0*40.0*40.0*40.0*40.0);
                       // lv rv and mv are numbers between 0 and 1
-//SS what is does here is transform the "DB" volume values in a sample
-//range??? isn't it gross?
-#if defined(SSE_SOUND_MICROWIRE)
-                      dma_sound_l_top_val=128;
-                      dma_sound_r_top_val=128;
-#else
                       dma_sound_l_top_val=BYTE(128.0*lv*mv);
                       dma_sound_r_top_val=BYTE(128.0*rv*mv);
 #endif
-#if defined(SSE_SOUND_MICROWIRE)
-                      TRACE_LOG("STE Snd master %X L %X R %X\n",dma_sound_volume,dma_sound_l_volume,dma_sound_r_volume);
-                      TRACE_LOG("STE Snd vol L %d R %d\n",dma_sound_l_top_val,dma_sound_r_top_val);
-                      //dma_sound_l_top_val=dma_sound_r_top_val=128;
-#endif
+                      TRACE_LOG("Microwire volume:  master %d L %d R %d\n",dma_sound_volume,dma_sound_l_volume,dma_sound_r_volume);
                       log_to_section(LOGSECTION_SOUND,EasyStr("SOUND: ")+HEXSl(old_pc,6)+" - DMA sound set volume master="+dma_sound_volume+
                                       " l="+dma_sound_l_volume+" r="+dma_sound_r_volume);
                       break;
@@ -1391,7 +1374,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
             }
 #endif
             MicroWire_Mask=MAKEWORD(LOBYTE(MicroWire_Mask),io_src_b);
-            TRACE_LOG("MicroWire Mask has become %x\n",MicroWire_Mask);
+//            TRACE_LOG("MicroWire Mask has become %x\n",MicroWire_Mask); //yeah, how useful
             break;
           case 0xff8925:  // Set low byte of MicroWire_Mask
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY)
@@ -1423,8 +1406,6 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_IO
-
-
 
 
 /*        STF
@@ -1846,48 +1827,51 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
         cpu_cycles+=-2; // = +2 cycles!
 #endif
 
-  ASSERT( (addr&0xFFFF00)==0xff8200 );
+#if defined(SSE_VAR_OPT_383A1)
+      act=ACT;
+#endif
+
+      ASSERT( (addr&0xFFFF00)==0xff8200 );
 
 #if defined(SSE_VIDEO_IOW_TRACE)  // not LOG
-  TRACE("(%d %d/%d) Shifter write %X=%X\n",FRAME,scan_y,LINECYCLES,addr,io_src_b);
+      TRACE("(%d %d/%d) Shifter write %X=%X\n",FRAME,scan_y,LINECYCLES,addr,io_src_b);
 #endif  
 
-  if ((addr>=0xff8210 && addr<0xff8240) || addr>=0xff8280){
-    exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
-  }
+      if ((addr>=0xff8210 && addr<0xff8240) || addr>=0xff8280){
+        exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
+      }
   
   /////////////
   // Palette // // SS word (long) writes far more frequent (see below)
   /////////////
   
-  else if (addr>=0xff8240 && addr<0xff8260){  //palette
-    int n=(addr-0xff8240) >> 1; 
-    
-    // Writing byte to palette writes that byte to both the low and high byte!
-    WORD new_pal=MAKEWORD(io_src_b,io_src_b & 0xf);
+      else if (addr>=0xff8240 && addr<0xff8260){  //palette
+        int n=(addr-0xff8240) >> 1; 
+
+        // Writing byte to palette writes that byte to both the low and high byte!
+        WORD new_pal=MAKEWORD(io_src_b,io_src_b & 0xf);
 
 #if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
-      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_PAL)
-        FrameEvents.Add(scan_y,LINECYCLES,'p', (n<<12)|io_src_b);  // little p
+        if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_PAL)
+          FrameEvents.Add(scan_y,LINECYCLES,'p', (n<<12)|io_src_b);  // little p
 #endif
-    
+
 #if defined(SSE_SHIFTER_PALETTE_BYTE_CHANGE) 
-    // TESTING maybe Steem was right, Hatari is wrong
-    // v3.6.3 apparently Steem was right, undef
-    if(addr&1) // the double write happens only on even addresses (?)
-    {
-      new_pal=(STpal[n]&0xFF00)|io_src_b; // fixes Golden Soundtracker demo
-      TRACE_VID("Single byte  %X write pal %X STPal[%d] %X->%X\n",io_src_b,addr,n,STpal[n],new_pal);
-    }
+        // TESTING maybe Steem was right, Hatari is wrong
+        // v3.6.3 apparently Steem was right, undef
+        if(addr&1) // the double write happens only on even addresses (?)
+        {
+          new_pal=(STpal[n]&0xFF00)|io_src_b; // fixes Golden Soundtracker demo
+          TRACE_VID("Single byte  %X write pal %X STPal[%d] %X->%X\n",io_src_b,addr,n,STpal[n],new_pal);
+        }
 #endif
-    
-    Shifter.SetPal(n,new_pal);
-    log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Palette change at scan_y="+scan_y+" cycle "+(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl));
-    
-    
-  }
-  else{
-    switch(addr){
+
+        Shifter.SetPal(n,new_pal);
+        log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Palette change at scan_y="+scan_y+" cycle "+(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl));
+
+      }
+      else{
+        switch(addr){
       
 /*
 Video Base Address:                           ST     STE
@@ -1910,107 +1894,107 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
 
 */
      
-    case 0xff8201:  //high byte of screen memory address
+        case 0xff8201:  //high byte of screen memory address
 #if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
-      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_VIDEOBASE)
-        FrameEvents.Add(scan_y,LINECYCLES,'V',io_src_b); 
+          if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_VIDEOBASE)
+            FrameEvents.Add(scan_y,LINECYCLES,'V',io_src_b); 
 #endif
 /* "Later 3rd-party upgrade kits allow a maximum of 14MB w/Magnum-ST,
  bypassing the stock MMU with a replacement unit and the additional
  chips on a separate board fitting over it."
 */
-      if (mem_len<=FOUR_MEGS
+          if (mem_len<=FOUR_MEGS
 #if defined(SSE_TOS_GEMDOS_EM_382) && !defined(SSE_TOS_GEMDOS_EM_383)//oops
-        && !extended_monitor
+            && !extended_monitor
 #endif
-        ) 
-        io_src_b&=b00111111;
-      DWORD_B_2(&xbios2)=io_src_b;
+            ) 
+            io_src_b&=b00111111;
+          DWORD_B_2(&xbios2)=io_src_b;
 #if defined(SSE_STF_VBASELO)
-      if(ST_TYPE==STE) 
+          if(ST_TYPE==STE) 
 #endif
 #if defined(SSE_TOS_GEMDOS_EM_383)
-       if(!extended_monitor)
+            if(!extended_monitor)
 #endif
-        DWORD_B_0(&xbios2)=0; 
-      log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set screen base to "+HEXSl(xbios2,6));
-      break;
-      
-    case 0xff8203:  //mid byte of screen memory address
+              DWORD_B_0(&xbios2)=0; 
+          log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set screen base to "+HEXSl(xbios2,6));
+          break;
+
+        case 0xff8203:  //mid byte of screen memory address
 #if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
-      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_VIDEOBASE)
-        FrameEvents.Add(scan_y,LINECYCLES,'M',io_src_b); 
+          if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_VIDEOBASE)
+            FrameEvents.Add(scan_y,LINECYCLES,'M',io_src_b); 
 #endif
 #if defined(SSE_TOS_GEMDOS_EM_382)
-      if(!extended_monitor)
+          if(!extended_monitor)
 #endif
-      DWORD_B_1(&xbios2)=io_src_b;
+            DWORD_B_1(&xbios2)=io_src_b;
 
 #if defined(SSE_STF_VBASELO)
-      if(ST_TYPE==STE) 
+          if(ST_TYPE==STE) 
 #endif
-        DWORD_B_0(&xbios2)=0; 
-      log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set screen base to "+HEXSl(xbios2,6));
-      break;
-      
-    case 0xff8205:  //high byte of draw pointer
-    case 0xff8207:  //mid byte of draw pointer
-    case 0xff8209:  //low byte of draw pointer
-      
+            DWORD_B_0(&xbios2)=0; 
+          log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set screen base to "+HEXSl(xbios2,6));
+          break;
+
+        case 0xff8205:  //high byte of draw pointer
+        case 0xff8207:  //mid byte of draw pointer
+        case 0xff8209:  //low byte of draw pointer
+
 #if defined(SSE_SHIFTER_SDP_WRITE)
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
-      MMU.WriteVideoCounter(addr,io_src_b);
+          MMU.WriteVideoCounter(addr,io_src_b);
 #else
-      Shifter.WriteSDP(addr,io_src_b);
+          Shifter.WriteSDP(addr,io_src_b);
 #endif
-      break;
+          break;
       
 #else // Steem 3.2 or SSE_SHIFTER_SDP_WRITE not defined
-      {
-        //          int srp=scanline_raster_position();
-        int dst=ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl;
-        dst-=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN;
-        dst+=16;dst&=-16;
-        dst+=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN;
+          {
+            //          int srp=scanline_raster_position();
+            int dst=ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl;
+            dst-=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN;
+            dst+=16;dst&=-16;
+            dst+=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN;
 #if defined(SSE_SHIFTER) // video defined but not SDP
-        Shifter.Render(dst);
+            Shifter.Render(dst);
 #else
-        draw_scanline_to(dst); // This makes shifter_draw_pointer up to date
+            draw_scanline_to(dst); // This makes shifter_draw_pointer up to date
 #endif
-        MEM_ADDRESS nsdp=shifter_draw_pointer;
-        if (mem_len<=FOUR_MEGS && addr==0xff8205) io_src_b&=b00111111;
-        DWORD_B(&nsdp,(0xff8209-addr)/2)=io_src_b;
-        
-        /*
-        if (shifter_hscroll){
-        if (dst>=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN-32 && dst<CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320-16){
-        log_to(LOGSECTION_VIDEO,Str("ATTANT: addr=")+HEXSl(addr,6));
-        if (addr==0xff8209){
-        // If you set low byte while on screen with hscroll on then sdp will
-        // be an extra raster ahead. Steem's sdp is always 1 raster ahead, so
-        // correct for that here.
-        nsdp-=8;
-        }
-        }
-        }
-        */
-        
-        //          int off=(get_shifter_draw_pointer(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl)&-8)-shifter_draw_pointer;
-        //          shifter_draw_pointer=nsdp-off;
-        shifter_draw_pointer_at_start_of_line-=shifter_draw_pointer;
-        shifter_draw_pointer_at_start_of_line+=nsdp;
-        shifter_draw_pointer=nsdp;
-        
-        log_to(LOGSECTION_VIDEO,Str("VIDEO: ")+HEXSl(old_pc,6)+" - Set Shifter draw pointer to "+
-          HEXSl(shifter_draw_pointer,6)+" at "+scanline_cycle_log()+", aligned to "+dst);
-        break;
-      }
+            MEM_ADDRESS nsdp=shifter_draw_pointer;
+            if (mem_len<=FOUR_MEGS && addr==0xff8205) io_src_b&=b00111111;
+            DWORD_B(&nsdp,(0xff8209-addr)/2)=io_src_b;
+
+            /*
+            if (shifter_hscroll){
+            if (dst>=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN-32 && dst<CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320-16){
+            log_to(LOGSECTION_VIDEO,Str("ATTANT: addr=")+HEXSl(addr,6));
+            if (addr==0xff8209){
+            // If you set low byte while on screen with hscroll on then sdp will
+            // be an extra raster ahead. Steem's sdp is always 1 raster ahead, so
+            // correct for that here.
+            nsdp-=8;
+            }
+            }
+            }
+            */
+
+            //          int off=(get_shifter_draw_pointer(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl)&-8)-shifter_draw_pointer;
+            //          shifter_draw_pointer=nsdp-off;
+            shifter_draw_pointer_at_start_of_line-=shifter_draw_pointer;
+            shifter_draw_pointer_at_start_of_line+=nsdp;
+            shifter_draw_pointer=nsdp;
+
+            log_to(LOGSECTION_VIDEO,Str("VIDEO: ")+HEXSl(old_pc,6)+" - Set Shifter draw pointer to "+
+              HEXSl(shifter_draw_pointer,6)+" at "+scanline_cycle_log()+", aligned to "+dst);
+            break;
+          }
 #endif
 
-    case 0xff820a: //synchronization mode      
-      GLU.SetSyncMode(io_src_b); 
-      break;
-      
+        case 0xff820a: //synchronization mode      
+          GLU.SetSyncMode(io_src_b); 
+          break;
+
 /* 
 VBASELO 
 This register contains the low-order byte of the video display base address. 
@@ -2023,25 +2007,25 @@ Writing on it on a STF does nothing.
 
 Last bit always cleared (we must do it).
 */
-    case 0xff820d:  //low byte of screen memory address
+        case 0xff820d:  //low byte of screen memory address
 #if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
-      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_VIDEOBASE)
-        FrameEvents.Add(scan_y,LINECYCLES,'v',io_src_b); 
+          if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_VIDEOBASE)
+            FrameEvents.Add(scan_y,LINECYCLES,'v',io_src_b); 
 #endif
 
 #if defined(SSE_STF_VBASELO)
-      if(ST_TYPE!=STE)
-      {
-        TRACE_VID("STF write %X to %X\n",io_src_b,addr);
-        break; // fixes Lemmings 40; used by Beyond/Pax Plax Parallax
-      }
+          if(ST_TYPE!=STE)
+          {
+            TRACE_VID("STF write %X to %X\n",io_src_b,addr);
+            break; // fixes Lemmings 40; used by Beyond/Pax Plax Parallax
+          }
 #endif
-      io_src_b&=~1;
-      xbios2&=0xFFFF00;
-      xbios2|=io_src_b;
-      log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set screen base to "+HEXSl(xbios2,6));
-      break;
-      
+          io_src_b&=~1;
+          xbios2&=0xFFFF00;
+          xbios2|=io_src_b;
+          log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set screen base to "+HEXSl(xbios2,6));
+          break;
+
 /*
 LINEWID This register indicates the number of extra words of data (beyond
 that required by an ordinary ST at the same resolution) which represent
@@ -2074,45 +2058,45 @@ contained a "0". Hence, for any Pixel Offset Value > 0, please note that
 the Shifter has to read (a few bits) more each rasterline and these bits 
 must NOT be skipped using the Line Offset Register. 
 */
-    case 0xff820f:   
+        case 0xff820f:   
 #if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
-      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_HSCROLL)
-        FrameEvents.Add(scan_y,LINECYCLES,'L',io_src_b); 
+          if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_HSCROLL)
+            FrameEvents.Add(scan_y,LINECYCLES,'L',io_src_b); 
 #endif
 
 #if defined(SSE_STF_LINEWID)
-      if(ST_TYPE!=STE)
-      {
-        TRACE_VID("STF write %X to %X\n",io_src_b,addr);
-        break; // fixes Imagination/Roller Coaster mush
-      }
+          if(ST_TYPE!=STE)
+          {
+            TRACE_VID("STF write %X to %X\n",io_src_b,addr);
+            break; // fixes Imagination/Roller Coaster mush
+          }
 #endif
-      
+
 #if defined(SSE_SHIFTER) 
-      Shifter.Render(LINECYCLES,DISPATCHER_LINEWIDTH); // eg Beat Demo
+          Shifter.Render(LINECYCLES,DISPATCHER_LINEWIDTH); // eg Beat Demo
 #else
-      draw_scanline_to(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl); // Update sdp if off right  
+          draw_scanline_to(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl); // Update sdp if off right  
 #endif
-      
+
 #if defined(SSE_DEBUG_SDP_TRACE)
-      TRACE_VID("F%d y%d c%d LW %d -> %d\n",FRAME,scan_y,LINECYCLES,LINEWID,io_src_b);
+          TRACE_VID("F%d y%d c%d LW %d -> %d\n",FRAME,scan_y,LINECYCLES,LINEWID,io_src_b);
 #endif
 
 #if defined(SSE_MMU_LINEWID_TIMING)
-      shifter_fetch_extra_words=io_src_b;
-      if(LINECYCLES<GLU.CurrentScanline.EndCycle+MMU_PREFETCH_LATENCY)
-        LINEWID=shifter_fetch_extra_words;
+          shifter_fetch_extra_words=io_src_b;
+          if(LINECYCLES<GLU.CurrentScanline.EndCycle+MMU_PREFETCH_LATENCY)
+            LINEWID=shifter_fetch_extra_words;
 #else
-      LINEWID=io_src_b;
+          LINEWID=io_src_b;
 #endif
-      log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set shifter_fetch_extra_words to "+
-        (shifter_fetch_extra_words)+" at "+scanline_cycle_log());
-      break;
+          log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set shifter_fetch_extra_words to "+
+            (shifter_fetch_extra_words)+" at "+scanline_cycle_log());
+          break;
 
-    case 0xff8260: //resolution
-      GLU.SetShiftMode(io_src_b);
-      break;
-      
+        case 0xff8260: //resolution
+          GLU.SetShiftMode(io_src_b);
+          break;
+
 /*
 HSCROLL 
 This register contains the pixel scroll offset. 
@@ -2138,91 +2122,90 @@ This register allows to skip from a single to 15 pixels at the start of each
 rasterline to allow horizontal fine-scrolling. 
 */
       
-    case 0xff8264:   
-      // Set hscroll and don't change line length
-      // This is an odd register, when you change hscroll below to non-zero each
-      // scanline becomes 4 words longer to allow for extra screen data. This register
-      // sets hscroll but doesn't do that, instead the left border is increased by
-      // 16 pixels. If you have got hscroll extra fetch turned on then setting this
-      // to 0 confuses the Shifter and causes it to shrink the left border by 16 pixels.
-    case 0xff8265:  // Hscroll
+        case 0xff8264:   
+          // Set hscroll and don't change line length
+          // This is an odd register, when you change hscroll below to non-zero each
+          // scanline becomes 4 words longer to allow for extra screen data. This register
+          // sets hscroll but doesn't do that, instead the left border is increased by
+          // 16 pixels. If you have got hscroll extra fetch turned on then setting this
+          // to 0 confuses the Shifter and causes it to shrink the left border by 16 pixels.
+        case 0xff8265:  // Hscroll
 #if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
-      if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_HSCROLL)
-        FrameEvents.Add(scan_y,LINECYCLES,(addr==0xff8264)?'h':'H',io_src_b); 
+          if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_HSCROLL)
+            FrameEvents.Add(scan_y,LINECYCLES,(addr==0xff8264)?'h':'H',io_src_b); 
 #endif
 #if defined(SSE_STF_HSCROLL)
-      if(ST_TYPE!=STE) 
-      {
-        TRACE_VID("STF write %X to %X\n",io_src_b,addr); //ST-CNX
-        break; // fixes Hyperforce
-      }
-      else
+          if(ST_TYPE!=STE) 
+          {
+            TRACE_VID("STF write %X to %X\n",io_src_b,addr); //ST-CNX
+            break; // fixes Hyperforce
+          }
+          else
 #endif
-      {
-        int cycles_in=(int)(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
+          {
+            int cycles_in=(int)(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
 #if defined(SSE_DEBUG_SDP_TRACE)
-        TRACE_VID("F%d y%d c%d HS %d -> %d\n",FRAME,scan_y,LINECYCLES,HSCROLL,io_src_b);
+            TRACE_VID("F%d y%d c%d HS %d -> %d\n",FRAME,scan_y,LINECYCLES,HSCROLL,io_src_b);
 #endif
 #if defined(SSE_SHIFTER_HSCROLL_380) && !defined(SSE_VS2008_WARNING_382)
-        BYTE former_hscroll=HSCROLL;
+            BYTE former_hscroll=HSCROLL;
 #endif
-        HSCROLL=io_src_b & 0xf; // limited to 4bit
+            HSCROLL=io_src_b & 0xf; // limited to 4bit
 
-        log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set horizontal scroll ("+HEXSl(addr,6)+
-          ") to "+(shifter_hscroll)+" at "+scanline_cycle_log());
-        if (addr==0xff8265) 
-          shifter_hscroll_extra_fetch=(HSCROLL!=0);
+            log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set horizontal scroll ("+HEXSl(addr,6)+
+              ") to "+(shifter_hscroll)+" at "+scanline_cycle_log());
+            if (addr==0xff8265) 
+              shifter_hscroll_extra_fetch=(HSCROLL!=0);
 
 #if defined(SSE_SHIFTER_HSCROLL_380)
 /*  Better test, should new HSCROLL apply on current line
     TODO: what is exact threshold ?
 */
-        if(cycles_in<=GLU.CurrentScanline.StartCycle+24) {
+            if(cycles_in<=GLU.CurrentScanline.StartCycle+24) {
 #elif defined(SSE_VID_BORDERS)
-        if (cycles_in<=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN-BORDER_SIDE){
+            if (cycles_in<=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN-BORDER_SIDE){
 #else
-        if (cycles_in<=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN-32){
+            if (cycles_in<=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN-32){
 #endif           // eg Coreflakes hidden screen //SS:which one?...
 #if defined(SSE_SHIFTER_HSCROLL_380)
-          Shifter.hscroll0=HSCROLL;
+              Shifter.hscroll0=HSCROLL;
 #endif
 #if defined(SSE_SHIFTER_HSCROLL_380)
-          {
+              {
 #else
-          if (left_border>0){ // Don't do this if left border removed!
+              if (left_border>0){ // Don't do this if left border removed!
 #endif
-            shifter_skip_raster_for_hscroll = (HSCROLL!=0);
+                shifter_skip_raster_for_hscroll = (HSCROLL!=0);
 
 #if defined(SSE_SHIFTER_HSCROLL_381) //argh!
 #if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
-            GLU.AdaptScanlineValues(cycles_in); // ST Magazin
+                GLU.AdaptScanlineValues(cycles_in); // ST Magazin
 #endif
 #ifndef SSE_VID_BORDERS
-            if (left_border>=BORDER_SIDE) {//ux382
+                if (left_border>=BORDER_SIDE) {//ux382
 #else
-            if (left_border>=SideBorderSize){ // Don't do this if left border removed!
+                if (left_border>=SideBorderSize){ // Don't do this if left border removed!
 #endif
 #elif defined(SSE_SHIFTER_HSCROLL_380)
-            if (left_border>0){ // Don't do this if left border removed!
+                if (left_border>0){ // Don't do this if left border removed!
 #endif
-              left_border=BORDER_SIDE;
-              if (HSCROLL)
-                left_border+=16;
-              if(shifter_hscroll_extra_fetch) 
-                left_border-=16;
+                  left_border=BORDER_SIDE;
+                  if (HSCROLL)
+                    left_border+=16;
+                  if(shifter_hscroll_extra_fetch) 
+                    left_border-=16;
 #if defined(SSE_SHIFTER_HSCROLL_380)
-            }
+                }
 #endif
 #if defined(SSE_SHIFTER_HSCROLL_380) // update shifter_pixel for new HSCROLL
-            shifter_pixel=HSCROLL; //fixes We Were STE distorter (party version)
+                shifter_pixel=HSCROLL; //fixes We Were STE distorter (party version)
 #endif
-          }
-        }
-      } 
-      break;
-        
-    }//sw
-  }//if     
+              }
+            }
+          } 
+          break;
+        }//sw
+      }//if     
 
 #if defined(SSE_MMU_WU_IO_BYTES_W_SHIFTER_ONLY)
       if(adjust_cycles)

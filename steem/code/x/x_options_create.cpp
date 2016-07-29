@@ -752,7 +752,7 @@ void TOptionBox::CreateSoundPage()
 ///  y+=LineHeight;
   ste_microwire_but.create(XD,page_p,page_l+148,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Microwire"),4009,BkCol);
-  ste_microwire_but.set_check(MICROWIRE_ON);
+  ste_microwire_but.set_check(OPTION_MICROWIRE);
   hints.add(ste_microwire_but.handle,
 //  T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature."),
   T("Microwire (STE sound), incomplete emulation"),
@@ -1505,7 +1505,7 @@ void TOptionBox::CreateSSEPage() {
 #if defined(SSE_SOUND_MICROWIRE) && !defined(SSE_GUI_OPTIONS_SOUND3)
   ste_microwire_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Microwire"),4009,BkCol);
-  ste_microwire_but.set_check(MICROWIRE_ON);
+  ste_microwire_but.set_check(OPTION_MICROWIRE);
   hints.add(ste_microwire_but.handle,
   T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature."),
     page_p);

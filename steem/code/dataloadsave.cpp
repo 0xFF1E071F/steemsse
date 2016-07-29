@@ -893,7 +893,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     PSG_FILTER_FIX=pCSF->GetInt("Sound","PsgFilter",PSG_FILTER_FIX);
 #endif
 #if defined(SSE_SOUND_MICROWIRE)
-    MICROWIRE_ON=pCSF->GetInt("Sound","Microwire",MICROWIRE_ON);
+    OPTION_MICROWIRE=pCSF->GetInt("Sound","Microwire",OPTION_MICROWIRE);
 #endif
 #if defined(SSE_SOUND_OPTION_DISABLE_DSP)
     DSP_ENABLED=pCSF->GetInt("Sound","Dsp",DSP_ENABLED);
@@ -1454,7 +1454,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetStr("Sound","PsgFilter",EasyStr(PSG_FILTER_FIX));  
 #endif
 #if defined(SSE_SOUND_MICROWIRE)
-  pCSF->SetStr("Sound","Microwire",EasyStr(MICROWIRE_ON));  
+  pCSF->SetStr("Sound","Microwire",EasyStr(OPTION_MICROWIRE));  
 #endif
 #if defined(SSE_SOUND_OPTION_DISABLE_DSP)
   pCSF->SetStr("Sound","Dsp",EasyStr(DSP_ENABLED));  

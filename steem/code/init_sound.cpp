@@ -159,7 +159,6 @@ HRESULT InitSound()
   SoundRelease();
 
   HRESULT Ret;
-
 #if !(defined(SSE_SOUND_SKIP_DSOUND_TEST)) //stupid?
   // Hey, this allows Steem to run even if there is no DSound.dll
   dbg_log("SOUND: Attempting to load dsound.dll");

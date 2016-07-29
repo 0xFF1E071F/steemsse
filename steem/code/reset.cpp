@@ -437,7 +437,6 @@ void reset_peripherals(bool Cold)
   dma_sound_output_countdown=0;
   dma_sound_samples_countdown=0;
   dma_sound_last_word=MAKEWORD(128,128);
-
   MicroWire_Mask=0x07ff,MicroWire_Data=0;
   dma_sound_volume=40;
   dma_sound_l_volume=20;
