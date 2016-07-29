@@ -14,7 +14,7 @@ extern "C" {  // necessary for VC6
 #endif
 
 struct ACIA_STRUCT{ // removed _ ..
-#if defined(SSE_VAR_RESIZE_383_) // problem is memory snapshots
+#if defined(SSE_VAR_RESIZE_383A) // problem is memory snapshots, structure: more complicated
   BYTE clock_divide;
   BYTE rx_irq_enabled;
   BYTE rx_not_read;
@@ -26,7 +26,7 @@ struct ACIA_STRUCT{ // removed _ ..
   int last_tx_write_time;
   int last_rx_read_time;
 #else
-  int clock_divide; //OLD_VARIABLES?
+  int clock_divide;
   int rx_delay__unused; //SS see this?
   BYTE rx_irq_enabled;
   BYTE rx_not_read;

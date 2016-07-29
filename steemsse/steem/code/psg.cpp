@@ -26,7 +26,6 @@ EXT int sound_variable_d INIT(208);
 EXT bool sound_internal_speaker INIT(false);
 #endif
 EXT int sound_freq INIT(50066),sound_comline_freq INIT(0),sound_chosen_freq INIT(50066);
-EXT int sound_mode INIT(SOUND_MODE_CHIP),sound_last_mode INIT(SOUND_MODE_CHIP);
 EXT BYTE sound_num_channels INIT(1),sound_num_bits INIT(8);
 EXT int sound_bytes_per_sample INIT(1);
 #if defined(SSE_SOUND_VOL_LOGARITHMIC_3)//v3.7.1
@@ -39,14 +38,12 @@ EXT DWORD MaxVolume INIT(0xffff);
 EXT bool sound_low_quality INIT(0);
 EXT bool sound_write_primary INIT( NOT_ONEGAME(0) ONEGAME_ONLY(true) );
 EXT bool sound_click_at_start INIT(0);
-EXT int sound_time_method INIT(0);
 EXT bool sound_record INIT(false);
 EXT DWORD sound_record_start_time; //by timer variable = timeGetTime()
 EXT int psg_write_n_screens_ahead INIT(3 UNIX_ONLY(+7) );
 
 EXT int psg_voltage,psg_dv;
 
-EXT int psg_reg_select;
 EXT BYTE psg_reg[16],psg_reg_data;
 
 EXT FILE *wav_file INIT(NULL);
@@ -109,26 +106,47 @@ WORD MicroWire_Mask=0x07ff;
 WORD MicroWire_Data=0;
 int MicroWire_StartTime=0;
 
-int dma_sound_mode_to_freq[4]={6258,12517,25033,50066};
-int dma_sound_freq,dma_sound_output_countdown,dma_sound_samples_countdown;
 
 WORD dma_sound_internal_buf[4],dma_sound_last_word;
-int dma_sound_internal_buf_len=0;
 MEM_ADDRESS dma_sound_fetch_address;
 
 WORD dma_sound_channel_buf[DMA_SOUND_BUFFER_LENGTH+16];
 DWORD dma_sound_channel_buf_last_write_t;
+#if defined(SSE_VAR_RESIZE_383)
+EXT BYTE psg_reg_select;
+EXT BYTE sound_time_method INIT(0);
+EXT BYTE sound_mode INIT(SOUND_MODE_CHIP),sound_last_mode INIT(SOUND_MODE_CHIP);
+WORD dma_sound_mode_to_freq[4]={6258,12517,25033,50066},dma_sound_freq;
+int dma_sound_output_countdown,dma_sound_samples_countdown;
+BYTE dma_sound_internal_buf_len=0;
+bool dma_sound_on_this_screen=0;
+EXT BYTE dma_sound_mixer,dma_sound_volume;
+EXT BYTE dma_sound_l_volume,dma_sound_r_volume;
+EXT BYTE dma_sound_l_top_val,dma_sound_r_top_val;
+#else
+EXT int psg_reg_select;
+EXT int sound_time_method INIT(0);
+EXT int sound_mode INIT(SOUND_MODE_CHIP),sound_last_mode INIT(SOUND_MODE_CHIP);
+int dma_sound_mode_to_freq[4]={6258,12517,25033,50066};
+int dma_sound_freq,dma_sound_output_countdown,dma_sound_samples_countdown;
+int dma_sound_internal_buf_len=0;
 int dma_sound_on_this_screen=0;
-
 int dma_sound_mixer=1,dma_sound_volume=40;
 int dma_sound_l_volume=20,dma_sound_r_volume=20;
 int dma_sound_l_top_val=128,dma_sound_r_top_val=128;
-
+#endif
 #if defined(SSE_SOUND_MICROWIRE)
 #include "../../3rdparty/dsp/dsp.h"
+#if defined(SSE_VAR_RESIZE_383)
+BYTE dma_sound_bass=6; // 6 is neutral value
+BYTE dma_sound_treble=6;
+#else
 int dma_sound_bass=6; // 6 is neutral value
 int dma_sound_treble=6;
-TIirVolume MicrowireVolume[2];
+#endif
+#if !defined(SSE_SOUND_DMA_383A)// too many click problems
+TIirVolume MicrowireVolume[2]; 
+#endif
 TIirLowShelf MicrowireBass[2];
 TIirHighShelf MicrowireTreble[2];
 #if defined(SSE_SOUND_VOL)
@@ -343,8 +361,13 @@ extern IDirectSoundBuffer *PrimaryBuf,*SoundBuf;
 #endif
 
 #if defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_DMA_383B)
+#define LOW_SHELF_FREQ 80 // officially 50 Hz
+#define HIGH_SHELF_FREQ (min(2000,(int)dma_sound_freq/2)) // officially  15 kHz
+#else
 #define LOW_SHELF_FREQ 80 // 50
 #define HIGH_SHELF_FREQ (dma_sound_freq) // doesn't work very well
+#endif
 #endif
 
 //---------------------------------------------------------------------------
@@ -747,11 +770,13 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
 #if defined(SSE_SOUND_MICROWIRE)   // microwire this!
 
 inline void Microwire(int channel,int &val) {
+#if !defined(SSE_SOUND_DMA_383C) // tested before
   if(
 #if defined(SSE_SOUND_OPTION_DISABLE_DSP)
     DSP_ENABLED&&
 #endif
-    MICROWIRE_ON)
+    OPTION_MICROWIRE)
+#endif
   {
 //    double d_dsp_v=val;
 #if defined(SSE_STF)
@@ -762,14 +787,25 @@ inline void Microwire(int channel,int &val) {
       if(dma_sound_bass!=6)
         d_dsp_v=MicrowireBass[channel].FilterAudio(d_dsp_v,LOW_SHELF_FREQ,
           dma_sound_bass-6);
-//      if(dma_sound_treble!=6)  //3.6.1? too buggy - made no switch...
-  //      d_dsp_v=MicrowireTreble[channel].FilterAudio(d_dsp_v,HIGH_SHELF_FREQ
-    //     ,dma_sound_treble-6);
+#if defined(SSE_SOUND_DMA_383B) || SSE_VERSION<361
+/*  In v3.8.3, we use the optional dsp module for bass and treble,
+    but not for volume, because of some clicks.
+*/
+      if(dma_sound_treble!=6)
+        d_dsp_v=MicrowireTreble[channel].FilterAudio(d_dsp_v,HIGH_SHELF_FREQ
+         ,dma_sound_treble-6);
+#endif
+#if defined(SSE_SOUND_DMA_383A)
+      // no "dsp" volume
+#else
       if(dma_sound_volume<0x28
         ||dma_sound_l_volume<0x14 &&!channel 
         ||dma_sound_r_volume<0x14 &&channel)//3.6.1: 2 channels
+
         d_dsp_v=MicrowireVolume[channel].FilterAudio(d_dsp_v,
           dma_sound_volume-0x28+dma_sound_l_volume-0x14);
+#endif
+
       val=d_dsp_v;//v3.7
 #if defined(SSE_STF)
     }
@@ -810,7 +846,7 @@ always audible."
     Must be =1 to mix YM and DMA, -12db doesn't work.
     SS: Pacemaker writes 0 then plays a PSG tune! -> 2 compensating bugs
 */
-    if(MICROWIRE_ON 
+    if(OPTION_MICROWIRE 
 #if defined(SSE_STF)
       && ST_TYPE==STE // only if option checked and we're on STE
 #endif
@@ -829,14 +865,15 @@ always audible."
 #endif//SSE_SOUND_MICROWIRE_MIXMODE
 
     val=v; //inefficient?
-
+#if defined(SSE_SOUND_DMA_360)//no
     if(dma_sound_on_this_screen) //bugfix v3.6.0
+#endif
     {//3.6.1
 #if defined(SSE_OSD_CONTROL)
-    if(OSD_MASK3 & OSD_CONTROL_DMASND) 
-      TRACE_OSD("F%d %cV%d %d %d B%d T%d",dma_sound_freq,(dma_sound_mode & BIT_7)?'M':'S',dma_sound_volume,dma_sound_l_volume,dma_sound_r_volume,dma_sound_bass,dma_sound_treble);
+      if(OSD_MASK3 & OSD_CONTROL_DMASND) 
+        TRACE_OSD("F%d %cV%d %d %d B%d T%d",dma_sound_freq,(dma_sound_mode & BIT_7)?'M':'S',dma_sound_volume,dma_sound_l_volume,dma_sound_r_volume,dma_sound_bass,dma_sound_treble);
 #endif
-      
+
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
       if(! (d2_dpeek(FAKE_IO_START+20)>>15) ) //dma
 #endif
@@ -853,10 +890,26 @@ now put the mixer to mix YM2149 and DMA sound, the LMC1992 will also manipulate
 the YM sound output. However, the YM2149 as a soundchip is not really meant to 
 have Bass and Trebble enhanced. This might result in a very ugly sound.
 */
-    Microwire(0,val);
+#if defined(SSE_SOUND_DMA_383C)
+/*  If sound is mono and balance is changed, Steem applied only 50% of the
+    balance. We do the rest here. Fixes Beat Demo L/R.
+    We don't use 'dsp' gain adjustment anymore.
+*/
+      if(OPTION_MICROWIRE)
+      {
+        Microwire(0,val);
+        if(dma_sound_r_volume<20)
+        {
+          val*=dma_sound_r_volume;
+          val/=20;
+        }
+      }
+#else
+      Microwire(0,val);
+#endif
 #endif
     }
-    //if(SSE_OPTION_PSG); else //v3.7 //no!
+    
     if (val<VOLTAGE_FP(0))
       val=VOLTAGE_FP(0); 
     else if (val>VOLTAGE_FP(255))
@@ -879,7 +932,9 @@ have Bass and Trebble enhanced. This might result in a very ugly sound.
     if(sound_num_channels==2){    
       
       val=v;
+#if defined(SSE_SOUND_DMA_360)//no
       if(dma_sound_on_this_screen) //bugfix v3.6
+#endif
       {
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
         if(! (d2_dpeek(FAKE_IO_START+20)>>15) ) 
@@ -887,11 +942,22 @@ have Bass and Trebble enhanced. This might result in a very ugly sound.
           val+= (*(*lp_dma_sound_channel+1)); 
 
 #if defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_DMA_383C) // balance, not dsp
+        if(OPTION_MICROWIRE)
+        {
+          Microwire(1,val);
+          if(dma_sound_l_volume<20)
+          {
+            val*=dma_sound_l_volume;
+            val/=20;
+          }
+        }
+#else
         Microwire(1,val);
+#endif
 #endif
       }
 
-      //if(SSE_OPTION_PSG);else //v3.7
       if(val<VOLTAGE_FP(0))
         val=VOLTAGE_FP(0); 
       else if (val>VOLTAGE_FP(255))
@@ -933,7 +999,7 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
     AlterV(Alter_V,v,dv,*source_p);
 
 #if defined(SSE_SOUND_MICROWIRE_MIXMODE)//3.6.3
-    if(MICROWIRE_ON 
+    if(OPTION_MICROWIRE 
 #if defined(SSE_STF)
       && ST_TYPE==STE // only if option checked and we're on STE
 #endif
@@ -949,8 +1015,9 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
 #endif//SSE_SOUND_MICROWIRE_MIXMODE
 
     val=v;//3.6.3, was it missing???
-
+#if defined(SSE_SOUND_DMA_360)
     if(dma_sound_on_this_screen) //bugfix v3.6
+#endif
       val+= (**lp_dma_sound_channel);    
 
 #if defined(SSE_SOUND_MICROWIRE)
@@ -972,8 +1039,9 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
     }
 
     if(sound_num_channels==2){    
-      
+#if defined(SSE_SOUND_DMA_360)
       if(dma_sound_on_this_screen) //bugfix v3.6
+#endif
         val+= (*(*lp_dma_sound_channel+1)); 
 
 #if defined(SSE_SOUND_MICROWIRE)
@@ -1129,20 +1197,20 @@ double d_dsp_v; // a bit silly, heavy, and maybe not optimal
 #define WRITE_SOUND_LOOP(Alter_V,Out_P,Size,GetSize)         \
              while (c>0){                                                  \
               Alter_V                                                     \
-              if(MICROWIRE_ON && (psg_reg[PSGR_MIXER] & b00111111)!=b00111111 ) v=PsgGain.FilterAudio(v,-6); \
+              if(OPTION_MICROWIRE && (psg_reg[PSGR_MIXER] & b00111111)!=b00111111 ) v=PsgGain.FilterAudio(v,-6); \
               val=v + *lp_dma_sound_channel;                           \
-              if( MICROWIRE_ON&&(\
+              if( OPTION_MICROWIRE&&(\
                 dma_sound_bass!=6||dma_sound_treble!=6\
               ||dma_sound_volume<0x28\
               ||dma_sound_l_volume<0x14)) d_dsp_v=val;\
-              if(MICROWIRE_ON&&dma_sound_bass!=6) \
+              if(OPTION_MICROWIRE&&dma_sound_bass!=6) \
                 d_dsp_v=MicrowireBass[0].FilterAudio(d_dsp_v,LOW_SHELF_FREQ,dma_sound_bass-6);\
-              if(MICROWIRE_ON&&dma_sound_treble!=6)\
+              if(OPTION_MICROWIRE&&dma_sound_treble!=6)\
                 d_dsp_v=MicrowireTreble[0].FilterAudio(d_dsp_v,HIGH_SHELF_FREQ,dma_sound_treble-6);\
-              if(MICROWIRE_ON&&(dma_sound_volume<0x28||dma_sound_l_volume<0x14))\
+              if(OPTION_MICROWIRE&&(dma_sound_volume<0x28||dma_sound_l_volume<0x14))\
                 d_dsp_v=MicrowireVolume[0].FilterAudio(d_dsp_v,dma_sound_volume-0x28\
                   +dma_sound_l_volume-0x14);\
-              if( MICROWIRE_ON &&(\
+              if( OPTION_MICROWIRE &&(\
                 dma_sound_bass!=6||dma_sound_treble!=6\
               ||dma_sound_volume<0x28\
               ||dma_sound_l_volume<0x14))  val=d_dsp_v;\
@@ -1154,18 +1222,18 @@ double d_dsp_v; // a bit silly, heavy, and maybe not optimal
               *(Out_P++)=Size(GetSize(&val)); \
               if (sound_num_channels==2){         \
                 val=v + *(lp_dma_sound_channel+1);                                            \
-                if(MICROWIRE_ON&&(dma_sound_bass!=6||dma_sound_treble!=6\
+                if(OPTION_MICROWIRE&&(dma_sound_bass!=6||dma_sound_treble!=6\
                   ||dma_sound_volume<0x28\
                   ||dma_sound_r_volume<0x14)) \
                   d_dsp_v=val;\
-                if(MICROWIRE_ON&&dma_sound_bass!=6) \
+                if(OPTION_MICROWIRE&&dma_sound_bass!=6) \
                   d_dsp_v=MicrowireBass[1].FilterAudio(d_dsp_v,LOW_SHELF_FREQ,dma_sound_bass-6);\
-                if(MICROWIRE_ON&&dma_sound_treble!=6)\
+                if(OPTION_MICROWIRE&&dma_sound_treble!=6)\
                   d_dsp_v=MicrowireTreble[1].FilterAudio(d_dsp_v,HIGH_SHELF_FREQ,dma_sound_treble-6);\
-                if(MICROWIRE_ON&&(dma_sound_volume<0x28||dma_sound_r_volume<0x14))\
+                if(OPTION_MICROWIRE&&(dma_sound_volume<0x28||dma_sound_r_volume<0x14))\
                 d_dsp_v=MicrowireVolume[1].FilterAudio(d_dsp_v,dma_sound_volume-0x28\
                   +dma_sound_r_volume-0x14);\
-                if(MICROWIRE_ON&&(dma_sound_bass!=6||dma_sound_treble!=6\
+                if(OPTION_MICROWIRE&&(dma_sound_bass!=6||dma_sound_treble!=6\
                   ||dma_sound_volume<0x28\
                   ||dma_sound_r_volume<0x14)) \
                   val=d_dsp_v;\
@@ -1187,18 +1255,18 @@ double d_dsp_v; // a bit silly, heavy, and maybe not optimal
              while (c>0){                                                  \
               Alter_V                                                     \
               val=v + *lp_dma_sound_channel;                           \
-              if( MICROWIRE_ON&&(\
+              if( OPTION_MICROWIRE&&(\
                 dma_sound_bass!=6||dma_sound_treble!=6\
               ||dma_sound_volume<0x28\
               ||dma_sound_l_volume<0x14)) tmp=val;\
-              if(MICROWIRE_ON&&dma_sound_bass!=6) \
+              if(OPTION_MICROWIRE&&dma_sound_bass!=6) \
                 tmp=MicrowireBass[0].FilterAudio(tmp,LOW_SHELF_FREQ,dma_sound_bass-6);\
-              if(MICROWIRE_ON&&dma_sound_treble!=6)\
+              if(OPTION_MICROWIRE&&dma_sound_treble!=6)\
                 tmp=MicrowireTreble[0].FilterAudio(tmp,HIGH_SHELF_FREQ,dma_sound_treble-6);\
-              if(MICROWIRE_ON&&(dma_sound_volume<0x28||dma_sound_l_volume<0x14))\
+              if(OPTION_MICROWIRE&&(dma_sound_volume<0x28||dma_sound_l_volume<0x14))\
                 tmp=MicrowireVolume[0].FilterAudio(tmp,dma_sound_volume-0x28\
                   +dma_sound_l_volume-0x14);\
-              if( MICROWIRE_ON &&(\
+              if( OPTION_MICROWIRE &&(\
                 dma_sound_bass!=6||dma_sound_treble!=6\
               ||dma_sound_volume<0x28\
               ||dma_sound_l_volume<0x14))  val=tmp;\
@@ -1210,18 +1278,18 @@ double d_dsp_v; // a bit silly, heavy, and maybe not optimal
               *(Out_P++)=Size(GetSize(&val)); \
               if (sound_num_channels==2){         \
                 val=v + *(lp_dma_sound_channel+1);                                            \
-                if(MICROWIRE_ON&&(dma_sound_bass!=6||dma_sound_treble!=6\
+                if(OPTION_MICROWIRE&&(dma_sound_bass!=6||dma_sound_treble!=6\
               ||dma_sound_volume<0x28\
               ||dma_sound_r_volume<0x14)) \
                   tmp=val;\
-                if(MICROWIRE_ON&&dma_sound_bass!=6) \
+                if(OPTION_MICROWIRE&&dma_sound_bass!=6) \
                   tmp=MicrowireBass[1].FilterAudio(tmp,LOW_SHELF_FREQ,dma_sound_bass-6);\
-                if(MICROWIRE_ON&&dma_sound_treble!=6)\
+                if(OPTION_MICROWIRE&&dma_sound_treble!=6)\
                   tmp=MicrowireTreble[1].FilterAudio(tmp,HIGH_SHELF_FREQ,dma_sound_treble-6);\
-                if(MICROWIRE_ON&&(dma_sound_volume<0x28||dma_sound_r_volume<0x14))\
+                if(OPTION_MICROWIRE&&(dma_sound_volume<0x28||dma_sound_r_volume<0x14))\
                 tmp=MicrowireVolume[1].FilterAudio(tmp,dma_sound_volume-0x28\
                   +dma_sound_r_volume-0x14);\
-                if(MICROWIRE_ON&&(dma_sound_bass!=6||dma_sound_treble!=6\
+                if(OPTION_MICROWIRE&&(dma_sound_bass!=6||dma_sound_treble!=6\
               ||dma_sound_volume<0x28\
               ||dma_sound_r_volume<0x14)) \
                  val=tmp;\
@@ -1821,7 +1889,6 @@ void dma_sound_set_mode(BYTE new_mode)
 */
 
 #if defined(SSE_SOUND)
-//  ASSERT(!(new_mode&~0x8F));
   new_mode&=0x8F;
   TRACE_LOG("DMA sound mode %X freq %d\n",new_mode,dma_sound_mode_to_freq[new_mode & 3]);
 #endif
@@ -1900,11 +1967,13 @@ void dma_sound_fetch()
       for (int i=0;i<3;i++) dma_sound_internal_buf[i]=dma_sound_internal_buf[i+1];
       dma_sound_internal_buf_len--;
       if (vol_change_l){
+       // debug1=dma_sound_last_word;
         int b1=(signed char)(HIBYTE(dma_sound_last_word));
         b1*=left_vol_top_val;
         b1/=128;
         dma_sound_last_word&=0x00ff;
         dma_sound_last_word|=WORD(BYTE(b1) << 8);
+        //TRACE_OSD("%x %x",debug1,dma_sound_last_word);
       }
       if (vol_change_r){
         int b2=(signed char)(LOBYTE(dma_sound_last_word));
@@ -1956,7 +2025,7 @@ void dma_sound_fetch()
 #if defined(SSE_SOUND_FILTER_STE)//no
         // exactly the same low-pass filter as for STF sound
         // ->3.6.3 it filters but also pollutes the sound
-        if(MICROWIRE_ON
+        if(OPTION_MICROWIRE
           &&PSG_FILTER_FIX //for v3.6.3 tests
           &&dma_sound_channel_buf_last_write_t>3)
         {

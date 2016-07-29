@@ -107,7 +107,6 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
   FF9220, FF9222                   paddles
   FFFA00 - FFFA3F   MFP
 */
-
   DEBUG_CHECK_READ_IO_B(addr);
 
 #ifdef ONEGAME
@@ -165,6 +164,10 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
 #endif
    }
 #endif//SSE_CPU_ROUNDING_BUS
+
+#if defined(SSE_VAR_OPT_383A)
+  act=ACT;
+#endif
 
   // Main switch: address groups
   switch(addr&0xffff00) 
@@ -1176,7 +1179,7 @@ Receiver Data Register is retained.
 
 #if defined(SSE_VIDEO_CHIPSET)
 
-  ASSERT( (addr&0xFFFF00)==0xff8200 );
+      ASSERT( (addr&0xFFFF00)==0xff8200 );
 /*
     This was in Steem 3.2:
     // Below $10 - Odd bytes return value or 0, even bytes return 0xfe/0x7e
@@ -1188,103 +1191,102 @@ Receiver Data Register is retained.
    Cases 
    R FF820D Lemmings40
 */
-  ior_byte= ((addr&1)||addr>0xff8240) ? 0 : 0xFE; 
+      ior_byte= ((addr&1)||addr>0xff8240) ? 0 : 0xFE; 
 #if defined(SSE_STF_VIDEO_IOR)
-  if(ST_TYPE!=STE)
-    ior_byte=0xFF; 
+      if(ST_TYPE!=STE)
+        ior_byte=0xFF; 
 #endif  
 
-  if (addr>=0xff8240 && addr<0xff8260){  //palette
-    int n=(addr-0xff8240)/2; // which palette
-    ior_byte= (addr&1) ? (STpal[n]&0xFF) : (STpal[n]>>8);
-  }else if (addr>0xff820f && addr<0xff8240){ //forbidden gap
-    exception(BOMBS_BUS_ERROR,EA_READ,addr);
-  }else if (addr>0xff827f){  //forbidden area after SHIFTER
-    exception(BOMBS_BUS_ERROR,EA_READ,addr);
-  }else{
-    switch(addr){
-      
-    case 0xff8201:  //high byte of screen memory address
-      ior_byte=LOBYTE(HIWORD(xbios2));
-      break;
-      
-    case 0xff8203:  //mid byte of screen memory address
-      ior_byte=HIBYTE(LOWORD(xbios2));
-      break;
-      
-    case 0xff8205:  //high byte of screen draw pointer
-    case 0xff8207:  //mid byte of screen draw pointer
-    case 0xff8209:{  //low byte of screen draw pointer
-      MEM_ADDRESS sdp;
+      if (addr>=0xff8240 && addr<0xff8260){  //palette
+        int n=(addr-0xff8240)/2; // which palette
+        ior_byte= (addr&1) ? (STpal[n]&0xFF) : (STpal[n]>>8);
+      }else if (addr>0xff820f && addr<0xff8240){ //forbidden gap
+        exception(BOMBS_BUS_ERROR,EA_READ,addr);
+      }else if (addr>0xff827f){  //forbidden area after SHIFTER
+        exception(BOMBS_BUS_ERROR,EA_READ,addr);
+      }else{
+        switch(addr){
+
+        case 0xff8201:  //high byte of screen memory address
+          ior_byte=LOBYTE(HIWORD(xbios2));
+          break;
+
+        case 0xff8203:  //mid byte of screen memory address
+          ior_byte=HIBYTE(LOWORD(xbios2));
+          break;
+
+        case 0xff8205:  //high byte of screen draw pointer
+        case 0xff8207:  //mid byte of screen draw pointer
+        case 0xff8209:{  //low byte of screen draw pointer
+          MEM_ADDRESS sdp;
 #if defined(SSE_SHIFTER_SDP_READ)
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
-      sdp=MMU.ReadVideoCounter(LINECYCLES); // a complicated affair
+          sdp=MMU.ReadVideoCounter(LINECYCLES); // a complicated affair
 #else
-      sdp=Shifter.ReadSDP(LINECYCLES); // a complicated affair
+          sdp=Shifter.ReadSDP(LINECYCLES); // a complicated affair
 #endif
 #else
-      if(scan_y<shifter_first_draw_line || scan_y>=shifter_last_draw_line){
-        sdp=shifter_draw_pointer;
-      }else{
-        sdp=get_shifter_draw_pointer(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
-        LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_VIDEO,Str("VIDEO: ")+HEXSl(old_pc,6)+
-          " - Read Shifter draw pointer as $"+HEXSl(sdp,6)+
-          " on "+scanline_cycle_log()); )
-      }
+          if(scan_y<shifter_first_draw_line || scan_y>=shifter_last_draw_line){
+            sdp=shifter_draw_pointer;
+          }else{
+            sdp=get_shifter_draw_pointer(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
+            LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_VIDEO,Str("VIDEO: ")+HEXSl(old_pc,6)+
+              " - Read Shifter draw pointer as $"+HEXSl(sdp,6)+
+              " on "+scanline_cycle_log()); )
+          }
 #endif
-      ior_byte=DWORD_B(&sdp,(2-(addr-0xff8205)/2)); // change for big endian !!!!!!!!!
+          ior_byte=DWORD_B(&sdp,(2-(addr-0xff8205)/2)); // change for big endian !!!!!!!!!
 #if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
-      if(mode!=STEM_MODE_INSPECT &&(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SDP_READ))
-        FrameEvents.Add(scan_y,LINECYCLES,'c',((addr&0xF)<<8)|ior_byte);
+          if(mode!=STEM_MODE_INSPECT &&(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SDP_READ))
+            FrameEvents.Add(scan_y,LINECYCLES,'c',((addr&0xF)<<8)|ior_byte);
 #endif
-      }
-      break;
-      
-    case 0xff820a:  //synchronization mode
-      ior_byte&=~3;           // this way takes care...
-      ior_byte|=GLU.m_SyncMode;   // ...of both STF & STE
-      break;
+                      }
+                      break;
 
-    case 0xff820d:  //low byte of screen memory address
+        case 0xff820a:  //synchronization mode
+          ior_byte&=~3;           // this way takes care...
+          ior_byte|=GLU.m_SyncMode;   // ...of both STF & STE
+          break;
+
+        case 0xff820d:  //low byte of screen memory address
 #if defined(SSE_STF_VBASELO)
-      ASSERT( ST_TYPE==STE || !(xbios2&0xFF) );
-      if(ST_TYPE==STE) 
+          ASSERT( ST_TYPE==STE || !(xbios2&0xFF) );
+          if(ST_TYPE==STE) 
 #endif
-        ior_byte=(BYTE)xbios2&0xFF;
-      break;
-  
-    case 0xff820f: // LINEWID
+            ior_byte=(BYTE)xbios2&0xFF;
+          break;
+
+        case 0xff820f: // LINEWID
 #if defined(SSE_STF_LINEWID)
-      if(ST_TYPE==STE) 
+          if(ST_TYPE==STE) 
 #endif
 #if defined(SSE_MMU_LINEWID_TIMING)
-        ior_byte=shifter_fetch_extra_words;
+            ior_byte=shifter_fetch_extra_words;
 #else
-        ior_byte=LINEWID;
+            ior_byte=LINEWID;
 #endif
-      break;
-      
-    case 0xff8260: //resolution
-      ior_byte&=~3;           // this way takes care
-      ior_byte|=Shifter.m_ShiftMode;  // of both STF & STE
-      break;
+          break;
 
-    case 0xff8265:  //HSCROLL
-      DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) 
-        shifter_hscroll_extra_fetch=(shifter_hscroll!=0); //case Kultur Melk
+        case 0xff8260: //resolution
+          ior_byte&=~3;           // this way takes care
+          ior_byte|=Shifter.m_ShiftMode;  // of both STF & STE
+          break;
+
+        case 0xff8265:  //HSCROLL
+          DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) 
+            shifter_hscroll_extra_fetch=(shifter_hscroll!=0); //case Kultur Melk
 #if defined(SSE_STF_HSCROLL)
-      if(ST_TYPE==STE)
+          if(ST_TYPE==STE)
 #endif
-        ior_byte=HSCROLL;
-      break;
-    }//if
-    
-  }
+            ior_byte=HSCROLL;
+          break;
+        }//if
+      }
 #if defined(SSE_VIDEO_IOR_TRACE)
-  // made possible by our structure change
-  TRACE("Shifter read %X=%X\n",addr,ior_byte); // not LOG
+      // made possible by our structure change
+      TRACE("Shifter read %X=%X\n",addr,ior_byte); // not LOG
 #endif
-  break;
+      break;
 
 #else // Steem 3.2
     {

@@ -188,8 +188,13 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   }
 
   ReadWrite(mfp_gpip_no_interrupt); //1
-
+#if defined(SSE_VAR_RESIZE_383)
+  int i_psg_reg_select=psg_reg_select;
+  ReadWrite(i_psg_reg_select);      //4
+  psg_reg_select=i_psg_reg_select;
+#else
   ReadWrite(psg_reg_select);        //4
+#endif
   ReadWriteArray(psg_reg);//SS16
 
   ReadWrite(dma_sound_control);     //1
@@ -296,7 +301,85 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 
   if (Version>=5) ReadWriteArray(ST_Key_Down);
 
+#if defined(SSE_VAR_RESIZE_383A) // problem is memory snapshots, structure: more complicated
+  struct {
+    int clock_divide;
+    int rx_delay__unused;
+    BYTE rx_irq_enabled;
+    BYTE rx_not_read;
+    int overrun;
+    int tx_flag;
+    BYTE tx_irq_enabled;
+    BYTE data;
+    BYTE irq;
+    int last_tx_write_time;
+    int last_rx_read_time;
+    BYTE LineRxBusy;
+    BYTE ByteWaitingRx;
+    BYTE ByteWaitingTx;
+    BYTE LineTxBusy;
+    BYTE CR,SR,RDR,TDR,RDRS,TDRS;
+  } old_acia[2];
+
+  old_acia[NUM_ACIA_IKBD].clock_divide=ACIA_IKBD.clock_divide;
+  old_acia[NUM_ACIA_IKBD].rx_irq_enabled=ACIA_IKBD.rx_irq_enabled;
+  old_acia[NUM_ACIA_IKBD].rx_not_read=ACIA_IKBD.rx_not_read;
+  old_acia[NUM_ACIA_IKBD].overrun=ACIA_IKBD.overrun;
+  old_acia[NUM_ACIA_IKBD].tx_flag=ACIA_IKBD.tx_flag;
+  old_acia[NUM_ACIA_IKBD].tx_irq_enabled=ACIA_IKBD.tx_irq_enabled;
+  old_acia[NUM_ACIA_IKBD].data=ACIA_IKBD.data;
+  old_acia[NUM_ACIA_IKBD].irq=ACIA_IKBD.irq;
+  old_acia[NUM_ACIA_IKBD].last_tx_write_time=ACIA_IKBD.last_tx_write_time;
+  old_acia[NUM_ACIA_IKBD].last_rx_read_time=ACIA_IKBD.last_rx_read_time;
+#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
+  old_acia[NUM_ACIA_IKBD].LineRxBusy=ACIA_IKBD.LineRxBusy;
+  old_acia[NUM_ACIA_IKBD].ByteWaitingRx=ACIA_IKBD.ByteWaitingRx;
+#endif
+#if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
+  old_acia[NUM_ACIA_IKBD].ByteWaitingTx=ACIA_IKBD.ByteWaitingTx;
+  old_acia[NUM_ACIA_IKBD].LineTxBusy=ACIA_IKBD.LineTxBusy;
+#endif
+#if defined(SSE_ACIA_REGISTERS)
+  old_acia[NUM_ACIA_IKBD].CR=ACIA_IKBD.CR;
+  old_acia[NUM_ACIA_IKBD].SR=ACIA_IKBD.SR;
+  old_acia[NUM_ACIA_IKBD].RDR=ACIA_IKBD.RDR;
+  old_acia[NUM_ACIA_IKBD].TDR=ACIA_IKBD.TDR;
+  old_acia[NUM_ACIA_IKBD].RDRS=ACIA_IKBD.RDRS;
+  old_acia[NUM_ACIA_IKBD].TDRS=ACIA_IKBD.TDRS;
+#endif
+
+  if (Version>=8) ReadWriteStruct(old_acia[NUM_ACIA_IKBD]);
+
+  ACIA_IKBD.clock_divide=old_acia[NUM_ACIA_IKBD].clock_divide;
+  ACIA_IKBD.rx_irq_enabled=old_acia[NUM_ACIA_IKBD].rx_irq_enabled;
+  ACIA_IKBD.rx_not_read=old_acia[NUM_ACIA_IKBD].rx_not_read;
+  ACIA_IKBD.overrun=old_acia[NUM_ACIA_IKBD].overrun;
+  ACIA_IKBD.tx_flag=old_acia[NUM_ACIA_IKBD].tx_flag;
+  ACIA_IKBD.tx_irq_enabled=old_acia[NUM_ACIA_IKBD].tx_irq_enabled;
+  ACIA_IKBD.data=old_acia[NUM_ACIA_IKBD].data;
+  ACIA_IKBD.irq=old_acia[NUM_ACIA_IKBD].irq;
+  ACIA_IKBD.last_tx_write_time=old_acia[NUM_ACIA_IKBD].last_tx_write_time;
+  ACIA_IKBD.last_rx_read_time=old_acia[NUM_ACIA_IKBD].last_rx_read_time;
+#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
+  ACIA_IKBD.LineRxBusy=old_acia[NUM_ACIA_IKBD].LineRxBusy;
+  ACIA_IKBD.ByteWaitingRx=old_acia[NUM_ACIA_IKBD].ByteWaitingRx;
+#endif
+#if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
+  ACIA_IKBD.ByteWaitingTx=old_acia[NUM_ACIA_IKBD].ByteWaitingTx;
+  ACIA_IKBD.LineTxBusy=old_acia[NUM_ACIA_IKBD].LineTxBusy;
+#endif
+#if defined(SSE_ACIA_REGISTERS)
+  ACIA_IKBD.CR=old_acia[NUM_ACIA_IKBD].CR;
+  ACIA_IKBD.SR=old_acia[NUM_ACIA_IKBD].SR;
+  ACIA_IKBD.RDR=old_acia[NUM_ACIA_IKBD].RDR;
+  ACIA_IKBD.TDR=old_acia[NUM_ACIA_IKBD].TDR;
+  ACIA_IKBD.RDRS=old_acia[NUM_ACIA_IKBD].RDRS;
+  ACIA_IKBD.TDRS=old_acia[NUM_ACIA_IKBD].TDRS;
+#endif
+#else
   if (Version>=8) ReadWriteStruct(ACIA_IKBD);
+#endif
+ 
 
 #if defined(SSE_ACIA_REGISTERS)
   if(Version<44 && LoadOrSave==LS_LOAD) //v3.5.1
@@ -416,19 +499,6 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   if (Version>=24){
 
 #if defined(SSE_VAR_RESIZE_383)
-/*
-#if defined(SSE_VAR_RESIZE_383)
-EXT WORD em_width INIT(480);
-EXT WORD em_height INIT(480);
-EXT BYTE em_planes INIT(4);
-EXT BYTE extended_monitor INIT(0);
-#else
-EXT int em_width INIT(480);
-EXT int em_height INIT(480);
-EXT int em_planes INIT(4);
-EXT int extended_monitor INIT(0);
-#endif
-*/
     // what we win in pure size, we lose in code, but this function could be paged
     int em_ints[4];
     em_ints[0]=em_width;
@@ -505,12 +575,33 @@ EXT int extended_monitor INIT(0);
   if (Version>=30){
     ReadWrite(MicroWire_Mask);
     ReadWrite(MicroWire_Data);
+#if defined(SSE_VAR_RESIZE_383)
+    int i_dma_sound_volume=dma_sound_volume;
+    int i_dma_sound_l_volume=dma_sound_l_volume;
+    int i_dma_sound_r_volume=dma_sound_r_volume;
+    int i_dma_sound_l_top_val=dma_sound_l_top_val;
+    int i_dma_sound_r_top_val=dma_sound_r_top_val;
+    int i_dma_sound_mixer=dma_sound_mixer;
+    ReadWrite(i_dma_sound_volume);
+    ReadWrite(i_dma_sound_l_volume);
+    ReadWrite(i_dma_sound_r_volume);
+    ReadWrite(i_dma_sound_l_top_val);
+    ReadWrite(i_dma_sound_r_top_val);
+    ReadWrite(i_dma_sound_mixer);
+    dma_sound_volume=i_dma_sound_volume;
+    dma_sound_l_volume=i_dma_sound_l_volume;
+    dma_sound_r_volume=i_dma_sound_r_volume;
+    dma_sound_l_top_val=i_dma_sound_l_top_val;
+    dma_sound_r_top_val=i_dma_sound_r_top_val;
+    dma_sound_mixer=i_dma_sound_mixer;
+#else
     ReadWrite(dma_sound_volume);
     ReadWrite(dma_sound_l_volume);
     ReadWrite(dma_sound_r_volume);
     ReadWrite(dma_sound_l_top_val);
     ReadWrite(dma_sound_r_top_val);
     ReadWrite(dma_sound_mixer);
+#endif
   }
 
   int NumFloppyDrives=num_connected_floppies;
@@ -649,7 +740,13 @@ EXT int extended_monitor INIT(0);
 
   if (Version>=39){
     ReadWriteArray(dma_sound_internal_buf);
+#if defined(SSE_VAR_RESIZE_383)
+    int i_dma_sound_internal_buf_len=dma_sound_internal_buf_len;
+    ReadWrite(i_dma_sound_internal_buf_len);
+    dma_sound_internal_buf_len=i_dma_sound_internal_buf_len;
+#else
     ReadWrite(dma_sound_internal_buf_len);
+#endif
   }
 
   BYTE *pasti_block=NULL;
@@ -759,10 +856,22 @@ EXT int extended_monitor INIT(0);
     ReadWrite(SampleRate); // global of 3rd party
     if(SampleRate<6258 || SampleRate>50066)
       SampleRate=12517;
+#if defined(SSE_VAR_RESIZE_383)
+    int i_dma_sound_bass=dma_sound_bass;
+    ReadWrite(i_dma_sound_bass);
+    dma_sound_bass=dma_sound_bass;
+#else
     ReadWrite(dma_sound_bass);
+#endif
     if(dma_sound_bass<0 || dma_sound_bass>=0xC)
       dma_sound_bass=6;
+#if defined(SSE_VAR_RESIZE_383)
+    int i_dma_sound_treble=dma_sound_treble;
+    ReadWrite(i_dma_sound_treble);
+    dma_sound_treble=dma_sound_treble;
+#else
     ReadWrite(dma_sound_treble);
+#endif
     if(dma_sound_treble<0 || dma_sound_treble>=0xC)
       dma_sound_treble=6;
 #endif
@@ -816,7 +925,67 @@ EXT int extended_monitor INIT(0);
       OPTION_C1=0;
 #endif
 #if defined(SSE_ACIA_REGISTERS)
+#if defined(SSE_VAR_RESIZE_383A)
+  old_acia[NUM_ACIA_MIDI].clock_divide=ACIA_MIDI.clock_divide;
+  old_acia[NUM_ACIA_MIDI].rx_irq_enabled=ACIA_MIDI.rx_irq_enabled;
+  old_acia[NUM_ACIA_MIDI].rx_not_read=ACIA_MIDI.rx_not_read;
+  old_acia[NUM_ACIA_MIDI].overrun=ACIA_MIDI.overrun;
+  old_acia[NUM_ACIA_MIDI].tx_flag=ACIA_MIDI.tx_flag;
+  old_acia[NUM_ACIA_MIDI].tx_irq_enabled=ACIA_MIDI.tx_irq_enabled;
+  old_acia[NUM_ACIA_MIDI].data=ACIA_MIDI.data;
+  old_acia[NUM_ACIA_MIDI].irq=ACIA_MIDI.irq;
+  old_acia[NUM_ACIA_MIDI].last_tx_write_time=ACIA_MIDI.last_tx_write_time;
+  old_acia[NUM_ACIA_MIDI].last_rx_read_time=ACIA_MIDI.last_rx_read_time;
+#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
+  old_acia[NUM_ACIA_MIDI].LineRxBusy=ACIA_MIDI.LineRxBusy;
+  old_acia[NUM_ACIA_MIDI].ByteWaitingRx=ACIA_MIDI.ByteWaitingRx;
+#endif
+#if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
+  old_acia[NUM_ACIA_MIDI].ByteWaitingTx=ACIA_MIDI.ByteWaitingTx;
+  old_acia[NUM_ACIA_MIDI].LineTxBusy=ACIA_MIDI.LineTxBusy;
+#endif
+#if defined(SSE_ACIA_REGISTERS)
+  old_acia[NUM_ACIA_MIDI].CR=ACIA_MIDI.CR;
+  old_acia[NUM_ACIA_MIDI].SR=ACIA_MIDI.SR;
+  old_acia[NUM_ACIA_MIDI].RDR=ACIA_MIDI.RDR;
+  old_acia[NUM_ACIA_MIDI].TDR=ACIA_MIDI.TDR;
+  old_acia[NUM_ACIA_MIDI].RDRS=ACIA_MIDI.RDRS;
+  old_acia[NUM_ACIA_MIDI].TDRS=ACIA_MIDI.TDRS;
+#endif
+
+  ReadWriteStruct(old_acia[NUM_ACIA_MIDI]);
+
+  ACIA_MIDI.clock_divide=old_acia[NUM_ACIA_MIDI].clock_divide;
+  ACIA_MIDI.rx_irq_enabled=old_acia[NUM_ACIA_MIDI].rx_irq_enabled;
+  ACIA_MIDI.rx_not_read=old_acia[NUM_ACIA_MIDI].rx_not_read;
+  ACIA_MIDI.overrun=old_acia[NUM_ACIA_MIDI].overrun;
+  ACIA_MIDI.tx_flag=old_acia[NUM_ACIA_MIDI].tx_flag;
+  ACIA_MIDI.tx_irq_enabled=old_acia[NUM_ACIA_MIDI].tx_irq_enabled;
+  ACIA_MIDI.data=old_acia[NUM_ACIA_MIDI].data;
+  ACIA_MIDI.irq=old_acia[NUM_ACIA_MIDI].irq;
+  ACIA_MIDI.last_tx_write_time=old_acia[NUM_ACIA_MIDI].last_tx_write_time;
+  ACIA_MIDI.last_rx_read_time=old_acia[NUM_ACIA_MIDI].last_rx_read_time;
+#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
+  ACIA_MIDI.LineRxBusy=old_acia[NUM_ACIA_MIDI].LineRxBusy;
+  ACIA_MIDI.ByteWaitingRx=old_acia[NUM_ACIA_MIDI].ByteWaitingRx;
+#endif
+#if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
+  ACIA_MIDI.ByteWaitingTx=old_acia[NUM_ACIA_MIDI].ByteWaitingTx;
+  ACIA_MIDI.LineTxBusy=old_acia[NUM_ACIA_MIDI].LineTxBusy;
+#endif
+#if defined(SSE_ACIA_REGISTERS)
+  ACIA_MIDI.CR=old_acia[NUM_ACIA_MIDI].CR;
+  ACIA_MIDI.SR=old_acia[NUM_ACIA_MIDI].SR;
+  ACIA_MIDI.RDR=old_acia[NUM_ACIA_MIDI].RDR;
+  ACIA_MIDI.TDR=old_acia[NUM_ACIA_MIDI].TDR;
+  ACIA_MIDI.RDRS=old_acia[NUM_ACIA_MIDI].RDRS;
+  ACIA_MIDI.TDRS=old_acia[NUM_ACIA_MIDI].TDRS;
+#endif
+
+#else
     ReadWriteStruct(ACIA_MIDI);
+#endif
+
 #endif
 #if defined(SSE_DMA_OBJECT)
     ReadWriteStruct(Dma);
@@ -1049,9 +1218,11 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #endif
   if(Version>=54) //383
   {
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT_383)
     if(LoadOrSave==LS_SAVE)
       NewROMCountry=ROM_PEEK(0x1D);
     ReadWrite(NewROMCountry);
+#endif
   }
 #endif
 
@@ -1181,7 +1352,7 @@ void LoadSnapShotUpdateVars(int Version)
   }
 #endif
 
-  dma_sound_on_this_screen=1;
+  dma_sound_on_this_screen=1; // SS strange?
   dma_sound_output_countdown=0;
   dma_sound_samples_countdown=0;
   dma_sound_channel_buf_last_write_t=0;

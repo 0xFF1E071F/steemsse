@@ -70,7 +70,6 @@ struct TGlue {
 #if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
   void AddExtraToShifterDrawPointerAtEndOfLine(unsigned long &extra);
 #endif
-  int CheckFreq(int t);
   void CheckSideOverscan(); // left & right border effects
   void CheckVerticalOverscan(); // top & bottom borders
   void EndHBL();
@@ -78,38 +77,20 @@ struct TGlue {
   void IncScanline();
   void SetShiftMode(BYTE NewRes);
   void SetSyncMode(BYTE NewSync);
-#if defined(SSE_SHIFTER_TRICKS) // some functions aren't used
+#if defined(SSE_SHIFTER_TRICKS)
   void AddFreqChange(int f);
   void AddShiftModeChange(int r);
-  int CheckShiftMode(int t);
-  int FreqChange(int idx);
-  int ShiftModeChange(int idx=-1);
-  int FreqChangeCycle(int idx);
-  int ShiftModeChangeCycle(int idx);
-  int FreqChangeIdx(int cycle);
-  int ShiftModeChangeIdx(int cycle);
   int FreqChangeAtCycle(int cycle);
-  int ShiftModeChangeAtCycle(int cycle);
-  // value before this cycle (and a possible change)
   int FreqAtCycle(int cycle);
   int ShiftModeAtCycle(int cycle);
-  // cycle of next change to whatever value after this cycle
+  int ShiftModeChangeAtCycle(int cycle);
 #ifdef SSE_BOILER
   int NextFreqChange(int cycle,int value=-1);
+  int PreviousFreqChange(int cycle);
 #endif
   int NextShiftModeChange(int cycle,int value=-1);
-  // idx of next change to whatever value after this cycle
-  int NextFreqChangeIdx(int cycle);
   int NextShiftModeChangeIdx(int cycle);
-  // cycle of previous change to whatever value before this cycle
-  int PreviousFreqChange(int cycle);
   int PreviousShiftModeChange(int cycle);
-  //   int PreviousFreqChange(int cycle,int value=-1);
-  //   int PreviousShiftModeChange(int cycle,int value=-1);
-  // idx of previous change to whatever value before this cycle
-  int PreviousFreqChangeIdx(int cycle);
-  int PreviousShiftModeChangeIdx(int cycle);
-  int CycleOfLastChangeToFreq(int value);
   int CycleOfLastChangeToShiftMode(int value);
 #endif
 #endif//

@@ -1337,7 +1337,6 @@ void HandleButtonMessage(UINT Id,HWND hBut)
 #if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_ON_STOP)
           FrameEvents.Report();
 #endif
-
           runstate=RUNSTATE_STOPPING;
           SetStemMouseMode(STEM_MOUSEMODE_DISABLED);
         }

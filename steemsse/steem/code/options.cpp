@@ -1929,9 +1929,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_SOUND_MICROWIRE) 
         case 7302: // STE Microwire on/off 
           if (HIWORD(wPar)==BN_CLICKED){
-            MICROWIRE_ON=!MICROWIRE_ON;
-            TRACE_LOG("Option Microwire %d\n",MICROWIRE_ON);
-            SendMessage(HWND(lPar),BM_SETCHECK,MICROWIRE_ON,0);
+            OPTION_MICROWIRE=!OPTION_MICROWIRE;
+            TRACE_LOG("Option Microwire %d\n",OPTION_MICROWIRE);
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_MICROWIRE,0);
           }
           break; 
 #endif

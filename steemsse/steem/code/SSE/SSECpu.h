@@ -1072,10 +1072,11 @@ inline void TM68000::InstructionTime(int t) {
 #if !defined(SSE_CPU_TIMINGS_NO_INLINE_382)
 
 inline void TM68000::InstructionTimeRound(int t) {
-  InstructionTime(t);
 #if defined(SSE_VC_INTRINSICS_383D) // great optimisation
+  cpu_cycles-=(t);
   Rounded=_bittestandreset((LONG*)&cpu_cycles,1);
 #else//383?
+  InstructionTime(t);
 #if defined(SSE_CPU_ROUNDING_BUS)
 #if defined(SSE_VC_INTRINSICS_382)
   Rounded=BITTEST(cpu_cycles,1); // causes inlining anyway

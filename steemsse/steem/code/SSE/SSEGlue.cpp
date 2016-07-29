@@ -186,16 +186,6 @@ void TGlue::AddExtraToShifterDrawPointerAtEndOfLine(unsigned long &extra) {
 }
 #endif
 
-int TGlue::CheckFreq(int t) {
-  int i,j;
-  for(i=shifter_freq_change_idx,j=0
-    ; shifter_freq_change_time[i]-t>0 && j<32
-    ; i--,i&=31,j++);
-  if(j==32)
-    i=-1; // this ugly thing still necessary anyway
-  return i;
-}
-
 
 void TGlue::CheckSideOverscan() {
 /*  Various overscan tricks can change the border size and the number of bytes
@@ -204,7 +194,8 @@ void TGlue::CheckSideOverscan() {
     (fullscreen demos are more impressive than borders-on demos), and/or
     scroll the screen by using "sync lines" (eg Enchanted Land).
 */
-  ASSERT(screen_res<=2)
+  ASSERT(screen_res<=2);
+
 #if defined(SSE_VS2008_WARNING_383) && defined(SSE_DEBUG)
   int t=0;
 #elif defined(SSE_VAR_OPT_382)
@@ -1914,7 +1905,9 @@ void TGlue::CheckVerticalOverscan() {
 #if !defined(SSE_VID_DISABLE_AUTOBORDER)
     overscan=OVERSCAN_MAX_COUNTDOWN;
 #endif
+#if !defined(SSE_VAR_OPT_383)
     ASSERT(screen_event.event==event_scanline);
+#endif
     time_of_next_timer_b=time_of_next_event+cpu_cycles_from_hbl_to_timer_b
       + TB_TIME_WOBBLE; 
     if(on_overscan_limit==LIMIT_TOP) // top border off
@@ -2212,48 +2205,34 @@ void TGlue::IncScanline() {
 void TGlue::AddFreqChange(int f) {
   // Replacing macro ADD_SHIFTER_FREQ_CHANGE(shifter_freq)
   shifter_freq_change_idx++;
+#if defined(SSE_VC_INTRINSICS_383G)
+  BITRESET(shifter_freq_change_idx,5);//stupid, I guess
+#else
   shifter_freq_change_idx&=31;
+#endif
+#if defined(SSE_VAR_OPT_383A1)
+  shifter_freq_change_time[shifter_freq_change_idx]=act;
+#else
   shifter_freq_change_time[shifter_freq_change_idx]=ABSOLUTE_CPU_TIME;
+#endif
   shifter_freq_change[shifter_freq_change_idx]=f;                    
 }
 
 
 void TGlue::AddShiftModeChange(int mode) {
   // called only by SetShiftMode
-  ASSERT((mode&3)==mode); // Oyster sets it to 3
   shifter_shift_mode_change_idx++;
+#if defined(SSE_VC_INTRINSICS_383G)
+  BITRESET(shifter_shift_mode_change_idx,5);//stupid, I guess
+#else
   shifter_shift_mode_change_idx&=31;
+#endif
+#if defined(SSE_VAR_OPT_383A1)
+  shifter_shift_mode_change_time[shifter_shift_mode_change_idx]=act;
+#else
   shifter_shift_mode_change_time[shifter_shift_mode_change_idx]=ABSOLUTE_CPU_TIME;
+#endif
   shifter_shift_mode_change[shifter_shift_mode_change_idx]=mode;                    
-}
-
-
-int TGlue::CheckShiftMode(int t) {
-  // this is inspired by the original Steem tests in draw_check_border_removal
-  int i,j;
-  for(i=shifter_shift_mode_change_idx,j=0
-    ; shifter_shift_mode_change_time[i]-t>0 && j<32
-    ; i--,i&=31,j++);
-  if(j==32)
-    i=-1;
-  return i;
-}
-
-
-int TGlue::FreqChangeCycle(int idx) {
-  // just give the relative cycle of element idx
-  idx&=31; // so you can send idx+1 or whatever here
-  ASSERT(shifter_freq_change[idx]==50||shifter_freq_change[idx]==60);
-  int rv=shifter_freq_change_time[idx]-LINECYCLE0;
-  return rv;
-}
-
-int TGlue::ShiftModeChangeCycle(int idx) {
-  // just give the relative cycle of element idx
-  idx&=31; // so you can send idx+1 or whatever here
-  ASSERT(!shifter_shift_mode_change[idx]||shifter_shift_mode_change[idx]==1||shifter_shift_mode_change[idx]==2);
-  int rv=shifter_shift_mode_change_time[idx]-LINECYCLE0;
-  return rv;
 }
 
 
@@ -2261,11 +2240,11 @@ int TGlue::FreqChangeAtCycle(int cycle) {
   // if there was a change at this cycle, return it, otherwise -1
   int t=cycle+LINECYCLE0; // convert to absolute
   int i,j;
-  // loop while it's bigger than cycle, with safety
+  // loop while it's later than cycle, with safety
   for(i=shifter_freq_change_idx,j=0;
   j<32 && shifter_freq_change_time[i]-t>0;
   j++,i--,i&=31);
-  // here, we're on the right cycle, or smaller
+  // here, we're on the right cycle, or before
   int rv=(j<32 && !(shifter_freq_change_time[i]-t))
     ?shifter_freq_change[i]:-1;
   return rv;
@@ -2275,34 +2254,15 @@ int TGlue::ShiftModeChangeAtCycle(int cycle) {
   // if there was a change at this cycle, return it, otherwise -1
   int t=cycle+LINECYCLE0; // convert to absolute
   int i,j;
-  // loop while it's bigger than cycle, with safety
+  // loop while it's later than cycle, with safety
   for(i=shifter_shift_mode_change_idx,j=0;
   j<32 && shifter_shift_mode_change_time[i]-t>0;
   j++,i--,i&=31);
-  // here, we're on the right cycle, or smaller
+  // here, we're on the right cycle, or before
   int rv=(j<32 && !(shifter_shift_mode_change_time[i]-t))
     ?shifter_shift_mode_change[i]:-1;
   return rv;
 
-}
-
-
-int TGlue::FreqChangeIdx(int cycle) {
-  // give the idx of freq change at this cycle, if any
-  int t=cycle+LINECYCLE0; // convert to absolute
-  int idx=CheckFreq(t); // use the <= check
-  if(idx!=-1 &&shifter_freq_change_time[idx]==t)
-    return idx;
-  return -1;
-}
-
-int TGlue::ShiftModeChangeIdx(int cycle) {
-  // give the idx of shift mode change at this cycle, if any
-  int t=cycle+LINECYCLE0; // convert to absolute
-  int idx=CheckShiftMode(t); // use the <= check
-  if(idx!=-1 &&shifter_shift_mode_change_time[idx]==t)
-    return idx;
-  return -1;
 }
 
 #if defined(SSE_GLUE_382)
@@ -2316,7 +2276,6 @@ int TGlue::FreqAtCycle(int cycle) {
   for(i=shifter_freq_change_idx,j=0
     ; shifter_freq_change_time[i]-t>0 && j<32
     ; i--,i&=31,j++) ;
-
   if(shifter_freq_change_time[i]-t<=0 && shifter_freq_change[i]>0)
     return shifter_freq_change[i];
   return shifter_freq_at_start_of_vbl;
@@ -2419,34 +2378,7 @@ int TGlue::NextShiftModeChange(int cycle,int value) {
   return -1;
 }
 
-
-int TGlue::NextFreqChangeIdx(int cycle) {
-  // return idx next change after this cycle
-  int t=cycle+LINECYCLE0; // convert to absolute
-  int idx,i,j;
-  for(idx=i=shifter_freq_change_idx,j=0
-    ; shifter_freq_change_time[i]-t>0 && j<32
-    ; i--,i&=31,j++)
-    idx=i;
-  if(shifter_freq_change_time[idx]-t>0)
-    return idx;
-  return -1;
-}
-
-int TGlue::NextShiftModeChangeIdx(int cycle) {
-  // return idx next change after this cycle
-  int t=cycle+LINECYCLE0; // convert to absolute
-  int idx,i,j;
-  for(idx=i=shifter_shift_mode_change_idx,j=0
-    ; shifter_shift_mode_change_time[i]-t>0 && j<32
-    ; i--,i&=31,j++)
-    idx=i;
-  if(shifter_shift_mode_change_time[idx]-t>0)
-    return idx;
-  return -1;
-}
-
-
+#if defined(SSE_BOILER_FRAME_REPORT) 
 int TGlue::PreviousFreqChange(int cycle) {
   // return cycle of previous change before this cycle
   int t=cycle+LINECYCLE0; // convert to absolute
@@ -2458,6 +2390,7 @@ int TGlue::PreviousFreqChange(int cycle) {
     return shifter_freq_change_time[i]-LINECYCLE0;
   return -1;
 }
+#endif
 
 int TGlue::PreviousShiftModeChange(int cycle) {
   // return cycle of previous change before this cycle
@@ -2471,41 +2404,6 @@ int TGlue::PreviousShiftModeChange(int cycle) {
   return -1;
 }
 
-
-int TGlue::PreviousFreqChangeIdx(int cycle) {
-  // return idx of previous change before this cycle
-  int t=cycle+LINECYCLE0; // convert to absolute
-  int i,j;
-  for(i=shifter_freq_change_idx,j=0
-    ; shifter_freq_change_time[i]-t>=0 && j<32
-    ; i--,i&=31,j++) ;
-  if(shifter_freq_change_time[i]-t<0)
-    return i; 
-  return -1;
-}
-
-int TGlue::PreviousShiftModeChangeIdx(int cycle) {
-  // return idx of previous change before this cycle
-  int t=cycle+LINECYCLE0; // convert to absolute
-  int i,j;
-  for(i=shifter_shift_mode_change_idx,j=0
-    ; shifter_shift_mode_change_time[i]-t>=0 && j<32
-    ; i--,i&=31,j++) ;
-  if(shifter_shift_mode_change_time[i]-t<0)
-    return i;
-  return -1;
-}
-
-
-int TGlue::CycleOfLastChangeToFreq(int value) {
-  int i,j;
-  for(i=shifter_freq_change_idx,j=0
-    ; shifter_freq_change[i]!=value && j<32
-    ; i--,i&=31,j++) ;
-  if(shifter_freq_change[i]==value)
-    return shifter_freq_change_time[i]-LINECYCLE0;
-  return -1;
-}
 
 int TGlue::CycleOfLastChangeToShiftMode(int value) {
   int i,j;
@@ -2543,12 +2441,17 @@ int TGlue::CycleOfLastChangeToShiftMode(int value) {
     Function is called by run's prepare_next_event() and prepare_event_again().
     This is a core function, so we don't use GLU. as simplification for both
     Shifter and Glue according to defines.
+
+    TODO wait for some input by ijor, because it could be that some frame "decisions",
+    like #lines, are made early on?
+
 */
 
 void TGlue::GetNextScreenEvent() {
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
   ASSERT(GLU.CurrentScanline.Cycles==224||GLU.CurrentScanline.Cycles==508||GLU.CurrentScanline.Cycles==512);
 #endif
+#if !defined(SSE_VAR_OPT_383) // at end of if-else ladder
   // default event = scanline
   screen_event.event=event_scanline;
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
@@ -2556,7 +2459,7 @@ void TGlue::GetNextScreenEvent() {
 #else
   screen_event.time=Shifter.CurrentScanline.Cycles;
 #endif
-
+#endif
   // VBI is set pending some cycles into first scanline of frame, 
   // when VSYNC stops.
   if(!Status.vbi_done&&!scanline)
@@ -2566,7 +2469,11 @@ void TGlue::GetNextScreenEvent() {
 #else
     screen_event.time=ST_TYPE==STE?68:64;
 #endif
+#if defined(SSE_VAR_OPT_383) // directly assign on screen_event_vector
+    screen_event_vector=event_trigger_vbi;
+#else
     screen_event.event=event_trigger_vbi;
+#endif
     if(!Status.hbi_done)
       hbl_pending=true; 
   }
@@ -2580,7 +2487,11 @@ void TGlue::GetNextScreenEvent() {
 #else
     screen_event.time=62;
 #endif
+#if defined(SSE_VAR_OPT_383)
+    screen_event_vector=event_start_vbl;
+#else
     screen_event.event=event_start_vbl;
+#endif
   }
   // The GLU uses counters and sync, shift mode values to trigger VSYNC.
   // At cycle 0, mode could be 2, so we use Shifter.CurrentScanline.Cycles
@@ -2601,13 +2512,38 @@ void TGlue::GetNextScreenEvent() {
 #else
     screen_event.time=Shifter.CurrentScanline.Cycles;
 #endif
+#if defined(SSE_VAR_OPT_383)
+    screen_event_vector=event_vbl_interrupt;
+#else
     screen_event.event=event_vbl_interrupt;
+#endif
     Status.vbi_done=false;
   }  
+#if defined(SSE_VAR_OPT_383)
+  else
+  {
+    // default event = scanline
+#if defined(SSE_VAR_OPT_383)
+    screen_event_vector=event_scanline;
+#else
+    screen_event.event=event_scanline;
+#endif
+#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+    screen_event.time=CurrentScanline.Cycles;
+#else
+    screen_event.time=Shifter.CurrentScanline.Cycles;
+#endif
+  }
+#endif
+
 #if !defined(SSE_GLUE_FRAME_TIMINGS_B)
   screen_event_pointer=&Glue.screen_event;
 #endif
+#if !defined(SSE_VAR_OPT_383)
   screen_event_vector=screen_event.event;
+#elif defined(SSE_DEBUG)
+  screen_event.event=screen_event_vector;
+#endif
 
 #if defined(SSE_INT_MFP_RATIO)
   if (n_cpu_cycles_per_second>CpuNormalHz){
@@ -2669,25 +2605,28 @@ void TGlue::SetShiftMode(BYTE NewMode) {
   It is needed in the Shifter because it needs to know in how many bit planes
   memory has to be decoded, and where it must send the video signal (RGB, 
   Mono).
+  For the GLU, '3' is interpreted as '2' because only bit1 is tested
+  for 'HIRES'.
+  Cases: The World is my Oyster screen #2
+
+  Writes on ShiftMode have a 2 cycle resolution as far as the GLU is
+  concerned, 4 for the Shifter.
     
   In monochrome, frequency is 72hz, a line is transmitted in 28µs.
   There are 500 scanlines + vsync = 1 scanline time (more or less).
 
-  For the GLU, '3' is interpreted as '2' because only bit1 is tested
-  for 'HIRES'.
-  Cases: The World is my Oyster screen #2
 */
 
   int CyclesIn=LINECYCLES;
-
 #if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SHIFTMODE)
     FrameEvents.Add(scan_y,CyclesIn,'R',NewMode); 
 #endif
 
   NewMode&=3; // only two lines would physically exist
-  // Update both Shifter and GLU - on the STE it should be one chip, one register
-  Shifter.m_ShiftMode=m_ShiftMode=NewMode; //TODO delay!
+  // Update both Shifter and GLU
+  // We don't emulate the possible 2 cycle delay for the Shifter 
+  Shifter.m_ShiftMode=m_ShiftMode=NewMode;
 
   if(screen_res
 #if defined(SSE_SHIFTER_HIRES_OVERSCAN)
@@ -2749,7 +2688,11 @@ void TGlue::SetShiftMode(BYTE NewMode) {
       }
 #endif
     }
+#if defined(SSE_VAR_OPT_383A1)
+    if(mixed_output==3 && (act-cpu_timer_at_res_change<30))
+#else
     if(mixed_output==3 && (ABSOLUTE_CPU_TIME-cpu_timer_at_res_change<30))
+#endif
       mixed_output=0; //cancel!
     else if(scan_y<-30) // not displaying anything: no output to mix...
       ; // eg Pandemonium/Chaos Dister
@@ -2757,7 +2700,11 @@ void TGlue::SetShiftMode(BYTE NewMode) {
       mixed_output=3;
     else if(mixed_output<2)
       mixed_output=2;
+#if defined(SSE_VAR_OPT_383A1)
+    cpu_timer_at_res_change=act;
+#else
     cpu_timer_at_res_change=ABSOLUTE_CPU_TIME;
+#endif
   }
 
   freq_change_this_scanline=true; // all switches are interesting
