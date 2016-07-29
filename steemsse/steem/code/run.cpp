@@ -1671,7 +1671,11 @@ void event_vbl_interrupt() //SS misleading name?
     overscan=OVERSCAN_MAX_COUNTDOWN;
   }
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_382)
+#if defined(SSE_GLUE_383)
+  if((Shifter.m_ShiftMode&2)&&screen_res<2) //TODO?
+#else
   if((GLU.m_ShiftMode&2)&&screen_res<2)
+#endif
     shifter_last_draw_line*=2; //400 fetching lines
 #endif
 

@@ -992,7 +992,12 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
   }
 #if defined(SSE_SHIFTER)//don't trust content of snapshot
+#if defined(SSE_GLUE_383)
+  Shifter.m_ShiftMode=(BYTE)screen_res;
+  Glue.HiRes=(screen_res&2)!=0;
+#else
   GLU.m_ShiftMode=Shifter.m_ShiftMode=(BYTE)screen_res;
+#endif
   GLU.m_SyncMode= (BYTE)((shifter_freq==50)?2:0);
 #endif
 #endif

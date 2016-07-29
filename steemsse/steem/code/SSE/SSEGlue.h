@@ -57,7 +57,12 @@ struct TGlue {
   void Vbl();
 #endif
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+#if defined(SSE_GLUE_383)
+  bool HiRes; // one single line/bit/latch/whatever
+  BYTE m_SyncMode;
+#else
   BYTE m_ShiftMode,m_SyncMode;
+#endif
   BYTE Freq[NFREQS];
   // we need keep info for only 3 scanlines 
   TScanline PreviousScanline, CurrentScanline, NextScanline;
@@ -88,7 +93,11 @@ struct TGlue {
   int NextFreqChange(int cycle,int value=-1);
   int PreviousFreqChange(int cycle);
 #endif
-  int NextShiftModeChange(int cycle,int value=-1);
+  int NextShiftModeChange(int cycle,int value=-1); //move to shifter...
+#if defined(SSE_GLUE_383B)
+  int NextChangeToHi(int cycle);
+  int NextChangeToLo(int cycle); // Lo = not HI for GLU
+#endif
   int NextShiftModeChangeIdx(int cycle);
   int PreviousShiftModeChange(int cycle);
   int CycleOfLastChangeToShiftMode(int value);

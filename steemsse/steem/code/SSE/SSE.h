@@ -3043,7 +3043,8 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #define SSE_DISK_CAPS_383
-
+#define SSE_GLUE_383
+#define SSE_GLUE_383B
 #define SSE_GUI_383
 #define SSE_VAR_OPT_383
 
