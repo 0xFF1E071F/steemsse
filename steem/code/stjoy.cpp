@@ -160,7 +160,8 @@ BYTE joy_get_pos(int Port)
     if (IsDirIDPressed(Joy[Port].DirID[n],Joy[Port].DeadZone,true,true /*Diag POV*/)) Ret|=(1 << n);
   }
 #if defined(SSE_JOYSTICK_JUMP_BUTTON)
-  if (IsDirIDPressed(Joy[Port].DirID[6],Joy[Port].DeadZone,true,true /*Diag POV*/)) Ret|=(1 << 0);
+  if (IsDirIDPressed(Joy[Port].DirID[6],Joy[Port].DeadZone,true,true /*Diag POV*/)) 
+    Ret|=(1 << 0);
 #endif
   // Don't allow both up and down or left and right to be pressed at the same time
   if ((Ret & (1 | 2))==(1 | 2)) Ret&=~(1 | 2);
@@ -276,6 +277,7 @@ void SetJoyToDefaults(int j,int Defs)
 //---------------------------------------------------------------------------
 DWORD GetJagPadDown(int n,DWORD Mask)
 {
+  ASSERT(n>=2);
   if ((macro_play_has_joys || macro_record) && Mask<0xffffffff){
     return macro_jagpad[int(n==N_JOY_STE_B_0 ? 1:0)] & Mask;
   }
@@ -308,14 +310,43 @@ DWORD GetJagPadDown(int n,DWORD Mask)
 //---------------------------------------------------------------------------
 DWORD ReadJagPad(int n)
 {
+  ASSERT(n==N_JOY_STE_A_0 || n==N_JOY_STE_B_0);
   int Offset4=0,Offset2=0;
   DWORD Ret=0;
   if (n==N_JOY_STE_B_0){ Offset4=4;Offset2=2; }
 
   DWORD DownMask;
 
+#if defined(SSE_JOYSTICK_JOYPAD)
+/*
+	0xFFFE	Selects group 4, joypad A for reading
+	0xFFFD	Selects group 3, joypad A
+	0xFFFB	Selects group 2, joypad A
+	0xFFF7	Selects group 1, joypad A
+	
+	0xFFEF	Selects group 4, joypad B for reading
+	0xFFDF	Selects group 3, joypad B
+	0xFFBF	Selects group 2, joypad B
+	0XFF7F	Selects group 1, joypad B
+
+  Problem: Substation writes 0X instead of FX to read the joypad.
+  Solution: only consider nibble for joypad n
+*/
+
+  BYTE nibble= (n==N_JOY_STE_A_0) 
+    ? (paddles_ReadMask&0x0F) : ((paddles_ReadMask&0xF0)>>4);
+#endif
+
+#if defined(SSE_JOYSTICK_JOYPAD)
+  switch(nibble) {
+#else
   switch (LOBYTE(paddles_ReadMask)){
-    case 0xfd:case 0xdf:
+#endif
+#if defined(SSE_JOYSTICK_JOYPAD)
+    case 0xd:// group 3
+#else
+    case 0xfd:case 0xdf: 
+#endif
       DownMask=GetJagPadDown(n,JAGPAD_BUT_KEY_AST_BIT | JAGPAD_BUT_KEY_7_BIT |
                               JAGPAD_BUT_KEY_4_BIT | JAGPAD_BUT_KEY_1_BIT |
                               JAGPAD_BUT_FIRE_B_BIT);
@@ -326,7 +357,11 @@ DWORD ReadJagPad(int n)
 
       if (DownMask & JAGPAD_BUT_FIRE_B_BIT) Ret|=BIT_17 << Offset2;
       break;
-    case 0xfb:case 0xbf:
+#if defined(SSE_JOYSTICK_JOYPAD)
+    case 0xb:// group 2
+#else
+    case 0xfb:case 0xbf: 
+#endif
       DownMask=GetJagPadDown(n,JAGPAD_BUT_KEY_0_BIT | JAGPAD_BUT_KEY_8_BIT |
                               JAGPAD_BUT_KEY_5_BIT | JAGPAD_BUT_KEY_2_BIT |
                               JAGPAD_BUT_FIRE_C_BIT);
@@ -337,7 +372,11 @@ DWORD ReadJagPad(int n)
 
       if (DownMask & JAGPAD_BUT_FIRE_C_BIT) Ret|=BIT_17 << Offset2;
       break;
-    case 0xf7:case 0x7f:
+#if defined(SSE_JOYSTICK_JOYPAD)
+    case 0x7:// group 1
+#else
+    case 0xf7:case 0x7f: 
+#endif
       DownMask=GetJagPadDown(n,JAGPAD_BUT_KEY_HASH_BIT | JAGPAD_BUT_KEY_9_BIT |
                               JAGPAD_BUT_KEY_6_BIT | JAGPAD_BUT_KEY_3_BIT |
                               JAGPAD_BUT_KEY_OPTION_BIT);
@@ -348,7 +387,11 @@ DWORD ReadJagPad(int n)
 
       if (DownMask & JAGPAD_BUT_KEY_OPTION_BIT) Ret|=BIT_17 << Offset2;
       break;
+#if defined(SSE_JOYSTICK_JOYPAD)
+    case 0xe:
+#else
     default:
+#endif
       DownMask=GetJagPadDown(n,JAGPAD_DIR_U_BIT | JAGPAD_DIR_D_BIT |
                               JAGPAD_DIR_L_BIT | JAGPAD_DIR_R_BIT |
                               JAGPAD_BUT_KEY_PAUSE_BIT | JAGPAD_BUT_FIRE_A_BIT);
@@ -379,7 +422,7 @@ BYTE JoyReadSTEAddress(MEM_ADDRESS addr,bool *pIllegal)
         Ret|=(stick[N_JOY_STE_A_0] & BIT_7);
         Ret|=(stick[N_JOY_STE_A_1] & BIT_7)*BIT_1;
 #else
-#if defined(SSE_VERSION)
+#if defined(SSE_VERSION)//?
         Ret|=(BOOL)(stick[N_JOY_STE_A_0] & BIT_7);
 #else
         Ret|=bool(stick[N_JOY_STE_A_0] & BIT_7);
@@ -387,7 +430,6 @@ BYTE JoyReadSTEAddress(MEM_ADDRESS addr,bool *pIllegal)
         Ret|=bool(stick[N_JOY_STE_A_1] & BIT_7)*BIT_1;
 #endif
       }
-
       if (Joy[N_JOY_STE_B_0].Type==JOY_TYPE_JAGPAD){
         Ret|=HIWORD(ReadJagPad(N_JOY_STE_B_0));
       }else{
@@ -399,7 +441,6 @@ BYTE JoyReadSTEAddress(MEM_ADDRESS addr,bool *pIllegal)
         Ret|=bool(stick[N_JOY_STE_B_1] & BIT_7)*BIT_3;
 #endif
       }
-
       return (BYTE)~Ret;
     }
     case 0xff9202:case 0xff9203:
@@ -433,7 +474,6 @@ BYTE JoyReadSTEAddress(MEM_ADDRESS addr,bool *pIllegal)
         Ret|=((stick[N_JOY_STE_B_1] & b0010) << 13);
         Ret|=((stick[N_JOY_STE_B_1] & b0001) << 15);
       }
-
       Ret=~Ret;
       return BYTE((addr==0xff9202) ? HIBYTE(Ret):LOBYTE(Ret));
     }
@@ -777,7 +817,7 @@ void TJoystickConfig::Show()
 
     // Left Right Up Down
     //SS up
-#if defined(SSE_JOYSTICK_JUMP_BUTTON)
+#if defined(SSE_JOYSTICK_JUMP_BUTTON) // move 1st jump button to the left
     Win=CreateWindowEx(512,"Steem Button Picker","",
                       WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | WS_DISABLED,
                       x+90-35,y,65,23,Handle,(HMENU)(110+p*100),HInstance,NULL);
@@ -788,7 +828,7 @@ void TJoystickConfig::Show()
 #endif
     SetWindowWord(Win,0,(WORD)Joy[BasePort+p].DirID[0]);
 
-#if defined(SSE_JOYSTICK_JUMP_BUTTON)
+#if defined(SSE_JOYSTICK_JUMP_BUTTON) // create 2nd jump button, handle 116 and 216
     Win=CreateWindowEx(512,"Steem Button Picker","",
                       WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | WS_DISABLED,
                       x+90+70-35,y,65,23,Handle,(HMENU)(116+p*100),HInstance,NULL);
@@ -840,9 +880,13 @@ void TJoystickConfig::Show()
     y+=30;
 
     EasyStr Text=T("Or any button on");
+#if defined(SSE_JOYSTICK_JUMP_BUTTON_383) //116 is for 2nd jump button
+    CreateWindow("Static",Text,WS_CHILD | WS_VISIBLE | int(NumJoysticks==0 ? WS_DISABLED:0),
+                  x+10,y+4,GetTextSize(Font,Text).Width,23,Handle,(HMENU)(1160+p*100),HInstance,NULL);
+#else
     CreateWindow("Static",Text,WS_CHILD | WS_VISIBLE | int(NumJoysticks==0 ? WS_DISABLED:0),
                   x+10,y+4,GetTextSize(Font,Text).Width,23,Handle,(HMENU)(116+p*100),HInstance,NULL);
-
+#endif
     w=GetTextSize(Font,Text).Width;
     HWND Win=CreateWindow("Combobox","",WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST | int(NumJoysticks==0 ? WS_DISABLED:0),
                             x+w+15,y,235-(w+15),200,Handle,(HMENU)(118+p*100),HInstance,NULL);
@@ -993,7 +1037,6 @@ void TJoystickConfig::CheckJoyType()
         for (int n=160;n<180;n++) if (GetDlgItem(Handle,n)) ShowWindow(GetDlgItem(Handle,n),JagShowType);
       }else{
         for (int n=114;n<=118;n++) ShowWindow(GetDlgItem(Handle,n),NormShowType);
-
         for (int n=150;n<=151;n++) ShowWindow(GetDlgItem(Handle,n),NormShowType);
 
         for (int n=201;n<=202;n++) ShowWindow(GetDlgItem(Handle,n),NormShowType);
@@ -1075,8 +1118,10 @@ void TJoystickConfig::JoyModeChange(int Port,int base)
         InvalidateRect(GetDlgItem(Handle,n),NULL,0);
       }
     }
+#if defined(SSE_JOYSTICK_JUMP_BUTTON_383) // hide "Or any button on" for joypad
+    ShowWindow(GetDlgItem(Handle,1160),false);
+#endif
   }
-
   FillJoyTypeCombo();
   CheckJoyType();
 
@@ -1164,6 +1209,13 @@ LRESULT __stdcall TJoystickConfig::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM
         {
           int Port=BasePort+(LOWORD(wPar)/100 - 1);
           Joy[Port].DirID[(LOWORD(wPar) % 100)-10]=GetWindowWord(HWND(lPar),0);
+#if defined(SSE_GUI_JOYSTICK_383)
+          if(Joy[Port].DirID[(LOWORD(wPar) % 100)-10]==VK_DELETE)
+          {
+            Joy[Port].DirID[(LOWORD(wPar) % 100)-10]=0; // assign nothing
+            SetWindowWord(GetDlgItem(This->Handle,LOWORD(wPar)),0,0);
+          }
+#endif
           CreateJoyAnyButtonMasks();
           break;
         }
