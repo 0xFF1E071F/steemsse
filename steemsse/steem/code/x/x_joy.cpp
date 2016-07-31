@@ -1,3 +1,5 @@
+#ifdef UNIX//SS
+
 //#define UNIX_FAKE_JOY
 //---------------------------------------------------------------------------
 void XOpenJoystick(int j)
@@ -942,3 +944,4 @@ int TJoystickConfig::timerproc(void *t,Window,int)
 }
 //---------------------------------------------------------------------------
 
+#endif//#ifdef UNIX//SS

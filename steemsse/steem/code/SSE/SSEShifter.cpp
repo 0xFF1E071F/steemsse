@@ -2258,7 +2258,9 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
 #endif
         {
         ASSERT(screen_res==2);
-#if defined(SSE_SHIFTER_382)
+#if defined(SSE_SHIFTER_383)
+        if(nsdp<=mem_len)
+#elif defined(SSE_SHIFTER_382)
         if(nsdp<mem_len) // potential crash
 #endif
         if(border & 1)
@@ -3050,7 +3052,10 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
           }
 #endif
 
-#if defined(SSE_SHIFTER_382)
+#if defined(SSE_SHIFTER_383)
+          if(nsdp<=mem_len) // Antiques
+#elif defined(SSE_SHIFTER_382)
+          //ASSERT(nsdp<=mem_len);
           if(nsdp<mem_len) // potential crash
 #endif
 

@@ -3046,6 +3046,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_383
 #define SSE_GLUE_383B
 #define SSE_GUI_383
+#define SSE_GUI_JOYSTICK_383
 #define SSE_VAR_OPT_383
 
 #if defined(SSE_VAR_OPT_383) && defined(VC_BUILD) && _MSC_VER>=1500 //VS2008+
@@ -3095,6 +3096,10 @@ Beta: not SSE_PRIVATE_BUILD
 
 #undef SSE_CPU_TIMINGS_NO_INLINE_382 // it's inlined anyway
 #define SSE_DISK_GHOST_SECTOR_383
+#define SSE_JOYSTICK_JOYPAD
+#define SSE_JOYSTICK_JUMP_BUTTON_383 
+#define SSE_SHIFTER_383 //bugfixes
+#define SSE_SHIFTER_UNSTABLE_383 //bugfixes
 #undef SSE_SOUND_DMA_360
 #undef SSE_SOUND_DMA_CLOCK // and molz still ok?
 #define SSE_SOUND_DMA_383A // no "dsp" for volume
@@ -3106,7 +3111,6 @@ Beta: not SSE_PRIVATE_BUILD
 #undef SSE_TOS_GEMDOS_RESTRICT_TOS3 //INI option
 #define SSE_TOS_GEMDOS_RESTRICT_TOS4 // STF T206 OK!
 #define SSE_TOS_SNAPSHOT_AUTOSELECT_383 // correct country
-#define SSE_SHIFTER_UNSTABLE_383 //bugfixes
 #define SSE_VAR_CHECK_SNAPSHOT2
 
 #endif//bugfix
