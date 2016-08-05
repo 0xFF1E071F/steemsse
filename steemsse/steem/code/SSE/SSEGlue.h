@@ -97,6 +97,12 @@ struct TGlue {
 #if defined(SSE_GLUE_383B)
   int NextChangeToHi(int cycle);
   int NextChangeToLo(int cycle); // Lo = not HI for GLU
+
+
+  int PreviousChangeToHi(int cycle);
+  int PreviousChangeToLo(int cycle); // Lo = not HI for GLU
+
+
 #endif
   int NextShiftModeChangeIdx(int cycle);
   int PreviousShiftModeChange(int cycle);
