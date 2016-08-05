@@ -292,6 +292,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention />
+      <MinimumRequiredVersion>5.01</MinimumRequiredVersion>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -399,6 +400,7 @@
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention />
+      <MinimumRequiredVersion>5.01</MinimumRequiredVersion>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -499,6 +501,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention />
+      <MinimumRequiredVersion>5.01</MinimumRequiredVersion>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -608,6 +611,7 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention />
       <Profile>false</Profile>
+      <MinimumRequiredVersion>5.01</MinimumRequiredVersion>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -662,6 +666,7 @@
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <Profile>false</Profile>
+      <MinimumRequiredVersion>5.01</MinimumRequiredVersion>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -828,6 +833,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention />
+      <MinimumRequiredVersion>5.01</MinimumRequiredVersion>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
