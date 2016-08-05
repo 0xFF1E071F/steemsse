@@ -10,10 +10,14 @@ DESCRIPTION: Med res C++ drawing routine
   MEM_ADDRESS source;
   picture*=2;
   GET_START(0,160)
+#if defined(SSE_DRAW_C_383B)
+  DRAW_BORDER_PIXELS(border1)
+#else
   n=border1/16;DRAW_BORDER(n);
   for(border1&=15;border1>0;border1--){
     DRAWPIXEL(PCpal);
   }
+#endif
   if(picture){
     n=16-hscroll;
     if(picture<n)n=picture;
@@ -28,6 +32,12 @@ DESCRIPTION: Med res C++ drawing routine
     }
     for(n=picture/16;n>0;n--){
       GET_SCREEN_DATA_INTO_REGS_AND_INC_SA_MEDRES
+#if defined(SSE_DRAW_C_383A) //anyway, to reduce bloat
+      for(int mask=BIT_15;mask;mask>>=1)
+      {
+        CALC_COL_MEDRES_AND_DRAWPIXEL(mask);
+      }
+#else
       CALC_COL_MEDRES_AND_DRAWPIXEL(BIT_15);
       CALC_COL_MEDRES_AND_DRAWPIXEL(BIT_14);
       CALC_COL_MEDRES_AND_DRAWPIXEL(BIT_13);
@@ -44,6 +54,7 @@ DESCRIPTION: Med res C++ drawing routine
       CALC_COL_MEDRES_AND_DRAWPIXEL(BIT_2);
       CALC_COL_MEDRES_AND_DRAWPIXEL(BIT_1);
       CALC_COL_MEDRES_AND_DRAWPIXEL(BIT_0);
+#endif
     }
     picture&=15;
     if(picture){
@@ -55,8 +66,11 @@ DESCRIPTION: Med res C++ drawing routine
       }
     }
   }
+#if defined(SSE_DRAW_C_383B)
+  DRAW_BORDER_PIXELS(border2)
+#else
   n=border2/16;DRAW_BORDER(n);
   for(border2&=15;border2>0;border2--){
     DRAWPIXEL(PCpal);
   }
-
+#endif

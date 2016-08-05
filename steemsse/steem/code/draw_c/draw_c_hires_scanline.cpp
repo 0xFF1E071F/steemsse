@@ -16,14 +16,29 @@ DESCRIPTION: High res C++ drawing routine
 
   MEM_ADDRESS source;
   GET_START(0,80)
+#if defined(SSE_DRAW_C_383B)
+  DRAW_BORDER_PIXELS(border1*16)
+#elif defined(SSE_DRAW_C_383A) //anyway, to reduce bloat
+  for(n=border1*16;n>0;n--)
+  {
+    DRAWPIXEL(back);
+  }
+#else
   for(n=border1;n>0;n--){
     DRAWPIXEL(back);DRAWPIXEL(back);DRAWPIXEL(back);DRAWPIXEL(back);
     DRAWPIXEL(back);DRAWPIXEL(back);DRAWPIXEL(back);DRAWPIXEL(back);
     DRAWPIXEL(back);DRAWPIXEL(back);DRAWPIXEL(back);DRAWPIXEL(back);
     DRAWPIXEL(back);DRAWPIXEL(back);DRAWPIXEL(back);DRAWPIXEL(back);
   }
+#endif
   for(n=picture;n>0;n--){
     GET_SCREEN_DATA_INTO_REGS_AND_INC_SA_HIRES
+#if defined(SSE_DRAW_C_383A) //anyway, to reduce bloat
+      for(int mask=BIT_15;mask;mask>>=1)
+      {
+        CALC_COL_HIRES_AND_DRAWPIXEL(mask);
+      }
+#else
     CALC_COL_HIRES_AND_DRAWPIXEL(BIT_15);
     CALC_COL_HIRES_AND_DRAWPIXEL(BIT_14);
     CALC_COL_HIRES_AND_DRAWPIXEL(BIT_13);
@@ -40,11 +55,20 @@ DESCRIPTION: High res C++ drawing routine
     CALC_COL_HIRES_AND_DRAWPIXEL(BIT_2);
     CALC_COL_HIRES_AND_DRAWPIXEL(BIT_1);
     CALC_COL_HIRES_AND_DRAWPIXEL(BIT_0);
+#endif
   }
+#if defined(SSE_DRAW_C_383B)
+  DRAW_BORDER_PIXELS(border2*16)
+#elif defined(SSE_DRAW_C_383A) //anyway, to reduce bloat
+  for(n=border2*16;n>0;n--)
+  {
+    DRAWPIXEL(back);
+  }
+#else
   for(n=border2;n>0;n--){
     DRAWPIXEL(back);DRAWPIXEL(back);DRAWPIXEL(back);DRAWPIXEL(back);
     DRAWPIXEL(back);DRAWPIXEL(back);DRAWPIXEL(back);DRAWPIXEL(back);
     DRAWPIXEL(back);DRAWPIXEL(back);DRAWPIXEL(back);DRAWPIXEL(back);
     DRAWPIXEL(back);DRAWPIXEL(back);DRAWPIXEL(back);DRAWPIXEL(back);
   }
-
+#endif

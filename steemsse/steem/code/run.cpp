@@ -1795,7 +1795,7 @@ void event_vbl_interrupt() //SS misleading name?
 #endif
 #if defined(SSE_BOILER_FRAME_REPORT_MASK) // report starting res & sync
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SHIFTMODE) 
-    FrameEvents.Add(scan_y,0,'R',GLU.m_ShiftMode); 
+    FrameEvents.Add(scan_y,0,'R',Shifter.m_ShiftMode); 
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SYNCMODE)
     FrameEvents.Add(scan_y,0,'S',GLU.m_SyncMode); 
 #endif
