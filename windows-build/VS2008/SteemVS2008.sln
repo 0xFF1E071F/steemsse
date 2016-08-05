@@ -11,6 +11,8 @@ Global
 		Boiler|x64 = Boiler|x64
 		Boiler-Steem 3.2+|Win32 = Boiler-Steem 3.2+|Win32
 		Boiler-Steem 3.2+|x64 = Boiler-Steem 3.2+|x64
+		Debug - draw_c|Win32 = Debug - draw_c|Win32
+		Debug - draw_c|x64 = Debug - draw_c|x64
 		Debug - Steem 3.2+|Win32 = Debug - Steem 3.2+|Win32
 		Debug - Steem 3.2+|x64 = Debug - Steem 3.2+|x64
 		Debug|Win32 = Debug|Win32
@@ -37,6 +39,10 @@ Global
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Boiler-Steem 3.2+|Win32.Build.0 = Boiler-Steem 3.2+|Win32
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Boiler-Steem 3.2+|x64.ActiveCfg = Boiler-Steem 3.2+|x64
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Boiler-Steem 3.2+|x64.Build.0 = Boiler-Steem 3.2+|x64
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Debug - draw_c|Win32.ActiveCfg = Debug - draw_c|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Debug - draw_c|Win32.Build.0 = Debug - draw_c|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Debug - draw_c|x64.ActiveCfg = Debug - draw_c|x64
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Debug - draw_c|x64.Build.0 = Debug - draw_c|x64
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Debug - Steem 3.2+|Win32.ActiveCfg = Debug - Steem 3.2+|Win32
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Debug - Steem 3.2+|Win32.Build.0 = Debug - Steem 3.2+|Win32
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Debug - Steem 3.2+|x64.ActiveCfg = Debug - Steem 3.2+|x64

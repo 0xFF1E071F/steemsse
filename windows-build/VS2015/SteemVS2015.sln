@@ -11,6 +11,8 @@ Global
 		Boiler Debug|x86 = Boiler Debug|x86
 		Boiler|x64 = Boiler|x64
 		Boiler|x86 = Boiler|x86
+		Debug - draw_c|x64 = Debug - draw_c|x64
+		Debug - draw_c|x86 = Debug - draw_c|x86
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
 		Release_Opt|x64 = Release_Opt|x64
@@ -27,6 +29,10 @@ Global
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Boiler|x64.Build.0 = Debug|x64
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Boiler|x86.ActiveCfg = Boiler|Win32
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Boiler|x86.Build.0 = Boiler|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Debug - draw_c|x64.ActiveCfg = Debug - draw_c|x64
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Debug - draw_c|x64.Build.0 = Debug - draw_c|x64
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Debug - draw_c|x86.ActiveCfg = Debug - draw_c|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Debug - draw_c|x86.Build.0 = Debug - draw_c|Win32
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Debug|x64.ActiveCfg = Debug|x64
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Debug|x64.Build.0 = Debug|x64
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Debug|x86.ActiveCfg = Debug|Win32
