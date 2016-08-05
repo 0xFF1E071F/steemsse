@@ -3045,19 +3045,21 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DISK_CAPS_383
 #define SSE_GLUE_383
 #define SSE_GLUE_383B
+#define SSE_GLUE_383C
 #define SSE_GUI_383
 #define SSE_GUI_JOYSTICK_383
+
 #define SSE_VAR_OPT_383
 
 #if defined(SSE_VAR_OPT_383) && defined(VC_BUILD) && _MSC_VER>=1500 //VS2008+
 #define SSE_VC_INTRINSICS_383
 #if defined(SSE_VC_INTRINSICS_383)
-#define SSE_VC_INTRINSICS_383A // some cpu sr checks //useless like 383E?
+//#define SSE_VC_INTRINSICS_383A // some cpu sr checks //useless like 383E?
 #define SSE_VC_INTRINSICS_383B // popcount 
 #define SSE_VC_INTRINSICS_383C // byteswap
 #define SSE_VC_INTRINSICS_383D // instruction time => much less object code :)
-#define SSE_VC_INTRINSICS_383E // set/clear some sr bits => more object code? => bad idea?
-#define SSE_VC_INTRINSICS_383F // avoid shifting mask in MOVEM //i'm sure it's a bad idea too!
+//#define SSE_VC_INTRINSICS_383E // set/clear some sr bits => more object code? => bad idea?
+//#define SSE_VC_INTRINSICS_383F // avoid shifting mask in MOVEM //i'm sure it's a bad idea too!
 #define SSE_VC_INTRINSICS_383G // GLU functions
 #endif
 #endif
@@ -3066,6 +3068,20 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_OPT_383A // variable to hold ABSOLUTE_CPU_TIME for a while (TODO)
 #define SSE_VAR_OPT_383A1 // Video chipset writes
 #define SSE_VAR_OPT_383B // dma init
+#define SSE_VAR_OPT_383C // CycleOfLastChangeToShiftMode()
+#endif
+
+#if defined(SSE_VAR_OPT_383) && defined(SSE_DRAW_C)
+#define SSE_DRAW_C_383
+#if defined(SSE_DRAW_C_383)
+#define SSE_DRAW_C_383A //loops (better performance in VS2015)
+#define SSE_DRAW_C_383A1 // replace if ladder with shifts (better performance in VS2015)
+#define SSE_DRAW_C_383B //border (better performance in VS2015)
+#if defined(SSE_VC_INTRINSICS_383)
+#define SSE_DRAW_C_383_INTRINSICS // (better performance in VS2015)
+//#define SSE_DRAW_C_383_INTRINSICSB //BT worse performance in VS2015
+#endif
+#endif
 #endif
 
 #define SSE_VAR_RESIZE_383

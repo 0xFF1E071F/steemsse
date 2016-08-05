@@ -11,21 +11,36 @@ SS: used in the x64 build
 
 #define IN_DRAW_C
 
+#include "code/SSE/SSE.h"
+
 #include "easystr.h"
 typedef EasyStr Str;
-
 #include "code/conditions.h"
+
+#ifdef SSE_STRUCTURE_DECLA
+#include "code/steemh.decla.h"
+#include "code/draw.decla.h"
+#include "code/display.decla.h"
+#include "code/emulator.decla.h"
+#include "code/osd.decla.h"
+#else
 #include "code/steemh.h"
 #include "code/draw.h"
 #include "code/display.h"
 #include "code/emulator.h"
 #include "code/osd.h"
+#endif
+#include "code/SSE/SSEDecla.h"
+
+#include "code/SSE/SSEShifter.h"
 
 long PCpal_array[16];
 
 extern "C" long* ASMCALL Get_PCpal(){
   return PCpal_array;
 }
+
+#if !defined(SSE_VAR_DEAD_CODE)
 
 DWORD palette_convert_RRRRGGGGBBBB(DWORD dw){
   int rp,gp,bp;
@@ -43,6 +58,8 @@ DWORD palette_convert_RRRRGGGGBBBB(DWORD dw){
   return ((dw&0xf00)<<(rp-11)) | ((dw&0xf0)<<(gp-7)) | ((dw&0xf)<<(bp-3));
 }
 
+#endif
+
 #define OSD_PIXEL(mask)  \
   if(dw1&mask){    \
     OSD_DRAWPIXEL(colour);  \
@@ -52,6 +69,7 @@ DWORD palette_convert_RRRRGGGGBBBB(DWORD dw){
     dadd+=bpp; }
 
 #define bpp 1
+
 #define OSD_DRAWPIXEL(c) *(dadd++)=(BYTE)c;
 extern "C" void ASMCALL osd_draw_char_8(long*source_ad,BYTE*draw_mem,long x,long y,int draw_line_length,long colour,long h){
 #include "draw_c_osd_draw_char.cpp"
@@ -173,6 +191,7 @@ extern "C" void ASMCALL osd_draw_char_clipped_transparent_32
 }
 
 #else
+
 extern "C" void ASMCALL osd_draw_char_clipped_8(long*,BYTE*,long,long,int,long,long,RECT*){}
 extern "C" void ASMCALL osd_draw_char_clipped_16(long*,BYTE*,long,long,int,long,long,RECT*){}
 extern "C" void ASMCALL osd_draw_char_clipped_24(long*,BYTE*,long,long,int,long,long,RECT*){}
@@ -187,19 +206,26 @@ extern "C" void ASMCALL osd_draw_char_clipped_transparent_8(long*,BYTE*,long,lon
 extern "C" void ASMCALL osd_draw_char_clipped_transparent_16(long*,BYTE*,long,long,int,long,long,RECT*){}
 extern "C" void ASMCALL osd_draw_char_clipped_transparent_24(long*,BYTE*,long,long,int,long,long,RECT*){}
 extern "C" void ASMCALL osd_draw_char_clipped_transparent_32(long*,BYTE*,long,long,int,long,long,RECT*){}
+
 #endif
 
 #if defined(SSE_DRAW_C)
+
 extern "C" void ASMCALL osd_black_box_8(void*,int,int,int,int,long){}
 extern "C" void ASMCALL osd_black_box_16(void*,int,int,int,int,long){}
 extern "C" void ASMCALL osd_black_box_24(void*,int,int,int,int,long){}
 extern "C" void ASMCALL osd_black_box_32(void*,int,int,int,int,long){}
+
 #else
+
 extern "C" void ASMCALL osd_black_box_8(void*,int,int,int,int,long,long){}
 extern "C" void ASMCALL osd_black_box_16(void*,int,int,int,int,long,long){}
 extern "C" void ASMCALL osd_black_box_24(void*,int,int,int,int,long,long){}
 extern "C" void ASMCALL osd_black_box_32(void*,int,int,int,int,long,long){}
+
 #endif
+
+#if !defined(SSE_VAR_DEAD_CODE)
 
 extern "C" void ASMCALL palette_convert_16_555(int n){
   long col=((STpal[n] & 0x888) >> 3)+((STpal[n] & 0x777) << 1);  //correct STE colour
@@ -224,11 +250,21 @@ extern "C" void ASMCALL palette_convert_32(int n){
   PCpal[n]=((col & 0x00f) << 4) | ((col & 0x0f0) << 8) | ((col & 0xf00) << 12);
 }
 
+#endif
 
-
+//SS increase = 80 or 160, doubleflag =0, not used
 #define GET_START(doubleflag,increase)  \
   source=shifter_draw_pointer&0xffffff; \
   while(source+increase>mem_len)source-=mem_len;  \
+
+#if defined(SSE_DRAW_C_383A)
+
+#define DRAW_BORDER(n)    \
+  for(n*=8;n>0;n--){                       \
+    DRAW_2_BORDER_PIXELS               \
+  }
+
+#else
 
 #define DRAW_BORDER(n)    \
   for(;n>0;n--){                       \
@@ -242,6 +278,22 @@ extern "C" void ASMCALL palette_convert_32(int n){
     DRAW_2_BORDER_PIXELS                                  \
   }
 
+#endif
+
+
+
+#if defined(SSE_DRAW_C_383B) 
+
+#define DRAW_BORDER_PIXELS_A(npixels) \
+  for(int i=npixels;i;i--) \
+  { \
+    DRAWPIXEL(PCpal);\
+  }
+
+#define DRAW_BORDER_PIXELS DRAW_BORDER_PIXELS_A
+
+#endif
+
 #define GET_SCREEN_DATA_INTO_REGS_AND_INC_SA \
   w0=DPEEK(source);w1=DPEEK(source+2); \
   w2=DPEEK(source+4);w3=DPEEK(source+6); \
@@ -254,6 +306,27 @@ extern "C" void ASMCALL palette_convert_32(int n){
 #define GET_SCREEN_DATA_INTO_REGS_AND_INC_SA_HIRES \
   w0=DPEEK(source);      \
   source+=2;
+
+#if defined(SSE_DRAW_C_383A1)
+
+
+#if defined(SSE_DRAW_C_383_INTRINSICSB) //worse performance in VS2015
+
+#define CALC_COL_LOWRES_AND_DRAWPIXEL(mask) { \
+  int nibble= (BITTEST(w0,mask)) + (BITTEST(w1,mask)<<1) + (BITTEST(w2,mask)<<2) + (BITTEST(w3,mask)<<3); \
+  DRAWPIXEL(PCpal+nibble)\
+}
+
+#else
+
+#define CALC_COL_LOWRES_AND_DRAWPIXEL(mask) { \
+  int nibble= ((w0&mask)!=0) + (((w1&mask)!=0)<<1) + (((w2&mask)!=0)<<2) + (((w3&mask)!=0)<<3); \
+  DRAWPIXEL(PCpal+nibble)\
+}
+
+#endif
+ 
+#else
 
 #define CALC_COL_LOWRES_AND_DRAWPIXEL(mask)  \
   if(w3&mask){                                      \
@@ -302,6 +375,18 @@ extern "C" void ASMCALL palette_convert_32(int n){
     }        \
   }
 
+#endif
+
+#if defined(SSE_DRAW_C_383A1)
+
+
+#define CALC_COL_MEDRES_AND_DRAWPIXEL(mask)   { \
+  int nibble= ((w0&mask)!=0) + (((w1&mask)!=0)<<1) ; \
+  DRAWPIXEL_MEDRES(PCpal+nibble)\
+}
+
+#else
+
 #define CALC_COL_MEDRES_AND_DRAWPIXEL(mask)  \
   if(w1&mask){                                      \
     if(w0&mask){                                     \
@@ -317,12 +402,21 @@ extern "C" void ASMCALL palette_convert_32(int n){
     }                                        \
   }
 
+#endif
+
+#if defined(SSE_DRAW_C_383A1)
+// same thing I guess
+#define CALC_COL_HIRES_AND_DRAWPIXEL(mask) DRAWPIXEL((w0&mask)?fore:back)
+#else
+
 #define CALC_COL_HIRES_AND_DRAWPIXEL(mask)  \
   if(w0&mask){                                     \
     DRAWPIXEL(fore)    \
   }else{                    \
     DRAWPIXEL(back)    \
   }                                      \
+
+#endif
 
 #define DRAW_2_BORDER_PIXELS  *LPWORD(draw_dest_ad)=*LPWORD(PCpal);draw_dest_ad+=2;
 #define DRAWPIXEL(s_add)  *(draw_dest_ad++)=*LPBYTE(s_add);
@@ -378,11 +472,25 @@ extern "C" void ASMCALL draw_scanline_24_medres_pixelwise(int border1,int pictur
 #define DRAW_2_BORDER_PIXELS  \
           *LPDWORD(draw_dest_ad)=*LPDWORD(PCpal);draw_dest_ad+=4; \
           *LPDWORD(draw_dest_ad)=*LPDWORD(PCpal);draw_dest_ad+=4;
+
 #define DRAWPIXEL(s_add)  *LPDWORD(draw_dest_ad)=*LPDWORD(s_add);draw_dest_ad+=4;
+
 #define DRAWPIXEL_MEDRES(s) DRAWPIXEL(s)
+
+//SS small display size or stretched (double, triple, D3D fullscreen...)
+
+#if defined(SSE_DRAW_C_383B) && defined(SSE_DRAW_C_383_INTRINSICS)
+#undef DRAW_BORDER_PIXELS 
+#define DRAW_BORDER_PIXELS(npixels) {\
+  __stosd((DWORD*)draw_dest_ad,*PCpal,npixels);\
+  draw_dest_ad+=4*npixels;\
+}
+#endif
+
 extern "C" void ASMCALL draw_scanline_32_lowres_pixelwise(int border1,int picture,int border2,int hscroll){
 #include "draw_c_lowres_scanline.cpp"
 }
+
 extern "C" void ASMCALL draw_scanline_32_medres_pixelwise(int border1,int picture,int border2,int hscroll){
   border1*=2;border2*=2;
 #include "draw_c_medres_scanline.cpp"
@@ -390,6 +498,11 @@ extern "C" void ASMCALL draw_scanline_32_medres_pixelwise(int border1,int pictur
 #undef DRAW_2_BORDER_PIXELS
 #undef DRAWPIXEL
 #undef DRAWPIXEL_MEDRES
+
+#if defined(SSE_DRAW_C_383B) && defined(SSE_DRAW_C_383_INTRINSICS)
+#undef DRAW_BORDER_PIXELS 
+#define DRAW_BORDER_PIXELS DRAW_BORDER_PIXELS_A
+#endif
 
 ///////////////////////////////////////////////////////////
 ////////////////////////// _dw  ///////////////////////////
@@ -436,21 +549,51 @@ extern "C" void ASMCALL draw_scanline_24_lowres_pixelwise_dw(int border1,int pic
 #undef DRAWPIXEL
 #if defined(SSE_DRAW_C)
 #define DRAW_2_BORDER_PIXELS *(((DWORD*)(draw_dest_ad)))=*(DWORD*)(PCpal),draw_dest_ad+=4;*(((DWORD*)(draw_dest_ad)))=*(DWORD*)(PCpal),draw_dest_ad+=4;*(((DWORD*)(draw_dest_ad)))=*(DWORD*)(PCpal),draw_dest_ad+=4;*(((DWORD*)(draw_dest_ad)))=*(DWORD*)(PCpal),draw_dest_ad+=4;
+
+#if defined(SSE_DRAW_C_383_INTRINSICS)
+
+#define DRAWPIXEL(s_add) {\
+  __stosd((DWORD*)draw_dest_ad,*(s_add),2); \
+  draw_dest_ad+=8;\
+}
+
+#else
+
 #define DRAWPIXEL(s_add)  *(((DWORD*)(draw_dest_ad)))=*(DWORD*)(s_add),draw_dest_ad+=4;*(((DWORD*)(draw_dest_ad)))=*(DWORD*)(s_add),draw_dest_ad+=4;
+
+#endif
+
 #else
 #define DRAW_2_BORDER_PIXELS *(((DWORD*)(draw_dest_ad))++)=*(DWORD*)(PCpal);*(((DWORD*)(draw_dest_ad))++)=*(DWORD*)(PCpal);*(((DWORD*)(draw_dest_ad))++)=*(DWORD*)(PCpal);*(((DWORD*)(draw_dest_ad))++)=*(DWORD*)(PCpal);
 #define DRAWPIXEL(s_add)  *(((DWORD*)(draw_dest_ad))++)=*(DWORD*)(s_add);*(((DWORD*)(draw_dest_ad))++)=*(DWORD*)(s_add);
 #endif
+
+//SS double no stretch + scanlines
+
+#if defined(SSE_DRAW_C_383B) && defined(SSE_DRAW_C_383_INTRINSICS)
+#undef DRAW_BORDER_PIXELS 
+#define DRAW_BORDER_PIXELS(npixels) {\
+  __stosd((DWORD*)draw_dest_ad,*PCpal,npixels*2);\
+  draw_dest_ad+=4*npixels*2;\
+}
+#endif
+
 extern "C" void ASMCALL draw_scanline_32_lowres_pixelwise_dw(int border1,int picture,int border2,int hscroll){
 #include "draw_c_lowres_scanline.cpp"
 }
 #undef DRAW_2_BORDER_PIXELS
 #undef DRAWPIXEL
 
+#if defined(SSE_DRAW_C_383B) && defined(SSE_DRAW_C_383_INTRINSICS)
+#undef DRAW_BORDER_PIXELS 
+#define DRAW_BORDER_PIXELS DRAW_BORDER_PIXELS_A
+#endif
+
+
 ///////////////////////////////////////////////////////////
 ////////////////////////// _400 ///////////////////////////
 ///////////////////////////////////////////////////////////
-//#pragma message("_400")
+//#pragma message("_400") //used in...?
 #if defined(SSE_DRAW_C)
 #define DRAW_2_BORDER_PIXELS  *(((WORD*)(draw_dest_ad+draw_line_length)))=*(WORD*)(PCpal);*(((WORD*)(draw_dest_ad+draw_line_length+2)))=*(WORD*)(PCpal); \
                               *(((WORD*)(draw_dest_ad)))=*(WORD*)(PCpal),draw_dest_ad+=2;*(((WORD*)(draw_dest_ad)))=*(WORD*)(PCpal),draw_dest_ad+=2;
@@ -555,6 +698,16 @@ extern "C" void ASMCALL draw_scanline_32_medres_pixelwise_400(int border1,int pi
 #undef DRAWPIXEL_MEDRES
 
 #define DRAWPIXEL(col) *(draw_dest_ad++)=BYTE(col);
+
+#if defined(SSE_DRAW_C_383B)
+#undef DRAW_BORDER_PIXELS
+#define DRAW_BORDER_PIXELS(npixels) \
+  for(int i=npixels;i;i--) \
+  { \
+    DRAWPIXEL(back);\
+  }
+#endif
+
 extern "C" void ASMCALL draw_scanline_8_hires(int border1,int picture,int border2,int){
 #include "draw_c_hires_scanline.cpp"
 }
@@ -578,6 +731,15 @@ extern "C" void ASMCALL draw_scanline_24_hires(int border1,int picture,int borde
 #else
 #define DRAWPIXEL(col) *(((DWORD*)draw_dest_ad)++)=DWORD(col);
 #endif
+
+#if defined(SSE_DRAW_C_383B) && defined(SSE_DRAW_C_383_INTRINSICS)
+#undef DRAW_BORDER_PIXELS
+#define DRAW_BORDER_PIXELS(npixels) {\
+  __stosd((DWORD*)draw_dest_ad,back,npixels);\
+  draw_dest_ad+=4*npixels;\
+}
+#endif
+
 extern "C" void ASMCALL draw_scanline_32_hires(int border1,int picture,int border2,int){
 #include "draw_c_hires_scanline.cpp"
 }
