@@ -294,10 +294,23 @@ extern "C" void ASMCALL palette_convert_32(int n){
 
 #endif
 
+
+#if defined(SSE_DRAW_C_383C) && defined(SSE_DRAW_C_383_INTRINSICS)
+//guess the original version is more optimal...
+
+#define GET_SCREEN_DATA_INTO_REGS_AND_INC_SA {\
+  for(int i=0;i<4;i++,source+=2)\
+    w[i]=*(WORD*)(Mem_End_minus_2-source);\
+}
+  
+#else
+
 #define GET_SCREEN_DATA_INTO_REGS_AND_INC_SA \
   w0=DPEEK(source);w1=DPEEK(source+2); \
   w2=DPEEK(source+4);w3=DPEEK(source+6); \
   source+=8;
+
+#endif
 
 #define GET_SCREEN_DATA_INTO_REGS_AND_INC_SA_MEDRES \
   w0=DPEEK(source);w1=DPEEK(source+2); \
@@ -314,6 +327,14 @@ extern "C" void ASMCALL palette_convert_32(int n){
 
 #define CALC_COL_LOWRES_AND_DRAWPIXEL(mask) { \
   int nibble= (BITTEST(w0,mask)) + (BITTEST(w1,mask)<<1) + (BITTEST(w2,mask)<<2) + (BITTEST(w3,mask)<<3); \
+  DRAWPIXEL(PCpal+nibble)\
+}
+
+#elif defined(SSE_DRAW_C_383C) && defined(SSE_DRAW_C_383_INTRINSICS)
+
+#define CALC_COL_LOWRES_AND_DRAWPIXEL(mask) { \
+  int nibble= ((w[0]&mask)!=0) + (((w[1]&mask)!=0)<<1) + (((w[2]&mask)!=0)<<2) + (((w[3]&mask)!=0)<<3); \
+  /*int nibble= ((w[3]&mask)!=0) + (((w[2]&mask)!=0)<<1) + (((w[1]&mask)!=0)<<2) + (((w[0]&mask)!=0)<<3);*/\
   DRAWPIXEL(PCpal+nibble)\
 }
 
@@ -548,9 +569,12 @@ extern "C" void ASMCALL draw_scanline_24_lowres_pixelwise_dw(int border1,int pic
 #undef DRAW_2_BORDER_PIXELS
 #undef DRAWPIXEL
 #if defined(SSE_DRAW_C)
+
+//SS double no stretch + scanlines
+
 #define DRAW_2_BORDER_PIXELS *(((DWORD*)(draw_dest_ad)))=*(DWORD*)(PCpal),draw_dest_ad+=4;*(((DWORD*)(draw_dest_ad)))=*(DWORD*)(PCpal),draw_dest_ad+=4;*(((DWORD*)(draw_dest_ad)))=*(DWORD*)(PCpal),draw_dest_ad+=4;*(((DWORD*)(draw_dest_ad)))=*(DWORD*)(PCpal),draw_dest_ad+=4;
 
-#if defined(SSE_DRAW_C_383_INTRINSICS)
+#if defined(SSE_DRAW_C_383_INTRINSICSC) //worse
 
 #define DRAWPIXEL(s_add) {\
   __stosd((DWORD*)draw_dest_ad,*(s_add),2); \
@@ -568,9 +592,7 @@ extern "C" void ASMCALL draw_scanline_24_lowres_pixelwise_dw(int border1,int pic
 #define DRAWPIXEL(s_add)  *(((DWORD*)(draw_dest_ad))++)=*(DWORD*)(s_add);*(((DWORD*)(draw_dest_ad))++)=*(DWORD*)(s_add);
 #endif
 
-//SS double no stretch + scanlines
-
-#if defined(SSE_DRAW_C_383B) && defined(SSE_DRAW_C_383_INTRINSICS)
+#if defined(SSE_DRAW_C_383B) && defined(SSE_DRAW_C_383_INTRINSICSB) //seems worse too
 #undef DRAW_BORDER_PIXELS 
 #define DRAW_BORDER_PIXELS(npixels) {\
   __stosd((DWORD*)draw_dest_ad,*PCpal,npixels*2);\

@@ -3067,7 +3067,6 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_VAR_OPT_383)
 #define SSE_VAR_OPT_383A // variable to hold ABSOLUTE_CPU_TIME for a while (TODO)
 #define SSE_VAR_OPT_383A1 // Video chipset writes
-#define SSE_VAR_OPT_383B // dma init
 #define SSE_VAR_OPT_383C // CycleOfLastChangeToShiftMode()
 #endif
 
@@ -3077,9 +3076,11 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DRAW_C_383A //loops (better performance in VS2015)
 #define SSE_DRAW_C_383A1 // replace if ladder with shifts (better performance in VS2015)
 #define SSE_DRAW_C_383B //border (better performance in VS2015)
+#define SSE_DRAW_C_383C //
 #if defined(SSE_VC_INTRINSICS_383)
 #define SSE_DRAW_C_383_INTRINSICS // (better performance in VS2015)
 //#define SSE_DRAW_C_383_INTRINSICSB //BT worse performance in VS2015
+//#define SSE_DRAW_C_383_INTRINSICSC //STOSD 2 items: worse performance in VS2015
 #endif
 #endif
 #endif
@@ -3128,6 +3129,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_TOS_GEMDOS_RESTRICT_TOS4 // STF T206 OK!
 #define SSE_TOS_SNAPSHOT_AUTOSELECT_383 // correct country
 #define SSE_VAR_CHECK_SNAPSHOT2
+#define SSE_WD1772_383B 
 
 #endif//bugfix
 

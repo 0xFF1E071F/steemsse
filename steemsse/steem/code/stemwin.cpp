@@ -1527,6 +1527,7 @@ void SetStemWinSize(int w,int h,int xo,int yo)
                     w+4+GetSystemMetrics(SM_CXFRAME)*2,
                     h+MENUHEIGHT+4+GetSystemMetrics(SM_CYFRAME)*2+GetSystemMetrics(SM_CYCAPTION));
 */
+      //TRACE_INIT("w+4+GetSystemMetrics(SM_CXFRAME)*2 %d\n",w+4+GetSystemMetrics(SM_CXFRAME)*2);//different in vs2015
       SetWindowPos(StemWin,0,max(rc.left+xo,0l),max((int)(rc.top+yo),-GetSystemMetrics(SM_CYCAPTION)),
                     w+4+GetSystemMetrics(SM_CXFRAME)*2,
                     h+MENUHEIGHT+4+GetSystemMetrics(SM_CYFRAME)*2+GetSystemMetrics(SM_CYCAPTION),
