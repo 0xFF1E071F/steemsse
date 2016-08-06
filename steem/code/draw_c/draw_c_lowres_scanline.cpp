@@ -6,7 +6,11 @@ DESCRIPTION: Low res C++ drawing routine
 
 //void draw_scanline_lowres_pixelwise_8(int border1,int picture,int border2,int hscroll){
   int n;
+#if defined(SSE_DRAW_C_383C) && defined(SSE_DRAW_C_383_INTRINSICS)
+  WORD w[4], mask;
+#else
   WORD w0,w1,w2,w3,mask;
+#endif
   MEM_ADDRESS source;
   GET_START(0,160)
 #if defined(SSE_DRAW_C_383B)

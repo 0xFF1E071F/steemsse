@@ -1253,7 +1253,16 @@ void TWD1772::NewCommand(BYTE command) {
       Motor(true); 
       prg_phase=WD_TYPEI_SPUNUP;
       STR|=STR_SU; // eg ST NICCC 2
+#if defined(SSE_WD1772_383B) 
+/*  Don't IRQ at once, apparently there's a 30ms (!) delay
+http://libhyp.atariforge.org/gf/project/firebee/scmsvn/?action=browse&path=%2F*checkout*%2FFPGA%2FFalconIO_SDCard_IDE_CF%2FWF_FDC1772_IP%2Fwf1772ip_control.vhd&revision=6&pathrev=6
+"In T1_VERIFY_DELAY there is a delay of 30ms."
+    Cases: My Socks Are Weapons (RESTORE), Suretrip II (SEEK)
+*/
+      update_time=ACT + MsToCycles(30);
+#else
       OnUpdate(); //go direct, no delay
+#endif
     }
     break;
 
@@ -1533,6 +1542,7 @@ void TWD1772::OnUpdate() {
         if(Lines.track0)
           TR=0;
         DR=0;
+#if !defined(SSE_WD1772_383B) //done before now
         // imitate Steem native, eg My Socks are Weapons
         // not documented; only restore?
 #if defined(SSE_FLOPPY_EVENT2)
@@ -1540,8 +1550,11 @@ void TWD1772::OnUpdate() {
 #else
         update_time=ACT+1024; 
 #endif
+#endif
       }    
+#if !defined(SSE_WD1772_383B)
       else
+#endif
        OnUpdate(); // some recursion is always cool   
       
     }
@@ -2332,7 +2345,7 @@ r1       r0            1772
 
 void TWD1772::Read() {
 #if SSE_VERSION>=372
-  ASSERT(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE);
+//  ASSERT(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE);
 #endif
   if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE)
   {
