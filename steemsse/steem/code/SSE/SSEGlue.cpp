@@ -37,15 +37,12 @@ TGlue::TGlue() {
   ASSERT((DE_cycles[2]<<1)==320);
   DE_cycles[0]=DE_cycles[1]=DE_cycles[2]<<1; // do we reduce footprint?
 #endif
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
   Freq[FREQ_50]=50;
   Freq[FREQ_60]=60;
   Freq[FREQ_72]=72;	
   CurrentScanline.Cycles=scanline_time_in_cpu_cycles_8mhz[1]; 
-#endif
 }
 
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 
 void TGlue::AdaptScanlineValues(int CyclesIn) { 
   // on set sync or shift mode
@@ -158,30 +155,6 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
     prepare_next_event();
   }
 }
-
-#endif
-
-
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
-/*  Because Shifter tricks generally involve the GLU chip more than the
-    Shifter, we move some functions and variables from Shifter object
-    to Glue object.
-    Advantages:
-    - no need to qualify GLU thresholds with TGlue::
-    - can remove some previous compile choices (#ifdef) while still
-      being able to compile previous versions, making code easier to read
-    Disadvantages:
-    - increased code base
-    - can be confusing if you don't know where to look
-    - debugging using previous switches will be harder
-    But we need to go on...
-    We assume: 
-    - version >= 380
-    - SSE_GLUE_FRAME_TIMINGS, SSE_GLUE_THRESHOLDS, 
-    SSE_SHIFTER_TRICKS, SSE_SHIFTER_STATE_MACHINE, 
-    SSE_SHIFTER_LEFT_OFF_TEST_BEFORE_HBL,SSE_SHIFTER_LINE_PLUS_2_TEST,
-    - SSE_SHIFTER_FIX_LINE508_CONFUSION,SSE_SHIFTER_LEFT_OFF_60HZ undefined
-*/
 
 #define LOGSECTION LOGSECTION_VIDEO
 
@@ -2138,10 +2111,9 @@ void TGlue::IncScanline() {
 #endif
   Shifter.IncScanline();
 
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
+
 #if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
   MMU.SDPMiddleByte=999; // an impossible value for a byte
-#endif
 #endif
 
   PreviousScanline=CurrentScanline; // auto-generated
@@ -2170,58 +2142,9 @@ void TGlue::IncScanline() {
     NextScanline.Bytes=0;
   }
 
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
+
   AdaptScanlineValues(-1);
-#else
 
-
-#if defined(SSE_GLUE_THRESHOLDS) //TODO refactor
-  if(m_ShiftMode&2)
-  {
-    CurrentScanline.StartCycle=Glue.ScanlineTiming[TGlue::GLU_DE_ON][TGlue::FREQ_72];
-    CurrentScanline.EndCycle=Glue.ScanlineTiming[TGlue::GLU_DE_OFF][TGlue::FREQ_72];
-    CurrentScanline.Cycles=SCANLINE_TIME_IN_CPU_CYCLES_70HZ;
-#if defined(SSE_SHIFTER_STE_HI_HSCROLL)
-    if(screen_res>=2)
-    {
-      shifter_draw_pointer+=LINEWID*2; 
-      if(shifter_skip_raster_for_hscroll) 
-        shifter_draw_pointer+=2; // + 1 raster (the last prefetch)
-    }
-#endif
-  }
-  else
-#endif
-  if(shifter_freq==50)
-  {
-    CurrentScanline.StartCycle=56;
-    CurrentScanline.EndCycle=376;
-    CurrentScanline.Cycles=SCANLINE_TIME_IN_CPU_CYCLES_50HZ;
-  }
-  else if(shifter_freq==60)
-  {
-    CurrentScanline.StartCycle=52;
-    CurrentScanline.EndCycle=372;
-    CurrentScanline.Cycles=SCANLINE_TIME_IN_CPU_CYCLES_60HZ;
-  }
-#if !defined(SSE_GLUE_THRESHOLDS) //this was coming here only if HIRES monitor was connected
-  else if(shifter_freq==72 || screen_res==2)
-  {
-    CurrentScanline.StartCycle=0; //+4/6...
-    CurrentScanline.EndCycle=160;
-    CurrentScanline.Cycles=SCANLINE_TIME_IN_CPU_CYCLES_70HZ;
-#if defined(SSE_SHIFTER_STE_HI_HSCROLL)
-    shifter_draw_pointer+=LINEWID*2; // 'AddExtra' wasn't used
-#if SSE_VERSION>=370 // 'AddExtra' wasn't used
-    if(shifter_skip_raster_for_hscroll) 
-      shifter_draw_pointer+=2; // + 1 raster (the last prefetch)
-#endif
-#endif
-  }
-#endif
-
-
-#endif
   ASSERT(CurrentScanline.Cycles>=224);
   TrickExecuted=0;
   NextScanline.Tricks=0; // eg for 0byte lines mess
@@ -2524,7 +2447,7 @@ int TGlue::CycleOfLastChangeToShiftMode(int value) {
 
 #endif//look-up functions
 
-#endif//move code from shifter to glue
+
 
 #if defined(SSE_GLUE_FRAME_TIMINGS)
 /*  v3.8
@@ -2544,10 +2467,8 @@ int TGlue::CycleOfLastChangeToShiftMode(int value) {
     In v3.8, we compute the next screen event at each event check.
     Advantages and disadvantages are the opposite of the previous system.
     Conceptually, it is more satisfying, because Steem acts more like a real
-    ST, where timings are also computed on the go by the GLU.
+    ST, where timings are also computed on the go by the Glue.
     Function is called by run's prepare_next_event() and prepare_event_again().
-    This is a core function, so we don't use GLU. as simplification for both
-    Shifter and Glue according to defines.
 
     TODO wait for some input by ijor, because it could be that some frame "decisions",
     like #lines, are made early on?
@@ -2555,17 +2476,13 @@ int TGlue::CycleOfLastChangeToShiftMode(int value) {
 */
 
 void TGlue::GetNextScreenEvent() {
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
-  ASSERT(GLU.CurrentScanline.Cycles==224||GLU.CurrentScanline.Cycles==508||GLU.CurrentScanline.Cycles==512);
-#endif
+
+  ASSERT(Glue.CurrentScanline.Cycles==224||Glue.CurrentScanline.Cycles==508||Glue.CurrentScanline.Cycles==512);
+
 #if !defined(SSE_VAR_OPT_383) // at end of if-else ladder
   // default event = scanline
   screen_event.event=event_scanline;
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
   screen_event.time=CurrentScanline.Cycles;
-#else
-  screen_event.time=Shifter.CurrentScanline.Cycles;
-#endif
 #endif
   // VBI is set pending some cycles into first scanline of frame, 
   // when VSYNC stops.
@@ -2604,21 +2521,11 @@ void TGlue::GetNextScreenEvent() {
   // At cycle 0, mode could be 2, so we use Shifter.CurrentScanline.Cycles
   // instead because we must program event.
   else if(!Status.vbl_done && 
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
     (CurrentScanline.Cycles==512&&scanline==312&&screen_res!=2
     || CurrentScanline.Cycles==508&&scanline==262&&screen_res!=2)
     || scanline==500) // scanline 500: unconditional to catch oddities...
-#else
-    (Shifter.CurrentScanline.Cycles==512&&scanline==312 
-    || Shifter.CurrentScanline.Cycles==508&&scanline==262
-    || Shifter.CurrentScanline.Cycles==224&&scanline==500))
-#endif
   {
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
     screen_event.time=CurrentScanline.Cycles;
-#else
-    screen_event.time=Shifter.CurrentScanline.Cycles;
-#endif
 #if defined(SSE_VAR_OPT_383)
     screen_event_vector=event_vbl_interrupt;
 #else
@@ -2635,11 +2542,7 @@ void TGlue::GetNextScreenEvent() {
 #else
     screen_event.event=event_scanline;
 #endif
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
     screen_event.time=CurrentScanline.Cycles;
-#else
-    screen_event.time=Shifter.CurrentScanline.Cycles;
-#endif
   }
 #endif
 
@@ -2667,25 +2570,25 @@ void TGlue::GetNextScreenEvent() {
 
 
 void TGlue::Reset(bool Cold) {
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+
   m_SyncMode=0; //60hz
   CurrentScanline.Cycles=scanline_time_in_cpu_cycles_8mhz[shifter_freq_idx];
   ASSERT(CurrentScanline.Cycles<=512);
-#endif
+
   if(Cold) // if warm, Glue keeps on running
   {
 #if defined(SSE_GLUE_FRAME_TIMINGS_INIT)
     scanline=0;
     cpu_timer_at_start_of_hbl=0;
 #endif
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)	  //vital for HIRES emu	  
+
 #if defined(SSE_GLUE_383)
-    Shifter.m_ShiftMode=screen_res;
+    //Shifter.m_ShiftMode=screen_res;
     HiRes=(screen_res&2);
 #else
     Shifter.m_ShiftMode=m_ShiftMode=screen_res; 
 #endif
-#endif
+
   }
   *(BYTE*)(&Status)=0;
 }
@@ -2694,8 +2597,6 @@ void TGlue::Reset(bool Cold) {
 /*  SetShiftMode() and SetSyncMode() are called when a program writes
     on registers FF8260 (shift) or FF820A (sync). 
 */
-
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 
 void TGlue::SetShiftMode(BYTE NewMode) {
 /*
@@ -2915,7 +2816,7 @@ void TGlue::SetSyncMode(BYTE NewSync) {
 #endif
 }
 
-#endif//move to glue
+
 
 /*  There's already a MMU object where wake-up state is managed.
     We use Glue to compute some "Shifter tricks" thresholds only
@@ -3012,7 +2913,6 @@ void TGlue::Update() {
   if(ST_TYPE==STE) 
     ScanlineTiming[ENABLE_VBI][FREQ_50]+=4;
 
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 /*  A strange aspect of the GLU is that it decides around cycle 54 how
     many cycles the scanline will be, like it had an internal variable for
     this, or various paths.
@@ -3046,7 +2946,7 @@ LOOP
   cycle_of_scanline_length_decision=GLU_DECIDE_NCYCLES+WU_sync_modifier;
   if(ST_TYPE==STE)
     cycle_of_scanline_length_decision+=2;
-#endif
+
 
   // Top and bottom border, little trick here, we assume STF is in WU2
 #if defined(SSE_GLUE_382)
@@ -3066,24 +2966,7 @@ LOOP
     =ScanlineTiming[VERT_OVSCN_LIMIT][FREQ_50];//?
 
 #else // this wasn't used anyway
-  char STE_modifier=-16; // not correct!
-#if defined(SSE_MMU_WU_DL)
-  char WU_res_modifier=MMU.ResMod[OPTION_WS]; //-2, 0, 2
-  char WU_sync_modifier=MMU.FreqMod[OPTION_WS]; // 0 or 2
-#endif
-  for(int f=0;f<NFREQS;f++)
-  {
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
-    ScanlineTiming[STOP_PREFETCH][f]
-      =ScanlineTiming[START_PREFETCH][f]+DE_cycles[f];
-#endif
-    for(int t=0;t<NTIMINGS;t++)
-    {
-      ScanlineTiming[t][f]+=STE_modifier; // all timings!
-      if(f==FREQ_60)
-        ScanlineTiming[t][f]-=4;
-    }
-  }
+
 #endif
 }
 
@@ -3100,7 +2983,7 @@ void TGlue::Vbl() {
   if(time_of_next_event-cpu_time_of_last_vbl==133604) // according to ljbk ?
     Shifter.Preload=0; 
 #endif
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1) && defined(SSE_OSD_CONTROL)
+#if defined(SSE_OSD_CONTROL)
   if(OSD_MASK2&OSD_CONTROL_60HZ)
     TRACE_OSD("R%d S%d",Shifter.m_ShiftMode,m_SyncMode);
 #endif

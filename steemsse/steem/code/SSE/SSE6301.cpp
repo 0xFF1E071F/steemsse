@@ -19,7 +19,7 @@
 #include "SSE6301.h"
 #include "SSEOption.h"
 #include "SSEShifter.h"
-
+#include "SSEFrameReport.h"
 
 THD6301 HD6301; // singleton
 

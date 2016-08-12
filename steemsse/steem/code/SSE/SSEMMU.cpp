@@ -37,7 +37,6 @@ TMMU MMU={{0,2,2,1,1,2},{0,2,4,3,1,2},{0,2,0,0,-2,2},{0,2,2,0,0,2}};
 TMMU MMU;
 #endif
 
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
 /*  The video counter registers are inside the MMU.
     The MMU is tasked with fetching video memory and putting
     it in the Shifter.
@@ -127,7 +126,7 @@ void TMMU::UpdateVideoCounter(int CyclesIn) {
       //TRACE("F%d y%d c%d bytes in %d\n",TIMING_INFO,bytes_to_count);
       // The timing of this is a strange thing on a real STE - TODO
       if(ST_TYPE==STE
-        && CyclesIn>=GLU.CurrentScanline.EndCycle + (HSCROLL0?WordsToSkip*2:4)) 
+        && CyclesIn>=Glue.CurrentScanline.EndCycle + (HSCROLL0?WordsToSkip*2:4)) 
         sdp+=(LINEWID+WordsToSkip)*2;
     }
     else if (c>=0){
@@ -480,8 +479,8 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
     // If we're writing the video counter, our plan to add 2 to it
     // makes no more sense. It's no hack, not doing it was a hack.
     // Fixes Cryos scroller shift.
-    if(!GLU.ExtraAdded&&
-      (GLU.CurrentScanline.Tricks&(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_2)))
+    if(!Glue.ExtraAdded&&
+      (Glue.CurrentScanline.Tricks&(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_2)))
       overscan_add_extra-=2;
 
     // recompute right off bonus bytes (E605 Planet, D4/Tekila)
@@ -513,7 +512,7 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
     Ooh Crikey hidden screen #2, RGBeast still OK
 */
       if(OPTION_HACKS) // last minute change so...
-        nsdp+=-SHIFTER_RASTER+((cycles-GLU.CurrentScanline.StartCycle)%8)/2; 
+        nsdp+=-SHIFTER_RASTER+((cycles-Glue.CurrentScanline.StartCycle)%8)/2; 
       Shifter.RoundCycles(shifter_pixel);
     }
 
@@ -551,6 +550,6 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
 
 }
 
-#endif//#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
+
 
 #endif//#if defined(SSE_MMU)

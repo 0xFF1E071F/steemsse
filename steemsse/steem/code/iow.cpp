@@ -1824,13 +1824,8 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
         case 0xff8209:  //low byte of draw pointer
 
 #if defined(SSE_SHIFTER_SDP_WRITE)
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
           MMU.WriteVideoCounter(addr,io_src_b);
-#else
-          Shifter.WriteSDP(addr,io_src_b);
-#endif
           break;
-      
 #else // Steem 3.2 or SSE_SHIFTER_SDP_WRITE not defined
           {
             //          int srp=scanline_raster_position();
@@ -1874,7 +1869,7 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
 #endif
 
         case 0xff820a: //synchronization mode      
-          GLU.SetSyncMode(io_src_b); 
+          Glue.SetSyncMode(io_src_b); 
           break;
 
 /* 
@@ -1966,7 +1961,7 @@ must NOT be skipped using the Line Offset Register.
 
 #if defined(SSE_MMU_LINEWID_TIMING)
           shifter_fetch_extra_words=io_src_b;
-          if(LINECYCLES<GLU.CurrentScanline.EndCycle+MMU_PREFETCH_LATENCY)
+          if(LINECYCLES<Glue.CurrentScanline.EndCycle+MMU_PREFETCH_LATENCY)
             LINEWID=shifter_fetch_extra_words;
 #else
           LINEWID=io_src_b;
@@ -1976,7 +1971,7 @@ must NOT be skipped using the Line Offset Register.
           break;
 
         case 0xff8260: //resolution
-          GLU.SetShiftMode(io_src_b);
+          Glue.SetShiftMode(io_src_b);
           break;
 
 /*
@@ -2043,7 +2038,7 @@ rasterline to allow horizontal fine-scrolling.
 /*  Better test, should new HSCROLL apply on current line
     TODO: what is exact threshold ?
 */
-            if(cycles_in<=GLU.CurrentScanline.StartCycle+24) {
+            if(cycles_in<=Glue.CurrentScanline.StartCycle+24) {
 #elif defined(SSE_VID_BORDERS)
             if (cycles_in<=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN-BORDER_SIDE){
 #else
@@ -2061,7 +2056,7 @@ rasterline to allow horizontal fine-scrolling.
 
 #if defined(SSE_SHIFTER_HSCROLL_381) //argh!
 #if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
-                GLU.AdaptScanlineValues(cycles_in); // ST Magazin
+                Glue.AdaptScanlineValues(cycles_in); // ST Magazin
 #endif
 #ifndef SSE_VID_BORDERS
                 if (left_border>=BORDER_SIDE) {//ux382

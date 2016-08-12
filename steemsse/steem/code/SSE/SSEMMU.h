@@ -77,7 +77,7 @@ struct TMMU {
   inline bool WakeUpState1(); // for STF
   inline bool WakeUpState2(); // for STF 
 #endif
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
+
 #if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
   short SDPMiddleByte;
 #endif
@@ -88,7 +88,7 @@ struct TMMU {
 #endif
   void ShiftSDP(int shift);  
   void WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b);
-#endif
+
 #if defined(SSE_MMU_LINEWID_TIMING)
   BYTE Linewid0;
 #endif

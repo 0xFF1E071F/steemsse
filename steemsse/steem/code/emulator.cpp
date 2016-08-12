@@ -189,8 +189,8 @@ void init_timings()
 #endif
 #if defined(SSE_GLUE_FRAME_TIMINGS)
   Glue.GetNextScreenEvent();
-  GLU.CurrentScanline.Cycles=scanline_time_in_cpu_cycles_at_start_of_vbl;
-  ASSERT(GLU.CurrentScanline.Cycles>=224);
+  Glue.CurrentScanline.Cycles=scanline_time_in_cpu_cycles_at_start_of_vbl;
+  ASSERT(Glue.CurrentScanline.Cycles>=224);
 #endif
 #if !defined(SSE_VAR_OPT_383)
   screen_event_vector=screen_event_pointer->event;
