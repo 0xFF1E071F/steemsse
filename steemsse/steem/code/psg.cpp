@@ -787,7 +787,7 @@ inline void Microwire(int channel,int &val) {
       if(dma_sound_bass!=6)
         d_dsp_v=MicrowireBass[channel].FilterAudio(d_dsp_v,LOW_SHELF_FREQ,
           dma_sound_bass-6);
-#if defined(SSE_SOUND_DMA_383B) || SSE_VERSION<361
+#if defined(SSE_SOUND_DMA_383B)
 /*  In v3.8.3, we use the optional dsp module for bass and treble,
     but not for volume, because of some clicks.
 */
@@ -2523,11 +2523,7 @@ void psg_write_buffer(int abc,DWORD to_t)
 
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
   // It was a request and I received no thanks no feedback from the amiga lamer
-#if SSE_VERSION>=370 // C<->A
   if( (4>>abc) & (d2_dpeek(FAKE_IO_START+20)>>12 ))
-#else
-  if( (1<<abc) & (d2_dpeek(FAKE_IO_START+20)>>12 ))
-#endif
     return; // skip this channel
 #endif
 

@@ -89,14 +89,6 @@ typedef unsigned __int64	uint64_t;
 #define IRD   ir              // Instruction Register Decoder
 #endif
 
-/////////
-// FDC //
-/////////
-
-#if SSE_VERSION<=341
-#define DRIVE floppy_current_drive()
-#endif
-
 ///////////
 // Hacks //
 ///////////
@@ -262,7 +254,7 @@ FARPROC WINAPI MyLoadFailureHook(dliNotification dliNotify, DelayLoadInfo * pdli
 // VERSION //
 /////////////
 
-#if defined(SSE_VERSION)
+#if defined(SSE_BUILD)
 
 #define SSE_VERSION_TXT_LEN 8// "3.7.0" +...
 extern BYTE *stem_version_text[SSE_VERSION_TXT_LEN];

@@ -48,9 +48,6 @@ struct THD6301 {
 #endif//c++?
 
   BYTE Initialised; // we do need a rom
-#if SSE_VERSION<=350
-  BYTE RunThisHbl; 
-#endif
   BYTE Crashed; // oops
   short MouseVblDeltaX; // must keep separate for true emu
   short MouseVblDeltaY;

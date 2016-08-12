@@ -117,11 +117,7 @@ EXT BYTE fdc_read_address_buffer[20];
 #endif
 
 #if defined(SSE_DRIVE_OBJECT)
-#if SSE_VERSION>=370
 #define FDC_HBLS_PER_ROTATION  (ADAT?SF314[DRIVE].HblsPerRotation():(313*50/5))
-#else
-#define FDC_HBLS_PER_ROTATION  (SF314[DRIVE].HblsPerRotation()) 
-#endif
 #else
 // 5 revolutions per second, 313*50 HBLs per second
 #define FDC_HBLS_PER_ROTATION (313*50/5) 

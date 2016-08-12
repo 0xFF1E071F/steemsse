@@ -589,7 +589,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
     case 38:
       CutPauseUntilSysEx_Time=timeGetTime()+5000;
       break;
-#if defined(SSE_VAR_REWRITE) && SSE_VERSION>=370
+#if defined(SSE_VAR_REWRITE)
     case CUT_PRESSCHAR:
 #else
     case 39:

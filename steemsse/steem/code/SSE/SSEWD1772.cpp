@@ -52,7 +52,7 @@ void TWD1772::Reset(bool Cold) {
   Lines.CommandWasIntercepted=0;
 #endif
 
-#if defined(SSE_WD1772_PHASE) && SSE_VERSION>=372
+#if defined(SSE_WD1772_PHASE)
   prg_phase=WD_READY;
 #endif
 
@@ -299,25 +299,16 @@ BYTE TWD1772::IORead(BYTE Line) {
       if(floppy_type1_command_active)
 #endif
       {
-#if SSE_VERSION<=364
-        // It was a stupid bug because of Aladin.
-        // The Macintosh boot disk mustn't be write protected (Hint).
-        STR&=(~FDC_STR_WRITE_PROTECT); 
-#endif
         // disk has just been changed (30 VBL set at SetDisk())
         if(floppy_mediach[drive])
         {
-#if SSE_VERSION>364
           STR&=(~FDC_STR_WRITE_PROTECT);
-#endif
           if(floppy_mediach[drive]/10!=1) 
             STR|=FDC_STR_WRITE_PROTECT;
         }
-#if SSE_VERSION>364 
         // Permanent status if disk is in
         else if (FloppyDrive[drive].ReadOnly && !FloppyDrive[drive].Empty())
           STR|=FDC_STR_WRITE_PROTECT;
-#endif
 
 #if defined(SSE_DISK_STW) // was set already (hopefully)
         if(SF314[drive].ImageType.Manager==MNGR_WD1772)
@@ -1720,7 +1711,7 @@ r1       r0            1772
       Amd.nA1=3;
       CrcLogic.Reset(); 
 
-#if defined(SSE_WD1772_AM_LOGIC) && SSE_VERSION>=372
+#if defined(SSE_WD1772_AM_LOGIC) 
       Amd.Enabled=false; // read IDs OK
 #endif
 
@@ -1751,25 +1742,6 @@ r1       r0            1772
       Amd.amisigmask=CAPSFDC_AI_DSRREADY;
 #endif
     }
-#if SSE_VERSION<371 // no use
-    else if(!n_format_bytes) // count zeroes (or ones)
-    {
-      if(!DSR || n00==11&&DSR==2)
-      {
-        n00++;
-        nFF=0;
-      }
-      else if(DSR==0xFF)
-      {
-        n00=0;
-        nFF++;
-      }
-      else
-      {
-        n00=nFF=0;
-      }
-    }
-#endif
 #if defined(SSE_WD1772_AM_LOGIC)
     else if( (DSR&0xFF)>=0xFC && Amd.nA1==3) // CAPS: $FC->$FF
 #else
@@ -2203,7 +2175,7 @@ r1       r0            1772
     Drq(true);
 #ifdef SSE_DEBUG_WRITE_TRACK_TRACE_IDS // so we'll trace all written IDs
     if((DR&0xFE)==0xFE
-#if defined(SSE_BOILER_TRACE_CONTROL) && SSE_VERSION>=372
+#if defined(SSE_BOILER_TRACE_CONTROL) 
       && !(TRACE_MASK3&(TRACE_CONTROL_FDCMFM|TRACE_CONTROL_FDCBYTES))
 #endif
       )
@@ -2344,9 +2316,6 @@ r1       r0            1772
 
 
 void TWD1772::Read() {
-#if SSE_VERSION>=372
-//  ASSERT(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE);
-#endif
   if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE)
   {
     SF314[DRIVE].Read(); // this gets data and creates event

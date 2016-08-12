@@ -177,166 +177,8 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
     // ACIAs (IKBD and MIDI) //
     ///////////////////////////
 
-
-
 #undef LOGSECTION 
 #define LOGSECTION LOGSECTION_IKBD
-
-
-#if SSE_VERSION<=350
-
-    case 0xfffc00:      //----------------------------------- ACIAs
-    {
-      // Only cause bus jam once per word
-      DEBUG_ONLY( if (mode==STEM_MODE_CPU) )
-      {
-        if (io_word_access==0 || (addr & 1)==0){
-
-#if defined(SSE_ACIA_BUS_JAM_NO_WOBBLE)
-          const int rel_cycle=0; // hoping it will be trashed by compiler
-#else // Steem 3.2, 3.3
-
-//          if (passed VBL or HBL point){ //SS: those // are not mine
-//            BUS_JAM_TIME(4);
-//          }else{
-          // Jorge Cwik:
-          // Access to the ACIA is synchronized to the E signal. Which is a clock with
-          // one tenth the frequency of the main CPU clock (800 Khz). So the timing
-          // should depend on the phase relationship between both clocks.
-
-          int rel_cycle=ABSOLUTE_CPU_TIME-shifter_cycle_base;
-#if defined(SSE_INT_MFP_RATIO)
-          rel_cycle=CpuNormalHz-rel_cycle;
-#else
-          rel_cycle=8000000-rel_cycle;
-#endif
-          rel_cycle%=10;
-#endif
-
-#if defined(SSE_SHIFTER_EVENTS)
-          VideoEvents.Add(scan_y,LINECYCLES,'j',rel_cycle+6);
-#endif
-          BUS_JAM_TIME(rel_cycle+6); // just 6 - fixes jitter in Spectrum 512
-        }
-      }
-      switch (addr){
-/******************** Keyboard ACIA ************************/
-
-#if defined(SSE_ACIA)
-      case 0xfffc00:  //status
-      {
-#if defined(SSE_ACIA_IRQ_DELAY)//dbg info
-        int elapsed_cycles=ABSOLUTE_CPU_TIME-ikbd.timer_when_keyboard_info;
-#endif
-        // Build the byte x to be returned based on our ACIA var
-        // Note ACIA_IKBD = acia[0].
-        BYTE x=0;
-        // bit 0
-        if(ACIA_IKBD.overrun)
-          x|=BIT_0;
-        if(ACIA_IKBD.rx_not_read)
-          x|=BIT_0; 
-        // bit 1: can we send a byte to the 6301 now?
-        if(ACIA_IKBD.tx_flag==0 
-#if defined(SSE_IKBD_6301) 
-          &&(!hd6301_receiving_from_MC6850 ||!OPTION_C1)  
-#endif
-          )
-          x|=BIT_1; //empty bit
-        // bit 7 (high bit)
-        if(ACIA_IKBD.irq) 
-        {
-          ASSERT( ACIA_IKBD.rx_irq_enabled );
-          x|=BIT_7; //irq bit
-#if defined(SSE_ACIA_IRQ_DELAY)
-          TRACE_LOG("PC %X $FC00 check irq at %d (%d)\n",pc-2,elapsed_cycles,ABSOLUTE_CPU_TIME);
-#endif
-        }
-        // bit 5
-        if (ACIA_IKBD.overrun==ACIA_OVERRUN_YES) 
-          x|=BIT_5; //overrun
-
-#if defined(SSE_ACIA_IRQ_DELAY)
-        if(ACIA_IKBD.rx_stage)
-          TRACE_LOG("PC %X, read 0xfffc00: %x after %d cycles, ACIA rx stage %d\n",pc-2,x,elapsed_cycles,ACIA_IKBD.rx_stage); 
-        else if(keyboard_buffer_length)
-          TRACE_LOG("PC %X, read 0xfffc00: %x\n",pc-2,x); 
-#endif
-#if defined(SSE_DEBUG)
-        if(x&BIT_1) TRACE_LOG("read 0xfffc00 %x ACT %d PX %X\n",x,ABSOLUTE_CPU_TIME,pc);
-#endif
-
-          return x;
-        }//scope
-
-#else // Steem 3.2
-      case 0xfffc00:  //status
-      {
-        BYTE x=0;
-        if (ACIA_IKBD.rx_not_read || ACIA_IKBD.overrun==ACIA_OVERRUN_YES) x|=BIT_0; //full bit
-        if (ACIA_IKBD.tx_flag==0) x|=BIT_1; //empty bit
-//        if (acia[ACIA_IKBD].rx_not_read && acia[ACIA_IKBD].rx_irq_enabled) x|=BIT_7; //irq bit
-        if (ACIA_IKBD.irq) x|=BIT_7; //irq bit
-        if (ACIA_IKBD.overrun==ACIA_OVERRUN_YES) x|=BIT_5; //overrun
-        return x;
-      }
-#endif
-
-      case 0xfffc02:  //data
-      {
-        DEBUG_ONLY( if (mode!=STEM_MODE_CPU) return ACIA_IKBD.data; )
-        ACIA_IKBD.rx_not_read=0; // SS: reading the data register changes the status register
-        LOG_ONLY( bool old_irq=ACIA_IKBD.irq; )
-        if (ACIA_IKBD.overrun==ACIA_OVERRUN_COMING){
-          ACIA_IKBD.overrun=ACIA_OVERRUN_YES;
-          if (ACIA_IKBD.rx_irq_enabled) ACIA_IKBD.irq=true;
-          LOG_ONLY( log_to_section(LOGSECTION_IKBD,EasyStr("IKBD: ")+HEXSl(old_pc,6)+
-                              " - OVERRUN! Read data ($"+HEXSl(ACIA_IKBD.data,2)+
-                              "), changing ACIA IRQ bit from "+old_irq+" to "+ACIA_IKBD.irq); )
-        }else{
-          ACIA_IKBD.overrun=ACIA_OVERRUN_NO;
-          // IRQ should be off for receive, but could be set for tx empty interrupt
-          ACIA_IKBD.irq=(ACIA_IKBD.tx_irq_enabled && ACIA_IKBD.tx_flag==0);
-          LOG_ONLY( if (ACIA_IKBD.irq!=old_irq) log_to_section(LOGSECTION_IKBD,Str("IKBD: ")+
-            HEXSl(old_pc,6)+" - Read data ($"+HEXSl(ACIA_IKBD.data,2)+
-            "), changing ACIA IRQ bit from "+old_irq+" to "+ACIA_IKBD.irq); )
-          }
-          mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
-//          TRACE_LOG("PC %X Read 0xfffc02: %x (%d) at ACT %d\n",pc,ACIA_IKBD.data,hd6301_transmitting_to_MC6850,ABSOLUTE_CPU_TIME);
-          return ACIA_IKBD.data;
-      }
-
-  /******************** MIDI ACIA ************************/
-
-      case 0xfffc04:  // status
-      {
-        BYTE x=0;
-        if (ACIA_MIDI.rx_not_read || ACIA_MIDI.overrun==ACIA_OVERRUN_YES) x|=BIT_0; //full bit
-        if (ACIA_MIDI.tx_flag==0) x|=BIT_1; //empty bit
-        if (ACIA_MIDI.irq) x|=BIT_7; //irq bit
-        if (ACIA_MIDI.overrun==ACIA_OVERRUN_YES) x|=BIT_5; //overrun
-        return x;
-      }
-      case 0xfffc06:  // data
-        DEBUG_ONLY(if (mode!=STEM_MODE_CPU) return ACIA_MIDI.data);
-        ACIA_MIDI.rx_not_read=0;
-        if (ACIA_MIDI.overrun==ACIA_OVERRUN_COMING){
-          ACIA_MIDI.overrun=ACIA_OVERRUN_YES;
-          if (ACIA_MIDI.rx_irq_enabled) ACIA_MIDI.irq=true;
-        }else{
-          ACIA_MIDI.overrun=ACIA_OVERRUN_NO;
-          // IRQ should be off for receive, but could be set for tx empty interrupt
-          ACIA_MIDI.irq=(ACIA_MIDI.tx_irq_enabled && ACIA_MIDI.tx_flag==0);
-        }
-        mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
-        log_to(LOGSECTION_MIDI,Str("MIDI: ")+HEXSl(old_pc,6)+" - Read $"+
-                HEXSl(ACIA_MIDI.data,6)+" from MIDI ACIA data register");
-        return ACIA_MIDI.data;
-      }
-
-      break;
-    }
-#else//!ver
 
     case 0xfffc00:      
 /*  
@@ -654,7 +496,6 @@ Receiver Data Register is retained.
         break;
       }
       break;
-#endif//ver?
 
 #undef LOGSECTION //SS
 #define LOGSECTION LOGSECTION_IO //SS
@@ -1387,7 +1228,7 @@ FF8240 - FF827F   palette, res
 #endif
         case 0xffc101:
           {
-#if defined(SSE_VERSION)  //BCC
+#if defined(SSE_BUILD)  //BCC
             Str minor_ver=(char*)stem_version_text+2;
 #else
             Str minor_ver=stem_version_text+2;

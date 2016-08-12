@@ -166,7 +166,7 @@ EXT BYTE *Mem_End,
 
 EXT BYTE palette_exec_mem[64+PAL_EXTRA_BYTES];
 
-EXT long palette_table[4096]; // SS 4K!
+EXT long palette_table[4096]; // SS 16K!
 
 #if defined(PEEK_RANGE_TEST) && defined(DEBUG_BUILD)
 
@@ -254,7 +254,7 @@ EXT char m68k_src_b;
 #include "SSE/SSECpu.h"
 #include "SSE/SSESTF.h"
 #include "SSE/SSEMMU.h"
-#if defined(SSE_DEBUG_FRAME_REPORT)
+#if defined(SSE_BOILER_FRAME_REPORT)
 #include "SSE/SSEFrameReport.h"
 #endif
 #include "SSE/SSEShifter.h"

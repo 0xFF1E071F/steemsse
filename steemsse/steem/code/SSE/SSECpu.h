@@ -428,10 +428,7 @@ struct TM68000 {
 #endif
   void Interrupt(MEM_ADDRESS ad);
   inline void PerformRte();
-#if SSE_VERSION<370
-  inline //not inlined anyway
-#endif
-    void PrefetchSetPC();
+  void PrefetchSetPC();
   inline void Process();
 #if defined(SSE_CPU_INLINE_READ_BWL)
   static inline void ReadB(MEM_ADDRESS addr);

@@ -111,12 +111,7 @@ void THD6301::InterpretCommand(BYTE ByteIn) {
   // taking parameters of a command?
   else if(CurrentCommand!=-1)
   {
-#if 0// SSE_VERSION>=373 //annoying asserts, player clicks 'ignore', crash
-    ASSERT( nParameters );
-    ASSERT( CurrentParameter>=0 && CurrentParameter<nParameters );
-#else
     if(CurrentParameter>=0 && CurrentParameter<nParameters)
-#endif
       Parameter[CurrentParameter++]=ByteIn;
   }
   else ; // could be junk?
@@ -211,26 +206,6 @@ void THD6301::ReportCommand() {
 }
 
 #endif//#if defined(SSE_IKBD_6301_IKBDI)
-
-
-
-#if SSE_VERSION<=350
-
-void THD6301::Init() { // called in 'main'
-  Initialised=Crashed=0;
-  if(hd6301_init()) // calling the 6301 function
-  {
-    HD6301_OK=Initialised=1;
-    TRACE_LOG("HD6301 emu initialised\n");
-  }
-  else
-  {
-    TRACE_LOG("HD6301 emu NOT initialised\n");
-    OPTION_C1=0;
-  }
-}
-
-#else//!ver
 
 #pragma warning(disable: 4701)//potentially uninitialized local variable 'fp' used
 
@@ -333,9 +308,7 @@ void THD6301::ResetChip(int Cold) {
 
 #if defined(SSE_IKBD_6301_IKBDI)
   CustomProgram=CUSTOM_PROGRAM_NONE;
-#if SSE_VERSION>=351
   ResetProgram();
-#endif
 #endif
 #if defined(SSE_IKBD_6301)
   if(HD6301_OK && OPTION_C1)
@@ -388,6 +361,6 @@ void THD6301::Vbl() {
 
 #undef LOGSECTION
 
-#endif//ver?
+
 
 #endif//SSE_IKBD_6301

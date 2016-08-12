@@ -422,7 +422,7 @@ BYTE JoyReadSTEAddress(MEM_ADDRESS addr,bool *pIllegal)
         Ret|=(stick[N_JOY_STE_A_0] & BIT_7);
         Ret|=(stick[N_JOY_STE_A_1] & BIT_7)*BIT_1;
 #else
-#if defined(SSE_VERSION)//?
+#if defined(SSE_BUILD)//MFD?
         Ret|=(BOOL)(stick[N_JOY_STE_A_0] & BIT_7);
 #else
         Ret|=bool(stick[N_JOY_STE_A_0] & BIT_7);

@@ -304,14 +304,8 @@ enum logsection_enum_tag {
 #define TRACE_CONTROL_FDCBYTES (1<<14)//no logsection needed
 #define TRACE_CONTROL_FDCPSG (1<<13)//drive/side
 #define TRACE_CONTROL_FDCREGS (1<<12)// writes to registers CR,TR,SR,DR
-
-#if SSE_VERSION>370
 #define TRACE_CONTROL_FDCMFM (1<<11)
 #define TRACE_CONTROL_FDCDMA (1<<10)
-#else
-#define TRACE_CONTROL_FDCIPF1 (1<<11)//lock info
-#define TRACE_CONTROL_FDCIPF2 (1<<10)//sectors
-#endif
 
 #define TRACE_MASK4 (Debug.ControlMask[13]) //cpu
 #define TRACE_CONTROL_CPU_REGISTERS (1<<15) 
@@ -319,13 +313,9 @@ enum logsection_enum_tag {
 #define TRACE_CONTROL_CPU_SP (1<<13) 
 #define TRACE_CONTROL_CPU_CYCLES (1<<12) 
 
-#if SSE_VERSION>=380
-
 #define TRACE_MASK_14 (Debug.ControlMask[14]) //Shifter 2
 #define TRACE_CONTROL_LINE_PLUS_2 (1<<15) 
 #define TRACE_CONTROL_VIDEO_COUNTER (1<<14)
-
-#endif
 
 #endif
 
@@ -552,7 +542,7 @@ enum logsection_enum_tag {
 #endif
 
 // TRACE_MFM 3.7.1
-#if defined(SSE_BOILER_TRACE_CONTROL) && SSE_VERSION>=371
+#if defined(SSE_BOILER_TRACE_CONTROL) 
 #ifdef __cplusplus // visible only to C++ objects
 #define TRACE_MFM if(TRACE_MASK3&TRACE_CONTROL_FDCMFM) Debug.LogSection=LOGSECTION_FDC, Debug.TraceLog //!
 #endif//C++

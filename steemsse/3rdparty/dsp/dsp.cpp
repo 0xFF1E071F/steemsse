@@ -171,21 +171,31 @@ double TIirLowPass::FilterAudio(double Input,double Frequency,double Gain) {
   return TIirFilter::FilterAudio(Input,Frequency,1,Gain,1);
 }
 
-#if !defined(SSE_VAR_OPT_382) //compiler would scrub it anyway, normally
+
 double TIirHighShelf::FilterAudio(double Input,double Frequency,double Gain) {
 //    double rv=TIirFilter::FilterAudio(Input,Frequency,50,Gain,6);
-  //  double rv=TIirFilter::FilterAudio(Input,Frequency,3,Gain>0?Gain:0,4);
-   // return rv;
-  return Input;//...
+  double rv=TIirFilter::FilterAudio(Input,Frequency,3,Gain,6);
+  return rv;
+  //return Input;//...
 }
-#endif
+
 
 double TIirLowShelf::FilterAudio(double Input,double Frequency,double Gain) {
   return TIirFilter::FilterAudio(Input,Frequency,0,Gain,5);
 }
 
 
+double old_gain=0;
+
 double TIirVolume::FilterAudio(double Input,double Gain) {
+  //if(Gain<-20) Gain=-20;
+  //if(Gain>12) Gain=12;
+  /*
+  if(Gain-old_gain>1)
+    Gain=old_gain+1, old_gain++;
+  else if(Gain-old_gain<-1)
+    Gain=old_gain-1, old_gain--;
+    */
   return TIirFilter::FilterAudio(Input,0,0,Gain,0);
 }
 

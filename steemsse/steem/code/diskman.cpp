@@ -1940,15 +1940,12 @@ That will toggle bit x.
 #if defined(SSE_GUI_OPTIONS_REFRESH)
           OptionBox.SSEUpdateIfVisible(); // other way
 #endif
-#if defined(SSE_GUI_STATUS_STRING_ADAT) && SSE_VERSION<380
-          GUIRefreshStatusBar();
-#endif
 #else
           InvalidateRect(GetDlgItem(Win,98),NULL,0);
           InvalidateRect(GetDlgItem(Win,99),NULL,0);
           CheckResetDisplay();
 #endif
-#if defined(SSE_GUI_STATUS_STRING_ADAT) && SSE_VERSION>=380
+#if defined(SSE_GUI_STATUS_STRING_ADAT)
           GUIRefreshStatusBar();
 #endif
           break;

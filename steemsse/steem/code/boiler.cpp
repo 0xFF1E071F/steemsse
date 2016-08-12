@@ -1917,11 +1917,7 @@ void DWin_init()
 #endif
 #endif
 #if defined(SSE_BOILER_STACK_CHOICE)
-#if SSE_VERSION>=370
   AppendMenu(sse_menu,MF_STRING,1528,"Swap display USP/SSP");
-#else
-  AppendMenu(sse_menu,MF_STRING,1528,"Display other stack");
-#endif
 #endif
 #if defined(SSE_BOILER_FAKE_IO)
   AppendMenu(sse_menu,MF_STRING|MF_SEPARATOR,0,NULL);
@@ -1957,7 +1953,7 @@ void DWin_init()
   RegisterClass(&wnd);
 
 //  HiddenParent=CreateWindow("Steem Debug Window","Steem Hidden Window",0,0,0,0,0,NULL,NULL,Inst,NULL);
-#if defined(SSE_VERSION)  //BCC
+#if defined(SSE_BUILD)
   DWin=CreateWindowEx(WS_EX_APPWINDOW,"Steem Debug Window",EasyStr("The Boiler Room: Steem v")+(char*)stem_version_text
       ,WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX
        | WS_SIZEBOX
@@ -2201,8 +2197,6 @@ void DWin_init()
     int y=5;
     mr_static *ms;
 
-
-
 #if defined(SSE_BOILER_SHOW_FRAME)
     ms=new mr_static("Frame ","",5,y,Par,
         NULL,(MEM_ADDRESS)&FRAME,3,MST_DECIMAL,true,NULL);
@@ -2239,28 +2233,14 @@ void DWin_init()
 #if defined(SSE_BOILER_SHOW_ACT)
     ms=
 #endif
-#if SSE_VERSION>=370
+#if defined(SSE_BUILD)
     new mr_static("Line ","",rc.right+5,y,Par,
         NULL,(MEM_ADDRESS)&debug_cycles_since_HBL,2,MST_DECIMAL,0,NULL);
 #else
     new mr_static("Since HBL ","",rc.right+5,y,Par,
         NULL,(MEM_ADDRESS)&debug_cycles_since_HBL,2,MST_DECIMAL,0,NULL);
 #endif
-#if defined(SSE_BOILER_SHOW_ACT__)
-    GetWindowRectRelativeToParent(ms->handle,&rc);
-    new mr_static("Absolute ","",rc.right+5,y,Par,
-        NULL,(MEM_ADDRESS)&debug_ACT,4,MST_DECIMAL,0,NULL);
-#endif
-
     y+=30;
-
-#if defined(SSE_BOILER_SHOW_FRAME__)
-    ms=new mr_static("Frame #","",5,y,Par,
-        NULL,(MEM_ADDRESS)&FRAME,3,MST_DECIMAL,0,NULL);
-    GetWindowRectRelativeToParent(ms->handle,&rc);
-#endif
-
-
 #if defined(SSE_BOILER_MOD_VBASE2)
     ms=new mr_static("VBASE","screen address",5,y,Par,
       (HMENU)294,(MEM_ADDRESS)&xbios2,3,MST_REGISTER,true,NULL);
@@ -2268,7 +2248,7 @@ void DWin_init()
 #endif
 
 
-#if SSE_VERSION>=370 //in Steem that's the true one!
+#if defined(SSE_BUILD)
     ms=new mr_static("VCOUNT ","",rc.right+5,y,Par,
         NULL,(MEM_ADDRESS)&debug_VAP,3,MST_REGISTER,0,NULL);
 #else
@@ -2279,7 +2259,7 @@ void DWin_init()
 
 #if defined(SSE_BOILER_SHOW_SDP) // the draw pointer
 
-#if SSE_VERSION>=370 //clearer for me
+#if defined(SSE_BUILD)
     new mr_static("SDP ","",rc.right+5,y,Par,
         NULL,(MEM_ADDRESS)&shifter_draw_pointer,3,MST_REGISTER,true,NULL);
     y+=30;

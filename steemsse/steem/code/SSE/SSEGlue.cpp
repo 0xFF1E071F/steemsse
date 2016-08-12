@@ -2139,7 +2139,7 @@ void TGlue::IncScanline() {
   Shifter.IncScanline();
 
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
-#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA) || SSE_VERSION<383
+#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
   MMU.SDPMiddleByte=999; // an impossible value for a byte
 #endif
 #endif

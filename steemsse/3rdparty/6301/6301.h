@@ -58,13 +58,6 @@ extern int mousek;
 // variables that Steem must see
 extern int hd6301_completed_transmission_to_MC6850; // for sync
 
-#if SSE_VERSION<=350
-extern int hd6301_receiving_from_MC6850; // for sync
-extern int hd6301_transmitting_to_MC6850; // for sync
-extern int hd6301_mouse_move_since_last_interrupt_x; // different lifetime
-extern int hd6301_mouse_move_since_last_interrupt_y;
-#endif
-
 #if defined(SSE_IKBD_6301_EVENT)
 extern int cycles_run; 
 #endif

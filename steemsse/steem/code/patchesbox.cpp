@@ -14,7 +14,7 @@ Steem.
 void TPatchesBox::RefreshPatchList()
 {
   if (Handle==WINDOWTYPE(0)) return;
-#if defined(SSE_VERSION)  //BCC
+#if defined(SSE_BUILD)
   EasyStr ThisVerText=(char*)stem_version_text;
 #else
   EasyStr ThisVerText=stem_version_text;

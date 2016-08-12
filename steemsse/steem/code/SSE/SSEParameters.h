@@ -78,9 +78,6 @@ MIDI is 4 times faster than IKBD
 #define ACIA_MIDI_OUT_CYCLES (HD6301_TO_ACIA_IN_CYCLES/4) //temp
 #endif
 
-#if SSE_VERSION<=350
-#define IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESSE_ALT (OPTION_C1?45:2)
-#endif
 
 #else //!ACIA
 #define HD6301_TO_ACIA_IN_HBL (screen_res==2?24:12) // to be <7200
@@ -447,12 +444,7 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
 #if defined(SSE_INT_VBL_STF) // modest hack still works
 #define HBL_FOR_STE (444)
 #define THRESHOLD_LINE_PLUS_2_STE (40) //3.7.0
-#if SSE_VERSION<364
-//this particular hack doesn't look useful for anything now
-#define HBL_FOR_STF (HBL_FOR_STE+4+(OPTION_HACKS?4:0))
-#else
 #define HBL_FOR_STF (HBL_FOR_STE+4)
-#endif
 #else
 #define THRESHOLD_LINE_PLUS_2_STE (THRESHOLD_LINE_PLUS_2_STF-2)
 #endif
@@ -747,14 +739,10 @@ Some STFs                32.02480    8.0071
 #endif
 
 #if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO) || defined(SSE_VID_STRETCH_ASPECT_RATIO)
-#if SSE_VERSION>=380
 #if defined(SSE_VS2008_WARNING_382)
 #define ST_ASPECT_RATIO_DISTORTION 1.10f // multiplier for Y axis
 #else
 #define ST_ASPECT_RATIO_DISTORTION 1.10 // multiplier for Y axis
-#endif
-#else
-#define ST_ASPECT_RATIO_DISTORTION 1.15 // multiplier for Y axis
 #endif
 #endif
 

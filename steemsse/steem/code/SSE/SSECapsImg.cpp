@@ -6,7 +6,7 @@
 #include <cpu.decla.h>
 #include <fdc.decla.h>
 #include <floppy_drive.decla.h>
-#if !defined(SSE_OSD) || SSE_VERSION<351
+#if !defined(SSE_OSD) 
 #include <gui.decla.h> //DisableDiskLightAfter
 #endif
 #include <iorw.decla.h>
@@ -476,37 +476,30 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
 #if defined(SSE_DEBUG_IPF_TRACE_SECTORS) &&defined(SSE_DISK_IMAGETYPE) // debug info
   if(::SF314[drive].ImageType.Extension==EXT_IPF)
   {
-#if SSE_VERSION<=370 // included in image info
-#if defined(SSE_BOILER_TRACE_CONTROL) // controlled by boiler now (3.6.1)
-    if(TRACE_MASK3&TRACE_CONTROL_FDCIPF2) 
-#endif
-#endif
-    {
-      CapsSectorInfo CSI;
+    CapsSectorInfo CSI;
 #if defined(SSE_VS2008_WARNING_371)
-      DWORD sec_num;
+    DWORD sec_num;
 #else
-      int sec_num;
+    int sec_num;
 #endif
-      TRACE_LOG("sector info (encoder,cell type,data,gap info)\n");
-      for(sec_num=1;sec_num<=track_info.sectorcnt;sec_num++)
-      {
-        CAPSGetInfo(&CSI,Caps.ContainerID[drive],track,side,cgiitSector,sec_num-1);
-        TRACE_LOG("#%d|%d|%d|%d %d %d|%d %d %d %d %d %d %d\n",
-          sec_num,
-          CSI.enctype,      // encoder type
-          CSI.celltype,     // bitcell type
-          CSI.descdatasize, // data size in bits from IPF descriptor
-          CSI.datasize,     // data size in bits from decoder
-          CSI.datastart,    // data start position in bits from decoder
-          CSI.descgapsize,  // gap size in bits from IPF descriptor
-          CSI.gapsize,      // gap size in bits from decoder
-          CSI.gapstart,     // gap start position in bits from decoder
-          CSI.gapsizews0,   // gap size before write splice
-          CSI.gapsizews1,   // gap size after write splice
-          CSI.gapws0mode,   // gap size mode before write splice
-          CSI.gapws1mode);   // gap size mode after write splice
-      }
+    TRACE_LOG("sector info (encoder,cell type,data,gap info)\n");
+    for(sec_num=1;sec_num<=track_info.sectorcnt;sec_num++)
+    {
+      CAPSGetInfo(&CSI,Caps.ContainerID[drive],track,side,cgiitSector,sec_num-1);
+      TRACE_LOG("#%d|%d|%d|%d %d %d|%d %d %d %d %d %d %d\n",
+        sec_num,
+        CSI.enctype,      // encoder type
+        CSI.celltype,     // bitcell type
+        CSI.descdatasize, // data size in bits from IPF descriptor
+        CSI.datasize,     // data size in bits from decoder
+        CSI.datastart,    // data start position in bits from decoder
+        CSI.descgapsize,  // gap size in bits from IPF descriptor
+        CSI.gapsize,      // gap size in bits from decoder
+        CSI.gapstart,     // gap start position in bits from decoder
+        CSI.gapsizews0,   // gap size before write splice
+        CSI.gapsizews1,   // gap size after write splice
+        CSI.gapws0mode,   // gap size mode before write splice
+        CSI.gapws1mode);   // gap size mode after write splice
     }
   }
 #endif

@@ -661,7 +661,7 @@ void SteemDisplay::ChangeToFullScreen()
     // SS location of the upper left corner of the viewport into the virtual screen
     XF86VidModeSetViewPort(XD,Screen,x,y);
     //XF86VidModeSetViewPort(XD,Screen,0,0);
-#if SSE_VERSION>=370
+#if defined(SSE_BUILD)
     draw_grille_black=max((int)draw_grille_black,50);
 #else
     draw_grille_black=max(draw_grille_black,50);

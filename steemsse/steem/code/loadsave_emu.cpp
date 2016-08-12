@@ -834,7 +834,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     pasti_active=0;
 #endif
   }
-#if SSE_VERSION
+#if defined(SSE_BUILD)
 #if SSE_VERSION>=330
   if(Version>=41) // Steem 3.3
   {
@@ -1231,7 +1231,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
   }
 #endif
 
-#endif//#if SSE_VERSION
+#endif//sse_build
 
 
 

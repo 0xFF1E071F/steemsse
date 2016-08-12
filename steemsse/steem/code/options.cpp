@@ -1255,27 +1255,14 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_STF_MEGASTF)
             if(ST_TYPE==MEGASTF)
             {
-#if SSE_VERSION>=354
               This->NewMonitorSel=1; // preselect monochrome (v3.5.4)
-#endif
-#if SSE_VERSION>=360 && SSE_VERSION<370
-              OPTION_C1=false; // v3.6.0 - because mouse is slow in high res
-#endif
 #if defined(SSE_ACSI_MEGASTF) // default to ACSI hard disk
               if(SSEConfig.AcsiImg)
                 SSEOption.Acsi=true;
               else
 #endif
-#if SSE_VERSION>=360
-              HardDiskMan.DisableHardDrives=false; // v3.6.0
+                HardDiskMan.DisableHardDrives=false; // v3.6.0
 //              TRACE("hd off %d\n",HardDiskMan.DisableHardDrives);
-#endif
-#if SSE_VERSION>=360 && SSE_VERSION<370
-              floppy_instant_sector_access=true;// v3.6.0
-#endif
-#if SSE_VERSION>=364 && SSE_VERSION<370
-              FloppyDrive[0].RemoveDisk(); // to boot on hd//3.6.4
-#endif
             }
             else if(old_st_type==MEGASTF) //v3.6.0: go colour, no HD by default)
             {
@@ -1283,7 +1270,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               HardDiskMan.DisableHardDrives=true;
 //              TRACE("hd off %d\n",HardDiskMan.DisableHardDrives);
             }
-              HardDiskMan.update_mount();
+            HardDiskMan.update_mount();
 #endif
           }
 	  break;

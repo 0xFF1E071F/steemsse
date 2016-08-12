@@ -456,9 +456,7 @@ void reset_peripherals(bool Cold)
   ikbd_reset(true); // Always cold reset, soft reset is different
 
 #if defined(SSE_IKBD_6301)
-#if SSE_VERSION>=351
   HD6301.ResetChip(Cold);
-#endif
   if(Cold) // only cold
     keyboard_buffer_length=0; // cold reset & run, Transbeauce 2
 #endif

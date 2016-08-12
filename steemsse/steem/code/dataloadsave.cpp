@@ -857,12 +857,6 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
     USE_SDL=pCSF->GetInt("Options","UseSDL",USE_SDL);
 #endif
-#if defined(SSE_STF) && SSE_VERSION<370 //double, also in machine
-    ST_TYPE=pCSF->GetInt("Options","StType",ST_TYPE);
-#endif
-#if defined(SSE_MMU_WAKE_UP)
-//    OPTION_WS=pCSF->GetInt("Options","WakeUpState",OPTION_WS);
-#endif
 #if defined(SSE_VID_BORDERS) && !defined(SSE_VID_BORDERS_NO_LOAD_SETTING)
     DISPLAY_SIZE=pCSF->GetInt("Display","BorderSize",DISPLAY_SIZE);
     if(DISPLAY_SIZE<0||DISPLAY_SIZE>BIGGEST_DISPLAY
@@ -874,11 +868,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     ChangeBorderSize(DISPLAY_SIZE);
 #endif
 #if defined(SSE_YM2149_FIX_TABLES)
-#if SSE_VERSION>=370
     SSEOption.PSGMod=pCSF->GetInt("Sound","PsgMod",SSEOption.PSGMod);
-#else
-    PSG_FILTER_FIX=SSEOption.PSGMod=pCSF->GetInt("Sound","PsgMod",SSEOption.PSGMod);
-#endif
 #if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
     if(SSEOption.PSGMod)
       YM2149.LoadFixedVolTable();
@@ -1434,12 +1424,6 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 #if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
   pCSF->SetStr("Options","UseSDL",EasyStr(USE_SDL));  
-#endif
-#if defined(SSE_STF) && SSE_VERSION<370
-  pCSF->SetStr("Options","StType",EasyStr(ST_TYPE));  
-#endif
-#if defined(SSE_MMU_WAKE_UP)
-//  pCSF->SetStr("Options","WakeUpState",EasyStr(OPTION_WS));  
 #endif
 #if defined(SSE_VID_BORDERS) && !defined(SSE_VID_BORDERS_NO_LOAD_SETTING)
   pCSF->SetStr("Display","BorderSize",EasyStr(DISPLAY_SIZE));  
