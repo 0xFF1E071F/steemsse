@@ -65,22 +65,12 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_STRUCTURE //  necessary for the SSE build
 
 
-/////////////
-// VERSION //
-/////////////
 
-#define SSE_VERSION 383 // versions down to 330 still compile
-                        // full v330 not publicly available anymore
-                        // for v32+, don't define STEVEN_SEAGAL
 
-/*do a search on SSE_VERSION, eliminate, then transfer into Parameters*/
-
-#if SSE_VERSION>382 //last release
 #define SSE_BETA //title, OSD, plus some testing - new features
 #define SSE_BETA_BUGFIX // beta for just bugfixes
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
 //#define SSE_PRIVATE_BUILD // my "beta" option
-#endif
 #endif
 
 
@@ -242,12 +232,6 @@ Beta: not SSE_PRIVATE_BUILD
 //////////
 // v3.3 //
 //////////
-/*  v3.3 can't really be built as it was because Hatari code for keyboard and
-    video, used in v3.3, was removed in v3.4 (so that comments don't appear
-    in search engines)
-*/
-
-#if SSE_VERSION>=330
 
 #if defined(SSE_CPU_PREFETCH)
 #define SSE_CPU_PREFETCH_4PIXEL_RASTERS //see SSECpu.cpp
@@ -302,16 +286,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_BPOC // Best Part of the Creation fit display 800 hack
 #endif//vid
 
-#endif//3.3.0
-
-
 
 //////////
 // v3.4 //
 //////////
-
-
-#if SSE_VERSION>=340
 
 #if defined(SSE_ACIA)
 #define SSE_ACIA_BUS_JAM_NO_WOBBLE // simple "fix" //undef 3.6.4
@@ -464,10 +442,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif//video
 
-#endif//340
-
-
-#if SSE_VERSION>=341
+//341
 
 #if defined(SSE_INTERRUPT)
 
@@ -477,16 +452,10 @@ Beta: not SSE_PRIVATE_BUILD
 
 #endif//int
 
-#endif//341
-
-
 
 //////////
 // v3.5 //
 //////////
-
-
-#if SSE_VERSION>=350
 
 #define SSE_SSE_CONFIG_STRUCT // structure SSEConfig (350+)
 
@@ -639,10 +608,8 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif//video
 
-#endif//350
 
-
-#if SSE_VERSION>=351
+//351
 
 #if defined(SSE_ACIA)
 #define SSE_ACIA_DOUBLE_BUFFER_RX // only from 6301 (not MIDI) 
@@ -805,10 +772,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif
 
-#endif//351
-
-
-#if SSE_VERSION>=352
+//352
 
 #if defined(SSE_ACIA)
 #undef SSE_ACIA_IRQ_DELAY //code missing now
@@ -877,11 +841,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_SCREENSHOTS_NUMBER
 #endif
 
-#endif//352
-
-
-#if SSE_VERSION>=353
-
+//353
 #if defined(SSE_ACIA)
 #define SSE_ACIA_TDR_COPY_DELAY // effect on SR
 #endif
@@ -985,11 +945,8 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif//vid
 
-#endif//353
 
-
-#if SSE_VERSION>=354
-
+//354
 #if defined(SSE_FLOPPY)
 #if defined(SSE_DRIVE_OBJECT)
 #undef SSE_DRIVE_EMPTY_VERIFY_LONG //def 3.5.3
@@ -1070,16 +1027,10 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif//vid
 
-#endif//354
-
-
 
 //////////
 // v3.6 //
 //////////
-
-
-#if SSE_VERSION>=360
 
 #if defined(SSE_ACIA)
 #define SSE_ACIA_MIDI_TIMING1 //check
@@ -1229,10 +1180,8 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif//ym2149
 
-#endif//360
 
-
-#if SSE_VERSION>=361
+//361
 
 #if defined(SSE_ACIA)
 #define SSE_ACIA_IRQ_DELAY2// back to this approach (hack)
@@ -1338,10 +1287,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_BORDERS_LB_DX1 // check border on/off
 #endif
 
-#endif//361
 
-
-#if SSE_VERSION>=362
+//362
 
 #if defined(SSE_FLOPPY) && defined(SSE_DMA)
 #define SSE_DMA_FDC_READ_HIGH_BYTE
@@ -1352,10 +1299,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_POWERON2 // undef 3.6.3 :)
 #endif
 
-#endif//362
-
-
-#if SSE_VERSION>=363
+//363
 
 #if defined(SSE_FLOPPY) && defined(SSE_DMA)
 #undef SSE_DMA_FDC_READ_HIGH_BYTE //def 3.6.2
@@ -1387,10 +1331,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_FREEIMAGE3 //remove WBMP
 #endif//vid
 
-#endif//363
 
-
-#if SSE_VERSION>=364
+//363
 
 #if defined(SSE_CPU)
 
@@ -1470,16 +1412,11 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif//vid
 
-#endif//364
-
-
 
 //////////
 // v3.7 //
 //////////
 
- 
-#if SSE_VERSION>=370
 
 #if _MSC_VER >= 1500 
 #define SSE_VS2008_WARNING_370
@@ -2003,10 +1940,8 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif//ym
 
-#endif//v3.7.0
 
-
-#if SSE_VERSION>=371
+//371
 
 #if _MSC_VER >= 1500 
 #define SSE_VS2008_WARNING_371
@@ -2075,10 +2010,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_INFOBOX17 //mousewheel on links
 #endif
 
-#endif//371
 
-
-#if SSE_VERSION>=372
+//372
 
 #if defined(SSE_CPU)
 #define SSE_CPU_256MHZ
@@ -2148,10 +2081,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_WD1772_372 // bugfix write MFM word with missing clock bit on data!
 #endif
 
-#endif//372
 
-
-#if SSE_VERSION>=373
+//373
 
 #ifdef SSE_ACIA
 #define SSE_ACIA_OVR_TIMING // Snork/Defulloir
@@ -2210,16 +2141,11 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_EXT_FS2 // max screen
 #endif
 
-#endif//373
-
-
 
 //////////
 // v3.8 //
 //////////
 
- 
-#if SSE_VERSION>=380
 
 #if defined(SSE_HARDDISK) && defined(SSE_DMA)
 #define SSE_ACSI //3.8.0 new feature
@@ -2491,10 +2417,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_YM2149_ENV_DEPHASING //undef v3.8.1
 #endif
 
-#endif//380
 
-
-#if SSE_VERSION>=381
+//381
 
 #if defined(SSE_ACSI)
 #define SSE_ACSI_ICON2 // more space for the ACSI icon in initial disk manager
@@ -2572,10 +2496,8 @@ Beta: not SSE_PRIVATE_BUILD
 #undef SSE_YM2149_ENV_DEPHASING // don't understand, it sounds like we shouldn't?
 #endif
 
-#endif//381
 
-
-#if SSE_VERSION>=382
+//382
 
 #if _MSC_VER >= 1500 
 #define SSE_VS2008_WARNING_382
@@ -2668,7 +2590,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_YM2149_QUANTIZE_382
 #endif
 
-#endif//382
+
 
 
 ///////////
@@ -2753,9 +2675,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BOILER_MONITOR_372 // v3.7.2 to clarify code
 #endif
 #define SSE_BOILER_MONITOR_IO_FIX1 // ? word check, not 2x byte on word access
-#if SSE_VERSION>=370
 #define SSE_BOILER_MONITOR_RANGE // will stop for every address between 2 stops
-#endif
 #define SSE_BOILER_MONITOR_TRACE // v3.7.2 mode log also in TRACE (duh!)
 #define SSE_BOILER_MONITOR_VALUE // specify value (RW) that triggers stop
 #define SSE_BOILER_MONITOR_VALUE2 // write before check
