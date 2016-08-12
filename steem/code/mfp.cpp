@@ -1434,8 +1434,8 @@ void mfp_interrupt(int irq,int when_fired)
             mfp_time_of_start_of_last_interrupt[irq]=ABSOLUTE_CPU_TIME; 
 #ifdef SSE_DEBUG // trace, osd, frame report
 #if defined(SSE_BOILER_FRAME_REPORT_MASK)
-          if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_MFP)
-            FrameEvents.Add(scan_y,LINECYCLES,'I',0x70+irq);
+//          if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_MFP)
+  //          FrameEvents.Add(scan_y,LINECYCLES,'I',0x70+irq);
 #endif
 #if defined(SSE_DEBUG)//tmp
           TRACE_LOG("%d %d %d (%d) PC %X IRQ %d VEC %X ",TIMING_INFO,ACT,old_pc,irq,LPEEK(vector));

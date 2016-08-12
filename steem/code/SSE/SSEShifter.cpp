@@ -3152,10 +3152,7 @@ void TShifter::Reset(bool Cold) {
 #endif
 
 #if defined(SSE_SHIFTER_UNSTABLE)
-#if SSE_VERSION==352
-  if(Cold)  
-#endif
-    Preload=0;
+  Preload=0;
 #endif
 }
 

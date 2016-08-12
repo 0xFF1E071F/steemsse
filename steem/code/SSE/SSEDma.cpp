@@ -39,21 +39,6 @@
 #include <harddiskman.decla.h>
 #endif
 
-#if SSE_VERSION<351
-#define DMA_INC_ADDRESS                                    \
-  if (dma_sector_count){                                   \
-    dma_address++;                                         \
-    dma_bytes_written_for_sector_count++;                  \
-    if (dma_bytes_written_for_sector_count>=512){        \
-      dma_bytes_written_for_sector_count=0;              \
-      dma_sector_count--;                                  \
-      dma_status|=BIT_1;  /* DMA sector count not 0 */   \
-      if (dma_sector_count==0) dma_status&=~BIT_1;     \
-    }                                                      \
-  }
-#endif
-
-
 #if defined(SSE_DMA_OBJECT)
 
 TDma::TDma() {
@@ -564,7 +549,7 @@ TODO?
 #endif
 
 
-#if defined(SSE_BOILER_TRACE_CONTROL) && SSE_VERSION>370
+#if defined(SSE_BOILER_TRACE_CONTROL)
   if(TRACE_MASK3 & TRACE_CONTROL_FDCDMA)
     TRACE_FDC("PC %X DMA R %X %X\n",old_pc,addr,ior_byte);
 #endif
@@ -577,7 +562,7 @@ void TDma::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
 
   ASSERT( (addr&0xFFFF00)==0xFF8600 );
 
-#if defined(SSE_BOILER_TRACE_CONTROL) && SSE_VERSION>370
+#if defined(SSE_BOILER_TRACE_CONTROL)
   if(TRACE_MASK3 & TRACE_CONTROL_FDCDMA)
     TRACE_FDC("PC %X DMA W %X %X\n",old_pc,addr,io_src_b);
 #endif
@@ -1191,7 +1176,7 @@ void TDma::TransferBytes() {
   if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
     TRACE_FDC("\n");
 #endif
-#if defined(SSE_BOILER) && SSE_VERSION>=372
+#if defined(SSE_BOILER)
   for(int i=0;i<8;i++) // for Boiler monitor, intercept DMA traffic
   {
     if(!(MCR&0x100)&& DMA_ADDRESS_IS_VALID_W) // disk -> RAM

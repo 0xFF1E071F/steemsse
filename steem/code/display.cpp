@@ -604,7 +604,7 @@ HRESULT SteemDisplay::DDCreateSurfaces()
 
   draw_init_resdependent();
   palette_prepare(true);
-#if defined(SSE_DEBUG) && SSE_VERSION>353 && defined(SSE_VIDEO)
+#if defined(SSE_DEBUG) && defined(SSE_VIDEO)
   TRACE_INIT("DD %s Primary %dx%d caps %X flags %X %dhz\n",(FullScreen?"fullscreen":"window"),PrimaryFeedback.dwWidth,PrimaryFeedback.dwHeight,PrimaryFeedback.ddsCaps,PrimaryFeedback.dwFlags,PrimaryFeedback.dwRefreshRate);
   TRACE_INIT("DD Back surface %dx%d %dbit flags %X caps %X triple %d %dhz\n",DDBackSurDesc.dwWidth,DDBackSurDesc.dwHeight,DDBackSurDesc.ddpfPixelFormat.dwRGBBitCount,DDBackSurDesc.dwFlags,DDBackSurDesc.ddsCaps,(bool)DDBackSur2,DDBackSurDesc.dwRefreshRate);
   TRACE_INIT("Source (%d,%d,%d,%d)\n",draw_blit_source_rect.left,draw_blit_source_rect.top,draw_blit_source_rect.right,draw_blit_source_rect.bottom);

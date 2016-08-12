@@ -179,9 +179,6 @@ struct TShifter {
 #if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
   int TrickExecuted; //make sure that each trick will only be applied once
 #endif
-#if defined(SSE_DEBUG) && SSE_VERSION<380
-  int nVbl;
-#endif
 #if defined(SSE_SHIFTER_UNSTABLE)
   BYTE Preload; // #words into Shifter's RR (shifts display)
 #endif
@@ -200,7 +197,7 @@ struct TShifter {
 #if defined(SSE_SHIFTER_HSCROLL_380)
   BYTE hscroll0; // what is/was HSCROLL at start of line
 #endif
-#if defined(SSE_DEBUG) && SSE_VERSION>=380
+#if defined(SSE_DEBUG)
   int nVbl;
 #endif
 };

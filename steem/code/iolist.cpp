@@ -332,20 +332,11 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
 
 #if defined(SSE_BOILER_TRACE_CONTROL)
   iolist_add_entry(FAKE_IO_START+12,"TRACE Shifter",2,
-#if SSE_VERSION>=380 //+there was a bug
     "vert|1line|vbl|off|adj|0byte|.|.|.|.|.|.|.|.|.|.");
-#else
-    "vert|1line|vbl|adj|.|.|.|.|.|.|.|.|.|.|.|.");
-#endif
   iolist_add_entry(FAKE_IO_START+14,"TRACE irq",2,
     "E|rte|evt|.|.|.|.|.|.|.|.|.|.|.|.|.");
-#if SSE_VERSION>370
   iolist_add_entry(FAKE_IO_START+16,"TRACE floppy",2,
     "str|data|psg|reg|mfm|dma|.|.|.|.|.|.|.|.|.|.");
-#else
-  iolist_add_entry(FAKE_IO_START+16,"TRACE floppy",2,
-    "str|bytes|psg|reg|ipf1|ipf2|.|.|.|.|.|.|.|.|.|.");
-#endif
 #endif
 
 #if defined(SSE_BOILER_VIDEO_CONTROL)
@@ -374,7 +365,7 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
 
 #endif
 
-#if defined(SSE_BOILER_TRACE_CONTROL) && SSE_VERSION>=380
+#if defined(SSE_BOILER_TRACE_CONTROL)
   iolist_add_entry(FAKE_IO_START+28,"TRACE Shifter2",2,
     "+2|VC|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
 #endif

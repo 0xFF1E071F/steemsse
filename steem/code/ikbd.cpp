@@ -544,49 +544,6 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
 #endif
 
 #if defined(SSE_IKBD_6301)
-#if SSE_VERSION<=350//ver?
-
-  if(OPTION_C1)
-  {
-//    TRACE_LOG("IKBD Finished transmitting byte %X to 6301 emu (act %d after %d cycles)\n",src,ABSOLUTE_CPU_TIME,ABSOLUTE_CPU_TIME-ACIA_IKBD.last_tx_write_time);
-    hd6301_receiving_from_MC6850=0; // line is free
-#if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
-    if(ACIA_IKBD.tx_flag) // but if there's another one waiting
-    {
-      hd6301_receiving_from_MC6850=1; // line is busy
-      ACIA_IKBD.tx_flag=0; // register is free
-      // agenda byte to serialise (it's in the shift register)
-      // 6301 can't receive it at once, so we need no extra variable
-      agenda_add(agenda_ikbd_process,HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL,
-        ACIA_IKBD.data_tdr);
-#if defined(SSE_IKBD_TRACE_IO)
-      TRACE_LOG("%d PC %X IKBD TX shift %X\n",ABSOLUTE_CPU_TIME,pc,ACIA_IKBD.data_tdr);
-#endif
-    }
-#endif
-
-    if(!HD6301.Crashed) 
-    {
-      ASSERT(!HD6301.RunThisHbl); // may assert
-      hd6301_receive_byte(src);// send byte to 6301 emu
-      // run some cycles now to maybe avoid sync problems (may be useless)
-#if defined(SSE_SHIFTER)
-      int n6301cycles=Shifter.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
-#else
-      int n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
-#endif
-      if(hd6301_run_cycles(n6301cycles)==-1)
-      {
-        TRACE_LOG("6301 emu is hopelessly crashed!\n");
-        HD6301.Crashed=1; 
-      }
-      HD6301.RunThisHbl=1; // stupid signal
-      return; // that's it for Steem, the rest is handled by the program in ROM
-    }
-  }
-
-#else // current version
-
   if(OPTION_C1  && !HD6301.Crashed)
   {
     ACIA_IKBD.SR|=BIT_1; // TDRE
@@ -623,7 +580,6 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
     // That's it for Steem, the rest is handled by the program in ROM!
     return; 
   }//if
-#endif//ver?
 #endif//6301
 
   ikbd.send_nothing=0;  // This should only happen if valid command is received!
@@ -1449,21 +1405,6 @@ or FIRE BUTTON MONITORING mode.
 //---------------------------------------------------------------------------
 void agenda_keyboard_replace(int) {
 
-#if defined(SSE_ACIA_IRQ_DELAY) && SSE_VERSION<=350
-
-  if(keyboard_buffer_length)
-  {
-    if(!ikbd.send_nothing) 
-      ACIA_IKBD.rx_stage=1; // actual work done later
-    else // we retry later, repairs Cobra Compil 1 
-    {
-      TRACE_LOG("IKBD Input delayed...\n");
-      agenda_add(agenda_keyboard_replace,HD6301_TO_ACIA_IN_HBL,0);
-    }
-  }
-
-#else//!ver
-
 #if defined(SSE_IKBD_6301)
   if(OPTION_C1) 
   {
@@ -1598,7 +1539,7 @@ void agenda_keyboard_replace(int) {
     if (keyboard_buffer_length) agenda_add(agenda_keyboard_replace,ACIAClockToHBLS(ACIA_IKBD.clock_divide),0);
   }
   if (macro_start_after_ikbd_read_count) macro_start_after_ikbd_read_count--;
-#endif//ver?
+
 }
 
 
@@ -1617,49 +1558,6 @@ void keyboard_buffer_write_n_record(BYTE src)
 */
 
 void keyboard_buffer_write(BYTE src) {
-
-#if SSE_VERSION<=350
-  // This function handles all output of the 6301 in fake emulation
-#if defined(SS_IKBD_6301)
-  ASSERT(!OPTION_C1);
-#endif
-#if defined(SSE_ACIA_IRQ_DELAY)
-  ikbd.timer_when_keyboard_info=ABSOLUTE_CPU_TIME; // record exact timing
-#endif
-
-  if(keyboard_buffer_length<MAX_KEYBOARD_BUFFER_SIZE)
-  {
-    // If there's already info in the buffer, an agenda was already prepared
-    if(keyboard_buffer_length)
-      memmove(keyboard_buffer+1,keyboard_buffer,keyboard_buffer_length); // shift
-    else
-    {
-      // Prepare agenda - there's a delay
-#if defined(SSE_ACIA_IRQ_DELAY)
-      if(!keyboard_buffer_length && screen_res<2)
-        agenda_add(agenda_keyboard_replace,HD6301_TO_ACIA_IN_HBL,0);
-      else
-#endif
-        agenda_add(agenda_keyboard_replace,ACIAClockToHBLS(ACIA_IKBD.clock_divide),0);
-    }
-    // put info in buffer
-    keyboard_buffer_length++;
-    keyboard_buffer[0]=src;
-    TRACE_LOG("PC %X IKBD +%X(%d)\n",pc,src,keyboard_buffer_length);
-
-    dbg_log(EasyStr("IKBD: Wrote $")+HEXSl(src,2)+" keyboard buffer length="+keyboard_buffer_length);
-    if(ikbd.joy_packet_pos>=0) 
-      ikbd.joy_packet_pos++;
-    if(ikbd.mouse_packet_pos>=0) 
-      ikbd.mouse_packet_pos++;
-  }
-  else
-  {
-    dbg_log("IKBD: Keyboard buffer overflow");
-    TRACE_LOG("IKBD: Keyboard buffer overflow\n");
-  }
-
-#else//!ver
 
 #if defined(SSE_IKBD_6301)
   if(OPTION_C1)
@@ -1735,7 +1633,6 @@ void keyboard_buffer_write(BYTE src) {
   }else{
     dbg_log("IKBD: Keyboard buffer overflow");
   }
-#endif//ver?
 }
 
 
@@ -1885,9 +1782,7 @@ void ikbd_set_clock_to_correct_time()
 
 void ikbd_reset(bool Cold)
 {
-#if SSE_VERSION>350
   ASSERT( Cold || !OPTION_C1 );// !!! always //check this
-#endif
   agenda_delete(agenda_keyboard_reset);
 #if defined(SSE_ACIA_IRQ_DELAY)
   ikbd.timer_when_keyboard_info=0;
@@ -1901,10 +1796,6 @@ void ikbd_reset(bool Cold)
       TRACE_LOG("6301 reset ikbd.cpp part\n");
       HD6301.Crashed=0;
       ikbd.mouse_upside_down=false;
-#if SSE_VERSION<=350
-      hd6301_reset(Cold);
-      keyboard_buffer_length=0;
-#endif
 #ifdef SSE_IKBD_6301_EVENT
       HD6301.LineRxFreeTime=HD6301.LineTxFreeTime=0;
 #endif
@@ -1970,7 +1861,7 @@ void agenda_keyboard_reset(int SendF0) // SS scheduled by ikbd_reset()
   }else{
     dbg_log(EasyStr("IKBD: Finished reset at ")+hbl_count);
 
-#if defined(SSE_IKBD_6301) && SSE_VERSION>=351
+#if defined(SSE_IKBD_6301)
     if(OPTION_C1) // shouldn't we leave at once?
     {
 #if defined(SSE_IKBD_6301_IKBDI)

@@ -186,7 +186,7 @@ compatible only with the STF"));
   CBAddString(Win,"2.5 MB",MAKELONG(MEMCONF_512,MEMCONF_2MB));
 #endif
   CBAddString(Win,"4 MB",MAKELONG(MEMCONF_2MB,MEMCONF_2MB));
-#if SSE_VERSION>=380
+#ifdef  SSE_BUILD
   CBAddString(Win,"14 MB (hack)",MAKELONG(MEMCONF_7MB,MEMCONF_7MB));
 #else  
   CBAddString(Win,"14 MB",MAKELONG(MEMCONF_7MB,MEMCONF_7MB));
@@ -259,19 +259,11 @@ compatible only with the STF"));
   y+=40;
 
 
-#if defined(SSE_STF) \
-  && defined(SSE_GUI_OPTIONS_STF_IN_MACHINE)
-#if SSE_VERSION>=380
+#if defined(SSE_STF) && defined(SSE_GUI_OPTIONS_STF_IN_MACHINE)
   WIDTHHEIGHT wh=GetTextSize(Font,T("Memory and monitor changes don't take effect until the next cold reset of the ST"));
   if (wh.Width>=page_w) wh.Height=(wh.Height+1)*2;
   CreateWindow("Static",T("Memory and monitor changes don't take effect until the next cold reset of the ST"),
         WS_CHILD,page_l,y,page_w,wh.Height,Handle,HMENU(8600),HInstance,NULL);
-#else
-  WIDTHHEIGHT wh=GetTextSize(Font,T("ST model, memory and monitor changes don't take effect until the next cold reset of the ST"));
-  if (wh.Width>=page_w) wh.Height=(wh.Height+1)*2;
-  CreateWindow("Static",T("ST model, memory and monitor changes don't take effect until the next cold reset of the ST"),
-        WS_CHILD,page_l,y,page_w,wh.Height,Handle,HMENU(8600),HInstance,NULL);
-#endif
 #else
   WIDTHHEIGHT wh=GetTextSize(Font,T("Memory and monitor changes don't take effect until the next cold reset of the ST"));
   if (wh.Width>=page_w) wh.Height=(wh.Height+1)*2;
@@ -1102,12 +1094,7 @@ void TOptionBox::CreateDisplayPage()
 #endif
 #endif
   SendMessage(BorderSizeOption,CB_SETCURSEL,DISPLAY_SIZE,0);
-  ToolAddWindow(ToolTip,Win,
-#if SSE_VERSION>=370
-    T("Changes the border sizes"));
-#else
-    T("Some border effects (demos) will look better in one of the sizes, it really depends on the program, generally smallest is fine for games."));
-#endif
+  ToolAddWindow(ToolTip,Win,T("Changes the border sizes"));
   y+=30;//LineHeight;
 #endif
 
@@ -2083,36 +2070,23 @@ void TOptionBox::CreateSoundPage()
 #if !(defined(SSE_VS2008_WARNING_382) && defined(SOUND_DISABLE_INTERNAL_SPEAKER))
   DWORD DisableIfNT=DWORD(WinNT ? WS_DISABLED:0);
 #endif
-#if defined(STEVEN_SEAGAL______) && defined(SSE_SOUND_FILTER_STF) && SSE_VERSION>=370
-  Wid=GetTextSize(Font,T("Output type (filter)")).Width;
-  CreateWindow("Static",T("Output type (filter)"),WS_CHILD | DisableIfNoSound,
-                  page_l,y+4,Wid,23,Handle,(HMENU)7049,HInstance,NULL);
-#else
   Wid=GetTextSize(Font,T("Output type")).Width;
   CreateWindow("Static",T("Output type"),WS_CHILD | DisableIfNoSound,
                   page_l,y+4,Wid,23,Handle,(HMENU)7049,HInstance,NULL);
-#endif
   Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP |
                   DisableIfNoSound | CBS_DROPDOWNLIST,
                   page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)7099,HInstance,NULL),
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("None (Mute)"));
 #if defined(SSE_SOUND_FILTER_STF)
-#if SSE_VERSION>=370
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("No filter"));
-#endif
-#if SSE_VERSION>=370
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Filter 'coaxial' (Steem original)"));
-#else
-  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Monitor Speaker"));
-#endif
 #else
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Simulated ST Speaker"));
 #endif
 #if defined(SSE_SOUND_FILTER_STF5)
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Filter 'SCART'"));
 #endif
-#if SSE_VERSION>=370
-//  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("No filter"));
+#if defined(SSE_SOUND_FILTER_STF)
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Filter 'coaxial' tunes only"));
 #else
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Direct"));
@@ -2120,22 +2094,16 @@ void TOptionBox::CreateSoundPage()
 #endif
 #if defined(SSE_SOUND_FILTER_STF5)
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Filter 'coaxial' samples only"));
-//  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Monitor Speaker"));
 #endif
 #if defined(SSE_SOUND_FILTER_HATARI)
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Filter 'Hatari'"));
-//  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Monitor Speaker"));
 #endif
   SendMessage(Win,CB_SETCURSEL,sound_mode,0);
 
 
 #if defined(SSE_YM2149_FIX_TABLES) && defined(SSE_GUI_OPTIONS_SOUND3)
   y+=LineHeight;
-#if SSE_VERSION>=370
   Wid=GetCheckBoxSize(Font,T("Sampled YM-2149")).Width;
-#else
-  Wid=GetCheckBoxSize(Font,T("P.S.G.")).Width;
-#endif
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
 #if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
 #if defined(SSE_VAR_OPT_382)
@@ -2152,13 +2120,8 @@ void TOptionBox::CreateSoundPage()
     mask|=WS_DISABLED;
 #endif
 #endif
-#if SSE_VERSION>=370
   Win=CreateWindow("Button",T("Sampled YM-2149"),mask,
     page_l+HorizontalSeparation,y,Wid,25,Handle,(HMENU)7311,HInstance,NULL);
-#else
-  Win=CreateWindow("Button",T("P.S.G."),mask,
-    page_l,y,Wid,25,Handle,(HMENU)7311,HInstance,NULL);
-#endif
   SendMessage(Win,BM_SETCHECK,SSEOption.PSGMod,0);
   ToolAddWindow(ToolTip,Win,
 #if defined(SSE_YM2149_NO_SAMPLES_OPTION)
@@ -2201,15 +2164,6 @@ void TOptionBox::CreateSoundPage()
   BOOL keyboard_click=( PEEK(0x484)&1 ); // get current setting
   SendMessage(Win,BM_SETCHECK,keyboard_click,0);
 #endif
-#if SSE_VERSION<382 // changed on release day
-  ToolAddWindow(ToolTip,Win,
-#if SSE_VERSION>=370
-    T("When you're annoyed by those clicks, uncheck this option\
- (you must do it each time)"));
-#else
-    T("This gives you direct access to bit1 of address $484, which enables or disables the annoying keyboard click (in TOS/GEM programs only)."));
-#endif
-#endif//382
   y+=LineHeight;
 #endif  
 
@@ -2509,7 +2463,7 @@ void TOptionBox::CreateStartupPage()
   Wid=GetCheckBoxSize(Font,T("Never use Direct3D")).Width;
   Win=CreateWindow("Button",T("Never use Direct3D"),WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX,
                           page_l,y,Wid,23,Handle,(HMENU)3300,HInstance,NULL);
-#elif defined(SSE_VID_D3D) && SSE_VERSION>=382
+#elif defined(SSE_VID_D3D)
   Wid=GetCheckBoxSize(Font,T("Never use DirectDraw or Direct3D")).Width;
   Win=CreateWindow("Button",T("Never use DirectDraw  or Direct3D"),WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX,
                           page_l,y,Wid,23,Handle,(HMENU)3300,HInstance,NULL);
@@ -2926,16 +2880,10 @@ void TOptionBox::CreateSSEPage() {
   EasyStr tip_text;
 
   // Title
-#if SSE_VERSION>=370
   Wid=get_text_width("Steem SSE Extra Options\n==============================")/2;
   CreateWindow("Static","Steem SSE Extra Options\n==============================",WS_CHILD,
     page_l,y,Wid,21,Handle,(HMENU)209,HInstance,NULL);
 
-#else
-  Wid=get_text_width("Steem SSE Options\n=================")/2;
-  CreateWindow("Static","Steem SSE Options\n================",WS_CHILD,
-    page_l,y,Wid,21,Handle,(HMENU)209,HInstance,NULL);
-#endif
 #if defined(SSE_GUI_OPTION_FOR_TESTS)
   Offset=Wid+HorizontalSeparation;
   Wid=GetCheckBoxSize(Font,T("Beta tests")).Width;
@@ -3106,29 +3054,6 @@ Windows 2000	5.0
 */
   y-=LineHeight;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
-  OSVERSIONINFO osver;
-#if !defined(SSE_GUI_OPTIONS_DONT_MENTION_WINDOW_COMPOSITING)
-  char add_tip[sizeof(" Incompatible with Window Compositing of Windows 8.")]="";
-#endif
-  osver.dwOSVersionInfoSize = sizeof(osver);
-  if (GetVersionEx(&osver) && osver.dwPlatformId>=2 && osver.dwMajorVersion>=6)
-  {
-#if SSE_VERSION<380 // vsync can work on a Win 8 system...
-    if(osver.dwMinorVersion>=2) //Win 8
-    {
-      //TODO don't even display option?
-#if !defined(SSE_GUI_OPTIONS_DONT_MENTION_WINDOW_COMPOSITING)
-      strcpy(add_tip," Incompatible with Window Compositing of Windows 8.");
-#endif
-      mask|=WS_DISABLED;
-      SSE_WIN_VSYNC=SSE_3BUFFER=0;
-    }
-#if !defined(SSE_GUI_OPTIONS_DONT_MENTION_WINDOW_COMPOSITING)
-    else // vista+Win7
-      strcpy(add_tip," Don't use together with Window Compositing.");
-#endif
-#endif
-  }
 #endif
 
 #if defined(SSE_VID_VSYNC_WINDOW)
@@ -3137,13 +3062,7 @@ Windows 2000	5.0
   Win=CreateWindow("Button",T("VSync"), mask,
                page_l +Offset,y,Wid,25,Handle,(HMENU)1033,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,SSE_WIN_VSYNC,0);
-#if SSE_VERSION>=382
   tip_text=T("Works with windows and fullscreen, but if your monitor refresh rate is wrong, emulation speed will change!");
-#elif SSE_VERSION>=370
-  tip_text=T("Works with windows and fullscreen on XP but you need the correct frequency on your monitor.");
-#else
-  tip_text=T("Works with windows and fullscreen but you need the correct frequency on your monitor.");
-#endif
 #if !defined(SSE_GUI_OPTIONS_DONT_MENTION_WINDOW_COMPOSITING)
   tip_text+=add_tip;
 #endif
@@ -3237,18 +3156,7 @@ Windows 2000	5.0
 #endif
 
 #if defined(SSE_IKBD_6301) 
-
-#if !defined(SSE_GUI_OPTIONS_STF_IN_MACHINE) 
-//  y+=LineHeight;
-#endif
-
-#if SSE_VERSION>=370
   Wid=GetCheckBoxSize(Font,T("C1: 6850/6301/MIDI/E-Clock")).Width;
-#elif SSE_VERSION>=364
-  Wid=GetCheckBoxSize(Font,T("6301/ACIA")).Width;
-#else
-  Wid=GetCheckBoxSize(Font,T("6301 true emu")).Width;
-#endif
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
   if(!HD6301_OK)
   {
@@ -3263,31 +3171,17 @@ Windows 2000	5.0
   }
 #endif
 
-#if SSE_VERSION>=370
   Win=CreateWindow("Button",T("C1: 6850/6301/MIDI/E-Clock"),mask,page_l,y,Wid,23,Handle,
     (HMENU)1029,HInstance,NULL);
-#elif SSE_VERSION>=364
-  Win=CreateWindow("Button",T("6301/ACIA"),mask,page_l,y,Wid,23,Handle,
-    (HMENU)1029,HInstance,NULL);
-#else
-  Win=CreateWindow("Button",T("6301 true emu"),mask,page_l,y,Wid,23,Handle,
-    (HMENU)1029,HInstance,NULL);
-#endif
 
   if(!HD6301_OK)
     SendMessage(Win,BN_DISABLE,0,0);
   else
     SendMessage(Win,BM_SETCHECK,OPTION_C1,0);
   ToolAddWindow(ToolTip,Win,
-#if SSE_VERSION>=370
   T("Chipset 1 - This enables a low level emulation of the IKBD keyboard chip (using\
  the Sim6xxx code by Arne Riiber, thx dude!), precise E-Clock, as well as ACIA and MIDI \
  improvements or bugs"));
-#else
-  T("This enables a low level emulation of the IKBD keyboard chip (using\
- the Sim6xxx code by Arne Riiber, thx dude!) as well as ACIA and MIDI \
- improvements or bugs"));
-#endif
   y+=LineHeight;
 #endif
 
@@ -3571,18 +3465,9 @@ Windows 2000	5.0
     T("BETA TESTS - BUGGY"));
   y+=LineHeight;
 #endif
-  
-
-
-
-
 #if defined(SSE_INT_MFP_RATIO_OPTION) // user can fine tune CPU clock
   Wid=GetCheckBoxSize(Font,T("Fine tune CPU clock")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
-#if SSE_VERSION<382//probably copy/paste
-  if(!hPasti)
-    mask|=WS_DISABLED;
-#endif
   Win=CreateWindow("Button",T("Fine tune CPU clock"),mask,
     page_l+Offset,y,Wid,25,Handle,(HMENU)7322,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_CPU_CLOCK,0);
@@ -3606,16 +3491,8 @@ Windows 2000	5.0
 
 #endif
 
-#if SSE_VERSION>=370
-  if(y<300)
+  if(y<300)//?
     y=300;
-#endif
-
-
-#if SSE_VERSION<370//all's been moved
-  CreateWindow("Button",T("Perform cold reset now"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
-                  page_l,y,page_w,23,Handle,(HMENU)8601,HInstance,NULL);
-#endif
 
 #if defined(SSE_GUI_OPTIONS_SSE_ICON_VERSION) // fancy
   y+=LineHeight+LineHeight;

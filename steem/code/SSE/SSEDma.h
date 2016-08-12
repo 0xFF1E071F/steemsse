@@ -2,7 +2,7 @@
 #ifndef SSEDMA_H
 #define SSEDMA_H
 
-
+#include "SSE.h"
 #if defined(SSE_DMA_OBJECT)
 
 //   Steem original variables are defined as the new ones.
@@ -80,17 +80,9 @@ struct TDma {
 */
   void RequestTransfer();
   void TransferBytes();
-#if SSE_VERSION>=370
   unsigned int Request:1;//even so it works, no need for a nested struct
   unsigned int BufferInUse:1;
   unsigned int Fifo_idx:5; //5 bits, must reach 16!
-#else
-  bool Request;
-  BYTE Fifo_idx;
-#if defined(SSE_DMA_DOUBLE_FIFO)
-  bool BufferInUse; 
-#endif
-#endif
 #if defined(SSE_DMA_DOUBLE_FIFO)
 /*
 "Internally the DMA has two 16 bytes FIFOs that are used alternatively. 
@@ -103,9 +95,6 @@ This feature is emulated in Steem if SSE_DMA_DOUBLE_FIFO is defined, but it
 hasn't proved necessary yet.
 TODO: maybe use the feature and remove #define to make code more readable?
 */
-#if SSE_VERSION<370
-//  bool BufferInUse; 
-#endif
   BYTE Fifo[2][16
 #if defined(SSE_DMA_FIFO_READ_ADDRESS) && !defined(SSE_DMA_FIFO_READ_ADDRESS2)
     +4 // see fdc.h, replaces fdc_read_address_buffer[20]//review this!
@@ -151,8 +140,6 @@ heavy. It was a test.
 
 };
 
-#endif//dma
-
-
+#endif//dma object
 
 #endif//SSEDMA_H

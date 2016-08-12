@@ -618,8 +618,7 @@ void TGeneralInfo::CreateReadmePage(int p)
 #if defined(SSE_GUI_INFOBOX15)
     case INFOPAGE_README_SSE: TextFile+=WINDOW_TITLE; TextFile+=EXT_TXT; break;
 #endif
-#if (SSE_VERSION>=370 && defined(SSE_GUI_INFOBOX7))\
-    || (SSE_VERSION<370 && defined(SSE_GUI_INFOBOX2))
+#if defined(SSE_GUI_INFOBOX7)
     case INFOPAGE_HINTS: TextFile+=STEEM_HINTS; TextFile+=EXT_TXT; break;
 #endif
 #if defined(SSE_GUI_INFOBOX9)

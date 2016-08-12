@@ -1,10 +1,9 @@
 // for v3.8.3
 #pragma once // VC guard
-#ifndef STEVEN_SEAGAL_H // BCC guard
-#define STEVEN_SEAGAL_H
+#ifndef SSE_H // BCC guard
+#define SSE_H
 
 /*
-
 Steem Steven Seagal Edition (SSE)
 ---------------------------------
 
@@ -15,38 +14,14 @@ SVN code repository is at:
 Homepage:
  http://ataristeven.exxoshost.co.uk/
 
-Added some files to the project. 
-- acia.decla.h, key_table.cpp in 'steem\code'.
--In folder 'steem\code\SSE', several files starting with 'SSE', including 
-this one.
--In folder 'steem\doc\SSE', some doc files (mainly done by me, but sometimes
-only by composing other docs)
--A folder '6301' in '3rdparty' for true emulation of the IKBD
--A folder 'avi' in '3rdparty' for recording video to AVI support
--A folder 'caps' in '3rdparty' for IPF/CTR disk image format support
--A folder 'caps_linux' in '3rdparty' for future (?) IPF disk image format 
-support
--A folder 'd3d' in '3rdparty' to compile the D3D9 parts with BCC
--A folder 'doc' in '3rdparty' for some doc files (done by others)
--A folder 'dsp' in '3rdparty' for bad Microwire emulation
--A file 'div68kCycleAccurate.c' in '3rdparty\pasti', to use the correct DIV 
-timings found by ijor (also author of Pasti).
--A folder 'SDL-WIN' for future (?) SDL support
--A folder 'unRARDLL' in '3rdparty' for unrar support
--A folder 'various' in '3rdparty'
--A folder 'ArchiveAccess' in '3rdparty' for 7z (and more) support
--A folder 'hfe' in '3rdparty' for HFE support
--Files xxx.decla.h to better separate declaration/implementation
+To enjoy the new features, you must define STEVEN_SEAGAL in the 
+project/makefile.
 
-Other mods are in Steem code, inside blocks where STEVEN_SEAGAL is defined.
-Many other defines are used to segment code. This is heavy but it makes 
-debugging a lot easier (real life-savers when something is broken).
+SSE_DEBUG, if needed, should also be defined in the project/makefile.
+It has an effect on both the boiler and the VS debug build.
 
-Switches are sorted by version, sometimes you must search a bit.
-
-To enjoy the new features, you must define STEVEN_SEAGAL!
-If not, you should get the last 3.2 build that compiles in VC6 (only
-thing changed is no update attempt).
+SSE.h is supposed to mainly be a collection of compiling switches (defines).
+It should include nothing and can be included everywhere.
 
 My inane comments outside of defined blocks generally are marked by 'SS:'
 They don't mean that I did something cool, only that I comment the source.
@@ -56,34 +31,15 @@ I removed nothing from the original source code or comments.
 Since v3.7, the main build is the VS2008 one (before, it was VC6).
 The BCC build is much used for development. Borland compiler is much faster
 than the Microsoft ones.
-The MinGW build is experimental.
-A Unix (gcc) version is also more or less maintained, with fewer features
-than the Windows versions.
-
-The VC6 build should be linked with the C++ library, don't count on system
-DLL or it will crash in Windows Vista & 7. 
-
-Since v3.7.3, the VS2008 build uses the DLL C++ library. It is so optimised
-that the EXE is smaller than original Steem 3.2 despite all the additions.
-
-Project files are included.
-    
-SSE.h is supposed to mainly be a collection of compiling switches (defines).
-It should include nothing and can be included everywhere.
-Normally switches are optional, but they also are useful just to mark
-code changes.
-
-SSE_DEBUG, if needed, should be defined in the project/makefile.
-It has an effect on both the boiler and the VS debug build.
-
-Some switches have been simplified since release. It's easy enough
-to separate them again for bug tracking.
-
+The MinGW build is experimental (did work at some point, but stopped following
+it).
+A Unix (gcc) version was also maintained, with fewer features than the Windows
+versions, last version released was v3.7.2.
+There's a working VS2015 build since v3.8.2.
+There's a x64 build since v3.8.2 (VS2008 or VS2015).
 */
 
-
 /*
-
 Important (note to self)
 
 Release: not SSE_BETA
@@ -92,7 +48,6 @@ Version for snapshot (in LoadSave.h) + Windows properties (rc\resource.rc)
 Rebuild so that dates are correct
 
 Beta: not SSE_PRIVATE_BUILD
-
 */
 
 #if defined(VC_BUILD) // so that v3.2+ compiles
@@ -117,6 +72,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VERSION 383 // versions down to 330 still compile
                         // full v330 not publicly available anymore
                         // for v32+, don't define STEVEN_SEAGAL
+
+/*do a search on SSE_VERSION, eliminate, then transfer into Parameters*/
 
 #if SSE_VERSION>382 //last release
 #define SSE_BETA //title, OSD, plus some testing - new features
@@ -266,6 +223,11 @@ Beta: not SSE_PRIVATE_BUILD
 
 //#define SSE_STRUCTURE_INFO // just telling cpp files included in modules
 #define SSE_STRUCTURE_DECLA // necessary for SSE build
+
+
+#define SSE_CPU_INLINE_SET_DEST_TO_ADDR
+#define SSE_CPU_INLINE_READ_FROM_ADDR
+
 
 #endif//structure
 
@@ -2791,7 +2753,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BOILER_MONITOR_372 // v3.7.2 to clarify code
 #endif
 #define SSE_BOILER_MONITOR_IO_FIX1 // ? word check, not 2x byte on word access
+#if SSE_VERSION>=370
 #define SSE_BOILER_MONITOR_RANGE // will stop for every address between 2 stops
+#endif
 #define SSE_BOILER_MONITOR_TRACE // v3.7.2 mode log also in TRACE (duh!)
 #define SSE_BOILER_MONITOR_VALUE // specify value (RW) that triggers stop
 #define SSE_BOILER_MONITOR_VALUE2 // write before check
@@ -3039,7 +3003,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_CPU_INLINE)
-#define SSE_CPU_INLINE_SET_DEST_TO_ADDR
+//#define SSE_CPU_INLINE_SET_DEST_TO_ADDR
 #endif
 
 #define SSE_DISK_CAPS_383
@@ -3142,4 +3106,4 @@ Beta: not SSE_PRIVATE_BUILD
 #include "SSEDecla.h" // still need to neutralise debug macros
 #endif//?SS
 
-#endif// #ifndef STEVEN_SEAGAL_H 
+#endif// #ifndef SSE_H 

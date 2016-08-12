@@ -234,8 +234,6 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 
 */
 
-
-
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_IKBD//SS
 
@@ -256,97 +254,8 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 
       case 0xfffc02:  // data //SS sending data to HD6301
 
-#if defined(SSE_ACIA) && SSE_VERSION<=350 // big block before refactoring...
-
-        TRACE_LOG("Write %X to IKBD's ACIA DR\n",io_src_b);
-        // no TX in the agenda?
-        if(agenda_get_queue_pos(agenda_acia_tx_delay_IKBD)<0)
-        {
-          if(ACIA_IKBD.tx_irq_enabled) // rare
-          {
-            ACIA_IKBD.irq=false;
-            mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,
-              !(ACIA_IKBD.irq || ACIA_MIDI.irq));
-          }
-
-#if defined(SSE_IKBD_6301) && defined(SSE_ACIA_DOUBLE_BUFFER_TX)
-          if(!OPTION_C1) // see agenda_ikbd_process()
-#endif
-            agenda_add(agenda_acia_tx_delay_IKBD,
-              IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESSE_ALT,0);
-        }
-
-#if defined(SSE_IKBD_6301)&& defined(SSE_ACIA_DOUBLE_BUFFER_TX)
-        // If the line is free, the byte in register will be sent very soon 
-        // and the TX bit cleared very soon (double buffer)
-        if(hd6301_receiving_from_MC6850||!OPTION_C1)  
-#endif
-          ACIA_IKBD.tx_flag=true;
 
 #if defined(SSE_IKBD_6301)
-        if(0);
-#else
-/*  "If send new byte before last one has finished being sent"
-    We keep this part for now, maybe Steem authors had info.
-    It's like ACIA wouldn't start shifting at once.
-    In the MC6850 doc, they mention "within one bit time".
-    7250 bit/s, 8000000 cycles/s
-    1bit = 1100 cycles, the ACIA_CYCLES_NEEDED_TO_START_TX (=512)
-    would be an average.
-    v3.5: disabled for true 6301 emu (Delirious 4 fake GEM)
-*/ 
-        if(abs(ABSOLUTE_CPU_TIME-ACIA_IKBD.last_tx_write_time)
-          <ACIA_CYCLES_NEEDED_TO_START_TX)//512
-        {
-          // replace old byte with new one
-          int n=agenda_get_queue_pos(agenda_ikbd_process);
-          if(n>=0)
-          {
-            log_to(LOGSECTION_IKBD,Str("IKBD: ")+HEXSl(old_pc,6)+" - Received new command before old one was sent, replacing "+
-              HEXSl(agenda[n].param,2)+" with "+HEXSl(io_src_b,2));
-            TRACE_LOG("IKBD replace byte %X with %X\n",agenda[n].param,io_src_b);
-            agenda[n].param=io_src_b;
-          }
-        }
-#endif
-
-#if defined(SSE_IKBD_6301) && defined(SSE_ACIA_DOUBLE_BUFFER_TX)
-        // ACIA to 6301 line busy: we'll place in agenda when the current byte
-        // is handled
-        else if(hd6301_receiving_from_MC6850) 
-        {
-#if defined(SSE_IKBD_TRACE_6301)
-          TRACE_LOG("%d PC %X IKBD write (shift delayed) %X\n",ACIA_IKBD.last_tx_write_time,pc,io_src_b);
-#endif
-          ACIA_IKBD.data_tdr=io_src_b;
-        }
-#endif
-        // line is free, or we don't care (6301+"fake")
-        else
-        {
-          ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
-#if defined(SSE_IKBD_TRACE_6301)
-          if(OPTION_C1)
-            TRACE_LOG("iow IKBD write %X (act %d PC %X tx%d)\n",io_src_b,ABSOLUTE_CPU_TIME,pc,ACIA_IKBD.tx_flag);
-#endif
-          // agenda the byte to process
-          agenda_add(agenda_ikbd_process,
-#if defined(SSE_IKBD_6301)
-            HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL,
-#else
-           IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESSE_ALT,
-#endif
-           io_src_b);
-        }
-
-#if defined(SSE_IKBD_6301)
-        if(OPTION_C1)
-          hd6301_receiving_from_MC6850=1; // line is busy
-#endif
-
-        break;
-
-#elif defined(SSE_IKBD_6301) //current version
 
 #if defined(SSE_ACIA_380)
         ACIA_IKBD.TDR=io_src_b;
@@ -550,33 +459,6 @@ system exclusive start and end messages (F0 and F7).
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_MIDI//SS
 
-
-#if SSE_VERSION<=350 // Steem 3.2 was untouched
-
-      case 0xfffc04:  //control
-        if ((io_src_b & 3)==3){ // Reset
-          log_to(LOGSECTION_IKBD,Str("MIDI: ")+HEXSl(old_pc,6)+" - ACIA reset");
-          ACIA_Reset(NUM_ACIA_MIDI,0);
-        }else{
-          ACIA_SetControl(NUM_ACIA_MIDI,io_src_b);
-        }
-        break;
-      case 0xfffc06:  //data
-      {
-        bool TXEmptyAgenda=(agenda_get_queue_pos(agenda_acia_tx_delay_MIDI)>=0);
-        if (TXEmptyAgenda==0){
-          if (ACIA_MIDI.tx_irq_enabled){
-            ACIA_MIDI.irq=false;
-            mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
-          }
-          agenda_add(agenda_acia_tx_delay_MIDI,2 /*ACIAClockToHBLS(ACIA_MIDI.clock_divide)*/,0);
-        }
-        ACIA_MIDI.tx_flag=true;  //flag for transmitting
-        MIDIPort.OutputByte(io_src_b);
-        break;
-      }
-
-#else
       case 0xfffc04:  //control
 
 #if defined(SSE_ACIA_REGISTERS)
@@ -668,7 +550,7 @@ system exclusive start and end messages (F0 and F7).
 #endif
         break;
       }
-#endif
+
     //-------------------------- unrecognised -------------------------------------------------
       default:
         break;  //all writes allowed

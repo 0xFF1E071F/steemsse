@@ -78,7 +78,7 @@ struct TMMU {
   inline bool WakeUpState2(); // for STF 
 #endif
 #if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
-#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA) || SSE_VERSION<383
+#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
   short SDPMiddleByte;
 #endif
 #if defined(SSE_VS2008_WARNING_382)

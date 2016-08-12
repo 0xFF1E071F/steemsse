@@ -445,7 +445,7 @@ static dr4_getb (offs)
     doesn't work right on real STE either. In Steem it will work when '6301'
     isn't checked so there's the real hack.
 */
-      if(SSE_HACKS_ON&&!(HD6301.MouseVblDeltaX||HD6301.MouseVblDeltaY))
+      if(OPTION_HACKS&&!(HD6301.MouseVblDeltaX||HD6301.MouseVblDeltaY))
       {
         mouse_x_counter=~MOUSE_MASK;
         mouse_y_counter=~MOUSE_MASK;
@@ -462,7 +462,7 @@ static dr4_getb (offs)
   if(!joy0mvt
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
   // if both are defined, Hacks makes the difference, for comparison (beta)
-    || !SSE_HACKS_ON
+    || !OPTION_HACKS
 #endif
     )
 #endif

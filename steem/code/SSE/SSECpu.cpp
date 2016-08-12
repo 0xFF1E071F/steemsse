@@ -2201,62 +2201,7 @@ void m68k_lpoke_abus2(LONG x){
 
 // E-clock
 
-#if defined(SSE_CPU_E_CLOCK) && SSE_VERSION==364 // another source error...
-
-#define LOGSECTION LOGSECTION_INTERRUPTS
-
-#ifdef SSE_CPU_E_CLOCK_DISPATCHER
-void TM68000::SyncEClock(int dispatcher) {
-#else
-void TM68000::SyncEClock() {
-#endif
-
-  // sync with E max once per instruction: Demoniak (?)
-  if(EClock_synced) 
-    return;
-  EClock_synced=true; 
- 
-  int act=ACT;
-
-#if defined(SSE_SHIFTER)&& defined(SSE_TIMINGS_FRAME_ADJUSTMENT)//no
-  act-=4*Shifter.n508lines; //legit hack: NOJITTER.PRG
-#endif
-
-  BYTE wait_states;
-  switch(abs(act%10)) {
-  case 0:
-    wait_states=8;
-#if defined(SSE_INT_HBL_E_CLOCK_HACK)
-    // pathetic hack for 3615GEN4 HMD #1, make it 4 cycles instead on HBI
-    // (suspect wrong timing in an instruction?)
-    if(!(dispatcher==TM68000::ECLOCK_HBL&&OPTION_HACKS))
-#endif
-    break;
-  case 2:
-  case 4: 
-    wait_states=4;
-    break;
-  default:
-    wait_states=0;
-  }//sw
-
-  InstructionTime(wait_states); 
-
-#if defined(SSE_DEBUG)
-  char* sdispatcher[]={"ACIA","HBL","VBL"};
-#if defined(SSE_DEBUG_FRAME_REPORT_MASK)
-  if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_ACIA)
-    FrameEvents.Add(scan_y,LINECYCLES,'E',wait_states);
-#endif
-  if(wait_states) 
-    TRACE_LOG("F%d y%d c%d %s E-Clock +%d\n",TIMING_INFO,sdispatcher[dispatcher],wait_states);
-#endif
-  
-}
-
-#undef LOGSECTION
-
-#elif defined(SSE_CPU_E_CLOCK)
+#if defined(SSE_CPU_E_CLOCK)
 /*  
 "Enable (E)
 This signal is the standard enable signal common to all M6800 Family peripheral

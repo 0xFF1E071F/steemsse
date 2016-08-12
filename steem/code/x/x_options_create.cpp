@@ -620,25 +620,20 @@ void TOptionBox::CreateSoundPage()
   sound_mode_dd.id=5001;
   sound_mode_dd.make_empty();
   sound_mode_dd.additem(T("None (Mute)"));
-#if SSE_VERSION>=370
+#if defined(SSE_BUILD)
   sound_mode_dd.additem(T("No filter"));
-
   const int LineHeight=30;
   const int HorizontalSeparation=10;
-
-
 #endif
-#if SSE_VERSION>=370
+#if defined(SSE_SOUND_FILTER_STF)
   sound_mode_dd.additem(T("Filter 'coaxial' (Steem original)"));
-#elif defined(SSE_SOUND_FILTER_STF)
-  sound_mode_dd.additem(T("Simulated Monitor Speaker"));
 #else
   sound_mode_dd.additem(T("Simulated ST Speaker"));
 #endif
 #if defined(SSE_SOUND_FILTER_STF5)
   sound_mode_dd.additem(T("Filter 'SCART'"));
 #endif
-#if SSE_VERSION>=370
+#if defined(SSE_SOUND_FILTER_STF)
   sound_mode_dd.additem(T("Filter 'coaxial' tunes only"));
 #else
   sound_mode_dd.additem(T("Direct"));
@@ -895,7 +890,7 @@ void TOptionBox::CreateDisplayPage()
 #endif
 #if defined(SSE_VID_DISABLE_AUTOBORDER)
   border_dd.changesel(min((int)border,1));
-#elif SSE_VERSION>=370
+#elif defined(SSE_BUILD)
   border_dd.changesel(min((int)border,2));
 #else
   border_dd.changesel(min(border,2));
@@ -1423,8 +1418,6 @@ void TOptionBox::CreateSSEPage() {
 #endif
 
 #if defined(SSE_IKBD_6301) 
-
-#if SSE_VERSION>=370
   hd6301emu_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("C1: 6850/6301/MIDI/E-Clock"),4006,BkCol);
   hd6301emu_but.set_check(OPTION_C1);
@@ -1433,15 +1426,6 @@ void TOptionBox::CreateSSEPage() {
  the Sim6xxx code by Arne Riiber, thx dude!), precise E-Clock, as well as ACIA and MIDI \
  improvements or bugs"),
     page_p);
-
-#else
-  hd6301emu_but.create(XD,page_p,page_l,y,0,25,
-    button_notify_proc,this,BT_CHECKBOX,T("6301 true emu"),4006,BkCol);
-  hd6301emu_but.set_check(OPTION_C1);
-  hints.add(hd6301emu_but.handle,
-  T("This enables a real emulation of the IKBD keyboard chip (using the Sim6xxx code by Arne Riiber, thx dude!)"),
-    page_p);
-#endif
   y+=LineHeight;
 #endif
 

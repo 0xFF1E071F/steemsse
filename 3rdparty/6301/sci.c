@@ -221,7 +221,7 @@ trcsr_putb (offs, value)
   {
     if((value & TIE)
 #if defined(SSE_IKBD_6301_380B)
-      && SSE_HACKS_ON // don't understand well
+      && OPTION_HACKS // don't understand well
 #endif
 #if defined(SSE_ACIA_DOUBLE_BUFFER_RX) && !defined(SSE_IKBD_6301_380B) // Defulloir
      &&!ACIA_IKBD.LineRxBusy
@@ -296,7 +296,7 @@ rdr_getb (offs)
       iram[TRCSR]&=~ORFE; // clear overrun bit
     }
 
-    rxinterrupts=0;//
+    ////////rxinterrupts=0;//
 
   }
   return ireg_getb (RDR);

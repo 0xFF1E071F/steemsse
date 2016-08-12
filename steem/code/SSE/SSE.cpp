@@ -4,7 +4,7 @@
 
 #include "SSE.h"
 
-#if defined(SSE_VERSION)
+#if defined(SSE_BUILD)
 
 #include "../pch.h"
 #include "SSEDecla.h"

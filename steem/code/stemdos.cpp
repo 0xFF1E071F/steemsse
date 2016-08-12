@@ -1082,16 +1082,9 @@ void stemdos_Pexec() //called from stemdos_rte, nothing done after this fn calle
     Using this instead of 4 + Mfree at pterm fixes the
     ReDMCSB project.
     To simplify we test TOS version.
-    v3.6.3: add hack condition, after all we still don't know if that
-    project compiles on a real ST. Fixes devpac2?
-    v3.7.2: remove hack condition, project compiles in an ACSI drive,
-    it probably works on real HW (but with TOS 1.04 at least)
 */
-#if SSE_VERSION<363 || SSE_VERSION>=372
+
           m68k_dpoke(sp+2, ( (tos_version>=0x104) ? 6 : 4));
-#else
-          m68k_dpoke(sp+2, ( (tos_version>=0x104&&OPTION_HACKS) ? 6 : 4));
-#endif
 #else
           m68k_dpoke(sp+2,4); //SS mode4
 #endif

@@ -46,7 +46,7 @@ EXT BYTE stick[8];
 
 
 // Don't forget to update this in the resource file too!
-#if defined(SSE_VERSION)
+#if defined(SSE_BUILD)
 #define STEEM_EMAIL "donmegacool@hotmail.com"
 #define STEEM_WEB "http:/""/ataristeven.exxoshost.co.uk/"
 #else

@@ -289,11 +289,10 @@ void TImageSCP::IncPosition() {
       case TWD1772::WD_TYPEII_READ_CRC:
         LoadTrack(CURRENT_SIDE,SF314[DRIVE].Track(),true);
         break;
-#if SSE_VERSION>=372 // test... will  fail on a $A1 though
+      // test... will  fail on a $A1 though
       case TWD1772::WD_TYPEII_FIND_ID://3.7.2 I Ludicrus vs Turrican, or need 3 revs
         if(!WD1772.Amd.Enabled)
           LoadTrack(CURRENT_SIDE,SF314[DRIVE].Track(),true);
-#endif
       }//sw
 #endif
     }      

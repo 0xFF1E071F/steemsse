@@ -52,13 +52,11 @@ const char *stem_version_date_text=__DATE__ " - " __TIME__;
 
 #ifndef ONEGAME
 #if defined(SSE_GUI_WINDOW_TITLE)
-#if !defined(SSE_GUI_CUSTOM_WINDOW_TITLE) && !defined(SSE_VERSION)
+#if !defined(SSE_GUI_CUSTOM_WINDOW_TITLE) && !defined(SSE_BUILD)
 const 
 #endif
 //char stem_window_title[]=WINDOW_TITLE; // in SSE.h //the [] for VS2008
 char stem_window_title[WINDOW_TITLE_MAX_CHARS+1];//=WINDOW_TITLE; //+1 v3.7.2
-#elif defined(SSE_VERSION) && SSE_VERSION<370
-char stem_window_title[WINDOW_TITLE_MAX_CHARS]="Steem Engine";
 #else
 const char *stem_window_title="Steem Engine";
 #endif
@@ -522,7 +520,7 @@ bool Initialise()
   NoINI=(CSF.GetStr("Machine","ROM_File","")=="");
 
   CSF.SetInt("Main","DebugBuild",0 DEBUG_ONLY( +1 ) );
-#if defined(SSE_VERSION)  //BCC
+#if defined(SSE_BUILD)
   CSF.SetStr("Update","CurrentVersion",Str((char*)stem_version_text));
 #else
   CSF.SetStr("Update","CurrentVersion",Str(stem_version_text));
@@ -559,7 +557,7 @@ bool Initialise()
   InitTranslations();
 
 #if USE_PASTI
-#ifdef SSE_VERSION
+#ifdef SSE_BUILD
   hPasti=LoadLibrary(PASTI_DLL);
   if (hPasti==NULL) hPasti=LoadLibrary("pasti\\" PASTI_DLL);
 #else
@@ -869,7 +867,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #endif
 #if !defined(SSE_VAR_ARCHIVEACCESS4)
   {//ss scope
-#ifdef SSE_VERSION
+#ifdef SSE_BUILD
   SetNotifyInitText(UNZIP_DLL);
 #else
   SetNotifyInitText("unzipd32.dll");
