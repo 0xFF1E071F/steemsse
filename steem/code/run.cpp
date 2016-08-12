@@ -183,7 +183,7 @@ void run()
   Sound_Start();
 
 #if defined(SSE_SHIFTER_TRICKS)
-  GLU.AddFreqChange(shifter_freq);
+  Glue.AddFreqChange(shifter_freq);
 #else
   ADD_SHIFTER_FREQ_CHANGE(shifter_freq);
 #endif	
@@ -767,7 +767,7 @@ void event_hbl()   //just HBL, don't draw yet
     ASSERT(HD6301_OK);
     int n6301cycles;
 #if defined(SSE_SHIFTER)
-    n6301cycles=GLU.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
+    n6301cycles=Glue.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
 #else
     n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
 #endif
@@ -806,8 +806,8 @@ void event_scanline_sub() {
     ASSERT(HD6301_OK);
     int n6301cycles;
 #if defined(SSE_SHIFTER)
-    ASSERT(GLU.CurrentScanline.Cycles>=224);
-    n6301cycles=GLU.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
+    ASSERT(Glue.CurrentScanline.Cycles>=224);
+    n6301cycles=Glue.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
 #else
     n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
 #endif
@@ -853,8 +853,8 @@ void event_scanline()
     ASSERT(HD6301_OK);
     int n6301cycles;
 #if defined(SSE_SHIFTER)
-    ASSERT(GLU.CurrentScanline.Cycles>=224);
-    n6301cycles=GLU.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
+    ASSERT(Glue.CurrentScanline.Cycles>=224);
+    n6301cycles=Glue.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
 #else
     n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
 #endif
@@ -878,7 +878,7 @@ void event_scanline()
 */
 
 #if defined(SSE_GLUE) && defined(SSE_INT_MFP_TIMER_B_AER2)
-  if(OPTION_C2 && GLU.FetchingLine())
+  if(OPTION_C2 && Glue.FetchingLine())
     CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq); // update each scanline
 #endif
 
@@ -956,14 +956,14 @@ void event_scanline()
   
 #if defined(SSE_SHIFTER) || defined(SSE_GLUE)
 #if defined(SSE_VAR_OPT_383)
-  if(GLU.FetchingLine())
+  if(Glue.FetchingLine())
 #endif
-    GLU.EndHBL(); // check for +2 -2 errors + unstable Shifter
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE2) // don't go for every line
+    Glue.EndHBL(); // check for +2 -2 errors + unstable Shifter
+
   if((scan_y==-30||scan_y==shifter_last_draw_line-1&&scan_y<245)
-    &&GLU.CurrentScanline.Cycles>224)
-#endif
-    GLU.CheckVerticalOverscan(); // check top & bottom borders
+    &&Glue.CurrentScanline.Cycles>224)
+
+    Glue.CheckVerticalOverscan(); // check top & bottom borders
 #else // Steem 3.2's vertical overscan check
   if (shifter_freq_at_start_of_vbl==50){
     if (scan_y==-30 || scan_y==199 || scan_y==225){
@@ -1062,14 +1062,14 @@ void event_scanline()
     the counter at the start of the line (adapted or not because of a write)
     and #bytes recorded in CurrentScanline.Bytes (must be accurate now!).
 */
-  if(!emudetect_falcon_mode && GLU.FetchingLine())
+  if(!emudetect_falcon_mode && Glue.FetchingLine())
   {
 #if 0 
     //looks nice but guess it takes more CPU power? (another CheckSideOverscan round)
     MMU.UpdateVideoCounter(LINECYCLES);
     shifter_draw_pointer=shifter_draw_pointer_at_start_of_line=MMU.VideoCounter;
 #else
-    short added_bytes=GLU.CurrentScanline.Bytes;
+    short added_bytes=Glue.CurrentScanline.Bytes;
     if(ST_TYPE==STE && added_bytes)
       added_bytes+=(LINEWID+MMU.WordsToSkip)*2; 
 #if defined(SSE_BOILER_FRAME_REPORT_MASK) && defined(SSE_GLUE_017B)
@@ -1098,13 +1098,13 @@ void event_scanline()
 #endif
 
 #if defined(SSE_GLUE)
-  GLU.IncScanline(); // will call Shifter.IncScanline()
+  Glue.IncScanline(); // will call Shifter.IncScanline()
 #else
   scan_y++;
 #endif
 
 #if defined(SSE_BOILER_FRAME_REPORT_MASK) && defined(SSE_VIDEO_CHIPSET)
-  if(GLU.FetchingLine() && (FRAME_REPORT_MASK1&FRAME_REPORT_MASK_SDP_LINES)) 
+  if(Glue.FetchingLine() && (FRAME_REPORT_MASK1&FRAME_REPORT_MASK_SDP_LINES)) 
   {
     FrameEvents.Add(scan_y,0,'@',(shifter_draw_pointer&0x00FF0000)>>16 ); 
     FrameEvents.Add(scan_y,0,'@',(shifter_draw_pointer&0xFFFF) ); 
@@ -1192,9 +1192,9 @@ void event_start_vbl()
     shifter_freq)
 */
   Glue.Status.sdp_reload_done=true; // checked this line
-  if(Glue.scanline==310&&GLU.CurrentScanline.Cycles!=512
-    ||Glue.scanline==260&&GLU.CurrentScanline.Cycles!=508
-    ||Glue.scanline==494&&GLU.CurrentScanline.Cycles!=224)
+  if(Glue.scanline==310&&Glue.CurrentScanline.Cycles!=512
+    ||Glue.scanline==260&&Glue.CurrentScanline.Cycles!=508
+    ||Glue.scanline==494&&Glue.CurrentScanline.Cycles!=224)
     return;
 #endif
 #if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
@@ -1255,7 +1255,7 @@ void event_vbl_interrupt() //SS misleading name?
         Shifter.DrawScanlineToEnd();
       scanline_drawn_so_far=0;
       shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
-      GLU.IncScanline();
+      Glue.IncScanline();
 #else
       if (bad_drawing==0) draw_scanline_to_end();
       scanline_drawn_so_far=0;
@@ -1674,7 +1674,7 @@ void event_vbl_interrupt() //SS misleading name?
 #if defined(SSE_GLUE_383)
   if((Shifter.m_ShiftMode&2)&&screen_res<2) //TODO?
 #else
-  if((GLU.m_ShiftMode&2)&&screen_res<2)
+  if((Glue.m_ShiftMode&2)&&screen_res<2)
 #endif
     shifter_last_draw_line*=2; //400 fetching lines
 #endif
@@ -1707,11 +1707,11 @@ void event_vbl_interrupt() //SS misleading name?
     Update v3.8.2: other way (SSE_SHIFTER_HIRES_COLOUR_DISPLAY_382)
 */
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_380)
-  if( screen_res<2 && (GLU.m_ShiftMode&2) && COLOUR_MONITOR
-    && GLU.CurrentScanline.Cycles==224) 
+  if( screen_res<2 && (Glue.m_ShiftMode&2) && COLOUR_MONITOR
+    && Glue.CurrentScanline.Cycles==224) 
 #else
-  if( screen_res<2 && (GLU.m_ShiftMode&2) && COLOUR_MONITOR
-    && (ACT-GLU.CycleOfLastChangeToShiftMode(2)>512)) //weak
+  if( screen_res<2 && (Glue.m_ShiftMode&2) && COLOUR_MONITOR
+    && (ACT-Glue.CycleOfLastChangeToShiftMode(2)>512)) //weak
 #endif
   {
     TRACE_OSD("RES2");
@@ -1797,7 +1797,7 @@ void event_vbl_interrupt() //SS misleading name?
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SHIFTMODE) 
     FrameEvents.Add(scan_y,0,'R',Shifter.m_ShiftMode); 
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SYNCMODE)
-    FrameEvents.Add(scan_y,0,'S',GLU.m_SyncMode); 
+    FrameEvents.Add(scan_y,0,'S',Glue.m_SyncMode); 
 #endif
 #endif
 

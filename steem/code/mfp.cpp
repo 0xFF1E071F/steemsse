@@ -143,7 +143,7 @@ void calc_time_of_next_timer_b() //SS called only by mfp_set_timer_reg()
 #endif
 
 #if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
-  if(OPTION_C2&&(GLU.CurrentScanline.Tricks&TRICK_LINE_MINUS_106)
+  if(OPTION_C2&&(Glue.CurrentScanline.Tricks&TRICK_LINE_MINUS_106)
     && LINECYCLES>166+28+4) // not if Timer B occurred in shift mode 2
     time_of_next_timer_b+=scanline_time_in_cpu_cycles[shifter_freq_idx]; 
 #endif 
@@ -1851,7 +1851,7 @@ void TMC68901::AdjustTimerB() {
     return;
   int CyclesIn=LINECYCLES;
   int linecycle_of_end_de=(mfp_reg[MFPR_AER]&8)
-    ? GLU.CurrentScanline.StartCycle : GLU.CurrentScanline.EndCycle;
+    ? Glue.CurrentScanline.StartCycle : Glue.CurrentScanline.EndCycle;
   if(linecycle_of_end_de==-1) //0byte -> no timer B?
     linecycle_of_end_de+=scanline_time_in_cpu_cycles_8mhz[shifter_freq_idx];
   

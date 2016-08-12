@@ -17,7 +17,6 @@ struct TGlueStatusBYTE {
 
 #endif
 
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
 struct TScanline {
   short StartCycle; // eg 56
   short EndCycle; // eg 376
@@ -25,22 +24,15 @@ struct TScanline {
   short Cycles; // eg 512 
   DWORD Tricks; // see mask description in SSEVideo.h
 };
-#endif
 
 // Generalized Logic Unit
 struct TGlue {
   TGlue();
   void Update();
   enum {FREQ_50,FREQ_60,FREQ_72,NFREQS};
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+
   enum {GLU_DE_ON,HBLANK_OFF,GLU_DE_OFF,HBLANK_ON,HSYNC_ON,HSYNC_OFF,RELOAD_SDP,
     ENABLE_VBI,VERT_OVSCN_LIMIT,NTIMINGS};
-#elif defined(SSE_GLUE_THRESHOLDS)
-  enum {GLU_DE_ON,HBLANK_OFF,GLU_DE_OFF,HBLANK_ON,HSYNC_ON,HSYNC_OFF,RELOAD_SDP,
-    ENABLE_VBI,NTIMINGS};
-#else //it wasn't used anyway
-  enum {NEGATE_HSYNC,NEGATE_HBLANK,START_PREFETCH,STOP_PREFETCH,ASSERT_HBL,ASSERT_HSYNC,NTIMINGS};
-#endif
   
   WORD DE_cycles[NFREQS];
   // cycles can be 0-512, hence words
@@ -56,7 +48,7 @@ struct TGlue {
   void Reset(bool Cold);
   void Vbl();
 #endif
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
+
 #if defined(SSE_GLUE_383)
   bool HiRes; // one single line/bit/latch/whatever
   BYTE m_SyncMode;
@@ -108,7 +100,7 @@ struct TGlue {
   int PreviousShiftModeChange(int cycle);
   int CycleOfLastChangeToShiftMode(int value);
 #endif
-#endif//
+
 };
 
 extern TGlue Glue;

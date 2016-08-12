@@ -134,7 +134,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
 */
 #if defined(SSE_CPU_ROUNDING_BUS3C)
 /*  Reading Shifter registers will cause rounding up to 4, we don't read
-    the latch in GLU.
+    the latch in Glue.
 */
    if(M68000.Rounded && !(addr>=0xff8240 
 #if defined(SSE_VS2008_WARNING_382) 
@@ -1061,11 +1061,7 @@ Receiver Data Register is retained.
         case 0xff8209:{  //low byte of screen draw pointer
           MEM_ADDRESS sdp;
 #if defined(SSE_SHIFTER_SDP_READ)
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
           sdp=MMU.ReadVideoCounter(LINECYCLES); // a complicated affair
-#else
-          sdp=Shifter.ReadSDP(LINECYCLES); // a complicated affair
-#endif
 #else
           if(scan_y<shifter_first_draw_line || scan_y>=shifter_last_draw_line){
             sdp=shifter_draw_pointer;
@@ -1086,7 +1082,7 @@ Receiver Data Register is retained.
 
         case 0xff820a:  //synchronization mode
           ior_byte&=~3;           // this way takes care...
-          ior_byte|=GLU.m_SyncMode;   // ...of both STF & STE
+          ior_byte|=Glue.m_SyncMode;   // ...of both STF & STE
           break;
 
         case 0xff820d:  //low byte of screen memory address

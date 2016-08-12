@@ -273,6 +273,10 @@ enum {
 
 #endif
 
+#if !defined(SSE_GLUE)
+#define HBL_FOR_STE (444)
+#define HBL_FOR_STF (444+4)
+#endif
 
 ////////
 //GUI //
@@ -439,16 +443,7 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
 #define ECLOCK_AUTOVECTOR_CYCLE 28 //whatever!
 #endif
 
-#if !defined(SSE_GLUE_THRESHOLDS) || !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
-#define THRESHOLD_LINE_PLUS_2_STF (54)
-#if defined(SSE_INT_VBL_STF) // modest hack still works
-#define HBL_FOR_STE (444)
-#define THRESHOLD_LINE_PLUS_2_STE (40) //3.7.0
-#define HBL_FOR_STF (HBL_FOR_STE+4)
-#else
-#define THRESHOLD_LINE_PLUS_2_STE (THRESHOLD_LINE_PLUS_2_STF-2)
-#endif
-#endif
+
 #endif//int
 
 
@@ -593,14 +588,6 @@ Some STFs                32.02480    8.0071
 /////////////
 
 
-#ifndef SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1
-#define VERT_OVSCN_LIMIT (502) //502
-#if defined(SSE_MMU_WU_IO_BYTES_W_SHIFTER_ONLY)
-#define WU2_PLUS_CYCLES 4 // we make cycles +2
-#else
-#define WU2_PLUS_CYCLES 2 // we don't
-#endif
-#endif
 
 
 ///////////
@@ -633,7 +620,7 @@ Some STFs                32.02480    8.0071
 /////////////
 
 #if defined(SSE_SHIFTER_TRICKS) && defined(SSE_INT_MFP_RATIO)
-#define HBL_PER_SECOND (CpuNormalHz/GLU.CurrentScanline.Cycles) //TODO assert
+#define HBL_PER_SECOND (CpuNormalHz/Glue.CurrentScanline.Cycles) //TODO assert
 //#endif
 //Frequency   50          60            72
 //#HBL/sec    15666.5 15789.85827 35809.14286

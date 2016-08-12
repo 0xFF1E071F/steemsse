@@ -2236,11 +2236,8 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_GLUE)
 
-#define SSE_GLUE_FRAME_TIMINGS  // big timing change
-#define SSE_GLUE_THRESHOLDS     // computing thresholds only when changing option
-#if defined(SSE_GLUE_FRAME_TIMINGS) && defined(SSE_GLUE_THRESHOLDS)
-#define SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE // I regret this switch now... doubles code!
-#endif
+#define SSE_GLUE_FRAME_TIMINGS  // big timing change, necessary
+#define SSE_GLUE_THRESHOLDS     // computing thresholds only when changing option, optional
 
 #if defined(SSE_GLUE_FRAME_TIMINGS)
 #define SSE_GLUE_FRAME_TIMINGS_HBL // routines of last scanline
@@ -2250,17 +2247,9 @@ Beta: not SSE_PRIVATE_BUILD
 #undef SSE_TIMINGS_FRAME_ADJUSTMENT // hack unnecessary
 #undef SSE_INT_VBL_STF // hack unnecessary
 #endif//SSE_GLUE_FRAME_TIMINGS
-
-#ifndef IN_RC
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
-#define SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1 // the boring stuff
-#define SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE2 //misc
 #define SSE_GLUE_60HZ_OVERSCAN2 // # lines in bottom
 #undef SSE_SHIFTER_LEFT_OFF_60HZ//forget it
 #undef SSE_STF_VERT_OVSCN
-#endif//SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE
-#endif//rc?
-
 #endif//glue
 
 #ifdef SSE_GUI
@@ -2333,15 +2322,10 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_MMU)
-#ifndef IN_RC
 #define SSE_MMU_RELOAD_SDP_380
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE)
 #if defined(SSE_MMU_WU_DL)
 #define SSE_MMU_WU_STE_380
 #endif
-#define SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1
-#endif
-#endif//rc?
 #endif
 
 #if defined(SSE_OSD) && defined(SSE_DRIVE_OBJECT)
@@ -2405,9 +2389,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_STRETCH_ASPECT_RATIO 
 #if defined(SSE_VID_BORDERS)
 #define SSE_VID_BORDERS_LIMIT_TO_245
-#ifdef SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1
 #define SSE_VID_BORDERS_LINE_PLUS_20
-#endif
 #define SSE_VID_BORDERS_416_NO_SHIFT_380
 #endif
 #endif

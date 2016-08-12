@@ -59,20 +59,6 @@ enum {DISPATCHER_NONE, DISPATCHER_CPU, DISPATCHER_LINEWIDTH,
 #define SHIFTER_RASTER_PREFETCH_TIMING 16//(shifter_freq==72 ? 4 : 16) 
 #define SHIFTER_RASTER (shifter_freq==72? 2 : (screen_res ? 4 : 8)) 
 
-
-/*  There's something wrong with the cycles when the line is 508 cycles,
-    but fixing it will take some care. See the Omega hack
-*/
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-struct TScanline {
-  int StartCycle; // eg 56
-  int EndCycle; // eg 376
-  int Bytes; // eg 160 - TODO make sure it's always correct
-  int Cycles; // eg 512 
-  int Tricks; // see mask description above
-};
-#endif
-
 struct TShifter {
 /*  As explained by ST-CNX and others, the video picture is produced by the
     MMU, the GLUE and the Shifter. 
@@ -82,21 +68,11 @@ struct TShifter {
 */
   TShifter(); 
   ~TShifter();
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-  inline void AddExtraToShifterDrawPointerAtEndOfLine(unsigned long &extra);
-  inline int CheckFreq(int t);
-  void CheckSideOverscan(); // left & right border effects
-  void CheckVerticalOverscan(); // top & bottom borders
-  void EndHBL(); // at end of HBL, check if +2 -2 were correct
-#endif
 #if defined(WIN32)
   inline void DrawBufferedScanlineToVideo();
 #endif
   void DrawScanlineToEnd();
 
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-  int FetchingLine();
-#endif
   void IncScanline();
 #if defined(SSE_SHIFTER_FIX_LINE508_CONFUSION)
   inline bool Line508Confusion();
@@ -105,80 +81,15 @@ struct TShifter {
   void Reset(bool Cold);
   inline void RoundCycles(int &cycles_in);
   void SetPal(int n, WORD NewPal);
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-  void SetShiftMode(BYTE NewRes);
-  void SetSyncMode(BYTE NewSync);
-#endif
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
-  inline void ShiftSDP(int shift);
-#endif
   void Vbl();
-
-#if defined(SSE_SHIFTER_TRICKS) && !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-   void AddFreqChange(int f);
-   void AddShiftModeChange(int r);
-   int CheckShiftMode(int t);
-   int FreqChange(int idx);
-   int ShiftModeChange(int idx=-1);
-   int FreqChangeCycle(int idx);
-   int ShiftModeChangeCycle(int idx);
-   int FreqChangeIdx(int cycle);
-   int ShiftModeChangeIdx(int cycle);
-   int FreqChangeAtCycle(int cycle);
-   int ShiftModeChangeAtCycle(int cycle);
-  // value before this cycle (and a possible change)
-   int FreqAtCycle(int cycle);
-   int ShiftModeAtCycle(int cycle);
-  // cycle of next change to whatever value after this cycle
-   int NextFreqChange(int cycle,int value=-1);
-   int NextShiftModeChange(int cycle,int value=-1);
-  // idx of next change to whatever value after this cycle
-   int NextFreqChangeIdx(int cycle);
-   int NextShiftModeChangeIdx(int cycle);
-  // cycle of previous change to whatever value before this cycle
-   int PreviousFreqChange(int cycle);
-   int PreviousShiftModeChange(int cycle);
-//   int PreviousFreqChange(int cycle,int value=-1);
-//   int PreviousShiftModeChange(int cycle,int value=-1);
-  // idx of previous change to whatever value before this cycle
-   int PreviousFreqChangeIdx(int cycle);
-   int PreviousShiftModeChangeIdx(int cycle);
-   int CycleOfLastChangeToFreq(int value);
-   int CycleOfLastChangeToShiftMode(int value);
-#endif
-
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_MMU1)
-#if defined(SSE_SHIFTER_SDP)
-#ifdef SSE_SHIFTER_SDP_READ
-  inline MEM_ADDRESS ReadSDP(int cycles_since_hbl,int dispatcher=DISPATCHER_NONE);
-#endif
-#ifdef SSE_SHIFTER_SDP_WRITE
-  void WriteSDP(MEM_ADDRESS addr, BYTE io_src_b);
-  int SDPMiddleByte; // glue it! 
-#endif 
-#endif
-#endif
-
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-  // we need keep info for only 3 scanlines 
-  TScanline PreviousScanline, CurrentScanline, NextScanline;
-  int ExtraAdded;//rather silly
-#endif
   int HblStartingHscroll; // saving true hscroll in MED RES (no use)
   int HblPixelShift; // for 4bit scrolling, other shifts //BYTE?
 #if defined(WIN32)
   BYTE *ScanlineBuffer;
 #endif
 
-#if defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-  BYTE m_ShiftMode; // Shifter has its copy, Glue could do with only 1 bit
-#else
-  BYTE m_ShiftMode,m_SyncMode;
-#endif
+  BYTE m_ShiftMode;
 
-#if !defined(SSE_MOVE_SHIFTER_CONCEPTS_TO_GLUE1)
-  int TrickExecuted; //make sure that each trick will only be applied once
-#endif
 #if defined(SSE_SHIFTER_UNSTABLE)
   BYTE Preload; // #words into Shifter's RR (shifts display)
 #endif

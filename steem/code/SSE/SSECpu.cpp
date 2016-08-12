@@ -2074,7 +2074,7 @@ void m68k_poke_abus2(BYTE x){
     when the address bus is around the current scanline.
 */
 
-    if(GLU.FetchingLine()
+    if(Glue.FetchingLine()
       && abus>=shifter_draw_pointer
       && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2)
       Shifter.Render(LINECYCLES,DISPATCHER_CPU); 
@@ -2128,7 +2128,7 @@ void m68k_dpoke_abus2(WORD x){
     DEBUG_CHECK_WRITE_W(abus);
 #endif
 #if defined(SSE_CPU_CHECK_VIDEO_RAM) // 3615 GEN4
-    if(GLU.FetchingLine()
+    if(Glue.FetchingLine()
       && abus>=shifter_draw_pointer
       && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2
       //&& DPEEK(abus)!=x
@@ -2178,7 +2178,7 @@ void m68k_lpoke_abus2(LONG x){
     DEBUG_CHECK_WRITE_L(abus);
 #endif
 #if defined(SSE_CPU_CHECK_VIDEO_RAM)
-    if(GLU.FetchingLine()
+    if(Glue.FetchingLine()
       && abus>=shifter_draw_pointer
       && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2)
       Shifter.Render(LINECYCLES,DISPATCHER_CPU); 
