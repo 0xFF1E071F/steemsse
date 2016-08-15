@@ -2284,9 +2284,6 @@ TM68000::SyncEClock(
   if(ST_TYPE==STE && dispatcher==ECLOCK_VBL)//temp, it's some compensation for sure
     act+=2;
 #endif
-#if defined(SSE_SHIFTER) && defined(SSE_TIMINGS_FRAME_ADJUSTMENT)//no
-  act-=4*Shifter.n508lines; //legit hack: NOJITTER.PRG
-#endif
 #if defined(SSE_CPU_E_CLOCK_370)
 /*
   int a=2147483644;

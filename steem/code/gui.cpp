@@ -605,7 +605,7 @@ void GUIRefreshStatusBar() {
 #endif
         sb_tos[5],sb_ram[7];
 #if !defined(SSE_GUI_STATUS_STRING_FULL_ST_MODEL)
-#if defined(SSE_MMU_WU_DL)
+#if defined(SSE_MMU_WU)
       sprintf(sb_st_model,"%s%d",(ST_TYPE)? "STF":"STE",MMU.WS[OPTION_WS]);
       if(!OPTION_WS)
         sb_st_model[3]=0;
@@ -618,7 +618,7 @@ void GUIRefreshStatusBar() {
       sprintf(sb_ram,"%dK",mem_len/1024);
 #if defined(SSE_GUI_STATUS_STRING_FULL_ST_MODEL)
       sprintf(status_bar,"%s %s %s",st_model_name[ST_TYPE],sb_tos,sb_ram);
-#if defined(SSE_MMU_WU_DL)
+#if defined(SSE_MMU_WU)
       if(OPTION_WS)
       {
         char sb_wu[6];

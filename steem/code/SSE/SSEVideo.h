@@ -6,6 +6,10 @@
 
 #include <conditions.h>
 
+#include "SSEGlue.h"
+#include "SSEMMU.h"
+#include "SSEShifter.h"
+
 /*  The overscan mask is an imitation of Hatari's BorderMask.
     Each trick has a dedicated bit, to set it we '|' it, to check it
     we '&' it. Each value is the previous one x2.
@@ -26,11 +30,6 @@ enum EOverscanMask {
  TRICK_LINE_PLUS_20=0x800,
  TRICK_0BYTE_LINE=0x1000,
  TRICK_STABILISER=0x2000,
-#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
-// at least hacks involving those have been removed
- TRICK_WRITE_SDP=0x4000 ,
- TRICK_WRITE_SDP_POST_DE=0x8000,
-#endif
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_382)
  TRICK_80BYTE_LINE=0x4000, // don't assume a "no trick" colour line = 160byte
 #endif
@@ -47,6 +46,10 @@ enum EOverscanMask {
 };
 
 enum EBorders {BORDERS_NONE, BORDERS_ON, BORDERS_AUTO_OFF, BORDERS_AUTO_ON};
+
+extern TGlue Glue;
+extern TMMU MMU;
+extern TShifter Shifter;
 
 #endif//defined(SSE_VIDEO_CHIPSET)
 

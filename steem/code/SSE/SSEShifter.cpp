@@ -8,6 +8,8 @@
 #include <mfp.decla.h>
 #include <palette.decla.h>
 #include <run.decla.h>
+#include <emulator.decla.h>
+#include <cpu.decla.h>
 #include "SSEFrameReport.h"
 #include "SSEParameters.h"
 #include "SSEVideo.h"
@@ -21,14 +23,9 @@
 #define HSCROLL0 HSCROLL
 #endif
 
-TShifter Shifter; // singleton
-
-
-/////////////////////
-// object TShifter //
-/////////////////////
 
 #define LOGSECTION LOGSECTION_VIDEO
+
 
 TShifter::TShifter() {
 #if defined(WIN32)
@@ -44,9 +41,9 @@ TShifter::~TShifter() {
 }
 
 
-void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
+void TShifter::DrawScanlineToEnd()  {
   MEM_ADDRESS nsdp; 
-#ifndef NO_CRAZY_MONITOR // SS: we don't care about this yet
+#ifndef NO_CRAZY_MONITOR
   if (emudetect_falcon_mode!=EMUD_FALC_MODE_OFF){
     int pic=320*emudetect_falcon_mode_size,bord=0;
     // We double the size of borders too to keep the aspect ratio of the screen the same
@@ -127,16 +124,11 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
   
   if(screen_res<2)
   {
-    //ASSERT(scan_y<248);
     Render(CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320+BORDER_SIDE,DISPATCHER_DSTE);
 #if defined(WIN32)
     DrawBufferedScanlineToVideo();
 #endif
-    if(scan_y>=draw_first_possible_line 
-      && scan_y<draw_last_possible_line
-      
-
-      )
+    if(scan_y>=draw_first_possible_line && scan_y<draw_last_possible_line)
     {
       // thsee variables are pointers to PC video memory
       draw_dest_ad=draw_dest_next_scanline;
@@ -300,12 +292,12 @@ void TShifter::DrawScanlineToEnd()  { // such a monster wouldn't be inlined
 
 
 void TShifter::IncScanline() {
-  scan_y++;   // -63-249
+  scan_y++;
   HblPixelShift=0;  
   left_border=BORDER_SIDE;
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT_381)
-/*  v3.8.1, another method not to shift scanlines when the left border
-    is removed. We must shift other scanlines in compensation, which is
+#if defined(SSE_VID_BORDERS_416_NO_SHIFT)
+/*  Don't shift scanlines by 4 pixcels when the left border is removed. 
+    We must shift other scanlines in compensation, which is
     correct emulation. On the ST, the left border is larger than the right
     border. By directly changing left_border and right_border, we can get
     the right timing for palette effects.
@@ -313,7 +305,7 @@ void TShifter::IncScanline() {
     many hacks to correct the picture.
     Cases: Backlash -TEX, Appendix 4pix plasma, Gobliins II -ICS...
 */
-  if(SideBorderSize==VERY_LARGE_BORDER_SIDE)
+  if(SideBorderSize==VERY_LARGE_BORDER_SIDE && border)
     left_border+=4;
 #endif  
   if(HSCROLL) 
@@ -324,8 +316,8 @@ void TShifter::IncScanline() {
   if(shifter_hscroll_extra_fetch) 
     left_border-=16;
   right_border=BORDER_SIDE;
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT_381)
-  if(SideBorderSize==VERY_LARGE_BORDER_SIDE)
+#if defined(SSE_VID_BORDERS_416_NO_SHIFT)
+  if(SideBorderSize==VERY_LARGE_BORDER_SIDE && border)
     right_border-=4;
 #endif    
 }
@@ -344,8 +336,6 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
   if(extended_monitor || emudetect_falcon_mode!=EMUD_FALC_MODE_OFF) 
     return;
 #endif
-
-
 
   if(Glue.FetchingLine()&&(freq_change_this_scanline
 #if defined(SSE_SHIFTER_UNSTABLE)
@@ -366,11 +356,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
   // this may look impressive but it's just a bunch of hacks!
   switch(dispatcher) {
   case DISPATCHER_CPU:
-#if defined(SSE_CPU_CHECK_VIDEO_RAM_381)
     cycles_since_hbl+=MMU_PREFETCH_LATENCY;
-#else
-    cycles_since_hbl+=16; // 3615 Gen4 by ULM, override normal delay
-#endif
     break;
   case DISPATCHER_SET_PAL:
 #if defined(SSE_SHIFTER_PALETTE_TIMING)
@@ -386,29 +372,6 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 #endif
 #endif
       cycles_since_hbl++; // eg Overscan Demos #6, already in v3.2 TODO why?
-#if defined(SSE_VID_BORDERS_LINE_PLUS_20) && !defined(SSE_VID_BORDERS_416_NO_SHIFT_381)
-    if(OPTION_HACKS&&SideBorderSize==VERY_LARGE_BORDER_SIDE&&border
-      && (Glue.CurrentScanline.Tricks&TRICK_LINE_PLUS_20))
-      cycles_since_hbl+=2; // Circus 
-#endif
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT) && !defined(SSE_VID_BORDERS_416_NO_SHIFT_381)
-/*  We must compensate the "no shifter_pixel+4" of "left off" to get correct
-    palette timings. This is a hack but we must manage various sizes.
-    OK: Overscan #6, HighResMode STE
-    bugfix v3.6.0: for STE line +20 there's nothing to compensate! (pcsv62im)
-*/
-      if(OPTION_HACKS && SideBorderSize==VERY_LARGE_BORDER_SIDE  
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT1)
-        && border
-#endif
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT_380) // closure hicolour pics
-        && !((Glue.CurrentScanline.Tricks&TRICK_OVERSCAN_MED_RES)&&ST_TYPE!=STE)
-#else
-        && shifter_freq_at_start_of_vbl==50//?
-#endif
-        && (Glue.CurrentScanline.Tricks&TRICK_LINE_PLUS_26))
-        cycles_since_hbl+=4;
-#endif
 #endif
 
 #if defined(SSE_SHIFTER_60HZ_LINE)
@@ -439,18 +402,17 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
       
   if(pixels_in > BORDER_SIDE+320+BORDER_SIDE) 
     pixels_in=BORDER_SIDE+320+BORDER_SIDE; 
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT_381)
-// this is the most hacky part of our new trick for large border/no shift...
+#if defined(SSE_VID_BORDERS_416_NO_SHIFT)
+// this is the most hacky part of our trick for large border/no shift on left off...
   int pixels_in0=pixels_in;
-  if(SideBorderSize==VERY_LARGE_BORDER_SIDE && pixels_in>0)
+  if(SideBorderSize==VERY_LARGE_BORDER_SIDE && border && pixels_in>0)
     pixels_in+=4;
-  
 #endif
   if(pixels_in>=0) // time to render?
   {
 #ifdef WIN32 // prepare buffer & ASM routine
 
-#ifdef SSE_VID_BORDERS_416_NO_SHIFT_381  // don't mess border2
+#ifdef SSE_VID_BORDERS_416_NO_SHIFT  // don't mess border2
     if(pixels_in>416)
       pixels_in=pixels_in0;
 #endif
@@ -465,7 +427,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 #endif
         && scan_y<draw_last_scanline_for_border)
       {
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT_381)
+#if defined(SSE_VID_BORDERS_416_NO_SHIFT)
         // OSC #3 //no condition
         if(draw_store_dest_ad==NULL && pixels_in0<=BORDER_SIDE+320+BORDER_SIDE)
 #else
@@ -497,7 +459,6 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 
       if(pixels_in>picture_left_edge)
       { //might be some picture to draw = fetching RAM
-//        ASSERT(pixels_in!=420 || !(ACT));
         if(scanline_drawn_so_far>picture_left_edge)
         {
           picture=pixels_in-scanline_drawn_so_far;
@@ -516,31 +477,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
       if(scanline_drawn_so_far<left_border)
       {
         if(pixels_in>left_border)
-        {
           border1=left_border-scanline_drawn_so_far;
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT) && !defined(SSE_VID_BORDERS_416_NO_SHIFT_381)
-/*  In very large display mode, we display 52 pixels when the left
-    border is removed. But Steem was built around borders of 32
-    pixels, which were extended to 40, 48, not 52. And borders have
-    the same size on left and right.
-    To make up for larger left border, we shift pixels by 4 to the 
-    right when the left border isn't removed!
-    We do so to avoid far more intricate changes.
-    This is a simple hack that surprisingly works even for:
-    Beeshift, Dragonnels menu
-*/
-          if(OPTION_HACKS && SideBorderSize==VERY_LARGE_BORDER_SIDE 
-            && left_border
-#if defined(SSE_VID_BORDERS_LINE_PLUS_20)
-            &&!(Glue.CurrentScanline.Tricks&TRICK_LINE_PLUS_20)
-#endif
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT1)
-            && border
-#endif
-            )
-            border1+=4;
-#endif
-        }
         else
           border1=pixels_in-scanline_drawn_so_far; // we're not yet at end of border
 
@@ -633,9 +570,6 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
           DEBUG_ONLY( shifter_draw_pointer+=debug_screen_shift; );
           if(hscroll>=16) // convert excess hscroll in SDP shift
           {
-#if defined(SSE_DEBUG)
-//            if(scan_y==120) TRACE_LOG("y %d hscroll OVL\n",scan_y);
-#endif
             shifter_draw_pointer+=(SHIFTER_RASTER_PREFETCH_TIMING/2)
               *(hscroll/16); // ST-CNX large border
             hscroll-=16*(hscroll/16);
@@ -663,7 +597,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
           if(nsdp<=mem_len) // Antiques
 #elif defined(SSE_SHIFTER_382)
           //ASSERT(nsdp<=mem_len);
-          if(nsdp<mem_len) // potential crash
+          if(nsdp<mem_len) // potential crash, possibly also when changing size life
 #endif
 
           // call to appropriate ASSEMBLER routine!
@@ -704,10 +638,6 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
       {
         left_visible_edge=0;
         right_visible_edge=BORDER_SIDE + 320 + BORDER_SIDE;
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT_380) && !defined(SSE_VID_BORDERS_416_NO_SHIFT_381)
-        if(SideBorderSize==VERY_LARGE_BORDER_SIDE && pixels_in>BORDER_SIDE)
-          pixels_in+=4;// fixes Appendix 4 pixel rgb plasma in this display size
-#endif
       }
       // No, only the part between the borders
       else 
@@ -724,10 +654,8 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
         border1=0;
       else if(border1> (right_visible_edge - left_visible_edge))
         border1=(right_visible_edge - left_visible_edge);
-//      ASSERT( scan_y>=draw_first_possible_line && scan_y<draw_last_possible_line ); // asserts when changing sizes
       if(scan_y>=draw_first_possible_line && scan_y<draw_last_possible_line)
       {
-        //////ASSERT(draw_lock); //!!!!!!!!!!
       ///////////////// RENDER VIDEO /////////////////        
         draw_scanline(border1,0,0,0); // see SSE_VID_ADJUST_DRAWING_ZONE1
       }
@@ -776,9 +704,6 @@ void TShifter::Vbl() {
 #if defined(SSE_SHIFTER_UNSTABLE)
   HblPixelShift=0;
 #endif
-#if defined(SSE_TIMINGS_FRAME_ADJUSTMENT)
-  n508lines=0;
-#endif
 
 }
 
@@ -816,35 +741,6 @@ void TShifter::DrawBufferedScanlineToVideo() {
   ScanlineBuffer=NULL;
 }
 
-#endif
-
-
-#if defined(SSE_SHIFTER_FIX_LINE508_CONFUSION)
-/*  In Steem the timings of all HBLs are prepared for each frame
-    using the "event" system.
-    In a 50hz frame, when there are 60hz (508 cycles) scanlines, 
-    Steem will be off by 4 cycles in its reckoning of the start
-    of the HBL (linecycle 0).
-    This is hard to understand and also to fix without messing other
-    timings (like CPU, MFP...)
-    The little function here will just allow to have the
-    right linecyles on the scanline after the 60hz scanline.
-    Cases where it matters:
-    Omega, TCB
-*/
-//note: this isn't compiled anymore in v3.8
-bool TShifter::Line508Confusion() {
-  bool rv=(PreviousScanline.Cycles==508 && CurrentScanline.Cycles==508 
-    && shifter_freq_at_start_of_vbl==50);
-//  ASSERT(!rv);
-
-//  if(rv) TRACE("508? %d\n",scan_y);
-//  if(rv) REPORT_LINE;
-
-  return rv;
-//  return(PreviousScanline.Cycles==508 && CurrentScanline.Cycles==508 
-  //  && shifter_freq_at_start_of_vbl==50);
-}
 #endif
 
 
@@ -947,19 +843,8 @@ FF825E
   if(!n && NewPal && NewPal!=0x777) // basic test
     overscan=OVERSCAN_MAX_COUNTDOWN;
 #endif
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT_380) 
-/*  Also render when pal doesn't change
-    Fixes Gobliins II-ICS in large display mode (pure rendering problem)
-*/
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT_381)
-    if(STpal[n]!=NewPal || SideBorderSize==VERY_LARGE_BORDER_SIDE)
-#else
-    if(STpal[n]!=NewPal || OPTION_HACKS&&SideBorderSize==VERY_LARGE_BORDER_SIDE
-      &&border)
-#endif
-#else
+
     if(STpal[n]!=NewPal)
-#endif
     {
       int CyclesIn=LINECYCLES;
 #if defined(MMU_PREFETCH_LATENCY)
@@ -999,5 +884,7 @@ FF825E
 }
 
 #undef LOGSECTION
+
+//TShifter Shifter;
 
 #endif//#if defined(SSE_SHIFTER)

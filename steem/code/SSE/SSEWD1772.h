@@ -19,6 +19,8 @@ The structure is used by SSEWD1772.cpp, but also by SSEGhostDisk.cpp.
 
 */
 
+#pragma pack(push, 1)//TODO
+
 #if defined(SSE_WD1772_IDFIELD)
 
 struct TWD1772IDField {
@@ -331,5 +333,7 @@ struct TWD1772 {
   void TraceStatus();
 #endif
 };
+
+#pragma pack(pop)
 
 #endif//#ifndef WD1772_H

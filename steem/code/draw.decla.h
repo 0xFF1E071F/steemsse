@@ -206,10 +206,7 @@ EXT int left_border,right_border;
 #if !defined(SSE_VAR_RESIZE_370) || !defined(SSE_VIDEO_CHIPSET)
 EXT bool right_border_changed;
 #endif
-#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
-#elif defined(SSE_VAR_RESIZE_380)
-EXT short overscan_add_extra;
-#else
+#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
 EXT int overscan_add_extra;
 #endif
 //LPSCANPROC draw_scanline;

@@ -154,14 +154,20 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif
 
-#if defined(SSE_VIDEO_CHIPSET) // all or nothing, hence the chipset switch
-// 
+#if defined(SSE_VIDEO_CHIPSET) 
+// all or nothing, hence the chipset switch; in STE GLUE and MMU are one chip
 #define SSE_GLUE       // General Logic Unit
 #define SSE_MMU        // Memory Manager Unit (of the ST, no paging)
 #define SSE_SHIFTER    // Video Shifter
 #endif
 
+#if defined(SSE_GLUE)
+#define SSE_GLUE_LINE_PLUS_20 // 224 byte scanline STE only
+#endif
 
+#if defined(SSE_MMU)
+#define SSE_MMU_WU // wake-up states
+#endif
 
 #if _MSC_VER == 1200 //VC6: DirectDraw build
 #define SSE_NO_D3D
@@ -383,7 +389,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SHIFTER_NON_STOPPING_LINE // Enchanted Land
 #define SSE_SHIFTER_PALETTE_BYTE_CHANGE //undef v3.6.3
 #define SSE_SHIFTER_STE_MED_HSCROLL // Cool STE
-#define SSE_SHIFTER_UNSTABLE_LEFT_OFF // DoLB, Omega, Overdrive/Dragon old hack
 #endif
 #if defined(SSE_SHIFTER_SDP)
 #define SSE_SHIFTER_SDP_READ
@@ -560,12 +565,11 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//stf
 #if defined(SSE_MMU_WAKE_UP)
 #define SSE_MMU_WU_0_BYTE_LINE
-#define SSE_MMU_WU_IOR_HACK // undef 3.5.4
-#define SSE_MMU_WU_IOW_HACK // undef 3.5.4
+
+
 // the following 3 switches were more experimental 
-#define SSE_MMU_WU_IO_BYTES_R  // undef 3.5.3
-#define SSE_MMU_WU_IO_BYTES_W // undef 3.5.3
-#define SSE_MMU_WU_IO_BYTES_W_SHIFTER_ONLY // undef v3.5.3
+
+
 #define SSE_MMU_WU_PALETTE_STE // render +1 cycle (pixel) in state 2
 //#define SSE_MMU_WU_READ_SDP
 #define SSE_MMU_WU_RIGHT_BORDER
@@ -811,23 +815,18 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_SHIFTER_TRICKS)
 #define SSE_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK
 #define SSE_SHIFTER_LEFT_OFF_TEST_BEFORE_HBL // for Riverside
-#define SSE_SHIFTER_LINE_PLUS_20 // 224 byte scanline STE only
+
 #define SSE_SHIFTER_LINE_PLUS_20_SHIFT // for Riverside
 #if defined(SSE_HACKS)
 #define SSE_SHIFTER_DRAGON1 // undef v3.5.4
 #endif
 #endif//trck
-#if defined(SSE_MMU_WAKE_UP)
+#if defined(SSE_MMU_WU)
 #define SSE_SHIFTER_UNSTABLE // DoLB, Omega, Overdrive/Dragon, Beeshift
 #endif
 #if defined(SSE_SHIFTER_UNSTABLE)
-#define SSE_SHIFTER_UNSTABLE_DOLB
-#define SSE_SHIFTER_UNSTABLE_OMEGA
 #define SSE_SHIFTER_HI_RES_SCROLLING // Beeshift2
 #define SSE_SHIFTER_MED_RES_SCROLLING // Beeshift
-#if defined(SSE_MMU_WAKE_UP)
-#define SSE_SHIFTER_PANIC // funny effect, interleaved border bands
-#endif
 #endif//unstable
 #define SSE_SHIFTER_REMOVE_USELESS_VAR //3.6.1
 #define SSE_SHIFTER_VERTICAL_OPTIM1 //avoid useless tests
@@ -897,9 +896,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_MMU)
-#undef SSE_MMU_WU_IO_BYTES_R  // breaks too much (read SDP) TODO
-#undef SSE_MMU_WU_IO_BYTES_W // no too radical
-#undef SSE_MMU_WU_IO_BYTES_W_SHIFTER_ONLY // adapt cycles for Shifter write
+
 #define SSE_MMU_WU_SHIFTER_TRICKS // Adapt limit values based on Paolo's table
 #define SSE_MMU_WU_VERTICAL_OVERSCAN // ijor's wakeup.tos test
 #endif
@@ -913,11 +910,11 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_SHIFTER)
 ///#define SSE_SHIFTER_RENDER_SYNC_CHANGES//don't until debug
 #if defined(SSE_SHIFTER_TRICKS)
-#define SSE_SHIFTER_FIX_LINE508_CONFUSION // hack at recording Shifter event
-#define SSE_SHIFTER_LINE_PLUS_2_STE_DSOS // limit 42 instead of 38? //undef 3.5.4
-#define SSE_SHIFTER_LINE_PLUS_2_TEST // loSTE screens
+
+
+#define SSE_SHIFTER_LINE_PLUS_2_TEST
 #define SSE_SHIFTER_LINE_MINUS_106_BLACK // loSTE screens
-#define SSE_SHIFTER_LEFT_OFF_60HZ //24 bytes!
+
 #define SSE_SHIFTER_RIGHT_OFF_BY_SHIFT_MODE //beeshift0
 #if defined(SSE_SHIFTER_0BYTE_LINE) // former switch approach
 #define SSE_SHIFTER_0BYTE_LINE_SYNC2 // loSTE screens
@@ -978,10 +975,9 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_MMU)
 #undef SSE_MMU_WU_0_BYTE_LINE
-#undef SSE_MMU_WU_IOR_HACK 
-#undef SSE_MMU_WU_IOW_HACK 
-#if defined(SSE_STF)
-#define SSE_MMU_WU_DL // Dio's DE-LOAD delay
+
+
+#if defined(SSE_STF) && defined(SSE_MMU_WU)
 #define SSE_MMU_WU_RESET_ON_SWITCH_ST
 #endif
 #endif//mmu
@@ -994,8 +990,8 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_SHIFTER)
 #if defined(SSE_SHIFTER_TRICKS)
-#undef SSE_SHIFTER_LINE_PLUS_2_STE_DSOS
-#define SSE_SHIFTER_LINE_PLUS_2_STE // hack?
+
+
 #define SSE_SHIFTER_STATE_MACHINE //simpler approach and WS-aware
 #define SSE_SHIFTER_STE_HI_HSCROLL
 #if defined(SSE_SHIFTER_STATE_MACHINE)
@@ -1131,13 +1127,8 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_SHIFTER_TRICKS)
 #define SSE_SHIFTER_MED_RES_SCROLLING_360//switch was missing in original source revision
 #define SSE_SHIFTER_PALETTE_NOISE //UMD8730 STF
-#if defined(SSE_HACKS)
-#define SSE_SHIFTER_XMAS2004 // XMas 2004 by Paradox shift
-#endif//hck
 #endif//tricks
-#if defined(SSE_SHIFTER_UNSTABLE)
-#define SSE_SHIFTER_UNSTABLE_360
-#endif
+
 #endif//sft
 
 #if defined(SSE_SOUND)
@@ -1282,8 +1273,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//var
 
 #if defined(SSE_VID_BORDERS)
-#define SSE_VID_BORDERS_416_NO_SHIFT0
-#define SSE_VID_BORDERS_416_NO_SHIFT1 // check border on/off
 #define SSE_VID_BORDERS_LB_DX1 // check border on/off
 #endif
 
@@ -1396,10 +1385,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_INT_HBL_INLINE
 #endif//hbl
 #endif//int
-
-#if defined(SSE_TIMINGS)
-#define SSE_TIMINGS_FRAME_ADJUSTMENT // due to Shifter tricks
-#endif
 
 #if defined(SSE_VARIOUS)
 #define SSE_VAR_WRONG_IMAGE_ALERT1
@@ -1783,7 +1768,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_MMU)
 #define SSE_MMU_SDP1
-#define SSE_MMU_SDP2
+
 #endif
 
 #if defined(SSE_OSD)
@@ -1796,7 +1781,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SHIFTER_HIRES_COLOUR_DISPLAY//My Socks are Weapons
 #ifndef IN_RC
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
-#define SSE_SHIFTER_HIRES_COLOUR_DISPLAY_370 //we change the way later
+#define SSE_SHIFTER_HIRES_COLOUR_DISPLAY_370
 #endif
 #endif
 #define SSE_SHIFTER_HIRES_OVERSCAN//3.7.0
@@ -1805,9 +1790,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SHIFTER_STE_READ_SDP_HSCROLL1 // undef 373
 #define SSE_SHIFTER_STE_READ_SDP_SKIP // bugfix
 #define SSE_SHIFTER_LINE_MINUS_2_DONT_FETCH //BIG Demo #2 bad raster finally!
-#undef SSE_SHIFTER_LINE_PLUS_2_STE
-#define SSE_SHIFTER_LINE_PLUS_2_STE2 //tested on hardware
-#define SSE_SHIFTER_LINE_PLUS_20B // general
+
 #define SSE_SHIFTER_LINE_PLUS_4
 #define SSE_SHIFTER_LINE_PLUS_6
 #define SSE_SHIFTER_DOLB_STE
@@ -2236,19 +2219,16 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_GLUE)
 
-#define SSE_GLUE_FRAME_TIMINGS  // big timing change, necessary
-#define SSE_GLUE_THRESHOLDS     // computing thresholds only when changing option, optional
+#define SSE_GLUE_FRAME_TIMINGS  // big timing change - optional
+#define SSE_GLUE_THRESHOLDS     // computing thresholds only when changing option - optional
 
 #if defined(SSE_GLUE_FRAME_TIMINGS)
 #define SSE_GLUE_FRAME_TIMINGS_HBL // routines of last scanline
 #define SSE_GLUE_FRAME_TIMINGS_INIT // not indispensable
-#define SSE_GLUE_FRAME_TIMINGS_B // eliminate old var
-#undef SSE_SHIFTER_FIX_LINE508_CONFUSION // hack unnecessary
-#undef SSE_TIMINGS_FRAME_ADJUSTMENT // hack unnecessary
 #undef SSE_INT_VBL_STF // hack unnecessary
 #endif//SSE_GLUE_FRAME_TIMINGS
-#define SSE_GLUE_60HZ_OVERSCAN2 // # lines in bottom
-#undef SSE_SHIFTER_LEFT_OFF_60HZ//forget it
+
+
 #undef SSE_STF_VERT_OVSCN
 #endif//glue
 
@@ -2323,7 +2303,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_MMU)
 #define SSE_MMU_RELOAD_SDP_380
-#if defined(SSE_MMU_WU_DL)
+#if defined(SSE_MMU_WU)
 #define SSE_MMU_WU_STE_380
 #endif
 #endif
@@ -2340,17 +2320,11 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_GLUE_FRAME_TIMINGS)
 #define SSE_SHIFTER_HIRES_RASTER // edgy stuff in monochrome mode (Time Slices)
 #endif
-#ifndef IN_RC
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
-#define SSE_SHIFTER_HIRES_COLOUR_DISPLAY_380//better test, compatible with GLUE refactoring
-#endif
-#endif
 #if defined(SSE_SHIFTER_UNSTABLE)
-#define SSE_SHIFTER_UNSTABLE_380 // demo Closure
-#define SSE_SHIFTER_UNSTABLE_380_LINE_PLUS_2 // demo NPG_WOM
+#define SSE_SHIFTER_UNSTABLE_380
 #endif
 #define SSE_SHIFTER_60HZ_LINE // compensate fix in 'read SDP'
-#define SSE_SHIFTER_KRYOS//hack undef 3.8.1
+
 #define SSE_SHIFTER_STE_MED_HSCROLL2 // Desktop Central
 #endif//sft
 
@@ -2390,7 +2364,6 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_VID_BORDERS)
 #define SSE_VID_BORDERS_LIMIT_TO_245
 #define SSE_VID_BORDERS_LINE_PLUS_20
-#define SSE_VID_BORDERS_416_NO_SHIFT_380
 #endif
 #endif
 
@@ -2411,7 +2384,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_CPU)
-#define SSE_CPU_CHECK_VIDEO_RAM_381
 #define SSE_CPU_E_CLOCK5
 #if defined(SSE_CPU_HALT)
 #define SSE_CPU_HALT2 // can reset
@@ -2425,10 +2397,9 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_CPU_TRACE_REFACTOR)
 #define SSE_CPU_TPEND2 //use it
 #endif
-#endif
+#endif//cpu
 
 #if defined(SSE_GLUE)
-#define SSE_GLUE_381
 #define SSE_GLUE_EXT_SYNC
 #endif
 
@@ -2438,7 +2409,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2 // eliminate old code and variables
 #endif
 #define SSE_MMU_LINEWID_TIMING
-#if defined(SSE_MMU_WU_DL)
+#if defined(SSE_MMU_WU)
 #define SSE_MMU_WU_STE_381
 #endif
 #endif//mmu
@@ -2446,12 +2417,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_SHIFTER)
 #define SSE_SHIFTER_60HZ_LINE2
 #define SSE_SHIFTER_HSCROLL_381
-#define SSE_SHIFTER_MED_OVERSCAN_SHIFT_381
-#define SSE_SHIFTER_SCHNUSDIE_381
-#if defined(SSE_SHIFTER_UNSTABLE)
-#define SSE_SHIFTER_UNSTABLE_381
-#undef SSE_SHIFTER_KRYOS
-#endif
+
 #endif//sft
 
 #if defined(SSE_SOUND)
@@ -2466,8 +2432,6 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_VIDEO)
 #if defined(SSE_VID_BORDERS)
 #define SSE_VID_BORDERS_413_381
-#undef SSE_VID_BORDERS_416_NO_SHIFT4
-#define SSE_VID_BORDERS_416_NO_SHIFT_381 // change left_border and right_border
 #define SSE_VID_BORDERS_BIGTOP_381
 #define SSE_VID_BORDERS_LINE_PLUS_20_381 // left border 12 pixels
 #endif//borders
@@ -2502,15 +2466,11 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_TPEND_382
 #endif//cpu
 
-#if defined(SSE_GLUE)
-#define SSE_GLUE_382
-#endif                                                             
-
 #if defined(SSE_GUI)
 #define SSE_GUI_MOUSE_VM_FRIENDLY //VM for virtual machine
 #endif
 
-#if defined(SSE_INT_HBL) && defined(SSE_STF) && defined(SSE_MMU)
+#if defined(SSE_INT_HBL) && defined(SSE_STF) && defined(SSE_MMU_WU)
 #define SSE_INT_HBL_E_CLOCK_HACK_382 //here we go again
 #endif
 
@@ -2525,11 +2485,9 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
 #define SSE_SHIFTER_HIRES_COLOUR_DISPLAY_382 // My Socks Are Weapons, other way
 #undef SSE_SHIFTER_HIRES_COLOUR_DISPLAY_370
-#undef SSE_SHIFTER_HIRES_COLOUR_DISPLAY_380 // incl. in 370
 #endif
 #endif
-#undef SSE_SHIFTER_PANIC//it was cool, but fake emu, it's bugged now
-#define SSE_SHIFTER_UNSTABLE_382
+
 #endif//sft
 
 #if defined(SSE_SOUND)
@@ -2562,7 +2520,6 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_NO_DD)
 #define SSE_VID_D3D_ONLY // D3D has smaller footprint than DD
 #endif
-#define SSE_VID_BORDERS_416_NO_SHIFT_382
 #endif
 #endif//vid
 

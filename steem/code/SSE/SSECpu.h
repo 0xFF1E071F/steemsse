@@ -18,7 +18,9 @@ void exception(int,exception_action,MEM_ADDRESS);
 #include <blitter.decla.h>
 #include <mfp.decla.h>
 #include "SSEDebug.h"
-#include "SSEShifter.h" //TIMING_INFO
+//#include "SSEShifter.h" //TIMING_INFO
+#include "SSEVideo.h"
+
 #define LOGSECTION LOGSECTION_CPU 
 
 #if !defined(SSE_SHIFTER)
@@ -411,7 +413,7 @@ void m68k_lpoke_abus2(LONG);
 #define IRC   prefetch_buf[1] // Instruction Register Capture
 #define IR    prefetch_buf[0] // Instruction Register
 #define IRD   ir              // Instruction Register Decoder
-
+#pragma pack(push, 1)
 struct TM68000 {
   TM68000();
 #if defined(SSE_CPU_PREFETCH_TIMING) && !defined(SSE_CPU_PREFETCH_TIMING_EXCEPT)
@@ -494,11 +496,7 @@ struct TM68000 {
 #if defined(SSE_CPU_PREFETCH)
 
 #if defined(SSE_CPU_PREFETCH_CLASS)
-#if defined(SSE_VAR_RESIZE_380)
   BYTE PrefetchClass; // see ijor's article
-#else
-  int PrefetchClass; // see ijor's article
-#endif
 #endif
 
 #if defined(SSE_CPU_PREFETCH_CALL)
@@ -535,6 +533,8 @@ struct TM68000 {
   int dispatcher
 #endif
   );
+#pragma pack(pop)
+
 #if defined(SSE_CPU_E_CLOCK_370) && defined(SSE_CPU_E_CLOCK_DISPATCHER)
   BYTE LastEClockCycles[3];
 #endif

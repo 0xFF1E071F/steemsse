@@ -176,7 +176,7 @@ void init_timings()
 
   cpu_time_of_start_of_event_plan=0; //0x7f000000; // test overflow
 
-#if !defined(SSE_GLUE_FRAME_TIMINGS_B)
+#if !defined(SSE_GLUE_FRAME_TIMINGS)
 #if defined(SSE_INT_MFP_RATIO)
   if (n_cpu_cycles_per_second>CpuNormalHz){
 #else

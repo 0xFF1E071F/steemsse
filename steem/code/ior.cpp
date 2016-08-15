@@ -121,12 +121,6 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
 
   BYTE ior_byte=0xff; // default value
 
-#if defined(SSE_MMU_WU_IO_BYTES_R)
-  bool adjust_cycles=!io_word_access && MMU.OnMmuCycles(LINECYCLES);
-  if(adjust_cycles)
-    cpu_cycles+=-2; // = +2 cycles
-#endif
-
 #if defined(SSE_CPU_ROUNDING_BUS)
 /*  Should round up only for RAM and Shifter (palette), not peripherals
     that sit on the CPU bus.
@@ -1314,11 +1308,6 @@ FF8240 - FF827F   palette, res
     TRACE_LOG("%d PC %X IOR.B %X : %X\n",ACT,old_pc,addr,ior_byte);
 #endif
 
-#if defined(SSE_MMU_WU_IO_BYTES_R)
-  if(adjust_cycles)
-    cpu_cycles+=2; 
-#endif
-
   return ior_byte;
 
 #else // Steem 3.2
@@ -1869,36 +1858,6 @@ FF8240 - FF827F   palette, res
 //---------------------------------------------------------------------------
 WORD ASMCALL io_read_w(MEM_ADDRESS addr)
 {
-
-#if defined(SSE_MMU_WU_IOR_HACK)//no
-
-  WORD return_value;
-  int CyclesIn=LINECYCLES;
-  if(MMU.OnMmuCycles(CyclesIn))
-  {
-    TRACE("ior %X cycle %d\n",addr,CyclesIn);
-    cpu_cycles-=2; // - = + !!!!
-  }
-  if (addr>=0xff8240 && addr<0xff8260){  //palette
-    DEBUG_CHECK_READ_IO_W(addr);
-    int n=addr-0xff8240;n/=2;
-    return_value=STpal[n];
-  }else{
-    io_word_access=true;
-    WORD x=WORD(io_read_b(addr) << 8);
-    x|=io_read_b(addr+1);
-    io_word_access=0;
-#if defined(SSE_DEBUG_TRACE_IO)
-    TRACE_LOG("PC %X read word %X at %X\n",old_pc,x,addr);
-#endif
-    return_value=x;
-  }
-  if(MMU.OnMmuCycles(CyclesIn))
-    cpu_cycles+=2;
-  return return_value;
-
-#else
-
   if (addr>=0xff8240 && addr<0xff8260){  //palette
     DEBUG_CHECK_READ_IO_W(addr);
     int n=addr-0xff8240;n/=2;
@@ -2104,7 +2063,7 @@ Done one cycle of all palettes
 #endif
     return x;
   }
-#endif  
+
 }
 //---------------------------------------------------------------------------
 DWORD ASMCALL io_read_l(MEM_ADDRESS addr)
