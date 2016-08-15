@@ -56,26 +56,11 @@ EXT int cpu_time_of_last_vbl,shifter_cycle_base;
 
 EXT int cpu_timer_at_start_of_hbl;
 
-#if defined(SSE_GLUE_FRAME_TIMINGS_B)
-
+#if defined(SSE_GLUE_FRAME_TIMINGS)
 // no more plans!
-
-#elif defined(SSE_VAR_RESIZE_370) 
-/*  There was room for hbi, hbl but only hbl was used for some reason.
-    Since we can't fix anything with apart hbl and hbi events, we may as well
-    reduce memory footprint by: 
-    (313*2+263*2+600*2)*(4+4)=18816 bytes!
-*/
-EXT screen_event_struct event_plan_50hz[313+4],event_plan_60hz[263+4],event_plan_70hz[600+4],
-                    event_plan_boosted_50hz[313+4],event_plan_boosted_60hz[263+4],event_plan_boosted_70hz[600+4];
-
-
 #else
-
 screen_event_struct event_plan_50hz[313*2+2],event_plan_60hz[263*2+2],event_plan_70hz[600*2+2],
                     event_plan_boosted_50hz[313*2+2],event_plan_boosted_60hz[263*2+2],event_plan_boosted_70hz[600*2+2];
-#endif
-#if !defined(SSE_GLUE_FRAME_TIMINGS_B) // there's no pointer anymore
 screen_event_struct*screen_event_pointer,*event_plan[4],*event_plan_boosted[4];
 #endif
 EVENTPROC event_mfp_timer_timeout[4]={event_timer_a_timeout,event_timer_b_timeout,
@@ -141,7 +126,6 @@ void exception(int exn,exception_action ea,MEM_ADDRESS a)
 //---------------------------------------------------------------------------
 void run()
 {
-
 #if defined(SSE_CPU_HALT)
   if(M68000.ProcessingState==TM68000::HALTED)
     return; // cancel "run" until reset
@@ -260,7 +244,6 @@ void run()
           // This has to be in while loop as it can cause an interrupt,
           // thus making another event happen.
           if (cpu_cycles>0) check_for_interrupts_pending();
-
         }//while (cpu_cycles<=0)
 
         CHECK_BREAKPOINT
@@ -757,7 +740,7 @@ void event_hbl()   //just HBL, don't draw yet
     hbl_pending=true;
   }
   if (dma_sound_on_this_screen) dma_sound_fetch();//,dma_sound_fetch();
-#if !defined(SSE_GLUE_FRAME_TIMINGS_B)
+#if !defined(SSE_GLUE_FRAME_TIMINGS)
   screen_event_pointer++;  
 #endif
 #if defined(SSE_IKBD_6301)
@@ -836,7 +819,6 @@ void event_scanline_sub() {
 
 void event_scanline()
 {
-
 #if defined(SSE_GLUE_FRAME_TIMINGS_HBL)
 
   event_scanline_sub();
@@ -1159,7 +1141,7 @@ void event_scanline()
 #if !defined(SSE_GLUE_FRAME_TIMINGS_HBL)
   if (dma_sound_on_this_screen) dma_sound_fetch(); 
 #endif
-#if !defined(SSE_GLUE_FRAME_TIMINGS_B)
+#if !defined(SSE_GLUE_FRAME_TIMINGS)
   screen_event_pointer++;
 #endif
 #if !defined(SSE_VID_D3D_3BUFFER)
@@ -1216,7 +1198,7 @@ void event_start_vbl()
   overscan_add_extra=0;
 #endif
   left_border=BORDER_SIDE;right_border=BORDER_SIDE;
-#if !defined(SSE_GLUE_FRAME_TIMINGS_B)
+#if !defined(SSE_GLUE_FRAME_TIMINGS)
   screen_event_pointer++;
 #endif
 #if defined(SSE_GLUE_FRAME_TIMINGS)
@@ -1706,13 +1688,9 @@ void event_vbl_interrupt() //SS misleading name?
     its trace decoding routine.
     Update v3.8.2: other way (SSE_SHIFTER_HIRES_COLOUR_DISPLAY_382)
 */
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_380)
-  if( screen_res<2 && (Glue.m_ShiftMode&2) && COLOUR_MONITOR
+
+  if( screen_res<2 && (Shifter.m_ShiftMode&2) && COLOUR_MONITOR
     && Glue.CurrentScanline.Cycles==224) 
-#else
-  if( screen_res<2 && (Glue.m_ShiftMode&2) && COLOUR_MONITOR
-    && (ACT-Glue.CycleOfLastChangeToShiftMode(2)>512)) //weak
-#endif
   {
     TRACE_OSD("RES2");
     screen_res=2;
@@ -1720,16 +1698,7 @@ void event_vbl_interrupt() //SS misleading name?
     shifter_freq_idx=2;
     init_screen(); //radical but spares much code
   }
-#if !defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_380)
-  else if(screen_res==2 && !(Shifter.m_ShiftMode&2) && COLOUR_MONITOR) 
-  {
-    screen_res=Shifter.m_ShiftMode&2;//0;//back to LORES //bug
-    shifter_freq=50;
-    shifter_freq_idx=0;
-    init_screen();
-  }
-#endif
-#endif
+#endif//SSE_SHIFTER_HIRES_COLOUR_DISPLAY_370
 
   shifter_freq_at_start_of_vbl=shifter_freq;
   scanline_time_in_cpu_cycles_at_start_of_vbl=scanline_time_in_cpu_cycles[shifter_freq_idx];
@@ -1741,7 +1710,7 @@ void event_vbl_interrupt() //SS misleading name?
 // /////                                 CPU_CYCLES_FROM_LINE_RETURN_TO_HBL_INTERRUPT;
 //  cpu_time_of_next_hbl_interrupt=cpu_time_of_last_vbl; ///// HBL happens immediately after VBL
 
-#if !defined(SSE_GLUE_FRAME_TIMINGS_B)
+#if !defined(SSE_GLUE_FRAME_TIMINGS)
   screen_event_pointer++;
   if (screen_event_pointer->event==NULL){
     cpu_time_of_start_of_event_plan=cpu_time_of_last_vbl;
@@ -1801,15 +1770,6 @@ void event_vbl_interrupt() //SS misleading name?
 #endif
 #endif
 
-#if !defined(SSE_GLUE_FRAME_TIMINGS)
-#if defined(SSE_TIMINGS_FRAME_ADJUSTMENT)
-  if(shifter_freq_at_start_of_vbl==50)
-  {
-    event_plan_50hz[314].time=160256;//restore!!!
-  }
-#endif
-#endif
-
 #if defined(SSE_CPU_E_CLOCK_382)
   M68000.UpdateCyclesForEClock(); // this function is called at least each VBL
 #endif
@@ -1819,7 +1779,7 @@ void event_vbl_interrupt() //SS misleading name?
 void prepare_cpu_boosted_event_plans()
 {
   n_millions_cycles_per_sec=n_cpu_cycles_per_second/1000000;
-#if !defined(SSE_GLUE_FRAME_TIMINGS_B)
+#if !defined(SSE_GLUE_FRAME_TIMINGS)
   screen_event_struct *source,*dest;
 #endif
   int factor=n_millions_cycles_per_sec;
@@ -1828,7 +1788,7 @@ void prepare_cpu_boosted_event_plans()
     SSEOption.Chipset2=SSEOption.Chipset1=false; 
 #endif
   for (int idx=0;idx<3;idx++){ //3 frequencies
-#if !defined(SSE_GLUE_FRAME_TIMINGS_B)
+#if !defined(SSE_GLUE_FRAME_TIMINGS)
     source=event_plan[idx];
     dest=event_plan_boosted[idx];
     for (;;){
@@ -1900,13 +1860,9 @@ void event_pasti_update()
 
 #if defined(SSE_GLUE_FRAME_TIMINGS)
 void event_trigger_vbi() { //6X cycles into frame (reference end of HSYNC)
-#if !defined(SSE_GLUE_FRAME_TIMINGS) // too many false alerts
-  ASSERT(scan_y==-scanlines_above_screen[0]||scan_y==-scanlines_above_screen[1]||scan_y==-scanlines_above_screen[2]);
-#endif
 #if defined(SSE_GLUE_FRAME_TIMINGS)
   ASSERT(!Glue.Status.vbi_done);
 #endif
-
 #if defined(SSE_MMU_RELOAD_SDP_380)
 /*  The video counter is reloaded from VBASE a second time at the end
     of VSYNC, when VBI is set pending.
@@ -1918,11 +1874,11 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
     Cases
     Beyond/Universal Coders
 */
+
 #if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
   MMU.VideoCounter=
 #endif
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer=xbios2;
-  //event_start_vbl();
 #endif
 
 #if defined(SSE_INT_VBL_380) && defined(SSE_CPU_E_CLOCK_370) && defined(SSE_INT_VBL_IACK2)
@@ -1938,7 +1894,7 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
   //We don't expect cases:
    //ASSERT(vbl_pending); //there are some, it's an annoying assert
 
-#if !defined(SSE_GLUE_FRAME_TIMINGS_B)
+#if !defined(SSE_GLUE_FRAME_TIMINGS)
   screen_event_pointer++;
 #endif
 #if defined(SSE_GLUE_FRAME_TIMINGS)

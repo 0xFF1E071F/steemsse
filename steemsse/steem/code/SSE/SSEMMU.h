@@ -20,7 +20,7 @@ State 2
 +-----+
 
 
-When we don't use the DL concept (SSE_MMU_WU_DL not defined), variable 
+When we don't use the DL concept (SSE_MMU_WU not defined), variable 
 OPTION_WS is WU or 0.
 
 +--------------------------------------------+---------------+
@@ -36,7 +36,7 @@ OPTION_WS is WU or 0.
 +------------------+------------+------------+-------+-------+
 
 
-When we use the DL concept (SSE_MMU_WU_DL defined), OPTION_WS 
+When we use the DL concept (SSE_MMU_WU defined), OPTION_WS 
 is more confusing, its value is no wake-up state but just an option index.
 
 +------------------------------------------------------------+---------------+
@@ -66,91 +66,41 @@ On STE there's no latency, DL=3, WS=1.
 #include "SSEShifter.h"
 
 #ifdef SSE_MMU
+/*  We were having a nasty bug in the _DEBUG build where writing VideoCounter 
+    would corrupt SideBorderSize, if we moved instantiation of video objects
+    to SSEVideo.
+    This directive ensures that the same size is considered everywhere.
+    We also moved data to be better aligned. 
+*/
+#pragma pack(push, 1)
 
 struct TMMU {
-#if defined(SSE_MMU_WU_DL)
+
+  //DATA
+#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
+  MEM_ADDRESS VideoCounter; // to separate from rendering
+#endif
+#if defined(SSE_MMU_WU)
   BYTE WU[6]; // 0, 1, 2
   BYTE WS[6]; // 0 + 4 + panic
   char ResMod[6],FreqMod[6];
-#else
-  inline bool OnMmuCycles(int CyclesIn);
-  inline bool WakeUpState1(); // for STF
-  inline bool WakeUpState2(); // for STF 
 #endif
-
-#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
-  short SDPMiddleByte;
-#endif
-#if defined(SSE_VS2008_WARNING_382)
-  MEM_ADDRESS ReadVideoCounter(int CyclesIn);
-#else
-  MEM_ADDRESS ReadVideoCounter(int CyclesIn,int dispatcher=DISPATCHER_NONE);
-#endif
-  void ShiftSDP(int shift);  
-  void WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b);
-
 #if defined(SSE_MMU_LINEWID_TIMING)
   BYTE Linewid0;
 #endif
 #if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
   BYTE WordsToSkip; // for HSCROLL
-  MEM_ADDRESS VideoCounter; // to separate from rendering
+#endif
+
+  // FUNCTIONS
+  MEM_ADDRESS ReadVideoCounter(int CyclesIn);
+  void ShiftSDP(int shift);  
+  void WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b);
+#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
   void UpdateVideoCounter(int CyclesIn);
 #endif
 };
-
-extern TMMU MMU;
-
-#if !defined(SSE_MMU_WU_DL)
-
-/*  This function tells if the program is attempting a read or write on the
-    bus while the MMU has the bus. In that case, access should be delayed by
-    2 cycles. In practice it isn't used to check RAM access but IO access.
-    We ended up creating a new MMU object and an inline function because
-    of the complicated defines (as usual in this build).
-    3.5.4: concept should change
-*/
-inline bool TMMU::OnMmuCycles(int CyclesIn) {
-  return  WakeUpState1()&&(CyclesIn%4) ||  WakeUpState2()&&!(CyclesIn%4) ;
-}
-
-/*  A bit confusing. We have option Wake Up State 2 for both STF & STE, but
-    apparently the STE isn't in the same wake up state 2 as the STF where
-    all Shifter tricks may be shifted (lol) by 2 cycles, instead it would just
-    be the palette delay (1 cycle).
-    3.5.4: give up this STE thing?
-*/
-inline bool TMMU::WakeUpState1() {
-  return (
-#if defined(SSE_STF) && !defined(SSE_MMU_WU_STE_STATE2)
-  (ST_TYPE!=STE) &&
-#endif
-
-#if defined(SSE_MMU_WU_DL)
-  (OPTION_WS==3||OPTION_WS==4)
-#else
-  (OPTION_WS==1)
-#endif
-  );
-}
-
-inline bool TMMU::WakeUpState2() {
-  return (
-#if defined(SSE_STF) && !defined(SSE_MMU_WU_STE_STATE2)
-  (ST_TYPE!=STE) &&
-#endif
-#if defined(SSE_MMU_WU_DL)
-  (OPTION_WS==1||OPTION_WS==2
-#if defined(SSE_SHIFTER_PANIC) // used for omega only
-  ||OPTION_WS==WU_SHIFTER_PANIC
-#endif
-  )
-#else
-  (OPTION_WS&2)
-#endif
-  );
-}
-#endif
+#pragma pack(pop)
 
 #endif
 #endif//#ifndef SSEMMU_H

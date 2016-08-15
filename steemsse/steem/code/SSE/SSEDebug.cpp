@@ -62,7 +62,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_INIT ] =1; //0; by default
   logsection_enabled[ LOGSECTION_CRASH ] = 0;
   logsection_enabled[ LOGSECTION_STEMDOS ] = 0;
-  logsection_enabled[ LOGSECTION_IKBD ] = 1;
+  logsection_enabled[ LOGSECTION_IKBD ] = 0;
   logsection_enabled[ LOGSECTION_AGENDA ] = 0;
   logsection_enabled[ LOGSECTION_INTERRUPTS ] = 0;
   logsection_enabled[ LOGSECTION_TRAP ] = 0;
@@ -403,7 +403,7 @@ void TDebug::TraceGeneralInfos(int when) {
     if (n_cpu_cycles_per_second>CpuNormalHz)
       TRACE("Speed %d Mhz ",n_cpu_cycles_per_second/1000000);
 #endif
-#if defined(SSE_STF) && defined(SSE_MMU_WU_DL)
+#if defined(SSE_STF) && defined(SSE_MMU_WU)
     TRACE("%s%d; ",st_model_name[ST_TYPE],MMU.WS[OPTION_WS]);
 #endif
     TRACE("T%X %d; ",tos_version,ROM_PEEK(0x1D)); //+country

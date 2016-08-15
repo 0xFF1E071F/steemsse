@@ -63,12 +63,6 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
     TRACE_LOG("%d PC %X write byte %X to %X\n",ACT,old_pc,io_src_b,addr);
 #endif
 
-#if defined(SSE_MMU_WU_IO_BYTES_W) //no, too radical
-   bool adjust_cycles=!io_word_access && MMU.OnMmuCycles(LINECYCLES);
-   if(adjust_cycles)
-     cpu_cycles+=-2; // = +2 cycles!
-#endif
-
 #if defined(SSE_CPU_ROUNDING_BUS)
 /*  Should round up only for RAM and Shifter (palette), not peripherals
     that sit on the CPU bus.
@@ -1703,12 +1697,6 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 
     case 0xff8200: {
 
-#if defined(SSE_MMU_WU_IO_BYTES_W_SHIFTER_ONLY)
-      bool adjust_cycles=!io_word_access && MMU.OnMmuCycles(LINECYCLES);
-      if(adjust_cycles)
-        cpu_cycles+=-2; // = +2 cycles!
-#endif
-
 #if defined(SSE_VAR_OPT_383A1)
       act=ACT;
 #endif
@@ -1747,7 +1735,6 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
           TRACE_VID("Single byte  %X write pal %X STPal[%d] %X->%X\n",io_src_b,addr,n,STpal[n],new_pal);
         }
 #endif
-
         Shifter.SetPal(n,new_pal);
         log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Palette change at scan_y="+scan_y+" cycle "+(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl));
 
@@ -1825,6 +1812,10 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
 
 #if defined(SSE_SHIFTER_SDP_WRITE)
           MMU.WriteVideoCounter(addr,io_src_b);
+#ifdef SSE_GLUE_REFACTOR_OVERSCAN_EXTRA
+          log_to(LOGSECTION_VIDEO,Str("VIDEO: ")+HEXSl(old_pc,6)+" - Set Shifter draw pointer to "+
+            HEXSl(MMU.VideoCounter,6)+" at "+scanline_cycle_log());
+#endif
           break;
 #else // Steem 3.2 or SSE_SHIFTER_SDP_WRITE not defined
           {
@@ -2084,10 +2075,6 @@ rasterline to allow horizontal fine-scrolling.
         }//sw
       }//if     
 
-#if defined(SSE_MMU_WU_IO_BYTES_W_SHIFTER_ONLY)
-      if(adjust_cycles)
-        cpu_cycles+=2;
-#endif
       break;
 
 #else // Steem 3.2
@@ -2545,12 +2532,6 @@ MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
       exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
     }
   }
-
-#if defined(SSE_MMU_WU_IO_BYTES_W)
-  if(adjust_cycles)
-    cpu_cycles+=2;
-#endif
-
 }
 //---------------------------------------------------------------------------
 void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
@@ -2580,12 +2561,6 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
 
 #if defined(SSE_CPU_DATABUS)
   M68000.dbus=io_src_w;
-#endif
-
-#if defined(SSE_MMU_WU_IOW_HACK)//no
-  int CyclesIn=LINECYCLES;
-  if(MMU.OnMmuCycles(CyclesIn))
-      cpu_cycles-=2; // - = + !!!!
 #endif
 
   if (addr>=0xff8240 && addr<0xff8260){  //palette
@@ -2633,11 +2608,6 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
     io_write_b(addr+1,LOBYTE(io_src_w));
     io_word_access=0;
   }
-#if defined(SSE_MMU_WU_IOW_HACK)//no
-  if(MMU.OnMmuCycles(CyclesIn))
-    cpu_cycles+=2;
-#endif
-
 }
 //---------------------------------------------------------------------------
 void ASMCALL io_write_l(MEM_ADDRESS addr,LONG io_src_l)

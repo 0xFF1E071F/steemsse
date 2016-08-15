@@ -14,11 +14,13 @@
 #include <mymisc.h>
 #include <gui.decla.h>
 #include <ikbd.decla.h>
+#include <cpu.decla.h>
 
 #include "SSEDebug.h"
 #include "SSE6301.h"
 #include "SSEOption.h"
-#include "SSEShifter.h"
+//#include "SSEShifter.h"
+#include "SSEVideo.h"
 #include "SSEFrameReport.h"
 
 THD6301 HD6301; // singleton

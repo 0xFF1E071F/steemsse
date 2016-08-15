@@ -6,8 +6,6 @@
 
 #define LOGSECTION LOGSECTION_VIDEO
 
-#include <cpu.decla.h>
-
 #if defined(SSE_SHIFTER)
 /*  The ST was a barebone machine made up of cheap components hastily patched
     together, including the video Shifter.
@@ -59,61 +57,47 @@ enum {DISPATCHER_NONE, DISPATCHER_CPU, DISPATCHER_LINEWIDTH,
 #define SHIFTER_RASTER_PREFETCH_TIMING 16//(shifter_freq==72 ? 4 : 16) 
 #define SHIFTER_RASTER (shifter_freq==72? 2 : (screen_res ? 4 : 8)) 
 
+#pragma pack(push, 1)
 struct TShifter {
-/*  As explained by ST-CNX and others, the video picture is produced by the
-    MMU, the GLUE and the Shifter. 
-    In our emulation, we pretend that the Shifter does most of it by itself:
-    fetching memory, generating signals... It's a simplification. Otherwise
-    we could imagine new objects: TMMU, TGlue...
-*/
+  //DATA
+#if defined(WIN32)
+  BYTE *ScanlineBuffer;
+#endif
+#if defined(SSE_SHIFTER_STE_HI_HSCROLL)
+  DWORD Scanline[230/4+2]; // TODO
+#endif
+#if defined(SSE_DEBUG)
+  int nVbl;
+#endif
+#ifdef SSE_SHIFTER_HIRES_RASTER
+  BYTE Scanline2[112+1]; // element 112 holds # raster bytes
+#endif
+#if defined(SSE_SHIFTER_HSCROLL_380)
+  BYTE hscroll0; // what is/was HSCROLL at start of line
+#endif
+  BYTE HblStartingHscroll; // saving true hscroll in MED RES (no use)
+  BYTE m_ShiftMode;
+#if defined(SSE_SHIFTER_UNSTABLE)
+  BYTE Preload; // #words into Shifter's SR (shifts display)
+#endif
+  char HblPixelShift; // for 4bit scrolling, other shifts
+
+  //FUNCTIONS
   TShifter(); 
   ~TShifter();
 #if defined(WIN32)
   inline void DrawBufferedScanlineToVideo();
 #endif
   void DrawScanlineToEnd();
-
   void IncScanline();
-#if defined(SSE_SHIFTER_FIX_LINE508_CONFUSION)
-  inline bool Line508Confusion();
-#endif
   void Render(int cycles_since_hbl, int dispatcher=DISPATCHER_NONE);
   void Reset(bool Cold);
   inline void RoundCycles(int &cycles_in);
   void SetPal(int n, WORD NewPal);
   void Vbl();
-  int HblStartingHscroll; // saving true hscroll in MED RES (no use)
-  int HblPixelShift; // for 4bit scrolling, other shifts //BYTE?
-#if defined(WIN32)
-  BYTE *ScanlineBuffer;
-#endif
 
-  BYTE m_ShiftMode;
-
-#if defined(SSE_SHIFTER_UNSTABLE)
-  BYTE Preload; // #words into Shifter's RR (shifts display)
-#endif
-#if defined(SSE_SHIFTER_PANIC) || defined(SSE_SHIFTER_STE_HI_HSCROLL)
-  DWORD Scanline[230/4+2]; // the price of fun
-#endif
-
-#ifdef SSE_SHIFTER_HIRES_RASTER
-  BYTE Scanline2[112+1]; // element 112 holds # raster bytes
-#endif
-
-#if defined(SSE_TIMINGS_FRAME_ADJUSTMENT) // v3.6.4->v3.7.2
-  // it's a hack, less involved than making a reliable statemachine
-  WORD n508lines;
-#endif
-#if defined(SSE_SHIFTER_HSCROLL_380)
-  BYTE hscroll0; // what is/was HSCROLL at start of line
-#endif
-#if defined(SSE_DEBUG)
-  int nVbl;
-#endif
 };
-
-extern TShifter Shifter; // singleton
+#pragma pack(pop)
 
 // just taking some unimportant code out of Render for clarity
 

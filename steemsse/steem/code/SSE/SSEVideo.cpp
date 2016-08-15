@@ -5,6 +5,18 @@
 #include "SSEParameters.h"
 #include "SSEVideo.h"
 
+#if defined(SSE_VIDEO_CHIPSET)
+// Video chipset made of GLUE, MMU, Shifter
+TGlue Glue;
+#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
+TMMU MMU={0,{0,2,2,1,1,2},{0,2,4,3,1,2},{0,2,0,0,-2,2},{0,2,2,0,0,2},0,0};
+#elif defined(SSE_MMU_WU)
+TMMU MMU={{0,2,2,1,1,2},{0,2,4,3,1,2},{0,2,0,0,-2,2},{0,2,2,0,0,2}};
+#else
+TMMU MMU;
+#endif
+TShifter Shifter;
+#endif
 
 #if defined(SSE_VIDEO)
 

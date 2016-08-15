@@ -7,6 +7,8 @@
 #include <hfe/libhxcfe.h> //3rdparty
 #include <hfe/hfe_format.h> //3rdparty
 
+#pragma pack(push, 1)
+
 struct  TImageHFE {
   // interface (the same as for STW disk images)
   bool Open(char *path);
@@ -30,10 +32,11 @@ struct  TImageHFE {
   void Init();
   WORD MirrorMFM(WORD mfm_word);
   // variables
-  BYTE Id; //0,1, same as drive
-#if !(defined(SSE_VAR_RESIZE_372) && defined(SSE_DISK1))
-  WORD nBytes; // track data, not image
+#if !defined(SSE_VAR_RESIZE_372) || defined(SSE_VAR_RESIZE_382)
+  FILE *fCurrentImage; // use FloppyDrive's
 #endif
+  WORD *TrackData;
+  BYTE *ImageData;
 #if defined(SSE_DISK_HFE_DYNAMIC_HEADER) //spare some memory
   picfileformatheader *file_header;
   pictrack *track_header;
@@ -41,17 +44,16 @@ struct  TImageHFE {
   picfileformatheader file_header;
   pictrack track_header[84]; // should be enough
 #endif
+  int image_size;
+  WORD Position;
+#if !(defined(SSE_VAR_RESIZE_372) && defined(SSE_DISK1))
+  WORD nBytes; // track data, not image
+#endif
+  BYTE Id; //0,1, same as drive
 #if !defined(SSE_DISK2)
   BYTE current_side;//in Disk
 #endif
-  WORD Position;
-private: 
-#if !defined(SSE_VAR_RESIZE_372) || defined(SSE_VAR_RESIZE_382)
-  FILE *fCurrentImage; // use FloppyDrive's
-#endif
-  WORD *TrackData;
-  BYTE *ImageData;
-  int image_size;
 };
+#pragma pack(pop)
 
 #endif//#ifndef SSEHFE_H

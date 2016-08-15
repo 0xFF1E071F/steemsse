@@ -90,7 +90,7 @@ compatible only with the STF"));
     page_l+5+Wid+Offset,y,85+20,200,Handle,(HMENU)212,HInstance,NULL);
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("Ignore"));
 
-#if defined(SSE_MMU_WU_DL)
+#if defined(SSE_MMU_WU)
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("DL3 WU2 WS2"));
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("DL4 WU2 WS4"));
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("DL5 WU1 WS3"));
@@ -98,9 +98,6 @@ compatible only with the STF"));
 #else
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("Wake-up state 1"));
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("Wake-up state 2"));
-#endif
-#if defined(SSE_SHIFTER_PANIC) // 3 or 5
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,WU_SHIFTER_PANIC,(long)CStrT("Shifter panic"));
 #endif
   SendMessage(MMUWakeUpOption,CB_SETCURSEL,OPTION_WS,0);
 #if defined(SSE_GUI_383)
@@ -3125,7 +3122,7 @@ Windows 2000	5.0
     page_l+5+Wid+Offset,y,85,200,Handle,(HMENU)212,HInstance,NULL);
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("Ignore"));
 
-#if defined(SSE_MMU_WU_DL)
+#if defined(SSE_MMU_WU)
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("DL3 WU2 WS2"));
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("DL4 WU2 WS4"));
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("DL5 WU1 WS3"));
@@ -3133,9 +3130,6 @@ Windows 2000	5.0
 #else
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("Wake-up state 1"));
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("Wake-up state 2"));
-#endif
-#if defined(SSE_SHIFTER_PANIC) // 3 or 5
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,WU_SHIFTER_PANIC,(long)CStrT("Shifter panic"));
 #endif
   SendMessage(MMUWakeUpOption,CB_SETCURSEL,OPTION_WS,0);
   ToolAddWindow(ToolTip,Win,

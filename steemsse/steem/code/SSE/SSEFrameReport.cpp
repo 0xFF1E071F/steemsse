@@ -8,6 +8,9 @@
 #include <fdc.decla.h>
 #include <floppy_drive.decla.h>
 #include <run.decla.h>
+#include <emulator.decla.h>
+#include <cpu.decla.h>
+
 #include "SSEFrameReport.h"
 #include "SSEMMU.h"
 #include "SSEOption.h"
@@ -130,7 +133,7 @@ int TFrameEvents::Report() {
 #else
       "STE"
 #endif
-#if defined(SSE_MMU_WU_DL)
+#if defined(SSE_MMU_WU)
       ,MMU.WS[OPTION_WS]);
 #else
     ,0);

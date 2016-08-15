@@ -61,7 +61,7 @@ void TOptionBox::CreateMachinePage()
   wake_up_dd.id=4006;
   wake_up_dd.make_empty();
   wake_up_dd.additem("Ignore",0);
-#if defined(SSE_MMU_WU_DL)
+#if defined(SSE_MMU_WU)
   wake_up_dd.additem("DL3 WU2 WS2",1);
   wake_up_dd.additem("DL4 WU2 WS4",2);
   wake_up_dd.additem("DL5 WU1 WS3",3);
@@ -1397,7 +1397,7 @@ void TOptionBox::CreateSSEPage() {
   wake_up_dd.id=4006;
   wake_up_dd.make_empty();
   wake_up_dd.additem("Ignore wake-up state",0);
-#if defined(SSE_MMU_WU_DL)
+#if defined(SSE_MMU_WU)
   wake_up_dd.additem("DL3 WU2 WS2",1);
   wake_up_dd.additem("DL4 WU2 WS4",2);
   wake_up_dd.additem("DL5 WU1 WS3",3);

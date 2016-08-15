@@ -141,12 +141,9 @@ int left_border=BORDER_SIDE,right_border=BORDER_SIDE;
 #if !defined(SSE_VAR_RESIZE_370) || !defined(SSE_VIDEO_CHIPSET)
 bool right_border_changed=0;//we use the border mask instead
 #endif
-#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
+#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
 // We finally do without this confusing variable (especially annoying
 // for large display mode differences :)
-#elif defined(SSE_VAR_RESIZE_380)
-short overscan_add_extra;
-#else
 int overscan_add_extra;
 #endif
 LPPIXELWISESCANPROC jump_draw_scanline[3][4][3],draw_scanline,draw_scanline_lowres,draw_scanline_medres;
@@ -226,8 +223,6 @@ void ASMCALL draw_scanline_dont(int,int,int,int) {}
 
 void draw_begin()
 {
-//  ASSERT(draw_grille_black>0);
-//ASSERT( !draw_lock);
   if (draw_lock) return;
   /*
   #ifndef NO_CRAZY_MONITOR
@@ -713,7 +708,7 @@ void draw_end()
 /* SS this was the core of Shifter trick analysis in Steem 3.2.
    There's not so much code but it ran many cases eg Darkside of the Spoon,
    it was missing the 0byte line, 4bit scrolling.
-   It has been much expanded and commented in SSEShifter.cpp, then SSEGlue.cpp.
+   It has been much expanded and commented in SSEGlue.cpp.
    This function isn't compiled.
 */
 void draw_check_border_removal()
@@ -773,7 +768,6 @@ void draw_check_border_removal()
 
 /*
   // This should do something, but I don't know what! See Nostalgia Lemmings screen.
-//SS-> 0 byte line
   if (overscan_add_extra>-300){
     t=cpu_timer_at_start_of_hbl+48; //trigger point
     if (act>t){
@@ -1437,8 +1431,7 @@ void res_change()
 //---------------------------------------------------------------------------
 bool draw_routines_init()
 {
-  //TRACE_INIT("draw_routines_init\n");
-#if !defined(SSE_GLUE_FRAME_TIMINGS_B)
+#if !defined(SSE_GLUE_FRAME_TIMINGS)
 /*  Those timings are now computed at each event, so we don't need
     the frame plans anymore.
 */
@@ -1494,7 +1487,7 @@ bool draw_routines_init()
         evp++;
       }
     }
-    evp->time=160256; //SS check SSE_TIMINGS_FRAME_ADJUSTMENT
+    evp->time=160256;
     evp->event=event_vbl_interrupt;
     evp++;
     evp->event=NULL;

@@ -22,6 +22,8 @@
 
 #define SCP_DATA_WINDOW_TOLERANCY 20 
 
+#pragma pack(push, 1)
+
 struct TSCP_file_header {
   char IFF_ID[3]; //"SCP" (ASCII CHARS)
   BYTE IFF_VER; //version (nibbles major/minor)
@@ -77,31 +79,29 @@ struct  TImageSCP {
 #endif
   void IncPosition();
   void Init();
+#if defined(SSE_BOILER) && defined(SSE_DISK_SCP_TO_MFM_PREVIEW)
+  void InterpretFlux(); // was a dev step
+#endif
   // variables
-#if defined(SSE_DISK_SCP2A) 
-  BYTE Id; //0,1, same as drive
-#endif
-  WORD nBytes;
-#if !defined(SSE_VAR_RESIZE_372)
-  BYTE nSides;
-  BYTE nTracks;
-#endif
-  DWORD nBits;
-  TSCP_file_header file_header;
-  TSCP_track_header track_header;
-  DWORD Position;
-  BYTE rev;
-private: 
 #if !defined(SSE_VAR_RESIZE_372) || defined(SSE_VAR_RESIZE_382)
   FILE *fCurrentImage; // use FloppyDrive's
 #endif
   DWORD *TimeFromIndexPulse; // from IP
-#if defined(SSE_BOILER) && defined(SSE_DISK_SCP_TO_MFM_PREVIEW)
-  void InterpretFlux(); // was a dev step
+  DWORD nBits;
+  DWORD Position;
+  WORD nBytes;
+  TSCP_file_header file_header;
+  TSCP_track_header track_header;
+#if defined(SSE_DISK_SCP2A) 
+  BYTE Id; //0,1, same as drive
 #endif
-
+#if !defined(SSE_VAR_RESIZE_372)
+  BYTE nSides;
+  BYTE nTracks;
+#endif
+  BYTE rev;
 };
-
+#pragma pack(pop)
 
 #endif//scp
 

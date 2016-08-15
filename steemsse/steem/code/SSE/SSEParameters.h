@@ -273,7 +273,7 @@ enum {
 
 #endif
 
-#if !defined(SSE_GLUE)
+#if !defined(SSE_GLUE) || !defined(SSE_GLUE_FRAME_TIMINGS)
 #define HBL_FOR_STE (444)
 #define HBL_FOR_STF (444+4)
 #endif
@@ -558,17 +558,6 @@ Some STFs                32.02480    8.0071
 // MMU //
 /////////
 
-#if defined(SSE_MMU)
-
-#ifdef SSE_SHIFTER_PANIC
-#if defined(SSE_MMU_WU_DL)
-#define WU_SHIFTER_PANIC 5
-#else
-#define WU_SHIFTER_PANIC 3
-#endif
-#endif
-
-#endif
 
 
 /////////
@@ -579,7 +568,6 @@ Some STFs                32.02480    8.0071
 #define RED_LED_DELAY 1500 // Red floppy led for writing, in ms
 #define HD_TIMER 100 // Yellow hard disk led (imperfect timing)
 #endif
-
 
 
 

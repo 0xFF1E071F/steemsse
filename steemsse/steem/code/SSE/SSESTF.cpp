@@ -13,7 +13,7 @@
 #include "SSEInterrupt.h"
 #include "SSESTF.h"
 #include "SSEOption.h"
-#include "SSEGlue.h"
+#include "SSEVideo.h"
 
 // note this is global here, not in classes. TODO?
 // and it is also in the release build (but now used in TRACE)

@@ -51,11 +51,7 @@ struct TDebug {
 #endif
 #endif
 #if defined(SSE_DEBUG_ASSERT)
-#if defined(SSE_VAR_RESIZE_380)
   BYTE IgnoreErrors;
-#else
-  int IgnoreErrors; 
-#endif
 #endif
 #if defined(SSE_DEBUG)
   BYTE logsection_enabled[100]; // we want a double anyway //bool
