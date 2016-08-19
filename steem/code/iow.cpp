@@ -143,28 +143,17 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
           if(OPTION_C1)
           {
             INSTRUCTION_TIME(wait_states);
-#if defined(SSE_CPU_E_CLOCK_370)
-            wait_states=
-#endif              
-#if defined(SSE_CPU_E_CLOCK_DISPATCHER)
-              M68000.SyncEClock(TM68000::ECLOCK_ACIA);
-#else
-              M68000.SyncEClock();
-#endif
-#if defined(SSE_CPU_E_CLOCK_370)              
+            wait_states=M68000.SyncEClock(TM68000::ECLOCK_ACIA);
             INSTRUCTION_TIME(wait_states);
-#endif
           }
           else
 #endif
           {
-#if !defined(SSE_ACIA_BUS_JAM_NO_WOBBLE)
 /*  This is a part from Steem 3.2, but in ior.cpp.
     With this instead of the original part iow.cpp below,
     Spectrum 512 is fixed also without option 6301/ACIA.
 */
             wait_states+=(8000000-(ACT-shifter_cycle_base))%10;
-#endif
             BUS_JAM_TIME(wait_states);
           }
 
@@ -595,26 +584,23 @@ system exclusive start and end messages (F0 and F7).
             int old_ioaccess=ioaccess;
             int n=(addr-0xfffa01) >> 1;
 
-#if defined(SSE_INT_MFP_IRQ_TIMING)
-            if(OPTION_C2)
-            {
-#if defined(SSE_INT_MFP_EVENT_WRITE)
+#if defined(SSE_INT_MFP)
 /*    If we come here while a write is pending, it should mean that we're at
       least 4 cycles later, so there's been some delay.
       We have no choice anyway, registers must be correct at the end of the
       day and we keep no buffer/agenda for multiple writes.
 */
+            if(OPTION_C2)
+            {
               if(MC68901.WritePending)
               {
                 TRACE_MFP("IOW Flush MFP event ");
                 event_mfp_write(); //flush
               }
-#endif
-              MC68901.LastRegisterFormerValue=mfp_reg[n]; // save for our hacks
+              MC68901.LastRegisterFormerValue=mfp_reg[n];
               MC68901.LastRegisterWrittenValue=io_src_b;
             }
 #endif
-
             if (n==MFPR_GPIP || n==MFPR_AER || n==MFPR_DDR){
               // The output from the AER is eored with the GPIP/input buffer state
               // and that input goes into a 1-0 transition detector. So if the result
@@ -649,7 +635,7 @@ system exclusive start and end messages (F0 and F7).
                   bool new_1_to_0_detector_input=((new_gpip & mask) ^ (new_aer & mask))==mask;
                   if (old_1_to_0_detector_input && new_1_to_0_detector_input==0){
                     // Transition the right way! Set pending (interrupts happen later)
-#if defined(SSE_INT_MFP_REFACTOR2)
+#if defined(SSE_INT_MFP)
                     if(OPTION_C2) 
                       mfp_set_pending(irq,ACT); // update timing, Irq...
                     else
@@ -768,19 +754,14 @@ system exclusive start and end messages (F0 and F7).
               mfp_reg[n]=io_src_b;
             }
 
-#if defined(SSE_INT_MFP_IRQ_TIMING)
-            if(OPTION_C2)
-            {
-#if !defined(SSE_INT_MFP_REFACTOR2) // later, when register is updated
-              MC68901.UpdateNextIrq();
-#endif
-              MC68901.WriteTiming=ACT;
-              MC68901.LastRegisterWritten=n;
-#if defined(SSE_INT_MFP_EVENT_WRITE)
+#if defined(SSE_INT_MFP)
 /*  We execute the write now, but we'll update the register value after a
     while. We could do otherwise (delay everything), it was just faster that
     way.
-*/
+*/            if(OPTION_C2)
+            {
+              MC68901.WriteTiming=ACT;
+              MC68901.LastRegisterWritten=n;
               MC68901.LastRegisterWrittenValue=mfp_reg[n]; // in case there was a mask
               mfp_reg[n]=MC68901.LastRegisterFormerValue; // revert write for a while
               ASSERT(!MC68901.WritePending);
@@ -791,16 +772,13 @@ system exclusive start and end messages (F0 and F7).
               MC68901.WritePending=true;
 //              TRACE_MFP("plan event to write %X on reg %d at %d\n",MC68901.LastRegisterWrittenValue,n,time_of_event_mfp_write);
               TRACE_MFP("plan event to write %X on %s at %d\n",MC68901.LastRegisterWrittenValue,mfp_reg_name[n],time_of_event_mfp_write);
-#elif defined(SSE_INT_MFP_REFACTOR2) // so, not if event write
-              MC68901.UpdateNextIrq();
-#endif
             }
 #endif
             // The MFP doesn't update for about 8 cycles, so we should execute the next
             // instruction before causing any interrupts
             //SS this seems suspicious but it is actually needed: Super Hang-On TODO
             ioaccess=old_ioaccess;
-#if defined(SSE_INT_MFP_REFACTOR2A)
+#if defined(SSE_INT_MFP)
             if(OPTION_C2)
                 ioaccess|=IOACCESS_FLAG_DELAY_MFP; // we manage delay another way
             else
@@ -809,9 +787,6 @@ system exclusive start and end messages (F0 and F7).
                                 IOACCESS_FLAG_DELAY_MFP))==0){
               ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE;
             }
-#if defined(SSE_INT_MFP_WRITE_DELAY1) //no
-            time_of_last_write_to_mfp_reg=ACT;
-#endif
           }
         }else{ // even
           // Byte access causes bus error

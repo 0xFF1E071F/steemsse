@@ -2310,8 +2310,7 @@ void DWin_init()
     y+=30;
 #endif    
 
-#if defined(SSE_BOILER_SHOW_ECLOCK) && defined(SSE_CPU_E_CLOCK_DISPATCHER)\
-  && defined(SSE_CPU_E_CLOCK_370)
+#if defined(SSE_BOILER_SHOW_ECLOCK)
     y-=30;
     x+=70;
     new mr_static("E-clk ","",x,y,Par,

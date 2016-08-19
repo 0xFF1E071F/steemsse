@@ -1185,6 +1185,10 @@ void LoadAllIcons(ConfigStoreFile *NOT_ONEGAME( pCSF ),bool NOT_ONEGAME( FirstCa
 #endif
 }
 //---------------------------------------------------------------------------
+
+
+#define LOGSECTION LOGSECTION_INIT //SS
+
 bool MakeGUI()
 {
 	fnt=(HFONT)GetStockObject(DEFAULT_GUI_FONT);

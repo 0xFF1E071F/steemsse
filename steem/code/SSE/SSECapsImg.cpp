@@ -35,6 +35,7 @@
 #if defined(SSE_DISK_GHOST)
 #include "SSEGhostDisk.h"
 #endif
+#include "SSEVideo.h"
 
 
 TCaps::TCaps() {
@@ -477,11 +478,7 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   if(::SF314[drive].ImageType.Extension==EXT_IPF)
   {
     CapsSectorInfo CSI;
-#if defined(SSE_VS2008_WARNING_371)
     DWORD sec_num;
-#else
-    int sec_num;
-#endif
     TRACE_LOG("sector info (encoder,cell type,data,gap info)\n");
     for(sec_num=1;sec_num<=track_info.sectorcnt;sec_num++)
     {

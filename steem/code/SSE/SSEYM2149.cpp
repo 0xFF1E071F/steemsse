@@ -13,10 +13,6 @@
 #include "SSEOption.h"
 #include <gui.decla.h>
 
-#if defined(SSE_YM2149_OBJECT)
-TYM2149 YM2149; //singleton
-#endif
-
 //SOUND
 
 TYM2149::TYM2149() { //v3.7.0

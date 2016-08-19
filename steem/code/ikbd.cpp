@@ -6,12 +6,8 @@ DESCRIPTION: The code to emulate the ST's Intellegent Keyboard Controller
 Note that this is functional rather than hardware-level emulation.
 Reprogramming is not implemented. 
 SS: 
-Added doc, trace of commands
-V3.3: fake emu borrowed from Hatari for reprogramming
-V3.4: low-level emulation of the 6301 added
-V3.5.1: fake emu for reprogramming nuked (avoid bloat)
-V3.6.0: all non 6301 true emu mods removed (ACIA + IKBD), so if option
-C1 isn't checked, behaviour should be exactly the same as v3.2.
+If option C1 is checked, hardware-level emulation is set on, see 6301.
+If option C1 isn't checked, behaviour should be exactly the same as v3.2.
 ---------------------------------------------------------------------------*/
 
 #if defined(SSE_STRUCTURE_INFO)
@@ -1461,13 +1457,6 @@ void agenda_keyboard_replace(int) {
           ACIA_IKBD.RDR=ACIA_IKBD.RDRS; // transfer shifted byte
           TRACE_LOG("%d %d %d ACIA RDR %X\n",TIMING_INFO,ACIA_IKBD.RDR);
           ACIA_IKBD.SR|=BIT_0; // set RDR full
-
-#if defined(SSE_ACIA_IRQ_DELAY2)//no
-/*  This variable was defined but never used in Steem, we use it now for
-    a little hack.
-*/
-          ACIA_IKBD.last_rx_read_time=ACT;
-#endif
         }
      
         // Check if we must activate IRQ (overrun or normal)
@@ -1784,10 +1773,6 @@ void ikbd_reset(bool Cold)
 {
   ASSERT( Cold || !OPTION_C1 );// !!! always //check this
   agenda_delete(agenda_keyboard_reset);
-#if defined(SSE_ACIA_IRQ_DELAY)
-  ikbd.timer_when_keyboard_info=0;
-#endif
-
 #if defined(SSE_IKBD_6301)
   if(OPTION_C1)
   {
@@ -1897,11 +1882,6 @@ void agenda_keyboard_reset(int SendF0) // SS scheduled by ikbd_reset()
     }
   }
   ikbd.resetting=0;
-
-#if defined(SSE_ACIA_IRQ_DELAY)
-  ikbd.timer_when_keyboard_info=0;
-#endif
-
 }
 //---------------------------------------------------------------------------
 void ikbd_report_abs_mouse(int abs_mousek_flags)

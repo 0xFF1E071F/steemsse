@@ -2,10 +2,6 @@
 // Parameters //
 ////////////////
 
-/*  Some important emulation parameters are concentrated here, which makes 
-    experimenting (always fun) easier.
-    A lot are still missing.
-*/
 #pragma once
 #ifndef SSEPARAMETERS_H
 #define SSEPARAMETERS_H
@@ -17,32 +13,20 @@
 #endif
 
 
+#if defined(STRUCTURE_ALIGNMENT)
+#error STRUCTURE_ALIGNMENT defined!
+#endif
+#ifdef SSE_X64
+#define STRUCTURE_ALIGNMENT 16 //default in Win64
+#else
+#define STRUCTURE_ALIGNMENT 8 //default in Win32
+#endif
 
 //////////
 // ACIA //
 //////////
 
 #if defined(SSE_ACIA)
-
-#if defined(SSE_ACIA_IRQ_DELAY)// not defined anymore (v3.5.2), see MFP
-
-#define SSE_ACIA_IRQ_DELAY_CYCLES 20 // est. gap between RX and IRQ in CPU cycles
-/*  Delay before keys sent by the IKBD are received by the ACIA.
-    It was about 20 in Steem 3.2 (>10.000 cycles), I brought it back to
-    12 in 3.3 to be closer to 7.200 cycles mentioned in WinsTON/Hatari, but
-    experiments with 6301 'true emu' could point to a value > 10.000, 
-    vindicating Steem authors! Though it is all guessing.
-*/
-
-#if !defined(SSE_IKBD)
-#define HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL \
-(1350*8/ \
-(shifter_freq_at_start_of_vbl==50?SCANLINE_TIME_IN_CPU_CYCLES_50HZ:\
-(screen_res==2?SCANLINE_TIME_IN_CPU_CYCLES_70HZ:\
-SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
-#endif
-
-#endif
 
 #if defined(SSE_IKBD_6301)
 
@@ -62,9 +46,6 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define ACIA_TDR_COPY_DELAY (200) // Hades Nebula vs. Nightdawn (???)
 #endif
 
-#if defined(SSE_ACIA_IRQ_DELAY2)
-#define ACIA_RDRF_DELAY (20)
-#endif
 
 #if defined(SSE_ACIA_MIDI_SR02_CYCLES)
 /*  
@@ -522,7 +503,7 @@ Some STFs                32.02480    8.0071
 
 #if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY)
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE) 
-#if defined(SSE_INT_MFP_EVENT_WRITE)
+#if defined(SSE_INT_MFP)
 #define MFP_TIMER_SET_DELAY (10-2) // 8 OK with wobble 4 for LXS
 #elif defined(SSE_GLUE_FRAME_TIMINGS) && !defined(SSE_INT_MFP_RATIO_STE3)
 #define MFP_TIMER_SET_DELAY 8//(8) //schnusdie

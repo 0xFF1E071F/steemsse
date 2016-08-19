@@ -22,7 +22,7 @@
 
 #define SCP_DATA_WINDOW_TOLERANCY 20 
 
-#pragma pack(push, 1)
+#pragma pack(push, STRUCTURE_ALIGNMENT)
 
 struct TSCP_file_header {
   char IFF_ID[3]; //"SCP" (ASCII CHARS)

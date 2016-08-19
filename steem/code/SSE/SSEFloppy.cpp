@@ -32,47 +32,37 @@
 #include "SSEFloppy.h"
 #include "SSEOption.h"
 
-
+#if defined(SSE_DMA_OBJECT)
+TDma Dma;
+#endif
+#if defined(SSE_WD1772)
+TWD1772 WD1772;
+#endif
+#if defined(SSE_YM2149_OBJECT)
+TYM2149 YM2149; //singleton
+#endif
+#if defined(SSE_DRIVE_OBJECT)
+TSF314 SF314[2]; // cool!
+#endif
+#if defined(SSE_DISK1)
+TDisk Disk[2];
+#endif
+#if defined(SSE_DISK_CAPS) 
+TCaps Caps; //this object includes a controller and 2 drives
+#endif
 #if defined(SSE_DISK_GHOST)
   // Each drive has its own optional ghost image
   // Most will use A: but e.g. Lethal Xcess could save on B:
   TGhostDisk GhostDisk[2];
 #endif
-
-#if defined(SSE_DISK_IMAGETYPE)
-#endif
-
 #if defined(SSE_DISK_STW)
 TImageSTW ImageSTW[2];
 #endif
-
 #if defined(SSE_DISK_SCP)
 TImageSCP ImageSCP[2];
 #endif
-
 #if defined(SSE_DISK_HFE)
 TImageHFE ImageHFE[2];
-#endif
-
-
-#if defined(SSE_DMA_OBJECT)
-TDma Dma;
-#endif
-
-#if defined(SSE_DRIVE_OBJECT)
-TSF314 SF314[2]; // cool!
-#endif
-
-#if defined(SSE_DISK1)
-TDisk Disk[2]; // 
-#endif
-
-#if defined(SSE_WD1772)
-TWD1772 WD1772;
-#endif
-
-#if defined(SSE_DISK_CAPS) 
-TCaps Caps;
 #endif
 
 #endif//#if defined(SSE_BUILD)

@@ -361,27 +361,13 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
   case DISPATCHER_SET_PAL:
 #if defined(SSE_SHIFTER_PALETTE_TIMING)
 #if defined(SSE_MMU_WU_PALETTE_STE)
-    if(!(
-#if defined(SSE_STF)
-      ST_TYPE==STE &&
-#endif
-#if defined(SSE_MMU_WU_STE_380) 
-      MMU.WU[OPTION_WS]==2)) // it really is another WU, to check Spectrum 512 pics
-#else
-      OPTION_WS==1))
-#endif
+    if(!(ST_TYPE==STE && MMU.WU[OPTION_WS]==2)) // it really is another WU, to check Spectrum 512 pics
 #endif
       cycles_since_hbl++; // eg Overscan Demos #6, already in v3.2 TODO why?
 #endif
-
-#if defined(SSE_SHIFTER_60HZ_LINE)
-#if defined(SSE_SHIFTER_60HZ_LINE2)
-      if(Glue.CurrentScanline.StartCycle==52 || Glue.CurrentScanline.StartCycle==36)
-#else
-      if(Glue.CurrentScanline.StartCycle==52)
-#endif
-        cycles_since_hbl+=4; // it's a girl 2 bear //TODO better way?
-#endif
+    //60hz line with border, HSCROLL or not
+    if(Glue.CurrentScanline.StartCycle==52 || Glue.CurrentScanline.StartCycle==36)
+      cycles_since_hbl+=4; // it's a girl 2 bear //TODO better way?
     break;
   case DISPATCHER_SET_SHIFT_MODE:
     RoundCycles(cycles_since_hbl); // eg Drag/Happy Islands, Cool STE, Bees (...)
@@ -393,7 +379,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     break;
 #endif
   case DISPATCHER_WRITE_SDP:
-    RoundCycles(cycles_since_hbl); // eg D4/Tekila in large display 
+    RoundCycles(cycles_since_hbl); // eg Riverside rainbow
     break;
   }//sw
 #endif

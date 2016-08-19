@@ -13,52 +13,39 @@
     Such a system was chosen because RAM space was precious. Chunk modes are
     only possible with byte or more sizes.
 */
+
 // register names in Atari doc / Steem variable
 #define HSCROLL shifter_hscroll
-
 #if defined(SSE_MMU_LINEWID_TIMING)
-#define LINEWID MMU.Linewid0
+#define LINEWID MMU.Linewid0 //lock it before rendering
 #else
-#define LINEWID shifter_fetch_extra_words
+#define LINEWID shifter_fetch_extra_words 
 #endif
 
-// ID which part of emulation required video rendering
-enum {DISPATCHER_NONE, DISPATCHER_CPU, DISPATCHER_LINEWIDTH,
+// ID which part of emulation required video rendering (only a few used now)
+enum EShifterDispatchers {DISPATCHER_NONE, DISPATCHER_CPU, DISPATCHER_LINEWIDTH,
   DISPATCHER_WRITE_SDP, DISPATCHER_SET_SHIFT_MODE, DISPATCHER_SET_SYNC,
   DISPATCHER_SET_PAL, DISPATCHER_DSTE};
 
-/*  The Shifter latency could be the time needed by the Shifter to treat
-    data it's fed. 
-    It is observed that palette changes occuring at some cycle apply at once,
-    but on pixels that would be behind those that are currently being fetched
-    (video counter).
-    If we don't do that, emulation of Spectrum 512 pictures is not correct.
-    There is a hack in Steem, delaying rendering by 28 cycles (16 fetching
-    +12 treatment),and also a "magic value" (hack) of 7 (x4) used in Hatari 
-    to shift lines with the same result.
-    We try to rationalise this.
-    Update: the delay is reduced after we corrected prefetch timing.
-    This latency would be GLUE - MMU, since it impacts the timing of video RAM
-    fetches (we renamed the constant MMU_PREFETCH_LATENCY instead of 
-    MMU_PREFETCH_LATENCY).
-    There's a further +4 latency in the Shifter before palette registers are 
-    used. 
-    8+16+4=28 cycles
-    Current implementation: wake-up states are not directly integrated
-    into this latency, nor in scanline start/stop cycles.
-*/
-
-#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA) && defined(SSE_CPU_PREFETCH_TIMING)
+// minimal delay between GLUE DE and first LOAD signal emitted by the MMU
+#if defined(SSE_CPU_PREFETCH_TIMING)
 #define MMU_PREFETCH_LATENCY 8
 #else
 #define MMU_PREFETCH_LATENCY 12 
 #endif
 
-#define SHIFTER_RASTER_PREFETCH_TIMING 16//(shifter_freq==72 ? 4 : 16) 
+// in all shift modes, all 4 Shifter registers are loaded before picture starts
+#define SHIFTER_RASTER_PREFETCH_TIMING 16
 #define SHIFTER_RASTER (shifter_freq==72? 2 : (screen_res ? 4 : 8)) 
 
-#pragma pack(push, 1)
+//    There's a further +4 latency in the Shifter before palette registers are 
+//    used. 
+//    8+16+4=28 cycles
+
+#pragma pack(push, STRUCTURE_ALIGNMENT)
+
 struct TShifter {
+
   //DATA
 #if defined(WIN32)
   BYTE *ScanlineBuffer;

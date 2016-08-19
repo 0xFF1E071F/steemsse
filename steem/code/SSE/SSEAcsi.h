@@ -3,6 +3,7 @@
 #define SSEACSI_H
 
 #include <conditions.h>
+#pragma pack(push, STRUCTURE_ALIGNMENT)
 
 struct TAcsiHdc {
 #if defined(SSE_ACSI_MULTIPLE)
@@ -36,13 +37,6 @@ enum {MAX_ACSI_DEVICES=4}; // could be 8 but we stop at 4
   void Inquiry();
 #endif
   // member variables
-  FILE *hard_disk_image;
-  BYTE device_num; //0-7
-  BYTE cmd_block[6];
-  BYTE cmd_ctr;
-  BYTE STR,DR; //STR 0=OK
-  BYTE error_code;
-  BYTE Active; // can't be bool, can be 2
   int nSectors; //total
 #if defined(SSE_ACSI_TIMING)
   int time_of_irq;
@@ -50,8 +44,16 @@ enum {MAX_ACSI_DEVICES=4}; // could be 8 but we stop at 4
 #if defined(SSE_ACSI_INQUIRY2)
   char inquiry_string[32];
 #endif
+  FILE *hard_disk_image;
+  BYTE device_num; //0-7
+  BYTE cmd_block[6];
+  BYTE cmd_ctr;
+  BYTE STR,DR; //STR 0=OK
+  BYTE error_code;
+  BYTE Active; // can't be bool, can be 2
 };
 
+#pragma pack(pop)
 #if defined(SSE_ACSI_MULTIPLE)
 extern BYTE acsi_dev;
 extern TAcsiHdc AcsiHdc[TAcsiHdc::MAX_ACSI_DEVICES]; // each object is <64 bytes

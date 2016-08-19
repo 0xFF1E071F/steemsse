@@ -25,31 +25,6 @@
 // MMU: Video counter //
 ////////////////////////
 
-//TMMU::TMMU() {
-/*
-+------------------------------------------------------------+---------------+
-| Steem  option    |              Wake-up concepts           |    Cycle      |
-|    variable      |                                         |  adjustment   |
-+------------------+---------------+------------+------------+-------+-------+
-|  OPTION_WS       |   DL Latency  |     WU     |      WS    | SHIFT |  SYNC |
-|                  |     (Dio)     |    (ijor)  |    (LJBK)  | (Res) |(Freq) |
-+------------------+---------------+------------+------------+-------+-------+
-|   0 (ignore)     |      5        |     -      |      -     |    -  |    -  |
-|        1         |      3        |   2 (warm) |      2     |   +2  |   +2  |
-|        2         |      4        |     2      |      4     |    -  |   +2  |
-|        3         |      5        |   1 (cold) |      3     |    -  |    -  |
-|        4         |      6        |     1      |      1     |   -2  |    -  |
-+------------------+---------------+------------+------------+-------+-------+
-*/
-// WU - WS - SHIFT - SYNC
-//={{0,2,2,1,1,2},{0,2,4,3,1,2},{0,2,0,0,-2,2},{0,2,2,0,0,2}};
-  //WU[0]=0;
-  //WU[1]=2;
-  
-  //{0,2,2,1,1,2};
-//}
-
-
 /*  The video counter registers are inside the MMU.
     The MMU is tasked with fetching video memory and putting
     it in the Shifter.
@@ -81,7 +56,7 @@
 
 #if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
 /*  "ReadVideoCounter" has been refactored in case we would want
-    to use it to recompute the video counter at each scanline.
+    to use it to recompute the video counter at each scanline (but we don't).
     Now we have a member variable VideoCounter and a function that
     updates it.
     CurrentScanline.StartCycle is mostly correct now, so it simplifies
@@ -148,8 +123,7 @@ MEM_ADDRESS TMMU::ReadVideoCounter(int CyclesIn) {
   return VideoCounter;
 
 #else
-  // the function has been greatly streamlined in v3.8.0,
-  // relying on info already in "CurrentScanline" (no WS modifiers)
+  // the function had been already greatly streamlined in v3.8.0
  
   MEM_ADDRESS sdp; // return value
   if (bad_drawing){  // Fake SDP, eg extended monitor
@@ -239,7 +213,7 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
   bool fl=Glue.FetchingLine();
 
 #if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
-/*  Now that video counter reckoning (MMU.VideoCouter) is separated from 
+/*  Now that video counter reckoning (MMU.VideoCounter) is separated from 
     rendering (shifter_draw_pointer), a lot of cases that seemed complicated
     are simplified. Most hacks could be removed.
 
@@ -295,8 +269,5 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
 #endif//#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
 
 }
-
-//TMMU MMU={{0,2,2,1,1,2},{0,2,4,3,1,2},{0,2,0,0,-2,2},{0,2,2,0,0,2}};
-
 
 #endif//#if defined(SSE_MMU)

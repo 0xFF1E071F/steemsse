@@ -202,29 +202,16 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
         BYTE wait_states=6;
 
 #if defined(SSE_ACIA_BUS_JAM_PRECISE_WOBBLE) //v3.6.4
-
         if(OPTION_C1)
         {
           INSTRUCTION_TIME(wait_states); 
-
-#if defined(SSE_CPU_E_CLOCK_370)
-          wait_states=
-#endif              
-#if defined(SSE_CPU_E_CLOCK_DISPATCHER)
-            M68000.SyncEClock(TM68000::ECLOCK_ACIA);
-#else
-            M68000.SyncEClock();
-#endif
-#if defined(SSE_CPU_E_CLOCK_370)              
+          wait_states=M68000.SyncEClock(TM68000::ECLOCK_ACIA);
           INSTRUCTION_TIME(wait_states);
-#endif
         }
         else
 #endif
         {
-#if !defined(SSE_ACIA_BUS_JAM_NO_WOBBLE) // Steem 3.2
           wait_states+=(8000000-(ACT-shifter_cycle_base))%10;
-#endif
           BUS_JAM_TIME(wait_states); 
         }
       }
@@ -273,20 +260,6 @@ when it does).
             TRACE_LOG("ACIA SR TDRE not set yet (%d)\n",ACT-ACIA_IKBD.last_tx_write_time);
             ior_byte&=~BIT_1; // eg Nightdawn STF
           }
-#endif
-
-#if defined(SSE_ACIA_IRQ_DELAY2)
-/*  Not necessary for V8MS but it's logical
- -> very bad if we define SSE_INT_MFP_GPIP_TO_IRQ_DELAY
-*/
-
-          if(OPTION_HACKS && 
-            abs(ACT-ACIA_IKBD.last_rx_read_time)<ACIA_RDRF_DELAY)
-          {
-            TRACE_LOG("ACIA SR RDRF not set yet (%d)\n",ACT-ACIA_IKBD.last_rx_read_time);
-            ior_byte&=~BIT_0;
-          }
-
 #endif
           break;
         }
@@ -548,10 +521,10 @@ Receiver Data Register is retained.
           {
             int n=(addr-0xfffa01) >> 1;
 
-#if defined(SSE_INT_MFP_EVENT_WRITE)
-/*    If a write on the same register is pending, maybe it's time to
-      execute it so that the register we read is the correct one.
-      Especially in case of ORI or the like... (My Socks Are Weapons)
+#if defined(SSE_INT_MFP)
+/*  If a write on the same register is pending, maybe it's time to
+    execute it so that the register we read is the correct one.
+    Especially in case of ORI or the like... (My Socks Are Weapons)
 */
             if(OPTION_C2 && MC68901.WritePending 
               && n==MC68901.LastRegisterWritten)
@@ -561,48 +534,19 @@ Receiver Data Register is retained.
             }
 #endif
             if (n>=MFPR_TADR && n<=MFPR_TDDR){ //timer data registers
-//#undef SSE_INT_MFP_READ_DELAY2
-#if defined(SSE_INT_MFP_READ_DELAY1)
-/*  v3.7.0 
-    MC68901 doc:
-    "
+
+#if defined(SSE_INT_MFP_READ_DELAY)
+/*  MC68901 doc:    "
     Start Timer to Read Timer Error + 0 to – (tpsc + 6tCLK + 400ns)
-    Start Timer to Interrupt Request Error (note 3) - 2tCLK to – (4tCLK + 800ns)
-    "
+    Start Timer to Interrupt Request Error (note 3) - 2tCLK to – (4tCLK + 800ns)"
     Compare 400ns with 800ns. We interpret this as a short delay between 
     timeout and IRQ (+-4 cycles). 
     Steem computes timer timeout on the IRQ basis, so we correct here.
-    We do it for Overscan Demos, that read timer data register.
-    Without this fix, with new (correct) STE "line +2" threshold they would 
-    flicker.
-    But:
-    - they also sometimes flicker on a real STE
-    - it depends on MFP parameter MFP_TIMER_SET_DELAY
 */
               if(OPTION_C2)
                 INSTRUCTION_TIME(MFP_TIMER_DATA_REGISTER_ADVANCE);
-              //if(OPTION_C2) TRACE_OSD("read mfp %d",MFP_TIMER_DATA_REGISTER_ADVANCE);
 #endif
               mfp_calc_timer_counter(n-MFPR_TADR);
-#if defined(SSE_INT_MFP_READ_DELAY1) && !defined(SSE_INT_MFP_READ_DELAY2)
-/*  v3.8.0
-    BIG demo #1
-    We surmise the same delay for timer B
-    TBI -> register -> IRQ : some delays in the chain?
- 	moveq #0,d0                                      ; 0146AA: 7000 
-	mulu d0,d0                                       ; 0146AC: C0C0 
-	mulu d0,d0                                       ; 0146AE: C0C0 
-	move.b #$0,$ffff820a                             ; 0146B0: 13FC 0000 FFFF 820A 
-	move.b $fa21.W,d0                                ; 0146B8: 1038 FA21 
-	cmp.b $fa21.W,d0                                 ; 0146BC: B038 FA21 
-	beq .l -6 {$0146BC}                              ; 0146C0: 6700 FFFA 
-	mulu d0,d0                                       ; 0146C4: C0C0 
-	mulu d0,d0                                       ; 0146C6: C0C0 
-	move.b #$2,$ffff820a                             ; 0146C8: 13FC 0002 FFFF 820A 
-*/
-              if(OPTION_C2)
-                INSTRUCTION_TIME(-MFP_TIMER_DATA_REGISTER_ADVANCE);
-#endif
               ior_byte=BYTE(mfp_timer_counter[n-MFPR_TADR]/64);
               if (n==MFPR_TBDR){
                 if (mfp_get_timer_control_register(1)==8){
@@ -617,7 +561,7 @@ Receiver Data Register is retained.
                   }
                 }
               }
-#if defined(SSE_INT_MFP_READ_DELAY1) && defined(SSE_INT_MFP_READ_DELAY2)//see above
+#if defined(SSE_INT_MFP_READ_DELAY)
               if(OPTION_C2)
                 INSTRUCTION_TIME(-MFP_TIMER_DATA_REGISTER_ADVANCE);
 #endif

@@ -18,11 +18,7 @@
 // note this is global here, not in classes. TODO?
 // and it is also in the release build (but now used in TRACE)
 
-char* st_model_name[]={"STE","STF","Mega ST4"
-#if defined(SSE_STF_8MHZ)//no
-  ,"STF 8.00 MHZ"
-#endif
-};
+char* st_model_name[]={"STE","STF","Mega ST4"};
 
 #if defined(SSE_TOS_WARNING1) //TODO refactor, functions in TTos
 void CheckSTTypeAndTos() {
@@ -51,15 +47,7 @@ int SwitchSTType(int new_type) { // it was one of the first added functions, no 
 #if defined(SSE_INT_MFP_RATIO)
 
 #if defined(SSE_INT_MFP_RATIO_STF) 
-
-#if defined(SSE_STF_8MHZ)//no
-    if(ST_TYPE==STF8MHZ) // this removes artefacts in panic.tos, is it normal?
-    {
-      CpuMfpRatio=(double)CPU_STF_ALT/(double)MFP_CLK_TH_EXACT;
-      CpuNormalHz=CPU_STF_ALT;
-    }
-    else
-#elif defined(SSE_INT_MFP_RATIO_OPTION)
+#if defined(SSE_INT_MFP_RATIO_OPTION)
     if(OPTION_CPU_CLOCK)
       CpuMfpRatio=(double)CpuCustomHz/(double)MFP_CLK_TH_EXACT;
     else

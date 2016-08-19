@@ -270,17 +270,10 @@ BYTE TDma::IORead(MEM_ADDRESS addr) {
 #endif
     }
     // high byte of FDC
-    else
-#if defined(SSE_DMA_FDC_READ_HIGH_BYTE)
-      ior_byte=0x00;// like in Pasti
-#else
 /*
 "The FDC registers only uses 8 bits when writing and therefore the upper byte 
 is ignored and when reading the 8 upper bits consistently reads 1."
 */
-      ;
-      //TRACE("read %x as %x\n",addr,ior_byte);
-#endif
     break;
 
   case 0xff8605: 
@@ -814,18 +807,11 @@ What was in the buffers will go nowhere, the internal counter is reset.
 #else
     || SF314[floppy_current_drive()].ImageType==3//DISK_PASTI
 #endif
-#if SSES_VERSION!=364
-    ||addr!=0xff8605 // quick fix, TODO...
-#endif
-    //|| MCR&BIT_3 // let pass when HD selected
-    || (MCR&CR_HDC_OR_FDC)//3.7
-//    || (MCR&BIT_4) //counter
-    )
+    ||addr!=0xff8605 || (MCR&CR_HDC_OR_FDC))
 #endif        
     )
   {
-    //ASSERT( io_src_b!=0xF0 );
-//    TRACE_LOG(" Pasti");
+
     WORD data=io_src_b;
 
     if(addr<0xff8608 && !(addr&1))

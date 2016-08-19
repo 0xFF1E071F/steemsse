@@ -71,8 +71,9 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 #endif
 
 #if defined(SSE_SHIFTER_UNSTABLE)
-#include "SSE/SSEFrameReport.h"//same, temp
-#include "SSE/SSEShifter.h"
+#include "SSE/SSEVideo.h"
+//#include "SSE/SSEFrameReport.h"//same, temp
+//#include "SSE/SSEShifter.h"
 #endif
 
 #include "SSE/SSEGlue.h"

@@ -1479,7 +1479,7 @@ void TWD1772::OnIndexPulse(int id) {
   }//if
   else
   {
-    n_format_bytes=n00=nFF=0; //?
+    n_format_bytes=0; //?
 #if defined(SSE_DRIVE_INDEX_PULSE2)
     if(!image_triggered)
 #endif
@@ -1680,7 +1680,7 @@ r1       r0            1772
 #if defined(SSE_WD1772_AM_LOGIC)
     Amd.Reset();
 #endif
-    n_format_bytes= n00=nFF=0;
+    n_format_bytes=0;
     Read(); // drive will send word (clock, byte) and set event
     IndexCounter=6; 
 //    TRACE_LOG("%d IP to find ID %d\n",IndexCounter,SR);
@@ -1750,7 +1750,7 @@ r1       r0            1772
     //else if( (DSR&0xFE)==0xFE) && n_format_bytes==3) // doc: $FE(+$FF)
     {
       TRACE_LOG("%X found at %d\n",DSR,SF314[DRIVE].BytePosition());
-      n_format_bytes=n00=nFF=0;//reset
+      n_format_bytes=0;//reset
       prg_phase++; // in type I or type II or III
 #if defined(SSE_WD1772_AM_LOGIC)
       Amd.Enabled=false; // read IDs OK
@@ -1761,7 +1761,7 @@ r1       r0            1772
       Amd.Reset();
 #else
     else if(n_format_bytes)
-      n_format_bytes=n00=nFF=0;
+      n_format_bytes=0;
 #endif
 
 #if defined(SSE_DISK_SCP2B)
@@ -1857,7 +1857,7 @@ r1       r0            1772
 #if defined(SSE_WD1772_AM_LOGIC)
       Amd.Reset();
 #endif
-      n_format_bytes=n00=nFF=0;
+      n_format_bytes=0;
       Read();
     }
     break;
@@ -1931,7 +1931,7 @@ r1       r0            1772
       && n_format_bytes>=43)
     {
       Amd.Enable();
-      n_format_bytes=n00=0;
+      n_format_bytes=0;
     }
 
     // wait for AM
@@ -2119,7 +2119,7 @@ r1       r0            1772
     {
       IndexCounter=5; //not documented, see OnIndexPulse()
       prg_phase=WD_TYPEIII_FIND_ID;
-      n_format_bytes=n00=nFF=0;
+      n_format_bytes=0;
       Read();
     }
     // check Write Protect for command write track

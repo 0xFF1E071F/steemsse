@@ -165,6 +165,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_LINE_PLUS_20 // 224 byte scanline STE only
 #endif
 
+#if defined(SSE_INT_MFP)
+#define SSE_INT_MFP_IACK
+#endif
+
 #if defined(SSE_MMU)
 #define SSE_MMU_WU // wake-up states
 #endif
@@ -244,7 +248,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_CPU_INSTR)
-#define SSE_CPU_DIV          // divide like Caesar
+#define SSE_CPU_DIV        // divide like Caesar
 #define SSE_CPU_MOVE       // move like a superstar
 #endif
 
@@ -256,7 +260,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_INT_MFP)
-#define SSE_INT_MFP_IACK_LATENCY //was SS_MFP_PENDING in v3.3 undef 3.7.0
 #define SSE_INT_MFP_RATIO // change the values of CPU & MFP freq!
 #define SSE_INT_MFP_TIMER_B 
 #if defined(SSE_INT_MFP_RATIO) 
@@ -298,9 +301,9 @@ Beta: not SSE_PRIVATE_BUILD
 //////////
 
 #if defined(SSE_ACIA)
-#define SSE_ACIA_BUS_JAM_NO_WOBBLE // simple "fix" //undef 3.6.4
+
 #define SSE_ACIA_DOUBLE_BUFFER_TX // only to 6301 (not MIDI)
-#define SSE_ACIA_IRQ_DELAY // only from 6301 (not MIDI) // undef 3.5.2
+
 #endif
 
 #if defined(SSE_BLITTER)
@@ -477,10 +480,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_CPU_LINE_F // for interrupt depth counter
 
-#if defined(SSE_CPU_EXCEPTION)
-#define SSE_CPU_IGNORE_WRITE_B_0 // for Aladin //undef 3.7.1
-#define SSE_CPU_SET_DEST_W_TO_0 // for Aladin //undef 3.7.1
-#endif
 
 #if defined(SSE_CPU_PREFETCH)
 // Change no timing, just the macro used, so that we can identify what timings
@@ -492,29 +491,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_PREFETCH_TIMING_MOVEM_HACK // undef v3.7.0 
 #define SSE_CPU_PREFETCH_TIMING_SET_PC // necessary for some SET PC cases
 #endif
-//#define SSE_CPU_PREFETCH_TIMING_EXCEPT // to mix unique switch + lines
-#if !defined(SSE_CPU_PREFETCH_TIMING) || defined(SSE_CPU_PREFETCH_TIMING_EXCEPT)
-#define CORRECTING_PREFETCH_TIMING 
-#endif
-#ifdef CORRECTING_PREFETCH_TIMING
-// powerful prefetch debugging switches
-#define SSE_CPU_LINE_0_TIMINGS // 0000 Bit Manipulation/MOVEP/Immediate
-#define SSE_CPU_LINE_1_TIMINGS // 0001 Move Byte
-#define SSE_CPU_LINE_2_TIMINGS // 0010 Move Long
-#define SSE_CPU_LINE_3_TIMINGS // 0011 Move Word
-#define SSE_CPU_LINE_4_TIMINGS // 0100 Miscellaneous
-#define SSE_CPU_LINE_5_TIMINGS // 0101 ADDQ/SUBQ/Scc/DBcc/TRAPcc
-#define SSE_CPU_LINE_6_TIMINGS // 0110 Bcc/BSR/BRA
-#define SSE_CPU_LINE_7_TIMINGS // 0111 MOVEQ
-#define SSE_CPU_LINE_8_TIMINGS // 1000 OR/DIV/SBCD
-#define SSE_CPU_LINE_9_TIMINGS // 1001 SUB/SUBX
-#define SSE_CPU_LINE_A_TIMINGS // 1010 (Unassigned, Reserved)
-#define SSE_CPU_LINE_B_TIMINGS // 1011 CMP/EOR
-#define SSE_CPU_LINE_C_TIMINGS // 1100 AND/MUL/ABCD/EXG
-#define SSE_CPU_LINE_D_TIMINGS // 1101 ADD/ADDX
-#define SSE_CPU_LINE_E_TIMINGS // 1110 Shift/Rotate/Bit Field
-#define SSE_CPU_LINE_F_TIMINGS // 1111 Coprocessor Interface/MC68040 and CPU32 Extensions
-#endif//CORRECTING_PREFETCH_TIMING
 #endif//prefetch
 
 #endif//cpu
@@ -552,9 +528,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_INT_MFP)
-#if defined(SSE_INT_MFP_TIMER_B)
-#define SSE_INT_MFP_TIMER_B_NO_WOBBLE // BIG Demo Psych-O screen 2
-#endif
 #define SSE_INT_MFP_TxDR_RESET // they're not reset according to doc
 #endif//mfp
 
@@ -565,11 +538,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//stf
 #if defined(SSE_MMU_WAKE_UP)
 #define SSE_MMU_WU_0_BYTE_LINE
-
-
-// the following 3 switches were more experimental 
-
-
 #define SSE_MMU_WU_PALETTE_STE // render +1 cycle (pixel) in state 2
 //#define SSE_MMU_WU_READ_SDP
 #define SSE_MMU_WU_RIGHT_BORDER
@@ -648,7 +616,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_CPU_PREFETCH_MULU
 #define SSE_CPU_PREFETCH_NOP
 #define SSE_CPU_PREFETCH_PEA
-#if defined(SSE_CPU_PREFETCH_TIMING) || defined(CORRECTING_PREFETCH_TIMING)
+#if defined(SSE_CPU_PREFETCH_TIMING)
 #define SSE_CPU_PREFETCH_MOVE_MEM 
 #define SSE_CPU_PREFETCH_TAS 
 #endif
@@ -778,9 +746,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 //352
 
-#if defined(SSE_ACIA)
-#undef SSE_ACIA_IRQ_DELAY //code missing now
-#endif
 
 #if defined(SSE_BLITTER)
 #define SSE_BLT_YCOUNT // 0=65536
@@ -802,10 +767,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif//flp
 
-#if defined(SSE_INT_MFP)
-#define SSE_INT_MFP_IRQ_DELAY // undef v3.6.0
-#define SSE_INT_MFP_IRQ_DELAY2 // undef v3.5.3
-#endif
 
 #if defined(SSE_MMU)
 #undef SSE_MMU_NO_CONFUSION //Diagnostic cartridge: don't define
@@ -814,12 +775,6 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_SHIFTER)
 #if defined(SSE_SHIFTER_TRICKS)
 #define SSE_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK
-#define SSE_SHIFTER_LEFT_OFF_TEST_BEFORE_HBL // for Riverside
-
-#define SSE_SHIFTER_LINE_PLUS_20_SHIFT // for Riverside
-#if defined(SSE_HACKS)
-#define SSE_SHIFTER_DRAGON1 // undef v3.5.4
-#endif
 #endif//trck
 #if defined(SSE_MMU_WU)
 #define SSE_SHIFTER_UNSTABLE // DoLB, Omega, Overdrive/Dragon, Beeshift
@@ -886,10 +841,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_INT_HBL_IACK_FIX // from Hatari - BBC52 (works without?)
 #endif
 
-#if defined(SSE_INT_MFP)
-#undef SSE_INT_MFP_IRQ_DELAY2
-#define SSE_INT_MFP_PATCH_TIMER_D // from Hatari, we keep it for performance
-#endif
 
 #if defined(SSE_INT_VBL)
 #define SSE_INT_VBL_IACK
@@ -998,7 +949,6 @@ Beta: not SSE_PRIVATE_BUILD
 #undef SSE_SHIFTER_0BYTE_LINE_SYNC2 // loSTE screens
 #endif
 #if defined(SSE_HACKS)
-#undef SSE_SHIFTER_DRAGON1
 #define SSE_SHIFTER_DOLB_SHIFT1 // based on "unstable overscan"
 //#define SSE_SHIFTER_DOLB_SHIFT2 // based on cycle of R0
 #endif//hacks
@@ -1109,8 +1059,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_INT_MFP)
-#undef SSE_INT_MFP_IRQ_DELAY
-#define SSE_INT_MFP_IRQ_DELAY3 // undef v3.6.1
 #define SSE_INT_MFP_TIMERS_BASETIME //
 #endif
 
@@ -1174,9 +1122,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 //361
 
-#if defined(SSE_ACIA)
-#define SSE_ACIA_IRQ_DELAY2// back to this approach (hack)
-#endif
 
 #if defined(SSE_CPU_DIV)
 #define SSE_CPU_DIVS_OVERFLOW
@@ -1238,16 +1183,11 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_INT_MFP)
-#undef SSE_INT_MFP_IRQ_DELAY3
 #define SSE_INT_MFP_RATIO_HIGH_SPEED
-#define SSE_INT_MFP_WRITE_DELAY1//Audio Artistic//undef v370
 #endif
 
 #endif//int
 
-#if defined(SSE_STF)
-#define SSE_STF_8MHZ // for Panic study! //undef v370
-#endif
 
 #if defined(SSE_TOS)
 #undef SSE_TOS_NO_INTERCEPT_ON_RTE1
@@ -1268,9 +1208,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif//tos
 
-#if defined(SSE_VARIOUS)
-#define SSE_VAR_POWERON1 // undef 3.6.2 ;)
-#endif//var
 
 #if defined(SSE_VID_BORDERS)
 #define SSE_VID_BORDERS_LB_DX1 // check border on/off
@@ -1279,20 +1216,10 @@ Beta: not SSE_PRIVATE_BUILD
 
 //362
 
-#if defined(SSE_FLOPPY) && defined(SSE_DMA)
-#define SSE_DMA_FDC_READ_HIGH_BYTE
-#endif
 
-#if defined(SSE_VARIOUS)
-#undef SSE_VAR_POWERON1
-#define SSE_VAR_POWERON2 // undef 3.6.3 :)
-#endif
 
 //363
 
-#if defined(SSE_FLOPPY) && defined(SSE_DMA)
-#undef SSE_DMA_FDC_READ_HIGH_BYTE //def 3.6.2
-#endif
 
 #if defined(SSE_MMU)
 #define SSE_MMU_WU_VERTICAL_OVERSCAN1 //defaults to WU1
@@ -1309,9 +1236,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SOUND_MICROWIRE_MIXMODE
 #endif
 
-#if defined(SSE_VARIOUS)
-#undef SSE_VAR_POWERON2
-#endif
 
 #if defined(SSE_VIDEO)
 #define SSE_VID_FREEIMAGE1 //init library
@@ -1326,11 +1250,8 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_CPU)
 
 #if defined(SSE_CPU_E_CLOCK)
-#if defined(SSE_DEBUG) || defined(SSE_HACKS)
-#define SSE_CPU_E_CLOCK_DISPATCHER // "who" wants to sync?
-#endif
 #if defined(SSE_ACIA)
-#undef SSE_ACIA_BUS_JAM_NO_WOBBLE // def 3.4.0
+
 #define SSE_ACIA_BUS_JAM_PRECISE_WOBBLE // option 6301 on
 #endif
 #endif//e-clock
@@ -1379,9 +1300,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_INT_E_CLOCK //was lost (beta bug)
 #endif
 #if defined(SSE_INT_HBL)
-#if defined(SSE_HACKS)
-#define SSE_INT_HBL_E_CLOCK_HACK //3615GEN4 HMD #1
-#endif
 #define SSE_INT_HBL_INLINE
 #endif//hbl
 #endif//int
@@ -1411,10 +1329,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BLT_370 // bad hack for Relapse
 #endif
 
-#if defined(SSE_COMPILER)
-#define SSE_COMPILER_370_INLINE
-#endif
-
 #if defined(SSE_CPU)
 
 #define SSE_CPU_DATABUS
@@ -1429,7 +1343,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_HALT // no reset, just stop
 #endif
 #define SSE_CPU_TRACE_REFACTOR//debug-only?
-#define SSE_CPU_UNSTOP2//not twice
+
 
 #if defined(SSE_CPU_EXCEPTION)
 #undef SSE_CPU_IGNORE_RW_4MB // F-29 hangs on 4MB machines, nothing to fix
@@ -1724,38 +1638,31 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_INT_MFP_OBJECT)
 #define SSE_INT_MFP_IRQ_TIMING //tracking it more precisely
 #define SSE_INT_MFP_GPIP_TO_IRQ_DELAY // only for GPIP interrupts
-#undef SSE_ACIA_IRQ_DELAY2
-#undef SSE_INT_MFP_IACK_LATENCY //same irq
-#define SSE_INT_MFP_IACK_LATENCY2 //delay timers
-#define SSE_INT_MFP_IACK_LATENCY3 //timer B
-#define SSE_INT_MFP_IACK_LATENCY4 //delay timers 
-//#define SSE_INT_MFP_IACK_LATENCY5 //timer B 
+
+
+
+
 #define SSE_INT_MFP_TIMERS_NO_BOOST_LIMIT
 #define SSE_INT_MFP_OPTION //performance/precision
 #define SSE_INT_MFP_UTIL
-#define SSE_INT_MFP_SPURIOUS//cool crashes
+
 #define SSE_INT_MFP_CHECKTIMEOUT_ON_STOP
-#undef SSE_INT_MFP_PATCH_TIMER_D//Audio Artistic
-#define SSE_INT_MFP_READ_DELAY1 
-#undef SSE_INT_MFP_WRITE_DELAY1 //Audio Artistic
-#define SSE_INT_MFP_WRITE_DELAY2
+#define SSE_INT_MFP_READ_DELAY 
+
 #if defined(SSE_INT_MFP_RATIO)
 #define SSE_INT_MFP_RATIO_OPTION // user can fine tune CPU clock
 #define SSE_INT_MFP_RATIO_OPTION2 // L/S
-#define SSE_INT_MFP_RATIO_PRECISION_2 // 1 cycle precision
-#define SSE_INT_MFP_RATIO_PRECISION3 // 100%
 #endif
 #define SSE_INT_MFP_RATIO_STE2
 #define SSE_INT_MFP_RATIO_STF2 
-#define SSE_INT_MFP_REFACTOR1
-#undef SSE_INT_MFP_TIMER_B_NO_WOBBLE //there is wobble
+
 #define SSE_INT_MFP_TIMER_B_WOBBLE2 // 2 instead of 4
 #define SSE_INT_MFP_TIMER_B_WOBBLE_HACK //for Sunny
 #define SSE_INT_MFP_TIMERS_RATIO1 //unimportant
 #define SSE_INT_MFP_TIMERS_INLINE
 //#define SSE_INT_MFP_TIMERS_RUN_IF_DISABLED //load!
 //#define SSE_INT_MFP_TIMERS_STARTING_DELAY //12->?
-//#define SSE_INT_MFP_TIMERS_WOBBLE //as for timer B
+
 #endif
 #endif//SSE_INT_MFP
 
@@ -1827,7 +1734,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_STF)
-#undef SSE_STF_8MHZ // we have better option now
+
 #define SSE_STF_MATCH_TOS2 // default = 1.62 instead of 1.06
 #endif
 
@@ -1931,9 +1838,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_CPU_EXCEPTION)
-#undef SSE_CPU_IGNORE_WRITE_B_0 // Aladin remove hack
-#undef SSE_CPU_SET_DEST_W_TO_0 // Aladin remove hack
-#define SSE_CPU_TRUE_PC3 // Aladin real fix
+#define SSE_CPU_TRUE_PC3 // Aladin
 #endif
 
 #if defined(SSE_FLOPPY)
@@ -2202,7 +2107,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//round
 #define SSE_CPU_STOP_380 // little refactoring
 #define SSE_CPU_STOP_DELAY // from Hatari
-#undef SSE_CPU_UNSTOP2//placement is paramount!
+
 #define SSE_CPU_TIMINGS_REFACTOR_FETCH // moving timings to fetching functions
 #define SSE_CPU_TIMINGS_REFACTOR_PUSH // count timing in push macros
 #define SSE_CPU_TRACE_TIMING
@@ -2262,30 +2167,18 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_INT_CHECK_BEFORE_PREFETCH
 #endif
 
-#if defined(SSE_INT_HBL)
-#undef SSE_INT_HBL_E_CLOCK_HACK  // made a patch instead
-#define SSE_INT_HBL_380 
-#endif
 
 #if defined(SSE_INT_MFP)
-#define SSE_INT_MFP_READ_DELAY2 //timer B
-#ifdef SSE_CPU //IackCycle is, logically, in CPU
-#define SSE_INT_MFP_REFACTOR2 //simpler way for IACK and Spurious
-#endif
+
+#define SSE_INT_MFP_SPURIOUS
+#define SSE_INT_MFP_REFACTOR2
 #if defined(SSE_INT_MFP_REFACTOR2)
 #define SSE_INT_MFP_REFACTOR2A//debug...
-//#define SSE_INT_MFP_REFACTOR2A1//define for fewer spurious...
 #define SSE_INT_MFP_REFACTOR2A2//define for fewer spurious...
-#define SSE_INT_MFP_REFACTOR2B//"improve"...
-#undef SSE_INT_MFP_IACK_LATENCY4 // adios "skip timer" hack
-#define SSE_INT_MFP_EVENT_WRITE 
-#if defined(SSE_INT_MFP_EVENT_WRITE)
-#define SSE_INT_MFP_EVENT_WRITE_SPURIOUS
-#else
-#define SSE_INT_MFP_IS_DELAY
-#endif
+
+
 #endif//ref2
-#define SSE_INT_MFP_REFACTOR3 //enums 
+
 #undef SSE_INT_MFP_SPURIOUS_372
 #undef SSE_INT_MFP_TIMER_B_AER // refactor
 #define SSE_INT_MFP_TIMER_B_AER2 // refactor
@@ -2295,10 +2188,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #define SSE_INT_MFP_TIMERS_WOBBLE // trade off with timer set delay
 #define SSE_INT_MFP_TIMERS_STARTING_DELAY //
-#endif
-
-#if defined(SSE_INT_VBL)
-#define SSE_INT_VBL_380
 #endif
 
 #if defined(SSE_MMU)
@@ -2461,7 +2350,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_CPU)
-#define SSE_CPU_E_CLOCK_382
+
 #define SSE_CPU_TIMINGS_NO_INLINE_382 //undef 383
 #define SSE_CPU_TPEND_382
 #endif//cpu
@@ -2891,6 +2780,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_OPT_383A // variable to hold ABSOLUTE_CPU_TIME for a while (TODO)
 #define SSE_VAR_OPT_383A1 // Video chipset writes
 #define SSE_VAR_OPT_383C // CycleOfLastChangeToShiftMode()
+#define SSE_VAR_OPT_383D
 #endif
 
 #if defined(SSE_VAR_OPT_383) && defined(SSE_DRAW_C)
@@ -2934,8 +2824,10 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA_BUGFIX)
 
+#define SSE_CPU_E_CLOCK_383
 #undef SSE_CPU_TIMINGS_NO_INLINE_382 // it's inlined anyway
 #define SSE_DISK_GHOST_SECTOR_383
+#define SSE_INTERRUPT_383
 #define SSE_JOYSTICK_JOYPAD
 #define SSE_JOYSTICK_JUMP_BUTTON_383 
 #define SSE_SHIFTER_383 //bugfixes

@@ -5,7 +5,7 @@
 #if defined(SSE_STRUCTURE_DECLA)
 
 #include <binary.h>
-#include <conditions.h>
+#include "conditions.h"
 #include <setjmp.h>
 
 #include "acc.decla.h"
@@ -20,6 +20,7 @@
 
 //SS It is called jump but they are used as function calls, they return,
 // except if there's a ST crash detected
+
 extern void (*m68k_high_nibble_jump_table[16])();
 extern void (*m68k_jump_line_0[64])();
 extern void (*m68k_jump_line_4[64])();
@@ -102,6 +103,7 @@ void m68k_get_dest_110_l();
 void m68k_get_dest_111_b();
 void m68k_get_dest_111_w();
 void m68k_get_dest_111_l();
+
 #if !defined(SSE_CPU_ROUNDING_NO_FASTER_FOR_D)
 void m68k_get_dest_000_b_faster();
 void m68k_get_dest_000_w_faster();
@@ -151,16 +153,17 @@ extern "C" unsigned getDivs68kCycles( signed long dividend, signed short divisor
 #endif
 
 enum nbombs {
-  BOMBS_BUS_ERROR =2
-, BOMBS_ADDRESS_ERROR =3
-, BOMBS_ILLEGAL_INSTRUCTION =4
-, BOMBS_DIVISION_BY_ZERO =5
-, BOMBS_CHK= 6
-, BOMBS_TRAPV= 7
-, BOMBS_PRIVILEGE_VIOLATION= 8
-, BOMBS_TRACE_EXCEPTION= 9
-, BOMBS_LINE_A= 10
-, BOMBS_LINE_F= 11};
+  BOMBS_BUS_ERROR =2,
+  BOMBS_ADDRESS_ERROR =3,
+  BOMBS_ILLEGAL_INSTRUCTION =4,
+  BOMBS_DIVISION_BY_ZERO =5,
+  BOMBS_CHK= 6,
+  BOMBS_TRAPV= 7,
+  BOMBS_PRIVILEGE_VIOLATION= 8,
+  BOMBS_TRACE_EXCEPTION= 9, 
+  BOMBS_LINE_A= 10,
+  BOMBS_LINE_F= 11
+};
 
 enum exception_action{EA_READ=0,EA_WRITE,EA_FETCH,EA_INST};
 
@@ -276,11 +279,10 @@ inline void m68k_dpoke(MEM_ADDRESS ad,WORD x);
 inline void m68k_lpoke(MEM_ADDRESS ad,LONG x);
 
 #if !defined(SSE_CPU_POKE)
-//must keep them inline also for debug or double def
+
 inline void m68k_poke_abus(BYTE x);
 inline void m68k_dpoke_abus(WORD x);
 inline void m68k_lpoke_abus(LONG x);
-
 
 inline  void m68k_poke(MEM_ADDRESS ad,BYTE x){
   abus=ad;
@@ -296,11 +298,14 @@ inline  void m68k_lpoke(MEM_ADDRESS ad,LONG x){
   abus=ad;
   m68k_lpoke_abus(x);
 }
+
 #endif
 
-#if !(defined(SSE_CPU)) // inlined in SSECpu.h
+#if !defined(SSE_CPU)
+
 #define INSTRUCTION_TIME(t) {cpu_cycles-=(t);}
 #define INSTRUCTION_TIME_ROUND(t) {INSTRUCTION_TIME(t); cpu_cycles&=-4;}
+
 #endif
 
 #ifdef DEBUG_BUILD
@@ -454,7 +459,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 #define FETCH_TIMING {INSTRUCTION_TIME(4); cpu_cycles&=-4;} 
 #endif
 
-#if defined(SSE_CPU_INLINE_SET_DEST_TO_ADDR) //383 (finally)
+#if defined(SSE_CPU) && defined(SSE_CPU_INLINE_SET_DEST_TO_ADDR) //383 (finally)
 
 #define m68k_SET_DEST_B_TO_ADDR M68000.SetDestBToAddr();
 #define m68k_SET_DEST_W_TO_ADDR M68000.SetDestWToAddr();
@@ -599,13 +604,8 @@ extern int debug_mem_write_log_bytes;
 #define STOP_INTS_BECAUSE_INTERCEPT_OS bool(ioaccess & (IOACCESS_INTERCEPT_OS | IOACCESS_INTERCEPT_OS2))
 
 
-#if defined(SSE_STRUCTURE_DECLA)
 inline void change_to_user_mode();
 inline void change_to_supervisor_mode();
-#else
-void change_to_user_mode();
-void change_to_supervisor_mode();
-#endif
 
 extern bool cpu_stopped;
 extern bool m68k_do_trace_exception;
@@ -1164,8 +1164,6 @@ extern signed int compare_buffer;
 //SS SR has just been loaded, if supervisor bit in it isn't set, go user mode:
 #define DETECT_CHANGE_TO_USER_MODE if (!SUPERFLAG) change_to_user_mode();
 
-
-
 #define ILLEGAL  exception(BOMBS_ILLEGAL_INSTRUCTION,EA_INST,0);
 
 #if defined(SSE_VC_INTRINSICS_383E)
@@ -1198,32 +1196,28 @@ extern void perform_rte();
 extern void sr_check_z_n_l_for_r0();
 extern void m68k_process();
 
+//---------------------------------------------------------------------------
 #ifdef SSE_STRUCTURE_DECLA
 inline void change_to_user_mode()
 {
-//  if(SUPERFLAG){
   compare_buffer=r[15];r[15]=other_sp;other_sp=compare_buffer;
 #if defined(SSE_VC_INTRINSICS_383E)
   BITRESET(sr,SR_SUPER_BIT);
 #else
   SR_CLEAR(SR_SUPER);
 #endif
-//  }
 }
-//---------------------------------------------------------------------------
 inline void change_to_supervisor_mode()
 {
-//  if(!SUPERFLAG){
   compare_buffer=r[15];r[15]=other_sp;other_sp=compare_buffer;
 #if defined(SSE_VC_INTRINSICS_383E)
   BITSET(sr,SR_SUPER_BIT);
 #else
   SR_SET(SR_SUPER);
 #endif
-//  }
 }
 #endif
-
+//---------------------------------------------------------------------------
 
 
 #if !defined(SSE_CPU_POKE)
