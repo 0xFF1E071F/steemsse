@@ -335,7 +335,7 @@ void reset_peripherals(bool Cold)
 #endif
 #endif
 
-#if defined(SSE_INT_MFP_REFACTOR2)
+#if defined(SSE_INT_MFP)
 #if defined(SSE_VS2008_WARNING_383)
   MC68901.Reset();
 #else
@@ -343,14 +343,6 @@ void reset_peripherals(bool Cold)
 #endif
 #endif
 
-#if defined(SSE_INT_JITTER_RESET) //no
-  if(Cold)
-  {
-    HblJitterIndex=0;
-    VblJitterIndex=0;
-  }
-#endif
-  
   shifter_hscroll=0;
   shifter_hscroll_extra_fetch=0;
   shifter_fetch_extra_words=0; //unspecified
@@ -416,10 +408,6 @@ void reset_peripherals(bool Cold)
 #if defined(SSE_INT_MFP_TxDR_RESET)
   if(!Cold)
     memcpy(&mfp_reg[MFPR_TADR],&tmp,4);
-#endif
-#if defined(SSE_INT_MFP_IACK_LATENCY4)
-  for(int i=0;i<4;i++)
-    MC68901.SkipTimer[i]=0;
 #endif
   mfp_reg[MFPR_GPIP]=mfp_gpip_no_interrupt;
   mfp_reg[MFPR_AER]=0x4;   // CTS goes the other way

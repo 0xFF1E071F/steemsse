@@ -38,13 +38,6 @@ struct ACIA_STRUCT{ // removed _ ..
   int last_tx_write_time;
   int last_rx_read_time;
 #endif
-#if defined(SSE_ACIA_IRQ_DELAY)// not defined anymore (v3.5.2), see MFP
-/*  This is to help implement the short delay between RX set and IRQ set,
-    as mentioned in Hatari.
-    1: RX will be set at right time 2: IRQ will be (some cycles later)
-*/
-  int rx_stage; 
-#endif
 #if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
   BYTE LineRxBusy; // receiveing from 6301 or MIDI
   BYTE ByteWaitingRx; // Byte in 6301's TDR is waiting to be shifted

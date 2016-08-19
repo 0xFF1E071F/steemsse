@@ -2,6 +2,8 @@
 #ifndef SSEDISK_H
 #define SSEDISK_H
 
+#pragma pack(push, STRUCTURE_ALIGNMENT)
+
 #if defined(SSE_DISK_EXT) // available for all SSE versions
 enum { EXT_ST=1,EXT_MSA,EXT_DIM,EXT_STT,EXT_STX,EXT_IPF,EXT_CTR,EXT_STG,EXT_STW,
 EXT_PRG,EXT_TOS,EXT_SCP,EXT_HFE};
@@ -32,12 +34,12 @@ extern char *dot_ext(int i);
 
 #if defined(SSE_DISK_IMAGETYPE) 
 
-/*  v3.7.0 We separate disk image type in two:
+/*  We separate disk image type in two:
     who's in charge (manager), and what kind of image we have (extension).
     We start enums at 1 because 0 is used to clear status.
     This info is recorded for each drive (it is a variable in SF314).
-    Steem is Steem's original native emulation.
-    WD1772 is also Steem's, written to run STW disk images.
+    Steem is Steem's original native emulation (fdc.cpp)
+    WD1772 is also Steem's, written to run STW disk images (SSEWD1772.cpp).
 */
 enum { MNGR_STEEM=1,MNGR_PASTI,MNGR_CAPS,MNGR_WD1772};
 
@@ -45,7 +47,8 @@ struct TImageType {
   BYTE Manager;
   BYTE Extension;
 };
-#endif//defined(SSE_DISK_IMAGETYPE) 
+
+#endif
 
 
 //TODO move gap stuff from drive here
@@ -65,9 +68,9 @@ struct TImageType {
 #if defined(SSE_DISK1)
 
 struct TDisk {
-  BYTE Id; //0,1, same as drive
   WORD current_byte;
   WORD TrackBytes;
+  BYTE Id; //0,1, same as drive
 #if defined(SSE_DISK2)
   BYTE current_side; //used in HFE
   BYTE current_track;
@@ -79,5 +82,7 @@ struct TDisk {
 #endif
 
 #endif//#if defined(SSE_DISK)
+
+#pragma pack(pop)
 
 #endif//#ifndef SSEDISK_H

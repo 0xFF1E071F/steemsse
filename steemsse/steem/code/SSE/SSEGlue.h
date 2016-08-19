@@ -4,7 +4,7 @@
 
 #include <run.decla.h>
 
-#pragma pack(push, 1)
+#pragma pack(push, STRUCTURE_ALIGNMENT)
 
 struct TScanline {
   DWORD Tricks; // see mask description in SSEVideo.h
@@ -30,12 +30,14 @@ struct TGlueStatusBYTE {
 // Generalized Logic Unit
 
 struct TGlue {
+
+  // ENUM
   enum {FREQ_50,FREQ_60,FREQ_72,NFREQS};
 
   enum {GLU_DE_ON,HBLANK_OFF,GLU_DE_OFF,HBLANK_ON,HSYNC_ON,HSYNC_OFF,RELOAD_SDP,
     ENABLE_VBI,VERT_OVSCN_LIMIT,NTIMINGS};
 
-  //DATA
+  // DATA
   int TrickExecuted; //make sure that each trick will only be applied once
 #if defined(SSE_GLUE_FRAME_TIMINGS)
   screen_event_struct screen_event;
@@ -63,7 +65,7 @@ struct TGlue {
   TGlueStatusBYTE Status;
 #endif
 
-  //FUCNTIONS
+  // FUNCTIONS
   TGlue();
   void AdaptScanlineValues(int CyclesIn); // on set sync of shift mode
   void AddFreqChange(int f);
@@ -84,7 +86,6 @@ struct TGlue {
 #if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
   void AddExtraToShifterDrawPointerAtEndOfLine(unsigned long &extra);
 #endif
-
   int FreqChangeAtCycle(int cycle);
   int FreqAtCycle(int cycle);
   int ShiftModeAtCycle(int cycle);

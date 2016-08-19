@@ -79,30 +79,8 @@ EXT void debug_hit_io_mon_write(MEM_ADDRESS,int);
 /*  Adding range check: is ad between ad1 and ad2
     We use the first 2 watches
 */
-#if defined(SSE_COMPILER_370_INLINE)
   //bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adarr,bool wr);
   bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adarr);//383 warning
-#else
-inline  bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adarr,bool wr) {
-  MEM_ADDRESS ad1=0,ad2=0;
-  for(int i=0;i<num;i++)
-  {
-    if(!ad1)
-      ad1=adarr[i];
-    else if(!ad2)
-    {
-      ad2=adarr[i];
-      break;
-    }
-  }
-  if(ad1&&ad2&& (ad1<ad2 && ad1<=ad && ad<=ad2
-    || ad1>ad2 && ad2<=ad && ad<=ad1))
-  {
-    return true;
-  }
-  return false;
-}
-#endif
 
 #define DEBUG_CHECK_WR_B(ad,num,adarr,maskarr,hit,wr) \
   if (num){ \

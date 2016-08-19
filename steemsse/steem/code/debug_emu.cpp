@@ -635,7 +635,7 @@ int __stdcall debug_plugin_write_mem(DWORD ad,BYTE *buf,int len)
 }
 //---------------------------------------------------------------------------
 
-#if defined(SSE_BOILER_MONITOR_RANGE) && defined(SSE_COMPILER_370_INLINE)
+#if defined(SSE_BOILER_MONITOR_RANGE) 
 /*  Adding range check: is ad between ad1 and ad2
     We use the first 2 watches
 */

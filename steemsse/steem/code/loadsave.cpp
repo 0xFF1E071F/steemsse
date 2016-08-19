@@ -306,11 +306,7 @@ void AddSnapShotToHistory(char *FilNam)
 //---------------------------------------------------------------------------
 //SS C++ horror, TODO
 
-bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bool ChangeDisks=true
-#if defined(SSE_VAR_POWERON2) //this isn't defined (v3.6.2)
-  ,bool NoNeedToReset=false // in main, we already called reset_st
-#endif
-  )
+bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bool ChangeDisks=true)
 {
   TRACE2("Loading %s\n",FilNam);
 #ifndef ONEGAME
@@ -329,9 +325,6 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
       DeleteFile(WriteDir+SLASH+"auto_reset_backup.sts");
       SaveSnapShot(WriteDir+SLASH+"auto_loadsnapshot_backup.sts",-1,0);
     }
-#if defined(SSE_VAR_POWERON2)
-    if(!NoNeedToReset)
-#endif
     reset_st(RESET_COLD | RESET_STOP | RESET_NOCHANGESETTINGS | RESET_NOBACKUP);
 
     FILE *f=fopen(FilNam,"rb");

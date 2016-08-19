@@ -408,7 +408,7 @@ void inline prepare_event_again() //might be an earlier one
     
     PREPARE_EVENT_CHECK_FOR_TIMER_B;
 
-#if defined(SSE_INT_MFP_EVENT_WRITE)
+#if defined(SSE_INT_MFP)
     PREPARE_EVENT_CHECK_FOR_MFP_WRITE;
 #endif
     
@@ -422,11 +422,6 @@ void inline prepare_event_again() //might be an earlier one
 
 #if defined(SSE_DMA_DELAY)
     PREPARE_EVENT_CHECK_FOR_DMA;
-#endif
-
-#if defined(SSE_ACIA_IRQ_DELAY)
-// not defined anymore (v3.5.2), see MFP
-    PREPARE_EVENT_CHECK_FOR_ACIA_IKBD_IN;
 #endif
 
 #if defined(SSE_IKBD_6301_EVENT)
@@ -468,7 +463,7 @@ void inline prepare_next_event() //SS check this "inline" thing
 
     PREPARE_EVENT_CHECK_FOR_TIMER_B;
 
-#if defined(SSE_INT_MFP_EVENT_WRITE)
+#if defined(SSE_INT_MFP)
     PREPARE_EVENT_CHECK_FOR_MFP_WRITE;
 #endif
       
@@ -511,10 +506,8 @@ inline void handle_timeout(int tn) {
     " period was "+mfp_timer_period[tn]);
 
   if (mfp_timer_period_change[tn]){    
-#if defined(SSE_INT_MFP_EVENT_WRITE)
-/*  Here we go again...
-    Audio Artistic, timer D would count through before the write
-*/
+#if defined(SSE_INT_MFP)
+    // Audio Artistic, timer D would count through before the write
     if(MC68901.WritePending)
     {
       TRACE_MFP("Handle time-out Flush MFP event ");
@@ -543,31 +536,18 @@ inline void handle_timeout(int tn) {
   {
 #if defined(SSE_INT_MFP_RATIO_PRECISION)
   mfp_timer_period_current_fraction[tn]+=mfp_timer_period_fraction[tn]; 
-#if defined(SSE_INT_MFP_RATIO_PRECISION_2) // 1 cycle precision
   // this guarantees that we're always at the right cycle, despite
   // the inconvenience of a ratio
   if(mfp_timer_period_current_fraction[tn]>=1000) {
     mfp_timer_period_current_fraction[tn]-=1000;
     new_timeout+=1; 
   }
-#elif defined(SSE_INT_MFP_RATIO_PRECISION) // 4 cycle precision
-  if(mfp_timer_period_current_fraction[tn]>=4000) {\
-    mfp_timer_period_current_fraction[tn]-=4000;\
-    new_timeout+=4; \
-  }
-#endif
 #endif
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
    new_timeout+=MC68901.Wobble[tn]=rand()&MFP_TIMERS_WOBBLE;
-  //new_timeout+=MC68901.Wobble[tn];
 #endif
   }
-#if defined(SSE_INT_MFP_IACK_LATENCY4)
-  if(MC68901.SkipTimer[tn])
-    MC68901.SkipTimer[tn]=0;// should be -- but we reduce risks
-  else
-#endif
-    mfp_interrupt_pend(mfp_timer_irq[tn],mfp_timer_timeout[tn]);
+  mfp_interrupt_pend(mfp_timer_irq[tn],mfp_timer_timeout[tn]);
   mfp_timer_timeout[tn]=new_timeout;
 }
 
@@ -667,13 +647,7 @@ void event_timer_b()
         if (mfp_interrupt_enabled[8]) TRACE_LOG("F%d y%d c%d Timer B pending\n",TIMING_INFO); //?
 #endif
         mfp_timer_counter[1]=BYTE_00_TO_256(mfp_reg[MFPR_TBDR])*64;
-        
-#if defined(SSE_INT_MFP_IACK_LATENCY4) && defined(SSE_INT_MFP_IACK_LATENCY5)
-        if(MC68901.SkipTimer[1])
-          MC68901.SkipTimer[1]=0;
-        else
-#endif
-          mfp_interrupt_pend(MFP_INT_TIMER_B,time_of_next_timer_b);
+        mfp_interrupt_pend(MFP_INT_TIMER_B,time_of_next_timer_b);
       }
     }
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+cpu_cycles_from_hbl_to_timer_b+
@@ -1093,12 +1067,6 @@ void event_scanline()
   }
 #endif
 
-#if defined(SSE_INT_JITTER)//no
-  HblJitterIndex++; 
-  if(HblJitterIndex==5)
-    HblJitterIndex=0;
-#endif
-
 #ifdef DEBUG_BUILD
   if (debug_run_until==DRU_SCANLINE){
     if (debug_run_until_val==scan_y){
@@ -1110,14 +1078,14 @@ void event_scanline()
   }
 #endif
 
-#if defined(SSE_INT_HBL_IACK2) && defined(SSE_CPU_E_CLOCK_370)
+#if defined(SSE_INT_HBL_IACK2)
   BYTE iack_latency=(OPTION_C1)
     ? HBL_IACK_LATENCY + M68000.LastEClockCycles[TM68000::ECLOCK_HBL]
     : CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED;
 #endif
 
   if (abs_quick(cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt)
-#if defined(SSE_INT_HBL_IACK2) && defined(SSE_CPU_E_CLOCK_370)
+#if defined(SSE_INT_HBL_IACK2)
     >iack_latency
 #else
     >CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED
@@ -1288,7 +1256,7 @@ void event_vbl_interrupt() //SS misleading name?
     Cases? Must be pretty rare, usually the problem is not too many VBI but
     missed VBI
 */
-#if defined(SSE_INT_VBL_IACK2) && defined(SSE_CPU_E_CLOCK_370) //as for HBL
+#if defined(SSE_INT_VBL_IACK2)//as for HBL
   if(time_of_last_vbl_interrupt+VBL_IACK_LATENCY
     +M68000.LastEClockCycles[TM68000::ECLOCK_VBL]-ACT>0)
 #else
@@ -1669,11 +1637,6 @@ void event_vbl_interrupt() //SS misleading name?
   Glue.Vbl();
 #endif
 
-#if defined(SSE_SHIFTER_DRAGON1)//not defined in v3.5.2
-  if(SS_signal==SIGNAL_SHIFTER_CONFUSED_1)
-    SS_signal=SIGNAL_SHIFTER_CONFUSED_2; // stage 2 of our hack
-#endif  
-
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_370)//no
 /*  v3.7
     The ST could be set on high resolution for a long time
@@ -1728,12 +1691,6 @@ void event_vbl_interrupt() //SS misleading name?
   cpu_time_of_start_of_event_plan=cpu_time_of_last_vbl;
 #endif
 
-#if defined(SSE_INT_JITTER)//no
-    VblJitterIndex++; // like Hatari  
-    if(VblJitterIndex==5)
-      VblJitterIndex=0;
-#endif
-
   log_to(LOGSECTION_SPEEDLIMIT,"--");
 
   PasteVBL();
@@ -1754,7 +1711,7 @@ void event_vbl_interrupt() //SS misleading name?
   Shifter.Vbl(); 
 #endif
 
-#if defined(SSE_SHIFTER) && defined(SSE_BOILER_FRAME_REPORT)
+#if defined(SSE_VIDEO_CHIPSET)
 #if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SDP_LINES) 
   {
@@ -1770,7 +1727,7 @@ void event_vbl_interrupt() //SS misleading name?
 #endif
 #endif
 
-#if defined(SSE_CPU_E_CLOCK_382)
+#if defined(SSE_CPU_E_CLOCK)
   M68000.UpdateCyclesForEClock(); // this function is called at least each VBL
 #endif
 
@@ -1823,14 +1780,8 @@ void event_pasti_update()
 {
   if (hPasti==NULL || pasti_active==false
 #if defined(SSE_DISK_PASTI_ONLY_STX)
-    || PASTI_JUST_STX && 
-#if defined(SSE_DISK_IMAGETYPE)
-    SF314[YM2149.SelectedDrive].ImageType.Extension!=EXT_STX
-#else
-    SF314[floppy_current_drive()].ImageType!=3
-#endif
+    ||PASTI_JUST_STX && SF314[YM2149.SelectedDrive].ImageType.Extension!=EXT_STX
 #if defined(SSE_DISK_PASTI_ONLY_STX_HD) && defined(SSE_DMA_OBJECT)
-//    && ! ( pasti_active && (Dma.MCR&BIT_3)) // hard disk handling by pasti
     && ! ( pasti_active && (Dma.MCR&TDma::CR_HDC_OR_FDC)) // hard disk handling by pasti
 #endif
 #endif
@@ -1859,6 +1810,7 @@ void event_pasti_update()
 // SSE added events
 
 #if defined(SSE_GLUE_FRAME_TIMINGS)
+
 void event_trigger_vbi() { //6X cycles into frame (reference end of HSYNC)
 #if defined(SSE_GLUE_FRAME_TIMINGS)
   ASSERT(!Glue.Status.vbi_done);
@@ -1881,13 +1833,11 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer=xbios2;
 #endif
 
-#if defined(SSE_INT_VBL_380) && defined(SSE_CPU_E_CLOCK_370) && defined(SSE_INT_VBL_IACK2)
+#if defined(SSE_INT_VBL_IACK2)
   BYTE iack_latency=(OPTION_C1)
     ? HBL_IACK_LATENCY + M68000.LastEClockCycles[TM68000::ECLOCK_VBL]
     : CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED;
- // if(abs_quick(cpu_timer_at_start_of_hbl-time_of_last_vbl_interrupt)
- //   >iack_latency)
-    if(cpu_timer_at_start_of_hbl-time_of_last_vbl_interrupt>iack_latency
+  if(cpu_timer_at_start_of_hbl-time_of_last_vbl_interrupt>iack_latency
     ||!cpu_timer_at_start_of_hbl&&!time_of_last_vbl_interrupt)
 #endif
       vbl_pending=true;
@@ -1964,9 +1914,9 @@ void event_ikbd2() {
 
 #endif//ikbd
 
-#if defined(SSE_INT_MFP_EVENT_WRITE)
+#if defined(SSE_INT_MFP)
 
-int time_of_event_mfp_write;
+int time_of_event_mfp_write=0;
 
 void event_mfp_write() {
   
@@ -1975,16 +1925,12 @@ void event_mfp_write() {
     ASSERT(time_of_event_mfp_write!=MC68901.WriteTiming);
 //    TRACE_MFP("%d execute event_mfp_write(): mfp_reg[%d]=%X\n",ACT,MC68901.LastRegisterWritten,MC68901.LastRegisterWrittenValue);
     TRACE_MFP("%d %s=%X\n",ACT,mfp_reg_name[MC68901.LastRegisterWritten],MC68901.LastRegisterWrittenValue);
-#if defined(SSE_INT_MFP_REFACTOR2B) && defined(SSE_DEBUG) //for trace
+#if defined(SSE_DEBUG) //for trace
     MC68901.LastRegisterFormerValue=mfp_reg[MC68901.LastRegisterWritten];
 #endif
     mfp_reg[MC68901.LastRegisterWritten]=MC68901.LastRegisterWrittenValue;
     MC68901.UpdateNextIrq(); // for example to clear IRQ
     MC68901.WritePending=false;
-#if !defined(SSE_INT_MFP_REFACTOR2A) //remove bug/hack 
-    if(MC68901.Irq && !M68000.IackCycle)
-      check_for_interrupts_pending();   // radical? //test10 vs audio artistic
-#endif
   }
   time_of_event_mfp_write=time_of_next_event+n_cpu_cycles_per_second;
 }

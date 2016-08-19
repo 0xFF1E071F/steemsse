@@ -41,105 +41,58 @@ int debug0,debug1,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9;
 
 // a structure that may be used by C++ and C objects
 
-//todo, all C above
+#pragma pack(push, STRUCTURE_ALIGNMENT)
+
+#define MAX_TRACE_CHARS 256
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
+#define MAX_INTERRUPTS 256
+#define DESCRIPTION_LENGTH 8
+#endif
+#if defined(SSE_BOILER_PSEUDO_STACK)
+#define PSEUDO_STACK_ELEMENTS 64
+#endif
 
 struct TDebug {
+#ifdef __cplusplus 
+  // ENUM 
+#if defined(SSE_DEBUG_START_STOP_INFO)
+  enum {START,STOP,INIT} ;
+#endif
+#endif
+  // DATA
+#if defined(SSE_BOILER_TIMERS_ACTIVE)
+  HWND boiler_timer_hwnd[4];//to record WIN handles
+#endif
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
+  HWND InterruptReportingZone; // record static control handle in Boiler
+#endif
 #if defined(SSE_DEBUG_TRACE_FILE)
   FILE *trace_file_pointer; 
 #if defined(SSE_DEBUG)
   int nTrace;
 #endif
 #endif
-#if defined(SSE_DEBUG_ASSERT)
-  BYTE IgnoreErrors;
-#endif
-#if defined(SSE_DEBUG)
-  BYTE logsection_enabled[100]; // we want a double anyway //bool
+#ifdef SSE_DEBUG
   int LogSection;
-#endif
-
-#ifdef __cplusplus // visible only to C++ objects
-  TDebug();
-  ~TDebug();
-#if defined(SSE_DEBUG)
   int ShifterTricks;
 #endif
-#if defined(SSE_DEBUG_TRACE)
-  enum {MAX_TRACE_CHARS=256}; // the function is safe anyway
-  void Trace(char *fmt, ...); // one function for both IDE & file
-  void TraceIde(char *fmt, ...); // in IDE, not file, whatever the defines
-  // if logsection enabled, static for function pointer, used in '6301':
-  static void TraceLog(char *fmt, ...); 
-  char trace_buffer[MAX_TRACE_CHARS];
+#if defined(SSE_OSD_SHOW_TIME)// using OSD trace, so may as well be here
+  DWORD StartingTime; // record time on cold reset
+  DWORD StoppingTime; // to adjsut when stopping/restarting
 #endif
-#endif//c++
-
-#ifdef __cplusplus // visible only to C++ objects
-
-#if defined(SSE_DEBUG_START_STOP_INFO)
-  enum {START,STOP,INIT} ;
-  void TraceGeneralInfos(int when);
+#if defined(SSE_BOILER_PSEUDO_STACK)
+  DWORD PseudoStack[PSEUDO_STACK_ELEMENTS]; // rotating stack
 #endif
-
 #if defined(SSE_OSD_DEBUG_MESSAGE)
-  char m_OsdMessage[OSD_DEBUG_MESSAGE_LENGTH+1]; // +null as usual
-  void TraceOsd(char *fmt, ...);
   unsigned long OsdTimer;
 #endif
-
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
-  enum {MAX_INTERRUPTS=256,DESCRIPTION_LENGTH=8};//
   struct SInterruptTable {
     char description[DESCRIPTION_LENGTH]; // eg MFP VBI TRACE...
     BYTE num; // eg 13 for timer A
   } InterruptTable[MAX_INTERRUPTS];
-
   short InterruptIdx;
-  HWND InterruptReportingZone; // record static control handle in Boiler
-  void ClickInterrupt();
-  void RecordInterrupt(char *description, BYTE num=0);
-  void ReportInterrupt();
-  void Rte();
 #endif
-
-#if defined(SSE_BOILER_TIMERS_ACTIVE)
-  HWND boiler_timer_hwnd[4];//to record WIN handles
-#endif
-
-#if defined(SSE_BOILER_MONITOR_VALUE)
-  BYTE MonitorValueSpecified; // boiler SSE option
-  BYTE MonitorComparison; // as is, none found = 0 means no value to look for
-  WORD MonitorValue;
-#endif
-
-#if defined(SSE_BOILER_MONITOR_RANGE)
-  BYTE MonitorRange; //check from ad1 to ad2
-#endif
-
-#if defined(SSE_BOILER_68030_STACK_FRAME)
-  BYTE M68030StackFrame;//flag
-#endif
-
-#if defined(SSE_BOILER_BROWSER_6301)
-  BYTE HD6301RamBuffer[256+8];
-#endif
-
-#if defined(SSE_BOILER_STACK_CHOICE)
-  BYTE StackDisplayUseOtherSp;//flag
-#endif
-#if defined(SSE_DEBUG) || defined(SSE_OSD_SHOW_TIME)
-  void Vbl(); //3.6.1
-#endif
-#if defined(SSE_DEBUG_RESET)
-  void Reset(bool Cold);
-#endif
-#if defined(SSE_BOILER_TRACE_EVENTS)
-  void TraceEvent( void* pointer);
-#endif
-
-
-#endif//c++
-
 #if defined(SSE_BOILER_FAKE_IO)
 /*  Hack. A free zone in IO is mapped to an array of masks to control 
     a lot of debug options using the Boiler's built-in features.
@@ -148,29 +101,86 @@ struct TDebug {
 */
   WORD ControlMask[FAKE_IO_LENGTH];
 #endif
-
+#if defined(SSE_BOILER_MONITOR_VALUE)
+  WORD MonitorValue;
+#endif
 #if defined(SSE_BOILER_FRAME_INTERRUPTS)
-  BYTE FrameInterrupts; //bit0 VBI 1 HBI 2 MFP
   WORD FrameMfpIrqs; // for OSD report
 #endif
 #if defined(SSE_DEBUG)
   WORD nHbis; // counter for each frame
 #endif
+#if defined(SSE_DEBUG)
+  BYTE logsection_enabled[100];
+#endif
+#if defined(SSE_DEBUG_ASSERT)
+  BYTE IgnoreErrors;
+#endif
+#if defined(SSE_BOILER_MONITOR_VALUE)
+  BYTE MonitorValueSpecified; // boiler SSE option
+  BYTE MonitorComparison; // as is, none found = 0 means no value to look for
+#endif
+#if defined(SSE_BOILER_MONITOR_RANGE)
+  BYTE MonitorRange; //check from ad1 to ad2
+#endif
+#if defined(SSE_BOILER_68030_STACK_FRAME)
+  BYTE M68030StackFrame;//flag
+#endif
+#if defined(SSE_BOILER_BROWSER_6301)
+  BYTE HD6301RamBuffer[256+8];
+#endif
+#if defined(SSE_BOILER_STACK_CHOICE)
+  BYTE StackDisplayUseOtherSp;//flag
+#endif
+#if defined(SSE_BOILER_FRAME_INTERRUPTS)
+  BYTE FrameInterrupts; //bit0 VBI 1 HBI 2 MFP
+#endif
+#if defined(SSE_DEBUG_TRACE)
+  char trace_buffer[MAX_TRACE_CHARS];
+#endif
+#if defined(SSE_OSD_DEBUG_MESSAGE)
+  char m_OsdMessage[OSD_DEBUG_MESSAGE_LENGTH+1]; // +null as usual
+#endif
+  // FUNCTIONS
+#ifdef __cplusplus 
+  TDebug();
+  ~TDebug();
+#if defined(SSE_DEBUG_TRACE)
+  void Trace(char *fmt, ...); // one function for both IDE & file
+  void TraceIde(char *fmt, ...); // in IDE, not file, whatever the defines
+  // if logsection enabled, static for function pointer, used in '6301':
+  static void TraceLog(char *fmt, ...); 
+#endif
+#if defined(SSE_DEBUG_START_STOP_INFO)
+  void TraceGeneralInfos(int when);
+#endif
+#if defined(SSE_OSD_DEBUG_MESSAGE)
+  void TraceOsd(char *fmt, ...);
+#endif
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
+  void ClickInterrupt();
+  void RecordInterrupt(char *description, BYTE num=0);
+  void ReportInterrupt();
+  void Rte();
+#endif
+#if defined(SSE_DEBUG) || defined(SSE_OSD_SHOW_TIME)
+  void Vbl();
+#endif
+#if defined(SSE_DEBUG_RESET)
+  void Reset(bool Cold);
+#endif
+#if defined(SSE_BOILER_TRACE_EVENTS)
+  void TraceEvent( void* pointer);
+#endif
 #if defined(SSE_BOILER_PSEUDO_STACK)
-#define PSEUDO_STACK_ELEMENTS 64
-  DWORD PseudoStack[PSEUDO_STACK_ELEMENTS]; // rotating stack
-#ifdef __cplusplus
   void PseudoStackCheck(DWORD return_address);
   DWORD PseudoStackPop();
   void PseudoStackPush(DWORD return_address);
 #endif
-#endif
-#if defined(SSE_OSD_SHOW_TIME)// using OSD trace, so may as well be here
-  DWORD StartingTime; // record time on cold reset
-  DWORD StoppingTime; // to adjsut when stopping/restarting
-#endif
+#endif//C++
 };
 
+#pragma pack(pop)
 
 extern 
 #ifdef __cplusplus
@@ -242,9 +252,7 @@ enum logsection_enum_tag {
  };
 #endif
 
-#if defined(SSE_BOILER_FAKE_IO)
-
-#if defined(SSE_OSD_CONTROL)
+#if defined(SSE_BOILER_FAKE_IO) && defined(SSE_OSD_CONTROL)
 
 #define OSD_MASK1 (Debug.ControlMask[2])
 #define OSD_CONTROL_INTERRUPT               (1<<15)
@@ -263,14 +271,13 @@ enum logsection_enum_tag {
 #define OSD_MASK2 (Debug.ControlMask[4])
 #define OSD_CONTROL_SHIFTERTRICKS           (1<<15)
 #define OSD_CONTROL_PRELOAD (1<<14)
-#define OSD_CONTROL_60HZ              (1<<13)
+#define OSD_CONTROL_MODES (1<<13)
 
 #define OSD_MASK3 (Debug.ControlMask[5])
 #define OSD_CONTROL_DMASND                  (1<<15)
 #define OSD_CONTROL_STEBLT                  (1<<14)
 #if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
 #define OSD_CONTROL_WRITESDP                (1<<13)
-#endif
 #endif//osdcontrol
 
 #if defined(SSE_BOILER_TRACE_CONTROL)

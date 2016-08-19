@@ -144,11 +144,7 @@ void TGhostDisk::WriteSector(TWD1772IDField *IDField) {
     if(FindIDField(IDField))
     {
       IDField_existed=true;
-#if defined(SSE_VS2008_WARNING_371)
       fseek(fCurrentImage,-(long)sizeof(TWD1772IDField),SEEK_CUR);
-#else
-      fseek(fCurrentImage,-sizeof(TWD1772IDField),SEEK_CUR);      
-#endif
     }
     else
     {

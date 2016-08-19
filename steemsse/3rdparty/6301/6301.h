@@ -49,11 +49,7 @@
 #if defined(SSE_IKBD_6301)
 
 // variables from Steem we declare here as 'C' linkage
-#if defined(SSE_VAR_RESIZE_380)
-extern BYTE ST_Key_Down[128];//my mistake
-#else
-extern int ST_Key_Down[128];
-#endif
+extern BYTE ST_Key_Down[128];
 extern int mousek;
 // variables that Steem must see
 extern int hd6301_completed_transmission_to_MC6850; // for sync

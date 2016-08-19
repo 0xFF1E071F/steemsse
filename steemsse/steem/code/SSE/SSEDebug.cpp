@@ -25,7 +25,8 @@
 #include "SSEFloppy.h"
 #include <display.decla.h>
 #include <init_sound.decla.h>
-#include "SSEMMU.h"
+//#include "SSEMMU.h"
+#include "SSEVideo.h"
 #include "SSEInterrupt.h"
 #include "SSECpu.h"
 #include <stdio.h>
@@ -759,7 +760,7 @@ void TDebug::TraceEvent(void* pointer) {
   else if(pointer==event_ikbd2)
     TRACE("event_ikbd2");
 #endif
-#if defined(SSE_INT_MFP_EVENT_WRITE)
+#if defined(SSE_INT_MFP)
   else if(pointer==event_mfp_write)
     TRACE("event_mfp_write");
 #endif

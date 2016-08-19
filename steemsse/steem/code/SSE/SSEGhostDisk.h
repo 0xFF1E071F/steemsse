@@ -46,28 +46,30 @@ Interface:
 
 #include "SSEWD1772.h"
 
-struct TGhostDisk {
+#pragma pack(push, STRUCTURE_ALIGNMENT)
 
+struct TGhostDisk {
+  //DATA
+  BYTE *SectorData; // memory allocation is handled by object
+  FILE *fCurrentImage;
+  WORD Version;  // version of the STG file (we write $100)
+  WORD nRecords;
+  WORD SectorBytes;
+  TWD1772IDField CurrentIDField;
   // interface
   bool Open(char *path);
   void Close();
   WORD ReadSector(TWD1772IDField *IDField);
   void WriteSector(TWD1772IDField *IDField); 
-  BYTE *SectorData; // memory allocation is handled by object
-
   // other functions
   TGhostDisk();
   ~TGhostDisk();
   void Init();
   void Reset();
   bool FindIDField(TWD1772IDField *IDField);
-  // other variables
-  TWD1772IDField CurrentIDField;
-  FILE *fCurrentImage;
-  WORD Version;  // version of the STG file (we write $100)
-  WORD nRecords;
-  WORD SectorBytes;
 };
+
+#pragma pack(pop)
 
 #endif//#if defined(SSE_DISK_GHOST)
 

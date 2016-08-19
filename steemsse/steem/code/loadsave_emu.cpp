@@ -1151,7 +1151,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if defined(SSE_INT_MFP_OBJECT)
     //TRACE("L/S MFP\n");
     ReadWriteStruct(MC68901);
-#if defined(SSE_INT_MFP_REFACTOR2)
+#if defined(SSE_INT_MFP)
     if(LoadOrSave==LS_LOAD)
 #endif
       MC68901.Init(); // in case of bad snapshot
@@ -1208,12 +1208,16 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 */
     ioaccess=(Glue.screen_event.time-cpu_cycles);
     ReadWrite(ioaccess);
-#if defined(SSE_CPU_E_CLOCK_382)
+#if defined(SSE_CPU_E_CLOCK)
     M68000.cycles_for_eclock-=ioaccess;
 #endif
 #endif
-#if defined(SSE_CPU_E_CLOCK_382) // keep E-Clock synced on loading a snapshot
+#if defined(SSE_CPU_E_CLOCK) // keep E-Clock synced on loading a snapshot
     ReadWrite(M68000.cycles_for_eclock); 
+#if defined(SSE_CPU_E_CLOCK_383)
+    if(LoadOrSave==LS_SAVE)
+      M68000.cycles_for_eclock+=ioaccess; // restore
+#endif
 #endif
 
   }

@@ -260,13 +260,7 @@ void event_timer_d_timeout();
 void event_scanline();
 void event_timer_b();
 
-#if defined(SSE_ACIA_IRQ_DELAY)
-void event_acia_rx_irq();// not defined anymore (v3.5.2), see MFP
-#endif
 
-//void event_hbl();
-//void event_border_scanline();
-//void event_picture_scanline();
 void event_start_vbl();
 void event_vbl_interrupt();
 void event_hbl(); //just HBL, don't draw yet, don't increase scan_y
@@ -343,10 +337,10 @@ void event_ikbd(),event_ikbd2();
 
 #endif//ikbdevt
 
-#if defined(SSE_INT_MFP_EVENT_WRITE)
+#if defined(SSE_INT_MFP)
 /*  v3.8
-    We create an event for write to MFP registers, because the
-    alternative is getting too complicated.
+    We create an event for write to MFP registers, it adds load but the
+    alternative is too complicated (previous versions).
     The event triggers MFP_WRITE_LATENCY cycles later, which
     practically means after the next instruction, or during
     the IACK cycle.

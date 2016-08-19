@@ -290,9 +290,6 @@ logically connected to it. If a mouse disable command is received while port 0
 /*  WRT memory snapshots we can safely modify the structures, the size is 
     recorded along with data
 */
-#if defined(SSE_ACIA_IRQ_DELAY)  // not defined anymore (v3.5.2), see MFP
-  int timer_when_keyboard_info; // to improve accuracy of keyboard IRQ timing
-#endif
 #if defined(SSE_IKBD_POLL_IN_FRAME)
   int scanline_to_poll; // each VBL, we poll IKBD during a random scanline
 #endif
@@ -319,37 +316,6 @@ EXT IKBD_STRUCT ikbd;
 #endif
 
 BYTE keyboard_buffer_read();
-
-/*
-#if (defined(SSE_ACIA)) 
-//temp moved from emulator.h to have it compile
-#include "acia.decla.h"
-EXT ACIA_STRUCT acia[2];
-#endif
-*/
-
-#if defined(SSE_ACIA_IRQ_DELAY)
-// not defined anymore (v3.5.2), see MFP
-inline void PrepareEventCheckForAciaIkbdIn() {
-  if(acia[0].rx_stage)
-  {
-    int tt=ikbd.timer_when_keyboard_info+HD6301_TO_ACIA_IN_CYCLES;
-    if(acia[0].rx_stage==2)
-    {
-      tt+=SSE_ACIA_IRQ_DELAY_CYCLES; // fixes V8 Music Studio (from Hatari)
-    }
-    if((time_of_next_event-tt) >= 0)
-    {
-      time_of_next_event=tt;  
-      screen_event_vector=event_acia_rx_irq;
-    }
-  }
-}
-#define PREPARE_EVENT_CHECK_FOR_ACIA_IKBD_IN PrepareEventCheckForAciaIkbdIn(); 
-#endif
-
-
-//#endif
 
 #undef EXT
 #undef INIT

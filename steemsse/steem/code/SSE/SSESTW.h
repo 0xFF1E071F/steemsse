@@ -2,10 +2,13 @@
 #ifndef SSE_STW_H
 #define SSE_STW_H
 #include "SSE.H"
+#include "SSEParameters.h"
 #ifdef SSE_UNIX
 #include <conditions.h>
 #endif
-#pragma pack(push, 1)
+
+#pragma pack(push, STRUCTURE_ALIGNMENT)
+
 struct TImageSTW {
 
   // interface
@@ -39,6 +42,7 @@ struct TImageSTW {
 private: 
 
 };
+
 #pragma pack(pop)
 
 #endif//#ifndef SSE_STW_H

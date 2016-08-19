@@ -5,12 +5,7 @@
 #if defined(SSE_CPU)
 
 #include <cpu.decla.h>
-#include <d2.decla.h> //V3.7.1
-
-#ifdef SSE_UNIX
-void exception(int,exception_action,MEM_ADDRESS);
-#endif
-
+#include <d2.decla.h>
 #ifdef DEBUG_BUILD
 #include <debug_emu.decla.h>
 #endif
@@ -18,20 +13,21 @@ void exception(int,exception_action,MEM_ADDRESS);
 #include <blitter.decla.h>
 #include <mfp.decla.h>
 #include "SSEDebug.h"
-//#include "SSEShifter.h" //TIMING_INFO
 #include "SSEVideo.h"
+
+#ifdef SSE_UNIX//?
+extern void exception(int,exception_action,MEM_ADDRESS);
+#endif
 
 #define LOGSECTION LOGSECTION_CPU 
 
-#if !defined(SSE_SHIFTER)
-#include "SSEFrameReport.h" //for some trace
-#endif
-
 #if defined(SSE_CPU_INLINE_READ_BWL)
+
 #define m68k_READ_B(addr) M68000.ReadB(addr);
 #define m68k_READ_W(addr) M68000.ReadW(addr);
 #define m68k_READ_L(addr) M68000.ReadL(addr);
-#else //for versions <360
+
+#else
 
 #define m68k_READ_B(addr)                              \
   m68k_src_b=m68k_peek(addr);                           \
@@ -45,125 +41,12 @@ void exception(int,exception_action,MEM_ADDRESS);
 #endif
 
 #if defined(SSE_CPU_INLINE_READ_FROM_ADDR)
+
 #define m68k_READ_B_FROM_ADDR M68000.m68kReadBFromAddr();
 #define m68k_READ_W_FROM_ADDR M68000.m68kReadWFromAddr();
 #define m68k_READ_L_FROM_ADDR M68000.m68kReadLFromAddr();
-#else //for versions <360 (big block)
 
-#if !defined(SSE_CPU_INLINE_READ_FROM_ADDR)
-
-#if defined(SSE_MMU_NO_CONFUSION) //<352
-
-#define m68k_READ_B_FROM_ADDR                         \
-  abus&=0xffffff;                                   \
-  if(abus>=himem){                                  \
-    if(abus>=MEM_IO_BASE){            \
-      if(SUPERFLAG)m68k_src_b=io_read_b(abus);           \
-      else exception(BOMBS_BUS_ERROR,EA_READ,abus);         \
-    }else if(abus>=0xfc0000){                             \
-      if(tos_high && abus<(0xfc0000+192*1024))m68k_src_b=ROM_PEEK(abus-rom_addr);   \
-      else if (abus<0xfe0000 || abus>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,abus);  \
-    }else if(abus>=MEM_EXPANSION_CARTRIDGE){           \
-      if(cart){                                             \
-        m68k_src_b=CART_PEEK(abus-MEM_EXPANSION_CARTRIDGE);  \
-      }else{                                                 \
-        m68k_src_b=0xff;                                    \
-      }                                                     \
-    }else if (abus>=rom_addr){                         \
-      if(abus<(0xe00000+256*1024))m68k_src_b=ROM_PEEK(abus-rom_addr);                           \
-      else if (abus>=0xec0000) exception(BOMBS_BUS_ERROR,EA_READ,abus);          \
-      else m68k_src_b=0xff;                                          \
-    }else if (abus>=0xd00000 && abus<0xd80000){ \
-      m68k_src_b=0xff;                                          \
-    }else if(abus>=FOUR_MEGS){                   \
-      exception(BOMBS_BUS_ERROR,EA_READ,abus);                          \
-    }else{                                                     \
-      m68k_src_b=0xff;                                          \
-    }                                                             \
-  }else if(abus>=MEM_START_OF_USER_AREA){                                              \
-    DEBUG_CHECK_READ_B(abus);  \
-    m68k_src_b=(BYTE)(PEEK(abus));                  \
-  }else if(SUPERFLAG){     \
-    DEBUG_CHECK_READ_B(abus);  \
-    m68k_src_b=(BYTE)(PEEK(abus));                  \
-  }else exception(BOMBS_BUS_ERROR,EA_READ,abus);
-
-
-#define m68k_READ_W_FROM_ADDR           \
-  abus&=0xffffff;                                   \
-  if(abus&1){                                      \
-    exception(BOMBS_ADDRESS_ERROR,EA_READ,abus);    \
-  }else if(abus>=himem){                                  \
-    if(abus>=MEM_IO_BASE){            \
-      if(SUPERFLAG)m68k_src_w=io_read_w(abus);           \
-      else exception(BOMBS_BUS_ERROR,EA_READ,abus);         \
-    }else if(abus>=0xfc0000){                             \
-      if (tos_high && abus<(0xfc0000+192*1024)) m68k_src_w=ROM_DPEEK(abus-rom_addr);   \
-      else if (abus<0xfe0000 || abus>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,abus);  \
-    }else if(abus>=MEM_EXPANSION_CARTRIDGE){           \
-      if(cart){                                             \
-        m68k_src_w=CART_DPEEK(abus-MEM_EXPANSION_CARTRIDGE);  \
-      }else{                                                 \
-        m68k_src_w=0xffff;                                    \
-      }                                                     \
-    }else if(abus>=rom_addr){                         \
-      if(abus<(0xe00000+256*1024)) m68k_src_w=ROM_DPEEK(abus-rom_addr);                           \
-      else if (abus>=0xec0000) exception(BOMBS_BUS_ERROR,EA_READ,abus);          \
-      else m68k_src_w=0xffff;                                          \
-    }else if (abus>=0xd00000 && abus<0xd80000){ \
-      m68k_src_w=0xffff;                                          \
-    }else if(abus>=FOUR_MEGS){                   \
-      exception(BOMBS_BUS_ERROR,EA_READ,abus);                          \
-    }else{                                                     \
-      m68k_src_w=0xffff;                                          \
-    }                                                             \
-  }else if(abus>=MEM_START_OF_USER_AREA){                                              \
-    DEBUG_CHECK_READ_W(abus);  \
-    m68k_src_w=DPEEK(abus);                  \
-  }else if(SUPERFLAG){     \
-    DEBUG_CHECK_READ_W(abus);  \
-    m68k_src_w=DPEEK(abus);                  \
-  }else exception(BOMBS_BUS_ERROR,EA_READ,abus);
-
-#define m68k_READ_L_FROM_ADDR                        \
-  abus&=0xffffff;                                   \
-  if(abus&1){                                      \
-    exception(BOMBS_ADDRESS_ERROR,EA_READ,abus);    \
-  }else if(abus>=himem){                                  \
-    if(abus>=MEM_IO_BASE){           \
-      if(SUPERFLAG)m68k_src_l=io_read_l(abus);          \
-      else exception(BOMBS_BUS_ERROR,EA_READ,abus);         \
-    }else if(abus>=0xfc0000){                             \
-      if(tos_high && abus<(0xfc0000+192*1024-2)) m68k_src_l=ROM_LPEEK(abus-rom_addr);   \
-      else if (abus<0xfe0000 || abus>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,abus);  \
-    }else if(abus>=MEM_EXPANSION_CARTRIDGE){           \
-      if(cart){                                             \
-        m68k_src_l=CART_LPEEK(abus-MEM_EXPANSION_CARTRIDGE);  \
-      }else{                                                 \
-        m68k_src_l=0xffffffff;                                    \
-      }                                                     \
-    }else if(abus>=rom_addr){                         \
-      if(abus<(0xe00000+256*1024-2)) m68k_src_l=ROM_LPEEK(abus-rom_addr);   \
-      else if (abus>=0xec0000) exception(BOMBS_BUS_ERROR,EA_READ,abus);          \
-      else m68k_src_l=0xffffffff;                                          \
-    }else if (abus>=0xd00000 && abus<0xd80000-2){ \
-      m68k_src_l=0xffffffff;                                          \
-    }else if (abus>=FOUR_MEGS){                   \
-      exception(BOMBS_BUS_ERROR,EA_READ,abus);                          \
-    }else{                                                     \
-      m68k_src_l=0xffffffff;                                          \
-    }                                                             \
-  }else if(abus>=MEM_START_OF_USER_AREA){                                              \
-    DEBUG_CHECK_READ_L(abus);  \
-    m68k_src_l=LPEEK(abus);                  \
-  }else if(SUPERFLAG){     \
-    DEBUG_CHECK_READ_L(abus);  \
-    m68k_src_l=LPEEK(abus);                  \
-  }else exception(BOMBS_BUS_ERROR,EA_READ,abus);
-
-
-
-#else //352+
+#else 
 
 #define m68k_READ_B_FROM_ADDR                         \
   abus&=0xffffff;                                   \
@@ -278,14 +161,10 @@ void exception(int,exception_action,MEM_ADDRESS);
     m68k_src_l=LPEEK(abus);                  \
   }else exception(BOMBS_BUS_ERROR,EA_READ,abus);
 
-
 #endif
-#endif
-#endif//?SSE_CPU_INLINE_READ_FROM_ADDR
 
 
-
-#if defined(SSE_BOILER_MONITOR_TRACE)
+#if defined(SSE_BOILER_MONITOR_TRACE) && defined(DEBUG_BUILD)
 #define DEBUG_CHECK_IOACCESS \
   if (ioaccess & IOACCESS_DEBUG_MEM_WRITE_LOG){ \
     int val=int((debug_mem_write_log_bytes==1) ? int(m68k_peek(debug_mem_write_log_address)):int(m68k_dpeek(debug_mem_write_log_address))); \
@@ -323,8 +202,6 @@ void exception(int,exception_action,MEM_ADDRESS);
 
 #ifdef SSE_DEBUG
 
-
-
 inline void handle_ioaccess() {
   if (ioaccess/*||(OPTION_C2&&MC68901.Irq)*/){                             \
     switch (ioaccess & IOACCESS_NUMBER_MASK){                        \
@@ -359,16 +236,7 @@ inline void handle_ioaccess() {
 
 #define HANDLE_IOACCESS(tracefunc) handle_ioaccess();
 
-
 #else
-
-
-
-
-
-
-// keep as macro, wouldn't be inlined in VC6
-// but since we changed trace... (change was reverted...)
 
 #define HANDLE_IOACCESS(tracefunc) \
   if (ioaccess){                             \
@@ -401,20 +269,103 @@ inline void handle_ioaccess() {
   }
 
 
-#endif//inline??
-
-#if defined(SSE_CPU_POKE)  && !defined(SSE_COMPILER_370_INLINE)
-void m68k_poke_abus2(BYTE);
-void m68k_dpoke_abus2(WORD);
-void m68k_lpoke_abus2(LONG);
 #endif
+
+
 
 // Finer names!
 #define IRC   prefetch_buf[1] // Instruction Register Capture
 #define IR    prefetch_buf[0] // Instruction Register
 #define IRD   ir              // Instruction Register Decoder
-#pragma pack(push, 1)
+
+#pragma pack(push, STRUCTURE_ALIGNMENT)
+
 struct TM68000 {
+
+  // ENUM
+#if defined(SSE_CPU_HALT) || defined(SSE_CPU_TRACE_REFACTOR)
+/* v 3.7, see MC68000UM p99 (6-1)
+"The processor is always in one of three processing states: normal, exception, or halted.
+The normal processing state is associated with instruction execution; the memory
+references are to fetch instructions and operands and to store results. A special case of
+the normal state is the stopped state, resulting from execution of a STOP instruction. In
+this state, no further memory references are made."
+->  For the moment only HALTED is used, for the GUI.
+    We add TRACE_MODE to spare a byte, it should correspond to a hidden
+    bit in the CPU, so that it knows that the trace bit was set at the
+    start of the instruction.
+v3.8.0
+Different states are used, but some have NOTHING to do with processor state,
+so refactoring due!
+*/
+  enum {NORMAL,EXCEPTION,HALTED,STOPPED,TRACE_MODE,INTEL_CRASH,BLIT_ERROR,BOILER_MESSAGE}; 
+#endif
+#ifdef SSE_CPU_E_CLOCK
+  enum {ECLOCK_VBL,ECLOCK_HBL,ECLOCK_ACIA}; //debug/hacks
+#endif
+
+  // DATA
+#if defined(SSE_CPU_PREFETCH_CALL)
+  WORD *PrefetchAddress; 
+#endif
+#if defined(SSE_CPU_E_CLOCK)
+  int cycles_for_eclock; // because of integer overflow problems
+  int cycles0; // to record ACT
+#endif
+#if defined(SSE_CPU_EXCEPTION) && defined(SSE_CPU_TRUE_PC)
+  MEM_ADDRESS Pc;
+#endif
+#if defined(SSE_DEBUG)
+  int IrAddress; // pc at start
+  int nExceptions;
+  int nInstr;
+#endif
+#if defined(SSE_CPU_PREFETCH_CALL)
+  WORD PrefetchedOpcode;
+#endif
+#if defined(SSE_CPU_DATABUS)
+  WORD dbus; // TODO; we have global abus, which isn't always up-to-date
+#endif
+#if defined(SSE_DEBUG)
+  WORD PreviousIr;
+#endif
+#if defined(SSE_CPU_PREFETCH_CLASS)
+  BYTE PrefetchClass; // see ijor's article
+#endif
+#if defined(SSE_CPU_EXCEPTION) && defined(SSE_CPU_TRUE_PC)
+  bool CheckRead; // most 'write' instructions read before, crash at read...
+#endif
+#if defined(SSE_CPU_ROUNDING_BUS2)
+  bool Unrounded; // for blitter
+#endif
+#if defined(SSE_CPU_ROUNDING_BUS)
+#if defined(SSE_VS2008_WARNING_383)
+  char Rounded;
+#else
+  bool Rounded;
+#endif
+#endif
+#if defined(SSE_CPU_PREFETCH_CALL)
+  bool CallPrefetch; 
+#endif
+#if defined(SSE_CPU_E_CLOCK)
+  bool EClock_synced;
+  BYTE LastEClockCycles[3];
+#endif
+#if defined(SSE_CPU_HALT) || defined(SSE_CPU_TRACE_REFACTOR)
+  BYTE ProcessingState;
+#endif
+#if defined(SSE_INT_MFP_SPURIOUS) && !defined(SSE_VAR_OPT_383D)
+  bool IackCycle; // flag to avoid starting IACK during IACK (in an emulator, anything goes...)
+#endif
+#if defined(SSE_CPU_TPEND)  
+  bool tpend; // actual internal latch set when CPU should trace current instruction
+#endif  
+#if defined(SSE_DEBUG)
+  bool NextIrFetched; // fetched next instruction?
+#endif
+
+  // FUNCTIONS
   TM68000();
 #if defined(SSE_CPU_PREFETCH_TIMING) && !defined(SSE_CPU_PREFETCH_TIMING_EXCEPT)
 #else//for v341-
@@ -423,13 +374,9 @@ struct TM68000 {
 #endif
   inline void FetchWord(WORD &dest_word); 
   inline void InstructionTime(int n);
-#if defined(SSE_CPU_TIMINGS_NO_INLINE_382)
   void InstructionTimeRound(int n);
-#else
-  inline void InstructionTimeRound(int n);
-#endif
   void Interrupt(MEM_ADDRESS ad);
-  inline void PerformRte();
+  void PerformRte();
   void PrefetchSetPC();
   inline void Process();
 #if defined(SSE_CPU_INLINE_READ_BWL)
@@ -450,30 +397,6 @@ struct TM68000 {
   void SetPC(MEM_ADDRESS ad);
   inline void Unstop();
   void Reset(bool Cold);
-#if defined(SSE_DEBUG)
-  int IrAddress; // pc at start
-  int nExceptions;
-  int nInstr;
-  WORD PreviousIr;
-  bool NextIrFetched; // fetched next instruction?
-#endif//debug
-#if defined(SSE_CPU_EXCEPTION)
-//  BYTE GetSize(WORD ir);
-#if defined(SSE_CPU_TRUE_PC)
-  MEM_ADDRESS Pc;
-  bool CheckRead; // most 'write' instructions read before, crash at read...
-#endif
-#endif//excp
-#if defined(SSE_CPU_ROUNDING_BUS)
-#if defined(SSE_VS2008_WARNING_383)
-  char Rounded;
-#else
-  bool Rounded;
-#endif
-#endif
-#if defined(SSE_CPU_ROUNDING_BUS2)
-  bool Unrounded; // for blitter
-#endif
   inline void GetDestByte();
   inline void GetDestWord();
   inline void GetDestLong();
@@ -492,135 +415,24 @@ struct TM68000 {
   inline void GetSourceByteNotA(); 
   inline void GetSourceWordNotA();
   inline void GetSourceLongNotA();
-
 #if defined(SSE_CPU_PREFETCH)
-
-#if defined(SSE_CPU_PREFETCH_CLASS)
-  BYTE PrefetchClass; // see ijor's article
-#endif
-
 #if defined(SSE_CPU_PREFETCH_CALL)
-  BOOL CallPrefetch; 
   WORD FetchForCall(MEM_ADDRESS ad);
-  WORD *PrefetchAddress; 
-  WORD PrefetchedOpcode;
 #endif
-#if !defined(SSE_COMPILER_370_INLINE) && !defined(SSE_COMPILER_380)
-  inline 
-#endif
-    void PrefetchIrc();
+  void PrefetchIrc();
 #if !defined(SSE_CPU_ROUNDING2)
   inline void PrefetchIrcNoRound();
 #endif
   inline void RefetchIr();
-
 #endif
-
 #if defined(SSE_CPU_E_CLOCK)
-  bool EClock_synced;
-
-#ifdef SSE_CPU_E_CLOCK_DISPATCHER
- // enum {ECLOCK_ACIA,ECLOCK_HBL,ECLOCK_VBL}; //debug/hacks
-  enum {ECLOCK_VBL,ECLOCK_HBL,ECLOCK_ACIA}; //debug/hacks
-#endif
-#if defined(SSE_CPU_E_CLOCK_370)
-  int
-#else
-  void
-#endif
-  SyncEClock(
-#ifdef SSE_CPU_E_CLOCK_DISPATCHER
-  int dispatcher
-#endif
-  );
-#pragma pack(pop)
-
-#if defined(SSE_CPU_E_CLOCK_370) && defined(SSE_CPU_E_CLOCK_DISPATCHER)
-  BYTE LastEClockCycles[3];
-#endif
-#endif
-
-#if defined(SSE_CPU_HALT) || defined(SSE_CPU_TRACE_REFACTOR)
-
-/* v 3.7, see MC68000UM p99 (6-1)
-"The processor is always in one of three processing states: normal, exception, or halted.
-The normal processing state is associated with instruction execution; the memory
-references are to fetch instructions and operands and to store results. A special case of
-the normal state is the stopped state, resulting from execution of a STOP instruction. In
-this state, no further memory references are made."
-->  For the moment only HALTED is used, for the GUI.
-    We add TRACE_MODE to spare a byte, it should correspond to a hidden
-    bit in the CPU, so that it knows that the trace bit was set at the
-    start of the instruction.
-v3.8.0
-Different states are used, but some have NOTHING to do with processor state,
-so refactoring due!
-*/
-  enum {NORMAL,EXCEPTION,HALTED,STOPPED,TRACE_MODE,INTEL_CRASH,BLIT_ERROR,BOILER_MESSAGE}; 
-  BYTE ProcessingState;
-#endif
-
-#if defined(SSE_CPU_DATABUS)
-  WORD dbus; // TODO; we have global abus, which isn't always up-to-date
-#endif
-#if defined(SSE_INT_MFP_REFACTOR2)
-  bool IackCycle; // flag to avoid starting IACK during IACK (in an emulator, anything goes...)
-#endif
-#if defined(SSE_CPU_TPEND)  
-  bool tpend; // actual internal latch set when CPU should trace current instruction
-#endif  
-#if defined(SSE_CPU_E_CLOCK_382)
-  int cycles_for_eclock; // because of integer overflow problems
-  int cycles0; // to record ACT
+  int SyncEClock(int dispatcher);
   void UpdateCyclesForEClock();
 #endif
 };
 
-extern TM68000 M68000;
+#pragma pack(pop)
 
-#if !defined(SSE_COMPILER_370_INLINE)
-
-void TM68000::PrefetchSetPC() { 
-  // called by SetPC; we don't count timing here
-
-#if defined(SSE_CPU_FETCH_IO)
-  // don't use lpfetch for fetching in IO zone, use io_read: fixes Warp 
-  // original STX + Lethal Xcess Beta STX
-  if(pc>=MEM_IO_BASE && !(pc>=0xff8240 && pc<0xff8260))
-  {
-    prefetch_buf[0]=io_read_w(pc);
-    prefetch_buf[1]=io_read_w(pc+2);
-    TRACE("Set PC in IO zone %X\n",pc);
-    prefetched_2=true;
-    return;
-  }
-#endif
-#if defined(SSE_CPU_FETCH_80000A)
-  // don't crash, but the correct value would be 'dbus'
-  if(pc>himem && pc>=0x80000 && pc<0x3FFFFF)
-  {
-    prefetch_buf[0]=prefetch_buf[1]=0xFFFF; // default, incorrect?
-    prefetched_2=true;
-    TRACE("Set PC in empty zone %X\n",pc);
-    return;
-  }
-#endif
-  prefetch_buf[0]=*lpfetch;
-  prefetch_buf[1]=*(lpfetch+MEM_DIR); 
-  prefetched_2=true; // was false in Steem 3.2
-#if defined(SSE_CPU_PREFETCH_CALL)
-  if(CallPrefetch) 
-  {
-    ASSERT(PrefetchedOpcode==prefetch_buf[0]);
-    prefetch_buf[0]=PrefetchedOpcode;
-    CallPrefetch=FALSE;
-  }
-#endif
-  lpfetch+=MEM_DIR;
-
-}
-
-#endif
 
 #define SET_PC(ad) M68000.SetPC(ad);
 
@@ -1066,29 +878,8 @@ inline void TM68000::InstructionTime(int t) {
 
 #define INSTRUCTION_TIME(t)  M68000.InstructionTime(t)
 
-#if !defined(SSE_CPU_TIMINGS_NO_INLINE_382)
-
-inline void TM68000::InstructionTimeRound(int t) {
-#if defined(SSE_VC_INTRINSICS_383D) // great optimisation
-  cpu_cycles-=(t);
-  Rounded=_bittestandreset((LONG*)&cpu_cycles,1);
-#else//383?
-  InstructionTime(t);
-#if defined(SSE_CPU_ROUNDING_BUS)
-#if defined(SSE_VC_INTRINSICS_382)
-  Rounded=BITTEST(cpu_cycles,1); // causes inlining anyway
-#else
-  Rounded=(cpu_cycles&2);
-#endif
-#endif
-  cpu_cycles&=-4;
-#endif//383?
-}
-#endif
-
 #define INSTRUCTION_TIME_ROUND(t) M68000.InstructionTimeRound(t)
 
-///#ifdef SSE_CPU_ABUS_ACCESS //just new macros
 #define CPU_ABUS_ACCESS_READ  M68000.InstructionTimeRound(4)
 
 #if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
@@ -1117,162 +908,18 @@ inline void TM68000::InstructionTimeRound(int t) {
 
 #define m68k_interrupt(ad) M68000.Interrupt(ad)
 
-inline void TM68000::PerformRte() {
-  // replacing macro M68K_PERFORM_RTE(checkints)
-  MEM_ADDRESS pushed_return_address=m68k_lpeek(r[15]+2);
-#if defined(SSE_BOILER_PSEUDO_STACK)
-  Debug.PseudoStackPop();
-#endif
-  // An Illegal routine could manipulate this value.
-  SetPC(pushed_return_address);
-  sr=m68k_dpeek(r[15]);r[15]+=6;    
-#if defined(SSE_BOILER_68030_STACK_FRAME)
-  if(Debug.M68030StackFrame)
-    r[15]+=2;   
-#endif  
-  sr&=SR_VALID_BITMASK;               
-
-  DETECT_CHANGE_TO_USER_MODE;         
-  DETECT_TRACE_BIT;     
-
-#if defined(SSE_INT_MFP_IRQ_DELAY2) //no
-/*  v3.5.3: hack for Audio Artistic Demo removed (SSE_INT_MFP_IRQ_DELAY2 not 
-    defined)
-    Doesn't make sense and breaks ST Magazine STE Demo (Stax 65)!
-    See more robust hacks in mfp.cpp, SSE_INT_MFP_PATCH_TIMER_D and 
-    SSE_INT_MFP_WRITE_DELAY2.
-*/
-  if(OPTION_HACKS && (ioaccess&IOACCESS_FLAG_DELAY_MFP))
-  {
-    ioaccess&=~IOACCESS_FLAG_DELAY_MFP;
-    ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE; 
-  }
-#endif
-
-#if defined(SSE_BOILER_TRACE_CONTROL)
-  if(TRACE_MASK2&TRACE_CONTROL_RTE)
-    TRACE_INT("%d %d %d pc %X RTE to %X\n",TIMING_INFO,old_pc,pushed_return_address);
-#endif
-
-#if defined(SSE_BOILER_SHOW_INTERRUPT)
-  Debug.Rte();
-#endif
-
-
-
-}
-
 #define M68K_PERFORM_RTE(checkints) M68000.PerformRte()
-
 
 #if defined(SSE_CPU_PREFETCH)
 
-#if !defined(SSE_COMPILER_370_INLINE) || defined(SSE_COMPILER_380)
-// InstructionTimeRound(4); ended up not being inlined //3.8.0: only sometimes
-inline void TM68000::PrefetchIrc() {
-
-#if defined(SSE_DEBUG) && defined(SSE_CPU_PREFETCH_ASSERT)
-  ASSERT(!prefetched_2); // strong, only once per instruction 
-#endif
-
-#if !defined(SSE_CPU_FETCH_IO2)
-  ASSERT( !(pc>=MEM_IO_BASE && !(pc>=0xff8240 && pc<0xff8260)) );
-#else 
-  if(pc>=MEM_IO_BASE && !(pc>=0xff8240 && pc<0xff8260))
-  {
-    IRC=io_read_w(pc); 
-    TRACE_LOG("IRC %X in IO zone %X\n",IRC,pc);
-  }
-  else
-#endif
-#if defined(SSE_CPU_FETCH_80000C)
-  if(pc>himem && pc>=0x80000 && pc<0x3FFFFF)
-  {
-    IRC=0xFFFF;
-    TRACE_LOG("Fetch IRC %X in empty zone %X\n",IRC,pc);
-  }
-  else
-#endif
-    IRC=*lpfetch;
-  prefetched_2=true;
-#if defined(SSE_CPU_PREFETCH_TIMING) // we count fetch timing here
-#if defined(SSE_DEBUG) && !(defined(_DEBUG) && defined(DEBUG_BUILD))
-  //ASSERT(!NextIrFetched); //strong
-  if(NextIrFetched)
-  {
-    TRACE_LOG("PC %X IR %X double prefetch?\n",pc,ir);
-#if defined(SSE_OSD_CONTROL)
-    if(OSD_MASK_CPU & OSD_CONTROL_CPUPREFETCH) 
-#endif
-      TRACE_OSD("IRC 2X FETCH"); // generally false alert at start-up
-  }
-  NextIrFetched=true;
-#endif
-#if defined(SSE_CPU_PREFETCH_TIMING_EXCEPT)
-  if(debug_prefetch_timing(IRD))
-    ; else
-#endif
-    InstructionTimeRound(4);
-#endif//SSE_CPU_PREFETCH_TIMING
-
-}
-
-#endif
-
-#if !defined(SSE_CPU_ROUNDING2) //no more needed
-
-inline void TM68000::PrefetchIrcNoRound() { // the same except no rounding
-
-#if defined(SSE_DEBUG) && !(defined(_DEBUG) && defined(DEBUG_BUILD))
-  ASSERT(!prefetched_2); // strong, only once per instruction 
-#endif
-#if !defined(SSE_CPU_FETCH_IO2)
-  ASSERT( !(pc>=MEM_IO_BASE && !(pc>=0xff8240 && pc<0xff8260)) );
-#else 
-  if(pc>=MEM_IO_BASE && !(pc>=0xff8240 && pc<0xff8260))
-  {
-    IRC=io_read_w(pc); 
-    TRACE_LOG("IRC %X in IO zone %X\n",IRC,pc);
-  }
-  else
-#endif
-  IRC=*lpfetch;
-  prefetched_2=true;
-#if defined(SSE_CPU_PREFETCH_TIMING) // we count fetch timing here
-#if defined(SSE_DEBUG) && !(defined(_DEBUG) && defined(DEBUG_BUILD))
-  //ASSERT(!NextIrFetched); //strong
-  if(NextIrFetched)
-  {
-    TRACE_LOG("PC %X IR %X double prefetch?\n",pc,ir);
-#if defined(SSE_OSD_CONTROL)
-    if(OSD_MASK_CPU & OSD_CONTROL_CPUPREFETCH) 
-#endif
-    TRACE_OSD("IRC 2X FETCH"); // generally false alert at start-up
-  }
-  NextIrFetched=true;
-#endif
-#if defined(SSE_CPU_PREFETCH_TIMING_EXCEPT)
-  if(debug_prefetch_timing(IRD))
-    ; else
-#endif
-    InstructionTime(4);
-#endif//SSE_CPU_PREFETCH_TIMING
-
-}
-#endif
-
 #define EXTRA_PREFETCH //all prefetches actually are "extra"!
 #define PREFETCH_IRC  M68000.PrefetchIrc()
-#if !defined(SSE_CPU_ROUNDING2)
-#define PREFETCH_IRC_NO_ROUND  M68000.PrefetchIrcNoRound()
-#endif
+
 #else //not defined, macros do nothing
 
 #define EXTRA_PREFETCH
 #define PREFETCH_IRC
-#if !defined(SSE_CPU_ROUNDING2)
-#define PREFETCH_IRC_NO_ROUND
-#endif
+
 #endif
 
 // core function, dispatches in cpu emu, inlining m68k_PROCESS
@@ -1294,9 +941,6 @@ inline void TM68000::Process() {
     {
       TRACE_LOG("\nCycles %d %d %d (%d)\n",ACT,FRAMECYCLES,LINECYCLES,scan_y);
     }
-
-//#if defined(SSE_DEBUG_TRACE_IO) 
-
     if(TRACE_MASK4 & TRACE_CONTROL_CPU_REGISTERS)
     {
       if(!(TRACE_MASK4 & TRACE_CONTROL_CPU_CYCLES))
@@ -1521,7 +1165,8 @@ Assume the same for Illegal, Privilege, Line A and Line F
 
 */
 #if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
-    INSTRUCTION_TIME_ROUND(CPU_TRACE_TIMING-12); 
+    //INSTRUCTION_TIME_ROUND(CPU_TRACE_TIMING-12); 
+    InstructionTimeRound(CPU_TRACE_TIMING-12);
 #else
     INSTRUCTION_TIME_ROUND(CPU_TRACE_TIMING); //36, including prefetch
 #endif
@@ -1533,7 +1178,8 @@ Assume the same for Illegal, Privilege, Line A and Line F
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
     Debug.RecordInterrupt("TRACE");
 #endif
-    m68k_interrupt(LPEEK(BOMBS_TRACE_EXCEPTION*4));
+    //m68k_interrupt(LPEEK(BOMBS_TRACE_EXCEPTION*4));
+    Interrupt(LPEEK(BOMBS_TRACE_EXCEPTION*4));
   }
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_CPU 
@@ -1576,21 +1222,15 @@ inline void TM68000::RefetchIr() {
 
 #if defined(SSE_CPU_INLINE_READ_BWL)
 
-void TM68000::ReadB(MEM_ADDRESS addr)
-{
-  //m68k_READ_B(addr)
+void TM68000::ReadB(MEM_ADDRESS addr) {
   m68k_src_b=m68k_peek(addr);
 }
 
-void TM68000::ReadW(MEM_ADDRESS addr)
-{
-  //m68k_READ_W(addr)
+void TM68000::ReadW(MEM_ADDRESS addr) {
   m68k_src_w=m68k_dpeek(addr);
 }
 
-void TM68000::ReadL(MEM_ADDRESS addr)
-{
-  //m68k_READ_L(addr)
+void TM68000::ReadL(MEM_ADDRESS addr) {
   m68k_src_l=m68k_lpeek(addr);
 }
 
@@ -1614,105 +1254,14 @@ inline void TM68000::Unstop() {
 
 #if defined(SSE_CPU_POKE)
 
-#if defined(SSE_COMPILER_370_INLINE) || defined(DEBUG_BUILD)
-
 void m68k_poke_abus(BYTE x);
 void m68k_dpoke_abus(WORD x);
 void m68k_lpoke_abus(LONG x);
 
-#else
-
-NOT_DEBUG(inline) void m68k_poke_abus(BYTE x){
-  abus&=0xffffff; // annoying that we must do this
-  BOOL super=SUPERFLAG;
-  if(abus>=MEM_IO_BASE && super)
-    io_write_b(abus,x);
-#if defined(SSE_CPU_CHECK_VIDEO_RAM)
-/*  To save some performance, we do just one basic Shifter test in the inline
-    part. More precise test is in m68k_poke_abus2().
-*/
-  else if(abus<shifter_draw_pointer_at_start_of_line && abus<himem
-    && (abus>=MEM_START_OF_USER_AREA ||super && abus>=MEM_FIRST_WRITEABLE))
-#else
-  else if(abus<himem && (abus>=MEM_START_OF_USER_AREA
-    ||super && abus>=MEM_FIRST_WRITEABLE))
-#endif
-  {
-#if defined(SSE_BOILER_MONITOR_VALUE2)
-    PEEK(abus)=x;
-    DEBUG_CHECK_WRITE_B(abus);
-#else
-    DEBUG_CHECK_WRITE_B(abus);
-    PEEK(abus)=x;
-#endif
-  }
-  else 
-    m68k_poke_abus2(x);
-}
- 
-
-NOT_DEBUG(inline) void m68k_dpoke_abus(WORD x){
-  abus&=0xffffff;
-  BOOL super=SUPERFLAG;
-  if(abus&1) 
-    ::exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
-  else if(abus>=MEM_IO_BASE && super)
-      io_write_w(abus,x);
-#if defined(SSE_CPU_CHECK_VIDEO_RAM) // 3615 GEN4 100
-  else if(abus<shifter_draw_pointer_at_start_of_line && abus<himem
-    && (abus>=MEM_START_OF_USER_AREA ||super && abus>=MEM_FIRST_WRITEABLE))
-#else
-  else if(abus<himem && (abus>=MEM_START_OF_USER_AREA
-    ||super && abus>=MEM_FIRST_WRITEABLE))
-#endif
-  {
-#if defined(SSE_BOILER_MONITOR_VALUE2)
-    DPEEK(abus)=x;
-    DEBUG_CHECK_WRITE_W(abus);
-#else
-    DEBUG_CHECK_WRITE_W(abus);
-    DPEEK(abus)=x;
-#endif
-  }
-  else
-    m68k_dpoke_abus2(x);
-}
-
-
-NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x){
-  abus&=0xffffff;
-  BOOL super=SUPERFLAG;
-  if(abus&1)
-    ::exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
-  else 
-  if(abus>=MEM_IO_BASE && super)
-    io_write_l(abus,x);
-#if defined(SSE_CPU_CHECK_VIDEO_RAM)
-  else if(abus<shifter_draw_pointer_at_start_of_line && abus<himem
-    && (abus>=MEM_START_OF_USER_AREA ||super && abus>=MEM_FIRST_WRITEABLE))
-#else
-  else if(abus<himem && (abus>=MEM_START_OF_USER_AREA
-    ||super && abus>=MEM_FIRST_WRITEABLE))
-#endif
-  {
-#if defined(SSE_BOILER_MONITOR_VALUE2)//3.6.1, also for long of course (argh!)
-    LPEEK(abus)=x;
-    DEBUG_CHECK_WRITE_L(abus);
-#else
-    DEBUG_CHECK_WRITE_L(abus);
-    LPEEK(abus)=x;
-#endif
-  }
-  else
-    m68k_lpoke_abus2(x);
-}
-
-
-#endif//!debug
-
 
 // those will be inlined where it counts (cpu.cpp), not where it
 // doesn't count (stemdos.cpp)
+
 void m68k_poke(MEM_ADDRESS ad,BYTE x){
   abus=ad&0xffffff;
   BOOL super=SUPERFLAG;
@@ -1730,11 +1279,7 @@ void m68k_poke(MEM_ADDRESS ad,BYTE x){
 #endif
   }
   else 
-#if defined(SSE_COMPILER_370_INLINE) 
     m68k_poke_abus(x);
-#else
-    m68k_poke_abus2(x);
-#endif
 }
 
 
@@ -1757,11 +1302,7 @@ void m68k_dpoke(MEM_ADDRESS ad,WORD x){
 #endif
   }
   else
-#if defined(SSE_COMPILER_370_INLINE) 
     m68k_dpoke_abus(x);
-#else
-    m68k_dpoke_abus2(x);
-#endif
 }
 
 
@@ -1785,90 +1326,14 @@ void m68k_lpoke(MEM_ADDRESS ad,LONG x){
 #endif
   }
   else
-#if defined(SSE_COMPILER_370_INLINE)
     m68k_lpoke_abus(x);
-#else
-    m68k_lpoke_abus2(x);
-#endif
 }
 
 #endif//poke
 
-
-
-
-
-#if defined(SSE_CPU_PREFETCH_TIMING_EXCEPT)
-// this is a silly debug-only function, very useful at some point, we keep
-// it just in case...
-// pb when we undef/def only parts of instructions... not that super
-// important because it's just "read SDP"
-
-bool debug_prefetch_timing(WORD ir) {
-  bool answer=false;
-#ifdef SSE_CPU_PREFETCH_TIMING_EXCEPT
-#ifdef SSE_CPU_LINE_0_TIMINGS 
-  if( (ir&0xF000)==0x0000)
-    answer=true;
-#endif
-#ifdef SSE_CPU_MOVE_B_TIMINGS 
-  if( (ir&0xF000)==0x1000)
-    answer=true;
-#endif
-#ifdef SSE_CPU_MOVE_L_TIMINGS
-  if( (ir&0xF000)==0x2000)
-    answer=true;
-#endif
-#ifdef SSE_CPU_MOVE_W_TIMINGS
-  if( (ir&0xF000)==0x3000)
-    answer=true;
-#endif
-#ifdef SSE_CPU_LINE_4_TIMINGS 
-  if( (ir&0xF000)==0x4000)
-    answer=true;
-#endif
-#ifdef SSE_CPU_LINE_5_TIMINGS 
-  if( (ir&0xF000)==0x5000)
-    answer=true;
-#endif
-#ifdef SSE_CPU_LINE_6_TIMINGS 
-  if( (ir&0xF000)==0x6000)
-    answer=true;
-#endif
-#ifdef SSE_CPU_LINE_7_TIMINGS 
-  if( (ir&0xF000)==0x7000)
-    answer=true;
-#endif
-#ifdef SSE_CPU_LINE_8_TIMINGS
-  if( (ir&0xF000)==0x8000)
-    answer=true;
-#endif
-#ifdef SSE_CPU_LINE_9_TIMINGS
-  if( (ir&0xF000)==0x9000)
-    answer=true;
-#endif
-#ifdef SSE_CPU_LINE_B_TIMINGS
-  if( (ir&0xF000)==0xB000)
-    answer=true;
-#endif
-#ifdef SSE_CPU_LINE_C_TIMINGS
-  if( (ir&0xF000)==0xC000)
-    answer=true;
-#endif
-#ifdef SSE_CPU_LINE_D_TIMINGS
-  if( (ir&0xF000)==0xD000)
-    answer=true;
-#endif
-#ifdef SSE_CPU_LINE_E_TIMINGS
-  if( (ir&0xF000)==0xE000)
-    answer=true;
-#endif
-#endif
-  return answer;
-}
-#endif
-
 #undef LOGSECTION
+
+extern TM68000 M68000;
 
 #endif//#if defined(SSE_CPU)
 

@@ -61,15 +61,8 @@ void TOptionBox::CreateMachinePage()
 #if defined(SSE_STF_MEGASTF)
   SendMessage(STTypeOption,CB_ADDSTRING,0,(long)CStrT(st_model_name[2]));
 #endif
-#if defined(SSE_STF_8MHZ)
-  SendMessage(STTypeOption,CB_ADDSTRING,0,(long)CStrT(st_model_name[3]));
-#endif
   SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,SSE_STF_ST_MODELS-1),0);
-#if defined(SSE_STF_8MHZ)
-  Wid+=get_text_width(st_model_name[3]);//longest
-#else
   Wid+=73;//by hand...
-#endif
 #if defined(SSE_GUI_383)
   ToolAddWindow(ToolTip,Win,
     T("The STE was more elaborated than the older STF but some programs are \
@@ -1509,11 +1502,7 @@ void TOptionBox::CreateFullscreenPage()
                           page_l+5+w+Offset,y,Wid,200,Handle,(HMENU)7319,HInstance,NULL);
   ToolAddWindow(ToolTip,Win,T("With Direct3D option you have the choice between all the 32bit modes your video card can handle."));
   D3DDISPLAYMODE Mode;
-#if defined(SSE_VS2008_WARNING_371)
   for(UINT i=0;i<nD3Dmodes;i++)
-#else
-  for(int i=0;i<nD3Dmodes;i++)
-#endif
   {
     ASSERT(Disp.pD3D);
     Disp.pD3D->EnumAdapterModes(Adapter,DisplayFormat,i,&Mode);
@@ -3096,9 +3085,6 @@ Windows 2000	5.0
   SendMessage(STTypeOption,CB_ADDSTRING,0,(long)CStrT(st_model_name[1]));
 #if defined(SSE_STF_MEGASTF)
   SendMessage(STTypeOption,CB_ADDSTRING,0,(long)CStrT(st_model_name[2]));
-#endif
-#if defined(SSE_STF_8MHZ)
-  SendMessage(STTypeOption,CB_ADDSTRING,0,(long)CStrT(st_model_name[3]));
 #endif
   SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,SSE_STF_ST_MODELS-1),0);
   ToolAddWindow(ToolTip,Win,

@@ -83,7 +83,6 @@ extern TImageHFE ImageHFE[2];
 #define IMAGE_HFE 0
 #endif
 
-
 #if defined(SSE_DMA_OBJECT)
 extern TDma Dma;
 #define dma_sector_count Dma.Counter
@@ -92,15 +91,15 @@ extern TDma Dma;
 #define dma_mode Dma.MCR
 #define dma_status Dma.SR
 #endif//dma
-
+#if defined(SSE_YM2149_OBJECT)
+extern TYM2149 YM2149;
+#endif
 #if defined(SSE_DRIVE_OBJECT)
 extern TSF314 SF314[2]; // 2 double-sided drives, wow!
 #endif
-
 #if defined(SSE_DISK1)
 extern TDisk Disk[2]; // 
 #endif
-
 #if defined(SSE_WD1772)
 extern TWD1772 WD1772;
 #define fdc_cr WD1772.CR     // problem:

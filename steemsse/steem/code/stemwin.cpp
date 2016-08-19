@@ -9,7 +9,7 @@ and its various buttons.
 #pragma message("Included for compilation: stemwin.cpp")
 #endif
 
-#include "mfp.decla.h" //for an ASSERT if SSE_CPU not defined
+//#include "mfp.decla.h" //for an ASSERT if SSE_CPU not defined
 
 #define LOGSECTION LOGSECTION_INIT//SS
 

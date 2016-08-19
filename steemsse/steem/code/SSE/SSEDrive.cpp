@@ -12,7 +12,8 @@
 #include "SSECpu.h"
 #include "SSEInterrupt.h"
 #include "SSEOption.h"
-#include "SSEShifter.h"
+//#include "SSEShifter.h"
+#include "SSEVideo.h"
 
 #if defined(WIN32)
 #include <pasti/pasti.h>

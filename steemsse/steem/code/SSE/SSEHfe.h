@@ -7,7 +7,7 @@
 #include <hfe/libhxcfe.h> //3rdparty
 #include <hfe/hfe_format.h> //3rdparty
 
-#pragma pack(push, 1)
+#pragma pack(push, STRUCTURE_ALIGNMENT)
 
 struct  TImageHFE {
   // interface (the same as for STW disk images)

@@ -6,6 +6,7 @@
 #include <conditions.h>
 #include <display.decla.h>
 #include <emulator.decla.h>
+#include <cpu.decla.h>
 #include <mfp.decla.h>
 #include <run.decla.h>
 
@@ -76,7 +77,7 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
 
 #if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
         if(shifter_hscroll_extra_fetch) // -16 pixel left border trick, HSCROLL = 0
-          CurrentScanline.StartCycle-=16;
+          CurrentScanline.StartCycle-=16; // only if HSCROLL...
 #endif
       }
 
@@ -260,10 +261,7 @@ void TGlue::CheckSideOverscan() {
   if(!(TrickExecuted&(TRICK_LINE_PLUS_20|TRICK_LINE_PLUS_26|TRICK_0BYTE_LINE)))
   {
 #if defined(SSE_VAR_OPT_383)
-    // if the ST is in high res when the high res scanline is supposed
-    // to start, it will start
 #define lim_r2 Glue.ScanlineTiming[TGlue::GLU_DE_ON][TGlue::FREQ_72]
-    // if the ST is in high res too long, HBLANK will not be disabled
 #define lim_r0 Glue.ScanlineTiming[TGlue::HBLANK_OFF][TGlue::FREQ_50]
 #else
     short lim_r2=Glue.ScanlineTiming[TGlue::GLU_DE_ON][TGlue::FREQ_72];
@@ -405,14 +403,15 @@ cycle       0               4               8               12               12
 #if defined(SSE_SHIFTER_UNSTABLE_380)
         Shifter.Preload=0; // again because we miss the real reset (We were greets)
 #endif
-#if defined(SSE_SHIFTER_LINE_PLUS_20_SHIFT) // Riverside
+
+        // correct alignemnt, eg Riverside leave
 #if defined(SSE_VID_BORDERS)
-        if(SideBorderSize==VERY_LARGE_BORDER_SIDE && border)
+        if(BigBorders)
           MMU.ShiftSDP(-8);
         else
 #endif
           Shifter.HblPixelShift=-8;
-#endif
+
 #if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
         CurrentScanline.StartCycle=16;
 #endif
@@ -2131,9 +2130,6 @@ void TGlue::GetNextScreenEvent() {
   }
 #endif
 
-#if !defined(SSE_GLUE_FRAME_TIMINGS)
-  screen_event_pointer=&Glue.screen_event;
-#endif
 #if !defined(SSE_VAR_OPT_383)
   screen_event_vector=screen_event.event;
 #elif defined(SSE_DEBUG)
@@ -2168,7 +2164,6 @@ void TGlue::Reset(bool Cold) {
 #endif
 
 #if defined(SSE_GLUE_383)
-    //Shifter.m_ShiftMode=screen_res;
     HiRes=(screen_res&2);
 #else
     Shifter.m_ShiftMode=m_ShiftMode=screen_res; 
@@ -2420,13 +2415,8 @@ void TGlue::Update() {
     As you can see, demo Forest by ljbk (AF) helps us a lot here.
 */
 
-#if defined(SSE_MMU_WU_STE_381)
   char WU_res_modifier=MMU.ResMod[ST_TYPE==STE?3:OPTION_WS]; //-2, 0, 2
   char WU_sync_modifier=MMU.FreqMod[ST_TYPE==STE?3:OPTION_WS]; // 0 or 2
-#else
-  const char WU_res_modifier=0;
-  const char WU_sync_modifier=0;
-#endif
 
   // DE (Display Enable)
   // Before the image is really displayed,there's a delay of 28 cycles (27?):
@@ -2553,14 +2543,12 @@ void TGlue::Vbl() {
   if(time_of_next_event-cpu_time_of_last_vbl==133604) // according to ljbk ?
     Shifter.Preload=0; 
 #endif
-#if defined(SSE_OSD_CONTROL)
-  if(OSD_MASK2&OSD_CONTROL_60HZ)
+#if defined(SSE_BOILER_FAKE_IO) && defined(SSE_OSD_CONTROL)
+  if(OSD_MASK2&OSD_CONTROL_MODES)
     TRACE_OSD("R%d S%d",Shifter.m_ShiftMode,m_SyncMode);
 #endif
 }
 
 #endif
-
-//TGlue Glue;
 
 #endif//SSE_GLUE

@@ -1195,20 +1195,13 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
         }
       }
       if (Load){
-        LoadSnapShot(WriteDir+SLASH+AutoSnapShotName+".sts",0,true,0
-#if defined(SSE_VAR_POWERON2)
-          ,true // no need to reset, we just did
-#endif
-          ); // Don't add to history, don't change disks
+        LoadSnapShot(WriteDir+SLASH+AutoSnapShotName+".sts",0,true,0); // Don't add to history, don't change disks
       }
     }
   }
   if (OptionBox.NeedReset()) 
     reset_st(RESET_COLD | RESET_STOP | RESET_CHANGESETTINGS | RESET_NOBACKUP);
 
-#if defined(SSE_TOS_WARNING1) && defined(SSE_VAR_POWERON2)
-  CheckSTTypeAndTos();
-#endif
 #if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) && defined(WIN32) 
   HardDiskMan.CheckTos();
 #endif

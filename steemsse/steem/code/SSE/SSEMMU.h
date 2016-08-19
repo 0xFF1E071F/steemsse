@@ -43,7 +43,7 @@ is more confusing, its value is no wake-up state but just an option index.
 | Steem  option    |              Wake-up concepts           |    Cycle      |
 |    variable      |                                         |  adjustment   |
 +------------------+---------------+------------+------------+-------+-------+
-|  OPTION_WS   |   DL Latency  |     WU     |      WS    | SHIFT |  SYNC |
+|  OPTION_WS       |   DL Latency  |     WU     |      WS    | SHIFT |  SYNC |
 |                  |     (Dio)     |    (ijor)  |    (LJBK)  | (Res) |(Freq) |
 +------------------+---------------+------------+------------+-------+-------+
 |   0 (ignore)     |      5        |     -      |      -     |    -  |    -  |
@@ -72,7 +72,8 @@ On STE there's no latency, DL=3, WS=1.
     This directive ensures that the same size is considered everywhere.
     We also moved data to be better aligned. 
 */
-#pragma pack(push, 1)
+
+#pragma pack(push, STRUCTURE_ALIGNMENT)
 
 struct TMMU {
 
@@ -100,6 +101,7 @@ struct TMMU {
   void UpdateVideoCounter(int CyclesIn);
 #endif
 };
+
 #pragma pack(pop)
 
 #endif
