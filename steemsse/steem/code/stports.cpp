@@ -19,21 +19,21 @@ TSTPort STPort[3];
 //---------------------------------------------------------------------------
 void agenda_midi_replace(int)
 {
-#if defined(SSE_IKBD_6301) && defined(SSE_ACIA_REGISTERS)
+#if defined(SSE_ACIA_REGISTERS)
 #define LOGSECTION LOGSECTION_MIDI
   if(OPTION_C1)
   {
     if (MIDIPort.AreBytesToCome()){
       MIDIPort.NextByte();
-      
       BYTE midi_in=MIDIPort.ReadByte();
-
+      //TRACE_OSD("%d %X",midi_in,midi_in);
 #if defined(SSE_MIDI_TRACE_BYTES_IN)
       TRACE_LOG("Midi in %X\n",midi_in);
 #endif
-
+#if defined(SSE_ACIA_383)
+      ASSERT(ACIA_MIDI.LineRxBusy);
+#endif
       if(ACIA_MIDI.SR&BIT_0) {
-        
         // discard data and set overrun
         log_to_section(LOGSECTION_MIDI,"MIDI: Overrun on ACIA! Byte lost!");
         if (ACIA_MIDI.overrun!=ACIA_OVERRUN_YES) 
@@ -46,41 +46,63 @@ void agenda_midi_replace(int)
       log_to_section(LOGSECTION_MIDI,EasyStr("MIDI: Fire ACIA interrupt"));
 
       if(ACIA_MIDI.CR&BIT_7)
-        ACIA_MIDI.SR|=BIT_7;
-      
+        ACIA_MIDI.SR|=BIT_7; // IRQ anyway
+
       mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!( (ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7) ));
-      
+
+      ACIA_MIDI.LineRxBusy=false;
+
       if(MIDIPort.AreBytesToCome()) 
+#if defined(SSE_ACIA_383)
+      {
+        time_of_event_acia=ACIA_MIDI.time_of_event_incoming
+          =time_of_next_event+ACIA_MIDI_IN_CYCLES;
+        ACIA_MIDI.LineRxBusy=true;
+      }
+#else
         agenda_add(agenda_midi_replace,ACIAClockToHBLS(ACIA_MIDI.clock_divide,true),0);
+#endif
     }
   }
   else
 #endif //Steem 3.2
-  if (MIDIPort.AreBytesToCome()){
-    MIDIPort.NextByte();
+    if (MIDIPort.AreBytesToCome()){
+      MIDIPort.NextByte();
 
-    if (ACIA_MIDI.rx_not_read){
-      // discard data and set overrun
-      log_to_section(LOGSECTION_MIDI,"MIDI: Overrun on ACIA! Byte lost!");
-      if (ACIA_MIDI.overrun!=ACIA_OVERRUN_YES) ACIA_MIDI.overrun=ACIA_OVERRUN_COMING;
-    }else{
+      if (ACIA_MIDI.rx_not_read){
+        // discard data and set overrun
+        log_to_section(LOGSECTION_MIDI,"MIDI: Overrun on ACIA! Byte lost!");
+        if (ACIA_MIDI.overrun!=ACIA_OVERRUN_YES) ACIA_MIDI.overrun=ACIA_OVERRUN_COMING;
+      }else{
 
-      ACIA_MIDI.data=MIDIPort.ReadByte();
-      ACIA_MIDI.rx_not_read=true;
+        ACIA_MIDI.data=MIDIPort.ReadByte();
+        ACIA_MIDI.rx_not_read=true;
+      }
+      log_to_section(LOGSECTION_MIDI,EasyStr("MIDI: Fire ACIA interrupt"));
+      if (ACIA_MIDI.rx_irq_enabled) ACIA_MIDI.irq=true;
+      mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
+
+      if (MIDIPort.AreBytesToCome()) agenda_add(agenda_midi_replace,ACIAClockToHBLS(ACIA_MIDI.clock_divide,true),0);
     }
-    log_to_section(LOGSECTION_MIDI,EasyStr("MIDI: Fire ACIA interrupt"));
-    if (ACIA_MIDI.rx_irq_enabled) ACIA_MIDI.irq=true;
-    mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
-
-    if (MIDIPort.AreBytesToCome()) agenda_add(agenda_midi_replace,ACIAClockToHBLS(ACIA_MIDI.clock_divide,true),0);
-  }
 #undef LOGSECTION
 
 }
 //---------------------------------------------------------------------------
 void MidiInBufNotEmpty()
 {
-  agenda_add(agenda_midi_replace,ACIAClockToHBLS(ACIA_MIDI.clock_divide,true)+1,0); //+1 for middle of scanline
+
+#if defined(SSE_ACIA_383)
+  if(OPTION_C1)
+  {
+    ASSERT(!ACIA_MIDI.LineRxBusy);//or we got a problem
+    ACIA_MIDI.LineRxBusy=true;
+    time_of_event_acia=ACIA_MIDI.time_of_event_incoming
+      =ACT + ACIA_MIDI_IN_CYCLES;
+    ASSERT(!MIDIPort.AreBytesToCome()); //! byte not added in buffer yet!
+  }
+  else
+#endif
+    agenda_add(agenda_midi_replace,ACIAClockToHBLS(ACIA_MIDI.clock_divide,true)+1,0); //+1 for middle of scanline
 }
 //---------------------------------------------------------------------------
 // Parallel Port
@@ -141,7 +163,7 @@ void agenda_serial_replace(int)
       mfp_reg[MFPR_RSR]&=BYTE(~(BIT_2 /*Char in progress*/ | BIT_3 /*Break*/ |
                                 BIT_4 /*Frame Error*/ |      BIT_5 /*Parity Error*/));
       mfp_reg[MFPR_RSR]|=BIT_7 /*Buffer Full*/;
-#if defined(SSE_INT_MFP) && defined(SSE_VS2008_WARNING_382)
+#if defined(SSE_INT_MFP)
       mfp_interrupt(MFP_INT_RS232_RECEIVE_BUFFER_FULL);
 #else
       mfp_interrupt(MFP_INT_RS232_RECEIVE_BUFFER_FULL,ABSOLUTE_CPU_TIME);

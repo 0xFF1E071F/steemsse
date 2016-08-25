@@ -55,43 +55,28 @@ instr_exec ()
   int interrupted = 0;    /* 1 = HW interrupt occured */
 
 #ifndef M6800
-/*  ST
-    We kind of sync 6301 to ACIA transmission, allowing the interrupt
-    only when the byte has been received.
-*/
+
   if(hd6301_completed_transmission_to_MC6850)
   {
-#if defined(SSE_DEBUG_IKBD_6301_TRACE_SCI_TX)
-    //TRACE("6301 send byte completed\n");
-#endif
     hd6301_completed_transmission_to_MC6850--;
     ASSERT(!hd6301_completed_transmission_to_MC6850);
-
-//#if !(defined(SSE_ACIA_DOUBLE_BUFFER_RX)
-    // this is very dubious, we need it, because of this, do we have
-    // working double buffer?
-    txinterrupts=1; // we may trigger IRQ 
-//#endif
-
-#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
-/*  We may also start shifting the waiting byte...
-*/
+#if !defined(SSE_ACIA_383) //finally fixed this (non)issue
+    txinterrupts=1;
+#endif
+    //  Start shifting the waiting byte if any
     if(ACIA_IKBD.ByteWaitingRx)
     {
 #if defined(SSE_DEBUG_IKBD_6301_TRACE_SCI_TX)
-      //TRACE("HD6301: waiting $%X ->ACIA RDRS\n",iram[TDR]);
-      //TRACE("HD6301 $%X TDR -> TDRS -> ACIA RDRS\n",iram[TDR]);
       TRACE("6301 TDRS waiting %X\n",iram[TDR]);
 #endif
-#if defined(SSE_IKBD_6301_380) 
       HD6301.tdrs=iram[TDR];
       keyboard_buffer_write_n_record(HD6301.tdrs); // call Steem's ikbd function
-#else
-      keyboard_buffer_write( iram[TDR] ); // call Steem's ikbd function
-#endif
       ACIA_IKBD.ByteWaitingRx=0;
-    }
+#if defined(SSE_ACIA_383)
+      txinterrupts=1;
 #endif
+    }
+
   }
 
   if (!reg_getiflag () 

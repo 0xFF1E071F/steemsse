@@ -424,7 +424,9 @@ void inline prepare_event_again() //might be an earlier one
     PREPARE_EVENT_CHECK_FOR_DMA;
 #endif
 
-#if defined(SSE_IKBD_6301_EVENT)
+#if defined(SSE_ACIA_383)
+    PREPARE_EVENT_CHECK_FOR_ACIA;
+#elif defined(SSE_IKBD_6301_EVENT)
     PREPARE_EVENT_CHECK_FOR_IKBD;
 #endif
 
@@ -479,7 +481,9 @@ void inline prepare_next_event() //SS check this "inline" thing
     PREPARE_EVENT_CHECK_FOR_DMA;
 #endif
 
-#if defined(SSE_IKBD_6301_EVENT)
+#if defined(SSE_ACIA_383)
+    PREPARE_EVENT_CHECK_FOR_ACIA;
+#elif defined(SSE_IKBD_6301_EVENT)
     PREPARE_EVENT_CHECK_FOR_IKBD; // two events: both directions
 #endif
 
@@ -552,29 +556,6 @@ inline void handle_timeout(int tn) {
 }
 
 #define HANDLE_TIMEOUT(tn) handle_timeout(tn)
-
-#elif defined(SSE_INT_MFP_RATIO_PRECISION)
-// adding the fractional part every 4 cycles
-
-#define HANDLE_TIMEOUT(tn) \
-  dbg_log(Str("MFP: Timer ")+char('A'+tn)+" timeout at "+ABSOLUTE_CPU_TIME+" timeout was "+mfp_timer_timeout[tn]+ \
-    " period was "+mfp_timer_period[tn]); \
-  if (mfp_timer_period_change[tn]){    \
-    MFP_CALC_TIMER_PERIOD(tn);          \
-    mfp_timer_period_change[tn]=0;       \
-  }                                       \
-  int stage=(mfp_timer_timeout[tn]-ABSOLUTE_CPU_TIME); \
-  if (stage<=0){                                       \
-    stage+=((-stage/mfp_timer_period[tn])+1)*mfp_timer_period[tn]; \
-  }else{ \
-    stage%=mfp_timer_period[tn]; \
-  }   \
-  int new_timeout=ABSOLUTE_CPU_TIME+stage; \
-  mfp_timer_period_current_fraction[tn]+=mfp_timer_period_fraction[tn]; \
-  if(mfp_timer_period_current_fraction[tn]>=4000) {\
-    mfp_timer_period_current_fraction[tn]-=4000;\
-    new_timeout+=4; \
-  }
 
 #else 
 
@@ -662,13 +643,7 @@ void event_timer_b()
 }
 #undef LOGSECTION
 //---------------------------------------------------------------------------
-
-#if defined(SSE_INT_HBL_ONE_FUNCTION)
-/*  Still to spare memory, we do without this function, that is
-    duplicated in event_scanline().
-*/
-
-#else
+#if !defined(SSE_GLUE_FRAME_TIMINGS)
 
 void event_hbl()   //just HBL, don't draw yet
 {
@@ -1739,8 +1714,11 @@ void prepare_cpu_boosted_event_plans()
 #if !defined(SSE_GLUE_FRAME_TIMINGS)
   screen_event_struct *source,*dest;
 #endif
-  int factor=n_millions_cycles_per_sec;
-#if defined(SSE_CPU_4GHZ) || defined(SSE_CPU_3GHZ) || defined(SSE_CPU_2GHZ) || defined(SSE_CPU_1GHZ) || defined(SSE_CPU_512MHZ)
+  int factor=n_millions_cycles_per_sec; //SS TODO optimise away
+#if defined(SSE_TIMING_MULTIPLIER)
+  cpu_cycles_multiplier=factor/8;
+  ASSERT(cpu_cycles_multiplier>0);
+#elif defined(SSE_CPU_4GHZ) || defined(SSE_CPU_3GHZ) || defined(SSE_CPU_2GHZ) || defined(SSE_CPU_1GHZ) || defined(SSE_CPU_512MHZ)
   if(factor>=512)
     SSEOption.Chipset2=SSEOption.Chipset1=false; 
 #endif
@@ -1888,10 +1866,48 @@ void event_driveB_ip() {
 #endif
 #endif//flp
 
-#if defined(SSE_IKBD_6301_EVENT)
+#if defined(SSE_ACIA_383)
+//  ACIA events to handle IO with both 6301 and MIDI
+
+int time_of_event_acia=0;
+
+void event_acia() {
+  time_of_event_acia=time_of_next_event+n_cpu_cycles_per_second; 
+  if(OPTION_C1)
+  {
+    // IKBD
+    if(ACIA_IKBD.LineRxBusy && time_of_next_event==ACIA_IKBD.time_of_event_incoming)
+      agenda_keyboard_replace(0); // from IKBD
+    else if(ACIA_IKBD.LineTxBusy && time_of_next_event==ACIA_IKBD.time_of_event_outgoing)
+      agenda_ikbd_process(ACIA_IKBD.TDRS); // to IKBD
+    // MIDI
+    else if(ACIA_MIDI.LineRxBusy && time_of_next_event==ACIA_MIDI.time_of_event_incoming)
+      agenda_midi_replace(0); // from MIDI
+    else if(ACIA_MIDI.LineTxBusy && time_of_next_event==ACIA_MIDI.time_of_event_outgoing)
+    { // to MIDI, do the job here
+      MIDIPort.OutputByte(ACIA_MIDI.TDRS);
+      ACIA_MIDI.SR|=BIT_1; // TDRE (register free)
+      if((ACIA_MIDI.CR&BIT_5)&&!(ACIA_MIDI.CR&BIT_6))
+      {
+        ACIA_MIDI.SR|=BIT_7; 
+        mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0); //trigger IRQ (rare!)
+      }
+      ACIA_MIDI.LineTxBusy=false;
+      // send next MIDI note if any
+      if(ACIA_MIDI.ByteWaitingTx)
+      {
+        ACIA_MIDI.TDRS=ACIA_MIDI.TDR;
+        ACIA_MIDI.LineTxBusy=true;
+        time_of_event_acia=time_of_next_event+ACIA_MIDI_OUT_CYCLES;
+        ACIA_MIDI.ByteWaitingTx=false;
+      }
+    }
+  }
+}
+
+#elif defined(SSE_IKBD_6301_EVENT)
 
 int time_of_event_ikbd,time_of_event_ikbd2;
-
 
 void event_ikbd() {
   time_of_event_ikbd=time_of_next_event+n_cpu_cycles_per_second; 

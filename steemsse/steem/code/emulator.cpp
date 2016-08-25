@@ -35,6 +35,9 @@ EXT int em_planes INIT(4);
 EXT int extended_monitor INIT(0);
 #endif
 EXT DWORD n_cpu_cycles_per_second INIT(8000000),new_n_cpu_cycles_per_second INIT(0),n_millions_cycles_per_sec INIT(8);
+#if defined(SSE_TIMING_MULTIPLIER)
+EXT BYTE cpu_cycles_multiplier INIT(1);
+#endif
 EXT int on_rte;
 EXT int on_rte_interrupt_depth;
 
@@ -497,7 +500,7 @@ void ACIA_Reset(int nACIA,bool Cold)
   LOG_ONLY( if (nACIA==0 && acia[nACIA].irq) log_to_section(LOGSECTION_IKBD,EasyStr("IKBD: ACIA reset - Changing ACIA IRQ bit from ")+ACIA_IKBD.irq+" to 0"); )
   acia[nACIA].irq=false;
 
-#if defined(SSE_IKBD_6301)  && defined(SSE_ACIA_REGISTERS)
+#if defined(SSE_ACIA_REGISTERS)
   if(OPTION_C1)
   {
     if(Cold) 
@@ -506,27 +509,22 @@ void ACIA_Reset(int nACIA,bool Cold)
       acia[nACIA].CR=0x80; //?
       acia[nACIA].RDRS=0;
       acia[nACIA].TDRS=0;
-#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
       acia[nACIA].LineRxBusy=0;
       acia[nACIA].ByteWaitingRx=0;
-#endif
-#if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
       acia[nACIA].ByteWaitingTx=0;
       acia[nACIA].LineTxBusy=0;
-#endif
     }
     else
     {
     /*
     "Overrun is also reset by the Master Reset."
-      */
+      */ //TODO: isn't Master Reset sthg else?
       acia[nACIA].SR&=~(BIT_0|BIT_5); // from doc
       ////    acia[nACIA].SR=2;
       acia[nACIA].RDR=0;//?
       acia[nACIA].TDR=0;
     }
   }
-//////  else//3.7
 #endif//6301
   if (Cold==0) mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
 }
@@ -538,13 +536,23 @@ void ACIA_SetControl(int nACIA,BYTE Val)
   acia[nACIA].rx_irq_enabled=bool(Val & b10000000);
   LOG_ONLY( if (nACIA==0) log_to(LOGSECTION_IKBD,EasyStr("IKBD: ACIA control set to ")+itoa(Val,d2_t_buf,2)); )
 
-#if defined(SSE_IKBD_6301) && defined(SSE_ACIA_REGISTERS)
+#if defined(SSE_ACIA_REGISTERS)
+#if defined(SSE_ACIA_383)
+  if(OPTION_C1)
+  {
+    if((acia[nACIA].IrqForTx()) && !acia[nACIA].ByteWaitingTx)
+      acia[nACIA].SR|=BIT_7; 
+    else
+      acia[nACIA].SR&=~BIT_7; 
+    mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!( (ACIA_IKBD.SR&BIT_7)
+      || (ACIA_MIDI.SR&BIT_7)));
+    return;
+  }
+#else
   if(OPTION_C1)
   {
     if((ACIA_IKBD.CR&BIT_5)&&!(ACIA_IKBD.CR&BIT_6) 
-#if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
       && !ACIA_IKBD.ByteWaitingTx
-#endif
       )
       ACIA_IKBD.SR|=BIT_7; 
     else
@@ -554,6 +562,7 @@ void ACIA_SetControl(int nACIA,BYTE Val)
     return;
   }
 #endif
+#endif
   if (acia[nACIA].tx_irq_enabled){
     acia[nACIA].irq=true;
   }else{
@@ -562,6 +571,55 @@ void ACIA_SetControl(int nACIA,BYTE Val)
   }
   mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
 }
+
+#if defined(SSE_ACIA_383)
+
+void ACIA_STRUCT::BusJam(MEM_ADDRESS addr) {
+// one function, used by io_read_b() and io_write_b() 
+  if( 
+#if defined(DEBUG_BUILD)
+    mode==STEM_MODE_CPU && // no cycles when boiler is reading
+#endif
+    (!io_word_access||!(addr & 1)) ) //Only cause bus jam once per word
+  {
+    BYTE wait_states=6;
+#if defined(SSE_CPU_E_CLOCK)
+    if(OPTION_C1)
+    {
+      INSTRUCTION_TIME(wait_states); 
+      wait_states=M68000.SyncEClock(TM68000::ECLOCK_ACIA);
+      INSTRUCTION_TIME(wait_states);
+    }
+    else
+#endif
+    {
+      wait_states+=(8000000-(ACT-shifter_cycle_base))%10;
+      BUS_JAM_TIME(wait_states); 
+    }
+  }
+}
+
+int ACIA_STRUCT::TransmissionTime() { 
+/*  
+Compute cycles according to bits 0-1 of CR
+SS1 SS0                  Speed (bit/s)
+ 0   0    Normal            500000
+ 0   1    Div by 16          31250 (ST: MIDI)
+ 1   0    Div by 64         7812.5 (ST: IKBD)
+MIDI transmission is 4 times faster than IKBD
+*/
+  int cycles=n_cpu_cycles_per_second*( (CR&1)?16:64 );  // one or the other
+  cycles/=50000; // not 500000, compensation 10 bit/byte
+  if(OPTION_HACKS&& LPEEK(0x18)==0xFEE74)
+    cycles+=(1345-1280)*8; // hack for froggies menu
+  //TRACE_OSD("%d",cycles);
+  return cycles;
+}
+
+#endif
+
+
+
 //---------------------------------------------------------------------------  Agenda
 #define LOGSECTION LOGSECTION_AGENDA
 int MILLISECONDS_TO_HBLS(int ms)
@@ -656,7 +714,7 @@ void agenda_acia_tx_delay_IKBD(int)
 void agenda_acia_tx_delay_MIDI(int)
 {
   ACIA_MIDI.tx_flag=0; //finished transmitting
-#if defined(SSE_IKBD_6301) && defined(SSE_ACIA_REGISTERS)
+#if defined(SSE_ACIA_REGISTERS)
   if(OPTION_C1)
   {
     ACIA_MIDI.SR|=BIT_1; // TDRE
