@@ -562,13 +562,13 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
       hd6301_receive_byte(src);
     }
 #endif
-#if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
+
     //  If there's a byte in TDR waiting to be shifted, do it now.
 ///    ASSERT(ACIA_IKBD.LineTxBusy); //TODO on resume
     ACIA_IKBD.LineTxBusy=false;
     if(ACIA_IKBD.ByteWaitingTx) 
       HD6301.ReceiveByte(ACIA_IKBD.TDR);
-#endif
+
 #if !defined(SSE_IKBD_6301_EVENT)
     //TRACE_LOG("6301 RDRS->RDR %X\n",src);
     hd6301_receive_byte(src);// send byte to 6301 emu
@@ -1414,7 +1414,7 @@ void agenda_keyboard_replace(int) {
 #if defined(SSE_IKBD_6301_380) 
         ACIA_IKBD.RDRS=HD6301.tdrs;
 #endif
-#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
+
         ASSERT( keyboard_buffer_length<2 );
         ASSERT( ACIA_IKBD.LineRxBusy );
         ACIA_IKBD.LineRxBusy=false;
@@ -1432,7 +1432,7 @@ void agenda_keyboard_replace(int) {
         hd6301_completed_transmission_to_MC6850=true;
 #endif
 
-#endif
+
 
         /*  Check overrun.
         "The Overrun does not occur in the Status Register until the valid character
@@ -1442,9 +1442,7 @@ void agenda_keyboard_replace(int) {
         */
         if(ACIA_IKBD.SR&BIT_0) // RDR full
         {
-          //TRACE_LOG("ACIA RDRS OVR: $%X->$%X\n",keyboard_buffer[keyboard_buffer_length],keyboard_buffer[keyboard_buffer_length+1]);
-          //TRACE_LOG("%d %d %d ACIA OVR RDR $%X RDRS $%X\n",TIMING_INFO,ACIA_IKBD.RDR,ACIA_IKBD.RDRS);
-          TRACE_LOG("%d %d %d ACIA OVR (RDRS %X)\n",TIMING_INFO,ACIA_IKBD.RDRS);
+          TRACE_LOG("%d %d %d ACIA 0 OVR (RDRS %X)\n",TIMING_INFO,ACIA_IKBD.RDRS);
           dbg_log("IKBD: Overrun on keyboard ACIA");
           if(ACIA_IKBD.overrun!=ACIA_OVERRUN_YES) 
           {
@@ -1464,9 +1462,7 @@ void agenda_keyboard_replace(int) {
         {
           dbg_log(EasyStr("IKBD: Changing ACIA IRQ bit from ")+ACIA_IKBD.irq+" to 1");
           ACIA_IKBD.SR|=BIT_7;
-          //TRACE_LOG("ACIA IRQ (RDR)\n");
-          TRACE_LOG("ACIA IRQ\n");
-          //ASSERT(  mfp_reg[MFPR_GPIP]&MFP_GPIP_ACIA_BIT ); // just curious
+          TRACE_LOG("ACIA 1 IRQ (RDR)\n");
           mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0);
         }
       }//if (!ikbd.send_nothing){
@@ -1480,8 +1476,13 @@ void agenda_keyboard_replace(int) {
       {
         HD6301.tdrs=HD6301.tdr;
         TRACE_LOG("Buffer %d 6301 TDRS %X\n",keyboard_buffer_length,HD6301.tdrs);
+#if defined(SSE_ACIA_383)
+        time_of_event_acia=ACIA_IKBD.time_of_event_incoming
+          =time_of_next_event+HD6301_TO_ACIA_IN_CYCLES; 
+#else
         time_of_event_ikbd=time_of_next_event+HD6301_TO_ACIA_IN_CYCLES; 
         HD6301.EventStatus|=1;
+#endif
       }
       else
 #endif
@@ -1492,10 +1493,7 @@ void agenda_keyboard_replace(int) {
 #else
       ACIA_IKBD.RDRS=keyboard_buffer[keyboard_buffer_length-1];
 #endif
-#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
       ACIA_IKBD.LineRxBusy=true;
-#endif
-
     }
     if (macro_start_after_ikbd_read_count) 
       macro_start_after_ikbd_read_count--;
@@ -1551,19 +1549,15 @@ void keyboard_buffer_write(BYTE src) {
 #if defined(SSE_IKBD_6301)
   if(OPTION_C1)
   {
-#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
     if(!ACIA_IKBD.LineRxBusy)
     {
-#endif
 #if defined(SSE_IKBD_6301_380)
       ASSERT(HD6301.tdrs==src);
 #else
       ACIA_IKBD.RDRS=src; // byte is being shifted
 #endif
-#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
     }
     ACIA_IKBD.LineRxBusy=true;
-#endif
 
 /*  Normally the buffer should be 2 bytes, one being shifted, one in the 
     register. In fake mode, it's much more.
@@ -1584,14 +1578,24 @@ void keyboard_buffer_write(BYTE src) {
 #if defined(SSE_IKBD_6301_EVENT)
       {
         TRACE_LOG("IKBD TDRS %X\n",src);
+#if defined(SSE_ACIA_383)
+        ASSERT(OPTION_C1); //fool!
+#else
         if(OPTION_C1)
         {
+#endif
+#if defined(SSE_ACIA_383)
+        time_of_event_acia=ACIA_IKBD.time_of_event_incoming
+          =cpu_timer_at_start_of_hbl + cycles_run*HD6301_CYCLE_DIVISOR 
+          + ACIA_TO_HD6301_IN_CYCLES;
+#else
           time_of_event_ikbd=cpu_timer_at_start_of_hbl
             + cycles_run*HD6301_CYCLE_DIVISOR + ACIA_TO_HD6301_IN_CYCLES;
           HD6301.EventStatus|=1;
         }
         else 
           agenda_add(agenda_keyboard_replace,HD6301_TO_ACIA_IN_HBL,0);
+#endif
       }
 #else
         agenda_add(agenda_keyboard_replace,HD6301_TO_ACIA_IN_HBL,0);

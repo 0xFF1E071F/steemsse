@@ -3136,7 +3136,11 @@ Windows 2000	5.0
 #endif
 
 #if defined(SSE_IKBD_6301) 
+#if defined(SSE_ACIA_383) 
+  Wid=GetCheckBoxSize(Font,T("C1: 6850/6301/E-Clock")).Width;
+#else
   Wid=GetCheckBoxSize(Font,T("C1: 6850/6301/MIDI/E-Clock")).Width;
+#endif
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
   if(!HD6301_OK)
   {
@@ -3151,17 +3155,30 @@ Windows 2000	5.0
   }
 #endif
 
+#if defined(SSE_ACIA_383) // it's more ACIA than MIDI
+  Win=CreateWindow("Button",T("C1: 6850/6301/E-Clock"),mask,page_l,y,Wid,23,Handle,
+    (HMENU)1029,HInstance,NULL);
+#else
   Win=CreateWindow("Button",T("C1: 6850/6301/MIDI/E-Clock"),mask,page_l,y,Wid,23,Handle,
     (HMENU)1029,HInstance,NULL);
+#endif
 
   if(!HD6301_OK)
     SendMessage(Win,BN_DISABLE,0,0);
   else
     SendMessage(Win,BM_SETCHECK,OPTION_C1,0);
+
+#if defined(SSE_ACIA_383)
+  ToolAddWindow(ToolTip,Win,
+  T("Chipset 1 - This enables a low level emulation of the IKBD keyboard chip (using\
+ the Sim6xxx code by Arne Riiber, thx dude!), precise E-Clock and ACIA timings.\
+ Note: important for MIDI emulation too."));
+#else
   ToolAddWindow(ToolTip,Win,
   T("Chipset 1 - This enables a low level emulation of the IKBD keyboard chip (using\
  the Sim6xxx code by Arne Riiber, thx dude!), precise E-Clock, as well as ACIA and MIDI \
  improvements or bugs"));
+#endif
   y+=LineHeight;
 #endif
 

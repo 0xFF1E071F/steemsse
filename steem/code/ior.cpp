@@ -115,40 +115,18 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
   }
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 
   ASSERT( (addr&0xFFFFFF)==addr ); // done in 'peek' part
 
   BYTE ior_byte=0xff; // default value
 
 #if defined(SSE_CPU_ROUNDING_BUS)
-/*  Should round up only for RAM and Shifter (palette), not peripherals
-    that sit on the CPU bus.
-    Not a big change because we corrected MOVE rounding too.
+/*  Should round up only for RAM and Shifter, not peripherals that sit
+    on the CPU bus.
 */
-#if defined(SSE_CPU_ROUNDING_BUS3C)
-/*  Reading Shifter registers will cause rounding up to 4, we don't read
-    the latch in Glue.
-*/
-   if(M68000.Rounded && !(addr>=0xff8240 
-#if defined(SSE_VS2008_WARNING_382) 
-     && addr<=(MEM_ADDRESS)(ST_TYPE==STE?0xff8265:0xff8260))
-#else
-     && addr<=(ST_TYPE==STE?0xff8265:0xff8260))
-#endif
-#elif defined(SSE_CPU_ROUNDING_BUS3B)
-   if(M68000.Rounded 
-     && !(addr>=0xff8240 && addr<(ST_TYPE==STE?0xff8266:0xff8260))
-#elif defined(SSE_CPU_ROUNDING_BUS3)
-   // see iow.cpp
-   if(M68000.Rounded && !(addr>=0xff8240 && addr<=0xff8265)
-#else
-  if(M68000.Rounded && !(addr>=0xff8240 && addr<0xff8260)
-#endif
-#if defined(SSE_CPU_ROUNDING_BUS2)
-    && !M68000.Unrounded
-#endif
-  )
+  if(M68000.Rounded && !M68000.Unrounded &&
+    !(addr>=0xff8240 && addr<=(MEM_ADDRESS)(ST_TYPE==STE?0xff8265:0xff8260)))
   {
     INSTRUCTION_TIME(-2);
     M68000.Rounded=false;
@@ -171,28 +149,131 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
     // ACIAs (IKBD and MIDI) //
     ///////////////////////////
 
+#if defined(SSE_ACIA) && defined(SSE_ACIA_383) //more compact code
+
+#ifdef SSE_DEBUG
+#define TRACE_ACIA if(TRACE_ENABLED(LOGSECTION_IKBD) && !acia_num \
+  || TRACE_ENABLED(LOGSECTION_MIDI) && acia_num) TRACE
+#else
+#define TRACE_ACIA
+#endif
+
+    case 0xfffc00:
+    {
+      acia[0].BusJam(addr);
+      int acia_num;
+      switch (addr) // ACIA registers
+      {
+      case 0xfffc00: // Keyboard ACIA Control
+      case 0xfffc04: // MIDI ACIA Control
+        acia_num=(addr&0xf)>>2;
+        ASSERT(acia_num==0 || acia_num==1);
+        if(OPTION_C1)
+        {
+          ior_byte=acia[acia_num].SR; 
+          if(abs(ACT-acia[acia_num].last_tx_write_time)<ACIA_TDR_COPY_DELAY)
+          {
+            TRACE_ACIA("ACIA %d SR TDRE not set yet (%d)\n",acia_num,ACT-acia[acia_num].last_tx_write_time);
+            ior_byte&=~BIT_1; // eg Nightdawn STF
+          }
+          break;
+        }//C1
+        ior_byte=0;
+        if (acia[acia_num].rx_not_read || acia[acia_num].overrun==ACIA_OVERRUN_YES) ior_byte|=BIT_0; //full bit
+        if (acia[acia_num].tx_flag==0) ior_byte|=BIT_1; //empty bit
+        if (acia[acia_num].irq) ior_byte|=BIT_7; //irq bit
+        if (acia[acia_num].overrun==ACIA_OVERRUN_YES) ior_byte|=BIT_5; //overrun
+        break;
+
+      case 0xfffc02:  // Keyboard ACIA Data
+      case 0xfffc06:  // MIDI ACIA Data
+        acia_num=((addr&0xf)-2)>>2;
+        ASSERT(acia_num==0 || acia_num==1);
+#ifdef DEBUG_BUILD
+        if(mode!=STEM_MODE_CPU) 
+        {
+          ior_byte=(OPTION_C1)?ACIA_IKBD.RDR:ACIA_IKBD.data; 
+          break;
+        }
+#endif
+        if(OPTION_C1)
+        {
+          // Update status BIT 5 (overrun)
+          if(acia[acia_num].overrun==ACIA_OVERRUN_COMING) // keep this, it's right
+          {
+            acia[acia_num].overrun=ACIA_OVERRUN_YES;
+            acia[acia_num].SR|=BIT_5; // set overrun (only now, conform to doc)
+            if(acia[acia_num].CR&BIT_7) // irq enabled
+              acia[acia_num].SR|=BIT_7; // there's a new IRQ when overrun bit is set
+            TRACE_ACIA("%d %d %d PC %X reads ACIA %d RDR %X, OVR\n",TIMING_INFO,old_pc,acia_num,acia[acia_num].RDR);
+          }
+          // no overrun, normal
+          else
+          {
+/*
+"The Overrun indication is reset after the reading of data from the 
+Receive Data Register."
+ACIA02.TOS: reading ACIA RDR once after overrun bit is set is enough
+to clear overrun
+*/
+            acia[acia_num].overrun=ACIA_OVERRUN_NO;
+            acia[acia_num].SR&=~BIT_0;
+            acia[acia_num].SR&=~BIT_5;
+            if(!( acia[acia_num].IrqForTx() && acia[acia_num].SR&BIT_1))
+              acia[acia_num].SR&=~BIT_7;
+            TRACE_ACIA("%d %d %d PC %X CPU reads ACIA %d RDR %X\n",TIMING_INFO,old_pc,acia_num,acia[acia_num].RDR);
+          }
+          mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,
+            !( (ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7)) );
+/*
+"The nondestructive read cycle (...) although the data in the
+Receiver Data Register is retained.
+*/
+          ior_byte=acia[acia_num].RDR;
+          break;
+        }//C1
+        {//scope
+          acia[acia_num].rx_not_read=0;
+          LOG_ONLY( bool old_irq=acia[acia_num].irq; )
+          if (acia[acia_num].overrun==ACIA_OVERRUN_COMING){
+            acia[acia_num].overrun=ACIA_OVERRUN_YES;
+            if (acia[acia_num].rx_irq_enabled) acia[acia_num].irq=true;
+            LOG_ONLY( log_to_section(acia_num?LOGSECTION_MIDI:LOGSECTION_IKBD,
+              EasyStr("ACIA ")+Str(acia_num)+": "+HEXSl(old_pc,6)+
+              " - OVERRUN! Read data ($"+HEXSl(acia[acia_num].data,2)+
+              "), changing ACIA IRQ bit from "+old_irq+" to "+acia[acia_num].irq); )
+          }else{
+            acia[acia_num].overrun=ACIA_OVERRUN_NO;
+            // IRQ should be off for receive, but could be set for tx empty interrupt
+            acia[acia_num].irq=(acia[acia_num].tx_irq_enabled && acia[acia_num].tx_flag==0);
+#ifdef SSE_VS2008_WARNING_370
+#pragma warning(disable : 4805) 
+#endif
+            LOG_ONLY( if (acia[acia_num].irq!=old_irq) log_to_section(acia_num?LOGSECTION_MIDI:LOGSECTION_IKBD,
+              Str("ACIA ")+Str(acia_num)+": "+HEXSl(old_pc,6)+" - Read data ($"+HEXSl(acia[acia_num].data,2)+
+              "), changing ACIA IRQ bit from "+old_irq+" to "+acia[acia_num].irq); )
+#ifdef SSE_VS2008_WARNING_370
+#pragma warning(default : 4805) 
+#endif
+          }
+          mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
+          ior_byte=acia[acia_num].data;
+          break;
+        }
+        //break;
+      }
+    }//fffc00-6
+
+#undef LOGSECTION //SS
+#undef TRACE_ACIA
+#define LOGSECTION LOGSECTION_IO //SS
+
+
+#else//SSE_ACIA_383
 #undef LOGSECTION 
 #define LOGSECTION LOGSECTION_IKBD
-
     case 0xfffc00:      
-/*  
-    Bus jam:
-    In Hatari, each access causes 8 cycles of wait states.
-    In v1.7.0, more complicated:
-
-  "CPU cycles in the ST :
-    When accessing an ACIA register, an additional delay will be added to the usual number of
-    cycles for this CPU instruction. This delay is made of 2 parts (for a 68000 at 8 MHz) :
-	- a fixed delay of 6 cycles.
-	- a variable delay of 0 to 8 cycles to synchronise with the E Clock."
-    This is the same idea as in Steem 3.2
-    In Steem, we count 6 cycles, but with rounding.
-    We removed extra cycles since v3.4 as it broke Spectrum 512
-    If we want to make it more precise, we probably must act on
-    different aspects at once.
-    v3.6.4: Because there is ACIA jitter on real ST (eg NOJITTER.PRG), 
-    we reintroduce variable wait states without breaking Spectrum 512.
-*/
+      // Bus "jam" when accessing ACIA
       if( 
 #if defined(DEBUG_BUILD)
         mode==STEM_MODE_CPU && // no cycles when boiler is reading
@@ -201,7 +282,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
       {
         BYTE wait_states=6;
 
-#if defined(SSE_ACIA_BUS_JAM_PRECISE_WOBBLE) //v3.6.4
+#if defined(SSE_CPU_E_CLOCK)
         if(OPTION_C1)
         {
           INSTRUCTION_TIME(wait_states); 
@@ -245,12 +326,9 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 Double buffering means that two bytes may be written very fast one after
 the other on TDR. The first byte will be transferred almost at once into
 TDRS. Subsequent bytes will have to wait the full serial transfer time.
-
 'Almost' doesn't mean instant, for a few cycles (32?, which would translate
 into 512 MC68000 cycles), the TDRE bit in SR will be cleared but TDR will 
 take a byte.
-This feature was in Steem 3.2 but I made it disappear in some SSE versions!
-Refix v3.5.3
 #cycles should be variable and depend on ACIA clock, but we don't emulate
 that. The number is chosen so as not to break Hades Nebula (interesting screen
 when it does).
@@ -466,6 +544,8 @@ Receiver Data Register is retained.
 
 #undef LOGSECTION //SS
 #define LOGSECTION LOGSECTION_IO //SS
+
+#endif//SSE_ACIA_383
 
     /////////
     //  ?  //

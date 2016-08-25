@@ -159,19 +159,11 @@ trcsr_getb (offs)
   else
     rv&= ~RDRF;
 
-#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
-#if defined(SSE_IKBD_6301_373)
-/*  Bugfix, if a byte is waiting, TDRE is false.
-    Cases: Froggies
-*/
+  // if a byte is waiting, TDRE is false
   if(!ACIA_IKBD.ByteWaitingRx)
-#else
-  if(!ACIA_IKBD.LineRxBusy||!ACIA_IKBD.ByteWaitingRx)
-#endif
-    rv|=TDRE; // is empty
+    rv|=TDRE; // "TDR is empty"
   else
-    rv&=~TDRE; // is full
-#endif
+    rv&=~TDRE; // "TDR is full"
 
 #if defined(SSE_DEBUG_IKBD_6301_TRACE_STATUS)
   TRACE("6301 PC %X read TRCSR %X txi%d wb%d cycles %d\n",reg_getpc(),rv,txinterrupts,ACIA_IKBD.ByteWaitingRx,cycles_run); //tmp
@@ -223,7 +215,7 @@ trcsr_putb (offs, value)
 #if defined(SSE_IKBD_6301_380B)
       && OPTION_HACKS // don't understand well
 #endif
-#if defined(SSE_ACIA_DOUBLE_BUFFER_RX) && !defined(SSE_IKBD_6301_380B) // Defulloir
+#if !defined(SSE_IKBD_6301_380B) // Defulloir
      &&!ACIA_IKBD.LineRxBusy
 #endif
       ) 
@@ -322,17 +314,16 @@ tdr_putb (offs, value)
    * start generating tx int. request immediately
    */
 /*  ST
-    In fact for Steem, we will generate the TX interrupt later when the byte
-    has been transmitted, except if the line was free (double buffering), then
-    it can be triggered at once.
-    TODO: this part is especially messy, what does really happen?
+    Double buffer allows 1 byte waiting in TDR while another is being
+    shifted, but not more. 
+    TDRE = 0 while a byte is waiting in TDR.
 */
   trcsr = trcsr_getb (TRCSR);
 #if 0
   if (trcsr & TIE)
     txinterrupts = 1;
 #endif
-#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
+
 #if defined(SSE_IKBD_6301_380) 
   HD6301.tdr=value;
 #if defined(SSE_DEBUG_IKBD_6301_TRACE_SCI_TX)
@@ -344,22 +335,19 @@ tdr_putb (offs, value)
 #if defined(SSE_DEBUG_IKBD_6301_TRACE_SCI_TX)
     TRACE("6301 %X waits in TDR\n",value);
 #endif
-    ASSERT( !ACIA_IKBD.ByteWaitingRx );
+    ASSERT( !ACIA_IKBD.ByteWaitingRx ); // if it happened, it's just replaced
     ACIA_IKBD.ByteWaitingRx=1;
   }
   else
-#endif
+
   {
-#if defined(SSE_IKBD_6301_380) 
     HD6301.tdrs=value;
 #if defined(SSE_DEBUG_IKBD_6301_TRACE_SCI_TX)
     TRACE("6301 TDRS %X\n",HD6301.tdrs);
 #endif
-#endif
-#if defined(SSE_IKBD_6301_380)
     keyboard_buffer_write_n_record(value); // call Steem's ikbd function
-#else
-    keyboard_buffer_write(value); // call Steem's ikbd function
+#if defined(SSE_ACIA_383)
+    txinterrupts=1;
 #endif
   }
   return 0;//warning

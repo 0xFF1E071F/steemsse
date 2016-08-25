@@ -67,29 +67,12 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 /*  Should round up only for RAM and Shifter (palette), not peripherals
     that sit on the CPU bus.
     Not a big change because we corrected MOVE rounding too.
-*/
-#if defined(SSE_CPU_ROUNDING_BUS3B)
-/* Closure STF WS 3 & 4
-   There could be a reason for an STF/STE difference: MMU and GLU are merged
-   on the STE
-   This or our limit for left off on STE is wrong.
+    There could be a reason for an STF/STE difference: MMU and GLU are merged
+    on the STE
+    This or our limit for left off on STE is wrong.
 */
    if(M68000.Rounded && !(addr>=0xff8240 
-#if defined(SSE_VS2008_WARNING_382) 
-     && addr<(MEM_ADDRESS)(ST_TYPE==STE?0xff8266:0xff8260))
-#else
-     && addr<(ST_TYPE==STE?0xff8266:0xff8260))
-#endif
-#elif defined(SSE_CPU_ROUNDING_BUS3)
-   // 3615GEN4 - Naos menu -STE, so probably HSCROLL too
-   if(M68000.Rounded && !(addr>=0xff8240 && addr<=0xff8265)
-#else
-  if(M68000.Rounded && !(addr>=0xff8240 && addr<0xff8260)// || addr==0xFF8265)
-#endif
-#if defined(SSE_CPU_ROUNDING_BUS2)
-    && !M68000.Unrounded
-#endif
-  )
+     && addr<(MEM_ADDRESS)(ST_TYPE==STE?0xff8266:0xff8260)))
   {
     INSTRUCTION_TIME(-2);
     M68000.Rounded=false;
@@ -121,6 +104,16 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 
   
   switch (addr & 0xffff00){   //0xfffe00 SS: big switch for all byte writes
+
+#if defined(SSE_ACIA) && defined(SSE_ACIA_383) //more compact code
+
+#ifdef SSE_DEBUG
+#define TRACE_ACIA if(TRACE_ENABLED(LOGSECTION_IKBD) && !acia_num \
+  || TRACE_ENABLED(LOGSECTION_MIDI) && acia_num) TRACE
+#else
+#define TRACE_ACIA
+#endif
+
     case 0xfffc00:{  //--------------------------------------- ACIAs
 /*
           MC6850
@@ -132,6 +125,158 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
           ff fc06                   |xxxxxxxx|   MIDI ACIA Data
 
 */
+      acia[0].BusJam(addr);
+      int acia_num;
+      switch (addr){
+      case 0xfffc00: // Keyboard ACIA Control
+      case 0xfffc04: // MIDI ACIA Control
+        acia_num=(addr&0xf)>>2;
+        ASSERT(acia_num==0 || acia_num==1);
+        acia[acia_num].CR=io_src_b; // no option test
+        if ((io_src_b & 3)==3)  // 'Master reset'
+        {
+          log_to(acia_num?LOGSECTION_MIDI:LOGSECTION_IKBD,Str("ACIA ")+Str(acia_num)+": "+HEXSl(old_pc,6)+" - ACIA reset "); 
+          ACIA_Reset(acia_num,0);
+        }
+        else
+          ACIA_SetControl(acia_num,io_src_b); // TOS: 95 for MIDI, 96 for IKBD
+        break;
+
+      case 0xfffc02:  // Keyboard ACIA Data
+      case 0xfffc06:  // MIDI ACIA Data
+        acia_num=((addr&0xf)-2)>>2;
+        ASSERT(acia_num==0 || acia_num==1);
+        acia[acia_num].TDR=io_src_b; // no option test
+        TRACE_ACIA("%d %d %d PC %x ACIA %d TDR %X\n",TIMING_INFO,old_pc,acia_num,io_src_b);
+        if(OPTION_C1)
+        {
+/*  Effect of write on status register.
+    The 'Tx data register empty' (TDRE) bit is cleared: register isn't empty.
+    Writing on ACIA TDR clears the IRQ bit if IRQ for transmission
+    is enabled. Eg Hades Nebula
+*/
+          acia[acia_num].SR&=~BIT_1; // clear TDRE bit
+          if(acia[acia_num].IrqForTx())
+            acia[acia_num].SR&=~BIT_7; // clear IRQ bit
+          
+          //update in MFP (if needs be)
+          mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,
+            !((ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7)));
+
+/*  If the line is free, the byte in TDR is copied almost at once into the 
+    shifting register, and TDR is free again.
+    When TDR is free, status bit TDRE is set, and Steem's tx_flag is false!
+    (hard to follow)
+    If the ACIA is shifting and already has a byte in TDR, the byte in TDR
+    can be changed (High Fidelity Dreams).
+    We record the timing of 'tx' only if the line is free: Pandemonium Demos.
+    Grumbler by Electricity: key repeat in 6301 true emu mode
+*/
+          if(!acia[acia_num].LineTxBusy
+            || ACT-acia[acia_num].last_tx_write_time<ACIA_TDR_COPY_DELAY)
+          {
+            if(!acia[acia_num].LineTxBusy)
+              acia[acia_num].last_tx_write_time=ABSOLUTE_CPU_TIME;
+
+            if(acia_num==NUM_ACIA_IKBD)
+              HD6301.ReceiveByte(io_src_b);
+            else
+            {
+              acia[acia_num].TDRS=acia[acia_num].TDR;
+              acia[acia_num].time_of_event_outgoing=ACT+ACIA_MIDI_OUT_CYCLES;
+              acia[acia_num].LineTxBusy=true;
+            }
+            acia[acia_num].SR|=BIT_1; // TDRE free (see ior: can be "cancelled")
+
+            // rare case when IRQ is enabled for transmit
+            if(acia[acia_num].IrqForTx())
+            {
+              TRACE_ACIA("ACIA %d TX IRQ\n",acia_num);            
+              acia[acia_num].SR|=BIT_7; 
+              mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0); //trigger
+            }
+          }
+          else
+          {
+#if defined(SSE_DEBUG)
+            ASSERT(acia[acia_num].LineTxBusy);
+            if(!acia[acia_num].ByteWaitingTx) // TDR was free 
+              TRACE_ACIA("ACIA %d byte waiting $%X\n",acia_num,io_src_b);
+            else
+              TRACE_ACIA("ACIA %d new byte waiting $%X (instead of $%X)\n",acia_num,io_src_b,ACIA_IKBD.TDR);
+#endif
+            if(ACT-acia[acia_num].last_tx_write_time<ACIA_TDR_COPY_DELAY)
+              acia[acia_num].TDRS=acia[acia_num].TDR; // replaces
+            else
+              acia[acia_num].ByteWaitingTx=true;
+          }
+
+          break;
+        }//option C1
+        {
+          bool TXEmptyAgenda=(agenda_get_queue_pos(acia_num==NUM_ACIA_IKBD?
+            agenda_acia_tx_delay_IKBD:agenda_acia_tx_delay_MIDI)>=0);
+          if (TXEmptyAgenda==0){
+            if (acia[acia_num].tx_irq_enabled){
+              acia[acia_num].irq=false;
+              mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
+            }
+            agenda_add(acia_num==NUM_ACIA_IKBD?agenda_acia_tx_delay_IKBD
+              :agenda_acia_tx_delay_MIDI,
+              ACIAClockToHBLS(acia[acia_num].clock_divide),0);
+          }
+          acia[acia_num].tx_flag=true; //flag for transmitting
+
+          //Steem 3.2, not C1, different paths for IKBD and MIDI:
+          if(acia_num==NUM_ACIA_IKBD)
+          {
+            // If send new byte before last one has finished being sent
+            if (abs(ABSOLUTE_CPU_TIME-acia[acia_num].last_tx_write_time)
+              <ACIA_CYCLES_NEEDED_TO_START_TX){
+                // replace old byte with new one
+                int n=agenda_get_queue_pos(agenda_ikbd_process);
+                if (n>=0){
+                  log_to(LOGSECTION_IKBD,Str("IKBD: ")+HEXSl(old_pc,6)+" - Received new command before old one was sent, replacing "+
+                    HEXSl(agenda[n].param,2)+" with "+HEXSl(io_src_b,2));
+                  agenda[n].param=io_src_b;
+                }
+            }else{
+              // there is a delay before the data gets to the IKBD
+              acia[acia_num].last_tx_write_time=ABSOLUTE_CPU_TIME;
+              agenda_add(agenda_ikbd_process,IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESS,io_src_b);
+            }
+          }
+          else
+          {
+            ASSERT(acia_num==NUM_ACIA_MIDI);
+            MIDIPort.OutputByte(io_src_b);
+          }
+        break;
+      }
+    //-------------------------- unrecognised -------------------------------------------------
+      default:
+        break;  //all writes allowed
+      }
+    }
+    break;
+
+#undef LOGSECTION
+#undef TRACE_ACIA
+#define LOGSECTION LOGSECTION_IO//SS
+
+#else//defined(SSE_ACIA_383) 
+    case 0xfffc00:{  //--------------------------------------- ACIAs
+/*
+          MC6850
+
+          ff fc00                   |xxxxxxxx|   Keyboard ACIA Control
+          ff fc02                   |xxxxxxxx|   Keyboard ACIA Data
+
+          ff fc04                   |xxxxxxxx|   MIDI ACIA Control
+          ff fc06                   |xxxxxxxx|   MIDI ACIA Data
+
+*/
+      // Bus "jam" when accessing ACIA
       // Only cause bus jam once per word
       DEBUG_ONLY( if (mode==STEM_MODE_CPU) )
       {
@@ -139,7 +284,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
         {
 #if defined(SSE_ACIA)
           BYTE wait_states=6;
-#if defined(SSE_ACIA_BUS_JAM_PRECISE_WOBBLE) //v3.6.4
+#if defined(SSE_CPU_E_CLOCK)
           if(OPTION_C1)
           {
             INSTRUCTION_TIME(wait_states);
@@ -222,7 +367,7 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 
       case 0xfffc00:  //control //SS writing ACIA IKBD control register
 
-#if defined(SSE_IKBD_6301) && defined(SSE_ACIA_REGISTERS)
+#if defined(SSE_ACIA_REGISTERS)
         if(OPTION_C1)
           ACIA_IKBD.CR=io_src_b; // assign before we send to other functions
 #endif //... and we run the same functions in 6301 mode too:
@@ -237,9 +382,7 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 
       case 0xfffc02:  // data //SS sending data to HD6301
 
-
 #if defined(SSE_IKBD_6301)
-
 #if defined(SSE_ACIA_380)
         ACIA_IKBD.TDR=io_src_b;
 #endif
@@ -262,7 +405,6 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
             !((ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7)));
 
 
-#if defined(SSE_ACIA_DOUBLE_BUFFER_TX) 
 /*  If the line is free, the byte in TDR is copied almost at once into the 
     shifting register, and TDR is free again.
     When TDR is free, status bit TDRE is set, and Steem's tx_flag is false!
@@ -320,16 +462,6 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
 #endif
             ACIA_IKBD.ByteWaitingTx=true;
           }
-
-#else //no double buffer
-
-          ACIA_IKBD.TDRS=ACIA_IKBD.TDR; 
-          // agenda the byte to process
-          agenda_delete(agenda_ikbd_process); //imprecise - TODO? 
-          agenda_add(agenda_ikbd_process,HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL,
-            io_src_b);
-
-#endif//double buffer or not
 
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_IO//SS
@@ -459,7 +591,7 @@ system exclusive start and end messages (F0 and F7).
 
       case 0xfffc06:  //data
       {
-#if defined(SSE_ACIA_REGISTERS) && defined(SSE_IKBD_6301)
+#if defined(SSE_ACIA_REGISTERS)
         if(OPTION_C1)
         {
           if( (ACIA_MIDI.CR&BIT_5)&&!(ACIA_MIDI.CR&BIT_6) )// IRQ transmit enabled
@@ -473,7 +605,7 @@ system exclusive start and end messages (F0 and F7).
         }
 #endif
         bool TXEmptyAgenda=(agenda_get_queue_pos(agenda_acia_tx_delay_MIDI)
-#if defined(SSE_MIDI)   //TODO (argh)
+#if defined(SSE_MIDI)
           <0
 #else
           >=0
@@ -544,6 +676,7 @@ system exclusive start and end messages (F0 and F7).
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_IO//SS
 
+#endif//defined(SSE_ACIA_383) 
 
     case 0xfffa00:  //--------------------------------------- MFP
     {

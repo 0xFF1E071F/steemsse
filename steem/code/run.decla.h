@@ -74,7 +74,7 @@ EXT int cpu_timer_at_start_of_hbl;
           INSTRUCTION_TIME_ROUND(0); \
           INSTRUCTION_TIME((8000000-(ABSOLUTE_CPU_TIME-shifter_cycle_base)) % 10);
 
-// see SSEInterrupt.h for new definitions
+// see SSEInterrupt.cpp for new definitions
 #if !(defined(SSE_INT_HBL_INLINE))
 #define HBL_INTERRUPT  \
   {                  \
@@ -320,7 +320,31 @@ void event_driveB_ip();
 
 #endif
 
-#if defined(SSE_IKBD_6301_EVENT)
+#if defined(SSE_ACIA_383)
+extern int time_of_event_acia;
+void event_acia();
+
+#define PREPARE_EVENT_CHECK_FOR_ACIA     \
+  if(OPTION_C1) {\
+  if (acia[0].LineRxBusy &&(time_of_next_event-acia[0].time_of_event_incoming) >= 0){\
+  time_of_next_event=time_of_event_acia=acia[0].time_of_event_incoming;  \
+  screen_event_vector=event_acia;                    \
+  } \
+  if (acia[0].LineTxBusy &&(time_of_next_event-acia[0].time_of_event_outgoing) >= 0){\
+  time_of_next_event=time_of_event_acia=acia[0].time_of_event_outgoing;  \
+  screen_event_vector=event_acia;                    \
+  } \
+  if (acia[1].LineRxBusy && (time_of_next_event-acia[1].time_of_event_incoming) >= 0){\
+  time_of_next_event=time_of_event_acia=acia[1].time_of_event_incoming;  \
+  screen_event_vector=event_acia;                    \
+  } \
+  if (acia[1].LineTxBusy &&(time_of_next_event-acia[1].time_of_event_outgoing) >= 0){\
+  time_of_next_event=time_of_event_acia=acia[1].time_of_event_outgoing;  \
+  screen_event_vector=event_acia;                    \
+  } \
+  }
+
+#elif defined(SSE_IKBD_6301_EVENT)
 
 extern int time_of_event_ikbd,time_of_event_ikbd2;
 void event_ikbd(),event_ikbd2();

@@ -10,11 +10,24 @@
 #include <binary.h>
 
 #ifdef __cplusplus
+#include "emulator.decla.h"
+#include "steemh.decla.h"
+#include "SSE/SSEDebug.h"
+#include "SSE/SSEOption.h"
 extern "C" {  // necessary for VC6
 #endif
 
+
+
+#pragma pack(push, STRUCTURE_ALIGNMENT)
+
 struct ACIA_STRUCT{ // removed _ ..
 #if defined(SSE_VAR_RESIZE_383A) // problem is memory snapshots, structure: more complicated
+  int last_tx_write_time;
+  int last_rx_read_time;
+#if defined(SSE_ACIA_383)
+  int time_of_event_incoming, time_of_event_outgoing;
+#endif
   BYTE clock_divide;
   BYTE rx_irq_enabled;
   BYTE rx_not_read;
@@ -23,11 +36,9 @@ struct ACIA_STRUCT{ // removed _ ..
   BYTE tx_irq_enabled;
   BYTE data;
   BYTE irq;
-  int last_tx_write_time;
-  int last_rx_read_time;
 #else
   int clock_divide;
-  int rx_delay__unused; //SS see this?
+  int rx_delay__unused;
   BYTE rx_irq_enabled;
   BYTE rx_not_read;
   int overrun;
@@ -38,24 +49,18 @@ struct ACIA_STRUCT{ // removed _ ..
   int last_tx_write_time;
   int last_rx_read_time;
 #endif
-#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
   BYTE LineRxBusy; // receiveing from 6301 or MIDI
-  BYTE ByteWaitingRx; // Byte in 6301's TDR is waiting to be shifted
-#endif
-#if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
+  BYTE ByteWaitingRx; // Byte in 6301's or MIDI's TDR is waiting to be shifted
+
 /*  When a byte is being shifted in the shift register and being transmitted,
     another byte may already be transmitted in the data register, it will wait
     there until the first transmission is over.
 */
   BYTE ByteWaitingTx;
   BYTE LineTxBusy; // transmitting to 6301 or MIDI
-#if !defined(SSE_ACIA_REGISTERS)
-  BYTE WaitingByte; // would be TDR before going to TDRS
-#endif
-#endif
+
 
 #if defined(SSE_ACIA_REGISTERS)
-  // this should make things clearer
   BYTE CR,  // control 
     SR,     // status
     RDR,    // receive data 
@@ -64,9 +69,15 @@ struct ACIA_STRUCT{ // removed _ ..
     TDRS;   // transmit data shift
 #ifdef __cplusplus
   inline bool IrqForTx() { return ((CR&BIT_5)&&!(CR&BIT_6)); }
+#if defined(SSE_ACIA_383)
+  void BusJam(unsigned long addr);
+  int TransmissionTime();
+#endif
 #endif
 #endif
 };
+
+#pragma pack(pop)
 
 extern struct ACIA_STRUCT acia[2]; 
 
@@ -74,12 +85,11 @@ extern struct ACIA_STRUCT acia[2];
 }//extern "C"
 #endif
 
-enum { ACIA_OVERRUN_NO,ACIA_OVERRUN_COMING,ACIA_OVERRUN_YES };
-enum { NUM_ACIA_IKBD,NUM_ACIA_MIDI };
+enum EAciaOverrun { ACIA_OVERRUN_NO,ACIA_OVERRUN_COMING,ACIA_OVERRUN_YES };
+enum EAciaChips { NUM_ACIA_IKBD,NUM_ACIA_MIDI };
 
 #define ACIA_IKBD acia[NUM_ACIA_IKBD]
 #define ACIA_MIDI acia[NUM_ACIA_MIDI]
-
 #define ACIA_CYCLES_NEEDED_TO_START_TX 512 //need if !SSE_IKBD
 
 #endif
