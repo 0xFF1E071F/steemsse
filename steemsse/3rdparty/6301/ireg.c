@@ -297,13 +297,7 @@ static unsigned int mouse_x_counter=MOUSE_MASK;
 static unsigned int mouse_y_counter=MOUSE_MASK;
 #endif
 
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED) \
-  || !defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
-static int mouse_click_x_time=0;
-static int mouse_click_y_time=0; 
-#endif
-
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
 extern int shifter_freq;
 #endif
 
@@ -327,22 +321,13 @@ static dr4_getb (offs)
     send the last bits to registry bits 0-1 for horizontal movement, 2-3
     for vertical movement. 
     If we test for DR2 bit 0 set, ok for desktop but it breaks Froggies.
-    The way we emulate this with 'n_chunk' speeds and 'cycles_per_chunk'
-    cycles of delay between rotations is gross and will have you killed in
-    Arkanoid (he he). We wanted to have a mouse slow enough for drawing 
-    (NEOchrome) and fast enough that it feels OK in GEM.
-    It seems to be the hardest part (also not perfect in SainT), but maybe we
-    should make sure the send/receive timings are correct before we fiddle 
-    again with mouse speed.
-    v3.7.0: mouse speed improved (SSE_IKBD_6301_MOUSE_ADJUST_SPEED2), now it's
-    satisfactory.
 */
 
   if(!(ddr4&0xF) && (ddr2&1) 
     && (HD6301.MouseVblDeltaX || HD6301.MouseVblDeltaY) )
   {
 
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)//yes: better than SainT now!
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
     int cycles_per_frame;
     ASSERT(shifter_freq);
     cycles_per_frame=HD6301_CLOCK/shifter_freq;   
@@ -381,46 +366,6 @@ static dr4_getb (offs)
 
 #endif
 
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED) //no
-      
-    int n_chunk=HD6301_MOUSE_SPEED_CHUNKS; // 20 // 15
-    int cycles_per_chunk=HD6301_MOUSE_SPEED_CYCLES_PER_CHUNK;// 1250;// 500 
-    int movement,cycles_for_a_click;
-
-    if(HD6301.MouseVblDeltaX) // horizontal
-    { 
-      int amx=abs(HD6301.MouseVblDeltaX);
-      movement=__min((int)amx,n_chunk-1);
-      cycles_for_a_click=cycles_per_chunk*(n_chunk-movement);
-
-      if(cpu.ncycles-mouse_click_x_time>cycles_for_a_click)
-      {
-        if(HD6301.MouseVblDeltaX<0) // left
-          mouse_x_counter=_rotl(mouse_x_counter,1);
-        else  // right
-          mouse_x_counter=_rotr(mouse_x_counter,1);
-        mouse_click_x_time=cpu.ncycles;
-      }
-    }
-
-    if(HD6301.MouseVblDeltaY) // vertical
-    {
-      int amy=abs(HD6301.MouseVblDeltaY);
-      movement=__min(amy,n_chunk-1);
-      cycles_for_a_click=cycles_per_chunk*(n_chunk-movement);
-
-      if(cpu.ncycles-mouse_click_y_time>cycles_for_a_click)
-      {
-        if(HD6301.MouseVblDeltaY<0) // up
-          mouse_y_counter=_rotl(mouse_y_counter,1);
-        else  // down
-          mouse_y_counter=_rotr(mouse_y_counter,1);
-        mouse_click_y_time=cpu.ncycles;
-      }
-    }   
-
-#endif
-
   }
 
 /*  Joystick movements
@@ -456,16 +401,6 @@ static dr4_getb (offs)
     }
   }  
 
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)//no
-  // We do it that way because mouse speed is better if we don't update that
-  // value only when the mouse has moved.
-  if(!joy0mvt
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
-  // if both are defined, Hacks makes the difference, for comparison (beta)
-    || !OPTION_HACKS
-#endif
-    )
-#endif
   value = (value&(~0xF))  | (mouse_x_counter&3) | ((mouse_y_counter&3)<<2);
   //TRACE("mvt %X\n",value);
 

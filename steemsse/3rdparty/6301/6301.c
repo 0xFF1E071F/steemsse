@@ -186,11 +186,7 @@ hd6301_run_cycles(u_int cycles_to_run) {
     TRACE("6301 starting cpu\n");
     cpu_start();
   }
-  if((iram[TRCSR]&1) 
-#if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
-    && !ACIA_IKBD.LineTxBusy
-#endif
-    )
+  if((iram[TRCSR]&1) && !ACIA_IKBD.LineTxBusy)
   {
     TRACE("6301 waking up (PC %X cycles %d ACT %d)\n",reg_getpc(),cpu.ncycles,act);
     iram[TRCSR]&=~1; // ha! that's for Barbarian (& Obliterator, Froggies)

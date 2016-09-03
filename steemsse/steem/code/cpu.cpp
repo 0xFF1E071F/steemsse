@@ -6,38 +6,23 @@ follow the functions in this file is extremely difficult, we recommend
 treating it as a black box. The only parts of this file really required by
 the rest of the program are the macro m68k_PROCESS that executes the next
 instruction and cpu_routines_init in cpuinit.cpp.
+SS: this is compiled only if STEVEN_SEAGAL or SSE_CPU isn't defined.
 ---------------------------------------------------------------------------*/
 
-/*  Core of Steem's remarkable MC68000 emulation.
-    It's a classic emulation in the sense that each instruction is
-    emulated by a function that runs from start to end.
-    Timings are handled in a microcode way, they're not added at once.
-    As it is, Steem runs many, many programs, but this structure is
-    a liability in some rare cases.
-    An ideal emulation would have a 1 cycle loop, with each chip changing
-    its state cycle by cycle. This could hurt performance. And we're still
-    in trouble because of the different clock for the MFP (not a multiple).
-    Also check SSECpu.h and SSECpu.cpp (eg MOVE rewritten)
-    This part was already frightening, now it's worse with all the #ifdef
-*/
-
-#if defined(SSE_STRUCTURE_INFO)
-#pragma message("Included for compilation: cpu.cpp")
-#endif
 
 #if defined(SSE_STRUCTURE_DECLA)
 
 #define EXT
 #define INIT(s) =s
 
+extern const char*exception_action_name[4];//383
+
 m68k_exception ExceptionObject;
 jmp_buf *pJmpBuf=NULL;
 EXT BYTE  m68k_peek(MEM_ADDRESS ad);
 EXT WORD  m68k_dpeek(MEM_ADDRESS ad);
 EXT LONG  m68k_lpeek(MEM_ADDRESS ad);
-#if !defined(SSE_CPU_DIV)
 EXT int m68k_divu_cycles INIT(124),m68k_divs_cycles INIT(140); // +4 for overall time
-#endif
 #ifdef DEBUG_BUILD
 #ifndef RELEASE_BUILD
 EXT MEM_ADDRESS pc_rel_stop_on_ref;
@@ -46,14 +31,6 @@ EXT MEM_ADDRESS pc_rel_stop_on_ref;
 
 #undef EXT
 #undef INIT
-
-#ifndef CPU_ABUS_ACCESS_READ
-#define CPU_ABUS_ACCESS_READ INSTRUCTION_TIME_ROUND(4)
-#endif
-
-#ifndef CPU_ABUS_ACCESS_WRITE
-#define CPU_ABUS_ACCESS_WRITE INSTRUCTION_TIME_ROUND(4)
-#endif
 
 #ifdef SSE_UNIX //TODO
 #if !defined(min)
@@ -75,32 +52,10 @@ bool cpu_stopped=0;
 bool m68k_do_trace_exception;
 signed int compare_buffer;
 
-#if defined(SSE_VAR_OPT_383A)
-int act; 
-#endif
 
-void sr_check_z_n_l_for_r0()
-{
-  m68k_dest=&r[0];
-  SR_CHECK_Z_AND_N_L;
-}
 
 #endif
 
-// SS neutralise macros if needs be
-#if !defined(PREFETCH_IRC)
-#define PREFETCH_IRC 
-#define REFETCH_IR 
-#if !defined(SSE_CPU_ROUNDING2)
-#define PREFETCH_IRC_NO_ROUND
-#endif
-#endif
-
-#if !defined(TRUE_PC)
-//int silly_dummy_for_true_pc;
-//#define TRUE_PC silly_dummy_for_true_pc //we guard now
-//#define CHECK_READ silly_dummy_for_true_pc //we guard now
-#endif
 
 void (*m68k_high_nibble_jump_table[16])();
 void (*m68k_jump_line_0[64])();
@@ -128,14 +83,10 @@ void (*m68k_jump_get_dest_l_not_a[8])();
 void (*m68k_jump_get_dest_b_not_a_or_d[8])();
 void (*m68k_jump_get_dest_w_not_a_or_d[8])();
 void (*m68k_jump_get_dest_l_not_a_or_d[8])();
-#if !defined(SSE_CPU_ROUNDING_NO_FASTER_FOR_D)
 void (*m68k_jump_get_dest_b_not_a_faster_for_d[8])();
 void (*m68k_jump_get_dest_w_not_a_faster_for_d[8])();
 void (*m68k_jump_get_dest_l_not_a_faster_for_d[8])();
-#endif
 bool (*m68k_jump_condition_test[16])();
-
-#if !(defined(SSE_CPU) && defined(SSE_CPU_INLINE_READ_FROM_ADDR))
 
 #define m68k_READ_B_FROM_ADDR                         \
   abus&=0xffffff;                                   \
@@ -249,9 +200,8 @@ bool (*m68k_jump_condition_test[16])();
     DEBUG_CHECK_READ_L(abus);  \
     m68k_src_l=LPEEK(abus);                  \
   }else exception(BOMBS_BUS_ERROR,EA_READ,abus);
-#endif//SSE_CPU_INLINE_READ_FROM_ADDR
 
-#if !defined(SSE_CPU_INLINE_READ_BWL)
+
 
 #define m68k_READ_B(addr)                              \
   m68k_src_b=m68k_peek(addr);                           \
@@ -262,18 +212,15 @@ bool (*m68k_jump_condition_test[16])();
 #define m68k_READ_L(addr)                              \
   m68k_src_l=m68k_lpeek(addr);                           \
 
-#endif//SSE_CPU_INLINE_READ_BWL
-
 //---------------------------------------------------------------------------
-#if !defined(SSE_STRUCTURE_DECLA)
 inline void change_to_user_mode()
 {
 //  if(SUPERFLAG){
-  ASSERT(!SUPERFLAG);
   compare_buffer=r[15];r[15]=other_sp;other_sp=compare_buffer;
   SR_CLEAR(SR_SUPER);
 //  }
 }
+//---------------------------------------------------------------------------
 inline void change_to_supervisor_mode()
 {
 //  if(!SUPERFLAG){
@@ -281,38 +228,23 @@ inline void change_to_supervisor_mode()
   SR_SET(SR_SUPER);
 //  }
 }
-#endif
-//---------------------------------------------------------------------------
 
-#define LOGSECTION LOGSECTION_CRASH//SS
 void m68k_exception::init(int a,exception_action ea,MEM_ADDRESS _abus)
 {
   bombs=a;
   _pc=PC32; //old_pc;
-  crash_address=old_pc; //SS this is for group 1+2
+  crash_address=old_pc;
   address=_abus;
   _sr=::sr;_ir=::ir;
   action=ea;
 }
 
-//#define LOGSECTION LOGSECTION_CRASH//ss moved up
+#define LOGSECTION LOGSECTION_CRASH
 //---------------------------------------------------------------------------
 void ASMCALL perform_crash_and_burn()
 {
-#if !defined(SSE_CPU_HALT) || !defined(SSE_GUI_STATUS_STRING_HALT)
   reset_st(RESET_COLD | RESET_NOSTOP | RESET_CHANGESETTINGS | RESET_NOBACKUP);
-#endif
-#if defined(SSE_DEBUG)
-  TRACE("==============\nCRASH AND BURN\n==============\n");
-#endif
-#if defined(SSE_CPU_HALT) && defined(SSE_GUI_STATUS_STRING_HALT)
-  runstate=RUNSTATE_STOPPING;
-  M68000.ProcessingState=TM68000::HALTED;
-  GUIRefreshStatusBar(); // no OSD, it's mentioned there
-#else
   osd_start_scroller(T("CRASH AND BURN - ST RESET"));
-#endif
-  TRACE2("HALT\n");
 }
 //---------------------------------------------------------------------------
 #ifdef DEBUG_BUILD
@@ -354,7 +286,6 @@ void log_history(int bombs,MEM_ADDRESS crash_address)
 }
 #endif
 //---------------------------------------------------------------------------
-#if !(defined(SSE_CPU))
 NOT_DEBUG(inline) void m68k_interrupt(MEM_ADDRESS ad) //not address, bus, illegal instruction or privilege violation interrupt
 {
   WORD _sr=sr;
@@ -362,15 +293,12 @@ NOT_DEBUG(inline) void m68k_interrupt(MEM_ADDRESS ad) //not address, bus, illega
   m68k_PUSH_L(PC32);
   m68k_PUSH_W(_sr);
   SET_PC(ad);
-//  dbg_log(EasyStr("interrupt - increasing interrupt depth from ")+interrupt_depth+" to "+(interrupt_depth+1));
+//  log(EasyStr("interrupt - increasing interrupt depth from ")+interrupt_depth+" to "+(interrupt_depth+1));
   SR_CLEAR(SR_TRACE);
   interrupt_depth++;
 }
-#endif
 //---------------------------------------------------------------------------
 // TODO: Allow exception frames to be written to IO?
-
-#if !(defined(SSE_CPU_EXCEPTION))// redone in SSEM68000.cpp
 void m68k_exception::crash()
 {
   DWORD bytes_to_stack=int((bombs==BOMBS_BUS_ERROR || bombs==BOMBS_ADDRESS_ERROR) ? (4+2+2+4+2):(4+2));
@@ -432,13 +360,14 @@ void m68k_exception::crash()
   }
   PeekEvent(); // Stop exception freeze
 }
-#endif
 
 #undef LOGSECTION
 
-#if !defined(SSE_STRUCTURE_DECLA)
-
+#ifdef SSE_BUILD
+void m68k_poke_abus(BYTE x){
+#else
 NOT_DEBUG(inline) void m68k_poke_abus(BYTE x){
+#endif
   abus&=0xffffff;
   if(abus>=MEM_IO_BASE){
     if(SUPERFLAG)
@@ -446,18 +375,15 @@ NOT_DEBUG(inline) void m68k_poke_abus(BYTE x){
     else
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
   }else if(abus>=himem){
-#if !defined(SSE_MMU_NO_CONFUSION)
     if (mmu_confused){
       mmu_confused_set_dest_to_addr(1,true);
       m68k_DEST_B=x;
-    }else
-#endif
-    if (abus>=FOUR_MEGS){
+    }else if (abus>=FOUR_MEGS){
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
     } //otherwise throw away
   }else{
     DEBUG_CHECK_WRITE_B(abus);
-    if (SUPERFLAG && abus>=MEM_FIRST_WRITEABLE) //SS !defined
+    if (SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)
       PEEK(abus)=x;
     else if (abus>=MEM_START_OF_USER_AREA)
       PEEK(abus)=x;
@@ -465,28 +391,28 @@ NOT_DEBUG(inline) void m68k_poke_abus(BYTE x){
   }
 }
 
-
+#ifdef SSE_BUILD
+void m68k_dpoke_abus(WORD x){
+#else
 NOT_DEBUG(inline) void m68k_dpoke_abus(WORD x){
+#endif
   abus&=0xffffff;
-  if(abus&1) exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
+  if(abus&1)exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
   else if(abus>=MEM_IO_BASE){
     if(SUPERFLAG)
       io_write_w(abus,x);
     else
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
   }else if(abus>=himem){
-#if !defined(SSE_MMU_NO_CONFUSION)
     if(mmu_confused){
       mmu_confused_set_dest_to_addr(2,true);
       m68k_DEST_W=x;
-    }else 
-#endif
-    if(abus>=FOUR_MEGS){
+    }else if(abus>=FOUR_MEGS){
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
     } //otherwise throw away
   }else{
     DEBUG_CHECK_WRITE_W(abus);
-    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)//SS !defined
+    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)
       DPEEK(abus)=x;
     else if(abus>=MEM_START_OF_USER_AREA)
       DPEEK(abus)=x;
@@ -494,8 +420,11 @@ NOT_DEBUG(inline) void m68k_dpoke_abus(WORD x){
   }
 }
 
-
+#ifdef SSE_BUILD
+void m68k_lpoke_abus(LONG x){
+#else
 NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x){
+#endif
   abus&=0xffffff;
   if(abus&1)exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
   else if(abus>=MEM_IO_BASE){
@@ -504,18 +433,15 @@ NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x){
     else
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
   }else if(abus>=himem){
-#if !defined(SSE_MMU_NO_CONFUSION)
     if(mmu_confused){
       mmu_confused_set_dest_to_addr(4,true);
       m68k_DEST_L=x;
-    }else 
-#endif
-    if(abus>=FOUR_MEGS){
+    }else if(abus>=FOUR_MEGS){
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
     } //otherwise throw away
   }else{
     DEBUG_CHECK_WRITE_L(abus);
-    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)//SS !defined
+    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)
       LPEEK(abus)=x;
     else if(abus>=MEM_START_OF_USER_AREA)
       LPEEK(abus)=x;
@@ -523,22 +449,33 @@ NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x){
   }
 }
 
-inline void m68k_poke(MEM_ADDRESS ad,BYTE x){
+#ifdef SSE_BUILD
+void m68k_poke(MEM_ADDRESS ad,BYTE x){
+#else
+NOT_DEBUG(inline) void m68k_poke(MEM_ADDRESS ad,BYTE x){
+#endif
   abus=ad;
   m68k_poke_abus(x);
 }
 
-inline void m68k_dpoke(MEM_ADDRESS ad,WORD x){
+#ifdef SSE_BUILD
+void m68k_dpoke(MEM_ADDRESS ad,WORD x){
+#else
+NOT_DEBUG(inline) void m68k_dpoke(MEM_ADDRESS ad,WORD x){
+#endif
   abus=ad;
   m68k_dpoke_abus(x);
 }
 
-inline void m68k_lpoke(MEM_ADDRESS ad,LONG x){
+#ifdef SSE_BUILD
+void m68k_lpoke(MEM_ADDRESS ad,LONG x){
+#else
+NOT_DEBUG(inline) void m68k_lpoke(MEM_ADDRESS ad,LONG x){
+#endif
   abus=ad;
   m68k_lpoke_abus(x);
 }
 
-#endif
 
 BYTE m68k_peek(MEM_ADDRESS ad){
   ad&=0xffffff;
@@ -547,45 +484,19 @@ BYTE m68k_peek(MEM_ADDRESS ad){
       if(SUPERFLAG)return io_read_b(ad);
       else exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else if(ad>=0xfc0000){
-#if defined(SSE_CPU_ROUNDING_BUS)
-      if(tos_high && ad<(0xfc0000+192*1024))
-      {
-        if(M68000.Rounded)
-        {
-          INSTRUCTION_TIME(-2);
-          M68000.Rounded=false;
-        }
-        return ROM_PEEK(ad-rom_addr);
-      }
-#else
       if(tos_high && ad<(0xfc0000+192*1024))return ROM_PEEK(ad-rom_addr);
-#endif
       else if (ad<0xfe0000 || ad>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else if(ad>=MEM_EXPANSION_CARTRIDGE){
       if (cart) return CART_PEEK(ad-MEM_EXPANSION_CARTRIDGE);
       else return 0xff;
     }else if(ad>=rom_addr){
-#if defined(SSE_CPU_ROUNDING_BUS)
-      if (ad<(0xe00000+256*1024)) 
-      {
-        if(M68000.Rounded)
-        {
-          INSTRUCTION_TIME(-2);
-          M68000.Rounded=false;
-        }
-        return ROM_PEEK(ad-rom_addr);
-      }
-#else
       if (ad<(0xe00000+256*1024)) return ROM_PEEK(ad-rom_addr);
-#endif
       if (ad>=0xec0000) exception(BOMBS_BUS_ERROR,EA_READ,ad);
       return 0xff;
     }else if (ad>=0xd00000 && ad<0xd80000){
       return 0xff;
-#if !defined(SSE_MMU_NO_CONFUSION)
     }else if (mmu_confused){
       return mmu_confused_peek(ad,true);
-#endif
     }else if (ad>=FOUR_MEGS){
       exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else{
@@ -603,59 +514,26 @@ BYTE m68k_peek(MEM_ADDRESS ad){
 
 WORD m68k_dpeek(MEM_ADDRESS ad){
   ad&=0xffffff;
-//  ASSERT( ad!=0x400000);
-//  ASSERT( ad!=0x080000);
   if(ad&1)exception(BOMBS_ADDRESS_ERROR,EA_READ,ad);
   else if(ad>=himem){
     if(ad>=MEM_IO_BASE){
       if(SUPERFLAG)return io_read_w(ad);
       else exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else if(ad>=0xfc0000){
-#if defined(SSE_CPU_ROUNDING_BUS)
-      if(tos_high && ad<(0xfc0000+192*1024))
-      {
-        if(M68000.Rounded)
-        {
-          INSTRUCTION_TIME(-2);
-          M68000.Rounded=false;
-        }
-        return ROM_DPEEK(ad-rom_addr);
-      }
-#else
       if(tos_high && ad<(0xfc0000+192*1024))return ROM_DPEEK(ad-rom_addr);
-#endif
       else if (ad<0xfe0000 || ad>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else if(ad>=MEM_EXPANSION_CARTRIDGE){
       if (cart) return CART_DPEEK(ad-MEM_EXPANSION_CARTRIDGE);
       else return 0xffff;
     }else if(ad>=rom_addr){
-#if defined(SSE_CPU_ROUNDING_BUS)
-      if (ad<(0xe00000+256*1024)) 
-      {
-        if(M68000.Rounded)
-        {
-          INSTRUCTION_TIME(-2);
-          M68000.Rounded=false;
-        }
-        return ROM_DPEEK(ad-rom_addr);
-      }
-#else
       if (ad<(0xe00000+256*1024)) return ROM_DPEEK(ad-rom_addr);
-#endif
       if (ad>=0xec0000) exception(BOMBS_BUS_ERROR,EA_READ,ad);
       return 0xffff;
     }else if (ad>=0xd00000 && ad<0xd80000){
       return 0xffff;
-#if !defined(SSE_MMU_NO_CONFUSION)
     }else if(mmu_confused){
       return mmu_confused_dpeek(ad,true);
-#endif
-#if defined(SSE_CPU_IGNORE_RW_4MB)//undef 3.7
-      // safe mod for RAM<4MB, fixes F-29 4MB, along with poke
-    }else if(ad>FOUR_MEGS || ad==FOUR_MEGS&&mem_len<FOUR_MEGS){
-#else
     }else if(ad>=FOUR_MEGS){
-#endif
       exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else{
       return 0xffff;
@@ -672,55 +550,25 @@ WORD m68k_dpeek(MEM_ADDRESS ad){
 
 LONG m68k_lpeek(MEM_ADDRESS ad){
   ad&=0xffffff;
-#if defined(SSE_CPU_EXCEPTION)
-  if(ad&1)exception(BOMBS_ADDRESS_ERROR,EA_READ,ad); // bug fix!
-#else
-  if(ad&1)exception(BOMBS_ADDRESS_ERROR,EA_WRITE,ad); 
-#endif
+  if(ad&1)exception(BOMBS_ADDRESS_ERROR,EA_WRITE,ad);
   else if(ad>=himem){
     if(ad>=MEM_IO_BASE){
       if(SUPERFLAG)return io_read_l(ad);
       else exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else if(ad>=0xfc0000){
-#if defined(SSE_CPU_ROUNDING_BUS)
-      if(tos_high && ad<(0xfc0000+192*1024))
-      {
-        if(M68000.Rounded)
-        {
-          INSTRUCTION_TIME(-2);
-          M68000.Rounded=false;
-        }
-        return ROM_LPEEK(ad-rom_addr);
-      }
-#else
       if(tos_high && ad<(0xfc0000+192*1024-2))return ROM_LPEEK(ad-rom_addr);
-#endif
       else if (ad<0xfe0000 || ad>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else if (ad>=MEM_EXPANSION_CARTRIDGE){
       if (cart) return CART_LPEEK(ad-MEM_EXPANSION_CARTRIDGE);
       else return 0xffffffff;
     }else if (ad>=rom_addr){
-#if defined(SSE_CPU_ROUNDING_BUS)
-      if (ad<(0xe00000+256*1024)) 
-      {
-        if(M68000.Rounded)
-        {
-          INSTRUCTION_TIME(-2);
-          M68000.Rounded=false;
-        }
-        return ROM_LPEEK(ad-rom_addr);
-      }
-#else
       if (ad<(0xe00000+256*1024-2)) return ROM_LPEEK(ad-rom_addr);
-#endif
       if (ad>=0xec0000) exception(BOMBS_BUS_ERROR,EA_READ,ad);
       return 0xffffffff;
     }else if (ad>=0xd00000 && ad<0xd80000){
       return 0xffffffff;
-#if !defined(SSE_MMU_NO_CONFUSION)
     }else if (mmu_confused){
       return mmu_confused_lpeek(ad,true);
-#endif
     }else if (ad>=FOUR_MEGS){
       exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else{
@@ -739,9 +587,6 @@ LONG m68k_lpeek(MEM_ADDRESS ad){
 BYTE m68k_fetchB()
 {
   WORD ret;
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-  INSTRUCTION_TIME_ROUND(4);
-#endif
   FETCH_W(ret)
   return LOBYTE(ret);
 }
@@ -749,9 +594,6 @@ BYTE m68k_fetchB()
 WORD m68k_fetchW()
 {
   WORD ret;
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-  INSTRUCTION_TIME_ROUND(4);
-#endif
   FETCH_W(ret)
   return ret;
 }
@@ -759,18 +601,16 @@ WORD m68k_fetchW()
 LONG m68k_fetchL()
 {
   LONG ret;
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-  INSTRUCTION_TIME_ROUND(8);
-#endif
   FETCH_W(*LPHIWORD(ret));
   FETCH_W(*LPLOWORD(ret));
   return ret;
 }
 
-void m68k_unrecognised() //SS trap1 in Motorola doc
+void m68k_unrecognised()
 {
   exception(BOMBS_ILLEGAL_INSTRUCTION,EA_INST,0);
 }
+
 
 BYTE m68k_read_dest_b(){
   BYTE x;
@@ -793,30 +633,13 @@ BYTE m68k_read_dest_b(){
     INSTRUCTION_TIME_ROUND(6);
     return m68k_peek(areg[PARAM_M]);
   case BITS_543_101:{
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-    //  (d16,An)        | 101 | reg |   8(2/0)   |              np    nr     
-    CPU_ABUS_ACCESS_READ_FETCH;
-#else
     INSTRUCTION_TIME_ROUND(8);
-#endif
-    register MEM_ADDRESS ad=areg[PARAM_M]+(signed short)m68k_fetchW();pc+=2; 
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-    CPU_ABUS_ACCESS_READ;
-#endif
+    register MEM_ADDRESS ad=areg[PARAM_M]+(signed short)m68k_fetchW();pc+=2;
     x=m68k_peek(ad);
     return x;
   }case BITS_543_110:
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-//  (d8,An,Xn)      |         10(2/0) |                   n    np    nr           
-    INSTRUCTION_TIME(2);
-    CPU_ABUS_ACCESS_READ_FETCH;
-#else
     INSTRUCTION_TIME_ROUND(10);
-#endif
-    m68k_iriwo=m68k_fetchW();pc+=2; 
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-    CPU_ABUS_ACCESS_READ;
-#endif
+    m68k_iriwo=m68k_fetchW();pc+=2;
     if(m68k_iriwo&BIT_b){  //.l
       return m68k_peek(areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12]);
     }else{         //.w
@@ -825,32 +648,15 @@ BYTE m68k_read_dest_b(){
   case BITS_543_111:
     switch(ir&0x7){
     case 0:{
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-//  (xxx).W         | 111 | 000 |   8(2/0)   |              np    nr       
-      CPU_ABUS_ACCESS_READ_FETCH;
-#else
       INSTRUCTION_TIME_ROUND(8);
-#endif
       register MEM_ADDRESS ad=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
-      pc+=2; 
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-      CPU_ABUS_ACCESS_READ;
-#endif
+      pc+=2;
       x=m68k_peek(ad);
       return x;
     }case 1:{
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-//  (xxx).L         | 111 | 001 |  12(3/0)   |           np np    nr    
-      CPU_ABUS_ACCESS_READ_FETCH;
-      CPU_ABUS_ACCESS_READ_FETCH;
-#else
       INSTRUCTION_TIME_ROUND(12);
-#endif
       register MEM_ADDRESS ad=m68k_fetchL()&0xffffff;
-      pc+=4;  
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-      CPU_ABUS_ACCESS_READ;
-#endif
+      pc+=4;
       x=m68k_peek(ad);
       return x;
     }default:
@@ -879,30 +685,13 @@ WORD m68k_read_dest_w(){
     areg[PARAM_M]-=2;
     return m68k_dpeek(areg[PARAM_M]);
   case BITS_543_101:{
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-    //  (d16,An)        | 101 | reg |   8(2/0)   |              np    nr     
-    CPU_ABUS_ACCESS_READ_FETCH;
-#else
     INSTRUCTION_TIME_ROUND(8);
-#endif
-    register MEM_ADDRESS ad=areg[PARAM_M]+(signed short)m68k_fetchW();pc+=2; 
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-    CPU_ABUS_ACCESS_READ;
-#endif
+    register MEM_ADDRESS ad=areg[PARAM_M]+(signed short)m68k_fetchW();pc+=2;
     x=m68k_dpeek(ad);
     return x;
   }case BITS_543_110:
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-//  (d8,An,Xn)      |         10(2/0) |                   n    np    nr           
-    INSTRUCTION_TIME(2);
-    CPU_ABUS_ACCESS_READ_FETCH;
-#else
     INSTRUCTION_TIME_ROUND(10);
-#endif
-    m68k_iriwo=m68k_fetchW();pc+=2; 
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-    CPU_ABUS_ACCESS_READ;
-#endif
+    m68k_iriwo=m68k_fetchW();pc+=2;
     if(m68k_iriwo&BIT_b){  //.l
       return m68k_dpeek(areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12]);
     }else{         //.w
@@ -911,32 +700,15 @@ WORD m68k_read_dest_w(){
   case BITS_543_111:
     switch(ir&ir&0x7){
     case 0:{
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-//  (xxx).W         | 111 | 000 |   8(2/0)   |              np    nr       
-      CPU_ABUS_ACCESS_READ_FETCH;
-#else
       INSTRUCTION_TIME_ROUND(8);
-#endif
       register MEM_ADDRESS ad=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
-      pc+=2; 
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-      CPU_ABUS_ACCESS_READ;
-#endif
+      pc+=2;
       x=m68k_dpeek(ad);
       return x;
     }case 1:{
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-//  (xxx).L         | 111 | 001 |  12(3/0)   |           np np    nr    
-      CPU_ABUS_ACCESS_READ_FETCH;
-      CPU_ABUS_ACCESS_READ_FETCH;
-#else
       INSTRUCTION_TIME_ROUND(12);
-#endif
       register MEM_ADDRESS ad=m68k_fetchL()&0xffffff;
-      pc+=4;  
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-      CPU_ABUS_ACCESS_READ;
-#endif
+      pc+=4;
       x=m68k_dpeek(ad);
       return x;
     }default:
@@ -965,32 +737,13 @@ LONG m68k_read_dest_l(){
     areg[PARAM_M]-=4;
     return m68k_lpeek(areg[PARAM_M]);
   case BITS_543_101:{
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-    //  (d16,An)        | 101 | reg |  12(3/0)   |              np nR nr          
-    CPU_ABUS_ACCESS_READ_FETCH;
-#else
     INSTRUCTION_TIME_ROUND(12);
-#endif
-    register MEM_ADDRESS ad=areg[PARAM_M]+(signed short)m68k_fetchW();pc+=2; 
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-    CPU_ABUS_ACCESS_READ;
-    CPU_ABUS_ACCESS_READ;
-#endif
+    register MEM_ADDRESS ad=areg[PARAM_M]+(signed short)m68k_fetchW();pc+=2;
     x=m68k_lpeek(ad);
     return x;
   }case BITS_543_110:
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-//  (d8,An,Xn)      | 110 | reg |  14(3/0)   |         n    np nR nr           
-    INSTRUCTION_TIME(2);
-    CPU_ABUS_ACCESS_READ_FETCH;
-#endif
-    m68k_iriwo=m68k_fetchW();pc+=2; 
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-    CPU_ABUS_ACCESS_READ;
-    CPU_ABUS_ACCESS_READ;
-#else
+    m68k_iriwo=m68k_fetchW();pc+=2;
     INSTRUCTION_TIME_ROUND(14);
-#endif
     if(m68k_iriwo&BIT_b){  //.l
       return m68k_lpeek(areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12]);
     }else{         //.w
@@ -999,34 +752,15 @@ LONG m68k_read_dest_l(){
   case BITS_543_111:
     switch(ir&0x7){
     case 0:{
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-//  (xxx).W         | 111 | 000 |  12(3/0)   |              np nR nr      
-      CPU_ABUS_ACCESS_READ_FETCH;
-#else
       INSTRUCTION_TIME_ROUND(12);
-#endif
       register MEM_ADDRESS ad=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
-      pc+=2; 
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-      CPU_ABUS_ACCESS_READ;
-      CPU_ABUS_ACCESS_READ;
-#endif
+      pc+=2;
       x=m68k_lpeek(ad);
       return x;
     }case 1:{
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-//(xxx).L         | 111 | 001 |  16(4/0)   |           np np nR nr           
-      CPU_ABUS_ACCESS_READ_FETCH;
-      CPU_ABUS_ACCESS_READ_FETCH;
-#else
       INSTRUCTION_TIME_ROUND(16);
-#endif
       register MEM_ADDRESS ad=m68k_fetchL()&0xffffff;
-      pc+=4;  
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-      CPU_ABUS_ACCESS_READ;
-      CPU_ABUS_ACCESS_READ;
-#endif
+      pc+=4;
       x=m68k_lpeek(ad);
       return x;
     }default:
@@ -1035,8 +769,6 @@ LONG m68k_read_dest_l(){
   }
   return 0;
 }
-
-#if !defined(SSE_BOILER_MONITOR_372) // defined in SSECpu.h
 #ifdef DEBUG_BUILD
 #define DEBUG_CHECK_IOACCESS \
   if (ioaccess & IOACCESS_DEBUG_MEM_WRITE_LOG){ \
@@ -1047,16 +779,14 @@ LONG m68k_read_dest_l(){
 #else
 #define DEBUG_CHECK_IOACCESS
 #endif
-#endif
 
-#if !defined(SSE_CPU)
 #define HANDLE_IOACCESS(tracefunc) \
   if (ioaccess){                             \
     switch (ioaccess & IOACCESS_NUMBER_MASK){                        \
       case 1: io_write_b(ioad,LOBYTE(iobuffer)); break;    \
       case 2: io_write_w(ioad,LOWORD(iobuffer)); break;    \
       case 4: io_write_l(ioad,iobuffer); break;      \
-      case TRACE_BIT_JUST_SET: /*if(!M68000.ProcessingBusError)*/ tracefunc; break;                                        \
+      case TRACE_BIT_JUST_SET: tracefunc; break;                                        \
     }                                             \
     if (ioaccess & IOACCESS_FLAG_DELAY_MFP){ \
       ioaccess&=~IOACCESS_FLAG_DELAY_MFP;  \
@@ -1079,9 +809,7 @@ LONG m68k_read_dest_l(){
     /* These flags stay until the next instruction to stop interrupts */  \
     ioaccess=ioaccess & (IOACCESS_FLAG_DELAY_MFP | IOACCESS_INTERCEPT_OS2);                                   \
   }
-#endif
 
-#if !(defined(SSE_CPU))
 #define m68k_PROCESS \
   LOG_CPU  \
   old_pc=pc;  \
@@ -1090,31 +818,19 @@ LONG m68k_read_dest_l(){
   m68k_high_nibble_jump_table[ir>>12]();    \
   HANDLE_IOACCESS(m68k_trace();)           \
   DEBUG_ONLY( debug_first_instruction=0 );
-#endif
 
 #define LOGSECTION LOGSECTION_TRACE
-
-#if !defined(SSE_CPU_TRACE_REFACTOR) // See TM68000:Process in SSECpu.h
-
 #ifdef COMPILER_VC6
 extern "C" void ASMCALL m68k_trace() //execute instruction with trace bit set
 #else
 extern "C" ASMCALL void m68k_trace() //execute instruction with trace bit set
 #endif
 {
-  ASSERT( sr&SR_TRACE );
 #ifdef DEBUG_BUILD
   pc_history[pc_history_idx++]=pc;
   if (pc_history_idx>=HISTORY_SIZE) pc_history_idx=0;
   EasyStr Dissasembly=disa_d2(pc);
   dbg_log(EasyStr("TRACE: ")+HEXSl(pc,6)+" - "+Dissasembly);
-#endif
-#if defined(SSE_CPU_TRACE_DETECT) && !defined(DEBUG_BUILD)
-  TRACE_OSD("TRACE");
-#endif
-#if defined(SSE_OSD_CONTROL)
-  if(OSD_MASK_CPU & OSD_CONTROL_CPUTRACE) 
-    TRACE_OSD("TRACE");
 #endif
 
   LOG_CPU
@@ -1123,81 +839,34 @@ extern "C" ASMCALL void m68k_trace() //execute instruction with trace bit set
 
   DEBUG_ONLY( if (debug_num_bk) breakpoint_check(); )
 
-#if defined(SSE_CPU)
-  M68000.FetchWord(ir);
-#else
-  ir=m68k_fetchW();
-#endif
 
+
+  ir=m68k_fetchW();
   pc+=2;
 
-#if defined(SSE_CPU_TRUE_PC)
-  M68000.Pc=pc; // anyway
-  M68000.CheckRead=0;
-#endif
-  
   // Store blitter and interrupt check bits, set trace exception bit, lose everything else
   int store_ioaccess=ioaccess & (IOACCESS_FLAG_DO_BLIT | IOACCESS_FLAG_FOR_CHECK_INTRS |
-    IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE);
+                                  IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE);
   ioaccess=0;
-  m68k_do_trace_exception=true; //SS this flag won't be reset
+  m68k_do_trace_exception=true;
+  m68k_high_nibble_jump_table[ir>>12]();
 
-#if defined(SSE_CPU) && defined(SSE_DEBUG)
-  M68000.PreviousIr=ir;
-  M68000.nInstr++;
-#endif
-#if defined(SSE_CPU_PREFETCH_CLASS)
-  M68000.PrefetchClass=0;
-#endif
-
-  m68k_high_nibble_jump_table[ir>>12](); //SS call in trace
-
-#if defined(SSE_CPU) && defined(SSE_DEBUG)
-  M68000.NextIrFetched=false;
-#endif
   if (m68k_do_trace_exception){
     // This flag is used for exceptions that we don't want to do a proper exception
     // for but should really. i.e Line-A/F, they are just as serious as illegal
     // instruction but are called reguarly, we don't want to slow things down.
-
-#ifdef DEBUG_BUILD
-    TRACE_LOG("TRACE PC %X SR %X VEC %X",old_pc,sr,LPEEK(0x24));
-    EasyStr instr=disa_d2(old_pc); // take advantage of the disassembler
-    //TRACE_LOG("\n");
-    TRACE_LOG("IR %X: %s\n",ir,instr.Text);
-    //TRACE_LOG("TRACE PC %X VEC %X\n",pc,LPEEK(0x24));
-#else
-    TRACE_LOG("TRACE PC %X IR %X SR %X $24 %X\n",pc,ir,sr,LPEEK(0x24));
-#endif
-
-    // this timing is precisely tested by My Socks are Weapons
-#if defined(SSE_CPU_TRACE_TIMING)
-    //tests
-    INSTRUCTION_TIME_ROUND(36); //same effect
-#else
     INSTRUCTION_TIME_ROUND(0); // Round first for interrupts
     INSTRUCTION_TIME_ROUND(34);
-#endif
-#if defined(SSE_BOILER_SHOW_INTERRUPT)
-    Debug.RecordInterrupt("TRACE");
-#endif
-//    TRACE_LOG("SR=%X\n",sr);
     m68k_interrupt(LPEEK(BOMBS_TRACE_EXCEPTION*4));
-
   }
   ioaccess|=store_ioaccess;
 
   // In case of IOACCESS_FLAG_FOR_CHECK_INTRS interrupt must happen after trace
   HANDLE_IOACCESS(;)
-
-
 }
-#endif//#if defined(SSE_CPU_TRACE_REFACTOR)
 #undef LOGSECTION
-#if !(defined(SSE_CPU_ROUDING_EA))
-/*  This function is confusing timing reckoning, so now each of the concerned
-    instructions (JMP, JSR, LEA, PEA) will directly get EA.
-*/
+
+
 void m68k_get_effective_address()
 {
   // Note: The timings in this routine are completely wrong. It is only used for
@@ -1212,11 +881,11 @@ void m68k_get_effective_address()
     case BITS_543_101:
       INSTRUCTION_TIME_ROUND(4);
       effective_address=areg[PARAM_M]+(signed short)m68k_fetchW();
-      pc+=2; 
+      pc+=2;
       break;
     case BITS_543_110:
       INSTRUCTION_TIME_ROUND(8);
-      m68k_iriwo=m68k_fetchW();pc+=2; 
+      m68k_iriwo=m68k_fetchW();pc+=2;
       if (m68k_iriwo & BIT_b){  //.l
         effective_address=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
       }else{         //.w
@@ -1228,35 +897,18 @@ void m68k_get_effective_address()
       case 0:
         INSTRUCTION_TIME_ROUND(4);
         effective_address=(signed long)(signed short)m68k_fetchW();
-        pc+=2; 
-#if defined(SSE_CPU_TRUE_PC)
-#if defined(SSE_CPU_TRUE_PC2)
-/*  For JMP and JSR, different microcodes are used and PC isn't changed before
-    it is set, even for fetching operands (AU is used as usual).
-    Fixes The Teller (jmp $201.w)
-    LEA, PEA: TODO
-*/ 
-        if(ir&0xFF80!=0x4E80)
-#endif
-          TRUE_PC+=2;
-#endif
+        pc+=2;
         break;
       case 1:
         INSTRUCTION_TIME_ROUND(8);
         effective_address=m68k_fetchL();
-        pc+=4;  
-#if defined(SSE_CPU_TRUE_PC)
-#if defined(SSE_CPU_TRUE_PC2)
-        if(ir&0xFF80!=0x4E80) // also for .L according to microcodes
-#endif
-        TRUE_PC+=4;
-#endif
+        pc+=4;
         break;
       case 2:
         INSTRUCTION_TIME_ROUND(4);
         effective_address=(PC_RELATIVE_PC+(signed short)m68k_fetchW()) | pc_high_byte;
         PC_RELATIVE_MONITOR(effective_address);
-        pc+=2; 
+        pc+=2;
         break;
       case 3:
         INSTRUCTION_TIME_ROUND(8);
@@ -1267,7 +919,7 @@ void m68k_get_effective_address()
           effective_address=(PC_RELATIVE_PC+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12]) | pc_high_byte;
         }
         PC_RELATIVE_MONITOR(effective_address);
-        pc+=2; 
+        pc+=2;
         break;       //what do bits 8,9,a  of extra word do?  (not always 0)
       default:
         m68k_unrecognised();
@@ -1278,7 +930,6 @@ void m68k_get_effective_address()
       m68k_unrecognised();
   }
 }
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1293,8 +944,6 @@ void m68k_get_effective_address()
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-
-#if !defined(SSE_CPU) // moved to SSECpu.cpp
 
 void m68k_get_source_000_b(){ m68k_src_b=(BYTE)(r[PARAM_M]); }
 void m68k_get_source_000_w(){ m68k_src_w=(WORD)(r[PARAM_M]); }
@@ -1477,9 +1126,6 @@ void m68k_get_source_111_l(){
   }
 }
 
-#endif//!SSE-CPU
-
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1494,7 +1140,6 @@ void m68k_get_source_111_l(){
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-#if !defined(SSE_CPU) // moved to SSECpu.cpp
 
 void m68k_get_dest_000_b(){ m68k_dest=r+PARAM_M; }
 void m68k_get_dest_000_w(){ m68k_dest=r+PARAM_M; }
@@ -1511,25 +1156,24 @@ void m68k_get_dest_011_l(){ INSTRUCTION_TIME_ROUND(8); m68k_SET_DEST_L(areg[PARA
 void m68k_get_dest_100_b(){ INSTRUCTION_TIME_ROUND(6); areg[PARAM_M]-=1; if(PARAM_M==7)areg[7]--; m68k_SET_DEST_B(areg[PARAM_M]); }
 void m68k_get_dest_100_w(){ INSTRUCTION_TIME_ROUND(6); areg[PARAM_M]-=2; m68k_SET_DEST_W(areg[PARAM_M]); }
 void m68k_get_dest_100_l(){ INSTRUCTION_TIME_ROUND(10); areg[PARAM_M]-=4; m68k_SET_DEST_L(areg[PARAM_M]); }
-
 void m68k_get_dest_101_b(){
   INSTRUCTION_TIME_ROUND(8);
-  register signed int fw=(signed short)m68k_fetchW();pc+=2; 
+  register signed int fw=(signed short)m68k_fetchW();pc+=2;
   m68k_SET_DEST_B(areg[PARAM_M]+fw);
 }
 void m68k_get_dest_101_w(){
   INSTRUCTION_TIME_ROUND(8);
-  register signed int fw=(signed short)m68k_fetchW();pc+=2; 
+  register signed int fw=(signed short)m68k_fetchW();pc+=2;
   m68k_SET_DEST_W(areg[PARAM_M]+fw);
 }
 void m68k_get_dest_101_l(){
   INSTRUCTION_TIME_ROUND(12);
-  register signed int fw=(signed short)m68k_fetchW();pc+=2; 
+  register signed int fw=(signed short)m68k_fetchW();pc+=2;
   m68k_SET_DEST_L(areg[PARAM_M]+fw);
 }
 void m68k_get_dest_110_b(){
   INSTRUCTION_TIME_ROUND(10);
-  m68k_iriwo=m68k_fetchW();pc+=2; 
+  m68k_iriwo=m68k_fetchW();pc+=2;
   if(m68k_iriwo&BIT_b){  //.l
     abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
   }else{         //.w
@@ -1539,7 +1183,7 @@ void m68k_get_dest_110_b(){
 }
 void m68k_get_dest_110_w(){
   INSTRUCTION_TIME_ROUND(10);
-  m68k_iriwo=m68k_fetchW();pc+=2; 
+  m68k_iriwo=m68k_fetchW();pc+=2;
   if(m68k_iriwo&BIT_b){  //.l
     abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
   }else{         //.w
@@ -1549,7 +1193,7 @@ void m68k_get_dest_110_w(){
 }
 void m68k_get_dest_110_l(){
   INSTRUCTION_TIME_ROUND(14);
-  m68k_iriwo=m68k_fetchW();pc+=2; 
+  m68k_iriwo=m68k_fetchW();pc+=2;
   if(m68k_iriwo&BIT_b){  //.l
     abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
   }else{         //.w
@@ -1561,12 +1205,12 @@ void m68k_get_dest_111_b(){
   switch(ir&0x7){
   case 0:{
     INSTRUCTION_TIME_ROUND(8);
-    register signed int fw=(signed short)m68k_fetchW();pc+=2; 
+    register signed int fw=(signed short)m68k_fetchW();pc+=2;
     m68k_SET_DEST_B(fw)
     break;
   }case 1:{
     INSTRUCTION_TIME_ROUND(12);
-    register MEM_ADDRESS fw=m68k_fetchL();pc+=4;  
+    register MEM_ADDRESS fw=m68k_fetchL();pc+=4;
     m68k_SET_DEST_B(fw)
     break;
   }default:
@@ -1577,12 +1221,12 @@ void m68k_get_dest_111_w(){
   switch(ir&0x7){
   case 0:{
     INSTRUCTION_TIME_ROUND(8);
-    register signed int fw=(signed short)m68k_fetchW();pc+=2; 
+    register signed int fw=(signed short)m68k_fetchW();pc+=2;
     m68k_SET_DEST_W(fw)
     break;
   }case 1:{
     INSTRUCTION_TIME_ROUND(12);
-    register MEM_ADDRESS fw=m68k_fetchL();pc+=4;  
+    register MEM_ADDRESS fw=m68k_fetchL();pc+=4;
     m68k_SET_DEST_W(fw)
     break;
   }default:
@@ -1593,20 +1237,18 @@ void m68k_get_dest_111_l(){
   switch(ir&0x7){
   case 0:{
     INSTRUCTION_TIME_ROUND(12);
-    register signed int fw=(signed short)m68k_fetchW();pc+=2; 
+    register signed int fw=(signed short)m68k_fetchW();pc+=2;
     m68k_SET_DEST_L(fw)
     break;
   }case 1:{
     INSTRUCTION_TIME_ROUND(16);
-    register MEM_ADDRESS fw=m68k_fetchL();pc+=4;  
+    register MEM_ADDRESS fw=m68k_fetchL();pc+=4;
     m68k_SET_DEST_L(fw)
     break;
   }default:
     ILLEGAL;
   }
 }
-
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1622,13 +1264,6 @@ void m68k_get_dest_111_l(){
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-/*  SS: EXTRA_PREFETCH has been deactivated, it's being taken care of for
-    all instructions now, by PREFETCH_IRC
-    The negative timings correct extra timing added in instructions like ORI,
-    it seems it was to spare some code?
-*/
-
-#if !defined(SSE_CPU) // moved to SSECpu.cpp
 
 void m68k_get_dest_000_b_faster(){ INSTRUCTION_TIME(-4); m68k_dest=r+PARAM_M; }
 void m68k_get_dest_000_w_faster(){ INSTRUCTION_TIME(-4); m68k_dest=r+PARAM_M; }
@@ -1647,25 +1282,25 @@ void m68k_get_dest_100_w_faster(){ INSTRUCTION_TIME_ROUND(6); areg[PARAM_M]-=2; 
 void m68k_get_dest_100_l_faster(){ INSTRUCTION_TIME_ROUND(10); areg[PARAM_M]-=4; m68k_SET_DEST_L(areg[PARAM_M]); EXTRA_PREFETCH}
 void m68k_get_dest_101_b_faster(){
   INSTRUCTION_TIME_ROUND(8);
-  register signed int fw=(signed short)m68k_fetchW();pc+=2; 
+  register signed int fw=(signed short)m68k_fetchW();pc+=2;
   m68k_SET_DEST_B(areg[PARAM_M]+fw);
   EXTRA_PREFETCH
 }
 void m68k_get_dest_101_w_faster(){
   INSTRUCTION_TIME_ROUND(8);
-  register signed int fw=(signed short)m68k_fetchW();pc+=2; 
+  register signed int fw=(signed short)m68k_fetchW();pc+=2;
   m68k_SET_DEST_W(areg[PARAM_M]+fw);
   EXTRA_PREFETCH
 }
 void m68k_get_dest_101_l_faster(){
   INSTRUCTION_TIME_ROUND(12);
-  register signed int fw=(signed short)m68k_fetchW();pc+=2; 
+  register signed int fw=(signed short)m68k_fetchW();pc+=2;
   m68k_SET_DEST_L(areg[PARAM_M]+fw);
   EXTRA_PREFETCH
 }
 void m68k_get_dest_110_b_faster(){
   INSTRUCTION_TIME_ROUND(10);
-  m68k_iriwo=m68k_fetchW();pc+=2; 
+  m68k_iriwo=m68k_fetchW();pc+=2;
   if(m68k_iriwo&BIT_b){  //.l
     abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
   }else{         //.w
@@ -1676,7 +1311,7 @@ void m68k_get_dest_110_b_faster(){
 }
 void m68k_get_dest_110_w_faster(){
   INSTRUCTION_TIME_ROUND(10);
-  m68k_iriwo=m68k_fetchW();pc+=2; 
+  m68k_iriwo=m68k_fetchW();pc+=2;
   if(m68k_iriwo&BIT_b){  //.l
     abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
   }else{         //.w
@@ -1687,7 +1322,7 @@ void m68k_get_dest_110_w_faster(){
 }
 void m68k_get_dest_110_l_faster(){
   INSTRUCTION_TIME_ROUND(14);
-  m68k_iriwo=m68k_fetchW();pc+=2; 
+  m68k_iriwo=m68k_fetchW();pc+=2;
   if(m68k_iriwo&BIT_b){  //.l
     abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
   }else{         //.w
@@ -1700,13 +1335,13 @@ void m68k_get_dest_111_b_faster(){
   switch(ir&0x7){
   case 0:{
     INSTRUCTION_TIME_ROUND(8);
-    register signed int fw=(signed short)m68k_fetchW();pc+=2; 
+    register signed int fw=(signed short)m68k_fetchW();pc+=2;
     m68k_SET_DEST_B(fw)
     EXTRA_PREFETCH
     break;
   }case 1:{
     INSTRUCTION_TIME_ROUND(12);
-    register MEM_ADDRESS fw=m68k_fetchL();pc+=4;  
+    register MEM_ADDRESS fw=m68k_fetchL();pc+=4;
     m68k_SET_DEST_B(fw)
     EXTRA_PREFETCH
     break;
@@ -1718,13 +1353,13 @@ void m68k_get_dest_111_w_faster(){
   switch(ir&0x7){
   case 0:{
     INSTRUCTION_TIME_ROUND(8);
-    register signed int fw=(signed short)m68k_fetchW();pc+=2; 
+    register signed int fw=(signed short)m68k_fetchW();pc+=2;
     m68k_SET_DEST_W(fw)
     EXTRA_PREFETCH
     break;
   }case 1:{
     INSTRUCTION_TIME_ROUND(12);
-    register MEM_ADDRESS fw=m68k_fetchL();pc+=4;  
+    register MEM_ADDRESS fw=m68k_fetchL();pc+=4;
     m68k_SET_DEST_W(fw)
     EXTRA_PREFETCH
     break;
@@ -1736,13 +1371,13 @@ void m68k_get_dest_111_l_faster(){
   switch(ir&0x7){
   case 0:{
     INSTRUCTION_TIME_ROUND(12);
-    register signed int fw=(signed short)m68k_fetchW();pc+=2; 
+    register signed int fw=(signed short)m68k_fetchW();pc+=2;
     m68k_SET_DEST_L(fw)
     EXTRA_PREFETCH
     break;
   }case 1:{
     INSTRUCTION_TIME_ROUND(16);
-    register MEM_ADDRESS fw=m68k_fetchL();pc+=4;  
+    register MEM_ADDRESS fw=m68k_fetchL();pc+=4;
     m68k_SET_DEST_L(fw)
     EXTRA_PREFETCH
     break;
@@ -1750,8 +1385,6 @@ void m68k_get_dest_111_l_faster(){
     ILLEGAL;
   }
 }
-
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1768,26 +1401,6 @@ void m68k_get_dest_111_l_faster(){
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#if defined(SSE_VC_INTRINSICS_383A)
-
-inline bool m68k_condition_test_t(){return true;}
-inline bool m68k_condition_test_f(){return false;}
-inline bool m68k_condition_test_hi(){return ((sr&(SR_C+SR_Z))==0);}
-inline bool m68k_condition_test_ls(){return (bool)((sr&(SR_C+SR_Z)));}
-inline bool m68k_condition_test_cc(){return (BITTEST(sr,SR_C_BIT)==0);}
-inline bool m68k_condition_test_cs(){return (BITTEST(sr,SR_C_BIT));}
-inline bool m68k_condition_test_ne(){return (BITTEST(sr,SR_Z_BIT)==0);}
-inline bool m68k_condition_test_eq(){return (BITTEST(sr,SR_Z_BIT));}
-inline bool m68k_condition_test_vc(){return (BITTEST(sr,SR_V_BIT)==0);}
-inline bool m68k_condition_test_vs(){return (BITTEST(sr,SR_V_BIT));}
-inline bool m68k_condition_test_pl(){return (BITTEST(sr,SR_N_BIT)==0);}
-inline bool m68k_condition_test_mi(){return (BITTEST(sr,SR_N_BIT));}
-inline bool m68k_condition_test_ge(){return ((sr&(SR_N+SR_V))==0 || (sr&(SR_N+SR_V))==(SR_N+SR_V));}
-inline bool m68k_condition_test_lt(){return ((sr&(SR_N+SR_V))==SR_V || (sr&(SR_N+SR_V))==SR_N);}
-inline bool m68k_condition_test_gt(){return ((BITTEST(sr,SR_Z_BIT)==0) && ( ((sr&(SR_N+SR_V))==0) || ((sr&(SR_N+SR_V))==SR_N+SR_V) ));}
-inline bool m68k_condition_test_le(){return ((BITTEST(sr,SR_Z_BIT)) || ( ((sr&(SR_N+SR_V))==SR_N) || ((sr&(SR_N+SR_V))==SR_V) ));}
-
-#else
 
 bool m68k_condition_test_t(){return true;}
 bool m68k_condition_test_f(){return false;}
@@ -1806,21 +1419,6 @@ bool m68k_condition_test_lt(){return ((sr&(SR_N+SR_V))==SR_V || (sr&(SR_N+SR_V))
 bool m68k_condition_test_gt(){return (!(sr&SR_Z) && ( ((sr&(SR_N+SR_V))==0) || ((sr&(SR_N+SR_V))==SR_N+SR_V) ));}
 bool m68k_condition_test_le(){return ((sr&SR_Z) || ( ((sr&(SR_N+SR_V))==SR_N) || ((sr&(SR_N+SR_V))==SR_V) ));}
 
-#endif
-
-
-/* SSE build
-
-CPU_ABUS_ACCESS_READ        4 cycles, rounded up to 4
-CPU_ABUS_ACCESS_READ_FETCH  0 cycle (cycles counted in m68k_IMMEDIATE_ macros)
-CPU_ABUS_ACCESS_READ_PC     4 cycles, not rounded if PC is in ROM
-CPU_ABUS_ACCESS_WRITE       4 cycles, rounded 
-CPU_ABUS_ACCESS_WRITE_PUSH  0 cycles (cycles counted in m68k_PUSH_ macros)
-FETCH_TIMING                0 cycle
-PREFETCH_IRC                4 cycles, not rounded if PC is in ROM, plus fill IRC 
-
-*/
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1836,344 +1434,114 @@ PREFETCH_IRC                4 cycles, not rounded if PC is in ROM, plus fill IRC
 ////////////////////////////////////////////////////////////////////////////////
 
 
-/*
--------------------------------------------------------------------------------
- EORI, ORI, ANDI, |    Exec Time    |               Data Bus Usage
-    SUBI, ADDI    |  INSTR     EA   | 1st Operand |  2nd OP (ea)  |   INSTR
-------------------+-----------------+-------------+---------------+------------
-#<data>,<ea> :    |                 |             |               |
-  .B or .W :      |                 |             |               |
-    Dn            |  8(2/0)  0(0/0) |          np |               | np          
-    (An)          | 12(2/1)  4(1/0) |          np |            nr | np nw	      
-    (An)+         | 12(2/1)  4(1/0) |          np |            nr | np nw	      
-    -(An)         | 12(2/1)  6(1/0) |          np | n          nr | np nw	      
-    (d16,An)      | 12(2/1)  8(2/0) |          np |      np    nr | np nw	      
-    (d8,An,Xn)    | 12(2/1) 10(2/0) |          np | n    np    nr | np nw	      
-    (xxx).W       | 12(2/1)  8(2/0) |          np |      np    nr | np nw	      
-    (xxx).L       | 12(2/1) 12(3/0) |          np |   np np    nr | np nw	      
-  .L :                              |             |               |
-    Dn            | 16(3/0)  0(0/0) |       np np |               | np       nn	
-    (An)          | 20(3/2)  8(2/0) |       np np |         nR nr | np nw nW    
-    (An)+         | 20(3/2)  8(2/0) |       np np |         nR nr | np nw nW    
-    -(An)         | 20(3/2) 10(2/0) |       np np | n       nR nr | np nw nW    
-    (d16,An)      | 20(3/2) 12(3/0) |       np np |      np nR nr | np nw nW    
-    (d8,An,Xn)    | 20(3/2) 14(3/0) |       np np | n    np nR nr | np nw nW    
-    (xxx).W       | 20(3/2) 12(3/0) |       np np |      np nR nr | np nw nW    
-    (xxx).L       | 20(3/2) 16(4/0) |       np np |   np np nR nr | np nw nW    
-
--------------------------------------------------------------------------------
- ORI, ANDI, EORI  |    Exec Time    |               Data Bus Usage
-  to CCR, to SR   |      INSTR      | 1st Operand |          INSTR
-------------------+-----------------+-------------+----------------------------
-#<data>,CCR       |                 |             |               
-  .B :            | 20(3/0)         |          np |              nn nn np np   
-*/
 
 void                              m68k_ori_b(){
   FETCH_TIMING;
   if ((ir & B6_111111)==B6_111100){  //to sr
-#if !defined(SSE_CPU_ROUNDING_ORI)
     INSTRUCTION_TIME(16);
-#endif
-#if defined(SSE_CPU_ROUNDING_IMMEDIATE_TO_SR)
-    CPU_ABUS_ACCESS_READ_FETCH; 
-    BYTE immediate=m68k_IMMEDIATE_B;
-    INSTRUCTION_TIME(8);
-    CCR|=immediate;
-    CPU_ABUS_ACCESS_READ_PC;
-#else
-#if defined(SSE_CPU_ROUNDING_ORI)
-    CPU_ABUS_ACCESS_READ;//? respecting Yacht
-    INSTRUCTION_TIME(8);
-    CPU_ABUS_ACCESS_READ_FETCH; 
-#endif
     CCR|=m68k_IMMEDIATE_B;
-#endif
-    PREFETCH_IRC;
     sr&=SR_VALID_BITMASK;
-    pc+=2; 
+    pc+=2;
   }else{
-#if !defined(SSE_CPU_ROUNDING_ORI)
     INSTRUCTION_TIME(8);
-#endif
-#if defined(SSE_CPU_ROUNDING_ORI)
-    CPU_ABUS_ACCESS_READ_FETCH;
-#endif
     m68k_GET_IMMEDIATE_B;
-#if defined(SSE_CPU_ROUNDING_ORI)
-    m68k_GET_DEST_B_NOT_A;
-#else
-    m68k_GET_DEST_B_NOT_A_FASTER_FOR_D; // SS this compensates the 8
-#endif
-    PREFETCH_IRC;
-#if defined(SSE_CPU_ROUNDING_ORI)
-    if(!DEST_IS_DATA_REGISTER)
-      CPU_ABUS_ACCESS_WRITE;
-#endif
+    m68k_GET_DEST_B_NOT_A_FASTER_FOR_D;
     m68k_DEST_B|=m68k_src_b;
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_B
   }
 }
-
 void                              m68k_ori_w(){
   FETCH_TIMING;
   if ((ir & B6_111111)==B6_111100){  //to sr
     if (SUPERFLAG){
-#if !defined(SSE_CPU_ROUNDING_ORI)
       INSTRUCTION_TIME(16);
-#endif
-#if defined(SSE_CPU_ROUNDING_IMMEDIATE_TO_SR)
-      CPU_ABUS_ACCESS_READ_FETCH; 
-      WORD immediate=m68k_IMMEDIATE_W;
-      INSTRUCTION_TIME(8);
-      sr|=immediate;
-      CPU_ABUS_ACCESS_READ_PC;
-#else
-#if defined(SSE_CPU_ROUNDING_ORI)
-      CPU_ABUS_ACCESS_READ;//? respecting Yacht
-      INSTRUCTION_TIME(8);
-      CPU_ABUS_ACCESS_READ_FETCH; 
-#endif
       sr|=m68k_IMMEDIATE_W;
-#endif
-      PREFETCH_IRC;
       sr&=SR_VALID_BITMASK;
-      pc+=2; 
+      pc+=2;
       DETECT_TRACE_BIT;
     }else{
       exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
     }
   }else{
-#if !defined(SSE_CPU_ROUNDING_ORI)
     INSTRUCTION_TIME(8);
-#endif
-#if defined(SSE_CPU_ROUNDING_ORI)
-    CPU_ABUS_ACCESS_READ_FETCH;
-#endif
     m68k_GET_IMMEDIATE_W;
-#if defined(SSE_CPU_ROUNDING_ORI)
-    m68k_GET_DEST_W_NOT_A;
-#else
     m68k_GET_DEST_W_NOT_A_FASTER_FOR_D;
-#endif
-    PREFETCH_IRC;
-#if defined(SSE_CPU_ROUNDING_ORI)
-    if(!DEST_IS_DATA_REGISTER)
-      CPU_ABUS_ACCESS_WRITE;
-#endif
     m68k_DEST_W|=m68k_src_w;
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_W
   }
 }
-
 void                              m68k_ori_l(){
   FETCH_TIMING;
-#if !defined(SSE_CPU_ROUNDING_ORI)
   INSTRUCTION_TIME(16);
-#endif
-#if defined(SSE_CPU_ROUNDING_ORI)
-  CPU_ABUS_ACCESS_READ_FETCH;
-  CPU_ABUS_ACCESS_READ_FETCH;
-#endif
   m68k_GET_IMMEDIATE_L;
-#if defined(SSE_CPU_ROUNDING_ORI)
-  m68k_GET_DEST_L_NOT_A;
-#else
   m68k_GET_DEST_L_NOT_A_FASTER_FOR_D;
-#endif
-  PREFETCH_IRC;
-#if defined(SSE_CPU_ROUNDING_ORI)
-  if(DEST_IS_DATA_REGISTER)
-    INSTRUCTION_TIME(4);
-  else
-  {
-    CPU_ABUS_ACCESS_WRITE;
-    CPU_ABUS_ACCESS_WRITE;
-  }
-#endif
   m68k_DEST_L|=m68k_src_l;
   SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
   SR_CHECK_Z_AND_N_L
 }
-
 void                              m68k_andi_b(){
   FETCH_TIMING;
   if((ir&B6_111111)==B6_111100){  //to sr
-#if !defined(SSE_CPU_ROUNDING_ANDI)
     INSTRUCTION_TIME(16);
-#endif
-#if defined(SSE_CPU_ROUNDING_IMMEDIATE_TO_SR)
-    CPU_ABUS_ACCESS_READ_FETCH; 
-    BYTE immediate=m68k_IMMEDIATE_B;
-    INSTRUCTION_TIME(8);
-    CCR&=immediate;
-    CPU_ABUS_ACCESS_READ_PC;
-#else
-#if defined(SSE_CPU_ROUNDING_ANDI)
-    CPU_ABUS_ACCESS_READ;//? respecting Yacht
-    INSTRUCTION_TIME(8);
-    CPU_ABUS_ACCESS_READ_FETCH; 
-#endif
     CCR&=m68k_IMMEDIATE_B;
-#endif
-    PREFETCH_IRC;
-    pc+=2; 
+    pc+=2;
   }else{
-#if !defined(SSE_CPU_ROUNDING_ANDI)
     INSTRUCTION_TIME(8);
-#endif
-#if defined(SSE_CPU_ROUNDING_ANDI)
-    CPU_ABUS_ACCESS_READ_FETCH;
-#endif
     m68k_GET_IMMEDIATE_B;
-#if defined(SSE_CPU_DATABUS)
-    M68000.dbus|=m68k_src_b;//?
-#endif
-#if defined(SSE_CPU_ROUNDING_ANDI)
-    m68k_GET_DEST_B_NOT_A;
-#else
-    m68k_GET_DEST_B_NOT_A_FASTER_FOR_D; // SS this compensates the 8
-#endif
-    PREFETCH_IRC;
-#if defined(SSE_CPU_ROUNDING_ANDI)
-    if(!DEST_IS_DATA_REGISTER)
-      CPU_ABUS_ACCESS_WRITE;
-#endif
+    m68k_GET_DEST_B_NOT_A_FASTER_FOR_D;
     m68k_DEST_B&=m68k_src_b;
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_B
   }
 }
-
 void                              m68k_andi_w(){
   FETCH_TIMING;
   if((ir&B6_111111)==B6_111100){  //to sr
     if(SUPERFLAG){
       DEBUG_ONLY( int debug_old_sr=sr; )
-#if defined(SSE_CPU_ROUNDING_IMMEDIATE_TO_SR)
-      CPU_ABUS_ACCESS_READ_FETCH; 
-      WORD immediate=m68k_IMMEDIATE_W;
-      INSTRUCTION_TIME(8);
-      sr&=immediate;
-      CPU_ABUS_ACCESS_READ_PC;
-#else
-#if defined(SSE_CPU_ROUNDING_ANDI2)
-      CPU_ABUS_ACCESS_READ;//? respecting Yacht
-      INSTRUCTION_TIME(8);
-      CPU_ABUS_ACCESS_READ_FETCH; 
-#else      
+
       INSTRUCTION_TIME(16);
-#endif
       sr&=m68k_IMMEDIATE_W;
-#endif
-      PREFETCH_IRC;
       DETECT_CHANGE_TO_USER_MODE;
-      pc+=2; 
+      pc+=2;
       ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
-      //SS was commented out:
-//    check_for_interrupts_pending(); //in case we've lowered the IPL level
+//      check_for_interrupts_pending(); //in case we've lowered the IPL level
+
       CHECK_STOP_ON_USER_CHANGE
     }else exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
   }else{
-#if !defined(SSE_CPU_ROUNDING_ANDI)
     INSTRUCTION_TIME(8);
-#endif
-#if defined(SSE_CPU_ROUNDING_ANDI)
-    CPU_ABUS_ACCESS_READ_FETCH;
-#endif
     m68k_GET_IMMEDIATE_W;
-#if defined(SSE_CPU_ROUNDING_ANDI)
-    m68k_GET_DEST_W_NOT_A;
-#else
     m68k_GET_DEST_W_NOT_A_FASTER_FOR_D;
-#endif
-#if defined(SSE_CPU_DATABUS)
-    M68000.dbus=m68k_src_w;
-#endif
-#if defined(SSE_CPU_ROUNDING_ANDI)
-    PREFETCH_IRC;
-#endif
-#if defined(SSE_CPU_ROUNDING_ANDI)
-    if(!DEST_IS_DATA_REGISTER)
-      CPU_ABUS_ACCESS_WRITE;
-#endif
     m68k_DEST_W&=m68k_src_w;
-#if !defined(SSE_CPU_ROUNDING_ANDI)
-    PREFETCH_IRC;
-#endif
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_W
   }
 }
-
 void                              m68k_andi_l(){
   FETCH_TIMING;
-#if !defined(SSE_CPU_ROUNDING_ANDI)
   INSTRUCTION_TIME(16);
-#endif
-#if defined(SSE_CPU_ROUNDING_ANDI)
-  CPU_ABUS_ACCESS_READ_FETCH;
-  CPU_ABUS_ACCESS_READ_FETCH;
-#endif
   m68k_GET_IMMEDIATE_L;
-#if defined(SSE_CPU_DATABUS)
-  M68000.dbus=m68k_src_l&0xFFFF;
-#endif
-#if defined(SSE_CPU_ROUNDING_ANDI)
-  m68k_GET_DEST_L_NOT_A;
-#else
   m68k_GET_DEST_L_NOT_A_FASTER_FOR_D;
-#endif
-  PREFETCH_IRC;
-#if defined(SSE_CPU_ROUNDING_ANDI)
-  if(DEST_IS_DATA_REGISTER)
-    INSTRUCTION_TIME(4);
-  else
-  {
-    CPU_ABUS_ACCESS_WRITE;
-    CPU_ABUS_ACCESS_WRITE;
-  }
-#endif
   m68k_DEST_L&=m68k_src_l;
   SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
   SR_CHECK_Z_AND_N_L
 }
-
 void                              m68k_subi_b(){
   FETCH_TIMING;
-#if !defined(SSE_CPU_ROUNDING_SUBI)
   INSTRUCTION_TIME(8);
-#endif
-#if defined(SSE_CPU_ROUNDING_SUBI)
-  CPU_ABUS_ACCESS_READ_FETCH;
-#endif
   m68k_GET_IMMEDIATE_B;
-#if defined(SSE_CPU_ROUNDING_SUBI)
-  m68k_GET_DEST_B_NOT_A;
-#else
   m68k_GET_DEST_B_NOT_A_FASTER_FOR_D;
-#endif
-  PREFETCH_IRC;
-//  SR_CLEAR(SR_USER_BYTE); //SS was commented out
-//  if((unsigned char)m68k_IMMEDIATE_B>(unsigned char)m68k_DEST_B)SR_SET(SR_C+SR_X); // was commented out
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-  FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_SUBI)
-  if(!DEST_IS_DATA_REGISTER)
-    CPU_ABUS_ACCESS_WRITE;
-#endif
+//  SR_CLEAR(SR_USER_BYTE);
+//  if((unsigned char)m68k_IMMEDIATE_B>(unsigned char)m68k_DEST_B)SR_SET(SR_C+SR_X);
   m68k_old_dest=m68k_DEST_B;
   m68k_DEST_B-=m68k_src_b;
   SR_SUB_B(SR_X);
-  //SS was commented out:
-  /*
-  int wasnegative=0; // I add
+/*
   if(m68k_DEST_B&0x80){
     SR_SET(SR_N);
-    wasnegative++;
   }else{
     if(wasnegative){
       SR_SET(SR_V);
@@ -2182,106 +1550,40 @@ void                              m68k_subi_b(){
       SR_SET(SR_Z);
     }
   }
-  */
+*/
 }
-
 void                              m68k_subi_w(){
   FETCH_TIMING;
-#if !defined(SSE_CPU_ROUNDING_SUBI)
   INSTRUCTION_TIME(8);
-#endif
-#if defined(SSE_CPU_ROUNDING_SUBI)
-  CPU_ABUS_ACCESS_READ_FETCH;
-#endif
   m68k_GET_IMMEDIATE_W;
-#if defined(SSE_CPU_ROUNDING_SUBI)
-  m68k_GET_DEST_W_NOT_A;
-#else
   m68k_GET_DEST_W_NOT_A_FASTER_FOR_D;
-#endif
-  PREFETCH_IRC;
-#if defined(SSE_CPU_ROUNDING_SUBI)
-  if(!DEST_IS_DATA_REGISTER)
-    CPU_ABUS_ACCESS_WRITE;
-#endif
   m68k_old_dest=m68k_DEST_W;
   m68k_DEST_W-=m68k_src_w;
   SR_SUB_W(SR_X);
 }
-
 void                              m68k_subi_l(){
   FETCH_TIMING;
-#if !defined(SSE_CPU_ROUNDING_SUBI)
   INSTRUCTION_TIME(16);
-#endif
-#if defined(SSE_CPU_ROUNDING_SUBI)
-  CPU_ABUS_ACCESS_READ_FETCH;
-  CPU_ABUS_ACCESS_READ_FETCH;
-#endif
   m68k_GET_IMMEDIATE_L;
-#if defined(SSE_CPU_ROUNDING_SUBI)
-  m68k_GET_DEST_L_NOT_A;
-#else
   m68k_GET_DEST_L_NOT_A_FASTER_FOR_D;
-#endif
-  PREFETCH_IRC;
-#if defined(SSE_CPU_ROUNDING_SUBI)
-  if(DEST_IS_DATA_REGISTER)
-    INSTRUCTION_TIME(4); 
-  else
-  {
-    CPU_ABUS_ACCESS_WRITE;
-    CPU_ABUS_ACCESS_WRITE;
-  }
-#endif
   m68k_old_dest=m68k_DEST_L;
   m68k_DEST_L-=m68k_src_l;
   SR_SUB_L(SR_X);
 }
-
 void                              m68k_addi_b(){
   FETCH_TIMING;
-#if !defined(SSE_CPU_ROUNDING_ADDI)
   INSTRUCTION_TIME(8);
-#endif
-#if defined(SSE_CPU_ROUNDING_ADDI)
-  CPU_ABUS_ACCESS_READ_FETCH;
-#endif
   m68k_GET_IMMEDIATE_B;
-#if defined(SSE_CPU_ROUNDING_ADDI)
-  m68k_GET_DEST_B_NOT_A;
-#else
   m68k_GET_DEST_B_NOT_A_FASTER_FOR_D;
-#endif
-  PREFETCH_IRC;
-#if defined(SSE_CPU_ROUNDING_ADDI)
-  if(!DEST_IS_DATA_REGISTER)
-    CPU_ABUS_ACCESS_WRITE;
-#endif
   m68k_old_dest=m68k_DEST_B;
   m68k_DEST_B+=m68k_src_b;
   SR_ADD_B;
 }
-
 void                              m68k_addi_w(){
   FETCH_TIMING;
-#if !defined(SSE_CPU_ROUNDING_ADDI)
   INSTRUCTION_TIME(8);
-#endif
-#if defined(SSE_CPU_ROUNDING_ADDI)
-  CPU_ABUS_ACCESS_READ_FETCH;
-#endif
   m68k_GET_IMMEDIATE_W;
-#if defined(SSE_CPU_ROUNDING_ADDI)
-  m68k_GET_DEST_W_NOT_A;
-#else
   m68k_GET_DEST_W_NOT_A_FASTER_FOR_D;
-#endif
-  PREFETCH_IRC;
-#if defined(SSE_CPU_ROUNDING_ADDI)
-  if(!DEST_IS_DATA_REGISTER)
-    CPU_ABUS_ACCESS_WRITE;
-#endif
   m68k_old_dest=m68k_DEST_W;
   m68k_DEST_W+=m68k_src_w;
   SR_ADD_W;
@@ -2289,29 +1591,9 @@ void                              m68k_addi_w(){
 
 void                              m68k_addi_l(){
   FETCH_TIMING;
-#if !defined(SSE_CPU_ROUNDING_ADDI)
   INSTRUCTION_TIME(16);
-#endif
-#if defined(SSE_CPU_ROUNDING_ADDI)
-  CPU_ABUS_ACCESS_READ_FETCH;
-  CPU_ABUS_ACCESS_READ_FETCH;
-#endif
   m68k_GET_IMMEDIATE_L;
-#if defined(SSE_CPU_ROUNDING_ADDI)
-  m68k_GET_DEST_L_NOT_A;
-#else
-  m68k_GET_DEST_L_NOT_A_FASTER_FOR_D; //SS this removes 4 cycles
-#endif
-  PREFETCH_IRC;
-#if defined(SSE_CPU_ROUNDING_ADDI)
-  if(DEST_IS_DATA_REGISTER)
-    INSTRUCTION_TIME(4);
-  else
-  {
-    CPU_ABUS_ACCESS_WRITE;
-    CPU_ABUS_ACCESS_WRITE;
-  }
-#endif
+  m68k_GET_DEST_L_NOT_A_FASTER_FOR_D;
   m68k_old_dest=m68k_DEST_L;
   m68k_DEST_L+=m68k_src_l;
   SR_ADD_L;
@@ -2319,915 +1601,309 @@ void                              m68k_addi_l(){
 
 void                              m68k_btst(){
   FETCH_TIMING;
-#if defined(SSE_CPU_ROUNDING_BTST)
-  CPU_ABUS_ACCESS_READ_FETCH;
-#endif
   m68k_GET_IMMEDIATE_B;
   if ((ir&BITS_543)==BITS_543_000){
-/*
-#<data>,Dn :      |                 |             |               |
-  .L :            | 10(2/0)  0(0/0) |          np |               | np n     
-*/
-    PREFETCH_IRC;
-#if !defined(SSE_CPU_ROUNDING_BTST)
-    INSTRUCTION_TIME(6); 
-#endif
-#if defined(SSE_CPU_ROUNDING_BTST)
-    INSTRUCTION_TIME(2);
-#endif
+    INSTRUCTION_TIME(6);
     m68k_src_b&=31;
     if((r[PARAM_M]>>m68k_src_b)&1){
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITRESET(sr,SR_Z_BIT);
-#else
       SR_CLEAR(SR_Z);
-#endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITSET(sr,SR_Z_BIT);
-#else
       SR_SET(SR_Z);
-#endif
     }
   }else{
-/*
-#<data>,<ea> :    |                 |             |               |             
-  .B :            |                 |             |               |
-    (An)          |  8(2/0)  4(1/0) |          np |            nr | np          
-    (An)+         |  8(2/0)  4(1/0) |          np |            nr | np          
-    -(An)         |  8(2/0)  6(1/0) |          np | n          nr | np          
-    (d16,An)      |  8(2/0)  8(2/0) |          np |      np    nr | np          
-    (d8,An,Xn)    |  8(2/0) 10(2/0) |          np | n    np    nr | np          
-    (xxx).W       |  8(2/0)  8(2/0) |          np |      np    nr | np          
-    (xxx).L       |  8(2/0) 12(3/0) |          np |   np np    nr | np          
-*/
-#if !defined(SSE_CPU_ROUNDING_BTST)
     INSTRUCTION_TIME(4);
-#endif
     m68k_ap=(short)(m68k_src_b & 7);
-//    m68k_GET_DEST_B_NOT_A; // was commented out
+//    m68k_GET_DEST_B_NOT_A;
     if((ir&(BIT_5+BIT_4+BIT_3+BIT_2+BIT_1+BIT_0))==B6_111100){  //immediate mode is the only one not allowed -
-      m68k_unrecognised(); //SS TODO correct timing... (in general)
+      m68k_unrecognised();
     }else{
       m68k_GET_SOURCE_B_NOT_A;
-      PREFETCH_IRC;
       if((m68k_src_b>>m68k_ap)&1){
-#if defined(SSE_VC_INTRINSICS_383E)
-        BITRESET(sr,SR_Z_BIT);
-#else
         SR_CLEAR(SR_Z);
-#endif
       }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-        BITSET(sr,SR_Z_BIT);
-#else
         SR_SET(SR_Z);
-#endif
       }
     }
   }
 }
-
 void                              m68k_bchg(){
-#if !(defined(SSE_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
-#endif
-
-#if defined(SSE_CPU_ROUNDING_BCHG)
-  CPU_ABUS_ACCESS_READ_FETCH;
-#endif
-  m68k_GET_IMMEDIATE_B; //SS this doesn't count any cycles
-
-  if((ir&BITS_543)==BITS_543_000){ //SS on DN
-/*
-#<data>,Dn :      |                 |             |               |
-  .L :            |                 |             |               |
-    if data<16    | 10(2/0)  0(0/0) |          np |               | np       n  
-    if data>15    | 12(2/0)  0(0/0) |          np |               | np       nn 
-*/
-
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC; 
-    m68k_src_b&=31; //SS bit 0-31
-#if defined(SSE_CPU_ROUNDING_BCHG)
-    if (m68k_src_b>15){
-      INSTRUCTION_TIME(4); //MAXIMUM VALUE
-    }else{
-      INSTRUCTION_TIME(2);
-    }
-#else
+  m68k_GET_IMMEDIATE_B;
+  if((ir&BITS_543)==BITS_543_000){
+    m68k_src_b&=31;
     if (m68k_src_b>=16){
       INSTRUCTION_TIME(8); //MAXIMUM VALUE
     }else{
       INSTRUCTION_TIME(6);
     }
-#endif
     m68k_src_l=1<<m68k_src_b;
     if(r[PARAM_M]&m68k_src_l){
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITRESET(sr,SR_Z_BIT);
-#else
       SR_CLEAR(SR_Z);
-#endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITSET(sr,SR_Z_BIT);
-#else
       SR_SET(SR_Z);
-#endif
     }
     r[PARAM_M]^=m68k_src_l;
   }else{
-/*
-#<data>,<ea> :    |                 |             |               |
-  .B :            |                 |             |               |
-    (An)          | 12(2/1)  4(1/0) |          np |            nr | np    nw    
-    (An)+         | 12(2/1)  4(1/0) |          np |            nr | np    nw    
-    -(An)         | 12(2/1)  6(1/0) |          np | n          nr | np    nw    
-    (d16,An)      | 12(2/1)  8(2/0) |          np |      np    nr | np    nw    
-    (d8,An,Xn)    | 12(2/1) 10(2/0) |          np | n    np    nr | np    nw    
-    (xxx).W       | 12(2/1)  8(2/0) |          np |      np    nr | np    nw    
-    (xxx).L       | 12(2/1) 12(3/0) |          np |   np np    nr | np    nw    
-*/
-#if !defined(SSE_CPU_ROUNDING_BCHG)
     INSTRUCTION_TIME(8);
-#endif
     m68k_src_b&=7;
     m68k_GET_DEST_B_NOT_A;
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
     m68k_src_b=(BYTE)(1<<m68k_src_b);
     if(m68k_DEST_B&m68k_src_b){
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITRESET(sr,SR_Z_BIT);
-#else
       SR_CLEAR(SR_Z);
-#endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITSET(sr,SR_Z_BIT);
-#else
       SR_SET(SR_Z);
-#endif
     }
-#if defined(SSE_CPU_ROUNDING_BCHG)
-    CPU_ABUS_ACCESS_WRITE;
-#endif
     m68k_DEST_B^=(BYTE)m68k_src_b;
   }
 }
-
-
-//#undef SSE_CPU_LINE_0_TIMINGS
-
 void                              m68k_bclr(){
-#if !(defined(SSE_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_BCLR)
-  CPU_ABUS_ACCESS_READ_FETCH;
-#endif
   m68k_GET_IMMEDIATE_B;
   if((ir&BITS_543)==BITS_543_000){
-/*
-#<data>,Dn :      |                 |             |               |
-  .L :            |                 |             |               |
-    if data<16    | 12(2/0)  0(0/0) |          np |               | np nn       
-    if data>15    | 14(2/0)  0(0/0) |          np |               | np nn n     
-*/
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-    FETCH_TIMING;
-#endif
     m68k_src_b&=31;
-#if defined(SSE_CPU_ROUNDING_BCLR)
-    if (m68k_src_b>=16){
-      INSTRUCTION_TIME(6);
-    }else{
-      INSTRUCTION_TIME(4);
-    }
-#else
     if (m68k_src_b>=16){
       INSTRUCTION_TIME(10); //MAXIMUM VALUE
     }else{
       INSTRUCTION_TIME(8);
     }
-#endif
     m68k_src_l=1<<m68k_src_b;
     if(r[PARAM_M]&m68k_src_l){
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITRESET(sr,SR_Z_BIT);
-#else
       SR_CLEAR(SR_Z);
-#endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITSET(sr,SR_Z_BIT);
-#else
       SR_SET(SR_Z);
-#endif
     }
     r[PARAM_M]&=~m68k_src_l;
   }else{
-/*
-#<data>,<ea> :    |                 |             |               |
-  .B :            |                 |             |               |
-    (An)          | 12(2/1)  4(1/0) |          np |            nr | np    nw    
-    (An)+         | 12(2/1)  4(1/0) |          np |            nr | np    nw    
-    -(An)         | 12(2/1)  6(1/0) |          np | n          nr | np    nw    
-    (d16,An)      | 12(2/1)  8(2/0) |          np |      np    nr | np    nw    
-    (d8,An,Xn)    | 12(2/1) 10(2/0) |          np | n    np    nr | np    nw    
-    (xxx).W       | 12(2/1)  8(2/0) |          np |      np    nr | np    nw    
-    (xxx).L       | 12(2/1) 12(3/0) |          np |   np np    nr | np    nw    
-*/
-#if !defined(SSE_CPU_ROUNDING_BCLR)
-    INSTRUCTION_TIME(8); //SS get immediate + write result
-#endif
+    INSTRUCTION_TIME(8);
     m68k_src_b&=7;
     m68k_GET_DEST_B_NOT_A;
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-    FETCH_TIMING;
-#endif
     m68k_src_b=(BYTE)(1<<m68k_src_b);
     if(m68k_DEST_B&m68k_src_b){
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITRESET(sr,SR_Z_BIT);
-#else
       SR_CLEAR(SR_Z);
-#endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITSET(sr,SR_Z_BIT);
-#else
       SR_SET(SR_Z);
-#endif
     }
-#if defined(SSE_CPU_ROUNDING_BCLR)
-    CPU_ABUS_ACCESS_WRITE;
-#endif
     m68k_DEST_B&=(BYTE)(~m68k_src_b);
   }
 }
-
 void                              m68k_bset(){
-#if !(defined(SSE_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_BSET)
-  CPU_ABUS_ACCESS_READ_FETCH;
-#endif
   m68k_GET_IMMEDIATE_B;
-  if ((ir&BITS_543)==BITS_543_000){ //SS to Dn
-/*
-#<data>,Dn :      |                 |             |               |
-  .L :            |                 |             |               |
-    if data<16    | 10(2/0)  0(0/0) |          np |               | np       n  
-    if data>15    | 12(2/0)  0(0/0) |          np |               | np       nn 
-*/
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
+  if ((ir&BITS_543)==BITS_543_000){
     m68k_src_b&=31;
-#if defined(SSE_CPU_ROUNDING_BSET)
-    if (m68k_src_b>15){
-      INSTRUCTION_TIME(4); 
-    }else{
-      INSTRUCTION_TIME(2);
-    }
-#else
     if (m68k_src_b>=16){
       INSTRUCTION_TIME(8); //MAXIMUM VALUE
     }else{
       INSTRUCTION_TIME(6);
     }
-#endif
     m68k_src_l=1 << m68k_src_b;
     if (r[PARAM_M] & m68k_src_l){
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITRESET(sr,SR_Z_BIT);
-#else
       SR_CLEAR(SR_Z);
-#endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITSET(sr,SR_Z_BIT);
-#else
       SR_SET(SR_Z);
-#endif
     }
     r[PARAM_M]|=m68k_src_l;
   }else{
-/*
-#<data>,<ea> :    |                 |             |               |
-  .B :            |                 |             |               |
-    (An)          | 12(2/1)  4(1/0) |          np |            nr | np    nw    
-    (An)+         | 12(2/1)  4(1/0) |          np |            nr | np    nw    
-    -(An)         | 12(2/1)  6(1/0) |          np | n          nr | np    nw    
-    (d16,An)      | 12(2/1)  8(2/0) |          np |      np    nr | np    nw    
-    (d8,An,Xn)    | 12(2/1) 10(2/0) |          np | n    np    nr | np    nw    
-    (xxx).W       | 12(2/1)  8(2/0) |          np |      np    nr | np    nw    
-    (xxx).L       | 12(2/1) 12(3/0) |          np |   np np    nr | np    nw    
-*/
-#if !defined(SSE_CPU_ROUNDING_BSET)
-    INSTRUCTION_TIME(8); //SS includes fetch immediate, write result
-#endif
+    INSTRUCTION_TIME(8);
     m68k_src_b&=7;
     m68k_GET_DEST_B_NOT_A;
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
     m68k_src_b=(BYTE)(1<<m68k_src_b);
     if(m68k_DEST_B&m68k_src_b){
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITRESET(sr,SR_Z_BIT);
-#else
       SR_CLEAR(SR_Z);
-#endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITSET(sr,SR_Z_BIT);
-#else
       SR_SET(SR_Z);
-#endif
     }
-#if defined(SSE_CPU_ROUNDING_BSET)
-    CPU_ABUS_ACCESS_WRITE;
-#endif
     m68k_DEST_B|=(BYTE)m68k_src_b;
   }
 }
-
 void                              m68k_eori_b(){
-#if !(defined(SSE_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
-#endif
-  if((ir&B6_111111)==B6_111100){  //to sr //(ccr)
-#if !defined(SSE_CPU_ROUNDING_EORI)
+  if((ir&B6_111111)==B6_111100){  //to sr
     INSTRUCTION_TIME(16);
-#endif
-#if defined(SSE_CPU_ROUNDING_IMMEDIATE_TO_SR)
-    CPU_ABUS_ACCESS_READ_FETCH; 
-    BYTE immediate=m68k_IMMEDIATE_B; //timing counted there
-    INSTRUCTION_TIME(8);
-    CCR^=immediate;
-    //REFETCH_IR; //probably not...
-#else
-#if defined(SSE_CPU_ROUNDING_EORI)
-    CPU_ABUS_ACCESS_READ;//? respecting Yacht
-    INSTRUCTION_TIME(8);
-    CPU_ABUS_ACCESS_READ_FETCH; 
-#endif
     CCR^=m68k_IMMEDIATE_B;
-#endif
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-    FETCH_TIMING;
-#endif
     sr&=SR_VALID_BITMASK;
-    pc+=2; 
+    pc+=2;
   }else{
-#if !defined(SSE_CPU_ROUNDING_EORI)
     INSTRUCTION_TIME(8);
-#endif
-#if defined(SSE_CPU_ROUNDING_EORI)
-    CPU_ABUS_ACCESS_READ_FETCH;
-#endif
     m68k_GET_IMMEDIATE_B;
-#if !defined(SSE_CPU_ROUNDING_EORI)
-    m68k_GET_DEST_B_NOT_A_FASTER_FOR_D; // SS this compensates the 8
-#endif
-#if defined(SSE_CPU_ROUNDING_EORI)
-    m68k_GET_DEST_B_NOT_A;
-#endif
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-    FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_EORI)
-    if(!DEST_IS_DATA_REGISTER)
-      CPU_ABUS_ACCESS_WRITE;
-#endif
+    m68k_GET_DEST_B_NOT_A_FASTER_FOR_D;
     m68k_DEST_B^=m68k_src_b;
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_B
   }
 }
-//#undef SSE_CPU_ROUNDING_EORI
 void                              m68k_eori_w(){
-#if !(defined(SSE_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
-#endif
   if((ir&B6_111111)==B6_111100){  //to sr
     if(SUPERFLAG){
       DEBUG_ONLY( int debug_old_sr=sr; )
-#if !defined(SSE_CPU_ROUNDING_EORI)
+
       INSTRUCTION_TIME(16);
-#endif
-#if defined(SSE_CPU_ROUNDING_IMMEDIATE_TO_SR)
-      CPU_ABUS_ACCESS_READ_FETCH; 
-      WORD immediate=m68k_IMMEDIATE_W; //timing counted there
-      INSTRUCTION_TIME(8);
-      sr^=immediate;
-      CPU_ABUS_ACCESS_READ_PC;
-      //REFETCH_IR; //probably not...
-#else
-#if defined(SSE_CPU_ROUNDING_EORI)
-      CPU_ABUS_ACCESS_READ;//? respecting Yacht
-      INSTRUCTION_TIME(8);
-      CPU_ABUS_ACCESS_READ_FETCH; 
-#endif
       sr^=m68k_IMMEDIATE_W;
-#endif
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-      FETCH_TIMING;
-#endif
-      PREFETCH_IRC;
       sr&=SR_VALID_BITMASK;
-      pc+=2; 
+      pc+=2;
       DETECT_CHANGE_TO_USER_MODE
       DETECT_TRACE_BIT;
       // Interrupts must come after trace exception
       ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
-//      check_for_interrupts_pending(); // was commented out
+//      check_for_interrupts_pending();
 
       CHECK_STOP_ON_USER_CHANGE;
     }else exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
-  }
-//#undef SSE_CPU_ROUNDING_EORI
-  else{
-#if !defined(SSE_CPU_ROUNDING_EORI)
+  }else{
     INSTRUCTION_TIME(8);
-#endif
-#if defined(SSE_CPU_ROUNDING_EORI)
-    CPU_ABUS_ACCESS_READ_FETCH; //oops, bug seen thanks to lowlife60
-#endif
     m68k_GET_IMMEDIATE_W;
-#if !defined(SSE_CPU_ROUNDING_EORI)
     m68k_GET_DEST_W_NOT_A_FASTER_FOR_D;
-#endif
-#if defined(SSE_CPU_ROUNDING_EORI)
-    m68k_GET_DEST_W_NOT_A;
-#endif
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
-#if defined(SSE_CPU_ROUNDING_EORI)
-    if(!DEST_IS_DATA_REGISTER)
-      CPU_ABUS_ACCESS_WRITE;
-#endif
     m68k_DEST_W^=m68k_src_w;
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_W;
   }
 }
-//#undef SSE_CPU_LINE_0_TIMINGS
-//#undef SSE_CPU_ROUNDING_EORI
 void                              m68k_eori_l(){
-/*
-  .L :                              |             |               |
-    Dn            | 16(3/0)  0(0/0) |       np np |               | np       nn	
-    (An)          | 20(3/2)  8(2/0) |       np np |         nR nr | np nw nW    
-    (An)+         | 20(3/2)  8(2/0) |       np np |         nR nr | np nw nW    
-    -(An)         | 20(3/2) 10(2/0) |       np np | n       nR nr | np nw nW    
-    (d16,An)      | 20(3/2) 12(3/0) |       np np |      np nR nr | np nw nW    
-    (d8,An,Xn)    | 20(3/2) 14(3/0) |       np np | n    np nR nr | np nw nW    
-    (xxx).W       | 20(3/2) 12(3/0) |       np np |      np nR nr | np nw nW    
-    (xxx).L       | 20(3/2) 16(4/0) |       np np |   np np nR nr | np nw nW    
-*/
-#if !(defined(SSE_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
-#endif
-
-#if !defined(SSE_CPU_ROUNDING_EORI)
   INSTRUCTION_TIME(16);
-#endif
-#if defined(SSE_CPU_ROUNDING_EORI)
-  CPU_ABUS_ACCESS_READ_FETCH;
-  CPU_ABUS_ACCESS_READ_FETCH;
-#endif
   m68k_GET_IMMEDIATE_L;
-#if !defined(SSE_CPU_ROUNDING_EORI)
   m68k_GET_DEST_L_NOT_A_FASTER_FOR_D;
-#endif
-#if defined(SSE_CPU_ROUNDING_EORI)
-  m68k_GET_DEST_L_NOT_A;
-#endif
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-  FETCH_TIMING;
-#endif
-  PREFETCH_IRC;
-#if defined(SSE_CPU_ROUNDING_EORI)
-  if(DEST_IS_DATA_REGISTER)
-    INSTRUCTION_TIME(4);
-  else
-  {
-    CPU_ABUS_ACCESS_WRITE;
-    CPU_ABUS_ACCESS_WRITE;
-  }
-#endif
   m68k_DEST_L^=m68k_src_l;
   SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
   SR_CHECK_Z_AND_N_L;
 }
 
-/*
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage
-       CMPI       |  INSTR     EA   | 1st Operand |  2nd OP (ea)  |   INSTR
-------------------+-----------------+-------------+-------------+--------------
-#<data>,<ea> :    |                 |             |               |
-  .B or .W :      |                 |             |               |
-    Dn            |  8(2/0)  0(0/0) |          np |               | np          
-    (An)          |  8(2/0)  4(1/0) |          np |            nr | np          
-    (An)+         |  8(2/0)  4(1/0) |          np |            nr | np          
-    -(An)         |  8(2/0)  6(1/0) |          np | n          nr | np          
-    (d16,An)      |  8(2/0)  8(2/0) |          np |      np    nr | np          
-    (d8,An,Xn)    |  8(2/0) 10(2/0) |          np | n    np    nr | np          
-    (xxx).W       |  8(2/0)  8(2/0) |          np |      np    nr | np          
-    (xxx).L       |  8(2/0) 12(3/0) |          np |   np np    nr | np          
-*/
-//#undef SSE_CPU_LINE_0_TIMINGS
 void                              m68k_cmpi_b(){
-#if !(defined(SSE_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_CMPI)
-  CPU_ABUS_ACCESS_READ_FETCH;
-#else
   INSTRUCTION_TIME(4);
-#endif
   m68k_GET_IMMEDIATE_B;
   m68k_old_dest=m68k_read_dest_b();
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-  FETCH_TIMING;
-#endif
   compare_buffer=m68k_old_dest;
   m68k_dest=&compare_buffer;
   m68k_DEST_B-=m68k_src_b;
+
   SR_SUB_B(0);
 }
-
 void                              m68k_cmpi_w(){
-#if !(defined(SSE_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_CMPI)
-  CPU_ABUS_ACCESS_READ_FETCH;
-#else
   INSTRUCTION_TIME(4);
-#endif
-  m68k_GET_IMMEDIATE_W; //SS this doesn't count cycles
+  m68k_GET_IMMEDIATE_W;
   m68k_old_dest=m68k_read_dest_w();
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-  FETCH_TIMING;
-#endif
-  PREFETCH_IRC;
   compare_buffer=m68k_old_dest;
   m68k_dest=&compare_buffer;
   m68k_DEST_W-=m68k_src_w;
   SR_SUB_W(0);
 }
-//#undef SSE_CPU_LINE_0_TIMINGS
-
 void                              m68k_cmpi_l(){
-/*
-  .L :            |                 |             |               |
-    Dn            | 14(3/0)  0(0/0) |       np np |               | np       n  
-    (An)          | 12(3/0)  8(2/0) |       np np |         nR nr | np          
-    (An)+         | 12(3/0)  8(2/0) |       np np |         nR nr | np          
-    -(An)         | 12(3/0) 10(2/0) |       np np | n       nR nr | np          
-    (d16,An)      | 12(3/0) 12(3/0) |       np np |      np nR nr | np          
-    (d8,An,Xn)    | 12(3/0) 14(3/0) |       np np | n    np nR nr | np          
-    (xxx).W       | 12(3/0) 12(3/0) |       np np |      np nR nr | np          
-    (xxx).L       | 12(3/0) 16(4/0) |       np np |   np np nR nr | np       
-*/
-#if !(defined(SSE_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_CMPI_L) && defined(SSE_CPU_ROUNDING_CMPI_L2)
-  CPU_ABUS_ACCESS_READ_FETCH;
-  CPU_ABUS_ACCESS_READ_FETCH;
-#endif
-  m68k_GET_IMMEDIATE_L; //SS this doesn't count cycles
-#if !defined(SSE_CPU_ROUNDING_CMPI_L)
+  m68k_GET_IMMEDIATE_L;
   if(DEST_IS_REGISTER){INSTRUCTION_TIME(10);} else {INSTRUCTION_TIME(8);}
-#endif
-#if defined(SSE_CPU_ROUNDING_CMPI_L) && !defined(SSE_CPU_ROUNDING_CMPI_L2)
-  INSTRUCTION_TIME_ROUND(8); // for immediate
-#endif
-  m68k_old_dest=m68k_read_dest_l(); //SS this counts cycles
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-  FETCH_TIMING;
-#endif
-  PREFETCH_IRC;
-#if defined(SSE_CPU_ROUNDING_CMPI_L)
-/* Japtro disk B overscan dot balls, we were rounding 14 to 16 in v3.5
-*/
-  if(DEST_IS_REGISTER){INSTRUCTION_TIME(2);}
-#endif
+  m68k_old_dest=m68k_read_dest_l();
   compare_buffer=m68k_old_dest;
   m68k_dest=&compare_buffer;
   m68k_DEST_L-=m68k_src_l;
   SR_SUB_L(0);
 }
 
-
-//#define SSE_CPU_LINE_0_TIMINGS
 void                              m68k_movep_w_to_dN_or_btst(){
-
-#if !(defined(SSE_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
-#endif
-  if((ir&BITS_543)==BITS_543_001){ //SS MOVEP
-    
-/*
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage
-      MOVEP       |      INSTR      |                  INSTR
-------------------+-----------------+------------------------------------------
-(d16,Ay),Dx :     |                 |
-  .W :            | 16(4/0)         |                np    nR    nr np          
-  .L :            | 24(6/0)         |                np nR nR nr nr np          
-*/
-
-    
-#if defined(SSE_CPU_PREFETCH_CLASS)
-    M68000.PrefetchClass=1;
-#endif
-#if defined(SSE_CPU_ROUNDING_MOVEP_MR_W)
-    CPU_ABUS_ACCESS_READ_FETCH;
-#endif
+  if((ir&BITS_543)==BITS_543_001){
     MEM_ADDRESS addr=areg[PARAM_M]+(signed short)m68k_fetchW();
-#if !defined(SSE_CPU_ROUNDING_MOVEP_MR_W)
     INSTRUCTION_TIME(4);
-#endif
-    pc+=2; 
-#if defined(SSE_CPU_ROUNDING_MOVEP_MR_W)
-    CPU_ABUS_ACCESS_READ;
-#endif
+
+    pc+=2;
     m68k_READ_B(addr);
     DWORD_B_1(&r[PARAM_N])=m68k_src_b; //high byte
-#if !defined(SSE_CPU_ROUNDING_MOVEP_MR_W)
     INSTRUCTION_TIME(4);
-#endif
-#if defined(SSE_CPU_ROUNDING_MOVEP_MR_W)
-    CPU_ABUS_ACCESS_READ;
-#endif
+
     m68k_READ_B(addr+2);
     DWORD_B_0(&r[PARAM_N])=m68k_src_b; //low byte
-#if !defined(SSE_CPU_ROUNDING_MOVEP_MR_W)
     INSTRUCTION_TIME(4);
-#endif
 
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
-// was commented out:
 //    *( ((BYTE*)(&r[PARAM_N])) +1)=m68k_src_b; //high byte
 //    m68k_READ_B(addr+2);
 //    *( ((BYTE*)(&r[PARAM_N]))   )=m68k_src_b; //low byte
-  }else{
 
+  }else{
     if ((ir&BITS_543)==BITS_543_000){  //btst to data register
       INSTRUCTION_TIME(2);
-        PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-  FETCH_TIMING;
-#endif
-
       if ((r[PARAM_M] >> (31 & r[PARAM_N])) & 1){
-#if defined(SSE_VC_INTRINSICS_383E)
-        BITRESET(sr,SR_Z_BIT);
-#else
         SR_CLEAR(SR_Z);
-#endif
       }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-        BITSET(sr,SR_Z_BIT);
-#else
         SR_SET(SR_Z);
-#endif
       }
     }else{ // btst memory
       m68k_GET_SOURCE_B_NOT_A;   //even immediate mode is allowed!!!!
-      PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-  FETCH_TIMING;
-#endif
       if( (m68k_src_b >> (7 & r[PARAM_N])) & 1){
-#if defined(SSE_VC_INTRINSICS_383E)
-        BITRESET(sr,SR_Z_BIT);
-#else
         SR_CLEAR(SR_Z);
-#endif
       }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-        BITSET(sr,SR_Z_BIT);
-#else
         SR_SET(SR_Z);
-#endif
       }
     }
   }
 }
 
 void                              m68k_movep_l_to_dN_or_bchg(){
-#if !(defined(SSE_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
-#endif
-
-  if((ir&BITS_543)==BITS_543_001){ //SS MOVEP
-#if defined(SSE_CPU_PREFETCH_CLASS)
-    M68000.PrefetchClass=1;
-#endif
-
-#if defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
-    CPU_ABUS_ACCESS_READ_FETCH;
-#endif
+  if((ir&BITS_543)==BITS_543_001){
     MEM_ADDRESS addr=areg[PARAM_M]+(signed short)m68k_fetchW();
-    pc+=2; 
-
-#if !defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
+    pc+=2;
     INSTRUCTION_TIME(4);
-#endif
-#if defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
-    CPU_ABUS_ACCESS_READ;
-#endif
+
     ///// Should handle blitter here, blitter would start 1 word after busy is set
-    //SS not here, in "to memory"
-    m68k_READ_B(addr)//ss problem with putting timing there, sometimes it shouldn't be there
+    m68k_READ_B(addr)
     DWORD_B_3(&r[PARAM_N])=m68k_src_b;
-#if !defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
     INSTRUCTION_TIME(4);
-#endif
 
-#if defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
-    CPU_ABUS_ACCESS_READ;
-#endif
     m68k_READ_B(addr+2)
     DWORD_B_2(&r[PARAM_N])=m68k_src_b;
-#if !defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
     INSTRUCTION_TIME(4);
-#endif
 
-#if defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
-    CPU_ABUS_ACCESS_READ;
-#endif
     m68k_READ_B(addr+4)
     DWORD_B_1(&r[PARAM_N])=m68k_src_b;
-#if !defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
     INSTRUCTION_TIME(4);
-#endif
 
-#if defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
-    CPU_ABUS_ACCESS_READ;
-#endif
     m68k_READ_B(addr+6)
     DWORD_B_0(&r[PARAM_N])=m68k_src_b;
-#if !defined(SSE_CPU_ROUNDING_MOVEP_MR_L)
     INSTRUCTION_TIME(4);
-#endif
 
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
-  }else{ // bchg
-    if((ir&BITS_543)==BITS_543_000){ // register SS:data
-/*
-Dn,Dm :           |                 |             |               |
-  .L :            |                 |             |               |
-    if Dn<16      |  6(1/0)  0(0/0) |             |               | np       n  
-    if Dn>15      |  8(1/0)  0(0/0) |             |               | np       nn 
-*/
+  }else{
+    if((ir&BITS_543)==BITS_543_000){
       m68k_src_w=BYTE(LOBYTE(r[PARAM_N]) & 31);
-///      m68k_src_w=r[PARAM_N]%32;
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-      FETCH_TIMING;
-#endif
-      PREFETCH_IRC;
       if (m68k_src_w>=16){
         INSTRUCTION_TIME(4); //MAXIMUM VALUE
       }else{
         INSTRUCTION_TIME(2);
       }
       if((r[PARAM_M]>>(m68k_src_w))&1){
-#if defined(SSE_VC_INTRINSICS_383E)
-        BITRESET(sr,SR_Z_BIT);
-#else
         SR_CLEAR(SR_Z);
-#endif
       }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-        BITSET(sr,SR_Z_BIT);
-#else
         SR_SET(SR_Z);
-#endif
       }
       r[PARAM_M]^=(1<<m68k_src_w);
     }else{
-
-/*
-Dn,<ea> :         |                 |             |               |
-  .B :            |                 |             |               |             
-    (An)          |  8(1/1)  4(1/0) |             |            nr | np    nw    
-    (An)+         |  8(1/1)  4(1/0) |             |            nr | np    nw    
-    -(An)         |  8(1/1)  6(1/0) |             | n          nr | np    nw    
-    (d16,An)      |  8(1/1)  8(2/0) |             |      np    nr | np    nw    
-    (d8,An,Xn)    |  8(1/1) 10(2/0) |             | n    np    nr | np    nw    
-    (xxx).W       |  8(1/1)  8(2/0) |             |      np    nr | np    nw    
-    (xxx).L       |  8(1/1) 12(3/0) |             |   np np    nr | np    nw    
-*/
-#if !defined(SSE_CPU_ROUNDING_BCHG)
       INSTRUCTION_TIME(4);
-#endif
       m68k_GET_DEST_B_NOT_A;
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-      FETCH_TIMING;
-#endif
-      PREFETCH_IRC;
       if((m68k_DEST_B>>(7&r[PARAM_N]))&1){
-#if defined(SSE_VC_INTRINSICS_383E)
-        BITRESET(sr,SR_Z_BIT);
-#else
         SR_CLEAR(SR_Z);
-#endif
       }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-        BITSET(sr,SR_Z_BIT);
-#else
         SR_SET(SR_Z);
-#endif
       }
-#if defined(SSE_CPU_ROUNDING_BCHG)
-      CPU_ABUS_ACCESS_WRITE;
-#endif
       m68k_DEST_B^=(signed char)(1<<(7&r[PARAM_N]));
     }
   }
 }
-
 void                              m68k_movep_w_from_dN_or_bclr(){
-#if !(defined(SSE_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
-#endif
-
-  if ((ir & BITS_543)==BITS_543_001){    //SS MOVEP
-#if defined(SSE_CPU_PREFETCH_CLASS)
-    M68000.PrefetchClass=1;
-#endif
-#if defined(SSE_CPU_ROUNDING_MOVEP_RM_W)
-    CPU_ABUS_ACCESS_READ_FETCH;
-#endif
+  if ((ir & BITS_543)==BITS_543_001){
     MEM_ADDRESS ad=areg[PARAM_M]+(short)m68k_fetchW();
-    pc+=2; 
-#if !defined(SSE_CPU_ROUNDING_MOVEP_RM_W)
+    pc+=2;
     INSTRUCTION_TIME(4);
-#endif
-#if defined(SSE_CPU_ROUNDING_MOVEP_RM_W)
-    CPU_ABUS_ACCESS_WRITE;
-#else
+
     INSTRUCTION_TIME(4);
-#endif
     m68k_poke(ad,DWORD_B_1(&r[PARAM_N]));
     ad+=2;
-#if defined(SSE_CPU_ROUNDING_MOVEP_RM_W)
-    CPU_ABUS_ACCESS_WRITE;
-#else
+
     INSTRUCTION_TIME(4);
-#endif
     m68k_poke(ad,DWORD_B_0(&r[PARAM_N]));
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-    FETCH_TIMING;
-#endif
-
-    ///INSTRUCTION_TIME(-4);
-
-    PREFETCH_IRC;
-  }else{ //bclr
+  }else{
     if((ir&BITS_543)==BITS_543_000){
-/*
-Dn,Dm :           |                 |             |               |
-  .L :            |                 |             |               |
-    if Dn<16      |  8(1/0)  0(0/0) |             |               | np nn       
-    if Dn>15      | 10(1/0)  0(0/0) |             |               | np nn n     
-*/
-#if defined(SSE_CPU_ROUNDING_BCLR)
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-      FETCH_TIMING;
-#endif
-      PREFETCH_IRC;
-#endif
       m68k_src_w=BYTE(LOBYTE(r[PARAM_N]) & 31);
       if (m68k_src_w>=16){
         INSTRUCTION_TIME(6); //MAXIMUM VALUE
@@ -3235,161 +1911,49 @@ Dn,Dm :           |                 |             |               |
         INSTRUCTION_TIME(4);
       }
       if((r[PARAM_M]>>(m68k_src_w))&1){
-#if defined(SSE_VC_INTRINSICS_383E)
-        BITRESET(sr,SR_Z_BIT);
-#else
         SR_CLEAR(SR_Z);
-#endif
       }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-        BITSET(sr,SR_Z_BIT);
-#else
         SR_SET(SR_Z);
-#endif
       }
-#if !defined(SSE_CPU_ROUNDING_BCLR)
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-      FETCH_TIMING;
-#endif
-      PREFETCH_IRC;
-#endif
       r[PARAM_M]&=(long)~((long)(1<<m68k_src_w));
 
       //length = .l
     }else{
-
-/*
-Dn,<ea> :         |                 |             |               |
-  .B :            |                 |             |               |
-    (An)          |  8(1/1)  4(1/0) |             |            nr | np    nw    
-    (An)+         |  8(1/1)  4(1/0) |             |            nr | np    nw    
-    -(An)         |  8(1/1)  6(1/0) |             | n          nr | np    nw    
-    (d16,An)      |  8(1/1)  8(2/0) |             |      np    nr | np    nw    
-    (d8,An,Xn)    |  8(1/1) 10(2/0) |             | n    np    nr | np    nw    
-    (xxx).W       |  8(1/1)  8(2/0) |             |      np    nr | np    nw    
-    (xxx).L       |  8(1/1) 12(3/0) |             |   np np    nr | np    nw    
-*/
-
-#if !defined(SSE_CPU_ROUNDING_BCLR)
       INSTRUCTION_TIME(4);
-#endif
       m68k_GET_DEST_B_NOT_A;
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-      FETCH_TIMING;
-#endif
-      PREFETCH_IRC;
       if((m68k_DEST_B>>(7&r[PARAM_N]))&1){
-#if defined(SSE_VC_INTRINSICS_383E)
-        BITRESET(sr,SR_Z_BIT);
-#else
         SR_CLEAR(SR_Z);
-#endif
       }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-        BITSET(sr,SR_Z_BIT);
-#else
         SR_SET(SR_Z);
-#endif
       }
-#if defined(SSE_CPU_ROUNDING_BCLR)
-      CPU_ABUS_ACCESS_WRITE;
-#endif
       m68k_DEST_B&=(signed char)~(1<<(7&r[PARAM_N]));
     }
   }
 }
-
 void                              m68k_movep_l_from_dN_or_bset(){
-
-  //SS there's a TODO for blitter, maybe need a case
-
-#if !(defined(SSE_CPU_LINE_0_TIMINGS))
   FETCH_TIMING;
-#endif
-  if ((ir&BITS_543)==BITS_543_001){  //SS MOVEP
-/*
- eg movep.l d0,0(a1)  01C9 0000 
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage
-      MOVEP       |      INSTR      |                  INSTR
-------------------+-----------------+------------------------------------------
-Dx,(d16,Ay) :     |                 |
-  .L :            | 24(2/4)         |                np nW nW nw nw np          
-
-NOTES :
-  .Read and write operations are done from the MSB to the LSB on 2 words if 
-  using ".w" (first read/write word at Ay+d16 then word at Ay+d16+2)and on 
-  4 words if using ".l" (first read/write word at Ay+d16 then word at Ay+d16+2 
-  then word at Ay+d16+4 and finally word at Ay+d16+6).
-*/
-
-#if defined(SSE_CPU_PREFETCH_CLASS)
-    M68000.PrefetchClass=1; 
-#endif
-#if defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
-    CPU_ABUS_ACCESS_READ_FETCH;
-#endif
+  if ((ir&BITS_543)==BITS_543_001){
     MEM_ADDRESS ad=areg[PARAM_M]+(signed short)m68k_fetchW();
-    pc+=2; 
-#if !defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
+    pc+=2;
     INSTRUCTION_TIME(4);
-#endif
 
     BYTE *p=(BYTE*)(&r[PARAM_N]);
-
-#if defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
-    CPU_ABUS_ACCESS_WRITE;
-#endif
-#if !defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
     INSTRUCTION_TIME(4);
-#endif
     m68k_poke(ad,DWORD_B_3(p));
     ad+=2;
 
-#if defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
-    CPU_ABUS_ACCESS_WRITE;
-#endif
-#if !defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
     INSTRUCTION_TIME(4);
-#endif
     m68k_poke(ad,DWORD_B_2(p));
     ad+=2;
 
-#if defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
-    CPU_ABUS_ACCESS_WRITE;
-#endif
-#if !defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
     INSTRUCTION_TIME(4);
-#endif
     m68k_poke(ad,DWORD_B_1(p));
     ad+=2;
 
-#if defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
-    CPU_ABUS_ACCESS_WRITE;
-#endif
-#if !defined(SSE_CPU_ROUNDING_MOVEP_RM_L)
     INSTRUCTION_TIME(4);
-#endif
     m68k_poke(ad,DWORD_B_0(p));
-
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC; 
-  }else{ // SS bset
+  }else{
     if((ir&BITS_543)==BITS_543_000){
-/*
-Dn,Dm :           |                 |             |               |
-  .L :            |                 |             |               |
-    if Dn<16      |  6(1/0)  0(0/0) |             |               | np       n  
-    if Dn>15      |  8(1/0)  0(0/0) |             |               | np       nn 
-*/
-#if defined(SSE_CPU_ROUNDING_BSET)
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-      FETCH_TIMING;
-#endif
-      PREFETCH_IRC;
-#endif
       m68k_src_w=BYTE(LOBYTE(r[PARAM_N]) & 31);
       if (m68k_src_w>=16){
         INSTRUCTION_TIME(4); //MAXIMUM VALUE
@@ -3397,71 +1961,24 @@ Dn,Dm :           |                 |             |               |
         INSTRUCTION_TIME(2);
       }
       if((r[PARAM_M]>>(m68k_src_w))&1){
-#if defined(SSE_VC_INTRINSICS_383E)
-        BITRESET(sr,SR_Z_BIT);
-#else
         SR_CLEAR(SR_Z);
-#endif
       }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-        BITSET(sr,SR_Z_BIT);
-#else
         SR_SET(SR_Z);
-#endif
       }
-#if !defined(SSE_CPU_ROUNDING_BSET)
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-      FETCH_TIMING;
-#endif
-      PREFETCH_IRC;
-#endif
+
       r[PARAM_M]|=(1<<m68k_src_w);
 
-//SS was so:
+
     //    m68k_dest=// D2_dM;
       //length = .l
     }else{
-/*
-Dn,<ea> :         |                 |             |               |
-  .B :            |                 |             |               |             
-    (An)          |  8(1/1)  4(1/0) |             |            nr | np    nw    
-    (An)+         |  8(1/1)  4(1/0) |             |            nr | np    nw    
-    -(An)         |  8(1/1)  6(1/0) |             | n          nr | np    nw    
-    (d16,An)      |  8(1/1)  8(2/0) |             |      np    nr | np    nw    
-    (d8,An,Xn)    |  8(1/1) 10(2/0) |             | n    np    nr | np    nw    
-    (xxx).W       |  8(1/1)  8(2/0) |             |      np    nr | np    nw    
-    (xxx).L       |  8(1/1) 12(3/0) |             |   np np    nr | np    nw    
-*/
-
-#if !(defined(SSE_CPU_PREFETCH_BSET) \
-  || defined(SSE_CPU_ROUNDING_BSET))
       INSTRUCTION_TIME(4);
-#endif
       m68k_GET_DEST_B_NOT_A;
-#if defined(SSE_CPU_LINE_0_TIMINGS)
-      FETCH_TIMING;
-#endif
-      PREFETCH_IRC;
-#if (defined(SSE_CPU_PREFETCH_BSET)\
-  && !defined(SSE_CPU_ROUNDING_BSET))
-      INSTRUCTION_TIME(4);
-#endif
       if((m68k_DEST_B>>(7&r[PARAM_N]))&1){
-#if defined(SSE_VC_INTRINSICS_383E)
-        BITRESET(sr,SR_Z_BIT);
-#else
         SR_CLEAR(SR_Z);
-#endif
       }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-        BITSET(sr,SR_Z_BIT);
-#else
         SR_SET(SR_Z);
-#endif
       }
-#if defined(SSE_CPU_ROUNDING_BSET)
-      CPU_ABUS_ACCESS_WRITE;
-#endif
       m68k_DEST_B|=(signed char)(1<<(7&r[PARAM_N]));
     }
   }
@@ -3482,941 +1999,225 @@ Dn,<ea> :         |                 |             |               |
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
--------------------------------------------------------------------------------
-        CLR,      |    Exec Time    |               Data Bus Usage
-  NEGX, NEG, NOT  |  INSTR     EA   |  1st OP (ea)  |          INSTR
-------------------+-----------------+---------------+--------------------------
-<ea> :            |                 |               | 
-  .B or .W :      |                 |               | 
-    Dn            |  4(1/0)  0(0/0) |               |               np          
-    (An)          |  8(1/1)  4(1/0) |            nr |               np nw       
-    (An)+         |  8(1/1)  4(1/0) |            nr |               np nw       
-    -(An)         |  8(1/1)  6(1/0) | n          nr |               np nw       
-    (d16,An)      |  8(1/1)  8(2/0) |      np    nr |               np nw       
-    (d8,An,Xn)    |  8(1/1) 10(2/0) | n    np    nr |               np nw       
-    (xxx).W       |  8(1/1)  8(2/0) |      np    nr |               np nw       
-    (xxx).L       |  8(1/1) 12(2/0) |   np np    nr |               np nw       
-  .L :            |                 |               | 
-    Dn            |  6(1/0)  0(0/0) |               |               np       n  
-    (An)          | 12(1/2)  8(2/0) |         nR nr |               np nw nW    
-    (An)+         | 12(1/2)  8(2/0) |         nR nr |               np nw nW    
-    -(An)         | 12(1/2) 10(2/0) | n       nR nr |               np nw nW    
-    (d16,An)      | 12(1/2) 12(3/0) |      np nR nr |               np nw nW    
-    (d8,An,Xn)    | 12(1/2) 14(3/0) | n    np nR nr |               np nw nW    
-    (xxx).W       | 12(1/2) 12(3/0) |      np nR nr |               np nw nW    
-    (xxx).L       | 12(1/2) 16(4/0) |   np np nR nr |               np nw nW    
-
-*/
-
 
 void                              m68k_negx_b(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-  CHECK_READ=true; //this is how we "emulate" the read before write behaviour
-#endif
   m68k_GET_DEST_B_NOT_A;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-
   m68k_old_dest=m68k_DEST_B;
   m68k_DEST_B=(BYTE)-m68k_DEST_B;
   if(sr&SR_X)m68k_DEST_B--;
   SR_CLEAR(SR_X+SR_N+SR_V+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
-  if(m68k_DEST_B)
-    BITRESET(sr,SR_Z_BIT);
-  if(m68k_old_dest&m68k_DEST_B&MSB_B)
-    BITSET(sr,SR_V_BIT); 
-  if((m68k_old_dest|m68k_DEST_B)&MSB_B)
-    SR_SET(SR_C+SR_X);
-  if(m68k_DEST_B & MSB_B)
-    BITSET(sr,SR_N_BIT); 
-#else
   if(m68k_DEST_B)SR_CLEAR(SR_Z);
   if(m68k_old_dest&m68k_DEST_B&MSB_B)SR_SET(SR_V);
   if((m68k_old_dest|m68k_DEST_B)&MSB_B)SR_SET(SR_C+SR_X);
   if(m68k_DEST_B & MSB_B)SR_SET(SR_N);
-#endif
-  
 }void                             m68k_negx_w(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-  CHECK_READ=true;
-#endif
   m68k_GET_DEST_W_NOT_A;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
   m68k_old_dest=m68k_DEST_W;
   m68k_DEST_W=(WORD)-m68k_DEST_W;
   if(sr&SR_X)m68k_DEST_W--;
   SR_CLEAR(SR_X+SR_N+SR_V+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
-  if(m68k_DEST_W)
-    BITRESET(sr,SR_Z_BIT);
-  if(m68k_old_dest&m68k_DEST_W&MSB_W)
-    BITSET(sr,SR_V_BIT); 
-  if((m68k_old_dest|m68k_DEST_W)&MSB_W)
-    SR_SET(SR_C+SR_X);
-  if(m68k_DEST_W & MSB_W)
-    BITSET(sr,SR_N_BIT); 
-#else
   if(m68k_DEST_W)SR_CLEAR(SR_Z);
   if(m68k_old_dest&m68k_DEST_W&MSB_W)SR_SET(SR_V);
   if((m68k_old_dest|m68k_DEST_W)&MSB_W)SR_SET(SR_C+SR_X);
   if(m68k_DEST_W & MSB_W)SR_SET(SR_N);
-#endif
-
-}
-
-void                             m68k_negx_l(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
+}void                             m68k_negx_l(){
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-  CHECK_READ=true;
-#endif
-#if defined(SSE_CPU)
-#if defined(SSE_CPU_ROUNDING_NEGX)
-  m68k_GET_DEST_L_NOT_A;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-  if(DEST_IS_DATA_REGISTER)
-    INSTRUCTION_TIME(2);
-  else
-  {
-    CPU_ABUS_ACCESS_WRITE; //there were 8 missing cycles in original Steem
-    CPU_ABUS_ACCESS_WRITE;
-  }
-#else
-  m68k_GET_DEST_L_NOT_A;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-  INSTRUCTION_TIME(2);
-#endif
-#else
   INSTRUCTION_TIME(2);
   m68k_GET_DEST_L_NOT_A;
-#endif
   m68k_old_dest=m68k_DEST_L;
   m68k_DEST_L=-m68k_DEST_L;
   if(sr&SR_X)m68k_DEST_L-=1;
   SR_CLEAR(SR_X+SR_N+SR_V+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
-  if(m68k_DEST_L)
-    BITRESET(sr,SR_Z_BIT);
-  if(m68k_old_dest&m68k_DEST_L&MSB_L)
-    BITSET(sr,SR_V_BIT);
-  if((m68k_old_dest|m68k_DEST_L)&MSB_L)SR_SET(SR_C+SR_X);
-  if(m68k_DEST_L & MSB_L)
-    BITSET(sr,SR_N_BIT);
-#else
   if(m68k_DEST_L)SR_CLEAR(SR_Z);
   if(m68k_old_dest&m68k_DEST_L&MSB_L)SR_SET(SR_V);
   if((m68k_old_dest|m68k_DEST_L)&MSB_L)SR_SET(SR_C+SR_X);
   if(m68k_DEST_L & MSB_L)SR_SET(SR_N);
-#endif
-
 }
-
-//#undef SSE_CPU_LINE_4_TIMINGS
 // TODO: These read the dest if it is memory
-//SS: done in crash()
-/*
-<ea> :            |                 |               | 
-  .B or .W :      |                 |               | 
-    Dn            |  4(1/0)  0(0/0) |               |               np          
-    (An)          |  8(1/1)  4(1/0) |            nr |               np nw       
-    (An)+         |  8(1/1)  4(1/0) |            nr |               np nw       
-    -(An)         |  8(1/1)  6(1/0) | n          nr |               np nw       
-    (d16,An)      |  8(1/1)  8(2/0) |      np    nr |               np nw       
-    (d8,An,Xn)    |  8(1/1) 10(2/0) | n    np    nr |               np nw       
-    (xxx).W       |  8(1/1)  8(2/0) |      np    nr |               np nw       
-    (xxx).L       |  8(1/1) 12(2/0) |   np np    nr |               np nw       
-*/
 void                              m68k_clr_b(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
-#endif
-#if !defined(SSE_CPU_ROUNDING_CLR)
   if (DEST_IS_REGISTER==0){INSTRUCTION_TIME(4);}
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-  CHECK_READ=true; //it's only important for crashes
-#endif
   m68k_GET_DEST_B_NOT_A;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_CLR)
-  if(!DEST_IS_DATA_REGISTER)
-  {
-    CPU_ABUS_ACCESS_WRITE;
-  }
-#endif
   m68k_DEST_B=0;
-#if defined(SSE_BOILER_MONITOR_VALUE3)
-  if (DEST_IS_REGISTER==0)
-    DEBUG_CHECK_WRITE_B(abus);
-#endif
   SR_CLEAR(SR_N+SR_V+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
-  BITSET(sr,SR_Z_BIT);
-#else
   SR_SET(SR_Z);
-#endif
-}
-
-void                             m68k_clr_w(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
+}void                             m68k_clr_w(){
   FETCH_TIMING;
-#endif
-#if !defined(SSE_CPU_ROUNDING_CLR)
   if(DEST_IS_REGISTER==0){INSTRUCTION_TIME(4);}
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-  CHECK_READ=true;
-#endif
-  m68k_GET_DEST_W_NOT_A; //SS this crashes as 'write'
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_CLR)
-  if(!DEST_IS_DATA_REGISTER)
-  {
-    CPU_ABUS_ACCESS_WRITE;
-  }
-#endif
+  m68k_GET_DEST_W_NOT_A;
   m68k_DEST_W=0;
-#if defined(SSE_BOILER_MONITOR_VALUE3)
-  if (DEST_IS_REGISTER==0)
-    DEBUG_CHECK_WRITE_W(abus);
-#endif
   SR_CLEAR(SR_N+SR_V+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
-  BITSET(sr,SR_Z_BIT);
-#else
   SR_SET(SR_Z);
-#endif
-}
-
-void                             m68k_clr_l(){
-
-/*
-  .L :            |                 |               | 
-    Dn            |  6(1/0)  0(0/0) |               |               np       n  
-    (An)          | 12(1/2)  8(2/0) |         nR nr |               np nw nW    
-    (An)+         | 12(1/2)  8(2/0) |         nR nr |               np nw nW    
-    -(An)         | 12(1/2) 10(2/0) | n       nR nr |               np nw nW    
-    (d16,An)      | 12(1/2) 12(3/0) |      np nR nr |               np nw nW    
-    (d8,An,Xn)    | 12(1/2) 14(3/0) | n    np nR nr |               np nw nW    
-    (xxx).W       | 12(1/2) 12(3/0) |      np nR nr |               np nw nW    
-    (xxx).L       | 12(1/2) 16(4/0) |   np np nR nr |               np nw nW    
-*/
-
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
+}void                             m68k_clr_l(){
   FETCH_TIMING;
-#endif
-#if !defined(SSE_CPU_ROUNDING_CLR)
   if(DEST_IS_REGISTER){INSTRUCTION_TIME(2);}else {INSTRUCTION_TIME(8);}
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-  CHECK_READ=true;
-#endif
   m68k_GET_DEST_L_NOT_A;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_DATABUS)
-//  M68000.dbus=0;//m68k_DEST_L&0xFFFF;
-  M68000.dbus=pc+2;
-#endif
-#if defined(SSE_CPU_ROUNDING_CLR)
-  if(DEST_IS_DATA_REGISTER)
-    INSTRUCTION_TIME(2);
-  else
-  {
-    CPU_ABUS_ACCESS_WRITE;
-    CPU_ABUS_ACCESS_WRITE;
-  }
-#endif
   m68k_DEST_L=0;
-#if defined(SSE_BOILER_MONITOR_VALUE3)
-  if (DEST_IS_REGISTER==0)
-    DEBUG_CHECK_WRITE_L(abus);
-#endif
   SR_CLEAR(SR_N+SR_V+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
-  BITSET(sr,SR_Z_BIT);
-#else
   SR_SET(SR_Z);
-#endif
 }
-//#define SSE_CPU_LINE_4_TIMINGS
-//#undef SSE_CPU_LINE_4_TIMINGS
-
-/*
--------------------------------------------------------------------------------
-        CLR,      |    Exec Time    |               Data Bus Usage
-  NEGX, NEG, NOT  |  INSTR     EA   |  1st OP (ea)  |          INSTR
-------------------+-----------------+---------------+--------------------------
-<ea> :            |                 |               | 
-  .B or .W :      |                 |               | 
-    Dn            |  4(1/0)  0(0/0) |               |               np          
-    (An)          |  8(1/1)  4(1/0) |            nr |               np nw       
-    (An)+         |  8(1/1)  4(1/0) |            nr |               np nw       
-    -(An)         |  8(1/1)  6(1/0) | n          nr |               np nw       
-    (d16,An)      |  8(1/1)  8(2/0) |      np    nr |               np nw       
-    (d8,An,Xn)    |  8(1/1) 10(2/0) | n    np    nr |               np nw       
-    (xxx).W       |  8(1/1)  8(2/0) |      np    nr |               np nw       
-    (xxx).L       |  8(1/1) 12(2/0) |   np np    nr |               np nw       
-*/
-
 void                              m68k_neg_b(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-  CHECK_READ=true;
-#endif
-#if !defined(SSE_CPU_ROUNDING_NEG)
   if(DEST_IS_REGISTER==0){INSTRUCTION_TIME(4);}
-#endif
   m68k_GET_DEST_B_NOT_A;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_NEG)
-  if(DEST_IS_REGISTER==0){CPU_ABUS_ACCESS_WRITE;}
-#endif
   m68k_old_dest=m68k_DEST_B;
   m68k_DEST_B=(BYTE)-m68k_DEST_B;
   SR_CLEAR(SR_USER_BYTE);
-#if defined(SSE_VC_INTRINSICS_383E)
-  if(m68k_old_dest&m68k_DEST_B&MSB_B)
-    BITSET(sr,SR_V_BIT);
-#else
   if(m68k_old_dest&m68k_DEST_B&MSB_B)SR_SET(SR_V);
-#endif
   if((m68k_old_dest|m68k_DEST_B)&MSB_B)SR_SET(SR_C+SR_X);
   SR_CHECK_Z_AND_N_B;
-}
-
-void                             m68k_neg_w(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
+}void                             m68k_neg_w(){
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-  CHECK_READ=true;
-#endif
-#if !defined(SSE_CPU_ROUNDING_NEG)
   if(DEST_IS_REGISTER==0){INSTRUCTION_TIME(4);}
-#endif
   m68k_GET_DEST_W_NOT_A;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_NEG)
-  if(DEST_IS_REGISTER==0){CPU_ABUS_ACCESS_WRITE;}
-#endif
   m68k_old_dest=m68k_DEST_W;
   m68k_DEST_W=(WORD)-m68k_DEST_W;
   SR_CLEAR(SR_USER_BYTE);
-#if defined(SSE_VC_INTRINSICS_383E)
-  if(m68k_old_dest&m68k_DEST_W&MSB_W)
-    BITSET(sr,SR_V_BIT);
-#else
   if(m68k_old_dest&m68k_DEST_W&MSB_W)SR_SET(SR_V);
-#endif
   if((m68k_old_dest|m68k_DEST_W)&MSB_W)SR_SET(SR_C+SR_X);
   SR_CHECK_Z_AND_N_W;
-}
-/*
--------------------------------------------------------------------------------
-        CLR,      |    Exec Time    |               Data Bus Usage
-  NEGX, NEG, NOT  |  INSTR     EA   |  1st OP (ea)  |          INSTR
-------------------+-----------------+---------------+--------------------------
-<ea> :            |                 |               | 
-  .L :            |                 |               | 
-    Dn            |  6(1/0)  0(0/0) |               |               np       n  
-    (An)          | 12(1/2)  8(2/0) |         nR nr |               np nw nW    
-    (An)+         | 12(1/2)  8(2/0) |         nR nr |               np nw nW    
-    -(An)         | 12(1/2) 10(2/0) | n       nR nr |               np nw nW    
-    (d16,An)      | 12(1/2) 12(3/0) |      np nR nr |               np nw nW    
-    (d8,An,Xn)    | 12(1/2) 14(3/0) | n    np nR nr |               np nw nW    
-    (xxx).W       | 12(1/2) 12(3/0) |      np nR nr |               np nw nW    
-    (xxx).L       | 12(1/2) 16(4/0) |   np np nR nr |               np nw nW    
-*/
-
-void                             m68k_neg_l(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
+}void                             m68k_neg_l(){
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-  CHECK_READ=true;
-#endif
-#if !defined(SSE_CPU_ROUNDING_NEG)
   if(DEST_IS_REGISTER){INSTRUCTION_TIME(2);}else {INSTRUCTION_TIME(8);}
-#endif
   m68k_GET_DEST_L_NOT_A;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-
-#if defined(SSE_CPU_ROUNDING_NEG)
-  if(DEST_IS_DATA_REGISTER)
-    INSTRUCTION_TIME(2);
-  else
-  {
-    CPU_ABUS_ACCESS_WRITE;
-    CPU_ABUS_ACCESS_WRITE;
-  }
-#endif
-
   m68k_old_dest=m68k_DEST_L;
   m68k_DEST_L=-m68k_DEST_L;
   SR_CLEAR(SR_USER_BYTE);
-#if defined(SSE_VC_INTRINSICS_383E)
-  if(m68k_old_dest&m68k_DEST_L&MSB_L)
-    BITSET(sr,SR_V_BIT);
-#else
   if(m68k_old_dest&m68k_DEST_L&MSB_L)SR_SET(SR_V);
-#endif
   if((m68k_old_dest|m68k_DEST_L)&MSB_L)SR_SET(SR_C+SR_X);
   SR_CHECK_Z_AND_N_L;
 }
-
 void                              m68k_not_b(){
-/*
-  <ea> :            |                 |               | 
-  .B or .W :      |                 |               | 
-    Dn            |  4(1/0)  0(0/0) |               |               np          
-    (An)          |  8(1/1)  4(1/0) |            nr |               np nw       
-    (An)+         |  8(1/1)  4(1/0) |            nr |               np nw       
-    -(An)         |  8(1/1)  6(1/0) | n          nr |               np nw       
-    (d16,An)      |  8(1/1)  8(2/0) |      np    nr |               np nw       
-    (d8,An,Xn)    |  8(1/1) 10(2/0) | n    np    nr |               np nw       
-    (xxx).W       |  8(1/1)  8(2/0) |      np    nr |               np nw       
-    (xxx).L       |  8(1/1) 12(2/0) |   np np    nr |               np nw       
-*/
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-  CHECK_READ=true;
-#endif
-#if !defined(SSE_CPU_ROUNDING_NOT)
-  if(DEST_IS_REGISTER==0){INSTRUCTION_TIME(4);} 
-#endif
+  if(DEST_IS_REGISTER==0){INSTRUCTION_TIME(4);}
   m68k_GET_DEST_B_NOT_A;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_NOT)
-  if(DEST_IS_REGISTER==0){CPU_ABUS_ACCESS_WRITE;}
-#endif
   m68k_DEST_B=(BYTE)~m68k_DEST_B;
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
   SR_CHECK_Z_AND_N_B;
-}
-
-void                             m68k_not_w(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
+}void                             m68k_not_w(){
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-  CHECK_READ=true;
-#endif
-#if !defined(SSE_CPU_ROUNDING_NOT)
   if(DEST_IS_REGISTER==0){INSTRUCTION_TIME(4);}
-#endif
   m68k_GET_DEST_W_NOT_A;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_NOT)
-  if(DEST_IS_REGISTER==0){CPU_ABUS_ACCESS_WRITE;}
-#endif
   m68k_DEST_W=(WORD)~m68k_DEST_W;
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
   SR_CHECK_Z_AND_N_W;
-}
-
-void                             m68k_not_l(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
+}void                             m68k_not_l(){
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-  CHECK_READ=true;
-#endif
-#if !defined(SSE_CPU_ROUNDING_NOT)
   if (DEST_IS_REGISTER){INSTRUCTION_TIME(2);}else {INSTRUCTION_TIME(8);}
-#endif
   m68k_GET_DEST_L_NOT_A;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_NOT)
-  if(DEST_IS_DATA_REGISTER)
-    INSTRUCTION_TIME(2);
-  else
-  {
-    CPU_ABUS_ACCESS_WRITE;
-    CPU_ABUS_ACCESS_WRITE;
-  }
-#endif
   m68k_DEST_L=~m68k_DEST_L;
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
   SR_CHECK_Z_AND_N_L;
 }
-
-/*
--------------------------------------------------------------------------------
-	                |     Exec Time   |               Data Bus Usage             
-       TST        |  INSTR     EA   |  1st OP (ea)  |          INSTR           
-------------------+-----------------+---------------+--------------------------
-<ea> :            |                 |               | 
-  .B or .W :      |                 |               | 
-    Dn            |  4(1/0)  0(0/0) |               |               np          
-    (An)          |  4(1/0)  4(1/0) |            nr |               np          
-    (An)+         |  4(1/0)  4(1/0) |            nr |               np          
-    -(An)         |  4(1/0)  6(1/0) | n          nr |               np          
-    (d16,An)      |  4(1/0)  8(2/0) |      np    nr |               np          
-    (d8,An,Xn)    |  4(1/0) 10(2/0) | n    np    nr |               np          
-    (xxx).W       |  4(1/0)  8(2/0) |      np    nr |               np          
-    (xxx).L       |  4(1/0) 12(3/0) |   np np    nr |               np          
-  .L              |                 |               | 
-    Dn            |  4(1/0)  0(0/0) |               |               np          
-    (An)          |  4(1/0)  8(2/0) |         nR nr |               np          
-    (An)+         |  4(1/0)  8(2/0) |         nR nr |               np          
-    -(An)         |  4(1/0) 10(2/0) | n       nR nr |               np          
-    (d16,An)      |  4(1/0) 12(3/0) |      np nR nr |               np          
-    (d8,An,Xn)    |  4(1/0) 14(3/0) | n    np nR nr |               np          
-    (xxx).W       |  4(1/0) 12(3/0) |      np nR nr |               np          
-    (xxx).L       |  4(1/0) 16(4/0) |   np np nR nr |               np          
-
-*/
-
 void                              m68k_tst_b(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_PREFETCH_CLASS_380)
-  M68000.PrefetchClass=1;
-#endif
   BYTE x=m68k_read_dest_b();
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
-  if(!x)
-    BITSET(sr,SR_Z_BIT);
-  if(x&MSB_B)
-    BITSET(sr,SR_N_BIT);
-#else
   if(!x)SR_SET(SR_Z);
   if(x&MSB_B)SR_SET(SR_N);
-#endif
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-  PREFETCH_IRC;
 }void                             m68k_tst_w(){
-  //ASSERT(!(old_pc==0x040154 && scan_y==-31 && LINECYCLES==508));
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_PREFETCH_CLASS_380)
-  M68000.PrefetchClass=1;
-#endif
   WORD x=m68k_read_dest_w();
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
-  if(!x)
-    BITSET(sr,SR_Z_BIT);
-  if(x&MSB_W)
-    BITSET(sr,SR_N_BIT);
-#else
   if(!x)SR_SET(SR_Z);
   if(x&MSB_W)SR_SET(SR_N);
-#endif
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-  PREFETCH_IRC;
 }void                             m68k_tst_l(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_PREFETCH_CLASS_380)
-  M68000.PrefetchClass=1;
-#endif
   LONG x=m68k_read_dest_l();
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
-  if(!x)
-    BITSET(sr,SR_Z_BIT);
-  if(x&MSB_L)
-    BITSET(sr,SR_N_BIT);
-#else
   if(!x)SR_SET(SR_Z);
   if(x&MSB_L)SR_SET(SR_N);
-#endif
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-  PREFETCH_IRC;
 }
-
-
-//#define SSE_CPU_LINE_4_TIMINGS
-//#undef SSE_CPU_LINE_4_TIMINGS
-
-/* SS
-Instruction   Size   Register   Memory
-TAS           Byte    4(1/0)    14(2/1)+
-
-One read for prefetch.
-If memory, one read and one write.
-TAS is class 0, prefetch occurs before write.
-
-  Read memory (4)
-  Test (2)
-  Prefetch (4)
-  Write memory (4)
-
-Don't see how it could be 10 instead of 14: we shouldn't define
-SSE_CPU_TAS. Haven't seen a case that it changes yet.
-
-Update from M68000UM
-TAS 	Byte	4(1/0)	14(2/1)+
-
-
-Update from Yacht:
--------------------------------------------------------------------------------
-	                |    Exec Time    |               Data Bus Usage
-       TAS        |  INSTR     EA   |  1st OP (ea)  |          INSTR            
-------------------+-----------------+---------------+--------------------------
-<ea> :            |                 |               |
-  .B :            |                 |               | 
-    Dn            |  4(1/0)  0(0/0) |               |               np          
-    (An)          | 10(1/1)  4(1/0) |            nr |          n nw np          
-    (An)+         | 10(1/1)  4(1/0) |            nr |          n nw np          
-    -(An)         | 10(1/1)  6(1/0) | n          nr |          n nw np          
-    (d16,An)      | 10(1/1)  8(2/0) |      np    nr |          n nw np          
-    (d8,An,Xn)    | 10(1/1) 10(2/0) | n    np    nr |          n nw np          
-    (xxx).W       | 10(1/1)  8(1/0) |               |          n nw np          
-    (xxx).L       | 10(1/1) 12(2/0) |               |          n nw np          
-NOTES :
-  .M68000UM is probably wrong with instruction timming when <ea> is different 
-   from Dn. It reads "14(3/0)" but according to the same book the read-modify-
-   write bus cycle used by this instruction is only 10 clock cycles long which 
-   seems coherent with the microwords decomposition in USP4325121. Last, 
-   evaluation on real hardware confirms the 10 cycles timing.
-
-Following this, which seems to justify the Steem authors comment, we now define
- SSE_CPU_TAS.
-
-We also move the prefetch timing: it is class 1, not 0.
-
-*/
-
 void                              m68k_tas(){
   if((ir&B6_111111)==B6_111100){
-    ASSERT(ir==0x4afc); // it is tas_or_illegal()
     ILLEGAL;
   }else{
-
-#if defined(SSE_CPU_PREFETCH_CLASS)
-    M68000.PrefetchClass=1;
-#endif
-
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
     FETCH_TIMING;
-#endif
-
-#if defined(SSE_CPU_TRUE_PC)
-    CHECK_READ=true;
-#endif
-
     m68k_GET_DEST_B_NOT_A;
-
-#if !(defined(SSE_CPU_PREFETCH_TAS))
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
-#endif
-
-#if defined(SSE_CPU_TAS) // not defined until 3.5.1
-    if(DEST_IS_REGISTER==0){INSTRUCTION_TIME(6);} 
-#else
     if(DEST_IS_REGISTER==0){INSTRUCTION_TIME(10);} /// Should this be 6?
-#endif
-
     SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
     SR_CHECK_Z_AND_N_B;
     m68k_DEST_B|=MSB_B;
-
-#if (defined(SSE_CPU_PREFETCH_TAS))
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
-#endif
-
   }
 }
-
-//#define SSE_CPU_LINE_4_TIMINGS
-//#undef SSE_CPU_LINE_4_TIMINGS
-/*
--------------------------------------------------------------------------------
-       MOVE       |    Exec Time    |               Data Bus Usage
-     from SR      |  INSTR     EA   |  2nd Op (ea)  |          INSTR
-------------------+-----------------+---------------+--------------------------
-SR,<ea> :         |                 |               |
-  .W :            |                 |               |
-    Dn            |  6(1/0)  0(0/0) |               |               np       n  
-    (An)          |  8(1/1)  4(1/0) |            nr |               np nw       
-    (An)+         |  8(1/1)  4(1/0) |            nr |               np nw       
-    -(An)         |  8(1/1)  6(1/0) | n          nr |               np nw       
-    (d16,An)      |  8(1/1)  8(2/0) |      np    nr |               np nw       
-    (d8,An,Xn)    |  8(1/1) 10(2/0) | n    np    nr |               np nw       
-    (xxx).W       |  8(1/1)  8(2/0) |      np    nr |               np nw       
-    (xxx).L       |  8(1/1) 12(3/0) |   np np    nr |               np nw       
-*/
-// TODO: This should read the memory first 
+// TODO: This should read the memory first
 void                              m68k_move_from_sr(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-  CHECK_READ=true;
-#endif
-#if defined(SSE_CPU_PREFETCH_MOVE_FROM_SR)
-  m68k_GET_DEST_W_NOT_A; // DSOS loader
-#endif
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
   if (DEST_IS_REGISTER){
     INSTRUCTION_TIME(2);
   }else{
-#if defined(SSE_CPU_ROUNDING_MOVE_FROM_SR)
-    CPU_ABUS_ACCESS_WRITE;
-#else
     INSTRUCTION_TIME(4);
-#endif
   }
-#if !(defined(SSE_CPU_PREFETCH_MOVE_FROM_SR))
   m68k_GET_DEST_W_NOT_A;
-#endif
   m68k_DEST_W=sr;
 }
-
-//#define SSE_CPU_LINE_4_TIMINGS
-
 void                              m68k_move_from_ccr(){
-    ILLEGAL;
-  
-  ////ILLEGAL;  //68010 only!!!
+  ILLEGAL;  //68010 only!!!
 /*
   m68k_GET_DEST_B_NOT_A;
   m68k_DEST_B=LOBYTE(sr);
 */
 }
-
-
-/*
--------------------------------------------------------------------------------
-       MOVE       |    Exec Time    |               Data Bus Usage
-  to CCR, to SR   |  INSTR     EA   |  1st OP (ea)  |          INSTR
-------------------+-----------------+---------------+--------------------------
-<ea>,CCR :        |                 |               |
-  .W :            |                 |               |
-    Dn            | 12(1/0)  0(0/0) |               |         nn np np          
-    (An)          | 12(1/0)  4(1/0) |            nr |         nn np np          
-    (An)+         | 12(1/0)  4(1/0) |            nr |         nn np np          
-    -(An)         | 12(1/0)  6(1/0) | n          nr |         nn np np          
-    (d16,An)      | 12(1/0)  8(2/0) |      np    nr |         nn np np          
-    (d8,An,Xn)    | 12(1/0) 10(2/0) | n    np    nr |         nn np np          
-    (xxx).W       | 12(1/0)  8(2/0) |      np    nr |         nn np np          
-    (xxx).L       | 12(1/0) 12(3/0) |   np np    nr |         nn np np          
-    #<data>       | 12(1/0)  4(1/0) |      np       |         nn np np          
-*/
-
 void                              m68k_move_to_ccr(){
   if((ir&BITS_543)==BITS_543_001){
     m68k_unrecognised();
   }else{
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
-  FETCH_TIMING;
-#endif
-
+    FETCH_TIMING;
     m68k_GET_SOURCE_W;
-#if defined(SSE_CPU_ROUNDING_MOVE_TO_SR)
-    INSTRUCTION_TIME(8);
-#endif
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
     CCR=LOBYTE(m68k_src_w);
     sr&=SR_VALID_BITMASK;
-#if !defined(SSE_CPU_ROUNDING_MOVE_TO_SR)
     INSTRUCTION_TIME(8);
-#endif
   }
 }
-
-
 void                              m68k_move_to_sr(){
   if(SUPERFLAG){
     if((ir&BITS_543)==BITS_543_001){ //address register
       m68k_unrecognised();
     }else{
       DEBUG_ONLY( int debug_old_sr=sr; )
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
+
       FETCH_TIMING;
-#endif
-#if !defined(SSE_CPU_ROUNDING_MOVE_TO_SR)
       INSTRUCTION_TIME(8);
-#endif
       m68k_GET_SOURCE_W;
-#if defined(SSE_CPU_ROUNDING_MOVE_TO_SR)
-      INSTRUCTION_TIME(8);
-#endif
       sr=m68k_src_w;
       sr&=SR_VALID_BITMASK;
-      PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-      FETCH_TIMING;
-#endif
+
       DETECT_CHANGE_TO_USER_MODE;
       DETECT_TRACE_BIT;
       // Interrupts must come after trace exception
       ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
-//      check_for_interrupts_pending(); // was commented out
+//      check_for_interrupts_pending();
+
       CHECK_STOP_ON_USER_CHANGE;
     }
   }else{
     exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
   }
 }
-
-//#define SSE_CPU_LINE_4_TIMINGS
-/*
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage
-       NBCD       |      INSTR      |  1st OP (ea)  |          INSTR
-------------------+-----------------+---------------+--------------------------
-<ea> :            |                 |               |
-  .B :            |                 |               |
-    Dn            |  6(1/0)  0(0/0) |               |               np       n  
-    (An)          |  8(1/1)  4(1/0) |            nr |               np nw       
-    (An)+         |  8(1/1)  4(1/0) |            nr |               np nw       
-    -(An)         |  8(1/1)  6(1/0) | n          nr |               np nw       
-    (d16,An)      |  8(1/1)  8(2/0) |      np    nr |               np nw       
-    (d8,An,Xn)    |  8(1/1) 10(2/0) | n    np    nr |               np nw       
-    (xxx).W       |  8(1/1)  8(2/0) |      np    nr |               np nw       
-    (xxx).L       |  8(1/1) 12(3/0) |   np np    nr |               np nw       
-*/
-
 void                              m68k_nbcd(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
-#endif
-#if !defined(SSE_CPU_ROUNDING_NBCD)
   if (DEST_IS_REGISTER){INSTRUCTION_TIME(2);}else {INSTRUCTION_TIME(4);}
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-  CHECK_READ=true;
-#endif
   m68k_GET_DEST_B_NOT_A;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_NBCD)
-  if (DEST_IS_REGISTER){INSTRUCTION_TIME(2);}else {CPU_ABUS_ACCESS_WRITE;}
-#endif
   int m=m68k_DEST_B,n=0;
   if(m&0xff) n=0xa0;
   if(m&0xf)n=0x9a;
   if(sr&SR_X)n=0x99;
+
   SR_CLEAR(SR_X+SR_C);
   if(m)SR_SET(SR_X+SR_C); //there will be a carry
   m68k_DEST_B=(BYTE)(n-m);
-#if defined(SSE_VC_INTRINSICS_383E)
-  if(m68k_DEST_B) 
-    BITRESET(sr,SR_Z_BIT);
-#else
   if(m68k_DEST_B){SR_CLEAR(SR_Z);}
-#endif
 }
 void                              m68k_pea_or_swap(){
-  if((ir&BITS_543)==BITS_543_000){ // SWAP
-
-/*
--------------------------------------------------------------------------------
-	                |    Exec Time    |               Data Bus Usage
-       SWAP       |      INSTR      |                  INSTR
-------------------+-----------------+------------------------------------------
-Dn :              |                 |
-  .W :            |  4(1/0)         |                               np          
-
-*/
-
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
+  if((ir&BITS_543)==BITS_543_000){
     FETCH_TIMING;
-#endif
     r[PARAM_M]=MAKELONG(HIWORD(r[PARAM_M]),LOWORD(r[PARAM_M]));
-#if !defined(SSE_CPU_PREFETCH_TIMING_SWAP)
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-    FETCH_TIMING;
-#endif
-#endif
     SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
-    if(!r[PARAM_M])
-      BITSET(sr,SR_Z_BIT);
-    if(r[PARAM_M]&MSB_L)
-      BITSET(sr,SR_N_BIT);
-#else
     if(!r[PARAM_M])SR_SET(SR_Z);
     if(r[PARAM_M]&MSB_L)SR_SET(SR_N);
-#endif
-#if defined(SSE_CPU_PREFETCH_TIMING_SWAP)
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-    FETCH_TIMING;
-#endif
-#endif
-  }else{ //PEA
-
-#if !defined(SSE_CPU_ROUDING_EA)
+  }else{
     // pea instruction times table.
     // ad.mode  time  Steem EA time difference
     // (aN)     12    0             12
@@ -4428,194 +2229,31 @@ Dn :              |                 |
     // D(pc,dM) 22    8             14
     if ((ir & B6_111111)==B6_111011 || (ir & B6_111000)==B6_110000){ INSTRUCTION_TIME(2); } //iriwo
     m68k_get_effective_address();
-#endif
-#if defined(SSE_CPU_ROUDING_EA)
-/*
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage
-        PEA       |      INSTR      |                  INSTR
-------------------+-----------------+------------------------------------------
-<ea> :            |                 | 
-  .L :            |                 |
-    (An)          | 12(1/2)         |                               np nS ns    
-    (d16,An)      | 16(2/2)         |                          np   np nS ns    
-    (d8,An,Xn)    | 20(2/2)         |                        n np n np nS ns    
-    (xxx).W       | 16(2/2)         |                               np nS ns np 
-    (xxx).L       | 20(3/2)         |                          np   np nS ns np 
-*/
-  switch (ir & BITS_543){
-    case BITS_543_010: //SS (An)
-      effective_address=areg[PARAM_M];
-      break;
-    case BITS_543_101: //SS (d16,An)
-      CPU_ABUS_ACCESS_READ_FETCH;
-      effective_address=areg[PARAM_M]+(signed short)m68k_fetchW();
-      pc+=2; 
-      break;
-    case BITS_543_110: //SS (d8,An,Xn)
-      INSTRUCTION_TIME(2);
-      CPU_ABUS_ACCESS_READ_FETCH;
-      m68k_iriwo=m68k_fetchW();pc+=2; 
-      INSTRUCTION_TIME(2);
-      if (m68k_iriwo & BIT_b){  //.l
-        effective_address=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
-      }else{         //.w
-        effective_address=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
-      }
-      break;
-    case BITS_543_111:
-      switch (ir & 0x7){
-      case 0: //SS (xxx).W
-        CPU_ABUS_ACCESS_READ_FETCH;
-        effective_address=(signed long)(signed short)m68k_fetchW();
-        pc+=2; 
-#if defined(SSE_CPU_TRUE_PC)
-        TRUE_PC+=2;
-#endif
-        break;
-      case 1: //SS (xxx).L
-        CPU_ABUS_ACCESS_READ_FETCH;
-        CPU_ABUS_ACCESS_READ_FETCH;
-        effective_address=m68k_fetchL();
-        pc+=4;  
-#if defined(SSE_CPU_TRUE_PC)
-        TRUE_PC+=4;
-#endif
-        break;
-      case 2: //SS (d16,PC) 
-        CPU_ABUS_ACCESS_READ_FETCH;
-        effective_address=(PC_RELATIVE_PC+(signed short)m68k_fetchW()) | pc_high_byte;
-        PC_RELATIVE_MONITOR(effective_address);
-        pc+=2; 
-        break;
-      case 3: //SS (d8,PC,Xn)
-        INSTRUCTION_TIME(2);
-        CPU_ABUS_ACCESS_READ_FETCH;
-        m68k_iriwo=m68k_fetchW();
-        INSTRUCTION_TIME(2);
-        if (m68k_iriwo & BIT_b){  //.l
-          effective_address=(PC_RELATIVE_PC+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12]) | pc_high_byte;
-        }else{         //.w
-          effective_address=(PC_RELATIVE_PC+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12]) | pc_high_byte;
-        }
-        PC_RELATIVE_MONITOR(effective_address);
-        pc+=2; 
-        break;       //what do bits 8,9,a  of extra word do?  (not always 0)
-      default:
-        m68k_unrecognised();
-        break;
-      }
-      break;
-    default:
-      m68k_unrecognised();
-  }
-#endif
 
-#if !defined(SSE_CPU_ROUNDING_PEA)
     INSTRUCTION_TIME_ROUND(8); // Round before writing to memory
-#endif
-
-#if defined(SSE_CPU_PREFETCH_PEA)
-    if((ir & B6_111111)==B6_111000) 
-      M68000.PrefetchClass=1; // PEA for absolute short and absolute long addr. modes
-    else
-    {
-      PREFETCH_IRC; 
-      FETCH_TIMING;
-    }
-#endif
-
-#if defined(SSE_CPU_ROUNDING_PEA)
-    CPU_ABUS_ACCESS_WRITE_PUSH; //not defined
-    CPU_ABUS_ACCESS_WRITE_PUSH;
-#endif
-    m68k_PUSH_L(effective_address); //because timing is counted here
-
-#if defined(SSE_CPU_PREFETCH_PEA)
-    if(M68000.PrefetchClass==1)
-    {
-      PREFETCH_IRC;
-      FETCH_TIMING;
-    }
-#else
-    FETCH_TIMING; // <-- Steem authors perceived the 'class 1' behaviour?
-#endif
+    m68k_PUSH_L(effective_address);
+    FETCH_TIMING;
   }
 }
-
-//#define SSE_CPU_LINE_4_TIMINGS
-
 void                              m68k_movem_w_from_regs_or_ext_w(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
-#endif
-  if((ir&BITS_543)==BITS_543_000){ 
-    //SS EXT.W
-/*
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage
-        EXT       |      INSTR      |  1st Operand  |          INSTR
-------------------+-----------------+---------------+--------------------------
-Dn :              |                 |               |
-  .W :            |  4(1/0)         |               |               np          
-  .L :            |  4(1/0)         |               |               np          
-*/
+  if((ir&BITS_543)==BITS_543_000){
     SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
     m68k_dest=&(r[PARAM_M]);
-#if !defined(SSE_CPU_PREFETCH_TIMING_EXT)
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-    FETCH_TIMING;
-#endif
-#endif
     m68k_DEST_W=(signed short)((signed char)LOBYTE(r[PARAM_M]));
     SR_CHECK_Z_AND_N_W;
-#if defined(SSE_CPU_PREFETCH_TIMING_EXT)
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-    FETCH_TIMING;
-#endif
-#endif
-  }
-  //SS MOVEM R->M -(An)
-  else if ((ir & BITS_543)==BITS_543_100){ //predecrement 
-#if defined(SSE_CPU_PREFETCH_CLASS)
-    M68000.PrefetchClass=1; 
-#endif
-#if defined(SSE_CPU_ROUNDING_MOVEM)
-    CPU_ABUS_ACCESS_READ_FETCH;
-#endif
-    m68k_src_w=m68k_fetchW();pc+=2; 
-#if !defined(SSE_CPU_ROUNDING_MOVEM)
+  }else if ((ir & BITS_543)==BITS_543_100){ //predecrement
+    m68k_src_w=m68k_fetchW();pc+=2;
     INSTRUCTION_TIME(4);
-#endif
+
     MEM_ADDRESS ad=areg[PARAM_M];
     DWORD areg_hi=(areg[PARAM_M] & 0xff000000);
-#if defined(SSE_CPU_PREFETCH_TIMING_MOVEM_HACK)
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
-#endif
-#if defined(SSE_VC_INTRINSICS_383F)
-    short bit=0,BlitterStart=0;
-#else
     short mask=1,BlitterStart=0;
-#endif
     for (int n=0;n<16;n++){
-#if defined(SSE_VC_INTRINSICS_383F)
-      if(BITTEST(m68k_src_w,bit)) {
-#else
       if (m68k_src_w & mask){
-#endif
         ad-=2;
-#if defined(SSE_CPU_MOVEM_BUS_ACCESS_TIMING)
-        CPU_ABUS_ACCESS_WRITE;
-#endif
         m68k_dpoke(ad,LOWORD(r[15-n]));
-#if !defined(SSE_CPU_MOVEM_BUS_ACCESS_TIMING)
         INSTRUCTION_TIME(4);
-#endif
         if (ioaccess & IOACCESS_FLAG_DO_BLIT){
           // After word that starts blitter must write one more word, then blit
           if ((++BlitterStart)==2){
@@ -4624,165 +2262,61 @@ Dn :              |                 |               |
           }
         }
       }
-#if defined(SSE_VC_INTRINSICS_383F)
-      bit++;
-#else
       mask<<=1;
-#endif
     }
     // The register written to memory should be the original one, so
     // predecrement afterwards.
     areg[PARAM_M]=ad | areg_hi;
-#if !defined(SSE_CPU_PREFETCH_TIMING_MOVEM_HACK)
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-    FETCH_TIMING;
-#endif
-#endif
-  }else{ //SS MOVEM other cases
-#if defined(SSE_CPU_PREFETCH_CLASS)
-    M68000.PrefetchClass=1; 
-#endif
-#if defined(SSE_CPU_ASSERT_ILLEGAL_370)
-    switch (ir & BITS_543){
-    case BITS_543_010: // (An)
-    case BITS_543_101: // (d16,An)
-    case BITS_543_110: // (d8, An, Xn)
-      break;
-    case BITS_543_111:
-      switch(ir&0x7){
-      case 0:
-        break;
-      case 1:
-        break;
-      default:
-        m68k_unrecognised();
-      }
-      break;
-    default:
-      m68k_unrecognised();
-    }
-#endif
-#if defined(SSE_CPU_ROUNDING_MOVEM)
-    CPU_ABUS_ACCESS_READ_FETCH;
-#endif
-    m68k_src_w=m68k_fetchW();pc+=2; 
-#if !defined(SSE_CPU_ROUNDING_MOVEM)
+  }else{
+    m68k_src_w=m68k_fetchW();pc+=2;
     INSTRUCTION_TIME(4);
-#endif
-#if defined(SSE_VS2008_WARNING_383)
-    MEM_ADDRESS ad=areg[PARAM_M];
-#else
     MEM_ADDRESS ad;
-#endif
+
     switch (ir & BITS_543){
-    case BITS_543_010: // (An)
-#if !defined(SSE_VS2008_WARNING_383)
+    case BITS_543_010:
       ad=areg[PARAM_M];
-#endif
       break;
-    case BITS_543_101: // (d16,An)
-#if defined(SSE_CPU_ROUNDING_MOVEM)
-      CPU_ABUS_ACCESS_READ_FETCH;
-#else
+    case BITS_543_101:
       INSTRUCTION_TIME(4);
-#endif
-#if defined(SSE_VS2008_WARNING_383)
-      ad+=(signed short)m68k_fetchW();
-#else
       ad=areg[PARAM_M]+(signed short)m68k_fetchW();
-#endif
-      pc+=2; 
+      pc+=2;
       break;
-    case BITS_543_110: // (d8, An, Xn)
-#if defined(SSE_CPU_ROUNDING_MOVEM6)
-      CPU_ABUS_ACCESS_READ_FETCH;
-#else
+    case BITS_543_110:
       INSTRUCTION_TIME(6);
-#endif
-      m68k_iriwo=m68k_fetchW();pc+=2; 
+      m68k_iriwo=m68k_fetchW();pc+=2;
       if(m68k_iriwo&BIT_b){  //.l
-#if defined(SSE_VS2008_WARNING_383)
-        ad+=(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
-#else
         ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
-#endif
       }else{         //.w
-#if defined(SSE_VS2008_WARNING_383)
-        ad+=(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
-#else
         ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
-#endif
       }
-#if defined(SSE_CPU_ROUNDING_MOVEM6)
-      INSTRUCTION_TIME(2);
-#endif
       break;
     case BITS_543_111:
       switch(ir&0x7){
       case 0:
-#if defined(SSE_CPU_ROUNDING_MOVEM6)
-        CPU_ABUS_ACCESS_READ_FETCH;
-#else
         INSTRUCTION_TIME(4);
-#endif
         ad=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
-        pc+=2; 
+        pc+=2;
         break;
       case 1:
-#if defined(SSE_CPU_ROUNDING_MOVEM6)
-        CPU_ABUS_ACCESS_READ_FETCH;
-        CPU_ABUS_ACCESS_READ_FETCH;
-#else
         INSTRUCTION_TIME(8);
-#endif
         ad=0xffffff & m68k_fetchL();
-        pc+=4;  
+        pc+=4;
         break;
-#if !defined(SSE_CPU_ASSERT_ILLEGAL_370)
       default:
         ad=0; // This is to stop an annoying warning
         m68k_unrecognised();
         break;
-#elif defined(SSE_VS2008_WARNING_383)
-      default:
-        NODEFAULT;
-#endif
       }
       break;
-#if !defined(SSE_CPU_ASSERT_ILLEGAL_370)
     default:
       ad=0; // This is to stop an annoying warning
       m68k_unrecognised();
-#elif defined(SSE_VS2008_WARNING_383)
-    default:
-      NODEFAULT;
-#endif
     }
-#if defined(SSE_CPU_PREFETCH_TIMING_MOVEM_HACK)
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
-#endif
-#if defined(SSE_VC_INTRINSICS_383F)
-    short bit=0,BlitterStart=0;
-#else
     short mask=1,BlitterStart=0;
-#endif
     for (int n=0;n<16;n++){
-#if defined(SSE_VC_INTRINSICS_383F)
-      if(BITTEST(m68k_src_w,bit)) {
-#else
       if (m68k_src_w & mask){
-#endif
-#if defined(SSE_CPU_MOVEM_BUS_ACCESS_TIMING)
-        CPU_ABUS_ACCESS_WRITE;
-#endif
         m68k_dpoke(ad,LOWORD(r[n]));
-#if !defined(SSE_CPU_MOVEM_BUS_ACCESS_TIMING)
         INSTRUCTION_TIME(4);
-#endif
         ad+=2;
         if (ioaccess & IOACCESS_FLAG_DO_BLIT){
           // After word that starts blitter must write one more word, then blit
@@ -4792,18 +2326,8 @@ Dn :              |                 |               |
           }
         }
       }
-#if defined(SSE_VC_INTRINSICS_383F)
-      bit++;
-#else
       mask<<=1;
-#endif
     }
-#if !defined(SSE_CPU_PREFETCH_TIMING_MOVEM_HACK)
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
-#endif
   }
   if (ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_W){  //oh dear, writing multiple words to the PSG
     int s=count_bits_set_in_word(m68k_src_w);
@@ -4811,922 +2335,283 @@ Dn :              |                 |               |
   }
 }
 
-//#define SSE_CPU_LINE_4_TIMINGS
-//#undef SSE_CPU_LINE_4_TIMINGS
 void                              m68k_movem_l_from_regs_or_ext_l(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
-#endif
   if((ir&BITS_543)==BITS_543_000){  //ext.l
-/*
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage
-        EXT       |      INSTR      |  1st Operand  |          INSTR
-------------------+-----------------+---------------+--------------------------
-Dn :              |                 |               |
-  .W :            |  4(1/0)         |               |               np          
-  .L :            |  4(1/0)         |               |               np          
-
-*/
     SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
     m68k_dest=&(r[PARAM_M]);
-#if !defined(SSE_CPU_PREFETCH_TIMING_EXT)
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
-#endif
     m68k_DEST_L=(signed long)((signed short)LOWORD(r[PARAM_M]));
     SR_CHECK_Z_AND_N_L;
-#if defined(SSE_CPU_PREFETCH_TIMING_EXT)
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
-#endif
-
-  }else if((ir&BITS_543)==BITS_543_100){ //predecrement //SS MOVEM -(An)
-    //SS this is used to save registers on the stack
-/*
-
--------------------------------------------------------------------------------
-	                |    Exec Time    |               Data Bus Usage
-      MOVEM       |      INSTR      |                  INSTR
-------------------+-----------------+------------------------------------------
-R --> M           |                 | 
-  .L              |                 |                             
-    -(An)         |  8+8m(2/2m)     |                np (nw nW)*    np   
-*/
-#if defined(SSE_CPU_PREFETCH_CLASS) 
-    M68000.PrefetchClass=1; 
-#endif
-#if defined(SSE_CPU_ROUNDING_MOVEM)
-    CPU_ABUS_ACCESS_READ_FETCH; // no action if SSE_CPU_TIMINGS_REFACTOR_FETCH defined
-#endif
+  }else if((ir&BITS_543)==BITS_543_100){ //predecrement
     m68k_src_w=m68k_fetchW();pc+=2;
-#if !defined(SSE_CPU_ROUNDING_MOVEM)
     INSTRUCTION_TIME(4);
-#endif
+
     MEM_ADDRESS ad=areg[PARAM_M];
     DWORD areg_hi=(areg[PARAM_M] & 0xff000000);
-#if defined(SSE_CPU_PREFETCH_TIMING_MOVEM_HACK)
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-    TRUE_PC=pc+2;
-#endif
-#if defined(SSE_VC_INTRINSICS_383F)
-    short bit=0;
-#else
     short mask=1;
-#endif
     for (int n=0;n<16;n++){
-#if defined(SSE_VC_INTRINSICS_383F)
-      if(BITTEST(m68k_src_w,bit)) {
-#else
       if (m68k_src_w & mask){
-#endif
         ad-=4;
-#if defined(SSE_CPU_MOVEM_BUS_ACCESS_TIMING)
-        CPU_ABUS_ACCESS_WRITE;
-        CPU_ABUS_ACCESS_WRITE;
-#else
         INSTRUCTION_TIME(4);
-#endif
         m68k_lpoke(ad,r[15-n]);
-#if !defined(SSE_CPU_MOVEM_BUS_ACCESS_TIMING)
         INSTRUCTION_TIME(4);
-#endif
         if (ioaccess & IOACCESS_FLAG_DO_BLIT) Blitter_Start_Now();
       }
-#if defined(SSE_VC_INTRINSICS_383F)
-      bit++;
-#else
       mask<<=1;
-#endif
     }
     // The register written to memory should be the original one, so
     // predecrement afterwards.
     areg[PARAM_M]=ad | areg_hi;
-#if !defined(SSE_CPU_PREFETCH_TIMING_MOVEM_HACK)
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
-#endif
-  }else{ //SS MOVEM other cases
+  }else{
+    m68k_src_w=m68k_fetchW();pc+=2;
+    INSTRUCTION_TIME(4);
+    MEM_ADDRESS ad;
 
-/*
-
--------------------------------------------------------------------------------
-	                |    Exec Time    |               Data Bus Usage
-      MOVEM       |      INSTR      |                  INSTR
-------------------+-----------------+------------------------------------------
-R --> M           |                 | 
-  .L              |                 |                             
-    (An)          |  8+8m(2/2m)     |                np (nW nw)*    np          
-    (d16,An)      | 12+8m(3/2m)     |             np np (nW nw)*    np          
-    (d8,An,Xn)    | 14+8m(3/2m)     |        n    np np (nW nw)*    np          
-    (xxx).W       | 12+8m(3/2m)     |             np np (nW nw)*    np          
-    (xxx).L       | 16+8m(4/2m)     |          np np np (nW nw)*    np      
-*/
-
-#if defined(SSE_CPU_PREFETCH_CLASS) 
-    M68000.PrefetchClass=1; 
-#endif
-#if defined(SSE_CPU_ASSERT_ILLEGAL_370)
-    switch (ir & BITS_543){
-    case BITS_543_010: // (An)
-    case BITS_543_101: // (d16,An)
-    case BITS_543_110: // (d8, An, Xn)
+    switch(ir&BITS_543){
+    case BITS_543_010:
+      ad=areg[PARAM_M];
+      break;
+    case BITS_543_101:
+      INSTRUCTION_TIME(4);
+      ad=areg[PARAM_M]+(signed short)m68k_fetchW();
+      pc+=2;
+      break;
+    case BITS_543_110:
+      m68k_ap=m68k_fetchW();pc+=2;
+      INSTRUCTION_TIME(6);
+      if(m68k_ap&BIT_b){  //.l
+        ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_ap)+(int)r[m68k_ap>>12];
+      }else{         //.w
+        ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_ap)+(signed short)r[m68k_ap>>12];
+      }
       break;
     case BITS_543_111:
       switch(ir&0x7){
       case 0:
+        ad=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
+        INSTRUCTION_TIME(4);
+        pc+=2;
+        break;
       case 1:
+        ad=0xffffff&m68k_fetchL();
+        INSTRUCTION_TIME(8);
+        pc+=4;
         break;
       default:
-        m68k_unrecognised();
-      }
-      break;
-    default:
-      m68k_unrecognised();
-    }
-#endif
-#if defined(SSE_CPU_ROUNDING_MOVEM_380)
-    if((ir&BITS_543)==BITS_543_110) // (d8,An,Xn)
-      INSTRUCTION_TIME(2); // Yacht
-#endif
-#if defined(SSE_CPU_ROUNDING_MOVEM) 
-    CPU_ABUS_ACCESS_READ_FETCH; // no action if SSE_CPU_TIMINGS_REFACTOR_FETCH defined
-#endif
-    m68k_src_w=m68k_fetchW();pc+=2; 
-#if !defined(SSE_CPU_ROUNDING_MOVEM)
-    INSTRUCTION_TIME(4);
-#endif
-#if defined(SSE_VS2008_WARNING_383)
-    MEM_ADDRESS ad=areg[PARAM_M];
-#else
-    MEM_ADDRESS ad;
-#endif
-    switch(ir&BITS_543){
-    case BITS_543_010:
-#if !defined(SSE_VS2008_WARNING_383)
-      ad=areg[PARAM_M];
-#endif
-      break;
-    case BITS_543_101:
-#if defined(SSE_CPU_ROUNDING_MOVEM)
-      CPU_ABUS_ACCESS_READ_FETCH;
-#else
-      INSTRUCTION_TIME(4);
-#endif
-#if defined(SSE_VS2008_WARNING_383)
-      ad+=(signed short)m68k_fetchW();
-#else
-      ad=areg[PARAM_M]+(signed short)m68k_fetchW();
-#endif
-      pc+=2; 
-      break;
-    case BITS_543_110:
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-      CPU_ABUS_ACCESS_READ_FETCH
-#endif
-      m68k_ap=m68k_fetchW();pc+=2; 
-#if !defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-#if defined(SSE_CPU_ROUNDING_MOVEM6) 
-      CPU_ABUS_ACCESS_READ;
-      ///INSTRUCTION_TIME_ROUND(6);
-#else
-      INSTRUCTION_TIME(6);
-#endif
-#endif
-      if(m68k_ap&BIT_b){  //.l
-#if defined(SSE_VS2008_WARNING_383)
-        ad+=(signed char)LOBYTE(m68k_ap)+(int)r[m68k_ap>>12];
-#else
-        ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_ap)+(int)r[m68k_ap>>12];
-#endif
-      }else{         //.w
-#if defined(SSE_VS2008_WARNING_383)
-        ad+=(signed char)LOBYTE(m68k_ap)+(signed short)r[m68k_ap>>12];
-#else
-        ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_ap)+(signed short)r[m68k_ap>>12];
-#endif
-      }
-#if defined(SSE_CPU_ROUNDING_MOVEM6) && !defined(SSE_CPU_ROUNDING_MOVEM_380)
-      INSTRUCTION_TIME(2);
-#endif
-      break;
-    case BITS_543_111:
-      switch(ir&0x7){
-      case 0://(xxx).W
-#if defined(SSE_CPU_ROUNDING_MOVEM)
-        CPU_ABUS_ACCESS_READ_FETCH;
-#endif
-        ad=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
-#if !defined(SSE_CPU_ROUNDING_MOVEM)
-        INSTRUCTION_TIME(4);
-#endif
-        pc+=2; 
-        break;
-      case 1://(xxx).L
-#if defined(SSE_CPU_ROUNDING_MOVEM)
-        CPU_ABUS_ACCESS_READ_FETCH;
-        CPU_ABUS_ACCESS_READ_FETCH;
-#endif
-        ad=0xffffff&m68k_fetchL();
-#if !defined(SSE_CPU_ROUNDING_MOVEM)
-        INSTRUCTION_TIME(8);
-#endif
-        pc+=4;  
-        break;
-#if !defined(SSE_CPU_ASSERT_ILLEGAL_370)
-      default: //ILLEGAL
         ad=0; // This is to stop an annoying warning
         m68k_unrecognised();
         break;
-#elif defined(SSE_VS2008_WARNING_383)
-      default:
-        NODEFAULT;
-#endif
       }
       break;
-#if !defined(SSE_CPU_ASSERT_ILLEGAL_370)
     default:
       ad=0; // This is to stop an annoying warning
       m68k_unrecognised();
-#elif defined(SSE_VS2008_WARNING_383)
-    default:
-      NODEFAULT;
-#endif
     }
-#if defined(SSE_CPU_PREFETCH_TIMING_MOVEM_HACK)
-/* see below, we must define either SSE_CPU_PREFETCH_TIMING_MOVEM_HACK
-   or SSE_CPU_MOVEM_BUS_ACCESS_TIMING for Dragonnel menu correct display on
-   line 200.
-   SSE_CPU_PREFETCH_TIMING_MOVEM_HACK = hack before 3.7
-   SSE_CPU_MOVEM_BUS_ACCESS_TIMING = legit fix in Steem CPU since 3.7
-*/
-    PREFETCH_IRC; 
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-    FETCH_TIMING;
-#endif
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-    TRUE_PC=pc+2; // Blood Money original
-#endif
-#if defined(SSE_VC_INTRINSICS_383F)
-    short bit=0;
-#else
     short mask=1;
-#endif
     for (int n=0;n<16;n++){
-#if defined(SSE_VC_INTRINSICS_383F)
-      if(BITTEST(m68k_src_w,bit)) {
-#else
       if (m68k_src_w&mask){
-#endif
-#if defined(SSE_CPU_MOVEM_BUS_ACCESS_TIMING)
-/*  It seems that timing should be counted at once during the long
-    move.
-    With this switch Dragonnels menu is correct and prefetch is
-    correctly placed, at the end of the instruction, at last.
-*/
-        CPU_ABUS_ACCESS_WRITE;
-        CPU_ABUS_ACCESS_WRITE;
-#else
         INSTRUCTION_TIME_ROUND(4);
-#endif
         m68k_lpoke(ad,r[n]);
         ad+=4;
-#if !defined(SSE_CPU_MOVEM_BUS_ACCESS_TIMING)
         INSTRUCTION_TIME(4);
-#endif
       }
-#if defined(SSE_VC_INTRINSICS_383F)
-      bit++;
-#else
       mask<<=1;
-#endif
     }
-#if !defined(SSE_CPU_PREFETCH_TIMING_MOVEM_HACK)
-    PREFETCH_IRC; 
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-    FETCH_TIMING;
-#endif
-#endif
   }
   if (ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_W){  //oh dear, writing multiple longs to the PSG
     int s=count_bits_set_in_word(m68k_src_w)*2; //number of words to write
     if(s>4)BUS_JAM_TIME((s-1)&-4);  //we've already had a bus jam of 4, for s=5..8 want extra bus jam of 4
   }
+
 }
-
-//#define SSE_CPU_LINE_4_TIMINGS
-
 void                              m68k_movem_l_to_regs(){
-
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ASSERT_ILLEGAL_370)
-    switch (ir & BITS_543){
-    case BITS_543_010: // (An)
-    case BITS_543_011:
-    case BITS_543_101: // (d16,An)
-    case BITS_543_110: // (d8, An, Xn)
-      break;
-    case BITS_543_111:
-      switch(ir&0x7){
-      case 0:
-      case 1:
-      case 2:
-      case 3:
-        break;
-      default:
-        m68k_unrecognised();
-      }
-      break;
-    default:
-      m68k_unrecognised();
-    }
-#endif
   bool postincrement=false;
-#if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
-  CPU_ABUS_ACCESS_READ_FETCH;// fixes Hackabonds Demo instructions scroller (STF)
-#endif
-  m68k_src_w=m68k_fetchW();pc+=2;  // SS: TODO what if m68k_src_w=0?
-#if !defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
+  m68k_src_w=m68k_fetchW();pc+=2;
   INSTRUCTION_TIME(4);
-#endif
-#if defined(SSE_VS2008_WARNING_383)
-  MEM_ADDRESS ad=areg[PARAM_M];
-#else
+
   MEM_ADDRESS ad;
-#endif
   switch(ir&BITS_543){
-#if defined(SSE_VS2008_WARNING_383)
-  case BITS_543_011:
-    postincrement=true;
   case BITS_543_010:
-#else
-  case BITS_543_010: //ss (A)
     ad=areg[PARAM_M];
     break;
   case BITS_543_011:
     ad=areg[PARAM_M];
     postincrement=true;
-#endif
     break;
   case BITS_543_101:
-#if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
-    CPU_ABUS_ACCESS_READ_FETCH;
-#endif
-#if defined(SSE_VS2008_WARNING_383)
-    ad+=(signed short)m68k_fetchW();
-#else
     ad=areg[PARAM_M]+(signed short)m68k_fetchW();
-#endif
-#if !defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
     INSTRUCTION_TIME(4);
-#endif
-    pc+=2; 
+    pc+=2;
     break;
   case BITS_543_110:
-#if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
-    CPU_ABUS_ACCESS_READ_FETCH;
-#else
     INSTRUCTION_TIME(6);
-#endif
-    m68k_iriwo=m68k_fetchW();pc+=2; 
+    m68k_iriwo=m68k_fetchW();pc+=2;
     if(m68k_iriwo&BIT_b){  //.l
-#if defined(SSE_VS2008_WARNING_383)
-      ad+=(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
-#else
       ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
-#endif
     }else{         //.w
-#if defined(SSE_VS2008_WARNING_383)
-      ad+=(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
-#else
       ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
-#endif
     }
-#if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
-    INSTRUCTION_TIME(2);
-#endif
     break;
   case BITS_543_111:
     switch(ir&0x7){
     case 0:
-#if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
-      CPU_ABUS_ACCESS_READ_FETCH;
-#else
       INSTRUCTION_TIME(4);
-#endif
       ad=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
-      pc+=2; 
+      pc+=2;
       break;
     case 1:
-#if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
-      CPU_ABUS_ACCESS_READ_FETCH;
-      CPU_ABUS_ACCESS_READ_FETCH;
-#else
       INSTRUCTION_TIME(8);
-#endif
       ad=0xffffff&m68k_fetchL();
-      pc+=4;  
+      pc+=4;
       break;
     case 2:
-#if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
-      CPU_ABUS_ACCESS_READ_FETCH;
-#else
       INSTRUCTION_TIME(4);
-#endif
       ad=pc+(signed short)m68k_fetchW();
-      pc+=2; 
+      pc+=2;
       break;
     case 3:
-#if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
-      CPU_ABUS_ACCESS_READ_FETCH;
-#else
       INSTRUCTION_TIME(6);
-#endif
       m68k_iriwo=m68k_fetchW();
       if(m68k_iriwo&BIT_b){  //.l
         ad=pc+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
       }else{         //.w
         ad=pc+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
       }
-#if defined(SSE_CPU_ROUNDING_MOVEM_MR_L)
-      INSTRUCTION_TIME(2);
-#endif
-      pc+=2; 
+      pc+=2;
       break;
-#if !defined(SSE_CPU_ASSERT_ILLEGAL_370)
     default:
       ad=0; // This is to stop an annoying warning
       m68k_unrecognised();
       break;
-#elif defined(SSE_VS2008_WARNING_383)
-    default:
-      NODEFAULT;
-#endif
     }
     break;
-#if !defined(SSE_CPU_ASSERT_ILLEGAL_370)
   default:
     ad=0; // This is to stop an annoying warning
     m68k_unrecognised();
-#elif defined(SSE_VS2008_WARNING_383)
-  default:
-    NODEFAULT;
-#endif
   }
-#if defined(SSE_CPU_PREFETCH_TIMING_MOVEM_HACK)
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-  PREFETCH_IRC;
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-  TRUE_PC=pc+2;
-#endif
   DWORD areg_hi=(areg[PARAM_M] & 0xff000000);
-#if defined(SSE_VC_INTRINSICS_383F)
-    short bit=0;
-#else
   short mask=1;
-#endif
   for (int n=0;n<16;n++){
-#if defined(SSE_VC_INTRINSICS_383F)
-    if(BITTEST(m68k_src_w,bit)) {
-#else
     if (m68k_src_w & mask){
-#endif  
-#if defined(SSE_CPU_MOVEM_BUS_ACCESS_TIMING)
-      CPU_ABUS_ACCESS_READ;
-      CPU_ABUS_ACCESS_READ;
-#else
       INSTRUCTION_TIME_ROUND(4);
-#endif
       r[n]=m68k_lpeek(ad);
-#if !defined(SSE_CPU_MOVEM_BUS_ACCESS_TIMING)
       INSTRUCTION_TIME(4);
-#endif
       ad+=4;
     }
-#if defined(SSE_VC_INTRINSICS_383F)
-    bit++;
-#else
     mask<<=1;
-#endif
   }
   if (postincrement) areg[PARAM_M]=ad | areg_hi;
-#ifdef SSE_CPU_ROUNDING_MOVEM_380
-  CPU_ABUS_ACCESS_READ;
-#endif
   m68k_dpeek(ad); //extra word read (discarded)
-#ifndef SSE_CPU_ROUNDING_MOVEM_380
   INSTRUCTION_TIME_ROUND(4);
-#endif
-#if !defined(SSE_CPU_PREFETCH_TIMING_MOVEM_HACK)
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-  PREFETCH_IRC;
-#endif
-  //SS: PSG jam seems to be correctly emulated as changing this (here or there) 
-  //will break many programs...
   if (ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_R){  //oh dear, reading multiple longs from the PSG
     int s=count_bits_set_in_word(m68k_src_w)*2+1; //number of words read
     if(s>4)BUS_JAM_TIME((s-1)&-4);  //we've already had a bus jam of 4, for s=5..8 want extra bus jam of 4
   }
 }
-
-//#define SSE_CPU_LINE_4_TIMINGS
-
 void                              m68k_movem_w_to_regs(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ASSERT_ILLEGAL_370)
-    switch (ir & BITS_543){
-    case BITS_543_010: // (An)
-    case BITS_543_011:
-    case BITS_543_101: // (d16,An)
-    case BITS_543_110: // (d8, An, Xn)
-      break;
-    case BITS_543_111:
-      switch(ir&0x7){
-      case 0:
-      case 1:
-      case 2:
-      case 3:
-        break;
-      default:
-        m68k_unrecognised();
-      }
-      break;
-    default:
-      m68k_unrecognised();
-    }
-#endif
   bool postincrement=false;
-#if defined(SSE_CPU_ROUNDING_MOVEM)
-  CPU_ABUS_ACCESS_READ_FETCH;
-#else
   INSTRUCTION_TIME(4);
-#endif
-  m68k_src_w=m68k_fetchW();pc+=2; 
-#if defined(SSE_VS2008_WARNING_383)
-  MEM_ADDRESS ad=areg[PARAM_M]; // so we have a default
-#else
+  m68k_src_w=m68k_fetchW();pc+=2;
+
   MEM_ADDRESS ad;
-#endif
   switch (ir & BITS_543){
-#if defined(SSE_VS2008_WARNING_383)
-  case BITS_543_011:
-    postincrement=true;
-  case BITS_543_010:
-#else
   case BITS_543_010:
     ad=areg[PARAM_M];
     break;
   case BITS_543_011:
     ad=areg[PARAM_M];
     postincrement=true;
-#endif
     break;
   case BITS_543_101:
-#if defined(SSE_CPU_ROUNDING_MOVEM)
-    CPU_ABUS_ACCESS_READ_FETCH;
-#else
     INSTRUCTION_TIME(4);
-#endif
-#if defined(SSE_VS2008_WARNING_383)
-    ad+=(signed short)m68k_fetchW();
-#else
     ad=areg[PARAM_M]+(signed short)m68k_fetchW();
-#endif
-    pc+=2; 
+    pc+=2;
     break;
   case BITS_543_110:
-#if defined(SSE_CPU_ROUNDING_MOVEM6)
-    CPU_ABUS_ACCESS_READ_FETCH;
-    //INSTRUCTION_TIME_ROUND(6);
-#else
     INSTRUCTION_TIME(6);
-#endif
-    m68k_iriwo=m68k_fetchW();pc+=2; 
+    m68k_iriwo=m68k_fetchW();pc+=2;
     if(m68k_iriwo&BIT_b){  //.l
-#if defined(SSE_VS2008_WARNING_383)
-      ad+=(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
-#else
       ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
-#endif
     }else{         //.w
-#if defined(SSE_VS2008_WARNING_383)
-      ad+=(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
-#else
       ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
-#endif
     }
-#if defined(SSE_CPU_ROUNDING_MOVEM6)
-    INSTRUCTION_TIME(2);
-#endif
     break;
   case BITS_543_111:
     switch(ir&0x7){
     case 0:
-#if defined(SSE_CPU_ROUNDING_MOVEM)
-      CPU_ABUS_ACCESS_READ_FETCH;
-#else
       INSTRUCTION_TIME(4);
-#endif      
       ad=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
-      pc+=2; 
+      pc+=2;
       break;
     case 1:
-#if defined(SSE_CPU_ROUNDING_MOVEM)
-      CPU_ABUS_ACCESS_READ_FETCH;
-      CPU_ABUS_ACCESS_READ_FETCH;
-#else
       INSTRUCTION_TIME(8);
-#endif      
       ad=0xffffff&m68k_fetchL();
-      pc+=4;  
+      pc+=4;
       break;
     case 2:
-#if defined(SSE_CPU_ROUNDING_MOVEM)
-      CPU_ABUS_ACCESS_READ_FETCH;
-#else
       INSTRUCTION_TIME(4);
-#endif
       ad=pc+(signed short)m68k_fetchW();
-      pc+=2; 
+      pc+=2;
       break;
     case 3:
-#if defined(SSE_CPU_ROUNDING_MOVEM6)
-      CPU_ABUS_ACCESS_READ_FETCH;
-      //INSTRUCTION_TIME_ROUND(6);
-#else
       INSTRUCTION_TIME(6);
-#endif
+
       m68k_iriwo=m68k_fetchW();
       if(m68k_iriwo&BIT_b){  //.l
         ad=pc+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
       }else{         //.w
         ad=pc+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
       }
-#if defined(SSE_CPU_ROUNDING_MOVEM6)
-      INSTRUCTION_TIME(2);
-#endif
-      pc+=2; 
+      pc+=2;
       // m68k_src_w=// D2_IRIWO_PC;
       break;
-#if !defined(SSE_CPU_ASSERT_ILLEGAL_370)
     default:
       ad=0; // This is to stop an annoying warning
       m68k_unrecognised();
       break;
-#elif defined(SSE_VS2008_WARNING_383)
-    default:
-      NODEFAULT;
-#endif
     }
     break;
-#if !defined(SSE_CPU_ASSERT_ILLEGAL_370)
   default:
     ad=0; // This is to stop an annoying warning
     m68k_unrecognised();
-#elif defined(SSE_VS2008_WARNING_383)
-  default:
-    NODEFAULT;
-#endif
-
   }
-#if defined(SSE_CPU_PREFETCH_TIMING_MOVEM_HACK)
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-  PREFETCH_IRC;
-#endif
   DWORD areg_hi=(areg[PARAM_M] & 0xff000000);
-#if defined(SSE_CPU_TRUE_PC)
-  TRUE_PC=pc+2;
-#endif
-#if defined(SSE_VC_INTRINSICS_383F)
-  short bit=0;
-#else
   short mask=1;
-#endif
   for(int n=0;n<16;n++){
-#if defined(SSE_VC_INTRINSICS_383F)
-    if(BITTEST(m68k_src_w,bit)) {
-#else
     if (m68k_src_w & mask){
-#endif
-#if defined(SSE_CPU_MOVEM_BUS_ACCESS_TIMING)
-      CPU_ABUS_ACCESS_READ;
-#endif
       r[n]=(signed long)((signed short)m68k_dpeek(ad));
-#if !defined(SSE_CPU_MOVEM_BUS_ACCESS_TIMING)
       INSTRUCTION_TIME_ROUND(4);
-#endif
       ad+=2;
     }
-#if defined(SSE_VC_INTRINSICS_383F)
-    bit++;
-#else
     mask<<=1;
-#endif
   }
   if (postincrement) areg[PARAM_M]=ad | areg_hi;
-#ifdef SSE_CPU_ROUNDING_MOVEM_380
-  CPU_ABUS_ACCESS_READ;
-#endif
   m68k_dpeek(ad); //extra word read (discarded)
-#ifndef SSE_CPU_ROUNDING_MOVEM_380
   INSTRUCTION_TIME_ROUND(4);
-#endif
-#if !defined(SSE_CPU_PREFETCH_TIMING_MOVEM_HACK)
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-  PREFETCH_IRC;
-#endif
   if (ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_R){  //oh dear, reading multiple words from the PSG
     int s=count_bits_set_in_word(m68k_src_w)+1; //number of words read
     if(s>4)BUS_JAM_TIME((s-1)&-4);  //we've already had a bus jam of 4, for s=5..8 want extra bus jam of 4
   }
 }
-
 void                              m68k_jsr()
 {
-#if !defined(SSE_CPU_ROUDING_EA)
   // see jmp instruction times table and +8.
-  if((ir&B6_111111)==B6_111001){ INSTRUCTION_TIME(0);}//SS (xxx).L
-  else if((ir&BITS_543)==BITS_543_010){ INSTRUCTION_TIME(4);}//SS (An),+round
-  else {INSTRUCTION_TIME(2);}//SS  (d16,An) (d8,An,Xn) (xxx).L
-  m68k_get_effective_address();
-#endif
-#if defined(SSE_CPU_ROUDING_EA)
-/*
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage
-       JSR        |      INSTR      |                  INSTR                    
-------------------+-----------------+------------------------------------------
-<ea> :            |                 |                
-    (An)          | 16(2/2)         |                      np nS ns np          
-    (d16,An)      | 18(2/2)         |                 n    np nS ns np          
-    (d8,An,Xn)    | 22(2/2)         |                 n nn np nS ns np          
-    (xxx).W       | 18(2/2)         |                 n    np nS ns np          
-    (xxx).L       | 20(3/2)         |                   np np nS ns np          
-*/
-  switch (ir & BITS_543){
-    case BITS_543_010: //SS (An)
-      // (An)          | 16(2/2)         |                      np nS ns np          
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-      CPU_ABUS_ACCESS_READ_PC; // = prefetch but Steem doesn't work like that yet
-#endif
-      effective_address=areg[PARAM_M];
-      break;
-    case BITS_543_101: //SS (d16,An)
-      // (d16,An)      | 18(2/2)         |                 n    np nS ns np          
-      INSTRUCTION_TIME(2); //immediate was already prefetched...
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-      CPU_ABUS_ACCESS_READ_FETCH; //...so this really fetches next ir (see FetchWord)
-#endif
-      effective_address=areg[PARAM_M]+(signed short)m68k_fetchW();
-      pc+=2; 
-      break;
-    case BITS_543_110: //SS (d8,An,Xn)
-      // (d8,An,Xn)    | 22(2/2)         |                 n nn np nS ns np          
-      INSTRUCTION_TIME(6);
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-      CPU_ABUS_ACCESS_READ_FETCH;
-#endif
-      m68k_iriwo=m68k_fetchW();pc+=2; 
-      if (m68k_iriwo & BIT_b){  //.l
-        effective_address=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
-      }else{         //.w
-        effective_address=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
-      }
-      break;
-    case BITS_543_111:
-      switch (ir & 0x7){
-      case 0: //SS (xxx).W
-        // (xxx).W       | 18(2/2)         |                 n    np nS ns np          
-        INSTRUCTION_TIME(2);
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-        CPU_ABUS_ACCESS_READ_FETCH;
-#endif
-        effective_address=(signed long)(signed short)m68k_fetchW();
-        pc+=2; 
-#if defined(SSE_CPU_TRUE_PC)
-#if !defined(SSE_CPU_TRUE_PC2)
-          TRUE_PC+=2;
-#endif
-#endif
-        break;
-      case 1: //SS (xxx).L
-        // (xxx).L       | 20(3/2)         |                   np np nS ns np     
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-        CPU_ABUS_ACCESS_READ_FETCH;
-        CPU_ABUS_ACCESS_READ_FETCH;
-#else
-        CPU_ABUS_ACCESS_READ;
-#endif
-        effective_address=m68k_fetchL();
-        pc+=4;  
-#if defined(SSE_CPU_TRUE_PC)
-#if !defined(SSE_CPU_TRUE_PC2)
-        TRUE_PC+=4;
-#endif
-#endif
-        break;
-      case 2: //SS (d16,PC) 
-        INSTRUCTION_TIME(2);
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-        CPU_ABUS_ACCESS_READ_FETCH;
-#endif
-        effective_address=(PC_RELATIVE_PC+(signed short)m68k_fetchW()) | pc_high_byte;
-        PC_RELATIVE_MONITOR(effective_address);
-        pc+=2; 
-        break;
-      case 3: //SS (d8,PC,Xn)
-        INSTRUCTION_TIME(6);
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-        CPU_ABUS_ACCESS_READ_FETCH
-#endif
-        m68k_iriwo=m68k_fetchW();
-        if (m68k_iriwo & BIT_b){  //.l
-          effective_address=(PC_RELATIVE_PC+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12]) | pc_high_byte;
-        }else{         //.w
-          effective_address=(PC_RELATIVE_PC+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12]) | pc_high_byte;
-        }
-        PC_RELATIVE_MONITOR(effective_address);
-        pc+=2; 
-        break;       //what do bits 8,9,a  of extra word do?  (not always 0)
-      default:
-        m68k_unrecognised();
-        break;
-      }
-      break;
-    default:
-      m68k_unrecognised();
-  }
-#if !defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-  CPU_ABUS_ACCESS_READ; 
-#endif
-#endif
-#if !(defined(SSE_CPU_ROUNDING_JSR))
-  INSTRUCTION_TIME_ROUND(8);
-#endif
-#if defined(SSE_CPU_PREFETCH_CALL)
-  // read new PC before pushing current PC; fixes nothing AFAIK
-  M68000.PrefetchClass=1; 
-#if defined(SSE_CPU_ROUNDING_BUS)
-  M68000.Rounded=false;
-#endif
-  m68k_READ_W(effective_address); // Check for bus/address errors
-  FETCH_TIMING; // Fetch from new address before setting PC
-#if defined(SSE_CPU_PREFETCH_TIMING_SET_PC) \
-  && !defined(SSE_CPU_ROUNDING_JSR)
-  INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
-#endif
-  M68000.FetchForCall(effective_address); // fetch before writing stack
+  if((ir&B6_111111)==B6_111001){ INSTRUCTION_TIME(0);}
+  else if((ir&BITS_543)==BITS_543_010){ INSTRUCTION_TIME(4);}
+  else {INSTRUCTION_TIME(2);}
 
-#if defined(SSE_CPU_ROUNDING_JSR)
-  // 8 cycles more than JMP because we push PC
-  CPU_ABUS_ACCESS_WRITE_PUSH;
-  CPU_ABUS_ACCESS_WRITE_PUSH;
-#endif
-  m68k_PUSH_L(PC32); 
-#else
+  m68k_get_effective_address();
+  INSTRUCTION_TIME_ROUND(8);
   m68k_PUSH_L(PC32);
   FETCH_TIMING; // Fetch from new address before setting PC
   m68k_READ_W(effective_address); // Check for bus/address errors
-#endif
-#if defined(SSE_BOILER_PSEUDO_STACK)
-  Debug.PseudoStackPush(PC32);
-#endif
-  SET_PC(effective_address); //SS where prefetch happens
-#if defined(SSE_CPU_PREFETCH_TIMING_JSR)
-  CPU_ABUS_ACCESS_READ_PC;
-#endif
+  SET_PC(effective_address);
   intercept_os();
 }
-
-
 void                              m68k_jmp()
 {
-#if !defined(SSE_CPU_ROUDING_EA)
   // jmp instruction times table.
   // ad.mode  time  Steem EA time difference
   // (aN)     8     0             8
@@ -5739,268 +2624,32 @@ void                              m68k_jmp()
   if((ir&B6_111111)==B6_111001){ INSTRUCTION_TIME(0);}  // abs.l
   else if((ir&BITS_543)==BITS_543_010){ INSTRUCTION_TIME(4);} // (an)
   else {INSTRUCTION_TIME(2);}
-  m68k_get_effective_address();
-#endif
-#if defined(SSE_CPU_ROUDING_EA)
-/*
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage
-       JMP        |      INSTR      |                  INSTR                    
-------------------+-----------------+------------------------------------------
-<ea> :            |                 |                          
-    (An)          |  8(2/0)         |                      np       np          
-    (d16,An)      | 10(2/0)         |                 n    np       np          
-    (d8,An,Xn)    | 14(2/0)         |                 n nn np       np          
-    (xxx).W       | 10(2/0)         |                 n    np       np          
-    (xxx).L       | 12(3/0)         |                   np np       np          
-NOTES :
-  .M68000UM is probably wrong with bus read accesses for JMP (d8,An,Xn),Dn 
-   instruction. It reads "14(3/0)" but, according to USP4325121 and with a 
-   little common sense, 2 bus read accesses are far enough.
-*/
 
-  switch (ir & BITS_543){
-    case BITS_543_010: //SS (An)
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-      CPU_ABUS_ACCESS_READ_PC; // see JSR
-#endif
-      effective_address=areg[PARAM_M];
-      break;
-    case BITS_543_101: //SS (d16,An)
-      INSTRUCTION_TIME(2);
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-      CPU_ABUS_ACCESS_READ_FETCH;
-#endif
-      effective_address=areg[PARAM_M]+(signed short)m68k_fetchW();
-      pc+=2; 
-      break;
-    case BITS_543_110: //SS (d8,An,Xn)
-      INSTRUCTION_TIME(6);
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-      CPU_ABUS_ACCESS_READ_FETCH;
-#endif
-      m68k_iriwo=m68k_fetchW();pc+=2; 
-      if (m68k_iriwo & BIT_b){  //.l
-        effective_address=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
-      }else{         //.w
-        effective_address=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
-      }
-      break;
-    case BITS_543_111:
-      switch (ir & 0x7){
-      case 0: //SS (xxx).W
-        INSTRUCTION_TIME(2);
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-        CPU_ABUS_ACCESS_READ_FETCH;
-#endif
-        effective_address=(signed long)(signed short)m68k_fetchW();
-        pc+=2; 
-#if defined(SSE_CPU_TRUE_PC)
-#if !defined(SSE_CPU_TRUE_PC2)
-        TRUE_PC+=2;
-#endif
-#endif
-        break;
-      case 1: //SS (xxx).L
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-        CPU_ABUS_ACCESS_READ_FETCH;
-        CPU_ABUS_ACCESS_READ_FETCH;
-#else
-        CPU_ABUS_ACCESS_READ;
-#endif
-        effective_address=m68k_fetchL();
-        pc+=4;  
-#if defined(SSE_CPU_TRUE_PC)
-#if !defined(SSE_CPU_TRUE_PC2)
-        TRUE_PC+=4;
-#endif
-#endif
-        break;
-      case 2: //SS (d16,PC) 
-        INSTRUCTION_TIME(2);
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-        CPU_ABUS_ACCESS_READ_FETCH;
-#endif
-        effective_address=(PC_RELATIVE_PC+(signed short)m68k_fetchW()) | pc_high_byte;
-        PC_RELATIVE_MONITOR(effective_address);
-        pc+=2; 
-        break;
-      case 3: //SS (d8,PC,Xn)
-        INSTRUCTION_TIME(6);
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-        CPU_ABUS_ACCESS_READ_FETCH;
-#endif
-        m68k_iriwo=m68k_fetchW();
-        if (m68k_iriwo & BIT_b){  //.l
-          effective_address=(PC_RELATIVE_PC+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12]) | pc_high_byte;
-        }else{         //.w
-          effective_address=(PC_RELATIVE_PC+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12]) | pc_high_byte;
-        }
-        PC_RELATIVE_MONITOR(effective_address);
-        pc+=2; 
-        break;       //what do bits 8,9,a  of extra word do?  (not always 0)
-      default:
-        m68k_unrecognised();
-        break;
-      }
-      break;
-    default:
-      m68k_unrecognised();
-  }
-#endif
+  m68k_get_effective_address();
   FETCH_TIMING; // Fetch from new address before setting PC
-#if defined(SSE_CPU_PREFETCH_TIMING_SET_PC) \
-  && !defined(SSE_CPU_PREFETCH_TIMING_JMP)
-  INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
-#endif
-#if defined(SSE_CPU_ROUNDING_BUS)
-  M68000.Rounded=false;
-#endif
   m68k_READ_W(effective_address); // Check for bus/address errors
-#if defined(SSE_CPU) && !defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-  CPU_ABUS_ACCESS_READ; // there are 2 prefetches in those instructions
-#endif
-  SET_PC(effective_address);  
-#if defined(SSE_CPU_PREFETCH_TIMING_JMP)
-  CPU_ABUS_ACCESS_READ_PC;
-#endif
+  SET_PC(effective_address);
   intercept_os();
 }
-/*
-Yacht:
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage
-        CHK       |  INSTR     EA   |  1st OP (ea)  |          INSTR
-------------------+-----------------+---------------+--------------------------
-no trap :         |                 |               |
-  <ea>,Dn :       |                 |              /  
-    .W :          |                 |             /  
-      Dn          | 10(1/0)  0(0/0) |            |                  np nn n     
-      (An)        | 10(1/0)  4(1/0) |         nr |                  np nn n     
-      (An)+       | 10(1/0)  4(1/0) |         nr |                  np nn n     
-      -(An)       | 10(1/0)  6(1/0) | n       nr |                  np nn n     
-      (d16,An)    | 10(1/0)  8(2/0) |      np nr |                  np nn n     
-      (d8,An,Xn)  | 10(1/0) 10(2/0) | n    np nr |                  np nn n     
-      (xxx).W     | 10(1/0)  8(2/0) |      np nr |                  np nn n     
-      (xxx).L     | 10(1/0) 12(2/0) |   np np nr |                  np nn n     
-      #<data>     | 10(1/0)  4(1/0) |      np    |                  np nn n     
-trap :            |                 |            |
-  <ea>,Dn :       |                 |            |  
-    .W :          |                 |            |
-      Dn > Src :  |                 |            |
-        Dn        | 38(5/3)  0(0/0) |            |np    nn ns nS ns np np np np 
-        (An)      | 38(5/3)  4(1/0) |         nr |np    nn ns nS ns np np np np 
-        (An)+     | 38(5/3)  4(1/0) |         nr |np    nn ns nS ns np np np np 
-        -(An)     | 38(5/3)  6(1/0) | n       nr |np    nn ns nS ns np np np np 
-        (d16,An)  | 38(5/3)  8(2/0) |      np nr |np    nn ns nS ns np np np np 
-        (d8,An,Xn)| 38(5/3) 10(2/0) | n    np nr |np    nn ns nS ns np np np np 
-        (xxx).W   | 38(5/3)  8(2/0) |      np nr |np    nn ns nS ns np np np np 
-        (xxx).L   | 38(5/3) 12(2/0) |   np np nr |np    nn ns nS ns np np np np 
-        #<data>   | 38(5/3)  4(1/0) |      np    |np    nn ns nS ns np np np np 
-      Dn <0 :     |                 |            |
-        Dn        | 40(5/3)  0(0/0) |            |np n- nn ns nS ns np np np np 
-        (An)      | 40(5/3)  4(1/0) |         nr |np n- nn ns nS ns np np np np 
-        (An)+     | 40(5/3)  4(1/0) |         nr |np n- nn ns nS ns np np np np 
-        -(An)     | 40(5/3)  6(1/0) | n       nr |np n- nn ns nS ns np np np np 
-        (d16,An)  | 40(5/3)  8(2/0) |      np nr |np n- nn ns nS ns np np np np 
-        (d8,An,Xn)| 40(5/3) 10(2/0) | n    np nr |np n- nn ns nS ns np np np np 
-        (xxx).W   | 40(5/3)  8(2/0) |      np nr |np n- nn ns nS ns np np np np 
-        (xxx).L   | 40(5/3) 12(2/0) |   np np nr |np n- nn ns nS ns np np np np 
-        #<data>   | 40(5/3)  4(1/0) |      np    |np n- nn ns nS ns np np np np 
-NOTES :
-  . for more informations about the "trap" lines see exceptions section below.
-
-WinUAE
-CHK:
-
-- 8 idle cycles
-- write PC low word
-- write SR
-- write PC high word
-- read exception address high word
-- read exception address low word
-- prefetch
-- 2 idle cycles
-- prefetch
-
-Not exactly the same... cases?
-*/
 void                              m68k_chk(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
-#endif
   if((ir&BITS_543)==BITS_543_001){
     m68k_unrecognised();
   }else{
     m68k_GET_SOURCE_W;
-#if defined(SSE_CPU_PREFETCH_TIMING_CHK)
-    PREFETCH_IRC; // apparently, we do it anyway? (not optimised)
-    INSTRUCTION_TIME(6);
-#else
     INSTRUCTION_TIME(4);
-#endif
-#if defined(SSE_BOILER_SHOW_INTERRUPT)
-    Debug.RecordInterrupt("CHK");
-#endif
-    // ss do later if trap
     if(r[PARAM_N]&0x8000){
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITSET(sr,SR_N_BIT);
-#else
       SR_SET(SR_N);
-#endif
       m68k_interrupt(LPEEK(BOMBS_CHK*4));
-#if defined(SSE_CPU_FETCH_TIMING)
-#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
-      INSTRUCTION_TIME_ROUND(30-4-12); // includes a timing fix for CHK
-#else
-      INSTRUCTION_TIME(40-4); //10 already counted
-#endif
-      FETCH_TIMING;
-#if defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-      CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
-#endif
-#else
       INSTRUCTION_TIME_ROUND(40);
-#endif
     }else if((signed short)LOWORD(r[PARAM_N])>(signed short)m68k_src_w){
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITRESET(sr,SR_N_BIT);
-#else
       SR_CLEAR(SR_N);
-#endif
       m68k_interrupt(LPEEK(BOMBS_CHK*4));
-#if defined(SSE_CPU_FETCH_TIMING)
-#if defined(SSE_CPU_ROUNDING_CHK)
-      INSTRUCTION_TIME(28-4); //10 already counted + 2 fewer acording to Yacht
-#else
-      INSTRUCTION_TIME(40-4);
-#endif
-      FETCH_TIMING;
-#if defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-      CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
-#endif
-#else
       INSTRUCTION_TIME_ROUND(40);
-#endif
     }
-#if !defined(SSE_CPU_PREFETCH_TIMING_CHK)
-#if defined(SSE_CPU_PREFETCH_CHK)
-    else
-    {
-      PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-      FETCH_TIMING;
-#endif
-    }
-#endif
-#endif
   }
 }
-
-
 void                              m68k_lea(){
-#if !defined(SSE_CPU_ROUDING_EA)
   // lea instruction times table.
   // ad.mode  time  Steem EA time difference
   // (aN)     4     0             4
@@ -6010,107 +2659,11 @@ void                              m68k_lea(){
   // xxx.l    12    8             4
   // D(pc)    8     4             4
   // D(pc,dM) 14    8             6
+
   if ((ir & B6_111111)==B6_111011 || (ir & B6_111000)==B6_110000){ INSTRUCTION_TIME(2); }
   m68k_get_effective_address();
-#endif
-#if defined(SSE_CPU_ROUDING_EA)
-/*
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage
-        LEA       |      INSTR      |                  INSTR                   
-------------------+-----------------+------------------------------------------
-<ea>,An :         |                 |               
-  .L :            |                 |               
-    (An)          |  4(1/0)         |                               np          
-    (d16,An)      |  8(2/0)         |                          np   np          
-    (d8,An,Xn)    | 12(2/0)         |                        n np n np          
-    (xxx).W       |  8(2/0)         |                          np   np          
-    (xxx).L       | 12(3/0)         |                       np np   np          
-*/
-  switch (ir & BITS_543){
-    case BITS_543_010: //SS (An)
-      effective_address=areg[PARAM_M];
-      break;
-    case BITS_543_101: //SS (d16,An)
-      CPU_ABUS_ACCESS_READ_FETCH;
-      effective_address=areg[PARAM_M]+(signed short)m68k_fetchW();
-      pc+=2; 
-      break;
-    case BITS_543_110: //SS (d8,An,Xn)
-      INSTRUCTION_TIME(2);
-      CPU_ABUS_ACCESS_READ_FETCH;
-      m68k_iriwo=m68k_fetchW();pc+=2; 
-      INSTRUCTION_TIME(2);
-      if (m68k_iriwo & BIT_b){  //.l
-        effective_address=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
-      }else{         //.w
-        effective_address=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
-      }
-      break;
-    case BITS_543_111:
-      switch (ir & 0x7){
-      case 0: //SS (xxx).W
-        CPU_ABUS_ACCESS_READ_FETCH;
-        effective_address=(signed long)(signed short)m68k_fetchW();
-        pc+=2; 
-#if defined(SSE_CPU_TRUE_PC)
-          TRUE_PC+=2;
-#endif
-        break;
-      case 1: //SS (xxx).L
-        CPU_ABUS_ACCESS_READ_FETCH;
-        CPU_ABUS_ACCESS_READ_FETCH;
-        effective_address=m68k_fetchL();
-        pc+=4;  
-#if defined(SSE_CPU_TRUE_PC)
-        TRUE_PC+=4;
-#endif
-        break;
-      case 2: //SS (d16,PC) 
-        CPU_ABUS_ACCESS_READ_FETCH;
-        effective_address=(PC_RELATIVE_PC+(signed short)m68k_fetchW()) | pc_high_byte;
-        PC_RELATIVE_MONITOR(effective_address);
-        pc+=2; 
-        break;
-      case 3: //SS (d8,PC,Xn)
-        INSTRUCTION_TIME(2);
-        CPU_ABUS_ACCESS_READ_FETCH;
-        m68k_iriwo=m68k_fetchW();
-        INSTRUCTION_TIME(2);
-        if (m68k_iriwo & BIT_b){  //.l
-          effective_address=(PC_RELATIVE_PC+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12]) | pc_high_byte;
-        }else{         //.w
-          effective_address=(PC_RELATIVE_PC+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12]) | pc_high_byte;
-        }
-        PC_RELATIVE_MONITOR(effective_address);
-        pc+=2; 
-        break;       //what do bits 8,9,a  of extra word do?  (not always 0)
-      default:
-        m68k_unrecognised();
-        break;
-      }
-      break;
-    default:
-      m68k_unrecognised();
-  }
-#endif
-#if !defined(SSE_CPU_PREFETCH_TIMING_LEA)
-  PREFETCH_IRC;
-#if (defined(SSE_CPU_LINE_4_TIMINGS))
-  FETCH_TIMING;
-#endif
-#endif
   areg[PARAM_N]=effective_address;
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING; /// This seems strange but it is right, it fetches after instruction
-#endif
-#if defined(SSE_CPU_PREFETCH_TIMING_LEA) // and Steem authors did it right to boot
-  PREFETCH_IRC;
-#if (defined(SSE_CPU_LINE_4_TIMINGS))
-  FETCH_TIMING;
-#endif
-#endif
-
 }
 
 
@@ -6120,19 +2673,9 @@ void                              m68k_line_4_stuff(){
 
 #define LOGSECTION LOGSECTION_TRAP
 void                              m68k_trap(){
-//  TRAP instruction    | 34(4/3)  |              nn    ns nS ns nV nv np np      
-// case Bird Mad Girl Show
-
-#if defined(SSE_CPU_ROUNDING_TRAP)
-  INSTRUCTION_TIME(4);
-#if !defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
-  INSTRUCTION_TIME_ROUND(4); 
-#endif
-#else
   INSTRUCTION_TIME_ROUND(8); // Time to read address to jump to
-#endif
-
   MEM_ADDRESS Vector=LPEEK( 0x80+((ir & 0xf)*4) );
+
   switch (ir & 0xf){
     case 1: //GEMDOS
       if (os_gemdos_vector==0) if (Vector>=rom_addr) os_gemdos_vector=Vector;
@@ -6144,313 +2687,104 @@ void                              m68k_trap(){
       if (os_xbios_vector==0) if (Vector>=rom_addr) os_xbios_vector=Vector;
       break;
   }
-#if defined(DEBUG_BUILD) && defined(SSE_CPU)
-#if defined(SSE_BOILER_SHOW_INTERRUPT)
-  Debug.RecordInterrupt("TRAP",(ir&0xF));
-#endif
-  if((ir&0xf)!=1)
-    //TRACE_LOG("PC %X TRAP #%d, %X\n",old_pc,(ir&0xf),DPEEK(areg[7]));//unsafe!
-    TRACE_LOG("PC %X TRAP #%d, %X\n",old_pc,(ir&0xf),d2_dpeek(areg[7]));
-#endif
   m68k_interrupt(Vector);
-#if defined(SSE_CPU_FETCH_TIMING)
-#if defined(SSE_CPU_ROUNDING_TRAP)
-#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
-#if defined(SSE_CPU_TRACE_TIMING_EXT)
-  INSTRUCTION_TIME_ROUND(CPU_TRACE_TIMING-4-12-4); 
-#else
-  INSTRUCTION_TIME_ROUND(14); 
-#endif
-#else
-  INSTRUCTION_TIME(26-4-4);
-#endif
-#else
-#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
-  INSTRUCTION_TIME_ROUND(26-12-4); 
-#else
-  INSTRUCTION_TIME(26-4);
-#endif
-#endif
-  FETCH_TIMING;
-#if defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-  CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
-#endif
-#else
   INSTRUCTION_TIME_ROUND(26);
-#endif
   intercept_os();
   debug_check_break_on_irq(BREAK_IRQ_TRAP_IDX);
 }
 #undef LOGSECTION
 
 void                              m68k_link(){
-/*
-Pushes the contents of the specified address register onto the stack. Then
-loads the updated stack pointer into the address register. Finally, adds the
-displacement value to the stack pointer.
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage
-       LINK       |      INSTR      |  2nd Operand  |   INSTR
-------------------+-----------------+---------------+--------------------------
-An,#<data> :      |                 |
-  .W :            | 16(2/2)         |                      np nS ns np          
-*/
-#if defined(SSE_CPU_PREFETCH_CLASS)
-  M68000.PrefetchClass=1; 
-#endif
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_LINK)
-  CPU_ABUS_ACCESS_READ_FETCH;
-#else
   INSTRUCTION_TIME(12);
-#endif
   m68k_GET_IMMEDIATE_W;
-#if defined(SSE_CPU_ROUNDING_LINK)
-  CPU_ABUS_ACCESS_WRITE_PUSH;
-  CPU_ABUS_ACCESS_WRITE_PUSH;
-#endif
   m68k_PUSH_L(areg[PARAM_M]);
   areg[PARAM_M]=r[15];
   r[15]+=(signed short)m68k_src_w;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-
 }
-
-/*
--------------------------------------------------------------------------------
-	                |    Exec Time    |               Data Bus Usage
-      UNLNK       |      INSTR      |                  INSTR
-------------------+-----------------+------------------------------------------
-An :              | 12(3/0)         |                         nU nu np          
-*/
-
 void                              m68k_unlk(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_UNLK)
-  CPU_ABUS_ACCESS_READ;
-  CPU_ABUS_ACCESS_READ;
-#else
   INSTRUCTION_TIME(8);
-#endif
   r[15]=areg[PARAM_M];
   abus=r[15];m68k_READ_L_FROM_ADDR;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-
-  r[15]+=4;    //This is contrary to the Programmer's reference manual which says
-  areg[PARAM_M]=m68k_src_l; //it does move (a7),An then adds 4 to a7, but it fixed Wrath of Demon
+  r[15]+=4;                                     //This is contrary to the Programmer's reference manual which says
+  areg[PARAM_M]=m68k_src_l;                     //it does move (a7),An then adds 4 to a7, but it fixed Wrath of Demon
 }
 void                              m68k_move_to_usp(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
-#endif
   if (SUPERFLAG){
     other_sp=areg[PARAM_M];
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-    FETCH_TIMING;
-#endif
   }else{
     exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
   }
 }
 void                              m68k_move_from_usp(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
-#endif
-
   if (SUPERFLAG){
     areg[PARAM_M]=other_sp;
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
   }else{
     exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
   }
 }
-
 void                              m68k_reset(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
-#endif
   if (SUPERFLAG){
     reset_peripherals(0);
     INSTRUCTION_TIME(128);
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
   }else{
     exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
   }
 }
-
 void                              m68k_nop(){
-#if !(defined(SSE_CPU_LINE_4_TIMINGS))
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_PREFETCH_NOP)
-  PREFETCH_IRC; // quite the opposite!
-  // note rounding necessary, eg Overscan Demos menu
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-#else
   prefetched_2=false;
   prefetch_buf[0]=*(lpfetch-MEM_DIR);  //flush prefetch queue
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-  FETCH_TIMING;
-#endif
-#endif
 }
-
-
 void                              m68k_stop(){
-
   if (SUPERFLAG){
     if (cpu_stopped==0){
-#if defined(SSE_CPU_FETCH_TIMING) //36.15 OVR
-//STOP	4(0/0)	
-//stop reads the immediate and doesn't prefetch
-#else
       FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_PREFETCH_TIMING_STOP)
-      CPU_ABUS_ACCESS_READ_FETCH;
-#endif
-      m68k_GET_IMMEDIATE_W;//SS timing counted there now
-
-#if defined(SSE_CPU_ROUNDING_BUS_STOP)
-/*http://www.atari-forum.com/viewtopic.php?f=68&t=13264&p=292437#p292437
-"Yes, STOP can (kinda) pair with the previous instruction. It's not a pairing
-in the strict sense. STOP would always take a multiple of 4 cycles. 
-But STOP is transparent (because it doesn't perform any bus access) in terms 
-of pairing to the previous instruction.
-
-So EXG+STOP+INTR does pair, because EXG and INTR pair."
-
---> STOP must read the immediate, but we know it's already fetched, so 
-    maybe it just uses it without refetching?
-*/
-      if(M68000.Rounded)
-      {
-        INSTRUCTION_TIME(-2);
-        M68000.Rounded=false;
-      }
-#endif
-
-#if !defined(SSE_CPU_PREFETCH_TIMING_STOP)
+      m68k_GET_IMMEDIATE_W;
       INSTRUCTION_TIME_ROUND(4); // time for immediate fetch
-#endif
+
       DEBUG_ONLY( int debug_old_sr=sr; )
-      sr=m68k_src_w; // SS contains IPL
+
+      sr=m68k_src_w;
       sr&=SR_VALID_BITMASK;
       DETECT_CHANGE_TO_USER_MODE;
       cpu_stopped=true;
-#if !defined(SSE_CPU_STOP_380)
-      SET_PC((pc-4) | pc_high_byte); // SS: go back on the stop
-#endif
+
+      SET_PC((pc-4) | pc_high_byte);
+
       DETECT_TRACE_BIT;
       // Interrupts must come after trace exception
       ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
-//      check_for_interrupts_pending(); //SS was commented out
+//      check_for_interrupts_pending();
+
       CHECK_STOP_ON_USER_CHANGE;
-#if defined(SSE_CPU_STOP_DELAY)
-/*  from Hatari:
-    The CPU can't be restarted at once after a STOP, there's a
-    delay of 8 cycles, even if an interrupt is pending.
-    option C2: this fixes the spurious interrupt in Return -HMD (STE)
-*/
-      if(M68000.ProcessingState!=TM68000::TRACE_MODE && OPTION_C2)
-        INSTRUCTION_TIME(CPU_STOP_DELAY); 
-#endif
-    }else{ //SS already stopped
-#if !defined(SSE_CPU_STOP_380)
+    }else{
       SET_PC((pc-2) | pc_high_byte);
-#endif
       // If we have got here then there were no interrupts pending when the IPL
       // was changed. Now unless we are in a blitter loop nothing can possibly
       // happen until cpu_cycles<=0.
-#if defined(SSE_CPU_STOP_380)
-      // keep counting, it can't hurt and it's clearer in the Boiler
-      INSTRUCTION_TIME(4); 
-#else
       if (Blit.Busy){
         INSTRUCTION_TIME_ROUND(4);
       }else if (cpu_cycles>0){
         cpu_cycles=0; // It takes 0 cycles to unstop
       }
-#endif
     }
-#if defined(SSE_CPU_STOP_380) 
-/*  Just sparing some code.
-    Normally we shouldn't fill prefetch but it's simpler so in process.
-    Note that SET_PC itself shouldn't count CPU timing.
-*/
-    SET_PC(old_pc);
-#endif
   }else{
     exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
   }
 }
 void                              m68k_rte(){
-#if !defined(SSE_TOS_NO_INTERCEPT_ON_RTE1)
-/*  Megamax C would hang while trying to compile the ReDMCSB project.
-    http://www.dungeon-master.com/forum/viewtopic.php?f=25&t=29805
-    The bug was tracked down to this part. Gemdos command PTerm() would
-    be executed twice, unduly terminating another process:
-    Apparently Timer C triggers while the TOS trap is executing. That's
-    why there's a random aspect in the hanging: depends on when we launch
-    the program.
-    At the RTE of timer C ($FC431A), Steem peeks the stack and finds the PTerm
-    command again.
-
-Trap 1 $40 Fwrite(handle=0009,count=000000C3,buf=0002A244)
-Trap 1 $49 Mfree(addr=0002A244)
-Trap 1 $3E Fclose(handle=0009)
-Close file 9
-Trap 1 $49 Mfree(addr=0002A044)
-Trap 1 $4C Pterm(retcode=0000)
-PC 24FEE terminate process 4
-Trap 1 $4C Pterm(retcode=0000)
-PC FC07A0 terminate process 3
-pexec, close file 6
-pexec, close file 7
-pexec, close file 8
-Trap 1 $3F Fread(handle=0008,count=00000001,buf=0001ED58)
-File 8 not open
-    The file 8 is BUILDINI.BAT
-    When SSE_TOS_NO_INTERCEPT_ON_RTE1 is defined the project will compile 
-    to completion, but we don't know what this mod could break. 
-    Why intercept at the RTE?
-    Disabling this is radical so: TESTING
-    If it breaks anything we could try to disable only gemdos 
-    intercept on RTE. // v361: done
-Also see SSE_TOS_GEMDOS_PEXEC6 for ReDMCSB
-*/
   bool dont_intercept_os=false;
-#endif
   if (SUPERFLAG){
+
     DEBUG_ONLY( int debug_old_sr=sr; )
-#if defined(SSE_CPU_FETCH_TIMING)
-    INSTRUCTION_TIME_ROUND(20-4); //v3.7 rounds up, changes nothing
-    FETCH_TIMING;
-#if defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-    CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
-#endif
-#else
+
     INSTRUCTION_TIME_ROUND(20);
-#endif
+
     M68K_PERFORM_RTE(;);
 
     log_to(LOGSECTION_INTERRUPTS,Str("INTERRUPT: ")+HEXSl(old_pc,6)+" - RTE to "+HEXSl(pc,6)+" sr="+HEXSl(sr,4)+
@@ -6469,18 +2803,8 @@ Also see SSE_TOS_GEMDOS_PEXEC6 for ReDMCSB
 #endif
 #ifndef DISABLE_STEMDOS
           case ON_RTE_STEMDOS:
-            //ASSERT( stemdos_rte_action!=STEMDOS_RTE_MALLOC );
             stemdos_rte();
-#if !defined(SSE_TOS_NO_INTERCEPT_ON_RTE1)
             dont_intercept_os=true;
-#endif
-            break;
-#endif
-
-#if defined(SSE_CPU_LINE_F)
-          case ON_RTE_LINE_F:
-            interrupt_depth++; // there's a RTE after all, cancel 'compensate'
-            //on_rte=ON_RTE_RTE;
             break;
 #endif
 
@@ -6489,19 +2813,17 @@ Also see SSE_TOS_GEMDOS_PEXEC6 for ReDMCSB
             on_rte=ON_RTE_RTE;
             SET_PC(on_rte_return_address);
             extended_monitor_hack();
+
             break;
-#ifndef SSE_TOS_GEMDOS_EM_381B
           case ON_RTE_DONE_MALLOC_FOR_EM:
 //            log_write(HEXSl(pc,6)+EasyStr(": Malloc done - returned $")+HEXSl(r[0],8));
             xbios2=(r[0]+255)&-256;
-            //TRACE("EM xbios 2 %X\n",xbios2);
             LPEEK(SV_v_bas_ad)=xbios2;
             LPEEK(SVscreenpt)=xbios2;
             memcpy(r,save_r,16*4);
             on_rte=ON_RTE_RTE;
 //            log_write_stack();
             break;
-#endif
           case ON_RTE_EMHACK:
             on_rte=ON_RTE_RTE;
             extended_monitor_hack();
@@ -6510,168 +2832,48 @@ Also see SSE_TOS_GEMDOS_PEXEC6 for ReDMCSB
         }
       }
     }
-//    dbg_log(EasyStr("RTE - decreasing interrupt depth from ")+interrupt_depth+" to "+(interrupt_depth-1));
+//    log(EasyStr("RTE - decreasing interrupt depth from ")+interrupt_depth+" to "+(interrupt_depth-1));
     interrupt_depth--;
     ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
-//    check_for_interrupts_pending();// was commented out
-#if !defined(SSE_TOS_NO_INTERCEPT_ON_RTE1)
-#if defined(SSE_TOS_NO_INTERCEPT_ON_RTE2) && !defined(DISABLE_STEMDOS)
-/*  This is less heavy-handed than the 1st mod, but we need a new
-    variable.
-    It's better but not enough for ReDMCSB, that will only complete 50%
-    with TOS1.02.
-*/
-    if(stemdos_command==0x4c)// && stemdos_rte_action!=STEMDOS_RTE_MFREE2)
-    {
-      //if(stemdos_Pexec_list_ptr==debug1)
-      if(stemdos_Pexec_list_ptr==Tos.LastPTermedProcess)
-      {
-       // TRACE("refuse intercept OS for $%X\n",stemdos_Pexec_list_ptr);
-        dont_intercept_os=true;
-      }
-      else
-        Tos.LastPTermedProcess=stemdos_Pexec_list_ptr;
-    }
-#endif
+//    check_for_interrupts_pending();
     if (!dont_intercept_os) intercept_os();
-#endif
+
     CHECK_STOP_ON_USER_CHANGE;
   }else{
     exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
   }
 }
 void                              m68k_rtd(){
-//  INSTRUCTION_TIME_ROUND(20); // was commented out
-//  m68k_GET_IMMEDIATE_W; // was commented out
+//  INSTRUCTION_TIME_ROUND(20);
+//  m68k_GET_IMMEDIATE_W;
   m68k_unrecognised();
 }
-/*
--------------------------------------------------------------------------------
-	                |    Exec Time    |               Data Bus Usage
-       RTS        |      INSTR      |                  INSTR
-------------------+-----------------+------------------------------------------
-                  | 16(4/0)         |                   nU nu    np np          
-*/
 void                              m68k_rts(){
-#if defined(SSE_CPU_FETCH_TIMING)
-  INSTRUCTION_TIME(16-4);
-  FETCH_TIMING;
-#if defined(SSE_CPU_PREFETCH_TIMING_SET_PC) \
-  && !defined(SSE_CPU_ROUNDING_RTS)
-  CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
-#endif
-#else
   INSTRUCTION_TIME_ROUND(16);
-#endif
+
   effective_address=m68k_lpeek(r[15]);
-#if defined(SSE_BOILER_PSEUDO_STACK)
-  Debug.PseudoStackPop();
-#endif
   r[15]+=4;
   m68k_READ_W(effective_address); // Check for bus/address errors
   SET_PC(effective_address);
-#if defined(SSE_CPU_ROUNDING_RTS)
-  CPU_ABUS_ACCESS_READ_PC; 
-#endif
   intercept_os();
-#if defined(SSE_BOILER_RUN_TO_RTS) //rather useless?
-  if(on_rte==ON_RTS_STOP)
-  {
-    if (runstate==RUNSTATE_RUNNING){
-      runstate=RUNSTATE_STOPPING;
-      SET_WHY_STOP(HEXSl(old_pc,6)+": RTS");
-    }
-    on_rte=ON_RTE_RTE;
-  }
-#endif
-
 }
-/*
--------------------------------------------------------------------------------
-	                |    Exec Time    |               Data Bus Usage
-      TRAPV       |      INSTR      |                  INSTR
-------------------+-----------------+------------------------------------------
-no trap           |  4(1/0)         |                               np          
-   trap           | 34(5/3)         |          np ns nS ns np np np np          
-NOTES :
-  . for more informations about the "trap" line see exceptions section below.
-*/
 void                              m68k_trapv(){
   if (sr & SR_V){
-#if defined(SSE_BOILER_SHOW_INTERRUPT)
-    Debug.RecordInterrupt("TRAPV");
-#endif
     m68k_interrupt(LPEEK(BOMBS_TRAPV*4));
-#if !defined(SSE_INT_ROUNDING)
     INSTRUCTION_TIME_ROUND(0); //Round first for interrupts
-#endif
-#if defined(SSE_CPU_FETCH_TIMING)
-#if defined(SSE_CPU_TRACE_TIMING_EXT)
-#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
-    INSTRUCTION_TIME_ROUND(CPU_TRACE_TIMING-4-12); 
-#else
-    INSTRUCTION_TIME_ROUND(CPU_TRACE_TIMING-4);
-#endif
-#else
-#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
-    INSTRUCTION_TIME(34-12-4);
-#else
-    INSTRUCTION_TIME(34-4);
-#endif
-#endif
-    FETCH_TIMING;
-#if defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-    CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
-#endif
-#else
     INSTRUCTION_TIME_ROUND(34);
-#endif
   }else{
-#if defined(SSE_CPU_LINE_4_TIMINGS)
-    FETCH_TIMING_NO_ROUND; //?
-#else
-#if !defined(SSE_CPU_ROUNDING_TRAPV)
-    INSTRUCTION_TIME(4);//my bug, fix v3.8.0
-#endif
-#endif
-    PREFETCH_IRC;
-
+    INSTRUCTION_TIME(4);
   }
 }
-/*
--------------------------------------------------------------------------------
-	                |    Exec Time    |               Data Bus Usage
-     RTE, RTR     |      INSTR      |                  INSTR
-------------------+-----------------+------------------------------------------
-                  | 20(5/0)         |                      nU nu nu np np       
-NOTES :
-  .M68000UM is probably wrong with bus read accesses for RTR instruction. 
-   It reads "20(2/0)" but, according to USP4325121 and with a little common 
-   sense, 2 bus read accesses aren't enough for reading status register and 
-   program counter values from the stack and prefetching.
-*/
 void                              m68k_rtr(){
-#if defined(SSE_CPU_FETCH_TIMING)
-  INSTRUCTION_TIME(20-4);
-  FETCH_TIMING;
-#if defined(SSE_CPU_PREFETCH_TIMING_SET_PC) && !defined(SSE_CPU_ROUNDING_RTR)
-  CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
-#endif
-#else
   INSTRUCTION_TIME_ROUND(20);
-#endif
   CCR=LOBYTE(m68k_dpeek(r[15]));r[15]+=2;
   sr&=SR_VALID_BITMASK;
 
   effective_address=m68k_lpeek(r[15]);r[15]+=4;
-#if defined(SSE_CPU_ROUNDING_BUS)
-  M68000.Rounded=false;
-#endif
   m68k_READ_W(effective_address); // Check for bus/address errors
   SET_PC(effective_address);
-#if defined(SSE_CPU_ROUNDING_RTR)
-  CPU_ABUS_ACCESS_READ_PC; 
-#endif
   intercept_os();
 }
 void                              m68k_movec(){
@@ -6694,550 +2896,104 @@ void                              m68k_movec(){
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage
-    ADDQ, SUBQ    |  INSTR     EA   |  1st OP (ea)  |          INSTR
-------------------+-----------------+---------------+--------------------------
-#<data>,<ea> :    |                 |               |
-  .B or .W :      |                 |               |
-    Dn            |  4(1/0)  0(0/0) |               |               np          
-    An            |  8(1/0)  0(0/0) |               |               np       nn 
-    (An)          |  8(1/1)  4(1/0) |            nr |               np nw       
-    (An)+         |  8(1/1)  4(1/0) |            nr |               np nw       
-    -(An)         |  8(1/1)  6(1/0) | n          nr |               np nw       
-    (d16,An)      |  8(1/1)  8(2/0) |      np    nr |               np nw       
-    (d8,An,Xn)    |  8(1/1) 10(2/0) | n    np    nr |               np nw       
-    (xxx).W       |  8(1/1)  8(2/0) |      np    nr |               np nw       
-    (xxx).L       |  8(1/1) 12(3/0) |   np np    nr |               np nw       
-  .L :            |                 |               |
-    Dn            |  8(1/0)  0(0/0) |               |               np       nn 
-    An            |  8(1/0)  0(0/0) |               |               np       nn 
-    (An)          | 12(1/2)  8(2/0) |         nR nr |               np nw nW    
-    (An)+         | 12(1/2)  8(2/0) |         nR nr |               np nw nW    
-    -(An)         | 12(1/2) 10(2/0) | n       nR nr |               np nw nW    
-    (d16,An)      | 12(1/2) 12(3/0) |      np nR nr |               np nw nW    
-    (d8,An,Xn)    | 12(1/2) 14(3/0) | n    np nR nr |               np nw nW    
-    (xxx).W       | 12(1/2) 12(3/0) |      np nR nr |               np nw nW    
-    (xxx).L       | 12(1/2) 16(4/0) |   np np nR nr |               np nw nW    
-NOTES :
-  .M68000UM is probably wrong with instruction timing for ADDQ.W #<data>,An 
-   instruction. It reads "4(1/0)" but, according to USP4325121, this 
-   instruction is based on the same microwords than ADDQ.L #<data>,Dn and 
-   ADDQ.L #<data>,An that have a "8(3/0)" timing. That makes sense because of 
-   the calculation of a 32 bit address on 16 bits ALU. In addition, evaluation 
-   on real hardware confirms the 8 cycles timing and, last, it makes addq and 
-   subbq coherent in term of timing.
-*/
-//  ADDQ.B SUBQ.B #<data>,An illegal
+
 
 void                              m68k_addq_b(){
-#if !(defined(SSE_CPU_LINE_5_TIMINGS))
   FETCH_TIMING;
-#endif
-#if !defined(SSE_CPU_ROUNDING_ADDQ)
   INSTRUCTION_TIME(4);
-#endif
   m68k_src_b=(BYTE)PARAM_N;if(m68k_src_b==0)m68k_src_b=8;
-#if defined(SSE_CPU_TRUE_PC)
-  CHECK_READ=true;
-#endif
-#if !defined(SSE_CPU_ROUNDING_ADDQ)
   m68k_GET_DEST_B_NOT_A_FASTER_FOR_D;
-#endif
-#if defined(SSE_CPU_ROUNDING_ADDQ)
-  m68k_GET_DEST_B_NOT_A;
-#endif
   m68k_old_dest=m68k_DEST_B;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_5_TIMINGS)
-  FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_ADDQ)
-  if(!DEST_IS_DATA_REGISTER)
-  {
-    CPU_ABUS_ACCESS_WRITE;
-  }
-#endif
   m68k_DEST_B+=m68k_src_b;
   SR_ADD_B;
-}
-
-void                             m68k_addq_w(){
-#if !(defined(SSE_CPU_LINE_5_TIMINGS))
+}void                             m68k_addq_w(){
   FETCH_TIMING;
-#endif
   m68k_src_w=(WORD)PARAM_N;if(m68k_src_w==0)m68k_src_w=8;
   if((ir&BITS_543)==BITS_543_001){ //addq.w to address register
-//     An            |  8(1/0)  0(0/0) |               |               np       nn 
-
-#if defined(SSE_CPU_LINE_5_TIMINGS)
-    FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_ADDQ)
-    PREFETCH_IRC;
     INSTRUCTION_TIME(4);
-#else
-    INSTRUCTION_TIME(4);
-    PREFETCH_IRC;
-#endif
     areg[PARAM_M]+=m68k_src_w;
   }else{
-/*
-    Dn            |  4(1/0)  0(0/0) |               |               np          
-
-    (An)          |  8(1/1)  4(1/0) |            nr |               np nw       
-    (An)+         |  8(1/1)  4(1/0) |            nr |               np nw       
-    -(An)         |  8(1/1)  6(1/0) | n          nr |               np nw       
-    (d16,An)      |  8(1/1)  8(2/0) |      np    nr |               np nw       
-    (d8,An,Xn)    |  8(1/1) 10(2/0) | n    np    nr |               np nw       
-    (xxx).W       |  8(1/1)  8(2/0) |      np    nr |               np nw       
-    (xxx).L       |  8(1/1) 12(3/0) |   np np    nr |               np nw       
-
-*/
-
-#if !defined(SSE_CPU_ROUNDING_ADDQ)
     INSTRUCTION_TIME(4);
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-    CHECK_READ=true;
-#endif
-#if defined(SSE_CPU_DATABUS)
-  //  M68000.dbus=IRC;
-#endif
-#if !defined(SSE_CPU_ROUNDING_ADDQ)
     m68k_GET_DEST_W_NOT_A_FASTER_FOR_D;
-#endif
-#if defined(SSE_CPU_ROUNDING_ADDQ)
-    m68k_GET_DEST_W_NOT_A;
-#endif
     m68k_old_dest=m68k_DEST_W;
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_5_TIMINGS)
-    FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_ADDQ)
-    if(!DEST_IS_DATA_REGISTER)
-    {
-      CPU_ABUS_ACCESS_WRITE;
-    }
-#endif
     m68k_DEST_W+=m68k_src_w;
-#if defined(SSE_CPU_DATABUS)
-    M68000.dbus=m68k_DEST_W;//m68k_old_dest+m68k_src_w;
-#endif
     SR_ADD_W;
   }
-}
-
-void                             m68k_addq_l(){
-#if !(defined(SSE_CPU_LINE_5_TIMINGS))
+}void                             m68k_addq_l(){
   FETCH_TIMING;
-#endif
   m68k_src_l=(LONG)PARAM_N;if(m68k_src_l==0)m68k_src_l=8;
   if((ir&BITS_543)==BITS_543_001){ //addq.l to address register
-#if defined(SSE_CPU_LINE_5_TIMINGS)
-    FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_ADDQ)
-//  An            |  8(1/0)  0(0/0) |               |               np       nn 
-
-    PREFETCH_IRC;
     INSTRUCTION_TIME(4);
     areg[PARAM_M]+=m68k_src_l;
-#else
-    INSTRUCTION_TIME(4);
-    PREFETCH_IRC;
-    areg[PARAM_M]+=m68k_src_l;
-#endif
-
   }else{
-/*
-    Dn            |  8(1/0)  0(0/0) |               |               np       nn 
-
-    (An)          | 12(1/2)  8(2/0) |         nR nr |               np nw nW    
-    (An)+         | 12(1/2)  8(2/0) |         nR nr |               np nw nW    
-    -(An)         | 12(1/2) 10(2/0) | n       nR nr |               np nw nW    
-    (d16,An)      | 12(1/2) 12(3/0) |      np nR nr |               np nw nW    
-    (d8,An,Xn)    | 12(1/2) 14(3/0) | n    np nR nr |               np nw nW    
-    (xxx).W       | 12(1/2) 12(3/0) |      np nR nr |               np nw nW    
-    (xxx).L       | 12(1/2) 16(4/0) |   np np nR nr |               np nw nW    
-*/
-
-#if !defined(SSE_CPU_ROUNDING_ADDQ)
     INSTRUCTION_TIME(8);
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-    CHECK_READ=true;
-#endif
-#if !defined(SSE_CPU_ROUNDING_ADDQ)
     m68k_GET_DEST_L_NOT_A_FASTER_FOR_D;
-#endif
-#if defined(SSE_CPU_ROUNDING_ADDQ)
-    m68k_GET_DEST_L_NOT_A;
-#endif
     m68k_old_dest=m68k_DEST_L;
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_5_TIMINGS)
-    FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_ADDQ)
-    if(DEST_IS_DATA_REGISTER)
-      INSTRUCTION_TIME(4);
-    else
-    {
-      CPU_ABUS_ACCESS_WRITE;
-      CPU_ABUS_ACCESS_WRITE;
-    }
-#endif
     m68k_DEST_L+=m68k_src_l;
     SR_ADD_L;
   }
 }
-
 void                              m68k_subq_b(){
-/*
-    Dn            |  4(1/0)  0(0/0) |               |               np          
-    An            |                 |               | 
-    (An)          |  8(1/1)  4(1/0) |            nr |               np nw       
-    (An)+         |  8(1/1)  4(1/0) |            nr |               np nw       
-    -(An)         |  8(1/1)  6(1/0) | n          nr |               np nw       
-    (d16,An)      |  8(1/1)  8(2/0) |      np    nr |               np nw       
-    (d8,An,Xn)    |  8(1/1) 10(2/0) | n    np    nr |               np nw       
-    (xxx).W       |  8(1/1)  8(2/0) |      np    nr |               np nw       
-    (xxx).L       |  8(1/1) 12(3/0) |   np np    nr |               np nw       
-*/
-#if !(defined(SSE_CPU_LINE_5_TIMINGS))
   FETCH_TIMING;
-#endif
   m68k_src_b=(BYTE)PARAM_N;if(m68k_src_b==0)m68k_src_b=8;
-#if !defined(SSE_CPU_ROUNDING_SUBQ)
   INSTRUCTION_TIME(4);
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-  CHECK_READ=true;
-#endif
-#if !defined(SSE_CPU_ROUNDING_SUBQ)
   m68k_GET_DEST_B_NOT_A_FASTER_FOR_D;
-#endif
-#if defined(SSE_CPU_ROUNDING_SUBQ)
-  m68k_GET_DEST_B_NOT_A;
-#endif
   m68k_old_dest=m68k_DEST_B;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_5_TIMINGS)
-  FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_SUBQ)
-  if(!DEST_IS_DATA_REGISTER)
-  {
-    CPU_ABUS_ACCESS_WRITE;
-  }
-#endif
   m68k_DEST_B-=m68k_src_b;
   SR_SUB_B(SR_X);
-}
-
-void                             m68k_subq_w(){
-/*
-    Dn            |  4(1/0)  0(0/0) |               |               np          
-    An            |  8(1/0)  0(0/0) |               |               np       nn 
-    (An)          |  8(1/1)  4(1/0) |            nr |               np nw       
-    (An)+         |  8(1/1)  4(1/0) |            nr |               np nw       
-    -(An)         |  8(1/1)  6(1/0) | n          nr |               np nw       
-    (d16,An)      |  8(1/1)  8(2/0) |      np    nr |               np nw       
-    (d8,An,Xn)    |  8(1/1) 10(2/0) | n    np    nr |               np nw       
-    (xxx).W       |  8(1/1)  8(2/0) |      np    nr |               np nw       
-    (xxx).L       |  8(1/1) 12(3/0) |   np np    nr |               np nw       
-*/
-#if !(defined(SSE_CPU_LINE_5_TIMINGS))
+}void                             m68k_subq_w(){
   FETCH_TIMING;
-#endif
   m68k_src_w=(WORD)PARAM_N;if(m68k_src_w==0)m68k_src_w=8;
   if((ir&BITS_543)==BITS_543_001){ //subq.w to address register
-#if defined(SSE_CPU_LINE_5_TIMINGS)
-    FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_SUBQ)
-    PREFETCH_IRC;
     INSTRUCTION_TIME(4);
-#else
-    INSTRUCTION_TIME(4);
-    PREFETCH_IRC;
-#endif
     areg[PARAM_M]-=m68k_src_w;
   }else{
-#if !defined(SSE_CPU_ROUNDING_SUBQ)
     INSTRUCTION_TIME(4);
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-    CHECK_READ=true;
-#endif
-#if !defined(SSE_CPU_ROUNDING_SUBQ)
     m68k_GET_DEST_W_NOT_A_FASTER_FOR_D;
-#endif
-#if defined(SSE_CPU_ROUNDING_SUBQ)
-    m68k_GET_DEST_W_NOT_A;
-#endif
     m68k_old_dest=m68k_DEST_W;
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_5_TIMINGS)
-    FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_SUBQ)
-    if(!DEST_IS_DATA_REGISTER)
-    {
-      CPU_ABUS_ACCESS_WRITE;
-    }
-#endif
     m68k_DEST_W-=m68k_src_w;
-#if defined(SSE_CPU_DATABUS)
-//    M68000.dbus=m68k_old_dest-m68k_src_w;
-#endif
     SR_SUB_W(SR_X);
   }
-}
-
-//#undef SSE_CPU_ROUNDING_SUBQ
-
-void                             m68k_subq_l(){
-/*
-  .L :            |                 |               |
-    Dn            |  8(1/0)  0(0/0) |               |               np       nn 
-    An            |  8(1/0)  0(0/0) |               |               np       nn 
-    (An)          | 12(1/2)  8(2/0) |         nR nr |               np nw nW    
-    (An)+         | 12(1/2)  8(2/0) |         nR nr |               np nw nW    
-    -(An)         | 12(1/2) 10(2/0) | n       nR nr |               np nw nW    
-    (d16,An)      | 12(1/2) 12(3/0) |      np nR nr |               np nw nW    
-    (d8,An,Xn)    | 12(1/2) 14(3/0) | n    np nR nr |               np nw nW    
-    (xxx).W       | 12(1/2) 12(3/0) |      np nR nr |               np nw nW    
-    (xxx).L       | 12(1/2) 16(4/0) |   np np nR nr |               np nw nW    
-*/
-#if !(defined(SSE_CPU_LINE_5_TIMINGS))
+}void                             m68k_subq_l(){
   FETCH_TIMING;
-#endif
   m68k_src_l=(LONG)PARAM_N;if(m68k_src_l==0)m68k_src_l=8;
   if((ir&BITS_543)==BITS_543_001){ //subq.l to address register
-
-#if defined(SSE_CPU_ROUNDING_SUBQ)
-    PREFETCH_IRC;
-    INSTRUCTION_TIME(4);
-    areg[PARAM_M]-=m68k_src_l;
-#else
     areg[PARAM_M]-=m68k_src_l;
     INSTRUCTION_TIME(4);
-    PREFETCH_IRC;
-#endif
-#if defined(SSE_CPU_LINE_5_TIMINGS)
-    FETCH_TIMING;
-#endif
   }else{
-#if !defined(SSE_CPU_ROUNDING_SUBQ)
     INSTRUCTION_TIME(8);
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-    CHECK_READ=true;
-#endif
-//#undef SSE_CPU_ROUNDING_SUBQ
-#if !defined(SSE_CPU_ROUNDING_SUBQ)
     m68k_GET_DEST_L_NOT_A_FASTER_FOR_D;
-#endif
-#if defined(SSE_CPU_ROUNDING_SUBQ)
-    m68k_GET_DEST_L_NOT_A;
-#endif
     m68k_old_dest=m68k_DEST_L;
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_5_TIMINGS)
-    FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_SUBQ)
-    if(DEST_IS_DATA_REGISTER)
-      INSTRUCTION_TIME(4);
-    else
-    {
-      CPU_ABUS_ACCESS_WRITE;
-      CPU_ABUS_ACCESS_WRITE;
-    }
-#endif
     m68k_DEST_L-=m68k_src_l;
     SR_SUB_L(SR_X);
   }
 }
-//#undef SSE_CPU_LINE_5_TIMINGS
-
 void                              m68k_dbCC_or_sCC(){
-  if ((ir&BITS_543)==BITS_543_001){ // DBCC
-/*
-If Condition False 
-Then (Dn - 1 -> Dn; If Dn  <> -1 Then PC + dn -> PC) 
-*/
-
-/*
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage
-       DBcc       |      INSTR      |                   INSTR
-------------------+-----------------+------------------------------------------
-Dn,<label> :      |                 |                               
-  branch taken    | 10(2/0)         |                      n np       np        
-  branch not taken|                 |                                           
-    cc true       | 12(2/0)         |                      n     n np np        
-    counter exp   | 14(3/0)         |                      n np    np np        
-NOTES :                                                                         
-  .DBcc does not exist in USP4325121. Only does a primitive instruction DCNT    
-   tht doesn't succeded to reach the production version of M68000 CPU.          
-   Nervertheless, looking at DCNT and Bcc micro/nanowords can lead to a         
-   realistic idea of how DBcc should work. At least, this re-enginering of DBcc 
-   matches the timing written in M68000UM for this instruction.                 
-FLOWCHART :                                                                     
-                   cc                  n                 /cc                    
-                   +-------------------+-------------------+                    
-                   n                             z         np       /z          
-                   |                             +---------+---------+          
-                   +---------------------------->np                  |          
-                                                 |                   |          
-                                                 np<-----------------+          
-
-v3.8.0
-We at least strictly follow the Yacht table (SSE_CPU_ROUNDING_DBCC2):
-fixes Bird Mad Girl Show fullscreen boot (long standing bug).
-
-*/
-//#undef SSE_CPU_ROUNDING_DBCC
-
-#if !defined(SSE_CPU_ROUNDING_DBCC)
+  if ((ir&BITS_543)==BITS_543_001){
     INSTRUCTION_TIME(6);
     m68k_GET_IMMEDIATE_W;
-#endif
-#if defined(SSE_CPU_ROUNDING_DBCC2)
-    INSTRUCTION_TIME(2);
-#elif defined(SSE_CPU_ROUNDING_DBCC)
-    INSTRUCTION_TIME(2); //do the test
-    CPU_ABUS_ACCESS_READ_FETCH; // get displacement (whether we go or not...)
-    m68k_GET_IMMEDIATE_W;
-#endif
-
     if (!m68k_CONDITION_TEST){
       (*((WORD*)(&(r[PARAM_M]))))--;
       if( (*( (signed short*)(&(r[PARAM_M]) ))) != (signed short)(-1) ){
-#if defined(SSE_CPU_ROUNDING_DBCC2)
-        //   branch taken    | 10(2/0)         |                      n np       np        
-        CPU_ABUS_ACCESS_READ_FETCH;
-        m68k_GET_IMMEDIATE_W;
-#endif
         MEM_ADDRESS new_pc=(pc+(signed short)m68k_src_w-2) | pc_high_byte;
-#if defined(SSE_CPU_ROUNDING_BUS)
-        M68000.Rounded=false;
-#endif
         m68k_READ_W(new_pc); // Check for bus/address errors
-        SET_PC(new_pc); // SS branch taken (prefetch in SET_PC)
-#if defined(SSE_CPU_LINE_5_TIMINGS)
-        FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-#if defined(SSE_CPU_ROUNDING_DBCC)
-        CPU_ABUS_ACCESS_READ_PC; // SET_PC doesn't count cycles (TODO?)
-#else
-        INSTRUCTION_TIME_ROUND(4); // because FETCH_TIMING does nothing
-#endif
-#endif
-      }else{ //SS end of loop
-#if defined(SSE_CPU_ROUNDING_DBCC2)
-//    counter exp   | 14(3/0)         |                      n np    np np     
-        CPU_ABUS_ACCESS_READ_FETCH;
-        m68k_GET_IMMEDIATE_W;
-#endif
-#if defined(SSE_CPU_ROUNDING_DBCC)
-        CPU_ABUS_ACCESS_READ; // but what for?
-#else
+        SET_PC(new_pc);
+      }else{
         INSTRUCTION_TIME(4);
-#endif
-        PREFETCH_IRC; //branch not taken
-#if defined(SSE_CPU_LINE_5_TIMINGS)
-        FETCH_TIMING;
-#endif
       }
-    }else{ //SS condition true
-      INSTRUCTION_TIME(2);//SS what for?
-#if defined(SSE_CPU_ROUNDING_DBCC2)
-      CPU_ABUS_ACCESS_READ_FETCH;
-      m68k_GET_IMMEDIATE_W;
-//     cc true       | 12(2/0)         |                      n     n np np  
-// this is where it's different
-#endif
-#if defined(SSE_CPU_ROUNDING_DBCC__)
-      //CPU_ABUS_ACCESS_READ; //CPU prefetches once for nothing
-      m68k_GET_IMMEDIATE_W; 
-#endif
-      PREFETCH_IRC; //branch not taken
-#if defined(SSE_CPU_LINE_5_TIMINGS)
-      FETCH_TIMING;
-#endif
-
-    }
-#if !(defined(SSE_CPU_LINE_5_TIMINGS))
-  FETCH_TIMING;
-#endif
-//#define SSE_CPU_LINE_5_TIMINGS
-  }else{ // SCC
-
-/*
-------------------------------------------------------------------------------- 
-                  |    Exec Time    |               Data Bus Usage              
-        Scc       |  INSTR     EA   |  1st OP (ea)  |          INSTR
-------------------+-----------------+---------------+--------------------------
-<ea> :            |                 |               |
-  .B :            |                 |               |
-    cc false      |                 |               |
-      Dn          |  4(1/0)  0(0/0) |               |               np          
-      (An)        |  8(1/1)  4(1/0) |            nr |               np    nw    
-      (An)+       |  8(1/1)  4(1/0) |            nr |               np    nw    
-      -(An)       |  8(1/1)  6(1/0) | n          nr |               np    nw    
-      (d16,An)    |  8(1/1)  8(2/0) |      np    nr |               np    nw    
-      (d8,An,Xn)  |  8(1/1) 10(2/0) | n    np    nr |               np    nw    
-      (xxx).W     |  8(1/1)  8(2/0) |      np    nr |               np    nw    
-      (xxx).L     |  8(1/1) 12(3/0) |   np np    nr |               np    nw    
-    cc true       |                 |               |
-      Dn          |  6(1/0)  0(0/0) |               |               np       n  
-      (An)        |  8(1/1)  4(1/0) |            nr |               np    nw    
-      (An)+       |  8(1/1)  4(1/0) |            nr |               np    nw    
-      -(An)       |  8(1/1)  6(1/0) | n          nr |               np    nw    
-      (d16,An)    |  8(1/1)  8(2/0) |      np    nr |               np    nw    
-      (d8,An,Xn)  |  8(1/1) 10(2/0) | n    np    nr |               np    nw    
-      (xxx).W     |  8(1/1)  8(2/0) |      np    nr |               np    nw    
-      (xxx).L     |  8(1/1) 12(3/0) |   np np    nr |               np    nw    
-*/
-
-#if !(defined(SSE_CPU_LINE_5_TIMINGS))
-    FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-    CHECK_READ=true;
-#endif
-    m68k_GET_DEST_B;
-#if defined(SSE_CPU_LINE_5_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
-    if(m68k_CONDITION_TEST){
-#if defined(SSE_CPU_ROUNDING_SCC)
-      if(DEST_IS_REGISTER){INSTRUCTION_TIME(2);}else {CPU_ABUS_ACCESS_WRITE;}
-#endif
-#if defined(SSE_VS2008_WARNING_371)
-      m68k_DEST_B=(BYTE)0xff; //stupid warning
-#else
-      m68k_DEST_B=0xff;
-#endif
-#if !defined(SSE_CPU_ROUNDING_SCC)
-      if(DEST_IS_REGISTER){INSTRUCTION_TIME(2);}else {INSTRUCTION_TIME(4);}
-#endif
     }else{
-#if defined(SSE_CPU_ROUNDING_SCC)
-      if(DEST_IS_REGISTER==0){CPU_ABUS_ACCESS_WRITE;}
-#endif
+      INSTRUCTION_TIME(2);
+    }
+    FETCH_TIMING;
+  }else{
+    FETCH_TIMING;
+    m68k_GET_DEST_B;
+    if(m68k_CONDITION_TEST){
+      m68k_DEST_B=0xff;
+      if(DEST_IS_REGISTER){INSTRUCTION_TIME(2);}else {INSTRUCTION_TIME(4);}
+    }else{
       m68k_DEST_B=0;
-#if !defined(SSE_CPU_ROUNDING_SCC)
       if(DEST_IS_REGISTER==0){INSTRUCTION_TIME(4);}
-#endif
     }
   }
 }
@@ -7256,94 +3012,24 @@ fixes Bird Mad Girl Show fullscreen boot (long standing bug).
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-//#undef SSE_CPU_LINE_8_TIMINGS
-
-/*
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage
-      AND, OR     |  INSTR     EA   |  1st OP (ea)  |          INSTR
-------------------+-----------------+---------------+--------------------------
-<ea>,Dn :         |                 |               |
-  .B or .W :      |                 |               |
-    Dn            |  4(1/0)  0(0/0) |               |               np       
-    (An)          |  4(1/0)  4(1/0) |            nr |               np		     
-    (An)+         |  4(1/0)  4(1/0) |            nr |               np		     
-    -(An)         |  4(1/0)  6(1/0) | n          nr |               np		     
-    (d16,An)      |  4(1/0)  8(2/0) |      np    nr |               np		     
-    (d8,An,Xn)    |  4(1/0) 10(2/0) | n    np    nr |               np		     
-    (xxx).W       |  4(1/0)  8(2/0) |      np    nr |               np		     
-    (xxx).L       |  4(1/0) 12(3/0) |   np np    nr |               np		     
-    #<data>       |  4(1/0)  4(1/0) |      np       |               np		     
-  .L :            |                 |               |
-    Dn            |  8(1/0)  0(0/0) |               |               np       nn
-    (An)          |  6(1/0)  8(2/0) |         nR nr |               np       n	
-    (An)+         |  6(1/0)  8(2/0) |         nR nr |               np       n	
-    -(An)         |  6(1/0) 10(2/0) | n       nR nr |               np       n	
-    (d16,An)      |  6(1/0) 12(3/0) |      np nR nr |               np       n	
-    (d8,An,Xn)    |  6(1/0) 14(3/0) | n    np nR nr |               np       n	
-    (xxx).W       |  6(1/0) 12(3/0) |      np nR nr |               np       n	
-    (xxx).L       |  6(1/0) 16(4/0) |   np np nR nr |               np       n	
-    #<data>       |  8(1/0)  8(2/0) |   np np       |               np       nn
-*/
-
 
 void                              m68k_or_b_to_dN(){
-#if !(defined(SSE_CPU_LINE_8_TIMINGS))
   FETCH_TIMING;
-#endif
   m68k_GET_SOURCE_B_NOT_A;
-#if !defined(SSE_CPU_PREFETCH_TIMING_OR)
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_8_TIMINGS)
-  FETCH_TIMING;
-#endif
-#endif
   m68k_dest=&(r[PARAM_N]);
   m68k_DEST_B|=m68k_src_b;
-#if defined(SSE_CPU_PREFETCH_TIMING_OR)
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_8_TIMINGS)
-  FETCH_TIMING;
-#endif
-#endif
   SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
   SR_CHECK_Z_AND_N_B;
-}
-
-void                             m68k_or_w_to_dN(){
-#if !(defined(SSE_CPU_LINE_8_TIMINGS))
+}void                             m68k_or_w_to_dN(){
   FETCH_TIMING;
-#endif
   m68k_GET_SOURCE_W_NOT_A;
-#if !defined(SSE_CPU_PREFETCH_TIMING_OR)
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_8_TIMINGS)
-  FETCH_TIMING;
-#endif
-#endif
   m68k_dest=&(r[PARAM_N]);
   m68k_DEST_W|=m68k_src_w;
-#if defined(SSE_CPU_PREFETCH_TIMING_OR)
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_8_TIMINGS)
-  FETCH_TIMING;
-#endif
-#endif
   SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
   SR_CHECK_Z_AND_N_W;
-}
-//#undef SSE_CPU_LINE_8_TIMINGS //sowatt/sync
-
-void                             m68k_or_l_to_dN(){
-
-#if !(defined(SSE_CPU_LINE_8_TIMINGS))
+}void                             m68k_or_l_to_dN(){
   FETCH_TIMING;
-#endif
   m68k_GET_SOURCE_L_NOT_A;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_8_TIMINGS)
-  FETCH_TIMING;
-#endif
   if (SOURCE_IS_REGISTER_OR_IMMEDIATE){INSTRUCTION_TIME(4);}
   else {INSTRUCTION_TIME(2);}
   m68k_dest=&(r[PARAM_N]);
@@ -7351,15 +3037,10 @@ void                             m68k_or_l_to_dN(){
   SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
   SR_CHECK_Z_AND_N_L;
 }
-#define SSE_CPU_LINE_8_TIMINGS
-
-#if defined(SSE_CPU_DIV)
-extern void m68k_divu();
-#else
 void                              m68k_divu(){
-#if !(defined(SSE_BOILER_NODIV))
-  DEBUG_ONLY(    log_to(LOGSECTION_DIV,Str("DIV: ")+HEXSl(old_pc,6)+" - "+disa_d2(old_pc));  )
-#endif
+  DEBUG_ONLY(
+    log_to(LOGSECTION_DIV,Str("DIV: ")+HEXSl(old_pc,6)+" - "+disa_d2(old_pc));
+  )
   FETCH_TIMING;
   m68k_GET_SOURCE_W_NOT_A;
   if (m68k_src_w==0){
@@ -7378,118 +3059,24 @@ void                              m68k_divu(){
       r[PARAM_N]=((((unsigned long)r[PARAM_N])%((unsigned short)m68k_src_w))<<16)+q;
     }
   }
+
 }
-#endif
-
-//#undef SSE_CPU_LINE_8_TIMINGS
 void                              m68k_or_b_from_dN_or_sbcd(){
-#if !(defined(SSE_CPU_LINE_8_TIMINGS))
   FETCH_TIMING;
-#endif
-
   switch(ir&BITS_543){
   case BITS_543_000:case BITS_543_001:{  //sbcd
-/*
-------------------------------------------------------------------------------- 
-                  |    Exec Time    |               Data Bus Usage              
-    ABCD, SBCD    |      INSTR      |                  INSTR                    
-------------------+-----------------+------------------------------------------ 
-Dy,Dx :           |                 |
-  .B :            |  6(1/0)         |                               np       n  
--(Ay),-(Ax) :     |                 |
-  .B :            | 18(3/1)         |                 n    nr    nr np nw       
-
-*/
-
     if((ir&BITS_543)==BITS_543_000){
-
-#if defined(SSE_CPU_LINE_8_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
-
       INSTRUCTION_TIME(2);
       m68k_src_b=LOBYTE(r[PARAM_M]);
       m68k_dest=&(r[PARAM_N]);
     }else{
-
-#if defined(SSE_CPU_LINE_8_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
-
-
       INSTRUCTION_TIME_ROUND(14);
       areg[PARAM_M]--;areg[PARAM_N]--;
       if(PARAM_M==7)areg[PARAM_M]--;
       if(PARAM_N==7)areg[PARAM_N]--;
       m68k_src_b=m68k_peek(areg[PARAM_M]);
-#if defined(SSE_CPU_TRUE_PC)
-      CHECK_READ=true;
-#endif
       m68k_SET_DEST_B(areg[PARAM_N]);
     }
-#if defined(SSE_CPU_SBCD)
-/*  It's more complicated than ABCD if anything.
-    eg 22-14 = 8
-    2-4 = $FE
-    $E-6=8
-    one borrow 2-1-1=0
-    result: 08
-
-    eg 10-14
-    0-4 = $FC
-    $C-6=6
-    one borrow 1-1-1=$FF
-    $F-6=9
-    result: 96 with carry ?
-
-*/
-
-
-#ifdef SSE_DEBUG__
-    int n=100+
-       ( ((m68k_DEST_B&0xf0)>>4)*10+(m68k_DEST_B&0xf) )
-      -( ((m68k_src_b&0xf0)>>4)*10+(m68k_src_b&0xf) );
-    if(sr&SR_X)n--;
-    n%=100;
-    n=(BYTE)( (((n/10)%10)<<4)+(n%10) );
-#endif
-
-  BYTE src = m68k_src_b;
-  BYTE dst = (m68k_DEST_B&0xff);
-  BYTE lo_nibble=(dst & 0xF) - (src & 0xF) - ((sr&SR_X)?1:0);
-  SR_CLEAR(SR_X+SR_C+SR_N);
-  if(lo_nibble&0xF0)
-  {
-    lo_nibble-=6;
-#if defined(SSE_VC_INTRINSICS_383E)
-    BITSET(sr,SR_C_BIT);
-#else
-    SR_SET(SR_C);//internal
-#endif
-  }
-
-  WORD hi_nibble=(dst & 0xF0) - (src & 0xF0) - ((sr&SR_C)?0x10:0);
-#if defined(SSE_VC_INTRINSICS_383E)
-  BITRESET(sr,SR_C_BIT);
-#else
-  SR_CLEAR(SR_C);//clear internal bit
-#endif
-  if(hi_nibble&0xF00)
-  {
-    hi_nibble-=0x60;
-    SR_SET(SR_X+SR_C+SR_N);
-  }
-  m68k_DEST_B=(hi_nibble&0xF0)+(lo_nibble&0xF);
-  //ASSERT( m68k_DEST_B==n ); // The Teller, Dark Castle, Jupiter's Masterdrive...
-  if(!m68k_DEST_B)
-#if defined(SSE_VC_INTRINSICS_383E)
-    BITSET(sr,SR_Z_BIT);
-#else
-    SR_SET(SR_Z)
-#endif
-#else
     int n=100+
        ( ((m68k_DEST_B&0xf0)>>4)*10+(m68k_DEST_B&0xf) )
       -( ((m68k_src_b&0xf0)>>4)*10+(m68k_src_b&0xf) );
@@ -7498,135 +3085,54 @@ Dy,Dx :           |                 |
     if(n<100)SR_SET(SR_X+SR_C); //if a carry occurs
     n%=100;
     if(n)SR_CLEAR(SR_Z);
-
-/*
-#if defined(SSE_CPU_LINE_8_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
-*/
     m68k_DEST_B=(BYTE)( (((n/10)%10)<<4)+(n%10) );
-#endif
     break;
-  }default://or.b
-/*
-Dn,<ea> :         |                 |               | 
-  .B or .W :      |                 |               | 
-    (An)          |  8(1/1)  4(1/0) |            nr |               np nw	      
-    (An)+         |  8(1/1)  4(1/0) |            nr |               np nw	      
-    -(An)         |  8(1/1)  6(1/0) | n          nr |               np nw	      
-    (d16,An)      |  8(1/1)  8(2/0) |      np    nr |               np nw	      
-    (d8,An,Xn)    |  8(1/1) 10(2/0) | n    np    nr |               np nw	      
-    (xxx).W       |  8(1/1)  8(2/0) |      np    nr |               np nw	      
-    (xxx).L       |  8(1/1) 12(3/0) |   np np    nr |               np nw	      
-*/
-#if !defined(SSE_CPU_ROUNDING_OR)
+  }default:
     INSTRUCTION_TIME(4);
-#endif
-    EXTRA_PREFETCH; 
-#if defined(SSE_CPU_TRUE_PC)
-    CHECK_READ=true;
-#endif
+    EXTRA_PREFETCH;
     m68k_GET_DEST_B_NOT_A;
-    m68k_src_b=LOBYTE(r[PARAM_N]);  
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_8_TIMINGS)
-    FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_OR)
-    CPU_ABUS_ACCESS_WRITE;
-#endif
+    m68k_src_b=LOBYTE(r[PARAM_N]);
     m68k_DEST_B|=m68k_src_b;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_B;
-  }//sw
-}
-#undef SSE_CPU_LINE_8_TIMINGS
-void                             m68k_or_w_from_dN(){
-#if !(defined(SSE_CPU_LINE_8_TIMINGS))
+  }
+}void                             m68k_or_w_from_dN(){
   FETCH_TIMING;
-#endif
-
   switch(ir&BITS_543){
   case BITS_543_000:
   case BITS_543_001:
     m68k_unrecognised();
     break;
   default:
-#if !defined(SSE_CPU_ROUNDING_OR)
     INSTRUCTION_TIME(4);
-#endif
-    EXTRA_PREFETCH; 
-#if defined(SSE_CPU_TRUE_PC)
-    CHECK_READ=true;
-#endif
+    EXTRA_PREFETCH;
     m68k_GET_DEST_W_NOT_A;
     m68k_src_w=LOWORD(r[PARAM_N]);
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_8_TIMINGS)
-    FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_OR)
-    CPU_ABUS_ACCESS_WRITE;
-#endif
     m68k_DEST_W|=m68k_src_w;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_W;
   }
-}
-//#undef SSE_CPU_LINE_8_TIMINGS
-
-/*
-  .L :            |                 |                              
-    (An)          | 12(1/2)  8(2/0) |         nR nr |               np nw nW    
-    (An)+         | 12(1/2)  8(2/0) |         nR nr |               np nw nW    
-    -(An)         | 12(1/2) 10(2/0) | n       nR nr |               np nw nW    
-    (d16,An)      | 12(1/2) 12(3/0) |      np nR nr |               np nw nW    
-    (d8,An,Xn)    | 12(1/2) 14(3/0) | n    np nR nr |               np nw nW    
-    (xxx).W       | 12(1/2) 12(3/0) |      np nR nr |               np nw nW    
-    (xxx).L       | 12(1/2) 16(4/0) |   np np nR nr |               np nw nW    
-*/
-void                             m68k_or_l_from_dN(){
-#if !(defined(SSE_CPU_LINE_8_TIMINGS))
+}void                             m68k_or_l_from_dN(){
   FETCH_TIMING;
-#endif
-
   switch(ir&BITS_543){
   case BITS_543_000:
   case BITS_543_001:
     m68k_unrecognised();
     break;
   default:
-#if !defined(SSE_CPU_ROUNDING_OR)
     INSTRUCTION_TIME(8);
-#endif
-    EXTRA_PREFETCH; 
-#if defined(SSE_CPU_TRUE_PC)
-    CHECK_READ=true;
-#endif
+    EXTRA_PREFETCH;
     m68k_GET_DEST_L_NOT_A;
     m68k_src_l=r[PARAM_N];
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_8_TIMINGS)
-    FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUNDING_OR)
-    CPU_ABUS_ACCESS_WRITE;
-    CPU_ABUS_ACCESS_WRITE;
-#endif
     m68k_DEST_L|=m68k_src_l;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_L;
   }
 }
-
-#if defined(SSE_CPU_DIV)
-void m68k_divs();
-#else
 void                              m68k_divs(){
-#if !(defined(SSE_BOILER_NODIV))
-  DEBUG_ONLY( log_to(LOGSECTION_DIV,Str("DIV: ")+HEXSl(old_pc,6)+" - "+disa_d2(old_pc)); )
-#endif
+  DEBUG_ONLY(
+    log_to(LOGSECTION_DIV,Str("DIV: ")+HEXSl(old_pc,6)+" - "+disa_d2(old_pc));
+  )
   FETCH_TIMING;
   m68k_GET_SOURCE_W_NOT_A;
   if (m68k_src_w==0){
@@ -7646,7 +3152,7 @@ void                              m68k_divs(){
     }
   }
 }
-#endif
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -7662,559 +3168,116 @@ void                              m68k_divs(){
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-<ea>,Dn :         |                 |              \              |
-  .B or .W :      |                 |               |             |
-    Dn            |  4(1/0)  0(0/0) |               |             | np          
-    An            |  4(1/0)  0(0/0) |               |             | np          
-    (An)          |  4(1/0)  4(1/0) |            nr |             | np          
-    (An)+         |  4(1/0)  4(1/0) |            nr |             | np          
-    -(An)         |  4(1/0)  6(1/0) | n          nr |             | np          
-    (d16,An)      |  4(1/0)  8(2/0) |      np    nr |             | np          
-    (d8,An,Xn)    |  4(1/0) 10(2/0) | n    np    nr |             | np          
-    (xxx).W       |  4(1/0)  8(2/0) |      np    nr |             | np          
-    (xxx).L       |  4(1/0) 12(3/0) |   np np    nr |             | np          
-    #<data>       |  4(1/0)  4(1/0)        np                     | np          
-
-*/
 void                              m68k_sub_b_to_dN(){
-
-#if !defined(SSE_CPU_LINE_9_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
   INSTRUCTION_TIME(4);
-#endif
-#endif
-
   m68k_GET_SOURCE_B_NOT_A;
   m68k_dest=&r[PARAM_N];
   m68k_old_dest=m68k_DEST_B;
-
-#if defined(SSE_CPU_LINE_9_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
-  INSTRUCTION_TIME(4);
-#endif
-#endif
-
-#if !defined(SSE_CPU_ROUNDING_SUB_BW_DN)
-  PREFETCH_IRC_NO_ROUND;
-#endif
-
   m68k_DEST_B-=m68k_src_b;
   SR_SUB_B(SR_X);
-
-#if defined(SSE_CPU_ROUNDING_SUB_BW_DN)
-  PREFETCH_IRC;  // same effect
-#else
   INSTRUCTION_TIME_ROUND(0);
-#endif
-
 }
-
 void                             m68k_sub_w_to_dN(){
-
-#if !defined(SSE_CPU_LINE_9_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
   INSTRUCTION_TIME(4);
-#endif
-#endif
-
   m68k_GET_SOURCE_W;   //A is allowed
   m68k_dest=&r[PARAM_N];
   m68k_old_dest=m68k_DEST_W;
-
-#if defined(SSE_CPU_LINE_9_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
-  INSTRUCTION_TIME(4);
-#endif
-#endif
-
-#if !defined(SSE_CPU_ROUNDING_SUB_BW_DN)
-  PREFETCH_IRC_NO_ROUND;
-#endif
-
   m68k_DEST_W-=m68k_src_w;
   SR_SUB_W(SR_X);
-
-#if defined(SSE_CPU_ROUNDING_SUB_BW_DN)
-  PREFETCH_IRC;  // same effect
-#else
   INSTRUCTION_TIME_ROUND(0);
-#endif
-
 }
-/*
-  .L :            |                 |               |             |
-    Dn            |  8(1/0)  0(0/0) |               |             | np       nn 
-    An            |  8(1/0)  0(0/0) |               |             | np       nn 
-    (An)          |  6(1/0)  8(2/0) |         nR nr |             | np       n  
-    (An)+         |  6(1/0)  8(2/0) |         nR nr |             | np       n  
-    -(An)         |  6(1/0) 10(2/0) | n       nR nr |             | np       n  
-    (d16,An)      |  6(1/0) 12(3/0) |      np nR nr |             | np       n  
-    (d8,An,Xn)    |  6(1/0) 14(3/0) | n    np nR nr |             | np       n  
-    (xxx).W       |  6(1/0) 12(3/0) |      np nR nr |             | np       n  
-    (xxx).L       |  6(1/0) 16(4/0) |   np np nR nr |             | np       n  
-    #<data>       |  8(1/0)  8(2/0) |   np np       |               np       nn 
-*/
 void                             m68k_sub_l_to_dN(){
-#if !defined(SSE_CPU_LINE_9_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
   INSTRUCTION_TIME(4);
-#endif
-#endif
   m68k_GET_SOURCE_L;   //A is allowed
-
-#if defined(SSE_CPU_LINE_9_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
-  INSTRUCTION_TIME(4);
-#endif
-#endif
-
-#if defined(SSE_CPU_ROUNDING_SUB_L_DN)
-  PREFETCH_IRC;
-#else
-  PREFETCH_IRC_NO_ROUND;
-#endif
-
-  if(SOURCE_IS_REGISTER_OR_IMMEDIATE){INSTRUCTION_TIME(4);} //SS looks correct
+  if(SOURCE_IS_REGISTER_OR_IMMEDIATE){INSTRUCTION_TIME(4);}
   else {INSTRUCTION_TIME(2);}
-
   m68k_dest=&r[PARAM_N];
   m68k_old_dest=m68k_DEST_L;
   m68k_DEST_L-=m68k_src_l;
   SR_SUB_L(SR_X);
-
-#if !defined(SSE_CPU_ROUNDING_SUB_L_DN)
   INSTRUCTION_TIME_ROUND(0);
-#endif
-
-}
-
-/*
-------------------------------------------------------------------------------- 
-                  |    Exec Time    |               Data Bus Usage              
-    ADDA, SUBA    |  INSTR     EA   |  1st OP (ea)  |          INSTR            
-------------------+-----------------+---------------+-------------------------- 
-<ea>,An :         |                 |               |
-  .B or .W :      |                 |               |
-    Dn            |  8(1/0)  0(0/0) |               |               np       nn 
-    An            |  8(1/0)  0(0/0) |               |               np       nn 
-    (An)          |  8(1/0)  4(1/0) |            nr |               np       nn 
-    (An)+         |  8(1/0)  4(1/0) |            nr |               np       nn 
-    -(An)         |  8(1/0)  6(1/0) | n          nr |               np       nn 
-    (d16,An)      |  8(1/0)  8(2/0) |      np    nr |               np       nn 
-    (d8,An,Xn)    |  8(1/0) 10(2/0) | n    np    nr |               np       nn 
-    (xxx).W       |  8(1/0)  8(2/0) |      np    nr |               np       nn 
-    (xxx).L       |  8(1/0) 12(3/0) |   np np    nr |               np       nn 
-    #<data>       |  8(1/0)  4(1/0) |      np       |               np       nn 
-*/
-
-void                             m68k_suba_w(){
-
-#if !defined(SSE_CPU_LINE_9_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
+}void                             m68k_suba_w(){
   INSTRUCTION_TIME(4);
-#endif
-#endif
-
   m68k_GET_SOURCE_W;
-
-#if defined(SSE_CPU_LINE_9_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
   INSTRUCTION_TIME(4);
-#endif
-#endif
 
-#if defined(SSE_CPU_ROUNDING_SUBA_W_DN)
-  PREFETCH_IRC;
-#else
-  PREFETCH_IRC_NO_ROUND;
-#endif
-
-  INSTRUCTION_TIME(4);
   m68k_src_l=(signed long)((signed short)m68k_src_w);
-
   areg[PARAM_N]-=m68k_src_l;
-
-#if !defined(SSE_CPU_ROUNDING_SUBA_W_DN)
   INSTRUCTION_TIME_ROUND(0);
-#endif
 }
-
 void                              m68k_sub_b_from_dN(){
-
-#if !defined(SSE_CPU_LINE_9_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
   INSTRUCTION_TIME(4);
-#endif
-#endif
-
   switch(ir&BITS_543){
-/*
-SUBX is done here (bit 8=1, bits543=000 or 001
-15 14 13 12     11 10 9    8 7 6  5 4 3       2 1 0
-1   0  0  1 REGISTER Dy/Ay 1 SIZE 0 0 R/M     REGISTER Dx/Ax 
-
-
-------------------------------------------------------------------------------- 
-                  |    Exec Time    |               Data Bus Usage              
-    ADDX, SUBX    |      INSTR      |                  INSTR                    
-------------------+-----------------+------------------------------------------ 
-Dy,Dx :           |                 |
-  .B or .W :      |  4(1/0)         |                               np          
-
-*/
-
   case BITS_543_000:
   case BITS_543_001:
-
-#if defined(SSE_CPU_LINE_9_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
-  INSTRUCTION_TIME(4);
-#endif
-#endif
-
-#if !defined(SSE_CPU_PREFETCH_TIMING_SUBX)
-#if defined(SSE_CPU_ROUNDING_SUB_BW_DN2) 
-    PREFETCH_IRC;
-#else
-    PREFETCH_IRC_NO_ROUND;
-#endif
-#endif
-
     if((ir&BITS_543)==BITS_543_000){
       m68k_src_b=LOBYTE(r[PARAM_M]);
       m68k_dest=&(r[PARAM_N]);
     }else{
-/*
--(Ay),-(Ax) :     |                 |
-  .B or .W :      | 18(3/1)         |              n nr    nr       np nw       
-*/
-#if !defined(SSE_CPU_ROUNDING_SUBX)
       INSTRUCTION_TIME_ROUND(14);
-#endif
-#if defined(SSE_CPU_ROUNDING_SUBX)
-      INSTRUCTION_TIME(2);
-#endif
       areg[PARAM_M]--;      if(PARAM_M==7)areg[PARAM_M]--;
-#if defined(SSE_CPU_ROUNDING_SUBX)
-      CPU_ABUS_ACCESS_READ;
-#endif
       m68k_src_b=m68k_peek(areg[PARAM_M]);
       areg[PARAM_N]--;      if(PARAM_N==7)areg[PARAM_N]--;
-#if defined(SSE_CPU_TRUE_PC)
-      CHECK_READ=true;
-#endif
       m68k_SET_DEST_B(areg[PARAM_N]);
-#if defined(SSE_CPU_ROUNDING_SUBX)
-      CPU_ABUS_ACCESS_READ;
-#endif
     }
     m68k_old_dest=m68k_DEST_B;
-#if defined(SSE_CPU_PREFETCH_TIMING_SUBX)
-    PREFETCH_IRC;
-#endif
-#if defined(SSE_CPU_ROUNDING_SUBX)
-    if((ir&BITS_543)==BITS_543_001)
-      CPU_ABUS_ACCESS_WRITE;
-#endif
     m68k_DEST_B-=m68k_src_b;
     if(sr&SR_X)m68k_DEST_B--;
     SR_SUBX_B;
     break;
   default:
-/*
-Dn,<ea> :         |                 |              /              |
-  .B or .W :      |                 |             |               |
-    (An)          |  8(1/1)  4(1/0) |             |            nr | np nw       
-    (An)+         |  8(1/1)  4(1/0) |             |            nr | np nw       
-    -(An)         |  8(1/1)  6(1/0) |             | n          nr | np nw       
-    (d16,An)      |  8(1/1)  8(2/0) |             |      np    nr | np nw       
-    (d8,An,Xn)    |  8(1/1) 10(2/0) |             | n    np    nr | np nw       
-    (xxx).W       |  8(1/1)  8(2/0) |             |      np    nr | np nw       
-    (xxx).L       |  8(1/1) 12(3/0) |             |   np np    nr | np nw       
-
-*/
-#if !defined(SSE_CPU_ROUNDING_SUB)
     INSTRUCTION_TIME(4);
-#endif
-    EXTRA_PREFETCH; 
+    EXTRA_PREFETCH;
     m68k_src_b=LOBYTE(r[PARAM_N]);
-#if defined(SSE_CPU_TRUE_PC)
-    CHECK_READ=true;
-#endif
     m68k_GET_DEST_B_NOT_A;
-
-#if defined(SSE_CPU_LINE_9_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
-  INSTRUCTION_TIME(4);
-#endif
-#endif
-
-#if defined(SSE_CPU_ROUNDING_SUB_BW_DN2)
-    PREFETCH_IRC;
-#else
-    PREFETCH_IRC_NO_ROUND;
-#endif
-
     m68k_old_dest=m68k_DEST_B;
-#if defined(SSE_CPU_ROUNDING_SUB)
-    CPU_ABUS_ACCESS_WRITE;
-#endif
     m68k_DEST_B-=m68k_src_b;
     SR_SUB_B(SR_X);
   }
-
-#if !defined(SSE_CPU_ROUNDING_SUB_BW_DN2)
   INSTRUCTION_TIME_ROUND(0);
-#endif
 }
-
 void                              m68k_sub_w_from_dN(){
-
-#if !defined(SSE_CPU_LINE_9_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
   INSTRUCTION_TIME(4);
-#endif
-#endif
-
   switch(ir&BITS_543){
-/*
-SUBX is done here (bit 8=1, bits543=000 or 001
-15 14 13 12     11 10 9    8 7 6  5 4 3       2 1 0
-1   0  0  1 REGISTER Dy/Ay 1 SIZE 0 0 R/M     REGISTER Dx/Ax 
-
-
-------------------------------------------------------------------------------- 
-                  |    Exec Time    |               Data Bus Usage              
-    ADDX, SUBX    |      INSTR      |                  INSTR                    
-------------------+-----------------+------------------------------------------ 
-Dy,Dx :           |                 |
-  .B or .W :      |  4(1/0)         |                               np          
-
-*/
   case BITS_543_000:
   case BITS_543_001:
-#if defined(SSE_CPU_LINE_9_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-    FETCH_TIMING_NO_ROUND;
-#else
-    INSTRUCTION_TIME(4);
-#endif
-#endif
-
-#if !defined(SSE_CPU_PREFETCH_TIMING_SUBX)
-#if defined(SSE_CPU_ROUNDING_SUB_BW_DN2)
-    PREFETCH_IRC;
-#else
-    PREFETCH_IRC_NO_ROUND;
-#endif
-#endif
-
     if((ir&BITS_543)==BITS_543_000){
       m68k_src_w=LOWORD(r[PARAM_M]);
       m68k_dest=&(r[PARAM_N]);
     }else{
-/*
--(Ay),-(Ax) :     |                 |
-  .B or .W :      | 18(3/1)         |              n nr    nr       np nw       
-*/
-#if !defined(SSE_CPU_ROUNDING_SUBX)
       INSTRUCTION_TIME_ROUND(14);
-#endif
-#if defined(SSE_CPU_ROUNDING_SUBX)
-      INSTRUCTION_TIME(2);
-#endif
-      areg[PARAM_M]-=2;
-#if defined(SSE_CPU_ROUNDING_SUBX)
-      CPU_ABUS_ACCESS_READ;
-#endif
-      m68k_src_w=m68k_dpeek(areg[PARAM_M]);
-#if defined(SSE_CPU_TRUE_PC)
-      CHECK_READ=true;
-#endif
+      areg[PARAM_M]-=2;m68k_src_w=m68k_dpeek(areg[PARAM_M]);
       areg[PARAM_N]-=2;m68k_SET_DEST_W(areg[PARAM_N]);
-#if defined(SSE_CPU_ROUNDING_SUBX)
-      CPU_ABUS_ACCESS_READ;
-#endif
     }
     m68k_old_dest=m68k_DEST_W;
-#if defined(SSE_CPU_PREFETCH_TIMING_SUBX)
-    PREFETCH_IRC;
-#endif
-#if defined(SSE_CPU_ROUNDING_SUBX)
-    if((ir&BITS_543)==BITS_543_001)
-      CPU_ABUS_ACCESS_WRITE;
-#endif
     m68k_DEST_W-=m68k_src_w;
     if(sr&SR_X)m68k_DEST_W--;
     SR_SUBX_W;
     break;
   default: //to memory
-/*
-Dn,<ea> :         |                 |              /              |
-  .B or .W :      |                 |             |               |
-    (An)          |  8(1/1)  4(1/0) |             |            nr | np nw       
-    (An)+         |  8(1/1)  4(1/0) |             |            nr | np nw       
-    -(An)         |  8(1/1)  6(1/0) |             | n          nr | np nw       
-    (d16,An)      |  8(1/1)  8(2/0) |             |      np    nr | np nw       
-    (d8,An,Xn)    |  8(1/1) 10(2/0) |             | n    np    nr | np nw       
-    (xxx).W       |  8(1/1)  8(2/0) |             |      np    nr | np nw       
-    (xxx).L       |  8(1/1) 12(3/0) |             |   np np    nr | np nw       
-
-*/
-
-
-#if !defined(SSE_CPU_ROUNDING_SUB)
     INSTRUCTION_TIME(4);
-#endif
-
-    EXTRA_PREFETCH; 
+    EXTRA_PREFETCH;
     m68k_src_w=LOWORD(r[PARAM_N]);
-#if defined(SSE_CPU_TRUE_PC)
-    CHECK_READ=true;
-#endif
     m68k_GET_DEST_W_NOT_A;
-#if defined(SSE_CPU_LINE_9_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-    FETCH_TIMING_NO_ROUND;
-#else
-    INSTRUCTION_TIME(4);
-#endif
-#endif
-
-#if defined(SSE_CPU_ROUNDING_SUB_BW_DN2)
-    PREFETCH_IRC;
-#else
-    PREFETCH_IRC_NO_ROUND;
-#endif
-
     m68k_old_dest=m68k_DEST_W;
-#if defined(SSE_CPU_ROUNDING_SUB)
-    CPU_ABUS_ACCESS_WRITE;
-#endif
     m68k_DEST_W-=m68k_src_w;
     SR_SUB_W(SR_X);
   }
-#if !defined(SSE_CPU_ROUNDING_SUB_BW_DN2)
   INSTRUCTION_TIME_ROUND(0);
-#endif
-
 }
-
-
 void                              m68k_sub_l_from_dN(){
-#if !defined(SSE_CPU_LINE_9_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
   INSTRUCTION_TIME(4);
-#endif
-#endif
   switch(ir&BITS_543){
-
-/*
-SUBX is done here (bit 8=1, bits543=000 or 001
-15 14 13 12     11 10 9    8 7 6  5 4 3       2 1 0
-1   0  0  1 REGISTER Dy/Ay 1 SIZE 0 0 R/M     REGISTER Dx/Ax 
-
-
-------------------------------------------------------------------------------- 
-                  |    Exec Time    |               Data Bus Usage              
-    ADDX, SUBX    |      INSTR      |                  INSTR                    
-------------------+-----------------+------------------------------------------ 
-Dy,Dx :           |                 |
-  .L :            |  8(1/0)         |                               np       nn 
-*/
-
-
   case BITS_543_000:
   case BITS_543_001:
     if((ir&BITS_543)==BITS_543_000){
-#if defined(SSE_CPU_LINE_9_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-      FETCH_TIMING_NO_ROUND;
-#else
-      INSTRUCTION_TIME(4);
-#endif
-#endif
-
-#if defined(SSE_CPU_ROUNDING_SUB_L_DN2)
-      PREFETCH_IRC;
-#else
-      PREFETCH_IRC_NO_ROUND;
-#endif
-
       INSTRUCTION_TIME(4);
       m68k_src_l=r[PARAM_M];
       m68k_dest=&(r[PARAM_N]);
     }else{
-/*
--(Ay),-(Ax) :     |                 |
-  .L :            | 30(5/2)         |              n nr nR nr nR nw np    nW    
-*/
-#if !defined(SSE_CPU_ROUNDING_SUBX)
       INSTRUCTION_TIME_ROUND(26);
-#endif
-#if defined(SSE_CPU_ROUNDING_SUBX)
-      INSTRUCTION_TIME(2);
-#endif
-      areg[PARAM_M]-=4;
-#if defined(SSE_CPU_ROUNDING_SUBX)
-      CPU_ABUS_ACCESS_READ;
-      CPU_ABUS_ACCESS_READ;
-#endif
-      m68k_src_l=m68k_lpeek(areg[PARAM_M]);
-
-#if defined(SSE_CPU_TRUE_PC)
-      CHECK_READ=true;
-#endif
+      areg[PARAM_M]-=4;m68k_src_l=m68k_lpeek(areg[PARAM_M]);
       areg[PARAM_N]-=4;m68k_SET_DEST_L(areg[PARAM_N]);
-#if defined(SSE_CPU_ROUNDING_SUBX)
-      CPU_ABUS_ACCESS_READ;
-      CPU_ABUS_ACCESS_READ;
-#endif
-#if defined(SSE_CPU_LINE_9_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-      FETCH_TIMING_NO_ROUND;
-#else
-      INSTRUCTION_TIME(4);
-#endif
-#endif
-#if defined(SSE_CPU_ROUNDING_SUBX)
-      CPU_ABUS_ACCESS_WRITE;
-#endif
-#if defined(SSE_CPU_ROUNDING_SUB_L_DN2)
-      PREFETCH_IRC;
-#else
-      PREFETCH_IRC_NO_ROUND;
-#endif
-#if defined(SSE_CPU_ROUNDING_SUBX)
-      CPU_ABUS_ACCESS_WRITE;
-#endif
     }
     m68k_old_dest=m68k_DEST_L;
     m68k_DEST_L-=m68k_src_l;
@@ -8222,95 +3285,22 @@ Dy,Dx :           |                 |
     SR_SUBX_L;
     break;
   default:
-/*
-  .L :            |                 |             |               |
-    (An)          | 12(1/2)  8(2/0) |             |            nr | np nw nW    
-    (An)+         | 12(1/2)  8(2/0) |             |            nr | np nw nW    
-    -(An)         | 12(1/2) 10(2/0) |             | n       nR nr | np nw nW    
-    (d16,An)      | 12(1/2) 12(3/0) |             |      np nR nr | np nw nW    
-    (d8,An,Xn)    | 12(1/2) 14(3/0) |             | n    np nR nr | np nw nW    
-    (xxx).W       | 12(1/2) 12(3/0) |             |      np nR nr | np nw nW    
-    (xxx).L       | 12(1/2) 16(4/0) |             |   np np nR nr | np nw nW    
-
-*/
-
-#if !defined(SSE_CPU_ROUNDING_SUB)
     INSTRUCTION_TIME(8);
-#endif
-    EXTRA_PREFETCH; 
+    EXTRA_PREFETCH;
     m68k_src_l=r[PARAM_N];
     m68k_GET_DEST_L_NOT_A;
-#if defined(SSE_CPU_LINE_9_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
-  INSTRUCTION_TIME(4);
-#endif
-#endif
-
-#if defined(SSE_CPU_ROUNDING_SUB_L_DN2)
-    PREFETCH_IRC;
-#else
-    PREFETCH_IRC_NO_ROUND;
-#endif
-
     m68k_old_dest=m68k_DEST_L;
-#if defined(SSE_CPU_ROUNDING_SUB)
-    CPU_ABUS_ACCESS_WRITE;
-    CPU_ABUS_ACCESS_WRITE;
-#endif
     m68k_DEST_L-=m68k_src_l;
     SR_SUB_L(SR_X);
   }
-#if !defined(SSE_CPU_ROUNDING_SUB_L_DN2)
   INSTRUCTION_TIME_ROUND(0);
-#endif
-}
-
-
-/*
-  .L :            |                 |               |
-    Dn            |  8(1/0)  0(0/0) |               |               np       nn 
-    An            |  8(1/0)  0(0/0) |               |               np       nn 
-    (An)          |  6(1/0)  8(2/0) |         nR nr |               np       n  
-    (An)+         |  6(1/0)  8(2/0) |         nR nr |               np       n  
-    -(An)         |  6(1/0) 10(2/0) | n       nR nr |               np       n  
-    (d16,An)      |  6(1/0) 12(3/0) |      np nR nr |               np       n  
-    (d8,An,Xn)    |  6(1/0) 14(3/0) | n    np nR nr |               np       n  
-    (xxx).W       |  6(1/0) 12(3/0) |      np nR nr |               np       n  
-    (xxx).L       |  6(1/0) 16(4/0) |   np np nR nr |               np       n  
-    #<data>       |  8(1/0)  8(2/0) |   np np       |               np       nn 
-*/
-void                             m68k_suba_l(){
-#if !defined(SSE_CPU_LINE_9_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
+}void                             m68k_suba_l(){
   INSTRUCTION_TIME(4);
-#endif
-#endif
   m68k_GET_SOURCE_L;
-
-#if defined(SSE_CPU_LINE_9_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
-  INSTRUCTION_TIME(4);
-#endif
-#endif
-
-#if defined(SSE_CPU_ROUNDING_SUBA_L_DN)
-    PREFETCH_IRC;
-#else
-    PREFETCH_IRC_NO_ROUND;
-#endif
-
   if (SOURCE_IS_REGISTER_OR_IMMEDIATE){INSTRUCTION_TIME(4);}
   else {INSTRUCTION_TIME(2);}
   areg[PARAM_N]-=m68k_src_l;
-#if !defined(SSE_CPU_ROUNDING_SUBA_L_DN)
   INSTRUCTION_TIME_ROUND(0);
-#endif
 }
 
 
@@ -8328,140 +3318,34 @@ void                             m68k_suba_l(){
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-------------------------------------------------------------------------------- 
-                  |    Exec Time    |               Data Bus Usage              
-       CMP        |  INSTR     EA   |  1st OP (ea)  |          INSTR            
-------------------+-----------------+---------------+-------------------------- 
-<ea>,Dn :         |                 |               | 
-  .B or .W :      |                 |               | 
-    Dn            |  4(1/0)  0(0/0) |               |               np          
-    An            |  4(1/0)  0(0/0) |               |               np          
-    (An)          |  4(1/0)  4(1/0) |            nr |               np          
-    (An)+         |  4(1/0)  4(1/0) |            nr |               np          
-    -(An)         |  4(1/0)  6(1/0) | n          nr |               np          
-    (d16,An)      |  4(1/0)  8(2/0) |      np    nr |               np          
-    (d8,An,Xn)    |  4(1/0) 10(2/0) | n    np    nr |               np          
-    (xxx).W       |  4(1/0)  8(2/0) |      np    nr |               np          
-    (xxx).L       |  4(1/0) 12(3/0) |   np np    nr |               np          
-    #<data>       |  4(1/0)  4(1/0) |      np       |               np          
-*/
-
 void                              m68k_cmp_b(){
-#if !defined(SSE_CPU_LINE_B_TIMINGS)
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ASSERT_ILLEGAL_380)
-  m68k_GET_SOURCE_B_NOT_A; //shorter
-#elif defined(SSE_CPU_ASSERT_ILLEGAL_370)
-  if((ir&BITS_543)==BITS_543_001) // .B An...
-    m68k_unrecognised();
   m68k_GET_SOURCE_B;
-//    ILLEGAL
-#else
-  m68k_GET_SOURCE_B;
-#endif
   m68k_old_dest=LOBYTE(r[PARAM_N]);
   compare_buffer=m68k_old_dest;
   m68k_dest=&compare_buffer;
-#if !defined(SSE_CPU_PREFETCH_TIMING_CMP)
-#if defined(SSE_CPU_LINE_B_TIMINGS)
-  FETCH_TIMING;
-#endif
-  PREFETCH_IRC;
-#endif
   m68k_DEST_B-=m68k_src_b;
   SR_SUB_B(0);
-#if defined(SSE_CPU_PREFETCH_TIMING_CMP)
-#if defined(SSE_CPU_LINE_B_TIMINGS)
+}void                             m68k_cmp_w(){
   FETCH_TIMING;
-#endif
-  PREFETCH_IRC;
-#endif
-}
-
-void                             m68k_cmp_w(){
-#if !defined(SSE_CPU_LINE_B_TIMINGS)
-  FETCH_TIMING;
-#endif
   m68k_GET_SOURCE_W;
   m68k_old_dest=LOWORD(r[PARAM_N]);
   compare_buffer=m68k_old_dest;
   m68k_dest=&compare_buffer;
-#if !defined(SSE_CPU_PREFETCH_TIMING_CMP)
-#if defined(SSE_CPU_LINE_B_TIMINGS)
-  FETCH_TIMING;
-#endif
-  PREFETCH_IRC;
-#endif
   m68k_DEST_W-=m68k_src_w;
   SR_SUB_W(0);
-#if defined(SSE_CPU_PREFETCH_TIMING_CMP)
-#if defined(SSE_CPU_LINE_B_TIMINGS)
+}void                             m68k_cmp_l(){
   FETCH_TIMING;
-#endif
-  PREFETCH_IRC;
-#endif
-}
-
-/*
-  .L :            |                 |               | 
-    Dn            |  6(1/0)  0(0/0) |               |               np       n  
-    An            |  6(1/0)  0(0/0) |               |               np       n  
-    (An)          |  6(1/0)  8(1/0) |         nR nr |               np       n  
-    (An)+         |  6(1/0)  8(1/0) |         nR nr |               np       n  
-    -(An)         |  6(1/0) 10(1/0) | n       nR nr |               np       n  
-    (d16,An)      |  6(1/0) 12(2/0) |      np nR nr |               np       n  
-    (d8,An,Xn)    |  6(1/0) 14(2/0) | n    np nR nr |               np       n  
-    (xxx).W       |  6(1/0) 12(2/0) |      np nR nr |               np       n  
-    (xxx).L       |  6(1/0) 16(3/0) |   np np nR nr |               np       n  
-    #<data>       |  6(1/0)  8(2/0) |   np np       |               np       n  
-*/
-
-void                             m68k_cmp_l(){
-#if !defined(SSE_CPU_LINE_B_TIMINGS)
-  FETCH_TIMING;
-#endif
   m68k_GET_SOURCE_L;
-#if defined(SSE_CPU_LINE_B_TIMINGS)
-  FETCH_TIMING;
-#endif
-  PREFETCH_IRC;
   INSTRUCTION_TIME(2);
   m68k_old_dest=r[PARAM_N];
   compare_buffer=m68k_old_dest;
   m68k_dest=&compare_buffer;
   m68k_DEST_L-=m68k_src_l;
   SR_SUB_L(0);
-}
-/*
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage             
-       CMPA       |  INSTR     EA   |  1st OP (ea)  |          INSTR           
-------------------+-----------------+---------------+--------------------------
-<ea>,An :         |                 |               | 
-  .B or .W :      |                 |               | 
-    Dn            |  6(1/0)  0(0/0) |               |               np       n  
-    An            |  6(1/0)  0(0/0) |               |               np       n  
-    (An)          |  6(1/0)  4(1/0) |            nr |               np       n  
-    (An)+         |  6(1/0)  4(1/0) |            nr |               np       n  
-    -(An)         |  6(1/0)  6(1/0) | n          nr |               np       n  
-    (d16,An)      |  6(1/0)  8(2/0) |      np    nr |               np       n  
-    (d8,An,Xn)    |  6(1/0) 10(2/0) | n    np    nr |               np       n  
-    (xxx).W       |  6(1/0)  8(2/0) |      np    nr |               np       n  
-    (xxx).L       |  6(1/0) 12(3/0) |   np np    nr |               np       n  
-    #<data>       |  6(1/0)  4(1/0) |      np       |               np       n  
-*/
-
-void                             m68k_cmpa_w(){
-#if !defined(SSE_CPU_LINE_B_TIMINGS)
+}void                             m68k_cmpa_w(){
   FETCH_TIMING;
-#endif
   m68k_GET_SOURCE_W;
-#if defined(SSE_CPU_LINE_B_TIMINGS)
-  FETCH_TIMING;
-#endif
-  PREFETCH_IRC;
   INSTRUCTION_TIME(2);
   m68k_src_l=(signed long)((signed short)m68k_src_w);
   m68k_old_dest=areg[PARAM_N];
@@ -8470,274 +3354,69 @@ void                             m68k_cmpa_w(){
   m68k_DEST_L-=m68k_src_l;
   SR_SUB_L(0);
 }
-
-void                              m68k_eor_b(){ //SS or cmpm
-#if !defined(SSE_CPU_LINE_B_TIMINGS)
+void                              m68k_eor_b(){
   FETCH_TIMING;
-#endif
   if((ir&BITS_543)==BITS_543_001){  //cmpm
-/*
-------------------------------------------------------------------------------- 
-                  |    Exec Time    |               Data Bus Usage              
-       CMPM       |      INSTR      |                  INSTR                    
-------------------+-----------------+------------------------------------------ 
-(Ay)+,(Ax)+       |                 |
-  .B or .W :      | 12(3/0)         |                      nr    nr np          
-*/
-#if !defined(SSE_CPU_ROUDING_CMP)
     INSTRUCTION_TIME_ROUND(8);
-#endif
-#if defined(SSE_CPU_ROUDING_CMP)
-    CPU_ABUS_ACCESS_READ;
-#endif
     m68k_src_b=m68k_peek(areg[PARAM_M]);areg[PARAM_M]++; if(PARAM_M==7)areg[PARAM_M]++;
-#if defined(SSE_CPU_ROUDING_CMP)
-    CPU_ABUS_ACCESS_READ;
-#endif
     m68k_old_dest=m68k_peek(areg[PARAM_N]);areg[PARAM_N]++; if(PARAM_N==7)areg[PARAM_N]++;
     compare_buffer=m68k_old_dest;
     m68k_dest=&compare_buffer;
-#if !defined(SSE_CPU_PREFETCH_TIMING_CMP)
-#if defined(SSE_CPU_LINE_B_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
-#endif
     m68k_DEST_B-=m68k_src_b;
     SR_SUB_B(0);
-#if defined(SSE_CPU_PREFETCH_TIMING_CMP)
-#if defined(SSE_CPU_LINE_B_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
-#endif
   }else{
-/*
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage              
-        EOR       |  INSTR     EA   |  1st OP (ea)  |          INSTR           
-------------------+-----------------+---------------+--------------------------
-Dn,<ea> :         |                 |               |
-  .B or .W :      |                 |               |
-    Dn            |  4(1/0)  0(0/0) |               |               np		     
-    (An)          |  8(1/1)  4(1/0) |            nr |               np nw	   
-    (An)+         |  8(1/1)  4(1/0) |            nr |               np nw	      
-    -(An)         |  8(1/1)  6(1/0) | n          nr |               np nw	      
-    (d16,An)      |  8(1/1)  8(2/0) |      np    nr |               np nw	      
-    (d8,An,Xn)    |  8(1/1) 10(2/0) | n    np    nr |               np nw	      
-    (xxx).W       |  8(1/1)  8(2/0) |      np    nr |               np nw	      
-    (xxx).L       |  8(1/1) 12(3/0) |   np np    nr |               np nw	
-*/
-#if !defined(SSE_CPU_ROUDING_EOR)
     INSTRUCTION_TIME(4);
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-    CHECK_READ=true;
-#endif
-#if !defined(SSE_CPU_ROUDING_EOR)
     m68k_GET_DEST_B_NOT_A_FASTER_FOR_D;
-#endif
-#if defined(SSE_CPU_ROUDING_EOR)
-    m68k_GET_DEST_B_NOT_A;
-#endif
-#if defined(SSE_CPU_LINE_B_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
-#if defined(SSE_CPU_ROUDING_EOR)
-    if(!DEST_IS_DATA_REGISTER)
-      CPU_ABUS_ACCESS_WRITE; 
-#endif
     m68k_DEST_B^=LOBYTE(r[PARAM_N]);
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_B;
   }
-}
-
-void                             m68k_eor_w(){ //SS or CMPM
-#if !defined(SSE_CPU_LINE_B_TIMINGS)
+}void                             m68k_eor_w(){
   FETCH_TIMING;
-#endif
-
   if((ir&BITS_543)==BITS_543_001){  //cmpm
-#if !defined(SSE_CPU_ROUDING_CMP)
     INSTRUCTION_TIME_ROUND(8);
-#endif
-#if defined(SSE_CPU_ROUDING_CMP)
-    CPU_ABUS_ACCESS_READ;
-#endif
     m68k_src_w=m68k_dpeek(areg[PARAM_M]);areg[PARAM_M]+=2;
-#if defined(SSE_CPU_ROUDING_CMP)
-    CPU_ABUS_ACCESS_READ;
-#endif
     m68k_old_dest=m68k_dpeek(areg[PARAM_N]);areg[PARAM_N]+=2;
     compare_buffer=m68k_old_dest;
     m68k_dest=&compare_buffer;
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_B_TIMINGS)
-    FETCH_TIMING;
-#endif
     m68k_DEST_W-=m68k_src_w;
     SR_SUB_W(0);
   }else{
-/*
-Dn,<ea> :         |                 |               |
-  .B or .W :      |                 |               |
-    Dn            |  4(1/0)  0(0/0) |               |               np		     
-    (An)          |  8(1/1)  4(1/0) |            nr |               np nw	   
-    (An)+         |  8(1/1)  4(1/0) |            nr |               np nw	      
-    -(An)         |  8(1/1)  6(1/0) | n          nr |               np nw	      
-    (d16,An)      |  8(1/1)  8(2/0) |      np    nr |               np nw	      
-    (d8,An,Xn)    |  8(1/1) 10(2/0) | n    np    nr |               np nw	      
-    (xxx).W       |  8(1/1)  8(2/0) |      np    nr |               np nw	      
-    (xxx).L       |  8(1/1) 12(3/0) |   np np    nr |               np nw	  
-*/
-#if !defined(SSE_CPU_ROUDING_EOR)
     INSTRUCTION_TIME(4);
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-    CHECK_READ=true;
-#endif
-#if !defined(SSE_CPU_ROUDING_EOR)
-    m68k_GET_DEST_W_NOT_A_FASTER_FOR_D; //SS: with 'extra prefetch'
-#endif
-#if defined(SSE_CPU_ROUDING_EOR)
-    m68k_GET_DEST_W_NOT_A;
-#endif
-#if defined(SSE_CPU_LINE_B_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC; // Operation Clean Streets (Auto 168)
-#if defined(SSE_CPU_ROUDING_EOR)
-    if(!(DEST_IS_DATA_REGISTER))
-      CPU_ABUS_ACCESS_WRITE;
-#endif
+    m68k_GET_DEST_W_NOT_A_FASTER_FOR_D;
     m68k_DEST_W^=LOWORD(r[PARAM_N]);
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_W;
   }
-}
-
-void                             m68k_eor_l(){ //SS or CMPM
-#if !defined(SSE_CPU_LINE_B_TIMINGS)
+}void                             m68k_eor_l(){
   FETCH_TIMING;
-#endif
-
   if((ir&BITS_543)==BITS_543_001){  //cmpm
-//   .L :            | 20(5/0)         |                   nR nr nR nr np   
-#if !defined(SSE_CPU_ROUDING_CMP)
     INSTRUCTION_TIME_ROUND(16);
-#endif
-#if defined(SSE_CPU_ROUDING_CMP)
-    CPU_ABUS_ACCESS_READ;
-    CPU_ABUS_ACCESS_READ;
-#endif
     m68k_src_l=m68k_lpeek(areg[PARAM_M]);areg[PARAM_M]+=4;
-#if defined(SSE_CPU_ROUDING_CMP)
-    CPU_ABUS_ACCESS_READ;
-    CPU_ABUS_ACCESS_READ;
-#endif
     m68k_old_dest=m68k_lpeek(areg[PARAM_N]);areg[PARAM_N]+=4;
     compare_buffer=m68k_old_dest;
     m68k_dest=&compare_buffer;
-#if !defined(SSE_CPU_PREFETCH_TIMING_CMP)
-#if defined(SSE_CPU_LINE_B_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
-#endif
     m68k_DEST_L-=m68k_src_l;
     SR_SUB_L(0);
-#if defined(SSE_CPU_PREFETCH_TIMING_CMP)
-#if defined(SSE_CPU_LINE_B_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
-#endif
   }else{
-/*
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage              
-        EOR       |  INSTR     EA   |  1st OP (ea)  |          INSTR           
-------------------+-----------------+---------------+--------------------------
-Dn,<ea> :         |                 |               |
-  .L :            |                 |               |                           
-    Dn            |  8(1/0)  0(0/0) |               |               np       nn 
-    (An)          | 12(1/2)  8(2/0) |         nR nr |               np nw nW    
-    (An)+         | 12(1/2)  8(2/0) |         nR nr |               np nw nW    
-    -(An)         | 12(1/2) 10(2/0) | n       nR nr |               np nw nW    
-    (d16,An)      | 12(1/2) 12(3/0) |      np nR nr |               np nw nW    
-    (d8,An,Xn)    | 12(1/2) 14(3/0) | n    np nR nr |               np nw nW    
-    (xxx).W       | 12(1/2) 12(3/0) |      np nR nr |               np nw nW    
-    (xxx).L       | 12(1/2) 16(4/0) |   np np nR nr |               np nw nW    
-*/
-#if !defined(SSE_CPU_ROUDING_EOR)
     INSTRUCTION_TIME(8);
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-    CHECK_READ=true;
-#endif
-#if !defined(SSE_CPU_ROUDING_EOR)
     m68k_GET_DEST_L_NOT_A_FASTER_FOR_D;
-#endif
-#if defined(SSE_CPU_ROUDING_EOR)
-    m68k_GET_DEST_L_NOT_A;
-#endif
-#if defined(SSE_CPU_LINE_B_TIMINGS)
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
-#if defined(SSE_CPU_ROUDING_EOR)
-    if(DEST_IS_DATA_REGISTER)
-      INSTRUCTION_TIME(4);
-    else
-    {
-      CPU_ABUS_ACCESS_WRITE;
-      CPU_ABUS_ACCESS_WRITE;
-    }
-#endif
     m68k_DEST_L^=r[PARAM_N];
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_L;
   }
 }
-//#undef SSE_CPU_LINE_B_TIMINGS
-/*
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage             
-       CMPA       |  INSTR     EA   |  1st OP (ea)  |          INSTR           
-------------------+-----------------+---------------+--------------------------
-<ea>,An :         |                 |               | 
-  .L :            |                 |               | 
-    Dn            |  6(1/0)  0(0/0) |               |               np       n  
-    An            |  6(1/0)  0(0/0) |               |               np       n  
-    (An)          |  6(1/0)  8(1/0) |         nR nr |               np       n  
-    (An)+         |  6(1/0)  8(1/0) |         nR nr |               np       n  
-    -(An)         |  6(1/0) 10(1/0) | n       nR nr |               np       n  
-    (d16,An)      |  6(1/0) 12(2/0) |      np nR nr |               np       n  
-    (d8,An,Xn)    |  6(1/0) 14(2/0) | n    np nR nr |               np       n  
-    (xxx).W       |  6(1/0) 12(2/0) |      np nR nr |               np       n  
-    (xxx).L       |  6(1/0) 16(3/0) |   np np nR nr |               np       n  
-    #<data>       |  6(1/0)  8(2/0) |   np np       |               np       n  
-*/
-
 void                             m68k_cmpa_l(){
-#if !defined(SSE_CPU_LINE_B_TIMINGS)
   FETCH_TIMING;
-#endif
   m68k_GET_SOURCE_L;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_B_TIMINGS)
-  FETCH_TIMING; //DSOS/scrollers: before the INSTRUCTION_TIME(2)
-#endif
   INSTRUCTION_TIME(2);
   m68k_old_dest=areg[PARAM_N];
   compare_buffer=m68k_old_dest;
   m68k_dest=&compare_buffer;
   m68k_DEST_L-=m68k_src_l;
-  SR_SUB_L(0);//SS SR_X would break Death of the Clock Cycles
+  SR_SUB_L(0);
 }
-//#define SSE_CPU_LINE_B_TIMINGS
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -8753,88 +3432,23 @@ void                             m68k_cmpa_l(){
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-<ea>,Dn :         |                 |               |
-  .B or .W :      |                 |               |
-    Dn            |  4(1/0)  0(0/0) |               |               np       
-    (An)          |  4(1/0)  4(1/0) |            nr |               np		     
-    (An)+         |  4(1/0)  4(1/0) |            nr |               np		     
-    -(An)         |  4(1/0)  6(1/0) | n          nr |               np		     
-    (d16,An)      |  4(1/0)  8(2/0) |      np    nr |               np		     
-    (d8,An,Xn)    |  4(1/0) 10(2/0) | n    np    nr |               np		     
-    (xxx).W       |  4(1/0)  8(2/0) |      np    nr |               np		     
-    (xxx).L       |  4(1/0) 12(3/0) |   np np    nr |               np		     
-    #<data>       |  4(1/0)  4(1/0) |      np       |               np		     
-
-*/
-
 void                              m68k_and_b_to_dN(){
-#if !defined(SSE_CPU_LINE_C_TIMINGS)
   FETCH_TIMING;
-#endif
   m68k_GET_SOURCE_B_NOT_A;
   m68k_dest=&(r[PARAM_N]);
-#if !defined(SSE_CPU_PREFETCH_TIMING_AND)
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_C_TIMINGS)
-  FETCH_TIMING;
-#endif
-#endif
   m68k_DEST_B&=m68k_src_b;
   SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
   SR_CHECK_Z_AND_N_B;
-#if defined(SSE_CPU_PREFETCH_TIMING_AND)
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_C_TIMINGS)
+}void                             m68k_and_w_to_dN(){
   FETCH_TIMING;
-#endif
-#endif
-}
-
-void                             m68k_and_w_to_dN(){
-#if !defined(SSE_CPU_LINE_C_TIMINGS)
-  FETCH_TIMING;
-#endif
   m68k_GET_SOURCE_W_NOT_A;
   m68k_dest=&(r[PARAM_N]);
-#if !defined(SSE_CPU_PREFETCH_TIMING_AND)
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_C_TIMINGS)
-  FETCH_TIMING;
-#endif
-#endif  
   m68k_DEST_W&=m68k_src_w;
   SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
   SR_CHECK_Z_AND_N_W;
-#if defined(SSE_CPU_PREFETCH_TIMING_AND)
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_C_TIMINGS)
+}void                             m68k_and_l_to_dN(){
   FETCH_TIMING;
-#endif
-#endif
-}
-/*
-  .L :            |                 |               |
-    Dn            |  8(1/0)  0(0/0) |               |               np       nn
-    (An)          |  6(1/0)  8(2/0) |         nR nr |               np       n	
-    (An)+         |  6(1/0)  8(2/0) |         nR nr |               np       n	
-    -(An)         |  6(1/0) 10(2/0) | n       nR nr |               np       n	
-    (d16,An)      |  6(1/0) 12(3/0) |      np nR nr |               np       n	
-    (d8,An,Xn)    |  6(1/0) 14(3/0) | n    np nR nr |               np       n	
-    (xxx).W       |  6(1/0) 12(3/0) |      np nR nr |               np       n	
-    (xxx).L       |  6(1/0) 16(4/0) |   np np nR nr |               np       n	
-    #<data>       |  8(1/0)  8(2/0) |   np np       |               np       nn
-
-*/
-void                             m68k_and_l_to_dN(){
-#if !defined(SSE_CPU_LINE_C_TIMINGS)
-  FETCH_TIMING;
-#endif
   m68k_GET_SOURCE_L_NOT_A;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_C_TIMINGS)
-  FETCH_TIMING;
-#endif
   if(SOURCE_IS_REGISTER_OR_IMMEDIATE){INSTRUCTION_TIME(4);}
   else {INSTRUCTION_TIME(2);}
   m68k_dest=&(r[PARAM_N]);
@@ -8842,63 +3456,11 @@ void                             m68k_and_l_to_dN(){
   SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
   SR_CHECK_Z_AND_N_L;
 }
-
-//#undef SSE_CPU_LINE_C_TIMINGS
-
-/*
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage
-    MULU,MULS     |  INSTR     EA   |  1st OP (ea)  |          INSTR
-------------------+-----------------+---------------+--------------------------
-<ea>,Dn :        /                  |               |
-  .W :          /                   |               |
-    Dn         | 38+2m(1/0)  0(0/0) |               |               np       n* 
-    (An)       | 38+2m(1/0)  4(1/0) |            nr |               np       n* 
-    (An)+      | 38+2m(1/0)  4(1/0) |            nr |               np       n* 
-    -(An)      | 38+2m(1/0)  6(1/0) | n          nr |               np       n* 
-    (d16,An)   | 38+2m(1/0)  8(2/0) |      np    nr |               np       n* 
-    (d8,An,Xn) | 38+2m(1/0) 10(2/0) | n    np    nr |               np       n* 
-    (xxx).W    | 38+2m(1/0)  8(2/0) |      np    nr |               np       n* 
-    (xxx).L    | 38+2m(1/0) 12(2/0) |   np np    nr |               np       n* 
-    #<data>    | 38+2m(1/0)  8(2/0) |   np np       |               np       n* 
-NOTES :
-  .for MULU 'm' = the number of ones in the source
-    - Best case 38 cycles with $0
-    - Worst case : 70 cycles with $FFFF 
-  .for MULS 'm' = concatenate the 16-bit pointed by <ea> with a zero as the LSB
-   'm' is the resultant number of 10 or 01 patterns in the 17-bit source.
-    - Best case : 38 cycles with $0 or $FFFF
-    - Worst case : 70 cycles with $5555
-  .in both cases : 'n*' should be replaced by 17+m consecutive 'n'
-FLOWCHART :                                                                     
-                            np                                                  
-         LSB=1              |           LSB=0                                   
-               +------------+------------+                                      
-               |                         |                                      
-            +->n------------------------>n<----+                                
-            |                            |     | LSB=0 or                       
-            |           No more bits     |     | 2LSB=00,11                     
-   LSB=1 or +---------------+------------+-----+                                
-   2LSB=01,10               |                                                   
-                            n                                                   
-  .LSB = less significant bit : bit at the far right of the source.             
-  .2LSB = 2 less significant bits : 2 last bits at the far right of the source. 
-
-*/
-
 void                              m68k_mulu(){
-
-#if !(defined(SSE_CPU_LINE_C_TIMINGS))
   FETCH_TIMING;
-#endif
 
   m68k_GET_SOURCE_W_NOT_A;
-
-#if defined(SSE_CPU_LINE_C_TIMINGS)
-  FETCH_TIMING; 
-#endif
-  PREFETCH_IRC; // prefetch before computing (but after <EA>)
-  INSTRUCTION_TIME(34);  //SS here a tricky programmer can fool Steem with the blitter
+  INSTRUCTION_TIME(34);
 
   ///// Hey, this is right apparently
   for (WORD Val=m68k_src_w;Val;Val>>=1){
@@ -8907,118 +3469,26 @@ void                              m68k_mulu(){
 
   m68k_dest=&(r[PARAM_N]);
   m68k_DEST_L=(unsigned long)LOWORD(r[PARAM_N])*(unsigned long)((unsigned short)m68k_src_w);
-  SR_CLEAR(SR_Z+SR_N+SR_C+SR_V); //SS 16bit x 16bit < 32bit, no overflow
+  SR_CLEAR(SR_Z+SR_N+SR_C+SR_V);
   SR_CHECK_Z_AND_N_L;
 }
-//#define SSE_CPU_LINE_C_TIMINGS
-
-//#undef SSE_CPU_LINE_C_TIMINGS
 void                              m68k_and_b_from_dN_or_abcd(){
-#if !defined(SSE_CPU_LINE_C_TIMINGS)
   FETCH_TIMING;
-#endif
-
   switch (ir & BITS_543){
-  case BITS_543_000:case BITS_543_001:{ //SS ABCD
-    if((ir&BITS_543)==BITS_543_000){ //SS R+R
-/*
-------------------------------------------------------------------------------- 
-                  |    Exec Time    |               Data Bus Usage              
-    ABCD, SBCD    |      INSTR      |                  INSTR                    
-------------------+-----------------+------------------------------------------ 
-Dy,Dx :           |                 |
-  .B :            |  6(1/0)         |                               np       n  
-*/
-
-      PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_C_TIMINGS)
-      FETCH_TIMING;
-#endif
+  case BITS_543_000:case BITS_543_001:{
+    if((ir&BITS_543)==BITS_543_000){
       INSTRUCTION_TIME(2);
       m68k_src_b=LOBYTE(r[PARAM_M]);
       m68k_dest=&(r[PARAM_N]);
-    }else{ //SS M+M
-/*
--(Ay),-(Ax) :     |                 |
-  .B :            | 18(3/1)         |                 n    nr    nr np nw       
-*/
-#if !defined(SSE_CPU_ROUNDING_ABCD)
-      PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_C_TIMINGS)
-      FETCH_TIMING;
-#endif
+    }else{
       INSTRUCTION_TIME_ROUND(14);
-#endif
-#if defined(SSE_CPU_ROUNDING_ABCD)
-      INSTRUCTION_TIME(2);
-#endif
       areg[PARAM_M]--;
-      if(PARAM_M==7)areg[PARAM_M]--;
+            if(PARAM_M==7)areg[PARAM_M]--;
       areg[PARAM_N]--;
-      if(PARAM_N==7)areg[PARAM_N]--;
-#if defined(SSE_CPU_ROUNDING_ABCD)
-      CPU_ABUS_ACCESS_READ;
-#endif
+            if(PARAM_N==7)areg[PARAM_N]--;
       m68k_src_b=m68k_peek(areg[PARAM_M]);
-#if defined(SSE_CPU_TRUE_PC)
-      CHECK_READ=true;
-#endif
       m68k_SET_DEST_B(areg[PARAM_N]);
-#if defined(SSE_CPU_ROUNDING_ABCD)
-      CPU_ABUS_ACCESS_READ;
-      PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_C_TIMINGS)
-      FETCH_TIMING;
-#endif
-#endif
     }
-
-#if defined(SSE_CPU_ABCD)
-/*
-  http://en.wikipedia.org/wiki/Binary-coded_decimal#Addition_with_BCD
-  each decimal digit is coded on 4bit
-
-    0-9  0-9   +   0-9  0-9   
-    ---- ----      ---- ----  
-
-  The Steem way works for normal operands but when an operand
-  is illegal (nibble>9), the result isn't the same as on a MC68000,
-  that uses the "+6" trick.
-  http://tams-www.informatik.uni-hamburg.de/applets/hades/webdemos/20-arithmetic/10-adders/bcd-adder.html
-  In the MC68000, the 'DAA' decimal adjust accumulator is integrated into ABCD.
-  It is correct in WinUAE, so we use the same way now.
-  Fixes Espana 92 -ICS
-*/
-  BYTE src = m68k_src_b;
-  BYTE dst = (m68k_DEST_B&0xff);
-  BYTE lo_nibble=(src & 0xF) + (dst & 0xF) + ( (sr&SR_X) ? 1 : 0);
-  SR_CLEAR(SR_X+SR_C+SR_N);
-  if(lo_nibble>9)
-    lo_nibble+=6;
-  WORD hi_nibble=(src & 0xF0) + (dst & 0xF0) + (lo_nibble&0xF0);
-  if(hi_nibble>0x90)
-  {
-    hi_nibble+=0x60;
-    SR_SET(SR_X+SR_C);
-  }
-#if defined(SSE_CPU_ROUNDING_ABCD)
-  CPU_ABUS_ACCESS_WRITE;
-#endif
-  m68k_DEST_B=(hi_nibble&0xF0)+(lo_nibble&0xF);
-#if defined(SSE_VC_INTRINSICS_383E)
-  if(!m68k_DEST_B)
-    BITSET(sr,SR_Z_BIT);
-  else if(m68k_DEST_B<0)
-    BITSET(sr,SR_N_BIT);
-#else
-  if(!m68k_DEST_B)
-    SR_SET(SR_Z)
-  else if(m68k_DEST_B<0)
-    SR_SET(SR_N) // not sure of that, it's so in WinUAE
-#endif
-  break;
-
-#else  // Steem 3.2
     int n=
        ( ((m68k_DEST_B&0xf0)>>4)*10+(m68k_DEST_B&0xf) )
       +( ((m68k_src_b&0xf0)>>4)*10+(m68k_src_b&0xf) );
@@ -9029,123 +3499,41 @@ Dy,Dx :           |                 |
     if(n)SR_CLEAR(SR_Z);
     m68k_DEST_B=(BYTE)( (((n/10)%10)<<4)+(n%10) );
     break;
-#endif
-  }default: //SS and.b from dn
-/*
-Dn,<ea> :         |                 |               | 
-  .B or .W :      |                 |               | 
-    (An)          |  8(1/1)  4(1/0) |            nr |               np nw	      
-    (An)+         |  8(1/1)  4(1/0) |            nr |               np nw	      
-    -(An)         |  8(1/1)  6(1/0) | n          nr |               np nw	      
-    (d16,An)      |  8(1/1)  8(2/0) |      np    nr |               np nw	      
-    (d8,An,Xn)    |  8(1/1) 10(2/0) | n    np    nr |               np nw	      
-    (xxx).W       |  8(1/1)  8(2/0) |      np    nr |               np nw	      
-    (xxx).L       |  8(1/1) 12(3/0) |   np np    nr |               np nw	      
-
-*/
-#if !defined(SSE_CPU_ROUDING_AND)
+  }default:
     INSTRUCTION_TIME(4);
-#endif
-    EXTRA_PREFETCH; 
+    EXTRA_PREFETCH;
     m68k_GET_DEST_B_NOT_A;
     m68k_src_b=LOBYTE(r[PARAM_N]);
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_C_TIMINGS)
-    FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUDING_AND)
-    ASSERT(!DEST_IS_DATA_REGISTER);
-    CPU_ABUS_ACCESS_WRITE;
-#endif
     m68k_DEST_B&=m68k_src_b;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_B;
   }
-}
-//#define SSE_CPU_LINE_C_TIMINGS
-//#undef SSE_CPU_LINE_C_TIMINGS
-
-void                             m68k_and_w_from_dN_or_exg_like(){
-#if !defined(SSE_CPU_LINE_C_TIMINGS)
+}void                             m68k_and_w_from_dN_or_exg_like(){
   FETCH_TIMING;
-#endif
-
-  switch(ir&BITS_543){ 
-/*
-------------------------------------------------------------------------------- 
-                  |    Exec Time    |               Data Bus Usage              
-        EXG       |      INSTR      |                  INSTR                    
-------------------+-----------------+------------------------------------------ 
-  .L :            |                 |
-    Dx,Dy         |  6(1/0)         |                               np       n  
-    Ax,Ay         |  6(1/0)         |                               np       n  
-*/
-  case BITS_543_000: //SS EXG D D
-
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_C_TIMINGS)
-    FETCH_TIMING;
-#endif
-
+  switch(ir&BITS_543){
+  case BITS_543_000:
     INSTRUCTION_TIME(2);
     compare_buffer=r[PARAM_N];
     r[PARAM_N]=r[PARAM_M];
     r[PARAM_M]=compare_buffer;
     break;
-  case BITS_543_001: //SS EXG A A
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_C_TIMINGS)
-    FETCH_TIMING;
-#endif
-
+  case BITS_543_001:
     INSTRUCTION_TIME(2);
     compare_buffer=areg[PARAM_N];
     areg[PARAM_N]=areg[PARAM_M];
     areg[PARAM_M]=compare_buffer;
     break;
-  default://SS and.b from dn
-/*
-Dn,<ea> :         |                 |               | 
-  .B or .W :      |                 |               | 
-    (An)          |  8(1/1)  4(1/0) |            nr |               np nw	      
-    (An)+         |  8(1/1)  4(1/0) |            nr |               np nw	      
-    -(An)         |  8(1/1)  6(1/0) | n          nr |               np nw	      
-    (d16,An)      |  8(1/1)  8(2/0) |      np    nr |               np nw	      
-    (d8,An,Xn)    |  8(1/1) 10(2/0) | n    np    nr |               np nw	      
-    (xxx).W       |  8(1/1)  8(2/0) |      np    nr |               np nw	      
-    (xxx).L       |  8(1/1) 12(3/0) |   np np    nr |               np nw	      
-
-*/
-#if !defined(SSE_CPU_ROUDING_AND)
+  default:
     INSTRUCTION_TIME(4);
-#endif
-
-    EXTRA_PREFETCH; 
-#if defined(SSE_CPU_TRUE_PC)
-    CHECK_READ=true;
-#endif
+    EXTRA_PREFETCH;
     m68k_GET_DEST_W_NOT_A;
     m68k_src_w=LOWORD(r[PARAM_N]);
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_C_TIMINGS)
-    FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUDING_AND)
-    ASSERT(!DEST_IS_DATA_REGISTER);
-    CPU_ABUS_ACCESS_WRITE;
-#endif
     m68k_DEST_W&=m68k_src_w;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_W;
   }
-}
-//#define SSE_CPU_LINE_C_TIMINGS
-//#undef SSE_CPU_LINE_C_TIMINGS//**
-void                             m68k_and_l_from_dN_or_exg_unlike(){
-#if !defined(SSE_CPU_LINE_C_TIMINGS)
+}void                             m68k_and_l_from_dN_or_exg_unlike(){
   FETCH_TIMING;
-#endif
-
   switch(ir&BITS_543){
   case BITS_543_000:
     m68k_unrecognised();
@@ -9153,91 +3541,28 @@ void                             m68k_and_l_from_dN_or_exg_unlike(){
     // m68k_src_l=// D2_aN;
     // m68k_dest=// D2_dM;
     break;
-  case BITS_543_001: //SS EXG
-
-/*
-------------------------------------------------------------------------------- 
-                  |    Exec Time    |               Data Bus Usage              
-        EXG       |      INSTR      |                  INSTR                    
-------------------+-----------------+------------------------------------------ 
-  .L :            |                 |
-    Dx,Ay         |  6(1/0)         |                               np       n  
-*/
-
-
-    //SS TB2/DNT
-    // EXG 6(1/0)
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_C_TIMINGS)
-    FETCH_TIMING;
-#endif
+  case BITS_543_001:
     INSTRUCTION_TIME(2);
     compare_buffer=areg[PARAM_M];
     areg[PARAM_M]=r[PARAM_N];
     r[PARAM_N]=compare_buffer;
     break;
-  default://SS and.l from dn
-/*
-Dn,<ea> :         |                 |               | 
-  .L :            |                 |                              
-    (An)          | 12(1/2)  8(2/0) |         nR nr |               np nw nW    
-    (An)+         | 12(1/2)  8(2/0) |         nR nr |               np nw nW    
-    -(An)         | 12(1/2) 10(2/0) | n       nR nr |               np nw nW    
-    (d16,An)      | 12(1/2) 12(3/0) |      np nR nr |               np nw nW    
-    (d8,An,Xn)    | 12(1/2) 14(3/0) | n    np nR nr |               np nw nW    
-    (xxx).W       | 12(1/2) 12(3/0) |      np nR nr |               np nw nW    
-    (xxx).L       | 12(1/2) 16(4/0) |   np np nR nr |               np nw nW    
-
-*/
-#if !defined(SSE_CPU_ROUDING_AND)
+  default:
     INSTRUCTION_TIME(8);
-#endif
-    EXTRA_PREFETCH; 
-#if defined(SSE_CPU_TRUE_PC)
-    CHECK_READ=true;
-#endif
+    EXTRA_PREFETCH;
     m68k_GET_DEST_L_NOT_A;
     m68k_src_l=r[PARAM_N];
-    PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_C_TIMINGS)
-    FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ROUDING_AND)
-    CPU_ABUS_ACCESS_WRITE;
-    CPU_ABUS_ACCESS_WRITE;
-#endif
     m68k_DEST_L&=m68k_src_l;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_L;
   }
 }
-//#define SSE_CPU_LINE_C_TIMINGS
-//#undef SSE_CPU_LINE_C_TIMINGS
-
-// see mulu for chart
-
 void                              m68k_muls(){
-
-#if !defined(SSE_CPU_LINE_C_TIMINGS)
   FETCH_TIMING;
-#endif
 
   m68k_GET_SOURCE_W_NOT_A;
 
-#if defined(SSE_CPU_LINE_C_TIMINGS)
-  FETCH_TIMING;
-#endif
-  PREFETCH_IRC; // prefetch before computing (but after <EA>)
-/*
-  .for MULS 'm' = concatenate the 16-bit pointed by <ea> with a zero as the LSB
-   'm' is the resultant number of 10 or 01 patterns in the 17-bit source.
-    - Best case : 38 cycles with $0 or $FFFF
-    - Worst case : 70 cycles with $5555
-
-*/
-
-  INSTRUCTION_TIME(34);  
-
+  INSTRUCTION_TIME(34);
   ///// Hey, this is right apparently
   int LastLow=0;
   int Val=WORD(m68k_src_w);
@@ -9252,7 +3577,7 @@ void                              m68k_muls(){
   SR_CHECK_Z_AND_N_L;
 }
 
-#define SSE_CPU_LINE_C_TIMINGS
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9269,633 +3594,143 @@ void                              m68k_muls(){
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-------------------------------------------------------------------------------- 
-                  |    Exec Time    |               Data Bus Usage              
-     ADD, SUB     |  INSTR     EA   | 1st Operand |  2nd OP (ea)  |   INSTR     
-------------------+-----------------+-------------+---------------+------------ 
-<ea>,Dn :         |                 |              \              |
-  .B or .W :      |                 |               |             |
-    Dn            |  4(1/0)  0(0/0) |               |             | np          
-    An            |  4(1/0)  0(0/0) |               |             | np          
-    (An)          |  4(1/0)  4(1/0) |            nr |             | np          
-    (An)+         |  4(1/0)  4(1/0) |            nr |             | np          
-    -(An)         |  4(1/0)  6(1/0) | n          nr |             | np          
-    (d16,An)      |  4(1/0)  8(2/0) |      np    nr |             | np          
-    (d8,An,Xn)    |  4(1/0) 10(2/0) | n    np    nr |             | np          
-    (xxx).W       |  4(1/0)  8(2/0) |      np    nr |             | np          
-    (xxx).L       |  4(1/0) 12(3/0) |   np np    nr |             | np          
-    #<data>       |  4(1/0)  4(1/0)        np                     | np          
-*/
-
 void                              m68k_add_b_to_dN(){
-
-#if !defined(SSE_CPU_LINE_D_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
   INSTRUCTION_TIME(4);
-#endif
-#endif
   m68k_GET_SOURCE_B_NOT_A;
   m68k_dest=&r[PARAM_N];
   m68k_old_dest=m68k_DEST_B;
-#if !defined(SSE_CPU_PREFETCH_TIMING_ADD) //prefetches at the end
-#if defined(SSE_CPU_ROUNDING_ADD_BW_DN)
-  PREFETCH_IRC;
-#else
-  PREFETCH_IRC_NO_ROUND;
-#endif
-#if defined(SSE_CPU_LINE_D_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
-  INSTRUCTION_TIME(4);
-#endif
-#endif
-#endif
   m68k_DEST_B+=m68k_src_b;
   SR_ADD_B;
-#if defined(SSE_CPU_PREFETCH_TIMING_ADD)
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_D_TIMINGS)
-  FETCH_TIMING;
-#endif
-#endif
-#if !defined(SSE_CPU_ROUNDING_ADD) && !defined(SSE_CPU_ROUNDING_ADD_BW_DN)
   INSTRUCTION_TIME_ROUND(0);
-#endif
-}
-
-void                             m68k_add_w_to_dN(){ // add.w ea,dn or adda.w ea,an
-
-#if !defined(SSE_CPU_LINE_D_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
+}void                             m68k_add_w_to_dN(){ // add.w ea,dn or adda.w ea,an
   INSTRUCTION_TIME(4);
-#endif
-#endif
   m68k_GET_SOURCE_W;   //A is allowed
   m68k_dest=&r[PARAM_N];
   m68k_old_dest=m68k_DEST_W;
-#if !defined(SSE_CPU_PREFETCH_TIMING_ADD)
-#if defined(SSE_CPU_ROUNDING_ADD_BW_DN)
-  PREFETCH_IRC;
-#else
-  PREFETCH_IRC_NO_ROUND;
-#endif
-#if defined(SSE_CPU_LINE_D_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
-  INSTRUCTION_TIME(4);
-#endif
-#endif
-#endif
   m68k_DEST_W+=m68k_src_w;
   SR_ADD_W;
-#if defined(SSE_CPU_PREFETCH_TIMING_ADD)
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_D_TIMINGS)
-  FETCH_TIMING;
-#endif
-#endif
-#if !defined(SSE_CPU_ROUNDING_ADD) && !defined(SSE_CPU_ROUNDING_ADD_BW_DN)
   INSTRUCTION_TIME_ROUND(0);
-#endif
-}
-
-/*
-  .L :            |                 |               |             |
-    Dn            |  8(1/0)  0(0/0) |               |             | np       nn 
-    An            |  8(1/0)  0(0/0) |               |             | np       nn 
-    (An)          |  6(1/0)  8(2/0) |         nR nr |             | np       n  
-    (An)+         |  6(1/0)  8(2/0) |         nR nr |             | np       n  
-    -(An)         |  6(1/0) 10(2/0) | n       nR nr |             | np       n  
-    (d16,An)      |  6(1/0) 12(3/0) |      np nR nr |             | np       n  
-    (d8,An,Xn)    |  6(1/0) 14(3/0) | n    np nR nr |             | np       n  
-    (xxx).W       |  6(1/0) 12(3/0) |      np nR nr |             | np       n  
-    (xxx).L       |  6(1/0) 16(4/0) |   np np nR nr |             | np       n  
-    #<data>       |  8(1/0)  8(2/0) |   np np       |               np       nn 
-*/
-
-void                             m68k_add_l_to_dN(){ // add.l ea,dn or adda.l ea,an
-
-#if !defined(SSE_CPU_LINE_D_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
+}void                             m68k_add_l_to_dN(){ // add.l ea,dn or adda.l ea,an
   INSTRUCTION_TIME(4);
-#endif
-#endif
   m68k_GET_SOURCE_L;   //A is allowed
-#if defined(SSE_CPU_ROUNDING_ADD_L_DN)
-  PREFETCH_IRC;
-#endif
   if(SOURCE_IS_REGISTER_OR_IMMEDIATE){INSTRUCTION_TIME(4);}
   else {INSTRUCTION_TIME(2);}
   m68k_dest=&r[PARAM_N];
   m68k_old_dest=m68k_DEST_L;
-#if !defined(SSE_CPU_ROUNDING_ADD_L_DN)
-  PREFETCH_IRC_NO_ROUND;
-#endif
-#if defined(SSE_CPU_LINE_D_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
-  INSTRUCTION_TIME(4);
-#endif
-#endif
   m68k_DEST_L+=m68k_src_l;
   SR_ADD_L;
-#if !defined(SSE_CPU_ROUNDING_ADD)
-/*  Conform to Yacht now and both programs below work: compensating
-    timing issues certainly.
-*/
-#if defined(SSE_CPU_ROUNDING_ADD_L_DN)
-/*  Cernit Trandafir #2 right border
-    but DSoTS doesn't like it, hence the senseless test.
-    TODO
-*/
-  if((ir&BITS_543)!=BITS_543_011) // (An)+
-#endif
-  INSTRUCTION_TIME_ROUND(0); 
-#endif
-}
-
-/*
-------------------------------------------------------------------------------- 
-                  |    Exec Time    |               Data Bus Usage              
-    ADDA, SUBA    |  INSTR     EA   |  1st OP (ea)  |          INSTR            
-------------------+-----------------+---------------+-------------------------- 
-<ea>,An :         |                 |               |
-  .B or .W :      |                 |               |
-    Dn            |  8(1/0)  0(0/0) |               |               np       nn 
-    An            |  8(1/0)  0(0/0) |               |               np       nn 
-    (An)          |  8(1/0)  4(1/0) |            nr |               np       nn 
-    (An)+         |  8(1/0)  4(1/0) |            nr |               np       nn 
-    -(An)         |  8(1/0)  6(1/0) | n          nr |               np       nn 
-    (d16,An)      |  8(1/0)  8(2/0) |      np    nr |               np       nn 
-    (d8,An,Xn)    |  8(1/0) 10(2/0) | n    np    nr |               np       nn 
-    (xxx).W       |  8(1/0)  8(2/0) |      np    nr |               np       nn 
-    (xxx).L       |  8(1/0) 12(3/0) |   np np    nr |               np       nn 
-    #<data>       |  8(1/0)  4(1/0) |      np       |               np       nn 
-*/
-
-void                             m68k_adda_w(){
-
-#if !defined(SSE_CPU_LINE_D_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
+  INSTRUCTION_TIME_ROUND(0);
+}void                             m68k_adda_w(){
   INSTRUCTION_TIME(4);
-#endif
-#endif
   m68k_GET_SOURCE_W;
-#if !defined(SSE_CPU_ROUNDING_ADDA)
   INSTRUCTION_TIME(4);
-#endif
   m68k_src_l=(signed long)((signed short)m68k_src_w);
-#if defined(SSE_CPU_ROUNDING_ADDA_W_DN)
-  PREFETCH_IRC;
-#else
-  PREFETCH_IRC_NO_ROUND;
-#endif
-////INSTRUCTION_TIME(4);
-#if defined(SSE_CPU_LINE_D_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
-  INSTRUCTION_TIME(4);
-#endif
-#endif
-#if defined(SSE_CPU_ROUNDING_ADDA)
-  INSTRUCTION_TIME(4);
-#endif
   areg[PARAM_N]+=m68k_src_l;
-#if !defined(SSE_CPU_ROUNDING_ADDA_W_DN)// no rounding
-  INSTRUCTION_TIME_ROUND(0); 
-#endif
+  INSTRUCTION_TIME_ROUND(0);
 }
-
 void                              m68k_add_b_from_dN(){
-
-#if !defined(SSE_CPU_LINE_D_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
   INSTRUCTION_TIME(4);
-#endif
-#endif
   switch(ir&BITS_543){
-//SS  ADDX.B
-/*
-------------------------------------------------------------------------------- 
-                  |    Exec Time    |               Data Bus Usage              
-    ADDX, SUBX    |      INSTR      |                  INSTR                    
-------------------+-----------------+------------------------------------------ 
-Dy,Dx :           |                 |
-  .B or .W :      |  4(1/0)         |                               np          
--(Ay),-(Ax) :     |                 |
-  .B or .W :      | 18(3/1)         |              n nr    nr       np nw       
-
-*/
   case BITS_543_000:
   case BITS_543_001:
     if((ir&BITS_543)==BITS_543_000){
       m68k_src_b=LOBYTE(r[PARAM_M]);
       m68k_dest=&(r[PARAM_N]);
     }else{
-#if !defined(SSE_CPU_ROUNDING_ADDX)
       INSTRUCTION_TIME_ROUND(14);
-#endif
-#if defined(SSE_CPU_ROUNDING_ADDX)
-      INSTRUCTION_TIME(2);
-#endif
       areg[PARAM_M]--;
-      if(PARAM_M==7)areg[PARAM_M]--;
+            if(PARAM_M==7)areg[PARAM_M]--;
       m68k_src_b=m68k_peek(areg[PARAM_M]);
       areg[PARAM_N]--;
-      if(PARAM_N==7)areg[PARAM_N]--;
-#if defined(SSE_CPU_TRUE_PC)
-      CHECK_READ=true;
-#endif
+            if(PARAM_N==7)areg[PARAM_N]--;
       m68k_SET_DEST_B(areg[PARAM_N]);
-#if defined(SSE_CPU_ROUNDING_ADDX)
-      CPU_ABUS_ACCESS_READ;
-#endif
     }
     m68k_old_dest=m68k_DEST_B;
-#if defined(SSE_CPU_PREFETCH_TIMING_ADDX) || defined(SSE_CPU_ROUNDING_ADD_BW_DN2)
-    PREFETCH_IRC;
-#else
-    PREFETCH_IRC_NO_ROUND;
-#endif
-#if defined(SSE_CPU_LINE_D_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-    FETCH_TIMING_NO_ROUND;
-#else
-    INSTRUCTION_TIME(4);
-#endif
-#endif
-#if defined(SSE_CPU_ROUNDING_ADDX)
-    if((ir&BITS_543)==BITS_543_001)
-      CPU_ABUS_ACCESS_WRITE;
-#endif
     m68k_DEST_B+=m68k_src_b;
     if(sr&SR_X)m68k_DEST_B++;
     SR_ADDX_B;
     break;
   default:
-/*
-Dn,<ea> :         |                 |              /              |
-  .B or .W :      |                 |             |               |
-    (An)          |  8(1/1)  4(1/0) |             |            nr | np nw       
-    (An)+         |  8(1/1)  4(1/0) |             |            nr | np nw       
-    -(An)         |  8(1/1)  6(1/0) |             | n          nr | np nw       
-    (d16,An)      |  8(1/1)  8(2/0) |             |      np    nr | np nw       
-    (d8,An,Xn)    |  8(1/1) 10(2/0) |             | n    np    nr | np nw       
-    (xxx).W       |  8(1/1)  8(2/0) |             |      np    nr | np nw       
-    (xxx).L       |  8(1/1) 12(3/0) |             |   np np    nr | np nw       
-*/
-#if !defined(SSE_CPU_ROUNDING_ADD)
     INSTRUCTION_TIME(4);
-#endif
-    EXTRA_PREFETCH; 
+    EXTRA_PREFETCH;
     m68k_src_b=LOBYTE(r[PARAM_N]);
-#if defined(SSE_CPU_TRUE_PC)
-    CHECK_READ=true;
-#endif
     m68k_GET_DEST_B_NOT_A;
     m68k_old_dest=m68k_DEST_B;
-#if defined(SSE_CPU_PREFETCH_TIMING_ADD) || defined(SSE_CPU_ROUNDING_ADD_BW_DN2)
-    PREFETCH_IRC;
-#else
-    PREFETCH_IRC_NO_ROUND;
-#endif
-#if defined(SSE_CPU_LINE_D_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-    FETCH_TIMING_NO_ROUND;
-#else
-    INSTRUCTION_TIME(4);
-#endif
-#endif
-#if defined(SSE_CPU_ROUNDING_ADD)
-    CPU_ABUS_ACCESS_WRITE;
-#endif
     m68k_DEST_B+=m68k_src_b;
     SR_ADD_B;
   }
-#if !defined(SSE_CPU_ROUNDING_ADD) && !defined(SSE_CPU_ROUNDING_ADD_BW_DN)
   INSTRUCTION_TIME_ROUND(0);
-#endif
 }
-
 void                              m68k_add_w_from_dN(){
-
-#if !defined(SSE_CPU_LINE_D_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
   INSTRUCTION_TIME(4);
-#endif
-#endif
   switch(ir&BITS_543){
-//SS  ADDX.W
   case BITS_543_000:
   case BITS_543_001:
     if((ir&BITS_543)==BITS_543_000){
       m68k_src_w=LOWORD(r[PARAM_M]);
       m68k_dest=&(r[PARAM_N]);
     }else{
-#if !defined(SSE_CPU_ROUNDING_ADDX)
       INSTRUCTION_TIME_ROUND(14);
-#endif
-#if defined(SSE_CPU_ROUNDING_ADDX)
-      INSTRUCTION_TIME(2);
-#endif
       areg[PARAM_M]-=2;m68k_src_w=m68k_dpeek(areg[PARAM_M]);
-#if defined(SSE_CPU_TRUE_PC)
-      CHECK_READ=true;
-#endif
-      areg[PARAM_N]-=2;
-      m68k_SET_DEST_W(areg[PARAM_N]);
-#if defined(SSE_CPU_ROUNDING_ADDX)
-      CPU_ABUS_ACCESS_READ;
-#endif
+      areg[PARAM_N]-=2;m68k_SET_DEST_W(areg[PARAM_N]);
     }
     m68k_old_dest=m68k_DEST_W;
-#if defined(SSE_CPU_PREFETCH_TIMING_ADDX) || defined(SSE_CPU_ROUNDING_ADD_BW_DN2)
-    PREFETCH_IRC;
-#else
-    PREFETCH_IRC_NO_ROUND;
-#endif
-#if defined(SSE_CPU_LINE_D_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-    FETCH_TIMING_NO_ROUND;
-#else
-    INSTRUCTION_TIME(4);
-#endif
-#endif
-#if defined(SSE_CPU_ROUNDING_ADDX)
-    if((ir&BITS_543)==BITS_543_001)
-      CPU_ABUS_ACCESS_WRITE;
-#endif
     m68k_DEST_W+=m68k_src_w;
     if(sr&SR_X)m68k_DEST_W++;
     SR_ADDX_W;
     break;
-
-  default://SS ADD.W Dn,<EA>
-/*
-Dn,<ea> :         |                 |              /              |
-  .B or .W :      |                 |             |               |
-    (An)          |  8(1/1)  4(1/0) |             |            nr | np nw       
-    (An)+         |  8(1/1)  4(1/0) |             |            nr | np nw       
-    -(An)         |  8(1/1)  6(1/0) |             | n          nr | np nw       
-    (d16,An)      |  8(1/1)  8(2/0) |             |      np    nr | np nw       
-    (d8,An,Xn)    |  8(1/1) 10(2/0) |             | n    np    nr | np nw       
-    (xxx).W       |  8(1/1)  8(2/0) |             |      np    nr | np nw       
-    (xxx).L       |  8(1/1) 12(3/0) |             |   np np    nr | np nw       
-*/
-    ASSERT((ir&BITS_543)!=BITS_543_000);// Dn,Dn done elsewhere
-//#if !defined(SSE_CPU_ROUNDING_ADDX) //was wrong switch
-#if !defined(SSE_CPU_ROUNDING_ADD)
+  default:
     INSTRUCTION_TIME(4);
-#endif
-    EXTRA_PREFETCH; 
+    EXTRA_PREFETCH
     m68k_src_w=LOWORD(r[PARAM_N]);
-#if defined(SSE_CPU_TRUE_PC)
-    CHECK_READ=true;
-#endif
     m68k_GET_DEST_W_NOT_A;
     m68k_old_dest=m68k_DEST_W;
-#if defined(SSE_CPU_PREFETCH_TIMING_ADD) || defined(SSE_CPU_ROUNDING_ADD_BW_DN2)
-    PREFETCH_IRC;
-#else
-    PREFETCH_IRC_NO_ROUND;
-#endif
-#if defined(SSE_CPU_LINE_D_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-    FETCH_TIMING_NO_ROUND;
-#else
-    INSTRUCTION_TIME(4);
-#endif
-#endif
-#if defined(SSE_CPU_ROUNDING_ADD)
-    CPU_ABUS_ACCESS_WRITE;
-#endif
     m68k_DEST_W+=m68k_src_w;
     SR_ADD_W;
   }
-#if !defined(SSE_CPU_ROUNDING_ADD) && !defined(SSE_CPU_ROUNDING_ADD_BW_DN)
   INSTRUCTION_TIME_ROUND(0);
-#endif
 }
-
-void                              m68k_add_l_from_dN(){ //SS +ADDX
-
-#if !defined(SSE_CPU_LINE_D_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
+void                              m68k_add_l_from_dN(){
   INSTRUCTION_TIME(4);
-#endif
-#endif
-  switch (ir&BITS_543){ //SS ADDX.L
-  case BITS_543_000: 
-  case BITS_543_001: 
-/*
-------------------------------------------------------------------------------- 
-                  |    Exec Time    |               Data Bus Usage              
-    ADDX, SUBX    |      INSTR      |                  INSTR                    
-------------------+-----------------+------------------------------------------ 
-Dy,Dx :           |                 |
-  .L :            |  8(1/0)         |                               np       nn 
--(Ay),-(Ax) :     |                 |
-  .L :            | 30(5/2)         |              n nr nR nr nR nw np    nW    
-*/
-
+  switch (ir&BITS_543){
+  case BITS_543_000:
+  case BITS_543_001:
     if((ir&BITS_543)==BITS_543_000){
-#if defined(SSE_CPU_PREFETCH_TIMING_ADDX)
-      PREFETCH_IRC;
-#endif
       INSTRUCTION_TIME(4);
       m68k_src_l=r[PARAM_M];
       m68k_dest=&(r[PARAM_N]);
-    }else{ //SS -(An), -(An)
-#if !defined(SSE_CPU_ROUNDING_ADDX)
+    }else{
       INSTRUCTION_TIME_ROUND(26);
-#endif
-#if defined(SSE_CPU_ROUNDING_ADDX)
-      INSTRUCTION_TIME(2);
-#endif
-      areg[PARAM_M]-=4;
-#if defined(SSE_CPU_ROUNDING_ADDX)
-      CPU_ABUS_ACCESS_READ;
-      CPU_ABUS_ACCESS_READ;
-#endif      
-      m68k_src_l=m68k_lpeek(areg[PARAM_M]);
-#if defined(SSE_CPU_TRUE_PC)
-      CHECK_READ=true;
-#endif
+      areg[PARAM_M]-=4;m68k_src_l=m68k_lpeek(areg[PARAM_M]);
       areg[PARAM_N]-=4;m68k_SET_DEST_L(areg[PARAM_N]);
-#if defined(SSE_CPU_ROUNDING_ADDX)
-      CPU_ABUS_ACCESS_READ;
-      CPU_ABUS_ACCESS_READ;
-#endif  
-#if defined(SSE_CPU_ROUNDING_ADDX)
-      CPU_ABUS_ACCESS_WRITE;
-#endif
-#if defined(SSE_CPU_PREFETCH_TIMING_ADDX)
-      PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_D_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-    FETCH_TIMING_NO_ROUND;
-#else
-    INSTRUCTION_TIME(4);
-#endif
-#endif
-#endif
-#if defined(SSE_CPU_ROUNDING_ADDX)
-      CPU_ABUS_ACCESS_WRITE;
-#endif
     }
     m68k_old_dest=m68k_DEST_L;
-#if !defined(SSE_CPU_PREFETCH_TIMING_ADDX)
-#if defined(SSE_CPU_ROUNDING_ADD_L_DN2)
-    PREFETCH_IRC;
-#else
-    PREFETCH_IRC_NO_ROUND;
-#endif
-#if defined(SSE_CPU_LINE_D_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-    FETCH_TIMING_NO_ROUND;
-#else
-    INSTRUCTION_TIME(4);
-#endif
-#endif
-#endif
     m68k_DEST_L+=m68k_src_l;
-    if(sr&SR_X)m68k_DEST_L++; 
+    if(sr&SR_X)m68k_DEST_L++;
     SR_ADDX_L;
     break;
   default:
-/*  ADD Dn,<ea>
-  .L :            |                 |             |               |
-    (An)          | 12(1/2)  8(2/0) |             |            nr | np nw nW    
-    (An)+         | 12(1/2)  8(2/0) |             |            nr | np nw nW    
-    -(An)         | 12(1/2) 10(2/0) |             | n       nR nr | np nw nW    
-    (d16,An)      | 12(1/2) 12(3/0) |             |      np nR nr | np nw nW    
-    (d8,An,Xn)    | 12(1/2) 14(3/0) |             | n    np nR nr | np nw nW    
-    (xxx).W       | 12(1/2) 12(3/0) |             |      np nR nr | np nw nW    
-    (xxx).L       | 12(1/2) 16(4/0) |             |   np np nR nr | np nw nW    
-*/
-#if !defined(SSE_CPU_ROUNDING_ADD)
     INSTRUCTION_TIME(8);
-#endif
-    EXTRA_PREFETCH; 
+    EXTRA_PREFETCH;
     m68k_src_l=r[PARAM_N];
     m68k_GET_DEST_L_NOT_A;
     m68k_old_dest=m68k_DEST_L;
-#if defined(SSE_CPU_PREFETCH_TIMING_ADD) || defined(SSE_CPU_ROUNDING_ADD_BW_DN2)
-    PREFETCH_IRC;
-#else
-    PREFETCH_IRC_NO_ROUND;
-#endif
-#if defined(SSE_CPU_LINE_D_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-    FETCH_TIMING_NO_ROUND;
-#else
-    INSTRUCTION_TIME(4);
-#endif
-#endif
-#if defined(SSE_CPU_ROUNDING_ADD)
-    CPU_ABUS_ACCESS_WRITE;
-    CPU_ABUS_ACCESS_WRITE;
-#endif
     m68k_DEST_L+=m68k_src_l;
     SR_ADD_L;
   }
-#if !defined(SSE_CPU_ROUNDING_ADD) && !defined(SSE_CPU_ROUNDING_ADD_L_DN2)
-  INSTRUCTION_TIME_ROUND(0); 
-#endif
+  INSTRUCTION_TIME_ROUND(0);
 }
-
-/*
-------------------------------------------------------------------------------- 
-                  |    Exec Time    |               Data Bus Usage              
-    ADDA, SUBA    |  INSTR     EA   |  1st OP (ea)  |          INSTR            
-------------------+-----------------+---------------+-------------------------- 
-<ea>,An :         |                 |               |
-
-  .L :            |                 |               |
-    Dn            |  8(1/0)  0(0/0) |               |               np       nn 
-    An            |  8(1/0)  0(0/0) |               |               np       nn 
-    (An)          |  6(1/0)  8(2/0) |         nR nr |               np       n  
-    (An)+         |  6(1/0)  8(2/0) |         nR nr |               np       n  
-    -(An)         |  6(1/0) 10(2/0) | n       nR nr |               np       n  
-    (d16,An)      |  6(1/0) 12(3/0) |      np nR nr |               np       n  
-    (d8,An,Xn)    |  6(1/0) 14(3/0) | n    np nR nr |               np       n  
-    (xxx).W       |  6(1/0) 12(3/0) |      np nR nr |               np       n  
-    (xxx).L       |  6(1/0) 16(4/0) |   np np nR nr |               np       n  
-    #<data>       |  8(1/0)  8(2/0) |   np np       |               np       nn 
-
-
-SS: does it make sense?
-The CPU must do the same once it has the <EA>: prefetch and add.
-Why would it take more time with Rn and #?
-To check in microcodes: maybe data must be transferred on some
-internal bus before computing.
-*/
-
 void                             m68k_adda_l(){
-
-#if !defined(SSE_CPU_LINE_D_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
   INSTRUCTION_TIME(4);
-#endif
-#endif
-  m68k_GET_SOURCE_L; 
-#if defined(SSE_CPU_PREFETCH_TIMING_ADDA) || defined(SSE_CPU_ROUNDING_ADDA_L_DN)
-  PREFETCH_IRC; 
-#endif
-  if (SOURCE_IS_REGISTER_OR_IMMEDIATE
-#if defined(SSE_CPU_ROUNDING_ADDA_L_DN2)
-/*  Update v3.7 Timings are conform to Yacht.
-    This was no bugfix but a hack.
-    Now Pulsion 172 works without this. It certainly was compensating
-    something else.
-*/
-    || (ir& (BITS_543|7))==b00111001 // (xxx).L bugfix Pulsion 172
-#endif
-    ){
+  m68k_GET_SOURCE_L;
+  if (SOURCE_IS_REGISTER_OR_IMMEDIATE){
     INSTRUCTION_TIME(4);
   }else{
-    //Cernit Trandafir:  (An)+, -(An)
-    //ASSERT((ir&BITS_543)==b00011000 || (ir&BITS_543)==b00100000); 
     INSTRUCTION_TIME(2);
   }
-#if !defined(SSE_CPU_ROUNDING_ADDA_L_DN)
-  PREFETCH_IRC_NO_ROUND;
-#endif
-#if defined(SSE_CPU_LINE_D_TIMINGS)
-#if defined(SSE_CPU_FETCH_TIMING)
-  FETCH_TIMING_NO_ROUND;
-#else
-  INSTRUCTION_TIME(4);
-#endif
-#endif
   areg[PARAM_N]+=m68k_src_l;
-#if !defined(SSE_CPU_ROUNDING_ADDA) && !defined(SSE_CPU_ROUNDING_ADDA_L_DN)
-  INSTRUCTION_TIME_ROUND(0); // no rounding: Cernit Trandafir and Summer Delights
-#endif
+  INSTRUCTION_TIME_ROUND(0);
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -9911,48 +3746,12 @@ void                             m68k_adda_l(){
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-*******************************************************************************
-  Line 1110
-    ASL, ASR, LSL, LSR, ROL, ROR, ROXL, ROXR
-*******************************************************************************
--------------------------------------------------------------------------------
-     ASL, ASR,    |    Exec Time    |               Data Bus Usage              
-     LSL, LSR,    |                 |
-     ROL, ROR,    |                 |
-    ROXL, ROXR    |  INSTR     EA   |  1st OP (ea)  |          INSTR           
-------------------+-----------------+---------------+--------------------------
-Dx,Dy :           |                 |               | 
-  .B or .W :      |  6+2m(1/0)      |               |               np    n* n  
-  .L :            |  8+2m(1/0)      |               |               np    n* nn 
-#<data>,Dy :      |                 |               |
-  .B or .W :      |  6+2m(1/0)      |               |               np    n  n* 
-  .L :            |  8+2m(1/0)      |               |               np    nn n* 
-<ea> :            |                 |               |
-  .B or .W :      |                 |               |
-    (An)          |  8(1/1)  4(1/0) |            nr |               np    nw    
-    (An)+         |  8(1/1)  4(1/0) |            nr |               np    nw    
-    -(An)         |  8(1/1)  6(1/0) | n          nr |               np    nw    
-    (d16,An)      |  8(1/1)  8(2/0) |      np    nr |               np    nw    
-    (d8,An)       |  8(1/1) 10(2/0) | n    np    nr |               np    nw    
-    (xxx).W       |  8(1/1)  8(2/0) |      np    nr |               np    nw    
-    (xxx).L       |  8(1/1) 12(3/0) |   np np    nr |               np    nw    
-NOTES :
-  .'m' is the shift count.
-  .'n*' should be replaced by m consecutive 'n'
-*/
 
 void                              m68k_asr_b_to_dM(){
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
-#endif
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
-  if(m68k_src_w>31)m68k_src_w=31; //SS but don't change timing, the CPU isn't optimised for that
+  if(m68k_src_w>31)m68k_src_w=31;
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
   if (m68k_src_w){
@@ -9965,14 +3764,8 @@ void                              m68k_asr_b_to_dM(){
   *((signed char*)m68k_dest)>>=m68k_src_w;
   SR_CHECK_Z_AND_N_B;
 }void                             m68k_lsr_b_to_dM(){
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
-#endif
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   if(m68k_src_w>31)m68k_src_w=31;
   m68k_dest=&(r[PARAM_M]);
@@ -9991,25 +3784,11 @@ void                              m68k_asr_b_to_dM(){
   *((unsigned char*)m68k_dest)>>=m68k_src_w;
   SR_CHECK_Z_AND_N_B;
 }void                             m68k_roxr_b_to_dM(){ //okay
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
-#endif
-
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
-
   INSTRUCTION_TIME(2+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
-  SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
-  if(BITTEST(sr,SR_X_BIT))
-    BITSET(sr,SR_C_BIT);
-#else
-  if(sr&SR_X)SR_SET(SR_C);
-#endif
+  SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);if(sr&SR_X)SR_SET(SR_C);
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=(sr&SR_X);
     if(m68k_DEST_B&1){
@@ -10021,47 +3800,25 @@ void                              m68k_asr_b_to_dM(){
   }
   SR_CHECK_Z_AND_N_B;
 }void                             m68k_ror_b_to_dM(){  //okay!
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
-#endif
-
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=m68k_DEST_B&1;
     if(old_x){
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITSET(sr,SR_C_BIT);
-#else
       SR_SET(SR_C)
-#endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITRESET(sr,SR_C_BIT);
-#else
       SR_CLEAR(SR_C)
-#endif
     }
     *((unsigned char*)m68k_dest)>>=1;if(old_x)m68k_DEST_B|=MSB_B;
   }
   SR_CHECK_Z_AND_N_B;
 }
 void                              m68k_asr_w_to_dM(){
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
-#endif
-
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   if(m68k_src_w>31)m68k_src_w=31;
   m68k_dest=&(r[PARAM_M]);
@@ -10076,15 +3833,8 @@ void                              m68k_asr_w_to_dM(){
   }
   SR_CHECK_Z_AND_N_W;
 }void                             m68k_lsr_w_to_dM(){  //okay!
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
-#endif
-
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   if(m68k_src_w>31)m68k_src_w=31;
   m68k_dest=&(r[PARAM_M]);
@@ -10103,24 +3853,11 @@ void                              m68k_asr_w_to_dM(){
   *((unsigned short*)m68k_dest)>>=m68k_src_w;
   SR_CHECK_Z_AND_N_W;
 }void                             m68k_roxr_w_to_dM(){          //okay
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
-#endif
-
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
-  SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
-  if(BITTEST(sr,SR_X_BIT))
-    BITSET(sr,SR_C_BIT);  
-#else
-  if(sr&SR_X)SR_SET(SR_C);
-#endif
+  SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);if(sr&SR_X)SR_SET(SR_C);
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=(sr&SR_X);
     if(m68k_DEST_W&1){
@@ -10132,47 +3869,25 @@ void                              m68k_asr_w_to_dM(){
   }
   SR_CHECK_Z_AND_N_W;
 }void                             m68k_ror_w_to_dM(){
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
-#endif
-
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=m68k_DEST_W&1;
     if(old_x){
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITSET(sr,SR_C_BIT);
-#else
       SR_SET(SR_C)
-#endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITRESET(sr,SR_C_BIT);
-#else
       SR_CLEAR(SR_C)
-#endif
     }
     *((unsigned short*)m68k_dest)>>=1;if(old_x)m68k_DEST_W|=MSB_W;
   }
   SR_CHECK_Z_AND_N_W;
 }
 void                              m68k_asr_l_to_dM(){
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
-#endif
-
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   INSTRUCTION_TIME(4+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
 
@@ -10192,15 +3907,8 @@ void                              m68k_asr_l_to_dM(){
   SR_CHECK_Z_AND_N_L;
 }
 void                             m68k_lsr_l_to_dM(){
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
-#endif
-
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   INSTRUCTION_TIME(4+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
@@ -10219,24 +3927,11 @@ void                             m68k_lsr_l_to_dM(){
   if(m68k_src_w>31)m68k_DEST_L=0;
   SR_CHECK_Z_AND_N_L;
 }void                             m68k_roxr_l_to_dM(){   //okay!
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
-#endif
-
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   INSTRUCTION_TIME(4+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
-  SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
-  if(BITTEST(sr,SR_X_BIT))
-    BITSET(sr,SR_C_BIT);
-#else
-  if(sr&SR_X)SR_SET(SR_C);
-#endif
+  SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);if(sr&SR_X)SR_SET(SR_C);
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=(sr&SR_X);
     if(m68k_DEST_L&1){
@@ -10248,47 +3943,25 @@ void                             m68k_lsr_l_to_dM(){
   }
   SR_CHECK_Z_AND_N_L;
 }void                             m68k_ror_l_to_dM(){   //okay!
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
-#endif
-
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   INSTRUCTION_TIME(4+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=m68k_DEST_L&1;
     if(old_x){
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITSET(sr,SR_C_BIT);
-#else
       SR_SET(SR_C)
-#endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITRESET(sr,SR_C_BIT);
-#else
       SR_CLEAR(SR_C)
-#endif
     }
     *((unsigned long*)m68k_dest)>>=1;if(old_x)m68k_DEST_L|=MSB_L;
   }
   SR_CHECK_Z_AND_N_L;
 }
 void                              m68k_asl_b_to_dM(){
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
-#endif
-
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   if (m68k_src_w>31) m68k_src_w=31;
   m68k_dest=&(r[PARAM_M]);
@@ -10306,45 +3979,23 @@ void                              m68k_asl_b_to_dM(){
       //        1   1   1   1       1   0    0...
 
       if((mask&(m68k_DEST_B))!=0 && ((mask&(m68k_DEST_B))^mask)!=0){
-#if defined(SSE_VC_INTRINSICS_383E)
-        BITSET(sr,SR_V_BIT);
-#else
         SR_SET(SR_V);
-#endif
       }
     }else if(m68k_DEST_B){
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITSET(sr,SR_V_BIT);
-#else
       SR_SET(SR_V);
-#endif
     }
   }
   *((signed char*)m68k_dest)<<=m68k_src_w;
   SR_CHECK_Z_AND_N_B;
-}
-
-void                             m68k_lsl_b_to_dM(){
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
+}void                             m68k_lsl_b_to_dM(){
   FETCH_TIMING;
-#endif
-
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   if(m68k_src_w>31)m68k_src_w=31;
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
   if(m68k_src_w){
-#if defined(SSE_VC_INTRINSICS_383E)
-    BITRESET(sr,SR_X_BIT);
-#else
     SR_CLEAR(SR_X);
-#endif
     if(m68k_src_w<=8){
       if( m68k_DEST_B&(BYTE)( MSB_B>>(m68k_src_w-1) )  ){
         SR_SET(SR_C+SR_X);
@@ -10353,28 +4004,13 @@ void                             m68k_lsl_b_to_dM(){
   }
   *((unsigned char*)m68k_dest)<<=m68k_src_w;
   SR_CHECK_Z_AND_N_B;
-}
-
-void                             m68k_roxl_b_to_dM(){
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
+}void                             m68k_roxl_b_to_dM(){
   FETCH_TIMING;
-#endif
-
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
 
   INSTRUCTION_TIME(2+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
-  SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
-  if(BITTEST(sr,SR_X_BIT))
-    BITSET(sr,SR_C_BIT);
-#else
-  if(sr&SR_X)SR_SET(SR_C);
-#endif
+  SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);if(sr&SR_X)SR_SET(SR_C);
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=(sr&SR_X);
     if(m68k_DEST_B&MSB_B){
@@ -10385,51 +4021,26 @@ void                             m68k_roxl_b_to_dM(){
     *((unsigned char*)m68k_dest)<<=1;if(old_x)m68k_DEST_B|=1;
   }
   SR_CHECK_Z_AND_N_B;
-}
-
-void                             m68k_rol_b_to_dM(){
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
+}void                             m68k_rol_b_to_dM(){
   FETCH_TIMING;
-#endif
-
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=m68k_DEST_B&MSB_B;
     if(old_x){
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITSET(sr,SR_C_BIT);
-#else
       SR_SET(SR_C)
-#endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITSET(sr,SR_C_BIT);
-#else
       SR_CLEAR(SR_C)
-#endif
     }
     *((unsigned char*)m68k_dest)<<=1;if(old_x)m68k_DEST_B|=1;
   }
   SR_CHECK_Z_AND_N_B;
 }
-
 void                              m68k_asl_w_to_dM(){       //okay!
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
-#endif
-
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   if(m68k_src_w>31)m68k_src_w=31;
   m68k_dest=&(r[PARAM_M]);
@@ -10444,44 +4055,23 @@ void                              m68k_asl_w_to_dM(){       //okay!
     if(m68k_src_w<=15){
       signed short mask=(signed short)(((signed short)(MSB_W))>>(m68k_src_w));
       if((mask&(m68k_DEST_W))!=0 && ((mask&(m68k_DEST_W))^mask)!=0){
-#if defined(SSE_VC_INTRINSICS_383E)
-        BITSET(sr,SR_V_BIT);
-#else
         SR_SET(SR_V);
-#endif
       }
     }else if(m68k_DEST_W){
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITSET(sr,SR_V_BIT);
-#else
       SR_SET(SR_V);
-#endif
     }
   }
   *((signed short*)m68k_dest)<<=m68k_src_w;
   SR_CHECK_Z_AND_N_W;
-}
-
-void                             m68k_lsl_w_to_dM(){
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
+}void                             m68k_lsl_w_to_dM(){
   FETCH_TIMING;
-#endif
-
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   if(m68k_src_w>31)m68k_src_w=31;
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
   if(m68k_src_w){
-#if defined(SSE_VC_INTRINSICS_383E)
-    BITRESET(sr,SR_X_BIT);
-#else
     SR_CLEAR(SR_X);
-#endif
     if(m68k_src_w<=16){
       if( m68k_DEST_W&(WORD)( MSB_W>>(m68k_src_w-1) )  ){
         SR_SET(SR_C+SR_X);
@@ -10492,26 +4082,12 @@ void                             m68k_lsl_w_to_dM(){
 
   SR_CHECK_Z_AND_N_W;
 }
-
 void                             m68k_roxl_w_to_dM(){
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
-#endif
-
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
-  SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
-  if(BITTEST(sr,SR_X_BIT))
-    BITSET(sr,SR_C_BIT);
-#else
-  if(sr&SR_X)SR_SET(SR_C);
-#endif
+  SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);if(sr&SR_X)SR_SET(SR_C);
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=(sr&SR_X);
     if(m68k_DEST_W&MSB_W){
@@ -10522,51 +4098,26 @@ void                             m68k_roxl_w_to_dM(){
     *((unsigned short*)m68k_dest)<<=1;if(old_x)m68k_DEST_W|=1;
   }
   SR_CHECK_Z_AND_N_W;
-}
-
-void                             m68k_rol_w_to_dM(){
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
+}void                             m68k_rol_w_to_dM(){
   FETCH_TIMING;
-#endif
-
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   INSTRUCTION_TIME(2+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=m68k_DEST_W&MSB_W;
     if(old_x){
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITSET(sr,SR_C_BIT);
-#else
       SR_SET(SR_C)
-#endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITRESET(sr,SR_C_BIT);
-#else
       SR_CLEAR(SR_C)
-#endif
     }
     *((unsigned short*)m68k_dest)<<=1;if(old_x)m68k_DEST_W|=1;
   }
   SR_CHECK_Z_AND_N_W;
 }
-
 void                              m68k_asl_l_to_dM(){    //okay!
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
-#endif
-
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   INSTRUCTION_TIME(4+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
@@ -10580,44 +4131,23 @@ void                              m68k_asl_l_to_dM(){    //okay!
     if(m68k_src_w<=31){
       signed long mask=(((signed long)(MSB_L))>>(m68k_src_w));
       if((mask&(m68k_DEST_L))!=0 && ((mask&(m68k_DEST_L))^mask)!=0){
-#if defined(SSE_VC_INTRINSICS_383E)
-        BITSET(sr,SR_V_BIT);
-#else
         SR_SET(SR_V);
-#endif
       }
     }else if(m68k_DEST_L){
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITSET(sr,SR_V_BIT);
-#else
       SR_SET(SR_V);
-#endif
     }
   }
   *((signed long*)m68k_dest)<<=m68k_src_w;
   if(m68k_src_w>31)m68k_DEST_L=0;
   SR_CHECK_Z_AND_N_L;
-}
-
-void                             m68k_lsl_l_to_dM(){
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
+}void                             m68k_lsl_l_to_dM(){
   FETCH_TIMING;
-#endif
-
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   INSTRUCTION_TIME(4+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
   if(m68k_src_w){
-#if defined(SSE_VC_INTRINSICS_383E)
-    BITRESET(sr,SR_X_BIT);
-#else
     SR_CLEAR(SR_X);
-#endif
     if(m68k_src_w<=32){
       if( m68k_DEST_L&(LONG)( MSB_L>>(m68k_src_w-1) )  ){
         SR_SET(SR_C+SR_X);
@@ -10627,27 +4157,12 @@ void                             m68k_lsl_l_to_dM(){
   *((unsigned long*)m68k_dest)<<=m68k_src_w;
   if(m68k_src_w>31)m68k_DEST_L=0;
   SR_CHECK_Z_AND_N_L;
-}
-
-void                             m68k_roxl_l_to_dM(){
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
+}void                             m68k_roxl_l_to_dM(){
   FETCH_TIMING;
-#endif
-
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   INSTRUCTION_TIME(4+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
-  SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
-  if(BITTEST(sr,SR_X_BIT))
-    BITSET(sr,SR_C_BIT);
-#else
-  if(sr&SR_X)SR_SET(SR_C);
-#endif
+  SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);if(sr&SR_X)SR_SET(SR_C);
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=(sr&SR_X);
     if(m68k_DEST_L&MSB_L){
@@ -10659,63 +4174,26 @@ void                             m68k_roxl_l_to_dM(){
   }
   SR_CHECK_Z_AND_N_L;
 }void                             m68k_rol_l_to_dM(){
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
-#endif
-
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   INSTRUCTION_TIME(4+2*m68k_src_w);
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=m68k_DEST_L&MSB_L;
     if(old_x){
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITSET(sr,SR_C_BIT);
-#else
       SR_SET(SR_C)
-#endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITRESET(sr,SR_C_BIT);
-#else
       SR_CLEAR(SR_C)
-#endif
     }
     *((unsigned long*)m68k_dest)<<=1;if(old_x)m68k_DEST_L|=1;
   }
   SR_CHECK_Z_AND_N_L;
 }
 void                              m68k_bit_shift_right_to_mem(){
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
   FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_ASSERT_ILLEGAL_370)
-  switch(ir&BITS_ba9){
-  case BITS_ba9_000:
-  case BITS_ba9_001:
-  case BITS_ba9_010:
-  case BITS_ba9_011:
-    break;
-  default:
-    m68k_unrecognised();
-  }
-#endif
-#if !defined(SSE_CPU_ROUNDING_SHIFT_MEM)
-  INSTRUCTION_TIME(4); 
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-  CHECK_READ=true;
-#endif
+  INSTRUCTION_TIME(4);
   m68k_GET_DEST_W_NOT_A_OR_D;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
-  FETCH_TIMING;
-#endif
   switch(ir&BITS_ba9){
   case BITS_ba9_000:
     SR_CLEAR(SR_N+SR_V+SR_Z+SR_C+SR_X);
@@ -10735,13 +4213,7 @@ void                              m68k_bit_shift_right_to_mem(){
     SR_CHECK_Z_AND_N_W;
     break;
   case BITS_ba9_010:{
-    SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
-  if(BITTEST(sr,SR_X_BIT))
-    BITSET(sr,SR_C_BIT);
-#else
-    if(sr&SR_X)SR_SET(SR_C);
-#endif
+    SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);if(sr&SR_X)SR_SET(SR_C);
     bool old_x=(sr&SR_X);
     if(m68k_DEST_W&1){
       SR_SET(SR_X+SR_C)
@@ -10755,60 +4227,23 @@ void                              m68k_bit_shift_right_to_mem(){
     SR_CLEAR(SR_N+SR_V+SR_Z);
     bool old_x=m68k_DEST_W&1;
     if(old_x){
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITSET(sr,SR_C_BIT);
-#else
       SR_SET(SR_C)
-#endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITRESET(sr,SR_C_BIT);
-#else
       SR_CLEAR(SR_C)
-#endif
     }
     *((unsigned short*)m68k_dest)>>=1;if(old_x)m68k_DEST_W|=MSB_W;
     SR_CHECK_Z_AND_N_W;
     break;
-  }
-#if !defined(SSE_CPU_ASSERT_ILLEGAL_370)  
-  default:
-    m68k_unrecognised(); // SS it doesn't pay to crash before
-    break;
-#endif
-  }
-#if defined(SSE_CPU_ROUNDING_SHIFT_MEM)
-  CPU_ABUS_ACCESS_WRITE;
-#endif
-}
 
-void                              m68k_bit_shift_left_to_mem(){
-#if !(defined(SSE_CPU_LINE_E_TIMINGS))
-  FETCH_TIMING;
-#endif
-
-#if defined(SSE_CPU_ASSERT_ILLEGAL_370)
-  switch(ir&BITS_ba9){
-  case BITS_ba9_000:
-  case BITS_ba9_001:
-  case BITS_ba9_010:
-  case BITS_ba9_011:
-    break;
-  default:
+  }default:
     m68k_unrecognised();
+    break;
   }
-#endif
-#if !defined(SSE_CPU_ROUNDING_SHIFT_MEM)
-  INSTRUCTION_TIME(4);
-#endif
-#if defined(SSE_CPU_TRUE_PC)
-  CHECK_READ=true;
-#endif
-  m68k_GET_DEST_W_NOT_A_OR_D;
-  PREFETCH_IRC;
-#if defined(SSE_CPU_LINE_E_TIMINGS)
+}
+void                              m68k_bit_shift_left_to_mem(){
   FETCH_TIMING;
-#endif
+  INSTRUCTION_TIME(4);
+  m68k_GET_DEST_W_NOT_A_OR_D;
   switch(ir&BITS_ba9){
   case BITS_ba9_000: //asl
     SR_CLEAR(SR_N+SR_V+SR_Z+SR_C+SR_X);
@@ -10817,11 +4252,7 @@ void                              m68k_bit_shift_left_to_mem(){
       SR_SET(SR_C+SR_X);
     }
     if((m68k_DEST_W&0xc000)==0x8000 || (m68k_DEST_W&0xc000)==0x4000){
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITSET(sr,SR_V_BIT);
-#else
       SR_SET(SR_V);
-#endif
     }
     *((signed short*)m68k_dest)<<=1;
     SR_CHECK_Z_AND_N_W;
@@ -10835,13 +4266,7 @@ void                              m68k_bit_shift_left_to_mem(){
     SR_CHECK_Z_AND_N_W;
     break;
   case BITS_ba9_010:{
-    SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
-    if(BITTEST(sr,SR_X_BIT))
-      BITSET(sr,SR_C_BIT);
-#else
-    if(sr&SR_X)SR_SET(SR_C);
-#endif
+    SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);if(sr&SR_X)SR_SET(SR_C);
     bool old_x=(sr&SR_X);
     if(m68k_DEST_W&MSB_W){
       SR_SET(SR_X+SR_C)
@@ -10855,32 +4280,20 @@ void                              m68k_bit_shift_left_to_mem(){
     SR_CLEAR(SR_N+SR_V+SR_Z);
     bool old_x=m68k_DEST_W&MSB_W;
     if(old_x){
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITSET(sr,SR_C_BIT);
-#else
       SR_SET(SR_C)
-#endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
-      BITRESET(sr,SR_C_BIT);
-#else
       SR_CLEAR(SR_C)
-#endif
     }
     *((unsigned short*)m68k_dest)<<=1;if(old_x)m68k_DEST_W|=1;
     SR_CHECK_Z_AND_N_W;
     break;
-  }
-#if !defined(SSE_CPU_ASSERT_ILLEGAL_370)    
-  default:
+  }default:
     m68k_unrecognised();
     break;
-#endif
   }
-#if defined(SSE_CPU_ROUNDING_SHIFT_MEM)
-  CPU_ABUS_ACCESS_WRITE;
-#endif
 }
+
+
 
 
 
@@ -10903,17 +4316,6 @@ void                              m68k_bit_shift_left_to_mem(){
 extern "C" void m68k_0000(){ //immediate stuff
   m68k_jump_line_0[(ir&(BITS_876|BITS_ba9))>>6]();
 }
-
-#if defined(SSE_CPU_MOVE)
-
-void m68k_0001();
-void m68k_0010();
-void m68k_0011();
-
-#else
-// Note the INSTRUCTION_TIME were commented out by Steem authors, and
-// the other comments are theirs too. We define our versions of the MOVE
-// instructions in SSECpu.cpp.
 
 void m68k_0001(){  //move.b
   INSTRUCTION_TIME(4); // I don't think this should be here, does move read on cycle 0?
@@ -10947,11 +4349,11 @@ void m68k_0001(){  //move.b
     case BITS_876_101:
       INSTRUCTION_TIME(12-4-4);
       abus=areg[PARAM_N]+(signed short)m68k_fetchW();
-      pc+=2; 
+      pc+=2;
       break;
     case BITS_876_110:
       INSTRUCTION_TIME(14-4-4);
-      m68k_iriwo=m68k_fetchW();pc+=2; 
+      m68k_iriwo=m68k_fetchW();pc+=2;
       if(m68k_iriwo&BIT_b){  //.l
         abus=areg[PARAM_N]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
       }else{         //.w
@@ -10988,7 +4390,6 @@ void m68k_0001(){  //move.b
     if (refetch) prefetch_buf[0]=*(lpfetch-MEM_DIR);
   }
 }
-
 
 void m68k_0010()  //move.l
 {
@@ -11063,7 +4464,6 @@ void m68k_0010()  //move.l
     if (refetch) prefetch_buf[0]=*(lpfetch-MEM_DIR);
   }
 }
-
 
 void m68k_0011() //move.w
 {
@@ -11140,8 +4540,6 @@ void m68k_0011() //move.w
   }
 }
 
-#endif
-
 extern "C" void m68k_0100(){
   m68k_jump_line_4[(ir&(BITS_ba9|BITS_876))>>6]();
 }
@@ -11150,264 +4548,54 @@ extern "C" void m68k_0101(){
   m68k_jump_line_5[(ir&BITS_876)>>6]();
 }
 
-//SS line6; this part has become unreadable!
-
-extern "C" void m68k_0110(){  //bCC //SS + BSR
-  if (LOBYTE(ir)){ //SS 8-bit displacement
+extern "C" void m68k_0110(){  //bCC
+  if (LOBYTE(ir)){
     MEM_ADDRESS new_pc=(pc+(signed long)((signed char)LOBYTE(ir))) | pc_high_byte;
-    if ((ir & 0xf00)==0x100){ //BSR
-/*
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage
-        BSR       |      INSTR      |                   INSTR
-------------------+-----------------+------------------------------------------
-<label> :         |                 |
-  .B .S or .W :   | 18(2/2)         |                 n    nS ns np np          
-*/
-#if defined(SSE_CPU_PREFETCH_CLASS)
-      M68000.PrefetchClass=2;
-#endif
-#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
-      INSTRUCTION_TIME(2);
-#endif
+    if ((ir & 0xf00)==0x100){ //bsr
       m68k_PUSH_L(PC32);
-#if defined(SSE_BOILER_PSEUDO_STACK)
-      Debug.PseudoStackPush(PC32);
-#endif
-#if defined(SSE_CPU_ROUNDING_BUS)
-      M68000.Rounded=false;
-#endif
       m68k_READ_W(new_pc); // Check for bus/address errors
-#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
-      CPU_ABUS_ACCESS_READ_PC; //as first prefetch...
-#else
-#if (defined(SSE_CPU_FETCH_TIMING))
-      INSTRUCTION_TIME(18-4);
-#endif
-#endif
       SET_PC(new_pc);
-#if defined(SSE_CPU_FETCH_TIMING)
-      FETCH_TIMING;
-#if defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-      CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
-#endif
-#else
       INSTRUCTION_TIME_ROUND(18); // round for fetch
-#endif
-    }else{ //SS Bcc
-/*
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage
-        Bcc       |      INSTR      |                   INSTR
-------------------+-----------------+------------------------------------------
-<label> :         |                 |
- .B or .S :       |                 |
-  branch taken    | 10(2/0)         |                 n          np np          
-  branch not taken|  8(1/0)         |                nn             np          
-*/
-
-#if defined(SSE_CPU_ROUNDING_BCC)
-      INSTRUCTION_TIME(2);
-#endif
-      if (m68k_CONDITION_TEST){ //SS branch taken
-#if defined(SSE_CPU_ROUNDING_BCC) && !defined(SSE_CPU_ROUNDING_BUS)
-        CPU_ABUS_ACCESS_READ;
-#endif
-#if defined(SSE_CPU_ROUNDING_BUS)
-        M68000.Rounded=false;
-#endif
+    }else{
+      if (m68k_CONDITION_TEST){
         m68k_READ_W(new_pc); // Check for bus/address errors
-#if defined(SSE_CPU_ROUNDING_BCC) && defined(SSE_CPU_ROUNDING_BUS)
-        CPU_ABUS_ACCESS_READ;
-#endif
-#if !defined(SSE_CPU_ROUNDING_BCC)
-#if (defined(SSE_CPU_FETCH_TIMING))
-        INSTRUCTION_TIME(10-4); // DSOS Lots of scrollers
-#endif
-#endif
         SET_PC(new_pc);
-#if !defined(SSE_CPU_ROUNDING_BCC)
-#if !(defined(SSE_CPU_FETCH_TIMING))
         INSTRUCTION_TIME_ROUND(10); // round for fetch
-#endif
-#endif
-#if defined(SSE_CPU_FETCH_TIMING)
-        FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-        CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
-#endif
-      }else{ //SS branch not taken
-#if defined(SSE_CPU_ROUNDING_BCC)
-        INSTRUCTION_TIME(2);
-#endif
-#if !defined(SSE_CPU_ROUNDING_BCC)
-#if defined(SSE_CPU_FETCH_TIMING)
-        INSTRUCTION_TIME(8-4);    
-        FETCH_TIMING;
-#else
-        INSTRUCTION_TIME_ROUND(8); // round for fetch
-#endif
-#endif
-        PREFETCH_IRC;
-        //ASSERT(M68000.PrefetchClass==0);
+      }else{
+        INSTRUCTION_TIME_ROUND(8);
       }
     }
   }else{
-//#undef SSE_CPU_LINE_6_TIMINGS
-    if ((ir & 0xf00)==0x100){ //bsr.l //SS .W?
-/*
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage
-        BSR       |      INSTR      |                   INSTR
-------------------+-----------------+------------------------------------------
-<label> :         |                 |
-  .B .S or .W :   | 18(2/2)         |                 n    nS ns np np          
-*/
-
-#if defined(SSE_CPU_PREFETCH_CLASS)
-      M68000.PrefetchClass=2;
-#endif
-#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
-      INSTRUCTION_TIME(2);
-#endif
+    if ((ir & 0xf00)==0x100){ //bsr.l
       m68k_PUSH_L(PC32+2);
-#if defined(SSE_BOILER_PSEUDO_STACK)
-      Debug.PseudoStackPush(PC32+2);
-#endif
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-#if !defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
-      INSTRUCTION_TIME(2);
-      CPU_ABUS_ACCESS_WRITE;
-      CPU_ABUS_ACCESS_WRITE;
-#endif
-      CPU_ABUS_ACCESS_READ_FETCH;
-#endif
+
       MEM_ADDRESS new_pc=(pc+(signed long)((signed short)m68k_fetchW())) | pc_high_byte;
       // stacked pc is always instruction pc+2 due to prefetch (pc doesn't increase before new_pc is read)
-#if defined(SSE_CPU_ROUNDING_BUS)
-      M68000.Rounded=false;
-#endif
       m68k_READ_W(new_pc); // Check for bus/address errors
-#if defined(SSE_CPU_FETCH_TIMING) && !defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-      INSTRUCTION_TIME(18-4);    
-#endif
-      SET_PC(new_pc);      
-#if defined(SSE_CPU_FETCH_TIMING)
-      FETCH_TIMING;
-#if defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-      CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
-#endif
-#else
+      SET_PC(new_pc);
       INSTRUCTION_TIME_ROUND(18); // round for fetch
-#endif
-    }else{ // Bcc.l //SS .W?
-//#undef SSE_CPU_ROUNDING_BCC
-/*
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage
-        Bcc       |      INSTR      |                   INSTR
-------------------+-----------------+------------------------------------------
-<label> :         |                 |
- .W :             |                 |
-  branch taken    | 10(2/0)         |                 n          np np          
-  branch not taken| 12(2/0)         |                nn          np np          
-*/
-#if defined(SSE_CPU_ROUNDING_BCC)
-      INSTRUCTION_TIME(2);
-#endif
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-#if defined(SSE_CPU_ROUNDING_BUS)
-      M68000.Rounded=false;//? will be useless in the end
-#endif
-      //CPU_ABUS_ACCESS_READ_FETCH;
-      MEM_ADDRESS new_pc;
-#else
+    }else{ // Bcc.l
       MEM_ADDRESS new_pc=(pc+(signed long)((signed short)m68k_fetchW())) | pc_high_byte;
-#endif
-      if (m68k_CONDITION_TEST){ //SS bramch taken
+      if (m68k_CONDITION_TEST){
         // stacked pc is always instruction pc+2 due to prefetch (pc doesn't increase before new_pc is read)
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-        CPU_ABUS_ACCESS_READ_FETCH;
-        new_pc=(pc+(signed long)((signed short)m68k_fetchW())) | pc_high_byte;
-#elif defined(SSE_CPU_ROUNDING_BCC)
-        CPU_ABUS_ACCESS_READ;
-#endif
         m68k_READ_W(new_pc); // Check for bus/address errors
-#if !defined(SSE_CPU_ROUNDING_BCC) && defined(SSE_CPU_FETCH_TIMING)
-        INSTRUCTION_TIME(10-4);
-#endif
         SET_PC(new_pc);
-#if !defined(SSE_CPU_ROUNDING_BCC)
-#if !(defined(SSE_CPU_FETCH_TIMING))
-        INSTRUCTION_TIME_ROUND(10); // round for fetch
-#endif
-#endif
-#if defined(SSE_CPU_FETCH_TIMING)
-        FETCH_TIMING;
-#endif
-#if defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-        CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
-#endif
+        INSTRUCTION_TIME_ROUND(10);
       }else{
-#if defined(SSE_CPU_ROUNDING_BCC)
-        INSTRUCTION_TIME(2);
-#if defined(SSE_CPU_TIMINGS_REFACTOR_FETCH)
-        // fetched but not used
-        // we surmise M68000 has a 'fetch' routine to advance PC, and not
-        // another one to advance PC without fetching?
-        CPU_ABUS_ACCESS_READ_FETCH;
-        new_pc=(pc+(signed long)((signed short)m68k_fetchW())) | pc_high_byte;
-#else
-        CPU_ABUS_ACCESS_READ;
-#endif
-#endif
-        pc+=2; 
-#if !defined(SSE_CPU_ROUNDING_BCC)
-#if defined(SSE_CPU_FETCH_TIMING)
-        INSTRUCTION_TIME(12-4);    
-        FETCH_TIMING;
-#else
-        INSTRUCTION_TIME_ROUND(12); // round for fetch
-#endif
-#endif
-        PREFETCH_IRC;
+        pc+=2;
+        INSTRUCTION_TIME_ROUND(12);
       }
     }
   }
-//#define SSE_CPU_LINE_6_TIMINGS
 }
-
-/*
-*******************************************************************************
-  Line 0111
-    MOVEQ
-*******************************************************************************
--------------------------------------------------------------------------------
-                  |    Exec Time    |               Data Bus Usage
-       MOVEQ      |      INSTR      |  1st OP (ea)  |          INSTR
-------------------+-----------------+---------------+--------------------------
-#<data>,Dn :      |                 |               
-  .L :            |  4(1/0)         |                               np          
-
-*/
 
 extern "C" void m68k_0111(){  //moveq
   if(ir&BIT_8){
     m68k_unrecognised();
   }else{
-#if defined(SSE_CPU_PREFETCH_CLASS)
-    M68000.PrefetchClass=1;
-#endif
-#if !(defined(SSE_CPU_LINE_7_TIMINGS))
     FETCH_TIMING;
-#endif
     m68k_dest=&(r[PARAM_N]);
     m68k_DEST_L=(signed long)((signed char)LOBYTE(ir));
-#if (defined(SSE_CPU_LINE_7_TIMINGS))
-    FETCH_TIMING;
-#endif
-    PREFETCH_IRC;
     SR_CLEAR(SR_Z+SR_N+SR_C+SR_V);
     SR_CHECK_Z_AND_N_L;
   }
@@ -11418,109 +4606,19 @@ extern "C" void m68k_1000(){ //or, div, sbcd
 }
 
 extern "C" void m68k_1001(){ //sub
-/*  SS bits 876 = opmode
-Byte Word Long        Operation
- 000  001  010      Dn – < ea > 
- 100  101  110      < ea > – Dn 
-
- + SUBA:
-
-  m68k_jump_line_9[0]=m68k_sub_b_to_dN;
-  m68k_jump_line_9[1]=m68k_sub_w_to_dN;
-  m68k_jump_line_9[2]=m68k_sub_l_to_dN;
-  m68k_jump_line_9[3]=m68k_suba_w;
-  m68k_jump_line_9[4]=m68k_sub_b_from_dN; + subx.b
-  m68k_jump_line_9[5]=m68k_sub_w_from_dN; + subx.w
-  m68k_jump_line_9[6]=m68k_sub_l_from_dN; + subx.l
-  m68k_jump_line_9[7]=m68k_suba_l;
-
-SUBX:
-
-bits 876 = 1ss with ss: 00 byte 01 word 10 long
-bit 3 =  0: SUBX Dx,Dy  1: – (Ax), – (Ay)
-
-*/
   m68k_jump_line_9[(ir&BITS_876)>>6]();
 }
 
 extern "C" void m68k_1010() //line-a
 {
   pc-=2;  //pc not incremented for illegal instruction
+
 //  log_write("CPU sees line-a instruction");
-//  intercept_line_a();//SS doesn't exist
-#if !defined(SSE_INT_ROUNDING)
+//  intercept_line_a();
   INSTRUCTION_TIME_ROUND(0);  // Round first for interrupts
-#endif
-#if defined(SSE_CPU_FETCH_TIMING)
-#if defined(SSE_CPU_TRACE_TIMING_EXT)
-#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
-  INSTRUCTION_TIME_ROUND(CPU_TRACE_TIMING-4-12); 
-#else
-  INSTRUCTION_TIME_ROUND(CPU_TRACE_TIMING-4);
-#endif
-#else
-#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
-  INSTRUCTION_TIME_ROUND(34-12-4);
-#else
-  INSTRUCTION_TIME_ROUND(34-4);
-#endif
-#endif
-  FETCH_TIMING;
-#if defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-  CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
-#endif
-#else
   INSTRUCTION_TIME_ROUND(34);
-#endif
-#ifdef SSE_DEBUG
-#if defined(SSE_OSD_CONTROL)
-  if(OSD_MASK3 & OSD_CONTROL_STEBLT) // by default
-    TRACE_OSD("LINE A %X",(IRD&0xF));
-#endif
-#if defined(SSE_BOILER_SHOW_INTERRUPT)
-  Debug.RecordInterrupt("LINEA");
-#endif
-/*
-B_WD            equ     +00     ; width of block in pixels                          
-B_HT            equ     +02     ; height of block in pixels                         
-
-PLANE_CT        equ     +04     ; number of consecutive planes to blt       {D}     
-
-FG_COL          equ     +06     ; foreground color (logic op index:hi bit)  {D}     
-BG_COL          equ     +08     ; background color (logic op index:lo bit)  {D}     
-OP_TAB          equ     +10     ; logic ops for all fore and background combos      
-S_XMIN          equ     +14     ; minimum X: source                                 
-S_YMIN          equ     +16     ; minimum Y: source                                 
-S_FORM          equ     +18     ; source form base address                          
-S_NXWD          equ     +22     ; offset to next word in line  (in bytes)           
-S_NXLN          equ     +24     ; offset to next line in plane (in bytes)           
-S_NXPL          equ     +26     ; offset to next plane from start of current plane  
-
-D_XMIN          equ     +28     ; minimum X: destination                            
-D_YMIN          equ     +30     ; minimum Y: destination                            
-D_FORM          equ     +32     ; destination form base address                     
-D_NXWD          equ     +36     ; offset to next word in line  (in bytes)           
-D_NXLN          equ     +38     ; offset to next line in plane (in bytes)           
-D_NXPL          equ     +40     ; offset to next plane from start of current plane  
-
-P_ADDR          equ     +42     ; address of pattern buffer   (0:no pattern) {D}
-P_NXLN          equ     +46     ; offset to next line in pattern  (in bytes)    
-P_NXPL          equ     +48     ; offset to next plane in pattern (in bytes)    
-P_MASK          equ     +50     ; pattern index mask                            
-
-*/
-#define LOGSECTION LOGSECTION_BLITTER // by default
-  if((IRD&0xF)==7) //bitblt
-  {
-    MEM_ADDRESS p=areg[6];
-    TRACE_LOG("Line A biblt %dx%d %d planes fg %d bg %d op %X src %X x %d y %d p %d dst %X x %d y %d p %d pattern %X\n",DPEEK(p),DPEEK(p+2),DPEEK(p+4),DPEEK(p+6),DPEEK(p+8),LPEEK(p+10),LPEEK(p+18),DPEEK(p+22),DPEEK(p+24),DPEEK(p+26),LPEEK(p+32),DPEEK(p+36),DPEEK(p+38),DPEEK(p+40),LPEEK(p+42));
-  }
-#undef LOGSECTION
-#endif//dbg
   m68k_interrupt(LPEEK(BOMBS_LINE_A*4));
-#if !defined(SSE_CPU_TRACE_LINE_A_F)
   m68k_do_trace_exception=0;
-#endif
   debug_check_break_on_irq(BREAK_IRQ_LINEA_IDX);
 }
 
@@ -11541,50 +4639,24 @@ extern "C" void m68k_1110(){  //bit shift
 }
 
 extern "C" void m68k_1111(){  //line-f emulator
-#if defined(SSE_CPU_LINE_F)
-  interrupt_depth--; // compensate
-  on_rte=ON_RTE_LINE_F;
-#endif
   pc-=2;  //pc not incremented for illegal instruction
+
 #ifdef ONEGAME
   if (ir==0xffff){
     OGIntercept();
     return;
   }
 #endif
-#if !defined(SSE_INT_ROUNDING)
+
   INSTRUCTION_TIME_ROUND(0);  // Round first for interrupts
-#endif
-#if defined(SSE_CPU_FETCH_TIMING)
-#if defined(SSE_CPU_TRACE_TIMING_EXT)
-#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
-  INSTRUCTION_TIME_ROUND(CPU_TRACE_TIMING-4-12); 
-#else
-  INSTRUCTION_TIME_ROUND(CPU_TRACE_TIMING-4);
-#endif
-#else
-#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
-  INSTRUCTION_TIME_ROUND(34-12-4);
-#else
-  INSTRUCTION_TIME_ROUND(34-4);
-#endif
-#endif
-  FETCH_TIMING;
-#if defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-  CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
-#endif
-#else
   INSTRUCTION_TIME_ROUND(34);
-#endif
-#if defined(SSE_BOILER_SHOW_INTERRUPT)
-//  Debug.RecordInterrupt("LINEF");
-#endif
   m68k_interrupt(LPEEK(BOMBS_LINE_F*4));
-#if !defined(SSE_CPU_TRACE_LINE_A_F)
   m68k_do_trace_exception=0;
-#endif
   debug_check_break_on_irq(BREAK_IRQ_LINEF_IDX);
 }
-//       check PC-relative addressing  // SS: gulp
-///#define SSE_VS2008_WARNING_383
+//       check PC-relative addressing
+
+
 #include "cpuinit.cpp"
+
+

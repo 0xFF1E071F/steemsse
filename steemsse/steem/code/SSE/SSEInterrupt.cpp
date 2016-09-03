@@ -79,7 +79,7 @@ void ASMCALL check_for_interrupts_pending() {
     Here we place all the tests in check_for_interrupts_pending() and when
     mfp_interrupt() is called from here, the interrupt is executed for sure.
 */
-  if(!(ioaccess & (IOACCESS_INTERCEPT_OS | IOACCESS_INTERCEPT_OS2))) //internal Steem flags
+  if(!STOP_INTS_BECAUSE_INTERCEPT_OS) //internal Steem flags
   {
     if (!(ioaccess & IOACCESS_FLAG_DELAY_MFP) //internal Steem flag
       && ((sr & SR_IPL)<SR_IPL_6)) //MFP can interrupt to begin with
@@ -211,11 +211,7 @@ void ASMCALL check_for_interrupts_pending() {
             TRACE_MFP("%d PC %X Spurious! %d\n",ACT,old_pc,iack_latency);
             TRACE_MFP("IRQ %d (%d) IERA %X IPRA %X IMRA %X ISRA %X IERB %X IPRB %X IMRB %X ISRB %X\n",MC68901.Irq,MC68901.NextIrq,mfp_reg[MFPR_IERA],mfp_reg[MFPR_IPRA],mfp_reg[MFPR_IMRA],mfp_reg[MFPR_ISRA],mfp_reg[MFPR_IERB],mfp_reg[MFPR_IPRB],mfp_reg[MFPR_IMRB],mfp_reg[MFPR_ISRB]);
             int iack_cycles=ACT-MC68901.IackTiming;
-#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
-            INSTRUCTION_TIME_ROUND(50-12-iack_cycles); //? unimportant
-#else
             INSTRUCTION_TIME(50-iack_cycles); //?
-#endif
             m68k_interrupt(LPEEK(0x60)); // vector for Spurious, NOT Bus Error
             sr=WORD((sr & (~SR_IPL)) | SR_IPL_6); // the CPU does that anyway
           }
@@ -340,28 +336,6 @@ void HBLInterrupt() {
 #if defined(SSE_INT_E_CLOCK)
   if(OPTION_C1)
   {
-#if defined(SSE_INT_CHECK_BEFORE_PREFETCH)
-/*  3.8.0
-    On some instructions, interrupt is triggered before prefetch.
-    It makes sense as the prefetch is useless.
-    Maybe it is indicated by 'dbi' in US patent 4,325,121.
-    It explains why some interrupts seem to take too much time in
-    emulation.
-    Only partial now, TST/HBI (for a fix)
-    Update 3.8.1
-    It was another of those last-minute insights, can't help it.
-    A generalisation of this seems incorrect, but we'll keep it
-    until it breaks something or we find a better fix.
-*/
-    if(OPTION_HACKS && M68000.PrefetchClass==1 && LINECYCLES>=4)
-    {
-      if((ir&0xFF00)==0x4A00 && (ir&0xFFC0)!=0x4AC0) //TST
-      {
-        INSTRUCTION_TIME(-4); // fixes Phantom end scroller
-        //TRACE_OSD("-4");
-      }
-    }
-#endif//SSE_INT_CHECK_BEFORE_PREFETCH  
     int current_cycles=ACT;
     INSTRUCTION_TIME(ECLOCK_AUTOVECTOR_CYCLE);
     BYTE e_clock_wait_states=M68000.SyncEClock(TM68000::ECLOCK_HBL);
@@ -370,16 +344,10 @@ void HBLInterrupt() {
   }
 #endif
 
-#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
-  INSTRUCTION_TIME_ROUND(SSE_INT_HBL_TIMING-12); 
-#else
-  INSTRUCTION_TIME_ROUND(SSE_INT_HBL_TIMING); 
-#endif
-
 #if defined(SSE_GLUE_FRAME_TIMINGS)
   Glue.Status.hbi_done=true;
 #endif
-
+  INSTRUCTION_TIME_ROUND(SSE_INT_HBL_TIMING); 
   m68k_interrupt(LPEEK(0x0068));       
   // set CPU registers
   sr=(sr & (WORD)(~SR_IPL)) | (WORD)(SR_IPL_2);
@@ -438,12 +406,7 @@ void VBLInterrupt() {
   }
 #endif
 
-#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
-  INSTRUCTION_TIME_ROUND(SSE_INT_VBL_TIMING-12); 
-#else
   INSTRUCTION_TIME_ROUND(SSE_INT_VBL_TIMING);
-#endif
-
   m68k_interrupt(LPEEK(0x0070));
 
   sr=(sr& (WORD)(~SR_IPL))|(WORD)(SR_IPL_4);

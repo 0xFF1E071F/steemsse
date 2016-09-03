@@ -1645,32 +1645,6 @@ void ikbd_mouse_move(int x,int y,int mousek,int max_mouse_move)
 #if defined(SSE_IKBD_6301)
   if(OPTION_C1)
   {
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)//no
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
-// if both are defined, Hacks makes the difference, for comparison (beta)
-    if(!OPTION_HACKS)
-#endif
-    {
-    //TODO still our attempts to get a smoother mouse
-    const int max_step=20+20*screen_res; //18
-    const int multiplier=1; //2
-    const int divisor=1; //3
-    if(x>1||x<-1)
-      x*=multiplier,x/=divisor;
-    if(x>max_step)
-      x=max_step;
-    if(x<-max_step)
-      x=-max_step;
-
-    if(y>1||y<-1)
-      y*=multiplier,y/=divisor;
-    if(y>max_step)
-      y=max_step;
-    if(y<-max_step)
-      y=-max_step;
-    }
-#endif
-
     HD6301.MouseVblDeltaX=x,HD6301.MouseVblDeltaY=y;
     return;
   }

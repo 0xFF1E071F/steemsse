@@ -5,6 +5,8 @@
 #define EXT extern
 #define INIT(s)
 
+class m68k_exception;//383
+
 extern EasyStr disa_d2(MEM_ADDRESS);
 void breakpoint_check();
 extern int debug_get_ad_mode(MEM_ADDRESS);

@@ -4,7 +4,6 @@
 /*  Note most useful 6301 emulation code is in 3rdparty folder '6301', in C.
     Object HD6301 is more for some support, of both true and fake IKBD
     emulation.
-    v3.7.3: done some refactoring without compile switches.
 */
 
 #include "../pch.h"
@@ -19,12 +18,10 @@
 #include "SSEDebug.h"
 #include "SSE6301.h"
 #include "SSEOption.h"
-//#include "SSEShifter.h"
 #include "SSEVideo.h"
 #include "SSEFrameReport.h"
 
 THD6301 HD6301; // singleton
-
 
 THD6301::THD6301() {
 }
@@ -153,7 +150,6 @@ void THD6301::ReportCommand() {
 #endif
 
   // give command code
-  //TRACE_LOG("[IKBDi $%02X ",CurrentCommand);//i for interpreter
   TRACE_LOG("IKBDi $%02X ",CurrentCommand);//i for interpreter
   // spell out command (as in Atari manual)
   switch(CurrentCommand) {
@@ -199,11 +195,9 @@ void THD6301::ReportCommand() {
   {
     TRACE_LOG(" (");
     for(int i=0;i<nParameters;i++)
-      //TRACE_LOG("%d=$%X ",Parameter[i],Parameter[i]);
       TRACE_LOG("%d=$%X ",i,Parameter[i]); // v3.8
     TRACE_LOG(")");
   }
-  //TRACE_LOG("]\n");
   TRACE_LOG("\n");
 }
 
@@ -272,8 +266,6 @@ void THD6301::Init() { // called in 'main'
 }
 
 
-#if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
-
 void THD6301::ReceiveByte(BYTE data) {
 /*  Transfer byte to 6301.
     Call of this function initiates transfer. The function sets up an
@@ -282,12 +274,15 @@ void THD6301::ReceiveByte(BYTE data) {
 */
   TRACE_LOG("%d %d %d ACIA TDRS %X\n",TIMING_INFO,data);
   ACIA_IKBD.ByteWaitingTx=false;
-
-#if defined(SSE_IKBD_6301_EVENT)
   ASSERT(ACIA_IKBD.TDR==data);
   ACIA_IKBD.TDRS=ACIA_IKBD.TDR=data;
   ASSERT(!ACIA_IKBD.LineTxBusy||ACT-ACIA_IKBD.last_tx_write_time<ACIA_TDR_COPY_DELAY);
   ACIA_IKBD.LineTxBusy=true;
+#if defined(SSE_ACIA_383)
+  if(OPTION_C1)
+    time_of_event_acia=ACIA_IKBD.time_of_event_outgoing=ACT+ACIA_TO_HD6301_IN_CYCLES;
+  else
+#elif defined(SSE_IKBD_6301_EVENT)
   if(OPTION_C1)
   {
     time_of_event_ikbd2=ACT+ACIA_TO_HD6301_IN_CYCLES;
@@ -303,7 +298,7 @@ void THD6301::ReceiveByte(BYTE data) {
 #endif
 }
 
-#endif
+
 
 void THD6301::ResetChip(int Cold) {
   TRACE_LOG("6301 Reset chip %d\n",Cold);
@@ -339,7 +334,7 @@ void THD6301::ResetProgram() { // debug only
 void THD6301::Vbl() {
   hd6301_vbl_cycles=0;
 
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
   click_x=click_y=0;
   // the following avoids the mouse going backward at high speed
   const int max_pix_h=(screen_res)?30:40;
@@ -356,7 +351,7 @@ void THD6301::Vbl() {
   if(MouseVblDeltaX||MouseVblDeltaX)
       TRACE_LOG("F%d 6301 mouse move %d,%d\n",FRAME,MouseVblDeltaX,MouseVblDeltaY);
 #endif
-#endif//SSE_IKBD_6301_MOUSE_ADJUST_SPEED2
+#endif//SSE_IKBD_6301_MOUSE_ADJUST_SPEED
 }
 
 #endif//SSE_IKBD_6301_VBL

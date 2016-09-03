@@ -35,9 +35,7 @@ struct THD6301 {
   void ReportCommand();
 #endif
 #endif
-#if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
   void ReceiveByte(BYTE data);
-#endif
   void ResetChip(int Cold);
   void ResetProgram();
   void Init();
@@ -51,7 +49,7 @@ struct THD6301 {
   BYTE Crashed; // oops
   short MouseVblDeltaX; // must keep separate for true emu
   short MouseVblDeltaY;
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
   BYTE click_x,click_y; // current click
 #endif
 
@@ -63,7 +61,9 @@ struct THD6301 {
 #if defined(SSE_IKBD_6301_EVENT)
   char LineRxFreeTime; // cycles in (0-63)
   char LineTxFreeTime; // cycles in (0-63)
+#if !defined(SSE_ACIA_383)
   BYTE EventStatus; // bit0 event1 bit1 event2
+#endif
 #endif
 
 #if defined(SSE_DEBUG) 

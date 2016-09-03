@@ -28,7 +28,26 @@
 
 #if defined(SSE_ACIA)
 
-#if defined(SSE_IKBD_6301)
+/*
+The ACIA master clock is 500kHz.
+       |     |Clock divide                                      | ||
+       |     |00 - Normal --------------------------------------+-+|
+       |     |01 - Div by 16 -----------------------------------+-+|
+       |     |10 - Div by 64 -----------------------------------+-+|
+       |     |11 - Master reset --------------------------------+-'|
+
+10bits per byte
+
+*/
+
+#if defined(SSE_ACIA_383)
+
+#define HD6301_TO_ACIA_IN_CYCLES (acia[0].TransmissionTime())
+#define ACIA_TO_HD6301_IN_CYCLES (acia[0].TransmissionTime())
+//TODO:
+#define HD6301_TO_ACIA_IN_HBL (OPTION_C1?HD6301_CYCLES_TO_SEND_BYTE_IN_HBL:(screen_res==2?24:12)) //is a mod??
+
+#elif defined(SSE_IKBD_6301)
 
 #define HD6301_TO_ACIA_IN_CYCLES (HD6301_CYCLES_TO_SEND_BYTE*HD6301_CYCLE_DIVISOR)
 #define ACIA_TO_HD6301_IN_CYCLES (HD6301_CYCLES_TO_RECEIVE_BYTE*HD6301_CYCLE_DIVISOR)
@@ -46,17 +65,14 @@
 #define ACIA_TDR_COPY_DELAY (200) // Hades Nebula vs. Nightdawn (???)
 #endif
 
-
-#if defined(SSE_ACIA_MIDI_SR02_CYCLES)
-/*  
-
-SS1 SS0                  Speed (bit/s)
- 0   0    Normal            500000
- 0   1    Div by 16          31250 (ST: MIDI)
- 1   0    Div by 64         7812.5 (ST: IKBD)
-MIDI is 4 times faster than IKBD
-*/
-#define ACIA_MIDI_OUT_CYCLES (HD6301_TO_ACIA_IN_CYCLES/4) //temp
+#if defined(SSE_ACIA_383)
+#define ACIA_MIDI_OUT_CYCLES (acia[1].TransmissionTime())
+#define ACIA_MIDI_IN_CYCLES (acia[1].TransmissionTime())
+#elif defined(SSE_ACIA_MIDI_SR02_CYCLES)
+//#define ACIA_MIDI_OUT_CYCLES (1280*cpu_cycles_multiplier*HD6301_CYCLE_DIVISOR/2)
+#define ACIA_MIDI_OUT_CYCLES (HD6301_TO_ACIA_IN_CYCLES/4)
+#define ACIA_MIDI_IN_CYCLES ACIA_MIDI_OUT_CYCLES
+//1280*HD6301_CYCLE_DIVISOR/2//(HD6301_TO_ACIA_IN_CYCLES/4) //temp
 #endif
 
 
@@ -110,15 +126,7 @@ MIDI is 4 times faster than IKBD
 
 #if defined(SSE_CPU)
 
-//todo move clock here?
-
-#if defined(SSE_CPU_TRACE_TIMING)
-#define CPU_TRACE_TIMING 36 // doc 34 //used in more than trace
-#endif
-
-#if defined(SSE_CPU_STOP_DELAY)
 #define CPU_STOP_DELAY 8
-#endif
 
 #endif
 
@@ -303,6 +311,7 @@ SIGNAL_SHIFTER_CONFUSED_2,// not looking for elegance!
 #define HD6301_CYCLES_PER_SCANLINE 64 // used if SSE_SHIFTER not defined
 #endif
 
+
 #define HD6301_CYCLE_DIVISOR 8 // the 6301 runs at 1MHz (verified by Stefan jL)
 #define HD6301_CLOCK (1000000) //used in 6301/ireg.c
 
@@ -342,13 +351,6 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define HD6301_CYCLES_TO_SEND_BYTE (1350)
 #define HD6301_CYCLES_TO_RECEIVE_BYTE (1350)
 #endif
-
-// far from ideal, but maybe we must change method or timings instead //v3.7 done!
-#if !defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
-#define HD6301_MOUSE_SPEED_CHUNKS 15
-#define HD6301_MOUSE_SPEED_CYCLES_PER_CHUNK 1000
-#endif
-
 
 
 ///////////////
@@ -418,10 +420,8 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
 #define HBL_IACK_LATENCY 28
 #define VBL_IACK_LATENCY 28
 
-#if defined(SSE_CPU_E_CLOCK_380)
+#if defined(SSE_CPU_E_CLOCK)
 #define ECLOCK_AUTOVECTOR_CYCLE 10 // IACK starts at cycle 10 (?)
-#else
-#define ECLOCK_AUTOVECTOR_CYCLE 28 //whatever!
 #endif
 
 

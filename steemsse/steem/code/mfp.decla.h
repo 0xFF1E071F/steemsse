@@ -250,7 +250,7 @@ EXT int cpu_time_of_first_mfp_tick;
 		mfp_timer_enabled[n]=mfp_interrupt_enabled[mfp_timer_irq[n]] && (mfp_get_timer_control_register(n) & 7);	\
 	}
 
-#if defined(SSE_INT_MFP) && defined(SSE_VS2008_WARNING_382)
+#if defined(SSE_INT_MFP)
 void mfp_interrupt(int);
 #else
 void mfp_interrupt(int,int);

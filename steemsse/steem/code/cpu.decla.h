@@ -3,24 +3,20 @@
 #define CPU_DECLA_H
 
 #if defined(SSE_STRUCTURE_DECLA)
-
 #include <binary.h>
-#include "conditions.h"
 #include <setjmp.h>
-
+#include "conditions.h"
 #include "acc.decla.h"
 #include "emulator.decla.h"
 #include "iorw.decla.h"
 #include "steemh.decla.h"
-
-#include <SSE/SSEDebug.h>
-#include <SSE/SSEDecla.h> //intrinsics
-
+#include "SSE/SSEDebug.h"
+#include "SSE/SSEDecla.h" //intrinsics
+#include "SSE/SSECpu.h"
 #endif
 
 //SS It is called jump but they are used as function calls, they return,
-// except if there's a ST crash detected
-
+// except if there's a ST crash detected, then they jump!
 extern void (*m68k_high_nibble_jump_table[16])();
 extern void (*m68k_jump_line_0[64])();
 extern void (*m68k_jump_line_4[64])();
@@ -47,7 +43,7 @@ extern void (*m68k_jump_get_dest_l_not_a[8])();
 extern void (*m68k_jump_get_dest_b_not_a_or_d[8])();
 extern void (*m68k_jump_get_dest_w_not_a_or_d[8])();
 extern void (*m68k_jump_get_dest_l_not_a_or_d[8])();
-#if !defined(SSE_CPU_ROUNDING_NO_FASTER_FOR_D)
+#if !defined(SSE_CPU)
 extern void (*m68k_jump_get_dest_b_not_a_faster_for_d[8])();
 extern void (*m68k_jump_get_dest_w_not_a_faster_for_d[8])();
 extern void (*m68k_jump_get_dest_l_not_a_faster_for_d[8])();
@@ -104,7 +100,7 @@ void m68k_get_dest_111_b();
 void m68k_get_dest_111_w();
 void m68k_get_dest_111_l();
 
-#if !defined(SSE_CPU_ROUNDING_NO_FASTER_FOR_D)
+#if !defined(SSE_CPU)
 void m68k_get_dest_000_b_faster();
 void m68k_get_dest_000_w_faster();
 void m68k_get_dest_000_l_faster();
@@ -141,13 +137,15 @@ LONG m68k_fetchL();
 void ASMCALL perform_crash_and_burn();
 void m68k_unrecognised();
 
+void m68kSetPC(MEM_ADDRESS ad);
+
 #if defined(COMPILER_VC6)
 extern "C" void ASMCALL m68k_trace(); //execute instruction with trace bit set
 #else
 extern "C" ASMCALL void m68k_trace(); //execute instruction with trace bit set
 #endif
 
-#if defined(SSE_CPU_DIV)
+#if defined(SSE_CPU)
 extern "C" unsigned getDivu68kCycles( unsigned long dividend, unsigned short divisor);
 extern "C" unsigned getDivs68kCycles( signed long dividend, signed short divisor);
 #endif
@@ -222,7 +220,7 @@ extern LONG  m68k_lpeek(MEM_ADDRESS ad);
 
 extern void cpu_routines_init();
 
-#if !defined(SSE_CPU_DIV)
+#if !defined(SSE_CPU)
 extern int m68k_divu_cycles,m68k_divs_cycles;
 #endif
 
@@ -274,15 +272,192 @@ SR_TRACE_BIT=0xf};
 #define lpSSP ((MEM_ADDRESS*)((SUPERFLAG) ? &(r[15]):&other_sp))
 #define lpUSP ((MEM_ADDRESS*)((SUPERFLAG) ? &other_sp:&(r[15])))
 
-inline void m68k_poke(MEM_ADDRESS ad,BYTE x);
-inline void m68k_dpoke(MEM_ADDRESS ad,WORD x);
-inline void m68k_lpoke(MEM_ADDRESS ad,LONG x);
+#define IOACCESS_FLAGS_MASK  0xFFFFFFC0
+#define IOACCESS_NUMBER_MASK 0x0000003F
 
-#if !defined(SSE_CPU_POKE)
+#define IOACCESS_FLAG_FOR_CHECK_INTRS BIT_6
+#define IOACCESS_FLAG_PSG_BUS_JAM_R BIT_7
+#define IOACCESS_FLAG_PSG_BUS_JAM_W BIT_8
+#define IOACCESS_FLAG_DO_BLIT BIT_9
+#define IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE BIT_10
+#define IOACCESS_FLAG_DELAY_MFP BIT_11
+#define IOACCESS_INTERCEPT_OS BIT_12
+#define IOACCESS_INTERCEPT_OS2 BIT_13
 
-inline void m68k_poke_abus(BYTE x);
-inline void m68k_dpoke_abus(WORD x);
-inline void m68k_lpoke_abus(LONG x);
+extern WORD*lpfetch,*lpfetch_bound;
+extern bool prefetched_2;
+extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
+
+// Finer names!
+#define IRC   prefetch_buf[1] // Instruction Register Capture
+#define IR    prefetch_buf[0] // Instruction Register
+#define IRD   ir              // Instruction Register Decoder
+
+#ifdef SSE_CPU
+#define m68k_PROCESS m68kProcess();
+#endif
+
+
+
+#define m68k_DEST_B (*((signed char*)m68k_dest))
+#define m68k_DEST_W (*((short*)m68k_dest))
+#define m68k_DEST_L (*((long*)m68k_dest))
+
+#if defined(SSE_CPU)
+
+inline void FetchTiming() {
+  if(pc>=rom_addr && pc<rom_addr+tos_len)
+    INSTRUCTION_TIME(4);
+  else
+    INSTRUCTION_TIME_ROUND(4);
+}
+
+inline void FetchTimingL() {
+  if(pc>=rom_addr && pc<rom_addr+tos_len)
+    INSTRUCTION_TIME(8);
+  else
+    INSTRUCTION_TIME_ROUND(8);
+}
+
+
+inline void m68k_poke_abus(BYTE x){
+  abus&=0xffffff;
+  if(abus>=MEM_IO_BASE){
+    if(SUPERFLAG)
+      io_write_b(abus,x);
+    else
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+  }else if(abus>=himem){
+#if !defined(SSE_MMU_NO_CONFUSION)
+    if (mmu_confused){
+      mmu_confused_set_dest_to_addr(1,true);
+      m68k_DEST_B=x;
+#if defined(SSE_MMU_TRACE2)
+      TRACE_LOG("MMU %X: poke %X=%X\n",old_pc,m68k_DEST_B,x);
+#endif
+    }else 
+#endif      
+    if (abus>=FOUR_MEGS){
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+    } //otherwise throw away
+  }else{
+#if !defined(SSE_BOILER_MONITOR_VALUE2)
+    DEBUG_CHECK_WRITE_B(abus);
+#endif
+#if defined(SSE_CPU_CHECK_VIDEO_RAM)
+/*  If we're going to write in video RAM of the current scanline,
+    we check whether we need to render before. Some programs write
+    just after the memory has been fetched, but Steem renders at
+    shift mode changes, and if nothing happens, at the end of the line.
+    So if we do nothing it will render wrong memory.
+    The test isn't perfect and will cause some "false alerts" but
+    we have performance in mind: CPU poke is used a lot, it is rare
+    when the address bus is around the current scanline.
+*/
+
+    if(Glue.FetchingLine()
+      && abus>=shifter_draw_pointer
+      && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2)
+      Shifter.Render(LINECYCLES,DISPATCHER_CPU); 
+#endif
+    if (SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)
+      PEEK(abus)=x;
+    else if (abus>=MEM_START_OF_USER_AREA)
+      PEEK(abus)=x;
+    else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+#if defined(SSE_BOILER_MONITOR_VALUE2)
+    DEBUG_CHECK_WRITE_B(abus);
+#endif
+  }
+}
+
+inline void m68k_dpoke_abus(WORD x){
+  abus&=0xffffff;
+  if(abus&1) exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
+  else if(abus>=MEM_IO_BASE){
+    if(SUPERFLAG)
+      io_write_w(abus,x);
+    else
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+  }else if(abus>=himem){
+#if !defined(SSE_MMU_NO_CONFUSION)
+    if(mmu_confused){
+      mmu_confused_set_dest_to_addr(2,true);
+      m68k_DEST_W=x;
+#if defined(SSE_MMU_TRACE2)
+      TRACE_LOG("MMU %X: dpoke %X=%X\n",old_pc,m68k_DEST_W,x);
+#endif
+    }else 
+#endif
+    if(abus>=FOUR_MEGS){
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+    } //otherwise throw away
+  }else{
+#if !defined(SSE_BOILER_MONITOR_VALUE2)
+    DEBUG_CHECK_WRITE_W(abus);
+#endif
+#if defined(SSE_CPU_CHECK_VIDEO_RAM) // 3615 GEN4
+    if(Glue.FetchingLine()
+      && abus>=shifter_draw_pointer
+      && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2)
+      Shifter.Render(LINECYCLES,DISPATCHER_CPU); 
+#endif
+    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)
+      DPEEK(abus)=x;
+    else if(abus>=MEM_START_OF_USER_AREA)
+      DPEEK(abus)=x;
+    else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+#if defined(SSE_BOILER_MONITOR_VALUE2)
+    DEBUG_CHECK_WRITE_W(abus);
+#endif
+
+  }
+}
+
+inline void m68k_lpoke_abus(LONG x){
+  abus&=0xffffff;
+  if(abus&1)exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
+  else if(abus>=MEM_IO_BASE){
+    if(SUPERFLAG)
+      io_write_l(abus,x);
+    else
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+  }else if(abus>=himem){
+#if !defined(SSE_MMU_NO_CONFUSION)
+    if(mmu_confused){
+      mmu_confused_set_dest_to_addr(4,true);
+      m68k_DEST_L=x;
+#if defined(SSE_MMU_TRACE2)
+      TRACE_LOG("MMU %X: lpoke %X=%X\n",old_pc,m68k_DEST_L,x);
+#endif
+    }else 
+#endif
+    if(abus>=FOUR_MEGS){
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+    } //otherwise throw away
+  }else{
+#if !defined(SSE_BOILER_MONITOR_VALUE4) //??
+/////#if defined(SSE_BOILER_MONITOR_VALUE2) //3.7.2 bugfix ?!
+    DEBUG_CHECK_WRITE_L(abus);
+#endif
+#if defined(SSE_CPU_CHECK_VIDEO_RAM)
+    if(Glue.FetchingLine()
+      && abus>=shifter_draw_pointer
+      && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2)
+      Shifter.Render(LINECYCLES,DISPATCHER_CPU); 
+#endif
+    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)
+      LPEEK(abus)=x;
+    else if(abus>=MEM_START_OF_USER_AREA)
+      LPEEK(abus)=x;
+    else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+//#if !defined(SSE_BOILER_MONITOR_VALUE2)
+#if defined(SSE_BOILER_MONITOR_VALUE2) //3.7.2 bugfix?
+    DEBUG_CHECK_WRITE_L(abus);
+#endif
+
+  }
+}
 
 inline  void m68k_poke(MEM_ADDRESS ad,BYTE x){
   abus=ad;
@@ -298,6 +473,24 @@ inline  void m68k_lpoke(MEM_ADDRESS ad,LONG x){
   abus=ad;
   m68k_lpoke_abus(x);
 }
+
+#else
+
+#ifdef SSE_BUILD
+void m68k_poke(MEM_ADDRESS ad,BYTE x);
+void m68k_dpoke(MEM_ADDRESS ad,WORD x);
+void m68k_lpoke(MEM_ADDRESS ad,LONG x);
+void m68k_poke_abus(BYTE x);
+void m68k_dpoke_abus(WORD x);
+void m68k_lpoke_abus(LONG x);
+#else
+NOT_DEBUG(inline) void m68k_poke(MEM_ADDRESS ad,BYTE x);
+NOT_DEBUG(inline) void m68k_dpoke(MEM_ADDRESS ad,WORD x);
+NOT_DEBUG(inline) void m68k_lpoke(MEM_ADDRESS ad,LONG x);
+NOT_DEBUG(inline) void m68k_poke_abus(BYTE x);
+NOT_DEBUG(inline) void m68k_dpoke_abus(WORD x);
+NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x);
+#endif
 
 #endif
 
@@ -368,104 +561,149 @@ extern MEM_ADDRESS pc_rel_stop_on_ref;
 
 
 #define DEST_IS_REGISTER ((ir&BITS_543)<=BITS_543_001)
-
-#ifdef SSE_CPU_DEST_IS_REGISTER
-#define DEST_IS_DATA_REGISTER ((ir&BITS_543)==BITS_543_000)//3.7
-#define DEST_IS_ADDRESS_REGISTER ((ir&BITS_543)==BITS_543_001)//3.7
-#endif
-
 #define DEST_IS_MEMORY ((ir&BITS_543)>BITS_543_001)
 #define SOURCE_IS_REGISTER_OR_IMMEDIATE ((ir & BITS_543)<=BITS_543_001 || ((ir&b00111111)==b00111100) )
 
-extern WORD*lpfetch,*lpfetch_bound;
-extern bool prefetched_2;
-extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
+#if defined(SSE_CPU)
 
-#if !(defined(SSE_CPU))
-// SS I can't find one instance where checkints is passed.
-#define M68K_PERFORM_RTE(checkints)             \
-            SET_PC(m68k_lpeek(r[15]+2));        \
-            sr=m68k_dpeek(r[15]);r[15]+=6;      \
-            sr&=SR_VALID_BITMASK;               \
-            DETECT_CHANGE_TO_USER_MODE;         \
-            DETECT_TRACE_BIT;                   \
-            checkints;                          \
+#define DEST_IS_DATA_REGISTER ((ir&BITS_543)==BITS_543_000)
+#define DEST_IS_ADDRESS_REGISTER ((ir&BITS_543)==BITS_543_001)
 
 #endif
 
-#if defined(SSE_CPU_INLINE_PREFETCH_SET_PC)
-#define PREFETCH_SET_PC M68000.PrefetchSetPC();
-#else
-  #define PREFETCH_SET_PC                       \
-  prefetched_2=false; /*will have prefetched 1 word*/ \
-  prefetch_buf[0]=*lpfetch;               \
-  lpfetch+=MEM_DIR;  /*let's not cause exceptions here*/
-#endif
 
 #if !defined(SSE_CPU)
-#define SET_PC(ad)        \
-    pc=ad;                               \
-    pc_high_byte=pc & 0xff000000;     \
-    pc&=0xffffff;                    \
-    lpfetch=lpDPEEK(0);          /*Default to instant bus error when fetch*/   \
-    lpfetch_bound=lpDPEEK(0);         \
-                                        \
-    if (pc>=himem){                                                       \
-      if (pc<MEM_IO_BASE){           \
-        if (pc>=MEM_EXPANSION_CARTRIDGE){                                \
-          if (pc>=0xfc0000){                                                   \
-            if (tos_high && pc<(0xfc0000+192*1024)){         \
-              lpfetch=lpROM_DPEEK(pc-0xfc0000); \
-              lpfetch_bound=lpROM_DPEEK(192*1024);         \
-            }                                                                          \
-          }else if (cart){                                                          \
-            lpfetch=lpCART_DPEEK(pc-MEM_EXPANSION_CARTRIDGE); \
-            lpfetch_bound=lpCART_DPEEK(128*1024);         \
-          }                                                                          \
-        }else if(pc>=rom_addr){                                                      \
-          if (pc<(0xe00000 + 256*1024)){         \
-            lpfetch=lpROM_DPEEK(pc-0xe00000); \
-            lpfetch_bound=lpROM_DPEEK(256*1024);         \
-          }                                                                          \
-        }                            \
-      }else{   \
-        if (pc>=0xff8240 && pc<0xff8260){         \
-          lpfetch=lpPAL_DPEEK(pc-0xff8240); \
-          lpfetch_bound=lpPAL_DPEEK(64+PAL_EXTRA_BYTES);         \
-        }                              \
-      }                                                                           \
-    }else{                                                                         \
-      lpfetch=lpDPEEK(pc); \
-      lpfetch_bound=lpDPEEK(mem_len+(MEM_EXTRA_BYTES/2));         \
-    }                                         \
-    PREFETCH_SET_PC
-#endif
 
-#if !defined(SSE_CPU)
-#define FETCH_W(dest_word)              \
-  if(prefetched_2){                     \
-    dest_word=prefetch_buf[0];            \
-    prefetch_buf[0]=prefetch_buf[1];       \
-    prefetched_2=false;                           \
-  }else{ /* if(prefetched==1) */             \
-    dest_word=prefetch_buf[0];                \
-    prefetch_buf[0]=*lpfetch;              \
-  }                                            \
-  lpfetch+=MEM_DIR;                             \
-  if(lpfetch MEM_GE lpfetch_bound)exception(BOMBS_BUS_ERROR,EA_FETCH,pc);
-#endif
-
-#if !defined(SSE_CPU)
 #define FETCH_TIMING {INSTRUCTION_TIME(4); cpu_cycles&=-4;} 
+
 #endif
 
-#if defined(SSE_CPU) && defined(SSE_CPU_INLINE_SET_DEST_TO_ADDR) //383 (finally)
+#if defined(SSE_CPU)
 
-#define m68k_SET_DEST_B_TO_ADDR M68000.SetDestBToAddr();
-#define m68k_SET_DEST_W_TO_ADDR M68000.SetDestWToAddr();
-#define m68k_SET_DEST_L_TO_ADDR M68000.SetDestLToAddr();
+inline void SetDestBToAddr() {
+  abus&=0xffffff;                                   
+  if(abus>=MEM_IO_BASE){               
+    if(SUPERFLAG){                        
+      ioaccess&=IOACCESS_FLAGS_MASK; 
+      ioaccess|=1;                     
+      ioad=abus;                        
+      m68k_dest=&iobuffer;               
+      DWORD_B_0(&iobuffer)=io_read_b(abus);        
+    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);             
+  }else if(abus>=himem){                               
+#if !defined(SSE_MMU_NO_CONFUSION)
+    if(mmu_confused){                               
+      mmu_confused_set_dest_to_addr(1,true);           
+    }else 
+#endif
+    if(abus>=FOUR_MEGS){                                                
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               
+    }else{                                                        
+      m68k_dest=&iobuffer;                             
+    }                                       
+  }else{                                            
+#if !defined(SSE_BOILER_MONITOR_VALUE4)
+    DEBUG_CHECK_WRITE_B(abus); 
+#endif
+    if (SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){                             
+      m68k_dest=lpPEEK(abus);           
+    }else if(abus>=MEM_START_OF_USER_AREA){ 
+      m68k_dest=lpPEEK(abus);           
+    }else{                                      
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       
+    }                                           
+#if defined(SSE_BOILER_MONITOR_VALUE4)
+    DEBUG_CHECK_WRITE_B(abus); 
+#endif
+  }
+}
 
-#else // removed older mods (they're in the inline version)
+inline void SetDestWToAddr() {
+  abus&=0xffffff;                                   
+  if(abus&1){                                      
+    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);    
+  }else if(abus>=MEM_IO_BASE){               
+    if(SUPERFLAG){                        
+      ioaccess&=IOACCESS_FLAGS_MASK; 
+      ioaccess|=2;                     
+      ioad=abus;                        
+      m68k_dest=&iobuffer;               
+      *((WORD*)&iobuffer)=io_read_w(abus);        
+    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                
+  }else if(abus>=himem){  
+#if !defined(SSE_MMU_NO_CONFUSION)
+    if(mmu_confused){                               
+      mmu_confused_set_dest_to_addr(2,true);           
+    }else 
+#endif
+    if(abus>=FOUR_MEGS){                                                
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               
+    }else{                                                        
+      m68k_dest=&iobuffer;                             
+    }                                       
+  }else{                   
+#if !defined(SSE_BOILER_MONITOR_VALUE4)
+    DEBUG_CHECK_WRITE_W(abus);  
+#endif
+    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){                       
+      m68k_dest=lpDPEEK(abus);           
+    }else if(abus>=MEM_START_OF_USER_AREA){ 
+      m68k_dest=lpDPEEK(abus);           
+    }else{                                      
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       
+    }                                           
+#if defined(SSE_BOILER_MONITOR_VALUE4)
+    DEBUG_CHECK_WRITE_W(abus);  
+#endif
+  }
+
+}
+
+inline void SetDestLToAddr() {
+  abus&=0xffffff;                                   
+  if(abus&1){                                      
+    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);    
+  }else if(abus>=MEM_IO_BASE){               
+    if(SUPERFLAG){                        
+      ioaccess&=IOACCESS_FLAGS_MASK; 
+      ioaccess|=4;                     
+      ioad=abus;                         
+      m68k_dest=&iobuffer;               
+      iobuffer=io_read_l(abus);        
+    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                 
+  }else if(abus>=himem){  
+#if !defined(SSE_MMU_NO_CONFUSION)
+    if(mmu_confused){                               
+      mmu_confused_set_dest_to_addr(4,true);           
+    }else 
+#endif
+    if(abus>=FOUR_MEGS){                                                
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               
+    }else{                                                        
+      m68k_dest=&iobuffer;                             
+    }                                       
+  }else{                               
+#if !defined(SSE_BOILER_MONITOR_VALUE4)
+    DEBUG_CHECK_WRITE_L(abus);  
+#endif
+    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){                       
+      m68k_dest=lpLPEEK(abus);           
+    }else if(abus>=MEM_START_OF_USER_AREA){ 
+      m68k_dest=lpLPEEK(abus);           
+    }else{                                      
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       
+    }                                           
+#if defined(SSE_BOILER_MONITOR_VALUE4)
+    DEBUG_CHECK_WRITE_L(abus);  
+#endif
+  }
+}
+
+#define m68k_SET_DEST_B_TO_ADDR SetDestBToAddr();
+#define m68k_SET_DEST_W_TO_ADDR SetDestWToAddr();
+#define m68k_SET_DEST_L_TO_ADDR SetDestLToAddr();
+
+#else
 
 #define m68k_SET_DEST_B_TO_ADDR        \
   abus&=0xffffff;                                   \
@@ -558,7 +796,7 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
     }                                           \
   }
 
-#endif//SSE_CPU_INLINE_SET_DEST_TO_ADDR
+#endif
 
 #define m68k_SET_DEST_B(addr)           \
   abus=addr;                            \
@@ -573,24 +811,106 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
   m68k_SET_DEST_L_TO_ADDR;
 
 
+#if defined(SSE_CPU)
 
-#if !(defined(SSE_CPU_PREFETCH))
+inline void FetchWord(WORD &dest_word) {
+  dest_word=IR; //get first word of prefetch queue
+  if(prefetched_2)// second word was prefetched
+  {
+    IR=IRC; // IRC->IR
+    prefetched_2=false;
+  }
+#if defined(SSE_CPU_FETCH_IO)
+  // some programs like to set PC on Shifter or PSG registers!
+  else if(pc>=MEM_IO_BASE)
+    IR=io_read_w(pc);
+#endif
+#if defined(SSE_CPU_FETCH_80000)
+  // no crash if there's no RAM
+  else if(pc>himem && pc>=0x80000 && pc<0x3FFFFF)
+    IR=0xFFFF; // TODO - value not correct
+#endif
+  else
+    IR=*lpfetch; // next instr or imm
+#if defined(SSE_CPU_FETCH_IO)
+  if(pc<MEM_IO_BASE)
+#endif
+  {
+    lpfetch+=MEM_DIR; // advance the fetch pointer
+    if(lpfetch MEM_GE lpfetch_bound) // MEM_GE : <=
+      ::exception(BOMBS_BUS_ERROR,EA_FETCH,pc); // :: for gcc "ambiguous" ?
+  }
+}
+
+
+#define FETCH_W(dest_word) FetchWord(dest_word);
+
+#else
+
+#define FETCH_W(dest_word)              \
+  if(prefetched_2){                     \
+    dest_word=prefetch_buf[0];            \
+    prefetch_buf[0]=prefetch_buf[1];       \
+    prefetched_2=false;                           \
+  }else{ /* if(prefetched==1) */             \
+    dest_word=prefetch_buf[0];                \
+    prefetch_buf[0]=*lpfetch;              \
+  }                                            \
+  lpfetch+=MEM_DIR;                             \
+  if(lpfetch MEM_GE lpfetch_bound)exception(BOMBS_BUS_ERROR,EA_FETCH,pc);
+#endif
+
+
+
+#if defined(SSE_CPU)
+
+inline void PrefetchIrc() {
+  ASSERT(!prefetched_2); // strong, only once per instruction 
+  FetchTiming(); // (inline)
+#if defined(SSE_CPU_FETCH_IO)
+  if(pc>=MEM_IO_BASE)
+    IRC=io_read_w(pc); 
+  else
+#endif
+#if defined(SSE_CPU_FETCH_80000)
+  if(pc>himem && pc>=0x80000 && pc<0x3FFFFF)
+    IRC=0xFFFF; // TODO - value not correct
+  else
+#endif
+    IRC=*lpfetch;
+  prefetched_2=true;
+}
+
+#define PREFETCH_IRC PrefetchIrc();
+
+/*  This is no fix, "refetch" was already in Steem 3.2, just rewritten.
+    Cases: 
+    Synth Dream Sound Demo II
+*/
+
+inline void RefetchIr() {
+  ASSERT( IR==*(lpfetch+1) ); //detect cases
+  IR=*(lpfetch-MEM_DIR);
+  // we count fetch timing here (383)
+#if defined(SSE_MMU_ROUNDING_BUS)
+  if(pc>=rom_addr && pc<rom_addr+tos_len)
+    INSTRUCTION_TIME(4);
+  else
+#endif
+    INSTRUCTION_TIME_ROUND(4);
+}
+
+#define REFETCH_IR  RefetchIr();
+
+#else
+
 #define EXTRA_PREFETCH                    \
   prefetch_buf[1]=*lpfetch;              \
   prefetched_2=true;
+
 #endif
 
-#define IOACCESS_FLAGS_MASK  0xFFFFFFC0
-#define IOACCESS_NUMBER_MASK 0x0000003F
 
-#define IOACCESS_FLAG_FOR_CHECK_INTRS BIT_6
-#define IOACCESS_FLAG_PSG_BUS_JAM_R BIT_7
-#define IOACCESS_FLAG_PSG_BUS_JAM_W BIT_8
-#define IOACCESS_FLAG_DO_BLIT BIT_9
-#define IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE BIT_10
-#define IOACCESS_FLAG_DELAY_MFP BIT_11
-#define IOACCESS_INTERCEPT_OS BIT_12
-#define IOACCESS_INTERCEPT_OS2 BIT_13
 
 #ifdef ENABLE_LOGFILE
 #define IOACCESS_DEBUG_MEM_WRITE_LOG BIT_14
@@ -603,19 +923,148 @@ extern int debug_mem_write_log_bytes;
 
 #define STOP_INTS_BECAUSE_INTERCEPT_OS bool(ioaccess & (IOACCESS_INTERCEPT_OS | IOACCESS_INTERCEPT_OS2))
 
-
+#if defined(SSE_CPU)
 inline void change_to_user_mode();
 inline void change_to_supervisor_mode();
+#endif
 
 extern bool cpu_stopped;
-extern bool m68k_do_trace_exception;
 extern signed int compare_buffer;
 
 #define PC_RELATIVE_PC pc
 //(old_pc+2)
 //(old_dpc+2)
 
-#if !defined(SSE_CPU) // inlined in SSECpu.h
+#if defined(SSE_CPU)
+
+#define m68k_GET_DEST_B m68kGetDestByte();
+#define m68k_GET_DEST_W m68kGetDestWord();
+#define m68k_GET_DEST_L m68kGetDestLong();
+#define m68k_GET_DEST_B_NOT_A m68kGetDestByteNotA();
+#define m68k_GET_DEST_W_NOT_A m68kGetDestWordNotA();
+#define m68k_GET_DEST_L_NOT_A m68kGetDestLongNotA();
+#define m68k_GET_DEST_B_NOT_A_OR_D m68kGetDestByteNotAOrD();
+#define m68k_GET_DEST_W_NOT_A_OR_D m68kGetDestWordNotAOrD();
+#define m68k_GET_DEST_L_NOT_A_OR_D m68kGetDestLongNotAOrD();
+#define m68k_GET_SOURCE_B m68kGetSourceByte();
+#define m68k_GET_SOURCE_W m68kGetSourceWord();
+#define m68k_GET_SOURCE_L m68kGetSourceLong();
+#define m68k_GET_SOURCE_B_NOT_A m68kGetSourceByteNotA();
+#define m68k_GET_SOURCE_W_NOT_A m68kGetSourceWordNotA();
+#define m68k_GET_SOURCE_L_NOT_A m68kGetSourceLongNotA();
+
+inline void m68kGetDestByte() {
+#if defined(SSE_CPU_TRUE_PC)
+  if(!M68000.CheckRead)
+    M68000.Pc=pc+2;
+#endif
+  m68k_jump_get_dest_b[(ir&BITS_543)>>3]();
+}
+
+
+inline void m68kGetDestWord() {
+#if defined(SSE_CPU_TRUE_PC)
+  if(!M68000.CheckRead)
+    M68000.Pc=pc+2;
+#endif
+  m68k_jump_get_dest_w[(ir&BITS_543)>>3]();
+}
+
+
+inline void m68kGetDestLong() {
+#if defined(SSE_CPU_TRUE_PC)
+  if(!M68000.CheckRead)
+    M68000.Pc=pc+2;
+#endif
+  m68k_jump_get_dest_l[(ir&BITS_543)>>3]();
+}
+
+
+inline void m68kGetDestByteNotA() {
+#if defined(SSE_CPU_TRUE_PC)
+  if(!M68000.CheckRead)
+    M68000.Pc=pc+2;
+#endif
+  m68k_jump_get_dest_b_not_a[(ir&BITS_543)>>3]();
+}
+
+
+inline void m68kGetDestWordNotA() {
+#if defined(SSE_CPU_TRUE_PC)
+  if(!M68000.CheckRead)
+    M68000.Pc=pc+2;
+#endif
+  m68k_jump_get_dest_w_not_a[(ir&BITS_543)>>3]();
+}
+
+
+inline void m68kGetDestLongNotA() {
+#if defined(SSE_CPU_TRUE_PC)
+  if(!M68000.CheckRead)
+    M68000.Pc=pc+2;
+#endif
+  m68k_jump_get_dest_l_not_a[(ir&BITS_543)>>3]();
+}
+
+
+inline void m68kGetDestByteNotAOrD() {
+#if defined(SSE_CPU_TRUE_PC)
+  if(!M68000.CheckRead)
+    M68000.Pc=pc+2;
+#endif
+  m68k_jump_get_dest_b_not_a_or_d[(ir&BITS_543)>>3]();
+}
+
+
+inline void m68kGetDestWordNotAOrD() {
+#if defined(SSE_CPU_TRUE_PC)
+  if(!M68000.CheckRead)
+    M68000.Pc=pc+2;
+#endif
+  m68k_jump_get_dest_w_not_a_or_d[(ir&BITS_543)>>3]();
+}
+
+
+inline void m68kGetDestLongNotAOrD() {
+#if defined(SSE_CPU_TRUE_PC)
+  if(!M68000.CheckRead)
+    M68000.Pc=pc+2;
+#endif
+  m68k_jump_get_dest_l_not_a_or_d[(ir&BITS_543)>>3]();
+}
+
+
+inline void m68kGetSourceByte() {
+  m68k_jump_get_source_b[(ir&BITS_543)>>3]();
+}
+
+
+inline void m68kGetSourceWord() {
+  m68k_jump_get_source_w[(ir&BITS_543)>>3]();
+}
+
+
+inline void m68kGetSourceLong() {
+  m68k_jump_get_source_l[(ir&BITS_543)>>3]();
+}
+
+
+inline void m68kGetSourceByteNotA() {
+  m68k_jump_get_source_b_not_a[(ir&BITS_543)>>3]();
+}
+
+
+inline void m68kGetSourceWordNotA() {
+  m68k_jump_get_source_w_not_a[(ir&BITS_543)>>3]();
+}
+
+
+inline void m68kGetSourceLongNotA() {
+  m68k_jump_get_source_l_not_a[(ir&BITS_543)>>3]();
+}
+
+
+#else
 #define m68k_GET_SOURCE_B m68k_jump_get_source_b[(ir&BITS_543)>>3]()
 #define m68k_GET_SOURCE_W m68k_jump_get_source_w[(ir&BITS_543)>>3]()
 #define m68k_GET_SOURCE_L m68k_jump_get_source_l[(ir&BITS_543)>>3]()
@@ -643,26 +1092,6 @@ extern signed int compare_buffer;
 
 #define m68k_CONDITION_TEST m68k_jump_condition_test[(ir&0xf00)>>8]()
 
-
-#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH) // count timing in push macros
-
-#define m68k_PUSH_W(x)                   \
-    CPU_ABUS_ACCESS_WRITE; \
-    r[15]-=2;abus=r[15];                 \
-    m68k_SET_DEST_W_TO_ADDR;             \
-    m68k_DEST_W=x;
-
-
-#define m68k_PUSH_L(x)                   \
-    CPU_ABUS_ACCESS_WRITE; \
-    CPU_ABUS_ACCESS_WRITE; \
-    r[15]-=4;abus=r[15];                 \
-    m68k_SET_DEST_L_TO_ADDR;             \
-    m68k_DEST_L=x;
-
-
-#else
-
 #define m68k_PUSH_W(x)                   \
     r[15]-=2;abus=r[15];                 \
     m68k_SET_DEST_W_TO_ADDR;             \
@@ -673,8 +1102,6 @@ extern signed int compare_buffer;
     r[15]-=4;abus=r[15];                 \
     m68k_SET_DEST_L_TO_ADDR;             \
     m68k_DEST_L=x;
-
-#endif
 
 #define m68k_BIT_SHIFT_TO_dM_GET_SOURCE         \
   if(ir&BIT_5){                               \
@@ -683,10 +1110,6 @@ extern signed int compare_buffer;
     m68k_src_w=(WORD)PARAM_N;                       \
     if(!m68k_src_w)m68k_src_w=8;              \
   }
-
-#define m68k_DEST_B (*((signed char*)m68k_dest))
-#define m68k_DEST_W (*((short*)m68k_dest))
-#define m68k_DEST_L (*((long*)m68k_dest))
 
 #define CCR WORD_B_0(&sr)
 
@@ -1183,7 +1606,7 @@ extern signed int compare_buffer;
 #define FC_INTERRUPT_VERIFICATION 7
 
 #if defined(SSE_CPU)
-#define SET_PC(ad) M68000.SetPC(ad);
+#define SET_PC(ad) m68kSetPC(ad);
 #else
 //#define SET_PC(ad) set_pc(ad);// stack overflow!
 extern void set_pc(MEM_ADDRESS);
@@ -1196,8 +1619,129 @@ extern void perform_rte();
 extern void sr_check_z_n_l_for_r0();
 extern void m68k_process();
 
+
+#if defined(SSE_CPU)
+
+inline void m68kPerformRte() {
+  // replacing macro M68K_PERFORM_RTE(checkints)
+  MEM_ADDRESS pushed_return_address=m68k_lpeek(r[15]+2);
+#if defined(SSE_BOILER_PSEUDO_STACK)
+  Debug.PseudoStackPop();
+#endif
+  // An Illegal routine could manipulate this value.
+  SET_PC(pushed_return_address);
+  sr=m68k_dpeek(r[15]);r[15]+=6;    
+#if defined(SSE_BOILER_68030_STACK_FRAME)
+  if(Debug.M68030StackFrame)
+    r[15]+=2;   
+#endif  
+  sr&=SR_VALID_BITMASK;               
+
+  DETECT_CHANGE_TO_USER_MODE;         
+  DETECT_TRACE_BIT;     
+
+#if defined(SSE_BOILER_TRACE_CONTROL)
+  if(TRACE_MASK2&TRACE_CONTROL_RTE)
+    TRACE_INT("%d %d %d pc %X RTE to %X\n",TIMING_INFO,old_pc,pushed_return_address);
+#endif
+
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
+  Debug.Rte();
+#endif
+}
+
+#define M68K_PERFORM_RTE(checkints) m68kPerformRte();
+
+#else
+// SS I can't find one instance where checkints is passed.
+#define M68K_PERFORM_RTE(checkints)             \
+            SET_PC(m68k_lpeek(r[15]+2));        \
+            sr=m68k_dpeek(r[15]);r[15]+=6;      \
+            sr&=SR_VALID_BITMASK;               \
+            DETECT_CHANGE_TO_USER_MODE;         \
+            DETECT_TRACE_BIT;                   \
+            checkints;                          \
+
+#endif
+
+#if defined(SSE_CPU)
+
+inline void m68kPrefetchSetPC() { 
+  // called by SetPC; we don't count timing here
+
+  // don't use lpfetch for fetching in IO zone, use io_read: fixes Warp 
+  // original STX + Lethal Xcess Beta STX
+  if(pc>=MEM_IO_BASE && !(pc>=0xff8240 && pc<0xff8260))
+  {
+    prefetch_buf[0]=io_read_w(pc);
+    prefetch_buf[1]=io_read_w(pc+2);
+  }
+  // don't crash, but the correct value would be 'dbus'
+  else if(pc>himem && pc>=0x80000 && pc<0x3FFFFF)
+  {
+    prefetch_buf[0]=prefetch_buf[1]=0xFFFF; // default, incorrect?
+
+  }
+  else
+  {
+    prefetch_buf[0]=*lpfetch;
+    prefetch_buf[1]=*(lpfetch+MEM_DIR); 
+    lpfetch+=MEM_DIR;
+  }
+  prefetched_2=true;
+}
+#define PREFETCH_SET_PC m68kPrefetchSetPC();
+
+#else
+  #define PREFETCH_SET_PC                       \
+  prefetched_2=false; /*will have prefetched 1 word*/ \
+  prefetch_buf[0]=*lpfetch;               \
+  lpfetch+=MEM_DIR;  /*let's not cause exceptions here*/
+
+#endif
+
+#if !defined(SSE_CPU)
+#define SET_PC(ad)        \
+    pc=ad;                               \
+    pc_high_byte=pc & 0xff000000;     \
+    pc&=0xffffff;                    \
+    lpfetch=lpDPEEK(0);          /*Default to instant bus error when fetch*/   \
+    lpfetch_bound=lpDPEEK(0);         \
+                                        \
+    if (pc>=himem){                                                       \
+      if (pc<MEM_IO_BASE){           \
+        if (pc>=MEM_EXPANSION_CARTRIDGE){                                \
+          if (pc>=0xfc0000){                                                   \
+            if (tos_high && pc<(0xfc0000+192*1024)){         \
+              lpfetch=lpROM_DPEEK(pc-0xfc0000); \
+              lpfetch_bound=lpROM_DPEEK(192*1024);         \
+            }                                                                          \
+          }else if (cart){                                                          \
+            lpfetch=lpCART_DPEEK(pc-MEM_EXPANSION_CARTRIDGE); \
+            lpfetch_bound=lpCART_DPEEK(128*1024);         \
+          }                                                                          \
+        }else if(pc>=rom_addr){                                                      \
+          if (pc<(0xe00000 + 256*1024)){         \
+            lpfetch=lpROM_DPEEK(pc-0xe00000); \
+            lpfetch_bound=lpROM_DPEEK(256*1024);         \
+          }                                                                          \
+        }                            \
+      }else{   \
+        if (pc>=0xff8240 && pc<0xff8260){         \
+          lpfetch=lpPAL_DPEEK(pc-0xff8240); \
+          lpfetch_bound=lpPAL_DPEEK(64+PAL_EXTRA_BYTES);         \
+        }                              \
+      }                                                                           \
+    }else{                                                                         \
+      lpfetch=lpDPEEK(pc); \
+      lpfetch_bound=lpDPEEK(mem_len+(MEM_EXTRA_BYTES/2));         \
+    }                                         \
+    PREFETCH_SET_PC
+#endif
+
 //---------------------------------------------------------------------------
 #ifdef SSE_STRUCTURE_DECLA
+#if defined(SSE_CPU)
 inline void change_to_user_mode()
 {
   compare_buffer=r[15];r[15]=other_sp;other_sp=compare_buffer;
@@ -1217,94 +1761,146 @@ inline void change_to_supervisor_mode()
 #endif
 }
 #endif
+inline void sr_check_z_n_l_for_r0()
+{
+  m68k_dest=&r[0];
+  SR_CHECK_Z_AND_N_L;
+}
+
+#endif
 //---------------------------------------------------------------------------
+#if defined(SSE_CPU)
+inline void ReadB(MEM_ADDRESS addr) {
+  m68k_src_b=m68k_peek(addr);
+}
 
+inline void ReadW(MEM_ADDRESS addr) {
+  m68k_src_w=m68k_dpeek(addr);
+}
 
-#if !defined(SSE_CPU_POKE)
-NOT_DEBUG(inline) void m68k_poke_abus(BYTE x){
-  abus&=0xffffff;
-  if(abus>=MEM_IO_BASE){
-    if(SUPERFLAG)
-      io_write_b(abus,x);
-    else
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
-  }else if(abus>=himem){
-#if !defined(SSE_MMU_NO_CONFUSION)
-    if (mmu_confused){
-      mmu_confused_set_dest_to_addr(1,true);
-      m68k_DEST_B=x;
-    }else
-#endif
-    if (abus>=FOUR_MEGS){
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
-    } //otherwise throw away
-  }else{
-    DEBUG_CHECK_WRITE_B(abus);
-    if (SUPERFLAG && abus>=MEM_FIRST_WRITEABLE) //SS !defined
-      PEEK(abus)=x;
-    else if (abus>=MEM_START_OF_USER_AREA)
-      PEEK(abus)=x;
-    else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+inline void ReadL(MEM_ADDRESS addr) {
+  m68k_src_l=m68k_lpeek(addr);
+}
+
+#define m68k_READ_B(addr) ReadB(addr);
+#define m68k_READ_W(addr) ReadW(addr);
+#define m68k_READ_L(addr) ReadL(addr);
+
+void m68k_interrupt(MEM_ADDRESS ad);
+
+inline void m68kUnstop() {
+  if(cpu_stopped)
+  {
+    cpu_stopped=false;     
+    m68kSetPC((pc+4) | pc_high_byte); 
   }
+}
+#define M68K_UNSTOP m68kUnstop();
+
+
+inline void m68kTrapTiming() {
+/*
+Motorola
+Exception Processing Execution Times	
+
+Exception 	Periods
+Address Error	50(4/7)
+Bus Error	50(4/7)
+CHK Instruction	40(4/3)+
+Divide by Zero	38(4/3)+
+Illegal Instruction	34(4/3)
+Interrupt	44(5/3)*
+Privilege Violation	34(4/3)
+RESET**	40(6/0)
+Trace	34(4/3)
+TRAP	34(4/3)
+TRAPV	34(5/3)
+
+
+Yacht
+******************************************************************************* 
+                      EXCEPTION PROCESSING EXECUTION TIMES                  
+******************************************************************************* 
+------------------------------------------------------------------------------- 
+                      | Periods  |               Data Bus Usage              
+----------------------+----------+--------------------------------------------- 
+                      |          |                                           
+Group 0 :             |          |
+  Address error       | 50(4/7)  |     nn ns nS ns ns ns nS ns nV nv np np      
+  Bus error           | 50(4/7)  |     nn ns nS ns ns ns nS ns nV nv np np      
+  /RESET              | 40(6/0)  |             (n-)*5 nn nF nf nV nv np np      
+Group 1 :             |          |
+  Trace               | 34(4/3)  |              nn    ns nS ns nV nv np np      
+  Interrupt           | 44(5/3)  |      n nn ns ni n-  n nS ns nV nv np np      
+  Privilege Violation | 34(4/3)  |              nn    ns nS ns nV nv np np      
+  Illegal Instruction | 34(4/3)  |              nn    ns nS ns nV nv np np      
+Group 2 :             |          |
+  CHK Instruction     | 40(4/3)+ |   np (n-)    nn    ns nS ns nV nv np np      
+  Divide by Zero      | 38(4/3)+ |           nn nn    ns nS ns nV nv np np      
+  TRAP instruction    | 34(4/3)  |              nn    ns nS ns nV nv np np      
+  TRAPV instruction   | 34(5/3)  |   np               ns nS ns nV nv np np      
+NOTES:       
+  .for CHK, Divide by Zero, Illegal, Trap and TRAPV :
+    .The numbers of clock periods, for the "trap" lines, include the times for 
+     all stacking, the vector fetch and the fetch of the first instruction of 
+     THE handler routine.
+    .First are pushed on the stack the program counter high and low words then 
+     the status register.
+  .for CHK and Divide by zero, you must add effective address calculation time
+   to the period (according to instruction section above).
+  ./RESET line indicates the time from when /RESET and /HALT are first sampled
+   as negated to when instruction execution starts. For a subsequent external 
+   reset, asserting these signals for 10 clock cycles or longer is mandatory to 
+   initiate reset sequence. During these 10 clock cycles the CPU is in halted 
+   state (see below). However, an external reset signal that is asserted while 
+   the CPU is executing a reset instruction is ignored. Since the processor 
+   asserts the /RESET signal for 124 clock cycles during execution of a reset 
+   instruction, an external reset should assert /RESET for at least 132 clock 
+   periods.
+  .For all these exceptions, there is a difference of 2 cycles between Data 
+   bus usage as obtained from USP4325121 and periods as written in M68000UM.
+   There's no proven theory to explain this gap.
+
+WinUAE
+- 4 idle cycles
+- write PC low word
+- write SR
+- write PC high word                       [wrong order...is this credible?]
+- read exception address high word
+- read exception address low word
+- prefetch
+- 2 idle cycles
+- prefetch
+
+    So, in the YACHT table, a n would be missing between the last two np,
+    which would justify the Motorola totals.
+    On the ST, this n would provoke alignment of the last np, so it's like
+    it was nn.
+
+    cases
+    trace: My Socks Are Weapons (Legacy)
+    trap: Bird Mad Girl Show
+*/
+#if 0 // in detail
+  if(ir==0x4E76) // trapv
+    CPU_ABUS_ACCESS_READ_FETCH;
+  else
+    INSTRUCTION_TIME(4); //  nn 4
+  CPU_ABUS_ACCESS_WRITE_PUSH; // ns 8
+  CPU_ABUS_ACCESS_WRITE_PUSH_L; // ns nS 16
+  CPU_ABUS_ACCESS_READ_L; // nV nv 24
+  CPU_ABUS_ACCESS_READ_FETCH; //np 28
+  INSTRUCTION_TIME(2); // n 30 // on ST it will provoke alignment of last fetch
+  CPU_ABUS_ACCESS_READ_FETCH; //np 34
+#else
+  INSTRUCTION_TIME_ROUND(36); 
+#endif
 }
 
 
-NOT_DEBUG(inline) void m68k_dpoke_abus(WORD x){
-  abus&=0xffffff;
-  if(abus&1) exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
-  else if(abus>=MEM_IO_BASE){
-    if(SUPERFLAG)
-      io_write_w(abus,x);
-    else
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
-  }else if(abus>=himem){
-#if !defined(SSE_MMU_NO_CONFUSION)
-    if(mmu_confused){
-      mmu_confused_set_dest_to_addr(2,true);
-      m68k_DEST_W=x;
-    }else 
-#endif
-    if(abus>=FOUR_MEGS){
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
-    } //otherwise throw away
-  }else{
-    DEBUG_CHECK_WRITE_W(abus);
-    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)//SS !defined
-      DPEEK(abus)=x;
-    else if(abus>=MEM_START_OF_USER_AREA)
-      DPEEK(abus)=x;
-    else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
-  }
-}
+
+#endif//CPU
 
 
-NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x){
-  abus&=0xffffff;
-  if(abus&1)exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
-  else if(abus>=MEM_IO_BASE){
-    if(SUPERFLAG)
-      io_write_l(abus,x);
-    else
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
-  }else if(abus>=himem){
-#if !defined(SSE_MMU_NO_CONFUSION)
-    if(mmu_confused){
-      mmu_confused_set_dest_to_addr(4,true);
-      m68k_DEST_L=x;
-    }else 
-#endif
-    if(abus>=FOUR_MEGS){
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
-    } //otherwise throw away
-  }else{
-    DEBUG_CHECK_WRITE_L(abus);
-    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)//SS !defined
-      LPEEK(abus)=x;
-    else if(abus>=MEM_START_OF_USER_AREA)
-      LPEEK(abus)=x;
-    else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
-  }
-}
-#endif
 
 #endif//!defined(CPU_DECLA_H) 

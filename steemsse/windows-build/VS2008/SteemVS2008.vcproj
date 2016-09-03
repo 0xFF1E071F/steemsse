@@ -51,6 +51,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/GA "
 				InlineFunctionExpansion="0"
+				WholeProgramOptimization="false"
 				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty\;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
 				PreprocessorDefinitions="NDEBUG;DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS;STEVEN_SEAGAL;SSE_DEBUG"
 				StringPooling="true"
@@ -450,8 +451,9 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/GA "
-				InlineFunctionExpansion="2"
-				FavorSizeOrSpeed="2"
+				Optimization="0"
+				InlineFunctionExpansion="0"
+				FavorSizeOrSpeed="0"
 				OmitFramePointers="true"
 				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty\;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
 				PreprocessorDefinitions="NDEBUG;NO_DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS;STEVEN_SEAGAL"
@@ -659,12 +661,17 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/EHa /Zc:forScope "
+				Optimization="0"
+				EnableIntrinsicFunctions="false"
 				OmitFramePointers="true"
 				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty\;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
 				PreprocessorDefinitions="_DEBUG;NO_DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS;STEVEN_SEAGAL;SSE_DEBUG"
 				StringPooling="true"
 				ExceptionHandling="2"
+				SmallerTypeCheck="false"
 				RuntimeLibrary="3"
+				StructMemberAlignment="0"
+				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				EnableEnhancedInstructionSet="2"
 				PrecompiledHeaderFile=".\Debug/SteemVS2008.pch"
@@ -863,9 +870,11 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/GA"
 				Optimization="3"
-				InlineFunctionExpansion="0"
-				FavorSizeOrSpeed="2"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
+				EnableFiberSafeOptimizations="true"
 				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty\;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
 				PreprocessorDefinitions="NDEBUG;NO_DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS;STEVEN_SEAGAL"
@@ -1526,7 +1535,7 @@
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
-				ShowIncludes="true"
+				ShowIncludes="false"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -9845,6 +9854,174 @@
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\steem\code\cpu_ea.cpp"
+				>
+				<FileConfiguration
+					Name="Boiler|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Boiler Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_Opt|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_Opt_DrawC|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release-Steem3.2+|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug - Steem 3.2+|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Boiler-Steem 3.2+|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug - draw_c|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\steem\code\cpu_sse.cpp"
+				>
+				<FileConfiguration
+					Name="Boiler|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Boiler Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_Opt|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_Opt_DrawC|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release-Steem3.2+|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug - Steem 3.2+|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Boiler-Steem 3.2+|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug - draw_c|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
 					/>
 				</FileConfiguration>
 			</File>
@@ -20961,13 +21138,6 @@
 					<FileConfiguration
 						Name="Boiler-Steem 3.2+|x64"
 						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug - draw_c|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"

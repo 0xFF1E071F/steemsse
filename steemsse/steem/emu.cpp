@@ -206,6 +206,9 @@ EXT char d2_t_buf[200];
 #endif
 EXT void* m68k_dest;
 EXT MEM_ADDRESS abus;
+#if defined(SSE_CPU_DATABUS)
+EXT WORD dbus;
+#endif
 EXT long m68k_old_dest;
 EXT MEM_ADDRESS effective_address;
 
@@ -260,7 +263,6 @@ EXT char m68k_src_b;
 #include "SSE/SSEShifter.h"
 #include "SSE/SSEInterrupt.h"
 #include "SSE/SSEVideo.h"
-#include "SSE/SSEInline.h"
 #include "SSE/SSESDL.h"
 
 #else
@@ -290,7 +292,12 @@ EXT char m68k_src_b;
 
 #endif
 
+#ifdef SSE_CPU
+#include "cpu_sse.cpp"
+ //"cpu2.cpp"
+#else
 #include "cpu.cpp"
+#endif
 
 #ifdef DEBUG_BUILD
 #include "debug_emu.cpp"

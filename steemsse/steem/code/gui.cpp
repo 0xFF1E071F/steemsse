@@ -1604,7 +1604,7 @@ int GetComLineArgType(char *Arg,EasyStr &Path)
   }else if (ComLineArgCompare(Arg,"SCREENSHOT",true)){
     Path="";
     return ARG_TAKESHOT;
-#if !defined(SSE_CPU_DIV)
+#if !defined(SSE_CPU)
   }else if (ComLineArgCompare(Arg,"DIVUTIME=",true)){
     Path=strchr(Arg,'=')+1;
     return ARG_SETDIVUTIME;
@@ -1701,7 +1701,7 @@ void ParseCommandLine(int NumArgs,char *Arg[],int Level)
       case ARG_ACCURATEFDC: floppy_instant_sector_access=0; break;
       case ARG_NOPCJOYSTICKS: DisablePCJoysticks=true; break;
       case ARG_OLDPORTIO: WIN_ONLY( TPortIO::AlwaysUseNTMethod=0; ) break;
-#if !defined(SSE_CPU_DIV)
+#if !defined(SSE_CPU)
       case ARG_SETDIVUTIME: m68k_divu_cycles=atoi(Path)-4; break;
       case ARG_SETDIVSTIME: m68k_divs_cycles=atoi(Path)-4; break;
 #endif

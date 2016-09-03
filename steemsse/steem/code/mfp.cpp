@@ -701,16 +701,7 @@ void mfp_interrupt(int irq) {
 #endif
 
   int iack_cycles=ACT-MC68901.IackTiming;
-#if defined(SSE_CPU_TIMINGS_REFACTOR_PUSH)
-  INSTRUCTION_TIME(SSE_INT_MFP_TIMING-12-4-iack_cycles);
-#else
-  INSTRUCTION_TIME(SSE_INT_MFP_TIMING-4-iack_cycles);
-#endif
-  FETCH_TIMING;
-#if defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-  CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
-#endif
-
+  INSTRUCTION_TIME_ROUND(SSE_INT_MFP_TIMING-iack_cycles);
   m68k_interrupt(LPEEK(vector));
   sr=WORD((sr & (~SR_IPL)) | SR_IPL_6);
   log_to_section(LOGSECTION_INTERRUPTS,EasyStr("  IRQ fired - vector=")+HEXSl(LPEEK(vector),6));

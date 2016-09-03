@@ -61,11 +61,9 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(STEVEN_SEAGAL) 
 
 #define SSE_BUILD
+
 #define SSE_COMPILER  //  warnings, errors... 
 #define SSE_STRUCTURE //  necessary for the SSE build
-
-
-
 
 #define SSE_BETA //title, OSD, plus some testing - new features
 #define SSE_BETA_BUGFIX // beta for just bugfixes
@@ -107,13 +105,27 @@ Beta: not SSE_PRIVATE_BUILD
 /////////////////////////
 
 #if defined(SSE_CPU)
-#define SSE_CPU_E_CLOCK      // [joke]
-#define SSE_CPU_EXCEPTION    // crash like Windows 98
-#define SSE_CPU_INSTR        // rewriting some instructions
-#define SSE_CPU_POKE         // poke like a C64 
-#define SSE_CPU_PREFETCH     // prefetch like a dog
-#define SSE_CPU_ROUNDING     // round like a rolling stone
+
+#define SSE_CPU_256MHZ
+#define SSE_CPU_512MHZ
+#define SSE_CPU_1GHZ 
+#define SSE_CPU_2GHZ//after this I hope they'll leave me alone for a while
+//#define SSE_CPU_3GHZ   //note: 2147483647 = max int
+//#define SSE_CPU_4GHZ
+#define SSE_CPU_CHECK_VIDEO_RAM
+#define SSE_CPU_DATABUS//preliminary
+#define SSE_CPU_DIVS_OVERFLOW_PC //long-standing bug that could crash Steem
+#define SSE_CPU_E_CLOCK
+#define SSE_CPU_FETCH_80000  // no crash when RAM is missing
+#define SSE_CPU_FETCH_IO     // fetch like a dog in outer space
+#define SSE_CPU_HALT
+#define SSE_CPU_LINE_F // for interrupt depth counter
+#define SSE_CPU_TRACE_LINE_A_F
+#define SSE_CPU_TRACE_REFACTOR
+#define SSE_CPU_TRUE_PC
+
 #endif//cpu
+
 
 #if defined(SSE_FLOPPY)
 #define SSE_DISK       // Disk images
@@ -161,6 +173,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SHIFTER    // Video Shifter
 #endif
 
+#if defined(SSE_ACIA)
+#define SSE_ACIA_REGISTERS
+#endif
+
 #if defined(SSE_GLUE)
 #define SSE_GLUE_LINE_PLUS_20 // 224 byte scanline STE only
 #endif
@@ -170,14 +186,17 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_MMU)
+#define SSE_MMU_ROUNDING_BUS // we keep this switch hoping to refactor later
 #define SSE_MMU_WU // wake-up states
+#define SSE_MMU_WRITE_MEM_CONF // programs in RAM may write in the MMU
 #endif
 
 #if _MSC_VER == 1200 //VC6: DirectDraw build
 #define SSE_NO_D3D
 #else
-#define SSE_NO_DD //v3.8.2
+#define SSE_NO_DD 
 #endif
+
 
 //////////////
 // COMPILER //
@@ -220,37 +239,16 @@ Beta: not SSE_PRIVATE_BUILD
 
 
 #if defined(SSE_STRUCTURE)
-
 //#define SSE_STRUCTURE_INFO // just telling cpp files included in modules
 #define SSE_STRUCTURE_DECLA // necessary for SSE build
-
-
-#define SSE_CPU_INLINE_SET_DEST_TO_ADDR
-#define SSE_CPU_INLINE_READ_FROM_ADDR
-
-
 #endif//structure
 
-
-//////////////////
-// ALL VERSIONS //
-//////////////////
-
-#define SSE_LOAD_SAVE_001
 
 
 //////////
 // v3.3 //
 //////////
 
-#if defined(SSE_CPU_PREFETCH)
-#define SSE_CPU_PREFETCH_4PIXEL_RASTERS //see SSECpu.cpp
-#endif
-
-#if defined(SSE_CPU_INSTR)
-#define SSE_CPU_DIV        // divide like Caesar
-#define SSE_CPU_MOVE       // move like a superstar
-#endif
 
 #if defined(SSE_GUI)
 #if !(defined(_DEBUG) && defined(VC_BUILD)) // it's Windows 'break' key
@@ -267,9 +265,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif
 
-#if defined(SSE_MMU)
-#define SSE_MMU_WRITE // programs in RAM may write in the MMU
-#endif
+
 
 #if defined(SSE_OSD)
 #define SSE_OSD_DRIVE_LED
@@ -300,26 +296,12 @@ Beta: not SSE_PRIVATE_BUILD
 // v3.4 //
 //////////
 
-#if defined(SSE_ACIA)
-
-#define SSE_ACIA_DOUBLE_BUFFER_TX // only to 6301 (not MIDI)
-
-#endif
 
 #if defined(SSE_BLITTER)
 #define SSE_BLT_BLIT_MODE_CYCLES // #cycles in BLIT Mode in NOPs, not M68K cycles
 #define SSE_BLT_BLIT_MODE_INTERRUPT // trigger at once (not after blit phase)
 #define SSE_BLT_HOG_MODE_INTERRUPT // no interrupt in hog mode
 #endif
-
-#if defined(SSE_CPU_EXCEPTION)
-#define SSE_CPU_ASSERT_ILLEGAL // assert before trying to execute (not general)
-#define SSE_CPU_POST_INC // no post increment if exception (Beyond)
-#endif
-
-#if defined(SSE_CPU_POKE) && defined(SSE_SHIFTER)
-#define SSE_CPU_CHECK_VIDEO_RAM // 36.15 GEN4 by ULM
-#endif //poke
 
 #if defined(SSE_FDC) 
 #define SSE_FDC_ACCURATE // "native Steem", slow disk drive
@@ -375,7 +357,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_SHIFTER)
-#define SSE_SHIFTER_SDP // SDP=Shifter draw pointer
+
 #define SSE_SHIFTER_TRICKS  // based on Steem system, extended
 #if defined(SSE_SHIFTER_TRICKS)
 #define SSE_SHIFTER_0BYTE_LINE
@@ -393,12 +375,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SHIFTER_PALETTE_BYTE_CHANGE //undef v3.6.3
 #define SSE_SHIFTER_STE_MED_HSCROLL // Cool STE
 #endif
-#if defined(SSE_SHIFTER_SDP)
-#define SSE_SHIFTER_SDP_READ
-#define SSE_SHIFTER_SDP_WRITE
-#define SSE_SHIFTER_SDP_WRITE_ADD_EXTRA
-#define SSE_SHIFTER_SDP_WRITE_LOWER_BYTE
-#endif
+
 #if defined(SSE_HACKS)
 // most hacks concern SDP, there's room for improvement
 #define SSE_SHIFTER_BIG_WOBBLE // Big Wobble shift
@@ -406,8 +383,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SHIFTER_MED_OVERSCAN_SHIFT // No Cooper/greetings
 #define SSE_SHIFTER_PACEMAKER // Pacemaker credits flickering line
 #define SSE_SHIFTER_SCHNUSDIE // Reality is a Lie/Schnusdie overscan logo
-#define SSE_SHIFTER_SDP_WRITE_DE_HSCROLL
-#define SSE_SHIFTER_SDP_WRITE_MIDDLE_BYTE // stable
 #define SSE_SHIFTER_TCB // Swedish New Year Demo/TCB SDP (60hz)
 #endif
 #if defined(SSE_STF)
@@ -444,7 +419,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_VIDEO)
-#define SSE_VID_AUTOOFF_DECRUNCHING //undef v3.5.0
+
 #if defined(SSE_VID_BORDERS)
 #define SSE_VID_BORDERS_LB_DX // rendering-stage trick rather than painful hacks
 #endif
@@ -476,24 +451,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif
 
-#if defined(SSE_CPU)
-
-#define SSE_CPU_LINE_F // for interrupt depth counter
-
-
-#if defined(SSE_CPU_PREFETCH)
-// Change no timing, just the macro used, so that we can identify what timings
-// are for prefetch:
-#define SSE_CPU_FETCH_TIMING  // TODO can't isolate
-// Move the timing counting from FETCH_TIMING to PREFETCH_IRC:
-#define SSE_CPU_PREFETCH_TIMING //big, big change
-#if defined(SSE_CPU_PREFETCH_TIMING)
-#define SSE_CPU_PREFETCH_TIMING_MOVEM_HACK // undef v3.7.0 
-#define SSE_CPU_PREFETCH_TIMING_SET_PC // necessary for some SET PC cases
-#endif
-#endif//prefetch
-
-#endif//cpu
 
 #if defined(SSE_DISK_CAPS)
 #define SSE_DISK_CAPS_OSD // for the little box at reset - undef v3.6.1
@@ -569,7 +526,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//var
 
 #if defined(SSE_VIDEO)
-#undef SSE_VID_AUTOOFF_DECRUNCHING
+
 #define SSE_VID_ADJUST_DRAWING_ZONE1 // attempt to avoid crash
 #define SSE_VID_ADJUST_DRAWING_ZONE2
 #define SSE_VID_BLIT_TRY_BLOCK //useless?
@@ -584,45 +541,12 @@ Beta: not SSE_PRIVATE_BUILD
 //351
 
 #if defined(SSE_ACIA)
-#define SSE_ACIA_DOUBLE_BUFFER_RX // only from 6301 (not MIDI) 
-#define SSE_ACIA_REGISTERS // formalising the registers
+
+
 #define SSE_ACIA_NO_RESET_PIN // don't reset on warm reset
 #define SSE_ACIA_USE_REGISTERS
 #endif
 
-#if defined(SSE_CPU)
-
-#define SSE_CPU_FETCH_IO     // fetch like a dog in outer space
-#define SSE_CPU_FETCH_IO2
-
-#if defined(SSE_CPU_EXCEPTION)
-#define SSE_CPU_PRE_DEC // no "pre" decrement if exception
-#define SSE_CPU_TRUE_PC // based on Motorola microcodes!
-#endif
-
-#if defined(SSE_CPU_INSTR)
-#define SSE_CPU_TAS          // 4 cycles fewer if memory
-#endif
-
-#if defined(SSE_CPU_PREFETCH)
-#define SSE_CPU_PREFETCH_ASSERT
-#define SSE_CPU_PREFETCH_CALL
-#define SSE_CPU_PREFETCH_CLASS
-#define SSE_CPU_PREFETCH_BSET
-#define SSE_CPU_PREFETCH_CHK
-#define SSE_CPU_PREFETCH_JSR
-#define SSE_CPU_PREFETCH_MOVE_FROM_SR
-//#define SSE_CPU_PREFETCH_MULS //not used (TODO?)
-//#define SSE_CPU_PREFETCH_MULU
-#define SSE_CPU_PREFETCH_NOP
-#define SSE_CPU_PREFETCH_PEA
-#if defined(SSE_CPU_PREFETCH_TIMING)
-#define SSE_CPU_PREFETCH_MOVE_MEM 
-#define SSE_CPU_PREFETCH_TAS 
-#endif
-#endif//prefetch
-
-#endif//cpu
 
 #if defined(SSE_FLOPPY)
 
@@ -670,10 +594,6 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_GUI)
 #define SSE_GUI_INFOBOX //changed later
 #define SSE_GUI_OPTIONS_REFRESH // 6301, STF... up-to-date with snapshot
-#endif
-
-#if defined(SSE_IKBD_6301)
-#define SSE_IKBD_6301_MOUSE_ADJUST_SPEED // undef 3.7.0
 #endif
 
 #if defined(SSE_INT_MFP)
@@ -983,29 +903,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_ACIA_TDR_COPY_DELAY2 // effect on byte flow
 #endif
 
-#if defined(SSE_CPU)
-
-#if defined(SSE_CPU_EXCEPTION)
-#define SSE_CPU_IGNORE_RW_4MB // for F-29, works but... 
-#endif
-
-
-#define SSE_CPU_INLINE       // supposes TM68000 exists!
-
-#if defined(SSE_CPU_INLINE)
-#define SSE_CPU_INLINE_PREFETCH_SET_PC
-#define SSE_CPU_INLINE_READ_BWL
-#define SSE_CPU_INLINE_READ_FROM_ADDR
-#endif
-
-#if defined(SSE_CPU_ROUNDING)
-#define SSE_CPU_ROUNDING_MOVEM_MR_L //Hackabonds instructions scroller
-#endif
-
-#define SSE_CPU_UNSTOP
-
-#endif//cpu
-
 #if defined(SSE_FLOPPY)
 
 #if defined(SSE_DISK_PASTI)
@@ -1115,7 +1012,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #if defined(SSE_YM2149_FIX_TABLES)
 #define SSE_YM2149_FIXED_VOL_FIX1 //undef v3.7.0
-#define SSE_YM2149_ENV_FIX1 //undef v3.7.0
+
 #endif
 #endif//ym2149
 
@@ -1123,10 +1020,6 @@ Beta: not SSE_PRIVATE_BUILD
 //361
 
 
-#if defined(SSE_CPU_DIV)
-#define SSE_CPU_DIVS_OVERFLOW
-#define SSE_CPU_DIVU_OVERFLOW
-#endif
 
 #if defined(SSE_FLOPPY)
 
@@ -1174,13 +1067,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_INTERRUPT)
 
-#if defined(SSE_INT_HBL)
-#define SSE_INT_HBL_ONE_FUNCTION // remove event_hbl()
-#endif
-
-#if defined(SSE_INT_JITTER) && defined(SSE_INT_VBL) && defined(SSE_STF)
-#define SSE_INT_JITTER_RESET //undef v370
-#endif
 
 #if defined(SSE_INT_MFP)
 #define SSE_INT_MFP_RATIO_HIGH_SPEED
@@ -1247,23 +1133,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 //363
 
-#if defined(SSE_CPU)
-
-#if defined(SSE_CPU_E_CLOCK)
-#if defined(SSE_ACIA)
-
-#define SSE_ACIA_BUS_JAM_PRECISE_WOBBLE // option 6301 on
-#endif
-#endif//e-clock
-
-#if defined(SSE_CPU_ROUNDING)
-#define SSE_CPU_ROUNDING_ADD_L_DN
-#define SSE_CPU_ROUNDING_ADDA_L_DN
-//#define SSE_CPU_ROUNDING_CMPI_BW
-#define SSE_CPU_ROUNDING_CMPI_L
-#endif//rounding
-
-#endif//cpu
 
 #if defined(SSE_FLOPPY)
 
@@ -1329,129 +1198,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BLT_370 // bad hack for Relapse
 #endif
 
-#if defined(SSE_CPU)
 
-#define SSE_CPU_DATABUS
-#define SSE_CPU_DEST_IS_REGISTER //just new macro
-#if defined(SSE_CPU_E_CLOCK)
-#define SSE_CPU_E_CLOCK_370
-#endif
-#define SSE_CPU_FETCH_80000A//setpc
-#define SSE_CPU_FETCH_80000B//fetchword
-#define SSE_CPU_FETCH_80000C//prefetch IRC
-#if defined(SSE_GUI_STATUS_STRING)
-#define SSE_CPU_HALT // no reset, just stop
-#endif
-#define SSE_CPU_TRACE_REFACTOR//debug-only?
-
-
-#if defined(SSE_CPU_EXCEPTION)
-#undef SSE_CPU_IGNORE_RW_4MB // F-29 hangs on 4MB machines, nothing to fix
-
-#if defined(SSE_CPU_ASSERT_ILLEGAL)
-#define SSE_CPU_ASSERT_ILLEGAL_370
-#endif
-#define SSE_CPU_BUS_ERROR_ADDRESS //high byte
-#define SSE_CPU_BUS_ERROR_ADDRESS2 //high byte
-#define SSE_CPU_EXCEPTION_FCO
-#define SSE_CPU_TRUE_PC2 // JMP, JSR
-#endif//exc
-
-#if defined(SSE_CPU_FETCH_IO)
-#define SSE_CPU_FETCH_IO3//clarify
-#endif
-
-#if defined(SSE_CPU_INSTR)
-#define SSE_CPU_ABCD
-#define SSE_CPU_DIV_CC //carry clear: always
-#define SSE_CPU_MOVEM_BUS_ACCESS_TIMING
-#define SSE_CPU_NBCD //TODO?
-#define SSE_CPU_SBCD //to test
-#endif//instr
-
-#if defined(SSE_CPU_PREFETCH_TIMING)
-#undef SSE_CPU_PREFETCH_TIMING_MOVEM_HACK
-#define SSE_CPU_PREFETCH_TIMING_ADD
-#define SSE_CPU_PREFETCH_TIMING_ADDA
-#define SSE_CPU_PREFETCH_TIMING_ADDX
-#define SSE_CPU_PREFETCH_TIMING_AND
-#define SSE_CPU_PREFETCH_TIMING_CHK
-#define SSE_CPU_PREFETCH_TIMING_CMP
-#define SSE_CPU_PREFETCH_TIMING_EXT
-#define SSE_CPU_PREFETCH_TIMING_JMP
-#define SSE_CPU_PREFETCH_TIMING_JSR
-#define SSE_CPU_PREFETCH_TIMING_LEA
-#define SSE_CPU_PREFETCH_TIMING_OR
-#define SSE_CPU_PREFETCH_TIMING_STOP
-#define SSE_CPU_PREFETCH_TIMING_SUBX
-#define SSE_CPU_PREFETCH_TIMING_SWAP
-#endif
-
-#if defined(SSE_CPU_ROUNDING)
-#define SSE_CPU_ROUNDING2 // no more "NO_ROUND" //when debugged!
-#define SSE_CPU_ROUNDING_ADD_BW_DN // to DN
-#define SSE_CPU_ROUNDING_ADD_BW_DN2 // from DN
-#define SSE_CPU_ROUNDING_ADD_L_DN2
-#define SSE_CPU_ROUNDING_ADDA_W_DN
-#define SSE_CPU_ROUNDING_ADDA_L_DN2
-#define SSE_CPU_ROUNDING_CMPI_L2
-#define SSE_CPU_ROUNDING_MOVE
-#define SSE_CPU_ROUNDING_MOVEM
-#define SSE_CPU_ROUNDING_MOVEM_MR_L // renamed
-#define SSE_CPU_ROUNDING_MOVEM6
-#define SSE_CPU_ROUNDING_MOVEP_MR_L
-#define SSE_CPU_ROUNDING_MOVEP_MR_W
-#define SSE_CPU_ROUNDING_MOVEP_RM_L
-#define SSE_CPU_ROUNDING_MOVEP_RM_W
-#define SSE_CPU_ROUNDING_SUB_BW_DN
-#define SSE_CPU_ROUNDING_SUB_BW_DN2
-#define SSE_CPU_ROUNDING_SUB_L_DN
-#define SSE_CPU_ROUNDING_SUB_L_DN2
-#define SSE_CPU_ROUNDING_SUBA_W_DN
-#define SSE_CPU_ROUNDING_SUBA_L_DN
-#define SSE_CPU_ROUNDING_ABCD
-#undef SSE_CPU_ROUNDING_ADD_BW_DN //simplify
-#undef SSE_CPU_ROUNDING_ADD_BW_DN2 //simplify
-#define SSE_CPU_ROUNDING_ADD
-#undef SSE_CPU_ROUNDING_ADDA_L_DN2 //correct
-#define SSE_CPU_ROUNDING_ADDA
-#define SSE_CPU_ROUNDING_ADDQ
-#define SSE_CPU_ROUNDING_ADDX
-#define SSE_CPU_ROUNDING_ADDI
-#define SSE_CPU_ROUDING_AND
-#define SSE_CPU_ROUNDING_ANDI
-#define SSE_CPU_ROUNDING_BCC
-#define SSE_CPU_ROUNDING_BCHG
-#define SSE_CPU_ROUNDING_BCLR
-#define SSE_CPU_ROUNDING_BSET
-#define SSE_CPU_ROUNDING_BTST
-#define SSE_CPU_ROUNDING_CLR
-#define SSE_CPU_ROUDING_CMP
-#define SSE_CPU_ROUNDING_CMPI
-#define SSE_CPU_ROUNDING_DBCC
-#define SSE_CPU_ROUDING_EA // no more m68k_get_effective_address(), more code
-#define SSE_CPU_ROUDING_EOR
-#define SSE_CPU_ROUNDING_EORI//
-#define SSE_CPU_ROUNDING_JSR
-#define SSE_CPU_ROUNDING_MOVE_FROM_SR
-#define SSE_CPU_ROUNDING_MOVE_TO_SR
-#define SSE_CPU_ROUNDING_NBCD
-#define SSE_CPU_ROUNDING_NEG
-#define SSE_CPU_ROUNDING_NEGX
-#define SSE_CPU_ROUNDING_NO_FASTER_FOR_D // eliminate confusing hack, less code
-#define SSE_CPU_ROUNDING_NOT
-#define SSE_CPU_ROUNDING_OR
-#define SSE_CPU_ROUNDING_ORI
-#define SSE_CPU_ROUNDING_PEA
-#define SSE_CPU_ROUNDING_SCC
-#define SSE_CPU_ROUNDING_SHIFT_MEM
-#define SSE_CPU_ROUNDING_SUB
-#define SSE_CPU_ROUNDING_SUBI
-#define SSE_CPU_ROUNDING_SUBQ
-#define SSE_CPU_ROUNDING_SUBX
-#endif
-
-#endif//cpu
 
 #if defined(SSE_FLOPPY)
 
@@ -1611,8 +1358,8 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_IKBD)
 #if defined(SSE_IKBD_6301)
-#undef SSE_IKBD_6301_MOUSE_ADJUST_SPEED //def 3.5.1
-#define SSE_IKBD_6301_MOUSE_ADJUST_SPEED2 //better
+
+#define SSE_IKBD_6301_MOUSE_ADJUST_SPEED
 //#define SSE_IKBD_6301_MOUSE_MASK2//hack but game is bugged
 #define SSE_IKBD_6301_MOUSE_MASK3 // reset
 #define SSE_IKBD_6301_SEND1 // bugfix
@@ -1624,12 +1371,10 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_INTERRUPT)
 #undef SSE_INT_HBL_IACK_FIX
+#ifdef SSE_CPU_E_CLOCK
 #define SSE_INT_HBL_IACK2
 #define SSE_INT_VBL_IACK2
-#undef SSE_INT_JITTER 
-#undef SSE_INT_JITTER_HBL
-#undef SSE_INT_JITTER_VBL
-#undef SSE_INT_JITTER_RESET
+#endif
 #endif
 
 #if defined(SSE_INT_MFP)
@@ -1638,24 +1383,17 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_INT_MFP_OBJECT)
 #define SSE_INT_MFP_IRQ_TIMING //tracking it more precisely
 #define SSE_INT_MFP_GPIP_TO_IRQ_DELAY // only for GPIP interrupts
-
-
-
-
 #define SSE_INT_MFP_TIMERS_NO_BOOST_LIMIT
 #define SSE_INT_MFP_OPTION //performance/precision
 #define SSE_INT_MFP_UTIL
-
 #define SSE_INT_MFP_CHECKTIMEOUT_ON_STOP
 #define SSE_INT_MFP_READ_DELAY 
-
 #if defined(SSE_INT_MFP_RATIO)
 #define SSE_INT_MFP_RATIO_OPTION // user can fine tune CPU clock
 #define SSE_INT_MFP_RATIO_OPTION2 // L/S
 #endif
 #define SSE_INT_MFP_RATIO_STE2
 #define SSE_INT_MFP_RATIO_STF2 
-
 #define SSE_INT_MFP_TIMER_B_WOBBLE2 // 2 instead of 4
 #define SSE_INT_MFP_TIMER_B_WOBBLE_HACK //for Sunny
 #define SSE_INT_MFP_TIMERS_RATIO1 //unimportant
@@ -1673,10 +1411,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif//midi
 
-#if defined(SSE_MMU)
-#define SSE_MMU_SDP1
-
-#endif
 
 #if defined(SSE_OSD)
 #undef SSE_OSD_DRIVE_INFO_SSE_PAGE // moving the option...
@@ -1813,10 +1547,10 @@ Beta: not SSE_PRIVATE_BUILD
 
 #ifdef SSE_YM2149_OBJECT
 
-#undef SSE_YM2149_ENV_FIX1 //my mistake
+
 #ifdef SSE_SOUND
 #define SSE_YM2149_DELAY_RENDERING // so that we use table also for envelope
-#define SSE_YM2149_QUANTIZE1 //undef 3.8.2
+
 #endif
 #if defined(SSE_YM2149_DELAY_RENDERING)  
 #undef SSE_YM2149_FIXED_VOL_FIX1 // former 'P.S.G.' option replaced with that
@@ -1837,9 +1571,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VS2008_WARNING_371
 #endif
 
-#if defined(SSE_CPU_EXCEPTION)
-#define SSE_CPU_TRUE_PC3 // Aladin
-#endif
 
 #if defined(SSE_FLOPPY)
 
@@ -1870,9 +1601,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #endif//flp
 
-#if defined(SSE_MMU)
-#define SSE_MMU_SDP1B
-#endif
 
 #if defined(SSE_OSD)
 #undef SSE_OSD_SCROLLER_DISK_IMAGE // doubles with status bar
@@ -1892,7 +1620,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #ifdef SSE_YM2149_OBJECT 
 #define SSE_YM2149_DELAY_RENDERING2 //bug in v3.7.0
-#define SSE_YM2149_QUANTIZE2 //bug in v3.7.0
+
 #endif
 #if defined(SSE_GUI_INFOBOX)
 #define SSE_GUI_INFOBOX17 //mousewheel on links
@@ -1901,11 +1629,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 //372
 
-#if defined(SSE_CPU)
-#define SSE_CPU_256MHZ
-//#define SSE_CPU_512MHZ // ready if someone requests it!
-#define SSE_CPU_DIVS_OVERFLOW_PC //long-standing bug that could crash Steem
-#endif
 
 #if defined(SSE_DISK)
 #define SSE_DISK2 //add info
@@ -1954,7 +1677,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_ARCHIVEACCESS4 // remove code for unzipd32.dll - what if archiveaccess fails!
 #endif
 #endif
+#ifndef _DEBUG//of course
 #define SSE_VAR_MAIN_LOOP1 // protect from crash with try/catch
+#endif
 #define SSE_VAR_NO_UPDATE_372
 #define SSE_VAR_RESIZE_372
 #endif//var
@@ -1978,11 +1703,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #ifdef SSE_BLITTER
 #define SSE_BLT_371 // temp fix Drone
-#endif
-
-#ifdef SSE_CPU
-#define SSE_CPU_ABUS_ACCESS // argh, was forgotten
-#undef SSE_CPU_PREFETCH_TIMING_MOVEM_HACK // grr forgot this too!! (Sea of Colour)
 #endif
 
 #if defined(SSE_FLOPPY)
@@ -2073,47 +1793,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_COMPILER_380
 #endif
 
-#ifdef SSE_CPU
-#define SSE_CPU_512MHZ
-#define SSE_CPU_1GHZ 
-#define SSE_CPU_2GHZ//after this I hope they'll leave me alone for a while
-//#define SSE_CPU_3GHZ   //note: 2147483647 = max int
-//#define SSE_CPU_4GHZ
-#if defined(SSE_CPU_ASSERT_ILLEGAL)
-#define SSE_CPU_ASSERT_ILLEGAL_380 // mini-refactoring
-#endif
-#if defined(SSE_CPU_E_CLOCK)
-#define SSE_CPU_E_CLOCK_380
-#endif
-#if defined(SSE_CPU_PREFETCH_CLASS)
-#define SSE_CPU_PREFETCH_CLASS_380
-#endif
-#if defined(SSE_CPU_ROUNDING)
-#define SSE_CPU_ROUNDING_ANDI2
-#define SSE_CPU_ROUNDING_BUS // big change, much overhead, little effect 
-#define SSE_CPU_ROUNDING_BUS2 // blitter problem
-#define SSE_CPU_ROUNDING_BUS3 // more shifter regs
-#define SSE_CPU_ROUNDING_BUS3B // ...but not for STF
-#define SSE_CPU_ROUNDING_CHK
-#define SSE_CPU_ROUNDING_DBCC2
-#define SSE_CPU_ROUNDING_IMMEDIATE_TO_SR //dubious... future bug reports?
-#define SSE_CPU_ROUNDING_MOVEM_380 //final?
-#define SSE_CPU_ROUNDING_UNLK
-#define SSE_CPU_ROUNDING_LINK
-#define SSE_CPU_ROUNDING_RTR
-#define SSE_CPU_ROUNDING_RTS
-#define SSE_CPU_ROUNDING_TRAP
-#define SSE_CPU_ROUNDING_TRAPV
-#endif//round
-#define SSE_CPU_STOP_380 // little refactoring
-#define SSE_CPU_STOP_DELAY // from Hatari
-
-#define SSE_CPU_TIMINGS_REFACTOR_FETCH // moving timings to fetching functions
-#define SSE_CPU_TIMINGS_REFACTOR_PUSH // count timing in push macros
-#define SSE_CPU_TRACE_TIMING
-#define SSE_CPU_TRACE_TIMING_EXT //EXT for "extended" (see SSECpu.h)
-#define SSE_CPU_TRACE_LINE_A_F
-#endif//cpu
 
 #if defined(SSE_DISK)
 #define SSE_DISK_380 // update side
@@ -2272,22 +1951,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BLT_381
 #endif
 
-#if defined(SSE_CPU)
-#define SSE_CPU_E_CLOCK5
-#if defined(SSE_CPU_HALT)
-#define SSE_CPU_HALT2 // can reset
-#define SSE_CPU_HALT2B // warm reset runs emulation
-#endif
-#if defined(SSE_CPU_ROUNDING_BUS)
-#define SSE_CPU_ROUNDING_BUS3C
-#define SSE_CPU_ROUNDING_BUS_STOP
-#endif
-#define SSE_CPU_TPEND // internal bit latch
-#if defined(SSE_CPU_TRACE_REFACTOR)
-#define SSE_CPU_TPEND2 //use it
-#endif
-#endif//cpu
-
 #if defined(SSE_GLUE)
 #define SSE_GLUE_EXT_SYNC
 #endif
@@ -2349,18 +2012,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_ACSI_RELOAD_TOS
 #endif
 
-#if defined(SSE_CPU)
-
-#define SSE_CPU_TIMINGS_NO_INLINE_382 //undef 383
-#define SSE_CPU_TPEND_382
-#endif//cpu
-
 #if defined(SSE_GUI)
 #define SSE_GUI_MOUSE_VM_FRIENDLY //VM for virtual machine
-#endif
-
-#if defined(SSE_INT_HBL) && defined(SSE_STF) && defined(SSE_MMU_WU)
-#define SSE_INT_HBL_E_CLOCK_HACK_382 //here we go again
 #endif
 
 #if defined(SSE_OSD) 
@@ -2413,8 +2066,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//vid
 
 #if defined(SSE_YM2149_OBJECT)
-#undef SSE_YM2149_QUANTIZE1
-#undef SSE_YM2149_QUANTIZE2
 #define SSE_YM2149_QUANTIZE_382
 #endif
 
@@ -2513,7 +2164,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BOILER_MOVE_OTHER_SP
 #define SSE_BOILER_MOVE_OTHER_SP2//SSP+USP
 #define SSE_BOILER_NEXT_PRG_RUN//request
+#ifdef SSE_CPU
 #define SSE_BOILER_NODIV // no DIV log necessary anymore
+#endif
 #define SSE_BOILER_NO_SET_BRK_PC_MENU
 #define SSE_BOILER_NO_SOUND_DAMPING //PSG filter control 'd' and 'a'
 #define SSE_BOILER_PSEUDO_STACK
@@ -2544,10 +2197,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_BETA)
 //#define SSE_CPU_DETECT_STACK_PC_USE // push garbage!!
 #endif
-#if defined(SSE_CPU_PREFETCH) 
-//#define SSE_CPU_PREFETCH_TRACE 
-#endif
-//#define SSE_CPU_TRACE_DETECT
+
 #endif//cpu
 
 #ifdef SSE_FLOPPY
@@ -2650,7 +2300,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BOILER_HISTORY_VECS
 #define SSE_BOILER_HISTORY_TIMING
 #define SSE_BOILER_OPTION_SAVE_FRAME_REPORT
+#ifdef SSE_CPU_E_CLOCK
 #define SSE_BOILER_SHOW_ECLOCK
+#endif
 #define SSE_BOILER_SHOW_PENDING
 #if defined(SSE_SHIFTER_UNSTABLE)
 #define SSE_BOILER_SHOW_PRELOAD
@@ -2681,10 +2333,6 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_YM2149_QUANTIZE_TRACE
 #endif//SSE_BOILER
 #define SSE_DEBUG_START_STOP_INFO3
-#ifdef _DEBUG
-#undef SSE_VAR_MAIN_LOOP1 // let exceptions trigger in VS IDE
-#endif
-
 #else//SSE_DEBUG
 
 //3.8.2
@@ -2744,25 +2392,21 @@ Beta: not SSE_PRIVATE_BUILD
 #if _MSC_VER >= 1500 
 #define SSE_VS2008_383
 #define SSE_VS2008_WARNING_383
+#define SSE_VS2008_WARNING_383B
 #endif
 
 #ifdef SSE_BOILER
 #define SSE_BOILER_383
 #endif
 
-#if defined(SSE_CPU_INLINE)
-//#define SSE_CPU_INLINE_SET_DEST_TO_ADDR
-#endif
-
+#define SSE_ACIA_383
 #define SSE_DISK_CAPS_383
 #define SSE_GLUE_383
 #define SSE_GLUE_383B
 #define SSE_GLUE_383C
 #define SSE_GUI_383
 #define SSE_GUI_JOYSTICK_383
-
 #define SSE_VAR_OPT_383
-
 #if defined(SSE_VAR_OPT_383) && defined(VC_BUILD) && _MSC_VER>=1500 //VS2008+
 #define SSE_VC_INTRINSICS_383
 #if defined(SSE_VC_INTRINSICS_383)
@@ -2775,14 +2419,14 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VC_INTRINSICS_383G // GLU functions
 #endif
 #endif
-
 #if defined(SSE_VAR_OPT_383)
+#ifdef SSE_CPU
 #define SSE_VAR_OPT_383A // variable to hold ABSOLUTE_CPU_TIME for a while (TODO)
 #define SSE_VAR_OPT_383A1 // Video chipset writes
-#define SSE_VAR_OPT_383C // CycleOfLastChangeToShiftMode()
-#define SSE_VAR_OPT_383D
 #endif
-
+#define SSE_VAR_OPT_383C // CycleOfLastChangeToShiftMode()
+#define SSE_VAR_OPT_383D // don't need IackCycle
+#endif
 #if defined(SSE_VAR_OPT_383) && defined(SSE_DRAW_C)
 #define SSE_DRAW_C_383
 #if defined(SSE_DRAW_C_383)
@@ -2797,10 +2441,8 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif
 #endif
-
 #define SSE_VAR_RESIZE_383
 #define SSE_VAR_RESIZE_383A // acia, more problematic
-
 // Exception management...
 //#define SSE_M68K_EXCEPTION_TRY_CATCH //works but too slow, especially if _DEBUG
 #define SSE_VAR_MAIN_LOOP2 //2KB on optimised exe but will catch and report everything (?)
@@ -2811,7 +2453,6 @@ Beta: not SSE_PRIVATE_BUILD
 #undef SSE_VAR_MAIN_LOOP1 //is emu-only
 #endif
 //#undef SSE_CPU_DIVS_OVERFLOW_PC //temp for tests...
-
 #define SSE_VID_GAMMA
 #define SSE_WD1772_383
 
@@ -2823,9 +2464,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_BETA_BUGFIX)
-
 #define SSE_CPU_E_CLOCK_383
-#undef SSE_CPU_TIMINGS_NO_INLINE_382 // it's inlined anyway
 #define SSE_DISK_GHOST_SECTOR_383
 #define SSE_INTERRUPT_383
 #define SSE_JOYSTICK_JOYPAD
@@ -2838,6 +2477,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SOUND_DMA_383B // treble (trouble?)
 #define SSE_SOUND_DMA_383C //  balance 
 #define SSE_STF_MATCH_TOS_383 // to keep autoselect T104 for HD
+#define SSE_TIMING_MULTIPLIER
 #define SSE_TOS_GEMDOS_EM_383 
 #undef SSE_TOS_GEMDOS_RESTRICT_TOS2 //HD/TOS check
 #undef SSE_TOS_GEMDOS_RESTRICT_TOS3 //INI option
@@ -2845,7 +2485,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_TOS_SNAPSHOT_AUTOSELECT_383 // correct country
 #define SSE_VAR_CHECK_SNAPSHOT2
 #define SSE_WD1772_383B 
-
 #endif//bugfix
 
 #else//!SS

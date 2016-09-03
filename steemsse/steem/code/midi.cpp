@@ -369,6 +369,7 @@ TMIDIIn::TMIDIIn(int Device,bool StartNow,LPMIDIINNOTEMPTYPROC NEP)
   }
 }
 //---------------------------------------------------------------------------
+#pragma warning(disable: 4701)
 void CALLBACK TMIDIIn::InProc(HMIDIIN Handle,UINT Msg,DWORD dwThis,DWORD MidiMess,DWORD)
 {
   TMIDIIn *This=(TMIDIIn*)dwThis;
@@ -425,7 +426,7 @@ void CALLBACK TMIDIIn::InProc(HMIDIIN Handle,UINT Msg,DWORD dwThis,DWORD MidiMes
       }
       LOG_ONLY( if (DataLen>This->MaxSysExLen-8) dbg_log("MIDI In: Large sysex message received, possible overflow.") );
       break;
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_383____) // bug!
     default:
       NODEFAULT;
 #endif
@@ -434,7 +435,8 @@ void CALLBACK TMIDIIn::InProc(HMIDIIN Handle,UINT Msg,DWORD dwThis,DWORD MidiMes
     while (This->Buf.IsLocked()) Sleep(0);
 
     if (This->NotEmptyProc){
-      if (This->Buf.AreBytesInBuffer()==0) This->NotEmptyProc();
+      if (This->Buf.AreBytesInBuffer()==0) 
+        This->NotEmptyProc();
     }
     This->Buf.AddBytes(pData,DataLen);
 
@@ -449,6 +451,7 @@ void CALLBACK TMIDIIn::InProc(HMIDIIN Handle,UINT Msg,DWORD dwThis,DWORD MidiMes
     }
   }
 }
+#pragma warning(default: 4701)
 //---------------------------------------------------------------------------
 int TMIDIIn::GetDeviceID()
 {

@@ -265,7 +265,7 @@ enum logsection_enum_tag {
 #define OSD_CONTROL_CPUBOMBS  (1<<14)
 #define OSD_CONTROL_CPUIO  (1<<13)
 #define OSD_CONTROL_CPURESET            (1<<12)
-#define OSD_CONTROL_CPUPREFETCH   (1<<11)    
+//#define OSD_CONTROL_CPUPREFETCH   (1<<11)    
 #define OSD_CONTROL_CPUROUNDING   (1<<10)
 
 #define OSD_MASK2 (Debug.ControlMask[4])

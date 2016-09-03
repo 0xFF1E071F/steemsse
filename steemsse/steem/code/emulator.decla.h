@@ -5,6 +5,9 @@
 #include <conditions.h>
 #include <dynamicarray.h>
 
+//#include <SSE/SSEMMU.h>
+#include <SSE/SSEVideo.h>
+
 // they've been nuked in conditions -> should do without...
 #define EXT extern 
 #define INIT(s)
@@ -47,6 +50,9 @@ EXT int em_planes INIT(4);
 EXT int extended_monitor INIT(0);//SS can't be bool
 #endif
 EXT DWORD n_cpu_cycles_per_second INIT(8000000),new_n_cpu_cycles_per_second INIT(0),n_millions_cycles_per_sec INIT(8);
+#if defined(SSE_TIMING_MULTIPLIER)
+EXT BYTE cpu_cycles_multiplier INIT(1);
+#endif
 EXT int on_rte;
 EXT int on_rte_interrupt_depth;
 
@@ -63,7 +69,7 @@ EXT int shifter_hscroll,shifter_skip_raster_for_hscroll;
 EXT MEM_ADDRESS xbios2,shifter_draw_pointer_at_start_of_line;
 EXT int shifter_pixel;
 
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
 #if defined(MINGW_BUILD) || defined(SSE_UNIX)
 extern "C"{ EXT int shifter_freq INIT(60); }
 #else
@@ -206,6 +212,62 @@ void agenda_acia_tx_delay_IKBD(int),agenda_acia_tx_delay_MIDI(int);
 
 EXT MEM_ADDRESS on_rte_return_address;
 
+/////////////////////
+// Counting cycles //
+/////////////////////
+
+#ifdef SSE_CPU
+
+extern "C" int cpu_cycles; // defined in emu.cpp
+
+inline void InstructionTime(int t) {
+  cpu_cycles-=(t);
+}
+
+inline void InstructionTimeRound(int t) {
+  InstructionTime(t);
+#if defined(SSE_VC_INTRINSICS_383D) && defined(SSE_MMU_ROUNDING_BUS) // great optimisation
+  MMU.Rounded=_bittestandreset((LONG*)&cpu_cycles,1);
+#else//383?
+#if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_VC_INTRINSICS_382)
+  MMU.Rounded=BITTEST(cpu_cycles,1); // causes inlining anyway
+#else
+  MMU.Rounded=(cpu_cycles&2);
+#endif
+#endif
+  cpu_cycles&=-4;
+#endif//383?
+}
+
+#define INSTRUCTION_TIME(t)  InstructionTime(t)
+#define INSTRUCTION_TIME_ROUND(t) InstructionTimeRound(t)
+
+#endif
+
+#define CPU_ABUS_ACCESS_READ  INSTRUCTION_TIME_ROUND(4)
+#define CPU_ABUS_ACCESS_READ_L  INSTRUCTION_TIME_ROUND(8) //for performance
+
+
+
+#define CPU_ABUS_ACCESS_READ_POP CPU_ABUS_ACCESS_READ
+#define CPU_ABUS_ACCESS_READ_POP_L CPU_ABUS_ACCESS_READ_L
+
+#define CPU_ABUS_ACCESS_WRITE_PUSH CPU_ABUS_ACCESS_WRITE
+#define CPU_ABUS_ACCESS_WRITE_PUSH_L CPU_ABUS_ACCESS_WRITE_L
+
+#if defined(SSE_MMU_ROUNDING_BUS) // TODO: cartridge
+inline void FetchTiming();
+inline void FetchTimingL();
+#define CPU_ABUS_ACCESS_READ_FETCH FetchTiming()
+#define CPU_ABUS_ACCESS_READ_FETCH_L FetchTimingL()
+#else
+#define CPU_ABUS_ACCESS_READ_FETCH CPU_ABUS_ACCESS_READ //so we can directly replace macros
+#define CPU_ABUS_ACCESS_READ_FETCH_L CPU_ABUS_ACCESS_READ_L //so we can directly replace macros
+#endif
+
+#define CPU_ABUS_ACCESS_WRITE  INSTRUCTION_TIME_ROUND(4)
+#define CPU_ABUS_ACCESS_WRITE_L  INSTRUCTION_TIME_ROUND(8) //for performance
 
 #if !(defined(SSE_CPU))
 #define M68K_UNSTOP                         \

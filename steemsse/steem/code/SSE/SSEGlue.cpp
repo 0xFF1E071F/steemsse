@@ -1754,6 +1754,9 @@ void TGlue::IncScanline() {
 #endif
   }
 
+//if(scan_y==-29) INSTRUCTION_TIME(4);
+
+
 #if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
   ExtraAdded=false;
   overscan_add_extra=0;
@@ -1864,7 +1867,7 @@ int TGlue::ShiftModeChangeAtCycle(int cycle) {
 
 int TGlue::FreqAtCycle(int cycle) {
 
-  ASSERT(cycle<=LINECYCLES);
+  //ASSERT(cycle<=LINECYCLES);
 
   int t=cycle+LINECYCLE0; // convert to absolute
   int i,j;
@@ -2061,8 +2064,6 @@ int TGlue::CycleOfLastChangeToShiftMode(int value) {
 
 void TGlue::GetNextScreenEvent() {
 
-  ASSERT(Glue.CurrentScanline.Cycles==224||Glue.CurrentScanline.Cycles==508||Glue.CurrentScanline.Cycles==512);
-
 #if !defined(SSE_VAR_OPT_383) // at end of if-else ladder
   // default event = scanline
   screen_event.event=event_scanline;
@@ -2136,6 +2137,10 @@ void TGlue::GetNextScreenEvent() {
   screen_event.event=screen_event_vector;
 #endif
 
+#if defined(SSE_TIMING_MULTIPLIER)
+  if(cpu_cycles_multiplier>1)
+    screen_event.time*=cpu_cycles_multiplier;
+#else
 #if defined(SSE_INT_MFP_RATIO)
   if (n_cpu_cycles_per_second>CpuNormalHz){
     ASSERT(n_millions_cycles_per_sec>8);
@@ -2146,6 +2151,7 @@ void TGlue::GetNextScreenEvent() {
     screen_event.time*=factor;
     screen_event.time/=8;
   }
+#endif//#if defined(SSE_TIMING_MULTIPLIER)
   time_of_next_event=screen_event.time+cpu_timer_at_start_of_hbl;
 }
 
