@@ -703,7 +703,7 @@ void draw_end()
 }
 
 #define LOGSECTION LOGSECTION_VIDEO
-#if !defined(SSE_SHIFTER)
+#if !defined(SSE_VIDEO_CHIPSET)
 //---------------------------------------------------------------------------
 /* SS this was the core of Shifter trick analysis in Steem 3.2.
    There's not so much code but it ran many cases eg Darkside of the Spoon,
@@ -1466,15 +1466,11 @@ bool draw_routines_init()
 */
     screen_event_struct *evp=event_plan_50hz;
 
-#if defined(SSE_INT_HBL_ONE_FUNCTION)
-    evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_50HZ; 
-    evp->event=event_scanline;
-#else
     // SS for line 0, event is not scanline but hbl, but for all the others,
     // it is scanline, placed at the hbl timing..
     evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_50HZ; // 444 -> this is the hack
     evp->event=event_hbl;
-#endif
+
     evp++;
     for (int y=1;y<313;y++){
       evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_50HZ + y*512;
@@ -1501,13 +1497,8 @@ bool draw_routines_init()
     */
     evp=event_plan_60hz;
 
-#if defined(SSE_INT_HBL_ONE_FUNCTION)
-    evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_60HZ; 
-    evp->event=event_scanline;
-#else
     evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_60HZ;
     evp->event=event_hbl;
-#endif
     evp++;
     for(int y=1;y<263;y++){
       evp->time=CYCLES_FOR_VERTICAL_RETURN_IN_60HZ + y*508;

@@ -978,9 +978,7 @@ void event_scanline()
 /*  Enforce register limitations, so that "report SDP" isn't messed up
     in the debug build.
 */
-#if defined(SSE_MMU_SDP1B) //bugfix 3.7.1 not for 14MB hack!
   if(mem_len<=FOUR_MEGS) 
-#endif
     shifter_draw_pointer&=0x3FFFFE;
 #endif
 

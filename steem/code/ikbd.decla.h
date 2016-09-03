@@ -4,10 +4,13 @@
 
 #include "SSE/SSEParameters.h"
 #include "run.decla.h" //complicates matters...
+
+#include "acia.decla.h"
+
 #define EXT extern
 #define INIT(s)
 
-#include "acia.decla.h"
+
 //EXT ACIA_STRUCT acia[2];
 
 

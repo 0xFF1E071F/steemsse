@@ -239,10 +239,6 @@ void power_on()
   Disp.VSyncTiming=0;
 #endif
 
-#if defined(SSE_CPU_HALT) && !defined(SSE_CPU_HALT2)
-  M68000.ProcessingState=TM68000::NORMAL; //care later for exception
-#endif
-
 #if defined(SSE_VID_DISABLE_AUTOBORDER3) 
   if(MONO && SSEOption.MonochromeDisableBorder)
     border=0;
@@ -272,7 +268,7 @@ void reset_peripherals(bool Cold)
 #endif
 #endif//dbg
 
-#if defined(SSE_CPU_HALT) && defined(SSE_CPU_HALT2)
+#if defined(SSE_CPU_HALT)
   M68000.ProcessingState=TM68000::NORMAL;
 #endif
   
@@ -466,9 +462,6 @@ void reset_peripherals(bool Cold)
   ZeroMemory(&Blit,sizeof(Blit));
 
   cpu_stopped=false;
-#if defined(SSE_CPU) && defined(SSE_DEBUG)
-  M68000.NextIrFetched=false;
-#endif
 
   if (runstate==RUNSTATE_RUNNING) //SS savage mod?
     prepare_event_again();
@@ -488,8 +481,8 @@ void reset_peripherals(bool Cold)
 void reset_st(DWORD flags)
 {
   TRACE_INIT("reset_st, flags %X\n");
-#if defined(SSE_CPU_PREFETCH)
-  prefetched_2=FALSE;
+#if defined(SSE_CPU)
+  prefetched_2=false;
 #endif
   bool Stop=bool(flags & RESET_NOSTOP)==0;
   bool Warm=bool(flags & RESET_WARM);
@@ -500,7 +493,7 @@ void reset_st(DWORD flags)
   if (Backup) GUISaveResetBackup();
 
   if (Warm){
-#if defined(SSE_CPU_HALT2B) // real ST can be reset on HALT
+#if defined(SSE_CPU_HALT) // real ST can be reset on HALT
     if(M68000.ProcessingState==TM68000::HALTED)
       PostRunMessage();
 #endif

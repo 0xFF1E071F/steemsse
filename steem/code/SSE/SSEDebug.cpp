@@ -22,6 +22,9 @@
 #include <mymisc.h>//getexe
 #include <run.decla.h>
 #include <steemh.decla.h>
+
+#include <cpu.decla.h>
+
 #include "SSEFloppy.h"
 #include <display.decla.h>
 #include <init_sound.decla.h>
@@ -61,7 +64,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_IO ] = 0;
   logsection_enabled[ LOGSECTION_MFP_TIMERS ] = 0;
   logsection_enabled[ LOGSECTION_INIT ] =1; //0; by default
-  logsection_enabled[ LOGSECTION_CRASH ] = 0;
+  logsection_enabled[ LOGSECTION_CRASH ] = 1;
   logsection_enabled[ LOGSECTION_STEMDOS ] = 0;
   logsection_enabled[ LOGSECTION_IKBD ] = 0;
   logsection_enabled[ LOGSECTION_AGENDA ] = 0;
@@ -754,7 +757,10 @@ void TDebug::TraceEvent(void* pointer) {
   else if(pointer==event_driveB_ip)
     TRACE("event_driveB_ip");
 #endif
-#if defined(SSE_IKBD_6301_EVENT)
+#if defined(SSE_ACIA_383)
+  else if(pointer==event_acia)
+    TRACE("event_acia");
+#elif defined(SSE_IKBD_6301_EVENT)
   else if(pointer==event_ikbd)
     TRACE("event_ikbd");
   else if(pointer==event_ikbd2)

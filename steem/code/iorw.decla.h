@@ -5,7 +5,9 @@
 #define EXT extern
 #define INIT(s)
 
+#ifndef SSE_VIDEO_CHIPSET
 extern DWORD get_shifter_draw_pointer(int);
+#endif
 
 extern "C" {
 
@@ -19,12 +21,11 @@ void ASMCALL io_write_l(MEM_ADDRESS,LONG);
 }
 
 EXT bool io_word_access INIT(0);
-#if defined(SSE_CPU_ROUNDING_BUS)
+#if defined(SSE_MMU_ROUNDING_BUS)
 #define BUS_JAM_TIME(t) INSTRUCTION_TIME(t) // no need to round up
 #else
 #define BUS_JAM_TIME(t) INSTRUCTION_TIME_ROUND(t)
 #endif
-//#define BUS_JAM_TIME(t) INSTRUCTION_TIME(t)
 
 #undef EXT
 #undef INIT

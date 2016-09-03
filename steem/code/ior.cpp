@@ -22,7 +22,7 @@ bool io_word_access=false;
 
 #define LOGSECTION LOGSECTION_IO
 
-#if !defined(SSE_SHIFTER_SDP_READ) || !defined(SSE_STRUCTURE)
+#if !defined(SSE_VIDEO_CHIPSET)
 
 MEM_ADDRESS get_shifter_draw_pointer(int cycles_since_hbl)
 { 
@@ -121,21 +121,29 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
 
   BYTE ior_byte=0xff; // default value
 
-#if defined(SSE_CPU_ROUNDING_BUS)
+#if defined(SSE_MMU_ROUNDING_BUS)
 /*  Should round up only for RAM and Shifter, not peripherals that sit
     on the CPU bus.
 */
-  if(M68000.Rounded && !M68000.Unrounded &&
-    !(addr>=0xff8240 && addr<=(MEM_ADDRESS)(ST_TYPE==STE?0xff8265:0xff8260)))
+  if(MMU.Rounded && !MMU.Unrounded &&
+    !(addr>=0xff8240 && addr<=(MEM_ADDRESS)(ST_TYPE==STE?0xff8265:0xff8260))
+#if defined(DEBUG_BUILD)
+    && mode==STEM_MODE_CPU // no cycles when boiler is reading (writing?? useless?)
+#endif    
+    )
   {
     INSTRUCTION_TIME(-2);
-    M68000.Rounded=false;
+#if defined(SSE_MMU_ROUNDING_BUS)
+    MMU.Rounded=false;
+#else
+    Rounded=false;
+#endif
 #if defined(SSE_OSD_CONTROL)
     if((OSD_MASK_CPU&OSD_CONTROL_CPUROUNDING))
       TRACE_OSD("R %X -2",addr);
 #endif
    }
-#endif//SSE_CPU_ROUNDING_BUS
+#endif
 
 #if defined(SSE_VAR_OPT_383A)
   act=ACT;
@@ -1078,7 +1086,7 @@ Receiver Data Register is retained.
         case 0xff8207:  //mid byte of screen draw pointer
         case 0xff8209:{  //low byte of screen draw pointer
           MEM_ADDRESS sdp;
-#if defined(SSE_SHIFTER_SDP_READ)
+#ifdef SSE_VIDEO_CHIPSET
           sdp=MMU.ReadVideoCounter(LINECYCLES); // a complicated affair
 #else
           if(scan_y<shifter_first_draw_line || scan_y>=shifter_last_draw_line){
@@ -1090,13 +1098,14 @@ Receiver Data Register is retained.
               " on "+scanline_cycle_log()); )
           }
 #endif
+
           ior_byte=DWORD_B(&sdp,(2-(addr-0xff8205)/2)); // change for big endian !!!!!!!!!
 #if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
           if(mode!=STEM_MODE_INSPECT &&(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SDP_READ))
             FrameEvents.Add(scan_y,LINECYCLES,'c',((addr&0xF)<<8)|ior_byte);
 #endif
-                      }
-                      break;
+          }
+          break;
 
         case 0xff820a:  //synchronization mode
           ior_byte&=~3;           // this way takes care...
@@ -2039,10 +2048,10 @@ Done one cycle of all palettes
           palette|=(0xF888)&(rand()); // UMD8730
 #if defined(SSE_CPU_DATABUS)
         else if(ir==0x5279 || ir==0x5379)
-          palette|=0xF888&M68000.dbus; // Awesome 04
+          palette|=0xF888&dbus; // Awesome 04
 #endif
 #elif defined(SSE_CPU_DATABUS)
-        palette|=0xF888&M68000.dbus;
+        palette|=0xF888&dbus;
 #else
         palette|=(0x888)&(rand());
 #endif

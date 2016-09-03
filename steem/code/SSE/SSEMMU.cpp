@@ -64,7 +64,7 @@
 */
 
 void TMMU::UpdateVideoCounter(int CyclesIn) {
-
+//  ASSERT(scan_y!=-29);
   MEM_ADDRESS sdp;
   if (bad_drawing){  // Fake SDP, eg extended monitor
     if (scan_y<0)
@@ -81,7 +81,7 @@ void TMMU::UpdateVideoCounter(int CyclesIn) {
     int bytes_to_count=Glue.CurrentScanline.Bytes;
 
     // 8 cycles latency before MMU starts prefetching
-    int starts_counting=(Glue.CurrentScanline.StartCycle+8)/2;
+    int starts_counting=(Glue.CurrentScanline.StartCycle+MMU_PREFETCH_LATENCY)/2;
 
     // can't be odd though (hires)
     starts_counting&=-2;
@@ -205,10 +205,8 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
   // some bits will stay at 0 in the STE whatever you write
   if(mem_len<=FOUR_MEGS && addr==0xFF8205) 
     io_src_b&=0x3F; // eg Delirious IV
-#if defined(SSE_SHIFTER_SDP_WRITE_LOWER_BYTE)
   else if(addr==0xFF8209)
     io_src_b&=0xFE; // eg RGBeast
-#endif
 
   bool fl=Glue.FetchingLine();
 

@@ -237,7 +237,7 @@ int GetComLineArgType(char *,EasyStr &);
 #define ARG_SETTRANSFILE 102
 #define ARG_SETFONT 103
 #define ARG_SETCUTSFILE 104
-#if !defined(SSE_CPU_DIV)
+#if !defined(SSE_CPU)
 #define ARG_SETDIVUTIME 105
 #define ARG_SETDIVSTIME 106
 #endif

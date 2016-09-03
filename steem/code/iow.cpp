@@ -63,26 +63,26 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
     TRACE_LOG("%d PC %X write byte %X to %X\n",ACT,old_pc,io_src_b,addr);
 #endif
 
-#if defined(SSE_CPU_ROUNDING_BUS)
+#if defined(SSE_MMU_ROUNDING_BUS)
 /*  Should round up only for RAM and Shifter (palette), not peripherals
     that sit on the CPU bus.
-    Not a big change because we corrected MOVE rounding too.
-    There could be a reason for an STF/STE difference: MMU and GLU are merged
-    on the STE
-    This or our limit for left off on STE is wrong.
 */
-   if(M68000.Rounded && !(addr>=0xff8240 
-     && addr<(MEM_ADDRESS)(ST_TYPE==STE?0xff8266:0xff8260)))
+    if(MMU.Rounded && !(addr>=0xff8240 
+     && addr<(MEM_ADDRESS)(ST_TYPE==STE?0xff8266:0xff8260))
+#if defined(DEBUG_BUILD)
+     && mode==STEM_MODE_CPU // no cycles when boiler is reading
+#endif      
+     )
   {
     INSTRUCTION_TIME(-2);
-    M68000.Rounded=false;
+    MMU.Rounded=false;
     //TRACE("PC %X addr %X\n",old_pc,addr);
 #if defined(SSE_OSD_CONTROL)
     if((OSD_MASK_CPU&OSD_CONTROL_CPUROUNDING))
       TRACE_OSD("W %X -2",addr);
 #endif
    }
-#endif//SSE_CPU_ROUNDING_BUS
+#endif
 
 #ifdef DEBUG_BUILD
 #if defined(SSE_BOILER_MONITOR_IO_FIX1)
@@ -264,7 +264,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 #undef TRACE_ACIA
 #define LOGSECTION LOGSECTION_IO//SS
 
-#else//defined(SSE_ACIA_383) 
+#else//defined(SSE_ACIA_383) ?
     case 0xfffc00:{  //--------------------------------------- ACIAs
 /*
           MC6850
@@ -1020,6 +1020,7 @@ Even though the samples are built on a byte-base, the DMA chip also only
 */
                 next_dma_sound_start&=0x00ffff;
                 next_dma_sound_start|=io_src_b << 16;
+                //next_dma_sound_start=(io_src_b << 16);
                 break;
               case 0x5:
                 next_dma_sound_start&=0xff00ff;
@@ -1658,7 +1659,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
         EasyStr bin_src_b;bin_src_b.SetLength(8);
         itoa(io_src_b,bin_src_b,2);
         EasyStr a=EasyStr("FDC: Writing byte ")+bin_src_b.LPad(8,'0')+" to IO address "+HEXSl(addr,6);
-#ifdef _DEBUG_BUILD
+#ifdef DEBUG_BUILD
         iolist_entry *iol=search_iolist(addr);
         if (iol) a+=EasyStr(" (")+(iol->name)+")";
 #endif
@@ -1918,14 +1919,14 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
         case 0xff8207:  //mid byte of draw pointer
         case 0xff8209:  //low byte of draw pointer
 
-#if defined(SSE_SHIFTER_SDP_WRITE)
+#if defined(SSE_VIDEO_CHIPSET)
           MMU.WriteVideoCounter(addr,io_src_b);
 #ifdef SSE_GLUE_REFACTOR_OVERSCAN_EXTRA
           log_to(LOGSECTION_VIDEO,Str("VIDEO: ")+HEXSl(old_pc,6)+" - Set Shifter draw pointer to "+
             HEXSl(MMU.VideoCounter,6)+" at "+scanline_cycle_log());
 #endif
           break;
-#else // Steem 3.2 or SSE_SHIFTER_SDP_WRITE not defined
+#else 
           {
             //          int srp=scanline_raster_position();
             int dst=ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl;
@@ -2525,7 +2526,7 @@ MMU PC E000E6 Byte A RAM 1024K Bank 0 512 Bank 1 512 testing 1
 MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
 
 */
-#if defined(SSE_MMU_WRITE) 
+#if defined(SSE_MMU_WRITE_MEM_CONF) 
         if(mem_len<=FOUR_MEGS){ // programs actually may write here
 #else
         if (old_pc>=FOURTEEN_MEGS && mem_len<=FOUR_MEGS){
@@ -2541,7 +2542,7 @@ MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
           mmu_confused=false;
           if (bank_length[0]) if (mmu_bank_length[0]!=bank_length[0]) mmu_confused=true;
           if (bank_length[1]) if (mmu_bank_length[1]!=bank_length[1]) mmu_confused=true;
-#if defined(SSE_MMU_WRITE)
+#if defined(SSE_MMU_WRITE_MEM_CONF)
           if(old_pc<FOURTEEN_MEGS) // the write doesn't "confuse" the MMU
           {
 #if defined(SSE_BOILER_TRACE_CONTROL)
@@ -2668,7 +2669,7 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
 #endif
 
 #if defined(SSE_CPU_DATABUS)
-  M68000.dbus=io_src_w;
+  dbus=io_src_w;
 #endif
 
   if (addr>=0xff8240 && addr<0xff8260){  //palette

@@ -27,12 +27,7 @@ enum EShifterDispatchers {DISPATCHER_NONE, DISPATCHER_CPU, DISPATCHER_LINEWIDTH,
   DISPATCHER_WRITE_SDP, DISPATCHER_SET_SHIFT_MODE, DISPATCHER_SET_SYNC,
   DISPATCHER_SET_PAL, DISPATCHER_DSTE};
 
-// minimal delay between GLUE DE and first LOAD signal emitted by the MMU
-#if defined(SSE_CPU_PREFETCH_TIMING)
-#define MMU_PREFETCH_LATENCY 8
-#else
-#define MMU_PREFETCH_LATENCY 12 
-#endif
+
 
 // in all shift modes, all 4 Shifter registers are loaded before picture starts
 #define SHIFTER_RASTER_PREFETCH_TIMING 16

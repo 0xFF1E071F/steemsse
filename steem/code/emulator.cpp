@@ -50,7 +50,7 @@ EXT int shifter_hscroll,shifter_skip_raster_for_hscroll;
 
 EXT MEM_ADDRESS xbios2,shifter_draw_pointer_at_start_of_line;
 EXT int shifter_pixel;
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED2)
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
 extern "C" 
 #endif
 EXT int shifter_freq INIT(60);
@@ -148,6 +148,9 @@ MEM_ADDRESS line_a_base=0;
 MEM_ADDRESS vdi_intout=0;
 
 #endif
+
+
+
 
 #undef EXT
 #undef INIT
@@ -518,7 +521,7 @@ void ACIA_Reset(int nACIA,bool Cold)
     {
     /*
     "Overrun is also reset by the Master Reset."
-      */ //TODO: isn't Master Reset sthg else?
+      */
       acia[nACIA].SR&=~(BIT_0|BIT_5); // from doc
       ////    acia[nACIA].SR=2;
       acia[nACIA].RDR=0;//?
@@ -936,18 +939,6 @@ void call_a000()
   //TRACE_INIT("call_a000()\n");
   on_rte_return_address=(PC32);
   //now save regs a0,a1,d0 ?
-#if !defined(SSE_INT_ROUNDING)
-  INSTRUCTION_TIME_ROUND(0);  // Round first for interrupts
-#endif
-#if defined(SSE_CPU_FETCH_TIMING)
-  INSTRUCTION_TIME_ROUND(34-4);
-  FETCH_TIMING;
-#if defined(SSE_CPU_PREFETCH_TIMING_SET_PC)
-  CPU_ABUS_ACCESS_READ_PC; // because FETCH_TIMING does nothing
-#endif
-#else
-  INSTRUCTION_TIME_ROUND(34);
-#endif
   on_rte=ON_RTE_LINE_A;
   DPEEK(0)=0xa000; //SS ?
 //    m68k_interrupt(LPEEK(BOMBS_LINE_A*4));
@@ -955,7 +946,13 @@ void call_a000()
   if (!SUPERFLAG) change_to_supervisor_mode();
   m68k_PUSH_L(0);
   m68k_PUSH_W(_sr);
+#if defined(SSE_CPU)
+  m68kTrapTiming();
+#else
+  INSTRUCTION_TIME_ROUND(34);
+#endif
   SET_PC(LPEEK(BOMBS_LINE_A*4));
+
 
 //  dbg_log(EasyStr("interrupt - increasing interrupt depth from ")+interrupt_depth+" to "+(interrupt_depth+1));
 #if defined(SSE_VC_INTRINSICS_383E)

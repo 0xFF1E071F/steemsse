@@ -331,14 +331,10 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   old_acia[NUM_ACIA_IKBD].irq=ACIA_IKBD.irq;
   old_acia[NUM_ACIA_IKBD].last_tx_write_time=ACIA_IKBD.last_tx_write_time;
   old_acia[NUM_ACIA_IKBD].last_rx_read_time=ACIA_IKBD.last_rx_read_time;
-#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
   old_acia[NUM_ACIA_IKBD].LineRxBusy=ACIA_IKBD.LineRxBusy;
   old_acia[NUM_ACIA_IKBD].ByteWaitingRx=ACIA_IKBD.ByteWaitingRx;
-#endif
-#if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
   old_acia[NUM_ACIA_IKBD].ByteWaitingTx=ACIA_IKBD.ByteWaitingTx;
   old_acia[NUM_ACIA_IKBD].LineTxBusy=ACIA_IKBD.LineTxBusy;
-#endif
 #if defined(SSE_ACIA_REGISTERS)
   old_acia[NUM_ACIA_IKBD].CR=ACIA_IKBD.CR;
   old_acia[NUM_ACIA_IKBD].SR=ACIA_IKBD.SR;
@@ -360,14 +356,10 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ACIA_IKBD.irq=old_acia[NUM_ACIA_IKBD].irq;
   ACIA_IKBD.last_tx_write_time=old_acia[NUM_ACIA_IKBD].last_tx_write_time;
   ACIA_IKBD.last_rx_read_time=old_acia[NUM_ACIA_IKBD].last_rx_read_time;
-#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
   ACIA_IKBD.LineRxBusy=old_acia[NUM_ACIA_IKBD].LineRxBusy;
   ACIA_IKBD.ByteWaitingRx=old_acia[NUM_ACIA_IKBD].ByteWaitingRx;
-#endif
-#if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
   ACIA_IKBD.ByteWaitingTx=old_acia[NUM_ACIA_IKBD].ByteWaitingTx;
   ACIA_IKBD.LineTxBusy=old_acia[NUM_ACIA_IKBD].LineTxBusy;
-#endif
 #if defined(SSE_ACIA_REGISTERS)
   ACIA_IKBD.CR=old_acia[NUM_ACIA_IKBD].CR;
   ACIA_IKBD.SR=old_acia[NUM_ACIA_IKBD].SR;
@@ -389,10 +381,10 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     ACIA_MIDI.CR=0x95; // usually
     ACIA_MIDI.SR=2; // usually
   //}//3.8.0
-#if defined(SSE_ACIA_DOUBLE_BUFFER_RX) && !defined(SSE_ACIA_380)
+#if !defined(SSE_ACIA_380)
     ACIA_IKBD.LineRxBusy=0;
 #endif
-#if defined(SSE_ACIA_DOUBLE_BUFFER_TX) && !defined(SSE_ACIA_380)
+#if !defined(SSE_ACIA_380)
     ACIA_IKBD.LineTxBusy=0;
 #endif
     }//3.8.0
@@ -729,7 +721,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     DWORD l=256;
     if (emudetect_called==0) l=0;
     ReadWrite(l);
-#if defined(SSE_LOAD_SAVE_001)
+#if defined(SSE_VS2008_WARNING_383)
     for (DWORD n=0;n<(BYTE)l;n++){
 #else
     for (DWORD n=0;n<l;n++){
@@ -936,14 +928,10 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   old_acia[NUM_ACIA_MIDI].irq=ACIA_MIDI.irq;
   old_acia[NUM_ACIA_MIDI].last_tx_write_time=ACIA_MIDI.last_tx_write_time;
   old_acia[NUM_ACIA_MIDI].last_rx_read_time=ACIA_MIDI.last_rx_read_time;
-#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
   old_acia[NUM_ACIA_MIDI].LineRxBusy=ACIA_MIDI.LineRxBusy;
   old_acia[NUM_ACIA_MIDI].ByteWaitingRx=ACIA_MIDI.ByteWaitingRx;
-#endif
-#if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
   old_acia[NUM_ACIA_MIDI].ByteWaitingTx=ACIA_MIDI.ByteWaitingTx;
   old_acia[NUM_ACIA_MIDI].LineTxBusy=ACIA_MIDI.LineTxBusy;
-#endif
 #if defined(SSE_ACIA_REGISTERS)
   old_acia[NUM_ACIA_MIDI].CR=ACIA_MIDI.CR;
   old_acia[NUM_ACIA_MIDI].SR=ACIA_MIDI.SR;
@@ -965,14 +953,10 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ACIA_MIDI.irq=old_acia[NUM_ACIA_MIDI].irq;
   ACIA_MIDI.last_tx_write_time=old_acia[NUM_ACIA_MIDI].last_tx_write_time;
   ACIA_MIDI.last_rx_read_time=old_acia[NUM_ACIA_MIDI].last_rx_read_time;
-#if defined(SSE_ACIA_DOUBLE_BUFFER_RX)
   ACIA_MIDI.LineRxBusy=old_acia[NUM_ACIA_MIDI].LineRxBusy;
   ACIA_MIDI.ByteWaitingRx=old_acia[NUM_ACIA_MIDI].ByteWaitingRx;
-#endif
-#if defined(SSE_ACIA_DOUBLE_BUFFER_TX)
   ACIA_MIDI.ByteWaitingTx=old_acia[NUM_ACIA_MIDI].ByteWaitingTx;
   ACIA_MIDI.LineTxBusy=old_acia[NUM_ACIA_MIDI].LineTxBusy;
-#endif
 #if defined(SSE_ACIA_REGISTERS)
   ACIA_MIDI.CR=old_acia[NUM_ACIA_MIDI].CR;
   ACIA_MIDI.SR=old_acia[NUM_ACIA_MIDI].SR;

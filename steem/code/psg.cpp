@@ -84,8 +84,6 @@ EXT int psg_capture_cycle_base INIT(0);
 
 EXT bool psg_always_capture_on_start INIT(0);
 
-//#ifdef IN_EMU
-
 //not all are used
 #define ONE_MILLION 1048576
 #define TWO_MILLION 2097152
@@ -281,35 +279,6 @@ const int psg_envelope_level[8][64]={
     {0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,1*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,3*VA/1000+VZL*VFP,5*VA/1000+VZL*VFP,10*VA/1000+VZL*VFP,20*VA/1000+VZL*VFP,30*VA/1000+VZL*VFP,50*VA/1000+VZL*VFP,55*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,70*VA/1000+VZL*VFP,80*VA/1000+VZL*VFP,88*VA/1000+VZL*VFP,100*VA/1000+VZL*VFP,110*VA/1000+VZL*VFP,125*VA/1000+VZL*VFP,149*VA/1000+VZL*VFP,178*VA/1000+VZL*VFP,210*VA/1000+VZL*VFP,250*VA/1000+VZL*VFP,290*VA/1000+VZL*VFP,354*VA/1000+VZL*VFP,420*VA/1000+VZL*VFP,510*VA/1000+VZL*VFP,590*VA/1000+VZL*VFP,707*VA/1000+VZL*VFP,841*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP,
     VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP}};
 
-
-#if defined(SSE_YM2149_ENV_FIX1)
-/*  Values based on the graphic in Yamaha doc.
-    It remains to be seen/heard if the sound is better with these values or
-    Steem original values.
-    For that reason, the mod is optional.
-    v3.7.0: this mod was wrong, we must take the values mentioned in the doc 841, 707, etc.
-    What was I thinking?
-    SSE_YM2149_ENV_FIX1 undef
-*/
-
-const int psg_envelope_level2[8][64]={
-    {1000*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,
-    1000*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP},
-    {1000*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,
-    VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP},
-    {1000*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,
-    0*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP},
-    {1000*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,
-    VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP},
-    {0*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP,
-    0*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP},
-    {0*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP,
-    VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP},
-    {0*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP,
-    1000*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP},
-    {0*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,7*VA/1000+VZL*VFP,9*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,15*VA/1000+VZL*VFP,16*VA/1000+VZL*VFP,22*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,40*VA/1000+VZL*VFP,46*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,54*VA/1000+VZL*VFP,66*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,91*VA/1000+VZL*VFP,107*VA/1000+VZL*VFP,130*VA/1000+VZL*VFP,152*VA/1000+VZL*VFP,179*VA/1000+VZL*VFP,212*VA/1000+VZL*VFP,256*VA/1000+VZL*VFP,300*VA/1000+VZL*VFP,355*VA/1000+VZL*VFP,425*VA/1000+VZL*VFP,507*VA/1000+VZL*VFP,598*VA/1000+VZL*VFP,704*VA/1000+VZL*VFP,834*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP,
-    VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP}};
-#endif
 
 #if defined(SSE_YM2149_DELAY_RENDERING)
 /*  Rendering is done later, we save the 5bit digital value instead of the 
@@ -2208,9 +2177,6 @@ void psg_prepare_envelope(double &af,double &bf,int &psg_envmodulo,DWORD t,
 #endif
           : psg_envelope_level[envshape][psg_envstage & 63] ;                   
 
-#elif defined(SSE_YM2149_ENV_FIX1) //no                      
-        envvol=SSEOption.PSGMod?psg_envelope_level2[envshape][psg_envstage & 63]      
-          :psg_envelope_level[envshape][psg_envstage & 63];
 #else
         envvol=psg_envelope_level[envshape][psg_envstage & 63];
 
@@ -2231,36 +2197,6 @@ void psg_prepare_envelope(double &af,double &bf,int &psg_envmodulo,DWORD t,
 
 #else
 
-#if defined(SSE_YM2149_ENV_FIX1)
-#define PSG_PREPARE_ENVELOPE                                \
-      int envperiod=max( (((int)psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]) <<8) + psg_reg[PSGR_ENVELOPE_PERIOD_LOW],1);  \
-      af=envperiod;                              \
-      af*=sound_freq;                  \
-      af*=((double)(1<<13))/15625;                               \
-      psg_envmodulo=(int)af; \
-      bf=(((DWORD)t)-psg_envelope_start_time); \
-      bf*=(double)(1<<17); \
-      psg_envstage=(int)floor(bf/af); \
-      bf=fmod(bf,af); /*remainder*/ \
-      psg_envcountdown=psg_envmodulo-(int)bf; \
-      envdeath=-1;                                                                  \
-      if ((psg_reg[PSGR_ENVELOPE_SHAPE] & PSG_ENV_SHAPE_CONT)==0 ||                  \
-           (psg_reg[PSGR_ENVELOPE_SHAPE] & PSG_ENV_SHAPE_HOLD)){                      \
-        if(psg_reg[PSGR_ENVELOPE_SHAPE]==11 || psg_reg[PSGR_ENVELOPE_SHAPE]==13){      \
-          envdeath=psg_flat_volume_level[15];                                           \
-        }else{                                                                           \
-          envdeath=psg_flat_volume_level[0];                                              \
-        }                                                                                   \
-      }                                                                                      \
-      envshape=psg_reg[PSGR_ENVELOPE_SHAPE] & 7;                    \
-      if (psg_envstage>=32 && envdeath!=-1){                           \
-        envvol=envdeath;                                             \
-      }else{                                                       \
-        envvol=SSEOption.PSGMod?psg_envelope_level2[envshape][psg_envstage & 63]            \
-          :psg_envelope_level[envshape][psg_envstage & 63];\
-      }																															\
-
-#else
 #define PSG_PREPARE_ENVELOPE                                \
       int envperiod=max( (((int)psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]) <<8) + psg_reg[PSGR_ENVELOPE_PERIOD_LOW],1);  \
       af=envperiod;                              \
@@ -2287,8 +2223,6 @@ void psg_prepare_envelope(double &af,double &bf,int &psg_envmodulo,DWORD t,
       }else{                                                       \
         envvol=psg_envelope_level[envshape][psg_envstage & 63];            \
       }																															\
-
-#endif
 
 #endif//a
 
@@ -2402,9 +2336,6 @@ void psg_envelope_advance(int &psg_envmodulo,int &psg_envstage,int &psg_envcount
 #endif
           : psg_envelope_level[envshape][psg_envstage & 63] ;                   
                  
-#elif defined(SSE_YM2149_ENV_FIX1)
-              envvol=(SSEOption.PSGMod)?psg_envelope_level2[envshape][psg_envstage & 63]            \
-                :psg_envelope_level[envshape][psg_envstage & 63];
 #else                                                    
               envvol=psg_envelope_level[envshape][psg_envstage & 63];
 #endif
@@ -2420,22 +2351,6 @@ void psg_envelope_advance(int &psg_envmodulo,int &psg_envstage,int &psg_envcount
 
 #else
 
-#if defined(SSE_YM2149_ENV_FIX1)
-
-#define PSG_ENVELOPE_ADVANCE                                   \
-          psg_envcountdown-=TWO_TO_SEVENTEEN;  \
-          while (psg_envcountdown<0){           \
-            psg_envcountdown+=psg_envmodulo;             \
-            psg_envstage++;                   \
-            if (psg_envstage>=32 && envdeath!=-1){                           \
-              envvol=envdeath;                                             \
-            }else{                                                       \
-              envvol=(SSEOption.PSGMod)?psg_envelope_level2[envshape][psg_envstage & 63]            \
-                :psg_envelope_level[envshape][psg_envstage & 63];\
-            }																															\
-          }
-#else
-
 #define PSG_ENVELOPE_ADVANCE                                   \
           psg_envcountdown-=TWO_TO_SEVENTEEN;  \
           while (psg_envcountdown<0){           \
@@ -2447,8 +2362,6 @@ void psg_envelope_advance(int &psg_envmodulo,int &psg_envstage,int &psg_envcount
               envvol=psg_envelope_level[envshape][psg_envstage & 63];            \
             }																															\
           }
-#endif
-
   //            envvol=(psg_envstage&255)*64;
 
 
@@ -2919,12 +2832,6 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
       // psg_tone_start_time[abc] is set to the last end of wave, so if it is in future don't do anything.
       // Overflow will be a problem, however at 50Khz that will take a day of non-stop output.
 
-#if defined(SSE_YM2149_QUANTIZE1) // undef v3.8.2
-#if defined(SSE_YM2149_QUANTIZE2) //fixes high pitch noise in YMT-Player
-      if(OPTION_HACKS && new_val>15 ) //pathetic hack: Union Demo text screens
-#endif
-        psg_write_buffer(abc,t);
-#endif
       if (t>psg_tone_start_time[abc]){
 
 #if defined(SSE_YM2149_QUANTIZE_382)
@@ -2962,12 +2869,7 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
 #else
         t=psg_quantize_time(abc,t);
 #endif//SSE_YM2149_QUANTIZE_382
-#if !defined(SSE_YM2149_QUANTIZE1)  || defined(SSE_YM2149_QUANTIZE2)
-#if defined(SSE_YM2149_QUANTIZE2)
-        if(new_val<=15 || !OPTION_HACKS) // :roll:
-#endif
-          psg_write_buffer(abc,t);
-#endif
+        psg_write_buffer(abc,t);
         psg_tone_start_time[abc]=t;
         
       }

@@ -599,18 +599,9 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
          dispatcher!=DISPATCHER_WRITE_SDP  && 
          pixels_in>=picture_right_edge 
         && scanline_drawn_so_far<picture_right_edge
-#if defined(SSE_SHIFTER_SDP_WRITE_ADD_EXTRA)
-/*  LINEWID is added to the videocounter right when the Shifter is
-    finished rendering (depends on Shifter, not GLU) //no...
-*/
         || dispatcher==DISPATCHER_WRITE_SDP // fixes flicker in Cool STE 
-        && cycles_since_hbl>Glue.CurrentScanline.EndCycle
-          +MMU_PREFETCH_LATENCY // case: Kryos 
-#endif
-        ) )
-      {
+        && cycles_since_hbl>Glue.CurrentScanline.EndCycle+MMU_PREFETCH_LATENCY))
         Glue.AddExtraToShifterDrawPointerAtEndOfLine(shifter_draw_pointer);
-      }
 #endif
     }
     // overscan lines = a big "left border"
@@ -825,11 +816,6 @@ FF825E
   else
 #endif
     NewPal &= 0x0FFF;
-#if defined(SSE_VID_AUTOOFF_DECRUNCHING)//no
-  if(!n && NewPal && NewPal!=0x777) // basic test
-    overscan=OVERSCAN_MAX_COUNTDOWN;
-#endif
-
     if(STpal[n]!=NewPal)
     {
       int CyclesIn=LINECYCLES;
