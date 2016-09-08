@@ -738,16 +738,104 @@ void agenda_acia_tx_delay_MIDI(int)
 #undef LOGSECTION
 //-------------------------------------------------- MMU Confused
 #if !(defined(SSE_MMU_NO_CONFUSION))
-  /* SS I still don't know what's the use.
-  I thought it was for when TOS resets and tests memory, but now
-  it seems to work without it.
-  It's quite a lot of code removed.
-  v3.5.2:
-  Code has been put back because the Atari dignostic cartridge
-  works better with it.
-  TODO is it OK for 256K?
-  */
 #define LOGSECTION LOGSECTION_IO//SS
+
+#if defined(SSE_MMU_RAM_TEST1)
+/* see memdetect.txt in 3rdparty/doc
+
+R=row, C=column
+If a line isn't connected, bit is 0.
+
+On MMU configured for 2MB
+
+STF decoding=
+0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
+C C C C C C C C C C R R R R R R R R R R X
+9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 X
+
+STE decoding=
+0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
+C R C R C R C R C R C R C R C R C R C R X
+9 9 8 8 7 7 6 6 5 5 4 4 3 3 2 2 1 1 0 0 X
+
+512K bank: C9, R9 
+128K bank: C9, R9, C8, R8 not connected
+
+On MMU configured for 512K 
+
+STF decoding=
+8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
+C C C C C C C C C R R R R R R R R R X
+8 7 6 5 4 3 2 1 0 8 7 6 5 4 3 2 1 0 X
+
+STE decoding=
+8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
+C R C R C R C R C R C R C R C R C R X
+8 8 7 7 6 6 5 5 4 4 3 3 2 2 1 1 0 0 X
+
+128K bank: R8, C8 not connected
+
+*/
+
+MEM_ADDRESS mmu_confused_address(MEM_ADDRESS ad)
+{
+#if defined(SSE_BOILER_TRACE_CONTROL)
+  MEM_ADDRESS ad1=ad; // save for trace
+#endif
+  int bank=0;
+  if (ad>FOUR_MEGS){
+    return 0xffffff;   //bus error
+  }else if (ad>=mmu_bank_length[0]){
+    bank=1;
+    ad-=mmu_bank_length[0];
+    if (ad>=mmu_bank_length[1]) 
+      return 0xfffffe; //gap
+  }
+
+  if (bank_length[bank]==0)
+     ad=0xfffffe; //gap
+
+  // MMU configured for 2MB 
+  else if (mmu_bank_length[bank]==MB2){ 
+    if (bank_length[bank]==KB128){ //real memory
+#ifdef SSE_STF_MMU
+      if(ST_TYPE==STF)
+        ad&=~(BIT_20|BIT_19|BIT_10|BIT_9);
+      else
+#endif
+        ad&=~(BIT_20|BIT_19|BIT_18|BIT_17);
+    }else if (bank_length[bank]==KB512){ //real memory
+#ifdef SSE_STF_MMU
+      if(ST_TYPE==STF)
+        ad&=~(BIT_20|BIT_10);
+      else
+#endif
+        ad&=~(BIT_20|BIT_19);
+    }
+  }//2MB
+
+  // MMU configured for 512K
+  else if (mmu_bank_length[bank]==KB512) { 
+    if (bank_length[bank]==KB128){ //real memory
+#ifdef SSE_STF_MMU
+      if(ST_TYPE==STF)
+        ad&=~(BIT_18|BIT_9); // TOS OK, but diagnostic catridge?
+      else
+#endif
+        ad&=~(BIT_18|BIT_17);
+    }
+  }//512K
+
+  if (bank==1 && ad<FOUR_MEGS) 
+    ad+=bank_length[0];
+#if defined(SSE_BOILER_TRACE_CONTROL)
+  if((ad1!=ad) && (TRACE_MASK_IO & TRACE_CONTROL_IO_MMU))
+    TRACE_LOG("MMU confused ad %X -> %X\n",ad1,ad);
+#endif
+  return ad;
+}
+
+#else
 
 MEM_ADDRESS mmu_confused_address(MEM_ADDRESS ad)
 {
@@ -838,33 +926,20 @@ MEM_ADDRESS mmu_confused_address(MEM_ADDRESS ad)
   return ad;
 }
 
+#endif
+
 BYTE ASMCALL mmu_confused_peek(MEM_ADDRESS ad,bool cause_exception)
 {
   MEM_ADDRESS c_ad=mmu_confused_address(ad);
   if (c_ad==0xffffff){   //bus error
-    if (cause_exception) exception(BOMBS_BUS_ERROR,EA_READ,ad);
-#if defined(SSE_BOILER_TRACE_CONTROL)
-    if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
-#endif
-      TRACE_LOG("MMU confused peek %X 0\n",ad);
+    if (cause_exception) 
+      exception(BOMBS_BUS_ERROR,EA_READ,ad);
     return 0;
   }else if (c_ad==0xfffffe){  //gap in memory
-#if defined(SSE_BOILER_TRACE_CONTROL)
-    if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
-#endif
-      TRACE_LOG("MMU confused peek %X FF\n",ad);
     return 0xff;
   }else if (c_ad<mem_len){
-#if defined(SSE_BOILER_TRACE_CONTROL)
-    if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
-#endif
-      TRACE_LOG("MMU confused peek %X %X\n",ad,PEEK(c_ad));
     return PEEK(c_ad);
   }else{
-#if defined(SSE_BOILER_TRACE_CONTROL)
-    if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
-#endif
-      TRACE_LOG("MMU confused peek %X FF\n",ad);
     return 0xff;
   }
 }
@@ -873,29 +948,14 @@ WORD ASMCALL mmu_confused_dpeek(MEM_ADDRESS ad,bool cause_exception)
 {
   MEM_ADDRESS c_ad=mmu_confused_address(ad);
   if (c_ad==0xffffff){   //bus error
-    if (cause_exception) exception(BOMBS_BUS_ERROR,EA_READ,ad);
-#if defined(SSE_BOILER_TRACE_CONTROL)
-    if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
-#endif
-      TRACE_LOG("MMU confused dpeek %X 0\n",ad);
+    if (cause_exception) 
+      exception(BOMBS_BUS_ERROR,EA_READ,ad);
     return 0;
   }else if (c_ad==0xfffffe){  //gap in memory
-#if defined(SSE_BOILER_TRACE_CONTROL)
-    if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
-#endif
-      TRACE_LOG("MMU confused dpeek %X FFFF\n",ad);
     return 0xffff;
   }else if (c_ad<mem_len){
-#if defined(SSE_BOILER_TRACE_CONTROL)
-    if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
-#endif
-      TRACE_LOG("MMU confused dpeek %X %X\n",ad,DPEEK(c_ad));
     return DPEEK(c_ad);
   }else{
-#if defined(SSE_BOILER_TRACE_CONTROL)
-    if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
-#endif
-      TRACE_LOG("MMU confused dpeek %X FFFF\n",ad);
     return 0xffff;
   }
 }
@@ -904,10 +964,6 @@ LONG ASMCALL mmu_confused_lpeek(MEM_ADDRESS ad,bool cause_exception)
 {
   WORD a=mmu_confused_dpeek(ad,cause_exception);
   WORD b=mmu_confused_dpeek(ad+2,cause_exception);
-#if defined(SSE_BOILER_TRACE_CONTROL)
-  if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
-#endif
-    TRACE_LOG("MMU confused lpeek %X %X\n",ad,MAKELONG(b,a));
   return MAKELONG(b,a);
 }
 
@@ -915,7 +971,8 @@ void ASMCALL mmu_confused_set_dest_to_addr(int bytes,bool cause_exception)
 {
   MEM_ADDRESS c_ad=mmu_confused_address(abus);
   if (c_ad==0xffffff){  //bus error
-    if (cause_exception) exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+    if (cause_exception) 
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
   }else if (c_ad==0xfffffe){  //gap in memory
     m68k_dest=&iobuffer;  //throw away result
   }else if ((c_ad+bytes) <= mem_len){
@@ -923,10 +980,6 @@ void ASMCALL mmu_confused_set_dest_to_addr(int bytes,bool cause_exception)
   }else{
     m68k_dest=&iobuffer;  //throw away result
   }
-#if defined(SSE_BOILER_TRACE_CONTROL)
-  if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
-#endif
-    TRACE_LOG("MMU confused set dest %X\n",m68k_dest);
 }
 #undef LOGSECTION
 #endif//#if !defined(SSE_MMU_NO_CONFUSION)

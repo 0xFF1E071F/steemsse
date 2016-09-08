@@ -166,8 +166,11 @@ LONG d2_fetchL()
 
 BYTE d2_peek(MEM_ADDRESS ad){
   d2_peekvalid=0; //all valid
-
+#if defined(SSE_MMU_RAM_TEST3)
+  if(ad>=himem  || mmu_confused){
+#else
   if(ad>=himem){
+#endif
     ad&=0xffffff;
     if(ad>=MEM_IO_BASE){
       BYTE x;
