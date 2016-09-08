@@ -327,14 +327,15 @@ inline void m68k_poke_abus(BYTE x){
       io_write_b(abus,x);
     else
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
-  }else if(abus>=himem){
+#if defined(SSE_MMU_RAM_TEST3)
+  }else if(abus>=himem || mmu_confused) {
+#else
+  }else if(abus>=himem) {
+#endif
 #if !defined(SSE_MMU_NO_CONFUSION)
     if (mmu_confused){
       mmu_confused_set_dest_to_addr(1,true);
       m68k_DEST_B=x;
-#if defined(SSE_MMU_TRACE2)
-      TRACE_LOG("MMU %X: poke %X=%X\n",old_pc,m68k_DEST_B,x);
-#endif
     }else 
 #endif      
     if (abus>=FOUR_MEGS){
@@ -360,16 +361,16 @@ inline void m68k_poke_abus(BYTE x){
       && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2)
       Shifter.Render(LINECYCLES,DISPATCHER_CPU); 
 #endif
-    if (SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)
+    if (abus>=MEM_START_OF_USER_AREA||SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)
       PEEK(abus)=x;
-    else if (abus>=MEM_START_OF_USER_AREA)
-      PEEK(abus)=x;
-    else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+    else 
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
 #if defined(SSE_BOILER_MONITOR_VALUE2)
     DEBUG_CHECK_WRITE_B(abus);
 #endif
   }
 }
+
 
 inline void m68k_dpoke_abus(WORD x){
   abus&=0xffffff;
@@ -379,14 +380,15 @@ inline void m68k_dpoke_abus(WORD x){
       io_write_w(abus,x);
     else
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
-  }else if(abus>=himem){
+#if defined(SSE_MMU_RAM_TEST3)
+  }else if(abus>=himem || mmu_confused) {
+#else
+  }else if(abus>=himem) {
+#endif
 #if !defined(SSE_MMU_NO_CONFUSION)
     if(mmu_confused){
       mmu_confused_set_dest_to_addr(2,true);
       m68k_DEST_W=x;
-#if defined(SSE_MMU_TRACE2)
-      TRACE_LOG("MMU %X: dpoke %X=%X\n",old_pc,m68k_DEST_W,x);
-#endif
     }else 
 #endif
     if(abus>=FOUR_MEGS){
@@ -402,17 +404,17 @@ inline void m68k_dpoke_abus(WORD x){
       && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2)
       Shifter.Render(LINECYCLES,DISPATCHER_CPU); 
 #endif
-    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)
+    if(abus>=MEM_START_OF_USER_AREA||SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)
       DPEEK(abus)=x;
-    else if(abus>=MEM_START_OF_USER_AREA)
-      DPEEK(abus)=x;
-    else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+    else 
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
 #if defined(SSE_BOILER_MONITOR_VALUE2)
     DEBUG_CHECK_WRITE_W(abus);
 #endif
 
   }
 }
+
 
 inline void m68k_lpoke_abus(LONG x){
   abus&=0xffffff;
@@ -422,14 +424,15 @@ inline void m68k_lpoke_abus(LONG x){
       io_write_l(abus,x);
     else
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
-  }else if(abus>=himem){
+#if defined(SSE_MMU_RAM_TEST3)
+  }else if(abus>=himem || mmu_confused) {
+#else
+  }else if(abus>=himem) {
+#endif
 #if !defined(SSE_MMU_NO_CONFUSION)
     if(mmu_confused){
       mmu_confused_set_dest_to_addr(4,true);
       m68k_DEST_L=x;
-#if defined(SSE_MMU_TRACE2)
-      TRACE_LOG("MMU %X: lpoke %X=%X\n",old_pc,m68k_DEST_L,x);
-#endif
     }else 
 #endif
     if(abus>=FOUR_MEGS){
@@ -437,7 +440,6 @@ inline void m68k_lpoke_abus(LONG x){
     } //otherwise throw away
   }else{
 #if !defined(SSE_BOILER_MONITOR_VALUE4) //??
-/////#if defined(SSE_BOILER_MONITOR_VALUE2) //3.7.2 bugfix ?!
     DEBUG_CHECK_WRITE_L(abus);
 #endif
 #if defined(SSE_CPU_CHECK_VIDEO_RAM)
@@ -446,28 +448,29 @@ inline void m68k_lpoke_abus(LONG x){
       && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2)
       Shifter.Render(LINECYCLES,DISPATCHER_CPU); 
 #endif
-    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)
+    if(abus>=MEM_START_OF_USER_AREA||SUPERFLAG && abus>=MEM_FIRST_WRITEABLE)
       LPEEK(abus)=x;
-    else if(abus>=MEM_START_OF_USER_AREA)
-      LPEEK(abus)=x;
-    else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
-//#if !defined(SSE_BOILER_MONITOR_VALUE2)
-#if defined(SSE_BOILER_MONITOR_VALUE2) //3.7.2 bugfix?
+    else 
+      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+#if defined(SSE_BOILER_MONITOR_VALUE2)
     DEBUG_CHECK_WRITE_L(abus);
 #endif
 
   }
 }
 
+
 inline  void m68k_poke(MEM_ADDRESS ad,BYTE x){
   abus=ad;
   m68k_poke_abus(x);
 }
 
+
 inline  void m68k_dpoke(MEM_ADDRESS ad,WORD x){
   abus=ad;
   m68k_dpoke_abus(x);
 }
+
 
 inline  void m68k_lpoke(MEM_ADDRESS ad,LONG x){
   abus=ad;
@@ -590,7 +593,11 @@ inline void SetDestBToAddr() {
       m68k_dest=&iobuffer;               
       DWORD_B_0(&iobuffer)=io_read_b(abus);        
     }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);             
-  }else if(abus>=himem){                               
+#if defined(SSE_MMU_RAM_TEST3)
+  }else if(abus>=himem || mmu_confused) {
+#else
+  }else if(abus>=himem) {
+#endif                            
 #if !defined(SSE_MMU_NO_CONFUSION)
     if(mmu_confused){                               
       mmu_confused_set_dest_to_addr(1,true);           
@@ -605,9 +612,7 @@ inline void SetDestBToAddr() {
 #if !defined(SSE_BOILER_MONITOR_VALUE4)
     DEBUG_CHECK_WRITE_B(abus); 
 #endif
-    if (SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){                             
-      m68k_dest=lpPEEK(abus);           
-    }else if(abus>=MEM_START_OF_USER_AREA){ 
+    if (abus>=MEM_START_OF_USER_AREA||SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){                             
       m68k_dest=lpPEEK(abus);           
     }else{                                      
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       
@@ -630,7 +635,11 @@ inline void SetDestWToAddr() {
       m68k_dest=&iobuffer;               
       *((WORD*)&iobuffer)=io_read_w(abus);        
     }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                
-  }else if(abus>=himem){  
+#if defined(SSE_MMU_RAM_TEST3)
+  }else if(abus>=himem || mmu_confused) {
+#else
+  }else if(abus>=himem) {
+#endif
 #if !defined(SSE_MMU_NO_CONFUSION)
     if(mmu_confused){                               
       mmu_confused_set_dest_to_addr(2,true);           
@@ -645,9 +654,7 @@ inline void SetDestWToAddr() {
 #if !defined(SSE_BOILER_MONITOR_VALUE4)
     DEBUG_CHECK_WRITE_W(abus);  
 #endif
-    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){                       
-      m68k_dest=lpDPEEK(abus);           
-    }else if(abus>=MEM_START_OF_USER_AREA){ 
+    if(abus>=MEM_START_OF_USER_AREA||SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){  
       m68k_dest=lpDPEEK(abus);           
     }else{                                      
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       
@@ -671,7 +678,11 @@ inline void SetDestLToAddr() {
       m68k_dest=&iobuffer;               
       iobuffer=io_read_l(abus);        
     }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                 
-  }else if(abus>=himem){  
+#if defined(SSE_MMU_RAM_TEST3)
+  }else if(abus>=himem || mmu_confused) {
+#else
+  }else if(abus>=himem) {
+#endif 
 #if !defined(SSE_MMU_NO_CONFUSION)
     if(mmu_confused){                               
       mmu_confused_set_dest_to_addr(4,true);           
@@ -686,9 +697,7 @@ inline void SetDestLToAddr() {
 #if !defined(SSE_BOILER_MONITOR_VALUE4)
     DEBUG_CHECK_WRITE_L(abus);  
 #endif
-    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){                       
-      m68k_dest=lpLPEEK(abus);           
-    }else if(abus>=MEM_START_OF_USER_AREA){ 
+    if(abus>=MEM_START_OF_USER_AREA||SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){       
       m68k_dest=lpLPEEK(abus);           
     }else{                                      
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       
@@ -1766,7 +1775,6 @@ inline void sr_check_z_n_l_for_r0()
   m68k_dest=&r[0];
   SR_CHECK_Z_AND_N_L;
 }
-
 #endif
 //---------------------------------------------------------------------------
 #if defined(SSE_CPU)

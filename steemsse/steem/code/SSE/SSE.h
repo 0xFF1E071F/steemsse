@@ -278,7 +278,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_STF_HSCROLL
 #define SSE_STF_LEFT_OFF 
 #define SSE_STF_LINEWID
-#define SSE_STF_MMU_PREFETCH
+#define SSE_STF_MMU
 #define SSE_STF_PADDLES
 #define SSE_STF_PAL
 #define SSE_STF_SDP
@@ -2406,6 +2406,16 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_383C
 #define SSE_GUI_383
 #define SSE_GUI_JOYSTICK_383
+
+
+#define SSE_MMU_RAM_TEST //now?
+#if defined(SSE_MMU_RAM_TEST)
+#define SSE_MMU_RAM_TEST1 // change test emulation
+#define SSE_MMU_RAM_TEST2 // remove "no confusion" hack
+#define SSE_MMU_RAM_TEST3 // remove himem=0 hack
+#endif
+
+
 #define SSE_VAR_OPT_383
 #if defined(SSE_VAR_OPT_383) && defined(VC_BUILD) && _MSC_VER>=1500 //VS2008+
 #define SSE_VC_INTRINSICS_383
@@ -2445,7 +2455,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_RESIZE_383A // acia, more problematic
 // Exception management...
 //#define SSE_M68K_EXCEPTION_TRY_CATCH //works but too slow, especially if _DEBUG
+#ifndef _DEBUG
 #define SSE_VAR_MAIN_LOOP2 //2KB on optimised exe but will catch and report everything (?)
+#endif
 #if _MSC_VER >= 1500 && !defined(_DEBUG)
 #define SSE_VAR_MAIN_LOOP3 //VC only (vs2008)?
 #endif

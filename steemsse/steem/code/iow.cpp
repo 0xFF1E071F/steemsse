@@ -45,7 +45,8 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 #if defined(SSE_DEBUG_TRACE_IO)
   if(!io_word_access
 #if defined(SSE_BOILER_TRACE_CONTROL)
-    && (((1<<15)&d2_dpeek(FAKE_IO_START+24))) 
+    && (TRACE_MASK_IO & TRACE_CONTROL_IO_W)
+//    && (((1<<15)&d2_dpeek(FAKE_IO_START+24))) 
     // we add conditions address range - logsection enabled
       //&& (old_pc<rom_addr)
 //      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_INTERRUPTS] ) //mfp
@@ -2437,130 +2438,47 @@ rasterline to allow horizontal fine-scrolling.
     case 0xff8000:  //--------------------------------------- memory
     {
       if (addr==0xff8001){ //Memory Configuration
-/*
-from WinSTon/Hatari:
 
-  "The Atari ST TOS needs to be patched to help with emulation. Eg, it
-  references the MMU chip to set memory size. This is patched to the
-  sizes we need without the complicated emulation of hardware which
-  is not needed (as yet). We also patch DMA devices and Hard Drives."
-  
-  SS In Steem, this complicated emulation has been done (not by me, by 
-  Steem authors)! It would be silly  to discard it. 
-  It's only useful  at TOS (or cartridge) boot time, apparently, but it  
-  doesn't come in the way of performance, from what we can see.
-  Except booting TOS 1.06 takes more time in Steem, as on a STE, because
-  of DMA boot check.
-  Booting a 4MB machine with TOS 1.00 fails, as noted by Steem authors.
-
-  Atari doc:
-
-          ff 8001   R/W             |----xxxx|   Memory Configuration
-                                         ||||
-                                          -------   Bank0      Bank1 (not used)
-                                         0000       128 Kbyte  128 Kbyte
-                                         0001       128 Kbyte  512 Kbyte
-                                         0010       128 Kbyte    2 Mbyte
-                                         0011       Reserved
-                                    4    0100       512 Kbyte  128 Kbyte
-                                    5    0101       512 Kbyte  512 Kbyte
-                                         0110       512 Kbyte    2 Mbyte
-                                         0111       Reserved
-                                         1000         2 Mbyte  128 Kbyte
-                                         1001         2 Mbyte  512 Kbyte
-                                         1010         2 Mbyte    2 Mbyte
-                                         1011       Reserved
-                                         11xx       Reserved
-
-
-
-               The configuration of main memory consists  of  five  64
-          Kbyte sets of ROM (standard set0 to set2, expansion set3 and
-          set4) and one configurable  bank  (standard  bank0)  of  128
-          Kbyte, 512 Kbyte, or 2 Mbyte RAM.  The configuration of main
-          memory ROM is ascertained through  software  identification.
-          The  configuration  of  main  memory RAM is achieved via the
-          programming   of   the   Memory    Configuration    Register
-          (read/write,  reset:  all zeros).  RAM configuration must be
-          asserted during the first steps of the power up sequence and
-          can  be  determined by using the following shadow test algo-
-          rithm:
-
-
-
-          START   o  write 0x000a (2 Mbyte, 2 Mbyte) to the Memory
-                     Configuration Register.
-
-          BANK0   o  write Pattern to 0x000000 - 0x0001ff.
-                  o  read Pattern from 0x000200 - 0x0003ff.
-                  o  if Match, then Bank0 contains 128 Kbyte; goto BANK1.
-                  o  read Pattern from 0x000400 - 0x0005ff.
-                  o  if Match, then Bank0 contains 512 Kbyte; goto BANK1.
-                  o  read Pattern from 0x000000 - 0x0001ff.
-                  o  if Match, then Bank0 contains 2 Mbyte; goto BANK1.
-                  o  panic:  RAM error in Bank0.
-
-          BANK1   o  write Pattern to 0x200000 - 0x2001ff.
-                  o  read Pattern from 0x200200 - 0x2003ff.
-                  o  if Match, then Bank1 contains 128 Kbyte; goto FIN.
-                  o  read Pattern from 0x200400 - 0x2005ff.
-                  o  if Match, then Bank1 contains 512 Kbyte; goto FIN.
-                  o  read Pattern from 0x200000 - 0x2001ff.
-                  o  if Match, then Bank1 contains 2 Mbyte; goto FIN.
-                  o  note:  Bank1 nonexistent.
-
-          FIN     o  write Configuration to the Memory Configuration
-                     Register.
-                  o  note Total Memory Size (Top of RAM) for future
-                     reference.
-
-
-eg, trace:
-
-TOS102
-MMU PC FC00F2 Byte A RAM 1024K Bank 0 512 Bank 1 512 testing 1
-MMU PC FC0154 Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
-  
-TOS106
-MMU PC E000E6 Byte A RAM 1024K Bank 0 512 Bank 1 512 testing 1
-MMU PC E0014C Byte 5 RAM 1024K Bank 0 512 Bank 1 512 testing 0
-
-*/
 #if defined(SSE_MMU_WRITE_MEM_CONF) 
         if(mem_len<=FOUR_MEGS){ // programs actually may write here
 #else
         if (old_pc>=FOURTEEN_MEGS && mem_len<=FOUR_MEGS){
 #endif
-#if defined(SSE_BOILER_TRACE_CONTROL)
-          if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
-#endif
-            TRACE_LOG("PC %X write %X to MMU\n",pc,io_src_b);
           mmu_memory_configuration=io_src_b;
           mmu_bank_length[0]=mmu_bank_length_from_config[(mmu_memory_configuration & b1100) >> 2];
           mmu_bank_length[1]=mmu_bank_length_from_config[(mmu_memory_configuration & b0011)];
+#if defined(SSE_BOILER_TRACE_CONTROL)
+          if(TRACE_MASK_IO & TRACE_CONTROL_IO_MMU)
+            TRACE_LOG("PC %X write %X to MMU (bank 0: %d bank 1: %d)\n",pc,io_src_b,
+              mmu_bank_length[0]/1024, mmu_bank_length[1]/1024);
+#endif
 #if !defined(SSE_MMU_NO_CONFUSION)
           mmu_confused=false;
           if (bank_length[0]) if (mmu_bank_length[0]!=bank_length[0]) mmu_confused=true;
           if (bank_length[1]) if (mmu_bank_length[1]!=bank_length[1]) mmu_confused=true;
-#if defined(SSE_MMU_WRITE_MEM_CONF)
+#if defined(SSE_MMU_WRITE_MEM_CONF) && !defined(SSE_MMU_RAM_TEST2)
           if(old_pc<FOURTEEN_MEGS) // the write doesn't "confuse" the MMU
           {
 #if defined(SSE_BOILER_TRACE_CONTROL)
-            if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
-#endif
+            if(TRACE_MASK_IO & TRACE_CONTROL_IO_MMU)
               TRACE_LOG("Cancel MMU testing\n");
-            mmu_confused=false; // fixes Super Neo Demo Show (1MB)
+#endif
+            mmu_confused=false; // fixes Super Neo Demo Show (1MB) (hack)
           }
 #endif
+#if !defined(SSE_MMU_RAM_TEST3)
           himem=(MEM_ADDRESS)(mmu_confused ? 0:mem_len);
 #else
+          himem=(MEM_ADDRESS)mem_len;
+#endif
+#else//?SSE_MMU_NO_CONFUSION
           himem=(MEM_ADDRESS)mem_len;
           int mmu_confused=0;//dbg
 #endif
 #if defined(SSE_BOILER_TRACE_CONTROL)
-          if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
+          if(TRACE_MASK_IO & TRACE_CONTROL_IO_MMU)
+            TRACE_LOG("MMU PC %X Byte %X RAM %dK Bank 0 %d Bank 1 %d confused %d\n",old_pc,io_src_b,mem_len/1024,bank_length[0]/1024,bank_length[1]/1024,mmu_confused);
 #endif
-            TRACE_LOG("MMU PC %X Byte %X RAM %dK Bank 0 %d Bank 1 %d testing %d\n",old_pc,io_src_b,mem_len/1024,bank_length[0]/1024,bank_length[1]/1024,mmu_confused);
         }
       }else if (addr>0xff800f){
         exception(BOMBS_BUS_ERROR,EA_WRITE,addr);

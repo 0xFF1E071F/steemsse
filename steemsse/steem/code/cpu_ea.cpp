@@ -8,7 +8,11 @@ void m68kReadLFromAddr();
 
 BYTE m68k_peek(MEM_ADDRESS ad){
   ad&=0xffffff;
-  if (ad>=himem){
+#if defined(SSE_MMU_RAM_TEST3)
+  if (ad>=himem  || mmu_confused) {
+#else
+  if (ad>=himem) {
+#endif
     if (ad>=MEM_IO_BASE){
       if(SUPERFLAG)return io_read_b(ad);
       else exception(BOMBS_BUS_ERROR,EA_READ,ad);
@@ -31,7 +35,7 @@ BYTE m68k_peek(MEM_ADDRESS ad){
       if (cart) return CART_PEEK(ad-MEM_EXPANSION_CARTRIDGE);
       else return 0xff;
     }else if(ad>=rom_addr){
-#if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_MMU_ROUNDING_BUS0A)
       if (ad<(0xe00000+256*1024)) 
       {
         if(MMU.Rounded)
@@ -67,15 +71,21 @@ BYTE m68k_peek(MEM_ADDRESS ad){
   return 0;
 }
 
+
 WORD m68k_dpeek(MEM_ADDRESS ad){
   ad&=0xffffff;
-  if(ad&1)exception(BOMBS_ADDRESS_ERROR,EA_READ,ad);
-  else if(ad>=himem){
+  if(ad&1)
+    exception(BOMBS_ADDRESS_ERROR,EA_READ,ad);
+#if defined(SSE_MMU_RAM_TEST3)
+  if (ad>=himem  || mmu_confused) {
+#else
+  else if (ad>=himem) {
+#endif
     if(ad>=MEM_IO_BASE){
       if(SUPERFLAG)return io_read_w(ad);
       else exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else if(ad>=0xfc0000){
-#if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_MMU_ROUNDING_BUS0A)
       if(tos_high && ad<(0xfc0000+192*1024))
       {
         if(MMU.Rounded)
@@ -93,7 +103,7 @@ WORD m68k_dpeek(MEM_ADDRESS ad){
       if (cart) return CART_DPEEK(ad-MEM_EXPANSION_CARTRIDGE);
       else return 0xffff;
     }else if(ad>=rom_addr){
-#if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_MMU_ROUNDING_BUS0A)
       if (ad<(0xe00000+256*1024)) 
       {
         if(MMU.Rounded)
@@ -129,15 +139,21 @@ WORD m68k_dpeek(MEM_ADDRESS ad){
   return 0;
 }
 
+
 LONG m68k_lpeek(MEM_ADDRESS ad){
   ad&=0xffffff;
-  if(ad&1)exception(BOMBS_ADDRESS_ERROR,EA_READ,ad);
-  else if(ad>=himem){
+  if(ad&1)
+    exception(BOMBS_ADDRESS_ERROR,EA_READ,ad);
+#if defined(SSE_MMU_RAM_TEST3)
+  if (ad>=himem  || mmu_confused) {
+#else
+  else if (ad>=himem) {
+#endif
     if(ad>=MEM_IO_BASE){
       if(SUPERFLAG)return io_read_l(ad);
       else exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else if(ad>=0xfc0000){
-#if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_MMU_ROUNDING_BUS0A)
       if(tos_high && ad<(0xfc0000+192*1024))
       {
         if(MMU.Rounded)
@@ -155,7 +171,7 @@ LONG m68k_lpeek(MEM_ADDRESS ad){
       if (cart) return CART_LPEEK(ad-MEM_EXPANSION_CARTRIDGE);
       else return 0xffffffff;
     }else if (ad>=rom_addr){
-#if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_MMU_ROUNDING_BUS0A)
       if (ad<(0xe00000+256*1024)) 
       {
         if(MMU.Rounded)
@@ -257,6 +273,7 @@ BYTE m68k_read_dest_b(){
   return 0;
 }
 
+
 WORD m68k_read_dest_w(){
   WORD x;
   switch(ir&BITS_543){
@@ -318,6 +335,7 @@ WORD m68k_read_dest_w(){
   }
   return 0;
 }
+
 
 LONG m68k_read_dest_l(){
   LONG x;
@@ -1148,10 +1166,13 @@ void m68k_get_dest_111_l(){
 }
 
 
-
 void m68kReadBFromAddr() {
   abus&=0xffffff;
+#if defined(SSE_MMU_RAM_TEST3)
+  if(abus>=himem  || mmu_confused)
+#else
   if(abus>=himem)
+#endif
   {                                  
     if(abus>=MEM_IO_BASE)
     {            
@@ -1185,7 +1206,7 @@ void m68kReadBFromAddr() {
     }
     else if (abus>=0xd00000 && abus<0xd80000)
       m68k_src_b=(BYTE)0xff;               
-#if !defined(SSE_MMU_NO_CONFUSION)      
+#if !defined(SSE_MMU_NO_CONFUSION)
     else if(mmu_confused)
       m68k_src_b=mmu_confused_peek(abus,true);                                         
 #endif
@@ -1194,13 +1215,8 @@ void m68kReadBFromAddr() {
     else
       m68k_src_b=(BYTE)0xff;                                          
   }
-  else if(abus>=MEM_START_OF_USER_AREA)
+  else if(abus>=MEM_START_OF_USER_AREA || SUPERFLAG)
   {                                              
-    DEBUG_CHECK_READ_B(abus);  
-    m68k_src_b=(BYTE)(PEEK(abus));                  
-  }
-  else if(SUPERFLAG)
-  {     
     DEBUG_CHECK_READ_B(abus);  
     m68k_src_b=(BYTE)(PEEK(abus));                  
   }
@@ -1208,11 +1224,16 @@ void m68kReadBFromAddr() {
     exception(BOMBS_BUS_ERROR,EA_READ,abus);
 }
 
+
 void m68kReadWFromAddr() {
   abus&=0xffffff;                                   
   if(abus&1)
     exception(BOMBS_ADDRESS_ERROR,EA_READ,abus);    
+#if defined(SSE_MMU_RAM_TEST3)
+  if(abus>=himem  || mmu_confused)
+#else
   else if(abus>=himem)
+#endif
   {                                  
     if(abus>=MEM_IO_BASE)
     {            
@@ -1255,13 +1276,8 @@ void m68kReadWFromAddr() {
     else
       m68k_src_w=(WORD)0xffff;                                          
   }
-  else if(abus>=MEM_START_OF_USER_AREA)
+  else if(abus>=MEM_START_OF_USER_AREA||SUPERFLAG)
   {                                              
-    DEBUG_CHECK_READ_W(abus);  
-    m68k_src_w=DPEEK(abus);                  
-  }
-  else if(SUPERFLAG)
-  {     
     DEBUG_CHECK_READ_W(abus);  
     m68k_src_w=DPEEK(abus);                  
   }
@@ -1269,11 +1285,16 @@ void m68kReadWFromAddr() {
     exception(BOMBS_BUS_ERROR,EA_READ,abus);
 }
 
+
 void m68kReadLFromAddr() {
   abus&=0xffffff;                                   
   if(abus&1)
     exception(BOMBS_ADDRESS_ERROR,EA_READ,abus);    
+#if defined(SSE_MMU_RAM_TEST3)
+  if(abus>=himem  || mmu_confused)
+#else
   else if(abus>=himem)
+#endif
   {                                  
     if(abus>=MEM_IO_BASE)
     {           
@@ -1316,15 +1337,10 @@ void m68kReadLFromAddr() {
     else
       m68k_src_l=0xffffffff;                                          
   }
-  else if(abus>=MEM_START_OF_USER_AREA)
+  else if(abus>=MEM_START_OF_USER_AREA||SUPERFLAG)
   {                                              
     DEBUG_CHECK_READ_L(abus);  
-    m68k_src_l=LPEEK(abus);                  
-  }
-  else if(SUPERFLAG)
-  {     
-    DEBUG_CHECK_READ_L(abus);  
-    m68k_src_l=LPEEK(abus);                  
+    m68k_src_l=LPEEK(abus);   
   }
   else
     exception(BOMBS_BUS_ERROR,EA_READ,abus);

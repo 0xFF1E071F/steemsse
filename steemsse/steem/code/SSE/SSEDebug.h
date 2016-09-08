@@ -316,6 +316,11 @@ enum logsection_enum_tag {
 #define TRACE_CONTROL_CPU_SP (1<<13) 
 #define TRACE_CONTROL_CPU_CYCLES (1<<12) 
 
+#define TRACE_MASK_IO (Debug.ControlMask[12])
+#define TRACE_CONTROL_IO_W (1<<15)
+#define TRACE_CONTROL_IO_R (1<<14)
+#define TRACE_CONTROL_IO_MMU (1<<13)
+
 #define TRACE_MASK_14 (Debug.ControlMask[14]) //Shifter 2
 #define TRACE_CONTROL_LINE_PLUS_2 (1<<15) 
 #define TRACE_CONTROL_VIDEO_COUNTER (1<<14)
