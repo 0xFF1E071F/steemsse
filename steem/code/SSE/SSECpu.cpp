@@ -33,7 +33,7 @@ void TM68000::Reset(bool Cold) {
   if(Cold)
     nExceptions=nInstr=0;
 #endif
-#if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_MMU_ROUNDING_BUS0A)
   MMU.Unrounded = false;
 #endif
 #if defined(SSE_INT_MFP_SPURIOUS) && !defined(SSE_VAR_OPT_383D)
@@ -97,6 +97,11 @@ int TM68000::SyncEClock(int dispatcher) {
   switch(cycles) {
   case 0:
     wait_states=8;
+#if defined(SSE_INT_HBL_E_CLOCK_HACK_382) 
+    if(MMU.WS[OPTION_WS]==1 && ST_TYPE==STF && dispatcher==ECLOCK_HBL 
+      && OPTION_HACKS)
+     wait_states-=2;// hack Closure, 3615GEN4, as STF WS1
+#endif
     break;
   case 2:
   case 4: 

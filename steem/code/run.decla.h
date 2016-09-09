@@ -69,10 +69,19 @@ EXT int cpu_timer_at_start_of_hbl;
 //          INSTRUCTION_TIME(8-((ABSOLUTE_CPU_TIME-shifter_cycle_base) % 12));
 
 
+#if defined(SSE_MMU_ROUNDING_BUS2_EXCEPTION)
+
+#define INTERRUPT_START_TIME_WOBBLE  \
+          cpu_cycles&=-4; \
+          INSTRUCTION_TIME((8000000-(ABSOLUTE_CPU_TIME-shifter_cycle_base)) % 10);
+
+#else
 
 #define INTERRUPT_START_TIME_WOBBLE  \
           INSTRUCTION_TIME_ROUND(0); \
           INSTRUCTION_TIME((8000000-(ABSOLUTE_CPU_TIME-shifter_cycle_base)) % 10);
+
+#endif
 
 // see SSEInterrupt.cpp for new definitions
 #if !(defined(SSE_INT_HBL_INLINE))

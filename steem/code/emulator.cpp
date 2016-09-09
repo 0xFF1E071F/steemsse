@@ -797,20 +797,22 @@ MEM_ADDRESS mmu_confused_address(MEM_ADDRESS ad)
 
   // MMU configured for 2MB 
   else if (mmu_bank_length[bank]==MB2){ 
-    if (bank_length[bank]==KB128){ //real memory
-#ifdef SSE_STF_MMU
-      if(ST_TYPE==STF)
-        ad&=~(BIT_20|BIT_19|BIT_10|BIT_9);
-      else
-#endif
-        ad&=~(BIT_20|BIT_19|BIT_18|BIT_17);
-    }else if (bank_length[bank]==KB512){ //real memory
+
+    if (bank_length[bank]==KB512){ //real memory
 #ifdef SSE_STF_MMU
       if(ST_TYPE==STF)
         ad&=~(BIT_20|BIT_10);
       else
 #endif
         ad&=~(BIT_20|BIT_19);
+    }
+    else if (bank_length[bank]==KB128){ //real memory
+#ifdef SSE_STF_MMU
+      if(ST_TYPE==STF)
+        ad&=~(BIT_20|BIT_19|BIT_10|BIT_9);
+      else
+#endif
+        ad&=~(BIT_20|BIT_19|BIT_18|BIT_17);
     }
   }//2MB
 

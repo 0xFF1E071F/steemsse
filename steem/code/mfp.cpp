@@ -701,7 +701,13 @@ void mfp_interrupt(int irq) {
 #endif
 
   int iack_cycles=ACT-MC68901.IackTiming;
+
+#if defined(SSE_MMU_ROUNDING_BUS2_EXCEPTION)
+  INSTRUCTION_TIME(-iack_cycles);//temp
+  m68kInterruptTiming();
+#else
   INSTRUCTION_TIME_ROUND(SSE_INT_MFP_TIMING-iack_cycles);
+#endif
   m68k_interrupt(LPEEK(vector));
   sr=WORD((sr & (~SR_IPL)) | SR_IPL_6);
   log_to_section(LOGSECTION_INTERRUPTS,EasyStr("  IRQ fired - vector=")+HEXSl(LPEEK(vector),6));

@@ -1817,8 +1817,6 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
     ||!cpu_timer_at_start_of_hbl&&!time_of_last_vbl_interrupt)
 #endif
       vbl_pending=true;
-  //We don't expect cases:
-   //ASSERT(vbl_pending); //there are some, it's an annoying assert
 
 #if !defined(SSE_GLUE_FRAME_TIMINGS)
   screen_event_pointer++;

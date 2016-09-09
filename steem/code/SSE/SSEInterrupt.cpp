@@ -347,7 +347,11 @@ void HBLInterrupt() {
 #if defined(SSE_GLUE_FRAME_TIMINGS)
   Glue.Status.hbi_done=true;
 #endif
+#if defined(SSE_MMU_ROUNDING_BUS2_EXCEPTION)
+  m68kInterruptTiming();
+#else
   INSTRUCTION_TIME_ROUND(SSE_INT_HBL_TIMING); 
+#endif
   m68k_interrupt(LPEEK(0x0068));       
   // set CPU registers
   sr=(sr & (WORD)(~SR_IPL)) | (WORD)(SR_IPL_2);
@@ -405,8 +409,11 @@ void VBLInterrupt() {
     INSTRUCTION_TIME(e_clock_wait_states);
   }
 #endif
-
+#if defined(SSE_MMU_ROUNDING_BUS2_EXCEPTION)
+  m68kInterruptTiming();
+#else
   INSTRUCTION_TIME_ROUND(SSE_INT_VBL_TIMING);
+#endif
   m68k_interrupt(LPEEK(0x0070));
 
   sr=(sr& (WORD)(~SR_IPL))|(WORD)(SR_IPL_4);
