@@ -121,7 +121,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
 
   BYTE ior_byte=0xff; // default value
 
-#if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_MMU_ROUNDING_BUS0A)
 /*  Should round up only for RAM and Shifter, not peripherals that sit
     on the CPU bus.
 */
@@ -133,11 +133,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
     )
   {
     INSTRUCTION_TIME(-2);
-#if defined(SSE_MMU_ROUNDING_BUS)
     MMU.Rounded=false;
-#else
-    Rounded=false;
-#endif
 #if defined(SSE_OSD_CONTROL)
     if((OSD_MASK_CPU&OSD_CONTROL_CPUROUNDING))
       TRACE_OSD("R %X -2",addr);
@@ -1318,7 +1314,8 @@ FF8240 - FF827F   palette, res
 #if defined(SSE_DEBUG_TRACE_IO)
   if(!io_word_access
 #if defined(SSE_BOILER_TRACE_CONTROL)
-    && (((1<<14)&d2_dpeek(FAKE_IO_START+24))
+ //   && (((1<<14)&d2_dpeek(FAKE_IO_START+24))
+      && ((TRACE_MASK_IO & TRACE_CONTROL_IO_R)
 // we add conditions address range - logsection enabled
 
       && (old_pc<rom_addr)
@@ -1894,6 +1891,10 @@ WORD ASMCALL io_read_w(MEM_ADDRESS addr)
   if (addr>=0xff8240 && addr<0xff8260){  //palette
     DEBUG_CHECK_READ_IO_W(addr);
     int n=addr-0xff8240;n/=2;
+
+#if defined(SSE_MMU_ROUNDING_BUS2_IO)
+    cpu_cycles&=-4;
+#endif
 
 #if defined(SSE_SHIFTER_PALETTE_NOISE)
 /*  When one reads the palette on a STF, the high bit of each nibble

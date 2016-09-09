@@ -8,6 +8,8 @@
 //#include <SSE/SSEMMU.h>
 #include <SSE/SSEVideo.h>
 
+#include <SSE/SSEDebug.h>
+
 // they've been nuked in conditions -> should do without...
 #define EXT extern 
 #define INIT(s)
@@ -148,10 +150,6 @@ EXT void ASMCALL emudetect_falcon_draw_scanline(int,int,int,int);
 EXT void emudetect_falcon_palette_convert(int);
 EXT void emudetect_init();
 //---------------------------------------------------------------------------
-//#ifdef IN_EMU
-
-//extern MEM_ADDRESS mmu_bank_length_from_config[5]=
-  //                {128*1024,512*1024,2*1024*1024,0,7*1024*1024};
                   
 void init_timings();
 
@@ -224,11 +222,21 @@ inline void InstructionTime(int t) {
   cpu_cycles-=(t);
 }
 
+#define INSTRUCTION_TIME(t)  InstructionTime(t)
+
+#if !(defined(SSE_MMU_ROUNDING_BUS2_EXCEPTION)&&defined(SSE_MMU_ROUNDING_BUS2_BLITTER))
 inline void InstructionTimeRound(int t) {
+#if defined(SSE_MMU_ROUNDING_BUS2_ASSERT)
+  ASSERT(t>8);
+  //ASSERT(0);
+#endif
   InstructionTime(t);
+
+#ifdef SSE_MMU_ROUNDING_BUS0A
 #if defined(SSE_VC_INTRINSICS_383D) && defined(SSE_MMU_ROUNDING_BUS) // great optimisation
   MMU.Rounded=_bittestandreset((LONG*)&cpu_cycles,1);
 #else//383?
+
 #if defined(SSE_MMU_ROUNDING_BUS)
 #if defined(SSE_VC_INTRINSICS_382)
   MMU.Rounded=BITTEST(cpu_cycles,1); // causes inlining anyway
@@ -237,26 +245,53 @@ inline void InstructionTimeRound(int t) {
 #endif
 #endif
   cpu_cycles&=-4;
+
 #endif//383?
+#else
+#if defined(SSE_VC_INTRINSICS_383D)
+  _bittestandreset((LONG*)&cpu_cycles,1); //?
+#else
+  cpu_cycles&=-4;
+#endif
+#endif//0A
 }
 
-#define INSTRUCTION_TIME(t)  InstructionTime(t)
 #define INSTRUCTION_TIME_ROUND(t) InstructionTimeRound(t)
 
 #endif
 
+#endif
+
+#if defined(SSE_MMU_ROUNDING_BUS2)
+inline void ReadBus();
+inline void ReadBusL();
+#define CPU_ABUS_ACCESS_READ  ReadBus()
+#define CPU_ABUS_ACCESS_READ_L  ReadBusL()
+
+#define BLT_ABUS_ACCESS_READ  ReadBus()
+
+#else
+
 #define CPU_ABUS_ACCESS_READ  INSTRUCTION_TIME_ROUND(4)
 #define CPU_ABUS_ACCESS_READ_L  INSTRUCTION_TIME_ROUND(8) //for performance
 
+#endif
 
-
+#if defined(SSE_MMU_ROUNDING_BUS2_STACK)
+inline void StackTiming();
+inline void StackTimingL();
+#define CPU_ABUS_ACCESS_READ_POP StackTiming()
+#define CPU_ABUS_ACCESS_READ_POP_L StackTimingL()
+#define CPU_ABUS_ACCESS_WRITE_PUSH StackTiming()
+#define CPU_ABUS_ACCESS_WRITE_PUSH_L StackTimingL()
+#else
 #define CPU_ABUS_ACCESS_READ_POP CPU_ABUS_ACCESS_READ
 #define CPU_ABUS_ACCESS_READ_POP_L CPU_ABUS_ACCESS_READ_L
-
 #define CPU_ABUS_ACCESS_WRITE_PUSH CPU_ABUS_ACCESS_WRITE
 #define CPU_ABUS_ACCESS_WRITE_PUSH_L CPU_ABUS_ACCESS_WRITE_L
+#endif
 
-#if defined(SSE_MMU_ROUNDING_BUS) // TODO: cartridge
+#if defined(SSE_MMU_ROUNDING_BUS) 
 inline void FetchTiming();
 inline void FetchTimingL();
 #define CPU_ABUS_ACCESS_READ_FETCH FetchTiming()
@@ -266,8 +301,21 @@ inline void FetchTimingL();
 #define CPU_ABUS_ACCESS_READ_FETCH_L CPU_ABUS_ACCESS_READ_L //so we can directly replace macros
 #endif
 
+#if defined(SSE_MMU_ROUNDING_BUS2)
+inline void WriteBus();
+inline void WriteBusL();
+
+#define CPU_ABUS_ACCESS_WRITE  WriteBus()
+#define CPU_ABUS_ACCESS_WRITE_L  WriteBusL()
+
+#define BLT_ABUS_ACCESS_WRITE  WriteBus()
+
+#else
+
 #define CPU_ABUS_ACCESS_WRITE  INSTRUCTION_TIME_ROUND(4)
 #define CPU_ABUS_ACCESS_WRITE_L  INSTRUCTION_TIME_ROUND(8) //for performance
+
+#endif
 
 #if !(defined(SSE_CPU))
 #define M68K_UNSTOP                         \

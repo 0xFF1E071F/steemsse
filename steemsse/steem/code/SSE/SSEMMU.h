@@ -66,12 +66,6 @@ On STE there's no latency, DL=3, WS=1.
 #include "SSEShifter.h"
 
 #ifdef SSE_MMU
-/*  We were having a nasty bug in the _DEBUG build where writing VideoCounter 
-    would corrupt SideBorderSize, if we moved instantiation of video objects
-    to SSEVideo.
-    This directive ensures that the same size is considered everywhere.
-    We also moved data to be better aligned. 
-*/
 
 // minimal delay between GLUE DE and first LOAD signal emitted by the MMU
 #if defined(SSE_CPU)
@@ -80,6 +74,12 @@ On STE there's no latency, DL=3, WS=1.
 #define MMU_PREFETCH_LATENCY (12) 
 #endif
 
+/*  We were having a nasty bug in the _DEBUG build where writing VideoCounter 
+    would corrupt SideBorderSize, if we moved instantiation of video objects
+    to SSEVideo.
+    This directive ensures that the same size is considered everywhere.
+    We also moved data to be better aligned. 
+*/
 #pragma pack(push, STRUCTURE_ALIGNMENT)
 
 struct TMMU {
@@ -99,7 +99,7 @@ struct TMMU {
 #if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
   BYTE WordsToSkip; // for HSCROLL
 #endif
-#if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_MMU_ROUNDING_BUS0A)
 /*
 Note for SSE_MMU_ROUNDING_BUS (v3.8.0)
 
@@ -196,6 +196,10 @@ something simpler, now that we better understand rounding rules.
   void WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b);
 #if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
   void UpdateVideoCounter(int CyclesIn);
+#endif
+#if defined(SSE_MMU_LOW_LEVEL)
+  WORD ReadRAM(); // abus as parameter?
+  void WriteRAM(); // abus, dbus as parameters?
 #endif
 };
 

@@ -46,7 +46,7 @@ so refactoring due!
     STOPPED,INTEL_CRASH,BLIT_ERROR,BOILER_MESSAGE}; 
 #endif
 #ifdef SSE_CPU_E_CLOCK
-  enum {ECLOCK_VBL,ECLOCK_HBL,ECLOCK_ACIA}; //debug/hacks
+  enum {ECLOCK_VBL,ECLOCK_HBL,ECLOCK_ACIA};
 #endif
 
   // DATA

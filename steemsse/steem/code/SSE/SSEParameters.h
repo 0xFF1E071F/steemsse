@@ -358,48 +358,6 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 ///////////////
 
 #if defined(SSE_INTERRUPT)
-/*  
-Doc
-
-Motorola UM:
-Interrupt 44(5/3)*
-* The interrupt acknowledge cycle is assumed to take four clock periods.
-
-Yacht
-  Interrupt           | 44(5/3)  |      n nn ns ni n-  n nS ns nV nv np np      
-
-WinUAE
-Interrupt:
-
-- 6 idle cycles
-- write PC low word
-- read exception number byte from (0xfffff1 | (interrupt number << 1)) [amiga specific]
-- 4 idle cycles
-- write SR
-- write PC high word                       [wrong order...is this credible?]
-- read exception address high word
-- read exception address low word
-- prefetch
-- 2 idle cycles
-- prefetch
-total 44 (don't repeat it, the amiga interrupts better...)
-
-ST (speculative)
--IACK = 16 cycles instead of 4
--2 idle cycles between fetches = 4
-could be the cycles are used to increment "PC"
-
-Interrupt IACK (MFP)     |  54(5/3)   | n nn ns ni ni ni ni nS ns nV nv np n np
-Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n np
-(E=E-clock synchronisation 0-8)
-
- Cases
-
- MFP  TIMERB01.TOS; TIMERB03.TOS
- HBI  Forest, TCB, 3615GEN4-HMD, TEST16.TOS
- VBI  Auto 168, Dragonnels/Happy Islands, 3615GEN4-CKM
-
-*/
 
 #if defined(SSE_INT_ROUNDING)
 #define SSE_INT_MFP_TIMING (54)

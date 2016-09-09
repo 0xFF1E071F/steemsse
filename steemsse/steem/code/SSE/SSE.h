@@ -187,6 +187,9 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_MMU)
 #define SSE_MMU_ROUNDING_BUS // we keep this switch hoping to refactor later
+
+#define SSE_MMU_ROUNDING_BUS1 //preref
+
 #define SSE_MMU_WU // wake-up states
 #define SSE_MMU_WRITE_MEM_CONF // programs in RAM may write in the MMU
 #endif
@@ -2012,6 +2015,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_ACSI_RELOAD_TOS
 #endif
 
+#if defined(SSE_INT_HBL) && defined(SSE_STF) && defined(SSE_MMU_WU)
+#define SSE_INT_HBL_E_CLOCK_HACK_382 //here we go again
+#endif
+
 #if defined(SSE_GUI)
 #define SSE_GUI_MOUSE_VM_FRIENDLY //VM for virtual machine
 #endif
@@ -2406,15 +2413,35 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_383C
 #define SSE_GUI_383
 #define SSE_GUI_JOYSTICK_383
+//#define SSE_MMU_LOW_LEVEL // long term?
 
 
-#define SSE_MMU_RAM_TEST //now?
+#define SSE_MMU_RAM_TEST 
 #if defined(SSE_MMU_RAM_TEST)
 #define SSE_MMU_RAM_TEST1 // change test emulation
 #define SSE_MMU_RAM_TEST2 // remove "no confusion" hack
 #define SSE_MMU_RAM_TEST3 // remove himem=0 hack
 #endif
 
+#define SSE_MMU_ROUNDING_BUS1A 
+#define SSE_MMU_ROUNDING_BUS2 //ambitious, less hacky 
+#define SSE_MMU_ROUNDING_BUS0A // to disable hacky way
+
+#if defined(SSE_MMU_ROUNDING_BUS2)
+#define SSE_MMU_ROUNDING_BUS2A_EA // make abus up-to-date in EA SRC
+#define SSE_MMU_ROUNDING_BUS2A_EA2 // make abus up-to-date in EA DEST
+#define SSE_MMU_ROUNDING_BUS2A_INSTR // make abus up-to-date in instructions
+#define SSE_MMU_ROUNDING_BUS2A_INSTR2 // make abus up-to-date in instructions
+#define SSE_MMU_ROUNDING_BUS2A_INSTR3 // make abus up-to-date in instructions
+#define SSE_MMU_ROUNDING_BUS2A_INSTR4 // make abus up-to-date in instructions
+#define SSE_MMU_ROUNDING_BUS2B // need no param
+#define SSE_MMU_ROUNDING_BUS2_IO // Shifter palette correction
+#define SSE_MMU_ROUNDING_BUS2_ASSERT//temp
+#define SSE_MMU_ROUNDING_BUS2_BLITTER
+#define SSE_MMU_ROUNDING_BUS2_EXCEPTION //must detail
+#define SSE_MMU_ROUNDING_BUS2_STACK
+#undef SSE_MMU_ROUNDING_BUS0A
+#endif
 
 #define SSE_VAR_OPT_383
 #if defined(SSE_VAR_OPT_383) && defined(VC_BUILD) && _MSC_VER>=1500 //VS2008+
@@ -2477,6 +2504,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA_BUGFIX)
 #define SSE_CPU_E_CLOCK_383
+#define SSE_CPU_EA_383
 #define SSE_DISK_GHOST_SECTOR_383
 #define SSE_INTERRUPT_383
 #define SSE_JOYSTICK_JOYPAD

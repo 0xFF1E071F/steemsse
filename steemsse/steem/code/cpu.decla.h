@@ -305,6 +305,26 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 
 #if defined(SSE_CPU)
 
+#if defined(SSE_MMU_ROUNDING_BUS1A)
+
+//pc is of course up-to-date
+//we don't round on palette, but it's done in ior (?)
+
+inline void FetchTiming() {
+  cpu_cycles-=4;
+  if(pc<himem)
+    cpu_cycles&=-4;
+}
+
+
+inline void FetchTimingL() {
+  cpu_cycles-=8;
+  if(pc<himem)
+    cpu_cycles&=-4;
+}
+
+#else
+
 inline void FetchTiming() {
   if(pc>=rom_addr && pc<rom_addr+tos_len)
     INSTRUCTION_TIME(4);
@@ -312,12 +332,60 @@ inline void FetchTiming() {
     INSTRUCTION_TIME_ROUND(4);
 }
 
+
 inline void FetchTimingL() {
   if(pc>=rom_addr && pc<rom_addr+tos_len)
     INSTRUCTION_TIME(8);
   else
     INSTRUCTION_TIME_ROUND(8);
 }
+
+#endif
+
+
+#if defined(SSE_MMU_ROUNDING_BUS2)
+
+inline void ReadBus() {
+  cpu_cycles-=4;
+  if(abus<himem)
+    cpu_cycles&=-4;
+}
+
+inline void ReadBusL() {
+  cpu_cycles-=8;
+  if(abus<himem)
+    cpu_cycles&=-4;
+}
+
+inline void WriteBus() {
+  cpu_cycles-=4;
+  if(abus<himem)
+    cpu_cycles&=-4;
+}
+
+inline void WriteBusL() {
+  cpu_cycles-=8;
+  if(abus<himem)
+    cpu_cycles&=-4;
+}
+
+#if defined(SSE_MMU_ROUNDING_BUS2_STACK)
+// it's in case abus wasn't correct vs stack
+inline void StackTiming() {
+  cpu_cycles-=4;
+  if((MEM_ADDRESS)r[15]<himem)
+    cpu_cycles&=-4;
+}
+
+inline void StackTimingL() {
+  cpu_cycles-=8;
+  if((MEM_ADDRESS)r[15]<himem)
+    cpu_cycles&=-4;
+}
+
+#endif
+
+#endif
 
 
 inline void m68k_poke_abus(BYTE x){
@@ -807,6 +875,16 @@ inline void SetDestLToAddr() {
 
 #endif
 
+#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR4) && defined(SSE_MMU_ROUNDING_BUS2B)
+
+#define m68k_SET_DEST_B(abus) m68k_SET_DEST_B_TO_ADDR;
+
+#define m68k_SET_DEST_W(abus) m68k_SET_DEST_W_TO_ADDR;
+
+#define m68k_SET_DEST_L(abus) m68k_SET_DEST_L_TO_ADDR;
+
+#else
+
 #define m68k_SET_DEST_B(addr)           \
   abus=addr;                            \
   m68k_SET_DEST_B_TO_ADDR;
@@ -819,6 +897,7 @@ inline void SetDestLToAddr() {
   abus=addr;                            \
   m68k_SET_DEST_L_TO_ADDR;
 
+#endif
 
 #if defined(SSE_CPU)
 
@@ -901,12 +980,7 @@ inline void RefetchIr() {
   ASSERT( IR==*(lpfetch+1) ); //detect cases
   IR=*(lpfetch-MEM_DIR);
   // we count fetch timing here (383)
-#if defined(SSE_MMU_ROUNDING_BUS)
-  if(pc>=rom_addr && pc<rom_addr+tos_len)
-    INSTRUCTION_TIME(4);
-  else
-#endif
-    INSTRUCTION_TIME_ROUND(4);
+  FetchTiming();
 }
 
 #define REFETCH_IR  RefetchIr();
@@ -1778,6 +1852,23 @@ inline void sr_check_z_n_l_for_r0()
 #endif
 //---------------------------------------------------------------------------
 #if defined(SSE_CPU)
+
+#if defined(SSE_MMU_ROUNDING_BUS2B)
+
+inline void ReadB() {
+  m68k_src_b=m68k_peek(abus);
+}
+
+inline void ReadW() {
+  m68k_src_w=m68k_dpeek(abus);
+}
+
+inline void ReadL() {
+  m68k_src_l=m68k_lpeek(abus);
+}
+
+#else
+
 inline void ReadB(MEM_ADDRESS addr) {
   m68k_src_b=m68k_peek(addr);
 }
@@ -1790,9 +1881,21 @@ inline void ReadL(MEM_ADDRESS addr) {
   m68k_src_l=m68k_lpeek(addr);
 }
 
+#endif
+
+#if defined(SSE_MMU_ROUNDING_BUS2B)
+
+#define m68k_READ_B(abus) ReadB();
+#define m68k_READ_W(abus) ReadW();
+#define m68k_READ_L(abus) ReadL();
+
+#else
+
 #define m68k_READ_B(addr) ReadB(addr);
 #define m68k_READ_W(addr) ReadW(addr);
 #define m68k_READ_L(addr) ReadL(addr);
+
+#endif
 
 void m68k_interrupt(MEM_ADDRESS ad);
 
@@ -1889,7 +1992,7 @@ WinUAE
     trace: My Socks Are Weapons (Legacy)
     trap: Bird Mad Girl Show
 */
-#if 0 // in detail
+#if defined(SSE_MMU_ROUNDING_BUS2_EXCEPTION) // in detail
   if(ir==0x4E76) // trapv
     CPU_ABUS_ACCESS_READ_FETCH;
   else
@@ -1905,7 +2008,64 @@ WinUAE
 #endif
 }
 
+#if defined(SSE_MMU_ROUNDING_BUS2_EXCEPTION)
 
+inline void m68kInterruptTiming() {
+/*  
+Doc
+
+Motorola UM:
+Interrupt 44(5/3)*
+* The interrupt acknowledge cycle is assumed to take four clock periods.
+
+Yacht
+  Interrupt           | 44(5/3)  |      n nn ns ni n-  n nS ns nV nv np np      
+
+WinUAE
+Interrupt:
+
+- 6 idle cycles
+- write PC low word
+- read exception number byte from (0xfffff1 | (interrupt number << 1)) [amiga specific]
+- 4 idle cycles
+- write SR
+- write PC high word                       [wrong order...is this credible?]
+- read exception address high word
+- read exception address low word
+- prefetch
+- 2 idle cycles
+- prefetch
+total 44 (don't repeat it, the amiga interrupts better...)
+
+ST (speculative)
+-IACK = 16 cycles instead of 4
+-2 idle cycles between fetches = 4
+could be the cycles are used to increment "PC"
+
+Interrupt IACK (MFP)     |  54(5/3)   | n nn ns ni ni ni ni nS ns nV nv np n np
+Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n np
+(E=E-clock synchronisation 0-8)
+
+ Cases
+
+ MFP  TIMERB01.TOS; TIMERB03.TOS
+ HBI  Forest, TCB, 3615GEN4-HMD, TEST16.TOS
+ VBI  Auto 168, Dragonnels/Happy Islands, 3615GEN4-CKM
+
+*/
+
+// E-clock has already been added (temp, in fact this function is temp)
+  INSTRUCTION_TIME(6); //  n nn
+  CPU_ABUS_ACCESS_WRITE_PUSH; // ns 
+  INSTRUCTION_TIME(16); // ni ni ni ni
+  CPU_ABUS_ACCESS_WRITE_PUSH_L; // nS ns 
+  CPU_ABUS_ACCESS_READ_L; // nV nv 
+  CPU_ABUS_ACCESS_READ_FETCH; //np 
+  INSTRUCTION_TIME(2); // n  // on ST it will provoke alignment of last fetch
+  CPU_ABUS_ACCESS_READ_FETCH; //np 
+}
+
+#endif
 
 #endif//CPU
 

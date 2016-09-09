@@ -159,7 +159,7 @@ void Blitter_Start_Line()
 #endif
     {
       INSTRUCTION_TIME(-2);
-#if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_MMU_ROUNDING_BUS0A)
       MMU.Unrounded = true; // barbarous, hacky, but reduces # checks
 #endif
     }
@@ -259,7 +259,12 @@ void Blitter_Blit_Word() //SS Data is blitted word by word
       }
     }else{
       Blitter_ReadSource(Blit.SrcAdr);
+#if defined(SSE_MMU_ROUNDING_BUS2_BLITTER)
+      abus=Blit.SrcAdr;
+      BLT_ABUS_ACCESS_READ;
+#else
       INSTRUCTION_TIME_ROUND(4);
+#endif
     }
     if (Blit.Last){ // SS finishing a line, apply SrcYInc
 /*
@@ -341,7 +346,12 @@ void Blitter_Blit_Word() //SS Data is blitted word by word
   if (Blit.NeedDestRead || Blit.Mask!=0xffff){
     DestDat=Blitter_DPeek(Blit.DestAdr);
     NewDat=DestDat & WORD(~(Blit.Mask));
+#if defined(SSE_MMU_ROUNDING_BUS2_BLITTER)
+    abus=Blit.DestAdr;
+    BLT_ABUS_ACCESS_READ;
+#else
     INSTRUCTION_TIME_ROUND(4);
+#endif
   }else{
     NewDat=0; //Blit.Mask is FFFF and we're in a source-only mode
   }
@@ -379,13 +389,17 @@ void Blitter_Blit_Word() //SS Data is blitted word by word
     case 15: // 1 1 1 1    - Target is set to "1"      (blind copy)
       NewDat|=WORD(0xffff) & Blit.Mask; break;
   }
-
+#if defined(SSE_MMU_ROUNDING_BUS2_BLITTER)
+  abus=Blit.DestAdr;
+  BLT_ABUS_ACCESS_WRITE; //+ bugfix? before the poke
+#endif
   Blitter_DPoke(Blit.DestAdr,NewDat); //SS writing the word to dest
 #if defined(SSE_DEBUG)
   nBytesBlitted+=sizeof(WORD);
 #endif
+#if !defined(SSE_MMU_ROUNDING_BUS2_BLITTER)
   INSTRUCTION_TIME_ROUND(4);
-
+#endif
   if (Blit.Last){
 /*
   DESTINATION Y INCREMENT
@@ -649,7 +663,7 @@ the Blitter is active - Not even for interrupts. "
     }
     CHECK_BREAKPOINT
 
-#if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_MMU_ROUNDING_BUS0A)
 /*  Hopefully, having this here in the blitter routine is enough.
     We wouldn't want to have this in Process or inlined in INSTRUCTION_TIME...
 */

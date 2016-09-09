@@ -64,7 +64,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
     TRACE_LOG("%d PC %X write byte %X to %X\n",ACT,old_pc,io_src_b,addr);
 #endif
 
-#if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_MMU_ROUNDING_BUS0A)
 /*  Should round up only for RAM and Shifter (palette), not peripherals
     that sit on the CPU bus.
 */
@@ -1826,6 +1826,11 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
   /////////////
   
       else if (addr>=0xff8240 && addr<0xff8260){  //palette
+
+#if defined(SSE_MMU_ROUNDING_BUS2_IO)
+        cpu_cycles&=-4;
+#endif
+
         int n=(addr-0xff8240) >> 1; 
 
         // Writing byte to palette writes that byte to both the low and high byte!
@@ -2591,6 +2596,11 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
 #endif
 
   if (addr>=0xff8240 && addr<0xff8260){  //palette
+
+#if defined(SSE_MMU_ROUNDING_BUS2_IO)
+    cpu_cycles&=-4;
+#endif
+
     DEBUG_CHECK_WRITE_IO_W(addr,io_src_w);
     int n=(addr-0xff8240) >> 1;
 
