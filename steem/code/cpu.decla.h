@@ -345,25 +345,25 @@ inline void FetchTimingL() {
 
 #if defined(SSE_MMU_ROUNDING_BUS2)
 
-inline void ReadBus() {
+inline void ReadBusTiming() {
   cpu_cycles-=4;
   if(abus<himem)
     cpu_cycles&=-4;
 }
 
-inline void ReadBusL() {
+inline void ReadBusTimingL() {
   cpu_cycles-=8;
   if(abus<himem)
     cpu_cycles&=-4;
 }
 
-inline void WriteBus() {
+inline void WriteBusTiming() {
   cpu_cycles-=4;
   if(abus<himem)
     cpu_cycles&=-4;
 }
 
-inline void WriteBusL() {
+inline void WriteBusTimingL() {
   cpu_cycles-=8;
   if(abus<himem)
     cpu_cycles&=-4;
@@ -1908,7 +1908,7 @@ inline void m68kUnstop() {
 }
 #define M68K_UNSTOP m68kUnstop();
 
-
+//TODO should it be inline?
 inline void m68kTrapTiming() {
 /*
 Motorola
