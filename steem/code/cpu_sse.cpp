@@ -401,7 +401,6 @@ ST:                 | 52(4/7)  |     nn ns nS ns ns ns nS ns nV nv np n+ np
     In bus errors, CLR.W usually crashes on 'read' but not in that
     special ST memory zone where only writing crashes, so it's a logic
     'exception' in our 'true pc' system for bus error stack frame.
-    Suspect other CPU fixes helped remove the hack.
     We test here, not before, for performance.
 */
         if(M68000.CheckRead && abus<MEM_FIRST_WRITEABLE) 
@@ -440,8 +439,9 @@ ST:                 | 52(4/7)  |     nn ns nS ns ns ns nS ns nV nv np n+ np
         TRACE_LOG("Exception during exception...\n");
 #if defined(SSE_CPU_HALT)
         perform_crash_and_burn(); //wait for cases...
-#endif
+#else//383
         r[15]=0xf000; // R15=A7  // should be halt?
+#endif
       }
       END_M68K_EXCEPTION
       abus=LPEEK(bombs*4);//383
@@ -584,6 +584,7 @@ inline void handle_ioaccess() {
 // a big function now
 void m68kProcess() {
 
+#if defined(SSE_DEBUG)
 #if defined(SSE_BOILER)
   LOG_CPU  
 /*  Very powerful but demanding traces.
@@ -627,8 +628,6 @@ void m68kProcess() {
       TRACE_LOG("%X %X %s\n",pc,ir,disa_d2(pc).Text);
   }
 #endif//boiler
-
-#if defined(SSE_DEBUG)
   M68000.IrAddress=pc;
   M68000.PreviousIr=IRD;
   M68000.nInstr++;
@@ -646,7 +645,7 @@ void m68kProcess() {
     M68000.tpend=true; // hardware latch (=flag)
 #if defined(SSE_DEBUG) && defined(SSE_OSD_CONTROL)
     if(OSD_MASK_CPU & OSD_CONTROL_CPUTRACE) 
-      TRACE_OSD("TRACE");
+      TRACE_OSD("TRACE %X",pc);
 #endif
   }
 #endif
@@ -687,8 +686,8 @@ already fetched. One word will be in IRD and another one in IRC.
   M68000.EClock_synced=false; // one more bool in Process()!
 #endif
 
-  /////////// JUMP TO CPU EMU: ///////////////
-  m68k_high_nibble_jump_table[ir>>12](); // go to instruction...
+  /////////// CALL CPU EMU FUNCTION ///////////////
+  m68k_high_nibble_jump_table[ir>>12]();
 
 #if defined(SSE_CPU_TRACE_REFACTOR)
 #undef LOGSECTION
@@ -748,9 +747,7 @@ exception vector.
     TRACE_LOG("TRACE PC %X IR %X SR %X $24 %X\n",pc,ir,sr,LPEEK(0x24));
 #endif
     m68kTrapTiming();
-
     m68k_interrupt(LPEEK(BOMBS_TRACE_EXCEPTION*4));
-    //Interrupt(LPEEK(BOMBS_TRACE_EXCEPTION*4));
   }
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_CPU 

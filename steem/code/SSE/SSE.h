@@ -2429,13 +2429,16 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_MMU_ROUNDING_BUS2)
 #define SSE_MMU_ROUNDING_BUS2A_EA // make abus up-to-date in EA SRC
+#define SSE_MMU_ROUNDING_BUS2A_EA1 // make abus up-to-date in EA SRC
 #define SSE_MMU_ROUNDING_BUS2A_EA2 // make abus up-to-date in EA DEST
+#define SSE_MMU_ROUNDING_BUS2A_EA3 // make abus up-to-date in EA DEST
 #define SSE_MMU_ROUNDING_BUS2A_INSTR // make abus up-to-date in instructions
 #define SSE_MMU_ROUNDING_BUS2A_INSTR2 // make abus up-to-date in instructions
 #define SSE_MMU_ROUNDING_BUS2A_INSTR3 // make abus up-to-date in instructions
 #define SSE_MMU_ROUNDING_BUS2A_INSTR4 // make abus up-to-date in instructions
 #define SSE_MMU_ROUNDING_BUS2B // need no param
 #define SSE_MMU_ROUNDING_BUS2_IO // Shifter palette correction
+#define SSE_MMU_ROUNDING_BUS2_IO2 // Shifter other regs correction
 #define SSE_MMU_ROUNDING_BUS2_ASSERT//temp
 #define SSE_MMU_ROUNDING_BUS2_BLITTER
 #define SSE_MMU_ROUNDING_BUS2_EXCEPTION //must detail
