@@ -263,12 +263,12 @@ inline void InstructionTimeRound(int t) {
 #endif
 
 #if defined(SSE_MMU_ROUNDING_BUS2)
-inline void ReadBus();
-inline void ReadBusL();
-#define CPU_ABUS_ACCESS_READ  ReadBus()
-#define CPU_ABUS_ACCESS_READ_L  ReadBusL()
+inline void ReadBusTiming();
+inline void ReadBusTimingL();
+#define CPU_ABUS_ACCESS_READ  ReadBusTiming()
+#define CPU_ABUS_ACCESS_READ_L  ReadBusTimingL()
 
-#define BLT_ABUS_ACCESS_READ  ReadBus()
+#define BLT_ABUS_ACCESS_READ  ReadBusTiming()
 
 #else
 
@@ -302,13 +302,13 @@ inline void FetchTimingL();
 #endif
 
 #if defined(SSE_MMU_ROUNDING_BUS2)
-inline void WriteBus();
-inline void WriteBusL();
+inline void WriteBusTiming();
+inline void WriteBusTimingL();
 
-#define CPU_ABUS_ACCESS_WRITE  WriteBus()
-#define CPU_ABUS_ACCESS_WRITE_L  WriteBusL()
+#define CPU_ABUS_ACCESS_WRITE  WriteBusTiming()
+#define CPU_ABUS_ACCESS_WRITE_L  WriteBusTimingL()
 
-#define BLT_ABUS_ACCESS_WRITE  WriteBus()
+#define BLT_ABUS_ACCESS_WRITE  WriteBusTiming()
 
 #else
 
