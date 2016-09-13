@@ -506,7 +506,30 @@ void m68k_unrecognised() //SS trap1 in Motorola doc
 #if defined(DEBUG_BUILD)
 
 void DebugCheckIOAccess() {
-#if defined(SSE_BOILER_MONITOR_TRACE)
+#if defined(SSE_BOILER_383)
+  if (ioaccess & IOACCESS_DEBUG_MEM_WRITE_LOG){ \
+    int val=int((debug_mem_write_log_bytes==1) ? int(d2_peek(debug_mem_write_log_address)):int(d2_dpeek(debug_mem_write_log_address))); \
+    log_write(HEXSl(old_pc,6)+": Write to address $"+HEXSl(debug_mem_write_log_address,6)+ \
+                  ", new value is "+val+" ($"+HEXSl(val,debug_mem_write_log_bytes*2)+")"); \
+    val=d2_peek(debug_mem_write_log_address);\
+    int val2=debug_mem_write_log_address&1?0:d2_dpeek(debug_mem_write_log_address);\
+    int val3=debug_mem_write_log_address&1?0:d2_lpeek(debug_mem_write_log_address);\
+    TRACE("PC %X %s write %X|%X|%X to %X\n",old_pc,disa_d2(old_pc).Text,  \
+      val,val2,val3,debug_mem_write_log_address);\
+    ioaccess|=IOACCESS_DEBUG_MEM_WRITE_LOG;\
+  }  else if (ioaccess & IOACCESS_DEBUG_MEM_READ_LOG){ \
+    int val=int((debug_mem_write_log_bytes==1) ? int(d2_peek(debug_mem_write_log_address)):int(d2_dpeek(debug_mem_write_log_address))); \
+    log_write(HEXSl(old_pc,6)+": Read from address $"+HEXSl(debug_mem_write_log_address,6)+ \
+      ", = "+val+" ($"+HEXSl(val,debug_mem_write_log_bytes*2)+")"); \
+    val=d2_peek(debug_mem_write_log_address);\
+    int val2=debug_mem_write_log_address&1?0:d2_dpeek(debug_mem_write_log_address);\
+    int val3=debug_mem_write_log_address&1?0:d2_lpeek(debug_mem_write_log_address);\
+    TRACE("PC %X %s read %X|%X|%X from %X\n",old_pc,disa_d2(old_pc).Text,\
+      val,val2,val3,debug_mem_write_log_address);\
+    ioaccess|=IOACCESS_DEBUG_MEM_READ_LOG;\
+  } 
+
+#elif defined(SSE_BOILER_MONITOR_TRACE)
   if (ioaccess & IOACCESS_DEBUG_MEM_WRITE_LOG){ \
     int val=int((debug_mem_write_log_bytes==1) ? int(m68k_peek(debug_mem_write_log_address)):int(m68k_dpeek(debug_mem_write_log_address))); \
     log_write(HEXSl(old_pc,6)+": Write to address $"+HEXSl(debug_mem_write_log_address,6)+ \
@@ -8417,7 +8440,8 @@ P_MASK          equ     +50     ; pattern index mask
   if((IRD&0xF)==7) //bitblt
   {
     MEM_ADDRESS p=areg[6];
-    TRACE_LOG("Line A biblt %dx%d %d planes fg %d bg %d op %X src %X x %d y %d p %d dst %X x %d y %d p %d pattern %X\n",DPEEK(p),DPEEK(p+2),DPEEK(p+4),DPEEK(p+6),DPEEK(p+8),LPEEK(p+10),LPEEK(p+18),DPEEK(p+22),DPEEK(p+24),DPEEK(p+26),LPEEK(p+32),DPEEK(p+36),DPEEK(p+38),DPEEK(p+40),LPEEK(p+42));
+  ///  TRACE_LOG("Line A biblt %dx%d %d planes fg %d bg %d op %X src %X x %d y %d p %d dst %X x %d y %d p %d pattern %X\n",DPEEK(p),DPEEK(p+2),DPEEK(p+4),DPEEK(p+6),DPEEK(p+8),LPEEK(p+10),LPEEK(p+18),DPEEK(p+22),DPEEK(p+24),DPEEK(p+26),LPEEK(p+32),DPEEK(p+36),DPEEK(p+38),DPEEK(p+40),LPEEK(p+42));
+    // TODO, as is, can hang Steem
   }
 #undef LOGSECTION
 #endif//dbg

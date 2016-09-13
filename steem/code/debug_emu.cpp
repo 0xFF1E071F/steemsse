@@ -284,10 +284,16 @@ void debug_hit_mon(MEM_ADDRESS ad,int read)
     write (what value?)
 */
   int val=0;
+#if defined(SSE_BOILER_383)
+  if(ad&1) 
+    ad--;  
+#endif
   if(Debug.MonitorValueSpecified && Debug.MonitorComparison)
   {
+#if !defined(SSE_BOILER_383)
     if(ad&1) 
       ad--;  // We only check words
+#endif
     val=(int)d2_dpeek(ad); // must read RAM or IO
     if(
       (Debug.MonitorComparison=='=' && val!=Debug.MonitorValue)
@@ -305,6 +311,7 @@ void debug_hit_mon(MEM_ADDRESS ad,int read)
     WORD mask=debug_get_ad_mask(ad,read);
     if (mask==0xff00) bytes=1;
     if (mask==0x00ff) bytes=1, ad++;
+    ASSERT(!(ad&1));
     val=int((bytes==1) ? int(d2_peek(ad)):int(d2_dpeek(ad)));
   }
 #else 
