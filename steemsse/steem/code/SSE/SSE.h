@@ -2407,6 +2407,22 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #define SSE_ACIA_383
+
+#define SSE_CARTRIDGE_383
+#if defined(SSE_CARTRIDGE_383)
+#define SSE_CARTRIDGE_BAT //fun!
+#define SSE_CARTRIDGE_BAT2
+#define SSE_CARTRIDGE_FREEZE
+#define SSE_CARTRIDGE_TRANSPARENT //check for bugs
+#endif
+
+#define SSE_DONGLE //new domain of emulation!
+#if defined(SSE_DONGLE)
+#define SSE_DONGLE_BAT2
+#define SSE_DONGLE_MUSIC_MASTER
+#define SSE_DONGLE_URC
+#endif
+
 #define SSE_DISK_CAPS_383
 #define SSE_GLUE_383
 #define SSE_GLUE_383B

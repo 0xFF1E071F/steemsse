@@ -162,6 +162,9 @@ EXT bool psg_always_capture_on_start INIT(0);
 HRESULT Sound_VBL();
 //--------------------------------------------------------------------------- DMA Sound
 void dma_sound_fetch();
+#if defined(SSE_CARTRIDGE_BAT)
+void dma_mv16_fetch(WORD data);
+#endif
 void dma_sound_set_control(BYTE);
 void dma_sound_set_mode(BYTE);
 

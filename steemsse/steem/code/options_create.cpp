@@ -240,12 +240,36 @@ compatible only with the STF"));
   CreateWindowEx(512,"Steem Path Display","",WS_CHILD,
                   page_l+10,y,page_w-20,22,Handle,(HMENU)8500,HInstance,NULL);
   y+=30;
+  //temp switches, because I added 'freeze' before 'transparent'
+#if defined(SSE_CARTRIDGE_FREEZE) && defined(SSE_CARTRIDGE_TRANSPARENT)
+  CreateWindow("Button",T("Choose"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
+                  page_l+10,y,(page_w-20)/4-5,23,Handle,(HMENU)8501,HInstance,NULL);
 
+  CreateWindow("Button",T("Remove"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
+                  page_l+10+(page_w-20)/4,y,(page_w-20)/4-5,23,Handle,(HMENU)8502,HInstance,NULL);
+
+  Win=CreateWindow("Button","",WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
+                  page_l+10+2*(page_w-20)/4,y,(page_w-20)/4-5,23,Handle,(HMENU)8504,HInstance,NULL);
+
+  CreateWindow("Button",T("Freeze"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
+                  page_l+10+3*(page_w-20)/4,y,(page_w-20)/4-5,23,Handle,(HMENU)8503,HInstance,NULL);
+
+#elif defined(SSE_CARTRIDGE_FREEZE)
+  CreateWindow("Button",T("Choose"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
+                  page_l+10,y,(page_w-20)/3-5,23,Handle,(HMENU)8501,HInstance,NULL);
+
+  CreateWindow("Button",T("Remove"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
+                  page_l+10+(page_w-20)/3,y,(page_w-20)/3-5,23,Handle,(HMENU)8502,HInstance,NULL);
+
+  CreateWindow("Button",T("Freeze"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
+                  page_l+10+2*(page_w-20)/3,y,(page_w-20)/3-5,23,Handle,(HMENU)8503,HInstance,NULL);
+#else
   CreateWindow("Button",T("Choose"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
                   page_l+10,y,(page_w-20)/2-5,23,Handle,(HMENU)8501,HInstance,NULL);
 
   CreateWindow("Button",T("Remove"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
                   page_l+10+(page_w-20)/2+5,y,(page_w-20)/2-5,23,Handle,(HMENU)8502,HInstance,NULL);
+#endif
   y+=40;
 
 
@@ -364,6 +388,14 @@ void TOptionBox::MachineUpdateIfVisible()
 
   SetWindowText(GetDlgItem(Handle,8500),CartFile);
   EnableWindow(GetDlgItem(Handle,8502),CartFile.NotEmpty());
+#if defined(SSE_CARTRIDGE_FREEZE)
+  EnableWindow(GetDlgItem(Handle,8503),CartFile.NotEmpty());
+#endif
+#if defined(SSE_CARTRIDGE_TRANSPARENT)
+  SendMessage(GetDlgItem(Handle,8504),WM_SETTEXT,0,SSEOption.CartidgeOff
+    ?(LPARAM)"Switch on":(LPARAM)"Switch off");
+  EnableWindow(GetDlgItem(Handle,8504),CartFile.NotEmpty());
+#endif
 }
 //---------------------------------------------------------------------------
 void TOptionBox::CreateTOSPage()
@@ -562,6 +594,21 @@ void TOptionBox::CreatePortsPage()
     if (AllowCOM) CBAddString(Win,T("COM Port"),PORTTYPE_COM);
     CBAddString(Win,T("File"),PORTTYPE_FILE);
     CBAddString(Win,T("Loopback (Output->Input)"),PORTTYPE_LOOP);
+
+#if defined(SSE_DONGLE)
+    if(p==2){ //serial
+#if defined(SSE_DONGLE_BAT2)
+      CBAddString(Win,T("B.A.T II dongle"),PORTTYPE_DONGLE_BAT2);
+#endif
+#if defined(SSE_DONGLE_MUSIC_MASTER)
+      CBAddString(Win,T("Music Master dongle"),PORTTYPE_DONGLE_MUSIC_MASTER);
+#endif
+#if defined(SSE_DONGLE_URC)
+      CBAddString(Win,T("Ultimate Ripper Cartridge switch"),PORTTYPE_DONGLE_URC);
+#endif
+    }
+#endif
+
     if (CBSelectItemWithData(Win,STPort[p].Type)<0){
       SendMessage(Win,CB_SETCURSEL,0,0);
     }
@@ -633,7 +680,6 @@ void TOptionBox::CreatePortsPage()
                     WS_CHILD | PDS_VCENTRESTATIC,
                     10,20,page_w-20,GroupHeight-30,CtrlParent,HMENU(99),HInstance,NULL);
     }
-
     SetWindowAndChildrensFont(CtrlParent,Font);
   }
 

@@ -765,6 +765,16 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     LastCartFile=pCSF->GetStr("Machine","LastCartFile",LastCartFile);
     if (LastCartFile.Empty()) LastCartFile=RunDir+SLASH;
 
+
+#if defined(SSE_CARTRIDGE_TRANSPARENT)
+    SSEOption.CartidgeOff=pCSF->GetInt("Machine","CartidgeOff",SSEOption.CartidgeOff);
+    if(SSEOption.CartidgeOff)
+    {
+      cart_save=cart; //update
+      cart=NULL;
+    }
+#endif
+
     if (FirstLoad){
       bool ColourMonitor=pCSF->GetInt("Machine","Colour_Monitor",1);
       if (ColourMonitor){
@@ -1696,6 +1706,9 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetStr("Machine","ROM_Add_Dir",TOSBrowseDir);
   pCSF->SetStr("Machine","Cart_File",CartFile);
   pCSF->SetStr("Machine","LastCartFile",LastCartFile);
+#if defined(SSE_CARTRIDGE_TRANSPARENT)
+  pCSF->SetStr("Machine","CartidgeOff",EasyStr(SSEOption.CartidgeOff));
+#endif
   pCSF->SetStr("Machine","Colour_Monitor",LPSTR((mfp_gpip_no_interrupt & MFP_GPIP_COLOUR) ? "1":"0"));
   BYTE MemConf[2]={MEMCONF_512,MEMCONF_512};
   GetCurrentMemConf(MemConf);

@@ -893,7 +893,6 @@ have Bass and Trebble enhanced. This might result in a very ugly sound.
     else // WORD
     {
       *(WORD*)*(WORD**)Out_P=((WORD)val) ^ MSB_W;
-      //*(WORD*)*(WORD**)Out_P=((WORD)val);// + 32767;
       (*(WORD**)Out_P)++;
     }  
 
@@ -940,7 +939,6 @@ have Bass and Trebble enhanced. This might result in a very ugly sound.
       else
       {
         *(WORD*)*(WORD**)Out_P=((WORD)val) ^ MSB_W;
-        //*(WORD*)*(WORD**)Out_P=((WORD)val);// + 32767;
         (*(WORD**)Out_P)++;
       }    
     }//right channel 
@@ -1014,7 +1012,7 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
         val+= (*(*lp_dma_sound_channel+1)); 
 
 #if defined(SSE_SOUND_MICROWIRE)
-    Microwire(1,val);
+      Microwire(1,val);
 #endif
       
       if(val<VOLTAGE_FP(0))
@@ -1599,13 +1597,23 @@ HRESULT Sound_VBL()
   for (int abc=2;abc>=0;abc--){
     psg_write_buffer(abc,time_of_next_vbl_to_write+PSG_WRITE_EXTRA);
   }
+
   if (dma_sound_on_this_screen){
+#if defined(SSE_CARTRIDGE_BAT)
+    if(SSEConfig.mv16)
+      dma_sound_freq=sound_freq;
+#endif
     WORD w[2]={dma_sound_channel_buf[dma_sound_channel_buf_last_write_t-2],dma_sound_channel_buf[dma_sound_channel_buf_last_write_t-1]};
     for (int i=0;i<PSG_WRITE_EXTRA;i++){
       if (dma_sound_channel_buf_last_write_t>=DMA_SOUND_BUFFER_LENGTH) break;
       dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w[0];
       dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w[1];
     }
+#if defined(SSE_CARTRIDGE_BAT)
+  }else if(SSEConfig.mv16){
+    dma_sound_channel_buf[0]=dma_sound_channel_buf[1]=dma_sound_last_word;
+    dma_sound_channel_buf_last_write_t=0;
+#endif
   }else{
     WORD w1,w2;
     dma_sound_get_last_sample(&w1,&w2);
@@ -2078,6 +2086,41 @@ void dma_sound_fetch()
   }//nxt
   ////TRACE_LOG("Y%d DMA frame counter %X\n",scan_y,dma_sound_fetch_address);
 }
+//---------------------------------------------------------------------------
+#if defined(SSE_CARTRIDGE_BAT)
+/*  To play the digital sound of the MV16 cartridge, we hack Steem's STE
+    dma sound emulation, trading stereo 8bit for mono 16bit.
+    This reduces overhead (need no other sound buffer).
+    The sound is played as is, without filter. 
+    https://www.youtube.com/watch?v=2cYJGTL0QrE actual hardware
+    https://www.youtube.com/watch?v=nxAHqYP9hAg crack - PSG
+*/
+void dma_mv16_fetch(WORD data) {
+  ASSERT(SSEConfig.mv16);
+#define last_write MicroWire_StartTime //recycle an int, starts at 0
+  data<<=3;
+  int cycles=(ACT-last_write)&0xFFF; //fff for when last_write is 0!
+  dma_sound_samples_countdown+=dma_sound_freq*cycles; // this implies jitter
+  while (dma_sound_samples_countdown>/*=*/0){
+    dma_sound_output_countdown+=sound_freq;
+    while (dma_sound_output_countdown>=0){
+      if (dma_sound_channel_buf_last_write_t>=DMA_SOUND_BUFFER_LENGTH) 
+        break;
+      dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=dma_sound_last_word;
+      //dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=(dma_sound_last_word+data)/2;//filter
+      dma_sound_output_countdown-=dma_sound_freq;
+    }
+    dma_sound_output_countdown+=sound_freq;
+    dma_sound_samples_countdown-=n_cpu_cycles_per_second; 
+  }
+  last_write=ACT;
+  dma_sound_on_this_screen=true;
+  dma_sound_last_word=data;
+}
+
+#undef last_write 
+
+#endif
 //---------------------------------------------------------------------------
 void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
 {
@@ -2775,6 +2818,14 @@ DWORD psg_adjust_envelope_start_time(DWORD t,DWORD new_envperiod)
 void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
 {
   ASSERT(reg<=15);
+#if defined(SSE_CARTRIDGE_BAT2)
+/*  B.A.T II plays the same samples on both the MV16 and the PSG, because
+    the MV16 of B.A.T I wasn't included, it was just supported.
+    If player inserted the cartridge, he doesn't need PSG sounds.
+*/
+  if(SSEConfig.mv16)
+    return; 
+#endif
   // suggestions for global variables:  n_samples_per_vbl=sound_freq/shifter_freq,   shifter_y+(SCANLINES_ABOVE_SCREEN+SCANLINES_BELOW_SCREEN)
   if (reg==1 || reg==3 || reg==5 || reg==13){
     new_val&=15;

@@ -32,7 +32,21 @@ BYTE m68k_peek(MEM_ADDRESS ad){
 #endif
       else if (ad<0xfe0000 || ad>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else if(ad>=MEM_EXPANSION_CARTRIDGE){
+#if defined(SSE_CARTRIDGE_BAT)
+/*  See m68k_dpeek().
+    B.A.T I and II and Music Master use MOVE.W, but other programs may use
+    MOVE.B (not tested yet).
+ */
+      if (cart)
+      {
+        WORD cart_addr=ad-MEM_EXPANSION_CARTRIDGE;
+        if(SSEConfig.mv16 && cart_addr>4) //not when checking for presence
+          dma_mv16_fetch(cart_addr);
+        return CART_PEEK(cart_addr);
+      }
+#else
       if (cart) return CART_PEEK(ad-MEM_EXPANSION_CARTRIDGE);
+#endif
       else return 0xff;
     }else if(ad>=rom_addr){
 #if defined(SSE_MMU_ROUNDING_BUS0A)
@@ -100,7 +114,21 @@ WORD m68k_dpeek(MEM_ADDRESS ad){
 #endif
       else if (ad<0xfe0000 || ad>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else if(ad>=MEM_EXPANSION_CARTRIDGE){
+#if defined(SSE_CARTRIDGE_BAT)
+/*  The MV16 cartridge was designed for the game B.A.T.
+    It plays samples sent through reading an address on the 
+    cartridge (address=data).
+*/
+      if (cart)
+      {
+        WORD cart_addr=ad-MEM_EXPANSION_CARTRIDGE;
+        if(SSEConfig.mv16)
+          dma_mv16_fetch(cart_addr);
+        return CART_DPEEK(cart_addr);
+      }
+#else
       if (cart) return CART_DPEEK(ad-MEM_EXPANSION_CARTRIDGE);
+#endif
       else return 0xffff;
     }else if(ad>=rom_addr){
 #if defined(SSE_MMU_ROUNDING_BUS0A)

@@ -9,9 +9,11 @@ DESCRIPTION: Code to handle Steem's flexible port redirection system.
 #endif
 
 #if defined(SSE_STRUCTURE_DECLA)
-
 TSTPort STPort[3];
+#endif
 
+#if defined(SSE_DONGLE)
+TDongle Dongle;
 #endif
 
 //---------------------------------------------------------------------------
@@ -449,6 +451,13 @@ DWORD TSTPort::GetModemFlags()
 //---------------------------------------------------------------------------
 bool TSTPort::SetDTR(bool Val)
 {
+#if defined(SSE_DONGLE_MUSIC_MASTER)
+  if(STPort[2].Type==PORTTYPE_DONGLE_MUSIC_MASTER)
+  { //record old value, new value and timing
+    Dongle.Value=((Dongle.Value<<1) | (int)Val)&3;//old - new
+    Dongle.Timing=ACT;
+  }
+#endif
   if (PCPort) return PCPort->SetDTR(Val);
   return 0;
 }
