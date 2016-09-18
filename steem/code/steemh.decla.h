@@ -74,6 +74,10 @@ EXT BYTE *Mem_End,
      *Cart_End_minus_4;
 }//extern C
 
+#if defined(SSE_CARTRIDGE_TRANSPARENT)
+EXT BYTE *cart_save INIT(NULL);
+#endif
+
 #define PAL_EXTRA_BYTES 16
 EXT BYTE palette_exec_mem[64+PAL_EXTRA_BYTES];
 

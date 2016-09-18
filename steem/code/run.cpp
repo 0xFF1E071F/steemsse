@@ -761,7 +761,10 @@ void event_scanline_sub() {
 #endif
 
   if (dma_sound_on_this_screen) 
-    dma_sound_fetch(); 
+#if defined(SSE_CARTRIDGE_BAT)
+    if(!SSEConfig.mv16) // don't interfere with our hack
+#endif
+      dma_sound_fetch(); 
 }
 
 #endif
@@ -1152,6 +1155,25 @@ void event_start_vbl()
 //---------------------------------------------------------------------------
 void event_vbl_interrupt() //SS misleading name?
 { 
+
+#if defined(SSE_CARTRIDGE_FREEZE)
+/*  When pressing some button of his cartridge, the player triggered an MFP
+    interrupt.
+    By releasing the button, the concerned bit should change state. We use
+    no counter but do it at first VBL for simplicity.
+*/
+  if(cart)
+  {
+#if defined(SSE_DONGLE_URC) 
+    if(STPort[2].Type==PORTTYPE_DONGLE_URC && !(mfp_reg[MFPR_GPIP]&0x40))
+      mfp_gpip_set_bit(MFP_GPIP_RING_BIT,true); // Ultimate Ripper
+    else 
+#endif
+    if(!(mfp_reg[MFPR_GPIP]&0x80)) // Multiface
+      mfp_gpip_set_bit(MFP_GPIP_MONO_BIT,true);
+  }
+#endif
+
 #if defined(SSE_GLUE_FRAME_TIMINGS_HBL)
 /*  With GLU/video event refactoring, we call event_scanline() one time fewer,
     if we did now it would mess up some timings, so we call the sub

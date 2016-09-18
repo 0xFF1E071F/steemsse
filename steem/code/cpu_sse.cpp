@@ -8437,12 +8437,14 @@ P_MASK          equ     +50     ; pattern index mask
 
 */
 #define LOGSECTION LOGSECTION_BLITTER // by default
+/*
   if((IRD&0xF)==7) //bitblt
   {
     MEM_ADDRESS p=areg[6];
   ///  TRACE_LOG("Line A biblt %dx%d %d planes fg %d bg %d op %X src %X x %d y %d p %d dst %X x %d y %d p %d pattern %X\n",DPEEK(p),DPEEK(p+2),DPEEK(p+4),DPEEK(p+6),DPEEK(p+8),LPEEK(p+10),LPEEK(p+18),DPEEK(p+22),DPEEK(p+24),DPEEK(p+26),LPEEK(p+32),DPEEK(p+36),DPEEK(p+38),DPEEK(p+40),LPEEK(p+42));
     // TODO, as is, can hang Steem
   }
+  */
 #undef LOGSECTION
 #endif//dbg
   m68kTrapTiming();

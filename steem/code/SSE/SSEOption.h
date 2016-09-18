@@ -59,6 +59,7 @@ struct TOption {
   unsigned int FullScreenGui:1;
   unsigned int VMMouse:1;
   unsigned int OsdTime:1;
+  unsigned int CartidgeOff:1;
 
 #ifdef __cplusplus // visible only to C++ objects
   TOption();
@@ -135,6 +136,8 @@ struct TConfig {
   unsigned int VideoCard8bit:1;
   unsigned int VideoCard16bit:1;
   unsigned int ym2149_fixed_vol:1;
+  unsigned int mv16:1; // B.A.T cartridge
+
   
 #ifdef __cplusplus // visible only to C++ objects
   TConfig();

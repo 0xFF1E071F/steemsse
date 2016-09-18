@@ -1028,10 +1028,18 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
   if (StemDialog_RetDefVal) return Ret;
 
   TOptionBox *This;
+#ifdef SSE_BUILD
+  WORD cmd_para;
+#endif
   switch (Mess){
     case WM_COMMAND:
       GET_THIS;
+#ifdef SSE_BUILD
+      cmd_para=LOWORD(wPar);
+      switch (cmd_para){
+#else
       switch (LOWORD(wPar)){
+#endif
         case 404:
           if (HIWORD(wPar)==CBN_SELENDOK){
 #if defined(SSE_CPU_4GHZ)
@@ -2275,6 +2283,12 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             if (NewCart.NotEmpty()){
               SetWindowText(GetDlgItem(Win,8500),NewCart);
               EnableWindow(GetDlgItem(Win,8502),true);
+#if defined(SSE_CARTRIDGE_FREEZE)
+              EnableWindow(GetDlgItem(Win,8503),true);
+#endif
+#if defined(SSE_CARTRIDGE_TRANSPARENT)
+              EnableWindow(GetDlgItem(Win,8504),true);
+#endif
               This->LastCartFile=NewCart;
               if (load_cart(NewCart)){
                 Alert(T("There was an error loading the cartridge."),T("Cannot Load Cartridge"),MB_ICONEXCLAMATION);
@@ -2298,10 +2312,25 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if (HIWORD(wPar)==BN_CLICKED){
             SetWindowText(GetDlgItem(Win,8500),"");
             SetFocus(GetDlgItem(Win,8501));
+#if defined(SSE_BUILD)
+            EnableWindow(GetDlgItem(Win,cmd_para),0);
+#if defined(SSE_CARTRIDGE_FREEZE)
+            EnableWindow(GetDlgItem(Win,cmd_para+1),0);
+#endif
+#if defined(SSE_CARTRIDGE_TRANSPARENT)
+            EnableWindow(GetDlgItem(Win,cmd_para+2),0);//8504
+            if(cart_save)
+              cart=cart_save;
+            cart_save=NULL;
+#endif
+#else
             EnableWindow(GetDlgItem(Win,8502),0);
-
+#endif
             delete[] cart;
             cart=NULL;
+#if defined(SSE_CARTRIDGE_BAT)
+            SSEConfig.mv16=false;
+#endif
             CartFile="";
             if (pc>=MEM_EXPANSION_CARTRIDGE && pc<0xfc0000){
             	SET_PC(PC32);
@@ -2310,6 +2339,43 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             CheckResetDisplay();
           }
           break;
+#if defined(SSE_CARTRIDGE_FREEZE)
+/*  The Multiface ST cartridge features a 'freeze' button that messes with the
+    monochrome monitor detection interrupt. That's the purpose of the cable
+    that intercepts the monitor connection.
+    The bit is cleared only as long as the player is pressing the button.
+    Same idea on the Ultimate Ripper cartridge, but the button hits a line of
+    the serial port instead.
+*/
+        case 8503:
+#if defined(SSE_DONGLE_URC)
+          if(STPort[2].Type==PORTTYPE_DONGLE_URC)
+            mfp_gpip_set_bit(MFP_GPIP_RING_BIT,false); // Ultimate Ripper
+          else
+#endif
+            mfp_gpip_set_bit(MFP_GPIP_MONO_BIT,false); // Multiface
+          break;
+#endif
+
+#if defined(SSE_CARTRIDGE_TRANSPARENT)
+        case 8504:
+          if(SSEOption.CartidgeOff)
+          {
+            if(cart_save)
+              cart=cart_save;
+            cart_save=NULL;
+          }
+          else
+          {
+            if(cart)
+              cart_save=cart;
+            cart=NULL;
+          }
+          SSEOption.CartidgeOff=!SSEOption.CartidgeOff;
+          OptionBox.MachineUpdateIfVisible();
+          break;
+#endif
+
         case 8601: // Cold reset
           if (HIWORD(wPar)==BN_CLICKED) 
           {//SS

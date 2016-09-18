@@ -25,8 +25,26 @@ class TMIDIOut;
 #define PORTTYPE_LOOP 5
 #define PORTTYPE_LAN 6
 
+#if defined(SSE_DONGLE_BAT2)
+#define PORTTYPE_DONGLE_BAT2 7
+#endif
+#if defined(SSE_DONGLE_MUSIC_MASTER)
+#define PORTTYPE_DONGLE_MUSIC_MASTER 8
+#endif
+#if defined(SSE_DONGLE_URC)
+#define PORTTYPE_DONGLE_URC 9
+#endif
 #define PORTTYPE_UNIX_SEQUENCER 100
 #define PORTTYPE_UNIX_OTHER 101
+
+
+#if defined(SSE_DONGLE)
+struct TDongle { 
+  int Timing;
+  WORD Value;
+};
+extern TDongle Dongle;
+#endif
 
 #ifdef UNIX
 // Convert Porttype to the type of IO device or -1 if not an IO device

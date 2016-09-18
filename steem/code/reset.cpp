@@ -421,6 +421,15 @@ void reset_peripherals(bool Cold)
   dma_sound_output_countdown=0;
   dma_sound_samples_countdown=0;
   dma_sound_last_word=MAKEWORD(128,128);
+#if defined(SSE_CARTRIDGE_BAT) //hack to reduce pops
+  if(SSEConfig.mv16)
+  {
+    if(STPort[2].Type==PORTTYPE_DONGLE_MUSIC_MASTER)
+      dma_sound_last_word=29408;
+    else
+      dma_sound_last_word=8352;//7088;
+  }
+#endif
   MicroWire_Mask=0x07ff,MicroWire_Data=0;
   dma_sound_volume=40;
   dma_sound_l_volume=20;
@@ -442,7 +451,7 @@ void reset_peripherals(bool Cold)
 #if defined(SSE_IKBD_6301)
   HD6301.ResetChip(Cold);
   if(Cold) // only cold
-    keyboard_buffer_length=0; // cold reset & run, Transbeauce 2
+    keyboard_buffer_length=0; 
 #endif
 
 #if defined(SSE_ACIA_NO_RESET_PIN) 

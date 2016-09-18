@@ -38,6 +38,7 @@ double CpuMfpRatio=(double)CpuNormalHz/(double)MFP_CLK_TH_EXACT;
           NOTE:  only interrupt priority level inputs 1 and 2 are used.
 
           SS An instruction like move.w $2700 SR disables interrupts
+          The mention of MK68901 MFP as interrupt autovector 6 is misleading.
 
 
           ----- MK68901 Interrupt Control ---------------
@@ -289,7 +290,6 @@ void ASMCALL check_for_interrupts_pending() {
 #endif
       }
     }
-
   }
   prepare_event_again();
 }

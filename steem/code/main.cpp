@@ -1431,6 +1431,10 @@ void CleanUpSteem()
 #endif
 
   dbg_log("SHUTDOWN: Freeing cart memory");
+#if defined(SSE_CARTRIDGE_TRANSPARENT)
+  if(cart_save)
+    cart=cart_save;
+#endif
   if (cart) {delete[] cart;cart=NULL;}
   dbg_log("SHUTDOWN: Freeing RAM memory");
   if (Mem) {delete[] Mem;Mem=NULL;}

@@ -111,6 +111,10 @@ int LoadSnapShotChangeCart(Str NewCart)
 {
   if (NewCart.Empty()){
     // Remove cart? Yes
+#if defined(SSE_CARTRIDGE_TRANSPARENT)
+    if(cart_save)
+      cart=cart_save;
+#endif
     if (cart) delete[] cart;
     cart=NULL;
     CartFile="";
@@ -571,12 +575,14 @@ bool load_TOS(char *)
     of the cartridge.
     SSE: we accept files  where there are no extra null bytes
     We also accept 64KB cartridges.
-    We also load diagnostic cartridges.
+    We recognise the MV16 sound cartridge (our custom, fake dump).
 */
 
 bool load_cart(char *filename) {
   bool failed=false; // return true on failure (!)
-  
+#if defined(SSE_CARTRIDGE_BAT)
+  SSEConfig.mv16=false;
+#endif
   FILE *f=fopen(filename,"rb");
   if (f==NULL) 
     failed=true;
@@ -607,9 +613,15 @@ bool load_cart(char *filename) {
     if(!failed)
     {
       fread(&FirstBytes,4,1,f);
+#if defined(SSE_CARTRIDGE_383)// cartidge header is TOS' business
+#if defined(SSE_CARTRIDGE_BAT)
+      if(FirstBytes==0x3631564D) // "MV16"
+        SSEConfig.mv16=true; 
+#endif
+#else
       switch(FirstBytes) {
 #if defined(SSE_CARTRIDGE_DIAGNOSTIC)
-      case 0x5F2352FA: // $FA52235F reversed - diagnostic
+      case 0x5F2352FA: // $FA52235F reversed - Atari diagnostic, Ultimate Ripper
         break;
 #endif
       case 0x42EFCDAB:  //$ABCDEF42 reversed - application
@@ -617,34 +629,45 @@ bool load_cart(char *filename) {
       default: // unknown
         failed=true;
       }
+#endif
       if(!failed)
       {
+#if defined(SSE_CARTRIDGE_TRANSPARENT)
+        if(cart_save)
+          cart=cart_save; 
+#endif
         if (cart) 
           delete[] cart;
-        cart=new BYTE[128*1024];
+        cart=new BYTE[128*1024]; //TODO: 64K? but more code vs rarely used memory
         memset(cart,0xFF,128*1024);
         long Len=FileLen-4;
         fseek(f,-4,SEEK_CUR); //hehe
+        int checksum=0;
         for(int bn=Len-1;bn>=0;bn--) 
+        {
           fread(cart+bn+offset,1,1,f); // backwards
+          checksum+=*(cart+bn+offset);
+        }
         
         Cart_End_minus_1=cart+(128*1024-1);
         Cart_End_minus_2=Cart_End_minus_1-1;
         Cart_End_minus_4=Cart_End_minus_1-3;
         
         if(pc>=MEM_EXPANSION_CARTRIDGE && pc<0xfc0000){
-          SET_PC(PC32);        
+          SET_PC(PC32);        //TODO ?
         }
-#if defined(SSE_CARTRIDGE_DIAGNOSTIC)
+        TRACE2("Cartridge %X %X\n",FirstBytes,checksum);
+#if defined(SSE_CARTRIDGE_DIAGNOSTIC) && !defined(SSE_CARTRIDGE_383) 
 /*  If these four bytes are found, the computer will transfer control
-    to memory location $FA0004, where you should start placing your 
-    MC68000 machine language instructions.
+    to memory location $FA0004.
+    383: TOS will do it itself
 */
         if(FirstBytes==0x5F2352FA)
         {
           SET_PC(0xFA0004)
         }
 #endif
+        
       }
       fclose(f);
     }

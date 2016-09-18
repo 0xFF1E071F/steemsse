@@ -372,6 +372,9 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
 
       delete[] cart;
       cart=NULL;
+#if defined(SSE_CARTRIDGE_BAT)
+      SSEConfig.mv16=false;
+#endif
       CartFile="";
       if (pc>=MEM_EXPANSION_CARTRIDGE && pc<0xfc0000){
       	SET_PC(PC32);
