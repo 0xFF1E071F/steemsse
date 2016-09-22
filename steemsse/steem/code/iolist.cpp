@@ -335,8 +335,13 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
     "vert|1line|vbl|off|adj|0byte|.|.|.|.|.|.|.|.|.|.");
   iolist_add_entry(FAKE_IO_START+14,"TRACE irq",2,
     "E|rte|evt|.|.|.|.|.|.|.|.|.|.|.|.|.");
+#if defined(SSE_BOILER_383_LOG2)
+  iolist_add_entry(FAKE_IO_START+16,"TRACE disk",2,
+    "str|data|psg|reg|mfm|.|.|.|.|.|.|.|.|.|.|.");
+#else
   iolist_add_entry(FAKE_IO_START+16,"TRACE floppy",2,
     "str|data|psg|reg|mfm|dma|.|.|.|.|.|.|.|.|.|.");
+#endif
 #endif
 
 #if defined(SSE_BOILER_VIDEO_CONTROL)

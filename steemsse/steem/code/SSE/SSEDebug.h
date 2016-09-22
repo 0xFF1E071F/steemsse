@@ -248,6 +248,8 @@ enum logsection_enum_tag {
 #endif
  LOGSECTION_IMAGE_INFO, //was Pasti
  LOGSECTION_OPTIONS, // now free (we use INIT for options)
+ LOGSECTION_ACIA,
+ LOGSECTION_DMA,
  NUM_LOGSECTIONS,
  };
 #endif
@@ -308,7 +310,9 @@ enum logsection_enum_tag {
 #define TRACE_CONTROL_FDCPSG (1<<13)//drive/side
 #define TRACE_CONTROL_FDCREGS (1<<12)// writes to registers CR,TR,SR,DR
 #define TRACE_CONTROL_FDCMFM (1<<11)
+#if !defined(SSE_BOILER_383_LOG2)
 #define TRACE_CONTROL_FDCDMA (1<<10)
+#endif
 
 #define TRACE_MASK4 (Debug.ControlMask[13]) //cpu
 #define TRACE_CONTROL_CPU_REGISTERS (1<<15) 
@@ -587,7 +591,6 @@ enum logsection_enum_tag {
 #define TRACE_VID // some code left to the compiler
 #endif
 #endif
-
 
 #if defined(SSE_BOILER_TRACE_EVENTS) //3.8.0
 #define TRACE_EVENT(x) Debug.TraceEvent(x)

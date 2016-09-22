@@ -52,7 +52,11 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 //      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_INTERRUPTS] ) //mfp
       && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_MFP] ) //mfp
       && ( (addr&0xffff00)!=0xfffc00 || logsection_enabled[LOGSECTION_IKBD] ) //acia
+#if defined(SSE_BOILER_383_LOG2)
+      && ( (addr&0xffff00)!=0xff8600 || logsection_enabled[LOGSECTION_DMA] ) //dma
+#else
       && ( (addr&0xffff00)!=0xff8600 || logsection_enabled[LOGSECTION_FDC] ) //dma
+#endif
       && ( (addr&0xffff00)!=0xff8800 || logsection_enabled[LOGSECTION_SOUND] )//psg
       && ( (addr&0xffff00)!=0xff8900 || logsection_enabled[LOGSECTION_SOUND] )//dma
       && ( (addr&0xffff00)!=0xff8a00 || logsection_enabled[LOGSECTION_BLITTER] )
@@ -108,12 +112,8 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 
 #if defined(SSE_ACIA) && defined(SSE_ACIA_383) //more compact code
 
-#ifdef SSE_DEBUG
-#define TRACE_ACIA if(TRACE_ENABLED(LOGSECTION_IKBD) && !acia_num \
-  || TRACE_ENABLED(LOGSECTION_MIDI) && acia_num) TRACE
-#else
-#define TRACE_ACIA
-#endif
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_ACIA
 
     case 0xfffc00:{  //--------------------------------------- ACIAs
 /*
@@ -148,7 +148,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
         acia_num=((addr&0xf)-2)>>2;
         ASSERT(acia_num==0 || acia_num==1);
         acia[acia_num].TDR=io_src_b; // no option test
-        TRACE_ACIA("%d %d %d PC %x ACIA %d TDR %X\n",TIMING_INFO,old_pc,acia_num,io_src_b);
+        TRACE_LOG("%d PC %X ACIA %d TDR %X\n",ACT,old_pc,acia_num,io_src_b);
         if(OPTION_C1)
         {
 /*  Effect of write on status register.
@@ -192,7 +192,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
             // rare case when IRQ is enabled for transmit
             if(acia[acia_num].IrqForTx())
             {
-              TRACE_ACIA("ACIA %d TX IRQ\n",acia_num);            
+              TRACE_LOG("ACIA %d TX IRQ\n",acia_num);            
               acia[acia_num].SR|=BIT_7; 
               mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0); //trigger
             }
@@ -202,9 +202,9 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 #if defined(SSE_DEBUG)
             ASSERT(acia[acia_num].LineTxBusy);
             if(!acia[acia_num].ByteWaitingTx) // TDR was free 
-              TRACE_ACIA("ACIA %d byte waiting $%X\n",acia_num,io_src_b);
+              TRACE_LOG("ACIA %d byte waiting $%X\n",acia_num,io_src_b);
             else
-              TRACE_ACIA("ACIA %d new byte waiting $%X (instead of $%X)\n",acia_num,io_src_b,ACIA_IKBD.TDR);
+              TRACE_LOG("ACIA %d new byte waiting $%X (instead of $%X)\n",acia_num,io_src_b,ACIA_IKBD.TDR);
 #endif
             if(ACT-acia[acia_num].last_tx_write_time<ACIA_TDR_COPY_DELAY)
               acia[acia_num].TDRS=acia[acia_num].TDR; // replaces
@@ -262,8 +262,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
     break;
 
 #undef LOGSECTION
-#undef TRACE_ACIA
-#define LOGSECTION LOGSECTION_IO//SS
+#define LOGSECTION LOGSECTION_IO
 
 #else//defined(SSE_ACIA_383) ?
     case 0xfffc00:{  //--------------------------------------- ACIAs
@@ -1773,7 +1772,6 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
             fdc_read_address_buffer_len=0;
             dma_bytes_written_for_sector_count=0;
             break;
-
           case 0xff8609:  //high byte of DMA pointer
             dma_address&=0x00ffff;
             dma_address|=((MEM_ADDRESS)io_src_b) << 16;

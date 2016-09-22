@@ -76,6 +76,10 @@ DESCRIPTION: Completely random accessory functions.
                                     {"Shutdown",LOGSECTION_SHUTDOWN},
                                     {"INI File",LOGSECTION_INIFILE},
                                     {"GUI",LOGSECTION_GUI},
+#if defined(SSE_BOILER_383_LOG2)
+                                    {"ACIA",LOGSECTION_ACIA},
+                                    {"DMA",LOGSECTION_DMA},
+#endif
                                     {"*",-1}};
 
 

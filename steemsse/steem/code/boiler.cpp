@@ -20,7 +20,12 @@ HMENU insp_menu=NULL;
 HMENU mem_browser_menu,history_menu,logsection_menu;
 HMENU menu1;
 HMENU boiler_op_menu,shift_screen_menu;
-HMENU sse_menu; //SSE
+#if defined(SSE_BOILER)
+HMENU sse_menu;
+#if defined(SSE_BOILER_383_LOG2) // new title for more options
+HMENU logsection_menu2;
+#endif
+#endif
 HWND sr_display,DWin_edit;
 mr_static *lpms_other_sp;
 HWND DWin_trace_button,DWin_trace_over_button,DWin_run_button;
@@ -613,7 +618,12 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
           id-=300;
           // SS id corresponds to 
           logsection_enabled[id]=!logsection_enabled[id];
+#if defined(SSE_BOILER_383_LOG2)
+          CheckMenuItem((id<21)?logsection_menu:logsection_menu2,LOWORD(wPar),
+            MF_BYCOMMAND| int(logsection_enabled[id] ? MF_CHECKED:MF_UNCHECKED));
+#else
           CheckMenuItem(logsection_menu,LOWORD(wPar),MF_BYCOMMAND| int(logsection_enabled[id] ? MF_CHECKED:MF_UNCHECKED));
+#endif
           if (id==LOGSECTION_CPU){
             if (logsection_enabled[id]) log_cpu_count=CPU_INSTRUCTIONS_TO_LOG;
           }
@@ -932,7 +942,12 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
                 int i=logsections[n].Index;
                 if (i>=0){
                   logsection_enabled[i]=0;
+#if defined(SSE_BOILER_383_LOG2)
+                  CheckMenuItem( (i<21) ?  logsection_menu : logsection_menu2 ,
+                    300+i,MF_BYCOMMAND | MF_UNCHECKED);
+#else
                   CheckMenuItem(logsection_menu,300+i,MF_BYCOMMAND | MF_UNCHECKED);
+#endif
                 }
               }
               break;
@@ -1848,13 +1863,28 @@ void DWin_init()
     if (logsections[n].Name[0]=='-'){
       AppendMenu(logsection_menu,MF_SEPARATOR,0,NULL);
     }else{
+#if defined(SSE_BOILER_383_LOG2)
+        AppendMenu((i<21)?logsection_menu:logsection_menu2,MF_STRING
+          |int(logsection_enabled[i] ? MF_CHECKED:0),300+i,logsections[n].Name);
+#else
       AppendMenu(logsection_menu,MF_STRING| int(logsection_enabled[i] ? MF_CHECKED:0),300+i,logsections[n].Name);
+#endif
     }
   }
   AppendMenu(logsection_menu,MF_SEPARATOR,0,NULL);
   AppendMenu(logsection_menu,MF_SEPARATOR,0,NULL);
   AppendMenu(logsection_menu,MF_STRING,1009,"&Uncheck All");
   AppendMenu(logsection_menu,MF_STRING,1012,"Suspend Logging");
+
+#if defined(SSE_BOILER_383_LOG2)
+  logsection_menu2=CreatePopupMenu();
+  AppendMenu(menu,MF_STRING | MF_POPUP,(UINT)logsection_menu2,"Log&2");
+  for (int n=1;logsections[n].Name[0]!='*';n++){
+    int i=logsections[n].Index;
+    if(i>=21)
+      AppendMenu(logsection_menu2,MF_STRING| int(logsection_enabled[i] ? MF_CHECKED:0),300+i,logsections[n].Name);
+  }
+#endif
 
   boiler_op_menu=CreatePopupMenu();
   AppendMenu(boiler_op_menu,MF_STRING,1501,"Notify on &all m68k exceptions 2-8");

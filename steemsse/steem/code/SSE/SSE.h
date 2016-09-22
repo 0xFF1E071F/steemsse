@@ -2404,6 +2404,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #ifdef SSE_BOILER
 #define SSE_BOILER_383
+#define SSE_BOILER_383_LOG2 // new title for more options
 #endif
 
 #define SSE_ACIA_383
