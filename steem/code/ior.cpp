@@ -121,7 +121,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
 
   BYTE ior_byte=0xff; // default value
 
-#if defined(SSE_MMU_ROUNDING_BUS0A)
+#if defined(SSE_MMU_ROUNDING_BUS0A)//no more
 /*  Should round up only for RAM and Shifter, not peripherals that sit
     on the CPU bus.
 */
@@ -155,12 +155,8 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
 
 #if defined(SSE_ACIA) && defined(SSE_ACIA_383) //more compact code
 
-#ifdef SSE_DEBUG
-#define TRACE_ACIA if(TRACE_ENABLED(LOGSECTION_IKBD) && !acia_num \
-  || TRACE_ENABLED(LOGSECTION_MIDI) && acia_num) TRACE
-#else
-#define TRACE_ACIA
-#endif
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_ACIA
 
     case 0xfffc00:
     {
@@ -177,7 +173,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
           ior_byte=acia[acia_num].SR; 
           if(abs(ACT-acia[acia_num].last_tx_write_time)<ACIA_TDR_COPY_DELAY)
           {
-            TRACE_ACIA("ACIA %d SR TDRE not set yet (%d)\n",acia_num,ACT-acia[acia_num].last_tx_write_time);
+            TRACE_LOG("ACIA %d SR TDRE not set yet (%d)\n",acia_num,ACT-acia[acia_num].last_tx_write_time);
             ior_byte&=~BIT_1; // eg Nightdawn STF
           }
           break;
@@ -209,7 +205,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
             acia[acia_num].SR|=BIT_5; // set overrun (only now, conform to doc)
             if(acia[acia_num].CR&BIT_7) // irq enabled
               acia[acia_num].SR|=BIT_7; // there's a new IRQ when overrun bit is set
-            TRACE_ACIA("%d %d %d PC %X reads ACIA %d RDR %X, OVR\n",TIMING_INFO,old_pc,acia_num,acia[acia_num].RDR);
+            TRACE_LOG("%d %d %d PC %X reads ACIA %d RDR %X, OVR\n",TIMING_INFO,old_pc,acia_num,acia[acia_num].RDR);
           }
           // no overrun, normal
           else
@@ -225,7 +221,7 @@ to clear overrun
             acia[acia_num].SR&=~BIT_5;
             if(!( acia[acia_num].IrqForTx() && acia[acia_num].SR&BIT_1))
               acia[acia_num].SR&=~BIT_7;
-            TRACE_ACIA("%d %d %d PC %X CPU reads ACIA %d RDR %X\n",TIMING_INFO,old_pc,acia_num,acia[acia_num].RDR);
+            TRACE_LOG("%d %d %d PC %X CPU reads ACIA %d RDR %X\n",TIMING_INFO,old_pc,acia_num,acia[acia_num].RDR);
           }
           mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,
             !( (ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7)) );
@@ -268,9 +264,8 @@ Receiver Data Register is retained.
       }
     }//fffc00-6
 
-#undef LOGSECTION //SS
-#undef TRACE_ACIA
-#define LOGSECTION LOGSECTION_IO //SS
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_IO
 
 
 #else//SSE_ACIA_383
@@ -1358,7 +1353,11 @@ FF8240 - FF827F   palette, res
 //      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_INTERRUPTS] ) //mfp
       && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_MFP] ) //mfp
       && ( (addr&0xffff00)!=0xfffc00 || logsection_enabled[LOGSECTION_IKBD] ) //acia
+#if defined(SSE_BOILER_383_LOG2)
+      && ( (addr&0xffff00)!=0xff8600 || logsection_enabled[LOGSECTION_DMA] ) //dma
+#else
       && ( (addr&0xffff00)!=0xff8600 || logsection_enabled[LOGSECTION_FDC] ) //dma
+#endif
       && ( (addr&0xffff00)!=0xff8800 || logsection_enabled[LOGSECTION_SOUND] )//psg
       && ( (addr&0xffff00)!=0xff8900 || logsection_enabled[LOGSECTION_SOUND] )//dma
       && ( (addr&0xffff00)!=0xff8a00 || logsection_enabled[LOGSECTION_BLITTER] )
