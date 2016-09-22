@@ -461,7 +461,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_DMA)
 #define SSE_DMA_OBJECT
-//#define SSE_DMA_ADDRESS // enforcing order for write (no use?)
 #define SSE_DMA_COUNT_CYCLES
 //#define SSE_DMA_DELAY // works but overkill 3.7.0 -> use generic floppy event?
 #define SSE_DMA_FDC_ACCESS
@@ -2425,6 +2424,10 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #define SSE_DISK_CAPS_383
+
+#if defined(SSE_STF)
+#define SSE_DMA_RIPPLE_CARRY
+#endif
 #define SSE_GLUE_383
 #define SSE_GLUE_383B
 #define SSE_GLUE_383C
