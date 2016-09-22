@@ -41,6 +41,11 @@
 
 #if defined(SSE_DMA_OBJECT)
 
+#if defined(SSE_BOILER_383_LOG2)
+#define LOGSECTION LOGSECTION_DMA
+#endif
+
+
 TDma::TDma() {
 #if defined(SSE_DMA_FIFO)
   Request=false;
@@ -189,7 +194,9 @@ BYTE TDma::GetFifoByte() {
 /*  Read/write on disk DMA registers.
 */
 
+#if !defined(SSE_BOILER_383_LOG2)
 #define LOGSECTION LOGSECTION_IO
+#endif
 
 /*  DMA/Disk IO table based on Atari doc
 
@@ -251,7 +258,7 @@ BYTE TDma::IORead(MEM_ADDRESS addr) {
  unpredictable values."
 */
 #if defined(SSE_DMA_SECTOR_COUNT2)
-      TRACE_FDC("Read DMA sector counter\n");
+//      TRACE_FDC("Read DMA sector counter\n");
       ior_byte=0xFF;
 #else
       ior_byte=(rand()&0xFF); // or FF?
@@ -280,7 +287,7 @@ is ignored and when reading the 8 upper bits consistently reads 1."
     // sector counter
     if(MCR&CR_COUNT_OR_REGS) 
     {
-      TRACE_FDC("Read DMA sector counter\n");
+//      TRACE_FDC("Read DMA sector counter\n");
 #if defined(SSE_DMA_SECTOR_COUNT)
 #if defined(SSE_DMA_SECTOR_COUNT2)
       ior_byte=0xFF;
@@ -542,9 +549,9 @@ TODO?
 #endif
 
 
-#if defined(SSE_BOILER_TRACE_CONTROL)
+#if defined(SSE_BOILER_TRACE_CONTROL) && !defined(SSE_BOILER_383_LOG2)
   if(TRACE_MASK3 & TRACE_CONTROL_FDCDMA)
-    TRACE_FDC("PC %X DMA R %X %X\n",old_pc,addr,ior_byte);
+    TRACE_LOG("PC %X DMA R %X %X\n",old_pc,addr,ior_byte);
 #endif
 
   return ior_byte;
@@ -555,7 +562,7 @@ void TDma::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
 
   ASSERT( (addr&0xFFFF00)==0xFF8600 );
 
-#if defined(SSE_BOILER_TRACE_CONTROL)
+#if defined(SSE_BOILER_TRACE_CONTROL) && !defined(SSE_BOILER_383_LOG2)
   if(TRACE_MASK3 & TRACE_CONTROL_FDCDMA)
     TRACE_FDC("PC %X DMA W %X %X\n",old_pc,addr,io_src_b);
 #endif
@@ -709,7 +716,7 @@ What was in the buffers will go nowhere, the internal counter is reset.
     // detect toggling of bit 8 (boolean !x ^ !y = logical x ^^ y)
     if( !(MCR&CR_WRITE) ^ !(io_src_b) ) // fixes Archipelagos IPF
     {
-//      TRACE_LOG("Reset");
+      TRACE_LOG("DMA Reset\n");
 #if !defined(SSE_DMA_FIFO_READ_ADDRESS2)
       fdc_read_address_buffer_len=0;// this is only for command III read address
 #endif
@@ -750,35 +757,55 @@ What was in the buffers will go nowhere, the internal counter is reset.
 //    TRACE_LOG("BaseAddress");
     BaseAddress&=0x00ffff;
     BaseAddress|=((MEM_ADDRESS)io_src_b) << 16;
-    log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Set DMA address to "+HEXSl(BaseAddress,6));
+    log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Set DMA address to "+HEXSl(BaseAddress,6)); 
+    TRACE_LOG("DMA base address: %X\n",BaseAddress);
     break;
     
   case 0xff860b:  // DMA Base and Counter Mid
 //    TRACE_LOG("BaseAddress");
-#if defined(SSE_DMA_ADDRESS)
-/* 
-"The DMA Address Counter register must be loaded (written) in a Low, Mid, 
-  High order."
+
+
+#if defined(SSE_DMA_RIPPLE_CARRY)
+/*
+DMA pointer has to be initialized in order low, mid, high, why
+Short answer. Writing to a lower byte might increase (not clear) the upper one. 
+This will happen when bit 7 (uppermost bit) of the written byte is changed from one to zero.
+The reason is how exactly the counters are implemented on MMU. They use a ripple carry.
+This saves quite some logic at the cost of not being fully synchronous. 
+The upper bit of the lowermost byte, inverted, clocks directly the middle byte of 
+the counter. Any change from high to low on that bit, anytime, would clock the counter 
+on the middle byte. Similarly, the inverted uppermost bit of the middle byte clocks the 
+high byte of the counter.
+
+Actually, the ripple carry is not only across bytes, but across nibbles as well. 
+But between nibbles doesn't have that collateral effect because both nibbles are written 
+at the same time, and the written value overrides the ripple carry.
+
+In case you are wondering, the video counter uses the same ripple mechanism. But there 
+is no such effect because they are read only on the ST.
+(ijor)
 */
-    BaseAddress&=0x0000ff;
-    BaseAddress|=((MEM_ADDRESS)io_src_b) << 8;
-    //BaseAddress|=0xff0000;
-#else
+    if(ST_TYPE!=STE && (BaseAddress&0x008000) && !(io_src_b&0x80)) // 1 to 0
+    {
+      BYTE new_byte=(BYTE)(dma_address>>16)+1;
+      IOWrite(addr-2,new_byte); // maybe it works...
+    }
     BaseAddress&=0xff00ff;
     BaseAddress|=((MEM_ADDRESS)io_src_b) << 8;
-#endif
     break;
     
   case 0xff860d:  // DMA Base and Counter Low
 //    TRACE_LOG("BaseAddress L");
     ASSERT( !(io_src_b&1) ); // shouldn't the address be even?
-#if defined(SSE_DMA_ADDRESS)
-    //BaseAddress=0xffff00,BaseAddress|=io_src_b;
-    BaseAddress=io_src_b;
-#else
+#if defined(SSE_DMA_RIPPLE_CARRY)
+    if(ST_TYPE!=STE && (BaseAddress&0x000080) && !(io_src_b&0x80)) // 1 to 0
+    {
+      BYTE new_byte=(BYTE)(dma_address>>8)+1;
+      IOWrite(addr-2,new_byte);
+    }
+#endif
     BaseAddress&=0xffff00;
     BaseAddress|=io_src_b;
-#endif   
 #if defined(SSE_DMA_ADDRESS_EVEN)    
     //ASSERT(!(io_src_b&1));
     BaseAddress&=0xfffffe;//remark by Petari: bit0 ignored
@@ -944,25 +971,31 @@ void TDma::UpdateRegs(bool trace_them) {
   {
     //ASSERT(fdc_str);
     if(MCR&CR_HDC_OR_FDC)
-      TRACE_LOG("HDC IRQ\n");
+      TRACE_HDC("HDC IRQ\n");
     else
     {
       ASSERT(fdc_str);
 #if defined(SSE_DISK_IMAGETYPE) 
-      TRACE_LOG("%d FDC(%d) IRQ CR %X STR %X ",ACT,SF314[DRIVE].ImageType.Manager,fdc_cr,fdc_str);
+      TRACE_FDC("%d FDC(%d) IRQ CR %X STR %X ",ACT,SF314[DRIVE].ImageType.Manager,fdc_cr,fdc_str);
 #else
       TRACE_LOG("%d FDC IRQ CR %X STR %X ",ACT,fdc_cr,fdc_str);
 #endif
 #if defined(SSE_DEBUG_FDC_TRACE_STATUS)
       WD1772.TraceStatus();
 #endif
+#if defined(SSE_BOILER_383_LOG2)
+      TRACE_FDC("TR %d (CYL %d) SR %d DR %d\n",fdc_tr,floppy_head_track[DRIVE],fdc_sr,fdc_dr);
+#else
       TRACE_LOG("TR %d SR %d DR %d",fdc_tr,fdc_sr,fdc_dr);
-//    }
-#if defined(SSE_YM2149A)//
-    TRACE_LOG(" %c%d:",'A'+YM2149.SelectedDrive,YM2149.SelectedSide);
 #endif
+//    }
+#if defined(SSE_YM2149A)//?
+ //   TRACE_FDC(" %c%d:",'A'+YM2149.SelectedDrive,YM2149.SelectedSide);
+#endif
+#if !defined(SSE_BOILER_383_LOG2)
     TRACE_LOG(" CYL %d byte %d DMA CR %X $%X #%d\n",
       floppy_head_track[DRIVE],SF314[DRIVE].BytePosition(),MCR,BaseAddress,Counter);
+#endif
     }
   }
 #endif
@@ -1095,16 +1128,16 @@ void TDma::TransferBytes() {
 #ifdef SSE_ACSI
     if((MCR&CR_HDC_OR_FDC))
 #if defined(SSE_ACSI_MULTIPLE)      
-      TRACE_HDC("#%03d (%d) %s %06X: ",Datachunk, AcsiHdc[acsi_dev].SectorNum(),(MCR&0x100)?"from":"to",BaseAddress);
+      TRACE_LOG("#%03d (%d) %s %06X: ",Datachunk, AcsiHdc[acsi_dev].SectorNum(),(MCR&0x100)?"from":"to",BaseAddress);
 #else
-      TRACE_HDC("#%03d (%d) %s %06X: ",Datachunk, AcsiHdc.SectorNum(),(MCR&0x100)?"from":"to",BaseAddress);
+      TRACE_LOG("#%03d (%d) %s %06X: ",Datachunk, AcsiHdc.SectorNum(),(MCR&0x100)?"from":"to",BaseAddress);
 #endif
     else
 #endif
-      TRACE_FDC("#%03d (%d-%02d-%02d) %s %06X: ",Datachunk,floppy_current_side(),floppy_head_track[DRIVE],WD1772.CommandType()==2?fdc_sr:0,(MCR&0x100)?"from":"to",BaseAddress);
+      TRACE_LOG("#%03d (%d-%02d-%02d) %s %06X: ",Datachunk,floppy_current_side(),floppy_head_track[DRIVE],WD1772.CommandType()==2?fdc_sr:0,(MCR&0x100)?"from":"to",BaseAddress);
 #endif
 #endif
-
+//TODO is PEEK() safe?
   for(int i=0;i<16;i++) // burst, 16byte packets strictly, 8 words
   {
     if(!(MCR&0x100)&& DMA_ADDRESS_IS_VALID_W) // disk -> RAM
@@ -1125,10 +1158,10 @@ void TDma::TransferBytes() {
 #if defined(SSE_BOILER_TRACE_CONTROL)
       if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
 #endif
-          TRACE_FDC("!!!");
+          TRACE_LOG("!!!");
 #if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
-      TRACE_FDC("%02X ",Fifo
+      TRACE_LOG("%02X ",Fifo
 #if defined(SSE_DMA_DOUBLE_FIFO)
       [(MCR&CR_WRITE)?BufferInUse:!BufferInUse] //this is correct bugfix 3.7.2
 #endif
@@ -1160,7 +1193,7 @@ void TDma::TransferBytes() {
 #endif
 #if defined(SSE_BOILER_TRACE_CONTROL)
   if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
-    TRACE_FDC("\n");
+    TRACE_LOG("\n");
 #endif
 #if defined(SSE_BOILER)
   for(int i=0;i<8;i++) // for Boiler monitor, intercept DMA traffic
