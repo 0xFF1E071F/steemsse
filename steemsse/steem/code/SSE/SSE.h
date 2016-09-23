@@ -2548,6 +2548,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_TOS_SNAPSHOT_AUTOSELECT_383 // correct country
 #define SSE_VAR_CHECK_SNAPSHOT2
 #define SSE_WD1772_383B 
+#define SSE_WD1772_383C
 #endif//bugfix
 
 #else//!SS

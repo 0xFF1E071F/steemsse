@@ -790,6 +790,7 @@ is no such effect because they are read only on the ST.
       BYTE new_byte=(BYTE)(dma_address>>16)+1;
       IOWrite(addr-2,new_byte); // maybe it works...
     }
+#endif
     BaseAddress&=0xff00ff;
     BaseAddress|=((MEM_ADDRESS)io_src_b) << 8;
     break;

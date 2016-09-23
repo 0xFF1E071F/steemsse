@@ -9,7 +9,7 @@
     other emulation variables and facilities.
     The dispatcher also takes care of ghost disks.
 */
-
+//TODO, clean up, a bit messy...
 #include "SSE.h"
 
 #if defined(SSE_WD1772)
@@ -1844,7 +1844,11 @@ r1       r0            1772
 //    SF314[DRIVE].State.reading=true;
     // check Write Protect for command write sector
     if((CR&CR_TYPEII_WRITE) 
+#if defined(SSE_WD1772_383C) //Lines.write_protect is undefined!
+      && (FloppyDrive[DRIVE].ReadOnly) )
+#else
       && (Lines.write_protect|| FloppyDrive[DRIVE].ReadOnly) )
+#endif
     {
       STR|=STR_WP;
       Irq(true);
@@ -2124,7 +2128,11 @@ r1       r0            1772
     }
     // check Write Protect for command write track
     else if((CR&CR_TYPEIII_WRITE) 
+#if defined(SSE_WD1772_383C) //Lines.write_protect is undefined!
+      && (FloppyDrive[DRIVE].ReadOnly) )
+#else
       && (Lines.write_protect|| FloppyDrive[DRIVE].ReadOnly) )
+#endif
     {
       TRACE_LOG("Can't write on disk\n");
       STR|=STR_WP;
