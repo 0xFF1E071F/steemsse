@@ -8,6 +8,7 @@
 
 struct TYM2149 {
   enum {NO_VALID_DRIVE=0xFF};
+  // DATA
 #if defined(SSE_YM2149_DYNAMIC_TABLE)
   WORD *p_fixed_vol_3voices;
 #endif
@@ -15,6 +16,7 @@ struct TYM2149 {
   BYTE SelectedDrive; //0/1 (use Drive() to check validity
   BYTE SelectedSide;  //0/1
 #endif
+  // FUNCTIONS
   TYM2149();
   ~TYM2149();
   BYTE Drive(); // may return NO_VALID_DRIVE
@@ -26,6 +28,7 @@ struct TYM2149 {
   void FreeFixedVolTable();
   bool LoadFixedVolTable();
 #endif
+
 };
 
 #pragma pack(pop)

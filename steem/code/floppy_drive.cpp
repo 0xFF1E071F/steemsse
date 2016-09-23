@@ -587,6 +587,16 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
         fread(&MSA_Sides,2,1,nf);        SWAPBYTES(MSA_Sides);
         fread(&StartTrack,2,1,nf);       SWAPBYTES(StartTrack);
         fread(&MSA_EndTrack,2,1,nf);     SWAPBYTES(MSA_EndTrack);
+/*
+Header:
+	Word	ID marker, should be $0E0F
+	Word	Sectors per track
+	Word	Sides (0 or 1; add 1 to this to get correct number of sides)
+	Word	Starting track (0-based)
+	Word	Ending track (0-based)
+*/
+        TRACE_LOG("MSA ID %X sides %d tracks %d (%d-%d) sectors %d\n",
+          ID,MSA_Sides+1,MSA_EndTrack-StartTrack+1,StartTrack,MSA_EndTrack,MSA_SecsPerTrack);
 
         if (MSA_SecsPerTrack<1 || MSA_SecsPerTrack>FLOPPY_MAX_SECTOR_NUM ||
             MSA_Sides<0 || MSA_Sides>1 ||
@@ -1036,7 +1046,7 @@ bool TFloppyImage::ReopenFormatFile()
 bool TFloppyImage::SeekSector(int Side,int Track,int Sector,bool Format)
 {
   if (Format_f==NULL) Format=0;
-
+//  TRACE("SEEK %d/%d\n",Track,TracksPerSide-1);
   if (Empty()){
     return true;
   }else if (Side<0 || Track<0 || Side>1){
