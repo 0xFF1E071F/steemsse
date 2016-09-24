@@ -927,15 +927,28 @@ CRC.
               }
             }
           }
-//todo...
 #if defined(SSE_DRIVE_RW_SECTOR_TIMING)
 /*  Compute more precisely at which byte/HBL the sector R/W operation should
     start. Important for Microprose Golf 
 */
 
           if (SectorIdx>-1 && nSects>0) {
-
-#if defined(SSE_DRIVE_RW_SECTOR_TIMING3)
+#if defined(SSE_FDC_383)
+            WORD dummy;
+            BYTE num=fdc_sr;
+            WORD CurrentByte=SF314[DRIVE].BytePosition();
+            WORD BytesToNextID=SF314[DRIVE].BytesToID(num, dummy);
+            //TRACE_FDC("Current %d Start ID %d in %d, at %d ",CurrentByte,num,BytesToNextID,BytesToNextID+CurrentByte);
+            // 12+3: to ID; 16: will be counted in agenda function
+            BYTE pre_data_gap=SF314[DRIVE].PreDataGap()-12-3-16; 
+            //TRACE_FDC("gap %d\n",pre_data_gap);
+            WORD start=(CurrentByte+BytesToNextID+pre_data_gap)%DRIVE_BYTES_ROTATION;
+            DWORD HBLOfSectorStart=hbl_count+SF314[DRIVE].BytesToHbls(BytesToNextID+pre_data_gap);
+            if(WD1772.CR&BIT_2)
+              HBLOfSectorStart+=MILLISECONDS_TO_HBLS(15);//?
+            //TRACE_FDC("hbl now %d then %d, diff %d\n",hbl_count,HBLOfSectorStart,HBLOfSectorStart-hbl_count);
+            HBLOfSectorStart-=2;//see below, Steem's way
+#elif defined(SSE_DRIVE_RW_SECTOR_TIMING3)
             //trying with IDs... 
             WORD dummy;
             BYTE num=fdc_sr;
@@ -956,7 +969,6 @@ CRC.
             HBLOfSectorStart+=SF314[DRIVE].BytesToHbls(pre_data_gap-16);
 #endif
             HBLOfSectorStart-=2;//see below, Steem's way
-            
 #else//SSE_DRIVE_RW_SECTOR_TIMING3
             WORD SectorStartingByte= SF314[DRIVE].PostIndexGap()
               +SectorIdx*SF314[DRIVE].RecordLength()
@@ -974,8 +986,6 @@ CRC.
           if (HBLOfSectorStart<hbl_count) 
             HBLOfSectorStart+=FDC_HBLS_PER_ROTATION;
 #endif//SSE_DRIVE_RW_SECTOR_TIMING3
-
-
 #else //Steem 3.2
           if (SectorIdx>-1){
             // Break up the readable track into nSects sections,
@@ -988,7 +998,12 @@ CRC.
 #endif
 
             agenda_delete(agenda_floppy_readwrite_sector);
+#if defined(SSE_FDC_383)
+            agenda_add(agenda_floppy_readwrite_sector,int(hbl_multiply
+              *(HBLOfSectorStart-hbl_count))+2,MAKELONG(0,start));
+#else
             agenda_add(agenda_floppy_readwrite_sector,int(hbl_multiply*(HBLOfSectorStart-hbl_count))+2,MAKELONG(0,fdc_cr));
+#endif
             floppy_irq_flag=0;
             fdc_str=FDC_STR_MOTOR_ON | FDC_STR_BUSY;
 
@@ -1675,9 +1690,11 @@ void agenda_floppy_readwrite_sector(int Data)
   if (floppy_head_track[floppyno]<=FLOPPY_MAX_TRACK_NUM){
     FromFormat=floppy->TrackIsFormatted[floppy_current_side()][floppy_head_track[floppyno]];
   }
-
+#if defined(SSE_FDC_383)
+  int Command=fdc_cr; //shouldn't change...
+#else
   int Command=HIWORD(Data);
-
+#endif
   BYTE WriteProtect=0;
   if ((Command & 0x20) && floppy->ReadOnly){ // Write
     WriteProtect=FDC_STR_WRITE_PROTECT;
@@ -1888,12 +1905,36 @@ instant_sector_access_loop:
     bytes except for the latest part, CRC + $FF included, 19 bytes.
 */
   ASSERT(Part!=64); // 32 -> 65
+#if defined(SSE_FDC_383)
+/*  Correct drift due to hbl system imprecision. 
+    With packs of 16 bytes it can accumulate, and at the end of the sector, 
+    we're off by a couple of HBL, enough to miss next ID.
+    Necrosys STE, Oh No More Froggies
+    MPS Golf still OK (MUST slow down)
+*/
+  WORD bytes= (Part==65)? 19 : 16;
+  WORD start=HIWORD(Data);
+  if(Part<65)
+  {
+    WORD current_byte=SF314[DRIVE].BytePosition();
+    WORD theory_byte=start+ (Part-1)*16;
+    if(current_byte-theory_byte)
+    {
+      TRACE_FDC("Drift start %d theory %d byte %d Part %d\n",start,start+(Part-1)*16,SF314[DRIVE].BytePosition(),Part);
+      bytes-=2*(current_byte-theory_byte);
+    }
+  }
+  agenda_add(agenda_floppy_readwrite_sector,SF314[DRIVE].BytesToHbls(bytes),MAKELONG(Part,start)); 
+#else
   agenda_add(agenda_floppy_readwrite_sector,SF314[DRIVE].BytesToHbls( (Part==65)? 
 #if !defined(SSE_DRIVE_RW_SECTOR_TIMING4) // no hack!
      OPTION_HACKS?27:
 #endif
   19
     :16),MAKELONG(Part,Command)); 
+#endif
+
+
 #else
 #if defined(SSE_DRIVE_BYTES_PER_ROTATION)
     int bytes_per_second=TSF314::TRACK_BYTES*5;

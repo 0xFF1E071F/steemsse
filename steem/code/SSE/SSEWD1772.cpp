@@ -434,6 +434,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
         && (CR&0xF0)==0x90 && !(STR&STR_RNF))
         TRACE_LOG("\n");
       BYTE drive_char= (psg_reg[PSGR_PORT_A]&6)==6? '?' : 'A'+drive;
+   //TRACE_FDC(" %d %d ",ACT,SF314[drive].BytePosition());
       TRACE_FDC("%d FDC(%d) CR $%02X %c:%d STR %X TR %d CYL %d SR %d DR %d dma $%X #%d PC $%X\n",
         ACT,SF314[drive].ImageType.Manager,io_src_b,drive_char,CURRENT_SIDE,STR,TR,SF314[drive].Track(),SR,DR,Dma.BaseAddress,Dma.Counter,old_pc);
     }
