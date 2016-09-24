@@ -977,6 +977,7 @@ void TDma::UpdateRegs(bool trace_them) {
     {
       ASSERT(fdc_str);
 #if defined(SSE_DISK_IMAGETYPE) 
+      //TRACE_FDC(" %d %d ",ACT,SF314[DRIVE].BytePosition());
       TRACE_FDC("%d FDC(%d) IRQ CR %X STR %X ",ACT,SF314[DRIVE].ImageType.Manager,fdc_cr,fdc_str);
 #else
       TRACE_LOG("%d FDC IRQ CR %X STR %X ",ACT,fdc_cr,fdc_str);
