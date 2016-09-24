@@ -871,11 +871,15 @@ Receiver Data Register is retained.
       if (OPTION_HACKS && (addr & 1) && io_word_access) 
         break; //odd addresses ignored on word read, don't jam ?
 #endif
+#if defined(SSE_YM2149_BUS_JAM_383) //see note in iow.cpp
+      DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) BUS_JAM_TIME(1);
+#else
       if(!(ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_R))
       {
         DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) BUS_JAM_TIME(4);
         ioaccess|=IOACCESS_FLAG_PSG_BUS_JAM_R;
       }
+#endif
       if((addr & 1) && io_word_access)
         ;// odd addresses ignored on word writes
       else if(!(addr & 2))

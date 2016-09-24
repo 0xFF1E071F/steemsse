@@ -3094,12 +3094,12 @@ Dn :              |                 |               |
     }
     PREFETCH_IRC; // np
   }
-  //TODO
+#if !defined(SSE_YM2149_BUS_JAM_383)
   if (ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_W){  //oh dear, writing multiple words to the PSG
     int s=count_bits_set_in_word(m68k_src_w);
     if (s>4) BUS_JAM_TIME((s-1) & -4);  //we've already had a bus jam of 4, for s=5..8 want extra bus jam of 4
- // TRACE_OSD("Jam w %d",((s-1)&-4));
   }
+#endif
 }
 
 void                              m68k_movem_l_from_regs_or_ext_l(){
@@ -3301,13 +3301,12 @@ R --> M           |                 |
     }//nxt
     PREFETCH_IRC; // np
   }//movem regs->mem
-//TODO - after the loop??
-
+#if !defined(SSE_YM2149_BUS_JAM_383)
   if (ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_W){  //oh dear, writing multiple longs to the PSG
     int s=count_bits_set_in_word(m68k_src_w)*2; //number of words to write
     if(s>4)BUS_JAM_TIME((s-1)&-4);  //we've already had a bus jam of 4, for s=5..8 want extra bus jam of 4
-//  TRACE_OSD("Jam l %d",((s-1)&-4));
   }
+#endif
 }
 
 void                              m68k_movem_l_to_regs(){
@@ -3475,15 +3474,12 @@ void                              m68k_movem_l_to_regs(){
   if (postincrement) 
     areg[PARAM_M]=ad | areg_hi;
   PREFETCH_IRC;
-//TODO but it should happen sooner
-  //SS: PSG jam seems to be correctly emulated as changing this (here or there) 
-  //will break many programs...
-
+#if !defined(SSE_YM2149_BUS_JAM_383)
   if (ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_R){  //oh dear, reading multiple longs from the PSG
     int s=count_bits_set_in_word(m68k_src_w)*2+1; //number of words read
     if(s>4)BUS_JAM_TIME((s-1)&-4);  //we've already had a bus jam of 4, for s=5..8 want extra bus jam of 4
-//  TRACE_OSD("Jam l r %d",((s-1)&-4));
   }
+#endif
 }
 
 void                              m68k_movem_w_to_regs(){
@@ -3642,12 +3638,12 @@ void                              m68k_movem_w_to_regs(){
   CPU_ABUS_ACCESS_READ;//nr
   m68k_dpeek(ad); //extra word read (discarded)
   PREFETCH_IRC;//np
-
+#if !defined(SSE_YM2149_BUS_JAM_383)
   if (ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_R){  //oh dear, reading multiple words from the PSG
     int s=count_bits_set_in_word(m68k_src_w)+1; //number of words read
     if(s>4)BUS_JAM_TIME((s-1)&-4);  //we've already had a bus jam of 4, for s=5..8 want extra bus jam of 4
- /// TRACE_OSD("Jam w r %d",((s-1)&-4));
-  }
+   }
+#endif
 }
 
 void                              m68k_jsr()

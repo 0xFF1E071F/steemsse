@@ -2517,6 +2517,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#undef SSE_CPU_DIVS_OVERFLOW_PC //temp for tests...
 #define SSE_VID_GAMMA
 #define SSE_WD1772_383
+#define SSE_YM2149_BUS_JAM_383 //to test
 
 #endif//beta
 
