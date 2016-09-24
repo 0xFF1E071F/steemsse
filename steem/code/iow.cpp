@@ -1500,6 +1500,14 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
       if (OPTION_HACKS && (addr & 1) && io_word_access)
         break; //odd addresses ignored on word writes, don't jam?
 #endif
+
+#if defined(SSE_YM2149_BUS_JAM_383)
+/*  The YM2149 is clocked at 2 Mhz. So each R/W is a bit slower than if it
+    ran at 8 Mhz. We prefer this view to a 4 cycles jam for every 4 accesses
+    because it seems to make more sense. Until we find a broken program...
+*/
+      DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) BUS_JAM_TIME(1);
+#else
       if ((ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_W)==0){
         //SS this will jam only once for .W or .L
         DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) BUS_JAM_TIME(4);
@@ -1507,6 +1515,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 //        DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) INSTRUCTION_TIME(2);//
         ioaccess|=IOACCESS_FLAG_PSG_BUS_JAM_W;
       }
+#endif
       if ((addr & 1) && io_word_access) break; //odd addresses ignored on word writes
       if ((addr & 2)==0){  //read data / register select
         psg_reg_select=io_src_b;
