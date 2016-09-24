@@ -200,7 +200,7 @@ WORD TSF314::BytesToID(BYTE &num,WORD &nHbls) {
     {
       bytes_to_id=TRACK_BYTES-current_byte+byte_target_id;
       TRACE_FDC("%d next rev current %d target %d diff %d to id %d\n",num,current_byte,byte_target_id,current_byte-byte_target_id,bytes_to_id);
-      TRACE_FDC("%d + %d x %d\n",byte_first_id,n_sectors,record_length);
+      //TRACE_FDC("%d + %d x %d\n",byte_first_id,n_sectors,record_length);
     }
   }
   nHbls=BytesToHbls(bytes_to_id);

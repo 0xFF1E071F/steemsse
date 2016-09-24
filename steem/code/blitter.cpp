@@ -15,11 +15,18 @@ TBlitter Blit;
 #if defined(SSE_DEBUG)
 int nBytesBlitted=0; // for traces
 #endif
-#if defined(SSE_BLT_381)
+#if defined(SSE_BLT_383)
+/*  Now Circus needs those values!
+    Good as they make more sense.
+    Also Lethal Xcess doesn't like '6' anymore...
+*/
+#define BLITTER_START_WAIT 4
+#define BLITTER_END_WAIT 4
+#elif defined(SSE_BLT_381) 
 /*  Those values shouldn't be correct, we should have something like
     4 for CPU and BLiTTER, but it works better so in Steem.
     4 + 4 breaks Circus!
-    6 + 0 better for Down TLN (still not good), breaks nothing (I know)
+    6 + 0 better for Down TLN (still not good)
 */
 #define BLITTER_START_WAIT 6 
 #define BLITTER_END_WAIT 0
@@ -135,7 +142,11 @@ void Blitter_Start_Line()
     Blit.HasBus=false;
 #endif
 #if BLITTER_END_WAIT!=0 
+#if defined(SSE_BLT_380)
+    INSTRUCTION_TIME(BLITTER_END_WAIT);
+#else
     INSTRUCTION_TIME_ROUND(BLITTER_END_WAIT);
+#endif
 #endif
 #if defined(SSE_BLT_380)
 /*  Steem doesn't emulate the CPU running when the Blitter has the bus.
@@ -591,7 +602,11 @@ void Blitter_Draw()
 #if defined(DEBUG_BUILD) || !defined(SSE_BLITTER)
             if (Blit.HasBus){
 #if defined(SSE_BOILER_BLIT_WHEN_TRACING2) // do the blit before leaving...
-              cpu_cycles+=BLITTER_BLIT_MODE_CYCLES;
+#if defined(SSE_BLT_383)
+              ASSERT(mode==STEM_MODE_CPU);
+              if(debug_in_trace)
+#endif
+                cpu_cycles+=BLITTER_BLIT_MODE_CYCLES;
 #endif
 #if defined(SSE_BOILER_BLIT_IN_HISTORY2)
 #if defined(SSE_BOILER_HISTORY_TIMING)

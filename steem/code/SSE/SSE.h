@@ -67,6 +67,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_BETA //title, OSD, plus some testing - new features
 #define SSE_BETA_BUGFIX // beta for just bugfixes
+
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
 //#define SSE_PRIVATE_BUILD // my "beta" option
 #endif
@@ -2527,12 +2528,11 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_BETA_BUGFIX)
+#define SSE_BLT_383
 #define SSE_CPU_E_CLOCK_383
 #define SSE_CPU_EA_383
 #define SSE_DISK_GHOST_SECTOR_383
-
 #define SSE_FDC_383
-
 #define SSE_INTERRUPT_383
 #define SSE_JOYSTICK_JOYPAD
 #define SSE_JOYSTICK_JUMP_BUTTON_383 
