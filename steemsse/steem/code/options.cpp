@@ -2349,7 +2349,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 */
         case 8503:
 #if defined(SSE_DONGLE_URC)
+#if defined(SSE_DONGLE_MENU)
+          if(STPort[3].Type==TDongle::DONGLE_URC)
+#else
           if(STPort[2].Type==PORTTYPE_DONGLE_URC)
+#endif
             mfp_gpip_set_bit(MFP_GPIP_RING_BIT,false); // Ultimate Ripper
           else
 #endif
@@ -2763,10 +2767,22 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 
           SendMessage(HWND(lPar),BM_SETCHECK,0,true);
         }
+#if defined(SSE_DONGLE_MENU)
+      }else if (LOWORD(wPar)>=9000 && LOWORD(wPar)<9400){ // Ports
+#else
       }else if (LOWORD(wPar)>=9000 && LOWORD(wPar)<9300){ // Ports
+#endif
         Str ErrorText,ErrorTitle;
         int Port=(LOWORD(wPar)-9000)/100;
         int Control=(LOWORD(wPar) % 100);
+#if defined(SSE_DONGLE_MENU)
+        if(Port==3)
+        {
+          STPort[Port].Type=SendMessage(HWND(lPar),CB_GETITEMDATA,
+                                  SendMessage(HWND(lPar),CB_GETCURSEL,0,0),0);
+        }
+        else
+#endif
         switch (Control){
           case 2:
             if (HIWORD(wPar)==CBN_SELENDOK){

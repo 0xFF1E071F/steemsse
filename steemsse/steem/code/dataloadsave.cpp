@@ -1252,7 +1252,11 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
       MidiInList.Add(mic.szPname);
     }
 #endif
+#if defined(SSE_DONGLE_MENU)
+    for (int p=0;p<4;p++){
+#else
     for (int p=0;p<3;p++){
+#endif
       EasyStr PNam=EasyStr("Port_")+p+"_";
       STPort[p].Type=pCSF->GetInt("MIDI",PNam+"Type",STPort[p].Type);
       
@@ -1620,7 +1624,11 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if !defined(SOUND_DISABLE_INTERNAL_SPEAKER)
   pCSF->SetStr("Sound","InternalSpeaker",Str(sound_internal_speaker));
 #endif
+#if defined(SSE_DONGLE_MENU)
+  for (int p=0;p<4;p++){
+#else
   for (int p=0;p<3;p++){
+#endif
     EasyStr PNam=EasyStr("Port_")+p+"_";
     pCSF->SetStr("MIDI",PNam+"Type",EasyStr(STPort[p].Type));
 

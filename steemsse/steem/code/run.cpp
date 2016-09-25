@@ -1165,7 +1165,11 @@ void event_vbl_interrupt() //SS misleading name?
   if(cart)
   {
 #if defined(SSE_DONGLE_URC) 
+#if defined(SSE_DONGLE_MENU)
+    if(STPort[3].Type==TDongle::DONGLE_URC && !(mfp_reg[MFPR_GPIP]&0x40))
+#else
     if(STPort[2].Type==PORTTYPE_DONGLE_URC && !(mfp_reg[MFPR_GPIP]&0x40))
+#endif
       mfp_gpip_set_bit(MFP_GPIP_RING_BIT,true); // Ultimate Ripper
     else 
 #endif

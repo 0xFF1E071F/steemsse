@@ -424,7 +424,11 @@ void reset_peripherals(bool Cold)
 #if defined(SSE_CARTRIDGE_BAT) //hack to reduce pops
   if(SSEConfig.mv16)
   {
+#if defined(SSE_DONGLE_MENU)
+    if(STPort[3].Type==TDongle::DONGLE_MUSIC_MASTER)
+#else
     if(STPort[2].Type==PORTTYPE_DONGLE_MUSIC_MASTER)
+#endif
       dma_sound_last_word=29408;
     else
       dma_sound_last_word=8352;//7088;
