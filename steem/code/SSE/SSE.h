@@ -2419,7 +2419,9 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_DONGLE //new domain of emulation!
 #if defined(SSE_DONGLE)
+#define SSE_DONGLE_MENU
 #define SSE_DONGLE_BAT2
+#define SSE_DONGLE_LEADERBOARD
 #define SSE_DONGLE_MUSIC_MASTER
 #define SSE_DONGLE_URC
 #endif

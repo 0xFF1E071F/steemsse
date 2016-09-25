@@ -560,8 +560,13 @@ void TOptionBox::CreatePortsPage()
   int y=10,Wid;
   int GroupHeight=(OPTIONS_HEIGHT-10)/3-10;
   int GroupMiddle=20+30+(GroupHeight-20-30)/2;
-
+#if defined(SSE_DONGLE_MENU)
+  for (int p=0;p<4;p++){
+    if(p==1)
+      GroupHeight/=2;
+#else
   for (int p=0;p<3;p++){
+#endif
     HWND CtrlParent;
     EasyStr PortName;
     int base=9000+p*100;
@@ -569,6 +574,9 @@ void TOptionBox::CreatePortsPage()
       case 0:PortName=T("MIDI Ports");break;
       case 1:PortName=T("Parallel Port");break;
       case 2:PortName=T("Serial Port");break;
+#if defined(SSE_DONGLE_MENU)
+      case 3:PortName=T("Dongles");break;
+#endif
     }
     CtrlParent=CreateWindow("Button",PortName,WS_CHILD | BS_GROUPBOX,
                                 page_l,y,page_w,GroupHeight,Handle,HMENU(base),HInstance,NULL);
@@ -579,6 +587,7 @@ void TOptionBox::CreatePortsPage()
     SetWindowLong(CtrlParent,GWL_USERDATA,(long)this);
     Old_GroupBox_WndProc = (WNDPROC)SetWindowLong(CtrlParent, GWL_WNDPROC, (long)GroupBox_WndProc);
 #endif
+
     y+=GroupHeight;
     y+=10;
 
@@ -589,13 +598,35 @@ void TOptionBox::CreatePortsPage()
     Win=CreateWindow("Combobox","",WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST,
                             15+Wid,20,page_w-10-(15+Wid),200,CtrlParent,HMENU(base+2),HInstance,NULL);
     CBAddString(Win,T("None"),PORTTYPE_NONE);
+
+#if defined(SSE_DONGLE_MENU)
+    if(p==3)
+    {
+#if defined(SSE_DONGLE_BAT2)
+      CBAddString(Win,T("B.A.T II dongle"),TDongle::DONGLE_BAT2);
+#endif
+#if defined(SSE_DONGLE_MUSIC_MASTER)
+      CBAddString(Win,T("Music Master dongle"),TDongle::DONGLE_MUSIC_MASTER);
+#endif
+#if defined(SSE_DONGLE_URC)
+      CBAddString(Win,T("Ultimate Ripper Cartridge switch"),TDongle::DONGLE_URC);
+#endif
+#if defined(SSE_DONGLE_LEADERBOARD)
+      CBAddString(Win,T("Leader Board dongle"),TDongle::DONGLE_LEADERBOARD);
+#endif
+    }
+    else
+    {
+#endif
     CBAddString(Win,T("MIDI Device"),PORTTYPE_MIDI);
     if (AllowLPT) CBAddString(Win,T("Parallel Port (LPT)"),PORTTYPE_PARALLEL);
     if (AllowCOM) CBAddString(Win,T("COM Port"),PORTTYPE_COM);
     CBAddString(Win,T("File"),PORTTYPE_FILE);
     CBAddString(Win,T("Loopback (Output->Input)"),PORTTYPE_LOOP);
-
-#if defined(SSE_DONGLE)
+#if defined(SSE_DONGLE_MENU)
+    }
+#endif
+#if defined(SSE_DONGLE) && !defined(SSE_DONGLE_MENU)
     if(p==2){ //serial
 #if defined(SSE_DONGLE_BAT2)
       CBAddString(Win,T("B.A.T II dongle"),PORTTYPE_DONGLE_BAT2);

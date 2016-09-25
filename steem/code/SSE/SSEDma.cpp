@@ -1116,10 +1116,10 @@ void TDma::TransferBytes() {
 
 #endif//checksum
 
-#if defined(SSE_BOILER_TRACE_CONTROL)
+#if defined(SSE_BOILER_TRACE_CONTROL__)
 #define LOGSECTION LOGSECTION_ALWAYS // for just the bytes 
 #else
-#define LOGSECTION LOGSECTION_FDC_BYTES 
+#define LOGSECTION LOGSECTION_DMA
 #endif
 
 #if defined(SSE_DMA_TRACK_TRANSFER)

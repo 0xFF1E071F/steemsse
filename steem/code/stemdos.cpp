@@ -1185,6 +1185,7 @@ void stemdos_intercept_trap_1()
 #endif
     break;
   case 6://Crawio
+    //TRACE("pc %X\n",old_pc);
     break;
 #if defined(SSE_TOS_DONT_TRACE_3F)
       case 0x3F: //read file
