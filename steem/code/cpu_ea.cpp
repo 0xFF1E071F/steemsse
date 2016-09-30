@@ -35,7 +35,8 @@ BYTE m68k_peek(MEM_ADDRESS ad){
 #if defined(SSE_CARTRIDGE_BAT)
 /*  See m68k_dpeek().
     B.A.T I and II and Music Master use MOVE.W, but other programs may use
-    MOVE.B (not tested yet).
+    MOVE.B.
+    Drumbeat for the Replay 16 cartridge uses MOVE.B.
  */
       if (cart)
       {

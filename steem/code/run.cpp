@@ -1173,7 +1173,11 @@ void event_vbl_interrupt() //SS misleading name?
       mfp_gpip_set_bit(MFP_GPIP_RING_BIT,true); // Ultimate Ripper
     else 
 #endif
+#if defined(SSE_DONGLE_MULTIFACE) // cart + monochrome
+    if(STPort[3].Type==TDongle::DONGLE_MULTIFACE && !(mfp_reg[MFPR_GPIP]&0x80))
+#else
     if(!(mfp_reg[MFPR_GPIP]&0x80)) // Multiface
+#endif
       mfp_gpip_set_bit(MFP_GPIP_MONO_BIT,true);
   }
 #endif

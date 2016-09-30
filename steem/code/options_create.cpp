@@ -609,10 +609,13 @@ void TOptionBox::CreatePortsPage()
       CBAddString(Win,T("Music Master dongle"),TDongle::DONGLE_MUSIC_MASTER);
 #endif
 #if defined(SSE_DONGLE_URC)
-      CBAddString(Win,T("Ultimate Ripper Cartridge switch"),TDongle::DONGLE_URC);
+      CBAddString(Win,T("Ultimate Ripper Cartridge freeze switch"),TDongle::DONGLE_URC);
 #endif
 #if defined(SSE_DONGLE_LEADERBOARD)
       CBAddString(Win,T("Leader Board dongle"),TDongle::DONGLE_LEADERBOARD);
+#endif
+#if defined(SSE_DONGLE_MULTIFACE)
+      CBAddString(Win,T("Multiface Cartridge freeze switch"),TDongle::DONGLE_MULTIFACE);
 #endif
     }
     else

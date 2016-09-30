@@ -2328,7 +2328,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #endif
             delete[] cart;
             cart=NULL;
-#if defined(SSE_CARTRIDGE_BAT)
+#if defined(SSE_CARTRIDGE_REPLAY16)
+            SSEConfig.mv16=SSEConfig.mr16=false;
+#elif defined(SSE_CARTRIDGE_BAT)
             SSEConfig.mv16=false;
 #endif
             CartFile="";
@@ -2356,6 +2358,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #endif
             mfp_gpip_set_bit(MFP_GPIP_RING_BIT,false); // Ultimate Ripper
           else
+#endif
+#if defined(SSE_DONGLE_MULTIFACE)
+          if(STPort[3].Type==TDongle::DONGLE_MULTIFACE)
 #endif
             mfp_gpip_set_bit(MFP_GPIP_MONO_BIT,false); // Multiface
           break;

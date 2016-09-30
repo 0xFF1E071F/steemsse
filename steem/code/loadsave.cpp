@@ -580,7 +580,9 @@ bool load_TOS(char *)
 
 bool load_cart(char *filename) {
   bool failed=false; // return true on failure (!)
-#if defined(SSE_CARTRIDGE_BAT)
+#if defined(SSE_CARTRIDGE_REPLAY16)
+  SSEConfig.mv16=SSEConfig.mr16=false;
+#elif defined(SSE_CARTRIDGE_BAT)
   SSEConfig.mv16=false;
 #endif
   FILE *f=fopen(filename,"rb");
@@ -617,6 +619,10 @@ bool load_cart(char *filename) {
 #if defined(SSE_CARTRIDGE_BAT)
       if(FirstBytes==0x3631564D) // "MV16"
         SSEConfig.mv16=true; 
+#if defined(SSE_CARTRIDGE_REPLAY16)
+      else if(FirstBytes==0x3631524D) // "MR16"
+        SSEConfig.mv16=SSEConfig.mr16=true; 
+#endif
 #endif
 #else
       switch(FirstBytes) {

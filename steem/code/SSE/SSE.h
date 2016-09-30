@@ -2414,6 +2414,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CARTRIDGE_BAT //fun!
 #define SSE_CARTRIDGE_BAT2
 #define SSE_CARTRIDGE_FREEZE
+#define SSE_CARTRIDGE_REPLAY16
 #define SSE_CARTRIDGE_TRANSPARENT //check for bugs
 #endif
 
@@ -2422,6 +2423,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DONGLE_MENU
 #define SSE_DONGLE_BAT2
 #define SSE_DONGLE_LEADERBOARD
+#define SSE_DONGLE_MULTIFACE
 #define SSE_DONGLE_MUSIC_MASTER
 #define SSE_DONGLE_URC
 #endif
@@ -2545,6 +2547,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SOUND_DMA_383A // no "dsp" for volume
 #define SSE_SOUND_DMA_383B // treble (trouble?)
 #define SSE_SOUND_DMA_383C //  balance 
+#define SSE_SOUND_DMA_383D
 #define SSE_STF_MATCH_TOS_383 // to keep autoselect T104 for HD
 #define SSE_TIMING_MULTIPLIER
 #define SSE_TOS_GEMDOS_EM_383 
