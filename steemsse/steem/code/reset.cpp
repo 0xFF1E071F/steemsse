@@ -421,6 +421,9 @@ void reset_peripherals(bool Cold)
   dma_sound_output_countdown=0;
   dma_sound_samples_countdown=0;
   dma_sound_last_word=MAKEWORD(128,128);
+#if defined(SSE_SOUND_DMA_383D)
+  dma_sound_internal_buf_len=0;
+#endif
 #if defined(SSE_CARTRIDGE_BAT) //hack to reduce pops
   if(SSEConfig.mv16)
   {

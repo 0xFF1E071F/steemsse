@@ -16,9 +16,8 @@ TBlitter Blit;
 int nBytesBlitted=0; // for traces
 #endif
 #if defined(SSE_BLT_383)
-/*  Now Circus needs those values!
-    Good as they make more sense.
-    Also Lethal Xcess doesn't like '6' anymore...
+/*  We finally can use the logical values, thanks to a timing
+    bugfix at blitter write (access was counted after write).
 */
 #define BLITTER_START_WAIT 4
 #define BLITTER_END_WAIT 4
@@ -402,7 +401,7 @@ void Blitter_Blit_Word() //SS Data is blitted word by word
   }
 #if defined(SSE_MMU_ROUNDING_BUS2_BLITTER)
   abus=Blit.DestAdr;
-  BLT_ABUS_ACCESS_WRITE; //+ bugfix? before the poke
+  BLT_ABUS_ACCESS_WRITE; //+ bugfix! before the poke (Circus)
 #endif
   Blitter_DPoke(Blit.DestAdr,NewDat); //SS writing the word to dest
 #if defined(SSE_DEBUG)

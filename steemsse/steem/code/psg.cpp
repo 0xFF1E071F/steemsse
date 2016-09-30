@@ -27,7 +27,11 @@ EXT bool sound_internal_speaker INIT(false);
 #endif
 EXT int sound_freq INIT(50066),sound_comline_freq INIT(0),sound_chosen_freq INIT(50066);
 EXT BYTE sound_num_channels INIT(1),sound_num_bits INIT(8);
+#if defined(SSE_VAR_RESIZE_383)
+EXT BYTE sound_bytes_per_sample INIT(1);
+#else
 EXT int sound_bytes_per_sample INIT(1);
+#endif
 #if defined(SSE_SOUND_VOL_LOGARITHMIC_3)//v3.7.1
 EXT int MaxVolume INIT(10000);
 #elif defined(SSE_SOUND_VOL_LOGARITHMIC_2)
@@ -107,7 +111,6 @@ int MicroWire_StartTime=0;
 
 WORD dma_sound_internal_buf[4],dma_sound_last_word;
 MEM_ADDRESS dma_sound_fetch_address;
-
 WORD dma_sound_channel_buf[DMA_SOUND_BUFFER_LENGTH+16];
 DWORD dma_sound_channel_buf_last_write_t;
 #if defined(SSE_VAR_RESIZE_383)
@@ -795,6 +798,7 @@ inline void Microwire(int channel,int &val) {
 inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
   int &v,int &dv,int **source_p,WORD**lp_dma_sound_channel,
   WORD**lp_max_dma_sound_channel) {
+
   // the big loop, was harder to inline
   while(c>0)
   {       
@@ -878,7 +882,7 @@ have Bass and Trebble enhanced. This might result in a very ugly sound.
 #endif
 #endif
     }
-    
+
     if (val<VOLTAGE_FP(0))
       val=VOLTAGE_FP(0); 
     else if (val>VOLTAGE_FP(255))
@@ -900,6 +904,7 @@ have Bass and Trebble enhanced. This might result in a very ugly sound.
     if(sound_num_channels==2){    
       
       val=v;
+
 #if defined(SSE_SOUND_DMA_360)//no
       if(dma_sound_on_this_screen) //bugfix v3.6
 #endif
@@ -942,6 +947,9 @@ have Bass and Trebble enhanced. This might result in a very ugly sound.
         (*(WORD**)Out_P)++;
       }    
     }//right channel 
+
+    //TRACE_OSD("%d %d %d",v,(*(*lp_dma_sound_channel)),(*(*lp_dma_sound_channel+1)));
+    
     WAVEFORM_ONLY(temp_waveform_display[((int)(*source_p-psg_channels_buf)+psg_time_of_last_vbl_for_writing) % MAX_temp_waveform_display_counter]=WORD_B_1(&val)); 
     *(*source_p)++=VOLTAGE_FP(VOLTAGE_ZERO_LEVEL);
     if(*lp_dma_sound_channel<*lp_max_dma_sound_channel) 
@@ -957,10 +965,10 @@ have Bass and Trebble enhanced. This might result in a very ugly sound.
 #define WRITE_TO_WAV_FILE_B 1 
 #define WRITE_TO_WAV_FILE_W 2 
 
-
 inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
   int &v,int &dv,int **source_p,WORD**lp_dma_sound_channel,
   WORD**lp_max_dma_sound_channel,FILE* wav_file) {
+
   while(c>0)
   {       
     AlterV(Alter_V,v,dv,*source_p);
@@ -1014,12 +1022,12 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
 #if defined(SSE_SOUND_MICROWIRE)
       Microwire(1,val);
 #endif
-      
+
       if(val<VOLTAGE_FP(0))
         val=VOLTAGE_FP(0); 
       else if (val>VOLTAGE_FP(255))
         val=VOLTAGE_FP(255); 
-      
+
       if(Write==WRITE_TO_WAV_FILE_B) 
         fputc(BYTE(WORD_B_1(&(val))),wav_file);
       else 
@@ -1964,6 +1972,7 @@ void dma_sound_fetch()
     dma_sound_output_countdown+=sound_freq;
     WORD w1;
     WORD w2;
+
     if (Mono){       //mono, play half as many words
       w1=WORD((dma_sound_last_word & 0xff00) >> 2);
       w2=WORD((dma_sound_last_word & 0x00ff) << 6);
@@ -2098,7 +2107,10 @@ void dma_sound_fetch()
 void dma_mv16_fetch(WORD data) {
   ASSERT(SSEConfig.mv16);
 #define last_write MicroWire_StartTime //recycle an int, starts at 0
-  data<<=3;
+#if defined(SSE_CARTRIDGE_REPLAY16)
+  if(!SSEConfig.mr16) // real 16bit?
+#endif
+    data<<=3;
   int cycles=(ACT-last_write)&0xFFF; //fff for when last_write is 0!
   dma_sound_samples_countdown+=dma_sound_freq*cycles; // this implies jitter
   while (dma_sound_samples_countdown>/*=*/0){

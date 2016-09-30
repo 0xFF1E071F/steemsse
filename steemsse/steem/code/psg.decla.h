@@ -88,7 +88,11 @@ EXT bool sound_internal_speaker INIT(false);
 #endif
 EXT int sound_freq INIT(50066),sound_comline_freq INIT(0),sound_chosen_freq INIT(50066);
 EXT BYTE sound_num_channels INIT(1),sound_num_bits INIT(8);
+#if defined(SSE_VAR_RESIZE_383)
+EXT BYTE sound_bytes_per_sample INIT(1);
+#else
 EXT int sound_bytes_per_sample INIT(1);
+#endif
 #if defined(SSE_SOUND_VOL_LOGARITHMIC_2)
 EXT int MaxVolume;// INIT(0xffff);
 #else
@@ -183,7 +187,6 @@ EXT MEM_ADDRESS dma_sound_fetch_address;
 
 // Max frequency/lowest refresh *2 for stereo
 #define DMA_SOUND_BUFFER_LENGTH 2600 * SCREENS_PER_SOUND_VBL * 2
-
 EXT WORD dma_sound_channel_buf[DMA_SOUND_BUFFER_LENGTH+16];
 EXT DWORD dma_sound_channel_buf_last_write_t;
 
