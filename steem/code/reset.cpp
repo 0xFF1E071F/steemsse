@@ -490,7 +490,9 @@ void reset_peripherals(bool Cold)
 #if defined(SSE_GLUE_FRAME_TIMINGS_INIT)
   Glue.Reset(Cold);
 #endif
-
+#if defined(SSE_BLT_383B)
+  Blit.BlitCycles=0;//useful?
+#endif
 }
 #undef LOGSECTION
 //---------------------------------------------------------------------------

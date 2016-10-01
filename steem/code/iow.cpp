@@ -1837,7 +1837,9 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 #if defined(SSE_MMU_ROUNDING_BUS2_IO)
         cpu_cycles&=-4;
 #endif
-
+#if defined(SSE_BLT_383B)
+        Blit.BlitCycles=0;
+#endif
         int n=(addr-0xff8240) >> 1; 
 
         // Writing byte to palette writes that byte to both the low and high byte!
@@ -2606,6 +2608,9 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
 
 #if defined(SSE_MMU_ROUNDING_BUS2_IO)
     cpu_cycles&=-4;
+#endif
+#if defined(SSE_BLT_383B)
+    Blit.BlitCycles=0;
 #endif
 
     DEBUG_CHECK_WRITE_IO_W(addr,io_src_w);

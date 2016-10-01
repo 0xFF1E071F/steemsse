@@ -58,7 +58,9 @@ All the address-related auxilary registers such as X-Count/Y-Count,
   // we check every 64 cycles when we run for 256 cycles
   int TimeToCheckIrq; // same name style!
 #endif
-
+#if defined(SSE_BLT_383B)
+  int TimeAtBlit,BlitCycles;
+#endif
 };
 
 extern TBlitter Blit;

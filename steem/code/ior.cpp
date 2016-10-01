@@ -1117,6 +1117,9 @@ Receiver Data Register is retained.
 #if defined(SSE_MMU_ROUNDING_BUS2_IO)
         cpu_cycles&=-4;
 #endif
+#if defined(SSE_BLT_383B)
+        Blit.BlitCycles=0;
+#endif
         int n=(addr-0xff8240)/2; // which palette
         ior_byte= (addr&1) ? (STpal[n]&0xFF) : (STpal[n]>>8);
       }else if (addr>0xff820f && addr<0xff8240){ //forbidden gap
@@ -1187,6 +1190,9 @@ Receiver Data Register is retained.
 #if defined(SSE_MMU_ROUNDING_BUS2_IO2)
           cpu_cycles&=-4;
 #endif
+#if defined(SSE_BLT_383B)
+          Blit.BlitCycles=0;
+#endif
           ior_byte&=~3;           // this way takes care
           ior_byte|=Shifter.m_ShiftMode;  // of both STF & STE
           break;
@@ -1194,6 +1200,9 @@ Receiver Data Register is retained.
         case 0xff8265:  //HSCROLL
 #if defined(SSE_MMU_ROUNDING_BUS2_IO2)
           cpu_cycles&=-4;
+#endif
+#if defined(SSE_BLT_383B)
+          Blit.BlitCycles=0;
 #endif
           DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) 
             shifter_hscroll_extra_fetch=(shifter_hscroll!=0); //case Kultur Melk
@@ -1960,6 +1969,9 @@ WORD ASMCALL io_read_w(MEM_ADDRESS addr)
 
 #if defined(SSE_MMU_ROUNDING_BUS2_IO)
     cpu_cycles&=-4;
+#endif
+#if defined(SSE_BLT_383B)
+    Blit.BlitCycles=0;
 #endif
 
 #if defined(SSE_SHIFTER_PALETTE_NOISE)

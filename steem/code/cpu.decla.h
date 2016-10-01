@@ -315,14 +315,24 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 inline void FetchTiming() {
   cpu_cycles-=4;
   if(pc<himem)
+  {
     cpu_cycles&=-4;
+#if defined(SSE_BLT_383B)
+    Blit.BlitCycles=0;
+#endif
+  }
 }
 
 
 inline void FetchTimingL() {
   cpu_cycles-=8;
   if(pc<himem)
+  {
     cpu_cycles&=-4;
+#if defined(SSE_BLT_383B)
+    Blit.BlitCycles=0;
+#endif
+  }
 }
 
 #else
@@ -350,25 +360,48 @@ inline void FetchTimingL() {
 inline void ReadBusTiming() {
   cpu_cycles-=4;
   if(abus<himem)
+  {
     cpu_cycles&=-4;
+#if defined(SSE_BLT_383B)
+/*  As we can see, this feature costs a lot in overhead, but that's the price
+    of correct emulation.
+*/
+    Blit.BlitCycles=0;
+#endif
+  }
 }
 
 inline void ReadBusTimingL() {
   cpu_cycles-=8;
   if(abus<himem)
+  {
     cpu_cycles&=-4;
+#if defined(SSE_BLT_383B)
+    Blit.BlitCycles=0;
+#endif
+  }
 }
 
 inline void WriteBusTiming() {
   cpu_cycles-=4;
   if(abus<himem)
+  {
     cpu_cycles&=-4;
+#if defined(SSE_BLT_383B)
+    Blit.BlitCycles=0;
+#endif
+  }
 }
 
 inline void WriteBusTimingL() {
   cpu_cycles-=8;
   if(abus<himem)
+  {
     cpu_cycles&=-4;
+#if defined(SSE_BLT_383B)
+    Blit.BlitCycles=0;
+#endif
+  }
 }
 
 #if defined(SSE_MMU_ROUNDING_BUS2_STACK)
@@ -376,13 +409,23 @@ inline void WriteBusTimingL() {
 inline void StackTiming() {
   cpu_cycles-=4;
   if((MEM_ADDRESS)r[15]<himem)
+  {
     cpu_cycles&=-4;
+#if defined(SSE_BLT_383B)
+    Blit.BlitCycles=0;
+#endif
+  }
 }
 
 inline void StackTimingL() {
   cpu_cycles-=8;
   if((MEM_ADDRESS)r[15]<himem)
+  {
     cpu_cycles&=-4;
+#if defined(SSE_BLT_383B)
+    Blit.BlitCycles=0;
+#endif
+  }
 }
 
 #endif

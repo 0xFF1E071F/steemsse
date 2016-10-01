@@ -6092,7 +6092,7 @@ FLOWCHART :
 */
   m68k_GET_SOURCE_W_NOT_A; // EA
   PREFETCH_IRC; // np 
-  INSTRUCTION_TIME(34);  //SS here a tricky programmer can fool Steem with the blitter
+  INSTRUCTION_TIME(34);
 #if defined(SSE_VC_INTRINSICS_383B)
   int m=count_bits_set_in_word(m68k_src_w);
   INSTRUCTION_TIME(2*m); //n*
@@ -6319,7 +6319,7 @@ void                              m68k_muls(){
     - Best case : 38 cycles with $0 or $FFFF
     - Worst case : 70 cycles with $5555
 */
-  INSTRUCTION_TIME(34);  //SS here a tricky programmer can fool Steem with the blitter
+  INSTRUCTION_TIME(34); //TODO blitter? 
   int LastLow=0;
   int Val=WORD(m68k_src_w);
   for (int n=0;n<16;n++){
