@@ -10,6 +10,10 @@
 
 #include <SSE/SSEDebug.h>
 
+#if defined(SSE_BLT_383B)
+#include <blitter.decla.h>
+#endif
+
 // they've been nuked in conditions -> should do without...
 #define EXT extern 
 #define INIT(s)
@@ -219,6 +223,14 @@ EXT MEM_ADDRESS on_rte_return_address;
 extern "C" int cpu_cycles; // defined in emu.cpp
 
 inline void InstructionTime(int t) {
+#if defined(SSE_BLT_383B)
+/*  As we can see, this feature costs a lot in overhead, but that's the price
+    of correct emulation.
+*/
+  if(Blit.BlitCycles>t && t>0)
+    Blit.BlitCycles-=(t);
+  else
+#endif
   cpu_cycles-=(t);
 }
 

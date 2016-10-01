@@ -867,6 +867,7 @@ have Bass and Trebble enhanced. This might result in a very ugly sound.
 /*  If sound is mono and balance is changed, Steem applied only 50% of the
     balance. We do the rest here. Fixes Beat Demo L/R.
     We don't use 'dsp' gain adjustment anymore.
+    // trouble: Coreflakes
 */
       if(OPTION_MICROWIRE)
       {

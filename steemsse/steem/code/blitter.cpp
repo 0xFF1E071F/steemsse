@@ -15,6 +15,7 @@ TBlitter Blit;
 #if defined(SSE_DEBUG)
 int nBytesBlitted=0; // for traces
 #endif
+
 #if defined(SSE_BLT_383)
 /*  We finally can use the logical values, thanks to a timing
     bugfix at blitter write (access was counted after write).
@@ -147,7 +148,23 @@ void Blitter_Start_Line()
     INSTRUCTION_TIME_ROUND(BLITTER_END_WAIT);
 #endif
 #endif
-#if defined(SSE_BLT_380)
+#if defined(SSE_BLT_383B)
+/*  Record # blit cycles during which the CPU could work without
+    accessing the bus. More like real emulation, but it has a cost.
+*/
+    Blit.BlitCycles=ACT-Blit.TimeAtBlit;
+
+#elif defined(SSE_BLT_383)
+/*  Relapse plasma: OP-based temp hack because our other hack isn't reliable
+    anymore after instruction timing refactoring (We Were broken).
+    In case we don't define SSE_BLT_383B.
+*/
+    if(OPTION_HACKS && (IR&0xF0F8)==0x50C8) //DBcc
+    {
+      INSTRUCTION_TIME(-2);
+    }
+
+#elif defined(SSE_BLT_380)
 /*  Steem doesn't emulate the CPU running when the Blitter has the bus.
     This hack corrects for it when the next instruction doesn't access
     the bus at once, but it works only for one bus cycle (not MULU DN,DN).
@@ -213,6 +230,9 @@ void Blitter_Start_Line()
 //---------------------------------------------------------------------------
 void ASMCALL Blitter_Start_Now()
 {
+#if defined(SSE_BLT_383B)
+  Blit.TimeAtBlit=ACT;
+#endif
   ioaccess=0;
   Blit.Busy=true;
   dbg_log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Blitter_Start_Now changing GPIP bit from "+

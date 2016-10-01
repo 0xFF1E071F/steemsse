@@ -2533,6 +2533,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA_BUGFIX)
 #define SSE_BLT_383
+#define SSE_BLT_383B
 #define SSE_CPU_E_CLOCK_383
 #define SSE_CPU_EA_383
 #define SSE_DISK_GHOST_SECTOR_383
@@ -2546,7 +2547,7 @@ Beta: not SSE_PRIVATE_BUILD
 #undef SSE_SOUND_DMA_CLOCK // and molz still ok?
 #define SSE_SOUND_DMA_383A // no "dsp" for volume
 #define SSE_SOUND_DMA_383B // treble (trouble?)
-#define SSE_SOUND_DMA_383C //  balance 
+//#define SSE_SOUND_DMA_383C //  balance 
 #define SSE_SOUND_DMA_383D
 #define SSE_STF_MATCH_TOS_383 // to keep autoselect T104 for HD
 #define SSE_TIMING_MULTIPLIER
