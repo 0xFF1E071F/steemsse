@@ -762,7 +762,11 @@ void event_scanline_sub() {
 
   if (dma_sound_on_this_screen) 
 #if defined(SSE_CARTRIDGE_BAT)
-    if(!SSEConfig.mv16) // don't interfere with our hack
+    if(!SSEConfig.mv16 
+#if defined(SSE_DONGLE_PROSOUND)
+      && !(STPort[3].Type==TDongle::PROSOUND)
+#endif
+      ) // don't interfere with our hack
 #endif
       dma_sound_fetch(); 
 }
@@ -1166,7 +1170,7 @@ void event_vbl_interrupt() //SS misleading name?
   {
 #if defined(SSE_DONGLE_URC) 
 #if defined(SSE_DONGLE_MENU)
-    if(STPort[3].Type==TDongle::DONGLE_URC && !(mfp_reg[MFPR_GPIP]&0x40))
+    if(STPort[3].Type==TDongle::URC && !(mfp_reg[MFPR_GPIP]&0x40))
 #else
     if(STPort[2].Type==PORTTYPE_DONGLE_URC && !(mfp_reg[MFPR_GPIP]&0x40))
 #endif
@@ -1174,7 +1178,7 @@ void event_vbl_interrupt() //SS misleading name?
     else 
 #endif
 #if defined(SSE_DONGLE_MULTIFACE) // cart + monochrome
-    if(STPort[3].Type==TDongle::DONGLE_MULTIFACE && !(mfp_reg[MFPR_GPIP]&0x80))
+    if(STPort[3].Type==TDongle::MULTIFACE && !(mfp_reg[MFPR_GPIP]&0x80))
 #else
     if(!(mfp_reg[MFPR_GPIP]&0x80)) // Multiface
 #endif

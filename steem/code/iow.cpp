@@ -1640,6 +1640,14 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 #endif
           }
         }else if (psg_reg_select==PSGR_PORT_B){
+#if defined(SSE_DONGLE_PROSOUND)
+/*  Wings of Death, Lethal Xcess could use the Pro Sound Centronics adapter
+    to play 8bit samples on the STF.
+*/
+          if(STPort[3].Type==TDongle::PROSOUND)
+            dma_mv16_fetch(io_src_b<<3); // <<3 again in that function
+          else
+#endif
           if (ParallelPort.IsOpen()){
             if (ParallelPort.OutputByte(io_src_b)==0){
               log_write("ARRRGGHH: Lost printer character, printer not responding!!!!");

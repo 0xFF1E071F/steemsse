@@ -606,12 +606,12 @@ Receiver Data Register is retained.
 */
             switch(STPort[3].Type) {
 #if defined(SSE_DONGLE_BAT2)
-            case TDongle::DONGLE_BAT2:
+            case TDongle::BAT2:
               ior_byte&=~BIT_2; //CTS
               break;
 #endif
 #if defined(SSE_DONGLE_MUSIC_MASTER)
-            case TDongle::DONGLE_MUSIC_MASTER:
+            case TDongle::MUSIC_MASTER:
               { //inspired by WinUAE
                 int bit=(ACT-Dongle.Timing>200)?(Dongle.Value&1):(Dongle.Value&2);
                 if(bit)

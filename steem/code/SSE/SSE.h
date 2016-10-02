@@ -2422,6 +2422,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_DONGLE)
 #define SSE_DONGLE_MENU
 #define SSE_DONGLE_BAT2
+#define SSE_DONGLE_PROSOUND // Wings of Death, Lethal Xcess  STF
 #define SSE_DONGLE_LEADERBOARD
 #define SSE_DONGLE_MULTIFACE
 #define SSE_DONGLE_MUSIC_MASTER

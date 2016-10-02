@@ -2352,7 +2352,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 8503:
 #if defined(SSE_DONGLE_URC)
 #if defined(SSE_DONGLE_MENU)
-          if(STPort[3].Type==TDongle::DONGLE_URC)
+          if(STPort[3].Type==TDongle::URC)
 #else
           if(STPort[2].Type==PORTTYPE_DONGLE_URC)
 #endif
@@ -2360,7 +2360,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           else
 #endif
 #if defined(SSE_DONGLE_MULTIFACE)
-          if(STPort[3].Type==TDongle::DONGLE_MULTIFACE)
+          if(STPort[3].Type==TDongle::MULTIFACE)
 #endif
             mfp_gpip_set_bit(MFP_GPIP_MONO_BIT,false); // Multiface
           break;
