@@ -428,7 +428,7 @@ void reset_peripherals(bool Cold)
   if(SSEConfig.mv16)
   {
 #if defined(SSE_DONGLE_MENU)
-    if(STPort[3].Type==TDongle::DONGLE_MUSIC_MASTER)
+    if(STPort[3].Type==TDongle::MUSIC_MASTER)
 #else
     if(STPort[2].Type==PORTTYPE_DONGLE_MUSIC_MASTER)
 #endif

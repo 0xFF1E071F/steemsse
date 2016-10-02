@@ -2104,9 +2104,15 @@ void dma_sound_fetch()
     The sound is played as is, without filter. 
     https://www.youtube.com/watch?v=2cYJGTL0QrE actual hardware
     https://www.youtube.com/watch?v=nxAHqYP9hAg crack - PSG
+    This also handles the Replay 16 cartridge and the Centronics cartridge
+    used by Wings of Death and Lethal Xcess.
 */
 void dma_mv16_fetch(WORD data) {
+#if defined(SSE_DONGLE_PROSOUND)
+  ASSERT(SSEConfig.mv16 || (STPort[3].Type==TDongle::PROSOUND));
+#else
   ASSERT(SSEConfig.mv16);
+#endif
 #define last_write MicroWire_StartTime //recycle an int, starts at 0
 #if defined(SSE_CARTRIDGE_REPLAY16)
   if(!SSEConfig.mr16) // real 16bit?
@@ -2495,7 +2501,14 @@ void psg_write_buffer(int abc,DWORD to_t)
   if( (4>>abc) & (d2_dpeek(FAKE_IO_START+20)>>12 ))
     return; // skip this channel
 #endif
-
+#if defined(SSE_CARTRIDGE_BAT2)
+/*  B.A.T II plays the same samples on both the MV16 and the PSG, because
+    the MV16 of B.A.T I wasn't included, it was just supported.
+    If player inserted the cartridge, he doesn't need PSG sounds.
+*/
+  if(SSEConfig.mv16 && (STPort[3].Type==TDongle::BAT2))
+    return; 
+#endif
   //buffer starts at time time_of_last_vbl
   //we've written up to psg_buf_pointer[abc]
   //so start at pointer and write to to_t,
@@ -2831,14 +2844,7 @@ DWORD psg_adjust_envelope_start_time(DWORD t,DWORD new_envperiod)
 void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
 {
   ASSERT(reg<=15);
-#if defined(SSE_CARTRIDGE_BAT2)
-/*  B.A.T II plays the same samples on both the MV16 and the PSG, because
-    the MV16 of B.A.T I wasn't included, it was just supported.
-    If player inserted the cartridge, he doesn't need PSG sounds.
-*/
-  if(SSEConfig.mv16)
-    return; 
-#endif
+
   // suggestions for global variables:  n_samples_per_vbl=sound_freq/shifter_freq,   shifter_y+(SCANLINES_ABOVE_SCREEN+SCANLINES_BELOW_SCREEN)
   if (reg==1 || reg==3 || reg==5 || reg==13){
     new_val&=15;

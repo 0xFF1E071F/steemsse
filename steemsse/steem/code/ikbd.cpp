@@ -205,7 +205,7 @@ void IKBD_VBL()
       joy_read_buttons();
       for (int Port=0;Port<8;Port++) stick[Port]=joy_get_pos(Port);
 #if defined(SSE_DONGLE_LEADERBOARD) && defined(SSE_DONGLE_MENU)
-      if(STPort[3].Type==TDongle::DONGLE_LEADERBOARD)
+      if(STPort[3].Type==TDongle::LEADERBOARD)
         stick[1]=3; // up and down
 #endif
     }else{

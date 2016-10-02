@@ -575,7 +575,8 @@ void TOptionBox::CreatePortsPage()
       case 1:PortName=T("Parallel Port");break;
       case 2:PortName=T("Serial Port");break;
 #if defined(SSE_DONGLE_MENU)
-      case 3:PortName=T("Dongles");break;
+      //case 3:PortName=T("Dongles");break;
+        case 3:PortName=T("Special Adapters");break; //not all are dongles anyway
 #endif
     }
     CtrlParent=CreateWindow("Button",PortName,WS_CHILD | BS_GROUPBOX,
@@ -603,19 +604,22 @@ void TOptionBox::CreatePortsPage()
     if(p==3)
     {
 #if defined(SSE_DONGLE_BAT2)
-      CBAddString(Win,T("B.A.T II dongle"),TDongle::DONGLE_BAT2);
+      CBAddString(Win,T("B.A.T II dongle"),TDongle::BAT2);
 #endif
 #if defined(SSE_DONGLE_MUSIC_MASTER)
-      CBAddString(Win,T("Music Master dongle"),TDongle::DONGLE_MUSIC_MASTER);
+      CBAddString(Win,T("Music Master dongle"),TDongle::MUSIC_MASTER);
 #endif
 #if defined(SSE_DONGLE_URC)
-      CBAddString(Win,T("Ultimate Ripper Cartridge freeze switch"),TDongle::DONGLE_URC);
+      CBAddString(Win,T("Ultimate Ripper Cartridge freeze switch"),TDongle::URC);
 #endif
 #if defined(SSE_DONGLE_LEADERBOARD)
-      CBAddString(Win,T("Leader Board dongle"),TDongle::DONGLE_LEADERBOARD);
+      CBAddString(Win,T("Leader Board dongle"),TDongle::LEADERBOARD);
 #endif
 #if defined(SSE_DONGLE_MULTIFACE)
-      CBAddString(Win,T("Multiface Cartridge freeze switch"),TDongle::DONGLE_MULTIFACE);
+      CBAddString(Win,T("Multiface Cartridge freeze switch"),TDongle::MULTIFACE);
+#endif
+#if defined(SSE_DONGLE_PROSOUND)
+      CBAddString(Win,T("Pro Sound"),TDongle::PROSOUND);
 #endif
     }
     else
