@@ -560,7 +560,7 @@ void TOptionBox::CreatePortsPage()
   int y=10,Wid;
   int GroupHeight=(OPTIONS_HEIGHT-10)/3-10;
   int GroupMiddle=20+30+(GroupHeight-20-30)/2;
-#if defined(SSE_DONGLE_MENU)
+#if defined(SSE_DONGLE_PORT3)
   for (int p=0;p<4;p++){
     if(p==1)
       GroupHeight/=2;
@@ -574,9 +574,9 @@ void TOptionBox::CreatePortsPage()
       case 0:PortName=T("MIDI Ports");break;
       case 1:PortName=T("Parallel Port");break;
       case 2:PortName=T("Serial Port");break;
-#if defined(SSE_DONGLE_MENU)
+#if defined(SSE_DONGLE_PORT3)
       //case 3:PortName=T("Dongles");break;
-        case 3:PortName=T("Special Adapters");break; //not all are dongles anyway
+      case 3:PortName=T("Special Adapters");break; //not all are dongles anyway
 #endif
     }
     CtrlParent=CreateWindow("Button",PortName,WS_CHILD | BS_GROUPBOX,
@@ -600,26 +600,38 @@ void TOptionBox::CreatePortsPage()
                             15+Wid,20,page_w-10-(15+Wid),200,CtrlParent,HMENU(base+2),HInstance,NULL);
     CBAddString(Win,T("None"),PORTTYPE_NONE);
 
-#if defined(SSE_DONGLE_MENU)
+#if defined(SSE_DONGLE_PORT3)
     if(p==3)
     {
+#if defined(SSE_DONGLE_LEADERBOARD)
+      CBAddString(Win,T("10th Frame dongle"),TDongle::TENTHFRAME);
+#endif
 #if defined(SSE_DONGLE_BAT2)
       CBAddString(Win,T("B.A.T II dongle"),TDongle::BAT2);
 #endif
-#if defined(SSE_DONGLE_MUSIC_MASTER)
-      CBAddString(Win,T("Music Master dongle"),TDongle::MUSIC_MASTER);
-#endif
-#if defined(SSE_DONGLE_URC)
-      CBAddString(Win,T("Ultimate Ripper Cartridge freeze switch"),TDongle::URC);
+#if defined(SSE_DONGLE_CRICKET)
+      CBAddString(Win,T("Cricket Captain dongle"),TDongle::CRICKET);
 #endif
 #if defined(SSE_DONGLE_LEADERBOARD)
       CBAddString(Win,T("Leader Board dongle"),TDongle::LEADERBOARD);
 #endif
-#if defined(SSE_DONGLE_MULTIFACE)
-      CBAddString(Win,T("Multiface Cartridge freeze switch"),TDongle::MULTIFACE);
+#if defined(SSE_DONGLE_CRICKET)
+      CBAddString(Win,T("Rugby Coach dongle"),TDongle::RUGBY);
+#endif
+#if defined(SSE_DONGLE_CRICKET)
+      CBAddString(Win,T("Multi Player Soccer Manager dongle"),TDongle::SOCCER);
+#endif
+#if defined(SSE_DONGLE_MUSIC_MASTER)
+      CBAddString(Win,T("Music Master dongle"),TDongle::MUSIC_MASTER);
 #endif
 #if defined(SSE_DONGLE_PROSOUND)
-      CBAddString(Win,T("Pro Sound"),TDongle::PROSOUND);
+      CBAddString(Win,T("Pro Sound card (WOD/LXS)"),TDongle::PROSOUND);
+#endif
+#if defined(SSE_DONGLE_MULTIFACE)
+      CBAddString(Win,T("Multiface Cartridge switch"),TDongle::MULTIFACE);
+#endif
+#if defined(SSE_DONGLE_URC)
+      CBAddString(Win,T("Ultimate Ripper Cartridge switch"),TDongle::URC);
 #endif
     }
     else
@@ -630,20 +642,7 @@ void TOptionBox::CreatePortsPage()
     if (AllowCOM) CBAddString(Win,T("COM Port"),PORTTYPE_COM);
     CBAddString(Win,T("File"),PORTTYPE_FILE);
     CBAddString(Win,T("Loopback (Output->Input)"),PORTTYPE_LOOP);
-#if defined(SSE_DONGLE_MENU)
-    }
-#endif
-#if defined(SSE_DONGLE) && !defined(SSE_DONGLE_MENU)
-    if(p==2){ //serial
-#if defined(SSE_DONGLE_BAT2)
-      CBAddString(Win,T("B.A.T II dongle"),PORTTYPE_DONGLE_BAT2);
-#endif
-#if defined(SSE_DONGLE_MUSIC_MASTER)
-      CBAddString(Win,T("Music Master dongle"),PORTTYPE_DONGLE_MUSIC_MASTER);
-#endif
-#if defined(SSE_DONGLE_URC)
-      CBAddString(Win,T("Ultimate Ripper Cartridge switch"),PORTTYPE_DONGLE_URC);
-#endif
+#if defined(SSE_DONGLE_PORT3)
     }
 #endif
 

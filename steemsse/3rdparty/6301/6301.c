@@ -264,7 +264,7 @@ hd6301_run_cycles(u_int cycles_to_run) {
   {
     ASSERT(!Crashed6301);
     ASSERT( ExecutingInt==FINISHED_EXECUTING_INT );
-    ASSERT( !reg_getiflag () ); 
+    //ASSERT( !reg_getiflag () ); 
 #ifdef SSE_DEBUG
     if(ExecutingInt!=FINISHED_EXECUTING_INT)
       TRACE("cycles_run %d cycles_to_run %d ExecutingInt %d\n",cycles_run,cycles_to_run,ExecutingInt);

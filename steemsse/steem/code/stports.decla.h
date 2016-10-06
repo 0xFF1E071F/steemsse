@@ -24,34 +24,23 @@ class TMIDIOut;
 #define PORTTYPE_FILE 4
 #define PORTTYPE_LOOP 5
 #define PORTTYPE_LAN 6
-
-#if !defined(SSE_DONGLE_MENU)
-#if defined(SSE_DONGLE_BAT2)
-#define PORTTYPE_DONGLE_BAT2 7
-#endif
-#if defined(SSE_DONGLE_MUSIC_MASTER)
-#define PORTTYPE_DONGLE_MUSIC_MASTER 8
-#endif
-#if defined(SSE_DONGLE_URC)
-#define PORTTYPE_DONGLE_URC 9
-#endif
-#endif
-
 #define PORTTYPE_UNIX_SEQUENCER 100
 #define PORTTYPE_UNIX_OTHER 101
 
 
 #if defined(SSE_DONGLE)
 struct TDongle { 
-#if defined(SSE_DONGLE_MENU)
-  enum {NONE,BAT2,MUSIC_MASTER,URC,LEADERBOARD,MULTIFACE,PROSOUND};
+  enum {NONE,BAT2,MUSIC_MASTER,URC,LEADERBOARD,TENTHFRAME,MULTIFACE,PROSOUND,
+    CRICKET,RUGBY,SOCCER};
   //BYTE ID;
-#endif
   int Timing;
   WORD Value;
 };
 extern TDongle Dongle;
 
+#if defined(SSE_DONGLE_PORT3) 
+#define DONGLE_ID STPort[3].Type // in case we choose another way later
+#endif
 
 #endif
 
@@ -125,7 +114,7 @@ public:
   CircularBuffer *LoopBuf;
 };
 
-#if defined(SSE_DONGLE_MENU)
+#if defined(SSE_DONGLE_PORT3)
 extern TSTPort STPort[4];
 #else
 extern TSTPort STPort[3];

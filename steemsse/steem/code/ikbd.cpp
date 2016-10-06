@@ -204,9 +204,28 @@ void IKBD_VBL()
     if (disable_input_vbl_count==0){
       joy_read_buttons();
       for (int Port=0;Port<8;Port++) stick[Port]=joy_get_pos(Port);
-#if defined(SSE_DONGLE_LEADERBOARD) && defined(SSE_DONGLE_MENU)
-      if(STPort[3].Type==TDongle::LEADERBOARD)
-        stick[1]=3; // up and down
+#if defined(SSE_DONGLE)//TODO test 
+      switch(DONGLE_ID)
+      {
+#if defined(SSE_DONGLE_LEADERBOARD) 
+      case TDongle::LEADERBOARD:
+      case TDongle::TENTHFRAME:
+        stick[1]|=3; // up and down
+        break;
+#endif
+#if defined(SSE_DONGLE_CRICKET) 
+      case TDongle::CRICKET: // port 0 bit 0 toggles (?)
+      case TDongle::SOCCER: // port 0 = $D or $C
+      case TDongle::RUGBY: // port 1 = $D or $C (?)
+        Dongle.Value=(Dongle.Value==0xC)?0xD:0xC;
+        stick[ (DONGLE_ID==TDongle::RUGBY)?1:0 ]|=Dongle.Value;
+        break;
+#endif
+      }
+#endif
+#if defined(SSE_IKBD_6301_383)
+      if(stick[0]&0xF)
+        SSEConfig.Port0Joy=true; // it's joystick or mouse
 #endif
     }else{
       for (int Port=0;Port<8;Port++) stick[Port]=0;
@@ -411,6 +430,9 @@ void IKBD_VBL()
       mouse_change_since_last_interrupt=false;
       mouse_move_since_last_interrupt_x=0;
       mouse_move_since_last_interrupt_y=0;
+#if defined(SSE_IKBD_6301_383)
+      SSEConfig.Port0Joy=0;
+#endif
     }
 #if defined(SSE_IKBD_6301)
     else if(OPTION_C1)

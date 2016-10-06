@@ -2420,8 +2420,9 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_DONGLE //new domain of emulation!
 #if defined(SSE_DONGLE)
-#define SSE_DONGLE_MENU
+#define SSE_DONGLE_PORT3 // all dongles grouped in "virtual" port
 #define SSE_DONGLE_BAT2
+#define SSE_DONGLE_CRICKET
 #define SSE_DONGLE_PROSOUND // Wings of Death, Lethal Xcess  STF
 #define SSE_DONGLE_LEADERBOARD
 #define SSE_DONGLE_MULTIFACE
@@ -2540,6 +2541,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DISK_GHOST_SECTOR_383
 #define SSE_FDC_383
 #define SSE_INTERRUPT_383
+#define SSE_IKBD_6301_383
 #define SSE_JOYSTICK_JOYPAD
 #define SSE_JOYSTICK_JUMP_BUTTON_383 
 #define SSE_SHIFTER_383 //bugfixes

@@ -596,7 +596,7 @@ Receiver Data Register is retained.
               ior_byte|=32; // active-low: inactive
 #endif
 
-#if defined(SSE_DONGLE_MENU)
+#if defined(SSE_DONGLE)
 /*  Some dongles modify the GPIP register.
     The dongle for BAT2 on the ST is simplistic. It just permanently changes
     a bit (by grounding the line?).
@@ -604,7 +604,7 @@ Receiver Data Register is retained.
     Amiga. The program changes a line and checks the effect on another line
     at different times.
 */
-            switch(STPort[3].Type) {
+            switch(DONGLE_ID) {
 #if defined(SSE_DONGLE_BAT2)
             case TDongle::BAT2:
               ior_byte&=~BIT_2; //CTS
@@ -612,33 +612,6 @@ Receiver Data Register is retained.
 #endif
 #if defined(SSE_DONGLE_MUSIC_MASTER)
             case TDongle::MUSIC_MASTER:
-              { //inspired by WinUAE
-                int bit=(ACT-Dongle.Timing>200)?(Dongle.Value&1):(Dongle.Value&2);
-                if(bit)
-                  ior_byte|=BIT_1; //DCD
-                else
-                  ior_byte&=~BIT_1;
-              }
-              break;
-#endif
-            }//sw
-
-#elif defined(SSE_DONGLE)
-/*  Some dongles modify the GPIP register.
-    The dongle for BAT2 on the ST is simplistic. It just permanently changes
-    a bit (by grounding the line?).
-    The dongle for Music Master looks more like the dongle for BAT2 on the
-    Amiga. The program changes a line and checks the effect on another line
-    at different times.
-*/
-            switch(STPort[2].Type) {
-#if defined(SSE_DONGLE_BAT2)
-            case PORTTYPE_DONGLE_BAT2:
-              ior_byte&=~BIT_2; //CTS
-              break;
-#endif
-#if defined(SSE_DONGLE_MUSIC_MASTER)
-            case PORTTYPE_DONGLE_MUSIC_MASTER:
               { //inspired by WinUAE
                 int bit=(ACT-Dongle.Timing>200)?(Dongle.Value&1):(Dongle.Value&2);
                 if(bit)
