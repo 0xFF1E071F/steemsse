@@ -2341,31 +2341,30 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             CheckResetDisplay();
           }
           break;
-#if defined(SSE_CARTRIDGE_FREEZE)
+#if defined(SSE_CARTRIDGE_FREEZE) && defined(SSE_DONGLE)
 /*  The Multiface ST cartridge features a 'freeze' button that messes with the
     monochrome monitor detection interrupt. That's the purpose of the cable
     that intercepts the monitor connection.
     The bit is cleared only as long as the player is pressing the button.
     Same idea on the Ultimate Ripper cartridge, but the button hits a line of
     the serial port instead.
+    The switches are considered as dongles.
 */
         case 8503:
+          switch(DONGLE_ID) {
 #if defined(SSE_DONGLE_URC)
-#if defined(SSE_DONGLE_MENU)
-          if(STPort[3].Type==TDongle::URC)
-#else
-          if(STPort[2].Type==PORTTYPE_DONGLE_URC)
-#endif
+          case TDongle::URC:
             mfp_gpip_set_bit(MFP_GPIP_RING_BIT,false); // Ultimate Ripper
-          else
+            break;
 #endif
 #if defined(SSE_DONGLE_MULTIFACE)
-          if(STPort[3].Type==TDongle::MULTIFACE)
-#endif
+          case TDongle::MULTIFACE:
             mfp_gpip_set_bit(MFP_GPIP_MONO_BIT,false); // Multiface
+            break;
+#endif
+          }//sw
           break;
 #endif
-
 #if defined(SSE_CARTRIDGE_TRANSPARENT)
         case 8504:
           if(SSEOption.CartidgeOff)
@@ -2772,7 +2771,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 
           SendMessage(HWND(lPar),BM_SETCHECK,0,true);
         }
-#if defined(SSE_DONGLE_MENU)
+#if defined(SSE_DONGLE_PORT3)
       }else if (LOWORD(wPar)>=9000 && LOWORD(wPar)<9400){ // Ports
 #else
       }else if (LOWORD(wPar)>=9000 && LOWORD(wPar)<9300){ // Ports
@@ -2780,7 +2779,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         Str ErrorText,ErrorTitle;
         int Port=(LOWORD(wPar)-9000)/100;
         int Control=(LOWORD(wPar) % 100);
-#if defined(SSE_DONGLE_MENU)
+#if defined(SSE_DONGLE_PORT3)
         if(Port==3)
         {
           STPort[Port].Type=SendMessage(HWND(lPar),CB_GETITEMDATA,

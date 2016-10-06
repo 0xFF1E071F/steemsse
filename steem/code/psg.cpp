@@ -2109,7 +2109,7 @@ void dma_sound_fetch()
 */
 void dma_mv16_fetch(WORD data) {
 #if defined(SSE_DONGLE_PROSOUND)
-  ASSERT(SSEConfig.mv16 || (STPort[3].Type==TDongle::PROSOUND));
+  ASSERT(SSEConfig.mv16 || (DONGLE_ID==TDongle::PROSOUND));
 #else
   ASSERT(SSEConfig.mv16);
 #endif
@@ -2506,7 +2506,7 @@ void psg_write_buffer(int abc,DWORD to_t)
     the MV16 of B.A.T I wasn't included, it was just supported.
     If player inserted the cartridge, he doesn't need PSG sounds.
 */
-  if(SSEConfig.mv16 && (STPort[3].Type==TDongle::BAT2))
+  if(SSEConfig.mv16 && DONGLE_ID==TDongle::BAT2)
     return; 
 #endif
   //buffer starts at time time_of_last_vbl

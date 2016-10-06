@@ -1644,7 +1644,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 /*  Wings of Death, Lethal Xcess could use the Pro Sound Centronics adapter
     to play 8bit samples on the STF.
 */
-          if(STPort[3].Type==TDongle::PROSOUND)
+          if(DONGLE_ID==TDongle::PROSOUND)
             dma_mv16_fetch(io_src_b<<3); // <<3 again in that function
           else
 #endif

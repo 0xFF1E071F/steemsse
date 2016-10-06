@@ -1165,7 +1165,7 @@ void stemdos_intercept_trap_1()
   ASSERT( !Invalid );
   if (Invalid) return;
 
-#if defined(SSE_TOS_TRACE_CONOUT)
+#if defined(SSE_TOS_TRACE_CONOUT__)
   if(stemdos_command==2 && m68k_dpeek(sp)!=2)
     TRACE_LOG("\n");//show some class!
 #endif

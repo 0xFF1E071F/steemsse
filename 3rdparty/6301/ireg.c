@@ -14,6 +14,7 @@
 #ifdef USE_PROTOTYPES
 #endif
 
+#include "SSE/SSEOption.h"
 
 /*
  * Start/end of internal register block
@@ -258,6 +259,7 @@ static dr2_getb (offs)
     value=(mousek*2)%6;
 //    TRACE("HD6301 handling mousek %x -> %x\n",mousek,value);
   }
+
   return value;
 }
 
@@ -313,7 +315,7 @@ static dr4_getb (offs)
   ASSERT(!ddr4); // strong
   ASSERT(ddr2&1); // strong
   value=0xFF;
-                
+          
 /*  Mouse movements
     As the mouse ball rotates, two axes spin and cause the logical rotation
     of a 0011 bit sequence in the hardware, two bits going to the 
@@ -378,8 +380,10 @@ static dr4_getb (offs)
     if(joy0mvt||joy1mvt)
     {
       value=0; // not always right (game mouse+joy?) but can't do better yet
+#if !defined(SSE_IKBD_6301_383)
       if(joy0mvt) // for games using joystick 0
         mouse_y_counter=mouse_x_counter=MOUSE_MASK; 
+#endif
       value|= joy0mvt | ( joy1mvt<<4);
       value=~value;
       //TRACE("sticks %X 0 %x 1 %X\n",value,stick[0],stick[1]);
@@ -401,8 +405,10 @@ static dr4_getb (offs)
     }
   }  
 
-  value = (value&(~0xF))  | (mouse_x_counter&3) | ((mouse_y_counter&3)<<2);
-  //TRACE("mvt %X\n",value);
+#if defined(SSE_IKBD_6301_383)
+  if(!SSEConfig.Port0Joy)
+#endif
+    value = (value&(~0xF))  | (mouse_x_counter&3) | ((mouse_y_counter&3)<<2);
 
   iram[offs]=value;
   return value;

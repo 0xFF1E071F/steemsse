@@ -761,12 +761,12 @@ void event_scanline_sub() {
 #endif
 
   if (dma_sound_on_this_screen) 
-#if defined(SSE_CARTRIDGE_BAT)
+#if defined(SSE_CARTRIDGE_BAT)// don't interfere with our hack
     if(!SSEConfig.mv16 
 #if defined(SSE_DONGLE_PROSOUND)
-      && !(STPort[3].Type==TDongle::PROSOUND)
+      && !(DONGLE_ID==TDongle::PROSOUND)
 #endif
-      ) // don't interfere with our hack
+      ) 
 #endif
       dma_sound_fetch(); 
 }
@@ -1160,7 +1160,7 @@ void event_start_vbl()
 void event_vbl_interrupt() //SS misleading name?
 { 
 
-#if defined(SSE_CARTRIDGE_FREEZE)
+#if defined(SSE_CARTRIDGE_FREEZE) && defined(SSE_DONGLE)
 /*  When pressing some button of his cartridge, the player triggered an MFP
     interrupt.
     By releasing the button, the concerned bit should change state. We use
@@ -1168,24 +1168,22 @@ void event_vbl_interrupt() //SS misleading name?
 */
   if(cart)
   {
+    switch(DONGLE_ID) {
 #if defined(SSE_DONGLE_URC) 
-#if defined(SSE_DONGLE_MENU)
-    if(STPort[3].Type==TDongle::URC && !(mfp_reg[MFPR_GPIP]&0x40))
-#else
-    if(STPort[2].Type==PORTTYPE_DONGLE_URC && !(mfp_reg[MFPR_GPIP]&0x40))
-#endif
-      mfp_gpip_set_bit(MFP_GPIP_RING_BIT,true); // Ultimate Ripper
-    else 
+    case TDongle::URC: 
+      if(!(mfp_reg[MFPR_GPIP]&0x40))
+        mfp_gpip_set_bit(MFP_GPIP_RING_BIT,true); // Ultimate Ripper
+      break;
 #endif
 #if defined(SSE_DONGLE_MULTIFACE) // cart + monochrome
-    if(STPort[3].Type==TDongle::MULTIFACE && !(mfp_reg[MFPR_GPIP]&0x80))
-#else
-    if(!(mfp_reg[MFPR_GPIP]&0x80)) // Multiface
+    case TDongle::MULTIFACE:
+      if(!(mfp_reg[MFPR_GPIP]&0x80))
+        mfp_gpip_set_bit(MFP_GPIP_MONO_BIT,true);
+      break;
 #endif
-      mfp_gpip_set_bit(MFP_GPIP_MONO_BIT,true);
-  }
+    }
+  }//if
 #endif
-
 #if defined(SSE_GLUE_FRAME_TIMINGS_HBL)
 /*  With GLU/video event refactoring, we call event_scanline() one time fewer,
     if we did now it would mess up some timings, so we call the sub
