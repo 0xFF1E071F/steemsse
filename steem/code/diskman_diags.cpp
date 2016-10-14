@@ -1053,7 +1053,7 @@ LRESULT __stdcall TDiskManager::Dialog_WndProc(HWND Win,UINT Mess,WPARAM wPar,LP
         EnableWindow(This->Handle,true);
         break;
     }
-
+#if !defined(SSE_VAR_NO_WINSTON_383)
   }else if (Win==This->ImportDiag){
     switch (Mess){
       case WM_COMMAND:
@@ -1108,6 +1108,7 @@ LRESULT __stdcall TDiskManager::Dialog_WndProc(HWND Win,UINT Mess,WPARAM wPar,LP
         EnableWindow(This->Handle,true);
         break;
     }
+#endif
   }else if (Win==This->PropDiag){
     switch (Mess){
       case WM_COMMAND:

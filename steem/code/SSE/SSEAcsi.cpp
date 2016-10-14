@@ -87,7 +87,7 @@ bool TAcsiHdc::Init(int num, char *path) {
   {
     int l=GetFileLength(hard_disk_image); //in bytes - int is enough
     nSectors=l/BLOCK_SIZE;
-    ASSERT(!(l%BLOCK_SIZE) && nSectors>=20480 && device_num>=0 && device_num<MAX_ACSI_DEVICES); // but we take it?
+   //ASSERT(!(l%BLOCK_SIZE) && nSectors>=20480 && device_num>=0 && device_num<MAX_ACSI_DEVICES); // but we take it?
     device_num=num&7;
 #if defined(SSE_ACSI_INQUIRY2)
     char *filename=GetFileNameFromPath(path);

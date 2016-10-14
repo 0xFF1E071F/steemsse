@@ -294,6 +294,9 @@ bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDi
     SidesIdx=(WORD)pCSF->GetInt("Disks","SidesIdx",SidesIdx);
 
     HideBroken=pCSF->GetInt("Disks","HideBroken",HideBroken);
+#if defined(SSE_GUI_DISK_MANAGER_SHOW_EXT)
+    HideExtension=pCSF->GetInt("Disks","HideExtension",HideExtension);
+#endif
 
 #ifdef WIN32
     ExplorerFolders=pCSF->GetInt("Disks","ExplorerFolders",ExplorerFolders);
@@ -428,6 +431,9 @@ bool TDiskManager::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 
   pCSF->SetStr("Disks","HideBroken",LPSTR(HideBroken ? "1":"0"));
+#if defined(SSE_GUI_DISK_MANAGER_SHOW_EXT)
+  pCSF->SetStr("Disks","HideExtension",LPSTR(HideExtension ? "1":"0"));
+#endif
   pCSF->SetStr("Disks","EjectDisksWhenQuit",LPSTR(EjectDisksWhenQuit ? "1":"0"));
 
   pCSF->SetStr("Disks","DoubleClickAction",Str(DoubleClickAction));
@@ -905,7 +911,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     OSD_IMAGE_NAME=pCSF->GetInt("Options","OsdImageName", OSD_IMAGE_NAME);
 #endif
 #if defined(SSE_DISK_PASTI_ONLY_STX)
-    PASTI_JUST_STX=pCSF->GetInt("Disks","PastiJustStx",PASTI_JUST_STX);
+    PASTI_JUST_STX=pCSF->GetInt("Pasti","PastiJustStx",PASTI_JUST_STX);
 #endif
 #if defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
     SSE_INTERPOLATE=pCSF->GetInt("Display","InterpolatedScanlines",SSE_INTERPOLATE);
@@ -1464,7 +1470,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetStr("Options","OsdImageName",EasyStr(OSD_IMAGE_NAME));  
 #endif
 #if defined(SSE_DISK_PASTI_ONLY_STX)
-  pCSF->SetStr("Disks","PastiJustStx",EasyStr(PASTI_JUST_STX));  
+  pCSF->SetStr("Pasti","PastiJustStx",EasyStr(PASTI_JUST_STX));  
 #endif
 #if defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
   pCSF->SetStr("Display","InterpolatedScanlines",EasyStr(SSE_INTERPOLATE));  
