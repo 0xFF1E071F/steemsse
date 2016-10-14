@@ -41,7 +41,7 @@ extern char *dot_ext(int i);
     Steem is Steem's original native emulation (fdc.cpp)
     WD1772 is also Steem's, written to run STW disk images (SSEWD1772.cpp).
 */
-enum { MNGR_STEEM=1,MNGR_PASTI,MNGR_CAPS,MNGR_WD1772};
+enum { MNGR_STEEM=1,MNGR_PASTI,MNGR_CAPS,MNGR_WD1772};//TODO put inside
 
 struct TImageType {
   BYTE Manager;

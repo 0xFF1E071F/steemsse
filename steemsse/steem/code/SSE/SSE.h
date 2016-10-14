@@ -2402,6 +2402,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VS2008_WARNING_383B
 #endif
 
+#define SSE_BLT_383B
+
 #ifdef SSE_BOILER
 #define SSE_BOILER_383
 #define SSE_BOILER_383_LOG2 // new title for more options
@@ -2418,6 +2420,11 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CARTRIDGE_TRANSPARENT //check for bugs
 #endif
 
+#define SSE_DISK_CAPS_383
+#define SSE_DISK_STW_CONVERT // Convert to STW
+#define SSE_DISK_STW_CONVERT2 // helper function instead of macros
+#define SSE_DISK_STW_FAST // +HFE
+
 #define SSE_DONGLE //new domain of emulation!
 #if defined(SSE_DONGLE)
 #define SSE_DONGLE_PORT3 // all dongles grouped in "virtual" port
@@ -2430,8 +2437,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DONGLE_URC
 #endif
 
-#define SSE_DISK_CAPS_383
-
 #if defined(SSE_STF)
 #define SSE_DMA_RIPPLE_CARRY
 #endif
@@ -2439,9 +2444,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_383B
 #define SSE_GLUE_383C
 #define SSE_GUI_383
+#define SSE_GUI_DISK_MANAGER_SHOW_EXT
 #define SSE_GUI_JOYSTICK_383
 //#define SSE_MMU_LOW_LEVEL // long term?
-
 
 #define SSE_MMU_RAM_TEST 
 #if defined(SSE_MMU_RAM_TEST)
@@ -2535,7 +2540,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA_BUGFIX)
 #define SSE_BLT_383
-#define SSE_BLT_383B
 #define SSE_CPU_E_CLOCK_383
 #define SSE_CPU_EA_383
 #define SSE_DISK_GHOST_SECTOR_383
@@ -2560,6 +2564,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_TOS_GEMDOS_RESTRICT_TOS4 // STF T206 OK!
 #define SSE_TOS_SNAPSHOT_AUTOSELECT_383 // correct country
 #define SSE_VAR_CHECK_SNAPSHOT2
+#define SSE_VAR_NO_WINSTON_383
 #define SSE_WD1772_383B 
 #define SSE_WD1772_383C
 #endif//bugfix

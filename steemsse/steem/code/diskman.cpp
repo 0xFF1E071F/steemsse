@@ -269,8 +269,16 @@ TDiskManager::TDiskManager()
   Dragging=-1;DropTarget=-1;
 
   HideBroken=0;
+#if defined(SSE_GUI_DISK_MANAGER_SHOW_EXT)
+  HideExtension=0; //?
+#endif
 
-  DiskDiag=NULL;LinksDiag=NULL;ImportDiag=NULL;PropDiag=NULL;ContentDiag=NULL;DatabaseDiag=NULL;
+  DiskDiag=NULL;
+#if !defined(SSE_VAR_NO_WINSTON_383)
+  LinksDiag=NULL;
+  ImportDiag=NULL;
+#endif
+  PropDiag=NULL;ContentDiag=NULL;DatabaseDiag=NULL;
 
   BytesPerSectorIdx=2;SecsPerTrackIdx=1;TracksIdx=5;SidesIdx=1;
 
@@ -750,7 +758,10 @@ void TDiskManager::SetDir(EasyStr NewFol,bool AddToHistory,
         if ((wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)==0){
           exts=strrchr(Name,'.');
           if (exts!=NULL){
-            *exts=0; //Strip extension from Name
+#if defined(SSE_GUI_DISK_MANAGER_SHOW_EXT)
+            if(HideExtension)
+#endif
+              *exts=0; //Strip extension from Name
             Extension=exts+1;
             strupr(Extension);
             if (IsSameStr_I(Extension,"LNK")){
@@ -1172,6 +1183,22 @@ void TDiskManager::AddFileOrFolderContextMenu(HMENU Pop,DiskManFileInfo *Inf)
             }
           }
         }
+#if defined(SSE_DISK_STW_CONVERT)
+/*  To help our MFM disk image format, we add a right click option to convert
+    regular images to STW.
+    pasti_active would interfere in SetDisk.
+    Works with archives too.
+*/
+        if(!Inf->Folder && !Inf->UpFolder && !pasti_active)
+        {
+          char *ext=NULL;
+          char *dot=strrchr(Inf->Path,'.');
+          if (dot) ext=dot+1;
+          if(ext && (IsSameStr_I(ext,DISK_EXT_ST)||IsSameStr_I(ext,DISK_EXT_MSA)
+            ||IsSameStr_I(ext,DISK_EXT_DIM)||Inf->Zip))
+            InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1041,T("Convert to STW"));
+         }
+#endif
         InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,999,NULL);
       }else{
         InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1060,T("Open in &Explorer"));
@@ -1239,6 +1266,31 @@ void TDiskManager::GoToDisk(Str Path,bool Refresh)
   }
   SetFocus(DiskView);
 }
+//---------------------------------------------------------------------------
+#if defined(SSE_DISK_STW_CONVERT2) 
+/*  Helper function for case 1041
+    What counts here is code size, not performance 
+    mode 0 normal
+         1 missing clock
+         2 crc
+*/
+
+void wd1772_write_stw(BYTE data,TWD1772MFM* wd1772mfm,TWD1772Crc* wd1772crc,
+                      int& p,int mode) {
+  if(!mode)
+    wd1772crc->Add(data);
+  wd1772mfm->data=data;
+  wd1772mfm->Encode( (mode==1) ? (TWD1772MFM::FORMAT_CLOCK) : (TWD1772MFM::NORMAL_CLOCK)); 
+  if(mode==1)
+    wd1772crc->Reset();
+  ImageSTW[1].SetMfmData(p++,wd1772mfm->encoded);
+}
+
+#define WD1772_WRITE(d) wd1772_write_stw(d,&wd1772mfm,&wd1772crc,p,0);
+#define WD1772_WRITE_A1 wd1772_write_stw(0xA1,&wd1772mfm,&wd1772crc,p,1);
+#define WD1772_WRITE_CRC(d) wd1772_write_stw(d,&wd1772mfm,&wd1772crc,p,2);
+
+#endif
 //---------------------------------------------------------------------------
 #if defined(SSE_X64_LPTR)
 #define GET_THIS This=(TDiskManager*)GetWindowLongPtr(Win,GWLP_USERDATA);
@@ -1534,6 +1586,10 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(This->CloseAfterIRR ? MF_CHECKED:0),
                           2015,T("&Close Disk Manager After Insert, Reset and Run"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
+#if defined(SSE_GUI_DISK_MANAGER_SHOW_EXT)
+            InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |
+              int(This->HideExtension ? MF_CHECKED:0),2017,T("Hide E&xtension"));
+#endif
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,2005,T("&Large Icons"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,2006,T("&Small Icons"));
             CheckMenuRadioItem(Pop,2005,2006,2005+This->SmallIcons,MF_BYCOMMAND);
@@ -1807,6 +1863,120 @@ That will toggle bit x.
 
           break;
         }
+#if defined(SSE_DISK_STW_CONVERT) 
+#if !defined(SSE_DISK_STW_CONVERT2) // was first draft, see void wd1772_write_stw
+
+#define WD1772_WRITE(d) {\
+   wd1772crc.Add(d); \
+   wd1772mfm.data=(d); \
+   wd1772mfm.Encode(); \
+   ImageSTW[1].SetMfmData(p++,wd1772mfm.encoded);}
+
+#define WD1772_WRITE_A1 { \
+   wd1772mfm.data=0xA1; \
+   wd1772mfm.Encode(TWD1772MFM::FORMAT_CLOCK); \
+   wd1772crc.Reset(); \
+   ImageSTW[1].SetMfmData(p++,wd1772mfm.encoded);}
+
+#define WD1772_WRITE_CRC(d) {\
+   wd1772mfm.data=(d); \
+   wd1772mfm.Encode(); \
+   ImageSTW[1].SetMfmData(p++,wd1772mfm.encoded);}
+
+#endif
+/*  Create a new STW disk image, and copy the data from a DIM, MSA or ST
+    image into it, using some facilities of our WD1772 emu.
+*/
+        case 1041:
+        {
+          TWD1772MFM wd1772mfm;
+          TWD1772Crc wd1772crc;
+          DiskManFileInfo *Inf=This->GetItemInf(This->MenuTarget);
+          if(Inf)
+          {
+            EasyStr dest=Inf->Path;
+            char *dot=strrchr(dest,'.');
+            if (dot) 
+              strcpy(dot+1,"STW");
+            if(dest.Text)
+            {
+              int Err=FloppyDrive[0].SetDisk(Inf->Path,"");
+              if (!Err && SF314[0].ImageType.Manager==MNGR_STEEM)//DIM, MSA or ST
+              {   
+                TRACE_LOG("Creating %s\n",dest.Text);
+                ImageSTW[1].Create(dest.Text);
+                ImageSTW[1].Open(dest.Text);
+                FloppyDrive[1].ReadOnly=false; // make sure we save the STW
+
+                for(int track=0;track<FloppyDrive[0].TracksPerSide;track++)
+                {
+                  for(int side=0;side<FloppyDrive[0].Sides;side++)
+                  {
+                    ImageSTW[1].LoadTrack(side,track);
+                    int p=0;
+                    for(int i=0;i<SF314[0].PostIndexGap();i++) 
+                      WD1772_WRITE(0x4E)
+                    int sector; //used in trace
+                    for(sector=1;sector<=FloppyDrive[0].SectorsPerTrack;sector++)
+                    {
+                      if(FloppyDrive[0].SeekSector(side,track,sector,false))
+                        break; // not in source, write nothing more
+
+                      for(int i=0;i<(FloppyDrive[0].SectorsPerTrack==11?3:12);i++)
+                        WD1772_WRITE(0)
+                      for(int i=0;i<3;i++)
+                        WD1772_WRITE_A1
+
+                      // write sector ID
+                      WD1772_WRITE(0xFE)
+                      WD1772_WRITE(track)
+                      WD1772_WRITE(side)
+                      WD1772_WRITE(sector)
+                      WD1772_WRITE(2) //512 bytes
+                      WD1772_WRITE_CRC(wd1772crc.crc>>8)
+                      WD1772_WRITE_CRC(wd1772crc.crc&0xFF)
+
+                      for(int i=0;i<22;i++)
+                        WD1772_WRITE(0x4E)
+                      for(int i=0;i<12;i++) // 11 sectors too?
+                        WD1772_WRITE(0)
+                      for(int i=0;i<3;i++)
+                        WD1772_WRITE_A1
+
+                      // write sector data
+                      WD1772_WRITE(0xFB)
+                      BYTE b=0;
+                      for(int i=0;i<512;i++) 
+                      {
+                        fread(&b,1,1,FloppyDrive[0].f);
+                        WD1772_WRITE(b)                        
+                      }
+                      WD1772_WRITE_CRC(wd1772crc.crc>>8)
+                      WD1772_WRITE_CRC(wd1772crc.crc&0xFF)
+                      WD1772_WRITE(0xFF) //?
+
+                      for(int i=0;i<(FloppyDrive[0].SectorsPerTrack==11?1:40);i++)
+                        WD1772_WRITE(0x4E)
+
+                    }//sector
+
+                    // pre-index gap: the rest
+                    ASSERT(Disk[1].TrackBytes>=6256);
+                    while(p<Disk[1].TrackBytes) 
+                      WD1772_WRITE(0x4E)
+
+                    TRACE_LOG("STW track %d/%d written %d sectors %d bytes\n",side,track,sector-1,p);
+        
+                  }//side
+                }//track
+                ImageSTW[1].Close();
+                This->RefreshDiskView(dest,true);
+              }
+            }
+          }
+          break;
+        }
+#endif
         case 1060:
         case 1061:
         {
@@ -1894,6 +2064,12 @@ That will toggle bit x.
           This->HideBroken=!This->HideBroken;
           PostMessage(Win,WM_COMMAND,IDCANCEL,0);
           break;
+#if defined(SSE_GUI_DISK_MANAGER_SHOW_EXT)
+        case 2017:
+          This->HideExtension=!This->HideExtension;
+          PostMessage(Win,WM_COMMAND,IDCANCEL,0);
+          break;
+#endif
         case 2003:
           ShellExecute(NULL,LPSTR(This->ExplorerFolders ? "explore":NULL),This->DisksFol,"","",SW_SHOWNORMAL);
           break;

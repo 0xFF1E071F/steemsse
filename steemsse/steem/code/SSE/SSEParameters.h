@@ -177,8 +177,8 @@ The ACIA master clock is 500kHz.
 /////////
 
 #if defined(SSE_DMA)
-#if defined(SSE_DMA_DELAY)
-#define SSE_DMA_ACCESS_DELAY 20
+#if defined(SSE_DMA_DELAY) //no, TODO, it would be after DE anyway
+#define SSE_DMA_ACCESS_DELAY 20 
 #endif
 #endif
 
@@ -198,16 +198,22 @@ The ACIA master clock is 500kHz.
     The value generally seen is 6250.
     The value for 11 sectors is 6256. It's possible if the clock is higher than
     8mhz, which is the case on the ST.
-    6256+14 is too much, but this is the value that has some delicate cases
-    running, so we just keep it for now, couldn't improve.
-    In Steem native emulation precision is HBL, so there are trade-offs.
-    For STW images, precision is cycle and the value is 6256 for the same cases.
 */
 
+#if defined(SSE_FDC_383)
+#define DRIVE_BYTES_ROTATION (6256)
+#else
 #define DRIVE_BYTES_ROTATION (6256+14)  //little hack...
+#endif
+
 #define DRIVE_BYTES_ROTATION_STW (6256)
 #else
 #define DRIVE_BYTES_ROTATION (8000) // 3.2 (!)
+#endif
+
+#if defined(SSE_DISK_STW_FAST) // hacky by definition
+#define SSE_STW_FAST_CYCLES_PER_BYTE 4
+#define SSE_STW_FAST_IP_MULTIPLIER 8
 #endif
 
 #define DRIVE_SOUND_BUZZ_THRESHOLD 7 // distance between tracks

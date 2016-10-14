@@ -99,9 +99,9 @@ private:
   Str MSAConvPath;
   HANDLE MSAConvProcess;
   Str MSAConvSel;
-
+#if !defined(SSE_VAR_NO_WINSTON_383)
   bool Importing;
-
+#endif
 #elif defined(UNIX)
 	int HistBackLength,HistForwardLength;
 
@@ -175,7 +175,11 @@ public:
     SendMessage(HWND(LV ? LV:DiskView),LVM_GETITEM,0,(LPARAM)&lvi);
     return (DiskManFileInfo*)lvi.lParam;
   }
-  void ShowLinksDiag(),ShowImportDiag(),ShowPropDiag(),ShowDiskDiag();
+  void ShowLinksDiag(),
+#if !defined(SSE_VAR_NO_WINSTON_383)
+    ShowImportDiag(),
+#endif
+    ShowPropDiag(),ShowDiskDiag();
   int GetDiskSelectionSize();
   void SetDiskViewMode(int);
   void LoadIcons();
@@ -184,13 +188,23 @@ public:
 
   HWND DiskView;
   HICON DriveIcon[2],AccurateFDCIcon,DisableDiskIcon;
-  HWND DatabaseDiag,ContentDiag,DiskDiag,LinksDiag,ImportDiag,PropDiag,DiagFocus;
+  HWND DatabaseDiag,ContentDiag,DiskDiag,LinksDiag,
+#if !defined(SSE_VAR_NO_WINSTON_383)
+    ImportDiag,
+#endif
+    PropDiag,DiagFocus;
 #ifdef SSE_X64_LPTR
-  HWND VisibleDiag() { return HWND(int64_t(DiskDiag) | int64_t(LinksDiag) | int64_t(ImportDiag) |
-                          int64_t(PropDiag) | int64_t(ContentDiag) | int64_t(DatabaseDiag)); }
+  HWND VisibleDiag() { return HWND(int64_t(DiskDiag) | int64_t(LinksDiag) 
+#if !defined(SSE_VAR_NO_WINSTON_383)
+    | int64_t(ImportDiag) 
+#endif
+    | int64_t(PropDiag) | int64_t(ContentDiag) | int64_t(DatabaseDiag)); }
 #else
-  HWND VisibleDiag() { return HWND(long(DiskDiag) | long(LinksDiag) | long(ImportDiag) |
-                          long(PropDiag) | long(ContentDiag) | long(DatabaseDiag)); }  
+  HWND VisibleDiag() { return HWND(long(DiskDiag) | long(LinksDiag)
+#if !defined(SSE_VAR_NO_WINSTON_383)    
+    | long(ImportDiag) 
+#endif
+    | long(PropDiag) | long(ContentDiag) | long(DatabaseDiag)); }  
 #endif
   bool AtHome;
   bool ExplorerFolders;
@@ -208,6 +222,9 @@ public:
 	void RefreshDiskView(Str="");
 #endif
 	bool HideBroken,CloseAfterIRR;
+#if defined(SSE_GUI_DISK_MANAGER_SHOW_EXT)
+  bool HideExtension;
+#endif
   int SaveScroll;
   EasyStr SaveSelPath;
 

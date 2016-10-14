@@ -54,13 +54,16 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   SF314[drive].State.ghost=false;
 #endif
 
+#ifndef SSE_VAR_RESET_SAME_DISK //383
   if (IsSameStr_I(File,ImageFile) && IsSameStr_I(CompressedDiskName,DiskInZip)) 
   {//SS
     TRACE_LOG("Same file %s, exit SetDisk\n",File.Text);
-#ifndef SSE_VAR_RESET_SAME_DISK
+//#ifndef SSE_VAR_RESET_SAME_DISK
     return 0;
-#endif
+//#endif
   }//SS
+#endif
+
   if (Exists(File)==0) 
     return FIMAGE_FILEDOESNTEXIST;
 
@@ -257,6 +260,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #endif
 
   if (f_PastiDisk){
+
 #if USE_PASTI
     int Ret=0;
     if (drive>=0 && hPasti){
@@ -570,6 +574,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 
     EasyStr NewMSATemp="";
     short MSA_SecsPerTrack,MSA_EndTrack,MSA_Sides;
+
     if (MSA){
       NewMSATemp.SetLength(MAX_PATH);
       GetTempFileName(WriteDir,"MSA",0,NewMSATemp);
@@ -926,6 +931,10 @@ Header:
       ", Sides="+Sides);
   dbg_log(Str("     TracksPerSide=")+TracksPerSide+", ReadOnly="+ReadOnly);
   dbg_log("");
+
+  TRACE_LOG("Ext %s Manager %d Sides %d Tracks %d Sectors %d\n",
+dot_ext(SF314[drive].ImageType.Extension),SF314[drive].ImageType.Manager,Sides,TracksPerSide,SectorsPerTrack);
+
   return 0;
 }
 #pragma warning (default: 4701)

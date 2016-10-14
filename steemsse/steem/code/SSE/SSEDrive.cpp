@@ -61,6 +61,15 @@ bool TSF314::Adat() {
 
 #if defined(SSE_DISK_STW)
     ||ImageType.Manager==MNGR_WD1772
+#if defined(SSE_DISK_STW_FAST) 
+/*  To help our MFM disk image format, we finally add a fast mode for 
+    STW (and HFE, since we test the image manager).
+    It works with "normal" images (so most of them), but fails in cases 
+    where floppy disk timing is more important, like:
+    War Heli, MPS Golf, Jupiter's Masterdrive, Union Demo...
+*/
+      &&!floppy_instant_sector_access
+#endif
 #endif
     );
   return is_adat;
@@ -221,7 +230,7 @@ WORD TSF314::HblsNextIndex() { // relative
 
 
 WORD TSF314::HblsPerRotation() {
-  return HBL_PER_SECOND/(RPM/60); // see SSEParameters
+  return HBL_PER_SECOND/(RPM/60); 
 }
 
 
@@ -312,7 +321,7 @@ BYTE TSF314::PreDataGap() {
     gap=12+3+7+22+12+3+1; 
     break;
   case 11:
-    gap=3+3+7+22+12+3+1;
+    gap= 3+3+7+22+12+3+1;
     break;
   }
   return gap;
@@ -395,6 +404,10 @@ int TSF314::CyclesPerByte() {
   cycles/=rpm/60; // per rotation (300/60 = 5)
 #endif
   cycles/=Disk[Id].TrackBytes; // per byte
+#if defined(SSE_DISK_STW_FAST)
+  if(!ADAT)
+    cycles=SSE_STW_FAST_CYCLES_PER_BYTE; //hack!
+#endif
   cycles_per_byte=cycles; // save
   ASSERT(cycles);
   return cycles;
@@ -474,7 +487,13 @@ void TSF314::IndexPulse() {
 #endif
     {
       //TRACE("time_of_next_ip %d time_of_last_ip %d CyclesPerByte() %d Disk[Id].TrackBytes %d\n",time_of_next_ip,time_of_last_ip,CyclesPerByte(),Disk[Id].TrackBytes);
-      // time_of_next_ip 21210123 time_of_last_ip 13188876 CyclesPerByte() 1 Disk[Id].TrackBytes 6256
+#if defined(SSE_DISK_STW_FAST)
+      if(!ADAT)
+        // make it longer or it may come before the WD1772 event
+        time_of_next_ip=time_of_last_ip + 
+        CyclesPerByte() * Disk[Id].TrackBytes *SSE_STW_FAST_IP_MULTIPLIER;
+      else
+#endif
       time_of_next_ip=time_of_last_ip + CyclesPerByte() * Disk[Id].TrackBytes;
     }
   }
@@ -483,7 +502,7 @@ void TSF314::IndexPulse() {
     time_of_next_ip=ACT+n_cpu_cycles_per_second; // put into future
 #endif
   ASSERT(time_of_next_ip-time_of_last_ip>0);
-  //TRACE("Yo!\n");
+
   //TRACE("%c: IP at %d next at %d (%d cycles, %d ms)\n",Id,time_of_last_ip,time_of_next_ip,time_of_next_ip-time_of_last_ip,(time_of_next_ip-time_of_last_ip)/(n_cpu_cycles_per_second/1000));
 
   // send pulse to WD1772
