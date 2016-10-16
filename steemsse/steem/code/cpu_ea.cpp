@@ -4,6 +4,8 @@ void m68kReadBFromAddr();
 void m68kReadWFromAddr();
 void m68kReadLFromAddr();
 
+#define LOGSECTION LOGSECTION_CARTRIDGE
+
 // peek
 
 BYTE m68k_peek(MEM_ADDRESS ad){
@@ -32,6 +34,7 @@ BYTE m68k_peek(MEM_ADDRESS ad){
 #endif
       else if (ad<0xfe0000 || ad>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else if(ad>=MEM_EXPANSION_CARTRIDGE){
+      TRACE_LOG("PC %X read.b %X = %X\n",old_pc,ad,cart?CART_PEEK(ad-MEM_EXPANSION_CARTRIDGE):0xFF);
 #if defined(SSE_CARTRIDGE_BAT)
 /*  See m68k_dpeek().
     B.A.T I and II and Music Master use MOVE.W, but other programs may use
@@ -41,6 +44,7 @@ BYTE m68k_peek(MEM_ADDRESS ad){
       if (cart)
       {
         WORD cart_addr=ad-MEM_EXPANSION_CARTRIDGE;
+
         if(SSEConfig.mv16 && cart_addr>4) //not when checking for presence
           dma_mv16_fetch(cart_addr);
         return CART_PEEK(cart_addr);
@@ -115,6 +119,7 @@ WORD m68k_dpeek(MEM_ADDRESS ad){
 #endif
       else if (ad<0xfe0000 || ad>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else if(ad>=MEM_EXPANSION_CARTRIDGE){
+      TRACE_LOG("PC %X read.w %X = %X\n",old_pc,ad,cart?CART_DPEEK(ad-MEM_EXPANSION_CARTRIDGE):0xFFFF);
 #if defined(SSE_CARTRIDGE_BAT)
 /*  The MV16 cartridge was designed for the game B.A.T.
     It plays samples sent through reading an address on the 
@@ -197,6 +202,7 @@ LONG m68k_lpeek(MEM_ADDRESS ad){
 #endif
       else if (ad<0xfe0000 || ad>=0xfe2000) exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else if (ad>=MEM_EXPANSION_CARTRIDGE){
+      TRACE_LOG("PC %X read.l %X = %X\n",old_pc,ad,cart?CART_LPEEK(ad-MEM_EXPANSION_CARTRIDGE):0xFFFFFF);
       if (cart) return CART_LPEEK(ad-MEM_EXPANSION_CARTRIDGE);
       else return 0xffffffff;
     }else if (ad>=rom_addr){
@@ -1777,3 +1783,5 @@ void m68kReadLFromAddr() {
   else
     exception(BOMBS_BUS_ERROR,EA_READ,abus);
 }
+
+#undef LOGSECTION LOGSECTION_CARTRIDGE

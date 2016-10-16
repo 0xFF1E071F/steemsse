@@ -1242,16 +1242,14 @@ void TWD1772::NewCommand(BYTE command) {
     {
       // Doc doesn't state motor is started if it wasn't spinning yet and h=1
       // We assume.
-      Motor(true); 
+      Motor(true); // but does it make sense?
       prg_phase=WD_TYPEI_SPUNUP;
       STR|=STR_SU; // eg ST NICCC 2
 #if defined(SSE_WD1772_383B) 
-/*  Don't IRQ at once, apparently there's a 30ms (!) delay
-http://libhyp.atariforge.org/gf/project/firebee/scmsvn/?action=browse&path=%2F*checkout*%2FFPGA%2FFalconIO_SDCard_IDE_CF%2FWF_FDC1772_IP%2Fwf1772ip_control.vhd&revision=6&pathrev=6
-"In T1_VERIFY_DELAY there is a delay of 30ms."
-    Cases: My Socks Are Weapons (RESTORE), Suretrip II (SEEK)
+/*  Add a delay, not only for RESTORE (My Socks Are Weapons), but also
+    SEEK (Suretrip II), while being fast enough for MPS Golf-ELT!
 */
-      update_time=ACT + MsToCycles(30);
+      update_time=ACT + 256; // don't know the exact value for this, if any
 #else
       OnUpdate(); //go direct, no delay
 #endif

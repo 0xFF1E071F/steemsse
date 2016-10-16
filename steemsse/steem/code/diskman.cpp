@@ -270,7 +270,7 @@ TDiskManager::TDiskManager()
 
   HideBroken=0;
 #if defined(SSE_GUI_DISK_MANAGER_SHOW_EXT)
-  HideExtension=0; //?
+  HideExtension=true;
 #endif
 
   DiskDiag=NULL;
@@ -1196,7 +1196,7 @@ void TDiskManager::AddFileOrFolderContextMenu(HMENU Pop,DiskManFileInfo *Inf)
           if (dot) ext=dot+1;
           if(ext && (IsSameStr_I(ext,DISK_EXT_ST)||IsSameStr_I(ext,DISK_EXT_MSA)
             ||IsSameStr_I(ext,DISK_EXT_DIM)||Inf->Zip))
-            InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1041,T("Convert to STW"));
+            InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1041,T("Convert to ST&W"));
          }
 #endif
         InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,999,NULL);
@@ -1244,7 +1244,9 @@ void TDiskManager::AddFileOrFolderContextMenu(HMENU Pop,DiskManFileInfo *Inf)
     InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,999,NULL);
     if (AddProperties){
       InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1099,T("Properties"));
+#if !defined(SSE_GUI_383)
       InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,999,NULL);
+#endif
     }
     InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,999,NULL);
   }
@@ -1539,6 +1541,19 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #if USE_PASTI
             if (hPasti){
+#if defined(SSE_GUI_DISK_MANAGER_REGROUP_PASTI)
+              HMENU PastiPop=CreatePopupMenu();
+              InsertMenu(PastiPop,0xffffffff,MF_BYPOSITION | MF_STRING 
+                | int(pasti_active ? MF_CHECKED:0),2023,T("Enable"));
+              InsertMenu(PastiPop,0xffffffff,MF_BYPOSITION | MF_STRING,
+                2024,T("Configuration"));
+#if defined(SSE_DISK_PASTI_ONLY_STX_OPTION3)
+              InsertMenu(PastiPop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
+                (PASTI_JUST_STX?MF_CHECKED:0),2026,T("Not for ST/MSA"));
+#endif
+              InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | MF_POPUP,
+              (UINT)PastiPop,T("&Pasti"));
+#else
               InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(pasti_active ? MF_CHECKED:0),2023,T("Use Pasti"));
               InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,2024,T("Pasti Configuration"));
 //              InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(pasti_use_all_possible_disks ? MF_CHECKED:0),
@@ -1548,7 +1563,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
               InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
                 (PASTI_JUST_STX?MF_CHECKED:0),2026,T("Pasti only for STX"));
 #endif
-
+#endif
               InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
             }
 #endif
@@ -1575,25 +1590,55 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #endif
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(This->AutoInsert2 ? MF_CHECKED:0),2016,T("Automatically Insert &Second Disk"));
+#if !defined(SSE_GUI_DISK_MANAGER_REGROUP)
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(This->HideBroken ? MF_CHECKED:0),2002,T("Hide &Broken Shortcuts"));
+#endif
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(This->EjectDisksWhenQuit ? MF_CHECKED:0),2011,T("E&ject Disks When Quit"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
+#if defined(SSE_GUI_DISK_MANAGER_REGROUP)
+            HMENU DCActionPop=CreatePopupMenu();
+            InsertMenu(DCActionPop,0xffffffff,MF_BYPOSITION | MF_STRING,
+              2007,T("&None"));
+            InsertMenu(DCActionPop,0xffffffff,MF_BYPOSITION | MF_STRING,
+              2008,T("Insert In &Drive A"));
+            InsertMenu(DCActionPop,0xffffffff,MF_BYPOSITION | MF_STRING,
+              2009,T("Insert, &Reset and Run"));
+            CheckMenuRadioItem(DCActionPop,2007,2009,
+              2007+This->DoubleClickAction,MF_BYCOMMAND);
+            InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | MF_POPUP,
+              (UINT)DCActionPop,T("Double Click Disk &Action"));
+#else
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,2007,T("Double Click On Disk Does &Nothing"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,2008,T("Double Click On Disk Inserts In &Drive A"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,2009,T("Double Click On Disk Inserts, &Resets and Runs"));
             CheckMenuRadioItem(Pop,2007,2009,2007+This->DoubleClickAction,MF_BYCOMMAND);
+#endif
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(This->CloseAfterIRR ? MF_CHECKED:0),
                           2015,T("&Close Disk Manager After Insert, Reset and Run"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
+#if defined(SSE_GUI_DISK_MANAGER_REGROUP) // it's a "view" option
+            InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(This->HideBroken ? MF_CHECKED:0),2002,T("Hide &Broken Shortcuts"));
+#endif
 #if defined(SSE_GUI_DISK_MANAGER_SHOW_EXT)
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |
               int(This->HideExtension ? MF_CHECKED:0),2017,T("Hide E&xtension"));
 #endif
+#if defined(SSE_GUI_DISK_MANAGER_REGROUP)
+            HMENU IconSizePop=CreatePopupMenu();
+            InsertMenu(IconSizePop,0xffffffff,MF_BYPOSITION | MF_STRING,
+              2005,T("&Large"));
+            InsertMenu(IconSizePop,0xffffffff,MF_BYPOSITION | MF_STRING,
+              2006,T("&Small"));
+            CheckMenuRadioItem(IconSizePop,2005,2006,
+              2005+This->SmallIcons,MF_BYCOMMAND);
+            InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | MF_POPUP,
+              (UINT)IconSizePop,T("&Icon Size"));
+#else
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,2005,T("&Large Icons"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,2006,T("&Small Icons"));
             CheckMenuRadioItem(Pop,2005,2006,2005+This->SmallIcons,MF_BYCOMMAND);
-
+#endif
             HMENU SpacingPop=CreatePopupMenu();
             InsertMenu(SpacingPop,0xffffffff,MF_BYPOSITION | MF_STRING,2020,T("Thin"));
             InsertMenu(SpacingPop,0xffffffff,MF_BYPOSITION | MF_STRING,2021,T("Normal"));
@@ -1953,9 +1998,9 @@ That will toggle bit x.
                       }
                       WD1772_WRITE_CRC(wd1772crc.crc>>8)
                       WD1772_WRITE_CRC(wd1772crc.crc&0xFF)
-                      WD1772_WRITE(0xFF) //?
+                      WD1772_WRITE(0xFF) // so 1 byte gap fewer
 
-                      for(int i=0;i<(FloppyDrive[0].SectorsPerTrack==11?1:40);i++)
+                      for(int i=0;i<(FloppyDrive[0].SectorsPerTrack==11?1-1:40-1);i++)
                         WD1772_WRITE(0x4E)
 
                     }//sector
@@ -2517,6 +2562,26 @@ That will toggle bit x.
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,2010,T("Find In Current Folder"));
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,2030,T("Run MSA Converter")+"\10F6");
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,999,NULL);
+#if defined(SSE_GUI_DISK_MANAGER_REGROUP2)
+            HMENU NewPop=CreatePopupMenu();
+
+            InsertMenu(NewPop,0xffffffff,MF_BYPOSITION | MF_STRING,1000,
+              T("&Folder"));
+            InsertMenu(NewPop,0xffffffff,MF_BYPOSITION | MF_STRING,1001,
+              T("Standard &Disk Image"));
+            InsertMenu(NewPop,0xffffffff,MF_BYPOSITION | MF_STRING,1002,
+              T("Custom Disk &Image"));
+#if defined(SSE_DISK_STW_DISK_MANAGER) //new context option
+            InsertMenu(NewPop,0xffffffff,MF_BYPOSITION | MF_STRING,1003,
+              T("ST&W Disk Image"));
+#endif
+#if defined(SSE_DISK_HFE_DISK_MANAGER) //new context option
+            InsertMenu(NewPop,0xffffffff,MF_BYPOSITION | MF_STRING,1004,
+              T("&HFE Disk Image"));
+#endif
+            InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING | MF_POPUP,
+              (UINT)NewPop,T("&New..."));
+#else
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1000,T("New &Folder"));
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1001,T("New Standard &Disk Image"));
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1002,T("New Custom Disk &Image"));
@@ -2525,6 +2590,7 @@ That will toggle bit x.
 #endif
 #if defined(SSE_DISK_HFE_DISK_MANAGER) //new context option
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1004,T("New &HFE Disk Image"));
+#endif
 #endif
         POINT pt;
         GetCursorPos(&pt);
@@ -2640,7 +2706,16 @@ That will toggle bit x.
                 // Check for inserted disks being in renamed folder
               }
             }
+#if defined(SSE_GUI_DISK_MANAGER_SHOW_EXT)
+            BOOL success;
+            if(This->HideExtension)
+              success=MoveFile(This->DisksFol+"\\"+OldName+Extension,This->DisksFol+"\\"+NewName+Extension);
+            else
+              success=MoveFile(This->DisksFol+"\\"+OldName,This->DisksFol+"\\"+NewName);
+            if(success) {
+#else
             if (MoveFile(This->DisksFol+"\\"+OldName+Extension,This->DisksFol+"\\"+NewName+Extension)){
+#endif
               if (Link){
                 Inf->LinkPath=This->DisksFol+"\\"+NewName+Extension;
               }else{
@@ -2675,8 +2750,11 @@ That will toggle bit x.
               }
               return true;
             }else{
+#if defined(SSE_GUI_DISK_MANAGER_SHOW_EXT) // eg STW, system blocks access
+              Alert(T("Unable to rename file (read-only? inserted?)"),T("Error"),MB_ICONEXCLAMATION);
+#else
               Alert(EasyStr(T("Unable to rename"))+" "+This->DisksFol+"\\"+OldName+Extension+" "+T("to")+" "+This->DisksFol+"\\"+NewName+Extension,T("Error"),MB_ICONEXCLAMATION);
-
+#endif
               for (int disk=0;disk<2;disk++){
                 if (InDrive[disk]){
                   FloppyDrive[disk].SetDisk(This->DisksFol+"\\"+OldName+Extension,DiskInZip[disk]);
@@ -3043,7 +3121,11 @@ That will toggle bit x.
     case WM_GETMINMAXINFO:
     {
       MINMAXINFO *mmi=(MINMAXINFO*)lPar;
+#if defined(SSE_ACSI_ICON_383) //report Dima
+      mmi->ptMinTrackSize.x=403+70+GetSystemMetrics(SM_CXFRAME)*2+GetSystemMetrics(SM_CXVSCROLL);
+#else
       mmi->ptMinTrackSize.x=403+GetSystemMetrics(SM_CXFRAME)*2+GetSystemMetrics(SM_CXVSCROLL);
+#endif
       mmi->ptMinTrackSize.y=186+GetSystemMetrics(SM_CYCAPTION)+GetSystemMetrics(SM_CYFRAME)*2;
       if (FullScreen){
         mmi->ptMaxSize.x=GetSystemMetrics(SM_CXSCREEN)+GetSystemMetrics(SM_CXFRAME)*2;
