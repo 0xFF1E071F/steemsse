@@ -145,7 +145,7 @@ BYTE dma_sound_treble=6;
 int dma_sound_bass=6; // 6 is neutral value
 int dma_sound_treble=6;
 #endif
-#if !defined(SSE_SOUND_DMA_383A)// too many click problems
+#if !defined(SSE_SOUND_DMA_383A)// too many click problems (report Foebane)
 TIirVolume MicrowireVolume[2]; 
 #endif
 TIirLowShelf MicrowireBass[2];

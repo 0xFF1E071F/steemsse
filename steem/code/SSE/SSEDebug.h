@@ -250,6 +250,7 @@ enum logsection_enum_tag {
  LOGSECTION_OPTIONS, // now free (we use INIT for options)
  LOGSECTION_ACIA,
  LOGSECTION_DMA,
+ LOGSECTION_CARTRIDGE,
  NUM_LOGSECTIONS,
  };
 #endif

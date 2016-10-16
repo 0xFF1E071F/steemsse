@@ -65,8 +65,10 @@ bool TSF314::Adat() {
 /*  To help our MFM disk image format, we finally add a fast mode for 
     STW (and HFE, since we test the image manager).
     It works with "normal" images (so most of them), but fails in cases 
-    where floppy disk timing is more important, like:
-    War Heli, MPS Golf, Jupiter's Masterdrive, Union Demo...
+    where floppy disk timing is more important, like, or if there's a READ TRACK
+    command:
+    War Heli, MPS Golf, Jupiter's Masterdrive, Union Demo, Fantasia (megademo),
+    Demoniak -ELT...
 */
       &&!floppy_instant_sector_access
 #endif

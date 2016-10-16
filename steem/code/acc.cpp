@@ -79,6 +79,7 @@ DESCRIPTION: Completely random accessory functions.
 #if defined(SSE_BOILER_383_LOG2)
                                     {"ACIA",LOGSECTION_ACIA},
                                     {"DMA",LOGSECTION_DMA},
+                                    {"Cartridge",LOGSECTION_CARTRIDGE},
 #endif
                                     {"*",-1}};
 

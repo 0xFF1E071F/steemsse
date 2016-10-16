@@ -2444,6 +2444,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_383B
 #define SSE_GLUE_383C
 #define SSE_GUI_383
+#define SSE_GUI_DISK_MANAGER_REGROUP // it's getting cluttered
+#define SSE_GUI_DISK_MANAGER_REGROUP2 // context
+#define SSE_GUI_DISK_MANAGER_REGROUP_PASTI // not sure about this one
 #define SSE_GUI_DISK_MANAGER_SHOW_EXT
 #define SSE_GUI_JOYSTICK_383
 //#define SSE_MMU_LOW_LEVEL // long term?
@@ -2539,6 +2542,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_BETA_BUGFIX)
+#define SSE_ACSI_ICON_383
 #define SSE_BLT_383
 #define SSE_CPU_E_CLOCK_383
 #define SSE_CPU_EA_383
@@ -2554,7 +2558,7 @@ Beta: not SSE_PRIVATE_BUILD
 #undef SSE_SOUND_DMA_CLOCK // and molz still ok?
 #define SSE_SOUND_DMA_383A // no "dsp" for volume
 #define SSE_SOUND_DMA_383B // treble (trouble?)
-//#define SSE_SOUND_DMA_383C //  balance 
+//#define SSE_SOUND_DMA_383C //  balance (trouble)
 #define SSE_SOUND_DMA_383D
 #define SSE_STF_MATCH_TOS_383 // to keep autoselect T104 for HD
 #define SSE_TIMING_MULTIPLIER
