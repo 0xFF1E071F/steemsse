@@ -6,9 +6,7 @@
 #pragma pack(push, STRUCTURE_ALIGNMENT)
 
 struct TAcsiHdc {
-#if defined(SSE_ACSI_MULTIPLE)
 enum {MAX_ACSI_DEVICES=4}; // could be 8 but we stop at 4
-#endif
   TAcsiHdc();
   ~TAcsiHdc();
   // interface
@@ -54,11 +52,8 @@ enum {MAX_ACSI_DEVICES=4}; // could be 8 but we stop at 4
 };
 
 #pragma pack(pop)
-#if defined(SSE_ACSI_MULTIPLE)
+
 extern BYTE acsi_dev;
 extern TAcsiHdc AcsiHdc[TAcsiHdc::MAX_ACSI_DEVICES]; // each object is <64 bytes
-#else
-extern TAcsiHdc AcsiHdc;
-#endif
 
 #endif//#ifndef SSEACSI_H

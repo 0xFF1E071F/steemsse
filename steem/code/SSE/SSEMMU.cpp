@@ -65,15 +65,15 @@
 
 void TMMU::UpdateVideoCounter(int CyclesIn) {
 //  ASSERT(scan_y!=-29);
-  MEM_ADDRESS sdp;
+  MEM_ADDRESS vc;
   if (bad_drawing){  // Fake SDP, eg extended monitor
     if (scan_y<0)
-      sdp=xbios2;
+      vc=xbios2;
     else if (scan_y<shifter_y){
       int line_len=(160/res_vertical_scale);
-      sdp=xbios2 + scan_y*line_len + min(CyclesIn/2,line_len) & ~1;
+      vc=xbios2 + scan_y*line_len + min(CyclesIn/2,line_len) & ~1;
     }else
-      sdp=xbios2+32000;
+      vc=xbios2+32000;
   }
   else if(Glue.FetchingLine()) // lines where the counter actually moves
   {
@@ -86,30 +86,28 @@ void TMMU::UpdateVideoCounter(int CyclesIn) {
     // can't be odd though (hires)
     starts_counting&=-2;
 
-    // compute sdp
+    // compute vc
     int c=CyclesIn/2-starts_counting;
-    sdp=shifter_draw_pointer_at_start_of_line;
+    vc=shifter_draw_pointer_at_start_of_line;
     if(!bytes_to_count)
       ; // 0-byte lines
     else if(c>=bytes_to_count)
     {
-      sdp+=bytes_to_count;
-      //TRACE("F%d y%d c%d bytes in %d\n",TIMING_INFO,bytes_to_count);
+      vc+=bytes_to_count;
       // The timing of this is a strange thing on a real STE - TODO
       if(ST_TYPE==STE
-        && CyclesIn>=Glue.CurrentScanline.EndCycle + (HSCROLL0?WordsToSkip*2:4)) 
-        sdp+=(LINEWID+WordsToSkip)*2;
+        && CyclesIn>=Glue.CurrentScanline.EndCycle + (HSCROLL0?WordsToSkip*2:4))
+        vc+=(LINEWID+WordsToSkip)*2;
     }
     else if (c>=0){
       c&=-2;
-      sdp+=c;
-      //TRACE("F%d y%d c%d bytes in %d\n",TIMING_INFO,c);
+      vc+=c;
     }
   }
   else // lines witout fetching (before or after frame)
-    sdp=shifter_draw_pointer_at_start_of_line;
+    vc=shifter_draw_pointer_at_start_of_line;
 
-  VideoCounter=sdp; // update member variable
+  VideoCounter=vc; // update member variable
 }
 
 #endif

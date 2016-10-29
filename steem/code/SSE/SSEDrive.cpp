@@ -39,36 +39,25 @@ bool TSF314::Adat() {
     This is defined so: Steem slow (original ADAT) or Pasti or Caps 
     or Steem WD1772.
 */
-  bool is_adat= (!floppy_instant_sector_access
-#if defined(SSE_DISK_IMAGETYPE)
-    && ImageType.Manager==MNGR_STEEM
-#endif
-
+  bool is_adat= (
+    !floppy_instant_sector_access && ImageType.Manager==MNGR_STEEM
 #if USE_PASTI
-    ||pasti_active
+    || pasti_active && ImageType.Manager==MNGR_PASTI
 #endif
-#if defined(SSE_DISK_IMAGETYPE)
-    && ImageType.Manager==MNGR_PASTI
-#endif
-
 #if defined(SSE_DISK_CAPS)
-#if defined(SSE_DISK_IMAGETYPE1)
     || ImageType.Manager==MNGR_CAPS
-#else
-    ||Caps.IsIpf(Id)
 #endif
-#endif
-
 #if defined(SSE_DISK_STW)
     ||ImageType.Manager==MNGR_WD1772
 #if defined(SSE_DISK_STW_FAST) 
 /*  To help our MFM disk image format, we finally add a fast mode for 
     STW (and HFE, since we test the image manager).
     It works with "normal" images (so most of them), but fails in cases 
-    where floppy disk timing is more important, like, or if there's a READ TRACK
-    command:
+    where floppy disk timing is more important, or if there's a READ TRACK
+    or WRITE TRACK command:
     War Heli, MPS Golf, Jupiter's Masterdrive, Union Demo, Fantasia (megademo),
     Demoniak -ELT...
+    Part of it is because our system is simplistic.
 */
       &&!floppy_instant_sector_access
 #endif
@@ -144,9 +133,7 @@ void TSF314::Init() {
   SectorChecksum=0;
 #endif
 
-#if defined(SSE_DISK_IMAGETYPE) 
   ImageType.Manager=MNGR_STEEM; //default
-#endif
 
 }
 
@@ -758,12 +745,7 @@ void TSF314::Write() {
 
 #include "../../../3rdparty/various/sound.h" //struct TWavFileFormat
 
-#if defined(SSE_DRIVE_SOUND_EDIT) // my 1st attempt based on various sources
-
-char* drive_sound_wav_files[]={ "drive_startup_ST_edit.wav",
-"drive_spin_ST_edit.wav","drive_click_ST_edit.wav","drive_seek_edit.wav" };
-
-#elif defined(SSE_DRIVE_SOUND_EPSON) // already better
+#if defined(SSE_DRIVE_SOUND_EPSON) // already better
 
 char* drive_sound_wav_files[]={ "drive_startup_Epson.wav",
 "drive_spin_Epson.wav","drive_click_Epson.wav",

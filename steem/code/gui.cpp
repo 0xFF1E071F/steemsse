@@ -438,7 +438,8 @@ BYTE STCharToPCChar[128]={199,  0,233,226,228,224,229,231,234,235,232,239,238,23
 #endif
 
 #include "stemwin.cpp"
-#define LOGSECTION LOGSECTION_INIT
+//#define LOGSECTION LOGSECTION_INIT
+#define LOGSECTION LOGSECTION_OPTIONS
 
 #if defined(SSE_VID_BORDERS)
 
@@ -541,13 +542,18 @@ int ChangeBorderSize(int size_in) {
 #endif
     draw_last_scanline_for_border=shifter_y+res_vertical_scale*(BORDER_BOTTOM);
 
-
-    TRACE_INIT("ChangeBorderSize(%d) side %d side win %d bottom %d\n",size_in,SideBorderSize,SideBorderSizeWin,BottomBorderSize);
+    TRACE_LOG("ChangeBorderSize(%d) side %d side win %d bottom %d\n",size_in,SideBorderSize,SideBorderSizeWin,BottomBorderSize);
 
     StemWinResize();
 //#if !defined(SSE_VID_D3D1) // done in StemWinResize()
     Disp.ScreenChange();
 //#endif
+
+#if defined(SSE_GUI_383B)
+    draw_set_jumps_and_source(); // avoid crash when running?
+#endif
+
+
     return TRUE;
   }
 #if !defined(SSE_VS2008_WARNING_382)
@@ -802,7 +808,7 @@ void GUIRefreshStatusBar() {
 #undef MAX_TEXT_LENGTH_BORDER_ON
 #undef MAX_TEXT_LENGTH_BORDER_OFF
 
-#if defined(SSE_DISK_EXT) && defined(SSE_DISK_IMAGETYPE)
+#if defined(SSE_DISK_EXT)
 /*  If the game in A: isn't displayed on status bar, then we
     show what kind of file is in A: and B:. v3.7.2
 */
@@ -1187,7 +1193,7 @@ void LoadAllIcons(ConfigStoreFile *NOT_ONEGAME( pCSF ),bool NOT_ONEGAME( FirstCa
 //---------------------------------------------------------------------------
 
 
-#define LOGSECTION LOGSECTION_INIT //SS
+//#define LOGSECTION LOGSECTION_INIT //SS
 
 bool MakeGUI()
 {

@@ -1331,7 +1331,6 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               new mem_browser(0x000008,DT_MEMORY);
               break;
 #endif
-
 #if defined(SSE_BOILER_BROWSER_EXCEPTION_HANDLERS)
             case 925: // Bus Error
               new mem_browser( LPEEK(0x8),DT_INSTRUCTION);
@@ -1343,7 +1342,6 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               new mem_browser( LPEEK(0x24),DT_INSTRUCTION);
               break;
 #endif
-
 #if defined(SSE_BOILER_BROWSER_IRQ_HANDLERS)
             case 918: // timer A
               new mem_browser( LPEEK(0x134),DT_INSTRUCTION);
@@ -1367,7 +1365,6 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
               new mem_browser( LPEEK(0x70),DT_INSTRUCTION);
               break;
 #endif
-
 #if defined(SSE_BOILER_BROWSER_SHIFTER)
             case 912:
               new mem_browser(0xFF8240,DT_MEMORY);
@@ -1791,7 +1788,8 @@ void DWin_init()
   AppendMenu(mem_browser_menu,MF_STRING,919,"New Timer B Browser");
   AppendMenu(mem_browser_menu,MF_STRING,920,"New Timer C Browser");
   AppendMenu(mem_browser_menu,MF_STRING,921,"New Timer D Browser");
-  AppendMenu(mem_browser_menu,MF_STRING,922,"New ACIA Browser");
+  //AppendMenu(mem_browser_menu,MF_STRING,922,"New ACIA Browser");
+  AppendMenu(mem_browser_menu,MF_STRING,922,"New ACIA Handler Browser");
 #endif
 #if defined(SSE_BOILER_BROWSER_SHIFTER)
   AppendMenu(mem_browser_menu,MF_STRING,912,"New &Shifter Browser");
@@ -1856,7 +1854,7 @@ void DWin_init()
 #endif
   AppendMenu(logsection_menu,MF_STRING|
         int(debug_wipe_log_on_reset ? MF_CHECKED:MF_UNCHECKED),1013,"Wipe On Reset");
-  AppendMenu(logsection_menu,MF_SEPARATOR,0,NULL);
+  ////AppendMenu(logsection_menu,MF_SEPARATOR,0,NULL);//383
   AppendMenu(logsection_menu,MF_SEPARATOR,0,NULL);
   for (int n=1;logsections[n].Name[0]!='*';n++){
     int i=logsections[n].Index;
@@ -1872,7 +1870,7 @@ void DWin_init()
     }
   }
   AppendMenu(logsection_menu,MF_SEPARATOR,0,NULL);
-  AppendMenu(logsection_menu,MF_SEPARATOR,0,NULL);
+  ////AppendMenu(logsection_menu,MF_SEPARATOR,0,NULL);//383
   AppendMenu(logsection_menu,MF_STRING,1009,"&Uncheck All");
   AppendMenu(logsection_menu,MF_STRING,1012,"Suspend Logging");
 

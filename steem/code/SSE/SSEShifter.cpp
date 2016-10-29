@@ -645,9 +645,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 
 void TShifter::Reset(bool Cold) {
   m_ShiftMode=screen_res;// we know it's updated first, debug strange screen!
-#if defined(SSE_DEBUG)
-  nVbl=0; // cold or warm
-#endif
+
 #if defined(SSE_SHIFTER_TRICKS)
   for(int i=0;i<32;i++)
   {
@@ -658,6 +656,7 @@ void TShifter::Reset(bool Cold) {
 
 #if defined(SSE_DEBUG)
   Debug.ShifterTricks=0;
+  nVbl=0; // cold or warm
 #endif
 
 #if defined(SSE_SHIFTER_UNSTABLE)
@@ -703,7 +702,7 @@ void TShifter::DrawBufferedScanlineToVideo() {
     while(src<(DWORD*)draw_dest_ad)
       *(dest++)=*(src++); 
 //    ASSERT(draw_med_low_double_height);//OK, never asserted
-//    if(draw_med_low_double_height)
+    if(draw_med_low_double_height) //383 on my system... you never know
     {
       src=(DWORD*)draw_temp_line_buf;                        
       dest=(DWORD*)(draw_store_dest_ad+draw_line_length);     

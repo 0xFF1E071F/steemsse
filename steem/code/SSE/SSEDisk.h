@@ -32,8 +32,6 @@ extern char *dot_ext(int i);
 
 #include "SSEWD1772.h"
 
-#if defined(SSE_DISK_IMAGETYPE) 
-
 /*  We separate disk image type in two:
     who's in charge (manager), and what kind of image we have (extension).
     We start enums at 1 because 0 is used to clear status.
@@ -47,8 +45,6 @@ struct TImageType {
   BYTE Manager;
   BYTE Extension;
 };
-
-#endif
 
 
 //TODO move gap stuff from drive here

@@ -1165,75 +1165,7 @@ void stemdos_intercept_trap_1()
   ASSERT( !Invalid );
   if (Invalid) return;
 
-#if defined(SSE_TOS_TRACE_CONOUT__)
-  if(stemdos_command==2 && m68k_dpeek(sp)!=2)
-    TRACE_LOG("\n");//show some class!
-#endif
-
   stemdos_command=m68k_dpeek(sp);
-
-#if defined(SSE_DEBUG) && defined(DEBUG_BUILD)
-
-  if(TRACE_ENABLED(LOGSECTION_STEMDOS)) 
-    TRACE_OSD("TRAP1 %X",stemdos_command);
-
-  switch(stemdos_command)
-  {
-  case 2://conout
-#if defined(SSE_TOS_TRACE_CONOUT)
-    TRACE_LOG("%c",(BYTE)m68k_dpeek(sp+2));
-#endif
-    break;
-  case 6://Crawio
-    //TRACE("pc %X\n",old_pc);
-    break;
-#if defined(SSE_TOS_DONT_TRACE_3F)
-      case 0x3F: //read file
-    break;
-#endif
-#if defined(SSE_TOS_DONT_TRACE_40)
-      case 0x40: //write file
-    break;
-#endif
-#if defined(SSE_TOS_DONT_TRACE_42)
-      case 0x42: //seek file
-    break;
-#endif
-
-  default:
-    //  This is copied from acc.cpp (same as steem.log)
-
-    {
-      MEM_ADDRESS spp=sp+2;
-      long lpar=0;//383
-      EasyStr l="",a="";
-      if(stemdos_command>=0 && stemdos_command<0x58)
-        a=gemdos_calls[stemdos_command];
-      
-      for(int i=0;i<a.Length();i++){
-        if(a[i]=='%'){
-          lpar=m68k_lpeek(spp);spp+=4;
-          l+=HEXSl(lpar,8);
-        }else if(a[i]=='&'){
-          l+=HEXSl(m68k_dpeek(spp),4);spp+=2;
-        }else if(a[i]=='$'){
-          char c;
-          int ii;
-          for (ii=0;ii<30;ii++){
-            c=(char)m68k_peek(lpar+ii);
-            if(!c)break;
-            l+=c;
-          }
-          if(ii>=30)l+="...";
-        }else{
-          l+=a[i];
-        }
-      }      
-      TRACE_LOG("PC %X TRAP #1, $%X %s\n",old_pc,stemdos_command,l.Text);
-    }
-  } //sw
-
-#endif
 
   switch (stemdos_command){
 /*
@@ -1315,24 +1247,6 @@ void stemdos_intercept_trap_1()
 
       stemdos_filename=read_string_from_memory(m68k_lpeek(sp+2),100);
       dbg_log(EasyStr("STEMDOS: Got filename as ")+stemdos_filename);
-
-#if defined(SSE_TOS)
-      if(stemdos_command==0x3D)
-      {
-        ///TRACE_LOG("Open file %s\n",stemdos_filename.c_str());
-#if defined(SSE_TOS_PATCH106) // miserable hack
-        if(OPTION_HACKS && tos_version==0x106 && stemdos_filename=="DESKTOP.INF")
-          SS_signal=SIGNAL_TOS_PATCH106;
-#endif
-      }
-#ifdef SSE_DEBUG
-      else
-      {
-        TRACE_LOG("Create file %s\n",stemdos_filename.c_str());
-      }
-#endif
-#endif//SS
-
       int x=stemdos_get_file_path();
       if (x==STEMDOS_FILE_IS_STEMDOS){
         if (stemdos_command==0x3c){ //fcreate
@@ -1351,7 +1265,6 @@ void stemdos_intercept_trap_1()
         }
         return; //call GEMDOS to get file handle - interrupt already set up
       }
-
       dbg_log(EasyStr("STEMDOS: Leaving the call to GEMDOS"));
       stemdos_finished();
       return;
@@ -1359,22 +1272,6 @@ void stemdos_intercept_trap_1()
       stemdos_save_sr=sr;
       sr|=SR_IPL_7;
       int h=m68k_dpeek(sp+2);
-
-#if defined(SSE_TOS)
-      TRACE_LOG("Close file %d\n",h);
-#if defined(SSE_TOS_PATCH106)
-      if(SS_signal==SIGNAL_TOS_PATCH106)
-      { // stupid hack because I can't patch the TOS itself - TODO
-        BYTE tmp=PEEK(0xF0EF);
-        TRACE_LOG("Yoho! Hacking bug in TOS106 for you - byte %X\n",tmp);
-        tmp++;
-        PEEK(0xF0EF)=tmp;
-        SS_signal=0;
-        
-      }
-#endif
-#endif
-
       if (h>=0 && h<6){
         h=stemdos_std_handle_forced_to[h];
         stemdos_std_handle_forced_to[h]=0;

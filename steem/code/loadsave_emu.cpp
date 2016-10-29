@@ -12,16 +12,10 @@ for Steem's memory snapshots system.
 #if defined(SSE_STRUCTURE_DECLA)
 extern EasyStr RunDir,WriteDir,INIFile,ScreenShotFol;
 extern EasyStr LastSnapShot,BootStateFile,StateHist[10],AutoSnapShotName;
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_INIT
-
 #if defined(SSE_VS2008)
 #pragma warning(disable : 4258)
 #endif
-
 #endif
-
-
 
 //---------------------------------------------------------------------------
 void ReadWriteVar(void *lpVar,DWORD szVar,NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &pMem ),
@@ -110,7 +104,6 @@ int ReadWriteEasyStr(EasyStr &s,NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &pMem
 #define ReadWrite(var) ReadWriteVar(&(var),sizeof(var),f,LoadOrSave,0,Version)
 #define ReadWriteArray(var) ReadWriteVar(var,sizeof(var),f,LoadOrSave,1,Version)
 #define ReadWriteStruct(var) ReadWriteVar(&(var),sizeof(var),f,LoadOrSave,2,Version)
-
 #define ReadWriteStr(s) {int i=ReadWriteEasyStr(s,f,LoadOrSave,Version);if (i) return i; }
 //---------------------------------------------------------------------------
 int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
@@ -796,8 +789,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
       //read in length, read in block, pass it to pasti.
       ReadWrite(pasti_block_len);
       if (pasti_block_len){ //something to load in
-//#ifdef COMPILER_VC6// avoid bad crash
-#if 1 // all compilers, all builds...
+#if defined(SSE_BUILD) || defined(COMPILER_VC6)// avoid bad crash
         if(pasti_block_len>0 && pasti_block_len<1024*1024)
         {
           pasti_block=new BYTE[pasti_block_len];
@@ -977,13 +969,8 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     ReadWriteStruct(Dma);
 #endif
   }
-#if defined(SSE_SHIFTER)//don't trust content of snapshot
-#if defined(SSE_GLUE_383)
-  Shifter.m_ShiftMode=(BYTE)screen_res;
-  Glue.HiRes=(screen_res&2)!=0;
-#else
+#if defined(SSE_VIDEO_CHIPSET)//don't trust content of snapshot
   Glue.m_ShiftMode=Shifter.m_ShiftMode=(BYTE)screen_res;
-#endif
   Glue.m_SyncMode= (BYTE)((shifter_freq==50)?2:0);
 #endif
 #endif
@@ -1368,4 +1355,4 @@ void LoadSnapShotUpdateVars(int Version)
 }
 //---------------------------------------------------------------------------
 
-#undef LOGSECTION //SS
+

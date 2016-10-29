@@ -671,10 +671,6 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
     else if(b->id==4009)
       OPTION_MICROWIRE=b->checked;
 #endif   
-#if defined(SSE_GUI_OPTION_SLOW_DISK_SSE)
-    else if(b->id==4010)
-      floppy_instant_sector_access=!b->checked;
-#endif   
 #if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
     else if(b->id==4011)
       USE_SDL=b->checked;

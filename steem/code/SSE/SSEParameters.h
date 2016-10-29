@@ -201,7 +201,7 @@ The ACIA master clock is 500kHz.
 */
 
 #if defined(SSE_FDC_383)
-#define DRIVE_BYTES_ROTATION (6256)
+#define DRIVE_BYTES_ROTATION (6256) // finally
 #else
 #define DRIVE_BYTES_ROTATION (6256+14)  //little hack...
 #endif
@@ -268,7 +268,7 @@ enum {
 
 #endif
 
-#if !defined(SSE_GLUE) || !defined(SSE_GLUE_FRAME_TIMINGS)
+#if !defined(SSE_GLUE_FRAME_TIMINGS)
 #define HBL_FOR_STE (444)
 #define HBL_FOR_STF (444+4)
 #endif
@@ -370,18 +370,12 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define SSE_INT_HBL_TIMING (54)
 #define SSE_INT_VBL_TIMING (54)
 #else
-#if defined(SSE_INT_MFP)
 #define SSE_INT_MFP_TIMING (56) 
-#endif
-#if defined(SSE_INT_HBL)
 #define SSE_INT_HBL_TIMING (56)
-#endif
-#if defined(SSE_INT_VBL)
 #define SSE_INT_VBL_TIMING (56)
 #endif
-#endif
 
-#define HBL_IACK_LATENCY 28
+#define HBL_IACK_LATENCY 28 // 10-28 ?
 #define VBL_IACK_LATENCY 28
 
 #if defined(SSE_CPU_E_CLOCK)

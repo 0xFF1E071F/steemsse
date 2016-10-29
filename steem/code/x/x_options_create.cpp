@@ -1496,16 +1496,6 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SSE_GUI_OPTION_SLOW_DISK_SSE) // because many people miss it in disk manager
-  slow_disk_but.create(XD,page_p,page_l,y,0,25,
-    button_notify_proc,this,BT_CHECKBOX,T("Slow drive"),4010,BkCol);
-  slow_disk_but.set_check(!floppy_instant_sector_access);
-  hints.add(slow_disk_but.handle,
-  T("Slow but accurate disk drive emulation."),
-    page_p);
-  y+=LineHeight;
-#endif//no more room after this option!
-
 #if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
   use_sdl_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Use SDL"),4011,BkCol);

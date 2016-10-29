@@ -60,9 +60,6 @@ void SetNotifyInitText(char*);//forward
 int TCaps::Init() {
 
   Active=FALSE;
-#if !defined(SSE_DISK_IMAGETYPE)
-  DriveMap=0;
-#endif
   Version=0;
   ContainerID[0]=ContainerID[1]=-1;
   LockedSide[0]=LockedSide[1]=-1;
@@ -142,9 +139,6 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
   ASSERT( img_info );
   ASSERT( ContainerID[drive]!=-1 );
 
-#if !defined(SSE_DISK_IMAGETYPE)
-  DriveMap|=(drive+1); // not <<!
-#endif
   bool FileIsReadOnly=bool(GetFileAttributes(File) & FILE_ATTRIBUTE_READONLY);
   VERIFY( !CAPSLockImage(ContainerID[drive],File) ); // open the CAPS file
   VERIFY( !CAPSGetImageInfo(img_info,ContainerID[drive]) );
@@ -161,11 +155,7 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
 #endif
     if(img_info->platform[i]==ciipAtariST 
 #if defined(SSE_DISK_CAPS_CTRAW) 
-#if defined(SSE_DISK_IMAGETYPE)
-      || ::SF314[drive].ImageType.Extension!=EXT_IPF
-#else
-      || ::SF314[drive].ImageType!=DISK_IPF // the other SF314 (confusing)
-#endif
+      || ::SF314[drive].ImageType.Extension!=EXT_IPF// the other SF314 (confusing)
 #endif
       || OPTION_HACKS) //MPS GOlf 'test'
       found=true;
@@ -202,14 +192,7 @@ void TCaps::RemoveDisk(int drive) {
   TRACE_LOG("Drive %c removing image\n",drive+'A');
   VERIFY( !CAPSUnlockImage(Caps.ContainerID[drive]) ); // eject disk
   SF314[drive].diskattr&=~CAPSDRIVE_DA_IN;
-#if !defined(SSE_DISK_IMAGETYPE)
-  DriveMap&=~(drive+1); // not <<!
-#endif
-#if defined(SSE_DISK_IMAGETYPE1)
   if(::SF314[!drive].ImageType.Manager==MNGR_CAPS)
-#else
-  if(!IsIpf(!drive)) // other drive
-#endif 
     Active=FALSE; 
 }
 
@@ -308,20 +291,6 @@ void TCaps::Hbl() {
 
 }
 
-#if !defined(SSE_DISK_IMAGETYPE1) // step 2 remove function
-
-int TCaps::IsIpf(BYTE drive) {
-  //step1, replace function body
-#if defined(SSE_DISK_IMAGETYPE)
-  return (::SF314[drive].ImageType.Manager==MNGR_CAPS );
-#else
-  return (DriveMap&((drive&1)+1)); // not <<!
-#endif
-}
-
-#endif
-
-
 /*  Callback functions. Since they're static, they access object data like
     any external function, using 'Caps.'
 */
@@ -387,11 +356,7 @@ void TCaps::CallbackIRQ(PCAPSFDC pc, UDWORD lineout) {
 
 void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   ASSERT( !drive||drive==1 );
-#if defined(SSE_DISK_IMAGETYPE1)  
   ASSERT( ::SF314[drive].ImageType.Manager==MNGR_CAPS );
-#else
-  ASSERT( Caps.IsIpf(drive) );
-#endif
   ASSERT( drive==(unsigned)floppy_current_drive() );
 
   int side=Caps.SF314[drive].side;
@@ -402,48 +367,6 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   UDWORD flags=DI_LOCK_DENALT|DI_LOCK_DENVAR|DI_LOCK_UPDATEFD|DI_LOCK_TYPE;
   
   CapsRevolutionInfo CRI;
-
-
-#if !defined(SSE_DISK_CAPS_CTRAW_NO_UNLOCK) 
-/*  This part is undefined, since unlocking messes internal variables that are
-    important for games using "weak bits" protections, such as Outrun, Vroom.
-*/
-
-  if(Caps.LockedTrack[drive]!=-1)
-  {
-    ASSERT( Caps.LockedSide[drive]!=-1 );
-//    ASSERT( track!=Caps.LockedTrack[drive] || side!=Caps.LockedSide[drive] );
-
-    VERIFY( !CAPSUnlockTrack(Caps.ContainerID[drive],Caps.LockedTrack[drive],
-      Caps.LockedSide[drive]) );
-#if defined(SSE_BOILER_TRACE_CONTROL)
-    if(TRACE_MASK3 & TRACE_CONTROL_FDCIPF1)
-#endif
-    TRACE_LOG("CAPS Unlock %c:S%dT%d\n",drive+'A',Caps.LockedSide[drive],Caps.LockedTrack[drive]);
-
-
-#if defined(SSE_DISK_CAPS_CTRAW_REV)
-#if defined(SSE_DISK_IMAGETYPE)
-    if(::SF314[drive].ImageType.Extension!=EXT_IPF)
-#else
-    if(::SF314[drive].ImageType!=DISK_IPF)
-#endif
-    {
-      if(Caps.LockedSide[drive]==side && Caps.LockedTrack[drive]==track)
-      { // not tested!
-        CAPSGetInfo(&CRI,Caps.ContainerID[drive],track,side,cgiitRevolution,0);
-        TRACE_LOG("Same track, keep rev %d\n",CRI.next);
-      }
-      else
-      {
-        TRACE_LOG("New track, reset rev\n");
-        CAPSSetRevolution(Caps.ContainerID[drive],0);
-      }
-    }
-#endif//SSE_DISK_CAPS_CTRAW_NO_UNLOCK
-
-  }
-#endif
 
 #if defined(SSE_DISK_CAPS_CTRAW_1ST_LOCK)
 /*  We've changed track, we reset # revs as recommended by caps authors.
@@ -474,7 +397,7 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   Caps.LockedSide[drive]=side;
   Caps.LockedTrack[drive]=track;
 
-#if defined(SSE_DEBUG_IPF_TRACE_SECTORS) &&defined(SSE_DISK_IMAGETYPE) // debug info
+#if defined(SSE_DEBUG_IPF_TRACE_SECTORS) // debug info
   if(::SF314[drive].ImageType.Extension==EXT_IPF)
   {
     CapsSectorInfo CSI;

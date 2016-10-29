@@ -387,14 +387,9 @@ WD doc:
 #endif
     }//sw
 
-    // IPF handling
+    // CAPS handling
 #if defined(SSE_DISK_CAPS)
-
-#if defined(SSE_DISK_IMAGETYPE1)
     if(SF314[drive].ImageType.Manager==MNGR_CAPS)
-#else
-    if(Caps.IsIpf(drive))
-#endif 
       ior_byte=Caps.ReadWD1772(Line);
 #endif
 
@@ -427,7 +422,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #if defined(SSE_DMA_TRACK_TRANSFER2) // we reset it here so it works for CAPS too
     Dma.Datachunk=0;
 #endif
-#if defined(SSE_BOILER_TRACE_CONTROL) && defined(SSE_DRIVE_OBJECT) && defined(SSE_DISK_IMAGETYPE)
+#if defined(SSE_BOILER_TRACE_CONTROL) && defined(SSE_DRIVE_OBJECT) 
     if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
     {
       if( SF314[drive].ImageType.Manager==MNGR_WD1772 
@@ -448,19 +443,6 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
       TRACE_FDC("%c: bootsector checksum $%X\n",'A'+drive,SF314[drive].SectorChecksum);
     SF314[drive].SectorChecksum=0;
 #endif//checksum
-#if !defined(SSE_DISK_IMAGETYPE) //old block "can_send"
-    bool can_send=true; // are we in Steem's native emu?
-#if defined(SSE_DISK_CAPS)
-    can_send=can_send&&!Caps.IsIpf(drive);
-#endif
-#if USE_PASTI 
-    can_send=can_send&&!(hPasti && pasti_active
-#if defined(SSE_DRIVE_OBJECT) && defined(SSE_DISK_PASTI_ONLY_STX)
-      && (!PASTI_JUST_STX || SF314[drive].ImageType==3)
-#endif            
-        );
-#endif//pasti
-#endif//SSE_DISK_IMAGETYPE
 
 #if defined(SSE_DISK_GHOST)
 /*  For STX, IPF, CTR, we check if we should intercept FDC command
@@ -496,9 +478,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #endif//sound
 
       // Steem's native and WD1772 managers
-#if defined(SSE_DISK_IMAGETYPE)
     if(SF314[drive].ImageType.Manager==MNGR_STEEM)
-#endif
       floppy_fdc_command(io_src_b); // in fdc.cpp for ST, MSA, DIM, STT
 #if defined(SSE_DISK_STW)
     else if(SF314[drive].ImageType.Manager==MNGR_WD1772)
@@ -558,11 +538,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
   
   // CAPS handling
 #if defined(SSE_DISK_CAPS)
-#if defined(SSE_DISK_IMAGETYPE1)
   if(SF314[drive].ImageType.Manager==MNGR_CAPS)
-#else
-  if(Caps.IsIpf(drive))
-#endif 
 #if defined(SSE_DISK_GHOST)
     if(SSE_GHOST_DISK && Lines.CommandWasIntercepted)
     {

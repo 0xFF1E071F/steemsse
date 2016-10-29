@@ -351,12 +351,7 @@ when it does).
 
       // ACIA keyboard read data
       case 0xfffc02:
-#if defined(SSE_BOILER_ACIA_373)
-        if(mode!=STEM_MODE_CPU) 
-          return (OPTION_C1)?ACIA_IKBD.RDR:ACIA_IKBD.data; 
-#else
         DEBUG_ONLY( if (mode!=STEM_MODE_CPU) return ACIA_IKBD.data; ) // boiler
-#endif
 
 #if defined(SSE_IKBD_6301)
           
@@ -586,13 +581,8 @@ Receiver Data Register is retained.
     (events, block DMA transfers...), knowing that generally GPIP
     is polled by programs. It is a bit risky.
 */
-#if defined(SSE_ACSI_MULTIPLE)
             if(ADAT && ACSI_EMU_ON && AcsiHdc[acsi_dev].Active==2 && !(ior_byte&32)
               && AcsiHdc[acsi_dev].time_of_irq-ACT>0)
-#else
-            if(ADAT && ACSI_EMU_ON && AcsiHdc.Active==2 && !(ior_byte&32)
-              && AcsiHdc.time_of_irq-ACT>0)
-#endif
               ior_byte|=32; // active-low: inactive
 #endif
 
@@ -834,10 +824,6 @@ Receiver Data Register is retained.
             int nShifts=DWORD(ABSOLUTE_CPU_TIME-MicroWire_StartTime)/CPU_CYCLES_PER_MW_SHIFT;
             if (nShifts>15){
               MicroWire_StartTime=0;
-#ifdef SSE_SOUND_MICROWIRE_READ1 
-//v3.7.0, undef v3.7.1, fixes nothing, breaks Sleepwalker STE
-              dat=MicroWire_Data;
-#endif
             }else{
               dat=WORD(MicroWire_Data << nShifts);
               while (nShifts--){
@@ -868,11 +854,15 @@ Receiver Data Register is retained.
 
     case 0xff8800:
 #if defined(SSE_YM2149_NO_JAM_IF_NOT_RW)
+#if defined(SSE_YM2149_BUS_JAM_383B)
+      if ((addr & 1) && io_word_access) 
+#else
       if (OPTION_HACKS && (addr & 1) && io_word_access) 
-        break; //odd addresses ignored on word read, don't jam ?
+#endif
+        break; //odd addresses ignored on word read, don't jam
 #endif
 #if defined(SSE_YM2149_BUS_JAM_383) //see note in iow.cpp
-      DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) BUS_JAM_TIME(1);
+      DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) INSTRUCTION_TIME(1);
 #else
       if(!(ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_R))
       {
@@ -880,9 +870,14 @@ Receiver Data Register is retained.
         ioaccess|=IOACCESS_FLAG_PSG_BUS_JAM_R;
       }
 #endif
+#if defined(SSE_YM2149_BUS_JAM_383B)
+      ASSERT(!((addr & 1) && io_word_access));
+#else
       if((addr & 1) && io_word_access)
         ;// odd addresses ignored on word writes
-      else if(!(addr & 2))
+      else 
+#endif
+      if(!(addr & 2))
       { //read data / register select, mirrored at 4,8,12,...
         if(psg_reg_select==PSGR_PORT_A)
         {

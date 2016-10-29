@@ -421,7 +421,7 @@ void Blitter_Blit_Word() //SS Data is blitted word by word
   }
 #if defined(SSE_MMU_ROUNDING_BUS2_BLITTER)
   abus=Blit.DestAdr;
-  BLT_ABUS_ACCESS_WRITE; //+ bugfix! before the poke (Circus)
+  BLT_ABUS_ACCESS_WRITE; //+ bugfix! before the poke (Circus) //incredible that I didn't see it before
 #endif
   Blitter_DPoke(Blit.DestAdr,NewDat); //SS writing the word to dest
 #if defined(SSE_DEBUG)

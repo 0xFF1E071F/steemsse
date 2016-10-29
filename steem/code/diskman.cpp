@@ -17,20 +17,13 @@ as changing disk images and determining what files are disks.
 #include <loadsave.decla.h>
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
-
-#ifdef WIN32
+#if defined(SSE_STRUCTURE_DECLA) && defined(WIN32)
 void TDiskManager::RefreshDiskView(EasyStr SelPath,bool EditLabel,EasyStr SelLinkPath,int iItem)
 {
   SetDir(DisksFol,0,SelPath,EditLabel,SelLinkPath,iItem);
 }
 #endif
 
-#endif
-
-#if USE_PASTI && defined(SSE_DISK_PASTI_ON_WARNING) //no
-char sDiskManagerWindowCaption[]="Disk Manager (Pasti On)"; // and a nice global
-#endif
 
 #define LOGSECTION LOGSECTION_IMAGE_INFO//SS
 
@@ -197,12 +190,7 @@ void TDiskManager::SetNumFloppies(int NewNum)
 
 #if defined(SSE_DISK_CAPS)
   // it's not easy mixing IPF and native!
-
-#if defined(SSE_DISK_IMAGETYPE1)
   if(SF314[1].ImageType.Manager==MNGR_CAPS)
-#else
-  if(Caps.IsIpf(1)) // there's an IPF disk in drive B
-#endif 
   {
     if(NewNum==1) // deactivated
       Caps.SF314[1].diskattr&=~CAPSDRIVE_DA_IN;
@@ -365,26 +353,11 @@ void TDiskManager::Show()
   bool MaximizeIt=bool(FullScreen ? FSMaximized:Maximized);
 
   ManageWindowClasses(SD_REGISTER);
-#if USE_PASTI && defined(SSE_DISK_PASTI_ON_WARNING)
-#if !defined(SSE_DISK_PASTI_ON_WARNING2)
-    sDiskManagerWindowCaption[12]=(pasti_active
-#if defined(SSE_DISK_PASTI_ONLY_STX)
-      && (!PASTI_JUST_STX 
-      || SF314[floppy_current_drive()].ImageType==DISK_PASTI)    
-#endif
-    ) ? ' ' : '\0';
-#endif
-  Handle=CreateWindowEx(WS_EX_CONTROLPARENT | WS_EX_APPWINDOW,"Steem Disk Manager",sDiskManagerWindowCaption,
-      WS_CAPTION | WS_SYSMENU | WS_SIZEBOX | WS_MAXIMIZEBOX | WS_MINIMIZEBOX,
-      Left,Top,Width,Height,ParentWin,NULL,HInstance,NULL);
-#if defined(SSE_DISK_PASTI_ON_WARNING2)
-  RefreshPastiStatus();
-#endif
-#else
+
   Handle=CreateWindowEx(WS_EX_CONTROLPARENT | WS_EX_APPWINDOW,"Steem Disk Manager",T("Disk Manager"),
       WS_CAPTION | WS_SYSMENU | WS_SIZEBOX | WS_MAXIMIZEBOX | WS_MINIMIZEBOX,
       Left,Top,Width,Height,ParentWin,NULL,HInstance,NULL);
-#endif
+
   if (HandleIsInvalid()){
     ManageWindowClasses(SD_UNREGISTER);
     return;
@@ -1269,7 +1242,7 @@ void TDiskManager::GoToDisk(Str Path,bool Refresh)
   SetFocus(DiskView);
 }
 //---------------------------------------------------------------------------
-#if defined(SSE_DISK_STW_CONVERT2) 
+#if defined(SSE_DISK_STW_CONVERT) 
 /*  Helper function for case 1041
     What counts here is code size, not performance 
     mode 0 normal
@@ -1582,11 +1555,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING 
               | (int)(SSEOption.Acsi?MF_CHECKED:0)
               | (int)(SSEConfig.AcsiImg?0:MF_DISABLED)
-#if defined(SSE_ACSI_MULTIPLE)
               ,2029,T("ACSI hard disk images")); // with a s
-#else
-              ,2029,T("ACSI hard disk image"));
-#endif
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #endif
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(This->AutoInsert2 ? MF_CHECKED:0),2016,T("Automatically Insert &Second Disk"));
@@ -1742,11 +1711,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
         case 1003: // STW
         case 1004: // HFE
         {
-#if defined(SSE_DISK_EXT)
           char *extension=(wPar==1003)?DISK_EXT_STW:DISK_EXT_HFE;
-#else
-          char *extension=(wPar==1003)?"STW":"HFE";
-#endif
           EasyStr STName=This->DisksFol+"\\"+extension+" Disk."+extension;
           int n=2;
           while (Exists(STName)){
@@ -1909,28 +1874,9 @@ That will toggle bit x.
           break;
         }
 #if defined(SSE_DISK_STW_CONVERT) 
-#if !defined(SSE_DISK_STW_CONVERT2) // was first draft, see void wd1772_write_stw
-
-#define WD1772_WRITE(d) {\
-   wd1772crc.Add(d); \
-   wd1772mfm.data=(d); \
-   wd1772mfm.Encode(); \
-   ImageSTW[1].SetMfmData(p++,wd1772mfm.encoded);}
-
-#define WD1772_WRITE_A1 { \
-   wd1772mfm.data=0xA1; \
-   wd1772mfm.Encode(TWD1772MFM::FORMAT_CLOCK); \
-   wd1772crc.Reset(); \
-   ImageSTW[1].SetMfmData(p++,wd1772mfm.encoded);}
-
-#define WD1772_WRITE_CRC(d) {\
-   wd1772mfm.data=(d); \
-   wd1772mfm.Encode(); \
-   ImageSTW[1].SetMfmData(p++,wd1772mfm.encoded);}
-
-#endif
 /*  Create a new STW disk image, and copy the data from a DIM, MSA or ST
     image into it, using some facilities of our WD1772 emu.
+    TODO: in SSESTW?
 */
         case 1041:
         {
@@ -1946,7 +1892,8 @@ That will toggle bit x.
             if(dest.Text)
             {
               int Err=FloppyDrive[0].SetDisk(Inf->Path,"");
-              if (!Err && SF314[0].ImageType.Manager==MNGR_STEEM)//DIM, MSA or ST
+              if (!Err && SF314[0].ImageType.Manager==MNGR_STEEM //DIM, MSA or ST
+                && FloppyDrive[0].SectorsPerTrack<=11) //not "super" disks
               {   
                 TRACE_LOG("Creating %s\n",dest.Text);
                 ImageSTW[1].Create(dest.Text);
@@ -1957,13 +1904,26 @@ That will toggle bit x.
                 {
                   for(int side=0;side<FloppyDrive[0].Sides;side++)
                   {
-                    ImageSTW[1].LoadTrack(side,track);
+                    if(!ImageSTW[1].LoadTrack(side,track))
+                      continue;
                     int p=0;
                     for(int i=0;i<SF314[0].PostIndexGap();i++) 
                       WD1772_WRITE(0x4E)
                     int sector; //used in trace
+#if defined(SSE_DISK_STW_CONVERT2) 
+                    for(int sector2=1;sector2<=FloppyDrive[0].SectorsPerTrack;sector2++)
+#else
                     for(sector=1;sector<=FloppyDrive[0].SectorsPerTrack;sector++)
+#endif
                     {
+#if defined(SSE_DISK_STW_CONVERT2)
+/*  We must use interleave 6 for 11 sectors
+    eg Pang -EMP
+*/
+                      sector= ( FloppyDrive[0].SectorsPerTrack==11 
+                        ? ((((sector2-1)*DRIVE_11SEC_INTERLEAVE)%11)+1) 
+                        : sector2 );
+#endif
                       if(FloppyDrive[0].SeekSector(side,track,sector,false))
                         break; // not in source, write nothing more
 
@@ -2156,16 +2116,9 @@ That will toggle bit x.
 #endif
         case 2013: // SS menu ADAT
           floppy_instant_sector_access=!floppy_instant_sector_access;
-#if defined(SSE_GUI_OPTION_SLOW_DISK_SSE)
-          This->RefreshSnails();
-#if defined(SSE_GUI_OPTIONS_REFRESH)
-          OptionBox.SSEUpdateIfVisible(); // other way
-#endif
-#else
           InvalidateRect(GetDlgItem(Win,98),NULL,0);
           InvalidateRect(GetDlgItem(Win,99),NULL,0);
           CheckResetDisplay();
-#endif
 #if defined(SSE_GUI_STATUS_STRING_ADAT)
           GUIRefreshStatusBar();
 #endif
@@ -2236,20 +2189,6 @@ That will toggle bit x.
               This->RefreshDiskView();
               CheckResetDisplay();
             }
-#endif
-
-#if defined(SSE_DISK_PASTI_ON_WARNING2)
-            This->RefreshPastiStatus();
-#else
-#if defined(SSE_DISK_PASTI_ON_WARNING)
-            sDiskManagerWindowCaption[12]=(pasti_active
-#if defined(SSE_DISK_PASTI_ONLY_STX)
-              && (!PASTI_JUST_STX 
-              || SF314[floppy_current_drive()].ImageType==DISK_PASTI)
-#endif              
-              ) ? ' ' : '\0';// primitive!
-            SetWindowText(This->Handle,sDiskManagerWindowCaption);
-#endif
 #endif
           }//if (LOWORD(wPar)==2023
 
@@ -2629,12 +2568,11 @@ That will toggle bit x.
 /*  This is so the player can read the full name of the disk without
     checking at the place of storage.
     If he clicks on it, it is copied in the clipboard, whatever use this
-    then may have.
+    then may have. (383 switch restored)
 */
 #if defined(SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD)
           InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1082,
             Inf->Name.Text);
-          //  Inf->Name +" (Copy Name)"); //no mention
 #else
           //If you click, you go there.
           InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1091,
@@ -3745,21 +3683,6 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
 #elif defined(UNIX)
   UpdateDiskNames(Drive);
 #endif
-
-#if defined(SSE_DISK_PASTI_ON_WARNING2)
-  RefreshPastiStatus();
-#else
-#if USE_PASTI && defined(SSE_DISK_PASTI_ON_WARNING)
-  // check Pasti caption
-  sDiskManagerWindowCaption[12]=(pasti_active
-#if defined(SSE_DISK_PASTI_ONLY_STX)
-    && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==DISK_PASTI)    
-#endif    
-    ) ? ' ' : '\0';
-  SetWindowText(Handle,sDiskManagerWindowCaption);
-#endif
-#endif
-
   return true;
 }
 //---------------------------------------------------------------------------
@@ -4179,39 +4102,4 @@ Str TDiskManager::GetContentsGetAppendName(Str TOSECName)
   return ShortName;
 }
 //---------------------------------------------------------------------------
-#if defined(WIN32)
-#if defined(SSE_GUI_OPTION_SLOW_DISK_SSE) 
-
-// mini-function to avoid code duplication
-void TDiskManager::RefreshSnails() {
-  InvalidateRect(GetDlgItem(Handle,98),NULL,0);
-  InvalidateRect(GetDlgItem(Handle,99),NULL,0);
-  CheckResetDisplay();
-}
-
-#endif
-#if defined(SSE_DISK_PASTI_ON_WARNING2)//no more
-
-void TDiskManager::RefreshPastiStatus() {
-  // check Pasti caption
-  sDiskManagerWindowCaption[12]=(pasti_active
-#if defined(SSE_DISK_PASTI_ONLY_STX)
-    && (!PASTI_JUST_STX || 
-#if defined(SSE_DISK_IMAGETYPE)
-
-//    1  //SF314[floppy_current_drive()].ImageType.Extension==EXT_STX
-      SF314[YM2149.SelectedDrive].ImageType.Extension==EXT_STX
-#else
-      SF314[floppy_current_drive()].ImageType==DISK_PASTI
-#endif
-    )    
-#endif    
-    ) ? ' ' : '\0';
-  SetWindowText(Handle,sDiskManagerWindowCaption);
-  //TRACE_IDE("pasti %d\n",pasti_active);
-}
-
-#endif
-#endif
-
 #undef LOGSECTION //LOGSECTION_IMAGE_INFO

@@ -23,19 +23,14 @@
 #include "SSEDebug.h"
 #include "SSEFloppy.h"
 
-#if defined(SSE_ACSI_MULTIPLE)
+
 TAcsiHdc AcsiHdc[TAcsiHdc::MAX_ACSI_DEVICES]; // several, going beyond pasti
-#else
-TAcsiHdc AcsiHdc; // only one
-#endif
 
 #include <cpu.decla.h>
 
 #define BLOCK_SIZE 512 // fortunately it seems constant
 
-#if defined(SSE_ACSI_MULTIPLE)
 BYTE acsi_dev=0; // active device, ugly global, private to this file
-#endif
 
 TAcsiHdc::TAcsiHdc() {
   hard_disk_image=NULL;
@@ -99,9 +94,7 @@ bool TAcsiHdc::Init(int num, char *path) {
     TRACE_HDC("ACSI %d init %s %d sectors %d MB\n",device_num,inquiry_string+8,nSectors,nSectors/(2*1024));
     //TRACE2("ACSI %d %s %d sectors %d MB\n",device_num,inquiry_string+8,nSectors,nSectors/(2*1024));
 #endif
-#if defined(SSE_ACSI_MULTIPLE)
     acsi_dev=device_num;
-#endif
   }
   //TRACE_INIT("ACSI %d open %s %d sectors %d MB\n",device_num,path,nSectors,nSectors/(2*1024));
 #if defined(SSE_VS2008_WARNING_383)
@@ -139,10 +132,8 @@ void TAcsiHdc::IOWrite(BYTE Line,BYTE io_src_b) {
   {
     cmd_ctr=0;
     io_src_b&=0x1f;
-#if defined(SSE_ACSI_MULTIPLE)
     acsi_dev=device_num; // we have the bus
     ASSERT(acsi_dev<MAX_ACSI_DEVICES);
-#endif
   }
   if(cmd_ctr<6) // getting command
   {

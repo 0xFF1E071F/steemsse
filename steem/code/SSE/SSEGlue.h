@@ -45,12 +45,7 @@ struct TGlue {
 #endif
   WORD DE_cycles[NFREQS];
   WORD ScanlineTiming[NTIMINGS][NFREQS];
-#if defined(SSE_GLUE_383)
-  bool HiRes; // one single line/bit/latch/whatever
-  BYTE m_SyncMode;
-#else
-  BYTE m_ShiftMode,m_SyncMode;
-#endif
+  BYTE m_ShiftMode,m_SyncMode; // both bits of shift mode are shadowed in GLU (ijor)
   BYTE Freq[NFREQS];
   BYTE cycle_of_scanline_length_decision; 
 #if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)

@@ -19,6 +19,7 @@ data.
 #if defined(SSE_STRUCTURE_DECLA)
 TFloppyImage FloppyDrive[2]; //SS fascinating names of class and object:
   // it's hard to tell what is 'drive' from what is 'disk'.
+  // there's the same problem in the SSE files
 bool FloppyArchiveIsReadWrite=0;
 #include "SSE/SSEOption.h"
 #include "SSE/SSEFloppy.h"
@@ -142,7 +143,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
               if(drive!=-1)
               {
                 TRACE_LOG("Disk in %c (%s) is managed by Pasti.dll\n",'A'+drive,fn.Text);
-#if defined(SSE_DISK_IMAGETYPE)
+
                 SF314[drive].ImageType.Manager=MNGR_PASTI;
 #ifdef SSE_DISK_ST
                 if(ST)
@@ -154,9 +155,6 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
                 else
 #endif
                   SF314[drive].ImageType.Extension=EXT_STX;
-#else
-                SF314[drive].ImageType=DISK_PASTI;
-#endif                
               }
 #endif
               f_PastiDisk=true;
@@ -249,13 +247,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   if (drive==-1) f_PastiDisk=0; // Never use pasti for extra drives
 
 #if defined(SSE_DISK_CAPS)
-  if(CAPSIMG_OK && drive!=-1 && 
-#if defined(SSE_DISK_IMAGETYPE1)
-    SF314[drive].ImageType.Manager==MNGR_CAPS
-#else
-    Caps.IsIpf(drive)
-#endif 
-    )
+  if(CAPSIMG_OK && drive!=-1 && SF314[drive].ImageType.Manager==MNGR_CAPS)
     RemoveDisk();
 #endif
 
@@ -276,7 +268,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       if(drive!=-1)
       {
         //TRACE_LOG("Disk in %c is STX\n",'A'+drive);
-#if defined(SSE_DISK_IMAGETYPE)
+
         SF314[drive].ImageType.Manager=MNGR_PASTI;
 #ifdef SSE_DISK_ST
         if(ST)
@@ -286,9 +278,6 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
         else
 #endif                
           SF314[drive].ImageType.Extension=EXT_STX;
-#else
-        SF314[drive].ImageType=DISK_PASTI;
-#endif
       }
 #endif
 
@@ -347,24 +336,15 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #endif
 
 #if defined(SSE_DISK_CAPS_CTRAW)
-#if defined(SSE_DISK_IMAGETYPE)
-//    TRACE_LOG("Set ImageType Caps\n");
     SF314[drive].ImageType.Manager=MNGR_CAPS;
     SF314[drive].ImageType.Extension=IPF?EXT_IPF:EXT_CTR;
-#else
-    SF314[drive].ImageType=IPF?DISK_IPF:DISK_CTR;
-#endif
 #endif
     CapsImageInfo img_info;
     int Ret=Caps.InsertDisk(drive,File,&img_info);
     if(Ret==FIMAGE_WRONGFORMAT)
     {
 #if defined(SSE_DISK_CAPS_CTRAW) //wrong switch TODO
-#if defined(SSE_DISK_IMAGETYPE)
       ZeroMemory(&SF314[drive].ImageType,sizeof(SF314[drive].ImageType));
-#else
-      SF314[drive].ImageType=0;
-#endif
 #endif
       return Ret;
     }
@@ -386,14 +366,13 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     if(drive==-1  || !ImageSCP[drive].Open(File))
       return FIMAGE_WRONGFORMAT;
 
-#if defined(SSE_DISK_IMAGETYPE)
 #if USE_PASTI
     if(SF314[1-drive].ImageType.Extension!=EXT_STX)
       pasti_active=false;
 #endif
     SF314[drive].ImageType.Manager=MNGR_WD1772;
     SF314[drive].ImageType.Extension=EXT_SCP;
-#endif
+
 #if defined(SSE_DISK1)
     Disk[drive].TrackBytes=ImageSCP[drive].nBytes;
 #endif
@@ -411,14 +390,13 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     if(drive==-1  || !ImageSTW[drive].Open(File))
       return FIMAGE_WRONGFORMAT;
 
-#if defined(SSE_DISK_IMAGETYPE)
-#if USE_PASTI//#ifdef WIN32//replace with...
+#if USE_PASTI
     if(SF314[1-drive].ImageType.Extension!=EXT_STX)
       pasti_active=false;
 #endif
     SF314[drive].ImageType.Manager=MNGR_WD1772;
     SF314[drive].ImageType.Extension=EXT_STW;
-#endif
+
 #if defined(SSE_DISK1)
 #if !defined(SSE_VAR_RESIZE_372)
     Disk[drive].TrackBytes=ImageSTW[drive].nBytes;
@@ -474,14 +452,14 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #if defined(SSE_DISK1)
     Disk[drive].TrackBytes=DRIVE_BYTES_ROTATION_STW; //default
 #endif
-#if defined(SSE_DISK_IMAGETYPE)
-#if USE_PASTI//#ifdef WIN32//replace with...
+
+#if USE_PASTI
     if(SF314[1-drive].ImageType.Extension!=EXT_STX)
       pasti_active=false;
 #endif
     SF314[drive].ImageType.Manager=MNGR_WD1772;
     SF314[drive].ImageType.Extension=EXT_HFE;
-#endif
+
     SF314[drive].State.reading=SF314[drive].State.writing=0;
 #endif//hfe
   }
@@ -503,10 +481,8 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     if(!strncmp(PrgPath.Rights(3),"PRG",3)) //our dedicated folder
     {
       RemoveDisk();
-#if defined(SSE_DISK_IMAGETYPE)
       SF314[drive].ImageType.Manager=MNGR_STEEM;
       SF314[drive].ImageType.Extension=(TOS)?EXT_TOS:EXT_PRG;
-#endif
       Str NewPath,AutoPath;
       AutoPath=PrgPath+SLASH+"AUTO"+SLASH+"AUTORUN.PRG";
       DeleteFile(AutoPath.Text); // anyway
@@ -532,8 +508,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 
   else{
 
-#if defined(SSE_DISK_IMAGETYPE2)
-
+#if defined(SSE_DISK_IMAGETYPE)
 #if defined(SSE_TOS_PRG_AUTORUN)
     if(SF314[drive].ImageType.Extension==EXT_PRG
       || SF314[drive].ImageType.Extension==EXT_TOS)
@@ -541,7 +516,6 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       HardDiskMan.DisableHardDrives=true; // we guess
     }
 #endif
-
     SF314[drive].ImageType.Manager=MNGR_STEEM;
 #ifdef SSE_OSD_DRIVE_INFO_EXT //gotta be a smarter way...
     if(MSA)
@@ -857,12 +831,12 @@ Header:
       }
 
       fseek(nf,HeaderLen,SEEK_SET);
-#if defined(SSE_OSD_DRIVE_INFO_EXT) && defined(SSE_DISK_IMAGETYPE)
+#if defined(SSE_OSD_DRIVE_INFO_EXT)
       //this is pretty annoying, this RemoveDisk
       TImageType save_type=SF314[drive].ImageType;
 #endif
       RemoveDisk();
-#if defined(SSE_OSD_DRIVE_INFO_EXT) && defined(SSE_DISK_IMAGETYPE)
+#if defined(SSE_OSD_DRIVE_INFO_EXT)
       //this is pretty annoying, this RemoveDisk
       SF314[drive].ImageType=save_type;
 #endif
@@ -933,7 +907,8 @@ Header:
   dbg_log("");
 
   TRACE_LOG("Ext %s Manager %d Sides %d Tracks %d Sectors %d\n",
-dot_ext(SF314[drive].ImageType.Extension),SF314[drive].ImageType.Manager,Sides,TracksPerSide,SectorsPerTrack);
+//dot_ext(SF314[drive].ImageType.Extension),SF314[drive].ImageType.Manager,Sides,TracksPerSide,SectorsPerTrack);
+extension_list[SF314[drive].ImageType.Extension],SF314[drive].ImageType.Manager,Sides,TracksPerSide,SectorsPerTrack);
 
   return 0;
 }
@@ -1069,10 +1044,6 @@ bool TFloppyImage::SeekSector(int Side,int Track,int Sector,bool Format)
     return true;
   }
 
-#if defined(SSE_DRIVE_SINGLE_SIDE_NAT1)
-  if(SSEOption.SingleSideDriveMap&(floppy_current_drive()+1))
-    Side=0;
-#endif
 #if defined(SSE_DRIVE_SINGLE_SIDE_RND)//3.7.0
   if(SSEOption.SingleSideDriveMap&(DRIVE+1) && Side==1)
     return true;// -> RNF
@@ -1551,18 +1522,9 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
     isn't STX and option 'Pasti only for STX' is checked.
 */
     if(PASTI_JUST_STX && 
-#if defined(SSE_DISK_IMAGETYPE)
       SF314[1-floppy_current_drive()].ImageType.Extension!=EXT_STX)
-#else
-      SF314[1-floppy_current_drive()].ImageType!=DISK_PASTI)
-#endif
     {
-      //TRACE_LOG("deactivate pasti 1\n");
       pasti_active=false;
-      //TRACE_LOG("pasti_active %d\n",pasti_active);
-#if defined(SSE_DISK_PASTI_ON_WARNING2)
-      DiskMan.RefreshPastiStatus();
-#endif
     }
 #endif
   }
@@ -1573,13 +1535,7 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   PastiDisk=0;
 
 #if defined(SSE_DISK_CAPS)
-  if(CAPSIMG_OK && drive!=-1 && 
-#if defined(SSE_DISK_IMAGETYPE1)
-    SF314[drive].ImageType.Manager==MNGR_CAPS
-#else
-    Caps.IsIpf(drive)
-#endif     
-    )
+  if(CAPSIMG_OK && drive!=-1 && SF314[drive].ImageType.Manager==MNGR_CAPS)
     Caps.RemoveDisk(drive);
   IPFDisk=
 #ifdef SSE_DISK_CAPS_CTRAW
@@ -1619,7 +1575,6 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   Format_f=NULL;
 
 #if defined(SSE_DISK_IMAGETYPE) 
-//  TRACE_LOG("Remove disk: reset ImageType\n");
   SF314[drive].ImageType.Manager=MNGR_STEEM; //default
   SF314[drive].ImageType.Extension=0;
 #endif
