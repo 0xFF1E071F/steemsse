@@ -253,10 +253,6 @@ public:
   hxc_button enable_dsp_but;
 #endif
 
-#if defined(SSE_GUI_OPTION_SLOW_DISK_SSE)
-  hxc_button slow_disk_but;  
-#endif
-
 #if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
   hxc_button use_sdl_but;    
 #endif

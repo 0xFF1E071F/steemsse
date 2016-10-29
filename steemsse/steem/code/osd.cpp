@@ -314,12 +314,8 @@ void osd_draw()
     int frame=14;
     if (osd_old_pos) start_y=25;
     if (BytesPerPixel==1){
-
-#if !(defined(SSE_OSD_LOGO1)) // not defined in v3.5.3
       osd_black_box(draw_mem,x-1,start_y,PLASMA_W+2,PLASMA_H+2,draw_line_length);
       for (int y=start_y+1;y<start_y+1+PLASMA_H;y++) osd_blueize_line(x,y,PLASMA_W);
-#endif
-
     }else{
       if (osd_plasma_pal==NULL){
         osd_plasma_pal=new DWORD[PLASMA_MAX*2];
@@ -340,42 +336,12 @@ void osd_draw()
       }else{
         frame=min(int(timer-(osd_start_time+200))/20,14);
       }
-
-#if !(defined(SSE_OSD_LOGO1))
       if (frame>=0) 
         osd_draw_plasma(x,start_y,frame);
-#endif
     }
     if (frame==14){
       x=x1/2-OSD_LOGO_W/2;
-
-#if defined(SSE_OSD_LOGO2) // not defined in v3.5.3
-#define THE_LEFT (0)
-#define THE_RIGHT ((x1))
-#define BUFFER_LENGTH 35
-      RECT cliprect={THE_LEFT,0,THE_RIGHT,y1};
-      char tmp_buffer[BUFFER_LENGTH];
-      strcpy(tmp_buffer,"STEEM SSE "); // must be CAPS for the scroller font
-      // note it's STEem Engine anyway, not STeem Engine
-      size_t buffer_length = strlen(tmp_buffer);
-      size_t version_length = strlen((char*)stem_version_text);
-      strncat(tmp_buffer,(char*)stem_version_text,BUFFER_LENGTH-buffer_length);
-      size_t logo_length=strlen(tmp_buffer);
-      x=x1/2 - logo_length*16/2;
-      for(unsigned int i=0;i<logo_length;i++)
-      {
-        int n=(int)(toupper(tmp_buffer[i]))+(60-33);	// need macro?
-        if (n>=60 && n<120)
-        osd_draw_char_clipped(osd_font+(n*64),draw_mem,x,start_y+PLASMA_H/2-OSD_LOGO_H/2,draw_line_length,col_white,32,&cliprect);
-        x+=16;
-      }//nxt i
-#undef THE_LEFT
-#undef THE_RIGHT
-#undef BUFFER_LENGTH
-
-#else
-
-#if defined(SSE_OSD_LOGO3) // defined in v3.5.3
+#if defined(SSE_OSD_LOGO)
 /*  We write 'Steem SSE' in the nice plazma with scroller letters instead
     of the 'Steem 3.2' graphics. The result isn't too bad (better than
     our previous hack logo1&2).
@@ -403,8 +369,6 @@ void osd_draw()
         x+=32;
       }
 #endif//logo 3
-#endif//logo 2
-
     }
     if (draw_grille_black<4) draw_grille_black=4;
   }else if (osd_plasma_pal){
@@ -624,7 +588,7 @@ void osd_draw()
 
 #ifdef SSE_DEBUG // add current command (CR)
 
-#if defined(SSE_DISK_IMAGETYPE) && defined(SSE_OSD_DRIVE_INFO_EXT) //3.8.2, was SSE_DISK_IMAGE
+#if defined(SSE_OSD_DRIVE_INFO_EXT) //3.8.2, was SSE_DISK_IMAGE
 /*  Instead of the status bar, we put image info on debug OSD track info,
     so it's valid for both drives, we see clearly what happens with
     different types mixed.
@@ -874,27 +838,7 @@ void osd_get_reset_info(EasyStringList *sl)
 
   sl->Add(T("ST CPU speed")+": "+(n_millions_cycles_per_sec)+" "+T("Megahertz"));
   t=T("Active drives")+": A";
-#if defined(SSE_DISK_CAPS_OSD)
-  if(CAPSIMG_OK && 
-#if defined(SSE_DISK_IMAGETYPE1)
-    SF314[0].ImageType.Manager==MNGR_CAPS
-#else
-    Caps.IsIpf(0)
-#endif 
-    )
-    t+=" (IPF)";
-#endif
   if (num_connected_floppies==2) t+=", B";
-#if defined(SSE_DISK_CAPS_OSD)
-  if(CAPSIMG_OK && 
-#if defined(SSE_DISK_IMAGETYPE1)
-    SF314[1].ImageType.Manager==MNGR_CAPS
-#else
-    Caps.IsIpf(1)
-#endif 
-    )
-    t+=" (IPF)";
-#endif
   for (int n=2;n<26;n++) if (mount_flag[n]) t+=Str(", ")+char('A'+n);
   sl->Add(t);
 

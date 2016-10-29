@@ -78,7 +78,8 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 
 #include "SSE/SSEGlue.h"
 
-#define LOGSECTION LOGSECTION_INIT //SS
+//#define LOGSECTION LOGSECTION_INIT //SS
+#define LOGSECTION LOGSECTION_OPTIONS //SS
 
 //---------------------------------------------------------------------------
 bool TOptionBox::ChangeBorderModeRequest(int newborder)
@@ -476,13 +477,7 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
           }
 #endif
 #endif
-#if defined(SSE_TOS_CHECK_VERSION)
-/*  We can't know word 2 of every img file, so we need another
-    way to list only real TOS files...
-    ! Ver: TOSLOAD
-*/
-          if(!Ver || Ver>=0x100 && Ver<0x410) // still not very good...
-#elif defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301)
           if(Ver!=0x81AA) // 6301 ST Rom mustn't be listed
 #endif
 #if defined(SSE_STF_MATCH_TOS)
@@ -977,7 +972,7 @@ void TOptionBox::SetBorder(int newborder)
 #else
   int oldborder=border;
 #endif
-  TRACE_INIT("Option Border %d->%d\n",oldborder,newborder);
+  TRACE_LOG("Option Border %d->%d\n",oldborder,newborder);
 #if defined(SSE_VID_DISABLE_AUTOBORDER)
   if(!newborder) 
     ChangeBorderSize(0); // TODO with this we can remove the (border&1) tests
@@ -1203,7 +1198,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_MMU_WU_RESET_ON_SWITCH_ST)
             OPTION_WS=0;
 #endif
-#if defined(SSE_GUI_OPTIONS_REFRESH)
+#if defined(SSE_GUI_OPTIONS_REFRESH) && !defined(SSE_STF_MEGASTF_383)
             OptionBox.SSEUpdateIfVisible(); 
 #endif
 #if defined(SSE_STF_MATCH_TOS)
@@ -1256,7 +1251,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
                 This->NewMemConf0=-1;
               }
               CheckResetIcon();
-#if defined(SSE_GUI_OPTIONS_STF_IN_MACHINE)
+#if defined(SSE_GUI_OPTIONS_STF_IN_MACHINE) && !defined(SSE_STF_MEGASTF_383)
               This->MachineUpdateIfVisible();//it's on same page now, better so
 #endif
             }
@@ -1265,23 +1260,25 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             if(ST_TYPE==MEGASTF)
             {
               This->NewMonitorSel=1; // preselect monochrome (v3.5.4)
-#if defined(SSE_ACSI_MEGASTF) // default to ACSI hard disk
+#if defined(SSE_ACSI_MEGASTF) && !defined(SSE_STF_MEGASTF_383)//gemdos likelier
               if(SSEConfig.AcsiImg)
                 SSEOption.Acsi=true;
               else
 #endif
                 HardDiskMan.DisableHardDrives=false; // v3.6.0
-//              TRACE("hd off %d\n",HardDiskMan.DisableHardDrives);
             }
             else if(old_st_type==MEGASTF) //v3.6.0: go colour, no HD by default)
             {
               This->NewMonitorSel=0;
               HardDiskMan.DisableHardDrives=true;
-//              TRACE("hd off %d\n",HardDiskMan.DisableHardDrives);
             }
             HardDiskMan.update_mount();
 #endif
           }
+#if defined(SSE_STF_MEGASTF_383)
+//          OptionBox.MachineUpdateIfVisible(); //anyway
+          This->MachineUpdateIfVisible(); //anyway
+#endif
 	  break;
 #endif
 #if defined(SSE_MMU_WAKE_UP)
@@ -2020,17 +2017,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break; 
 #endif
-#endif
-#if defined(SSE_GUI_OPTION_SLOW_DISK_SSE)
-        case 7306: // replicate ADAT option
-          if (HIWORD(wPar)==BN_CLICKED){
-            floppy_instant_sector_access=!floppy_instant_sector_access;
-            SendMessage(HWND(lPar),BM_SETCHECK,!floppy_instant_sector_access,0);
-            TRACE_LOG("Option ADAT %d\n",!floppy_instant_sector_access);
-            if(DiskMan.Handle)
-              DiskMan.RefreshSnails();
-          }
-          break; 
 #endif
 
 #if defined(SSE_GUI_STATUS_STRING)

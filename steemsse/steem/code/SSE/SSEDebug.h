@@ -251,6 +251,8 @@ enum logsection_enum_tag {
  LOGSECTION_ACIA,
  LOGSECTION_DMA,
  LOGSECTION_CARTRIDGE,
+ LOGSECTION_PASTI, // restore this
+ LOGSECTION_MMU,
  NUM_LOGSECTIONS,
  };
 #endif
@@ -324,7 +326,7 @@ enum logsection_enum_tag {
 #define TRACE_MASK_IO (Debug.ControlMask[12])
 #define TRACE_CONTROL_IO_W (1<<15)
 #define TRACE_CONTROL_IO_R (1<<14)
-#define TRACE_CONTROL_IO_MMU (1<<13)
+//#define TRACE_CONTROL_IO_MMU (1<<13)
 
 #define TRACE_MASK_14 (Debug.ControlMask[14]) //Shifter 2
 #define TRACE_CONTROL_LINE_PLUS_2 (1<<15) 

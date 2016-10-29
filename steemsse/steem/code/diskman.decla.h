@@ -149,14 +149,6 @@ public:
   void ShowDatabaseDiag(),ShowContentDiag();
 
 #ifdef WIN32
-
-#if defined(SSE_DISK_PASTI_ON_WARNING2)
-  void RefreshPastiStatus();
-#endif
-#if defined(SSE_GUI_OPTION_SLOW_DISK_SSE)
-  void RefreshSnails();
-#endif
-
   bool HasHandledMessage(MSG*);
   void SetDir(EasyStr,bool,EasyStr="",bool=0,EasyStr="",int=0);
   bool SelectItemWithPath(char *,bool=0,char* = NULL);

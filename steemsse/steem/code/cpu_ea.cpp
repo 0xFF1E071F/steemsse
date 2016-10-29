@@ -1,4 +1,5 @@
 // this file is included in cpu_sse.cpp, which is a big file already
+// ea stands for Effective Address
 
 void m68kReadBFromAddr();
 void m68kReadWFromAddr();
@@ -19,7 +20,7 @@ BYTE m68k_peek(MEM_ADDRESS ad){
       if(SUPERFLAG)return io_read_b(ad);
       else exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else if(ad>=0xfc0000){
-#if defined(SSE_MMU_ROUNDING_BUS0A)
+#if defined(SSE_MMU_ROUNDING_BUS0A)//no more, see SSE_MMU_ROUNDING_BUS2
       if(tos_high && ad<(0xfc0000+192*1024))
       {
         if(MMU.Rounded)
@@ -1784,4 +1785,4 @@ void m68kReadLFromAddr() {
     exception(BOMBS_BUS_ERROR,EA_READ,abus);
 }
 
-#undef LOGSECTION LOGSECTION_CARTRIDGE
+#undef LOGSECTION

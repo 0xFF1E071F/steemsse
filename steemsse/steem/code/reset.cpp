@@ -380,19 +380,11 @@ void reset_peripherals(bool Cold)
 #if defined(SSE_ACSI) 
   if(ACSI_EMU_ON)
 #if defined(SSE_VS2008_WARNING_382)
-#if defined(SSE_ACSI_MULTIPLE)
     for(int i=0;i<TAcsiHdc::MAX_ACSI_DEVICES;i++)
       AcsiHdc[i].Reset();
 #else
-    AcsiHdc.Reset();
-#endif
-#else
-#if defined(SSE_ACSI_MULTIPLE)
     for(int i=0;i<TAcsiHdc::MAX_ACSI_DEVICES;i++)
       AcsiHdc[i].Reset(Cold);
-#else
-    AcsiHdc.Reset(Cold);
-#endif
 #endif
 #endif
 
@@ -448,9 +440,9 @@ void reset_peripherals(bool Cold)
   dma_sound_treble=6;
 #endif
 #if defined(SSE_ACIA_NO_RESET_PIN) 
-  if(Cold) // don't reset ACIA on warm reset, fixes Dragonnels/Plazma
+  if(Cold)
 #endif
-  ACIA_Reset(NUM_ACIA_IKBD,true);
+    ACIA_Reset(NUM_ACIA_IKBD,true);
   ikbd_reset(true); // Always cold reset, soft reset is different
 
 #if defined(SSE_IKBD_6301)
@@ -462,7 +454,7 @@ void reset_peripherals(bool Cold)
 #if defined(SSE_ACIA_NO_RESET_PIN) 
   if(Cold) 
 #endif
-  ACIA_Reset(NUM_ACIA_MIDI,true);
+    ACIA_Reset(NUM_ACIA_MIDI,true);
   MIDIPort.Reset();
   ParallelPort.Reset();
   SerialPort.Reset();

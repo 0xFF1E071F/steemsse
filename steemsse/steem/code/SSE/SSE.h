@@ -65,8 +65,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_COMPILER  //  warnings, errors... 
 #define SSE_STRUCTURE //  necessary for the SSE build
 
-#define SSE_BETA //title, OSD, plus some testing - new features
-#define SSE_BETA_BUGFIX // beta for just bugfixes
+//#define SSE_BETA //title, OSD, plus some testing - new features
+//#define SSE_BETA_BUGFIX // beta for just bugfixes
 
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
 //#define SSE_PRIVATE_BUILD // my "beta" option
@@ -269,8 +269,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif
 
-
-
 #if defined(SSE_OSD)
 #define SSE_OSD_DRIVE_LED
 #endif
@@ -337,16 +335,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//6301
 #endif//ikbd
 
-#if defined(SSE_INTERRUPT)
-#define SSE_INT_JITTER // from Hatari (option 6301/Acia unchecked)
-#if defined(SSE_INT_JITTER) && defined(SSE_INT_HBL)
-#define SSE_INT_JITTER_HBL
-#endif
-#if defined(SSE_INT_JITTER) && defined(SSE_INT_VBL) && defined(SSE_STF)
-#define SSE_INT_JITTER_VBL
-#endif
-#endif//int
-
 #if defined(SSE_INT_MFP)
 #if defined(SSE_INT_MFP_RATIO) 
 #define SSE_INT_MFP_RATIO_STE // measured (by Steem Authors) for STE?
@@ -364,29 +352,19 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_SHIFTER_TRICKS  // based on Steem system, extended
 #if defined(SSE_SHIFTER_TRICKS)
-#define SSE_SHIFTER_0BYTE_LINE
-#if defined(SSE_SHIFTER_0BYTE_LINE) 
-#define SSE_SHIFTER_0BYTE_LINE_RES_END //No Buddies Land
-#define SSE_SHIFTER_0BYTE_LINE_RES_HBL //Beyond/Pax Plax Parallax
-#define SSE_SHIFTER_0BYTE_LINE_RES_START //Nostalgic-O/Lemmings
-#define SSE_SHIFTER_0BYTE_LINE_SYNC //Forest
-#endif
+#define SSE_GLUE_0BYTE_LINE
 #define SSE_SHIFTER_4BIT_SCROLL //Let's do the Twist again
 #define SSE_SHIFTER_60HZ_OVERSCAN //Leavin' Teramis
 #define SSE_SHIFTER_LINE_PLUS_2_THRESHOLD //Forest
 #define SSE_SHIFTER_MED_OVERSCAN // BPOC
 #define SSE_SHIFTER_NON_STOPPING_LINE // Enchanted Land
-#define SSE_SHIFTER_PALETTE_BYTE_CHANGE //undef v3.6.3
+
 #define SSE_SHIFTER_STE_MED_HSCROLL // Cool STE
 #endif
 
 #if defined(SSE_HACKS)
 // most hacks concern SDP, there's room for improvement
-#define SSE_SHIFTER_BIG_WOBBLE // Big Wobble shift
-#define SSE_SHIFTER_DANGEROUS_FANTAISY // Dangerous Fantaisy credits flicker
 #define SSE_SHIFTER_MED_OVERSCAN_SHIFT // No Cooper/greetings
-#define SSE_SHIFTER_PACEMAKER // Pacemaker credits flickering line
-#define SSE_SHIFTER_SCHNUSDIE // Reality is a Lie/Schnusdie overscan logo
 #define SSE_SHIFTER_TCB // Swedish New Year Demo/TCB SDP (60hz)
 #endif
 #if defined(SSE_STF)
@@ -398,8 +376,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SOUND_FILTER_STF // a very simple filter
 #define SSE_SOUND_KEYBOARD_CLICK
 #define SSE_SOUND_MICROWIRE // volume, balance, bass & treble, primitive DSP
-#define SSE_SOUND_VOL // -6db for PSG chipsound (using DSP) //undef v3.7.0
-#define SSE_SOUND_FILTER_STE // same very simple filter as for STF//undef 3.6.3
 #endif
 
 #if defined(SSE_STF)
@@ -408,12 +384,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #define SSE_STF_MEGASTF // blitter in STF (could be useful?) + 4MB!
 #endif//stf
-
-#if defined(SSE_TOS)
-#ifdef SSE_HACKS
-#define SSE_TOS_PATCH106 // a silly bug, a silly hack //undef 370
-#endif
-#endif//tos
 
 #if defined(SSE_VARIOUS)
 #define SSE_VAR_FULLSCREEN_DONT_START // disable run when going fullscreen - option?
@@ -454,11 +424,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DRIVE_OBJECT
 #endif
 #endif
-
-
-#if defined(SSE_DISK_CAPS)
-#define SSE_DISK_CAPS_OSD // for the little box at reset - undef v3.6.1
-#endif//ipf
 
 #if defined(SSE_DMA)
 #define SSE_DMA_OBJECT
@@ -544,10 +509,7 @@ Beta: not SSE_PRIVATE_BUILD
 //351
 
 #if defined(SSE_ACIA)
-
-
 #define SSE_ACIA_NO_RESET_PIN // don't reset on warm reset
-#define SSE_ACIA_USE_REGISTERS
 #endif
 
 
@@ -558,7 +520,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DISK_PASTI_AUTO_SWITCH
 #define SSE_DISK_PASTI_ONLY_STX  // experimental! optional
 #define SSE_DISK_PASTI_NO_RESET 
-#define SSE_DISK_PASTI_ON_WARNING // mention in disk manager title - undef 370
 #endif//stx
 
 #if defined(SSE_DMA)
@@ -607,9 +568,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_INT_VBL)
 #define SSE_INT_VBL_INLINE 
-#if defined(SSE_INT_VBL) && defined(SSE_INT_JITTER)
-#define SSE_INT_JITTER_VBL_STE//3.5.1,undef 3.6.0
-#endif
 #endif
 
 #if defined(SSE_OSD)
@@ -620,14 +578,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_OSD_DRIVE_LED2 // simpler approach
 #define SSE_OSD_DRIVE_LED3 // remove useless variable
 #endif
-#define SSE_OSD_LOGO1 // suppress former logo (=3.2 in grx) //undef v3.5.3
-#define SSE_OSD_LOGO2 //hack (temp) //undef v3.5.3
 #define SSE_OSD_SCROLLER_CONTROL
-#endif
-
-#if defined(SSE_SHIFTER_TRICKS) && defined(SSE_HACKS)
-#define SSE_SHIFTER_ARMADA_IS_DEAD // no shift contrary to Big Wobble
-#define SSE_SHIFTER_TEKILA // in Delirious 4
 #endif
 
 #if defined(SSE_SOUND)
@@ -696,9 +647,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_SHIFTER)
-#if defined(SSE_SHIFTER_TRICKS)
-#define SSE_SHIFTER_4BIT_SCROLL_LARGE_BORDER_HACK
-#endif//trck
 #if defined(SSE_MMU_WU)
 #define SSE_SHIFTER_UNSTABLE // DoLB, Omega, Overdrive/Dragon, Beeshift
 #endif
@@ -748,7 +696,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_GUI)
 #define SSE_GUI_ASSOCIATE
 #define SSE_GUI_RESET_BUTTON // invert
-#define SSE_GUI_OPTION_SLOW_DISK_SSE // undef 3.7.0
+
 #endif
 
 #ifdef SSE_GUI_ASSOCIATE
@@ -776,9 +724,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_OSD)
-#undef SSE_OSD_LOGO1
-#undef SSE_OSD_LOGO2
-#define SSE_OSD_LOGO3 // nicer
+#define SSE_OSD_LOGO // "Steem SSE" instead of "Steem 3.2"
 #endif
 
 #if defined(SSE_SHIFTER)
@@ -786,13 +732,10 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_SHIFTER_TRICKS)
 
 
-#define SSE_SHIFTER_LINE_PLUS_2_TEST
+#define SSE_GLUE_LINE_PLUS_2
 #define SSE_SHIFTER_LINE_MINUS_106_BLACK // loSTE screens
 
 #define SSE_SHIFTER_RIGHT_OFF_BY_SHIFT_MODE //beeshift0
-#if defined(SSE_SHIFTER_0BYTE_LINE) // former switch approach
-#define SSE_SHIFTER_0BYTE_LINE_SYNC2 // loSTE screens
-#endif//0byte
 #endif//tricks
 #endif//sft
 
@@ -841,11 +784,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif
 
-#if defined(SSE_INTERRUPT)
-#if defined(SSE_INT_JITTER) && defined(SSE_INT_HBL)
-#undef SSE_INT_JITTER_HBL
-#endif
-#endif//int
 
 #if defined(SSE_MMU)
 #undef SSE_MMU_WU_0_BYTE_LINE
@@ -868,9 +806,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_SHIFTER_STATE_MACHINE //simpler approach and WS-aware
 #define SSE_SHIFTER_STE_HI_HSCROLL
-#if defined(SSE_SHIFTER_STATE_MACHINE)
-#undef SSE_SHIFTER_0BYTE_LINE_SYNC2 // loSTE screens
-#endif
 #if defined(SSE_HACKS)
 #define SSE_SHIFTER_DOLB_SHIFT1 // based on "unstable overscan"
 //#define SSE_SHIFTER_DOLB_SHIFT2 // based on cycle of R0
@@ -919,15 +854,10 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_DRIVE_OBJECT)
 #define SSE_DRIVE_CREATE_ST_DISK_FIX // from Petari
 #define SSE_DRIVE_SINGLE_SIDE
-#if defined(SSE_DRIVE_SINGLE_SIDE)
-#define SSE_DRIVE_SINGLE_SIDE_NAT1
-#define SSE_DRIVE_SINGLE_SIDE_PASTI
-#endif
 #if defined(WIN32) && defined(SSE_SOUND) //TODO Unix
 #define SSE_DRIVE_SOUND // heavily requested, delivered!//3.6.0
 #if defined(SSE_DRIVE_SOUND)
 #define SSE_DRIVE_SOUND_SINGLE_SET // drive B uses sounds of A
-//#define SSE_DRIVE_SOUND_EDIT // 1st beta soundset
 #define SSE_DRIVE_SOUND_EPSON // current samples=Epson
 #define SSE_DRIVE_SOUND_VOLUME // logarithmic 
 #endif//drive sound
@@ -950,13 +880,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_INTERRUPT)
 
-#if defined(SSE_INT_JITTER) && defined(SSE_INT_HBL)
-#define SSE_INT_JITTER_HBL //defined again for 3615HMD
-#endif
-
-#if defined(SSE_INT_JITTER) && defined(SSE_INT_VBL)
-#undef SSE_INT_JITTER_VBL_STE//3.5.1,undef 3.6.0
-#endif
 
 #if defined(SSE_INT_MFP)
 #define SSE_INT_MFP_TIMERS_BASETIME //
@@ -1013,16 +936,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_YM2149_FIXED_VOL_TABLE // was SSE_YM2149_FIXED_VOL_FIX2 in v3.6.4
 #define SSE_YM2149_OPT1
 #endif
-#if defined(SSE_YM2149_FIX_TABLES)
-#define SSE_YM2149_FIXED_VOL_FIX1 //undef v3.7.0
-
-#endif
 #endif//ym2149
 
 
 //361
-
-
 
 #if defined(SSE_FLOPPY)
 
@@ -1031,10 +948,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DISK_CAPS_CTRAW//2nd type of file recognised by caps v5.0 (?) //3.6.1
 #define SSE_DISK_CAPS_CTRAW_REV //3.6.1 manage different rev data
 #define SSE_DISK_CAPS_RESUME
-#endif
-
-#if defined(SSE_DISK_PASTI)
-#define SSE_DISK_PASTI_ON_WARNING2 //refactoring
 #endif
 
 #if defined(SSE_DMA)
@@ -1068,14 +981,9 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif
 
-#if defined(SSE_INTERRUPT)
-
-
 #if defined(SSE_INT_MFP)
 #define SSE_INT_MFP_RATIO_HIGH_SPEED
 #endif
-
-#endif//int
 
 
 #if defined(SSE_TOS)
@@ -1110,21 +1018,9 @@ Beta: not SSE_PRIVATE_BUILD
 //363
 
 
-#if defined(SSE_MMU)
-#define SSE_MMU_WU_VERTICAL_OVERSCAN1 //defaults to WU1
-#endif
-
-#if defined(SSE_SHIFTER_TRICKS)
-#undef SSE_SHIFTER_PALETTE_BYTE_CHANGE
-#if defined(SSE_SHIFTER_0BYTE_LINE) // former switch approach
-#endif//0-byte line
-#endif//tricks
-
 #if defined(SSE_SOUND)
-#undef SSE_SOUND_FILTER_STE
 #define SSE_SOUND_MICROWIRE_MIXMODE
 #endif
-
 
 #if defined(SSE_VIDEO)
 #define SSE_VID_FREEIMAGE1 //init library
@@ -1145,7 +1041,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_DISK_CAPS)
 #define SSE_DISK_CAPS_CTRAW_1ST_LOCK
-#define SSE_DISK_CAPS_CTRAW_NO_UNLOCK
 #endif
 
 #if defined(SSE_DMA)
@@ -1201,8 +1096,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BLT_370 // bad hack for Relapse
 #endif
 
-
-
 #if defined(SSE_FLOPPY)
 
 #define SSE_FLOPPY_EVENT
@@ -1210,10 +1103,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_DISK)
 #define SSE_DISK1//struct
-#if defined(SSE_DISK_IMAGETYPE)//3.6.4
-#define SSE_DISK_IMAGETYPE1 // replace "TCaps::IsIpf()"
-#define SSE_DISK_IMAGETYPE2
-#endif
 #if defined(SSE_WD1772) //&&...
 #define SSE_DISK_STW
 #endif
@@ -1234,8 +1123,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_DISK_PASTI)
 #define SSE_DISK_PASTI_ONLY_STX_OPTION3 // move that option SSE -> disk manager
-#undef SSE_DISK_PASTI_ON_WARNING//?
-#undef SSE_DISK_PASTI_ON_WARNING2//?
 #endif
 
 #if defined(SSE_DMA)
@@ -1260,8 +1147,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DRIVE_RW_SECTOR_TIMING4 //remove more hacks
 #endif
 #if defined(SSE_DRIVE_SINGLE_SIDE)
-#undef SSE_DRIVE_SINGLE_SIDE_NAT1
-#undef SSE_DRIVE_SINGLE_SIDE_PASTI
 #define SSE_DRIVE_SINGLE_SIDE_CAPS //using the new feature
 #define SSE_DRIVE_SINGLE_SIDE_NOPASTI // too involved
 #define SSE_DRIVE_SINGLE_SIDE_RND//random data instead
@@ -1304,16 +1189,10 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_GUI)
 #define SSE_GUI_CUSTOM_WINDOW_TITLE
 #define SSE_GUI_DISK_MANAGER//was missing in v3.7.2
-#undef SSE_GUI_OPTION_SLOW_DISK_SSE
 #define SSE_GUI_PATCH_SCROLLBAR
 #define SSE_GUI_SNAPSHOT_INI
 #ifdef WIN32
 #define SSE_GUI_CLIPBOARD_TEXT
-#endif
-#ifndef IN_RC
-#if defined(SSE_GUI_CLIPBOARD_TEXT) && defined(SSE_GUI_DISK_MANAGER_LONG_NAMES1)
-#define SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD
-#endif
 #endif
 #if defined(SSE_GUI_DISK_MANAGER)
 #define SSE_GUI_DISK_MANAGER_DOUBLE_CLK_GO_UP //habit with some file managers
@@ -1321,6 +1200,11 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_DISK_MANAGER_INSERT_DISKB
 #define SSE_GUI_DISK_MANAGER_INSERT_DISKB_LS//load/save option
 #define SSE_GUI_DISK_MANAGER_LONG_NAMES1
+#ifndef IN_RC
+#if defined(SSE_GUI_CLIPBOARD_TEXT) && defined(SSE_GUI_DISK_MANAGER_LONG_NAMES1)
+#define SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD
+#endif
+#endif
 #define SSE_GUI_DISK_MANAGER_NO_DISABLE_B_MENU // click on icon
 //#define SSE_GUI_DISK_MANAGER_RGT_CLK_HD//on DM icon 
 #define SSE_GUI_DISK_MANAGER_RGT_CLK_HD2//on HD icon
@@ -1430,8 +1314,8 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #define SSE_SHIFTER_HIRES_OVERSCAN//3.7.0
 #define SSE_SHIFTER_PALETTE_NOISE2
-#define SSE_SHIFTER_STE_DE_MED_RES // bugfix
-#define SSE_SHIFTER_STE_READ_SDP_HSCROLL1 // undef 373
+
+
 #define SSE_SHIFTER_STE_READ_SDP_SKIP // bugfix
 #define SSE_SHIFTER_LINE_MINUS_2_DONT_FETCH //BIG Demo #2 bad raster finally!
 
@@ -1449,7 +1333,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_SOUND_FILTER_STF)
 #define SSE_SOUND_FILTER_HATARI
-//#define SSE_SOUND_FILTER_STF2 // for samples, original is better
+
 #define SSE_SOUND_FILTER_STF3 // better detect samples
 #define SSE_SOUND_FILTER_STF4 // disable option if no chip sound
 #define SSE_SOUND_FILTER_STF5 // option in sound
@@ -1464,21 +1348,18 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #define SSE_SOUND_MICROWIRE_MASK1 //bugfix
 #define SSE_SOUND_MICROWIRE_MASK2 //incorrect doc (?)
-#define SSE_SOUND_MICROWIRE_READ1
+
 #define SSE_SOUND_MICROWIRE_WRITE_LATENCY_B //Antiques 
-#undef  SSE_SOUND_VOL //Antiques sounds better without this precaution
 #define SSE_SOUND_VOL_LOGARITHMIC_2 // bugfix on resume
 #endif
 
 #if defined(SSE_STF)
-
 #define SSE_STF_MATCH_TOS2 // default = 1.62 instead of 1.06
 #endif
 
 #if defined(SSE_TOS)
-#undef SSE_TOS_PATCH106 // TOS 1.62 recommended
 #define SSE_TOS_BOOTER1//accept TOS boot of the 260ST
-#if defined(SSE_DISK_IMAGETYPE) && defined(WIN32) //see note in floppy_drive.cpp
+#if defined(WIN32) //see note in floppy_drive.cpp
 #define SSE_TOS_PRG_AUTORUN// Atari PRG + TOS file direct support
 #endif
 #endif
@@ -1556,7 +1437,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #endif
 #if defined(SSE_YM2149_DELAY_RENDERING)  
-#undef SSE_YM2149_FIXED_VOL_FIX1 // former 'P.S.G.' option replaced with that
 #define SSE_YM2149_DELAY_RENDERING1 // use that table, interpolate...
 #define SSE_YM2149_NO_SAMPLES_OPTION // remove 'Samples' option
 #endif
@@ -1610,9 +1490,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_SOUND)
-#if defined(SSE_SOUND_MICROWIRE)
-#undef SSE_SOUND_MICROWIRE_READ1 //Sleepwalker STE
-#endif
 #if defined(SSE_SOUND_VOL_LOGARITHMIC_2)
 #define SSE_SOUND_VOL_LOGARITHMIC_3
 #endif
@@ -1666,7 +1543,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #ifdef SSE_TOS
-#define SSE_TOS_CHECK_VERSION // to avoid ID something else as TOS
+
 #define SSE_TOS_STE_FAST_BOOT2 // check each cold reset
 #define SSE_TOS_GEMDOS_RESTRICT_TOS2 // undef 3.8.3
 #endif
@@ -1735,10 +1612,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_INT_MFP_UTIL2 // bugfix parameter not used
 #endif
 
-#ifdef SSE_SHIFTER
-#undef SSE_SHIFTER_STE_READ_SDP_HSCROLL1 //breaks 20year STE intro
-#endif
-
 #ifdef SSE_TOS
 #define SSE_TOS_GEMDOS_RESTRICT_TOS3 // undef 3.8.3
 #ifdef SSE_DISK
@@ -1777,7 +1650,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_ACSI_LED // cool too
 #define SSE_ACSI_LS
 #define SSE_ACSI_MEGASTF
-#define SSE_ACSI_MULTIPLE
 #define SSE_ACSI_MODESELECT
 #define SSE_ACSI_OPTION
 #define SSE_ACSI_REQUEST_SENSE
@@ -1796,12 +1668,11 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_COMPILER_380
 #endif
 
-
 #if defined(SSE_DISK)
 #define SSE_DISK_380 // update side
 #endif
 #if defined(SSE_DMA)
-#define SSE_DMA_FIFO_NATIVE3 //bugfix Sabotage (the game)
+#define SSE_DMA_FIFO_NATIVE3 //bugfix game Sabotage
 #endif
 
 #if defined(SSE_GLUE)
@@ -1811,7 +1682,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_GLUE_FRAME_TIMINGS)
 #define SSE_GLUE_FRAME_TIMINGS_HBL // routines of last scanline
-#define SSE_GLUE_FRAME_TIMINGS_INIT // not indispensable
+#define SSE_GLUE_FRAME_TIMINGS_INIT 
 #undef SSE_INT_VBL_STF // hack unnecessary
 #endif//SSE_GLUE_FRAME_TIMINGS
 
@@ -1846,7 +1717,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_INTERRUPT)
 #define SSE_INT_ROUNDING
-#define SSE_INT_CHECK_BEFORE_PREFETCH
 #endif
 
 
@@ -1912,7 +1782,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #ifdef SSE_TOS
 //#define SSE_TOS_GEMDOS_DRVBIT // sooner //really necessary?
-#undef SSE_TOS_CHECK_VERSION // MagicOs v 6+
+
 #define SSE_STF_MATCH_TOS3 // + default country
 #endif
 
@@ -1940,7 +1810,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #ifdef SSE_YM2149_OBJECT
 #define SSE_YM2149_NO_JAM_IF_NOT_RW
-#define SSE_YM2149_ENV_DEPHASING //undef v3.8.1
 #endif
 
 
@@ -1991,10 +1860,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_BORDERS_LINE_PLUS_20_381 // left border 12 pixels
 #endif//borders
 #define SSE_VID_SCANLINES_INTERPOLATED_381
-#endif
-
-#if defined(SSE_YM2149_OBJECT)
-#undef SSE_YM2149_ENV_DEPHASING // don't understand, it sounds like we shouldn't?
 #endif
 
 
@@ -2076,8 +1941,173 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_YM2149_QUANTIZE_382
 #endif
 
+//383
+#if _MSC_VER >= 1500 
+#define SSE_VS2008_383
+#define SSE_VS2008_WARNING_383
+#define SSE_VS2008_WARNING_383B
+#endif
 
+#define SSE_BLT_383B
+#define SSE_ACIA_383
 
+#define SSE_CARTRIDGE_383
+#if defined(SSE_CARTRIDGE_383)
+#define SSE_CARTRIDGE_BAT //fun!
+#define SSE_CARTRIDGE_BAT2
+#define SSE_CARTRIDGE_FREEZE
+#define SSE_CARTRIDGE_REPLAY16
+#define SSE_CARTRIDGE_TRANSPARENT //check for bugs
+#endif
+
+#define SSE_DISK_CAPS_383
+#define SSE_DISK_STW_CONVERT // Convert to STW
+#define SSE_DISK_STW_CONVERT2 // 11 sectors interleave 6
+#define SSE_DISK_STW_FAST // +HFE
+
+#define SSE_DONGLE //new domain of emulation!
+#if defined(SSE_DONGLE)
+#define SSE_DONGLE_PORT3 // all dongles grouped in "virtual" port
+#define SSE_DONGLE_BAT2
+#define SSE_DONGLE_CRICKET
+#define SSE_DONGLE_PROSOUND // Wings of Death, Lethal Xcess  STF
+#define SSE_DONGLE_LEADERBOARD
+#define SSE_DONGLE_MULTIFACE
+#define SSE_DONGLE_MUSIC_MASTER
+#define SSE_DONGLE_URC
+#endif
+
+#if defined(SSE_STF)
+#define SSE_DMA_RIPPLE_CARRY
+#endif
+#define SSE_GLUE_383
+#define SSE_GLUE_383B
+#define SSE_GLUE_383C
+#define SSE_GUI_383
+#define SSE_GUI_DISK_MANAGER_REGROUP // it's getting cluttered
+#define SSE_GUI_DISK_MANAGER_REGROUP2 // context
+#define SSE_GUI_DISK_MANAGER_REGROUP_PASTI // not sure about this one
+#define SSE_GUI_DISK_MANAGER_SHOW_EXT // could still be buggy
+#define SSE_GUI_JOYSTICK_383
+
+#define SSE_MMU_RAM_TEST 
+#if defined(SSE_MMU_RAM_TEST)
+#define SSE_MMU_RAM_TEST1 // change test emulation
+#define SSE_MMU_RAM_TEST2 // remove "no confusion" hack
+#define SSE_MMU_RAM_TEST3 // remove himem=0 hack
+#endif
+
+#define SSE_MMU_ROUNDING_BUS1A 
+#define SSE_MMU_ROUNDING_BUS2 //ambitious, less hacky 
+#define SSE_MMU_ROUNDING_BUS0A // to disable hacky way
+
+#if defined(SSE_MMU_ROUNDING_BUS2)
+#define SSE_MMU_ROUNDING_BUS2A_EA // make abus up-to-date in EA SRC
+#define SSE_MMU_ROUNDING_BUS2A_EA1 // make abus up-to-date in EA SRC
+#define SSE_MMU_ROUNDING_BUS2A_EA2 // make abus up-to-date in EA DEST
+#define SSE_MMU_ROUNDING_BUS2A_EA3 // make abus up-to-date in EA DEST
+#define SSE_MMU_ROUNDING_BUS2A_INSTR // make abus up-to-date in instructions
+#define SSE_MMU_ROUNDING_BUS2A_INSTR2 // make abus up-to-date in instructions
+#define SSE_MMU_ROUNDING_BUS2A_INSTR3 // make abus up-to-date in instructions
+#define SSE_MMU_ROUNDING_BUS2A_INSTR4 // make abus up-to-date in instructions
+#define SSE_MMU_ROUNDING_BUS2B // need no param
+#define SSE_MMU_ROUNDING_BUS2_IO // Shifter palette correction
+#define SSE_MMU_ROUNDING_BUS2_IO2 // Shifter other regs correction
+//#define SSE_MMU_ROUNDING_BUS2_ASSERT//temp
+#define SSE_MMU_ROUNDING_BUS2_BLITTER
+#define SSE_MMU_ROUNDING_BUS2_EXCEPTION //must detail
+#define SSE_MMU_ROUNDING_BUS2_STACK
+#undef SSE_MMU_ROUNDING_BUS0A
+#endif
+
+#define SSE_VAR_OPT_383
+#if defined(SSE_VAR_OPT_383) && defined(VC_BUILD) && _MSC_VER>=1500 //VS2008+
+#define SSE_VC_INTRINSICS_383
+#if defined(SSE_VC_INTRINSICS_383)
+//#define SSE_VC_INTRINSICS_383A // some cpu sr checks //useless like 383E?
+#define SSE_VC_INTRINSICS_383B // popcount 
+#define SSE_VC_INTRINSICS_383C // byteswap
+#define SSE_VC_INTRINSICS_383D // instruction time => much less object code :)
+//#define SSE_VC_INTRINSICS_383E // set/clear some sr bits => more object code? => bad idea?
+//#define SSE_VC_INTRINSICS_383F // avoid shifting mask in MOVEM //i'm sure it's a bad idea too!
+#define SSE_VC_INTRINSICS_383G // GLU functions
+#endif
+#endif
+#if defined(SSE_VAR_OPT_383)
+#ifdef SSE_CPU
+#define SSE_VAR_OPT_383A // variable to hold ABSOLUTE_CPU_TIME for a while (TODO)
+#define SSE_VAR_OPT_383A1 // Video chipset writes
+#endif
+#define SSE_VAR_OPT_383C // CycleOfLastChangeToShiftMode()
+#define SSE_VAR_OPT_383D // don't need IackCycle
+#endif
+#if defined(SSE_VAR_OPT_383) && defined(SSE_DRAW_C)
+#define SSE_DRAW_C_383
+#if defined(SSE_DRAW_C_383)
+#define SSE_DRAW_C_383A //loops (better performance in VS2015)
+#define SSE_DRAW_C_383A1 // replace if ladder with shifts (better performance in VS2015)
+#define SSE_DRAW_C_383B //border (better performance in VS2015)
+#define SSE_DRAW_C_383C //
+#if defined(SSE_VC_INTRINSICS_383)
+#define SSE_DRAW_C_383_INTRINSICS // (better performance in VS2015)
+//#define SSE_DRAW_C_383_INTRINSICSB //BT worse performance in VS2015
+//#define SSE_DRAW_C_383_INTRINSICSC //STOSD 2 items: worse performance in VS2015
+#endif
+#endif
+#endif
+#define SSE_VAR_RESIZE_383
+#define SSE_VAR_RESIZE_383A // acia, more problematic
+// Exception management...
+//#define SSE_M68K_EXCEPTION_TRY_CATCH //works but too slow, especially if _DEBUG
+#ifndef _DEBUG
+#define SSE_VAR_MAIN_LOOP2 //2KB on optimised exe but will catch and report everything (?)
+#endif
+#if _MSC_VER >= 1500 && !defined(_DEBUG)
+#define SSE_VAR_MAIN_LOOP3 //VC only (vs2008)?
+#endif
+#if defined(SSE_VAR_MAIN_LOOP3)
+#undef SSE_VAR_MAIN_LOOP1 //is emu-only
+#endif
+//#undef SSE_CPU_DIVS_OVERFLOW_PC //temp for tests...
+#define SSE_VID_GAMMA
+#define SSE_WD1772_383
+#define SSE_YM2149_BUS_JAM_383 // 1 cycle each access
+#define SSE_YM2149_BUS_JAM_383B // 
+
+//383 bugfix
+#define SSE_ACSI_ICON_383
+#define SSE_BLT_383
+#define SSE_CPU_E_CLOCK_383
+#define SSE_CPU_EA_383
+#define SSE_DISK_GHOST_SECTOR_383
+#define SSE_FDC_383
+#define SSE_GUI_383B
+#define SSE_INTERRUPT_383
+#define SSE_IKBD_6301_383
+#define SSE_JOYSTICK_JOYPAD
+#define SSE_JOYSTICK_JUMP_BUTTON_383 
+#define SSE_SHIFTER_383 //bugfixes
+#define SSE_SHIFTER_UNSTABLE_383 //bugfixes
+#undef SSE_SOUND_DMA_360
+#undef SSE_SOUND_DMA_CLOCK // and molz still ok?
+#define SSE_SOUND_DMA_383A // no "dsp" for volume
+#define SSE_SOUND_DMA_383B // treble (trouble?)
+//#define SSE_SOUND_DMA_383C //  balance (trouble)
+#define SSE_SOUND_DMA_383D
+#define SSE_SOUND_DMA_383E //remove TOS condition
+#define SSE_SOUND_INLINE_383
+#define SSE_STF_MATCH_TOS_383 // to keep autoselect T104 for HD
+#define SSE_STF_MEGASTF_383
+#define SSE_TIMING_MULTIPLIER
+#define SSE_TOS_GEMDOS_EM_383 
+#undef SSE_TOS_GEMDOS_RESTRICT_TOS2 //HD/TOS check
+#undef SSE_TOS_GEMDOS_RESTRICT_TOS3 //INI option
+#define SSE_TOS_GEMDOS_RESTRICT_TOS4 // STF T206 OK!
+#define SSE_TOS_SNAPSHOT_AUTOSELECT_383 // correct country
+#define SSE_VAR_CHECK_SNAPSHOT2
+#define SSE_VAR_NO_WINSTON_383
+#define SSE_WD1772_383B 
+#define SSE_WD1772_383C
 
 ///////////
 // DEBUG //
@@ -2087,28 +2117,18 @@ Beta: not SSE_PRIVATE_BUILD
 // debug switches are grouped here
 
 #if defined(SSE_DEBUG) // Boiler + debug build
-
-#ifdef SSE_ACIA
-// #define SSE_ACIA_TEST_REGISTERS//????
-#endif
+#define SSE_DEBUG_ASSERT // 3.8.2
 #if defined(SSE_DEBUG) && defined(DEBUG_BUILD)
 #define SSE_BOILER
 #endif
-#define SSE_DEBUG_ASSERT // 3.8.2
-#if defined(SSE_BOILER)
 
+#if defined(SSE_BOILER)
 #define SSE_BOILER_FRAME_REPORT //3.3, now boiler-only because of mask control
 #if defined(SSE_BOILER_FRAME_REPORT)
 #define SSE_BOILER_FRAME_REPORT_ON_STOP // each time we stop emulation
 #endif
 #define SSE_BOILER_REPORT_SCAN_Y_ON_CLICK
 #define SSE_BOILER_REPORT_SDP_ON_CLICK // yeah!
-
-
-
-#ifdef ACIA
-#define SSE_BOILER_ACIA_373 // fix annoying bug 6301 mode
-#endif
 #define SSE_BOILER_AUTO_FLUSH_TRACE// v3.7.1
 #define SSE_BOILER_BLIT_IN_HISTORY // v3.7.1
 #define SSE_BOILER_BLIT_WHEN_STOPPED // v3.7.1
@@ -2258,8 +2278,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SHIFTER_REPORT_VBL_TRICKS // a line each VBL
 #endif
 
-//#define SSE_DEBUG_SDP_TRACE 
-
 #endif//shifter
 
 //#define SSE_VIDEO_IOR_TRACE // specific, not "log"
@@ -2340,6 +2358,15 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_YM2149_QUANTIZE_TRACE
 #endif//SSE_BOILER
 #define SSE_DEBUG_START_STOP_INFO3
+
+//383
+#ifdef SSE_BOILER
+#define SSE_BOILER_383
+#define SSE_BOILER_383B
+#define SSE_BOILER_383_LOG2 // new title for more options
+#endif
+
+
 #else//SSE_DEBUG
 
 //3.8.2
@@ -2396,181 +2423,16 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA) //next version
 
-#if _MSC_VER >= 1500 
-#define SSE_VS2008_383
-#define SSE_VS2008_WARNING_383
-#define SSE_VS2008_WARNING_383B
-#endif
-
-#define SSE_BLT_383B
-
-#ifdef SSE_BOILER
-#define SSE_BOILER_383
-#define SSE_BOILER_383_LOG2 // new title for more options
-#endif
-
-#define SSE_ACIA_383
-
-#define SSE_CARTRIDGE_383
-#if defined(SSE_CARTRIDGE_383)
-#define SSE_CARTRIDGE_BAT //fun!
-#define SSE_CARTRIDGE_BAT2
-#define SSE_CARTRIDGE_FREEZE
-#define SSE_CARTRIDGE_REPLAY16
-#define SSE_CARTRIDGE_TRANSPARENT //check for bugs
-#endif
-
-#define SSE_DISK_CAPS_383
-#define SSE_DISK_STW_CONVERT // Convert to STW
-#define SSE_DISK_STW_CONVERT2 // helper function instead of macros
-#define SSE_DISK_STW_FAST // +HFE
-
-#define SSE_DONGLE //new domain of emulation!
-#if defined(SSE_DONGLE)
-#define SSE_DONGLE_PORT3 // all dongles grouped in "virtual" port
-#define SSE_DONGLE_BAT2
-#define SSE_DONGLE_CRICKET
-#define SSE_DONGLE_PROSOUND // Wings of Death, Lethal Xcess  STF
-#define SSE_DONGLE_LEADERBOARD
-#define SSE_DONGLE_MULTIFACE
-#define SSE_DONGLE_MUSIC_MASTER
-#define SSE_DONGLE_URC
-#endif
-
-#if defined(SSE_STF)
-#define SSE_DMA_RIPPLE_CARRY
-#endif
-#define SSE_GLUE_383
-#define SSE_GLUE_383B
-#define SSE_GLUE_383C
-#define SSE_GUI_383
-#define SSE_GUI_DISK_MANAGER_REGROUP // it's getting cluttered
-#define SSE_GUI_DISK_MANAGER_REGROUP2 // context
-#define SSE_GUI_DISK_MANAGER_REGROUP_PASTI // not sure about this one
-#define SSE_GUI_DISK_MANAGER_SHOW_EXT
-#define SSE_GUI_JOYSTICK_383
-//#define SSE_MMU_LOW_LEVEL // long term?
-
-#define SSE_MMU_RAM_TEST 
-#if defined(SSE_MMU_RAM_TEST)
-#define SSE_MMU_RAM_TEST1 // change test emulation
-#define SSE_MMU_RAM_TEST2 // remove "no confusion" hack
-#define SSE_MMU_RAM_TEST3 // remove himem=0 hack
-#endif
-
-#define SSE_MMU_ROUNDING_BUS1A 
-#define SSE_MMU_ROUNDING_BUS2 //ambitious, less hacky 
-#define SSE_MMU_ROUNDING_BUS0A // to disable hacky way
-
-#if defined(SSE_MMU_ROUNDING_BUS2)
-#define SSE_MMU_ROUNDING_BUS2A_EA // make abus up-to-date in EA SRC
-#define SSE_MMU_ROUNDING_BUS2A_EA1 // make abus up-to-date in EA SRC
-#define SSE_MMU_ROUNDING_BUS2A_EA2 // make abus up-to-date in EA DEST
-#define SSE_MMU_ROUNDING_BUS2A_EA3 // make abus up-to-date in EA DEST
-#define SSE_MMU_ROUNDING_BUS2A_INSTR // make abus up-to-date in instructions
-#define SSE_MMU_ROUNDING_BUS2A_INSTR2 // make abus up-to-date in instructions
-#define SSE_MMU_ROUNDING_BUS2A_INSTR3 // make abus up-to-date in instructions
-#define SSE_MMU_ROUNDING_BUS2A_INSTR4 // make abus up-to-date in instructions
-#define SSE_MMU_ROUNDING_BUS2B // need no param
-#define SSE_MMU_ROUNDING_BUS2_IO // Shifter palette correction
-#define SSE_MMU_ROUNDING_BUS2_IO2 // Shifter other regs correction
-#define SSE_MMU_ROUNDING_BUS2_ASSERT//temp
-#define SSE_MMU_ROUNDING_BUS2_BLITTER
-#define SSE_MMU_ROUNDING_BUS2_EXCEPTION //must detail
-#define SSE_MMU_ROUNDING_BUS2_STACK
-#undef SSE_MMU_ROUNDING_BUS0A
-#endif
-
-#define SSE_VAR_OPT_383
-#if defined(SSE_VAR_OPT_383) && defined(VC_BUILD) && _MSC_VER>=1500 //VS2008+
-#define SSE_VC_INTRINSICS_383
-#if defined(SSE_VC_INTRINSICS_383)
-//#define SSE_VC_INTRINSICS_383A // some cpu sr checks //useless like 383E?
-#define SSE_VC_INTRINSICS_383B // popcount 
-#define SSE_VC_INTRINSICS_383C // byteswap
-#define SSE_VC_INTRINSICS_383D // instruction time => much less object code :)
-//#define SSE_VC_INTRINSICS_383E // set/clear some sr bits => more object code? => bad idea?
-//#define SSE_VC_INTRINSICS_383F // avoid shifting mask in MOVEM //i'm sure it's a bad idea too!
-#define SSE_VC_INTRINSICS_383G // GLU functions
-#endif
-#endif
-#if defined(SSE_VAR_OPT_383)
-#ifdef SSE_CPU
-#define SSE_VAR_OPT_383A // variable to hold ABSOLUTE_CPU_TIME for a while (TODO)
-#define SSE_VAR_OPT_383A1 // Video chipset writes
-#endif
-#define SSE_VAR_OPT_383C // CycleOfLastChangeToShiftMode()
-#define SSE_VAR_OPT_383D // don't need IackCycle
-#endif
-#if defined(SSE_VAR_OPT_383) && defined(SSE_DRAW_C)
-#define SSE_DRAW_C_383
-#if defined(SSE_DRAW_C_383)
-#define SSE_DRAW_C_383A //loops (better performance in VS2015)
-#define SSE_DRAW_C_383A1 // replace if ladder with shifts (better performance in VS2015)
-#define SSE_DRAW_C_383B //border (better performance in VS2015)
-#define SSE_DRAW_C_383C //
-#if defined(SSE_VC_INTRINSICS_383)
-#define SSE_DRAW_C_383_INTRINSICS // (better performance in VS2015)
-//#define SSE_DRAW_C_383_INTRINSICSB //BT worse performance in VS2015
-//#define SSE_DRAW_C_383_INTRINSICSC //STOSD 2 items: worse performance in VS2015
-#endif
-#endif
-#endif
-#define SSE_VAR_RESIZE_383
-#define SSE_VAR_RESIZE_383A // acia, more problematic
-// Exception management...
-//#define SSE_M68K_EXCEPTION_TRY_CATCH //works but too slow, especially if _DEBUG
-#ifndef _DEBUG
-#define SSE_VAR_MAIN_LOOP2 //2KB on optimised exe but will catch and report everything (?)
-#endif
-#if _MSC_VER >= 1500 && !defined(_DEBUG)
-#define SSE_VAR_MAIN_LOOP3 //VC only (vs2008)?
-#endif
-#if defined(SSE_VAR_MAIN_LOOP3)
-#undef SSE_VAR_MAIN_LOOP1 //is emu-only
-#endif
-//#undef SSE_CPU_DIVS_OVERFLOW_PC //temp for tests...
-#define SSE_VID_GAMMA
-#define SSE_WD1772_383
-#define SSE_YM2149_BUS_JAM_383 //to test
-
 #endif//beta
 
 #ifdef SSE_BETA // long term
 //#define SSE_IKBD_6301_NOT_OPTIONAL
 //#define SSE_INT_MFP_RATIO_STE3 // = STF
+//#define SSE_MMU_LOW_LEVEL //?
 #endif
 
 #if defined(SSE_BETA_BUGFIX)
-#define SSE_ACSI_ICON_383
-#define SSE_BLT_383
-#define SSE_CPU_E_CLOCK_383
-#define SSE_CPU_EA_383
-#define SSE_DISK_GHOST_SECTOR_383
-#define SSE_FDC_383
-#define SSE_INTERRUPT_383
-#define SSE_IKBD_6301_383
-#define SSE_JOYSTICK_JOYPAD
-#define SSE_JOYSTICK_JUMP_BUTTON_383 
-#define SSE_SHIFTER_383 //bugfixes
-#define SSE_SHIFTER_UNSTABLE_383 //bugfixes
-#undef SSE_SOUND_DMA_360
-#undef SSE_SOUND_DMA_CLOCK // and molz still ok?
-#define SSE_SOUND_DMA_383A // no "dsp" for volume
-#define SSE_SOUND_DMA_383B // treble (trouble?)
-//#define SSE_SOUND_DMA_383C //  balance (trouble)
-#define SSE_SOUND_DMA_383D
-#define SSE_STF_MATCH_TOS_383 // to keep autoselect T104 for HD
-#define SSE_TIMING_MULTIPLIER
-#define SSE_TOS_GEMDOS_EM_383 
-#undef SSE_TOS_GEMDOS_RESTRICT_TOS2 //HD/TOS check
-#undef SSE_TOS_GEMDOS_RESTRICT_TOS3 //INI option
-#define SSE_TOS_GEMDOS_RESTRICT_TOS4 // STF T206 OK!
-#define SSE_TOS_SNAPSHOT_AUTOSELECT_383 // correct country
-#define SSE_VAR_CHECK_SNAPSHOT2
-#define SSE_VAR_NO_WINSTON_383
-#define SSE_WD1772_383B 
-#define SSE_WD1772_383C
+
 #endif//bugfix
 
 #else//!SS

@@ -302,7 +302,18 @@ void TOptionBox::MachineUpdateIfVisible()
 
   if (Handle==NULL) return;
   if (GetDlgItem(Handle,8100)==NULL) return;
-
+#if defined(SSE_GUI_OPTIONS_STF_IN_MACHINE)//383
+#if defined(SSE_STF)
+  HWND Win=GetDlgItem(Handle,211); //ST Model
+  if(Win!=NULL) 
+    SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,SSE_STF_ST_MODELS-1),0);
+#endif
+#if defined(SSE_MMU_WAKE_UP)
+  Win=GetDlgItem(Handle,212); //WU
+  if(Win!=NULL) 
+    SendMessage(MMUWakeUpOption,CB_SETCURSEL,OPTION_WS,0);
+#endif
+#endif
 #if defined(SSE_MMU_256K) && defined(SSE_MMU_2560K) 
 /*  
 
@@ -1104,6 +1115,10 @@ void TOptionBox::CreateDisplayPage()
 	  page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
 #endif
   mask=WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST;
+#if defined(SSE_GUI_383B_)
+  if(runstate!=RUNSTATE_STOPPED)
+    mask|=WS_DISABLED;
+#endif
 #if defined(SSE_VID_BORDERS_GUARD_EM)
   if(NewMonitorSel==-1 && (extended_monitor 
 #if defined(SSE_VID_BORDERS_GUARD_R2)
@@ -3417,21 +3432,6 @@ Windows 2000	5.0
   y+=LineHeight;
 #endif
 
-#if defined(SSE_GUI_OPTION_SLOW_DISK_SSE) // because many people miss it in disk manager
-  Wid=GetCheckBoxSize(Font,T("Slow drive")).Width;
-  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
-  Win=CreateWindow("Button",T("Slow drive"),mask,
-    page_l,y,Wid,25,Handle,(HMENU)7306,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,!floppy_instant_sector_access,0);
-  ToolAddWindow(ToolTip,Win,
-    T("Slow but accurate disk drive emulation (ADAT)"));
-#if SSE_VERSION<370
-  y+=LineHeight;
-#else
-  Offset=0;
-#endif
-#endif
-
 #if defined(SSE_OSD_DRIVE_INFO_SSE_PAGE) 
   Offset=Wid+HorizontalSeparation;
 #if SSE_VERSION<370
@@ -3611,24 +3611,18 @@ void TOptionBox::SSEUpdateIfVisible() {
   Win=GetDlgItem(Handle,7301); //kkb click
   if(Win!=NULL) 
     SendMessage(Win,BM_SETCHECK,PEEK(0x484)&1,0);
+#if !defined(SSE_GUI_OPTIONS_STF_IN_MACHINE)//383
 #if defined(SSE_STF)
   Win=GetDlgItem(Handle,211); //ST Model
   if(Win!=NULL) 
     SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,SSE_STF_ST_MODELS-1),0);
 #endif
-
 #if defined(SSE_MMU_WAKE_UP)
   Win=GetDlgItem(Handle,212); //WU
   if(Win!=NULL) 
     SendMessage(MMUWakeUpOption,CB_SETCURSEL,OPTION_WS,0);
 #endif
-
-#if defined(SSE_GUI_OPTION_SLOW_DISK_SSE)
-  Win=GetDlgItem(Handle,7306); //Slow disk
-  if(Win!=NULL) 
-    SendMessage(Win,BM_SETCHECK,!floppy_instant_sector_access,0);
 #endif
-
 #if defined(SSE_VID_BORDERS_GUARD_EM)
   Win=GetDlgItem(Handle,1026);
   //TRACE("border handle %d\n",Win);

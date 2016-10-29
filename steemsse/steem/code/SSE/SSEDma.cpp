@@ -103,11 +103,7 @@ bool TDma::Drq() {
       WD1772.DR=GetFifoByte();
 #if defined(SSE_ACSI)
     else if(ACSI_EMU_ON)
-#if defined(SSE_ACSI_MULTIPLE)
       AcsiHdc[acsi_dev].DR=GetFifoByte();
-#else
-      AcsiHdc.DR=GetFifoByte();
-#endif
 #endif
 #if defined(SSE_DMA_DRQ_RND)
     else // hd
@@ -125,11 +121,7 @@ bool TDma::Drq() {
       AddToFifo(WD1772.DR);
 #if defined(SSE_ACSI)
     else if(ACSI_EMU_ON)
-#if defined(SSE_ACSI_MULTIPLE)
       AddToFifo(AcsiHdc[acsi_dev].DR);
-#else
-      AddToFifo(AcsiHdc.DR);
-#endif
 #endif
 #if defined(SSE_DMA_DRQ_RND)
     else
@@ -310,17 +302,9 @@ is ignored and when reading the 8 upper bits consistently reads 1."
       ASSERT(MCR&CR_DRQ_FDC_OR_HDC);
       if(ACSI_EMU_ON)
 #if defined(SSE_VS2008_WARNING_382)
-#if defined(SSE_ACSI_MULTIPLE)
         ior_byte=AcsiHdc[acsi_dev].IORead();
 #else
-        ior_byte=AcsiHdc.IORead();
-#endif
-#else
-#if defined(SSE_ACSI_MULTIPLE)
         ior_byte=AcsiHdc[acsi_dev].IORead( (MCR&(CR_A1|CR_A0))/2 );
-#else
-        ior_byte=AcsiHdc.IORead( (MCR&(CR_A1|CR_A0))/2 );
-#endif
 #endif
 #endif
 
@@ -478,12 +462,7 @@ TODO?
   if(hPasti && pasti_active
 #if defined(SSE_DISK_PASTI_ONLY_STX)
     && (!PASTI_JUST_STX || 
-#if defined(SSE_DISK_IMAGETYPE)
-// in fact we should refactor this
     SF314[drive].ImageType.Extension==EXT_STX
-#else
-    SF314[floppy_current_drive()].ImageType==3//DISK_PASTI
-#endif
 #if defined(SSE_DISK_PASTI_ONLY_STX_HD)
     || (MCR&CR_HDC_OR_FDC) // hard disk handling by pasti
 #endif
@@ -634,14 +613,10 @@ is ignored and when reading the 8 upper bits consistently reads 1."
       ASSERT(MCR&CR_DRQ_FDC_OR_HDC);
       if(ACSI_EMU_ON)
       {
-#if defined(SSE_ACSI_MULTIPLE)
         int device=acsi_dev;
         if(!(MCR&CR_A0) &&  (io_src_b>>5)<TAcsiHdc::MAX_ACSI_DEVICES) 
           device=(io_src_b>>5); // assume new command
         AcsiHdc[device].IOWrite((MCR&CR_A0),io_src_b);
-#else
-        AcsiHdc.IOWrite((MCR&CR_A0)/2,io_src_b);
-#endif
       }
 #endif
 
@@ -830,11 +805,7 @@ is no such effect because they are read only on the ST.
     
 #if defined(SSE_DRIVE_OBJECT)&&defined(SSE_DISK_PASTI_ONLY_STX)
     && (!PASTI_JUST_STX 
-#if defined(SSE_DISK_IMAGETYPE)
     || SF314[YM2149.SelectedDrive].ImageType.Extension==EXT_STX
-#else
-    || SF314[floppy_current_drive()].ImageType==3//DISK_PASTI
-#endif
     ||addr!=0xff8605 || (MCR&CR_HDC_OR_FDC))
 #endif        
     )
@@ -901,12 +872,7 @@ void TDma::UpdateRegs(bool trace_them) {
   if(hPasti && pasti_active
 #if defined(SSE_DISK_PASTI_ONLY_STX) //all or nothing?
     && (!PASTI_JUST_STX || 
-#if defined(SSE_DISK_IMAGETYPE)
-// in fact we should refactor this
     SF314[floppy_current_drive()].ImageType.Extension==EXT_STX
-#else
-    SF314[floppy_current_drive()].ImageType==3//DISK_PASTI
-#endif
 #if defined(SSE_DISK_PASTI_ONLY_STX_HD)
     || (MCR&BIT_3) // hard disk handling by pasti
 #endif
@@ -936,13 +902,7 @@ void TDma::UpdateRegs(bool trace_them) {
   }
 #endif
 #if defined(SSE_DISK_CAPS)
-  if(CAPSIMG_OK && 
-#if defined(SSE_DISK_IMAGETYPE1)
-    SF314[DRIVE].ImageType.Manager==MNGR_CAPS
-#else
-    Caps.IsIpf(floppy_current_drive())
-#endif 
-    )
+  if(CAPSIMG_OK && SF314[DRIVE].ImageType.Manager==MNGR_CAPS)
   {
     int ext=0;
     fdc_cr=CAPSFdcGetInfo(cfdciR_Command, &Caps.WD1772,ext);
@@ -976,12 +936,7 @@ void TDma::UpdateRegs(bool trace_them) {
     else
     {
       ASSERT(fdc_str);
-#if defined(SSE_DISK_IMAGETYPE) 
-      //TRACE_FDC(" %d %d ",ACT,SF314[DRIVE].BytePosition());
       TRACE_FDC("%d FDC(%d) IRQ CR %X STR %X ",ACT,SF314[DRIVE].ImageType.Manager,fdc_cr,fdc_str);
-#else
-      TRACE_LOG("%d FDC IRQ CR %X STR %X ",ACT,fdc_cr,fdc_str);
-#endif
 #if defined(SSE_DEBUG_FDC_TRACE_STATUS)
       WD1772.TraceStatus();
 #endif
@@ -1084,17 +1039,10 @@ void TDma::TransferBytes() {
 */
 
 #ifdef SSE_ACSI_BOOTCHECKSUM // floppy + harddrive
-#if defined(SSE_ACSI_MULTIPLE)
   if( !(MCR&CR_HDC_OR_FDC) && fdc_cr==0x80 && !fdc_tr && fdc_sr==1 
     && !(MCR&CR_WRITE) && !CURRENT_SIDE || (MCR&CR_HDC_OR_FDC) && 
     !(MCR&CR_WRITE) && ACSI_EMU_ON && AcsiHdc[acsi_dev].cmd_block[0]==8
      && AcsiHdc[acsi_dev].SectorNum()<3 && AcsiHdc[acsi_dev].cmd_block[4]==1 )
-#else
-  if( !(MCR&CR_HDC_OR_FDC) && fdc_cr==0x80 && !fdc_tr && fdc_sr==1 
-    && !(MCR&CR_WRITE) && !CURRENT_SIDE || (MCR&CR_HDC_OR_FDC) && 
-    !(MCR&CR_WRITE) && ACSI_EMU_ON && AcsiHdc.cmd_block[0]==8
-     && AcsiHdc.SectorNum()<3 && AcsiHdc.cmd_block[4]==1 )
-#endif
 #else
   if(fdc_cr==0x80 && !fdc_tr && fdc_sr==1 && !(MCR&CR_WRITE) && !CURRENT_SIDE)
 #endif
@@ -1129,11 +1077,7 @@ void TDma::TransferBytes() {
   if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
 #ifdef SSE_ACSI
     if((MCR&CR_HDC_OR_FDC))
-#if defined(SSE_ACSI_MULTIPLE)      
       TRACE_LOG("#%03d (%d) %s %06X: ",Datachunk, AcsiHdc[acsi_dev].SectorNum(),(MCR&0x100)?"from":"to",BaseAddress);
-#else
-      TRACE_LOG("#%03d (%d) %s %06X: ",Datachunk, AcsiHdc.SectorNum(),(MCR&0x100)?"from":"to",BaseAddress);
-#endif
     else
 #endif
       TRACE_LOG("#%03d (%d-%02d-%02d) %s %06X: ",Datachunk,floppy_current_side(),floppy_head_track[DRIVE],WD1772.CommandType()==2?fdc_sr:0,(MCR&0x100)?"from":"to",BaseAddress);
@@ -1173,12 +1117,7 @@ void TDma::TransferBytes() {
     if(hPasti&&pasti_active
 #if defined(SSE_DISK_PASTI_ONLY_STX)
     &&(!PASTI_JUST_STX || 
-#if defined(SSE_DISK_IMAGETYPE)
-// in fact we should refactor this
     SF314[DRIVE].ImageType.Extension==EXT_STX)
-#else
-    SF314[floppy_current_drive()].ImageType==3)//DISK_PASTI)
-#endif    
 #if defined(SSE_DISK_PASTI_ONLY_STX_HD)
     || (MCR&CR_HDC_OR_FDC) // hard disk handling by pasti
 #endif

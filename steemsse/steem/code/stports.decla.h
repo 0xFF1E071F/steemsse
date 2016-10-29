@@ -2,6 +2,8 @@
 #ifndef STPORTS_DECLA_H
 #define STPORTS_DECLA_H
 
+#include <portio.h>
+
 extern void agenda_midi_replace(int);
 extern void MidiInBufNotEmpty();
 

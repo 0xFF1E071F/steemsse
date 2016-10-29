@@ -22,8 +22,10 @@
 #include <mymisc.h>//getexe
 #include <run.decla.h>
 #include <steemh.decla.h>
-
 #include <cpu.decla.h>
+
+
+#include <stports.decla.h>
 
 #include "SSEFloppy.h"
 #include <display.decla.h>
@@ -34,6 +36,7 @@
 #include "SSECpu.h"
 #include <stdio.h>
 #include <stdarg.h>
+
 
 #if defined(SSE_DEBUG)
 int debug0,debug1=0,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9;
@@ -437,6 +440,10 @@ void TDebug::TraceGeneralInfos(int when) {
     if(MONO)
       //TRACE("Monochrome\n");  
       TRACE("; HI");  
+#if defined(SSE_DONGLE_PORT3) // if bug report = mouse drift...
+    if(STPort[3].Type)
+      TRACE("; Dongle %d", STPort[3].Type);  
+#endif
 #if defined(SSE_VID_BORDERS)
     else if(DISPLAY_SIZE)
       //TRACE("Dispay size %d\n", DISPLAY_SIZE);

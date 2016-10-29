@@ -701,12 +701,12 @@ void mem_browser::draw(DRAWITEMSTRUCT *di)
 
 void mem_browser::update()
 {
+//  ASSERT(!(ad&0xff000000));
   int x3,x1;
   char *c;
   iolist_entry* iol[30];
   MEM_ADDRESS ldpc2;
   MEM_ADDRESS save_dpc=dpc;
-
   char txt[12][1024];
   char *txt_p[12];
   char tbuffy[8];
@@ -733,8 +733,11 @@ void mem_browser::update()
 
     if (editbox) editbox->update();
     //      SetWindowText(editbox->handle,HEXSl(ad,6));
+#if defined(SSE_BOILER_383B)
+    dpc=ad&0xFFFFFF; // avoid crash when high byte is $FF
+#else
     dpc=ad;
-
+#endif
     if (disp_type==DT_MEMORY || disp_type==DT_REGISTERS){
       if (reg){
         wpl=2;

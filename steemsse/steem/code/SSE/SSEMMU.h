@@ -27,7 +27,7 @@ OPTION_WS is WU or 0.
 | Steem  option    |    Wake-up concepts     |    Cycle      |
 |    variable      |                         |  adjustment   |
 +------------------+------------+------------+-------+-------+
-|  OPTION_WS   |     WU     |      WS    | SHIFT |  SYNC |
+|  OPTION_WS       |     WU     |      WS    | SHIFT |  SYNC |
 |                  |    (ijor)  |    (LJBK)  | (Res) |(Freq) |
 +------------------+------------+------------+-------+-------+
 |   0 (ignore)     |     -      |      -     |    -  |    -  |
@@ -173,8 +173,15 @@ Though there are wait states too for all 8bit peripherals.
 It is not such a breaking change, nor does it fix anything, but it does 
 add overhead.
 
-TODO: we added on the current system, but we could refactor into
-something simpler, now that we better understand rounding rules.
+ijor:
+The scheme is a bit misleading. 
+MMU doesn't really sit between the CPU and RAM, those buffers are.
+
+There are two data buses in the ST, the main CPU bus, and the RAM/SHIFTER
+(and nothing else) bus. Four TTL chips (two buffers and two latches) 
+connect or separate both buses. MMU is connected to the main data bus. 
+But it controls the buffers and the RAM address bus.
+
 
 */
 

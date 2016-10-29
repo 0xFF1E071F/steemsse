@@ -1626,11 +1626,7 @@ void event_vbl_interrupt() //SS misleading name?
     overscan=OVERSCAN_MAX_COUNTDOWN;
   }
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_382)
-#if defined(SSE_GLUE_383)
-  if((Shifter.m_ShiftMode&2)&&screen_res<2) //TODO?
-#else
   if((Glue.m_ShiftMode&2)&&screen_res<2)
-#endif
     shifter_last_draw_line*=2; //400 fetching lines
 #endif
 
@@ -1816,7 +1812,7 @@ void event_pasti_update()
 #endif
 //---------------------------------------------------------------------------
 // SSE added events
-
+//---------------------------------------------------------------------------
 #if defined(SSE_GLUE_FRAME_TIMINGS)
 
 void event_trigger_vbi() { //6X cycles into frame (reference end of HSYNC)
@@ -1872,7 +1868,6 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
     One HBL = 512 cycles at 50hz.
 
     Caps works with HBL because it hold its own cycle count.
-    (which is maybe the way we should handle STW too. TODO)
     
     Here we should transfer control, or dispatch to handlers
 */

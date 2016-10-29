@@ -1300,7 +1300,6 @@ condition for interrupt is met the INTRQ line goes high signifying
 #if defined(SSE_FDC_FORCE_INTERRUPT_D8)
           if(!ADAT) // this was decided before
 #endif
-
           mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
         }
         /* From Jorge Cwik
@@ -2537,7 +2536,7 @@ void fdc_add_to_crc(WORD &crc,BYTE data)
 
 void pasti_handle_return(struct pastiIOINFO *pPIOI)
 {
-  //  log_to(LOGSECTION_PASTI,Str("PASTI: Handling return, update cycles=")+pPIOI->updateCycles+" irq="+pPIOI->intrqState+" Xfer="+pPIOI->haveXfer);
+//  log_to(LOGSECTION_PASTI,Str("PASTI: Handling return, update cycles=")+pPIOI->updateCycles+" irq="+pPIOI->intrqState+" Xfer="+pPIOI->haveXfer);
 //TRACE("pasti_handle_return\n");
 
 #if defined(SSE_DMA_OBJECT)// osd, fdcdebug
@@ -2595,7 +2594,7 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
     dma_address=pPIOI->xferInfo.xferSTaddr; //SS not the regs
 
     if (pPIOI->xferInfo.memToDisk){
-      //      log_to(LOGSECTION_PASTI,Str("PASTI: DMA transfer ")+pPIOI->xferInfo.xferLen+" bytes from address=$"+HEXSl(dma_address,6)+" to pasti buffer");
+      //log_to(LOGSECTION_PASTI,Str("PASTI: DMA transfer ")+pPIOI->xferInfo.xferLen+" bytes from address=$"+HEXSl(dma_address,6)+" to pasti buffer");
       for (DWORD i=0;i<pPIOI->xferInfo.xferLen;i++){
         if (DMA_ADDRESS_IS_VALID_R) 
         {
@@ -2610,7 +2609,7 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
 #endif
       }
     }else{
-      //      log_to(LOGSECTION_PASTI,Str("PASTI: DMA transfer ")+pPIOI->xferInfo.xferLen+" bytes from pasti buffer to address=$"+HEXSl(dma_address,6));
+      //log_to(LOGSECTION_PASTI,Str("PASTI: DMA transfer ")+pPIOI->xferInfo.xferLen+" bytes from pasti buffer to address=$"+HEXSl(dma_address,6));
       for (DWORD i=0;i<pPIOI->xferInfo.xferLen;i++){ 
         if (DMA_ADDRESS_IS_VALID_W){
 #if !defined(SSE_BOILER_MONITOR_VALUE2)
@@ -2632,8 +2631,8 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
     }
   }
 //#if !defined(SSE_BOILER_TRACE_CONTROL)
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_FDC//SS
+//#undef LOGSECTION
+//#define LOGSECTION LOGSECTION_FDC//SS
 //#endif
 
 #if defined(SSE_DMA_OBJECT) && defined(SSE_DEBUG)
@@ -2664,14 +2663,19 @@ void pasti_motor_proc(BOOL on)
 #endif
 }
 
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_PASTI
+
 void pasti_log_proc(const char * LOG_ONLY(text))
 {
 #if defined(SSE_DEBUG_LOG_OPTIONS) \
-  && defined(ENABLE_LOGFILE)
+  && defined(ENABLE_LOGFILE) && !defined(SSE_BOILER_383_LOG2)
   TRACE_LOG("Pasti: %s\n",(char*)text);
   // it was the only active logging for this section 
   dbg_log(text);
-#else
+//#else
+#elif defined(DEBUG_BUILD)
+  TRACE_LOG("Pasti: %s\n",(char*)text);
   log_to(LOGSECTION_PASTI,Str("PASTI: ")+text);
 #endif
 }

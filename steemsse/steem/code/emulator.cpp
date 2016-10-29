@@ -738,7 +738,8 @@ void agenda_acia_tx_delay_MIDI(int)
 #undef LOGSECTION
 //-------------------------------------------------- MMU Confused
 #if !(defined(SSE_MMU_NO_CONFUSION))
-#define LOGSECTION LOGSECTION_IO//SS
+//#define LOGSECTION LOGSECTION_IO//SS
+#define LOGSECTION LOGSECTION_MMU
 
 #if defined(SSE_MMU_RAM_TEST1)
 /* see memdetect.txt in 3rdparty/doc
@@ -779,7 +780,8 @@ C R C R C R C R C R C R C R C R C R X
 
 MEM_ADDRESS mmu_confused_address(MEM_ADDRESS ad)
 {
-#if defined(SSE_BOILER_TRACE_CONTROL)
+//#if defined(SSE_BOILER_TRACE_CONTROL)
+#ifdef SSE_DEBUG
   MEM_ADDRESS ad1=ad; // save for trace
 #endif
   int bank=0;
@@ -830,10 +832,12 @@ MEM_ADDRESS mmu_confused_address(MEM_ADDRESS ad)
 
   if (bank==1 && ad<FOUR_MEGS) 
     ad+=bank_length[0];
-#if defined(SSE_BOILER_TRACE_CONTROL)
-  if((ad1!=ad) && (TRACE_MASK_IO & TRACE_CONTROL_IO_MMU))
+//#if defined(SSE_BOILER_TRACE_CONTROL)
+#ifdef SSE_DEBUG
+  if((ad1!=ad)) //&& (TRACE_MASK_IO & TRACE_CONTROL_IO_MMU))
     TRACE_LOG("MMU confused ad %X -> %X\n",ad1,ad);
 #endif
+//#endif
   return ad;
 }
 

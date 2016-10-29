@@ -5,10 +5,7 @@
 #if defined(SSE_DRIVE_OBJECT)
 
 #include "SSEParameters.h"
-
-#if defined(SSE_DISK_IMAGETYPE)
 #include "SSEDisk.h"
-#endif
 
 /* How a floppy disk is structured (bytes/track, gaps...) is handled
    here.
@@ -52,11 +49,7 @@ struct TSF314 {
   WORD TrackGap();
   BYTE Id; // object has to know if its A: (0?) or B: (1?)
 
-#if defined(SSE_DISK_IMAGETYPE)
   TImageType ImageType; //WORD size, 3.6.2
-#elif defined(SSE_DISK_PASTI_ONLY_STX)
-  WORD ImageType; //3.6.1, for future extension, snapshot problem?
-#endif
 
 #if defined(SSE_DRIVE_MOTOR_ON)
 #if !defined(SSE_DRIVE_STATE)

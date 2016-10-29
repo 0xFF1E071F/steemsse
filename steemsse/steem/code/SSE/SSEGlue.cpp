@@ -47,11 +47,7 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
 
   if(FetchingLine())
   {
-#if defined(SSE_GLUE_383)
-    if(HiRes && CyclesIn==-1) // at IncScanline
-#else
     if((m_ShiftMode&2)&&CyclesIn==-1) // at IncScanline
-#endif
     {
       CurrentScanline.StartCycle
 #if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
@@ -92,11 +88,7 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
 */    
     if(CyclesIn<=CurrentScanline.StartCycle)
       if(shifter_hscroll_extra_fetch) 
-#if defined(SSE_GLUE_383)
-        MMU.WordsToSkip=(HiRes)?1:(4-Shifter.m_ShiftMode*2);
-#else
         MMU.WordsToSkip=(m_ShiftMode&2)?1:4-m_ShiftMode*2;
-#endif
       else
         MMU.WordsToSkip=0;
 #endif
@@ -105,20 +97,12 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
     // a bit tricky, saves a variable + rewriting
     if(COLOUR_MONITOR && CyclesIn<ScanlineTiming[GLU_DE_OFF][FREQ_72])
     {
-#if defined(SSE_GLUE_383)
-      if(HiRes && !(CurrentScanline.Tricks&TRICK_80BYTE_LINE))
-#else
       if((m_ShiftMode&2) && !(CurrentScanline.Tricks&TRICK_80BYTE_LINE))
-#endif
       {
         CurrentScanline.Bytes-=80;
         CurrentScanline.Tricks|=TRICK_80BYTE_LINE;
       }
-#if defined(SSE_GLUE_383)
-      else  if(!HiRes && (CurrentScanline.Tricks&TRICK_80BYTE_LINE))
-#else
       else  if(!(m_ShiftMode&2) && (CurrentScanline.Tricks&TRICK_80BYTE_LINE))
-#endif
       {
         CurrentScanline.Bytes+=80;
         CurrentScanline.Tricks&=~TRICK_80BYTE_LINE;
@@ -129,13 +113,8 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
   if(CyclesIn<=cycle_of_scanline_length_decision)
   {
     CurrentScanline.Cycles=scanline_time_in_cpu_cycles_8mhz
-#if defined(SSE_GLUE_383)
-      [ (HiRes&&((CyclesIn==-1)||PreviousScanline.Cycles!=224))
-        ? 2 : shifter_freq_idx];
-#else
       [(m_ShiftMode&2)&&((CyclesIn==-1)||PreviousScanline.Cycles!=224)
         ? 2 : shifter_freq_idx];
-#endif
     prepare_next_event();
   }
 }
@@ -626,7 +605,7 @@ Closure STF2
 
 */
 
-#if defined(SSE_SHIFTER_0BYTE_LINE)
+#if defined(SSE_GLUE_0BYTE_LINE)
 /*  Here we test for 0byte line at the start of the scanline, affecting
     current scanline.
 
@@ -1002,9 +981,9 @@ Closure STF2
     Spurious to avoid as STF: Panic, 3615GEN4-CKM
 */
 
-#if defined(SSE_SHIFTER_LINE_PLUS_2_TEST)
+#if defined(SSE_GLUE_LINE_PLUS_2)
 
-   ASSERT(screen_res<2);
+  ASSERT(screen_res<2);
   if(!(CurrentScanline.Tricks&
     (TRICK_0BYTE_LINE|TRICK_LINE_PLUS_2|TRICK_LINE_PLUS_4|TRICK_LINE_PLUS_6
       |TRICK_LINE_PLUS_20|TRICK_LINE_PLUS_26)))
@@ -1080,11 +1059,7 @@ Closure STF2
   // test
   if(!(CurrentScanline.Tricks&(TRICK_LINE_MINUS_106|TRICK_0BYTE_LINE))
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_382)
-#if defined(SSE_GLUE_383)
-    && !((CurrentScanline.Tricks&TRICK_80BYTE_LINE)&& HiRes)
-#else
     && !((CurrentScanline.Tricks&TRICK_80BYTE_LINE)&&(m_ShiftMode&2))
-#endif
 #endif
     && CyclesIn>=ScanlineTiming[GLU_DE_OFF][FREQ_72]
     && (ShiftModeAtCycle(ScanlineTiming[GLU_DE_OFF][FREQ_72])&2))
@@ -1104,11 +1079,7 @@ Closure STF2
 
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_382) 
     //must anticipate, why?
-#if defined(SSE_GLUE_383)
-    if((CurrentScanline.Tricks&TRICK_80BYTE_LINE) && !HiRes)
-#else
     if((CurrentScanline.Tricks&TRICK_80BYTE_LINE) && !(m_ShiftMode&2))
-#endif
     {
       CurrentScanline.Bytes+=80;
       CurrentScanline.Tricks&=~TRICK_80BYTE_LINE;
@@ -1458,7 +1429,7 @@ Dragonnels reset
   // 0-BYTE LINE 2 (next scanline) and NON-STOPPING LINE //
   /////////////////////////////////////////////////////////
 
-#if defined(SSE_SHIFTER_0BYTE_LINE)
+#if defined(SSE_GLUE_0BYTE_LINE)
 /*  We use the values in LJBK's table, taking care not to break
     emulation of other cases.
     Here we test for tricks at the end of the scanline, affecting
@@ -1754,9 +1725,6 @@ void TGlue::IncScanline() {
 #endif
   }
 
-//if(scan_y==-29) INSTRUCTION_TIME(4);
-
-
 #if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
   ExtraAdded=false;
   overscan_add_extra=0;
@@ -1867,7 +1835,7 @@ int TGlue::ShiftModeChangeAtCycle(int cycle) {
 
 int TGlue::FreqAtCycle(int cycle) {
 
-  //ASSERT(cycle<=LINECYCLES);
+  ASSERT(cycle<=LINECYCLES);
 
   int t=cycle+LINECYCLE0; // convert to absolute
   int i,j;
@@ -1889,11 +1857,7 @@ int TGlue::ShiftModeAtCycle(int cycle) {
     ; i--,i&=31,j++) ;
   if(shifter_shift_mode_change_time[i]-t<=0)
     return shifter_shift_mode_change[i];
-#if defined(SSE_GLUE_383)
-  return Shifter.m_ShiftMode; // we don't have at_start_of_vbl
-#else
   return m_ShiftMode; // we don't have at_start_of_vbl
-#endif
 }
 
 #ifdef SSE_BOILER
@@ -2168,13 +2132,7 @@ void TGlue::Reset(bool Cold) {
     scanline=0;
     cpu_timer_at_start_of_hbl=0;
 #endif
-
-#if defined(SSE_GLUE_383)
-    HiRes=(screen_res&2);
-#else
     Shifter.m_ShiftMode=m_ShiftMode=screen_res; 
-#endif
-
   }
   *(BYTE*)(&Status)=0;
 }
@@ -2204,8 +2162,7 @@ void TGlue::SetShiftMode(BYTE NewRes) {
   It is needed in the Shifter because it needs to know in how many bit planes
   memory has to be decoded, and where it must send the video signal (RGB, 
   Mono).
-  For the GLU, '3' is interpreted as '2' because only bit1 is tested
-  for 'HIRES'. Case: The World is my Oyster screen #2
+  For the GLU, '3' is interpreted as '2'. Case: The World is my Oyster screen #2
 
   Writes on ShiftMode have a 2 cycle resolution as far as the GLU is
   concerned, 4 for the Shifter. The GLU's timing matters, that's why the write
@@ -2227,22 +2184,15 @@ void TGlue::SetShiftMode(BYTE NewRes) {
      NewRes+" at scanline "+scan_y+", cycle "+CyclesIn);
 #endif
 
+#if defined(SSE_GLUE_383B)
+  int OldRes=m_ShiftMode;
+#endif
+
   // Only two lines would physically exist in the Shifter, not a full byte
   NewRes&=3; 
   // Update both Shifter and GLU
   // We don't emulate the possible 2 cycle delay for the Shifter 
-#if defined(SSE_GLUE_383)
-#if defined(SSE_GLUE_383B) 
-  if(NewRes==3) // still must, because some tests return -1, TODO
-    NewRes=2; // fixes The World is my Oyster screen #2
-  if(NewRes!=Shifter.m_ShiftMode)
-    AddShiftModeChange(NewRes); // add time & mode
-#endif
-  Shifter.m_ShiftMode=NewRes;
-  HiRes=(NewRes&2)!=0;
-#else
   Shifter.m_ShiftMode=m_ShiftMode=NewRes;
-#endif
   if(screen_res
 #if defined(SSE_SHIFTER_HIRES_OVERSCAN)
     >
@@ -2264,14 +2214,14 @@ void TGlue::SetShiftMode(BYTE NewRes) {
   ASSERT( COLOUR_MONITOR );
 #endif
 
-#if !defined(SSE_GLUE_383B)
   if(NewRes==3) 
     NewRes=2; // fixes The World is my Oyster screen #2
-#endif
 
-#if !defined(SSE_GLUE_383B)// before rendering
-  AddShiftModeChange(NewRes); // add time & mode
+#if defined(SSE_GLUE_383B)
+  if(NewRes!=OldRes)
 #endif
+    AddShiftModeChange(NewRes); // add time & mode
+
 #if defined(SSE_SHIFTER_RIGHT_OFF_BY_SHIFT_MODE) 
   AddFreqChange((NewRes&2) ? MONO_HZ : shifter_freq);
 #endif
@@ -2333,11 +2283,7 @@ void TGlue::SetShiftMode(BYTE NewRes) {
   }
 #endif
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_382)
-#if defined(SSE_GLUE_383)
-  if(shifter_last_draw_line==400 && !HiRes && screen_res<2)
-#else
   if(shifter_last_draw_line==400 && !(m_ShiftMode&2) && screen_res<2)
-#endif
     shifter_last_draw_line>>=1; // simplistic?
 #elif defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_370)
   if(old_screen_res==2 && !(Shifter.m_ShiftMode&2))//LEGACY back from HIRES
@@ -2389,10 +2335,10 @@ void TGlue::SetSyncMode(BYTE NewSync) {
   ASSERT(shifter_freq_idx>=0 && shifter_freq_idx<NFREQS);
   int new_freq=Freq[shifter_freq_idx];
   ASSERT(new_freq==50||new_freq==60||new_freq==72);
-#if !defined(SSE_GLUE_383)
+#if !defined(SSE_GLUE_383__) //?
   if(shifter_freq!=new_freq)
 #endif
-    freq_change_this_scanline=true;  
+  freq_change_this_scanline=true;  
   log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Changed frequency to "+new_freq+
     " at "+scanline_cycle_log());
   shifter_freq=new_freq;

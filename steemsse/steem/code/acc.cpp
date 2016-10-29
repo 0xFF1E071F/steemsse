@@ -79,7 +79,10 @@ DESCRIPTION: Completely random accessory functions.
 #if defined(SSE_BOILER_383_LOG2)
                                     {"ACIA",LOGSECTION_ACIA},
                                     {"DMA",LOGSECTION_DMA},
+                                    {"MMU",LOGSECTION_MMU},
                                     {"Cartridge",LOGSECTION_CARTRIDGE},
+                                    {"Options",LOGSECTION_OPTIONS},
+                                    {"Pasti",LOGSECTION_PASTI},
 #endif
                                     {"*",-1}};
 
@@ -445,6 +448,7 @@ void log_os_call(int trap)
     }
   }
   log_write(l);
+  TRACE("Trap #%d %s\n",trap,l.Text); // section trap is enabled
 }
 
 void log_write_stack()

@@ -1214,8 +1214,6 @@ void draw(bool osd)
   // SS: this is called by init, load... not for actual emulation
   // It draws the screen in one time
 
-//  TRACE("call draw(%d)\n",osd);
-
   int save_scan_y=scan_y;
   MEM_ADDRESS save_sdp=shifter_draw_pointer;
   MEM_ADDRESS save_sdp_at_start_of_line=shifter_draw_pointer_at_start_of_line;
@@ -1251,8 +1249,6 @@ void draw(bool osd)
 #ifndef NO_CRAZY_MONITOR
     if(extended_monitor){
       ASSERT(shifter_draw_pointer==xbios2);
-      //ASSERT(extended_monitor==1)
-      //ASSERT(draw_scanline==draw_scanline_32_lowres_pixelwise);
       yy=0;yy2=min(em_height,Disp.SurfaceHeight);
     }else
 #endif

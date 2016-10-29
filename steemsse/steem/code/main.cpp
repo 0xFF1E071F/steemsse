@@ -814,7 +814,7 @@ bool Initialise()
   }
 #endif
 
-#if defined(SSE_ACSI_MULTIPLE) && !defined(SSE_ACSI_HDMAN)
+#if !defined(SSE_ACSI_HDMAN)
 /*  We use the existing Steem "crawler" to load whatever hard disk IMG 
     files are in Steem/ACSI, up to MAX_ACSI_DEVICES.
 */

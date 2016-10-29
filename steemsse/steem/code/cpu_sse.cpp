@@ -4093,11 +4093,8 @@ void                              m68k_trap(){
       if (os_xbios_vector==0) if (Vector>=rom_addr) os_xbios_vector=Vector;
       break;
   }
-#if defined(DEBUG_BUILD) && defined(SSE_CPU)
-#if defined(SSE_BOILER_SHOW_INTERRUPT)
+#if defined(DEBUG_BUILD) && defined(SSE_CPU) && defined(SSE_BOILER_SHOW_INTERRUPT)
   Debug.RecordInterrupt("TRAP",(ir&0xF));
-#endif
-  TRACE_LOG("PC %X TRAP #%d, $%X\n",old_pc,(ir&0xf),d2_dpeek(areg[7]));
 #endif
   m68kTrapTiming();
   m68k_interrupt(Vector);
