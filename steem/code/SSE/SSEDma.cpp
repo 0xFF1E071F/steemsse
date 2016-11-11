@@ -913,11 +913,7 @@ void TDma::UpdateRegs(bool trace_them) {
     TODO
 */
     if(!(fdc_str&FDC_STR_MOTOR_ON)) // assume this drive!
-#if defined(SSE_DRIVE_STATE)
       ::SF314[DRIVE].State.motor=false;
-#else
-      ::SF314[DRIVE].motor_on=false;
-#endif
 #endif
     fdc_tr=CAPSFdcGetInfo(cfdciR_Track, &Caps.WD1772,ext);
     fdc_sr=CAPSFdcGetInfo(cfdciR_Sector, &Caps.WD1772,ext);

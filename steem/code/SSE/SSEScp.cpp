@@ -109,7 +109,7 @@ void  TImageSCP::ComputePosition(WORD position) {
     Position=rand()%4;
 #endif
 
-#if defined(SSE_WD1772_DPLL)
+#if defined(SSE_WD1772_BIT_LEVEL)
   WD1772.Dpll.Reset(ACT); 
 #endif
 
@@ -119,7 +119,7 @@ void  TImageSCP::ComputePosition(WORD position) {
     SF314[DRIVE].time_of_last_ip,ACT,ACT-SF314[DRIVE].time_of_last_ip,units,Position,TimeFromIndexPulse[Position],Disk[DRIVE].current_byte);
 }
 
-#if !defined(SSE_WD1772_AM_LOGIC)||defined(SSE_DISK_SCP_TO_MFM_PREVIEW)
+#if !defined(SSE_WD1772_BIT_LEVEL)||defined(SSE_DISK_SCP_TO_MFM_PREVIEW)
 
 BYTE TImageSCP::GetDelay(int position) {
   // we want delay in ms, typically 4, 6, 8
@@ -147,7 +147,6 @@ int TImageSCP::UnitsToNextFlux(int position) {
   ASSERT( time2>time1 );
   int units_to_next_flux=time2-time1; 
 #if defined(SSE_DISK_SCP_DRIVE_WOBBLE)
-  // like SSE_WD1772_WEAK_BITS but simpler (not "better")
   int wobble=(rand()%4)-2;
   units_to_next_flux+=wobble;
 #endif
@@ -175,8 +174,7 @@ WORD TImageSCP::GetMfmData(WORD position) {
     But precise emulation doesn't send MFM data word by word (16bit).
     Instead it sends bytes and AM signals according to bit sequences,
     as analysed in (3rd party-inspired) WD1772.ShiftBit().
-    note we need SSE_WD1772_AM_LOGIC and SSE_WD1772_DPLL, we didn't keep
-    beta code in v3.7.1
+    note we need SSE_WD1772_BIT_LEVEL, we didn't keep beta code in v3.7.1
 */
 
   WORD mfm_data=0;
@@ -188,7 +186,7 @@ WORD TImageSCP::GetMfmData(WORD position) {
   if(position!=0xFFFF)
     ComputePosition(position);
 
-#if defined(SSE_WD1772_AM_LOGIC) && defined(SSE_WD1772_DPLL)
+#if defined(SSE_WD1772_BIT_LEVEL)
 
   // we manage timing here, maybe we should do that in WD1772 instead
   int a1=WD1772.Dpll.ctime,a2,tm=0;
@@ -238,7 +236,6 @@ WORD TImageSCP::GetMfmData(WORD position) {
 }
 
 
-#if defined(SSE_WD1772_DPLL)
 int TImageSCP::GetNextTransition(BYTE& us_to_next_flux) {
   int t=UnitsToNextFlux(Position);
   us_to_next_flux=UsToNextFlux(t); // in parameter
@@ -246,7 +243,6 @@ int TImageSCP::GetNextTransition(BYTE& us_to_next_flux) {
   t/=5; // in cycles
   return t; 
 }
-#endif
 
 
 void TImageSCP::IncPosition() {
@@ -259,17 +255,12 @@ void TImageSCP::IncPosition() {
     TRACE_FDC("\nSCP triggers IP side %d track %d rev %d/%d\n",
       CURRENT_SIDE,floppy_head_track[DRIVE],rev+1,file_header.IFF_NUMREVS);
     
-#if defined(SSE_DRIVE_INDEX_PULSE2)
 /*  If a sector is spread over IP, we make sure that our event
     system won't start a new byte before returning to current
     byte. 
 */
-    SF314[DRIVE].IndexPulse(true);
-#else
-    SF314[DRIVE].IndexPulse();
-#endif
+    SF314[DRIVE].IndexPulse(true); // true for "image triggered"
 
-#if defined(SSE_DRIVE_INDEX_PULSE2) 
     // provided there are >1 revs...    
     if(file_header.IFF_NUMREVS>1)
     {
@@ -296,7 +287,6 @@ void TImageSCP::IncPosition() {
       }//sw
 #endif
     }      
-#endif
   }
 }
 

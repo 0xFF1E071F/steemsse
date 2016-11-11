@@ -506,7 +506,8 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   }
 #endif  
 
-  else{
+  else
+  {
 
 #if defined(SSE_DISK_IMAGETYPE)
 #if defined(SSE_TOS_PRG_AUTORUN)
@@ -517,6 +518,9 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     }
 #endif
     SF314[drive].ImageType.Manager=MNGR_STEEM;
+#if defined(SSE_FDC_383A)
+    Disk[drive].TrackBytes=TDisk::TRACK_BYTES; 
+#endif
 #ifdef SSE_OSD_DRIVE_INFO_EXT //gotta be a smarter way...
     if(MSA)
       SF314[drive].ImageType.Extension=EXT_MSA;

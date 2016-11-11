@@ -61,9 +61,7 @@ struct  TImageSCP {
   bool LoadTrack(BYTE side,BYTE track,bool reload=false);
   WORD GetMfmData(WORD position); 
   void SetMfmData(WORD position, WORD mfm_data);
-#if defined(SSE_WD1772_DPLL)
   int GetNextTransition(BYTE& us_to_next_flux);
-#endif
   // other functions
   TImageSCP();
   ~TImageSCP();
@@ -74,7 +72,7 @@ struct  TImageSCP {
   int UnitsToNextFlux(int position);
 #endif
   int UsToNextFlux(int units_to_next_flux);
-#if !defined(SSE_WD1772_AM_LOGIC)||defined(SSE_DISK_SCP_TO_MFM_PREVIEW)
+#if !defined(SSE_WD1772_BIT_LEVEL)||defined(SSE_DISK_SCP_TO_MFM_PREVIEW)
   BYTE GetDelay(int position);
 #endif
   void IncPosition();

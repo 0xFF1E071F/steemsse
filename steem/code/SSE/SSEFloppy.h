@@ -109,11 +109,11 @@ extern TWD1772 WD1772;
 #define fdc_dr WD1772.DR
 #endif //FDC
 
-#if defined(SSE_DISK_STW)
+#if defined(SSE_WD1772_LINES)
 #define fdc_last_step_inwards_flag WD1772.Lines.direction
 #endif
 
-#if defined(SSE_WD1772_REG2_B)
+#if defined(SSE_WD1772)
 #define floppy_type1_command_active WD1772.StatusType
 #endif
 
