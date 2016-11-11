@@ -799,10 +799,17 @@ void TJoystickConfig::Show()
                       CBS_HASSTRINGS | CBS_DROPDOWNLIST,
                       x+15+w,y,225-(5+w),200,
                       Handle,(HMENU)(102+p*100),HInstance,NULL);
+#if defined(SSE_X64_383)
+    SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Never"));
+    SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Always"));
+    SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("When Scroll Lock On"));
+    SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("When Num Lock Off"));
+#else
     SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("Never"));
     SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("Always"));
     SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("When Scroll Lock On"));
     SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("When Num Lock Off"));
+#endif
     switch (Joy[BasePort+p].ToggleKey){
       case VK_SCROLL:
         SendMessage(Win,CB_SETCURSEL,2,0);
@@ -890,8 +897,13 @@ void TJoystickConfig::Show()
     w=GetTextSize(Font,Text).Width;
     HWND Win=CreateWindow("Combobox","",WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST | int(NumJoysticks==0 ? WS_DISABLED:0),
                             x+w+15,y,235-(w+15),200,Handle,(HMENU)(118+p*100),HInstance,NULL);
+#if defined(SSE_X64_383)
+    SendMessage(Win,CB_ADDSTRING,0,(LPARAM)"-");
+    for (int n=0;n<MAX_PC_JOYS;n++) if (JoyExists[n]) SendMessage(Win,CB_ADDSTRING,0,(LPARAM)((T("Joystick")+" "+(n+1)).Text));
+#else
     SendMessage(Win,CB_ADDSTRING,0,(long)"-");
     for (int n=0;n<MAX_PC_JOYS;n++) if (JoyExists[n]) SendMessage(Win,CB_ADDSTRING,0,(long)((T("Joystick")+" "+(n+1)).Text));
+#endif    
     y+=30;
 
     w=get_text_width(T("Autofire"));
@@ -900,13 +912,21 @@ void TJoystickConfig::Show()
 
     Win=CreateWindow("Combobox","",WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST,
                             x+15+w,y,80,200,Handle,(HMENU)(117+p*100),HInstance,NULL);
+#if defined(SSE_X64_383)
+    SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Off"));
+    SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("V.Fast"));
+    SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Fast"));
+    SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Medium"));
+    SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Slow"));
+    SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("V.Slow"));
+#else
     SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("Off"));
     SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("V.Fast"));
     SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("Fast"));
     SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("Medium"));
     SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("Slow"));
     SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("V.Slow"));
-
+#endif
     Win=CreateWindowEx(512,"Steem Button Picker","",
                       WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | WS_DISABLED,
                       x+w+100,y,65,23,Handle,(HMENU)(115+p*100),HInstance,NULL);

@@ -719,7 +719,11 @@ void TOptionBox::ChooseScreenShotFolder(HWND Win)
   EasyStr NewFol=ChooseFolder(HWND(FullScreen ? StemWin:Win),T("Pick a Folder"),ScreenShotFol);
   if (NewFol.NotEmpty()){
     NO_SLASH(NewFol);
+#if defined(SSE_X64_383)
+    if (Handle) if (GetDlgItem(Handle,1021)) SendDlgItemMessage(Handle,1021,WM_SETTEXT,0,(LPARAM)(NewFol.Text));
+#else
     if (Handle) if (GetDlgItem(Handle,1021)) SendDlgItemMessage(Handle,1021,WM_SETTEXT,0,(long)(NewFol.Text));
+#endif
     ScreenShotFol=NewFol;
   }
 
@@ -1000,11 +1004,11 @@ void TOptionBox::SetBorder(int newborder)
   CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min(border,2),MF_BYCOMMAND);
 #endif
  
-#if defined(SSE_VID_BORDERS) && defined(SSE_GUI_OPTIONS_DISPLAY_SIZE_IN_DISPLAY)
+#if defined(SSE_VID_BORDERS) && defined(SSE_GUI_OPTIONS_DISPLAY_SIZE)
   EnableWindow(GetDlgItem(Handle,1026),(BOOL)border); 
 #endif
 
-#if defined(SSE_GUI_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_BAR)
   GUIRefreshStatusBar();
 #endif
 }
@@ -1194,7 +1198,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             BYTE old_st_type=ST_TYPE;//v3.6.0
             ST_TYPE=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
             TRACE_LOG("Option ST type = %d\n",ST_TYPE);
+#if defined(SSE_STF_383)
+            SSEConfig.SwitchSTType(ST_TYPE);
+#else
             SwitchSTType(ST_TYPE);
+#endif
 #if defined(SSE_MMU_WU_RESET_ON_SWITCH_ST)
             OPTION_WS=0;
 #endif
@@ -1251,7 +1259,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
                 This->NewMemConf0=-1;
               }
               CheckResetIcon();
-#if defined(SSE_GUI_OPTIONS_STF_IN_MACHINE) && !defined(SSE_STF_MEGASTF_383)
+#if defined(SSE_GUI_OPTIONS_STF) && !defined(SSE_STF_MEGASTF_383)
               This->MachineUpdateIfVisible();//it's on same page now, better so
 #endif
             }
@@ -1435,7 +1443,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_C1,0);
             TRACE_LOG("Option HD6301 emu: %d\n",OPTION_C1);
 //            printf("HD6301 emu: %d\n",OPTION_C1);
-#if defined(SSE_GUI_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_BAR)
 //            GUIRefreshStatusBar();//overkill
 #endif
           }
@@ -1629,13 +1637,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             }
           }
           break;
-
-#if defined(SSE_SOUND_OPTION_DISABLE_DSP)
-        case 3306:
-          DSP_ENABLED=!DSP_ENABLED;
-          break;
-#endif
-
+#if !defined(SSE_VAR_NO_UPDATE_383)
         case 4200:case 4201:case 4202:case 4203:
           if (HIWORD(wPar)==BN_CLICKED){
             ConfigStoreFile CSF(INIFile);
@@ -1658,17 +1660,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             WinExec(EasyStr("\"")+RunDir+"\\SteemUpdate.exe\""+Online+NoPatch+AskPatch,SW_SHOW);
           }
           break;
-
+#endif
 
         case 5100:case 5101:case 5102:case 5103:case 5104:case 5105:case 5106:
-#if defined(SSE_GUI_ASSOCIATE)
-#if !(defined(SSE_GUI_NO_ASSOCIATE_STC)) //haha
-        case 5107: //bugfix 3.5.3//hmm...
-#endif
-#endif
-#if defined(SSE_GUI_ASSOCIATE_IPF)
-        //case 5108: //bugfix 3.5.3//hmm...
-        case 5107://???
+#if defined(SSE_GUI_ASSOCIATE_HFE) || !defined(SSE_GUI_NO_ASSOCIATE_STC)
+        case 5107:
 #endif
 #if defined(SSE_TOS_PRG_AUTORUN)
         case 5108:
@@ -1689,17 +1685,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               case 5106: Ext=".STS";AssociateSteem(Ext,"steem_memory_snapshot"); break;
 #if !(defined(SSE_GUI_NO_ASSOCIATE_STC))
               case 5107: Ext=".STC";AssociateSteem(Ext,"st_cartridge",true,T("ST ROM Cartridge"),CART_ICON_NUM,0); break;
-#endif
-#if defined(SSE_GUI_ASSOCIATE_IPF)
-#if defined(SSE_GUI_ASSOCIATE_HFE)
-/*  It's not that we dislike or demote IPF format, but space is running out
-    and HFE is less likely to be zipped as HxC hardware needs unzipped files.
-    Besides, CAPS also handles CTR files.
-*/
+#elif defined(SSE_GUI_ASSOCIATE_HFE)
               case 5107: Ext=dot_ext(EXT_HFE);AssociateSteem(Ext,"st_hfe_disk_image"); break;
-#else
-              case 5107: Ext=dot_ext(EXT_IPF);AssociateSteem(Ext,"st_ipf_disk_image"); break;
-#endif
 #endif
 #if defined(SSE_TOS_PRG_AUTORUN) //TODO
               case 5108: Ext=dot_ext(EXT_PRG);AssociateSteem(Ext,"st_atari_prg_executable"); break;
@@ -1939,11 +1926,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
-#if defined(SSE_YM2149_FIX_TABLES)
-        case 7311: // PSG Mods Yamaha doc
+#if defined(SSE_GUI_OPTIONS_SAMPLED_YM)
+        case 7311: // option Sampled YM
           if (HIWORD(wPar)==BN_CLICKED){
-            SSEOption.PSGMod=!SSEOption.PSGMod;
-            TRACE_LOG("Option PSG mods %d\n",SSEOption.PSGMod);
+            OPTION_SAMPLED_YM=!OPTION_SAMPLED_YM;
+            TRACE_LOG("Option Sampled YM %d\n",OPTION_SAMPLED_YM);
 
 #if defined(SSE_YM2149_DYNAMIC_TABLE0) // temp to produce 8k bin file
             {
@@ -1960,27 +1947,16 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
                 TRACE("writing %d words in file %s, total %d\n",nw,filename.Text,check);
                 
               }
-              return (int)SSE_OPTION_PSG;
+              return (int)OPTION_SAMPLED_YM;
             }
 #endif
 #if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
-            if(SSEOption.PSGMod)
+            if(OPTION_SAMPLED_YM)
               YM2149.LoadFixedVolTable();
             else
               YM2149.FreeFixedVolTable();
 #endif
-            SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.PSGMod,0);
-          }
-          break; 
-         // SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.PSGMod,0);
-#endif
-//SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.PSGMod,0);
-#if defined(SSE_YM2149_FIXED_VOL_TABLE) && !defined(SSE_YM2149_NO_SAMPLES_OPTION)
-        case 7312: // PSG samples ljbk
-          if (HIWORD(wPar)==BN_CLICKED){
-            SSEOption.PSGFixedVolume=!SSEOption.PSGFixedVolume;
-            TRACE_LOG("Option PSGFixedVolume %d\n",SSEOption.PSGFixedVolume);
-            SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.PSGFixedVolume,0);
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_SAMPLED_YM,0);
           }
           break; 
 #endif
@@ -2019,12 +1995,12 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #endif
 #endif
 
-#if defined(SSE_GUI_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_BAR)
         case 7307: // status bar
           if (HIWORD(wPar)==BN_CLICKED){
-            SSE_STATUS_BAR=!SSE_STATUS_BAR;
-            SendMessage(HWND(lPar),BM_SETCHECK,SSE_STATUS_BAR,0);
-            TRACE_LOG("Option status bar %d\n",SSE_STATUS_BAR);
+            OPTION_STATUS_BAR=!OPTION_STATUS_BAR;
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_STATUS_BAR,0);
+            TRACE_LOG("Option status bar %d\n",OPTION_STATUS_BAR);
           }
           break; 
 #endif
@@ -2039,12 +2015,12 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 
-#if defined(SSE_GUI_STATUS_STRING_DISK_NAME_OPTION)
+#if defined(SSE_GUI_STATUS_BAR_DISK_NAME_OPTION)
         case 7309: //  status bar game name
           if (HIWORD(wPar)==BN_CLICKED){
-            SSE_STATUS_BAR_GAME_NAME=!SSE_STATUS_BAR_GAME_NAME;
-            SendMessage(HWND(lPar),BM_SETCHECK,SSE_STATUS_BAR_GAME_NAME,0);
-            TRACE_LOG("Option status bar game name %d\n",SSE_STATUS_BAR_GAME_NAME);
+            OPTION_STATUS_BAR_GAME_NAME=!OPTION_STATUS_BAR_GAME_NAME;
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_STATUS_BAR_GAME_NAME,0);
+            TRACE_LOG("Option status bar game name %d\n",OPTION_STATUS_BAR_GAME_NAME);
           }
           break;
 #endif
@@ -2374,7 +2350,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if (HIWORD(wPar)==BN_CLICKED) 
           {//SS
             reset_st(RESET_COLD | RESET_STOP | RESET_CHANGESETTINGS | RESET_BACKUP);
-#if defined(SSE_TOS_WARNING1)
+#if defined(SSE_TOS_WARNING1A)
+            Tos.CheckSTTypeAndTos();
+#elif defined(SSE_TOS_WARNING1)
             CheckSTTypeAndTos();
 #endif
 #if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) // warning
@@ -2724,7 +2702,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
       }
 
-#if defined(SSE_GUI_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_BAR)
       GUIRefreshStatusBar();
 #endif
 

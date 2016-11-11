@@ -463,7 +463,11 @@ LRESULT __stdcall TPatchesBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPa
           EasyStr NewFol=ChooseFolder(HWND(FullScreen ? StemWin:Win),T("Pick a Folder"),This->PatchDir);
           if (NewFol.NotEmpty()){
             NO_SLASH(NewFol);
+#if defined(SSE_X64_383)
+            SendDlgItemMessage(Win,401,WM_SETTEXT,0,(LPARAM)(NewFol).Text);
+#else
             SendDlgItemMessage(Win,401,WM_SETTEXT,0,(long)(NewFol).Text);
+#endif
             SendDlgItemMessage(Win,200,WM_SETTEXT,0,LPARAM(""));
             SendDlgItemMessage(Win,210,WM_SETTEXT,0,LPARAM(""));
             SendDlgItemMessage(Win,220,WM_SETTEXT,0,LPARAM(""));

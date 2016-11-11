@@ -193,10 +193,18 @@ void THardDiskManager::Show()
   SendMessage(Win,WM_SETFONT,(UINT)Font,0);
   char DriveName[8];
   DriveName[1]=':';DriveName[2]=0;
+#if defined(SSE_X64_383)
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Off"));
+#else
   SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("Off"));
+#endif
   for (int i=0;i<24;i++){
     DriveName[0]=(char)('C'+i);
+#if defined(SSE_X64_383)
+    SendMessage(Win,CB_ADDSTRING,0,(LPARAM)DriveName);
+#else
     SendMessage(Win,CB_ADDSTRING,0,(long)DriveName);
+#endif
   }
 #ifndef DISABLE_STEMDOS
   SendMessage(Win,CB_SETCURSEL,stemdos_boot_drive-1,0);
@@ -253,7 +261,11 @@ void THardDiskManager::CreateDriveControls(int Idx)
   else
 #endif
   DriveName[1]=':';DriveName[2]=0;
+#if defined(SSE_X64_383)
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Off"));
+#else
   SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("Off"));
+#endif
 #if defined(SSE_ACSI_HDMAN)
   for (int i=0;i<(acsi?TAcsiHdc::MAX_ACSI_DEVICES:24);i++){
     if(acsi)
@@ -263,7 +275,11 @@ void THardDiskManager::CreateDriveControls(int Idx)
   for (int i=0;i<24;i++){
 #endif
     DriveName[0]=(char)('C'+i);
+#if defined(SSE_X64_383)
+    SendMessage(Win,CB_ADDSTRING,0,(LPARAM)DriveName);
+#else
     SendMessage(Win,CB_ADDSTRING,0,(long)DriveName);
+#endif
   }
   SendMessage(Win,CB_SETCURSEL,(Drive[Idx].Letter-'C')+1,0);
 
@@ -307,8 +323,11 @@ void THardDiskManager::GetDriveInfo()
 {
   for (int i=0;i<nDrives;i++){
     Drive[i].Path.SetLength(MAX_PATH+1);
+#if defined(SSE_X64_383)
+    SendMessage(GetDlgItem(Handle,100+i),WM_GETTEXT,MAX_PATH,(LPARAM)Drive[i].Path.Text);
+#else
     SendMessage(GetDlgItem(Handle,100+i),WM_GETTEXT,MAX_PATH,(long)Drive[i].Path.Text);
-
+#endif
     NO_SLASH(Drive[i].Path);
 
     if (Drive[i].Path.Length()==1) Drive[i].Path+=":"; 
@@ -461,7 +480,7 @@ LRESULT __stdcall THardDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARA
 #endif  
           TRACE_INIT("Option GEMDOS HD %d\n",!This->DisableHardDrives);
 #endif  
-#if defined(SSE_GUI_STATUS_STRING) && defined(SSE_GUI_DISK_MANAGER_RGT_CLK_HD3)
+#if defined(SSE_GUI_STATUS_BAR) && defined(SSE_GUI_DISK_MANAGER_RGT_CLK_HD3)
         GUIRefreshStatusBar();
 #endif
       }else if (ID==IDOK || ID==IDCANCEL){
@@ -486,7 +505,11 @@ LRESULT __stdcall THardDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARA
             else
               NewPath=ChooseFolder(HWND(FullScreen ? StemWin:Win),T("Pick a Folder"),This->Drive[ID].Path);
             if (NewPath.NotEmpty()){
+#if defined(SSE_X64_383)
+              SendMessage(GetDlgItem(This->Handle,100+ID),WM_SETTEXT,0,(LPARAM)NewPath.Text);
+#else
               SendMessage(GetDlgItem(This->Handle,100+ID),WM_SETTEXT,0,(long)NewPath.Text);
+#endif
             }
 #else
             EasyStr NewFol=ChooseFolder(HWND(FullScreen ? StemWin:Win),T("Pick a Folder"),This->Drive[ID].Path);
@@ -504,8 +527,13 @@ LRESULT __stdcall THardDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARA
             char Text[MAX_PATH+1];
             This->nDrives--;
             for (int i=ID;i<This->nDrives;i++){
+#if defined(SSE_X64_383)
+              SendMessage(GetDlgItem(This->Handle,100+i+1),WM_GETTEXT,MAX_PATH,(LPARAM)Text);
+              SendMessage(GetDlgItem(This->Handle,100+i),WM_SETTEXT,0,(LPARAM)Text);
+#else
               SendMessage(GetDlgItem(This->Handle,100+i+1),WM_GETTEXT,MAX_PATH,(long)Text);
               SendMessage(GetDlgItem(This->Handle,100+i),WM_SETTEXT,0,(long)Text);
+#endif
               SendMessage(GetDlgItem(This->Handle,300+i),CB_SETCURSEL,
                            SendMessage(GetDlgItem(This->Handle,300+i+1),CB_GETCURSEL,0,0),0);
             }

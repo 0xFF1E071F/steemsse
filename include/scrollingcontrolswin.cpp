@@ -11,7 +11,7 @@
 
 #include <scrollingcontrolswin.h>
 
-#if defined(SSE_GUI_INFOBOX17)
+#if defined(SSE_GUI_INFOBOX_LINKS)
 #define WM_MOUSEWHEEL 0x020A
 #include <SSE/SSEDebug.h>
 #endif
@@ -228,7 +228,7 @@ LRESULT WINAPI ScrollControlWin::ScrollWndProc(HWND Win,UINT Mess,WPARAM wPar,LP
         MoveWindow((HWND)GetProp(Win,"ControlPage"),OffsetX,OffsetY,rc.right-OffsetX,rc.bottom-OffsetY,true);
       }
       break;
-#if defined(SSE_GUI_INFOBOX17) // v3.7.1 last minute
+#if defined(SSE_GUI_INFOBOX_LINKS)
     case WM_MOUSEWHEEL:
       {
         int zDelta = (signed)wPar>>16;

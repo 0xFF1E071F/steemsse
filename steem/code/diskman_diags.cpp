@@ -189,9 +189,15 @@ void TDiskManager::ShowContentDiag()
 
   Win=CreateWindow("Combobox","",WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST | Disable,
                           25+w,y,page_r-100-(25+w)-10,200,ContentDiag,(HMENU)211,HInstance,NULL);
+#if defined(SSE_X64_383)
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Skip"));
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Overwrite"));
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Rename new"));
+#else
   SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("Skip"));
   SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("Overwrite"));
   SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("Rename new"));
+#endif
   SendMessage(Win,CB_SETCURSEL,ContentConflictAction,0);
 
   CreateWindow("Button",T("Create"),WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON | WS_TABSTOP | Disable,
@@ -228,8 +234,13 @@ void TDiskManager::ShowDiskDiag()
 
   HWND Win=CreateWindow("Combobox","",WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST,
                           150,10,90,200,DiskDiag,(HMENU)101,HInstance,NULL);
+#if defined(SSE_X64_383)
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)"1");
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)"2");
+#else
   SendMessage(Win,CB_ADDSTRING,0,(long)"1");
   SendMessage(Win,CB_ADDSTRING,0,(long)"2");
+#endif
   SendMessage(Win,CB_SETCURSEL,SidesIdx,0);
 
   Wid=get_text_width(T("Tracks"));
@@ -920,7 +931,11 @@ LRESULT __stdcall TDiskManager::Dialog_WndProc(HWND Win,UINT Mess,WPARAM wPar,LP
 
             EasyStr NewFol=ChooseFolder(HWND(FullScreen ? StemWin:Win),T("Pick a Folder"),CurText);
             if (NewFol.NotEmpty()){
+#if defined(SSE_X64_383)
+              SendMessage(Edit,WM_SETTEXT,0,(LPARAM)NewFol.Text);
+#else
               SendMessage(Edit,WM_SETTEXT,0,(long)NewFol.Text);
+#endif
             }
 
             SetForegroundWindow(Win);
@@ -1017,14 +1032,21 @@ LRESULT __stdcall TDiskManager::Dialog_WndProc(HWND Win,UINT Mess,WPARAM wPar,LP
             HWND Edit=GetDlgItem(Win,LOWORD(wPar)-1);
 
             EnableAllWindows(0,Win);
-
+#if defined(SSE_X64_383)
+            SendMessage(Edit,WM_GETTEXT,MAX_PATH,(LPARAM)CurText);
+#else
             SendMessage(Edit,WM_GETTEXT,MAX_PATH,(long)CurText);
+#endif
             NO_SLASH(CurText);
 
             if (LOWORD(wPar)==202){
               EasyStr NewFol=ChooseFolder(HWND(FullScreen ? StemWin:Win),T("Pick a Folder"),CurText);
               if (NewFol.NotEmpty()){
+#if defined(SSE_X64_383)
+                SendMessage(Edit,WM_SETTEXT,0,(LPARAM)NewFol.Text);
+#else
                 SendMessage(Edit,WM_SETTEXT,0,(long)NewFol.Text);
+#endif
               }
             }else{
               EasyStr CurFol=CurText;
@@ -1034,7 +1056,11 @@ LRESULT __stdcall TDiskManager::Dialog_WndProc(HWND Win,UINT Mess,WPARAM wPar,LP
               EasyStr Disk=FileSelect(HWND(FullScreen ? StemWin:Win),T("Select Shortcut Target"),CurFol,
                                       FSTypes(2,NULL),1,true,"st",CurDiskName);
               if (Disk.NotEmpty()){
+#if defined(SSE_X64_383)
+                SendMessage(Edit,WM_SETTEXT,0,(LPARAM)Disk.Text);
+#else
                 SendMessage(Edit,WM_SETTEXT,0,(long)Disk.Text);
+#endif
               }
             }
 

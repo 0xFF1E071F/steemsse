@@ -30,10 +30,15 @@ public:
   int Compare(int,ESLSortEnum,char *,long *,long);
   int Add(long,char*,...);
   int Add(char*);
+#if defined(SSE_X64_383) //?
+  int Add(char*,LONG_PTR);
+  int Add(char*,LONG_PTR,LONG_PTR);
+  int Add(char*,LONG_PTR,LONG_PTR,LONG_PTR);
+#else
   int Add(char*,long);
   int Add(char*,long,long);
   int Add(char*,long,long,long);
-
+#endif
   int InsertAt(int,long,char *,...);
 	int Insert(int,long,char*,long*);
 
