@@ -13,15 +13,13 @@ of the various unarchiving libraries it can use.
 #include <conditions.h>
 #endif
 
-#if defined(SSE_ANSI_STRING)
-char ansi_name[MAX_PATH]; // for conversion from unicode
-#endif
+#if defined(SSE_BUILD)
+// global for conversion from unicode, reused in other parts
+char ansi_string[MAX_PATH]; 
 
-#if defined(SSE_STRUCTURE_DECLA) 
 zipclass zippy; 
 
 #if defined(WIN32)
-
 
 #if !(defined(SSE_VAR_ARCHIVEACCESS4))
 HINSTANCE hUnzip=NULL;
@@ -80,23 +78,17 @@ void LoadUnzipDLL()
 
 
 void LoadUnrarDLL() {
-
   try {
 /*  This function is missing in very old versions of UnRAR.dll, so it is safer 
     to use LoadLibrary and GetProcAddress to access it.
 */
-#if defined(SSE_VAR_UNRAR2)
-    UNRAR_OK=(RARGetDllVersion()>0); //bugfix v3.7.1, works with v6 too :)
-#else
-    UNRAR_OK=RARGetDllVersion(); // 5 with our unrar.dll
-#endif
+    UNRAR_OK=(RARGetDllVersion()>0); // works with v6 too :)
   }
   catch(...) {
     UNRAR_OK=0;
   }
   if (UNRAR_OK)
   {
-//      TRACE_LOG("UnRAR.DLL loaded, v%d\n",UNRAR_OK);
       TRACE_INIT("unrar.dll loaded, v%d\n",RARGetDllVersion());
       // prefill structures for all archives
       ZeroMemory(&zippy.ArchiveData,sizeof(zippy.ArchiveData));  
@@ -368,11 +360,11 @@ char* zipclass::filename_in_zip()
         WC_COMPOSITECHECK,     // Check for accented characters
         (LPCWSTR)FileInfo.path,         // Source Unicode string
         -1,                    // -1 means string is zero-terminated
-        (char*)ansi_name, //SS a global
+        (char*)ansi_string, //SS a global
         MAX_PATH,  // Size of buffer
         NULL,                  // No default character
         NULL );                // Don't care about this flag
-      return (char*)ansi_name;
+      return (char*)ansi_string;
     }
   } else
 #endif

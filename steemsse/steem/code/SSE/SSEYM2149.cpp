@@ -29,6 +29,7 @@ TYM2149::~TYM2149() { //v3.7.0
 }
 
 #if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
+
 #define LOGSECTION LOGSECTION_SOUND
 
 void TYM2149::FreeFixedVolTable() {
@@ -62,10 +63,12 @@ bool TYM2149::LoadFixedVolTable() {
   {
     TRACE_LOG("No file %s\n",filename.Text);
     FreeFixedVolTable();
-    SSE_OPTION_PSG=0;
+    OPTION_SAMPLED_YM=0;
   }
   return ok;
 }
+
+#undef LOGSECTION
 
 #endif//SSE_YM2149_DYNAMIC_TABLE
 

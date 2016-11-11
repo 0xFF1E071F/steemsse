@@ -207,15 +207,6 @@ inline bool playing_samples() {
 #endif
 }
 
-#if defined(SSE_YM2149_DELAY_RENDERING)  
-#if !defined(SSE_YM2149_DELAY_RENDERING1)
-inline WORD get_fixed_volume() {
-  ASSERT( playing_samples() );
-  return fixed_vol_3voices[psg_reg[10]&15][psg_reg[9]&15][psg_reg[8]&15];
-}
-#endif
-#endif
-
 #endif
 
 
@@ -325,12 +316,6 @@ HRESULT Sound_Start() // SS called by
   // Work out startup voltage
   int envshape=psg_reg[13] & 15;
   int flatlevel=0;
-#if defined(SSE_YM2149_FIXED_VOL_TABLE) && !defined(SSE_YM2149_NO_SAMPLES_OPTION) \
- && defined(SSE_YM2149_DELAY_RENDERING)  
-  if(SSEOption.PSGFixedVolume&& playing_samples())
-    flatlevel=get_fixed_volume();
-  else
-#endif
   for (int abc=0;abc<3;abc++){
     if ((psg_reg[8+abc] & BIT_4)==0){
       flatlevel+=psg_flat_volume_level[psg_reg[8+abc] & 15];
@@ -592,11 +577,7 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
     each channel byte is made up like this:
     bit 0-4: volume on 5bit
     bit 6: envelope (1) /fixed (0)
-
-*/  
-
-#if defined(SSE_YM2149_DELAY_RENDERING1)  
-/*  we use the fixed volume table to render sound on 3 channels
+    we use the fixed volume table to render sound on 3 channels
     this table is 16x16x16, but envelope volume is coded on 5bit, so
     we need to interpolate somehow
     We can interpolate 15 values, so we have 15+16 but need 32
@@ -616,7 +597,7 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
     eg Ace 2 on BIG demo
 */
 
-  if(SSE_OPTION_PSG
+  if(OPTION_SAMPLED_YM
 #if defined(SSE_YM2149_DYNAMIC_TABLE)
     && YM2149.p_fixed_vol_3voices
 #endif
@@ -657,8 +638,8 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
     }
 
     *source_p=vol;
-  }//SSE_OPTION_PSG
-#endif
+  }//OPTION_SAMPLED_YM
+
 
 #endif//mixing
 
@@ -675,11 +656,7 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
 
 inline void Microwire(int channel,int &val) {
 #if !defined(SSE_SOUND_DMA_383C) // tested before
-  if(
-#if defined(SSE_SOUND_OPTION_DISABLE_DSP)
-    DSP_ENABLED&&
-#endif
-    OPTION_MICROWIRE)
+  if(OPTION_MICROWIRE)
 #endif
   {
 //    double d_dsp_v=val;
@@ -1927,17 +1904,14 @@ void psg_prepare_envelope(double &af,double &bf,int &psg_envmodulo,DWORD t,
       if ((psg_reg[PSGR_ENVELOPE_SHAPE] & PSG_ENV_SHAPE_CONT)==0 ||                  
            (psg_reg[PSGR_ENVELOPE_SHAPE] & PSG_ENV_SHAPE_HOLD)){                     
         if(psg_reg[PSGR_ENVELOPE_SHAPE]==11 || psg_reg[PSGR_ENVELOPE_SHAPE]==13){      
-#if defined(SSE_YM2149_DELAY_RENDERING2)
-          // bugfix v3.7.1 eg FTL logo in Dungeon Master
-          envdeath=(SSE_OPTION_PSG)?31:psg_flat_volume_level[15];                                           
-#elif defined(SSE_YM2149_DELAY_RENDERING)
-          envdeath=(SSE_OPTION_PSG)?15:psg_flat_volume_level[15];                                           
+#if defined(SSE_YM2149_DELAY_RENDERING)
+          envdeath=(OPTION_SAMPLED_YM)?31:psg_flat_volume_level[15];                                           
 #else
           envdeath=psg_flat_volume_level[15];                                           
 #endif
         }else{       
 #if defined(SSE_YM2149_DELAY_RENDERING) 
-          envdeath=(SSE_OPTION_PSG)?0:psg_flat_volume_level[0];                                       
+          envdeath=(OPTION_SAMPLED_YM)?0:psg_flat_volume_level[0];                                       
 #else                                                                    
           envdeath=psg_flat_volume_level[0];     
 #endif                                         
@@ -1948,7 +1922,7 @@ void psg_prepare_envelope(double &af,double &bf,int &psg_envmodulo,DWORD t,
         envvol=envdeath;                                             
       }else{        
 #if defined(SSE_YM2149_DELAY_RENDERING)  
-        envvol=(SSE_OPTION_PSG) 
+        envvol=(OPTION_SAMPLED_YM) 
           ? psg_envelope_level3[envshape][psg_envstage & 63]
           : psg_envelope_level[envshape][psg_envstage & 63] ;                   
 #else
@@ -1994,11 +1968,7 @@ void psg_prepare_envelope(double &af,double &bf,int &psg_envmodulo,DWORD t,
 
 void psg_prepare_noise(double &af,double &bf,int &psg_noisemodulo,DWORD t,
     int &psg_noisecountdown, int &psg_noisecounter,bool &psg_noisetoggle) {
-#if defined(SSE_YM2149_DELAY_RENDERING2) // ? it was probably wrong...
       int noiseperiod=(1+(psg_reg[PSGR_NOISE_PERIOD]&0x1f));
-#else
-      int noiseperiod=(psg_reg[PSGR_NOISE_PERIOD]&0x1f)|1;      
-#endif 
       af=((int)noiseperiod*sound_freq);                              
       af*=((double)(1<<17))/15625; 
       psg_noisemodulo=(int)af; 
@@ -2086,7 +2056,7 @@ void psg_envelope_advance(int &psg_envmodulo,int &psg_envstage,int &psg_envcount
               envvol=envdeath;                                             \
             }else{   
 #if defined(SSE_YM2149_DELAY_RENDERING)  
-        envvol=(SSE_OPTION_PSG) 
+        envvol=(OPTION_SAMPLED_YM) 
           ? psg_envelope_level3[envshape][psg_envstage & 63]
           : psg_envelope_level[envshape][psg_envstage & 63] ;                   
 #else                                                    
@@ -2222,19 +2192,7 @@ void psg_write_buffer(int abc,DWORD to_t)
   TRACE_PSG("Write buffer %d from %d to %d\n",abc,t,to_t);
 
   if ((psg_reg[abc+8] & BIT_4)==0){ // Not Enveloped //SS bit 'M' in those registers
-
-#if defined(SSE_YM2149_FIXED_VOL_TABLE) && !defined(SSE_YM2149_NO_SAMPLES_OPTION)
-/*  One unique volume. It's possible because we sync rendering in case
-    of sample playing (see below).
-    v3.7.0 because the table is used all the time, this block isn't
-    defined anymore.
-*/
-    int vol;
-      vol=psg_flat_volume_level[psg_reg[abc+8] & 15];
-#else
     int vol=psg_flat_volume_level[psg_reg[abc+8] & 15];
-#endif
-
     if ((psg_reg[PSGR_MIXER] & (1 << abc))==0 && (toneperiod>9)){ //tone enabled
       PSG_PREPARE_TONE
       if (
@@ -2250,7 +2208,7 @@ void psg_write_buffer(int abc,DWORD to_t)
     instead if option 'P.S.G.' is checked
     Volume is coded on 5 bit (fixed volume is shifted)
 */
-          if(SSE_OPTION_PSG)
+          if(OPTION_SAMPLED_YM)
           {
             int t=0;
             if(psg_tonetoggle || psg_noisetoggle)
@@ -2273,7 +2231,7 @@ void psg_write_buffer(int abc,DWORD to_t)
       }else{ //tone only
         for (;count>0;count--){
 #if defined(SSE_YM2149_DELAY_RENDERING)
-          if(SSE_OPTION_PSG)
+          if(OPTION_SAMPLED_YM)
           {
             int t=0;
             if(psg_tonetoggle)
@@ -2301,7 +2259,7 @@ void psg_write_buffer(int abc,DWORD to_t)
       PSG_PREPARE_NOISE
       for (;count>0;count--){
 #if defined(SSE_YM2149_DELAY_RENDERING)
-        if(SSE_OPTION_PSG || SSE_OPTION_PSG_FIXED)
+        if(OPTION_SAMPLED_YM)
         {
           int t=0;
           if(psg_noisetoggle)
@@ -2325,7 +2283,7 @@ void psg_write_buffer(int abc,DWORD to_t)
     }else{ //nothing enabled //SS playing samples
       for (;count>0;count--){
 #if defined(SSE_YM2149_DELAY_RENDERING)
-        if(SSE_OPTION_PSG || SSE_OPTION_PSG_FIXED)
+        if(OPTION_SAMPLED_YM)
         {
           int t=0;
           t|=(psg_reg[abc+8] & 15)<<1; // vol 4bit
@@ -2333,15 +2291,6 @@ void psg_write_buffer(int abc,DWORD to_t)
           *p|=t;
           p++;
         } else
-#endif
-#if defined(SSE_YM2149_FIXED_VOL_TABLE) && !defined(SSE_YM2149_NO_SAMPLES_OPTION)
-/*  We don't add, we set (so there are useless rewrites), so we can use the
-    full table value (no >> shift).
-    If DMA sound is added to this, too bad!
-*/
-        if(SSEOption.PSGFixedVolume && playing_samples())
-          *(p++)=vol;
-        else
 #endif
         *(p++)+=vol;
       }
@@ -2372,7 +2321,7 @@ void psg_write_buffer(int abc,DWORD to_t)
         PSG_PREPARE_NOISE
         for (;count>0;count--){
 #if defined(SSE_YM2149_DELAY_RENDERING)
-          if(SSE_OPTION_PSG || SSE_OPTION_PSG_FIXED)
+          if(OPTION_SAMPLED_YM)
           {
             int t=BIT_6; // code for enveloped
             if(psg_tonetoggle || psg_noisetoggle)
@@ -2396,7 +2345,7 @@ void psg_write_buffer(int abc,DWORD to_t)
       }else{ //tone only
         for (;count>0;count--){
 #if defined(SSE_YM2149_DELAY_RENDERING)
-          if(SSE_OPTION_PSG || SSE_OPTION_PSG_FIXED)
+          if(OPTION_SAMPLED_YM)
           {
             int t=BIT_6;
             if(psg_tonetoggle)
@@ -2425,7 +2374,7 @@ void psg_write_buffer(int abc,DWORD to_t)
       PSG_PREPARE_NOISE
       for (;count>0;count--){
 #if defined(SSE_YM2149_DELAY_RENDERING)
-        if(SSE_OPTION_PSG || SSE_OPTION_PSG_FIXED)
+        if(OPTION_SAMPLED_YM)
         {
           int t=BIT_6;
           if(psg_noisetoggle)
@@ -2448,7 +2397,7 @@ void psg_write_buffer(int abc,DWORD to_t)
     }else{ //nothing enabled
       for (;count>0;count--){
 #if defined(SSE_YM2149_DELAY_RENDERING)
-        if(SSE_OPTION_PSG || SSE_OPTION_PSG_FIXED)
+        if(OPTION_SAMPLED_YM)
         {
           int t=BIT_6; 
           t|=envvol; // vol 5bit
@@ -2646,7 +2595,8 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
     When user tries to mute PSG channels, we give up this rendering system
     because it's all or nothing.
 */
-      if(SSEOption.PSGFixedVolume && playing_samples()
+     // if(SSEOption.PSGFixedVolume && playing_samples() //383 uh oh?
+      if(OPTION_SAMPLED_YM
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
         &&! ((d2_dpeek(FAKE_IO_START+20)>>12)&7)
 #endif

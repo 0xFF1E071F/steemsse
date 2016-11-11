@@ -171,7 +171,7 @@ struct TMC68901 {
   void Reset(bool Cold);
 #endif
   int UpdateNextIrq(int at_time=-1);
-#if defined(SSE_INT_MFP_TIMER_B_AER2)
+#if defined(SSE_INT_MFP_TIMER_B_AER)
   void CalcCyclesFromHblToTimerB(int freq);
 #endif
 #if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
@@ -182,7 +182,7 @@ struct TMC68901 {
 
 #pragma pack(pop)
 
-#if defined(SSE_INT_MFP_TIMER_B_AER2)
+#if defined(SSE_INT_MFP_TIMER_B_AER)
 #define CALC_CYCLES_FROM_HBL_TO_TIMER_B(freq) MC68901.CalcCyclesFromHblToTimerB(freq)
 #endif
 

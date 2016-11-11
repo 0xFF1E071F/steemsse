@@ -15,12 +15,9 @@
 #include "SSEOption.h"
 #include "SSEVideo.h"
 
-// note this is global here, not in classes. TODO?
-// and it is also in the release build (but now used in TRACE)
-
 char* st_model_name[]={"STE","STF","Mega ST4"};
 
-#if defined(SSE_TOS_WARNING1) //TODO refactor, functions in TTos
+#if defined(SSE_TOS_WARNING1) && !defined(SSE_TOS_WARNING1A)
 void CheckSTTypeAndTos() {
 #if defined(SSE_TOS_GEMDOS_RESTRICT_TOS3)
   if(Tos.VersionWarning)
@@ -34,7 +31,9 @@ void CheckSTTypeAndTos() {
 }
 #endif
 
-int SwitchSTType(int new_type) { // it was one of the first added functions, no object
+#if !defined(SSE_STF_383)
+
+int SwitchSTType(int new_type) { 
 
   ASSERT(new_type>=0 && new_type<SSE_STF_ST_MODELS);
   ST_TYPE=new_type;
@@ -116,5 +115,6 @@ int SwitchSTType(int new_type) { // it was one of the first added functions, no 
   return ST_TYPE;
 }
 
+#endif
 
 #endif//#if defined(SSE_STF)

@@ -186,7 +186,7 @@ WORD TSF314::HblsToBytes(int hbls) {
 
 
 #if defined(SSE_WD1772)
-/*  The WD1772 written for HFE, SCP, STW images uses events following
+/*  The WD1772 emu written for HFE, SCP, STW images uses events following
     a spinning drive.
     Drive events are index pulse (IP), reading or writing a byte.
 */

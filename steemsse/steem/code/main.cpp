@@ -754,10 +754,8 @@ bool Initialise()
       // add current TOS path if necessary
       if(strchr(ROMFile.Text,SLASHCHAR)==NULL) // no slash = no path
       {
-        //ASSERT(OptionBox.TOSBrowseDir.NotEmpty());//asserts
         EasyStr tmp=CSF.GetStr("Machine","ROM_Add_Dir",RunDir) + SLASH + ROMFile;
         ROMFile=tmp;
-        //TRACE("main TOS: %s\n",ROMFile.Text);
       }
 #endif
 
@@ -823,9 +821,9 @@ bool Initialise()
   EasyStr Fol=RunDir+SLASH+ACSI_HD_DIR+SLASH;
   if (ds.Find(Fol+"*.img")){
     do{
-      strcpy(ansi_name,Fol.Text);//2nd reuse!
-      strcat(ansi_name,ds.Name);
-      bool ok=AcsiHdc[acsi_dev].Init(acsi_dev,ansi_name); 
+      strcpy(ansi_string,Fol.Text);
+      strcat(ansi_string,ds.Name);
+      bool ok=AcsiHdc[acsi_dev].Init(acsi_dev,ansi_string); 
       if(ok)
       {
         SSEConfig.AcsiImg=true;
@@ -838,10 +836,9 @@ bool Initialise()
 
   SetNotifyInitText(T("Jump Tables"));
 
-#if defined(SSE_DELAY_LOAD_DLL) \
-  && defined(__BORLANDC__)
+#if defined(SSE_DELAY_LOAD_DLL) && defined(__BORLANDC__)
 ///__pfnDliNotifyHook=
-__pfnDliFailureHook = MyLoadFailureHook; // from the internet!
+__pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
 #endif
 
 #if !(defined(SSE_GUI_NOTIFY1))
@@ -1091,9 +1088,6 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
 #endif
   AssociateSteem(".STS","steem_memory_snapshot",0,T("Steem Memory Snapshot"),SNAP_ICON_NUM,0);
   AssociateSteem(".STC","st_cartridge",0,T("ST ROM Cartridge"),CART_ICON_NUM,0);
-#if defined(SSE_GUI_ASSOCIATE_IPF)
-  AssociateSteem(".IPF","st_disk_image",0,T("ST Disk Image"),DISK_ICON_NUM,0);
-#endif
 #endif//#if !defined(SSE_GUI_NO_AUTO_ASSOCIATE_DISK_STS_STC)
 
 #if !defined(SSE_GUI_NO_AUTO_ASSOCIATE_MISC)
@@ -1118,6 +1112,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
   dbg_log("STARTUP: LoadState finished");
   dbg_log("STARTUP: power_on Called");
   power_on();
+#if !defined(SSE_VAR_NO_UPDATE_383)
 #ifdef WIN32
 #ifndef ONEGAME
   if (CSF.GetInt("Update","AutoUpdateEnabled",true)){
@@ -1125,13 +1120,12 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet!
       EasyStr Online=LPSTR(CSF.GetInt("Update","AlwaysOnline",0) ? " online":"");
       EasyStr NoPatch=LPSTR(CSF.GetInt("Update","PatchDownload",true)==0 ? " nopatchcheck":"");
       EasyStr AskPatch=LPSTR(CSF.GetInt("Update","AskPatchInstall",0) ? " askpatchinstall":"");
-#if !!defined(STEVEN_SEAGAL_)
       WinExec(EasyStr("\"")+RunDir+"\\SteemUpdate.exe\" silent"+Online+NoPatch+AskPatch,SW_SHOW);
-#endif
     }
   }
 #endif
 #endif
+#endif//SSE_VAR_NO_UPDATE_383
 
 #ifdef DEBUG_BUILD
   dbg_log("STARTUP: update_register_display called");

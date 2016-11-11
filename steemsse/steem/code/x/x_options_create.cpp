@@ -28,8 +28,7 @@ void TOptionBox::CreateMachinePage()
 {
   int y=10;
 
-#if defined(SSE_STF) \
-  && defined(SSE_GUI_OPTIONS_STF_IN_MACHINE)
+#if defined(SSE_STF) && defined(SSE_GUI_OPTIONS_STF)
   const int LineHeight=30;
   const int HorizontalSeparation=10;
 
@@ -54,7 +53,7 @@ void TOptionBox::CreateMachinePage()
   st_type_dd.create(XD,page_p,page_l+5+Wid,y,180-(15+Wid+10),350,
     dd_notify_proc,this);
 
-#if defined(SSE_MMU_WAKE_UP) && defined(SSE_GUI_OPTIONS_WU_IN_MACHINE)
+#if defined(SSE_MMU_WAKE_UP) && defined(SSE_GUI_OPTIONS_WU)
   Wid=hxc::get_text_width(XD,T("Wake-up state"));
   wake_up_label.create(XD,page_p,page_l+160,y,Wid,25,NULL,this,BT_STATIC 
     | BT_TEXT,T("Wake-up state"),0,BkCol);
@@ -593,19 +592,6 @@ void TOptionBox::CreateGeneralPage()
   hints.add(start_click_but.handle,T("When this option is ticked clicking a mouse button on Steem's main window will start emulation."),
               page_p);
 
-
-#if defined(SSE_SOUND_OPTION_DISABLE_DSP)
-  y+=35;
-  enable_dsp_but.create(XD,page_p,page_l,y,0,25,
-          button_notify_proc,this,BT_CHECKBOX,
-          T("Start emulation on mouse click"),141,BkCol);
-  enable_dsp_but.set_check(DSP_ENABLED);
-  hints.add(enable_dsp_but.handle,T("If you have some odd crashes, unchecking this may help. DSP code uses the math coprocessor and exceptions are almost impossible to catch"),
-              page_p);
-#endif
-
-
-
   XFlush(XD);
 }
 //---------------------------------------------------------------------------
@@ -722,28 +708,24 @@ void TOptionBox::CreateSoundPage()
 
   FillSoundDevicesDD();
 
-#if !(defined(SSE_SOUND_MICROWIRE) && defined(SSE_GUI_OPTIONS_SOUND3))
+#if !(defined(SSE_SOUND_MICROWIRE) && defined(SSE_GUI_OPTIONS_SOUND))
   y+=220;
 #else
   y+=180;
 #endif
 
-#if defined(SSE_YM2149_FIX_TABLES) && defined(SSE_GUI_OPTIONS_SOUND3)
+#if defined(SSE_YM2149_FIX_TABLES) && defined(SSE_GUI_OPTIONS_SOUND)
   y+=LineHeight;
   psg_fixtables_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Sampled YM-2149"),4012,BkCol);
-  psg_fixtables_but.set_check(SSEOption.PSGMod);
+  psg_fixtables_but.set_check(OPTION_SAMPLED_YM);
   hints.add(psg_fixtables_but.handle,
-#if defined(SSE_YM2149_NO_SAMPLES_OPTION)
     T("Punchier P.S.G. (YM-2149) sound using a table by ljbk, thx dude!"),
-#else
-    T("This uses values from Yamaha doc to render P.S.G. (YM-2149) sound."),
-#endif
     page_p);
 ////  y+=LineHeight;
 #endif
 
-#if defined(SSE_SOUND_MICROWIRE) && defined(SSE_GUI_OPTIONS_SOUND3)
+#if defined(SSE_SOUND_MICROWIRE) && defined(SSE_GUI_OPTIONS_SOUND)
 ///  y+=LineHeight;
   ste_microwire_but.create(XD,page_p,page_l+148,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Microwire"),4009,BkCol);
@@ -755,7 +737,7 @@ void TOptionBox::CreateSoundPage()
 //  y+=LineHeight;
 #endif
 
-#if defined(SSE_SOUND_KEYBOARD_CLICK) && defined(SSE_GUI_OPTIONS_SOUND4)
+#if defined(SSE_SOUND_KEYBOARD_CLICK) && defined(SSE_GUI_OPTIONS_SOUND)
   keyboard_click_but.create(XD,page_p,page_l+240,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Keyboard click"),4007,BkCol);
   int keyboard_click=( PEEK(0x484)&1 ); // get current setting
@@ -1368,54 +1350,6 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SSE_STF) && !defined(SSE_GUI_OPTIONS_STF_IN_MACHINE)
-  Wid=hxc::get_text_width(XD,T("ST model"));
-  st_type_label.create(XD,page_p,page_l,y,Wid,25,NULL,this,BT_STATIC 
-    | BT_TEXT,T("ST Model"),0,BkCol);
-  st_type_dd.id=4005;
-  st_type_dd.make_empty();
-  st_type_dd.additem("STE",0);
-  st_type_dd.additem("STF",1);
-#if defined(SSE_STF_MEGASTF)
-  st_type_dd.additem("Mega ST4",2);
-#endif
-  st_type_dd.select_item_by_data(ST_TYPE);
-
-  hints.add(st_type_dd.handle, // works?
-    "Some programs will run only with STF or STE."
-    ,page_p);
-
-  st_type_dd.create(XD,page_p,page_l+5+Wid,y,400-(15+Wid+10),350,
-    dd_notify_proc,this);
-  y+=LineHeight;
-#endif
-
-#if defined(SSE_MMU_WAKE_UP) && !defined(SSE_GUI_OPTIONS_WU_IN_MACHINE)
-  Wid=hxc::get_text_width(XD,T("Wake-up state"));
-  wake_up_label.create(XD,page_p,page_l,y,Wid,25,NULL,this,BT_STATIC 
-    | BT_TEXT,T("Wake-up state"),0,BkCol);
-  wake_up_dd.id=4006;
-  wake_up_dd.make_empty();
-  wake_up_dd.additem("Ignore wake-up state",0);
-#if defined(SSE_MMU_WU)
-  wake_up_dd.additem("DL3 WU2 WS2",1);
-  wake_up_dd.additem("DL4 WU2 WS4",2);
-  wake_up_dd.additem("DL5 WU1 WS3",3);
-  wake_up_dd.additem("DL6 WU1 WS1",4);
-#else
-  wake_up_dd.additem("Wake-up state 1",1);
-  wake_up_dd.additem("Wake-up state 2",2);
-#endif
-  wake_up_dd.select_item_by_data(OPTION_WS);
-
-  hints.add(wake_up_dd.handle, // works?
-    "Very technical - Some demos will display correctly only in one of those states."
-    ,page_p);
-
-  wake_up_dd.create(XD,page_p,page_l+5+Wid,y,400-(15+Wid+10),350,
-    dd_notify_proc,this);
-  y+=LineHeight;
-#endif
 
 #if defined(SSE_IKBD_6301) 
   hd6301emu_but.create(XD,page_p,page_l,y,0,25,
@@ -1441,7 +1375,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SSE_SOUND_KEYBOARD_CLICK) && !defined(SSE_GUI_OPTIONS_SOUND4)
+#if defined(SSE_SOUND_KEYBOARD_CLICK) && !defined(SSE_GUI_OPTIONS_SOUND)
   keyboard_click_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Keyboard click"),4007,BkCol);
   int keyboard_click=( PEEK(0x484)&1 ); // get current setting
@@ -1452,16 +1386,12 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SSE_YM2149_FIX_TABLES) && !defined(SSE_GUI_OPTIONS_SOUND3)
+#if defined(SSE_YM2149_FIX_TABLES) && !defined(SSE_GUI_OPTIONS_SOUND)
   psg_fixtables_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("P.S.G."),4012,BkCol);
-  psg_fixtables_but.set_check(SSEOption.PSGMod);
+  psg_fixtables_but.set_check(OPTION_SAMPLED_YM);
   hints.add(psg_fixtables_but.handle,
-#if defined(SSE_YM2149_NO_SAMPLES_OPTION)
     T("Punchier P.S.G. (YM-2149) sound using a table by ljbk, thx dude!"),
-#else
-    T("This uses values from Yamaha doc to render P.S.G. (YM-2149) sound."),
-#endif
     page_p);
   y+=LineHeight;
 #endif
@@ -1486,7 +1416,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SSE_SOUND_MICROWIRE) && !defined(SSE_GUI_OPTIONS_SOUND3)
+#if defined(SSE_SOUND_MICROWIRE) && !defined(SSE_GUI_OPTIONS_SOUND)
   ste_microwire_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Microwire"),4009,BkCol);
   ste_microwire_but.set_check(OPTION_MICROWIRE);

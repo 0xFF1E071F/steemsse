@@ -83,6 +83,7 @@ DESCRIPTION: Completely random accessory functions.
                                     {"Cartridge",LOGSECTION_CARTRIDGE},
                                     {"Options",LOGSECTION_OPTIONS},
                                     {"Pasti",LOGSECTION_PASTI},
+  {"Video rendering",LOGSECTION_VIDEO_RENDERING},
 #endif
                                     {"*",-1}};
 

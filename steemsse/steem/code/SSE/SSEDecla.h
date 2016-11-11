@@ -209,11 +209,7 @@ int SS_signal; // "handy" global mask (future coding horror case)
 // VARIOUS //
 /////////////
 
-#if defined(SSE_VAR_ARCHIVEACCESS)||defined(SSE_ACSI)\
-  ||defined(SSE_GUI_STATUS_STRING_ICONS)
-#define SSE_ANSI_STRING
-extern char ansi_name[MAX_PATH];
-#endif
+extern char ansi_string[MAX_PATH];
 
 #if defined(SSE_DELAY_LOAD_DLL)
 // Delay loading DLLs

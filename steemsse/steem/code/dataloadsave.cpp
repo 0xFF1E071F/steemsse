@@ -825,7 +825,11 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_STF)
     OptionBox.Hide(); // hack
     ST_TYPE=pCSF->GetInt("Machine","STType",ST_TYPE);
+#if defined(SSE_STF_383)
+    SSEConfig.SwitchSTType(ST_TYPE);
+#else
     SwitchSTType(ST_TYPE); // settings for STF or STE
+#endif
 #endif
 #if defined(SSE_INT_MFP_RATIO_OPTION2)
     OPTION_CPU_CLOCK=pCSF->GetInt("Options","FinetuneCPUclock",OPTION_CPU_CLOCK);
@@ -884,25 +888,19 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     ChangeBorderSize(DISPLAY_SIZE);
 #endif
 #if defined(SSE_YM2149_FIX_TABLES)
-    SSEOption.PSGMod=pCSF->GetInt("Sound","PsgMod",SSEOption.PSGMod);
+    OPTION_SAMPLED_YM=pCSF->GetInt("Sound","PsgMod",OPTION_SAMPLED_YM);
 #if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
-    if(SSEOption.PSGMod)
+    if(OPTION_SAMPLED_YM)
       YM2149.LoadFixedVolTable();
     else
       YM2149.FreeFixedVolTable();
 #endif
-#endif
-#if defined(SSE_YM2149_FIXED_VOL_TABLE) && !defined(SSE_YM2149_NO_SAMPLES_OPTION)
-    SSEOption.PSGFixedVolume=pCSF->GetInt("Sound","PsgFixedVolume",SSEOption.PSGFixedVolume);
 #endif
 #if defined(SSE_SOUND_FILTER_STF)
     PSG_FILTER_FIX=pCSF->GetInt("Sound","PsgFilter",PSG_FILTER_FIX);
 #endif
 #if defined(SSE_SOUND_MICROWIRE)
     OPTION_MICROWIRE=pCSF->GetInt("Sound","Microwire",OPTION_MICROWIRE);
-#endif
-#if defined(SSE_SOUND_OPTION_DISABLE_DSP)
-    DSP_ENABLED=pCSF->GetInt("Sound","Dsp",DSP_ENABLED);
 #endif
 #if defined(SSE_OSD_DRIVE_INFO)
     OSD_DRIVE_INFO=pCSF->GetInt("Options","OsdDriveInfo", OSD_DRIVE_INFO);
@@ -916,11 +914,11 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
     SSE_INTERPOLATE=pCSF->GetInt("Display","InterpolatedScanlines",SSE_INTERPOLATE);
 #endif
-#if defined(SSE_GUI_STATUS_STRING)
-    SSE_STATUS_BAR=pCSF->GetInt("Options","StatusBar",SSE_STATUS_BAR);
+#if defined(SSE_GUI_STATUS_BAR)
+    OPTION_STATUS_BAR=pCSF->GetInt("Options","StatusBar",OPTION_STATUS_BAR);
 #endif
-#if defined(SSE_GUI_STATUS_STRING_DISK_NAME_OPTION)
-    SSE_STATUS_BAR_GAME_NAME=pCSF->GetInt("Options","StatusBarGameName",SSE_STATUS_BAR_GAME_NAME);
+#if defined(SSE_GUI_STATUS_BAR_DISK_NAME_OPTION)
+    OPTION_STATUS_BAR_GAME_NAME=pCSF->GetInt("Options","StatusBarGameName",OPTION_STATUS_BAR_GAME_NAME);
 #endif
 #if defined(SSE_VID_VSYNC_WINDOW)
     SSE_WIN_VSYNC=pCSF->GetInt("Display","WinVSync",SSE_WIN_VSYNC);
@@ -946,9 +944,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #endif
 #if defined(SSE_VID_D3D_OPTION) &&!defined(SSE_VID_D3D_ONLY)
     SSE_OPTION_D3D=pCSF->GetInt("Options","Direct3D",SSE_OPTION_D3D);
-#ifndef SSE_VID_D3D_ONLY
     Disp.ScreenChange();
-#endif
 #endif
 #if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION)
     OPTION_ST_ASPECT_RATIO=pCSF->GetInt("Display","STAspectRatio",OPTION_ST_ASPECT_RATIO);
@@ -1449,19 +1445,13 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetStr("Display","BorderSize",EasyStr(DISPLAY_SIZE));  
 #endif
 #if defined(SSE_YM2149_FIX_TABLES)
-  pCSF->SetStr("Sound","PsgMod",EasyStr(SSEOption.PSGMod));  
-#endif
-#if defined(SSE_YM2149_FIXED_VOL_TABLE) && !defined(SSE_YM2149_NO_SAMPLES_OPTION)
-  pCSF->SetStr("Sound","PsgFixedVolume",EasyStr(SSEOption.PSGFixedVolume));  
+  pCSF->SetStr("Sound","PsgMod",EasyStr(OPTION_SAMPLED_YM));  
 #endif
 #if defined(SSE_SOUND_FILTER_STF)
   pCSF->SetStr("Sound","PsgFilter",EasyStr(PSG_FILTER_FIX));  
 #endif
 #if defined(SSE_SOUND_MICROWIRE)
   pCSF->SetStr("Sound","Microwire",EasyStr(OPTION_MICROWIRE));  
-#endif
-#if defined(SSE_SOUND_OPTION_DISABLE_DSP)
-  pCSF->SetStr("Sound","Dsp",EasyStr(DSP_ENABLED));  
 #endif
 #if defined(SSE_OSD_DRIVE_INFO)
   pCSF->SetStr("Options","OsdDriveInfo",EasyStr(OSD_DRIVE_INFO));  
@@ -1475,11 +1465,11 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
   pCSF->SetStr("Display","InterpolatedScanlines",EasyStr(SSE_INTERPOLATE));  
 #endif
-#if defined(SSE_GUI_STATUS_STRING)
-  pCSF->SetStr("Options","StatusBar",EasyStr(SSE_STATUS_BAR));
+#if defined(SSE_GUI_STATUS_BAR)
+  pCSF->SetStr("Options","StatusBar",EasyStr(OPTION_STATUS_BAR));
 #endif
-#if defined(SSE_GUI_STATUS_STRING_DISK_NAME_OPTION)
-  pCSF->SetStr("Options","StatusBarGameName",EasyStr(SSE_STATUS_BAR_GAME_NAME));
+#if defined(SSE_GUI_STATUS_BAR_DISK_NAME_OPTION)
+  pCSF->SetStr("Options","StatusBarGameName",EasyStr(OPTION_STATUS_BAR_GAME_NAME));
 #endif
 #if defined(SSE_VID_VSYNC_WINDOW)
   pCSF->SetStr("Display","WinVSync",EasyStr(SSE_WIN_VSYNC));

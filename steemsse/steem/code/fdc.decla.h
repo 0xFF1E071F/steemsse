@@ -99,7 +99,7 @@ EXT BYTE dma_status;
 #if !(defined(SSE_WD1772))
 EXT BYTE fdc_cr,fdc_tr,fdc_sr,fdc_str,fdc_dr; // made struct
 #endif
-#if !(defined(SSE_DISK_STW))
+#if !(defined(SSE_WD1772_LINES))
 EXT bool fdc_last_step_inwards_flag;
 #endif
 
@@ -123,7 +123,7 @@ EXT WORD dma_sector_count;
 #endif
 EXT WORD floppy_write_track_bytes_done;
 EXT BYTE fdc_spinning_up;
-#if !(defined(SSE_WD1772_REG2_B))
+#if !(defined(SSE_WD1772))
 EXT BYTE floppy_type1_command_active;  // Default to type 1 status
 #endif
 #if !(defined(SSE_DMA_OBJECT))
@@ -143,7 +143,7 @@ EXT int dma_sector_count;
 #endif
 EXT int floppy_write_track_bytes_done;
 EXT int fdc_spinning_up;
-#if !(defined(SSE_WD1772_REG2_B))
+#if !(defined(SSE_WD1772))
 EXT int floppy_type1_command_active;  // Default to type 1 status
 #endif
 #if !(defined(SSE_DMA_OBJECT))

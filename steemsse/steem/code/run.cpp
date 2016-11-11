@@ -129,7 +129,7 @@ void run()
 #if defined(SSE_CPU_HALT)
   if(M68000.ProcessingState==TM68000::HALTED)
     return; // cancel "run" until reset
-#if defined(SSE_GUI_STATUS_STRING_ICONS)
+#if defined(SSE_GUI_STATUS_BAR_ICONS)
   else if(M68000.ProcessingState==TM68000::BOILER_MESSAGE)
   {
     M68000.ProcessingState=TM68000::NORMAL;
@@ -313,7 +313,7 @@ void run()
     {
       TRACE("System exception\n");
       runstate=RUNSTATE_STOPPING;
-#if defined(SSE_GUI_STATUS_STRING) && defined(SSE_CPU_HALT)
+#if defined(SSE_GUI_STATUS_BAR_ALERT)
       M68000.ProcessingState=TM68000::INTEL_CRASH; // Intel M68000 crashed
       GUIRefreshStatusBar();
 #endif
@@ -547,7 +547,9 @@ inline void handle_timeout(int tn) {
     new_timeout+=1; 
   }
 #endif
-#if defined(SSE_INT_MFP_TIMERS_WOBBLE)
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE_383)
+  new_timeout+=MC68901.Wobble[tn]=(rand() % MFP_TIMERS_WOBBLE);
+#elif defined(SSE_INT_MFP_TIMERS_WOBBLE)
    new_timeout+=MC68901.Wobble[tn]=rand()&MFP_TIMERS_WOBBLE;
 #endif
   }
@@ -633,10 +635,6 @@ void event_timer_b()
     }
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+cpu_cycles_from_hbl_to_timer_b+
         scanline_time_in_cpu_cycles_at_start_of_vbl + TB_TIME_WOBBLE;
-#if defined(SSE_GLUE) && defined(SSE_INT_MFP_TIMER_B_AER) // refactored
-    if(mfp_reg[1]&8)
-      time_of_next_timer_b-=Glue.DE_cycles[shifter_freq_idx];
-#endif
   }else{
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;
   }
@@ -815,7 +813,7 @@ void event_scanline()
     #if blocks.
 */
 
-#if defined(SSE_GLUE) && defined(SSE_INT_MFP_TIMER_B_AER2)
+#if defined(SSE_GLUE) && defined(SSE_INT_MFP_TIMER_B_AER)
   if(OPTION_C2 && Glue.FetchingLine())
     CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq); // update each scanline
 #endif
@@ -839,10 +837,6 @@ void event_scanline()
 #endif
     time_of_next_timer_b=time_of_next_event
       +cpu_cycles_from_hbl_to_timer_b+TB_TIME_WOBBLE;
-#if defined(SSE_GLUE) && defined(SSE_INT_MFP_TIMER_B_AER) // refactored
-    if(mfp_reg[1]&8) //v3.7 also 1st line
-      time_of_next_timer_b-=Glue.DE_cycles[shifter_freq_idx];
-#endif
   }else if (scan_y<shifter_last_draw_line-1){
     if (bad_drawing==0) 
 #if defined(SSE_SHIFTER)
@@ -852,14 +846,6 @@ void event_scanline()
 #endif
     time_of_next_timer_b=time_of_next_event
       +cpu_cycles_from_hbl_to_timer_b+TB_TIME_WOBBLE;
-#if defined(SSE_INT_MFP_TIMER_B_AER) // refactored 
-    if(mfp_reg[1]&8)
-#if defined(SSE_GLUE)
-      time_of_next_timer_b-=Glue.DE_cycles[shifter_freq_idx];
-#else
-      time_of_next_timer_b-=320;
-#endif
-#endif
   }else if (scan_y<draw_last_scanline_for_border){
     if (bad_drawing==0) 
 #if defined(SSE_SHIFTER)
@@ -1666,7 +1652,9 @@ void event_vbl_interrupt() //SS misleading name?
 
   shifter_freq_at_start_of_vbl=shifter_freq;
   scanline_time_in_cpu_cycles_at_start_of_vbl=scanline_time_in_cpu_cycles[shifter_freq_idx];
+#if !defined(SSE_INT_MFP_TIMER_B_383)
   CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq);
+#endif
 // SS: this was so in the source
   cpu_time_of_last_vbl=time_of_next_event; ///// ABSOLUTE_CPU_TIME;
 //  cpu_time_of_last_vbl=ABSOLUTE_CPU_TIME;
@@ -1857,7 +1845,6 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
 
 
 #if defined(SSE_FLOPPY_EVENT) 
-#if defined(SSE_DISK_STW) || defined(SSE_DISK_SCP) || defined(SSE_DISK_HFE)
 /*  There's an event for floppy now because we want to handle DRQ for each
     byte, and the resolution of HBL is too gross for that:
 
@@ -1886,7 +1873,6 @@ void event_driveA_ip() {
 void event_driveB_ip() {
   SF314[1].IndexPulse();
 }
-#endif
 #endif//flp
 
 #if defined(SSE_ACIA_383)

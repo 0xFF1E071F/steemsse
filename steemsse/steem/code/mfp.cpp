@@ -113,11 +113,6 @@ void calc_time_of_next_timer_b() //SS called only by mfp_set_timer_reg()
   int cycles_in=int(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
   if (cycles_in<cpu_cycles_from_hbl_to_timer_b){
     if (scan_y>=shifter_first_draw_line && scan_y<shifter_last_draw_line){
-#if defined(SSE_INT_MFP_TIMER_B_AER) //refactored
-      if(mfp_reg[1]&8)
-        time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;  //put into future
-      else
-#endif
         time_of_next_timer_b=cpu_timer_at_start_of_hbl+cpu_cycles_from_hbl_to_timer_b
 #if defined(SSE_INT_MFP_TIMER_B_WOBBLE_HACK)
 /*  For Sunny STE. We need the hack when emulation is more precise??
@@ -385,7 +380,11 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
     TEST10B doesn't confirm, but unconlusive
     MFPTA001 could indicate timer wobble
 */
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE_383)
+            MC68901.Wobble[timer]=(rand() % MFP_TIMERS_WOBBLE);
+#else
             MC68901.Wobble[timer]=(rand()&MFP_TIMERS_WOBBLE);
+#endif
             mfp_timer_timeout[timer]+=MC68901.Wobble[timer];
 #endif
           }
@@ -832,6 +831,7 @@ void TMC68901::AdjustTimerB() {
   int CyclesIn=LINECYCLES;
   int linecycle_of_end_de=(mfp_reg[MFPR_AER]&8)
     ? Glue.CurrentScanline.StartCycle : Glue.CurrentScanline.EndCycle;
+// ^^ TODO, think startcycle not correct for STE...
   if(linecycle_of_end_de==-1) //0byte -> no timer B?
     linecycle_of_end_de+=scanline_time_in_cpu_cycles_8mhz[shifter_freq_idx];
   
@@ -848,8 +848,41 @@ void TMC68901::AdjustTimerB() {
 }
 
 #endif
+#if defined(SSE_INT_MFP_TIMER_B_383) && defined(SSE_GLUE)
+/*  Timer B can be programmed to trigger on DE change (start or end of 
+    video picture).
+    However there's a delay between DE change and MFP IRQ.
 
-#if defined(SSE_INT_MFP_TIMER_B_AER2) // refactoring
+Motorola doc for MC68901
+Event Counter Mode:
+Minimum Active Time of TAl and TBI ............................................ .4 tCLK
+Minimum Inactive Time of TAl and TBI ............................................ 4 tCLK
+
+    The MFP will start its IRQ process only after 4 MFP clock cycles.
+
+Start Timer to Interrupt Request Error (See Note 3) ............ - 2 tCLK to - (4 tCLK + 800 ns)    
+    
+    There's also a delay for the IRQ itself.
+
+    It all comes down to 28 CPU cycles + wobble 0-4 cycles (based on cases, we 
+    didn't compute from the MFP doc).
+
+    It is a coincidence that this number corresponds to the delay between DE
+    signal and pixels appearing on the screen.
+
+    This mod just removes the confusion in Steem source by not using 
+    CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN, it doesn't change actual cycles.
+*/
+
+void TMC68901::CalcCyclesFromHblToTimerB(int freq) {
+  cpu_cycles_from_hbl_to_timer_b=Glue.ScanlineTiming[TGlue::GLU_DE_OFF][shifter_freq_idx];
+  if(OPTION_C2 && (mfp_reg[MFPR_AER]&8)) 
+    // from Hatari, fixes Seven Gates of Jambala; Trex Warrior
+    cpu_cycles_from_hbl_to_timer_b-=Glue.DE_cycles[shifter_freq_idx];
+  cpu_cycles_from_hbl_to_timer_b+=28; // an addition of MFP delays
+}
+
+#elif defined(SSE_INT_MFP_TIMER_B_AER)
 
 void TMC68901::CalcCyclesFromHblToTimerB(int freq) {
   switch (freq){ //this part was the macro

@@ -249,10 +249,6 @@ public:
   hxc_button ste_microwire_but;
 #endif
 
-#if defined(SSE_SOUND_OPTION_DISABLE_DSP)
-  hxc_button enable_dsp_but;
-#endif
-
 #if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
   hxc_button use_sdl_but;    
 #endif

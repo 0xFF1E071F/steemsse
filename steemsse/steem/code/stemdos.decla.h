@@ -223,6 +223,9 @@ struct TTos {
 #if defined(SSE_TOS_GEMDOS_EM_381B)
   void HackMemoryForExtendedMonitor();
 #endif
+#if defined(SSE_TOS_WARNING1A)
+void CheckSTTypeAndTos();
+#endif
 };
 
 extern TTos Tos;

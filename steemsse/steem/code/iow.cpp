@@ -711,7 +711,6 @@ system exclusive start and end messages (F0 and F7).
       if (addr<0xfffa40){
         // Only cause bus jam once per word
         DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) if (io_word_access==0 || (addr & 1)==1) BUS_JAM_TIME(4);
-
         if (addr & 1){
           if (addr<0xfffa30){
             int old_ioaccess=ioaccess;
@@ -750,7 +749,7 @@ system exclusive start and end messages (F0 and F7).
                 mfp_gpip_input_buffer=io_src_b;
               }else{
                 mfp_reg[n]=io_src_b;
-#if defined(SSE_INT_MFP_TIMER_B_AER2) // maybe Timer B's AER bit changed?
+#if defined(SSE_INT_MFP_TIMER_B_AER) // maybe Timer B's AER bit changed?
                 ASSERT(n==MFPR_AER || n==MFPR_DDR);
                 if(OPTION_C2)
                   CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq); //update
@@ -1012,12 +1011,6 @@ Even though the samples are built on a byte-base, the DMA chip also only
           case 0xff8907:   //LoByte of frame start address
             switch (addr & 0xf){
               case 0x3:
-/*
- The DMA-Soundsystem expects you to write the high-byte of the Start- and
- Endaddress first. Even though this serves no purpose at all, writing the 
- highbyte clears the others. Hence it must be written first.
- [Isn't it false? Sounds wrong when we do that]
-*/
                 next_dma_sound_start&=0x00ffff;
                 next_dma_sound_start|=io_src_b << 16;
                 //next_dma_sound_start=(io_src_b << 16);
@@ -1624,11 +1617,7 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
             SF314[1].Motor( YM2149.SelectedDrive==1 && (fdc_str&0x80));
 #elif defined(SSE_YM2149B)
             if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE)
-#if defined(SSE_DRIVE_STATE)
               SF314[YM2149.SelectedDrive].State.motor=!!(fdc_str&0x80);
-#else
-              SF314[YM2149.SelectedDrive].motor_on=!!(fdc_str&0x80);
-#endif
 #endif
 
 

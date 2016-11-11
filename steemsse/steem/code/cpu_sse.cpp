@@ -141,17 +141,18 @@ void m68k_exception::init(int a,exception_action ea,MEM_ADDRESS _abus)
 //---------------------------------------------------------------------------
 void ASMCALL perform_crash_and_burn()
 {
-#if defined(SSE_DEBUG)
-  TRACE("==============\nCRASH AND BURN\n==============\n");
-#endif
-  TRACE2("HALT\n");
 #if defined(SSE_CPU_HALT)
+  TRACE("HALT\n");
+  TRACE2("HALT\n");
   runstate=RUNSTATE_STOPPING;
   M68000.ProcessingState=TM68000::HALTED;
-  GUIRefreshStatusBar(); // no OSD, it's mentioned there
+#if defined(SSE_GUI_STATUS_BAR)
+  GUIRefreshStatusBar();
+#endif
 #else
   reset_st(RESET_COLD | RESET_NOSTOP | RESET_CHANGESETTINGS | RESET_NOBACKUP);
   osd_start_scroller(T("CRASH AND BURN - ST RESET"));
+  TRACE("CRASH AND BURN - ST RESET  \n");
 #endif
 }
 //---------------------------------------------------------------------------
@@ -4237,8 +4238,6 @@ So EXG+STOP+INTR does pair, because EXG and INTR pair."
 --> STOP must read the immediate, but we know it's already fetched, so 
     it just uses it without refetching at the same time.
 */
-
-      //CPU_ABUS_ACCESS_READ_FETCH; //no np
       m68k_GET_IMMEDIATE_W;
 #if defined(SSE_MMU_ROUNDING_BUS0A)
       if(MMU.Rounded)

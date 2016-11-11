@@ -188,7 +188,7 @@ void TDisk::NextID(BYTE &RecordIdx,WORD &nHbls) {
 
 
   nHbls=SF314[Id].BytesToHbls(BytesToRun);
-#if 1 && defined(SSE_DEBUG)
+#if 0 && defined(SSE_DEBUG)
   BYTE a=0;
   TRACE("Next ID #%d, %d bytes, BytesToID(0) %d\n",RecordIdx,BytesToRun,BytesToID(a));
 #endif

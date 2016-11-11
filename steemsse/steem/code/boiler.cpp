@@ -271,7 +271,11 @@ WORD debug_get_ad_mask(MEM_ADDRESS ad,bool read)
 //---------------------------------------------------------------------------
 void debug_check_break_on_irq(int irq)
 {
+#if defined(SSE_BOILER_383_IRQ_BREAK) //only if breakpoints enabled
+  if (breakpoint_mode==2 &&  break_on_irq[irq]){
+#else
   if (break_on_irq[irq]){
+#endif
     if (runstate==RUNSTATE_RUNNING){
       runstate=RUNSTATE_STOPPING;
       runstate_why_stop=HEXSl(old_pc,6)+": "+name_of_mfp_interrupt[irq]+" Interrupt";

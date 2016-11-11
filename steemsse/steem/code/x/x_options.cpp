@@ -3,9 +3,9 @@
 
 #include "SSE/SSE6301.h"
 #if defined(SSE_STF)
-
+#if !defined(SSE_STF_383)
 int SwitchSTType(int new_type);//forward
-
+#endif
 #endif
 //---------------------------------------------------------------------------
 TOptionBox::TOptionBox()
@@ -290,10 +290,6 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
       floppy_access_ff=b->checked;
     }else if (b->id==140){
       StartEmuOnClick=b->checked;
-#if defined(SSE_SOUND_OPTION_DISABLE_DSP)
-    }else if (b->id==141){
-      DSP_ENABLED=b->checked;
-#endif
     }else if (b->id==210){
       draw_fs_fx=(b->checked ? DFSFX_GRILLE:DFSFX_NONE);
       if (draw_grille_black<4) draw_grille_black=4;
@@ -642,9 +638,9 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
 #if defined(SSE_YM2149_FIX_TABLES) 
     else if(b->id==4012)
     {
-      SSEOption.PSGMod=b->checked;
+      OPTION_SAMPLED_YM=b->checked;
 #if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
-      if(SSEOption.PSGMod)
+      if(OPTION_SAMPLED_YM)
         YM2149.LoadFixedVolTable();
       else
         YM2149.FreeFixedVolTable();
@@ -656,7 +652,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
     {
       SSEOption.PSGFixedVolume=b->checked;
 #if defined(SSE_YM2149_DYNAMIC_TABLE____)//v3.7.0
-      if(SSEOption.PSGMod)
+      if(OPTION_SAMPLED_YM)
         YM2149.LoadFixedVolTable();
       else
         YM2149.FreeFixedVolTable();
@@ -816,7 +812,11 @@ int TOptionBox::dd_notify_proc(hxc_dropdown*dd,int mess,int i)
   else if(dd->id==4005) // ST model
   {
     ST_TYPE=dd->sel;
+#if defined(SSE_STF_383)
+    SSEConfig.SwitchSTType(ST_TYPE);
+#else
     SwitchSTType(ST_TYPE);
+#endif
     // TODO: add TOS matching, Mega STF 4MB 
   }
 #endif

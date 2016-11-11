@@ -9,14 +9,17 @@ and its various buttons.
 #pragma message("Included for compilation: stemwin.cpp")
 #endif
 
-//#include "mfp.decla.h" //for an ASSERT if SSE_CPU not defined
 
+#if defined(SSE_BOILER_383_LOG2)
+#define LOGSECTION LOGSECTION_VIDEO_RENDERING
+#else
 #define LOGSECTION LOGSECTION_INIT//SS
+#endif
 
 //---------------------------------------------------------------------------
 void StemWinResize(int xo,int yo)
 {
-  TRACE_INIT("StemWinResize(%d,%d)\n",xo,yo);
+  TRACE_LOG("StemWinResize(%d,%d)\n",xo,yo);
   int res=screen_res;
   if (mixed_output)
     res=1;
@@ -86,7 +89,7 @@ void StemWinResize(int xo,int yo)
     //Disp.ScreenChange(); //radical
 #endif
 
-#if defined(SSE_GUI_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_BAR)
   GUIRefreshStatusBar();//of course (v3.5.5)
 #endif
 
@@ -411,7 +414,6 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
               {
                 EasyStr tmp=OptionBox.TOSBrowseDir + SLASH + ROMFile;
                 ROMFile=tmp;
-                //TRACE("TOS: %s\n",ROMFile.Text);
               }
               OptionBox.NewROMFile=ROMFile;
 #endif
@@ -819,14 +821,14 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 #else
             int guessed_x=LOWORD(lPar)/2;
 #endif
-#if defined(SSE_GUI_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_BAR)
             
-#if defined(SSE_GUI_STATUS_STRING_ICONS)
+#if defined(SSE_GUI_STATUS_BAR_ICONS)
 #if defined(SSE_BOILER_REPORT_SDP_ON_CLICK) && defined(SSE_SHIFTER)
             MEM_ADDRESS computed_sdp=FrameEvents.GetSDP(guessed_x,guessed_scan_y);
-            sprintf(ansi_name,"X%d Y%d $%X",guessed_x,guessed_scan_y,computed_sdp);
+            sprintf(ansi_string,"X%d Y%d $%X",guessed_x,guessed_scan_y,computed_sdp);
 #else
-            sprintf(ansi_name,"X%d Y%d",guessed_x,guessed_scan_y);
+            sprintf(ansi_string,"X%d Y%d",guessed_x,guessed_scan_y);
 #endif
             M68000.ProcessingState=TM68000::BOILER_MESSAGE;
             HWND status_bar_win=GetDlgItem(StemWin,120); // get handle
@@ -844,7 +846,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             sprintf(tmp,"X%d Y%d",guessed_x,guessed_scan_y);
 #endif
             SendMessage(status_bar_win,WM_SETTEXT,0,(LPARAM)(LPCTSTR)tmp);
-#endif//#define SSE_GUI_STATUS_STRING_ICONS
+#endif//#define SSE_GUI_STATUS_BAR_ICONS
 #endif
           }
 
@@ -1050,7 +1052,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           }
           break;
       }
-#if defined(SSE_GUI_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_BAR)
       GUIRefreshStatusBar();//of course (v3.7.0) - there must be other places
 #endif
       break;
@@ -1168,17 +1170,17 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       ChangeClipboardChain(StemWin,NextClipboardViewerWin);
       StemWin=NULL;
       break;
-#if defined(SSE_GUI_STATUS_STRING_ICONS) //v3.8.0
+#if defined(SSE_GUI_STATUS_BAR_ICONS) //v3.8.0
 /*  It is cool to add country flag next to TOS in the status bar, so
     let's do some Windows programming. 
 */
     case WM_DRAWITEM: // window must draw its own item
       if(wPar==120) // status bar 
       {
-        ASSERT(SSE_STATUS_BAR||SSE_STATUS_BAR_GAME_NAME);
+        ASSERT(OPTION_STATUS_BAR||OPTION_STATUS_BAR_GAME_NAME);
         ASSERT(((DRAWITEMSTRUCT*)lPar)->CtlType==ODT_STATIC);
 #define myHdc ((DRAWITEMSTRUCT*)lPar)->hDC 
-#define status_bar ansi_name
+#define status_bar ansi_string
 #define myRect ((DRAWITEMSTRUCT*)lPar)->rcItem
 #if !defined(SSE_VS2008_WARNING_383)
         HWND status_bar_win=GetDlgItem(StemWin,wPar); // get handle
@@ -1199,7 +1201,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         if(ADAT)
           myRect.left-=8;
 #endif
-#if defined(SSE_GUI_STATUS_STRING_HD)
+#if defined(SSE_GUI_STATUS_BAR_HD)
         if(!HardDiskMan.DisableHardDrives||ACSI_EMU_ON)
           myRect.left-=8;
 #endif
@@ -1209,9 +1211,8 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           myRect.left-=8;
         if(OPTION_HACKS)
           myRect.left-=8;
-        //ASSERT(myRect.left>=0);//that would be stupid
         TextOut(myHdc,myRect.left,3,status_bar,nchars);
-        if(SSE_STATUS_BAR && M68000.ProcessingState==TM68000::NORMAL) 
+        if(OPTION_STATUS_BAR && M68000.ProcessingState==TM68000::NORMAL) 
         {
           HDC TempDC=CreateCompatibleDC(myHdc);
           ASSERT(TempDC);
@@ -1235,7 +1236,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             myx+=19;
           }
 #endif
-#if defined(SSE_GUI_STATUS_STRING_HD)
+#if defined(SSE_GUI_STATUS_BAR_HD)
           if(!HardDiskMan.DisableHardDrives||ACSI_EMU_ON)
           {
             DrawIconEx(myHdc,myx,2,
@@ -1279,17 +1280,6 @@ void HandleButtonMessage(UINT Id,HWND hBut)
 {
   switch (Id){
     case 100:
-#if defined(SSE_GUI_DISK_MANAGER_RGT_CLK_HD)
-      if (SendMessage(hBut,BM_GETCLICKBUTTON,0,0)==2)
-      {
-        HardDiskMan.DisableHardDrives=!HardDiskMan.DisableHardDrives;
-#if defined(SSE_GUI_STATUS_STRING)
-        GUIRefreshStatusBar();
-#endif
-        //TRACE_OSD("HD %d",!HardDiskMan.DisableHardDrives);
-        break;
-      }
-#endif
       DiskMan.ToggleVisible();
       SendMessage(hBut,BM_SETCHECK,DiskMan.IsVisible(),0);
       break;
