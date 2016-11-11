@@ -9,7 +9,7 @@
     other emulation variables and facilities.
     The dispatcher also takes care of ghost disks.
 */
-//TODO, clean up, a bit messy...
+
 #include "SSE.h"
 
 #if defined(SSE_WD1772)
@@ -43,18 +43,12 @@ void TWD1772::Reset(bool Cold) {
 #ifdef SSE_FDC_FORCE_INTERRUPT
   InterruptCondition=0;
 #endif
-
-#ifdef SSE_WD1772_REG2_B
-  StatusType=1;
-#endif
-
 #if defined(SSE_DISK_GHOST)
   Lines.CommandWasIntercepted=0;
 #endif
 
-#if defined(SSE_WD1772_PHASE)
   prg_phase=WD_READY;
-#endif
+  StatusType=1;
 
 }
 
@@ -293,11 +287,7 @@ BYTE TWD1772::IORead(BYTE Line) {
       else
         STR&=BYTE(~FDC_STR_T1_INDEX_PULSE);
       // WP, SU
-#if defined(SSE_WD1772_REG2_B)
       if(StatusType)
-#else
-      if(floppy_type1_command_active)
-#endif
       {
         // disk has just been changed (30 VBL set at SetDisk())
         if(floppy_mediach[drive])
@@ -328,7 +318,7 @@ BYTE TWD1772::IORead(BYTE Line) {
           " ($"+HEXSl(STR,2)+"), clearing IRQ"); )
           floppy_irq_flag=0;
 
-#if defined(SSE_FDC_FORCE_INTERRUPT_D8)
+#if defined(SSE_FDC_FORCE_INTERRUPT)
 /*
 WD doc:
 "When using the immediate interrupt condition (i3 = 1) an interrupt
@@ -351,11 +341,8 @@ WD doc:
         if(!ADAT || InterruptCondition!=8)
           mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
         InterruptCondition=0;
-#else//before v3.7
-#if defined(SSE_FDC_FORCE_INTERRUPT)
-        if(InterruptCondition!=8)
-#endif
-          mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
+#else
+        mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
 #endif
       }
 #if defined(SSE_WD1772_LINES)
@@ -745,19 +732,16 @@ void TWD1772IDField::Trace() {
 
 
 /////////////////////////////////// MFM ///////////////////////////////////////
-/*
-    Correct field must be filled in before calling a function:
+/*  Correct field must be filled in before calling a function:
     data -> Encode() -> clock and encoded word available 
     encoded word -> Decode() -> data & clock available 
     If mode is FORMAT_CLOCK, the clock byte will have a missing bit
     for bytes $A1 and $C2.
-    MFM encoding is partly for fun, we could just store the clock
-    and data bytes separately, it would be more efficient.
+    The STW format could have been done without MFM encoding but it is
+    necessary for the HFE format anyway.
 */
 
-//#if defined(SSE_DISK_STW)
 #if defined(SSE_WD1772_MFM)
-
 
 #ifdef SSE_WD1772_MFM_PRODUCE_TABLE // one-shot switch...
   // todo, also in bits
@@ -772,7 +756,6 @@ void TWD1772IDField::Trace() {
 
 void TWD1772MFM::Decode() {
 
-#if defined(SSE_DISK_STW_MFM) // not optimised
   WORD encoded_shift=encoded;
   data=clock=0; //BYTEs
   for(int i=0;i<8;i++)
@@ -785,10 +768,6 @@ void TWD1772MFM::Decode() {
     if(i<7)
       data<<=1,encoded_shift<<=1;
   }
-#else
-  data=(BYTE)encoded&0xFF;
-  clock=(BYTE) ((encoded>>8)&0xFF);
-#endif
 
 }
 
@@ -817,8 +796,6 @@ void TWD1772MFM::Encode(int mode) {
     else if(data==0xC2) // -> $5224
       clock&=~2; // missing bit 1 of clock -> bit 4 of encoded word
 
-
-#if defined(SSE_DISK_STW_MFM)
   // 2. mix clock & data to create a word
   data_shift=data;
   BYTE clock_shift=clock;
@@ -831,11 +808,6 @@ void TWD1772MFM::Encode(int mode) {
     if(i<7)
       encoded<<=1; data_shift<<=1;
   }   
-#else//no mfm:
-  encoded=clock;
-  encoded<<=8;
-  encoded|=data;  
-#endif
 }
 
 #endif
@@ -880,6 +852,8 @@ void TWD1772Crc::Reset() {
 
 #endif
 
+#if defined(SSE_WD1772_BIT_LEVEL)
+
 /////////////////////////////////// DPLL //////////////////////////////////////
 /*  This is the correct algorithm for the WD1772 DPLL (digital phase-locked 
     loop) system, as described in patent US 4808884 A.
@@ -887,8 +861,6 @@ void TWD1772Crc::Reset() {
     Thx to Olivier Galibert for some inspiration, otherwise the code
     would be a real MESS, err, mess...
 */
-
-#if defined(SSE_WD1772_DPLL)
 
 int TWD1772Dpll::GetNextBit(int &tm, BYTE drive) {
   ASSERT(drive<=1);
@@ -903,37 +875,6 @@ int TWD1772Dpll::GetNextBit(int &tm, BYTE drive) {
     aa=ImageSCP[drive].GetNextTransition(timing_in_us); // cycles to next 1
     TRACE_MFM("(%d)",timing_in_us);
 
-#if defined(SSE_WD1772_WEAK_BITS) //NO
-/*  We make sure that Dungeon Master's weak bits are paired.
-    See sector 0-00-7
-    Formed bytes should be random, out of those 2 values only:
-      $68 01101000 MFM 944A 1001010001001010 
-      $E8 11101000 MFM 544A 0101010001001010 
-    With other values, the 1st gate won't even open for your party.
-    We nudge by only 1 cycle, but it makes the difference.
-    undef 3.7.2
-*/
-    if(!OPTION_HACKS) 
-      ; // it is a dangerous hack, protected by the option
-    else if(weak_bit_pairing) // also if current timing is even
-    {
-      aa-=weak_bit_pairing; // 
-      TRACE_MFM(" WB%d ",-weak_bit_pairing);
-      weak_bit_pairing=0;
-    }
-    else if(timing_in_us>4 && timing_in_us<8 && (timing_in_us&1))
-    { // not exact science...
-      if(phase_add-phase_sub && (rand()&1))
-        weak_bit_pairing=(phase_add-phase_sub<0) ? 1 : -1;
-      else
-        weak_bit_pairing=(rand()%3)-1; 
-      ASSERT(weak_bit_pairing==-1 || weak_bit_pairing==1 || weak_bit_pairing==0);
-      aa+=weak_bit_pairing;
-      TRACE_MFM(" WB%d ",weak_bit_pairing);
-    }
-    else
-      weak_bit_pairing=0;
-#endif
     latest_transition+=aa;
   }
   int when=latest_transition;
@@ -1035,12 +976,9 @@ void TWD1772Dpll::SetClock(const int &period)
     delays[i] = period*(i+1);
 }
 
-#endif
 
 ///////////////////////////////////// AM //////////////////////////////////////
 // 3rd party-inspired; see note for function WD1772.ShiftBit()
-
-#if defined(SSE_WD1772_AM_LOGIC)
 
 // reset am detector; read returns only on AM detected or clocks elapsed
 void TWD1772AmDetector::Enable() {
@@ -1084,8 +1022,6 @@ void TWD1772AmDetector::Reset() {
 */
 
 
-#if defined(SSE_DISK_STW) || defined(SSE_DISK_SCP) || defined(SSE_DISK_HFE)
-
 bool TWD1772::Drq(bool state) {
   Lines.drq=state;
   if(state)
@@ -1099,12 +1035,12 @@ bool TWD1772::Drq(bool state) {
 
 void TWD1772::Irq(bool state) {
 
-#if defined(SSE_WD1772_AM_LOGIC)
+#if defined(SSE_WD1772_BIT_LEVEL)
   Amd.Reset();
   Amd.Enabled=false;//??
 #endif
 
-  if(state && !Lines.irq)// && (STR&STR_BUSY) ) // so not on "force interrupt"
+  if(state && !Lines.irq) // so not on "force interrupt"
   {
     IndexCounter=10;
     //TRACE_LOG("%d IP for motor off\n",IndexCounter);
@@ -1165,24 +1101,14 @@ int TWD1772::MsToCycles(int ms) {
 }
 
 
-#if defined(SSE_WD1772_PHASE)
-
-
 /*  Here there's no discussion: WD1772 got a new command and it will
     start executing it.
 */
 
 void TWD1772::NewCommand(BYTE command) {
   ASSERT( IMAGE_STW || IMAGE_SCP || IMAGE_HFE);
-  //TRACE_LOG("STW new command %X\n",command);
+  
   CR=command;
-
-
-#if defined(SSE_FDC_FORCE_INTERRUPT_D8)
-#else
-  if(InterruptCondition==4) // what if 4+8?
-    InterruptCondition=0;
-#endif
 
   // reset drive R/W flags
   SF314[DRIVE].State.reading=SF314[DRIVE].State.writing=0;
@@ -1199,11 +1125,7 @@ void TWD1772::NewCommand(BYTE command) {
     if(InterruptCondition!=8)
       Irq(0);
     InterruptCondition=0;
-#if defined(SSE_WD1772_REG2_B)
     StatusType=1;
-#else
-    floppy_type1_command_active=1; //or 2?
-#endif
 
     // should we wait for spinup (H=0)?
     if(!(CR&CR_H) && !Lines.motor)
@@ -1240,11 +1162,7 @@ void TWD1772::NewCommand(BYTE command) {
     if(InterruptCondition!=8)
       Irq(0);
     InterruptCondition=0;
-#if defined(SSE_WD1772_REG2_B)
     StatusType=0;
-#else
-    floppy_type1_command_active=0;
-#endif
     if(!(CR&CR_H) && !Lines.motor)
     {
       Motor(true); 
@@ -1268,11 +1186,7 @@ void TWD1772::NewCommand(BYTE command) {
     if(InterruptCondition!=8)
       Irq(0);
     InterruptCondition=0;
-#if defined(SSE_WD1772_REG2_B)
     StatusType=0;
-#else
-    floppy_type1_command_active=0;
-#endif
 
     // we treat the motor / H business as for type II, not as on flow chart
     if(!(CR&CR_H) && !Lines.motor)
@@ -1295,11 +1209,7 @@ void TWD1772::NewCommand(BYTE command) {
     if(STR&STR_BUSY)
       STR&=~STR_BUSY;
     else // read STR is type I if FDC wasn't busy when interrupted (doc)
-#if defined(SSE_WD1772_REG2_B)
       StatusType=1;
-#else
-      floppy_type1_command_active=2; // something like that?
-#endif
 
     if(CR&CR_I3) // immediate, D8
     {
@@ -1332,22 +1242,15 @@ void TWD1772::NewCommand(BYTE command) {
 
 }
 
-#endif
-
-
-#if defined(SSE_DRIVE_INDEX_PULSE)
 /*  Drive calls this function at IP if it's selected.
     Whether the WD1772 is waiting for it or not.
 */
-#if defined(SSE_DRIVE_INDEX_PULSE2)
 #if defined(SSE_VS2008_WARNING_383) && !defined(SSE_DEBUG)
 void TWD1772::OnIndexPulse(bool image_triggered) {
 #else
 void TWD1772::OnIndexPulse(int id,bool image_triggered) {
 #endif
-#else
-void TWD1772::OnIndexPulse(int id) {
-#endif
+
   IndexCounter--; // We set counter then decrement until 0
 
 #ifdef SSE_DEBUG
@@ -1378,9 +1281,7 @@ void TWD1772::OnIndexPulse(int id) {
     case WD_TYPEI_READ_ID:
     case WD_TYPEII_FIND_ID:
     case WD_TYPEII_READ_ID:
-#if defined(SSE_WD1772_371) // undocumented but I knew it, v3.7.1
     case WD_TYPEIII_FIND_ID: // Antago SCP (note: disk must be read-only)
-#endif
     case WD_TYPEIII_READ_ID:
       TRACE_LOG("Find ID timeout\n");
       STR|=STR_SE; // RNF is same bit as SE, OSD will be set by Dma.UpdateRegs
@@ -1405,7 +1306,7 @@ void TWD1772::OnIndexPulse(int id) {
         //TRACE_LOG("Start reading track\n");
         TRACE_LOG("Read track %c:S%d F%d  (DMA %d sectors)\n",'A'+DRIVE,CURRENT_SIDE,CURRENT_TRACK,Dma.Counter);
         prg_phase=WD_TYPEIII_READ_DATA;
-#if defined(SSE_WD1772_AM_LOGIC)
+#if defined(SSE_WD1772_BIT_LEVEL)
         Amd.Reset();
 #endif
         Read();
@@ -1438,9 +1339,7 @@ void TWD1772::OnIndexPulse(int id) {
 #if defined(SSE_DISK_GHOST)
       Lines.CommandWasIntercepted=0;
 #endif
-#if defined(SSE_WD1772_371)
       prg_phase=WD_READY;
-#endif
       break;
 
     default: // drive is spinning, WD isn't counting
@@ -1464,19 +1363,11 @@ void TWD1772::OnIndexPulse(int id) {
 //  TRACE_LOG("WD1772 IP %d byte %d\n",IndexCounter,Disk[DRIVE].current_byte);
 }
 
-#endif
-
-
 #if defined(SSE_FLOPPY_EVENT)
 
 void TWD1772::OnUpdate() {
 
-#if defined(SSE_FLOPPY_EVENT2)
   update_time=time_of_next_event+n_cpu_cycles_per_second; // we come here anyway
-#else
-  //TRACE_LOG("wd1772 event cpu %d\n",ACT);
-  update_time=ACT+n_cpu_cycles_per_second; // we come here anyway
-#endif
 
   if(!(IMAGE_STW)&&!(IMAGE_SCP)&&!(IMAGE_HFE)) // only for those images
   {
@@ -1511,11 +1402,7 @@ void TWD1772::OnUpdate() {
 #if !defined(SSE_WD1772_383B) //done before now
         // imitate Steem native, eg My Socks are Weapons
         // not documented; only restore?
-#if defined(SSE_FLOPPY_EVENT2)
         update_time=time_of_next_event+1024;
-#else
-        update_time=ACT+1024; 
-#endif
 #endif
       }    
 #if !defined(SSE_WD1772_383B)
@@ -1592,11 +1479,7 @@ r1       r0            1772
         update_time=MsToCycles(3);
         break;
       }//sw
-#if defined(SSE_FLOPPY_EVENT2)
       update_time+=time_of_next_event;
-#else
-      update_time+=ACT;; 
-#endif
       prg_phase=WD_TYPEI_STEP_PULSE;
     }
     break;
@@ -1608,14 +1491,11 @@ r1       r0            1772
     break;
 
   case WD_TYPEI_CHECK_VERIFY: // 'D'
-
-#ifdef SSE_WD1772_371
     // update STR bit 2 (reflects status of the TR00 signal)
     if(Lines.track0)
       STR|=STR_T00; // fixes Power Drift SCP disk A
     else
       STR&=~STR_T00; // fixes R-Type SCP
-#endif
 
     if(CR&CR_V)
     {
@@ -1637,11 +1517,7 @@ r1       r0            1772
 #endif
 
       prg_phase=WD_TYPEI_HEAD_SETTLE; 
-#if defined(SSE_FLOPPY_EVENT2)
       update_time=time_of_next_event+ MsToCycles(15);
-#else
-      update_time=ACT+ MsToCycles(15);
-#endif
     }
     else
     {
@@ -1652,7 +1528,7 @@ r1       r0            1772
   case WD_TYPEI_HEAD_SETTLE:
     // flow chart is missing head settling
     prg_phase=WD_TYPEI_FIND_ID;
-#if defined(SSE_WD1772_AM_LOGIC)
+#if defined(SSE_WD1772_BIT_LEVEL)
     Amd.Reset();
 #endif
     n_format_bytes=0;
@@ -1676,7 +1552,7 @@ r1       r0            1772
     CrcLogic.Add(DSR);
 //  TRACE("dsr=%x fmt=%d\n",DSR,n_format_bytes);
 
-#if defined(SSE_WD1772_AM_LOGIC)
+#if defined(SSE_WD1772_BIT_LEVEL)
     // wait for AM
     if(Amd.aminfo & CAPSFDC_AI_DSRAM)
     {
@@ -1686,7 +1562,7 @@ r1       r0            1772
       Amd.nA1=3;
       CrcLogic.Reset(); 
 
-#if defined(SSE_WD1772_AM_LOGIC) 
+#if defined(SSE_WD1772_BIT_LEVEL) 
       Amd.Enabled=false; // read IDs OK
 #endif
 
@@ -1695,29 +1571,22 @@ r1       r0            1772
 #endif
 
     if(DSR==0xA1 && !(Mfm.clock&BIT_5)
-#if ! defined(SSE_WD1772_371) // not $C2
-      || DSR==0xC2 && !(Mfm.clock&BIT_4)  
-#endif
-#if defined(SSE_WD1772_AM_LOGIC) 
+#if defined(SSE_WD1772_BIT_LEVEL) 
       || (Amd.aminfo&CAPSFDC_AI_DSRMA1)
 #endif
       )
     {
-#if defined(SSE_WD1772_AM_LOGIC)
+#if defined(SSE_WD1772_BIT_LEVEL)
       Amd.nA1++;
 #else
       n_format_bytes++;
 #endif
-#if ! defined(SSE_WD1772_371) // always A1, always reset
-      if(DSR==0xA1)
-#endif
-        CrcLogic.Reset(); // only special $A1 resets the CRC logic
-
-#if defined(SSE_WD1772_AM_LOGIC)
+      CrcLogic.Reset(); // only special $A1 resets the CRC logic
+#if defined(SSE_WD1772_BIT_LEVEL)
       Amd.amisigmask=CAPSFDC_AI_DSRREADY;
 #endif
     }
-#if defined(SSE_WD1772_AM_LOGIC)
+#if defined(SSE_WD1772_BIT_LEVEL)
     else if( (DSR&0xFF)>=0xFC && Amd.nA1==3) // CAPS: $FC->$FF
 #else
     else if( (DSR&0xFF)>=0xFC && n_format_bytes==3) // CAPS: $FC->$FF
@@ -1727,11 +1596,11 @@ r1       r0            1772
       TRACE_LOG("%X found at %d\n",DSR,SF314[DRIVE].BytePosition());
       n_format_bytes=0;//reset
       prg_phase++; // in type I or type II or III
-#if defined(SSE_WD1772_AM_LOGIC)
+#if defined(SSE_WD1772_BIT_LEVEL)
       Amd.Enabled=false; // read IDs OK
 #endif
     }
-#if defined(SSE_WD1772_AM_LOGIC)
+#if defined(SSE_WD1772_BIT_LEVEL)
     else if(Amd.nA1)
       Amd.Reset();
 #else
@@ -1795,7 +1664,7 @@ r1       r0            1772
         STR|=STR_CRC; // set CRC error if track field was OK
       }
       CrcLogic.Add(DSR); //unimportant
-#if defined(SSE_WD1772_AM_LOGIC)
+#if defined(SSE_WD1772_BIT_LEVEL)
       Amd.Enabled=true; 
 #endif
       Read(); // this sets up next event
@@ -1806,11 +1675,7 @@ r1       r0            1772
   case WD_TYPEIII_SPUNUP:
     prg_phase++;
     if(CR&CR_E) // head settle delay programmed
-#if defined(SSE_FLOPPY_EVENT2)
       update_time=time_of_next_event+ MsToCycles(15);
-#else
-      update_time=ACT+ MsToCycles(15);
-#endif
     else
       OnUpdate(); // some recursion is always cool
     break;
@@ -1833,7 +1698,7 @@ r1       r0            1772
       IndexCounter=5; 
       //TRACE_LOG("%d IP to find ID %d\n",IndexCounter,SR);
       prg_phase=WD_TYPEII_FIND_ID; // goto '1'
-#if defined(SSE_WD1772_AM_LOGIC)
+#if defined(SSE_WD1772_BIT_LEVEL)
       Amd.Reset();
 #endif
       n_format_bytes=0;
@@ -1866,7 +1731,7 @@ r1       r0            1772
     }
     else // it's no error (yet), the WD1772 must browse the IDs
       prg_phase=WD_TYPEII_FIND_ID;
-#if defined(SSE_WD1772_AM_LOGIC)
+#if defined(SSE_WD1772_BIT_LEVEL)
     Amd.Reset();
 #endif
     Read();
@@ -1876,7 +1741,7 @@ r1       r0            1772
     CrcLogic.Add(DSR);//before eventual reset
     n_format_bytes++;
     //TRACE_LOG("%d ",n_format_bytes);
-#if defined(SSE_WD1772_AM_LOGIC)
+#if defined(SSE_WD1772_BIT_LEVEL)
     if(n_format_bytes<27)
       ; // CAPS: first bytes aren't even read
     else if(n_format_bytes==27)
@@ -1890,20 +1755,16 @@ r1       r0            1772
       ; // CAPS: first bytes aren't even read
 #endif
 
-#if defined(SSE_WD1772_371)
-    else if(n_format_bytes==44)
-#else
-    else if(n_format_bytes==43) //timed out
-#endif
+    else if(n_format_bytes==44) //timed out
     {
       TRACE_LOG("DAM time out %d in\n",n_format_bytes);
       n_format_bytes=0;
       prg_phase=WD_TYPEII_FIND_ID;
-#if defined(SSE_WD1772_AM_LOGIC)
+#if defined(SSE_WD1772_BIT_LEVEL)
       Amd.Enable();
 #endif
     }
-#if defined(SSE_WD1772_AM_LOGIC)
+#if defined(SSE_WD1772_BIT_LEVEL)
     //if not A1 mark, restart
     else	if ( (IMAGE_SCP)
       && (Amd.aminfo & CAPSFDC_AI_DSRAM) && !(Amd.aminfo & CAPSFDC_AI_DSRMA1)
@@ -1925,18 +1786,18 @@ r1       r0            1772
 #endif
 
     else if(DSR==0xA1 && !(Mfm.clock&BIT_5) //stw
-#if defined(SSE_WD1772_AM_LOGIC) //last minute 3.7.1
+#if defined(SSE_WD1772_BIT_LEVEL) //last minute 3.7.1
       || (Amd.aminfo&CAPSFDC_AI_DSRMA1)
 #endif
       ) 
     {
       TRACE_LOG("%X found at byte %d, reset CRC\n",DSR,Disk[DRIVE].current_byte);
       CrcLogic.Reset();
-#if defined(SSE_WD1772_371)
+#if defined(SSE_WD1772_BIT_LEVEL)
       Amd.nA1++; 
 #endif
     }
-#if defined(SSE_WD1772_371) 
+#if defined(SSE_WD1772_BIT_LEVEL)
     else if(Amd.nA1==3 && ((DSR&0xFE)==0xF8||(DSR&0xFE)==0xFA)) // DAM found
 #else
     else if( (DSR&0xFE)==0xF8 ||  (DSR&0xFE)==0xFA ) // DAM found
@@ -1944,14 +1805,14 @@ r1       r0            1772
     {
       TRACE_LOG("TR%d SR%d %X found at byte %d (%d after ID)\n",TR,SR,DSR,Disk[DRIVE].current_byte,n_format_bytes);
       n_format_bytes=0; // for CRC later
-#if defined(SSE_WD1772_AM_LOGIC)
+#if defined(SSE_WD1772_BIT_LEVEL)
       Amd.Enabled=false;
 #endif
       prg_phase=WD_TYPEII_READ_DATA;
       if((DSR&0xFE)==0xF8)
         STR|=STR_RT; // "record type" set when "deleted data" DAM
     }
-#if defined(SSE_WD1772_371) 
+#if defined(SSE_WD1772_BIT_LEVEL)
     else if(Amd.nA1==3) // address mark but then no FB...
     {
       TRACE_LOG("%x found after AM: keep looking\n",DSR);
@@ -2088,7 +1949,7 @@ r1       r0            1772
 
   case WD_TYPEIII_HEAD_SETTLE: // we come directly or after 15ms delay
 
-#if defined(SSE_WD1772_AM_LOGIC)
+#if defined(SSE_WD1772_BIT_LEVEL)
     Amd.Reset();
     Amd.aminfo&=~CAPSFDC_AI_CRCENABLE;
     Amd.amisigmask=CAPSFDC_AI_DSRREADY;
@@ -2133,7 +1994,7 @@ r1       r0            1772
 
     // "the Address Mark Detector is on for the duration of the command"
     if(DSR==0xA1 && !(Mfm.clock&BIT_5)
-#if defined(SSE_WD1772_AM_LOGIC) //!!!!!!!!!!!! last minute
+#if defined(SSE_WD1772_BIT_LEVEL)
       || (Amd.aminfo&CAPSFDC_AI_DSRMA1)
 #endif
       )
@@ -2152,7 +2013,7 @@ r1       r0            1772
     Drq(true);
     Read();
     break;
-//#undef SSE_WD1772_F7_ESCAPE    
+
   case WD_TYPEIII_WRITE_DATA:  
     // The most interesting part of STW support, and novelty in ST emulation!
     Drq(true);
@@ -2228,11 +2089,7 @@ r1       r0            1772
       Mfm.data=DSR=CrcLogic.crc>>8; // write 1st byte
       DR=CrcLogic.crc&0xFF; // save 2nd byte
       CrcLogic.Add(Mfm.data);
-#if defined(SSE_WD1772_372)
-      Mfm.Encode(); // of course, silly bug
-#else
-      Mfm.Encode(TWD1772MFM::FORMAT_CLOCK);
-#endif
+      Mfm.Encode();
 #if defined(SSE_WD1772_F7_ESCAPE)
       F7_escaping=true;
 #endif
@@ -2250,11 +2107,7 @@ r1       r0            1772
     else // other bytes ($0, $E5...)
     {
       Mfm.data=DSR=DR;
-#if defined(SSE_WD1772_372)
-      Mfm.Encode(); // of course, silly bug
-#else
-      Mfm.Encode(TWD1772MFM::FORMAT_CLOCK);
-#endif
+      Mfm.Encode();
       CrcLogic.Add(DSR);
 #if defined(SSE_WD1772_F7_ESCAPE)
       F7_escaping=false;
@@ -2277,11 +2130,7 @@ r1       r0            1772
     // write 2nd byte of CRC
     Mfm.data=DSR=DR;// as saved
     CrcLogic.Add(Mfm.data);
-#if defined(SSE_WD1772_372)
-    Mfm.Encode(); // of course, silly bug
-#else
-    Mfm.Encode(TWD1772MFM::FORMAT_CLOCK);
-#endif
+    Mfm.Encode();
     Write(); 
 #ifdef SSE_DEBUG_WRITE_TRACK_TRACE_IDS
     if(n_format_bytes)
@@ -2295,15 +2144,14 @@ r1       r0            1772
   }//sw
 }
 
-#endif
-
+#endif//event
 
 void TWD1772::Read() {
   if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE)
   {
     SF314[DRIVE].Read(); // this gets data and creates event
     Mfm.Decode();
-#if defined(SSE_WD1772_AM_LOGIC) 
+#if defined(SSE_WD1772_BIT_LEVEL) 
     if(!IMAGE_SCP) // DSR shouldn't be messed with...
 #endif
       DSR=Mfm.data;
@@ -2387,18 +2235,17 @@ void  TWD1772::WriteCR(BYTE io_src_b) {
   }
 }
 
-#endif
 
-#if defined(SSE_WD1772_AM_LOGIC)
+#if defined(SSE_WD1772_BIT_LEVEL)
 /*  This is the correct algorithm for the WD1772 data separator.
     It interprets the bit flow from disk images such as SCP, coming
     from the DPLL.
     
     Fluxes -> DPLL -> data separator -> DSR
 
-    Thx to Istvan Fabian for some inspiration otherwise Steem would FAIL
-    (err, why write in CAPS?) on some disk images that use the $C2 sync mark,
-    like Albedo and Jupiter's Masterdrive.
+    Thx to Istvan Fabian for some inspiration otherwise Steem would have lower
+    caps to read disk images (like those that use the $C2 sync mark, such as 
+    Albedo and Jupiter's Masterdrive).
     Note: my comments in this function marked by SS
 */
 

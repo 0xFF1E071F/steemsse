@@ -260,16 +260,8 @@ void TCaps::WriteWD1772(BYTE Line,int data) {
   if(!Line) // command
   {
 #if defined(SSE_DRIVE_MOTOR_ON_IPF)
-    // record time of motor start in hbl (TODO use)
     if(!(::WD1772.STR&FDC_STR_MOTOR_ON)) // assume no cycle run!
-    {
-#if defined(SSE_DRIVE_STATE)
       ::SF314[DRIVE].State.motor=true;
-#else
-      ::SF314[DRIVE].motor_on=true;
-#endif
-      ::SF314[DRIVE].HblOfMotorOn=hbl_count;
-    }
 #endif
 
   }

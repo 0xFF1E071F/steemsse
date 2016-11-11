@@ -200,7 +200,7 @@ The ACIA master clock is 500kHz.
     8mhz, which is the case on the ST.
 */
 
-#if defined(SSE_FDC_383)
+#if defined(SSE_FDC_383_HBL_DRIFT) 
 #define DRIVE_BYTES_ROTATION (6256) // finally
 #else
 #define DRIVE_BYTES_ROTATION (6256+14)  //little hack...
@@ -450,7 +450,11 @@ Some STFs                32.02480    8.0071
 #define  MFP_CLK_TH_EXACT 2457600 // ( 2^15 * 3 * 5^2 )
 #endif
 
-#if defined(SSE_INT_MFP_TIMERS_WOBBLE)//yes in v3.8
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE_383)
+#define MFP_WRITE_LATENCY (8)
+#define MFP_TIMERS_WOBBLE (8)
+
+#elif defined(SSE_INT_MFP_TIMERS_WOBBLE)//yes in v3.8
 #define MFP_WRITE_LATENCY (8) // is it high?
 #define MFP_TIMERS_WOBBLE 4//2  //if there's wobble, at least 2 seems likelier
 #else
@@ -460,7 +464,9 @@ Some STFs                32.02480    8.0071
 #define MFP_TIMER_DATA_REGISTER_ADVANCE (4)
 
 #if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY)
-#if defined(SSE_INT_MFP_TIMERS_WOBBLE) 
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE_383)
+#define MFP_TIMER_SET_DELAY (8)
+#elif defined(SSE_INT_MFP_TIMERS_WOBBLE) 
 #if defined(SSE_INT_MFP)
 #define MFP_TIMER_SET_DELAY (10-2) // 8 OK with wobble 4 for LXS
 #elif defined(SSE_GLUE_FRAME_TIMINGS) && !defined(SSE_INT_MFP_RATIO_STE3)
@@ -493,11 +499,6 @@ Some STFs                32.02480    8.0071
 #endif//mfp
 
 
-/////////
-// MMU //
-/////////
-
-
 
 /////////
 // OSD //
@@ -507,12 +508,6 @@ Some STFs                32.02480    8.0071
 #define RED_LED_DELAY 1500 // Red floppy led for writing, in ms
 #define HD_TIMER 100 // Yellow hard disk led (imperfect timing)
 #endif
-
-
-
-/////////////
-// SHIFTER //
-/////////////
 
 
 
@@ -530,16 +525,6 @@ Some STFs                32.02480    8.0071
 // to make XMAS 2004 scroller work, should it be lower?
 #define MICROWIRE_LATENCY_CYCLES (128+16)
 #endif
-
-/////////
-// STF //
-/////////
-
-
-#if defined(SSE_STF_VERT_OVSCN)
-#define STF_VERT_OVSCN_OFFSET 4
-#endif
-
 
 
 /////////////

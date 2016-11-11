@@ -66,7 +66,7 @@ struct TWD1772Crc {
 
 #endif
 
-#if defined(SSE_WD1772_DPLL)
+#if defined(SSE_WD1772_BIT_LEVEL)
 
 struct TWD1772Dpll {
 
@@ -85,15 +85,12 @@ struct TWD1772Dpll {
   BYTE history;
   BYTE slot;
   BYTE phase_add, phase_sub, freq_add, freq_sub;
-#if defined(SSE_WD1772_WEAK_BITS)
-  char weak_bit_pairing;
-#endif
 
 };
 
 #endif
 
-#if defined(SSE_WD1772_AM_LOGIC)
+#if defined(SSE_WD1772_BIT_LEVEL)
 
 struct TWD1772AmDetector {
   DWORD amdecode,aminfo,amisigmask;
@@ -177,9 +174,7 @@ struct TWD1772 {
   };
 
   // DATA
-#if defined(SSE_WD1772_PHASE)
   int prg_phase;
-#endif//phases
 #if defined(SSE_FLOPPY_EVENT)
   int update_time; // when do we need to come back?
 #endif
@@ -190,11 +185,14 @@ struct TWD1772 {
 #if defined(SSE_WD1772_CRC)
   TWD1772Crc CrcLogic;
 #endif
-#if defined(SSE_WD1772_DPLL)
+#if defined(SSE_WD1772_BIT_LEVEL)
   TWD1772Dpll Dpll;
 #endif
-#if defined(SSE_WD1772_AM_LOGIC)
+#if defined(SSE_WD1772_BIT_LEVEL)
   TWD1772AmDetector Amd; // not the processor
+#endif
+#if defined(SSE_WD1772_MFM)
+  TWD1772MFM Mfm;
 #endif
 
   BYTE CR;  // command
@@ -206,15 +204,12 @@ struct TWD1772 {
   BYTE StatusType; // guessed
   BYTE InterruptCondition; // guessed
   BYTE IndexCounter; // guessed
-#if defined(SSE_WD1772_PHASE)
+
 #if defined(SSE_WD1772_F7_ESCAPE)
   bool F7_escaping;
 #endif
   BYTE n_format_bytes; // to examine sequences before ID
-#endif
-#if defined(SSE_WD1772_MFM)
-  TWD1772MFM Mfm;
-#endif
+
 /*  Lines (pins). Some are necessary (eg direction), others not
     really yet (eg write_gate).
     TODO put them all in then (fun)
@@ -252,7 +247,6 @@ struct TWD1772 {
 #endif
 #endif
 
-#if defined(SSE_WD1772_PHASE)
   void NewCommand(BYTE command);
   bool Drq(bool state);//no default to make it clearer
   void Irq(bool state);
@@ -264,7 +258,6 @@ struct TWD1772 {
   void WriteCR(BYTE io_src_b); //horrible TODO
 #if defined(SSE_FLOPPY_EVENT)
   void OnUpdate();
-#endif
 #endif
 
 #if defined(SSE_DEBUG) || defined(SSE_OSD_DRIVE_LED)
@@ -278,23 +271,18 @@ struct TWD1772 {
 #endif
 #endif
 
-
-#if defined(SSE_DRIVE_INDEX_PULSE2)
   // called by drive or by image
 #if defined(SSE_VS2008_WARNING_383) && !defined(SSE_DEBUG)
   void OnIndexPulse(bool image_triggered); 
 #else
   void OnIndexPulse(int id,bool image_triggered); 
 #endif
-#elif defined(SSE_DRIVE_INDEX_PULSE)
-  void OnIndexPulse(int id); // called by drives (activates ip line)
-#endif
 
 #if defined(SSE_DISK_GHOST)
   bool CheckGhostDisk(BYTE drive,BYTE io_src_b);
 #endif
 
-#if defined(SSE_WD1772_AM_LOGIC)
+#if defined(SSE_WD1772_BIT_LEVEL)
   bool ShiftBit(int bit);
 #endif
 

@@ -115,26 +115,18 @@ bool TSF314::CheckGhostDisk(bool write) {
 
 
 void TSF314::Init() {
-//  TRACE("drive init\n");
 #if defined(SSE_DRIVE_SOUND)
   //TRACE("null %d sound buffer pointers\n",NSOUNDS);
   for(int i=0;i<NSOUNDS;i++)
     Sound_Buffer[i]=NULL;
 #if defined(SSE_DRIVE_SOUND_VOLUME)
-#if defined(SSE_DRIVE_SOUND_VOLUME_3)
   Sound_Volume=5000; 
-#else
-  Sound_Volume=0; //changed by option
-#endif
 #endif
 #endif//sound
-
 #if defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)
   SectorChecksum=0;
 #endif
-
   ImageType.Manager=MNGR_STEEM; //default
-
 }
 
 
@@ -146,66 +138,20 @@ BYTE TSF314::Track() {
 
 ////////////////////////////////////// ADAT ///////////////////////////////////
 
-WORD TSF314::BytePositionOfFirstId() { // with +7 for reading ID //no!
-  return ( PostIndexGap() + ( (nSectors()<11)?12+3+1:3+3+1) );
-}
+
 
 
 WORD TSF314::BytesToHbls(int bytes) {
-  return HblsPerRotation()*bytes/TRACK_BYTES;
-}
-
-
-#if defined(SSE_DRIVE_RW_SECTOR_TIMING3)
-
-WORD TSF314::BytesToID(BYTE &num,WORD &nHbls) {
-/*  Compute distance in bytes between current byte and desired ID
-    identified by 'num' (sector)
-    return 0 if it doesn't exist
-    if num=0, assume next ID, num will contain sector index, 1-based
-    (so, not num!)
-*/
-
-  WORD bytes_to_id=0;
-  const WORD current_byte=BytePosition();
-
-  if(FloppyDrive[Id].Empty())
-    ;
-  else
-  {
-    //here we assume normal ST disk image, sectors are 1...10
-    WORD record_length=RecordLength();
-    BYTE n_sectors=nSectors();
-    WORD byte_first_id=BytePositionOfFirstId();
-#if !defined(SSE_VS2008_WARNING_382)
-    WORD byte_last_id=byte_first_id+(n_sectors-1)*record_length;
+#if defined(SSE_FDC_383A)
+  return HblsPerRotation()*bytes/Disk[Id].TrackBytes;
+#else
+  return HblsPerRotation()*bytes/TDisk::TRACK_BYTES;
 #endif
-    WORD byte_target_id;
-
-    // If we're looking for whatever next num, we compute it first
-    if(!num)
-    {
-      num=(current_byte-byte_first_id)/record_length+1; // current
-      num++;
-      if(num==n_sectors+1) num=1; //TODO smart way
-    }
-
-    byte_target_id=byte_first_id+(num-1)*record_length;
-
-    if(current_byte<=byte_target_id) // this rev
-      bytes_to_id=byte_target_id-current_byte;
-    else                            // next rev
-    {
-      bytes_to_id=TRACK_BYTES-current_byte+byte_target_id;
-      TRACE_FDC("%d next rev current %d target %d diff %d to id %d\n",num,current_byte,byte_target_id,current_byte-byte_target_id,bytes_to_id);
-      //TRACE_FDC("%d + %d x %d\n",byte_first_id,n_sectors,record_length);
-    }
-  }
-  nHbls=BytesToHbls(bytes_to_id);
-  return bytes_to_id;
+  
+  
 }
 
-#endif//#if defined(SSE_DRIVE_RW_SECTOR_TIMING3)
+
 
 
 DWORD TSF314::HblsAtIndex() { // absolute
@@ -223,175 +169,35 @@ WORD TSF314::HblsPerRotation() {
 }
 
 
-WORD TSF314::HblsPerSector() {
-  return nSectors()?(HblsPerRotation()-BytesToHbls(TrackGap()))/nSectors() : 0;
-}
+
 
 
 WORD TSF314::HblsToBytes(int hbls) {
-  return TRACK_BYTES*hbls/HblsPerRotation();
-}
-
-
-void TSF314::NextID(BYTE &RecordId,WORD &nHbls) {
-/*  This routine was written to improve timing of command 'Read Address',
-    used by ProCopy. Since it exists, it is also used for 'Verify'.
-    In 'native' mode both.
-    TODO rationalise between BytesToID() and NextID()
-*/
-  RecordId=0;
-  nHbls=0;
-  if(FloppyDrive[Id].Empty())
-    return;
-
-  WORD BytesToRun;
-  WORD ByteOfNextId=BytePositionOfFirstId();//default
-  WORD BytePositionOfLastId=ByteOfNextId+(nSectors()-1)*RecordLength();
-  WORD CurrentByte=BytePosition(); 
-
-  // still on this rev
-  if(CurrentByte<ByteOfNextId) // before first ID
-    BytesToRun=ByteOfNextId-CurrentByte;
-  else if(CurrentByte<BytePositionOfLastId) // before last ID
-  {
-    while(CurrentByte>=ByteOfNextId)
-      ByteOfNextId+=RecordLength();
-    BytesToRun=ByteOfNextId-CurrentByte;
-    RecordId=(ByteOfNextId-BytePositionOfFirstId())/RecordLength();
-    ASSERT( RecordId>=1 && RecordId<nSectors() ); //<= ?
-  }
-  // next rev
-  else
-    BytesToRun=TRACK_BYTES-CurrentByte+ByteOfNextId;
-
-  nHbls=BytesToHbls(BytesToRun);
-}
-
-
-BYTE TSF314::nSectors() { 
-  // should we add IPF, STX? - here we do native - in IPF there's no nSectors,
-  // in STX, it's indicative
-  BYTE nSects;
-
-  if(FloppyDrive[Id].STT_File)
-  {
-    FDC_IDField IDList[30]; // much work each time, but STT rare
-    nSects=FloppyDrive[Id].GetIDFields(CURRENT_SIDE,Track(),IDList);
-  }
-  else
-    nSects=FloppyDrive[Id].SectorsPerTrack;
-  return nSects;
-}
-
-
-BYTE TSF314::PostIndexGap() {
-#if defined(SSE_FDC_383)
-  switch( nSectors() )
-  {
-  case 9:
-    return 60;
-  case 10:
-    return 22;
-  default:
-    return 10;
-  }
+#if defined(SSE_FDC_383A)
+  return Disk[Id].TrackBytes*hbls/HblsPerRotation();
 #else
-  return (nSectors()<11)? 60 : 10;
+  return TDisk::TRACK_BYTES*hbls/HblsPerRotation();
 #endif
+  
+  
 }
 
 
-BYTE TSF314::PreDataGap() {
-  int gap=0;
-  switch(nSectors())
-  {
-  case 9:
-  case 10: // with ID (7) and DAM (1)
-    gap=12+3+7+22+12+3+1; 
-    break;
-  case 11:
-    gap= 3+3+7+22+12+3+1;
-    break;
-  }
-  return gap;
-}
 
 
-BYTE TSF314::PostDataGap() {
-#if defined(SSE_FDC_383) // count CRC?
-  // 
-  return (nSectors()<11)? 40+2 : 1+2;
-#else
-  return (nSectors()<11)? 40 : 1;
-#endif
-}
-
-
-WORD TSF314::PreIndexGap() {
-  int gap=0;
-  switch(nSectors())
-  {
-  case 9:
-#if defined(SSE_DRIVE_REM_HACKS2)
-    gap=664+6; // 6256 vs 6250
-#else
-    gap=664;
-#endif
-    break;
-  case 10:
-#if defined(SSE_FDC_383)
-    gap=50+6+ (60-22);
-#elif defined(SSE_DRIVE_REM_HACKS2)
-    gap=50+6;
-#else
-    gap=50;
-#endif
-    break;
-  case 11:
-    gap=20;
-    break;
-  }
-  return gap;
-}
-
-
-WORD TSF314::RecordLength() {
-  return (nSectors()<11)? 614 : 566;
-}
-
-
-BYTE TSF314::SectorGap() {
-  return PostDataGap()+PreDataGap();
-}
-
-
-WORD TSF314::TrackGap() {
-  return PostIndexGap()+PreIndexGap();
-}
-
-
-///////////////////////////////////// STW /////////////////////////////////////
-
-/*  Written to help handle STW disk images.
+#if defined(SSE_WD1772)
+/*  The WD1772 written for HFE, SCP, STW images uses events following
+    a spinning drive.
+    Drive events are index pulse (IP), reading or writing a byte.
 */
 
-#if defined(SSE_DISK_STW)
-
-
-int TSF314::CyclesPerByte() {
-//? TODO
-// + todo: when >8mhz?
+int TSF314::CyclesPerByte() { // normally 256
 #if defined(SSE_INT_MFP_RATIO) 
   int cycles=CpuNormalHz; // per second  
 #else
   int cycles=8000000; // per second  
 #endif
-#if defined(SSE_DRIVE_INIT_373)
   cycles/=RPM/60; // per rotation (300/60 = 5)
-#else
-  ASSERT(rpm==300);//argh!
-  cycles/=rpm/60; // per rotation (300/60 = 5)
-#endif
   cycles/=Disk[Id].TrackBytes; // per byte
 #if defined(SSE_DISK_STW_FAST)
   if(!ADAT)
@@ -402,9 +208,6 @@ int TSF314::CyclesPerByte() {
   return cycles;
 }
 
-
-#if defined(SSE_DRIVE_INDEX_PULSE)
-
 /*  Function called by event manager in run.cpp based on preset timing
     or by the image object when we're  going through the last byte.
     Motor must be on, a floppy disk must be inside.
@@ -414,34 +217,15 @@ int TSF314::CyclesPerByte() {
     though 1/sec is OK!
 */
 
-#if defined(SSE_DRIVE_INDEX_PULSE2)
 void TSF314::IndexPulse(bool image_triggered) {
-#else
-void TSF314::IndexPulse() {
-#endif
-  ASSERT(Id==0||Id==1);
 
-#if defined(SSE_DRIVE_INDEX_PULSE2) // moving safety
+  ASSERT(Id==0||Id==1);
   time_of_next_ip=time_of_next_event+n_cpu_cycles_per_second; 
-#endif
   
   if(ImageType.Manager!=MNGR_WD1772||FloppyDrive[Id].Empty()||!State.motor)
-  {
-#if !defined(SSE_DRIVE_INDEX_PULSE2)
-#ifdef SSE_DEBUG
-    if(YM2149.SelectedDrive==Id)
-      TRACE_LOG("%c: Manager %d Empty %d motor %d\n",'A'+Id,ImageType.Manager,FloppyDrive[Id].Empty(),State.motor);
-#endif
-    time_of_next_ip=ACT+n_cpu_cycles_per_second; // put into future
-#endif
     return; 
-  }
 
-#if defined(SSE_FLOPPY_EVENT2)
   time_of_last_ip=time_of_next_event; // record timing
-#else
-  time_of_last_ip=ACT; // record timing
-#endif
 
   // Make sure that we always end track at the same byte when R/W
   // Important for Realm of the Trolls TODO: as for SCP
@@ -454,56 +238,43 @@ void TSF314::IndexPulse() {
 
   // Program next event, at next IP or in 1 sec (more?)
   ASSERT(State.motor);
-#if !defined(SSE_DRIVE_INDEX_PULSE2)
-  if(State.motor)
-#endif
+
+  /*  We set up a timing for next IP, but if the drive is reading there are 
+  chances the SCP object will trigger IP itself at the end of the track.
+  This is a place where we could have bug reports.
+  */
+  if(IMAGE_SCP // an image is inside
+    && ImageSCP[DRIVE].track_header.TDH_TABLESTART[ImageSCP[DRIVE].rev].\
+    TDH_DURATION) // a track is loaded... (else it's 0 and it hangs)
   {
-#if defined(SSE_DRIVE_INDEX_PULSE2)
-/*  We set up a timing for next IP, but if the drive is reading there are 
-    chances the SCP object will trigger IP itself at the end of the track.
-    This is a place where we could have bug reports.
-*/
-    if(IMAGE_SCP // an image is inside
-      && ImageSCP[DRIVE].track_header.TDH_TABLESTART[ImageSCP[DRIVE].rev].\
-        TDH_DURATION) // a track is loaded... (else it's 0 and it hangs)
-    {
-      time_of_next_ip=time_of_last_ip 
-        + ImageSCP[DRIVE].track_header.TDH_TABLESTART[ImageSCP[DRIVE].rev].\
-          TDH_DURATION/5;
-      //TRACE_LOG("SCP pos %d/%d next IP in %d cycles\n",ImageSCP[DRIVE].Position,ImageSCP[DRIVE].nBits-1,ImageSCP[DRIVE].track_header.TDH_TABLESTART[ImageSCP[DRIVE].rev].TDH_DURATION/5);
-    }
+    time_of_next_ip=time_of_last_ip 
+      + ImageSCP[DRIVE].track_header.TDH_TABLESTART[ImageSCP[DRIVE].rev].\
+      TDH_DURATION/5;
+    //TRACE_LOG("SCP pos %d/%d next IP in %d cycles\n",ImageSCP[DRIVE].Position,ImageSCP[DRIVE].nBits-1,ImageSCP[DRIVE].track_header.TDH_TABLESTART[ImageSCP[DRIVE].rev].TDH_DURATION/5);
+  }
+  else
+  {
+    //TRACE("time_of_next_ip %d time_of_last_ip %d CyclesPerByte() %d Disk[Id].TrackBytes %d\n",time_of_next_ip,time_of_last_ip,CyclesPerByte(),Disk[Id].TrackBytes);
+#if defined(SSE_DISK_STW_FAST)
+    if(!ADAT)
+      // make it longer or it may come before the WD1772 event
+      time_of_next_ip=time_of_last_ip + 
+      CyclesPerByte() * Disk[Id].TrackBytes *SSE_STW_FAST_IP_MULTIPLIER;
     else
 #endif
-    {
-      //TRACE("time_of_next_ip %d time_of_last_ip %d CyclesPerByte() %d Disk[Id].TrackBytes %d\n",time_of_next_ip,time_of_last_ip,CyclesPerByte(),Disk[Id].TrackBytes);
-#if defined(SSE_DISK_STW_FAST)
-      if(!ADAT)
-        // make it longer or it may come before the WD1772 event
-        time_of_next_ip=time_of_last_ip + 
-        CyclesPerByte() * Disk[Id].TrackBytes *SSE_STW_FAST_IP_MULTIPLIER;
-      else
-#endif
       time_of_next_ip=time_of_last_ip + CyclesPerByte() * Disk[Id].TrackBytes;
-    }
   }
-#if !defined(SSE_DRIVE_INDEX_PULSE2)
-  else //as a safety, or it could hang //TODO
-    time_of_next_ip=ACT+n_cpu_cycles_per_second; // put into future
-#endif
+
   ASSERT(time_of_next_ip-time_of_last_ip>0);
 
   //TRACE("%c: IP at %d next at %d (%d cycles, %d ms)\n",Id,time_of_last_ip,time_of_next_ip,time_of_next_ip-time_of_last_ip,(time_of_next_ip-time_of_last_ip)/(n_cpu_cycles_per_second/1000));
 
   // send pulse to WD1772
   if(DRIVE==Id)
-#if defined(SSE_DRIVE_INDEX_PULSE2)
 #if defined(SSE_VS2008_WARNING_383) && !defined(SSE_DEBUG)
     WD1772.OnIndexPulse(image_triggered); // transmitting image_triggered
 #else
     WD1772.OnIndexPulse(Id,image_triggered); // transmitting image_triggered
-#endif
-#else
-    WD1772.OnIndexPulse(Id); 
 #endif
 }
 
@@ -532,10 +303,9 @@ void TSF314::Motor(bool state) {
   }
 
 #if defined(SSE_DRIVE_IP_HACK)
-/*
-  Check time_of_next_ip, if there's none happening soon, stage one (hack)
-  coded for Realm of the Trolls STX but I think SSE_YM2149C is the real
-  fix; we keep it just in case there's another bug.
+/*  Check time_of_next_ip, if there's none happening soon, stage one (hack)
+    coded for Realm of the Trolls but I think SSE_YM2149C is the real
+    fix; we keep it just in case there's another bug.
 */
   if(OPTION_HACKS && state && State.motor && ImageType.Manager==MNGR_WD1772
     && (time_of_next_ip-ACT<0 || time_of_next_ip-ACT> Disk[Id].TrackBytes*CyclesPerByte()))
@@ -550,41 +320,6 @@ void TSF314::Motor(bool state) {
   State.motor=state;
 
 }
-
-#endif
-
-
-#if defined(SSE_DRIVE_INDEX_STEP)
-
-
-void TSF314::Step(int direction) {
-  
-#if defined(SSE_DRIVE_SOUND_SEEK2)
-  if(SSEOption.DriveSound
-#if defined(SSE_DRIVE_SOUND_SEEK5)
-    && !DRIVE_SOUND_SEEK_SAMPLE
-#endif
-    )
-    Sound_Step();
-#endif
-
-  if(direction && floppy_head_track[Id]<MAX_CYL)
-  {
-    floppy_head_track[Id]++;
-  }
-  else if(floppy_head_track[Id])
-  {
-    floppy_head_track[Id]--;
-  }
-  WD1772.Lines.track0=(floppy_head_track[Id]==0);
-  if(WD1772.Lines.track0)
-    WD1772.STR|=TWD1772::STR_T00; // doing it here?
-  CyclesPerByte();  // compute - should be the same every track but...
-  //TRACE_LOG("Drive %d Step d%d new track: %d\n",Id,direction,floppy_head_track[Id]);
-}
-
-
-#endif
 
 
 void TSF314::Read() {
@@ -678,6 +413,33 @@ void TSF314::Read() {
 }
 
 
+void TSF314::Step(int direction) {
+  
+#if defined(SSE_DRIVE_SOUND_SEEK2)
+  if(SSEOption.DriveSound
+#if defined(SSE_DRIVE_SOUND_SEEK5)
+    && !DRIVE_SOUND_SEEK_SAMPLE
+#endif
+    )
+    Sound_Step();
+#endif
+
+  if(direction && floppy_head_track[Id]<MAX_CYL)
+  {
+    floppy_head_track[Id]++;
+  }
+  else if(floppy_head_track[Id])
+  {
+    floppy_head_track[Id]--;
+  }
+  WD1772.Lines.track0=(floppy_head_track[Id]==0);
+  if(WD1772.Lines.track0)
+    WD1772.STR|=TWD1772::STR_T00; // doing it here?
+  CyclesPerByte();  // compute - should be the same every track but...
+  //TRACE_LOG("Drive %d Step d%d new track: %d\n",Id,direction,floppy_head_track[Id]);
+}
+
+
 void TSF314::Write() {
   ASSERT(IMAGE_STW||IMAGE_SCP||IMAGE_HFE); // only for those now
   ASSERT(Id==DRIVE);
@@ -727,7 +489,7 @@ void TSF314::Write() {
     WD1772.update_time=ACT+cycles_per_byte;
 }
 
-#endif
+#endif//WD1772
 
 
 ///////////////////////////////////// SOUND ///////////////////////////////////
@@ -768,18 +530,17 @@ char* drive_sound_wav_files[]={ "drive_startup.wav","drive_spin.wav",
 void TSF314::Sound_ChangeVolume() {
 /*  Same volume for each buffer
 */
-#if defined(SSE_DRIVE_SOUND_VOLUME_3)
+
   Sound_Volume=min(Sound_Volume,10000);
-#endif
-   for(int i=0;i<NSOUNDS;i++)
-   {
-     if(Sound_Buffer[i])
-       Sound_Buffer[i]->SetVolume(
+  for(int i=0;i<NSOUNDS;i++)
+  {
+    if(Sound_Buffer[i])
+      Sound_Buffer[i]->SetVolume(
 #if defined(SSE_DRIVE_SOUND_SEEK3)
-       i==SEEK?Sound_Volume/2:
+      i==SEEK?Sound_Volume/2:
 #endif
-     Sound_Volume);
-   }
+      Sound_Volume);
+  }
 }
 
 #endif
