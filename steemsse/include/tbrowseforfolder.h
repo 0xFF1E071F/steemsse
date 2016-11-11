@@ -88,9 +88,11 @@ int __stdcall TBrowseForFolder::BrowseCallbackProc(HWND hwnd,UINT uMsg,LPARAM lP
       SetWindowPos(hwnd,0,(GetSystemMetrics(SM_CXSCREEN)/2)-(box.right/2),
                     (GetSystemMetrics(SM_CYSCREEN)/2)-(box.bottom/2),
                     0,0,SWP_NOSIZE | SWP_NOZORDER);
-
+#if defined(SSE_X64_383)
+      SendMessage(hwnd,BFFM_SETSELECTION,true,(LPARAM)This->Path);
+#else
       SendMessage(hwnd,BFFM_SETSELECTION,true,(long)This->Path);
-
+#endif
       int ChildId;
       for (ChildId=6000;ChildId<7000;ChildId++)
         if (GetDlgItem(hwnd,ChildId)==NULL) break;
@@ -160,7 +162,11 @@ LRESULT __stdcall TBrowseForFolder::BrowseWndProc(HWND hwnd,UINT uMsg,WPARAM wPa
               // Delete all children of selected item
               // Add secret item that tells it to get folders
               // Expand selected
+#if defined(SSE_X64_383)
+              SendMessage(hwnd,BFFM_SETSELECTION,true,(LPARAM)temp);
+#else
               SendMessage(hwnd,BFFM_SETSELECTION,true,(long)temp);
+#endif
             }
             delete[] This->NewFolName;This->NewFolName=NULL;
           }

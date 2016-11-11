@@ -222,7 +222,7 @@ void TDiskManager::SetNumFloppies(int NewNum)
 	}
 #endif
   CheckResetDisplay();
-#if defined(SSE_GUI_STATUS_STRING_ICONS)
+#if defined(SSE_GUI_STATUS_BAR)
   GUIRefreshStatusBar();
 #endif
 }
@@ -448,7 +448,11 @@ http://www.microsoft-questions.com/microsoft/Platform-SDK-Shell/32138755/vista-l
   for (int d=0;d<27;d++){
     Root[0]=char('A'+d);
     if (GetDriveType(Root)>1){
+#if defined(SSE_X64_383)
+      SendMessage(Win,CB_ADDSTRING,0,(LPARAM)Root);
+#else
       SendMessage(Win,CB_ADDSTRING,0,(long)Root);
+#endif
     }
   }
 
@@ -525,7 +529,8 @@ http://www.microsoft-questions.com/microsoft/Platform-SDK-Shell/32138755/vista-l
 #if defined(SSE_X64_LPTR)
   SetWindowLongPtr(GetDlgItem(Handle, 98), GWLP_USERDATA,(LONG_PTR) this);
   SetWindowLongPtr(GetDlgItem(Handle, 99), GWLP_USERDATA,(LONG_PTR) this);
-  Old_ListView_WndProc = (WINDOWPROC)GetClassLongPtr(GetDlgItem(Handle, 100), GCLP_WNDPROC);
+  Old_ListView_WndProc = (WNDPROC)GetClassLongPtr(GetDlgItem(Handle, 100), GCLP_WNDPROC);
+  //TRACE("%p\n",Old_ListView_WndProc);
   SetWindowLongPtr(GetDlgItem(Handle, 100), GWLP_USERDATA,(LONG_PTR) this);
   SetWindowLongPtr(GetDlgItem(Handle, 100), GWLP_WNDPROC, (LONG_PTR)DriveView_WndProc);
   SetWindowLongPtr(GetDlgItem(Handle, 101), GWLP_USERDATA,(LONG_PTR) this);
@@ -627,8 +632,11 @@ void TDiskManager::SetDiskViewMode(int Mode)
     WIDTHHEIGHT widh=GetTextSize(Font,"8");
     ListView_SetIconSpacing(DiskView,32+24+IconSpacing*12,38 + (widh.Height+2)*2);
   }
-
+#ifdef SSE_X64_383
+  SendMessage(DiskView,LVM_SORTITEMS,0,(LPARAM)CompareFunc);
+#else
   SendMessage(DiskView,LVM_SORTITEMS,0,(long)CompareFunc);
+#endif
   if (SmallIcons==0) SendMessage(DiskView,LVM_ARRANGE,LVA_DEFAULT,0);
 }
 //---------------------------------------------------------------------------
@@ -675,7 +683,11 @@ void TDiskManager::SetDir(EasyStr NewFol,bool AddToHistory,
 
     {
       SetWindowText(GetDlgItem(Handle,97),Fol.Lefts(Fol.Length()-1).Text+min(3,Fol.Length()-1));
+#if defined(SSE_X64_383)
+      int idx=SendMessage(GetDlgItem(Handle,90),CB_FINDSTRING,0xffffffff,(LPARAM)((Fol.Lefts(2)+"\\").Text));
+#else
       int idx=SendMessage(GetDlgItem(Handle,90),CB_FINDSTRING,0xffffffff,(long)((Fol.Lefts(2)+"\\").Text));
+#endif
       if (idx>-1) SendMessage(GetDlgItem(Handle,90),CB_SETCURSEL,idx,0);
       UpdateWindow(GetDlgItem(Handle,97));
       UpdateWindow(GetDlgItem(Handle,90));
@@ -845,7 +857,11 @@ void TDiskManager::SetDir(EasyStr NewFol,bool AddToHistory,
     lvi.iSubItem=0;
     lvi.pszText=LPSTR_TEXTCALLBACK;
     for (int n=0;n<Files.NumItems;n++){
+#ifdef SSE_X64_383
+      lvi.lParam=(LPARAM)(Files[n]);
+#else
       lvi.lParam=long(Files[n]);
+#endif
       lvi.iImage=Files[n]->Image;
       SendMessage(DiskView,LVM_INSERTITEM,0,LPARAM(&lvi));
     }
@@ -887,7 +903,11 @@ void TDiskManager::SetDir(EasyStr NewFol,bool AddToHistory,
       lvi.stateMask=LVIS_SELECTED | LVIS_FOCUSED;
       lvi.state=LVIS_SELECTED | LVIS_FOCUSED;
       iSelItem=bound(iSelItem,0,max(SendMessage(DiskView,LVM_GETITEMCOUNT,0,0)-1,0L));
+#if defined(SSE_X64_383)
+      SendMessage(DiskView,LVM_SETITEMSTATE,iSelItem,(LPARAM)&lvi);
+#else
       SendMessage(DiskView,LVM_SETITEMSTATE,iSelItem,(long)&lvi);
+#endif
       SendMessage(DiskView,LVM_ENSUREVISIBLE,iSelItem,1);
     }
 
@@ -1315,7 +1335,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
               HardDiskMan.DisableHardDrives=!HardDiskMan.DisableHardDrives;
               TRACE_INIT("Option GEMDOS HD %d\n",!HardDiskMan.DisableHardDrives);
               HardDiskMan.update_mount();
-#if defined(SSE_GUI_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_BAR)
               GUIRefreshStatusBar();
 #endif
 #ifdef SSE_GUI_DISK_MANAGER_HD_SELECTED
@@ -1348,7 +1368,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
               if(SSEOption.Acsi)
                 load_TOS(ROMFile);
 #endif
-#if defined(SSE_GUI_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_BAR)
               GUIRefreshStatusBar();
 #endif
               SendMessage(icon_handle,BM_SETCHECK,SSEOption.Acsi,0);
@@ -1666,11 +1686,19 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
 
           if (HIWORD(wPar)==CBN_SELENDOK){
             char Text[8];
+#if defined(SSE_X64_383)
+            SendMessage((HWND)lPar,CB_GETLBTEXT,SendMessage((HWND)lPar,CB_GETCURSEL,0,0),(LPARAM)Text);
+#else
             SendMessage((HWND)lPar,CB_GETLBTEXT,SendMessage((HWND)lPar,CB_GETCURSEL,0,0),(long)Text);
+#endif
             if (Text[0]!=This->DisksFol[0]){
               This->SetDir(Text,true);
               if (Text[0]!=This->DisksFol[0]){
+#if defined(SSE_X64_383)
+                int idx=SendMessage((HWND)lPar,CB_FINDSTRING,0xffffffff,(LPARAM)((This->DisksFol.Lefts(2)+"\\").Text));
+#else
                 int idx=SendMessage((HWND)lPar,CB_FINDSTRING,0xffffffff,(long)((This->DisksFol.Lefts(2)+"\\").Text));
+#endif
                 if (idx>-1) SendMessage((HWND)lPar,CB_SETCURSEL,idx,0);
               }
             }
@@ -1706,7 +1734,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
         case 1002:  // Custom disk image
           This->ShowDiskDiag();
           break;
-#if defined(SSE_DISK_STW_DISK_MANAGER) && defined(SSE_DISK_HFE_DISK_MANAGER)
+#if defined(SSE_GUI_DISK_MANAGER_STW) && defined(SSE_GUI_DISK_MANAGER_HFE)
 // when both are defined (should be the case), we save a couple of bytes
         case 1003: // STW
         case 1004: // HFE
@@ -1724,7 +1752,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             Alert(EasyStr(T("Could not create the disk image "))+STName,T("Error"),MB_ICONEXCLAMATION);
           return 0;
         }
-#elif defined(SSE_DISK_STW_DISK_MANAGER)
+#elif defined(SSE_GUI_DISK_MANAGER_STW)
         case 1003:  // STW
         {
           EasyStr STName=This->DisksFol+"\\"+T("STW Disk")+".STW";
@@ -1739,7 +1767,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
           }
           return 0;
         }
-#elif defined(SSE_DISK_HFE_DISK_MANAGER)
+#elif defined(SSE_GUI_DISK_MANAGER_HFE)
         case 1004:  // HFE
         {
           EasyStr STName=This->DisksFol+"\\"+T("HFE Disk")+".HFE";
@@ -1783,12 +1811,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
 #if defined(SSE_DRIVE_SWITCH_OFF_MOTOR)
         case 1046:
         case 1047:
-#if defined(SSE_DRIVE_STATE)
           SF314[(LOWORD(wPar)-1046)].State.motor=false;
-#else
-          SF314[(LOWORD(wPar)-1046)].motor_on=false;
-#endif
-         // fdc_str&=0xEF; //it's 7F, once again displaying my ignorance...
           fdc_str&=~FDC_STR_MOTOR_ON;
           break;
 #endif
@@ -1907,7 +1930,7 @@ That will toggle bit x.
                     if(!ImageSTW[1].LoadTrack(side,track))
                       continue;
                     int p=0;
-                    for(int i=0;i<SF314[0].PostIndexGap();i++) 
+                    for(int i=0;i<Disk[0].PostIndexGap();i++) 
                       WD1772_WRITE(0x4E)
                     int sector; //used in trace
 #if defined(SSE_DISK_STW_CONVERT2) 
@@ -2119,7 +2142,7 @@ That will toggle bit x.
           InvalidateRect(GetDlgItem(Win,98),NULL,0);
           InvalidateRect(GetDlgItem(Win,99),NULL,0);
           CheckResetDisplay();
-#if defined(SSE_GUI_STATUS_STRING_ADAT)
+#if defined(SSE_GUI_STATUS_BAR_ADAT)
           GUIRefreshStatusBar();
 #endif
           break;
@@ -2510,11 +2533,11 @@ That will toggle bit x.
               T("Standard &Disk Image"));
             InsertMenu(NewPop,0xffffffff,MF_BYPOSITION | MF_STRING,1002,
               T("Custom Disk &Image"));
-#if defined(SSE_DISK_STW_DISK_MANAGER) //new context option
+#if defined(SSE_GUI_DISK_MANAGER_STW) //new context option
             InsertMenu(NewPop,0xffffffff,MF_BYPOSITION | MF_STRING,1003,
               T("ST&W Disk Image"));
 #endif
-#if defined(SSE_DISK_HFE_DISK_MANAGER) //new context option
+#if defined(SSE_GUI_DISK_MANAGER_HFE) //new context option
             InsertMenu(NewPop,0xffffffff,MF_BYPOSITION | MF_STRING,1004,
               T("&HFE Disk Image"));
 #endif
@@ -2524,10 +2547,10 @@ That will toggle bit x.
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1000,T("New &Folder"));
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1001,T("New Standard &Disk Image"));
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1002,T("New Custom Disk &Image"));
-#if defined(SSE_DISK_STW_DISK_MANAGER) //new context option
+#if defined(SSE_GUI_DISK_MANAGER_STW) //new context option
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1003,T("New ST&W Disk Image"));
 #endif
-#if defined(SSE_DISK_HFE_DISK_MANAGER) //new context option
+#if defined(SSE_GUI_DISK_MANAGER_HFE) //new context option
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1004,T("New &HFE Disk Image"));
 #endif
 #endif
@@ -3137,11 +3160,7 @@ LRESULT __stdcall TDiskManager::Drive_Icon_WndProc(HWND Win,UINT Mess,WPARAM wPa
         T("SF354 (single side - caution!)"));
 
 #if defined(SSE_DRIVE_SWITCH_OFF_MOTOR)
-#if defined(SSE_DRIVE_STATE)
       if(SF314[This->MenuTarget].State.motor)
-#else
-      if(SF314[This->MenuTarget].motor_on)
-#endif
       {
         InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,
           1046+This->MenuTarget,T("Stop motor"));
@@ -3581,10 +3600,10 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
     FloppyDrive[Drive].DiskName=Name;
 
 #if defined(SSE_OSD_SCROLLER_DISK_IMAGE)
-    if(OSD_IMAGE_NAME && !SSE_STATUS_BAR_GAME_NAME)
+    if(OSD_IMAGE_NAME && !OPTION_STATUS_BAR_GAME_NAME)
       OsdControl.StartScroller(Name); // display image disk name
 #endif
-#if defined(SSE_GUI_STATUS_STRING_DISK_NAME)
+#if defined(SSE_GUI_STATUS_BAR_DISK_NAME)
     GUIRefreshStatusBar();
 #endif
 
@@ -3674,11 +3693,17 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
   lvi.iImage=int(Inf->Zip ? 8:(1+FloppyDrive[Drive].ReadOnly*4));
   lvi.stateMask=LVIS_SELECTED | LVIS_FOCUSED;
   lvi.state=LVIS_SELECTED | LVIS_FOCUSED;
+#if defined(SSE_X64_383)
+  lvi.lParam=(LPARAM)Inf;
+#else
   lvi.lParam=(long)Inf;
+#endif
   lvi.pszText=Inf->Name;
-
+#if defined(SSE_X64_383)
+  SendMessage(LV,LVM_INSERTITEM,0,(LPARAM)&lvi);
+#else
   SendMessage(LV,LVM_INSERTITEM,0,(long)&lvi);
-
+#endif
   CentreLVItem(LV,0,LVIS_SELECTED | LVIS_FOCUSED);
 #elif defined(UNIX)
   UpdateDiskNames(Drive);
@@ -3828,7 +3853,7 @@ void TDiskManager::EjectDisk(int Drive)
     SendMessage(GetDlgItem(Handle,100+Drive),LVM_DELETEITEM,0,0);
     EnableWindow(GetDlgItem(GetDlgItem(Handle,98+Drive),100),AreNewDisksInHistory(Drive));
   }   
-#if defined(SSE_GUI_STATUS_STRING_DISK_NAME)
+#if defined(SSE_GUI_STATUS_BAR_DISK_NAME)
   GUIRefreshStatusBar();
 #endif
 #elif defined(UNIX)

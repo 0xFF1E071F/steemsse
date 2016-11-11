@@ -101,6 +101,20 @@ int EasyStringList::Add(char *AddStr)
 {
   return Add(0,AddStr);
 }
+#if defined(SSE_X64_383) //?
+int EasyStringList::Add(char *AddStr,LONG_PTR AddData)
+{
+  return Add(1,AddStr,AddData);
+}
+int EasyStringList::Add(char *AddStr,LONG_PTR AddData,LONG_PTR AddData2)
+{
+  return Add(2,AddStr,AddData,AddData2);
+}
+int EasyStringList::Add(char *AddStr,LONG_PTR AddData,LONG_PTR AddData2,LONG_PTR AddData3)
+{
+  return Add(3,AddStr,AddData,AddData2,AddData3);
+}
+#else
 int EasyStringList::Add(char *AddStr,long AddData)
 {
   return Add(1,AddStr,AddData);
@@ -113,6 +127,7 @@ int EasyStringList::Add(char *AddStr,long AddData,long AddData2,long AddData3)
 {
   return Add(3,AddStr,AddData,AddData2,AddData3);
 }
+#endif
 int EasyStringList::Add(long nDat,char *AddStr,...)
 {
   long *p=((long*)&AddStr)+1;

@@ -9893,6 +9893,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release_Opt|Win32"
 					ExcludedFromBuild="true"
 					>
@@ -9902,6 +9910,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release_Opt_DrawC|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_Opt_DrawC|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -9977,6 +9993,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release_Opt|Win32"
 					ExcludedFromBuild="true"
 					>
@@ -9986,6 +10010,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release_Opt_DrawC|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_Opt_DrawC|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool

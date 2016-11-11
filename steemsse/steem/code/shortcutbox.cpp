@@ -73,9 +73,7 @@ bool TShortcutBox::Picking=0;
 #if defined(SSE_GUI)
 
 enum {
-#if !defined(SSE_GUI_DISK_MANAGER_RGT_CLK_HD)
   CUT_TOGGLEHARDDRIVES=231,
-#endif
 #if defined(SSE_VID_RECORD_AVI)
   CUT_RECORD_VIDEO,
 #endif
@@ -121,9 +119,7 @@ const char *ShortcutNames[NUM_SHORTCUTS*2]=
   "Save Over Last Memory Snapshot",(char*)53,"Load Last Memory Snapshot",(char*)54,
 
 #if defined(SSE_GUI)
-#if !defined(SSE_GUI_DISK_MANAGER_RGT_CLK_HD)
-	"Toggle Hard Drives On/Off",(char*)CUT_TOGGLEHARDDRIVES,
-#endif
+	 "Toggle Hard Drives On/Off",(char*)CUT_TOGGLEHARDDRIVES,
 #if defined(SSE_VID_RECORD_AVI)
    "Record Video",(char*)CUT_RECORD_VIDEO,
 #endif
@@ -186,7 +182,11 @@ void TShortcutBox::TranslateCutNames()
     TranslatedCutNamesSL.Sort=eslNoSort;
     for (int n=0;n<NUM_SHORTCUTS*2;n+=2){
       if (ShortcutNames[n]==NULL) break;
+#if defined(SSE_X64_383) //?
+      LONG_PTR i=(LONG_PTR)ShortcutNames[n+1];
+#else
       long i=(long)ShortcutNames[n+1];
+#endif
       if (i<200){
         TranslatedCutNamesSL.Add(T((char*)ShortcutNames[n]),i);
       }else{
@@ -665,13 +665,11 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       break;
 
 #if defined(SSE_GUI)
-#if !defined(SSE_GUI_DISK_MANAGER_RGT_CLK_HD)
     case CUT_TOGGLEHARDDRIVES:	// toggle hard drives on/off
       HardDiskMan.DisableHardDrives=!HardDiskMan.DisableHardDrives;	// toggle
 //      TRACE("hd off %d\n",HardDiskMan.DisableHardDrives);
       HardDiskMan.update_mount();
       break;
-#endif
 #if defined(SSE_VID_RECORD_AVI)
 #define LOGSECTION LOGSECTION_VIDEO
     case CUT_RECORD_VIDEO:

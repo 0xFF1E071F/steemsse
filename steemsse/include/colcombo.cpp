@@ -220,7 +220,11 @@ bool TColCombo::AddItem(char *text,int col)
   VItem[VNumItems]=new CC_Info;
   memcpy(VItem[VNumItems]->Text,text,min((int)strlen(text),249));
   VItem[VNumItems]->Col=col;
+#if defined(SSE_X64_383)
+  SendMessage(VHandle,CB_ADDSTRING,0,(LPARAM)text);
+#else
   SendMessage(VHandle,CB_ADDSTRING,0,(long)text);
+#endif
   VNumItems++;
   return true;
 }
@@ -251,7 +255,11 @@ bool TColCombo::InsertItem(char *text,int col,int idx)
     }
     memcpy(VItem[idx]->Text,text,min((int)strlen(text),249));
     VItem[idx]->Col=col;
+#if defined(SSE_X64_383)
+    SendMessage(VHandle,CB_INSERTSTRING,idx,(LPARAM)text);
+#else
     SendMessage(VHandle,CB_INSERTSTRING,idx,(long)text);
+#endif
     VNumItems++;
     return true;
   }

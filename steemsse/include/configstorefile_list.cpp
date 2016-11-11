@@ -61,7 +61,11 @@ void ConfigStoreFile::AddSection(char *Name,CSF_SECT_LISTS *pLists)
 
   Sections.Add(Name);
   strupr(Name);
+#if defined(SSE_X64_383) //?
   SectionsUpr.Add(3,Name,(long)(pLists->pKeys),(long)(pLists->pKeysUpr),(long)(pLists->pValues));
+#else
+  SectionsUpr.Add(3,Name,(long)(pLists->pKeys),(long)(pLists->pKeysUpr),(long)(pLists->pValues));
+#endif
 }
 //---------------------------------------------------------------------------
 bool ConfigStoreFile::GetSection(char *NameUpr,CSF_SECT_LISTS *pLists)

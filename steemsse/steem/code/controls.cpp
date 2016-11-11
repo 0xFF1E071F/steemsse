@@ -111,7 +111,11 @@ LRESULT __stdcall PicButton_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 
       int Len=DefWindowProc(Win,WM_GETTEXTLENGTH,0,0)+1;
       char *Text=new char[Len+1];
+#if defined(SSE_X64_383)
+      DefWindowProc(Win,WM_GETTEXT,Len,(LPARAM)Text);
+#else
       DefWindowProc(Win,WM_GETTEXT,Len,(long)Text);
+#endif
       Ico=hGUIIcon[min(atoi(Text),RC_NUM_ICONS-1)];
 
       Inf=NULL;
@@ -399,7 +403,11 @@ LRESULT __stdcall PathDisplay_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 
       Len=DefWindowProc(Win,WM_GETTEXTLENGTH,0,0)+1;
       Text=new char[Len+1];
+#if defined(SSE_X64_383)
+      DefWindowProc(Win,WM_GETTEXT,Len,(LPARAM)Text);
+#else
       DefWindowProc(Win,WM_GETTEXT,Len,(long)Text);
+#endif
 
       if (Static){
         WIDTHHEIGHT wh=GetTextSize((HFONT)GetProp(Win,"DisplayPathFont"),Text);
@@ -872,11 +880,15 @@ LRESULT __stdcall HyperLinkWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           if (LOWORD(lPar)<rc.right && HIWORD(lPar)<rc.bottom){
             int Len=DefWindowProc(Win,WM_GETTEXTLENGTH,0,0)+1;
             char *Text=new char[Len+1];
+#if defined(SSE_X64_383)
+            DefWindowProc(Win,WM_GETTEXT,Len,(LPARAM)Text);
+#else
             DefWindowProc(Win,WM_GETTEXT,Len,(long)Text);
+#endif
 
             char *tp=Text;
             if (strchr(Text,'|')) tp=strchr(Text,'|')+1;
-#if defined(SSE_GUI_INFOBOX18) //new instance
+#if defined(SSE_GUI_INFOBOX_LINKS) //new instance
             ShellExecute(0,0,"iexplore.exe", tp, 0, SW_SHOWNORMAL); 
 #else
             ShellExecute(NULL,NULL,tp,"","",SW_SHOW);
@@ -938,7 +950,11 @@ LRESULT __stdcall HyperLinkWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 
     int Len=DefWindowProc(Win,WM_GETTEXTLENGTH,0,0)+1;
     char *Text=new char[Len+1];
+#if defined(SSE_X64_383)
+    DefWindowProc(Win,WM_GETTEXT,Len,(LPARAM)Text);
+#else
     DefWindowProc(Win,WM_GETTEXT,Len,(long)Text);
+#endif
     if ((GetWindowLong(Win,GWL_STYLE) & HL_STATIC)==0){
       if (strchr(Text,'|')) *strchr(Text,'|')=0;
     }
@@ -998,7 +1014,11 @@ LRESULT __stdcall HyperLinkWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 
     int Len=DefWindowProc(Win,WM_GETTEXTLENGTH,0,0)+1;
     char *Text=new char[Len+1];
+#if defined(SSE_X64_383)
+    DefWindowProc(Win,WM_GETTEXT,Len,(LPARAM)Text);
+#else
     DefWindowProc(Win,WM_GETTEXT,Len,(long)Text);
+#endif
     if (strchr(Text,'|')) *strchr(Text,'|')=0;
 
     SelectObject(DC,GetProp(Win,"Font"));
@@ -1020,7 +1040,11 @@ LRESULT __stdcall HyperLinkWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       }
       TextOut(DC,0,0,Text,strlen(Text));
     }else{
+#if defined(SSE_X64_383)
+      GrayString(DC,NULL,NULL,(LPARAM)Text,strlen(Text),0,0,rc.right,rc.bottom);
+#else
       GrayString(DC,NULL,NULL,(long)Text,strlen(Text),0,0,rc.right,rc.bottom);
+#endif
     }
     delete[] Text;
 
