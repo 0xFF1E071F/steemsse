@@ -1431,67 +1431,60 @@ void agenda_keyboard_replace(int) {
   if(OPTION_C1) 
   {
     if (keyboard_buffer_length){ 
-#if !defined(SSE_IKBD_6301_SEND1) // bugfix v3.7
-      if (!ikbd.send_nothing) //no, not this one, could freeze true emu
-#endif
-      {
-        keyboard_buffer_length--;
-        ASSERT( keyboard_buffer_length>=0 );
+      keyboard_buffer_length--;
+      ASSERT( keyboard_buffer_length>=0 );
 #if defined(SSE_IKBD_6301_380) 
-        ACIA_IKBD.RDRS=HD6301.tdrs;
+      ACIA_IKBD.RDRS=HD6301.tdrs;
 #endif
-
-        ASSERT( keyboard_buffer_length<2 );
-        ASSERT( ACIA_IKBD.LineRxBusy );
-        ACIA_IKBD.LineRxBusy=false;
+      ASSERT( keyboard_buffer_length<2 );
+      ASSERT( ACIA_IKBD.LineRxBusy );
+      ACIA_IKBD.LineRxBusy=false;
 #ifdef SSE_IKBD_6301_EVENT
-        int cycles=LINECYCLES;
-        ASSERT(cycles>=0);
-        HD6301.LineTxFreeTime=cycles/8;
-       // TRACE_OSD("%d",HD6301.LineTxFreeTime);
-        if(!HD6301.LineTxFreeTime)
-        {
-          TRACE_LOG("6301 Tx free at once\n");
-          hd6301_completed_transmission_to_MC6850=true;
-        }
-#else
+      int cycles=LINECYCLES;
+      ASSERT(cycles>=0);
+      HD6301.LineTxFreeTime=cycles/8;
+      // TRACE_OSD("%d",HD6301.LineTxFreeTime);
+      if(!HD6301.LineTxFreeTime)
+      {
+        TRACE_LOG("6301 Tx free at once\n");
         hd6301_completed_transmission_to_MC6850=true;
+      }
+#else
+      hd6301_completed_transmission_to_MC6850=true;
 #endif
 
+      /*  Check overrun.
+      "The Overrun does not occur in the Status Register until the valid character
+      prior to Overrun has been read."
+      => 1. SR is updated at next read of RDR
+      2. The old byte will be read, the new byte is lost
+      */
+      if(ACIA_IKBD.SR&BIT_0) // RDR full
+      {
+        TRACE_LOG("%d %d %d ACIA 0 OVR (RDRS %X)\n",TIMING_INFO,ACIA_IKBD.RDRS);
+        dbg_log("IKBD: Overrun on keyboard ACIA");
+        if(ACIA_IKBD.overrun!=ACIA_OVERRUN_YES) 
+        {
+          ACIA_IKBD.overrun=ACIA_OVERRUN_COMING; // keep original system
+        }
+      }
+      else // not overrun, OK
+      {
+        //TRACE_LOG("%d %d %d ACIA RDRS->RDR %X\n",TIMING_INFO,ACIA_IKBD.RDRS);
+        ACIA_IKBD.RDR=ACIA_IKBD.RDRS; // transfer shifted byte
+        TRACE_LOG("%d %d %d ACIA RDR %X\n",TIMING_INFO,ACIA_IKBD.RDR);
+        ACIA_IKBD.SR|=BIT_0; // set RDR full
+      }
 
+      // Check if we must activate IRQ (overrun or normal)
+      if(ACIA_IKBD.CR&BIT_7)
+      {
+        dbg_log(EasyStr("IKBD: Changing ACIA IRQ bit from ")+ACIA_IKBD.irq+" to 1");
+        ACIA_IKBD.SR|=BIT_7;
+        TRACE_LOG("ACIA 1 IRQ (RDR)\n");
+        mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0);
+      }
 
-        /*  Check overrun.
-        "The Overrun does not occur in the Status Register until the valid character
-        prior to Overrun has been read."
-        => 1. SR is updated at next read of RDR
-        2. The old byte will be read, the new byte is lost
-        */
-        if(ACIA_IKBD.SR&BIT_0) // RDR full
-        {
-          TRACE_LOG("%d %d %d ACIA 0 OVR (RDRS %X)\n",TIMING_INFO,ACIA_IKBD.RDRS);
-          dbg_log("IKBD: Overrun on keyboard ACIA");
-          if(ACIA_IKBD.overrun!=ACIA_OVERRUN_YES) 
-          {
-            ACIA_IKBD.overrun=ACIA_OVERRUN_COMING; // keep original system
-          }
-        }
-        else // not overrun, OK
-        {
-          //TRACE_LOG("%d %d %d ACIA RDRS->RDR %X\n",TIMING_INFO,ACIA_IKBD.RDRS);
-          ACIA_IKBD.RDR=ACIA_IKBD.RDRS; // transfer shifted byte
-          TRACE_LOG("%d %d %d ACIA RDR %X\n",TIMING_INFO,ACIA_IKBD.RDR);
-          ACIA_IKBD.SR|=BIT_0; // set RDR full
-        }
-     
-        // Check if we must activate IRQ (overrun or normal)
-        if(ACIA_IKBD.CR&BIT_7)
-        {
-          dbg_log(EasyStr("IKBD: Changing ACIA IRQ bit from ")+ACIA_IKBD.irq+" to 1");
-          ACIA_IKBD.SR|=BIT_7;
-          TRACE_LOG("ACIA 1 IRQ (RDR)\n");
-          mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0);
-        }
-      }//if (!ikbd.send_nothing){
     }//if (keyboard_buffer_length)
 
     // More to process?

@@ -31,7 +31,7 @@ void DebugCheckIOAccess();
 struct TM68000 {
 
   // ENUM
-#if defined(SSE_CPU_HALT) || defined(SSE_CPU_TRACE_REFACTOR)
+#if defined(SSE_CPU_HALT)
 /* v 3.7, see MC68000UM p99 (6-1)
 "The processor is always in one of three processing states: normal, exception, or halted.
 The normal processing state is associated with instruction execution; the memory

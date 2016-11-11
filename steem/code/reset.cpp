@@ -120,7 +120,7 @@ is issued, and that the reset was active for at least 132 clock cycles [27].
 void power_on()
 {
   TRACE_INIT("power_on\n");
-#if defined(SSE_GUI_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_BAR)
   GUIRefreshStatusBar();//overkill
 #endif
 
@@ -184,11 +184,7 @@ void power_on()
 #if defined(SSE_DRIVE_OBJECT)
     SF314[floppyno].Id=floppyno;
 #if defined(SSE_DRIVE_MOTOR_ON)
-#if defined(SSE_DRIVE_STATE)
     SF314[floppyno].State.motor=false;
-#else
-    SF314[floppyno].motor_on=false;
-#endif
 #ifdef SSE_DISK_STW
 #if !defined(SSE_DRIVE_INIT_373)
     SF314[floppyno].rpm=300; 
@@ -215,7 +211,11 @@ void power_on()
 #endif
 
 #if defined(SSE_STF)
+#if defined(SSE_STF_383)
+  SSEConfig.SwitchSTType(ST_TYPE);
+#else
   SwitchSTType(ST_TYPE);
+#endif
 #endif
 
 #if defined(SSE_INT_MFP_TxDR_RESET)

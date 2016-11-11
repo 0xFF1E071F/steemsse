@@ -398,10 +398,10 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
   }
 
 #if defined(SSE_OSD_SCROLLER_DISK_IMAGE)
-    if(OSD_IMAGE_NAME && !SSE_STATUS_BAR_GAME_NAME && !FloppyDrive[0].Empty())
+    if(OSD_IMAGE_NAME && !OPTION_STATUS_BAR_GAME_NAME && !FloppyDrive[0].Empty())
       OsdControl.StartScroller(FloppyDrive[0].DiskName); // display image disk name
 #endif
-#if defined(SSE_GUI_STATUS_STRING_DISK_NAME)
+#if defined(SSE_GUI_STATUS_BAR_DISK_NAME)
     GUIRefreshStatusBar();
 #endif
 #if defined(SSE_GUI_OPTIONS_REFRESH)

@@ -40,8 +40,9 @@ struct TOption {
   unsigned int StatusBarGameName:1;
   unsigned int DriveSound:1;
   unsigned int SingleSideDriveMap:2;
-  unsigned int PSGMod:1;
-  unsigned int PSGFixedVolume:1;
+  //unsigned int PSGMod:1;
+  unsigned int SampledYM:1;
+  //unsigned int PSGFixedVolume:1;
   unsigned int GhostDisk:1;
   unsigned int Direct3D:1;
   unsigned int STAspectRatio:1;
@@ -95,15 +96,14 @@ extern struct TOption SSEOption;
 #define OSD_IMAGE_NAME (SSEOption.OsdImageName)
 #define PASTI_JUST_STX (SSEOption.PastiJustSTX)
 #define SSE_INTERPOLATE (SSEOption.Interpolate)
-#define SSE_STATUS_BAR (SSEOption.StatusBar)
-#define SSE_STATUS_BAR_GAME_NAME (SSEOption.StatusBarGameName)
+#define OPTION_STATUS_BAR (SSEOption.StatusBar)
+#define OPTION_STATUS_BAR_GAME_NAME (SSEOption.StatusBarGameName)
 #define SSE_WIN_VSYNC (SSEOption.WinVSync)
 #define SSE_3BUFFER (SSEOption.TripleBuffer)
 //#define SSE_DRIVE_SOUND (SSEOption.DriveSound)
 #define SSE_GHOST_DISK (SSEOption.GhostDisk)
 #define SSE_OPTION_D3D (SSEOption.Direct3D)
-#define SSE_OPTION_PSG (SSEOption.PSGMod)
-#define SSE_OPTION_PSG_FIXED (SSEOption.PSGFixedVolume)
+#define OPTION_SAMPLED_YM (SSEOption.SampledYM)
 #define OPTION_ST_ASPECT_RATIO (SSEOption.STAspectRatio)
 #define DRIVE_SOUND_SEEK_SAMPLE (SSEOption.DriveSoundSeekSample)
 #define SSE_TEST_ON (SSEOption.TestingNewFeatures)//use macro only for actual tests
@@ -142,6 +142,9 @@ struct TConfig {
   
 #ifdef __cplusplus // visible only to C++ objects
   TConfig();
+#if defined(SSE_STF_383)
+  int SwitchSTType(int new_type); // adapt to new machine
+#endif
 #endif
 };
 

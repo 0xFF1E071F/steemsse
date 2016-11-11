@@ -66,7 +66,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_FDC ] = 0;
   logsection_enabled[ LOGSECTION_IO ] = 0;
   logsection_enabled[ LOGSECTION_MFP_TIMERS ] = 0;
-  logsection_enabled[ LOGSECTION_INIT ] =1; //0; by default
+  logsection_enabled[ LOGSECTION_INIT ] =0; //0; by default
   logsection_enabled[ LOGSECTION_CRASH ] = 0;
   logsection_enabled[ LOGSECTION_STEMDOS ] = 0;
   logsection_enabled[ LOGSECTION_IKBD ] = 0;
@@ -111,7 +111,7 @@ TDebug::TDebug() {
   if(!trace_file_pointer)
     Alert("Couldn't open TRACE file",GetEXEDir().Text,0);
 #endif
-  //if(!trace_file_pointer) TRACE_IDE("%s\n",WriteDir.Text);
+ 
 #if !defined(SSE_BOILER_WIPE_TRACE2)
 #ifdef WIN32 // at each start now because of wiping
 
@@ -435,7 +435,7 @@ void TDebug::TraceGeneralInfos(int when) {
       TRACE("; Clock %d",CpuCustomHz);
 #endif
 #endif
-    if(SSEOption.PSGMod)
+    if(OPTION_SAMPLED_YM)
       TRACE("; YM");
     if(MONO)
       //TRACE("Monochrome\n");  

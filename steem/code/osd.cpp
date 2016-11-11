@@ -500,46 +500,23 @@ void osd_draw()
     || OSD_DRIVE_INFO
 #endif
     )
-
 #if defined(SSE_OSD_DRIVE_LED)
   // Green led for floppy disk read; red for write.
   {
-#if defined(SSE_OSD_DRIVE_LED2) 
-    {
-      Dma.UpdateRegs();
-      bool FDCWriting=WD1772.WritingToDisk();
-      if(WD1772.STR&0x80 //) // motor on, simply
-          && (psg_reg[PSGR_PORT_A]&6) != 6 //3.6.3
+    Dma.UpdateRegs();
+    bool FDCWriting=WD1772.WritingToDisk();
+    if(WD1772.STR&0x80 //) // motor on, simply
+      && (psg_reg[PSGR_PORT_A]&6) != 6 //3.6.3
 #if defined(SSE_TOS_PRG_AUTORUN)
-          && SF314[0].ImageType.Extension!=EXT_PRG 
-          && SF314[0].ImageType.Extension!=EXT_TOS
+      && SF314[0].ImageType.Extension!=EXT_PRG 
+      && SF314[0].ImageType.Extension!=EXT_TOS
 #endif
-          && FloppyDrive[DRIVE].DiskInDrive() 
-
-          )
-#else
-    if(  (psg_reg[PSGR_PORT_A]&6) != 6
-    //  psg_reg[PSGR_PORT_A] & b0110)==BIT_1 // drive A?
-    //  || (psg_reg[PSGR_PORT_A] & b0110)==BIT_2  // drive B?
-      || FDCCantWriteDisplayTimer>timer
-      || FDCWritingTimer>timer
-      || FDCWriting)
+      && FloppyDrive[DRIVE].DiskInDrive() )
     {
-      if(disk_light_off_time>timer 
-        || DisableDiskLightAfter==0 
-        || FDCCantWriteDisplayTimer>timer
-        || FDCWritingTimer>timer
-        || FDCWriting)
-#endif
-      {
-        int idx=32,w=20;
-        if(draw_blit_source_rect.bottom>200+BORDER_TOP+BORDER_BOTTOM)
-          idx=37,w=32;
-        DWORD col=(FDCWriting 
-#if !defined(SSE_OSD_DRIVE_LED2)   
-          || (FDCWritingTimer>timer)
-#endif
-          ) 
+      int idx=32,w=20;
+      if(draw_blit_source_rect.bottom>200+BORDER_TOP+BORDER_BOTTOM)
+        idx=37,w=32;
+      DWORD col=(FDCWriting) 
           ? col_fd_red[(hbl_count/512) & 1] : col_fd_green[(hbl_count/512) & 1];
 #else
   {
@@ -552,27 +529,27 @@ void osd_draw()
     	DWORD col=col_yellow[(hbl_count/512) & 1];
 #endif
 #if defined(SSE_OSD_DRIVE_INFO)
-        if(osd_show_disk_light && !OSD_DRIVE_INFO)
+      if(osd_show_disk_light && !OSD_DRIVE_INFO)
 #endif
-        {
-          if (FDCCantWriteDisplayTimer>timer){
-            col=col_red;
-            osd_draw_char(osd_font+(38*64),draw_mem,(x1-w)-24,1,draw_line_length,col_red,16);
-            if (((FDCCantWriteDisplayTimer-timer) % 500)<=250){
-              osd_draw_char(osd_font+(39*64),draw_mem,(x1-w)-24,1,draw_line_length,col_red,16);
-            }
+      {
+        if (FDCCantWriteDisplayTimer>timer){
+          col=col_red;
+          osd_draw_char(osd_font+(38*64),draw_mem,(x1-w)-24,1,draw_line_length,col_red,16);
+          if (((FDCCantWriteDisplayTimer-timer) % 500)<=250){
+            osd_draw_char(osd_font+(39*64),draw_mem,(x1-w)-24,1,draw_line_length,col_red,16);
           }
-          osd_draw_char(osd_font+(idx*64),draw_mem,(x1-w)-4,4,draw_line_length,col,8);
-
-          if (draw_grille_black<4) draw_grille_black=4;
         }
+        osd_draw_char(osd_font+(idx*64),draw_mem,(x1-w)-4,4,draw_line_length,col,8);
+
+        if (draw_grille_black<4) draw_grille_black=4;
+      }
 
 #if defined(SSE_OSD_DRIVE_INFO)
 /*  Display drive, side, track, sector
     Sector for type II commands and 'Read Address'
 */
-        if(OSD_DRIVE_INFO)// && seconds>=osd_show_plasma)
-        {
+      if(OSD_DRIVE_INFO)// && seconds>=osd_show_plasma)
+      {
 #define THE_LEFT (x1/2)
 #define THE_RIGHT ((x1))
 #ifdef SSE_DEBUG
@@ -581,53 +558,47 @@ void osd_draw()
 #define BUFFER_LENGTH (10+2) //"D:S-TR-SEC" drive-side-track-sector
 #endif
 
-          RECT cliprect={THE_LEFT,0,THE_RIGHT,y1}; //refactor...
-          
-          //BYTE floppyno=DRIVE;//floppy_current_drive();      
-          char tmp_buffer[BUFFER_LENGTH];
+        RECT cliprect={THE_LEFT,0,THE_RIGHT,y1}; //refactor...
+        char tmp_buffer[BUFFER_LENGTH];
 
 #ifdef SSE_DEBUG // add current command (CR)
-
 #if defined(SSE_OSD_DRIVE_INFO_EXT) //3.8.2, was SSE_DISK_IMAGE
-/*  Instead of the status bar, we put image info on debug OSD track info,
-    so it's valid for both drives, we see clearly what happens with
-    different types mixed.
-*/
-          ASSERT(SF314[DRIVE].ImageType.Extension-1>=0);
-          ASSERT(SF314[DRIVE].ImageType.Extension-1<EXT_HFE);
-          sprintf(tmp_buffer,"%C:%s-%02X-%d-%02d-%02d",'A'+DRIVE,
-            extension_list[SF314[DRIVE].ImageType.Extension],fdc_cr,
+        /*  Instead of the status bar, we put image info on debug OSD track info,
+        so it's valid for both drives, we see clearly what happens with
+        different types mixed.
+        */
+        ASSERT(SF314[DRIVE].ImageType.Extension-1>=0);
+        ASSERT(SF314[DRIVE].ImageType.Extension-1<EXT_HFE);
+        sprintf(tmp_buffer,"%C:%s-%02X-%d-%02d-%02d",'A'+DRIVE,
+          extension_list[SF314[DRIVE].ImageType.Extension],fdc_cr,
 #else
-          sprintf(tmp_buffer,"%2X-%C:%d-%02d-%02d",fdc_cr,'A'+DRIVE,
+        sprintf(tmp_buffer,"%2X-%C:%d-%02d-%02d",fdc_cr,'A'+DRIVE,
 #endif
-            CURRENT_SIDE,floppy_head_track[DRIVE],
-            (WD1772.CommandType()==2||(WD1772.CR&0xF0)==0xC0)?fdc_sr:0);
-#else
-          sprintf(tmp_buffer,"%C:%d-%02d-%02d",'A'+DRIVE,
-            CURRENT_SIDE,floppy_head_track[DRIVE],
-            (WD1772.CommandType()==2||(WD1772.CR&0xF0)==0xC0)?fdc_sr:0);
+          CURRENT_SIDE,floppy_head_track[DRIVE],
+          (WD1772.CommandType()==2||(WD1772.CR&0xF0)==0xC0)?fdc_sr:0);
+#else // not Debug
+        sprintf(tmp_buffer,"%C:%d-%02d-%02d",'A'+DRIVE,
+          CURRENT_SIDE,floppy_head_track[DRIVE],
+          (WD1772.CommandType()==2||(WD1772.CR&0xF0)==0xC0)?fdc_sr:0);
 #endif
-          ASSERT( strlen(tmp_buffer) < BUFFER_LENGTH );
-          size_t drive_info_length=strlen(tmp_buffer);
-          int x=x1-(drive_info_length+1)*16;
-          int start_y=0+8;
-          for(unsigned int i=0;i<drive_info_length;i++)
-          {
-            int n= (int)(tmp_buffer[i]) + (60-33);
-            if (n>=60 && n<120)
-              osd_draw_char_clipped(osd_font+(n*64),draw_mem,x,start_y+PLASMA_H/2-OSD_LOGO_H/2,draw_line_length,col,32,&cliprect);
-            x+=16;
-          }//nxt i
-          if (draw_grille_black<4) draw_grille_black=4;
+        ASSERT( strlen(tmp_buffer) < BUFFER_LENGTH );
+        size_t drive_info_length=strlen(tmp_buffer);
+        int x=x1-(drive_info_length+1)*16;
+        int start_y=0+8;
+        for(unsigned int i=0;i<drive_info_length;i++)
+        {
+          int n= (int)(tmp_buffer[i]) + (60-33);
+          if (n>=60 && n<120)
+            osd_draw_char_clipped(osd_font+(n*64),draw_mem,x,start_y+PLASMA_H/2-OSD_LOGO_H/2,draw_line_length,col,32,&cliprect);
+          x+=16;
+        }//nxt i
+        if (draw_grille_black<4) draw_grille_black=4;
 #undef THE_LEFT
 #undef THE_RIGHT
 #undef BUFFER_LENGTH
-        }
-#endif
-
       }
+#endif
     }
-
 #if defined(SSE_OSD_DRIVE_LED)
     // Hard disk activity
     if(HDDisplayTimer>timer)
@@ -655,7 +626,6 @@ void osd_draw()
     ;
   else
 #endif
-
 
   if (can_have_scroller && osd_shown_scroller==0){
     osd_shown_scroller=true;

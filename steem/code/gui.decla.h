@@ -53,8 +53,8 @@ UNIX_ONLY( extern void PostRunMessage(); )
 UNIX_ONLY( EXT void PostRunMessage(); )
 #endif
 
-#if defined(SSE_GUI_STATUS_STRING)
-#if defined(SSE_GUI_STATUS_STRING_ICONS)
+#if defined(SSE_GUI_STATUS_BAR)
+#if defined(SSE_GUI_STATUS_BAR_ICONS)
   void GUIRefreshStatusBar(bool invalidate=true);
 #else
   void GUIRefreshStatusBar();

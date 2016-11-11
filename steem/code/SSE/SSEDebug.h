@@ -253,6 +253,7 @@ enum logsection_enum_tag {
  LOGSECTION_CARTRIDGE,
  LOGSECTION_PASTI, // restore this
  LOGSECTION_MMU,
+ LOGSECTION_VIDEO_RENDERING,
  NUM_LOGSECTIONS,
  };
 #endif
@@ -472,20 +473,6 @@ enum logsection_enum_tag {
 #define TRACE_ENABLED (0)
 #endif
 #endif
-
-// TRACE_IDE
-#if defined(SSE_DEBUG_TRACE)
-#ifdef __cplusplus
-#define TRACE_IDE Debug.TraceIde
-#endif//c++
-#else
-#if defined(VC_BUILD) // OK for Unix?
-#define TRACE_IDE(x) // no code left?
-#else
-#define TRACE_IDE // some code left to the compiler
-#endif
-#endif//#if defined(SSE_DEBUG_TRACE)
-
 
 // TRACE_LOG
 #if defined(SSE_DEBUG)

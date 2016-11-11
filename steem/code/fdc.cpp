@@ -262,8 +262,8 @@ void fdc_type1_check_verify()
 #if defined(SSE_DRIVE_EMPTY_VERIFY_TIME_OUT)
 /*  When you boot a ST with no disk into the drive, it will hang for
     a long time then show the desktop with two drive icons.
-    It is handled here and not in SSEWD1772 as there's no disk, so
-    no disk image!
+    It is handled here and not in SSEWD1772 as there's no disk image,
+    'Steem native' is the default manager.
 */
       if(FloppyDrive[DRIVE].Empty())
       {

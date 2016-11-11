@@ -439,7 +439,12 @@ BYTE STCharToPCChar[128]={199,  0,233,226,228,224,229,231,234,235,232,239,238,23
 
 #include "stemwin.cpp"
 //#define LOGSECTION LOGSECTION_INIT
+#if defined(SSE_BOILER_383_LOG2)
+#define LOGSECTION LOGSECTION_VIDEO_RENDERING
+#else
 #define LOGSECTION LOGSECTION_OPTIONS
+#endif
+
 
 #if defined(SSE_VID_BORDERS)
 
@@ -563,15 +568,8 @@ int ChangeBorderSize(int size_in) {
 
 #endif
 
-#if defined(SSE_GUI_STATUS_STRING)
-/*  Cool feature introduced with v3.5.4, a kind of status bar consisting
-    in a formatted text string placed on the icon bar of Steem, when there
-    is sufficient room between left and right icons.
-*/
-
-#include "SSE/SSEMMU.h"
-
-#if defined(SSE_GUI_STATUS_STRING_ICONS)
+#if defined(SSE_GUI_STATUS_BAR)
+#if defined(SSE_GUI_STATUS_BAR_ICONS)
 void GUIRefreshStatusBar(bool invalidate) {
 #else
 void GUIRefreshStatusBar() {
@@ -580,12 +578,12 @@ void GUIRefreshStatusBar() {
   HWND status_bar_win=GetDlgItem(StemWin,120); // get handle
 
   // should we show or hide that "status bar"?
-  bool should_we_show=(SSE_STATUS_BAR||SSE_STATUS_BAR_GAME_NAME); 
+  bool should_we_show=(OPTION_STATUS_BAR||OPTION_STATUS_BAR_GAME_NAME); 
 
   // build text of "status bar", only if we're to show it
 
 
-#if defined(SSE_GUI_STATUS_STRING_ICONS) && defined(SSE_CPU_HALT)
+#if defined(SSE_GUI_STATUS_BAR_ALERT)
   // and it's no special string
   if(should_we_show && M68000.ProcessingState!=TM68000::INTEL_CRASH
     && M68000.ProcessingState!=TM68000::HALTED
@@ -594,53 +592,33 @@ void GUIRefreshStatusBar() {
   if(should_we_show)
 #endif
   {
-#if defined(SSE_ANSI_STRING)
-    char *status_bar=ansi_name; //first reuse!
-#else
-    char status_bar[120+10]="\0"; //TODO: size
-#endif
-#if defined(SSE_GUI_STATUS_STRING_ICONS)
+    char *status_bar=ansi_string;
+#if defined(SSE_GUI_STATUS_BAR_ICONS)
     status_bar[0]='\0';
 #endif
-    if(SSE_STATUS_BAR)
+    if(OPTION_STATUS_BAR)
     {
       // basic ST/TOS/RAM
       char 
-#if !defined(SSE_GUI_STATUS_STRING_FULL_ST_MODEL)
         sb_st_model[5],
-#endif
         sb_tos[5],sb_ram[7];
-#if !defined(SSE_GUI_STATUS_STRING_FULL_ST_MODEL)
 #if defined(SSE_MMU_WU)
       sprintf(sb_st_model,"%s%d",(ST_TYPE)? "STF":"STE",MMU.WS[OPTION_WS]);
       if(!OPTION_WS)
-        sb_st_model[3]=0;
+        sb_st_model[3]='\0';
 #else
       sprintf(sb_st_model,"%s",(ST_TYPE)? "STF":"STE");
-#endif
 #endif
       ASSERT(tos_version<0x1000);
       sprintf(sb_tos,"T%x",tos_version);
       sprintf(sb_ram,"%dK",mem_len/1024);
-#if defined(SSE_GUI_STATUS_STRING_FULL_ST_MODEL)
-      sprintf(status_bar,"%s %s %s",st_model_name[ST_TYPE],sb_tos,sb_ram);
-#if defined(SSE_MMU_WU)
-      if(OPTION_WS)
-      {
-        char sb_wu[6];
-        sprintf(sb_wu," WS%c",'0'+MMU.WS[OPTION_WS]);
-        strcat(status_bar,sb_wu);
-      }
-#endif
-#else
-#if defined(SSE_GUI_STATUS_STRING_ICONS) // make room for flag after TXXX
+#if defined(SSE_GUI_STATUS_BAR_ICONS) // make room for flag after TXXX
       sprintf(status_bar,"%s %s       %s",sb_st_model,sb_tos,sb_ram);
 #else
       sprintf(status_bar,"%s %s %s",sb_st_model,sb_tos,sb_ram);
 #endif
-#endif 
 
-#if defined(SSE_GUI_STATUS_STRING_HISPEED) && defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_GUI_STATUS_BAR_HISPEED) && defined(SSE_INT_MFP_RATIO)
       if(n_cpu_cycles_per_second>CpuNormalHz)
       {
         char sb_clock[10];
@@ -649,103 +627,59 @@ void GUIRefreshStatusBar() {
       }
 #endif
 
+#if !defined(SSE_GUI_STATUS_BAR_ICONS)
       // some options
-#if !defined(SSE_GUI_STATUS_STRING_ICONS)
-#if defined(SSE_IKBD_6301) && defined(SSE_GUI_STATUS_STRING_6301)
+#if defined(SSE_IKBD_6301) && defined(SSE_GUI_STATUS_BAR_6301)
       if(OPTION_C1)
         strcat(status_bar," C1"); //saves som space
-#if defined(SSE_GUI_STATUS_STRING_68901) && !defined(SSE_GUI_STATUS_STRING_ICONS)
+#if defined(SSE_GUI_STATUS_BAR_68901) && !defined(SSE_GUI_STATUS_BAR_ICONS)
       else
         strcat(status_bar," X");
 #endif
 #endif
-
-#if defined(SSE_GUI_STATUS_STRING_68901)
+#if defined(SSE_GUI_STATUS_BAR_68901)
       if(OPTION_C2)
         strcat(status_bar," C2");
-#if !defined(SSE_GUI_STATUS_STRING_ICONS)
+#if !defined(SSE_GUI_STATUS_BAR_ICONS)
       else
         strcat(status_bar," X");
 #endif
 #endif//!icon
       if(OPTION_CPU_CLOCK 
-#if defined(SSE_GUI_STATUS_STRING_SINGLE_SIDE)
+#if defined(SSE_GUI_STATUS_BAR_SINGLE_SIDE)
         || (SSEOption.SingleSideDriveMap&3)
 #endif
         )
         strcat(status_bar,"!");
-#endif
-
-
-      
-#if USE_PASTI && defined(SSE_GUI_STATUS_STRING_PASTI)//no
-      if(hPasti && pasti_active
-#if defined(SSE_DRIVE_OBJECT)&&defined(SSE_DISK_PASTI_ONLY_STX)
-#if defined(SSE_DISK_IMAGETYPE)
-//        && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType.Extension==EXT_STX)
-#else
-        && (!PASTI_JUST_STX || SF314[floppy_current_drive()].ImageType==3)
-#endif
-#endif            
-        )
-        strcat(status_bar," Pasti");
-#else
-      //if(0);
-#endif
-      
-#if defined(SSE_GUI_STATUS_STRING_IPF) && defined(SSE_DISK_CAPS)//no
-      else if(Caps.Active)
-        strcat(status_bar," Caps");
-#endif
-      
-#if defined(SSE_GUI_STATUS_STRING_STW)//no
-      else if(IMAGE_STW)
-        strcat(status_bar," STW");
-#endif      
-
-#if defined(SSE_GUI_STATUS_STRING_ADAT)
-#if defined(SSE_GUI_STATUS_STRING_PASTI)
-      else if(ADAT)
-        strcat(status_bar," ADAT");
-#else
-#if !defined(SSE_GUI_STATUS_STRING_ICONS)
-#if defined(SSE_GUI_STATUS_STRING_HD)
-      if(!HardDiskMan.DisableHardDrives //v3.7.0
-        || ACSI_EMU_ON) //v3.7.2
+#if defined(SSE_GUI_STATUS_BAR_HD)
+      if(!HardDiskMan.DisableHardDrives || ACSI_EMU_ON)
         strcat(status_bar," HD");
 #endif
-#endif
-#if !defined(SSE_GUI_STATUS_STRING_ICONS)
-      if(!floppy_instant_sector_access) // the option only //3.7.0
+#if defined(SSE_GUI_STATUS_BAR_ADAT)
+      if(!floppy_instant_sector_access) // the option only 
         strcat(status_bar," ADAT");
 #endif
-#endif
-#endif
-
-
-
-#if defined(SSE_GUI_STATUS_STRING_HACKS) && !defined(SSE_GUI_STATUS_STRING_ICONS)
+#if defined(SSE_GUI_STATUS_BAR_HACKS)
       if(OPTION_HACKS)
         strcat(status_bar," #"); // which symbol?
 #endif
-
+#endif//#if !defined(SSE_GUI_STATUS_BAR_ICONS)
 #if defined(SSE_PRIVATE_BUILD)
       if(SSEOption.TestingNewFeatures)
         strcat(status_bar," ##");
 #endif
-
-#if defined(SSE_GUI_STATUS_STRING_VSYNC)
+#if defined(SSE_GUI_STATUS_BAR_VSYNC)
       if(SSE_WIN_VSYNC)
         strcat(status_bar," V"); // V for VSync!
 #endif
     }
 
-#if defined(SSE_GUI_STATUS_STRING_DISK_NAME)
+#if defined(SSE_GUI_STATUS_BAR_DISK_NAME)
 /*  We try to take advantage of all space.
     Font is proportional so we need a margin.
     TODO: precise computing
 */
-    if(SSE_STATUS_BAR_GAME_NAME 
+    if(OPTION_STATUS_BAR_GAME_NAME 
       && (FloppyDrive[floppy_current_drive()].NotEmpty() 
 #if defined(SSE_TOS_PRG_AUTORUN)
       || SF314[0].ImageType.Extension==EXT_PRG 
@@ -760,7 +694,7 @@ void GUIRefreshStatusBar() {
 #else
       int max_text_length=(border&1)?MAX_TEXT_LENGTH_BORDER_ON:MAX_TEXT_LENGTH_BORDER_OFF;
 #endif
-      if(SSE_STATUS_BAR)
+      if(OPTION_STATUS_BAR)
         max_text_length-=30;
 #if defined(SSE_VID_BORDERS)
       if(SideBorderSizeWin<VERY_LARGE_BORDER_SIDE)
@@ -768,7 +702,7 @@ void GUIRefreshStatusBar() {
       if(SideBorderSizeWin==ORIGINAL_BORDER_SIDE)
         max_text_length-=5;
 #endif
-#if defined(SSE_GUI_STATUS_STRING_ICONS)
+#if defined(SSE_GUI_STATUS_BAR_ICONS)
       char tmp[MAX_TEXT_LENGTH_BORDER_ON+2+1]=" ";
 #else
       char tmp[MAX_TEXT_LENGTH_BORDER_ON+2+1]=" \"";
@@ -776,7 +710,7 @@ void GUIRefreshStatusBar() {
       if( strlen(FloppyDrive[floppy_current_drive()].DiskName.Text)<=max_text_length)
       {
         strncpy(tmp
-#if defined(SSE_GUI_STATUS_STRING_ICONS)
+#if defined(SSE_GUI_STATUS_BAR_ICONS)
           +1
 #else
           +2
@@ -792,7 +726,7 @@ void GUIRefreshStatusBar() {
       else
       {
         strncpy(tmp
-#if defined(SSE_GUI_STATUS_STRING_ICONS)
+#if defined(SSE_GUI_STATUS_BAR_ICONS)
           +1
 #else
           +2
@@ -801,7 +735,7 @@ void GUIRefreshStatusBar() {
         strcat(tmp,"...");
       }
       strcat(status_bar,tmp);
-#if !defined(SSE_GUI_STATUS_STRING_ICONS)
+#if !defined(SSE_GUI_STATUS_BAR_ICONS)
       strcat(status_bar,"\"");
 #endif
     }
@@ -815,7 +749,7 @@ void GUIRefreshStatusBar() {
     else
     {
       char disk_type[13]; // " A:MSA B:STW"
-#if defined(SSE_GUI_STATUS_STRING_ICONS)
+#if defined(SSE_GUI_STATUS_BAR_ICONS)
       if(num_connected_floppies==1)
         sprintf(disk_type," A:%s",extension_list[SF314[0].ImageType.Extension]);
       else
@@ -830,13 +764,13 @@ void GUIRefreshStatusBar() {
 
     //TRACE("status string len %d\n",strlen(status_bar));
     // change text
-#if !defined(SSE_GUI_STATUS_STRING_ICONS)
+#if !defined(SSE_GUI_STATUS_BAR_ICONS)
 #if defined(SSE_VAR_MAIN_LOOP1) && defined(SSE_CPU_HALT)
     if(M68000.ProcessingState==TM68000::INTEL_CRASH)
       strcpy(status_bar,T("STEEM CRASHED!"));  
 #endif
 
-#if defined(SSE_GUI_STATUS_STRING_HALT) && defined(SSE_CPU_HALT)
+#if defined(SSE_GUI_STATUS_BAR_HALT) && defined(SSE_CPU_HALT)
     if(M68000.ProcessingState==TM68000::HALTED)
       //strcpy(status_bar,T("HALT (ST crashed)"));
       strcpy(status_bar,T("HALT"));
@@ -846,19 +780,18 @@ void GUIRefreshStatusBar() {
 #endif
   }
 
-#if defined(SSE_GUI_STATUS_STRING_ICONS)
+#if defined(SSE_GUI_STATUS_BAR_ICONS)
 #if defined(SSE_VAR_MAIN_LOOP1) && defined(SSE_CPU_HALT)
     if(M68000.ProcessingState==TM68000::INTEL_CRASH)
-      strcpy(ansi_name,T("STEEM CRASHED!"));  
+      strcpy(ansi_string,T("STEEM CRASHED!"));  
 #endif
-
-#if defined(SSE_GUI_STATUS_STRING_HALT) && defined(SSE_CPU_HALT)
+#if defined(SSE_GUI_STATUS_BAR_HALT) && defined(SSE_CPU_HALT)
     if(M68000.ProcessingState==TM68000::HALTED)
       //strcpy(status_bar,T("HALT (ST crashed)"));
-      strcpy(ansi_name,T("HALT"));
+      strcpy(ansi_string,T("HALT"));
 
     if(M68000.ProcessingState==TM68000::BLIT_ERROR)
-      strcpy(ansi_name,T("BLIT ERROR"));
+      strcpy(ansi_string,T("BLIT ERROR"));
 #endif
 #endif
 
@@ -878,7 +811,7 @@ void GUIRefreshStatusBar() {
     GetWindowRect(status_bar_win,&window_rect3);
     int w=window_rect2.left-window_rect1.right-10;
 
-#if defined(SSE_GUI_STATUS_STRING_THRESHOLD)
+#if defined(SSE_GUI_STATUS_BAR_THRESHOLD)
     if(w<200)
       should_we_show=false;
     else
@@ -895,7 +828,7 @@ void GUIRefreshStatusBar() {
   // show or hide
   ShowWindow(status_bar_win, (should_we_show) ? SW_SHOW : SW_HIDE);
 
-#if defined(SSE_GUI_STATUS_STRING_ICONS)
+#if defined(SSE_GUI_STATUS_BAR_ICONS)
   if(invalidate)
     InvalidateRect(status_bar_win,NULL,FALSE); //to get message WM_DRAWITEM
 #endif
@@ -1336,17 +1269,14 @@ bool MakeGUI()
   x+=23;
 #endif
 
-#if defined(SSE_GUI_STATUS_STRING)  
-/*  Create a static control as text status bar. We take the undef update icon's
+#if defined(SSE_GUI_STATUS_BAR)  
+/*  Create a static control as status bar. We take the undef update icon's
     number.
     WINDOW_TITLE is dummy, the field will be updated later, its size too.
 */
 
   Win=CreateWindowEx(0,"Static",WINDOW_TITLE,WS_CHILD | WS_VISIBLE
-//    |SS_CENTER // horizontally
-  //  |SS_CENTERIMAGE // vertically
-  //|SS_SUNKEN // frame
-#if defined(SSE_GUI_STATUS_STRING_ICONS)
+#if defined(SSE_GUI_STATUS_BAR_ICONS)
     |SS_OWNERDRAW
 #else
     |SS_CENTER // horizontally
@@ -1375,14 +1305,9 @@ bool MakeGUI()
                           100,0,20,20,StemWin,(HMENU)103,Inst,NULL);
   ToolAddWindow(ToolTip,Win,T("Joystick Configuration"));
 
-#if defined(SSE_GUI_DISK_MANAGER_RGT_CLK_HD)
-  // introducing right click to toggle HD
-  Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_DISKMAN),WS_CHILDWINDOW | WS_VISIBLE 
-    | PBS_RIGHTCLICK ,100,0,20,20,StemWin,(HMENU)100,Inst,NULL);
-#else
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_DISKMAN),WS_CHILDWINDOW | WS_VISIBLE
     ,100,0,20,20,StemWin,(HMENU)100,Inst,NULL);
-#endif
+
   ToolAddWindow(ToolTip,Win,T("Disk Manager"));
 
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_TOWINDOW),WS_CHILD,
@@ -1974,13 +1899,20 @@ EasyStr Translation(char *s)
 }
 
 //---------------------------------------------------------------------------
-char FileTypes[512]; //SS another global we could use...
+#if defined(SSE_VAR_RESIZE_383)
+#define FileTypes ansi_string //no problem as it's used for modal fileselect
+#else
+char FileTypes[512];
+#endif
 
 char *FSTypes(int Type,...)
 {
   char *tp=FileTypes;
+#if defined(SSE_VAR_RESIZE_383)
+  ZeroMemory(FileTypes,256);
+#else
   ZeroMemory(FileTypes,512);
-
+#endif
   if (Type==2){
     strcpy(tp,T("Disk Images"));tp+=strlen(tp)+1;
     strcpy(tp,"*.st;*.stt;*.msa;*.dim;*.zip;*.stz");tp+=strlen(tp);
@@ -2026,7 +1958,11 @@ char *FSTypes(int Type,...)
     strcpy(tp,T("All Files"));tp+=strlen(tp)+1;
     strcpy(tp,"*.*");
   }
+  ASSERT(strlen(FileTypes)<256); //512 was overkill (maybe...)
   return FileTypes;
+#if defined(SSE_VAR_RESIZE_383)
+#undef FileTypes
+#endif
 }
 //---------------------------------------------------------------------------
 bool CheckForSteemRunning()

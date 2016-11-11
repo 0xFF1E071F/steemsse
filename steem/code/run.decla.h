@@ -220,11 +220,7 @@ EXT int cpu_timer_at_start_of_hbl;
 #define PREPARE_EVENT_CHECK_FOR_DMA
 #endif
 
-//SS how to optimise when we don't use it?
-
 #if defined(SSE_FLOPPY_EVENT)
-
-// version with 3 events: 1 for WD1772, 1 for each drive
 
 #define PREPARE_EVENT_CHECK_FOR_FLOPPY       \
   if ((time_of_next_event-WD1772.update_time) >= 0){                 \
@@ -318,15 +314,12 @@ void event_pasti_update();
 #endif
 
 #if defined(SSE_FLOPPY_EVENT)
-
 /*  1 event for FDC: various parts of its program
     1 event for each drive: IP
 */
-
 void event_wd1772();
 void event_driveA_ip();
 void event_driveB_ip();
-
 #endif
 
 #if defined(SSE_ACIA_383)

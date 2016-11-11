@@ -221,7 +221,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(fdc_sr);            //1
   ReadWrite(fdc_str);           //1
   ReadWrite(fdc_dr);                     //1
-#if (defined(SSE_DISK_STW))
+#if defined(SSE_WD1772_LINES)
   BYTE dummy_byte;
   ReadWrite(dummy_byte);
 #else
@@ -829,7 +829,11 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #if SSE_VERSION>=382
     if(LoadOrSave==LS_LOAD)
 #endif
+#if defined(SSE_STF_383)
+    SSEConfig.SwitchSTType(ST_TYPE);
+#else
     SwitchSTType(ST_TYPE);
+#endif
 #endif
     int dummy=0; // dummy for former Program ID
     ReadWrite(dummy);
@@ -1047,7 +1051,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
   {
 #if defined(SSE_MMU_WAKE_UP)
     ReadWrite(OPTION_WS); // and not struct MMU
-#if defined(SSE_GUI_STATUS_STRING)
+#if defined(SSE_GUI_STATUS_BAR)
     GUIRefreshStatusBar();//overkill
 #endif
 #if defined(SSE_GLUE_THRESHOLDS)    
@@ -1138,13 +1142,15 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #ifdef SSE_WD1772
     ReadWriteStruct(WD1772); //yep, was missing before... explains a lot!
     //TRACE("phase %d\n",WD1772.prg_phase);
+#if defined(SSE_FLOPPY_EVENT)
     if(LoadOrSave==LS_LOAD && WD1772.prg_phase>TWD1772::WD_READY)
     {
       WD1772.update_time=ACT+256; // yeah, but it will work with some prgs
+#if defined(SSE_FLOPPY_EVENT) //moved 383
+    SF314[0].time_of_next_ip=SF314[1].time_of_next_ip=ACT+n_cpu_cycles_per_second;
+#endif
     }
 #endif
-#ifdef SSE_DRIVE_OBJECT
-    SF314[0].time_of_next_ip=SF314[1].time_of_next_ip=ACT+n_cpu_cycles_per_second;
 #endif
   }
 #endif

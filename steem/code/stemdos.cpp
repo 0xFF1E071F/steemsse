@@ -2149,6 +2149,20 @@ void TTos::HackMemoryForExtendedMonitor() {
 
 #endif
 
+#if defined(SSE_TOS_WARNING1A)
+
+void TTos::CheckSTTypeAndTos() {
+  if(tos_version<0x106 && ST_TYPE==STE || tos_version>=0x106 && ST_TYPE!=STE
+#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS4)    
+    && tos_version!=0x206
+#endif
+    )
+    Alert("TOS and ST type normally not compatible","Warning",MB_OK|MB_ICONWARNING);
+}
+
+#endif
+
+
 #undef LOGSECTION
 
 
