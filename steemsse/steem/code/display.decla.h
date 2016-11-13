@@ -144,7 +144,9 @@ public:
 #if defined(SSE_VID_D3D_382)
   UINT D3DFsW,D3DFsH;
   void D3DUpdateWH(UINT mode);
+#if !defined(SSE_VID_D3D_383)
   void Cls();
+#endif
 #endif
 private:
 #endif//d3d

@@ -33,68 +33,6 @@ TSF314::TSF314() {
   Init();
 }
 
-
-bool TSF314::Adat() {
-/*  ADAT=accurate disk access times
-    This is defined so: Steem slow (original ADAT) or Pasti or Caps 
-    or Steem WD1772.
-*/
-  bool is_adat= (
-    !floppy_instant_sector_access && ImageType.Manager==MNGR_STEEM
-#if USE_PASTI
-    || pasti_active && ImageType.Manager==MNGR_PASTI
-#endif
-#if defined(SSE_DISK_CAPS)
-    || ImageType.Manager==MNGR_CAPS
-#endif
-#if defined(SSE_DISK_STW)
-    ||ImageType.Manager==MNGR_WD1772
-#if defined(SSE_DISK_STW_FAST) 
-/*  To help our MFM disk image format, we finally add a fast mode for 
-    STW (and HFE, since we test the image manager).
-    It works with "normal" images (so most of them), but fails in cases 
-    where floppy disk timing is more important, or if there's a READ TRACK
-    or WRITE TRACK command:
-    War Heli, MPS Golf, Jupiter's Masterdrive, Union Demo, Fantasia (megademo),
-    Demoniak -ELT...
-    Part of it is because our system is simplistic.
-*/
-      &&!floppy_instant_sector_access
-#endif
-#endif
-    );
-  return is_adat;
-}
-
-
-WORD TSF314::BytePosition() {
-  WORD position=0;
-#ifdef SSE_DISK_STW
-/*  This assumes constant bytes/track (some protected disks have more)
-    This should be 0-6255
-    This is independent of #sectors
-    This is independent of disk type
-    This is based on Index Pulse, that is sent by the drive 
-*/
-  if(ImageType.Manager==MNGR_WD1772 && CyclesPerByte())
-  {
-    position=(ACT-time_of_last_ip)/cycles_per_byte;
-    if(position>=Disk[Id].TrackBytes)
-    {
-      // argh! IP didn't occur yet (Overdrive demo)
-      position=Disk[Id].TrackBytes-(time_of_next_ip-ACT)/cycles_per_byte;
-      time_of_last_ip=ACT;
-      if(position>=Disk[Id].TrackBytes)
-        position=0; //some safety
-    }
-  }
-  else
-#endif
-    position=HblsToBytes( hbl_count% HblsPerRotation() );
-  return position;
-
-}
-
 #if defined(SSE_DISK_GHOST)
 
 bool TSF314::CheckGhostDisk(bool write) {
@@ -134,12 +72,105 @@ BYTE TSF314::Track() {
   return floppy_head_track[Id]; //eh eh
 }
 
-
-
 ////////////////////////////////////// ADAT ///////////////////////////////////
 
+#if defined(SSE_FLOPPY_ADAT_UPDATE) // not sure it's that smart
+
+void TSF314::UpdateAdat() {
+/*  ADAT=accurate disk access times
+    This is defined so: Steem slow (original ADAT) or Pasti or Caps 
+    or Steem WD1772 slow.
+*/
+  State.adat= (
+    !floppy_instant_sector_access && ImageType.Manager==MNGR_STEEM
+#if USE_PASTI
+    || pasti_active && ImageType.Manager==MNGR_PASTI
+#endif
+#if defined(SSE_DISK_CAPS)
+    || ImageType.Manager==MNGR_CAPS
+#endif
+#if defined(SSE_DISK_STW)
+    ||ImageType.Manager==MNGR_WD1772
+#if defined(SSE_DISK_STW_FAST) 
+/*  To help our MFM disk image format, we finally add a fast mode for 
+    STW (and HFE, since we test the image manager).
+    It works with "normal" images (so most of them), but fails in cases 
+    where floppy disk timing is more important, or if there's a READ TRACK
+    or WRITE TRACK command:
+    War Heli, MPS Golf, Jupiter's Masterdrive, Union Demo, Fantasia (megademo),
+    Demoniak -ELT...
+    Part of it is because our system is simplistic.
+*/
+      &&!floppy_instant_sector_access
+#endif
+#endif
+    );
+}
 
 
+#else
+
+bool TSF314::Adat() {
+/*  ADAT=accurate disk access times
+    This is defined so: Steem slow (original ADAT) or Pasti or Caps 
+    or Steem WD1772 slow.
+*/
+  bool is_adat= (
+    !floppy_instant_sector_access && ImageType.Manager==MNGR_STEEM
+#if USE_PASTI
+    || pasti_active && ImageType.Manager==MNGR_PASTI
+#endif
+#if defined(SSE_DISK_CAPS)
+    || ImageType.Manager==MNGR_CAPS
+#endif
+#if defined(SSE_DISK_STW)
+    ||ImageType.Manager==MNGR_WD1772
+#if defined(SSE_DISK_STW_FAST) 
+/*  To help our MFM disk image format, we finally add a fast mode for 
+    STW (and HFE, since we test the image manager).
+    It works with "normal" images (so most of them), but fails in cases 
+    where floppy disk timing is more important, or if there's a READ TRACK
+    or WRITE TRACK command:
+    War Heli, MPS Golf, Jupiter's Masterdrive, Union Demo, Fantasia (megademo),
+    Demoniak -ELT...
+    Part of it is because our system is simplistic.
+*/
+      &&!floppy_instant_sector_access
+#endif
+#endif
+    );
+  return is_adat;
+}
+
+#endif
+
+WORD TSF314::BytePosition() {
+  WORD position=0;
+#ifdef SSE_DISK_STW
+/*  This assumes constant bytes/track (some protected disks have more)
+    This should be 0-6255
+    This is independent of #sectors
+    This is independent of disk type
+    This is based on Index Pulse, that is sent by the drive 
+*/
+  if(ImageType.Manager==MNGR_WD1772 && CyclesPerByte())
+  {
+    position=(ACT-time_of_last_ip)/cycles_per_byte;
+    if(position>=Disk[Id].TrackBytes)
+    {
+      // argh! IP didn't occur yet (Overdrive demo)
+      position=Disk[Id].TrackBytes-(time_of_next_ip-ACT)/cycles_per_byte;
+      time_of_last_ip=ACT;
+      if(position>=Disk[Id].TrackBytes)
+        position=0; //some safety
+    }
+  }
+  else
+#endif
+    position=HblsToBytes( hbl_count% HblsPerRotation() );
+  return position;
+
+}
 
 WORD TSF314::BytesToHbls(int bytes) {
 #if defined(SSE_FDC_383A)
@@ -147,11 +178,7 @@ WORD TSF314::BytesToHbls(int bytes) {
 #else
   return HblsPerRotation()*bytes/TDisk::TRACK_BYTES;
 #endif
-  
-  
 }
-
-
 
 
 DWORD TSF314::HblsAtIndex() { // absolute
@@ -168,19 +195,14 @@ WORD TSF314::HblsPerRotation() {
   return HBL_PER_SECOND/(RPM/60); 
 }
 
-
-
-
-
 WORD TSF314::HblsToBytes(int hbls) {
 #if defined(SSE_FDC_383A)
   return Disk[Id].TrackBytes*hbls/HblsPerRotation();
 #else
   return TDisk::TRACK_BYTES*hbls/HblsPerRotation();
 #endif
-  
-  
 }
+
 
 
 
@@ -332,9 +354,7 @@ void TSF314::Read() {
   ASSERT(!State.writing);
   ASSERT(IMAGE_STW || IMAGE_SCP || IMAGE_HFE); // only for those now
   ASSERT(Id==DRIVE);
-#if defined(SSE_DISK2)
-
-#if defined(SSE_DISK_380) && defined(SSE_DISK_STW)
+#if defined(SSE_DISK2) && defined(SSE_DISK_STW)
   //it works but side could change again in the interval
   if(Disk[Id].current_side!=CURRENT_SIDE && (IMAGE_STW||IMAGE_HFE|IMAGE_SCP))
   {
@@ -349,10 +369,6 @@ void TSF314::Read() {
       ImageSCP[Id].LoadTrack(CURRENT_SIDE,Track());
 #endif
   }
-#endif
-
-  //ASSERT(Disk[Id].current_side==CURRENT_SIDE);
-//  ASSERT(Disk[Id].current_track==Track());
 #endif
 
 #if defined(SSE_DISK_SCP) || defined(SSE_DISK_HFE)
@@ -406,7 +422,6 @@ void TSF314::Read() {
   if(Disk[Id].current_byte<=Disk[Id].TrackBytes)
   {
     WD1772.update_time=time_of_last_ip+cycles_per_byte*(Disk[Id].current_byte+1);
-    //ASSERT(WD1772.update_time>ACT);
     if(WD1772.update_time-ACT<0)
       WD1772.update_time=ACT+cycles_per_byte;
   }
@@ -556,9 +571,11 @@ void TSF314::Sound_CheckCommand(BYTE cr) {
     if(Sound_Buffer[START])
       Sound_Buffer[START]->Play(0,0,0);
   }
-
+#if defined(SSE_FLOPPY_ADAT_UPDATE)
+  if( State.adat &&
+#else
   if( Adat() &&
-
+#endif
 #if defined(SSE_DRIVE_SOUND_SEEK2) && !defined(SSE_DRIVE_SOUND_SEEK3) 
 /*  Because we have no 'Step' callback, we use a loop to emulate
     the Seek noise with Pasti or Caps in charge.

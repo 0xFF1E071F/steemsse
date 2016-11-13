@@ -249,6 +249,10 @@ bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDi
       InsertDisk(1,pCSF->GetStr("Disks","Disk_B_Name",""),pCSF->GetStr("Disks","Disk_B_Path",""),
                     0,0,pCSF->GetStr("Disks","Disk_B_DiskInZip",""),true);
     }
+#if defined(SSE_FLOPPY_ADAT_UPDATE)
+    SF314[0].UpdateAdat();
+    SF314[1].UpdateAdat();
+#endif
   }
 
   SEC(PSEC_DISKGUI){

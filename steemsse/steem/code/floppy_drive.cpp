@@ -910,9 +910,14 @@ Header:
   dbg_log(Str("     TracksPerSide=")+TracksPerSide+", ReadOnly="+ReadOnly);
   dbg_log("");
 
-  TRACE_LOG("Ext %s Manager %d Sides %d Tracks %d Sectors %d\n",
+#if defined(SSE_FLOPPY_ADAT_UPDATE)
+  SF314[drive].UpdateAdat();
+#endif
+
+
+  TRACE_LOG("Ext %s Manager %d Sides %d Tracks %d Sectors %d adat %d\n",
 //dot_ext(SF314[drive].ImageType.Extension),SF314[drive].ImageType.Manager,Sides,TracksPerSide,SectorsPerTrack);
-extension_list[SF314[drive].ImageType.Extension],SF314[drive].ImageType.Manager,Sides,TracksPerSide,SectorsPerTrack);
+extension_list[SF314[drive].ImageType.Extension],SF314[drive].ImageType.Manager,Sides,TracksPerSide,SectorsPerTrack,SF314[drive].State.adat);
 
   return 0;
 }
@@ -1581,6 +1586,9 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
 #if defined(SSE_DISK_IMAGETYPE) 
   SF314[drive].ImageType.Manager=MNGR_STEEM; //default
   SF314[drive].ImageType.Extension=0;
+#endif
+#if defined(SSE_FLOPPY_ADAT_UPDATE)
+  SF314[drive].UpdateAdat();
 #endif
 #if defined(SSE_DISK_GHOST)
   // This makes sure to update the image before leaving, though

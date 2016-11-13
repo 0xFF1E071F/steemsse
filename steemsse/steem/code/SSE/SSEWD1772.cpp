@@ -35,9 +35,13 @@
 #if defined(SSE_WD1772_RESET)
 
 #if defined(SSE_VS2008_WARNING_383)
+
 void TWD1772::Reset() {
+
 #else
+
 void TWD1772::Reset(bool Cold) {
+
 #endif
   STR=2; // funny, like ACIA
 #ifdef SSE_FDC_FORCE_INTERRUPT
@@ -46,10 +50,8 @@ void TWD1772::Reset(bool Cold) {
 #if defined(SSE_DISK_GHOST)
   Lines.CommandWasIntercepted=0;
 #endif
-
   prg_phase=WD_READY;
   StatusType=1;
-
 }
 
 #endif//reset
@@ -702,6 +704,7 @@ void TWD1772::TraceStatus() {
 
 ///////////////////////////////// ID Field ////////////////////////////////////
 
+
 #if defined(SSE_WD1772_IDFIELD)
 //#if defined(SSE_DISK_STW) || defined(SSE_DISK_GHOST)
 
@@ -729,7 +732,7 @@ void TWD1772IDField::Trace() {
 }
 
 #endif
-
+//#if defined(SSE_WD1772_EMU)
 
 /////////////////////////////////// MFM ///////////////////////////////////////
 /*  Correct field must be filled in before calling a function:
@@ -820,7 +823,6 @@ void TWD1772MFM::Encode(int mode) {
     TODO: test on hardware
 */
 
-//#if defined(SSE_DISK_STW)
 #if defined(SSE_WD1772_CRC)
 
 void TWD1772Crc::Add(BYTE data) {
@@ -852,6 +854,7 @@ void TWD1772Crc::Reset() {
 
 #endif
 
+#if defined(SSE_WD1772_EMU)
 #if defined(SSE_WD1772_BIT_LEVEL)
 
 /////////////////////////////////// DPLL //////////////////////////////////////
@@ -997,7 +1000,9 @@ void TWD1772AmDetector::Reset() {
   Enable();
 }
 
-#endif
+#endif//bit-level
+
+
 
 ///////////////////////////////// WD1772 emu //////////////////////////////////
 
@@ -1363,7 +1368,7 @@ void TWD1772::OnIndexPulse(int id,bool image_triggered) {
 //  TRACE_LOG("WD1772 IP %d byte %d\n",IndexCounter,Disk[DRIVE].current_byte);
 }
 
-#if defined(SSE_FLOPPY_EVENT)
+//#if defined(SSE_FLOPPY_EVENT)
 
 void TWD1772::OnUpdate() {
 
@@ -2144,7 +2149,7 @@ r1       r0            1772
   }//sw
 }
 
-#endif//event
+//#endif//event
 
 void TWD1772::Read() {
   if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE)
@@ -2422,5 +2427,7 @@ bool TWD1772::ShiftBit(int bit) {
 }
 
 #endif//precise sync
+
+#endif//#if defined(SSE_WD1772_EMU)
 
 #endif//WD1772

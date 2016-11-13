@@ -364,7 +364,7 @@ inline void ReadBusTiming() {
     cpu_cycles&=-4;
 #if defined(SSE_BLT_383B)
 /*  As we can see, this feature costs a lot in overhead, but that's the price
-    of correct emulation.
+    of "correct" emulation.
 */
     Blit.BlitCycles=0;
 #endif

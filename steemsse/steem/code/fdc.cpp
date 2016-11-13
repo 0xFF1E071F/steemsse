@@ -617,25 +617,11 @@ and ends the command.
           fdc_str=FDC_STR_SEEK_ERROR | FDC_STR_MOTOR_ON | FDC_STR_BUSY;
         }else{
           if (floppy_head_track[floppyno]==0){
-
-#if defined(SSE_FDC_RESTORE1)
-/*
-If the FDC receives this command when the drive head is at track
-zero, the chip sets its Track Register to $00 and ends the command.
-v3.7.0. We still need some delay, eg My Socks are Weapons
-->switch renamed and undefined
-*/
-            if(ADAT)
-            {
-              fdc_tr=0;
-              floppy_irq_flag=0;
-              agenda_fdc_finished(0); // no delay
-              break;
-            }
-            else
-#endif
-
+#if defined(SSE_FDC_383B)
+            hbls_to_interrupt=(ADAT)?1:2;
+#else
             hbls_to_interrupt=2;
+#endif
           }else{
             if (floppy_instant_sector_access==0) hbls_to_interrupt*=floppy_head_track[floppyno];
 #if defined(SSE_FDC_RESTORE) && defined(SSE_FDC_SEEK)

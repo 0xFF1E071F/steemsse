@@ -539,7 +539,7 @@ bool load_TOS(char *File)
 //  TRACE("tos v %x loaded\n",tos_version);
   if(OPTION_HACKS && (tos_version==0x106||tos_version==0x162)
 #if USE_PASTI
-    && !pasti_active
+    && !pasti_active 
 #endif
 #if defined(SSE_ACSI)
     && !(ACSI_EMU_ON)

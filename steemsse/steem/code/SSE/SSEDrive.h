@@ -39,7 +39,7 @@ struct TSF314 {
 #if defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)//debug only
   WORD SectorChecksum;
 #endif
-  BYTE Id; // object has to know if its A: (0?) or B: (1?)
+  BYTE Id; // object has to know if its A: (0) or B: (1)
 #if defined(SSE_DRIVE_SOUND)
   BYTE TrackAtCommand;
 #endif
@@ -50,25 +50,26 @@ struct TSF314 {
     unsigned int empty:1; //TODO
     unsigned int reading:1;
     unsigned int writing:1;
-    unsigned int :2;
+    unsigned int adat:1;
+    //unsigned int :1;
   }State;
   // FUNCTIONS
   TSF314();
+#if defined(SSE_FLOPPY_ADAT_UPDATE)
+  void UpdateAdat();
+#else
   bool Adat(); // accurate disk access times
+#endif
   WORD BytePosition(); //this has to do with IP and rotation speed
-
   WORD BytesToHbls(int bytes);
-
 #if defined(SSE_DISK_GHOST)
   bool CheckGhostDisk(bool write);
 #endif
   DWORD HblsAtIndex();
   WORD HblsNextIndex();
   WORD HblsPerRotation();
-
   WORD HblsToBytes(int hbls);
   void Init();
-
   BYTE Track();
 
 #if defined(SSE_WD1772)

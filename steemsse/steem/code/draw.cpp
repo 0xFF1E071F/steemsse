@@ -642,15 +642,6 @@ void draw_set_jumps_and_source()
     draw_blit_source_rect.right=ox+ow;
     draw_blit_source_rect.bottom=oy+oh;
 
-#if defined(SSE_VID_D3D_382_)
-    if(SCANLINES_INTERPOLATED && SSE_OPTION_D3D)
-    {
-      draw_blit_source_rect.right-=rand()%6;
-      draw_blit_source_rect.bottom-=rand()%6;
-    }
-#endif
-
-
 //    if(overscan)draw_blit_source_rect_bottom+=OVERSCAN_HEIGHT; should this be put in???
     draw_dest_increase_y=draw_line_length;
     //TRACE("no big source rect %d %d %d %d\n",draw_blit_source_rect.left,draw_blit_source_rect.top,draw_blit_source_rect.right,draw_blit_source_rect.bottom);

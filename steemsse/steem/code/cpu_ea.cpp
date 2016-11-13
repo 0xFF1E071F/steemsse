@@ -44,10 +44,9 @@ BYTE m68k_peek(MEM_ADDRESS ad){
  */
       if (cart)
       {
-        WORD cart_addr=ad-MEM_EXPANSION_CARTRIDGE;
-
+        DWORD cart_addr=ad-MEM_EXPANSION_CARTRIDGE; // DWORD, not WORD (128KB)
         if(SSEConfig.mv16 && cart_addr>4) //not when checking for presence
-          dma_mv16_fetch(cart_addr);
+          dma_mv16_fetch((WORD)cart_addr);
         return CART_PEEK(cart_addr);
       }
 #else
@@ -128,9 +127,9 @@ WORD m68k_dpeek(MEM_ADDRESS ad){
 */
       if (cart)
       {
-        WORD cart_addr=ad-MEM_EXPANSION_CARTRIDGE;
+        DWORD cart_addr=ad-MEM_EXPANSION_CARTRIDGE;
         if(SSEConfig.mv16)
-          dma_mv16_fetch(cart_addr);
+          dma_mv16_fetch((WORD)cart_addr);
         return CART_DPEEK(cart_addr);
       }
 #else

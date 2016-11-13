@@ -1646,7 +1646,7 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
 #endif
           }
         }else if (psg_reg_select==PSGR_PORT_B){
-#if defined(SSE_DONGLE_PROSOUND)
+#if defined(SSE_DONGLE_PROSOUND) && defined(SSE_CARTRIDGE_BAT)
 /*  Wings of Death, Lethal Xcess could use the Pro Sound Centronics adapter
     to play 8bit samples on the STF.
 */
@@ -1848,8 +1848,8 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
   
       else if (addr>=0xff8240 && addr<0xff8260){  //palette
 
-#if defined(SSE_MMU_ROUNDING_BUS2_IO)
-        cpu_cycles&=-4;
+#if defined(SSE_MMU_ROUNDING_BUS2_SHIFTER)
+        cpu_cycles&=-4; // Shifter access -> wait states possible
 #endif
 #if defined(SSE_BLT_383B)
         Blit.BlitCycles=0;
@@ -2607,8 +2607,8 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
 
   if (addr>=0xff8240 && addr<0xff8260){  //palette
 
-#if defined(SSE_MMU_ROUNDING_BUS2_IO)
-    cpu_cycles&=-4;
+#if defined(SSE_MMU_ROUNDING_BUS2_SHIFTER)
+    cpu_cycles&=-4; // Shifter access -> wait states possible
 #endif
 #if defined(SSE_BLT_383B)
     Blit.BlitCycles=0;

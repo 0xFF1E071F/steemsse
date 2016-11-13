@@ -22,6 +22,7 @@ The structure is used by SSEWD1772.cpp, but also by SSEGhostDisk.cpp.
 
 #pragma pack(push, STRUCTURE_ALIGNMENT)//TODO
 
+//#if defined(SSE_WD1772_EMU)
 #if defined(SSE_WD1772_IDFIELD)
 
 struct TWD1772IDField {
@@ -88,9 +89,6 @@ struct TWD1772Dpll {
 
 };
 
-#endif
-
-#if defined(SSE_WD1772_BIT_LEVEL)
 
 struct TWD1772AmDetector {
   DWORD amdecode,aminfo,amisigmask;
@@ -103,11 +101,15 @@ struct TWD1772AmDetector {
   void Reset();
 };
 
-#endif
+#endif//bit-level
+//#endif//#if defined(SSE_WD1772_EMU) 
+
+//#if defined(SSE_WD1772_EMU) //temp
 
 struct TWD1772 {
 
   // ENUM
+#if defined(SSE_WD1772_EMU)
 /*  Status bits.
     We define our own because Steem's are a bit long.
     We also define command flags of the docs, and some
@@ -172,28 +174,26 @@ struct TWD1772 {
     WD_TYPEIV_8, // $D8
     WD_MOTOR_OFF,
   };
-
-  // DATA
-  int prg_phase;
-#if defined(SSE_FLOPPY_EVENT)
-  int update_time; // when do we need to come back?
 #endif
-
+  // DATA
+#if defined(SSE_WD1772_EMU)
+  int prg_phase;
+//#if defined(SSE_FLOPPY_EVENT)
+  int update_time; // when do we need to come back?
+//#endif
   WORD ByteCount; // guessed
   // definition is outside the class but objects belong to the class
   TWD1772IDField IDField; // to R/W those fields
-#if defined(SSE_WD1772_CRC)
+//#if defined(SSE_WD1772_CRC)
   TWD1772Crc CrcLogic;
-#endif
+//#endif
 #if defined(SSE_WD1772_BIT_LEVEL)
   TWD1772Dpll Dpll;
-#endif
-#if defined(SSE_WD1772_BIT_LEVEL)
   TWD1772AmDetector Amd; // not the processor
 #endif
-#if defined(SSE_WD1772_MFM)
+//#if defined(SSE_WD1772_MFM)
   TWD1772MFM Mfm;
-#endif
+//#endif
 
   BYTE CR;  // command
   BYTE STR; // status
@@ -205,10 +205,12 @@ struct TWD1772 {
   BYTE InterruptCondition; // guessed
   BYTE IndexCounter; // guessed
 
-#if defined(SSE_WD1772_F7_ESCAPE)
+#if defined(SSE_WD1772_F7_ESCAPE) //keep a switch because I'm not sure of this
   bool F7_escaping;
 #endif
+
   BYTE n_format_bytes; // to examine sequences before ID
+#endif//#if defined(SSE_WD1772_EMU)
 
 /*  Lines (pins). Some are necessary (eg direction), others not
     really yet (eg write_gate).
@@ -235,31 +237,12 @@ struct TWD1772 {
 
   //FUNCTIONS
 
+#if defined(SSE_DISK_GHOST)
+  bool CheckGhostDisk(BYTE drive,BYTE io_src_b);
+#endif
+  BYTE CommandType(int command=-1); // I->IV
   BYTE IORead(BYTE Line);
   void IOWrite(BYTE Line,BYTE io_src_b);
-  BYTE CommandType(int command=-1); // I->IV
-
-#if defined(SSE_WD1772_RESET)
-#if defined(SSE_VS2008_WARNING_383)
-  void Reset();
-#else
-  void Reset(bool Cold);
-#endif
-#endif
-
-  void NewCommand(BYTE command);
-  bool Drq(bool state);//no default to make it clearer
-  void Irq(bool state);
-  void Motor(bool state);
-  void Read(); // sends order to drive
-  void StepPulse();
-  int MsToCycles(int ms);
-  void Write(); // sends order to drive
-  void WriteCR(BYTE io_src_b); //horrible TODO
-#if defined(SSE_FLOPPY_EVENT)
-  void OnUpdate();
-#endif
-
 #if defined(SSE_DEBUG) || defined(SSE_OSD_DRIVE_LED)
 /*  This is useful for OSD: if we're writing then we need to display a red
     light (green when reading). This is used by pasti & IPF.
@@ -270,26 +253,43 @@ struct TWD1772 {
   int WritingToDisk();
 #endif
 #endif
+#if defined(SSE_WD1772_RESET)
+#if defined(SSE_VS2008_WARNING_383)
+  void Reset();
+#else
+  void Reset(bool Cold);
+#endif
+#endif
+#if defined(SSE_DEBUG)
+  void TraceStatus();
+#endif
 
+#if defined(SSE_WD1772_EMU)
+  void NewCommand(BYTE command);
+  bool Drq(bool state);//no default to make it clearer
+  void Irq(bool state);
+  void Motor(bool state);
+  void Read(); // sends order to drive
+  void StepPulse();
+  int MsToCycles(int ms);
+  void Write(); // sends order to drive
+  void WriteCR(BYTE io_src_b); //horrible TODO
+//#if defined(SSE_FLOPPY_EVENT)
+  void OnUpdate();
+//#endif
   // called by drive or by image
 #if defined(SSE_VS2008_WARNING_383) && !defined(SSE_DEBUG)
   void OnIndexPulse(bool image_triggered); 
 #else
   void OnIndexPulse(int id,bool image_triggered); 
 #endif
-
-#if defined(SSE_DISK_GHOST)
-  bool CheckGhostDisk(BYTE drive,BYTE io_src_b);
-#endif
-
 #if defined(SSE_WD1772_BIT_LEVEL)
   bool ShiftBit(int bit);
 #endif
-
-#if defined(SSE_DEBUG)
-  void TraceStatus();
-#endif
+#endif//emu
 };
+
+//#endif
 
 #pragma pack(pop)
 

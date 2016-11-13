@@ -225,7 +225,7 @@ extern "C" int cpu_cycles; // defined in emu.cpp
 inline void InstructionTime(int t) {
 #if defined(SSE_BLT_383B)
 /*  As we can see, this feature costs a lot in overhead, but that's the price
-    of correct emulation.
+    of "correct" emulation.
 */
   if(Blit.BlitCycles>t && t>0)
     Blit.BlitCycles-=(t);
@@ -238,10 +238,6 @@ inline void InstructionTime(int t) {
 
 #if !(defined(SSE_MMU_ROUNDING_BUS2_EXCEPTION)&&defined(SSE_MMU_ROUNDING_BUS2_BLITTER))
 inline void InstructionTimeRound(int t) {
-#if defined(SSE_MMU_ROUNDING_BUS2_ASSERT)
-  ASSERT(t>8);
-  //ASSERT(0);
-#endif
   InstructionTime(t);
 
 #ifdef SSE_MMU_ROUNDING_BUS0A

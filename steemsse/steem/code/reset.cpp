@@ -193,9 +193,7 @@ void power_on()
 #endif//stw
 #endif//motor
 #endif//drv
-#if defined(SSE_DISK1) && !defined(SSE_DISK2)
-    Disk[floppyno].Id=floppyno;//same idea
-#endif
+
   }
   fdc_tr=0;fdc_sr=0;fdc_dr=0;
 
