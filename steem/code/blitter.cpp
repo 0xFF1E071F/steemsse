@@ -30,9 +30,6 @@ int nBytesBlitted=0; // for traces
 */
 #define BLITTER_START_WAIT 6 
 #define BLITTER_END_WAIT 0
-#elif defined(SSE_BLT_380)
-#define BLITTER_START_WAIT 8 
-#define BLITTER_END_WAIT 0
 #else // Steem 3.2
 #define BLITTER_START_WAIT 8//8
 #define BLITTER_END_WAIT 0//0

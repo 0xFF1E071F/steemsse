@@ -395,12 +395,8 @@ void FindWriteDir()
 //---------------------------------------------------------------------------
 bool Initialise()
 {
-#if defined(SSE_DEBUG_START_STOP_INFO2)\
-  && !defined(SSE_DEBUG_START_STOP_INFO3)
-  Debug.TraceGeneralInfos(TDebug::INIT);
-#endif
-#if defined(SSE_DISK2) // do it before disks are reinserted!
-  for(BYTE id=0;id<2;id++)
+#if defined(SSE_DISK) // do it before disks are reinserted!
+  for(int id=0;id<2;id++)
   {
 #if defined(SSE_DISK_STW2)
     ImageSTW[id].Id=id;
@@ -411,11 +407,9 @@ bool Initialise()
 #if defined(SSE_DISK_SCP2A)
     ImageSCP[id].Id=id;
 #endif
-#if defined(SSE_DISK1)
-    Disk[id].Id=id;//same idea
-#endif
+    Disk[id].Id=id;
   }
-#endif//disk2
+#endif
 
   FindWriteDir();
 #if defined(SSE_GUI)

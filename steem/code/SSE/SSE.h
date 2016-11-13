@@ -65,7 +65,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_STRUCTURE //  necessary for the SSE build
 
 #define SSE_BETA //title, OSD, plus some testing - new features
-//#define SSE_BETA_BUGFIX // beta for just bugfixes
+#define SSE_BETA_BUGFIX // beta for just bugfixes
 
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
 //#define SSE_PRIVATE_BUILD // my "beta" option
@@ -1133,15 +1133,15 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_FDC_IDFIELD_IGNORE_SIDE
 #define SSE_FDC_MULTIPLE_SECTORS
-//#define SSE_FDC_RESTORE1//undef to remove bug
 #endif
 
 #if defined(SSE_WD1772)
+#define SSE_WD1772_EMU 
+
 #define SSE_WD1772_CRC 
 #define SSE_WD1772_F7_ESCAPE
 #define SSE_WD1772_IDFIELD 
 #define SSE_WD1772_MFM 
-
 #define SSE_WD1772_LINES // made switch in v383
 #endif
 
@@ -1860,8 +1860,12 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_X64_383 
 #endif
 
-#define SSE_BLT_383B
 #define SSE_ACIA_383
+
+#if defined(SSE_BLITTER)
+#define SSE_BLT_383 //bugfix
+#define SSE_BLT_383B //ambitious + overhead: CPU can work when blitter has bus
+#endif
 
 #define SSE_CARTRIDGE_383
 #if defined(SSE_CARTRIDGE_383)
@@ -1870,13 +1874,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CARTRIDGE_FREEZE
 #define SSE_CARTRIDGE_REPLAY16
 #define SSE_CARTRIDGE_TRANSPARENT //check for bugs
-#endif
-
-#ifdef SSE_DISK
-#define SSE_DISK_CAPS_383
-#define SSE_DISK_STW_CONVERT // Convert to STW
-#define SSE_DISK_STW_CONVERT2 // 11 sectors interleave 6
-#define SSE_DISK_STW_FAST // +HFE
 #endif
 
 #define SSE_DONGLE //new domain of emulation!
@@ -1891,15 +1888,30 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DONGLE_URC
 #endif
 
-#ifdef SSE_FDC
-#define SSE_FDC_383B // refactoring
-#define SSE_FDC_383_HBL_DRIFT
-#endif
-
-
+#ifdef SSE_FLOPPY
+#define SSE_FLOPPY_ADAT_UPDATE
+#ifdef SSE_DISK
+#define SSE_DISK_CAPS_383
+#define SSE_DISK_GHOST_SECTOR_383
 #if defined(SSE_STF)
 #define SSE_DMA_RIPPLE_CARRY
 #endif
+#ifdef SSE_GUI
+#define SSE_GUI_STW_CONVERT // Convert to STW
+#define SSE_GUI_STW_CONVERT2 // 11 sectors interleave 6
+#endif
+#define SSE_DISK_STW_FAST // +HFE
+#endif
+#ifdef SSE_FDC
+#define SSE_FDC_383A // bugfixes
+#define SSE_FDC_383B // refactoring
+#define SSE_FDC_383_HBL_DRIFT
+#endif
+#define SSE_WD1772_383
+#define SSE_WD1772_383B 
+#define SSE_WD1772_383C
+#endif
+
 #define SSE_GLUE_383
 #define SSE_GLUE_383B
 #define SSE_GLUE_383C
@@ -1921,11 +1933,13 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_MMU_RAM_TEST3 // remove himem=0 hack
 #endif
 
-#define SSE_MMU_ROUNDING_BUS1A 
-#define SSE_MMU_ROUNDING_BUS2 //ambitious, less hacky 
 #define SSE_MMU_ROUNDING_BUS0A // to disable hacky way
+#define SSE_MMU_ROUNDING_BUS1A // fetching 
+#define SSE_MMU_ROUNDING_BUS2 //ambitious, less hacky 
+
 
 #if defined(SSE_MMU_ROUNDING_BUS2)
+
 #define SSE_MMU_ROUNDING_BUS2A_EA // make abus up-to-date in EA SRC
 #define SSE_MMU_ROUNDING_BUS2A_EA1 // make abus up-to-date in EA SRC
 #define SSE_MMU_ROUNDING_BUS2A_EA2 // make abus up-to-date in EA DEST
@@ -1935,11 +1949,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_MMU_ROUNDING_BUS2A_INSTR3 // make abus up-to-date in instructions
 #define SSE_MMU_ROUNDING_BUS2A_INSTR4 // make abus up-to-date in instructions
 #define SSE_MMU_ROUNDING_BUS2B // need no param
-#define SSE_MMU_ROUNDING_BUS2_IO // Shifter palette correction
-#define SSE_MMU_ROUNDING_BUS2_IO2 // Shifter other regs correction
-//#define SSE_MMU_ROUNDING_BUS2_ASSERT//temp
+
 #define SSE_MMU_ROUNDING_BUS2_BLITTER
 #define SSE_MMU_ROUNDING_BUS2_EXCEPTION //must detail
+#define SSE_MMU_ROUNDING_BUS2_SHIFTER // round up on Shifter registers access
 #define SSE_MMU_ROUNDING_BUS2_STACK
 #undef SSE_MMU_ROUNDING_BUS0A
 #endif
@@ -1998,20 +2011,18 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_TOS_WARNING1A
 
+#ifdef SSE_VIDEO
 #define SSE_VID_GAMMA
 #define SSE_VID_D3D_383
+#endif
 
-#define SSE_WD1772_383
 #define SSE_YM2149_BUS_JAM_383 // 1 cycle each access
-#define SSE_YM2149_BUS_JAM_383B // 
+#define SSE_YM2149_BUS_JAM_383B // not more (word access)
 
 //383 bugfix
 #define SSE_ACSI_ICON_383
-#define SSE_BLT_383
 #define SSE_CPU_E_CLOCK_383
 #define SSE_CPU_EA_383
-#define SSE_DISK_GHOST_SECTOR_383
-#define SSE_FDC_383A // bugfixes
 #define SSE_GUI_383B
 #define SSE_INTERRUPT_383
 #define SSE_IKBD_6301_383
@@ -2039,8 +2050,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_NO_UPDATE_383
 #define SSE_VAR_NO_WINSTON_383
 #define SSE_VID_D3D_SCREENSHOT_383
-#define SSE_WD1772_383B 
-#define SSE_WD1772_383C
+
 
 ///////////
 // DEBUG //

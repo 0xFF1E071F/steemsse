@@ -50,7 +50,9 @@ interrupt."
 
 #if defined(SSE_FLOPPY)
 
-#ifdef SSE_DRIVE_OBJECT
+#if defined(SSE_FLOPPY_ADAT_UPDATE)
+#define ADAT (SF314[floppy_current_drive()].State.adat)
+#elif defined(SSE_DRIVE_OBJECT)
 #define ADAT (SF314[floppy_current_drive()].Adat())
 #else
 #define ADAT (!floppy_instant_sector_access)
@@ -58,7 +60,6 @@ interrupt."
 #endif
 
 #if defined(SSE_DISK_GHOST)
-//struct TGhostDisk;//ouch! this works in VC, not BCC -> create apart files
 extern TGhostDisk GhostDisk[2];
 #endif
 

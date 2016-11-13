@@ -2827,7 +2827,7 @@ bool SteemDisplay::D3DBlit() {
 
 #pragma warning( default : 4701) //OldCur, 383
 
-#if defined(SSE_VID_D3D_382)
+#if defined(SSE_VID_D3D_382) && !defined(SSE_VID_D3D_383)
 
 void SteemDisplay::Cls() {
   if(pD3DDevice)
@@ -3326,7 +3326,10 @@ HRESULT SteemDisplay::D3DSpriteInit() {
   };
   pD3DSprite->SetTransform((D3DXMATRIX*)&matrix);
 #endif
-#if defined(SSE_VID_D3D_382)
+#if defined(SSE_VID_D3D_383)
+  if(pD3DDevice)
+    pD3DDevice->Clear(0,0,D3DCLEAR_TARGET,0,0,0);
+#elif defined(SSE_VID_D3D_382)
   Cls();
 #endif
   return hr;

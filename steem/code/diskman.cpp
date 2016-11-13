@@ -1176,7 +1176,7 @@ void TDiskManager::AddFileOrFolderContextMenu(HMENU Pop,DiskManFileInfo *Inf)
             }
           }
         }
-#if defined(SSE_DISK_STW_CONVERT)
+#if defined(SSE_GUI_STW_CONVERT)
 /*  To help our MFM disk image format, we add a right click option to convert
     regular images to STW.
     pasti_active would interfere in SetDisk.
@@ -1262,7 +1262,7 @@ void TDiskManager::GoToDisk(Str Path,bool Refresh)
   SetFocus(DiskView);
 }
 //---------------------------------------------------------------------------
-#if defined(SSE_DISK_STW_CONVERT) 
+#if defined(SSE_GUI_STW_CONVERT) 
 /*  Helper function for case 1041
     What counts here is code size, not performance 
     mode 0 normal
@@ -1896,10 +1896,9 @@ That will toggle bit x.
 
           break;
         }
-#if defined(SSE_DISK_STW_CONVERT) 
+#if defined(SSE_GUI_STW_CONVERT) 
 /*  Create a new STW disk image, and copy the data from a DIM, MSA or ST
     image into it, using some facilities of our WD1772 emu.
-    TODO: in SSESTW?
 */
         case 1041:
         {
@@ -1933,13 +1932,13 @@ That will toggle bit x.
                     for(int i=0;i<Disk[0].PostIndexGap();i++) 
                       WD1772_WRITE(0x4E)
                     int sector; //used in trace
-#if defined(SSE_DISK_STW_CONVERT2) 
+#if defined(SSE_GUI_STW_CONVERT2) 
                     for(int sector2=1;sector2<=FloppyDrive[0].SectorsPerTrack;sector2++)
 #else
                     for(sector=1;sector<=FloppyDrive[0].SectorsPerTrack;sector++)
 #endif
                     {
-#if defined(SSE_DISK_STW_CONVERT2)
+#if defined(SSE_GUI_STW_CONVERT2)
 /*  We must use interleave 6 for 11 sectors
     eg Pang -EMP
 */
@@ -2144,6 +2143,10 @@ That will toggle bit x.
           CheckResetDisplay();
 #if defined(SSE_GUI_STATUS_BAR_ADAT)
           GUIRefreshStatusBar();
+#endif
+#if defined(SSE_FLOPPY_ADAT_UPDATE)
+          SF314[0].UpdateAdat();
+          SF314[1].UpdateAdat();
 #endif
           break;
         case 2014:

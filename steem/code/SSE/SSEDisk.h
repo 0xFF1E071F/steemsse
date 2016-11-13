@@ -64,15 +64,14 @@ struct TImageType {
 #if defined(SSE_DISK1)
 
 struct TDisk {
-  //enum {TRACK_BYTES=DRIVE_BYTES_ROTATION+14};
   enum {TRACK_BYTES=DRIVE_BYTES_ROTATION};
   WORD current_byte;
   WORD TrackBytes;
-  BYTE Id; //0,1, same as drive
 #if defined(SSE_DISK2)
-  BYTE current_side; //used in HFE
-  BYTE current_track;
+  BYTE current_side; //of the image
+  BYTE current_track; //of the image
 #endif
+  BYTE Id; //0,1, same as drive
   TDisk();
   void Init();
 
@@ -93,7 +92,6 @@ struct TDisk {
   WORD RecordLength();
   BYTE SectorGap();
   WORD TrackGap();
-
 
 };
 

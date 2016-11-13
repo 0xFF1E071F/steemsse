@@ -1082,8 +1082,8 @@ Receiver Data Register is retained.
 #endif  
 
       if (addr>=0xff8240 && addr<0xff8260){  //palette
-#if defined(SSE_MMU_ROUNDING_BUS2_IO)
-        cpu_cycles&=-4;
+#if defined(SSE_MMU_ROUNDING_BUS2_SHIFTER)
+        cpu_cycles&=-4; // Shifter access -> wait states possible
 #endif
 #if defined(SSE_BLT_383B)
         Blit.BlitCycles=0;
@@ -1155,8 +1155,8 @@ Receiver Data Register is retained.
           break;
 
         case 0xff8260: //resolution
-#if defined(SSE_MMU_ROUNDING_BUS2_IO2)
-          cpu_cycles&=-4;
+#if defined(SSE_MMU_ROUNDING_BUS2_SHIFTER)
+          cpu_cycles&=-4; // Shifter access -> wait states possible
 #endif
 #if defined(SSE_BLT_383B)
           Blit.BlitCycles=0;
@@ -1166,8 +1166,8 @@ Receiver Data Register is retained.
           break;
 
         case 0xff8265:  //HSCROLL
-#if defined(SSE_MMU_ROUNDING_BUS2_IO2)
-          cpu_cycles&=-4;
+#if defined(SSE_MMU_ROUNDING_BUS2_SHIFTER)
+          cpu_cycles&=-4; // Shifter access -> wait states possible
 #endif
 #if defined(SSE_BLT_383B)
           Blit.BlitCycles=0;
@@ -1935,8 +1935,8 @@ WORD ASMCALL io_read_w(MEM_ADDRESS addr)
     DEBUG_CHECK_READ_IO_W(addr);
     int n=addr-0xff8240;n/=2;
 
-#if defined(SSE_MMU_ROUNDING_BUS2_IO)
-    cpu_cycles&=-4;
+#if defined(SSE_MMU_ROUNDING_BUS2_SHIFTER)
+    cpu_cycles&=-4; // Shifter access -> wait states possible
 #endif
 #if defined(SSE_BLT_383B)
     Blit.BlitCycles=0;
