@@ -2141,12 +2141,11 @@ That will toggle bit x.
           InvalidateRect(GetDlgItem(Win,98),NULL,0);
           InvalidateRect(GetDlgItem(Win,99),NULL,0);
           CheckResetDisplay();
-#if defined(SSE_GUI_STATUS_BAR_ADAT)
-          GUIRefreshStatusBar();
-#endif
 #if defined(SSE_FLOPPY_ADAT_UPDATE)
           SF314[0].UpdateAdat();
           SF314[1].UpdateAdat();
+#elif defined(SSE_GUI_STATUS_BAR_ADAT)
+          GUIRefreshStatusBar();
 #endif
           break;
         case 2014:

@@ -209,17 +209,6 @@ EXT int cpu_timer_at_start_of_hbl;
 #endif
 
 
-#if defined(SSE_DMA_DELAY)
-#define PREPARE_EVENT_CHECK_FOR_DMA       \
-  if ((time_of_next_event-Dma.TransferTime) >= 0){                 \
-    time_of_next_event=Dma.TransferTime;  \
-    screen_event_vector=TDma::Event;                    \
-  }
-
-#else
-#define PREPARE_EVENT_CHECK_FOR_DMA
-#endif
-
 #if defined(SSE_FLOPPY_EVENT)
 
 #define PREPARE_EVENT_CHECK_FOR_FLOPPY       \

@@ -134,23 +134,6 @@ bool TDma::Drq() {
 
 #endif
 
-
-#if defined(SSE_DMA_DELAY) // normally not 
-// this is a Steem 'event' (static member function)
-
-void TDma::Event() {
-#if defined(SSE_INT_MFP_RATIO)
-  Dma.TransferTime=ABSOLUTE_CPU_TIME+CpuNormalHz;
-#else
-  Dma.TransferTime=ABSOLUTE_CPU_TIME+8000000;
-#endif
-  if(Dma.Request)
-    Dma.TransferBytes();
-}
-
-#endif
-
-
 #if defined(SSE_DMA_FIFO)
 /*  For writing to disk, we use the FIFO in the other direction,
     because we want it to fill up when empty.
@@ -1009,13 +992,8 @@ void TDma::RequestTransfer() {
   BufferInUse=!BufferInUse; // toggle 16byte buffer
 #endif
 
-#if defined(SSE_DMA_DELAY) // normally not - set event
-  // in fact we should taret linecycle "end DE"
-  TransferTime=ABSOLUTE_CPU_TIME+SSE_DMA_ACCESS_DELAY; 
-  PREPARE_EVENT_CHECK_FOR_DMA
-#else
-  TransferBytes(); // direct transfer
-#endif
+  TransferBytes(); // direct transfer - should be after DE for better emulation
+
 }
 
 #endif

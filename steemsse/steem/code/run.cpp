@@ -420,10 +420,6 @@ void inline prepare_event_again() //might be an earlier one
     PREPARE_EVENT_CHECK_FOR_FLOPPY;
 #endif
 
-#if defined(SSE_DMA_DELAY)
-    PREPARE_EVENT_CHECK_FOR_DMA;
-#endif
-
 #if defined(SSE_ACIA_383)
     PREPARE_EVENT_CHECK_FOR_ACIA;
 #elif defined(SSE_IKBD_6301_EVENT)
@@ -475,10 +471,6 @@ void inline prepare_next_event() //SS check this "inline" thing
 
 #if defined(SSE_FLOPPY_EVENT)
     PREPARE_EVENT_CHECK_FOR_FLOPPY;
-#endif
-
-#if defined(SSE_DMA_DELAY)
-    PREPARE_EVENT_CHECK_FOR_DMA;
 #endif
 
 #if defined(SSE_ACIA_383)

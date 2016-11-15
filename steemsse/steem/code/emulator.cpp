@@ -273,14 +273,6 @@ void init_timings()
 #endif
 #endif
 
-#if defined(SSE_DMA_DELAY)
-#if defined(SSE_INT_MFP_RATIO)
-    Dma.TransferTime=ABSOLUTE_CPU_TIME+CpuNormalHz;
-#else
-    Dma.TransferTime=ABSOLUTE_CPU_TIME+8000000;
-#endif
-#endif
-
   hbl_count=0;
 }
 //---------------------------------------------------------------------------

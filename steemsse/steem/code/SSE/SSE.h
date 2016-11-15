@@ -426,8 +426,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_DMA)
 #define SSE_DMA_OBJECT
-#define SSE_DMA_COUNT_CYCLES
-//#define SSE_DMA_DELAY // works but overkill 3.7.0 -> use generic floppy event?
+//#define SSE_DMA_COUNT_CYCLES
 #define SSE_DMA_FDC_ACCESS
 #define SSE_DMA_FIFO // first made for CAPS 
 #define SSE_DMA_IO //necessary
@@ -533,7 +532,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_DRIVE_OBJECT)
 #define SSE_DRIVE_BYTES_PER_ROTATION
-#define SSE_DRIVE_MULTIPLE_SECTORS
 #define SSE_DRIVE_READ_ADDRESS_TIMING
 #define SSE_DRIVE_RW_SECTOR_TIMING // start of sector
 #define SSE_DRIVE_RW_SECTOR_TIMING2 // end of sector (hack) //undef 3.7.0
@@ -547,7 +545,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_FDC_SPIN_UP_AGENDA
 #define SSE_FDC_STEP
 #define SSE_FDC_IGNORE_WHEN_NO_DRIVE_SELECTED // from Hatari
+
+
 #define SSE_FDC_MOTOR_OFF_COUNT_IP
+
 #endif//fdc
 
 #if defined(SSE_YM2149)
@@ -645,7 +646,9 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_DRIVE_OBJECT)
 #define SSE_DRIVE_MOTOR_ON
 #define SSE_DRIVE_SPIN_UP_TIME
-#define SSE_DRIVE_SPIN_UP_TIME2 // more precise
+
+#define SSE_DRIVE_SPIN_DOWN_TIME
+
 #endif
 #endif//flp
 
@@ -937,7 +940,7 @@ Beta: not SSE_PRIVATE_BUILD
 #ifdef SSE_DRIVE_OBJECT
 #define SSE_DRIVE_EMPTY_VERIFY_TIME_OUT2 //motor led still on
 #define SSE_DRIVE_IPF1 // know image type (not used yet)
-#define SSE_DRIVE_MOTOR_ON_IPF//TODO
+#define SSE_DRIVE_MOTOR_ON_IPF
 #if defined(SSE_DRIVE_SOUND)
 #define SSE_DRIVE_SOUND_EMPTY // none
 #define SSE_DRIVE_SOUND_IPF // fix 
@@ -1009,10 +1012,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_DISK_CAPS)
 #define SSE_DISK_CAPS_CTRAW_1ST_LOCK
-#endif
-
-#if defined(SSE_DMA)
-#undef SSE_DMA_COUNT_CYCLES
 #endif
 
 #if defined(SSE_DRIVE_OBJECT)
@@ -1093,7 +1092,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_DMA)
-#define SSE_DMA_COUNT_CYCLES // again
+
 #define SSE_DMA_DOUBLE_FIFO
 #define SSE_DMA_DRQ
 //#define SSE_DMA_DRQ_RND 
@@ -1130,7 +1129,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//drive
 
 #if defined(SSE_FDC_ACCURATE) 
-
 #define SSE_FDC_IDFIELD_IGNORE_SIDE
 #define SSE_FDC_MULTIPLE_SECTORS
 #endif
@@ -1399,7 +1397,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DISK_STW_READONLY //3.7.1 last minute
 
 #if defined(SSE_DMA)
-#undef SSE_DMA_COUNT_CYCLES //again... ;)
+
 #define SSE_DMA_TRACK_TRANSFER2 // also for CAPS images
 #endif
 
@@ -1850,6 +1848,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 //383
+#if 1
 #if _MSC_VER >= 1500 
 #define SSE_VS2008_383
 #define SSE_VS2008_WARNING_383
@@ -1857,7 +1856,8 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #ifdef SSE_X64
-#define SSE_X64_383 
+#define SSE_X64_383 // bad casts
+#define SSE_X64_383B // ellipses (,...)
 #endif
 
 #define SSE_ACIA_383
@@ -1905,6 +1905,12 @@ Beta: not SSE_PRIVATE_BUILD
 #ifdef SSE_FDC
 #define SSE_FDC_383A // bugfixes
 #define SSE_FDC_383B // refactoring
+#define SSE_FDC_383B1
+#define SSE_FDC_383B2
+
+#define SSE_FDC_383B3//bugfix
+
+#define SSE_FDC_383C // refactoring
 #define SSE_FDC_383_HBL_DRIFT
 #endif
 #define SSE_WD1772_383
@@ -1912,9 +1918,12 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_WD1772_383C
 #endif
 
+
 #define SSE_GLUE_383
 #define SSE_GLUE_383B
+#define SSE_GLUE_383B1
 #define SSE_GLUE_383C
+
 #define SSE_GUI_383
 #define SSE_GUI_DISK_MANAGER_REGROUP // it's getting cluttered
 #define SSE_GUI_DISK_MANAGER_REGROUP2 // context
@@ -2051,6 +2060,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_NO_WINSTON_383
 #define SSE_VID_D3D_SCREENSHOT_383
 
+
+#endif//383
 
 ///////////
 // DEBUG //

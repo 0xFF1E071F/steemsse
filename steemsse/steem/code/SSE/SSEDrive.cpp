@@ -105,6 +105,9 @@ void TSF314::UpdateAdat() {
 #endif
 #endif
     );
+#if defined(SSE_GUI_STATUS_BAR_ADAT)
+  GUIRefreshStatusBar();
+#endif
 }
 
 

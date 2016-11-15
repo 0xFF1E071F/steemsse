@@ -201,9 +201,6 @@ struct TWD1772 {
   BYTE SR;  // sector
   BYTE DR;  // data
   BYTE DSR; // shift register - official
-  BYTE StatusType; // guessed
-  BYTE InterruptCondition; // guessed
-  BYTE IndexCounter; // guessed
 
 #if defined(SSE_WD1772_F7_ESCAPE) //keep a switch because I'm not sure of this
   bool F7_escaping;
@@ -211,6 +208,11 @@ struct TWD1772 {
 
   BYTE n_format_bytes; // to examine sequences before ID
 #endif//#if defined(SSE_WD1772_EMU)
+
+  BYTE StatusType; // guessed
+  BYTE InterruptCondition; // guessed
+  BYTE IndexCounter; // guessed
+
 
 /*  Lines (pins). Some are necessary (eg direction), others not
     really yet (eg write_gate).

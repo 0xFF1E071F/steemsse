@@ -1026,6 +1026,10 @@ Steem SSE will reset auto.sts and quit\nSorry!",
         SF314[drive].Id=drive;
       }
       SF314[drive].ImageType=image_type;
+#if defined(SSE_FLOPPY_ADAT_UPDATE) // really? or just update adat +GUI?
+      //SF314[drive].State.adat=SF314Copy[drive].State.adat;
+      SF314[drive].UpdateAdat();
+#endif
     }
 #endif
 

@@ -42,9 +42,6 @@ struct TDma {
 
   // DATA
   MEM_ADDRESS BaseAddress; // Base Address Register
-#if defined(SSE_DMA_DELAY)
-  int TransferTime;
-#endif
 #if defined(SSE_DMA_DOUBLE_FIFO)
 /*
 "Internally the DMA has two 16 bytes FIFOs that are used alternatively. 
@@ -117,27 +114,6 @@ TODO: maybe use the feature and remove #define to make code more readable?
 */
   void RequestTransfer();
   void TransferBytes();
-#if defined(SSE_DMA_DELAY)
-/*
-"In read mode, when one of the FIFO is full (i.e. when 16 bytes have been
- transferred from the FDC or HDC) the DMA chip performs a bus request to
- the 68000 and in return the processor will grant the control of the bus to
-  the DMA, the transfer to the memory is then done with 8 cycles then the 
-bus is released to the system. As the processor takes time to grant 
-the bus and as transferring data from FIFO to memory also takes time,
- the other FIFO is used for continuing the data transfer with the FD/HD
- controllers."
-When SSE_DMA_DELAY is defined (normally not), an arbitrary delay 
-(SSEParameters.h) is applied before the transfer takes place. 
-SSE_DMA_DOUBLE_FIFO should also be defined (or the single buffer would be
-overwritten).
-This feature uses Steem's event system, which is cycle accurate but also 
-heavy. It was a test.
-  // if we use event for all, there's no need for this one (which delay
-  we're not sure we need to emulate)
-*/
-  static void Event(); 
-#endif
 };
 
 #pragma pack(pop)
