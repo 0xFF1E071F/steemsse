@@ -249,7 +249,7 @@ void TGlue::CheckSideOverscan() {
     if(!(CurrentScanline.Tricks
       &(TRICK_LINE_PLUS_20|TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_24)))
     {
-#if defined(SSE_GLUE_383C) //test
+#if defined(SSE_GLUE_383C) && defined(SSE_GLUE_383B)//test
       r2cycle=PreviousChangeToHi(lim_r2+2);
 #elif defined(SSE_GLUE_383B)
       r2cycle=NextChangeToHi(lim_r2-14);
@@ -1402,7 +1402,11 @@ Dragonnels reset
   if(!(CurrentScanline.Tricks&TRICK_STABILISER) && CyclesIn>432)
   {
     r2cycle=NextShiftModeChange(432); // can be 1 or 2
+#ifdef TEST02__
+    if(r2cycle>432 && r2cycle<460) 
+#else
     if(r2cycle>-1 && r2cycle<460) 
+#endif
     {
       if(!ShiftModeChangeAtCycle(r2cycle))
         r2cycle=NextShiftModeChange(r2cycle);
@@ -1729,12 +1733,10 @@ void TGlue::IncScanline() {
   ExtraAdded=false;
   overscan_add_extra=0;
 #endif
-  Shifter.IncScanline();
 
+  Shifter.IncScanline();
   PreviousScanline=CurrentScanline; // auto-generated
   CurrentScanline=NextScanline;
-  ASSERT( CurrentScanline.Tricks==NextScanline.Tricks );
-  
 
   if(CurrentScanline.Tricks)
     ; // don't change #bytes
@@ -1879,21 +1881,93 @@ int TGlue::NextFreqChange(int cycle,int value) {
 
 #endif
 
+#if defined(SSE_FDC_383B3) // refactor + bugfix 
+
+int TGlue::NextShiftModeChange(int cycle,int value) {
+  // return cycle of next change after this cycle
+  // if value=-1, return any change
+  // if none is found, return -1
+  ASSERT(value>=-1 && value <=2);
+  int t=cycle+LINECYCLE0; // convert to absolute
+  int i,j,rv=-1;
+  // we start from now, go back in time
+  for(i=shifter_shift_mode_change_idx,j=0; j<32; i--,i&=31,j++)
+  {
+    int a=shifter_shift_mode_change_time[i]-t;
+    if(a>0 && a<1024) // as long as it's valid, it's better...
+    {
+      if(value==-1 || shifter_shift_mode_change[i]==value)
+        rv=shifter_shift_mode_change_time[i]-LINECYCLE0; // in linecycles
+    }
+    else
+      break; // as soon as it's not valid, we're done
+  }
+  return rv;
+}
+
+#else
+
 int TGlue::NextShiftModeChange(int cycle,int value) {
   // return cycle of next change after this cycle
   int t=cycle+LINECYCLE0; // convert to absolute
   int idx,i,j;
   for(idx=-1,i=shifter_shift_mode_change_idx,j=0
-    ; shifter_shift_mode_change_time[i]-t>0 && j<32
+    ; int a=(shifter_shift_mode_change_time[i]-t)>0 && j<32
     ; i--,i&=31,j++)
     if(value==-1 || shifter_shift_mode_change[i]==value)
       idx=i;
+  //ASSERT((shifter_shift_mode_change_time[idx]-LINECYCLE0)!=159);
   if(idx!=-1 && shifter_shift_mode_change_time[idx]-t>0)
     return shifter_shift_mode_change_time[idx]-LINECYCLE0;
   return -1;
 }
 
-#if defined(SSE_GLUE_383B)
+#endif
+
+#if defined(SSE_FDC_383B3) //the same for new functions
+
+
+int TGlue::NextChangeToHi(int cycle) {
+  // return cycle of next change after this cycle
+  // if none is found, return -1
+
+  int t=cycle+LINECYCLE0; // convert to absolute
+  int i,j,rv=-1;
+  // we start from now, go back in time
+  for(i=shifter_shift_mode_change_idx,j=0; j<32; i--,i&=31,j++)
+  {
+    int a=shifter_shift_mode_change_time[i]-t;
+    if(a>0 && a<1024) // as long as it's valid, it's better...
+    {
+      if(shifter_shift_mode_change[i]&2) //HI
+        rv=shifter_shift_mode_change_time[i]-LINECYCLE0; // in linecycles
+    }
+    else
+      break; // as soon as it's not valid, we're done
+  }
+  return rv;
+}
+
+
+int TGlue::NextChangeToLo(int cycle) {
+  int t=cycle+LINECYCLE0; // convert to absolute
+  int i,j,rv=-1;
+  // we start from now, go back in time
+  for(i=shifter_shift_mode_change_idx,j=0; j<32; i--,i&=31,j++)
+  {
+    int a=shifter_shift_mode_change_time[i]-t;
+    if(a>0 && a<1024) // as long as it's valid, it's better...
+    {
+      if(!(shifter_shift_mode_change[i]&2)) //not HI
+        rv=shifter_shift_mode_change_time[i]-LINECYCLE0; // in linecycles
+    }
+    else
+      break; // as soon as it's not valid, we're done
+  }
+  return rv;
+}
+
+#elif defined(SSE_GLUE_383B)
 
 // we add functions but they're faster, the point being clarification anyway
 int TGlue::NextChangeToHi(int cycle) {
@@ -1924,6 +1998,9 @@ int TGlue::NextChangeToLo(int cycle) {
   return -1;
 }
 
+#endif
+
+//and those?
 int TGlue::PreviousChangeToHi(int cycle) {
   int t=cycle+LINECYCLE0; // convert to absolute
   int idx,i,j;
@@ -1949,10 +2026,6 @@ int TGlue::PreviousChangeToLo(int cycle) {
     idx=shifter_shift_mode_change_time[idx]-LINECYCLE0;
   return idx;
 }
-
-
-
-#endif
 
 
 #if defined(SSE_BOILER_FRAME_REPORT) 
@@ -2498,6 +2571,10 @@ void TGlue::Vbl() {
 #if defined(SSE_BOILER_FAKE_IO) && defined(SSE_OSD_CONTROL)
   if(OSD_MASK2&OSD_CONTROL_MODES)
     TRACE_OSD("R%d S%d",Shifter.m_ShiftMode,m_SyncMode);
+#endif
+#if defined(SSE_FDC_383B1)//?
+  AddFreqChange(shifter_freq);
+  AddShiftModeChange(m_ShiftMode);
 #endif
 }
 

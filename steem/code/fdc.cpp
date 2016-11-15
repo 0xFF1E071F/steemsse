@@ -272,7 +272,7 @@ void fdc_type1_check_verify()
       else
 #endif
       {//bugfix scope
-#if defined(SSE_FDC_INDEX_PULSE_COUNTER)
+#if defined(SSE_WD1772)
         WD1772.IndexCounter=0; // 5 REVS to find match
 #endif
         agenda_add(agenda_fdc_verify,HBLsToNextID,NextIDNum);
@@ -374,7 +374,6 @@ void floppy_fdc_command(BYTE cm)
   fdc_cr=cm;
 
   agenda_delete(agenda_fdc_motor_flag_off); //SS it's safe as we set it ourselve
-
 #if defined(SSE_FDC_CHANGE_COMMAND_DURING_SPINUP)
 /*  No need to start the motor, it should already be spinning up
     (Noughts and Mad Crosses STE)
@@ -398,7 +397,7 @@ void floppy_fdc_command(BYTE cm)
     fdc_str=FDC_STR_BUSY | FDC_STR_MOTOR_ON;
     fdc_spinning_up=int(delay_exec ? 2:1);
 #if defined(SSE_DRIVE_MOTOR_ON)
-    if( ADAT)
+    if(ADAT)
       SF314[DRIVE].State.motor=true;
     TRACE_LOG("Motor on drive %c\n",'A'+DRIVE);
 #else
@@ -408,26 +407,11 @@ void floppy_fdc_command(BYTE cm)
       agenda_add(agenda_fdc_spun_up,MILLISECONDS_TO_HBLS(100),delay_exec);
     }else{
 #if defined(SSE_DRIVE_SPIN_UP_TIME)
-/*  if SSE_FDC_INDEX_PULSE_COUNTER or SSE_DRIVE_SPIN_UP_TIME2 is defined,
-    the motor will start at a random hbl but will be spun up at a hbl
-    divisible by FDC_HBLS_PER_ROTATION. We define those spots, arbitrarily,
-    as IP time, and so the command starts right at an IP.
-    The randomness is introduced by the random starting hbl.
-*/
-#if defined(SSE_FDC_INDEX_PULSE_COUNTER)
+      ASSERT(ADAT);
       //  Set up agenda for next IP
       WD1772.IndexCounter=0;
       DWORD delay=SF314[DRIVE].HblsNextIndex();
       agenda_add(agenda_fdc_spun_up,delay,delay_exec);
-#elif defined(SSE_DRIVE_SPIN_UP_TIME2)
-      //  Set up agenda for 6 IP
-      DWORD delay=SF314[DRIVE].HblsNextIndex();
-      delay+=5*FDC_HBLS_PER_ROTATION;
-      ASSERT( delay<=FDC_HBLS_PER_ROTATION*6 );
-      agenda_add(agenda_fdc_spun_up,delay,delay_exec);
-#else
-      agenda_add(agenda_fdc_spun_up,FDC_HBLS_PER_ROTATION*6,delay_exec);
-#endif
 #else
       // 6 revolutions but guaranteed 1 second spinup at 5 RPS, how?
       agenda_add(agenda_fdc_spun_up,MILLISECONDS_TO_HBLS(1100),delay_exec);
@@ -443,8 +427,7 @@ void floppy_fdc_command(BYTE cm)
 //---------------------------------------------------------------------------
 void agenda_fdc_spun_up(int do_exec)
 {
-
-#if defined(SSE_FDC_INDEX_PULSE_COUNTER) && defined(SSE_DRIVE_OBJECT)
+#if defined(SSE_DRIVE_SPIN_UP_TIME)
 /*  
 On the WD1772 all commands, except the Force Interrupt Command,
  are programmed via the h Flag to delay for spindle motor start 
@@ -455,15 +438,15 @@ On the WD1772 all commands, except the Force Interrupt Command,
  ->
  We count IP, only if there's a spinning selected drive
  Not emulated: if program changes drive and the new drive is spinning
- too, but at different IP!
+ too, but IP occurs at different time!
 */
   if(ADAT)
   {
-    ASSERT( WD1772.IndexCounter<6 );
+    ASSERT(WD1772.IndexCounter<6);
+    ASSERT(fdc_spinning_up);
     if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE&&SF314[DRIVE].State.motor)
       WD1772.IndexCounter++;
-
-    if(WD1772.IndexCounter<6)
+    if(WD1772.IndexCounter<6) // not finished
     {
       agenda_add(agenda_fdc_spun_up,FDC_HBLS_PER_ROTATION,do_exec);
       return;
@@ -471,7 +454,7 @@ On the WD1772 all commands, except the Force Interrupt Command,
   }
 #endif
   fdc_spinning_up=0;
-//  TRACE_LOG("Spin up - exec:%d\n",do_exec);
+  TRACE_LOG("FDC Drive spun\n");
   if (do_exec) fdc_execute();
 }
 //---------------------------------------------------------------------------
@@ -690,17 +673,15 @@ cycles before the first stepping pulse.
 */
       default: //step, step in, step out
       {
-#if defined(SSE_FDC_STEP___)// v3.7.0 bugfix Treasure Trap
-        if(ADAT)
-          floppy_irq_flag=0;
-#endif
-
 #if defined(SSE_DRIVE_SOUND_SEEK2)
       if(SSEOption.DriveSound 
 #if defined(SSE_DRIVE_SOUND_SEEK5)
         && !DRIVE_SOUND_SEEK_SAMPLE
 #endif
-        && SF314[DRIVE].Sound_Buffer[TSF314::STEP])
+#if !defined(SSE_FDC_383C)//tested in function
+        && SF314[DRIVE].Sound_Buffer[TSF314::STEP] 
+#endif
+      )
         SF314[DRIVE].Sound_Step();
 #endif
 
@@ -895,7 +876,7 @@ CRC.
             //trying with IDs... 
             WORD dummy;
             BYTE num=fdc_sr;
-            WORD SectorStartingByte=SF314[DRIVE].BytesToID(num, dummy);
+            WORD SectorStartingByte=Disk[DRIVE].BytesToID(num, dummy);
             DWORD HBLOfSectorStart=hbl_count;
             HBLOfSectorStart+=SF314[DRIVE].BytesToHbls(SectorStartingByte);
 #if defined(SSE_FDC_HEAD_SETTLE)//normally also type III
@@ -908,7 +889,7 @@ CRC.
     We don't need to count pre-ID gap.
     With this, no need for added bytes at end of sector.
 */
-            BYTE pre_data_gap=SF314[DRIVE].PreDataGap()-12-3;
+            BYTE pre_data_gap=Disk[DRIVE].PreDataGap()-12-3;
             HBLOfSectorStart+=SF314[DRIVE].BytesToHbls(pre_data_gap-16);
 #endif
             HBLOfSectorStart-=2;//see below, Steem's way
@@ -1272,7 +1253,7 @@ condition for interrupt is met the INTRQ line goes high signifying
       }
     }
   }
-#if defined(SSE_FDC_MOTOR_OFF)
+#if defined(SSE_DRIVE_SPIN_DOWN_TIME)
   if(!ADAT)
 #endif
   if (fdc_str & FDC_STR_MOTOR_ON) agenda_add(agenda_fdc_motor_flag_off,MILLISECONDS_TO_HBLS(1800),0);
@@ -1296,11 +1277,10 @@ condition for interrupt is met the INTRQ line goes high signifying
 
 }
 //---------------------------------------------------------------------------
-#if defined(SSE_FDC_MOTOR_OFF_COUNT_IP)
+#if defined(SSE_DRIVE_SPIN_DOWN_TIME)
 
 void agenda_fdc_motor_flag_off(int revs_to_wait)
 {
-#if defined(SSE_FDC_INDEX_PULSE_COUNTER) && defined(SSE_DRIVE_OBJECT)
 /*
  "If after finishing the command, the device remains idle for
  9 revolutions, the MO signal goes back to a logic 0."
@@ -1311,7 +1291,7 @@ void agenda_fdc_motor_flag_off(int revs_to_wait)
 
   We count IP, only if there's a spinning selected drive
   Not emulated: if program changes drive and the new drive is spinning
-  too, but at different IP!
+  too, but IP occurs at different time!
 
   Cases Symic; Treasure Trap -FOF
 
@@ -1325,12 +1305,8 @@ void agenda_fdc_motor_flag_off(int revs_to_wait)
 #endif
       )
       WD1772.IndexCounter++;
-//TRACE("agenda_motor_flag_off %d \n",WD1772.IndexCounter);
     if(WD1772.IndexCounter<10)
     {
-#ifndef SSE_DEBUG_TRACE_IDE
-///TODO mask      TRACE_LOG("IP for motor off %d A%d B%d\n",WD1772.IndexCounter,SF314[0].motor_on,SF314[1].motor_on);
-#endif
       agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION,revs_to_wait);
       return;
     }
@@ -1344,29 +1320,9 @@ void agenda_fdc_motor_flag_off(int revs_to_wait)
   TRACE_LOG("Motor off\n");
 #endif
 }
-#else
-  if(ADAT && revs_to_wait>0)
-  {
-#if defined(SSE_YM2149_OBJECT)
-    if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE) // one drive selected?
-#endif
-      revs_to_wait--;
-    agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION,revs_to_wait);
-  }
-  else
-  {
-    fdc_str&=BYTE(~FDC_STR_MOTOR_ON);
-#if defined(SSE_DRIVE_MOTOR_ON)
-    TRACE_LOG("Motor off drive %c\n",'A'+DRIVE);
-    SF314[DRIVE].State.motor=false;
-#else
-    TRACE_LOG("Motor off\n");
-#endif
-  }
-}
-#endif
 
 #else
+
 void agenda_fdc_motor_flag_off(int)
 {
   TRACE_LOG("Motor off\n");
@@ -1375,6 +1331,7 @@ void agenda_fdc_motor_flag_off(int)
   SF314[DRIVE].State.motor=false;
 #endif
 }
+
 #endif
 //---------------------------------------------------------------------------
 
@@ -1429,11 +1386,10 @@ void agenda_fdc_verify(int id) {
 //---------------------------------------------------------------------------
 void agenda_fdc_finished(int)
 {
-  // note we come here also for $D4
   
 #if defined(SSE_DMA_OBJECT) && defined(SSE_DEBUG)
   if(TRACE_ENABLED(LOGSECTION_FDC)) 
-    Dma.UpdateRegs(true); // -> "IRQ"
+    Dma.UpdateRegs(true); // -> "IRQ" trace
 #endif
 
 #if defined(SSE_DRIVE_SOUND) 
@@ -1454,7 +1410,6 @@ void agenda_fdc_finished(int)
 
   dbg_log("FDC: Finished command, GPIP bit low.");
   floppy_irq_flag=FLOPPY_IRQ_NOW;
-
   mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,0); // Sets bit in GPIP low (and it stays low)
 
   fdc_str&=BYTE(~FDC_STR_BUSY); // Turn off busy bit
@@ -1488,17 +1443,12 @@ void agenda_fdc_finished(int)
 #if defined(SSE_FDC_MOTOR_OFF)
   if(ADAT)
   {
-#if defined(SSE_FDC_MOTOR_OFF_COUNT_IP)
-#if defined(SSE_FDC_INDEX_PULSE_COUNTER) && defined(SSE_DRIVE_OBJECT)
+#if defined(SSE_DRIVE_SPIN_DOWN_TIME)
     //  Set up agenda for next IP
     agenda_delete(agenda_fdc_motor_flag_off); //3.6.2
     WD1772.IndexCounter=0;
     DWORD delay=SF314[DRIVE].HblsNextIndex();
     agenda_add(agenda_fdc_motor_flag_off,delay,0);
-#else
-    // was a little less precise
-    agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION,9); //10?
-#endif
 #else
     agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION*9,0);
 #endif
@@ -1508,7 +1458,7 @@ void agenda_fdc_finished(int)
 //---------------------------------------------------------------------------
 void agenda_floppy_seek(int)
 {
-//  ASSERT( fdc_str&FDC_STR_BUSY );//TODO
+  ASSERT( fdc_str&FDC_STR_BUSY );//TODO
   int floppyno=floppy_current_drive();
 #if defined(SSE_FDC_SEEK)
 /*
@@ -1531,11 +1481,6 @@ issued."
     if(fdc_tr==fdc_dr)
     {
       dbg_log(Str("FDC: Finished seeking to track ")+fdc_dr+" hbl_count="+hbl_count);
-#ifdef SSE_DEBUG // this happens, eg in GEM
-//      if(floppy_head_track[floppyno]!=fdc_tr)
-  //      TRACE_LOG("!Seek: DR %d TR%d CYL %d\n",fdc_dr,fdc_tr,floppy_head_track[floppyno]);
-//      else TRACE_LOG("Seek completed TR=%d\n",fdc_tr);
-#endif
       fdc_type1_check_verify();
 #if !defined(SSE_FDC_VERIFY_AGENDA)
       agenda_fdc_finished(0);
@@ -1616,7 +1561,6 @@ void agenda_floppy_readwrite_sector(int Data)
   ASSERT(floppyno==0 || floppyno==1);
   TFloppyImage *floppy=&FloppyDrive[floppyno];
   ASSERT(floppy);
-//  TRACE("%d bytes\n",floppy->BytesPerSector);
 #if defined(SSE_FDC_ACCURATE) && !defined(SSE_VS2008_WARNING_383)
   BYTE nSects=floppy->SectorsPerTrack;
 #endif
@@ -1768,15 +1712,13 @@ instant_sector_access_loop:
     if (Command & BIT_4){ // Multiple sectors
       fdc_sr++;
       floppy_irq_flag=0;
-#if defined(SSE_DRIVE_MULTIPLE_SECTORS)
+#if defined(SSE_FDC_MULTIPLE_SECTORS)
       if(ADAT)
       {
-#ifdef SSE_FDC_MULTIPLE_SECTORS
         if(!fdc_sr)
           fdc_sr++; // CAPS: 255 wraps to 1 (due to add with carry)
-#endif
         TRACE_LOG("SR->%d\n",fdc_sr);
-        // The drive must find next sector
+        // The controller must find next sector
         agenda_add(agenda_floppy_readwrite_sector,Disk[DRIVE].SectorGap(),
           MAKELONG(++Part,Command));
         return;
@@ -1791,16 +1733,6 @@ instant_sector_access_loop:
     case FLOPPY_IRQ_NOW:
       dbg_log("FDC: Finished read/write sector");
       fdc_str=BYTE(WriteProtect | FDC_STR_MOTOR_ON); //SS War Heli
-//      TRACE_LOG("Sector R/W OK\n");
-
-#if defined(SSE_DRIVE_RW_SECTOR_TIMING2)\
-      && defined(SSE_FDC_ACCURATE) && !defined(SSE_DRIVE_REM_HACKS)
-      // For test program FDCT by Petari
-      if(ADAT)
-        agenda_add(agenda_fdc_finished,SF314[DRIVE].BytesToHbls(nSects<11?
-          FDC_SECTOR_GAP_BEFORE_IRQ_9_10:FDC_SECTOR_GAP_BEFORE_IRQ_11),0);
-      else
-#endif
       agenda_fdc_finished(0);
       return; // Don't loop
     case FLOPPY_IRQ_ONESEC:
@@ -1936,8 +1868,8 @@ void agenda_floppy_read_address(int idx)
 #if defined(SSE_FDC_MOTOR_OFF)
     if(!ADAT) {
 #endif
-    agenda_delete(agenda_fdc_motor_flag_off);
-    agenda_add(agenda_fdc_motor_flag_off,MILLISECONDS_TO_HBLS(1800),0);
+      agenda_delete(agenda_fdc_motor_flag_off);
+      agenda_add(agenda_fdc_motor_flag_off,MILLISECONDS_TO_HBLS(1800),0);
 #if defined(SSE_FDC_MOTOR_OFF)
     }
 #endif
@@ -2055,7 +1987,6 @@ void agenda_floppy_read_track(int part)
         int i=0;
         for (int n=0;n<22;n++) pre_sect[i++]=0x4e;  // Gap 1 & 3 (22 bytes)
 #if defined(SSE_DRIVE_READ_TRACK_11)
-        //ASSERT(nSects<11);
 /*
 Gap 2 Pre ID                    12+3        12+3         3+3     00+A1
 */
@@ -2461,7 +2392,7 @@ void agenda_floppy_write_track(int part)
     int hbls_per_second=(ADAT)? HBL_PER_SECOND : 
       ((shifter_freq==MONO_HZ)?int(HBLS_PER_SECOND_MONO) : HBLS_PER_SECOND_AVE);
 #elif defined(SSE_DRIVE_BYTES_PER_ROTATION)
-    int bytes_per_second=TSF314::TRACK_BYTES*5;
+    int bytes_per_second=TDisk::TRACK_BYTES*5;
 #else
     // 8000 bytes per revolution * 5 revolutions per second
     int bytes_per_second=8000*5;
@@ -2571,10 +2502,6 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
       }
     }
   }
-//#if !defined(SSE_BOILER_TRACE_CONTROL)
-//#undef LOGSECTION
-//#define LOGSECTION LOGSECTION_FDC//SS
-//#endif
 
 #if defined(SSE_DMA_OBJECT) && defined(SSE_DEBUG)
   if(TRACE_ENABLED(LOGSECTION_FDC)&&!old_irq&&old_irq!=(bool)pPIOI->intrqState) 
@@ -2597,7 +2524,6 @@ void pasti_motor_proc(BOOL)
 void pasti_motor_proc(BOOL on)
 #endif
 {
-  //SS TODO use this instead
 #if !defined(SSE_OSD_DRIVE_LED3)
   disk_light_off_time=timer;
   if (on) disk_light_off_time+=50*1000;

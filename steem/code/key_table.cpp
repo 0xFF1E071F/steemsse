@@ -107,7 +107,7 @@ WORD *shift_key_table[4]={NULL,NULL,NULL,NULL};
 bool EnableShiftSwitching=0,ShiftSwitchingAvailable=0;
 //---------------------------------------------------------------------------
 #ifdef WIN32
-//TODO X64 ???
+
 void SetSTKeys(char *Letters,int Val1,...)
 {
   int *lpVals=&Val1;
@@ -116,7 +116,11 @@ void SetSTKeys(char *Letters,int Val1,...)
   do{
     Code=VkKeyScan(Letters[l]);
     if (HIBYTE(Code)==0){ //No shift required to type character #Letters[l]
+#if defined(SSE_X64_383B)
+      key_table[LOBYTE(Code)]=LOBYTE(lpVals[l*2]); // each parameter takes 8 bytes
+#else
       key_table[LOBYTE(Code)]=LOBYTE(lpVals[l]);
+#endif
     }
   }while (Letters[++l]);
 }

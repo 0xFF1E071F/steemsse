@@ -227,7 +227,8 @@ void TDebug::Vbl(){
 #if defined(SSE_DEBUG_RESET) 
 
 void TDebug::Reset(bool Cold) {
-  TRACE_INIT("%s reset\n",(Cold?"Cold":"Warm"));
+  //TRACE_INIT("%s reset\n",(Cold?"Cold":"Warm"));
+  TRACE("%s reset\n",(Cold?"Cold":"Warm"));
   if(Cold)
   {
 #if defined(SSE_DEBUG_ASSERT)

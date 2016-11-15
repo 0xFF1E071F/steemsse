@@ -159,7 +159,11 @@ void SteemDisplay::SetMethods(int Method1,...)
 {
   int *mp=&Method1;
   for (int n=0;n<5;n++){
+#if defined(SSE_X64_383B)
+    UseMethods[n]=mp[n*2];
+#else
     UseMethods[n]=mp[n];
+#endif
     if (UseMethods[n]==0) break;
   }
   nUseMethod=0;

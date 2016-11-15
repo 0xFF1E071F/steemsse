@@ -172,17 +172,6 @@ The ACIA master clock is 500kHz.
 #endif
 
 
-/////////
-// DMA //
-/////////
-
-#if defined(SSE_DMA)
-#if defined(SSE_DMA_DELAY) //no, TODO, it would be after DE anyway
-#define SSE_DMA_ACCESS_DELAY 20 
-#endif
-#endif
-
-
 ///////////
 // DRIVE //
 ///////////

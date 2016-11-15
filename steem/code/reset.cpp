@@ -183,17 +183,11 @@ void power_on()
     floppy_head_track[floppyno]=0;
 #if defined(SSE_DRIVE_OBJECT)
     SF314[floppyno].Id=floppyno;
-#if defined(SSE_DRIVE_MOTOR_ON)
     SF314[floppyno].State.motor=false;
-#ifdef SSE_DISK_STW
-#if !defined(SSE_DRIVE_INIT_373)
-    SF314[floppyno].rpm=300; 
 #endif
+#ifdef SSE_WD1772_LINES
     WD1772.Lines.motor=false;
-#endif//stw
-#endif//motor
-#endif//drv
-
+#endif
   }
   fdc_tr=0;fdc_sr=0;fdc_dr=0;
 
@@ -253,7 +247,7 @@ void reset_peripherals(bool Cold)
 
 #if defined(SSE_DEBUG) || defined(SSE_OSD_SHOW_TIME)
 #if defined(SSE_DEBUG_RESET)
-  Debug.Reset(Cold);
+  Debug.Reset(Cold); 
 #else
   if(Cold)
     TRACE_LOG("Reset peripherals (cold)\n");

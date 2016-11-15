@@ -1084,6 +1084,10 @@ void TWD1772::Irq(bool state) {
 
 
 void TWD1772::Motor(bool state) {
+#ifdef SSE_DEBUG
+  if(state!=SF314[DRIVE].State.motor)
+    TRACE_LOG("WD motor %d\n",state);
+#endif
   Lines.motor=state;
   if(state)
     STR|=STR_MO;
@@ -1093,7 +1097,9 @@ void TWD1772::Motor(bool state) {
   if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE)
 //    SF314[YM2149.SelectedDrive].Motor(state); 
     SF314[DRIVE].Motor(state); 
+#ifdef SSE_DEBUG
   else TRACE_LOG("WD motor %d: no drive\n",state);
+#endif
 }
 
 

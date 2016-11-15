@@ -23,6 +23,9 @@ struct TGlueStatusBYTE {
   unsigned int vbl_done:1;
   unsigned int vbi_done:1;
   unsigned int hbi_done:1;
+#ifdef TEST02
+  unsigned int :11;
+#endif
 };
 
 #endif
@@ -43,6 +46,9 @@ struct TGlue {
   screen_event_struct screen_event;
   WORD scanline; 
 #endif
+#ifdef TEST02
+  TScanline PreviousScanline, CurrentScanline, NextScanline;
+#endif
   WORD DE_cycles[NFREQS];
   WORD ScanlineTiming[NTIMINGS][NFREQS];
   BYTE m_ShiftMode,m_SyncMode; // both bits of shift mode are shadowed in GLU (ijor)
@@ -52,7 +58,9 @@ struct TGlue {
   bool ExtraAdded;
 #endif
   // we need keep info for only 3 scanlines:
+#ifndef TEST02
   TScanline PreviousScanline, CurrentScanline, NextScanline;
+#endif
 #if defined(SSE_GLUE_FRAME_TIMINGS)
 #ifdef UNIX
 #undef Status // ?? ux382
