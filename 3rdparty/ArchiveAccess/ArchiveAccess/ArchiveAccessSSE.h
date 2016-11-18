@@ -8,7 +8,10 @@
 
 //#include "../ArchiveAccess/ArchiveAccessDynamic.h"
 // check that file for some C++ horror :(
+
+#ifndef ArchiveAccess__H // no choice
 #define FileInArchiveInfoStringSize 1024
+
 struct FileInArchiveInfo {
 	int ArchiveHandle; // handle for Archive/class pointer
     //int FileIndex;
@@ -19,6 +22,7 @@ struct FileInArchiveInfo {
 	_FILETIME LastWriteTime, CreationTime, LastAccessTime;
 	unsigned short path[FileInArchiveInfoStringSize];
 };
+#endif
 typedef void* aaHandle;
 
 extern FileInArchiveInfo FileInfo;

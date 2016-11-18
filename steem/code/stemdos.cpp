@@ -496,7 +496,7 @@ void stemdos_seek(int h,MEM_ADDRESS sp)
     r[0]=ftell(stemdos_file[h].f);
   }
 
-#if defined(SSE_OSD_DRIVE_LED)
+#if defined(SSE_OSD_DRIVE_LED) && !defined(SSE_OSD_DRIVE_LED_383)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -1757,7 +1757,7 @@ void stemdos_parse_path()  //remove \..\ etc.
 {
   dbg_log(EasyStr("STEMDOS: Parsing path ")+stemdos_filename);
 
-#if defined(SSE_OSD_DRIVE_LED)
+#if defined(SSE_OSD_DRIVE_LED) && !defined(SSE_OSD_DRIVE_LED_383)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 

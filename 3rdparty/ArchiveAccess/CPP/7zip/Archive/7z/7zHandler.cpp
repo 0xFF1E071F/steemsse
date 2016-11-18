@@ -385,6 +385,7 @@ STDMETHODIMP CHandler::Open(IInStream *stream,
     const UInt64 *maxCheckStartPosition,
     IArchiveOpenCallback *openArchiveCallback)
 {
+  //OutputDebugString(L"7z Open\n");
   COM_TRY_BEGIN
   Close();
   #ifndef _SFX
@@ -435,6 +436,7 @@ STDMETHODIMP CHandler::Open(IInStream *stream,
 STDMETHODIMP CHandler::Close()
 {
   COM_TRY_BEGIN
+  //OutputDebugString(L"7zhandler close\n");
   _inStream.Release();
   _db.Clear();
   return S_OK;

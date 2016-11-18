@@ -97,10 +97,10 @@ int TDiskManager::dir_lv_notify_handler(hxc_dir_lv *dlv,int mess,int i)
     dlv->pop.menu.InsertAt(pos++,2,"-",-1,0);  
     dlv->pop.menu.Add(StripAndT("New Standard &Disk Image"),ICO16_DISK,1001);
     dlv->pop.menu.Add(StripAndT("New Custom Disk &Image"),ICO16_DISK,1002);
-#if defined(SSE_GUI_DISK_MANAGER_STW) //new context option
+#if defined(SSE_GUI_DM_STW) //new context option
     dlv->pop.menu.Add(StripAndT("New ST&W Disk Image"),ICO16_DISK,1003);
 #endif
-#if defined(SSE_GUI_DISK_MANAGER_HFE) //new context option
+#if defined(SSE_GUI_DM_HFE) //new context option
     dlv->pop.menu.Add(StripAndT("New &HFE Disk Image"),ICO16_DISK,1004);
 #endif
 
@@ -170,7 +170,7 @@ int TDiskManager::dir_lv_notify_handler(hxc_dir_lv *dlv,int mess,int i)
         }
         return 0;
       }
-#if defined(SSE_GUI_DISK_MANAGER_STW)
+#if defined(SSE_GUI_DM_STW)
       case 1003:  // STW
       {
         hxc_prompt prompt;
@@ -187,7 +187,7 @@ int TDiskManager::dir_lv_notify_handler(hxc_dir_lv *dlv,int mess,int i)
         return 0;
       }
 #endif
-#if defined(SSE_GUI_DISK_MANAGER_HFE)
+#if defined(SSE_GUI_DM_HFE)
       case 1004:  // HFE
       {
         hxc_prompt prompt;
@@ -689,7 +689,7 @@ void TDiskManager::Show()
   dir_lv.ext_sl.Add(4,"stt",ICO16_DISK,ICO16_DISKLINK,ICO16_DISKLINKBROKEN,ICO16_DISK_RO);
   dir_lv.ext_sl.Add(4,"dim",ICO16_DISK,ICO16_DISKLINK,ICO16_DISKLINKBROKEN,ICO16_DISK_RO);
   dir_lv.ext_sl.Add(4,"msa",ICO16_DISK,ICO16_DISKLINK,ICO16_DISKLINKBROKEN,ICO16_DISK_RO);
-#if defined(SSE_GUI_DISK_MANAGER_STW)
+#if defined(SSE_GUI_DM_STW)
   dir_lv.ext_sl.Add(4,"stw",ICO16_DISK,ICO16_DISKLINK,ICO16_DISKLINKBROKEN,ICO16_DISK_RO);
 #endif
 #if defined(SSE_DISK_SCP)

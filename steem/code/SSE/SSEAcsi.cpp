@@ -145,7 +145,7 @@ void TAcsiHdc::IOWrite(BYTE Line,BYTE io_src_b) {
   if(cmd_ctr==6) // command in
   {
     TRACE_HDC("ACSI %d command §%X (%X %X %X %X %X)\n",device_num,cmd_block[0],cmd_block[1],cmd_block[2],cmd_block[3],cmd_block[4],cmd_block[5]);
-#if defined(SSE_DMA_TRACK_TRANSFER2)
+#if defined(SSE_DMA_TRACK_TRANSFER)
     Dma.Datachunk=0;
 #endif
     STR=0; // all fine
@@ -220,7 +220,7 @@ void TAcsiHdc::IOWrite(BYTE Line,BYTE io_src_b) {
     cmd_ctr++;
     ASSERT(cmd_ctr<8);
 #if defined(SSE_ACSI_LED) && defined(SSE_OSD_DRIVE_LED)
-    HDDisplayTimer=timer+HD_TIMER;
+    HDDisplayTimer=timer+HD_TIMER; // simplistic
 #endif
 #if defined(SSE_ACSI_TIMING) // some delay... 1MB/s 512bytes/ 0.5ms
     if(!floppy_instant_sector_access&&(*cmd_block==8 || *cmd_block==0xa)&&!STR)

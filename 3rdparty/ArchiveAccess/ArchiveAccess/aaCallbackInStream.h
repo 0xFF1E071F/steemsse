@@ -33,9 +33,13 @@ class AACallbackInStream: IInStream
 {
 public:
 	// Constructor
+#if 0 //SS
+	AACallbackInStream (ReadCallback readFunction, aaHandle readStreamID,
+		                 INT64 FileSize, bool CloseStreamAfterDestruction = true);
+#else
 	AACallbackInStream (ReadCallback readFunction, aaHandle readStreamID,
 		                 INT64 FileSize, bool CloseStreamAfterDestruction = false);
-
+#endif
 	// Destructor
 	~AACallbackInStream ();
 

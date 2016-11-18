@@ -722,7 +722,7 @@ WORD change_endian(WORD x) {
 /*  Used for -copy 68000 code from browser (Boiler)
              -copy disk name (excluding extension) from Disk manager
 */
-#if defined(SSE_BOILER_CLIPBOARD) || defined(SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD)
+#if defined(SSE_BOILER_CLIPBOARD) || defined(SSE_GUI_DM_NAME_CLIPBOARD)
 BOOL SetClipboardText(LPCTSTR pszText) // from the 'net
 {
    BOOL ok = FALSE;

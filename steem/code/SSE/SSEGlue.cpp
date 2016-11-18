@@ -1402,7 +1402,7 @@ Dragonnels reset
   if(!(CurrentScanline.Tricks&TRICK_STABILISER) && CyclesIn>432)
   {
     r2cycle=NextShiftModeChange(432); // can be 1 or 2
-#ifdef TEST02__
+#if defined(SSE_GLUE_383B2) //just in case
     if(r2cycle>432 && r2cycle<460) 
 #else
     if(r2cycle>-1 && r2cycle<460) 
@@ -1881,7 +1881,7 @@ int TGlue::NextFreqChange(int cycle,int value) {
 
 #endif
 
-#if defined(SSE_FDC_383B3) // refactor + bugfix 
+#if defined(SSE_GLUE_383B3) // refactor + bugfix 
 
 int TGlue::NextShiftModeChange(int cycle,int value) {
   // return cycle of next change after this cycle
@@ -1924,7 +1924,7 @@ int TGlue::NextShiftModeChange(int cycle,int value) {
 
 #endif
 
-#if defined(SSE_FDC_383B3) //the same for new functions
+#if defined(SSE_GLUE_383B3) //the same for new functions
 
 
 int TGlue::NextChangeToHi(int cycle) {
@@ -2000,6 +2000,8 @@ int TGlue::NextChangeToLo(int cycle) {
 
 #endif
 
+#if defined(SSE_GLUE_383B)
+
 //and those?
 int TGlue::PreviousChangeToHi(int cycle) {
   int t=cycle+LINECYCLE0; // convert to absolute
@@ -2027,6 +2029,7 @@ int TGlue::PreviousChangeToLo(int cycle) {
   return idx;
 }
 
+#endif
 
 #if defined(SSE_BOILER_FRAME_REPORT) 
 int TGlue::PreviousFreqChange(int cycle) {
@@ -2572,7 +2575,7 @@ void TGlue::Vbl() {
   if(OSD_MASK2&OSD_CONTROL_MODES)
     TRACE_OSD("R%d S%d",Shifter.m_ShiftMode,m_SyncMode);
 #endif
-#if defined(SSE_FDC_383B1)//?
+#if defined(SSE_GLUE_383B1)
   AddFreqChange(shifter_freq);
   AddShiftModeChange(m_ShiftMode);
 #endif

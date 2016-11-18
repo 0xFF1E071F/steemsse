@@ -480,7 +480,7 @@ LRESULT __stdcall THardDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARA
 #endif  
           TRACE_INIT("Option GEMDOS HD %d\n",!This->DisableHardDrives);
 #endif  
-#if defined(SSE_GUI_STATUS_BAR) && defined(SSE_GUI_DISK_MANAGER_RGT_CLK_HD3)
+#if defined(SSE_GUI_STATUS_BAR) && defined(SSE_GUI_DM_RGT_CLK_HD3)
         GUIRefreshStatusBar();
 #endif
       }else if (ID==IDOK || ID==IDCANCEL){

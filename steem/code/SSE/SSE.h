@@ -934,7 +934,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_DMA)
-#define SSE_DMA_TRACK_TRANSFER // debug + possible later use
+#define SSE_DMA_TRACK_TRANSFER
 #endif
 
 #ifdef SSE_DRIVE_OBJECT
@@ -1073,7 +1073,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DISK_STW
 #endif
 #if defined(SSE_DISK_STW)
-#define SSE_GUI_DISK_MANAGER_STW //new context option
+#define SSE_GUI_DM_STW //new context option
 
 #endif
 #if defined(WIN32) && defined(SSE_WD1772)
@@ -1158,18 +1158,18 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_CLIPBOARD_TEXT
 #endif
 #if defined(SSE_GUI_DISK_MANAGER)
-#define SSE_GUI_DISK_MANAGER_DOUBLE_CLK_GO_UP //habit with some file managers
-#define SSE_GUI_DISK_MANAGER_GHOST
-#define SSE_GUI_DISK_MANAGER_INSERT_DISKB
-#define SSE_GUI_DISK_MANAGER_INSERT_DISKB_LS//load/save option
-#define SSE_GUI_DISK_MANAGER_LONG_NAMES1
+#define SSE_GUI_DM_DOUBLE_CLK_GO_UP //habit with some file managers
+#define SSE_GUI_DM_GHOST
+#define SSE_GUI_DM_INSERT_DISK_B
+#define SSE_GUI_DM_INSERT_DISK_B_LS//load/save option
+#define SSE_GUI_DM_LONG_NAMES1
 #ifndef IN_RC
-#if defined(SSE_GUI_CLIPBOARD_TEXT) && defined(SSE_GUI_DISK_MANAGER_LONG_NAMES1)
-#define SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD
+#if defined(SSE_GUI_CLIPBOARD_TEXT) && defined(SSE_GUI_DM_LONG_NAMES1)
+#define SSE_GUI_DM_NAME_CLIPBOARD
 #endif
 #endif
-#define SSE_GUI_DISK_MANAGER_NO_DISABLE_B_MENU // click on icon
-#define SSE_GUI_DISK_MANAGER_RGT_CLK_HD2//on HD icon
+#define SSE_GUI_DM_NO_DISABLE_B_MENU // click on icon
+#define SSE_GUI_DM_RGT_CLK_HD2//on HD icon
 #endif
 
 #if defined(SSE_GUI_STATUS_BAR)
@@ -1396,13 +1396,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_DISK_SCP_TO_MFM_PREVIEW // keep it, could be useful
 #define SSE_DISK_STW_READONLY //3.7.1 last minute
 
-#if defined(SSE_DMA)
-
-#define SSE_DMA_TRACK_TRANSFER2 // also for CAPS images
-#endif
-
 #if defined(SSE_DRIVE_OBJECT)
-#define SSE_DRIVE_INDEX_PULSE2 // improvements for SCP
 #define SSE_DRIVE_READ_TRACK_11C2 //ProCopy 1.50 Analyze
 #endif
 
@@ -1431,7 +1425,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_DISK)
 #define SSE_DISK2 //add info
 #define SSE_DISK_HFE // HxC floppy emulator HFE image support
-#define SSE_GUI_DISK_MANAGER_HFE // creating HFE images in Steem
+#define SSE_GUI_DM_HFE // creating HFE images in Steem
 #define SSE_DISK_HFE_TRIGGER_IP // changes nothing?
 //#define SSE_DISK_HFE_TO_STW // using Steem to convert current disk
 #define SSE_DISK_STW2 
@@ -1444,7 +1438,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_GUI)
 #define SSE_GUI_ASSOCIATE_HFE // they're generally not zipped...
-#define SSE_GUI_DISK_MANAGER_INSERT_DISKB_REMOVE //works?
+#define SSE_GUI_DM_INSERT_DISK_B_REMOVE //works?
 
 #ifdef SSE_DISK_EXT
 #define SSE_GUI_STATUS_BAR_DISK_TYPE // A:MSA B:STW
@@ -1606,8 +1600,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_CONFIG_FILE2 // TOS: relative path
 #endif
 #if defined(SSE_GUI_DISK_MANAGER)
-#define SSE_GUI_DISK_MANAGER_RGT_CLK_HD3 //when changing on/off in hdm
-#define SSE_GUI_DISK_MANAGER_HD_SELECTED //stay pushed if on
+#define SSE_GUI_DM_RGT_CLK_HD3 //when changing on/off in hdm
+#define SSE_GUI_DM_HD_SELECTED //stay pushed if on
 #endif
 #if defined(SSE_GUI_STATUS_BAR) && (defined(SSE_CPU_HALT) || defined(SSE_CPU_TRACE_REFACTOR))
 #define SSE_GUI_STATUS_BAR_ICONS
@@ -1650,9 +1644,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_MMU)
 #define SSE_MMU_RELOAD_SDP_380
-#if defined(SSE_MMU_WU)
-#define SSE_MMU_WU_STE_380
-#endif
+
 #endif
 
 #if defined(SSE_OSD) && defined(SSE_DRIVE_OBJECT)
@@ -1739,13 +1731,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2 // eliminate old code and variables
 #endif
 #define SSE_MMU_LINEWID_TIMING
-#if defined(SSE_MMU_WU)
-#define SSE_MMU_WU_STE_381
-#endif
 #endif//mmu
 
 #if defined(SSE_SHIFTER)
-#define SSE_SHIFTER_60HZ_LINE2
+
 #define SSE_SHIFTER_HSCROLL_381
 
 #endif//sft
@@ -1905,11 +1894,6 @@ Beta: not SSE_PRIVATE_BUILD
 #ifdef SSE_FDC
 #define SSE_FDC_383A // bugfixes
 #define SSE_FDC_383B // refactoring
-#define SSE_FDC_383B1
-#define SSE_FDC_383B2
-
-#define SSE_FDC_383B3//bugfix
-
 #define SSE_FDC_383C // refactoring
 #define SSE_FDC_383_HBL_DRIFT
 #endif
@@ -1918,37 +1902,39 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_WD1772_383C
 #endif
 
-
+#if defined(SSE_GLUE)
 #define SSE_GLUE_383
 #define SSE_GLUE_383B
 #define SSE_GLUE_383B1
+#define SSE_GLUE_383B2
+#define SSE_GLUE_383B3
 #define SSE_GLUE_383C
+#endif
 
+#if defined(SSE_GUI)
 #define SSE_GUI_383
-#define SSE_GUI_DISK_MANAGER_REGROUP // it's getting cluttered
-#define SSE_GUI_DISK_MANAGER_REGROUP2 // context
-#define SSE_GUI_DISK_MANAGER_REGROUP_PASTI // not sure about this one
-#define SSE_GUI_DISK_MANAGER_SHOW_EXT // could still be buggy
+#define SSE_GUI_DM_REGROUP // it's getting cluttered
+#define SSE_GUI_DM_REGROUP2 // context
+#define SSE_GUI_DM_REGROUP_PASTI // not sure about this one
+#define SSE_GUI_DM_SHOW_EXT // could still be buggy
 #define SSE_GUI_JOYSTICK_383
+#endif
 
 #if defined(SSE_INT_MFP)
 #define SSE_INT_MFP_TIMER_B_383
 #endif
 
+#if defined(SSE_MMU)
 #define SSE_MMU_RAM_TEST 
 #if defined(SSE_MMU_RAM_TEST)
 #define SSE_MMU_RAM_TEST1 // change test emulation
 #define SSE_MMU_RAM_TEST2 // remove "no confusion" hack
 #define SSE_MMU_RAM_TEST3 // remove himem=0 hack
 #endif
-
 #define SSE_MMU_ROUNDING_BUS0A // to disable hacky way
 #define SSE_MMU_ROUNDING_BUS1A // fetching 
 #define SSE_MMU_ROUNDING_BUS2 //ambitious, less hacky 
-
-
 #if defined(SSE_MMU_ROUNDING_BUS2)
-
 #define SSE_MMU_ROUNDING_BUS2A_EA // make abus up-to-date in EA SRC
 #define SSE_MMU_ROUNDING_BUS2A_EA1 // make abus up-to-date in EA SRC
 #define SSE_MMU_ROUNDING_BUS2A_EA2 // make abus up-to-date in EA DEST
@@ -1958,12 +1944,12 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_MMU_ROUNDING_BUS2A_INSTR3 // make abus up-to-date in instructions
 #define SSE_MMU_ROUNDING_BUS2A_INSTR4 // make abus up-to-date in instructions
 #define SSE_MMU_ROUNDING_BUS2B // need no param
-
 #define SSE_MMU_ROUNDING_BUS2_BLITTER
 #define SSE_MMU_ROUNDING_BUS2_EXCEPTION //must detail
 #define SSE_MMU_ROUNDING_BUS2_SHIFTER // round up on Shifter registers access
 #define SSE_MMU_ROUNDING_BUS2_STACK
 #undef SSE_MMU_ROUNDING_BUS0A
+#endif
 #endif
 
 #define SSE_VAR_OPT_383
@@ -2381,6 +2367,10 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_BETA_BUGFIX)
+#define SSE_VAR_ARCHIVEACCESS_383
+#define SSE_DRIVE_READ_TRACK_11_383
+#define SSE_OSD_DRIVE_LED_383 // not on parse path
+#define SSE_TOS_PRG_AUTORUN_383 // HD not really off after ejection!
 #endif//bugfix
 
 #else//!SS

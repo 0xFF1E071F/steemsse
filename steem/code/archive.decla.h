@@ -6,6 +6,9 @@
 #include <unzip.h>
 #endif
 
+#include <easystr.h>
+#include <easystringlist.h>
+
 #ifdef WIN32
 /*  from "unzip_win32.h"
     unzipd32.dll seems to be an odd library, couldn't find a h file, and when
@@ -29,11 +32,11 @@ struct PackStruct{
   WORD Flags;              // Only used by ARJ unpacker (LOBYTE: arj_flags, HIBYTE: file_type)
 };
 
-int (_stdcall *GetFirstInZip)(char*,PackStruct*); //find out what files are in the ZIP file (first file)
-int (_stdcall *GetNextInZip)(PackStruct*);        //get next file in ZIP
-void (_stdcall *CloseZipFile)(PackStruct*);       //free buffers and close ZIP after GetFirstInZip()
-BYTE (_stdcall *isZip)(char*);                    //determine if a file is a ZIP file
-int (_stdcall *UnzipFile)(char*,char*,WORD,long,void*,long);        //unzipping
+extern int (_stdcall *GetFirstInZip)(char*,PackStruct*); //find out what files are in the ZIP file (first file)
+extern int (_stdcall *GetNextInZip)(PackStruct*);        //get next file in ZIP
+extern void (_stdcall *CloseZipFile)(PackStruct*);       //free buffers and close ZIP after GetFirstInZip()
+extern BYTE (_stdcall *isZip)(char*);                    //determine if a file is a ZIP file
+extern int (_stdcall *UnzipFile)(char*,char*,WORD,long,void*,long);        //unzipping
 
 #define UNZIP_Ok           0               // Unpacked ok
 #define UNZIP_CRCErr       1               // CRC error

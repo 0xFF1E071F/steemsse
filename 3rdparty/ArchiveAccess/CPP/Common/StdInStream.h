@@ -10,9 +10,10 @@
 
 class CStdInStream
 {
+//public://SS
   bool _streamIsOpen;
   FILE *_stream;
-public:
+public:////SS
   CStdInStream(): _streamIsOpen(false) {};
   CStdInStream(FILE *stream): _streamIsOpen(false), _stream(stream) {};
   ~CStdInStream();

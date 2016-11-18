@@ -26,6 +26,7 @@ classes using plain C. These functions can be used easily in Delphi.
 //#include "aaZipArchiveCreator.h"
 #include "bgstr.h"
 
+
 extern "C" {
 #include "tar.h"
 }
@@ -275,6 +276,9 @@ aaHandle CALL_CONV aaOpenArchive (ReadCallback ReadFunction,
    aaHandle StreamHandle, INT64 _FileSize, int ArchiveType, int* result,
    wchar_t* password)
 {
+
+    //OutputDebugString(L"Open archive\n");
+
     if (ArchiveType == ArchiveFormatUnknown) 
         ArchiveType = aaDetermineArchiveType (ReadFunction, StreamHandle, _FileSize);
 
@@ -514,15 +518,20 @@ DLL_EXPORT void CALL_CONV aaAddFile (aaHandle ArchiveHandle, const TCHAR* FileNa
 
 int CALL_CONV aaCloseArchive (aaHandle ArchiveHandle)
 {
+
+    //OutputDebugString(L"Close archive\n");
+
     ArchiveAccessClass* aac = 
        ArchiveAccessClass::GetClassPointer (ArchiveHandle);
     if (aac != NULL) {
+        //OutputDebugString(L"delete aac\n");
         delete aac;
         return S_OK;
     } else {
         aaArchiveCreator* nac = 
             aaArchiveCreator::GetClassPointer (ArchiveHandle);
         if (nac != NULL) {
+            //OutputDebugString(L"delete nac\n");
             delete nac;
             return S_OK;
         } else

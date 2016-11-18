@@ -10,7 +10,7 @@ as changing disk images and determining what files are disks.
 #pragma message("Included for compilation: diskman.cpp")
 #endif
 
-#if defined(SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD)
+#if defined(SSE_GUI_DM_NAME_CLIPBOARD)
 #include <acc.decla.h>
 #endif
 #if defined(SSE_ACSI_RELOAD_TOS)
@@ -257,7 +257,7 @@ TDiskManager::TDiskManager()
   Dragging=-1;DropTarget=-1;
 
   HideBroken=0;
-#if defined(SSE_GUI_DISK_MANAGER_SHOW_EXT)
+#if defined(SSE_GUI_DM_SHOW_EXT)
   HideExtension=true;
 #endif
 
@@ -492,7 +492,7 @@ http://www.microsoft-questions.com/microsoft/Platform-SDK-Shell/32138755/vista-l
   {
     int ico=RC_ICO_HARDDRIVES;
     if (IsSameStr_I(T("File"),"Fichier")) ico=RC_ICO_HARDDRIVES_FR;
-#if defined(SSE_GUI_DISK_MANAGER_RGT_CLK_HD2)
+#if defined(SSE_GUI_DM_RGT_CLK_HD2)
     Win=CreateWindow("Steem Flat PicButton",Str(ico),
       WS_CHILD | WS_VISIBLE | WS_TABSTOP | PBS_RIGHTCLICK,
                   400,10,60,64,Handle,(HMENU)10,HInstance,NULL);
@@ -743,7 +743,7 @@ void TDiskManager::SetDir(EasyStr NewFol,bool AddToHistory,
         if ((wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)==0){
           exts=strrchr(Name,'.');
           if (exts!=NULL){
-#if defined(SSE_GUI_DISK_MANAGER_SHOW_EXT)
+#if defined(SSE_GUI_DM_SHOW_EXT)
             if(HideExtension)
 #endif
               *exts=0; //Strip extension from Name
@@ -1324,7 +1324,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
           break;
         }
         case 10:  //Hard Drives
-#if defined(SSE_GUI_DISK_MANAGER_RGT_CLK_HD2)
+#if defined(SSE_GUI_DM_RGT_CLK_HD2)
 /*  Right click on HD manager icon toggles HD
 */
           {
@@ -1338,7 +1338,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
 #if defined(SSE_GUI_STATUS_BAR)
               GUIRefreshStatusBar();
 #endif
-#ifdef SSE_GUI_DISK_MANAGER_HD_SELECTED
+#ifdef SSE_GUI_DM_HD_SELECTED
               SendMessage(icon_handle,BM_SETCHECK,!HardDiskMan.DisableHardDrives,0);
 #endif
             }
@@ -1526,7 +1526,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             SendMessage(HWND(lPar),BM_SETCHECK,1,0);
 
             HMENU Pop=CreatePopupMenu();
-#if !defined(SSE_GUI_DISK_MANAGER_NO_DISABLE_B_MENU) // click on icon
+#if !defined(SSE_GUI_DM_NO_DISABLE_B_MENU) // click on icon
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(num_connected_floppies==1 ? MF_CHECKED:0),2012,T("Disconnect Drive B"));
 #endif
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(floppy_instant_sector_access==0 ? MF_CHECKED:0),2013,T("Accurate Disk Access Times (Slow)"));
@@ -1534,7 +1534,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #if USE_PASTI
             if (hPasti){
-#if defined(SSE_GUI_DISK_MANAGER_REGROUP_PASTI)
+#if defined(SSE_GUI_DM_REGROUP_PASTI)
               HMENU PastiPop=CreatePopupMenu();
               InsertMenu(PastiPop,0xffffffff,MF_BYPOSITION | MF_STRING 
                 | int(pasti_active ? MF_CHECKED:0),2023,T("Enable"));
@@ -1561,7 +1561,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             }
 #endif
 
-#if defined(SSE_DISK_GHOST) && defined(SSE_GUI_DISK_MANAGER_GHOST)
+#if defined(SSE_DISK_GHOST) && defined(SSE_GUI_DM_GHOST)
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
               (SSE_GHOST_DISK?MF_CHECKED:0),2027,T("Enable ghost disks for CTR-IPF-SCP-STX"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
@@ -1579,12 +1579,12 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #endif
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(This->AutoInsert2 ? MF_CHECKED:0),2016,T("Automatically Insert &Second Disk"));
-#if !defined(SSE_GUI_DISK_MANAGER_REGROUP)
+#if !defined(SSE_GUI_DM_REGROUP)
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(This->HideBroken ? MF_CHECKED:0),2002,T("Hide &Broken Shortcuts"));
 #endif
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(This->EjectDisksWhenQuit ? MF_CHECKED:0),2011,T("E&ject Disks When Quit"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
-#if defined(SSE_GUI_DISK_MANAGER_REGROUP)
+#if defined(SSE_GUI_DM_REGROUP)
             HMENU DCActionPop=CreatePopupMenu();
             InsertMenu(DCActionPop,0xffffffff,MF_BYPOSITION | MF_STRING,
               2007,T("&None"));
@@ -1606,14 +1606,14 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(This->CloseAfterIRR ? MF_CHECKED:0),
                           2015,T("&Close Disk Manager After Insert, Reset and Run"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
-#if defined(SSE_GUI_DISK_MANAGER_REGROUP) // it's a "view" option
+#if defined(SSE_GUI_DM_REGROUP) // it's a "view" option
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(This->HideBroken ? MF_CHECKED:0),2002,T("Hide &Broken Shortcuts"));
 #endif
-#if defined(SSE_GUI_DISK_MANAGER_SHOW_EXT)
+#if defined(SSE_GUI_DM_SHOW_EXT)
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |
               int(This->HideExtension ? MF_CHECKED:0),2017,T("Hide E&xtension"));
 #endif
-#if defined(SSE_GUI_DISK_MANAGER_REGROUP)
+#if defined(SSE_GUI_DM_REGROUP)
             HMENU IconSizePop=CreatePopupMenu();
             InsertMenu(IconSizePop,0xffffffff,MF_BYPOSITION | MF_STRING,
               2005,T("&Large"));
@@ -1734,7 +1734,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
         case 1002:  // Custom disk image
           This->ShowDiskDiag();
           break;
-#if defined(SSE_GUI_DISK_MANAGER_STW) && defined(SSE_GUI_DISK_MANAGER_HFE)
+#if defined(SSE_GUI_DM_STW) && defined(SSE_GUI_DM_HFE)
 // when both are defined (should be the case), we save a couple of bytes
         case 1003: // STW
         case 1004: // HFE
@@ -1752,7 +1752,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             Alert(EasyStr(T("Could not create the disk image "))+STName,T("Error"),MB_ICONEXCLAMATION);
           return 0;
         }
-#elif defined(SSE_GUI_DISK_MANAGER_STW)
+#elif defined(SSE_GUI_DM_STW)
         case 1003:  // STW
         {
           EasyStr STName=This->DisksFol+"\\"+T("STW Disk")+".STW";
@@ -1767,7 +1767,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
           }
           return 0;
         }
-#elif defined(SSE_GUI_DISK_MANAGER_HFE)
+#elif defined(SSE_GUI_DM_HFE)
         case 1004:  // HFE
         {
           EasyStr STName=This->DisksFol+"\\"+T("HFE Disk")+".HFE";
@@ -2037,7 +2037,7 @@ That will toggle bit x.
           This->ExtractDisks(Inf->Path);
           break;
         }
-#if defined(SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD)
+#if defined(SSE_GUI_DM_NAME_CLIPBOARD)
 /*  Put the name of the game in the clipboard when user clicks on it.
 */
         case 1082:
@@ -2091,7 +2091,7 @@ That will toggle bit x.
           This->HideBroken=!This->HideBroken;
           PostMessage(Win,WM_COMMAND,IDCANCEL,0);
           break;
-#if defined(SSE_GUI_DISK_MANAGER_SHOW_EXT)
+#if defined(SSE_GUI_DM_SHOW_EXT)
         case 2017:
           This->HideExtension=!This->HideExtension;
           PostMessage(Win,WM_COMMAND,IDCANCEL,0);
@@ -2131,7 +2131,7 @@ That will toggle bit x.
         case 2011:
           This->EjectDisksWhenQuit=!This->EjectDisksWhenQuit;
           break;
-#if !defined(SSE_GUI_DISK_MANAGER_NO_DISABLE_B_MENU)
+#if !defined(SSE_GUI_DM_NO_DISABLE_B_MENU)
         case 2012:
           SendDlgItemMessage(Win,99,WM_LBUTTONDOWN,0,0);
           break;
@@ -2243,7 +2243,7 @@ That will toggle bit x.
           This->ShowDatabaseDiag();
           break;
 
-#if defined(SSE_DISK_GHOST) && defined(SSE_GUI_DISK_MANAGER_GHOST)
+#if defined(SSE_DISK_GHOST) && defined(SSE_GUI_DM_GHOST)
         case 2027:
           SSE_GHOST_DISK=!SSE_GHOST_DISK;
           TRACE_LOG("Option Ghost disk %d\n",SSE_GHOST_DISK);
@@ -2526,7 +2526,7 @@ That will toggle bit x.
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,2010,T("Find In Current Folder"));
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,2030,T("Run MSA Converter")+"\10F6");
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,999,NULL);
-#if defined(SSE_GUI_DISK_MANAGER_REGROUP2)
+#if defined(SSE_GUI_DM_REGROUP2)
             HMENU NewPop=CreatePopupMenu();
 
             InsertMenu(NewPop,0xffffffff,MF_BYPOSITION | MF_STRING,1000,
@@ -2535,11 +2535,11 @@ That will toggle bit x.
               T("Standard &Disk Image"));
             InsertMenu(NewPop,0xffffffff,MF_BYPOSITION | MF_STRING,1002,
               T("Custom Disk &Image"));
-#if defined(SSE_GUI_DISK_MANAGER_STW) //new context option
+#if defined(SSE_GUI_DM_STW) //new context option
             InsertMenu(NewPop,0xffffffff,MF_BYPOSITION | MF_STRING,1003,
               T("ST&W Disk Image"));
 #endif
-#if defined(SSE_GUI_DISK_MANAGER_HFE) //new context option
+#if defined(SSE_GUI_DM_HFE) //new context option
             InsertMenu(NewPop,0xffffffff,MF_BYPOSITION | MF_STRING,1004,
               T("&HFE Disk Image"));
 #endif
@@ -2549,10 +2549,10 @@ That will toggle bit x.
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1000,T("New &Folder"));
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1001,T("New Standard &Disk Image"));
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1002,T("New Custom Disk &Image"));
-#if defined(SSE_GUI_DISK_MANAGER_STW) //new context option
+#if defined(SSE_GUI_DM_STW) //new context option
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1003,T("New ST&W Disk Image"));
 #endif
-#if defined(SSE_GUI_DISK_MANAGER_HFE) //new context option
+#if defined(SSE_GUI_DM_HFE) //new context option
         InsertMenu(FolOptionsPop,0xffffffff,MF_BYPOSITION | MF_STRING,1004,T("New &HFE Disk Image"));
 #endif
 #endif
@@ -2589,13 +2589,13 @@ That will toggle bit x.
           InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1101,T("&Remove Disk From Drive")+" \10DEL");
           InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,999,NULL);
           InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1091,T("&Go To Disk"));
-#if defined(SSE_GUI_DISK_MANAGER_LONG_NAMES1)
+#if defined(SSE_GUI_DM_LONG_NAMES1)
 /*  This is so the player can read the full name of the disk without
     checking at the place of storage.
     If he clicks on it, it is copied in the clipboard, whatever use this
     then may have. (383 switch restored)
 */
-#if defined(SSE_GUI_DISK_MANAGER_NAME_CLIPBOARD)
+#if defined(SSE_GUI_DM_NAME_CLIPBOARD)
           InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1082,
             Inf->Name.Text);
 #else
@@ -2669,7 +2669,7 @@ That will toggle bit x.
                 // Check for inserted disks being in renamed folder
               }
             }
-#if defined(SSE_GUI_DISK_MANAGER_SHOW_EXT)
+#if defined(SSE_GUI_DM_SHOW_EXT)
             BOOL success;
             if(This->HideExtension)
               success=MoveFile(This->DisksFol+"\\"+OldName+Extension,This->DisksFol+"\\"+NewName+Extension);
@@ -2713,7 +2713,7 @@ That will toggle bit x.
               }
               return true;
             }else{
-#if defined(SSE_GUI_DISK_MANAGER_SHOW_EXT) // eg STW, system blocks access
+#if defined(SSE_GUI_DM_SHOW_EXT) // eg STW, system blocks access
               Alert(T("Unable to rename file (read-only? inserted?)"),T("Error"),MB_ICONEXCLAMATION);
 #else
               Alert(EasyStr(T("Unable to rename"))+" "+This->DisksFol+"\\"+OldName+Extension+" "+T("to")+" "+This->DisksFol+"\\"+NewName+Extension,T("Error"),MB_ICONEXCLAMATION);
@@ -2936,7 +2936,7 @@ That will toggle bit x.
           }
         }
 
-#if defined(SSE_GUI_DISK_MANAGER_DOUBLE_CLK_GO_UP) //easy, not optimised
+#if defined(SSE_GUI_DM_DOUBLE_CLK_GO_UP) //easy, not optimised
         else if(!lPar)
           lPar++; // go up
 #endif
@@ -3007,7 +3007,7 @@ That will toggle bit x.
           }
         }
       }
-#ifdef SSE_GUI_DISK_MANAGER_HD_SELECTED
+#ifdef SSE_GUI_DM_HD_SELECTED
      SendMessage(GetDlgItem(Win,10),BM_SETCHECK,
        !HardDiskMan.DisableHardDrives || HardDiskMan.IsVisible(),0);
 #else
@@ -3610,17 +3610,17 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
 #endif
 
     InsertHistoryAdd(Drive,Name,Path,DiskInZip);
-#if defined(SSE_GUI_DISK_MANAGER_INSERT_DISKB_REMOVE)
+#if defined(SSE_GUI_DM_INSERT_DISK_B_REMOVE)
     AutoInsert2&=~2; //TODO def
 #endif
     if (AllowInsert2 && Drive==0 && AutoInsert2){
       Err=1;
-#if !defined(SSE_GUI_DISK_MANAGER_INSERT_DISKB)
+#if !defined(SSE_GUI_DM_INSERT_DISK_B)
       Str NewName=Name+" (2)";
 #endif
       Str NewPath=Path;
       Str NewDiskInZip=DiskInZip;
-#if !defined(SSE_GUI_DISK_MANAGER_INSERT_DISKB)
+#if !defined(SSE_GUI_DM_INSERT_DISK_B)
       if (NewDiskInZip.NotEmpty()){
         char *dot=strrchr(NewDiskInZip,'.');
         if (dot){
@@ -3633,7 +3633,7 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
         if (Err) NewDiskInZip="";
       }
 #endif
-#if !defined(SSE_GUI_DISK_MANAGER_INSERT_DISKB)//+TODO save option
+#if !defined(SSE_GUI_DM_INSERT_DISK_B)
       if (NewDiskInZip.Empty())
 #endif
       {
@@ -3646,12 +3646,12 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
           if (*dot=='1') *dot='2', Err=0;
           if (*dot=='a') *dot='b', Err=0;
           if (*dot=='A') *dot='B', Err=0;
-#if defined(SSE_GUI_DISK_MANAGER_INSERT_DISKB)
+#if defined(SSE_GUI_DM_INSERT_DISK_B)
           Str NewName=GetFileNameFromPath(NewPath);
           dot=strrchr(NewName,'.');
           NewName=NewName.Lefts(dot-NewName.Text);
 #endif
-#if defined(SSE_GUI_DISK_MANAGER_INSERT_DISKB_REMOVE)
+#if defined(SSE_GUI_DM_INSERT_DISK_B_REMOVE)
           if (Err==0) 
           {
             InsertDisk(1,NewName,NewPath,0,0,NewDiskInZip,true,0);
@@ -3842,15 +3842,16 @@ void TDiskManager::EjectDisk(int Drive)
     ||SF314[Drive].ImageType.Extension==EXT_TOS)
   {
     HardDiskMan.DisableHardDrives=true; // we suppose it's wanted
-#ifdef SSE_GUI_DISK_MANAGER_HD_SELECTED // update icon
+#ifdef SSE_TOS_PRG_AUTORUN_383
+    stemdos_current_drive=0; // A:
+#endif
+#ifdef SSE_GUI_DM_HD_SELECTED // update GEMDOS HD icon
     HWND icon_handle=GetDlgItem(Handle,10);
     SendMessage(icon_handle,BM_SETCHECK,!HardDiskMan.DisableHardDrives,0);
 #endif
   }
   SF314[Drive].ImageType.Extension=0;
 #endif
-
-//#ifdef WIN32//ux382
   if (Handle){
     SendMessage(GetDlgItem(Handle,100+Drive),LVM_DELETEITEM,0,0);
     EnableWindow(GetDlgItem(GetDlgItem(Handle,98+Drive),100),AreNewDisksInHistory(Drive));

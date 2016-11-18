@@ -146,7 +146,7 @@ int TImageSCP::UnitsToNextFlux(int position) {
   time2=TimeFromIndexPulse[position];
   ASSERT( time2>time1 );
   int units_to_next_flux=time2-time1; 
-#if defined(SSE_DISK_SCP_DRIVE_WOBBLE)
+#if defined(SSE_DISK_SCP_DRIVE_WOBBLE) // this takes care of weak bits (?)
   int wobble=(rand()%4)-2;
   units_to_next_flux+=wobble;
 #endif
@@ -220,16 +220,17 @@ WORD TImageSCP::GetMfmData(WORD position) {
   ASSERT(delay_in_cycles>0);
   TRACE_MFM(" %d cycles\n",delay_in_cycles);
 #endif
-#endif
+//#endif
 
   WD1772.update_time=time_of_next_event+delay_in_cycles; 
+
   if(WD1772.update_time-ACT<=0) // safety
   {
     TRACE_LOG("Argh! wrong disk timing %d ACT %d diff %d last IP %d pos %d/%d delay %d units %d\n",
       WD1772.update_time,ACT,ACT-WD1772.update_time,SF314[DRIVE].time_of_last_ip,Position,nBits-1,delay_in_cycles,TimeFromIndexPulse[Position-1]);
     WD1772.update_time=ACT+SF314[DRIVE].cycles_per_byte;
   }
-
+#endif
   ASSERT(!mfm_data); // see note at top of function
   mfm_data=WD1772.Mfm.encoded; // correct?
   return mfm_data;
